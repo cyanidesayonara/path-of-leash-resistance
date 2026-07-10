@@ -1,0 +1,466 @@
+extends Node2D
+
+# Pull of Duty - leash physics prototype.
+# You are the dog. Walk the phone-zombie human to the park with the phone intact.
+
+const SIDEWALK_LEFT := 340.0
+const SIDEWALK_RIGHT := 940.0
+const START_Y := 260.0
+const GATE_Y := -5000.0
+const LEASH_LENGTH := 260.0
+const LEASH_STRETCH_CAP := 1.15
+const POLE_RADIUS := 10.0
+
+const LANE_YS: Array[float] = [-1200.0, -2600.0, -4000.0]
+const LANE_HALF := 70.0
+
+const COL_GRASS := Color(0.32, 0.42, 0.3)
+const COL_GRASS_DARK := Color(0.28, 0.37, 0.26)
+const COL_SIDEWALK := Color(0.68, 0.66, 0.61)
+const COL_SEAM := Color(0.6, 0.58, 0.53)
+const COL_ROAD := Color(0.24, 0.24, 0.27)
+const COL_STRIPE := Color(0.75, 0.72, 0.63)
+
+var dog: CharacterBody2D
+var human: CharacterBody2D
+var leash: Node2D
+var cam: Camera2D
+
+var poles: Array[Vector2] = []
+var manholes: Array[Vector2] = []
+var hydrants: Array = []
+var kebabs: Array = []
+var tufts: Array[Vector2] = []
+var trees: Array[Vector2] = []
+var lane_state: Array = []
+
+var bones := 0
+var phone_hp := 3
+var elapsed := 0.0
+var frozen := false
+var shake_t := 0.0
+
+var hud: CanvasLayer
+var phone_label: Label
+var bones_label: Label
+var msg_label: Label
+var dim: ColorRect
+var font: Font
+
+
+func _ready() -> void:
+	font = ThemeDB.fallback_font
+	_setup_input()
+	_build_level_data()
+	_build_walls()
+	_build_entities()
+	_build_hud()
+
+
+func _setup_input() -> void:
+	if InputMap.has_action("plant"):
+		return
+	var moves := {
+		"move_left": [KEY_A, KEY_LEFT], "move_right": [KEY_D, KEY_RIGHT],
+		"move_up": [KEY_W, KEY_UP], "move_down": [KEY_S, KEY_DOWN],
+	}
+	for action in moves:
+		InputMap.add_action(action)
+		for k in moves[action]:
+			var ev := InputEventKey.new()
+			ev.physical_keycode = k
+			InputMap.action_add_event(action, ev)
+	var axes := {
+		"move_left": [JOY_AXIS_LEFT_X, -1.0], "move_right": [JOY_AXIS_LEFT_X, 1.0],
+		"move_up": [JOY_AXIS_LEFT_Y, -1.0], "move_down": [JOY_AXIS_LEFT_Y, 1.0],
+	}
+	for action in axes:
+		var ev := InputEventJoypadMotion.new()
+		ev.axis = axes[action][0]
+		ev.axis_value = axes[action][1]
+		InputMap.action_add_event(action, ev)
+	var buttons := {
+		"plant": [KEY_SPACE, JOY_BUTTON_A], "bark": [KEY_E, JOY_BUTTON_B],
+		"restart": [KEY_R, JOY_BUTTON_START],
+	}
+	for action in buttons:
+		InputMap.add_action(action)
+		var evk := InputEventKey.new()
+		evk.physical_keycode = buttons[action][0]
+		InputMap.action_add_event(action, evk)
+		var evb := InputEventJoypadButton.new()
+		evb.button_index = buttons[action][1]
+		InputMap.action_add_event(action, evb)
+
+
+func _build_level_data() -> void:
+	for i in range(7):
+		var x := SIDEWALK_LEFT + 30.0 if i % 2 == 0 else SIDEWALK_RIGHT - 30.0
+		var y := -350.0 - i * 640.0
+		var near_lane := false
+		for ly in LANE_YS:
+			if absf(y - ly) < LANE_HALF + 60.0:
+				near_lane = true
+		if not near_lane:
+			poles.append(Vector2(x, y))
+	manholes = [
+		Vector2(560, -700), Vector2(760, -950), Vector2(480, -1700),
+		Vector2(700, -2100), Vector2(600, -3100), Vector2(820, -3450),
+		Vector2(520, -4400),
+	]
+	for hp in [
+		Vector2(SIDEWALK_LEFT + 45, -500), Vector2(SIDEWALK_RIGHT - 45, -1500),
+		Vector2(SIDEWALK_LEFT + 45, -2300), Vector2(SIDEWALK_RIGHT - 45, -3300),
+		Vector2(SIDEWALK_LEFT + 45, -4600),
+	]:
+		hydrants.append({"pos": hp, "done": false, "progress": 0.0})
+	for kp in [Vector2(620, -1900), Vector2(700, -4200)]:
+		kebabs.append({"pos": kp, "eaten": false})
+	for i in range(140):
+		var side := -1.0 if randf() < 0.5 else 1.0
+		var x := 640.0 + side * randf_range(340.0, 620.0)
+		tufts.append(Vector2(x, randf_range(GATE_Y - 600.0, START_Y + 150.0)))
+	for i in range(14):
+		trees.append(Vector2(randf_range(200.0, 1080.0), GATE_Y - randf_range(120.0, 550.0)))
+	for ly in LANE_YS:
+		lane_state.append({"t": randf_range(1.0, 2.5), "phase": 0, "dir": 1})
+
+
+func _build_walls() -> void:
+	var walls := StaticBody2D.new()
+	walls.collision_layer = 1
+	var mid_y := (START_Y + GATE_Y) / 2.0
+	var span := absf(START_Y - GATE_Y) + 1600.0
+	var defs := [
+		[Vector2(SIDEWALK_LEFT - 50.0, mid_y), Vector2(100, span)],
+		[Vector2(SIDEWALK_RIGHT + 50.0, mid_y), Vector2(100, span)],
+		[Vector2(640, START_Y + 160.0), Vector2(1400, 100)],
+		[Vector2(640, GATE_Y - 700.0), Vector2(1400, 100)],
+	]
+	for d in defs:
+		var cs := CollisionShape2D.new()
+		var sh := RectangleShape2D.new()
+		sh.size = d[1]
+		cs.shape = sh
+		cs.position = d[0]
+		walls.add_child(cs)
+	add_child(walls)
+	for p in poles:
+		var sb := StaticBody2D.new()
+		sb.collision_layer = 1
+		sb.position = p
+		var cs := CollisionShape2D.new()
+		var sh := CircleShape2D.new()
+		sh.radius = POLE_RADIUS
+		cs.shape = sh
+		sb.add_child(cs)
+		add_child(sb)
+
+
+func _build_entities() -> void:
+	leash = Node2D.new()
+	leash.set_script(load("res://leash.gd"))
+	leash.z_index = 5
+	add_child(leash)
+
+	dog = CharacterBody2D.new()
+	dog.set_script(load("res://dog.gd"))
+	dog.position = Vector2(700, START_Y)
+	add_child(dog)
+	dog.setup(self)
+
+	human = CharacterBody2D.new()
+	human.set_script(load("res://human.gd"))
+	human.position = Vector2(600, START_Y - 70.0)
+	add_child(human)
+	human.setup(self)
+
+	leash.setup(dog, human, poles, LEASH_LENGTH)
+
+	cam = Camera2D.new()
+	cam.position_smoothing_enabled = true
+	cam.position_smoothing_speed = 6.0
+	cam.position = Vector2(640, START_Y - 120.0)
+	add_child(cam)
+	cam.make_current()
+
+
+func _build_hud() -> void:
+	hud = CanvasLayer.new()
+	add_child(hud)
+	phone_label = _hud_label(Vector2(24, 16), 22)
+	bones_label = _hud_label(Vector2(24, 46), 22)
+	var hint := _hud_label(Vector2(24, 686), 15)
+	hint.text = "WASD / left stick: move    hold SPACE / A: dig in    E / B: bark    R: restart"
+	hint.modulate.a = 0.75
+	var title := _hud_label(Vector2(0, 90), 30)
+	title.size = Vector2(1280, 40)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.text = "PULL OF DUTY"
+	var sub := _hud_label(Vector2(0, 128), 17)
+	sub.size = Vector2(1280, 30)
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.text = "Walk the human to the park. Keep the phone alive."
+	for l in [title, sub]:
+		var tw := create_tween()
+		tw.tween_interval(3.5)
+		tw.tween_property(l, "modulate:a", 0.0, 1.0)
+	dim = ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.55)
+	dim.size = Vector2(1280, 720)
+	dim.visible = false
+	hud.add_child(dim)
+	msg_label = _hud_label(Vector2(0, 290), 28)
+	msg_label.size = Vector2(1280, 220)
+	msg_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	msg_label.visible = false
+	_update_hud()
+
+
+func _hud_label(pos: Vector2, size_px: int) -> Label:
+	var l := Label.new()
+	l.position = pos
+	l.add_theme_font_size_override("font_size", size_px)
+	hud.add_child(l)
+	return l
+
+
+func _update_hud() -> void:
+	phone_label.text = "PHONE  " + "#".repeat(phone_hp) + ".".repeat(3 - phone_hp)
+	bones_label.text = "BONES  %d" % bones
+
+
+func _physics_process(delta: float) -> void:
+	if frozen:
+		return
+	elapsed += delta
+	dog.tick(delta)
+	human.tick(delta)
+	_apply_leash(delta)
+	leash.tick(delta)
+	_lanes(delta)
+	_hazards(delta)
+	_pickups(delta)
+	_check_win()
+	shake_t = maxf(0.0, shake_t - delta * 2.5)
+
+
+func _process(_delta: float) -> void:
+	if Input.is_action_just_pressed("restart"):
+		get_tree().reload_current_scene()
+		return
+	var target_y := (dog.global_position.y + human.global_position.y) / 2.0 - 60.0
+	cam.position = Vector2(640, target_y)
+	if shake_t > 0.0:
+		cam.offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * 9.0 * shake_t
+	else:
+		cam.offset = Vector2.ZERO
+	queue_redraw()
+
+
+func _apply_leash(delta: float) -> void:
+	# Soft spring zone past LEASH_LENGTH, hard cap at LEASH_STRETCH_CAP.
+	# The human carries momentum; the spring bleeds it off so they visibly
+	# strain against a planted dog instead of stopping dead.
+	var d: Vector2 = human.global_position - dog.global_position
+	var dist := d.length()
+	leash.taut = dist > LEASH_LENGTH * 0.95
+	if dist <= LEASH_LENGTH or dist == 0.0:
+		return
+	var dir := d / dist
+	var excess := dist - LEASH_LENGTH
+	human.notify_strain()
+	# spring stiffness depends on how anchored the dog is
+	var k := 6.0
+	if dog.planted:
+		k = 26.0
+	elif dog.input_active:
+		k = 15.0
+	human.velocity += -dir * minf(k * excess, 900.0) * delta
+	# damp the separating component so the human doesn't bungee
+	var sep := human.velocity.dot(dir)
+	if sep > 0.0:
+		human.velocity -= dir * sep * minf(5.0 * delta, 1.0)
+	var cap := LEASH_LENGTH * LEASH_STRETCH_CAP
+	if dist > cap:
+		var over := dist - cap
+		var dog_share := 0.75
+		if dog.planted:
+			dog_share = 0.06
+		elif dog.input_active:
+			dog_share = 0.4
+		if human.is_fallen():
+			dog_share = minf(dog_share + 0.15, 0.9)
+		var yank_speed := maxf(human.velocity.dot(dir), 0.0)
+		dog.move_and_collide(dir * over * dog_share)
+		human.move_and_collide(-dir * over * (1.0 - dog_share))
+		var rel := human.velocity.dot(dir)
+		if rel > 0.0:
+			human.velocity -= dir * rel * 0.9
+		human.on_leash_yank(dir, dog.planted, yank_speed)
+
+
+func _lanes(delta: float) -> void:
+	for i in range(lane_state.size()):
+		var ls: Dictionary = lane_state[i]
+		if absf(LANE_YS[i] - cam.position.y) > 950.0:
+			continue
+		ls.t -= delta
+		if ls.t <= 0.0:
+			if ls.phase == 0:
+				ls.phase = 1
+				ls.dir = 1 if randf() < 0.5 else -1
+				ls.t = 0.75
+			else:
+				ls.phase = 0
+				ls.t = randf_range(1.7, 3.2)
+				_spawn_bike(LANE_YS[i] + randf_range(-34.0, 34.0), ls.dir)
+
+
+func _spawn_bike(y: float, dir: int) -> void:
+	var b := Node2D.new()
+	b.set_script(load("res://bike.gd"))
+	b.position = Vector2(-250.0 if dir > 0 else 1530.0, y)
+	b.z_index = 12
+	add_child(b)
+	b.setup(self, dog, human, dir)
+
+
+func _hazards(_delta: float) -> void:
+	for m in manholes:
+		if human.global_position.distance_to(m) < 26.0:
+			if human.fall("down the manhole"):
+				pass
+
+
+func _pickups(delta: float) -> void:
+	for h in hydrants:
+		if h.done:
+			continue
+		if dog.global_position.distance_to(h.pos) < 55.0 and dog.velocity.length() < 60.0:
+			h.progress += delta
+			if h.progress >= 0.8:
+				h.done = true
+				bones += 2
+				float_text(h.pos, "good sniff +2", Color(1, 0.95, 0.7))
+				_update_hud()
+	for k in kebabs:
+		if not k.eaten and dog.global_position.distance_to(k.pos) < 26.0:
+			k.eaten = true
+			bones += 1
+			float_text(k.pos, "snack +1", Color(1, 0.95, 0.7))
+			_update_hud()
+
+
+func _check_win() -> void:
+	if dog.global_position.y < GATE_Y and human.global_position.y < GATE_Y:
+		frozen = true
+		dim.visible = true
+		msg_label.visible = true
+		msg_label.text = "WALK COMPLETE\n\nBones: %d    Phone: %d/3    Time: %ds\n\nPress R for another walk" % [bones, phone_hp, int(elapsed)]
+
+
+func on_bark(pos: Vector2) -> void:
+	if human.global_position.distance_to(pos) < 170.0:
+		human.halt(0.8)
+
+
+func crack_phone(pos: Vector2) -> void:
+	phone_hp -= 1
+	shake_t = 1.0
+	_update_hud()
+	float_text(pos, "PHONE CRACKED", Color(1, 0.45, 0.4))
+	if phone_hp <= 0:
+		frozen = true
+		dim.visible = true
+		msg_label.visible = true
+		msg_label.text = "THE PHONE IS SHATTERED\n\nThe human is inconsolable. The walk is over.\n\nPress R to try again"
+
+
+func close_call(pos: Vector2) -> void:
+	bones += 1
+	float_text(pos, "close call +1", Color(0.75, 0.9, 1.0))
+	_update_hud()
+
+
+func float_text(pos: Vector2, text: String, color: Color = Color.WHITE) -> void:
+	var l := Label.new()
+	l.text = text
+	l.z_index = 100
+	l.add_theme_font_size_override("font_size", 20)
+	l.add_theme_color_override("font_color", color)
+	add_child(l)
+	l.position = pos + Vector2(-40, -56)
+	var tw := create_tween()
+	tw.tween_property(l, "position:y", l.position.y - 44.0, 0.9)
+	tw.parallel().tween_property(l, "modulate:a", 0.0, 0.9)
+	tw.tween_callback(l.queue_free)
+
+
+func _draw() -> void:
+	var top := GATE_Y - 800.0
+	var bottom := START_Y + 320.0
+	draw_rect(Rect2(-400, top, 2100, bottom - top), COL_GRASS)
+	for t in tufts:
+		draw_circle(t, 5.0, COL_GRASS_DARK)
+	# park beyond the gate
+	draw_rect(Rect2(-400, top, 2100, GATE_Y - top), Color(0.27, 0.4, 0.27))
+	for t in trees:
+		draw_circle(t, 26.0, Color(0.22, 0.34, 0.22))
+		draw_circle(t + Vector2(8, 6), 18.0, Color(0.25, 0.38, 0.24))
+	# sidewalk
+	draw_rect(Rect2(SIDEWALK_LEFT, GATE_Y - 40.0, SIDEWALK_RIGHT - SIDEWALK_LEFT, bottom - GATE_Y), COL_SIDEWALK)
+	var y := START_Y + 200.0
+	while y > GATE_Y:
+		draw_line(Vector2(SIDEWALK_LEFT, y), Vector2(SIDEWALK_RIGHT, y), COL_SEAM, 2.0)
+		y -= 150.0
+	draw_line(Vector2(SIDEWALK_LEFT, bottom), Vector2(SIDEWALK_LEFT, GATE_Y), COL_SEAM, 3.0)
+	draw_line(Vector2(SIDEWALK_RIGHT, bottom), Vector2(SIDEWALK_RIGHT, GATE_Y), COL_SEAM, 3.0)
+	# bike lanes crossing the sidewalk
+	for i in range(LANE_YS.size()):
+		var ly: float = LANE_YS[i]
+		draw_rect(Rect2(-400, ly - LANE_HALF, 2100, LANE_HALF * 2.0), COL_ROAD)
+		var x := -380.0
+		while x < 1700.0:
+			draw_line(Vector2(x, ly), Vector2(x + 30.0, ly), COL_STRIPE, 3.0)
+			x += 70.0
+		draw_line(Vector2(-400, ly - LANE_HALF), Vector2(1700, ly - LANE_HALF), COL_STRIPE, 2.0)
+		draw_line(Vector2(-400, ly + LANE_HALF), Vector2(1700, ly + LANE_HALF), COL_STRIPE, 2.0)
+		var ls: Dictionary = lane_state[i]
+		if ls.phase == 1 and fmod(Time.get_ticks_msec() / 150.0, 2.0) < 1.0:
+			var wx := 40.0 if ls.dir > 0 else 1240.0
+			draw_circle(Vector2(wx, ly), 16.0, Color(0.95, 0.8, 0.25))
+			draw_rect(Rect2(wx - 2.0, ly - 9.0, 4.0, 10.0), Color(0.15, 0.15, 0.15))
+			draw_circle(Vector2(wx, ly + 6.0), 2.2, Color(0.15, 0.15, 0.15))
+	# manholes
+	for m in manholes:
+		draw_circle(m, 24.0, Color(0.12, 0.12, 0.14))
+		draw_arc(m, 19.0, 0, TAU, 24, Color(0.3, 0.3, 0.33), 2.0)
+	# hydrants
+	for h in hydrants:
+		var c := Color(0.45, 0.4, 0.38) if h.done else Color(0.64, 0.26, 0.2)
+		draw_circle(h.pos, 9.0, c)
+		draw_circle(h.pos + Vector2(0, -8), 5.0, c.darkened(0.2))
+		if not h.done and h.progress > 0.0:
+			draw_arc(h.pos, 15.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
+	# kebabs
+	for k in kebabs:
+		if not k.eaten:
+			draw_circle(k.pos, 7.0, Color(0.75, 0.55, 0.3))
+			draw_line(k.pos + Vector2(-3, 5), k.pos + Vector2(4, -6), Color(0.5, 0.35, 0.2), 2.0)
+	# poles
+	for p in poles:
+		draw_circle(p, POLE_RADIUS + 3.0, Color(0.2, 0.2, 0.22, 0.35))
+		draw_circle(p, POLE_RADIUS, Color(0.44, 0.44, 0.48))
+		draw_circle(p, 4.0, Color(0.55, 0.55, 0.6))
+	# park gate
+	draw_rect(Rect2(SIDEWALK_LEFT - 14, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
+	draw_rect(Rect2(SIDEWALK_RIGHT, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
+	draw_rect(Rect2(SIDEWALK_LEFT - 14, GATE_Y - 58, SIDEWALK_RIGHT - SIDEWALK_LEFT + 28, 14), Color(0.35, 0.3, 0.28))
+	draw_string(font, Vector2(600, GATE_Y - 66), "PARK", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color(0.9, 0.88, 0.8))
+	var gx := SIDEWALK_LEFT
+	while gx < SIDEWALK_RIGHT:
+		draw_line(Vector2(gx, GATE_Y), Vector2(gx + 16.0, GATE_Y), Color(0.9, 0.88, 0.8, 0.6), 3.0)
+		gx += 32.0
+	# start hint
+	draw_string(font, Vector2(430, START_Y + 90), "The park is up ahead. Mind the bike lanes.", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color(1, 1, 1, 0.5))
