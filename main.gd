@@ -103,6 +103,8 @@ func _build_level_data() -> void:
 				near_lane = true
 		if not near_lane:
 			poles.append(Vector2(x, y))
+	for mp in [Vector2(640, -1750), Vector2(700, -2900), Vector2(580, -4250)]:
+		poles.append(mp)
 	manholes = [
 		Vector2(560, -700), Vector2(760, -950), Vector2(480, -1700),
 		Vector2(700, -2100), Vector2(600, -3100), Vector2(820, -3450),
@@ -262,28 +264,35 @@ func _apply_leash(delta: float) -> void:
 	# Soft spring zone past LEASH_LENGTH, hard cap at LEASH_STRETCH_CAP.
 	# The human carries momentum; the spring bleeds it off so they visibly
 	# strain against a planted dog instead of stopping dead.
-	var d: Vector2 = human.global_position - dog.global_position
-	var dist := d.length()
-	leash.taut = dist > LEASH_LENGTH * 0.95
-	if dist <= LEASH_LENGTH or dist == 0.0:
+	# Length and pull direction respect pole wraps: each end is pulled toward
+	# its nearest anchor (a pivot, or the other end of the leash).
+	leash.update_wraps()
+	var used: float = leash.used_length()
+	leash.taut = used > LEASH_LENGTH * 0.95
+	if used <= LEASH_LENGTH:
 		return
-	var dir := d / dist
-	var excess := dist - LEASH_LENGTH
+	var excess := used - LEASH_LENGTH
+	var to_h_anchor: Vector2 = leash.human_anchor() - human.global_position
+	if to_h_anchor.length() < 0.001:
+		return
+	var h_dir := to_h_anchor.normalized()
+	var to_d_anchor: Vector2 = leash.dog_anchor() - dog.global_position
+	var d_dir := to_d_anchor.normalized() if to_d_anchor.length() > 0.001 else Vector2.ZERO
 	human.notify_strain()
 	# spring stiffness depends on how anchored the dog is
 	var k := 6.0
-	if dog.planted:
+	if dog.planted or leash.pivots.size() > 0:
 		k = 26.0
 	elif dog.input_active:
 		k = 15.0
-	human.velocity += -dir * minf(k * excess, 900.0) * delta
+	human.velocity += h_dir * minf(k * excess, 900.0) * delta
 	# damp the separating component so the human doesn't bungee
-	var sep := human.velocity.dot(dir)
+	var sep := human.velocity.dot(-h_dir)
 	if sep > 0.0:
-		human.velocity -= dir * sep * minf(5.0 * delta, 1.0)
+		human.velocity += h_dir * sep * minf(5.0 * delta, 1.0)
 	var cap := LEASH_LENGTH * LEASH_STRETCH_CAP
-	if dist > cap:
-		var over := dist - cap
+	if used > cap:
+		var over := used - cap
 		var dog_share := 0.75
 		if dog.planted:
 			dog_share = 0.06
@@ -291,13 +300,14 @@ func _apply_leash(delta: float) -> void:
 			dog_share = 0.4
 		if human.is_fallen():
 			dog_share = minf(dog_share + 0.15, 0.9)
-		var yank_speed := maxf(human.velocity.dot(dir), 0.0)
-		dog.move_and_collide(dir * over * dog_share)
-		human.move_and_collide(-dir * over * (1.0 - dog_share))
-		var rel := human.velocity.dot(dir)
+		var yank_speed := maxf(human.velocity.dot(-h_dir), 0.0)
+		dog.move_and_collide(d_dir * over * dog_share)
+		human.move_and_collide(h_dir * over * (1.0 - dog_share))
+		var rel := human.velocity.dot(-h_dir)
 		if rel > 0.0:
-			human.velocity -= dir * rel * 0.9
-		human.on_leash_yank(dir, dog.planted, yank_speed)
+			human.velocity += h_dir * rel * 0.9
+		var anchored: bool = dog.planted or leash.pivots.size() > 0
+		human.on_leash_yank(-h_dir, anchored, yank_speed)
 
 
 func _lanes(delta: float) -> void:

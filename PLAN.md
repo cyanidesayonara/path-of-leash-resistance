@@ -27,8 +27,8 @@ Every feature must serve at least one. If it serves none, cut it.
 
 Iterate the 2D prototype until the core loop is fun for 10 minutes.
 
-- [ ] git init, first commit of the prototype
-- [ ] Pole wrapping as a real constraint (leash pivots around poles, not
+- [x] git init, first commit of the prototype
+- [x] Pole wrapping as a real constraint (leash pivots around poles, not
       just visually) — this is where the puzzle design opens up
 - [ ] Leash weight tuning round 2 (after wrap physics changes the feel)
 - [ ] 2-3 more human event types (sits on bench, walks backwards filming,
