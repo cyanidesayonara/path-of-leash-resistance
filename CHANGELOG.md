@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-07-10 — playtest feedback round 3: winding for real
+
+- Winding rewritten as a continuous accumulated angle per pivot: sign tests
+  cannot count revolutions and dropped wraps at ~3/4 turn. Release on
+  rotating back past the creation bearing, or on pulling nearly straight.
+  Added tests/test_wrap.gd (3 revolutions each direction, full unwind);
+  runs in CI before the smoke test.
+- Tug of war rebalanced: removed the human motor sap (it double-counted
+  the dog's advantage and killed the human's yanks); instead a taut leash
+  saps the DOG's control authority. Planting softened x30 -> x14 so hard
+  yanks visibly skid even a braced dog.
+- The human now fiddles with the retractable leash on its own timer
+  (every 4-8s, "click!"), on top of everything else they do.
+
 ## 2026-07-10 — playtest feedback round 2: tug of war
 
 - Mass-based leash model: human 4x dog mass, one tension applied inversely

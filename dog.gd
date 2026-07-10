@@ -7,6 +7,7 @@ const ACCEL := 2400.0
 
 var planted := false
 var input_active := false
+var dragged := false
 var tumble_t := 0.0
 var bark_cd := 0.0
 var bark_anim := 0.0
@@ -48,7 +49,10 @@ func tick(delta: float) -> void:
 	if planted:
 		velocity = Vector2.ZERO
 	else:
-		velocity = velocity.move_toward(iv * SPEED, ACCEL * delta)
+		# a taut leash saps the DOG's authority: the heavier human's yanks
+		# actually move you (flag set by main.gd/_apply_leash)
+		var accel := 1000.0 if dragged else ACCEL
+		velocity = velocity.move_toward(iv * SPEED, accel * delta)
 		if input_active:
 			facing = iv.normalized()
 	move_and_slide()

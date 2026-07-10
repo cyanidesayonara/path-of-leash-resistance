@@ -46,11 +46,19 @@ touch-grass/
   rest length, hard position cap at 15% stretch. One tension value is
   applied to both ends inversely to effective mass: HUMAN_MASS is 4x
   DOG_MASS, so the human wins raw tugs. The dog's effective mass is
-  multiplied by planting (x30), moving (x2), and pole wraps (capstan:
-  2.2^pivots). A strained human's walking motor is also sapped
-  (speed/accel capped in `human.gd/_walk`). Leash length is dynamic:
-  the HUMAN owns the retractable reel ("click!" event sets a random
-  target length; main.gd eases toward it).
+  multiplied by planting (x14), moving (x2), and pole wraps (capstan:
+  2.2^pivots). A taut leash also saps the DOG's control authority
+  (`dragged` flag, accel capped in dog.gd) - never the human's; the human
+  must keep full motor power or they can neither yank nor be worth
+  stopping. Leash length is dynamic: the HUMAN owns the retractable reel
+  and fiddles with it on a timer ("click!" sets a random target length;
+  main.gd eases toward it).
+- **Winding** is tracked as a continuous accumulated angle per end pivot
+  (`wound` in leash.gd), not by sign tests - sign tests cannot count
+  revolutions and caused wraps to fall off at ~3/4 turn. Release happens
+  when the rope rotates back past its creation bearing, or pulls nearly
+  straight with negligible wound. Regression test:
+  `tests/test_wrap.gd` (runs in CI).
 - **Pole wraps** (`leash.gd`): a pivot chain, ordered dog side to human
   side. Only the two end segments can gain or lose pivots (interior pivots
   are static). The same pole can be wound repeatedly once the rope swings

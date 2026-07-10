@@ -17,7 +17,9 @@ var poles: Array[Vector2] = []
 var seg_len := 16.0
 var taut := false
 
-# pivot: {pos: Vector2, pole: int, wind: float}; ordered dog side -> human side
+# pivot: {pos, pole, wind, rel, wound}; ordered dog side -> human side.
+# wind is the turn direction at creation; wound accumulates the rope's
+# actual rotation around the pole so multi-revolution winding is tracked.
 var pivots: Array = []
 
 
@@ -39,10 +41,61 @@ func _hand_pos() -> Vector2:
 # --- wrap bookkeeping -------------------------------------------------------
 
 func update_wraps() -> void:
-	_unwrap_end(true)
+	_update_wound()
 	_unwrap_end(false)
+	_unwrap_end(true)
 	_wrap_end(true)
 	_wrap_end(false)
+	_refresh_ends()
+
+
+func _refresh_ends() -> void:
+	# After any mutation of the pivot chain, make sure each end pivot's
+	# bookkeeping matches its owner: pivots[0] is tracked from the dog's
+	# perspective (also owns the single-pivot case), pivots[-1] from the
+	# human's. A perspective swap negates wind and wound; rel is re-based
+	# to the current true bearing either way (always safe).
+	if pivots.size() == 0:
+		return
+	_reconcile(pivots[0], true, dog.global_position, _anchor_beyond(false))
+	if pivots.size() >= 2:
+		_reconcile(pivots[-1], false, human.global_position, _anchor_beyond(true))
+
+
+func _reconcile(piv: Dictionary, dog_side: bool, p: Vector2, ref: Vector2) -> void:
+	var pole_c: Vector2 = poles[int(piv.pole)]
+	if bool(piv.dogside) != dog_side:
+		piv.wind = -float(piv.wind)
+		piv.wound = -float(piv.wound)
+		piv.dogside = dog_side
+	if p.distance_to(pole_c) < 0.001 or ref.distance_to(pole_c) < 0.001:
+		return
+	piv.rel = wrapf(_bearing(p, pole_c) - _bearing(ref, pole_c), -PI, PI)
+
+
+func _bearing(from_pos: Vector2, pole_c: Vector2) -> float:
+	return (from_pos - pole_c).angle()
+
+
+func _update_wound() -> void:
+	# Each end pivot tracks how far the rope has actually rotated around its
+	# pole (a continuous winding angle). Sign tests cannot count revolutions;
+	# this can. For a single pivot the dog-end pass uses the human as the
+	# reference, which folds both ends' motion into one measure.
+	if pivots.size() == 0:
+		return
+	_accumulate(pivots[0], dog.global_position, _anchor_beyond(false))
+	if pivots.size() >= 2:
+		_accumulate(pivots[-1], human.global_position, _anchor_beyond(true))
+
+
+func _accumulate(piv: Dictionary, p: Vector2, ref: Vector2) -> void:
+	var pole_c: Vector2 = poles[int(piv.pole)]
+	if p.distance_to(pole_c) < 0.001 or ref.distance_to(pole_c) < 0.001:
+		return
+	var rel := wrapf(_bearing(p, pole_c) - _bearing(ref, pole_c), -PI, PI)
+	piv.wound = float(piv.wound) + wrapf(rel - float(piv.rel), -PI, PI)
+	piv.rel = rel
 
 
 func used_length() -> float:
@@ -116,7 +169,11 @@ func _wrap_end(human_end: bool) -> void:
 	var wind := signf((pos - a).cross(p - pos))
 	if wind == 0.0:
 		wind = 1.0
-	var piv := {"pos": pos, "pole": best, "wind": wind}
+	var rel := wrapf(_bearing(p, c) - _bearing(a, c), -PI, PI)
+	var piv := {
+		"pos": pos, "pole": best, "wind": wind, "rel": rel, "wound": 0.0,
+		"dogside": not human_end,
+	}
 	if human_end:
 		pivots.append(piv)
 	else:
@@ -125,27 +182,26 @@ func _wrap_end(human_end: bool) -> void:
 
 func _unwrap_end(human_end: bool) -> void:
 	while pivots.size() > 0:
+		# a single pivot's winding is owned by the dog-end pass
+		if human_end and pivots.size() == 1:
+			return
 		var piv: Dictionary = pivots[-1] if human_end else pivots[0]
+		# release when the rope has rotated back past its creation bearing
+		# (small hysteresis; winding forward can never release), or when a
+		# barely-wound rope has pulled nearly straight across the pivot
 		var b := _anchor_beyond(human_end)
 		var p := human.global_position if human_end else dog.global_position
 		var pos: Vector2 = piv.pos
-		var pole_c: Vector2 = poles[int(piv.pole)]
-		# endpoint hugging the pole: geometry is degenerate, freeze the state
-		# (step away from the pole to unwind)
-		if p.distance_to(pole_c) < WRAP_R + 12.0:
-			break
-		var cur := signf((pos - b).cross(p - pos))
-		# the cross sign also flips when the rope winds PAST a half turn;
-		# only a flip on the straightened side (endpoint out beyond the
-		# pivot along the anchor->pivot ray) is a real unwind
-		var straightened := (p - pos).dot(pos - b) > 0.0
-		if cur != 0.0 and cur != float(piv.wind) and straightened:
-			if human_end:
-				pivots.pop_back()
-			else:
-				pivots.pop_front()
+		var nearly_straight := false
+		if (pos - b).length_squared() > 0.01 and (p - pos).length_squared() > 0.01:
+			nearly_straight = absf((p - pos).angle_to(pos - b)) < 0.12 and absf(float(piv.wound)) < 0.6
+		if float(piv.wind) * float(piv.wound) >= -0.35 and not nearly_straight:
+			return
+		if human_end:
+			pivots.pop_back()
 		else:
-			break
+			pivots.pop_front()
+		# newly exposed pivots are re-based by _refresh_ends afterwards
 
 
 func _closest_on_segment(a: Vector2, b: Vector2, c: Vector2) -> Vector2:

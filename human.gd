@@ -3,7 +3,7 @@ extends CharacterBody2D
 # The human. Dead weight with a phone. Walks north on autopilot,
 # occasionally does something stupid. Telegraphs it first, to be fair.
 
-enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, REEL, STUMBLE, FALLEN }
+enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, STUMBLE, FALLEN }
 
 const WALK_SPEED := 92.0
 
@@ -19,6 +19,7 @@ var sit_after_dash := false
 var iframes := 0.0
 var halt_t := 0.0
 var pull_cd := 0.0
+var reel_timer := 5.0
 var strain := false
 var wobble_seed := 0.0
 var main: Node2D
@@ -97,6 +98,28 @@ func tick(delta: float) -> void:
 				_end_dash()
 			_walk(delta)
 	_events(delta)
+	_fiddle_with_reel(delta)
+
+
+func _fiddle_with_reel(delta: float) -> void:
+	# constantly fiddles with the retractable leash, independent of the
+	# event system: new random length on every "click!"
+	if state in [HState.FALLEN, HState.STUMBLE]:
+		return
+	reel_timer -= delta
+	if reel_timer > 0.0:
+		return
+	if telegraph_t > 0.0:
+		reel_timer = 0.5
+		return
+	reel_timer = randf_range(4.0, 8.0)
+	main.set_leash_target(randf_range(130.0, 330.0))
+	_show_bubble("click!")
+	var tw := create_tween()
+	tw.tween_interval(0.7)
+	tw.tween_callback(func() -> void:
+		if telegraph_t <= 0.0:
+			bubble.visible = false)
 
 
 func _walk(delta: float) -> void:
@@ -121,13 +144,10 @@ func _walk(delta: float) -> void:
 			return
 		dir = to_target.normalized()
 		speed = 250.0
-	# heavy: momentum builds and bleeds slowly, lunges harder during a dash
+	# heavy: momentum builds and bleeds slowly, lunges harder during a dash.
+	# No motor sapping while strained: leash tension vs mass (main.gd)
+	# decides the tug of war, and the human is the heavy one.
 	var accel := 420.0 if state == HState.DASH else 240.0
-	# a taut leash saps the human's motor: the dog's pull actually restrains
-	# and drags them (momentum from before the leash went taut still carries)
-	if strain:
-		speed = minf(speed, 55.0)
-		accel = minf(accel, 120.0)
 	velocity = velocity.move_toward(dir * speed, accel * delta)
 	move_and_slide()
 
@@ -161,13 +181,10 @@ func _events(delta: float) -> void:
 		elif roll < 0.78:
 			pending_event = HState.FILM
 			_show_bubble("filming...")
-		elif roll < 0.88:
+		else:
 			pending_event = HState.DASH
 			pending_bench = true
 			_show_bubble("tired...")
-		else:
-			pending_event = HState.REEL
-			_show_bubble("click!")
 		telegraph_t = 0.8
 
 
@@ -180,10 +197,6 @@ func _fire_event() -> void:
 			state = HState.DRIFT
 			state_t = 1.8
 			drift_dir = 1.0 if randf() < 0.5 else -1.0
-		HState.REEL:
-			# fiddles with the retractable leash: new random length, and
-			# the dog just has to live with it
-			main.set_leash_target(randf_range(130.0, 330.0))
 		HState.SELFIE:
 			state = HState.SELFIE
 			state_t = 2.2

@@ -291,6 +291,7 @@ func _apply_leash(delta: float) -> void:
 	# Length and pull direction respect pole wraps: each end is pulled toward
 	# its nearest anchor (a pivot, or the other end of the leash).
 	human.strain = false
+	dog.dragged = false
 	leash.update_wraps()
 	var used: float = leash.used_length()
 	leash.taut = used > leash_len * 0.95
@@ -304,6 +305,7 @@ func _apply_leash(delta: float) -> void:
 	var to_d_anchor: Vector2 = leash.dog_anchor() - dog.global_position
 	var d_dir := to_d_anchor.normalized() if to_d_anchor.length() > 0.001 else Vector2.ZERO
 	human.notify_strain()
+	dog.dragged = not dog.planted
 	# Tug of war: one tension, applied to each end inversely to effective
 	# mass. The human is ~4x the dog, so raw pulls yank the DOG around;
 	# the dog wins by bracing (plant), leverage (wraps act as a capstan:
@@ -311,7 +313,7 @@ func _apply_leash(delta: float) -> void:
 	var capstan := pow(2.2, float(leash.pivots.size()))
 	var dog_m := DOG_MASS * capstan
 	if dog.planted:
-		dog_m *= 30.0
+		dog_m *= 14.0
 	elif dog.input_active:
 		dog_m *= 2.0
 	var human_m := HUMAN_MASS * (2.0 if human.is_fallen() else 1.0)

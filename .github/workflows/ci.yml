@@ -20,6 +20,9 @@ jobs:
           unzip -q godot.zip
           chmod +x Godot_v4.7-stable_linux.x86_64
 
+      - name: Leash winding regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_wrap.gd
+
       - name: Headless smoke test
         # Runs the game for 1800 simulated frames (~30s): catches parse
         # errors and runtime script errors in the main gameplay loop.
