@@ -76,8 +76,27 @@ the phone; final level the battery is dead and the walk is just a walk.
 ## Open questions
 
 - 2D top-down forever, or low-poly 3D with rail camera (Phase 2 spike decides)
-- Leash upgrades (retractable, bungee) — hold until wrap physics exists
+- Leash upgrades (retractable, bungee) — wrap physics now exists, viable any time
 - Dog breeds as difficulty/playstyle — production-phase question
+- Difficulty identity: current build is easy. Leaning: casual to *finish*,
+  hard to *master* (see Meta below) rather than picking one audience.
+
+## Meta / retention (Phase 2+ leanings, not commitments)
+
+- Casual vs puzzle: don't choose. Base walks stay forgiving (soft fail,
+  dense checkpoints); challenge lives in optional layers — star ratings,
+  par times, save streaks, "perfect walk" (phone untouched). Bespoke
+  puzzle-heavy "trial walks" as a separate late-game track if wanted.
+- Daily-walk hook: positive-only. A shared daily-seeded walk (same layout
+  for everyone that day, compare scores) fits the fiction perfectly and is
+  the modern comeback pattern. Explicitly avoid guilt mechanics: the dog is
+  never sad/anxious because the player was away — punishing absence reads
+  as F2P manipulation and poisons the cozy audience. The dog is always
+  thrilled you came back. That IS the dog experience.
+- Progression: mostly horizontal, not power. Bones buy cosmetics (collars,
+  bandanas), new breeds (playstyle variants: pull strength / speed / size),
+  leash types (retractable, bungee, chain), and a home/park hub that fills
+  with trophies. A photo album of best saves doubles as share bait.
 
 ## Process
 

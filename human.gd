@@ -58,7 +58,7 @@ func tick(delta: float) -> void:
 	pull_cd = maxf(0.0, pull_cd - delta)
 	halt_t = maxf(0.0, halt_t - delta)
 	state_t -= delta
-	strain = false
+	# strain is cleared and re-set by main.gd/_apply_leash each frame
 	match state:
 		HState.FALLEN:
 			velocity = Vector2.ZERO
@@ -123,6 +123,11 @@ func _walk(delta: float) -> void:
 		speed = 250.0
 	# heavy: momentum builds and bleeds slowly, lunges harder during a dash
 	var accel := 420.0 if state == HState.DASH else 240.0
+	# a taut leash saps the human's motor: the dog's pull actually restrains
+	# and drags them (momentum from before the leash went taut still carries)
+	if strain:
+		speed = minf(speed, 55.0)
+		accel = minf(accel, 120.0)
 	velocity = velocity.move_toward(dir * speed, accel * delta)
 	move_and_slide()
 

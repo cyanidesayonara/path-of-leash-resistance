@@ -281,6 +281,7 @@ func _apply_leash(delta: float) -> void:
 	# strain against a planted dog instead of stopping dead.
 	# Length and pull direction respect pole wraps: each end is pulled toward
 	# its nearest anchor (a pivot, or the other end of the leash).
+	human.strain = false
 	leash.update_wraps()
 	var used: float = leash.used_length()
 	leash.taut = used > LEASH_LENGTH * 0.95
@@ -295,12 +296,16 @@ func _apply_leash(delta: float) -> void:
 	var d_dir := to_d_anchor.normalized() if to_d_anchor.length() > 0.001 else Vector2.ZERO
 	human.notify_strain()
 	# spring stiffness depends on how anchored the dog is
-	var k := 6.0
-	if dog.planted or leash.pivots.size() > 0:
-		k = 26.0
+	var k := 8.0
+	if dog.planted:
+		k = 34.0
 	elif dog.input_active:
-		k = 15.0
-	human.velocity += h_dir * minf(k * excess, 900.0) * delta
+		k = 30.0
+	elif leash.pivots.size() > 0:
+		k = 26.0
+	# a wound-up leash is effectively stiffer: more wraps, harder flings
+	k *= 1.0 + 0.3 * minf(float(leash.pivots.size()), 6.0)
+	human.velocity += h_dir * minf(k * excess, 1400.0) * delta
 	# damp the separating component so the human doesn't bungee
 	var sep := human.velocity.dot(-h_dir)
 	if sep > 0.0:
@@ -312,7 +317,7 @@ func _apply_leash(delta: float) -> void:
 		if dog.planted:
 			dog_share = 0.06
 		elif dog.input_active:
-			dog_share = 0.4
+			dog_share = 0.25
 		if human.is_fallen():
 			dog_share = minf(dog_share + 0.15, 0.9)
 		var yank_speed := maxf(human.velocity.dot(-h_dir), 0.0)

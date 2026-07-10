@@ -84,26 +84,33 @@ func _anchor_beyond(human_end: bool) -> Vector2:
 
 
 func _wrap_end(human_end: bool) -> void:
-	if pivots.size() >= 8:
+	if pivots.size() >= 24:
 		return
 	var p := human.global_position if human_end else dog.global_position
 	var a := _adjacent_anchor(human_end)
-	var skip_pole := _adjacent_pole(human_end)
+	var same_pole := _adjacent_pole(human_end)
 	var best := -1
 	var best_d := 1e9
+	var best_cp := Vector2.ZERO
 	for i in range(poles.size()):
-		if i == skip_pole:
-			continue
 		var cp := _closest_on_segment(a, p, poles[i])
-		if cp.distance_to(poles[i]) < WRAP_R and cp.distance_to(a) > 2.0 and cp.distance_to(p) > 2.0:
-			var d := cp.distance_to(a)
-			if d < best_d:
-				best_d = d
-				best = i
+		if cp.distance_to(poles[i]) >= WRAP_R or cp.distance_to(a) <= 2.0 or cp.distance_to(p) <= 2.0:
+			continue
+		if i == same_pole:
+			# the same pole can be wound again and again, but only once the
+			# rope has swung well past the existing contact point
+			var swung := absf((a - poles[i]).angle_to(cp - poles[i]))
+			if swung < 1.7:
+				continue
+		var d := cp.distance_to(a)
+		if d < best_d:
+			best_d = d
+			best = i
+			best_cp = cp
 	if best < 0:
 		return
 	var c := poles[best]
-	var n := _closest_on_segment(a, p, c) - c
+	var n := best_cp - c
 	n = n.normalized() if n.length() > 0.001 else (a - c).normalized()
 	var pos := c + n * WRAP_R
 	var wind := signf((pos - a).cross(p - pos))
