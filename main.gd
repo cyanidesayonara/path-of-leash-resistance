@@ -9,6 +9,9 @@ const START_Y := 260.0
 const GATE_Y := -5000.0
 const LEASH_LENGTH := 260.0
 const LEASH_STRETCH_CAP := 1.15
+const LEASH_K := 32.0
+const DOG_MASS := 1.0
+const HUMAN_MASS := 4.0
 const POLE_RADIUS := 10.0
 
 const LANE_YS: Array[float] = [-1200.0, -2600.0, -4000.0]
@@ -39,6 +42,7 @@ var deco_pole_count := 0
 var lane_state: Array = []
 
 var leash_len := LEASH_LENGTH
+var leash_target := LEASH_LENGTH
 var bones := 0
 var streak := 0
 var phone_hp := 3
@@ -88,7 +92,6 @@ func _setup_input() -> void:
 		InputMap.action_add_event(action, ev)
 	var buttons := {
 		"plant": [KEY_SPACE, JOY_BUTTON_A], "bark": [KEY_E, JOY_BUTTON_B],
-		"reel": [KEY_SHIFT, JOY_BUTTON_RIGHT_SHOULDER],
 		"restart": [KEY_R, JOY_BUTTON_START],
 	}
 	for action in buttons:
@@ -209,7 +212,7 @@ func _build_hud() -> void:
 	phone_label = _hud_label(Vector2(24, 16), 22)
 	bones_label = _hud_label(Vector2(24, 46), 22)
 	var hint := _hud_label(Vector2(24, 686), 15)
-	hint.text = "WASD / left stick: move    hold SPACE / A: dig in    hold SHIFT / RB: reel    E / B: bark    R: restart"
+	hint.text = "WASD / left stick: move    hold SPACE / A: dig in    E / B: bark    R: restart"
 	hint.modulate.a = 0.75
 	var title := _hud_label(Vector2(0, 90), 30)
 	title.size = Vector2(1280, 40)
@@ -255,11 +258,9 @@ func _physics_process(delta: float) -> void:
 	elapsed += delta
 	dog.tick(delta)
 	human.tick(delta)
-	# retractable leash: reeling shortens it, released it extends back
-	if Input.is_action_pressed("reel"):
-		leash_len = maxf(110.0, leash_len - 220.0 * delta)
-	else:
-		leash_len = minf(LEASH_LENGTH, leash_len + 260.0 * delta)
+	# the human owns the retractable leash: length changes on their whim
+	# ("click!" event), never the dog's
+	leash_len = move_toward(leash_len, leash_target, 150.0 * delta)
 	leash.seg_len = leash_len / 15.0
 	_apply_leash(delta)
 	leash.tick(delta)
@@ -303,34 +304,35 @@ func _apply_leash(delta: float) -> void:
 	var to_d_anchor: Vector2 = leash.dog_anchor() - dog.global_position
 	var d_dir := to_d_anchor.normalized() if to_d_anchor.length() > 0.001 else Vector2.ZERO
 	human.notify_strain()
-	# spring stiffness depends on how anchored the dog is
-	var k := 8.0
+	# Tug of war: one tension, applied to each end inversely to effective
+	# mass. The human is ~4x the dog, so raw pulls yank the DOG around;
+	# the dog wins by bracing (plant), leverage (wraps act as a capstan:
+	# each pivot multiplies the dog side's holding power), and timing.
+	var capstan := pow(2.2, float(leash.pivots.size()))
+	var dog_m := DOG_MASS * capstan
 	if dog.planted:
-		k = 34.0
+		dog_m *= 30.0
 	elif dog.input_active:
-		k = 30.0
-	elif leash.pivots.size() > 0:
-		k = 26.0
-	# a wound-up leash is effectively stiffer: more wraps, harder flings
-	k *= 1.0 + 0.3 * minf(float(leash.pivots.size()), 6.0)
-	human.velocity += h_dir * minf(k * excess, 1400.0) * delta
-	# damp the separating component so the human doesn't bungee
-	var sep := human.velocity.dot(-h_dir)
-	if sep > 0.0:
-		human.velocity += h_dir * sep * minf(5.0 * delta, 1.0)
+		dog_m *= 2.0
+	var human_m := HUMAN_MASS * (2.0 if human.is_fallen() else 1.0)
+	var tension := minf(LEASH_K * excess, 1600.0)
+	human.velocity += h_dir * (tension / human_m) * delta
+	if not dog.planted:
+		dog.velocity += d_dir * (tension / dog_m) * delta
+	# damp separating components so neither end bungees
+	var sep_h := human.velocity.dot(-h_dir)
+	if sep_h > 0.0:
+		human.velocity += h_dir * sep_h * minf(5.0 * delta, 1.0)
+	var sep_d := dog.velocity.dot(-d_dir)
+	if sep_d > 0.0 and not dog.planted:
+		dog.velocity += d_dir * sep_d * minf(3.0 * delta, 1.0)
 	var cap := leash_len * LEASH_STRETCH_CAP
 	if used > cap:
 		var over := used - cap
-		var dog_share := 0.75
-		if dog.planted:
-			dog_share = 0.06
-		elif dog.input_active:
-			dog_share = 0.25
-		if human.is_fallen():
-			dog_share = minf(dog_share + 0.15, 0.9)
+		var w_d := (1.0 / dog_m) / (1.0 / dog_m + 1.0 / human_m)
 		var yank_speed := maxf(human.velocity.dot(-h_dir), 0.0)
-		dog.move_and_collide(d_dir * over * dog_share)
-		human.move_and_collide(h_dir * over * (1.0 - dog_share))
+		dog.move_and_collide(d_dir * over * w_d)
+		human.move_and_collide(h_dir * over * (1.0 - w_d))
 		var rel := human.velocity.dot(-h_dir)
 		if rel > 0.0:
 			human.velocity += h_dir * rel * 0.9
@@ -403,6 +405,10 @@ func _check_win() -> void:
 func on_bark(pos: Vector2) -> void:
 	if human.global_position.distance_to(pos) < 170.0:
 		human.halt(0.8)
+
+
+func set_leash_target(v: float) -> void:
+	leash_target = clampf(v, 120.0, 330.0)
 
 
 func nearest_bench(pos: Vector2):

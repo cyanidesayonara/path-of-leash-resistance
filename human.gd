@@ -3,7 +3,7 @@ extends CharacterBody2D
 # The human. Dead weight with a phone. Walks north on autopilot,
 # occasionally does something stupid. Telegraphs it first, to be fair.
 
-enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, STUMBLE, FALLEN }
+enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, REEL, STUMBLE, FALLEN }
 
 const WALK_SPEED := 92.0
 
@@ -146,25 +146,28 @@ func _events(delta: float) -> void:
 		event_timer = randf_range(3.5, 6.5)
 		var roll := randf()
 		pending_bench = false
-		if roll < 0.22:
+		if roll < 0.2:
 			pending_event = HState.STOPPED
 			_show_bubble("ring ring")
-		elif roll < 0.46:
+		elif roll < 0.4:
 			pending_event = HState.DRIFT
 			_show_bubble("typing...")
-		elif roll < 0.64:
+		elif roll < 0.56:
 			pending_event = HState.DASH
 			_show_bubble("ooh!")
-		elif roll < 0.78:
+		elif roll < 0.68:
 			pending_event = HState.SELFIE
 			_show_bubble("selfie!")
-		elif roll < 0.9:
+		elif roll < 0.78:
 			pending_event = HState.FILM
 			_show_bubble("filming...")
-		else:
+		elif roll < 0.88:
 			pending_event = HState.DASH
 			pending_bench = true
 			_show_bubble("tired...")
+		else:
+			pending_event = HState.REEL
+			_show_bubble("click!")
 		telegraph_t = 0.8
 
 
@@ -177,6 +180,10 @@ func _fire_event() -> void:
 			state = HState.DRIFT
 			state_t = 1.8
 			drift_dir = 1.0 if randf() < 0.5 else -1.0
+		HState.REEL:
+			# fiddles with the retractable leash: new random length, and
+			# the dog just has to live with it
+			main.set_leash_target(randf_range(130.0, 330.0))
 		HState.SELFIE:
 			state = HState.SELFIE
 			state_t = 2.2

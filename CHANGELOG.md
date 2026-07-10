@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-07-10 — playtest feedback round 2: tug of war
+
+- Mass-based leash model: human 4x dog mass, one tension applied inversely
+  to effective mass. The human now yanks the dog around; the dog wins via
+  planting (x30 brace), movement (x2), and pole wraps (capstan 2.2^pivots)
+- Fixed multi-wrap detaching: the unwrap sign test also fired when winding
+  past a half turn (now requires the straightened side), and wrap/unwrap
+  state freezes while the endpoint hugs the pole
+- Retractable leash inverted per playtest feedback: the HUMAN owns the
+  reel. "click!" event sets a random leash length (130-330), sometimes
+  reeling the dog in against its will. Player reel input removed.
+
 ## 2026-07-10 — GitHub setup, retractable leash
 
 - Repo published to GitHub with CI (headless smoke test on push/PR)

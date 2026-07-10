@@ -100,7 +100,7 @@ func _wrap_end(human_end: bool) -> void:
 			# the same pole can be wound again and again, but only once the
 			# rope has swung well past the existing contact point
 			var swung := absf((a - poles[i]).angle_to(cp - poles[i]))
-			if swung < 1.7:
+			if swung < 1.5:
 				continue
 		var d := cp.distance_to(a)
 		if d < best_d:
@@ -129,8 +129,17 @@ func _unwrap_end(human_end: bool) -> void:
 		var b := _anchor_beyond(human_end)
 		var p := human.global_position if human_end else dog.global_position
 		var pos: Vector2 = piv.pos
+		var pole_c: Vector2 = poles[int(piv.pole)]
+		# endpoint hugging the pole: geometry is degenerate, freeze the state
+		# (step away from the pole to unwind)
+		if p.distance_to(pole_c) < WRAP_R + 12.0:
+			break
 		var cur := signf((pos - b).cross(p - pos))
-		if cur != 0.0 and cur != float(piv.wind):
+		# the cross sign also flips when the rope winds PAST a half turn;
+		# only a flip on the straightened side (endpoint out beyond the
+		# pivot along the anchor->pivot ray) is a real unwind
+		var straightened := (p - pos).dot(pos - b) > 0.0
+		if cur != 0.0 and cur != float(piv.wind) and straightened:
 			if human_end:
 				pivots.pop_back()
 			else:

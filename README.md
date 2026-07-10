@@ -14,18 +14,22 @@ Playtest builds ship to a private itch.io page.
 
 - Move: WASD / arrows / left stick
 - Dig in (anchor yourself; the leash stops the human): hold Space / A
-- Reel in (retractable leash, drags the human toward you): hold Shift / RB
 - Bark (freezes the human for a beat): E / B
 - Restart: R / Start
 
 ## What to feel for
 
+- It is a tug of war you lose on raw muscle: the human is four times your
+  mass and will yank you around. You win by bracing (plant), leverage
+  (pole wraps multiply your holding power like a capstan), and timing.
 - Plant yourself before bike lanes so the human strains against the leash
   and grinds to a stop. Release when clear.
 - A hard yank while anchored makes the human stumble toward you; doing it
   as a bike whizzes past is a NICE SAVE and builds your streak.
-- The leash winds around poles for real. Wraps shorten it, redirect the
-  pull, and stiffen it — wind the human up and they whip around corners.
+- The leash winds around poles for real, multiple turns if you like.
+  Step away from a pole to unwind; hugging it freezes the wrap state.
+- The human owns the retractable leash. "click!" means they just changed
+  its length on a whim — sometimes reeling you in against your will.
 - The human telegraphs every event with a speech bubble: "ring ring" stops,
   "typing..." drifts, "ooh!" dashes, "selfie!" backs up blindly,
   "filming..." walks backwards, "tired..." heads for a bench.

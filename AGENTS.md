@@ -43,10 +43,14 @@ touch-grass/
 ## How things work (non-obvious bits)
 
 - **Leash constraint** (`main.gd/_apply_leash`): soft spring zone past the
-  rest length, hard position cap at 15% stretch. The human keeps momentum;
-  spring stiffness depends on how anchored the dog is (planted > moving >
-  idle) and multiplies with pole-wrap count. A strained human's walking
-  motor is sapped (speed/accel capped in `human.gd/_walk`).
+  rest length, hard position cap at 15% stretch. One tension value is
+  applied to both ends inversely to effective mass: HUMAN_MASS is 4x
+  DOG_MASS, so the human wins raw tugs. The dog's effective mass is
+  multiplied by planting (x30), moving (x2), and pole wraps (capstan:
+  2.2^pivots). A strained human's walking motor is also sapped
+  (speed/accel capped in `human.gd/_walk`). Leash length is dynamic:
+  the HUMAN owns the retractable reel ("click!" event sets a random
+  target length; main.gd eases toward it).
 - **Pole wraps** (`leash.gd`): a pivot chain, ordered dog side to human
   side. Only the two end segments can gain or lose pivots (interior pivots
   are static). The same pole can be wound repeatedly once the rope swings
