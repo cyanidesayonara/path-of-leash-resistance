@@ -38,6 +38,7 @@ var tables: Array[Vector2] = []
 var deco_pole_count := 0
 var lane_state: Array = []
 
+var leash_len := LEASH_LENGTH
 var bones := 0
 var streak := 0
 var phone_hp := 3
@@ -87,6 +88,7 @@ func _setup_input() -> void:
 		InputMap.action_add_event(action, ev)
 	var buttons := {
 		"plant": [KEY_SPACE, JOY_BUTTON_A], "bark": [KEY_E, JOY_BUTTON_B],
+		"reel": [KEY_SHIFT, JOY_BUTTON_RIGHT_SHOULDER],
 		"restart": [KEY_R, JOY_BUTTON_START],
 	}
 	for action in buttons:
@@ -207,7 +209,7 @@ func _build_hud() -> void:
 	phone_label = _hud_label(Vector2(24, 16), 22)
 	bones_label = _hud_label(Vector2(24, 46), 22)
 	var hint := _hud_label(Vector2(24, 686), 15)
-	hint.text = "WASD / left stick: move    hold SPACE / A: dig in    E / B: bark    R: restart"
+	hint.text = "WASD / left stick: move    hold SPACE / A: dig in    hold SHIFT / RB: reel    E / B: bark    R: restart"
 	hint.modulate.a = 0.75
 	var title := _hud_label(Vector2(0, 90), 30)
 	title.size = Vector2(1280, 40)
@@ -253,6 +255,12 @@ func _physics_process(delta: float) -> void:
 	elapsed += delta
 	dog.tick(delta)
 	human.tick(delta)
+	# retractable leash: reeling shortens it, released it extends back
+	if Input.is_action_pressed("reel"):
+		leash_len = maxf(110.0, leash_len - 220.0 * delta)
+	else:
+		leash_len = minf(LEASH_LENGTH, leash_len + 260.0 * delta)
+	leash.seg_len = leash_len / 15.0
 	_apply_leash(delta)
 	leash.tick(delta)
 	_lanes(delta)
@@ -284,10 +292,10 @@ func _apply_leash(delta: float) -> void:
 	human.strain = false
 	leash.update_wraps()
 	var used: float = leash.used_length()
-	leash.taut = used > LEASH_LENGTH * 0.95
-	if used <= LEASH_LENGTH:
+	leash.taut = used > leash_len * 0.95
+	if used <= leash_len:
 		return
-	var excess := used - LEASH_LENGTH
+	var excess := used - leash_len
 	var to_h_anchor: Vector2 = leash.human_anchor() - human.global_position
 	if to_h_anchor.length() < 0.001:
 		return
@@ -310,7 +318,7 @@ func _apply_leash(delta: float) -> void:
 	var sep := human.velocity.dot(-h_dir)
 	if sep > 0.0:
 		human.velocity += h_dir * sep * minf(5.0 * delta, 1.0)
-	var cap := LEASH_LENGTH * LEASH_STRETCH_CAP
+	var cap := leash_len * LEASH_STRETCH_CAP
 	if used > cap:
 		var over := used - cap
 		var dog_share := 0.75

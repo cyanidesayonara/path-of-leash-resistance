@@ -76,7 +76,8 @@ the phone; final level the battery is dead and the walk is just a walk.
 ## Open questions
 
 - 2D top-down forever, or low-poly 3D with rail camera (Phase 2 spike decides)
-- Leash upgrades (retractable, bungee) — wrap physics now exists, viable any time
+- Leash upgrades: retractable (reel-in) shipped as a core verb; bungee and
+  chain variants remain progression-phase material
 - Dog breeds as difficulty/playstyle — production-phase question
 - Difficulty identity: current build is easy. Leaning: casual to *finish*,
   hard to *master* (see Meta below) rather than picking one audience.
