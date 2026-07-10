@@ -1,4 +1,6 @@
-# Pull of Duty (working title)
+# Touch Grass
+
+*Take the Path of Leash Resistance.*
 
 Top-down leash physics prototype. You are the dog. Your human is glued to
 their phone and walking on autopilot. Get them to the park with the phone

@@ -3,7 +3,7 @@ extends CharacterBody2D
 # The human. Dead weight with a phone. Walks north on autopilot,
 # occasionally does something stupid. Telegraphs it first, to be fair.
 
-enum HState { WALK, STOPPED, DRIFT, DASH, STUMBLE, FALLEN }
+enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, STUMBLE, FALLEN }
 
 const WALK_SPEED := 92.0
 
@@ -14,6 +14,8 @@ var telegraph_t := 0.0
 var pending_event: HState = HState.STOPPED
 var drift_dir := 1.0
 var dash_target := Vector2.ZERO
+var pending_bench := false
+var sit_after_dash := false
 var iframes := 0.0
 var halt_t := 0.0
 var pull_cd := 0.0
@@ -74,9 +76,25 @@ func tick(delta: float) -> void:
 			move_and_slide()
 			if state_t <= 0.0:
 				state = HState.WALK
+				bubble.visible = false
+		HState.SELFIE:
+			# shuffles backward for a better angle, oblivious
+			velocity = velocity.move_toward(Vector2(0, 22.0), 220.0 * delta)
+			move_and_slide()
+			if state_t <= 0.0:
+				state = HState.WALK
+				bubble.visible = false
+		HState.FILM:
+			# walks backwards while filming, weaving
+			var sway := sin(Time.get_ticks_msec() / 250.0) * 30.0
+			velocity = velocity.move_toward(Vector2(sway, 62.0), 220.0 * delta)
+			move_and_slide()
+			if state_t <= 0.0:
+				state = HState.WALK
+				bubble.visible = false
 		_:
 			if state == HState.DASH and state_t <= 0.0:
-				state = HState.WALK
+				_end_dash()
 			_walk(delta)
 	_events(delta)
 
@@ -98,7 +116,7 @@ func _walk(delta: float) -> void:
 	if state == HState.DASH:
 		var to_target := dash_target - global_position
 		if to_target.length() < 14.0:
-			state = HState.WALK
+			_end_dash()
 			velocity = Vector2.ZERO
 			return
 		dir = to_target.normalized()
@@ -122,15 +140,26 @@ func _events(delta: float) -> void:
 	if event_timer <= 0.0:
 		event_timer = randf_range(3.5, 6.5)
 		var roll := randf()
-		if roll < 0.4:
+		pending_bench = false
+		if roll < 0.22:
 			pending_event = HState.STOPPED
 			_show_bubble("ring ring")
-		elif roll < 0.75:
+		elif roll < 0.46:
 			pending_event = HState.DRIFT
 			_show_bubble("typing...")
-		else:
+		elif roll < 0.64:
 			pending_event = HState.DASH
 			_show_bubble("ooh!")
+		elif roll < 0.78:
+			pending_event = HState.SELFIE
+			_show_bubble("selfie!")
+		elif roll < 0.9:
+			pending_event = HState.FILM
+			_show_bubble("filming...")
+		else:
+			pending_event = HState.DASH
+			pending_bench = true
+			_show_bubble("tired...")
 		telegraph_t = 0.8
 
 
@@ -143,12 +172,42 @@ func _fire_event() -> void:
 			state = HState.DRIFT
 			state_t = 1.8
 			drift_dir = 1.0 if randf() < 0.5 else -1.0
+		HState.SELFIE:
+			state = HState.SELFIE
+			state_t = 2.2
+			_show_bubble("selfie!")
+		HState.FILM:
+			state = HState.FILM
+			state_t = randf_range(1.6, 2.4)
+			_show_bubble("filming...")
 		HState.DASH:
-			state = HState.DASH
-			state_t = 1.2
-			var off := Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, -0.3)).normalized() * randf_range(130.0, 210.0)
-			dash_target = global_position + off
-			dash_target.x = clampf(dash_target.x, 375.0, 905.0)
+			if pending_bench:
+				var b = main.nearest_bench(global_position)
+				if b == null:
+					state = HState.STOPPED
+					state_t = 2.0
+					return
+				sit_after_dash = true
+				dash_target = b as Vector2
+				dash_target.x = clampf(dash_target.x, 372.0, 908.0)
+				state = HState.DASH
+				state_t = 2.2
+			else:
+				state = HState.DASH
+				state_t = 1.2
+				var off := Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, -0.3)).normalized() * randf_range(130.0, 210.0)
+				dash_target = global_position + off
+				dash_target.x = clampf(dash_target.x, 375.0, 905.0)
+
+
+func _end_dash() -> void:
+	if sit_after_dash:
+		sit_after_dash = false
+		state = HState.STOPPED
+		state_t = 3.0
+		_show_bubble("just a sec")
+	else:
+		state = HState.WALK
 
 
 func _show_bubble(text: String) -> void:
@@ -172,6 +231,7 @@ func on_leash_yank(dir: Vector2, dog_planted: bool, yank_speed: float) -> void:
 		telegraph_t = 0.0
 		bubble.visible = false
 		main.float_text(global_position, "whoa!", Color(1, 1, 1))
+		main.on_stumble_save(global_position)
 
 
 func fall(_reason: String) -> bool:

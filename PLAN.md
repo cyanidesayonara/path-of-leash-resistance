@@ -1,6 +1,8 @@
-# Pull of Duty — development plan
+# Touch Grass — development plan
 
-Working title. Real name TBD.
+Tagline: "Take the Path of Leash Resistance."
+Name pending the Phase 3 trademark/Steam collision check before anything
+goes public.
 
 ## The game
 
@@ -31,10 +33,10 @@ Iterate the 2D prototype until the core loop is fun for 10 minutes.
 - [x] Pole wrapping as a real constraint (leash pivots around poles, not
       just visually) — this is where the puzzle design opens up
 - [ ] Leash weight tuning round 2 (after wrap physics changes the feel)
-- [ ] 2-3 more human event types (sits on bench, walks backwards filming,
+- [x] 2-3 more human event types (sits on bench, walks backwards filming,
       stops for selfie in the worst spot)
-- [ ] 1-2 more hazard types (open cellar door, cafe terrace)
-- [ ] Basic juice: slow-mo flash on a last-moment save, save streak counter
+- [x] 1-2 more hazard types (open cellar door, cafe terrace)
+- [x] Basic juice: slow-mo flash on a last-moment save, save streak counter
 - [ ] Web export, unlisted itch.io page, watch 3-5 people play
 
 **Exit criteria:** a friend plays unprompted, laughs at least once, and
@@ -73,7 +75,6 @@ the phone; final level the battery is dead and the walk is just a walk.
 
 ## Open questions
 
-- Real name (see candidate lists in chat; nothing has stuck yet)
 - 2D top-down forever, or low-poly 3D with rail camera (Phase 2 spike decides)
 - Leash upgrades (retractable, bungee) — hold until wrap physics exists
 - Dog breeds as difficulty/playstyle — production-phase question

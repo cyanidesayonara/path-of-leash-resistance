@@ -32,9 +32,14 @@ var hydrants: Array = []
 var kebabs: Array = []
 var tufts: Array[Vector2] = []
 var trees: Array[Vector2] = []
+var benches: Array[Vector2] = []
+var cellars: Array[Rect2] = []
+var tables: Array[Vector2] = []
+var deco_pole_count := 0
 var lane_state: Array = []
 
 var bones := 0
+var streak := 0
 var phone_hp := 3
 var elapsed := 0.0
 var frozen := false
@@ -49,6 +54,7 @@ var font: Font
 
 
 func _ready() -> void:
+	Engine.time_scale = 1.0
 	font = ThemeDB.fallback_font
 	_setup_input()
 	_build_level_data()
@@ -105,6 +111,14 @@ func _build_level_data() -> void:
 			poles.append(Vector2(x, y))
 	for mp in [Vector2(640, -1750), Vector2(700, -2900), Vector2(580, -4250)]:
 		poles.append(mp)
+	deco_pole_count = poles.size()
+	# cafe terrace: tables join the poles array so they block bodies and
+	# snag the leash, but they are drawn as tables
+	tables = [Vector2(760, -3560), Vector2(840, -3660), Vector2(700, -3700), Vector2(790, -3780)]
+	for tb in tables:
+		poles.append(tb)
+	benches = [Vector2(376, -1300), Vector2(904, -2450), Vector2(376, -3850)]
+	cellars = [Rect2(340, -2750, 62, 88), Rect2(878, -750, 62, 82), Rect2(340, -4550, 62, 88)]
 	manholes = [
 		Vector2(560, -700), Vector2(760, -950), Vector2(480, -1700),
 		Vector2(700, -2100), Vector2(600, -3100), Vector2(820, -3450),
@@ -198,11 +212,11 @@ func _build_hud() -> void:
 	var title := _hud_label(Vector2(0, 90), 30)
 	title.size = Vector2(1280, 40)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.text = "PULL OF DUTY"
+	title.text = "TOUCH GRASS"
 	var sub := _hud_label(Vector2(0, 128), 17)
 	sub.size = Vector2(1280, 30)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub.text = "Walk the human to the park. Keep the phone alive."
+	sub.text = "Take the Path of Leash Resistance"
 	for l in [title, sub]:
 		var tw := create_tween()
 		tw.tween_interval(3.5)
@@ -229,7 +243,8 @@ func _hud_label(pos: Vector2, size_px: int) -> Label:
 
 func _update_hud() -> void:
 	phone_label.text = "PHONE  " + "#".repeat(phone_hp) + ".".repeat(3 - phone_hp)
-	bones_label.text = "BONES  %d" % bones
+	var streak_txt := "   STREAK x%d" % streak if streak > 1 else ""
+	bones_label.text = "BONES  %d%s" % [bones, streak_txt]
 
 
 func _physics_process(delta: float) -> void:
@@ -339,8 +354,10 @@ func _spawn_bike(y: float, dir: int) -> void:
 func _hazards(_delta: float) -> void:
 	for m in manholes:
 		if human.global_position.distance_to(m) < 26.0:
-			if human.fall("down the manhole"):
-				pass
+			human.fall("manhole")
+	for c in cellars:
+		if c.has_point(human.global_position):
+			human.fall("cellar")
 
 
 func _pickups(delta: float) -> void:
@@ -375,8 +392,37 @@ func on_bark(pos: Vector2) -> void:
 		human.halt(0.8)
 
 
+func nearest_bench(pos: Vector2):
+	var best = null
+	var best_d := 380.0
+	for b in benches:
+		var d := pos.distance_to(b)
+		if d < best_d:
+			best_d = d
+			best = b
+	return best
+
+
+func on_stumble_save(pos: Vector2) -> void:
+	for b in get_tree().get_nodes_in_group("bikes"):
+		if b.global_position.distance_to(pos) < 170.0:
+			streak += 1
+			bones += streak
+			float_text(pos + Vector2(0, -30), "NICE SAVE +%d" % streak, Color(0.7, 1.0, 0.75))
+			_slowmo()
+			_update_hud()
+			return
+
+
+func _slowmo() -> void:
+	Engine.time_scale = 0.3
+	var t := get_tree().create_timer(0.35, true, false, true)
+	t.timeout.connect(func() -> void: Engine.time_scale = 1.0)
+
+
 func crack_phone(pos: Vector2) -> void:
 	phone_hp -= 1
+	streak = 0
 	shake_t = 1.0
 	_update_hud()
 	float_text(pos, "PHONE CRACKED", Color(1, 0.45, 0.4))
@@ -458,11 +504,26 @@ func _draw() -> void:
 		if not k.eaten:
 			draw_circle(k.pos, 7.0, Color(0.75, 0.55, 0.3))
 			draw_line(k.pos + Vector2(-3, 5), k.pos + Vector2(4, -6), Color(0.5, 0.35, 0.2), 2.0)
-	# poles
-	for p in poles:
+	# lampposts (cafe tables share the poles array but are drawn below)
+	for i in range(deco_pole_count):
+		var p := poles[i]
 		draw_circle(p, POLE_RADIUS + 3.0, Color(0.2, 0.2, 0.22, 0.35))
 		draw_circle(p, POLE_RADIUS, Color(0.44, 0.44, 0.48))
 		draw_circle(p, 4.0, Color(0.55, 0.55, 0.6))
+	# cafe tables
+	for tb in tables:
+		draw_circle(tb, 14.0, Color(0.6, 0.55, 0.48))
+		draw_arc(tb, 14.0, 0, TAU, 20, Color(0.45, 0.4, 0.34), 2.0)
+		draw_circle(tb, 3.0, Color(0.4, 0.36, 0.3))
+	# benches
+	for b in benches:
+		draw_rect(Rect2(b.x - 8, b.y - 24, 16, 48), Color(0.5, 0.38, 0.26))
+		draw_line(Vector2(b.x, b.y - 22), Vector2(b.x, b.y + 22), Color(0.42, 0.32, 0.22), 2.0)
+	# cellar doors
+	for c in cellars:
+		draw_rect(c, Color(0.1, 0.1, 0.12))
+		draw_rect(Rect2(c.position.x, c.position.y, c.size.x, 6), Color(0.35, 0.28, 0.22))
+		draw_line(c.position + Vector2(c.size.x / 2.0, 0), c.position + Vector2(c.size.x / 2.0, c.size.y), Color(0.3, 0.3, 0.33), 2.0)
 	# park gate
 	draw_rect(Rect2(SIDEWALK_LEFT - 14, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
 	draw_rect(Rect2(SIDEWALK_RIGHT, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))

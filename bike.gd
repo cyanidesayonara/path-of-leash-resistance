@@ -13,6 +13,7 @@ var tint := Color(0.4, 0.5, 0.45)
 
 
 func setup(m: Node2D, d: Node2D, h: Node2D, direction: int) -> void:
+	add_to_group("bikes")
 	main = m
 	dog = d
 	human = h
