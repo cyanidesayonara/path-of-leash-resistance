@@ -22,6 +22,11 @@ Every feature must serve at least one. If it serves none, cut it.
    telegraphed. Never unfair, never smart.
 4. **Soft failure.** Slapstick consequences, dense checkpoints, instant
    retry. The phone breaks, nobody dies.
+5. **The leash is an honest rope, exaggerated.** Winding, cinching,
+   tetherballing and flinging the human in an arc are core verbs -
+   realistic enough to be predictable, cartoonish enough to be funny.
+   Doing it idly should be fun and give slightly different results every
+   time; harder puzzles may REQUIRE a good fling.
 
 ## Roadmap
 
@@ -54,6 +59,8 @@ One level at shippable quality. Proves the production pipeline.
       or drawn)
 - [ ] Sound pass: barks, yanks, phone noises, one music track
 - [ ] One complete walk: intro, three setpieces, finish, star rating
+- [ ] Main menu / walk-select screen (needed once there is a second walk;
+      see Settings catalog)
 
 **Exit criteria:** a 3-minute level someone would screenshot voluntarily.
 
@@ -98,6 +105,55 @@ the phone; final level the battery is dead and the walk is just a walk.
   bandanas), new breeds (playstyle variants: pull strength / speed / size),
   leash types (retractable, bungee, chain), and a home/park hub that fills
   with trophies. A photo album of best saves doubles as share bait.
+
+## Settings catalog
+
+Twenty settings, each with a signature feature that only it has, drawing
+from a shared obstruction library (bikes, scooters, crowds, tables,
+poles, water, dropped food). Production picks the best ~15; new ideas
+get appended, not squeezed in. Multiple settings imply a main menu /
+walk-select screen (Phase 2 item).
+
+1. **Quiet suburb** (tutorial) — sprinklers, garbage bins, one lone cyclist
+2. **Busy city sidewalk** — crowds of fellow phone zombies, deliveries, cafe terraces
+3. **Bike-lane boulevard** — marked bike lane running PARALLEL to the
+   sidewalk (continuous hazard, not a crossing); fast commuters plus
+   wobbly kids on slow scooters with erratic trajectories
+4. **Beach boulevard** — sand side (slow going, digging bonus, sunbathers,
+   sandcastles) vs restaurant side (tables, chairs, A-frames); seagulls
+   steal unattended food
+5. **City park** — pond (phone hazard supreme), bridge, a line of
+   ducklings crossing (moving no-go zone), squirrels (maximum temptation),
+   off-leash meadow where the rules invert
+6. **Farmers market** — stalls, crates, dropped produce heaven, fishmonger
+7. **Construction detour** — planks, cones, wet cement (paw print
+   evidence), swinging crane loads, workers on kebab break
+8. **Rainy day** — puddles, umbrella forest blocking sightlines, storm drains
+9. **Winter ice** — sliding physics for both ends of the leash, snow
+   piles, salt patches the dog refuses to walk on, sledding kids
+10. **Night walk** — visibility limited to the phone's light cone,
+    raccoons, weaving drunks (adult kid-scooters)
+11. **Dog park social** — other dog+owner pairs = leash-tangle chaos,
+    fetch crossfire, a rival retractable-leash owner
+12. **Street festival** — parade, balloon vendors, stage cables, food stalls
+13. **Old town alleys** — narrow, stairs, wall cats, laundry lines,
+    scooters squeezing through
+14. **Harbor marina** — piers, cleats and ropes (winding heaven), fish
+    crates, gulls, gangplanks over water
+15. **Schoolyard at recess** — kids everywhere on scooters and skates,
+    balls bouncing through, crossing guard
+16. **Shopping street on sale day** — shopping bags, sandwich boards,
+    automatic doors, carried mannequins
+17. **Forest trail** — roots, mud, streams, rabbits; the owner has NO
+    SIGNAL and keeps stopping to hold the phone up for bars (setting-
+    specific event)
+18. **Halloween night** — trick-or-treaters, scary costumes, candy
+    everywhere the dog must NOT eat (chocolate: the anti-snack)
+19. **Station concourse** — rolling suitcases as moving tripwires,
+    luggage carts, a moving walkway (conveyor physics), announcements
+    stop the owner dead
+20. **Christmas market** — mulled-wine crowds, ice patches, sausage
+    stands, the tree lot (a forest of windable poles), fairy-light cables
 
 ## Process
 

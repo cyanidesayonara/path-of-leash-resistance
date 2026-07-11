@@ -261,9 +261,8 @@ func _physics_process(delta: float) -> void:
 	# the human owns the retractable leash: length changes on their whim
 	# ("click!" event), never the dog's
 	leash_len = move_toward(leash_len, leash_target, 150.0 * delta)
-	leash.seg_len = leash_len / 15.0
+	leash.rest_len = leash_len
 	_apply_leash(delta)
-	leash.tick(delta)
 	_lanes(delta)
 	_hazards(delta)
 	_pickups(delta)
@@ -285,39 +284,35 @@ func _process(_delta: float) -> void:
 
 
 func _apply_leash(delta: float) -> void:
-	# Soft spring zone past LEASH_LENGTH, hard cap at LEASH_STRETCH_CAP.
-	# The human carries momentum; the spring bleeds it off so they visibly
-	# strain against a planted dog instead of stopping dead.
-	# Length and pull direction respect pole wraps: each end is pulled toward
-	# its nearest anchor (a pivot, or the other end of the leash).
+	# The rope itself (leash.gd) is the constraint. Here: run the rope
+	# physics, then turn its stretch into tug-of-war forces. One tension,
+	# applied to each end inversely to effective mass along the rope's end
+	# tangent - so a wound-up human is pulled around the pole in an arc.
+	# The human is ~4x the dog, so raw pulls yank the DOG around; the dog
+	# wins by bracing (plant), winding poles (the coil grips and shields
+	# both ends from raw tension while geometry still constrains), timing.
 	human.strain = false
 	dog.dragged = false
-	leash.update_wraps()
+	leash.tick(delta)
 	var used: float = leash.used_length()
-	leash.taut = used > leash_len * 0.95
-	if used <= leash_len:
-		return
 	var excess := used - leash_len
-	var to_h_anchor: Vector2 = leash.human_anchor() - human.global_position
-	if to_h_anchor.length() < 0.001:
+	leash.taut = excess > 0.0
+	if excess <= 0.0:
 		return
-	var h_dir := to_h_anchor.normalized()
-	var to_d_anchor: Vector2 = leash.dog_anchor() - dog.global_position
-	var d_dir := to_d_anchor.normalized() if to_d_anchor.length() > 0.001 else Vector2.ZERO
+	var h_dir: Vector2 = leash.human_pull_dir()
+	var d_dir: Vector2 = leash.dog_pull_dir()
+	if h_dir == Vector2.ZERO or d_dir == Vector2.ZERO:
+		return
 	human.notify_strain()
 	dog.dragged = not dog.planted
-	# Tug of war: one tension, applied to each end inversely to effective
-	# mass. The human is ~4x the dog, so raw pulls yank the DOG around;
-	# the dog wins by bracing (plant), leverage (wraps act as a capstan:
-	# each pivot multiplies the dog side's holding power), and timing.
-	var capstan := pow(2.2, float(leash.pivots.size()))
-	var dog_m := DOG_MASS * capstan
+	var shield := 1.0 / (1.0 + 0.3 * float(leash.contacts))
+	var dog_m := DOG_MASS
 	if dog.planted:
 		dog_m *= 14.0
 	elif dog.input_active:
 		dog_m *= 2.0
 	var human_m := HUMAN_MASS * (2.0 if human.is_fallen() else 1.0)
-	var tension := minf(LEASH_K * excess, 1600.0)
+	var tension := minf(LEASH_K * excess, 1600.0) * shield
 	human.velocity += h_dir * (tension / human_m) * delta
 	if not dog.planted:
 		dog.velocity += d_dir * (tension / dog_m) * delta
@@ -328,9 +323,11 @@ func _apply_leash(delta: float) -> void:
 	var sep_d := dog.velocity.dot(-d_dir)
 	if sep_d > 0.0 and not dog.planted:
 		dog.velocity += d_dir * sep_d * minf(3.0 * delta, 1.0)
-	var cap := leash_len * LEASH_STRETCH_CAP
-	if used > cap:
-		var over := used - cap
+	# hard cap: geometry always wins. Corrections follow the rope tangents
+	# (unshielded), which is what whips a wound human along the arc.
+	var cap := leash_len * (LEASH_STRETCH_CAP - 1.0)
+	if excess > cap:
+		var over := excess - cap
 		var w_d := (1.0 / dog_m) / (1.0 / dog_m + 1.0 / human_m)
 		var yank_speed := maxf(human.velocity.dot(-h_dir), 0.0)
 		dog.move_and_collide(d_dir * over * w_d)
@@ -338,7 +335,7 @@ func _apply_leash(delta: float) -> void:
 		var rel := human.velocity.dot(-h_dir)
 		if rel > 0.0:
 			human.velocity += h_dir * rel * 0.9
-		var anchored: bool = dog.planted or leash.pivots.size() > 0
+		var anchored: bool = dog.planted or leash.contacts > 0
 		human.on_leash_yank(-h_dir, anchored, yank_speed)
 
 

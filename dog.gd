@@ -50,8 +50,12 @@ func tick(delta: float) -> void:
 		velocity = Vector2.ZERO
 	else:
 		# a taut leash saps the DOG's authority: the heavier human's yanks
-		# actually move you (flag set by main.gd/_apply_leash)
-		var accel := 1000.0 if dragged else ACCEL
+		# actually move you (flag set by main.gd/_apply_leash). Crucially,
+		# an idle dragged dog barely brakes - braking toward zero was
+		# silently cancelling the human's drag forces.
+		var accel := ACCEL
+		if dragged:
+			accel = 1000.0 if input_active else 250.0
 		velocity = velocity.move_toward(iv * SPEED, accel * delta)
 		if input_active:
 			facing = iv.normalized()

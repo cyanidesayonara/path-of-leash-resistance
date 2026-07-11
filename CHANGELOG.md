@@ -2,6 +2,27 @@
 
 Append-only session history, newest first.
 
+## 2026-07-11 — the rope IS the constraint
+
+- Threw out wrap bookkeeping entirely (three generations of pivot/angle
+  tracking all desynced from the visual rope, producing detached-but-
+  magnetic poles). The visible verlet rope is now the gameplay physics:
+  segment-vs-circle pole collision (point checks tunneled under stretch),
+  stick-slip friction (coils grip at low tension, slip off under hard
+  pulls), forces along the rope's end tangents so a wound human flings
+  in an arc. Tetherball is now a real, tested mechanic.
+- tests/test_wrap.gd rewritten for the rope model: stretch measurement,
+  spiral-in winding, taut coil cinching with curved pull, slip-off
+  regression guard (the magnetic-owner bug), NaN guard.
+- Idle dragged dog barely brakes (braking was silently cancelling the
+  human's drag forces - the "owner can't move me" complaint).
+- New design pillar: the leash is an honest rope, exaggerated. Fling as
+  a core verb.
+- Settings catalog: 20 settings with signature features in PROJECT.md
+  (bike-lane boulevard, beach boulevard, park with ducklings, forest
+  trail with no signal, station concourse...). Main menu added to
+  Phase 2.
+
 ## 2026-07-10 — playtest feedback round 3: winding for real
 
 - Winding rewritten as a continuous accumulated angle per pivot: sign tests

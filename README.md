@@ -26,8 +26,11 @@ Playtest builds ship to a private itch.io page.
   and grinds to a stop. Release when clear.
 - A hard yank while anchored makes the human stumble toward you; doing it
   as a bike whizzes past is a NICE SAVE and builds your streak.
-- The leash winds around poles for real, multiple turns if you like.
-  Step away from a pole to unwind; hugging it freezes the wrap state.
+- The leash is a real rope. Wind it around a pole as many turns as you
+  like - the coil cinches when taut, the pull curves around the pole
+  (tetherball!), and a hard enough wrench slips the whole coil off.
+  Winding the human up or flinging them across danger in an arc is a
+  core move.
 - The human owns the retractable leash. "click!" means they just changed
   its length on a whim — sometimes reeling you in against your will.
 - The human telegraphs every event with a speech bubble: "ring ring" stops,
