@@ -9,6 +9,8 @@ as you can get away with.
 
 Built in Godot 4.7, GDScript, currently all placeholder vector art.
 Playtest builds ship to a private itch.io page.
+The default dog is modeled after Millie, a distinguished salt-and-pepper
+mutt who squats like a lady.
 
 ## Controls
 

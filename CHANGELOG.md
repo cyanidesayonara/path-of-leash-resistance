@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-07-11 — Millie
+
+- The default dog is now Millie: a medium mutt, black coat with salt-
+  and-pepper flecks and a graying muzzle. Procedural body upgrade: two-
+  segment torso with hips that trail the shoulders (she visibly bends
+  mid-turn), four legs in a trot gait (diagonal pairs, speed-scaled
+  stride), tail that wags slower when concentrating.
+- Pee/squat posture: rump drops, legs tuck, discreet drops (Millie is
+  female: she squats, no leg lift).
+- Note on looks: procedural flourishes polish the prototype; the Crash-
+  ish visual ambition is the Phase 2 track (3D spike + real art), not
+  more vectors.
+
 ## 2026-07-11 — the parallel bike lane (settings catalog no. 3, in the base walk)
 
 - The world got wider: sidewalk, curb, a marked bike lane running the

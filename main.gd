@@ -496,6 +496,7 @@ func _bodily(delta: float) -> void:
 	# a casual plant with a slack leash means peeing; bracing against a
 	# taut leash does not (the tank is a per-walk budget, ~9 breaks)
 	var going: bool = dog.planted and not dog.is_tumbling() and not leash.taut and pee > 0.02
+	dog.peeing = going
 	if going:
 		pee = maxf(0.0, pee - 0.16 * delta)
 		var target := _nearest_markable(dog.global_position)

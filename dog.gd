@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
-# The player. Fast, agile, responsible for the entire relationship.
+# The player: Millie, a medium-sized mutt, black with salt and pepper
+# thrown in. Fast, agile, responsible for the entire relationship.
 
 const SPEED := 330.0
 const ACCEL := 2400.0
@@ -15,7 +16,11 @@ var squat_t := 0.0
 var squat_ui := 0.0
 var bark_cd := 0.0
 var bark_anim := 0.0
+var peeing := false
 var facing := Vector2.UP
+var hip_dir := Vector2.DOWN
+var gait := 0.0
+var flecks: Array[Vector2] = []
 var main: Node2D
 
 
@@ -32,6 +37,8 @@ func _ready() -> void:
 	sh.radius = 14.0
 	cs.shape = sh
 	add_child(cs)
+	for i in range(14):
+		flecks.append(Vector2.from_angle(randf() * TAU) * randf_range(2.0, 9.5))
 
 
 func tick(delta: float) -> void:
@@ -74,6 +81,14 @@ func tick(delta: float) -> void:
 		if input_active:
 			facing = iv.normalized()
 	move_and_slide()
+	# the hips trail the shoulders: the body hinges mid-turn
+	gait += velocity.length() * delta * 0.055
+	var target_hip := -facing
+	hip_dir = hip_dir.slerp(target_hip, minf(10.0 * delta, 1.0))
+	if hip_dir.length() < 0.1:
+		hip_dir = target_hip
+	else:
+		hip_dir = hip_dir.normalized()
 	if Input.is_action_just_pressed("bark") and bark_cd <= 0.0:
 		bark_cd = 1.2
 		bark_anim = 0.35
@@ -114,26 +129,54 @@ func _process(_delta: float) -> void:
 
 func _draw() -> void:
 	var t := Time.get_ticks_msec() / 1000.0
-	var body := Color(0.55, 0.36, 0.2)
-	var dark := Color(0.42, 0.27, 0.15)
-	var wag := sin(t * 10.0) * 0.6
-	var tail_dir := (-facing).rotated(wag)
-	draw_line(Vector2.ZERO, tail_dir * 22.0, dark, 4.0)
-	draw_circle(Vector2.ZERO, 14.0, body)
-	var head_pos := facing * 12.0
-	draw_circle(head_pos, 9.0, body)
+	var fur := Color(0.14, 0.13, 0.14)
+	var fur_dark := Color(0.08, 0.08, 0.09)
+	var grizzle := Color(0.62, 0.6, 0.58)
+	var crouching := peeing or squat_t > 0.0 or squat_ui > 0.0
 	var side := facing.orthogonal()
-	draw_circle(head_pos + side * 7.0, 4.0, dark)
-	draw_circle(head_pos - side * 7.0, 4.0, dark)
-	draw_circle(head_pos + facing * 7.0, 3.0, Color(0.15, 0.1, 0.08))
-	if planted:
+	var shoulder := facing * 5.0
+	var hip := shoulder + hip_dir * 15.0
+	var hside := hip_dir.orthogonal()
+	# tail continues the hip line; wags slower when concentrating
+	var wag_speed := 3.0 if crouching else 10.0
+	var wag := sin(t * wag_speed) * (0.25 if crouching else 0.6)
+	draw_line(hip, hip + hip_dir.rotated(wag) * (12.0 if crouching else 20.0), fur_dark, 4.0)
+	# four legs, trot gait: diagonal pairs move together, tucked when crouching
+	var amp := 0.0 if crouching else clampf(velocity.length() / SPEED, 0.0, 1.0) * 5.5
+	var ph := sin(gait)
+	var paw := Color(0.1, 0.1, 0.11)
+	draw_circle(shoulder + side * 9.0 + facing * (6.0 + ph * amp), 3.4, paw)
+	draw_circle(shoulder - side * 9.0 + facing * (6.0 - ph * amp), 3.4, paw)
+	var rear_reach := 1.0 if crouching else 4.0
+	draw_circle(hip + hside * 8.0 - hip_dir * (rear_reach - ph * amp * 0.8), 3.6, paw)
+	draw_circle(hip - hside * 8.0 - hip_dir * (rear_reach + ph * amp * 0.8), 3.6, paw)
+	# hinged two-segment torso; the rump drops into a squat when crouching
+	draw_line(shoulder, hip, fur, 18.0)
+	draw_circle(hip, 12.5 if crouching else 11.0, fur)
+	draw_circle(shoulder, 10.0, fur)
+	# salt and pepper
+	for i in range(flecks.size()):
+		var base := hip if i % 2 == 0 else shoulder
+		draw_circle(base + flecks[i], 1.1, Color(grizzle, 0.55))
+	# head with a graying muzzle (Millie is a distinguished lady)
+	var head := shoulder + facing * 11.0
+	draw_circle(head, 8.0, fur)
+	draw_circle(head + side * 6.5, 3.8, fur_dark)
+	draw_circle(head - side * 6.5, 3.8, fur_dark)
+	draw_circle(head + facing * 5.0, 3.6, grizzle)
+	draw_circle(head + facing * 7.0, 2.2, Color(0.05, 0.05, 0.06))
+	if peeing:
+		for i in range(2):
+			var a := t * 5.0 + i * 2.4
+			draw_circle(hip + hip_dir * 10.0 + hside * sin(a) * 3.0, 1.6, Color(0.93, 0.85, 0.4, 0.5))
+	if planted and not crouching:
 		for i in range(4):
-			var a := TAU * i / 4.0 + 0.4
-			var p := Vector2.from_angle(a) * 19.0
-			draw_line(p, p + Vector2.from_angle(a) * 6.0, Color(0.3, 0.25, 0.2), 3.0)
+			var a2 := TAU * i / 4.0 + 0.4
+			var p := Vector2.from_angle(a2) * 19.0
+			draw_line(p, p + Vector2.from_angle(a2) * 6.0, Color(0.3, 0.25, 0.2), 3.0)
 	if bark_anim > 0.0:
 		var r := (0.35 - bark_anim) / 0.35
-		draw_arc(head_pos + facing * 10.0, 10.0 + r * 34.0, 0, TAU, 24, Color(1, 1, 1, 0.7 * (1.0 - r)), 2.0)
+		draw_arc(head + facing * 8.0, 10.0 + r * 34.0, 0, TAU, 24, Color(1, 1, 1, 0.7 * (1.0 - r)), 2.0)
 	if squat_ui > 0.0 or squat_t > 0.0:
 		for i in range(3):
 			draw_circle(Vector2(-8 + i * 8, -26), 2.0, Color(1, 1, 1, 0.7))
