@@ -28,6 +28,8 @@ var whirl_turns := 0.0
 var whirl_unwound := 0.0
 var whirl_pull := 0.0
 var just_flung := false
+var face_dir := Vector2.UP
+var hgait := 0.0
 var strain := false
 var wobble_seed := 0.0
 var main: Node2D
@@ -131,6 +133,18 @@ func tick(delta: float) -> void:
 			_walk(delta)
 	_events(delta)
 	_fiddle_with_reel(delta)
+	# face the direction of travel - except when deliberately walking
+	# backwards (filming, backing up for a selfie)
+	hgait += velocity.length() * delta * 0.06
+	if velocity.length() > 12.0:
+		var ft := velocity.normalized()
+		if state == HState.FILM or state == HState.SELFIE:
+			ft = -ft
+		face_dir = face_dir.slerp(ft, minf(8.0 * delta, 1.0))
+		if face_dir.length() < 0.1:
+			face_dir = ft
+		else:
+			face_dir = face_dir.normalized()
 
 
 func _fiddle_with_reel(delta: float) -> void:
@@ -392,22 +406,34 @@ func _draw() -> void:
 	var skin := Color(0.85, 0.72, 0.58)
 	var pants := Color(0.25, 0.27, 0.32)
 	var t := Time.get_ticks_msec() / 1000.0
+	var fd := face_dir
+	var side := fd.orthogonal()
+	# feet step along the walking direction
 	var stepping := velocity.length() > 5.0
-	var step_a := sin(t * 9.0) * 7.0 if stepping else 0.0
-	draw_circle(Vector2(-7, 12 + step_a), 5.0, pants)
-	draw_circle(Vector2(7, 12 - step_a), 5.0, pants)
-	draw_circle(Vector2.ZERO, 16.0, shirt)
-	draw_line(Vector2(-11, -4), Vector2(-5, -23), skin, 5.0)
-	draw_line(Vector2(11, -4), Vector2(5, -23), skin, 5.0)
-	draw_circle(Vector2(0, -6), 9.0, skin)
-	draw_arc(Vector2(0, -6), 9.0, PI * 1.1, PI * 1.9, 12, Color(0.3, 0.22, 0.15), 5.0)
+	var sa := sin(hgait) * 6.0 if stepping else 0.0
+	draw_circle(side * 7.0 + fd * sa, 5.0, pants)
+	draw_circle(-side * 7.0 - fd * sa, 5.0, pants)
+	# body with a slight walking sway
+	var sway := side * (sin(hgait * 0.5) * 1.2) if stepping else Vector2.ZERO
+	draw_circle(sway, 16.0, shirt)
+	# arms reaching forward to the phone
+	draw_line(side * 10.0, side * 4.0 + fd * 17.0, skin, 5.0)
+	draw_line(-side * 10.0, -side * 4.0 + fd * 17.0, skin, 5.0)
+	# head, hair on the back of it
+	var head := fd * 5.0
+	draw_circle(head, 9.0, skin)
+	var back := (-fd).angle()
+	draw_arc(head, 9.0, back - 0.85, back + 0.85, 12, Color(0.3, 0.22, 0.15), 5.0)
+	# the phone, held out front, eternally glowing
 	var glow := 0.55 + 0.2 * sin(t * 7.3)
-	draw_rect(Rect2(-6, -32, 12, 18), Color(0.1, 0.1, 0.12))
-	draw_rect(Rect2(-4.5, -30, 9, 14), Color(0.7, 0.85, 1.0, glow))
+	draw_set_transform(fd * 24.0, fd.angle() + PI / 2.0, Vector2.ONE)
+	draw_rect(Rect2(-6, -9, 12, 18), Color(0.1, 0.1, 0.12))
+	draw_rect(Rect2(-4.5, -7, 9, 14), Color(0.7, 0.85, 1.0, glow))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	if state == HState.FALLEN:
 		for i in range(3):
 			var a := t * 3.0 + TAU * i / 3.0
-			draw_circle(Vector2(0, -6) + Vector2.from_angle(a) * 22.0, 2.5, Color(1, 0.9, 0.4))
+			draw_circle(head + Vector2.from_angle(a) * 22.0, 2.5, Color(1, 0.9, 0.4))
 	elif state == HState.WHIRL:
 		# speed lines; the node itself is spinning, so they animate freely
 		for j in range(3):

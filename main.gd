@@ -62,6 +62,7 @@ var puddles: Array[Vector2] = []
 var mark_progress := 0.0
 var mark_target := Vector2(INF, INF)
 var stray_t := 0.0
+var mark_quest_done := false
 var poop_state := 0  # 0 not yet, 1 urge, 2 done, 3 forced telegraph, 4 forced squat
 var urge_y := -2000.0
 var urge_timer := 0.0
@@ -115,6 +116,7 @@ func _setup_input() -> void:
 		InputMap.action_add_event(action, ev)
 	var buttons := {
 		"plant": [KEY_SPACE, JOY_BUTTON_A], "bark": [KEY_E, JOY_BUTTON_B],
+		"pee": [KEY_Q, JOY_BUTTON_X], "poop": [KEY_C, JOY_BUTTON_Y],
 		"restart": [KEY_R, JOY_BUTTON_START],
 	}
 	for action in buttons:
@@ -243,7 +245,7 @@ func _build_hud() -> void:
 	hud.add_child(tube)
 	pee_label = _hud_label(Vector2(52, 112), 17)
 	var hint := _hud_label(Vector2(24, 686), 15)
-	hint.text = "WASD / left stick: move    hold SPACE / A: dig in, mark, squat    E / B: bark    R: restart"
+	hint.text = "WASD / stick: move    SPACE / A: dig in    Q / X: pee    C / Y: squat    E / B: bark    R: restart"
 	hint.modulate.a = 0.75
 	var title := _hud_label(Vector2(0, 90), 30)
 	title.size = Vector2(1280, 40)
@@ -281,13 +283,13 @@ func _update_hud() -> void:
 	phone_label.text = "PHONE  " + "#".repeat(phone_hp) + ".".repeat(3 - phone_hp)
 	var streak_txt := "   STREAK x%d" % streak if streak > 1 else ""
 	bones_label.text = "BONES  %d%s" % [bones, streak_txt]
-	var status := ""
+	var status := "MARKS %d/5" % mini(marks.size(), 5)
 	if poop_state == 1:
-		status = "GOTTA GO!  find a spot, hold SPACE"
+		status += "    GOTTA GO!  find a spot, hold C"
 	elif poop_state >= 3:
-		status = "UH OH..."
+		status += "    UH OH..."
 	elif pee >= 0.999:
-		status = "FULL!"
+		status += "    FULL!"
 	pee_label.text = status
 
 
@@ -370,14 +372,21 @@ func _apply_leash(delta: float) -> void:
 	elif dog.input_active:
 		dog_m *= 2.0
 	var human_m := HUMAN_MASS * (2.0 if human.is_fallen() else 1.0)
-	var tension := minf(LEASH_K * excess, 1600.0) * shield
+	var base_tension := minf(LEASH_K * excess, 1600.0)
+	# pulley: with the rope wound and the dog working its end, the pole
+	# redirects and amplifies the pull on the human continuously - not
+	# only during the whirl. Wraps still shield the DOG from raw yanks.
+	var wind_turns := absf(leash.winding())
+	var pulley := 1.0
+	if wind_turns > 0.3 and (dog.input_active or dog.planted):
+		pulley = 1.0 + 0.4 * minf(wind_turns, 3.0)
 	if whirling:
-		# the dog's pulling feeds the whirl's spin-up (pulley)
-		human.whirl_pull = maxf(float(human.whirl_pull), tension)
+		# the dog's pulling feeds the whirl's spin-up
+		human.whirl_pull = maxf(float(human.whirl_pull), base_tension)
 	if not whirling:
-		human.velocity += h_dir * (tension / human_m) * delta
+		human.velocity += h_dir * (base_tension * pulley / human_m) * delta
 	if not dog.planted:
-		dog.velocity += d_dir * (tension / dog_m) * delta
+		dog.velocity += d_dir * (base_tension * shield / dog_m) * delta
 	# damp separating components so neither end bungees
 	var sep_h := human.velocity.dot(-h_dir)
 	if sep_h > 0.0 and not whirling:
@@ -409,7 +418,9 @@ func _apply_leash(delta: float) -> void:
 	var armed := false
 	if not whirling and not human.is_fallen() and excess > 8.0:
 		var end_wind: float = leash.human_end_winding()
-		if absf(leash.winding()) > 0.85 and absf(end_wind) > 2.4:
+		# 0.55 turns covers the 270-degree partial wind that used to jam
+		# awkwardly without ever whirling
+		if absf(leash.winding()) > 0.55 and absf(end_wind) > 2.4:
 			var wp := _nearest_pole_to(human.global_position, 70.0)
 			if wp.x < INF:
 				armed = true
@@ -522,9 +533,10 @@ func _bodily(delta: float) -> void:
 	pee = minf(1.0, pee + 0.008 * delta)
 	dog.bladder_slow = pee >= 0.999
 	tube.level = pee
-	# a casual plant with a slack leash means peeing; bracing against a
-	# taut leash does not (the tank is a per-walk budget, ~9 breaks)
-	var going: bool = dog.planted and not dog.is_tumbling() and not leash.taut and pee > 0.02
+	# peeing has its own button now; a yank that gets you moving
+	# interrupts it (the tank is a per-walk budget, ~9 breaks)
+	var going: bool = Input.is_action_pressed("pee") and pee > 0.02 \
+		and not dog.is_tumbling() and dog.velocity.length() < 30.0
 	dog.peeing = going
 	if going:
 		pee = maxf(0.0, pee - 0.16 * delta)
@@ -541,6 +553,10 @@ func _bodily(delta: float) -> void:
 				float_text(target, "marked! +3", Color(1, 0.95, 0.7))
 				mark_progress = 0.0
 				mark_target = Vector2(INF, INF)
+				if marks.size() >= 5 and not mark_quest_done:
+					mark_quest_done = true
+					bones += 10
+					float_text(dog.global_position, "territory secured +10", Color(0.8, 1.0, 0.8))
 		else:
 			mark_target = Vector2(INF, INF)
 			mark_progress = 0.0
@@ -559,7 +575,7 @@ func _bodily(delta: float) -> void:
 				float_text(dog.global_position, "uh oh...", Color(1, 0.9, 0.6))
 		1:
 			urge_timer -= delta
-			if dog.planted and not dog.is_tumbling():
+			if Input.is_action_pressed("poop") and dog.velocity.length() < 30.0 and not dog.is_tumbling():
 				squat_progress += delta
 				dog.squat_ui = squat_progress / 2.5
 				if squat_progress >= 2.5:
@@ -792,10 +808,14 @@ func _draw() -> void:
 		draw_rect(Rect2(c.position.x, c.position.y, c.size.x, 6), Color(0.35, 0.28, 0.22))
 		draw_line(c.position + Vector2(c.size.x / 2.0, 0), c.position + Vector2(c.size.x / 2.0, c.size.y), Color(0.3, 0.3, 0.33), 2.0)
 	# marked spots, stray puddles and, discreetly, the business
+	var pud := Color(0.93, 0.85, 0.4, 0.4)
 	for mk in marks:
-		draw_circle(mk + Vector2(7, 9), 3.0, Color(0.95, 0.88, 0.5, 0.55))
+		draw_circle(mk + Vector2(6, 10), 6.0, pud)
+		draw_circle(mk + Vector2(11, 13), 3.5, pud)
+		draw_circle(mk + Vector2(7, 9), 3.0, Color(0.95, 0.88, 0.5, 0.7))
 	for pd in puddles:
-		draw_circle(pd, 4.0, Color(0.93, 0.85, 0.4, 0.35))
+		draw_circle(pd, 7.5, pud)
+		draw_circle(pd + Vector2(6, 3), 4.5, pud)
 	if business_spot.x < INF:
 		draw_circle(business_spot, 3.0, Color(0.35, 0.25, 0.15))
 	if mark_target.x < INF and mark_progress > 0.0:

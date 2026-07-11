@@ -65,8 +65,12 @@ func tick(delta: float) -> void:
 	var iv := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	input_active = iv.length() > 0.1
 	planted = Input.is_action_pressed("plant")
+	var answering_nature := Input.is_action_pressed("pee") or Input.is_action_pressed("poop")
 	if planted:
 		velocity = Vector2.ZERO
+	elif answering_nature:
+		# stopping to go; not braced though - a yank interrupts, as in life
+		velocity = velocity.move_toward(Vector2.ZERO, 1400.0 * delta)
 	else:
 		# a taut leash saps the DOG's authority: the heavier human's yanks
 		# actually move you (flag set by main.gd/_apply_leash). Crucially,

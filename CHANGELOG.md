@@ -2,6 +2,23 @@
 
 Append-only session history, newest first.
 
+## 2026-07-12 — dedicated buttons, continuous pulley, the owner faces forward
+
+- Pee (Q / X) and squat (C / Y) are their own buttons; plant is purely
+  for bracing again. Stopping to go is a vulnerability, not a brace: a
+  yank that gets the dog moving interrupts it. Puddles are bigger, marked
+  spots pool properly, and marking 5 spots completes the walk's territory
+  quest (+10, "MARKS x/5" on the HUD).
+- The pulley works along the whole leash now: with the rope wound and the
+  dog working its end, the pull on the human is amplified continuously
+  (up to ~2.2x at 3 wraps), not only during the whirl. Wraps still shield
+  the dog from raw yanks.
+- Whirl trigger lowered to 0.55 turns so a 270-degree partial wind whirls
+  instead of jamming awkwardly against the pole.
+- The owner faces their walking direction (smoothed), with stepping feet,
+  a slight walking sway, arms reaching to the phone held out front - and
+  correctly walks BACKWARDS while filming or backing up for a selfie.
+
 ## 2026-07-11 — whirl v4 (consistency), 5m leash, Millie refined
 
 - Single-wind flings stuck because the 1.25-lap minimum OVER-unwound
