@@ -2,6 +2,24 @@
 
 Append-only session history, newest first.
 
+## 2026-07-11 — whirl v4 (consistency), 5m leash, Millie refined
+
+- Single-wind flings stuck because the 1.25-lap minimum OVER-unwound
+  short winds, re-wrapping the rope the other way and arresting the
+  launch. The orbit now runs exactly the wound amount; launch speed
+  comes from a faster spin-up instead of extra laps. Aim-wait capped at
+  0.6 turn; free-slip extends 1.2s after release so residual wraps can
+  never arrest a fling.
+- Spurious whirls (walking past a pole) fixed: the trigger must hold for
+  0.25s with tighter thresholds, and the unwind direction is averaged
+  over that window. A mid-whirl wrong-way detector flips the spin once
+  if the rope is observed winding tighter.
+- The leash is 5 meters now (340px, reel range 170-430) - room to
+  actually wind up and fling.
+- Millie refined: skinny street-dog frame, long nose, whippy three-
+  segment tail with a traveling wave, grey concentrated on the crown
+  and face instead of scattered over the body.
+
 ## 2026-07-11 — Millie
 
 - The default dog is now Millie: a medium mutt, black coat with salt-

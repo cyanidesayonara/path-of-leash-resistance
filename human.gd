@@ -27,6 +27,7 @@ var whirl_angle := 0.0
 var whirl_turns := 0.0
 var whirl_unwound := 0.0
 var whirl_pull := 0.0
+var just_flung := false
 var strain := false
 var wobble_seed := 0.0
 var main: Node2D
@@ -105,7 +106,7 @@ func tick(delta: float) -> void:
 			# runs for exactly as many turns as the rope was wound (the
 			# rope free-slips along underneath). Pulling harder spins it
 			# up faster - the leash as a pulley.
-			whirl_omega = minf(whirl_omega + (5.0 + whirl_pull * 0.012) * delta, 22.0)
+			whirl_omega = minf(whirl_omega + (8.0 + whirl_pull * 0.016) * delta, 24.0)
 			whirl_pull *= 0.9
 			var step := whirl_dir * whirl_omega * delta
 			whirl_angle += step
@@ -113,14 +114,14 @@ func tick(delta: float) -> void:
 			global_position = whirl_pole + Vector2.from_angle(whirl_angle) * 30.0
 			velocity = Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0) * whirl_omega * 30.0
 			rotation += whirl_dir * whirl_omega * 1.4 * delta
-			# always at least 1.25 dramatic laps so even short winds build
-			# real speed, then wait (up to one extra lap) for the tangent
-			# to sweep toward the dog before letting fly
-			var min_unwind := maxf(whirl_turns, 1.25 * TAU)
-			if whirl_unwound >= min_unwind:
+			# orbit EXACTLY the wound amount (over-orbiting re-wraps the
+			# rope the other way and the fling gets arrested), then hold
+			# briefly - at most 0.6 extra turn - for the tangent to sweep
+			# toward the dog
+			if whirl_unwound >= whirl_turns:
 				var tangent := Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0)
 				var aim: Vector2 = (main.dog.global_position - global_position).normalized()
-				if tangent.dot(aim) > 0.65 or whirl_unwound > min_unwind + TAU:
+				if tangent.dot(aim) > 0.5 or whirl_unwound > whirl_turns + 0.6 * TAU:
 					release_whirl()
 			if state_t <= 0.0:
 				release_whirl()
@@ -144,7 +145,7 @@ func _fiddle_with_reel(delta: float) -> void:
 		reel_timer = 0.5
 		return
 	reel_timer = randf_range(4.0, 8.0)
-	main.set_leash_target(randf_range(130.0, 330.0))
+	main.set_leash_target(randf_range(170.0, 430.0))
 	_show_bubble("click!")
 	var tw := create_tween()
 	tw.tween_interval(0.7)
@@ -282,13 +283,22 @@ func start_whirl(pole: Vector2, dir: float, turns: float) -> void:
 	state_t = 3.5
 	whirl_pole = pole
 	whirl_dir = dir
-	whirl_turns = clampf(turns, 0.5, 4.0) * TAU
+	whirl_turns = clampf(turns, 0.6, 4.0) * TAU
 	whirl_unwound = 0.0
 	whirl_pull = 0.0
 	whirl_angle = (global_position - pole).angle()
-	whirl_omega = clampf(velocity.length() / 30.0, 6.0, 14.0)
+	whirl_omega = clampf(velocity.length() / 30.0, 8.0, 14.0)
 	telegraph_t = 0.0
 	_show_bubble("wheee!")
+
+
+func flip_whirl() -> void:
+	# main.gd noticed the rope winding tighter: the direction guess was
+	# wrong. Reverse, and start the unwind count fresh.
+	if state != HState.WHIRL:
+		return
+	whirl_dir = -whirl_dir
+	whirl_unwound = 0.0
 
 
 func release_whirl() -> void:
@@ -303,8 +313,9 @@ func release_whirl() -> void:
 	state_t = 1.0
 	rotation = 0.0
 	bubble.visible = false
-	var speed := clampf(whirl_omega * 30.0 * 1.8, 340.0, 900.0)
+	var speed := clampf(whirl_omega * 30.0 * 1.8, 360.0, 950.0)
 	velocity = tangent * speed
+	just_flung = true
 	main.float_text(global_position, "AAAA", Color(1, 0.9, 0.6))
 	main.shake_t = maxf(float(main.shake_t), 0.35)
 

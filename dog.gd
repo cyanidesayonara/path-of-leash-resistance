@@ -134,37 +134,46 @@ func _draw() -> void:
 	var grizzle := Color(0.62, 0.6, 0.58)
 	var crouching := peeing or squat_t > 0.0 or squat_ui > 0.0
 	var side := facing.orthogonal()
-	var shoulder := facing * 5.0
-	var hip := shoulder + hip_dir * 15.0
+	var shoulder := facing * 6.0
+	var hip := shoulder + hip_dir * 17.0
 	var hside := hip_dir.orthogonal()
-	# tail continues the hip line; wags slower when concentrating
-	var wag_speed := 3.0 if crouching else 10.0
-	var wag := sin(t * wag_speed) * (0.25 if crouching else 0.6)
-	draw_line(hip, hip + hip_dir.rotated(wag) * (12.0 if crouching else 20.0), fur_dark, 4.0)
+	# whippy tail: three tapering segments with a traveling wave
+	var wag_speed := 3.0 if crouching else 11.0
+	var tp := hip + hip_dir * 4.0
+	var tdir := hip_dir
+	var widths: Array[float] = [3.2, 2.4, 1.7]
+	for s in range(3):
+		tdir = tdir.rotated(sin(t * wag_speed - s * 0.9) * (0.15 if crouching else 0.38))
+		var nxt := tp + tdir * (9.0 - s * 1.5)
+		draw_line(tp, nxt, fur_dark, widths[s])
+		tp = nxt
 	# four legs, trot gait: diagonal pairs move together, tucked when crouching
 	var amp := 0.0 if crouching else clampf(velocity.length() / SPEED, 0.0, 1.0) * 5.5
 	var ph := sin(gait)
 	var paw := Color(0.1, 0.1, 0.11)
-	draw_circle(shoulder + side * 9.0 + facing * (6.0 + ph * amp), 3.4, paw)
-	draw_circle(shoulder - side * 9.0 + facing * (6.0 - ph * amp), 3.4, paw)
+	draw_circle(shoulder + side * 7.5 + facing * (6.0 + ph * amp), 3.0, paw)
+	draw_circle(shoulder - side * 7.5 + facing * (6.0 - ph * amp), 3.0, paw)
 	var rear_reach := 1.0 if crouching else 4.0
-	draw_circle(hip + hside * 8.0 - hip_dir * (rear_reach - ph * amp * 0.8), 3.6, paw)
-	draw_circle(hip - hside * 8.0 - hip_dir * (rear_reach + ph * amp * 0.8), 3.6, paw)
-	# hinged two-segment torso; the rump drops into a squat when crouching
-	draw_line(shoulder, hip, fur, 18.0)
-	draw_circle(hip, 12.5 if crouching else 11.0, fur)
-	draw_circle(shoulder, 10.0, fur)
-	# salt and pepper
-	for i in range(flecks.size()):
+	draw_circle(hip + hside * 7.0 - hip_dir * (rear_reach - ph * amp * 0.8), 3.2, paw)
+	draw_circle(hip - hside * 7.0 - hip_dir * (rear_reach + ph * amp * 0.8), 3.2, paw)
+	# lean street-dog torso, hinged; the rump drops into the squat
+	draw_line(shoulder, hip, fur, 13.0)
+	draw_circle(hip, 10.5 if crouching else 9.0, fur)
+	draw_circle(shoulder, 8.5, fur)
+	# only a few subtle flecks on the body - the grey lives on the head
+	for i in range(6):
 		var base := hip if i % 2 == 0 else shoulder
-		draw_circle(base + flecks[i], 1.1, Color(grizzle, 0.55))
-	# head with a graying muzzle (Millie is a distinguished lady)
-	var head := shoulder + facing * 11.0
-	draw_circle(head, 8.0, fur)
-	draw_circle(head + side * 6.5, 3.8, fur_dark)
-	draw_circle(head - side * 6.5, 3.8, fur_dark)
-	draw_circle(head + facing * 5.0, 3.6, grizzle)
-	draw_circle(head + facing * 7.0, 2.2, Color(0.05, 0.05, 0.06))
+		draw_circle(base + flecks[i], 1.0, Color(grizzle, 0.22))
+	# head with a LONG street-dog nose; grey on the crown and the face
+	var head := shoulder + facing * 10.0
+	draw_circle(head, 7.0, fur)
+	draw_line(head, head + facing * 10.0, fur, 5.5)
+	draw_circle(head + facing * 2.0, 4.0, Color(grizzle, 0.45))
+	draw_line(head + facing * 3.0, head + facing * 9.0, Color(grizzle, 0.5), 3.0)
+	draw_circle(head - facing * 2.5, 3.2, Color(grizzle, 0.3))
+	draw_circle(head + facing * 11.0, 2.4, Color(0.05, 0.05, 0.06))
+	draw_circle(head + side * 5.5 - facing * 2.0, 3.4, fur_dark)
+	draw_circle(head - side * 5.5 - facing * 2.0, 3.4, fur_dark)
 	if peeing:
 		for i in range(2):
 			var a := t * 5.0 + i * 2.4

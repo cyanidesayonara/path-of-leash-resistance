@@ -12,7 +12,7 @@ const BLANE_R := 1036.0
 const SHOULDER_R := 1060.0
 const START_Y := 260.0
 const GATE_Y := -5000.0
-const LEASH_LENGTH := 260.0
+const LEASH_LENGTH := 340.0  # a proper 5-meter leash
 const LEASH_STRETCH_CAP := 1.15
 const LEASH_K := 32.0
 const DOG_MASS := 1.0
@@ -46,6 +46,10 @@ var tables: Array[Vector2] = []
 var deco_pole_count := 0
 var lane_state: Array = []
 var vspawn_t := 2.5
+var whirl_arm := 0.0
+var whirl_wind_acc := 0.0
+var whirl_start_wind := 0.0
+var whirl_flipped := false
 
 var leash_len := LEASH_LENGTH
 var leash_target := LEASH_LENGTH
@@ -337,10 +341,21 @@ func _apply_leash(delta: float) -> void:
 	if whirling:
 		# the choreographed unwind must never be arrested by rope grip
 		leash.free_slip_t = 0.7
+		# wrong-way guard: if the rope is winding TIGHTER, the direction
+		# guess was wrong - flip once
+		if not whirl_flipped and absf(leash.winding()) > whirl_start_wind + 0.35:
+			human.flip_whirl()
+			whirl_flipped = true
+	if human.just_flung:
+		# a fresh fling must never be arrested by a residual wrap
+		human.just_flung = false
+		leash.free_slip_t = 1.2
 	var used: float = leash.used_length()
 	var excess := used - leash_len
 	leash.taut = excess > 0.0
 	if excess <= 0.0:
+		whirl_arm = 0.0
+		whirl_wind_acc = 0.0
 		return
 	var h_dir: Vector2 = leash.human_pull_dir()
 	var d_dir: Vector2 = leash.dog_pull_dir()
@@ -387,16 +402,30 @@ func _apply_leash(delta: float) -> void:
 			human.on_leash_yank(-h_dir, anchored, yank_speed)
 	# cartoon tetherball: a human wound around a nearby pole who keeps
 	# getting pulled starts to WHIRL - an accelerating orbit that unwinds
-	# the rope and flings them when it runs out (Bugs Bunny physics)
+	# the rope and flings them when it runs out (Bugs Bunny physics).
+	# The condition must hold for a quarter second (walking past a pole
+	# briefly curves the rope and must not trigger), and the unwind
+	# direction is averaged over that window instead of one noisy frame.
+	var armed := false
 	if not whirling and not human.is_fallen() and excess > 8.0:
 		var end_wind: float = leash.human_end_winding()
-		if absf(leash.winding()) > 0.7 and absf(end_wind) > 1.6:
+		if absf(leash.winding()) > 0.85 and absf(end_wind) > 2.4:
 			var wp := _nearest_pole_to(human.global_position, 70.0)
 			if wp.x < INF:
-				var spin_dir := -signf(end_wind)
-				if spin_dir == 0.0:
-					spin_dir = 1.0
-				human.start_whirl(wp, spin_dir, absf(leash.winding()))
+				armed = true
+				whirl_arm += delta
+				whirl_wind_acc += end_wind
+				if whirl_arm >= 0.25:
+					var spin_dir := -signf(whirl_wind_acc)
+					if spin_dir == 0.0:
+						spin_dir = 1.0
+					whirl_start_wind = absf(leash.winding())
+					whirl_flipped = false
+					human.start_whirl(wp, spin_dir, whirl_start_wind)
+					armed = false
+	if not armed:
+		whirl_arm = 0.0
+		whirl_wind_acc = 0.0
 
 
 func _lanes(delta: float) -> void:
@@ -599,7 +628,7 @@ func on_bark(pos: Vector2) -> void:
 
 
 func set_leash_target(v: float) -> void:
-	leash_target = clampf(v, 120.0, 330.0)
+	leash_target = clampf(v, 150.0, 440.0)
 
 
 func _nearest_pole_to(pos: Vector2, max_d: float) -> Vector2:
