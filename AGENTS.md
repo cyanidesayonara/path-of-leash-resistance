@@ -70,9 +70,12 @@ touch-grass/
   only; gameplay uses the pivot chain length.
 - **The whirl** (human.gd WHIRL state): when a wound human near a pole
   keeps getting pulled, main.gd starts a choreographed accelerating orbit
-  instead of letting them jam against the pole. The rope honestly unwinds
-  underneath; main.gd releases the fling when |winding| < 0.15 (or 2.5s
-  timeout). Leash forces skip a whirling human. The rope stays honest;
+  instead of letting them jam against the pole. The orbit runs for
+  exactly the wound turn count (leash.free_slip_t is refreshed during
+  the whirl so rope grip can never arrest the unwind), spin-up scales
+  with pull tension (pulley), and release waits for the tangent to aim
+  at the dog - flings land toward/past the dog so the bungee yank-back
+  happens. Leash forces skip a whirling human. The rope stays honest;
   the human's response is the cartoon - keep it that way.
 - **Human events** are telegraphed with a speech bubble 0.8s before firing.
   Never add an untelegraphed hazard to the human - predictable-but-dumb is

@@ -24,6 +24,9 @@ var poles: Array[Vector2] = []
 var rest_len := 260.0
 var taut := false
 var contacts := 0
+# while > 0 the rope slides freely on poles (no stick): set during a whirl
+# so the choreographed unwind can never be arrested by rope grip
+var free_slip_t := 0.0
 
 
 func setup(d: Node2D, h: Node2D, pole_list: Array[Vector2], max_len: float) -> void:
@@ -41,13 +44,16 @@ func _hand_pos() -> Vector2:
 	return human.global_position + Vector2(9, -16).rotated(human.rotation)
 
 
-func tick(_delta: float) -> void:
+func tick(delta: float) -> void:
 	var seg := rest_len / (N - 1)
+	free_slip_t = maxf(0.0, free_slip_t - delta)
 	# stick-slip: grip the pole at low tension (coils hold, winding
 	# accumulates), slide freely when overstretched (rope slips off
 	# instead of sticking to the pole forever)
 	var stretch_ratio := used_length() / maxf(rest_len, 1.0)
 	var slip := clampf(0.15 + (stretch_ratio - 1.0) * 0.8, 0.15, 1.0)
+	if free_slip_t > 0.0:
+		slip = 1.0
 	for i in range(1, N - 1):
 		var vel := (pts[i] - prev[i]) * 0.94
 		prev[i] = pts[i]

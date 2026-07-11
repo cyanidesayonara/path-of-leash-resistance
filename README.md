@@ -30,9 +30,15 @@ Playtest builds ship to a private itch.io page.
   like - the coil cinches when taut, the pull curves around the pole
   (tetherball!), and a hard enough wrench slips the whole coil off.
 - The fling: wind the human around a pole and keep pulling. Instead of
-  jamming against it they WHIRL - orbiting faster and faster as the rope
-  unwinds - and launch along the tangent when it runs out. Aim it.
-  Winding the human up or flinging them across danger is a core move.
+  jamming against it they WHIRL - orbiting faster the harder you pull
+  (the leash is a pulley) - and launch TOWARD you when the rope runs
+  out. A fast fling sails past you, and then it is your turn to be
+  yanked along: the bungee. Winding the human up or flinging them
+  across danger is a core move.
+- Dog business is dog business: hold plant beside a hydrant or pole to
+  mark it (watch the PEE meter), and once per walk nature calls -
+  find a safe moment to squat, or the dog will pick the moment for you.
+- Open holes swallow dogs too. Watch your own paws.
 - The human owns the retractable leash. "click!" means they just changed
   its length on a whim — sometimes reeling you in against your will.
 - The human telegraphs every event with a speech bubble: "ring ring" stops,

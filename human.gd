@@ -24,6 +24,9 @@ var whirl_pole := Vector2.ZERO
 var whirl_dir := 1.0
 var whirl_omega := 0.0
 var whirl_angle := 0.0
+var whirl_turns := 0.0
+var whirl_unwound := 0.0
+var whirl_pull := 0.0
 var strain := false
 var wobble_seed := 0.0
 var main: Node2D
@@ -98,14 +101,25 @@ func tick(delta: float) -> void:
 				state = HState.WALK
 				bubble.visible = false
 		HState.WHIRL:
-			# cartoon tetherball: choreographed accelerating orbit around
-			# the pole. The rope honestly unwinds as they go; main.gd calls
-			# release_whirl() when it runs out (or on timeout here).
-			whirl_omega = minf(whirl_omega + 9.0 * delta, 17.0)
-			whirl_angle += whirl_dir * whirl_omega * delta
+			# cartoon tetherball: choreographed accelerating orbit that
+			# runs for exactly as many turns as the rope was wound (the
+			# rope free-slips along underneath). Pulling harder spins it
+			# up faster - the leash as a pulley.
+			whirl_omega = minf(whirl_omega + (5.0 + whirl_pull * 0.012) * delta, 22.0)
+			whirl_pull *= 0.9
+			var step := whirl_dir * whirl_omega * delta
+			whirl_angle += step
+			whirl_unwound += absf(step)
 			global_position = whirl_pole + Vector2.from_angle(whirl_angle) * 30.0
 			velocity = Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0) * whirl_omega * 30.0
 			rotation += whirl_dir * whirl_omega * 1.4 * delta
+			if whirl_unwound >= whirl_turns:
+				# release aimed at the dog: hold on (up to one extra lap)
+				# until the tangent swings toward them, then let fly
+				var tangent := Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0)
+				var aim: Vector2 = (main.dog.global_position - global_position).normalized()
+				if tangent.dot(aim) > 0.75 or whirl_unwound > whirl_turns + TAU:
+					release_whirl()
 			if state_t <= 0.0:
 				release_whirl()
 		_:
@@ -259,15 +273,18 @@ func is_whirling() -> bool:
 	return state == HState.WHIRL
 
 
-func start_whirl(pole: Vector2, dir: float) -> void:
+func start_whirl(pole: Vector2, dir: float, turns: float) -> void:
 	if state == HState.WHIRL or state == HState.FALLEN:
 		return
 	state = HState.WHIRL
-	state_t = 2.5
+	state_t = 3.5
 	whirl_pole = pole
 	whirl_dir = dir
+	whirl_turns = clampf(turns, 0.5, 4.0) * TAU
+	whirl_unwound = 0.0
+	whirl_pull = 0.0
 	whirl_angle = (global_position - pole).angle()
-	whirl_omega = clampf(velocity.length() / 30.0, 5.0, 12.0)
+	whirl_omega = clampf(velocity.length() / 30.0, 6.0, 14.0)
 	telegraph_t = 0.0
 	_show_bubble("wheee!")
 
@@ -275,13 +292,28 @@ func start_whirl(pole: Vector2, dir: float) -> void:
 func release_whirl() -> void:
 	if state != HState.WHIRL:
 		return
+	# fling toward the pulling dog - fast enough and they sail PAST the
+	# dog, whose turn it then is to get yanked along (the bungee)
+	var tangent := Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0)
+	var to_dog: Vector2 = main.dog.global_position - global_position
+	var aim := to_dog.normalized() if to_dog.length() > 1.0 else tangent
 	state = HState.STUMBLE
-	state_t = 0.7
+	state_t = 1.0
 	rotation = 0.0
 	bubble.visible = false
-	var speed := minf(whirl_omega * 30.0 * 1.35, 620.0)
-	velocity = Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0) * speed
+	var speed := clampf(whirl_omega * 30.0 * 1.8, 320.0, 900.0)
+	velocity = (tangent * 0.35 + aim * 0.65).normalized() * speed
 	main.float_text(global_position, "AAAA", Color(1, 0.9, 0.6))
+	main.shake_t = maxf(float(main.shake_t), 0.35)
+
+
+func gross_out() -> void:
+	# reaction to the dog answering nature's call: stops to bag it
+	if state in [HState.FALLEN, HState.WHIRL]:
+		return
+	state = HState.STOPPED
+	state_t = 3.0
+	_show_bubble("gotta bag it...")
 
 
 func notify_strain() -> void:

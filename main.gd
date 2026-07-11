@@ -46,6 +46,15 @@ var leash_target := LEASH_LENGTH
 var bones := 0
 var streak := 0
 var phone_hp := 3
+var pee := 1.0
+var marks: Array[Vector2] = []
+var mark_progress := 0.0
+var mark_target := Vector2(INF, INF)
+var poop_state := 0  # 0 not yet, 1 urge, 2 done, 3 forced telegraph, 4 forced squat
+var urge_y := -2000.0
+var urge_timer := 0.0
+var squat_progress := 0.0
+var business_spot := Vector2(INF, INF)
 var elapsed := 0.0
 var frozen := false
 var shake_t := 0.0
@@ -53,6 +62,7 @@ var shake_t := 0.0
 var hud: CanvasLayer
 var phone_label: Label
 var bones_label: Label
+var pee_label: Label
 var msg_label: Label
 var dim: ColorRect
 var font: Font
@@ -124,6 +134,7 @@ func _build_level_data() -> void:
 		poles.append(tb)
 	benches = [Vector2(376, -1300), Vector2(904, -2450), Vector2(376, -3850)]
 	cellars = [Rect2(340, -2750, 62, 88), Rect2(878, -750, 62, 82), Rect2(340, -4550, 62, 88)]
+	urge_y = randf_range(-3200.0, -1500.0)
 	manholes = [
 		Vector2(560, -700), Vector2(760, -950), Vector2(480, -1700),
 		Vector2(700, -2100), Vector2(600, -3100), Vector2(820, -3450),
@@ -211,8 +222,9 @@ func _build_hud() -> void:
 	add_child(hud)
 	phone_label = _hud_label(Vector2(24, 16), 22)
 	bones_label = _hud_label(Vector2(24, 46), 22)
+	pee_label = _hud_label(Vector2(24, 76), 22)
 	var hint := _hud_label(Vector2(24, 686), 15)
-	hint.text = "WASD / left stick: move    hold SPACE / A: dig in    E / B: bark    R: restart"
+	hint.text = "WASD / left stick: move    hold SPACE / A: dig in, mark, squat    E / B: bark    R: restart"
 	hint.modulate.a = 0.75
 	var title := _hud_label(Vector2(0, 90), 30)
 	title.size = Vector2(1280, 40)
@@ -250,6 +262,13 @@ func _update_hud() -> void:
 	phone_label.text = "PHONE  " + "#".repeat(phone_hp) + ".".repeat(3 - phone_hp)
 	var streak_txt := "   STREAK x%d" % streak if streak > 1 else ""
 	bones_label.text = "BONES  %d%s" % [bones, streak_txt]
+	var pips := clampi(int(ceil(pee * 5.0)), 0, 5)
+	var pee_txt := "PEE    " + "#".repeat(pips) + ".".repeat(5 - pips)
+	if poop_state == 1:
+		pee_txt += "    GOTTA GO! find a spot, hold SPACE"
+	elif poop_state >= 3:
+		pee_txt += "    UH OH..."
+	pee_label.text = pee_txt
 
 
 func _physics_process(delta: float) -> void:
@@ -266,6 +285,7 @@ func _physics_process(delta: float) -> void:
 	_lanes(delta)
 	_hazards(delta)
 	_pickups(delta)
+	_bodily(delta)
 	_check_win()
 	shake_t = maxf(0.0, shake_t - delta * 2.5)
 
@@ -299,6 +319,9 @@ func _apply_leash(delta: float) -> void:
 	if human.is_whirling() and absf(leash.winding()) < 0.15:
 		human.release_whirl()
 	var whirling: bool = human.is_whirling()
+	if whirling:
+		# the choreographed unwind must never be arrested by rope grip
+		leash.free_slip_t = 0.7
 	var used: float = leash.used_length()
 	var excess := used - leash_len
 	leash.taut = excess > 0.0
@@ -318,6 +341,9 @@ func _apply_leash(delta: float) -> void:
 		dog_m *= 2.0
 	var human_m := HUMAN_MASS * (2.0 if human.is_fallen() else 1.0)
 	var tension := minf(LEASH_K * excess, 1600.0) * shield
+	if whirling:
+		# the dog's pulling feeds the whirl's spin-up (pulley)
+		human.whirl_pull = maxf(float(human.whirl_pull), tension)
 	if not whirling:
 		human.velocity += h_dir * (tension / human_m) * delta
 	if not dog.planted:
@@ -355,7 +381,7 @@ func _apply_leash(delta: float) -> void:
 				var spin_dir := -signf(end_wind)
 				if spin_dir == 0.0:
 					spin_dir = 1.0
-				human.start_whirl(wp, spin_dir)
+				human.start_whirl(wp, spin_dir, absf(leash.winding()))
 
 
 func _lanes(delta: float) -> void:
@@ -388,9 +414,13 @@ func _hazards(_delta: float) -> void:
 	for m in manholes:
 		if human.global_position.distance_to(m) < 26.0:
 			human.fall("manhole")
+		if dog.hole_cd <= 0.0 and dog.global_position.distance_to(m) < 20.0:
+			dog.fall_in(m)
 	for c in cellars:
 		if c.has_point(human.global_position):
 			human.fall("cellar")
+		if dog.hole_cd <= 0.0 and c.has_point(dog.global_position):
+			dog.fall_in(c.get_center())
 
 
 func _pickups(delta: float) -> void:
@@ -410,6 +440,89 @@ func _pickups(delta: float) -> void:
 			bones += 1
 			float_text(k.pos, "snack +1", Color(1, 0.95, 0.7))
 			_update_hud()
+
+
+func _bodily(delta: float) -> void:
+	# the life of a dog: marking spots costs pee, and once per walk
+	# nature calls and you must find a moment to squat
+	pee = minf(1.0, pee + 0.02 * delta)
+	var target := _nearest_markable(dog.global_position)
+	if dog.planted and target.x < INF and pee >= 0.33 and not dog.is_tumbling():
+		if target != mark_target:
+			mark_target = target
+			mark_progress = 0.0
+		mark_progress += delta
+		if mark_progress >= 0.7:
+			pee -= 0.33
+			bones += 3
+			marks.append(target)
+			float_text(target, "marked! +3", Color(1, 0.95, 0.7))
+			mark_progress = 0.0
+			mark_target = Vector2(INF, INF)
+	else:
+		mark_progress = 0.0
+		mark_target = Vector2(INF, INF)
+	match poop_state:
+		0:
+			if dog.global_position.y < urge_y:
+				poop_state = 1
+				urge_timer = 35.0
+				float_text(dog.global_position, "uh oh...", Color(1, 0.9, 0.6))
+		1:
+			urge_timer -= delta
+			if dog.planted and not dog.is_tumbling():
+				squat_progress += delta
+				dog.squat_ui = squat_progress / 2.5
+				if squat_progress >= 2.5:
+					_finish_business(true)
+			else:
+				squat_progress = maxf(0.0, squat_progress - delta * 2.0)
+				dog.squat_ui = squat_progress / 2.5
+			if poop_state == 1 and urge_timer <= 0.0:
+				poop_state = 3
+				urge_timer = 1.2
+				float_text(dog.global_position, "UH OH", Color(1, 0.6, 0.5))
+		3:
+			urge_timer -= delta
+			if urge_timer <= 0.0:
+				poop_state = 4
+				dog.forced_squat(2.5)
+		4:
+			if dog.squat_t <= 0.0:
+				_finish_business(false)
+	_update_hud()
+
+
+func _finish_business(voluntary: bool) -> void:
+	poop_state = 2
+	dog.squat_ui = 0.0
+	squat_progress = 0.0
+	business_spot = dog.global_position + Vector2(0, 8)
+	if voluntary:
+		bones += 5
+		float_text(dog.global_position, "relief +5", Color(0.8, 1.0, 0.8))
+	else:
+		float_text(dog.global_position, "couldn't wait", Color(1, 0.8, 0.6))
+	human.gross_out()
+
+
+func _nearest_markable(pos: Vector2) -> Vector2:
+	var best := Vector2(INF, INF)
+	var best_d := 42.0
+	for h in hydrants:
+		var hp: Vector2 = h.pos
+		if not marks.has(hp):
+			var d := pos.distance_to(hp)
+			if d < best_d:
+				best_d = d
+				best = hp
+	for p in poles:
+		if not marks.has(p):
+			var d := pos.distance_to(p)
+			if d < best_d:
+				best_d = d
+				best = p
+	return best
 
 
 func _check_win() -> void:
@@ -572,6 +685,11 @@ func _draw() -> void:
 		draw_rect(c, Color(0.1, 0.1, 0.12))
 		draw_rect(Rect2(c.position.x, c.position.y, c.size.x, 6), Color(0.35, 0.28, 0.22))
 		draw_line(c.position + Vector2(c.size.x / 2.0, 0), c.position + Vector2(c.size.x / 2.0, c.size.y), Color(0.3, 0.3, 0.33), 2.0)
+	# marked spots and, discreetly, the business
+	for mk in marks:
+		draw_circle(mk + Vector2(7, 9), 3.0, Color(0.95, 0.88, 0.5, 0.55))
+	if business_spot.x < INF:
+		draw_circle(business_spot, 3.0, Color(0.35, 0.25, 0.15))
 	# park gate
 	draw_rect(Rect2(SIDEWALK_LEFT - 14, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
 	draw_rect(Rect2(SIDEWALK_RIGHT, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))

@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-07-11 — whirl v2 (pulley + bungee), dog holes, the life of a dog
+
+- Whirl reworked per playtest: it releases reliably now. The orbit runs
+  for exactly as many turns as the rope was wound (the rope free-slips
+  underneath so grip can never arrest the unwind - the old bug where the
+  first whirl left the human half-wound and un-flung). Pulling harder
+  spins it up faster (leash as pulley). Release waits for the tangent to
+  swing toward the dog, then launches at them, floor 320 px/s, up to
+  900 - fast flings sail PAST the dog, whose turn it is to get yanked
+  along (the bungee). Screen shake on release.
+- Dogs are not exempt from open holes: manholes and cellar doors now
+  swallow the dog too (tumble in place, scramble out, brief immunity).
+- Bodily functions as mechanics, kept family friendly: PEE meter on the
+  HUD - hold plant beside an unmarked hydrant or pole to mark it (+3
+  bones, costs a third of the tank, slowly refills). Once per walk the
+  urge strikes ("GOTTA GO!"): find a safe moment and hold plant 2.5s to
+  squat (+5 bones, the human stops to bag it); ignore it for 35s and the
+  dog decides for you at whatever moment fate picks.
+
 ## 2026-07-11 — the whirl (Bugs Bunny physics)
 
 - A human wound around a nearby pole who keeps getting pulled no longer

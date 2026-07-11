@@ -9,6 +9,9 @@ var planted := false
 var input_active := false
 var dragged := false
 var tumble_t := 0.0
+var hole_cd := 0.0
+var squat_t := 0.0
+var squat_ui := 0.0
 var bark_cd := 0.0
 var bark_anim := 0.0
 var facing := Vector2.UP
@@ -33,6 +36,14 @@ func _ready() -> void:
 func tick(delta: float) -> void:
 	bark_cd = maxf(0.0, bark_cd - delta)
 	bark_anim = maxf(0.0, bark_anim - delta)
+	hole_cd = maxf(0.0, hole_cd - delta)
+	if squat_t > 0.0:
+		# answering nature's call: immobile and braced, come what may
+		squat_t -= delta
+		planted = true
+		input_active = false
+		velocity = Vector2.ZERO
+		return
 	if tumble_t > 0.0:
 		tumble_t -= delta
 		planted = false
@@ -74,6 +85,26 @@ func hit_by_bike(dir: int) -> void:
 	main.float_text(global_position, "yipe!", Color(1, 0.8, 0.6))
 
 
+func fall_in(center: Vector2) -> void:
+	# open holes are open holes, dogs included
+	if tumble_t > 0.0 or hole_cd > 0.0:
+		return
+	tumble_t = 1.1
+	hole_cd = 2.6
+	global_position = center
+	velocity = Vector2.ZERO
+	main.float_text(center, "oof", Color(1, 0.85, 0.6))
+
+
+func forced_squat(duration: float) -> void:
+	squat_t = duration
+	velocity = Vector2.ZERO
+
+
+func is_tumbling() -> bool:
+	return tumble_t > 0.0
+
+
 func _process(_delta: float) -> void:
 	queue_redraw()
 
@@ -100,3 +131,8 @@ func _draw() -> void:
 	if bark_anim > 0.0:
 		var r := (0.35 - bark_anim) / 0.35
 		draw_arc(head_pos + facing * 10.0, 10.0 + r * 34.0, 0, TAU, 24, Color(1, 1, 1, 0.7 * (1.0 - r)), 2.0)
+	if squat_ui > 0.0 or squat_t > 0.0:
+		for i in range(3):
+			draw_circle(Vector2(-8 + i * 8, -26), 2.0, Color(1, 1, 1, 0.7))
+		if squat_ui > 0.0:
+			draw_arc(Vector2.ZERO, 20.0, -PI / 2.0, -PI / 2.0 + TAU * clampf(squat_ui, 0.0, 1.0), 20, Color(1, 0.95, 0.7), 3.0)
