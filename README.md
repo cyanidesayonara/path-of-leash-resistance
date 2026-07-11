@@ -35,9 +35,11 @@ Playtest builds ship to a private itch.io page.
   out. A fast fling sails past you, and then it is your turn to be
   yanked along: the bungee. Winding the human up or flinging them
   across danger is a core move.
-- Dog business is dog business: hold plant beside a hydrant or pole to
-  mark it (watch the PEE meter), and once per walk nature calls -
-  find a safe moment to squat, or the dog will pick the moment for you.
+- Dog business is dog business: plant with a slack leash to pee anywhere
+  - marking hydrants and poles scores, stray breaks just leave a puddle.
+  The test tube lasts about nine breaks, and a full bladder slows you
+  down. Once per walk nature calls for a longer stop - find a safe
+  moment to squat, or the dog will pick the moment for you.
 - Open holes swallow dogs too. Watch your own paws.
 - The human owns the retractable leash. "click!" means they just changed
   its length on a whim — sometimes reeling you in against your will.

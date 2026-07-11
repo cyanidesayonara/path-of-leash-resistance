@@ -2,6 +2,21 @@
 
 Append-only session history, newest first.
 
+## 2026-07-11 — whirl v3 (pure tangent), pee anywhere, the test tube
+
+- Fixed the stuck-behind-the-pole fling: launching "toward the dog" often
+  meant launching through the pole (the dog is usually on its far side).
+  Release is now along the PURE tangent, which geometrically cannot hit
+  the pole; aiming comes entirely from release timing (the orbit holds
+  until the tangent sweeps toward the dog). Minimum 1.25 laps so even
+  single-wind whirls build speed. Removed the early-release path that
+  produced randomly aimed flings.
+- Pee rework: pee anywhere by planting with a slack leash (bracing a taut
+  leash is not peeing). Spots (hydrants/poles) score +3 via the same pie
+  timer as sniffing; stray breaks just leave a puddle. The tank lasts
+  ~9 breaks and refills very slowly; a FULL bladder makes the dog waddle
+  12% slower - empty it. New test-tube meter widget (pee_tube.gd).
+
 ## 2026-07-11 — whirl v2 (pulley + bungee), dog holes, the life of a dog
 
 - Whirl reworked per playtest: it releases reliably now. The orbit runs

@@ -48,8 +48,10 @@ var streak := 0
 var phone_hp := 3
 var pee := 1.0
 var marks: Array[Vector2] = []
+var puddles: Array[Vector2] = []
 var mark_progress := 0.0
 var mark_target := Vector2(INF, INF)
+var stray_t := 0.0
 var poop_state := 0  # 0 not yet, 1 urge, 2 done, 3 forced telegraph, 4 forced squat
 var urge_y := -2000.0
 var urge_timer := 0.0
@@ -63,6 +65,7 @@ var hud: CanvasLayer
 var phone_label: Label
 var bones_label: Label
 var pee_label: Label
+var tube: Control
 var msg_label: Label
 var dim: ColorRect
 var font: Font
@@ -222,7 +225,12 @@ func _build_hud() -> void:
 	add_child(hud)
 	phone_label = _hud_label(Vector2(24, 16), 22)
 	bones_label = _hud_label(Vector2(24, 46), 22)
-	pee_label = _hud_label(Vector2(24, 76), 22)
+	tube = Control.new()
+	tube.set_script(load("res://pee_tube.gd"))
+	tube.position = Vector2(26, 82)
+	tube.size = Vector2(16, 84)
+	hud.add_child(tube)
+	pee_label = _hud_label(Vector2(52, 112), 17)
 	var hint := _hud_label(Vector2(24, 686), 15)
 	hint.text = "WASD / left stick: move    hold SPACE / A: dig in, mark, squat    E / B: bark    R: restart"
 	hint.modulate.a = 0.75
@@ -262,13 +270,14 @@ func _update_hud() -> void:
 	phone_label.text = "PHONE  " + "#".repeat(phone_hp) + ".".repeat(3 - phone_hp)
 	var streak_txt := "   STREAK x%d" % streak if streak > 1 else ""
 	bones_label.text = "BONES  %d%s" % [bones, streak_txt]
-	var pips := clampi(int(ceil(pee * 5.0)), 0, 5)
-	var pee_txt := "PEE    " + "#".repeat(pips) + ".".repeat(5 - pips)
+	var status := ""
 	if poop_state == 1:
-		pee_txt += "    GOTTA GO! find a spot, hold SPACE"
+		status = "GOTTA GO!  find a spot, hold SPACE"
 	elif poop_state >= 3:
-		pee_txt += "    UH OH..."
-	pee_label.text = pee_txt
+		status = "UH OH..."
+	elif pee >= 0.999:
+		status = "FULL!"
+	pee_label.text = status
 
 
 func _physics_process(delta: float) -> void:
@@ -314,10 +323,8 @@ func _apply_leash(delta: float) -> void:
 	human.strain = false
 	dog.dragged = false
 	leash.tick(delta)
-	# a whirling human is released the moment the rope has unwound,
-	# tension or not - that is the fling
-	if human.is_whirling() and absf(leash.winding()) < 0.15:
-		human.release_whirl()
+	# the whirl manages its own release (aimed at the dog); no early exit,
+	# or the launch direction would be random
 	var whirling: bool = human.is_whirling()
 	if whirling:
 		# the choreographed unwind must never be arrested by rope grip
@@ -443,23 +450,37 @@ func _pickups(delta: float) -> void:
 
 
 func _bodily(delta: float) -> void:
-	# the life of a dog: marking spots costs pee, and once per walk
-	# nature calls and you must find a moment to squat
-	pee = minf(1.0, pee + 0.02 * delta)
-	var target := _nearest_markable(dog.global_position)
-	if dog.planted and target.x < INF and pee >= 0.33 and not dog.is_tumbling():
-		if target != mark_target:
-			mark_target = target
-			mark_progress = 0.0
-		mark_progress += delta
-		if mark_progress >= 0.7:
-			pee -= 0.33
-			bones += 3
-			marks.append(target)
-			float_text(target, "marked! +3", Color(1, 0.95, 0.7))
-			mark_progress = 0.0
+	# the life of a dog: pee anywhere the leash allows (spots score),
+	# and once per walk nature calls for a longer stop
+	pee = minf(1.0, pee + 0.008 * delta)
+	dog.bladder_slow = pee >= 0.999
+	tube.level = pee
+	# a casual plant with a slack leash means peeing; bracing against a
+	# taut leash does not (the tank is a per-walk budget, ~9 breaks)
+	var going: bool = dog.planted and not dog.is_tumbling() and not leash.taut and pee > 0.02
+	if going:
+		pee = maxf(0.0, pee - 0.16 * delta)
+		var target := _nearest_markable(dog.global_position)
+		if target.x < INF:
+			if target != mark_target:
+				mark_target = target
+				mark_progress = 0.0
+			mark_progress += delta
+			stray_t = 0.0
+			if mark_progress >= 0.7:
+				bones += 3
+				marks.append(target)
+				float_text(target, "marked! +3", Color(1, 0.95, 0.7))
+				mark_progress = 0.0
+				mark_target = Vector2(INF, INF)
+		else:
 			mark_target = Vector2(INF, INF)
+			mark_progress = 0.0
+			stray_t += delta
 	else:
+		if stray_t >= 0.4:
+			puddles.append(dog.global_position + Vector2(4, 8))
+		stray_t = 0.0
 		mark_progress = 0.0
 		mark_target = Vector2(INF, INF)
 	match poop_state:
@@ -685,11 +706,15 @@ func _draw() -> void:
 		draw_rect(c, Color(0.1, 0.1, 0.12))
 		draw_rect(Rect2(c.position.x, c.position.y, c.size.x, 6), Color(0.35, 0.28, 0.22))
 		draw_line(c.position + Vector2(c.size.x / 2.0, 0), c.position + Vector2(c.size.x / 2.0, c.size.y), Color(0.3, 0.3, 0.33), 2.0)
-	# marked spots and, discreetly, the business
+	# marked spots, stray puddles and, discreetly, the business
 	for mk in marks:
 		draw_circle(mk + Vector2(7, 9), 3.0, Color(0.95, 0.88, 0.5, 0.55))
+	for pd in puddles:
+		draw_circle(pd, 4.0, Color(0.93, 0.85, 0.4, 0.35))
 	if business_spot.x < INF:
 		draw_circle(business_spot, 3.0, Color(0.35, 0.25, 0.15))
+	if mark_target.x < INF and mark_progress > 0.0:
+		draw_arc(mark_target, 17.0, -PI / 2.0, -PI / 2.0 + TAU * mark_progress / 0.7, 20, Color(1, 0.95, 0.6), 3.0)
 	# park gate
 	draw_rect(Rect2(SIDEWALK_LEFT - 14, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
 	draw_rect(Rect2(SIDEWALK_RIGHT, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))

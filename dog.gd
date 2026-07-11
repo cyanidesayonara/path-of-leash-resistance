@@ -8,6 +8,7 @@ const ACCEL := 2400.0
 var planted := false
 var input_active := false
 var dragged := false
+var bladder_slow := false
 var tumble_t := 0.0
 var hole_cd := 0.0
 var squat_t := 0.0
@@ -67,7 +68,9 @@ func tick(delta: float) -> void:
 		var accel := ACCEL
 		if dragged:
 			accel = 1000.0 if input_active else 250.0
-		velocity = velocity.move_toward(iv * SPEED, accel * delta)
+		# a full bladder waddles
+		var top := SPEED * (0.88 if bladder_slow else 1.0)
+		velocity = velocity.move_toward(iv * top, accel * delta)
 		if input_active:
 			facing = iv.normalized()
 	move_and_slide()

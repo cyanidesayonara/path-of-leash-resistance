@@ -113,12 +113,14 @@ func tick(delta: float) -> void:
 			global_position = whirl_pole + Vector2.from_angle(whirl_angle) * 30.0
 			velocity = Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0) * whirl_omega * 30.0
 			rotation += whirl_dir * whirl_omega * 1.4 * delta
-			if whirl_unwound >= whirl_turns:
-				# release aimed at the dog: hold on (up to one extra lap)
-				# until the tangent swings toward them, then let fly
+			# always at least 1.25 dramatic laps so even short winds build
+			# real speed, then wait (up to one extra lap) for the tangent
+			# to sweep toward the dog before letting fly
+			var min_unwind := maxf(whirl_turns, 1.25 * TAU)
+			if whirl_unwound >= min_unwind:
 				var tangent := Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0)
 				var aim: Vector2 = (main.dog.global_position - global_position).normalized()
-				if tangent.dot(aim) > 0.75 or whirl_unwound > whirl_turns + TAU:
+				if tangent.dot(aim) > 0.65 or whirl_unwound > min_unwind + TAU:
 					release_whirl()
 			if state_t <= 0.0:
 				release_whirl()
@@ -292,17 +294,17 @@ func start_whirl(pole: Vector2, dir: float, turns: float) -> void:
 func release_whirl() -> void:
 	if state != HState.WHIRL:
 		return
-	# fling toward the pulling dog - fast enough and they sail PAST the
-	# dog, whose turn it then is to get yanked along (the bungee)
+	# launch along the PURE tangent: a tangent ray always moves away from
+	# the pole, so getting stuck on it is geometrically impossible. The
+	# "toward the dog" part comes from release timing. Fast flings sail
+	# PAST the dog, whose turn it then is to get yanked along (the bungee).
 	var tangent := Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0)
-	var to_dog: Vector2 = main.dog.global_position - global_position
-	var aim := to_dog.normalized() if to_dog.length() > 1.0 else tangent
 	state = HState.STUMBLE
 	state_t = 1.0
 	rotation = 0.0
 	bubble.visible = false
-	var speed := clampf(whirl_omega * 30.0 * 1.8, 320.0, 900.0)
-	velocity = (tangent * 0.35 + aim * 0.65).normalized() * speed
+	var speed := clampf(whirl_omega * 30.0 * 1.8, 340.0, 900.0)
+	velocity = tangent * speed
 	main.float_text(global_position, "AAAA", Color(1, 0.9, 0.6))
 	main.shake_t = maxf(float(main.shake_t), 0.35)
 
