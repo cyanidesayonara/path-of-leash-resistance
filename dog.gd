@@ -65,7 +65,7 @@ func tick(delta: float) -> void:
 	var iv := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	input_active = iv.length() > 0.1
 	planted = Input.is_action_pressed("plant")
-	var answering_nature := Input.is_action_pressed("pee") or Input.is_action_pressed("poop")
+	var answering_nature := Input.is_action_pressed("pee")
 	if planted:
 		velocity = Vector2.ZERO
 	elif answering_nature:

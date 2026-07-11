@@ -2,6 +2,31 @@
 
 Append-only session history, newest first.
 
+## 2026-07-12 — game flow: title, results, rating
+
+- Title screen ("press SPACE / A to go walkies") holds the world until
+  the player starts; headless CI runs auto-start.
+- The walk ends with a results screen: quest checklist (phone without a
+  scratch, territory secured, business bagged), bones, time, and a
+  rating of one to three GOOD DOGs. First step of turning the demo into
+  a full game loop per the gamification direction.
+
+## 2026-07-12 — the chore chain, button consolidation
+
+- Bagging is a real quest beat now: after the dog goes, the owner's
+  autopilot is hijacked - they walk to the spot ("ugh, hold on"), bend
+  down and bag it (2s, visible bag animation), then carry the bag to the
+  nearest trash bin ("where's a bin...") and deposit it (+2 responsible
+  bones). Falls, whirls and dog sabotage interrupt the chain; they
+  resume when back on their feet. Six trash bins line the route - they
+  block bodies, snag the leash, and can be marked, obviously.
+- Buttons consolidated for a normal Xbox pad: A dig in (doubles as the
+  squat during GOTTA GO - the separate squat button felt identical to
+  digging in), X pee, B bark, Start restart. The pee velocity gate was
+  the "X doesn't really pee" bug: being gently towed by the walking
+  human kept the dog above the stationary threshold; the gate is loose
+  now and only a hard yank interrupts.
+
 ## 2026-07-12 — dedicated buttons, continuous pulley, the owner faces forward
 
 - Pee (Q / X) and squat (C / Y) are their own buttons; plant is purely

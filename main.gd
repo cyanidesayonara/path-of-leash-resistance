@@ -53,6 +53,7 @@ var whirl_flipped := false
 
 var leash_len := LEASH_LENGTH
 var leash_target := LEASH_LENGTH
+var started := false
 var bones := 0
 var streak := 0
 var phone_hp := 3
@@ -63,6 +64,8 @@ var mark_progress := 0.0
 var mark_target := Vector2(INF, INF)
 var stray_t := 0.0
 var mark_quest_done := false
+var bins: Array[Vector2] = []
+var bag_pending := false
 var poop_state := 0  # 0 not yet, 1 urge, 2 done, 3 forced telegraph, 4 forced squat
 var urge_y := -2000.0
 var urge_timer := 0.0
@@ -77,6 +80,10 @@ var phone_label: Label
 var bones_label: Label
 var pee_label: Label
 var tube: Control
+var title_l: Label
+var sub_l: Label
+var prompt_l: Label
+var prompt_tw: Tween
 var msg_label: Label
 var dim: ColorRect
 var font: Font
@@ -90,6 +97,12 @@ func _ready() -> void:
 	_build_walls()
 	_build_entities()
 	_build_hud()
+	# title screen holds the world until the player goes walkies;
+	# headless runs (CI smoke test) start immediately
+	if DisplayServer.get_name() == "headless":
+		started = true
+	else:
+		frozen = true
 
 
 func _setup_input() -> void:
@@ -116,7 +129,7 @@ func _setup_input() -> void:
 		InputMap.action_add_event(action, ev)
 	var buttons := {
 		"plant": [KEY_SPACE, JOY_BUTTON_A], "bark": [KEY_E, JOY_BUTTON_B],
-		"pee": [KEY_Q, JOY_BUTTON_X], "poop": [KEY_C, JOY_BUTTON_Y],
+		"pee": [KEY_Q, JOY_BUTTON_X],
 		"restart": [KEY_R, JOY_BUTTON_START],
 	}
 	for action in buttons:
@@ -147,6 +160,16 @@ func _build_level_data() -> void:
 	tables = [Vector2(760, -3560), Vector2(840, -3660), Vector2(700, -3700), Vector2(790, -3780)]
 	for tb in tables:
 		poles.append(tb)
+	# trash bins: bag deposit targets for the owner's chore chain; they
+	# also join the poles array, so they block bodies, snag the leash,
+	# and can absolutely be marked
+	bins = [
+		Vector2(SIDEWALK_LEFT + 30, -600), Vector2(SIDEWALK_RIGHT - 30, -1400),
+		Vector2(SIDEWALK_LEFT + 30, -2150), Vector2(SIDEWALK_RIGHT - 30, -3000),
+		Vector2(SIDEWALK_LEFT + 30, -3700), Vector2(SIDEWALK_RIGHT - 30, -4700),
+	]
+	for bn in bins:
+		poles.append(bn)
 	benches = [Vector2(376, -1300), Vector2(904, -2450), Vector2(376, -3850)]
 	cellars = [Rect2(340, -2750, 62, 88), Rect2(878, -750, 62, 82), Rect2(340, -4550, 62, 88)]
 	urge_y = randf_range(-3200.0, -1500.0)
@@ -245,27 +268,30 @@ func _build_hud() -> void:
 	hud.add_child(tube)
 	pee_label = _hud_label(Vector2(52, 112), 17)
 	var hint := _hud_label(Vector2(24, 686), 15)
-	hint.text = "WASD / stick: move    SPACE / A: dig in    Q / X: pee    C / Y: squat    E / B: bark    R: restart"
+	hint.text = "WASD / stick: move    SPACE / A: dig in (squat when nature calls)    Q / X: pee    E / B: bark    R: restart"
 	hint.modulate.a = 0.75
-	var title := _hud_label(Vector2(0, 90), 30)
-	title.size = Vector2(1280, 40)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.text = "TOUCH GRASS"
-	var sub := _hud_label(Vector2(0, 128), 17)
-	sub.size = Vector2(1280, 30)
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub.text = "Take the Path of Leash Resistance"
-	for l in [title, sub]:
-		var tw := create_tween()
-		tw.tween_interval(3.5)
-		tw.tween_property(l, "modulate:a", 0.0, 1.0)
+	title_l = _hud_label(Vector2(0, 240), 44)
+	title_l.size = Vector2(1280, 52)
+	title_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_l.text = "TOUCH GRASS"
+	sub_l = _hud_label(Vector2(0, 300), 18)
+	sub_l.size = Vector2(1280, 30)
+	sub_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub_l.text = "Take the Path of Leash Resistance"
+	prompt_l = _hud_label(Vector2(0, 386), 20)
+	prompt_l.size = Vector2(1280, 30)
+	prompt_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	prompt_l.text = "press SPACE / A to go walkies"
+	prompt_tw = create_tween().set_loops()
+	prompt_tw.tween_property(prompt_l, "modulate:a", 0.25, 0.7)
+	prompt_tw.tween_property(prompt_l, "modulate:a", 1.0, 0.7)
 	dim = ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.55)
 	dim.size = Vector2(1280, 720)
 	dim.visible = false
 	hud.add_child(dim)
-	msg_label = _hud_label(Vector2(0, 290), 28)
-	msg_label.size = Vector2(1280, 220)
+	msg_label = _hud_label(Vector2(0, 200), 22)
+	msg_label.size = Vector2(1280, 400)
 	msg_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	msg_label.visible = false
 	_update_hud()
@@ -285,7 +311,7 @@ func _update_hud() -> void:
 	bones_label.text = "BONES  %d%s" % [bones, streak_txt]
 	var status := "MARKS %d/5" % mini(marks.size(), 5)
 	if poop_state == 1:
-		status += "    GOTTA GO!  find a spot, hold C"
+		status += "    GOTTA GO!  find a spot, hold SPACE / A"
 	elif poop_state >= 3:
 		status += "    UH OH..."
 	elif pee >= 0.999:
@@ -317,6 +343,14 @@ func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("restart"):
 		get_tree().reload_current_scene()
 		return
+	if not started:
+		if Input.is_action_just_pressed("plant") or Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pee"):
+			started = true
+			frozen = false
+			prompt_tw.kill()
+			for l: Label in [title_l, sub_l, prompt_l]:
+				var tw := create_tween()
+				tw.tween_property(l, "modulate:a", 0.0, 0.5)
 	var target_y := (dog.global_position.y + human.global_position.y) / 2.0 - 60.0
 	cam.position = Vector2(640, target_y)
 	if shake_t > 0.0:
@@ -535,8 +569,10 @@ func _bodily(delta: float) -> void:
 	tube.level = pee
 	# peeing has its own button now; a yank that gets you moving
 	# interrupts it (the tank is a per-walk budget, ~9 breaks)
+	# velocity gate is loose: being gently towed must not block the pee
+	# (a hard yank still interrupts it)
 	var going: bool = Input.is_action_pressed("pee") and pee > 0.02 \
-		and not dog.is_tumbling() and dog.velocity.length() < 30.0
+		and not dog.is_tumbling() and dog.velocity.length() < 80.0
 	dog.peeing = going
 	if going:
 		pee = maxf(0.0, pee - 0.16 * delta)
@@ -575,7 +611,7 @@ func _bodily(delta: float) -> void:
 				float_text(dog.global_position, "uh oh...", Color(1, 0.9, 0.6))
 		1:
 			urge_timer -= delta
-			if Input.is_action_pressed("poop") and dog.velocity.length() < 30.0 and not dog.is_tumbling():
+			if dog.planted and not dog.is_tumbling():
 				squat_progress += delta
 				dog.squat_ui = squat_progress / 2.5
 				if squat_progress >= 2.5:
@@ -587,6 +623,12 @@ func _bodily(delta: float) -> void:
 				poop_state = 3
 				urge_timer = 1.2
 				float_text(dog.global_position, "UH OH", Color(1, 0.6, 0.5))
+		2:
+			# the owner's chore chain: walk to it, bag it, find a bin.
+			# Falls and whirls interrupt; they resume when back on
+			# their feet
+			if bag_pending and human.is_available_for_chore():
+				human.fetch_poop(business_spot)
 		3:
 			urge_timer -= delta
 			if urge_timer <= 0.0:
@@ -608,7 +650,26 @@ func _finish_business(voluntary: bool) -> void:
 		float_text(dog.global_position, "relief +5", Color(0.8, 1.0, 0.8))
 	else:
 		float_text(dog.global_position, "couldn't wait", Color(1, 0.8, 0.6))
-	human.gross_out()
+	bag_pending = true
+
+
+func nearest_bin(pos: Vector2) -> Vector2:
+	var best := bins[0]
+	var best_d := 1e12
+	for b in bins:
+		var d := pos.distance_to(b)
+		if d < best_d:
+			best_d = d
+			best = b
+	return best
+
+
+func on_business_bagged() -> void:
+	bag_pending = false
+	business_spot = Vector2(INF, INF)
+	bones += 2
+	float_text(human.global_position, "responsible +2", Color(0.8, 1.0, 0.8))
+	_update_hud()
 
 
 func _nearest_markable(pos: Vector2) -> Vector2:
@@ -635,7 +696,20 @@ func _check_win() -> void:
 		frozen = true
 		dim.visible = true
 		msg_label.visible = true
-		msg_label.text = "WALK COMPLETE\n\nBones: %d    Phone: %d/3    Time: %ds\n\nPress R for another walk" % [bones, phone_hp, int(elapsed)]
+		var bagged: bool = poop_state == 2 and not bag_pending
+		var q1 := ("[x]" if phone_hp == 3 else "[ ]") + "  phone without a scratch"
+		var q2 := ("[x]" if mark_quest_done else "[ ]") + "  territory secured (5 marks)"
+		var q3 := ("[x]" if bagged else "[ ]") + "  business done and bagged"
+		var stars := 1
+		if phone_hp == 3:
+			stars += 1
+		if mark_quest_done and bagged:
+			stars += 1
+		var rating := ""
+		for i in range(stars):
+			rating += "GOOD DOG. "
+		msg_label.text = "WALK COMPLETE\n\n%s\n%s\n%s\n\nBones: %d    Phone: %d/3    Time: %ds\n\n%s\n\nPress R for another walk" % [
+			q1, q2, q3, bones, phone_hp, int(elapsed), rating.strip_edges()]
 
 
 func on_bark(pos: Vector2) -> void:
@@ -793,6 +867,11 @@ func _draw() -> void:
 		draw_circle(p, POLE_RADIUS + 3.0, Color(0.2, 0.2, 0.22, 0.35))
 		draw_circle(p, POLE_RADIUS, Color(0.44, 0.44, 0.48))
 		draw_circle(p, 4.0, Color(0.55, 0.55, 0.6))
+	# trash bins
+	for bn in bins:
+		draw_circle(bn, 11.0, Color(0.24, 0.32, 0.26))
+		draw_circle(bn, 8.0, Color(0.3, 0.4, 0.32))
+		draw_circle(bn, 3.0, Color(0.16, 0.22, 0.18))
 	# cafe tables
 	for tb in tables:
 		draw_circle(tb, 14.0, Color(0.6, 0.55, 0.48))

@@ -3,7 +3,7 @@ extends CharacterBody2D
 # The human. Dead weight with a phone. Walks north on autopilot,
 # occasionally does something stupid. Telegraphs it first, to be fair.
 
-enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, WHIRL, STUMBLE, FALLEN }
+enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, WHIRL, GO_POOP, BAG, GO_BIN, STUMBLE, FALLEN }
 
 const WALK_SPEED := 92.0
 
@@ -30,6 +30,8 @@ var whirl_pull := 0.0
 var just_flung := false
 var face_dir := Vector2.UP
 var hgait := 0.0
+var chain_target := Vector2.ZERO
+var carrying_bag := false
 var strain := false
 var wobble_seed := 0.0
 var main: Node2D
@@ -103,6 +105,35 @@ func tick(delta: float) -> void:
 			if state_t <= 0.0:
 				state = HState.WALK
 				bubble.visible = false
+		HState.GO_POOP:
+			# duty overrides doomscrolling: walk to the scene
+			var to_poop := chain_target - global_position
+			if to_poop.length() < 22.0:
+				state = HState.BAG
+				state_t = 2.0
+				velocity = Vector2.ZERO
+				_show_bubble("bagging...")
+			else:
+				velocity = velocity.move_toward(to_poop.normalized() * 120.0, 300.0 * delta)
+				move_and_slide()
+		HState.BAG:
+			velocity = Vector2.ZERO
+			if state_t <= 0.0:
+				carrying_bag = true
+				chain_target = main.nearest_bin(global_position)
+				state = HState.GO_BIN
+				_show_bubble("where's a bin...")
+		HState.GO_BIN:
+			var to_bin := chain_target - global_position
+			if to_bin.length() < 34.0:
+				carrying_bag = false
+				state = HState.STOPPED
+				state_t = 0.7
+				bubble.visible = false
+				main.on_business_bagged()
+			else:
+				velocity = velocity.move_toward(to_bin.normalized() * 120.0, 300.0 * delta)
+				move_and_slide()
 		HState.WHIRL:
 			# cartoon tetherball: choreographed accelerating orbit that
 			# runs for exactly as many turns as the rope was wound (the
@@ -334,6 +365,19 @@ func release_whirl() -> void:
 	main.shake_t = maxf(float(main.shake_t), 0.35)
 
 
+func is_available_for_chore() -> bool:
+	return state == HState.WALK
+
+
+func fetch_poop(spot: Vector2) -> void:
+	if state in [HState.FALLEN, HState.WHIRL, HState.GO_POOP, HState.BAG, HState.GO_BIN]:
+		return
+	state = HState.GO_POOP
+	chain_target = spot
+	telegraph_t = 0.0
+	_show_bubble("ugh, hold on")
+
+
 func bumped(dir: Vector2) -> void:
 	# a slow scooter kid is a shove, not a wipeout
 	if state in [HState.FALLEN, HState.WHIRL]:
@@ -343,15 +387,6 @@ func bumped(dir: Vector2) -> void:
 	velocity = dir * 190.0
 	telegraph_t = 0.0
 	bubble.visible = false
-
-
-func gross_out() -> void:
-	# reaction to the dog answering nature's call: stops to bag it
-	if state in [HState.FALLEN, HState.WHIRL]:
-		return
-	state = HState.STOPPED
-	state_t = 3.0
-	_show_bubble("gotta bag it...")
 
 
 func notify_strain() -> void:
@@ -430,6 +465,12 @@ func _draw() -> void:
 	draw_rect(Rect2(-6, -9, 12, 18), Color(0.1, 0.1, 0.12))
 	draw_rect(Rect2(-4.5, -7, 9, 14), Color(0.7, 0.85, 1.0, glow))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	if carrying_bag:
+		draw_circle(side * 12.0 + fd * 2.0, 4.5, Color(0.9, 0.9, 0.92))
+	if state == HState.BAG:
+		# bent over the evidence, arm to the ground
+		draw_line(fd * 10.0, fd * 26.0, skin, 4.0)
+		draw_circle(fd * 26.0, 3.5, Color(0.9, 0.9, 0.92))
 	if state == HState.FALLEN:
 		for i in range(3):
 			var a := t * 3.0 + TAU * i / 3.0

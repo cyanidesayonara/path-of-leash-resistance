@@ -15,10 +15,10 @@ mutt who squats like a lady.
 ## Controls
 
 - Move: WASD / arrows / left stick
-- Dig in (anchor yourself; the leash stops the human): hold Space / A
+- Dig in (anchor yourself; the leash stops the human. Doubles as the
+  squat when nature calls): hold Space / A
 - Pee (mark spots for points; five marks completes the territory quest):
   hold Q / X
-- Squat (when nature calls, once per walk): hold C / Y
 - Bark (freezes the human for a beat): E / B
 - Restart: R / Start
 
@@ -43,8 +43,10 @@ mutt who squats like a lady.
 - Dog business is dog business: pee anywhere with Q - marking hydrants
   and poles scores, five marks secures the territory, stray breaks just
   leave a puddle. The test tube lasts about nine breaks, and a full
-  bladder slows you down. Once per walk nature calls for a longer stop
-  (C) - find a safe moment, or the dog will pick the moment for you.
+  bladder slows you down. Once per walk nature calls for a longer stop -
+  find a safe moment, or the dog will pick the moment for you. Then
+  watch the owner: they walk to it, bag it, and carry it to the nearest
+  bin, and that whole errand is yours to protect (or sabotage).
 - A wound leash is a pulley: the dog pulling one end multiplies the drag
   on the human around the pole, all the time, not just during the whirl.
 - Open holes swallow dogs too. Watch your own paws.
