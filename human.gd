@@ -3,7 +3,7 @@ extends CharacterBody2D
 # The human. Dead weight with a phone. Walks north on autopilot,
 # occasionally does something stupid. Telegraphs it first, to be fair.
 
-enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, STUMBLE, FALLEN }
+enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, WHIRL, STUMBLE, FALLEN }
 
 const WALK_SPEED := 92.0
 
@@ -20,6 +20,10 @@ var iframes := 0.0
 var halt_t := 0.0
 var pull_cd := 0.0
 var reel_timer := 5.0
+var whirl_pole := Vector2.ZERO
+var whirl_dir := 1.0
+var whirl_omega := 0.0
+var whirl_angle := 0.0
 var strain := false
 var wobble_seed := 0.0
 var main: Node2D
@@ -93,6 +97,17 @@ func tick(delta: float) -> void:
 			if state_t <= 0.0:
 				state = HState.WALK
 				bubble.visible = false
+		HState.WHIRL:
+			# cartoon tetherball: choreographed accelerating orbit around
+			# the pole. The rope honestly unwinds as they go; main.gd calls
+			# release_whirl() when it runs out (or on timeout here).
+			whirl_omega = minf(whirl_omega + 9.0 * delta, 17.0)
+			whirl_angle += whirl_dir * whirl_omega * delta
+			global_position = whirl_pole + Vector2.from_angle(whirl_angle) * 30.0
+			velocity = Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0) * whirl_omega * 30.0
+			rotation += whirl_dir * whirl_omega * 1.4 * delta
+			if state_t <= 0.0:
+				release_whirl()
 		_:
 			if state == HState.DASH and state_t <= 0.0:
 				_end_dash()
@@ -104,7 +119,7 @@ func tick(delta: float) -> void:
 func _fiddle_with_reel(delta: float) -> void:
 	# constantly fiddles with the retractable leash, independent of the
 	# event system: new random length on every "click!"
-	if state in [HState.FALLEN, HState.STUMBLE]:
+	if state in [HState.FALLEN, HState.STUMBLE, HState.WHIRL]:
 		return
 	reel_timer -= delta
 	if reel_timer > 0.0:
@@ -240,6 +255,35 @@ func _show_bubble(text: String) -> void:
 	bubble.visible = true
 
 
+func is_whirling() -> bool:
+	return state == HState.WHIRL
+
+
+func start_whirl(pole: Vector2, dir: float) -> void:
+	if state == HState.WHIRL or state == HState.FALLEN:
+		return
+	state = HState.WHIRL
+	state_t = 2.5
+	whirl_pole = pole
+	whirl_dir = dir
+	whirl_angle = (global_position - pole).angle()
+	whirl_omega = clampf(velocity.length() / 30.0, 5.0, 12.0)
+	telegraph_t = 0.0
+	_show_bubble("wheee!")
+
+
+func release_whirl() -> void:
+	if state != HState.WHIRL:
+		return
+	state = HState.STUMBLE
+	state_t = 0.7
+	rotation = 0.0
+	bubble.visible = false
+	var speed := minf(whirl_omega * 30.0 * 1.35, 620.0)
+	velocity = Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0) * speed
+	main.float_text(global_position, "AAAA", Color(1, 0.9, 0.6))
+
+
 func notify_strain() -> void:
 	if state != HState.FALLEN:
 		strain = true
@@ -308,6 +352,10 @@ func _draw() -> void:
 		for i in range(3):
 			var a := t * 3.0 + TAU * i / 3.0
 			draw_circle(Vector2(0, -6) + Vector2.from_angle(a) * 22.0, 2.5, Color(1, 0.9, 0.4))
+	elif state == HState.WHIRL:
+		# speed lines; the node itself is spinning, so they animate freely
+		for j in range(3):
+			draw_arc(Vector2.ZERO, 23.0 + j * 6.0, PI * 0.15, PI * 0.85, 10, Color(1, 1, 1, 0.34 - j * 0.09), 2.5)
 	elif strain:
 		draw_line(Vector2(16, -36), Vector2(16, -27), Color(1, 0.85, 0.3), 3.0)
 		draw_circle(Vector2(16, -22), 2.0, Color(1, 0.85, 0.3))

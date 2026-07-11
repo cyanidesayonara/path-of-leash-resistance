@@ -68,6 +68,12 @@ touch-grass/
   are static). The same pole can be wound repeatedly once the rope swings
   ~100 degrees past the previous contact point. The verlet rope is visual
   only; gameplay uses the pivot chain length.
+- **The whirl** (human.gd WHIRL state): when a wound human near a pole
+  keeps getting pulled, main.gd starts a choreographed accelerating orbit
+  instead of letting them jam against the pole. The rope honestly unwinds
+  underneath; main.gd releases the fling when |winding| < 0.15 (or 2.5s
+  timeout). Leash forces skip a whirling human. The rope stays honest;
+  the human's response is the cartoon - keep it that way.
 - **Human events** are telegraphed with a speech bubble 0.8s before firing.
   Never add an untelegraphed hazard to the human - predictable-but-dumb is
   the design contract (see PROJECT.md pillars).

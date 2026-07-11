@@ -294,6 +294,11 @@ func _apply_leash(delta: float) -> void:
 	human.strain = false
 	dog.dragged = false
 	leash.tick(delta)
+	# a whirling human is released the moment the rope has unwound,
+	# tension or not - that is the fling
+	if human.is_whirling() and absf(leash.winding()) < 0.15:
+		human.release_whirl()
+	var whirling: bool = human.is_whirling()
 	var used: float = leash.used_length()
 	var excess := used - leash_len
 	leash.taut = excess > 0.0
@@ -313,12 +318,13 @@ func _apply_leash(delta: float) -> void:
 		dog_m *= 2.0
 	var human_m := HUMAN_MASS * (2.0 if human.is_fallen() else 1.0)
 	var tension := minf(LEASH_K * excess, 1600.0) * shield
-	human.velocity += h_dir * (tension / human_m) * delta
+	if not whirling:
+		human.velocity += h_dir * (tension / human_m) * delta
 	if not dog.planted:
 		dog.velocity += d_dir * (tension / dog_m) * delta
 	# damp separating components so neither end bungees
 	var sep_h := human.velocity.dot(-h_dir)
-	if sep_h > 0.0:
+	if sep_h > 0.0 and not whirling:
 		human.velocity += h_dir * sep_h * minf(5.0 * delta, 1.0)
 	var sep_d := dog.velocity.dot(-d_dir)
 	if sep_d > 0.0 and not dog.planted:
@@ -331,12 +337,25 @@ func _apply_leash(delta: float) -> void:
 		var w_d := (1.0 / dog_m) / (1.0 / dog_m + 1.0 / human_m)
 		var yank_speed := maxf(human.velocity.dot(-h_dir), 0.0)
 		dog.move_and_collide(d_dir * over * w_d)
-		human.move_and_collide(h_dir * over * (1.0 - w_d))
-		var rel := human.velocity.dot(-h_dir)
-		if rel > 0.0:
-			human.velocity += h_dir * rel * 0.9
-		var anchored: bool = dog.planted or leash.contacts > 0
-		human.on_leash_yank(-h_dir, anchored, yank_speed)
+		if not whirling:
+			human.move_and_collide(h_dir * over * (1.0 - w_d))
+			var rel := human.velocity.dot(-h_dir)
+			if rel > 0.0:
+				human.velocity += h_dir * rel * 0.9
+			var anchored: bool = dog.planted or leash.contacts > 0
+			human.on_leash_yank(-h_dir, anchored, yank_speed)
+	# cartoon tetherball: a human wound around a nearby pole who keeps
+	# getting pulled starts to WHIRL - an accelerating orbit that unwinds
+	# the rope and flings them when it runs out (Bugs Bunny physics)
+	if not whirling and not human.is_fallen() and excess > 8.0:
+		var end_wind: float = leash.human_end_winding()
+		if absf(leash.winding()) > 0.7 and absf(end_wind) > 1.6:
+			var wp := _nearest_pole_to(human.global_position, 70.0)
+			if wp.x < INF:
+				var spin_dir := -signf(end_wind)
+				if spin_dir == 0.0:
+					spin_dir = 1.0
+				human.start_whirl(wp, spin_dir)
 
 
 func _lanes(delta: float) -> void:
@@ -408,6 +427,17 @@ func on_bark(pos: Vector2) -> void:
 
 func set_leash_target(v: float) -> void:
 	leash_target = clampf(v, 120.0, 330.0)
+
+
+func _nearest_pole_to(pos: Vector2, max_d: float) -> Vector2:
+	var best := Vector2(INF, INF)
+	var best_d := max_d
+	for p in poles:
+		var d := pos.distance_to(p)
+		if d < best_d:
+			best_d = d
+			best = p
+	return best
 
 
 func nearest_bench(pos: Vector2):

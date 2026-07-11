@@ -29,8 +29,10 @@ Playtest builds ship to a private itch.io page.
 - The leash is a real rope. Wind it around a pole as many turns as you
   like - the coil cinches when taut, the pull curves around the pole
   (tetherball!), and a hard enough wrench slips the whole coil off.
-  Winding the human up or flinging them across danger in an arc is a
-  core move.
+- The fling: wind the human around a pole and keep pulling. Instead of
+  jamming against it they WHIRL - orbiting faster and faster as the rope
+  unwinds - and launch along the tangent when it runs out. Aim it.
+  Winding the human up or flinging them across danger is a core move.
 - The human owns the retractable leash. "click!" means they just changed
   its length on a whim — sometimes reeling you in against your will.
 - The human telegraphs every event with a speech bubble: "ring ring" stops,

@@ -119,15 +119,27 @@ func used_length() -> float:
 
 
 func winding() -> float:
-	# net turning of the rope in full turns: a coil around a pole reads as
-	# +/-N turns, while gentle slack curves mostly cancel out
+	# net signed turning of the rope in full turns: a coil around a pole
+	# reads as +/-N turns, while gentle slack curves mostly cancel out
 	var total := 0.0
 	for i in range(1, N - 1):
 		var a := pts[i] - pts[i - 1]
 		var b := pts[i + 1] - pts[i]
 		if a.length_squared() > 0.01 and b.length_squared() > 0.01:
 			total += a.angle_to(b)
-	return absf(total) / TAU
+	return total / TAU
+
+
+func human_end_winding() -> float:
+	# signed turning (radians) of the last few segments at the human end:
+	# tells whether the HUMAN is the wound-up one, and which way unwinds
+	var total := 0.0
+	for i in range(maxi(1, N - 8), N - 1):
+		var a := pts[i] - pts[i - 1]
+		var b := pts[i + 1] - pts[i]
+		if a.length_squared() > 0.01 and b.length_squared() > 0.01:
+			total += a.angle_to(b)
+	return total
 
 
 func dog_pull_dir() -> Vector2:

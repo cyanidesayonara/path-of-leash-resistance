@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-07-11 — the whirl (Bugs Bunny physics)
+
+- A human wound around a nearby pole who keeps getting pulled no longer
+  jams against it: they WHIRL - a choreographed accelerating orbit with
+  spin animation, speed lines and a "wheee!" bubble. The rope honestly
+  unwinds as they orbit; the moment it runs out they are flung along the
+  tangent with an exaggerated boost ("AAAA"). Timeout fling at 2.5s as a
+  safety valve. The rope stays honest; the human's RESPONSE is the cartoon.
+- Signed winding plus a human-end winding measure in leash.gd decide when
+  to whirl and which direction unwinds.
+
 ## 2026-07-11 — the rope IS the constraint
 
 - Threw out wrap bookkeeping entirely (three generations of pivot/angle
