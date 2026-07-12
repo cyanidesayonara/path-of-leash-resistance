@@ -142,8 +142,10 @@ func _draw() -> void:
 	var crouching := peeing or squat_t > 0.0 or squat_ui > 0.0
 	var side := facing.orthogonal()
 	var shoulder := facing * 6.0
-	var hip := shoulder + hip_dir * 17.0
 	var hside := hip_dir.orthogonal()
+	# THE WIGGLE: the rump swings with the gait
+	var wiggle := hside * sin(gait) * clampf(velocity.length() / SPEED, 0.0, 1.0) * 2.6
+	var hip := shoulder + hip_dir * 17.0 + wiggle
 	# whippy tail: three tapering segments with a traveling wave
 	var wag_speed := 3.0 if crouching else 11.0
 	var tp := hip + hip_dir * 4.0
@@ -157,7 +159,8 @@ func _draw() -> void:
 	# four legs, trot gait: diagonal pairs move together, tucked when crouching
 	var amp := 0.0 if crouching else clampf(velocity.length() / SPEED, 0.0, 1.0) * 5.5
 	var ph := sin(gait)
-	var paw := Color(0.1, 0.1, 0.11)
+	# white-tipped paws, like she stepped in paint and regrets nothing
+	var paw := Color(0.78, 0.76, 0.73)
 	draw_circle(shoulder + side * 7.5 + facing * (6.0 + ph * amp), 3.0, paw)
 	draw_circle(shoulder - side * 7.5 + facing * (6.0 - ph * amp), 3.0, paw)
 	var rear_reach := 1.0 if crouching else 4.0
@@ -171,6 +174,12 @@ func _draw() -> void:
 	for i in range(6):
 		var base := hip if i % 2 == 0 else shoulder
 		draw_circle(base + flecks[i], 1.0, Color(grizzle, 0.22))
+	# the red Julius K9 harness across the shoulders, and the collar
+	var red := Color(0.72, 0.16, 0.14)
+	draw_line(shoulder + side * 8.0, shoulder - side * 8.0, red, 6.0)
+	draw_circle(shoulder, 2.2, Color(0.3, 0.3, 0.32))
+	var neck := shoulder + facing * 6.5
+	draw_line(neck + side * 5.5, neck - side * 5.5, red, 3.0)
 	# head with a LONG street-dog nose; grey on the crown and the face
 	var head := shoulder + facing * 10.0
 	draw_circle(head, 7.0, fur)
@@ -179,8 +188,10 @@ func _draw() -> void:
 	draw_line(head + facing * 3.0, head + facing * 9.0, Color(grizzle, 0.5), 3.0)
 	draw_circle(head - facing * 2.5, 3.2, Color(grizzle, 0.3))
 	draw_circle(head + facing * 11.0, 2.4, Color(0.05, 0.05, 0.06))
-	draw_circle(head + side * 5.5 - facing * 2.0, 3.4, fur_dark)
-	draw_circle(head - side * 5.5 - facing * 2.0, 3.4, fur_dark)
+	# big floppy ears, swinging slightly with the stride
+	var flop := sin(gait) * 1.6
+	draw_line(head + side * 4.0, head + side * 9.5 - facing * 3.5 + side * flop, fur_dark, 5.5)
+	draw_line(head - side * 4.0, head - side * 9.5 - facing * 3.5 - side * flop, fur_dark, 5.5)
 	if peeing:
 		for i in range(2):
 			var a := t * 5.0 + i * 2.4

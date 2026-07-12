@@ -3,9 +3,13 @@
 *Take the Path of Leash Resistance.*
 
 A top-down physics comedy game. You are the dog. Your human is glued to
-their phone and walking on autopilot. Get them to the park with the phone
-intact — dodge the bikes, mind the manholes, and sneak in as much sniffing
-as you can get away with.
+their phone and walking on autopilot. Get them through the walk with the
+phone intact — dodge the bikes, mind the manholes (and the pond), and
+sneak in as much sniffing as you can get away with.
+
+Two walks so far, picked on the title screen with left/right: The
+Boulevard (bike lane, crossings, cafe terrace) and The Park (pond,
+bridge, duck crossings, windable trees).
 
 Built in Godot 4.7, GDScript, currently all placeholder vector art.
 Playtest builds ship to a private itch.io page.

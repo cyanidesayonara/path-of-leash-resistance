@@ -23,9 +23,14 @@ jobs:
       - name: Leash winding regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_wrap.gd
 
-      - name: Headless smoke test
+      - name: Headless smoke test (street)
         # Runs the game for 1800 simulated frames (~30s): catches parse
         # errors and runtime script errors in the main gameplay loop.
         run: |
           ./Godot_v4.7-stable_linux.x86_64 --headless --path . --quit-after 1800 2>&1 | tee smoke.log
           ! grep -E "SCRIPT ERROR|Parse Error|Failed to load script" smoke.log
+
+      - name: Headless smoke test (park)
+        run: |
+          ./Godot_v4.7-stable_linux.x86_64 --headless --path . --quit-after 1800 -- --level=park 2>&1 | tee smoke-park.log
+          ! grep -E "SCRIPT ERROR|Parse Error|Failed to load script" smoke-park.log

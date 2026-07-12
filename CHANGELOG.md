@@ -2,6 +2,26 @@
 
 Append-only session history, newest first.
 
+## 2026-07-12 — THE PARK (level two), level select, Millie for real
+
+- Second level: The Park. Dirt path instead of sidewalk, trees instead
+  of lampposts (same physics, different soul - and yes, they wind), a
+  POND that bites into the path with bridge planks squeezing past it
+  (phones and ponds are natural enemies; dogs get dunked too), duck
+  families crossing in a line (disturbing them is quest material, not
+  points - park-only quest: "let the ducklings pass"), no bike lane, no
+  manholes, slower path traffic that is mostly kids, extra pigeons,
+  slightly better cat odds.
+- Level select on the title screen (left/right cycles The Boulevard /
+  The Park, the world rebuilds live behind the title). Selection
+  survives restarts via a tiny Game autoload. CI now smoke-tests both
+  levels. Branch-based for two levels; extract data-driven when the
+  third setting arrives.
+- Millie, from the reference photos: big floppy ears that swing with
+  her stride, THE BUTT WIGGLE (rump swings with the gait), red collar
+  and red Julius K9-style harness, white-tipped paws.
+- Pigeons scatter from bikes and scooters too, not just mammals.
+
 ## 2026-07-12 — chore chain polish, rare visitors
 
 - The poop leaves the sidewalk when the owner BAGS it, not when they

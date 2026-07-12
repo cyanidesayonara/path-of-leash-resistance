@@ -6,6 +6,10 @@ config_version=5
 config/name="Touch Grass (prototype)"
 run/main_scene="res://main.tscn"
 
+[autoload]
+
+Game="*res://game.gd"
+
 [display]
 
 window/size/viewport_width=1280

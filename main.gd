@@ -19,7 +19,6 @@ const DOG_MASS := 1.0
 const HUMAN_MASS := 4.0
 const POLE_RADIUS := 10.0
 
-const LANE_YS: Array[float] = [-1200.0, -2600.0, -4000.0]
 const LANE_HALF := 70.0
 
 const COL_GRASS := Color(0.32, 0.42, 0.3)
@@ -46,6 +45,15 @@ var tables: Array[Vector2] = []
 var deco_pole_count := 0
 var lane_state: Array = []
 var vspawn_t := 2.5
+
+# level identity: "street" or "park" (branch-based for now; extract a
+# data-driven level system when the third setting arrives)
+var lvl := "street"
+var lane_ys: Array[float] = []
+var pond := Rect2()
+var gate_text := "PARK"
+var duck_ys: Array[float] = []
+var ducks_disturbed := 0
 var sq_spawn_t := 6.0
 var whirl_arm := 0.0
 var whirl_wind_acc := 0.0
@@ -98,6 +106,7 @@ var tube: Control
 var title_l: Label
 var sub_l: Label
 var prompt_l: Label
+var select_l: Label
 var prompt_tw: Tween
 var quests_label: Label
 var msg_label: Label
@@ -108,6 +117,7 @@ var font: Font
 func _ready() -> void:
 	Engine.time_scale = 1.0
 	font = ThemeDB.fallback_font
+	lvl = Game.level_id
 	_setup_input()
 	_build_level_data()
 	_build_walls()
@@ -160,23 +170,35 @@ func _setup_input() -> void:
 
 
 func _build_level_data() -> void:
+	if lvl == "street":
+		lane_ys = [-1200.0, -2600.0, -4000.0]
+		gate_text = "PARK"
+	else:
+		lane_ys = []
+		gate_text = "HOME"
+		# the pond bites into the path; the remaining strip is the bridge
+		pond = Rect2(340, -2950, 360, 470)
+		duck_ys = [randf_range(-2200.0, -1400.0), randf_range(-4300.0, -3400.0)]
 	for i in range(7):
 		var x := SIDEWALK_LEFT + 30.0 if i % 2 == 0 else SIDEWALK_RIGHT - 30.0
 		var y := -350.0 - i * 640.0
 		var near_lane := false
-		for ly in LANE_YS:
+		for ly in lane_ys:
 			if absf(y - ly) < LANE_HALF + 60.0:
 				near_lane = true
-		if not near_lane:
+		if not near_lane and not (pond.size.x > 0.0 and pond.grow(40.0).has_point(Vector2(x, y))):
 			poles.append(Vector2(x, y))
 	for mp in [Vector2(640, -1750), Vector2(700, -2900), Vector2(580, -4250)]:
+		if pond.size.x > 0.0 and pond.grow(40.0).has_point(mp):
+			continue
 		poles.append(mp)
 	deco_pole_count = poles.size()
-	# cafe terrace: tables join the poles array so they block bodies and
-	# snag the leash, but they are drawn as tables
-	tables = [Vector2(760, -3560), Vector2(840, -3660), Vector2(700, -3700), Vector2(790, -3780)]
-	for tb in tables:
-		poles.append(tb)
+	if lvl == "street":
+		# cafe terrace: tables join the poles array so they block bodies
+		# and snag the leash, but they are drawn as tables
+		tables = [Vector2(760, -3560), Vector2(840, -3660), Vector2(700, -3700), Vector2(790, -3780)]
+		for tb in tables:
+			poles.append(tb)
 	# trash bins: bag deposit targets for the owner's chore chain; they
 	# also join the poles array, so they block bodies, snag the leash,
 	# and can absolutely be marked
@@ -188,25 +210,37 @@ func _build_level_data() -> void:
 	for bn in bins:
 		poles.append(bn)
 	benches = [Vector2(376, -1300), Vector2(904, -2450), Vector2(376, -3850)]
-	cellars = [Rect2(340, -2750, 62, 88), Rect2(878, -750, 62, 82), Rect2(340, -4550, 62, 88)]
+	if lvl == "park":
+		benches.append(Vector2(904, -1900))
 	urge_y = randf_range(-3200.0, -1500.0)
 	# rare visitors: a cat some walks, a pigeon flock or two most walks
-	if randf() < 0.3:
+	if randf() < (0.4 if lvl == "park" else 0.3):
 		cat_y = randf_range(-4200.0, -1200.0)
 	flock_ys = [randf_range(-1800.0, -800.0), randf_range(-4400.0, -2600.0)]
-	manholes = [
-		Vector2(560, -700), Vector2(760, -950), Vector2(480, -1700),
-		Vector2(700, -2100), Vector2(600, -3100), Vector2(820, -3450),
-		Vector2(520, -4400),
-	]
-	for hp in [
+	if lvl == "park":
+		flock_ys.insert(1, randf_range(-2600.0, -1900.0))
+	if lvl == "street":
+		manholes = [
+			Vector2(560, -700), Vector2(760, -950), Vector2(480, -1700),
+			Vector2(700, -2100), Vector2(600, -3100), Vector2(820, -3450),
+			Vector2(520, -4400),
+		]
+		cellars = [Rect2(340, -2750, 62, 88), Rect2(878, -750, 62, 82), Rect2(340, -4550, 62, 88)]
+	var hyd_list: Array[Vector2] = [
 		Vector2(SIDEWALK_LEFT + 45, -500), Vector2(SIDEWALK_RIGHT - 45, -1500),
 		Vector2(SIDEWALK_LEFT + 45, -2300), Vector2(SIDEWALK_RIGHT - 45, -3300),
 		Vector2(SIDEWALK_LEFT + 45, -4600),
-		Vector2(SHOULDER_R - 12, -1000), Vector2(SHOULDER_R - 12, -3600),
-	]:
+	]
+	var keb_list: Array[Vector2] = [Vector2(620, -1900), Vector2(700, -4200)]
+	if lvl == "street":
+		hyd_list.append(Vector2(SHOULDER_R - 12, -1000))
+		hyd_list.append(Vector2(SHOULDER_R - 12, -3600))
+		keb_list.append(Vector2(SHOULDER_R - 12, -2400))
+	for hp in hyd_list:
+		if pond.size.x > 0.0 and pond.grow(30.0).has_point(hp):
+			continue
 		hydrants.append({"pos": hp, "done": false, "progress": 0.0})
-	for kp in [Vector2(620, -1900), Vector2(700, -4200), Vector2(SHOULDER_R - 12, -2400)]:
+	for kp in keb_list:
 		kebabs.append({"pos": kp, "eaten": false})
 	for i in range(140):
 		var side := -1.0 if randf() < 0.5 else 1.0
@@ -214,7 +248,7 @@ func _build_level_data() -> void:
 		tufts.append(Vector2(x, randf_range(GATE_Y - 600.0, START_Y + 150.0)))
 	for i in range(14):
 		trees.append(Vector2(randf_range(200.0, 1080.0), GATE_Y - randf_range(120.0, 550.0)))
-	for ly in LANE_YS:
+	for ly in lane_ys:
 		lane_state.append({"t": randf_range(1.0, 2.5), "phase": 0, "dir": 1})
 
 
@@ -223,9 +257,10 @@ func _build_walls() -> void:
 	walls.collision_layer = 1
 	var mid_y := (START_Y + GATE_Y) / 2.0
 	var span := absf(START_Y - GATE_Y) + 1600.0
+	var right_wall_x := SHOULDER_R + 50.0 if lvl == "street" else SIDEWALK_RIGHT + 50.0
 	var defs := [
 		[Vector2(SIDEWALK_LEFT - 50.0, mid_y), Vector2(100, span)],
-		[Vector2(SHOULDER_R + 50.0, mid_y), Vector2(100, span)],
+		[Vector2(right_wall_x, mid_y), Vector2(100, span)],
 		[Vector2(640, START_Y + 160.0), Vector2(1400, 100)],
 		[Vector2(640, GATE_Y - 700.0), Vector2(1400, 100)],
 	]
@@ -293,6 +328,8 @@ func _build_quests() -> void:
 		{"text": "keep your own paws clean", "target": 1, "fn": func() -> int: return 1 if dog_hits == 0 else 0},
 		{"text": "get the business bagged", "target": 1, "fn": func() -> int: return 1 if poop_state == 2 and not bag_pending else 0},
 	]
+	if lvl == "park":
+		quest_pool.append({"text": "let the ducklings pass", "target": 1, "fn": func() -> int: return 1 if ducks_disturbed == 0 else 0})
 	quest_pool.shuffle()
 	for i in range(3):
 		var q: Dictionary = quest_pool[i]
@@ -331,7 +368,11 @@ func _build_hud() -> void:
 	sub_l.size = Vector2(1280, 30)
 	sub_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub_l.text = "Take the Path of Leash Resistance"
-	prompt_l = _hud_label(Vector2(0, 386), 20)
+	select_l = _hud_label(Vector2(0, 348), 22)
+	select_l.size = Vector2(1280, 32)
+	select_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	select_l.text = "<   %s   >" % Game.LEVEL_NAMES[lvl]
+	prompt_l = _hud_label(Vector2(0, 396), 20)
 	prompt_l.size = Vector2(1280, 30)
 	prompt_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	prompt_l.text = "press SPACE / A to go walkies"
@@ -418,11 +459,16 @@ func _process(_delta: float) -> void:
 		get_tree().reload_current_scene()
 		return
 	if not started:
+		# level select: cycling rebuilds the world behind the title
+		if Input.is_action_just_pressed("move_left") or Input.is_action_just_pressed("move_right"):
+			Game.cycle_level(1 if Input.is_action_just_pressed("move_right") else -1)
+			get_tree().reload_current_scene()
+			return
 		if Input.is_action_just_pressed("plant") or Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pee"):
 			started = true
 			frozen = false
 			prompt_tw.kill()
-			for l: Label in [title_l, sub_l, prompt_l]:
+			for l: Label in [title_l, sub_l, prompt_l, select_l]:
 				var tw := create_tween()
 				tw.tween_property(l, "modulate:a", 0.0, 0.5)
 	var target_y := (dog.global_position.y + human.global_position.y) / 2.0 - 60.0
@@ -551,7 +597,7 @@ func _apply_leash(delta: float) -> void:
 func _lanes(delta: float) -> void:
 	for i in range(lane_state.size()):
 		var ls: Dictionary = lane_state[i]
-		if absf(LANE_YS[i] - cam.position.y) > 950.0:
+		if absf(lane_ys[i] - cam.position.y) > 950.0:
 			continue
 		ls.t -= delta
 		if ls.t <= 0.0:
@@ -562,7 +608,7 @@ func _lanes(delta: float) -> void:
 			else:
 				ls.phase = 0
 				ls.t = randf_range(1.7, 3.2)
-				_spawn_bike(LANE_YS[i] + randf_range(-34.0, 34.0), ls.dir)
+				_spawn_bike(lane_ys[i] + randf_range(-34.0, 34.0), ls.dir)
 
 
 func _spawn_bike(y: float, dir: int) -> void:
@@ -580,17 +626,21 @@ func _vlane(delta: float) -> void:
 	vspawn_t -= delta
 	if vspawn_t > 0.0:
 		return
-	vspawn_t = randf_range(2.2, 4.2)
+	vspawn_t = randf_range(2.2, 4.2) if lvl == "street" else randf_range(3.2, 5.6)
 	if get_tree().get_nodes_in_group("bikes").size() >= 7:
 		return
-	var kid := randf() < 0.38
+	var kid := randf() < (0.7 if lvl == "park" else 0.38)
 	var up := randf() < 0.62
 	var speed := randf_range(70.0, 120.0) if kid else randf_range(300.0, 460.0)
+	if lvl == "park" and not kid:
+		speed = randf_range(220.0, 320.0)
 	var y: float = cam.position.y + (560.0 if up else -560.0)
 	if y > START_Y + 150.0 or y < GATE_Y - 400.0:
 		return
-	var on_sidewalk := kid and randf() < 0.45
+	var on_sidewalk := (kid and randf() < 0.45) or lvl == "park"
 	var x := randf_range(380.0, 900.0) if on_sidewalk else randf_range(BLANE_L + 16.0, BLANE_R - 16.0)
+	if lvl == "park" and pond.grow(50.0).has_point(Vector2(x, y)):
+		x = clampf(x, pond.end.x + 40.0, 900.0)
 	var b := Node2D.new()
 	b.set_script(load("res://bike.gd"))
 	b.position = Vector2(x, y)
@@ -623,6 +673,17 @@ func _squirrels(delta: float) -> void:
 			p.z_index = 8
 			add_child(p)
 			p.setup(self, dog, human)
+	while duck_ys.size() > 0 and cam.position.y < duck_ys[0] + 650.0:
+		var dy: float = duck_ys.pop_front()
+		var ddir := 1.0 if randf() < 0.5 else -1.0
+		var start_x := 310.0 if ddir > 0.0 else 970.0
+		for i in range(5):
+			var d := Node2D.new()
+			d.set_script(load("res://duckling.gd"))
+			d.position = Vector2(start_x - ddir * i * 17.0, dy + sin(i * 1.7) * 4.0)
+			d.z_index = 9
+			add_child(d)
+			d.setup(self, dog, ddir, i == 0)
 	sq_spawn_t -= delta
 	if sq_spawn_t > 0.0:
 		return
@@ -674,6 +735,11 @@ func _temptation(delta: float) -> void:
 		dog.velocity += pull * delta
 
 
+func on_duck_disturbed(pos: Vector2) -> void:
+	ducks_disturbed += 1
+	float_text(pos, "quack!", Color(1, 0.9, 0.5))
+
+
 func on_critter_chase(pos: Vector2, kind: String) -> void:
 	squirrels_chased += 1
 	if kind == "cat":
@@ -690,6 +756,15 @@ func on_dog_hit() -> void:
 
 
 func _hazards(_delta: float) -> void:
+	if pond.size.x > 0.0:
+		# phones and ponds are natural enemies
+		if pond.has_point(human.global_position):
+			if human.fall("pond"):
+				float_text(human.global_position, "SPLASH", Color(0.6, 0.8, 1.0))
+				human.global_position.x = pond.end.x + 26.0
+		if dog.hole_cd <= 0.0 and pond.has_point(dog.global_position):
+			float_text(dog.global_position, "SPLASH", Color(0.6, 0.8, 1.0))
+			dog.fall_in(Vector2(pond.end.x + 26.0, dog.global_position.y))
 	for m in manholes:
 		if human.global_position.distance_to(m) < 26.0:
 			human.fall("manhole")
@@ -982,42 +1057,60 @@ func float_text(pos: Vector2, text: String, color: Color = Color.WHITE) -> void:
 func _draw() -> void:
 	var top := GATE_Y - 800.0
 	var bottom := START_Y + 320.0
-	draw_rect(Rect2(-400, top, 2100, bottom - top), COL_GRASS)
+	var grass := COL_GRASS if lvl == "street" else Color(0.3, 0.45, 0.28)
+	var walkway := COL_SIDEWALK if lvl == "street" else Color(0.62, 0.55, 0.42)
+	draw_rect(Rect2(-400, top, 2100, bottom - top), grass)
 	for t in tufts:
 		draw_circle(t, 5.0, COL_GRASS_DARK)
-	# park beyond the gate
+	# whatever lies beyond the gate
 	draw_rect(Rect2(-400, top, 2100, GATE_Y - top), Color(0.27, 0.4, 0.27))
 	for t in trees:
 		draw_circle(t, 26.0, Color(0.22, 0.34, 0.22))
 		draw_circle(t + Vector2(8, 6), 18.0, Color(0.25, 0.38, 0.24))
-	# sidewalk
-	draw_rect(Rect2(SIDEWALK_LEFT, GATE_Y - 40.0, SIDEWALK_RIGHT - SIDEWALK_LEFT, bottom - GATE_Y), COL_SIDEWALK)
-	var y := START_Y + 200.0
-	while y > GATE_Y:
-		draw_line(Vector2(SIDEWALK_LEFT, y), Vector2(SIDEWALK_RIGHT, y), COL_SEAM, 2.0)
-		y -= 150.0
+	# the walkway: sidewalk downtown, packed dirt in the park
+	draw_rect(Rect2(SIDEWALK_LEFT, GATE_Y - 40.0, SIDEWALK_RIGHT - SIDEWALK_LEFT, bottom - GATE_Y), walkway)
+	if lvl == "street":
+		var y := START_Y + 200.0
+		while y > GATE_Y:
+			draw_line(Vector2(SIDEWALK_LEFT, y), Vector2(SIDEWALK_RIGHT, y), COL_SEAM, 2.0)
+			y -= 150.0
 	draw_line(Vector2(SIDEWALK_LEFT, bottom), Vector2(SIDEWALK_LEFT, GATE_Y), COL_SEAM, 3.0)
 	draw_line(Vector2(SIDEWALK_RIGHT, bottom), Vector2(SIDEWALK_RIGHT, GATE_Y), COL_SEAM, 3.0)
-	# parallel bike lane + far shoulder
-	draw_rect(Rect2(BLANE_L, GATE_Y - 40.0, BLANE_R - BLANE_L, bottom - GATE_Y), Color(0.4, 0.31, 0.29))
-	draw_rect(Rect2(BLANE_R, GATE_Y - 40.0, SHOULDER_R - BLANE_R, bottom - GATE_Y), COL_SIDEWALK)
-	var dy := START_Y + 200.0
-	while dy > GATE_Y:
-		draw_line(Vector2((BLANE_L + BLANE_R) / 2.0, dy), Vector2((BLANE_L + BLANE_R) / 2.0, dy - 26.0), Color(0.85, 0.82, 0.75, 0.5), 2.0)
-		dy -= 64.0
-	var gy := START_Y - 100.0
-	while gy > GATE_Y:
-		var cxx := (BLANE_L + BLANE_R) / 2.0 - 14.0
-		draw_circle(Vector2(cxx - 7, gy), 4.0, Color(1, 1, 1, 0.3))
-		draw_circle(Vector2(cxx + 7, gy), 4.0, Color(1, 1, 1, 0.3))
-		draw_line(Vector2(cxx - 7, gy), Vector2(cxx + 7, gy - 6), Color(1, 1, 1, 0.3), 2.0)
-		gy -= 600.0
-	draw_line(Vector2(BLANE_L, bottom), Vector2(BLANE_L, GATE_Y), COL_SEAM, 3.0)
-	draw_line(Vector2(BLANE_R, bottom), Vector2(BLANE_R, GATE_Y), COL_SEAM, 2.0)
-	draw_line(Vector2(SHOULDER_R, bottom), Vector2(SHOULDER_R, GATE_Y), COL_SEAM, 3.0)
+	if lvl == "street":
+		# parallel bike lane + far shoulder
+		draw_rect(Rect2(BLANE_L, GATE_Y - 40.0, BLANE_R - BLANE_L, bottom - GATE_Y), Color(0.4, 0.31, 0.29))
+		draw_rect(Rect2(BLANE_R, GATE_Y - 40.0, SHOULDER_R - BLANE_R, bottom - GATE_Y), COL_SIDEWALK)
+		var dy := START_Y + 200.0
+		while dy > GATE_Y:
+			draw_line(Vector2((BLANE_L + BLANE_R) / 2.0, dy), Vector2((BLANE_L + BLANE_R) / 2.0, dy - 26.0), Color(0.85, 0.82, 0.75, 0.5), 2.0)
+			dy -= 64.0
+		var gy := START_Y - 100.0
+		while gy > GATE_Y:
+			var cxx := (BLANE_L + BLANE_R) / 2.0 - 14.0
+			draw_circle(Vector2(cxx - 7, gy), 4.0, Color(1, 1, 1, 0.3))
+			draw_circle(Vector2(cxx + 7, gy), 4.0, Color(1, 1, 1, 0.3))
+			draw_line(Vector2(cxx - 7, gy), Vector2(cxx + 7, gy - 6), Color(1, 1, 1, 0.3), 2.0)
+			gy -= 600.0
+		draw_line(Vector2(BLANE_L, bottom), Vector2(BLANE_L, GATE_Y), COL_SEAM, 3.0)
+		draw_line(Vector2(BLANE_R, bottom), Vector2(BLANE_R, GATE_Y), COL_SEAM, 2.0)
+		draw_line(Vector2(SHOULDER_R, bottom), Vector2(SHOULDER_R, GATE_Y), COL_SEAM, 3.0)
+	if pond.size.x > 0.0:
+		# the pond, and the bridge planks squeezing past it
+		draw_rect(pond.grow(14.0), Color(0.42, 0.4, 0.34))
+		draw_rect(pond, Color(0.33, 0.45, 0.52))
+		var wt := Time.get_ticks_msec() / 1000.0
+		for i in range(4):
+			var wy := pond.position.y + 70.0 + i * 105.0
+			draw_arc(Vector2(pond.get_center().x + sin(wt * 0.7 + i) * 40.0, wy), 26.0, PI * 0.15, PI * 0.85, 10, Color(1, 1, 1, 0.14), 2.0)
+		var px := pond.end.x + 8.0
+		var py := pond.position.y
+		while py < pond.end.y:
+			draw_line(Vector2(px, py), Vector2(SIDEWALK_RIGHT, py), Color(0.5, 0.4, 0.28), 5.0)
+			py += 16.0
+		draw_line(Vector2(px, pond.position.y), Vector2(px, pond.end.y), Color(0.36, 0.28, 0.2), 4.0)
 	# bike lanes crossing the sidewalk
-	for i in range(LANE_YS.size()):
-		var ly: float = LANE_YS[i]
+	for i in range(lane_ys.size()):
+		var ly: float = lane_ys[i]
 		draw_rect(Rect2(-400, ly - LANE_HALF, 2100, LANE_HALF * 2.0), COL_ROAD)
 		var x := -380.0
 		while x < 1700.0:
@@ -1047,12 +1140,18 @@ func _draw() -> void:
 		if not k.eaten:
 			draw_circle(k.pos, 7.0, Color(0.75, 0.55, 0.3))
 			draw_line(k.pos + Vector2(-3, 5), k.pos + Vector2(4, -6), Color(0.5, 0.35, 0.2), 2.0)
-	# lampposts (cafe tables share the poles array but are drawn below)
+	# lampposts downtown, trees in the park (same physics, different soul)
 	for i in range(deco_pole_count):
 		var p := poles[i]
-		draw_circle(p, POLE_RADIUS + 3.0, Color(0.2, 0.2, 0.22, 0.35))
-		draw_circle(p, POLE_RADIUS, Color(0.44, 0.44, 0.48))
-		draw_circle(p, 4.0, Color(0.55, 0.55, 0.6))
+		if lvl == "park":
+			draw_circle(p, 42.0, Color(0.2, 0.35, 0.2, 0.3))
+			draw_circle(p + Vector2(10, 8), 28.0, Color(0.22, 0.38, 0.21, 0.3))
+			draw_circle(p, POLE_RADIUS, Color(0.4, 0.3, 0.2))
+			draw_circle(p, 4.0, Color(0.32, 0.24, 0.16))
+		else:
+			draw_circle(p, POLE_RADIUS + 3.0, Color(0.2, 0.2, 0.22, 0.35))
+			draw_circle(p, POLE_RADIUS, Color(0.44, 0.44, 0.48))
+			draw_circle(p, 4.0, Color(0.55, 0.55, 0.6))
 	# trash bins
 	for bn in bins:
 		draw_circle(bn, 11.0, Color(0.24, 0.32, 0.26))
@@ -1097,10 +1196,11 @@ func _draw() -> void:
 	draw_rect(Rect2(SIDEWALK_LEFT - 14, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
 	draw_rect(Rect2(SIDEWALK_RIGHT, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
 	draw_rect(Rect2(SIDEWALK_LEFT - 14, GATE_Y - 58, SIDEWALK_RIGHT - SIDEWALK_LEFT + 28, 14), Color(0.35, 0.3, 0.28))
-	draw_string(font, Vector2(600, GATE_Y - 66), "PARK", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color(0.9, 0.88, 0.8))
+	draw_string(font, Vector2(600, GATE_Y - 66), gate_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color(0.9, 0.88, 0.8))
 	var gx := SIDEWALK_LEFT
 	while gx < SIDEWALK_RIGHT:
 		draw_line(Vector2(gx, GATE_Y), Vector2(gx + 16.0, GATE_Y), Color(0.9, 0.88, 0.8, 0.6), 3.0)
 		gx += 32.0
 	# start hint
-	draw_string(font, Vector2(430, START_Y + 90), "The park is up ahead. Mind the bike lanes.", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color(1, 1, 1, 0.5))
+	var hint_txt := "The park is up ahead. Mind the bike lanes." if lvl == "street" else "A stroll through the park, then home. Mind the pond."
+	draw_string(font, Vector2(430, START_Y + 90), hint_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color(1, 1, 1, 0.5))

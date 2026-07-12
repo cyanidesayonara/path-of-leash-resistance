@@ -38,6 +38,12 @@ func _physics_process(delta: float) -> void:
 			global_position.distance_to(human.global_position))
 		if threat < 70.0:
 			scare()
+		else:
+			# traffic scatters pigeons too
+			for b in get_tree().get_nodes_in_group("bikes"):
+				if global_position.distance_to(b.global_position) < 90.0:
+					scare()
+					break
 	queue_redraw()
 
 
