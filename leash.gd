@@ -24,6 +24,7 @@ var poles: Array[Vector2] = []
 var rest_len := 260.0
 var taut := false
 var contacts := 0
+var near_poles: Array[Vector2] = []
 # while > 0 the rope slides freely on poles (no stick): set during a whirl
 # so the choreographed unwind can never be arrested by rope grip
 var free_slip_t := 0.0
@@ -60,6 +61,17 @@ func tick(delta: float) -> void:
 		pts[i] += vel
 	var start := pts.duplicate()
 	var touched := {}
+	# only poles near the rope's bounding box matter this frame; checking
+	# every pole on the level per point per iteration is the single
+	# biggest per-frame cost otherwise
+	var rl := minf(pts[0].x, pts[N - 1].x) - 90.0
+	var rr := maxf(pts[0].x, pts[N - 1].x) + 90.0
+	var rt := minf(pts[0].y, pts[N - 1].y) - 90.0
+	var rb := maxf(pts[0].y, pts[N - 1].y) + 90.0
+	near_poles.clear()
+	for npl in poles:
+		if npl.x > rl and npl.x < rr and npl.y > rt and npl.y < rb:
+			near_poles.append(npl)
 	for _iter in range(ITER):
 		pts[0] = dog.global_position
 		pts[N - 1] = _hand_pos()
@@ -79,7 +91,7 @@ func tick(delta: float) -> void:
 		# segment-vs-circle collision: point-only checks tunnel when
 		# stretched segments straddle the pole between two points
 		for i in range(N - 1):
-			for pl in poles:
+			for pl in near_poles:
 				var cp := _closest_on_segment(pts[i], pts[i + 1], pl)
 				var dp := cp - pl
 				var l := dp.length()

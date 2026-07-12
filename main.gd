@@ -120,6 +120,7 @@ var title_l: Label
 var sub_l: Label
 var prompt_l: Label
 var select_l: Label
+var owner_l: Label
 var prompt_tw: Tween
 var quests_label: Label
 var msg_label: Label
@@ -257,18 +258,18 @@ func _build_level_data() -> void:
 			# pavement | palms and cafe terraces. The human walks the
 			# pavement; the dog walks wherever a dog walks.
 			gate_text = "HOME"
-			walk_cx = 785.0
-			walk_half = 195.0
-			gate_l = 590.0
+			walk_cx = 770.0
+			walk_half = 210.0
+			gate_l = 560.0
 			gate_r = 980.0
 			tut_l = 110.0
 			tut_r = 1160.0
 			# palms: a row along the boardwalk, a row by the cafes, one
 			# rebel in the middle of the pavement
 			for i in range(6):
-				poles.append(Vector2(480.0, -400.0 - i * 880.0))
+				poles.append(Vector2(462.0, -400.0 - i * 880.0))
 			for i in range(5):
-				poles.append(Vector2(1005.0, -700.0 - i * 880.0))
+				poles.append(Vector2(998.0, -700.0 - i * 880.0))
 			poles.append(Vector2(760.0, -2750.0))
 			deco_pole_count = poles.size()
 			# terrace tables under canopies, twice along the route
@@ -285,19 +286,19 @@ func _build_level_data() -> void:
 			var ty := -800.0
 			for i in range(5):
 				towels.append({
-					"rect": Rect2(randf_range(130.0, 240.0), ty, 46, 80),
+					"rect": Rect2(randf_range(120.0, 270.0), ty, 46, 80),
 					"col": towel_cols[i % 4], "bather": i % 2 == 0, "cd": 0.0,
 				})
 				ty -= randf_range(700.0, 1000.0)
 			bins = [
-				Vector2(620, -700), Vector2(950, -1600), Vector2(620, -2500),
-				Vector2(950, -3400), Vector2(620, -4300),
+				Vector2(590, -700), Vector2(950, -1600), Vector2(590, -2500),
+				Vector2(950, -3400), Vector2(590, -4300),
 			]
-			benches = [Vector2(520, -1200), Vector2(520, -2800), Vector2(520, -4200)]
+			benches = [Vector2(410, -1200), Vector2(410, -2800), Vector2(410, -4200)]
 			hyd_list = [
-				Vector2(610, -1000), Vector2(950, -2200), Vector2(610, -3200), Vector2(950, -4500),
+				Vector2(578, -1000), Vector2(950, -2200), Vector2(578, -3200), Vector2(950, -4500),
 			]
-			keb_list = [Vector2(700, -1900), Vector2(860, -4200), Vector2(450, -3000)]
+			keb_list = [Vector2(700, -1900), Vector2(860, -4200), Vector2(420, -3000)]
 	for tb in tables:
 		poles.append(tb)
 	# trash bins: bag deposit targets for the owner's chore chain; they
@@ -451,13 +452,20 @@ func _build_hud() -> void:
 	select_l.size = Vector2(1280, 32)
 	select_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	select_l.text = "<   %s   >" % Game.LEVEL_NAMES[lvl]
-	prompt_l = _hud_label(Vector2(0, 396), 20)
+	owner_l = _hud_label(Vector2(0, 384), 18)
+	owner_l.size = Vector2(1280, 28)
+	owner_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	owner_l.text = "walking: %s   (up/down)" % Game.owner_id.to_upper()
+	prompt_l = _hud_label(Vector2(0, 424), 20)
 	prompt_l.size = Vector2(1280, 30)
 	prompt_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	prompt_l.text = "press SPACE / A to go walkies"
 	prompt_tw = create_tween().set_loops()
 	prompt_tw.tween_property(prompt_l, "modulate:a", 0.25, 0.7)
 	prompt_tw.tween_property(prompt_l, "modulate:a", 1.0, 0.7)
+	var touch := Control.new()
+	touch.set_script(load("res://touch_controls.gd"))
+	hud.add_child(touch)
 	dim = ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.55)
 	dim.size = Vector2(1280, 720)
@@ -544,11 +552,14 @@ func _process(_delta: float) -> void:
 			Game.cycle_level(1 if Input.is_action_just_pressed("move_right") else -1)
 			get_tree().reload_current_scene()
 			return
+		if Input.is_action_just_pressed("move_up") or Input.is_action_just_pressed("move_down"):
+			Game.toggle_owner()
+			owner_l.text = "walking: %s   (up/down)" % Game.owner_id.to_upper()
 		if Input.is_action_just_pressed("plant") or Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pee"):
 			started = true
 			frozen = false
 			prompt_tw.kill()
-			for l: Label in [title_l, sub_l, prompt_l, select_l]:
+			for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l]:
 				var tw := create_tween()
 				tw.tween_property(l, "modulate:a", 0.0, 0.5)
 	var target_y := (dog.global_position.y + human.global_position.y) / 2.0 - 60.0
@@ -742,13 +753,13 @@ func _vlane(delta: float) -> void:
 			kid = randf() < 0.4
 			speed = randf_range(70.0, 120.0) if kid else randf_range(300.0, 440.0)
 			if kid and randf() < 0.5:
-				x = randf_range(610.0, 950.0)
-				band_lo = 600.0
+				x = randf_range(590.0, 950.0)
+				band_lo = 575.0
 				band_hi = 960.0
 			else:
-				x = randf_range(505.0, 585.0)
-				band_lo = 505.0
-				band_hi = 585.0
+				x = randf_range(488.0, 552.0)
+				band_lo = 486.0
+				band_hi = 554.0
 	var b := Node2D.new()
 	b.set_script(load("res://bike.gd"))
 	b.position = Vector2(x, y)
@@ -766,7 +777,7 @@ func _squirrels(delta: float) -> void:
 		c.set_script(load("res://squirrel.gd"))
 		var cat_x := 336.0 if randf() < 0.5 else 944.0
 		if lvl == "beach":
-			cat_x = 1010.0 if randf() < 0.5 else 520.0
+			cat_x = 1010.0 if randf() < 0.5 else 462.0
 		c.position = Vector2(cat_x, cat_y)
 		c.z_index = 9
 		add_child(c)
@@ -780,7 +791,7 @@ func _squirrels(delta: float) -> void:
 			p.set_script(load("res://pigeon.gd"))
 			var fx := randf_range(480.0, 820.0)
 			if gulls:
-				fx = randf_range(130.0, 290.0) if randf() < 0.7 else randf_range(320.0, 480.0)
+				fx = randf_range(120.0, 320.0) if randf() < 0.7 else randf_range(350.0, 470.0)
 			p.position = Vector2(fx, fy + randf_range(-40.0, 40.0))
 			p.z_index = 8
 			add_child(p)
@@ -873,7 +884,7 @@ func on_dog_hit() -> void:
 func _offpath(delta: float) -> void:
 	# the dog may roam, but an undistracted owner has opinions: after a
 	# few seconds off the walk they tut and reel the leash in a notch
-	dog.sand_slow = lvl == "beach" and dog.global_position.x < 300.0
+	dog.sand_slow = lvl == "beach" and dog.global_position.x < 340.0
 	var off: bool = dog.global_position.x < tut_l or dog.global_position.x > tut_r
 	if off and human.is_available_for_chore() and not human.is_fallen():
 		offpath_t += delta
@@ -1193,6 +1204,10 @@ func float_text(pos: Vector2, text: String, color: Color = Color.WHITE) -> void:
 func _draw() -> void:
 	var top := GATE_Y - 800.0
 	var bottom := START_Y + 320.0
+	# cull to the camera: redrawing 5500px of detail lines every frame
+	# was the browser stutter
+	var vt: float = cam.position.y - 440.0
+	var vb: float = cam.position.y + 440.0
 	if lvl == "beach":
 		# Passeig Maritim, west to east: sea, sand, boardwalk, bike
 		# path, pavement, cafe strip, buildings
@@ -1200,33 +1215,37 @@ func _draw() -> void:
 		var wt := Time.get_ticks_msec() / 1000.0
 		var fy := top + 40.0
 		while fy < bottom:
-			draw_line(Vector2(72 + sin(fy * 0.011 + wt * 1.5) * 9.0, fy), Vector2(84 + sin(fy * 0.013 + wt * 1.5) * 9.0, fy + 70.0), Color(1, 1, 1, 0.25), 3.0)
+			if fy > vt and fy < vb:
+				draw_line(Vector2(72 + sin(fy * 0.011 + wt * 1.5) * 9.0, fy), Vector2(84 + sin(fy * 0.013 + wt * 1.5) * 9.0, fy + 70.0), Color(1, 1, 1, 0.25), 3.0)
 			fy += 150.0
-		draw_rect(Rect2(90, top, 210, bottom - top), Color(0.84, 0.75, 0.56))
-		draw_rect(Rect2(300, top, 200, bottom - top), Color(0.6, 0.45, 0.3))
+		draw_rect(Rect2(90, top, 250, bottom - top), Color(0.87, 0.8, 0.66))
+		draw_rect(Rect2(340, top, 140, bottom - top), Color(0.74, 0.66, 0.53))
 		var py := START_Y + 200.0
 		while py > GATE_Y:
-			draw_line(Vector2(300, py), Vector2(500, py), Color(0.51, 0.38, 0.25), 2.0)
+			if py < vb and py > vt:
+				draw_line(Vector2(340, py), Vector2(480, py), Color(0.66, 0.58, 0.45), 2.0)
 			py -= 22.0
-		draw_rect(Rect2(500, top, 90, bottom - top), Color(0.52, 0.34, 0.3))
+		draw_rect(Rect2(480, top, 80, bottom - top), Color(0.44, 0.24, 0.2))
 		var ddy := START_Y + 200.0
 		while ddy > GATE_Y:
-			draw_line(Vector2(545, ddy), Vector2(545, ddy - 26.0), Color(0.85, 0.82, 0.75, 0.5), 2.0)
+			if ddy < vb and ddy > vt:
+				draw_line(Vector2(520, ddy), Vector2(520, ddy - 26.0), Color(0.85, 0.82, 0.75, 0.5), 2.0)
 			ddy -= 64.0
-		draw_rect(Rect2(590, top, 390, bottom - top), Color(0.72, 0.7, 0.66))
+		draw_rect(Rect2(560, top, 420, bottom - top), Color(0.79, 0.76, 0.7))
 		var sy := START_Y + 200.0
 		while sy > GATE_Y:
-			draw_line(Vector2(590, sy), Vector2(980, sy), Color(0.64, 0.62, 0.58), 2.0)
+			if sy < vb and sy > vt:
+				draw_line(Vector2(560, sy), Vector2(980, sy), Color(0.71, 0.68, 0.62), 2.0)
 			sy -= 150.0
-		draw_rect(Rect2(980, top, 200, bottom - top), Color(0.68, 0.64, 0.58))
+		draw_rect(Rect2(980, top, 200, bottom - top), Color(0.76, 0.72, 0.65))
 		draw_rect(Rect2(1180, top, 520, bottom - top), Color(0.35, 0.33, 0.31))
-		draw_line(Vector2(300, bottom), Vector2(300, GATE_Y), Color(0.45, 0.33, 0.2), 3.0)
-		draw_line(Vector2(500, bottom), Vector2(500, GATE_Y), COL_SEAM, 2.0)
-		draw_line(Vector2(590, bottom), Vector2(590, GATE_Y), COL_SEAM, 2.0)
+		draw_line(Vector2(340, bottom), Vector2(340, GATE_Y), Color(0.55, 0.45, 0.32), 3.0)
+		draw_line(Vector2(480, bottom), Vector2(480, GATE_Y), COL_SEAM, 2.0)
+		draw_line(Vector2(560, bottom), Vector2(560, GATE_Y), COL_SEAM, 2.0)
 		draw_line(Vector2(980, bottom), Vector2(980, GATE_Y), COL_SEAM, 2.0)
 		for t in tufts:
-			if t.x > 110.0 and (t.x < 290.0 or t.x > 1000.0) and t.x < 1170.0:
-				draw_circle(t, 4.0, Color(0.76, 0.66, 0.48))
+			if t.y > vt and t.y < vb and t.x > 110.0 and (t.x < 330.0 or t.x > 1000.0) and t.x < 1170.0:
+				draw_circle(t, 4.0, Color(0.78, 0.7, 0.54))
 		for twd in towels:
 			var r: Rect2 = twd.rect
 			draw_rect(r, twd.col)
@@ -1239,13 +1258,15 @@ func _draw() -> void:
 		var walkway := COL_SIDEWALK if lvl == "street" else Color(0.62, 0.55, 0.42)
 		draw_rect(Rect2(-400, top, 2100, bottom - top), grass)
 		for t in tufts:
-			draw_circle(t, 5.0, COL_GRASS_DARK)
+			if t.y > vt and t.y < vb:
+				draw_circle(t, 5.0, COL_GRASS_DARK)
 		# the walkway: sidewalk downtown, packed dirt in the park
 		draw_rect(Rect2(SIDEWALK_LEFT, GATE_Y - 40.0, SIDEWALK_RIGHT - SIDEWALK_LEFT, bottom - GATE_Y), walkway)
 		if lvl == "street":
 			var y := START_Y + 200.0
 			while y > GATE_Y:
-				draw_line(Vector2(SIDEWALK_LEFT, y), Vector2(SIDEWALK_RIGHT, y), COL_SEAM, 2.0)
+				if y < vb and y > vt:
+					draw_line(Vector2(SIDEWALK_LEFT, y), Vector2(SIDEWALK_RIGHT, y), COL_SEAM, 2.0)
 				y -= 150.0
 		draw_line(Vector2(SIDEWALK_LEFT, bottom), Vector2(SIDEWALK_LEFT, GATE_Y), COL_SEAM, 3.0)
 		draw_line(Vector2(SIDEWALK_RIGHT, bottom), Vector2(SIDEWALK_RIGHT, GATE_Y), COL_SEAM, 3.0)
@@ -1260,14 +1281,16 @@ func _draw() -> void:
 		draw_rect(Rect2(BLANE_R, GATE_Y - 40.0, SHOULDER_R - BLANE_R, bottom - GATE_Y), COL_SIDEWALK)
 		var dy := START_Y + 200.0
 		while dy > GATE_Y:
-			draw_line(Vector2((BLANE_L + BLANE_R) / 2.0, dy), Vector2((BLANE_L + BLANE_R) / 2.0, dy - 26.0), Color(0.85, 0.82, 0.75, 0.5), 2.0)
+			if dy < vb and dy > vt:
+				draw_line(Vector2((BLANE_L + BLANE_R) / 2.0, dy), Vector2((BLANE_L + BLANE_R) / 2.0, dy - 26.0), Color(0.85, 0.82, 0.75, 0.5), 2.0)
 			dy -= 64.0
 		var gy := START_Y - 100.0
 		while gy > GATE_Y:
-			var cxx := (BLANE_L + BLANE_R) / 2.0 - 14.0
-			draw_circle(Vector2(cxx - 7, gy), 4.0, Color(1, 1, 1, 0.3))
-			draw_circle(Vector2(cxx + 7, gy), 4.0, Color(1, 1, 1, 0.3))
-			draw_line(Vector2(cxx - 7, gy), Vector2(cxx + 7, gy - 6), Color(1, 1, 1, 0.3), 2.0)
+			if gy < vb and gy > vt:
+				var cxx := (BLANE_L + BLANE_R) / 2.0 - 14.0
+				draw_circle(Vector2(cxx - 7, gy), 4.0, Color(1, 1, 1, 0.3))
+				draw_circle(Vector2(cxx + 7, gy), 4.0, Color(1, 1, 1, 0.3))
+				draw_line(Vector2(cxx - 7, gy), Vector2(cxx + 7, gy - 6), Color(1, 1, 1, 0.3), 2.0)
 			gy -= 600.0
 		draw_line(Vector2(BLANE_L, bottom), Vector2(BLANE_L, GATE_Y), COL_SEAM, 3.0)
 		draw_line(Vector2(BLANE_R, bottom), Vector2(BLANE_R, GATE_Y), COL_SEAM, 2.0)
@@ -1322,6 +1345,8 @@ func _draw() -> void:
 	# (same physics, different soul)
 	for i in range(deco_pole_count):
 		var p := poles[i]
+		if p.y < vt - 60.0 or p.y > vb + 60.0:
+			continue
 		if lvl == "park":
 			draw_circle(p, 42.0, Color(0.2, 0.35, 0.2, 0.3))
 			draw_circle(p + Vector2(10, 8), 28.0, Color(0.22, 0.38, 0.21, 0.3))

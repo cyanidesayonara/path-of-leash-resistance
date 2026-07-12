@@ -471,9 +471,11 @@ func _process(_delta: float) -> void:
 
 
 func _draw() -> void:
-	var shirt := Color(0.35, 0.42, 0.55)
+	var woman: bool = Game.owner_id == "her"
+	var shirt := Color(0.6, 0.38, 0.44) if woman else Color(0.35, 0.42, 0.55)
 	var skin := Color(0.85, 0.72, 0.58)
-	var pants := Color(0.25, 0.27, 0.32)
+	var pants := Color(0.3, 0.28, 0.34) if woman else Color(0.25, 0.27, 0.32)
+	var hair_col := Color(0.42, 0.3, 0.18) if woman else Color(0.3, 0.22, 0.15)
 	var t := Time.get_ticks_msec() / 1000.0
 	var fd := face_dir
 	var side := fd.orthogonal()
@@ -488,11 +490,13 @@ func _draw() -> void:
 	# arms reaching forward to the phone
 	draw_line(side * 10.0, side * 4.0 + fd * 17.0, skin, 5.0)
 	draw_line(-side * 10.0, -side * 4.0 + fd * 17.0, skin, 5.0)
-	# head, hair on the back of it
+	# head, hair on the back of it; she gets the fuller cut and a ponytail
 	var head := fd * 5.0
 	draw_circle(head, 9.0, skin)
 	var back := (-fd).angle()
-	draw_arc(head, 9.0, back - 0.85, back + 0.85, 12, Color(0.3, 0.22, 0.15), 5.0)
+	draw_arc(head, 9.0, back - (1.15 if woman else 0.85), back + (1.15 if woman else 0.85), 12, hair_col, 5.0)
+	if woman:
+		draw_circle(head - fd * 11.0, 3.6, hair_col)
 	# the phone, held out front, eternally glowing
 	var glow := 0.55 + 0.2 * sin(t * 7.3)
 	draw_set_transform(fd * 24.0, fd.angle() + PI / 2.0, Vector2.ONE)

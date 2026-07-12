@@ -6,6 +6,11 @@ const LEVELS: Array[String] = ["street", "park", "beach"]
 const LEVEL_NAMES := {"street": "The Boulevard", "park": "The Park", "beach": "Passeig Maritim"}
 
 var level_id := "street"
+var owner_id := "him"  # "him" | "her"; a proper character creator can come later
+
+
+func toggle_owner() -> void:
+	owner_id = "her" if owner_id == "him" else "him"
 
 
 func _ready() -> void:

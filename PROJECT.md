@@ -168,6 +168,16 @@ memorable.
   physics argument. The rope is already a self-contained component;
   the tangle is rope-vs-rope collision plus a lot of playtesting.
   Likely the flagship mechanic of the dog park setting.
+- Carry missions: Millie can hold things in her mouth - fetch quests
+  per level (take X from here to there), a ball-catch minigame, the
+  newspaper delivery. Mouth slot + item nodes; quest pool entries.
+- Level editor: data-driven levels FIRST (due at setting four), which
+  makes an internal editor nearly free and player-facing editing a
+  realistic post-launch option. Not before.
+- Character creator: two preset owners exist (HIM/HER); creator later.
+- Uniqueness rule (from playtesting): shared asset library for
+  efficiency, but every setting must earn its own look AND at least one
+  interaction that exists nowhere else - it gets dull otherwise.
 
 ## Process
 

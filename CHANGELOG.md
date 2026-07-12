@@ -2,6 +2,24 @@
 
 Append-only session history, newest first.
 
+## 2026-07-12 — touch controls, performance pass, two owners, beach palette
+
+- The web build is playable on phones: a floating virtual joystick on
+  the left half of the screen and DIG/BARK/PEE/R buttons on the right.
+  They feed the same input actions as keyboard and gamepad, so there is
+  no second control scheme to maintain. Only visible on touch devices.
+- Performance (the browser stutter): the leash now collision-checks only
+  poles near the rope's bounding box (was every pole on the level, per
+  point, per iteration - the single biggest per-frame cost), and the
+  level draw culls detail lines, tufts, and poles to the camera window
+  instead of redrawing 5500px of them every frame.
+- Two selectable owners on the title screen (up/down): HIM and HER -
+  different hair, ponytail, palette. A proper character creator is a
+  future-systems note.
+- Passeig Maritim palette and proportions corrected against the
+  reference photos: wider pale sand, narrower pale-wood boardwalk, dark
+  brick bike path, pale pavement.
+
 ## 2026-07-12 — PASSEIG MARITIM (level three), free roaming
 
 - Level three, modeled on the family's real daily walk in Badalona: sea
