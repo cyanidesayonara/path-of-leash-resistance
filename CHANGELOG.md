@@ -2,6 +2,28 @@
 
 Append-only session history, newest first.
 
+## 2026-07-12 — the slipping regression, props that make sense
+
+- The perf pass's pole filter computed its bounding box from the rope's
+  ENDPOINTS only; a partial wind puts both endpoints on one side of the
+  pole, the pole got excluded from collision, and the rope ghosted
+  through - the slipping-off regression. The box now covers every rope
+  point. (Lesson repeated: fast and wrong is still wrong.)
+- Environmental storytelling pass, because "why is there an open manhole
+  in the middle of the walkway": manholes now have work cones nobody
+  moved, cellar doors are propped open next to a delivery crate and a
+  cone, mid-walkway poles on the Boulevard are street TREES in grates
+  (that is why they stand there), lampposts grew a lamp head so they
+  stop reading as bins, bins got a lid, mouth and handle - the green
+  lidded thing is the only thing the owner bags into. The beach lost
+  its inexplicable mid-pavement palm.
+- PROJECT.md: "the shape of a walk" direction - walk out, DESTINATION
+  as the off-leash reward (dog park / beach / meadow, other dogs,
+  minigames), then the walk home. Replaces the finish line eventually.
+- Name check result: "Touch Grass" is TAKEN on Steam (LionsHead
+  Development, trademark claimed) plus a cluster of similar titles.
+  "Path of Leash Resistance" checked clear. Decision pending.
+
 ## 2026-07-12 — touch controls, performance pass, two owners, beach palette
 
 - The web build is playable on phones: a floating virtual joystick on

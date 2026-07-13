@@ -63,14 +63,22 @@ func tick(delta: float) -> void:
 	var touched := {}
 	# only poles near the rope's bounding box matter this frame; checking
 	# every pole on the level per point per iteration is the single
-	# biggest per-frame cost otherwise
-	var rl := minf(pts[0].x, pts[N - 1].x) - 90.0
-	var rr := maxf(pts[0].x, pts[N - 1].x) + 90.0
-	var rt := minf(pts[0].y, pts[N - 1].y) - 90.0
-	var rb := maxf(pts[0].y, pts[N - 1].y) + 90.0
+	# biggest per-frame cost otherwise. The box MUST cover every rope
+	# point, not just the endpoints - a partial wind puts both endpoints
+	# on one side of the pole, and an endpoint-only box excluded it,
+	# letting the rope ghost through (the slipping-off regression).
+	var rl := pts[0].x
+	var rr := pts[0].x
+	var rt := pts[0].y
+	var rb := pts[0].y
+	for rp in pts:
+		rl = minf(rl, rp.x)
+		rr = maxf(rr, rp.x)
+		rt = minf(rt, rp.y)
+		rb = maxf(rb, rp.y)
 	near_poles.clear()
 	for npl in poles:
-		if npl.x > rl and npl.x < rr and npl.y > rt and npl.y < rb:
+		if npl.x > rl - 40.0 and npl.x < rr + 40.0 and npl.y > rt - 40.0 and npl.y < rb + 40.0:
 			near_poles.append(npl)
 	for _iter in range(ITER):
 		pts[0] = dog.global_position

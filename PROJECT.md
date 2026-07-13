@@ -106,6 +106,18 @@ the phone; final level the battery is dead and the walk is just a walk.
   leash types (retractable, bungee, chain), and a home/park hub that fills
   with trophies. A photo album of best saves doubles as share bait.
 
+## The shape of a walk (design direction, July 2026 playtesting)
+
+A dog walk is never A to B - you always come home. The eventual level
+template, replacing the finish line:
+
+1. **The walk out** - the corridor: hazards, temptations, quests.
+2. **The destination as the reward** - dog park, dog beach, meadow at
+   the corridor's end. Off-leash, let loose, run and bark with other
+   dogs; soft minigames (smell every dog, ball catch, fetch).
+3. **The walk home** - the same corridor southbound with fresh spawns,
+   tired-dog pacing, end-of-walk light.
+
 ## Settings catalog
 
 Twenty settings, each with a signature feature that only it has, drawing

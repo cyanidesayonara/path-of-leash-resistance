@@ -264,13 +264,12 @@ func _build_level_data() -> void:
 			gate_r = 980.0
 			tut_l = 110.0
 			tut_r = 1160.0
-			# palms: a row along the boardwalk, a row by the cafes, one
-			# rebel in the middle of the pavement
+			# palms: a row along the boardwalk, a row by the cafes -
+			# where the city actually plants them
 			for i in range(6):
 				poles.append(Vector2(462.0, -400.0 - i * 880.0))
 			for i in range(5):
 				poles.append(Vector2(998.0, -700.0 - i * 880.0))
-			poles.append(Vector2(760.0, -2750.0))
 			deco_pole_count = poles.size()
 			# terrace tables under canopies, twice along the route
 			tables = [
@@ -1325,10 +1324,13 @@ func _draw() -> void:
 			draw_circle(Vector2(wx, ly), 16.0, Color(0.95, 0.8, 0.25))
 			draw_rect(Rect2(wx - 2.0, ly - 9.0, 4.0, 10.0), Color(0.15, 0.15, 0.15))
 			draw_circle(Vector2(wx, ly + 6.0), 2.2, Color(0.15, 0.15, 0.15))
-	# manholes
+	# manholes - open for street work, hence the cones nobody moved
 	for m in manholes:
 		draw_circle(m, 24.0, Color(0.12, 0.12, 0.14))
 		draw_arc(m, 19.0, 0, TAU, 24, Color(0.3, 0.3, 0.33), 2.0)
+		for co in [Vector2(30, -16), Vector2(-26, 20)]:
+			draw_circle(m + co, 5.0, Color(0.85, 0.45, 0.15))
+			draw_circle(m + co, 2.4, Color(0.95, 0.92, 0.85))
 	# hydrants
 	for h in hydrants:
 		var c := Color(0.45, 0.4, 0.38) if h.done else Color(0.64, 0.26, 0.2)
@@ -1358,10 +1360,18 @@ func _draw() -> void:
 				var fa := TAU * j / 6.0 + p.x * 0.01 + p.y * 0.007
 				draw_line(p, p + Vector2.from_angle(fa) * 27.0, Color(0.27, 0.44, 0.24, 0.85), 4.0)
 			draw_circle(p, 6.0, Color(0.45, 0.35, 0.22))
+		elif p.x > SIDEWALK_LEFT + 60.0 and p.x < SIDEWALK_RIGHT - 60.0:
+			# mid-walkway poles are street trees in grates - that is WHY
+			# they stand in the middle of a sidewalk
+			draw_rect(Rect2(p.x - 15, p.y - 15, 30, 30), Color(0.3, 0.3, 0.33), false, 2.0)
+			draw_circle(p, 26.0, Color(0.28, 0.42, 0.26, 0.4))
+			draw_circle(p, POLE_RADIUS - 2.0, Color(0.4, 0.3, 0.2))
 		else:
+			# lamppost, with a lamp head so it stops reading as a bin
 			draw_circle(p, POLE_RADIUS + 3.0, Color(0.2, 0.2, 0.22, 0.35))
 			draw_circle(p, POLE_RADIUS, Color(0.44, 0.44, 0.48))
-			draw_circle(p, 4.0, Color(0.55, 0.55, 0.6))
+			draw_line(p, p + Vector2(9, -9), Color(0.5, 0.5, 0.55), 3.0)
+			draw_circle(p + Vector2(11, -11), 4.5, Color(0.95, 0.9, 0.72))
 	# parasols on the sand: poles with ambition
 	var pcols := [Color(0.85, 0.45, 0.35, 0.7), Color(0.4, 0.6, 0.75, 0.7), Color(0.9, 0.8, 0.4, 0.7)]
 	for i in range(parasols.size()):
@@ -1369,11 +1379,14 @@ func _draw() -> void:
 		draw_circle(pa, 28.0, pcols[i % 3])
 		draw_arc(pa, 28.0, 0, TAU, 20, Color(1, 1, 1, 0.4), 2.0)
 		draw_circle(pa, 3.5, Color(0.4, 0.35, 0.3))
-	# trash bins
+	# trash bins: green, lidded, with a visible mouth - the ONLY thing
+	# the owner will throw a bag into
 	for bn in bins:
 		draw_circle(bn, 11.0, Color(0.24, 0.32, 0.26))
-		draw_circle(bn, 8.0, Color(0.3, 0.4, 0.32))
-		draw_circle(bn, 3.0, Color(0.16, 0.22, 0.18))
+		draw_circle(bn, 8.0, Color(0.32, 0.45, 0.34))
+		draw_arc(bn, 8.0, PI * 0.15, PI * 0.85, 10, Color(0.14, 0.2, 0.16), 3.5)
+		draw_circle(bn, 3.2, Color(0.08, 0.12, 0.1))
+		draw_line(bn + Vector2(-5, 0), bn + Vector2(5, 0), Color(0.55, 0.66, 0.56), 2.0)
 	# cafe tables, and canopies floating over the beach terraces
 	for tb in tables:
 		draw_circle(tb, 14.0, Color(0.6, 0.55, 0.48))
@@ -1387,11 +1400,13 @@ func _draw() -> void:
 	for b in benches:
 		draw_rect(Rect2(b.x - 8, b.y - 24, 16, 48), Color(0.5, 0.38, 0.26))
 		draw_line(Vector2(b.x, b.y - 22), Vector2(b.x, b.y + 22), Color(0.42, 0.32, 0.22), 2.0)
-	# cellar doors
+	# cellar doors, propped open for a delivery
 	for c in cellars:
 		draw_rect(c, Color(0.1, 0.1, 0.12))
 		draw_rect(Rect2(c.position.x, c.position.y, c.size.x, 6), Color(0.35, 0.28, 0.22))
 		draw_line(c.position + Vector2(c.size.x / 2.0, 0), c.position + Vector2(c.size.x / 2.0, c.size.y), Color(0.3, 0.3, 0.33), 2.0)
+		draw_rect(Rect2(c.end.x + 4, c.position.y + 10, 16, 20), Color(0.6, 0.45, 0.3))
+		draw_circle(c.position + Vector2(c.size.x + 12, c.size.y - 8), 5.0, Color(0.85, 0.45, 0.15))
 	# marked spots, stray puddles and, discreetly, the business
 	var pud := Color(0.93, 0.85, 0.4, 0.4)
 	for mk in marks:
