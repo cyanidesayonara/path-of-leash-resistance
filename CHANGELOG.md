@@ -2,6 +2,27 @@
 
 Append-only session history, newest first.
 
+## 2026-07-12 — retitled PATH OF LEASH RESISTANCE, the liveliness pass
+
+- The game is now PATH OF LEASH RESISTANCE ("Touch Grass" is a
+  trademarked Steam game). New tagline: "You are the dog. Go touch
+  grass." - the meme lives on inside. Repo slug stays touch-grass.
+- Kickable traffic cones (cone.gd): bigger, high-contrast, and REAL -
+  dog, owner, and riders all send them skittering with spin. Placed at
+  every manhole and cellar work site plus loose ones; nobody ever puts
+  them back.
+- Liveliness pass, all placements with urban logic: a slalom line of
+  grated street trees on the Boulevard and a tree slalom in the Park;
+  terrace chairs and umbrellas making the cafe properly awful to thread
+  a dog through (street and beach); A-stands with today's specials
+  ("dogs must be leashed" in the park); parked delivery vans half on
+  the walkway (three-circle colliders - the leash wraps around a whole
+  van); street performers with hats, coins, and rising music notes.
+- Concept art mocks in assets/concept/: logo-mock.svg (title lettering
+  with leash spiral and grass baseline) and keyart-mock.svg (the pond
+  splash, itch cover proportions) - composition guides for the
+  watercolor finals.
+
 ## 2026-07-12 — the slipping regression, props that make sense
 
 - The perf pass's pole filter computed its bounding box from the rope's

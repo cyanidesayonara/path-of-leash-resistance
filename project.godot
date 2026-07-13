@@ -3,7 +3,7 @@ config_version=5
 
 [application]
 
-config/name="Touch Grass (prototype)"
+config/name="Path of Leash Resistance (prototype)"
 run/main_scene="res://main.tscn"
 
 [autoload]

@@ -5,10 +5,12 @@ this project. It follows the AGENTS.md open standard (https://agents.md).
 
 ## Project Overview
 
-**Touch Grass** (tagline: "Take the Path of Leash Resistance") is a top-down
-physics comedy game. You are a dog leashed to a phone-distracted human who
-walks on autopilot. Get them to the park with their phone intact while
-sneaking in as much dog business as possible.
+**Path of Leash Resistance** (tagline: "You are the dog. Go touch grass.")
+is a top-down physics comedy game. You are a dog leashed to a
+phone-distracted human who walks on autopilot. Get them through the walk
+with their phone intact while sneaking in as much dog business as
+possible. (The repo slug stays touch-grass; the game was retitled in
+July 2026 after a trademark collision.)
 
 Core design pillars, roadmap, and open questions live in `PROJECT.md`. Read it
 before proposing features.

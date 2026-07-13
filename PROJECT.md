@@ -1,8 +1,9 @@
-# Touch Grass — development plan
+# Path of Leash Resistance — development plan
 
-Tagline: "Take the Path of Leash Resistance."
-Name pending the Phase 3 trademark/Steam collision check before anything
-goes public.
+Tagline: "You are the dog. Go touch grass."
+Retitled July 2026 after the trademark check found "Touch Grass" taken
+on Steam (LionsHead Development, trademark claimed). "Path of Leash
+Resistance" searched clear; verify at EUIPO/USPTO before the store page.
 
 ## The game
 

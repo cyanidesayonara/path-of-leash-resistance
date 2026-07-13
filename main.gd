@@ -67,6 +67,13 @@ var offpath_t := 0.0
 var towels: Array[Dictionary] = []
 var parasols: Array[Vector2] = []
 var canopies: Array[Rect2] = []
+# street furniture: chairs and A-stands share pole physics, vans are
+# multi-circle colliders drawn as one vehicle, performers are pure life
+var chairs: Array[Vector2] = []
+var astands: Array[Vector2] = []
+var vans: Array[Vector2] = []
+var performers: Array[Vector2] = []
+var cone_spots: Array[Vector2] = []
 var sq_spawn_t := 6.0
 var whirl_arm := 0.0
 var whirl_wind_acc := 0.0
@@ -136,6 +143,7 @@ func _ready() -> void:
 	_build_level_data()
 	_build_walls()
 	_build_entities()
+	_spawn_cones()
 	_build_quests()
 	_build_hud()
 	# title screen holds the world until the player goes walkies;
@@ -201,10 +209,25 @@ func _build_level_data() -> void:
 					poles.append(Vector2(x, y))
 			for mp in [Vector2(640, -1750), Vector2(700, -2900), Vector2(580, -4250)]:
 				poles.append(mp)
+			# a slalom line of street trees mid-walkway (in grates)
+			for sl in [Vector2(590, -1880), Vector2(710, -2010), Vector2(590, -2140), Vector2(710, -2270)]:
+				poles.append(sl)
 			deco_pole_count = poles.size()
 			# cafe terrace: tables join the poles array so they block
-			# bodies and snag the leash, but they are drawn as tables
+			# bodies and snag the leash, but they are drawn as tables.
+			# Chairs and umbrellas make it properly hard to thread a dog
+			# through, as in life.
 			tables = [Vector2(760, -3560), Vector2(840, -3660), Vector2(700, -3700), Vector2(790, -3780)]
+			chairs = [
+				Vector2(725, -3535), Vector2(800, -3595), Vector2(872, -3690),
+				Vector2(736, -3745), Vector2(670, -3672), Vector2(815, -3820),
+			]
+			parasols = [Vector2(775, -3610), Vector2(745, -3745)]
+			astands = [Vector2(365, -1150), Vector2(915, -2850), Vector2(370, -4050)]
+			# a delivery van parked half on the walkway, as they do
+			vans = [Vector2(890, -3050)]
+			performers = [Vector2(400, -1550)]
+			cone_spots = [Vector2(858, -2975), Vector2(920, -3130)]
 			manholes = [
 				Vector2(560, -700), Vector2(760, -950), Vector2(480, -1700),
 				Vector2(700, -2100), Vector2(600, -3100), Vector2(820, -3450),
@@ -226,7 +249,7 @@ func _build_level_data() -> void:
 				Vector2(SIDEWALK_LEFT + 45, -4600),
 				Vector2(SHOULDER_R - 12, -1000), Vector2(SHOULDER_R - 12, -3600),
 			]
-			keb_list = [Vector2(620, -1900), Vector2(700, -4200), Vector2(SHOULDER_R - 12, -2400)]
+			keb_list = [Vector2(640, -1960), Vector2(700, -4200), Vector2(SHOULDER_R - 12, -2400)]
 		"park":
 			gate_text = "HOME"
 			# the pond bites into the path; the strip past it is the bridge
@@ -240,7 +263,12 @@ func _build_level_data() -> void:
 			for mp in [Vector2(640, -1750), Vector2(700, -2900), Vector2(580, -4250)]:
 				if not pond.grow(40.0).has_point(mp):
 					poles.append(mp)
+			# a tree slalom on the path, and repair cones by the bridge
+			for sl in [Vector2(570, -1150), Vector2(690, -1280), Vector2(570, -1410), Vector2(690, -1540)]:
+				poles.append(sl)
 			deco_pole_count = poles.size()
+			astands = [Vector2(350, -2050)]
+			cone_spots = [Vector2(720, -2500), Vector2(700, -2960)]
 			bins = [
 				Vector2(SIDEWALK_LEFT + 30, -600), Vector2(SIDEWALK_RIGHT - 30, -1400),
 				Vector2(SIDEWALK_LEFT + 30, -2150), Vector2(SIDEWALK_RIGHT - 30, -3000),
@@ -277,10 +305,16 @@ func _build_level_data() -> void:
 				Vector2(1040, -3300), Vector2(1110, -3360), Vector2(1050, -3420), Vector2(1120, -3480),
 			]
 			canopies = [Rect2(1015, -1710, 135, 240), Rect2(1015, -3510, 135, 240)]
+			chairs = [
+				Vector2(1075, -1470), Vector2(1020, -1560), Vector2(1090, -1640),
+				Vector2(1075, -3270), Vector2(1020, -3360), Vector2(1090, -3440),
+			]
+			astands = [Vector2(600, -1450), Vector2(966, -3250)]
+			vans = [Vector2(930, -4050)]
+			performers = [Vector2(410, -2200)]
+			cone_spots = [Vector2(492, -1500), Vector2(548, -3050)]
 			# parasols are poles too: windable, markable, brilliant
 			parasols = [Vector2(200, -900), Vector2(150, -2300), Vector2(240, -3700), Vector2(170, -4500)]
-			for pa in parasols:
-				poles.append(pa)
 			var towel_cols := [Color(0.85, 0.4, 0.35), Color(0.35, 0.55, 0.8), Color(0.9, 0.75, 0.3), Color(0.5, 0.7, 0.5)]
 			var ty := -800.0
 			for i in range(5):
@@ -300,6 +334,18 @@ func _build_level_data() -> void:
 			keb_list = [Vector2(700, -1900), Vector2(860, -4200), Vector2(420, -3000)]
 	for tb in tables:
 		poles.append(tb)
+	for pa in parasols:
+		poles.append(pa)
+	for ch in chairs:
+		poles.append(ch)
+	for a in astands:
+		poles.append(a)
+	# vans are three colliders in a row: big enough to block, round
+	# enough for the leash to wrap around the whole vehicle
+	for v in vans:
+		poles.append(v + Vector2(0, -46))
+		poles.append(v)
+		poles.append(v + Vector2(0, 46))
 	# trash bins: bag deposit targets for the owner's chore chain; they
 	# also join the poles array, so they block bodies, snag the leash,
 	# and can absolutely be marked
@@ -423,6 +469,24 @@ func _quest_text(q: Dictionary) -> String:
 	return s
 
 
+func _spawn_cones() -> void:
+	# real, kickable cones at every work site plus a few loose ones
+	var spots: Array[Vector2] = []
+	spots.append_array(cone_spots)
+	for m in manholes:
+		spots.append(m + Vector2(30, -16))
+		spots.append(m + Vector2(-26, 20))
+	for c in cellars:
+		spots.append(Vector2(c.end.x + 14, c.position.y + 24))
+	for s in spots:
+		var cn := Node2D.new()
+		cn.set_script(load("res://cone.gd"))
+		cn.position = s
+		cn.z_index = 11
+		add_child(cn)
+		cn.setup(self, dog, human)
+
+
 func _build_hud() -> void:
 	hud = CanvasLayer.new()
 	add_child(hud)
@@ -442,11 +506,11 @@ func _build_hud() -> void:
 	title_l = _hud_label(Vector2(0, 240), 44)
 	title_l.size = Vector2(1280, 52)
 	title_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_l.text = "TOUCH GRASS"
+	title_l.text = "PATH OF LEASH RESISTANCE"
 	sub_l = _hud_label(Vector2(0, 300), 18)
 	sub_l.size = Vector2(1280, 30)
 	sub_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub_l.text = "Take the Path of Leash Resistance"
+	sub_l.text = "You are the dog. Go touch grass."
 	select_l = _hud_label(Vector2(0, 348), 22)
 	select_l.size = Vector2(1280, 32)
 	select_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -1324,13 +1388,10 @@ func _draw() -> void:
 			draw_circle(Vector2(wx, ly), 16.0, Color(0.95, 0.8, 0.25))
 			draw_rect(Rect2(wx - 2.0, ly - 9.0, 4.0, 10.0), Color(0.15, 0.15, 0.15))
 			draw_circle(Vector2(wx, ly + 6.0), 2.2, Color(0.15, 0.15, 0.15))
-	# manholes - open for street work, hence the cones nobody moved
+	# manholes - open for street work; the cones are real nodes now
 	for m in manholes:
 		draw_circle(m, 24.0, Color(0.12, 0.12, 0.14))
 		draw_arc(m, 19.0, 0, TAU, 24, Color(0.3, 0.3, 0.33), 2.0)
-		for co in [Vector2(30, -16), Vector2(-26, 20)]:
-			draw_circle(m + co, 5.0, Color(0.85, 0.45, 0.15))
-			draw_circle(m + co, 2.4, Color(0.95, 0.92, 0.85))
 	# hydrants
 	for h in hydrants:
 		var c := Color(0.45, 0.4, 0.38) if h.done else Color(0.64, 0.26, 0.2)
@@ -1400,13 +1461,46 @@ func _draw() -> void:
 	for b in benches:
 		draw_rect(Rect2(b.x - 8, b.y - 24, 16, 48), Color(0.5, 0.38, 0.26))
 		draw_line(Vector2(b.x, b.y - 22), Vector2(b.x, b.y + 22), Color(0.42, 0.32, 0.22), 2.0)
+	# terrace chairs
+	for ch in chairs:
+		draw_rect(Rect2(ch.x - 6, ch.y - 6, 12, 12), Color(0.55, 0.42, 0.3))
+		draw_line(ch + Vector2(-6, -6), ch + Vector2(6, -6), Color(0.4, 0.3, 0.2), 3.0)
+	# A-stands: today's specials, in squiggle
+	for a in astands:
+		draw_rect(Rect2(a.x - 11, a.y - 14, 22, 28), Color(0.9, 0.86, 0.78))
+		draw_rect(Rect2(a.x - 11, a.y - 14, 22, 28), Color(0.4, 0.36, 0.3), false, 2.0)
+		draw_line(a + Vector2(-6, -6), a + Vector2(6, -6), Color(0.5, 0.45, 0.38), 2.0)
+		draw_line(a + Vector2(-6, 0), a + Vector2(6, 0), Color(0.5, 0.45, 0.38), 2.0)
+		draw_line(a + Vector2(-6, 6), a + Vector2(2, 6), Color(0.7, 0.4, 0.3), 2.0)
+	# parked service vans, half on the walkway, hazards blinking in spirit
+	for v in vans:
+		for w in [Vector2(-36, -44), Vector2(30, -44), Vector2(-36, 30), Vector2(30, 30)]:
+			draw_rect(Rect2(v.x + w.x, v.y + w.y, 6, 16), Color(0.12, 0.12, 0.14))
+		draw_rect(Rect2(v.x - 32, v.y - 66, 64, 132), Color(0.88, 0.88, 0.86))
+		draw_rect(Rect2(v.x - 32, v.y - 66, 64, 132), Color(0.55, 0.55, 0.55), false, 2.0)
+		draw_rect(Rect2(v.x - 26, v.y - 60, 52, 22), Color(0.35, 0.42, 0.5))
+		draw_line(v + Vector2(-24, 62), v + Vector2(24, 62), Color(0.6, 0.3, 0.25), 3.0)
+	# street performers: a hat, some coins, music in the air
+	var pt := Time.get_ticks_msec() / 1000.0
+	for pf in performers:
+		draw_circle(pf, 12.0, Color(0.5, 0.35, 0.5))
+		draw_circle(pf + Vector2(0, -4), 7.0, Color(0.85, 0.72, 0.58))
+		draw_arc(pf + Vector2(0, -4), 7.0, PI, TAU, 10, Color(0.2, 0.15, 0.1), 4.0)
+		draw_circle(pf + Vector2(18, 12), 6.0, Color(0.3, 0.25, 0.2))
+		draw_circle(pf + Vector2(16, 11), 1.5, Color(0.9, 0.8, 0.3))
+		draw_circle(pf + Vector2(20, 13), 1.5, Color(0.9, 0.8, 0.3))
+		for i in range(2):
+			var ny := fmod(pt * 22.0 + i * 20.0, 44.0)
+			var np := pf + Vector2(14.0 + i * 10.0 - ny * 0.2, -14.0 - ny)
+			var na := clampf(1.0 - ny / 44.0, 0.0, 1.0) * 0.8
+			draw_circle(np, 3.0, Color(1, 1, 1, na))
+			draw_line(np + Vector2(2.5, -1), np + Vector2(2.5, -9), Color(1, 1, 1, na), 1.5)
 	# cellar doors, propped open for a delivery
 	for c in cellars:
 		draw_rect(c, Color(0.1, 0.1, 0.12))
 		draw_rect(Rect2(c.position.x, c.position.y, c.size.x, 6), Color(0.35, 0.28, 0.22))
 		draw_line(c.position + Vector2(c.size.x / 2.0, 0), c.position + Vector2(c.size.x / 2.0, c.size.y), Color(0.3, 0.3, 0.33), 2.0)
 		draw_rect(Rect2(c.end.x + 4, c.position.y + 10, 16, 20), Color(0.6, 0.45, 0.3))
-		draw_circle(c.position + Vector2(c.size.x + 12, c.size.y - 8), 5.0, Color(0.85, 0.45, 0.15))
 	# marked spots, stray puddles and, discreetly, the business
 	var pud := Color(0.93, 0.85, 0.4, 0.4)
 	for mk in marks:

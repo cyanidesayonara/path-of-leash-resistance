@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 630 500" font-family="Georgia, serif">
+  <!-- Key art / itch cover composition mock (630x500 = itch cover size).
+       The pond splash scene. Layout guide for the watercolor final. -->
+  <rect width="630" height="500" fill="#eef0e6"/>
+  <!-- park washes -->
+  <ellipse cx="150" cy="90" rx="240" ry="100" fill="#c8d8c0" opacity="0.5"/>
+  <ellipse cx="480" cy="70" rx="220" ry="90" fill="#dce4c8" opacity="0.5"/>
+  <ellipse cx="320" cy="430" rx="360" ry="120" fill="#b9cbaa" opacity="0.5"/>
+  <!-- the pond -->
+  <ellipse cx="180" cy="330" rx="170" ry="95" fill="#7fa8b5" opacity="0.8"/>
+  <ellipse cx="180" cy="330" rx="140" ry="75" fill="#8fb8c2" opacity="0.6"/>
+  <!-- the splash: owner half-submerged, phone held high and dry -->
+  <g transform="translate(180 315)">
+    <path d="M -60 22 q 12 -34 24 0 M -8 26 q 12 -40 26 0 M 44 22 q 10 -30 22 0"
+          fill="none" stroke="#eaf2f4" stroke-width="8" stroke-linecap="round"/>
+    <ellipse cx="0" cy="6" rx="30" ry="20" fill="#46586e"/>
+    <circle cx="-2" cy="-26" r="17" fill="#e3bf98"/>
+    <path d="M -20 -36 a 18 18 0 0 1 36 -2" fill="none" stroke="#4a3826" stroke-width="8"/>
+    <line x1="14" y1="-18" x2="52" y2="-58" stroke="#e3bf98" stroke-width="8" stroke-linecap="round"/>
+    <rect x="46" y="-86" width="18" height="30" rx="3" fill="#20242c"/>
+    <rect x="49" y="-81" width="12" height="21" rx="2" fill="#9fc4e8"/>
+  </g>
+  <!-- ducklings, judging -->
+  <g>
+    <ellipse cx="70" cy="270" rx="12" ry="9" fill="#7a5c34"/>
+    <circle cx="82" cy="264" r="6" fill="#7a5c34"/>
+    <circle cx="104" cy="276" r="5" fill="#e8cf6a"/>
+    <circle cx="118" cy="282" r="5" fill="#e8cf6a"/>
+    <circle cx="132" cy="288" r="5" fill="#e8cf6a"/>
+  </g>
+  <!-- bridge planks, right -->
+  <g stroke="#a8845c" stroke-width="9">
+    <line x1="380" y1="270" x2="580" y2="250"/><line x1="382" y1="292" x2="584" y2="272"/>
+    <line x1="384" y1="314" x2="588" y2="294"/><line x1="386" y1="336" x2="592" y2="316"/>
+  </g>
+  <!-- Millie on the bank, taut leash to the water, ears up, guilt nowhere -->
+  <path d="M 205 292 C 260 240 330 240 372 258" fill="none" stroke="#b8402e" stroke-width="6" stroke-linecap="round"/>
+  <g transform="translate(400 268) rotate(-8)">
+    <ellipse cx="0" cy="0" rx="40" ry="22" fill="#23211f"/>
+    <circle cx="-38" cy="-6" r="15" fill="#23211f"/>
+    <ellipse cx="-54" cy="-8" rx="11" ry="6" fill="#35322e"/>
+    <circle cx="-63" cy="-8" r="3" fill="#151312"/>
+    <path d="M -44 -18 q -12 12 -3 17" fill="none" stroke="#151312" stroke-width="8" stroke-linecap="round"/>
+    <path d="M -28 -19 q 9 10 2 15" fill="none" stroke="#151312" stroke-width="8" stroke-linecap="round"/>
+    <path d="M 36 -4 q 24 -18 20 -36" fill="none" stroke="#23211f" stroke-width="6" stroke-linecap="round"/>
+    <rect x="-20" y="-17" width="27" height="12" rx="5" fill="#b8402e"/>
+    <line x1="-24" y1="14" x2="-28" y2="24" stroke="#23211f" stroke-width="7" stroke-linecap="round"/>
+    <line x1="16" y1="16" x2="22" y2="26" stroke="#23211f" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <!-- title block -->
+  <text x="315" y="415" font-size="40" fill="#2c2a26" font-weight="bold" text-anchor="middle" letter-spacing="1">PATH OF LEASH</text>
+  <text x="315" y="455" font-size="40" fill="#b8402e" font-weight="bold" text-anchor="middle" letter-spacing="1">RESISTANCE</text>
+  <text x="315" y="483" font-size="17" fill="#6a675e" font-style="italic" text-anchor="middle">you are the dog. go touch grass.</text>
+</svg>
