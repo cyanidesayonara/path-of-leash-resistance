@@ -2,6 +2,24 @@
 
 Append-only session history, newest first.
 
+## 2026-07-13 — polish round from playtest
+
+- Street performers have mass now: you walk around a person, not
+  through them.
+- Market stall wrap circles moved to the stall ENDS - the mid circle
+  made the leash snake weirdly across the tabletop. A dragged leash now
+  simply lies across the produce, as it would.
+- Market lampposts check stall footprints before planting themselves
+  (one grew out of a fish stand).
+- Terrace glow-up: umbrellas are wide and sit OVER the tables (furled to
+  a spike at night, as umbrellas are), beach canopies roll up at night,
+  chairs got round seats, legs and backrests, tables got a plate and a
+  coffee.
+- Pee puddle size now reflects the length of the break. Commitment is
+  visible.
+- Control hints show keyboard only until a controller is attached
+  (listens for connect/disconnect live).
+
 ## 2026-07-13 — EL MERCAT (level four), day/night, the realism batch
 
 - Level four: El Mercat. Market stalls with striped awnings line both

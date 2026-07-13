@@ -93,7 +93,7 @@ var streak := 0
 var phone_hp := 3
 var pee := 1.0
 var marks: Array[Vector2] = []
-var puddles: Array[Vector2] = []
+var puddles: Array[Dictionary] = []
 var mark_progress := 0.0
 var mark_target := Vector2(INF, INF)
 var stray_t := 0.0
@@ -134,6 +134,7 @@ var prompt_l: Label
 var select_l: Label
 var owner_l: Label
 var night_l: Label
+var hint_l: Label
 var prompt_tw: Tween
 var quests_label: Label
 var msg_label: Label
@@ -232,7 +233,7 @@ func _build_level_data() -> void:
 				Vector2(725, -3535), Vector2(800, -3595), Vector2(872, -3690),
 				Vector2(736, -3745), Vector2(670, -3672), Vector2(815, -3820),
 			]
-			parasols = [Vector2(775, -3610), Vector2(745, -3745)]
+			parasols = [Vector2(800, -3610), Vector2(745, -3740)]
 			# off the crossing lanes, by the shopfronts where they belong
 			astands = [Vector2(365, -1600), Vector2(915, -2850), Vector2(372, -4330)]
 			# a delivery van parked half on the walkway, as they do
@@ -348,15 +349,21 @@ func _build_level_data() -> void:
 			# El Mercat: stalls line both edges, produce underfoot, the
 			# cat is practically guaranteed (fish)
 			gate_text = "PLAZA"
-			for i in range(7):
-				var x := SIDEWALK_LEFT + 30.0 if i % 2 == 0 else SIDEWALK_RIGHT - 30.0
-				poles.append(Vector2(x, -350.0 - i * 640.0))
-			deco_pole_count = poles.size()
 			stalls = [
 				Vector2(370, -800), Vector2(910, -1150), Vector2(370, -1750),
 				Vector2(910, -2300), Vector2(370, -2900), Vector2(910, -3500),
 				Vector2(370, -4150), Vector2(910, -4650),
 			]
+			for i in range(7):
+				var x := SIDEWALK_LEFT + 30.0 if i % 2 == 0 else SIDEWALK_RIGHT - 30.0
+				var lp := Vector2(x, -350.0 - i * 640.0)
+				var clear := true
+				for st in stalls:
+					if absf(st.x - lp.x) < 75.0 and absf(st.y - lp.y) < 65.0:
+						clear = false
+				if clear:
+					poles.append(lp)
+			deco_pole_count = poles.size()
 			manholes = [Vector2(640, -2050), Vector2(560, -3800)]
 			bins = [
 				Vector2(330, -1400), Vector2(950, -2700),
@@ -396,9 +403,11 @@ func _build_level_data() -> void:
 	for v in vans:
 		for off in [-52.0, -26.0, 0.0, 26.0, 52.0]:
 			poles.append(v + Vector2(0, off))
+	# stall wrap circles at the ENDS only: a mid circle made the rope
+	# snake weirdly across the tabletop
 	for st in stalls:
-		for off in [-32.0, 0.0, 32.0]:
-			poles.append(st + Vector2(off, 0))
+		poles.append(st + Vector2(-48, 0))
+		poles.append(st + Vector2(48, 0))
 	urge_y = randf_range(-3200.0, -1500.0)
 	# rare visitors: a cat some walks, a pigeon flock or two most walks
 	# (seagulls at the beach, obviously)
@@ -465,6 +474,17 @@ func _build_walls() -> void:
 		_add_rect_body(v, Vector2(64, 132))
 	for st in stalls:
 		_add_rect_body(st, Vector2(96, 56))
+	# performers have mass; you walk around a person, not through them
+	for pf in performers:
+		var pb := StaticBody2D.new()
+		pb.collision_layer = 1
+		pb.position = pf
+		var pcs := CollisionShape2D.new()
+		var psh := CircleShape2D.new()
+		psh.radius = 12.0
+		pcs.shape = psh
+		pb.add_child(pcs)
+		add_child(pb)
 
 
 func _add_rect_body(at: Vector2, size: Vector2) -> void:
@@ -582,9 +602,8 @@ func _build_hud() -> void:
 	pee_label = _hud_label(Vector2(52, 112), 17)
 	quests_label = _hud_label(Vector2(936, 16), 15)
 	quests_label.size = Vector2(330, 110)
-	var hint := _hud_label(Vector2(24, 686), 15)
-	hint.text = "WASD / stick: move    SPACE / A: dig in (squat when nature calls)    Q / X: pee    E / B: bark    R: restart"
-	hint.modulate.a = 0.75
+	hint_l = _hud_label(Vector2(24, 686), 15)
+	hint_l.modulate.a = 0.75
 	title_l = _hud_label(Vector2(0, 240), 44)
 	title_l.size = Vector2(1280, 52)
 	title_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -604,11 +623,11 @@ func _build_hud() -> void:
 	night_l = _hud_label(Vector2(0, 414), 18)
 	night_l.size = Vector2(1280, 28)
 	night_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	night_l.text = "time: %s   (E / B)" % ("NIGHT" if Game.night else "DAY")
 	prompt_l = _hud_label(Vector2(0, 452), 20)
 	prompt_l.size = Vector2(1280, 30)
 	prompt_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	prompt_l.text = "press SPACE / A to go walkies"
+	_update_hint()
+	Input.joy_connection_changed.connect(func(_d: int, _c: bool) -> void: _update_hint())
 	prompt_tw = create_tween().set_loops()
 	prompt_tw.tween_property(prompt_l, "modulate:a", 0.25, 0.7)
 	prompt_tw.tween_property(prompt_l, "modulate:a", 1.0, 0.7)
@@ -625,6 +644,19 @@ func _build_hud() -> void:
 	msg_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	msg_label.visible = false
 	_update_hud()
+
+
+func _update_hint() -> void:
+	# show controller labels only when a controller is actually attached
+	var pad := Input.get_connected_joypads().size() > 0
+	if pad:
+		hint_l.text = "stick: move    A: dig in (squat when nature calls)    X: pee    B: bark    Start: restart"
+		prompt_l.text = "press A to go walkies"
+		night_l.text = "time: %s   (B)" % ("NIGHT" if Game.night else "DAY")
+	else:
+		hint_l.text = "WASD: move    SPACE: dig in (squat when nature calls)    Q: pee    E: bark    R: restart"
+		prompt_l.text = "press SPACE to go walkies"
+		night_l.text = "time: %s   (E)" % ("NIGHT" if Game.night else "DAY")
 
 
 func _hud_label(pos: Vector2, size_px: int) -> Label:
@@ -707,7 +739,7 @@ func _process(_delta: float) -> void:
 		if Input.is_action_just_pressed("bark"):
 			Game.night = not Game.night
 			night_cm.color = Color(0.5, 0.55, 0.78) if Game.night else Color.WHITE
-			night_l.text = "time: %s   (E / B)" % ("NIGHT" if Game.night else "DAY")
+			_update_hint()
 		if Input.is_action_just_pressed("plant") or Input.is_action_just_pressed("pee"):
 			started = true
 			frozen = false
@@ -1162,7 +1194,11 @@ func _bodily(delta: float) -> void:
 			stray_t += delta
 	else:
 		if stray_t >= 0.4:
-			puddles.append(dog.global_position + Vector2(4, 8))
+			# puddle size is a matter of commitment
+			puddles.append({
+				"pos": dog.global_position + Vector2(4, 8),
+				"r": clampf(4.0 + stray_t * 7.0, 5.0, 13.0),
+			})
 		stray_t = 0.0
 		mark_progress = 0.0
 		mark_target = Vector2(INF, INF)
@@ -1558,13 +1594,6 @@ func _draw() -> void:
 			for bo in [Vector2(10, 0), Vector2(-10, 0), Vector2(0, 10), Vector2(0, -10)]:
 				draw_line(p, p + bo, Color(0.5, 0.5, 0.55), 2.5)
 				draw_circle(p + bo * 1.35, 3.5, Color(0.98, 0.93, 0.7))
-	# parasols on the sand: poles with ambition
-	var pcols := [Color(0.85, 0.45, 0.35, 0.7), Color(0.4, 0.6, 0.75, 0.7), Color(0.9, 0.8, 0.4, 0.7)]
-	for i in range(parasols.size()):
-		var pa := parasols[i]
-		draw_circle(pa, 28.0, pcols[i % 3])
-		draw_arc(pa, 28.0, 0, TAU, 20, Color(1, 1, 1, 0.4), 2.0)
-		draw_circle(pa, 3.5, Color(0.4, 0.35, 0.3))
 	# trash bins: green, lidded, with a visible mouth - the ONLY thing
 	# the owner will throw a bag into
 	for bn in bins:
@@ -1573,23 +1602,45 @@ func _draw() -> void:
 		draw_arc(bn, 8.0, PI * 0.15, PI * 0.85, 10, Color(0.14, 0.2, 0.16), 3.5)
 		draw_circle(bn, 3.2, Color(0.08, 0.12, 0.1))
 		draw_line(bn + Vector2(-5, 0), bn + Vector2(5, 0), Color(0.55, 0.66, 0.56), 2.0)
-	# cafe tables, and canopies floating over the beach terraces
+	# cafe tables with a little service on them
 	for tb in tables:
 		draw_circle(tb, 14.0, Color(0.6, 0.55, 0.48))
 		draw_arc(tb, 14.0, 0, TAU, 20, Color(0.45, 0.4, 0.34), 2.0)
-		draw_circle(tb, 3.0, Color(0.4, 0.36, 0.3))
+		draw_circle(tb + Vector2(5, -4), 3.2, Color(0.92, 0.9, 0.85))
+		draw_circle(tb + Vector2(-4, 4), 2.0, Color(0.5, 0.32, 0.2))
+		draw_circle(tb, 2.6, Color(0.4, 0.36, 0.3))
+	# canopies over the beach terraces: out by day, furled at night
 	for cn in canopies:
-		draw_rect(cn, Color(0.93, 0.9, 0.8, 0.45))
-		draw_rect(cn, Color(0.6, 0.55, 0.45, 0.6), false, 2.0)
-		draw_line(Vector2(cn.get_center().x, cn.position.y), Vector2(cn.get_center().x, cn.end.y), Color(0.6, 0.55, 0.45, 0.4), 1.5)
+		if Game.night:
+			draw_rect(Rect2(cn.position.x, cn.position.y, cn.size.x, 10), Color(0.72, 0.67, 0.57))
+			draw_rect(Rect2(cn.position.x, cn.position.y, cn.size.x, 10), Color(0.5, 0.46, 0.38), false, 1.5)
+		else:
+			draw_rect(cn, Color(0.93, 0.9, 0.8, 0.45))
+			draw_rect(cn, Color(0.6, 0.55, 0.45, 0.6), false, 2.0)
+			draw_line(Vector2(cn.get_center().x, cn.position.y), Vector2(cn.get_center().x, cn.end.y), Color(0.6, 0.55, 0.45, 0.4), 1.5)
+	# umbrellas: wide, OVER the tables by day; furled spikes at night
+	var pcols := [Color(0.85, 0.45, 0.35, 0.7), Color(0.4, 0.6, 0.75, 0.7), Color(0.9, 0.8, 0.4, 0.7)]
+	for i in range(parasols.size()):
+		var pa := parasols[i]
+		if Game.night:
+			draw_line(pa + Vector2(-3, 24), pa + Vector2(3, -28), Color(0.45, 0.4, 0.35), 5.0)
+			draw_circle(pa + Vector2(3, -28), 4.0, pcols[i % 3])
+		else:
+			draw_circle(pa, 34.0, pcols[i % 3])
+			draw_arc(pa, 34.0, 0, TAU, 24, Color(1, 1, 1, 0.4), 2.0)
+			for sp in range(6):
+				draw_line(pa, pa + Vector2.from_angle(TAU * sp / 6.0) * 34.0, Color(1, 1, 1, 0.25), 2.0)
+			draw_circle(pa, 3.5, Color(0.4, 0.35, 0.3))
 	# benches
 	for b in benches:
 		draw_rect(Rect2(b.x - 8, b.y - 24, 16, 48), Color(0.5, 0.38, 0.26))
 		draw_line(Vector2(b.x, b.y - 22), Vector2(b.x, b.y + 22), Color(0.42, 0.32, 0.22), 2.0)
-	# terrace chairs
+	# terrace chairs: round seats, four legs, a hint of backrest
 	for ch in chairs:
-		draw_rect(Rect2(ch.x - 6, ch.y - 6, 12, 12), Color(0.55, 0.42, 0.3))
-		draw_line(ch + Vector2(-6, -6), ch + Vector2(6, -6), Color(0.4, 0.3, 0.2), 3.0)
+		for lg in [Vector2(-5, -5), Vector2(5, -5), Vector2(-5, 5), Vector2(5, 5)]:
+			draw_circle(ch + lg, 1.5, Color(0.35, 0.27, 0.18))
+		draw_circle(ch, 6.5, Color(0.58, 0.44, 0.3))
+		draw_arc(ch, 6.5, PI * 1.15, PI * 1.85, 8, Color(0.4, 0.3, 0.2), 3.0)
 	# fountains: where the tank refills
 	for f in fountains:
 		draw_circle(f, 12.0, Color(0.5, 0.55, 0.58))
@@ -1644,8 +1695,9 @@ func _draw() -> void:
 		draw_circle(mk + Vector2(11, 13), 3.5, pud)
 		draw_circle(mk + Vector2(7, 9), 3.0, Color(0.95, 0.88, 0.5, 0.7))
 	for pd in puddles:
-		draw_circle(pd, 7.5, pud)
-		draw_circle(pd + Vector2(6, 3), 4.5, pud)
+		var pr: float = pd.r
+		draw_circle(pd.pos, pr, pud)
+		draw_circle((pd.pos as Vector2) + Vector2(pr * 0.7, pr * 0.4), pr * 0.6, pud)
 	if business_spot.x < INF:
 		# soft-serve, cartoon rules, nothing gross
 		var pcol := Color(0.36, 0.26, 0.16)
