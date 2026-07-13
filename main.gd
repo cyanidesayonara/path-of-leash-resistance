@@ -134,6 +134,7 @@ var shake_t := 0.0
 var hud: CanvasLayer
 var panel: Control
 var qbg: Panel
+var weather_fx: Control
 var menu_step := 0
 var hud_status := ""
 var title_l: Label
@@ -142,9 +143,9 @@ var prompt_l: Label
 var select_l: Label
 var owner_l: Label
 var night_l: Label
+var weather_l: Label
 var hint_l: Label
 var record_l: Label
-var marquee: Control
 var prompt_tw: Tween
 var quests_label: Label
 var msg_label: Label
@@ -163,10 +164,11 @@ func _ready() -> void:
 	_spawn_cones()
 	_build_quests()
 	_build_hud()
-	# day/night: a canvas tint; HUD lives on a CanvasLayer, unaffected
+	# day/night + weather: a canvas tint; HUD lives on a CanvasLayer,
+	# unaffected
 	night_cm = CanvasModulate.new()
-	night_cm.color = Color(0.5, 0.55, 0.78) if Game.night else Color.WHITE
 	add_child(night_cm)
+	night_cm.color = _weather_tint()
 	# title screen holds the world until the player goes walkies;
 	# headless runs (CI smoke test) start immediately
 	if DisplayServer.get_name() == "headless":
@@ -605,6 +607,11 @@ func _spawn_cones() -> void:
 func _build_hud() -> void:
 	hud = CanvasLayer.new()
 	add_child(hud)
+	# weather sits behind the HUD text but over the world
+	weather_fx = Control.new()
+	weather_fx.set_script(load("res://weather_overlay.gd"))
+	weather_fx.mode = Game.weather
+	hud.add_child(weather_fx)
 	# one quiet card for the vitals, one quiet card for the quests -
 	# the world is busy on purpose, the overlay is not
 	panel = Control.new()
@@ -636,25 +643,24 @@ func _build_hud() -> void:
 	select_l.size = Vector2(1280, 32)
 	select_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	select_l.text = "<   %s   >" % Game.LEVEL_NAMES[lvl]
-	record_l = _hud_label(Vector2(0, 486), 15)
-	record_l.size = Vector2(1280, 24)
+	record_l = _hud_label(Vector2(0, 300), 18)
+	record_l.size = Vector2(1280, 26)
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	record_l.text = Game.best_line(lvl) + ("    lifetime bones: %d" % Game.total_bones if Game.total_bones > 0 else "")
-	record_l.modulate.a = 0.8
+	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.1"
+	version_l.text = "v1.2"
 	version_l.modulate.a = 0.5
-	marquee = Control.new()
-	marquee.set_script(load("res://title_marquee.gd"))
-	hud.add_child(marquee)
-	owner_l = _hud_label(Vector2(0, 384), 18)
-	owner_l.size = Vector2(1280, 28)
+	owner_l = _hud_label(Vector2(0, 296), 26)
+	owner_l.size = Vector2(1280, 34)
 	owner_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	night_l = _hud_label(Vector2(0, 414), 18)
-	night_l.size = Vector2(1280, 28)
+	night_l = _hud_label(Vector2(0, 340), 26)
+	night_l.size = Vector2(1280, 34)
 	night_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	prompt_l = _hud_label(Vector2(0, 452), 20)
-	prompt_l.size = Vector2(1280, 30)
+	weather_l = _hud_label(Vector2(0, 384), 26)
+	weather_l.size = Vector2(1280, 34)
+	weather_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	prompt_l = _hud_label(Vector2(0, 470), 22)
+	prompt_l.size = Vector2(1280, 32)
 	prompt_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	Input.joy_connection_changed.connect(func(_d: int, _c: bool) -> void: _refresh_menu_text())
 	prompt_tw = create_tween().set_loops()
@@ -679,6 +685,15 @@ func _kb_or_pad(kb: String, pad: String) -> String:
 	return pad if Input.get_connected_joypads().size() > 0 else kb
 
 
+func _weather_tint() -> Color:
+	var c := Color(0.5, 0.55, 0.78) if Game.night else Color.WHITE
+	if Game.weather == "rain":
+		c = c * Color(0.72, 0.76, 0.82)  # grey, overcast
+	elif Game.weather == "wind":
+		c = c * Color(0.92, 0.9, 0.82)  # dusty, warm-grey
+	return c
+
+
 func _apply_menu_step() -> void:
 	# Tony Hawk rules: each screen shows ONE choice and ONE instruction.
 	# Gameplay HUD (panel, quests) stays hidden until the walk begins.
@@ -686,34 +701,39 @@ func _apply_menu_step() -> void:
 	panel.visible = started
 	qbg.visible = started
 	quests_label.visible = started
-	marquee.visible = in_menu
 	title_l.visible = in_menu
 	sub_l.visible = in_menu and menu_step == 0
 	select_l.visible = in_menu and menu_step >= 1
 	record_l.visible = in_menu and menu_step == 1
 	owner_l.visible = in_menu and menu_step == 2
 	night_l.visible = in_menu and menu_step == 2
+	weather_l.visible = in_menu and menu_step == 2
 	prompt_l.visible = in_menu
 	if not in_menu:
 		return
 	match menu_step:
 		0:
-			title_l.add_theme_font_size_override("font_size", 46)
-			title_l.position.y = 232
+			title_l.add_theme_font_size_override("font_size", 60)
+			title_l.position.y = 210
 			title_l.text = "PATH OF LEASH RESISTANCE"
-			sub_l.text = "You are the dog. Go touch grass."
+			sub_l.add_theme_font_size_override("font_size", 22)
+			sub_l.position.y = 288
+			sub_l.text = "you are the dog. go touch grass."
 		1:
-			title_l.add_theme_font_size_override("font_size", 26)
+			title_l.add_theme_font_size_override("font_size", 30)
 			title_l.position.y = 150
-			title_l.text = "CHOOSE YOUR WALK"
-			select_l.text = "<   %s   >" % Game.LEVEL_NAMES[lvl]
-			record_l.text = Game.best_line(lvl) + ("    lifetime bones: %d" % Game.total_bones if Game.total_bones > 0 else "")
+			title_l.text = "CHOOSE YOUR WALK   (%d stars)" % Game.total_stars()
+			var locked := not Game.is_unlocked(lvl)
+			select_l.add_theme_font_size_override("font_size", 52)
+			select_l.text = ("[ %s ]" % Game.LEVEL_NAMES[lvl]) if locked else ("<   %s   >" % Game.LEVEL_NAMES[lvl])
+			select_l.position.y = 220
+			record_l.position.y = 300
+			record_l.text = Game.best_line(lvl)
 		2:
-			title_l.add_theme_font_size_override("font_size", 26)
+			title_l.add_theme_font_size_override("font_size", 40)
 			title_l.position.y = 150
 			title_l.text = Game.LEVEL_NAMES[lvl].to_upper()
-			select_l.text = "get ready"
-			owner_l.text = "walking: %s" % Game.owner_id.to_upper()
+			owner_l.text = "WALKING:  %s" % Game.owner_id.to_upper()
 	_refresh_menu_text()
 
 
@@ -722,17 +742,21 @@ func _refresh_menu_text() -> void:
 	var pad := Input.get_connected_joypads().size() > 0
 	hint_l.text = ("stick: move    A: dig in (squat when nature calls)    X: pee    B: bark    Start: restart" if pad
 		else "WASD: move    SPACE: dig in (squat when nature calls)    Q: pee    E: bark    R: restart")
-	night_l.text = "time of day: %s   (change with %s)" % [("NIGHT" if Game.night else "DAY"), _kb_or_pad("E", "B")]
+	night_l.text = "TIME:  %s        (%s)" % [("NIGHT" if Game.night else "DAY"), _kb_or_pad("E", "B")]
+	weather_l.text = "WEATHER:  %s        (%s)" % [Game.WEATHER_NAMES[Game.weather], _kb_or_pad("Q", "X")]
 	var go := _kb_or_pad("SPACE", "A")
 	match menu_step:
 		0:
-			prompt_l.text = "press %s to begin" % go
+			prompt_l.text = "press  %s  to begin" % go
 			hint_l.visible = false
 		1:
-			prompt_l.text = "%s / %s to browse,  %s to choose" % [_kb_or_pad("A", "left"), _kb_or_pad("D", "right"), go]
+			if not Game.is_unlocked(lvl):
+				prompt_l.text = "locked - earn %d stars" % int(Game.STAR_GATE.get(lvl, 0))
+			else:
+				prompt_l.text = "%s / %s  browse       %s  choose" % [_kb_or_pad("A", "<"), _kb_or_pad("D", ">"), go]
 			hint_l.visible = false
 		2:
-			prompt_l.text = "press %s to go walkies" % go
+			prompt_l.text = "press  %s  to go walkies" % go
 			hint_l.visible = true
 
 
@@ -775,6 +799,12 @@ func _physics_process(delta: float) -> void:
 	riders_cache = get_tree().get_nodes_in_group("bikes")
 	critters_cache = get_tree().get_nodes_in_group("squirrels")
 	birds_cache = get_tree().get_nodes_in_group("pigeons")
+	# weather nudges: rain makes the pavement slick, wind shoves everyone
+	# gently downwind (the owner, dead weight, catches more of it)
+	dog.slick = Game.weather == "rain"
+	if Game.weather == "wind":
+		dog.velocity += Vector2(46.0, 0) * delta
+		human.velocity += Vector2(70.0, 0) * delta
 	dog.tick(delta)
 	human.tick(delta)
 	# the human owns the retractable leash: length changes on their whim
@@ -818,9 +848,18 @@ func _process(_delta: float) -> void:
 			owner_l.text = "walking: %s" % Game.owner_id.to_upper()
 		if menu_step == 2 and Input.is_action_just_pressed("bark"):
 			Game.night = not Game.night
-			night_cm.color = Color(0.5, 0.55, 0.78) if Game.night else Color.WHITE
+			night_cm.color = _weather_tint()
 			_refresh_menu_text()
-		if Input.is_action_just_pressed("plant") or Input.is_action_just_pressed("pee"):
+		if menu_step == 2 and Input.is_action_just_pressed("pee"):
+			Game.cycle_weather(1)
+			night_cm.color = _weather_tint()
+			weather_fx.mode = Game.weather
+			_refresh_menu_text()
+		if Input.is_action_just_pressed("plant"):
+			# cannot advance past a locked walk
+			if menu_step == 1 and not Game.is_unlocked(lvl):
+				select_l.text = "%s  (locked)" % Game.LEVEL_NAMES[lvl]
+				return
 			if menu_step < 2:
 				menu_step += 1
 				Game.menu_step = menu_step
@@ -830,11 +869,10 @@ func _process(_delta: float) -> void:
 			frozen = false
 			Game.menu_step = 1
 			prompt_tw.kill()
-			marquee.visible = false
 			panel.visible = true
 			qbg.visible = true
 			quests_label.visible = true
-			for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, record_l]:
+			for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, weather_l, record_l]:
 				var tw := create_tween()
 				tw.tween_property(l, "modulate:a", 0.0, 0.5)
 			# the hint earns its keep for a few seconds, then gets out
@@ -1457,26 +1495,29 @@ func _check_win() -> void:
 				completed += 1
 			qtext += ("[x]  " if done else "[ ]  ") + _quest_text(q) + "\n"
 		bones += completed * 5
-		var rating := ""
+		# stars = quests completed this walk (0-3), the Tony Hawk currency
+		var earned := completed
+		var rating := Game.star_str(earned)
 		if completed == 0:
-			rating = "...still a good dog."
-		else:
-			for i in range(completed):
-				rating += "GOOD DOG. "
-			rating = rating.strip_edges()
-			if completed == 3:
-				rating += "\nPERFECT WALK"
-		var rec: Dictionary = Game.record_result(lvl, bones, elapsed, completed == 3)
+			rating += "   ...still a good dog."
+		elif completed == 3:
+			rating += "   PERFECT WALK"
+		var rec: Dictionary = Game.record_result(lvl, bones, elapsed, completed == 3, earned)
 		var rec_line := ""
+		if rec.new_stars > 0:
+			rec_line += "+%d STAR%s!   " % [rec.new_stars, "" if rec.new_stars == 1 else "S"]
 		if rec.bones_record:
 			rec_line += "NEW BONES RECORD!   "
 		if rec.time_record:
 			rec_line += "BEST TIME!"
 		if rec_line == "":
-			rec_line = Game.best_line(lvl)
-		rec_line += "\nlifetime bones: %d" % Game.total_bones
-		msg_label.text = "WALK COMPLETE\n\n%s\nQuests: +%d bones\n\nBones: %d    Phone: %d/3    Time: %ds\n%s\n\n%s\n\nPress %s for another walk" % [
-			qtext, completed * 5, bones, phone_hp, int(elapsed), rec_line, rating, _kb_or_pad("R", "Start")]
+			rec_line = "best: %d bones, %s" % [int(Game.records[lvl].bones), Game.star_str(Game.stars(lvl))]
+		rec_line += "\nstars: %d total    lifetime bones: %d" % [Game.total_stars(), Game.total_bones]
+		var unlock_line := ""
+		if rec.unlocked != "":
+			unlock_line = "\n\nNEW WALK UNLOCKED: %s" % Game.LEVEL_NAMES[rec.unlocked]
+		msg_label.text = "WALK COMPLETE\n\n%s\nQuests: +%d bones\n\nBones: %d    Phone: %d/3    Time: %ds\n%s%s\n\n%s\n\nPress %s for another walk" % [
+			qtext, completed * 5, bones, phone_hp, int(elapsed), rec_line, unlock_line, rating, _kb_or_pad("R", "Start")]
 
 
 func on_bark(pos: Vector2) -> void:

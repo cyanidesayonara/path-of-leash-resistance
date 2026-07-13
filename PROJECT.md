@@ -35,15 +35,19 @@ Every feature must serve at least one. If it serves none, cut it.
   Maritim, El Mercat), day/night, rope leash with tetherball whirl,
   rotating quests, chore chain, two owners, Millie and Tofu cameos,
   touch controls, itch web release.
-- **v1.1 - next.** Presentation and persistence: title marquee, local
-  records + lifetime bones (the wallet), HUD overlay makeover, art
-  mock 2.0 handoff to the watercolor pipeline.
-- **v1.2 - The Walk Home.** The shape-of-a-walk structure: destination
-  zones at the corridor's end (off-leash romp), the return leg,
-  tired-dog pacing. Level five (Rainy Day).
-- **v1.3 - The Dog Park.** Other dog+owner pairs, leash-vs-leash
-  tangling prototype, ball catch, smell-every-dog. Tofu's expanded role.
-- **v1.4 - The Daily Walk.** Seeded daily run shared by all players,
+- **v1.1 - shipped.** Presentation and persistence: onboarding menu,
+  title marquee (later removed), local records + lifetime bones wallet,
+  HUD overlay makeover, swimming, art mock 2.0.
+- **v1.2 - shipped.** Progression and weather: star-gated walk unlocks
+  (Tony Hawk style), selectable weather (clear/rain/wind), bigger menu
+  type. Discoverable + timed quests still to come (next).
+- **v1.3 - Quests & The Walk Home.** Discoverable in-world quests, some
+  timed (timer on the challenge, never the walk). The shape-of-a-walk
+  structure: destination romp at the corridor's end, the return leg,
+  tired-dog pacing. Level five (Rainy Day - now that weather exists).
+- **v1.4 - The Dog Park.** Other dog+owner pairs, leash-vs-leash
+  tangling prototype, ball catch, smell-every-dog, bring-Tofu-home.
+- **v1.5 - The Daily Walk.** Seeded daily run shared by all players,
   results card for sharing, lifetime-bones spending (first cosmetics:
   collars and bandanas). Level six (Old Town).
 - **v2.0 - The Product.** Watercolor art integration, sound and music

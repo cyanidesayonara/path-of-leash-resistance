@@ -12,6 +12,7 @@ var dragged := false
 var bladder_slow := false
 var sand_slow := false
 var swimming := false
+var slick := false
 var tumble_t := 0.0
 var hole_cd := 0.0
 var squat_t := 0.0
@@ -82,6 +83,9 @@ func tick(delta: float) -> void:
 		var accel := ACCEL
 		if dragged:
 			accel = 1000.0 if input_active else 250.0
+		if slick:
+			# wet ground: less grip, more skate
+			accel *= 0.45
 		# a full bladder waddles; sand is heavy going; water is a happy
 		# dog-paddle (slower, but she would stay in all day)
 		var top := SPEED * (0.88 if bladder_slow else 1.0) * (0.8 if sand_slow else 1.0) * (0.62 if swimming else 1.0)

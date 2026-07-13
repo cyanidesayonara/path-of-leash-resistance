@@ -2,6 +2,23 @@
 
 Append-only session history, newest first.
 
+## 2026-07-13 — v1.2: progression and weather
+
+- Star-gated progression (Tony Hawk style): each walk awards up to 3
+  stars (one per quest completed), saved as a per-walk high-water mark.
+  Total stars unlock the next walk - Park at 2, Passeig at 4, Mercat at
+  7. Locked walks show on the select screen with their requirement.
+  Results screen announces new stars and any walk unlocked.
+- Weather is a menu choice now: CLEAR, RAIN, WIND. Rain greys the light
+  and makes the pavement slick (less grip); wind tints it dusty and
+  shoves everyone gently downwind (the dead-weight owner catches more).
+  A screen-space overlay draws the rain streaks / blown grit.
+- Menu makeover from playtest notes: bigger, more readable lettering,
+  one choice per screen; the left-to-right walker on the title is gone.
+  Weather sits alongside owner and time-of-day on the Get Ready screen.
+- Logged for next: discoverable in-world quests, some timed (a timer on
+  the challenge, never on the walk itself).
+
 ## 2026-07-13 — v1.1: presentation, persistence, swimming
 
 - Step-by-step title menu (Tony Hawk style) after a real non-gamer
