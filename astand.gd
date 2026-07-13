@@ -31,7 +31,7 @@ func _physics_process(delta: float) -> void:
 					_topple((global_position - dog.global_position).normalized())
 					break
 		if not fallen:
-			for b in get_tree().get_nodes_in_group("bikes"):
+			for b in main.riders_cache:
 				if global_position.distance_to(b.global_position) < 26.0:
 					_topple((b.vel as Vector2).normalized())
 					break
@@ -39,6 +39,9 @@ func _physics_process(delta: float) -> void:
 		tip = minf(tip + delta * 4.0, 1.0)
 		position += fall_dir * 34.0 * delta * (1.0 - tip)
 		queue_redraw()
+		if tip >= 1.0:
+			# flat is forever; stop thinking about it
+			set_physics_process(false)
 
 
 func _topple(dir: Vector2) -> void:

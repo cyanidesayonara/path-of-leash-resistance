@@ -24,7 +24,7 @@ func _physics_process(delta: float) -> void:
 		return
 	_kick_by(dog.global_position, dog.velocity, 24.0)
 	_kick_by(human.global_position, human.velocity, 26.0)
-	for b in get_tree().get_nodes_in_group("bikes"):
+	for b in main.riders_cache:
 		_kick_by(b.global_position, b.vel, 28.0)
 	if vel.length_squared() > 1.0:
 		position += vel * delta

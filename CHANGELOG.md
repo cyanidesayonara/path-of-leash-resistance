@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-07-13 — v1.0, the first major version
+
+- Tofu joins the cast: the cat is now white with brown on top, pink
+  harness, her own patch of shade, friendly but professionally skittish.
+  "Tofu got away +4."
+- Every control hint is controller-aware now, including the results,
+  game-over, and GOTTA GO prompts (finishing on a pad no longer tells
+  you to press R).
+- Bigger silhouettes where it counts: park canopies, beach palm fronds,
+  street tree crowns, lamp halos, and umbrellas all grew.
+- Performance deep scan: one shared riders/critters query per physics
+  tick replaces ~30 per-entity scene-tree queries per frame (the
+  remaining stutter); HUD strings rebuild at most every 0.15s instead
+  of every frame; flattened A-stands stop processing entirely.
+- Riders now also steer around parked vans and market stalls; market
+  traffic keeps to the middle aisle between the stall rows.
+- Full-codebase sweep: no stale references, all four levels pass
+  extended 60-second headless runs plus the rope regression suite.
+
 ## 2026-07-13 — polish round from playtest
 
 - Street performers have mass now: you walk around a person, not

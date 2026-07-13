@@ -1,7 +1,8 @@
 extends Node2D
 
-# Pull of Duty - leash physics prototype.
-# You are the dog. Walk the phone-zombie human to the park with the phone intact.
+# Path of Leash Resistance.
+# You are the dog. Walk the phone-zombie human through it with the
+# phone intact. Go touch grass.
 
 const SIDEWALK_LEFT := 300.0
 const SIDEWALK_RIGHT := 980.0
@@ -79,6 +80,11 @@ var fountains: Array[Vector2] = []
 var body_pole_count := 0
 var drunk_amount := 0.0
 var night_cm: CanvasModulate
+# one group query per physics tick, shared by every cone, bird, duck and
+# A-stand - thirty entities each asking the scene tree was the stutter
+var riders_cache: Array = []
+var critters_cache: Array = []
+var hud_t := 0.0
 var sq_spawn_t := 6.0
 var whirl_arm := 0.0
 var whirl_wind_acc := 0.0
@@ -646,6 +652,10 @@ func _build_hud() -> void:
 	_update_hud()
 
 
+func _kb_or_pad(kb: String, pad: String) -> String:
+	return pad if Input.get_connected_joypads().size() > 0 else kb
+
+
 func _update_hint() -> void:
 	# show controller labels only when a controller is actually attached
 	var pad := Input.get_connected_joypads().size() > 0
@@ -673,7 +683,7 @@ func _update_hud() -> void:
 	bones_label.text = "BONES  %d%s" % [bones, streak_txt]
 	var status := "MARKS %d/5" % mini(marks.size(), 5)
 	if poop_state == 1:
-		status += "    GOTTA GO!  find a spot, hold SPACE / A"
+		status += "    GOTTA GO!  find a spot, hold %s" % _kb_or_pad("SPACE", "A")
 	elif poop_state >= 3:
 		status += "    UH OH..."
 	elif pee >= 0.999:
@@ -697,6 +707,8 @@ func _physics_process(delta: float) -> void:
 	if frozen:
 		return
 	elapsed += delta
+	riders_cache = get_tree().get_nodes_in_group("bikes")
+	critters_cache = get_tree().get_nodes_in_group("squirrels")
 	dog.tick(delta)
 	human.tick(delta)
 	# the human owns the retractable leash: length changes on their whim
@@ -946,12 +958,13 @@ func _vlane(delta: float) -> void:
 				band_lo = 486.0
 				band_hi = 554.0
 		"market":
-			# strollers and the occasional delivery scooter
+			# strollers and the occasional delivery scooter, kept to the
+			# middle aisle between the stall rows
 			kid = randf() < 0.75
 			speed = randf_range(60.0, 105.0) if kid else randf_range(200.0, 300.0)
-			x = randf_range(SIDEWALK_LEFT + 90.0, SIDEWALK_RIGHT - 90.0)
-			band_lo = SIDEWALK_LEFT + 80.0
-			band_hi = SIDEWALK_RIGHT - 80.0
+			x = randf_range(460.0, 820.0)
+			band_lo = 450.0
+			band_hi = 830.0
 	var b := Node2D.new()
 	b.set_script(load("res://bike.gd"))
 	b.position = Vector2(x, y)
@@ -1037,7 +1050,7 @@ func _temptation(delta: float) -> void:
 	var best_s: Node2D = null
 	var best_d := 1e9
 	var best_rng := 0.0
-	for s in get_tree().get_nodes_in_group("squirrels"):
+	for s in critters_cache:
 		if s.state == 2:
 			continue
 		var rng: float = 300.0 if s.kind == "cat" else 220.0
@@ -1062,7 +1075,7 @@ func on_critter_chase(pos: Vector2, kind: String) -> void:
 	squirrels_chased += 1
 	if kind == "cat":
 		bones += 4
-		float_text(pos, "the cat got away +4", Color(1, 0.95, 0.7))
+		float_text(pos, "Tofu got away +4", Color(1, 0.95, 0.7))
 	else:
 		bones += 2
 		float_text(pos, "almost got it! +2", Color(1, 0.95, 0.7))
@@ -1092,7 +1105,7 @@ func _death(msg: String) -> void:
 	frozen = true
 	dim.visible = true
 	msg_label.visible = true
-	msg_label.text = msg + "\n\nPress R to try again"
+	msg_label.text = msg + "\n\nPress %s to try again" % _kb_or_pad("R", "Start")
 
 
 func _hazards(delta: float) -> void:
@@ -1239,7 +1252,11 @@ func _bodily(delta: float) -> void:
 		4:
 			if dog.squat_t <= 0.0:
 				_finish_business(false)
-	_update_hud()
+	# rebuilding the HUD strings every frame was wasted work
+	hud_t -= delta
+	if hud_t <= 0.0:
+		hud_t = 0.15
+		_update_hud()
 
 
 func _finish_business(voluntary: bool) -> void:
@@ -1323,8 +1340,8 @@ func _check_win() -> void:
 			rating = rating.strip_edges()
 			if completed == 3:
 				rating += "\nPERFECT WALK"
-		msg_label.text = "WALK COMPLETE\n\n%s\nQuests: +%d bones\n\nBones: %d    Phone: %d/3    Time: %ds\n\n%s\n\nPress R for another walk" % [
-			qtext, completed * 5, bones, phone_hp, int(elapsed), rating]
+		msg_label.text = "WALK COMPLETE\n\n%s\nQuests: +%d bones\n\nBones: %d    Phone: %d/3    Time: %ds\n\n%s\n\nPress %s for another walk" % [
+			qtext, completed * 5, bones, phone_hp, int(elapsed), rating, _kb_or_pad("R", "Start")]
 
 
 func on_bark(pos: Vector2) -> void:
@@ -1392,7 +1409,7 @@ func crack_phone(pos: Vector2) -> void:
 		frozen = true
 		dim.visible = true
 		msg_label.visible = true
-		msg_label.text = "THE PHONE IS SHATTERED\n\nThe human is inconsolable. The walk is over.\n\nPress R to try again"
+		msg_label.text = "THE PHONE IS SHATTERED\n\nThe human is inconsolable. The walk is over.\n\nPress %s to try again" % _kb_or_pad("R", "Start")
 
 
 func close_call(pos: Vector2) -> void:
@@ -1568,27 +1585,27 @@ func _draw() -> void:
 		if p.y < vt - 60.0 or p.y > vb + 60.0:
 			continue
 		if lvl == "park":
-			draw_circle(p, 42.0, Color(0.2, 0.35, 0.2, 0.3))
-			draw_circle(p + Vector2(10, 8), 28.0, Color(0.22, 0.38, 0.21, 0.3))
+			draw_circle(p, 56.0, Color(0.2, 0.35, 0.2, 0.3))
+			draw_circle(p + Vector2(12, 10), 38.0, Color(0.22, 0.38, 0.21, 0.3))
 			draw_circle(p, POLE_RADIUS, Color(0.4, 0.3, 0.2))
 			draw_circle(p, 4.0, Color(0.32, 0.24, 0.16))
 		elif lvl == "beach":
-			draw_circle(p + Vector2(8, 8), 22.0, Color(0, 0, 0, 0.12))
+			draw_circle(p + Vector2(10, 10), 30.0, Color(0, 0, 0, 0.12))
 			for j in range(6):
 				var fa := TAU * j / 6.0 + p.x * 0.01 + p.y * 0.007
-				draw_line(p, p + Vector2.from_angle(fa) * 27.0, Color(0.27, 0.44, 0.24, 0.85), 4.0)
-			draw_circle(p, 6.0, Color(0.45, 0.35, 0.22))
+				draw_line(p, p + Vector2.from_angle(fa) * 36.0, Color(0.27, 0.44, 0.24, 0.85), 5.0)
+			draw_circle(p, 7.0, Color(0.45, 0.35, 0.22))
 		elif p.x > SIDEWALK_LEFT + 60.0 and p.x < SIDEWALK_RIGHT - 60.0:
 			# mid-walkway poles are street trees in grates - that is WHY
 			# they stand in the middle of a sidewalk
 			draw_rect(Rect2(p.x - 15, p.y - 15, 30, 30), Color(0.3, 0.3, 0.33), false, 2.0)
-			draw_circle(p, 26.0, Color(0.28, 0.42, 0.26, 0.4))
+			draw_circle(p, 34.0, Color(0.28, 0.42, 0.26, 0.4))
 			draw_circle(p, POLE_RADIUS - 2.0, Color(0.4, 0.3, 0.2))
 		else:
 			# lamppost: four bulbs on cross arms and a warm halo - an
 			# actual light source, brightest at night
-			var halo_a := 0.3 if Game.night else 0.1
-			draw_circle(p, 48.0, Color(1.0, 0.9, 0.6, halo_a))
+			var halo_a := 0.32 if Game.night else 0.1
+			draw_circle(p, 62.0, Color(1.0, 0.9, 0.6, halo_a))
 			draw_circle(p, POLE_RADIUS + 3.0, Color(0.2, 0.2, 0.22, 0.35))
 			draw_circle(p, POLE_RADIUS, Color(0.44, 0.44, 0.48))
 			for bo in [Vector2(10, 0), Vector2(-10, 0), Vector2(0, 10), Vector2(0, -10)]:
@@ -1626,10 +1643,10 @@ func _draw() -> void:
 			draw_line(pa + Vector2(-3, 24), pa + Vector2(3, -28), Color(0.45, 0.4, 0.35), 5.0)
 			draw_circle(pa + Vector2(3, -28), 4.0, pcols[i % 3])
 		else:
-			draw_circle(pa, 34.0, pcols[i % 3])
-			draw_arc(pa, 34.0, 0, TAU, 24, Color(1, 1, 1, 0.4), 2.0)
+			draw_circle(pa, 40.0, pcols[i % 3])
+			draw_arc(pa, 40.0, 0, TAU, 24, Color(1, 1, 1, 0.4), 2.0)
 			for sp in range(6):
-				draw_line(pa, pa + Vector2.from_angle(TAU * sp / 6.0) * 34.0, Color(1, 1, 1, 0.25), 2.0)
+				draw_line(pa, pa + Vector2.from_angle(TAU * sp / 6.0) * 40.0, Color(1, 1, 1, 0.25), 2.0)
 			draw_circle(pa, 3.5, Color(0.4, 0.35, 0.3))
 	# benches
 	for b in benches:

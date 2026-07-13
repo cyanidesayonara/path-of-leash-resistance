@@ -45,7 +45,7 @@ func _physics_process(delta: float) -> void:
 				state = 0
 			else:
 				# traffic spooks critters too (cats merely disapprove)
-				for b in get_tree().get_nodes_in_group("bikes"):
+				for b in main.riders_cache:
 					if global_position.distance_to(b.global_position) < (35.0 if kind == "cat" else 60.0):
 						scare()
 						break
@@ -77,12 +77,19 @@ func scare() -> void:
 func _draw() -> void:
 	var t := Time.get_ticks_msec() / 1000.0
 	if kind == "cat":
-		var cbody := Color(0.25, 0.25, 0.28)
-		draw_line(Vector2(-6, 0), Vector2(-6, 0) + Vector2(-8, -6).rotated(sin(t * 2.0 + seed_o) * 0.25), cbody, 2.5)
-		draw_circle(Vector2.ZERO, 6.5, cbody)
-		draw_circle(Vector2(5, -3), 4.0, cbody)
-		draw_line(Vector2(3, -6), Vector2(2, -9), cbody, 2.0)
-		draw_line(Vector2(7, -6), Vector2(8, -9), cbody, 2.0)
+		# Tofu: white with brown on top, pink harness, friendly but
+		# professionally skittish. Keeps to the shade, as cats do.
+		var white := Color(0.93, 0.91, 0.88)
+		var brown := Color(0.62, 0.45, 0.28)
+		draw_circle(Vector2(2, 3), 14.0, Color(0, 0, 0, 0.16))
+		draw_line(Vector2(-6, 0), Vector2(-6, 0) + Vector2(-9, -6).rotated(sin(t * 2.0 + seed_o) * 0.25), brown, 2.5)
+		draw_circle(Vector2.ZERO, 6.5, white)
+		draw_circle(Vector2(-1, -2), 4.0, brown)
+		draw_circle(Vector2(5, -3), 4.0, white)
+		draw_circle(Vector2(6, -5), 2.2, brown)
+		draw_line(Vector2(3, -6), Vector2(2, -9), brown, 2.0)
+		draw_line(Vector2(7, -6), Vector2(8, -9), brown, 2.0)
+		draw_line(Vector2(1, 0), Vector2(7, 0), Color(0.9, 0.45, 0.62), 2.0)
 		if state == 1:
 			draw_circle(Vector2(6, -3), 1.0, Color(0.75, 0.9, 0.3))
 		return

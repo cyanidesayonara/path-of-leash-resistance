@@ -55,12 +55,21 @@ func _physics_process(delta: float) -> void:
 		var target_x := base_x + sin(t * 2.4 + wob_seed) * 24.0
 		vel.x = clampf((target_x - position.x) * 3.0, -85.0, 85.0)
 		rotation = vel.angle()
-	# nobody, not even a wobbly kid, rides into an open manhole
+	# nobody, not even a wobbly kid, rides into an open manhole,
+	# a parked van, or a market stall
 	if absf(vel.y) > absf(vel.x):
 		for m in main.manholes:
 			var ahead: float = (m.y - global_position.y) * signf(vel.y)
 			if ahead > 0.0 and ahead < 90.0 and absf(m.x - global_position.x) < 34.0:
 				position.x += signf(global_position.x - m.x + 0.001) * 95.0 * delta
+		for v in main.vans:
+			var aheadv: float = ((v as Vector2).y - global_position.y) * signf(vel.y)
+			if aheadv > -70.0 and aheadv < 140.0 and absf((v as Vector2).x - global_position.x) < 56.0:
+				position.x += signf(global_position.x - (v as Vector2).x + 0.001) * 120.0 * delta
+		for st in main.stalls:
+			var aheads: float = ((st as Vector2).y - global_position.y) * signf(vel.y)
+			if aheads > -40.0 and aheads < 120.0 and absf((st as Vector2).x - global_position.x) < 76.0:
+				position.x += signf(global_position.x - (st as Vector2).x + 0.001) * 120.0 * delta
 	position += vel * delta
 	var hp: Vector2 = human.global_position
 	var dh := global_position.distance_to(hp)

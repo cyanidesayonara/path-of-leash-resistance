@@ -32,7 +32,7 @@ func _physics_process(delta: float) -> void:
 	if hd < dd:
 		dd = hd
 		threat_pos = main.human.global_position
-	for b in get_tree().get_nodes_in_group("bikes"):
+	for b in main.riders_cache:
 		var bd: float = global_position.distance_to(b.global_position)
 		if bd < dd:
 			dd = bd
