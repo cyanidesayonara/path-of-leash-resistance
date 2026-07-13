@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-07-13 — v1.0.1: Tofu, properly
+
+- Tofu lost the ominous shadow (she likes shade; she is not made of it).
+- Spooked, she now skitters in a zigzag to a NEW hiding spot - beside a
+  tree, a stall, a parasol, away from the threat - and resettles there.
+  Cats relocate; they do not exit. She and Millie are not enemies:
+  contact is a friendly "boop! +4" and a dignified relocation.
+- Millie's instinct is properly magnetic and tiered now: Tofu pulls
+  hardest (500), squirrels and rats hard (420), grounded birds a gentle
+  tug (200) - and yes, birds pull now too.
+- The passeig has no squirrels. It has RATS (grey, quick, long naked
+  tail), and Millie is not picky.
+- Tofu cameos in both concept art mocks, supervising from the margins.
+
 ## 2026-07-13 — v1.0, the first major version
 
 - Tofu joins the cast: the cat is now white with brown on top, pink

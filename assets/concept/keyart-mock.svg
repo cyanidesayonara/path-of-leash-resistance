@@ -47,6 +47,18 @@
     <line x1="-24" y1="14" x2="-28" y2="24" stroke="#23211f" stroke-width="7" stroke-linecap="round"/>
     <line x1="16" y1="16" x2="22" y2="26" stroke="#23211f" stroke-width="7" stroke-linecap="round"/>
   </g>
+  <!-- Tofu on the bridge, watching the consequences unfold -->
+  <g transform="translate(530 226)">
+    <path d="M 14 4 q 12 -2 10 -14" fill="none" stroke="#a3764e" stroke-width="4" stroke-linecap="round"/>
+    <ellipse cx="0" cy="0" rx="15" ry="10" fill="#f2efe9"/>
+    <ellipse cx="-1" cy="-4" rx="8" ry="5" fill="#a3764e"/>
+    <circle cx="-15" cy="-4" r="7.5" fill="#f2efe9"/>
+    <path d="M -20 -9 l -2 -6 l 6 3 z" fill="#a3764e"/>
+    <path d="M -13 -10 l 0 -6 l 5 4 z" fill="#a3764e"/>
+    <circle cx="-11" cy="-7" r="3" fill="#a3764e"/>
+    <path d="M -6 -1 q 6 4 12 3" fill="none" stroke="#d9749c" stroke-width="3"/>
+    <circle cx="-18" cy="-4" r="1.1" fill="#3a352e"/>
+  </g>
   <!-- title block -->
   <text x="315" y="415" font-size="40" fill="#2c2a26" font-weight="bold" text-anchor="middle" letter-spacing="1">PATH OF LEASH</text>
   <text x="315" y="455" font-size="40" fill="#b8402e" font-weight="bold" text-anchor="middle" letter-spacing="1">RESISTANCE</text>

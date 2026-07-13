@@ -84,6 +84,7 @@ var night_cm: CanvasModulate
 # A-stand - thirty entities each asking the scene tree was the stutter
 var riders_cache: Array = []
 var critters_cache: Array = []
+var birds_cache: Array = []
 var hud_t := 0.0
 var sq_spawn_t := 6.0
 var whirl_arm := 0.0
@@ -709,6 +710,7 @@ func _physics_process(delta: float) -> void:
 	elapsed += delta
 	riders_cache = get_tree().get_nodes_in_group("bikes")
 	critters_cache = get_tree().get_nodes_in_group("squirrels")
+	birds_cache = get_tree().get_nodes_in_group("pigeons")
 	dog.tick(delta)
 	human.tick(delta)
 	# the human owns the retractable leash: length changes on their whim
@@ -1038,32 +1040,67 @@ func _squirrels(delta: float) -> void:
 	s.position = Vector2(x, y)
 	s.z_index = 9
 	add_child(s)
-	s.setup(self, dog)
+	# the passeig has no squirrels; it has rats, and Millie is not picky
+	s.setup(self, dog, "rat" if lvl == "beach" else "squirrel")
 
 
 func _temptation(delta: float) -> void:
-	# a nearby critter physically pulls at Millie; fight it or lean in.
-	# Cats pull harder and from farther away, as cats do.
+	# a nearby creature physically pulls at Millie; fight it or lean in.
+	# The pull is instinct, tiered: cats are magnetic, squirrels and rats
+	# nearly so, grounded birds a gentler tug.
 	dog.tempted = false
 	if dog.planted or dog.is_tumbling() or dog.peeing:
 		return
 	var best_s: Node2D = null
 	var best_d := 1e9
 	var best_rng := 0.0
+	var best_str := 0.0
 	for s in critters_cache:
 		if s.state == 2:
 			continue
-		var rng: float = 300.0 if s.kind == "cat" else 220.0
+		var rng: float = 320.0 if s.kind == "cat" else 240.0
 		var d: float = dog.global_position.distance_to(s.global_position)
 		if d < rng and d < best_d:
 			best_d = d
 			best_s = s
 			best_rng = rng
+			best_str = 500.0 if s.kind == "cat" else 420.0
+	for p in birds_cache:
+		if p.flying:
+			continue
+		var d2: float = dog.global_position.distance_to(p.global_position)
+		if d2 < 160.0 and d2 < best_d:
+			best_d = d2
+			best_s = p
+			best_rng = 160.0
+			best_str = 200.0
 	if best_s != null:
 		dog.tempted = true
-		var strength: float = 430.0 if best_s.kind == "cat" else 320.0
-		var pull := (best_s.global_position - dog.global_position).normalized() * strength * (1.0 - best_d / best_rng)
+		var pull := (best_s.global_position - dog.global_position).normalized() * best_str * (1.0 - best_d / best_rng)
 		dog.velocity += pull * delta
+
+
+func nearest_cover(from: Vector2, threat: Vector2) -> Vector2:
+	# where a cat hides: beside anything with a silhouette, away from
+	# whatever spooked her
+	var best := Vector2(INF, INF)
+	var best_score := -1e9
+	var away := (from - threat).normalized()
+	for i in range(body_pole_count):
+		var p := poles[i]
+		var d := from.distance_to(p)
+		if d < 120.0 or d > 520.0:
+			continue
+		var dirdot := (p - from).normalized().dot(away)
+		if dirdot < 0.1:
+			continue
+		var score := dirdot * 200.0 - absf(d - 280.0)
+		if score > best_score:
+			best_score = score
+			best = p
+	if best.x < INF:
+		return best + Vector2(16.0, 12.0)
+	return best
 
 
 func on_duck_disturbed(pos: Vector2) -> void:
@@ -1074,8 +1111,10 @@ func on_duck_disturbed(pos: Vector2) -> void:
 func on_critter_chase(pos: Vector2, kind: String) -> void:
 	squirrels_chased += 1
 	if kind == "cat":
+		# not enemies - Tofu just prefers a respectful distance, and a
+		# nose boop is the closest Millie ever gets
 		bones += 4
-		float_text(pos, "Tofu got away +4", Color(1, 0.95, 0.7))
+		float_text(pos, "boop! +4", Color(1, 0.95, 0.7))
 	else:
 		bones += 2
 		float_text(pos, "almost got it! +2", Color(1, 0.95, 0.7))
