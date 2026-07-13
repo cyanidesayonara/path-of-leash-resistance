@@ -32,6 +32,8 @@ var face_dir := Vector2.UP
 var hgait := 0.0
 var chain_target := Vector2.ZERO
 var carrying_bag := false
+var wading := false
+var pond_bank_x := 0.0
 var strain := false
 var wobble_seed := 0.0
 var main: Node2D
@@ -236,6 +238,12 @@ func _walk(delta: float) -> void:
 	# No motor sapping while strained: leash tension vs mass (main.gd)
 	# decides the tug of war, and the human is the heavy one.
 	var accel := 420.0 if state == HState.DASH else 240.0
+	if wading:
+		# reluctant wader: wants OUT, heads for the nearest bank, slowed
+		# by the water and by dignity
+		dir = Vector2(signf(pond_bank_x - global_position.x + 0.001), -0.15).normalized()
+		speed = 46.0
+		accel = 200.0
 	velocity = velocity.move_toward(dir * speed, accel * delta)
 	move_and_slide()
 
@@ -503,6 +511,12 @@ func _draw() -> void:
 	draw_rect(Rect2(-6, -9, 12, 18), Color(0.1, 0.1, 0.12))
 	draw_rect(Rect2(-4.5, -7, 9, 14), Color(0.7, 0.85, 1.0, glow))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	if wading:
+		# waist-deep, phone held higher, ripples of shame around the middle
+		draw_circle(Vector2(0, 4), 17.0, Color(0.42, 0.56, 0.66, 0.55))
+		for i in range(2):
+			var rr := fmod(t * 1.3 + i * 0.5, 1.2)
+			draw_arc(Vector2(0, 4), 16.0 + rr * 18.0, 0, TAU, 20, Color(0.82, 0.9, 1.0, 0.3 * (1.0 - rr / 1.2)), 2.0)
 	if carrying_bag:
 		draw_circle(side * 12.0 + fd * 2.0, 4.5, Color(0.9, 0.9, 0.92))
 	if state == HState.BAG:

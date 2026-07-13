@@ -29,6 +29,28 @@ Every feature must serve at least one. If it serves none, cut it.
    Doing it idly should be fun and give slightly different results every
    time; harder puzzles may REQUIRE a good fling.
 
+## Release plan (living document, one theme per release)
+
+- **v1.0 - shipped 2026-07-13.** Four walks (Boulevard, Park, Passeig
+  Maritim, El Mercat), day/night, rope leash with tetherball whirl,
+  rotating quests, chore chain, two owners, Millie and Tofu cameos,
+  touch controls, itch web release.
+- **v1.1 - next.** Presentation and persistence: title marquee, local
+  records + lifetime bones (the wallet), HUD overlay makeover, art
+  mock 2.0 handoff to the watercolor pipeline.
+- **v1.2 - The Walk Home.** The shape-of-a-walk structure: destination
+  zones at the corridor's end (off-leash romp), the return leg,
+  tired-dog pacing. Level five (Rainy Day).
+- **v1.3 - The Dog Park.** Other dog+owner pairs, leash-vs-leash
+  tangling prototype, ball catch, smell-every-dog. Tofu's expanded role.
+- **v1.4 - The Daily Walk.** Seeded daily run shared by all players,
+  results card for sharing, lifetime-bones spending (first cosmetics:
+  collars and bandanas). Level six (Old Town).
+- **v2.0 - The Product.** Watercolor art integration, sound and music
+  pass, trademark verification, Steam page, Next Fest demo.
+- Every release also ships: mechanics tuning from playtests, at least
+  one new rare event, and a CHANGELOG entry. Tags on every release.
+
 ## Roadmap
 
 ### Phase 1 — Find the fun (now, 2-6 weeks of evenings)
@@ -188,9 +210,21 @@ memorable.
   makes an internal editor nearly free and player-facing editing a
   realistic post-launch option. Not before.
 - Character creator: two preset owners exist (HIM/HER); creator later.
+- "Bring Tofu home" quest: an inside joke - the real Tofu is an
+  escape artist. In the a->b->FREEDOM->b->a walk-home structure, a
+  special walk can task the player with coaxing a runaway Tofu back
+  (she keeps her respectful distance and relocates; you herd, you do
+  not grab). Ties the cat cameo into a real objective.
+- Swimming (shipped v1.1 in the park pond, expandable): Millie loves
+  water and paddles happily; the owner is dragged in to wade reluctantly
+  with the phone held high; Tofu will not go near it. Beach sea and any
+  future water get the same treatment.
 - Uniqueness rule (from playtesting): shared asset library for
   efficiency, but every setting must earn its own look AND at least one
   interaction that exists nowhere else - it gets dull otherwise.
+- Onboarding (from a real non-gamer playtest): step-by-step menu
+  screens, one instruction each (Tony Hawk style), shipped v1.1. Levels
+  intentionally open calm before the chaos - keep that.
 
 ## Process
 

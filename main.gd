@@ -79,6 +79,7 @@ var stalls: Array[Vector2] = []
 var fountains: Array[Vector2] = []
 var body_pole_count := 0
 var drunk_amount := 0.0
+var swam := false
 var night_cm: CanvasModulate
 # one group query per physics tick, shared by every cone, bird, duck and
 # A-stand - thirty entities each asking the scene tree was the stutter
@@ -131,10 +132,10 @@ var frozen := false
 var shake_t := 0.0
 
 var hud: CanvasLayer
-var phone_label: Label
-var bones_label: Label
-var pee_label: Label
-var tube: Control
+var panel: Control
+var qbg: Panel
+var menu_step := 0
+var hud_status := ""
 var title_l: Label
 var sub_l: Label
 var prompt_l: Label
@@ -142,6 +143,8 @@ var select_l: Label
 var owner_l: Label
 var night_l: Label
 var hint_l: Label
+var record_l: Label
+var marquee: Control
 var prompt_tw: Tween
 var quests_label: Label
 var msg_label: Label
@@ -170,6 +173,8 @@ func _ready() -> void:
 		started = true
 	else:
 		frozen = true
+	menu_step = Game.menu_step
+	_apply_menu_step()
 
 
 func _setup_input() -> void:
@@ -553,6 +558,7 @@ func _build_quests() -> void:
 	]
 	if lvl == "park":
 		quest_pool.append({"text": "let the ducklings pass", "target": 1, "fn": func() -> int: return 1 if ducks_disturbed == 0 else 0})
+		quest_pool.append({"text": "take a dip in the pond", "target": 1, "fn": func() -> int: return 1 if swam else 0})
 	quest_pool.shuffle()
 	for i in range(3):
 		var q: Dictionary = quest_pool[i]
@@ -599,16 +605,23 @@ func _spawn_cones() -> void:
 func _build_hud() -> void:
 	hud = CanvasLayer.new()
 	add_child(hud)
-	phone_label = _hud_label(Vector2(24, 16), 22)
-	bones_label = _hud_label(Vector2(24, 46), 22)
-	tube = Control.new()
-	tube.set_script(load("res://pee_tube.gd"))
-	tube.position = Vector2(26, 82)
-	tube.size = Vector2(16, 84)
-	hud.add_child(tube)
-	pee_label = _hud_label(Vector2(52, 112), 17)
-	quests_label = _hud_label(Vector2(936, 16), 15)
-	quests_label.size = Vector2(330, 110)
+	# one quiet card for the vitals, one quiet card for the quests -
+	# the world is busy on purpose, the overlay is not
+	panel = Control.new()
+	panel.set_script(load("res://hud_panel.gd"))
+	panel.position = Vector2(16, 12)
+	hud.add_child(panel)
+	panel.setup(self)
+	var qsb := StyleBoxFlat.new()
+	qsb.bg_color = Color(0.08, 0.09, 0.1, 0.3)
+	qsb.set_corner_radius_all(10)
+	qbg = Panel.new()
+	qbg.add_theme_stylebox_override("panel", qsb)
+	qbg.position = Vector2(924, 8)
+	qbg.size = Vector2(348, 112)
+	hud.add_child(qbg)
+	quests_label = _hud_label(Vector2(938, 16), 15)
+	quests_label.size = Vector2(330, 100)
 	hint_l = _hud_label(Vector2(24, 686), 15)
 	hint_l.modulate.a = 0.75
 	title_l = _hud_label(Vector2(0, 240), 44)
@@ -623,20 +636,29 @@ func _build_hud() -> void:
 	select_l.size = Vector2(1280, 32)
 	select_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	select_l.text = "<   %s   >" % Game.LEVEL_NAMES[lvl]
+	record_l = _hud_label(Vector2(0, 486), 15)
+	record_l.size = Vector2(1280, 24)
+	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	record_l.text = Game.best_line(lvl) + ("    lifetime bones: %d" % Game.total_bones if Game.total_bones > 0 else "")
+	record_l.modulate.a = 0.8
+	var version_l := _hud_label(Vector2(1150, 686), 13)
+	version_l.text = "v1.1"
+	version_l.modulate.a = 0.5
+	marquee = Control.new()
+	marquee.set_script(load("res://title_marquee.gd"))
+	hud.add_child(marquee)
 	owner_l = _hud_label(Vector2(0, 384), 18)
 	owner_l.size = Vector2(1280, 28)
 	owner_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	owner_l.text = "walking: %s   (up/down)" % Game.owner_id.to_upper()
 	night_l = _hud_label(Vector2(0, 414), 18)
 	night_l.size = Vector2(1280, 28)
 	night_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	prompt_l = _hud_label(Vector2(0, 452), 20)
 	prompt_l.size = Vector2(1280, 30)
 	prompt_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_update_hint()
-	Input.joy_connection_changed.connect(func(_d: int, _c: bool) -> void: _update_hint())
+	Input.joy_connection_changed.connect(func(_d: int, _c: bool) -> void: _refresh_menu_text())
 	prompt_tw = create_tween().set_loops()
-	prompt_tw.tween_property(prompt_l, "modulate:a", 0.25, 0.7)
+	prompt_tw.tween_property(prompt_l, "modulate:a", 0.3, 0.7)
 	prompt_tw.tween_property(prompt_l, "modulate:a", 1.0, 0.7)
 	var touch := Control.new()
 	touch.set_script(load("res://touch_controls.gd"))
@@ -657,17 +679,61 @@ func _kb_or_pad(kb: String, pad: String) -> String:
 	return pad if Input.get_connected_joypads().size() > 0 else kb
 
 
-func _update_hint() -> void:
-	# show controller labels only when a controller is actually attached
+func _apply_menu_step() -> void:
+	# Tony Hawk rules: each screen shows ONE choice and ONE instruction.
+	# Gameplay HUD (panel, quests) stays hidden until the walk begins.
+	var in_menu := not started
+	panel.visible = started
+	qbg.visible = started
+	quests_label.visible = started
+	marquee.visible = in_menu
+	title_l.visible = in_menu
+	sub_l.visible = in_menu and menu_step == 0
+	select_l.visible = in_menu and menu_step >= 1
+	record_l.visible = in_menu and menu_step == 1
+	owner_l.visible = in_menu and menu_step == 2
+	night_l.visible = in_menu and menu_step == 2
+	prompt_l.visible = in_menu
+	if not in_menu:
+		return
+	match menu_step:
+		0:
+			title_l.add_theme_font_size_override("font_size", 46)
+			title_l.position.y = 232
+			title_l.text = "PATH OF LEASH RESISTANCE"
+			sub_l.text = "You are the dog. Go touch grass."
+		1:
+			title_l.add_theme_font_size_override("font_size", 26)
+			title_l.position.y = 150
+			title_l.text = "CHOOSE YOUR WALK"
+			select_l.text = "<   %s   >" % Game.LEVEL_NAMES[lvl]
+			record_l.text = Game.best_line(lvl) + ("    lifetime bones: %d" % Game.total_bones if Game.total_bones > 0 else "")
+		2:
+			title_l.add_theme_font_size_override("font_size", 26)
+			title_l.position.y = 150
+			title_l.text = Game.LEVEL_NAMES[lvl].to_upper()
+			select_l.text = "get ready"
+			owner_l.text = "walking: %s" % Game.owner_id.to_upper()
+	_refresh_menu_text()
+
+
+func _refresh_menu_text() -> void:
+	# controller labels only when a controller is attached
 	var pad := Input.get_connected_joypads().size() > 0
-	if pad:
-		hint_l.text = "stick: move    A: dig in (squat when nature calls)    X: pee    B: bark    Start: restart"
-		prompt_l.text = "press A to go walkies"
-		night_l.text = "time: %s   (B)" % ("NIGHT" if Game.night else "DAY")
-	else:
-		hint_l.text = "WASD: move    SPACE: dig in (squat when nature calls)    Q: pee    E: bark    R: restart"
-		prompt_l.text = "press SPACE to go walkies"
-		night_l.text = "time: %s   (E)" % ("NIGHT" if Game.night else "DAY")
+	hint_l.text = ("stick: move    A: dig in (squat when nature calls)    X: pee    B: bark    Start: restart" if pad
+		else "WASD: move    SPACE: dig in (squat when nature calls)    Q: pee    E: bark    R: restart")
+	night_l.text = "time of day: %s   (change with %s)" % [("NIGHT" if Game.night else "DAY"), _kb_or_pad("E", "B")]
+	var go := _kb_or_pad("SPACE", "A")
+	match menu_step:
+		0:
+			prompt_l.text = "press %s to begin" % go
+			hint_l.visible = false
+		1:
+			prompt_l.text = "%s / %s to browse,  %s to choose" % [_kb_or_pad("A", "left"), _kb_or_pad("D", "right"), go]
+			hint_l.visible = false
+		2:
+			prompt_l.text = "press %s to go walkies" % go
+			hint_l.visible = true
 
 
 func _hud_label(pos: Vector2, size_px: int) -> Label:
@@ -679,17 +745,15 @@ func _hud_label(pos: Vector2, size_px: int) -> Label:
 
 
 func _update_hud() -> void:
-	phone_label.text = "PHONE  " + "#".repeat(phone_hp) + ".".repeat(3 - phone_hp)
-	var streak_txt := "   STREAK x%d" % streak if streak > 1 else ""
-	bones_label.text = "BONES  %d%s" % [bones, streak_txt]
-	var status := "MARKS %d/5" % mini(marks.size(), 5)
+	hud_status = ""
 	if poop_state == 1:
-		status += "    GOTTA GO!  find a spot, hold %s" % _kb_or_pad("SPACE", "A")
+		hud_status = "GOTTA GO!  find a spot, hold %s" % _kb_or_pad("SPACE", "A")
 	elif poop_state >= 3:
-		status += "    UH OH..."
+		hud_status = "UH OH..."
 	elif pee >= 0.999:
-		status += "    FULL!"
-	pee_label.text = status
+		hud_status = "FULL!"
+	elif pee <= 0.02:
+		hud_status = "empty - find a fountain"
 	var qlines := "TODAY'S WALK:"
 	for q in active_quests:
 		var got: int = q.fn.call()
@@ -742,25 +806,42 @@ func _process(_delta: float) -> void:
 		get_tree().reload_current_scene()
 		return
 	if not started:
-		# level select: cycling rebuilds the world behind the title
-		if Input.is_action_just_pressed("move_left") or Input.is_action_just_pressed("move_right"):
+		# Tony Hawk rules: one screen, one instruction. Step 0 is just
+		# the title; step 1 picks the walk; step 2 picks the details.
+		if menu_step == 1 and (Input.is_action_just_pressed("move_left") or Input.is_action_just_pressed("move_right")):
 			Game.cycle_level(1 if Input.is_action_just_pressed("move_right") else -1)
+			Game.menu_step = 1
 			get_tree().reload_current_scene()
 			return
-		if Input.is_action_just_pressed("move_up") or Input.is_action_just_pressed("move_down"):
+		if menu_step == 2 and (Input.is_action_just_pressed("move_up") or Input.is_action_just_pressed("move_down")):
 			Game.toggle_owner()
-			owner_l.text = "walking: %s   (up/down)" % Game.owner_id.to_upper()
-		if Input.is_action_just_pressed("bark"):
+			owner_l.text = "walking: %s" % Game.owner_id.to_upper()
+		if menu_step == 2 and Input.is_action_just_pressed("bark"):
 			Game.night = not Game.night
 			night_cm.color = Color(0.5, 0.55, 0.78) if Game.night else Color.WHITE
-			_update_hint()
+			_refresh_menu_text()
 		if Input.is_action_just_pressed("plant") or Input.is_action_just_pressed("pee"):
+			if menu_step < 2:
+				menu_step += 1
+				Game.menu_step = menu_step
+				_apply_menu_step()
+				return
 			started = true
 			frozen = false
+			Game.menu_step = 1
 			prompt_tw.kill()
-			for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l]:
+			marquee.visible = false
+			panel.visible = true
+			qbg.visible = true
+			quests_label.visible = true
+			for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, record_l]:
 				var tw := create_tween()
 				tw.tween_property(l, "modulate:a", 0.0, 0.5)
+			# the hint earns its keep for a few seconds, then gets out
+			# of the way
+			var htw := create_tween()
+			htw.tween_interval(6.0)
+			htw.tween_property(hint_l, "modulate:a", 0.0, 1.2)
 	var target_y := (dog.global_position.y + human.global_position.y) / 2.0 - 60.0
 	cam.position = Vector2(640, target_y)
 	if shake_t > 0.0:
@@ -1155,15 +1236,22 @@ func _hazards(delta: float) -> void:
 			human.bumped((human.global_position - (tw.rect as Rect2).get_center()).normalized())
 			float_text(human.global_position, "hey! my towel!", Color(1, 0.85, 0.7))
 	if pond.size.x > 0.0:
-		# phones and ponds are natural enemies (wet, embarrassing,
-		# survivable - the pond is the middle tier of danger)
-		if pond.has_point(human.global_position):
-			if human.fall("pond"):
-				float_text(human.global_position, "SPLASH", Color(0.6, 0.8, 1.0))
-				human.global_position.x = pond.end.x + 26.0
-		if dog.hole_cd <= 0.0 and pond.has_point(dog.global_position):
-			float_text(dog.global_position, "SPLASH", Color(0.6, 0.8, 1.0))
-			dog.fall_in(Vector2(pond.end.x + 26.0, dog.global_position.y))
+		# Millie LOVES the water. In she goes, paddling happily - and
+		# whatever is on the other end of the leash comes too. The owner
+		# wades in reluctantly, phone held high, and edges back to the
+		# bank. Nobody drowns; it is just wet and a little undignified.
+		var dog_wet: bool = pond.grow(-4.0).has_point(dog.global_position)
+		var was_swim: bool = dog.swimming
+		dog.swimming = dog_wet
+		if dog_wet and not was_swim:
+			float_text(dog.global_position, "splish!", Color(0.7, 0.85, 1.0))
+			swam = true
+		var hum_wet: bool = pond.grow(-4.0).has_point(human.global_position)
+		var was_wade: bool = human.wading
+		human.wading = hum_wet
+		human.pond_bank_x = pond.end.x + 24.0
+		if hum_wet and not was_wade:
+			float_text(human.global_position, "no no no-", Color(0.7, 0.85, 1.0))
 	# open holes are the TOP tier of danger: falling in ends the walk,
 	# full stop. Bumps hurt a little; holes hurt completely.
 	for m in manholes:
@@ -1213,7 +1301,6 @@ func _bodily(delta: float) -> void:
 			pee = minf(1.0, pee + 0.3 * delta)
 			drunk_amount += 0.3 * delta
 	dog.bladder_slow = pee >= 0.999
-	tube.level = pee
 	# peeing has its own button now; a yank that gets you moving
 	# interrupts it (the tank is a per-walk budget, ~9 breaks)
 	# velocity gate is loose: being gently towed must not block the pee
@@ -1379,8 +1466,17 @@ func _check_win() -> void:
 			rating = rating.strip_edges()
 			if completed == 3:
 				rating += "\nPERFECT WALK"
-		msg_label.text = "WALK COMPLETE\n\n%s\nQuests: +%d bones\n\nBones: %d    Phone: %d/3    Time: %ds\n\n%s\n\nPress %s for another walk" % [
-			qtext, completed * 5, bones, phone_hp, int(elapsed), rating, _kb_or_pad("R", "Start")]
+		var rec: Dictionary = Game.record_result(lvl, bones, elapsed, completed == 3)
+		var rec_line := ""
+		if rec.bones_record:
+			rec_line += "NEW BONES RECORD!   "
+		if rec.time_record:
+			rec_line += "BEST TIME!"
+		if rec_line == "":
+			rec_line = Game.best_line(lvl)
+		rec_line += "\nlifetime bones: %d" % Game.total_bones
+		msg_label.text = "WALK COMPLETE\n\n%s\nQuests: +%d bones\n\nBones: %d    Phone: %d/3    Time: %ds\n%s\n\n%s\n\nPress %s for another walk" % [
+			qtext, completed * 5, bones, phone_hp, int(elapsed), rec_line, rating, _kb_or_pad("R", "Start")]
 
 
 func on_bark(pos: Vector2) -> void:

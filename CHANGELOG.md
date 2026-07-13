@@ -2,6 +2,30 @@
 
 Append-only session history, newest first.
 
+## 2026-07-13 — v1.1: presentation, persistence, swimming
+
+- Step-by-step title menu (Tony Hawk style) after a real non-gamer
+  playtest got stuck on the option-wall: splash -> choose walk ->
+  ready, one instruction per screen. First run sees the splash; later
+  runs land on walk-select. A little Millie-tows-owner marquee trots
+  across the title.
+- Local records + lifetime bones wallet (game.gd, user://records.cfg):
+  best bones and time per walk, perfect-walk count, saved between runs.
+  Results screen calls out new records; title shows your best.
+- HUD overlay makeover: the vitals live in one quiet translucent card
+  (phone pips, bone count, pee tube, 5 mark dots, a pulsing status
+  line) and the quests in another. The world is chaotic on purpose;
+  the UI is calm now. Old scattered labels removed (pee_tube.gd gone).
+- Swimming: Millie loves the water and dog-paddles across the park pond
+  (wake rings, slower, blissful); whatever is on the leash comes too,
+  so the owner wades in reluctantly toward the nearest bank, phone held
+  high. No more phone-cracking pond. New park quest: "take a dip". Tofu
+  keeps well clear of water.
+- Concept art mocks upgraded to v2: gradients, shaped anatomy, paper
+  grain, motion arcs, a lost shoe, and Tofu supervising both.
+- Release plan added to PROJECT.md (one theme per version through v2.0).
+- Logged for the walk-home structure: a "bring runaway Tofu home" quest.
+
 ## 2026-07-13 — v1.0.1: Tofu, properly
 
 - Tofu lost the ominous shadow (she likes shade; she is not made of it).

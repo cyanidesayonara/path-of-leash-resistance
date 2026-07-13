@@ -11,6 +11,7 @@ var input_active := false
 var dragged := false
 var bladder_slow := false
 var sand_slow := false
+var swimming := false
 var tumble_t := 0.0
 var hole_cd := 0.0
 var squat_t := 0.0
@@ -81,8 +82,9 @@ func tick(delta: float) -> void:
 		var accel := ACCEL
 		if dragged:
 			accel = 1000.0 if input_active else 250.0
-		# a full bladder waddles; sand is heavy going
-		var top := SPEED * (0.88 if bladder_slow else 1.0) * (0.8 if sand_slow else 1.0)
+		# a full bladder waddles; sand is heavy going; water is a happy
+		# dog-paddle (slower, but she would stay in all day)
+		var top := SPEED * (0.88 if bladder_slow else 1.0) * (0.8 if sand_slow else 1.0) * (0.62 if swimming else 1.0)
 		velocity = velocity.move_toward(iv * top, accel * delta)
 		if input_active:
 			facing = iv.normalized()
@@ -144,6 +146,11 @@ func _draw() -> void:
 	var side := facing.orthogonal()
 	var shoulder := facing * 6.0
 	var hside := hip_dir.orthogonal()
+	if swimming:
+		# expanding wake rings behind her happy paddling self
+		for i in range(3):
+			var rr := fmod(t * 1.4 + i * 0.45, 1.35)
+			draw_arc(-facing * 6.0, 12.0 + rr * 26.0, 0, TAU, 22, Color(0.82, 0.9, 1.0, 0.32 * (1.0 - rr / 1.35)), 2.0)
 	# THE WIGGLE: the rump swings with the gait
 	var wiggle := hside * sin(gait) * clampf(velocity.length() / SPEED, 0.0, 1.0) * 2.6
 	var hip := shoulder + hip_dir * 17.0 + wiggle
@@ -213,3 +220,9 @@ func _draw() -> void:
 			draw_circle(Vector2(-8 + i * 8, -26), 2.0, Color(1, 1, 1, 0.7))
 		if squat_ui > 0.0:
 			draw_arc(Vector2.ZERO, 20.0, -PI / 2.0, -PI / 2.0 + TAU * clampf(squat_ui, 0.0, 1.0), 20, Color(1, 0.95, 0.7), 3.0)
+	if swimming:
+		# waterline over the hindquarters and little paddle splashes up front
+		draw_circle(hip, 11.0, Color(0.42, 0.56, 0.66, 0.5))
+		draw_circle(shoulder + facing * 2.0, 9.0, Color(0.42, 0.56, 0.66, 0.32))
+		draw_circle(head + facing * 12.0 + side * sin(t * 18.0) * 4.0, 2.2, Color(0.9, 0.95, 1.0, 0.8))
+		draw_circle(head + facing * 12.0 - side * sin(t * 18.0) * 4.0, 1.8, Color(0.9, 0.95, 1.0, 0.6))

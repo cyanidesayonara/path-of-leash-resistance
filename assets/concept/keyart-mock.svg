@@ -1,66 +1,127 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 630 500" font-family="Georgia, serif">
-  <!-- Key art / itch cover composition mock (630x500 = itch cover size).
-       The pond splash scene. Layout guide for the watercolor final. -->
-  <rect width="630" height="500" fill="#eef0e6"/>
-  <!-- park washes -->
-  <ellipse cx="150" cy="90" rx="240" ry="100" fill="#c8d8c0" opacity="0.5"/>
-  <ellipse cx="480" cy="70" rx="220" ry="90" fill="#dce4c8" opacity="0.5"/>
-  <ellipse cx="320" cy="430" rx="360" ry="120" fill="#b9cbaa" opacity="0.5"/>
-  <!-- the pond -->
-  <ellipse cx="180" cy="330" rx="170" ry="95" fill="#7fa8b5" opacity="0.8"/>
-  <ellipse cx="180" cy="330" rx="140" ry="75" fill="#8fb8c2" opacity="0.6"/>
-  <!-- the splash: owner half-submerged, phone held high and dry -->
-  <g transform="translate(180 315)">
-    <path d="M -60 22 q 12 -34 24 0 M -8 26 q 12 -40 26 0 M 44 22 q 10 -30 22 0"
+  <!-- Key art / itch cover mock v2 (630x500). The pond splash: owner in,
+       phone saved, ducks unbothered, Millie innocent, Tofu witnessing. -->
+  <defs>
+    <linearGradient id="kpaper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0f2e6"/>
+      <stop offset="1" stop-color="#e2e7d2"/>
+    </linearGradient>
+    <radialGradient id="kwash">
+      <stop offset="0" stop-color="#c8d8c0" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#c8d8c0" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="kpond">
+      <stop offset="0" stop-color="#9cc2cc"/>
+      <stop offset="0.7" stop-color="#7fa8b5"/>
+      <stop offset="1" stop-color="#6d95a4"/>
+    </radialGradient>
+    <radialGradient id="kglow">
+      <stop offset="0" stop-color="#aacdf0" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#aacdf0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="630" height="500" fill="url(#kpaper)"/>
+  <ellipse cx="150" cy="80" rx="260" ry="105" fill="url(#kwash)"/>
+  <ellipse cx="500" cy="60" rx="230" ry="90" fill="url(#kwash)"/>
+  <ellipse cx="320" cy="440" rx="380" ry="130" fill="url(#kwash)"/>
+  <g fill="#8a8270" opacity="0.12">
+    <circle cx="90" cy="140" r="1.4"/><circle cx="420" cy="90" r="1.3"/><circle cx="560" cy="180" r="1.5"/>
+    <circle cx="240" cy="60" r="1.2"/><circle cx="500" cy="420" r="1.4"/><circle cx="60" cy="430" r="1.3"/>
+  </g>
+
+  <!-- the pond, with ripples and lily pads -->
+  <ellipse cx="185" cy="325" rx="175" ry="98" fill="url(#kpond)"/>
+  <ellipse cx="185" cy="325" rx="175" ry="98" fill="none" stroke="#5d8291" stroke-width="3" opacity="0.5"/>
+  <ellipse cx="185" cy="322" rx="120" ry="62" fill="none" stroke="#eaf2f4" stroke-width="2" opacity="0.5"/>
+  <ellipse cx="185" cy="320" rx="86" ry="42" fill="none" stroke="#eaf2f4" stroke-width="1.5" opacity="0.4"/>
+  <ellipse cx="86" cy="290" rx="16" ry="8" fill="#5d8a5a" opacity="0.85"/>
+  <ellipse cx="278" cy="368" rx="13" ry="7" fill="#5d8a5a" opacity="0.85"/>
+  <!-- reeds at the bank -->
+  <g stroke="#4f7245" stroke-width="3.5" stroke-linecap="round" fill="none">
+    <path d="M 40 340 q -2 -34 6 -50"/><path d="M 52 348 q 2 -30 -6 -44"/><path d="M 62 344 q 4 -36 -2 -52"/>
+  </g>
+  <ellipse cx="46" cy="286" rx="4" ry="9" fill="#6e5636"/>
+  <ellipse cx="60" cy="288" rx="4" ry="9" fill="#6e5636"/>
+
+  <!-- the splash: owner in, arm heroic, phone dry -->
+  <g transform="translate(180 312)">
+    <ellipse cx="0" cy="16" rx="52" ry="16" fill="#eaf2f4" opacity="0.5"/>
+    <path d="M -62 20 q 12 -36 24 0 M -10 26 q 12 -44 26 0 M 44 20 q 10 -32 22 0"
           fill="none" stroke="#eaf2f4" stroke-width="8" stroke-linecap="round"/>
-    <ellipse cx="0" cy="6" rx="30" ry="20" fill="#46586e"/>
+    <circle cx="-46" cy="-14" r="3" fill="#eaf2f4"/><circle cx="30" cy="-20" r="2.5" fill="#eaf2f4"/>
+    <circle cx="52" cy="-8" r="2" fill="#eaf2f4"/>
+    <path d="M -26 10 Q -30 -8 -14 -14 Q 6 -18 14 -4 Q 18 8 8 14 Z" fill="#46586e"/>
     <circle cx="-2" cy="-26" r="17" fill="#e3bf98"/>
-    <path d="M -20 -36 a 18 18 0 0 1 36 -2" fill="none" stroke="#4a3826" stroke-width="8"/>
+    <path d="M -20 -36 a 18 18 0 0 1 36 -2" fill="none" stroke="#4a3826" stroke-width="8" stroke-linecap="round"/>
     <line x1="14" y1="-18" x2="52" y2="-58" stroke="#e3bf98" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="55" cy="-72" r="26" fill="url(#kglow)"/>
     <rect x="46" y="-86" width="18" height="30" rx="3" fill="#20242c"/>
     <rect x="49" y="-81" width="12" height="21" rx="2" fill="#9fc4e8"/>
   </g>
-  <!-- ducklings, judging -->
+
+  <!-- the duck family, unbothered, with little wakes -->
   <g>
-    <ellipse cx="70" cy="270" rx="12" ry="9" fill="#7a5c34"/>
-    <circle cx="82" cy="264" r="6" fill="#7a5c34"/>
-    <circle cx="104" cy="276" r="5" fill="#e8cf6a"/>
-    <circle cx="118" cy="282" r="5" fill="#e8cf6a"/>
-    <circle cx="132" cy="288" r="5" fill="#e8cf6a"/>
+    <path d="M 52 268 q 14 6 26 2 M 88 278 q 12 5 22 2" stroke="#eaf2f4" stroke-width="1.5" fill="none" opacity="0.6"/>
+    <ellipse cx="70" cy="266" rx="12" ry="9" fill="#7a5c34"/>
+    <circle cx="82" cy="260" r="6" fill="#7a5c34"/>
+    <path d="M 87 -0 l 0 0" fill="none"/>
+    <path d="M 87 260 l 6 1 l -6 2 Z" fill="#d99b2e"/>
+    <circle cx="104" cy="272" r="5" fill="#e8cf6a"/>
+    <circle cx="118" cy="278" r="5" fill="#e8cf6a"/>
+    <circle cx="132" cy="284" r="5" fill="#e8cf6a"/>
   </g>
-  <!-- bridge planks, right -->
-  <g stroke="#a8845c" stroke-width="9">
-    <line x1="380" y1="270" x2="580" y2="250"/><line x1="382" y1="292" x2="584" y2="272"/>
-    <line x1="384" y1="314" x2="588" y2="294"/><line x1="386" y1="336" x2="592" y2="316"/>
+
+  <!-- bridge planks with grain, and Tofu witnessing -->
+  <g stroke="#a8845c" stroke-width="10" stroke-linecap="round">
+    <line x1="380" y1="272" x2="586" y2="252"/><line x1="382" y1="294" x2="590" y2="274"/>
+    <line x1="384" y1="316" x2="594" y2="296"/><line x1="386" y1="338" x2="598" y2="318"/>
   </g>
-  <!-- Millie on the bank, taut leash to the water, ears up, guilt nowhere -->
-  <path d="M 205 292 C 260 240 330 240 372 258" fill="none" stroke="#b8402e" stroke-width="6" stroke-linecap="round"/>
-  <g transform="translate(400 268) rotate(-8)">
-    <ellipse cx="0" cy="0" rx="40" ry="22" fill="#23211f"/>
-    <circle cx="-38" cy="-6" r="15" fill="#23211f"/>
-    <ellipse cx="-54" cy="-8" rx="11" ry="6" fill="#35322e"/>
-    <circle cx="-63" cy="-8" r="3" fill="#151312"/>
-    <path d="M -44 -18 q -12 12 -3 17" fill="none" stroke="#151312" stroke-width="8" stroke-linecap="round"/>
-    <path d="M -28 -19 q 9 10 2 15" fill="none" stroke="#151312" stroke-width="8" stroke-linecap="round"/>
-    <path d="M 36 -4 q 24 -18 20 -36" fill="none" stroke="#23211f" stroke-width="6" stroke-linecap="round"/>
-    <rect x="-20" y="-17" width="27" height="12" rx="5" fill="#b8402e"/>
-    <line x1="-24" y1="14" x2="-28" y2="24" stroke="#23211f" stroke-width="7" stroke-linecap="round"/>
-    <line x1="16" y1="16" x2="22" y2="26" stroke="#23211f" stroke-width="7" stroke-linecap="round"/>
+  <g stroke="#8f6f4a" stroke-width="1.5" opacity="0.6">
+    <line x1="420" y1="270" x2="470" y2="265"/><line x1="500" y1="288" x2="552" y2="283"/>
+    <line x1="410" y1="314" x2="452" y2="310"/><line x1="530" y1="330" x2="574" y2="326"/>
   </g>
-  <!-- Tofu on the bridge, watching the consequences unfold -->
-  <g transform="translate(530 226)">
-    <path d="M 14 4 q 12 -2 10 -14" fill="none" stroke="#a3764e" stroke-width="4" stroke-linecap="round"/>
-    <ellipse cx="0" cy="0" rx="15" ry="10" fill="#f2efe9"/>
-    <ellipse cx="-1" cy="-4" rx="8" ry="5" fill="#a3764e"/>
-    <circle cx="-15" cy="-4" r="7.5" fill="#f2efe9"/>
-    <path d="M -20 -9 l -2 -6 l 6 3 z" fill="#a3764e"/>
-    <path d="M -13 -10 l 0 -6 l 5 4 z" fill="#a3764e"/>
-    <circle cx="-11" cy="-7" r="3" fill="#a3764e"/>
-    <path d="M -6 -1 q 6 4 12 3" fill="none" stroke="#d9749c" stroke-width="3"/>
-    <circle cx="-18" cy="-4" r="1.1" fill="#3a352e"/>
+  <g transform="translate(520 236)">
+    <path d="M 15 5 q 13 -2 11 -16 q -1 -6 -5 -8" fill="none" stroke="#a3764e" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M -2 9 Q -17 9 -18 -3 Q -19 -12 -10 -13 L 6 -12 Q 16 -9 15 1 Q 14 9 -2 9 Z" fill="#f2efe9"/>
+    <path d="M -10 -12 Q -2 -16 6 -11 L 5 -4 L -9 -6 Z" fill="#a3764e"/>
+    <circle cx="-15" cy="-10" r="7.5" fill="#f2efe9"/>
+    <path d="M -21 -14 l -2 -7 l 6 3 Z" fill="#a3764e"/>
+    <path d="M -12 -16 l 1 -7 l 5 5 Z" fill="#a3764e"/>
+    <path d="M -19 -14 Q -15 -18 -10 -14 L -11 -9 L -18 -10 Z" fill="#a3764e"/>
+    <circle cx="-18" cy="-10" r="1.1" fill="#3a352e"/>
+    <path d="M -5 -1 q 6 4 11 3" fill="none" stroke="#d9749c" stroke-width="3"/>
   </g>
-  <!-- title block -->
+
+  <!-- Millie on the bank: seated, taut leash, sainthood implied -->
+  <path d="M 208 290 C 264 238 330 240 372 260" fill="none" stroke="#8f2f20" stroke-width="7" stroke-linecap="round" opacity="0.9"/>
+  <path d="M 208 290 C 264 238 330 240 372 260" fill="none" stroke="#c44a33" stroke-width="3.5" stroke-linecap="round"/>
+  <g transform="translate(398 268) rotate(-6)">
+    <ellipse cx="6" cy="26" rx="40" ry="7" fill="#8a8270" opacity="0.2"/>
+    <path d="M -2 22 Q -18 22 -20 4 Q -21 -12 -6 -14 L 16 -12 Q 32 -8 30 8 Q 28 22 -2 22 Z" fill="#23211f"/>
+    <circle cx="-24" cy="-16" r="13" fill="#23211f"/>
+    <path d="M -34 -22 Q -46 -24 -52 -18 Q -45 -13 -36 -13 Z" fill="#35322e"/>
+    <circle cx="-50" cy="-17" r="3" fill="#121110"/>
+    <path d="M -22 -28 Q -28 -42 -18 -44 Q -15 -34 -17 -28 Z" fill="#151312"/>
+    <path d="M -32 -26 Q -40 -36 -34 -42 Q -28 -34 -28 -27 Z" fill="#151312"/>
+    <circle cx="-45" cy="-20" r="1.6" fill="#f2efe9"/>
+    <path d="M 26 6 q 22 -12 20 -30" fill="none" stroke="#23211f" stroke-width="5.5" stroke-linecap="round"/>
+    <path d="M -14 20 L -16 30 M 6 22 L 8 30" stroke="#151312" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="-16" cy="31" r="2.8" fill="#c9c5be"/>
+    <circle cx="9" cy="31" r="2.8" fill="#c9c5be"/>
+    <rect x="-14" y="-14" width="26" height="11" rx="5" fill="#b8402e"/>
+  </g>
+  <!-- a dragonfly, because ponds have management -->
+  <g transform="translate(320 210)">
+    <line x1="0" y1="0" x2="10" y2="2" stroke="#3f6b74" stroke-width="2"/>
+    <ellipse cx="-4" cy="-3" rx="6" ry="2" fill="#9fc4e8" opacity="0.7"/>
+    <ellipse cx="-4" cy="3" rx="6" ry="2" fill="#9fc4e8" opacity="0.7"/>
+  </g>
+
+  <!-- title block with soft shadow -->
+  <text x="317" y="418" font-size="40" fill="#8a8270" opacity="0.35" font-weight="bold" text-anchor="middle" letter-spacing="1">PATH OF LEASH</text>
   <text x="315" y="415" font-size="40" fill="#2c2a26" font-weight="bold" text-anchor="middle" letter-spacing="1">PATH OF LEASH</text>
+  <text x="317" y="458" font-size="40" fill="#8a8270" opacity="0.35" font-weight="bold" text-anchor="middle" letter-spacing="1">RESISTANCE</text>
   <text x="315" y="455" font-size="40" fill="#b8402e" font-weight="bold" text-anchor="middle" letter-spacing="1">RESISTANCE</text>
   <text x="315" y="483" font-size="17" fill="#6a675e" font-style="italic" text-anchor="middle">you are the dog. go touch grass.</text>
 </svg>
