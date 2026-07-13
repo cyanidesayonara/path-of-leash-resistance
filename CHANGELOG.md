@@ -2,6 +2,26 @@
 
 Append-only session history, newest first.
 
+## 2026-07-13 — EL MERCAT (level four), day/night, the realism batch
+
+- Level four: El Mercat. Market stalls with striped awnings line both
+  edges (solid bodies, leash-wrappable), dropped produce everywhere
+  (eight snacks), stroller crowds and delivery scooters, two performers,
+  a fountain in the middle, and the cat is practically guaranteed (fish).
+- DAY/NIGHT for every level: toggle with E / B on the title screen. A
+  canvas tint does the mood; lampposts now have four bulbs on cross
+  arms and a warm halo that earns its keep after dark.
+- A-stands are entities now: light, toppleable - bodies knock them over
+  and a TAUT LEASH sweeps them flat ("clatter"). Nobody stands them up.
+- Vans and stalls are solid rectangles: no more walking over the roof;
+  the wrap circles remain so the leash still rounds the whole vehicle.
+- Riders (even wobbly kids) now steer around open manholes; dog and
+  owner fall in a little less easily (death radius trimmed).
+- The pee tank no longer refills for free: drink at fountains, bowls or
+  the beach shower, standing still. New quest: "have a good long drink".
+- Ducklings flee dogs, humans, and traffic alike; squirrels spook at
+  passing riders (cats merely disapprove until nearly run over).
+
 ## 2026-07-12 — two tiers of danger, repo renamed
 
 - Repo and folder renamed to path-of-leash-resistance for the fresh
