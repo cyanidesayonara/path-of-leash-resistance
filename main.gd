@@ -74,6 +74,11 @@ var astands: Array[Vector2] = []
 var vans: Array[Vector2] = []
 var performers: Array[Vector2] = []
 var cone_spots: Array[Vector2] = []
+var stalls: Array[Vector2] = []
+var fountains: Array[Vector2] = []
+var body_pole_count := 0
+var drunk_amount := 0.0
+var night_cm: CanvasModulate
 var sq_spawn_t := 6.0
 var whirl_arm := 0.0
 var whirl_wind_acc := 0.0
@@ -128,6 +133,7 @@ var sub_l: Label
 var prompt_l: Label
 var select_l: Label
 var owner_l: Label
+var night_l: Label
 var prompt_tw: Tween
 var quests_label: Label
 var msg_label: Label
@@ -146,6 +152,10 @@ func _ready() -> void:
 	_spawn_cones()
 	_build_quests()
 	_build_hud()
+	# day/night: a canvas tint; HUD lives on a CanvasLayer, unaffected
+	night_cm = CanvasModulate.new()
+	night_cm.color = Color(0.5, 0.55, 0.78) if Game.night else Color.WHITE
+	add_child(night_cm)
 	# title screen holds the world until the player goes walkies;
 	# headless runs (CI smoke test) start immediately
 	if DisplayServer.get_name() == "headless":
@@ -333,29 +343,71 @@ func _build_level_data() -> void:
 				Vector2(578, -1000), Vector2(950, -2200), Vector2(578, -3200), Vector2(950, -4500),
 			]
 			keb_list = [Vector2(700, -1900), Vector2(860, -4200), Vector2(420, -3000)]
+			fountains = [Vector2(420, -1300), Vector2(1005, -3550)]
+		"market":
+			# El Mercat: stalls line both edges, produce underfoot, the
+			# cat is practically guaranteed (fish)
+			gate_text = "PLAZA"
+			for i in range(7):
+				var x := SIDEWALK_LEFT + 30.0 if i % 2 == 0 else SIDEWALK_RIGHT - 30.0
+				poles.append(Vector2(x, -350.0 - i * 640.0))
+			deco_pole_count = poles.size()
+			stalls = [
+				Vector2(370, -800), Vector2(910, -1150), Vector2(370, -1750),
+				Vector2(910, -2300), Vector2(370, -2900), Vector2(910, -3500),
+				Vector2(370, -4150), Vector2(910, -4650),
+			]
+			manholes = [Vector2(640, -2050), Vector2(560, -3800)]
+			bins = [
+				Vector2(330, -1400), Vector2(950, -2700),
+				Vector2(330, -3300), Vector2(950, -4400),
+			]
+			benches = [Vector2(336, -2450), Vector2(944, -3850)]
+			astands = [
+				Vector2(440, -880), Vector2(840, -1230), Vector2(440, -2980), Vector2(840, -3580),
+			]
+			performers = [Vector2(640, -2600), Vector2(400, -4400)]
+			cone_spots = [Vector2(600, -1990), Vector2(690, -2110)]
+			fountains = [Vector2(640, -3100)]
+			hyd_list = [Vector2(345, -600), Vector2(935, -1900), Vector2(345, -3600)]
+			keb_list = [
+				Vector2(500, -900), Vector2(780, -1250), Vector2(620, -1800),
+				Vector2(540, -2380), Vector2(760, -3000), Vector2(600, -3650),
+				Vector2(820, -4250), Vector2(480, -4550),
+			]
+	if lvl == "street":
+		fountains = [Vector2(335, -3350)]
+	elif lvl == "park":
+		fountains = [Vector2(944, -3300), Vector2(724, -2440)]
 	for tb in tables:
 		poles.append(tb)
 	for pa in parasols:
 		poles.append(pa)
 	for ch in chairs:
 		poles.append(ch)
-	for a in astands:
-		poles.append(a)
-	# vans are three colliders in a row: big enough to block, round
-	# enough for the leash to wrap around the whole vehicle
-	for v in vans:
-		poles.append(v + Vector2(0, -46))
-		poles.append(v)
-		poles.append(v + Vector2(0, 46))
 	# trash bins: bag deposit targets for the owner's chore chain; they
 	# also join the poles array, so they block bodies, snag the leash,
 	# and can absolutely be marked
 	for bn in bins:
 		poles.append(bn)
+	# everything past body_pole_count is rope-wrap geometry only: vans
+	# and stalls get one solid rectangular body each in _build_walls
+	body_pole_count = poles.size()
+	for v in vans:
+		for off in [-52.0, -26.0, 0.0, 26.0, 52.0]:
+			poles.append(v + Vector2(0, off))
+	for st in stalls:
+		for off in [-32.0, 0.0, 32.0]:
+			poles.append(st + Vector2(off, 0))
 	urge_y = randf_range(-3200.0, -1500.0)
 	# rare visitors: a cat some walks, a pigeon flock or two most walks
 	# (seagulls at the beach, obviously)
-	if randf() < (0.4 if lvl == "park" else 0.3):
+	var cat_p := 0.3
+	if lvl == "park":
+		cat_p = 0.4
+	elif lvl == "market":
+		cat_p = 0.75
+	if randf() < cat_p:
 		cat_y = randf_range(-4200.0, -1200.0)
 	flock_ys = [randf_range(-1800.0, -800.0), randf_range(-4400.0, -2600.0)]
 	if lvl != "street":
@@ -398,16 +450,33 @@ func _build_walls() -> void:
 		cs.position = d[0]
 		walls.add_child(cs)
 	add_child(walls)
-	for p in poles:
+	for i in range(body_pole_count):
 		var sb := StaticBody2D.new()
 		sb.collision_layer = 1
-		sb.position = p
+		sb.position = poles[i]
 		var cs := CollisionShape2D.new()
 		var sh := CircleShape2D.new()
 		sh.radius = POLE_RADIUS
 		cs.shape = sh
 		sb.add_child(cs)
 		add_child(sb)
+	# vans and stalls are solid rectangles: no walking over the van roof
+	for v in vans:
+		_add_rect_body(v, Vector2(64, 132))
+	for st in stalls:
+		_add_rect_body(st, Vector2(96, 56))
+
+
+func _add_rect_body(at: Vector2, size: Vector2) -> void:
+	var sb := StaticBody2D.new()
+	sb.collision_layer = 1
+	sb.position = at
+	var cs := CollisionShape2D.new()
+	var sh := RectangleShape2D.new()
+	sh.size = size
+	cs.shape = sh
+	sb.add_child(cs)
+	add_child(sb)
 
 
 func _build_entities() -> void:
@@ -453,6 +522,7 @@ func _build_quests() -> void:
 		{"text": "phone without a scratch", "target": 1, "fn": func() -> int: return 1 if phone_hp == 3 else 0},
 		{"text": "keep your own paws clean", "target": 1, "fn": func() -> int: return 1 if dog_hits == 0 else 0},
 		{"text": "get the business bagged", "target": 1, "fn": func() -> int: return 1 if poop_state == 2 and not bag_pending else 0},
+		{"text": "have a good long drink", "target": 1, "fn": func() -> int: return 1 if drunk_amount >= 0.4 else 0},
 	]
 	if lvl == "park":
 		quest_pool.append({"text": "let the ducklings pass", "target": 1, "fn": func() -> int: return 1 if ducks_disturbed == 0 else 0})
@@ -489,6 +559,14 @@ func _spawn_cones() -> void:
 		cn.z_index = 11
 		add_child(cn)
 		cn.setup(self, dog, human)
+	# A-stands are entities too: light, toppleable, never re-stood
+	for a in astands:
+		var sa := Node2D.new()
+		sa.set_script(load("res://astand.gd"))
+		sa.position = a
+		sa.z_index = 11
+		add_child(sa)
+		sa.setup(self, dog, human)
 
 
 func _build_hud() -> void:
@@ -523,7 +601,11 @@ func _build_hud() -> void:
 	owner_l.size = Vector2(1280, 28)
 	owner_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	owner_l.text = "walking: %s   (up/down)" % Game.owner_id.to_upper()
-	prompt_l = _hud_label(Vector2(0, 424), 20)
+	night_l = _hud_label(Vector2(0, 414), 18)
+	night_l.size = Vector2(1280, 28)
+	night_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	night_l.text = "time: %s   (E / B)" % ("NIGHT" if Game.night else "DAY")
+	prompt_l = _hud_label(Vector2(0, 452), 20)
 	prompt_l.size = Vector2(1280, 30)
 	prompt_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	prompt_l.text = "press SPACE / A to go walkies"
@@ -622,11 +704,15 @@ func _process(_delta: float) -> void:
 		if Input.is_action_just_pressed("move_up") or Input.is_action_just_pressed("move_down"):
 			Game.toggle_owner()
 			owner_l.text = "walking: %s   (up/down)" % Game.owner_id.to_upper()
-		if Input.is_action_just_pressed("plant") or Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pee"):
+		if Input.is_action_just_pressed("bark"):
+			Game.night = not Game.night
+			night_cm.color = Color(0.5, 0.55, 0.78) if Game.night else Color.WHITE
+			night_l.text = "time: %s   (E / B)" % ("NIGHT" if Game.night else "DAY")
+		if Input.is_action_just_pressed("plant") or Input.is_action_just_pressed("pee"):
 			started = true
 			frozen = false
 			prompt_tw.kill()
-			for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l]:
+			for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l]:
 				var tw := create_tween()
 				tw.tween_property(l, "modulate:a", 0.0, 0.5)
 	var target_y := (dog.global_position.y + human.global_position.y) / 2.0 - 60.0
@@ -827,6 +913,13 @@ func _vlane(delta: float) -> void:
 				x = randf_range(488.0, 552.0)
 				band_lo = 486.0
 				band_hi = 554.0
+		"market":
+			# strollers and the occasional delivery scooter
+			kid = randf() < 0.75
+			speed = randf_range(60.0, 105.0) if kid else randf_range(200.0, 300.0)
+			x = randf_range(SIDEWALK_LEFT + 90.0, SIDEWALK_RIGHT - 90.0)
+			band_lo = SIDEWALK_LEFT + 80.0
+			band_hi = SIDEWALK_RIGHT - 80.0
 	var b := Node2D.new()
 	b.set_script(load("res://bike.gd"))
 	b.position = Vector2(x, y)
@@ -990,10 +1083,10 @@ func _hazards(delta: float) -> void:
 	# open holes are the TOP tier of danger: falling in ends the walk,
 	# full stop. Bumps hurt a little; holes hurt completely.
 	for m in manholes:
-		if human.global_position.distance_to(m) < 24.0 and not human.is_fallen():
+		if human.global_position.distance_to(m) < 18.0 and not human.is_fallen():
 			_death("THE HUMAN WENT DOWN THE MANHOLE\n\nThe phone gets reception down there. The walk does not.")
 			return
-		if dog.global_position.distance_to(m) < 20.0:
+		if dog.global_position.distance_to(m) < 15.0:
 			_death("MILLIE WENT DOWN THE MANHOLE\n\nShe is fine. The walk is very over.")
 			return
 	for c in cellars:
@@ -1028,8 +1121,13 @@ func _pickups(delta: float) -> void:
 
 func _bodily(delta: float) -> void:
 	# the life of a dog: pee anywhere the leash allows (spots score),
-	# and once per walk nature calls for a longer stop
-	pee = minf(1.0, pee + 0.008 * delta)
+	# and once per walk nature calls for a longer stop.
+	# No free refills: the tank only refills at water - fountains,
+	# bowls, the beach shower - drunk standing still, like a lady.
+	for f in fountains:
+		if dog.global_position.distance_to(f) < 34.0 and dog.velocity.length() < 40.0:
+			pee = minf(1.0, pee + 0.3 * delta)
+			drunk_amount += 0.3 * delta
 	dog.bladder_slow = pee >= 0.999
 	tube.level = pee
 	# peeing has its own button now; a yank that gets you moving
@@ -1336,14 +1434,19 @@ func _draw() -> void:
 				draw_rect(Rect2(r.get_center().x - 7, r.get_center().y - 12, 14, 26), Color(0.55, 0.35, 0.45))
 	else:
 		var grass := COL_GRASS if lvl == "street" else Color(0.3, 0.45, 0.28)
-		var walkway := COL_SIDEWALK if lvl == "street" else Color(0.62, 0.55, 0.42)
+		var walkway := Color(0.62, 0.55, 0.42)
+		if lvl == "street":
+			walkway = COL_SIDEWALK
+		elif lvl == "market":
+			grass = COL_GRASS
+			walkway = Color(0.76, 0.73, 0.66)
 		draw_rect(Rect2(-400, top, 2100, bottom - top), grass)
 		for t in tufts:
 			if t.y > vt and t.y < vb:
 				draw_circle(t, 5.0, COL_GRASS_DARK)
 		# the walkway: sidewalk downtown, packed dirt in the park
 		draw_rect(Rect2(SIDEWALK_LEFT, GATE_Y - 40.0, SIDEWALK_RIGHT - SIDEWALK_LEFT, bottom - GATE_Y), walkway)
-		if lvl == "street":
+		if lvl == "street" or lvl == "market":
 			var y := START_Y + 200.0
 			while y > GATE_Y:
 				if y < vb and y > vt:
@@ -1446,11 +1549,15 @@ func _draw() -> void:
 			draw_circle(p, 26.0, Color(0.28, 0.42, 0.26, 0.4))
 			draw_circle(p, POLE_RADIUS - 2.0, Color(0.4, 0.3, 0.2))
 		else:
-			# lamppost, with a lamp head so it stops reading as a bin
+			# lamppost: four bulbs on cross arms and a warm halo - an
+			# actual light source, brightest at night
+			var halo_a := 0.3 if Game.night else 0.1
+			draw_circle(p, 48.0, Color(1.0, 0.9, 0.6, halo_a))
 			draw_circle(p, POLE_RADIUS + 3.0, Color(0.2, 0.2, 0.22, 0.35))
 			draw_circle(p, POLE_RADIUS, Color(0.44, 0.44, 0.48))
-			draw_line(p, p + Vector2(9, -9), Color(0.5, 0.5, 0.55), 3.0)
-			draw_circle(p + Vector2(11, -11), 4.5, Color(0.95, 0.9, 0.72))
+			for bo in [Vector2(10, 0), Vector2(-10, 0), Vector2(0, 10), Vector2(0, -10)]:
+				draw_line(p, p + bo, Color(0.5, 0.5, 0.55), 2.5)
+				draw_circle(p + bo * 1.35, 3.5, Color(0.98, 0.93, 0.7))
 	# parasols on the sand: poles with ambition
 	var pcols := [Color(0.85, 0.45, 0.35, 0.7), Color(0.4, 0.6, 0.75, 0.7), Color(0.9, 0.8, 0.4, 0.7)]
 	for i in range(parasols.size()):
@@ -1483,13 +1590,24 @@ func _draw() -> void:
 	for ch in chairs:
 		draw_rect(Rect2(ch.x - 6, ch.y - 6, 12, 12), Color(0.55, 0.42, 0.3))
 		draw_line(ch + Vector2(-6, -6), ch + Vector2(6, -6), Color(0.4, 0.3, 0.2), 3.0)
-	# A-stands: today's specials, in squiggle
-	for a in astands:
-		draw_rect(Rect2(a.x - 11, a.y - 14, 22, 28), Color(0.9, 0.86, 0.78))
-		draw_rect(Rect2(a.x - 11, a.y - 14, 22, 28), Color(0.4, 0.36, 0.3), false, 2.0)
-		draw_line(a + Vector2(-6, -6), a + Vector2(6, -6), Color(0.5, 0.45, 0.38), 2.0)
-		draw_line(a + Vector2(-6, 0), a + Vector2(6, 0), Color(0.5, 0.45, 0.38), 2.0)
-		draw_line(a + Vector2(-6, 6), a + Vector2(2, 6), Color(0.7, 0.4, 0.3), 2.0)
+	# fountains: where the tank refills
+	for f in fountains:
+		draw_circle(f, 12.0, Color(0.5, 0.55, 0.58))
+		draw_circle(f, 8.0, Color(0.4, 0.55, 0.65))
+		draw_circle(f + Vector2(0, -3), 2.5, Color(0.75, 0.88, 0.95))
+		draw_circle(f + Vector2(14, 8), 5.0, Color(0.45, 0.6, 0.7, 0.5))
+	# market stalls: awnings, crates, produce
+	for i in range(stalls.size()):
+		var st := stalls[i]
+		draw_rect(Rect2(st.x - 48, st.y - 28, 96, 56), Color(0.55, 0.42, 0.3))
+		var acol := Color(0.75, 0.3, 0.28) if i % 2 == 0 else Color(0.32, 0.5, 0.42)
+		for s2 in range(6):
+			draw_rect(Rect2(st.x - 48 + s2 * 16.0, st.y - 36, 8, 10), acol)
+			draw_rect(Rect2(st.x - 40 + s2 * 16.0, st.y - 36, 8, 10), Color(0.92, 0.9, 0.84))
+		draw_rect(Rect2(st.x - 40, st.y - 18, 24, 16), Color(0.7, 0.55, 0.35))
+		draw_circle(st + Vector2(18, -2), 5.0, Color(0.85, 0.45, 0.3))
+		draw_circle(st + Vector2(30, 6), 5.0, Color(0.9, 0.7, 0.3))
+		draw_circle(st + Vector2(6, 10), 4.0, Color(0.5, 0.65, 0.35))
 	# parked service vans, half on the walkway, hazards blinking in spirit
 	for v in vans:
 		for w in [Vector2(-36, -44), Vector2(30, -44), Vector2(-36, 30), Vector2(30, 30)]:

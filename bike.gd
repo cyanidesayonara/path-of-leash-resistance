@@ -55,6 +55,12 @@ func _physics_process(delta: float) -> void:
 		var target_x := base_x + sin(t * 2.4 + wob_seed) * 24.0
 		vel.x = clampf((target_x - position.x) * 3.0, -85.0, 85.0)
 		rotation = vel.angle()
+	# nobody, not even a wobbly kid, rides into an open manhole
+	if absf(vel.y) > absf(vel.x):
+		for m in main.manholes:
+			var ahead: float = (m.y - global_position.y) * signf(vel.y)
+			if ahead > 0.0 and ahead < 90.0 and absf(m.x - global_position.x) < 34.0:
+				position.x += signf(global_position.x - m.x + 0.001) * 95.0 * delta
 	position += vel * delta
 	var hp: Vector2 = human.global_position
 	var dh := global_position.distance_to(hp)

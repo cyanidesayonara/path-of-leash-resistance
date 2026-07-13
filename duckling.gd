@@ -25,14 +25,25 @@ func setup(m: Node2D, d: Node2D, direction: float, is_leader: bool) -> void:
 func _physics_process(delta: float) -> void:
 	if main.frozen:
 		return
+	# ducks fear everything with legs or wheels, as is wise
+	var threat_pos: Vector2 = dog.global_position
 	var dd: float = global_position.distance_to(dog.global_position)
+	var hd: float = global_position.distance_to(main.human.global_position)
+	if hd < dd:
+		dd = hd
+		threat_pos = main.human.global_position
+	for b in get_tree().get_nodes_in_group("bikes"):
+		var bd: float = global_position.distance_to(b.global_position)
+		if bd < dd:
+			dd = bd
+			threat_pos = b.global_position
 	if dd < 36.0 and not flustered:
 		flustered = true
 		if not noted:
 			noted = true
 			main.on_duck_disturbed(global_position)
 	if flustered:
-		position += (global_position - dog.global_position).normalized() * 130.0 * delta
+		position += (global_position - threat_pos).normalized() * 130.0 * delta
 		if dd > 75.0:
 			flustered = false
 	else:

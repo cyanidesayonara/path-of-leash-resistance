@@ -43,6 +43,12 @@ func _physics_process(delta: float) -> void:
 				scare()
 			elif dd > alert_r + 40.0:
 				state = 0
+			else:
+				# traffic spooks critters too (cats merely disapprove)
+				for b in get_tree().get_nodes_in_group("bikes"):
+					if global_position.distance_to(b.global_position) < (35.0 if kind == "cat" else 60.0):
+						scare()
+						break
 		2:
 			# zigzag escape, faster than any dog in a straight line;
 			# cats depart with more dignity

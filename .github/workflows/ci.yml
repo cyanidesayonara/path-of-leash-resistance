@@ -27,7 +27,7 @@ jobs:
         # Runs each level for 1800 simulated frames (~30s): catches parse
         # errors and runtime script errors in the main gameplay loop.
         run: |
-          for LV in street park beach; do
+          for LV in street park beach market; do
             ./Godot_v4.7-stable_linux.x86_64 --headless --path . --quit-after 1800 -- --level=$LV 2>&1 | tee smoke-$LV.log
             ! grep -E "SCRIPT ERROR|Parse Error|Failed to load script" smoke-$LV.log
           done

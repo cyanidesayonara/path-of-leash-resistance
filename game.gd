@@ -2,11 +2,15 @@ extends Node
 
 # Autoload: session state that must survive scene reloads.
 
-const LEVELS: Array[String] = ["street", "park", "beach"]
-const LEVEL_NAMES := {"street": "The Boulevard", "park": "The Park", "beach": "Passeig Maritim"}
+const LEVELS: Array[String] = ["street", "park", "beach", "market"]
+const LEVEL_NAMES := {
+	"street": "The Boulevard", "park": "The Park",
+	"beach": "Passeig Maritim", "market": "El Mercat",
+}
 
 var level_id := "street"
 var owner_id := "him"  # "him" | "her"; a proper character creator can come later
+var night := false
 
 
 func toggle_owner() -> void:
