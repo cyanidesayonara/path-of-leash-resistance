@@ -24,6 +24,7 @@ var poles: Array[Vector2] = []
 var rest_len := 260.0
 var taut := false
 var contacts := 0
+var detached := false
 var near_poles: Array[Vector2] = []
 # while > 0 the rope slides freely on poles (no stick): set during a whirl
 # so the choreographed unwind can never be arrested by rope grip
@@ -43,6 +44,16 @@ func setup(d: Node2D, h: Node2D, pole_list: Array[Vector2], max_len: float) -> v
 
 func _hand_pos() -> Vector2:
 	return human.global_position + Vector2(9, -16).rotated(human.rotation)
+
+
+func resnap() -> void:
+	# lay the rope fresh in a straight line from dog to hand, so
+	# re-clipping the leash after the off-leash romp doesn't snap
+	var a := dog.global_position
+	var b := _hand_pos()
+	for i in range(N):
+		pts[i] = a.lerp(b, float(i) / (N - 1))
+		prev[i] = pts[i]
 
 
 func tick(delta: float) -> void:

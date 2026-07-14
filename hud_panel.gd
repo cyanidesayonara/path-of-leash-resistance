@@ -41,7 +41,7 @@ func _draw() -> void:
 	draw_string(f, Vector2(120, 31), str(main.bones), HORIZONTAL_ALIGNMENT_LEFT, -1, 19, Color(0.95, 0.94, 0.9))
 	if main.streak > 1:
 		draw_string(f, Vector2(120, 48), "streak x%d" % main.streak, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.7, 1.0, 0.75))
-	# the tube
+	# the pee tube (yellow) and the zoomies/energy tube (green)
 	var tr := Rect2(16, 44, 12, 38)
 	draw_rect(tr, Color(1, 1, 1, 0.12))
 	var lh: float = 34.0 * clampf(main.pee, 0.0, 1.0)
@@ -51,9 +51,18 @@ func _draw() -> void:
 			col = Color(1.0, 0.92, 0.35)
 		draw_rect(Rect2(17, 46 + 34.0 - lh, 10, lh), col)
 	draw_rect(tr, Color(1, 1, 1, 0.5), false, 1.5)
+	var er := Rect2(34, 44, 12, 38)
+	draw_rect(er, Color(1, 1, 1, 0.12))
+	var eh: float = 34.0 * clampf(main.dog.energy, 0.0, 1.0)
+	if eh > 2.0:
+		var ecol := Color(0.4, 0.8, 0.5, 0.9)
+		if main.dog.turbo_active and fmod(Time.get_ticks_msec() / 120.0, 2.0) < 1.0:
+			ecol = Color(0.6, 1.0, 0.7)
+		draw_rect(Rect2(35, 46 + 34.0 - eh, 10, eh), ecol)
+	draw_rect(er, Color(1, 1, 1, 0.5), false, 1.5)
 	# mark dots: territory progress
 	for i in range(5):
-		var p := Vector2(52 + i * 17, 64)
+		var p := Vector2(60 + i * 16, 64)
 		if i < mini(main.marks.size(), 5):
 			draw_circle(p, 5.0, Color(0.95, 0.88, 0.5, 0.9))
 		draw_arc(p, 5.0, 0, TAU, 12, Color(1, 1, 1, 0.4), 1.2)

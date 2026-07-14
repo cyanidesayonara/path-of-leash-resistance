@@ -81,6 +81,19 @@ var body_pole_count := 0
 var drunk_amount := 0.0
 var swam := false
 var night_cm: CanvasModulate
+# the walk has three legs: out to the destination, an off-leash FREEDOM
+# romp there, then the walk HOME. Reaching the gate is halfway, not the end.
+var phase := "out"  # "out" | "freedom" | "home"
+var gate_bench := Vector2(640, GATE_Y - 150)
+var ball: Node2D
+var romp_timer := 0.0
+var romp_catches := 0
+var romp_target := 3
+var romp_done := false
+var freedom_lo := GATE_Y - 620.0
+const HOME_Y := 320.0
+var auto_walk := false
+var finished := false
 # one group query per physics tick, shared by every cone, bird, duck and
 # A-stand - thirty entities each asking the scene tree was the stutter
 var riders_cache: Array = []
@@ -175,6 +188,14 @@ func _ready() -> void:
 		started = true
 	else:
 		frozen = true
+	# --autowalk drives the dog through all three legs unattended, so CI
+	# actually traverses out -> freedom -> home -> finish
+	if "--autowalk" in OS.get_cmdline_user_args():
+		auto_walk = true
+		# the attract/CI bot cannot navigate clutter; let it glide through
+		# so the full out->freedom->home->finish loop can be verified
+		dog.collision_mask = 0
+		human.collision_mask = 0
 	menu_step = Game.menu_step
 	_apply_menu_step()
 
@@ -203,7 +224,7 @@ func _setup_input() -> void:
 		InputMap.action_add_event(action, ev)
 	var buttons := {
 		"plant": [KEY_SPACE, JOY_BUTTON_A], "bark": [KEY_E, JOY_BUTTON_B],
-		"pee": [KEY_Q, JOY_BUTTON_X],
+		"pee": [KEY_Q, JOY_BUTTON_X], "turbo": [KEY_SHIFT, JOY_BUTTON_RIGHT_SHOULDER],
 		"restart": [KEY_R, JOY_BUTTON_START],
 	}
 	for action in buttons:
@@ -557,6 +578,7 @@ func _build_quests() -> void:
 		{"text": "keep your own paws clean", "target": 1, "fn": func() -> int: return 1 if dog_hits == 0 else 0},
 		{"text": "get the business bagged", "target": 1, "fn": func() -> int: return 1 if poop_state == 2 and not bag_pending else 0},
 		{"text": "have a good long drink", "target": 1, "fn": func() -> int: return 1 if drunk_amount >= 0.4 else 0},
+		{"text": "burn off the zoomies", "target": 1, "fn": func() -> int: return 1 if dog.energy <= 0.25 else 0},
 	]
 	if lvl == "park":
 		quest_pool.append({"text": "let the ducklings pass", "target": 1, "fn": func() -> int: return 1 if ducks_disturbed == 0 else 0})
@@ -648,7 +670,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.2"
+	version_l.text = "v1.3"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -740,8 +762,8 @@ func _apply_menu_step() -> void:
 func _refresh_menu_text() -> void:
 	# controller labels only when a controller is attached
 	var pad := Input.get_connected_joypads().size() > 0
-	hint_l.text = ("stick: move    A: dig in (squat when nature calls)    X: pee    B: bark    Start: restart" if pad
-		else "WASD: move    SPACE: dig in (squat when nature calls)    Q: pee    E: bark    R: restart")
+	hint_l.text = ("stick: move   A: dig in / squat   X: pee   B: bark   RB: turbo   Start: restart" if pad
+		else "WASD: move   SPACE: dig in / squat   Q: pee   E: bark   SHIFT: turbo   R: restart")
 	night_l.text = "TIME:  %s        (%s)" % [("NIGHT" if Game.night else "DAY"), _kb_or_pad("E", "B")]
 	weather_l.text = "WEATHER:  %s        (%s)" % [Game.WEATHER_NAMES[Game.weather], _kb_or_pad("Q", "X")]
 	var go := _kb_or_pad("SPACE", "A")
@@ -770,7 +792,14 @@ func _hud_label(pos: Vector2, size_px: int) -> Label:
 
 func _update_hud() -> void:
 	hud_status = ""
-	if poop_state == 1:
+	if phase == "freedom":
+		if romp_done:
+			hud_status = "walk back down to head home"
+		else:
+			hud_status = "FETCH!  %d/%d   %ds left" % [romp_catches, romp_target, int(ceil(romp_timer))]
+	elif phase == "home":
+		hud_status = "head home"
+	elif poop_state == 1:
 		hud_status = "GOTTA GO!  find a spot, hold %s" % _kb_or_pad("SPACE", "A")
 	elif poop_state >= 3:
 		hud_status = "UH OH..."
@@ -805,6 +834,8 @@ func _physics_process(delta: float) -> void:
 	if Game.weather == "wind":
 		dog.velocity += Vector2(46.0, 0) * delta
 		human.velocity += Vector2(70.0, 0) * delta
+	if auto_walk:
+		_auto_drive(delta)
 	dog.tick(delta)
 	human.tick(delta)
 	# the human owns the retractable leash: length changes on their whim
@@ -827,7 +858,9 @@ func _physics_process(delta: float) -> void:
 			var to: Vector2 = f.to
 			bag_flights.remove_at(i)
 			on_business_bagged(to)
-	_check_win()
+	if phase == "freedom":
+		_romp(delta)
+	_progress(delta)
 	shake_t = maxf(0.0, shake_t - delta * 2.5)
 
 
@@ -881,6 +914,8 @@ func _process(_delta: float) -> void:
 			htw.tween_interval(6.0)
 			htw.tween_property(hint_l, "modulate:a", 0.0, 1.2)
 	var target_y := (dog.global_position.y + human.global_position.y) / 2.0 - 60.0
+	if phase == "freedom":
+		target_y = dog.global_position.y  # owner is parked; follow the dog
 	cam.position = Vector2(640, target_y)
 	if shake_t > 0.0:
 		cam.offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * 9.0 * shake_t
@@ -899,6 +934,8 @@ func _apply_leash(delta: float) -> void:
 	# both ends from raw tension while geometry still constrains), timing.
 	human.strain = false
 	dog.dragged = false
+	if leash.detached:
+		return  # off leash during the freedom romp
 	leash.tick(delta)
 	# the whirl manages its own release (aimed at the dog); no early exit,
 	# or the launch direction would be random
@@ -1292,6 +1329,9 @@ func _hazards(delta: float) -> void:
 			float_text(human.global_position, "no no no-", Color(0.7, 0.85, 1.0))
 	# open holes are the TOP tier of danger: falling in ends the walk,
 	# full stop. Bumps hurt a little; holes hurt completely.
+	# (auto_walk is a test/attract traversal - it is not allowed to die)
+	if auto_walk:
+		return
 	for m in manholes:
 		if human.global_position.distance_to(m) < 18.0 and not human.is_fallen():
 			_death("THE HUMAN WENT DOWN THE MANHOLE\n\nThe phone gets reception down there. The walk does not.")
@@ -1482,8 +1522,101 @@ func _nearest_markable(pos: Vector2) -> Vector2:
 	return best
 
 
-func _check_win() -> void:
-	if dog.global_position.y < GATE_Y and human.global_position.y < GATE_Y:
+func _auto_drive(_delta: float) -> void:
+	# unattended traversal for CI / attract mode: up to the gate, romp on
+	# the ball, then back home
+	dog.auto = true
+	# weave so a head-on pole doesn't stall the dumb driver forever
+	var weave := sin(elapsed * 1.6) * 0.6 + clampf((walk_cx - dog.global_position.x) / 300.0, -0.6, 0.6)
+	match phase:
+		"out":
+			dog.auto_move = Vector2(weave, -1.0).normalized()
+		"freedom":
+			if romp_done:
+				dog.auto_move = Vector2(weave, 1.0).normalized()  # head down to leave
+			elif is_instance_valid(ball):
+				dog.auto_move = (ball.global_position - dog.global_position).normalized()
+			else:
+				dog.auto_move = Vector2.from_angle(elapsed * 3.0)
+		"home":
+			dog.auto_move = Vector2(weave, 1.0).normalized()
+
+
+func _progress(_delta: float) -> void:
+	if finished:
+		return
+	match phase:
+		"out":
+			# reaching the gate together is the halfway point, not the end
+			if dog.global_position.y < GATE_Y + 10.0 and human.global_position.y < GATE_Y + 140.0:
+				_enter_freedom()
+		"freedom":
+			# walk back down through the gate to leave and head home
+			if dog.global_position.y > GATE_Y + 40.0:
+				_enter_home()
+		"home":
+			if dog.global_position.y > HOME_Y and human.global_position.y > HOME_Y:
+				_finish_walk()
+
+
+func _enter_freedom() -> void:
+	if auto_walk:
+		print("AUTOWALK reached FREEDOM at t=%.1f" % elapsed)
+	phase = "freedom"
+	leash.detached = true
+	leash.visible = false
+	human.park_at(gate_bench)
+	romp_timer = 30.0
+	romp_catches = 0
+	romp_done = false
+	ball = Node2D.new()
+	ball.set_script(load("res://ball.gd"))
+	ball.z_index = 10
+	ball.position = dog.global_position + Vector2(0, -80)
+	add_child(ball)
+	ball.setup(self, dog, freedom_lo, GATE_Y - 30.0)
+	float_text(dog.global_position, "OFF LEASH!  FETCH!", Color(0.8, 1.0, 0.8))
+
+
+func _romp(delta: float) -> void:
+	if romp_done:
+		return
+	romp_timer = maxf(0.0, romp_timer - delta)
+	if romp_timer <= 0.0:
+		romp_done = true
+		hud_status = ""
+		float_text(dog.global_position, "time to head home", Color(1, 0.95, 0.7))
+
+
+func on_ball_caught() -> void:
+	romp_catches += 1
+	bones += 2
+	float_text(dog.global_position, "good catch! +2", Color(0.8, 1.0, 0.8))
+	if romp_catches >= romp_target and not romp_done:
+		romp_done = true
+		bones += 10
+		float_text(dog.global_position, "FETCH! +10", Color(0.7, 1.0, 0.75))
+		_slowmo()
+
+
+func _enter_home() -> void:
+	if auto_walk:
+		print("AUTOWALK reached HOME leg at t=%.1f" % elapsed)
+	phase = "home"
+	leash.detached = false
+	leash.resnap()
+	leash.visible = true
+	human.unpark()
+	if is_instance_valid(ball):
+		ball.queue_free()
+	float_text(dog.global_position, "let's go home", Color(1, 0.95, 0.7))
+
+
+func _finish_walk() -> void:
+	if dog.global_position.y > HOME_Y and human.global_position.y > HOME_Y:
+		finished = true
+		if auto_walk:
+			print("AUTOWALK FINISHED the whole walk at t=%.1f" % elapsed)
 		frozen = true
 		dim.visible = true
 		msg_label.visible = true
@@ -1576,6 +1709,8 @@ func _slowmo() -> void:
 
 
 func crack_phone(pos: Vector2) -> void:
+	if auto_walk:
+		return  # the attract/CI bot carries an unbreakable phone
 	phone_hp -= 1
 	streak = 0
 	shake_t = 1.0
@@ -1903,7 +2038,19 @@ func _draw() -> void:
 		draw_circle(bp, 4.0 + sin(e * PI) * 2.0, Color(0.92, 0.92, 0.95))
 	if mark_target.x < INF and mark_progress > 0.0:
 		draw_arc(mark_target, 17.0, -PI / 2.0, -PI / 2.0 + TAU * mark_progress / 0.7, 20, Color(1, 0.95, 0.6), 3.0)
-	# the gate at the end of the walk
+	# the off-leash freedom yard beyond the gate: a fenced green with a
+	# waiting bench where the owner parks and scrolls
+	if vt < GATE_Y + 60.0:
+		draw_rect(Rect2(60, freedom_lo, 1120, GATE_Y - freedom_lo), Color(0.34, 0.5, 0.32))
+		for tf in range(24):
+			var gxp := 90.0 + tf * 46.0
+			draw_line(Vector2(gxp, freedom_lo + 30.0), Vector2(gxp, freedom_lo + 20.0), Color(0.28, 0.44, 0.27), 3.0)
+		# perimeter fence
+		draw_rect(Rect2(60, freedom_lo, 1120, GATE_Y - freedom_lo), Color(0.55, 0.5, 0.42), false, 3.0)
+		draw_circle(gate_bench, 4.0, Color(0.5, 0.38, 0.26))
+		draw_rect(Rect2(gate_bench.x - 16, gate_bench.y - 5, 32, 10), Color(0.5, 0.38, 0.26))
+		draw_string(font, Vector2(555, freedom_lo - 14), "OFF-LEASH AREA", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(0.9, 0.9, 0.82))
+	# the gate between the walk and the off-leash yard
 	draw_rect(Rect2(gate_l - 14, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
 	draw_rect(Rect2(gate_r, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
 	draw_rect(Rect2(gate_l - 14, GATE_Y - 58, gate_r - gate_l + 28, 14), Color(0.35, 0.3, 0.28))
@@ -1912,10 +2059,16 @@ func _draw() -> void:
 	while gx < gate_r:
 		draw_line(Vector2(gx, GATE_Y), Vector2(gx + 16.0, GATE_Y), Color(0.9, 0.88, 0.8, 0.6), 3.0)
 		gx += 32.0
+	# HOME, at the bottom, where the walk both begins and ends
+	if vb > START_Y + 30.0:
+		draw_rect(Rect2(gate_l - 14, HOME_Y + 40.0, gate_r - gate_l + 28, 14), Color(0.4, 0.32, 0.3))
+		draw_string(font, Vector2((gate_l + gate_r) / 2.0 - 40.0, HOME_Y + 78.0), "HOME", HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color(0.9, 0.85, 0.7))
 	# start hint
-	var hint_txt := "The park is up ahead. Mind the bike lanes."
+	var hint_txt := "To the park and back. Mind the bike lanes."
 	if lvl == "park":
-		hint_txt = "A stroll through the park, then home. Mind the pond."
+		hint_txt = "Through the park to the meadow, then home. Mind the pond."
 	elif lvl == "beach":
-		hint_txt = "The passeig, sea air, terrace smells. Mind the bike path."
+		hint_txt = "Along the passeig and back. Mind the bike path."
+	elif lvl == "market":
+		hint_txt = "Through the market to the plaza, then home."
 	draw_string(font, Vector2(430, START_Y + 90), hint_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color(1, 1, 1, 0.5))

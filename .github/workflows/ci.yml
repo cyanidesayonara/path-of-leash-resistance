@@ -31,3 +31,12 @@ jobs:
             ./Godot_v4.7-stable_linux.x86_64 --headless --path . --quit-after 1800 -- --level=$LV 2>&1 | tee smoke-$LV.log
             ! grep -E "SCRIPT ERROR|Parse Error|Failed to load script" smoke-$LV.log
           done
+
+      - name: Full-walk traversal (out -> freedom -> home -> finish)
+        # the attract bot walks street end to end; asserts the whole
+        # three-leg structure completes without error. --fixed-fps makes
+        # frame count map to physics time deterministically.
+        run: |
+          ./Godot_v4.7-stable_linux.x86_64 --headless --fixed-fps 60 --path . --quit-after 12000 -- --level=street --autowalk 2>&1 | tee walk.log
+          ! grep -E "SCRIPT ERROR|Parse Error" walk.log
+          grep -q "AUTOWALK FINISHED" walk.log

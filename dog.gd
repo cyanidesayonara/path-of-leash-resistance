@@ -13,6 +13,13 @@ var bladder_slow := false
 var sand_slow := false
 var swimming := false
 var slick := false
+var auto := false
+var auto_move := Vector2.ZERO
+# the zoomies: a reserve of energy the dog is dying to burn. Turbo spends
+# it for a burst of speed; a walk should always shed some, like pee/poop.
+var energy := 1.0
+var turbo_active := false
+const TURBO_MULT := 1.7
 var tumble_t := 0.0
 var hole_cd := 0.0
 var squat_t := 0.0
@@ -66,10 +73,14 @@ func tick(delta: float) -> void:
 		if tumble_t <= 0.0:
 			rotation = 0.0
 		return
-	var iv := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var iv := auto_move if auto else Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	input_active = iv.length() > 0.1
-	planted = Input.is_action_pressed("plant")
-	var answering_nature := Input.is_action_pressed("pee")
+	planted = Input.is_action_pressed("plant") and not auto
+	var answering_nature := Input.is_action_pressed("pee") and not auto
+	# turbo: burn the zoomies for a burst of speed while energy lasts
+	turbo_active = energy > 0.0 and input_active and (auto or Input.is_action_pressed("turbo"))
+	if turbo_active:
+		energy = maxf(0.0, energy - 0.28 * delta)
 	if planted:
 		velocity = Vector2.ZERO
 	elif answering_nature:
@@ -87,8 +98,11 @@ func tick(delta: float) -> void:
 			# wet ground: less grip, more skate
 			accel *= 0.45
 		# a full bladder waddles; sand is heavy going; water is a happy
-		# dog-paddle (slower, but she would stay in all day)
+		# dog-paddle (slower, but she would stay in all day); turbo rips
 		var top := SPEED * (0.88 if bladder_slow else 1.0) * (0.8 if sand_slow else 1.0) * (0.62 if swimming else 1.0)
+		if turbo_active:
+			top *= TURBO_MULT
+			accel = maxf(accel, 3200.0)
 		velocity = velocity.move_toward(iv * top, accel * delta)
 		if input_active:
 			facing = iv.normalized()

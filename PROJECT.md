@@ -41,12 +41,13 @@ Every feature must serve at least one. If it serves none, cut it.
 - **v1.2 - shipped.** Progression and weather: star-gated walk unlocks
   (Tony Hawk style), selectable weather (clear/rain/wind), bigger menu
   type. Discoverable + timed quests still to come (next).
-- **v1.3 - Quests & The Walk Home.** Discoverable in-world quests, some
-  timed (timer on the challenge, never the walk). The shape-of-a-walk
-  structure: destination romp at the corridor's end, the return leg,
-  tired-dog pacing. Level five (Rainy Day - now that weather exists).
-- **v1.4 - The Dog Park.** Other dog+owner pairs, leash-vs-leash
-  tangling prototype, ball catch, smell-every-dog, bring-Tofu-home.
+- **v1.3 - shipped.** The Walk Home: out -> off-leash freedom romp ->
+  walk home round-trip structure. Turbo/zoomies energy meter. First
+  discoverable timed quest (the fetch challenge). Attract/CI autowalk bot.
+- **v1.4 - The Dog Park.** Other dog+owner pairs met in the off-leash
+  area, leash-vs-leash tangling prototype, more romp minigames,
+  smell-every-dog, bring-Tofu-home. More discoverable/timed quests along
+  the route. Level five (Rainy Day - now that weather exists).
 - **v1.5 - The Daily Walk.** Seeded daily run shared by all players,
   results card for sharing, lifetime-bones spending (first cosmetics:
   collars and bandanas). Level six (Old Town).

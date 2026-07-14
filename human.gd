@@ -34,6 +34,9 @@ var chain_target := Vector2.ZERO
 var carrying_bag := false
 var wading := false
 var pond_bank_x := 0.0
+var homeward := false
+var parked := false
+var park_target := Vector2.ZERO
 var strain := false
 var wobble_seed := 0.0
 var main: Node2D
@@ -73,6 +76,18 @@ func tick(delta: float) -> void:
 	pull_cd = maxf(0.0, pull_cd - delta)
 	halt_t = maxf(0.0, halt_t - delta)
 	state_t -= delta
+	# parked at the off-leash area: shuffle to the bench and sit,
+	# scrolling contentedly, ignoring everything until re-leashed
+	if parked:
+		var to_seat := park_target - global_position
+		if to_seat.length() > 6.0:
+			velocity = to_seat.normalized() * 70.0
+			move_and_slide()
+		else:
+			velocity = Vector2.ZERO
+		if not bubble.visible:
+			_show_bubble("...")
+		return
 	# strain is cleared and re-set by main.gd/_apply_leash each frame
 	match state:
 		HState.FALLEN:
@@ -225,7 +240,9 @@ func _walk(delta: float) -> void:
 		speed = 72.0
 		if state_t <= 0.0:
 			state = HState.WALK
-	var dir := Vector2(clampf((tx - global_position.x) / 60.0, -1.0, 1.0) * 0.8, -1.0).normalized()
+	# forward is up on the way out, down on the walk home
+	var fwd_y := 1.0 if homeward else -1.0
+	var dir := Vector2(clampf((tx - global_position.x) / 60.0, -1.0, 1.0) * 0.8, fwd_y).normalized()
 	if state == HState.DASH:
 		var to_target := dash_target - global_position
 		if to_target.length() < 14.0:
@@ -385,8 +402,24 @@ func release_whirl() -> void:
 	main.shake_t = maxf(float(main.shake_t), 0.35)
 
 
+func park_at(seat: Vector2) -> void:
+	parked = true
+	park_target = seat
+	state = HState.WALK
+	state_t = 0.0
+	telegraph_t = 0.0
+	carrying_bag = false
+
+
+func unpark() -> void:
+	parked = false
+	homeward = true
+	bubble.visible = false
+	_show_bubble("okay, home time")
+
+
 func is_available_for_chore() -> bool:
-	return state == HState.WALK
+	return state == HState.WALK and not parked
 
 
 func fetch_poop(spot: Vector2) -> void:

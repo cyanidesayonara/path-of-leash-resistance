@@ -2,6 +2,27 @@
 
 Append-only session history, newest first.
 
+## 2026-07-14 — v1.3: The Walk Home, turbo, the fetch romp
+
+- A walk is a round trip now. Reaching the gate is halfway: you spill
+  into an OFF-LEASH area (leash drops, the owner parks on a bench and
+  scrolls), then you turn around and walk HOME - the full corridor
+  again, fresh traffic, the owner now heading south. Finish is back at
+  HOME, not the gate.
+- The freedom romp is the first discoverable timed quest: a FETCH
+  challenge (catch the ball 3 times before the 30s timer) with bonus
+  bones and a slow-mo on completion. Off-leash, no leash to fight.
+- TURBO / the zoomies (hold Shift / RB): a green energy meter beside the
+  pee tube. Burn it for a burst of speed - best spent running laps in
+  the off-leash area. A walk should always shed some, like pee and poop;
+  "burn off the zoomies" is a new quest. Energy does not refill mid-walk.
+- Attract/CI bot: --autowalk drives the dog through all three legs
+  unattended (unbreakable phone, glides through clutter). CI now asserts
+  the whole out->freedom->home->finish loop completes (deterministic via
+  --fixed-fps).
+- Weather from v1.2 pays off here: rain-slick pavement makes the home
+  leg genuinely harder.
+
 ## 2026-07-13 — v1.2: progression and weather
 
 - Star-gated progression (Tony Hawk style): each walk awards up to 3
