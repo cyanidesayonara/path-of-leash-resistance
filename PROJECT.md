@@ -44,13 +44,16 @@ Every feature must serve at least one. If it serves none, cut it.
 - **v1.3 - shipped.** The Walk Home: out -> off-leash freedom romp ->
   walk home round-trip structure. Turbo/zoomies energy meter. First
   discoverable timed quest (the fetch challenge). Attract/CI autowalk bot.
-- **v1.4 - The Dog Park.** Other dog+owner pairs met in the off-leash
-  area, leash-vs-leash tangling prototype, more romp minigames,
-  smell-every-dog, bring-Tofu-home. More discoverable/timed quests along
-  the route. Level five (Rainy Day - now that weather exists).
-- **v1.5 - The Daily Walk.** Seeded daily run shared by all players,
-  results card for sharing, lifetime-bones spending (first cosmetics:
-  collars and bandanas). Level six (Old Town).
+- **v1.4 - shipped.** The Dog Park: NPC dog-walker pairs on the path,
+  leash-vs-leash TANGLING (emergent from rope-vs-rope collision), free
+  dogs to romp with and greet in the off-leash area, tangle + say-hi
+  quests.
+- **v1.5 - The Daily Walk & bring Tofu home.** Seeded daily run shared
+  by all players, results card for sharing, lifetime-bones cosmetics
+  (collars, bandanas), the bring-runaway-Tofu-home quest. Level five
+  (Rainy Day). More discoverable/timed route quests.
+- **v1.6 - Level six (Old Town) + polish.** Narrow alleys, stairs, wall
+  cats, laundry lines. Mechanics tuning from playtests.
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
 - Every release also ships: mechanics tuning from playtests, at least

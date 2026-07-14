@@ -2,6 +2,21 @@
 
 Append-only session history, newest first.
 
+## 2026-07-14 — v1.4: The Dog Park (other dogs, tangling leashes)
+
+- Other dog-walkers now share the path: an NPC owner and dog joined by
+  their own real leash (a second leash.gd rope), ambling the other way.
+- LEASH TANGLING, the long-promised flagship: when their rope and yours
+  cross, each becomes an obstacle for the other, so the two ropes drape
+  and snarl for real - emergent from the shared verlet+capstan physics,
+  no bespoke knot solver. They fuss ("oh - sorry!"), you get gummed up,
+  "TANGLED! +3", and you walk it out. New quest: tangle with another
+  walker.
+- The off-leash area is social now: three free dogs romp there, bolting
+  after you to play. Say hi (nose to nose) to any dog - free or leashed -
+  for the "say hi to 3 dogs" quest.
+- Autowalk/CI still traverses the whole loop clean with pairs on the path.
+
 ## 2026-07-14 — v1.3: The Walk Home, turbo, the fetch romp
 
 - A walk is a round trip now. Reaching the gate is halfway: you spill

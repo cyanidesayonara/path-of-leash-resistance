@@ -94,6 +94,12 @@ var freedom_lo := GATE_Y - 620.0
 const HOME_Y := 320.0
 var auto_walk := false
 var finished := false
+var pair_spawn_t := 5.0
+var tangles := 0
+var tangle_cd := 0.0
+var my_rope_sample: Array[Vector2] = []
+var dogs_greeted := 0
+var greeted := {}
 # one group query per physics tick, shared by every cone, bird, duck and
 # A-stand - thirty entities each asking the scene tree was the stutter
 var riders_cache: Array = []
@@ -579,6 +585,8 @@ func _build_quests() -> void:
 		{"text": "get the business bagged", "target": 1, "fn": func() -> int: return 1 if poop_state == 2 and not bag_pending else 0},
 		{"text": "have a good long drink", "target": 1, "fn": func() -> int: return 1 if drunk_amount >= 0.4 else 0},
 		{"text": "burn off the zoomies", "target": 1, "fn": func() -> int: return 1 if dog.energy <= 0.25 else 0},
+		{"text": "tangle with another walker", "target": 1, "fn": func() -> int: return 1 if tangles >= 1 else 0},
+		{"text": "say hi to %d dogs", "target": 3, "fn": func() -> int: return dogs_greeted},
 	]
 	if lvl == "park":
 		quest_pool.append({"text": "let the ducklings pass", "target": 1, "fn": func() -> int: return 1 if ducks_disturbed == 0 else 0})
@@ -670,7 +678,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.3"
+	version_l.text = "v1.4"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -848,6 +856,9 @@ func _physics_process(delta: float) -> void:
 	_squirrels(delta)
 	_temptation(delta)
 	_offpath(delta)
+	_greetings()
+	if phase != "freedom":
+		_pairs(delta)
 	_hazards(delta)
 	_pickups(delta)
 	_bodily(delta)
@@ -1281,6 +1292,65 @@ func on_dog_hit() -> void:
 	dog_hits += 1
 
 
+func _greetings() -> void:
+	# a nose-to-nose with any other dog counts once - sniff hello
+	var others: Array = get_tree().get_nodes_in_group("freedogs")
+	others.append_array(get_tree().get_nodes_in_group("pairs"))
+	for o in others:
+		var op: Vector2 = o.global_position if o.is_in_group("freedogs") else o.npc_dog.position
+		var id: int = o.get_instance_id()
+		if dog.global_position.distance_to(op) < 28.0 and not greeted.has(id):
+			greeted[id] = true
+			dogs_greeted += 1
+			float_text(op + Vector2(0, -18), "sniff! hi", Color(0.8, 1.0, 0.85))
+
+
+func _pairs(delta: float) -> void:
+	# other dog-walkers coming the other way; their leashes tangle yours
+	var pairs := get_tree().get_nodes_in_group("pairs")
+	pair_spawn_t -= delta
+	if pair_spawn_t <= 0.0 and pairs.size() < 3:
+		pair_spawn_t = randf_range(6.0, 11.0)
+		var up := phase == "home"  # oncoming: down on the way out, up home
+		var y: float = cam.position.y + (-560.0 if up else 560.0)
+		if y < GATE_Y + 60.0 or y > START_Y + 100.0:
+			return
+		var p := Node2D.new()
+		p.set_script(load("res://otherpair.gd"))
+		add_child(p)
+		p.setup(self, dog, poles, Vector2(randf_range(walk_cx - 120.0, walk_cx + 120.0), y), Vector2(0, 1) if up else Vector2(0, -1))
+		pairs = get_tree().get_nodes_in_group("pairs")
+	# tangle feed: our rope and theirs each become obstacles for the other
+	tangle_cd = maxf(0.0, tangle_cd - delta)
+	leash.dynamic_obstacles.clear()
+	if leash.detached:
+		return
+	my_rope_sample.clear()
+	for i in range(0, leash.N, 2):
+		my_rope_sample.append(leash.pts[i])
+	for p in pairs:
+		if dog.global_position.distance_to(p.npc_owner.position) > 320.0:
+			p.leash.dynamic_obstacles.clear()
+			continue
+		leash.dynamic_obstacles.append_array(p.sampled)
+		p.leash.dynamic_obstacles = my_rope_sample.duplicate()
+		if _ropes_crossing(my_rope_sample, p.sampled):
+			p.note_tangle()
+			if tangle_cd <= 0.0:
+				tangle_cd = 1.5
+				tangles += 1
+				bones += 3
+				float_text(dog.global_position, "TANGLED! +3", Color(1, 0.85, 0.7))
+
+
+func _ropes_crossing(a: Array[Vector2], b: Array[Vector2]) -> bool:
+	for pa in a:
+		for pb in b:
+			if pa.distance_squared_to(pb) < 289.0:  # ~17px
+				return true
+	return false
+
+
 func _offpath(delta: float) -> void:
 	# the dog may roam, but an undistracted owner has opinions: after a
 	# few seconds off the walk they tut and reel the leash in a notch
@@ -1575,6 +1645,14 @@ func _enter_freedom() -> void:
 	ball.position = dog.global_position + Vector2(0, -80)
 	add_child(ball)
 	ball.setup(self, dog, freedom_lo, GATE_Y - 30.0)
+	# other dogs to romp and say hi to
+	for i in range(3):
+		var fd := Node2D.new()
+		fd.set_script(load("res://freedog.gd"))
+		fd.position = Vector2(randf_range(200.0, 1080.0), randf_range(freedom_lo + 40.0, GATE_Y - 60.0))
+		fd.z_index = 9
+		add_child(fd)
+		fd.setup(self, dog, freedom_lo, GATE_Y - 30.0)
 	float_text(dog.global_position, "OFF LEASH!  FETCH!", Color(0.8, 1.0, 0.8))
 
 
@@ -1609,6 +1687,8 @@ func _enter_home() -> void:
 	human.unpark()
 	if is_instance_valid(ball):
 		ball.queue_free()
+	for fd in get_tree().get_nodes_in_group("freedogs"):
+		fd.queue_free()
 	float_text(dog.global_position, "let's go home", Color(1, 0.95, 0.7))
 
 

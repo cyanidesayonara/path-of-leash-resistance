@@ -26,6 +26,9 @@ var taut := false
 var contacts := 0
 var detached := false
 var near_poles: Array[Vector2] = []
+# points contributed by ANOTHER leash this frame: the rope drapes over
+# them exactly like poles, so two leashes crossing tangle for real
+var dynamic_obstacles: Array[Vector2] = []
 # while > 0 the rope slides freely on poles (no stick): set during a whirl
 # so the choreographed unwind can never be arrested by rope grip
 var free_slip_t := 0.0
@@ -91,6 +94,10 @@ func tick(delta: float) -> void:
 	for npl in poles:
 		if npl.x > rl - 40.0 and npl.x < rr + 40.0 and npl.y > rt - 40.0 and npl.y < rb + 40.0:
 			near_poles.append(npl)
+	# another leash's points, if any, are obstacles too (the tangle)
+	for dob in dynamic_obstacles:
+		if dob.x > rl - 40.0 and dob.x < rr + 40.0 and dob.y > rt - 40.0 and dob.y < rb + 40.0:
+			near_poles.append(dob)
 	for _iter in range(ITER):
 		pts[0] = dog.global_position
 		pts[N - 1] = _hand_pos()
