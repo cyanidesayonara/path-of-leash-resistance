@@ -165,6 +165,11 @@ var night_l: Label
 var weather_l: Label
 var hint_l: Label
 var record_l: Label
+var shop_title_l: Label
+var shop_l: Label
+var in_shop := false
+var shop_items: Array[Dictionary] = []
+var shop_idx := 0
 var prompt_tw: Tween
 var quests_label: Label
 var msg_label: Label
@@ -175,7 +180,16 @@ var font: Font
 func _ready() -> void:
 	Engine.time_scale = 1.0
 	font = ThemeDB.fallback_font
-	lvl = Game.level_id
+	if Game.is_daily(Game.level_id):
+		# same layout, weather and time for everyone, all day
+		Game.daily = true
+		seed(Game.daily_seed())
+		lvl = Game.daily_level()
+		Game.weather = Game.daily_weather()
+		Game.night = Game.daily_night()
+	else:
+		Game.daily = false
+		lvl = Game.level_id
 	_setup_input()
 	_build_level_data()
 	_build_walls()
@@ -678,7 +692,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.4"
+	version_l.text = "v1.5"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -692,6 +706,20 @@ func _build_hud() -> void:
 	prompt_l = _hud_label(Vector2(0, 470), 22)
 	prompt_l.size = Vector2(1280, 32)
 	prompt_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	shop_title_l = _hud_label(Vector2(0, 70), 30)
+	shop_title_l.size = Vector2(1280, 40)
+	shop_title_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	shop_title_l.visible = false
+	shop_l = _hud_label(Vector2(0, 150), 20)
+	shop_l.size = Vector2(1280, 460)
+	shop_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	shop_l.visible = false
+	for k in Game.COLLARS:
+		shop_items.append({"kind": "collar", "key": k})
+	for k in Game.BANDANAS:
+		if k != "none":
+			shop_items.append({"kind": "bandana", "key": k})
+	shop_items.append({"kind": "bandana", "key": "none"})
 	Input.joy_connection_changed.connect(func(_d: int, _c: bool) -> void: _refresh_menu_text())
 	prompt_tw = create_tween().set_loops()
 	prompt_tw.tween_property(prompt_l, "modulate:a", 0.3, 0.7)
@@ -753,18 +781,69 @@ func _apply_menu_step() -> void:
 			title_l.add_theme_font_size_override("font_size", 30)
 			title_l.position.y = 150
 			title_l.text = "CHOOSE YOUR WALK   (%d stars)" % Game.total_stars()
-			var locked := not Game.is_unlocked(lvl)
+			var sel: String = Game.level_id  # carousel id (may be "daily")
+			var locked := not Game.is_unlocked(sel)
 			select_l.add_theme_font_size_override("font_size", 52)
-			select_l.text = ("[ %s ]" % Game.LEVEL_NAMES[lvl]) if locked else ("<   %s   >" % Game.LEVEL_NAMES[lvl])
+			select_l.text = ("[ %s ]" % Game.LEVEL_NAMES[sel]) if locked else ("<   %s   >" % Game.LEVEL_NAMES[sel])
 			select_l.position.y = 220
 			record_l.position.y = 300
-			record_l.text = Game.best_line(lvl)
+			record_l.text = Game.best_line(sel)
 		2:
 			title_l.add_theme_font_size_override("font_size", 40)
 			title_l.position.y = 150
-			title_l.text = Game.LEVEL_NAMES[lvl].to_upper()
+			title_l.text = Game.LEVEL_NAMES[Game.level_id].to_upper()
 			owner_l.text = "WALKING:  %s" % Game.owner_id.to_upper()
 	_refresh_menu_text()
+
+
+func _open_shop() -> void:
+	in_shop = true
+	for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, weather_l, record_l]:
+		l.visible = false
+	shop_title_l.visible = true
+	shop_l.visible = true
+	_refresh_shop()
+
+
+func _shop_select() -> void:
+	var it: Dictionary = shop_items[shop_idx]
+	var key: String = it.key
+	if Game.owned.get(key, false):
+		# equip
+		if it.kind == "collar":
+			Game.collar = key
+		else:
+			Game.bandana = key
+		Game.save_records()
+	elif Game.buy(key):
+		if it.kind == "collar":
+			Game.collar = key
+		else:
+			Game.bandana = key
+		Game.save_records()
+	# (if the buy failed, not enough bones - the price stays shown)
+	_refresh_shop()
+
+
+func _refresh_shop() -> void:
+	shop_title_l.text = "MILLIE'S WARDROBE      %d bones" % Game.total_bones
+	var lines := ""
+	for i in range(shop_items.size()):
+		var it: Dictionary = shop_items[i]
+		var key: String = it.key
+		var data: Dictionary = Game.COLLARS[key] if it.kind == "collar" else Game.BANDANAS[key]
+		var equipped: bool = (it.kind == "collar" and Game.collar == key) or (it.kind == "bandana" and Game.bandana == key)
+		var tag := ""
+		if equipped:
+			tag = "  [EQUIPPED]"
+		elif Game.owned.get(key, false):
+			tag = "  (owned - press to wear)"
+		else:
+			tag = "  %d bones" % int(data.cost)
+		var cursor := ">  " if i == shop_idx else "    "
+		lines += "%s%s%s\n" % [cursor, data.name, tag]
+	lines += "\nleft / right browse    %s buy or wear    %s back" % [_kb_or_pad("SPACE", "A"), _kb_or_pad("E", "B")]
+	shop_l.text = lines
 
 
 func _refresh_menu_text() -> void:
@@ -772,18 +851,19 @@ func _refresh_menu_text() -> void:
 	var pad := Input.get_connected_joypads().size() > 0
 	hint_l.text = ("stick: move   A: dig in / squat   X: pee   B: bark   RB: turbo   Start: restart" if pad
 		else "WASD: move   SPACE: dig in / squat   Q: pee   E: bark   SHIFT: turbo   R: restart")
-	night_l.text = "TIME:  %s        (%s)" % [("NIGHT" if Game.night else "DAY"), _kb_or_pad("E", "B")]
-	weather_l.text = "WEATHER:  %s        (%s)" % [Game.WEATHER_NAMES[Game.weather], _kb_or_pad("Q", "X")]
+	var fixed := "  (fixed today)" if Game.daily else "        (%s)" % _kb_or_pad("E", "B")
+	night_l.text = "TIME:  %s%s" % [("NIGHT" if Game.night else "DAY"), fixed]
+	weather_l.text = "WEATHER:  %s%s" % [Game.WEATHER_NAMES[Game.weather], "" if Game.daily else "        (%s)" % _kb_or_pad("Q", "X")]
 	var go := _kb_or_pad("SPACE", "A")
 	match menu_step:
 		0:
 			prompt_l.text = "press  %s  to begin" % go
 			hint_l.visible = false
 		1:
-			if not Game.is_unlocked(lvl):
-				prompt_l.text = "locked - earn %d stars" % int(Game.STAR_GATE.get(lvl, 0))
+			if not Game.is_unlocked(Game.level_id):
+				prompt_l.text = "locked - earn %d stars" % int(Game.STAR_GATE.get(Game.level_id, 0))
 			else:
-				prompt_l.text = "%s / %s  browse       %s  choose" % [_kb_or_pad("A", "<"), _kb_or_pad("D", ">"), go]
+				prompt_l.text = "%s / %s  browse     %s  choose     %s  wardrobe" % [_kb_or_pad("A", "<"), _kb_or_pad("D", ">"), go, _kb_or_pad("E", "B")]
 			hint_l.visible = false
 		2:
 			prompt_l.text = "press  %s  to go walkies" % go
@@ -879,9 +959,27 @@ func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("restart"):
 		get_tree().reload_current_scene()
 		return
+	if not started and in_shop:
+		if Input.is_action_just_pressed("move_left"):
+			shop_idx = wrapi(shop_idx - 1, 0, shop_items.size())
+			_refresh_shop()
+		if Input.is_action_just_pressed("move_right"):
+			shop_idx = wrapi(shop_idx + 1, 0, shop_items.size())
+			_refresh_shop()
+		if Input.is_action_just_pressed("plant"):
+			_shop_select()
+		if Input.is_action_just_pressed("bark"):
+			in_shop = false
+			shop_title_l.visible = false
+			shop_l.visible = false
+			_apply_menu_step()
+		return
 	if not started:
 		# Tony Hawk rules: one screen, one instruction. Step 0 is just
 		# the title; step 1 picks the walk; step 2 picks the details.
+		if menu_step == 1 and Input.is_action_just_pressed("bark"):
+			_open_shop()
+			return
 		if menu_step == 1 and (Input.is_action_just_pressed("move_left") or Input.is_action_just_pressed("move_right")):
 			Game.cycle_level(1 if Input.is_action_just_pressed("move_right") else -1)
 			Game.menu_step = 1
@@ -890,19 +988,20 @@ func _process(_delta: float) -> void:
 		if menu_step == 2 and (Input.is_action_just_pressed("move_up") or Input.is_action_just_pressed("move_down")):
 			Game.toggle_owner()
 			owner_l.text = "walking: %s" % Game.owner_id.to_upper()
-		if menu_step == 2 and Input.is_action_just_pressed("bark"):
+		# weather and time are fixed by the seed on the daily walk
+		if menu_step == 2 and not Game.daily and Input.is_action_just_pressed("bark"):
 			Game.night = not Game.night
 			night_cm.color = _weather_tint()
 			_refresh_menu_text()
-		if menu_step == 2 and Input.is_action_just_pressed("pee"):
+		if menu_step == 2 and not Game.daily and Input.is_action_just_pressed("pee"):
 			Game.cycle_weather(1)
 			night_cm.color = _weather_tint()
 			weather_fx.mode = Game.weather
 			_refresh_menu_text()
 		if Input.is_action_just_pressed("plant"):
 			# cannot advance past a locked walk
-			if menu_step == 1 and not Game.is_unlocked(lvl):
-				select_l.text = "%s  (locked)" % Game.LEVEL_NAMES[lvl]
+			if menu_step == 1 and not Game.is_unlocked(Game.level_id):
+				select_l.text = "%s  (locked)" % Game.LEVEL_NAMES[Game.level_id]
 				return
 			if menu_step < 2:
 				menu_step += 1
@@ -1715,7 +1814,7 @@ func _finish_walk() -> void:
 			rating += "   ...still a good dog."
 		elif completed == 3:
 			rating += "   PERFECT WALK"
-		var rec: Dictionary = Game.record_result(lvl, bones, elapsed, completed == 3, earned)
+		var rec: Dictionary = Game.record_result("daily" if Game.daily else lvl, bones, elapsed, completed == 3, earned)
 		var rec_line := ""
 		if rec.new_stars > 0:
 			rec_line += "+%d STAR%s!   " % [rec.new_stars, "" if rec.new_stars == 1 else "S"]

@@ -2,6 +2,21 @@
 
 Append-only session history, newest first.
 
+## 2026-07-14 — v1.5: The Daily Walk & Millie's wardrobe
+
+- Daily Walk: first entry in the walk carousel, always unlocked. Its
+  level, weather and time are seeded from the date, so everyone gets the
+  same walk each day; the RNG is seeded to match layouts. One best per
+  day, wiped when the date rolls over. Bones earned still fill the wallet.
+- Cosmetics shop ("Millie's wardrobe", open with bark from the walk-
+  select screen): spend bones on collars (blue, pink, gold, shimmering
+  rainbow) and bandanas (navy, forest, sunny). Equipped items recolour
+  her harness/collar and add a bandana at the throat. Owned and equipped
+  choices persist. Bones are a spendable wallet now.
+- Records file gained cosmetics and a daily-best section.
+- Weather/time are locked on the daily (fair for everyone); still free
+  to pick on the campaign walks.
+
 ## 2026-07-14 — v1.4: The Dog Park (other dogs, tangling leashes)
 
 - Other dog-walkers now share the path: an NPC owner and dog joined by

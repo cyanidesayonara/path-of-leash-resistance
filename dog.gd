@@ -200,12 +200,20 @@ func _draw() -> void:
 	for i in range(6):
 		var base := hip if i % 2 == 0 else shoulder
 		draw_circle(base + flecks[i], 1.0, Color(grizzle, 0.22))
-	# the red Julius K9 harness across the shoulders, and the collar
-	var red := Color(0.72, 0.16, 0.14)
-	draw_line(shoulder + side * 8.0, shoulder - side * 8.0, red, 6.0)
+	# the Julius K9 harness across the shoulders, and the collar - colour
+	# set by the equipped cosmetic (rainbow shimmers)
+	var col := Game.collar_color()
+	if Game.collar == "rainbow":
+		col = Color.from_hsv(fmod(t * 0.35, 1.0), 0.7, 0.9)
+	# a bandana, if equipped: a little triangle at the throat
+	if Game.bandana != "none":
+		var bcol: Color = Game.BANDANAS[Game.bandana].col
+		var nb := shoulder + facing * 7.0
+		draw_colored_polygon(PackedVector2Array([nb + side * 6.0, nb - side * 6.0, nb + facing * 8.0]), bcol)
+	draw_line(shoulder + side * 8.0, shoulder - side * 8.0, col, 6.0)
 	draw_circle(shoulder, 2.2, Color(0.3, 0.3, 0.32))
 	var neck := shoulder + facing * 6.5
-	draw_line(neck + side * 5.5, neck - side * 5.5, red, 3.0)
+	draw_line(neck + side * 5.5, neck - side * 5.5, col, 3.0)
 	# head with a LONG street-dog nose; grey on the crown and the face
 	var head := shoulder + facing * 10.0
 	draw_circle(head, 7.0, fur)

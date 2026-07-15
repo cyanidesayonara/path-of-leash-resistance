@@ -48,10 +48,12 @@ Every feature must serve at least one. If it serves none, cut it.
   leash-vs-leash TANGLING (emergent from rope-vs-rope collision), free
   dogs to romp with and greet in the off-leash area, tangle + say-hi
   quests.
-- **v1.5 - The Daily Walk & bring Tofu home.** Seeded daily run shared
-  by all players, results card for sharing, lifetime-bones cosmetics
-  (collars, bandanas), the bring-runaway-Tofu-home quest. Level five
-  (Rainy Day). More discoverable/timed route quests.
+- **v1.5 - shipped.** The Daily Walk (seeded, shared, daily best) and
+  the cosmetics shop (collars + bandanas, spent from the bones wallet).
+- **v1.5.x / v1.6 - bring Tofu home + Level five (Rainy Day).** The
+  runaway-Tofu-home quest (she keeps her distance; you herd, not grab).
+  A rainy-by-default level with storm drains and umbrella crowds. A
+  shareable results card for the daily.
 - **v1.6 - Level six (Old Town) + polish.** Narrow alleys, stairs, wall
   cats, laundry lines. Mechanics tuning from playtests.
 - **v2.0 - The Product.** Watercolor art integration, sound and music
