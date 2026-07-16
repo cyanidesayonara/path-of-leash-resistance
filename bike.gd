@@ -5,6 +5,12 @@ extends Node2D
 # node rotates to the direction of travel.
 # Commuters knock the human flat (phone risk); kids just bump ("sorry!").
 
+const BypasserRouteScript := preload("res://bypasser_route.gd")
+const RIDER_CLEARANCE := 18.0
+const RIDER_MAX_LATERAL_SPEED := 220.0
+const RIDER_MINIMUM_LOOKAHEAD := 220.0
+const RIDER_LOOKAHEAD_TIME := 1.35
+
 var vel := Vector2.ZERO
 var kind := "bike"  # "bike" | "kid"
 var main: Node2D
@@ -18,6 +24,8 @@ var band_hi := 0.0
 var base_x := 0.0
 var wob_seed := 0.0
 var swerve_t := 0.0
+var route: RefCounted
+var desired_vertical_speed := 0.0
 
 
 func setup(m: Node2D, d: Node2D, h: Node2D, v: Vector2, k: String) -> void:
@@ -26,6 +34,7 @@ func setup(m: Node2D, d: Node2D, h: Node2D, v: Vector2, k: String) -> void:
 	dog = d
 	human = h
 	vel = v
+	desired_vertical_speed = v.y
 	kind = k
 	rotation = vel.angle()
 	wob_seed = randf() * 10.0
@@ -39,11 +48,42 @@ func lane_keep(lo: float, hi: float) -> void:
 	# kids weave inside a band instead of holding a line
 	band_lo = lo
 	band_hi = hi
-	base_x = position.x
+	base_x = float(route.get("preferred_x")) if route != null else position.x
 	swerve_t = randf_range(1.2, 2.8)
 
 
+func configure_route(
+	preferred_x: float,
+	min_x: float,
+	max_x: float,
+	blockers: Array[Dictionary]
+) -> bool:
+	route = BypasserRouteScript.new(
+		preferred_x,
+		min_x,
+		max_x,
+		RIDER_CLEARANCE,
+		RIDER_MAX_LATERAL_SPEED,
+		RIDER_MINIMUM_LOOKAHEAD,
+		RIDER_LOOKAHEAD_TIME
+	)
+	route.call("configure_blockers", blockers)
+	var spawn: Dictionary = route.call(
+		"find_clear_spawn_x",
+		global_position.y,
+		desired_vertical_speed
+	)
+	if not bool(spawn.found):
+		route = null
+		return false
+	global_position.x = float(spawn.x)
+	return true
+
+
 func _physics_process(delta: float) -> void:
+	if main.phase == "freedom":
+		queue_free()
+		return
 	if main.frozen:
 		return
 	if kind == "kid" and band_hi > band_lo:
@@ -53,24 +93,30 @@ func _physics_process(delta: float) -> void:
 			base_x = clampf(base_x + randf_range(-70.0, 70.0), band_lo, band_hi)
 		var t := Time.get_ticks_msec() / 1000.0
 		var target_x := base_x + sin(t * 2.4 + wob_seed) * 24.0
-		vel.x = clampf((target_x - position.x) * 3.0, -85.0, 85.0)
-		rotation = vel.angle()
-	# nobody, not even a wobbly kid, rides into an open manhole,
-	# a parked van, or a market stall
-	if absf(vel.y) > absf(vel.x):
-		for m in main.manholes:
-			var ahead: float = (m.y - global_position.y) * signf(vel.y)
-			if ahead > 0.0 and ahead < 90.0 and absf(m.x - global_position.x) < 34.0:
-				position.x += signf(global_position.x - m.x + 0.001) * 95.0 * delta
-		for v in main.vans:
-			var aheadv: float = ((v as Vector2).y - global_position.y) * signf(vel.y)
-			if aheadv > -70.0 and aheadv < 140.0 and absf((v as Vector2).x - global_position.x) < 56.0:
-				position.x += signf(global_position.x - (v as Vector2).x + 0.001) * 120.0 * delta
-		for st in main.stalls:
-			var aheads: float = ((st as Vector2).y - global_position.y) * signf(vel.y)
-			if aheads > -40.0 and aheads < 120.0 and absf((st as Vector2).x - global_position.x) < 76.0:
-				position.x += signf(global_position.x - (st as Vector2).x + 0.001) * 120.0 * delta
-	position += vel * delta
+		if route != null:
+			var route_min := float(route.get("min_x"))
+			var route_max := float(route.get("max_x"))
+			route.set(
+				"preferred_x",
+				clampf(target_x, maxf(band_lo, route_min), minf(band_hi, route_max))
+			)
+	if route != null:
+		var before := global_position
+		var result: Dictionary = route.call(
+			"step",
+			before,
+			desired_vertical_speed,
+			delta
+		)
+		global_position = Vector2(
+			float(result.x),
+			before.y if bool(result.blocked) else before.y + desired_vertical_speed * delta
+		)
+		vel = (global_position - before) / delta if delta > 0.0 else Vector2.ZERO
+		if not vel.is_zero_approx():
+			rotation = vel.angle()
+	else:
+		position += vel * delta
 	var hp: Vector2 = human.global_position
 	var dh := global_position.distance_to(hp)
 	min_dist = minf(min_dist, dh)

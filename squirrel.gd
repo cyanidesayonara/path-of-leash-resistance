@@ -69,7 +69,7 @@ func _physics_process(delta: float) -> void:
 				position += flee_dir.rotated(sin(t * 9.0 + seed_o) * wiggle) * speed * delta
 				if absf(global_position.y - float(main.cam.position.y)) > 800.0:
 					queue_free()
-	if not chased and state != 2 and dd < 26.0:
+	if not chased and dd < 26.0:
 		chased = true
 		main.on_critter_chase(global_position, kind)
 		scare()

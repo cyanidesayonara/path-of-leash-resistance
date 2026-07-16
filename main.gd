@@ -13,12 +13,23 @@ const BLANE_R := 1072.0
 const SHOULDER_R := 1100.0
 const START_Y := 260.0
 const GATE_Y := -5000.0
+const PAIR_SPAWN_DIST := 560.0
+const AUTOWALK_SEED := 0x5A17C0DE
+const AUTOWALK_MIN_FINISH_TIME := 120.0
+const PAIR_MIN_SPAWN_DIST := 360.0
 const LEASH_LENGTH := 340.0  # a proper 5-meter leash
 const LEASH_STRETCH_CAP := 1.15
 const LEASH_K := 32.0
 const DOG_MASS := 1.0
 const HUMAN_MASS := 4.0
 const POLE_RADIUS := 10.0
+const HYDRANT_RADIUS := 9.0
+const FOUNTAIN_RADIUS := 12.0
+const PERFORMER_RADIUS := 12.0
+const MANHOLE_RADIUS := 24.0
+const BENCH_BODY_SIZE := Vector2(16.0, 48.0)
+const VAN_BODY_SIZE := Vector2(64.0, 132.0)
+const STALL_BODY_SIZE := Vector2(96.0, 56.0)
 
 const LANE_HALF := 70.0
 
@@ -78,6 +89,7 @@ var cone_spots: Array[Vector2] = []
 var stalls: Array[Vector2] = []
 var fountains: Array[Vector2] = []
 var body_pole_count := 0
+var bypasser_blockers: Array[Dictionary] = []
 var drunk_amount := 0.0
 var swam := false
 var night_cm: CanvasModulate
@@ -96,7 +108,6 @@ var auto_walk := false
 var finished := false
 var pair_spawn_t := 5.0
 var tangles := 0
-var tangle_cd := 0.0
 var my_rope_sample: Array[Vector2] = []
 var dogs_greeted := 0
 var greeted := {}
@@ -167,6 +178,9 @@ var hint_l: Label
 var record_l: Label
 var shop_title_l: Label
 var shop_l: Label
+var shop_preview_bg: ColorRect
+var shop_preview_l: Label
+var shop_preview: CharacterBody2D
 var in_shop := false
 var shop_items: Array[Dictionary] = []
 var shop_idx := 0
@@ -180,6 +194,7 @@ var font: Font
 func _ready() -> void:
 	Engine.time_scale = 1.0
 	font = ThemeDB.fallback_font
+	var autowalk_requested := "--autowalk" in OS.get_cmdline_user_args()
 	if Game.is_daily(Game.level_id):
 		# same layout, weather and time for everyone, all day
 		Game.daily = true
@@ -189,9 +204,12 @@ func _ready() -> void:
 		Game.night = Game.daily_night()
 	else:
 		Game.daily = false
+		if autowalk_requested:
+			seed(AUTOWALK_SEED)
 		lvl = Game.level_id
 	_setup_input()
 	_build_level_data()
+	_build_bypasser_blockers()
 	_build_walls()
 	_build_entities()
 	_spawn_cones()
@@ -210,7 +228,7 @@ func _ready() -> void:
 		frozen = true
 	# --autowalk drives the dog through all three legs unattended, so CI
 	# actually traverses out -> freedom -> home -> finish
-	if "--autowalk" in OS.get_cmdline_user_args():
+	if autowalk_requested:
 		auto_walk = true
 		# the attract/CI bot cannot navigate clutter; let it glide through
 		# so the full out->freedom->home->finish loop can be verified
@@ -492,6 +510,66 @@ func _build_level_data() -> void:
 		lane_state.append({"t": randf_range(1.0, 2.5), "phase": 0, "dir": 1})
 
 
+func _build_bypasser_blockers() -> void:
+	bypasser_blockers.clear()
+	for i in range(body_pole_count):
+		bypasser_blockers.append({
+			"id": "pole_%d" % i,
+			"center": poles[i],
+			"radius": POLE_RADIUS,
+		})
+	for i in range(hydrants.size()):
+		bypasser_blockers.append({
+			"id": "hydrant_%d" % i,
+			"center": hydrants[i].pos,
+			"radius": HYDRANT_RADIUS,
+		})
+	for i in range(fountains.size()):
+		bypasser_blockers.append({
+			"id": "fountain_%d" % i,
+			"center": fountains[i],
+			"radius": FOUNTAIN_RADIUS,
+		})
+	for i in range(performers.size()):
+		bypasser_blockers.append({
+			"id": "performer_%d" % i,
+			"center": performers[i],
+			"radius": PERFORMER_RADIUS,
+		})
+	for i in range(benches.size()):
+		bypasser_blockers.append({
+			"id": "bench_%d" % i,
+			"rect": Rect2(benches[i] - BENCH_BODY_SIZE * 0.5, BENCH_BODY_SIZE),
+		})
+	for i in range(vans.size()):
+		bypasser_blockers.append({
+			"id": "van_%d" % i,
+			"rect": Rect2(vans[i] - VAN_BODY_SIZE * 0.5, VAN_BODY_SIZE),
+		})
+	for i in range(stalls.size()):
+		bypasser_blockers.append({
+			"id": "stall_%d" % i,
+			"rect": Rect2(stalls[i] - STALL_BODY_SIZE * 0.5, STALL_BODY_SIZE),
+		})
+	for i in range(manholes.size()):
+		bypasser_blockers.append({
+			"id": "manhole_%d" % i,
+			"center": manholes[i],
+			"radius": MANHOLE_RADIUS,
+		})
+	for i in range(cellars.size()):
+		bypasser_blockers.append({
+			"id": "cellar_%d" % i,
+			"rect": cellars[i],
+		})
+	if pond.size.x > 0.0 and pond.size.y > 0.0:
+		bypasser_blockers.append({
+			"id": "pond_0",
+			"rect": pond,
+			"forced_side": "right",
+		})
+
+
 func _build_walls() -> void:
 	var walls := StaticBody2D.new()
 	walls.collision_layer = 1
@@ -526,9 +604,9 @@ func _build_walls() -> void:
 		add_child(sb)
 	# vans and stalls are solid rectangles: no walking over the van roof
 	for v in vans:
-		_add_rect_body(v, Vector2(64, 132))
+		_add_rect_body(v, VAN_BODY_SIZE)
 	for st in stalls:
-		_add_rect_body(st, Vector2(96, 56))
+		_add_rect_body(st, STALL_BODY_SIZE)
 	# performers have mass; you walk around a person, not through them
 	for pf in performers:
 		var pb := StaticBody2D.new()
@@ -536,7 +614,7 @@ func _build_walls() -> void:
 		pb.position = pf
 		var pcs := CollisionShape2D.new()
 		var psh := CircleShape2D.new()
-		psh.radius = 12.0
+		psh.radius = PERFORMER_RADIUS
 		pcs.shape = psh
 		pb.add_child(pcs)
 		add_child(pb)
@@ -706,12 +784,33 @@ func _build_hud() -> void:
 	prompt_l = _hud_label(Vector2(0, 470), 22)
 	prompt_l.size = Vector2(1280, 32)
 	prompt_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	shop_preview_bg = ColorRect.new()
+	shop_preview_bg.position = Vector2(60.0, 190.0)
+	shop_preview_bg.size = Vector2(440.0, 390.0)
+	shop_preview_bg.color = Color(0.05, 0.06, 0.07, 0.72)
+	shop_preview_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shop_preview_bg.visible = false
+	hud.add_child(shop_preview_bg)
+	var preview := CharacterBody2D.new()
+	preview.set_script(load("res://dog.gd"))
+	preview.preview_mode = true
+	preview.position = Vector2(280.0, 365.0)
+	preview.scale = Vector2(3.0, 3.0)
+	preview.visible = false
+	hud.add_child(preview)
+	preview.z_index = 1
+	shop_preview = preview
 	shop_title_l = _hud_label(Vector2(0, 70), 30)
 	shop_title_l.size = Vector2(1280, 40)
 	shop_title_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shop_title_l.visible = false
-	shop_l = _hud_label(Vector2(0, 150), 20)
-	shop_l.size = Vector2(1280, 460)
+	shop_preview_l = _hud_label(Vector2(60.0, 145.0), 18)
+	shop_preview_l.size = Vector2(440.0, 30.0)
+	shop_preview_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	shop_preview_l.text = "HIGHLIGHTED LOOK"
+	shop_preview_l.visible = false
+	shop_l = _hud_label(Vector2(430.0, 150.0), 20)
+	shop_l.size = Vector2(800.0, 460.0)
 	shop_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shop_l.visible = false
 	for k in Game.COLLARS:
@@ -750,6 +849,10 @@ func _weather_tint() -> Color:
 	elif Game.weather == "wind":
 		c = c * Color(0.92, 0.9, 0.82)  # dusty, warm-grey
 	return c
+
+
+func _owner_label_text(owner_id: String) -> String:
+	return "WALKING:  %s" % owner_id.to_upper()
 
 
 func _apply_menu_step() -> void:
@@ -792,7 +895,7 @@ func _apply_menu_step() -> void:
 			title_l.add_theme_font_size_override("font_size", 40)
 			title_l.position.y = 150
 			title_l.text = Game.LEVEL_NAMES[Game.level_id].to_upper()
-			owner_l.text = "WALKING:  %s" % Game.owner_id.to_upper()
+			owner_l.text = _owner_label_text(Game.owner_id)
 	_refresh_menu_text()
 
 
@@ -802,6 +905,9 @@ func _open_shop() -> void:
 		l.visible = false
 	shop_title_l.visible = true
 	shop_l.visible = true
+	shop_preview_bg.visible = true
+	shop_preview_l.visible = true
+	shop_preview.visible = true
 	_refresh_shop()
 
 
@@ -844,6 +950,14 @@ func _refresh_shop() -> void:
 		lines += "%s%s%s\n" % [cursor, data.name, tag]
 	lines += "\nleft / right browse    %s buy or wear    %s back" % [_kb_or_pad("SPACE", "A"), _kb_or_pad("E", "B")]
 	shop_l.text = lines
+	var highlighted: Dictionary = shop_items[shop_idx]
+	var preview_collar: String = Game.collar
+	var preview_bandana: String = Game.bandana
+	if highlighted.kind == "collar":
+		preview_collar = highlighted.key
+	else:
+		preview_bandana = highlighted.key
+	shop_preview.set_cosmetic_preview(preview_collar, preview_bandana)
 
 
 func _refresh_menu_text() -> void:
@@ -931,14 +1045,14 @@ func _physics_process(delta: float) -> void:
 	leash_len = move_toward(leash_len, leash_target, 150.0 * delta)
 	leash.rest_len = leash_len
 	_apply_leash(delta)
-	_lanes(delta)
-	_vlane(delta)
+	if phase != "freedom":
+		_lanes(delta)
+		_vlane(delta)
 	_squirrels(delta)
 	_temptation(delta)
 	_offpath(delta)
 	_greetings()
-	if phase != "freedom":
-		_pairs(delta)
+	_pairs(delta)
 	_hazards(delta)
 	_pickups(delta)
 	_bodily(delta)
@@ -972,6 +1086,9 @@ func _process(_delta: float) -> void:
 			in_shop = false
 			shop_title_l.visible = false
 			shop_l.visible = false
+			shop_preview_bg.visible = false
+			shop_preview_l.visible = false
+			shop_preview.visible = false
 			_apply_menu_step()
 		return
 	if not started:
@@ -987,7 +1104,7 @@ func _process(_delta: float) -> void:
 			return
 		if menu_step == 2 and (Input.is_action_just_pressed("move_up") or Input.is_action_just_pressed("move_down")):
 			Game.toggle_owner()
-			owner_l.text = "walking: %s" % Game.owner_id.to_upper()
+			owner_l.text = _owner_label_text(Game.owner_id)
 		# weather and time are fixed by the seed on the daily walk
 		if menu_step == 2 and not Game.daily and Input.is_action_just_pressed("bark"):
 			Game.night = not Game.night
@@ -1210,9 +1327,7 @@ func _vlane(delta: float) -> void:
 			kid = randf() < 0.7
 			speed = randf_range(70.0, 120.0) if kid else randf_range(220.0, 320.0)
 			x = randf_range(SIDEWALK_LEFT + 40.0, SIDEWALK_RIGHT - 40.0)
-			if pond.grow(50.0).has_point(Vector2(x, y)):
-				x = clampf(x, pond.end.x + 40.0, SIDEWALK_RIGHT - 40.0)
-			band_lo = pond.end.x + 30.0
+			band_lo = SIDEWALK_LEFT + 30.0
 			band_hi = SIDEWALK_RIGHT - 30.0
 		"beach":
 			kid = randf() < 0.4
@@ -1237,10 +1352,13 @@ func _vlane(delta: float) -> void:
 	b.set_script(load("res://bike.gd"))
 	b.position = Vector2(x, y)
 	b.z_index = 12
-	add_child(b)
 	b.setup(self, dog, human, Vector2(0.0, -speed if up else speed), "kid" if kid else "bike")
 	if kid:
 		b.lane_keep(band_lo, band_hi)
+	if not b.configure_route(x, band_lo, band_hi, bypasser_blockers):
+		b.free()
+		return
+	add_child(b)
 
 
 func _squirrels(delta: float) -> void:
@@ -1404,42 +1522,74 @@ func _greetings() -> void:
 			float_text(op + Vector2(0, -18), "sniff! hi", Color(0.8, 1.0, 0.85))
 
 
+func _pair_spawn_distance(camera_y: float) -> float:
+	var max_distance := minf(
+		PAIR_SPAWN_DIST,
+		minf(camera_y - (GATE_Y + 60.0), (START_Y + 100.0) - camera_y)
+	)
+	return max_distance if max_distance >= PAIR_MIN_SPAWN_DIST else 0.0
+
+
+func _pair_spawn_route(walk_phase: String, oncoming: bool, camera_y: float) -> Dictionary:
+	var player_dir_y := -1.0 if walk_phase == "out" else 1.0
+	var pair_dir_y := -player_dir_y if oncoming else player_dir_y
+	var spawn_distance := _pair_spawn_distance(camera_y)
+	return {
+		"y": camera_y - pair_dir_y * spawn_distance,
+		"direction": Vector2(0.0, pair_dir_y),
+	}
+
+
 func _pairs(delta: float) -> void:
-	# other dog-walkers coming the other way; their leashes tangle yours
+	# mixed-direction dog-walkers; their leashes tangle yours
 	var pairs := get_tree().get_nodes_in_group("pairs")
-	pair_spawn_t -= delta
-	if pair_spawn_t <= 0.0 and pairs.size() < 3:
-		pair_spawn_t = randf_range(6.0, 11.0)
-		var up := phase == "home"  # oncoming: down on the way out, up home
-		var y: float = cam.position.y + (-560.0 if up else 560.0)
-		if y < GATE_Y + 60.0 or y > START_Y + 100.0:
-			return
-		var p := Node2D.new()
-		p.set_script(load("res://otherpair.gd"))
-		add_child(p)
-		p.setup(self, dog, poles, Vector2(randf_range(walk_cx - 120.0, walk_cx + 120.0), y), Vector2(0, 1) if up else Vector2(0, -1))
-		pairs = get_tree().get_nodes_in_group("pairs")
+	if phase != "freedom":
+		pair_spawn_t -= delta
+		if pair_spawn_t <= 0.0 and pairs.size() < 3:
+			var camera_y := cam.get_screen_center_position().y
+			var spawn_distance := _pair_spawn_distance(camera_y)
+			if spawn_distance > 0.0:
+				pair_spawn_t = randf_range(6.0, 11.0)
+				var route := _pair_spawn_route(phase, randf() < 0.5, camera_y)
+				var y: float = route["y"]
+				if y >= GATE_Y + 60.0 and y <= START_Y + 100.0:
+					var p := Node2D.new()
+					p.set_script(load("res://otherpair.gd"))
+					var direction: Vector2 = route["direction"]
+					var start := Vector2(randf_range(walk_cx - 120.0, walk_cx + 120.0), y)
+					p.setup(self, dog, poles, start, direction)
+					if not p.configure_route(
+						start.x,
+						walk_cx - walk_half + 30.0,
+						walk_cx + walk_half - 30.0,
+						bypasser_blockers
+					):
+						p.free()
+					else:
+						add_child(p)
+						pairs = get_tree().get_nodes_in_group("pairs")
 	# tangle feed: our rope and theirs each become obstacles for the other
-	tangle_cd = maxf(0.0, tangle_cd - delta)
 	leash.dynamic_obstacles.clear()
 	if leash.detached:
+		for p in pairs:
+			p.leash.dynamic_obstacles.clear()
+			p.update_tangle_state(false, delta)
 		return
 	my_rope_sample.clear()
 	for i in range(0, leash.N, 2):
 		my_rope_sample.append(leash.pts[i])
 	for p in pairs:
+		var crossing := false
 		if dog.global_position.distance_to(p.npc_owner.position) > 320.0:
 			p.leash.dynamic_obstacles.clear()
-			continue
-		leash.dynamic_obstacles.append_array(p.sampled)
-		p.leash.dynamic_obstacles = my_rope_sample.duplicate()
-		if _ropes_crossing(my_rope_sample, p.sampled):
-			p.note_tangle()
-			if tangle_cd <= 0.0:
-				tangle_cd = 1.5
-				tangles += 1
-				bones += 3
-				float_text(dog.global_position, "TANGLED! +3", Color(1, 0.85, 0.7))
+		else:
+			leash.dynamic_obstacles.append_array(p.sampled)
+			p.leash.dynamic_obstacles = my_rope_sample.duplicate()
+			crossing = _ropes_crossing(my_rope_sample, p.sampled)
+		if p.update_tangle_state(crossing, delta):
+			tangles += 1
+			bones += 3
+			float_text(dog.global_position, "TANGLED! +3", Color(1, 0.85, 0.7))
 
 
 func _ropes_crossing(a: Array[Vector2], b: Array[Vector2]) -> bool:
@@ -1724,7 +1874,11 @@ func _progress(_delta: float) -> void:
 			if dog.global_position.y > GATE_Y + 40.0:
 				_enter_home()
 		"home":
-			if dog.global_position.y > HOME_Y and human.global_position.y > HOME_Y:
+			if (
+				dog.global_position.y > HOME_Y
+				and human.global_position.y > HOME_Y
+				and (not auto_walk or elapsed >= AUTOWALK_MIN_FINISH_TIME)
+			):
 				_finish_walk()
 
 

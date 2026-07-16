@@ -2,6 +2,84 @@
 
 Append-only session history, newest first.
 
+## 2026-07-16 — shared bypasser avoidance
+
+- One stateful local route planner now steers vertical riders and NPC
+  dog-walker pairs around fixed hazards.
+- The fixed catalog includes the park pond and bridge, path poles and
+  furniture, benches, hydrants and fountains, performers, vans and stalls,
+  manholes, and cellars.
+- Each NPC dog and owner take one coordinated side so their honest leash does
+  not routinely wrap or slip over trees.
+- Connected furniture/tree clusters route around their outer expanded bounds
+  instead of trapping bypassers on occupied per-blocker edges.
+- Fast bikes, scooters, and pairs use bounded steering, forward-sweep-safe
+  spawn placement, stable detours, lane return, and brake or hesitate only
+  when genuinely boxed in.
+- Pair runtime routing checks the actual owner/dog formation, while immutable
+  blocker descriptors are normalized once per route configuration.
+- The exact park tree slalom now extends or replans navigation across
+  non-touching trees; explicit current, detour, and clear formation paths keep
+  the commanded dog transition inside route bounds without extra clearance
+  hysteresis.
+- Clear-return release now checks every configured blocker and route bounds;
+  pair clear targets preserve wander/curiosity while steering to the nearest
+  valid route edge.
+- Non-daily CI autowalk uses a named pre-construction seed and a fixed-fps
+  completion gate, producing a repeatable 120.0-second finish marker.
+- Added deterministic planner, rider, and real-pair cluster regressions.
+
+## 2026-07-16 — NPC bridge steering
+
+- NPC dog-walker pairs now steer across the park bridge instead of walking
+  through the pond on outbound or homebound routes.
+- Their dogs keep wander and curiosity targets on the bridge side near the
+  pond, then both return to their original lane after clearing it.
+- Added a deterministic real-script regression for both travel directions,
+  dog targeting, and levels without ponds.
+
+## 2026-07-16 — consistent owner label
+
+- The walk-details owner label now remains `WALKING:  HIM/HER` after toggling.
+- Added a real-script regression for canonical casing and spacing.
+
+## 2026-07-15 — visible bandanas and wardrobe preview
+
+- Bandanas now read as outlined neckerchiefs trailing over Millie's back
+  instead of disappearing beneath her head and collar.
+- The wardrobe now previews every highlighted collar and bandana on the real
+  dog renderer before purchase or equip.
+- Added a real-renderer regression for preview overrides, `No bandana`, and
+  backward-pointing geometry.
+
+## 2026-07-15 — mixed NPC walker directions
+
+- NPC dog-walker pairs now spawn as an even random mix of head-on encounters
+  and ambient same-direction walkers on both legs of the walk.
+- Spawn positions shorten to the viewport edge near route ends while preserving
+  unbiased oncoming/same-direction selection.
+- Added a real-script headless regression covering outbound and home routes.
+
+## 2026-07-15 — traffic-free freedom phase
+
+- Entering the off-leash area now removes active bikes, scooters and leashed
+  NPC pairs immediately; rider spawners pause until the home leg.
+- Added a real-script headless regression for freedom-phase traffic cleanup.
+
+## 2026-07-15 — distinct leash tangle events
+
+- A continuous NPC leash crossing now triggers one apology, quest increment
+  and `TANGLED! +3` reward instead of repeating during the same snag.
+- A pair rearms only after half a second fully separated, with a headless
+  regression covering sustained crossings, geometry flicker and recrossing.
+
+## 2026-07-15 — critter chase scoring restored
+
+- Squirrels, rats and Tofu now award their chase or boop reward on first
+  contact even after they start fleeing; the same critter cannot score twice.
+- Added a headless regression test for fleeing contact, Tofu relocation and
+  scare-without-contact behavior.
+
 ## 2026-07-14 — v1.5: The Daily Walk & Millie's wardrobe
 
 - Daily Walk: first entry in the walk carousel, always unlocked. Its

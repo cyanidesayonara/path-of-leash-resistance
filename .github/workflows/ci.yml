@@ -23,6 +23,33 @@ jobs:
       - name: Leash winding regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_wrap.gd
 
+      - name: Critter chase regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_critter_chase.gd
+
+      - name: Tangle event regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tangle_latch.gd
+
+      - name: Freedom traffic regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_freedom_traffic.gd
+
+      - name: NPC pair direction regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_direction.gd
+
+      - name: Bandana preview regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_bandana_preview.gd
+
+      - name: Owner label regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_owner_label.gd
+
+      - name: Shared bypasser route regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_bypasser_route.gd
+
+      - name: Rider obstacle avoidance regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_rider_avoidance.gd
+
+      - name: NPC pair obstacle avoidance regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_pond_avoidance.gd
+
       - name: Headless smoke tests (all levels)
         # Runs each level for 1800 simulated frames (~30s): catches parse
         # errors and runtime script errors in the main gameplay loop.

@@ -33,23 +33,60 @@ var hip_dir := Vector2.DOWN
 var gait := 0.0
 var flecks: Array[Vector2] = []
 var main: Node2D
+var preview_mode := false
+var preview_collar := ""
+var preview_bandana := ""
 
 
 func setup(m: Node2D) -> void:
 	main = m
 
 
+func set_cosmetic_preview(collar_key: String, bandana_key: String) -> void:
+	preview_collar = collar_key
+	preview_bandana = bandana_key
+	queue_redraw()
+
+
+func _cosmetic_collar_key() -> String:
+	if preview_mode and Game.COLLARS.has(preview_collar):
+		return preview_collar
+	return Game.collar if Game.COLLARS.has(Game.collar) else "red"
+
+
+func _cosmetic_bandana_key() -> String:
+	if preview_mode and Game.BANDANAS.has(preview_bandana):
+		return preview_bandana
+	return Game.bandana if Game.BANDANAS.has(Game.bandana) else "none"
+
+
+func _bandana_points(shoulder: Vector2, forward: Vector2) -> PackedVector2Array:
+	var side := forward.orthogonal()
+	var base := shoulder - forward
+	return PackedVector2Array([
+		base + side * 7.0,
+		base - side * 7.0,
+		shoulder - forward * 15.0,
+	])
+
+
 func _ready() -> void:
 	z_index = 10
-	collision_layer = 2
-	collision_mask = 1
-	var cs := CollisionShape2D.new()
-	var sh := CircleShape2D.new()
-	sh.radius = 14.0
-	cs.shape = sh
-	add_child(cs)
-	for i in range(14):
-		flecks.append(Vector2.from_angle(randf() * TAU) * randf_range(2.0, 9.5))
+	if not preview_mode:
+		collision_layer = 2
+		collision_mask = 1
+		var cs := CollisionShape2D.new()
+		var sh := CircleShape2D.new()
+		sh.radius = 14.0
+		cs.shape = sh
+		add_child(cs)
+		for i in range(14):
+			flecks.append(Vector2.from_angle(randf() * TAU) * randf_range(2.0, 9.5))
+	else:
+		var preview_rng := RandomNumberGenerator.new()
+		preview_rng.seed = 1729
+		for i in range(14):
+			flecks.append(Vector2.from_angle(preview_rng.randf() * TAU) * preview_rng.randf_range(2.0, 9.5))
 
 
 func tick(delta: float) -> void:
@@ -202,14 +239,19 @@ func _draw() -> void:
 		draw_circle(base + flecks[i], 1.0, Color(grizzle, 0.22))
 	# the Julius K9 harness across the shoulders, and the collar - colour
 	# set by the equipped cosmetic (rainbow shimmers)
-	var col := Game.collar_color()
-	if Game.collar == "rainbow":
+	var collar_key := _cosmetic_collar_key()
+	var col: Color = Game.COLLARS[collar_key].col
+	if collar_key == "rainbow":
 		col = Color.from_hsv(fmod(t * 0.35, 1.0), 0.7, 0.9)
-	# a bandana, if equipped: a little triangle at the throat
-	if Game.bandana != "none":
-		var bcol: Color = Game.BANDANAS[Game.bandana].col
-		var nb := shoulder + facing * 7.0
-		draw_colored_polygon(PackedVector2Array([nb + side * 6.0, nb - side * 6.0, nb + facing * 8.0]), bcol)
+	var bandana_key := _cosmetic_bandana_key()
+	if bandana_key != "none":
+		var bcol: Color = Game.BANDANAS[bandana_key].col
+		var bandana := _bandana_points(shoulder, facing)
+		var edge := bcol.darkened(0.35)
+		draw_colored_polygon(bandana, bcol)
+		draw_line(bandana[0], bandana[1], edge, 1.5)
+		draw_line(bandana[1], bandana[2], edge, 1.5)
+		draw_line(bandana[2], bandana[0], edge, 1.5)
 	draw_line(shoulder + side * 8.0, shoulder - side * 8.0, col, 6.0)
 	draw_circle(shoulder, 2.2, Color(0.3, 0.3, 0.32))
 	var neck := shoulder + facing * 6.5

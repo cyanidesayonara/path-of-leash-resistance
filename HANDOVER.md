@@ -67,8 +67,10 @@ Godot 4.7 lives portably in `godot/` (gitignored). Key commands:
   `...console.exe --headless --path . --export-release "Web" build/web/index.html`
   then `Compress-Archive -Path build\web\* -DestinationPath leash-resistance-web.zip -Force`
   (export templates are installed at `%APPDATA%\Godot\export_templates\4.7.stable\`).
-- **CI** (`.github/workflows/ci.yml`, Ubuntu): rope test + 4-level smoke +
-  full autowalk traversal. Green on every push.
+- **CI** (`.github/workflows/ci.yml`, Ubuntu): focused rope, critter, tangle,
+  freedom-traffic, pair-direction, bandana, owner-label, bypasser-route,
+  rider-avoidance, and generalized pair-obstacle regressions + 4-level smoke
+  + full autowalk traversal. The suite runs on every push.
 
 **Release ritual each version:** implement → run all tests + launch to
 eyeball → update CHANGELOG.md + version label in main.gd (`version_l`) →
@@ -130,32 +132,36 @@ Millie + Tofu cameos. NPC dog-walker pairs with leash-vs-leash tangling.
 Cosmetics shop (collars + bandanas from the bones wallet). Touch
 controls, controller-aware prompts. Attract/CI autowalk bot.
 
-## 6. OPEN BUGS — from Santtu's v1.4/v1.5 playtest (DO THESE FIRST)
+## 6. OPEN FOLLOW-UPS — from Santtu's v1.4/v1.5 playtest
 
 The off-leash area and the NPC dogs need the most love. In priority-ish
 order:
 
-1. **Wardrobe bandana selector is broken.** Selecting bandanas (navy /
-   "no bandana") does nothing visible, and bandanas appear to only tint
-   the collar rather than draw a distinct bandana. The bandana draw in
-   `dog.gd` (throat triangle) isn't reading right / equip may not apply.
-   Verify `Game.bandana` is set + drawn separately from the collar.
-2. **NPC pairs behave badly.** They: wade through the pond; only ever
-   move the same direction as the player; their leash slips through
-   poles (it should wrap like the player's — likely `otherpair` isn't
-   feeding real poles or the npc leash isn't running the same collision);
-   pathfinding is worse than the player-owner's. Rework `otherpair.gd`
-   movement (proper oncoming traffic, avoid pond/obstacles) and make the
-   NPC leash wrap poles like yours.
-3. **Tangling is spammy and awkward.** Continuous "oh — sorry!" bubbles
-   (throttle/latch the reaction properly — `reacted` toggle is wrong).
-   Tangle feel needs tuning so it reads as a real snag you work out of.
-4. **Bikes/scooters spawn in the off-leash area** and leashed NPC dogs
-   walk through it — the freedom zone should be traffic-free and its own
-   space. Gate `_vlane`/pair spawns out of the freedom zone (phase check).
-5. **`walking: HIM/HER` capitalisation** flips inconsistently between
-   screens — always upper-case it (the step-2 label vs the toggle
-   handler set it differently).
+Trailing bandana geometry and the highlighted-item wardrobe preview are fixed.
+Fixed-obstacle avoidance is implemented and automated for riders and NPC
+dog-walker pairs. Connected blocker clusters use their outer expanded bounds,
+spawn placement validates the first speed-scaled forward sweep, and pair
+runtime routing checks the actual owner/dog formation. Blockers are normalized
+once when each route is configured. Non-touching park-slalom trees can extend
+one navigation route when their commanded sweeps touch; pair steering validates
+current, side-specific detour, and clear-return dog paths without adding a
+second clearance release margin. Clear return checks all configured blockers
+and clamps the commanded wander/curiosity target to route bounds. Non-daily CI
+autowalk seeds before level construction and finishes on a deterministic
+120.0-second fixed-fps gate; ordinary player randomness is unchanged. The NPC
+leash remains the real rope: never introduce separate leash pivot or wrap
+bookkeeping.
+
+1. **Pair persistence and arrival/departure behavior** through the freedom/dog
+   park transition still needs design and implementation.
+2. **Richer NPC owner presentation** remains open: phone, coffee, and
+   conversation variants should use visual language comparable to the player
+   owner.
+3. **Optional deliberate pole-snag/recovery** may be added as a rare state only
+   if coordinated avoidance feels too clean after playtesting.
+4. **Tangle feel needs broader playtesting.** The repeated reward/apology spam
+   is fixed with a separation latch, but the snag should still read as
+   something the player deliberately works out of.
 
 ## 7. NEXT FEATURES (Santtu's explicit asks for the off-leash area / v1.6)
 
