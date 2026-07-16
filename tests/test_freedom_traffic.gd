@@ -35,8 +35,9 @@ func _initialize() -> void:
 	_check(bike.is_queued_for_deletion(), "active rider removes itself in freedom")
 
 	var pair := _make_traffic("res://otherpair.gd", main)
+	pair.configure_park_area(0.0, Rect2(0.0, -300.0, 400.0, 260.0))
 	pair._physics_process(0.0)
-	_check(pair.is_queued_for_deletion(), "active leashed pair removes itself in freedom")
+	_check(not pair.is_queued_for_deletion(), "park-configured dog-walker pair persists in freedom")
 
 	if failures > 0:
 		print("test_freedom_traffic: %d FAILURES" % failures)

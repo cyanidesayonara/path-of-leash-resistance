@@ -69,8 +69,9 @@ Godot 4.7 lives portably in `godot/` (gitignored). Key commands:
   (export templates are installed at `%APPDATA%\Godot\export_templates\4.7.stable\`).
 - **CI** (`.github/workflows/ci.yml`, Ubuntu): focused rope, critter, tangle,
   freedom-traffic, pair-direction, bandana, owner-label, bypasser-route,
-  rider-avoidance, and generalized pair-obstacle regressions + 4-level smoke
-  + full autowalk traversal. The suite runs on every push.
+  rider-avoidance, generalized pair-obstacle, pair-park-lifecycle, and
+  park-slot regressions + 4-level smoke + full autowalk traversal. The suite
+  runs on every push.
 
 **Release ritual each version:** implement → run all tests + launch to
 eyeball → update CHANGELOG.md + version label in main.gd (`version_l`) →
@@ -107,7 +108,8 @@ Everything is procedural vector art drawn in `_draw()`; no art assets.
 - Entities: `bike.gd` (riders: bikes + kids), `squirrel.gd` (squirrel/
   rat/cat=Tofu), `pigeon.gd` (pigeons/gulls), `duckling.gd`, `cone.gd`
   (kickable), `astand.gd` (toppleable), `ball.gd` (fetch), `freedog.gd`
-  (off-leash dogs), `otherpair.gd` (NPC owner+dog+their own leash).
+  (off-leash dogs), `otherpair.gd` (persistent NPC owner+dog+their own leash;
+  walking/arriving/parked/recalling/departing lifecycle).
 - `weather_overlay.gd`, `touch_controls.gd`, `hud_panel.gd`.
 - Concept art mocks (SVG, layout guides for the watercolour artist) in
   `assets/concept/`.
@@ -128,7 +130,8 @@ leash freedom romp with fetch + free dogs → home). Turbo/zoomies energy.
 Rotating quests (3/walk from a pool) → up to 3 stars/walk → star-gated
 unlocks. Chore chain (bag the poop, deliver to bin). Pee/marking +
 fountains to drink. Bodily needs as mechanics. Two owners (him/her).
-Millie + Tofu cameos. NPC dog-walker pairs with leash-vs-leash tangling.
+Millie + Tofu cameos. Persistent NPC dog-walker pairs with leash-vs-leash
+tangling, dog-park arrivals, off-leash roaming, recall, and departures.
 Cosmetics shop (collars + bandanas from the bones wallet). Touch
 controls, controller-aware prompts. Attract/CI autowalk bot.
 
@@ -136,6 +139,13 @@ controls, controller-aware prompts. Attract/CI autowalk bot.
 
 The off-leash area and the NPC dogs need the most love. In priority-ish
 order:
+
+### Parallel-safe work
+
+The isolated free-dog visual-variety task is defined in
+`docs/PARALLEL_TASK_FREE_DOG_VARIETY.md`. Its worker owns only `freedog.gd`, a
+new appearance module, and a new focused test. Pair park lifecycle work in
+`main.gd` and `otherpair.gd` is complete.
 
 Trailing bandana geometry and the highlighted-item wardrobe preview are fixed.
 Fixed-obstacle avoidance is implemented and automated for riders and NPC
@@ -152,14 +162,17 @@ autowalk seeds before level construction and finishes on a deterministic
 leash remains the real rope: never introduce separate leash pivot or wrap
 bookkeeping.
 
-1. **Pair persistence and arrival/departure behavior** through the freedom/dog
-   park transition still needs design and implementation.
-2. **Richer NPC owner presentation** remains open: phone, coffee, and
+Pair persistence through the freedom transition is implemented and automated.
+Main owns four distinct fence-side slots. Pairs enter leashed, park with the
+same dog roaming inside yard bounds, recall physically, re-leash, clear the
+gate, release their slot exactly once, and resume shared route planning.
+
+1. **Richer NPC owner presentation** remains open: phone, coffee, and
    conversation variants should use visual language comparable to the player
    owner.
-3. **Optional deliberate pole-snag/recovery** may be added as a rare state only
+2. **Optional deliberate pole-snag/recovery** may be added as a rare state only
    if coordinated avoidance feels too clean after playtesting.
-4. **Tangle feel needs broader playtesting.** The repeated reward/apology spam
+3. **Tangle feel needs broader playtesting.** The repeated reward/apology spam
    is fixed with a separation latch, but the snag should still read as
    something the player deliberately works out of.
 

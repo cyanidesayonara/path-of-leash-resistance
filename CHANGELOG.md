@@ -2,6 +2,24 @@
 
 Append-only session history, newest first.
 
+## 2026-07-16 — NPC dog-park traffic lifecycle
+
+- NPC dog-walker pairs now persist through the freedom transition instead of
+  disappearing at the gate.
+- Arriving pairs reserve distinct fence-side spots, enter with their real leash
+  attached, then detach it while the same dog roams inside the park.
+- Parked owners wait in place while their dogs mill or investigate Millie
+  within hard yard bounds, with no hidden rope samples or tangle collisions.
+- Recall is physical: the dog returns before the leash resnaps and becomes
+  visible, then the pair walks through a bounded gate waypoint before shared
+  obstacle routing resumes.
+- Freedom traffic now spawns a sparse mix of arrivals and already-parked
+  departures; bikes and scooters remain paused.
+- Slots remain held until a departing owner clears the gate and are released
+  exactly once on normal departure, unparenting, or deletion.
+- Added real pair/leash lifecycle, main slot/orchestration, and updated freedom
+  traffic regressions to CI.
+
 ## 2026-07-16 — shared bypasser avoidance
 
 - One stateful local route planner now steers vertical riders and NPC

@@ -513,13 +513,13 @@ func _test_spawn_selection_and_rejection(world: Dictionary) -> void:
 			)
 
 	var source := FileAccess.get_file_as_string("res://main.gd")
-	var pairs_start := source.find("func _pairs")
-	var pairs_end := source.find("func _ropes_crossing", pairs_start)
+	var pairs_start := source.find("func _make_pair")
+	var pairs_end := source.find("func _pairs", pairs_start)
 	var pairs_source := source.substr(pairs_start, pairs_end - pairs_start)
-	var setup_call := pairs_source.find("p.setup")
-	var configure_call := pairs_source.find("p.configure_route", setup_call)
-	var free_call := pairs_source.find("p.free()", configure_call)
-	var add_call := pairs_source.find("add_child(p)", configure_call)
+	var setup_call := pairs_source.find("pair.setup")
+	var configure_call := pairs_source.find("pair.configure_route", setup_call)
+	var free_call := pairs_source.find("pair.free()", configure_call)
+	var add_call := pairs_source.find("add_child(pair)", configure_call)
 	_check(
 		setup_call >= 0
 		and configure_call > setup_call

@@ -104,9 +104,16 @@ var romp_target := 3
 var romp_done := false
 var freedom_lo := GATE_Y - 620.0
 const HOME_Y := 320.0
+const PAIR_PARK_SPOTS := [
+	Vector2(240.0, GATE_Y - 120.0),
+	Vector2(430.0, GATE_Y - 155.0),
+	Vector2(850.0, GATE_Y - 155.0),
+	Vector2(1040.0, GATE_Y - 120.0),
+]
 var auto_walk := false
 var finished := false
 var pair_spawn_t := 5.0
+var pair_park_slots := {}
 var tangles := 0
 var my_rope_sample: Array[Vector2] = []
 var dogs_greeted := 0
@@ -505,7 +512,14 @@ func _build_level_data() -> void:
 		var x := 640.0 + side * randf_range(340.0, 620.0)
 		tufts.append(Vector2(x, randf_range(GATE_Y - 600.0, START_Y + 150.0)))
 	for i in range(14):
-		trees.append(Vector2(randf_range(200.0, 1080.0), GATE_Y - randf_range(120.0, 550.0)))
+		for attempt in range(20):
+			var tree := Vector2(randf_range(200.0, 1080.0), GATE_Y - randf_range(120.0, 550.0))
+			var clear := tree.distance_to(gate_bench) > 95.0
+			for spot in PAIR_PARK_SPOTS:
+				clear = clear and tree.distance_to(spot) > 85.0
+			if clear:
+				trees.append(tree)
+				break
 	for ly in lane_ys:
 		lane_state.append({"t": randf_range(1.0, 2.5), "phase": 0, "dir": 1})
 
@@ -1540,12 +1554,99 @@ func _pair_spawn_route(walk_phase: String, oncoming: bool, camera_y: float) -> D
 	}
 
 
+func _pair_park_bounds() -> Rect2:
+	return Rect2(90.0, freedom_lo + 20.0, 1100.0, GATE_Y - freedom_lo - 60.0)
+
+
+func reserve_pair_park_spot(pair: Node) -> Dictionary:
+	var pair_id := pair.get_instance_id()
+	if pair_park_slots.has(pair_id):
+		var existing := int(pair_park_slots[pair_id])
+		return {"found": true, "slot_id": existing, "spot": PAIR_PARK_SPOTS[existing]}
+	var occupied := pair_park_slots.values()
+	for i in range(PAIR_PARK_SPOTS.size()):
+		if i not in occupied:
+			pair_park_slots[pair_id] = i
+			return {"found": true, "slot_id": i, "spot": PAIR_PARK_SPOTS[i]}
+	return {"found": false, "slot_id": -1, "spot": Vector2.ZERO}
+
+
+func release_pair_park_spot(pair_instance_id: int) -> void:
+	pair_park_slots.erase(pair_instance_id)
+
+
+func _make_pair(start: Vector2, direction: Vector2, parked_departure := false) -> Node2D:
+	var pair := Node2D.new()
+	pair.set_script(load("res://otherpair.gd"))
+	pair.setup(self, dog, poles, start, direction)
+	if not pair.configure_route(
+		start.x,
+		walk_cx - walk_half + 30.0,
+		walk_cx + walk_half - 30.0,
+		bypasser_blockers
+	):
+		pair.free()
+		return null
+	pair.configure_park_area(GATE_Y, _pair_park_bounds())
+	if parked_departure:
+		var reservation := reserve_pair_park_spot(pair)
+		var bounds := _pair_park_bounds()
+		var dog_position := Vector2(
+			randf_range(bounds.position.x, bounds.end.x),
+			randf_range(bounds.position.y, bounds.end.y)
+		)
+		if (
+			not bool(reservation.found)
+			or not pair.initialize_parked_departure(
+				int(reservation.slot_id),
+				reservation.spot,
+				dog_position,
+				randf_range(1.5, 4.0)
+			)
+		):
+			release_pair_park_spot(pair.get_instance_id())
+			pair.free()
+			return null
+	add_child(pair)
+	return pair
+
+
+func _start_pair_arrivals(pairs: Array) -> void:
+	if phase == "home":
+		return
+	for pair in pairs:
+		if (
+			not pair.is_park_lifecycle_active()
+			and pair.desired_vertical_speed < 0.0
+			and pair.npc_owner.position.y <= GATE_Y + 35.0
+			and pair.npc_owner.position.y >= GATE_Y - 45.0
+		):
+			var reservation := reserve_pair_park_spot(pair)
+			if bool(reservation.found) and not pair.begin_park_arrival(
+				int(reservation.slot_id),
+				reservation.spot
+			):
+				release_pair_park_spot(pair.get_instance_id())
+
+
 func _pairs(delta: float) -> void:
 	# mixed-direction dog-walkers; their leashes tangle yours
 	var pairs := get_tree().get_nodes_in_group("pairs")
-	if phase != "freedom":
-		pair_spawn_t -= delta
-		if pair_spawn_t <= 0.0 and pairs.size() < 3:
+	pair_spawn_t -= delta
+	if pair_spawn_t <= 0.0 and pairs.size() < 3:
+		if phase == "freedom":
+			pair_spawn_t = randf_range(7.0, 11.0)
+			var arriving := randf() < 0.55
+			var x := randf_range(walk_cx - 120.0, walk_cx + 120.0)
+			var start := (
+				Vector2(x, GATE_Y + 420.0)
+				if arriving
+				else Vector2(x, GATE_Y - 120.0)
+			)
+			var pair := _make_pair(start, Vector2.UP if arriving else Vector2.DOWN, not arriving)
+			if pair != null:
+				pairs = get_tree().get_nodes_in_group("pairs")
+		else:
 			var camera_y := cam.get_screen_center_position().y
 			var spawn_distance := _pair_spawn_distance(camera_y)
 			if spawn_distance > 0.0:
@@ -1553,21 +1654,12 @@ func _pairs(delta: float) -> void:
 				var route := _pair_spawn_route(phase, randf() < 0.5, camera_y)
 				var y: float = route["y"]
 				if y >= GATE_Y + 60.0 and y <= START_Y + 100.0:
-					var p := Node2D.new()
-					p.set_script(load("res://otherpair.gd"))
 					var direction: Vector2 = route["direction"]
 					var start := Vector2(randf_range(walk_cx - 120.0, walk_cx + 120.0), y)
-					p.setup(self, dog, poles, start, direction)
-					if not p.configure_route(
-						start.x,
-						walk_cx - walk_half + 30.0,
-						walk_cx + walk_half - 30.0,
-						bypasser_blockers
-					):
-						p.free()
-					else:
-						add_child(p)
+					var pair := _make_pair(start, direction)
+					if pair != null:
 						pairs = get_tree().get_nodes_in_group("pairs")
+	_start_pair_arrivals(pairs)
 	# tangle feed: our rope and theirs each become obstacles for the other
 	leash.dynamic_obstacles.clear()
 	if leash.detached:
@@ -1580,7 +1672,9 @@ func _pairs(delta: float) -> void:
 		my_rope_sample.append(leash.pts[i])
 	for p in pairs:
 		var crossing := false
-		if dog.global_position.distance_to(p.npc_owner.position) > 320.0:
+		if not p.leash.visible:
+			p.leash.dynamic_obstacles.clear()
+		elif dog.global_position.distance_to(p.npc_owner.position) > 320.0:
 			p.leash.dynamic_obstacles.clear()
 		else:
 			leash.dynamic_obstacles.append_array(p.sampled)
@@ -1942,6 +2036,8 @@ func _enter_home() -> void:
 		ball.queue_free()
 	for fd in get_tree().get_nodes_in_group("freedogs"):
 		fd.queue_free()
+	for pair in get_tree().get_nodes_in_group("pairs"):
+		pair.begin_departure()
 	float_text(dog.global_position, "let's go home", Color(1, 0.95, 0.7))
 
 
