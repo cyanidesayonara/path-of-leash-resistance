@@ -17,6 +17,7 @@ const PAIR_SPAWN_DIST := 560.0
 const AUTOWALK_SEED := 0x5A17C0DE
 const AUTOWALK_MIN_FINISH_TIME := 120.0
 const PAIR_MIN_SPAWN_DIST := 360.0
+const MAX_ACTIVE_PAIRS := 3
 const LEASH_LENGTH := 340.0  # a proper 5-meter leash
 const LEASH_STRETCH_CAP := 1.15
 const LEASH_K := 32.0
@@ -105,14 +106,14 @@ var romp_done := false
 var freedom_lo := GATE_Y - 620.0
 const HOME_Y := 320.0
 const PAIR_PARK_SPOTS := [
-	Vector2(240.0, GATE_Y - 120.0),
-	Vector2(430.0, GATE_Y - 155.0),
-	Vector2(850.0, GATE_Y - 155.0),
-	Vector2(1040.0, GATE_Y - 120.0),
+	{"name": &"west_fence", "position": Vector2(240.0, GATE_Y - 120.0)},
+	{"name": &"north_fence", "position": Vector2(430.0, GATE_Y - 260.0)},
+	{"name": &"east_fence", "position": Vector2(1040.0, GATE_Y - 120.0)},
 ]
 var auto_walk := false
 var finished := false
 var pair_spawn_t := 5.0
+var park_pair_spawn_t := 5.0
 var pair_park_slots := {}
 var tangles := 0
 var my_rope_sample: Array[Vector2] = []
@@ -515,7 +516,8 @@ func _build_level_data() -> void:
 		for attempt in range(20):
 			var tree := Vector2(randf_range(200.0, 1080.0), GATE_Y - randf_range(120.0, 550.0))
 			var clear := tree.distance_to(gate_bench) > 95.0
-			for spot in PAIR_PARK_SPOTS:
+			for slot in PAIR_PARK_SPOTS:
+				var spot: Vector2 = slot.position
 				clear = clear and tree.distance_to(spot) > 85.0
 			if clear:
 				trees.append(tree)
@@ -1555,27 +1557,34 @@ func _pair_spawn_route(walk_phase: String, oncoming: bool, camera_y: float) -> D
 
 
 func _pair_park_bounds() -> Rect2:
-	return Rect2(90.0, freedom_lo + 20.0, 1100.0, GATE_Y - freedom_lo - 60.0)
+	return Rect2(90.0, freedom_lo, 1100.0, GATE_Y - 30.0 - freedom_lo)
 
 
-func reserve_pair_park_spot(pair: Node) -> Dictionary:
-	var pair_id := pair.get_instance_id()
+func reserve_pair_park_spot(pair_id: int) -> Dictionary:
 	if pair_park_slots.has(pair_id):
 		var existing := int(pair_park_slots[pair_id])
-		return {"found": true, "slot_id": existing, "spot": PAIR_PARK_SPOTS[existing]}
+		return {
+			"found": true,
+			"slot_id": existing,
+			"position": PAIR_PARK_SPOTS[existing].position,
+		}
 	var occupied := pair_park_slots.values()
 	for i in range(PAIR_PARK_SPOTS.size()):
 		if i not in occupied:
 			pair_park_slots[pair_id] = i
-			return {"found": true, "slot_id": i, "spot": PAIR_PARK_SPOTS[i]}
-	return {"found": false, "slot_id": -1, "spot": Vector2.ZERO}
+			return {
+				"found": true,
+				"slot_id": i,
+				"position": PAIR_PARK_SPOTS[i].position,
+			}
+	return {"found": false, "slot_id": -1, "position": Vector2.ZERO}
 
 
 func release_pair_park_spot(pair_instance_id: int) -> void:
 	pair_park_slots.erase(pair_instance_id)
 
 
-func _make_pair(start: Vector2, direction: Vector2, parked_departure := false) -> Node2D:
+func _make_pair(start: Vector2, direction: Vector2, activate := true) -> Node2D:
 	var pair := Node2D.new()
 	pair.set_script(load("res://otherpair.gd"))
 	pair.setup(self, dog, poles, start, direction)
@@ -1588,65 +1597,126 @@ func _make_pair(start: Vector2, direction: Vector2, parked_departure := false) -
 		pair.free()
 		return null
 	pair.configure_park_area(GATE_Y, _pair_park_bounds())
-	if parked_departure:
-		var reservation := reserve_pair_park_spot(pair)
-		var bounds := _pair_park_bounds()
-		var dog_position := Vector2(
-			randf_range(bounds.position.x, bounds.end.x),
-			randf_range(bounds.position.y, bounds.end.y)
-		)
-		if (
-			not bool(reservation.found)
-			or not pair.initialize_parked_departure(
-				int(reservation.slot_id),
-				reservation.spot,
-				dog_position,
-				randf_range(1.5, 4.0)
-			)
-		):
-			release_pair_park_spot(pair.get_instance_id())
-			pair.free()
-			return null
-	add_child(pair)
+	if activate:
+		add_child(pair)
 	return pair
 
 
+func _create_configured_pair(start: Vector2, direction: Vector2) -> Node2D:
+	return _make_pair(start, direction, false)
+
+
+func _pair_qualifies_for_arrival(pair: Node2D) -> bool:
+	return (
+		phase == "out" or phase == "freedom"
+	) and (
+		not pair.is_park_lifecycle_active()
+		and pair.desired_vertical_speed < 0.0
+		and pair.npc_owner.position.y <= GATE_Y + 35.0
+		and pair.npc_owner.position.y >= GATE_Y - 45.0
+	)
+
+
+func _try_start_pair_arrival(pair: Node2D) -> bool:
+	if not _pair_qualifies_for_arrival(pair):
+		return false
+	var pair_id := pair.get_instance_id()
+	var reservation := reserve_pair_park_spot(pair_id)
+	if not bool(reservation.found):
+		return false
+	if pair.begin_park_arrival(
+		int(reservation.slot_id),
+		reservation.position
+	):
+		return true
+	release_pair_park_spot(pair_id)
+	return false
+
+
 func _start_pair_arrivals(pairs: Array) -> void:
-	if phase == "home":
-		return
 	for pair in pairs:
-		if (
-			not pair.is_park_lifecycle_active()
-			and pair.desired_vertical_speed < 0.0
-			and pair.npc_owner.position.y <= GATE_Y + 35.0
-			and pair.npc_owner.position.y >= GATE_Y - 45.0
-		):
-			var reservation := reserve_pair_park_spot(pair)
-			if bool(reservation.found) and not pair.begin_park_arrival(
+		_try_start_pair_arrival(pair)
+
+
+func _build_park_pair(kind: String) -> Node2D:
+	var arriving := kind == "arrival"
+	if not arriving and kind != "departure":
+		return null
+	var start := Vector2(
+		randf_range(walk_cx - 120.0, walk_cx + 120.0),
+		GATE_Y + 420.0 if arriving else GATE_Y - 120.0
+	)
+	var pair := _create_configured_pair(
+		start,
+		Vector2.UP if arriving else Vector2.DOWN
+	)
+	if pair == null:
+		return null
+	var pair_id := pair.get_instance_id()
+	var reservation := reserve_pair_park_spot(pair_id)
+	var prepared := false
+	if bool(reservation.found):
+		if arriving:
+			prepared = pair.begin_park_arrival(
 				int(reservation.slot_id),
-				reservation.spot
-			):
-				release_pair_park_spot(pair.get_instance_id())
+				reservation.position
+			)
+		else:
+			var bounds := _pair_park_bounds()
+			var dog_position := Vector2(
+				randf_range(bounds.position.x, bounds.end.x),
+				randf_range(bounds.position.y, bounds.end.y)
+			)
+			prepared = pair.initialize_parked_departure(
+				int(reservation.slot_id),
+				reservation.position,
+				dog_position,
+				randf_range(1.5, 4.0)
+			)
+	if not prepared:
+		release_pair_park_spot(pair_id)
+		pair.free()
+		return null
+	return pair
+
+
+func _spawn_freedom_pair(active_pair_count: int, preferred_kind: String) -> Node2D:
+	if active_pair_count >= MAX_ACTIVE_PAIRS:
+		return null
+	var other_kind := "departure" if preferred_kind == "arrival" else "arrival"
+	for kind in [preferred_kind, other_kind]:
+		var pair := _build_park_pair(kind)
+		if pair != null:
+			add_child(pair)
+			return pair
+	return null
+
+
+func _clear_detached_pair_tangles(pairs: Array, delta: float) -> void:
+	for pair in pairs:
+		pair.leash.dynamic_obstacles.clear()
+		pair.update_tangle_state(false, delta)
+
+
+func _prepare_pairs_for_home(pairs: Array) -> void:
+	for pair in pairs:
+		pair.begin_home_departure()
 
 
 func _pairs(delta: float) -> void:
 	# mixed-direction dog-walkers; their leashes tangle yours
 	var pairs := get_tree().get_nodes_in_group("pairs")
-	pair_spawn_t -= delta
-	if pair_spawn_t <= 0.0 and pairs.size() < 3:
-		if phase == "freedom":
-			pair_spawn_t = randf_range(7.0, 11.0)
-			var arriving := randf() < 0.55
-			var x := randf_range(walk_cx - 120.0, walk_cx + 120.0)
-			var start := (
-				Vector2(x, GATE_Y + 420.0)
-				if arriving
-				else Vector2(x, GATE_Y - 120.0)
-			)
-			var pair := _make_pair(start, Vector2.UP if arriving else Vector2.DOWN, not arriving)
+	if phase == "freedom":
+		park_pair_spawn_t -= delta
+		if park_pair_spawn_t <= 0.0 and pairs.size() < MAX_ACTIVE_PAIRS:
+			var preferred_kind := "arrival" if randf() < 0.5 else "departure"
+			var pair := _spawn_freedom_pair(pairs.size(), preferred_kind)
+			park_pair_spawn_t = randf_range(7.0, 11.0) if pair != null else 1.0
 			if pair != null:
-				pairs = get_tree().get_nodes_in_group("pairs")
-		else:
+				pairs.append(pair)
+	else:
+		pair_spawn_t -= delta
+		if pair_spawn_t <= 0.0 and pairs.size() < MAX_ACTIVE_PAIRS:
 			var camera_y := cam.get_screen_center_position().y
 			var spawn_distance := _pair_spawn_distance(camera_y)
 			if spawn_distance > 0.0:
@@ -1658,14 +1728,12 @@ func _pairs(delta: float) -> void:
 					var start := Vector2(randf_range(walk_cx - 120.0, walk_cx + 120.0), y)
 					var pair := _make_pair(start, direction)
 					if pair != null:
-						pairs = get_tree().get_nodes_in_group("pairs")
+						pairs.append(pair)
 	_start_pair_arrivals(pairs)
 	# tangle feed: our rope and theirs each become obstacles for the other
 	leash.dynamic_obstacles.clear()
 	if leash.detached:
-		for p in pairs:
-			p.leash.dynamic_obstacles.clear()
-			p.update_tangle_state(false, delta)
+		_clear_detached_pair_tangles(pairs, delta)
 		return
 	my_rope_sample.clear()
 	for i in range(0, leash.N, 2):
@@ -1982,6 +2050,9 @@ func _enter_freedom() -> void:
 	phase = "freedom"
 	leash.detached = true
 	leash.visible = false
+	leash.dynamic_obstacles.clear()
+	for pair in get_tree().get_nodes_in_group("pairs"):
+		pair.leash.dynamic_obstacles.clear()
 	human.park_at(gate_bench)
 	romp_timer = 30.0
 	romp_catches = 0
@@ -2036,8 +2107,7 @@ func _enter_home() -> void:
 		ball.queue_free()
 	for fd in get_tree().get_nodes_in_group("freedogs"):
 		fd.queue_free()
-	for pair in get_tree().get_nodes_in_group("pairs"):
-		pair.begin_departure()
+	_prepare_pairs_for_home(get_tree().get_nodes_in_group("pairs"))
 	float_text(dog.global_position, "let's go home", Color(1, 0.95, 0.7))
 
 

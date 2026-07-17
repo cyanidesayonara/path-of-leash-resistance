@@ -36,26 +36,28 @@ func _initialize() -> void:
 	main.set_script(load("res://main.gd"))
 	var pairs: Array[Node] = []
 	var spots: Array[Vector2] = []
-	for i in range(5):
+	for i in range(4):
 		var pair := Node.new()
 		pairs.append(pair)
-		var result: Dictionary = main.reserve_pair_park_spot(pair)
-		if i < 4:
+		var result: Dictionary = main.reserve_pair_park_spot(pair.get_instance_id())
+		if i < 3:
 			_check(bool(result.found), "slot %d reserves" % i)
-			spots.append(result.spot)
+			spots.append(result.position)
 		else:
-			_check(not bool(result.found), "fifth pair is rejected")
-	_check(spots.size() == 4, "four park spots are available")
+			_check(not bool(result.found), "fourth pair is rejected")
+	_check(spots.size() == 3, "three park spots are available")
 	for i in range(spots.size()):
 		for j in range(i + 1, spots.size()):
 			_check(not spots[i].is_equal_approx(spots[j]), "park spots are distinct")
 		_check(main._pair_park_bounds().has_point(spots[i]), "park spot is inside freedom bounds")
 		_check(spots[i].distance_to(main.gate_bench) > 100.0, "park spot avoids player bench")
 
+	var repeated: Dictionary = main.reserve_pair_park_spot(pairs[1].get_instance_id())
+	_check(int(repeated.slot_id) == 1, "existing reservation is idempotent")
 	main.release_pair_park_spot(pairs[1].get_instance_id())
-	var retry: Dictionary = main.reserve_pair_park_spot(pairs[4])
+	var retry: Dictionary = main.reserve_pair_park_spot(pairs[3].get_instance_id())
 	_check(bool(retry.found), "released slot can be reused")
-	_check((retry.spot as Vector2).is_equal_approx(spots[1]), "released spot is reused")
+	_check((retry.position as Vector2).is_equal_approx(spots[1]), "released spot is reused")
 	for pair in pairs:
 		main.release_pair_park_spot(pair.get_instance_id())
 

@@ -54,148 +54,159 @@ romp, then home.
 Godot 4.7 lives portably in `godot/` (gitignored). Key commands:
 
 - **Play it:** `godot\Godot_v4.7-stable_win64.exe --path .`
-- **Rope regression test:**
-  `godot\Godot_v4.7-stable_win64_console.exe --headless --path . --script res://tests/test_wrap.gd`
-- **Per-level smoke test (catches script errors):**
-  `...console.exe --headless --path . --quit-after 1800 -- --level=park`
-  (levels: street, park, beach, market; add `--daily` for the daily.)
+- **Focused regression example — production pair-park orchestration:**
+  `godot\Godot_v4.7-stable_win64_console.exe --headless --path . --script res://tests/test_pair_park_traffic.gd`
+- **Per-level smoke test:**
+  `godot\Godot_v4.7-stable_win64_console.exe --headless --path . --quit-after 1800 -- --level=park`
+  Run `street`, `park`, `beach`, and `market`; add `--daily` only when
+  specifically testing the daily.
 - **Full-loop attract/CI bot (out→freedom→home→finish):**
-  `...console.exe --headless --fixed-fps 60 --path . --quit-after 12000 -- --level=street --autowalk`
-  MUST use `--fixed-fps 60` or headless frame count ≠ physics time and it
-  falsely "stalls". Look for `AUTOWALK FINISHED` in the log.
+  `godot\Godot_v4.7-stable_win64_console.exe --headless --fixed-fps 60 --path . --quit-after 12000 -- --level=street --autowalk`
+  `--fixed-fps 60` is mandatory. Require no script/parse errors and an
+  `AUTOWALK FINISHED` marker.
 - **Web export + zip for itch:**
-  `...console.exe --headless --path . --export-release "Web" build/web/index.html`
+  `godot\Godot_v4.7-stable_win64_console.exe --headless --path . --export-release "Web" build/web/index.html`
   then `Compress-Archive -Path build\web\* -DestinationPath leash-resistance-web.zip -Force`
-  (export templates are installed at `%APPDATA%\Godot\export_templates\4.7.stable\`).
-- **CI** (`.github/workflows/ci.yml`, Ubuntu): focused rope, critter, tangle,
-  freedom-traffic, pair-direction, bandana, owner-label, bypasser-route,
-  rider-avoidance, generalized pair-obstacle, pair-park-lifecycle, and
-  park-slot regressions + 4-level smoke + full autowalk traversal. The suite
-  runs on every push.
+  (templates live in `%APPDATA%\Godot\export_templates\4.7.stable\`).
+- **CI source of truth:** `.github/workflows/ci.yml`. It runs focused rope,
+  critter, tangle, freedom-traffic, pair-direction, bandana, owner-label,
+  bypasser-route, rider-avoidance, pair-obstacle, pair-park-lifecycle,
+  park-slot, and pair-park-traffic regressions, followed by all four smoke
+  tests and deterministic autowalk. The suite runs on every push to `main`
+  and every pull request targeting `main`.
 
-**Release ritual each version:** implement → run all tests + launch to
-eyeball → update CHANGELOG.md + version label in main.gd (`version_l`) →
-`git commit`, `git tag vX.Y`, `git push --tags` → re-export zip. Santtu
-uploads the zip to itch manually.
+**Release ritual each version:** implement → run all automated tests → launch
+and perform the relevant manual acceptance → update `CHANGELOG.md` and the
+version label in `main.gd` (`version_l`) → commit and tag → push with tags →
+re-export the zip. Santtu uploads the zip to itch manually.
 
 **Gotcha:** renaming the project folder tends to hit a Windows directory
-lock; use robocopy /MOVE as a fallback (has happened twice).
+lock; use robocopy `/MOVE` as a fallback.
 
-## 4. Architecture
+## 4. Architecture and ownership
 
-Single gameplay scene `main.tscn` = one Node2D running `main.gd` (~2100
-lines — the god object: level data, state machine, HUD, all systems).
-Everything is procedural vector art drawn in `_draw()`; no art assets.
+Single gameplay scene `main.tscn` is one Node2D running `main.gd` (roughly
+2,500 lines). Everything is procedural vector art drawn in `_draw()`; there
+are no production art assets yet.
 
-- `game.gd` — **autoload `Game`**: session + save state (level/owner/
+- `game.gd` — **autoload `Game`**: session and save state (level, owner,
   night/weather, records, stars, bones wallet, cosmetics, daily seed).
-  Save file `user://records.cfg`.
-- `main.gd` — level build (branch per level in `_build_level_data`),
-  `_physics_process` loop, phase machine (`phase` = out|freedom|home),
-  HUD (`hud_panel.gd` card + quest card), menu (`_apply_menu_step`,
-  steps 0 splash / 1 choose-walk / 2 ready, + shop), all spawners and
-  interactions, `_draw` for the world.
-- `dog.gd` — Millie (player). Move/plant/pee/turbo, swimming, drawing
-  incl. equipped cosmetics. `auto`/`auto_move` for the bot.
-- `human.gd` — the owner (payload). Autopilot walk (homeward flag flips
-  direction on the way back), telegraphed events (call/text/dash/selfie/
-  film/bench), whirl (tetherball), chore chain (poop→bag→bin), wading,
-  parked (off-leash).
-- `leash.gd` — the verlet rope AND the gameplay constraint. Segment-vs-
-  circle pole collision, stick-slip friction, capstan, `detached` (off-
-  leash), `resnap()`, `dynamic_obstacles` (another rope's points → the
-  tangle).
-- Entities: `bike.gd` (riders: bikes + kids), `squirrel.gd` (squirrel/
-  rat/cat=Tofu), `pigeon.gd` (pigeons/gulls), `duckling.gd`, `cone.gd`
-  (kickable), `astand.gd` (toppleable), `ball.gd` (fetch), `freedog.gd`
-  (off-leash dogs), `otherpair.gd` (persistent NPC owner+dog+their own leash;
-  walking/arriving/parked/recalling/departing lifecycle).
-- `weather_overlay.gd`, `touch_controls.gd`, `hud_panel.gd`.
-- Concept art mocks (SVG, layout guides for the watercolour artist) in
-  `assets/concept/`.
+  Save file: `user://records.cfg`.
+- `main.gd` — world construction, the explicit frame loop, walk phase machine
+  (`out|freedom|home`), HUD/menu, spawners, interactions, and world drawing.
+  For NPC park traffic, main owns the three fence-side slot definitions and
+  reservation dictionary, configures pair routes and park bounds, qualifies
+  gate arrivals, applies the global three-pair cap, mixes arrival/departure
+  freedom spawns, initiates home recall, and clears rope obstacles immediately
+  on freedom entry.
+- `otherpair.gd` — owns each persistent NPC owner, dog, real leash, route
+  planner, slot handle, and lifecycle state machine:
+  `WALKING → ARRIVING → PARKED → RECALLING → DEPARTING → WALKING`. It owns
+  bounded transition movement, parked dog roaming, physical recall, re-leash,
+  gate clearance, route resumption, and exactly-once slot release on clearance
+  or tree exit. Main starts lifecycle events; `otherpair.gd` executes them.
+- `dog.gd` — Millie: movement, plant, pee, turbo, swimming, cosmetics, and
+  `auto`/`auto_move` bot support.
+- `human.gd` — player owner payload: autopilot, telegraphed events, whirl,
+  chore chain, wading, and freedom parking.
+- `leash.gd` — visible verlet rope and gameplay constraint. It owns pole
+  collision, stick-slip/capstan behavior, `detached`, `resnap()`, and dynamic
+  rope obstacles used by leash tangling.
+- Other entities: `bike.gd`, `squirrel.gd`, `pigeon.gd`, `duckling.gd`,
+  `cone.gd`, `astand.gd`, `ball.gd`, and `freedog.gd`.
+- Presentation/support: `weather_overlay.gd`, `touch_controls.gd`,
+  `hud_panel.gd`; concept guides are under `assets/concept/`.
 
-**Performance pattern (important):** entities must NOT call
-`get_tree().get_nodes_in_group()` per frame. main builds
-`riders_cache` / `critters_cache` / `birds_cache` once per physics tick
-and entities read those. `_draw` culls to the camera window. HUD strings
-rebuild at ~7 Hz, not every frame.
+**Performance constraint:** entities must not query scene-tree groups per
+frame. Main builds rider/critter/bird caches once per physics tick. `_draw`
+culls to the camera window and HUD strings rebuild at about 7 Hz.
 
-## 5. Feature state at v1.5 (all shipped, tested)
+## 5. Released baseline versus current main
 
-4 walks (street/park/beach/market) + a seeded Daily Walk. Day/night +
-weather (clear/rain/wind) selectable. Rope leash with tetherball whirl,
-pole-wrap capstan, fling with bungee. Tug-of-war (human 4× dog mass).
-Retractable leash (human-owned "click!"). Round-trip walk (out → off-
-leash freedom romp with fetch + free dogs → home). Turbo/zoomies energy.
-Rotating quests (3/walk from a pool) → up to 3 stars/walk → star-gated
-unlocks. Chore chain (bag the poop, deliver to bin). Pee/marking +
-fountains to drink. Bodily needs as mechanics. Two owners (him/her).
-Millie + Tofu cameos. Persistent NPC dog-walker pairs with leash-vs-leash
-tangling, dog-park arrivals, off-leash roaming, recall, and departures.
-Cosmetics shop (collars + bandanas from the bones wallet). Touch
-controls, controller-aware prompts. Attract/CI autowalk bot.
+### Released v1.5
 
-## 6. OPEN FOLLOW-UPS — from Santtu's v1.4/v1.5 playtest
+Tag `v1.5` contains four campaign walks plus the seeded Daily Walk, selectable
+day/night/weather, records/stars/bones, cosmetics shop, round-trip walk with
+freedom romp and fetch, turbo, quests, chores, bodily-needs systems, two player
+owners, touch/controller support, and deterministic autowalk. The v1.4
+NPC-pair baseline — path walkers, real second leashes, tangle events, and free
+dogs in the park — is also in v1.5.
 
-The off-leash area and the NPC dogs need the most love. In priority-ish
-order:
+The full NPC arrival/park/recall/departure lifecycle is **not** part of the
+`v1.5` tag.
 
-### Parallel-safe work
+### Post-v1.5 current `main`
 
-The isolated free-dog visual-variety task is defined in
-`docs/PARALLEL_TASK_FREE_DOG_VARIETY.md`. Its worker owns only `freedog.gd`, a
-new appearance module, and a new focused test. Pair park lifecycle work in
-`main.gd` and `otherpair.gd` is complete.
+Current `main` adds hardened fixed-obstacle routing and the persistent NPC
+dog-park lifecycle. Three pairs can be active and three distinct park slots
+exist away from the player bench. Existing upward walkers can reserve a slot
+at the gate; freedom traffic can also spawn arrivals or already-parked
+departures. The same dog and owner persist through parking, recall, re-leash,
+gate exit, slot release, and shared route resumption.
 
-Trailing bandana geometry and the highlighted-item wardrobe preview are fixed.
-Fixed-obstacle avoidance is implemented and automated for riders and NPC
-dog-walker pairs. Connected blocker clusters use their outer expanded bounds,
-spawn placement validates the first speed-scaled forward sweep, and pair
-runtime routing checks the actual owner/dog formation. Blockers are normalized
-once when each route is configured. Non-touching park-slalom trees can extend
-one navigation route when their commanded sweeps touch; pair steering validates
-current, side-specific detour, and clear-return dog paths without adding a
-second clearance release margin. Clear return checks all configured blockers
-and clamps the commanded wander/curiosity target to route bounds. Non-daily CI
-autowalk seeds before level construction and finishes on a deterministic
-120.0-second fixed-fps gate; ordinary player randomness is unchanged. The NPC
-leash remains the real rope: never introduce separate leash pivot or wrap
-bookkeeping.
+The off-leash yard has a perimeter fence, a waiting bench, and a defined gate.
+This post-v1.5 work has strong automated coverage but still requires manual
+lifecycle acceptance before calling it visually accepted or released.
 
-Pair persistence through the freedom transition is implemented and automated.
-Main owns four distinct fence-side slots. Pairs enter leashed, park with the
-same dog roaming inside yard bounds, recall physically, re-leash, clear the
-gate, release their slot exactly once, and resume shared route planning.
+## 6. Current sitrep, evidence, and residual risk
 
-1. **Richer NPC owner presentation** remains open: phone, coffee, and
-   conversation variants should use visual language comparable to the player
-   owner.
-2. **Optional deliberate pole-snag/recovery** may be added as a rare state only
-   if coordinated avoidance feels too clean after playtesting.
-3. **Tangle feel needs broader playtesting.** The repeated reward/apology spam
-   is fixed with a separation latch, but the snag should still read as
-   something the player deliberately works out of.
+### Evidence in the repository
 
-## 7. NEXT FEATURES (Santtu's explicit asks for the off-leash area / v1.6)
+- The production-path regressions exercise real `main.gd` orchestration for
+  arrival qualification, freedom spawn policy/fallback, active cap, slot
+  ownership, transition cleanup, home entry, and exhausted-slot walkers
+  continuing across the gate.
+- Real `otherpair.gd`, route planner, and leash fixtures cover bounded
+  arrival, parked identity/bounds, suspended rope state, recall/re-leash,
+  gate exit, route reset, tangle latching, and exactly-once cleanup.
+- `test_freedom_traffic.gd` separately proves riders leave freedom while a
+  park-configured pair persists.
+- The deterministic CI autowalk spends only about 4.9 seconds in freedom. It
+  verifies whole-walk traversal, not a full NPC lifecycle, and does not
+  guarantee that a live pair is encountered.
 
-- **Make the off-leash area a real dog park:** fencing around it,
-  benches for humans, a gate — it currently reads as bare grass.
-- **Develop the fetch into a real minigame:** the OWNER throws the ball,
-  the dog fetches and **brings it back to the owner** (not just touch-to-
-  catch). Other owners in the park should also throw balls to their dogs;
-  catching one of theirs scores too.
-- **Other dogs should resemble real dogs** — different breeds with
-  distinct features. IMPORTANT: build this so it can back a future **dog
-  selector / playable breeds** (Santtu wants to choose Millie's breed
-  later). Save distinct breeds for that.
-- **Make other dogs more interactive** in the play area (play bows,
-  chase, wrestle, share the ball).
-- **Bring Tofu home quest** (the inside joke): Tofu is a runaway; you
-  herd her home (keep her distance, never grab). Fits the walk-home
-  structure.
-- **Level five: Rainy Day** (rainy by default, storm drains, umbrella
-  crowds). Weather system already supports rain.
-- **Shareable daily results card.**
+### Manual acceptance still required
+
+No manual visual lifecycle acceptance is recorded for the post-v1.5 work.
+Run these checks in priority order:
+
+1. Watch an upward walker enter through the gate leashed, with no speed snap,
+   teleport, or invisible tangle.
+2. Fill multiple slots and confirm owners wait at distinct fence-side spots
+   away from the player bench while the same dogs roam inside the yard.
+3. Confirm the parked leash is hidden, dogs stay bounded and greetable, and
+   recall happens physically before the leash appears.
+4. Confirm recalled pairs clear the gate, release their slots, and continue
+   downward through ordinary obstacle routing.
+5. Exercise three occupied slots and verify another upward walker passes
+   through without stalling, stacking, or stealing/leaking a reservation.
+6. Trigger freedom/home transitions around arrival and recall, checking for
+   one-frame rope artifacts, double rewards, snaps, or stranded pairs.
+7. Confirm bikes/scooters stay absent during freedom and assess whether
+   ordinary leash tangles remain readable and recoverable on walking legs.
+
+### Inference and residual risk
+
+Headless tests establish state and motion invariants, not visual readability
+or game feel. Because the automated freedom leg is short and encounter timing
+is stochastic in normal play, successful autowalk is not evidence that the
+arrival-to-departure sequence looks good. Optional deliberate pole-snag
+behavior should remain deferred until coordinated avoidance and tangle feel
+have been manually assessed.
+
+## 7. Recommended next work
+
+1. **Manual NPC lifecycle acceptance first.** Record observed failures before
+   tuning timing, movement, or presentation.
+2. **Then isolated free-dog visual variety.** Follow
+   `docs/PARALLEL_TASK_FREE_DOG_VARIETY.md`; keep ownership to `freedog.gd`, a
+   reusable appearance module, and its focused regression so it stays
+   independent from pair lifecycle code.
+3. **Then roadmap content:** richer NPC-owner props/conversation, a real
+   owner-throw/return fetch loop, more off-leash dog interactions, the
+   bring-Tofu-home quest, Rainy Day level, and a shareable daily results card.
+   Distinct dog appearances should be reusable by a future playable-breed
+   selector rather than becoming one-off NPC art.
 
 ## 8. Then v2.0 — The Product
 

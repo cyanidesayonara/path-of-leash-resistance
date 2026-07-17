@@ -23,6 +23,7 @@ class FakeMain:
 	var frozen := false
 	var cam := Node2D.new()
 	var released_pair_ids: Array[int] = []
+	var apologies := 0
 
 	func _init() -> void:
 		add_child(cam)
@@ -30,8 +31,9 @@ class FakeMain:
 	func release_pair_park_spot(pair_instance_id: int) -> void:
 		released_pair_ids.append(pair_instance_id)
 
-	func float_text(_position: Vector2, _text: String, _color: Color) -> void:
-		pass
+	func float_text(_position: Vector2, text: String, _color: Color) -> void:
+		if text == "oh - sorry!":
+			apologies += 1
 
 
 func _check(condition: bool, message: String) -> void:
@@ -120,6 +122,15 @@ func _inside_inclusive(bounds: Rect2, point: Vector2) -> bool:
 	)
 
 
+func _rope_points_equal(first: Array[Vector2], second: Array[Vector2]) -> bool:
+	if first.size() != second.size():
+		return false
+	for index in range(first.size()):
+		if not first[index].is_equal_approx(second[index]):
+			return false
+	return true
+
+
 func _test_interface_and_explicit_arrival() -> void:
 	var main := _make_main("freedom")
 	var pair := _make_pair(main, Vector2(200.0, 30.0), Vector2.UP)
@@ -142,6 +153,36 @@ func _test_interface_and_explicit_arrival() -> void:
 	_check(_state(pair) == WALKING, "configured upward traffic does not auto-reserve")
 	_check(not pair.is_queued_for_deletion(), "configured pair persists through freedom")
 	_check(not bool(pair.has_park_slot()), "walking pair owns no park slot")
+	_check(pair.update_tangle_state(true, DT), "pre-arrival crossing starts one tangle event")
+	_check(main.apologies == 1, "pre-arrival crossing rewards once")
+	_check(
+		not pair.update_tangle_state(false, 0.2),
+		"partial pre-arrival separation emits no event"
+	)
+	var clear_before_arrival: float = pair.tangle_clear_t
+	_check(bool(pair.begin_park_arrival(3, PARK_SPOT)), "latched pair starts arrival")
+	_check(pair.tangle_active, "arrival preserves the active tangle latch")
+	_check(
+		is_equal_approx(pair.tangle_clear_t, clear_before_arrival),
+		"arrival preserves accumulated tangle separation"
+	)
+	_check(
+		not pair.update_tangle_state(true, DT),
+		"arrival crossing does not duplicate the latched tangle event"
+	)
+	_check(main.apologies == 1, "arrival crossing does not duplicate the reward")
+	_check(
+		not pair.update_tangle_state(false, pair.TANGLE_REARM_S - 0.01),
+		"short arrival separation keeps the event latched"
+	)
+	_check(pair.tangle_active, "arrival latch waits for the full separation dwell")
+	_check(
+		not pair.update_tangle_state(false, 0.01),
+		"full arrival separation only rearms the event"
+	)
+	_check(not pair.tangle_active, "arrival latch rearms after normal separation dwell")
+	_check(pair.update_tangle_state(true, DT), "later arrival crossing is a new event")
+	_check(main.apologies == 2, "later arrival crossing rewards exactly once")
 
 	var unconfigured_main := _make_main("freedom")
 	var unconfigured := _make_pair(unconfigured_main)
@@ -184,7 +225,20 @@ func _test_arrival_reaches_persistent_parked_pair() -> void:
 	_check(not pair.is_queued_for_deletion(), "arrival is immune to path despawn")
 	pair.main.cam.position = pair.npc_owner.position
 	pair.leash.dynamic_obstacles.append(Vector2(123.0, 456.0))
-	_check(_tick_until_state(pair, PARKED), "arrival reaches PARKED")
+	var arrival_motion_bounded := true
+	var reached_parked := false
+	for _frame in range(1200):
+		var arrival_owner_before: Vector2 = pair.npc_owner.position
+		_tick(pair)
+		arrival_motion_bounded = arrival_motion_bounded and (
+			pair.npc_owner.position.distance_to(arrival_owner_before)
+				<= pair.PARK_OWNER_SPEED * DT + 0.001
+		)
+		if _state(pair) == PARKED:
+			reached_parked = true
+			break
+	_check(reached_parked, "arrival reaches PARKED")
+	_check(arrival_motion_bounded, "arrival completion never snaps beyond its movement cap")
 
 	_check(pair.npc_owner.position.is_equal_approx(PARK_SPOT), "owner reaches assigned spot")
 	_check(not pair.leash.visible, "parked leash is hidden")
@@ -199,6 +253,7 @@ func _test_arrival_reaches_persistent_parked_pair() -> void:
 	_check(pair.dog_col == dog_color, "dog color persists")
 
 	var parked_owner: Vector2 = pair.npc_owner.position
+	var parked_rope_points: Array[Vector2] = pair.leash.pts.duplicate()
 	pair.park_stay_t = 100.0
 	pair.wander_t = 0.0
 	for _frame in range(240):
@@ -209,6 +264,10 @@ func _test_arrival_reaches_persistent_parked_pair() -> void:
 		)
 	_check(pair.npc_owner.position.is_equal_approx(parked_owner), "parked owner remains fixed")
 	_check(pair.sampled.is_empty(), "parked movement never samples the rope")
+	_check(
+		_rope_points_equal(parked_rope_points, pair.leash.pts),
+		"parked movement leaves suspended rope points unchanged"
+	)
 	pair.leash.dynamic_obstacles.append(Vector2(123.0, 456.0))
 	_tick(pair)
 	_check(pair.leash.dynamic_obstacles.is_empty(), "parked tick rejects stale rope obstacles")
@@ -279,23 +338,57 @@ func _test_timer_home_and_idempotent_recall() -> void:
 	for _frame in range(10):
 		_tick(arrival_pair)
 	var interrupted_owner: Vector2 = arrival_pair.npc_owner.position
+	arrival_pair.npc_dog.position = interrupted_owner + Vector2(100.0, 0.0)
+	arrival_pair.leash.dynamic_obstacles.append(Vector2(222.0, 333.0))
+	var interrupted_rope_points: Array[Vector2] = arrival_pair.leash.pts.duplicate()
 	arrival_main.phase = "home"
-	_tick(arrival_pair)
+	_tick(arrival_pair, 0.0)
 	_check(_state(arrival_pair) == RECALLING, "home phase interrupts an active arrival")
 	_check(
 		arrival_pair.npc_owner.position.is_equal_approx(interrupted_owner),
 		"arrival interruption fixes owner at the recall point"
 	)
+	_check(not arrival_pair.leash.visible, "arrival interruption hides the leash immediately")
+	_check(bool(arrival_pair.leash.detached), "arrival interruption detaches the leash immediately")
+	_check(arrival_pair.sampled.is_empty(), "arrival interruption clears rope samples immediately")
+	_check(
+		arrival_pair.leash.dynamic_obstacles.is_empty(),
+		"arrival interruption clears dynamic rope obstacles immediately"
+	)
+	for _frame in range(5):
+		_tick(arrival_pair)
+	_check(not arrival_pair.leash.visible, "interrupted recall keeps the leash hidden")
+	_check(bool(arrival_pair.leash.detached), "interrupted recall keeps the leash detached")
+	_check(arrival_pair.sampled.is_empty(), "interrupted recall keeps rope samples empty")
+	_check(
+		_rope_points_equal(interrupted_rope_points, arrival_pair.leash.pts),
+		"interrupted recall leaves suspended rope points unchanged"
+	)
 
 
 func _test_recall_attach_gate_release_and_route_resume() -> void:
-	var main := _make_main("freedom")
-	var pair := _make_parked_fixture(
-		main,
-		21,
-		Vector2(40.0, -230.0),
-		100.0
+	var main := _make_main("out")
+	var pair := _make_pair(main)
+	var stale_blockers: Array[Dictionary] = [
+		{"id": "stale_arrival_detour", "center": Vector2(200.0, 0.0), "radius": 20.0},
+	]
+	pair.route.call("configure_blockers", stale_blockers)
+	_tick(pair)
+	_check(int(pair.route.detour_side) != 0, "fixture activates a real pre-arrival detour")
+	var stale_detour_side := int(pair.route.detour_side)
+	pair.configure_park_area(GATE_Y, PARK_BOUNDS)
+	_check(
+		bool(
+			pair.initialize_parked_departure(
+				21,
+				PARK_SPOT,
+				Vector2(40.0, -230.0),
+				100.0
+			)
+		),
+		"stale-detour parked fixture initializes"
 	)
+	main.phase = "freedom"
 	if not pair.has_method("get_pair_state"):
 		return
 	var pair_id := pair.get_instance_id()
@@ -303,9 +396,14 @@ func _test_recall_attach_gate_release_and_route_resume() -> void:
 	var dog_id: int = pair.npc_dog.get_instance_id()
 	pair.begin_park_recall()
 	_check(_state(pair) == RECALLING, "explicit recall enters RECALLING")
+	var recall_rope_points: Array[Vector2] = pair.leash.pts.duplicate()
 	_tick(pair)
 	_check(not pair.leash.visible, "leash remains hidden while dog is outside attach distance")
 	_check(bool(pair.leash.detached), "leash remains detached during physical recall")
+	_check(
+		_rope_points_equal(recall_rope_points, pair.leash.pts),
+		"recall leaves suspended rope points unchanged before attach"
+	)
 	_check(main.released_pair_ids.is_empty(), "recall beside the spot does not release slot")
 	pair.leash.dynamic_obstacles.append(Vector2(99.0, 99.0))
 
@@ -353,6 +451,10 @@ func _test_recall_attach_gate_release_and_route_resume() -> void:
 	var route_resume_y: float = pair.npc_owner.position.y
 	_tick(pair)
 	_check(pair.npc_owner.position.y > route_resume_y, "shared route resumes downward")
+	_check(stale_detour_side != 0, "departure fixture began with a stale detour")
+	_check(int(pair.route.detour_side) == 0, "downward route clears the stale detour")
+	_check(pair.route.active_blocker_id == null, "downward route releases the stale blocker")
+	_check(not bool(pair.route.blocked), "downward route is not blocked by arrival state")
 	_check(pair.npc_owner.get_instance_id() == owner_id, "departing owner identity persists")
 	_check(pair.npc_dog.get_instance_id() == dog_id, "departing dog identity persists")
 	root.remove_child(pair)

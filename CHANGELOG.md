@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-07-17 — NPC dog-park lifecycle hardening
+
+- Smoothed bounded arrival, park, recall, re-leash, gate-exit, and route-resume
+  transitions while keeping lifecycle state in the persistent NPC pair.
+- Integrated reservation, freedom spawning, active-pair caps, arrival
+  qualification, home recall, and cleanup through the production `main.gd`
+  orchestration path.
+- Entering freedom now immediately clears player and NPC rope obstacles, so
+  detached leashes cannot leave a one-frame invisible tangle.
+- Added production-path coverage for fallback spawning, the three-pair cap,
+  three park slots, reservation cleanup, and slot-exhausted walkers continuing
+  through the gate without stalling or leaking a slot.
+
 ## 2026-07-16 — NPC dog-park traffic lifecycle
 
 - NPC dog-walker pairs now persist through the freedom transition instead of

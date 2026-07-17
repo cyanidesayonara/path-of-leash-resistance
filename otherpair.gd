@@ -127,9 +127,6 @@ func begin_park_arrival(slot_id: int, spot: Vector2) -> bool:
 	park_slot_id = slot_id
 	park_spot = spot
 	pair_state = PairState.ARRIVING
-	tangled_t = 0.0
-	tangle_active = false
-	tangle_clear_t = 0.0
 	return true
 
 
@@ -159,9 +156,20 @@ func begin_park_recall() -> void:
 		pair_state = PairState.RECALLING
 		park_stay_t = 0.0
 		park_dog_vel = Vector2.ZERO
+	if pair_state == PairState.RECALLING:
+		_suspend_leash()
 
 
 func begin_departure() -> void:
+	begin_home_departure()
+
+
+func begin_home_departure() -> void:
+	if pair_state == PairState.WALKING:
+		if desired_vertical_speed < 0.0:
+			desired_vertical_speed = absf(desired_vertical_speed)
+			vel = Vector2(0.0, desired_vertical_speed)
+		return
 	begin_park_recall()
 
 
@@ -297,7 +305,7 @@ func _tick_arriving(delta: float) -> void:
 	_cap_dog_to_owner()
 	leash.tick(delta)
 	_sample_rope()
-	if npc_owner.position.distance_to(park_spot) < 3.0:
+	if npc_owner.position.is_equal_approx(park_spot):
 		_enter_parked(randf_range(PARK_STAY_MIN, PARK_STAY_MAX))
 
 
@@ -305,11 +313,7 @@ func _enter_parked(stay_time: float) -> void:
 	pair_state = PairState.PARKED
 	park_stay_t = maxf(stay_time, 0.0)
 	park_dog_vel = Vector2.ZERO
-	npc_owner.position = park_spot
-	leash.detached = true
-	leash.visible = false
-	leash.dynamic_obstacles.clear()
-	sampled.clear()
+	_suspend_leash()
 	tangled_t = 0.0
 	tangle_active = false
 	tangle_clear_t = 0.0
@@ -338,7 +342,7 @@ func _tick_parked(delta: float) -> void:
 
 func _tick_recalling(delta: float) -> void:
 	npc_owner.position = park_spot
-	sampled.clear()
+	_suspend_leash()
 	park_dog_vel = Vector2.ZERO
 	npc_dog.position = npc_dog.position.move_toward(npc_owner.position, PARK_RECALL_SPEED * delta)
 	if npc_dog.position.distance_to(npc_owner.position) <= RELEASH_DISTANCE:
@@ -351,6 +355,13 @@ func _tick_recalling(delta: float) -> void:
 		vel = Vector2(0.0, desired_vertical_speed)
 		if route != null:
 			route.set("preferred_x", walking_lane_x)
+
+
+func _suspend_leash() -> void:
+	leash.detached = true
+	leash.visible = false
+	leash.dynamic_obstacles.clear()
+	sampled.clear()
 
 
 func _tick_departing(delta: float) -> void:
