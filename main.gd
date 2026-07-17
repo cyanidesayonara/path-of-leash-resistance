@@ -2292,6 +2292,11 @@ func _enter_freedom() -> void:
 
 
 func _neighbour_fetch() -> void:
+	# a bonus loop for the player, not the attract bot. Spawning a ball
+	# rolls the global RNG (the throw target), which would desync the
+	# deterministic autowalk traversal - so the CI bot never sees one.
+	if auto_walk:
+		return
 	# keep one neighbour ball in play, thrown by whichever pair is parked;
 	# the player can grab it and bring it back for a shared-fetch bonus
 	if is_instance_valid(npc_ball):
