@@ -193,6 +193,10 @@ func has_park_slot() -> bool:
 	return park_slot_id >= 0
 
 
+func is_parked() -> bool:
+	return pair_state == PairState.PARKED
+
+
 func _physics_process(delta: float) -> void:
 	if main.phase == "freedom" and not park_area_configured:
 		queue_free()

@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.10: Rainy Day + other owners throw + daily card
+
+- New walk: El Aguacero, a permanent downpour (gate 5). Slick pavement,
+  gaping storm drains down the middle of the road (lethal open holes),
+  an umbrella crowd hunched across the walkway, and the hard-to-reach
+  prize sits right on a drain. Reuses the boulevard layout for now;
+  bespoke geometry is a later pass.
+- Other owners throw: a parked NPC owner tosses a ball you can intercept
+  and bring back to them for a shared-fetch bonus ("shared! +4"). One
+  neighbour ball in play at a time, re-thrown on return, cleaned up when
+  that owner leaves the park. The dog carries one ball at a time now.
+- Daily results card: finishing the Daily Walk shows a compact,
+  screenshot-friendly summary (date, walk, weather, stars, goals, bones,
+  time, best combo) with a one-line share text you can copy to the
+  clipboard (C / Y).
+
 ## 2026-07-17 — v1.9: outrun the street sweeper (short in-level chase)
 
 - A chase can now strike on the walk home (homage to Crash Bandicoot's

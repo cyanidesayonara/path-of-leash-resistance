@@ -73,10 +73,11 @@ Every feature must serve at least one. If it serves none, cut it.
   strike on the walk home (slow devourer, oblivious owner, drag the dead
   weight to safety). The first cut of the chase mechanic; dedicated
   chase levels and feel tuning still to come (see Future systems).
-- **v1.10 - other owners throw + Rainy Day + daily card.** Parked NPC
-  owners throw balls for their dogs (return handler already scores
-  "shared! +4"); a rainy-by-default level with storm drains and umbrella
-  crowds; a shareable daily results card.
+- **v1.10 - shipped.** Rainy Day (El Aguacero: forced downpour, storm
+  drains, umbrella crowd), other owners throw (intercept a neighbour's
+  ball for "shared! +4"), and a shareable daily results card. Follow-ups
+  noted in Future systems (bespoke rain geometry; NPC dogs fetching
+  their own thrown ball).
 - **v1.11 - Level six (Old Town) + polish.** Narrow alleys, stairs, wall
   cats, laundry lines. Mechanics tuning from playtests.
 - **v2.0 - The Product.** Watercolor art integration, sound and music
@@ -295,6 +296,16 @@ memorable.
   Phase 2 one-week 3D spike (capsules, rail camera, ragdoll human) is
   the cheap experiment that tells us whether the leash even reads in 3D
   before any of that is committed.
+- Rainy Day follow-ups (shipped v1.10 on the boulevard layout): give
+  El Aguacero its own bespoke geometry (a plaza / arcade that reads as
+  distinct from The Boulevard), make the storm drains a signature
+  interaction beyond "lethal hole" (a current that drags the ball/prize
+  toward them, puddles the dog wants to splash), and let the umbrella
+  crowd actually shuffle and jostle rather than stand still.
+- Other-owners-throw follow-up (shipped v1.10, main-side): the NPC's own
+  dog should visibly fetch its owner's ball when the player does not, so
+  interception feels like stealing the fetch rather than the only fetch.
+  Deferred to avoid coupling the delicate parked-pair lifecycle.
 - Uniqueness rule (from playtesting): shared asset library for
   efficiency, but every setting must earn its own look AND at least one
   interaction that exists nowhere else - it gets dull otherwise.

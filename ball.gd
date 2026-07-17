@@ -43,6 +43,12 @@ func _throw() -> void:
 func _physics_process(delta: float) -> void:
 	if main.frozen or main.phase != "freedom":
 		return
+	# a neighbour's ball outlives its owner only until they leave the park
+	if not is_instance_valid(thrower):
+		if state == State.CARRIED:
+			main.dog_carrying = false
+		queue_free()
+		return
 	bob += delta
 	match state:
 		State.THROWN:
@@ -58,13 +64,17 @@ func _physics_process(delta: float) -> void:
 		State.RESTING:
 			arc = 0.0
 			rest_t += delta
-			if global_position.distance_to(dog.global_position) < 22.0:
+			# one ball in the mouth at a time (the player's own and a
+			# neighbour's can both be out at once)
+			if not main.dog_carrying and global_position.distance_to(dog.global_position) < 22.0:
 				state = State.CARRIED
+				main.dog_carrying = true
 				main.on_ball_grabbed()
 		State.CARRIED:
 			# ride at the dog's mouth (nose tip is ~facing*22 from centre)
 			global_position = dog.global_position + dog.facing * 22.0
 			if global_position.distance_to(thrower.global_position) < 42.0:
+				main.dog_carrying = false
 				main.on_ball_returned(thrower)
 				_throw()
 	queue_redraw()

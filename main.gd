@@ -214,6 +214,13 @@ var prompt_tw: Tween
 var quests_label: Label
 var msg_label: Label
 var combo: Node
+var dog_carrying := false
+# a neighbour's ball: a parked NPC owner throws one you can intercept and
+# return to them for a shared-fetch bonus
+var npc_ball: Node2D
+var npc_ball_pair: Node2D
+var daily_share := ""
+var daily_copied := false
 var combo_l: Label
 var combo_bar: ColorRect
 var combo_bar_bg: ColorRect
@@ -237,6 +244,9 @@ func _ready() -> void:
 		if autowalk_requested:
 			seed(AUTOWALK_SEED)
 		lvl = Game.level_id
+	# El Aguacero is always a downpour, whatever the weather selection says
+	if lvl == "rain":
+		Game.weather = "rain"
 	_setup_input()
 	_build_level_data()
 	_build_bypasser_blockers()
@@ -301,7 +311,7 @@ func _setup_input() -> void:
 	var buttons := {
 		"plant": [KEY_SPACE, JOY_BUTTON_A], "bark": [KEY_E, JOY_BUTTON_B],
 		"pee": [KEY_Q, JOY_BUTTON_X], "turbo": [KEY_SHIFT, JOY_BUTTON_RIGHT_SHOULDER],
-		"restart": [KEY_R, JOY_BUTTON_START],
+		"restart": [KEY_R, JOY_BUTTON_START], "share": [KEY_C, JOY_BUTTON_Y],
 	}
 	for action in buttons:
 		InputMap.add_action(action)
@@ -316,7 +326,11 @@ func _setup_input() -> void:
 func _build_level_data() -> void:
 	var hyd_list: Array[Vector2] = []
 	var keb_list: Array[Vector2] = []
-	match lvl:
+	# El Aguacero reuses the boulevard's proven layout for now (bespoke
+	# geometry is a later pass); the rain, extra storm drains and umbrella
+	# crowd below are what make it its own walk.
+	var geo := "street" if lvl == "rain" else lvl
+	match geo:
 		"street":
 			lane_ys = [-1200.0, -2600.0, -4000.0]
 			gate_text = "PARK"
@@ -497,6 +511,20 @@ func _build_level_data() -> void:
 		fountains = [Vector2(335, -3350)]
 	elif lvl == "park":
 		fountains = [Vector2(944, -3300), Vector2(724, -2440)]
+	elif lvl == "rain":
+		# El Aguacero: get-out-of-the-rain gate, storm drains gaping open
+		# down the middle of the road (open holes, lethal in a downpour),
+		# a huddle of umbrella-toting pedestrians clogging the walkway, and
+		# a fountain nobody needs today
+		gate_text = "SHELTER"
+		manholes.append_array([Vector2(640, -1500), Vector2(600, -2650), Vector2(680, -3900)])
+		# a huddle of umbrellas clogging the walkway - dense enough to make
+		# you thread it, with gaps left so it is never a wall
+		performers.append_array([
+			Vector2(500, -2250), Vector2(790, -2320),
+			Vector2(560, -3560), Vector2(760, -3520),
+		])
+		fountains = [Vector2(335, -3350)]
 	for tb in tables:
 		poles.append(tb)
 	for pa in parasols:
@@ -569,6 +597,9 @@ func _build_level_data() -> void:
 		"market":
 			prize_pos = Vector2(640.0, -2050.0)  # by the drain in the middle aisle
 			prize_text = "grab the churro by the open drain"
+		"rain":
+			prize_pos = Vector2(640.0, -1500.0)  # right on a gaping storm drain
+			prize_text = "snatch the toy off the storm drain"
 		_:
 			prize_pos = Vector2(SHOULDER_R - 12.0, -2400.0)
 			prize_text = "fetch the frisbee"
@@ -728,6 +759,7 @@ const LEVEL_GOAL_IDS := {
 	"street": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "fling", "prize"],
 	"park": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "prize"],
 	"beach": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "save", "prize"],
+	"rain": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "drink", "prize"],
 	"market": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "zoom", "prize"],
 }
 
@@ -873,7 +905,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.9"
+	version_l.text = "v1.10"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -1235,6 +1267,7 @@ func _physics_process(delta: float) -> void:
 			on_business_bagged(to)
 	if phase == "freedom":
 		_romp(delta)
+		_neighbour_fetch()
 	elif phase == "home" and chase_active:
 		_chase(delta)
 	_check_goals()
@@ -1248,6 +1281,11 @@ func _physics_process(delta: float) -> void:
 func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("restart"):
 		get_tree().reload_current_scene()
+		return
+	if finished and Game.daily and not daily_copied and daily_share != "" and Input.is_action_just_pressed("share"):
+		DisplayServer.clipboard_set(daily_share)
+		daily_copied = true
+		msg_label.text += "\n\n(copied to clipboard!)"
 		return
 	if not started and in_shop:
 		if Input.is_action_just_pressed("move_left"):
@@ -2253,6 +2291,28 @@ func _enter_freedom() -> void:
 	float_text(dog.global_position, "OFF LEASH!  FETCH!", Color(0.8, 1.0, 0.8))
 
 
+func _neighbour_fetch() -> void:
+	# keep one neighbour ball in play, thrown by whichever pair is parked;
+	# the player can grab it and bring it back for a shared-fetch bonus
+	if is_instance_valid(npc_ball):
+		if not is_instance_valid(npc_ball_pair) or not npc_ball_pair.is_parked():
+			npc_ball.queue_free()
+			npc_ball = null
+		else:
+			return
+	for pair in get_tree().get_nodes_in_group("pairs"):
+		if pair.is_parked() and is_instance_valid(pair.npc_owner):
+			npc_ball = Node2D.new()
+			npc_ball.set_script(load("res://ball.gd"))
+			npc_ball.z_index = 10
+			npc_ball.position = pair.npc_owner.global_position
+			add_child(npc_ball)
+			npc_ball.setup(self, dog, pair.npc_owner, freedom_lo, GATE_Y - 30.0)
+			npc_ball_pair = pair
+			float_text(pair.npc_owner.global_position + Vector2(0, -20), "fancy a game?", Color(0.85, 0.95, 1.0))
+			return
+
+
 func _romp(delta: float) -> void:
 	if romp_done:
 		return
@@ -2302,6 +2362,9 @@ func _enter_home() -> void:
 	human.unpark()
 	if is_instance_valid(ball):
 		ball.queue_free()
+	if is_instance_valid(npc_ball):
+		npc_ball.queue_free()
+	dog_carrying = false
 	for fd in get_tree().get_nodes_in_group("freedogs"):
 		fd.queue_free()
 	_prepare_pairs_for_home(get_tree().get_nodes_in_group("pairs"))
@@ -2398,8 +2461,29 @@ func _finish_walk() -> void:
 			for other in Game.LEVELS:
 				if Game.gate_crossed(run_pre_total_stars, other):
 					unlock_line = "\n\nNEW WALK UNLOCKED: %s" % Game.LEVEL_NAMES[other]
-		msg_label.text = "WALK COMPLETE\n\n%s\nGoals this run: +%d bones\n\nBones: %d    Phone: %d/3    Time: %ds\n%s%s\n\n%s\n\nPress %s for another walk" % [
-			qtext, run_done * 5, bones, phone_hp, int(elapsed), rec_line, unlock_line, rating, _kb_or_pad("R", "Start")]
+		if Game.daily:
+			_build_daily_card(run_done, total, rec)
+		else:
+			msg_label.text = "WALK COMPLETE\n\n%s\nGoals this run: +%d bones\n\nBones: %d    Phone: %d/3    Time: %ds\n%s%s\n\n%s\n\nPress %s for another walk" % [
+				qtext, run_done * 5, bones, phone_hp, int(elapsed), rec_line, unlock_line, rating, _kb_or_pad("R", "Start")]
+
+
+func _build_daily_card(run_done: int, total: int, rec: Dictionary) -> void:
+	# a compact, screenshot-friendly summary of today's shared walk, with a
+	# one-line share text the player can copy to the clipboard
+	var d := Time.get_date_dict_from_system()
+	var date_str := "%04d-%02d-%02d" % [d.year, d.month, d.day]
+	var stars_n := Game._milestone_stars(run_done)
+	var weather_bit: String = String(Game.WEATHER_NAMES[Game.weather]).to_lower()
+	var when_bit := "night" if Game.night else "day"
+	var combo_bit := "  combo x%d" % combo.best_mult if combo.best_mult >= 2 else ""
+	daily_share = "Path of Leash Resistance - Daily %s\n%s, %s, %s\n%s  %d/%d goals  %d bones  %ds%s" % [
+		date_str, Game.LEVEL_NAMES[lvl], weather_bit, when_bit,
+		Game.star_str(stars_n), run_done, total, bones, int(elapsed), combo_bit]
+	var best_line := "NEW DAILY BEST!\n\n" if rec.bones_record else ""
+	daily_copied = false
+	msg_label.text = "TODAY'S WALK\n\n%s\n\n%sPress %s to copy & share\nPress %s for another go" % [
+		daily_share, best_line, _kb_or_pad("C", "Y"), _kb_or_pad("R", "Start")]
 
 
 func on_bark(pos: Vector2) -> void:
@@ -2753,11 +2837,24 @@ func _draw() -> void:
 		draw_rect(Rect2(v.x - 32, v.y - 66, 64, 132), Color(0.55, 0.55, 0.55), false, 2.0)
 		draw_rect(Rect2(v.x - 26, v.y - 60, 52, 22), Color(0.35, 0.42, 0.5))
 		draw_line(v + Vector2(-24, 62), v + Vector2(24, 62), Color(0.6, 0.3, 0.25), 3.0)
-	# street performers: a hat, some coins, music in the air
+	# street performers: a hat, some coins, music in the air. In the rain
+	# they are an umbrella crowd instead - hunched under canopies, no busking.
 	var pt := Time.get_ticks_msec() / 1000.0
-	for pf in performers:
+	var raining := Game.weather == "rain"
+	var brolly_cols := [Color(0.75, 0.2, 0.25), Color(0.2, 0.35, 0.6), Color(0.25, 0.5, 0.35), Color(0.35, 0.3, 0.4)]
+	for idx in range(performers.size()):
+		var pf: Vector2 = performers[idx]
 		draw_circle(pf, 12.0, Color(0.5, 0.35, 0.5))
 		draw_circle(pf + Vector2(0, -4), 7.0, Color(0.85, 0.72, 0.58))
+		if raining:
+			# a wide domed umbrella over the head, on its stick
+			var bc: Color = brolly_cols[idx % brolly_cols.size()]
+			draw_line(pf + Vector2(0, -8), pf + Vector2(0, -30), Color(0.15, 0.14, 0.16), 2.0)
+			draw_arc(pf + Vector2(0, -30), 26.0, PI, TAU, 20, bc, 7.0)
+			for r in range(2):
+				var rx := fmod(pt * 120.0 + idx * 30.0 + r * 60.0, 120.0)
+				draw_line(pf + Vector2(-24 + rx * 0.4, -28), pf + Vector2(-24 + rx * 0.4, 12), Color(0.6, 0.7, 0.85, 0.4), 1.0)
+			continue
 		draw_arc(pf + Vector2(0, -4), 7.0, PI, TAU, 10, Color(0.2, 0.15, 0.1), 4.0)
 		draw_circle(pf + Vector2(18, 12), 6.0, Color(0.3, 0.25, 0.2))
 		draw_circle(pf + Vector2(16, 11), 1.5, Color(0.9, 0.8, 0.3))
