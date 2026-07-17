@@ -32,6 +32,7 @@ var face_dir := Vector2.UP
 var hgait := 0.0
 var chain_target := Vector2.ZERO
 var carrying_bag := false
+var bin_stuck_t := 0.0
 var wading := false
 var pond_bank_x := 0.0
 var homeward := false
@@ -145,15 +146,23 @@ func tick(delta: float) -> void:
 				_show_bubble("where's a bin...")
 		HState.GO_BIN:
 			var to_bin := chain_target - global_position
-			if to_bin.length() < 70.0:
+			var before_x := global_position
+			# close enough, OR wedged against something (a parked van):
+			# a stuck owner just lobs the bag from where they stand
+			if to_bin.length() < 70.0 or bin_stuck_t > 1.2:
 				state = HState.TOSS
 				state_t = 0.55
 				velocity = Vector2.ZERO
 				face_dir = to_bin.normalized()
+				bin_stuck_t = 0.0
 				_show_bubble("toss...")
 			else:
 				velocity = velocity.move_toward(to_bin.normalized() * 120.0, 300.0 * delta)
 				move_and_slide()
+				if global_position.distance_to(before_x) < 0.6:
+					bin_stuck_t += delta
+				else:
+					bin_stuck_t = 0.0
 		HState.TOSS:
 			velocity = Vector2.ZERO
 			if state_t <= 0.0:

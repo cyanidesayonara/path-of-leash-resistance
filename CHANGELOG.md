@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-07-17 — v1.7.1: fixes from playtest screenshots
+
+- Tofu herding redesigned. She no longer sits on a mat in the off-leash
+  area (she'd never wander in there). Instead she's loose on the walk
+  HOME: skittish, hiding, and every time you close in she bolts to the
+  next hiding spot further south — you press her down the whole chain,
+  spot by spot, until she's home. Off-leash mat and its HUD line removed.
+- Quest panel no longer overflows its background: the box auto-sizes to
+  the number of goals shown.
+- The owner no longer gets wedged against a parked van while carrying the
+  poop bag to the bin — if she can't make progress for a beat, she just
+  lobs it from where she's standing.
+
 ## 2026-07-17 — v1.7: Tony Hawk-style goal lists + bring Tofu home
 
 - Each walk now has a fixed list of ~10 goals (up from 3 drawn per run).

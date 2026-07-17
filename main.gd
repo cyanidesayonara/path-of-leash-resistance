@@ -105,7 +105,6 @@ var romp_target := 3
 var romp_done := false
 var tofu_quest_active := false
 var tofu_home := false
-var tofu_mat := Vector2.ZERO
 var freedom_lo := GATE_Y - 620.0
 const HOME_Y := 320.0
 # goals completed this run (ids), for scoring/toasts/results independent
@@ -855,7 +854,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.7"
+	version_l.text = "v1.7.1"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -1083,14 +1082,15 @@ func _hud_label(pos: Vector2, size_px: int) -> Label:
 func _update_hud() -> void:
 	hud_status = ""
 	if phase == "freedom":
-		if tofu_quest_active and not tofu_home:
-			hud_status = "herd Tofu onto her mat by the bench!"
-		elif romp_done:
+		if romp_done:
 			hud_status = "walk back down to head home"
 		else:
 			hud_status = "FETCH!  bring it back  %d/%d   %ds left" % [romp_catches, romp_target, int(ceil(romp_timer))]
 	elif phase == "home":
-		hud_status = "head home"
+		if tofu_quest_active and not tofu_home:
+			hud_status = "herd Tofu home - keep after her!"
+		else:
+			hud_status = "head home"
 	elif poop_state == 1:
 		hud_status = "GOTTA GO!  find a spot, hold %s" % _kb_or_pad("SPACE", "A")
 	elif poop_state >= 3:
@@ -1118,6 +1118,8 @@ func _update_hud() -> void:
 		if shown >= 6:
 			break
 	quests_label.text = qlines
+	# grow the card to fit however many lines we ended up showing
+	qbg.size.y = 18.0 + float(shown + 1) * 21.0
 
 
 func _physics_process(delta: float) -> void:
@@ -2163,16 +2165,6 @@ func _enter_freedom() -> void:
 		fd.z_index = 9
 		add_child(fd)
 		fd.setup(self, dog, freedom_lo, GATE_Y - 30.0)
-	# the runaway: Tofu turns up lost, to be herded onto her mat
-	if tofu_quest_active and not tofu_home:
-		tofu_mat = Vector2(gate_bench.x + 90.0, GATE_Y - 70.0)
-		var tf := Node2D.new()
-		tf.set_script(load("res://tofu.gd"))
-		tf.position = Vector2(randf_range(300.0, 950.0), freedom_lo + 120.0)
-		tf.z_index = 9
-		add_child(tf)
-		tf.setup(self, dog, tofu_mat, _pair_park_bounds())
-		float_text(tf.position, "Tofu!? she got out again", Color(1, 0.85, 0.7))
 	float_text(dog.global_position, "OFF LEASH!  FETCH!", Color(0.8, 1.0, 0.8))
 
 
@@ -2226,9 +2218,24 @@ func _enter_home() -> void:
 		ball.queue_free()
 	for fd in get_tree().get_nodes_in_group("freedogs"):
 		fd.queue_free()
-	for tf in get_tree().get_nodes_in_group("tofu"):
-		tf.queue_free()
 	_prepare_pairs_for_home(get_tree().get_nodes_in_group("pairs"))
+	# the runaway: Tofu is loose on the way home, to be herded south from
+	# hiding spot to hiding spot until she reaches HOME
+	if tofu_quest_active and not tofu_home:
+		var spots: Array[Vector2] = []
+		var n := 7
+		for i in range(n):
+			var ty := lerpf(GATE_Y + 500.0, HOME_Y + 30.0, float(i) / float(n - 1))
+			var tx := walk_cx + (walk_half * 0.6) * (1.0 if i % 2 == 0 else -1.0)
+			if i == n - 1:
+				tx = walk_cx
+			spots.append(Vector2(tx, ty))
+		var tf := Node2D.new()
+		tf.set_script(load("res://tofu.gd"))
+		tf.z_index = 9
+		add_child(tf)
+		tf.setup(self, dog, spots)
+		float_text(spots[0], "Tofu!? she got out again - get her home!", Color(1, 0.85, 0.7))
 	float_text(dog.global_position, "let's go home", Color(1, 0.95, 0.7))
 
 
@@ -2715,12 +2722,6 @@ func _draw() -> void:
 			draw_line(Vector2(bx.x + 20, bx.y - 5), Vector2(bx.x + 20, bx.y + 8), Color(0.42, 0.32, 0.22), 2.0)
 		# the owner's waiting bench (where the parked owner throws from)
 		draw_rect(Rect2(gate_bench.x - 18, gate_bench.y - 6, 36, 11), Color(0.54, 0.4, 0.27))
-		# Tofu's mat, the herding target for the bring-Tofu-home quest
-		if tofu_quest_active and tofu_mat != Vector2.ZERO:
-			var done_col := Color(0.55, 0.75, 0.6, 0.6) if tofu_home else Color(0.75, 0.55, 0.62, 0.55)
-			draw_circle(tofu_mat, 40.0, done_col)
-			draw_arc(tofu_mat, 40.0, 0, TAU, 24, Color(0.9, 0.7, 0.75, 0.7), 2.0)
-			draw_string(font, Vector2(tofu_mat.x - 26.0, tofu_mat.y + 5.0), "TOFU", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.95, 0.9, 0.85, 0.8))
 		draw_string(font, Vector2((yl + yr) / 2.0 - 70.0, ytop - 14), "OFF-LEASH DOG PARK", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(0.9, 0.9, 0.82))
 	# the gate between the walk and the off-leash yard
 	draw_rect(Rect2(gate_l - 14, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
