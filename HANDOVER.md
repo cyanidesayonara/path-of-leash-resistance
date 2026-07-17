@@ -226,16 +226,25 @@ lifecycle acceptance before calling it visually accepted or released.
 Repository state captured on 2026-07-17:
 
 - Feature branch: `npc-owner-appearances`.
+- Upstream: `origin/npc-owner-appearances`.
+- Pull request
+  [#2](https://github.com/cyanidesayonara/path-of-leash-resistance/pull/2)
+  is open against `main`.
 - Isolated implementation checkpoint:
   `3aaed22602359da70f1ddd063ce2912ac5e2f7b9`
   (`Add reusable NPC owner appearances`).
-- The branch had no configured upstream and no pull request had been created.
-  Nothing from this branch had been pushed.
-- Local `main` and `origin/main` were both at baseline
-  `4bca50c` (`Plan reusable NPC owner appearances`) when captured.
-- The CI/changelog/handover integration commit containing this section sits
-  immediately above the isolated implementation checkpoint. A final
-  whole-branch review is required before any push or pull request.
+- Integration checkpoint:
+  `c7746256a74feaea28f63280ff4f0d55d56e3944`
+  (`Integrate NPC owner appearance regressions`).
+- CI hardening commit above the integration checkpoint:
+  `f380ba8712e2adcb9840ddc94c199e6c2dd584bc`
+  (`Harden owner appearance pixel CI`).
+- Local `main` and `origin/main` remain at
+  `4bca50ce1c1a5deacbd54ff854a639ad74b20997`
+  (`Plan reusable NPC owner appearances`) until the pull request is merged.
+- Final whole-branch review found no code defects. Its sole Important finding,
+  Linux CI provisioning for the pixel tests, was fixed by `f380ba8`; focused
+  re-review marked that finding resolved.
 
 ### NPC owner appearance automated evidence
 
@@ -263,6 +272,13 @@ CI installs Xvfb explicitly and runs both owner appearance tests through
 `xvfb-run -a` with `--rendering-method gl_compatibility` and no `--headless`,
 so Linux CI exercises real pixel readback too. These automated results do not
 establish manual visual acceptance.
+
+GitHub Actions pull-request run
+[29587175828](https://github.com/cyanidesayonara/path-of-leash-resistance/actions/runs/29587175828)
+passed in 1m38s on Linux at `f380ba8`. The live run included the Xvfb/Mesa GL
+Compatibility owner pixel tests, every focused workflow regression, all-level
+smokes, and deterministic autowalk. It does not establish merge or manual
+visual acceptance.
 
 ### Manual acceptance still required
 
