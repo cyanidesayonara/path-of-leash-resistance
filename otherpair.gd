@@ -7,6 +7,7 @@ extends Node2D
 
 const BypasserRouteScript := preload("res://bypasser_route.gd")
 const DogAppearanceScript := preload("res://dog_appearance.gd")
+const HumanAppearanceScript := preload("res://human_appearance.gd")
 const TANGLE_REARM_S := 0.5
 const PAIR_CLEARANCE := 48.0
 const PAIR_MAX_LATERAL_SPEED := 90.0
@@ -39,6 +40,7 @@ var leash: Node2D
 var vel := Vector2.ZERO
 var owner_col := Color(0.5, 0.45, 0.55)
 var dog_col := Color(0.6, 0.5, 0.4)
+var owner_appearance_profile: Dictionary = {}
 var appearance_profile: Dictionary = {}
 var wander_t := 0.0
 var wander := Vector2.ZERO
@@ -66,7 +68,9 @@ func setup(m: Node2D, mine: Node2D, poles: Array[Vector2], start: Vector2, direc
 	my_dog = mine
 	vel = direction * randf_range(58.0, 82.0)
 	seed_o = randf() * 10.0
-	owner_col = [Color(0.5, 0.45, 0.55), Color(0.45, 0.5, 0.42), Color(0.55, 0.48, 0.4)][randi() % 3]
+	var owner_appearance_key := randi()
+	owner_appearance_profile = HumanAppearanceScript.profile_for_key(owner_appearance_key)
+	owner_col = owner_appearance_profile["shirt_color"]
 	var dog_appearance_key := randi()
 	appearance_profile = DogAppearanceScript.profile_for_key(dog_appearance_key)
 	dog_col = appearance_profile["base_color"]
@@ -462,15 +466,26 @@ func update_tangle_state(crossing: bool, delta: float) -> bool:
 
 
 func _draw() -> void:
-	# NPC owner (no glowing phone - they are present, unlike yours)
-	var op: Vector2 = npc_owner.position
-	draw_circle(op + Vector2(0, 14), 5.0, Color(0.25, 0.25, 0.3))
-	draw_circle(op, 13.0, owner_col)
-	draw_circle(op + Vector2(0, -12), 7.0, Color(0.85, 0.72, 0.58))
-	draw_arc(op + Vector2(0, -12), 7.0, PI, TAU, 10, Color(0.3, 0.24, 0.16), 4.0)
+	var t := Time.get_ticks_msec() / 1000.0
+	var owner_forward := vel
+	var owner_gait_amount := (
+		0.0
+		if pair_state == PairState.PARKED or pair_state == PairState.RECALLING
+		else clampf(vel.length() / 82.0, 0.0, 1.0)
+	)
+	var owner_phone_glow := 0.55 + 0.2 * sin(t * 7.3 + seed_o)
+	HumanAppearanceScript.draw_owner(
+		self,
+		owner_appearance_profile,
+		npc_owner.position,
+		owner_forward,
+		t * 6.0 + seed_o,
+		owner_gait_amount,
+		owner_phone_glow,
+		"held"
+	)
 	# NPC dog remains drawn by the pair parent; npc_dog stays the real endpoint.
 	var dp: Vector2 = npc_dog.position
-	var t := Time.get_ticks_msec() / 1000.0
 	var facing := (my_dog.global_position - dp).normalized()
 	var bob := sin(t * 6.0 + seed_o) * 1.5
 	var wag := t * 8.0 + seed_o
