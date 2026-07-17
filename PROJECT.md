@@ -58,11 +58,13 @@ Every feature must serve at least one. If it serves none, cut it.
 - **v1.6 - shipped.** Real fetch retrieve loop (owner throws, dog brings
   it back to the owner) and the off-leash area dressed as a proper dog
   park (fence, benches, gate, play patch).
-- **v1.7 - other owners throw + bring Tofu home + Rainy Day.** Parked
-  NPC owners throw balls for their dogs (return handler already scores
-  "shared! +4"); the runaway-Tofu-home quest (herd, not grab); a rainy-
-  by-default level with storm drains and umbrella crowds; a shareable
-  daily results card.
+- **v1.7 - shipped.** Tony Hawk-style per-level goal lists (~10,
+  persistent, goal-milestone stars), the unique hazardous prize per
+  level, and bring-Tofu-home (herd the runaway onto her mat).
+- **v1.8 - other owners throw + Rainy Day + daily card.** Parked NPC
+  owners throw balls for their dogs (return handler already scores
+  "shared! +4"); a rainy-by-default level with storm drains and umbrella
+  crowds; a shareable daily results card.
 - **v1.8 - Level six (Old Town) + polish.** Narrow alleys, stairs, wall
   cats, laundry lines. Mechanics tuning from playtests.
 - **v2.0 - The Product.** Watercolor art integration, sound and music

@@ -2,6 +2,30 @@
 
 Append-only session history, newest first.
 
+## 2026-07-17 — v1.7: Tony Hawk-style goal lists + bring Tofu home
+
+- Each walk now has a fixed list of ~10 goals (up from 3 drawn per run).
+  Completing a goal on any run marks it done for that level FOREVER
+  (persisted). A repeating core (mark, sniff, phone, paws, bag, fetch,
+  Tofu) plus a couple of per-level flavours and the unique prize.
+- Stars are earned from goal milestones (3 / 6 / 9 goals = 1 / 2 / 3
+  stars), and those stars still gate the next walk. Legacy saved stars
+  are never regressed.
+- Unique hazardous collectible per level (the "hard-to-reach prize"): a
+  glinting pickup somewhere costly — the frisbee across the bike lane
+  (street), the ball in the middle of the pond (park), the ball at the
+  water's edge (beach), the churro by the open drain (market).
+- Bring Tofu home (shipped): the runaway cat turns up lost in the
+  off-leash area; herd her onto her mat by the bench (she keeps her
+  skittish distance — you push, never grab). A repeating goal on every
+  walk.
+- HUD shows lifetime "GOALS x/10" plus the goals still open this run;
+  the results screen lists what you cleared this run, lifetime total,
+  new stars, and any walk unlocked. The daily scores goals per-run
+  without touching campaign progress.
+- New regressions: bring-Tofu-home herding, and the goal/star math. CI
+  runs both.
+
 ## 2026-07-17 — v1.6: real fetch + a proper dog park
 
 - Fetch is a real retrieve loop now: the parked owner THROWS the ball

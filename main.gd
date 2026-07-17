@@ -108,6 +108,16 @@ var tofu_home := false
 var tofu_mat := Vector2.ZERO
 var freedom_lo := GATE_Y - 620.0
 const HOME_Y := 320.0
+# goals completed this run (ids), for scoring/toasts/results independent
+# of persistence; plus the star snapshot captured when the walk begins
+var run_goals_hit := {}
+var run_pre_total_stars := 0
+var run_pre_level_stars := 0
+# the hazardous hard-to-reach collectible, one per level
+var prize_pos := Vector2(INF, INF)
+var prize_text := "grab the prize"
+var prize_taken := false
+var prize_glow := 0.0
 const PAIR_PARK_SPOTS := [
 	{"name": &"west_fence", "position": Vector2(240.0, GATE_Y - 120.0)},
 	{"name": &"north_fence", "position": Vector2(430.0, GATE_Y - 260.0)},
@@ -161,7 +171,6 @@ var kebabs_eaten := 0
 var saves_done := 0
 var flings_done := 0
 var dog_hits := 0
-var quest_pool: Array[Dictionary] = []
 var active_quests: Array[Dictionary] = []
 var poop_state := 0  # 0 not yet, 1 urge, 2 done, 3 forced telegraph, 4 forced squat
 var urge_y := -2000.0
@@ -527,6 +536,24 @@ func _build_level_data() -> void:
 				break
 	for ly in lane_ys:
 		lane_state.append({"t": randf_range(1.0, 2.5), "phase": 0, "dir": 1})
+	# the hazardous hard-to-reach collectible: one per level, in a spot
+	# that costs you something to reach
+	match lvl:
+		"street":
+			prize_pos = Vector2(SHOULDER_R - 12.0, -2400.0)  # far shoulder, across the bike lane
+			prize_text = "fetch the frisbee across the bike lane"
+		"park":
+			prize_pos = pond.get_center() if pond.size.x > 0.0 else Vector2(640.0, -2700.0)
+			prize_text = "fetch the ball from the middle of the pond"
+		"beach":
+			prize_pos = Vector2(300.0, -2600.0)  # down at the waterline on the sand
+			prize_text = "fetch the ball from the water's edge"
+		"market":
+			prize_pos = Vector2(640.0, -2050.0)  # by the drain in the middle aisle
+			prize_text = "grab the churro by the open drain"
+		_:
+			prize_pos = Vector2(SHOULDER_R - 12.0, -2400.0)
+			prize_text = "fetch the frisbee"
 
 
 func _build_bypasser_blockers() -> void:
@@ -679,37 +706,50 @@ func _build_entities() -> void:
 	cam.make_current()
 
 
+const LEVEL_GOAL_IDS := {
+	"street": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "fling", "prize"],
+	"park": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "prize"],
+	"beach": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "save", "prize"],
+	"market": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "zoom", "prize"],
+}
+
+
+func _goal_defs() -> Dictionary:
+	# every goal the game knows, keyed by a stable id (persistence-facing)
+	return {
+		"mark": {"text": "mark %d spots", "target": 5, "fn": func() -> int: return marks.size()},
+		"sniff": {"text": "%d good sniffs", "target": 4, "fn": func() -> int: return sniffs_done},
+		"phone": {"text": "phone without a scratch", "target": 1, "fn": func() -> int: return 1 if phone_hp == 3 else 0},
+		"paws": {"text": "keep your own paws clean", "target": 1, "fn": func() -> int: return 1 if dog_hits == 0 else 0},
+		"bag": {"text": "get the business bagged", "target": 1, "fn": func() -> int: return 1 if poop_state == 2 and not bag_pending else 0},
+		"fetch": {"text": "bring back %d balls", "target": 3, "fn": func() -> int: return romp_catches},
+		"tofu": {"text": "bring Tofu home", "target": 1, "fn": func() -> int: return 1 if tofu_home else 0},
+		"hi": {"text": "say hi to %d dogs", "target": 3, "fn": func() -> int: return dogs_greeted},
+		"drink": {"text": "have a good long drink", "target": 1, "fn": func() -> int: return 1 if drunk_amount >= 0.4 else 0},
+		"zoom": {"text": "burn off the zoomies", "target": 1, "fn": func() -> int: return 1 if dog.energy <= 0.25 else 0},
+		"chase": {"text": "chase %d critters", "target": 2, "fn": func() -> int: return squirrels_chased},
+		"close": {"text": "%d close calls", "target": 3, "fn": func() -> int: return close_calls},
+		"save": {"text": "%d nice saves", "target": 2, "fn": func() -> int: return saves_done},
+		"fling": {"text": "fling the owner off a pole", "target": 1, "fn": func() -> int: return flings_done},
+		"tangle": {"text": "tangle with another walker", "target": 1, "fn": func() -> int: return 1 if tangles >= 1 else 0},
+		"snack": {"text": "steal %d dropped snacks", "target": 2, "fn": func() -> int: return kebabs_eaten},
+		"prize": {"text": prize_text, "target": 1, "fn": func() -> int: return 1 if prize_taken else 0},
+	}
+
+
 func _build_quests() -> void:
-	# three objectives per walk, drawn from the pool: consecutive walks
-	# should not feel identical. "Maintain" quests (target 1, true at
-	# start) are things you can LOSE; they never pop mid-walk.
-	quest_pool = [
-		{"text": "chase %d squirrels", "target": 2, "fn": func() -> int: return squirrels_chased},
-		{"text": "%d close calls", "target": 3, "fn": func() -> int: return close_calls},
-		{"text": "mark %d spots", "target": 5, "fn": func() -> int: return marks.size()},
-		{"text": "complete %d good sniffs", "target": 4, "fn": func() -> int: return sniffs_done},
-		{"text": "steal %d dropped snacks", "target": 2, "fn": func() -> int: return kebabs_eaten},
-		{"text": "%d nice saves", "target": 2, "fn": func() -> int: return saves_done},
-		{"text": "fling the owner off a pole", "target": 1, "fn": func() -> int: return flings_done},
-		{"text": "phone without a scratch", "target": 1, "fn": func() -> int: return 1 if phone_hp == 3 else 0},
-		{"text": "keep your own paws clean", "target": 1, "fn": func() -> int: return 1 if dog_hits == 0 else 0},
-		{"text": "get the business bagged", "target": 1, "fn": func() -> int: return 1 if poop_state == 2 and not bag_pending else 0},
-		{"text": "have a good long drink", "target": 1, "fn": func() -> int: return 1 if drunk_amount >= 0.4 else 0},
-		{"text": "burn off the zoomies", "target": 1, "fn": func() -> int: return 1 if dog.energy <= 0.25 else 0},
-		{"text": "tangle with another walker", "target": 1, "fn": func() -> int: return 1 if tangles >= 1 else 0},
-		{"text": "say hi to %d dogs", "target": 3, "fn": func() -> int: return dogs_greeted},
-		{"text": "bring Tofu home", "target": 1, "fn": func() -> int: return 1 if tofu_home else 0},
-	]
-	if lvl == "park":
-		quest_pool.append({"text": "let the ducklings pass", "target": 1, "fn": func() -> int: return 1 if ducks_disturbed == 0 else 0})
-		quest_pool.append({"text": "take a dip in the pond", "target": 1, "fn": func() -> int: return 1 if swam else 0})
-	quest_pool.shuffle()
-	for i in range(3):
-		var q: Dictionary = quest_pool[i]
-		q["was_done"] = int(q.fn.call()) >= int(q.target)
-		active_quests.append(q)
-		if q.text == "bring Tofu home":
-			tofu_quest_active = true
+	# a fixed ~10-goal list per level (Tony Hawk style): completing a goal
+	# on any run marks it done for that level forever. Repeating goals,
+	# a couple of level flavours, and the unique hazardous prize.
+	var defs := _goal_defs()
+	var ids: Array = LEVEL_GOAL_IDS.get(lvl, LEVEL_GOAL_IDS["street"])
+	for id in ids:
+		var d: Dictionary = defs[id]
+		active_quests.append({
+			"id": id, "text": d.text, "target": int(d.target), "fn": d.fn,
+			"was_true": int(d.fn.call()) >= int(d.target),
+		})
+	tofu_quest_active = ("tofu" in ids) and not Game.goal_done(lvl, "tofu")
 
 
 func _quest_text(q: Dictionary) -> String:
@@ -717,6 +757,29 @@ func _quest_text(q: Dictionary) -> String:
 	if "%d" in s:
 		s = s % int(q.target)
 	return s
+
+
+func _credit_goal(q: Dictionary) -> void:
+	# award + persist a goal the first time it completes this run
+	var id: String = q.id
+	if run_goals_hit.has(id):
+		return
+	run_goals_hit[id] = true
+	bones += 5
+	var newly: bool = Game.mark_goal(lvl, id) if not Game.daily else false
+	var tag := "GOAL! " if (newly or Game.daily) else "goal (again) "
+	float_text(dog.global_position, tag + _quest_text(q), Color(0.8, 1.0, 0.8))
+
+
+func _check_goals() -> void:
+	# accumulate goals credit the moment they cross target; "maintain"
+	# goals (true from the start, e.g. unscratched phone) are only judged
+	# at the finish so they cannot auto-complete on frame one
+	for q in active_quests:
+		if q.was_true or run_goals_hit.has(q.id):
+			continue
+		if int(q.fn.call()) >= int(q.target):
+			_credit_goal(q)
 
 
 func _spawn_cones() -> void:
@@ -792,7 +855,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.6"
+	version_l.text = "v1.7"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -912,7 +975,10 @@ func _apply_menu_step() -> void:
 			select_l.text = ("[ %s ]" % Game.LEVEL_NAMES[sel]) if locked else ("<   %s   >" % Game.LEVEL_NAMES[sel])
 			select_l.position.y = 220
 			record_l.position.y = 300
-			record_l.text = Game.best_line(sel)
+			var rl: String = Game.best_line(sel)
+			if sel != "daily" and Game.is_unlocked(sel):
+				rl += "    goals %d/%d" % [Game.goals_count(sel), int((LEVEL_GOAL_IDS.get(sel, []) as Array).size())]
+			record_l.text = rl
 		2:
 			title_l.add_theme_font_size_override("font_size", 40)
 			title_l.position.y = 150
@@ -1033,17 +1099,24 @@ func _update_hud() -> void:
 		hud_status = "FULL!"
 	elif pee <= 0.02:
 		hud_status = "empty - find a fountain"
-	var qlines := "TODAY'S WALK:"
+	# the level's goal list: lifetime progress in the header, then the
+	# goals still open (plus any ticked off this run), capped for space
+	var total := active_quests.size()
+	var done_count: int = run_goals_hit.size() if Game.daily else Game.goals_count(lvl)
+	var qlines := "GOALS  %d/%d" % [mini(done_count, total), total]
+	var shown := 0
 	for q in active_quests:
-		var got: int = q.fn.call()
-		var done := got >= int(q.target)
-		var line := ("[x] " if done else "[ ] ") + _quest_text(q)
-		if not done and int(q.target) > 1:
-			line += "  %d/%d" % [mini(got, int(q.target)), int(q.target)]
+		var persisted: bool = (not Game.daily) and Game.goal_done(lvl, q.id)
+		var hit: bool = run_goals_hit.has(q.id)
+		if persisted and not hit:
+			continue  # earned on a past run; keep the live list to what's left
+		var line := ("[x] " if hit else "[ ] ") + _quest_text(q)
+		if not hit and int(q.target) > 1:
+			line += "  %d/%d" % [mini(int(q.fn.call()), int(q.target)), int(q.target)]
 		qlines += "\n" + line
-		if done and not q.get("noted", false) and not q.get("was_done", false) and elapsed > 3.0:
-			q["noted"] = true
-			float_text(dog.global_position, "quest done!", Color(0.8, 1.0, 0.8))
+		shown += 1
+		if shown >= 6:
+			break
 	quests_label.text = qlines
 
 
@@ -1089,8 +1162,10 @@ func _physics_process(delta: float) -> void:
 			on_business_bagged(to)
 	if phase == "freedom":
 		_romp(delta)
+	_check_goals()
 	_progress(delta)
 	shake_t = maxf(0.0, shake_t - delta * 2.5)
+	prize_glow += delta * 4.0
 
 
 func _process(_delta: float) -> void:
@@ -1151,6 +1226,9 @@ func _process(_delta: float) -> void:
 				return
 			started = true
 			frozen = false
+			# snapshot progress so the results can report stars/unlocks
+			run_pre_total_stars = Game.total_stars()
+			run_pre_level_stars = Game.stars(lvl)
 			Game.menu_step = 1
 			prompt_tw.kill()
 			panel.visible = true
@@ -1838,6 +1916,10 @@ func _hazards(delta: float) -> void:
 
 
 func _pickups(delta: float) -> void:
+	if not prize_taken and prize_pos.x < INF and dog.global_position.distance_to(prize_pos) < 28.0:
+		prize_taken = true
+		bones += 8
+		float_text(prize_pos, "got it! +8", Color(1, 0.9, 0.5))
 	for h in hydrants:
 		if h.done:
 			continue
@@ -2158,37 +2240,44 @@ func _finish_walk() -> void:
 		frozen = true
 		dim.visible = true
 		msg_label.visible = true
-		var completed := 0
+		# credit any goal still satisfied at the finish (catches the
+		# "maintain" goals like unscratched phone / clean paws)
+		for q in active_quests:
+			if not run_goals_hit.has(q.id) and int(q.fn.call()) >= int(q.target):
+				_credit_goal(q)
+		var run_done := run_goals_hit.size()
+		var total := active_quests.size()
 		var qtext := ""
 		for q in active_quests:
-			var done: bool = int(q.fn.call()) >= int(q.target)
-			if done:
-				completed += 1
-			qtext += ("[x]  " if done else "[ ]  ") + _quest_text(q) + "\n"
-		bones += completed * 5
-		# stars = quests completed this walk (0-3), the Tony Hawk currency
-		var earned := completed
-		var rating := Game.star_str(earned)
-		if completed == 0:
+			var hit: bool = run_goals_hit.has(q.id)
+			var had: bool = (not Game.daily) and Game.goal_done(lvl, q.id) and not hit
+			qtext += ("[x]  " if hit else ("[.]  " if had else "[ ]  ")) + _quest_text(q) + "\n"
+		var lifetime: int = run_done if Game.daily else Game.goals_count(lvl)
+		var perfect := run_done >= total
+		var rating := Game.star_str(Game.stars(lvl))
+		if run_done == 0:
 			rating += "   ...still a good dog."
-		elif completed == 3:
-			rating += "   PERFECT WALK"
-		var rec: Dictionary = Game.record_result("daily" if Game.daily else lvl, bones, elapsed, completed == 3, earned)
+		elif perfect:
+			rating += "   PERFECT WALK - every goal!"
+		var rec: Dictionary = Game.record_result("daily" if Game.daily else lvl, bones, elapsed, perfect)
 		var rec_line := ""
-		if rec.new_stars > 0:
-			rec_line += "+%d STAR%s!   " % [rec.new_stars, "" if rec.new_stars == 1 else "S"]
+		var star_gain: int = Game.stars(lvl) - run_pre_level_stars
+		if star_gain > 0 and not Game.daily:
+			rec_line += "+%d STAR%s!   " % [star_gain, "" if star_gain == 1 else "S"]
 		if rec.bones_record:
 			rec_line += "NEW BONES RECORD!   "
 		if rec.time_record:
 			rec_line += "BEST TIME!"
 		if rec_line == "":
-			rec_line = "best: %d bones, %s" % [int(Game.records[lvl].bones), Game.star_str(Game.stars(lvl))]
-		rec_line += "\nstars: %d total    lifetime bones: %d" % [Game.total_stars(), Game.total_bones]
+			rec_line = "goals this run: %d" % run_done
+		rec_line += "\ngoals: %d/%d here    stars: %d total    bones: %d" % [lifetime, total, Game.total_stars(), Game.total_bones]
 		var unlock_line := ""
-		if rec.unlocked != "":
-			unlock_line = "\n\nNEW WALK UNLOCKED: %s" % Game.LEVEL_NAMES[rec.unlocked]
-		msg_label.text = "WALK COMPLETE\n\n%s\nQuests: +%d bones\n\nBones: %d    Phone: %d/3    Time: %ds\n%s%s\n\n%s\n\nPress %s for another walk" % [
-			qtext, completed * 5, bones, phone_hp, int(elapsed), rec_line, unlock_line, rating, _kb_or_pad("R", "Start")]
+		if not Game.daily:
+			for other in Game.LEVELS:
+				if Game.gate_crossed(run_pre_total_stars, other):
+					unlock_line = "\n\nNEW WALK UNLOCKED: %s" % Game.LEVEL_NAMES[other]
+		msg_label.text = "WALK COMPLETE\n\n%s\nGoals this run: +%d bones\n\nBones: %d    Phone: %d/3    Time: %ds\n%s%s\n\n%s\n\nPress %s for another walk" % [
+			qtext, run_done * 5, bones, phone_hp, int(elapsed), rec_line, unlock_line, rating, _kb_or_pad("R", "Start")]
 
 
 func on_bark(pos: Vector2) -> void:
@@ -2427,6 +2516,13 @@ func _draw() -> void:
 		if not k.eaten:
 			draw_circle(k.pos, 7.0, Color(0.75, 0.55, 0.3))
 			draw_line(k.pos + Vector2(-3, 5), k.pos + Vector2(4, -6), Color(0.5, 0.35, 0.2), 2.0)
+	# the hazardous prize: a glinting collectible with a beckoning ring
+	if not prize_taken and prize_pos.x < INF and prize_pos.y > vt - 40.0 and prize_pos.y < vb + 40.0:
+		var pg := 0.5 + 0.5 * sin(prize_glow)
+		draw_arc(prize_pos, 16.0 + pg * 5.0, 0, TAU, 20, Color(1.0, 0.85, 0.3, 0.35 + pg * 0.3), 2.0)
+		draw_circle(prize_pos, 7.0, Color(0.95, 0.8, 0.35))
+		draw_circle(prize_pos + Vector2(-2, -2), 2.5, Color(1, 0.97, 0.85))
+		draw_string(font, prize_pos + Vector2(-30, -22), "!", HORIZONTAL_ALIGNMENT_CENTER, 60, 18, Color(1, 0.9, 0.5))
 	# lampposts downtown, trees in the park, palms by the sea
 	# (same physics, different soul)
 	for i in range(deco_pole_count):

@@ -122,11 +122,13 @@ func load_records() -> void:
 	if cf.load(SAVE_PATH) != OK:
 		return
 	for lv in LEVELS:
+		var gl: Array = cf.get_value(lv, "goals", [])
 		records[lv] = {
 			"bones": int(cf.get_value(lv, "bones", 0)),
 			"time": float(cf.get_value(lv, "time", 0.0)),
 			"perfects": int(cf.get_value(lv, "perfects", 0)),
 			"stars": int(cf.get_value(lv, "stars", 0)),
+			"goals": gl,
 		}
 	total_bones = int(cf.get_value("global", "total_bones", 0))
 	if cf.has_section("daily"):
@@ -150,6 +152,7 @@ func save_records() -> void:
 		cf.set_value(lv, "time", records[lv].time)
 		cf.set_value(lv, "perfects", records[lv].perfects)
 		cf.set_value(lv, "stars", records[lv].get("stars", 0))
+		cf.set_value(lv, "goals", records[lv].get("goals", []))
 	if records.has("daily"):
 		cf.set_value("daily", "bones", records["daily"].bones)
 		cf.set_value("daily", "seed", records["daily"].get("seed", 0))
@@ -160,8 +163,46 @@ func save_records() -> void:
 	cf.save(SAVE_PATH)
 
 
+# goals are the Tony Hawk-style per-level objective list: completing one
+# on any run marks it done for that level forever. Three milestones of
+# completed goals earn the three stars that gate the next walk.
+const STAR_MILESTONES := [3, 6, 9]
+
+
+func goal_done(lv: String, id: String) -> bool:
+	return records.has(lv) and (records[lv].get("goals", []) as Array).has(id)
+
+
+func goals_count(lv: String) -> int:
+	return (records[lv].get("goals", []) as Array).size() if records.has(lv) else 0
+
+
+func mark_goal(lv: String, id: String) -> bool:
+	if not records.has(lv) or lv == "daily":
+		return false
+	var gl: Array = records[lv].get("goals", [])
+	if gl.has(id):
+		return false
+	gl.append(id)
+	records[lv]["goals"] = gl
+	# keep the stored star floor in step with the milestones reached
+	records[lv]["stars"] = maxi(int(records[lv].get("stars", 0)), _milestone_stars(gl.size()))
+	save_records()
+	return true
+
+
+func _milestone_stars(n: int) -> int:
+	var s := 0
+	for m in STAR_MILESTONES:
+		if n >= int(m):
+			s += 1
+	return s
+
+
 func stars(lv: String) -> int:
-	return int(records[lv].get("stars", 0)) if records.has(lv) else 0
+	# derived from goals, but never below a legacy stored value
+	var stored := int(records[lv].get("stars", 0)) if records.has(lv) else 0
+	return maxi(stored, _milestone_stars(goals_count(lv)))
 
 
 func total_stars() -> int:
@@ -177,11 +218,11 @@ func is_unlocked(lv: String) -> bool:
 	return total_stars() >= int(STAR_GATE.get(lv, 0))
 
 
-func record_result(lv: String, bones: int, time: float, perfect: bool, earned_stars: int) -> Dictionary:
-	var out := {"bones_record": false, "time_record": false, "new_stars": 0, "unlocked": ""}
+func record_result(lv: String, bones: int, time: float, perfect: bool) -> Dictionary:
+	# stars/unlocks now come from goals (marked live during the run); this
+	# only records the best-bones/time/perfect tallies and banks bones.
+	var out := {"bones_record": false, "time_record": false}
 	if lv == "daily":
-		# one daily best per day; bones still fill the wallet, but no
-		# campaign stars or unlocks come from the daily
 		var dr: Dictionary = records.get("daily", {"bones": 0, "seed": daily_seed()})
 		if bones > int(dr.bones):
 			dr.bones = bones
@@ -191,7 +232,7 @@ func record_result(lv: String, bones: int, time: float, perfect: bool, earned_st
 		total_bones += bones
 		save_records()
 		return out
-	var r: Dictionary = records.get(lv, {"bones": 0, "time": 0.0, "perfects": 0, "stars": 0})
+	var r: Dictionary = records.get(lv, {"bones": 0, "time": 0.0, "perfects": 0, "stars": 0, "goals": []})
 	if bones > int(r.bones):
 		r.bones = bones
 		out.bones_record = true
@@ -200,21 +241,15 @@ func record_result(lv: String, bones: int, time: float, perfect: bool, earned_st
 		out.time_record = true
 	if perfect:
 		r.perfects = int(r.perfects) + 1
-	# stars are a high-water mark per walk, never lost
-	var before_total := total_stars()
-	if earned_stars > int(r.get("stars", 0)):
-		out.new_stars = earned_stars - int(r.get("stars", 0))
-		r.stars = earned_stars
 	records[lv] = r
 	total_bones += bones
 	save_records()
-	# did this push us past a gate?
-	var after_total := total_stars()
-	for other in LEVELS:
-		var gate := int(STAR_GATE.get(other, 0))
-		if gate > before_total and gate <= after_total:
-			out.unlocked = other
 	return out
+
+
+func gate_crossed(prev_total: int, lv: String) -> bool:
+	var gate := int(STAR_GATE.get(lv, 0))
+	return gate > prev_total and gate <= total_stars()
 
 
 func best_line(lv: String) -> String:
