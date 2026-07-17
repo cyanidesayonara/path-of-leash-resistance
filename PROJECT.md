@@ -60,12 +60,16 @@ Every feature must serve at least one. If it serves none, cut it.
   park (fence, benches, gate, play patch).
 - **v1.7 - shipped.** Tony Hawk-style per-level goal lists (~10,
   persistent, goal-milestone stars), the unique hazardous prize per
-  level, and bring-Tofu-home (herd the runaway onto her mat).
+  level, and bring-Tofu-home.
+- **v1.7.1 - shipped.** Playtest fixes: Tofu redesigned to be herded
+  home along a chain of hiding spots on the walk back (not a mat in the
+  off-leash area, where she'd never wander); quest panel auto-sizes;
+  the owner no longer wedges on a parked van during the poop-bag toss.
 - **v1.8 - other owners throw + Rainy Day + daily card.** Parked NPC
   owners throw balls for their dogs (return handler already scores
   "shared! +4"); a rainy-by-default level with storm drains and umbrella
   crowds; a shareable daily results card.
-- **v1.8 - Level six (Old Town) + polish.** Narrow alleys, stairs, wall
+- **v1.9 - Level six (Old Town) + polish.** Narrow alleys, stairs, wall
   cats, laundry lines. Mechanics tuning from playtests.
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
@@ -231,15 +235,41 @@ memorable.
   makes an internal editor nearly free and player-facing editing a
   realistic post-launch option. Not before.
 - Character creator: two preset owners exist (HIM/HER); creator later.
-- "Bring Tofu home" quest: an inside joke - the real Tofu is an
-  escape artist. In the a->b->FREEDOM->b->a walk-home structure, a
-  special walk can task the player with coaxing a runaway Tofu back
-  (she keeps her respectful distance and relocates; you herd, you do
-  not grab). Ties the cat cameo into a real objective.
+- "Bring Tofu home" quest (shipped v1.7, redesigned v1.7.1): an inside
+  joke - the real Tofu is an escape artist. She turns up loose on the
+  walk home and you herd her south from hiding spot to hiding spot (she
+  keeps her respectful distance and relocates; you press, you do not
+  grab) until she reaches home. A repeating goal on every level.
+- Combo / multiplier system (Tony Hawk lineage, musing July 2026): make
+  the physics chaos legible as score. Two phases. (A) A passive combo
+  meter fed by events that already fire - mark, sniff, say-hi, whirl,
+  dodge, knock a cone, snatch a snack - chained while they keep landing
+  within a few seconds of each other; multiplier = links in the chain;
+  the meter banks (points x mult) when the chain lapses, and a bail
+  (leash goes slack / you stop / you get tangled) drops the multiplier.
+  Bank vs push-your-luck is the whole Tony Hawk tension, and it reuses
+  existing hooks so it is cheap. (B) A triggered combo CHALLENGE handed
+  out by a character/event (a punk kid on a bench, a squirrel dare) - a
+  bounded window with a target ("tangle 3 walkers in one go"), optional,
+  self-contained, and time-free so it never fights the no-timer walk.
+  A "land a x8 combo" per-level goal ties it into progression. Build A
+  first; it is the highest fun-per-effort feature on the board.
 - Swimming (shipped v1.1 in the park pond, expandable): Millie loves
   water and paddles happily; the owner is dragged in to wade reluctantly
   with the phone held high; Tofu will not go near it. Beach sea and any
   future water get the same treatment.
+- 3D version (the "GTA: Chickenbone V online" north star): a rebuild,
+  not a port. Staying in Godot keeps the engine, GDScript, and - most
+  importantly - the design and systems (walk loop, quest/goal framework,
+  Game save/economy, tuning knowledge) transferable. Almost nothing else
+  is: the _draw() vector art, the 2D verlet rope, and the 2D physics all
+  get rewritten, and the rope's wrap/tangle bookkeeping is genuinely
+  harder in 3D. It also needs actual 3D models (the watercolor art plan
+  is 2D). So it is a sequel-scale effort that only begins AFTER the 2D
+  game is a finished, shipped product - not a near-term milestone. The
+  Phase 2 one-week 3D spike (capsules, rail camera, ragdoll human) is
+  the cheap experiment that tells us whether the leash even reads in 3D
+  before any of that is committed.
 - Uniqueness rule (from playtesting): shared asset library for
   efficiency, but every setting must earn its own look AND at least one
   interaction that exists nowhere else - it gets dull otherwise.
