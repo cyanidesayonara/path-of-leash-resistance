@@ -70,6 +70,9 @@ jobs:
       - name: NPC pair dog appearance regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_dog_appearance.gd
 
+      - name: Bring-Tofu-home herding regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tofu_home.gd
+
       - name: Human appearance regression test
         run: LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x1024x24" ./Godot_v4.7-stable_linux.x86_64 --rendering-method gl_compatibility --path . --script res://tests/test_human_appearance.gd
 

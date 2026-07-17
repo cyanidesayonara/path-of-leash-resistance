@@ -103,6 +103,9 @@ var romp_timer := 0.0
 var romp_catches := 0
 var romp_target := 3
 var romp_done := false
+var tofu_quest_active := false
+var tofu_home := false
+var tofu_mat := Vector2.ZERO
 var freedom_lo := GATE_Y - 620.0
 const HOME_Y := 320.0
 const PAIR_PARK_SPOTS := [
@@ -695,6 +698,7 @@ func _build_quests() -> void:
 		{"text": "burn off the zoomies", "target": 1, "fn": func() -> int: return 1 if dog.energy <= 0.25 else 0},
 		{"text": "tangle with another walker", "target": 1, "fn": func() -> int: return 1 if tangles >= 1 else 0},
 		{"text": "say hi to %d dogs", "target": 3, "fn": func() -> int: return dogs_greeted},
+		{"text": "bring Tofu home", "target": 1, "fn": func() -> int: return 1 if tofu_home else 0},
 	]
 	if lvl == "park":
 		quest_pool.append({"text": "let the ducklings pass", "target": 1, "fn": func() -> int: return 1 if ducks_disturbed == 0 else 0})
@@ -704,6 +708,8 @@ func _build_quests() -> void:
 		var q: Dictionary = quest_pool[i]
 		q["was_done"] = int(q.fn.call()) >= int(q.target)
 		active_quests.append(q)
+		if q.text == "bring Tofu home":
+			tofu_quest_active = true
 
 
 func _quest_text(q: Dictionary) -> String:
@@ -1011,7 +1017,9 @@ func _hud_label(pos: Vector2, size_px: int) -> Label:
 func _update_hud() -> void:
 	hud_status = ""
 	if phase == "freedom":
-		if romp_done:
+		if tofu_quest_active and not tofu_home:
+			hud_status = "herd Tofu onto her mat by the bench!"
+		elif romp_done:
 			hud_status = "walk back down to head home"
 		else:
 			hud_status = "FETCH!  bring it back  %d/%d   %ds left" % [romp_catches, romp_target, int(ceil(romp_timer))]
@@ -2073,6 +2081,16 @@ func _enter_freedom() -> void:
 		fd.z_index = 9
 		add_child(fd)
 		fd.setup(self, dog, freedom_lo, GATE_Y - 30.0)
+	# the runaway: Tofu turns up lost, to be herded onto her mat
+	if tofu_quest_active and not tofu_home:
+		tofu_mat = Vector2(gate_bench.x + 90.0, GATE_Y - 70.0)
+		var tf := Node2D.new()
+		tf.set_script(load("res://tofu.gd"))
+		tf.position = Vector2(randf_range(300.0, 950.0), freedom_lo + 120.0)
+		tf.z_index = 9
+		add_child(tf)
+		tf.setup(self, dog, tofu_mat, _pair_park_bounds())
+		float_text(tf.position, "Tofu!? she got out again", Color(1, 0.85, 0.7))
 	float_text(dog.global_position, "OFF LEASH!  FETCH!", Color(0.8, 1.0, 0.8))
 
 
@@ -2084,6 +2102,13 @@ func _romp(delta: float) -> void:
 		romp_done = true
 		hud_status = ""
 		float_text(dog.global_position, "time to head home", Color(1, 0.95, 0.7))
+
+
+func on_tofu_home(pos: Vector2) -> void:
+	tofu_home = true
+	bones += 15
+	float_text(pos, "TOFU'S COMING HOME! +15", Color(1, 0.85, 0.7))
+	_slowmo()
 
 
 func on_ball_grabbed() -> void:
@@ -2119,6 +2144,8 @@ func _enter_home() -> void:
 		ball.queue_free()
 	for fd in get_tree().get_nodes_in_group("freedogs"):
 		fd.queue_free()
+	for tf in get_tree().get_nodes_in_group("tofu"):
+		tf.queue_free()
 	_prepare_pairs_for_home(get_tree().get_nodes_in_group("pairs"))
 	float_text(dog.global_position, "let's go home", Color(1, 0.95, 0.7))
 
@@ -2592,6 +2619,12 @@ func _draw() -> void:
 			draw_line(Vector2(bx.x + 20, bx.y - 5), Vector2(bx.x + 20, bx.y + 8), Color(0.42, 0.32, 0.22), 2.0)
 		# the owner's waiting bench (where the parked owner throws from)
 		draw_rect(Rect2(gate_bench.x - 18, gate_bench.y - 6, 36, 11), Color(0.54, 0.4, 0.27))
+		# Tofu's mat, the herding target for the bring-Tofu-home quest
+		if tofu_quest_active and tofu_mat != Vector2.ZERO:
+			var done_col := Color(0.55, 0.75, 0.6, 0.6) if tofu_home else Color(0.75, 0.55, 0.62, 0.55)
+			draw_circle(tofu_mat, 40.0, done_col)
+			draw_arc(tofu_mat, 40.0, 0, TAU, 24, Color(0.9, 0.7, 0.75, 0.7), 2.0)
+			draw_string(font, Vector2(tofu_mat.x - 26.0, tofu_mat.y + 5.0), "TOFU", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.95, 0.9, 0.85, 0.8))
 		draw_string(font, Vector2((yl + yr) / 2.0 - 70.0, ytop - 14), "OFF-LEASH DOG PARK", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(0.9, 0.9, 0.82))
 	# the gate between the walk and the off-leash yard
 	draw_rect(Rect2(gate_l - 14, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
