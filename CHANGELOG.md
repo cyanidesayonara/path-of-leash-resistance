@@ -2,6 +2,27 @@
 
 Append-only session history, newest first.
 
+## 2026-07-17 — v1.6: real fetch + a proper dog park
+
+- Fetch is a real retrieve loop now: the parked owner THROWS the ball
+  out ("go get it!"), the dog runs to it, carries it in her mouth, and
+  brings it back to the owner to score ("good girl! +3"), then the owner
+  throws again. The 30s FETCH goal is now "bring it back N times".
+- The return handler already rewards delivering ANY owner's ball
+  ("shared! +4"), so neighbourly fetch is wired for when other owners
+  start throwing (next step).
+- The off-leash area is dressed as an actual dog park: chain-link fence
+  with posts and corner poles, an open entrance gate, human benches
+  along the fence, a worn dirt play patch in the middle, and an
+  "OFF-LEASH DOG PARK" sign.
+- The attract/CI bot carries the ball back to the owner too, so the full
+  loop still completes deterministically.
+- Cuts the release with all the post-v1.5 hardening: NPC dog-park
+  lifecycle, shared bypasser avoidance, bridge steering, distinct tangle
+  events, traffic-free freedom, mixed walker directions, visible
+  bandanas + wardrobe preview, consistent owner label, and reusable
+  NPC dog/owner appearance variety.
+
 ## 2026-07-17 — reusable NPC owner appearances
 
 - Added six neutral procedural NPC owner profiles with distinct proportions,

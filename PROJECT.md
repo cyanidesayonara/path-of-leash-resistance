@@ -50,11 +50,20 @@ Every feature must serve at least one. If it serves none, cut it.
   quests.
 - **v1.5 - shipped.** The Daily Walk (seeded, shared, daily best) and
   the cosmetics shop (collars + bandanas, spent from the bones wallet).
-- **v1.5.x / v1.6 - bring Tofu home + Level five (Rainy Day).** The
-  runaway-Tofu-home quest (she keeps her distance; you herd, not grab).
-  A rainy-by-default level with storm drains and umbrella crowds. A
-  shareable results card for the daily.
-- **v1.6 - Level six (Old Town) + polish.** Narrow alleys, stairs, wall
+- **post-v1.5 hardening (shipped, on main).** NPC dog-park lifecycle
+  (pairs persist into the park, reserve slots, recall home), shared
+  bypasser routing, bridge steering, distinct tangle events, traffic-
+  free freedom, mixed walker directions, visible bandanas + wardrobe
+  preview, reusable NPC dog/owner appearance variety.
+- **v1.6 - shipped.** Real fetch retrieve loop (owner throws, dog brings
+  it back to the owner) and the off-leash area dressed as a proper dog
+  park (fence, benches, gate, play patch).
+- **v1.7 - other owners throw + bring Tofu home + Rainy Day.** Parked
+  NPC owners throw balls for their dogs (return handler already scores
+  "shared! +4"); the runaway-Tofu-home quest (herd, not grab); a rainy-
+  by-default level with storm drains and umbrella crowds; a shareable
+  daily results card.
+- **v1.8 - Level six (Old Town) + polish.** Narrow alleys, stairs, wall
   cats, laundry lines. Mechanics tuning from playtests.
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.

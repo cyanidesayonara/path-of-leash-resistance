@@ -37,6 +37,7 @@ var pond_bank_x := 0.0
 var homeward := false
 var parked := false
 var park_target := Vector2.ZERO
+var park_throw_t := 0.0
 var strain := false
 var wobble_seed := 0.0
 var main: Node2D
@@ -76,16 +77,17 @@ func tick(delta: float) -> void:
 	pull_cd = maxf(0.0, pull_cd - delta)
 	halt_t = maxf(0.0, halt_t - delta)
 	state_t -= delta
-	# parked at the off-leash area: shuffle to the bench and sit,
-	# scrolling contentedly, ignoring everything until re-leashed
+	# parked at the off-leash area: shuffle to the bench, then play
+	# fetch - throwing the ball out for the dog to bring back
 	if parked:
+		park_throw_t = maxf(0.0, park_throw_t - delta)
 		var to_seat := park_target - global_position
 		if to_seat.length() > 6.0:
 			velocity = to_seat.normalized() * 70.0
 			move_and_slide()
 		else:
 			velocity = Vector2.ZERO
-		if not bubble.visible:
+		if park_throw_t <= 0.0 and not bubble.visible:
 			_show_bubble("...")
 		return
 	# strain is cleared and re-set by main.gd/_apply_leash each frame
@@ -400,6 +402,16 @@ func release_whirl() -> void:
 	just_flung = true
 	main.float_text(global_position, "AAAA", Color(1, 0.9, 0.6))
 	main.shake_t = maxf(float(main.shake_t), 0.35)
+
+
+func throw_pose() -> void:
+	park_throw_t = 0.5
+	_show_bubble("go get it!")
+	var tw := create_tween()
+	tw.tween_interval(0.9)
+	tw.tween_callback(func() -> void:
+		if not parked or park_throw_t <= 0.0:
+			bubble.visible = false)
 
 
 func park_at(seat: Vector2) -> void:

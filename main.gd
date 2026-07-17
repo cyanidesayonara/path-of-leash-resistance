@@ -786,7 +786,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.5"
+	version_l.text = "v1.6"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -1014,7 +1014,7 @@ func _update_hud() -> void:
 		if romp_done:
 			hud_status = "walk back down to head home"
 		else:
-			hud_status = "FETCH!  %d/%d   %ds left" % [romp_catches, romp_target, int(ceil(romp_timer))]
+			hud_status = "FETCH!  bring it back  %d/%d   %ds left" % [romp_catches, romp_target, int(ceil(romp_timer))]
 	elif phase == "home":
 		hud_status = "head home"
 	elif poop_state == 1:
@@ -2016,7 +2016,9 @@ func _auto_drive(_delta: float) -> void:
 			if romp_done:
 				dog.auto_move = Vector2(weave, 1.0).normalized()  # head down to leave
 			elif is_instance_valid(ball):
-				dog.auto_move = (ball.global_position - dog.global_position).normalized()
+				# carry a grabbed ball back to the owner; else chase it
+				var goal: Vector2 = human.global_position if ball.is_carried() else ball.global_position
+				dog.auto_move = (goal - dog.global_position).normalized()
 			else:
 				dog.auto_move = Vector2.from_angle(elapsed * 3.0)
 		"home":
@@ -2060,9 +2062,9 @@ func _enter_freedom() -> void:
 	ball = Node2D.new()
 	ball.set_script(load("res://ball.gd"))
 	ball.z_index = 10
-	ball.position = dog.global_position + Vector2(0, -80)
+	ball.position = human.global_position
 	add_child(ball)
-	ball.setup(self, dog, freedom_lo, GATE_Y - 30.0)
+	ball.setup(self, dog, human, freedom_lo, GATE_Y - 30.0)
 	# other dogs to romp and say hi to
 	for i in range(3):
 		var fd := Node2D.new()
@@ -2084,14 +2086,24 @@ func _romp(delta: float) -> void:
 		float_text(dog.global_position, "time to head home", Color(1, 0.95, 0.7))
 
 
-func on_ball_caught() -> void:
+func on_ball_grabbed() -> void:
+	float_text(dog.global_position, "got it!", Color(0.85, 1.0, 0.85))
+
+
+func on_ball_returned(thrower: Node2D) -> void:
+	# returning to your OWN owner is the fetch; returning another owner's
+	# ball is a neighbourly bonus
+	var mine := thrower == human
 	romp_catches += 1
-	bones += 2
-	float_text(dog.global_position, "good catch! +2", Color(0.8, 1.0, 0.8))
+	var reward := 3 if mine else 4
+	bones += reward
+	float_text(thrower.global_position, ("good girl! +%d" % reward) if mine else ("shared! +%d" % reward), Color(0.8, 1.0, 0.8))
+	if mine and is_instance_valid(thrower):
+		human.throw_pose()
 	if romp_catches >= romp_target and not romp_done:
 		romp_done = true
 		bones += 10
-		float_text(dog.global_position, "FETCH! +10", Color(0.7, 1.0, 0.75))
+		float_text(dog.global_position, "GOOD FETCH! +10", Color(0.7, 1.0, 0.75))
 		_slowmo()
 
 
@@ -2537,18 +2549,50 @@ func _draw() -> void:
 		draw_circle(bp, 4.0 + sin(e * PI) * 2.0, Color(0.92, 0.92, 0.95))
 	if mark_target.x < INF and mark_progress > 0.0:
 		draw_arc(mark_target, 17.0, -PI / 2.0, -PI / 2.0 + TAU * mark_progress / 0.7, 20, Color(1, 0.95, 0.6), 3.0)
-	# the off-leash freedom yard beyond the gate: a fenced green with a
-	# waiting bench where the owner parks and scrolls
+	# the off-leash freedom yard beyond the gate: a proper fenced dog
+	# park - grass, chain-link fence with posts, human benches, and a
+	# labelled entrance gate
 	if vt < GATE_Y + 60.0:
-		draw_rect(Rect2(60, freedom_lo, 1120, GATE_Y - freedom_lo), Color(0.34, 0.5, 0.32))
-		for tf in range(24):
-			var gxp := 90.0 + tf * 46.0
-			draw_line(Vector2(gxp, freedom_lo + 30.0), Vector2(gxp, freedom_lo + 20.0), Color(0.28, 0.44, 0.27), 3.0)
-		# perimeter fence
-		draw_rect(Rect2(60, freedom_lo, 1120, GATE_Y - freedom_lo), Color(0.55, 0.5, 0.42), false, 3.0)
-		draw_circle(gate_bench, 4.0, Color(0.5, 0.38, 0.26))
-		draw_rect(Rect2(gate_bench.x - 16, gate_bench.y - 5, 32, 10), Color(0.5, 0.38, 0.26))
-		draw_string(font, Vector2(555, freedom_lo - 14), "OFF-LEASH AREA", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(0.9, 0.9, 0.82))
+		var yl := 70.0
+		var yr := 1180.0
+		var ytop := freedom_lo
+		var ybot := GATE_Y - 30.0
+		draw_rect(Rect2(yl, ytop, yr - yl, ybot - ytop), Color(0.34, 0.5, 0.32))
+		# scattered grass tufts + a worn dirt patch in the middle (play area)
+		draw_circle(Vector2((yl + yr) / 2.0, (ytop + ybot) / 2.0), 150.0, Color(0.42, 0.44, 0.3, 0.35))
+		for tf in range(28):
+			var gxp := yl + 20.0 + tf * ((yr - yl - 40.0) / 27.0)
+			var gyp := ytop + 40.0 + fmod(tf * 137.0, ybot - ytop - 80.0)
+			draw_line(Vector2(gxp, gyp), Vector2(gxp - 3.0, gyp - 8.0), Color(0.28, 0.44, 0.27), 2.0)
+			draw_line(Vector2(gxp, gyp), Vector2(gxp + 3.0, gyp - 7.0), Color(0.28, 0.44, 0.27), 2.0)
+		# chain-link fence: rail + posts on all four sides, open at the gate
+		var fence := Color(0.62, 0.63, 0.6)
+		var post := Color(0.5, 0.5, 0.48)
+		var mesh := Color(0.66, 0.68, 0.66, 0.25)
+		# side rails
+		draw_line(Vector2(yl, ytop), Vector2(yl, ybot), fence, 3.0)
+		draw_line(Vector2(yr, ytop), Vector2(yr, ybot), fence, 3.0)
+		# top rail
+		draw_line(Vector2(yl, ytop), Vector2(yr, ytop), fence, 3.0)
+		# bottom rail, split around the gate opening
+		draw_line(Vector2(yl, ybot), Vector2(gate_l - 20.0, ybot), fence, 3.0)
+		draw_line(Vector2(gate_r + 20.0, ybot), Vector2(yr, ybot), fence, 3.0)
+		for px in range(int(yl), int(yr), 60):
+			draw_line(Vector2(px, ytop), Vector2(px, ytop + 8.0), post, 2.0)
+			if px < gate_l - 20.0 or px > gate_r + 20.0:
+				draw_line(Vector2(px, ybot - 8.0), Vector2(px, ybot), post, 2.0)
+		draw_line(Vector2(yl + 6.0, ytop + 6.0), Vector2(yr - 6.0, ytop + 6.0), mesh, 6.0)
+		# posts at the four corners
+		for cp in [Vector2(yl, ytop), Vector2(yr, ytop), Vector2(yl, ybot), Vector2(yr, ybot)]:
+			draw_circle(cp, 4.0, post)
+		# human benches along the fence
+		for bx in [Vector2(yl + 70.0, ytop + 60.0), Vector2(yr - 70.0, ytop + 120.0), Vector2(yl + 90.0, ybot - 80.0)]:
+			draw_rect(Rect2(bx.x - 22, bx.y - 5, 44, 10), Color(0.5, 0.38, 0.26))
+			draw_line(Vector2(bx.x - 20, bx.y - 5), Vector2(bx.x - 20, bx.y + 8), Color(0.42, 0.32, 0.22), 2.0)
+			draw_line(Vector2(bx.x + 20, bx.y - 5), Vector2(bx.x + 20, bx.y + 8), Color(0.42, 0.32, 0.22), 2.0)
+		# the owner's waiting bench (where the parked owner throws from)
+		draw_rect(Rect2(gate_bench.x - 18, gate_bench.y - 6, 36, 11), Color(0.54, 0.4, 0.27))
+		draw_string(font, Vector2((yl + yr) / 2.0 - 70.0, ytop - 14), "OFF-LEASH DOG PARK", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(0.9, 0.9, 0.82))
 	# the gate between the walk and the off-leash yard
 	draw_rect(Rect2(gate_l - 14, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
 	draw_rect(Rect2(gate_r, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))

@@ -1,0 +1,5 @@
+Godot Engine v4.7.stable.official.5b4e0cb0f - https://godotengine.org
+
+AUTOWALK reached FREEDOM at t=31.1
+AUTOWALK reached HOME leg at t=38.1
+AUTOWALK FINISHED the whole walk at t=120.0
