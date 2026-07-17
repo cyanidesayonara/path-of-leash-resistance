@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-07-17 — shared NPC dog visual variety
+
+- Added six neutral procedural dog profiles with distinct silhouettes, ears,
+  muzzles, tails, coats, and markings shared by free dogs and NPC pair dogs.
+- Free-dog profile and animation selection now derive deterministically from
+  spawn inputs without consuming global RNG or changing wander behavior.
+- Pair dogs reuse their existing dog-color random draw as the profile key,
+  preserving setup RNG cadence and appearance through the full park lifecycle.
+- Added real-script coverage for profile validation, both caller renderers,
+  RNG contracts, lifecycle persistence, bounds, and every profile.
+
 ## 2026-07-17 — NPC dog-park lifecycle hardening
 
 - Smoothed bounded arrival, park, recall, re-leash, gate-exit, and route-resume

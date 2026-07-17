@@ -6,6 +6,7 @@ extends Node2D
 # flagship dog-park mayhem, emergent from the shared rope physics.
 
 const BypasserRouteScript := preload("res://bypasser_route.gd")
+const DogAppearanceScript := preload("res://dog_appearance.gd")
 const TANGLE_REARM_S := 0.5
 const PAIR_CLEARANCE := 48.0
 const PAIR_MAX_LATERAL_SPEED := 90.0
@@ -38,6 +39,7 @@ var leash: Node2D
 var vel := Vector2.ZERO
 var owner_col := Color(0.5, 0.45, 0.55)
 var dog_col := Color(0.6, 0.5, 0.4)
+var appearance_profile: Dictionary = {}
 var wander_t := 0.0
 var wander := Vector2.ZERO
 var seed_o := 0.0
@@ -65,7 +67,9 @@ func setup(m: Node2D, mine: Node2D, poles: Array[Vector2], start: Vector2, direc
 	vel = direction * randf_range(58.0, 82.0)
 	seed_o = randf() * 10.0
 	owner_col = [Color(0.5, 0.45, 0.55), Color(0.45, 0.5, 0.42), Color(0.55, 0.48, 0.4)][randi() % 3]
-	dog_col = [Color(0.6, 0.5, 0.4), Color(0.75, 0.72, 0.68), Color(0.35, 0.3, 0.28)][randi() % 3]
+	var dog_appearance_key := randi()
+	appearance_profile = DogAppearanceScript.profile_for_key(dog_appearance_key)
+	dog_col = appearance_profile["base_color"]
 	npc_owner = Node2D.new()
 	npc_owner.position = start
 	add_child(npc_owner)
@@ -464,11 +468,17 @@ func _draw() -> void:
 	draw_circle(op, 13.0, owner_col)
 	draw_circle(op + Vector2(0, -12), 7.0, Color(0.85, 0.72, 0.58))
 	draw_arc(op + Vector2(0, -12), 7.0, PI, TAU, 10, Color(0.3, 0.24, 0.16), 4.0)
-	# NPC dog
+	# NPC dog remains drawn by the pair parent; npc_dog stays the real endpoint.
 	var dp: Vector2 = npc_dog.position
 	var t := Time.get_ticks_msec() / 1000.0
-	draw_line(dp, dp + Vector2(-9, -3).rotated(sin(t * 8.0 + seed_o) * 0.4), dog_col.darkened(0.2), 3.0)
-	draw_circle(dp, 7.0, dog_col)
-	var face := (my_dog.global_position - dp).normalized()
-	draw_circle(dp + face * 6.0, 4.5, dog_col)
-	draw_circle(dp + face * 8.0, 1.4, Color(0.1, 0.09, 0.08))
+	var facing := (my_dog.global_position - dp).normalized()
+	var bob := sin(t * 6.0 + seed_o) * 1.5
+	var wag := t * 8.0 + seed_o
+	DogAppearanceScript.draw_dog(
+		self,
+		appearance_profile,
+		dp,
+		facing,
+		bob,
+		wag
+	)

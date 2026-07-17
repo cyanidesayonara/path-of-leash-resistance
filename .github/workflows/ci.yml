@@ -59,6 +59,12 @@ jobs:
       - name: NPC pair park traffic regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_park_traffic.gd
 
+      - name: Free-dog visual variety regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_free_dog_variety.gd
+
+      - name: NPC pair dog appearance regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_dog_appearance.gd
+
       - name: Headless smoke tests (all levels)
         # Runs each level for 1800 simulated frames (~30s): catches parse
         # errors and runtime script errors in the main gameplay loop.

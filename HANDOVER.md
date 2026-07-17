@@ -71,9 +71,10 @@ Godot 4.7 lives portably in `godot/` (gitignored). Key commands:
 - **CI source of truth:** `.github/workflows/ci.yml`. It runs focused rope,
   critter, tangle, freedom-traffic, pair-direction, bandana, owner-label,
   bypasser-route, rider-avoidance, pair-obstacle, pair-park-lifecycle,
-  park-slot, and pair-park-traffic regressions, followed by all four smoke
-  tests and deterministic autowalk. The suite runs on every push to `main`
-  and every pull request targeting `main`.
+  park-slot, pair-park-traffic, free-dog visual-variety, and pair-dog
+  appearance regressions,
+  followed by all four smoke tests and deterministic autowalk. The suite runs
+  on every push to `main` and every pull request targeting `main`.
 
 **Release ritual each version:** implement → run all automated tests → launch
 and perform the relevant manual acceptance → update `CHANGELOG.md` and the
@@ -161,6 +162,14 @@ lifecycle acceptance before calling it visually accepted or released.
   gate exit, route reset, tangle latching, and exactly-once cleanup.
 - `test_freedom_traffic.gd` separately proves riders leave freedom while a
   park-configured pair persists.
+- `test_free_dog_variety.gd` loads the real appearance and free-dog scripts
+  and covers stable profile selection, defensive data, validation, RNG
+  isolation, deterministic setup, preserved lifecycle movement/bounds, and a
+  headless redraw of all six profiles including the zero-forward case.
+- `test_pair_dog_appearance.gd` loads the real pair, leash, and appearance
+  scripts and covers exact setup RNG cadence, stable profile identity through
+  every park lifecycle state, preserved node/leash identity, and parent-Canvas
+  redraw of all six profiles including the zero-forward case.
 - The deterministic CI autowalk spends only about 4.9 seconds in freedom. It
   verifies whole-walk traversal, not a full NPC lifecycle, and does not
   guarantee that a live pair is encountered.
@@ -168,6 +177,8 @@ lifecycle acceptance before calling it visually accepted or released.
 ### Manual acceptance still required
 
 No manual visual lifecycle acceptance is recorded for the post-v1.5 work.
+Shared free-dog and pair-dog appearance readability, animation, local bounds,
+and visual identity persistence also remain manually unverified.
 Run these checks in priority order:
 
 1. Watch an upward walker enter through the gate leashed, with no speed snap,
@@ -198,15 +209,14 @@ have been manually assessed.
 
 1. **Manual NPC lifecycle acceptance first.** Record observed failures before
    tuning timing, movement, or presentation.
-2. **Then isolated free-dog visual variety.** Follow
-   `docs/PARALLEL_TASK_FREE_DOG_VARIETY.md`; keep ownership to `freedog.gd`, a
-   reusable appearance module, and its focused regression so it stays
-   independent from pair lifecycle code.
+2. **Then reusable owner appearance profiles.** Design neutral procedural
+   owner profiles for hats, glasses, bald spots, and long hair behind a
+   character-creator-ready boundary without changing owner gameplay.
 3. **Then roadmap content:** richer NPC-owner props/conversation, a real
    owner-throw/return fetch loop, more off-leash dog interactions, the
    bring-Tofu-home quest, Rainy Day level, and a shareable daily results card.
-   Distinct dog appearances should be reusable by a future playable-breed
-   selector rather than becoming one-off NPC art.
+   The reusable dog appearance profiles are now available to a future
+   playable-dog selector without depending on either NPC caller.
 
 ## 8. Then v2.0 — The Product
 
