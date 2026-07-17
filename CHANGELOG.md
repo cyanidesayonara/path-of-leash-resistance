@@ -2,6 +2,23 @@
 
 Append-only session history, newest first.
 
+## 2026-07-17 — v1.8: combo / multiplier meter (Tony Hawk Phase A)
+
+- Every scored bit of dog business — sniff, mark, say-hi, snack, fetch,
+  boop, tangle, fling, nice save, close call — is now a "trick". Land
+  another within a few seconds and they CHAIN; the multiplier is the
+  number of links.
+- A bottom-centre meter shows the running trick string, points and
+  multiplier over a draining window bar (warms to red as it closes).
+- When the window lapses the chain BANKS: a style score (points ×
+  multiplier) plus a bones bonus that scales with the multiplier
+  (capped). Single tricks don't count — you need a real chain.
+- Taking a hit is a wipeout: it bails the whole chain. Bank-it-safe vs
+  push-your-luck for a fatter multiplier is the tension. Existing
+  per-event bones rewards are untouched; the combo is bonus on top.
+- The results screen reports your best multiplier and total style score.
+- New regression test (combo chain/bank/bail/bonus math); CI runs it.
+
 ## 2026-07-17 — v1.7.1: fixes from playtest screenshots
 
 - Tofu herding redesigned. She no longer sits on a mat in the off-leash

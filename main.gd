@@ -206,6 +206,10 @@ var shop_idx := 0
 var prompt_tw: Tween
 var quests_label: Label
 var msg_label: Label
+var combo: Node
+var combo_l: Label
+var combo_bar: ColorRect
+var combo_bar_bg: ColorRect
 var dim: ColorRect
 var font: Font
 
@@ -854,7 +858,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.7.1"
+	version_l.text = "v1.8"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -910,6 +914,30 @@ func _build_hud() -> void:
 	var touch := Control.new()
 	touch.set_script(load("res://touch_controls.gd"))
 	hud.add_child(touch)
+	# the combo meter: trick string + score/multiplier over a draining
+	# window bar, bottom-centre, only visible while a chain is live
+	combo = Node.new()
+	combo.set_script(load("res://combo.gd"))
+	add_child(combo)
+	combo.setup(self)
+	combo_bar_bg = ColorRect.new()
+	combo_bar_bg.position = Vector2(440, 662)
+	combo_bar_bg.size = Vector2(400, 8)
+	combo_bar_bg.color = Color(0.05, 0.06, 0.07, 0.55)
+	combo_bar_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	combo_bar_bg.visible = false
+	hud.add_child(combo_bar_bg)
+	combo_bar = ColorRect.new()
+	combo_bar.position = Vector2(440, 662)
+	combo_bar.size = Vector2(400, 8)
+	combo_bar.color = Color(1.0, 0.78, 0.32)
+	combo_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	combo_bar.visible = false
+	hud.add_child(combo_bar)
+	combo_l = _hud_label(Vector2(0, 624), 26)
+	combo_l.size = Vector2(1280, 34)
+	combo_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	combo_l.visible = false
 	dim = ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.55)
 	dim.size = Vector2(1280, 720)
@@ -1122,6 +1150,32 @@ func _update_hud() -> void:
 	qbg.size.y = 18.0 + float(shown + 1) * 21.0
 
 
+func _update_combo_hud() -> void:
+	var live: bool = combo.active() and combo.mult() >= 2
+	combo_l.visible = live
+	combo_bar.visible = live
+	combo_bar_bg.visible = live
+	if not live:
+		return
+	combo_l.text = "%s    %d   x%d" % [combo.label_text(), combo.points, combo.mult()]
+	# the bar drains as the window closes, and warms to red near the end
+	var f: float = combo.fraction()
+	combo_bar.size.x = 400.0 * f
+	combo_bar.color = Color(1.0, 0.78, 0.32) if f > 0.35 else Color(1.0, 0.45, 0.3)
+
+
+func on_combo_banked(score: int, mult: int, bonus: int) -> void:
+	if bonus > 0:
+		bones += bonus
+	var col := Color(1.0, 0.85, 0.4) if mult < 5 else Color(1.0, 0.7, 0.85)
+	var msg := "COMBO x%d   %d" % [mult, score]
+	if bonus > 0:
+		msg += "   +%d" % bonus
+	float_text(dog.global_position + Vector2(0, -26), msg, col)
+	if mult >= 5:
+		_slowmo()
+
+
 func _physics_process(delta: float) -> void:
 	if frozen:
 		return
@@ -1166,6 +1220,8 @@ func _physics_process(delta: float) -> void:
 		_romp(delta)
 	_check_goals()
 	_progress(delta)
+	combo.tick(delta)
+	_update_combo_hud()
 	shake_t = maxf(0.0, shake_t - delta * 2.5)
 	prize_glow += delta * 4.0
 
@@ -1283,6 +1339,7 @@ func _apply_leash(delta: float) -> void:
 		# a fresh fling must never be arrested by a residual wrap
 		human.just_flung = false
 		flings_done += 1
+		combo.add("FLING", 8)
 		leash.free_slip_t = 1.2
 	var used: float = leash.used_length()
 	var excess := used - leash_len
@@ -1602,15 +1659,19 @@ func on_critter_chase(pos: Vector2, kind: String) -> void:
 		# not enemies - Tofu just prefers a respectful distance, and a
 		# nose boop is the closest Millie ever gets
 		bones += 4
+		combo.add("BOOP", 4)
 		float_text(pos, "boop! +4", Color(1, 0.95, 0.7))
 	else:
 		bones += 2
+		combo.add("CHASE", 2)
 		float_text(pos, "almost got it! +2", Color(1, 0.95, 0.7))
 	_update_hud()
 
 
 func on_dog_hit() -> void:
 	dog_hits += 1
+	# a knock is a wipeout: whatever chain you had going is gone
+	combo.bail()
 
 
 func _greetings() -> void:
@@ -1623,6 +1684,7 @@ func _greetings() -> void:
 		if dog.global_position.distance_to(op) < 28.0 and not greeted.has(id):
 			greeted[id] = true
 			dogs_greeted += 1
+			combo.add("HELLO", 3)
 			float_text(op + Vector2(0, -18), "sniff! hi", Color(0.8, 1.0, 0.85))
 
 
@@ -1839,6 +1901,7 @@ func _pairs(delta: float) -> void:
 		if p.update_tangle_state(crossing, delta):
 			tangles += 1
 			bones += 3
+			combo.add("TANGLE", 3)
 			float_text(dog.global_position, "TANGLED! +3", Color(1, 0.85, 0.7))
 
 
@@ -1931,6 +1994,7 @@ func _pickups(delta: float) -> void:
 				h.done = true
 				bones += 2
 				sniffs_done += 1
+				combo.add("SNIFF", 2)
 				float_text(h.pos, "good sniff +2", Color(1, 0.95, 0.7))
 				_update_hud()
 	for k in kebabs:
@@ -1938,6 +2002,7 @@ func _pickups(delta: float) -> void:
 			k.eaten = true
 			bones += 1
 			kebabs_eaten += 1
+			combo.add("SNACK", 1)
 			float_text(k.pos, "snack +1", Color(1, 0.95, 0.7))
 			_update_hud()
 
@@ -1971,6 +2036,7 @@ func _bodily(delta: float) -> void:
 			if mark_progress >= 0.7:
 				bones += 3
 				marks.append(target)
+				combo.add("MARK", 3)
 				float_text(target, "marked! +3", Color(1, 0.95, 0.7))
 				mark_progress = 0.0
 				mark_target = Vector2(INF, INF)
@@ -2196,6 +2262,7 @@ func on_ball_returned(thrower: Node2D) -> void:
 	romp_catches += 1
 	var reward := 3 if mine else 4
 	bones += reward
+	combo.add("FETCH", reward)
 	float_text(thrower.global_position, ("good girl! +%d" % reward) if mine else ("shared! +%d" % reward), Color(0.8, 1.0, 0.8))
 	if mine and is_instance_valid(thrower):
 		human.throw_pose()
@@ -2278,6 +2345,8 @@ func _finish_walk() -> void:
 		if rec_line == "":
 			rec_line = "goals this run: %d" % run_done
 		rec_line += "\ngoals: %d/%d here    stars: %d total    bones: %d" % [lifetime, total, Game.total_stars(), Game.total_bones]
+		if combo.best_mult >= 2:
+			rec_line += "\nbest combo: x%d    style: %d" % [combo.best_mult, combo.run_style]
 		var unlock_line := ""
 		if not Game.daily:
 			for other in Game.LEVELS:
@@ -2330,6 +2399,7 @@ func on_stumble_save(pos: Vector2) -> void:
 			streak += 1
 			saves_done += 1
 			bones += streak
+			combo.add("SAVE", 5)
 			float_text(pos + Vector2(0, -30), "NICE SAVE +%d" % streak, Color(0.7, 1.0, 0.75))
 			_slowmo()
 			_update_hud()
@@ -2360,6 +2430,7 @@ func crack_phone(pos: Vector2) -> void:
 func close_call(pos: Vector2) -> void:
 	bones += 1
 	close_calls += 1
+	combo.add("CLOSE", 2)
 	float_text(pos, "close call +1", Color(0.75, 0.9, 1.0))
 	_update_hud()
 

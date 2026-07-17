@@ -65,11 +65,15 @@ Every feature must serve at least one. If it serves none, cut it.
   home along a chain of hiding spots on the walk back (not a mat in the
   off-leash area, where she'd never wander); quest panel auto-sizes;
   the owner no longer wedges on a parked van during the poop-bag toss.
-- **v1.8 - other owners throw + Rainy Day + daily card.** Parked NPC
+- **v1.8 - shipped.** Combo / multiplier meter (Tony Hawk Phase A):
+  scored actions chain into a multiplier that banks style points + bonus
+  bones; a hit bails the chain. See Future systems for Phase B (the
+  triggered combo challenge).
+- **v1.9 - other owners throw + Rainy Day + daily card.** Parked NPC
   owners throw balls for their dogs (return handler already scores
   "shared! +4"); a rainy-by-default level with storm drains and umbrella
   crowds; a shareable daily results card.
-- **v1.9 - Level six (Old Town) + polish.** Narrow alleys, stairs, wall
+- **v1.10 - Level six (Old Town) + polish.** Narrow alleys, stairs, wall
   cats, laundry lines. Mechanics tuning from playtests.
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
@@ -240,20 +244,25 @@ memorable.
   walk home and you herd her south from hiding spot to hiding spot (she
   keeps her respectful distance and relocates; you press, you do not
   grab) until she reaches home. A repeating goal on every level.
-- Combo / multiplier system (Tony Hawk lineage, musing July 2026): make
-  the physics chaos legible as score. Two phases. (A) A passive combo
-  meter fed by events that already fire - mark, sniff, say-hi, whirl,
-  dodge, knock a cone, snatch a snack - chained while they keep landing
-  within a few seconds of each other; multiplier = links in the chain;
-  the meter banks (points x mult) when the chain lapses, and a bail
-  (leash goes slack / you stop / you get tangled) drops the multiplier.
-  Bank vs push-your-luck is the whole Tony Hawk tension, and it reuses
-  existing hooks so it is cheap. (B) A triggered combo CHALLENGE handed
-  out by a character/event (a punk kid on a bench, a squirrel dare) - a
-  bounded window with a target ("tangle 3 walkers in one go"), optional,
-  self-contained, and time-free so it never fights the no-timer walk.
-  A "land a x8 combo" per-level goal ties it into progression. Build A
-  first; it is the highest fun-per-effort feature on the board.
+- Combo / multiplier system (Tony Hawk lineage). Phase A SHIPPED v1.8:
+  scored actions chain into a multiplier that banks style points + a
+  bones bonus; taking a hit bails the chain. Phase B still to come - a
+  triggered combo CHALLENGE handed out by a character/event (a punk kid
+  on a bench, a squirrel dare): a bounded window with a target ("tangle
+  3 walkers in one go"), optional, self-contained, and time-free so it
+  never fights the no-timer walk. A "land a x8 combo" per-level goal
+  would tie the meter into progression once it has been playtested.
+- Chase / outrun level (homage to Crash Bandicoot's boulder runs and
+  Indiana Jones): a north->south leg where something is CONSUMING the
+  path behind you and you have to keep ahead of it. The street sweeper
+  is the perfect in-fiction devourer (big spinning brushes, already a
+  service vehicle in the world); alternates could be a runaway parade
+  float, a tide coming in on the beach, a snowplough in winter. Inverts
+  the usual owner-is-dead-weight dynamic: now the owner must HURRY, and
+  the leash tension becomes a drag you fight instead of a weapon you
+  wield. Its own failure mode (get caught = the sweeper eats you, soft
+  slapstick) rather than the usual soft-fail. Likely a signature level
+  or a special daily variant, not every walk.
 - Swimming (shipped v1.1 in the park pond, expandable): Millie loves
   water and paddles happily; the owner is dragged in to wade reluctantly
   with the phone held high; Tofu will not go near it. Beach sea and any
