@@ -82,7 +82,11 @@ Every feature must serve at least one. If it serves none, cut it.
   dares you into a bounded trick window on the walk out; hit the target
   for bones + slow-mo, no penalty for missing. Combo system now complete
   (Phase A meter + Phase B challenge).
-- **v1.12 - Level six (Old Town) + polish.** Narrow alleys, stairs, wall
+- **v1.12 - shipped.** The bolt chase: the fast, owner-panics threat
+  variant (owner sprints for home dragging you; the leash flips from tool
+  to tow-rope). Second cell of the threat grid proven. Home-leg chases
+  now coin-flip sweeper/bolt.
+- **v1.13 - Level six (Old Town) + polish.** Narrow alleys, stairs, wall
   cats, laundry lines. Mechanics tuning from playtests.
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
@@ -276,9 +280,9 @@ memorable.
     - slow + scares only you (the sweeper, shipped): owner dawdles
       oblivious, you drag the dead weight south. Owner-is-payload turned
       lethal.
-    - fast + scares the owner (a blaring tow truck, a gull mob): the
-      owner bolts and drags YOU - the leash flips from tool to problem,
-      you're water-skiing behind a panicking human.
+    - fast + scares the owner (SHIPPED v1.12 as the "bolt": a red truck):
+      the owner bolts and drags YOU - the leash flips from tool to
+      problem, you're water-skiing behind a panicking human.
     - both (fire truck, runaway float): a brief cooperative sprint, the
       one time you and the owner want the same thing.
   In-fiction devourers by setting: street sweeper (city), incoming tide

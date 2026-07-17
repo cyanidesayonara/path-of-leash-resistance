@@ -6,6 +6,7 @@ extends CharacterBody2D
 enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, WHIRL, GO_POOP, BAG, GO_BIN, TOSS, STUMBLE, FALLEN }
 
 const WALK_SPEED := 92.0
+const PANIC_SPEED := 230.0
 
 var state: HState = HState.WALK
 var state_t := 0.0
@@ -40,6 +41,7 @@ var parked := false
 var park_target := Vector2.ZERO
 var park_throw_t := 0.0
 var strain := false
+var panic := false
 var wobble_seed := 0.0
 var main: Node2D
 var bubble: Label
@@ -90,6 +92,17 @@ func tick(delta: float) -> void:
 			velocity = Vector2.ZERO
 		if park_throw_t <= 0.0 and not bubble.visible:
 			_show_bubble("...")
+		return
+	# spooked witless (the "bolt" chase): the owner forgets the phone and
+	# SPRINTS for home, dragging the dog behind them - the leash flips from
+	# your tool into a tow-rope you are on the wrong end of
+	if panic:
+		velocity = velocity.move_toward(Vector2(0, PANIC_SPEED), 800.0 * delta)
+		move_and_slide()
+		face_dir = Vector2.DOWN
+		hgait += delta
+		if not bubble.visible:
+			_show_bubble("AAH!")
 		return
 	# strain is cleared and re-set by main.gd/_apply_leash each frame
 	match state:

@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.12: the bolt chase (fast threat, owner drags you)
+
+- A second chase flavour, the mirror of the sweeper. Where the sweeper is
+  slow and the oblivious owner needs dragging to safety, the BOLT is a
+  fast red truck that spooks the OWNER witless: they drop the phone and
+  sprint for home, and now the leash is a tow-rope you are on the wrong
+  end of. Keep up and don't snag, or you get left behind under the wheels.
+- Inverts the core dynamic (owner-is-dead-weight becomes owner-drags-you)
+  from the same rope, the whole point of the two-axis threat grid.
+- A home-leg chase now coin-flips between sweeper and bolt (or force one
+  with --chase / --bolt). Tuning knobs in main.gd: CHASE_SPEED_BOLT (205)
+  and human.gd PANIC_SPEED (230).
+- CI gains a --bolt full-walk traversal.
+
 ## 2026-07-18 — v1.11: combo challenge (Tony Hawk Phase B)
 
 - A show-off kid lounging on a bench on the walk out dares you into a
