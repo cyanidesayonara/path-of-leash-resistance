@@ -1,5 +1,7 @@
 extends Node2D
 
+const DogAppearanceScript := preload("res://dog_appearance.gd")
+
 # An off-leash dog in the freedom area: no owner, no leash, all zoomies.
 # Wanders, play-bows, and is delighted to be greeted (once).
 
@@ -9,9 +11,19 @@ var vel := Vector2.ZERO
 var wander_t := 0.0
 var seed_o := 0.0
 var col := Color(0.6, 0.5, 0.4)
+var appearance_profile: Dictionary = {}
 var lo := 0.0
 var hi := 0.0
 var bow := 0.0
+
+
+func _appearance_key(y_lo: float, y_hi: float) -> int:
+	return (
+		roundi(position.x) * 73856093
+		+ roundi(position.y) * 19349663
+		+ roundi(y_lo) * 83492791
+		+ roundi(y_hi) * 2654435761
+	)
 
 
 func setup(m: Node2D, mine: Node2D, y_lo: float, y_hi: float) -> void:
@@ -20,8 +32,11 @@ func setup(m: Node2D, mine: Node2D, y_lo: float, y_hi: float) -> void:
 	my_dog = mine
 	lo = y_lo
 	hi = y_hi
-	seed_o = randf() * 10.0
-	col = [Color(0.65, 0.52, 0.36), Color(0.8, 0.78, 0.74), Color(0.32, 0.28, 0.26), Color(0.7, 0.62, 0.45)][randi() % 4]
+	var appearance_key := _appearance_key(y_lo, y_hi)
+	appearance_profile = DogAppearanceScript.profile_for_key(appearance_key)
+	var phase_bucket := ((appearance_key % 10000) + 10000) % 10000
+	seed_o = float(phase_bucket) / 1000.0
+	col = appearance_profile["base_color"]
 
 
 func _physics_process(delta: float) -> void:
@@ -45,13 +60,13 @@ func _physics_process(delta: float) -> void:
 
 func _draw() -> void:
 	var t := Time.get_ticks_msec() / 1000.0
-	# a wagging tail and a happy little play-bow bob
 	var b := sin(bow * 6.0 + seed_o) * 1.5
-	draw_line(Vector2(-8, b), Vector2(-15, -6 + sin(t * 12.0 + seed_o) * 4.0), col.darkened(0.2), 3.0)
-	draw_circle(Vector2(0, b), 8.0, col)
 	var face := (my_dog.global_position - global_position).normalized()
-	draw_circle(face * 8.0 + Vector2(0, b), 5.5, col)
-	draw_circle(face * 11.0 + Vector2(0, b), 1.6, Color(0.1, 0.09, 0.08))
-	# little ears
-	draw_line(face * 6.0 + Vector2(-3, b - 4), face * 4.0 + Vector2(-5, b - 9), col.darkened(0.25), 3.0)
-	draw_line(face * 6.0 + Vector2(3, b - 4), face * 4.0 + Vector2(5, b - 9), col.darkened(0.25), 3.0)
+	DogAppearanceScript.draw_dog(
+		self,
+		appearance_profile,
+		Vector2.ZERO,
+		face,
+		b,
+		t * 12.0 + seed_o
+	)
