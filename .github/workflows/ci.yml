@@ -23,7 +23,7 @@ jobs:
       - name: Install virtual display
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb
+          sudo apt-get install -y xvfb libgl1-mesa-dri mesa-utils
 
       - name: Leash winding regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_wrap.gd
@@ -71,10 +71,10 @@ jobs:
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_dog_appearance.gd
 
       - name: Human appearance regression test
-        run: xvfb-run -a ./Godot_v4.7-stable_linux.x86_64 --rendering-method gl_compatibility --path . --script res://tests/test_human_appearance.gd
+        run: LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x1024x24" ./Godot_v4.7-stable_linux.x86_64 --rendering-method gl_compatibility --path . --script res://tests/test_human_appearance.gd
 
       - name: NPC pair owner appearance regression test
-        run: xvfb-run -a ./Godot_v4.7-stable_linux.x86_64 --rendering-method gl_compatibility --path . --script res://tests/test_pair_owner_appearance.gd
+        run: LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x1024x24" ./Godot_v4.7-stable_linux.x86_64 --rendering-method gl_compatibility --path . --script res://tests/test_pair_owner_appearance.gd
 
       - name: Headless smoke tests (all levels)
         # Runs each level for 1800 simulated frames (~30s): catches parse
