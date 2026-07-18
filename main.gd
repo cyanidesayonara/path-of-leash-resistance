@@ -240,6 +240,8 @@ var challenge_l: Label
 var challenge_giver: Node2D
 var challenge_offered := false
 var dog_carrying := false
+var paused := false
+var pause_l: Label
 var _redraw_acc := 0.0
 # a neighbour's ball: a parked NPC owner throws one you can intercept and
 # return to them for a shared-fetch bonus
@@ -352,6 +354,7 @@ func _setup_input() -> void:
 		"plant": [KEY_SPACE, JOY_BUTTON_A], "bark": [KEY_E, JOY_BUTTON_B],
 		"pee": [KEY_Q, JOY_BUTTON_X], "turbo": [KEY_SHIFT, JOY_BUTTON_RIGHT_SHOULDER],
 		"restart": [KEY_R, JOY_BUTTON_START], "share": [KEY_C, JOY_BUTTON_Y],
+		"pause": [KEY_ESCAPE, JOY_BUTTON_BACK],
 	}
 	for action in buttons:
 		InputMap.add_action(action)
@@ -1014,7 +1017,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.22"
+	version_l.text = "v1.23"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -1112,6 +1115,10 @@ func _build_hud() -> void:
 	msg_label.size = Vector2(1280, 400)
 	msg_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	msg_label.visible = false
+	pause_l = _hud_label(Vector2(0, 300), 26)
+	pause_l.size = Vector2(1280, 120)
+	pause_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	pause_l.visible = false
 	_update_hud()
 
 
@@ -1245,8 +1252,8 @@ func _refresh_shop() -> void:
 func _refresh_menu_text() -> void:
 	# controller labels only when a controller is attached
 	var pad := Input.get_connected_joypads().size() > 0
-	hint_l.text = ("stick: move   A: dig in / squat   X: pee   B: bark   RB: turbo   Start: restart" if pad
-		else "WASD: move   SPACE: dig in / squat   Q: pee   E: bark   SHIFT: turbo   R: restart")
+	hint_l.text = ("stick: move   A: dig in / squat   X: pee   B: bark   RB: turbo   Back: pause" if pad
+		else "WASD: move   SPACE: dig in / squat   Q: pee   E: bark   SHIFT: turbo   ESC: pause")
 	var fixed := "  (fixed today)" if Game.daily else "        (%s)" % _kb_or_pad("E", "B")
 	night_l.text = "TIME:  %s%s" % [("NIGHT" if Game.night else "DAY"), fixed]
 	weather_l.text = "WEATHER:  %s%s" % [Game.WEATHER_NAMES[Game.weather], "" if Game.daily else "        (%s)" % _kb_or_pad("Q", "X")]
@@ -1454,6 +1461,27 @@ func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("restart"):
 		get_tree().reload_current_scene()
 		return
+	# pause: only while actively walking (not on the title, a death, or the
+	# results). Resume with the pause key or plant; bark quits to the menu.
+	if started and not in_shop:
+		if paused:
+			if Input.is_action_just_pressed("pause") or Input.is_action_just_pressed("plant"):
+				paused = false
+				frozen = false
+				pause_l.visible = false
+				dim.visible = false
+			elif Input.is_action_just_pressed("bark"):
+				Game.menu_step = 1
+				get_tree().reload_current_scene()
+			return
+		elif not frozen and Input.is_action_just_pressed("pause"):
+			paused = true
+			frozen = true
+			pause_l.text = "PAUSED\n\n%s  resume     %s  restart     %s  menu" % [
+				_kb_or_pad("SPACE", "A"), _kb_or_pad("R", "Start"), _kb_or_pad("E", "B")]
+			pause_l.visible = true
+			dim.visible = true
+			return
 	if finished and Game.daily and not daily_copied and daily_share != "" and Input.is_action_just_pressed("share"):
 		DisplayServer.clipboard_set(daily_share)
 		daily_copied = true

@@ -123,7 +123,9 @@ Every feature must serve at least one. If it serves none, cut it.
 - **v1.22 - shipped.** L'Estacio (station concourse): a moving walkway
   that carries you toward the platforms (boost out, shove home) - the
   first "the ground moves you" mechanic. Reuses the boulevard layout.
-- **v1.23 - polish + tuning.** Playtest feedback pass: chase/combo feel,
+- **v1.23 - shipped.** Pause menu (ESC/Back): resume, restart, or quit to
+  the walk-select menu mid-walk. A basic shippable-QoL gap closed.
+- **v1.24 - polish + tuning.** Playtest feedback pass: chase/combo feel,
   level difficulty, and bespoke geometry for the reused-base walks
   (El Aguacero, El Gotic, El Bosc, L'Estacio).
 - **v2.0 - The Product.** Watercolor art integration, sound and music

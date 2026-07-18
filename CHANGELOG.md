@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.23: pause menu
+
+- A real pause, at last: ESC (or the Back button) mid-walk freezes the
+  game behind a dim overlay - resume, restart, or quit to the walk-select
+  menu without losing your session to a hard restart. Only arms while
+  actually walking (not on the title, a death, or the results). The
+  controls hint now advertises it.
+
 ## 2026-07-18 — v1.22: L'Estacio (station concourse) + moving walkway
 
 - An eighth walk (gate 13) built around a NEW mechanic: a moving walkway.
