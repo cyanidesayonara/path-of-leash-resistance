@@ -2,6 +2,21 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.19: web-perf pass #2 — gate entity redraws
+
+- Same principle as #1, applied to the entities: an entity moves via its
+  node transform every frame (so movement stays perfectly smooth), while
+  its procedurally-drawn POSE only needs ~30fps. Gated the multi-instance
+  entities to redraw every other physics frame - freedogs, NPC pairs,
+  squirrels, pigeons, ducklings, Tofu - exactly halving their draw calls.
+- NPC-pair leashes (line-heavy rope draws) also gated to 30fps via a
+  `hero` flag; the PLAYER's leash stays full-rate (it's the hero element).
+- Measured earlier: entities cost real CPU (native ~424fps at 8 entities
+  vs ~600 at 6). Halving their draw frequency recovers ~half of that,
+  which matters most on the WASM web build. Native was already smooth;
+  verified movement stays smooth (transform updates every frame) and all
+  regressions pass.
+
 ## 2026-07-18 — v1.18: the rescue chase (completes the threat grid)
 
 - The third and final cell of the chase threat grid: a fast threat that

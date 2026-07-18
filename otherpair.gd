@@ -222,7 +222,9 @@ func _physics_process(delta: float) -> void:
 	if pair_state == PairState.WALKING:
 		if absf(npc_owner.position.y - float(main.cam.position.y)) > 1200.0:
 			queue_free()
-	queue_redraw()
+	# owner/dog move via transform every frame; redraw the pose at ~30fps
+	if Engine.get_physics_frames() % 2 == 0:
+		queue_redraw()
 
 
 func _tick_walking(delta: float, _allow_arrival: bool) -> void:

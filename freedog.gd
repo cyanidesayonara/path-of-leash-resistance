@@ -55,7 +55,10 @@ func _physics_process(delta: float) -> void:
 	vel = vel.move_toward(Vector2.ZERO, 120.0 * delta)
 	position.x = clampf(position.x, 90.0, 1190.0)
 	position.y = clampf(position.y, lo, hi)
-	queue_redraw()
+	# the node moves via its transform every frame; the drawn pose only
+	# needs ~30fps, halving this entity's draw cost (web-build budget)
+	if Engine.get_physics_frames() % 2 == 0:
+		queue_redraw()
 
 
 func _draw() -> void:

@@ -813,6 +813,7 @@ func _build_entities() -> void:
 	human.setup(self)
 
 	leash.setup(dog, human, poles, LEASH_LENGTH)
+	leash.hero = true  # the player's rope draws every frame; NPC ropes at 30fps
 
 	cam = Camera2D.new()
 	cam.position_smoothing_enabled = true
@@ -975,7 +976,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.18"
+	version_l.text = "v1.19"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)

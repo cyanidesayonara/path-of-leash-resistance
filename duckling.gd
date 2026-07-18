@@ -51,7 +51,8 @@ func _physics_process(delta: float) -> void:
 		position.y += sin(Time.get_ticks_msec() / 1000.0 * 8.0 + bob_seed) * 6.0 * delta
 	if position.x < 240.0 or position.x > 1040.0:
 		queue_free()
-	queue_redraw()
+	if Engine.get_physics_frames() % 2 == 0:
+		queue_redraw()
 
 
 func _draw() -> void:

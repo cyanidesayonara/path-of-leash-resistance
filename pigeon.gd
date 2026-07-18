@@ -46,7 +46,8 @@ func _physics_process(delta: float) -> void:
 				if global_position.distance_to(b.global_position) < 90.0:
 					scare()
 					break
-	queue_redraw()
+	if Engine.get_physics_frames() % 2 == 0:
+		queue_redraw()
 
 
 func scare() -> void:

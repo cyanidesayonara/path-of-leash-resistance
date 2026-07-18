@@ -32,6 +32,9 @@ var dynamic_obstacles: Array[Vector2] = []
 # while > 0 the rope slides freely on poles (no stick): set during a whirl
 # so the choreographed unwind can never be arrested by rope grip
 var free_slip_t := 0.0
+# the player's leash draws every frame (hero element); NPC-pair leashes
+# only need ~30fps, halving their line-heavy rope draw on the web build
+var hero := false
 
 
 func setup(d: Node2D, h: Node2D, pole_list: Array[Vector2], max_len: float) -> void:
@@ -141,7 +144,8 @@ func tick(delta: float) -> void:
 			var da := wrapf(r1.angle() - r0.angle(), -PI, PI)
 			pts[i] = pl + Vector2.from_angle(r0.angle() + da * slip) * r1.length()
 		prev[i] = prev[i].lerp(pts[i], FRICTION)
-	queue_redraw()
+	if hero or Engine.get_physics_frames() % 2 == 0:
+		queue_redraw()
 
 
 func _closest_on_segment(a: Vector2, b: Vector2, c: Vector2) -> Vector2:
