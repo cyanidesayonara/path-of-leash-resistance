@@ -136,9 +136,12 @@ Every feature must serve at least one. If it serves none, cut it.
   splashes, combos, stars, saves, wall-cat hisses, tangles and UI.
   Autoloaded `Sfx`, 10-voice pool, local-RNG synthesis. Music and a
   proper mix are the next audio step (v2.0 sound pass).
-- **v1.27 - polish + tuning.** Playtest feedback pass: chase/combo feel,
-  level difficulty, and bespoke geometry for the reused-base walks
-  (El Aguacero, El Gotic, El Bosc, L'Estacio).
+- **v1.27 - shipped.** Music: a gentle procedural ambient loop (pentatonic
+  over I-vi-IV-V, synthesised at startup, no files), low in the mix,
+  toggle with M. Audio is now SFX + music, both fully procedural.
+- **v1.28 - polish + tuning.** Playtest feedback pass: chase/combo feel,
+  level difficulty, audio mix/variety, and bespoke geometry for the
+  reused-base walks (El Aguacero, El Gotic, El Bosc, L'Estacio).
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
 - Every release also ships: mechanics tuning from playtests, at least

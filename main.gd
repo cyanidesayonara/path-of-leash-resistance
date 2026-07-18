@@ -328,6 +328,7 @@ func _ready() -> void:
 			chase_kind = "sweeper" if r < 0.4 else ("bolt" if r < 0.75 else "both")
 	menu_step = Game.menu_step
 	_apply_menu_step()
+	Sfx.start_music()
 
 
 func _setup_input() -> void:
@@ -356,7 +357,7 @@ func _setup_input() -> void:
 		"plant": [KEY_SPACE, JOY_BUTTON_A], "bark": [KEY_E, JOY_BUTTON_B],
 		"pee": [KEY_Q, JOY_BUTTON_X], "turbo": [KEY_SHIFT, JOY_BUTTON_RIGHT_SHOULDER],
 		"restart": [KEY_R, JOY_BUTTON_START], "share": [KEY_C, JOY_BUTTON_Y],
-		"pause": [KEY_ESCAPE, JOY_BUTTON_BACK],
+		"pause": [KEY_ESCAPE, JOY_BUTTON_BACK], "mute_music": [KEY_M, JOY_BUTTON_LEFT_SHOULDER],
 	}
 	for action in buttons:
 		InputMap.add_action(action)
@@ -1020,7 +1021,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.26"
+	version_l.text = "v1.27"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -1484,6 +1485,8 @@ func _physics_process(delta: float) -> void:
 
 
 func _process(_delta: float) -> void:
+	if Input.is_action_just_pressed("mute_music"):
+		Sfx.toggle_music()
 	if Input.is_action_just_pressed("restart"):
 		get_tree().reload_current_scene()
 		return
@@ -1503,8 +1506,8 @@ func _process(_delta: float) -> void:
 		elif not frozen and Input.is_action_just_pressed("pause"):
 			paused = true
 			frozen = true
-			pause_l.text = "PAUSED\n\n%s  resume     %s  restart     %s  menu" % [
-				_kb_or_pad("SPACE", "A"), _kb_or_pad("R", "Start"), _kb_or_pad("E", "B")]
+			pause_l.text = "PAUSED\n\n%s  resume     %s  restart     %s  menu\n\n%s  toggle music" % [
+				_kb_or_pad("SPACE", "A"), _kb_or_pad("R", "Start"), _kb_or_pad("E", "B"), _kb_or_pad("M", "LB")]
 			pause_l.visible = true
 			dim.visible = true
 			return

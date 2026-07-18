@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.27: music (procedural ambient loop)
+
+- A gentle looping soundtrack, synthesised at startup like the SFX (no
+  files): a soft sine bass and quiet fifth pad under a sparse C-pentatonic
+  melody, over a calm I-vi-IV-V progression that breathes bar by bar.
+  Kept deliberately low and unobtrusive so it sits under the effects and
+  never grates on the loop.
+- Plays through the menu and the walk, survives scene reloads (it's on the
+  `Sfx` autoload). Toggle it with M (or LB on a pad); the pause menu
+  advertises it.
+
 ## 2026-07-18 — v1.26: sound (procedural SFX)
 
 - The game has a voice at last. Every sound is SYNTHESISED at startup from

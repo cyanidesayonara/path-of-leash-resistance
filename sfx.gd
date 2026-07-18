@@ -16,6 +16,8 @@ var next_player := 0
 var lib := {}
 var rng := RandomNumberGenerator.new()
 var muted := false
+var music_player: AudioStreamPlayer
+var music_on := true
 
 
 func _ready() -> void:
@@ -26,6 +28,23 @@ func _ready() -> void:
 		add_child(p)
 		players.append(p)
 	_build_library()
+	music_player = AudioStreamPlayer.new()
+	music_player.volume_db = -16.0  # ambient, well under the SFX
+	music_player.stream = _build_music()
+	add_child(music_player)
+
+
+func start_music() -> void:
+	if music_on and music_player != null and not music_player.playing:
+		music_player.play()
+
+
+func toggle_music() -> void:
+	music_on = not music_on
+	if music_on:
+		music_player.play()
+	else:
+		music_player.stop()
 
 
 func play(name: String, pitch := 1.0, vol_db := -6.0) -> void:
@@ -57,6 +76,53 @@ func _build_library() -> void:
 	lib["ui"] = _tone(560.0, 0.05, 40.0, 0.35)
 	lib["tangle"] = _wobble(0.26)
 	lib["hiss"] = _noiseburst(0.16, 22.0)
+
+
+# --- music -------------------------------------------------------------
+
+func _build_music() -> AudioStreamWAV:
+	# a gentle, looping ambient bed: soft sine bass + a quiet fifth pad
+	# under a sparse C-pentatonic melody, over an I-vi-IV-V progression.
+	# Deliberately calm so it never grates on repeat.
+	var beat := 60.0 / 80.0        # 80 BPM
+	var bar := beat * 4.0
+	var bars := 8
+	var n := int(bar * bars * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	# roots for C - Am - F - G, twice
+	var roots := [130.81, 110.0, 87.31, 98.0, 130.81, 110.0, 87.31, 98.0]
+	var pent := [261.63, 293.66, 329.63, 392.0, 440.0]  # C D E G A
+	for b in range(bars):
+		var root: float = roots[b]
+		var base := int(b * bar * RATE)
+		var bn := int(bar * RATE)
+		for i in range(bn):
+			var idx := base + i
+			if idx >= n:
+				break
+			var t := float(i) / RATE
+			var swell: float = sin(PI * clampf(t / bar, 0.0, 1.0))  # breathe per bar
+			var bass := sin(TAU * root * t) * 0.16 * (0.6 + 0.4 * swell)
+			var pad := (sin(TAU * root * 1.5 * t) + sin(TAU * root * 2.0 * t)) * 0.03 * swell
+			out[idx] += bass + pad
+		# sparse melody: a soft pentatonic note on a couple of beats
+		for nb in [0, 2, 3]:
+			if rng.randf() < 0.55:
+				var mf: float = pent[rng.randi() % pent.size()]
+				var mbase := base + int(nb * beat * RATE)
+				var mn := int(beat * 0.9 * RATE)
+				for i in range(mn):
+					var idx := mbase + i
+					if idx >= n:
+						break
+					var t := float(i) / RATE
+					out[idx] += sin(TAU * mf * t) * exp(-t * 3.2) * 0.14
+	var s := _pack(out)
+	s.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	s.loop_begin = 0
+	s.loop_end = n
+	return s
 
 
 # --- synthesis helpers -------------------------------------------------
