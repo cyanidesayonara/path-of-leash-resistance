@@ -86,8 +86,14 @@ Every feature must serve at least one. If it serves none, cut it.
   variant (owner sprints for home dragging you; the leash flips from tool
   to tow-rope). Second cell of the threat grid proven. Home-leg chases
   now coin-flip sweeper/bolt.
-- **v1.13 - Level six (Old Town) + polish.** Narrow alleys, stairs, wall
-  cats, laundry lines. Mechanics tuning from playtests.
+- **v1.13 - shipped.** El Gotic (old town alley): tight pinched channel,
+  laundry lines, lanterns, and the wall-cat signature (perched, smug,
+  shooed with a bark - a temptation you can never actually catch).
+  Reuses the market layout for now; bespoke geometry + stairs a later
+  pass.
+- **v1.14 - polish + tuning.** Playtest feedback pass: chase/combo feel,
+  level difficulty, and bespoke geometry for the reused-base walks
+  (El Aguacero, El Gotic).
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
 - Every release also ships: mechanics tuning from playtests, at least

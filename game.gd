@@ -2,21 +2,22 @@ extends Node
 
 # Autoload: session state that must survive scene reloads.
 
-const LEVELS: Array[String] = ["street", "park", "beach", "rain", "market"]
+const LEVELS: Array[String] = ["street", "park", "beach", "rain", "market", "oldtown"]
 const LEVEL_NAMES := {
 	"daily": "Daily Walk",
 	"street": "The Boulevard", "park": "The Park",
 	"beach": "Passeig Maritim", "rain": "El Aguacero", "market": "El Mercat",
+	"oldtown": "El Gotic",
 }
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
-const STAR_GATE := {"street": 0, "park": 2, "beach": 4, "rain": 5, "market": 7}
+const STAR_GATE := {"street": 0, "park": 2, "beach": 4, "rain": 5, "market": 7, "oldtown": 9}
 
 const WEATHERS: Array[String] = ["clear", "rain", "wind"]
 const WEATHER_NAMES := {"clear": "CLEAR", "rain": "RAIN", "wind": "WIND"}
 
 # the carousel on the title: the daily walk first, then the campaign walks
-const CAROUSEL: Array[String] = ["daily", "street", "park", "beach", "rain", "market"]
+const CAROUSEL: Array[String] = ["daily", "street", "park", "beach", "rain", "market", "oldtown"]
 
 # cosmetics: collars (recolour Millie's collar/harness) and bandanas.
 # "none" is free and always owned; the rest cost bones once, then equip.

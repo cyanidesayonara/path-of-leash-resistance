@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.13: El Gotic (the old town alley) + wall cats
+
+- New sixth walk: El Gotic (gate 9), a tight medieval alley. Extra poles
+  pinch the channel so threading the oblivious owner through is the real
+  work; laundry strung overhead and lanterns down one wall for the look.
+  Reuses the market's stall-lined layout as a base for now; bespoke
+  geometry is a later pass.
+- Signature: WALL CATS. Cats perched on ledges up both walls, smug and
+  just out of reach. Millie can never catch one (that's the joke) - they
+  arch and hiss as she nears, and a good BARK sends them leaping off with
+  a yowl. Shooing them is a per-level goal ("shoo 3 wall cats"), scores
+  bones, and feeds the combo meter. The hard-to-reach prize is a sardine
+  tucked under a cat's ledge.
+- New wall-cat regression test; CI smoke-tests the new level and runs the
+  test.
+
 ## 2026-07-18 — v1.12: the bolt chase (fast threat, owner drags you)
 
 - A second chase flavour, the mirror of the sweeper. Where the sweeper is

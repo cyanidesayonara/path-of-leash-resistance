@@ -113,6 +113,10 @@ const HOME_Y := 320.0
 var chase_active := false
 var chase_sweeper: Node2D
 var chase_kind := "sweeper"  # "sweeper" (slow, drag the owner) or "bolt" (fast, owner drags you)
+# El Gotic wall cats: perched temptations you shoo with a bark
+var wallcat_spots: Array[Vector2] = []
+var laundry_lines: Array[float] = []
+var wall_cats_spooked := 0
 const CHASE_SPEED := 140.0
 const CHASE_SPEED_BOLT := 205.0
 const CHASE_START_GAP := 650.0
@@ -262,6 +266,7 @@ func _ready() -> void:
 	_build_quests()
 	_build_hud()
 	_spawn_challenger()
+	_spawn_wallcats()
 	# day/night + weather: a canvas tint; HUD lives on a CanvasLayer,
 	# unaffected
 	night_cm = CanvasModulate.new()
@@ -341,10 +346,14 @@ func _setup_input() -> void:
 func _build_level_data() -> void:
 	var hyd_list: Array[Vector2] = []
 	var keb_list: Array[Vector2] = []
-	# El Aguacero reuses the boulevard's proven layout for now (bespoke
-	# geometry is a later pass); the rain, extra storm drains and umbrella
-	# crowd below are what make it its own walk.
-	var geo := "street" if lvl == "rain" else lvl
+	# a couple of walks reuse a proven layout as a base for now (bespoke
+	# geometry is a later pass) and re-theme it below: El Aguacero on the
+	# boulevard, El Gotic on the stall-lined market channel.
+	var geo := lvl
+	if lvl == "rain":
+		geo = "street"
+	elif lvl == "oldtown":
+		geo = "market"
 	match geo:
 		"street":
 			lane_ys = [-1200.0, -2600.0, -4000.0]
@@ -540,6 +549,19 @@ func _build_level_data() -> void:
 			Vector2(560, -3560), Vector2(760, -3520),
 		])
 		fountains = [Vector2(335, -3350)]
+	elif lvl == "oldtown":
+		# El Gotic: a tight medieval alley. Wall cats perched on ledges up
+		# both walls, laundry strung overhead, lanterns. Extra poles pinch
+		# the channel so threading the owner through is the real work.
+		gate_text = "PLACA"
+		wallcat_spots = [
+			Vector2(360, -900), Vector2(920, -1450), Vector2(360, -2100),
+			Vector2(920, -2750), Vector2(360, -3350), Vector2(920, -3950),
+		]
+		laundry_lines = [-1250.0, -2000.0, -2850.0, -3650.0, -4300.0]
+		for yy in [-1150.0, -1700.0, -2500.0, -3200.0, -3800.0, -4400.0]:
+			poles.append(Vector2(walk_cx + (70.0 if int(yy) % 2 == 0 else -70.0), yy))
+		fountains = [Vector2(345, -2600.0)]
 	for tb in tables:
 		poles.append(tb)
 	for pa in parasols:
@@ -615,6 +637,9 @@ func _build_level_data() -> void:
 		"rain":
 			prize_pos = Vector2(640.0, -1500.0)  # right on a gaping storm drain
 			prize_text = "snatch the toy off the storm drain"
+		"oldtown":
+			prize_pos = Vector2(920.0, -2750.0)  # under a smug wall cat, up the wall
+			prize_text = "steal the sardine under the cat's ledge"
 		_:
 			prize_pos = Vector2(SHOULDER_R - 12.0, -2400.0)
 			prize_text = "fetch the frisbee"
@@ -776,6 +801,7 @@ const LEVEL_GOAL_IDS := {
 	"beach": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "save", "prize"],
 	"rain": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "drink", "prize"],
 	"market": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "zoom", "prize"],
+	"oldtown": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "cats", "snack", "prize"],
 }
 
 
@@ -798,6 +824,7 @@ func _goal_defs() -> Dictionary:
 		"fling": {"text": "fling the owner off a pole", "target": 1, "fn": func() -> int: return flings_done},
 		"tangle": {"text": "tangle with another walker", "target": 1, "fn": func() -> int: return 1 if tangles >= 1 else 0},
 		"snack": {"text": "steal %d dropped snacks", "target": 2, "fn": func() -> int: return kebabs_eaten},
+		"cats": {"text": "shoo %d wall cats", "target": 3, "fn": func() -> int: return wall_cats_spooked},
 		"prize": {"text": prize_text, "target": 1, "fn": func() -> int: return 1 if prize_taken else 0},
 	}
 
@@ -920,7 +947,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.12"
+	version_l.text = "v1.13"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -2356,6 +2383,26 @@ func _enter_freedom() -> void:
 	float_text(dog.global_position, "OFF LEASH!  FETCH!", Color(0.8, 1.0, 0.8))
 
 
+func _spawn_wallcats() -> void:
+	# perched temptations up both alley walls (El Gotic). They bolt away
+	# from the centre when barked at.
+	for spot in wallcat_spots:
+		var wc := Node2D.new()
+		wc.set_script(load("res://wallcat.gd"))
+		wc.position = spot
+		wc.z_index = 7
+		add_child(wc)
+		wc.setup(self, dog, 1.0 if spot.x > walk_cx else -1.0)
+
+
+func on_wallcat_spooked(pos: Vector2) -> void:
+	wall_cats_spooked += 1
+	bones += 2
+	combo.add("SHOO", 3)
+	float_text(pos + Vector2(0, -20), "scat! +2", Color(0.9, 0.95, 1.0))
+	_update_hud()
+
+
 func _spawn_challenger() -> void:
 	# one combo-challenge giver per walk, lounging on the out leg where you
 	# still have room and energy to show off
@@ -2586,6 +2633,9 @@ func on_bark(pos: Vector2) -> void:
 	for p in get_tree().get_nodes_in_group("pigeons"):
 		if p.global_position.distance_to(pos) < 200.0:
 			p.scare()
+	for wc in get_tree().get_nodes_in_group("wallcats"):
+		if wc.global_position.distance_to(pos) < 150.0:
+			wc.scare()
 
 
 func set_leash_target(v: float) -> void:
@@ -2928,6 +2978,22 @@ func _draw() -> void:
 		draw_rect(Rect2(v.x - 32, v.y - 66, 64, 132), Color(0.55, 0.55, 0.55), false, 2.0)
 		draw_rect(Rect2(v.x - 26, v.y - 60, 52, 22), Color(0.35, 0.42, 0.5))
 		draw_line(v + Vector2(-24, 62), v + Vector2(24, 62), Color(0.6, 0.3, 0.25), 3.0)
+	# El Gotic: laundry strung across the alley overhead, a lantern or two
+	if lvl == "oldtown":
+		var lt := Time.get_ticks_msec() / 1000.0
+		var wash := [Color(0.8, 0.3, 0.35), Color(0.3, 0.5, 0.7), Color(0.9, 0.85, 0.6), Color(0.4, 0.65, 0.5)]
+		for i in range(laundry_lines.size()):
+			var ly: float = laundry_lines[i]
+			draw_line(Vector2(SIDEWALK_LEFT - 20.0, ly), Vector2(SIDEWALK_RIGHT + 20.0, ly - 8.0), Color(0.2, 0.18, 0.16), 1.5)
+			for j in range(5):
+				var hx := lerpf(SIDEWALK_LEFT + 20.0, SIDEWALK_RIGHT - 20.0, float(j) / 4.0)
+				var sway := sin(lt * 1.2 + j + i) * 2.0
+				draw_rect(Rect2(hx - 9.0, ly - 6.0, 18.0, 26.0 + sway), wash[(i + j) % wash.size()])
+		# lanterns down one wall
+		for i in range(laundry_lines.size()):
+			var lyy: float = laundry_lines[i] + 380.0
+			var glow := 0.6 + 0.25 * sin(lt * 3.0 + i)
+			draw_circle(Vector2(SIDEWALK_LEFT + 6.0, lyy), 6.0, Color(1.0, 0.8, 0.4, glow))
 	# street performers: a hat, some coins, music in the air. In the rain
 	# they are an umbrella crowd instead - hunched under canopies, no busking.
 	var pt := Time.get_ticks_msec() / 1000.0
