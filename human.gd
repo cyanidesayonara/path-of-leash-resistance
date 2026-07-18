@@ -3,7 +3,7 @@ extends CharacterBody2D
 # The human. Dead weight with a phone. Walks north on autopilot,
 # occasionally does something stupid. Telegraphs it first, to be fair.
 
-enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, WHIRL, GO_POOP, BAG, GO_BIN, TOSS, STUMBLE, FALLEN }
+enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, SIGNAL, WHIRL, GO_POOP, BAG, GO_BIN, TOSS, STUMBLE, FALLEN }
 
 const WALK_SPEED := 92.0
 const PANIC_SPEED := 230.0
@@ -135,6 +135,15 @@ func tick(delta: float) -> void:
 			# walks backwards while filming, weaving
 			var sway := sin(Time.get_ticks_msec() / 250.0) * 30.0
 			velocity = velocity.move_toward(Vector2(sway, 62.0), 220.0 * delta)
+			move_and_slide()
+			if state_t <= 0.0:
+				state = HState.WALK
+				bubble.visible = false
+		HState.SIGNAL:
+			# no bars: plants and holds the phone aloft, wandering a step in
+			# hope of a signal - a dead stop as far as the dog is concerned
+			var hunt := sin(Time.get_ticks_msec() / 400.0) * 10.0
+			velocity = velocity.move_toward(Vector2(hunt, 0.0), 260.0 * delta)
 			move_and_slide()
 			if state_t <= 0.0:
 				state = HState.WALK
@@ -308,21 +317,24 @@ func _events(delta: float) -> void:
 		event_timer = randf_range(3.5, 6.5)
 		var roll := randf()
 		pending_bench = false
-		if roll < 0.2:
+		if roll < 0.18:
 			pending_event = HState.STOPPED
 			_show_bubble("ring ring")
-		elif roll < 0.4:
+		elif roll < 0.36:
 			pending_event = HState.DRIFT
 			_show_bubble("typing...")
-		elif roll < 0.56:
+		elif roll < 0.5:
 			pending_event = HState.DASH
 			_show_bubble("ooh!")
-		elif roll < 0.68:
+		elif roll < 0.62:
 			pending_event = HState.SELFIE
 			_show_bubble("selfie!")
-		elif roll < 0.78:
+		elif roll < 0.72:
 			pending_event = HState.FILM
 			_show_bubble("filming...")
+		elif roll < 0.84:
+			pending_event = HState.SIGNAL
+			_show_bubble("signal?")
 		else:
 			pending_event = HState.DASH
 			pending_bench = true
@@ -347,6 +359,10 @@ func _fire_event() -> void:
 			state = HState.FILM
 			state_t = randf_range(1.6, 2.4)
 			_show_bubble("filming...")
+		HState.SIGNAL:
+			state = HState.SIGNAL
+			state_t = randf_range(2.6, 4.2)
+			_show_bubble("no signal...")
 		HState.DASH:
 			var lo: float = main.walk_cx - main.walk_half + 40.0
 			var hi: float = main.walk_cx + main.walk_half - 40.0
@@ -595,6 +611,15 @@ func _draw() -> void:
 		# bent over the evidence, arm to the ground
 		draw_line(fd * 10.0, fd * 26.0, skin, 4.0)
 		draw_circle(fd * 26.0, 3.5, Color(0.9, 0.9, 0.92))
+	if state == HState.SIGNAL:
+		# the phone thrust skyward, hunting for a bar that will not come
+		var up := head + Vector2(0, -22)
+		draw_line(head, up, skin, 4.0)
+		draw_rect(Rect2(up.x - 5.0, up.y - 8.0, 10.0, 15.0), Color(0.1, 0.1, 0.12))
+		draw_rect(Rect2(up.x - 3.5, up.y - 6.0, 7.0, 11.0), Color(0.7, 0.85, 1.0, 0.8))
+		for b in range(3):
+			draw_rect(Rect2(up.x - 5.0 + b * 3.0, up.y - 15.0 - b * 2.0, 2.0, 4.0 + b * 2.0), Color(0.6, 0.6, 0.65))
+		draw_line(up + Vector2(-6, -18), up + Vector2(7, -6), Color(1, 0.4, 0.4), 2.0)
 	if state == HState.FALLEN:
 		for i in range(3):
 			var a := t * 3.0 + TAU * i / 3.0

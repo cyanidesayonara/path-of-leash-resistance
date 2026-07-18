@@ -99,7 +99,10 @@ Every feature must serve at least one. If it serves none, cut it.
   your mouth and tote it to a marked drop-off (boulevard newspaper, El
   Mercat oranges). A calm objective type to offset the chases. Follow-up:
   drop-on-hit tension, more levels, fragile items.
-- **v1.16 - polish + tuning.** Playtest feedback pass: chase/combo feel,
+- **v1.16 - shipped.** "No signal" owner event: the phone addict loses
+  their bars and stops to hold the phone aloft, rooting themselves - the
+  owner's obsession as a gameplay beat. A cross-cutting rare event.
+- **v1.17 - polish + tuning.** Playtest feedback pass: chase/combo feel,
   level difficulty, and bespoke geometry for the reused-base walks
   (El Aguacero, El Gotic).
 - **v2.0 - The Product.** Watercolor art integration, sound and music
@@ -329,6 +332,25 @@ memorable.
   dog should visibly fetch its owner's ball when the player does not, so
   interception feels like stealing the fetch rather than the only fetch.
   Deferred to avoid coupling the delicate parked-pair lifecycle.
+- Performance / engine ceiling (profiled July 2026): natively the game
+  holds ~100fps with no drops even at peak entity counts, and the leash
+  verlet costs ~0.1ms/frame - the physics and algorithms are NOT the
+  bottleneck. The choppiness seen in play is the WASM web build (itch),
+  which runs GDScript and Godot's renderer 2-5x slower than native.
+  Godot 2D itself can take this game far; the practical ceiling is the
+  web export's CPU budget. Levers when we invest in a web-perf pass
+  (measure in-browser first): cut per-frame GDScript work in _draw and
+  the entity draws, coarser leash sampling / fewer solver iterations,
+  pooling, and possibly enabling web thread_support (needs COOP/COEP
+  headers on the host). Native/Steam has ample headroom; a desktop build
+  sidesteps the ceiling entirely. Renderer is already gl_compatibility.
+- UI/UX + art to "professional": the biggest lift-per-effort is a real
+  art + HUD pass - consistent type scale and spacing, a cohesive palette,
+  eased transitions and juice (screen shake, hit-stop, particles are
+  partly there), and the girlfriend's watercolor characters/backgrounds
+  replacing the procedural vector art. The systems are in place; it is a
+  presentation layer, best done once the mechanic set is frozen so art
+  is not redrawn. Tracked for the v2.0 "The Product" milestone.
 - Uniqueness rule (from playtesting): shared asset library for
   efficiency, but every setting must earn its own look AND at least one
   interaction that exists nowhere else - it gets dull otherwise.

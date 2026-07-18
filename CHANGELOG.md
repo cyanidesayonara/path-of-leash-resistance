@@ -2,6 +2,26 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.16: "no signal" owner event
+
+- A new rare owner behaviour, and maybe the most on-theme one yet: the
+  phone addict loses their bars, stops dead, and thrusts the phone
+  skyward hunting for a signal ("no signal..."), rooted for a few
+  seconds while you, the dog, are stuck on the other end of the leash.
+  The owner's phone obsession finally becomes a gameplay beat.
+- Added to the shared random-event pool, so it can strike on any walk
+  (~1 in 8 owner events). Zero new entities - deliberately cheap, since
+  the current jank is the web build's CPU headroom, not native.
+
+### Note on performance / the engine ceiling
+
+Profiled this session: natively the game holds ~100fps with no drops
+even at peak entity counts, and the leash physics costs ~0.1ms/frame -
+so the choppiness reported in play is the WASM web build (2-5x slower
+than native), not a native or algorithmic problem. Renderer is already
+gl_compatibility. A dedicated web-perf pass (measured in-browser) is the
+right next step when we choose to spend on it.
+
 ## 2026-07-18 — v1.15: carry / delivery missions
 
 - A new objective type, a calm counterpoint to the chaos: pick an item up
