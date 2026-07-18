@@ -12,7 +12,7 @@ extends Node2D
 # pull follows the rope around the pole.
 
 const N := 24
-const ITER := 14
+const ITER := 11
 const POLE_PAD := 13.0
 const FRICTION := 0.5
 
@@ -118,7 +118,11 @@ func tick(delta: float) -> void:
 			if i + 1 < N - 1:
 				pts[i + 1] -= corr
 		# segment-vs-circle collision: point-only checks tunnel when
-		# stretched segments straddle the pole between two points
+		# stretched segments straddle the pole between two points. On open
+		# stretches nothing is near, so skip the whole scan (it was N-1
+		# empty inner loops per solver iteration, every frame).
+		if near_poles.is_empty():
+			continue
 		for i in range(N - 1):
 			for pl in near_poles:
 				var cp := _closest_on_segment(pts[i], pts[i + 1], pl)

@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.21: web-perf pass #3 — leash solver trim
+
+- On open stretches (no poles or other ropes in the rope's bounding box)
+  the collision scan is now skipped entirely - it was running N-1 empty
+  inner loops per solver iteration, every frame, for nothing.
+- Solver iterations trimmed 14 -> 11 (~20% fewer passes). The wrap and
+  tangle regression tests both still pass, so the behaviour holds; the
+  rope is marginally softer. ITER is one constant in leash.gd - bump it
+  back toward 14 if the wind/tetherball feel wants more stiffness.
+- Targets the "tangling gets choppy" case on the web build specifically.
+  Guardrails: test_wrap + test_tangle_latch.
+
 ## 2026-07-18 — v1.20: El Bosc (the forest trail)
 
 - A seventh walk (gate 11): a woodland trail with a stop-start rhythm all

@@ -116,7 +116,11 @@ Every feature must serve at least one. If it serves none, cut it.
 - **v1.20 - shipped.** El Bosc (forest trail): a no-signal woodland walk
   where the owner keeps stopping to hunt for bars, with mud, a stream and
   squirrels. Reuses the park layout for now.
-- **v1.21 - polish + tuning.** Playtest feedback pass: chase/combo feel,
+- **v1.21 - shipped.** Web-perf pass #3: leash solver trim - skip the
+  collision scan on open stretches, and 14->11 solver iterations (wrap +
+  tangle tests still pass). Draw and physics hot paths all now trimmed;
+  remaining perf work is in-browser measurement on the actual web build.
+- **v1.22 - polish + tuning.** Playtest feedback pass: chase/combo feel,
   level difficulty, and bespoke geometry for the reused-base walks
   (El Aguacero, El Gotic, El Bosc).
 - **v2.0 - The Product.** Watercolor art integration, sound and music

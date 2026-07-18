@@ -997,7 +997,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.20"
+	version_l.text = "v1.21"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
