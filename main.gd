@@ -117,6 +117,9 @@ var chase_kind := "sweeper"  # "sweeper" (slow, drag the owner) or "bolt" (fast,
 var wallcat_spots: Array[Vector2] = []
 var laundry_lines: Array[float] = []
 var wall_cats_spooked := 0
+# El Bosc: the owner keeps losing signal; muddy patches slow the going
+var signal_prone := false
+var mud_zones: Array[Rect2] = []
 const CHASE_SPEED := 140.0
 const CHASE_SPEED_BOLT := 205.0
 const CHASE_SPEED_BOTH := 220.0
@@ -367,6 +370,8 @@ func _build_level_data() -> void:
 		geo = "street"
 	elif lvl == "oldtown":
 		geo = "market"
+	elif lvl == "trail":
+		geo = "park"
 	match geo:
 		"street":
 			lane_ys = [-1200.0, -2600.0, -4000.0]
@@ -575,6 +580,18 @@ func _build_level_data() -> void:
 		for yy in [-1150.0, -1700.0, -2500.0, -3200.0, -3800.0, -4400.0]:
 			poles.append(Vector2(walk_cx + (70.0 if int(yy) % 2 == 0 else -70.0), yy))
 		fountains = [Vector2(345, -2600.0)]
+	elif lvl == "trail":
+		# El Bosc: a forest trail. No bars out here, so the owner is forever
+		# stopping to hunt for a signal (see human.gd); muddy patches slow
+		# the going, and a stream to drink from. Calm, stop-start rhythm.
+		gate_text = "CLEARING"
+		signal_prone = true
+		mud_zones = [
+			Rect2(SIDEWALK_LEFT, -1600.0, SIDEWALK_RIGHT - SIDEWALK_LEFT, 260.0),
+			Rect2(SIDEWALK_LEFT, -2900.0, SIDEWALK_RIGHT - SIDEWALK_LEFT, 300.0),
+			Rect2(SIDEWALK_LEFT, -4100.0, SIDEWALK_RIGHT - SIDEWALK_LEFT, 240.0),
+		]
+		fountains = [Vector2(360.0, -2400.0)]
 	for tb in tables:
 		poles.append(tb)
 	for pa in parasols:
@@ -653,6 +670,9 @@ func _build_level_data() -> void:
 		"oldtown":
 			prize_pos = Vector2(920.0, -2750.0)  # under a smug wall cat, up the wall
 			prize_text = "steal the sardine under the cat's ledge"
+		"trail":
+			prize_pos = Vector2(300.0, -3400.0)  # a pinecone off in the muddy brush
+			prize_text = "dig the pinecone out of the mud"
 		_:
 			prize_pos = Vector2(SHOULDER_R - 12.0, -2400.0)
 			prize_text = "fetch the frisbee"
@@ -830,6 +850,7 @@ const LEVEL_GOAL_IDS := {
 	"rain": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "drink", "prize"],
 	"market": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "zoom", "carry", "prize"],
 	"oldtown": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "cats", "snack", "prize"],
+	"trail": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "chase", "drink", "prize"],
 }
 
 
@@ -976,7 +997,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.19"
+	version_l.text = "v1.20"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -2108,6 +2129,11 @@ func _offpath(delta: float) -> void:
 	# the dog may roam, but an undistracted owner has opinions: after a
 	# few seconds off the walk they tut and reel the leash in a notch
 	dog.sand_slow = lvl == "beach" and dog.global_position.x < 340.0
+	if lvl == "trail":
+		for mz in mud_zones:
+			if mz.has_point(dog.global_position):
+				dog.sand_slow = true
+				break
 	var off: bool = dog.global_position.x < tut_l or dog.global_position.x > tut_r
 	if off and human.is_available_for_chore() and not human.is_fallen():
 		offpath_t += delta
@@ -3057,6 +3083,15 @@ func _draw() -> void:
 		draw_rect(Rect2(v.x - 32, v.y - 66, 64, 132), Color(0.55, 0.55, 0.55), false, 2.0)
 		draw_rect(Rect2(v.x - 26, v.y - 60, 52, 22), Color(0.35, 0.42, 0.5))
 		draw_line(v + Vector2(-24, 62), v + Vector2(24, 62), Color(0.6, 0.3, 0.25), 3.0)
+	# El Bosc: muddy patches across the trail (slow going)
+	if lvl == "trail":
+		for mz in mud_zones:
+			if mz.end.y > vt and mz.position.y < vb:
+				draw_rect(mz, Color(0.34, 0.26, 0.18, 0.85))
+				for i in range(6):
+					var px := mz.position.x + fmod(i * 151.0, mz.size.x)
+					var py := mz.position.y + fmod(i * 97.0, mz.size.y)
+					draw_circle(Vector2(px, py), 5.0, Color(0.24, 0.18, 0.12, 0.7))
 	# El Gotic: laundry strung across the alley overhead, a lantern or two
 	if lvl == "oldtown":
 		var lt := Time.get_ticks_msec() / 1000.0

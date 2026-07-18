@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.20: El Bosc (the forest trail)
+
+- A seventh walk (gate 11): a woodland trail with a stop-start rhythm all
+  its own. Out here there are NO BARS, so the owner is forever freezing
+  mid-step to hold the phone aloft hunting for a signal (the "no signal"
+  event, cranked way up on this level) - you spend the walk stuck on a
+  rooted owner, tugging to get them moving again.
+- Muddy patches slow the going, a stream to drink from, squirrels to
+  chase. The hard-to-reach prize is a pinecone off in the muddy brush.
+- Reuses the park's layout as a base for now; bespoke geometry later.
+
 ## 2026-07-18 — v1.19: web-perf pass #2 — gate entity redraws
 
 - Same principle as #1, applied to the entities: an entity moves via its

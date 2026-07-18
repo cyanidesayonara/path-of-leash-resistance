@@ -317,7 +317,11 @@ func _events(delta: float) -> void:
 		event_timer = randf_range(3.5, 6.5)
 		var roll := randf()
 		pending_bench = false
-		if roll < 0.18:
+		if main.signal_prone and roll < 0.45:
+			# out in the woods there are no bars, ever
+			pending_event = HState.SIGNAL
+			_show_bubble("no bars out here")
+		elif roll < 0.18:
 			pending_event = HState.STOPPED
 			_show_bubble("ring ring")
 		elif roll < 0.36:

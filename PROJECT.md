@@ -113,9 +113,12 @@ Every feature must serve at least one. If it serves none, cut it.
   pairs, critters, Tofu) and NPC-pair leashes to ~30fps, keeping movement
   smooth via the transform and the player leash full-rate. Halves entity
   draw calls. Next perf: trim the leash solver; measure in-browser.
-- **v1.20 - polish + tuning.** Playtest feedback pass: chase/combo feel,
+- **v1.20 - shipped.** El Bosc (forest trail): a no-signal woodland walk
+  where the owner keeps stopping to hunt for bars, with mud, a stream and
+  squirrels. Reuses the park layout for now.
+- **v1.21 - polish + tuning.** Playtest feedback pass: chase/combo feel,
   level difficulty, and bespoke geometry for the reused-base walks
-  (El Aguacero, El Gotic).
+  (El Aguacero, El Gotic, El Bosc).
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
 - Every release also ships: mechanics tuning from playtests, at least
