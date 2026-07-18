@@ -232,6 +232,7 @@ var challenge_l: Label
 var challenge_giver: Node2D
 var challenge_offered := false
 var dog_carrying := false
+var _redraw_acc := 0.0
 # a neighbour's ball: a parked NPC owner throws one you can intercept and
 # return to them for a shared-fetch bonus
 var npc_ball: Node2D
@@ -969,7 +970,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.16"
+	version_l.text = "v1.17"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -1483,7 +1484,14 @@ func _process(_delta: float) -> void:
 		cam.offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * 9.0 * shake_t
 	else:
 		cam.offset = Vector2.ZERO
-	queue_redraw()
+	# the world is drawn in world space, so the camera scroll stays smooth
+	# without re-running _draw - only the world's own animations (glints,
+	# blinking lights) need refreshing, and 30fps is plenty for those. This
+	# frees the big per-frame draw cost that hurt the web build most.
+	_redraw_acc += _delta
+	if _redraw_acc >= 0.033 or shake_t > 0.0:
+		_redraw_acc = 0.0
+		queue_redraw()
 
 
 func _apply_leash(delta: float) -> void:

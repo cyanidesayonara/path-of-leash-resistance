@@ -102,7 +102,11 @@ Every feature must serve at least one. If it serves none, cut it.
 - **v1.16 - shipped.** "No signal" owner event: the phone addict loses
   their bars and stops to hold the phone aloft, rooting themselves - the
   owner's obsession as a gameplay beat. A cross-cutting rare event.
-- **v1.17 - polish + tuning.** Playtest feedback pass: chase/combo feel,
+- **v1.17 - shipped.** Web-perf pass #1: decoupled the world redraw from
+  the frame rate (world is drawn in world space, so camera scroll needs
+  no redraw). World now redraws ~30fps for its animations; ~70% less draw
+  CPU. Next: gate per-entity redraws, trim leash solver.
+- **v1.18 - polish + tuning.** Playtest feedback pass: chase/combo feel,
   level difficulty, and bespoke geometry for the reused-base walks
   (El Aguacero, El Gotic).
 - **v2.0 - The Product.** Watercolor art integration, sound and music

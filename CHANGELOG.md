@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.17: web-perf pass #1 — decouple world redraw
+
+- Measured the frame cost (windowed, in microseconds): the full-world
+  _draw was the single biggest cost (~750us, running ~100x/sec = ~75ms of
+  CPU per second), dwarfing physics (~24ms/sec, leash the biggest chunk).
+- Fix: the world is drawn in WORLD space, so scrolling the camera does
+  not require re-running _draw - Godot re-renders the persisted canvas
+  items from the new camera position for free. So the per-frame world
+  redraw was almost entirely wasted. Now the world redraws at ~30fps (for
+  its own glints/blinks), while the camera still scrolls every frame.
+  ~70% less draw CPU (~75ms/sec -> ~22ms/sec), and the scroll is
+  visually identical.
+- This targets exactly the web (WASM) build's bottleneck; native was
+  already smooth. Next perf increments (measured in-browser): gate the
+  per-entity redraws the same way, and trim leash solver cost.
+
 ## 2026-07-18 — v1.16: "no signal" owner event
 
 - A new rare owner behaviour, and maybe the most on-theme one yet: the
