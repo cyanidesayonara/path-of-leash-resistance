@@ -120,6 +120,10 @@ var wall_cats_spooked := 0
 # El Bosc: the owner keeps losing signal; muddy patches slow the going
 var signal_prone := false
 var mud_zones: Array[Rect2] = []
+# L'Estacio: a moving walkway that carries whoever stands on it
+var conveyor_zone := Rect2()
+var conveyor_dir := Vector2.ZERO
+const CONV_SPEED := 118.0
 const CHASE_SPEED := 140.0
 const CHASE_SPEED_BOLT := 205.0
 const CHASE_SPEED_BOTH := 220.0
@@ -366,7 +370,7 @@ func _build_level_data() -> void:
 	# geometry is a later pass) and re-theme it below: El Aguacero on the
 	# boulevard, El Gotic on the stall-lined market channel.
 	var geo := lvl
-	if lvl == "rain":
+	if lvl == "rain" or lvl == "station":
 		geo = "street"
 	elif lvl == "oldtown":
 		geo = "market"
@@ -592,6 +596,15 @@ func _build_level_data() -> void:
 			Rect2(SIDEWALK_LEFT, -4100.0, SIDEWALK_RIGHT - SIDEWALK_LEFT, 240.0),
 		]
 		fountains = [Vector2(360.0, -2400.0)]
+	elif lvl == "station":
+		# L'Estacio: a concourse with a moving walkway. On it you get carried
+		# toward the platforms (north) - a boost on the way out, a shove to
+		# fight on the way home. Luggage carts clutter the floor.
+		gate_text = "PLATFORM"
+		conveyor_zone = Rect2(walk_cx - 90.0, -3400.0, 180.0, 1500.0)
+		conveyor_dir = Vector2(0, -1)
+		vans = [Vector2(380, -1500), Vector2(900, -2600), Vector2(400, -4200)]
+		fountains = [Vector2(1005, -3550)]
 	for tb in tables:
 		poles.append(tb)
 	for pa in parasols:
@@ -673,6 +686,9 @@ func _build_level_data() -> void:
 		"trail":
 			prize_pos = Vector2(300.0, -3400.0)  # a pinecone off in the muddy brush
 			prize_text = "dig the pinecone out of the mud"
+		"station":
+			prize_pos = Vector2(640.0, -2650.0)  # a dropped sandwich mid-walkway
+			prize_text = "grab the sandwich off the moving walkway"
 		_:
 			prize_pos = Vector2(SHOULDER_R - 12.0, -2400.0)
 			prize_text = "fetch the frisbee"
@@ -851,6 +867,7 @@ const LEVEL_GOAL_IDS := {
 	"market": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "zoom", "carry", "prize"],
 	"oldtown": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "cats", "snack", "prize"],
 	"trail": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "chase", "drink", "prize"],
+	"station": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "snack", "prize"],
 }
 
 
@@ -997,7 +1014,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.21"
+	version_l.text = "v1.22"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -1384,6 +1401,13 @@ func _physics_process(delta: float) -> void:
 	if Game.weather == "wind":
 		dog.velocity += Vector2(46.0, 0) * delta
 		human.velocity += Vector2(70.0, 0) * delta
+	# the moving walkway carries whoever is standing on it (L'Estacio)
+	if conveyor_zone.size.y > 0.0:
+		var carry := conveyor_dir * CONV_SPEED
+		if conveyor_zone.has_point(dog.global_position):
+			dog.velocity += carry * delta
+		if conveyor_zone.has_point(human.global_position):
+			human.velocity += carry * delta
 	if auto_walk:
 		_auto_drive(delta)
 	dog.tick(delta)
@@ -3083,6 +3107,19 @@ func _draw() -> void:
 		draw_rect(Rect2(v.x - 32, v.y - 66, 64, 132), Color(0.55, 0.55, 0.55), false, 2.0)
 		draw_rect(Rect2(v.x - 26, v.y - 60, 52, 22), Color(0.35, 0.42, 0.5))
 		draw_line(v + Vector2(-24, 62), v + Vector2(24, 62), Color(0.6, 0.3, 0.25), 3.0)
+	# L'Estacio: the moving walkway - a metal band with chevrons scrolling
+	# in the carry direction
+	if conveyor_zone.size.y > 0.0 and conveyor_zone.end.y > vt and conveyor_zone.position.y < vb:
+		draw_rect(conveyor_zone, Color(0.32, 0.34, 0.38))
+		draw_rect(conveyor_zone, Color(0.55, 0.58, 0.62), false, 2.0)
+		var scroll := fmod(Time.get_ticks_msec() / 1000.0 * 90.0, 60.0) * conveyor_dir.y
+		var cy := conveyor_zone.position.y + fmod(scroll, 60.0)
+		while cy < conveyor_zone.end.y + 60.0:
+			if cy > vt - 20.0 and cy < vb + 20.0:
+				var cx := conveyor_zone.get_center().x
+				draw_line(Vector2(cx - 30.0, cy + 10.0), Vector2(cx, cy), Color(0.6, 0.63, 0.68), 3.0)
+				draw_line(Vector2(cx + 30.0, cy + 10.0), Vector2(cx, cy), Color(0.6, 0.63, 0.68), 3.0)
+			cy += 60.0
 	# El Bosc: muddy patches across the trail (slow going)
 	if lvl == "trail":
 		for mz in mud_zones:

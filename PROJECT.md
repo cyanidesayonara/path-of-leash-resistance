@@ -120,9 +120,12 @@ Every feature must serve at least one. If it serves none, cut it.
   collision scan on open stretches, and 14->11 solver iterations (wrap +
   tangle tests still pass). Draw and physics hot paths all now trimmed;
   remaining perf work is in-browser measurement on the actual web build.
-- **v1.22 - polish + tuning.** Playtest feedback pass: chase/combo feel,
+- **v1.22 - shipped.** L'Estacio (station concourse): a moving walkway
+  that carries you toward the platforms (boost out, shove home) - the
+  first "the ground moves you" mechanic. Reuses the boulevard layout.
+- **v1.23 - polish + tuning.** Playtest feedback pass: chase/combo feel,
   level difficulty, and bespoke geometry for the reused-base walks
-  (El Aguacero, El Gotic, El Bosc).
+  (El Aguacero, El Gotic, El Bosc, L'Estacio).
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
 - Every release also ships: mechanics tuning from playtests, at least

@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.22: L'Estacio (station concourse) + moving walkway
+
+- An eighth walk (gate 13) built around a NEW mechanic: a moving walkway.
+  Stand on the metal band and it carries you toward the platforms (north)
+  - a free boost on the way out, a shove you have to fight on the way
+  home. Chevrons scroll in the carry direction. Luggage carts clutter the
+  concourse floor.
+- The hard-to-reach prize is a dropped sandwich sitting mid-walkway, so
+  grabbing it means getting carried while you try.
+- First cross-cutting "the ground moves you" mechanic; reuses the
+  boulevard layout as a base for now.
+
 ## 2026-07-18 — v1.21: web-perf pass #3 — leash solver trim
 
 - On open stretches (no poles or other ropes in the rope's bounding box)
