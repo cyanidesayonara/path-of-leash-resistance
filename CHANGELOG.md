@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.15: carry / delivery missions
+
+- A new objective type, a calm counterpoint to the chaos: pick an item up
+  in your mouth on the walk and tote it to a marked drop-off. Reuses the
+  mouth-carry from fetch; the parcel rides at Millie's nose while she
+  carries it, and a "DROP" marker shows where it goes.
+- Two to start: the boulevard (deliver the newspaper to a stoop) and El
+  Mercat (run the crate of oranges to the far stall). Each is a per-level
+  goal worth bones + a slow-mo on delivery, and it feeds the combo meter.
+- Pickup and drop are placed on opposite sides so it's a real detour with
+  the owner in tow, not a straight line.
+
 ## 2026-07-18 — v1.14: snow (ice-slide weather)
 
 - A fourth weather, SNOW, selectable on any walk. Falling flakes, a cold

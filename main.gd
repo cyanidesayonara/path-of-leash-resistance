@@ -130,6 +130,13 @@ var prize_pos := Vector2(INF, INF)
 var prize_text := "grab the prize"
 var prize_taken := false
 var prize_glow := 0.0
+# carry / delivery mission: pick an item up in your mouth and take it to a
+# marked drop-off. 0 = not yet picked up, 1 = carrying, 2 = delivered.
+var carry_pickup := Vector2(INF, INF)
+var carry_drop := Vector2(INF, INF)
+var carry_state := 0
+var carry_text := "make the delivery"
+var carry_item := "the parcel"
 const PAIR_PARK_SPOTS := [
 	{"name": &"west_fence", "position": Vector2(240.0, GATE_Y - 120.0)},
 	{"name": &"north_fence", "position": Vector2(430.0, GATE_Y - 260.0)},
@@ -643,6 +650,20 @@ func _build_level_data() -> void:
 		_:
 			prize_pos = Vector2(SHOULDER_R - 12.0, -2400.0)
 			prize_text = "fetch the frisbee"
+	# carry / delivery mission on some walks: pick it up here, drop it there
+	match lvl:
+		"street":
+			carry_pickup = Vector2(360.0, -1150.0)
+			carry_drop = Vector2(905.0, -2850.0)
+			carry_item = "the newspaper"
+			carry_text = "deliver the newspaper to the stoop"
+		"market":
+			carry_pickup = Vector2(915.0, -1250.0)
+			carry_drop = Vector2(360.0, -3050.0)
+			carry_item = "the crate of oranges"
+			carry_text = "run the oranges to the far stall"
+		_:
+			pass
 
 
 func _build_bypasser_blockers() -> void:
@@ -796,11 +817,11 @@ func _build_entities() -> void:
 
 
 const LEVEL_GOAL_IDS := {
-	"street": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "fling", "prize"],
+	"street": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "fling", "carry", "prize"],
 	"park": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "prize"],
 	"beach": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "save", "prize"],
 	"rain": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "drink", "prize"],
-	"market": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "zoom", "prize"],
+	"market": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "zoom", "carry", "prize"],
 	"oldtown": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "cats", "snack", "prize"],
 }
 
@@ -825,6 +846,7 @@ func _goal_defs() -> Dictionary:
 		"tangle": {"text": "tangle with another walker", "target": 1, "fn": func() -> int: return 1 if tangles >= 1 else 0},
 		"snack": {"text": "steal %d dropped snacks", "target": 2, "fn": func() -> int: return kebabs_eaten},
 		"cats": {"text": "shoo %d wall cats", "target": 3, "fn": func() -> int: return wall_cats_spooked},
+		"carry": {"text": carry_text, "target": 1, "fn": func() -> int: return 1 if carry_state >= 2 else 0},
 		"prize": {"text": prize_text, "target": 1, "fn": func() -> int: return 1 if prize_taken else 0},
 	}
 
@@ -947,7 +969,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.14"
+	version_l.text = "v1.15"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -2138,6 +2160,19 @@ func _pickups(delta: float) -> void:
 		prize_taken = true
 		bones += 8
 		float_text(prize_pos, "got it! +8", Color(1, 0.9, 0.5))
+	# carry mission: grab it, then take it to the drop-off
+	if carry_pickup.x < INF:
+		if carry_state == 0 and dog.global_position.distance_to(carry_pickup) < 28.0:
+			carry_state = 1
+			float_text(carry_pickup, "got %s!" % carry_item, Color(0.85, 1.0, 0.85))
+			_update_hud()
+		elif carry_state == 1 and dog.global_position.distance_to(carry_drop) < 34.0:
+			carry_state = 2
+			bones += 10
+			combo.add("DELIVER", 5)
+			float_text(carry_drop, "delivered! +10", Color(0.8, 1.0, 0.8))
+			_slowmo()
+			_update_hud()
 	for h in hydrants:
 		if h.done:
 			continue
@@ -2876,6 +2911,20 @@ func _draw() -> void:
 		draw_circle(prize_pos, 7.0, Color(0.95, 0.8, 0.35))
 		draw_circle(prize_pos + Vector2(-2, -2), 2.5, Color(1, 0.97, 0.85))
 		draw_string(font, prize_pos + Vector2(-30, -22), "!", HORIZONTAL_ALIGNMENT_CENTER, 60, 18, Color(1, 0.9, 0.5))
+	# carry mission: the parcel where it waits, the drop-off marker, and
+	# the parcel riding in Millie's mouth while she totes it
+	if carry_pickup.x < INF and carry_state < 2:
+		if carry_state == 0:
+			draw_rect(Rect2(carry_pickup.x - 8.0, carry_pickup.y - 5.0, 16.0, 10.0), Color(0.7, 0.6, 0.4))
+			draw_line(carry_pickup + Vector2(-8, -1), carry_pickup + Vector2(8, -1), Color(0.4, 0.32, 0.2), 1.0)
+		# the drop-off: a doormat with a downward chevron
+		var dp := 0.5 + 0.5 * sin(prize_glow)
+		draw_rect(Rect2(carry_drop.x - 16.0, carry_drop.y - 10.0, 32.0, 20.0), Color(0.35, 0.4, 0.5, 0.4 + dp * 0.25))
+		draw_rect(Rect2(carry_drop.x - 16.0, carry_drop.y - 10.0, 32.0, 20.0), Color(0.7, 0.8, 0.95, 0.5), false, 2.0)
+		draw_string(font, carry_drop + Vector2(-40, -16), "DROP", HORIZONTAL_ALIGNMENT_CENTER, 80, 13, Color(0.8, 0.9, 1.0, 0.8))
+	if carry_state == 1:
+		var mp: Vector2 = dog.global_position + dog.facing * 20.0
+		draw_rect(Rect2(mp.x - 7.0, mp.y - 4.0, 14.0, 8.0), Color(0.7, 0.6, 0.4))
 	# lampposts downtown, trees in the park, palms by the sea
 	# (same physics, different soul)
 	for i in range(deco_pole_count):

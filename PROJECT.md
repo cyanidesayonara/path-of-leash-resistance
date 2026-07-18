@@ -95,7 +95,11 @@ Every feature must serve at least one. If it serves none, cut it.
   (dog and owner both skate), selectable on any walk. Added a --weather=
   test hook. Winter as a cross-cutting mechanic rather than a one-off
   level; snow piles / salt patches / sledding kids remain level material.
-- **v1.15 - polish + tuning.** Playtest feedback pass: chase/combo feel,
+- **v1.15 - shipped.** Carry / delivery missions: pick an item up in
+  your mouth and tote it to a marked drop-off (boulevard newspaper, El
+  Mercat oranges). A calm objective type to offset the chases. Follow-up:
+  drop-on-hit tension, more levels, fragile items.
+- **v1.16 - polish + tuning.** Playtest feedback pass: chase/combo feel,
   level difficulty, and bespoke geometry for the reused-base walks
   (El Aguacero, El Gotic).
 - **v2.0 - The Product.** Watercolor art integration, sound and music
@@ -255,9 +259,10 @@ memorable.
   physics argument. The rope is already a self-contained component;
   the tangle is rope-vs-rope collision plus a lot of playtesting.
   Likely the flagship mechanic of the dog park setting.
-- Carry missions: Millie can hold things in her mouth - fetch quests
-  per level (take X from here to there), a ball-catch minigame, the
-  newspaper delivery. Mouth slot + item nodes; quest pool entries.
+- Carry missions (SHIPPED v1.15): Millie holds an item in her mouth and
+  totes it to a drop-off (newspaper on the boulevard, oranges at the
+  market). Follow-ups: drop-on-hit tension, fragile items, a ball-catch
+  minigame, more levels.
 - Level editor: data-driven levels FIRST (due at setting four), which
   makes an internal editor nearly free and player-facing editing a
   realistic post-launch option. Not before.
