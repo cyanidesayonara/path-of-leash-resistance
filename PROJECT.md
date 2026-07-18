@@ -106,7 +106,10 @@ Every feature must serve at least one. If it serves none, cut it.
   the frame rate (world is drawn in world space, so camera scroll needs
   no redraw). World now redraws ~30fps for its animations; ~70% less draw
   CPU. Next: gate per-entity redraws, trim leash solver.
-- **v1.18 - polish + tuning.** Playtest feedback pass: chase/combo feel,
+- **v1.18 - shipped.** The rescue chase (fast + scares both): a fire
+  engine emergency where you and the owner sprint home together. Completes
+  the chase threat grid (sweeper / bolt / rescue).
+- **v1.19 - polish + tuning.** Playtest feedback pass: chase/combo feel,
   level difficulty, and bespoke geometry for the reused-base walks
   (El Aguacero, El Gotic).
 - **v2.0 - The Product.** Watercolor art integration, sound and music
@@ -305,8 +308,9 @@ memorable.
     - fast + scares the owner (SHIPPED v1.12 as the "bolt": a red truck):
       the owner bolts and drags YOU - the leash flips from tool to
       problem, you're water-skiing behind a panicking human.
-    - both (fire truck, runaway float): a brief cooperative sprint, the
-      one time you and the owner want the same thing.
+    - both (SHIPPED v1.12... v1.18 as the "rescue": a fire engine): a
+      brief cooperative sprint, the one time you and the owner want the
+      same thing. The threat grid is now complete.
   In-fiction devourers by setting: street sweeper (city), incoming tide
   (beach), snowplough (winter), runaway parade float (festival). Own
   failure mode (caught = eaten, soft slapstick), not the usual soft-fail.

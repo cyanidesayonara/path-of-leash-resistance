@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.18: the rescue chase (completes the threat grid)
+
+- The third and final cell of the chase threat grid: a fast threat that
+  scares BOTH of you. A crimson fire engine comes barrelling down (lights
+  flashing) and, for once, you and the owner want the same thing - they
+  panic-sprint for home AND you're right there with them. A committed
+  co-op dash: don't fight the leash, just GO. Faster than the sweeper or
+  the bolt, so there's no time to dawdle.
+- The grid is now complete: slow+scares-you (sweeper, drag the owner),
+  fast+scares-owner (bolt, dragged by them), fast+scares-both (rescue,
+  sprint together). A home-leg chase rolls sweeper/bolt/rescue.
+- Force it with --rescue; CI runs a --rescue traversal. Kind-aware
+  vehicle skin, HUD, and game-over text.
+
 ## 2026-07-18 — v1.17: web-perf pass #1 — decouple world redraw
 
 - Measured the frame cost (windowed, in microseconds): the full-world

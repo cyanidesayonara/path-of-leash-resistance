@@ -130,3 +130,11 @@ jobs:
           ./Godot_v4.7-stable_linux.x86_64 --headless --fixed-fps 60 --path . --quit-after 12000 -- --level=street --autowalk --bolt 2>&1 | tee bolt.log
           ! grep -E "SCRIPT ERROR|Parse Error" bolt.log
           grep -q "AUTOWALK FINISHED" bolt.log
+
+      - name: Full-walk traversal with the rescue chase (--rescue)
+        # the "both flee" emergency variant: owner panics AND the fast
+        # threat; asserts the loop still completes.
+        run: |
+          ./Godot_v4.7-stable_linux.x86_64 --headless --fixed-fps 60 --path . --quit-after 12000 -- --level=street --autowalk --rescue 2>&1 | tee rescue.log
+          ! grep -E "SCRIPT ERROR|Parse Error" rescue.log
+          grep -q "AUTOWALK FINISHED" rescue.log

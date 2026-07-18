@@ -119,6 +119,7 @@ var laundry_lines: Array[float] = []
 var wall_cats_spooked := 0
 const CHASE_SPEED := 140.0
 const CHASE_SPEED_BOLT := 205.0
+const CHASE_SPEED_BOTH := 220.0
 const CHASE_START_GAP := 650.0
 # goals completed this run (ids), for scoring/toasts/results independent
 # of persistence; plus the star snapshot captured when the walk begins
@@ -301,15 +302,19 @@ func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
 	var chase_forced := "--chase" in args
 	var bolt_forced := "--bolt" in args
-	chase_active = chase_forced or bolt_forced or (not auto_walk and not Game.daily and randf() < 0.25)
+	var rescue_forced := "--rescue" in args
+	chase_active = chase_forced or bolt_forced or rescue_forced or (not auto_walk and not Game.daily and randf() < 0.25)
 	if chase_active:
 		tofu_quest_active = false
 		if bolt_forced:
 			chase_kind = "bolt"
+		elif rescue_forced:
+			chase_kind = "both"
 		elif chase_forced:
 			chase_kind = "sweeper"
 		else:
-			chase_kind = "bolt" if randf() < 0.5 else "sweeper"
+			var r := randf()
+			chase_kind = "sweeper" if r < 0.4 else ("bolt" if r < 0.75 else "both")
 	menu_step = Game.menu_step
 	_apply_menu_step()
 
@@ -970,7 +975,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.17"
+	version_l.text = "v1.18"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -1239,7 +1244,9 @@ func _update_hud() -> void:
 			hud_status = "FETCH!  bring it back  %d/%d   %ds left" % [romp_catches, romp_target, int(ceil(romp_timer))]
 	elif phase == "home":
 		if chase_active and chase_sweeper != null:
-			if chase_kind == "bolt":
+			if chase_kind == "both":
+				hud_status = "EMERGENCY!  sprint home together - don't fight it!"
+			elif chase_kind == "bolt":
 				hud_status = "your human BOLTED - keep up and don't snag!"
 			else:
 				hud_status = "RUN!  keep the sweeper behind you - drag them along!"
@@ -2561,17 +2568,24 @@ func _enter_home() -> void:
 		tf.setup(self, dog, spots)
 		float_text(spots[0], "Tofu!? she got out again - get her home!", Color(1, 0.85, 0.7))
 	if chase_active:
-		var bolt := chase_kind == "bolt"
+		var owner_flees := chase_kind == "bolt" or chase_kind == "both"
 		chase_sweeper = Node2D.new()
 		chase_sweeper.set_script(load("res://sweeper.gd"))
 		chase_sweeper.z_index = 8
 		chase_sweeper.kind = chase_kind
 		add_child(chase_sweeper)
-		var spd := CHASE_SPEED_BOLT if bolt else CHASE_SPEED
+		var spd := CHASE_SPEED
+		if chase_kind == "bolt":
+			spd = CHASE_SPEED_BOLT
+		elif chase_kind == "both":
+			spd = CHASE_SPEED_BOTH
 		chase_sweeper.setup(self, dog.global_position.y - CHASE_START_GAP, walk_cx, walk_half, spd)
 		shake_t = 1.0
-		if bolt:
+		if owner_flees:
 			human.panic = true
+		if chase_kind == "both":
+			float_text(human.global_position, "FIRE ENGINE!  GO GO GO!", Color(1, 0.55, 0.25))
+		elif chase_kind == "bolt":
 			float_text(human.global_position, "AAH!  the owner BOLTED!", Color(1, 0.6, 0.3))
 		else:
 			float_text(dog.global_position, "THE STREET SWEEPER! RUN!", Color(1, 0.6, 0.3))
@@ -2592,12 +2606,15 @@ func _chase(delta: float) -> void:
 	if auto_walk:
 		return  # the attract/CI bot carries an unsweepable dog
 	if chase_sweeper.caught(human.global_position):
-		_death("THE SWEEPER GOT YOUR HUMAN\n\nThey never once looked up from the phone.\nYou did try to tell them.")
-	elif chase_sweeper.caught(dog.global_position):
-		if chase_kind == "bolt":
-			_death("LEFT BEHIND\n\nYou snagged, the leash went taut, and\nthe truck did not think to wait.")
+		if chase_kind == "sweeper":
+			_death("THE SWEEPER GOT YOUR HUMAN\n\nThey never once looked up from the phone.\nYou did try to tell them.")
 		else:
+			_death("CAUGHT\n\nYou couldn't get the two of you clear in time.")
+	elif chase_sweeper.caught(dog.global_position):
+		if chase_kind == "sweeper":
 			_death("SWEPT UP\n\nMillie disappeared into the brushes.\nSuspiciously clean about it, too.")
+		else:
+			_death("LEFT BEHIND\n\nYou snagged, the leash went taut, and\nnobody thought to wait.")
 
 
 func _finish_walk() -> void:
