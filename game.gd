@@ -13,8 +13,8 @@ const LEVEL_NAMES := {
 # walk. The first is always open; each subsequent walk asks a little more.
 const STAR_GATE := {"street": 0, "park": 2, "beach": 4, "rain": 5, "market": 7, "oldtown": 9}
 
-const WEATHERS: Array[String] = ["clear", "rain", "wind"]
-const WEATHER_NAMES := {"clear": "CLEAR", "rain": "RAIN", "wind": "WIND"}
+const WEATHERS: Array[String] = ["clear", "rain", "wind", "snow"]
+const WEATHER_NAMES := {"clear": "CLEAR", "rain": "RAIN", "wind": "WIND", "snow": "SNOW"}
 
 # the carousel on the title: the daily walk first, then the campaign walks
 const CAROUSEL: Array[String] = ["daily", "street", "park", "beach", "rain", "market", "oldtown"]
@@ -107,13 +107,17 @@ func _ready() -> void:
 	# the daily best is per-day: wipe it when the date rolls over
 	if records.has("daily") and int(records["daily"].get("seed", 0)) != daily_seed():
 		records.erase("daily")
-	# lets CI and local smoke tests exercise any level:
-	#   godot --headless --path . -- --level=park [--daily]
+	# lets CI and local smoke tests exercise any level/weather:
+	#   godot --headless --path . -- --level=park --weather=snow [--daily]
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--level="):
 			var lv := arg.trim_prefix("--level=")
 			if lv in LEVELS:
 				level_id = lv
+		elif arg.begins_with("--weather="):
+			var w := arg.trim_prefix("--weather=")
+			if w in WEATHERS:
+				weather = w
 		elif arg == "--daily":
 			level_id = "daily"
 

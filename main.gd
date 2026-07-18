@@ -947,7 +947,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.13"
+	version_l.text = "v1.14"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -1058,6 +1058,8 @@ func _weather_tint() -> Color:
 		c = c * Color(0.72, 0.76, 0.82)  # grey, overcast
 	elif Game.weather == "wind":
 		c = c * Color(0.92, 0.9, 0.82)  # dusty, warm-grey
+	elif Game.weather == "snow":
+		c = c * Color(0.9, 0.94, 1.02)  # cold, bright, blue-white
 	return c
 
 
@@ -1325,6 +1327,8 @@ func _physics_process(delta: float) -> void:
 	# weather nudges: rain makes the pavement slick, wind shoves everyone
 	# gently downwind (the owner, dead weight, catches more of it)
 	dog.slick = Game.weather == "rain"
+	dog.ice = Game.weather == "snow"
+	human.ice = Game.weather == "snow"
 	if Game.weather == "wind":
 		dog.velocity += Vector2(46.0, 0) * delta
 		human.velocity += Vector2(70.0, 0) * delta

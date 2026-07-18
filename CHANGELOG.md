@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.14: snow (ice-slide weather)
+
+- A fourth weather, SNOW, selectable on any walk. Falling flakes, a cold
+  bright tint, and - the point - ICE underfoot: both the dog and the
+  heavy owner lose grip and skate, momentum carrying them past where they
+  meant to stop. Turns every leash yank into a slide and makes the poles
+  genuinely hazardous. A cross-cutting mechanic rather than a one-off
+  level, so it recolours the whole game.
+- New --weather= cmdline hook (like --level=) for testing:
+  `--level=park --weather=snow`. CI smoke-tests the ice-physics path.
+- Default weather is unchanged, so the deterministic autowalk traversal
+  is unaffected.
+
 ## 2026-07-18 — v1.13: El Gotic (the old town alley) + wall cats
 
 - New sixth walk: El Gotic (gate 9), a tight medieval alley. Extra poles

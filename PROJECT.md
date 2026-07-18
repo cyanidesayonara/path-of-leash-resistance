@@ -91,7 +91,11 @@ Every feature must serve at least one. If it serves none, cut it.
   shooed with a bark - a temptation you can never actually catch).
   Reuses the market layout for now; bespoke geometry + stairs a later
   pass.
-- **v1.14 - polish + tuning.** Playtest feedback pass: chase/combo feel,
+- **v1.14 - shipped.** Snow: a fourth weather with ice-slide physics
+  (dog and owner both skate), selectable on any walk. Added a --weather=
+  test hook. Winter as a cross-cutting mechanic rather than a one-off
+  level; snow piles / salt patches / sledding kids remain level material.
+- **v1.15 - polish + tuning.** Playtest feedback pass: chase/combo feel,
   level difficulty, and bespoke geometry for the reused-base walks
   (El Aguacero, El Gotic).
 - **v2.0 - The Product.** Watercolor art integration, sound and music

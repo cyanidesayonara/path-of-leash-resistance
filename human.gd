@@ -42,6 +42,7 @@ var park_target := Vector2.ZERO
 var park_throw_t := 0.0
 var strain := false
 var panic := false
+var ice := false
 var wobble_seed := 0.0
 var main: Node2D
 var bubble: Label
@@ -285,6 +286,10 @@ func _walk(delta: float) -> void:
 		dir = Vector2(signf(pond_bank_x - global_position.x + 0.001), -0.15).normalized()
 		speed = 46.0
 		accel = 200.0
+	if ice:
+		# a heavy body on ice: grip drops, so momentum carries the owner
+		# past where they meant to stop - and the leash yanks compound it
+		accel *= 0.4
 	velocity = velocity.move_toward(dir * speed, accel * delta)
 	move_and_slide()
 

@@ -20,11 +20,16 @@ func _process(delta: float) -> void:
 	if mode == "clear" or not visible:
 		return
 	t += delta
-	var vel := Vector2(-90.0, 760.0) if mode == "rain" else Vector2(280.0, 40.0)
+	var vel := Vector2(-90.0, 760.0)
+	if mode == "wind":
+		vel = Vector2(280.0, 40.0)
+	elif mode == "snow":
+		vel = Vector2(0.0, 70.0)
 	for i in range(drops.size()):
-		drops[i] += vel * delta
+		var drift := Vector2(sin(t * 1.3 + i) * 26.0, 0.0) if mode == "snow" else Vector2.ZERO
+		drops[i] += (vel + drift) * delta
 		if drops[i].y > 726.0 or drops[i].x < -6.0 or drops[i].x > 1286.0:
-			drops[i] = Vector2(randf() * 1360.0 - 40.0, -6.0 if mode == "rain" else randf() * 720.0)
+			drops[i] = Vector2(randf() * 1360.0 - 40.0, -6.0 if mode != "wind" else randf() * 720.0)
 			if mode == "wind":
 				drops[i].x = -40.0
 	queue_redraw()
@@ -39,3 +44,7 @@ func _draw() -> void:
 			var d := drops[i]
 			var wob := sin(t * 6.0 + i) * 3.0
 			draw_line(d, d + Vector2(18, wob), Color(0.85, 0.8, 0.7, 0.22), 1.5)
+	elif mode == "snow":
+		for i in range(drops.size()):
+			var d := drops[i]
+			draw_circle(d, 2.2 + float(i % 3) * 0.7, Color(0.98, 0.99, 1.0, 0.8))

@@ -13,6 +13,7 @@ var bladder_slow := false
 var sand_slow := false
 var swimming := false
 var slick := false
+var ice := false
 var auto := false
 var auto_move := Vector2.ZERO
 # the zoomies: a reserve of energy the dog is dying to burn. Turbo spends
@@ -134,6 +135,9 @@ func tick(delta: float) -> void:
 		if slick:
 			# wet ground: less grip, more skate
 			accel *= 0.45
+		if ice:
+			# packed snow/ice: barely any grip, momentum carries you
+			accel *= 0.32
 		# a full bladder waddles; sand is heavy going; water is a happy
 		# dog-paddle (slower, but she would stay in all day); turbo rips
 		var top := SPEED * (0.88 if bladder_slow else 1.0) * (0.8 if sand_slow else 1.0) * (0.62 if swimming else 1.0)

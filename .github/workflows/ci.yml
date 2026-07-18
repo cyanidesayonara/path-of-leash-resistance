@@ -102,6 +102,9 @@ jobs:
             ./Godot_v4.7-stable_linux.x86_64 --headless --path . --quit-after 1800 -- --level=$LV 2>&1 | tee smoke-$LV.log
             ! grep -E "SCRIPT ERROR|Parse Error|Failed to load script" smoke-$LV.log
           done
+          # snow weather: exercises the ice-slide physics path
+          ./Godot_v4.7-stable_linux.x86_64 --headless --path . --quit-after 1800 -- --level=street --weather=snow 2>&1 | tee smoke-snow.log
+          ! grep -E "SCRIPT ERROR|Parse Error|Failed to load script" smoke-snow.log
 
       - name: Full-walk traversal (out -> freedom -> home -> finish)
         # the attract bot walks street end to end; asserts the whole
