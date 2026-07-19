@@ -133,6 +133,14 @@ var wet_paws := 0.0
 var candy_spots: Array[Vector2] = []
 var candy: Array[Dictionary] = []
 var candy_eaten := 0
+# El Desguas: stealth. Sleeping guard dogs (see guarddog.gd), sweeping
+# security cameras and moving laser beams. Non-lethal - getting caught
+# costs bones and dignity - but the ghost/unseen goals want a clean run.
+var guard_posts: Array[Vector2] = []
+var cameras: Array[Dictionary] = []
+var lasers: Array[Dictionary] = []
+var guards_woken := 0
+var times_spotted := 0
 const CHASE_SPEED := 140.0
 const CHASE_SPEED_BOLT := 205.0
 const CHASE_SPEED_BOTH := 220.0
@@ -299,6 +307,7 @@ func _ready() -> void:
 	_build_hud()
 	_spawn_challenger()
 	_spawn_wallcats()
+	_spawn_guards()
 	# day/night + weather: a canvas tint; HUD lives on a CanvasLayer,
 	# unaffected
 	night_cm = CanvasModulate.new()
@@ -388,7 +397,7 @@ func _build_level_data() -> void:
 	# geometry is a later pass) and re-theme it below: El Aguacero on the
 	# boulevard, El Gotic on the stall-lined market channel.
 	var geo := lvl
-	if lvl == "rain" or lvl == "station" or lvl == "site":
+	if lvl == "rain" or lvl == "station" or lvl == "site" or lvl == "scrap":
 		geo = "street"
 	elif lvl == "oldtown" or lvl == "spook":
 		geo = "market"
@@ -647,6 +656,28 @@ func _build_level_data() -> void:
 		cone_spots = [Vector2(520, -1650), Vector2(760, -1650), Vector2(560, -2020), Vector2(720, -2020), Vector2(600, -3250), Vector2(700, -3650)]
 		vans = [Vector2(900, -2500)]
 		fountains = [Vector2(335, -4200)]
+	elif lvl == "scrap":
+		# El Desguas: the scrapyard shortcut. Sleeping guard dogs, sweeping
+		# cameras, laser tripwires - and your stealth partner is a glowing,
+		# ringing phone zombie on the other end of the rope. Slow is silent;
+		# getting caught is embarrassing, not fatal.
+		gate_text = "BACK GATE"
+		guard_posts = [
+			Vector2(380, -1350), Vector2(900, -2250),
+			Vector2(390, -3150), Vector2(880, -4050),
+		]
+		cameras = [
+			{"pos": Vector2(330, -1900), "base": 0.0, "range": 0.9, "speed": 0.7, "cd": 0.0},
+			{"pos": Vector2(950, -3500), "base": PI, "range": 0.9, "speed": 0.55, "cd": 0.0},
+		]
+		lasers = [
+			{"x0": SIDEWALK_LEFT, "x1": SIDEWALK_RIGHT, "y_lo": -2750.0, "y_hi": -2550.0, "speed": 1.1, "cd": 0.0},
+			{"x0": SIDEWALK_LEFT, "x1": SIDEWALK_RIGHT, "y_lo": -4450.0, "y_hi": -4250.0, "speed": 0.8, "cd": 0.0},
+		]
+		# scrap heaps: wrecked cars (vans) and junk drums (cones)
+		vans = [Vector2(880, -1600), Vector2(390, -2650), Vector2(900, -4400)]
+		cone_spots = [Vector2(560, -1950), Vector2(720, -3050), Vector2(600, -3900)]
+		fountains = [Vector2(1005, -2950)]
 	for tb in tables:
 		poles.append(tb)
 	for pa in parasols:
@@ -739,6 +770,9 @@ func _build_level_data() -> void:
 		"spook":
 			prize_pos = Vector2(640.0, -2350.0)  # a dog-safe pumpkin treat, ringed by candy
 			prize_text = "get the pumpkin treat without eating the candy"
+		"scrap":
+			prize_pos = Vector2(925.0, -2270.0)  # right beside a sleeping guard dog
+			prize_text = "steal the bone from under the guard's nose"
 		_:
 			prize_pos = Vector2(SHOULDER_R - 12.0, -2400.0)
 			prize_text = "fetch the frisbee"
@@ -920,6 +954,7 @@ const LEVEL_GOAL_IDS := {
 	"station": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "snack", "combo", "prize"],
 	"site": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "snack", "combo", "prize"],
 	"spook": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "tummy", "snack", "combo", "prize"],
+	"scrap": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "ghost", "unseen", "combo", "prize"],
 }
 
 
@@ -946,6 +981,8 @@ func _goal_defs() -> Dictionary:
 		"carry": {"text": carry_text, "target": 1, "fn": func() -> int: return 1 if carry_state >= 2 else 0},
 		"combo": {"text": "land a x%d trick combo", "target": 5, "fn": func() -> int: return int(combo.best_mult) if combo != null else 0},
 		"tummy": {"text": "resist the chocolate (eat none)", "target": 1, "fn": func() -> int: return 1 if candy_eaten == 0 else 0},
+		"ghost": {"text": "ghost the yard (wake no guards)", "target": 1, "fn": func() -> int: return 1 if guards_woken == 0 else 0},
+		"unseen": {"text": "dodge every camera and laser", "target": 1, "fn": func() -> int: return 1 if times_spotted == 0 else 0},
 		"prize": {"text": prize_text, "target": 1, "fn": func() -> int: return 1 if prize_taken else 0},
 	}
 
@@ -1068,7 +1105,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.29"
+	version_l.text = "v1.30"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -1376,6 +1413,8 @@ func _update_hud() -> void:
 		hud_status = "GOTTA GO!  find a spot, hold %s" % _kb_or_pad("SPACE", "A")
 	elif poop_state >= 3:
 		hud_status = "UH OH..."
+	elif lvl == "scrap":
+		hud_status = "shhh... slow is silent. mind the cameras"
 	elif pee >= 0.999:
 		hud_status = "FULL!"
 	elif pee <= 0.02:
@@ -1516,6 +1555,8 @@ func _physics_process(delta: float) -> void:
 			var to: Vector2 = f.to
 			bag_flights.remove_at(i)
 			on_business_bagged(to)
+	if not cameras.is_empty() or not lasers.is_empty():
+		_stealth(delta)
 	if phase == "freedom":
 		_romp(delta)
 		_neighbour_fetch()
@@ -2665,6 +2706,63 @@ func on_wallcat_spooked(pos: Vector2) -> void:
 	_update_hud()
 
 
+func _spawn_guards() -> void:
+	for spot in guard_posts:
+		var gd := Node2D.new()
+		gd.set_script(load("res://guarddog.gd"))
+		gd.position = spot
+		gd.z_index = 7
+		add_child(gd)
+		gd.setup(self, dog)
+
+
+func on_guard_woken(pos: Vector2) -> void:
+	guards_woken += 1
+	bones = maxi(0, bones - 2)
+	shake_t = maxf(shake_t, 0.5)
+	Sfx.play("bark", 0.6, -3.0)  # a deeper, angrier dog than Millie
+	human.halt(1.0)
+	float_text(pos + Vector2(0, -26), "WOOF WOOF WOOF -2", Color(1, 0.5, 0.4))
+	_update_hud()
+
+
+func on_phone_noise(pos: Vector2) -> void:
+	# the owner's phone going off: the world's worst stealth partner
+	for g in get_tree().get_nodes_in_group("guards"):
+		g.hear_noise(pos, 250.0)
+
+
+func _stealth(delta: float) -> void:
+	# sweeping cameras: a vision cone that pans back and forth
+	var t := Time.get_ticks_msec() / 1000.0
+	for c in cameras:
+		c.cd = maxf(0.0, float(c.cd) - delta)
+		var ang: float = float(c.base) + sin(t * float(c.speed)) * float(c.range)
+		var to_dog: Vector2 = dog.global_position - (c.pos as Vector2)
+		if c.cd <= 0.0 and to_dog.length() < 190.0 and absf(wrapf(to_dog.angle() - ang, -PI, PI)) < 0.32:
+			c.cd = 3.0
+			_caught("the camera")
+	# laser tripwires: a beam that sweeps up and down its section
+	for lz in lasers:
+		lz.cd = maxf(0.0, float(lz.cd) - delta)
+		var by := lerpf(float(lz.y_lo), float(lz.y_hi), 0.5 + 0.5 * sin(t * float(lz.speed)))
+		if lz.cd <= 0.0 and dog.global_position.x > float(lz.x0) and dog.global_position.x < float(lz.x1) and absf(dog.global_position.y - by) < 7.0:
+			lz.cd = 3.0
+			_caught("the laser")
+
+
+func _caught(what: String) -> void:
+	times_spotted += 1
+	bones = maxi(0, bones - 2)
+	shake_t = maxf(shake_t, 0.4)
+	Sfx.play("crack", 1.4)
+	float_text(dog.global_position + Vector2(0, -26), "SPOTTED by %s! -2" % what, Color(1, 0.55, 0.4))
+	# the racket wakes anyone dozing nearby
+	for g in get_tree().get_nodes_in_group("guards"):
+		g.hear_noise(dog.global_position, 200.0)
+	_update_hud()
+
+
 func _spawn_challenger() -> void:
 	# one combo-challenge giver per walk, lounging on the out leg where you
 	# still have room and energy to show off
@@ -2911,6 +3009,9 @@ func on_bark(pos: Vector2) -> void:
 	for wc in get_tree().get_nodes_in_group("wallcats"):
 		if wc.global_position.distance_to(pos) < 150.0:
 			wc.scare()
+	# in the scrapyard, YOUR bark is noise too
+	for g in get_tree().get_nodes_in_group("guards"):
+		g.hear_noise(pos, 230.0)
 
 
 func set_leash_target(v: float) -> void:
@@ -3297,6 +3398,34 @@ func _draw() -> void:
 				draw_line(Vector2(cx - 30.0, cy + 10.0), Vector2(cx, cy), Color(0.6, 0.63, 0.68), 3.0)
 				draw_line(Vector2(cx + 30.0, cy + 10.0), Vector2(cx, cy), Color(0.6, 0.63, 0.68), 3.0)
 			cy += 60.0
+	# El Desguas: sweeping camera cones and laser tripwires
+	if lvl == "scrap":
+		var st := Time.get_ticks_msec() / 1000.0
+		for c in cameras:
+			var cp: Vector2 = c.pos
+			if cp.y < vt - 220.0 or cp.y > vb + 220.0:
+				continue
+			var ang: float = float(c.base) + sin(st * float(c.speed)) * float(c.range)
+			# the vision cone, hot for a beat after a catch
+			var hot: bool = float(c.cd) > 2.5
+			var cone := Color(1.0, 0.35, 0.3, 0.28) if hot else Color(1.0, 0.9, 0.55, 0.16)
+			var pts := PackedVector2Array([cp])
+			for k in range(9):
+				var a := ang - 0.32 + 0.64 * float(k) / 8.0
+				pts.append(cp + Vector2.from_angle(a) * 190.0)
+			draw_colored_polygon(pts, cone)
+			# the unit itself: pole, housing, blinking eye
+			draw_rect(Rect2(cp.x - 2.0, cp.y, 4.0, 26.0), Color(0.35, 0.35, 0.38))
+			draw_rect(Rect2(cp.x - 9.0, cp.y - 10.0, 18.0, 12.0), Color(0.25, 0.26, 0.3))
+			draw_circle(cp + Vector2.from_angle(ang) * 8.0, 2.5, Color(1, 0.3, 0.25) if fmod(st, 1.0) < 0.5 else Color(0.5, 0.15, 0.12))
+		for lz in lasers:
+			var by := lerpf(float(lz.y_lo), float(lz.y_hi), 0.5 + 0.5 * sin(st * float(lz.speed)))
+			if by < vt - 20.0 or by > vb + 20.0:
+				continue
+			draw_line(Vector2(float(lz.x0), by), Vector2(float(lz.x1), by), Color(1.0, 0.2, 0.2, 0.75), 2.0)
+			draw_line(Vector2(float(lz.x0), by), Vector2(float(lz.x1), by), Color(1.0, 0.5, 0.4, 0.25), 6.0)
+			draw_rect(Rect2(float(lz.x0) - 8.0, by - 6.0, 8.0, 12.0), Color(0.3, 0.3, 0.34))
+			draw_rect(Rect2(float(lz.x1), by - 6.0, 8.0, 12.0), Color(0.3, 0.3, 0.34))
 	# Les Obres: wet cement patches, and the paw-print trail they take
 	if lvl == "site":
 		for cz in cement_zones:

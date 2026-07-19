@@ -145,7 +145,11 @@ Every feature must serve at least one. If it serves none, cut it.
 - **v1.29 - shipped.** La Castanyada (festival night): forbidden candy you
   must steer past (chocolate is poison to dogs) - the temptation you can't
   give in to. Forced night, trick-or-treaters. Reuses the market layout.
-- **v1.30 - polish + tuning.** Playtest feedback pass: chase/combo feel,
+- **v1.30 - shipped.** El Desguas (scrapyard stealth): sleeping guard dogs
+  (wake to noise), sweeping cameras, laser tripwires - and the owner's
+  ringing phone as your worst stealth liability. Slow-is-silent, soft-fail.
+  A whole new verb. Reuses the boulevard layout.
+- **v1.31 - polish + tuning.** Playtest feedback pass: chase/combo feel,
   level difficulty, audio mix/variety, and bespoke geometry for the
   reused-base walks.
 - **v2.0 - The Product.** Watercolor art integration, sound and music

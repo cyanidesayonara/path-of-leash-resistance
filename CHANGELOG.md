@@ -2,6 +2,27 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.30: El Desguas (the scrapyard) — a stealth walk
+
+- An eleventh walk (gate 19), and a whole new verb: STEALTH. Sneak the
+  shortcut through a junkyard past three kinds of trouble:
+  - **Sleeping guard dogs** — chained and dozing. They wake to NOISE: a
+    fast mover nearby, a bark, or the killer — the owner's phone ringing
+    within earshot. Slow is silent; creep and they snore right through it.
+  - **Sweeping security cameras** — a panning vision cone; step into it
+    and you're spotted.
+  - **Laser tripwires** — beams that slide up and down their stretch;
+    time your crossing.
+- The unique bit only this game can do: your stealth partner is a
+  glowing, ringing phone-zombie roped to you. When their phone goes off
+  next to a guard, THEY blow it. Escort-stealth where the escort is
+  hopeless. Getting caught is never lethal (soft-fail pillar) — a bark,
+  −2 bones, a startled owner — but the "ghost the yard" and "dodge every
+  camera and laser" goals want a clean run. The prize is a bone right
+  under a sleeping guard's nose.
+- New guard-dog module + regression test; CI runs both. Reuses the
+  boulevard layout for now.
+
 ## 2026-07-18 — v1.29: La Castanyada (festival night) + forbidden candy
 
 - A tenth walk (gate 17): Barcelona's autumn festival, after dark. The

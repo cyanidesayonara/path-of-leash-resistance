@@ -324,6 +324,8 @@ func _events(delta: float) -> void:
 		elif roll < 0.18:
 			pending_event = HState.STOPPED
 			_show_bubble("ring ring")
+			# a ringing phone is NOISE - in the scrapyard it wakes the guards
+			main.on_phone_noise(global_position)
 		elif roll < 0.36:
 			pending_event = HState.DRIFT
 			_show_bubble("typing...")
