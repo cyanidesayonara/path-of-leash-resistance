@@ -142,9 +142,12 @@ Every feature must serve at least one. If it serves none, cut it.
 - **v1.28 - shipped.** Les Obres (roadworks detour): wet cement that
   slows you and leaves a paw-print trail that follows you down the walk.
   Reuses the boulevard layout for now.
-- **v1.29 - polish + tuning.** Playtest feedback pass: chase/combo feel,
+- **v1.29 - shipped.** La Castanyada (festival night): forbidden candy you
+  must steer past (chocolate is poison to dogs) - the temptation you can't
+  give in to. Forced night, trick-or-treaters. Reuses the market layout.
+- **v1.30 - polish + tuning.** Playtest feedback pass: chase/combo feel,
   level difficulty, audio mix/variety, and bespoke geometry for the
-  reused-base walks (El Aguacero, El Gotic, El Bosc, L'Estacio, Les Obres).
+  reused-base walks.
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
 - Every release also ships: mechanics tuning from playtests, at least

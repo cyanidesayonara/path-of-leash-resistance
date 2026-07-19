@@ -129,6 +129,10 @@ var cement_zones: Array[Rect2] = []
 var paw_prints: Array[Vector2] = []
 var paw_last := Vector2(INF, INF)
 var wet_paws := 0.0
+# La Castanyada: candy you must NOT eat (chocolate is poison to dogs)
+var candy_spots: Array[Vector2] = []
+var candy: Array[Dictionary] = []
+var candy_eaten := 0
 const CHASE_SPEED := 140.0
 const CHASE_SPEED_BOLT := 205.0
 const CHASE_SPEED_BOTH := 220.0
@@ -282,6 +286,9 @@ func _ready() -> void:
 	# El Aguacero is always a downpour, whatever the weather selection says
 	if lvl == "rain":
 		Game.weather = "rain"
+	# La Castanyada is always after dark
+	if lvl == "spook":
+		Game.night = true
 	_setup_input()
 	_build_level_data()
 	_build_bypasser_blockers()
@@ -383,7 +390,7 @@ func _build_level_data() -> void:
 	var geo := lvl
 	if lvl == "rain" or lvl == "station" or lvl == "site":
 		geo = "street"
-	elif lvl == "oldtown":
+	elif lvl == "oldtown" or lvl == "spook":
 		geo = "market"
 	elif lvl == "trail":
 		geo = "park"
@@ -616,6 +623,18 @@ func _build_level_data() -> void:
 		conveyor_dir = Vector2(0, -1)
 		vans = [Vector2(380, -1500), Vector2(900, -2600), Vector2(400, -4200)]
 		fountains = [Vector2(1005, -3550)]
+	elif lvl == "spook":
+		# La Castanyada: the autumn festival at night. Sweets everywhere -
+		# and here's the cruelty: chocolate is poison to dogs, so the one
+		# thing you want most is the one thing you must NOT eat. Steer past
+		# the candy strewn across your path; real treats are still fair game.
+		gate_text = "PLACA"
+		candy_spots = [
+			Vector2(560, -1100), Vector2(700, -1400), Vector2(600, -1750),
+			Vector2(720, -2200), Vector2(560, -2600), Vector2(690, -2950),
+			Vector2(600, -3400), Vector2(720, -3800), Vector2(560, -4200),
+		]
+		performers.append_array([Vector2(400, -2100), Vector2(880, -3300)])
 	elif lvl == "site":
 		# Les Obres: a roadworks detour. Wet cement laid across the walkway
 		# slows you AND takes a paw-print trail that follows you the rest of
@@ -669,6 +688,8 @@ func _build_level_data() -> void:
 		hydrants.append({"pos": hp, "done": false, "progress": 0.0})
 	for kp in keb_list:
 		kebabs.append({"pos": kp, "eaten": false})
+	for cp in candy_spots:
+		candy.append({"pos": cp, "eaten": false})
 	for i in range(140):
 		var side := -1.0 if randf() < 0.5 else 1.0
 		var x := 640.0 + side * randf_range(340.0, 620.0)
@@ -715,6 +736,9 @@ func _build_level_data() -> void:
 		"site":
 			prize_pos = Vector2(640.0, -3130.0)  # a trowel dropped in the wet cement
 			prize_text = "fish the trowel out of the wet cement"
+		"spook":
+			prize_pos = Vector2(640.0, -2350.0)  # a dog-safe pumpkin treat, ringed by candy
+			prize_text = "get the pumpkin treat without eating the candy"
 		_:
 			prize_pos = Vector2(SHOULDER_R - 12.0, -2400.0)
 			prize_text = "fetch the frisbee"
@@ -895,6 +919,7 @@ const LEVEL_GOAL_IDS := {
 	"trail": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "chase", "drink", "combo", "prize"],
 	"station": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "snack", "combo", "prize"],
 	"site": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "snack", "combo", "prize"],
+	"spook": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "tummy", "snack", "combo", "prize"],
 }
 
 
@@ -920,6 +945,7 @@ func _goal_defs() -> Dictionary:
 		"cats": {"text": "shoo %d wall cats", "target": 3, "fn": func() -> int: return wall_cats_spooked},
 		"carry": {"text": carry_text, "target": 1, "fn": func() -> int: return 1 if carry_state >= 2 else 0},
 		"combo": {"text": "land a x%d trick combo", "target": 5, "fn": func() -> int: return int(combo.best_mult) if combo != null else 0},
+		"tummy": {"text": "resist the chocolate (eat none)", "target": 1, "fn": func() -> int: return 1 if candy_eaten == 0 else 0},
 		"prize": {"text": prize_text, "target": 1, "fn": func() -> int: return 1 if prize_taken else 0},
 	}
 
@@ -1042,7 +1068,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.28"
+	version_l.text = "v1.29"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -2377,6 +2403,17 @@ func _pickups(delta: float) -> void:
 			combo.add("SNACK", 1)
 			float_text(k.pos, "snack +1", Color(1, 0.95, 0.7))
 			_update_hud()
+	# the candy you should not have: chocolate is poison to dogs, so
+	# wolfing it costs you (and your clean-tummy goal)
+	for c in candy:
+		if not c.eaten and dog.global_position.distance_to(c.pos) < 26.0:
+			c.eaten = true
+			candy_eaten += 1
+			bones = maxi(0, bones - 3)
+			shake_t = maxf(shake_t, 0.4)
+			Sfx.play("tangle", 0.7)
+			float_text(c.pos, "BLEH! not for dogs -3", Color(1, 0.5, 0.45))
+			_update_hud()
 
 
 func _bodily(delta: float) -> void:
@@ -3106,6 +3143,20 @@ func _draw() -> void:
 		if not k.eaten:
 			draw_circle(k.pos, 7.0, Color(0.75, 0.55, 0.3))
 			draw_line(k.pos + Vector2(-3, 5), k.pos + Vector2(4, -6), Color(0.5, 0.35, 0.2), 2.0)
+	# candy: shiny wrapped sweets - tempting, forbidden, faintly glinting
+	var candy_cols := [Color(0.85, 0.25, 0.35), Color(0.3, 0.5, 0.85), Color(0.55, 0.35, 0.7)]
+	for ci in range(candy.size()):
+		var c: Dictionary = candy[ci]
+		if c.eaten or c.pos.y < vt - 20.0 or c.pos.y > vb + 20.0:
+			continue
+		var cc: Color = candy_cols[ci % candy_cols.size()]
+		var gl := 0.6 + 0.4 * sin(prize_glow + ci)
+		draw_circle(c.pos, 6.0, cc)
+		draw_line(c.pos + Vector2(-6, -3), c.pos + Vector2(-9, -5), cc, 2.0)  # wrapper twists
+		draw_line(c.pos + Vector2(-6, 3), c.pos + Vector2(-9, 5), cc, 2.0)
+		draw_line(c.pos + Vector2(6, -3), c.pos + Vector2(9, -5), cc, 2.0)
+		draw_line(c.pos + Vector2(6, 3), c.pos + Vector2(9, 5), cc, 2.0)
+		draw_circle(c.pos + Vector2(-2, -2), 1.6, Color(1, 1, 1, 0.4 + gl * 0.4))
 	# the hazardous prize: a glinting collectible with a beckoning ring
 	if not prize_taken and prize_pos.x < INF and prize_pos.y > vt - 40.0 and prize_pos.y < vb + 40.0:
 		var pg := 0.5 + 0.5 * sin(prize_glow)

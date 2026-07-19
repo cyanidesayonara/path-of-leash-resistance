@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.29: La Castanyada (festival night) + forbidden candy
+
+- A tenth walk (gate 17): Barcelona's autumn festival, after dark. The
+  cruel twist - chocolate is poison to dogs, so the thing you crave most
+  is the thing you must NOT eat. Sweets are strewn right across your path;
+  the dog scoops up anything it walks over, so you have to actively STEER
+  PAST the candy while your real snacks stay fair game. Eat a sweet and
+  you get a queasy "BLEH!", -3 bones, and a blown clean-tummy goal.
+  Temptation-vs-duty in its purest form.
+- Forced night, festival stalls, trick-or-treaters on the walkway, and a
+  dog-safe pumpkin-treat prize ringed by candy. New "resist the chocolate"
+  goal. Reuses the market layout for now.
+
 ## 2026-07-18 — v1.28: Les Obres (roadworks) + wet cement
 
 - A ninth walk (gate 15): a construction detour. Wet cement is laid
