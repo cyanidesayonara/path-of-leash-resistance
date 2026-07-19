@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.28: Les Obres (roadworks) + wet cement
+
+- A ninth walk (gate 15): a construction detour. Wet cement is laid
+  across the walkway - slog through it and it slows you AND your paws come
+  out wet, leaving a trail of prints that follows you down the sidewalk
+  for a few seconds (the evidence). Cones, barriers and a parked works
+  van clutter the route; the hard-to-reach prize is a trowel dropped in
+  the middle of the wet cement.
+- Reuses the boulevard layout as a base for now; bespoke geometry later.
+
 ## 2026-07-18 — v1.27: music (procedural ambient loop)
 
 - A gentle looping soundtrack, synthesised at startup like the SFX (no

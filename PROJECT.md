@@ -139,9 +139,12 @@ Every feature must serve at least one. If it serves none, cut it.
 - **v1.27 - shipped.** Music: a gentle procedural ambient loop (pentatonic
   over I-vi-IV-V, synthesised at startup, no files), low in the mix,
   toggle with M. Audio is now SFX + music, both fully procedural.
-- **v1.28 - polish + tuning.** Playtest feedback pass: chase/combo feel,
+- **v1.28 - shipped.** Les Obres (roadworks detour): wet cement that
+  slows you and leaves a paw-print trail that follows you down the walk.
+  Reuses the boulevard layout for now.
+- **v1.29 - polish + tuning.** Playtest feedback pass: chase/combo feel,
   level difficulty, audio mix/variety, and bespoke geometry for the
-  reused-base walks (El Aguacero, El Gotic, El Bosc, L'Estacio).
+  reused-base walks (El Aguacero, El Gotic, El Bosc, L'Estacio, Les Obres).
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
 - Every release also ships: mechanics tuning from playtests, at least

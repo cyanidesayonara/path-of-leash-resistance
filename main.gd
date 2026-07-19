@@ -124,6 +124,11 @@ var mud_zones: Array[Rect2] = []
 var conveyor_zone := Rect2()
 var conveyor_dir := Vector2.ZERO
 const CONV_SPEED := 118.0
+# Les Obres: wet cement that slows you and takes a trail of paw prints
+var cement_zones: Array[Rect2] = []
+var paw_prints: Array[Vector2] = []
+var paw_last := Vector2(INF, INF)
+var wet_paws := 0.0
 const CHASE_SPEED := 140.0
 const CHASE_SPEED_BOLT := 205.0
 const CHASE_SPEED_BOTH := 220.0
@@ -376,7 +381,7 @@ func _build_level_data() -> void:
 	# geometry is a later pass) and re-theme it below: El Aguacero on the
 	# boulevard, El Gotic on the stall-lined market channel.
 	var geo := lvl
-	if lvl == "rain" or lvl == "station":
+	if lvl == "rain" or lvl == "station" or lvl == "site":
 		geo = "street"
 	elif lvl == "oldtown":
 		geo = "market"
@@ -611,6 +616,18 @@ func _build_level_data() -> void:
 		conveyor_dir = Vector2(0, -1)
 		vans = [Vector2(380, -1500), Vector2(900, -2600), Vector2(400, -4200)]
 		fountains = [Vector2(1005, -3550)]
+	elif lvl == "site":
+		# Les Obres: a roadworks detour. Wet cement laid across the walkway
+		# slows you AND takes a paw-print trail that follows you the rest of
+		# the walk (the evidence). Extra cones and a parked works van.
+		gate_text = "DETOUR"
+		cement_zones = [
+			Rect2(SIDEWALK_LEFT, -1700.0, SIDEWALK_RIGHT - SIDEWALK_LEFT, 300.0),
+			Rect2(SIDEWALK_LEFT, -3300.0, SIDEWALK_RIGHT - SIDEWALK_LEFT, 340.0),
+		]
+		cone_spots = [Vector2(520, -1650), Vector2(760, -1650), Vector2(560, -2020), Vector2(720, -2020), Vector2(600, -3250), Vector2(700, -3650)]
+		vans = [Vector2(900, -2500)]
+		fountains = [Vector2(335, -4200)]
 	for tb in tables:
 		poles.append(tb)
 	for pa in parasols:
@@ -695,6 +712,9 @@ func _build_level_data() -> void:
 		"station":
 			prize_pos = Vector2(640.0, -2650.0)  # a dropped sandwich mid-walkway
 			prize_text = "grab the sandwich off the moving walkway"
+		"site":
+			prize_pos = Vector2(640.0, -3130.0)  # a trowel dropped in the wet cement
+			prize_text = "fish the trowel out of the wet cement"
 		_:
 			prize_pos = Vector2(SHOULDER_R - 12.0, -2400.0)
 			prize_text = "fetch the frisbee"
@@ -874,6 +894,7 @@ const LEVEL_GOAL_IDS := {
 	"oldtown": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "cats", "snack", "combo", "prize"],
 	"trail": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "chase", "drink", "combo", "prize"],
 	"station": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "snack", "combo", "prize"],
+	"site": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "snack", "combo", "prize"],
 }
 
 
@@ -1021,7 +1042,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.27"
+	version_l.text = "v1.28"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -2235,6 +2256,20 @@ func _offpath(delta: float) -> void:
 			if mz.has_point(dog.global_position):
 				dog.sand_slow = true
 				break
+	if lvl == "site":
+		for cz in cement_zones:
+			if cz.has_point(dog.global_position):
+				dog.sand_slow = true
+				wet_paws = 2.5  # paws stay wet after you slog out of it
+				break
+		# leave a trail of prints while the paws are still wet
+		wet_paws = maxf(0.0, wet_paws - delta)
+		if wet_paws > 0.0 and paw_last.distance_to(dog.global_position) > 26.0:
+			paw_last = dog.global_position
+			var side: Vector2 = dog.facing.orthogonal() * (5.0 if paw_prints.size() % 2 == 0 else -5.0)
+			paw_prints.append(dog.global_position + side)
+			if paw_prints.size() > 90:
+				paw_prints.remove_at(0)
 	var off: bool = dog.global_position.x < tut_l or dog.global_position.x > tut_r
 	if off and human.is_available_for_chore() and not human.is_fallen():
 		offpath_t += delta
@@ -3211,6 +3246,19 @@ func _draw() -> void:
 				draw_line(Vector2(cx - 30.0, cy + 10.0), Vector2(cx, cy), Color(0.6, 0.63, 0.68), 3.0)
 				draw_line(Vector2(cx + 30.0, cy + 10.0), Vector2(cx, cy), Color(0.6, 0.63, 0.68), 3.0)
 			cy += 60.0
+	# Les Obres: wet cement patches, and the paw-print trail they take
+	if lvl == "site":
+		for cz in cement_zones:
+			if cz.end.y > vt and cz.position.y < vb:
+				draw_rect(cz, Color(0.62, 0.62, 0.6))
+				draw_rect(cz, Color(0.5, 0.5, 0.48), false, 2.0)
+				draw_line(Vector2(cz.position.x, cz.position.y), Vector2(cz.end.x, cz.position.y), Color(0.9, 0.75, 0.2, 0.8), 3.0)
+				draw_line(Vector2(cz.position.x, cz.end.y), Vector2(cz.end.x, cz.end.y), Color(0.9, 0.75, 0.2, 0.8), 3.0)
+		for pp in paw_prints:
+			if pp.y > vt - 20.0 and pp.y < vb + 20.0:
+				draw_circle(pp, 3.2, Color(0.42, 0.4, 0.38, 0.75))
+				draw_circle(pp + Vector2(-2.5, -3.0), 1.4, Color(0.42, 0.4, 0.38, 0.7))
+				draw_circle(pp + Vector2(2.5, -3.0), 1.4, Color(0.42, 0.4, 0.38, 0.7))
 	# El Bosc: muddy patches across the trail (slow going)
 	if lvl == "trail":
 		for mz in mud_zones:
