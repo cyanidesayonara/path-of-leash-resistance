@@ -59,6 +59,23 @@ static func check(m) -> Array:
 		p.append("only %d kickable objects on the whole walk" % kickables)
 	if m.hydrants.size() < 3:
 		p.append("only %d sniffable spots" % m.hydrants.size())
+	# the off-leash area is the one place the dog is free, so it must not be
+	# a bare field: it needs things to dig, sniff, climb and drink from
+	var props: Array = m.park_props
+	if props.size() < 8:
+		p.append("off-leash area has only %d props" % props.size())
+	var diggable := 0
+	var solid := 0
+	for pp in props:
+		var k := String(pp.kind)
+		if k == "dig":
+			diggable += 1
+		elif k == "log" or k == "driftwood" or k == "tyre":
+			solid += 1
+	if diggable < 2:
+		p.append("off-leash area has only %d dig patches" % diggable)
+	if solid < 1:
+		p.append("off-leash area has nothing solid to navigate round")
 
 	# --- the goal list is well formed ---
 	var ids: Array = m.LEVEL_GOAL_IDS.get(lv, [])

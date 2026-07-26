@@ -105,6 +105,12 @@ var night_cm: CanvasModulate
 # romp there, then the walk HOME. Reaching the gate is halfway, not the end.
 var phase := "out"  # "out" | "freedom" | "home"
 var gate_bench := Vector2(640, GATE_Y - 150)
+# Furniture for the off-leash area. It was a bare green field, which is a
+# waste of the one place in the game where the dog is free - so it gets
+# things to climb, dig, drink from and sniff, spread wide so running around
+# and exploring is rewarded rather than just running in a line.
+var park_props: Array[Dictionary] = []
+var digs_done := 0
 var ball: Node2D
 var romp_timer := 0.0
 var romp_catches := 0
@@ -816,6 +822,7 @@ func _build_level_data() -> void:
 	for cp in candy_spots:
 		candy.append({"pos": cp, "eaten": false})
 	_build_ground_detail()
+	_build_park_props()
 	for i in range(140):
 		var side := -1.0 if randf() < 0.5 else 1.0
 		var x := 640.0 + side * randf_range(340.0, 620.0)
@@ -1138,6 +1145,130 @@ func _draw_edge_module(r: Rect2, side: float, k: int) -> void:
 			draw_rect(Rect2(stp_x - 14.0, r.position.y + 162.0, 28.0, 12.0), Color(0.58, 0.56, 0.53))
 
 
+func _draw_park_props() -> void:
+	for pp in park_props:
+		var p: Vector2 = pp.pos
+		var prog := float(pp.prog)
+		var done: bool = pp.done
+		# everything gets a contact shadow: it is an object, not a decal
+		draw_set_transform(p + Vector2(4.0, 6.0), 0.0, Vector2(1.1, 0.5))
+		draw_circle(Vector2.ZERO, 15.0, Color(0.05, 0.05, 0.08, 0.20))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		match String(pp.kind):
+			"dig":
+				# a patch of turned earth; deepens as you dig, then a bone
+				var soil := Color(0.34, 0.26, 0.18)
+				draw_circle(p, 17.0, Color(0.30, 0.36, 0.22))
+				draw_circle(p, 12.0 + prog * 3.0, soil.darkened(prog * 0.30))
+				for i in range(4):
+					var a := TAU * float(i) / 4.0 + p.x * 0.02
+					draw_circle(p + Vector2.from_angle(a) * (14.0 + prog * 6.0), 3.0, soil)
+				if done:
+					# the prize, unearthed and left sitting in the hole
+					draw_circle(p, 9.0, soil.darkened(0.35))
+					draw_rect(Rect2(p.x - 7.0, p.y - 2.5, 14.0, 5.0), Color(0.92, 0.89, 0.80))
+					draw_circle(p + Vector2(-7.0, 0.0), 3.4, Color(0.92, 0.89, 0.80))
+					draw_circle(p + Vector2(7.0, 0.0), 3.4, Color(0.92, 0.89, 0.80))
+				elif prog > 0.05:
+					draw_arc(p, 22.0, -PI / 2.0, -PI / 2.0 + TAU * prog / 1.1, 18, Color(1, 0.9, 0.5), 3.0)
+			"log":
+				# a fallen log: bark, end grain, and a couple of knots
+				var bark := Color(0.40, 0.30, 0.20)
+				draw_rect(Rect2(p.x - 30.0, p.y - 9.0, 60.0, 18.0), bark)
+				draw_rect(Rect2(p.x - 30.0, p.y - 9.0, 60.0, 5.0), bark.lightened(0.18))
+				draw_circle(Vector2(p.x + 30.0, p.y), 9.0, Color(0.62, 0.50, 0.34))
+				draw_arc(Vector2(p.x + 30.0, p.y), 5.0, 0, TAU, 10, Color(0.48, 0.38, 0.25), 1.5)
+				draw_circle(Vector2(p.x - 8.0, p.y - 1.0), 3.0, bark.darkened(0.30))
+			"driftwood":
+				var pale := Color(0.68, 0.63, 0.55)
+				draw_rect(Rect2(p.x - 32.0, p.y - 6.0, 64.0, 12.0), pale)
+				draw_line(p + Vector2(-32, -1), p + Vector2(32, -1), pale.darkened(0.22), 2.0)
+				draw_line(p + Vector2(8, -6), p + Vector2(22, -16), pale, 5.0)
+			"tyre":
+				draw_circle(p, 17.0, Color(0.14, 0.14, 0.15))
+				draw_circle(p, 9.0, Color(0.26, 0.30, 0.24))
+				for i in range(10):
+					var a := TAU * float(i) / 10.0
+					draw_line(p + Vector2.from_angle(a) * 11.0, p + Vector2.from_angle(a) * 17.0, Color(0.24, 0.24, 0.26), 2.0)
+			"rock":
+				draw_circle(p, 15.0, Color(0.52, 0.50, 0.47))
+				draw_circle(p + Vector2(-4, -4), 9.0, Color(0.62, 0.60, 0.56))
+				draw_arc(p, 15.0, 0.4, 2.6, 10, Color(0.38, 0.36, 0.34), 2.0)
+			"post":
+				# a sniff post, with the worn patch dogs have made of its foot
+				draw_circle(p, 14.0, Color(0.42, 0.40, 0.28, 0.35))
+				draw_rect(Rect2(p.x - 4.0, p.y - 26.0, 8.0, 30.0), Color(0.46, 0.34, 0.22))
+				draw_rect(Rect2(p.x - 6.0, p.y - 28.0, 12.0, 5.0), Color(0.56, 0.42, 0.28))
+			"trough":
+				draw_rect(Rect2(p.x - 22.0, p.y - 12.0, 44.0, 24.0), Color(0.38, 0.38, 0.42))
+				draw_rect(Rect2(p.x - 19.0, p.y - 9.0, 38.0, 18.0), Color(0.36, 0.55, 0.68))
+				draw_rect(Rect2(p.x - 19.0, p.y - 9.0, 38.0, 5.0), Color(0.58, 0.76, 0.86, 0.7))
+			_:
+				# a shrub: clustered lobes with a lit crown, like the trees
+				var g1 := Color(0.20, 0.33, 0.20)
+				for i in range(5):
+					var a := TAU * float(i) / 5.0 + p.y * 0.01
+					draw_circle(p + Vector2.from_angle(a) * 8.0, 10.0, g1)
+				draw_circle(p + Vector2(-4, -5), 8.0, Color(0.29, 0.44, 0.26))
+				if done:
+					draw_circle(p + Vector2(9, -12), 2.6, Color(0.85, 0.85, 0.6, 0.7))
+		# the sniff affordance: a soft scent bloom while she is working on it
+		if not done and prog > 0.05 and String(pp.kind) != "dig":
+			for i in range(2):
+				var rr := 16.0 + prog * 12.0 + float(i) * 7.0
+				draw_arc(p, rr, 0, TAU, 16, Color(0.85, 0.9, 0.75, 0.28 * (1.0 - float(i) * 0.4)), 1.5)
+
+
+func _build_park_props() -> void:
+	# Spread across the whole width, deliberately AWAY from the straight line
+	# between gate and meadow, so poking about off the direct route is what
+	# finds things. Local rng, so the deterministic autowalk is untouched.
+	park_props.clear()
+	var r := RandomNumberGenerator.new()
+	r.seed = 0xD06BA55
+	var flavour := ["log", "dig", "shrub", "post", "dig", "shrub"]
+	match lvl:
+		"beach": flavour = ["driftwood", "dig", "rock", "dig", "shrub"]
+		"scrap", "site": flavour = ["tyre", "log", "dig", "tyre"]
+		"trail", "park": flavour = ["log", "dig", "shrub", "shrub", "post", "dig"]
+	var lo := freedom_lo + 70.0
+	var hi := GATE_Y - 90.0
+	# Guarantee the essentials rather than hoping the dice provide them: on
+	# junk-flavoured walks a random draw left only one dig patch, which the
+	# sanity sweep rightly failed. Digs are the main reward for exploring, so
+	# they are placed first, spread across the width.
+	var dig_xs: Array[float] = [250.0, 640.0, 1030.0]
+	var dig_fs: Array[float] = [0.22, 0.68, 0.42]
+	for i in range(3):
+		var gy := lerpf(lo + 60.0, hi - 60.0, dig_fs[i])
+		park_props.append({"pos": Vector2(dig_xs[i], gy), "kind": "dig", "done": false, "prog": 0.0})
+	for i in range(14):
+		var kind: String = flavour[r.randi() % flavour.size()]
+		# bias to the flanks: the middle is the fetch runway
+		var side_pick := r.randf()
+		var x := 0.0
+		if side_pick < 0.42:
+			x = r.randf_range(140.0, 430.0)
+		elif side_pick < 0.84:
+			x = r.randf_range(860.0, 1150.0)
+		else:
+			x = r.randf_range(470.0, 820.0)
+		var at := Vector2(x, r.randf_range(lo, hi))
+		# keep clear of the owner's bench and the park slots
+		if at.distance_to(gate_bench) < 110.0:
+			continue
+		var clear := true
+		for slot in PAIR_PARK_SPOTS:
+			if at.distance_to(slot.position as Vector2) < 90.0:
+				clear = false
+		if not clear:
+			continue
+		park_props.append({"pos": at, "kind": kind, "done": false, "prog": 0.0})
+	# one water trough near the gate, because a romp is thirsty work
+	park_props.append({"pos": Vector2(gate_bench.x - 150.0, gate_bench.y + 24.0),
+		"kind": "trough", "done": false, "prog": 0.0})
+
+
 func _build_ground_detail() -> void:
 	# a light dusting of wear over the whole walk: hairline cracks, grit,
 	# litter, damp stains. Cheap to draw (culled, and the world redraws at
@@ -1296,6 +1427,26 @@ func _build_walls() -> void:
 		tcs.shape = tsh
 		tb.add_child(tcs)
 		add_child(tb)
+	# the park's solid furniture: you go round a log, not through it. Digs,
+	# shrubs and troughs stay walkable so nosing about is never obstructed.
+	for pp in park_props:
+		var pk := String(pp.kind)
+		if pk != "log" and pk != "driftwood" and pk != "tyre":
+			continue
+		var lb := StaticBody2D.new()
+		lb.collision_layer = 1
+		lb.position = pp.pos
+		var lcs := CollisionShape2D.new()
+		if pk == "tyre":
+			var csh := CircleShape2D.new()
+			csh.radius = 16.0
+			lcs.shape = csh
+		else:
+			var rsh := RectangleShape2D.new()
+			rsh.size = Vector2(62.0, 18.0)
+			lcs.shape = rsh
+		lb.add_child(lcs)
+		add_child(lb)
 	# vans and stalls are solid rectangles: no walking over the van roof
 	for v in vans:
 		_add_rect_body(v, VAN_BODY_SIZE)
@@ -1614,7 +1765,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.38"
+	version_l.text = "v1.40"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -3013,6 +3164,45 @@ func _pickups(delta: float) -> void:
 			combo.add("SNACK", 1)
 			float_text(k.pos, "snack +1", Color(1, 0.95, 0.7))
 			_update_hud()
+	# The off-leash furniture, all of it rewarding a nose rather than a
+	# straight line: dig patches hide a bone (hold still over one and keep
+	# digging), shrubs and posts are worth a sniff, the trough is a drink.
+	if phase == "freedom":
+		for pp in park_props:
+			if pp.done:
+				continue
+			var d := dog.global_position.distance_to(pp.pos)
+			match String(pp.kind):
+				"dig":
+					if d < 30.0 and dog.velocity.length() < 70.0:
+						pp.prog = float(pp.prog) + delta
+						if float(pp.prog) >= 1.1:
+							pp.done = true
+							digs_done += 1
+							bones += 6
+							Sfx.play("star", 0.85)
+							combo.add("DIG", 4)
+							float_text(pp.pos, "buried treasure! +6", Color(1, 0.9, 0.55))
+							_update_hud()
+					else:
+						pp.prog = maxf(0.0, float(pp.prog) - delta * 0.6)
+				"shrub", "post", "rock", "driftwood", "tyre":
+					if d < 34.0 and dog.velocity.length() < 80.0:
+						pp.prog = float(pp.prog) + delta
+						if float(pp.prog) >= 0.7:
+							pp.done = true
+							sniffs_done += 1
+							bones += 2
+							Sfx.play("mark", 1.15)
+							combo.add("SNIFF", 2)
+							float_text(pp.pos, "good sniff +2", Color(1, 0.95, 0.7))
+							_update_hud()
+					else:
+						pp.prog = maxf(0.0, float(pp.prog) - delta)
+				"trough":
+					if d < 34.0:
+						drunk_amount += 0.34 * delta
+						pee = minf(1.0, pee + 0.3 * delta)
 	# the candy you should not have: chocolate is poison to dogs, so
 	# wolfing it costs you (and your clean-tummy goal)
 	for c in candy:
@@ -4198,6 +4388,7 @@ func _draw() -> void:
 		# the owner's waiting bench (where the parked owner throws from)
 		draw_rect(Rect2(gate_bench.x - 18, gate_bench.y - 6, 36, 11), Color(0.54, 0.4, 0.27))
 		draw_string(font, Vector2((yl + yr) / 2.0 - 70.0, ytop - 14), "OFF-LEASH DOG PARK", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(0.9, 0.9, 0.82))
+		_draw_park_props()
 	# the gate between the walk and the off-leash yard
 	draw_rect(Rect2(gate_l - 14, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
 	draw_rect(Rect2(gate_r, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))

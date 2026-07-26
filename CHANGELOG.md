@@ -2,6 +2,30 @@
 
 Append-only session history, newest first.
 
+## 2026-07-26 — v1.40: the off-leash area is somewhere now
+
+The one place in the game where the dog is actually free was a bare green
+field, which was a waste of it. It is now furnished, and deliberately
+furnished AWAY from the straight line between gate and meadow, so nosing
+about off the direct route is what finds things.
+
+- **Dig patches** - hold still over turned earth and keep digging (a
+  progress ring shows you are getting somewhere) to unearth a buried bone.
+  Three are guaranteed and spread across the width; the rest are scattered.
+- **Solid furniture with real mass**: fallen logs, driftwood, stacked tyres,
+  all with collision, so you go round them rather than through them.
+- **Sniffables that read as sniffable**: shrubs, sniff posts, rocks and
+  driftwood all reward a nose, and while Millie works on one a soft scent
+  bloom rises off it - so the affordance is visible rather than guessed at.
+- **A water trough** by the owner's bench, because a romp is thirsty work
+  (it counts for the "have a good long drink" goal).
+- Flavoured per walk: driftwood and rockpools at the beach, tyres and logs
+  in the yard and the works, shrubs and posts in the park and woods.
+- The sanity sweep now also fails a walk whose off-leash area is bare, has
+  fewer than two dig patches, or has nothing solid to navigate around - and
+  it immediately caught the works and the scrapyard rolling only one dig
+  patch, which is why the essentials are now placed rather than diced for.
+
 ## 2026-07-18 — v1.38: Millie's coat is data now (+ one-command releases)
 
 - **The first working piece of the dog creator.** Millie's colours were
