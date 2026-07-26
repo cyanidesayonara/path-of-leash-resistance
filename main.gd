@@ -30,6 +30,7 @@ const LEASH_K := 32.0
 const DOG_MASS := 1.0
 const HUMAN_MASS := 4.0
 const POLE_RADIUS := 10.0
+const TREE_RADIUS := 13.0  # a trunk is stouter than a lamppost
 const HYDRANT_RADIUS := 9.0
 const FOUNTAIN_RADIUS := 12.0
 const PERFORMER_RADIUS := 12.0
@@ -832,6 +833,13 @@ func _build_level_data() -> void:
 	for ly in lane_ys:
 		lane_state.append({"t": randf_range(1.0, 2.5), "phase": 0, "dir": 1})
 	_fit_props_to_corridor()
+	# The grove is wrap geometry too, so the rope catches on trunks. Appended
+	# AFTER the corridor fit on purpose: the trees stand in the open off-leash
+	# area, which is full width, so clamping them to the walkway would drag
+	# them out of position. They sit past body_pole_count, which is why they
+	# get their own collision bodies in _build_walls.
+	for t in trees:
+		poles.append(t)
 	# the hazardous hard-to-reach collectible: one per level, in a spot
 	# that costs you something to reach (deliberately outside the corridor
 	# on some walks, so it is exempt from the corridor fit)
@@ -1274,6 +1282,20 @@ func _build_walls() -> void:
 		cs.shape = sh
 		sb.add_child(cs)
 		add_child(sb)
+	# The grove in the off-leash area used to be pure decoration you could
+	# walk straight through - a flat texture, not an object. A tree is a
+	# solid trunk with real heft, so it blocks bodies and the leash wraps
+	# on it like any other pole.
+	for t in trees:
+		var tb := StaticBody2D.new()
+		tb.collision_layer = 1
+		tb.position = t
+		var tcs := CollisionShape2D.new()
+		var tsh := CircleShape2D.new()
+		tsh.radius = TREE_RADIUS
+		tcs.shape = tsh
+		tb.add_child(tcs)
+		add_child(tb)
 	# vans and stalls are solid rectangles: no walking over the van roof
 	for v in vans:
 		_add_rect_body(v, VAN_BODY_SIZE)
@@ -1446,7 +1468,72 @@ func _spawn_cones() -> void:
 		cn.position = s
 		cn.z_index = 11
 		add_child(cn)
-		cn.setup(self, dog, human)
+		cn.setup(self, dog, human, "cone")
+	# Loose junk scattered down the whole walk, because punting things is one
+	# of the reliable joys here and there was only ever cones. Mixed kinds so
+	# the heft varies: cans rattle away, sacks barely budge. Local rng, so the
+	# deterministic autowalk seed is untouched.
+	var jr := RandomNumberGenerator.new()
+	jr.seed = 0x7A17B0B
+	# the level's background litter, for stretches with nothing else nearby
+	var kinds := ["can", "bottle", "sack", "can"]
+	match lvl:
+		"scrap", "site": kinds = ["crate", "sack", "can", "bottle", "crate"]
+		"beach": kinds = ["bottle", "ball", "can"]
+		"park", "trail": kinds = ["bottle", "ball", "can"]
+		"market", "spook": kinds = ["crate", "bottle", "can"]
+		"station": kinds = ["can", "bottle", "bottle"]
+		"oldtown": kinds = ["sack", "bottle", "can"]
+	# Litter accumulates around whatever produced it, so junk is placed by
+	# AREA rather than sprinkled evenly: crates pile up behind market stalls,
+	# cans and bottles collect around cafe tables and buskers, sacks slump by
+	# the bins, crates and cones litter the works. Feels observed rather than
+	# randomised, and it makes each stretch of a walk look like somewhere.
+	var zones: Array[Dictionary] = []
+	for b in bins:
+		zones.append({"at": b, "pal": ["sack", "sack", "bottle"]})
+	for st in stalls:
+		zones.append({"at": st, "pal": ["crate", "crate", "bottle"]})
+	for tb in tables:
+		zones.append({"at": tb, "pal": ["can", "bottle", "can"]})
+	for pf in performers:
+		zones.append({"at": pf, "pal": ["can", "can", "bottle"]})
+	for v in vans:
+		zones.append({"at": v, "pal": ["crate", "sack", "can"]})
+	for bn in benches:
+		zones.append({"at": bn, "pal": ["can", "bottle", "ball"]})
+	for z in zones:
+		var pal: Array = z.pal
+		for i in range(jr.randi_range(1, 3)):
+			var at: Vector2 = z.at
+			var off := Vector2(jr.randf_range(-46.0, 46.0), jr.randf_range(-40.0, 46.0))
+			var px := clampf(at.x + off.x, sw_l + 16.0, sw_r - 16.0)
+			_spawn_junk(Vector2(px, at.y + off.y), pal[jr.randi() % pal.size()])
+	# then a thin background scatter, so the quiet stretches are not bare
+	var jy := START_Y - 120.0
+	while jy > GATE_Y + 160.0:
+		jy -= jr.randf_range(260.0, 520.0)
+		var jx := jr.randf_range(sw_l + 30.0, sw_r - 30.0)
+		_spawn_junk(Vector2(jx, jy), kinds[jr.randi() % kinds.size()])
+
+
+func _spawn_junk(at: Vector2, kind: String) -> void:
+	var jn := Node2D.new()
+	jn.set_script(load("res://cone.gd"))
+	jn.position = at
+	jn.z_index = 11
+	add_child(jn)
+	jn.setup(self, dog, human, kind)
+
+
+func on_junk_kicked(pos: Vector2, kind: String) -> void:
+	# a light, kind-appropriate clatter; heavier things thud
+	match kind:
+		"can": Sfx.play("tangle", 1.9, -13.0)
+		"bottle": Sfx.play("tangle", 1.6, -13.0)
+		"ball": Sfx.play("snack", 0.7, -14.0)
+		"sack", "crate": Sfx.play("crack", 0.6, -15.0)
+		_: Sfx.play("tangle", 1.3, -14.0)
 	# A-stands are entities too: light, toppleable, never re-stood
 	for a in astands:
 		var sa := Node2D.new()
@@ -1527,7 +1614,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.36"
+	version_l.text = "v1.37"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)

@@ -51,6 +51,15 @@ static func check(m) -> Array:
 				p.append("snack at x=%.0f is off the pavement" % d.pos.x)
 				break
 
+	# --- the walk has things to interact with ---
+	# kickable junk and sniffable spots are the small joys that make a walk
+	# feel inhabited, so a level that is short of either is a content bug
+	var kickables: int = m.get_tree().get_nodes_in_group("cones").size()
+	if kickables < 6:
+		p.append("only %d kickable objects on the whole walk" % kickables)
+	if m.hydrants.size() < 3:
+		p.append("only %d sniffable spots" % m.hydrants.size())
+
 	# --- the goal list is well formed ---
 	var ids: Array = m.LEVEL_GOAL_IDS.get(lv, [])
 	if ids.is_empty():

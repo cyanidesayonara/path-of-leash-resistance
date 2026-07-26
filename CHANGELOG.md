@@ -2,6 +2,32 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.37: things with mass, and litter that belongs somewhere
+
+A fair hit landed: v1.36 added trees you could walk straight through. If
+something is in the world it should have heft, not be a picture on the floor.
+
+- **The grove is solid.** The trees in the off-leash area now have real
+  collision AND are leash-wrap geometry, so you can bump into a trunk and
+  wind the rope around one like any lamppost. (Appended to the pole list
+  after the corridor fit on purpose - the grove stands in the open
+  full-width area, so clamping it to the walkway would have dragged it out
+  of place.)
+- **Six kinds of kickable junk**, not just cones - and the point is that
+  they FEEL different: a drink can rattles away twice as far as a cone, a
+  plastic bottle skitters, a lost ball fairly flies, and a rubbish sack or
+  a wooden crate barely budges and kills your momentum. Each is drawn so
+  you can read its weight at a glance, each has a contact shadow scaled to
+  its heft, and each makes its own noise when punted.
+- **Litter is placed by AREA, not sprinkled evenly.** Rubbish accumulates
+  around whatever produced it: crates pile up behind market stalls, cans
+  and bottles collect around cafe tables and buskers, sacks slump by the
+  bins, crates and cones litter the works. Plus a level-specific background
+  palette for the quiet stretches. Each stretch of a walk now looks like
+  somewhere in particular rather than like a random sprinkle.
+- The sanity sweep now also fails a level that is short of kickable junk or
+  sniffable spots, so "this walk feels bare" is a CI failure now.
+
 ## 2026-07-18 — v1.36: roofs, not facades - and real paving
 
 Visual inspection of v1.33 showed the edge buildings were wrong in concept,
