@@ -2,6 +2,41 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.36: roofs, not facades - and real paving
+
+Visual inspection of v1.33 showed the edge buildings were wrong in concept,
+not just in detail: I had drawn shop windows and doors, which from directly
+overhead just read as pale mats lying flat on the pavement. From above you
+do not see a facade at all - you see the ROOF.
+
+- **The verge is now roofscape.** Terracotta pantiles in courses with
+  chimney stacks for El Gotic / La Castanyada; flat felt-and-gravel roofs
+  with air-conditioning units (each casting its own little shadow), vents
+  and rooflights for the city blocks; a glazed platform canopy with steel
+  trusses for L'Estacio; scaffold decking and lashed tarps for Les Obres;
+  ribbed corrugated iron with rust blooms for El Desguas.
+- **Buildings read as tall** through three cues instead of drawn walls: a
+  lit parapet cap along the roof edge, a hard shadow thrown out across the
+  pavement (light is up-and-left, matching every other shadow in the game),
+  and ambient darkening where wall meets ground.
+- **Only things that genuinely exist in the ground plane are drawn there:**
+  awnings that project out over the pavement (with their own shadow) and
+  doorsteps at the wall base.
+- **Fixed a real bug found by looking:** every roof feature used
+  `inner_x - side * dist`, which moves INWARD on both sides - so skylights
+  and AC units were being painted onto the pavement. Hence the "laid flat
+  on the pavement" look. Sign corrected.
+- **Real paving.** A single flat fill with a seam line every 150px was the
+  main reason the ground read as a colour swatch. There are now actual
+  slabs with joints, a brick bond, a light chamfer catching the light, and
+  a stable per-slab tone wobble - and the slab size changes per level, so
+  the alley's small cobbled setts do not look like the concourse's big
+  square tiles. Broken ground (works, scrapyard) and dirt (park, trail)
+  correctly have no paving pattern at all.
+- **Trees are trees.** Two flat green discs read as a blob; a canopy now has
+  a cast shadow, overlapping lobes to break the outline, a lit crown up and
+  to the left, and trunk and limbs glimpsed through the gaps.
+
 ## 2026-07-18 — v1.35: the goal card, rebuilt
 
 The goals list had two real defects and not much pizzazz. Both fixed:

@@ -888,6 +888,60 @@ func _build_level_data() -> void:
 			pass
 
 
+func _draw_paving(vt: float, vb: float, base: Color) -> void:
+	# A single flat fill with a seam line every 150px was the main reason the
+	# ground read as a colour swatch. Real paving has JOINTS and every slab
+	# has slightly different tone, which together give the eye a sense of
+	# scale and of a surface. Slab size and bond pattern change per level, so
+	# the alley's small setts do not look like the concourse's big tiles.
+	var sw := 96.0     # slab width
+	var sh := 112.0    # slab height
+	var stagger := 0.5 # brick-bond offset per row
+	var joint := Color(0.0, 0.0, 0.0, 0.10)
+	match lvl:
+		"oldtown", "spook":
+			sw = 46.0    # small cobbled setts
+			sh = 40.0
+			stagger = 0.5
+		"station":
+			sw = 132.0   # big polished tiles, laid square
+			sh = 132.0
+			stagger = 0.0
+			joint = Color(0.0, 0.0, 0.0, 0.07)
+		"market":
+			sw = 84.0
+			sh = 96.0
+		"site", "scrap":
+			return       # broken ground: no paving pattern at all
+		"park", "trail":
+			return       # dirt, not slabs
+	var row := int(floorf(vt / sh)) - 1
+	var y := float(row) * sh
+	while y < vb + sh:
+		var off := fmod(absf(float(row)) * stagger, 1.0) * sw
+		var x := sw_l - sw + off
+		while x < sw_r:
+			var x0 := maxf(x, sw_l)
+			var x1 := minf(x + sw - 2.0, sw_r)
+			if x1 > x0:
+				# a stable per-slab tone wobble, hashed from the grid position
+				var h := fmod(absf(sin(float(row) * 12.9898 + floorf(x / sw) * 78.233) * 43758.5453), 1.0)
+				var slab := base.lightened((h - 0.5) * 0.09) if h > 0.5 else base.darkened((0.5 - h) * 0.10)
+				draw_rect(Rect2(x0, y, x1 - x0, sh - 2.0), slab)
+			x += sw
+		# the joints: a dark line, plus a light one below it so the slab edge
+		# catches the light like a real chamfer
+		draw_line(Vector2(sw_l, y), Vector2(sw_r, y), joint, 2.0)
+		draw_line(Vector2(sw_l, y + 2.0), Vector2(sw_r, y + 2.0), Color(1, 1, 1, 0.045), 1.5)
+		var vx := sw_l - sw + off
+		while vx < sw_r:
+			if vx > sw_l and vx < sw_r:
+				draw_line(Vector2(vx, y), Vector2(vx, y + sh - 2.0), joint, 2.0)
+			vx += sw
+		row += 1
+		y += sh
+
+
 func _draw_edges(vt: float, vb: float) -> void:
 	# What flanks the corridor is what actually gives a walk its identity:
 	# shopfronts say boulevard, stone walls say medieval alley, chain-link
@@ -909,9 +963,25 @@ func _draw_edges(vt: float, vb: float) -> void:
 		var h := (vb - vt) + 640.0
 		draw_rect(Rect2(sw_l - far, top_y, far, h), base)
 		draw_rect(Rect2(sw_r, top_y, far, h), base)
-		# a darker strip right at the kerb reads as the wall meeting the ground
-		draw_rect(Rect2(sw_l - 9.0, top_y, 9.0, h), base.darkened(0.30))
-		draw_rect(Rect2(sw_r, top_y, 9.0, h), base.darkened(0.30))
+		# Seen from directly overhead you do not see a facade at all - you
+		# see the ROOF. So the verge is roofscape, and the building reads as
+		# tall through three cues instead: a lit parapet cap along its edge,
+		# a hard shadow thrown across the pavement, and ambient darkening
+		# where wall meets ground.
+		# parapet: the top of the wall catches the light
+		draw_rect(Rect2(sw_l - 11.0, top_y, 11.0, h), base.lightened(0.20))
+		draw_rect(Rect2(sw_r, top_y, 11.0, h), base.lightened(0.14))
+		draw_line(Vector2(sw_l, top_y), Vector2(sw_l, top_y + h), base.darkened(0.45), 2.0)
+		draw_line(Vector2(sw_r, top_y), Vector2(sw_r, top_y + h), base.darkened(0.45), 2.0)
+		# the light is up-and-left, so the LEFT block throws a shadow out
+		# across the pavement; the right block throws its own away from us
+		var cast := 38.0
+		for i in range(6):
+			var f := float(i) / 5.0
+			draw_rect(Rect2(sw_l, top_y, cast * (1.0 - f * 0.82), h), Color(0.05, 0.04, 0.07, 0.055))
+		for i in range(3):
+			var g := float(i) / 2.0
+			draw_rect(Rect2(sw_r - 11.0 * (1.0 - g), top_y, 11.0 * (1.0 - g), h), Color(0.05, 0.04, 0.07, 0.05))
 	var y := floorf((vt - mod) / mod) * mod
 	while y < vb + mod:
 		for side in [-1.0, 1.0]:
@@ -938,81 +1008,126 @@ func _edge_base_color() -> Color:
 func _draw_edge_module(r: Rect2, side: float, k: int) -> void:
 	var inner_x: float = r.end.x if side < 0.0 else r.position.x
 	var lit := fmod(float(k) * 0.37, 1.0)
+	# Roofscape, not facades: from overhead the readable features are roof
+	# material, chimneys, vents, skylights and plant - plus the things that
+	# genuinely project over the pavement (awnings) and the things that sit
+	# in the ground plane (doorsteps).
 	match lvl:
 		"oldtown", "spook":
-			# stone: tall, close, shuttered. Warm lamplight at night.
-			var stone := Color(0.42, 0.38, 0.34).lightened(lit * 0.10)
-			draw_rect(r, stone)
-			draw_rect(Rect2(inner_x - side * 5.0, r.position.y, 5.0, r.size.y), stone.darkened(0.35))
-			for w in range(2):
-				var wy := r.position.y + 42.0 + w * 92.0
-				var wx := inner_x - side * 30.0
-				# lit windows after dark, otherwise glass reflecting the sky -
-				# a near-black fill just read as a hole punched in the wall
-				var glow: bool = (k + w) % 3 == 0 and Game.night
-				var pane := Color(0.95, 0.80, 0.46) if glow else Color(0.27, 0.30, 0.34)
-				draw_rect(Rect2(wx - 11.0, wy, 22.0, 30.0), pane)
-				# a shutter folded back against the wall, and a stone sill
-				draw_rect(Rect2(wx - 16.0, wy, 5.0, 30.0), Color(0.30, 0.36, 0.31))
-				draw_rect(Rect2(wx + 11.0, wy, 5.0, 30.0), Color(0.30, 0.36, 0.31))
-				draw_rect(Rect2(wx - 13.0, wy + 30.0, 26.0, 4.0), stone.lightened(0.18))
-				draw_rect(Rect2(wx - 11.0, wy, 22.0, 30.0), stone.darkened(0.45), false, 2.0)
-				if glow:
-					draw_circle(Vector2(wx, wy + 15.0), 34.0, Color(1.0, 0.85, 0.5, 0.05))
-					draw_circle(Vector2(wx, wy + 15.0), 20.0, Color(1.0, 0.85, 0.5, 0.06))
+			# terracotta pantiles running in courses, with chimney stacks
+			var tile := Color(0.55, 0.31, 0.22).lightened(lit * 0.10)
+			draw_rect(r, tile)
+			var course := r.position.y
+			while course < r.end.y:
+				draw_line(Vector2(r.position.x, course), Vector2(r.end.x, course), tile.darkened(0.22), 2.0)
+				course += 13.0
+			# ridge line along the outer edge
+			var ridge_x: float = r.position.x + 6.0 if side < 0.0 else r.end.x - 6.0
+			draw_line(Vector2(ridge_x, r.position.y), Vector2(ridge_x, r.end.y), tile.lightened(0.26), 5.0)
+			# a chimney with its own little shadow
+			if k % 2 == 0:
+				var cp := Vector2(inner_x + side * 46.0, r.position.y + 64.0)
+				draw_rect(Rect2(cp.x - 8.0, cp.y - 9.0, 16.0, 18.0), Color(0.40, 0.24, 0.19))
+				draw_rect(Rect2(cp.x - 8.0, cp.y - 9.0, 16.0, 5.0), Color(0.30, 0.19, 0.16))
+				draw_rect(Rect2(cp.x + 8.0, cp.y - 5.0, 7.0, 18.0), Color(0.05, 0.04, 0.07, 0.22))
+			# a doorstep at street level - this one DOES read from above
+			var step_x: float = inner_x + side * -13.0
+			draw_rect(Rect2(step_x - 13.0, r.position.y + 150.0, 26.0, 13.0), Color(0.62, 0.58, 0.52))
 		"trail", "park":
 			# dense undergrowth and trunks crowding the path
 			for b in range(4):
 				var by := r.position.y + 26.0 + b * 52.0
-				var bx := inner_x - side * (14.0 + float((k + b) % 3) * 13.0)
+				var bx := inner_x + side * (14.0 + float((k + b) % 3) * 13.0)
 				draw_circle(Vector2(bx, by), 21.0 + float((k + b) % 4) * 4.0, Color(0.19, 0.31, 0.20))
 				draw_circle(Vector2(bx - side * 5.0, by - 5.0), 12.0, Color(0.24, 0.38, 0.24))
-			var trunk_x := inner_x - side * 44.0
+			var trunk_x := inner_x + side * 44.0
 			draw_circle(Vector2(trunk_x, r.get_center().y), 9.0, Color(0.32, 0.25, 0.18))
 		"station":
-			# interior: tiled wall, pillars, a strip of signage
-			draw_rect(r, Color(0.55, 0.55, 0.58).lightened(lit * 0.08))
-			for t in range(5):
-				var ty := r.position.y + t * 44.0
-				draw_line(Vector2(r.position.x, ty), Vector2(r.end.x, ty), Color(0.46, 0.46, 0.5), 1.5)
-			draw_rect(Rect2(inner_x - side * 20.0, r.position.y + 30.0, 20.0, 34.0), Color(0.16, 0.3, 0.5))
-			draw_rect(Rect2(inner_x - side * 14.0, r.get_center().y, 14.0, r.size.y * 0.42), Color(0.62, 0.62, 0.66))
+			# a glazed platform canopy: steel frame, dusty glass panels, and
+			# the light that leaks through it onto the concourse
+			var glass := Color(0.52, 0.58, 0.62).lightened(lit * 0.07)
+			draw_rect(r, glass)
+			var pane_y := r.position.y
+			while pane_y < r.end.y:
+				draw_line(Vector2(r.position.x, pane_y), Vector2(r.end.x, pane_y), Color(0.36, 0.38, 0.42), 3.0)
+				draw_line(Vector2(r.position.x, pane_y + 4.0), Vector2(r.end.x, pane_y + 4.0), Color(0.68, 0.74, 0.78, 0.5), 1.5)
+				pane_y += 36.0
+			# the spine truss running the length of the canopy
+			var spine_x := r.get_center().x
+			draw_line(Vector2(spine_x, r.position.y), Vector2(spine_x, r.end.y), Color(0.33, 0.35, 0.39), 6.0)
 		"site":
-			# hoarding: plywood panels with hazard stripes and scaffold legs
-			draw_rect(r, Color(0.62, 0.5, 0.32).lightened(lit * 0.10))
-			draw_rect(Rect2(inner_x - side * 8.0, r.position.y, 8.0, r.size.y), Color(0.5, 0.4, 0.26))
-			for s in range(6):
-				var sy := r.position.y + 12.0 + s * 34.0
+			# scaffold decking and tarps over the works
+			draw_rect(r, Color(0.46, 0.44, 0.40).lightened(lit * 0.08))
+			# scaffold boards running across, with poles at the joints
+			var board := r.position.y
+			while board < r.end.y:
+				draw_line(Vector2(r.position.x, board), Vector2(r.end.x, board), Color(0.58, 0.48, 0.31), 7.0)
+				draw_line(Vector2(r.position.x, board + 4.0), Vector2(r.end.x, board + 4.0), Color(0.30, 0.25, 0.17), 1.5)
+				board += 26.0
+			# a blue tarp lashed over part of it, and hazard tape at the edge
+			if k % 2 == 0:
+				draw_rect(Rect2(inner_x + side * 58.0, r.position.y + 40.0, 58.0, 96.0), Color(0.20, 0.36, 0.52, 0.9))
+			var tape_x: float = inner_x + side * 5.0
+			for s in range(8):
+				var sy := r.position.y + s * 28.0
 				var sc := Color(0.92, 0.72, 0.15) if s % 2 == 0 else Color(0.15, 0.14, 0.13)
-				draw_rect(Rect2(inner_x - side * 20.0, sy, 12.0, 18.0), sc)
+				draw_line(Vector2(tape_x, sy), Vector2(tape_x, sy + 14.0), sc, 5.0)
 		"scrap":
-			# chain-link, and heaps of junk piled up behind it
-			for h in range(3):
-				var hy := r.position.y + 34.0 + h * 66.0
-				draw_circle(Vector2(inner_x - side * 40.0, hy), 26.0, Color(0.34, 0.3, 0.28))
-				draw_circle(Vector2(inner_x - side * 22.0, hy + 12.0), 15.0, Color(0.42, 0.31, 0.26))
-			var fx := inner_x - side * 6.0
-			draw_line(Vector2(fx, r.position.y), Vector2(fx, r.end.y), Color(0.6, 0.62, 0.63, 0.8), 2.0)
-			for d in range(7):
-				var dy := r.position.y + d * 30.0
-				draw_line(Vector2(fx - side * 12.0, dy), Vector2(fx, dy + 22.0), Color(0.58, 0.6, 0.62, 0.45), 1.2)
-				draw_line(Vector2(fx, dy), Vector2(fx - side * 12.0, dy + 22.0), Color(0.58, 0.6, 0.62, 0.45), 1.2)
+			# corrugated shed roofs, rusting, with junk heaps between them
+			var iron := Color(0.40, 0.38, 0.35).lightened(lit * 0.09)
+			draw_rect(r, iron)
+			var rib := r.position.x
+			while rib < r.end.x:
+				draw_line(Vector2(rib, r.position.y), Vector2(rib, r.end.y), iron.darkened(0.22), 2.0)
+				draw_line(Vector2(rib + 4.0, r.position.y), Vector2(rib + 4.0, r.end.y), iron.lightened(0.16), 1.5)
+				rib += 11.0
+			# rust blooms
+			for h in range(2):
+				var hy := r.position.y + 50.0 + h * 96.0
+				draw_circle(Vector2(inner_x + side * (34.0 + float(h) * 18.0), hy), 17.0, Color(0.48, 0.28, 0.17, 0.55))
+			# the fence line at the kerb, seen from above as posts and wire
+			var fx: float = inner_x + side * 5.0
+			draw_line(Vector2(fx, r.position.y), Vector2(fx, r.end.y), Color(0.55, 0.57, 0.58, 0.7), 2.0)
+			for d in range(5):
+				draw_circle(Vector2(fx, r.position.y + float(d) * 46.0), 3.0, Color(0.42, 0.44, 0.45))
 		_:
-			# the default city block: shopfronts with glass, doors, awnings
-			var wall := Color(0.46, 0.42, 0.44).lightened(lit * 0.14)
-			draw_rect(r, wall)
-			draw_rect(Rect2(inner_x - side * 6.0, r.position.y, 6.0, r.size.y), wall.darkened(0.28))
-			# the shop window, lit from inside after dark
-			var glass := Color(0.86, 0.8, 0.55, 0.9) if Game.night else Color(0.55, 0.66, 0.72, 0.85)
-			var gx := inner_x - side * 34.0
-			draw_rect(Rect2(gx - 16.0, r.position.y + 40.0, 32.0, 84.0), glass)
-			draw_rect(Rect2(gx - 16.0, r.position.y + 40.0, 32.0, 84.0), wall.darkened(0.45), false, 2.0)
-			# doorway
-			draw_rect(Rect2(inner_x - side * 26.0, r.position.y + 150.0, 22.0, 46.0), Color(0.3, 0.24, 0.22))
-			# a striped awning over the window
+			# the default city block, seen from the air: a flat felt roof
+			# with the usual clutter, and an awning that genuinely projects
+			# out over the pavement
+			var felt := Color(0.34, 0.33, 0.35).lightened(lit * 0.11)
+			draw_rect(r, felt)
+			# gravel ballast, in patches rather than a uniform fill
+			for gi in range(9):
+				var gx2 := r.position.x + fmod(float(gi) * 37.0 + float(k) * 11.0, r.size.x)
+				var gy2 := r.position.y + fmod(float(gi) * 61.0 + float(k) * 23.0, r.size.y)
+				draw_circle(Vector2(gx2, gy2), 9.0 + float(gi % 3) * 4.0, felt.lightened(0.09))
+			# an air-conditioning unit with a cast shadow, and roof vents
+			var ac_p := Vector2(inner_x + side * 44.0, r.position.y + 58.0)
+			draw_rect(Rect2(ac_p.x + 6.0, ac_p.y + 6.0, 30.0, 24.0), Color(0.05, 0.04, 0.07, 0.28))
+			draw_rect(Rect2(ac_p.x - 15.0, ac_p.y - 12.0, 30.0, 24.0), Color(0.62, 0.63, 0.65))
+			draw_rect(Rect2(ac_p.x - 11.0, ac_p.y - 8.0, 22.0, 16.0), Color(0.47, 0.49, 0.52))
+			for vi in range(2):
+				var vp := Vector2(inner_x + side * 22.0, r.position.y + 128.0 + float(vi) * 34.0)
+				draw_circle(vp, 7.0, Color(0.52, 0.53, 0.55))
+				draw_circle(vp, 4.0, Color(0.24, 0.25, 0.27))
+			# a rooflight: from above this is the window that makes sense
+			if k % 3 == 0:
+				var sk := Rect2(inner_x + side * 66.0, r.position.y + 96.0, 34.0, 46.0)
+				draw_rect(sk, Color(0.88, 0.83, 0.52, 0.85) if Game.night else Color(0.62, 0.72, 0.78, 0.8))
+				draw_rect(sk, felt.darkened(0.35), false, 3.0)
+			# the awning: projects over the pavement, so it reads correctly
+			# from overhead, and throws a shadow onto the paving below it
 			if k % 2 == 0:
 				var ac := Color(0.72, 0.3, 0.28) if k % 4 == 0 else Color(0.28, 0.42, 0.55)
-				draw_rect(Rect2(inner_x - side * 40.0, r.position.y + 30.0, 40.0, 12.0), ac)
+				var aw_x: float = inner_x if side < 0.0 else inner_x - 34.0
+				draw_rect(Rect2(aw_x, r.position.y + 44.0, 34.0, 76.0), Color(0.05, 0.04, 0.07, 0.16))
+				draw_rect(Rect2(aw_x, r.position.y + 40.0, 30.0, 72.0), ac)
+				for st in range(4):
+					draw_line(Vector2(aw_x + 7.0 * float(st), r.position.y + 40.0),
+						Vector2(aw_x + 7.0 * float(st), r.position.y + 112.0), ac.lightened(0.30), 3.0)
+			# a doorstep in the ground plane at the wall base
+			var stp_x: float = inner_x + side * -12.0
+			draw_rect(Rect2(stp_x - 14.0, r.position.y + 162.0, 28.0, 12.0), Color(0.58, 0.56, 0.53))
 
 
 func _build_ground_detail() -> void:
@@ -1412,7 +1527,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.35"
+	version_l.text = "v1.36"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -3540,20 +3655,42 @@ func _draw() -> void:
 				draw_circle(t, 5.0, COL_GRASS_DARK)
 		# the walkway: sidewalk downtown, packed dirt in the park
 		draw_rect(Rect2(sw_l, GATE_Y - 40.0, sw_r - sw_l, bottom - GATE_Y), walkway)
-		if lvl == "street" or lvl == "market":
-			var y := START_Y + 200.0
-			while y > GATE_Y:
-				if y < vb and y > vt:
-					draw_line(Vector2(sw_l, y), Vector2(sw_r, y), COL_SEAM, 2.0)
-				y -= 150.0
+		_draw_paving(vt, vb, walkway)
 		draw_line(Vector2(sw_l, bottom), Vector2(sw_l, GATE_Y), COL_SEAM, 3.0)
 		draw_line(Vector2(sw_r, bottom), Vector2(sw_r, GATE_Y), COL_SEAM, 3.0)
 	_draw_edges(vt, vb)
 	# whatever lies beyond the gate
 	draw_rect(Rect2(-400, top, 2100, GATE_Y - top), Color(0.27, 0.4, 0.27))
+	# Trees, read from above: two flat green discs said "blob", not "tree".
+	# A canopy needs a cast shadow to sit in the world, clustered lobes to
+	# break the outline, a lit side, and a hint of trunk and limbs showing
+	# through the gaps.
 	for t in trees:
-		draw_circle(t, 26.0, Color(0.22, 0.34, 0.22))
-		draw_circle(t + Vector2(8, 6), 18.0, Color(0.25, 0.38, 0.24))
+		if t.y < vt - 70.0 or t.y > vb + 70.0:
+			continue
+		var leaf_dark := Color(0.15, 0.25, 0.16)
+		var leaf := Color(0.22, 0.36, 0.22)
+		var leaf_lit := Color(0.34, 0.50, 0.28)
+		# shadow on the ground, offset with the world light (up-left)
+		draw_set_transform(t + Vector2(13.0, 17.0), 0.0, Vector2(1.1, 0.62))
+		draw_circle(Vector2.ZERO, 27.0, Color(0.05, 0.05, 0.08, 0.24))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		# trunk and a couple of limbs, glimpsed through the canopy
+		draw_circle(t, 7.0, Color(0.30, 0.23, 0.17))
+		for lb in range(3):
+			var la := TAU * float(lb) / 3.0 + t.x * 0.01
+			draw_line(t, t + Vector2.from_angle(la) * 19.0, Color(0.28, 0.21, 0.15), 3.0)
+		# canopy as overlapping lobes rather than one circle
+		for lo in range(6):
+			var a := TAU * float(lo) / 6.0 + t.y * 0.008
+			var c := t + Vector2.from_angle(a) * 13.0
+			draw_circle(c, 13.5, leaf_dark)
+		for lo in range(5):
+			var a2 := TAU * float(lo) / 5.0 + 0.6 + t.x * 0.007
+			draw_circle(t + Vector2.from_angle(a2) * 10.0, 11.5, leaf)
+		# the lit crown, up and to the left
+		draw_circle(t + Vector2(-6.0, -7.0), 12.0, leaf_lit)
+		draw_circle(t + Vector2(-11.0, -12.0), 6.0, leaf_lit.lightened(0.12))
 	if lvl == "street":
 		# parallel bike lane + far shoulder
 		draw_rect(Rect2(BLANE_L, GATE_Y - 40.0, BLANE_R - BLANE_L, bottom - GATE_Y), Color(0.4, 0.31, 0.29))
