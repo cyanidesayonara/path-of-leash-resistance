@@ -132,6 +132,10 @@ var conveyor_dir := Vector2.ZERO
 const CONV_SPEED := 118.0
 const CAM_ZOOM := 1.28
 # autowalk stall watchdog: how long a travelling leg may make no headway
+# the goals card: wide enough that the longest goal name cannot spill out
+const GOALS_X := 856.0
+const GOALS_W := 416.0
+const GOALS_MAX_ROWS := 7
 const STALL_WINDOW := 8.0
 const STALL_MIN_PROGRESS := 90.0
 var _stall_t := 0.0
@@ -261,7 +265,7 @@ var in_shop := false
 var shop_items: Array[Dictionary] = []
 var shop_idx := 0
 var prompt_tw: Tween
-var quests_label: Label
+var quests_label: RichTextLabel
 var msg_label: Label
 var combo: Node
 var challenge: Node
@@ -1367,15 +1371,28 @@ func _build_hud() -> void:
 	hud.add_child(panel)
 	panel.setup(self)
 	var qsb := StyleBoxFlat.new()
-	qsb.bg_color = Color(0.08, 0.09, 0.1, 0.3)
+	# opaque enough that dimmed, completed rows stay legible over bright
+	# ground - at 0.3 they washed out completely against pale pavement
+	qsb.bg_color = Color(0.07, 0.08, 0.09, 0.66)
 	qsb.set_corner_radius_all(10)
 	qbg = Panel.new()
 	qbg.add_theme_stylebox_override("panel", qsb)
-	qbg.position = Vector2(924, 8)
-	qbg.size = Vector2(348, 112)
+	qbg.position = Vector2(GOALS_X, 8)
+	qbg.size = Vector2(GOALS_W, 112)
 	hud.add_child(qbg)
-	quests_label = _hud_label(Vector2(938, 16), 15)
-	quests_label.size = Vector2(330, 100)
+	# a rich text list, so completed goals can dim and progress can colour
+	# per line - a flat Label could not, and long goal names were spilling
+	# straight out of the card
+	quests_label = RichTextLabel.new()
+	quests_label.bbcode_enabled = true
+	quests_label.fit_content = true
+	quests_label.scroll_active = false
+	quests_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	quests_label.position = Vector2(GOALS_X + 14.0, 14.0)
+	quests_label.size = Vector2(GOALS_W - 28.0, 40.0)
+	quests_label.add_theme_font_size_override("normal_font_size", 14)
+	quests_label.add_theme_font_size_override("bold_font_size", 14)
+	hud.add_child(quests_label)
 	hint_l = _hud_label(Vector2(24, 686), 15)
 	hint_l.modulate.a = 0.75
 	title_l = _hud_label(Vector2(0, 240), 44)
@@ -1395,7 +1412,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.34"
+	version_l.text = "v1.35"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -1709,27 +1726,54 @@ func _update_hud() -> void:
 		hud_status = "FULL!"
 	elif pee <= 0.02:
 		hud_status = "empty - find a fountain"
-	# the level's goal list: lifetime progress in the header, then the
-	# goals still open (plus any ticked off this run), capped for space
+	# The goal card, Tony Hawk style: a fixed, stable list where finished
+	# goals stay put with a tick and dim out, instead of vanishing (which is
+	# what made the row count wobble between runs). Open goals sort to the
+	# top so the live ones are always on screen, and long names can no longer
+	# spill out of the card because the card is sized for them.
 	var total := active_quests.size()
 	var done_count: int = run_goals_hit.size() if Game.daily else Game.goals_count(lvl)
-	var qlines := "GOALS  %d/%d" % [mini(done_count, total), total]
-	var shown := 0
+	done_count = mini(done_count, total)
+	var pct := 0.0 if total == 0 else float(done_count) / float(total)
+	var open_rows: Array[String] = []
+	var done_rows: Array[String] = []
 	for q in active_quests:
 		var persisted: bool = (not Game.daily) and Game.goal_done(lvl, q.id)
 		var hit: bool = run_goals_hit.has(q.id)
-		if persisted and not hit:
-			continue  # earned on a past run; keep the live list to what's left
-		var line := ("[x] " if hit else "[ ] ") + _quest_text(q)
-		if not hit and int(q.target) > 1:
-			line += "  %d/%d" % [mini(int(q.fn.call()), int(q.target)), int(q.target)]
-		qlines += "\n" + line
-		shown += 1
-		if shown >= 6:
-			break
+		var finished_goal: bool = persisted or hit
+		var name_txt := _quest_text(q)
+		if finished_goal:
+			# banked this run reads brighter than banked on some past walk
+			var tick_col := "8fe39a" if hit else "6f8c74"
+			var txt_col := "b9d8bd" if hit else "78877a"
+			done_rows.append("[color=#%s]  ✔  [/color][color=#%s]%s[/color]" % [tick_col, txt_col, name_txt])
+		else:
+			var row := "[color=#f0c95a]  ○  [/color][color=#f2ece0]%s[/color]" % name_txt
+			var target := int(q.target)
+			if target > 1:
+				var got: int = mini(int(q.fn.call()), target)
+				# a tiny inline meter, so multi-step goals show momentum
+				# filled/hollow circles: the default font has these (the
+				# block-glyph versions rendered as empty tofu boxes)
+				var meter := ""
+				for i in range(target):
+					meter += "●" if i < got else "○"
+				row += "  [color=#c8b98a]%s %d/%d[/color]" % [meter, got, target]
+			open_rows.append(row)
+	var rows := open_rows + done_rows
+	var shown: int = mini(rows.size(), GOALS_MAX_ROWS)
+	var head_col := "9fe6a8" if pct >= 1.0 else "e8dcc0"
+	var qlines := "[color=#%s][b]GOALS  %d/%d[/b][/color]" % [head_col, done_count, total]
+	if pct >= 1.0:
+		qlines += "  [color=#9fe6a8]ALL CLEAR[/color]"
+	for i in range(shown):
+		qlines += "\n" + rows[i]
+	if rows.size() > shown:
+		qlines += "\n[color=#8e8779]  + %d more[/color]" % (rows.size() - shown)
 	quests_label.text = qlines
-	# grow the card to fit however many lines we ended up showing
-	qbg.size.y = 18.0 + float(shown + 1) * 21.0
+	# fit_content gives the real rendered height, so the card always wraps
+	# its contents exactly instead of guessing at a line height
+	qbg.size.y = maxf(46.0, quests_label.size.y + 26.0)
 
 
 func _update_combo_hud() -> void:

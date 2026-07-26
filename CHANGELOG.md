@@ -2,6 +2,30 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.35: the goal card, rebuilt
+
+The goals list had two real defects and not much pizzazz. Both fixed:
+
+- **It overflowed its own card.** Long goal names ("steal the sardine
+  under the cat's ledge") ran straight out past the shaded background,
+  because the card was a fixed 348px and nothing measured the text. The
+  card is now 416px wide and its height comes from the rendered content,
+  so it always wraps its contents exactly instead of guessing a line
+  height.
+- **The row count wobbled between runs** because goals earned on a
+  PREVIOUS walk were hidden entirely. Now nothing disappears: finished
+  goals stay in place with a tick and dim out, open goals sort to the top
+  so the live ones are always on screen, and anything past seven rows
+  collapses into "+ N more". The list is stable and the count finally
+  matches the header.
+- **Pizzazz.** Rebuilt as rich text so rows can style themselves: amber
+  circles for open goals, green ticks for done, and multi-step goals get a
+  little inline meter (filled/hollow pips) next to their x/y - so you can
+  see momentum at a glance. Goals banked *this run* read brighter than
+  ones banked on a past walk, and the header turns green with ALL CLEAR
+  when a walk is fully cleaned out. Card is more opaque so dimmed rows
+  stay legible over pale pavement.
+
 ## 2026-07-18 — v1.34: content tests that catch real bugs
 
 Two new CI checks aimed at the class of mistake the old suite could not
