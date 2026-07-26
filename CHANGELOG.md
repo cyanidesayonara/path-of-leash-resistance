@@ -2,6 +2,26 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.38: Millie's coat is data now (+ one-command releases)
+
+- **The first working piece of the dog creator.** Millie's colours were
+  hardcoded into her renderer; they are now DATA (`Game.COATS`) - base fur,
+  shaded underside, muzzle/chest markings and how much grizzle shows. So
+  adding a breed later means adding a row of parameters, not editing the
+  drawing code. Six coats to start (Millie black, chocolate, golden, grey
+  weimaraner, cream, blue merle), bought with bones like any cosmetic, and
+  the wardrobe previews the highlighted coat on the preview dog before you
+  buy it. Millie's own look is the default and always owned.
+- The wardrobe grew a third category, and its buy/equip path collapsed from
+  duplicated if/else branches into one lookup - so a fourth category (ears,
+  tails, sizes) is now a couple of lines rather than a refactor.
+- **Releases publish themselves.** New workflow: push a version tag and CI
+  exports the web build and pushes it to itch with `butler`, which uploads
+  only the changed blocks (a few hundred KB instead of a 10MB re-upload)
+  and keeps every version rollback-able on itch's side. The zip is still
+  produced and attached to the GitHub release as a manual fallback.
+  One-time setup: add an itch API key as the BUTLER_API_KEY repo secret.
+
 ## 2026-07-18 — v1.37: things with mass, and litter that belongs somewhere
 
 A fair hit landed: v1.36 added trees you could walk straight through. If

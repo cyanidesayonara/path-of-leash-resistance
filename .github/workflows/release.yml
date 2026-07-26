@@ -1,0 +1,70 @@
+name: Release to itch.io
+
+# Deploying by hand (export, zip, drag to itch) is slow and easy to forget,
+# and a full 10MB re-upload every time. This does it properly: push a
+# version tag and the web build is exported and pushed to itch with
+# `butler`, which uploads only the CHANGED BLOCKS - so a typical release is
+# a few hundred KB and a couple of seconds, and every upload is versioned
+# and rollback-able on itch's side.
+#
+# One-time setup needed:
+#   1. Get an API key from https://itch.io/user/settings/api-keys
+#   2. Add it to the repo as a secret named BUTLER_API_KEY
+#      (Settings > Secrets and variables > Actions > New repository secret)
+# After that: `git tag v1.38 && git push --tags` publishes.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:      # or run it manually from the Actions tab
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Download Godot + export templates
+        run: |
+          curl -sL -o godot.zip https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
+          unzip -q godot.zip
+          chmod +x Godot_v4.7-stable_linux.x86_64
+          curl -sL -o templates.tpz https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_export_templates.tpz
+          unzip -q templates.tpz
+          mkdir -p ~/.local/share/godot/export_templates/4.7.stable
+          mv templates/* ~/.local/share/godot/export_templates/4.7.stable/
+
+      - name: Export the web build
+        run: |
+          mkdir -p build/web
+          ./Godot_v4.7-stable_linux.x86_64 --headless --path . --export-release "Web" build/web/index.html
+          test -f build/web/index.wasm
+
+      # keep producing the zip as well, so there is always a manual
+      # fallback and something attached to the GitHub release
+      - name: Zip it (manual-upload fallback)
+        run: cd build/web && zip -q -r ../../leash-resistance-web.zip . && cd ../..
+
+      - name: Attach the zip to the GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: leash-resistance-web.zip
+          generate_release_notes: true
+
+      - name: Push to itch.io with butler
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          if [ -z "$BUTLER_API_KEY" ]; then
+            echo "No BUTLER_API_KEY secret set - skipping the itch upload."
+            echo "The zip is still attached to the GitHub release for manual upload."
+            exit 0
+          fi
+          curl -sL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip -q butler.zip
+          chmod +x butler
+          ./butler -V
+          ./butler push build/web \
+            cyanidesayonara/path-of-leash-resistance:html5 \
+            --userversion "${GITHUB_REF_NAME}"

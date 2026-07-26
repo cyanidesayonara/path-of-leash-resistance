@@ -37,16 +37,26 @@ var main: Node2D
 var preview_mode := false
 var preview_collar := ""
 var preview_bandana := ""
+var preview_coat := ""
 
 
 func setup(m: Node2D) -> void:
 	main = m
 
 
-func set_cosmetic_preview(collar_key: String, bandana_key: String) -> void:
+func set_cosmetic_preview(collar_key: String, bandana_key: String, coat_key := "") -> void:
 	preview_collar = collar_key
 	preview_bandana = bandana_key
+	preview_coat = coat_key
 	queue_redraw()
+
+
+func _coat_data() -> Dictionary:
+	# in the wardrobe the highlighted coat shows on the preview dog before
+	# you have bought it; in the world it is always the equipped one
+	if preview_mode and Game.COATS.has(preview_coat):
+		return Game.COATS[preview_coat]
+	return Game.coat_data()
 
 
 func _cosmetic_collar_key() -> String:
@@ -205,9 +215,13 @@ func _draw() -> void:
 		draw_set_transform(Vector2(4.0, 7.0) * lift, 0.0, Vector2(1.15, 0.5))
 		draw_circle(Vector2.ZERO, 12.0, Color(0.06, 0.05, 0.08, 0.26))
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	var fur := Color(0.14, 0.13, 0.14)
-	var fur_dark := Color(0.08, 0.08, 0.09)
-	var grizzle := Color(0.62, 0.6, 0.58)
+	# the coat comes from data now (Game.COATS), not baked-in colours, so a
+	# dog creator later means adding a row of parameters rather than editing
+	# this renderer
+	var cd: Dictionary = _coat_data()
+	var fur: Color = cd.fur
+	var fur_dark: Color = cd.dark
+	var grizzle: Color = cd.mark
 	var crouching := peeing or squat_t > 0.0 or squat_ui > 0.0
 	var side := facing.orthogonal()
 	var shoulder := facing * 6.0

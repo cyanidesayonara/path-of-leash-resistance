@@ -40,6 +40,32 @@ const BANDANAS := {
 	"plum": {"name": "Plum bandana", "cost": 140, "col": Color(0.45, 0.22, 0.4)},
 }
 
+# Millie's coat, as DATA rather than colours hardcoded into her drawing.
+# This is the first piece of the eventual dog creator: every look is a set
+# of parameters (base fur, shaded underside, muzzle/chest markings, and how
+# much grizzle shows), so adding a breed later means adding a row here, not
+# editing the renderer. "millie" is the real dog and stays the default.
+const COATS := {
+	"millie": {"name": "Millie (black)", "cost": 0,
+		"fur": Color(0.14, 0.13, 0.14), "dark": Color(0.08, 0.08, 0.09),
+		"mark": Color(0.62, 0.60, 0.58), "grizzle": 1.0},
+	"choc": {"name": "Chocolate", "cost": 90,
+		"fur": Color(0.32, 0.20, 0.14), "dark": Color(0.21, 0.13, 0.09),
+		"mark": Color(0.68, 0.52, 0.36), "grizzle": 0.5},
+	"gold": {"name": "Golden", "cost": 90,
+		"fur": Color(0.72, 0.55, 0.30), "dark": Color(0.55, 0.40, 0.21),
+		"mark": Color(0.88, 0.78, 0.58), "grizzle": 0.4},
+	"grey": {"name": "Grey (weimaraner)", "cost": 130,
+		"fur": Color(0.44, 0.42, 0.44), "dark": Color(0.31, 0.30, 0.32),
+		"mark": Color(0.66, 0.64, 0.64), "grizzle": 0.3},
+	"cream": {"name": "Cream", "cost": 130,
+		"fur": Color(0.82, 0.74, 0.60), "dark": Color(0.64, 0.56, 0.44),
+		"mark": Color(0.94, 0.90, 0.80), "grizzle": 0.2},
+	"merle": {"name": "Blue merle", "cost": 220,
+		"fur": Color(0.40, 0.44, 0.50), "dark": Color(0.24, 0.27, 0.32),
+		"mark": Color(0.78, 0.80, 0.84), "grizzle": 1.4},
+}
+
 const SAVE_PATH := "user://records.cfg"
 
 var level_id := "street"
@@ -54,9 +80,10 @@ var menu_step := 0
 var records := {}
 var total_bones := 0
 # cosmetics
-var owned := {"red": true, "none": true}
+var owned := {"red": true, "none": true, "millie": true}
 var collar := "red"
 var bandana := "none"
+var coat := "millie"
 
 
 func daily_seed() -> int:
@@ -80,6 +107,10 @@ func collar_color() -> Color:
 	return COLLARS[collar].col if COLLARS.has(collar) else COLLARS["red"].col
 
 
+func coat_data() -> Dictionary:
+	return COATS[coat] if COATS.has(coat) else COATS["millie"]
+
+
 func buy(item: String) -> bool:
 	var cost := _cost(item)
 	if owned.get(item, false) or total_bones < cost:
@@ -95,6 +126,8 @@ func _cost(item: String) -> int:
 		return int(COLLARS[item].cost)
 	if BANDANAS.has(item):
 		return int(BANDANAS[item].cost)
+	if COATS.has(item):
+		return int(COATS[item].cost)
 	return 0
 
 
@@ -147,10 +180,13 @@ func load_records() -> void:
 	owned = {}
 	for k in ol:
 		owned[k] = true
+	# the freebies are always owned, however old the save file is
 	owned["red"] = true
 	owned["none"] = true
+	owned["millie"] = true
 	collar = cf.get_value("cosmetics", "collar", "red")
 	bandana = cf.get_value("cosmetics", "bandana", "none")
+	coat = cf.get_value("cosmetics", "coat", "millie")
 
 
 func save_records() -> void:
@@ -170,6 +206,7 @@ func save_records() -> void:
 	cf.set_value("cosmetics", "owned", owned.keys())
 	cf.set_value("cosmetics", "collar", collar)
 	cf.set_value("cosmetics", "bandana", bandana)
+	cf.set_value("cosmetics", "coat", coat)
 	cf.save(SAVE_PATH)
 
 

@@ -1614,7 +1614,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.37"
+	version_l.text = "v1.38"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -1663,6 +1663,10 @@ func _build_hud() -> void:
 		if k != "none":
 			shop_items.append({"kind": "bandana", "key": k})
 	shop_items.append({"kind": "bandana", "key": "none"})
+	# coats last: the biggest change to how Millie looks, and the first
+	# working piece of the dog creator
+	for k in Game.COATS:
+		shop_items.append({"kind": "coat", "key": k})
 	Input.joy_connection_changed.connect(func(_d: int, _c: bool) -> void: _refresh_menu_text())
 	prompt_tw = create_tween().set_loops()
 	prompt_tw.tween_property(prompt_l, "modulate:a", 0.3, 0.7)
@@ -1801,21 +1805,25 @@ func _open_shop() -> void:
 	_refresh_shop()
 
 
+func _shop_data(kind: String, key: String) -> Dictionary:
+	match kind:
+		"collar": return Game.COLLARS[key]
+		"coat": return Game.COATS[key]
+		_: return Game.BANDANAS[key]
+
+
+func _equip(kind: String, key: String) -> void:
+	match kind:
+		"collar": Game.collar = key
+		"bandana": Game.bandana = key
+		"coat": Game.coat = key
+
+
 func _shop_select() -> void:
 	var it: Dictionary = shop_items[shop_idx]
 	var key: String = it.key
-	if Game.owned.get(key, false):
-		# equip
-		if it.kind == "collar":
-			Game.collar = key
-		else:
-			Game.bandana = key
-		Game.save_records()
-	elif Game.buy(key):
-		if it.kind == "collar":
-			Game.collar = key
-		else:
-			Game.bandana = key
+	if Game.owned.get(key, false) or Game.buy(key):
+		_equip(String(it.kind), key)
 		Game.save_records()
 	# (if the buy failed, not enough bones - the price stays shown)
 	_refresh_shop()
@@ -1827,8 +1835,12 @@ func _refresh_shop() -> void:
 	for i in range(shop_items.size()):
 		var it: Dictionary = shop_items[i]
 		var key: String = it.key
-		var data: Dictionary = Game.COLLARS[key] if it.kind == "collar" else Game.BANDANAS[key]
-		var equipped: bool = (it.kind == "collar" and Game.collar == key) or (it.kind == "bandana" and Game.bandana == key)
+		var data: Dictionary = _shop_data(String(it.kind), key)
+		var equipped: bool = (
+			(it.kind == "collar" and Game.collar == key)
+			or (it.kind == "bandana" and Game.bandana == key)
+			or (it.kind == "coat" and Game.coat == key)
+		)
 		var tag := ""
 		if equipped:
 			tag = "  [EQUIPPED]"
@@ -1843,11 +1855,12 @@ func _refresh_shop() -> void:
 	var highlighted: Dictionary = shop_items[shop_idx]
 	var preview_collar: String = Game.collar
 	var preview_bandana: String = Game.bandana
-	if highlighted.kind == "collar":
-		preview_collar = highlighted.key
-	else:
-		preview_bandana = highlighted.key
-	shop_preview.set_cosmetic_preview(preview_collar, preview_bandana)
+	var preview_coat: String = Game.coat
+	match String(highlighted.kind):
+		"collar": preview_collar = highlighted.key
+		"coat": preview_coat = highlighted.key
+		_: preview_bandana = highlighted.key
+	shop_preview.set_cosmetic_preview(preview_collar, preview_bandana, preview_coat)
 
 
 func _refresh_menu_text() -> void:
