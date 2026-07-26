@@ -22,6 +22,10 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # the default token is read-only, so creating a GitHub release 403s
+    # without this ("Resource not accessible by integration")
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v5
 
@@ -46,12 +50,8 @@ jobs:
       - name: Zip it (manual-upload fallback)
         run: cd build/web && zip -q -r ../../leash-resistance-web.zip . && cd ../..
 
-      - name: Attach the zip to the GitHub release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: leash-resistance-web.zip
-          generate_release_notes: true
-
+      # itch goes FIRST: shipping the playable build is the point, and it
+      # must not be blocked by anything cosmetic downstream
       - name: Push to itch.io with butler
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
@@ -68,3 +68,11 @@ jobs:
           ./butler push build/web \
             cyanidesayonara/path-of-leash-resistance:html5 \
             --userversion "${GITHUB_REF_NAME}"
+
+      # nice-to-have, so it never fails the deploy it follows
+      - name: Attach the zip to the GitHub release
+        continue-on-error: true
+        uses: softprops/action-gh-release@v2
+        with:
+          files: leash-resistance-web.zip
+          generate_release_notes: true
