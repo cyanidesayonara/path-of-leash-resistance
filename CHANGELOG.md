@@ -2,6 +2,30 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.32: every walk gets its own proportions
+
+The levels all felt like the same street redressed, and the root cause was
+structural: the walkable corridor was two fixed constants, so every walk was
+identically 680px wide no matter how it was dressed.
+
+- The corridor is now derived from ONE width dial per level, moving the
+  pavement and the gameplay bounds together. El Gotic is a genuinely tight
+  alley (450 wide), L'Estacio a genuinely open concourse (780), with the
+  rest spread between - and narrow corridors are mechanically harder,
+  since there is less room to thread a distracted owner past a lamppost.
+- Props were all authored for the old fixed width, so a new corridor-fit
+  pass remaps every placed prop (poles, stalls, bins, benches, vans,
+  cones, manholes, hydrants, snacks, wall cats, guard posts, candy) into
+  whatever corridor its level declares, keeping each on its own side of
+  the path. The beach is exempt - its sand/boardwalk/bike-path
+  cross-section deliberately puts things outside the walkway.
+- Verified: all 11 levels still complete an unattended autowalk, including
+  the tightest, and all 22 regression tests pass.
+
+Still to come per level: bespoke EDGE treatment (walls for the alley,
+shopfronts for the boulevard), which is what will finish the personality
+job that proportions start.
+
 ## 2026-07-18 — v1.31: the look pass #1 — grade, shadows, light, texture
 
 First pass at the presentation, aimed squarely at "it looks like a 2010

@@ -4,8 +4,14 @@ extends Node2D
 # You are the dog. Walk the phone-zombie human through it with the
 # phone intact. Go touch grass.
 
-const SIDEWALK_LEFT := 300.0
-const SIDEWALK_RIGHT := 980.0
+# The walkable corridor. These used to be fixed constants, which is why
+# every walk had identical proportions no matter how differently it was
+# dressed. They are now derived from walk_cx/walk_half, so each level sets
+# ONE width dial and both the pavement and the gameplay bounds follow: a
+# tight medieval alley genuinely pinches, a station concourse genuinely
+# opens out. (Set in _apply_corridor, per level.)
+var sw_l := 300.0
+var sw_r := 980.0
 # parallel bike lane along the right side, plus a narrow far shoulder
 # with temptations - crossing the lane is a voluntary risk
 const BLANE_L := 988.0
@@ -71,8 +77,8 @@ var ducks_disturbed := 0
 # the outer walls, though an undistracted owner has opinions about it
 var walk_cx := 640.0
 var walk_half := 340.0
-var gate_l := SIDEWALK_LEFT
-var gate_r := SIDEWALK_RIGHT
+var gate_l := sw_l
+var gate_r := sw_r
 var tut_l := 220.0
 var tut_r := 1160.0
 var offpath_t := 0.0
@@ -398,7 +404,61 @@ func _setup_input() -> void:
 		InputMap.action_add_event(action, evb)
 
 
+func _apply_corridor() -> void:
+	# ONE width dial per walk. This is what makes the levels stop feeling
+	# like the same street redressed: a medieval alley that genuinely
+	# pinches, a station concourse that genuinely opens out. It moves the
+	# gameplay bounds and the pavement together, and narrow corridors are
+	# mechanically harder - less room to thread a distracted owner past a
+	# lamppost.
+	var half := 340.0
+	match lvl:
+		"street": half = 340.0   # a proper boulevard
+		"park": half = 300.0     # a dirt path through grass
+		"beach": half = 340.0    # bespoke cross-section, left alone
+		"rain": half = 320.0
+		"market": half = 270.0   # stalls crowd the aisle
+		"oldtown": half = 225.0  # the tightest: a medieval alley
+		"trail": half = 250.0    # a single-file woodland trail
+		"station": half = 390.0  # the widest: an open concourse
+		"site": half = 295.0     # squeezed by the works
+		"spook": half = 275.0
+		"scrap": half = 305.0
+	walk_cx = 640.0
+	walk_half = half
+	sw_l = walk_cx - walk_half
+	sw_r = walk_cx + walk_half
+
+
+func _fit_props_to_corridor() -> void:
+	# Props were all authored for the old fixed 300..980 corridor, so a
+	# narrower walk would leave them stranded out on the verge. Pull every
+	# placed prop back inside whatever corridor this level declared, keeping
+	# its side of the path. The beach is exempt: its sand/boardwalk/bike-path
+	# cross-section deliberately places things outside the walkway.
+	if lvl == "beach":
+		return
+	var pad := 26.0
+	var lo := sw_l + pad
+	var hi := sw_r - pad
+	for arr in [poles, tables, chairs, parasols, astands, vans, stalls, bins,
+			benches, performers, cone_spots, manholes, wallcat_spots,
+			guard_posts, candy_spots, fountains]:
+		for i in range(arr.size()):
+			var p: Vector2 = arr[i]
+			# remap proportionally so left-side props stay left, right stay right
+			var f := clampf((p.x - 300.0) / 680.0, 0.0, 1.0)
+			arr[i] = Vector2(lerpf(lo, hi, f), p.y)
+	# the dictionary-based pickups need the same treatment
+	for list in [hydrants, kebabs, candy]:
+		for d in list:
+			var dp: Vector2 = d.pos
+			var df := clampf((dp.x - 300.0) / 680.0, 0.0, 1.0)
+			d.pos = Vector2(lerpf(lo, hi, df), dp.y)
+
+
 func _build_level_data() -> void:
+	_apply_corridor()
 	var hyd_list: Array[Vector2] = []
 	var keb_list: Array[Vector2] = []
 	# a couple of walks reuse a proven layout as a base for now (bespoke
@@ -416,7 +476,7 @@ func _build_level_data() -> void:
 			lane_ys = [-1200.0, -2600.0, -4000.0]
 			gate_text = "PARK"
 			for i in range(7):
-				var x := SIDEWALK_LEFT + 30.0 if i % 2 == 0 else SIDEWALK_RIGHT - 30.0
+				var x := sw_l + 30.0 if i % 2 == 0 else sw_r - 30.0
 				var y := -350.0 - i * 640.0
 				var near_lane := false
 				for ly in lane_ys:
@@ -452,29 +512,29 @@ func _build_level_data() -> void:
 				Vector2(520, -4400),
 			]
 			cellars = [
-				Rect2(SIDEWALK_LEFT, -2750, 62, 88), Rect2(SIDEWALK_RIGHT - 62, -750, 62, 82),
-				Rect2(SIDEWALK_LEFT, -4550, 62, 88),
+				Rect2(sw_l, -2750, 62, 88), Rect2(sw_r - 62, -750, 62, 82),
+				Rect2(sw_l, -4550, 62, 88),
 			]
 			bins = [
-				Vector2(SIDEWALK_LEFT + 30, -600), Vector2(SIDEWALK_RIGHT - 30, -1400),
-				Vector2(SIDEWALK_LEFT + 30, -2150), Vector2(SIDEWALK_RIGHT - 30, -3000),
-				Vector2(SIDEWALK_LEFT + 30, -3700), Vector2(SIDEWALK_RIGHT - 30, -4700),
+				Vector2(sw_l + 30, -600), Vector2(sw_r - 30, -1400),
+				Vector2(sw_l + 30, -2150), Vector2(sw_r - 30, -3000),
+				Vector2(sw_l + 30, -3700), Vector2(sw_r - 30, -4700),
 			]
 			benches = [Vector2(336, -1300), Vector2(944, -2450), Vector2(336, -3850)]
 			hyd_list = [
-				Vector2(SIDEWALK_LEFT + 45, -500), Vector2(SIDEWALK_RIGHT - 45, -1500),
-				Vector2(SIDEWALK_LEFT + 45, -2300), Vector2(SIDEWALK_RIGHT - 45, -3300),
-				Vector2(SIDEWALK_LEFT + 45, -4600),
+				Vector2(sw_l + 45, -500), Vector2(sw_r - 45, -1500),
+				Vector2(sw_l + 45, -2300), Vector2(sw_r - 45, -3300),
+				Vector2(sw_l + 45, -4600),
 				Vector2(SHOULDER_R - 12, -1000), Vector2(SHOULDER_R - 12, -3600),
 			]
 			keb_list = [Vector2(640, -1960), Vector2(700, -4200), Vector2(SHOULDER_R - 12, -2400)]
 		"park":
 			gate_text = "HOME"
 			# the pond bites into the path; the strip past it is the bridge
-			pond = Rect2(SIDEWALK_LEFT, -2950, 360, 470)
+			pond = Rect2(sw_l, -2950, 360, 470)
 			duck_ys = [randf_range(-2200.0, -1400.0), randf_range(-4300.0, -3400.0)]
 			for i in range(7):
-				var x := SIDEWALK_LEFT + 30.0 if i % 2 == 0 else SIDEWALK_RIGHT - 30.0
+				var x := sw_l + 30.0 if i % 2 == 0 else sw_r - 30.0
 				var y := -350.0 - i * 640.0
 				if not pond.grow(40.0).has_point(Vector2(x, y)):
 					poles.append(Vector2(x, y))
@@ -488,15 +548,15 @@ func _build_level_data() -> void:
 			astands = [Vector2(350, -2050)]
 			cone_spots = [Vector2(720, -2500), Vector2(700, -2960)]
 			bins = [
-				Vector2(SIDEWALK_LEFT + 30, -600), Vector2(SIDEWALK_RIGHT - 30, -1400),
-				Vector2(SIDEWALK_LEFT + 30, -2150), Vector2(SIDEWALK_RIGHT - 30, -3000),
-				Vector2(SIDEWALK_LEFT + 30, -3700), Vector2(SIDEWALK_RIGHT - 30, -4700),
+				Vector2(sw_l + 30, -600), Vector2(sw_r - 30, -1400),
+				Vector2(sw_l + 30, -2150), Vector2(sw_r - 30, -3000),
+				Vector2(sw_l + 30, -3700), Vector2(sw_r - 30, -4700),
 			]
 			benches = [Vector2(336, -1300), Vector2(944, -2450), Vector2(336, -3850), Vector2(944, -1900)]
 			hyd_list = [
-				Vector2(SIDEWALK_LEFT + 45, -500), Vector2(SIDEWALK_RIGHT - 45, -1500),
-				Vector2(SIDEWALK_LEFT + 45, -2300), Vector2(SIDEWALK_RIGHT - 45, -3300),
-				Vector2(SIDEWALK_LEFT + 45, -4600),
+				Vector2(sw_l + 45, -500), Vector2(sw_r - 45, -1500),
+				Vector2(sw_l + 45, -2300), Vector2(sw_r - 45, -3300),
+				Vector2(sw_l + 45, -4600),
 			]
 			keb_list = [Vector2(620, -1900), Vector2(700, -4200)]
 		"beach":
@@ -561,7 +621,7 @@ func _build_level_data() -> void:
 				Vector2(370, -4150), Vector2(910, -4650),
 			]
 			for i in range(7):
-				var x := SIDEWALK_LEFT + 30.0 if i % 2 == 0 else SIDEWALK_RIGHT - 30.0
+				var x := sw_l + 30.0 if i % 2 == 0 else sw_r - 30.0
 				var lp := Vector2(x, -350.0 - i * 640.0)
 				var clear := true
 				for st in stalls:
@@ -626,9 +686,9 @@ func _build_level_data() -> void:
 		gate_text = "CLEARING"
 		signal_prone = true
 		mud_zones = [
-			Rect2(SIDEWALK_LEFT, -1600.0, SIDEWALK_RIGHT - SIDEWALK_LEFT, 260.0),
-			Rect2(SIDEWALK_LEFT, -2900.0, SIDEWALK_RIGHT - SIDEWALK_LEFT, 300.0),
-			Rect2(SIDEWALK_LEFT, -4100.0, SIDEWALK_RIGHT - SIDEWALK_LEFT, 240.0),
+			Rect2(sw_l, -1600.0, sw_r - sw_l, 260.0),
+			Rect2(sw_l, -2900.0, sw_r - sw_l, 300.0),
+			Rect2(sw_l, -4100.0, sw_r - sw_l, 240.0),
 		]
 		fountains = [Vector2(360.0, -2400.0)]
 	elif lvl == "station":
@@ -658,8 +718,8 @@ func _build_level_data() -> void:
 		# the walk (the evidence). Extra cones and a parked works van.
 		gate_text = "DETOUR"
 		cement_zones = [
-			Rect2(SIDEWALK_LEFT, -1700.0, SIDEWALK_RIGHT - SIDEWALK_LEFT, 300.0),
-			Rect2(SIDEWALK_LEFT, -3300.0, SIDEWALK_RIGHT - SIDEWALK_LEFT, 340.0),
+			Rect2(sw_l, -1700.0, sw_r - sw_l, 300.0),
+			Rect2(sw_l, -3300.0, sw_r - sw_l, 340.0),
 		]
 		cone_spots = [Vector2(520, -1650), Vector2(760, -1650), Vector2(560, -2020), Vector2(720, -2020), Vector2(600, -3250), Vector2(700, -3650)]
 		vans = [Vector2(900, -2500)]
@@ -679,8 +739,8 @@ func _build_level_data() -> void:
 			{"pos": Vector2(950, -3500), "base": PI, "range": 0.9, "speed": 0.55, "cd": 0.0},
 		]
 		lasers = [
-			{"x0": SIDEWALK_LEFT, "x1": SIDEWALK_RIGHT, "y_lo": -2750.0, "y_hi": -2550.0, "speed": 1.1, "cd": 0.0},
-			{"x0": SIDEWALK_LEFT, "x1": SIDEWALK_RIGHT, "y_lo": -4450.0, "y_hi": -4250.0, "speed": 0.8, "cd": 0.0},
+			{"x0": sw_l, "x1": sw_r, "y_lo": -2750.0, "y_hi": -2550.0, "speed": 1.1, "cd": 0.0},
+			{"x0": sw_l, "x1": sw_r, "y_lo": -4450.0, "y_hi": -4250.0, "speed": 0.8, "cd": 0.0},
 		]
 		# scrap heaps: wrecked cars (vans) and junk drums (cones)
 		vans = [Vector2(880, -1600), Vector2(390, -2650), Vector2(900, -4400)]
@@ -746,8 +806,10 @@ func _build_level_data() -> void:
 				break
 	for ly in lane_ys:
 		lane_state.append({"t": randf_range(1.0, 2.5), "phase": 0, "dir": 1})
+	_fit_props_to_corridor()
 	# the hazardous hard-to-reach collectible: one per level, in a spot
-	# that costs you something to reach
+	# that costs you something to reach (deliberately outside the corridor
+	# on some walks, so it is exempt from the corridor fit)
 	match lvl:
 		"street":
 			prize_pos = Vector2(SHOULDER_R - 12.0, -2400.0)  # far shoulder, across the bike lane
@@ -813,7 +875,7 @@ func _build_ground_detail() -> void:
 	while y > GATE_Y - 400.0:
 		y -= r.randf_range(55.0, 130.0)
 		var kind := r.randi() % 4
-		var x := r.randf_range(SIDEWALK_LEFT + 12.0, SIDEWALK_RIGHT - 12.0)
+		var x := r.randf_range(sw_l + 12.0, sw_r - 12.0)
 		ground_detail.append({
 			"pos": Vector2(x, y),
 			"kind": kind,
@@ -1185,7 +1247,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.31"
+	version_l.text = "v1.32"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -1976,9 +2038,9 @@ func _vlane(delta: float) -> void:
 			kid = randf() < 0.38
 			speed = randf_range(70.0, 120.0) if kid else randf_range(300.0, 460.0)
 			if kid and randf() < 0.45:
-				x = randf_range(SIDEWALK_LEFT + 40.0, SIDEWALK_RIGHT - 40.0)
-				band_lo = SIDEWALK_LEFT + 30.0
-				band_hi = SIDEWALK_RIGHT - 30.0
+				x = randf_range(sw_l + 40.0, sw_r - 40.0)
+				band_lo = sw_l + 30.0
+				band_hi = sw_r - 30.0
 			else:
 				x = randf_range(BLANE_L + 16.0, BLANE_R - 16.0)
 				band_lo = BLANE_L + 14.0
@@ -1986,9 +2048,9 @@ func _vlane(delta: float) -> void:
 		"park":
 			kid = randf() < 0.7
 			speed = randf_range(70.0, 120.0) if kid else randf_range(220.0, 320.0)
-			x = randf_range(SIDEWALK_LEFT + 40.0, SIDEWALK_RIGHT - 40.0)
-			band_lo = SIDEWALK_LEFT + 30.0
-			band_hi = SIDEWALK_RIGHT - 30.0
+			x = randf_range(sw_l + 40.0, sw_r - 40.0)
+			band_lo = sw_l + 30.0
+			band_hi = sw_r - 30.0
 		"beach":
 			kid = randf() < 0.4
 			speed = randf_range(70.0, 120.0) if kid else randf_range(300.0, 440.0)
@@ -2075,7 +2137,7 @@ func _squirrels(delta: float) -> void:
 		# open grass now that the dog can roam it
 		x = randf_range(150.0, 290.0)
 	elif roll < 0.65:
-		x = randf_range(SIDEWALK_RIGHT - 60.0, SIDEWALK_RIGHT - 25.0) if lvl == "street" else randf_range(1000.0, 1140.0)
+		x = randf_range(sw_r - 60.0, sw_r - 25.0) if lvl == "street" else randf_range(1000.0, 1140.0)
 	else:
 		# street: the far shoulder, live traffic between; park: far grass
 		x = randf_range(BLANE_R + 8.0, SHOULDER_R - 8.0) if lvl == "street" else randf_range(150.0, 290.0)
@@ -3263,15 +3325,15 @@ func _draw() -> void:
 			if t.y > vt and t.y < vb:
 				draw_circle(t, 5.0, COL_GRASS_DARK)
 		# the walkway: sidewalk downtown, packed dirt in the park
-		draw_rect(Rect2(SIDEWALK_LEFT, GATE_Y - 40.0, SIDEWALK_RIGHT - SIDEWALK_LEFT, bottom - GATE_Y), walkway)
+		draw_rect(Rect2(sw_l, GATE_Y - 40.0, sw_r - sw_l, bottom - GATE_Y), walkway)
 		if lvl == "street" or lvl == "market":
 			var y := START_Y + 200.0
 			while y > GATE_Y:
 				if y < vb and y > vt:
-					draw_line(Vector2(SIDEWALK_LEFT, y), Vector2(SIDEWALK_RIGHT, y), COL_SEAM, 2.0)
+					draw_line(Vector2(sw_l, y), Vector2(sw_r, y), COL_SEAM, 2.0)
 				y -= 150.0
-		draw_line(Vector2(SIDEWALK_LEFT, bottom), Vector2(SIDEWALK_LEFT, GATE_Y), COL_SEAM, 3.0)
-		draw_line(Vector2(SIDEWALK_RIGHT, bottom), Vector2(SIDEWALK_RIGHT, GATE_Y), COL_SEAM, 3.0)
+		draw_line(Vector2(sw_l, bottom), Vector2(sw_l, GATE_Y), COL_SEAM, 3.0)
+		draw_line(Vector2(sw_r, bottom), Vector2(sw_r, GATE_Y), COL_SEAM, 3.0)
 	# whatever lies beyond the gate
 	draw_rect(Rect2(-400, top, 2100, GATE_Y - top), Color(0.27, 0.4, 0.27))
 	for t in trees:
@@ -3308,7 +3370,7 @@ func _draw() -> void:
 		var px := pond.end.x + 8.0
 		var py := pond.position.y
 		while py < pond.end.y:
-			draw_line(Vector2(px, py), Vector2(SIDEWALK_RIGHT, py), Color(0.5, 0.4, 0.28), 5.0)
+			draw_line(Vector2(px, py), Vector2(sw_r, py), Color(0.5, 0.4, 0.28), 5.0)
 			py += 16.0
 		draw_line(Vector2(px, pond.position.y), Vector2(px, pond.end.y), Color(0.36, 0.28, 0.2), 4.0)
 	# bike lanes crossing the sidewalk
@@ -3389,7 +3451,7 @@ func _draw() -> void:
 			var lp := poles[i]
 			if lp.y < vt - 190.0 or lp.y > vb + 190.0:
 				continue
-			if lp.x < SIDEWALK_LEFT - 90.0 or lp.x > SIDEWALK_RIGHT + 90.0:
+			if lp.x < sw_l - 90.0 or lp.x > sw_r + 90.0:
 				continue
 			# a faint flicker keeps the light from looking like a decal
 			var flick := 0.94 + 0.06 * sin(lamp_t * 2.3 + lp.y * 0.01)
@@ -3415,7 +3477,7 @@ func _draw() -> void:
 				var fa := TAU * j / 6.0 + p.x * 0.01 + p.y * 0.007
 				draw_line(p, p + Vector2.from_angle(fa) * 36.0, Color(0.27, 0.44, 0.24, 0.85), 5.0)
 			draw_circle(p, 7.0, Color(0.45, 0.35, 0.22))
-		elif p.x > SIDEWALK_LEFT + 60.0 and p.x < SIDEWALK_RIGHT - 60.0:
+		elif p.x > sw_l + 60.0 and p.x < sw_r - 60.0:
 			# mid-walkway poles are street trees in grates - that is WHY
 			# they stand in the middle of a sidewalk
 			draw_rect(Rect2(p.x - 15, p.y - 15, 30, 30), Color(0.3, 0.3, 0.33), false, 2.0)
@@ -3574,16 +3636,16 @@ func _draw() -> void:
 		var wash := [Color(0.8, 0.3, 0.35), Color(0.3, 0.5, 0.7), Color(0.9, 0.85, 0.6), Color(0.4, 0.65, 0.5)]
 		for i in range(laundry_lines.size()):
 			var ly: float = laundry_lines[i]
-			draw_line(Vector2(SIDEWALK_LEFT - 20.0, ly), Vector2(SIDEWALK_RIGHT + 20.0, ly - 8.0), Color(0.2, 0.18, 0.16), 1.5)
+			draw_line(Vector2(sw_l - 20.0, ly), Vector2(sw_r + 20.0, ly - 8.0), Color(0.2, 0.18, 0.16), 1.5)
 			for j in range(5):
-				var hx := lerpf(SIDEWALK_LEFT + 20.0, SIDEWALK_RIGHT - 20.0, float(j) / 4.0)
+				var hx := lerpf(sw_l + 20.0, sw_r - 20.0, float(j) / 4.0)
 				var sway := sin(lt * 1.2 + j + i) * 2.0
 				draw_rect(Rect2(hx - 9.0, ly - 6.0, 18.0, 26.0 + sway), wash[(i + j) % wash.size()])
 		# lanterns down one wall
 		for i in range(laundry_lines.size()):
 			var lyy: float = laundry_lines[i] + 380.0
 			var glow := 0.6 + 0.25 * sin(lt * 3.0 + i)
-			draw_circle(Vector2(SIDEWALK_LEFT + 6.0, lyy), 6.0, Color(1.0, 0.8, 0.4, glow))
+			draw_circle(Vector2(sw_l + 6.0, lyy), 6.0, Color(1.0, 0.8, 0.4, glow))
 	# street performers: a hat, some coins, music in the air. In the rain
 	# they are an umbrella crowd instead - hunched under canopies, no busking.
 	var pt := Time.get_ticks_msec() / 1000.0
