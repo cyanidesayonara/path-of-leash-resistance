@@ -124,6 +124,7 @@ var mud_zones: Array[Rect2] = []
 var conveyor_zone := Rect2()
 var conveyor_dir := Vector2.ZERO
 const CONV_SPEED := 118.0
+const CAM_ZOOM := 1.28
 # Les Obres: wet cement that slows you and takes a trail of paw prints
 var cement_zones: Array[Rect2] = []
 var paw_prints: Array[Vector2] = []
@@ -259,6 +260,13 @@ var challenge_offered := false
 var dog_carrying := false
 var paused := false
 var pause_l: Label
+var grade_rect: ColorRect
+var _shot_done := false
+var _shot_frames := 0
+# scattered ground detail (cracks, litter, stones, stains) so hard surfaces
+# stop reading as empty colour fields. Built with a LOCAL rng so it never
+# perturbs the global seed the deterministic autowalk depends on.
+var ground_detail: Array[Dictionary] = []
 var in_progress_view := false
 var progress_l: Label
 var _redraw_acc := 0.0
@@ -721,6 +729,7 @@ func _build_level_data() -> void:
 		kebabs.append({"pos": kp, "eaten": false})
 	for cp in candy_spots:
 		candy.append({"pos": cp, "eaten": false})
+	_build_ground_detail()
 	for i in range(140):
 		var side := -1.0 if randf() < 0.5 else 1.0
 		var x := 640.0 + side * randf_range(340.0, 620.0)
@@ -790,6 +799,58 @@ func _build_level_data() -> void:
 			carry_text = "run the oranges to the far stall"
 		_:
 			pass
+
+
+func _build_ground_detail() -> void:
+	# a light dusting of wear over the whole walk: hairline cracks, grit,
+	# litter, damp stains. Cheap to draw (culled, and the world redraws at
+	# 30fps) but it is what stops a paved corridor looking like a colour
+	# swatch. Local rng: the global sequence stays byte-identical.
+	var r := RandomNumberGenerator.new()
+	r.seed = 0x1CEB00DA  # fixed, so a walk wears the same way every visit
+	ground_detail.clear()
+	var y := START_Y + 200.0
+	while y > GATE_Y - 400.0:
+		y -= r.randf_range(55.0, 130.0)
+		var kind := r.randi() % 4
+		var x := r.randf_range(SIDEWALK_LEFT + 12.0, SIDEWALK_RIGHT - 12.0)
+		ground_detail.append({
+			"pos": Vector2(x, y),
+			"kind": kind,
+			"rot": r.randf_range(0.0, TAU),
+			"len": r.randf_range(14.0, 46.0),
+			"sz": r.randf_range(1.4, 3.4),
+		})
+
+
+func _draw_ground_detail(vt: float, vb: float) -> void:
+	var crack := Color(0.24, 0.23, 0.22, 0.30)
+	var grit := Color(0.32, 0.31, 0.29, 0.36)
+	var stain := Color(0.30, 0.30, 0.27, 0.13)
+	var litter := [Color(0.72, 0.68, 0.58, 0.5), Color(0.55, 0.6, 0.5, 0.5)]
+	for d in ground_detail:
+		var p: Vector2 = d.pos
+		if p.y < vt - 30.0 or p.y > vb + 30.0:
+			continue
+		var dir := Vector2.from_angle(float(d.rot))
+		match int(d.kind):
+			0:
+				# a hairline crack with a kink in it
+				var mid := p + dir * float(d.len) * 0.55
+				var kink := mid + dir.rotated(0.5) * float(d.len) * 0.45
+				draw_line(p, mid, crack, 1.4)
+				draw_line(mid, kink, crack, 1.1)
+			1:
+				# a scatter of grit
+				for g in range(3):
+					draw_circle(p + dir.rotated(float(g) * 2.1) * (4.0 + g * 3.0), float(d.sz) * 0.5, grit)
+			2:
+				# a damp patch / old stain
+				draw_circle(p, float(d.len) * 0.35, stain)
+			_:
+				# a bit of litter: a leaf or a scrap of paper
+				var c: Color = litter[int(d.sz) % litter.size()]
+				draw_line(p - dir * float(d.sz) * 1.6, p + dir * float(d.sz) * 1.6, c, float(d.sz))
 
 
 func _build_bypasser_blockers() -> void:
@@ -938,6 +999,12 @@ func _build_entities() -> void:
 	cam = Camera2D.new()
 	cam.position_smoothing_enabled = true
 	cam.position_smoothing_speed = 6.0
+	# the walkway is only ~680px of a 1280px frame, so half the screen used
+	# to be empty verge and the characters read as specks. Pushing in fills
+	# the frame and makes the animation and the rope legible - the single
+	# biggest framing win available. Trade-off: less warning time on
+	# oncoming hazards, so this is a feel dial (1.0 = the old framing).
+	cam.zoom = Vector2(CAM_ZOOM, CAM_ZOOM)
 	cam.position = Vector2(640, START_Y - 120.0)
 	add_child(cam)
 	cam.make_current()
@@ -1062,7 +1129,20 @@ func _spawn_cones() -> void:
 
 
 func _build_hud() -> void:
+	# the colour grade sits over the world but UNDER the HUD, so the
+	# interface stays crisp and unvignetted while the world gets graded
+	var grade_layer := CanvasLayer.new()
+	grade_layer.layer = 1
+	add_child(grade_layer)
+	grade_rect = ColorRect.new()
+	grade_rect.size = Vector2(1280, 720)
+	grade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var gmat := ShaderMaterial.new()
+	gmat.shader = load("res://grade.gdshader")
+	grade_rect.material = gmat
+	grade_layer.add_child(grade_rect)
 	hud = CanvasLayer.new()
+	hud.layer = 2
 	add_child(hud)
 	# weather sits behind the HUD text but over the world
 	weather_fx = Control.new()
@@ -1105,7 +1185,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.30"
+	version_l.text = "v1.31"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -1573,6 +1653,19 @@ func _physics_process(delta: float) -> void:
 
 
 func _process(_delta: float) -> void:
+	if not _shot_done and "--shot" in OS.get_cmdline_user_args():
+		_shot_frames += 1
+		if _shot_frames == 2:
+			started = true  # skip the title so the shot shows the world
+			frozen = false
+			_apply_menu_step()
+			for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, weather_l, record_l]:
+				l.visible = false
+		if _shot_frames > 320:
+			_shot_done = true
+			var img := get_viewport().get_texture().get_image()
+			img.save_png("user://shot.png")
+			print("SHOT saved to user://shot.png")
 	if Input.is_action_just_pressed("mute_music"):
 		Sfx.toggle_music()
 	if Input.is_action_just_pressed("restart"):
@@ -1708,6 +1801,12 @@ func _process(_delta: float) -> void:
 	if _redraw_acc >= 0.033 or shake_t > 0.0:
 		_redraw_acc = 0.0
 		queue_redraw()
+	# keep the grade's surface texture pinned to world space, and drift the
+	# film grain. Two uniform writes a frame - negligible next to a redraw.
+	if grade_rect != null:
+		var gm: ShaderMaterial = grade_rect.material
+		gm.set_shader_parameter("cam_off", cam.position - Vector2(640.0, 360.0))
+		gm.set_shader_parameter("time_seed", fmod(elapsed * 7.0, 100.0))
 
 
 func _apply_leash(delta: float) -> void:
@@ -3281,6 +3380,26 @@ func _draw() -> void:
 		draw_rect(Rect2(mp.x - 7.0, mp.y - 4.0, 14.0, 8.0), Color(0.7, 0.6, 0.4))
 	# lampposts downtown, trees in the park, palms by the sea
 	# (same physics, different soul)
+	# night lighting: warm pools spilling from the lampposts. Layered
+	# concentric alpha fakes a falloff gradient cheaply, and because the
+	# lamps never move the 30fps world redraw is plenty.
+	if Game.night:
+		var lamp_t := Time.get_ticks_msec() / 1000.0
+		for i in range(deco_pole_count):
+			var lp := poles[i]
+			if lp.y < vt - 190.0 or lp.y > vb + 190.0:
+				continue
+			if lp.x < SIDEWALK_LEFT - 90.0 or lp.x > SIDEWALK_RIGHT + 90.0:
+				continue
+			# a faint flicker keeps the light from looking like a decal
+			var flick := 0.94 + 0.06 * sin(lamp_t * 2.3 + lp.y * 0.01)
+			# many thin rings: a smooth falloff instead of visible banding
+			for ring in range(11):
+				var f := float(ring) / 10.0
+				var rr := lerpf(185.0, 26.0, f)
+				var aa := (0.012 + f * f * 0.055) * flick
+				draw_circle(lp + Vector2(0, 16), rr, Color(1.0, 0.86, 0.55, aa))
+			draw_circle(lp + Vector2(0, -22), 7.0, Color(1.0, 0.94, 0.72, 0.9 * flick))
 	for i in range(deco_pole_count):
 		var p := poles[i]
 		if p.y < vt - 60.0 or p.y > vb + 60.0:
@@ -3398,6 +3517,7 @@ func _draw() -> void:
 				draw_line(Vector2(cx - 30.0, cy + 10.0), Vector2(cx, cy), Color(0.6, 0.63, 0.68), 3.0)
 				draw_line(Vector2(cx + 30.0, cy + 10.0), Vector2(cx, cy), Color(0.6, 0.63, 0.68), 3.0)
 			cy += 60.0
+	_draw_ground_detail(vt, vb)
 	# El Desguas: sweeping camera cones and laser tripwires
 	if lvl == "scrap":
 		var st := Time.get_ticks_msec() / 1000.0

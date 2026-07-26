@@ -2,6 +2,42 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.31: the look pass #1 — grade, shadows, light, texture
+
+First pass at the presentation, aimed squarely at "it looks like a 2010
+browser game". Diagnosis: the problem was never the top-down projection,
+it was that everything was flat untextured fills, floating (no shadows),
+uniformly lit, and framed too far out. All four are addressed:
+
+- **Colour grade (new post-process shader).** Split-toning (cool shadows,
+  warm light), gentle contrast and saturation, a soft vignette and a
+  black-lift so night stays readable. Sits over the world, under the HUD,
+  so the interface stays crisp.
+- **Surface texture, in the shader.** World-locked grain and soft
+  blotches, keyed to the camera offset so it sits on the ground like
+  aggregate in asphalt instead of sliding like a film overlay. This is
+  what kills the "flat colour swatch" read - and being GPU work it costs
+  the CPU-bound web build nothing.
+- **Contact shadows** under the dog, the owner, free dogs and NPC pairs,
+  all with one consistent light direction (up and to the left). Nothing
+  sells "solid thing standing on ground" faster.
+- **Night lighting.** Warm pools spilling from the lampposts (smooth
+  11-ring falloff, faint flicker) and - the joke of the game, finally lit
+  - the owner's phone throwing a cold blue-white pool on the pavement.
+- **Ground detail layer.** Hairline cracks, grit, litter and damp stains
+  scattered down every walk, so paved corridors stop reading as empty.
+  Built with a LOCAL rng so the deterministic autowalk seed is untouched.
+- **Framing.** The walkway is only ~680px of a 1280px frame, so half the
+  screen was empty verge and the characters read as specks. Camera now
+  pushes in (CAM_ZOOM 1.28): the frame fills, and the animation and the
+  rope become legible. Trade-off is less warning time on hazards, so it's
+  a feel dial.
+- **The leash reads as webbing**, not a debug gizmo: a dropped shadow, a
+  dark body, a lit top edge, and a visible handle loop in the owner's
+  fist. It cinches thinner and hotter when taut.
+- Dev tooling: a `--shot` flag that skips the title and writes a PNG, so
+  the look can actually be reviewed instead of guessed at.
+
 ## 2026-07-18 — v1.30: El Desguas (the scrapyard) — a stealth walk
 
 - An eleventh walk (gate 19), and a whole new verb: STEALTH. Sneak the

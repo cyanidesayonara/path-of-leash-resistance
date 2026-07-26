@@ -205,9 +205,27 @@ func human_pull_dir() -> Vector2:
 
 
 func _draw() -> void:
-	var col := Color(0.78, 0.32, 0.26) if taut else Color(0.5, 0.26, 0.22)
 	var arr := PackedVector2Array()
 	for p in pts:
 		arr.append(to_local(p))
-	draw_polyline(arr, col, 3.0)
-	draw_circle(to_local(_hand_pos()), 4.0, col.darkened(0.2))
+	# a flat 3px line reads as a debug gizmo. Three passes make it read as
+	# webbing: a dropped shadow, a dark body, and a lit top edge - plus it
+	# cinches visibly thinner and hotter when taut.
+	var body := Color(0.72, 0.28, 0.22) if taut else Color(0.55, 0.27, 0.23)
+	var wide := 3.4 if taut else 4.2
+	var shade := PackedVector2Array()
+	for p in arr:
+		shade.append(p + Vector2(2.0, 3.0))
+	draw_polyline(shade, Color(0.05, 0.04, 0.06, 0.22), wide)
+	draw_polyline(arr, body.darkened(0.35), wide)
+	draw_polyline(arr, body, wide * 0.6)
+	# the highlight runs slightly above the core, like light off a strap
+	var hi := PackedVector2Array()
+	for p in arr:
+		hi.append(p + Vector2(0.0, -0.9))
+	draw_polyline(hi, body.lightened(0.34), wide * 0.24)
+	# the handle loop in the owner's fist
+	var hp := to_local(_hand_pos())
+	draw_circle(hp + Vector2(1.5, 2.0), 4.6, Color(0.05, 0.04, 0.06, 0.25))
+	draw_circle(hp, 4.4, body.darkened(0.45))
+	draw_circle(hp, 2.4, body.lightened(0.1))

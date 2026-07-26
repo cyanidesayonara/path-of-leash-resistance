@@ -198,6 +198,13 @@ func _process(_delta: float) -> void:
 
 func _draw() -> void:
 	var t := Time.get_ticks_msec() / 1000.0
+	# a squashed contact shadow, offset as if the light is up and to the
+	# left. Nothing sells "solid object on ground" faster than this.
+	if not swimming:
+		var lift: float = 1.0 + clampf(velocity.length() / 700.0, 0.0, 0.35)
+		draw_set_transform(Vector2(4.0, 7.0) * lift, 0.0, Vector2(1.15, 0.5))
+		draw_circle(Vector2.ZERO, 12.0, Color(0.06, 0.05, 0.08, 0.26))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	var fur := Color(0.14, 0.13, 0.14)
 	var fur_dark := Color(0.08, 0.08, 0.09)
 	var grizzle := Color(0.62, 0.6, 0.58)

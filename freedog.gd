@@ -62,6 +62,9 @@ func _physics_process(delta: float) -> void:
 
 
 func _draw() -> void:
+	draw_set_transform(Vector2(4.0, 7.0), 0.0, Vector2(1.15, 0.5))
+	draw_circle(Vector2.ZERO, 11.0, Color(0.06, 0.05, 0.08, 0.24))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	var t := Time.get_ticks_msec() / 1000.0
 	var b := sin(bow * 6.0 + seed_o) * 1.5
 	var face := (my_dog.global_position - global_position).normalized()

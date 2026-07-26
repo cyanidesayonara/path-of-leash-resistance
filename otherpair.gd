@@ -473,6 +473,11 @@ func update_tangle_state(crossing: bool, delta: float) -> bool:
 
 func _draw() -> void:
 	var t := Time.get_ticks_msec() / 1000.0
+	# contact shadows under both ends of the pair, light up-and-left
+	for sh in [[npc_owner.position, 15.0], [npc_dog.position, 10.5]]:
+		draw_set_transform((sh[0] as Vector2) + Vector2(5.0, 8.0), 0.0, Vector2(1.2, 0.5))
+		draw_circle(Vector2.ZERO, sh[1], Color(0.06, 0.05, 0.08, 0.24))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	var owner_forward := vel
 	var owner_gait_amount := (
 		0.0

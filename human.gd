@@ -573,6 +573,22 @@ func _process(_delta: float) -> void:
 
 
 func _draw() -> void:
+	# at night the phone is a real light source: a cold blue-white pool on
+	# the pavement in front of them. The joke of the whole game, lit.
+	if Game.night:
+		var pt := Time.get_ticks_msec() / 1000.0
+		var pulse := 0.9 + 0.1 * sin(pt * 6.1)
+		var lit := face_dir * 26.0
+		for ring in range(4):
+			var rr := 96.0 - ring * 21.0
+			draw_circle(lit, rr, Color(0.62, 0.78, 1.0, (0.028 + ring * 0.020) * pulse))
+	# contact shadow first, matching the dog's light direction. A fallen
+	# owner's shadow spreads out under them.
+	if not wading:
+		var spread := 1.45 if state == HState.FALLEN else 1.0
+		draw_set_transform(Vector2(5.0, 9.0), 0.0, Vector2(1.2 * spread, 0.52))
+		draw_circle(Vector2.ZERO, 16.0, Color(0.06, 0.05, 0.08, 0.28))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	var woman: bool = Game.owner_id == "her"
 	var shirt := Color(0.6, 0.38, 0.44) if woman else Color(0.35, 0.42, 0.55)
 	var skin := Color(0.85, 0.72, 0.58)
