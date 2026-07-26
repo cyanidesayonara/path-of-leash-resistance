@@ -2,6 +2,38 @@
 
 Append-only session history, newest first.
 
+## 2026-07-26 — v1.41: the teeter - the moment before you fall in
+
+Walking into a hole used to be instant and unreadable: you were simply
+punished. A brink now starts a BALANCE moment, borrowed from the
+manual/grind in the Tony Hawk games - you are tipping, and a scramble the
+other way saves you. A hazard becomes something you lean into on purpose
+instead of something you resent.
+
+- A tipping bar appears over Millie with an arrow showing which way to
+  fight; scrambling away pushes back, and turbo counts as a panic scrabble.
+  It redraws every frame (the rest of the world runs at 30) because a reflex
+  moment has to be responsive.
+- Deliberately forgiving, since a fiddly version would be a pain rather
+  than a thrill: the pull starts gently and only bites as you tip further,
+  the correction outmuscles the pull, and simply staying upright for 1.25s
+  recovers you. A save scores bones, feeds the combo and adds to your save
+  streak. Momentum counts too - clip the edge at a clip and you sail past.
+- **The consequence depends on what you fell into**, which is the point:
+  a manhole or cellar is still a hole and still ends the walk, but WATER
+  never does. Millie loves water, so the wobble at the edge never gates her
+  getting in - falling in just means swimming, and costs nothing but your
+  run of tricks (the combo bails). It only triggers when she arrives at a
+  proper clip, so it reads as a stumble rather than a toll gate.
+- Built as a reusable module with the balance maths testable headless, so
+  any future brink (a quay, a cellar hatch, a kerb) can use it.
+- Tuning note: the first attempt double-integrated with damping, which
+  quietly capped the pull so far below the threshold that standing still
+  SAVED you. Rebuilt as a direct rate that can be tuned by arithmetic, and
+  the test now pins the difficulty band: no input loses, a token scramble
+  loses, a real one wins, and a late committed one can still rescue a deep
+  lean.
+
 ## 2026-07-26 — v1.40: the off-leash area is somewhere now
 
 The one place in the game where the dog is actually free was a bare green

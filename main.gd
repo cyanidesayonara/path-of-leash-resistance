@@ -111,6 +111,12 @@ var gate_bench := Vector2(640, GATE_Y - 150)
 # and exploring is rewarded rather than just running in a line.
 var park_props: Array[Dictionary] = []
 var digs_done := 0
+# the teeter: the moment before you fall in (see teeter.gd)
+var teeter: Node
+var teeter_kind := ""
+var teeter_at := Vector2.ZERO
+var teeter_msg := ""
+var teeter_cd := 0.0
 var ball: Node2D
 var romp_timer := 0.0
 var romp_catches := 0
@@ -1765,7 +1771,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.40"
+	version_l.text = "v1.41"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -1854,6 +1860,9 @@ func _build_hud() -> void:
 	challenge.set_script(load("res://challenge.gd"))
 	add_child(challenge)
 	challenge.setup(self)
+	teeter = Node.new()
+	teeter.set_script(load("res://teeter.gd"))
+	add_child(teeter)
 	challenge_l = _hud_label(Vector2(0, 70), 24)
 	challenge_l.size = Vector2(1280, 30)
 	challenge_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -2267,6 +2276,7 @@ func _physics_process(delta: float) -> void:
 	_progress(delta)
 	combo.tick(delta)
 	challenge.tick(delta)
+	_tick_teeter(delta)
 	_update_combo_hud()
 	_update_challenge_hud()
 	shake_t = maxf(0.0, shake_t - delta * 2.5)
@@ -2419,7 +2429,8 @@ func _process(_delta: float) -> void:
 	# blinking lights) need refreshing, and 30fps is plenty for those. This
 	# frees the big per-frame draw cost that hurt the web build most.
 	_redraw_acc += _delta
-	if _redraw_acc >= 0.033 or shake_t > 0.0:
+	# the teeter is a reflex moment, so it gets every frame, not 30fps
+	if _redraw_acc >= 0.033 or shake_t > 0.0 or teeter.active:
 		_redraw_acc = 0.0
 		queue_redraw()
 	# keep the grade's surface texture pinned to world space, and drift the
@@ -3068,6 +3079,66 @@ func _offpath(delta: float) -> void:
 		offpath_t = maxf(0.0, offpath_t - delta)
 
 
+func _dist_to_rect_edge(r: Rect2, p: Vector2) -> float:
+	# distance from a point OUTSIDE the rect to its nearest edge
+	var cx := clampf(p.x, r.position.x, r.end.x)
+	var cy := clampf(p.y, r.position.y, r.end.y)
+	return p.distance_to(Vector2(cx, cy))
+
+
+func _start_teeter(kind: String, at: Vector2, fail_msg := "") -> void:
+	if teeter.active or teeter_cd > 0.0 or dog.is_tumbling():
+		return
+	teeter_kind = kind
+	teeter_at = at
+	teeter_msg = fail_msg
+	teeter.begin()
+	Sfx.play("save", 1.5, -8.0)
+	shake_t = maxf(shake_t, 0.25)
+	_slowmo()  # a beat of hang time, so you register that you can fight it
+
+
+func _tick_teeter(delta: float) -> void:
+	teeter_cd = maxf(0.0, teeter_cd - delta)
+	if not teeter.active:
+		return
+	# scrambling AWAY from the brink is what saves you
+	var away := (dog.global_position - teeter_at).normalized()
+	var counter: float = dog.input_dir.normalized().dot(away) if dog.input_dir.length() > 0.1 else 0.0
+	# turbo is a panic scrabble: it helps, which is the intuitive reading
+	if dog.turbo_active:
+		counter += 0.25
+	var res: String = teeter.tick(delta, counter)
+	if res == "":
+		return
+	teeter_cd = 1.4  # never re-trigger instantly on the same brink
+	if res == "saved":
+		# a real recovery, scored like the stumble saves it echoes
+		saves_done += 1
+		streak += 1
+		bones += 4
+		Sfx.play("star", 1.1)
+		combo.add("BALANCE", 6)
+		float_text(dog.global_position + Vector2(0, -30), "WHOA! caught it +4", Color(0.75, 1.0, 0.8))
+		_slowmo()
+		_update_hud()
+		return
+	# fell in. What that COSTS depends entirely on what you fell into.
+	match teeter_kind:
+		"water":
+			# she is a dog who loves water: going in is not a punishment and
+			# never ends the walk. It just breaks your run of tricks.
+			combo.bail()
+			Sfx.play("splash")
+			float_text(dog.global_position, "SPLASH! ...worth it", Color(0.7, 0.9, 1.0))
+		_:
+			# a hole is a hole
+			if teeter_msg != "":
+				_death(teeter_msg)
+			else:
+				dog.fall_in(teeter_at)
+
+
 func _death(msg: String) -> void:
 	frozen = true
 	dim.visible = true
@@ -3094,6 +3165,15 @@ func _hazards(delta: float) -> void:
 			Sfx.play("splash")
 			float_text(dog.global_position, "splish!", Color(0.7, 0.85, 1.0))
 			swam = true
+		# A wobble at the water's edge, but ONLY when she arrives at a proper
+		# clip - a stumble, not a toll gate. It never blocks her getting in
+		# (she loves water) and losing it costs nothing but the combo, so this
+		# is pure comedy plus a chance to look graceful.
+		elif not dog_wet and not auto_walk and dog.velocity.length() > 210.0:
+			var brink: Vector2 = (pond as Rect2).get_center()
+			var edge_d: float = _dist_to_rect_edge(pond, dog.global_position)
+			if edge_d < 26.0:
+				_start_teeter("water", brink)
 		var hum_wet: bool = pond.grow(-4.0).has_point(human.global_position)
 		var was_wade: bool = human.wading
 		human.wading = hum_wet
@@ -3109,15 +3189,17 @@ func _hazards(delta: float) -> void:
 		if human.global_position.distance_to(m) < 18.0 and not human.is_fallen():
 			_death("THE HUMAN WENT DOWN THE MANHOLE\n\nThe phone gets reception down there. The walk does not.")
 			return
-		if dog.global_position.distance_to(m) < 15.0:
-			_death("MILLIE WENT DOWN THE MANHOLE\n\nShe is fine. The walk is very over.")
+		# the dog gets a teeter first: a brink is a skill moment, not an
+		# instant punishment
+		if dog.global_position.distance_to(m) < 22.0:
+			_start_teeter("hole", m, "MILLIE WENT DOWN THE MANHOLE\n\nShe is fine. The walk is very over.")
 			return
 	for c in cellars:
 		if c.has_point(human.global_position):
 			_death("THE HUMAN FELL INTO THE CELLAR\n\nRight onto the delivery. The walk is over.")
 			return
-		if c.has_point(dog.global_position):
-			_death("MILLIE FELL INTO THE CELLAR\n\nShe found the sausages. The walk is still over.")
+		if c.grow(6.0).has_point(dog.global_position):
+			_start_teeter("hole", c.get_center(), "MILLIE FELL INTO THE CELLAR\n\nShe found the sausages. The walk is still over.")
 			return
 
 
@@ -4222,6 +4304,24 @@ func _draw() -> void:
 				draw_line(Vector2(cx + 30.0, cy + 10.0), Vector2(cx, cy), Color(0.6, 0.63, 0.68), 3.0)
 			cy += 60.0
 	_draw_ground_detail(vt, vb)
+	# the teeter meter: a tipping bar over the dog, filling toward the brink,
+	# plus an arrow showing which way to scramble. Drawn in the world rather
+	# than on the HUD so your eyes never leave her.
+	if teeter.active:
+		var f: float = teeter.fraction()
+		var bp: Vector2 = dog.global_position + Vector2(0.0, -40.0)
+		var bw := 66.0
+		draw_rect(Rect2(bp.x - bw * 0.5, bp.y - 5.0, bw, 10.0), Color(0.06, 0.05, 0.08, 0.72))
+		var danger := Color(1.0, 0.86, 0.35).lerp(Color(1.0, 0.32, 0.25), f)
+		draw_rect(Rect2(bp.x - bw * 0.5 + 2.0, bp.y - 3.0, (bw - 4.0) * f, 6.0), danger)
+		draw_rect(Rect2(bp.x - bw * 0.5, bp.y - 5.0, bw, 10.0), Color(0.9, 0.9, 0.85, 0.5), false, 1.5)
+		# which way to fight: away from the brink
+		var away: Vector2 = (dog.global_position - teeter_at).normalized()
+		var ap: Vector2 = bp + Vector2(0.0, -16.0)
+		var tip: Vector2 = ap + away * 17.0
+		draw_line(ap, tip, Color(0.85, 1.0, 0.85, 0.95), 3.0)
+		draw_line(tip, tip - away.rotated(0.5) * 7.0, Color(0.85, 1.0, 0.85, 0.95), 3.0)
+		draw_line(tip, tip - away.rotated(-0.5) * 7.0, Color(0.85, 1.0, 0.85, 0.95), 3.0)
 	# El Desguas: sweeping camera cones and laser tripwires
 	if lvl == "scrap":
 		var st := Time.get_ticks_msec() / 1000.0

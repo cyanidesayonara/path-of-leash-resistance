@@ -38,6 +38,9 @@ var preview_mode := false
 var preview_collar := ""
 var preview_bandana := ""
 var preview_coat := ""
+# the raw movement input, so main can tell how hard she is scrambling away
+# from a brink during a teeter
+var input_dir := Vector2.ZERO
 
 
 func setup(m: Node2D) -> void:
@@ -122,6 +125,7 @@ func tick(delta: float) -> void:
 			rotation = 0.0
 		return
 	var iv := auto_move if auto else Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	input_dir = iv
 	input_active = iv.length() > 0.1
 	planted = Input.is_action_pressed("plant") and not auto
 	var answering_nature := Input.is_action_pressed("pee") and not auto
