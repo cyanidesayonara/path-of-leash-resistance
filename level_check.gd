@@ -1,0 +1,103 @@
+extends RefCounted
+
+# Structural sanity checks for a built level. These need the real runtime
+# (main.gd leans on the Game/Sfx autoloads, which do not exist under a bare
+# `--script` test run), so main invokes this under the --selftest flag and
+# CI sweeps every level through it. Pure inspection: it reads the level main
+# just built and returns a list of problems, changing nothing.
+#
+# This is the check that catches content mistakes CI could not see before:
+# props stranded off the pavement when a corridor width changes, a goal the
+# level cannot actually satisfy, a malformed goal list.
+
+static func check(m) -> Array:
+	var p: Array = []
+	var lv: String = m.lvl
+
+	# --- corridor sanity ---
+	if m.walk_half < 120.0 or m.walk_half > 520.0:
+		p.append("implausible corridor half-width %.0f" % m.walk_half)
+	# the beach's walkable strip sits off-centre by design (sea on one side,
+	# cafe terraces on the other), so only the symmetric walks are checked
+	if lv != "beach" and absf((m.sw_l + m.sw_r) / 2.0 - m.walk_cx) > 0.5:
+		p.append("pavement not centred on walk_cx")
+	if m.sw_l < 0.0 or m.sw_r > 1280.0:
+		p.append("corridor %.0f..%.0f leaves the viewport" % [m.sw_l, m.sw_r])
+
+	# --- every prop on its own pavement ---
+	# the beach is exempt: its sand / boardwalk / bike-path cross-section
+	# deliberately places things outside the walkway
+	if lv != "beach":
+		var lo: float = m.sw_l - 2.0
+		var hi: float = m.sw_r + 2.0
+		var groups := {
+			"stall": m.stalls, "bin": m.bins, "bench": m.benches,
+			"a-stand": m.astands, "van": m.vans, "performer": m.performers,
+			"cone": m.cone_spots, "manhole": m.manholes,
+			"wallcat": m.wallcat_spots, "guard": m.guard_posts,
+			"candy": m.candy_spots, "fountain": m.fountains,
+		}
+		for name in groups:
+			for v in groups[name]:
+				if v.x < lo or v.x > hi:
+					p.append("%s at x=%.0f is off the pavement (%.0f..%.0f)" % [name, v.x, lo, hi])
+					break
+		for d in m.hydrants:
+			if d.pos.x < lo or d.pos.x > hi:
+				p.append("hydrant at x=%.0f is off the pavement" % d.pos.x)
+				break
+		for d in m.kebabs:
+			if d.pos.x < lo or d.pos.x > hi:
+				p.append("snack at x=%.0f is off the pavement" % d.pos.x)
+				break
+
+	# --- the goal list is well formed ---
+	var ids: Array = m.LEVEL_GOAL_IDS.get(lv, [])
+	if ids.is_empty():
+		p.append("no goal list")
+	elif ids.size() < 8 or ids.size() > 14:
+		p.append("goal list length %d out of range" % ids.size())
+	var seen := {}
+	for id in ids:
+		if seen.has(id):
+			p.append("duplicate goal id '%s'" % id)
+		seen[id] = true
+	var defs: Dictionary = m._goal_defs()
+	for id in ids:
+		if not defs.has(id):
+			p.append("goal id '%s' has no definition" % id)
+	if not ids.is_empty() and m.active_quests.size() != ids.size():
+		p.append("built %d quests for %d ids" % [m.active_quests.size(), ids.size()])
+
+	# --- the level can actually satisfy what it asks for ---
+	for q in m.active_quests:
+		var need := int(q.target)
+		match String(q.id):
+			"sniff":
+				if m.hydrants.size() < need:
+					p.append("wants %d sniffs, has %d hydrants" % [need, m.hydrants.size()])
+			"snack":
+				if m.kebabs.size() < need:
+					p.append("wants %d snacks, has %d" % [need, m.kebabs.size()])
+			"cats":
+				if m.wallcat_spots.size() < need:
+					p.append("wants %d wall cats, has %d" % [need, m.wallcat_spots.size()])
+			"drink":
+				if m.fountains.is_empty():
+					p.append("wants a drink, has no fountain")
+			"tummy":
+				if m.candy.is_empty():
+					p.append("wants candy resisted, has no candy")
+			"ghost":
+				if m.guard_posts.is_empty():
+					p.append("wants guards unwoken, has no guards")
+			"unseen":
+				if m.cameras.is_empty() and m.lasers.is_empty():
+					p.append("wants cameras/lasers dodged, has neither")
+			"carry":
+				if m.carry_pickup.x >= INF or m.carry_drop.x >= INF:
+					p.append("has a carry goal but no pickup/drop placed")
+			"prize":
+				if m.prize_pos.x >= INF:
+					p.append("has a prize goal but no prize placed")
+	return p

@@ -97,6 +97,17 @@ jobs:
       - name: NPC pair owner appearance regression test
         run: LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x1024x24" ./Godot_v4.7-stable_linux.x86_64 --rendering-method gl_compatibility --path . --script res://tests/test_pair_owner_appearance.gd
 
+      - name: Level structural sanity sweep (every walk)
+        # validates each level inside the real runtime: props on their own
+        # pavement, well-formed goal lists, and goals the level can actually
+        # satisfy. Catches content mistakes a pure-logic test cannot see.
+        run: |
+          for LV in street park beach rain market oldtown trail station site spook scrap; do
+            ./Godot_v4.7-stable_linux.x86_64 --headless --path . -- --level=$LV --selftest 2>&1 | tee sane-$LV.log
+            grep -q "SELFTEST OK" sane-$LV.log
+            ! grep -q "SELFTEST FAIL" sane-$LV.log
+          done
+
       - name: Headless smoke tests (all levels)
         # Runs each level for 1800 simulated frames (~30s): catches parse
         # errors and runtime script errors in the main gameplay loop.
@@ -117,6 +128,7 @@ jobs:
           ./Godot_v4.7-stable_linux.x86_64 --headless --fixed-fps 60 --path . --quit-after 12000 -- --level=street --autowalk 2>&1 | tee walk.log
           ! grep -E "SCRIPT ERROR|Parse Error" walk.log
           grep -q "AUTOWALK FINISHED" walk.log
+          ! grep -q "AUTOWALK STALL" walk.log
 
       - name: Full-walk traversal with the sweeper chase (--chase)
         # forces the home-leg chase on; asserts the bot still completes the
@@ -125,6 +137,7 @@ jobs:
           ./Godot_v4.7-stable_linux.x86_64 --headless --fixed-fps 60 --path . --quit-after 12000 -- --level=street --autowalk --chase 2>&1 | tee chase.log
           ! grep -E "SCRIPT ERROR|Parse Error" chase.log
           grep -q "AUTOWALK FINISHED" chase.log
+          ! grep -q "AUTOWALK STALL" chase.log
 
       - name: Full-walk traversal with the bolt chase (--bolt)
         # the fast, owner-panics chase variant: asserts the loop still
@@ -133,6 +146,7 @@ jobs:
           ./Godot_v4.7-stable_linux.x86_64 --headless --fixed-fps 60 --path . --quit-after 12000 -- --level=street --autowalk --bolt 2>&1 | tee bolt.log
           ! grep -E "SCRIPT ERROR|Parse Error" bolt.log
           grep -q "AUTOWALK FINISHED" bolt.log
+          ! grep -q "AUTOWALK STALL" bolt.log
 
       - name: Full-walk traversal with the rescue chase (--rescue)
         # the "both flee" emergency variant: owner panics AND the fast
@@ -141,3 +155,4 @@ jobs:
           ./Godot_v4.7-stable_linux.x86_64 --headless --fixed-fps 60 --path . --quit-after 12000 -- --level=street --autowalk --rescue 2>&1 | tee rescue.log
           ! grep -E "SCRIPT ERROR|Parse Error" rescue.log
           grep -q "AUTOWALK FINISHED" rescue.log
+          ! grep -q "AUTOWALK STALL" rescue.log

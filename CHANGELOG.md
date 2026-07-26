@@ -2,6 +2,31 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.34: content tests that catch real bugs
+
+Two new CI checks aimed at the class of mistake the old suite could not
+see - and they found live bugs immediately.
+
+- **Structural sanity sweep (`--selftest`, every walk).** Validates each
+  level inside the real runtime: the corridor is sane, every placed prop
+  sits on its own pavement, the goal list is well formed (length, no
+  unknown ids, no duplicates), and - the important one - the level can
+  actually SATISFY the goals it sets.
+  It immediately caught that **El Mercat, El Gotic and La Castanyada each
+  asked for "4 good sniffs" while containing only 3 hydrants**, so that
+  goal was impossible and those walks could never be 100%%ed. Fixed by
+  adding two more hydrants to that layout. It also flagged the beach's
+  off-centre walkway, which is by design and is now documented as an
+  explicit exemption rather than an accident.
+  (Autoloads do not exist under a bare `--script` run, which is why this
+  lives behind a runtime flag instead of in tests/.)
+- **Autowalk stall watchdog.** "The walk finished" was a weak assertion -
+  the bot could crawl, wedge on a prop and still squeak home inside the
+  frame budget. Travelling legs must now make real corridor progress or
+  the run prints AUTOWALK STALL, which CI treats as a failure. The freedom
+  romp is exempt, since milling about after a ball is the point there.
+  Wired into all four full-walk traversals.
+
 ## 2026-07-18 — v1.33: per-level edge treatment
 
 What flanks the corridor is what actually gives a walk its identity, so

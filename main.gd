@@ -131,6 +131,11 @@ var conveyor_zone := Rect2()
 var conveyor_dir := Vector2.ZERO
 const CONV_SPEED := 118.0
 const CAM_ZOOM := 1.28
+# autowalk stall watchdog: how long a travelling leg may make no headway
+const STALL_WINDOW := 8.0
+const STALL_MIN_PROGRESS := 90.0
+var _stall_t := 0.0
+var _stall_last_y := 0.0
 # Les Obres: wet cement that slows you and takes a trail of paw prints
 var cement_zones: Array[Rect2] = []
 var paw_prints: Array[Vector2] = []
@@ -364,6 +369,16 @@ func _ready() -> void:
 	menu_step = Game.menu_step
 	_apply_menu_step()
 	Sfx.start_music()
+	# --selftest: validate the level we just built and exit. Runs inside the
+	# real runtime (autoloads and all), so CI can sweep every walk for
+	# content mistakes a pure-logic test cannot see.
+	if "--selftest" in OS.get_cmdline_user_args():
+		var problems: Array = load("res://level_check.gd").check(self)
+		for pr in problems:
+			print("SELFTEST FAIL [%s] %s" % [lvl, pr])
+		if problems.is_empty():
+			print("SELFTEST OK [%s]" % lvl)
+		get_tree().quit(1 if not problems.is_empty() else 0)
 
 
 func _setup_input() -> void:
@@ -642,7 +657,13 @@ func _build_level_data() -> void:
 			performers = [Vector2(640, -2600), Vector2(400, -4400)]
 			cone_spots = [Vector2(600, -1990), Vector2(690, -2110)]
 			fountains = [Vector2(640, -3100)]
-			hyd_list = [Vector2(345, -600), Vector2(935, -1900), Vector2(345, -3600)]
+			# 5, not 3: the "4 good sniffs" goal on this layout (and on El
+			# Gotic / La Castanyada, which inherit it) was impossible to
+			# complete with only three hydrants. Caught by --selftest.
+			hyd_list = [
+				Vector2(345, -600), Vector2(935, -1900), Vector2(345, -3600),
+				Vector2(935, -2900), Vector2(345, -4400),
+			]
 			keb_list = [
 				Vector2(500, -900), Vector2(780, -1250), Vector2(620, -1800),
 				Vector2(540, -2380), Vector2(760, -3000), Vector2(600, -3650),
@@ -1374,7 +1395,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.33"
+	version_l.text = "v1.34"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -1799,6 +1820,7 @@ func _physics_process(delta: float) -> void:
 			human.velocity += carry * delta
 	if auto_walk:
 		_auto_drive(delta)
+		_watch_stall(delta)
 	dog.tick(delta)
 	human.tick(delta)
 	# the human owns the retractable leash: length changes on their whim
@@ -2898,6 +2920,27 @@ func _nearest_markable(pos: Vector2) -> Vector2:
 				best_d = d
 				best = p
 	return best
+
+
+func _watch_stall(delta: float) -> void:
+	# "the walk finished" is a weak assertion: the bot can crawl, wedge on a
+	# prop and still squeak home inside the frame budget. This turns it into
+	# "it never got stuck" by requiring real corridor progress in the legs
+	# that are supposed to be travelling. The freedom romp is exempt - milling
+	# about after a ball is the whole point there.
+	if finished or phase == "freedom":
+		_stall_t = 0.0
+		_stall_last_y = dog.global_position.y
+		return
+	_stall_t += delta
+	if _stall_t < STALL_WINDOW:
+		return
+	_stall_t = 0.0
+	var y := dog.global_position.y
+	var moved := absf(y - _stall_last_y)
+	_stall_last_y = y
+	if moved < STALL_MIN_PROGRESS:
+		print("AUTOWALK STALL phase=%s y=%.0f moved only %.0fpx in %.0fs" % [phase, y, moved, STALL_WINDOW])
 
 
 func _auto_drive(_delta: float) -> void:
