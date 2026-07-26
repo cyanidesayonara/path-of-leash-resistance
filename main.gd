@@ -863,6 +863,133 @@ func _build_level_data() -> void:
 			pass
 
 
+func _draw_edges(vt: float, vb: float) -> void:
+	# What flanks the corridor is what actually gives a walk its identity:
+	# shopfronts say boulevard, stone walls say medieval alley, chain-link
+	# says scrapyard. Drawn as repeating modules down the walk and culled to
+	# the view, on both verges, facing inward.
+	if lvl == "beach":
+		return  # bespoke cross-section, dressed in its own block
+	var mod := 220.0                     # height of one facade module
+	var depth := 78.0                    # how far the detailed frontage juts
+	# Built-up walks fill the whole verge with masonry, so no stray grass
+	# shows past the buildings - that is a big part of why an alley feels
+	# enclosed. Green walks (park, trail) keep their verge and just crowd
+	# the path with foliage instead.
+	var built := lvl != "park" and lvl != "trail"
+	if built:
+		var base := _edge_base_color()
+		var far := 520.0
+		var top_y := vt - 320.0
+		var h := (vb - vt) + 640.0
+		draw_rect(Rect2(sw_l - far, top_y, far, h), base)
+		draw_rect(Rect2(sw_r, top_y, far, h), base)
+		# a darker strip right at the kerb reads as the wall meeting the ground
+		draw_rect(Rect2(sw_l - 9.0, top_y, 9.0, h), base.darkened(0.30))
+		draw_rect(Rect2(sw_r, top_y, 9.0, h), base.darkened(0.30))
+	var y := floorf((vt - mod) / mod) * mod
+	while y < vb + mod:
+		for side in [-1.0, 1.0]:
+			var inner: float = sw_l if side < 0.0 else sw_r
+			var x0: float = inner - depth if side < 0.0 else inner
+			# contiguous modules: gaps between them looked like missing wall
+			var r := Rect2(x0, y, depth, mod)
+			# a stable per-module variation without touching the global rng
+			var k := int(absf(y) / mod) + (0 if side < 0.0 else 7)
+			_draw_edge_module(r, side, k)
+		y += mod
+
+
+func _edge_base_color() -> Color:
+	match lvl:
+		"oldtown", "spook": return Color(0.36, 0.33, 0.30)   # old stone
+		"station": return Color(0.48, 0.48, 0.52)            # tiled interior
+		"site": return Color(0.52, 0.42, 0.27)               # plywood hoarding
+		"scrap": return Color(0.26, 0.25, 0.24)              # yard beyond the fence
+		"market": return Color(0.44, 0.38, 0.34)
+		_: return Color(0.38, 0.35, 0.37)                    # city block
+
+
+func _draw_edge_module(r: Rect2, side: float, k: int) -> void:
+	var inner_x: float = r.end.x if side < 0.0 else r.position.x
+	var lit := fmod(float(k) * 0.37, 1.0)
+	match lvl:
+		"oldtown", "spook":
+			# stone: tall, close, shuttered. Warm lamplight at night.
+			var stone := Color(0.42, 0.38, 0.34).lightened(lit * 0.10)
+			draw_rect(r, stone)
+			draw_rect(Rect2(inner_x - side * 5.0, r.position.y, 5.0, r.size.y), stone.darkened(0.35))
+			for w in range(2):
+				var wy := r.position.y + 42.0 + w * 92.0
+				var wx := inner_x - side * 30.0
+				# lit windows after dark, otherwise glass reflecting the sky -
+				# a near-black fill just read as a hole punched in the wall
+				var glow: bool = (k + w) % 3 == 0 and Game.night
+				var pane := Color(0.95, 0.80, 0.46) if glow else Color(0.27, 0.30, 0.34)
+				draw_rect(Rect2(wx - 11.0, wy, 22.0, 30.0), pane)
+				# a shutter folded back against the wall, and a stone sill
+				draw_rect(Rect2(wx - 16.0, wy, 5.0, 30.0), Color(0.30, 0.36, 0.31))
+				draw_rect(Rect2(wx + 11.0, wy, 5.0, 30.0), Color(0.30, 0.36, 0.31))
+				draw_rect(Rect2(wx - 13.0, wy + 30.0, 26.0, 4.0), stone.lightened(0.18))
+				draw_rect(Rect2(wx - 11.0, wy, 22.0, 30.0), stone.darkened(0.45), false, 2.0)
+				if glow:
+					draw_circle(Vector2(wx, wy + 15.0), 34.0, Color(1.0, 0.85, 0.5, 0.05))
+					draw_circle(Vector2(wx, wy + 15.0), 20.0, Color(1.0, 0.85, 0.5, 0.06))
+		"trail", "park":
+			# dense undergrowth and trunks crowding the path
+			for b in range(4):
+				var by := r.position.y + 26.0 + b * 52.0
+				var bx := inner_x - side * (14.0 + float((k + b) % 3) * 13.0)
+				draw_circle(Vector2(bx, by), 21.0 + float((k + b) % 4) * 4.0, Color(0.19, 0.31, 0.20))
+				draw_circle(Vector2(bx - side * 5.0, by - 5.0), 12.0, Color(0.24, 0.38, 0.24))
+			var trunk_x := inner_x - side * 44.0
+			draw_circle(Vector2(trunk_x, r.get_center().y), 9.0, Color(0.32, 0.25, 0.18))
+		"station":
+			# interior: tiled wall, pillars, a strip of signage
+			draw_rect(r, Color(0.55, 0.55, 0.58).lightened(lit * 0.08))
+			for t in range(5):
+				var ty := r.position.y + t * 44.0
+				draw_line(Vector2(r.position.x, ty), Vector2(r.end.x, ty), Color(0.46, 0.46, 0.5), 1.5)
+			draw_rect(Rect2(inner_x - side * 20.0, r.position.y + 30.0, 20.0, 34.0), Color(0.16, 0.3, 0.5))
+			draw_rect(Rect2(inner_x - side * 14.0, r.get_center().y, 14.0, r.size.y * 0.42), Color(0.62, 0.62, 0.66))
+		"site":
+			# hoarding: plywood panels with hazard stripes and scaffold legs
+			draw_rect(r, Color(0.62, 0.5, 0.32).lightened(lit * 0.10))
+			draw_rect(Rect2(inner_x - side * 8.0, r.position.y, 8.0, r.size.y), Color(0.5, 0.4, 0.26))
+			for s in range(6):
+				var sy := r.position.y + 12.0 + s * 34.0
+				var sc := Color(0.92, 0.72, 0.15) if s % 2 == 0 else Color(0.15, 0.14, 0.13)
+				draw_rect(Rect2(inner_x - side * 20.0, sy, 12.0, 18.0), sc)
+		"scrap":
+			# chain-link, and heaps of junk piled up behind it
+			for h in range(3):
+				var hy := r.position.y + 34.0 + h * 66.0
+				draw_circle(Vector2(inner_x - side * 40.0, hy), 26.0, Color(0.34, 0.3, 0.28))
+				draw_circle(Vector2(inner_x - side * 22.0, hy + 12.0), 15.0, Color(0.42, 0.31, 0.26))
+			var fx := inner_x - side * 6.0
+			draw_line(Vector2(fx, r.position.y), Vector2(fx, r.end.y), Color(0.6, 0.62, 0.63, 0.8), 2.0)
+			for d in range(7):
+				var dy := r.position.y + d * 30.0
+				draw_line(Vector2(fx - side * 12.0, dy), Vector2(fx, dy + 22.0), Color(0.58, 0.6, 0.62, 0.45), 1.2)
+				draw_line(Vector2(fx, dy), Vector2(fx - side * 12.0, dy + 22.0), Color(0.58, 0.6, 0.62, 0.45), 1.2)
+		_:
+			# the default city block: shopfronts with glass, doors, awnings
+			var wall := Color(0.46, 0.42, 0.44).lightened(lit * 0.14)
+			draw_rect(r, wall)
+			draw_rect(Rect2(inner_x - side * 6.0, r.position.y, 6.0, r.size.y), wall.darkened(0.28))
+			# the shop window, lit from inside after dark
+			var glass := Color(0.86, 0.8, 0.55, 0.9) if Game.night else Color(0.55, 0.66, 0.72, 0.85)
+			var gx := inner_x - side * 34.0
+			draw_rect(Rect2(gx - 16.0, r.position.y + 40.0, 32.0, 84.0), glass)
+			draw_rect(Rect2(gx - 16.0, r.position.y + 40.0, 32.0, 84.0), wall.darkened(0.45), false, 2.0)
+			# doorway
+			draw_rect(Rect2(inner_x - side * 26.0, r.position.y + 150.0, 22.0, 46.0), Color(0.3, 0.24, 0.22))
+			# a striped awning over the window
+			if k % 2 == 0:
+				var ac := Color(0.72, 0.3, 0.28) if k % 4 == 0 else Color(0.28, 0.42, 0.55)
+				draw_rect(Rect2(inner_x - side * 40.0, r.position.y + 30.0, 40.0, 12.0), ac)
+
+
 func _build_ground_detail() -> void:
 	# a light dusting of wear over the whole walk: hairline cracks, grit,
 	# litter, damp stains. Cheap to draw (culled, and the world redraws at
@@ -1247,7 +1374,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.32"
+	version_l.text = "v1.33"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -3334,6 +3461,7 @@ func _draw() -> void:
 				y -= 150.0
 		draw_line(Vector2(sw_l, bottom), Vector2(sw_l, GATE_Y), COL_SEAM, 3.0)
 		draw_line(Vector2(sw_r, bottom), Vector2(sw_r, GATE_Y), COL_SEAM, 3.0)
+	_draw_edges(vt, vb)
 	# whatever lies beyond the gate
 	draw_rect(Rect2(-400, top, 2100, GATE_Y - top), Color(0.27, 0.4, 0.27))
 	for t in trees:

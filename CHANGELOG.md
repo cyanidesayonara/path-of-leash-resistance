@@ -2,6 +2,26 @@
 
 Append-only session history, newest first.
 
+## 2026-07-18 — v1.33: per-level edge treatment
+
+What flanks the corridor is what actually gives a walk its identity, so
+every level now has its own verge instead of the same green grass:
+
+- **Boulevard / El Aguacero / El Mercat** - city shopfronts: masonry,
+  plate glass (lit from inside after dark), doorways, striped awnings.
+- **El Gotic / La Castanyada** - old stone, close and high, with shuttered
+  windows, stone sills, and warm lamplight spilling from the lit ones.
+- **El Bosc / The Park** - no wall at all: undergrowth and trunks crowd
+  in on the path, so the green walks stay green.
+- **L'Estacio** - tiled interior wall, pillars, signage strips.
+- **Les Obres** - plywood hoarding with hazard stripes.
+- **El Desguas** - chain-link fence with heaps of junk piled behind it.
+- Built-up walks fill the whole verge with masonry, so no stray grass
+  shows past the buildings. Combined with v1.32's width dial, the alley
+  now genuinely reads as a narrow alley between buildings.
+- Purely a draw layer (no new collision), culled to the view, with
+  per-module variation derived from position rather than the global rng.
+
 ## 2026-07-18 — v1.32: every walk gets its own proportions
 
 The levels all felt like the same street redressed, and the root cause was
