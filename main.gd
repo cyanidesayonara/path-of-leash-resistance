@@ -120,6 +120,12 @@ var teeter_cd := 0.0
 # past this distance from the brink she has physically escaped it, whatever
 # the balance meter thinks
 const TEETER_ESCAPE_R := 34.0
+# the kerb grind (see grind.gd): ride the kerb line for style
+var grind: Node
+var grind_kerb_x := 0.0
+var grind_cd := 0.0
+const GRIND_SPEED := 190.0   # you have to be moving to get up on it
+const GRIND_BAND := 13.0     # how close to the kerb line counts as on it
 var ball: Node2D
 var romp_timer := 0.0
 var romp_catches := 0
@@ -1815,7 +1821,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.42"
+	version_l.text = "v1.43"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -1907,6 +1913,9 @@ func _build_hud() -> void:
 	teeter = Node.new()
 	teeter.set_script(load("res://teeter.gd"))
 	add_child(teeter)
+	grind = Node.new()
+	grind.set_script(load("res://grind.gd"))
+	add_child(grind)
 	challenge_l = _hud_label(Vector2(0, 70), 24)
 	challenge_l.size = Vector2(1280, 30)
 	challenge_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -2323,6 +2332,8 @@ func _physics_process(delta: float) -> void:
 	combo.tick(delta)
 	challenge.tick(delta)
 	_tick_teeter(delta)
+	if phase != "freedom":
+		_tick_grind(delta)
 	_update_combo_hud()
 	_update_challenge_hud()
 	shake_t = maxf(0.0, shake_t - delta * 2.5)
@@ -2476,7 +2487,7 @@ func _process(_delta: float) -> void:
 	# frees the big per-frame draw cost that hurt the web build most.
 	_redraw_acc += _delta
 	# the teeter is a reflex moment, so it gets every frame, not 30fps
-	if _redraw_acc >= 0.033 or shake_t > 0.0 or teeter.active:
+	if _redraw_acc >= 0.033 or shake_t > 0.0 or teeter.active or grind.active:
 		_redraw_acc = 0.0
 		queue_redraw()
 	# keep the grade's surface texture pinned to world space, and drift the
@@ -3123,6 +3134,50 @@ func _offpath(delta: float) -> void:
 			set_leash_target(180.0)
 	else:
 		offpath_t = maxf(0.0, offpath_t - delta)
+
+
+func _tick_grind(delta: float) -> void:
+	# The kerb is a rail. Run along one at a clip and you get up on it; hold
+	# the balance with left/right nudges and it pays by the second. Bailing
+	# costs the trick and the combo but nothing else, because this is a thing
+	# you go looking for rather than a hazard to be survived.
+	grind_cd = maxf(0.0, grind_cd - delta)
+	var travelling_along := absf(dog.velocity.y) > absf(dog.velocity.x) * 1.4
+	var fast_enough := dog.velocity.length() > GRIND_SPEED
+	if grind.active:
+		# lateral nudges feather the balance; leaving the rail lands it
+		# Counter-steering, and the mapping is deliberately literal: your
+		# stick tilts the balance, so you hold it up by leaning the other
+		# way. Pressing left corrects a rightward tip.
+		var counter: float = -dog.input_dir.x
+		var res: String = grind.tick(delta, counter)
+		var off_rail: bool = absf(dog.global_position.x - grind_kerb_x) > GRIND_BAND + 10.0
+		if res == "bailed":
+			grind_cd = 0.9
+			combo.bail()
+			Sfx.play("crack", 1.2, -10.0)
+			float_text(dog.global_position + Vector2(0, -28), "bailed!", Color(1, 0.6, 0.5))
+			dog.stumble()
+		elif off_rail or not fast_enough or not travelling_along:
+			var pts := int(grind.land())
+			grind_cd = 0.5
+			if pts > 0:
+				bones += int(pts / 4)
+				combo.add("GRIND", pts)
+				Sfx.play("star", 1.2)
+				float_text(dog.global_position + Vector2(0, -30), "GRIND! %d" % pts, Color(1, 0.9, 0.5))
+				_update_hud()
+		return
+	if grind_cd > 0.0 or dog.is_tumbling() or teeter.active or not fast_enough or not travelling_along:
+		return
+	# on a kerb? both corridor edges are rails
+	for kx in [sw_l, sw_r]:
+		if absf(dog.global_position.x - kx) < GRIND_BAND:
+			grind_kerb_x = kx
+			grind.begin()
+			Sfx.play("save", 1.35, -10.0)
+			float_text(dog.global_position + Vector2(0, -26), "GRIND!", Color(1, 0.95, 0.6))
+			return
 
 
 func _dist_to_rect_edge(r: Rect2, p: Vector2) -> float:
@@ -4361,6 +4416,24 @@ func _draw() -> void:
 				draw_line(Vector2(cx + 30.0, cy + 10.0), Vector2(cx, cy), Color(0.6, 0.63, 0.68), 3.0)
 			cy += 60.0
 	_draw_ground_detail(vt, vb)
+	# the grind: the rail lights up under her and a CENTRED balance bar shows
+	# which way she is tipping, with the running score beside it
+	if grind.active:
+		var gy0 := maxf(vt - 40.0, GATE_Y)
+		var gy1 := minf(vb + 40.0, START_Y + 200.0)
+		draw_line(Vector2(grind_kerb_x, gy0), Vector2(grind_kerb_x, gy1), Color(1.0, 0.88, 0.45, 0.55), 4.0)
+		var gp: Vector2 = dog.global_position + Vector2(0.0, -42.0)
+		var gw := 74.0
+		draw_rect(Rect2(gp.x - gw * 0.5, gp.y - 5.0, gw, 10.0), Color(0.06, 0.05, 0.08, 0.72))
+		# centre mark, then the needle: middle is balanced, edges are a bail
+		draw_line(Vector2(gp.x, gp.y - 5.0), Vector2(gp.x, gp.y + 5.0), Color(0.6, 0.62, 0.6, 0.8), 1.5)
+		var nf: float = grind.fraction()
+		var nx: float = gp.x - gw * 0.5 + gw * nf
+		var tipping: float = absf(nf - 0.5) * 2.0
+		draw_rect(Rect2(nx - 3.0, gp.y - 6.0, 6.0, 12.0),
+			Color(0.6, 1.0, 0.6).lerp(Color(1.0, 0.4, 0.3), tipping))
+		draw_string(font, gp + Vector2(-18.0, -12.0), "GRIND %d" % grind.points(),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(1, 0.95, 0.65))
 	# the teeter meter: a tipping bar over the dog, filling toward the brink,
 	# plus an arrow showing which way to scramble. Drawn in the world rather
 	# than on the HUD so your eyes never leave her.

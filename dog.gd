@@ -202,6 +202,15 @@ func forced_squat(duration: float) -> void:
 	velocity = Vector2.ZERO
 
 
+func stumble() -> void:
+	# a scrappy little bail off a kerb: she scrabbles, she is fine. Much
+	# lighter than hit_by_rider, and it does not count as taking a hit.
+	if tumble_t > 0.0:
+		return
+	tumble_t = 0.35
+	velocity *= 0.35
+
+
 func is_tumbling() -> bool:
 	return tumble_t > 0.0
 

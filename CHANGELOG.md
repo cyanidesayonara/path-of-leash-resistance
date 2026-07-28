@@ -2,6 +2,34 @@
 
 Append-only session history, newest first.
 
+## 2026-07-26 — v1.43: the kerb grind
+
+The teeter turned a hazard into a skill you could survive. This turns the
+same idea into a skill you go LOOKING for - the first of the agreed
+fun-mechanic backlog, and the most Tony Hawk thing in the game.
+
+- Run along a kerb at a clip and Millie gets up on it. The rail lights up
+  under her and a centred balance needle shows which way she is tipping;
+  counter-steer to hold it. It pays by the second and the rate GROWS the
+  longer you ride, so a long grind is worth far more than several short
+  ones. Stepping off cleanly banks it as a combo trick plus bones; bailing
+  costs the trick and your combo and nothing else, because this is a thing
+  you seek out rather than a hazard to survive.
+- Both corridor edges are rails on every walk, so it is available
+  everywhere rather than being a level gimmick.
+- Balancing on a kerb is an INVERTED PENDULUM, and the first attempt got
+  that wrong: it only wobbled around centre, so an unattended grind never
+  fell off and there was no skill in it. Now any lean feeds on itself.
+- The disturbance ramps as well as the instability, and that is deliberate:
+  with divergence alone a perfect rider could pin the lean at zero and
+  grind forever for unbounded points. A growing wobble eventually
+  out-muscles the nudge however well you ride, so every grind ends and the
+  skill is in how long you stretch it.
+- The test pins the feel so it survives future retuning: ignoring the
+  wobble bails briskly, a competent rider holds it a good while, the ramp
+  ends even a perfect grind, later seconds pay more than earlier ones, and
+  landing banks exactly once.
+
 ## 2026-07-26 — v1.42: four bugs from real browser play
 
 All four found by actually playing the web build, and all four were real.
