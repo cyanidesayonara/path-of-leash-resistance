@@ -127,6 +127,18 @@ static func check(m) -> Array:
 				if m.prize_pos.x >= INF:
 					p.append("has a prize goal but no prize placed")
 
+	# --- the off-leash area must have something to pee on ---
+	# It had nothing: every hydrant and lamppost is out on the street, so the
+	# one place the dog is free to mark was the one place she could not, and
+	# the "mark 5 spots" goal quietly became unfinishable once you went
+	# through the gate.
+	var markable := 0
+	for pp in m.park_props:
+		if m.MARKABLE_PARK_KINDS.has(String(pp.kind)):
+			markable += 1
+	if markable < 3:
+		p.append("off-leash area has %d markable props, wants 3+" % markable)
+
 	# --- the settings screen ---
 	# The rows are drawn from settings_rows() but INDEXED with settings_keys(),
 	# so a setting added to one and not the other reads or writes the wrong

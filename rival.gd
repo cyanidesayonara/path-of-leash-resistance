@@ -190,9 +190,7 @@ func scare() -> void:
 func _draw() -> void:
 	var tt := Time.get_ticks_msec() / 1000.0
 	# contact shadow, same light as everything else
-	draw_set_transform(Vector2(4.0, 7.0), 0.0, Vector2(1.2, 0.5))
-	draw_circle(Vector2.ZERO, 13.0, Color(0.06, 0.05, 0.08, 0.26))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	main.contact_shadow(self, Vector2.ZERO, 13.0, 8.0, 0.26)
 	var bob := sin(tt * 9.0 + seed_o) * (2.0 if state == S.FLEE else 1.0)
 	DogAppearanceScript.draw_dog(self, appearance, Vector2.ZERO, face, bob, tt * 12.0 + seed_o)
 	# what he is carrying, plainly visible so you know what you are chasing

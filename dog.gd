@@ -225,9 +225,7 @@ func _draw() -> void:
 	# left. Nothing sells "solid object on ground" faster than this.
 	if not swimming:
 		var lift: float = 1.0 + clampf(velocity.length() / 700.0, 0.0, 0.35)
-		draw_set_transform(Vector2(4.0, 7.0) * lift, 0.0, Vector2(1.15, 0.5))
-		draw_circle(Vector2.ZERO, 12.0, Color(0.06, 0.05, 0.08, 0.26))
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		main.contact_shadow(self, Vector2.ZERO, 12.0, 8.0 * lift, 0.26)
 	# the coat comes from data now (Game.COATS), not baked-in colours, so a
 	# dog creator later means adding a row of parameters rather than editing
 	# this renderer

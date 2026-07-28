@@ -6,6 +6,13 @@ var failures := 0
 class FakeMain:
 	extends Node2D
 
+	# mirrors main.gd's shared light: the entities call this while drawing
+	func contact_shadow(_c: CanvasItem, _at: Vector2, _r: float, _h: float, _a := 0.24) -> void:
+		pass
+
+	func cast_shadow(_c: CanvasItem, _at: Vector2, _w: float, _h: float, _a := 0.20) -> void:
+		pass
+
 	var phase := "freedom"
 	var frozen := true
 	var cam := Camera2D.new()

@@ -82,6 +82,8 @@ func _physics_process(delta: float) -> void:
 
 func _draw() -> void:
 	var y := -arc
-	draw_circle(Vector2(2, 4), 6.0, Color(0, 0, 0, 0.15))
+	# the ball's shadow separates from it as it flies, which is the only cue
+	# that says airborne in a top-down view
+	main.contact_shadow(self, Vector2.ZERO, 6.0 - arc * 0.05, 4.0 + arc * 0.9, 0.18)
 	draw_circle(Vector2(0, y), 6.0, Color(0.82, 0.86, 0.3))
 	draw_arc(Vector2(0, y), 6.0, -0.4, 1.2, 8, Color(0.95, 0.95, 0.9), 1.2)

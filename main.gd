@@ -286,6 +286,7 @@ var whirl_arm := 0.0
 var whirl_wind_acc := 0.0
 var whirl_start_wind := 0.0
 var whirl_flipped := false
+var vault_recent := 0.0
 
 var leash_len := LEASH_LENGTH
 var leash_target := LEASH_LENGTH
@@ -296,6 +297,10 @@ var phone_hp := 3
 var pee := 1.0
 var marks: Array[Vector2] = []
 var puddles: Array[Dictionary] = []
+# marks left by the OTHER dogs. A dog park is a noticeboard, so these are
+# worth a sniff, and peeing over one is the whole point of being a dog.
+var npc_marks: Array[Dictionary] = []
+var overmarks := 0
 var mark_progress := 0.0
 var mark_target := Vector2(INF, INF)
 var stray_t := 0.0
@@ -361,6 +366,7 @@ var pause_l: Label
 var grade_rect: ColorRect
 var _shot_done := false
 var _shot_frames := 0
+var _shot_at := 320
 # scattered ground detail (cracks, litter, stones, stains) so hard surfaces
 # stop reading as empty colour fields. Built with a LOCAL rng so it never
 # perturbs the global seed the deterministic autowalk depends on.
@@ -1159,6 +1165,39 @@ func _edge_base_color() -> Color:
 		_: return Color(0.38, 0.35, 0.37)                    # city block
 
 
+func _draw_doorway(c: CanvasItem, inner_x: float, side: float, y: float, wall: Color) -> void:
+	# A door from directly above is genuinely hard: the leaf is vertical, so
+	# there is nothing to see. What you DO see is a recess in the wall, a
+	# threshold sticking out onto the pavement, and the lintel's shadow lying
+	# across it - and that shadow is the whole trick. Drawn as a grey
+	# rectangle it read as a doormat someone had left in the street, which is
+	# exactly what it looked like.
+	var into: float = -side          # away from the pavement, into the building
+	var jamb := wall.darkened(0.30)
+	# the reveal: the wall thickness the door is set back into
+	c.draw_rect(Rect2(inner_x + into * 22.0 if into > 0.0 else inner_x - 22.0,
+		y - 18.0, 22.0, 36.0), jamb)
+	# the leaf, foreshortened into a dark band, with a warm line of light
+	# escaping under it
+	var leaf_x: float = inner_x + into * 15.0
+	c.draw_rect(Rect2(minf(leaf_x, leaf_x + into * 7.0), y - 15.0, 7.0, 30.0),
+		Color(0.16, 0.12, 0.10))
+	c.draw_rect(Rect2(minf(leaf_x, leaf_x + into * 7.0), y - 15.0, 2.0, 30.0),
+		Color(0.30, 0.23, 0.18))
+	c.draw_circle(Vector2(leaf_x + into * 3.0, y + 7.0), 1.6, Color(0.80, 0.70, 0.42))
+	# the threshold, projecting onto the pavement, with a nosing on its edge
+	var t_out: float = inner_x + side * 13.0
+	c.draw_rect(Rect2(minf(inner_x, t_out), y - 16.0, 13.0, 32.0), Color(0.60, 0.57, 0.52))
+	c.draw_rect(Rect2(t_out - (2.0 if side > 0.0 else 0.0), y - 16.0, 2.0, 32.0),
+		Color(0.72, 0.69, 0.63))
+	# the lintel shadow: deepest against the wall, fading out over the step
+	for i in range(4):
+		var f := float(i) / 3.0
+		var sx: float = inner_x + side * (2.0 + f * 16.0)
+		c.draw_rect(Rect2(minf(sx, sx + side * 5.0), y - 16.0, 5.0, 32.0),
+			Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.30 * (1.0 - f)))
+
+
 func _draw_edge_module(c: CanvasItem, r: Rect2, side: float, k: int) -> void:
 	var inner_x: float = r.end.x if side < 0.0 else r.position.x
 	var lit := fmod(float(k) * 0.37, 1.0)
@@ -1184,9 +1223,7 @@ func _draw_edge_module(c: CanvasItem, r: Rect2, side: float, k: int) -> void:
 				c.draw_rect(Rect2(cp.x - 8.0, cp.y - 9.0, 16.0, 18.0), Color(0.40, 0.24, 0.19))
 				c.draw_rect(Rect2(cp.x - 8.0, cp.y - 9.0, 16.0, 5.0), Color(0.30, 0.19, 0.16))
 				c.draw_rect(Rect2(cp.x + 8.0, cp.y - 5.0, 7.0, 18.0), Color(0.05, 0.04, 0.07, 0.22))
-			# a doorstep at street level - this one DOES read from above
-			var step_x: float = inner_x + side * -13.0
-			c.draw_rect(Rect2(step_x - 13.0, r.position.y + 150.0, 26.0, 13.0), Color(0.62, 0.58, 0.52))
+			_draw_doorway(c, inner_x, side, r.position.y + 156.0, tile)
 		"trail", "park":
 			# dense undergrowth and trunks crowding the path
 			for b in range(4):
@@ -1279,9 +1316,7 @@ func _draw_edge_module(c: CanvasItem, r: Rect2, side: float, k: int) -> void:
 				for st in range(4):
 					c.draw_line(Vector2(aw_x + 7.0 * float(st), r.position.y + 40.0),
 						Vector2(aw_x + 7.0 * float(st), r.position.y + 112.0), ac.lightened(0.30), 3.0)
-			# a doorstep in the ground plane at the wall base
-			var stp_x: float = inner_x + side * -12.0
-			c.draw_rect(Rect2(stp_x - 14.0, r.position.y + 162.0, 28.0, 12.0), Color(0.58, 0.56, 0.53))
+			_draw_doorway(c, inner_x, side, r.position.y + 168.0, felt)
 
 
 func _scent_sources() -> Array:
@@ -1318,6 +1353,10 @@ func _build_scent_sources() -> Array:
 		out.append({"pos": carry_drop, "col": Color(0.62, 0.82, 1.0)})
 	for tf in get_tree().get_nodes_in_group("tofu"):
 		out.append({"pos": tf.global_position, "col": Color(1.0, 0.66, 0.80)})
+	# another dog's mark: a pale, unmistakable yellow-green
+	for nm in npc_marks:
+		if not bool(nm.sniffed):
+			out.append({"pos": nm.pos, "col": Color(0.86, 0.88, 0.42)})
 	return out
 
 
@@ -1363,6 +1402,137 @@ func _draw_scents() -> void:
 			draw_circle(at, 15.0 + near * 9.0, Color(col.r, col.g, col.b, 0.07 * near))
 
 
+# --- one light for the whole game -------------------------------------
+#
+# Shadows were being written by hand at each prop, so some had one, some did
+# not, and the ones that did disagreed about where the sun was - which is
+# exactly what makes a scene look pasted together rather than lit. There is
+# now ONE light, up and to the left, and every shadow in the game comes out
+# of these two helpers.
+#
+# Height is the input, not offset: a snack sits on the pavement and barely
+# has a shadow, a lamppost throws one several metres long. That difference
+# is most of what tells the eye how tall something is in a top-down view.
+
+const LIGHT := Vector2(0.5, 0.866)      # the direction shadows fall
+const SHADOW_COL := Color(0.05, 0.05, 0.08)
+
+
+func contact_shadow(c: CanvasItem, at: Vector2, r: float, h: float, a := 0.24) -> void:
+	# for things that sit ON the ground: a squashed ellipse, pushed away from
+	# the light by however tall the thing is
+	c.draw_set_transform(at + LIGHT * h, 0.0, Vector2(1.15, 0.5))
+	c.draw_circle(Vector2.ZERO, r, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, a))
+	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+func cast_shadow(c: CanvasItem, at: Vector2, w: float, h: float, a := 0.20) -> void:
+	# for uprights: a tapering shadow lying on the ground away from the light,
+	# plus the darker patch where the object actually meets it
+	var tip := at + LIGHT * h
+	var side := LIGHT.orthogonal()
+	c.draw_colored_polygon(
+		PackedVector2Array([
+			at + side * w, at - side * w,
+			tip - side * w * 0.62, tip + side * w * 0.62,
+		]),
+		Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, a))
+	c.draw_set_transform(at + LIGHT * (w * 0.5), 0.0, Vector2(1.2, 0.55))
+	c.draw_circle(Vector2.ZERO, w * 1.15, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, a * 0.9))
+	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+func _draw_broadleaf(p: Vector2, scale: float) -> void:
+	# A tree from above is a canopy, and a canopy is not one flat circle: it
+	# is clustered lobes with light on the top-left of each one, a trunk you
+	# can see through the gaps, and a shadow the same shape as the crown. The
+	# old version was two translucent discs.
+	var r := 34.0 * scale
+	# the crown's shadow, thrown clear of the trunk so the tree stands up
+	draw_set_transform(p + LIGHT * (46.0 * scale), 0.0, Vector2(1.1, 0.55))
+	draw_circle(Vector2.ZERO, r * 1.02, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.17))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	var dark := Color(0.15, 0.27, 0.16)
+	var mid := Color(0.21, 0.36, 0.20)
+	var lit := Color(0.31, 0.48, 0.26)
+	# the underside first, then lobes over it, each lit on its light side
+	draw_circle(p + Vector2(2, 3) * scale, r, dark)
+	var lobes := [
+		Vector2(-0.42, -0.30), Vector2(0.40, -0.34), Vector2(0.46, 0.32),
+		Vector2(-0.38, 0.40), Vector2(0.02, -0.06),
+	]
+	for i in range(lobes.size()):
+		var lp: Vector2 = p + (lobes[i] as Vector2) * r
+		draw_circle(lp, r * 0.54, mid)
+	for i in range(lobes.size()):
+		var lp2: Vector2 = p + (lobes[i] as Vector2) * r
+		draw_circle(lp2 - Vector2(0.16, 0.18) * r, r * 0.30, lit)
+	# the trunk, visible in the middle where the canopy parts
+	draw_circle(p, 6.5 * scale, Color(0.22, 0.16, 0.11))
+	draw_circle(p + Vector2(-1, -1) * scale, 4.4 * scale, Color(0.36, 0.27, 0.18))
+	# a few leaf tips breaking the outline, so it is not a perfect circle
+	for i in range(7):
+		var a := TAU * float(i) / 7.0 + p.x * 0.013
+		draw_circle(p + Vector2.from_angle(a) * r * 0.95, r * 0.17, mid)
+
+
+func _draw_palm(p: Vector2) -> void:
+	# a palm from above: a ring of long fronds, each with a spine and leaflets,
+	# radiating from a fat trunk. The shadow copies the frond pattern, which is
+	# what makes the beach read as glaring midday sun.
+	var sh := p + LIGHT * 40.0
+	for j in range(7):
+		var sa := TAU * float(j) / 7.0 + p.x * 0.01 + p.y * 0.007
+		draw_line(sh, sh + Vector2.from_angle(sa) * 34.0,
+			Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.14), 7.0)
+	var t := Time.get_ticks_msec() / 1000.0
+	for j in range(7):
+		var fa := TAU * float(j) / 7.0 + p.x * 0.01 + p.y * 0.007
+		# the whole frond nods in the sea breeze
+		fa += sin(t * 0.7 + float(j) * 1.3 + p.y * 0.01) * 0.05
+		var dir := Vector2.from_angle(fa)
+		var tip := p + dir * 38.0
+		draw_line(p, tip, Color(0.20, 0.36, 0.19), 6.0)
+		draw_line(p, tip, Color(0.29, 0.47, 0.24), 3.0)
+		# leaflets down both sides of the spine
+		var side := dir.orthogonal()
+		for k in range(4):
+			var f := 0.35 + float(k) * 0.2
+			var at := p + dir * (38.0 * f)
+			var ln := 9.0 * (1.0 - f * 0.5)
+			draw_line(at, at + (side + dir * 0.5).normalized() * ln, Color(0.24, 0.41, 0.21), 2.5)
+			draw_line(at, at - (side - dir * 0.5).normalized() * ln, Color(0.24, 0.41, 0.21), 2.5)
+	# the trunk, and the coconuts nobody should be under
+	draw_circle(p, 9.0, Color(0.34, 0.26, 0.17))
+	draw_circle(p + Vector2(-2, -2), 6.0, Color(0.48, 0.38, 0.25))
+	draw_circle(p + Vector2(5, 4), 3.4, Color(0.28, 0.22, 0.14))
+	draw_circle(p + Vector2(-4, 5), 3.0, Color(0.28, 0.22, 0.14))
+
+
+func _draw_lamppost(p: Vector2) -> void:
+	# A lamppost seen from above is mostly a shadow: the column is directly
+	# under the lantern, so the long shadow lying away from it is what tells
+	# you it is three metres tall and not a manhole cover.
+	cast_shadow(self, p, 6.0, 52.0, 0.18)
+	var halo_a := 0.32 if Game.night else 0.08
+	draw_circle(p, 62.0, Color(1.0, 0.9, 0.6, halo_a))
+	# the base plinth it is bolted to
+	draw_circle(p + Vector2(0, 2), POLE_RADIUS + 6.0, Color(0.24, 0.24, 0.27))
+	draw_circle(p + Vector2(0, 1), POLE_RADIUS + 3.5, Color(0.33, 0.33, 0.36))
+	# the fluted column, lit down one side
+	draw_circle(p, POLE_RADIUS, Color(0.38, 0.38, 0.42))
+	draw_circle(p + Vector2(-1.5, -1.5), POLE_RADIUS * 0.62, Color(0.52, 0.52, 0.57))
+	# four cross arms, each with a lantern on the end, glass and all
+	for bo: Vector2 in [Vector2(11, 0), Vector2(-11, 0), Vector2(0, 11), Vector2(0, -11)]:
+		draw_line(p, p + bo, Color(0.30, 0.30, 0.33), 3.5)
+		draw_line(p, p + bo, Color(0.46, 0.46, 0.5), 1.5)
+		var lp := p + bo * 1.4
+		draw_circle(lp, 5.0, Color(0.26, 0.26, 0.29))
+		draw_circle(lp, 3.6, Color(0.99, 0.95, 0.78) if Game.night else Color(0.86, 0.88, 0.9))
+		if Game.night:
+			draw_circle(lp, 6.5, Color(1.0, 0.92, 0.66, 0.35))
+
+
 func _draw_park_props(vt: float, vb: float) -> void:
 	for pp in park_props:
 		var p: Vector2 = pp.pos
@@ -1371,10 +1541,19 @@ func _draw_park_props(vt: float, vb: float) -> void:
 			continue
 		var prog := float(pp.prog)
 		var done: bool = pp.done
-		# everything gets a contact shadow: it is an object, not a decal
-		draw_set_transform(p + Vector2(4.0, 6.0), 0.0, Vector2(1.1, 0.5))
-		draw_circle(Vector2.ZERO, 15.0, Color(0.05, 0.05, 0.08, 0.20))
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		# everything gets a shadow: it is an object, not a decal. Uprights get
+		# a cast one, things lying on the ground get a contact patch.
+		match String(pp.kind):
+			"post":
+				cast_shadow(self, p, 5.0, 34.0)
+			"shrub":
+				contact_shadow(self, p, 15.0, 9.0)
+			"log", "driftwood":
+				contact_shadow(self, p, 17.0, 6.0)
+			"dig":
+				pass       # a hole in the ground casts nothing
+			_:
+				contact_shadow(self, p, 14.0, 7.0)
 		match String(pp.kind):
 			"dig":
 				# a patch of turned earth; deepens as you dig, then a bone
@@ -2749,6 +2928,7 @@ func _physics_process(delta: float) -> void:
 		_tick_vault(delta)
 	_update_combo_hud()
 	_update_challenge_hud()
+	vault_recent = maxf(0.0, vault_recent - delta)
 	shake_t = maxf(0.0, shake_t - delta * 2.5)
 	prize_glow += delta * 4.0
 	_scent_cache_t = maxf(0.0, _scent_cache_t - delta)
@@ -2756,6 +2936,11 @@ func _physics_process(delta: float) -> void:
 
 func _process(_delta: float) -> void:
 	if not _shot_done and "--shot" in OS.get_cmdline_user_args():
+		# --shot-at=N photographs frame N instead of 320, so a prop halfway up
+		# the walk can be inspected by letting --autowalk drive there first
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--shot-at="):
+				_shot_at = int(a.substr(10))
 		_shot_frames += 1
 		if _shot_frames == 2:
 			# --shot --shot-settings photographs the settings screen instead
@@ -2768,7 +2953,7 @@ func _process(_delta: float) -> void:
 			_apply_menu_step()
 			for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, weather_l, record_l]:
 				l.visible = false
-		if _shot_frames > 320:
+		if _shot_frames > _shot_at:
 			_shot_done = true
 			var img := get_viewport().get_texture().get_image()
 			img.save_png("user://shot.png")
@@ -2960,6 +3145,13 @@ func _apply_leash(delta: float) -> void:
 		# a fresh fling must never be arrested by a residual wrap
 		human.just_flung = false
 		flings_done += 1
+		# the two moves now CHAIN: wind him up with a carve, then let go
+		if vault_recent > 0.0:
+			bones += 8
+			combo.add("SLINGSHOT", 8)
+			float_text(human.global_position + Vector2(0, -34), "SLINGSHOT! +8",
+				Color(1.0, 0.86, 0.5))
+			vault_recent = 0.0
 		Sfx.play("fling")
 		combo.add("FLING", 8)
 		leash.free_slip_t = 1.2
@@ -3616,6 +3808,23 @@ func _tick_vault(delta: float) -> void:
 		return
 	if vault_cd > 0.0 or not wrapped or dog.is_tumbling() or teeter.active or grind.active:
 		return
+	# THE FLING HAS RIGHT OF WAY.
+	#
+	# These two moves are opposites and they were fighting over the same rope.
+	# The vault steers her velocity along the arc, which is precisely the input
+	# the whirl needs her to keep NOT doing - so a vault firing mid-wind-up
+	# stole the fling, and the fling stole the vault back. They read as one
+	# mechanic misbehaving rather than two.
+	#
+	# So the rope decides, by how wound the OWNER's end is: a clean single
+	# wrap is a vault, and once his end is properly wound the vault stands
+	# aside and lets the tetherball happen. Which also makes the vault the
+	# set-up move - carve two arcs around a pole and you have wound him up
+	# for the fling yourself.
+	if human.is_whirling() or whirl_arm > 0.0:
+		return
+	if absf(leash.human_end_winding()) > 1.2:
+		return
 	# one vault per approach: she has to actually leave a pole before it will
 	# give her another swing
 	if vault_done_pole.x < INF:
@@ -3632,6 +3841,7 @@ func _tick_vault(delta: float) -> void:
 	vault_t = 0.85
 	vault_arc = 0.0
 	vault_pole = pole
+	vault_recent = 2.6
 	Sfx.play("fling", 1.2, -8.0)
 	float_text(dog.global_position + Vector2(0, -28), "VAULT!", Color(0.9, 0.95, 1.0))
 
@@ -4009,6 +4219,19 @@ func _pickups(delta: float) -> void:
 				combo.add("SNIFF", 2)
 				float_text(h.pos, "good sniff +2", Color(1, 0.95, 0.7))
 				_update_hud()
+	# reading the noticeboard: another dog's mark is worth a proper sniff,
+	# and it is how you find out who else has been through
+	for nm in npc_marks:
+		if bool(nm.sniffed):
+			continue
+		if dog.global_position.distance_to(nm.pos) < 30.0 and dog.velocity.length() < 70.0:
+			nm.sniffed = true
+			sniffs_done += 1
+			bones += 2
+			Sfx.play("mark", 1.3)
+			combo.add("READ", 2)
+			float_text(nm.pos, "%s was here +2" % String(nm.who), Color(0.9, 0.95, 0.75))
+			_update_hud()
 	for k in kebabs:
 		if not k.eaten and dog.global_position.distance_to(k.pos) < 26.0:
 			k.eaten = true
@@ -4097,11 +4320,22 @@ func _bodily(delta: float) -> void:
 			mark_progress += delta
 			stray_t = 0.0
 			if mark_progress >= 0.7:
-				bones += 3
+				# Over-marking. Any dog owner has watched this happen: the
+				# interesting spot is not the clean post, it is the one that
+				# already smells of someone else. So it pays double.
+				var over := _npc_mark_at(target)
+				var pay := 6 if not over.is_empty() else 3
+				bones += pay
 				marks.append(target)
 				Sfx.play("mark")
-				combo.add("MARK", 3)
-				float_text(target, "marked! +3", Color(1, 0.95, 0.7))
+				combo.add("OVER-MARK" if not over.is_empty() else "MARK", pay)
+				if over.is_empty():
+					float_text(target, "marked! +3", Color(1, 0.95, 0.7))
+				else:
+					overmarks += 1
+					npc_marks.erase(over)
+					float_text(target, "over-marked %s! +6" % String(over.who),
+						Color(1, 0.85, 0.55))
 				mark_progress = 0.0
 				mark_target = Vector2(INF, INF)
 				if marks.size() >= 5 and not mark_quest_done:
@@ -4206,6 +4440,9 @@ func on_business_bagged(pos: Vector2) -> void:
 	_update_hud()
 
 
+const MARKABLE_PARK_KINDS := ["post", "shrub", "log", "rock", "driftwood", "tyre"]
+
+
 func _nearest_markable(pos: Vector2) -> Vector2:
 	var best := Vector2(INF, INF)
 	var best_d := 42.0
@@ -4222,7 +4459,36 @@ func _nearest_markable(pos: Vector2) -> Vector2:
 			if d < best_d:
 				best_d = d
 				best = p
+	# The off-leash area had nothing markable in it at all - every hydrant and
+	# lamppost is back on the street - so the one place a dog is FREE to pee
+	# was the one place she could not. Its posts, logs and shrubs count.
+	for pp in park_props:
+		if not MARKABLE_PARK_KINDS.has(String(pp.kind)):
+			continue
+		var ppos: Vector2 = pp.pos
+		if marks.has(ppos):
+			continue
+		var pd := pos.distance_to(ppos)
+		if pd < best_d:
+			best_d = pd
+			best = ppos
 	return best
+
+
+func _npc_mark_at(at: Vector2) -> Dictionary:
+	for nm in npc_marks:
+		if at.distance_to(nm.pos) < 26.0:
+			return nm
+	return {}
+
+
+func on_npc_mark(at: Vector2, col: Color, who: String) -> void:
+	# another dog has left a message. Cap the list: a long romp with four
+	# dogs in it would otherwise grow this without bound.
+	if npc_marks.size() > 14:
+		npc_marks.remove_at(0)
+	npc_marks.append({"pos": at, "col": col, "who": who, "sniffed": false})
+	_scent_cache_t = 0.0
 
 
 func _watch_stall(delta: float) -> void:
@@ -4921,22 +5187,90 @@ func _draw() -> void:
 			draw_circle(Vector2(wx, ly), 16.0, Color(0.95, 0.8, 0.25))
 			draw_rect(Rect2(wx - 2.0, ly - 9.0, 4.0, 10.0), Color(0.15, 0.15, 0.15))
 			draw_circle(Vector2(wx, ly + 6.0), 2.2, Color(0.15, 0.15, 0.15))
-	# manholes - open for street work; the cones are real nodes now
+	# manholes - open for street work; the cones are real nodes now.
+	# This one has to read as A HOLE from a glance at speed, because falling
+	# in ends the walk: hence the lifted cover leaning beside it, the lit
+	# near rim, and the shaft going properly dark toward the far side.
 	for m in manholes:
-		draw_circle(m, 24.0, Color(0.12, 0.12, 0.14))
-		draw_arc(m, 19.0, 0, TAU, 24, Color(0.3, 0.3, 0.33), 2.0)
-	# hydrants
+		if m.y < vt - 50.0 or m.y > vb + 50.0:
+			continue
+		# the cover, lifted off and propped against the kerb side
+		var cv := m + LIGHT * 30.0
+		contact_shadow(self, cv, 15.0, 5.0, 0.22)
+		draw_circle(cv, 14.0, Color(0.30, 0.30, 0.33))
+		draw_circle(cv, 11.0, Color(0.37, 0.37, 0.40))
+		for gi in range(3):
+			draw_line(cv + Vector2(-9.0, -6.0 + float(gi) * 6.0), cv + Vector2(9.0, -6.0 + float(gi) * 6.0),
+				Color(0.26, 0.26, 0.29), 1.6)
+		# the collar of brickwork it is set into
+		draw_circle(m, 25.0, Color(0.34, 0.32, 0.31))
+		draw_circle(m, 22.0, Color(0.24, 0.23, 0.23))
+		# the shaft: dark, and darker away from the light
+		draw_circle(m, 19.0, Color(0.10, 0.10, 0.12))
+		draw_circle(m + LIGHT * 5.0, 15.0, Color(0.05, 0.05, 0.07))
+		# the lit rim on the light side, which is what makes it a hole and
+		# not a disc
+		draw_arc(m, 19.5, PI * 0.95, PI * 1.95, 16, Color(0.55, 0.53, 0.50), 2.4)
+		draw_arc(m, 19.5, PI * 0.0, PI * 0.6, 12, Color(0.16, 0.16, 0.18), 2.0)
+		# rungs going down, just visible
+		for ri in range(2):
+			draw_line(m + Vector2(-6.0, 2.0 + float(ri) * 7.0), m + Vector2(6.0, 2.0 + float(ri) * 7.0),
+				Color(0.22, 0.21, 0.20), 2.0)
+	# hydrants: cast iron, and the most important object in the world if you
+	# are a dog. Base flange, barrel, bonnet, two side outlets and a chain -
+	# it was two flat circles and read as a red dot.
 	for h in hydrants:
-		var c := Color(0.45, 0.4, 0.38) if h.done else Color(0.64, 0.26, 0.2)
-		draw_circle(h.pos, 9.0, c)
-		draw_circle(h.pos + Vector2(0, -8), 5.0, c.darkened(0.2))
+		var hp: Vector2 = h.pos
+		if hp.y < vt - 40.0 or hp.y > vb + 40.0:
+			continue
+		var c := Color(0.45, 0.4, 0.38) if h.done else Color(0.68, 0.23, 0.18)
+		cast_shadow(self, hp, 8.0, 26.0)
+		# the flange it is bolted down with
+		draw_circle(hp + Vector2(0, 3), 12.0, c.darkened(0.45))
+		draw_circle(hp + Vector2(0, 3), 9.5, c.darkened(0.3))
+		# side outlets, one either side, with their caps
+		for so: float in [-1.0, 1.0]:
+			var op := hp + Vector2(10.0 * so, -1.0)
+			draw_line(hp, op, c.darkened(0.15), 5.0)
+			draw_circle(op, 3.6, c.lightened(0.08))
+			draw_circle(op, 1.8, c.darkened(0.35))
+		# the barrel, lit from the upper left
+		draw_circle(hp, 8.5, c)
+		draw_circle(hp + Vector2(-2.5, -2.5), 5.0, c.lightened(0.16))
+		# the bonnet on top, and its little cap nut
+		draw_circle(hp + Vector2(0, -7), 5.6, c.darkened(0.12))
+		draw_circle(hp + Vector2(-1.5, -8.5), 3.0, c.lightened(0.22))
+		draw_circle(hp + Vector2(0, -11), 2.0, Color(0.85, 0.8, 0.7, 0.9))
+		# the chain, hanging off to one side
+		for ci in range(3):
+			draw_circle(hp + Vector2(7.0 + float(ci) * 2.6, 6.0 + float(ci) * 1.6), 1.5,
+				Color(0.62, 0.6, 0.58))
 		if not h.done and h.progress > 0.0:
-			draw_arc(h.pos, 15.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
-	# kebabs
+			draw_arc(hp, 17.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
+	# the dropped snack. A brown circle could have been anything; this is a
+	# half-eaten kebab lying in its paper, which is unmistakably Barcelona
+	# pavement and unmistakably worth eating off it.
 	for k in kebabs:
-		if not k.eaten:
-			draw_circle(k.pos, 7.0, Color(0.75, 0.55, 0.3))
-			draw_line(k.pos + Vector2(-3, 5), k.pos + Vector2(4, -6), Color(0.5, 0.35, 0.2), 2.0)
+		if k.eaten or k.pos.y < vt - 30.0 or k.pos.y > vb + 30.0:
+			continue
+		var kp: Vector2 = k.pos
+		contact_shadow(self, kp, 9.0, 4.0, 0.20)
+		# the paper wrapper, screwed open
+		draw_colored_polygon(
+			PackedVector2Array([
+				kp + Vector2(-11, 3), kp + Vector2(-6, -8), kp + Vector2(7, -7),
+				kp + Vector2(11, 5), kp + Vector2(0, 9),
+			]), Color(0.90, 0.87, 0.79))
+		draw_colored_polygon(
+			PackedVector2Array([
+				kp + Vector2(-7, 2), kp + Vector2(-3, -5), kp + Vector2(5, -4),
+				kp + Vector2(7, 3), kp + Vector2(0, 6),
+			]), Color(0.80, 0.77, 0.70))
+		# the meat, and a sad shred of salad nobody wants
+		draw_circle(kp + Vector2(-1, -1), 5.2, Color(0.62, 0.40, 0.22))
+		draw_circle(kp + Vector2(-2.5, -2.5), 3.0, Color(0.74, 0.50, 0.28))
+		draw_circle(kp + Vector2(3, 2), 2.4, Color(0.55, 0.34, 0.19))
+		draw_line(kp + Vector2(-5, 4), kp + Vector2(1, 5), Color(0.45, 0.62, 0.32), 2.0)
 	# candy: shiny wrapped sweets - tempting, forbidden, faintly glinting
 	var candy_cols := [Color(0.85, 0.25, 0.35), Color(0.3, 0.5, 0.85), Color(0.55, 0.35, 0.7)]
 	for ci in range(candy.size()):
@@ -4999,40 +5333,39 @@ func _draw() -> void:
 		if p.y < vt - 60.0 or p.y > vb + 60.0:
 			continue
 		if lvl == "park":
-			draw_circle(p, 56.0, Color(0.2, 0.35, 0.2, 0.3))
-			draw_circle(p + Vector2(12, 10), 38.0, Color(0.22, 0.38, 0.21, 0.3))
-			draw_circle(p, POLE_RADIUS, Color(0.4, 0.3, 0.2))
-			draw_circle(p, 4.0, Color(0.32, 0.24, 0.16))
+			_draw_broadleaf(p, 1.0)
 		elif lvl == "beach":
-			draw_circle(p + Vector2(10, 10), 30.0, Color(0, 0, 0, 0.12))
-			for j in range(6):
-				var fa := TAU * j / 6.0 + p.x * 0.01 + p.y * 0.007
-				draw_line(p, p + Vector2.from_angle(fa) * 36.0, Color(0.27, 0.44, 0.24, 0.85), 5.0)
-			draw_circle(p, 7.0, Color(0.45, 0.35, 0.22))
+			_draw_palm(p)
 		elif p.x > sw_l + 60.0 and p.x < sw_r - 60.0:
 			# mid-walkway poles are street trees in grates - that is WHY
 			# they stand in the middle of a sidewalk
-			draw_rect(Rect2(p.x - 15, p.y - 15, 30, 30), Color(0.3, 0.3, 0.33), false, 2.0)
-			draw_circle(p, 34.0, Color(0.28, 0.42, 0.26, 0.4))
-			draw_circle(p, POLE_RADIUS - 2.0, Color(0.4, 0.3, 0.2))
+			cast_shadow(self, p, 20.0, 40.0, 0.16)
+			draw_circle(p, 19.0, Color(0.26, 0.24, 0.22))          # the pit
+			draw_rect(Rect2(p.x - 16, p.y - 16, 32, 32), Color(0.34, 0.34, 0.37))
+			for gi in range(4):
+				var gy := p.y - 12.0 + float(gi) * 8.0
+				draw_line(Vector2(p.x - 15, gy), Vector2(p.x + 15, gy), Color(0.2, 0.2, 0.22), 2.0)
+			draw_rect(Rect2(p.x - 16, p.y - 16, 32, 32), Color(0.44, 0.44, 0.47), false, 2.0)
+			_draw_broadleaf(p, 0.72)
 		else:
-			# lamppost: four bulbs on cross arms and a warm halo - an
-			# actual light source, brightest at night
-			var halo_a := 0.32 if Game.night else 0.1
-			draw_circle(p, 62.0, Color(1.0, 0.9, 0.6, halo_a))
-			draw_circle(p, POLE_RADIUS + 3.0, Color(0.2, 0.2, 0.22, 0.35))
-			draw_circle(p, POLE_RADIUS, Color(0.44, 0.44, 0.48))
-			for bo in [Vector2(10, 0), Vector2(-10, 0), Vector2(0, 10), Vector2(0, -10)]:
-				draw_line(p, p + bo, Color(0.5, 0.5, 0.55), 2.5)
-				draw_circle(p + bo * 1.35, 3.5, Color(0.98, 0.93, 0.7))
+			_draw_lamppost(p)
 	# trash bins: green, lidded, with a visible mouth - the ONLY thing
 	# the owner will throw a bag into
 	for bn in bins:
-		draw_circle(bn, 11.0, Color(0.24, 0.32, 0.26))
-		draw_circle(bn, 8.0, Color(0.32, 0.45, 0.34))
-		draw_arc(bn, 8.0, PI * 0.15, PI * 0.85, 10, Color(0.14, 0.2, 0.16), 3.5)
-		draw_circle(bn, 3.2, Color(0.08, 0.12, 0.1))
-		draw_line(bn + Vector2(-5, 0), bn + Vector2(5, 0), Color(0.55, 0.66, 0.56), 2.0)
+		if bn.y < vt - 40.0 or bn.y > vb + 40.0:
+			continue
+		cast_shadow(self, bn, 11.0, 24.0)
+		# the drum, on its post, with a lit rim and a genuinely dark mouth
+		draw_circle(bn, 13.0, Color(0.18, 0.25, 0.20))
+		draw_circle(bn, 11.0, Color(0.26, 0.36, 0.28))
+		draw_circle(bn + Vector2(-3, -3), 7.0, Color(0.32, 0.44, 0.33))
+		draw_arc(bn, 11.0, PI * 1.05, PI * 1.95, 14, Color(0.42, 0.55, 0.42), 2.0)
+		# the hinged lid, tipped open toward the light
+		draw_circle(bn + Vector2(1, 2), 8.6, Color(0.10, 0.14, 0.11))
+		draw_arc(bn + Vector2(1, 2), 8.6, PI * 0.1, PI * 0.9, 12, Color(0.20, 0.28, 0.22), 3.0)
+		# a bag someone has knotted round the handle, as always
+		draw_circle(bn + Vector2(12, 6), 4.0, Color(0.78, 0.78, 0.74, 0.85))
+		draw_line(bn + Vector2(10, 2), bn + Vector2(12, 5), Color(0.7, 0.7, 0.66), 1.5)
 	# cafe tables with a little service on them
 	for tb in tables:
 		draw_circle(tb, 14.0, Color(0.6, 0.55, 0.48))
@@ -5266,6 +5599,19 @@ func _draw() -> void:
 		draw_rect(Rect2(c.end.x + 4, c.position.y + 10, 16, 20), Color(0.6, 0.45, 0.3))
 	# marked spots, stray puddles and, discreetly, the business
 	var pud := Color(0.93, 0.85, 0.4, 0.4)
+	# the other dogs' marks: a small damp patch with a faint bloom, in their
+	# own colour so you can tell who from across the park
+	for nm in npc_marks:
+		var nmp: Vector2 = nm.pos
+		if nmp.y < vt - 30.0 or nmp.y > vb + 30.0:
+			continue
+		var nc: Color = nm.col
+		draw_circle(nmp + Vector2(0, 6), 7.0, Color(0.82, 0.78, 0.32, 0.20))
+		draw_circle(nmp + Vector2(0, 6), 3.4, Color(nc.r, nc.g, nc.b, 0.35))
+		if not bool(nm.sniffed):
+			var np := 0.5 + 0.5 * sin(prize_glow * 0.7 + nmp.x * 0.05)
+			draw_arc(nmp + Vector2(0, 6), 11.0 + np * 3.0, 0, TAU, 14,
+				Color(0.9, 0.92, 0.5, 0.12 + np * 0.10), 1.5)
 	for mk in marks:
 		draw_circle(mk + Vector2(6, 10), 6.0, pud)
 		draw_circle(mk + Vector2(11, 13), 3.5, pud)

@@ -43,11 +43,39 @@ var appearance_script: GDScript
 var free_dog_script: GDScript
 
 
+class FakeDog:
+	extends Node2D
+
+	# freedog.gd reads the player dog's velocity to decide whether it is
+	# being charged at, so the fixture needs one
+	var velocity := Vector2.ZERO
+
+
 class FakeMain:
 	extends Node2D
 
+	# mirrors main.gd's shared light: the entities call this while drawing
+	func contact_shadow(_c: CanvasItem, _at: Vector2, _r: float, _h: float, _a := 0.24) -> void:
+		pass
+
+	func cast_shadow(_c: CanvasItem, _at: Vector2, _w: float, _h: float, _a := 0.20) -> void:
+		pass
+
 	var phase := "freedom"
 	var frozen := false
+	# the park furniture a free dog now runs its errands around
+	# inside the Y_LO..Y_HI band the fixtures use, or a dog clamped to the
+	# park could never reach them
+	var park_props: Array[Dictionary] = [
+		{"pos": Vector2(300.0, -240.0), "kind": "post", "done": false, "prog": 0.0},
+		{"pos": Vector2(800.0, -150.0), "kind": "shrub", "done": false, "prog": 0.0},
+		{"pos": Vector2(560.0, -80.0), "kind": "dig", "done": false, "prog": 0.0},
+	]
+
+	var marks_left: Array[Dictionary] = []
+
+	func on_npc_mark(at: Vector2, col: Color, who: String) -> void:
+		marks_left.append({"pos": at, "col": col, "who": who})
 
 
 func _check(condition: bool, message: String) -> void:
@@ -257,6 +285,50 @@ func _test_appearance_rng_isolation() -> void:
 	)
 
 
+func _step(d: Node2D, steps: int, dt := 1.0 / 60.0) -> void:
+	for i in range(steps):
+		d._physics_process(dt)
+
+
+func _test_errands(main: FakeMain, player_dog: FakeDog) -> void:
+	# A free dog has to have somewhere to be. The old one picked a random
+	# heading every second, which looked like a screensaver; this asserts the
+	# errand loop actually runs - it visits the park furniture, sniffs it, and
+	# leaves a mark for Millie to find, which is what the whole park
+	# noticeboard depends on.
+	main.marks_left.clear()
+	player_dog.position = Vector2(20.0, -1200.0)   # far away and stationary
+	player_dog.velocity = Vector2.ZERO
+	var d := _make_free_dog(main, player_dog, Vector2(320.0, -220.0))
+	d.mark_cd = 0.0                               # ready to leave one
+	_step(d, 60 * 40)                             # forty seconds of park time
+	_check(not main.marks_left.is_empty(), "a free dog leaves a mark within 40s")
+	if not main.marks_left.is_empty():
+		var mk: Dictionary = main.marks_left[0]
+		var near_prop := false
+		for pp in main.park_props:
+			if (mk.pos as Vector2).distance_to(pp.pos as Vector2) < 40.0:
+				near_prop = true
+		_check(near_prop, "the mark lands on a piece of park furniture")
+		_check(String(mk.who) != "", "the mark says who left it")
+	_check(d.position.x >= 90.0 and d.position.x <= 1190.0, "stays inside the park (x)")
+	_check(d.position.y >= Y_LO - 0.5 and d.position.y <= Y_HI + 0.5, "stays inside the park (y)")
+
+
+func _test_dodges_a_charge(main: FakeMain, player_dog: FakeDog) -> void:
+	# Being barged into by a strange dog at speed is worth reacting to. A dog
+	# that stood there and took it was the single most lifeless thing in the
+	# park.
+	var d := _make_free_dog(main, player_dog, Vector2(600.0, -160.0))
+	player_dog.position = d.position + Vector2(-50.0, 0.0)
+	player_dog.velocity = Vector2(400.0, 0.0)     # straight at them
+	_step(d, 4)
+	_check(d.state == d.S.DODGE, "charging at a free dog makes it dodge")
+	var before := d.position
+	_step(d, 20)
+	_check(before.distance_to(d.position) > 6.0, "the dodge actually moves it")
+
+
 func _test_free_dog_setup_and_lifecycle(main: FakeMain, player_dog: Node2D) -> bool:
 	var probe := _make_free_dog(main, player_dog, REPRESENTATIVE_POSITIONS[0], false)
 	var has_profile := _has_property(probe, "appearance_profile")
@@ -393,12 +465,14 @@ func _run() -> void:
 	main.visible = false
 	root.add_child(main)
 	fixtures.append(main)
-	var player_dog := Node2D.new()
+	var player_dog := FakeDog.new()
 	player_dog.visible = false
 	root.add_child(player_dog)
 	fixtures.append(player_dog)
 	if _test_free_dog_setup_and_lifecycle(main, player_dog):
 		await _test_render_smoke(main, player_dog)
+	_test_errands(main, player_dog)
+	_test_dodges_a_charge(main, player_dog)
 	_finish()
 
 

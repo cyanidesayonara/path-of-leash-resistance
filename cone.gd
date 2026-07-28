@@ -86,9 +86,7 @@ func _draw() -> void:
 	# a contact shadow, so it sits on the ground instead of floating. Heavier
 	# things get a bigger, darker one.
 	var heft: float = clampf(620.0 / float(k.drag), 0.35, 1.5)
-	draw_set_transform(Vector2(3.0, 5.0), 0.0, Vector2(1.1, 0.5))
-	draw_circle(Vector2.ZERO, rr * 1.05, Color(0.05, 0.04, 0.07, 0.14 + 0.10 * heft))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	main.contact_shadow(self, Vector2.ZERO, rr * 1.05, 4.0 + rr * 0.35, 0.14 + 0.10 * heft)
 	match kind:
 		"can":
 			# a crushed drink can: bright metal, a dark rim, a pull tab
@@ -125,8 +123,14 @@ func _draw() -> void:
 				draw_line(Vector2(-rr * 0.92, sy), Vector2(rr * 0.92, sy), Color(0.40, 0.29, 0.17), 1.6)
 			draw_rect(Rect2(-rr * 0.35, -rr * 0.3, rr * 0.7, rr * 0.6), Color(0.30, 0.22, 0.14, 0.5))
 		_:
-			# the traffic cone: base flange, then the cone with its band
-			draw_rect(Rect2(-rr, -rr, rr * 2.0, rr * 2.0), Color(0.9, 0.5, 0.18, 0.42))
-			draw_circle(Vector2.ZERO, rr, Color(0.92, 0.5, 0.16))
-			draw_arc(Vector2.ZERO, rr * 0.64, 0, TAU, 12, Color(0.95, 0.92, 0.85), 2.6)
-			draw_circle(Vector2.ZERO, rr * 0.24, Color(0.98, 0.6, 0.22))
+			# The traffic cone, which from above is a bullseye: square base
+			# flange, then rings climbing to the tip, each one a little
+			# brighter, with the reflective collar in white. Concentric
+			# shading is the only way a cone reads as pointed from overhead.
+			draw_rect(Rect2(-rr * 1.15, -rr * 1.15, rr * 2.3, rr * 2.3), Color(0.72, 0.36, 0.11))
+			draw_rect(Rect2(-rr * 1.15, -rr * 1.15, rr * 2.3, rr * 2.3), Color(0.55, 0.27, 0.09), false, 1.5)
+			draw_circle(Vector2.ZERO, rr, Color(0.80, 0.40, 0.12))
+			draw_circle(Vector2(-rr * 0.05, -rr * 0.05), rr * 0.82, Color(0.94, 0.92, 0.86))
+			draw_circle(Vector2(-rr * 0.10, -rr * 0.10), rr * 0.60, Color(0.93, 0.52, 0.17))
+			draw_circle(Vector2(-rr * 0.15, -rr * 0.15), rr * 0.34, Color(0.99, 0.64, 0.26))
+			draw_circle(Vector2(-rr * 0.18, -rr * 0.18), rr * 0.16, Color(1.0, 0.78, 0.44))
