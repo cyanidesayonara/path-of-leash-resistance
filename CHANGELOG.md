@@ -2,6 +2,45 @@
 
 Append-only session history, newest first.
 
+## 2026-07-26 — v1.49: what she stood in comes home with you (+ a big perf win)
+
+Any dog owner knows a walk does not end at the door: whatever she stood in
+comes home, on the floor, on the furniture, and on you. One tracking system,
+EIGHT substances, so each walk offers whatever it would plausibly have lying
+about:
+
+- **mud** (woods, and any level's puddly patches), **wet cement** (the
+  works), **wet paint** (also the works), **beach sand**, **fish** (the
+  market's fishmonger patch - everyone will know), **oil** (the scrapyard),
+  **festival confetti** (La Castanyada), and **slush**, which appears on ANY
+  walk when the weather is snow.
+- She leaves paw prints in the colour of whatever she is tracking, which
+  means prints on sand come free - stand in it and it comes with you.
+- The joke is the payoff: lean on your human while mucky and you leave a
+  print on their nice trousers, with its own indignant caption per
+  substance. It stacks over the whole walk, they never notice, and it feeds
+  the combo.
+
+### Performance: the frame audit that mattered
+
+All the recent visual work had quietly tripled the world draw, from ~750us
+at v1.31 to 1844us - and smooth beats pretty, so I measured instead of
+guessing. The result was blunt: the edge treatment alone was **1007us of
+1844us**, over half the frame, redrawn thirty times a second to produce an
+identical picture, because buildings do not move.
+
+- Buildings, roofs and verge foliage now live on their own canvas that only
+  redraws when the camera has actually scrolled far enough to reveal new
+  frontage - the same insight that fixed the world draw in v1.17.
+- The park is back to its old baseline (1844us -> ~800us, a 57% cut).
+- Also: the off-leash props were being drawn in full with no view culling at
+  all, and the scent source list was being rebuilt - allocating a dictionary
+  per source, plus a group query - on every single redraw. Both fixed.
+- Known follow-up, measured rather than assumed: the remaining ~1.2ms on El
+  Gotic is the many static prop loops, which want the same cached-canvas
+  treatment as the edges. Paving is only 120us of it, so that is where to
+  look next rather than at the slabs.
+
 ## 2026-07-26 — v1.48: Brutus, the park thief
 
 A recurring character, because one of those does more for a game's

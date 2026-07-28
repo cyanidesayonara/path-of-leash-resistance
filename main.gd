@@ -199,9 +199,35 @@ var _stall_t := 0.0
 var _stall_last_y := 0.0
 # Les Obres: wet cement that slows you and takes a trail of paw prints
 var cement_zones: Array[Rect2] = []
-var paw_prints: Array[Vector2] = []
+# WHAT SHE IS TRACKING. Any dog owner knows the walk does not end at the
+# door: whatever she stood in comes home with her, on the floor, on the
+# furniture, and on you. Substances are data, so each walk can offer its own
+# (mud in the woods, wet cement at the works, wet paint, beach sand, fish at
+# the market, slush in the snow, festival confetti) and they all use one
+# tracking, printing and smudging system.
+const SUBSTANCES := {
+	"mud":      {"col": Color(0.34, 0.26, 0.18), "life": 2.6, "quip": "MUDDY PAWS!"},
+	"cement":   {"col": Color(0.62, 0.62, 0.60), "life": 2.5, "quip": "CEMENT PAWS!"},
+	"paint":    {"col": Color(0.85, 0.30, 0.35), "life": 3.4, "quip": "WET PAINT!"},
+	"sand":     {"col": Color(0.80, 0.72, 0.52), "life": 1.8, "quip": "SANDY PAWS!"},
+	"fish":     {"col": Color(0.62, 0.68, 0.60), "life": 3.0, "quip": "FISHY PAWS!"},
+	"slush":    {"col": Color(0.78, 0.82, 0.88), "life": 2.0, "quip": "SLUSHY PAWS!"},
+	"confetti": {"col": Color(0.92, 0.55, 0.75), "life": 2.8, "quip": "COVERED IN CONFETTI!"},
+	"oil":      {"col": Color(0.20, 0.19, 0.22), "life": 3.2, "quip": "OILY PAWS!"},
+}
+var substance_zones: Array[Dictionary] = []
+var paw_prints: Array[Dictionary] = []
 var paw_last := Vector2(INF, INF)
 var wet_paws := 0.0
+var paw_kind := "cement"
+# smudges she has left on her human, which is the actual joke
+var owner_smudges: Array[Dictionary] = []
+var smudges_left := 0
+var smudge_cd := 0.0
+var _scent_cache: Array = []
+var _scent_cache_t := 0.0
+var edge_layer: Node2D
+var _edge_drawn_y := 1.0e20
 # La Castanyada: candy you must NOT eat (chocolate is poison to dogs)
 var candy_spots: Array[Vector2] = []
 var candy: Array[Dictionary] = []
@@ -917,6 +943,7 @@ func _build_level_data() -> void:
 				break
 	for ly in lane_ys:
 		lane_state.append({"t": randf_range(1.0, 2.5), "phase": 0, "dir": 1})
+	_build_substance_zones()
 	_fit_props_to_corridor()
 	# The grove is wrap geometry too, so the rope catches on trunks. Appended
 	# AFTER the corridor fit on purpose: the trees stand in the open off-leash
@@ -993,8 +1020,11 @@ func _draw_paving(vt: float, vb: float, base: Color) -> void:
 	var joint := Color(0.0, 0.0, 0.0, 0.10)
 	match lvl:
 		"oldtown", "spook":
-			sw = 46.0    # small cobbled setts
-			sh = 40.0
+			# setts, but not SO fine that the slab count doubles the frame's
+			# draw cost - measured at 46x40 they alone pushed this walk to
+			# 1.3ms of world draw. Still visibly smaller than the boulevard's.
+			sw = 64.0
+			sh = 56.0
 			stagger = 0.5
 		"station":
 			sw = 132.0   # big polished tiles, laid square
@@ -1035,7 +1065,7 @@ func _draw_paving(vt: float, vb: float, base: Color) -> void:
 		y += sh
 
 
-func _draw_edges(vt: float, vb: float) -> void:
+func _draw_edges(c: CanvasItem, vt: float, vb: float) -> void:
 	# What flanks the corridor is what actually gives a walk its identity:
 	# shopfronts say boulevard, stone walls say medieval alley, chain-link
 	# says scrapyard. Drawn as repeating modules down the walk and culled to
@@ -1054,8 +1084,8 @@ func _draw_edges(vt: float, vb: float) -> void:
 		var far := 520.0
 		var top_y := vt - 320.0
 		var h := (vb - vt) + 640.0
-		draw_rect(Rect2(sw_l - far, top_y, far, h), base)
-		draw_rect(Rect2(sw_r, top_y, far, h), base)
+		c.draw_rect(Rect2(sw_l - far, top_y, far, h), base)
+		c.draw_rect(Rect2(sw_r, top_y, far, h), base)
 		# Seen from directly overhead you do not see a facade at all - you
 		# see the ROOF. So the verge is roofscape, and the building reads as
 		# tall through three cues instead: a lit parapet cap along its edge,
@@ -1073,24 +1103,24 @@ func _draw_edges(vt: float, vb: float) -> void:
 			var f := float(i) / 6.0
 			# left block: its face looks right, into the street
 			var lx := sw_l - face + face * f
-			draw_rect(Rect2(lx, top_y, face / 6.0 + 1.0, h), base.darkened(0.52 - f * 0.34))
+			c.draw_rect(Rect2(lx, top_y, face / 6.0 + 1.0, h), base.darkened(0.52 - f * 0.34))
 			# right block: its face looks left, into the street
 			var rx := sw_r + face - face * f
-			draw_rect(Rect2(rx - face / 6.0 - 1.0, top_y, face / 6.0 + 1.0, h), base.darkened(0.56 - f * 0.34))
+			c.draw_rect(Rect2(rx - face / 6.0 - 1.0, top_y, face / 6.0 + 1.0, h), base.darkened(0.56 - f * 0.34))
 		# the lit cap where the wall meets the roof, and a hard kerb line
-		draw_rect(Rect2(sw_l - face - 5.0, top_y, 5.0, h), base.lightened(0.30))
-		draw_rect(Rect2(sw_r + face, top_y, 5.0, h), base.lightened(0.24))
-		draw_line(Vector2(sw_l, top_y), Vector2(sw_l, top_y + h), Color(0.04, 0.03, 0.05, 0.55), 3.0)
-		draw_line(Vector2(sw_r, top_y), Vector2(sw_r, top_y + h), Color(0.04, 0.03, 0.05, 0.55), 3.0)
+		c.draw_rect(Rect2(sw_l - face - 5.0, top_y, 5.0, h), base.lightened(0.30))
+		c.draw_rect(Rect2(sw_r + face, top_y, 5.0, h), base.lightened(0.24))
+		c.draw_line(Vector2(sw_l, top_y), Vector2(sw_l, top_y + h), Color(0.04, 0.03, 0.05, 0.55), 3.0)
+		c.draw_line(Vector2(sw_r, top_y), Vector2(sw_r, top_y + h), Color(0.04, 0.03, 0.05, 0.55), 3.0)
 		# the light is up-and-left, so the LEFT block throws a shadow out
 		# across the pavement; the right block throws its own away from us
 		var cast := 38.0
 		for i in range(6):
 			var f := float(i) / 5.0
-			draw_rect(Rect2(sw_l, top_y, cast * (1.0 - f * 0.82), h), Color(0.05, 0.04, 0.07, 0.055))
+			c.draw_rect(Rect2(sw_l, top_y, cast * (1.0 - f * 0.82), h), Color(0.05, 0.04, 0.07, 0.055))
 		for i in range(3):
 			var g := float(i) / 2.0
-			draw_rect(Rect2(sw_r - 11.0 * (1.0 - g), top_y, 11.0 * (1.0 - g), h), Color(0.05, 0.04, 0.07, 0.05))
+			c.draw_rect(Rect2(sw_r - 11.0 * (1.0 - g), top_y, 11.0 * (1.0 - g), h), Color(0.05, 0.04, 0.07, 0.05))
 	# the roof sits BACK from the kerb by the depth of the wall face drawn
 	# above, otherwise the roof clutter would be painted over the wall
 	var inset := 27.0 if built else 0.0
@@ -1103,8 +1133,15 @@ func _draw_edges(vt: float, vb: float) -> void:
 			var r := Rect2(x0, y, depth, mod)
 			# a stable per-module variation without touching the global rng
 			var k := int(absf(y) / mod) + (0 if side < 0.0 else 7)
-			_draw_edge_module(r, side, k)
+			_draw_edge_module(c, r, side, k)
 		y += mod
+
+
+func draw_edges_onto(c: CanvasItem) -> void:
+	# called by the edge layer, which decides WHEN rather than what
+	var vt: float = cam.position.y - 560.0
+	var vb: float = cam.position.y + 560.0
+	_draw_edges(c, vt, vb)
 
 
 func _edge_base_color() -> Color:
@@ -1117,7 +1154,7 @@ func _edge_base_color() -> Color:
 		_: return Color(0.38, 0.35, 0.37)                    # city block
 
 
-func _draw_edge_module(r: Rect2, side: float, k: int) -> void:
+func _draw_edge_module(c: CanvasItem, r: Rect2, side: float, k: int) -> void:
 	var inner_x: float = r.end.x if side < 0.0 else r.position.x
 	var lit := fmod(float(k) * 0.37, 1.0)
 	# Roofscape, not facades: from overhead the readable features are roof
@@ -1128,121 +1165,131 @@ func _draw_edge_module(r: Rect2, side: float, k: int) -> void:
 		"oldtown", "spook":
 			# terracotta pantiles running in courses, with chimney stacks
 			var tile := Color(0.55, 0.31, 0.22).lightened(lit * 0.10)
-			draw_rect(r, tile)
+			c.draw_rect(r, tile)
 			var course := r.position.y
 			while course < r.end.y:
-				draw_line(Vector2(r.position.x, course), Vector2(r.end.x, course), tile.darkened(0.22), 2.0)
+				c.draw_line(Vector2(r.position.x, course), Vector2(r.end.x, course), tile.darkened(0.22), 2.0)
 				course += 13.0
 			# ridge line along the outer edge
 			var ridge_x: float = r.position.x + 6.0 if side < 0.0 else r.end.x - 6.0
-			draw_line(Vector2(ridge_x, r.position.y), Vector2(ridge_x, r.end.y), tile.lightened(0.26), 5.0)
+			c.draw_line(Vector2(ridge_x, r.position.y), Vector2(ridge_x, r.end.y), tile.lightened(0.26), 5.0)
 			# a chimney with its own little shadow
 			if k % 2 == 0:
 				var cp := Vector2(inner_x + side * 46.0, r.position.y + 64.0)
-				draw_rect(Rect2(cp.x - 8.0, cp.y - 9.0, 16.0, 18.0), Color(0.40, 0.24, 0.19))
-				draw_rect(Rect2(cp.x - 8.0, cp.y - 9.0, 16.0, 5.0), Color(0.30, 0.19, 0.16))
-				draw_rect(Rect2(cp.x + 8.0, cp.y - 5.0, 7.0, 18.0), Color(0.05, 0.04, 0.07, 0.22))
+				c.draw_rect(Rect2(cp.x - 8.0, cp.y - 9.0, 16.0, 18.0), Color(0.40, 0.24, 0.19))
+				c.draw_rect(Rect2(cp.x - 8.0, cp.y - 9.0, 16.0, 5.0), Color(0.30, 0.19, 0.16))
+				c.draw_rect(Rect2(cp.x + 8.0, cp.y - 5.0, 7.0, 18.0), Color(0.05, 0.04, 0.07, 0.22))
 			# a doorstep at street level - this one DOES read from above
 			var step_x: float = inner_x + side * -13.0
-			draw_rect(Rect2(step_x - 13.0, r.position.y + 150.0, 26.0, 13.0), Color(0.62, 0.58, 0.52))
+			c.draw_rect(Rect2(step_x - 13.0, r.position.y + 150.0, 26.0, 13.0), Color(0.62, 0.58, 0.52))
 		"trail", "park":
 			# dense undergrowth and trunks crowding the path
 			for b in range(4):
 				var by := r.position.y + 26.0 + b * 52.0
 				var bx := inner_x + side * (14.0 + float((k + b) % 3) * 13.0)
-				draw_circle(Vector2(bx, by), 21.0 + float((k + b) % 4) * 4.0, Color(0.19, 0.31, 0.20))
-				draw_circle(Vector2(bx - side * 5.0, by - 5.0), 12.0, Color(0.24, 0.38, 0.24))
+				c.draw_circle(Vector2(bx, by), 21.0 + float((k + b) % 4) * 4.0, Color(0.19, 0.31, 0.20))
+				c.draw_circle(Vector2(bx - side * 5.0, by - 5.0), 12.0, Color(0.24, 0.38, 0.24))
 			var trunk_x := inner_x + side * 44.0
-			draw_circle(Vector2(trunk_x, r.get_center().y), 9.0, Color(0.32, 0.25, 0.18))
+			c.draw_circle(Vector2(trunk_x, r.get_center().y), 9.0, Color(0.32, 0.25, 0.18))
 		"station":
 			# a glazed platform canopy: steel frame, dusty glass panels, and
 			# the light that leaks through it onto the concourse
 			var glass := Color(0.52, 0.58, 0.62).lightened(lit * 0.07)
-			draw_rect(r, glass)
+			c.draw_rect(r, glass)
 			var pane_y := r.position.y
 			while pane_y < r.end.y:
-				draw_line(Vector2(r.position.x, pane_y), Vector2(r.end.x, pane_y), Color(0.36, 0.38, 0.42), 3.0)
-				draw_line(Vector2(r.position.x, pane_y + 4.0), Vector2(r.end.x, pane_y + 4.0), Color(0.68, 0.74, 0.78, 0.5), 1.5)
+				c.draw_line(Vector2(r.position.x, pane_y), Vector2(r.end.x, pane_y), Color(0.36, 0.38, 0.42), 3.0)
+				c.draw_line(Vector2(r.position.x, pane_y + 4.0), Vector2(r.end.x, pane_y + 4.0), Color(0.68, 0.74, 0.78, 0.5), 1.5)
 				pane_y += 36.0
 			# the spine truss running the length of the canopy
 			var spine_x := r.get_center().x
-			draw_line(Vector2(spine_x, r.position.y), Vector2(spine_x, r.end.y), Color(0.33, 0.35, 0.39), 6.0)
+			c.draw_line(Vector2(spine_x, r.position.y), Vector2(spine_x, r.end.y), Color(0.33, 0.35, 0.39), 6.0)
 		"site":
 			# scaffold decking and tarps over the works
-			draw_rect(r, Color(0.46, 0.44, 0.40).lightened(lit * 0.08))
+			c.draw_rect(r, Color(0.46, 0.44, 0.40).lightened(lit * 0.08))
 			# scaffold boards running across, with poles at the joints
 			var board := r.position.y
 			while board < r.end.y:
-				draw_line(Vector2(r.position.x, board), Vector2(r.end.x, board), Color(0.58, 0.48, 0.31), 7.0)
-				draw_line(Vector2(r.position.x, board + 4.0), Vector2(r.end.x, board + 4.0), Color(0.30, 0.25, 0.17), 1.5)
+				c.draw_line(Vector2(r.position.x, board), Vector2(r.end.x, board), Color(0.58, 0.48, 0.31), 7.0)
+				c.draw_line(Vector2(r.position.x, board + 4.0), Vector2(r.end.x, board + 4.0), Color(0.30, 0.25, 0.17), 1.5)
 				board += 26.0
 			# a blue tarp lashed over part of it, and hazard tape at the edge
 			if k % 2 == 0:
-				draw_rect(Rect2(inner_x + side * 58.0, r.position.y + 40.0, 58.0, 96.0), Color(0.20, 0.36, 0.52, 0.9))
+				c.draw_rect(Rect2(inner_x + side * 58.0, r.position.y + 40.0, 58.0, 96.0), Color(0.20, 0.36, 0.52, 0.9))
 			var tape_x: float = inner_x + side * 5.0
 			for s in range(8):
 				var sy := r.position.y + s * 28.0
 				var sc := Color(0.92, 0.72, 0.15) if s % 2 == 0 else Color(0.15, 0.14, 0.13)
-				draw_line(Vector2(tape_x, sy), Vector2(tape_x, sy + 14.0), sc, 5.0)
+				c.draw_line(Vector2(tape_x, sy), Vector2(tape_x, sy + 14.0), sc, 5.0)
 		"scrap":
 			# corrugated shed roofs, rusting, with junk heaps between them
 			var iron := Color(0.40, 0.38, 0.35).lightened(lit * 0.09)
-			draw_rect(r, iron)
+			c.draw_rect(r, iron)
 			var rib := r.position.x
 			while rib < r.end.x:
-				draw_line(Vector2(rib, r.position.y), Vector2(rib, r.end.y), iron.darkened(0.22), 2.0)
-				draw_line(Vector2(rib + 4.0, r.position.y), Vector2(rib + 4.0, r.end.y), iron.lightened(0.16), 1.5)
+				c.draw_line(Vector2(rib, r.position.y), Vector2(rib, r.end.y), iron.darkened(0.22), 2.0)
+				c.draw_line(Vector2(rib + 4.0, r.position.y), Vector2(rib + 4.0, r.end.y), iron.lightened(0.16), 1.5)
 				rib += 11.0
 			# rust blooms
 			for h in range(2):
 				var hy := r.position.y + 50.0 + h * 96.0
-				draw_circle(Vector2(inner_x + side * (34.0 + float(h) * 18.0), hy), 17.0, Color(0.48, 0.28, 0.17, 0.55))
+				c.draw_circle(Vector2(inner_x + side * (34.0 + float(h) * 18.0), hy), 17.0, Color(0.48, 0.28, 0.17, 0.55))
 			# the fence line at the kerb, seen from above as posts and wire
 			var fx: float = inner_x + side * 5.0
-			draw_line(Vector2(fx, r.position.y), Vector2(fx, r.end.y), Color(0.55, 0.57, 0.58, 0.7), 2.0)
+			c.draw_line(Vector2(fx, r.position.y), Vector2(fx, r.end.y), Color(0.55, 0.57, 0.58, 0.7), 2.0)
 			for d in range(5):
-				draw_circle(Vector2(fx, r.position.y + float(d) * 46.0), 3.0, Color(0.42, 0.44, 0.45))
+				c.draw_circle(Vector2(fx, r.position.y + float(d) * 46.0), 3.0, Color(0.42, 0.44, 0.45))
 		_:
 			# the default city block, seen from the air: a flat felt roof
 			# with the usual clutter, and an awning that genuinely projects
 			# out over the pavement
 			var felt := Color(0.34, 0.33, 0.35).lightened(lit * 0.11)
-			draw_rect(r, felt)
+			c.draw_rect(r, felt)
 			# gravel ballast, in patches rather than a uniform fill
 			for gi in range(9):
 				var gx2 := r.position.x + fmod(float(gi) * 37.0 + float(k) * 11.0, r.size.x)
 				var gy2 := r.position.y + fmod(float(gi) * 61.0 + float(k) * 23.0, r.size.y)
-				draw_circle(Vector2(gx2, gy2), 9.0 + float(gi % 3) * 4.0, felt.lightened(0.09))
+				c.draw_circle(Vector2(gx2, gy2), 9.0 + float(gi % 3) * 4.0, felt.lightened(0.09))
 			# an air-conditioning unit with a cast shadow, and roof vents
 			var ac_p := Vector2(inner_x + side * 44.0, r.position.y + 58.0)
-			draw_rect(Rect2(ac_p.x + 6.0, ac_p.y + 6.0, 30.0, 24.0), Color(0.05, 0.04, 0.07, 0.28))
-			draw_rect(Rect2(ac_p.x - 15.0, ac_p.y - 12.0, 30.0, 24.0), Color(0.62, 0.63, 0.65))
-			draw_rect(Rect2(ac_p.x - 11.0, ac_p.y - 8.0, 22.0, 16.0), Color(0.47, 0.49, 0.52))
+			c.draw_rect(Rect2(ac_p.x + 6.0, ac_p.y + 6.0, 30.0, 24.0), Color(0.05, 0.04, 0.07, 0.28))
+			c.draw_rect(Rect2(ac_p.x - 15.0, ac_p.y - 12.0, 30.0, 24.0), Color(0.62, 0.63, 0.65))
+			c.draw_rect(Rect2(ac_p.x - 11.0, ac_p.y - 8.0, 22.0, 16.0), Color(0.47, 0.49, 0.52))
 			for vi in range(2):
 				var vp := Vector2(inner_x + side * 22.0, r.position.y + 128.0 + float(vi) * 34.0)
-				draw_circle(vp, 7.0, Color(0.52, 0.53, 0.55))
-				draw_circle(vp, 4.0, Color(0.24, 0.25, 0.27))
+				c.draw_circle(vp, 7.0, Color(0.52, 0.53, 0.55))
+				c.draw_circle(vp, 4.0, Color(0.24, 0.25, 0.27))
 			# a rooflight: from above this is the window that makes sense
 			if k % 3 == 0:
 				var sk := Rect2(inner_x + side * 66.0, r.position.y + 96.0, 34.0, 46.0)
-				draw_rect(sk, Color(0.88, 0.83, 0.52, 0.85) if Game.night else Color(0.62, 0.72, 0.78, 0.8))
-				draw_rect(sk, felt.darkened(0.35), false, 3.0)
+				c.draw_rect(sk, Color(0.88, 0.83, 0.52, 0.85) if Game.night else Color(0.62, 0.72, 0.78, 0.8))
+				c.draw_rect(sk, felt.darkened(0.35), false, 3.0)
 			# the awning: projects over the pavement, so it reads correctly
 			# from overhead, and throws a shadow onto the paving below it
 			if k % 2 == 0:
 				var ac := Color(0.72, 0.3, 0.28) if k % 4 == 0 else Color(0.28, 0.42, 0.55)
 				var aw_x: float = inner_x if side < 0.0 else inner_x - 34.0
-				draw_rect(Rect2(aw_x, r.position.y + 44.0, 34.0, 76.0), Color(0.05, 0.04, 0.07, 0.16))
-				draw_rect(Rect2(aw_x, r.position.y + 40.0, 30.0, 72.0), ac)
+				c.draw_rect(Rect2(aw_x, r.position.y + 44.0, 34.0, 76.0), Color(0.05, 0.04, 0.07, 0.16))
+				c.draw_rect(Rect2(aw_x, r.position.y + 40.0, 30.0, 72.0), ac)
 				for st in range(4):
-					draw_line(Vector2(aw_x + 7.0 * float(st), r.position.y + 40.0),
+					c.draw_line(Vector2(aw_x + 7.0 * float(st), r.position.y + 40.0),
 						Vector2(aw_x + 7.0 * float(st), r.position.y + 112.0), ac.lightened(0.30), 3.0)
 			# a doorstep in the ground plane at the wall base
 			var stp_x: float = inner_x + side * -12.0
-			draw_rect(Rect2(stp_x - 14.0, r.position.y + 162.0, 28.0, 12.0), Color(0.58, 0.56, 0.53))
+			c.draw_rect(Rect2(stp_x - 14.0, r.position.y + 162.0, 28.0, 12.0), Color(0.58, 0.56, 0.53))
 
 
 func _scent_sources() -> Array:
+	# cached: this allocates a dictionary per source and does a group query,
+	# and it was being rebuilt on every single world redraw
+	if _scent_cache_t > 0.0:
+		return _scent_cache
+	_scent_cache_t = 0.45
+	_scent_cache = _build_scent_sources()
+	return _scent_cache
+
+
+func _build_scent_sources() -> Array:
 	# Everything worth smelling, and what it smells LIKE. Colour carries the
 	# meaning, so a nose-led player learns to read them: warm amber for food,
 	# pale bone for something buried, pink for the cat, blue for a job to do,
@@ -1311,9 +1358,12 @@ func _draw_scents() -> void:
 			draw_circle(at, 15.0 + near * 9.0, Color(col.r, col.g, col.b, 0.07 * near))
 
 
-func _draw_park_props() -> void:
+func _draw_park_props(vt: float, vb: float) -> void:
 	for pp in park_props:
 		var p: Vector2 = pp.pos
+		# these were drawn in full every redraw with no culling at all
+		if p.y < vt - 60.0 or p.y > vb + 60.0:
+			continue
 		var prog := float(pp.prog)
 		var done: bool = pp.done
 		# everything gets a contact shadow: it is an object, not a decal
@@ -1383,6 +1433,37 @@ func _draw_park_props() -> void:
 			for i in range(2):
 				var rr := 16.0 + prog * 12.0 + float(i) * 7.0
 				draw_arc(p, rr, 0, TAU, 16, Color(0.85, 0.9, 0.75, 0.28 * (1.0 - float(i) * 0.4)), 1.5)
+
+
+func _build_substance_zones() -> void:
+	# Each walk offers whatever it would plausibly have lying about. The two
+	# that also SLOW her (mud, wet cement) keep doing so; the rest are purely
+	# a mess to carry around, which is the fun of them.
+	substance_zones.clear()
+	for mz in mud_zones:
+		substance_zones.append({"rect": mz, "kind": "mud", "slow": true})
+	for cz in cement_zones:
+		substance_zones.append({"rect": cz, "kind": "cement", "slow": true})
+	var w := sw_r - sw_l
+	match lvl:
+		"site":
+			# a works has wet paint as well as wet cement
+			substance_zones.append({"rect": Rect2(sw_l + 20.0, -2500.0, w * 0.4, 150.0), "kind": "paint"})
+		"beach":
+			# the whole sand side, which is most of the beach
+			substance_zones.append({"rect": Rect2(90.0, GATE_Y, 250.0, absf(GATE_Y) + 400.0), "kind": "sand"})
+		"market":
+			# the fishmonger's patch, and everyone will know about it
+			substance_zones.append({"rect": Rect2(sw_l + 30.0, -3050.0, w * 0.35, 130.0), "kind": "fish"})
+		"scrap":
+			substance_zones.append({"rect": Rect2(sw_l + 40.0, -1850.0, w * 0.45, 140.0), "kind": "oil"})
+		"spook":
+			substance_zones.append({"rect": Rect2(sw_l + 25.0, -2150.0, w * 0.5, 160.0), "kind": "confetti"})
+		"trail":
+			substance_zones.append({"rect": Rect2(sw_l + 20.0, -3650.0, w * 0.5, 150.0), "kind": "mud", "slow": true})
+	# snow turns the whole walk to slush underfoot, whatever the level
+	if Game.weather == "snow":
+		substance_zones.append({"rect": Rect2(sw_l, GATE_Y, w, absf(GATE_Y) + 500.0), "kind": "slush"})
 
 
 func _build_park_props() -> void:
@@ -1686,6 +1767,11 @@ func _build_entities() -> void:
 	leash.setup(dog, human, poles, LEASH_LENGTH)
 	leash.hero = true  # the player's rope draws every frame; NPC ropes at 30fps
 
+	edge_layer = Node2D.new()
+	edge_layer.set_script(load("res://edgelayer.gd"))
+	edge_layer.z_index = -5   # behind everything in the world
+	add_child(edge_layer)
+	edge_layer.setup(self)
 	cam = Camera2D.new()
 	cam.position_smoothing_enabled = true
 	cam.position_smoothing_speed = 6.0
@@ -1953,7 +2039,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.48"
+	version_l.text = "v1.49"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -2493,6 +2579,7 @@ func _physics_process(delta: float) -> void:
 	_update_challenge_hud()
 	shake_t = maxf(0.0, shake_t - delta * 2.5)
 	prize_glow += delta * 4.0
+	_scent_cache_t = maxf(0.0, _scent_cache_t - delta)
 
 
 func _process(_delta: float) -> void:
@@ -2642,6 +2729,10 @@ func _process(_delta: float) -> void:
 	# frees the big per-frame draw cost that hurt the web build most.
 	_redraw_acc += _delta
 	# the teeter is a reflex moment, so it gets every frame, not 30fps
+	# the frontage only needs redrawing when new frontage comes into view
+	if absf(cam.position.y - _edge_drawn_y) > 150.0:
+		_edge_drawn_y = cam.position.y
+		edge_layer.queue_redraw()
 	if _redraw_acc >= 0.033 or shake_t > 0.0 or teeter.active or grind.active:
 		_redraw_acc = 0.0
 		queue_redraw()
@@ -3268,20 +3359,38 @@ func _offpath(delta: float) -> void:
 			if mz.has_point(dog.global_position):
 				dog.sand_slow = true
 				break
-	if lvl == "site":
-		for cz in cement_zones:
-			if cz.has_point(dog.global_position):
+	# stand in something and it comes with you
+	for sz in substance_zones:
+		if (sz.rect as Rect2).has_point(dog.global_position):
+			paw_kind = String(sz.kind)
+			var sd: Dictionary = SUBSTANCES[paw_kind]
+			wet_paws = float(sd.life)
+			if bool(sz.get("slow", false)):
 				dog.sand_slow = true
-				wet_paws = 2.5  # paws stay wet after you slog out of it
-				break
-		# leave a trail of prints while the paws are still wet
-		wet_paws = maxf(0.0, wet_paws - delta)
-		if wet_paws > 0.0 and paw_last.distance_to(dog.global_position) > 26.0:
-			paw_last = dog.global_position
-			var side: Vector2 = dog.facing.orthogonal() * (5.0 if paw_prints.size() % 2 == 0 else -5.0)
-			paw_prints.append(dog.global_position + side)
-			if paw_prints.size() > 90:
-				paw_prints.remove_at(0)
+			break
+	wet_paws = maxf(0.0, wet_paws - delta)
+	if wet_paws > 0.0 and paw_last.distance_to(dog.global_position) > 26.0:
+		paw_last = dog.global_position
+		var side: Vector2 = dog.facing.orthogonal() * (5.0 if paw_prints.size() % 2 == 0 else -5.0)
+		paw_prints.append({"pos": dog.global_position + side, "kind": paw_kind})
+		if paw_prints.size() > 90:
+			paw_prints.remove_at(0)
+	# ...and so does your human, the moment you lean on their nice trousers
+	if wet_paws > 0.0 and dog.global_position.distance_to(human.global_position) < 26.0 and smudge_cd <= 0.0:
+		smudge_cd = 1.1
+		var sdd: Dictionary = SUBSTANCES[paw_kind]
+		owner_smudges.append({
+			"off": (dog.global_position - human.global_position).limit_length(15.0),
+			"kind": paw_kind,
+		})
+		if owner_smudges.size() > 10:
+			owner_smudges.remove_at(0)
+		smudges_left += 1
+		bones += 2
+		Sfx.play("snack", 0.8)
+		combo.add("MUCKY", 3)
+		float_text(human.global_position + Vector2(0, -34), String(sdd.quip) + " +2", Color(sdd.col).lightened(0.35))
+	smudge_cd = maxf(0.0, smudge_cd - delta)
 	var off: bool = dog.global_position.x < tut_l or dog.global_position.x > tut_r
 	if off and human.is_available_for_chore() and not human.is_fallen():
 		offpath_t += delta
@@ -4542,7 +4651,6 @@ func _draw() -> void:
 		_draw_paving(vt, vb, walkway)
 		draw_line(Vector2(sw_l, bottom), Vector2(sw_l, GATE_Y), COL_SEAM, 3.0)
 		draw_line(Vector2(sw_r, bottom), Vector2(sw_r, GATE_Y), COL_SEAM, 3.0)
-	_draw_edges(vt, vb)
 	# whatever lies beyond the gate
 	draw_rect(Rect2(-400, top, 2100, GATE_Y - top), Color(0.27, 0.4, 0.27))
 	# Trees, read from above: two flat green discs said "blob", not "tree".
@@ -4816,6 +4924,25 @@ func _draw() -> void:
 				draw_line(Vector2(cx + 30.0, cy + 10.0), Vector2(cx, cy), Color(0.6, 0.63, 0.68), 3.0)
 			cy += 60.0
 	_draw_ground_detail(vt, vb)
+	# the paw trail, in whatever she stood in
+	for pr in paw_prints:
+		var pp: Vector2 = pr.pos
+		if pp.y < vt - 20.0 or pp.y > vb + 20.0:
+			continue
+		var pc: Color = SUBSTANCES[String(pr.kind)].col
+		draw_circle(pp, 3.2, Color(pc.r, pc.g, pc.b, 0.78))
+		draw_circle(pp + Vector2(-2.5, -3.0), 1.4, Color(pc.r, pc.g, pc.b, 0.72))
+		draw_circle(pp + Vector2(2.5, -3.0), 1.4, Color(pc.r, pc.g, pc.b, 0.72))
+	# the substance patches themselves
+	for sz in substance_zones:
+		var zr: Rect2 = sz.rect
+		if zr.end.y < vt - 40.0 or zr.position.y > vb + 40.0:
+			continue
+		if String(sz.kind) == "mud" or String(sz.kind) == "cement":
+			continue  # those two draw themselves with their own level dressing
+		var zc: Color = SUBSTANCES[String(sz.kind)].col
+		draw_rect(zr, Color(zc.r, zc.g, zc.b, 0.55))
+		draw_rect(zr, Color(zc.r, zc.g, zc.b, 0.85), false, 2.0)
 	_draw_scents()
 	# the grind: the rail lights up under her and a CENTRED balance bar shows
 	# which way she is tipping, with the running score beside it
@@ -4889,11 +5016,7 @@ func _draw() -> void:
 				draw_rect(cz, Color(0.5, 0.5, 0.48), false, 2.0)
 				draw_line(Vector2(cz.position.x, cz.position.y), Vector2(cz.end.x, cz.position.y), Color(0.9, 0.75, 0.2, 0.8), 3.0)
 				draw_line(Vector2(cz.position.x, cz.end.y), Vector2(cz.end.x, cz.end.y), Color(0.9, 0.75, 0.2, 0.8), 3.0)
-		for pp in paw_prints:
-			if pp.y > vt - 20.0 and pp.y < vb + 20.0:
-				draw_circle(pp, 3.2, Color(0.42, 0.4, 0.38, 0.75))
-				draw_circle(pp + Vector2(-2.5, -3.0), 1.4, Color(0.42, 0.4, 0.38, 0.7))
-				draw_circle(pp + Vector2(2.5, -3.0), 1.4, Color(0.42, 0.4, 0.38, 0.7))
+		pass  # prints are drawn for every walk now, further down
 	# El Bosc: muddy patches across the trail (slow going)
 	if lvl == "trail":
 		for mz in mud_zones:
@@ -5019,7 +5142,7 @@ func _draw() -> void:
 		# the owner's waiting bench (where the parked owner throws from)
 		draw_rect(Rect2(gate_bench.x - 18, gate_bench.y - 6, 36, 11), Color(0.54, 0.4, 0.27))
 		draw_string(font, Vector2((yl + yr) / 2.0 - 70.0, ytop - 14), "OFF-LEASH DOG PARK", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(0.9, 0.9, 0.82))
-		_draw_park_props()
+		_draw_park_props(vt, vb)
 	# the gate between the walk and the off-leash yard
 	draw_rect(Rect2(gate_l - 14, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
 	draw_rect(Rect2(gate_r, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))

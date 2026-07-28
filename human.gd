@@ -659,6 +659,14 @@ func _draw() -> void:
 		for i in range(2):
 			var rr := fmod(t * 1.3 + i * 0.5, 1.2)
 			draw_arc(Vector2(0, 4), 16.0 + rr * 18.0, 0, TAU, 20, Color(0.82, 0.9, 1.0, 0.3 * (1.0 - rr / 1.2)), 2.0)
+	# whatever she has stood in, now on your trousers. The compounding joke:
+	# they never notice, and it stacks up over the whole walk.
+	for sm in main.owner_smudges:
+		var sc: Color = main.SUBSTANCES[String(sm.kind)].col
+		var so: Vector2 = sm.off
+		draw_circle(so, 4.6, Color(sc.r, sc.g, sc.b, 0.85))
+		draw_circle(so + Vector2(-2.6, -2.2), 2.0, Color(sc.r, sc.g, sc.b, 0.8))
+		draw_circle(so + Vector2(2.6, -2.2), 2.0, Color(sc.r, sc.g, sc.b, 0.8))
 	if carrying_bag:
 		draw_circle(side * 12.0 + fd * 2.0, 4.5, Color(0.9, 0.9, 0.92))
 	if state == HState.BAG:
