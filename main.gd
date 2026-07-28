@@ -72,6 +72,13 @@ var vspawn_t := 2.5
 var lvl := "street"
 var lane_ys: Array[float] = []
 var pond := Rect2()
+# Every body of water she can get into. `pond` is still the park's, because
+# the prize and the NPC pairs' avoidance both reason about that one
+# specifically, but the swimming, the wading owner and the skid at the edge
+# all work off this list - which is how the beach gets a swimmable sea in two
+# places at once, and how any later walk gets water for free.
+var water: Array[Rect2] = []
+var freedom_kind := "yard"
 var gate_text := "PARK"
 var duck_ys: Array[float] = []
 var ducks_disturbed := 0
@@ -333,6 +340,9 @@ var shake_t := 0.0
 var hud: CanvasLayer
 var panel: Control
 var goals_card: Control
+# a goal landing opens the card for a moment even when it is collapsed:
+# feedback without a permanent block of text in the corner
+var goals_peek := 0.0
 var results_card: Control
 var results: Dictionary = {}
 var weather_fx: Control
@@ -476,6 +486,16 @@ func _ready() -> void:
 			chase_kind = "sweeper" if r < 0.4 else ("bolt" if r < 0.75 else "both")
 	menu_step = Game.menu_step
 	_apply_menu_step()
+	# --at-freedom drops her straight into the off-leash space. Walking there
+	# takes half a minute of real time per look, which is no way to iterate on
+	# how the dog beach or the clearing is drawn.
+	if "--at-freedom" in OS.get_cmdline_user_args():
+		started = true
+		frozen = false
+		dog.global_position = Vector2(640.0, GATE_Y - 260.0)
+		human.global_position = Vector2(640.0, GATE_Y - 120.0)
+		cam.position = dog.global_position
+		_enter_freedom()
 	Sfx.start_music()
 	# --selftest: validate the level we just built and exit. Runs inside the
 	# real runtime (autoloads and all), so CI can sweep every walk for
@@ -517,6 +537,7 @@ func _setup_input() -> void:
 		"pee": [KEY_Q, JOY_BUTTON_X], "turbo": [KEY_SHIFT, JOY_BUTTON_RIGHT_SHOULDER],
 		"restart": [KEY_R, JOY_BUTTON_START], "share": [KEY_C, JOY_BUTTON_Y],
 		"pause": [KEY_ESCAPE, JOY_BUTTON_BACK], "mute_music": [KEY_M, JOY_BUTTON_LEFT_SHOULDER],
+		"goals": [KEY_TAB, JOY_BUTTON_DPAD_UP],
 	}
 	for action in buttons:
 		InputMap.add_action(action)
@@ -939,6 +960,7 @@ func _build_level_data() -> void:
 	for cp in candy_spots:
 		candy.append({"pos": cp, "eaten": false})
 	_build_ground_detail()
+	_build_freedom_area()
 	_build_park_props()
 	for i in range(140):
 		var side := -1.0 if randf() < 0.5 else 1.0
@@ -976,8 +998,8 @@ func _build_level_data() -> void:
 			prize_pos = pond.get_center() if pond.size.x > 0.0 else Vector2(640.0, -2700.0)
 			prize_text = "fetch the ball from the middle of the pond"
 		"beach":
-			prize_pos = Vector2(300.0, -2600.0)  # down at the waterline on the sand
-			prize_text = "fetch the ball from the water's edge"
+			prize_pos = Vector2(20.0, -2600.0)  # actually IN the sea, so she swims for it
+			prize_text = "swim out for the ball"
 		"market":
 			prize_pos = Vector2(640.0, -2050.0)  # by the drain in the middle aisle
 			prize_text = "grab the churro by the open drain"
@@ -1535,6 +1557,320 @@ func _draw_lamppost(p: Vector2) -> void:
 			draw_circle(lp, 6.5, Color(1.0, 0.92, 0.66, 0.35))
 
 
+func _freedom_rect() -> Rect2:
+	return Rect2(70.0, freedom_lo, 1110.0, GATE_Y - 30.0 - freedom_lo)
+
+
+func _draw_freedom_fence(r: Rect2, gravel: bool) -> void:
+	# chain-link on all four sides, open at the gate
+	var fence := Color(0.62, 0.63, 0.6) if not gravel else Color(0.55, 0.5, 0.44)
+	var post := Color(0.5, 0.5, 0.48)
+	var mesh := Color(0.66, 0.68, 0.66, 0.25)
+	var yl := r.position.x
+	var yr := r.end.x
+	var ytop := r.position.y
+	var ybot := r.end.y
+	draw_line(Vector2(yl, ytop), Vector2(yl, ybot), fence, 3.0)
+	draw_line(Vector2(yr, ytop), Vector2(yr, ybot), fence, 3.0)
+	draw_line(Vector2(yl, ytop), Vector2(yr, ytop), fence, 3.0)
+	draw_line(Vector2(yl, ybot), Vector2(gate_l - 20.0, ybot), fence, 3.0)
+	draw_line(Vector2(gate_r + 20.0, ybot), Vector2(yr, ybot), fence, 3.0)
+	for px in range(int(yl), int(yr), 60):
+		draw_line(Vector2(px, ytop), Vector2(px, ytop + 8.0), post, 2.0)
+		if px < gate_l - 20.0 or px > gate_r + 20.0:
+			draw_line(Vector2(px, ybot - 8.0), Vector2(px, ybot), post, 2.0)
+	draw_line(Vector2(yl + 6.0, ytop + 6.0), Vector2(yr - 6.0, ytop + 6.0), mesh, 6.0)
+	for cp: Vector2 in [Vector2(yl, ytop), Vector2(yr, ytop), Vector2(yl, ybot), Vector2(yr, ybot)]:
+		draw_circle(cp, 4.0, post)
+
+
+func _draw_freedom_benches(r: Rect2, col: Color) -> void:
+	for bx: Vector2 in [
+		Vector2(r.position.x + 70.0, r.position.y + 60.0),
+		Vector2(r.end.x - 70.0, r.position.y + 120.0),
+		Vector2(r.position.x + 90.0, r.end.y - 80.0),
+	]:
+		contact_shadow(self, bx, 22.0, 8.0, 0.20)
+		draw_rect(Rect2(bx.x - 22, bx.y - 5, 44, 10), col)
+		draw_line(Vector2(bx.x - 20, bx.y - 5), Vector2(bx.x - 20, bx.y + 8), col.darkened(0.2), 2.0)
+		draw_line(Vector2(bx.x + 20, bx.y - 5), Vector2(bx.x + 20, bx.y + 8), col.darkened(0.2), 2.0)
+	# the bench the parked owner throws the ball from
+	contact_shadow(self, gate_bench, 20.0, 8.0, 0.20)
+	draw_rect(Rect2(gate_bench.x - 18, gate_bench.y - 6, 36, 11), Color(0.54, 0.4, 0.27))
+
+
+func _freedom_sign(r: Rect2, txt: String) -> void:
+	draw_string(font, Vector2(0, r.position.y - 14), txt, HORIZONTAL_ALIGNMENT_CENTER, 1280,
+		22, Color(0.9, 0.9, 0.82))
+
+
+func _draw_yard(gravel: bool) -> void:
+	# the municipal dog park: grass (or a gravel compound on the industrial
+	# walks), a worn patch in the middle where every dog plays, and a fence
+	var r := _freedom_rect()
+	draw_rect(r, Color(0.40, 0.38, 0.34) if gravel else Color(0.34, 0.5, 0.32))
+	draw_circle(r.get_center(), 150.0,
+		Color(0.34, 0.32, 0.29, 0.5) if gravel else Color(0.42, 0.44, 0.3, 0.35))
+	if gravel:
+		# grit, in place of the grass tufts
+		for gi in range(90):
+			var gp := Vector2(
+				r.position.x + fmod(float(gi) * 197.0, r.size.x),
+				r.position.y + fmod(float(gi) * 331.0, r.size.y))
+			draw_circle(gp, 1.6, Color(0.30, 0.29, 0.27, 0.6))
+	else:
+		for tf in range(28):
+			var gxp := r.position.x + 20.0 + tf * ((r.size.x - 40.0) / 27.0)
+			var gyp := r.position.y + 40.0 + fmod(tf * 137.0, r.size.y - 80.0)
+			draw_line(Vector2(gxp, gyp), Vector2(gxp - 3.0, gyp - 8.0), Color(0.28, 0.44, 0.27), 2.0)
+			draw_line(Vector2(gxp, gyp), Vector2(gxp + 3.0, gyp - 7.0), Color(0.28, 0.44, 0.27), 2.0)
+	_draw_freedom_fence(r, gravel)
+	_draw_freedom_benches(r, Color(0.5, 0.38, 0.26))
+	_freedom_sign(r, "OFF-LEASH YARD" if gravel else "OFF-LEASH DOG PARK")
+
+
+func _draw_clearing() -> void:
+	# a clearing in the woods: no fence, because nothing out here is fenced.
+	# The trees ARE the boundary, drawn with the same renderer as the ones on
+	# the trail so it reads as the same wood.
+	var r := _freedom_rect()
+	draw_rect(r, Color(0.30, 0.42, 0.26))
+	draw_circle(r.get_center(), 170.0, Color(0.40, 0.36, 0.26, 0.55))   # trodden earth
+	for i in range(40):
+		var f := float(i) / 39.0
+		var edge := i % 4
+		var tp := Vector2.ZERO
+		match edge:
+			0: tp = Vector2(lerpf(r.position.x, r.end.x, f), r.position.y + 8.0)
+			1: tp = Vector2(r.position.x + 14.0, lerpf(r.position.y, r.end.y, f))
+			2: tp = Vector2(r.end.x - 14.0, lerpf(r.position.y, r.end.y, f))
+			_: tp = Vector2(lerpf(r.position.x, r.end.x, f), r.end.y - 10.0)
+		# leave the gate mouth clear
+		if edge == 3 and tp.x > gate_l - 60.0 and tp.x < gate_r + 60.0:
+			continue
+		_draw_broadleaf(tp, 0.6 + fmod(float(i) * 0.37, 0.4))
+	_draw_freedom_benches(r, Color(0.42, 0.33, 0.22))
+	_freedom_sign(r, "THE CLEARING")
+
+
+func _draw_dog_beach() -> void:
+	# THE DOG BEACH. The other walks all end in the same municipal field; this
+	# one ends where the city ends. Dry sand, wet sand, and open sea on the
+	# west - and the sea is real water: she swims in it, the ball gets thrown
+	# into it, and the owner will not enjoy any of that.
+	var r := _freedom_rect()
+	var t := Time.get_ticks_msec() / 1000.0
+	draw_rect(r, Color(0.85, 0.78, 0.62))
+	var sea := Rect2(-330.0, r.position.y - 40.0, BEACH_SEA_R + 330.0, r.size.y + 40.0)
+	draw_rect(sea, Color(0.24, 0.44, 0.54))
+	# shallows: a paler band where it shelves up to the sand
+	draw_rect(Rect2(BEACH_SEA_R - 90.0, sea.position.y, 90.0, sea.size.y),
+		Color(0.34, 0.56, 0.62))
+	# wet sand, darker than dry
+	draw_rect(Rect2(BEACH_SEA_R, r.position.y, 70.0, r.size.y), Color(0.70, 0.64, 0.52))
+	# Waves rolling in. The shore runs north-south, so a crest is a LONG line
+	# parallel to it that undulates as it travels - drawn as short segments it
+	# read as rain falling on the sea, which is not the same thing at all.
+	for rank in range(3):
+		var base_x := BEACH_SEA_R - 26.0 - float(rank) * 78.0
+		var pts := PackedVector2Array()
+		var wy := sea.position.y
+		while wy < sea.end.y:
+			pts.append(Vector2(
+				base_x + sin(wy * 0.010 + t * (1.0 + float(rank) * 0.35)) * 15.0,
+				wy))
+			wy += 26.0
+		if pts.size() > 1:
+			draw_polyline(pts, Color(1, 1, 1, 0.22 - float(rank) * 0.055),
+				4.0 - float(rank) * 0.8)
+	# a swell further out, going the other way, so the sea is not a loop
+	var swell := PackedVector2Array()
+	var sy2 := sea.position.y
+	while sy2 < sea.end.y:
+		swell.append(Vector2(sea.position.x + 120.0 + sin(sy2 * 0.007 - t * 0.6) * 26.0, sy2))
+		sy2 += 34.0
+	if swell.size() > 1:
+		draw_polyline(swell, Color(1, 1, 1, 0.07), 5.0)
+	# the tide line: foam right where wet meets dry
+	var fy := r.position.y
+	while fy < r.end.y:
+		var fx := BEACH_SEA_R + 4.0 + sin(fy * 0.02 + t * 1.4) * 4.0
+		draw_line(Vector2(fx, fy), Vector2(fx, fy + 40.0), Color(1, 1, 1, 0.30), 2.5)
+		fy += 52.0
+	# dunes along the east and north instead of a fence: marram grass on pale
+	# mounds is a boundary you can see without chain-link
+	# Pale sand mounds on pale sand were invisible; a dune reads by its SHADED
+	# side and the grass on top, not by being a slightly different beige.
+	for i in range(26):
+		var f2 := float(i) / 25.0
+		# inset from the edges, or half of them sit off the side of the screen
+		var dp := Vector2(lerpf(r.position.x + 60.0, r.end.x - 60.0, f2), r.position.y + 40.0)
+		if i % 2 == 0:
+			dp = Vector2(r.end.x - 70.0, lerpf(r.position.y + 60.0, r.end.y - 60.0, f2))
+		contact_shadow(self, dp, 27.0, 12.0, 0.16)
+		draw_circle(dp, 27.0, Color(0.74, 0.67, 0.52))          # the shaded flank
+		draw_circle(dp - LIGHT * 7.0, 21.0, Color(0.93, 0.88, 0.73))  # the lit crest
+		for g in range(6):
+			var ga := -PI * 0.62 + (float(g) - 2.5) * 0.26
+			var gl := 15.0 + fmod(float(i * 7 + g * 3), 9.0)
+			draw_line(dp - LIGHT * 5.0, dp - LIGHT * 5.0 + Vector2.from_angle(ga) * gl,
+				Color(0.55, 0.62, 0.36, 0.9), 2.0)
+	# the outdoor shower, a lifeguard chair and parasols: a real beach has
+	# furniture, and the shower is hers - it fills the tank back up
+	var sh := Vector2(BEACH_SEA_R + 150.0, r.position.y + 120.0)
+	cast_shadow(self, sh, 5.0, 34.0)
+	draw_circle(sh, 7.0, Color(0.68, 0.70, 0.72))
+	draw_line(sh, sh + Vector2(0, -16.0), Color(0.76, 0.78, 0.80), 4.0)
+	draw_circle(sh + Vector2(0, -18.0), 5.0, Color(0.82, 0.86, 0.88))
+	for di in range(4):
+		draw_line(sh + Vector2(-6.0 + float(di) * 4.0, -14.0),
+			sh + Vector2(-6.0 + float(di) * 4.0, -4.0), Color(0.7, 0.86, 0.95, 0.5), 1.5)
+	var lg := Vector2(BEACH_SEA_R + 240.0, r.get_center().y)
+	cast_shadow(self, lg, 14.0, 40.0)
+	draw_rect(Rect2(lg.x - 15.0, lg.y - 15.0, 30.0, 30.0), Color(0.86, 0.80, 0.34))
+	draw_rect(Rect2(lg.x - 15.0, lg.y - 15.0, 30.0, 30.0), Color(0.62, 0.56, 0.22), false, 2.0)
+	draw_rect(Rect2(lg.x - 9.0, lg.y - 9.0, 18.0, 18.0), Color(0.94, 0.90, 0.58))
+	var pcol := [Color(0.85, 0.45, 0.35, 0.85), Color(0.4, 0.6, 0.75, 0.85),
+		Color(0.9, 0.8, 0.4, 0.85)]
+	for i in range(3):
+		var pa := Vector2(r.end.x - 150.0, r.position.y + 180.0 + float(i) * 210.0)
+		# a parasol from above is panels radiating from a hub, with the shade
+		# it is there to cast falling clear of it
+		contact_shadow(self, pa, 36.0, 30.0, 0.20)
+		var pc: Color = pcol[i % 3]
+		draw_circle(pa, 36.0, pc)
+		for panel in range(8):
+			var a0 := TAU * float(panel) / 8.0 + float(i) * 0.2
+			draw_line(pa, pa + Vector2.from_angle(a0) * 36.0, pc.darkened(0.22), 2.0)
+			if panel % 2 == 0:
+				draw_colored_polygon(
+					PackedVector2Array([
+						pa, pa + Vector2.from_angle(a0) * 36.0,
+						pa + Vector2.from_angle(a0 + TAU / 8.0) * 36.0,
+					]), Color(1, 1, 1, 0.10))
+		draw_circle(pa - LIGHT * 10.0, 12.0, Color(1, 1, 1, 0.13))   # the lit side
+		draw_circle(pa, 5.0, Color(0.42, 0.38, 0.34))                # the pole
+		draw_circle(pa, 2.2, Color(0.62, 0.58, 0.52))
+	_draw_freedom_benches(r, Color(0.62, 0.5, 0.34))
+	_freedom_sign(r, "DOG BEACH  -  OFF LEASH")
+
+
+# --- writing that belongs to the world --------------------------------
+#
+# The title and the walk's name used to float over the level as HUD labels,
+# which is the one thing on screen that admits it is a screen. They are drawn
+# INTO the world now, in whatever medium that walk would actually have to hand:
+# chalk on the boulevard, a stick in the sand at the beach, scuffed dirt in the
+# park, a painted board at the station. Because they live in world space they
+# scroll away underfoot as you set off, which is free parallax and costs one
+# more string per frame while the title is up.
+
+const SIGN_STYLES := {
+	"street": "chalk", "market": "chalk", "spook": "chalk",
+	"beach": "sand", "park": "dirt", "trail": "dirt",
+	"station": "board", "site": "board", "scrap": "board",
+	"rain": "wet", "oldtown": "tile", "tutorial": "chalk",
+}
+
+
+func _hand_text(at: Vector2, txt: String, px: int, col: Color, jitter: float,
+		key: float) -> void:
+	# Each glyph placed by hand with its own wobble and tilt, so it reads as
+	# something a person drew rather than something a font laid out. Advance
+	# widths come from the font, so it stays centred whatever it says.
+	var f := font
+	var total: float = f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	var x := at.x - total * 0.5
+	for i in range(txt.length()):
+		var ch := txt.substr(i, 1)
+		var w: float = f.get_string_size(ch, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+		# deterministic per-character wobble: same title, same wobble, always
+		var n := sin(float(i) * 12.9898 + key) * 43758.5453
+		var wob := fmod(absf(n), 1.0) * 2.0 - 1.0
+		var n2 := sin(float(i) * 78.233 + key * 1.7) * 12345.6789
+		var wob2 := fmod(absf(n2), 1.0) * 2.0 - 1.0
+		draw_set_transform(Vector2(x + w * 0.5, at.y + wob * jitter),
+			wob2 * jitter * 0.02, Vector2.ONE)
+		draw_char(f, Vector2(-w * 0.5, 0.0), ch, px, col)
+		x += w
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+func _draw_world_text(at: Vector2, txt: String, px: int, style: String,
+		key := 1.0) -> void:
+	match style:
+		"chalk":
+			# pastel chalk: a soft dusty ghost under a brighter stroke, drawn
+			# twice off-register the way chalk goes down
+			_hand_text(at + Vector2(2, 2), txt, px, Color(0.55, 0.52, 0.48, 0.30), 2.2, key)
+			_hand_text(at, txt, px, Color(0.96, 0.93, 0.86, 0.80), 2.2, key)
+			_hand_text(at - Vector2(1, 1), txt, px, Color(1, 1, 1, 0.35), 2.4, key + 3.0)
+		"sand":
+			# a trench dragged with a stick: dark inside, bright sand piled on
+			# the light side of the furrow
+			_hand_text(at + LIGHT * 3.0, txt, px, Color(0.62, 0.55, 0.42, 0.75), 3.0, key)
+			_hand_text(at, txt, px, Color(0.48, 0.42, 0.32, 0.85), 3.0, key)
+			_hand_text(at - LIGHT * 2.0, txt, px, Color(0.97, 0.93, 0.82, 0.55), 3.0, key)
+		"dirt":
+			# scuffed into bare earth with a paw
+			_hand_text(at, txt, px, Color(0.34, 0.28, 0.20, 0.75), 3.4, key)
+			_hand_text(at - Vector2(1, 2), txt, px, Color(0.52, 0.46, 0.34, 0.5), 3.4, key + 2.0)
+		"wet":
+			# written on wet asphalt: it runs, and the shine sits under it
+			_hand_text(at + Vector2(0, 3), txt, px, Color(0.55, 0.62, 0.70, 0.35), 2.0, key)
+			_hand_text(at, txt, px, Color(0.80, 0.86, 0.92, 0.70), 2.0, key)
+		"tile":
+			# painted tiles set into the wall of the alley
+			var w: float = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+			var pad := 16.0
+			var r := Rect2(at.x - w * 0.5 - pad, at.y - float(px) * 0.86,
+				w + pad * 2.0, float(px) * 1.2)
+			draw_rect(r, Color(0.90, 0.88, 0.82))
+			draw_rect(r, Color(0.30, 0.42, 0.62), false, 3.0)
+			var tx := r.position.x
+			while tx < r.end.x:
+				draw_line(Vector2(tx, r.position.y), Vector2(tx, r.end.y),
+					Color(0.72, 0.72, 0.70, 0.6), 1.0)
+				tx += r.size.y * 0.5
+			_hand_text(at, txt, px, Color(0.18, 0.30, 0.55, 0.92), 0.8, key)
+		_:
+			# a works board or a departures board: dot-matrix on steel
+			var bw: float = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+			var br := Rect2(at.x - bw * 0.5 - 22.0, at.y - float(px) * 0.9,
+				bw + 44.0, float(px) * 1.3)
+			draw_rect(br, Color(0.14, 0.15, 0.16))
+			draw_rect(br, Color(0.40, 0.42, 0.44), false, 3.0)
+			draw_rect(Rect2(br.position.x + 4.0, br.position.y + 4.0, br.size.x - 8.0, 3.0),
+				Color(1, 1, 1, 0.10))
+			_hand_text(at, txt, px, Color(0.98, 0.78, 0.28, 0.95), 0.0, key)
+
+
+func _draw_ground_title() -> void:
+	# On the title screen the game's name is chalked on the ground she is
+	# standing on; on the walk-select screen it is the walk's name, in that
+	# walk's own medium. Both scroll away with the world once you set off,
+	# which is the whole reason to draw them here rather than on the HUD.
+	var style := String(SIGN_STYLES.get(lvl, "chalk"))
+	var mid := 640.0
+	if menu_step == 0:
+		_draw_world_text(Vector2(mid, START_Y - 232.0), "PATH OF", 52, style, 1.0)
+		_draw_world_text(Vector2(mid, START_Y - 176.0), "LEASH RESISTANCE", 52, style, 2.0)
+		_draw_world_text(Vector2(mid, START_Y - 132.0), "you are the dog", 22, style, 3.0)
+		return
+	var name := String(Game.LEVEL_NAMES[lvl]).to_upper()
+	var y := START_Y - 190.0
+	_draw_world_text(Vector2(mid, y), name, 46, style, 4.0)
+	if not Game.is_unlocked(lvl):
+		_draw_world_text(Vector2(mid, y + 44.0), "LOCKED", 24, style, 5.0)
+	elif menu_step == 1:
+		# the browse arrows, in the same medium as the name
+		var w: float = font.get_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, -1, 46).x
+		_draw_world_text(Vector2(mid - w * 0.5 - 44.0, y), "<", 46, style, 6.0)
+		_draw_world_text(Vector2(mid + w * 0.5 + 44.0, y), ">", 46, style, 7.0)
+	# and no more than that: the records, the owner and the weather stay on the
+	# HUD, where a changing value belongs
+
+
 func _draw_park_props(vt: float, vb: float) -> void:
 	for pp in park_props:
 		var p: Vector2 = pp.pos
@@ -1558,13 +1894,24 @@ func _draw_park_props(vt: float, vb: float) -> void:
 				contact_shadow(self, p, 14.0, 7.0)
 		match String(pp.kind):
 			"dig":
-				# a patch of turned earth; deepens as you dig, then a bone
+				# A HOLE, which means a rim of thrown earth around it and dark
+				# inside - flat brown circles read as stains on the grass, and
+				# this is the main reward for wandering off the path.
 				var soil := Color(0.34, 0.26, 0.18)
-				draw_circle(p, 17.0, Color(0.30, 0.36, 0.22))
-				draw_circle(p, 12.0 + prog * 3.0, soil.darkened(prog * 0.30))
-				for i in range(4):
-					var a := TAU * float(i) / 4.0 + p.x * 0.02
-					draw_circle(p + Vector2.from_angle(a) * (14.0 + prog * 6.0), 3.0, soil)
+				# spoil heaped on the far side, where a digging dog puts it
+				draw_circle(p + LIGHT * 9.0, 16.0, soil.lightened(0.10))
+				draw_circle(p + LIGHT * 12.0, 10.0, soil.lightened(0.22))
+				draw_circle(p, 17.0, soil.darkened(0.10))
+				# the pit: darker toward the light side, where the wall is
+				draw_circle(p, 12.0 + prog * 3.0, soil.darkened(0.42 + prog * 0.2))
+				draw_circle(p - LIGHT * 3.0, 8.0 + prog * 3.0, soil.darkened(0.62))
+				draw_arc(p, 13.0 + prog * 3.0, PI * 0.95, PI * 1.95, 14,
+					soil.lightened(0.30), 2.0)
+				# clods and a couple of scratched-up roots
+				for i in range(5):
+					var a := TAU * float(i) / 5.0 + p.x * 0.02
+					draw_circle(p + Vector2.from_angle(a) * (15.0 + prog * 6.0), 3.0, soil)
+				draw_line(p + Vector2(-14, 6), p + Vector2(-6, 10), soil.lightened(0.3), 1.5)
 				if done:
 					# the prize, unearthed and left sitting in the hole
 					draw_circle(p, 9.0, soil.darkened(0.35))
@@ -1593,25 +1940,67 @@ func _draw_park_props(vt: float, vb: float) -> void:
 					var a := TAU * float(i) / 10.0
 					draw_line(p + Vector2.from_angle(a) * 11.0, p + Vector2.from_angle(a) * 17.0, Color(0.24, 0.24, 0.26), 2.0)
 			"rock":
-				draw_circle(p, 15.0, Color(0.52, 0.50, 0.47))
-				draw_circle(p + Vector2(-4, -4), 9.0, Color(0.62, 0.60, 0.56))
-				draw_arc(p, 15.0, 0.4, 2.6, 10, Color(0.38, 0.36, 0.34), 2.0)
+				# faceted rather than round: a boulder is flat planes, and the
+				# planes are what catch the light differently
+				var rp := PackedVector2Array()
+				for i in range(7):
+					var a := TAU * float(i) / 7.0 + p.y * 0.01
+					var rr := 13.0 + fmod(float(i) * 5.7 + p.x * 0.03, 4.0)
+					rp.append(p + Vector2(cos(a) * rr, sin(a) * rr * 0.88))
+				draw_colored_polygon(rp, Color(0.46, 0.44, 0.42))
+				var top := PackedVector2Array()
+				for i in range(5):
+					var a2 := TAU * float(i) / 5.0 + 0.4
+					top.append(p - LIGHT * 4.0 + Vector2(cos(a2), sin(a2) * 0.9) * 8.0)
+				draw_colored_polygon(top, Color(0.63, 0.61, 0.57))
+				draw_polyline(rp, Color(0.34, 0.33, 0.32, 0.8), 1.4)
 			"post":
-				# a sniff post, with the worn patch dogs have made of its foot
-				draw_circle(p, 14.0, Color(0.42, 0.40, 0.28, 0.35))
-				draw_rect(Rect2(p.x - 4.0, p.y - 26.0, 8.0, 30.0), Color(0.46, 0.34, 0.22))
-				draw_rect(Rect2(p.x - 6.0, p.y - 28.0, 12.0, 5.0), Color(0.56, 0.42, 0.28))
+				# A sniff post: a round timber post with a chamfered top, the
+				# grain showing, and the bare patch every dog in the park has
+				# worn round its foot.
+				draw_circle(p, 15.0, Color(0.44, 0.40, 0.28, 0.40))
+				draw_rect(Rect2(p.x - 5.0, p.y - 26.0, 10.0, 30.0), Color(0.40, 0.29, 0.19))
+				draw_rect(Rect2(p.x - 5.0, p.y - 26.0, 4.0, 30.0), Color(0.50, 0.37, 0.24))
+				for gi in range(3):
+					draw_line(Vector2(p.x - 2.0 + float(gi) * 2.5, p.y - 24.0),
+						Vector2(p.x - 2.0 + float(gi) * 2.5, p.y + 2.0),
+						Color(0.34, 0.25, 0.16, 0.7), 1.0)
+				# the cut top, seen from above: end grain in rings
+				draw_circle(p + Vector2(0.0, -27.0), 7.0, Color(0.60, 0.47, 0.30))
+				draw_arc(p + Vector2(0.0, -27.0), 4.0, 0, TAU, 10, Color(0.48, 0.36, 0.23), 1.4)
+				draw_arc(p + Vector2(0.0, -27.0), 6.5, 0, TAU, 12, Color(0.42, 0.31, 0.20), 1.2)
 			"trough":
-				draw_rect(Rect2(p.x - 22.0, p.y - 12.0, 44.0, 24.0), Color(0.38, 0.38, 0.42))
-				draw_rect(Rect2(p.x - 19.0, p.y - 9.0, 38.0, 18.0), Color(0.36, 0.55, 0.68))
-				draw_rect(Rect2(p.x - 19.0, p.y - 9.0, 38.0, 5.0), Color(0.58, 0.76, 0.86, 0.7))
+				# A galvanised water trough: a thick rim, water sitting BELOW
+				# it, a highlight where the light hits the surface, and a
+				# slow ripple. It was three flat rectangles.
+				var tw := Time.get_ticks_msec() / 1000.0
+				draw_rect(Rect2(p.x - 23.0, p.y - 13.0, 46.0, 26.0), Color(0.34, 0.34, 0.38))
+				draw_rect(Rect2(p.x - 23.0, p.y - 13.0, 46.0, 5.0), Color(0.52, 0.52, 0.56))
+				# the water, inset and darker at the light-side wall
+				draw_rect(Rect2(p.x - 18.0, p.y - 8.0, 36.0, 16.0), Color(0.22, 0.38, 0.48))
+				draw_rect(Rect2(p.x - 18.0, p.y - 8.0, 36.0, 4.0), Color(0.16, 0.28, 0.38))
+				draw_rect(Rect2(p.x - 15.0, p.y - 4.0, 30.0, 9.0), Color(0.34, 0.54, 0.66))
+				# ripples, and the sky in it
+				for i in range(2):
+					var ry := p.y - 2.0 + float(i) * 6.0
+					var rw := 11.0 + sin(tw * 1.3 + float(i) * 2.0) * 4.0
+					draw_line(Vector2(p.x - rw, ry), Vector2(p.x + rw, ry),
+						Color(0.72, 0.86, 0.92, 0.30), 1.5)
+				draw_circle(p + Vector2(-9.0, -3.0), 3.0, Color(0.86, 0.94, 0.98, 0.35))
 			_:
-				# a shrub: clustered lobes with a lit crown, like the trees
-				var g1 := Color(0.20, 0.33, 0.20)
+				# a shrub: clustered lobes, lit per lobe rather than one blob
+				# with a highlight, plus leaf tips breaking the outline
+				var g1 := Color(0.17, 0.28, 0.17)
 				for i in range(5):
 					var a := TAU * float(i) / 5.0 + p.y * 0.01
 					draw_circle(p + Vector2.from_angle(a) * 8.0, 10.0, g1)
-				draw_circle(p + Vector2(-4, -5), 8.0, Color(0.29, 0.44, 0.26))
+				for i in range(5):
+					var a2 := TAU * float(i) / 5.0 + p.y * 0.01
+					draw_circle(p + Vector2.from_angle(a2) * 8.0 - LIGHT * 4.0, 5.5,
+						Color(0.28, 0.43, 0.25))
+				for i in range(6):
+					var a3 := TAU * float(i) / 6.0 + p.x * 0.02
+					draw_circle(p + Vector2.from_angle(a3) * 16.0, 3.0, g1.lightened(0.10))
 				if done:
 					draw_circle(p + Vector2(9, -12), 2.6, Color(0.85, 0.85, 0.6, 0.7))
 		# the sniff affordance: a soft scent bloom while she is working on it
@@ -1652,6 +2041,21 @@ func _build_substance_zones() -> void:
 		substance_zones.append({"rect": Rect2(sw_l, GATE_Y, w, absf(GATE_Y) + 500.0), "kind": "slush"})
 
 
+func _build_freedom_area() -> void:
+	freedom_kind = String(FREEDOM_KINDS.get(lvl, "yard"))
+	water.clear()
+	if pond.size.x > 0.0:
+		water.append(pond)
+	if freedom_kind == "beach":
+		# The sea, in two pieces that meet at the gate: a band along the whole
+		# passeig (so she can go in ANYWHERE on the walk, which is the first
+		# thing anyone tries on a seafront), and the wide bay in the dog beach
+		# at the top.
+		water.append(Rect2(-360.0, GATE_Y - 40.0, 450.0, absf(GATE_Y) + 500.0))
+		water.append(Rect2(-330.0, freedom_lo - 40.0,
+			BEACH_SEA_R + 330.0, GATE_Y - 30.0 - freedom_lo + 40.0))
+
+
 func _build_park_props() -> void:
 	# Spread across the whole width, deliberately AWAY from the straight line
 	# between gate and meadow, so poking about off the direct route is what
@@ -1661,7 +2065,7 @@ func _build_park_props() -> void:
 	r.seed = 0xD06BA55
 	var flavour := ["log", "dig", "shrub", "post", "dig", "shrub"]
 	match lvl:
-		"beach": flavour = ["driftwood", "dig", "rock", "dig", "shrub"]
+		"beach": flavour = ["driftwood", "dig", "rock", "dig", "rock"]
 		"scrap", "site": flavour = ["tyre", "log", "dig", "tyre"]
 		"trail", "park": flavour = ["log", "dig", "shrub", "shrub", "post", "dig"]
 	var lo := freedom_lo + 70.0
@@ -1822,8 +2226,12 @@ func _build_walls() -> void:
 	# the walls sit at the LEVEL edges, not the path edges: the dog is
 	# free to roam grass, sand and shoulders; the human stays on the walk
 	# by inclination, not by invisible fences
+	# On the beach the west wall moves out into the water, so she can actually
+	# get in the sea - the whole point of walking a dog along the seafront.
+	# Everywhere else it stays at the level edge.
+	var west_x := -180.0 if lvl == "beach" else 40.0
 	var defs := [
-		[Vector2(40.0, mid_y), Vector2(100, span)],
+		[Vector2(west_x, mid_y), Vector2(100, span)],
 		[Vector2(1240.0, mid_y), Vector2(100, span)],
 		[Vector2(640, START_Y + 160.0), Vector2(1400, 100)],
 		[Vector2(640, GATE_Y - 700.0), Vector2(1400, 100)],
@@ -2038,12 +2446,17 @@ func _quest_text(q: Dictionary) -> String:
 	return s
 
 
+func _peek_goals() -> void:
+	goals_peek = 3.0
+
+
 func _credit_goal(q: Dictionary) -> void:
 	# award + persist a goal the first time it completes this run
 	var id: String = q.id
 	if run_goals_hit.has(id):
 		return
 	run_goals_hit[id] = true
+	_peek_goals()
 	bones += 5
 	var newly: bool = Game.mark_goal(lvl, id) if not Game.daily else false
 	var tag := "GOAL! " if (newly or Game.daily) else "goal (again) "
@@ -2378,9 +2791,13 @@ func _apply_menu_step() -> void:
 	var in_menu := not started
 	panel.visible = started
 	goals_card.visible = started and not tutorial_mode
-	title_l.visible = in_menu
-	sub_l.visible = in_menu and menu_step == 0
-	select_l.visible = in_menu and menu_step >= 1
+	# The game's name and the walk's name are drawn INTO the level now (chalk
+	# on the pavement, a stick in the sand), so the labels that used to float
+	# over the top of them are gone. What is left on the HUD is the things a
+	# label is genuinely better at: the prompt and the run's details.
+	title_l.visible = false
+	sub_l.visible = false
+	select_l.visible = false
 	record_l.visible = in_menu and menu_step == 1
 	owner_l.visible = in_menu and menu_step == 2
 	night_l.visible = in_menu and menu_step == 2
@@ -2527,7 +2944,7 @@ func _refresh_menu_text() -> void:
 
 const SETTING_NAMES := {
 	"master": "MASTER VOLUME", "sfx": "SOUND EFFECTS",
-	"music": "MUSIC", "fullscreen": "FULLSCREEN",
+	"music": "MUSIC", "fullscreen": "FULLSCREEN", "goals": "GOAL LIST",
 }
 
 
@@ -2535,8 +2952,8 @@ func settings_keys() -> Array:
 	# the browser owns the window, so offering a fullscreen toggle there
 	# would be a button that lies
 	if OS.has_feature("web"):
-		return ["master", "sfx", "music"]
-	return ["master", "sfx", "music", "fullscreen"]
+		return ["master", "sfx", "music", "goals"]
+	return ["master", "sfx", "music", "fullscreen", "goals"]
 
 
 func settings_rows() -> Array:
@@ -2551,6 +2968,9 @@ func settings_rows() -> Array:
 			"music": v = Game.vol_music
 			"fullscreen":
 				v = 1.0 if Game.fullscreen else 0.0
+				kind = "toggle"
+			"goals":
+				v = 1.0 if Game.goals_expanded else 0.0
 				kind = "toggle"
 		out.append({"name": SETTING_NAMES[k], "kind": kind, "v": v})
 	return out
@@ -2649,6 +3069,9 @@ func _settings_adjust(dir: int) -> void:
 		"fullscreen":
 			Game.fullscreen = not Game.fullscreen
 			Game.apply_settings()
+			Sfx.play("ui")
+		"goals":
+			Game.goals_expanded = not Game.goals_expanded
 			Sfx.play("ui")
 
 
@@ -2756,10 +3179,14 @@ func goal_card_data() -> Dictionary:
 			})
 	var rows: Array = open_rows + done_rows
 	var shown: int = mini(rows.size(), GOALS_MAX_ROWS)
+	var open: bool = Game.goals_expanded or goals_peek > 0.0
 	return {
 		"done": done_count, "total": total,
 		"all_done": total > 0 and done_count >= total,
-		"rows": rows.slice(0, shown), "extra": rows.size() - shown,
+		"rows": rows.slice(0, shown) if open else [],
+		"extra": (rows.size() - shown) if open else 0,
+		"open": open, "peeking": goals_peek > 0.0 and not Game.goals_expanded,
+		"key": _kb_or_pad("TAB", "up"),
 	}
 
 
@@ -2908,6 +3335,7 @@ func _physics_process(delta: float) -> void:
 		_tick_vault(delta)
 	_update_combo_hud()
 	_update_challenge_hud()
+	goals_peek = maxf(0.0, goals_peek - delta)
 	vault_recent = maxf(0.0, vault_recent - delta)
 	shake_t = maxf(0.0, shake_t - delta * 2.5)
 	prize_glow += delta * 4.0
@@ -2970,6 +3398,11 @@ func _process(_delta: float) -> void:
 	if in_settings:
 		_tick_settings()
 		return
+	if Input.is_action_just_pressed("goals") and started and not frozen:
+		Game.goals_expanded = not Game.goals_expanded
+		Game.save_records()
+		Sfx.play("ui")
+		goals_peek = 0.0
 	if Input.is_action_just_pressed("mute_music"):
 		Sfx.toggle_music()
 	if Input.is_action_just_pressed("restart"):
@@ -4143,31 +4576,39 @@ func _hazards(delta: float) -> void:
 			tw.cd = 4.0
 			human.bumped((human.global_position - (tw.rect as Rect2).get_center()).normalized())
 			float_text(human.global_position, "hey! my towel!", Color(1, 0.85, 0.7))
-	if pond.size.x > 0.0:
-		# Millie LOVES the water. In she goes, paddling happily - and
-		# whatever is on the other end of the leash comes too. The owner
-		# wades in reluctantly, phone held high, and edges back to the
-		# bank. Nobody drowns; it is just wet and a little undignified.
-		var dog_wet: bool = pond.grow(-4.0).has_point(dog.global_position)
+	# Millie LOVES the water. In she goes, paddling happily - and whatever is
+	# on the other end of the leash comes too. The owner wades in reluctantly,
+	# phone held high, and edges back to the bank. Nobody drowns; it is just
+	# wet and a little undignified.
+	if not water.is_empty():
+		var dog_wet := false
+		var hum_wet := false
+		var bank_x: float = human.pond_bank_x
+		for w: Rect2 in water:
+			if w.grow(-4.0).has_point(dog.global_position):
+				dog_wet = true
+			if w.grow(-4.0).has_point(human.global_position):
+				hum_wet = true
+				# out the side he came in by, whichever is nearer
+				bank_x = (w.position.x - 24.0
+					if absf(human.global_position.x - w.position.x) < absf(human.global_position.x - w.end.x)
+					else w.end.x + 24.0)
+			# A wobble at the water's edge, but ONLY when she arrives at a
+			# proper clip - a stumble, not a toll gate. It never blocks her
+			# getting in (she loves water) and losing it costs nothing but the
+			# combo, so this is pure comedy plus a chance to look graceful.
+			if not dog_wet and not auto_walk and dog.velocity.length() > 210.0:
+				if _dist_to_rect_edge(w, dog.global_position) < 26.0:
+					_start_teeter("water", w.get_center())
 		var was_swim: bool = dog.swimming
 		dog.swimming = dog_wet
 		if dog_wet and not was_swim:
 			Sfx.play("splash")
 			float_text(dog.global_position, "splish!", Color(0.7, 0.85, 1.0))
 			swam = true
-		# A wobble at the water's edge, but ONLY when she arrives at a proper
-		# clip - a stumble, not a toll gate. It never blocks her getting in
-		# (she loves water) and losing it costs nothing but the combo, so this
-		# is pure comedy plus a chance to look graceful.
-		elif not dog_wet and not auto_walk and dog.velocity.length() > 210.0:
-			var brink: Vector2 = (pond as Rect2).get_center()
-			var edge_d: float = _dist_to_rect_edge(pond, dog.global_position)
-			if edge_d < 26.0:
-				_start_teeter("water", brink)
-		var hum_wet: bool = pond.grow(-4.0).has_point(human.global_position)
 		var was_wade: bool = human.wading
 		human.wading = hum_wet
-		human.pond_bank_x = pond.end.x + 24.0
+		human.pond_bank_x = bank_x
 		if hum_wet and not was_wade:
 			float_text(human.global_position, "no no no-", Color(0.7, 0.85, 1.0))
 	# open holes are the TOP tier of danger: falling in ends the walk,
@@ -4448,6 +4889,31 @@ func on_business_bagged(pos: Vector2) -> void:
 	_update_hud()
 
 
+const OPENERS := {
+	"street": "To the park and back. Mind the bike lanes.",
+	"park": "Through the park to the meadow, then home. Mind the pond.",
+	"beach": "Along the passeig and back. The sea is right there. So is the bike path.",
+	"rain": "Out in it, because you insisted. Mind the drains.",
+	"market": "Through the market to the plaza, then home. Everything smells edible.",
+	"oldtown": "Up the alleys and back. Narrow, and the cats own the walls.",
+	"trail": "Into the woods to the clearing. Everything out here moves.",
+	"station": "Across the concourse and back. Nobody here is looking down.",
+	"site": "Past the works to the far fence. The cement is wet, and it stays with you.",
+	"spook": "Around the Castanyada and home. The sweets on the ground are not for dogs.",
+	"scrap": "Through the yard and out. Quietly - things are sleeping.",
+	"tutorial": "A short one, to get the hang of it. Nothing out here can hurt you.",
+}
+
+# The off-leash space at the top of the walk. Every level ended in the same
+# fenced municipal dog park, which is a big part of why the walks still felt
+# like one walk redressed - you always finished in the same field. The beach
+# gets a DOG BEACH instead: sand, and a sea you can actually swim in.
+const FREEDOM_KINDS := {
+	"beach": "beach", "trail": "clearing", "site": "lot", "scrap": "lot",
+}
+const BEACH_SEA_R := 430.0
+
+
 const MARKABLE_PARK_KINDS := ["post", "shrub", "log", "rock", "driftwood", "tyre"]
 
 
@@ -4603,6 +5069,9 @@ func _enter_freedom() -> void:
 	ball.position = human.global_position
 	add_child(ball)
 	ball.setup(self, dog, human, freedom_lo, GATE_Y - 30.0)
+	if freedom_kind == "beach":
+		# into the surf, not across a field
+		ball.set_throw_window(-90.0, BEACH_SEA_R + 240.0)
 	# other dogs to romp and say hi to
 	for i in range(3):
 		var fd := Node2D.new()
@@ -5463,13 +5932,54 @@ func _draw() -> void:
 		draw_circle(st + Vector2(30, 6), 5.0, Color(0.9, 0.7, 0.3))
 		draw_circle(st + Vector2(6, 10), 4.0, Color(0.5, 0.65, 0.35))
 	# parked service vans, half on the walkway, hazards blinking in spirit
+	# The service van: the biggest object in the game and, until now, a white
+	# rectangle with four black tabs. A van seen from above is a roof - so it
+	# gets a roof: ribs across it, a vent, roof bars, the windscreen raked
+	# under the front edge, mirrors sticking out past the body, and the long
+	# shadow a two-metre box actually throws.
 	for v in vans:
-		for w in [Vector2(-36, -44), Vector2(30, -44), Vector2(-36, 30), Vector2(30, 30)]:
-			draw_rect(Rect2(v.x + w.x, v.y + w.y, 6, 16), Color(0.12, 0.12, 0.14))
-		draw_rect(Rect2(v.x - 32, v.y - 66, 64, 132), Color(0.88, 0.88, 0.86))
-		draw_rect(Rect2(v.x - 32, v.y - 66, 64, 132), Color(0.55, 0.55, 0.55), false, 2.0)
-		draw_rect(Rect2(v.x - 26, v.y - 60, 52, 22), Color(0.35, 0.42, 0.5))
-		draw_line(v + Vector2(-24, 62), v + Vector2(24, 62), Color(0.6, 0.3, 0.25), 3.0)
+		if v.y < vt - 140.0 or v.y > vb + 140.0:
+			continue
+		var body := Rect2(v.x - 32.0, v.y - 66.0, 64.0, 132.0)
+		# it sits high, so the shadow is offset a long way and shaped like it
+		draw_set_transform(v + LIGHT * 30.0, 0.0, Vector2.ONE)
+		draw_rect(Rect2(-34.0, -66.0, 68.0, 134.0),
+			Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		# tyres, visible past the body on both sides
+		for w: Vector2 in [Vector2(-35, -42), Vector2(29, -42), Vector2(-35, 28), Vector2(29, 28)]:
+			draw_rect(Rect2(v.x + w.x, v.y + w.y, 6.0, 17.0), Color(0.10, 0.10, 0.12))
+		# the roof, lit down its light-facing side
+		draw_rect(body, Color(0.86, 0.86, 0.84))
+		draw_rect(Rect2(body.position.x, body.position.y, 20.0, body.size.y),
+			Color(0.93, 0.93, 0.91))
+		draw_rect(Rect2(body.end.x - 12.0, body.position.y, 12.0, body.size.y),
+			Color(0.72, 0.72, 0.71))
+		draw_rect(body, Color(0.44, 0.44, 0.45), false, 2.0)
+		# pressed ribs along the roof
+		for ri in range(5):
+			var ry := body.position.y + 26.0 + float(ri) * 20.0
+			draw_line(Vector2(body.position.x + 5.0, ry), Vector2(body.end.x - 5.0, ry),
+				Color(0.76, 0.76, 0.75), 1.5)
+		# windscreen at the front (north), raked, with a wiper
+		draw_rect(Rect2(v.x - 27.0, v.y - 63.0, 54.0, 20.0), Color(0.30, 0.38, 0.46))
+		draw_rect(Rect2(v.x - 27.0, v.y - 63.0, 54.0, 7.0), Color(0.52, 0.62, 0.70, 0.7))
+		draw_line(v + Vector2(-18, -46), v + Vector2(6, -52), Color(0.2, 0.2, 0.22), 1.6)
+		# mirrors, which is what makes it read as a VEHICLE and not a crate
+		for mx: float in [-1.0, 1.0]:
+			draw_rect(Rect2(v.x + mx * 38.0 - 3.0, v.y - 52.0, 6.0, 9.0), Color(0.30, 0.30, 0.32))
+		# roof vent and bars
+		draw_rect(Rect2(v.x - 11.0, v.y - 16.0, 22.0, 16.0), Color(0.74, 0.74, 0.72))
+		draw_rect(Rect2(v.x - 11.0, v.y - 16.0, 22.0, 16.0), Color(0.52, 0.52, 0.52), false, 1.5)
+		for bx: float in [-20.0, 20.0]:
+			draw_line(v + Vector2(bx, -34.0), v + Vector2(bx, 46.0), Color(0.62, 0.62, 0.62), 2.5)
+		# the back doors and a livery stripe down the side
+		draw_line(v + Vector2(-30, 58), v + Vector2(30, 58), Color(0.55, 0.55, 0.56), 2.0)
+		draw_line(v + Vector2(0, 58), v + Vector2(0, 66), Color(0.55, 0.55, 0.56), 2.0)
+		draw_rect(Rect2(v.x - 32.0, v.y + 4.0, 64.0, 7.0), Color(0.62, 0.28, 0.24))
+		# a hazard beacon on the cab, because it is parked where it should not be
+		var beat := 0.55 + 0.45 * sin(Time.get_ticks_msec() / 190.0)
+		draw_circle(v + Vector2(0, -40.0), 4.0, Color(0.95, 0.62, 0.15, 0.55 + beat * 0.45))
 	# L'Estacio: the moving walkway - a metal band with chevrons scrolling
 	# in the carry direction
 	if conveyor_zone.size.y > 0.0 and conveyor_zone.end.y > vt and conveyor_zone.position.y < vb:
@@ -5675,46 +6185,11 @@ func _draw() -> void:
 	# park - grass, chain-link fence with posts, human benches, and a
 	# labelled entrance gate
 	if vt < GATE_Y + 60.0:
-		var yl := 70.0
-		var yr := 1180.0
-		var ytop := freedom_lo
-		var ybot := GATE_Y - 30.0
-		draw_rect(Rect2(yl, ytop, yr - yl, ybot - ytop), Color(0.34, 0.5, 0.32))
-		# scattered grass tufts + a worn dirt patch in the middle (play area)
-		draw_circle(Vector2((yl + yr) / 2.0, (ytop + ybot) / 2.0), 150.0, Color(0.42, 0.44, 0.3, 0.35))
-		for tf in range(28):
-			var gxp := yl + 20.0 + tf * ((yr - yl - 40.0) / 27.0)
-			var gyp := ytop + 40.0 + fmod(tf * 137.0, ybot - ytop - 80.0)
-			draw_line(Vector2(gxp, gyp), Vector2(gxp - 3.0, gyp - 8.0), Color(0.28, 0.44, 0.27), 2.0)
-			draw_line(Vector2(gxp, gyp), Vector2(gxp + 3.0, gyp - 7.0), Color(0.28, 0.44, 0.27), 2.0)
-		# chain-link fence: rail + posts on all four sides, open at the gate
-		var fence := Color(0.62, 0.63, 0.6)
-		var post := Color(0.5, 0.5, 0.48)
-		var mesh := Color(0.66, 0.68, 0.66, 0.25)
-		# side rails
-		draw_line(Vector2(yl, ytop), Vector2(yl, ybot), fence, 3.0)
-		draw_line(Vector2(yr, ytop), Vector2(yr, ybot), fence, 3.0)
-		# top rail
-		draw_line(Vector2(yl, ytop), Vector2(yr, ytop), fence, 3.0)
-		# bottom rail, split around the gate opening
-		draw_line(Vector2(yl, ybot), Vector2(gate_l - 20.0, ybot), fence, 3.0)
-		draw_line(Vector2(gate_r + 20.0, ybot), Vector2(yr, ybot), fence, 3.0)
-		for px in range(int(yl), int(yr), 60):
-			draw_line(Vector2(px, ytop), Vector2(px, ytop + 8.0), post, 2.0)
-			if px < gate_l - 20.0 or px > gate_r + 20.0:
-				draw_line(Vector2(px, ybot - 8.0), Vector2(px, ybot), post, 2.0)
-		draw_line(Vector2(yl + 6.0, ytop + 6.0), Vector2(yr - 6.0, ytop + 6.0), mesh, 6.0)
-		# posts at the four corners
-		for cp in [Vector2(yl, ytop), Vector2(yr, ytop), Vector2(yl, ybot), Vector2(yr, ybot)]:
-			draw_circle(cp, 4.0, post)
-		# human benches along the fence
-		for bx in [Vector2(yl + 70.0, ytop + 60.0), Vector2(yr - 70.0, ytop + 120.0), Vector2(yl + 90.0, ybot - 80.0)]:
-			draw_rect(Rect2(bx.x - 22, bx.y - 5, 44, 10), Color(0.5, 0.38, 0.26))
-			draw_line(Vector2(bx.x - 20, bx.y - 5), Vector2(bx.x - 20, bx.y + 8), Color(0.42, 0.32, 0.22), 2.0)
-			draw_line(Vector2(bx.x + 20, bx.y - 5), Vector2(bx.x + 20, bx.y + 8), Color(0.42, 0.32, 0.22), 2.0)
-		# the owner's waiting bench (where the parked owner throws from)
-		draw_rect(Rect2(gate_bench.x - 18, gate_bench.y - 6, 36, 11), Color(0.54, 0.4, 0.27))
-		draw_string(font, Vector2((yl + yr) / 2.0 - 70.0, ytop - 14), "OFF-LEASH DOG PARK", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(0.9, 0.9, 0.82))
+		match freedom_kind:
+			"beach": _draw_dog_beach()
+			"clearing": _draw_clearing()
+			"lot": _draw_yard(true)
+			_: _draw_yard(false)
 		_draw_park_props(vt, vb)
 	# the gate between the walk and the off-leash yard
 	draw_rect(Rect2(gate_l - 14, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
@@ -5729,12 +6204,11 @@ func _draw() -> void:
 	if vb > START_Y + 30.0:
 		draw_rect(Rect2(gate_l - 14, HOME_Y + 40.0, gate_r - gate_l + 28, 14), Color(0.4, 0.32, 0.3))
 		draw_string(font, Vector2((gate_l + gate_r) / 2.0 - 40.0, HOME_Y + 78.0), "HOME", HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color(0.9, 0.85, 0.7))
-	# start hint
-	var hint_txt := "To the park and back. Mind the bike lanes."
-	if lvl == "park":
-		hint_txt = "Through the park to the meadow, then home. Mind the pond."
-	elif lvl == "beach":
-		hint_txt = "Along the passeig and back. Mind the bike path."
-	elif lvl == "market":
-		hint_txt = "Through the market to the plaza, then home."
-	draw_string(font, Vector2(430, START_Y + 90), hint_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color(1, 1, 1, 0.5))
+	if not started and vb > START_Y - 260.0:
+		_draw_ground_title()
+	# The line painted on the pavement at the start: where you are going, and
+	# the one thing about this walk that will get you. Eight of the twelve
+	# walks used to fall back on the boulevard's line, so El Gotic told you to
+	# mind bike lanes it does not have.
+	draw_string(font, Vector2(0, START_Y + 90), String(OPENERS.get(lvl, OPENERS["street"])),
+		HORIZONTAL_ALIGNMENT_CENTER, 1280, 17, Color(1, 1, 1, 0.5))

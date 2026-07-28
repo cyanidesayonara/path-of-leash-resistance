@@ -16,6 +16,8 @@ var hi := 0.0
 var bob := 0.0
 var rest_t := 0.0
 var arc := 0.0  # visual hop height while thrown
+var x_lo := 180.0
+var x_hi := 1100.0
 
 
 func setup(m: Node2D, d: Node2D, thrower_node: Node2D, y_lo: float, y_hi: float) -> void:
@@ -27,6 +29,13 @@ func setup(m: Node2D, d: Node2D, thrower_node: Node2D, y_lo: float, y_hi: float)
 	_throw()
 
 
+func set_throw_window(lo_x: float, hi_x: float) -> void:
+	# the dog beach throws into the surf rather than across a field, so the
+	# window has to be able to sit off to one side
+	x_lo = lo_x
+	x_hi = hi_x
+
+
 func is_carried() -> bool:
 	return state == State.CARRIED
 
@@ -34,7 +43,7 @@ func is_carried() -> bool:
 func _throw() -> void:
 	state = State.THROWN
 	global_position = thrower.global_position
-	var target := Vector2(randf_range(180.0, 1100.0), randf_range(lo + 40.0, hi - 40.0))
+	var target := Vector2(randf_range(x_lo, x_hi), randf_range(lo + 40.0, hi - 40.0))
 	vel = (target - global_position).normalized() * randf_range(340.0, 460.0)
 	if thrower == main.human:
 		main.human.throw_pose()

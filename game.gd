@@ -91,6 +91,10 @@ var vol_master := 0.85
 var vol_sfx := 0.9
 var vol_music := 0.55
 var fullscreen := false
+# The goal card is a big block of text in the corner of a game whose whole
+# point is the mess in the middle. Collapsed it is one line; the player
+# decides, and the choice sticks.
+var goals_expanded := false
 
 
 func daily_seed() -> int:
@@ -212,6 +216,7 @@ func load_records() -> void:
 	vol_sfx = clampf(float(cf.get_value("settings", "vol_sfx", 0.9)), 0.0, 1.0)
 	vol_music = clampf(float(cf.get_value("settings", "vol_music", 0.55)), 0.0, 1.0)
 	fullscreen = bool(cf.get_value("settings", "fullscreen", false))
+	goals_expanded = bool(cf.get_value("settings", "goals_expanded", false))
 
 
 func save_records() -> void:
@@ -236,6 +241,7 @@ func save_records() -> void:
 	cf.set_value("settings", "vol_sfx", vol_sfx)
 	cf.set_value("settings", "vol_music", vol_music)
 	cf.set_value("settings", "fullscreen", fullscreen)
+	cf.set_value("settings", "goals_expanded", goals_expanded)
 	cf.save(SAVE_PATH)
 
 

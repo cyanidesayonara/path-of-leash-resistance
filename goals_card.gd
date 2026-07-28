@@ -16,6 +16,7 @@ extends Control
 const Icons := preload("res://ui_icons.gd")
 
 const W := 416.0
+const GOALS_X := 856.0
 const PAD := 14.0
 const ROW_H := 21.0
 const BOX := 13.0
@@ -52,17 +53,34 @@ func _draw() -> void:
 	var data: Dictionary = main.goal_card_data()
 	var rows: Array = data.rows
 	var extra: int = int(data.extra)
+	var open: bool = bool(data.open)
+	# Collapsed, this is one line in the corner. The game's chaos is supposed
+	# to be in the level, not in a wall of text over the top of it, so the
+	# list is something you ASK for - and it opens itself for a moment
+	# whenever a goal actually lands, so you never miss the tick.
+	var w: float = W if open else 190.0
 	var h := PAD + 22.0 + float(rows.size()) * ROW_H + (16.0 if extra > 0 else 0.0) + PAD * 0.6
-	size = Vector2(W, h)
-	draw_style_box(sb, Rect2(0, 0, W, h))
-	# the header: how many of this walk's goals are banked
+	if not open:
+		h = 40.0
+	size = Vector2(w, h)
+	# right-aligned, so collapsing pulls it into the corner instead of
+	# leaving a stub floating mid-screen
+	position.x = GOALS_X + (W - w)
+	draw_style_box(sb, Rect2(0, 0, w, h))
 	var all_done: bool = bool(data.all_done)
 	var head_col := Color(0.62, 0.90, 0.66) if all_done else Color(0.91, 0.86, 0.75)
+	if bool(data.peeking):
+		head_col = Color(1.0, 0.90, 0.55)
 	draw_string(f, Vector2(PAD, PAD + 12.0), "GOALS  %d/%d" % [int(data.done), int(data.total)],
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 16, head_col)
-	if all_done:
+	if all_done and open:
 		draw_string(f, Vector2(PAD + 108.0, PAD + 12.0), "ALL CLEAR",
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(0.62, 0.90, 0.66))
+	if not open:
+		# the key that opens it, quietly, once
+		draw_string(f, Vector2(w - PAD - 42.0, PAD + 11.0), String(data.key),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.62, 0.60, 0.56, 0.75))
+		return
 	var y := PAD + 30.0
 	for row: Dictionary in rows:
 		var state := int(row.state)
