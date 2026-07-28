@@ -121,6 +121,9 @@ var teeter_cd := 0.0
 # past this distance from the brink she has physically escaped it, whatever
 # the balance meter thinks
 const TEETER_ESCAPE_R := 34.0
+# the nose: how far scent carries, at a dead run vs at an amble
+const SCENT_REACH_MIN := 130.0
+const SCENT_REACH_MAX := 430.0
 # the kerb grind (see grind.gd): ride the kerb line for style
 var grind: Node
 var grind_kerb_x := 0.0
@@ -177,7 +180,7 @@ const CAM_ZOOM := 1.28
 const GOALS_X := 856.0
 const GOALS_W := 416.0
 const GOALS_MAX_ROWS := 7
-const STALL_WINDOW := 8.0
+const STALL_WINDOW := 13.0
 const STALL_MIN_PROGRESS := 90.0
 var _stall_t := 0.0
 var _stall_last_y := 0.0
@@ -1198,6 +1201,75 @@ func _draw_edge_module(r: Rect2, side: float, k: int) -> void:
 			draw_rect(Rect2(stp_x - 14.0, r.position.y + 162.0, 28.0, 12.0), Color(0.58, 0.56, 0.53))
 
 
+func _scent_sources() -> Array:
+	# Everything worth smelling, and what it smells LIKE. Colour carries the
+	# meaning, so a nose-led player learns to read them: warm amber for food,
+	# pale bone for something buried, pink for the cat, blue for a job to do,
+	# and a sickly green for the chocolate she must NOT eat - smelling
+	# wonderful and being bad for you is the whole joke of that level.
+	var out: Array = []
+	for pp in park_props:
+		if String(pp.kind) == "dig" and not pp.done:
+			out.append({"pos": pp.pos, "col": Color(0.94, 0.90, 0.76)})
+	for k in kebabs:
+		if not k.eaten:
+			out.append({"pos": k.pos, "col": Color(1.0, 0.76, 0.36)})
+	for c in candy:
+		if not c.eaten:
+			out.append({"pos": c.pos, "col": Color(0.55, 0.85, 0.45)})
+	if not prize_taken and prize_pos.x < INF:
+		out.append({"pos": prize_pos, "col": Color(1.0, 0.86, 0.42)})
+	if carry_state == 0 and carry_pickup.x < INF:
+		out.append({"pos": carry_pickup, "col": Color(0.62, 0.82, 1.0)})
+	elif carry_state == 1 and carry_drop.x < INF:
+		out.append({"pos": carry_drop, "col": Color(0.62, 0.82, 1.0)})
+	for tf in get_tree().get_nodes_in_group("tofu"):
+		out.append({"pos": tf.global_position, "col": Color(1.0, 0.66, 0.80)})
+	return out
+
+
+func _draw_scents() -> void:
+	# THE NOSE. A dog's strongest sense, so it gets to be a real one rather
+	# than a marker on a map: scent drifts off a source toward her, thickening
+	# as she nears it, and she can sense things far outside what she can see -
+	# which is what makes wandering off the direct line pay.
+	#
+	# The clever bit, and the reason this needs no extra button (so it works
+	# the same on keyboard, pad and touch): her nose REACHES FURTHER THE
+	# SLOWER SHE GOES. Barrel along and you smell almost nothing; drop to an
+	# amble and the whole street opens up. Being a dog rewards taking your
+	# time, which is rather the point of a walk.
+	var speed := dog.velocity.length()
+	var reach: float = lerpf(SCENT_REACH_MAX, SCENT_REACH_MIN, clampf(speed / 300.0, 0.0, 1.0))
+	var t := Time.get_ticks_msec() / 1000.0
+	var shown := 0
+	for src in _scent_sources():
+		if shown >= 6:
+			break  # keep the draw cost bounded on busy walks
+		var at: Vector2 = src.pos
+		var to_dog := dog.global_position - at
+		var d := to_dog.length()
+		if d > reach or d < 6.0:
+			continue
+		shown += 1
+		var near: float = 1.0 - d / reach          # 0 at the edge, 1 on top of it
+		var col: Color = src.col
+		var dir := to_dog / d
+		# motes drift from the source toward her nose, so the trail reads as
+		# something arriving rather than a line pointing at a waypoint
+		var motes := 3 + int(near * 5.0)
+		for i in range(motes):
+			var f := fmod(t * 0.45 + float(i) / float(motes), 1.0)
+			var along := at + dir * (d * f)
+			# a lazy sideways wander, so it looks carried on the air
+			var wob := dir.orthogonal() * sin(f * 7.0 + float(i) * 1.7 + at.x * 0.01) * (9.0 + near * 7.0)
+			var a: float = (0.10 + near * 0.34) * (1.0 - f * 0.55)
+			draw_circle(along + wob, 2.0 + near * 2.4, Color(col.r, col.g, col.b, a))
+		# right on top of it, a soft bloom so the last step is unmistakable
+		if near > 0.62:
+			draw_circle(at, 15.0 + near * 9.0, Color(col.r, col.g, col.b, 0.07 * near))
+
+
 func _draw_park_props() -> void:
 	for pp in park_props:
 		var p: Vector2 = pp.pos
@@ -1840,7 +1912,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.45"
+	version_l.text = "v1.46"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -3693,7 +3765,28 @@ func _watch_stall(delta: float) -> void:
 	# "it never got stuck" by requiring real corridor progress in the legs
 	# that are supposed to be travelling. The freedom romp is exempt - milling
 	# about after a ball is the whole point there.
-	if finished or phase == "freedom":
+	# Exempt the legitimately-stationary beats. The watchdog exists to catch
+	# being WEDGED, and a scripted pause is not that: while the owner is on
+	# the phone they are rooted for the better part of twenty seconds, and on
+	# the leash the dog simply cannot travel further than the rope - which
+	# read as a stall and would have failed CI for a feature working exactly
+	# as designed.
+	# Exempt the beats where standing still is the game working, not the bot
+	# being wedged. Diagnosing real stalls showed exactly two causes, both
+	# legitimate: the owner rooted mid-phone-call (the dog cannot out-travel
+	# the rope), and the owner mid-tetherball WHIRL while the dog vaults -
+	# both of them orbiting a pole, which is the funniest thing in the game
+	# and emphatically not a bug. The watchdog is for wedging.
+	if (
+		finished
+		or phase == "freedom"
+		or human.is_on_call()
+		or human.is_fallen()
+		or human.is_whirling()
+		or vault_t > 0.0
+		or teeter.active
+		or grind.active
+	):
 		_stall_t = 0.0
 		_stall_last_y = dog.global_position.y
 		return
@@ -4538,6 +4631,7 @@ func _draw() -> void:
 				draw_line(Vector2(cx + 30.0, cy + 10.0), Vector2(cx, cy), Color(0.6, 0.63, 0.68), 3.0)
 			cy += 60.0
 	_draw_ground_detail(vt, vb)
+	_draw_scents()
 	# the grind: the rail lights up under her and a CENTRED balance bar shows
 	# which way she is tipping, with the running score beside it
 	if grind.active:

@@ -423,6 +423,18 @@ memorable.
        multiplier and a natural co-op hook.
     8. WEATHER TURNING MID-WALK - rain starting changes the route home,
        not just the look.
+    9. DOG MOODS (Santtu, July 2026) - the strongest idea in the pile, and
+       worth refining before building. The scent trail proved that "see the
+       world as a dog does" is a rich seam; mood is that seam gone deeper.
+       HAPPY (normal), SCARED, BARKY and so on, where the mood does not just
+       tint the screen but changes what the level IS to you: scared might
+       shrink the world to a dim tunnel of looming shapes and long shadows
+       with hearing sharpened and scent muted; barky might light up every
+       dog, cat and pigeon as a target and make the owner harder to steer.
+       Best driven by events (a guard dog's bark, a chase, a full belly)
+       rather than chosen from a menu, so it reads as the dog REACTING.
+       Open design question: how the player influences it, because it must
+       never feel like losing control of your own camera.
   (Working title joke, recorded for posterity and not adopted: "Tony Dawg".)
 - Uniqueness rule (from playtesting): shared asset library for
   efficiency, but every setting must earn its own look AND at least one

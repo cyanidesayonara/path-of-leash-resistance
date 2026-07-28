@@ -2,6 +2,39 @@
 
 Append-only session history, newest first.
 
+## 2026-07-26 — v1.46: the scent trail - the world through a nose
+
+A dog's strongest sense finally IS one, rather than a marker on a map.
+Scent drifts off a source toward Millie, thickening as she nears it, and
+she can smell things far outside what she can see - which is what makes
+wandering off the direct line pay.
+
+- **Her nose reaches further the slower she goes.** Barrel along and you
+  smell almost nothing; drop to an amble and the whole street opens up.
+  Being a dog rewards taking your time, which is rather the point of a
+  walk - and because it needs no extra button it works identically on
+  keyboard, pad and touch.
+- Colour carries the meaning, so a nose-led player learns to read the air:
+  warm amber for food, pale bone for something buried, pink for Tofu, blue
+  for a job to do, and a sickly green for the chocolate she must NOT eat -
+  smelling wonderful while being bad for you is the whole joke of that
+  level.
+- The motes drift FROM the source TO her nose, so it reads as something
+  arriving on the air rather than a line pointing at a waypoint, with a
+  soft bloom at the source once she is nearly on top of it.
+
+### The stall watchdog, corrected
+
+Adding all this made the autowalk report stalls, and diagnosing them (with
+real numbers rather than guesses) found the watchdog was wrong, not the
+game. Both causes were legitimate: the owner rooted mid-phone-call, where
+the dog simply cannot out-travel the rope; and the owner mid-tetherball
+WHIRL while the dog vaults - both orbiting a pole, which is the funniest
+thing in the game and emphatically not a bug. Those beats are now exempt
+and the window is wider, so the watchdog still catches genuine wedging
+(it has already caught two real bugs) without failing CI for features
+working exactly as designed.
+
 ## 2026-07-26 — v1.45: the leash-vault
 
 The rope is the best thing in the game, so it should be a way to MOVE and
