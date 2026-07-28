@@ -2,6 +2,51 @@
 
 Append-only session history, newest first.
 
+## 2026-07-28 - v1.50: something you can download
+
+The first release that is not just a web page. There is now a Windows
+Desktop export preset, CI exports it alongside the web build and pushes it
+to its own itch channel, so the game appears in the itch app as a real
+download rather than a browser toy. It is built in CI rather than locally
+because the full export template pack is ~1GB and CI downloads it anyway
+for the web build, with a size check so a stub can never ship as a game.
+
+A download that cannot set its own volume is not finished, so:
+
+- **A settings screen**, reachable with the pause key from either the title
+  screen or a paused walk: master, effects and music volume, and a
+  fullscreen toggle. Saved to records.cfg with everything else. Before this
+  you could mute the music with M and that was the entire audio interface.
+- `Sfx.play()` scales by the effects setting on top of whatever volume the
+  caller asked for, so a quiet sound stays relatively quiet, and the music
+  bed scales from its own ambient level rather than jumping to the front.
+- It is drawn (settings_panel.gd) rather than assembled out of Labels. The
+  rows need a name, a slider and a value lining up in columns, and the
+  game's font is proportional - the first attempt, with padded text, looked
+  like a ragged shopping list.
+- The browser gets no fullscreen row. The browser owns the window, so the
+  toggle would be a button that lies.
+- `--selftest` now checks that the rows agree with the keys used to index
+  them, and that the values survive a save/load round trip: a typo in a
+  ConfigFile key fails silently, reverting to the default on next launch,
+  which is the kind of bug you find six weeks later.
+
+### An icon, and a name without "(prototype)" in it
+
+The download would otherwise arrive wearing the Godot logo, titled "Path of
+Leash Resistance (prototype)" - a fine way to tell someone not to bother.
+
+`tools/make_icon.gd` draws the icon from the game's own palette and writes
+icon.png; icon.ico is that PNG at seven sizes for the Windows exporter. The
+web export takes config/icon for the favicon for free, so the browser tab
+stops being a Godot tab. The pose is head-on rather than the game's
+top-down view: a black dog seen from above is a dark smudge at 32px,
+whereas a face with two eyes reads as a dog immediately.
+
+Renaming the project moves the desktop save directory, which costs nothing
+today - every save that exists is in a browser, where user:// is IndexedDB
+keyed by origin and does not care what the project is called.
+
 ## 2026-07-26 — v1.49: what she stood in comes home with you (+ a big perf win)
 
 Any dog owner knows a walk does not end at the door: whatever she stood in

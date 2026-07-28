@@ -19,9 +19,10 @@ before proposing features.
 
 - Godot 4.7 (GDScript only, no C#)
 - Renderer: GL Compatibility (required for the web export)
-- No external assets yet: all art is placeholder vectors drawn in `_draw()`
-- Web export ships to itch.io (draft page, secret URL for playtesters —
-  never commit the secret URL to this repo)
+- All art is vectors drawn in `_draw()`. The one file asset is `icon.png`,
+  and even that is generated - see `tools/make_icon.gd`
+- Two itch channels, both pushed by CI on a version tag: `html5` (played in
+  the browser) and `windows` (the download the itch app installs)
 
 ## Project Structure
 
@@ -102,13 +103,34 @@ Headless smoke test (what CI runs; catches parse and runtime script errors):
 godot\Godot_v4.7-stable_win64_console.exe --headless --path . --quit-after 1800
 ```
 
-Export the web build and zip it for itch.io:
+Release (both platforms, both itch channels):
+```
+git tag v1.51 && git push --tags
+```
+That is the whole procedure. `.github/workflows/release.yml` exports web and
+Windows, pushes each to its own itch channel with butler (which uploads only
+changed blocks), and attaches zips to a GitHub release.
+
+Export the web build locally:
 ```
 godot\Godot_v4.7-stable_win64_console.exe --headless --path . --export-release "Web" build/web/index.html
-Compress-Archive -Path build\web\* -DestinationPath touch-grass-web.zip -Force
 ```
 Requires export templates in `%APPDATA%\Godot\export_templates\4.7.stable\`
-(web_*.zip + version.txt from the official tpz).
+(web_*.zip + version.txt from the official tpz). The **Windows** preset needs
+the full ~1GB template pack, which is why that export lives in CI only - a
+local attempt fails with "No export template found" and nothing else.
+
+Regenerate the icon (after changing `tools/make_icon.gd`):
+```
+godot\Godot_v4.7-stable_win64_console.exe --rendering-method gl_compatibility --path . --script res://tools/make_icon.gd
+python tools/make_ico.py
+```
+
+Photograph a screen without playing (writes `user://shot.png`):
+```
+godot\Godot_v4.7-stable_win64_console.exe --path . --quit-after 340 -- --shot --level=park
+godot\Godot_v4.7-stable_win64_console.exe --path . --quit-after 340 -- --shot --shot-settings
+```
 
 ## Conventions
 

@@ -94,6 +94,9 @@ Web export (needs export templates installed, see AGENTS.md):
 godot\Godot_v4.7-stable_win64_console.exe --headless --path . --export-release "Web" build/web/index.html
 ```
 
+Releasing is a tag: `git tag v1.51 && git push --tags` builds web and
+Windows and pushes both to their itch channels. See AGENTS.md.
+
 ## Documentation
 
 - `PROJECT.md` — design pillars, phased roadmap, meta/retention direction
