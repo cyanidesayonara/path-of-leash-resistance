@@ -25,6 +25,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y xvfb libgl1-mesa-dri mesa-utils
 
+      # the icon is the project's one imported resource; without a cache the
+      # windowed runs below complain about a missing dependency
+      - name: Import resources
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --import
+
       - name: Leash winding regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_wrap.gd
 

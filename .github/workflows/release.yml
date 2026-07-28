@@ -39,6 +39,11 @@ jobs:
           mkdir -p ~/.local/share/godot/export_templates/4.7.stable
           mv templates/* ~/.local/share/godot/export_templates/4.7.stable/
 
+      # The project has one imported resource (the icon), and an export with
+      # no import cache ships it as a missing dependency. One pass fills it.
+      - name: Import resources
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --import
+
       - name: Export the web build
         run: |
           mkdir -p build/web

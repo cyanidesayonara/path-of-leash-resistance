@@ -3,8 +3,10 @@ config_version=5
 
 [application]
 
-config/name="Path of Leash Resistance (prototype)"
+config/name="Path of Leash Resistance"
+config/description="You are the dog. Go touch grass."
 run/main_scene="res://main.tscn"
+config/icon="res://icon.png"
 
 [autoload]
 
