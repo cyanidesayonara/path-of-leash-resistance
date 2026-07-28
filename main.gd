@@ -124,6 +124,10 @@ const TEETER_ESCAPE_R := 34.0
 var grind: Node
 var grind_kerb_x := 0.0
 var grind_cd := 0.0
+# the owner's phone call: a long window of maximum slack (see _tick_call)
+var call_active := false
+var call_haul := 0
+var call_slack_was := 340.0
 const GRIND_SPEED := 190.0   # you have to be moving to get up on it
 const GRIND_BAND := 13.0     # how close to the kerb line counts as on it
 var ball: Node2D
@@ -1821,7 +1825,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.43"
+	version_l.text = "v1.44"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -2148,6 +2152,8 @@ func _update_hud() -> void:
 		hud_status = "GOTTA GO!  find a spot, hold %s" % _kb_or_pad("SPACE", "A")
 	elif poop_state >= 3:
 		hud_status = "UH OH..."
+	elif call_active:
+		hud_status = "THEY'RE ON THE PHONE - %ds of freedom! go wild" % int(ceil(human.call_left()))
 	elif lvl == "scrap":
 		hud_status = "shhh... slow is silent. mind the cameras"
 	elif pee >= 0.999:
@@ -2245,6 +2251,9 @@ func _update_challenge_hud() -> void:
 
 func on_trick() -> void:
 	challenge.add_trick()
+	# anything she gets up to during the call counts toward the payout
+	if call_active:
+		call_haul += 1
 
 
 func start_challenge(giver: Node2D, target: int, seconds: float) -> void:
@@ -2334,6 +2343,7 @@ func _physics_process(delta: float) -> void:
 	_tick_teeter(delta)
 	if phase != "freedom":
 		_tick_grind(delta)
+		_tick_call(delta)
 	_update_combo_hud()
 	_update_challenge_hud()
 	shake_t = maxf(0.0, shake_t - delta * 2.5)
@@ -3134,6 +3144,34 @@ func _offpath(delta: float) -> void:
 			set_leash_target(180.0)
 	else:
 		offpath_t = maxf(0.0, offpath_t - delta)
+
+
+func _tick_call(_delta: float) -> void:
+	# The owner takes a call and roots themselves for the better part of
+	# twenty seconds. This is the premise of the whole game turned into a
+	# gift: for once their obliviousness is YOUR window. The leash goes right
+	# out (they are not reeling anyone in mid-natter), so the dog gets the
+	# widest radius in the game to go and do as she pleases.
+	var on_call: bool = human.is_on_call()
+	if on_call and not call_active:
+		call_active = true
+		call_haul = 0
+		call_slack_was = leash_target
+		set_leash_target(440.0)
+		Sfx.play("ui", 0.8)
+		float_text(human.global_position + Vector2(0, -34), "...a CALL. go on then", Color(0.8, 1.0, 0.85))
+	elif not on_call and call_active:
+		call_active = false
+		set_leash_target(call_slack_was)
+		# paid by what you actually got up to with the freedom
+		if call_haul > 0:
+			var bonus := 3 + call_haul * 2
+			bones += bonus
+			Sfx.play("star", 1.05)
+			float_text(dog.global_position + Vector2(0, -32), "GOOD CALL! %d things, +%d" % [call_haul, bonus], Color(0.85, 1.0, 0.8))
+			_update_hud()
+		else:
+			float_text(dog.global_position + Vector2(0, -30), "...you wasted it", Color(0.8, 0.8, 0.75))
 
 
 func _tick_grind(delta: float) -> void:

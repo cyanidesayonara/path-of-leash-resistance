@@ -2,6 +2,24 @@
 
 Append-only session history, newest first.
 
+## 2026-07-26 — v1.44: the phone call
+
+The premise of the whole game, turned into a gift. Once a walk the owner
+takes a call and roots themselves for the better part of twenty seconds -
+and for once their obliviousness is YOUR window rather than your problem.
+
+- The leash goes right out for the duration (nobody reels a dog in
+  mid-natter), so the dog gets the widest radius in the game and the run of
+  the place: mark, sniff, dig, grind, chase, whatever you fancy.
+- The HUD counts the window down, so you know exactly how much freedom is
+  left and can plan a route rather than flail.
+- It PAYS by what you actually did with it: every trick landed during the
+  call counts toward a haul that cashes out when they hang up ("GOOD CALL!
+  4 things, +11"). Waste it and it tells you so. That turns a free window
+  into a little optimisation puzzle rather than a pause.
+- Rare and once per walk, so it stays a treat, and it never interrupts the
+  poo-bag chore chain.
+
 ## 2026-07-26 — v1.43: the kerb grind
 
 The teeter turned a hazard into a skill you could survive. This turns the

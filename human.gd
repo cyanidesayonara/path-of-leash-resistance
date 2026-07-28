@@ -3,7 +3,7 @@ extends CharacterBody2D
 # The human. Dead weight with a phone. Walks north on autopilot,
 # occasionally does something stupid. Telegraphs it first, to be fair.
 
-enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, SIGNAL, WHIRL, GO_POOP, BAG, GO_BIN, TOSS, STUMBLE, FALLEN }
+enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, SIGNAL, CALL, WHIRL, GO_POOP, BAG, GO_BIN, TOSS, STUMBLE, FALLEN }
 
 const WALK_SPEED := 92.0
 const PANIC_SPEED := 230.0
@@ -34,6 +34,11 @@ var hgait := 0.0
 var chain_target := Vector2.ZERO
 var carrying_bag := false
 var bin_stuck_t := 0.0
+# THE PHONE CALL: once a walk the owner takes a call and stops dead for an
+# age. Their obliviousness stops being an obstacle and becomes the dog's
+# window - see main.gd, which lets the leash right out for the duration.
+var call_used := false
+var call_total := 0.0
 var wading := false
 var pond_bank_x := 0.0
 var homeward := false
@@ -135,6 +140,15 @@ func tick(delta: float) -> void:
 			# walks backwards while filming, weaving
 			var sway := sin(Time.get_ticks_msec() / 250.0) * 30.0
 			velocity = velocity.move_toward(Vector2(sway, 62.0), 220.0 * delta)
+			move_and_slide()
+			if state_t <= 0.0:
+				state = HState.WALK
+				bubble.visible = false
+		HState.CALL:
+			# planted, one hand to the ear, shifting their weight. They are
+			# not going anywhere and they are not watching the dog.
+			var shuf := sin(Time.get_ticks_msec() / 900.0) * 6.0
+			velocity = velocity.move_toward(Vector2(shuf, 0.0), 180.0 * delta)
 			move_and_slide()
 			if state_t <= 0.0:
 				state = HState.WALK
@@ -321,6 +335,9 @@ func _events(delta: float) -> void:
 			# out in the woods there are no bars, ever
 			pending_event = HState.SIGNAL
 			_show_bubble("no bars out here")
+		elif not call_used and roll < 0.08:
+			pending_event = HState.CALL
+			_show_bubble("ring ring...")
 		elif roll < 0.18:
 			pending_event = HState.STOPPED
 			_show_bubble("ring ring")
@@ -369,6 +386,13 @@ func _fire_event() -> void:
 			state = HState.SIGNAL
 			state_t = randf_range(2.6, 4.2)
 			_show_bubble("no signal...")
+		HState.CALL:
+			# a proper natter: long enough to be a real opportunity
+			state = HState.CALL
+			state_t = randf_range(16.0, 21.0)
+			call_total = state_t
+			call_used = true
+			_show_bubble("hello? ...oh HI")
 		HState.DASH:
 			var lo: float = main.walk_cx - main.walk_half + 40.0
 			var hi: float = main.walk_cx + main.walk_half - 40.0
@@ -477,6 +501,14 @@ func unpark() -> void:
 	homeward = true
 	bubble.visible = false
 	_show_bubble("okay, home time")
+
+
+func is_on_call() -> bool:
+	return state == HState.CALL
+
+
+func call_left() -> float:
+	return maxf(0.0, state_t) if state == HState.CALL else 0.0
 
 
 func is_available_for_chore() -> bool:
