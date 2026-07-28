@@ -399,6 +399,31 @@ memorable.
   replacing the procedural vector art. The systems are in place; it is a
   presentation layer, best done once the mechanic set is frozen so art
   is not redrawn. Tracked for the v2.0 "The Product" milestone.
+- Fun-mechanic backlog (agreed July 2026, all wanted). The game is
+  deliberately a mishmash of minigames, so the rule is: every mechanic has
+  to be fun on keyboard AND pad AND touch, easy to start, hard to master,
+  harder to perfect - Crash Bandicoot and Tony Hawk as the role models -
+  and the game must keep throwing new things at you so it never becomes
+  repetitive slop.
+    1. KERB GRIND - hold the teeter along a kerb or low wall at speed for
+       style points. Turns the balance module from a rescue into a scoring
+       verb. Cheapest big win, since teeter.gd already exists.
+    2. LEASH-VAULT - wind the leash on a pole and use the tension to
+       slingshot around it. Makes the best mechanic into locomotion.
+    3. SCENT TRAIL - a drifting smell you can follow to a buried thing.
+       Gives the nose a navigation purpose and rewards wandering.
+    4. RIVAL DOG - a recurring antagonist who steals fetched balls and
+       dug-up bones. One character does more for personality than three
+       levels.
+    5. THE PHONE CALL - the owner rooted for ~20s while you exploit maximum
+       slack. Their obliviousness as an opportunity, not an obstacle.
+    6. MUD STACKING - get muddy and everything you touch gets marked
+       (owner's trousers, cafe chairs, a white cat). Compounding comedy.
+    7. TWO DOGS, ONE OWNER - a second leash you also control. Chaos
+       multiplier and a natural co-op hook.
+    8. WEATHER TURNING MID-WALK - rain starting changes the route home,
+       not just the look.
+  (Working title joke, recorded for posterity and not adopted: "Tony Dawg".)
 - Uniqueness rule (from playtesting): shared asset library for
   efficiency, but every setting must earn its own look AND at least one
   interaction that exists nowhere else - it gets dull otherwise.

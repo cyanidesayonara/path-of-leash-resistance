@@ -117,6 +117,9 @@ var teeter_kind := ""
 var teeter_at := Vector2.ZERO
 var teeter_msg := ""
 var teeter_cd := 0.0
+# past this distance from the brink she has physically escaped it, whatever
+# the balance meter thinks
+const TEETER_ESCAPE_R := 34.0
 var ball: Node2D
 var romp_timer := 0.0
 var romp_catches := 0
@@ -989,11 +992,27 @@ func _draw_edges(vt: float, vb: float) -> void:
 		# tall through three cues instead: a lit parapet cap along its edge,
 		# a hard shadow thrown across the pavement, and ambient darkening
 		# where wall meets ground.
-		# parapet: the top of the wall catches the light
-		draw_rect(Rect2(sw_l - 11.0, top_y, 11.0, h), base.lightened(0.20))
-		draw_rect(Rect2(sw_r, top_y, 11.0, h), base.lightened(0.14))
-		draw_line(Vector2(sw_l, top_y), Vector2(sw_l, top_y + h), base.darkened(0.45), 2.0)
-		draw_line(Vector2(sw_r, top_y), Vector2(sw_r, top_y + h), base.darkened(0.45), 2.0)
+		# THE HEIGHT ILLUSION. A flat roof butted against flat pavement reads
+		# as ground you could stroll onto - which is exactly how it looked.
+		# So the roof is drawn inset from its footprint and the gap between
+		# them becomes a visible WALL FACE, angled toward the viewer: dark at
+		# the base, lighter up the wall, with a bright cap along the roof
+		# edge. Together with the cast shadow that gives a clear storey of
+		# height and makes the roofline unmistakably a roofline.
+		var face := 22.0
+		for i in range(7):
+			var f := float(i) / 6.0
+			# left block: its face looks right, into the street
+			var lx := sw_l - face + face * f
+			draw_rect(Rect2(lx, top_y, face / 6.0 + 1.0, h), base.darkened(0.52 - f * 0.34))
+			# right block: its face looks left, into the street
+			var rx := sw_r + face - face * f
+			draw_rect(Rect2(rx - face / 6.0 - 1.0, top_y, face / 6.0 + 1.0, h), base.darkened(0.56 - f * 0.34))
+		# the lit cap where the wall meets the roof, and a hard kerb line
+		draw_rect(Rect2(sw_l - face - 5.0, top_y, 5.0, h), base.lightened(0.30))
+		draw_rect(Rect2(sw_r + face, top_y, 5.0, h), base.lightened(0.24))
+		draw_line(Vector2(sw_l, top_y), Vector2(sw_l, top_y + h), Color(0.04, 0.03, 0.05, 0.55), 3.0)
+		draw_line(Vector2(sw_r, top_y), Vector2(sw_r, top_y + h), Color(0.04, 0.03, 0.05, 0.55), 3.0)
 		# the light is up-and-left, so the LEFT block throws a shadow out
 		# across the pavement; the right block throws its own away from us
 		var cast := 38.0
@@ -1003,10 +1022,13 @@ func _draw_edges(vt: float, vb: float) -> void:
 		for i in range(3):
 			var g := float(i) / 2.0
 			draw_rect(Rect2(sw_r - 11.0 * (1.0 - g), top_y, 11.0 * (1.0 - g), h), Color(0.05, 0.04, 0.07, 0.05))
+	# the roof sits BACK from the kerb by the depth of the wall face drawn
+	# above, otherwise the roof clutter would be painted over the wall
+	var inset := 27.0 if built else 0.0
 	var y := floorf((vt - mod) / mod) * mod
 	while y < vb + mod:
 		for side in [-1.0, 1.0]:
-			var inner: float = sw_l if side < 0.0 else sw_r
+			var inner: float = (sw_l - inset) if side < 0.0 else (sw_r + inset)
 			var x0: float = inner - depth if side < 0.0 else inner
 			# contiguous modules: gaps between them looked like missing wall
 			var r := Rect2(x0, y, depth, mod)
@@ -1433,6 +1455,28 @@ func _build_walls() -> void:
 		tcs.shape = tsh
 		tb.add_child(tcs)
 		add_child(tb)
+	# Buildings are solid, so you cannot stroll onto a roof. Only on the sides
+	# that really ARE buildings, and only along the walking legs - the
+	# off-leash area past the gate stays open. The boulevard and El Aguacero
+	# keep their right side open because that is the bike lane and the far
+	# shoulder, where the frisbee prize deliberately sits; the green walks and
+	# the beach have no buildings at all.
+	var wall_sides := []
+	match lvl:
+		"street", "rain": wall_sides = [-1.0]
+		"park", "trail", "beach": wall_sides = []
+		_: wall_sides = [-1.0, 1.0]
+	for ws in wall_sides:
+		var bx: float = (sw_l - 60.0) if ws < 0.0 else (sw_r + 60.0)
+		var bb := StaticBody2D.new()
+		bb.collision_layer = 1
+		bb.position = Vector2(bx, (START_Y + GATE_Y) / 2.0)
+		var bcs := CollisionShape2D.new()
+		var bsh := RectangleShape2D.new()
+		bsh.size = Vector2(120.0, absf(START_Y - GATE_Y) + 400.0)
+		bcs.shape = bsh
+		bb.add_child(bcs)
+		add_child(bb)
 	# the park's solid furniture: you go round a log, not through it. Digs,
 	# shrubs and troughs stay walkable so nosing about is never obstructed.
 	for pp in park_props:
@@ -1771,7 +1815,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.41"
+	version_l.text = "v1.42"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -2121,18 +2165,20 @@ func _update_hud() -> void:
 			# banked this run reads brighter than banked on some past walk
 			var tick_col := "8fe39a" if hit else "6f8c74"
 			var txt_col := "b9d8bd" if hit else "78877a"
-			done_rows.append("[color=#%s]  ✔  [/color][color=#%s]%s[/color]" % [tick_col, txt_col, name_txt])
+			done_rows.append("[color=#%s]  [x] [/color][color=#%s]%s[/color]" % [tick_col, txt_col, name_txt])
 		else:
-			var row := "[color=#f0c95a]  ○  [/color][color=#f2ece0]%s[/color]" % name_txt
+			var row := "[color=#f0c95a]  [ ] [/color][color=#f2ece0]%s[/color]" % name_txt
 			var target := int(q.target)
 			if target > 1:
 				var got: int = mini(int(q.fn.call()), target)
 				# a tiny inline meter, so multi-step goals show momentum
-				# filled/hollow circles: the default font has these (the
-				# block-glyph versions rendered as empty tofu boxes)
+				# ASCII ONLY. The desktop build has system font fallbacks
+				# that cover geometric shapes and ticks, but the web export
+				# ships none of them, so anything non-ASCII rendered as
+				# empty tofu boxes in the browser. Bar it is.
 				var meter := ""
 				for i in range(target):
-					meter += "●" if i < got else "○"
+					meter += "#" if i < got else "-"
 				row += "  [color=#c8b98a]%s %d/%d[/color]" % [meter, got, target]
 			open_rows.append(row)
 	var rows := open_rows + done_rows
@@ -3102,15 +3148,26 @@ func _tick_teeter(delta: float) -> void:
 	teeter_cd = maxf(0.0, teeter_cd - delta)
 	if not teeter.active:
 		return
-	# scrambling AWAY from the brink is what saves you
+	# scrambling AWAY from the brink is what saves you. Both the input AND
+	# the actual travel count: if momentum is carrying her clear, that IS
+	# escaping, and it would be daft to ignore it.
 	var away := (dog.global_position - teeter_at).normalized()
-	var counter: float = dog.input_dir.normalized().dot(away) if dog.input_dir.length() > 0.1 else 0.0
+	var counter := 0.0
+	if dog.input_dir.length() > 0.1:
+		counter = dog.input_dir.normalized().dot(away)
+	if dog.velocity.length() > 40.0:
+		counter = maxf(counter, dog.velocity.normalized().dot(away) * 0.9)
 	# turbo is a panic scrabble: it helps, which is the intuitive reading
 	if dog.turbo_active:
 		counter += 0.25
 	var res: String = teeter.tick(delta, counter)
 	if res == "":
 		return
+	# She may have walked clear of the brink while the meter was filling, and
+	# dying to a hole you are visibly standing past is indefensible. Physical
+	# escape beats the meter: if she is no longer over it, she got out.
+	if res == "fell" and dog.global_position.distance_to(teeter_at) > TEETER_ESCAPE_R:
+		res = "saved"
 	teeter_cd = 1.4  # never re-trigger instantly on the same brink
 	if res == "saved":
 		# a real recovery, scored like the stumble saves it echoes

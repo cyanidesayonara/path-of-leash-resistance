@@ -2,6 +2,41 @@
 
 Append-only session history, newest first.
 
+## 2026-07-26 — v1.42: four bugs from real browser play
+
+All four found by actually playing the web build, and all four were real.
+
+- **Mangled characters in the goal card.** The ticks and circles rendered
+  fine in the desktop build but as empty tofu boxes in the browser: the
+  desktop has system font fallbacks covering geometric shapes, and the web
+  export ships none. The HUD is now pure ASCII ([x] / [ ], and a #---- bar
+  for progress), and the whole codebase is swept clean of non-ASCII in
+  drawn text.
+- **Dying after escaping the teeter.** On a "fell" result the manhole death
+  fired unconditionally, so if the balance meter filled while Millie had
+  already WALKED CLEAR of the hole, she died standing visibly past it. Now
+  physical escape beats the meter: out of range means out. Momentum counts
+  toward the save too, not just held input - if travel is carrying her
+  clear, that IS escaping.
+- **Snow stuck on the screen after choosing a clear day.** The weather
+  overlay only queued a redraw while weather was active, so switching TO
+  clear left the last painted frame of snow on the canvas forever. `mode`
+  is now a setter that forces one final redraw to clear it.
+- **You could walk on the rooftops.** Two causes, both fixed. The roof was
+  drawn flush against the pavement so it read as ground you could stroll
+  onto - the roof is now inset from its footprint and the gap is a visible
+  WALL FACE, graded dark at the base to light at the cap, with a hard kerb
+  line and the existing cast shadow: a clear storey of height. And the
+  buildings are now SOLID, on the sides that really are buildings and only
+  along the walking legs. The boulevard and El Aguacero keep their right
+  side open, because that is the bike lane and the shoulder where the
+  frisbee prize deliberately sits, and the green walks and beach have no
+  buildings at all.
+- PROJECT.md now records the agreed fun-mechanic backlog (kerb grind,
+  leash-vault, scent trail, rival dog, the phone call, mud stacking, two
+  dogs, mid-walk weather) with the design rule that every mechanic must
+  work on keyboard, pad and touch.
+
 ## 2026-07-26 — v1.41: the teeter - the moment before you fall in
 
 Walking into a hole used to be instant and unreadable: you were simply

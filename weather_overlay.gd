@@ -4,7 +4,16 @@ extends Control
 # but under the HUD text. Purely atmospheric; the gameplay nudges (slick
 # ground, a shoving wind) live in main.gd.
 
-var mode := "clear"
+# `mode` needs a setter: _process returns early when the weather is "clear",
+# so it never queued a redraw, and the LAST drawn frame of snow or rain
+# stayed painted on the screen forever after you switched to a clear day.
+# Changing the mode now always forces one more redraw to clear the canvas.
+var mode := "clear":
+	set(value):
+		if mode == value:
+			return
+		mode = value
+		queue_redraw()
 var drops: Array[Vector2] = []
 var t := 0.0
 
