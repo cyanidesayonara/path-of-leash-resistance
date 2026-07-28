@@ -136,6 +136,7 @@ var tut_hint: Label
 var barks_done := 0
 var grinds_landed := 0
 var vaults_landed := 0
+var rivals_beaten := 0
 # the kerb grind (see grind.gd): ride the kerb line for style
 var grind: Node
 var grind_kerb_x := 0.0
@@ -1952,7 +1953,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.47"
+	version_l.text = "v1.48"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -3432,6 +3433,43 @@ func _update_tut_card() -> void:
 	tut_label.modulate = Color(1, 1, 1).lerp(Color(0.6, 1.0, 0.65), glow)
 
 
+func on_rival_snatch(at: Vector2, what: String) -> void:
+	# he has your things. This is a provocation, not a punishment: the combo
+	# survives, and you can have it straight back if you go and get it.
+	shake_t = maxf(shake_t, 0.3)
+	Sfx.play("bark", 0.7, -5.0)
+	var label := "MY BALL!" if what == "ball" else "MY BONE!"
+	float_text(at + Vector2(0, -30), label + " bark at him!", Color(1, 0.7, 0.6))
+	_update_hud()
+
+
+func on_rival_drop(at: Vector2, what: String, msg: String, earned: bool) -> void:
+	if what == "":
+		return
+	if not earned:
+		# he wandered off with it. You get nothing, because you did nothing -
+		# and the bone stays gone, so a thief who is ignored actually costs
+		# you something.
+		float_text(at + Vector2(0, -28), msg, Color(0.85, 0.8, 0.75))
+		return
+	# recovered: worth more than the thing was, because taking it back off
+	# him is the better story
+	var reward := 9 if what == "bone" else 7
+	bones += reward
+	rivals_beaten += 1
+	Sfx.play("star", 1.1)
+	combo.add("STEAL BACK", 7)
+	float_text(at + Vector2(0, -30), "%s  +%d" % [msg, reward], Color(0.85, 1.0, 0.8))
+	_slowmo()
+	# only a genuine recovery puts the bone back within reach; letting him
+	# escape with it means it is gone for good
+	for pp in park_props:
+		if String(pp.kind) == "dig" and pp.get("looted", false):
+			pp["looted"] = false
+			break
+	_update_hud()
+
+
 func _tick_call(_delta: float) -> void:
 	# The owner takes a call and roots themselves for the better part of
 	# twenty seconds. This is the premise of the whole game turned into a
@@ -4002,6 +4040,18 @@ func _enter_freedom() -> void:
 		fd.z_index = 9
 		add_child(fd)
 		fd.setup(self, dog, freedom_lo, GATE_Y - 30.0)
+	# BRUTUS, the park thief: he turns up on some walks to help himself to
+	# whatever you have just earned. Not in the tutorial - a first walk is no
+	# place to meet him.
+	if not tutorial_mode and randf() < 0.5:
+		var rv := Node2D.new()
+		rv.set_script(load("res://rival.gd"))
+		var rb := _pair_park_bounds()
+		rv.position = Vector2(rb.position.x + 60.0, rb.get_center().y)
+		rv.z_index = 9
+		add_child(rv)
+		rv.setup(self, dog, rb)
+		float_text(rv.position, "...oh no. Brutus.", Color(1, 0.85, 0.75))
 	float_text(dog.global_position, "OFF LEASH!  FETCH!", Color(0.8, 1.0, 0.8))
 
 
@@ -4327,6 +4377,9 @@ func on_bark(pos: Vector2) -> void:
 	for p in get_tree().get_nodes_in_group("pigeons"):
 		if p.global_position.distance_to(pos) < 200.0:
 			p.scare()
+	for rv in get_tree().get_nodes_in_group("rivals"):
+		if rv.global_position.distance_to(pos) < 132.0:
+			rv.scare()
 	for wc in get_tree().get_nodes_in_group("wallcats"):
 		if wc.global_position.distance_to(pos) < 150.0:
 			wc.scare()

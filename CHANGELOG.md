@@ -2,6 +2,30 @@
 
 Append-only session history, newest first.
 
+## 2026-07-26 — v1.48: Brutus, the park thief
+
+A recurring character, because one of those does more for a game's
+personality than three more levels. Brutus is the dog at the park having a
+lovely time at your expense.
+
+- He is not a hazard and he cannot hurt you - he is a THIEF. He waits for
+  you to EARN something (a ball you went and fetched, a bone you dug up),
+  helps himself, and legs it looking extremely pleased. Which is the point:
+  the fetch and dig systems now have something pushing back.
+- Get it back by barking him out of it (always works, no dice rolls) or by
+  catching him. Recovering is worth MORE than the thing was, because taking
+  it off him is the better story - and it feeds the combo.
+- He is faster than you in a straight line but turns like a bus, so the
+  counterplay is cutting corners rather than out-running him. Rules he obeys
+  so he stays funny rather than infuriating: never steals out of your mouth,
+  only off the ground; a close bark always beats him; and he never appears
+  on the tutorial walk, which is no place to meet him.
+- **He pays nothing if you ignore him.** The first cut rewarded you when he
+  simply got bored and wandered off, which meant doing nothing earned bones
+  and the same bone could be farmed in a loop. Now only a genuine recovery
+  pays, and if he escapes with your bone it is gone for good - so a thief
+  who is ignored actually costs you something.
+
 ## 2026-07-26 — v1.47: The First Walk - a tutorial
 
 We had accumulated a lot of verbs - some obvious (walk, pee), some that
