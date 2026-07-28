@@ -2,6 +2,36 @@
 
 Append-only session history, newest first.
 
+## 2026-07-26 — v1.47: The First Walk - a tutorial
+
+We had accumulated a lot of verbs - some obvious (walk, pee), some that
+nobody would ever guess (the grind, the vault, the nose, the teeter) - and
+nothing taught any of them. This is the fix, and it is the calm walk it
+ought to be rather than a wall of text.
+
+- A new walk at the front of the carousel, always unlocked, deliberately
+  SAFE BY CONSTRUCTION: no traffic, no chase, no other walkers, no manholes
+  or cellars, bright clear day. Nothing here can end your walk, so you can
+  fail a lesson as often as you like.
+- Eleven lessons, one at a time, ordered from "you already know this" to
+  "nobody would guess this": walk, feel the rope go tight, mark a hydrant,
+  have a proper sniff, USE YOUR NOSE (slow down and the world opens up),
+  dig something up, bark, the zoomies, ride the kerb, and vault a lamppost.
+  Each waits as long as you like and pays a couple of bones when it lands.
+- Every lesson is SKIPPABLE (C / Y). A tutorial that traps a player who
+  cannot do the thing is worse than no tutorial at all.
+- The lesson checks are written against what the game already tracks, so it
+  teaches the real mechanics rather than a scripted imitation - if the
+  grind changes, the grind lesson changes with it.
+- It sits outside the campaign level list entirely, so it has no star gate,
+  earns no stars, and cannot pollute your records. The goal card is hidden
+  on it too: a first walk has lessons, not goals.
+- Two ordering bugs found and fixed while building it: the calm-level setup
+  emptied lane_ys AFTER its parallel lane_state had been built (an
+  out-of-bounds every frame), and set the hydrant list AFTER it had already
+  been consumed. Both now run before the shared setup, and CI smoke-tests
+  the tutorial build.
+
 ## 2026-07-26 — v1.46: the scent trail - the world through a nose
 
 A dog's strongest sense finally IS one, rather than a marker on a map.

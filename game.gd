@@ -5,6 +5,7 @@ extends Node
 const LEVELS: Array[String] = ["street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap"]
 const LEVEL_NAMES := {
 	"daily": "Daily Walk",
+	"tutorial": "First Walk (tutorial)",
 	"street": "The Boulevard", "park": "The Park",
 	"beach": "Passeig Maritim", "rain": "El Aguacero", "market": "El Mercat",
 	"oldtown": "El Gotic", "trail": "El Bosc", "station": "L'Estacio", "site": "Les Obres",
@@ -18,7 +19,7 @@ const WEATHERS: Array[String] = ["clear", "rain", "wind", "snow"]
 const WEATHER_NAMES := {"clear": "CLEAR", "rain": "RAIN", "wind": "WIND", "snow": "SNOW"}
 
 # the carousel on the title: the daily walk first, then the campaign walks
-const CAROUSEL: Array[String] = ["daily", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap"]
+const CAROUSEL: Array[String] = ["tutorial", "daily", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap"]
 
 # cosmetics: collars (recolour Millie's collar/harness) and bandanas.
 # "none" is free and always owned; the rest cost bones once, then equip.
@@ -158,6 +159,8 @@ func _ready() -> void:
 				weather = w
 		elif arg == "--daily":
 			level_id = "daily"
+		elif arg == "--tutorial":
+			level_id = "tutorial"
 
 
 func load_records() -> void:
@@ -260,8 +263,8 @@ func total_stars() -> int:
 
 
 func is_unlocked(lv: String) -> bool:
-	if lv == "daily":
-		return true  # the daily is always open
+	if lv == "daily" or lv == "tutorial":
+		return true  # the daily and the tutorial are always open
 	return total_stars() >= int(STAR_GATE.get(lv, 0))
 
 
@@ -328,3 +331,7 @@ func cycle_level(dir: int) -> void:
 
 func is_daily(lv: String) -> bool:
 	return lv == "daily"
+
+
+func is_tutorial(lv: String) -> bool:
+	return lv == "tutorial"

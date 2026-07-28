@@ -124,6 +124,18 @@ const TEETER_ESCAPE_R := 34.0
 # the nose: how far scent carries, at a dead run vs at an amble
 const SCENT_REACH_MIN := 130.0
 const SCENT_REACH_MAX := 430.0
+# the tutorial walk (see tutorial.gd): one lesson at a time, all skippable
+const TutorialSteps := preload("res://tutorial.gd")
+var tutorial_mode := false
+var tut_step := 0
+var tut_flash := 0.0
+var tut_start_y := 0.0
+var tut_label: Label
+var tut_hint: Label
+# counters the tutorial checks against
+var barks_done := 0
+var grinds_landed := 0
+var vaults_landed := 0
 # the kerb grind (see grind.gd): ride the kerb line for style
 var grind: Node
 var grind_kerb_x := 0.0
@@ -353,6 +365,15 @@ func _ready() -> void:
 		lvl = Game.daily_level()
 		Game.weather = Game.daily_weather()
 		Game.night = Game.daily_night()
+	elif Game.is_tutorial(Game.level_id):
+		# THE FIRST WALK: the boulevard's shape, but calm and safe by
+		# construction - no traffic to dodge, no chase, no other walkers, and
+		# a bright clear day. Nothing here can end your walk.
+		Game.daily = false
+		tutorial_mode = true
+		lvl = "street"
+		Game.weather = "clear"
+		Game.night = false
 	else:
 		Game.daily = false
 		if autowalk_requested:
@@ -402,7 +423,7 @@ func _ready() -> void:
 	var chase_forced := "--chase" in args
 	var bolt_forced := "--bolt" in args
 	var rescue_forced := "--rescue" in args
-	chase_active = chase_forced or bolt_forced or rescue_forced or (not auto_walk and not Game.daily and randf() < 0.25)
+	chase_active = (chase_forced or bolt_forced or rescue_forced or (not auto_walk and not Game.daily and randf() < 0.25)) and not tutorial_mode
 	if chase_active:
 		tofu_quest_active = false
 		if bolt_forced:
@@ -815,6 +836,25 @@ func _build_level_data() -> void:
 		vans = [Vector2(880, -1600), Vector2(390, -2650), Vector2(900, -4400)]
 		cone_spots = [Vector2(560, -1950), Vector2(720, -3050), Vector2(600, -3900)]
 		fountains = [Vector2(1005, -2950)]
+	if tutorial_mode:
+		# Take away everything that can hurt, keep everything worth learning.
+		# This has to run BEFORE the shared setup below consumes hyd_list /
+		# keb_list and builds lane_state from lane_ys - doing it later left a
+		# populated lane_state indexing an emptied lane_ys, which is exactly
+		# the out-of-bounds it produced.
+		lane_ys = []
+		lane_state = []
+		manholes = []
+		cellars = []
+		vans = []
+		astands = []
+		performers = []
+		# a generous supply of practice apparatus, spread out and unhurried
+		hyd_list = [Vector2(360.0, -700.0), Vector2(915.0, -1250.0), Vector2(360.0, -1900.0)]
+		keb_list = [Vector2(640.0, -1500.0), Vector2(700.0, -2400.0)]
+		poles.append(Vector2(500.0, -2100.0))
+		poles.append(Vector2(790.0, -2750.0))
+		deco_pole_count = poles.size()
 	for tb in tables:
 		poles.append(tb)
 	for pa in parasols:
@@ -1912,7 +1952,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.46"
+	version_l.text = "v1.47"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -2024,6 +2064,14 @@ func _build_hud() -> void:
 	pause_l.size = Vector2(1280, 120)
 	pause_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	pause_l.visible = false
+	tut_label = _hud_label(Vector2(0, 96), 30)
+	tut_label.size = Vector2(1280, 40)
+	tut_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	tut_label.visible = false
+	tut_hint = _hud_label(Vector2(0, 136), 19)
+	tut_hint.size = Vector2(1280, 60)
+	tut_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	tut_hint.visible = false
 	progress_l = _hud_label(Vector2(0, 70), 19)
 	progress_l.size = Vector2(1280, 560)
 	progress_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -2056,7 +2104,7 @@ func _apply_menu_step() -> void:
 	var in_menu := not started
 	panel.visible = started
 	qbg.visible = started
-	quests_label.visible = started
+	quests_label.visible = started and not tutorial_mode
 	title_l.visible = in_menu
 	sub_l.visible = in_menu and menu_step == 0
 	select_l.visible = in_menu and menu_step >= 1
@@ -2297,6 +2345,11 @@ func _update_hud() -> void:
 	# fit_content gives the real rendered height, so the card always wraps
 	# its contents exactly instead of guessing at a line height
 	qbg.size.y = maxf(46.0, quests_label.size.y + 26.0)
+	if tutorial_mode:
+		# a first walk has lessons, not goals: the boulevard's goal list would
+		# be meaningless here and it collided with the lesson card
+		qbg.visible = false
+		quests_label.visible = false
 
 
 func _update_combo_hud() -> void:
@@ -2428,6 +2481,9 @@ func _physics_process(delta: float) -> void:
 	combo.tick(delta)
 	challenge.tick(delta)
 	_tick_teeter(delta)
+	if tutorial_mode:
+		_tick_tutorial(delta)
+		_update_tut_card()
 	if phase != "freedom":
 		_tick_grind(delta)
 		_tick_call(delta)
@@ -3140,6 +3196,8 @@ func _prepare_pairs_for_home(pairs: Array) -> void:
 
 
 func _pairs(delta: float) -> void:
+	if tutorial_mode:
+		return  # a first walk is quiet: no other dog-walkers at all
 	# mixed-direction dog-walkers; their leashes tangle yours
 	var pairs := get_tree().get_nodes_in_group("pairs")
 	if phase == "freedom":
@@ -3294,12 +3352,84 @@ func _end_vault() -> void:
 		dog.velocity = tan * VAULT_LAUNCH
 		var pts := int(round(8.0 + turns * 40.0))
 		bones += int(pts / 4)
+		vaults_landed += 1
 		combo.add("VAULT", pts)
 		Sfx.play("star", 1.15)
 		float_text(dog.global_position + Vector2(0, -32), "VAULT! %d" % pts, Color(0.85, 0.95, 1.0))
 		_slowmo()
 		_update_hud()
 	vault_arc = 0.0
+
+
+func _tut_step_done(id: String) -> bool:
+	# One check per lesson, each written against what the game already
+	# tracks, so the tutorial teaches the REAL mechanics rather than a
+	# scripted imitation of them.
+	match id:
+		"walk": return tut_start_y - dog.global_position.y > 240.0
+		"pull": return leash.taut and leash.used_length() > leash_len * 0.98
+		"pee": return marks.size() >= 1
+		"sniff": return sniffs_done >= 1
+		"nose":
+			# ambling near something worth smelling: the lesson IS going slow
+			if dog.velocity.length() > 110.0:
+				return false
+			for src in _scent_sources():
+				if dog.global_position.distance_to(src.pos) < 240.0:
+					return true
+			return false
+		"dig": return digs_done >= 1 or kebabs_eaten >= 1
+		"bark": return barks_done >= 1
+		"turbo": return dog.turbo_active and dog.energy < 0.94
+		"grind": return grinds_landed >= 1
+		"vault": return vaults_landed >= 1
+		"done": return false   # the last card just sees you off
+	return false
+
+
+func _tick_tutorial(delta: float) -> void:
+	tut_flash = maxf(0.0, tut_flash - delta)
+	var st: Dictionary = TutorialSteps.step(tut_step)
+	var id := String(st.id)
+	if id == "":
+		return
+	# skippable, always: a tutorial that traps a player who cannot do the
+	# thing is worse than no tutorial at all
+	if Input.is_action_just_pressed("share") and id != "done":
+		_tut_advance(false)
+		return
+	if _tut_step_done(id):
+		_tut_advance(true)
+
+
+func _tut_advance(earned: bool) -> void:
+	tut_step += 1
+	tut_flash = 1.1
+	if earned:
+		Sfx.play("star", 1.15)
+		bones += 2
+	else:
+		Sfx.play("ui", 0.9)
+	_update_hud()
+
+func _update_tut_card() -> void:
+	if not started:
+		return
+	var st: Dictionary = TutorialSteps.step(tut_step)
+	if String(st.id) == "":
+		tut_label.visible = false
+		tut_hint.visible = false
+		return
+	tut_label.visible = true
+	tut_hint.visible = true
+	tut_label.text = String(st.title)
+	var body := String(st.body)
+	if String(st.id) != "done":
+		body += "        (%s to skip)" % _kb_or_pad("C", "Y")
+	tut_hint.text = body
+	# a green flash of acknowledgement as each lesson lands
+	var glow: float = clampf(tut_flash, 0.0, 1.0)
+	tut_label.modulate = Color(1, 1, 1).lerp(Color(0.6, 1.0, 0.65), glow)
 
 
 func _tick_call(_delta: float) -> void:
@@ -3357,6 +3487,7 @@ func _tick_grind(delta: float) -> void:
 			grind_cd = 0.5
 			if pts > 0:
 				bones += int(pts / 4)
+				grinds_landed += 1
 				combo.add("GRIND", pts)
 				Sfx.play("star", 1.2)
 				float_text(dog.global_position + Vector2(0, -30), "GRIND! %d" % pts, Color(1, 0.9, 0.5))
@@ -4186,6 +4317,7 @@ func _build_daily_card(run_done: int, total: int, rec: Dictionary) -> void:
 
 
 func on_bark(pos: Vector2) -> void:
+	barks_done += 1
 	Sfx.play("bark")
 	if human.global_position.distance_to(pos) < 170.0:
 		human.halt(0.8)

@@ -125,6 +125,9 @@ jobs:
             ./Godot_v4.7-stable_linux.x86_64 --headless --path . --quit-after 1800 -- --level=$LV 2>&1 | tee smoke-$LV.log
             ! grep -E "SCRIPT ERROR|Parse Error|Failed to load script" smoke-$LV.log
           done
+          # the tutorial walk: a separate calm level build
+          ./Godot_v4.7-stable_linux.x86_64 --headless --path . --quit-after 1200 -- --tutorial 2>&1 | tee smoke-tutorial.log
+          ! grep -E "SCRIPT ERROR|Parse Error|Failed to load script" smoke-tutorial.log
           # snow weather: exercises the ice-slide physics path
           ./Godot_v4.7-stable_linux.x86_64 --headless --path . --quit-after 1800 -- --level=street --weather=snow 2>&1 | tee smoke-snow.log
           ! grep -E "SCRIPT ERROR|Parse Error|Failed to load script" smoke-snow.log
