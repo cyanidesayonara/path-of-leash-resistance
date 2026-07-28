@@ -81,6 +81,15 @@ jobs:
       - name: Per-level goal/star progression regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_goals.gd
 
+      - name: Fresh-save progression persistence regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_fresh_save_progression.gd
+
+      - name: Tutorial campaign-isolation regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tutorial_isolation.gd
+
+      - name: Cosmetic ownership migration regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_cosmetic_ownership.gd
+
       - name: Combo/multiplier meter regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_combo.gd
 

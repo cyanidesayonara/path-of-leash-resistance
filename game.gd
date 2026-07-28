@@ -21,8 +21,8 @@ const WEATHER_NAMES := {"clear": "CLEAR", "rain": "RAIN", "wind": "WIND", "snow"
 # the carousel on the title: the daily walk first, then the campaign walks
 const CAROUSEL: Array[String] = ["tutorial", "daily", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap"]
 
-# cosmetics: collars (recolour Millie's collar/harness) and bandanas.
-# "none" is free and always owned; the rest cost bones once, then equip.
+# Cosmetics keep their catalog keys when equipped, but ownership is namespaced
+# by category so identically named items remain separate purchases.
 const COLLARS := {
 	"red": {"name": "Red (classic)", "cost": 0, "col": Color(0.72, 0.16, 0.14)},
 	"blue": {"name": "Blue", "cost": 40, "col": Color(0.2, 0.4, 0.7)},
@@ -68,7 +68,15 @@ const COATS := {
 }
 
 const SAVE_PATH := "user://records.cfg"
+const DEFAULT_OWNED := {"collar:red": true, "bandana:none": true, "coat:millie": true}
+const DEFAULT_COLLAR := "red"
+const DEFAULT_BANDANA := "none"
+const DEFAULT_COAT := "millie"
+const DEFAULT_VOL_MASTER := 0.85
+const DEFAULT_VOL_SFX := 0.9
+const DEFAULT_VOL_MUSIC := 0.55
 
+var save_path := SAVE_PATH
 var level_id := "street"
 var owner_id := "him"  # "him" | "her"; a proper character creator can come later
 var night := false
@@ -81,15 +89,15 @@ var menu_step := 0
 var records := {}
 var total_bones := 0
 # cosmetics
-var owned := {"red": true, "none": true, "millie": true}
-var collar := "red"
-var bandana := "none"
-var coat := "millie"
+var owned := DEFAULT_OWNED.duplicate()
+var collar := DEFAULT_COLLAR
+var bandana := DEFAULT_BANDANA
+var coat := DEFAULT_COAT
 # Player settings. A downloadable build is expected to let you turn the
 # volume down and go fullscreen; muting the music with M was not enough.
-var vol_master := 0.85
-var vol_sfx := 0.9
-var vol_music := 0.55
+var vol_master := DEFAULT_VOL_MASTER
+var vol_sfx := DEFAULT_VOL_SFX
+var vol_music := DEFAULT_VOL_MUSIC
 var fullscreen := false
 # The goal card is a big block of text in the corner of a game whose whole
 # point is the mess in the middle. Collapsed it is one line; the player
@@ -122,24 +130,54 @@ func coat_data() -> Dictionary:
 	return COATS[coat] if COATS.has(coat) else COATS["millie"]
 
 
-func buy(item: String) -> bool:
-	var cost := _cost(item)
-	if owned.get(item, false) or total_bones < cost:
+func ownership_id(kind: String, key: String) -> String:
+	return "%s:%s" % [kind, key]
+
+
+func is_owned(kind: String, key: String) -> bool:
+	return bool(owned.get(ownership_id(kind, key), false))
+
+
+func buy(kind: String, key: String) -> bool:
+	var cost := _cost(kind, key)
+	if cost < 0 or is_owned(kind, key) or total_bones < cost:
 		return false
 	total_bones -= cost
-	owned[item] = true
+	owned[ownership_id(kind, key)] = true
 	save_records()
 	return true
 
 
-func _cost(item: String) -> int:
-	if COLLARS.has(item):
-		return int(COLLARS[item].cost)
-	if BANDANAS.has(item):
-		return int(BANDANAS[item].cost)
-	if COATS.has(item):
-		return int(COATS[item].cost)
-	return 0
+func equip(kind: String, key: String) -> bool:
+	if not is_owned(kind, key):
+		return false
+	match kind:
+		"collar":
+			if not COLLARS.has(key):
+				return false
+			collar = key
+		"bandana":
+			if not BANDANAS.has(key):
+				return false
+			bandana = key
+		"coat":
+			if not COATS.has(key):
+				return false
+			coat = key
+		_:
+			return false
+	return true
+
+
+func _cost(kind: String, key: String) -> int:
+	match kind:
+		"collar":
+			return int(COLLARS[key].cost) if COLLARS.has(key) else -1
+		"bandana":
+			return int(BANDANAS[key].cost) if BANDANAS.has(key) else -1
+		"coat":
+			return int(COATS[key].cost) if COATS.has(key) else -1
+	return -1
 
 
 func toggle_owner() -> void:
@@ -185,36 +223,81 @@ func _ready() -> void:
 		apply_settings()
 
 
+func _default_level_record() -> Dictionary:
+	return {"bones": 0, "time": 0.0, "perfects": 0, "stars": 0, "goals": []}
+
+
+func _ensure_level_record(lv: String) -> Dictionary:
+	var record := _default_level_record()
+	if records.has(lv):
+		for key in records[lv]:
+			record[key] = records[lv][key]
+	records[lv] = record
+	return record
+
+
+func _reset_persisted_state() -> void:
+	records = {}
+	for lv in LEVELS:
+		records[lv] = _default_level_record()
+	total_bones = 0
+	owned = DEFAULT_OWNED.duplicate()
+	collar = DEFAULT_COLLAR
+	bandana = DEFAULT_BANDANA
+	coat = DEFAULT_COAT
+	vol_master = DEFAULT_VOL_MASTER
+	vol_sfx = DEFAULT_VOL_SFX
+	vol_music = DEFAULT_VOL_MUSIC
+	fullscreen = false
+	goals_expanded = false
+
+
 func load_records() -> void:
+	_reset_persisted_state()
 	var cf := ConfigFile.new()
-	if cf.load(SAVE_PATH) != OK:
+	if cf.load(save_path) != OK:
 		return
 	for lv in LEVELS:
+		var record := _default_level_record()
 		var gl: Array = cf.get_value(lv, "goals", [])
-		records[lv] = {
-			"bones": int(cf.get_value(lv, "bones", 0)),
-			"time": float(cf.get_value(lv, "time", 0.0)),
-			"perfects": int(cf.get_value(lv, "perfects", 0)),
-			"stars": int(cf.get_value(lv, "stars", 0)),
-			"goals": gl,
-		}
+		record.bones = int(cf.get_value(lv, "bones", 0))
+		record.time = float(cf.get_value(lv, "time", 0.0))
+		record.perfects = int(cf.get_value(lv, "perfects", 0))
+		record.stars = int(cf.get_value(lv, "stars", 0))
+		record.goals = gl
+		records[lv] = record
 	total_bones = int(cf.get_value("global", "total_bones", 0))
 	if cf.has_section("daily"):
 		records["daily"] = {"bones": int(cf.get_value("daily", "bones", 0)), "seed": int(cf.get_value("daily", "seed", 0))}
 	var ol: Array = cf.get_value("cosmetics", "owned", ["red", "none"])
 	owned = {}
 	for k in ol:
-		owned[k] = true
+		var legacy_key := String(k)
+		if ":" in legacy_key:
+			owned[legacy_key] = true
+			continue
+		var matched := false
+		if COLLARS.has(legacy_key):
+			owned[ownership_id("collar", legacy_key)] = true
+			matched = true
+		if BANDANAS.has(legacy_key):
+			owned[ownership_id("bandana", legacy_key)] = true
+			matched = true
+		if COATS.has(legacy_key):
+			owned[ownership_id("coat", legacy_key)] = true
+			matched = true
+		if not matched:
+			owned[legacy_key] = true
 	# the freebies are always owned, however old the save file is
-	owned["red"] = true
-	owned["none"] = true
-	owned["millie"] = true
-	collar = cf.get_value("cosmetics", "collar", "red")
-	bandana = cf.get_value("cosmetics", "bandana", "none")
-	coat = cf.get_value("cosmetics", "coat", "millie")
-	vol_master = clampf(float(cf.get_value("settings", "vol_master", 0.85)), 0.0, 1.0)
-	vol_sfx = clampf(float(cf.get_value("settings", "vol_sfx", 0.9)), 0.0, 1.0)
-	vol_music = clampf(float(cf.get_value("settings", "vol_music", 0.55)), 0.0, 1.0)
+	owned[ownership_id("collar", "red")] = true
+	owned[ownership_id("bandana", "none")] = true
+	owned[ownership_id("coat", "millie")] = true
+	collar = cf.get_value("cosmetics", "collar", DEFAULT_COLLAR)
+	bandana = cf.get_value("cosmetics", "bandana", DEFAULT_BANDANA)
+	coat = cf.get_value("cosmetics", "coat", DEFAULT_COAT)
+	vol_master = clampf(float(cf.get_value("settings", "vol_master", DEFAULT_VOL_MASTER)), 0.0, 1.0)
+	vol_sfx = clampf(float(cf.get_value("settings", "vol_sfx", DEFAULT_VOL_SFX)), 0.0, 1.0)
+	vol_music = clampf(float(cf.get_value("settings", "vol_music", DEFAULT_VOL_MUSIC)), 0.0, 1.0)
 	fullscreen = bool(cf.get_value("settings", "fullscreen", false))
 	goals_expanded = bool(cf.get_value("settings", "goals_expanded", false))
 
@@ -242,7 +325,7 @@ func save_records() -> void:
 	cf.set_value("settings", "vol_music", vol_music)
 	cf.set_value("settings", "fullscreen", fullscreen)
 	cf.set_value("settings", "goals_expanded", goals_expanded)
-	cf.save(SAVE_PATH)
+	cf.save(save_path)
 
 
 # goals are the Tony Hawk-style per-level objective list: completing one
@@ -260,15 +343,16 @@ func goals_count(lv: String) -> int:
 
 
 func mark_goal(lv: String, id: String) -> bool:
-	if not records.has(lv) or lv == "daily":
+	if lv == "daily" or lv == "tutorial" or not lv in LEVELS:
 		return false
-	var gl: Array = records[lv].get("goals", [])
+	var record := _ensure_level_record(lv)
+	var gl: Array = record.get("goals", [])
 	if gl.has(id):
 		return false
 	gl.append(id)
-	records[lv]["goals"] = gl
+	record["goals"] = gl
 	# keep the stored star floor in step with the milestones reached
-	records[lv]["stars"] = maxi(int(records[lv].get("stars", 0)), _milestone_stars(gl.size()))
+	record["stars"] = maxi(int(record.get("stars", 0)), _milestone_stars(gl.size()))
 	save_records()
 	return true
 
@@ -304,6 +388,8 @@ func record_result(lv: String, bones: int, time: float, perfect: bool) -> Dictio
 	# stars/unlocks now come from goals (marked live during the run); this
 	# only records the best-bones/time/perfect tallies and banks bones.
 	var out := {"bones_record": false, "time_record": false}
+	if lv == "tutorial":
+		return out
 	if lv == "daily":
 		var dr: Dictionary = records.get("daily", {"bones": 0, "seed": daily_seed()})
 		if bones > int(dr.bones):
@@ -314,7 +400,9 @@ func record_result(lv: String, bones: int, time: float, perfect: bool) -> Dictio
 		total_bones += bones
 		save_records()
 		return out
-	var r: Dictionary = records.get(lv, {"bones": 0, "time": 0.0, "perfects": 0, "stars": 0, "goals": []})
+	if not lv in LEVELS:
+		return out
+	var r := _ensure_level_record(lv)
 	if bones > int(r.bones):
 		r.bones = bones
 		out.bones_record = true

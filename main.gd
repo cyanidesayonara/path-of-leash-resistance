@@ -2663,6 +2663,10 @@ func _build_quests() -> void:
 	# a fixed ~10-goal list per level (Tony Hawk style): completing a goal
 	# on any run marks it done for that level forever. Repeating goals,
 	# a couple of level flavours, and the unique hazardous prize.
+	if tutorial_mode:
+		active_quests.clear()
+		tofu_quest_active = false
+		return
 	var defs := _goal_defs()
 	var ids: Array = LEVEL_GOAL_IDS.get(lvl, LEVEL_GOAL_IDS["street"])
 	for id in ids:
@@ -2687,6 +2691,8 @@ func _peek_goals() -> void:
 
 func _credit_goal(q: Dictionary) -> void:
 	# award + persist a goal the first time it completes this run
+	if tutorial_mode:
+		return
 	var id: String = q.id
 	if run_goals_hit.has(id):
 		return
@@ -3095,17 +3101,15 @@ func _shop_data(kind: String, key: String) -> Dictionary:
 
 
 func _equip(kind: String, key: String) -> void:
-	match kind:
-		"collar": Game.collar = key
-		"bandana": Game.bandana = key
-		"coat": Game.coat = key
+	Game.equip(kind, key)
 
 
 func _shop_select() -> void:
 	var it: Dictionary = shop_items[shop_idx]
+	var kind: String = it.kind
 	var key: String = it.key
-	if Game.owned.get(key, false) or Game.buy(key):
-		_equip(String(it.kind), key)
+	if Game.is_owned(kind, key) or Game.buy(kind, key):
+		_equip(kind, key)
 		Game.save_records()
 	# (if the buy failed, not enough bones - the price stays shown)
 	_refresh_shop()
@@ -3126,7 +3130,7 @@ func _refresh_shop() -> void:
 		var tag := ""
 		if equipped:
 			tag = "  [EQUIPPED]"
-		elif Game.owned.get(key, false):
+		elif Game.is_owned(String(it.kind), key):
 			tag = "  (owned - press to wear)"
 		else:
 			tag = "  %d bones" % int(data.cost)
@@ -5428,6 +5432,8 @@ func _caught(what: String) -> void:
 func _spawn_challenger() -> void:
 	# one combo-challenge giver per walk, lounging on the out leg where you
 	# still have room and energy to show off
+	if tutorial_mode:
+		return
 	var giver := Node2D.new()
 	giver.set_script(load("res://challenger.gd"))
 	giver.position = Vector2(walk_cx + 170.0, -1600.0)
@@ -5474,6 +5480,8 @@ func _romp(delta: float) -> void:
 
 
 func on_tofu_home(pos: Vector2) -> void:
+	if tutorial_mode:
+		return
 	Sfx.play("star")
 	tofu_home = true
 	bones += 15
@@ -5589,6 +5597,9 @@ func _chase(delta: float) -> void:
 
 func _finish_walk() -> void:
 	if dog.global_position.y > HOME_Y and human.global_position.y > HOME_Y:
+		if tutorial_mode:
+			_finish_tutorial_walk()
+			return
 		finished = true
 		if auto_walk:
 			print("AUTOWALK FINISHED the whole walk at t=%.1f" % elapsed)
@@ -5648,6 +5659,33 @@ func _finish_walk() -> void:
 			# the in-walk HUD would otherwise sit on top of the card
 			goals_card.visible = false
 			panel.visible = false
+
+
+func _finish_tutorial_walk() -> void:
+	finished = true
+	frozen = true
+	dim.visible = true
+	msg_label.visible = false
+	results = {
+		"title": "GOOD DOG.",
+		"stars": 0,
+		"rating": "You know the ropes.",
+		"rows": [],
+		"bones": bones,
+		"phone": phone_hp,
+		"time": int(elapsed),
+		"goal_bones": 0,
+		"lines": [
+			"%d practice bones - not banked" % bones,
+			"Lessons complete. The real walks are waiting.",
+		],
+		"prompt": "press  %s  for walk select" % _kb_or_pad("R", "Start"),
+	}
+	results_card.visible = true
+	goals_card.visible = false
+	panel.visible = false
+	tut_label.visible = false
+	tut_hint.visible = false
 
 
 func _results_rows() -> Array:

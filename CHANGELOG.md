@@ -2,6 +2,28 @@
 
 Append-only session history, newest first.
 
+## 2026-07-28 - v1.53 hardening: progression boundaries
+
+Fresh profiles now initialize complete records for every campaign walk, so a
+goal earned before the first result persists, awards milestone stars, and
+unlocks the next walk. Loading a missing or malformed save starts from one
+canonical persisted-state baseline instead of retaining wallet, cosmetics, or
+settings from an earlier profile.
+
+The tutorial now remains practice from start to finish. It has no campaign
+goals or quest callbacks, cannot bank its local bone feedback, and says so on
+the result card. Cosmetic ownership is category-aware, so identically named
+items such as the gold collar and gold coat can be bought and equipped
+independently; old saves migrate ambiguous raw ownership without discarding
+unknown entries.
+
+Three persistence regressions cover fresh progression, tutorial isolation, and
+cosmetic ownership and migration. The full focused suite, rendering checks,
+all structural selftests, tutorial and Street smokes, and exported desktop Web
+flow pass. Phone-sized Web acceptance exposed a separate fixed-size canvas bug
+that currently makes the game render as a small box with large black borders;
+touch acceptance remains blocked until that Web scaling issue is fixed.
+
 ## 2026-07-28 - v1.52: the FUR-GONETA
 
 A mobile dog-grooming van with fur on it. Shaggy two-tone brown and cream,
