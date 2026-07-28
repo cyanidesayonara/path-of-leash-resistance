@@ -2,6 +2,31 @@
 
 Append-only session history, newest first.
 
+## 2026-07-26 — v1.45: the leash-vault
+
+The rope is the best thing in the game, so it should be a way to MOVE and
+not only a way to be held back. Catch the leash on a pole and keep running
+and the pole becomes a pivot: Millie carves a fast arc around it and
+slingshots out along the exit tangent.
+
+- It STEERS her velocity rather than teleporting her, so the verlet rope
+  stays the source of truth and holds the radius honestly - the swing is
+  the rope doing its job, not an animation played over the top.
+- Needs real pace and a rope under tension, so a gentle wrap is not a
+  vault. The payoff scales with how much arc she actually carved: a
+  committed swing throws her much further than a clipped one, and pays
+  combo points to match.
+- The swing geometry is pulled out into its own module (swing.gd) and
+  pinned by tests: always perpendicular to the rope, always following her
+  existing travel, mirrored correctly from either side, and NaN-safe when
+  she is standing exactly on the pole. A flipped sign there would have
+  flung her backwards INTO the pole.
+- One vault per approach: she has to leave a pole before it gives her
+  another swing. The autowalk stall watchdog caught the bot sitting in a
+  single lamppost's orbit re-triggering forever - which would also have
+  been a score exploit, farming unlimited combo points off one pole. Good
+  argument for that watchdog existing.
+
 ## 2026-07-26 — v1.44: the phone call
 
 The premise of the whole game, turned into a gift. Once a walk the owner

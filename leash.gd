@@ -24,6 +24,10 @@ var poles: Array[Vector2] = []
 var rest_len := 260.0
 var taut := false
 var contacts := 0
+# the pole the rope is caught on nearest the DOG end, which is the one she
+# can vault around (see main.gd/_tick_vault). INF when the rope is running
+# free.
+var contact_pole := Vector2(INF, INF)
 var detached := false
 var near_poles: Array[Vector2] = []
 # points contributed by ANOTHER leash this frame: the rope drapes over
@@ -137,6 +141,13 @@ func tick(delta: float) -> void:
 						pts[i + 1] += push
 						touched[i + 1] = pl
 	contacts = touched.size()
+	# remember the contact closest to the dog end (index 0 is the dog)
+	contact_pole = Vector2(INF, INF)
+	var best_i := 1 << 30
+	for i in touched:
+		if int(i) < best_i:
+			best_i = int(i)
+			contact_pole = touched[i]
 	# apply the stick-slip: contacted points keep only `slip` of the
 	# tangential travel the solver gave them this frame, and lose their
 	# sliding velocity memory

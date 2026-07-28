@@ -29,6 +29,7 @@ const LEASH_STRETCH_CAP := 1.15
 const LEASH_K := 32.0
 const DOG_MASS := 1.0
 const HUMAN_MASS := 4.0
+const SwingMath := preload("res://swing.gd")
 const POLE_RADIUS := 10.0
 const TREE_RADIUS := 13.0  # a trunk is stouter than a lamppost
 const HYDRANT_RADIUS := 9.0
@@ -128,6 +129,20 @@ var grind_cd := 0.0
 var call_active := false
 var call_haul := 0
 var call_slack_was := 340.0
+# the leash-vault: swing around a wrapped pole and slingshot out
+var vault_t := 0.0
+var vault_cd := 0.0
+var vault_arc := 0.0
+var vault_pole := Vector2.ZERO
+# the pole she last vaulted, and whether she has since cleared it. Without
+# this she can sit in one pole's orbit re-triggering forever: the autowalk
+# stall watchdog caught it, and it would also have been a score exploit
+# (unlimited combo points from one lamppost).
+var vault_done_pole := Vector2(INF, INF)
+const VAULT_TRIGGER_SPEED := 200.0
+const VAULT_MIN_SPEED := 210.0
+const VAULT_MAX_SPEED := 430.0
+const VAULT_LAUNCH := 470.0
 const GRIND_SPEED := 190.0   # you have to be moving to get up on it
 const GRIND_BAND := 13.0     # how close to the kerb line counts as on it
 var ball: Node2D
@@ -1825,7 +1840,7 @@ func _build_hud() -> void:
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.44"
+	version_l.text = "v1.45"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -2344,6 +2359,7 @@ func _physics_process(delta: float) -> void:
 	if phase != "freedom":
 		_tick_grind(delta)
 		_tick_call(delta)
+		_tick_vault(delta)
 	_update_combo_hud()
 	_update_challenge_hud()
 	shake_t = maxf(0.0, shake_t - delta * 2.5)
@@ -3144,6 +3160,74 @@ func _offpath(delta: float) -> void:
 			set_leash_target(180.0)
 	else:
 		offpath_t = maxf(0.0, offpath_t - delta)
+
+
+func _tick_vault(delta: float) -> void:
+	# THE LEASH-VAULT. The rope is already the best thing in the game, so it
+	# should be a way to MOVE, not only a way to be held back. Catch the
+	# leash on a pole and keep running and the rope becomes a pivot: she
+	# carves a fast arc around it and slingshots out along the tangent.
+	# It steers her velocity rather than teleporting her, so the verlet rope
+	# stays the source of truth and holds the radius honestly.
+	vault_cd = maxf(0.0, vault_cd - delta)
+	var pole: Vector2 = leash.contact_pole
+	var wrapped: bool = pole.x < INF and leash.contacts > 0
+	if vault_t > 0.0:
+		vault_t -= delta
+		if not wrapped or dog.velocity.length() < 90.0 or dog.is_tumbling():
+			_end_vault()
+			return
+		var tan := SwingMath.vault_tangent(pole, dog.global_position, dog.velocity)
+		# hold her speed up and keep her pointed along the arc: this is the
+		# carve. The rope itself stops her flying off the radius.
+		var speed: float = maxf(dog.velocity.length(), VAULT_MIN_SPEED)
+		dog.velocity = tan * minf(speed * 1.03, VAULT_MAX_SPEED)
+		vault_arc += absf(dog.velocity.length() * delta / maxf(dog.global_position.distance_to(pole), 1.0))
+		if vault_t <= 0.0:
+			_end_vault()
+		return
+	if vault_cd > 0.0 or not wrapped or dog.is_tumbling() or teeter.active or grind.active:
+		return
+	# one vault per approach: she has to actually leave a pole before it will
+	# give her another swing
+	if vault_done_pole.x < INF:
+		if dog.global_position.distance_to(vault_done_pole) > 210.0:
+			vault_done_pole = Vector2(INF, INF)
+		elif pole.distance_to(vault_done_pole) < 24.0:
+			return
+	# needs real pace and a rope under tension - a gentle wrap is not a vault
+	var r := dog.global_position.distance_to(pole)
+	if dog.velocity.length() < VAULT_TRIGGER_SPEED or r < 18.0 or r > 190.0:
+		return
+	if not leash.taut:
+		return
+	vault_t = 0.85
+	vault_arc = 0.0
+	vault_pole = pole
+	Sfx.play("fling", 1.2, -8.0)
+	float_text(dog.global_position + Vector2(0, -28), "VAULT!", Color(0.9, 0.95, 1.0))
+
+
+func _end_vault() -> void:
+	if vault_t <= 0.0 and vault_arc <= 0.0:
+		return
+	vault_t = 0.0
+	vault_cd = 0.7
+	vault_done_pole = vault_pole
+	# the payoff: a launch along the exit tangent, scaled by how much arc she
+	# actually carved, so a committed swing throws her further than a clip
+	var turns: float = vault_arc / TAU
+	if turns > 0.12:
+		var tan := SwingMath.vault_tangent(vault_pole, dog.global_position, dog.velocity)
+		dog.velocity = tan * VAULT_LAUNCH
+		var pts := int(round(8.0 + turns * 40.0))
+		bones += int(pts / 4)
+		combo.add("VAULT", pts)
+		Sfx.play("star", 1.15)
+		float_text(dog.global_position + Vector2(0, -32), "VAULT! %d" % pts, Color(0.85, 0.95, 1.0))
+		_slowmo()
+		_update_hud()
+	vault_arc = 0.0
 
 
 func _tick_call(_delta: float) -> void:
