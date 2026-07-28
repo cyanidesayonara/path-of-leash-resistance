@@ -2,6 +2,31 @@
 
 Append-only session history, newest first.
 
+## 2026-07-28 - v1.52: the FUR-GONETA
+
+A mobile dog-grooming van with fur on it. Shaggy two-tone brown and cream,
+floppy ears on the front corners, a fringe with small dark eyes peering out
+from under it, a black nose where the grille goes, a tail wagging on the back
+doors, and FUR-GONETA painted on the roof in two lines with a paw print for
+the hyphen - the roof being the only surface you can read from directly
+overhead. Parked on El Mercat, doing a trade in nervous poodles, and on the
+boulevard.
+
+An homage, not a copy: our own name and livery, because the van it tips its
+hat to belongs to somebody else. FURGONETA is Spanish for van and it begins
+with FUR, which is the entire joke.
+
+The first attempt was a dog costume - tongue out, pink collar, a light box the
+size of the vehicle. The van it is nodding to is subtler than that: it reads
+as a work van that happens to be furry, so no tongue, no collar, a grey
+bumper, and the name painted on rather than mounted above.
+
+To a dog it is the most interesting object in the city, so sniffing it is the
+biggest one-off payout on a walk - twelve bones and a FUR-GONETA combo tag,
+once, captioned "four hundred dogs have been in there". It smells from across
+the street so the nose leads you to it, it is solid, and the rope wraps its
+flanks like any other van.
+
 ## 2026-07-28 - v1.51: the freedom spaces, and a frame that is 6x cheaper
 
 The off-leash space at the top of every walk used to be one municipal field,

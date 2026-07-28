@@ -80,6 +80,12 @@ var pond := Rect2()
 var water: Array[Rect2] = []
 var freedom_kind := "yard"
 var dune_spots: Array[Vector2] = []
+# THE FUR-GONETA: a mobile dog-grooming van, upholstered in shaggy fur, with
+# ears on the front corners and a wet nose on the bonnet. An homage rather than
+# a copy - our own name, our own livery - and to a dog it is the single most
+# interesting object in the city, which is why it is worth a fortune to sniff.
+var furgoneta := Vector2(INF, INF)
+var furgoneta_sniffed := false
 var freedomlayer: Node2D
 var gate_text := "PARK"
 var duck_ys: Array[float] = []
@@ -1026,6 +1032,16 @@ func _build_level_data() -> void:
 			if clear:
 				trees.append(tree)
 				break
+	# THE FUR-GONETA, on the two walks a mobile groomer would actually work:
+	# the market (a trade in nervous poodles) and the boulevard.
+	if lvl == "market":
+		furgoneta = Vector2(sw_r - 74.0, -2150.0)
+	elif lvl == "street":
+		furgoneta = Vector2(sw_l + 66.0, -3560.0)
+	if furgoneta.x < INF:
+		# rope-wrap geometry down its flanks, like the other vans
+		for off: float in [-52.0, -26.0, 0.0, 26.0, 52.0]:
+			poles.append(furgoneta + Vector2(0.0, off))
 	for ly in lane_ys:
 		lane_state.append({"t": randf_range(1.0, 2.5), "phase": 0, "dir": 1})
 	_build_substance_zones()
@@ -1427,6 +1443,8 @@ func _build_scent_sources() -> Array:
 		out.append({"pos": carry_drop, "col": Color(0.62, 0.82, 1.0)})
 	for tf in get_tree().get_nodes_in_group("tofu"):
 		out.append({"pos": tf.global_position, "col": Color(1.0, 0.66, 0.80)})
+	if furgoneta.x < INF and not furgoneta_sniffed:
+		out.append({"pos": furgoneta, "col": Color(0.98, 0.82, 0.45)})
 	# another dog's mark: a pale, unmistakable yellow-green
 	for nm in npc_marks:
 		if not bool(nm.sniffed):
@@ -2387,6 +2405,11 @@ func _build_bypasser_blockers() -> void:
 			"id": "van_%d" % i,
 			"rect": Rect2(vans[i] - VAN_BODY_SIZE * 0.5, VAN_BODY_SIZE),
 		})
+	if furgoneta.x < INF:
+		bypasser_blockers.append({
+			"id": "furgoneta",
+			"rect": Rect2(furgoneta - VAN_BODY_SIZE * 0.5, VAN_BODY_SIZE),
+		})
 	for i in range(stalls.size()):
 		bypasser_blockers.append({
 			"id": "stall_%d" % i,
@@ -2516,6 +2539,8 @@ func _build_walls() -> void:
 	# vans and stalls are solid rectangles: no walking over the van roof
 	for v in vans:
 		_add_rect_body(v, VAN_BODY_SIZE)
+	if furgoneta.x < INF:
+		_add_rect_body(furgoneta, VAN_BODY_SIZE)
 	for st in stalls:
 		_add_rect_body(st, STALL_BODY_SIZE)
 	# performers have mass; you walk around a person, not through them
@@ -2843,7 +2868,7 @@ func _build_hud() -> void:
 	menu_hint_l.modulate.a = 0.55
 	menu_hint_l.visible = false
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.51"
+	version_l.text = "v1.52"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -4893,6 +4918,18 @@ func _pickups(delta: float) -> void:
 			combo.add("READ", 2)
 			float_text(nm.pos, "%s was here +2" % String(nm.who), Color(0.9, 0.95, 0.75))
 			_update_hud()
+	# the Fur-Goneta: a van that smells of four hundred other dogs. Sniffing it
+	# is the biggest single payout on the walk, and you only get it once.
+	if furgoneta.x < INF and not furgoneta_sniffed:
+		if dog.global_position.distance_to(furgoneta) < 82.0 and dog.velocity.length() < 90.0:
+			furgoneta_sniffed = true
+			bones += 12
+			sniffs_done += 1
+			Sfx.play("star", 0.9)
+			combo.add("FUR-GONETA", 8)
+			float_text(furgoneta + Vector2(0, -70.0),
+				"four hundred dogs have been in there +12", Color(1, 0.9, 0.6))
+			_update_hud()
 	for k in kebabs:
 		if not k.eaten and dog.global_position.distance_to(k.pos) < 26.0:
 			k.eaten = true
@@ -6194,6 +6231,129 @@ func _draw_world() -> void:
 		# a hazard beacon on the cab, because it is parked where it should not be
 		var beat := 0.55 + 0.45 * sin(Time.get_ticks_msec() / 190.0)
 		draw_circle(v + Vector2(0, -40.0), 4.0, Color(0.95, 0.62, 0.15, 0.55 + beat * 0.45))
+	# THE FUR-GONETA. A grooming van done up as a shaggy dog, in the tradition
+	# of every mobile groomer that has ever driven past you - fur over the whole
+	# body, floppy ears on the front corners, a fringe hanging over the eyes,
+	# a wet nose and a tongue out. Our own name and livery: the van it tips its
+	# hat to belongs to somebody else.
+	#
+	# The one surface you can read from directly overhead is the roof, so the
+	# signwriting goes in a raised sign box up there, which is where a real
+	# grooming van puts it anyway.
+	if furgoneta.x < INF and furgoneta.y > vt - 150.0 and furgoneta.y < vb + 150.0:
+		var v := furgoneta
+		var fur := Color(0.46, 0.30, 0.17)
+		var fur_lit := Color(0.58, 0.40, 0.23)
+		var fur_dark := Color(0.31, 0.20, 0.11)
+		var cream := Color(0.88, 0.83, 0.72)
+		var cream_dk := Color(0.74, 0.68, 0.57)
+		# the shadow of a two-metre box, same as the other vans
+		draw_set_transform(v + LIGHT * 30.0, 0.0, Vector2.ONE)
+		draw_rect(Rect2(-34.0, -66.0, 68.0, 134.0),
+			Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		for w: Vector2 in [Vector2(-35, -40), Vector2(29, -40), Vector2(-35, 26), Vector2(29, 26)]:
+			draw_rect(Rect2(v.x + w.x, v.y + w.y, 6.0, 18.0), Color(0.10, 0.10, 0.12))
+		# --- ears: big, floppy, hanging off the front corners --------------
+		for sx: float in [-1.0, 1.0]:
+			var ear_o := PackedVector2Array([
+				v + Vector2(24.0 * sx, -58.0), v + Vector2(50.0 * sx, -40.0),
+				v + Vector2(44.0 * sx, 2.0), v + Vector2(26.0 * sx, -12.0),
+			])
+			draw_colored_polygon(ear_o, fur_dark)
+			draw_colored_polygon(PackedVector2Array([
+				v + Vector2(26.0 * sx, -52.0), v + Vector2(43.0 * sx, -38.0),
+				v + Vector2(38.0 * sx, -6.0), v + Vector2(27.0 * sx, -18.0),
+			]), fur)
+			# a paler inner edge, and the shaggy fringe along the bottom
+			draw_line(v + Vector2(28.0 * sx, -48.0), v + Vector2(33.0 * sx, -14.0),
+				fur_lit, 2.5)
+			for tf in range(4):
+				var ty := -6.0 + float(tf) * 2.5
+				draw_line(v + Vector2((40.0 - float(tf) * 3.0) * sx, ty),
+					v + Vector2((36.0 - float(tf) * 3.0) * sx, ty + 7.0), fur_dark, 2.0)
+		# --- the body, in two tones like a real scruffy dog ---------------
+		draw_rect(Rect2(v.x - 32.0, v.y - 66.0, 64.0, 132.0), fur)
+		draw_rect(Rect2(v.x - 32.0, v.y - 66.0, 16.0, 132.0), fur_lit)   # lit flank
+		draw_rect(Rect2(v.x + 22.0, v.y - 66.0, 10.0, 132.0), fur_dark)  # shaded flank
+		# the cream patch over the face and along one side, which is what stops
+		# it reading as a plain brown box
+		draw_colored_polygon(PackedVector2Array([
+			v + Vector2(-30.0, -66.0), v + Vector2(30.0, -66.0),
+			v + Vector2(26.0, -30.0), v + Vector2(4.0, -24.0),
+			v + Vector2(-22.0, -34.0), v + Vector2(-30.0, -52.0),
+		]), cream)
+		draw_colored_polygon(PackedVector2Array([
+			v + Vector2(-30.0, 20.0), v + Vector2(-14.0, 26.0),
+			v + Vector2(-18.0, 54.0), v + Vector2(-30.0, 58.0),
+		]), cream_dk)
+		# --- fur: ranks of little curved tufts, denser on the shaded side --
+		for row in range(13):
+			var ry := v.y - 62.0 + float(row) * 10.0
+			for col in range(6):
+				var rx := v.x - 27.0 + float(col) * 11.0 + (5.0 if row % 2 == 0 else 0.0)
+				var on_cream: bool = ry < v.y - 28.0 or (rx < v.x - 14.0 and ry > v.y + 18.0)
+				var tc: Color = cream_dk if on_cream else (fur_lit if rx < v.x - 12.0 else fur_dark)
+				# a curl rather than a chevron: two short strokes at an angle
+				draw_line(Vector2(rx, ry), Vector2(rx - 3.0, ry + 6.0), tc, 1.8)
+				draw_line(Vector2(rx - 3.0, ry + 6.0), Vector2(rx + 1.0, ry + 8.0), tc, 1.6)
+		# --- the face on the front (north) end ----------------------------
+		# the fringe: a shaggy overhang that the eyes peer out from under
+		for i in range(11):
+			var fx := v.x - 25.0 + float(i) * 5.0
+			draw_line(Vector2(fx, v.y - 66.0), Vector2(fx - 2.0, v.y - 50.0), cream_dk, 3.0)
+		# small and dark, mostly hidden under the fringe - the reference van
+		# has eyes you have to look for, not headlamps
+		draw_circle(v + Vector2(-11.0, -46.0), 3.2, Color(0.13, 0.11, 0.11))
+		draw_circle(v + Vector2(11.0, -46.0), 3.2, Color(0.13, 0.11, 0.11))
+		draw_circle(v + Vector2(-11.6, -47.0), 1.0, Color(1, 1, 1, 0.55))
+		draw_circle(v + Vector2(10.4, -47.0), 1.0, Color(1, 1, 1, 0.55))
+		# the muzzle and a black nose where the grille would be. No tongue, no
+		# collar: on the real thing the joke is the fur, and everything else is
+		# still a work van.
+		draw_circle(v + Vector2(0.0, -57.0), 11.0, cream)
+		draw_circle(v + Vector2(0.0, -60.0), 7.0, Color(0.14, 0.12, 0.13))
+		draw_circle(v + Vector2(-2.0, -62.0), 2.4, Color(0.34, 0.31, 0.32))
+		# the front bumper, in van grey rather than a collar
+		draw_rect(Rect2(v.x - 31.0, v.y - 33.0, 62.0, 6.0), Color(0.40, 0.38, 0.36))
+		# --- the tail, wagging, on the back doors -------------------------
+		var wag := sin(Time.get_ticks_msec() / 210.0) * 0.55
+		var tail_dir := Vector2(0.0, 1.0).rotated(wag)
+		var tail_root := v + Vector2(0.0, 64.0)
+		draw_line(tail_root, tail_root + tail_dir * 30.0, fur_dark, 11.0)
+		draw_line(tail_root, tail_root + tail_dir * 26.0, fur, 7.0)
+		draw_circle(tail_root + tail_dir * 28.0, 5.0, cream)
+		# --- the livery ----------------------------------------------------
+		# Painted onto the roof rather than mounted above it. A light box the
+		# size of the van looked like a taxi sign and drowned the vehicle; the
+		# van this nods to just has its name written on it, so this does too.
+		# Two lines, which keeps the panel inside the van's own width - the roof
+		# is the only surface you can read from directly overhead, and that is
+		# the one liberty being taken.
+		var f_big := 16
+		var f_small := 13
+		var w_fur: float = font.get_string_size("FUR", HORIZONTAL_ALIGNMENT_LEFT, -1, f_big).x
+		var w_gon: float = font.get_string_size("GONETA", HORIZONTAL_ALIGNMENT_LEFT, -1, f_small).x
+		var pw: float = maxf(w_fur + 12.0, w_gon) + 12.0
+		var panel := Rect2(v.x - pw * 0.5, v.y - 22.0, pw, 45.0)
+		draw_rect(panel, Color(0.93, 0.90, 0.82, 0.93))
+		draw_rect(panel, Color(0.44, 0.31, 0.20, 0.55), false, 1.5)
+		var ink := Color(0.40, 0.20, 0.16)
+		# FUR, with a paw print for the hyphen, then GONETA under it
+		var fur_x := v.x - (w_fur + 11.0) * 0.5
+		draw_string(font, Vector2(fur_x, v.y - 5.0), "FUR", HORIZONTAL_ALIGNMENT_LEFT, -1,
+			f_big, ink)
+		UiIcons.draw_paw(self, Vector2(fur_x + w_fur + 5.5, v.y - 12.0), 4.2,
+			Color(0.62, 0.30, 0.22))
+		draw_string(font, Vector2(panel.position.x, v.y + 10.0), "GONETA",
+			HORIZONTAL_ALIGNMENT_CENTER, panel.size.x, f_small, ink)
+		draw_string(font, Vector2(panel.position.x, v.y + 20.0), "dog grooming",
+			HORIZONTAL_ALIGNMENT_CENTER, panel.size.x, 8, Color(0.52, 0.36, 0.26))
+		if not furgoneta_sniffed:
+			# it is the best smell in the city, so the nose can find it
+			var fg := 0.5 + 0.5 * sin(prize_glow * 0.8)
+			draw_arc(v, 74.0 + fg * 6.0, 0, TAU, 28, Color(1.0, 0.86, 0.5, 0.10 + fg * 0.07), 2.0)
+
 	# L'Estacio: the moving walkway - a metal band with chevrons scrolling
 	# in the carry direction
 	if conveyor_zone.size.y > 0.0 and conveyor_zone.end.y > vt and conveyor_zone.position.y < vb:
