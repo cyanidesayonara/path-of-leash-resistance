@@ -139,6 +139,38 @@ static func check(m) -> Array:
 	if markable < 3:
 		p.append("off-leash area has %d markable props, wants 3+" % markable)
 
+	# --- nothing sniffable floating out at sea ---
+	# The off-leash spaces place their furniture with a random draw, and the
+	# beach has open water in it, so driftwood and dig patches were landing
+	# twenty metres offshore where no dog can reach them.
+	for pp in m.park_props:
+		for w: Rect2 in m.water:
+			if w.has_point(pp.pos as Vector2):
+				p.append("%s prop at %s is in the water" % [String(pp.kind), pp.pos])
+	for t in m.trees:
+		for w2: Rect2 in m.water:
+			if w2.has_point(t as Vector2):
+				p.append("a tree is standing in the water at %s" % t)
+	# the corridor's furniture too: widening the seafront's water put towels
+	# and parasols that were authored on the sand out in the sea
+	var wet_groups := {
+		"parasol": m.parasols, "bench": m.benches, "bin": m.bins, "table": m.tables,
+		"a-stand": m.astands, "fountain": m.fountains, "cone": m.cone_spots,
+	}
+	for gname in wet_groups:
+		for at: Vector2 in wet_groups[gname]:
+			for w3: Rect2 in m.water:
+				if w3.grow(-6.0).has_point(at):
+					p.append("%s at %s is in the water" % [gname, at])
+	for tw in m.towels:
+		for w4: Rect2 in m.water:
+			if w4.intersects((tw.rect as Rect2)):
+				p.append("a towel is in the water at %s" % (tw.rect as Rect2).position)
+	for kb in m.kebabs:
+		for w5: Rect2 in m.water:
+			if w5.has_point(kb.pos as Vector2):
+				p.append("a snack is in the water at %s" % kb.pos)
+
 	# --- the settings screen ---
 	# The rows are drawn from settings_rows() but INDEXED with settings_keys(),
 	# so a setting added to one and not the other reads or writes the wrong

@@ -2,6 +2,63 @@
 
 Append-only session history, newest first.
 
+## 2026-07-28 - v1.51: the freedom spaces, and a frame that is 6x cheaper
+
+The off-leash space at the top of every walk used to be one municipal field,
+which is a large part of why twelve levels still felt like one walk redressed.
+Each walk ends somewhere of its own now, and the places are designed rather
+than dressed:
+
+- **The dog beach** at the end of the passeig: dry sand, wet sand, dunes with
+  marram grass in place of chain-link, palms along the BACK of the beach where
+  palms actually grow, parasols, a shower, and open sea. The sea is real
+  water - she swims, the ball is thrown into the surf, the owner wades in
+  holding the phone above his head - and the bay opens diagonally out of the
+  seafront's own coastline, so walking through the gate reads as rounding a
+  headland instead of the sea abruptly getting wider.
+- **The clearing** in the woods, with no fence, because nothing out there is
+  fenced. Its ring of trees is REAL trees: placed at build time so they have
+  collision and the rope wraps them. Decoration you can walk through is worse
+  than no decoration.
+- **A gravel compound** for the works and the scrapyard.
+- The seafront's water comes properly inshore now. At this camera zoom a band
+  at x<90 was a five-pixel sliver at the edge of the frame and usually off it,
+  so the sea was invisible for the whole walk it is named after.
+
+**Everything in the off-leash space has to be somewhere sensible**, and now it
+is: nothing is placed in water, the beach digs in dry sand, the dunes are
+solid, and --selftest fails a level that puts a prop, a tree, a towel or a
+snack in the sea. That check immediately found a roadworks cone standing in
+the middle of the pond on El Bosc, which reuses the park's geometry - so
+there is a build step that pushes anything wet to the nearest shore.
+
+### Performance: 9ms to 0.5ms
+
+Measured with a new --drawcost flag rather than guessed at, which is the only
+way this has ever gone well. The freedom view cost 3.3ms on the park and
+**9.0ms in the woods**, against 0.7ms for the corridor - and the clearing's
+ring of trees alone was 5.7ms of it, redrawn thirty times a second to produce
+an identical picture, because trees do not move.
+
+The off-leash space is a fixed scene, so it now lives on its own canvas
+(freedomlayer.gd) exactly like the building frontage did in v1.49, redrawn
+only when the camera reveals new ground or the furniture changes. The grove
+was drawn every frame in the world with its own near-duplicate tree renderer;
+it uses the one renderer and sits on the layer. The corridor's cross-section
+stops at the gate instead of being painted the length of the level. The
+beach's detail loops start at the visible window instead of walking all 5800
+pixels to draw the forty lines on screen.
+
+Result: park 3331 -> 546us, woods 9050 -> 514us, beach 4864 -> 1433us,
+boulevard 4002 -> 1216us. Which is the headroom the visual work needed.
+
+### Voice and text
+
+The death cards are in her voice throughout now - "NOBODY WAITED FOR YOU",
+"THEY GOT YOUR HUMAN", "THE HUMAN FELL IN THE CELLAR" - and the results card
+is titled GOOD DOG. (or VERY GOOD DOG. for a clean sweep). Two world-space
+strings that were nudged left by an eyeballed 40px are centred properly.
+
 ## 2026-07-28 - v1.50: something you can download
 
 The first release that is not just a web page. There is now a Windows

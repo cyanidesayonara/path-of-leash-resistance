@@ -79,6 +79,8 @@ var pond := Rect2()
 # places at once, and how any later walk gets water for free.
 var water: Array[Rect2] = []
 var freedom_kind := "yard"
+var dune_spots: Array[Vector2] = []
+var freedomlayer: Node2D
 var gate_text := "PARK"
 var duck_ys: Array[float] = []
 var ducks_disturbed := 0
@@ -379,6 +381,9 @@ var grade_rect: ColorRect
 var _shot_done := false
 var _shot_frames := 0
 var _shot_at := 320
+var _draw_cost_on := false
+var _draw_us := 0
+var _draw_n := 0
 # scattered ground detail (cracks, litter, stones, stains) so hard surfaces
 # stop reading as empty colour fields. Built with a LOCAL rng so it never
 # perturbs the global seed the deterministic autowalk depends on.
@@ -484,6 +489,7 @@ func _ready() -> void:
 		else:
 			var r := randf()
 			chase_kind = "sweeper" if r < 0.4 else ("bolt" if r < 0.75 else "both")
+	_draw_cost_on = "--drawcost" in OS.get_cmdline_user_args()
 	menu_step = Game.menu_step
 	_apply_menu_step()
 	# --at-freedom drops her straight into the off-leash space. Walking there
@@ -737,12 +743,12 @@ func _build_level_data() -> void:
 			performers = [Vector2(410, -2200)]
 			cone_spots = [Vector2(492, -1500), Vector2(548, -3050)]
 			# parasols are poles too: windable, markable, brilliant
-			parasols = [Vector2(200, -900), Vector2(150, -2300), Vector2(240, -3700), Vector2(170, -4500)]
+			parasols = [Vector2(268, -900), Vector2(300, -2300), Vector2(262, -3700), Vector2(330, -4500)]
 			var towel_cols := [Color(0.85, 0.4, 0.35), Color(0.35, 0.55, 0.8), Color(0.9, 0.75, 0.3), Color(0.5, 0.7, 0.5)]
 			var ty := -800.0
 			for i in range(5):
 				towels.append({
-					"rect": Rect2(randf_range(120.0, 270.0), ty, 46, 80),
+					"rect": Rect2(randf_range(248.0, 330.0), ty, 46, 80),
 					"col": towel_cols[i % 4], "bather": i % 2 == 0, "cd": 0.0,
 				})
 				ty -= randf_range(700.0, 1000.0)
@@ -961,15 +967,59 @@ func _build_level_data() -> void:
 		candy.append({"pos": cp, "eaten": false})
 	_build_ground_detail()
 	_build_freedom_area()
+	_lift_props_out_of_water()
+	_build_dunes()
 	_build_park_props()
 	for i in range(140):
 		var side := -1.0 if randf() < 0.5 else 1.0
 		var x := 640.0 + side * randf_range(340.0, 620.0)
 		tufts.append(Vector2(x, randf_range(GATE_Y - 600.0, START_Y + 150.0)))
-	for i in range(14):
+	# The grove in the off-leash space. Fourteen is right for a park; a beach
+	# with fourteen palms in it is a plantation, and the woods want more than a
+	# park does. These are rope-wrap geometry as well as scenery, so the count
+	# changes what the space plays like, not just what it looks like.
+	# The clearing is ringed with woodland. Placed here rather than drawn as
+	# scenery so it is solid, wraps the rope, and reads as the edge of a wood
+	# you cannot simply walk out of.
+	if freedom_kind == "clearing":
+		var fr := _freedom_rect()
+		for i in range(14):
+			var f := float(i) / 13.0
+			var edge := i % 3
+			var tp := Vector2.ZERO
+			match edge:
+				0: tp = Vector2(lerpf(fr.position.x + 40.0, fr.end.x - 40.0, f), fr.position.y + 34.0)
+				1: tp = Vector2(fr.position.x + 46.0, lerpf(fr.position.y + 60.0, fr.end.y - 60.0, f))
+				_: tp = Vector2(fr.end.x - 46.0, lerpf(fr.position.y + 60.0, fr.end.y - 60.0, f))
+			trees.append(tp)
+	var grove := 14
+	# Where they can stand at all. Palms do not grow in the sea or halfway down
+	# a beach - they line the back of it - and a clearing is a clearing because
+	# the middle of it is empty. The grove is rope-wrap geometry too, so this
+	# decides how the space plays as well as how it looks.
+	var grove_lo := 200.0
+	var grove_hi := 1080.0
+	match freedom_kind:
+		"beach":
+			grove = 5
+			grove_lo = 800.0     # the back of the beach, inland of the dry sand
+			grove_hi = 1060.0
+		"clearing":
+			grove = 10           # plus the ring the clearing draws
+		"lot":
+			grove = 6
+			grove_lo = 150.0
+			grove_hi = 1120.0
+	for i in range(grove):
 		for attempt in range(20):
-			var tree := Vector2(randf_range(200.0, 1080.0), GATE_Y - randf_range(120.0, 550.0))
+			var tx := randf_range(grove_lo, grove_hi)
+			if freedom_kind == "clearing":
+				# outer thirds only: the middle is where the fetching happens
+				tx = randf_range(150.0, 340.0) if randf() < 0.5 else randf_range(940.0, 1120.0)
+			var tree := Vector2(tx, GATE_Y - randf_range(120.0, 550.0))
 			var clear := tree.distance_to(gate_bench) > 95.0
+			for w: Rect2 in water:
+				clear = clear and not w.grow(30.0).has_point(tree)
 			for slot in PAIR_PARK_SPOTS:
 				var spot: Vector2 = slot.position
 				clear = clear and tree.distance_to(spot) > 85.0
@@ -1466,48 +1516,55 @@ func cast_shadow(c: CanvasItem, at: Vector2, w: float, h: float, a := 0.20) -> v
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
-func _draw_broadleaf(p: Vector2, scale: float) -> void:
+func _draw_broadleaf(c: CanvasItem, p: Vector2, scale: float) -> void:
 	# A tree from above is a canopy, and a canopy is not one flat circle: it
 	# is clustered lobes with light on the top-left of each one, a trunk you
 	# can see through the gaps, and a shadow the same shape as the crown. The
 	# old version was two translucent discs.
 	var r := 34.0 * scale
 	# the crown's shadow, thrown clear of the trunk so the tree stands up
-	draw_set_transform(p + LIGHT * (46.0 * scale), 0.0, Vector2(1.1, 0.55))
-	draw_circle(Vector2.ZERO, r * 1.02, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.17))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	c.draw_set_transform(p + LIGHT * (46.0 * scale), 0.0, Vector2(1.1, 0.55))
+	c.draw_circle(Vector2.ZERO, r * 1.02, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.17))
+	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	var dark := Color(0.15, 0.27, 0.16)
 	var mid := Color(0.21, 0.36, 0.20)
 	var lit := Color(0.31, 0.48, 0.26)
-	# the underside first, then lobes over it, each lit on its light side
-	draw_circle(p + Vector2(2, 3) * scale, r, dark)
+	# The underside, then a solid crown, then lobes only on the lit side. Lobes
+	# ringed evenly around the centre left a dark hole in the middle and the
+	# canopy read as a doughnut.
+	c.draw_circle(p + Vector2(2, 3) * scale, r, dark)
+	c.draw_circle(p - LIGHT * r * 0.10, r * 0.86, mid)
 	var lobes := [
 		Vector2(-0.42, -0.30), Vector2(0.40, -0.34), Vector2(0.46, 0.32),
 		Vector2(-0.38, 0.40), Vector2(0.02, -0.06),
 	]
 	for i in range(lobes.size()):
 		var lp: Vector2 = p + (lobes[i] as Vector2) * r
-		draw_circle(lp, r * 0.54, mid)
+		c.draw_circle(lp, r * 0.50, mid)
+	# the light falls on the upper-left of the crown, so only those lobes catch
 	for i in range(lobes.size()):
-		var lp2: Vector2 = p + (lobes[i] as Vector2) * r
-		draw_circle(lp2 - Vector2(0.16, 0.18) * r, r * 0.30, lit)
+		var lv: Vector2 = lobes[i]
+		if lv.dot(LIGHT) > 0.10:
+			continue          # this lobe is on the shaded side
+		c.draw_circle(p + lv * r - LIGHT * r * 0.14, r * 0.34, lit)
+	c.draw_circle(p - LIGHT * r * 0.42, r * 0.30, lit.lightened(0.08))
 	# the trunk, visible in the middle where the canopy parts
-	draw_circle(p, 6.5 * scale, Color(0.22, 0.16, 0.11))
-	draw_circle(p + Vector2(-1, -1) * scale, 4.4 * scale, Color(0.36, 0.27, 0.18))
+	c.draw_circle(p, 6.5 * scale, Color(0.22, 0.16, 0.11))
+	c.draw_circle(p + Vector2(-1, -1) * scale, 4.4 * scale, Color(0.36, 0.27, 0.18))
 	# a few leaf tips breaking the outline, so it is not a perfect circle
 	for i in range(7):
 		var a := TAU * float(i) / 7.0 + p.x * 0.013
-		draw_circle(p + Vector2.from_angle(a) * r * 0.95, r * 0.17, mid)
+		c.draw_circle(p + Vector2.from_angle(a) * r * 0.95, r * 0.17, mid)
 
 
-func _draw_palm(p: Vector2) -> void:
+func _draw_palm(c: CanvasItem, p: Vector2) -> void:
 	# a palm from above: a ring of long fronds, each with a spine and leaflets,
 	# radiating from a fat trunk. The shadow copies the frond pattern, which is
 	# what makes the beach read as glaring midday sun.
 	var sh := p + LIGHT * 40.0
 	for j in range(7):
 		var sa := TAU * float(j) / 7.0 + p.x * 0.01 + p.y * 0.007
-		draw_line(sh, sh + Vector2.from_angle(sa) * 34.0,
+		c.draw_line(sh, sh + Vector2.from_angle(sa) * 34.0,
 			Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.14), 7.0)
 	var t := Time.get_ticks_msec() / 1000.0
 	for j in range(7):
@@ -1516,21 +1573,21 @@ func _draw_palm(p: Vector2) -> void:
 		fa += sin(t * 0.7 + float(j) * 1.3 + p.y * 0.01) * 0.05
 		var dir := Vector2.from_angle(fa)
 		var tip := p + dir * 38.0
-		draw_line(p, tip, Color(0.20, 0.36, 0.19), 6.0)
-		draw_line(p, tip, Color(0.29, 0.47, 0.24), 3.0)
+		c.draw_line(p, tip, Color(0.20, 0.36, 0.19), 6.0)
+		c.draw_line(p, tip, Color(0.29, 0.47, 0.24), 3.0)
 		# leaflets down both sides of the spine
 		var side := dir.orthogonal()
 		for k in range(4):
 			var f := 0.35 + float(k) * 0.2
 			var at := p + dir * (38.0 * f)
 			var ln := 9.0 * (1.0 - f * 0.5)
-			draw_line(at, at + (side + dir * 0.5).normalized() * ln, Color(0.24, 0.41, 0.21), 2.5)
-			draw_line(at, at - (side - dir * 0.5).normalized() * ln, Color(0.24, 0.41, 0.21), 2.5)
+			c.draw_line(at, at + (side + dir * 0.5).normalized() * ln, Color(0.24, 0.41, 0.21), 2.5)
+			c.draw_line(at, at - (side - dir * 0.5).normalized() * ln, Color(0.24, 0.41, 0.21), 2.5)
 	# the trunk, and the coconuts nobody should be under
-	draw_circle(p, 9.0, Color(0.34, 0.26, 0.17))
-	draw_circle(p + Vector2(-2, -2), 6.0, Color(0.48, 0.38, 0.25))
-	draw_circle(p + Vector2(5, 4), 3.4, Color(0.28, 0.22, 0.14))
-	draw_circle(p + Vector2(-4, 5), 3.0, Color(0.28, 0.22, 0.14))
+	c.draw_circle(p, 9.0, Color(0.34, 0.26, 0.17))
+	c.draw_circle(p + Vector2(-2, -2), 6.0, Color(0.48, 0.38, 0.25))
+	c.draw_circle(p + Vector2(5, 4), 3.4, Color(0.28, 0.22, 0.14))
+	c.draw_circle(p + Vector2(-4, 5), 3.0, Color(0.28, 0.22, 0.14))
 
 
 func _draw_lamppost(p: Vector2) -> void:
@@ -1557,117 +1614,55 @@ func _draw_lamppost(p: Vector2) -> void:
 			draw_circle(lp, 6.5, Color(1.0, 0.92, 0.66, 0.35))
 
 
+func _freedom_dirty() -> void:
+	# the cached off-leash canvas is out of date: a hole got deeper, a post got
+	# sniffed, Brutus made off with a bone
+	if freedomlayer != null:
+		freedomlayer.mark_dirty()
+
+
+func draw_freedom_onto(c: CanvasItem) -> void:
+	# Everything in the off-leash space that does not move, drawn onto
+	# freedomlayer's canvas so it survives between redraws. `c` is that canvas;
+	# the helpers below take it rather than assuming `self`.
+	# the ground the space sits in, out to the level edges
+	var surround := Color(0.27, 0.4, 0.27)
+	match freedom_kind:
+		"beach": surround = Color(0.80, 0.74, 0.59)
+		"clearing": surround = Color(0.20, 0.30, 0.19)
+		"lot": surround = Color(0.32, 0.31, 0.29)
+	c.draw_rect(Rect2(-400.0, GATE_Y - 800.0, 2100.0, 800.0), surround)
+	match freedom_kind:
+		"beach": _draw_dog_beach(c)
+		"clearing": _draw_clearing(c)
+		"lot": _draw_yard(c, true)
+		_: _draw_yard(c, false)
+	# the grove stands in the off-leash area, so it is static too. It used to be
+	# drawn every frame in the world, with its own near-duplicate tree
+	# renderer: 16 trees at ~20 draw calls each, measured at over a
+	# millisecond, for a picture that never changed.
+	# The grove doubles as rope-wrap geometry, so it exists on every walk and
+	# has to be drawn on every walk - but a broadleaf on a beach is nonsense,
+	# so it wears whatever that place grows.
+	for t in trees:
+		if freedom_kind == "beach":
+			_draw_palm(c, t)
+		else:
+			_draw_broadleaf(c, t, 0.85)
+	_draw_park_props(c, -1e9, 1e9)
+
+
 func _freedom_rect() -> Rect2:
 	return Rect2(70.0, freedom_lo, 1110.0, GATE_Y - 30.0 - freedom_lo)
 
 
-func _draw_freedom_fence(r: Rect2, gravel: bool) -> void:
-	# chain-link on all four sides, open at the gate
-	var fence := Color(0.62, 0.63, 0.6) if not gravel else Color(0.55, 0.5, 0.44)
-	var post := Color(0.5, 0.5, 0.48)
-	var mesh := Color(0.66, 0.68, 0.66, 0.25)
-	var yl := r.position.x
-	var yr := r.end.x
-	var ytop := r.position.y
-	var ybot := r.end.y
-	draw_line(Vector2(yl, ytop), Vector2(yl, ybot), fence, 3.0)
-	draw_line(Vector2(yr, ytop), Vector2(yr, ybot), fence, 3.0)
-	draw_line(Vector2(yl, ytop), Vector2(yr, ytop), fence, 3.0)
-	draw_line(Vector2(yl, ybot), Vector2(gate_l - 20.0, ybot), fence, 3.0)
-	draw_line(Vector2(gate_r + 20.0, ybot), Vector2(yr, ybot), fence, 3.0)
-	for px in range(int(yl), int(yr), 60):
-		draw_line(Vector2(px, ytop), Vector2(px, ytop + 8.0), post, 2.0)
-		if px < gate_l - 20.0 or px > gate_r + 20.0:
-			draw_line(Vector2(px, ybot - 8.0), Vector2(px, ybot), post, 2.0)
-	draw_line(Vector2(yl + 6.0, ytop + 6.0), Vector2(yr - 6.0, ytop + 6.0), mesh, 6.0)
-	for cp: Vector2 in [Vector2(yl, ytop), Vector2(yr, ytop), Vector2(yl, ybot), Vector2(yr, ybot)]:
-		draw_circle(cp, 4.0, post)
-
-
-func _draw_freedom_benches(r: Rect2, col: Color) -> void:
-	for bx: Vector2 in [
-		Vector2(r.position.x + 70.0, r.position.y + 60.0),
-		Vector2(r.end.x - 70.0, r.position.y + 120.0),
-		Vector2(r.position.x + 90.0, r.end.y - 80.0),
-	]:
-		contact_shadow(self, bx, 22.0, 8.0, 0.20)
-		draw_rect(Rect2(bx.x - 22, bx.y - 5, 44, 10), col)
-		draw_line(Vector2(bx.x - 20, bx.y - 5), Vector2(bx.x - 20, bx.y + 8), col.darkened(0.2), 2.0)
-		draw_line(Vector2(bx.x + 20, bx.y - 5), Vector2(bx.x + 20, bx.y + 8), col.darkened(0.2), 2.0)
-	# the bench the parked owner throws the ball from
-	contact_shadow(self, gate_bench, 20.0, 8.0, 0.20)
-	draw_rect(Rect2(gate_bench.x - 18, gate_bench.y - 6, 36, 11), Color(0.54, 0.4, 0.27))
-
-
-func _freedom_sign(r: Rect2, txt: String) -> void:
-	draw_string(font, Vector2(0, r.position.y - 14), txt, HORIZONTAL_ALIGNMENT_CENTER, 1280,
-		22, Color(0.9, 0.9, 0.82))
-
-
-func _draw_yard(gravel: bool) -> void:
-	# the municipal dog park: grass (or a gravel compound on the industrial
-	# walks), a worn patch in the middle where every dog plays, and a fence
-	var r := _freedom_rect()
-	draw_rect(r, Color(0.40, 0.38, 0.34) if gravel else Color(0.34, 0.5, 0.32))
-	draw_circle(r.get_center(), 150.0,
-		Color(0.34, 0.32, 0.29, 0.5) if gravel else Color(0.42, 0.44, 0.3, 0.35))
-	if gravel:
-		# grit, in place of the grass tufts
-		for gi in range(90):
-			var gp := Vector2(
-				r.position.x + fmod(float(gi) * 197.0, r.size.x),
-				r.position.y + fmod(float(gi) * 331.0, r.size.y))
-			draw_circle(gp, 1.6, Color(0.30, 0.29, 0.27, 0.6))
-	else:
-		for tf in range(28):
-			var gxp := r.position.x + 20.0 + tf * ((r.size.x - 40.0) / 27.0)
-			var gyp := r.position.y + 40.0 + fmod(tf * 137.0, r.size.y - 80.0)
-			draw_line(Vector2(gxp, gyp), Vector2(gxp - 3.0, gyp - 8.0), Color(0.28, 0.44, 0.27), 2.0)
-			draw_line(Vector2(gxp, gyp), Vector2(gxp + 3.0, gyp - 7.0), Color(0.28, 0.44, 0.27), 2.0)
-	_draw_freedom_fence(r, gravel)
-	_draw_freedom_benches(r, Color(0.5, 0.38, 0.26))
-	_freedom_sign(r, "OFF-LEASH YARD" if gravel else "OFF-LEASH DOG PARK")
-
-
-func _draw_clearing() -> void:
-	# a clearing in the woods: no fence, because nothing out here is fenced.
-	# The trees ARE the boundary, drawn with the same renderer as the ones on
-	# the trail so it reads as the same wood.
-	var r := _freedom_rect()
-	draw_rect(r, Color(0.30, 0.42, 0.26))
-	draw_circle(r.get_center(), 170.0, Color(0.40, 0.36, 0.26, 0.55))   # trodden earth
-	for i in range(40):
-		var f := float(i) / 39.0
-		var edge := i % 4
-		var tp := Vector2.ZERO
-		match edge:
-			0: tp = Vector2(lerpf(r.position.x, r.end.x, f), r.position.y + 8.0)
-			1: tp = Vector2(r.position.x + 14.0, lerpf(r.position.y, r.end.y, f))
-			2: tp = Vector2(r.end.x - 14.0, lerpf(r.position.y, r.end.y, f))
-			_: tp = Vector2(lerpf(r.position.x, r.end.x, f), r.end.y - 10.0)
-		# leave the gate mouth clear
-		if edge == 3 and tp.x > gate_l - 60.0 and tp.x < gate_r + 60.0:
-			continue
-		_draw_broadleaf(tp, 0.6 + fmod(float(i) * 0.37, 0.4))
-	_draw_freedom_benches(r, Color(0.42, 0.33, 0.22))
-	_freedom_sign(r, "THE CLEARING")
-
-
-func _draw_dog_beach() -> void:
-	# THE DOG BEACH. The other walks all end in the same municipal field; this
-	# one ends where the city ends. Dry sand, wet sand, and open sea on the
-	# west - and the sea is real water: she swims in it, the ball gets thrown
-	# into it, and the owner will not enjoy any of that.
+func _draw_beach_water() -> void:
+	# The only part of the dog beach that moves. Everything else - sand, dunes,
+	# parasols, the shower - is on freedomlayer's cached canvas, so this is all
+	# the sea costs per frame.
 	var r := _freedom_rect()
 	var t := Time.get_ticks_msec() / 1000.0
-	draw_rect(r, Color(0.85, 0.78, 0.62))
 	var sea := Rect2(-330.0, r.position.y - 40.0, BEACH_SEA_R + 330.0, r.size.y + 40.0)
-	draw_rect(sea, Color(0.24, 0.44, 0.54))
-	# shallows: a paler band where it shelves up to the sand
-	draw_rect(Rect2(BEACH_SEA_R - 90.0, sea.position.y, 90.0, sea.size.y),
-		Color(0.34, 0.56, 0.62))
-	# wet sand, darker than dry
-	draw_rect(Rect2(BEACH_SEA_R, r.position.y, 70.0, r.size.y), Color(0.70, 0.64, 0.52))
 	# Waves rolling in. The shore runs north-south, so a crest is a LONG line
 	# parallel to it that undulates as it travels - drawn as short segments it
 	# read as rain falling on the sea, which is not the same thing at all.
@@ -1697,62 +1692,178 @@ func _draw_dog_beach() -> void:
 		var fx := BEACH_SEA_R + 4.0 + sin(fy * 0.02 + t * 1.4) * 4.0
 		draw_line(Vector2(fx, fy), Vector2(fx, fy + 40.0), Color(1, 1, 1, 0.30), 2.5)
 		fy += 52.0
+
+
+func _draw_freedom_fence(c: CanvasItem, r: Rect2, gravel: bool) -> void:
+	# chain-link on all four sides, open at the gate
+	var fence := Color(0.62, 0.63, 0.6) if not gravel else Color(0.55, 0.5, 0.44)
+	var post := Color(0.5, 0.5, 0.48)
+	var mesh := Color(0.66, 0.68, 0.66, 0.25)
+	var yl := r.position.x
+	var yr := r.end.x
+	var ytop := r.position.y
+	var ybot := r.end.y
+	c.draw_line(Vector2(yl, ytop), Vector2(yl, ybot), fence, 3.0)
+	c.draw_line(Vector2(yr, ytop), Vector2(yr, ybot), fence, 3.0)
+	c.draw_line(Vector2(yl, ytop), Vector2(yr, ytop), fence, 3.0)
+	c.draw_line(Vector2(yl, ybot), Vector2(gate_l - 20.0, ybot), fence, 3.0)
+	c.draw_line(Vector2(gate_r + 20.0, ybot), Vector2(yr, ybot), fence, 3.0)
+	for px in range(int(yl), int(yr), 60):
+		c.draw_line(Vector2(px, ytop), Vector2(px, ytop + 8.0), post, 2.0)
+		if px < gate_l - 20.0 or px > gate_r + 20.0:
+			c.draw_line(Vector2(px, ybot - 8.0), Vector2(px, ybot), post, 2.0)
+	c.draw_line(Vector2(yl + 6.0, ytop + 6.0), Vector2(yr - 6.0, ytop + 6.0), mesh, 6.0)
+	for cp: Vector2 in [Vector2(yl, ytop), Vector2(yr, ytop), Vector2(yl, ybot), Vector2(yr, ybot)]:
+		c.draw_circle(cp, 4.0, post)
+
+
+func _draw_freedom_benches(c: CanvasItem, r: Rect2, col: Color) -> void:
+	for bx: Vector2 in [
+		Vector2(r.position.x + 70.0, r.position.y + 60.0),
+		Vector2(r.end.x - 70.0, r.position.y + 120.0),
+		Vector2(r.position.x + 90.0, r.end.y - 80.0),
+	]:
+		contact_shadow(c, bx, 22.0, 8.0, 0.20)
+		c.draw_rect(Rect2(bx.x - 22, bx.y - 5, 44, 10), col)
+		c.draw_line(Vector2(bx.x - 20, bx.y - 5), Vector2(bx.x - 20, bx.y + 8), col.darkened(0.2), 2.0)
+		c.draw_line(Vector2(bx.x + 20, bx.y - 5), Vector2(bx.x + 20, bx.y + 8), col.darkened(0.2), 2.0)
+	# the bench the parked owner throws the ball from
+	contact_shadow(c, gate_bench, 20.0, 8.0, 0.20)
+	c.draw_rect(Rect2(gate_bench.x - 18, gate_bench.y - 6, 36, 11), Color(0.54, 0.4, 0.27))
+
+
+func _freedom_sign(c: CanvasItem, r: Rect2, txt: String) -> void:
+	c.draw_string(font, Vector2(0, r.position.y - 14), txt, HORIZONTAL_ALIGNMENT_CENTER, 1280,
+		22, Color(0.9, 0.9, 0.82))
+
+
+func _draw_yard(c: CanvasItem, gravel: bool) -> void:
+	# the municipal dog park: grass (or a gravel compound on the industrial
+	# walks), a worn patch in the middle where every dog plays, and a fence
+	var r := _freedom_rect()
+	c.draw_rect(r, Color(0.40, 0.38, 0.34) if gravel else Color(0.34, 0.5, 0.32))
+	c.draw_circle(r.get_center(), 150.0,
+		Color(0.34, 0.32, 0.29, 0.5) if gravel else Color(0.42, 0.44, 0.3, 0.35))
+	if gravel:
+		# grit, in place of the grass tufts
+		for gi in range(90):
+			var gp := Vector2(
+				r.position.x + fmod(float(gi) * 197.0, r.size.x),
+				r.position.y + fmod(float(gi) * 331.0, r.size.y))
+			c.draw_circle(gp, 1.6, Color(0.30, 0.29, 0.27, 0.6))
+	else:
+		for tf in range(28):
+			var gxp := r.position.x + 20.0 + tf * ((r.size.x - 40.0) / 27.0)
+			var gyp := r.position.y + 40.0 + fmod(tf * 137.0, r.size.y - 80.0)
+			c.draw_line(Vector2(gxp, gyp), Vector2(gxp - 3.0, gyp - 8.0), Color(0.28, 0.44, 0.27), 2.0)
+			c.draw_line(Vector2(gxp, gyp), Vector2(gxp + 3.0, gyp - 7.0), Color(0.28, 0.44, 0.27), 2.0)
+	_draw_freedom_fence(c, r, gravel)
+	_draw_freedom_benches(c, r, Color(0.5, 0.38, 0.26))
+	_freedom_sign(c, r, "OFF-LEASH YARD" if gravel else "OFF-LEASH DOG PARK")
+
+
+func _draw_clearing(c: CanvasItem) -> void:
+	# a clearing in the woods: no fence, because nothing out here is fenced.
+	# The trees ARE the boundary, drawn with the same renderer as the ones on
+	# the trail so it reads as the same wood.
+	var r := _freedom_rect()
+	c.draw_rect(r, Color(0.30, 0.42, 0.26))
+	c.draw_circle(r.get_center(), 170.0, Color(0.40, 0.36, 0.26, 0.55))   # trodden earth
+	# Sixteen, not forty. Forty of these cost 5.7ms of a 9ms frame, measured -
+	# a ring of trees does not read forty times better than a ring of sixteen.
+	# The ring of trees is not drawn here any more. It was decoration you could
+	# walk straight through - and a tree you can walk through is worse than no
+	# tree. They are placed as real trees at build time now, so they have
+	# collision, the rope wraps them, and the grove draws them.
+	_draw_freedom_benches(c, r, Color(0.42, 0.33, 0.22))
+	_freedom_sign(c, r, "THE CLEARING")
+
+
+func _draw_dog_beach(c: CanvasItem) -> void:
+	# THE DOG BEACH. The other walks all end in the same municipal field; this
+	# one ends where the city ends. Dry sand, wet sand, and open sea on the
+	# west - and the sea is real water: she swims in it, the ball gets thrown
+	# into it, and the owner will not enjoy any of that.
+	var r := _freedom_rect()
+	var t := Time.get_ticks_msec() / 1000.0
+	c.draw_rect(r, Color(0.85, 0.78, 0.62))
+	# The bay OPENS OUT of the seafront's coastline rather than starting
+	# abruptly at the gate: the shore runs out diagonally from the corridor's
+	# waterline to the width of the bay, so walking through the gate reads as
+	# rounding a headland instead of the sea suddenly getting wider.
+	var sea := Rect2(-330.0, r.position.y - 40.0, BEACH_SEA_R + 330.0, r.size.y + 40.0)
+	var bend_y := GATE_Y - 300.0
+	var shore := PackedVector2Array([
+		Vector2(-330.0, sea.position.y), Vector2(BEACH_SEA_R, sea.position.y),
+		Vector2(BEACH_SEA_R, bend_y), Vector2(230.0, r.end.y),
+		Vector2(-330.0, r.end.y),
+	])
+	c.draw_colored_polygon(shore, Color(0.24, 0.44, 0.54))
+	# shallows: a paler band inside the same shape
+	var shallow := PackedVector2Array([
+		Vector2(BEACH_SEA_R - 90.0, sea.position.y), Vector2(BEACH_SEA_R, sea.position.y),
+		Vector2(BEACH_SEA_R, bend_y), Vector2(230.0, r.end.y),
+		Vector2(150.0, r.end.y), Vector2(BEACH_SEA_R - 90.0, bend_y),
+	])
+	c.draw_colored_polygon(shallow, Color(0.34, 0.56, 0.62))
+	# wet sand, following the same diagonal
+	var wet := PackedVector2Array([
+		Vector2(BEACH_SEA_R, sea.position.y), Vector2(BEACH_SEA_R + 70.0, sea.position.y),
+		Vector2(BEACH_SEA_R + 70.0, bend_y), Vector2(300.0, r.end.y),
+		Vector2(230.0, r.end.y), Vector2(BEACH_SEA_R, bend_y),
+	])
+	c.draw_colored_polygon(wet, Color(0.70, 0.64, 0.52))
 	# dunes along the east and north instead of a fence: marram grass on pale
 	# mounds is a boundary you can see without chain-link
 	# Pale sand mounds on pale sand were invisible; a dune reads by its SHADED
 	# side and the grass on top, not by being a slightly different beige.
-	for i in range(26):
-		var f2 := float(i) / 25.0
-		# inset from the edges, or half of them sit off the side of the screen
-		var dp := Vector2(lerpf(r.position.x + 60.0, r.end.x - 60.0, f2), r.position.y + 40.0)
-		if i % 2 == 0:
-			dp = Vector2(r.end.x - 70.0, lerpf(r.position.y + 60.0, r.end.y - 60.0, f2))
-		contact_shadow(self, dp, 27.0, 12.0, 0.16)
-		draw_circle(dp, 27.0, Color(0.74, 0.67, 0.52))          # the shaded flank
-		draw_circle(dp - LIGHT * 7.0, 21.0, Color(0.93, 0.88, 0.73))  # the lit crest
+	for dp: Vector2 in dune_spots:
+		contact_shadow(c, dp, 27.0, 12.0, 0.16)
+		c.draw_circle(dp, 27.0, Color(0.74, 0.67, 0.52))          # the shaded flank
+		c.draw_circle(dp - LIGHT * 7.0, 21.0, Color(0.93, 0.88, 0.73))  # the lit crest
 		for g in range(6):
 			var ga := -PI * 0.62 + (float(g) - 2.5) * 0.26
-			var gl := 15.0 + fmod(float(i * 7 + g * 3), 9.0)
-			draw_line(dp - LIGHT * 5.0, dp - LIGHT * 5.0 + Vector2.from_angle(ga) * gl,
+			var gl := 15.0 + fmod(dp.x * 0.7 + float(g) * 3.0, 9.0)
+			c.draw_line(dp - LIGHT * 5.0, dp - LIGHT * 5.0 + Vector2.from_angle(ga) * gl,
 				Color(0.55, 0.62, 0.36, 0.9), 2.0)
 	# the outdoor shower, a lifeguard chair and parasols: a real beach has
 	# furniture, and the shower is hers - it fills the tank back up
 	var sh := Vector2(BEACH_SEA_R + 150.0, r.position.y + 120.0)
-	cast_shadow(self, sh, 5.0, 34.0)
-	draw_circle(sh, 7.0, Color(0.68, 0.70, 0.72))
-	draw_line(sh, sh + Vector2(0, -16.0), Color(0.76, 0.78, 0.80), 4.0)
-	draw_circle(sh + Vector2(0, -18.0), 5.0, Color(0.82, 0.86, 0.88))
+	cast_shadow(c, sh, 5.0, 34.0)
+	c.draw_circle(sh, 7.0, Color(0.68, 0.70, 0.72))
+	c.draw_line(sh, sh + Vector2(0, -16.0), Color(0.76, 0.78, 0.80), 4.0)
+	c.draw_circle(sh + Vector2(0, -18.0), 5.0, Color(0.82, 0.86, 0.88))
 	for di in range(4):
-		draw_line(sh + Vector2(-6.0 + float(di) * 4.0, -14.0),
+		c.draw_line(sh + Vector2(-6.0 + float(di) * 4.0, -14.0),
 			sh + Vector2(-6.0 + float(di) * 4.0, -4.0), Color(0.7, 0.86, 0.95, 0.5), 1.5)
 	var lg := Vector2(BEACH_SEA_R + 240.0, r.get_center().y)
-	cast_shadow(self, lg, 14.0, 40.0)
-	draw_rect(Rect2(lg.x - 15.0, lg.y - 15.0, 30.0, 30.0), Color(0.86, 0.80, 0.34))
-	draw_rect(Rect2(lg.x - 15.0, lg.y - 15.0, 30.0, 30.0), Color(0.62, 0.56, 0.22), false, 2.0)
-	draw_rect(Rect2(lg.x - 9.0, lg.y - 9.0, 18.0, 18.0), Color(0.94, 0.90, 0.58))
+	cast_shadow(c, lg, 14.0, 40.0)
+	c.draw_rect(Rect2(lg.x - 15.0, lg.y - 15.0, 30.0, 30.0), Color(0.86, 0.80, 0.34))
+	c.draw_rect(Rect2(lg.x - 15.0, lg.y - 15.0, 30.0, 30.0), Color(0.62, 0.56, 0.22), false, 2.0)
+	c.draw_rect(Rect2(lg.x - 9.0, lg.y - 9.0, 18.0, 18.0), Color(0.94, 0.90, 0.58))
 	var pcol := [Color(0.85, 0.45, 0.35, 0.85), Color(0.4, 0.6, 0.75, 0.85),
 		Color(0.9, 0.8, 0.4, 0.85)]
 	for i in range(3):
-		var pa := Vector2(r.end.x - 150.0, r.position.y + 180.0 + float(i) * 210.0)
+		var pa := Vector2(r.end.x - 260.0, r.position.y + 180.0 + float(i) * 210.0)
 		# a parasol from above is panels radiating from a hub, with the shade
 		# it is there to cast falling clear of it
-		contact_shadow(self, pa, 36.0, 30.0, 0.20)
+		contact_shadow(c, pa, 36.0, 30.0, 0.20)
 		var pc: Color = pcol[i % 3]
-		draw_circle(pa, 36.0, pc)
+		c.draw_circle(pa, 36.0, pc)
 		for panel in range(8):
 			var a0 := TAU * float(panel) / 8.0 + float(i) * 0.2
-			draw_line(pa, pa + Vector2.from_angle(a0) * 36.0, pc.darkened(0.22), 2.0)
+			c.draw_line(pa, pa + Vector2.from_angle(a0) * 36.0, pc.darkened(0.22), 2.0)
 			if panel % 2 == 0:
-				draw_colored_polygon(
+				c.draw_colored_polygon(
 					PackedVector2Array([
 						pa, pa + Vector2.from_angle(a0) * 36.0,
 						pa + Vector2.from_angle(a0 + TAU / 8.0) * 36.0,
 					]), Color(1, 1, 1, 0.10))
-		draw_circle(pa - LIGHT * 10.0, 12.0, Color(1, 1, 1, 0.13))   # the lit side
-		draw_circle(pa, 5.0, Color(0.42, 0.38, 0.34))                # the pole
-		draw_circle(pa, 2.2, Color(0.62, 0.58, 0.52))
-	_draw_freedom_benches(r, Color(0.62, 0.5, 0.34))
-	_freedom_sign(r, "DOG BEACH  -  OFF LEASH")
+		c.draw_circle(pa - LIGHT * 10.0, 12.0, Color(1, 1, 1, 0.13))   # the lit side
+		c.draw_circle(pa, 5.0, Color(0.42, 0.38, 0.34))                # the pole
+		c.draw_circle(pa, 2.2, Color(0.62, 0.58, 0.52))
+	_draw_freedom_benches(c, r, Color(0.62, 0.5, 0.34))
+	_freedom_sign(c, r, "DOG BEACH  -  OFF LEASH")
 
 
 # --- writing that belongs to the world --------------------------------
@@ -1871,7 +1982,7 @@ func _draw_ground_title() -> void:
 	# HUD, where a changing value belongs
 
 
-func _draw_park_props(vt: float, vb: float) -> void:
+func _draw_park_props(c: CanvasItem, vt: float, vb: float) -> void:
 	for pp in park_props:
 		var p: Vector2 = pp.pos
 		# these were drawn in full every redraw with no culling at all
@@ -1883,15 +1994,15 @@ func _draw_park_props(vt: float, vb: float) -> void:
 		# a cast one, things lying on the ground get a contact patch.
 		match String(pp.kind):
 			"post":
-				cast_shadow(self, p, 5.0, 34.0)
+				cast_shadow(c, p, 5.0, 34.0)
 			"shrub":
-				contact_shadow(self, p, 15.0, 9.0)
+				contact_shadow(c, p, 15.0, 9.0)
 			"log", "driftwood":
-				contact_shadow(self, p, 17.0, 6.0)
+				contact_shadow(c, p, 17.0, 6.0)
 			"dig":
 				pass       # a hole in the ground casts nothing
 			_:
-				contact_shadow(self, p, 14.0, 7.0)
+				contact_shadow(c, p, 14.0, 7.0)
 		match String(pp.kind):
 			"dig":
 				# A HOLE, which means a rim of thrown earth around it and dark
@@ -1899,46 +2010,46 @@ func _draw_park_props(vt: float, vb: float) -> void:
 				# this is the main reward for wandering off the path.
 				var soil := Color(0.34, 0.26, 0.18)
 				# spoil heaped on the far side, where a digging dog puts it
-				draw_circle(p + LIGHT * 9.0, 16.0, soil.lightened(0.10))
-				draw_circle(p + LIGHT * 12.0, 10.0, soil.lightened(0.22))
-				draw_circle(p, 17.0, soil.darkened(0.10))
+				c.draw_circle(p + LIGHT * 9.0, 16.0, soil.lightened(0.10))
+				c.draw_circle(p + LIGHT * 12.0, 10.0, soil.lightened(0.22))
+				c.draw_circle(p, 17.0, soil.darkened(0.10))
 				# the pit: darker toward the light side, where the wall is
-				draw_circle(p, 12.0 + prog * 3.0, soil.darkened(0.42 + prog * 0.2))
-				draw_circle(p - LIGHT * 3.0, 8.0 + prog * 3.0, soil.darkened(0.62))
-				draw_arc(p, 13.0 + prog * 3.0, PI * 0.95, PI * 1.95, 14,
+				c.draw_circle(p, 12.0 + prog * 3.0, soil.darkened(0.42 + prog * 0.2))
+				c.draw_circle(p - LIGHT * 3.0, 8.0 + prog * 3.0, soil.darkened(0.62))
+				c.draw_arc(p, 13.0 + prog * 3.0, PI * 0.95, PI * 1.95, 14,
 					soil.lightened(0.30), 2.0)
 				# clods and a couple of scratched-up roots
 				for i in range(5):
 					var a := TAU * float(i) / 5.0 + p.x * 0.02
-					draw_circle(p + Vector2.from_angle(a) * (15.0 + prog * 6.0), 3.0, soil)
-				draw_line(p + Vector2(-14, 6), p + Vector2(-6, 10), soil.lightened(0.3), 1.5)
+					c.draw_circle(p + Vector2.from_angle(a) * (15.0 + prog * 6.0), 3.0, soil)
+				c.draw_line(p + Vector2(-14, 6), p + Vector2(-6, 10), soil.lightened(0.3), 1.5)
 				if done:
 					# the prize, unearthed and left sitting in the hole
-					draw_circle(p, 9.0, soil.darkened(0.35))
-					draw_rect(Rect2(p.x - 7.0, p.y - 2.5, 14.0, 5.0), Color(0.92, 0.89, 0.80))
-					draw_circle(p + Vector2(-7.0, 0.0), 3.4, Color(0.92, 0.89, 0.80))
-					draw_circle(p + Vector2(7.0, 0.0), 3.4, Color(0.92, 0.89, 0.80))
+					c.draw_circle(p, 9.0, soil.darkened(0.35))
+					c.draw_rect(Rect2(p.x - 7.0, p.y - 2.5, 14.0, 5.0), Color(0.92, 0.89, 0.80))
+					c.draw_circle(p + Vector2(-7.0, 0.0), 3.4, Color(0.92, 0.89, 0.80))
+					c.draw_circle(p + Vector2(7.0, 0.0), 3.4, Color(0.92, 0.89, 0.80))
 				elif prog > 0.05:
-					draw_arc(p, 22.0, -PI / 2.0, -PI / 2.0 + TAU * prog / 1.1, 18, Color(1, 0.9, 0.5), 3.0)
+					c.draw_arc(p, 22.0, -PI / 2.0, -PI / 2.0 + TAU * prog / 1.1, 18, Color(1, 0.9, 0.5), 3.0)
 			"log":
 				# a fallen log: bark, end grain, and a couple of knots
 				var bark := Color(0.40, 0.30, 0.20)
-				draw_rect(Rect2(p.x - 30.0, p.y - 9.0, 60.0, 18.0), bark)
-				draw_rect(Rect2(p.x - 30.0, p.y - 9.0, 60.0, 5.0), bark.lightened(0.18))
-				draw_circle(Vector2(p.x + 30.0, p.y), 9.0, Color(0.62, 0.50, 0.34))
-				draw_arc(Vector2(p.x + 30.0, p.y), 5.0, 0, TAU, 10, Color(0.48, 0.38, 0.25), 1.5)
-				draw_circle(Vector2(p.x - 8.0, p.y - 1.0), 3.0, bark.darkened(0.30))
+				c.draw_rect(Rect2(p.x - 30.0, p.y - 9.0, 60.0, 18.0), bark)
+				c.draw_rect(Rect2(p.x - 30.0, p.y - 9.0, 60.0, 5.0), bark.lightened(0.18))
+				c.draw_circle(Vector2(p.x + 30.0, p.y), 9.0, Color(0.62, 0.50, 0.34))
+				c.draw_arc(Vector2(p.x + 30.0, p.y), 5.0, 0, TAU, 10, Color(0.48, 0.38, 0.25), 1.5)
+				c.draw_circle(Vector2(p.x - 8.0, p.y - 1.0), 3.0, bark.darkened(0.30))
 			"driftwood":
 				var pale := Color(0.68, 0.63, 0.55)
-				draw_rect(Rect2(p.x - 32.0, p.y - 6.0, 64.0, 12.0), pale)
-				draw_line(p + Vector2(-32, -1), p + Vector2(32, -1), pale.darkened(0.22), 2.0)
-				draw_line(p + Vector2(8, -6), p + Vector2(22, -16), pale, 5.0)
+				c.draw_rect(Rect2(p.x - 32.0, p.y - 6.0, 64.0, 12.0), pale)
+				c.draw_line(p + Vector2(-32, -1), p + Vector2(32, -1), pale.darkened(0.22), 2.0)
+				c.draw_line(p + Vector2(8, -6), p + Vector2(22, -16), pale, 5.0)
 			"tyre":
-				draw_circle(p, 17.0, Color(0.14, 0.14, 0.15))
-				draw_circle(p, 9.0, Color(0.26, 0.30, 0.24))
+				c.draw_circle(p, 17.0, Color(0.14, 0.14, 0.15))
+				c.draw_circle(p, 9.0, Color(0.26, 0.30, 0.24))
 				for i in range(10):
 					var a := TAU * float(i) / 10.0
-					draw_line(p + Vector2.from_angle(a) * 11.0, p + Vector2.from_angle(a) * 17.0, Color(0.24, 0.24, 0.26), 2.0)
+					c.draw_line(p + Vector2.from_angle(a) * 11.0, p + Vector2.from_angle(a) * 17.0, Color(0.24, 0.24, 0.26), 2.0)
 			"rock":
 				# faceted rather than round: a boulder is flat planes, and the
 				# planes are what catch the light differently
@@ -1947,67 +2058,67 @@ func _draw_park_props(vt: float, vb: float) -> void:
 					var a := TAU * float(i) / 7.0 + p.y * 0.01
 					var rr := 13.0 + fmod(float(i) * 5.7 + p.x * 0.03, 4.0)
 					rp.append(p + Vector2(cos(a) * rr, sin(a) * rr * 0.88))
-				draw_colored_polygon(rp, Color(0.46, 0.44, 0.42))
+				c.draw_colored_polygon(rp, Color(0.46, 0.44, 0.42))
 				var top := PackedVector2Array()
 				for i in range(5):
 					var a2 := TAU * float(i) / 5.0 + 0.4
 					top.append(p - LIGHT * 4.0 + Vector2(cos(a2), sin(a2) * 0.9) * 8.0)
-				draw_colored_polygon(top, Color(0.63, 0.61, 0.57))
-				draw_polyline(rp, Color(0.34, 0.33, 0.32, 0.8), 1.4)
+				c.draw_colored_polygon(top, Color(0.63, 0.61, 0.57))
+				c.draw_polyline(rp, Color(0.34, 0.33, 0.32, 0.8), 1.4)
 			"post":
 				# A sniff post: a round timber post with a chamfered top, the
 				# grain showing, and the bare patch every dog in the park has
 				# worn round its foot.
-				draw_circle(p, 15.0, Color(0.44, 0.40, 0.28, 0.40))
-				draw_rect(Rect2(p.x - 5.0, p.y - 26.0, 10.0, 30.0), Color(0.40, 0.29, 0.19))
-				draw_rect(Rect2(p.x - 5.0, p.y - 26.0, 4.0, 30.0), Color(0.50, 0.37, 0.24))
+				c.draw_circle(p, 15.0, Color(0.44, 0.40, 0.28, 0.40))
+				c.draw_rect(Rect2(p.x - 5.0, p.y - 26.0, 10.0, 30.0), Color(0.40, 0.29, 0.19))
+				c.draw_rect(Rect2(p.x - 5.0, p.y - 26.0, 4.0, 30.0), Color(0.50, 0.37, 0.24))
 				for gi in range(3):
-					draw_line(Vector2(p.x - 2.0 + float(gi) * 2.5, p.y - 24.0),
+					c.draw_line(Vector2(p.x - 2.0 + float(gi) * 2.5, p.y - 24.0),
 						Vector2(p.x - 2.0 + float(gi) * 2.5, p.y + 2.0),
 						Color(0.34, 0.25, 0.16, 0.7), 1.0)
 				# the cut top, seen from above: end grain in rings
-				draw_circle(p + Vector2(0.0, -27.0), 7.0, Color(0.60, 0.47, 0.30))
-				draw_arc(p + Vector2(0.0, -27.0), 4.0, 0, TAU, 10, Color(0.48, 0.36, 0.23), 1.4)
-				draw_arc(p + Vector2(0.0, -27.0), 6.5, 0, TAU, 12, Color(0.42, 0.31, 0.20), 1.2)
+				c.draw_circle(p + Vector2(0.0, -27.0), 7.0, Color(0.60, 0.47, 0.30))
+				c.draw_arc(p + Vector2(0.0, -27.0), 4.0, 0, TAU, 10, Color(0.48, 0.36, 0.23), 1.4)
+				c.draw_arc(p + Vector2(0.0, -27.0), 6.5, 0, TAU, 12, Color(0.42, 0.31, 0.20), 1.2)
 			"trough":
 				# A galvanised water trough: a thick rim, water sitting BELOW
 				# it, a highlight where the light hits the surface, and a
 				# slow ripple. It was three flat rectangles.
 				var tw := Time.get_ticks_msec() / 1000.0
-				draw_rect(Rect2(p.x - 23.0, p.y - 13.0, 46.0, 26.0), Color(0.34, 0.34, 0.38))
-				draw_rect(Rect2(p.x - 23.0, p.y - 13.0, 46.0, 5.0), Color(0.52, 0.52, 0.56))
+				c.draw_rect(Rect2(p.x - 23.0, p.y - 13.0, 46.0, 26.0), Color(0.34, 0.34, 0.38))
+				c.draw_rect(Rect2(p.x - 23.0, p.y - 13.0, 46.0, 5.0), Color(0.52, 0.52, 0.56))
 				# the water, inset and darker at the light-side wall
-				draw_rect(Rect2(p.x - 18.0, p.y - 8.0, 36.0, 16.0), Color(0.22, 0.38, 0.48))
-				draw_rect(Rect2(p.x - 18.0, p.y - 8.0, 36.0, 4.0), Color(0.16, 0.28, 0.38))
-				draw_rect(Rect2(p.x - 15.0, p.y - 4.0, 30.0, 9.0), Color(0.34, 0.54, 0.66))
+				c.draw_rect(Rect2(p.x - 18.0, p.y - 8.0, 36.0, 16.0), Color(0.22, 0.38, 0.48))
+				c.draw_rect(Rect2(p.x - 18.0, p.y - 8.0, 36.0, 4.0), Color(0.16, 0.28, 0.38))
+				c.draw_rect(Rect2(p.x - 15.0, p.y - 4.0, 30.0, 9.0), Color(0.34, 0.54, 0.66))
 				# ripples, and the sky in it
 				for i in range(2):
 					var ry := p.y - 2.0 + float(i) * 6.0
 					var rw := 11.0 + sin(tw * 1.3 + float(i) * 2.0) * 4.0
-					draw_line(Vector2(p.x - rw, ry), Vector2(p.x + rw, ry),
+					c.draw_line(Vector2(p.x - rw, ry), Vector2(p.x + rw, ry),
 						Color(0.72, 0.86, 0.92, 0.30), 1.5)
-				draw_circle(p + Vector2(-9.0, -3.0), 3.0, Color(0.86, 0.94, 0.98, 0.35))
+				c.draw_circle(p + Vector2(-9.0, -3.0), 3.0, Color(0.86, 0.94, 0.98, 0.35))
 			_:
 				# a shrub: clustered lobes, lit per lobe rather than one blob
 				# with a highlight, plus leaf tips breaking the outline
 				var g1 := Color(0.17, 0.28, 0.17)
 				for i in range(5):
 					var a := TAU * float(i) / 5.0 + p.y * 0.01
-					draw_circle(p + Vector2.from_angle(a) * 8.0, 10.0, g1)
+					c.draw_circle(p + Vector2.from_angle(a) * 8.0, 10.0, g1)
 				for i in range(5):
 					var a2 := TAU * float(i) / 5.0 + p.y * 0.01
-					draw_circle(p + Vector2.from_angle(a2) * 8.0 - LIGHT * 4.0, 5.5,
+					c.draw_circle(p + Vector2.from_angle(a2) * 8.0 - LIGHT * 4.0, 5.5,
 						Color(0.28, 0.43, 0.25))
 				for i in range(6):
 					var a3 := TAU * float(i) / 6.0 + p.x * 0.02
-					draw_circle(p + Vector2.from_angle(a3) * 16.0, 3.0, g1.lightened(0.10))
+					c.draw_circle(p + Vector2.from_angle(a3) * 16.0, 3.0, g1.lightened(0.10))
 				if done:
-					draw_circle(p + Vector2(9, -12), 2.6, Color(0.85, 0.85, 0.6, 0.7))
+					c.draw_circle(p + Vector2(9, -12), 2.6, Color(0.85, 0.85, 0.6, 0.7))
 		# the sniff affordance: a soft scent bloom while she is working on it
 		if not done and prog > 0.05 and String(pp.kind) != "dig":
 			for i in range(2):
 				var rr := 16.0 + prog * 12.0 + float(i) * 7.0
-				draw_arc(p, rr, 0, TAU, 16, Color(0.85, 0.9, 0.75, 0.28 * (1.0 - float(i) * 0.4)), 1.5)
+				c.draw_arc(p, rr, 0, TAU, 16, Color(0.85, 0.9, 0.75, 0.28 * (1.0 - float(i) * 0.4)), 1.5)
 
 
 func _build_substance_zones() -> void:
@@ -2026,7 +2137,7 @@ func _build_substance_zones() -> void:
 			substance_zones.append({"rect": Rect2(sw_l + 20.0, -2500.0, w * 0.4, 150.0), "kind": "paint"})
 		"beach":
 			# the whole sand side, which is most of the beach
-			substance_zones.append({"rect": Rect2(90.0, GATE_Y, 250.0, absf(GATE_Y) + 400.0), "kind": "sand"})
+			substance_zones.append({"rect": Rect2(230.0, GATE_Y, 150.0, absf(GATE_Y) + 400.0), "kind": "sand"})
 		"market":
 			# the fishmonger's patch, and everyone will know about it
 			substance_zones.append({"rect": Rect2(sw_l + 30.0, -3050.0, w * 0.35, 130.0), "kind": "fish"})
@@ -2051,9 +2162,72 @@ func _build_freedom_area() -> void:
 		# passeig (so she can go in ANYWHERE on the walk, which is the first
 		# thing anyone tries on a seafront), and the wide bay in the dog beach
 		# at the top.
-		water.append(Rect2(-360.0, GATE_Y - 40.0, 450.0, absf(GATE_Y) + 500.0))
+		water.append(Rect2(-360.0, GATE_Y - 40.0, 590.0, absf(GATE_Y) + 500.0))
+		# the wide part of the bay only: below the bend the coastline is the
+		# corridor's, and that band is already covered by the rect above
 		water.append(Rect2(-330.0, freedom_lo - 40.0,
-			BEACH_SEA_R + 330.0, GATE_Y - 30.0 - freedom_lo + 40.0))
+			BEACH_SEA_R + 330.0, (GATE_Y - 300.0) - (freedom_lo - 40.0)))
+
+
+func _lift_props_out_of_water() -> void:
+	# Anything the level data put in a pond or the sea gets pushed to the
+	# nearest shore. The walks that reuse another walk's geometry inherit its
+	# water but not its prop placement, which is how El Bosc ended up with a
+	# roadworks cone standing in the middle of the pond.
+	if water.is_empty():
+		return
+	var groups: Array = [parasols, benches, bins, tables, astands, fountains,
+		cone_spots, manholes, performers, candy_spots, wallcat_spots, guard_posts]
+	for arr: Array in groups:
+		for i in range(arr.size()):
+			arr[i] = _nearest_dry(arr[i] as Vector2)
+	for k in kebabs:
+		k.pos = _nearest_dry(k.pos as Vector2)
+	for h in hydrants:
+		h.pos = _nearest_dry(h.pos as Vector2)
+	for tw in towels:
+		var tr: Rect2 = tw.rect
+		var moved := _nearest_dry(tr.get_center())
+		tw.rect = Rect2(moved - tr.size * 0.5, tr.size)
+
+
+func _nearest_dry(at: Vector2) -> Vector2:
+	for w: Rect2 in water:
+		if not w.grow(10.0).has_point(at):
+			continue
+		# out the closest side, far enough that its footprint is clear too
+		var d_left: float = at.x - w.position.x
+		var d_right: float = w.end.x - at.x
+		var d_top: float = at.y - w.position.y
+		var d_bot: float = w.end.y - at.y
+		var m: float = minf(minf(d_left, d_right), minf(d_top, d_bot))
+		if m == d_left:
+			at.x = w.position.x - 30.0
+		elif m == d_right:
+			at.x = w.end.x + 30.0
+		elif m == d_top:
+			at.y = w.position.y - 30.0
+		else:
+			at.y = w.end.y + 30.0
+	return at
+
+
+func _build_dunes() -> void:
+	# The dune line is the beach's boundary in place of a fence, so it has to
+	# BE one: these get collision below, because a boundary you can stroll
+	# through is just a pattern on the floor.
+	dune_spots.clear()
+	if freedom_kind != "beach":
+		return
+	var r := _freedom_rect()
+	for i in range(26):
+		var f := float(i) / 25.0
+		if i % 2 == 0:
+			dune_spots.append(Vector2(r.end.x - 70.0,
+				lerpf(r.position.y + 60.0, r.end.y - 60.0, f)))
+		else:
+			dune_spots.append(Vector2(lerpf(r.position.x + 60.0, r.end.x - 60.0, f),
+				r.position.y + 40.0))
 
 
 func _build_park_props() -> void:
@@ -2075,6 +2249,8 @@ func _build_park_props() -> void:
 	# sanity sweep rightly failed. Digs are the main reward for exploring, so
 	# they are placed first, spread across the width.
 	var dig_xs: Array[float] = [250.0, 640.0, 1030.0]
+	if freedom_kind == "beach":
+		dig_xs = [560.0, 820.0, 1060.0]   # digging in dry sand, not in the sea
 	var dig_fs: Array[float] = [0.22, 0.68, 0.42]
 	for i in range(3):
 		var gy := lerpf(lo + 60.0, hi - 60.0, dig_fs[i])
@@ -2084,7 +2260,10 @@ func _build_park_props() -> void:
 		# bias to the flanks: the middle is the fetch runway
 		var side_pick := r.randf()
 		var x := 0.0
-		if side_pick < 0.42:
+		if freedom_kind == "beach":
+			# all of it on the dry sand, east of the tide line
+			x = r.randf_range(520.0, 780.0) if side_pick < 0.4 else r.randf_range(800.0, 1120.0)
+		elif side_pick < 0.42:
 			x = r.randf_range(140.0, 430.0)
 		elif side_pick < 0.84:
 			x = r.randf_range(860.0, 1150.0)
@@ -2094,6 +2273,14 @@ func _build_park_props() -> void:
 		# keep clear of the owner's bench and the park slots
 		if at.distance_to(gate_bench) < 110.0:
 			continue
+		# and out of the water: driftwood floating twenty metres out to sea is
+		# not a sniffable object, it is a bug
+		var in_water := false
+		for w: Rect2 in water:
+			if w.grow(24.0).has_point(at):
+				in_water = true
+		if in_water:
+			continue
 		var clear := true
 		for slot in PAIR_PARK_SPOTS:
 			if at.distance_to(slot.position as Vector2) < 90.0:
@@ -2102,8 +2289,12 @@ func _build_park_props() -> void:
 			continue
 		park_props.append({"pos": at, "kind": kind, "done": false, "prog": 0.0})
 	# one water trough near the gate, because a romp is thirsty work
-	park_props.append({"pos": Vector2(gate_bench.x - 150.0, gate_bench.y + 24.0),
-		"kind": "trough", "done": false, "prog": 0.0})
+	# one water trough near the gate, because a romp is thirsty work - by the
+	# shower on the beach, where the tap actually is
+	var trough_at := Vector2(gate_bench.x - 150.0, gate_bench.y + 24.0)
+	if freedom_kind == "beach":
+		trough_at = Vector2(BEACH_SEA_R + 172.0, freedom_lo + 148.0)
+	park_props.append({"pos": trough_at, "kind": "trough", "done": false, "prog": 0.0})
 
 
 func _build_ground_detail() -> void:
@@ -2114,8 +2305,10 @@ func _build_ground_detail() -> void:
 	var r := RandomNumberGenerator.new()
 	r.seed = 0x1CEB00DA  # fixed, so a walk wears the same way every visit
 	ground_detail.clear()
+	# stop at the gate: past it the off-leash space draws its own ground, and
+	# pavement grit scattered over open water is not wear, it is a bug
 	var y := START_Y + 200.0
-	while y > GATE_Y - 400.0:
+	while y > GATE_Y + 20.0:
 		y -= r.randf_range(55.0, 130.0)
 		var kind := r.randi() % 4
 		var x := r.randf_range(sw_l + 12.0, sw_r - 12.0)
@@ -2258,6 +2451,16 @@ func _build_walls() -> void:
 	# walk straight through - a flat texture, not an object. A tree is a
 	# solid trunk with real heft, so it blocks bodies and the leash wraps
 	# on it like any other pole.
+	for d in dune_spots:
+		var db := StaticBody2D.new()
+		db.collision_layer = 1
+		db.position = d
+		var dcs := CollisionShape2D.new()
+		var dsh := CircleShape2D.new()
+		dsh.radius = 22.0
+		dcs.shape = dsh
+		db.add_child(dcs)
+		add_child(db)
 	for t in trees:
 		var tb := StaticBody2D.new()
 		tb.collision_layer = 1
@@ -2366,6 +2569,13 @@ func _build_entities() -> void:
 	edge_layer.z_index = -5   # behind everything in the world
 	add_child(edge_layer)
 	edge_layer.setup(self)
+	# the off-leash space gets the same treatment: it is a fixed scene, so it
+	# is drawn once onto its own canvas rather than thirty times a second
+	freedomlayer = Node2D.new()
+	freedomlayer.set_script(load("res://freedomlayer.gd"))
+	freedomlayer.z_index = -9
+	add_child(freedomlayer)
+	freedomlayer.setup(self)
 	cam = Camera2D.new()
 	cam.position_smoothing_enabled = true
 	cam.position_smoothing_speed = 6.0
@@ -2633,7 +2843,7 @@ func _build_hud() -> void:
 	menu_hint_l.modulate.a = 0.55
 	menu_hint_l.visible = false
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.50"
+	version_l.text = "v1.51"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -3340,6 +3550,8 @@ func _physics_process(delta: float) -> void:
 	shake_t = maxf(0.0, shake_t - delta * 2.5)
 	prize_glow += delta * 4.0
 	_scent_cache_t = maxf(0.0, _scent_cache_t - delta)
+	if freedomlayer != null:
+		freedomlayer.tick(cam.position)
 
 
 func _process(_delta: float) -> void:
@@ -3365,7 +3577,7 @@ func _process(_delta: float) -> void:
 					rr[i]["state"] = [UiIcons.Check.DONE_NOW, UiIcons.Check.DONE_BEFORE,
 						UiIcons.Check.PARTIAL, UiIcons.Check.OPEN][i % 4]
 				results = {
-					"title": "WALK COMPLETE", "stars": 2, "rating": "...still a good dog.",
+					"title": "GOOD DOG.", "stars": 2, "rating": "...well. A dog, anyway.",
 					"rows": rr, "bones": 148, "phone": 2, "time": 137, "goal_bones": 30,
 					"lines": [
 						"+1 STAR   NEW BONES RECORD",
@@ -4627,7 +4839,7 @@ func _hazards(delta: float) -> void:
 			return
 	for c in cellars:
 		if c.has_point(human.global_position):
-			_death("THE HUMAN FELL INTO THE CELLAR\n\nRight onto the delivery. The walk is over.")
+			_death("THE HUMAN FELL IN THE CELLAR\n\nRight onto the delivery. You did warn them,\nin the only language you have.")
 			return
 		if c.grow(6.0).has_point(dog.global_position):
 			_start_teeter("hole", c.get_center(), "MILLIE FELL INTO THE CELLAR\n\nShe found the sausages. The walk is still over.")
@@ -4702,6 +4914,7 @@ func _pickups(delta: float) -> void:
 				"dig":
 					if d < 30.0 and dog.velocity.length() < 70.0:
 						pp.prog = float(pp.prog) + delta
+						_freedom_dirty()
 						if float(pp.prog) >= 1.1:
 							pp.done = true
 							digs_done += 1
@@ -4715,6 +4928,7 @@ func _pickups(delta: float) -> void:
 				"shrub", "post", "rock", "driftwood", "tyre":
 					if d < 34.0 and dog.velocity.length() < 80.0:
 						pp.prog = float(pp.prog) + delta
+						_freedom_dirty()
 						if float(pp.prog) >= 0.7:
 							pp.done = true
 							sniffs_done += 1
@@ -5060,6 +5274,7 @@ func _enter_freedom() -> void:
 	for pair in get_tree().get_nodes_in_group("pairs"):
 		pair.leash.dynamic_obstacles.clear()
 	human.park_at(gate_bench)
+	_freedom_dirty()
 	romp_timer = 30.0
 	romp_catches = 0
 	romp_done = false
@@ -5327,12 +5542,12 @@ func _chase(delta: float) -> void:
 		if chase_kind == "sweeper":
 			_death("THE SWEEPER GOT YOUR HUMAN\n\nThey never once looked up from the phone.\nYou did try to tell them.")
 		else:
-			_death("CAUGHT\n\nYou couldn't get the two of you clear in time.")
+			_death("THEY GOT YOUR HUMAN\n\nYou pulled. You barked. It was not enough.")
 	elif chase_sweeper.caught(dog.global_position):
 		if chase_kind == "sweeper":
-			_death("SWEPT UP\n\nMillie disappeared into the brushes.\nSuspiciously clean about it, too.")
+			_death("YOU WENT INTO THE BRUSHES\n\nYou came out suspiciously clean.\nThe walk did not come out at all.")
 		else:
-			_death("LEFT BEHIND\n\nYou snagged, the leash went taut, and\nnobody thought to wait.")
+			_death("NOBODY WAITED FOR YOU\n\nYou snagged, the leash went tight, and\nthey kept walking. They always keep walking.")
 
 
 func _finish_walk() -> void:
@@ -5355,7 +5570,7 @@ func _finish_walk() -> void:
 		var perfect := run_done >= total
 		var rating := ""
 		if run_done == 0:
-			rating = "...still a good dog."
+			rating = "...well. A dog, anyway."
 		elif perfect:
 			rating = "PERFECT WALK - every goal in one go"
 		var rec: Dictionary = Game.record_result("daily" if Game.daily else lvl, bones, elapsed, perfect)
@@ -5385,7 +5600,8 @@ func _finish_walk() -> void:
 			_build_daily_card(run_done, total, rec)
 		else:
 			results = {
-				"title": "WALK COMPLETE", "stars": Game.stars(lvl), "rating": rating,
+				"title": "VERY GOOD DOG." if perfect else "GOOD DOG.", "stars": Game.stars(lvl),
+				"rating": rating,
 				"rows": rows, "bones": bones, "phone": phone_hp, "time": int(elapsed),
 				"goal_bones": run_done * 5, "lines": lines,
 				"prompt": "press  %s  for another walk" % _kb_or_pad("R", "Start"),
@@ -5545,8 +5761,30 @@ func float_text(pos: Vector2, text: String, color: Color = Color.WHITE) -> void:
 
 
 func _draw() -> void:
+	# --drawcost prints what the world costs to draw. Smooth beats pretty, and
+	# every visual pass since v1.31 has been signed off with this number rather
+	# than a guess - guessing is how the edge treatment quietly grew to over
+	# half the frame.
+	var _t0 := Time.get_ticks_usec() if _draw_cost_on else 0
+	_draw_world()
+	if _draw_cost_on:
+		_draw_us += Time.get_ticks_usec() - _t0
+		_draw_n += 1
+		if _draw_n >= 60:
+			print("DRAWCOST %s %dus avg over %d draws" % [lvl, _draw_us / _draw_n, _draw_n])
+			_draw_us = 0
+			_draw_n = 0
+
+
+func _draw_world() -> void:
 	var top := GATE_Y - 800.0
 	var bottom := START_Y + 320.0
+	# The corridor's cross-section stops at the gate. It used to be painted all
+	# the way to the top of the level, which was invisible while the off-leash
+	# space was drawn afterwards in the same pass - but that space lives on its
+	# own cached canvas now, so anything painted here covers it. (This is how
+	# the dog beach turned green, and then sand-coloured.)
+	var ctop := GATE_Y - 40.0
 	# cull to the camera: redrawing 5500px of detail lines every frame
 	# was the browser stutter
 	var vt: float = cam.position.y - 440.0
@@ -5554,37 +5792,38 @@ func _draw() -> void:
 	if lvl == "beach":
 		# Passeig Maritim, west to east: sea, sand, boardwalk, bike
 		# path, pavement, cafe strip, buildings
-		draw_rect(Rect2(-400, top, 490, bottom - top), Color(0.25, 0.45, 0.55))
+		draw_rect(Rect2(-400, ctop, 630, bottom - ctop), Color(0.25, 0.45, 0.55))
 		var wt := Time.get_ticks_msec() / 1000.0
 		var fy := top + 40.0
 		while fy < bottom:
 			if fy > vt and fy < vb:
 				draw_line(Vector2(72 + sin(fy * 0.011 + wt * 1.5) * 9.0, fy), Vector2(84 + sin(fy * 0.013 + wt * 1.5) * 9.0, fy + 70.0), Color(1, 1, 1, 0.25), 3.0)
 			fy += 150.0
-		draw_rect(Rect2(90, top, 250, bottom - top), Color(0.87, 0.8, 0.66))
-		draw_rect(Rect2(340, top, 140, bottom - top), Color(0.74, 0.66, 0.53))
-		var py := START_Y + 200.0
-		while py > GATE_Y:
+		draw_rect(Rect2(230, ctop, 150, bottom - ctop), Color(0.87, 0.8, 0.66))
+		draw_rect(Rect2(380, ctop, 110, bottom - ctop), Color(0.74, 0.66, 0.53))
+		# start at the top of the visible window, not the top of the level
+		var py := minf(START_Y + 200.0, vb + 22.0 - fmod(vb, 22.0))
+		while py > GATE_Y and py > vt - 22.0:
 			if py < vb and py > vt:
-				draw_line(Vector2(340, py), Vector2(480, py), Color(0.66, 0.58, 0.45), 2.0)
+				draw_line(Vector2(380, py), Vector2(490, py), Color(0.66, 0.58, 0.45), 2.0)
 			py -= 22.0
-		draw_rect(Rect2(480, top, 80, bottom - top), Color(0.44, 0.24, 0.2))
-		var ddy := START_Y + 200.0
-		while ddy > GATE_Y:
+		draw_rect(Rect2(490, ctop, 80, bottom - ctop), Color(0.44, 0.24, 0.2))
+		var ddy := minf(START_Y + 200.0, vb + 64.0 - fmod(vb, 64.0))
+		while ddy > GATE_Y and ddy > vt - 64.0:
 			if ddy < vb and ddy > vt:
-				draw_line(Vector2(520, ddy), Vector2(520, ddy - 26.0), Color(0.85, 0.82, 0.75, 0.5), 2.0)
+				draw_line(Vector2(530, ddy), Vector2(530, ddy - 26.0), Color(0.85, 0.82, 0.75, 0.5), 2.0)
 			ddy -= 64.0
-		draw_rect(Rect2(560, top, 420, bottom - top), Color(0.79, 0.76, 0.7))
-		var sy := START_Y + 200.0
-		while sy > GATE_Y:
+		draw_rect(Rect2(570, ctop, 410, bottom - ctop), Color(0.79, 0.76, 0.7))
+		var sy := minf(START_Y + 200.0, vb + 150.0 - fmod(vb, 150.0))
+		while sy > GATE_Y and sy > vt - 150.0:
 			if sy < vb and sy > vt:
 				draw_line(Vector2(560, sy), Vector2(980, sy), Color(0.71, 0.68, 0.62), 2.0)
 			sy -= 150.0
-		draw_rect(Rect2(980, top, 200, bottom - top), Color(0.76, 0.72, 0.65))
-		draw_rect(Rect2(1180, top, 520, bottom - top), Color(0.35, 0.33, 0.31))
-		draw_line(Vector2(340, bottom), Vector2(340, GATE_Y), Color(0.55, 0.45, 0.32), 3.0)
-		draw_line(Vector2(480, bottom), Vector2(480, GATE_Y), COL_SEAM, 2.0)
-		draw_line(Vector2(560, bottom), Vector2(560, GATE_Y), COL_SEAM, 2.0)
+		draw_rect(Rect2(980, ctop, 200, bottom - ctop), Color(0.76, 0.72, 0.65))
+		draw_rect(Rect2(1180, ctop, 520, bottom - ctop), Color(0.35, 0.33, 0.31))
+		draw_line(Vector2(380, bottom), Vector2(380, GATE_Y), Color(0.55, 0.45, 0.32), 3.0)
+		draw_line(Vector2(490, bottom), Vector2(490, GATE_Y), COL_SEAM, 2.0)
+		draw_line(Vector2(570, bottom), Vector2(570, GATE_Y), COL_SEAM, 2.0)
 		draw_line(Vector2(980, bottom), Vector2(980, GATE_Y), COL_SEAM, 2.0)
 		for t in tufts:
 			if t.y > vt and t.y < vb and t.x > 110.0 and (t.x < 330.0 or t.x > 1000.0) and t.x < 1170.0:
@@ -5604,7 +5843,7 @@ func _draw() -> void:
 		elif lvl == "market":
 			grass = COL_GRASS
 			walkway = Color(0.76, 0.73, 0.66)
-		draw_rect(Rect2(-400, top, 2100, bottom - top), grass)
+		draw_rect(Rect2(-400, ctop, 2100, bottom - ctop), grass)
 		for t in tufts:
 			if t.y > vt and t.y < vb:
 				draw_circle(t, 5.0, COL_GRASS_DARK)
@@ -5613,44 +5852,19 @@ func _draw() -> void:
 		_draw_paving(vt, vb, walkway)
 		draw_line(Vector2(sw_l, bottom), Vector2(sw_l, GATE_Y), COL_SEAM, 3.0)
 		draw_line(Vector2(sw_r, bottom), Vector2(sw_r, GATE_Y), COL_SEAM, 3.0)
-	# whatever lies beyond the gate
-	draw_rect(Rect2(-400, top, 2100, GATE_Y - top), Color(0.27, 0.4, 0.27))
+	# (what lies beyond the gate is drawn by freedomlayer, which owns
+	# everything up there - drawing it here put a green field on top of the
+	# cached canvas, which is how the dog beach briefly turned into a lawn)
 	# Trees, read from above: two flat green discs said "blob", not "tree".
 	# A canopy needs a cast shadow to sit in the world, clustered lobes to
 	# break the outline, a lit side, and a hint of trunk and limbs showing
 	# through the gaps.
-	for t in trees:
-		if t.y < vt - 70.0 or t.y > vb + 70.0:
-			continue
-		var leaf_dark := Color(0.15, 0.25, 0.16)
-		var leaf := Color(0.22, 0.36, 0.22)
-		var leaf_lit := Color(0.34, 0.50, 0.28)
-		# shadow on the ground, offset with the world light (up-left)
-		draw_set_transform(t + Vector2(13.0, 17.0), 0.0, Vector2(1.1, 0.62))
-		draw_circle(Vector2.ZERO, 27.0, Color(0.05, 0.05, 0.08, 0.24))
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-		# trunk and a couple of limbs, glimpsed through the canopy
-		draw_circle(t, 7.0, Color(0.30, 0.23, 0.17))
-		for lb in range(3):
-			var la := TAU * float(lb) / 3.0 + t.x * 0.01
-			draw_line(t, t + Vector2.from_angle(la) * 19.0, Color(0.28, 0.21, 0.15), 3.0)
-		# canopy as overlapping lobes rather than one circle
-		for lo in range(6):
-			var a := TAU * float(lo) / 6.0 + t.y * 0.008
-			var c := t + Vector2.from_angle(a) * 13.0
-			draw_circle(c, 13.5, leaf_dark)
-		for lo in range(5):
-			var a2 := TAU * float(lo) / 5.0 + 0.6 + t.x * 0.007
-			draw_circle(t + Vector2.from_angle(a2) * 10.0, 11.5, leaf)
-		# the lit crown, up and to the left
-		draw_circle(t + Vector2(-6.0, -7.0), 12.0, leaf_lit)
-		draw_circle(t + Vector2(-11.0, -12.0), 6.0, leaf_lit.lightened(0.12))
 	if lvl == "street":
 		# parallel bike lane + far shoulder
 		draw_rect(Rect2(BLANE_L, GATE_Y - 40.0, BLANE_R - BLANE_L, bottom - GATE_Y), Color(0.4, 0.31, 0.29))
 		draw_rect(Rect2(BLANE_R, GATE_Y - 40.0, SHOULDER_R - BLANE_R, bottom - GATE_Y), COL_SIDEWALK)
-		var dy := START_Y + 200.0
-		while dy > GATE_Y:
+		var dy := minf(START_Y + 200.0, vb + 64.0 - fmod(vb, 64.0))
+		while dy > GATE_Y and dy > vt - 64.0:
 			if dy < vb and dy > vt:
 				draw_line(Vector2((BLANE_L + BLANE_R) / 2.0, dy), Vector2((BLANE_L + BLANE_R) / 2.0, dy - 26.0), Color(0.85, 0.82, 0.75, 0.5), 2.0)
 			dy -= 64.0
@@ -5841,9 +6055,9 @@ func _draw() -> void:
 		if p.y < vt - 60.0 or p.y > vb + 60.0:
 			continue
 		if lvl == "park":
-			_draw_broadleaf(p, 1.0)
+			_draw_broadleaf(self, p, 1.0)
 		elif lvl == "beach":
-			_draw_palm(p)
+			_draw_palm(self, p)
 		elif p.x > sw_l + 60.0 and p.x < sw_r - 60.0:
 			# mid-walkway poles are street trees in grates - that is WHY
 			# they stand in the middle of a sidewalk
@@ -5854,7 +6068,7 @@ func _draw() -> void:
 				var gy := p.y - 12.0 + float(gi) * 8.0
 				draw_line(Vector2(p.x - 15, gy), Vector2(p.x + 15, gy), Color(0.2, 0.2, 0.22), 2.0)
 			draw_rect(Rect2(p.x - 16, p.y - 16, 32, 32), Color(0.44, 0.44, 0.47), false, 2.0)
-			_draw_broadleaf(p, 0.72)
+			_draw_broadleaf(self, p, 0.72)
 		else:
 			_draw_lamppost(p)
 	# trash bins: green, lidded, with a visible mouth - the ONLY thing
@@ -6184,18 +6398,16 @@ func _draw() -> void:
 	# the off-leash freedom yard beyond the gate: a proper fenced dog
 	# park - grass, chain-link fence with posts, human benches, and a
 	# labelled entrance gate
-	if vt < GATE_Y + 60.0:
-		match freedom_kind:
-			"beach": _draw_dog_beach()
-			"clearing": _draw_clearing()
-			"lot": _draw_yard(true)
-			_: _draw_yard(false)
-		_draw_park_props(vt, vb)
+	if vt < GATE_Y + 60.0 and freedom_kind == "beach":
+		# only the water moves; the sand and everything on it is on the layer
+		_draw_beach_water()
 	# the gate between the walk and the off-leash yard
 	draw_rect(Rect2(gate_l - 14, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
 	draw_rect(Rect2(gate_r, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
 	draw_rect(Rect2(gate_l - 14, GATE_Y - 58, gate_r - gate_l + 28, 14), Color(0.35, 0.3, 0.28))
-	draw_string(font, Vector2((gate_l + gate_r) / 2.0 - 40.0, GATE_Y - 66), gate_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color(0.9, 0.88, 0.8))
+	# centred on the gate mouth, not nudged left by an eyeballed 40px
+	draw_string(font, Vector2(gate_l, GATE_Y - 66), gate_text, HORIZONTAL_ALIGNMENT_CENTER,
+		gate_r - gate_l, 26, Color(0.9, 0.88, 0.8))
 	var gx := gate_l
 	while gx < gate_r:
 		draw_line(Vector2(gx, GATE_Y), Vector2(gx + 16.0, GATE_Y), Color(0.9, 0.88, 0.8, 0.6), 3.0)
@@ -6203,7 +6415,8 @@ func _draw() -> void:
 	# HOME, at the bottom, where the walk both begins and ends
 	if vb > START_Y + 30.0:
 		draw_rect(Rect2(gate_l - 14, HOME_Y + 40.0, gate_r - gate_l + 28, 14), Color(0.4, 0.32, 0.3))
-		draw_string(font, Vector2((gate_l + gate_r) / 2.0 - 40.0, HOME_Y + 78.0), "HOME", HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color(0.9, 0.85, 0.7))
+		draw_string(font, Vector2(gate_l, HOME_Y + 78.0), "HOME", HORIZONTAL_ALIGNMENT_CENTER,
+			gate_r - gate_l, 24, Color(0.9, 0.85, 0.7))
 	if not started and vb > START_Y - 260.0:
 		_draw_ground_title()
 	# The line painted on the pavement at the start: where you are going, and
