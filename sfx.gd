@@ -35,8 +35,16 @@ func _ready() -> void:
 
 
 func start_music() -> void:
+	apply_music_volume()
 	if music_on and music_player != null and not music_player.playing:
 		music_player.play()
+
+
+func apply_music_volume() -> void:
+	if music_player == null:
+		return
+	# -16db was the hardcoded ambient level; the setting scales from there
+	music_player.volume_db = -16.0 + linear_to_db(clampf(Game.vol_music, 0.0001, 1.0)) + 6.0
 
 
 func toggle_music() -> void:
@@ -57,7 +65,9 @@ func play(name: String, pitch := 1.0, vol_db := -6.0) -> void:
 	next_player = (next_player + 1) % players.size()
 	p.stream = s
 	p.pitch_scale = clampf(pitch * rng.randf_range(0.96, 1.05), 0.5, 2.0)
-	p.volume_db = vol_db
+	# the player's effects volume rides on top of whatever the caller asked
+	# for, so a quiet sound stays relatively quiet
+	p.volume_db = vol_db + linear_to_db(clampf(Game.vol_sfx, 0.0001, 1.0))
 	p.play()
 
 

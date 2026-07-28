@@ -367,6 +367,10 @@ var _shot_frames := 0
 var ground_detail: Array[Dictionary] = []
 var in_progress_view := false
 var progress_l: Label
+var menu_hint_l: Label
+var in_settings := false
+var settings_idx := 0
+var settings_panel: Control
 var _redraw_acc := 0.0
 # a neighbour's ball: a parked NPC owner throws one you can intercept and
 # return to them for a shared-fetch bonus
@@ -470,6 +474,7 @@ func _ready() -> void:
 	# content mistakes a pure-logic test cannot see.
 	if "--selftest" in OS.get_cmdline_user_args():
 		var problems: Array = load("res://level_check.gd").check(self)
+		problems.append_array(_check_settings_roundtrip())
 		for pr in problems:
 			print("SELFTEST FAIL [%s] %s" % [lvl, pr])
 		if problems.is_empty():
@@ -2038,8 +2043,12 @@ func _build_hud() -> void:
 	record_l.size = Vector2(1280, 26)
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
+	# stacked ABOVE the controls line, which occupies y=686 from step 2 on
+	menu_hint_l = _hud_label(Vector2(24, 662), 14)
+	menu_hint_l.modulate.a = 0.55
+	menu_hint_l.visible = false
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.49"
+	version_l.text = "v1.50"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -2163,6 +2172,12 @@ func _build_hud() -> void:
 	progress_l.size = Vector2(1280, 560)
 	progress_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	progress_l.visible = false
+	settings_panel = Control.new()
+	settings_panel.set_script(load("res://settings_panel.gd"))
+	settings_panel.position = Vector2(340, 190)
+	settings_panel.visible = false
+	hud.add_child(settings_panel)
+	settings_panel.setup(self)
 	_update_hud()
 
 
@@ -2200,6 +2215,10 @@ func _apply_menu_step() -> void:
 	night_l.visible = in_menu and menu_step == 2
 	weather_l.visible = in_menu and menu_step == 2
 	prompt_l.visible = in_menu
+	# discreet, bottom-left, the same treatment as the version tag - the
+	# middle of the title screen is already busy with the level blurb
+	menu_hint_l.visible = in_menu
+	menu_hint_l.text = "%s  settings" % _kb_or_pad("ESC", "Back")
 	if not in_menu:
 		return
 	match menu_step:
@@ -2234,7 +2253,8 @@ func _apply_menu_step() -> void:
 
 func _open_shop() -> void:
 	in_shop = true
-	for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, weather_l, record_l]:
+	for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, weather_l, record_l,
+			menu_hint_l]:
 		l.visible = false
 	shop_title_l.visible = true
 	shop_l.visible = true
@@ -2324,6 +2344,158 @@ func _refresh_menu_text() -> void:
 		2:
 			prompt_l.text = "press  %s  to go walkies" % go
 			hint_l.visible = true
+
+
+# --- settings ----------------------------------------------------------
+#
+# A download needs volume and fullscreen; muting the music with M was the
+# whole of it before. Reachable with the pause key from either the title
+# screen or a paused walk, and saved to the same records file as everything
+# else. settings_panel.gd draws it; the rows below are the only source of
+# truth for what is in there and in what order.
+
+const SETTING_NAMES := {
+	"master": "MASTER VOLUME", "sfx": "SOUND EFFECTS",
+	"music": "MUSIC", "fullscreen": "FULLSCREEN",
+}
+
+
+func settings_keys() -> Array:
+	# the browser owns the window, so offering a fullscreen toggle there
+	# would be a button that lies
+	if OS.has_feature("web"):
+		return ["master", "sfx", "music"]
+	return ["master", "sfx", "music", "fullscreen"]
+
+
+func settings_rows() -> Array:
+	# the panel draws whatever this returns, so a new setting is one entry
+	var out := []
+	for k in settings_keys():
+		var v: float = 0.0
+		var kind := "slider"
+		match k:
+			"master": v = Game.vol_master
+			"sfx": v = Game.vol_sfx
+			"music": v = Game.vol_music
+			"fullscreen":
+				v = 1.0 if Game.fullscreen else 0.0
+				kind = "toggle"
+		out.append({"name": SETTING_NAMES[k], "kind": kind, "v": v})
+	return out
+
+
+func pad_hints() -> bool:
+	return Input.get_connected_joypads().size() > 0
+
+
+func _check_settings_roundtrip() -> Array:
+	# The settings are only worth having if they survive a restart, and a
+	# typo in a ConfigFile key fails silently - the value simply reverts to
+	# its default the next time you launch. So write odd values, read them
+	# back, and put the player's own settings back afterwards.
+	var p: Array = []
+	var keep := [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen]
+	Game.vol_master = 0.3
+	Game.vol_sfx = 0.1
+	Game.vol_music = 0.7
+	Game.fullscreen = true
+	Game.save_records()
+	Game.vol_master = 0.0
+	Game.vol_sfx = 0.0
+	Game.vol_music = 0.0
+	Game.fullscreen = false
+	Game.load_records()
+	if not (is_equal_approx(Game.vol_master, 0.3) and is_equal_approx(Game.vol_sfx, 0.1)
+			and is_equal_approx(Game.vol_music, 0.7) and Game.fullscreen):
+		p.append("settings did not survive a save/load round trip (%.2f %.2f %.2f %s)"
+			% [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen])
+	Game.vol_master = keep[0]
+	Game.vol_sfx = keep[1]
+	Game.vol_music = keep[2]
+	Game.fullscreen = keep[3]
+	Game.save_records()
+	# and the slider steps must stay inside 0..1 however hard you lean on them
+	settings_idx = 0
+	for i in range(20):
+		_settings_adjust(-1)
+	if Game.vol_master < 0.0:
+		p.append("master volume ran below zero (%.2f)" % Game.vol_master)
+	for i in range(30):
+		_settings_adjust(1)
+	if Game.vol_master > 1.0:
+		p.append("master volume ran above one (%.2f)" % Game.vol_master)
+	Game.vol_master = keep[0]
+	Game.apply_settings()
+	Game.save_records()
+	return p
+
+
+func _open_settings_from_menu() -> void:
+	for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, weather_l, record_l,
+			hint_l, menu_hint_l]:
+		l.visible = false
+	_open_settings()
+
+
+func _open_settings() -> void:
+	in_settings = true
+	settings_idx = 0
+	settings_panel.visible = true
+	dim.visible = true
+	Sfx.play("ui")
+
+
+func _close_settings() -> void:
+	in_settings = false
+	settings_panel.visible = false
+	Game.save_records()
+	Sfx.play("ui")
+	if paused:
+		# back to the pause card we came from
+		pause_l.visible = true
+		dim.visible = true
+	else:
+		dim.visible = false
+		_apply_menu_step()
+		_refresh_menu_text()
+
+
+func _settings_adjust(dir: int) -> void:
+	var keys := settings_keys()
+	var key: String = keys[settings_idx]
+	match key:
+		"master":
+			Game.vol_master = clampf(Game.vol_master + 0.1 * dir, 0.0, 1.0)
+			Game.apply_settings()
+			Sfx.play("ui")
+		"sfx":
+			Game.vol_sfx = clampf(Game.vol_sfx + 0.1 * dir, 0.0, 1.0)
+			Sfx.play("ui")  # so you hear what you just set
+		"music":
+			Game.vol_music = clampf(Game.vol_music + 0.1 * dir, 0.0, 1.0)
+			Sfx.apply_music_volume()
+		"fullscreen":
+			Game.fullscreen = not Game.fullscreen
+			Game.apply_settings()
+			Sfx.play("ui")
+
+
+func _tick_settings() -> void:
+	var n: int = settings_keys().size()
+	if Input.is_action_just_pressed("move_down"):
+		settings_idx = wrapi(settings_idx + 1, 0, n)
+		Sfx.play("ui")
+	elif Input.is_action_just_pressed("move_up"):
+		settings_idx = wrapi(settings_idx - 1, 0, n)
+		Sfx.play("ui")
+	elif Input.is_action_just_pressed("move_right"):
+		_settings_adjust(1)
+	elif Input.is_action_just_pressed("move_left"):
+		_settings_adjust(-1)
+	elif (Input.is_action_just_pressed("pause") or Input.is_action_just_pressed("bark")
+			or Input.is_action_just_pressed("plant")):
+		_close_settings()
 
 
 func _progress_text() -> String:
@@ -2586,6 +2758,11 @@ func _process(_delta: float) -> void:
 	if not _shot_done and "--shot" in OS.get_cmdline_user_args():
 		_shot_frames += 1
 		if _shot_frames == 2:
+			# --shot --shot-settings photographs the settings screen instead
+			# of the world, so its layout can be eyeballed without playing
+			if "--shot-settings" in OS.get_cmdline_user_args():
+				_open_settings_from_menu()
+				return
 			started = true  # skip the title so the shot shows the world
 			frozen = false
 			_apply_menu_step()
@@ -2596,6 +2773,9 @@ func _process(_delta: float) -> void:
 			var img := get_viewport().get_texture().get_image()
 			img.save_png("user://shot.png")
 			print("SHOT saved to user://shot.png")
+	if in_settings:
+		_tick_settings()
+		return
 	if Input.is_action_just_pressed("mute_music"):
 		Sfx.toggle_music()
 	if Input.is_action_just_pressed("restart"):
@@ -2610,6 +2790,9 @@ func _process(_delta: float) -> void:
 				frozen = false
 				pause_l.visible = false
 				dim.visible = false
+			elif Input.is_action_just_pressed("pee"):
+				pause_l.visible = false
+				_open_settings()
 			elif Input.is_action_just_pressed("bark"):
 				Game.menu_step = 1
 				get_tree().reload_current_scene()
@@ -2617,8 +2800,9 @@ func _process(_delta: float) -> void:
 		elif not frozen and Input.is_action_just_pressed("pause"):
 			paused = true
 			frozen = true
-			pause_l.text = "PAUSED\n\n%s  resume     %s  restart     %s  menu\n\n%s  toggle music" % [
-				_kb_or_pad("SPACE", "A"), _kb_or_pad("R", "Start"), _kb_or_pad("E", "B"), _kb_or_pad("M", "LB")]
+			pause_l.text = "PAUSED\n\n%s  resume     %s  restart     %s  menu\n\n%s  settings     %s  toggle music" % [
+				_kb_or_pad("SPACE", "A"), _kb_or_pad("R", "Start"), _kb_or_pad("E", "B"),
+				_kb_or_pad("Q", "X"), _kb_or_pad("M", "LB")]
 			pause_l.visible = true
 			dim.visible = true
 			return
@@ -2646,6 +2830,9 @@ func _process(_delta: float) -> void:
 			_apply_menu_step()
 		return
 	if not started:
+		if Input.is_action_just_pressed("pause") and not in_progress_view:
+			_open_settings_from_menu()
+			return
 		# the career overview: every walk's stars, goals and best run
 		if in_progress_view:
 			if Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pee") or Input.is_action_just_pressed("plant"):
@@ -2657,7 +2844,8 @@ func _process(_delta: float) -> void:
 			return
 		if menu_step == 1 and Input.is_action_just_pressed("pee"):
 			in_progress_view = true
-			for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, weather_l, record_l, hint_l]:
+			for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, weather_l, record_l,
+					hint_l, menu_hint_l]:
 				l.visible = false
 			progress_l.text = _progress_text()
 			progress_l.visible = true

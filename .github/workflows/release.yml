@@ -45,10 +45,24 @@ jobs:
           ./Godot_v4.7-stable_linux.x86_64 --headless --path . --export-release "Web" build/web/index.html
           test -f build/web/index.wasm
 
+      # The downloadable build, which is what the itch app actually serves.
+      # Built here rather than locally because the full export template pack
+      # is ~1GB and CI already downloads it for the web export.
+      - name: Export the Windows build
+        run: |
+          mkdir -p build/win
+          ./Godot_v4.7-stable_linux.x86_64 --headless --path . --export-release "Windows Desktop" build/win/PathOfLeashResistance.exe
+          test -f build/win/PathOfLeashResistance.exe
+          ls -la build/win
+          # a packed single-file build should be tens of MB, not a stub
+          test "$(stat -c%s build/win/PathOfLeashResistance.exe)" -gt 20000000
+
       # keep producing the zip as well, so there is always a manual
       # fallback and something attached to the GitHub release
-      - name: Zip it (manual-upload fallback)
-        run: cd build/web && zip -q -r ../../leash-resistance-web.zip . && cd ../..
+      - name: Zip them (manual-upload fallback)
+        run: |
+          cd build/web && zip -q -r ../../leash-resistance-web.zip . && cd ../..
+          cd build/win && zip -q -r ../../leash-resistance-windows.zip . && cd ../..
 
       # itch goes FIRST: shipping the playable build is the point, and it
       # must not be blocked by anything cosmetic downstream
@@ -68,11 +82,18 @@ jobs:
           ./butler push build/web \
             cyanidesayonara/path-of-leash-resistance:html5 \
             --userversion "${GITHUB_REF_NAME}"
+          # one channel per platform: itch serves html5 in the browser, and
+          # the windows channel through the itch app
+          ./butler push build/win \
+            cyanidesayonara/path-of-leash-resistance:windows \
+            --userversion "${GITHUB_REF_NAME}"
 
       # nice-to-have, so it never fails the deploy it follows
       - name: Attach the zip to the GitHub release
         continue-on-error: true
         uses: softprops/action-gh-release@v2
         with:
-          files: leash-resistance-web.zip
+          files: |
+            leash-resistance-web.zip
+            leash-resistance-windows.zip
           generate_release_notes: true

@@ -85,6 +85,12 @@ var owned := {"red": true, "none": true, "millie": true}
 var collar := "red"
 var bandana := "none"
 var coat := "millie"
+# Player settings. A downloadable build is expected to let you turn the
+# volume down and go fullscreen; muting the music with M was not enough.
+var vol_master := 0.85
+var vol_sfx := 0.9
+var vol_music := 0.55
+var fullscreen := false
 
 
 func daily_seed() -> int:
@@ -141,6 +147,16 @@ func cycle_weather(dir: int) -> void:
 	weather = WEATHERS[wrapi(i + dir, 0, WEATHERS.size())]
 
 
+func apply_settings() -> void:
+	# one place that pushes the saved settings at the engine, so the menu and
+	# startup cannot drift apart
+	AudioServer.set_bus_volume_db(0, linear_to_db(maxf(vol_master, 0.0001)))
+	AudioServer.set_bus_mute(0, vol_master <= 0.001)
+	DisplayServer.window_set_mode(
+		DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
+	)
+
+
 func _ready() -> void:
 	load_records()
 	# the daily best is per-day: wipe it when the date rolls over
@@ -161,6 +177,8 @@ func _ready() -> void:
 			level_id = "daily"
 		elif arg == "--tutorial":
 			level_id = "tutorial"
+	if DisplayServer.get_name() != "headless":
+		apply_settings()
 
 
 func load_records() -> void:
@@ -190,6 +208,10 @@ func load_records() -> void:
 	collar = cf.get_value("cosmetics", "collar", "red")
 	bandana = cf.get_value("cosmetics", "bandana", "none")
 	coat = cf.get_value("cosmetics", "coat", "millie")
+	vol_master = clampf(float(cf.get_value("settings", "vol_master", 0.85)), 0.0, 1.0)
+	vol_sfx = clampf(float(cf.get_value("settings", "vol_sfx", 0.9)), 0.0, 1.0)
+	vol_music = clampf(float(cf.get_value("settings", "vol_music", 0.55)), 0.0, 1.0)
+	fullscreen = bool(cf.get_value("settings", "fullscreen", false))
 
 
 func save_records() -> void:
@@ -210,6 +232,10 @@ func save_records() -> void:
 	cf.set_value("cosmetics", "collar", collar)
 	cf.set_value("cosmetics", "bandana", bandana)
 	cf.set_value("cosmetics", "coat", coat)
+	cf.set_value("settings", "vol_master", vol_master)
+	cf.set_value("settings", "vol_sfx", vol_sfx)
+	cf.set_value("settings", "vol_music", vol_music)
+	cf.set_value("settings", "fullscreen", fullscreen)
 	cf.save(SAVE_PATH)
 
 

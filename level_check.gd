@@ -126,4 +126,20 @@ static func check(m) -> Array:
 			"prize":
 				if m.prize_pos.x >= INF:
 					p.append("has a prize goal but no prize placed")
+
+	# --- the settings screen ---
+	# The rows are drawn from settings_rows() but INDEXED with settings_keys(),
+	# so a setting added to one and not the other reads or writes the wrong
+	# row. Cheap to check here, impossible to notice by eye.
+	var keys: Array = m.settings_keys()
+	var rows: Array = m.settings_rows()
+	if keys.size() != rows.size():
+		p.append("settings: %d keys but %d rows" % [keys.size(), rows.size()])
+	for k in keys:
+		if not m.SETTING_NAMES.has(k):
+			p.append("settings: key '%s' has no display name" % k)
+	for row in rows:
+		if String(row.kind) == "slider" and (float(row.v) < 0.0 or float(row.v) > 1.0):
+			p.append("settings: %s is %.2f, outside 0..1" % [row.name, row.v])
+
 	return p
