@@ -2,8 +2,12 @@ name: Release to itch.io
 
 # Production publish path: push a version tag (v*). Release waits for a
 # successful CI run on that exact commit SHA, then exports and publishes.
-# There is no workflow_dispatch publish path - manual dispatch previously
-# could ship without a tag or a green CI gate.
+#
+# Manual dispatch exists as an escape hatch, and it is gated the same way by
+# default: dispatch on a tag and it still waits for green CI on that SHA. The
+# gate is only skipped if the operator explicitly ticks skip_ci_gate, which is
+# for when the GATE itself is broken - otherwise a flaky CI run on an
+# already-pushed tag would leave no way to publish but deleting the tag.
 #
 # One-time setup needed:
 #   1. Get an API key from https://itch.io/user/settings/api-keys
@@ -15,6 +19,12 @@ name: Release to itch.io
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      skip_ci_gate:
+        description: "Publish without waiting for green CI (only if the gate itself is broken)"
+        type: boolean
+        default: false
 
 jobs:
   publish:
@@ -27,6 +37,7 @@ jobs:
       actions: read
     steps:
       - name: Require green CI for this exact SHA
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.skip_ci_gate }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -41,7 +52,7 @@ jobs:
             json="$(gh run list \
               --repo "${GITHUB_REPOSITORY}" \
               --commit "${SHA}" \
-              --workflow "CI" \
+              --workflow ci.yml \
               --limit 30 \
               --json databaseId,conclusion,status,event,url,displayTitle,headSha)"
             echo "${json}" | jq -c '.[] | {databaseId,status,conclusion,event,url}' || true
@@ -135,14 +146,20 @@ jobs:
           unzip -q butler.zip
           chmod +x butler
           ./butler -V
+          # a tag push names the version; a manual run from a branch does not
+          VERSION="${GITHUB_REF_NAME}"
+          if [ "${GITHUB_REF_TYPE}" != "tag" ]; then
+            VERSION="manual-${GITHUB_SHA:0:7}"
+          fi
+          echo "Publishing userversion ${VERSION}"
           ./butler push build/web \
             cyanidesayonara/path-of-leash-resistance:html5 \
-            --userversion "${GITHUB_REF_NAME}"
+            --userversion "${VERSION}"
           # one channel per platform: itch serves html5 in the browser, and
           # the windows channel through the itch app
           ./butler push build/win \
             cyanidesayonara/path-of-leash-resistance:windows \
-            --userversion "${GITHUB_REF_NAME}"
+            --userversion "${VERSION}"
 
       # nice-to-have, so it never fails the deploy it follows
       - name: Attach the zip to the GitHub release

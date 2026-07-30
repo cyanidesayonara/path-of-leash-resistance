@@ -22,9 +22,16 @@ const STRETCH_CAP := 1.15
 const STATIC_SLIP_MIN := 0.15
 const FURNITURE_SLIP_MIN := 0.35
 const DYNAMIC_SLIP_MIN := 0.40
+# Public kind names: contact_kind and slip_for() are read by main.gd and
+# pinned by tests, so they stay Strings.
 const KIND_POLE := "pole"
 const KIND_FURNITURE := "furniture"
 const KIND_DYNAMIC := "dynamic"
+# Internal codes. The solver runs ITER * (N-1) * near-obstacle times per rope
+# per frame, and it must not touch a String or a Dictionary in there.
+const K_POLE := 0
+const K_FURNITURE := 1
+const K_DYNAMIC := 2
 
 var pts: Array[Vector2] = []
 var prev: Array[Vector2] = []
@@ -50,6 +57,16 @@ var near_poles: Array[Vector2] = []
 # authored furniture wrap centres (tables/chairs/parasols/bins). Same
 # collision as poles, but typed so slip and contact metadata can differ.
 var furniture_poles: Array[Vector2] = []
+# poles typed once and cached, parallel to `poles`. Recovering a pole's kind by
+# scanning furniture_poles with a distance match EVERY frame cost more than the
+# collision it fed, and matching identity by proximity was fragile besides.
+var pole_kinds := PackedInt32Array()
+var _kinds_stamp := -1
+# scratch reused every tick, so a frame allocates nothing
+var _obs_pos := PackedVector2Array()
+var _obs_kind := PackedInt32Array()
+var _touch := PackedInt32Array()
+var _start: Array[Vector2] = []
 # points contributed by ANOTHER leash this frame: the rope drapes over
 # them, with dynamic slip, without claiming contact_pole
 var dynamic_obstacles: Array[Vector2] = []
@@ -62,24 +79,58 @@ var hero := false
 
 
 func slip_for(stretch_ratio: float, kind: String) -> float:
-	# Linear ramp from the kind's grip floor at rest length to free slip
-	# at STRETCH_CAP. Furniture starts looser than poles so terrace snags
-	# can free under collision-constrained pulls; dynamic leash contacts
-	# start looser still so a tangle does not lock like a pole.
-	var amin := STATIC_SLIP_MIN
+	return _slip_code(stretch_ratio, _code_for(kind))
+
+
+func _code_for(kind: String) -> int:
 	if kind == KIND_FURNITURE:
-		amin = FURNITURE_SLIP_MIN
-	elif kind == KIND_DYNAMIC:
-		amin = DYNAMIC_SLIP_MIN
+		return K_FURNITURE
+	if kind == KIND_DYNAMIC:
+		return K_DYNAMIC
+	return K_POLE
+
+
+func _name_for(code: int) -> String:
+	if code == K_FURNITURE:
+		return KIND_FURNITURE
+	if code == K_DYNAMIC:
+		return KIND_DYNAMIC
+	return KIND_POLE
+
+
+func _slip_code(stretch_ratio: float, code: int) -> float:
+	# POLES KEEP THE ORIGINAL CURVE, deliberately. The soft-lock this hardening
+	# pass fixes was terrace FURNITURE refusing to free under a
+	# collision-constrained pull. Pole grip is a different thing: it is what
+	# holds a wrap for the vault, what accumulates winding, and what decides
+	# whether the fling gets right of way - so putting poles on the steep ramp
+	# changed three mechanics to fix a fourth (at 10% stretch a pole went from
+	# 0.23 slip to 0.72). Nothing in the suite asked for it: every "approaches
+	# free slip at the cap" assertion is about furniture and dynamic contacts.
+	if code == K_POLE:
+		return clampf(0.15 + (stretch_ratio - 1.0) * 0.8, STATIC_SLIP_MIN, 1.0)
+	# Furniture and another walker's rope ramp to free slip by STRETCH_CAP, so
+	# a snag can always work itself loose inside the geometry cap.
+	var amin := FURNITURE_SLIP_MIN if code == K_FURNITURE else DYNAMIC_SLIP_MIN
 	var t := clampf((stretch_ratio - 1.0) / (STRETCH_CAP - 1.0), 0.0, 1.0)
 	return lerpf(amin, 1.0, t)
 
 
-func _kind_at(pos: Vector2) -> String:
-	for f in furniture_poles:
-		if f.distance_squared_to(pos) < 0.25:
-			return KIND_FURNITURE
-	return KIND_POLE
+func _ensure_pole_kinds() -> void:
+	# Rebuilt only when the pole list or the furniture list changes size, which
+	# is what main.gd does at build time (trees and the FUR-GONETA are appended
+	# after setup). Two int compares per tick in the steady state.
+	if pole_kinds.size() == poles.size() and _kinds_stamp == furniture_poles.size():
+		return
+	pole_kinds.resize(poles.size())
+	for i in range(poles.size()):
+		var code := K_POLE
+		for f in furniture_poles:
+			if f.distance_squared_to(poles[i]) < 0.25:
+				code = K_FURNITURE
+				break
+		pole_kinds[i] = code
+	_kinds_stamp = furniture_poles.size()
 
 
 func setup(d: Node2D, h: Node2D, pole_list: Array[Vector2], max_len: float) -> void:
@@ -118,9 +169,11 @@ func tick(delta: float) -> void:
 		var vel := (pts[i] - prev[i]) * 0.94
 		prev[i] = pts[i]
 		pts[i] += vel
-	var start := pts.duplicate()
-	# touched[i] -> {pos, kind, is_static}
-	var touched := {}
+	# reused rather than duplicated: this runs on every rope, every frame
+	if _start.size() != N:
+		_start.resize(N)
+	for i in range(N):
+		_start[i] = pts[i]
 	# only obstacles near the rope's bounding box matter this frame; the
 	# box MUST cover every rope point, not just the endpoints - a partial
 	# wind puts both endpoints on one side of the pole, and an
@@ -134,17 +187,31 @@ func tick(delta: float) -> void:
 		rr = maxf(rr, rp.x)
 		rt = minf(rt, rp.y)
 		rb = maxf(rb, rp.y)
+	# Near obstacles as two packed arrays rather than an array of dictionaries:
+	# a dictionary per near obstacle per rope per frame was pure allocation
+	# churn, and the solver read its fields from inside the innermost loop.
 	near_poles.clear()
-	var near_obs: Array[Dictionary] = []
-	for npl in poles:
+	_obs_pos.clear()
+	_obs_kind.clear()
+	_ensure_pole_kinds()
+	for pi in range(poles.size()):
+		var npl: Vector2 = poles[pi]
 		if npl.x > rl - 40.0 and npl.x < rr + 40.0 and npl.y > rt - 40.0 and npl.y < rb + 40.0:
 			near_poles.append(npl)
-			var kind := _kind_at(npl)
-			near_obs.append({"pos": npl, "kind": kind, "is_static": true})
+			_obs_pos.append(npl)
+			_obs_kind.append(pole_kinds[pi])
 	for dob in dynamic_obstacles:
 		if dob.x > rl - 40.0 and dob.x < rr + 40.0 and dob.y > rt - 40.0 and dob.y < rb + 40.0:
 			near_poles.append(dob)
-			near_obs.append({"pos": dob, "kind": KIND_DYNAMIC, "is_static": false})
+			_obs_pos.append(dob)
+			_obs_kind.append(K_DYNAMIC)
+	var obs_n := _obs_pos.size()
+	# which obstacle each rope point ended up against: -1 for none. An int per
+	# point, allocated once, replaces a Dictionary of Dictionaries per frame.
+	if _touch.size() != N:
+		_touch.resize(N)
+	for i in range(N):
+		_touch[i] = -1
 	for _iter in range(ITER):
 		pts[0] = dog.global_position
 		pts[N - 1] = _hand_pos()
@@ -163,11 +230,11 @@ func tick(delta: float) -> void:
 				pts[i + 1] -= corr
 		# segment-vs-circle collision: point-only checks tunnel when
 		# stretched segments straddle the pole between two points.
-		if near_obs.is_empty():
+		if obs_n == 0:
 			continue
 		for i in range(N - 1):
-			for obs in near_obs:
-				var pl: Vector2 = obs.pos
+			for oi in range(obs_n):
+				var pl: Vector2 = _obs_pos[oi]
 				var cp := _closest_on_segment(pts[i], pts[i + 1], pl)
 				var dp := cp - pl
 				var l := dp.length()
@@ -175,11 +242,11 @@ func tick(delta: float) -> void:
 					var push := dp / l * (POLE_PAD - l)
 					if i > 0:
 						pts[i] += push
-						touched[i] = obs
+						_touch[i] = oi
 					if i + 1 < N - 1:
 						pts[i + 1] += push
-						touched[i + 1] = obs
-	contacts = touched.size()
+						_touch[i + 1] = oi
+	contacts = 0
 	static_contacts = 0
 	dynamic_contacts = 0
 	# static contact closest to the dog end owns contact_pole (vault etc.)
@@ -187,28 +254,35 @@ func tick(delta: float) -> void:
 	contact_kind = ""
 	contact_static = false
 	contact_dynamic = Vector2(INF, INF)
-	var best_i := 1 << 30
-	var best_dyn_i := 1 << 30
-	for i in touched:
-		var obs: Dictionary = touched[i]
-		if bool(obs.is_static):
-			static_contacts += 1
-			if int(i) < best_i:
-				best_i = int(i)
-				contact_pole = obs.pos
-				contact_kind = String(obs.kind)
-				contact_static = true
-		else:
+	# the slip a contact gets depends only on this tick's stretch and the kind,
+	# so it is resolved three times per tick rather than once per contact
+	var free := free_slip_t > 0.0
+	var slip_pole := 1.0 if free else _slip_code(stretch_ratio, K_POLE)
+	var slip_furn := 1.0 if free else _slip_code(stretch_ratio, K_FURNITURE)
+	var slip_dyn := 1.0 if free else _slip_code(stretch_ratio, K_DYNAMIC)
+	for i in range(N):
+		var oi := _touch[i]
+		if oi < 0:
+			continue
+		contacts += 1
+		var code := _obs_kind[oi]
+		var pl2: Vector2 = _obs_pos[oi]
+		if code == K_DYNAMIC:
 			dynamic_contacts += 1
-			if int(i) < best_dyn_i:
-				best_dyn_i = int(i)
-				contact_dynamic = obs.pos
-	# apply stick-slip per contact kind
-	for i in touched:
-		var obs2: Dictionary = touched[i]
-		var pl2: Vector2 = obs2.pos
-		var slip := 1.0 if free_slip_t > 0.0 else slip_for(stretch_ratio, String(obs2.kind))
-		var r0: Vector2 = start[i] - pl2
+			if contact_dynamic.x >= INF:
+				contact_dynamic = pl2      # nearest the dog end: i ascends
+		else:
+			static_contacts += 1
+			if not contact_static:
+				contact_pole = pl2
+				contact_kind = _name_for(code)
+				contact_static = true
+		var slip := slip_dyn
+		if code == K_POLE:
+			slip = slip_pole
+		elif code == K_FURNITURE:
+			slip = slip_furn
+		var r0: Vector2 = _start[i] - pl2
 		var r1: Vector2 = pts[i] - pl2
 		if r0.length_squared() > 0.001 and r1.length_squared() > 0.001:
 			var da := wrapf(r1.angle() - r0.angle(), -PI, PI)

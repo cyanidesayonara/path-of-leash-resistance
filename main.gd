@@ -5698,7 +5698,10 @@ func _finish_walk() -> void:
 		var total := active_quests.size()
 		var rows: Array = _results_rows()
 		var lifetime: int = run_done if Game.daily else Game.goals_count(lvl)
-		var perfect := run_done >= total
+		# total == 0 made this TRUE, which is how a walk with no goal list
+		# banked a PERFECT for The Boulevard. The tutorial no longer reaches
+		# this path at all, but the trap should not be left armed.
+		var perfect := total > 0 and run_done >= total
 		var rating := ""
 		if run_done == 0:
 			rating = "...well. A dog, anyway."

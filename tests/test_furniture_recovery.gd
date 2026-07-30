@@ -81,6 +81,28 @@ func _test_slip_constants_and_curves() -> void:
 			"dynamic contacts slip at least as freely as poles at modest stretch")
 		_check(probe.slip_for(1.05, "furniture") >= probe.slip_for(1.05, "pole"),
 			"furniture contacts slip at least as freely as poles at modest stretch")
+		# Poles are deliberately NOT on the furniture ramp. Pole grip is what
+		# holds a wrap for the vault, what accumulates winding, and what
+		# decides whether the fling gets right of way, so the soft-lock fix
+		# stays scoped to the thing that was locking. If someone puts poles
+		# back on the steep ramp, this fails.
+		var pole_mid: float = probe.slip_for(1.10, "pole")
+		_check(pole_mid <= 0.35,
+			"a pole wrap still grips at 10%% stretch (slip %.2f)" % pole_mid)
+		var furn_mid: float = probe.slip_for(1.10, "furniture")
+		_check(furn_mid >= pole_mid + 0.25,
+			"furniture frees far sooner than a pole at 10%% stretch (%.2f vs %.2f)"
+				% [furn_mid, pole_mid])
+		_check(probe.slip_for(STRETCH_CAP, "pole") < 0.5,
+			"poles never reach free slip from tension alone - free_slip_t does that")
+
+		# The solver runs ITER * (N-1) * near-obstacle times per rope per
+		# frame. Typed scratch arrays are the reason that is affordable; a
+		# dictionary per obstacle per frame was not.
+		_check(probe.get("pole_kinds") is PackedInt32Array,
+			"pole kinds are cached as packed ints, not resolved per frame")
+		_check(not probe.has_method("_kind_at"),
+			"pole kind is not recovered by a per-frame distance scan")
 	_check(probe.get("KIND_POLE") != null, "leash exposes KIND_POLE")
 	_check(probe.get("KIND_FURNITURE") != null, "leash exposes KIND_FURNITURE")
 	_check(probe.get("KIND_DYNAMIC") != null, "leash exposes KIND_DYNAMIC")
