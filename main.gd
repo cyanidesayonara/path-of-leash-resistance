@@ -2888,7 +2888,7 @@ func _build_hud() -> void:
 	menu_hint_l.modulate.a = 0.55
 	menu_hint_l.visible = false
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.52"
+	version_l.text = "v1.53"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)

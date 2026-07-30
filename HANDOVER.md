@@ -20,9 +20,9 @@ phone-distracted human walks on autopilot; the leash is real verlet-rope
 physics (visual and gameplay constraint — see AGENTS.md). Ships to itch
 (`html5` + `windows`) on a version tag after green CI.
 
-## Current state (v1.53 hardening, branch `v153-hardening`)
+## Current state (v1.53 on `main`)
 
-Hardening rounds on this branch cover:
+Hardening rounds shipped via PR #3:
 
 - Progression boundaries (fresh saves, tutorial isolation, cosmetic
   ownership migration)
@@ -30,10 +30,12 @@ Hardening rounds on this branch cover:
   curves, beach shoreline agreement)
 - NPC-leash tangle contacts (segment/capsule enter/exit, dynamic vs static
   snags, mercy release, curiosity suppress during mercy hold)
+- Review follow-up: leash hot-path recovery, pole slip restored to the
+  original curve (furniture/dynamic keep the free-at-cap ramp), gated
+  manual release dispatch
 
-Visual acceptance recorded for the rounds: Round 1 PASS; Round 2 native
-shots; Round 3 Web PASS_WITH_GAPS (tangle scored; FX hard to frame in
-browser). No production itch publish is implied by this sitrep.
+Visual acceptance: Round 1 PASS; Round 2 native shots; Round 3 Web
+PASS_WITH_GAPS (tangle scored; FX hard to frame in browser).
 
 ## Known deferred gap
 

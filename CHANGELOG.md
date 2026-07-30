@@ -2,11 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-07-31 - v1.53 release
+
+In-game version label bumped to v1.53. Tag `v1.53` publishes web and
+Windows to itch after green CI on the tagged SHA.
+
 ## 2026-07-30 - v1.53 closeout: release gates and docs
 
 Release publish is gated on a successful CI run for the exact tagged SHA:
 `ci.yml` also runs on `v*` tags, and `release.yml` polls that result before
-export or itch upload. Unsafe production `workflow_dispatch` is removed.
+export or itch upload. Manual `workflow_dispatch` remains only as a gated
+escape hatch (CI wait by default; `skip_ci_gate` is explicit and emergency).
 Missing `BUTLER_API_KEY` fails the release instead of skipping itch with
 success. Godot export steps keep failing exit codes (`set -euo pipefail`).
 
