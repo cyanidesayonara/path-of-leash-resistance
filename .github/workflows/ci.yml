@@ -3,6 +3,9 @@ name: CI
 on:
   push:
     branches: [main]
+    # Version tags must run the full suite so release.yml can gate publish
+    # on a green CI result for the exact tagged SHA.
+    tags: ["v*"]
   pull_request:
     branches: [main]
 

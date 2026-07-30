@@ -2,6 +2,23 @@
 
 Append-only session history, newest first.
 
+## 2026-07-30 - v1.53 closeout: release gates and docs
+
+Release publish is gated on a successful CI run for the exact tagged SHA:
+`ci.yml` also runs on `v*` tags, and `release.yml` polls that result before
+export or itch upload. Unsafe production `workflow_dispatch` is removed.
+Missing `BUTLER_API_KEY` fails the release instead of skipping itch with
+success. Godot export steps keep failing exit codes (`set -euo pipefail`).
+
+Docs: AGENTS.md drops the stale pivot-chain / "verlet visual only" wrap
+paragraph so it matches the rope-is-the-constraint architecture; HANDOVER.md
+is a thin current sitrep with the 2026-07-17 history archived under
+`docs/handover/`; PROJECT.md notes v1.53 hardening and the shipped tangle
+path. Known deferred: mobile Web canvas scaling (phone-sized browser still
+shows a small fixed canvas with large black borders); Round 3 Web visual
+acceptance was PASS_WITH_GAPS for FX framing. No production itch publish
+was performed in this closeout.
+
 ## 2026-07-30 - v1.53 hardening: NPC-leash tangle contacts
 
 Leash-vs-leash tangles use visible segment/capsule contact with separate

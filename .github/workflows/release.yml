@@ -1,36 +1,81 @@
 name: Release to itch.io
 
-# Deploying by hand (export, zip, drag to itch) is slow and easy to forget,
-# and a full 10MB re-upload every time. This does it properly: push a
-# version tag and the web build is exported and pushed to itch with
-# `butler`, which uploads only the CHANGED BLOCKS - so a typical release is
-# a few hundred KB and a couple of seconds, and every upload is versioned
-# and rollback-able on itch's side.
+# Production publish path: push a version tag (v*). Release waits for a
+# successful CI run on that exact commit SHA, then exports and publishes.
+# There is no workflow_dispatch publish path - manual dispatch previously
+# could ship without a tag or a green CI gate.
 #
 # One-time setup needed:
 #   1. Get an API key from https://itch.io/user/settings/api-keys
 #   2. Add it to the repo as a secret named BUTLER_API_KEY
 #      (Settings > Secrets and variables > Actions > New repository secret)
-# After that: `git tag v1.38 && git push --tags` publishes.
+# After that: `git tag v1.53 && git push --tags` publishes (once CI is green
+# for the tagged SHA).
 
 on:
   push:
     tags: ["v*"]
-  workflow_dispatch:      # or run it manually from the Actions tab
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     # the default token is read-only, so creating a GitHub release 403s
-    # without this ("Resource not accessible by integration")
+    # without contents:write; actions:read is required to query CI runs
     permissions:
       contents: write
+      actions: read
     steps:
+      - name: Require green CI for this exact SHA
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          SHA="${GITHUB_SHA}"
+          echo "Requiring a successful CI workflow run for commit ${SHA}"
+          # Tag push starts CI in parallel; poll until that SHA is green.
+          # A prior successful CI run on the same SHA (e.g. main push) also
+          # satisfies the gate - we only care about the exact commit.
+          deadline=$((SECONDS + 1200))
+          while (( SECONDS < deadline )); do
+            json="$(gh run list \
+              --repo "${GITHUB_REPOSITORY}" \
+              --commit "${SHA}" \
+              --workflow "CI" \
+              --limit 30 \
+              --json databaseId,conclusion,status,event,url,displayTitle,headSha)"
+            echo "${json}" | jq -c '.[] | {databaseId,status,conclusion,event,url}' || true
+
+            success="$(echo "${json}" | jq '[.[] | select(.status == "completed" and .conclusion == "success")] | length')"
+            if [ "${success}" -gt 0 ]; then
+              echo "CI succeeded for ${SHA}; proceeding with release."
+              echo "${json}" | jq '[.[] | select(.status == "completed" and .conclusion == "success")][0]'
+              exit 0
+            fi
+
+            pending="$(echo "${json}" | jq '[.[] | select(.status == "queued" or .status == "in_progress" or .status == "pending" or .status == "waiting" or .status == "requested")] | length')"
+            failed="$(echo "${json}" | jq '[.[] | select(.conclusion == "failure" or .conclusion == "cancelled" or .conclusion == "timed_out" or .conclusion == "startup_failure")] | length')"
+
+            if [ "${pending}" -eq 0 ] && [ "${failed}" -gt 0 ]; then
+              echo "CI did not succeed for ${SHA}; refusing to publish."
+              exit 1
+            fi
+
+            if [ "$(echo "${json}" | jq 'length')" -eq 0 ]; then
+              echo "No CI runs listed yet for ${SHA}; waiting..."
+            else
+              echo "CI not green yet for ${SHA} (pending=${pending}); waiting..."
+            fi
+            sleep 20
+          done
+          echo "Timed out waiting for green CI on ${SHA}; refusing to publish."
+          exit 1
+
       - uses: actions/checkout@v5
 
       - name: Download Godot + export templates
         run: |
+          set -euo pipefail
           curl -sL -o godot.zip https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
           unzip -q godot.zip
           chmod +x Godot_v4.7-stable_linux.x86_64
@@ -42,10 +87,13 @@ jobs:
       # The project has one imported resource (the icon), and an export with
       # no import cache ships it as a missing dependency. One pass fills it.
       - name: Import resources
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --import
+        run: |
+          set -euo pipefail
+          ./Godot_v4.7-stable_linux.x86_64 --headless --path . --import
 
       - name: Export the web build
         run: |
+          set -euo pipefail
           mkdir -p build/web
           ./Godot_v4.7-stable_linux.x86_64 --headless --path . --export-release "Web" build/web/index.html
           test -f build/web/index.wasm
@@ -55,6 +103,7 @@ jobs:
       # is ~1GB and CI already downloads it for the web export.
       - name: Export the Windows build
         run: |
+          set -euo pipefail
           mkdir -p build/win
           ./Godot_v4.7-stable_linux.x86_64 --headless --path . --export-release "Windows Desktop" build/win/PathOfLeashResistance.exe
           test -f build/win/PathOfLeashResistance.exe
@@ -66,6 +115,7 @@ jobs:
       # fallback and something attached to the GitHub release
       - name: Zip them (manual-upload fallback)
         run: |
+          set -euo pipefail
           cd build/web && zip -q -r ../../leash-resistance-web.zip . && cd ../..
           cd build/win && zip -q -r ../../leash-resistance-windows.zip . && cd ../..
 
@@ -75,10 +125,11 @@ jobs:
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
         run: |
-          if [ -z "$BUTLER_API_KEY" ]; then
-            echo "No BUTLER_API_KEY secret set - skipping the itch upload."
-            echo "The zip is still attached to the GitHub release for manual upload."
-            exit 0
+          set -euo pipefail
+          if [ -z "${BUTLER_API_KEY}" ]; then
+            echo "BUTLER_API_KEY secret is required for production release."
+            echo "Refusing to skip itch upload with a successful exit."
+            exit 1
           fi
           curl -sL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
           unzip -q butler.zip
