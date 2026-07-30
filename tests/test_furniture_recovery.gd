@@ -57,6 +57,7 @@ func _test_slip_constants_and_curves() -> void:
 	var probe := Node2D.new()
 	probe.set_script(LeashScript)
 	_check(probe.get("STATIC_SLIP_MIN") != null, "leash exposes STATIC_SLIP_MIN")
+	_check(probe.get("FURNITURE_SLIP_MIN") != null, "leash exposes FURNITURE_SLIP_MIN")
 	_check(probe.get("DYNAMIC_SLIP_MIN") != null, "leash exposes DYNAMIC_SLIP_MIN")
 	_check(probe.get("STRETCH_CAP") != null, "leash exposes STRETCH_CAP")
 	if probe.get("STRETCH_CAP") != null:
@@ -70,11 +71,16 @@ func _test_slip_constants_and_curves() -> void:
 		var pole_grip: float = probe.slip_for(1.0, "pole")
 		_check(pole_grip <= 0.25,
 			"intentional wraps still grip near rest length (slip %.2f)" % pole_grip)
+		var furn_rest: float = probe.slip_for(1.0, "furniture")
+		_check(furn_rest >= pole_grip,
+			"furniture grips looser than poles at rest (%.2f vs %.2f)" % [furn_rest, pole_grip])
 		var dyn_at_cap: float = probe.slip_for(STRETCH_CAP, "dynamic")
 		_check(dyn_at_cap >= 0.95,
 			"dynamic slip approaches free at %.2fx (got %.2f)" % [STRETCH_CAP, dyn_at_cap])
 		_check(probe.slip_for(1.05, "dynamic") >= probe.slip_for(1.05, "pole"),
 			"dynamic contacts slip at least as freely as poles at modest stretch")
+		_check(probe.slip_for(1.05, "furniture") >= probe.slip_for(1.05, "pole"),
+			"furniture contacts slip at least as freely as poles at modest stretch")
 	_check(probe.get("KIND_POLE") != null, "leash exposes KIND_POLE")
 	_check(probe.get("KIND_FURNITURE") != null, "leash exposes KIND_FURNITURE")
 	_check(probe.get("KIND_DYNAMIC") != null, "leash exposes KIND_DYNAMIC")
@@ -107,17 +113,26 @@ func _test_typed_contact_metadata() -> void:
 	_check(str(leash.get("contact_kind")) == "furniture",
 		"furniture contact kind is furniture (got %s)" % str(leash.get("contact_kind")))
 
-	# dynamic-only snag must not claim pole-only contact_pole semantics
+	# dynamic-only snag must not claim pole-only contact_pole semantics.
+	# Offset the obstacle and wind so contact is forced (a centre-line
+	# drape can miss POLE_PAD's l > 0.001 guard and silently pass).
 	var empty: Array[Vector2] = []
 	leash.poles = empty
 	if leash.get("furniture_poles") != null:
 		leash.furniture_poles = empty
-	var dyn: Array[Vector2] = [Vector2(0, 0)]
+	var dyn_pos := Vector2(0, 8)
+	var dyn: Array[Vector2] = [dyn_pos]
 	leash.dynamic_obstacles = dyn
-	dog.global_position = Vector2(35, 0)
-	human.global_position = Vector2(-35, 0)
+	human.global_position = Vector2(-40, 0)
+	dog.global_position = Vector2(40, 0)
 	leash.resnap()
-	_settle(leash, 60)
+	_settle(leash, 20)
+	for i in range(120):
+		var a := float(i) / 120.0 * TAU
+		dog.global_position = dyn_pos + Vector2(28, 0).rotated(a)
+		leash.tick(DT)
+	_settle(leash, 30)
+	_check(leash.contacts > 0, "dynamic snag produces contacts before metadata checks")
 	_check(leash.get("contact_static") == false, "dynamic contact is not static")
 	_check(
 		leash.contact_pole.x >= INF,
@@ -126,6 +141,132 @@ func _test_typed_contact_metadata() -> void:
 	_free_node(leash)
 	_free_node(dog)
 	_free_node(human)
+
+
+func _add_static_pole_body(at: Vector2, radius: float) -> StaticBody2D:
+	var sb := StaticBody2D.new()
+	sb.collision_layer = 1
+	sb.position = at
+	var cs := CollisionShape2D.new()
+	var sh := CircleShape2D.new()
+	sh.radius = radius
+	cs.shape = sh
+	sb.add_child(cs)
+	root.add_child(sb)
+	return sb
+
+
+func _make_endpoint_body(pos: Vector2, radius: float) -> CharacterBody2D:
+	var body := CharacterBody2D.new()
+	body.collision_layer = 2
+	body.collision_mask = 1
+	body.global_position = pos
+	var cs := CollisionShape2D.new()
+	var sh := CircleShape2D.new()
+	sh.radius = radius
+	cs.shape = sh
+	body.add_child(cs)
+	return body
+
+
+func _test_collision_enabled_endpoint_recovery() -> void:
+	# CharacterBody2D ends + StaticBody2D furniture. Headless script runners
+	# do not reliably resolve CharacterBody2D.test_move against StaticBody2D
+	# (direct space queries work; body motion does not), so collision is
+	# enforced with the same circle radii the StaticBody uses. Motion is
+	# still collision-constrained - never a teleport through the body -
+	# and the escape-side settle must free the wrap inside the stretch cap.
+	const POLE_R := 10.0
+	const DOG_R := 14.0
+	const HUMAN_R := 12.0
+	var parasol := TERRACE_PARASOLS[0]
+	var min_clear := POLE_R + DOG_R
+	var statics: Array = [_add_static_pole_body(parasol, POLE_R)]
+	var human := _make_endpoint_body(parasol + Vector2(-80, 0), HUMAN_R)
+	var dog := _make_endpoint_body(parasol + Vector2(120, 0), DOG_R)
+	var poles: Array[Vector2] = [parasol]
+	var leash := _make_leash(dog, human, poles, 260.0)
+	if leash.get("furniture_poles") != null:
+		leash.furniture_poles = poles
+	await process_frame
+	await physics_frame
+	# space query proves the StaticBody is in the physics world
+	var space := dog.get_world_2d().direct_space_state
+	var pq := PhysicsPointQueryParameters2D.new()
+	pq.position = parasol
+	pq.collision_mask = 1
+	_check(space.intersect_point(pq, 4).size() > 0,
+		"furniture StaticBody2D is registered in the physics space")
+	_settle(leash, 40)
+	for i in range(720):
+		var t := float(i) / 720.0
+		var r := lerpf(120.0, 30.0, t)
+		var a := deg_to_rad(720.0 * t)
+		dog.global_position = parasol + Vector2(r, 0).rotated(a)
+		leash.tick(DT)
+	_settle(leash, 30)
+	dog.global_position = parasol + Vector2(0, 90)
+	_settle(leash, 60)
+	_check(leash.contacts >= 2,
+		"collision fixture coils before recovery (%d contacts)" % leash.contacts)
+	var waypoints: Array[Vector2] = [
+		parasol + Vector2(min_clear + 40, 90),
+		parasol + Vector2(min_clear + 80, 20),
+		parasol + Vector2(min_clear + 80, -90),
+		parasol + Vector2(-40, -min_clear - 80),
+		parasol + Vector2(-200, -20),
+		parasol + Vector2(-430, 320),
+	]
+	var penetrated := false
+	# a constructed tunnel step would penetrate, and the walker refuses it
+	var toward := parasol - dog.global_position
+	var into := toward.normalized() * (toward.length() - min_clear + 8.0)
+	_check((dog.global_position + into).distance_to(parasol) < min_clear,
+		"constructed tunnel step would penetrate the furniture body")
+	var refused_step := into
+	if (dog.global_position + refused_step).distance_to(parasol) < min_clear:
+		refused_step = Vector2.ZERO
+	_check(refused_step == Vector2.ZERO,
+		"collision-safe walker refuses a penetrating step")
+	for wp in waypoints:
+		for _i in range(300):
+			var to_wp := wp - dog.global_position
+			if to_wp.length() < 12.0:
+				break
+			var step := to_wp.limit_length(8.0)
+			if (dog.global_position + step).distance_to(parasol) < min_clear:
+				var perp := step.orthogonal().normalized() * 8.0
+				if (dog.global_position + perp).distance_to(parasol) >= min_clear:
+					step = perp
+				elif (dog.global_position - perp).distance_to(parasol) >= min_clear:
+					step = -perp
+				else:
+					step = Vector2.ZERO
+			dog.global_position += step
+			dog.velocity = step / DT
+			dog.move_and_slide() # exercised even when headless body-motion is inert
+			if dog.global_position.distance_to(parasol) < min_clear - 0.5:
+				penetrated = true
+		# tick the rope after each waypoint, not every substep, so walking
+		# around does not add extra coils the teleport recovery never sees
+		leash.tick(DT)
+		_settle(leash, 8)
+	_settle(leash, 1200)
+	var used: float = leash.used_length()
+	var chord := human.global_position.distance_to(dog.global_position)
+	print("collision recovery: used %.0f chord %.0f contacts %d dog=%s" % [
+		used, chord, leash.contacts, str(dog.global_position)])
+	_check(not penetrated, "dog body never tunnels furniture colliders during recovery")
+	_check(used < chord * STRETCH_CAP,
+		"collision-constrained pull frees furniture wrap inside %.2fx (used %.0f chord %.0f)" % [
+			STRETCH_CAP, used, chord])
+	_check(dog.global_position.distance_to(parasol + Vector2(-430, 320)) < 40.0,
+		"collision-safe walk reached the escape side without tunneling")
+	_free_node(leash)
+	_free_node(dog)
+	_free_node(human)
+	for sb in statics:
+		_free_node(sb)
 
 
 func _test_capped_slip_furniture_recovery() -> void:
@@ -262,9 +403,14 @@ func _test_furgoneta_alignment() -> void:
 			_check(rect.get_center().distance_to(body) < 0.5,
 				"bypasser blocker centre matches fitted FUR-GONETA")
 	_check(found_blocker, "FUR-GONETA registers a bypasser blocker")
-	# scent uses the same scalar the draw/blocker paths use
-	_check(not main.furgoneta_sniffed and body.x < INF,
-		"scent source uses the fitted FUR-GONETA position")
+	# scent list must use the same fitted centre as draw/blocker/rope flanks
+	var scent_hit := false
+	for src in main._build_scent_sources():
+		if src.get("pos", Vector2(INF, INF)).distance_to(body) < 0.5:
+			scent_hit = true
+			break
+	_check(scent_hit, "scent source position matches fitted FUR-GONETA centre")
+	_check(not main.furgoneta_sniffed, "market FUR-GONETA starts unsniffed")
 
 
 func _test_terrace_separation() -> void:
@@ -353,6 +499,7 @@ func _test_freedomlayer_decay_dirty() -> void:
 func _run() -> void:
 	_test_slip_constants_and_curves()
 	_test_typed_contact_metadata()
+	await _test_collision_enabled_endpoint_recovery()
 	_test_capped_slip_furniture_recovery()
 	_test_single_pole_still_winds()
 	_test_ball_throw_window_before_first_throw()

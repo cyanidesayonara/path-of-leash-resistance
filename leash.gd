@@ -20,6 +20,7 @@ const FRICTION := 0.5
 # while intentional single-pole wraps still grip near rest length.
 const STRETCH_CAP := 1.15
 const STATIC_SLIP_MIN := 0.15
+const FURNITURE_SLIP_MIN := 0.35
 const DYNAMIC_SLIP_MIN := 0.40
 const KIND_POLE := "pole"
 const KIND_FURNITURE := "furniture"
@@ -58,10 +59,13 @@ var hero := false
 
 func slip_for(stretch_ratio: float, kind: String) -> float:
 	# Linear ramp from the kind's grip floor at rest length to free slip
-	# at STRETCH_CAP. Furniture and poles share the static curve; dynamic
-	# leash contacts start looser so a tangle does not lock like a pole.
+	# at STRETCH_CAP. Furniture starts looser than poles so terrace snags
+	# can free under collision-constrained pulls; dynamic leash contacts
+	# start looser still so a tangle does not lock like a pole.
 	var amin := STATIC_SLIP_MIN
-	if kind == KIND_DYNAMIC:
+	if kind == KIND_FURNITURE:
+		amin = FURNITURE_SLIP_MIN
+	elif kind == KIND_DYNAMIC:
 		amin = DYNAMIC_SLIP_MIN
 	var t := clampf((stretch_ratio - 1.0) / (STRETCH_CAP - 1.0), 0.0, 1.0)
 	return lerpf(amin, 1.0, t)

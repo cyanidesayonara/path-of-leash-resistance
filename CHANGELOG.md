@@ -13,7 +13,8 @@ furniture and other leashes do not share pole-only contact_pole semantics.
 Dog-beach visual, animated and gameplay shorelines share beach_shore_x; the
 first beach throw gets the surf window; abandoned dig/sniff progress dirties
 freedomlayer again. Focused production-layout regression covers the terrace,
-FUR-GONETA alignment, capped-slip recovery and shoreline agreement.
+FUR-GONETA alignment, capped-slip recovery, collision-enabled endpoint
+recovery under move_and_slide, and shoreline agreement.
 
 ## 2026-07-28 - v1.53 hardening: progression boundaries
 
