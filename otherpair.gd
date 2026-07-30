@@ -490,7 +490,7 @@ func _raw_clear_dog_offset() -> Vector2:
 	# A tangle is already chaotic; do not also steer the NPC dog into the
 	# player while the ropes are snagged.
 	var curious := Vector2.ZERO
-	if tangled_t <= 0.0 and not tangle_active and to_mine.length() < 160.0:
+	if tangled_t <= 0.0 and not tangle_active and not mercy_hold and to_mine.length() < 160.0:
 		curious = to_mine.normalized() * 34.0
 	return Vector2(30, 24) + wander + curious
 
