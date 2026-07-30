@@ -67,11 +67,11 @@ touch-grass/
   control authority (`dragged` flag in dog.gd; an idle dragged dog barely
   brakes) - never the human's motor. Leash length is dynamic: the HUMAN
   owns the retractable reel and fiddles with it on a timer ("click!").
-- **Pole wraps** (`leash.gd`): a pivot chain, ordered dog side to human
-  side. Only the two end segments can gain or lose pivots (interior pivots
-  are static). The same pole can be wound repeatedly once the rope swings
-  ~100 degrees past the previous contact point. The verlet rope is visual
-  only; gameplay uses the pivot chain length.
+- **Wraps and snags** (`leash.gd`): still the same verlet rope - poles and
+  authored furniture collide segment-vs-circle; stick-slip grips or frees
+  by contact kind; static contacts own vault/shield metadata
+  (`contact_pole`), while other-leash points are dynamic snags with their
+  own slip. Do not reintroduce a separate pivot/angle bookkeeping layer.
 - **The whirl** (human.gd WHIRL state): when a wound human near a pole
   keeps getting pulled, main.gd starts a choreographed accelerating orbit
   instead of letting them jam against the pole. The orbit runs for
@@ -105,11 +105,13 @@ godot\Godot_v4.7-stable_win64_console.exe --headless --path . --quit-after 1800
 
 Release (both platforms, both itch channels):
 ```
-git tag v1.51 && git push --tags
+git tag v1.53 && git push --tags
 ```
-That is the whole procedure. `.github/workflows/release.yml` exports web and
-Windows, pushes each to its own itch channel with butler (which uploads only
-changed blocks), and attaches zips to a GitHub release.
+That is the whole procedure. Tagging runs CI on the tagged SHA;
+`.github/workflows/release.yml` waits for that CI to succeed, then exports
+web and Windows, pushes each to its own itch channel with butler (which
+uploads only changed blocks), and attaches zips to a GitHub release.
+Missing `BUTLER_API_KEY` fails the release (it does not skip itch).
 
 Export the web build locally:
 ```

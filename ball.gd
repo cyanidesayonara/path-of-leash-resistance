@@ -20,12 +20,24 @@ var x_lo := 180.0
 var x_hi := 1100.0
 
 
-func setup(m: Node2D, d: Node2D, thrower_node: Node2D, y_lo: float, y_hi: float) -> void:
+func setup(
+	m: Node2D,
+	d: Node2D,
+	thrower_node: Node2D,
+	y_lo: float,
+	y_hi: float,
+	throw_x_lo: float = 180.0,
+	throw_x_hi: float = 1100.0,
+) -> void:
 	main = m
 	dog = d
 	thrower = thrower_node
 	lo = y_lo
 	hi = y_hi
+	# window must be set BEFORE the first throw - calling set_throw_window
+	# after setup left the opening toss aimed at the default field
+	x_lo = throw_x_lo
+	x_hi = throw_x_hi
 	_throw()
 
 

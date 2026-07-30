@@ -30,6 +30,7 @@ const LEASH_K := 32.0
 const DOG_MASS := 1.0
 const HUMAN_MASS := 4.0
 const SwingMath := preload("res://swing.gd")
+const TangleGeom := preload("res://tangle_geom.gd")
 const POLE_RADIUS := 10.0
 const TREE_RADIUS := 13.0  # a trunk is stouter than a lamppost
 const HYDRANT_RADIUS := 9.0
@@ -39,6 +40,9 @@ const MANHOLE_RADIUS := 24.0
 const BENCH_BODY_SIZE := Vector2(16.0, 48.0)
 const VAN_BODY_SIZE := Vector2(64.0, 132.0)
 const STALL_BODY_SIZE := Vector2(96.0, 56.0)
+# chairs/tables/parasols share pole-radius bodies and leash POLE_PAD wraps;
+# authored centres must clear both (2 * 13 + margin)
+const FURNITURE_MIN_SEP := 28.0
 
 const LANE_HALF := 70.0
 
@@ -587,6 +591,11 @@ func _apply_corridor() -> void:
 	sw_r = walk_cx + walk_half
 
 
+func _fit_x(x: float, lo: float, hi: float) -> float:
+	var f := clampf((x - 300.0) / 680.0, 0.0, 1.0)
+	return lerpf(lo, hi, f)
+
+
 func _fit_props_to_corridor() -> void:
 	# Props were all authored for the old fixed 300..980 corridor, so a
 	# narrower walk would leave them stranded out on the verge. Pull every
@@ -604,14 +613,14 @@ func _fit_props_to_corridor() -> void:
 		for i in range(arr.size()):
 			var p: Vector2 = arr[i]
 			# remap proportionally so left-side props stay left, right stay right
-			var f := clampf((p.x - 300.0) / 680.0, 0.0, 1.0)
-			arr[i] = Vector2(lerpf(lo, hi, f), p.y)
+			arr[i] = Vector2(_fit_x(p.x, lo, hi), p.y)
 	# the dictionary-based pickups need the same treatment
 	for list in [hydrants, kebabs, candy]:
 		for d in list:
 			var dp: Vector2 = d.pos
-			var df := clampf((dp.x - 300.0) / 680.0, 0.0, 1.0)
-			d.pos = Vector2(lerpf(lo, hi, df), dp.y)
+			d.pos = Vector2(_fit_x(dp.x, lo, hi), dp.y)
+	# FUR-GONETA is authored against sw_l/sw_r already, so it is not remapped
+	# here. Its rope flanks are appended after this fit from that same centre.
 
 
 func _build_level_data() -> void:
@@ -651,10 +660,12 @@ func _build_level_data() -> void:
 			# bodies and snag the leash, but they are drawn as tables.
 			# Chairs and umbrellas make it properly hard to thread a dog
 			# through, as in life.
+			# cafe terrace: keep wrap/body centres >= FURNITURE_MIN_SEP so
+			# chair and parasol colliders cannot nest under tension
 			tables = [Vector2(760, -3560), Vector2(840, -3660), Vector2(700, -3700), Vector2(790, -3780)]
 			chairs = [
-				Vector2(725, -3535), Vector2(800, -3595), Vector2(872, -3690),
-				Vector2(736, -3745), Vector2(670, -3672), Vector2(815, -3820),
+				Vector2(725, -3535), Vector2(830, -3570), Vector2(872, -3690),
+				Vector2(700, -3775), Vector2(670, -3672), Vector2(815, -3820),
 			]
 			parasols = [Vector2(800, -3610), Vector2(745, -3740)]
 			# off the crossing lanes, by the shopfronts where they belong
@@ -1033,19 +1044,20 @@ func _build_level_data() -> void:
 				trees.append(tree)
 				break
 	# THE FUR-GONETA, on the two walks a mobile groomer would actually work:
-	# the market (a trade in nervous poodles) and the boulevard.
+	# the market (a trade in nervous poodles) and the boulevard. Position only
+	# here - wrap flanks are appended AFTER the corridor fit so body, draw,
+	# blocker, scent and rope contacts share one fitted centre.
 	if lvl == "market":
 		furgoneta = Vector2(sw_r - 74.0, -2150.0)
 	elif lvl == "street":
 		furgoneta = Vector2(sw_l + 66.0, -3560.0)
-	if furgoneta.x < INF:
-		# rope-wrap geometry down its flanks, like the other vans
-		for off: float in [-52.0, -26.0, 0.0, 26.0, 52.0]:
-			poles.append(furgoneta + Vector2(0.0, off))
 	for ly in lane_ys:
 		lane_state.append({"t": randf_range(1.0, 2.5), "phase": 0, "dir": 1})
 	_build_substance_zones()
 	_fit_props_to_corridor()
+	if furgoneta.x < INF:
+		for off: float in [-52.0, -26.0, 0.0, 26.0, 52.0]:
+			poles.append(furgoneta + Vector2(0.0, off))
 	# The grove is wrap geometry too, so the rope catches on trunks. Appended
 	# AFTER the corridor fit on purpose: the trees stand in the open off-leash
 	# area, which is full width, so clamping them to the walkway would drag
@@ -1677,18 +1689,18 @@ func _freedom_rect() -> Rect2:
 func _draw_beach_water() -> void:
 	# The only part of the dog beach that moves. Everything else - sand, dunes,
 	# parasols, the shower - is on freedomlayer's cached canvas, so this is all
-	# the sea costs per frame.
+	# the sea costs per frame. Crests and foam follow beach_shore_x so they
+	# never draw over dry sand in the headland taper.
 	var r := _freedom_rect()
 	var t := Time.get_ticks_msec() / 1000.0
-	var sea := Rect2(-330.0, r.position.y - 40.0, BEACH_SEA_R + 330.0, r.size.y + 40.0)
-	# Waves rolling in. The shore runs north-south, so a crest is a LONG line
-	# parallel to it that undulates as it travels - drawn as short segments it
-	# read as rain falling on the sea, which is not the same thing at all.
+	var sea_top := r.position.y - 40.0
+	var sea_bot := r.end.y
 	for rank in range(3):
-		var base_x := BEACH_SEA_R - 26.0 - float(rank) * 78.0
 		var pts := PackedVector2Array()
-		var wy := sea.position.y
-		while wy < sea.end.y:
+		var wy := sea_top
+		while wy < sea_bot:
+			var shore := beach_shore_x(wy)
+			var base_x := shore - 26.0 - float(rank) * 78.0
 			pts.append(Vector2(
 				base_x + sin(wy * 0.010 + t * (1.0 + float(rank) * 0.35)) * 15.0,
 				wy))
@@ -1696,18 +1708,16 @@ func _draw_beach_water() -> void:
 		if pts.size() > 1:
 			draw_polyline(pts, Color(1, 1, 1, 0.22 - float(rank) * 0.055),
 				4.0 - float(rank) * 0.8)
-	# a swell further out, going the other way, so the sea is not a loop
 	var swell := PackedVector2Array()
-	var sy2 := sea.position.y
-	while sy2 < sea.end.y:
-		swell.append(Vector2(sea.position.x + 120.0 + sin(sy2 * 0.007 - t * 0.6) * 26.0, sy2))
+	var sy2 := sea_top
+	while sy2 < sea_bot:
+		swell.append(Vector2(-210.0 + sin(sy2 * 0.007 - t * 0.6) * 26.0, sy2))
 		sy2 += 34.0
 	if swell.size() > 1:
 		draw_polyline(swell, Color(1, 1, 1, 0.07), 5.0)
-	# the tide line: foam right where wet meets dry
 	var fy := r.position.y
 	while fy < r.end.y:
-		var fx := BEACH_SEA_R + 4.0 + sin(fy * 0.02 + t * 1.4) * 4.0
+		var fx := beach_shore_x(fy) + 4.0 + sin(fy * 0.02 + t * 1.4) * 4.0
 		draw_line(Vector2(fx, fy), Vector2(fx, fy + 40.0), Color(1, 1, 1, 0.30), 2.5)
 		fy += 52.0
 
@@ -1803,32 +1813,31 @@ func _draw_dog_beach(c: CanvasItem) -> void:
 	# west - and the sea is real water: she swims in it, the ball gets thrown
 	# into it, and the owner will not enjoy any of that.
 	var r := _freedom_rect()
-	var t := Time.get_ticks_msec() / 1000.0
 	c.draw_rect(r, Color(0.85, 0.78, 0.62))
 	# The bay OPENS OUT of the seafront's coastline rather than starting
-	# abruptly at the gate: the shore runs out diagonally from the corridor's
-	# waterline to the width of the bay, so walking through the gate reads as
-	# rounding a headland instead of the sea suddenly getting wider.
-	var sea := Rect2(-330.0, r.position.y - 40.0, BEACH_SEA_R + 330.0, r.size.y + 40.0)
+	# abruptly at the gate. Shore x comes from beach_shore_x so fill,
+	# foam and gameplay water agree.
 	var bend_y := GATE_Y - 300.0
+	var top_y := r.position.y - 40.0
+	var bot_y := r.end.y
 	var shore := PackedVector2Array([
-		Vector2(-330.0, sea.position.y), Vector2(BEACH_SEA_R, sea.position.y),
-		Vector2(BEACH_SEA_R, bend_y), Vector2(230.0, r.end.y),
-		Vector2(-330.0, r.end.y),
+		Vector2(-330.0, top_y), Vector2(beach_shore_x(top_y), top_y),
+		Vector2(beach_shore_x(bend_y), bend_y), Vector2(beach_shore_x(bot_y), bot_y),
+		Vector2(-330.0, bot_y),
 	])
 	c.draw_colored_polygon(shore, Color(0.24, 0.44, 0.54))
-	# shallows: a paler band inside the same shape
 	var shallow := PackedVector2Array([
-		Vector2(BEACH_SEA_R - 90.0, sea.position.y), Vector2(BEACH_SEA_R, sea.position.y),
-		Vector2(BEACH_SEA_R, bend_y), Vector2(230.0, r.end.y),
-		Vector2(150.0, r.end.y), Vector2(BEACH_SEA_R - 90.0, bend_y),
+		Vector2(beach_shore_x(top_y) - 90.0, top_y), Vector2(beach_shore_x(top_y), top_y),
+		Vector2(beach_shore_x(bend_y), bend_y), Vector2(beach_shore_x(bot_y), bot_y),
+		Vector2(beach_shore_x(bot_y) - 80.0, bot_y),
+		Vector2(beach_shore_x(bend_y) - 90.0, bend_y),
 	])
 	c.draw_colored_polygon(shallow, Color(0.34, 0.56, 0.62))
-	# wet sand, following the same diagonal
 	var wet := PackedVector2Array([
-		Vector2(BEACH_SEA_R, sea.position.y), Vector2(BEACH_SEA_R + 70.0, sea.position.y),
-		Vector2(BEACH_SEA_R + 70.0, bend_y), Vector2(300.0, r.end.y),
-		Vector2(230.0, r.end.y), Vector2(BEACH_SEA_R, bend_y),
+		Vector2(beach_shore_x(top_y), top_y), Vector2(beach_shore_x(top_y) + 70.0, top_y),
+		Vector2(beach_shore_x(bend_y) + 70.0, bend_y),
+		Vector2(beach_shore_x(bot_y) + 70.0, bot_y),
+		Vector2(beach_shore_x(bot_y), bot_y), Vector2(beach_shore_x(bend_y), bend_y),
 	])
 	c.draw_colored_polygon(wet, Color(0.70, 0.64, 0.52))
 	# dunes along the east and north instead of a fence: marram grass on pale
@@ -2179,12 +2188,16 @@ func _build_freedom_area() -> void:
 		# The sea, in two pieces that meet at the gate: a band along the whole
 		# passeig (so she can go in ANYWHERE on the walk, which is the first
 		# thing anyone tries on a seafront), and the wide bay in the dog beach
-		# at the top.
+		# at the top. The bay uses thin horizontal strips so the diagonal
+		# shoreline from beach_shore_x is wet in gameplay, not just on screen.
 		water.append(Rect2(-360.0, GATE_Y - 40.0, 590.0, absf(GATE_Y) + 500.0))
-		# the wide part of the bay only: below the bend the coastline is the
-		# corridor's, and that band is already covered by the rect above
-		water.append(Rect2(-330.0, freedom_lo - 40.0,
-			BEACH_SEA_R + 330.0, (GATE_Y - 300.0) - (freedom_lo - 40.0)))
+		var strip_y := freedom_lo - 40.0
+		var strip_h := 36.0
+		var gate_y := GATE_Y - 30.0
+		while strip_y < gate_y:
+			var shore := beach_shore_x(strip_y + strip_h * 0.5)
+			water.append(Rect2(-330.0, strip_y, shore + 330.0, strip_h + 0.5))
+			strip_y += strip_h
 
 
 func _lift_props_out_of_water() -> void:
@@ -2588,6 +2601,7 @@ func _build_entities() -> void:
 
 	leash.setup(dog, human, poles, LEASH_LENGTH)
 	leash.hero = true  # the player's rope draws every frame; NPC ropes at 30fps
+	leash.furniture_poles = _furniture_wrap_poles()
 
 	edge_layer = Node2D.new()
 	edge_layer.set_script(load("res://edgelayer.gd"))
@@ -2663,6 +2677,10 @@ func _build_quests() -> void:
 	# a fixed ~10-goal list per level (Tony Hawk style): completing a goal
 	# on any run marks it done for that level forever. Repeating goals,
 	# a couple of level flavours, and the unique hazardous prize.
+	if tutorial_mode:
+		active_quests.clear()
+		tofu_quest_active = false
+		return
 	var defs := _goal_defs()
 	var ids: Array = LEVEL_GOAL_IDS.get(lvl, LEVEL_GOAL_IDS["street"])
 	for id in ids:
@@ -2687,6 +2705,8 @@ func _peek_goals() -> void:
 
 func _credit_goal(q: Dictionary) -> void:
 	# award + persist a goal the first time it completes this run
+	if tutorial_mode:
+		return
 	var id: String = q.id
 	if run_goals_hit.has(id):
 		return
@@ -3095,17 +3115,15 @@ func _shop_data(kind: String, key: String) -> Dictionary:
 
 
 func _equip(kind: String, key: String) -> void:
-	match kind:
-		"collar": Game.collar = key
-		"bandana": Game.bandana = key
-		"coat": Game.coat = key
+	Game.equip(kind, key)
 
 
 func _shop_select() -> void:
 	var it: Dictionary = shop_items[shop_idx]
+	var kind: String = it.kind
 	var key: String = it.key
-	if Game.owned.get(key, false) or Game.buy(key):
-		_equip(String(it.kind), key)
+	if Game.is_owned(kind, key) or Game.buy(kind, key):
+		_equip(kind, key)
 		Game.save_records()
 	# (if the buy failed, not enough bones - the price stays shown)
 	_refresh_shop()
@@ -3126,7 +3144,7 @@ func _refresh_shop() -> void:
 		var tag := ""
 		if equipped:
 			tag = "  [EQUIPPED]"
-		elif Game.owned.get(key, false):
+		elif Game.is_owned(String(it.kind), key):
 			tag = "  (owned - press to wear)"
 		else:
 			tag = "  %d bones" % int(data.cost)
@@ -3530,6 +3548,9 @@ func _physics_process(delta: float) -> void:
 	# ("click!" event), never the dog's
 	leash_len = move_toward(leash_len, leash_target, 150.0 * delta)
 	leash.rest_len = leash_len
+	# Dynamic NPC-rope obstacles must be current before the player leash
+	# solve; a post-solve feed left the hero rope one frame stale.
+	_refresh_pair_obstacles()
 	_apply_leash(delta)
 	if phase != "freedom":
 		_lanes(delta)
@@ -3846,7 +3867,9 @@ func _apply_leash(delta: float) -> void:
 		return
 	human.notify_strain()
 	dog.dragged = not dog.planted
-	var shield := 1.0 / (1.0 + 0.3 * float(leash.contacts))
+	# Only static wraps (poles/furniture) shield/anchor. Dynamic leash
+	# tangles must not borrow pole-vault semantics.
+	var shield := 1.0 / (1.0 + 0.3 * float(leash.static_contacts))
 	var dog_m := DOG_MASS
 	if dog.planted:
 		dog_m *= 14.0
@@ -3888,7 +3911,7 @@ func _apply_leash(delta: float) -> void:
 			var rel := human.velocity.dot(-h_dir)
 			if rel > 0.0:
 				human.velocity += h_dir * rel * 0.9
-			var anchored: bool = dog.planted or leash.contacts > 0
+			var anchored: bool = dog.planted or leash.static_contacts > 0
 			human.on_leash_yank(-h_dir, anchored, yank_speed)
 	# cartoon tetherball: a human wound around a nearby pole who keeps
 	# getting pulled starts to WHIRL - an accelerating orbit that unwinds
@@ -4226,10 +4249,21 @@ func release_pair_park_spot(pair_instance_id: int) -> void:
 	pair_park_slots.erase(pair_instance_id)
 
 
+func _furniture_wrap_poles() -> Array[Vector2]:
+	# typed furniture wrap centres: same collision as poles, distinct slip /
+	# contact metadata so terrace chairs do not share pole-only semantics
+	var furn: Array[Vector2] = []
+	for arr in [tables, chairs, parasols, bins]:
+		for p: Vector2 in arr:
+			furn.append(p)
+	return furn
+
+
 func _make_pair(start: Vector2, direction: Vector2, activate := true) -> Node2D:
 	var pair := Node2D.new()
 	pair.set_script(load("res://otherpair.gd"))
 	pair.setup(self, dog, poles, start, direction)
+	pair.leash.furniture_poles = _furniture_wrap_poles()
 	if not pair.configure_route(
 		start.x,
 		walk_cx - walk_half + 30.0,
@@ -4345,6 +4379,41 @@ func _prepare_pairs_for_home(pairs: Array) -> void:
 		pair.begin_home_departure()
 
 
+func _sample_player_rope() -> void:
+	my_rope_sample.clear()
+	for i in range(0, leash.N, 2):
+		my_rope_sample.append(leash.pts[i])
+
+
+func _refresh_pair_obstacles() -> void:
+	# Called before the player leash solve. Clears stale dynamic contacts and
+	# re-feeds from each visible pair whose rope bounds overlap ours.
+	leash.dynamic_obstacles.clear()
+	if tutorial_mode or not is_inside_tree():
+		return
+	var pairs := get_tree().get_nodes_in_group("pairs")
+	if leash.detached:
+		for pair in pairs:
+			pair.leash.dynamic_obstacles.clear()
+		return
+	_sample_player_rope()
+	var my_bounds := TangleGeom.rope_bounds(my_rope_sample, TangleGeom.BROADPHASE_PAD)
+	for p in pairs:
+		if not p.leash.visible or bool(p.leash.detached) or bool(p.mercy_hold):
+			p.leash.dynamic_obstacles.clear()
+			continue
+		var their: Array[Vector2] = p.sampled
+		if their.is_empty():
+			p.leash.dynamic_obstacles.clear()
+			continue
+		var their_bounds := TangleGeom.rope_bounds(their, TangleGeom.BROADPHASE_PAD)
+		if not TangleGeom.bounds_overlap(my_bounds, their_bounds):
+			p.leash.dynamic_obstacles.clear()
+			continue
+		leash.dynamic_obstacles.append_array(their)
+		p.leash.dynamic_obstacles = my_rope_sample.duplicate()
+
+
 func _pairs(delta: float) -> void:
 	if tutorial_mode:
 		return  # a first walk is quiet: no other dog-walkers at all
@@ -4374,38 +4443,35 @@ func _pairs(delta: float) -> void:
 					if pair != null:
 						pairs.append(pair)
 	_start_pair_arrivals(pairs)
-	# tangle feed: our rope and theirs each become obstacles for the other
-	leash.dynamic_obstacles.clear()
 	if leash.detached:
 		_clear_detached_pair_tangles(pairs, delta)
 		return
-	my_rope_sample.clear()
-	for i in range(0, leash.N, 2):
-		my_rope_sample.append(leash.pts[i])
+	# Obstacle feed already ran before the player leash solve; here we only
+	# evaluate segment/capsule contact + the rising-edge reward latch.
+	_sample_player_rope()
+	var my_bounds := TangleGeom.rope_bounds(my_rope_sample, TangleGeom.BROADPHASE_PAD)
 	for p in pairs:
 		var crossing := false
-		if not p.leash.visible:
-			p.leash.dynamic_obstacles.clear()
-		elif dog.global_position.distance_to(p.npc_owner.position) > 320.0:
+		if not p.leash.visible or bool(p.leash.detached):
 			p.leash.dynamic_obstacles.clear()
 		else:
-			leash.dynamic_obstacles.append_array(p.sampled)
-			p.leash.dynamic_obstacles = my_rope_sample.duplicate()
-			crossing = _ropes_crossing(my_rope_sample, p.sampled)
+			if bool(p.mercy_hold):
+				p.leash.dynamic_obstacles.clear()
+			var their: Array[Vector2] = p.sampled
+			var their_bounds := TangleGeom.rope_bounds(their, TangleGeom.BROADPHASE_PAD)
+			if their.is_empty() or not TangleGeom.bounds_overlap(my_bounds, their_bounds):
+				if not bool(p.mercy_hold):
+					p.leash.dynamic_obstacles.clear()
+			else:
+				crossing = TangleGeom.contact_with_hysteresis(
+					my_rope_sample, their, bool(p.tangle_touching) or bool(p.mercy_hold)
+				)
 		if p.update_tangle_state(crossing, delta):
 			tangles += 1
 			bones += 3
 			Sfx.play("tangle")
 			combo.add("TANGLE", 3)
 			float_text(dog.global_position, "TANGLED! +3", Color(1, 0.85, 0.7))
-
-
-func _ropes_crossing(a: Array[Vector2], b: Array[Vector2]) -> bool:
-	for pa in a:
-		for pb in b:
-			if pa.distance_squared_to(pb) < 289.0:  # ~17px
-				return true
-	return false
 
 
 func _offpath(delta: float) -> void:
@@ -4469,7 +4535,7 @@ func _tick_vault(delta: float) -> void:
 	# stays the source of truth and holds the radius honestly.
 	vault_cd = maxf(0.0, vault_cd - delta)
 	var pole: Vector2 = leash.contact_pole
-	var wrapped: bool = pole.x < INF and leash.contacts > 0
+	var wrapped: bool = pole.x < INF and leash.static_contacts > 0 and leash.contact_static
 	if vault_t > 0.0:
 		vault_t -= delta
 		if not wrapped or dog.velocity.length() < 90.0 or dog.is_tumbling():
@@ -4961,7 +5027,10 @@ func _pickups(delta: float) -> void:
 							float_text(pp.pos, "buried treasure! +6", Color(1, 0.9, 0.55))
 							_update_hud()
 					else:
-						pp.prog = maxf(0.0, float(pp.prog) - delta * 0.6)
+						var was_dig: float = float(pp.prog)
+						pp.prog = maxf(0.0, was_dig - delta * 0.6)
+						if was_dig > 0.0 and float(pp.prog) < was_dig:
+							_freedom_dirty()
 				"shrub", "post", "rock", "driftwood", "tyre":
 					if d < 34.0 and dog.velocity.length() < 80.0:
 						pp.prog = float(pp.prog) + delta
@@ -4975,7 +5044,10 @@ func _pickups(delta: float) -> void:
 							float_text(pp.pos, "good sniff +2", Color(1, 0.95, 0.7))
 							_update_hud()
 					else:
-						pp.prog = maxf(0.0, float(pp.prog) - delta)
+						var was_sniff: float = float(pp.prog)
+						pp.prog = maxf(0.0, was_sniff - delta)
+						if was_sniff > 0.0 and float(pp.prog) < was_sniff:
+							_freedom_dirty()
 				"trough":
 					if d < 34.0:
 						drunk_amount += 0.34 * delta
@@ -5163,6 +5235,20 @@ const FREEDOM_KINDS := {
 	"beach": "beach", "trail": "clearing", "site": "lot", "scrap": "lot",
 }
 const BEACH_SEA_R := 430.0
+const BEACH_GATE_SHORE_X := 230.0
+
+
+func beach_shore_x(y: float) -> float:
+	# Shared dog-beach shoreline: visual fill, animated foam/waves, and
+	# gameplay water all derive from this so the headland taper cannot
+	# disagree with where she actually gets wet.
+	var bend_y := GATE_Y - 300.0
+	var gate_y := GATE_Y - 30.0
+	if y <= bend_y:
+		return BEACH_SEA_R
+	if y >= gate_y:
+		return BEACH_GATE_SHORE_X
+	return lerpf(BEACH_SEA_R, BEACH_GATE_SHORE_X, (y - bend_y) / (gate_y - bend_y))
 
 
 const MARKABLE_PARK_KINDS := ["post", "shrub", "log", "rock", "driftwood", "tyre"]
@@ -5320,10 +5406,11 @@ func _enter_freedom() -> void:
 	ball.z_index = 10
 	ball.position = human.global_position
 	add_child(ball)
-	ball.setup(self, dog, human, freedom_lo, GATE_Y - 30.0)
 	if freedom_kind == "beach":
-		# into the surf, not across a field
-		ball.set_throw_window(-90.0, BEACH_SEA_R + 240.0)
+		# into the surf, not across a field - window before the first throw
+		ball.setup(self, dog, human, freedom_lo, GATE_Y - 30.0, -90.0, BEACH_SEA_R + 240.0)
+	else:
+		ball.setup(self, dog, human, freedom_lo, GATE_Y - 30.0)
 	# other dogs to romp and say hi to
 	for i in range(3):
 		var fd := Node2D.new()
@@ -5428,6 +5515,8 @@ func _caught(what: String) -> void:
 func _spawn_challenger() -> void:
 	# one combo-challenge giver per walk, lounging on the out leg where you
 	# still have room and energy to show off
+	if tutorial_mode:
+		return
 	var giver := Node2D.new()
 	giver.set_script(load("res://challenger.gd"))
 	giver.position = Vector2(walk_cx + 170.0, -1600.0)
@@ -5474,6 +5563,8 @@ func _romp(delta: float) -> void:
 
 
 func on_tofu_home(pos: Vector2) -> void:
+	if tutorial_mode:
+		return
 	Sfx.play("star")
 	tofu_home = true
 	bones += 15
@@ -5589,6 +5680,9 @@ func _chase(delta: float) -> void:
 
 func _finish_walk() -> void:
 	if dog.global_position.y > HOME_Y and human.global_position.y > HOME_Y:
+		if tutorial_mode:
+			_finish_tutorial_walk()
+			return
 		finished = true
 		if auto_walk:
 			print("AUTOWALK FINISHED the whole walk at t=%.1f" % elapsed)
@@ -5604,7 +5698,10 @@ func _finish_walk() -> void:
 		var total := active_quests.size()
 		var rows: Array = _results_rows()
 		var lifetime: int = run_done if Game.daily else Game.goals_count(lvl)
-		var perfect := run_done >= total
+		# total == 0 made this TRUE, which is how a walk with no goal list
+		# banked a PERFECT for The Boulevard. The tutorial no longer reaches
+		# this path at all, but the trap should not be left armed.
+		var perfect := total > 0 and run_done >= total
 		var rating := ""
 		if run_done == 0:
 			rating = "...well. A dog, anyway."
@@ -5648,6 +5745,33 @@ func _finish_walk() -> void:
 			# the in-walk HUD would otherwise sit on top of the card
 			goals_card.visible = false
 			panel.visible = false
+
+
+func _finish_tutorial_walk() -> void:
+	finished = true
+	frozen = true
+	dim.visible = true
+	msg_label.visible = false
+	results = {
+		"title": "GOOD DOG.",
+		"stars": 0,
+		"rating": "You know the ropes.",
+		"rows": [],
+		"bones": bones,
+		"phone": phone_hp,
+		"time": int(elapsed),
+		"goal_bones": 0,
+		"lines": [
+			"%d practice bones - not banked" % bones,
+			"Lessons complete. The real walks are waiting.",
+		],
+		"prompt": "press  %s  for walk select" % _kb_or_pad("R", "Start"),
+	}
+	results_card.visible = true
+	goals_card.visible = false
+	panel.visible = false
+	tut_label.visible = false
+	tut_hint.visible = false
 
 
 func _results_rows() -> Array:

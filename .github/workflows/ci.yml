@@ -3,6 +3,9 @@ name: CI
 on:
   push:
     branches: [main]
+    # Version tags must run the full suite so release.yml can gate publish
+    # on a green CI result for the exact tagged SHA.
+    tags: ["v*"]
   pull_request:
     branches: [main]
 
@@ -33,11 +36,17 @@ jobs:
       - name: Leash winding regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_wrap.gd
 
+      - name: Furniture recovery regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_furniture_recovery.gd
+
       - name: Critter chase regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_critter_chase.gd
 
       - name: Tangle event regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tangle_latch.gd
+
+      - name: NPC leash tangle hardening regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tangle_hardening.gd
 
       - name: Freedom traffic regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_freedom_traffic.gd
@@ -80,6 +89,15 @@ jobs:
 
       - name: Per-level goal/star progression regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_goals.gd
+
+      - name: Fresh-save progression persistence regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_fresh_save_progression.gd
+
+      - name: Tutorial campaign-isolation regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tutorial_isolation.gd
+
+      - name: Cosmetic ownership migration regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_cosmetic_ownership.gd
 
       - name: Combo/multiplier meter regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_combo.gd

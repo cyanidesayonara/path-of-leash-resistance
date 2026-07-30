@@ -2,6 +2,72 @@
 
 Append-only session history, newest first.
 
+## 2026-07-30 - v1.53 closeout: release gates and docs
+
+Release publish is gated on a successful CI run for the exact tagged SHA:
+`ci.yml` also runs on `v*` tags, and `release.yml` polls that result before
+export or itch upload. Unsafe production `workflow_dispatch` is removed.
+Missing `BUTLER_API_KEY` fails the release instead of skipping itch with
+success. Godot export steps keep failing exit codes (`set -euo pipefail`).
+
+Docs: AGENTS.md drops the stale pivot-chain / "verlet visual only" wrap
+paragraph so it matches the rope-is-the-constraint architecture; HANDOVER.md
+is a thin current sitrep with the 2026-07-17 history archived under
+`docs/handover/`; PROJECT.md notes v1.53 hardening and the shipped tangle
+path. Known deferred: mobile Web canvas scaling (phone-sized browser still
+shows a small fixed canvas with large black borders); Round 3 Web visual
+acceptance was PASS_WITH_GAPS for FX framing. No production itch publish
+was performed in this closeout.
+
+## 2026-07-30 - v1.53 hardening: NPC-leash tangle contacts
+
+Leash-vs-leash tangles use visible segment/capsule contact with separate
+enter/exit thresholds instead of sampled point proximity. Dynamic rope
+obstacles refresh before the player leash solve, and broad-phase uses rope
+bounds rather than dog-to-owner distance alone. Only static contacts shield,
+vault, or anchor; dynamic snags keep their own slip, a visible contact mark,
+and a warmer taut presentation. NPC owners pause only up to a named bound,
+curiosity is suppressed while snagged, and a mercy ramp frees every supported
+single-pair encounter inside 300 frames at 60 Hz with the same cancel rules on
+park/recall/detach/despawn paths. Rising-edge rewards stay one-per-encounter.
+Focused regression: tests/test_tangle_hardening.gd.
+
+## 2026-07-30 - v1.53 hardening: geometry and furniture recovery
+
+FUR-GONETA body, draw, blocker, scent and rope flanks now share one fitted
+centre - wrap contacts are appended after the corridor fit instead of being
+remapped without the van. The Boulevard terrace chairs no longer nest inside
+parasol wrap circles. Stick-slip uses named static/dynamic curves that can
+reach free slip inside the 1.15x geometry cap, with typed obstacle metadata so
+furniture and other leashes do not share pole-only contact_pole semantics.
+Dog-beach visual, animated and gameplay shorelines share beach_shore_x; the
+first beach throw gets the surf window; abandoned dig/sniff progress dirties
+freedomlayer again. Focused production-layout regression covers the terrace,
+FUR-GONETA alignment, capped-slip recovery, collision-enabled endpoint
+recovery under move_and_slide, and shoreline agreement.
+
+## 2026-07-28 - v1.53 hardening: progression boundaries
+
+Fresh profiles now initialize complete records for every campaign walk, so a
+goal earned before the first result persists, awards milestone stars, and
+unlocks the next walk. Loading a missing or malformed save starts from one
+canonical persisted-state baseline instead of retaining wallet, cosmetics, or
+settings from an earlier profile.
+
+The tutorial now remains practice from start to finish. It has no campaign
+goals or quest callbacks, cannot bank its local bone feedback, and says so on
+the result card. Cosmetic ownership is category-aware, so identically named
+items such as the gold collar and gold coat can be bought and equipped
+independently; old saves migrate ambiguous raw ownership without discarding
+unknown entries.
+
+Three persistence regressions cover fresh progression, tutorial isolation, and
+cosmetic ownership and migration. The full focused suite, rendering checks,
+all structural selftests, tutorial and Street smokes, and exported desktop Web
+flow pass. Phone-sized Web acceptance exposed a separate fixed-size canvas bug
+that currently makes the game render as a small box with large black borders;
+touch acceptance remains blocked until that Web scaling issue is fixed.
+
 ## 2026-07-28 - v1.52: the FUR-GONETA
 
 A mobile dog-grooming van with fur on it. Shaggy two-tone brown and cream,

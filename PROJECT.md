@@ -152,6 +152,13 @@ Every feature must serve at least one. If it serves none, cut it.
 - **v1.31 - polish + tuning.** Playtest feedback pass: chase/combo feel,
   level difficulty, audio mix/variety, and bespoke geometry for the
   reused-base walks.
+- **v1.32–v1.52 - shipped.** Continued content and systems (see CHANGELOG):
+  further walks, chase variants, goals/stars, cosmetics, fetch, park
+  lifecycle, procedural audio, web-perf passes, and the FUR-GONETA.
+- **v1.53 - hardening (this branch).** Progression boundary fixes;
+  furniture / wrap recovery under the geometry cap; NPC-leash tangle
+  contacts with mercy release. Release workflow gated on green CI for the
+  tagged SHA. Known deferred: mobile Web canvas scaling.
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
 - Every release also ships: mechanics tuning from playtests, at least
@@ -164,14 +171,15 @@ Every feature must serve at least one. If it serves none, cut it.
 Iterate the 2D prototype until the core loop is fun for 10 minutes.
 
 - [x] git init, first commit of the prototype
-- [x] Pole wrapping as a real constraint (leash pivots around poles, not
-      just visually) — this is where the puzzle design opens up
+- [x] Pole wrapping as a real constraint (the verlet rope wraps via
+      segment-vs-circle collision — no separate pivot bookkeeping) — this
+      is where the puzzle design opens up
 - [ ] Leash weight tuning round 2 (after wrap physics changes the feel)
 - [x] 2-3 more human event types (sits on bench, walks backwards filming,
       stops for selfie in the worst spot)
 - [x] 1-2 more hazard types (open cellar door, cafe terrace)
 - [x] Basic juice: slow-mo flash on a last-moment save, save streak counter
-- [ ] Web export, unlisted itch.io page, watch 3-5 people play
+- [x] Web export, itch.io page (html5 + windows channels on version tags)
 
 **Exit criteria:** a friend plays unprompted, laughs at least once, and
 retries after failing. If that doesn't happen, change mechanics, not art.
@@ -305,10 +313,9 @@ memorable.
 ## Future systems (noted, not scheduled)
 
 - Other dog+owner pairs sharing the walk: two leash ropes that can
-  TANGLE with each other, knotting both parties into a four-body
-  physics argument. The rope is already a self-contained component;
-  the tangle is rope-vs-rope collision plus a lot of playtesting.
-  Likely the flagship mechanic of the dog park setting.
+  TANGLE with each other (SHIPPED as rope-vs-rope; v1.53 hardens segment
+  contacts, static-vs-dynamic snag semantics, and mercy release). Follow-up
+  is playtest feel and presentation, not a second bookkeeping system.
 - Carry missions (SHIPPED v1.15): Millie holds an item in her mouth and
   totes it to a drop-off (newspaper on the boulevard, oranges at the
   market). Follow-ups: drop-on-hit tension, fragile items, a ball-catch
