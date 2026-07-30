@@ -30,6 +30,7 @@ const LEASH_K := 32.0
 const DOG_MASS := 1.0
 const HUMAN_MASS := 4.0
 const SwingMath := preload("res://swing.gd")
+const TangleGeom := preload("res://tangle_geom.gd")
 const POLE_RADIUS := 10.0
 const TREE_RADIUS := 13.0  # a trunk is stouter than a lamppost
 const HYDRANT_RADIUS := 9.0
@@ -3547,6 +3548,9 @@ func _physics_process(delta: float) -> void:
 	# ("click!" event), never the dog's
 	leash_len = move_toward(leash_len, leash_target, 150.0 * delta)
 	leash.rest_len = leash_len
+	# Dynamic NPC-rope obstacles must be current before the player leash
+	# solve; a post-solve feed left the hero rope one frame stale.
+	_refresh_pair_obstacles()
 	_apply_leash(delta)
 	if phase != "freedom":
 		_lanes(delta)
@@ -3863,7 +3867,9 @@ func _apply_leash(delta: float) -> void:
 		return
 	human.notify_strain()
 	dog.dragged = not dog.planted
-	var shield := 1.0 / (1.0 + 0.3 * float(leash.contacts))
+	# Only static wraps (poles/furniture) shield/anchor. Dynamic leash
+	# tangles must not borrow pole-vault semantics.
+	var shield := 1.0 / (1.0 + 0.3 * float(leash.static_contacts))
 	var dog_m := DOG_MASS
 	if dog.planted:
 		dog_m *= 14.0
@@ -3905,7 +3911,7 @@ func _apply_leash(delta: float) -> void:
 			var rel := human.velocity.dot(-h_dir)
 			if rel > 0.0:
 				human.velocity += h_dir * rel * 0.9
-			var anchored: bool = dog.planted or leash.contacts > 0
+			var anchored: bool = dog.planted or leash.static_contacts > 0
 			human.on_leash_yank(-h_dir, anchored, yank_speed)
 	# cartoon tetherball: a human wound around a nearby pole who keeps
 	# getting pulled starts to WHIRL - an accelerating orbit that unwinds
@@ -4373,6 +4379,41 @@ func _prepare_pairs_for_home(pairs: Array) -> void:
 		pair.begin_home_departure()
 
 
+func _sample_player_rope() -> void:
+	my_rope_sample.clear()
+	for i in range(0, leash.N, 2):
+		my_rope_sample.append(leash.pts[i])
+
+
+func _refresh_pair_obstacles() -> void:
+	# Called before the player leash solve. Clears stale dynamic contacts and
+	# re-feeds from each visible pair whose rope bounds overlap ours.
+	leash.dynamic_obstacles.clear()
+	if tutorial_mode or not is_inside_tree():
+		return
+	var pairs := get_tree().get_nodes_in_group("pairs")
+	if leash.detached:
+		for pair in pairs:
+			pair.leash.dynamic_obstacles.clear()
+		return
+	_sample_player_rope()
+	var my_bounds := TangleGeom.rope_bounds(my_rope_sample, TangleGeom.BROADPHASE_PAD)
+	for p in pairs:
+		if not p.leash.visible or bool(p.leash.detached) or bool(p.mercy_hold):
+			p.leash.dynamic_obstacles.clear()
+			continue
+		var their: Array[Vector2] = p.sampled
+		if their.is_empty():
+			p.leash.dynamic_obstacles.clear()
+			continue
+		var their_bounds := TangleGeom.rope_bounds(their, TangleGeom.BROADPHASE_PAD)
+		if not TangleGeom.bounds_overlap(my_bounds, their_bounds):
+			p.leash.dynamic_obstacles.clear()
+			continue
+		leash.dynamic_obstacles.append_array(their)
+		p.leash.dynamic_obstacles = my_rope_sample.duplicate()
+
+
 func _pairs(delta: float) -> void:
 	if tutorial_mode:
 		return  # a first walk is quiet: no other dog-walkers at all
@@ -4402,38 +4443,35 @@ func _pairs(delta: float) -> void:
 					if pair != null:
 						pairs.append(pair)
 	_start_pair_arrivals(pairs)
-	# tangle feed: our rope and theirs each become obstacles for the other
-	leash.dynamic_obstacles.clear()
 	if leash.detached:
 		_clear_detached_pair_tangles(pairs, delta)
 		return
-	my_rope_sample.clear()
-	for i in range(0, leash.N, 2):
-		my_rope_sample.append(leash.pts[i])
+	# Obstacle feed already ran before the player leash solve; here we only
+	# evaluate segment/capsule contact + the rising-edge reward latch.
+	_sample_player_rope()
+	var my_bounds := TangleGeom.rope_bounds(my_rope_sample, TangleGeom.BROADPHASE_PAD)
 	for p in pairs:
 		var crossing := false
-		if not p.leash.visible:
-			p.leash.dynamic_obstacles.clear()
-		elif dog.global_position.distance_to(p.npc_owner.position) > 320.0:
+		if not p.leash.visible or bool(p.leash.detached):
 			p.leash.dynamic_obstacles.clear()
 		else:
-			leash.dynamic_obstacles.append_array(p.sampled)
-			p.leash.dynamic_obstacles = my_rope_sample.duplicate()
-			crossing = _ropes_crossing(my_rope_sample, p.sampled)
+			if bool(p.mercy_hold):
+				p.leash.dynamic_obstacles.clear()
+			var their: Array[Vector2] = p.sampled
+			var their_bounds := TangleGeom.rope_bounds(their, TangleGeom.BROADPHASE_PAD)
+			if their.is_empty() or not TangleGeom.bounds_overlap(my_bounds, their_bounds):
+				if not bool(p.mercy_hold):
+					p.leash.dynamic_obstacles.clear()
+			else:
+				crossing = TangleGeom.contact_with_hysteresis(
+					my_rope_sample, their, bool(p.tangle_touching) or bool(p.mercy_hold)
+				)
 		if p.update_tangle_state(crossing, delta):
 			tangles += 1
 			bones += 3
 			Sfx.play("tangle")
 			combo.add("TANGLE", 3)
 			float_text(dog.global_position, "TANGLED! +3", Color(1, 0.85, 0.7))
-
-
-func _ropes_crossing(a: Array[Vector2], b: Array[Vector2]) -> bool:
-	for pa in a:
-		for pb in b:
-			if pa.distance_squared_to(pb) < 289.0:  # ~17px
-				return true
-	return false
 
 
 func _offpath(delta: float) -> void:
@@ -4497,7 +4535,7 @@ func _tick_vault(delta: float) -> void:
 	# stays the source of truth and holds the radius honestly.
 	vault_cd = maxf(0.0, vault_cd - delta)
 	var pole: Vector2 = leash.contact_pole
-	var wrapped: bool = pole.x < INF and leash.contacts > 0
+	var wrapped: bool = pole.x < INF and leash.static_contacts > 0 and leash.contact_static
 	if vault_t > 0.0:
 		vault_t -= delta
 		if not wrapped or dog.velocity.length() < 90.0 or dog.is_tumbling():

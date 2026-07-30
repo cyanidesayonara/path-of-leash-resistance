@@ -9,6 +9,14 @@ const BypasserRouteScript := preload("res://bypasser_route.gd")
 const DogAppearanceScript := preload("res://dog_appearance.gd")
 const HumanAppearanceScript := preload("res://human_appearance.gd")
 const TANGLE_REARM_S := 0.5
+# Owner roots briefly on contact; bound so a stuck geometry contact cannot
+# freeze the lane forever. 90 frames at 60 Hz = ordinary recovery target.
+const TANGLE_ROOT_S := 0.4
+const TANGLE_PAUSE_MAX_S := 1.5
+# Mercy ramp begins at the taut-escape budget (180 frames); hard release at
+# 300 frames so every supported single-pair encounter frees in time.
+const TANGLE_MERCY_RAMP_S := 3.0
+const TANGLE_MERCY_S := 5.0
 const PAIR_CLEARANCE := 48.0
 const PAIR_MAX_LATERAL_SPEED := 90.0
 const PAIR_MINIMUM_LOOKAHEAD := 240.0
@@ -48,6 +56,13 @@ var seed_o := 0.0
 var tangled_t := 0.0
 var tangle_active := false
 var tangle_clear_t := 0.0
+var tangle_touching := false
+var tangle_root_acc := 0.0
+var tangle_hold_t := 0.0
+var mercy_shown := false
+# After a hard mercy release, stay disengaged until geometry separates so the
+# rising-edge reward cannot re-fire every TANGLE_MERCY_S on the same snag.
+var mercy_hold := false
 var sampled: Array[Vector2] = []
 var route: RefCounted
 var desired_vertical_speed := 0.0
@@ -158,6 +173,9 @@ func initialize_parked_departure(
 
 
 func begin_park_recall() -> void:
+	# Same cancellation rules on every recall entry, including no-op calls
+	# from WALKING tests/paths that only need the tangle cleared.
+	_cancel_tangle()
 	if pair_state == PairState.PARKED or pair_state == PairState.ARRIVING:
 		if pair_state == PairState.ARRIVING:
 			park_spot = npc_owner.position
@@ -307,6 +325,7 @@ func _tick_walking(delta: float, _allow_arrival: bool) -> void:
 	if span.length() > LEASH_CAP:
 		npc_dog.position = npc_owner.position + span.normalized() * LEASH_CAP
 	leash.tick(delta)
+	_sync_leash_taut()
 	_sample_rope()
 
 
@@ -318,6 +337,7 @@ func _tick_arriving(delta: float) -> void:
 	npc_dog.position = npc_dog.position.move_toward(target, DOG_SPEED * delta)
 	_cap_dog_to_owner()
 	leash.tick(delta)
+	_sync_leash_taut()
 	_sample_rope()
 	if npc_owner.position.is_equal_approx(park_spot):
 		_enter_parked(randf_range(PARK_STAY_MIN, PARK_STAY_MAX))
@@ -328,15 +348,11 @@ func _enter_parked(stay_time: float) -> void:
 	park_stay_t = maxf(stay_time, 0.0)
 	park_dog_vel = Vector2.ZERO
 	_suspend_leash()
-	tangled_t = 0.0
-	tangle_active = false
-	tangle_clear_t = 0.0
 
 
 func _tick_parked(delta: float) -> void:
 	npc_owner.position = park_spot
-	sampled.clear()
-	leash.dynamic_obstacles.clear()
+	_cancel_tangle()
 	if main.phase == "freedom":
 		park_stay_t = maxf(0.0, park_stay_t - delta)
 		wander_t -= delta
@@ -356,12 +372,13 @@ func _tick_parked(delta: float) -> void:
 
 func _tick_recalling(delta: float) -> void:
 	npc_owner.position = park_spot
+	_cancel_tangle()
 	_suspend_leash()
 	park_dog_vel = Vector2.ZERO
 	npc_dog.position = npc_dog.position.move_toward(npc_owner.position, PARK_RECALL_SPEED * delta)
 	if npc_dog.position.distance_to(npc_owner.position) <= RELEASH_DISTANCE:
 		leash.detached = false
-		leash.dynamic_obstacles.clear()
+		_cancel_tangle()
 		leash.resnap()
 		leash.visible = true
 		pair_state = PairState.DEPARTING
@@ -374,7 +391,7 @@ func _tick_recalling(delta: float) -> void:
 func _suspend_leash() -> void:
 	leash.detached = true
 	leash.visible = false
-	leash.dynamic_obstacles.clear()
+	_cancel_tangle()
 	sampled.clear()
 
 
@@ -387,6 +404,7 @@ func _tick_departing(delta: float) -> void:
 	npc_dog.position = npc_dog.position.move_toward(target, DOG_SPEED * delta)
 	_cap_dog_to_owner()
 	leash.tick(delta)
+	_sync_leash_taut()
 	_sample_rope()
 	if npc_owner.position.is_equal_approx(gate_exit):
 		pair_state = PairState.WALKING
@@ -409,10 +427,28 @@ func _sample_rope() -> void:
 		sampled.append(leash.pts[i])
 
 
+func _sync_leash_taut() -> void:
+	# NPC leashes share the player's taut presentation rule: stretch vs reel.
+	leash.taut = leash.used_length() > leash.rest_len
+
+
 func _cap_dog_to_owner() -> void:
 	var span := npc_dog.position - npc_owner.position
 	if span.length() > LEASH_CAP:
 		npc_dog.position = npc_owner.position + span.normalized() * LEASH_CAP
+
+
+func _cancel_tangle() -> void:
+	tangled_t = 0.0
+	tangle_active = false
+	tangle_clear_t = 0.0
+	tangle_touching = false
+	tangle_root_acc = 0.0
+	tangle_hold_t = 0.0
+	mercy_shown = false
+	mercy_hold = false
+	if leash != null:
+		leash.dynamic_obstacles.clear()
 
 
 func _notification(what: int) -> void:
@@ -421,6 +457,7 @@ func _notification(what: int) -> void:
 		or what == NOTIFICATION_EXIT_TREE
 		or what == NOTIFICATION_PREDELETE
 	):
+		_cancel_tangle()
 		_release_park_spot()
 
 
@@ -450,24 +487,70 @@ func _clear_dog_offset() -> Vector2:
 
 func _raw_clear_dog_offset() -> Vector2:
 	var to_mine := my_dog.global_position - npc_dog.global_position
-	var curious := to_mine.normalized() * 34.0 if to_mine.length() < 160.0 else Vector2.ZERO
+	# A tangle is already chaotic; do not also steer the NPC dog into the
+	# player while the ropes are snagged.
+	var curious := Vector2.ZERO
+	if tangled_t <= 0.0 and not tangle_active and to_mine.length() < 160.0:
+		curious = to_mine.normalized() * 34.0
 	return Vector2(30, 24) + wander + curious
 
 
 func update_tangle_state(crossing: bool, delta: float) -> bool:
+	tangle_touching = crossing
+	if mercy_hold:
+		if crossing:
+			tangled_t = 0.0
+			if leash != null:
+				leash.dynamic_obstacles.clear()
+				leash.free_slip_t = maxf(leash.free_slip_t, 1.0)
+			return false
+		mercy_hold = false
 	if crossing:
-		tangled_t = 0.4
+		tangle_hold_t += delta
+		if tangle_root_acc < TANGLE_PAUSE_MAX_S:
+			tangled_t = TANGLE_ROOT_S
+			tangle_root_acc = minf(TANGLE_PAUSE_MAX_S, tangle_root_acc + delta)
+		else:
+			# Pause budget spent: owner unroots even if geometry still touches.
+			tangled_t = 0.0
+			tangle_root_acc = TANGLE_PAUSE_MAX_S
 		tangle_clear_t = 0.0
+		# Visible mercy ramp: free-slip the NPC rope so the snag cannot lock.
+		if tangle_hold_t >= TANGLE_MERCY_RAMP_S and leash != null:
+			var ramp_t := tangle_hold_t - TANGLE_MERCY_RAMP_S
+			leash.free_slip_t = maxf(leash.free_slip_t, 0.35 + ramp_t * 0.4)
+			if not mercy_shown and is_instance_valid(main):
+				mercy_shown = true
+				main.float_text(npc_owner.position, "excuse me - go on", Color(1, 0.92, 0.78))
+		if tangle_hold_t >= TANGLE_MERCY_S:
+			var need_line := not mercy_shown
+			tangled_t = 0.0
+			tangle_active = false
+			tangle_clear_t = 0.0
+			tangle_root_acc = 0.0
+			tangle_hold_t = 0.0
+			mercy_shown = false
+			mercy_hold = true
+			if leash != null:
+				leash.dynamic_obstacles.clear()
+				leash.free_slip_t = maxf(leash.free_slip_t, 1.0)
+			if need_line and is_instance_valid(main):
+				main.float_text(npc_owner.position, "excuse me - go on", Color(1, 0.92, 0.78))
+			return false
 		if tangle_active:
 			return false
 		tangle_active = true
 		main.float_text(npc_owner.position, "oh - sorry!", Color(1, 0.9, 0.8))
 		return true
+	tangle_root_acc = maxf(0.0, tangle_root_acc - delta * 2.0)
+	tangle_hold_t = maxf(0.0, tangle_hold_t - delta)
 	if tangle_active:
 		tangle_clear_t += delta
 		if tangle_clear_t >= TANGLE_REARM_S:
 			tangle_active = false
 			tangle_clear_t = 0.0
+			tangle_hold_t = 0.0
+			mercy_shown = false
 	return false
 
 

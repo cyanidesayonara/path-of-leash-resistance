@@ -34,6 +34,8 @@ var poles: Array[Vector2] = []
 var rest_len := 260.0
 var taut := false
 var contacts := 0
+var static_contacts := 0
+var dynamic_contacts := 0
 # the pole the rope is caught on nearest the DOG end, which is the one she
 # can vault around (see main.gd/_tick_vault). INF when the rope is running
 # free. Only STATIC contacts populate this - dynamic leash points must not
@@ -41,6 +43,8 @@ var contacts := 0
 var contact_pole := Vector2(INF, INF)
 var contact_kind := ""
 var contact_static := false
+# nearest dynamic snag (another leash) for tangle presentation. INF when free.
+var contact_dynamic := Vector2(INF, INF)
 var detached := false
 var near_poles: Array[Vector2] = []
 # authored furniture wrap centres (tables/chairs/parasols/bins). Same
@@ -176,20 +180,29 @@ func tick(delta: float) -> void:
 						pts[i + 1] += push
 						touched[i + 1] = obs
 	contacts = touched.size()
+	static_contacts = 0
+	dynamic_contacts = 0
 	# static contact closest to the dog end owns contact_pole (vault etc.)
 	contact_pole = Vector2(INF, INF)
 	contact_kind = ""
 	contact_static = false
+	contact_dynamic = Vector2(INF, INF)
 	var best_i := 1 << 30
+	var best_dyn_i := 1 << 30
 	for i in touched:
 		var obs: Dictionary = touched[i]
-		if not bool(obs.is_static):
-			continue
-		if int(i) < best_i:
-			best_i = int(i)
-			contact_pole = obs.pos
-			contact_kind = String(obs.kind)
-			contact_static = true
+		if bool(obs.is_static):
+			static_contacts += 1
+			if int(i) < best_i:
+				best_i = int(i)
+				contact_pole = obs.pos
+				contact_kind = String(obs.kind)
+				contact_static = true
+		else:
+			dynamic_contacts += 1
+			if int(i) < best_dyn_i:
+				best_dyn_i = int(i)
+				contact_dynamic = obs.pos
 	# apply stick-slip per contact kind
 	for i in touched:
 		var obs2: Dictionary = touched[i]
@@ -263,8 +276,11 @@ func _draw() -> void:
 		arr.append(to_local(p))
 	# a flat 3px line reads as a debug gizmo. Three passes make it read as
 	# webbing: a dropped shadow, a dark body, and a lit top edge - plus it
-	# cinches visibly thinner and hotter when taut.
+	# cinches visibly thinner and hotter when taut. A dynamic leash snag
+	# warms the strap so the tangle reads separately from a pole wrap.
 	var body := Color(0.72, 0.28, 0.22) if taut else Color(0.55, 0.27, 0.23)
+	if dynamic_contacts > 0:
+		body = Color(0.88, 0.42, 0.18) if taut else Color(0.72, 0.38, 0.22)
 	var wide := 3.4 if taut else 4.2
 	var shade := PackedVector2Array()
 	for p in arr:
@@ -277,6 +293,11 @@ func _draw() -> void:
 	for p in arr:
 		hi.append(p + Vector2(0.0, -0.9))
 	draw_polyline(hi, body.lightened(0.34), wide * 0.24)
+	if contact_dynamic.x < INF:
+		var cp := to_local(contact_dynamic)
+		draw_circle(cp + Vector2(1.2, 1.8), 5.2, Color(0.05, 0.04, 0.06, 0.28))
+		draw_circle(cp, 4.6, Color(0.95, 0.55, 0.22, 0.85 if taut else 0.65))
+		draw_circle(cp, 2.0, Color(1.0, 0.85, 0.55, 0.9))
 	# the handle loop in the owner's fist
 	var hp := to_local(_hand_pos())
 	draw_circle(hp + Vector2(1.5, 2.0), 4.6, Color(0.05, 0.04, 0.06, 0.25))

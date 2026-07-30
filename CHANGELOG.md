@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-07-30 - v1.53 hardening: NPC-leash tangle contacts
+
+Leash-vs-leash tangles use visible segment/capsule contact with separate
+enter/exit thresholds instead of sampled point proximity. Dynamic rope
+obstacles refresh before the player leash solve, and broad-phase uses rope
+bounds rather than dog-to-owner distance alone. Only static contacts shield,
+vault, or anchor; dynamic snags keep their own slip, a visible contact mark,
+and a warmer taut presentation. NPC owners pause only up to a named bound,
+curiosity is suppressed while snagged, and a mercy ramp frees every supported
+single-pair encounter inside 300 frames at 60 Hz with the same cancel rules on
+park/recall/detach/despawn paths. Rising-edge rewards stay one-per-encounter.
+Focused regression: tests/test_tangle_hardening.gd.
+
 ## 2026-07-30 - v1.53 hardening: geometry and furniture recovery
 
 FUR-GONETA body, draw, blocker, scent and rope flanks now share one fitted
