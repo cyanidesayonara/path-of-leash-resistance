@@ -15,6 +15,15 @@ const N := 24
 const ITER := 11
 const POLE_PAD := 13.0
 const FRICTION := 0.5
+# Stick-slip tuning. The geometry hard-cap is 1.15x; sustained tension
+# against static snags must be able to approach free slip inside that cap,
+# while intentional single-pole wraps still grip near rest length.
+const STRETCH_CAP := 1.15
+const STATIC_SLIP_MIN := 0.15
+const DYNAMIC_SLIP_MIN := 0.40
+const KIND_POLE := "pole"
+const KIND_FURNITURE := "furniture"
+const KIND_DYNAMIC := "dynamic"
 
 var pts: Array[Vector2] = []
 var prev: Array[Vector2] = []
@@ -26,12 +35,18 @@ var taut := false
 var contacts := 0
 # the pole the rope is caught on nearest the DOG end, which is the one she
 # can vault around (see main.gd/_tick_vault). INF when the rope is running
-# free.
+# free. Only STATIC contacts populate this - dynamic leash points must not
+# share pole-only vault/shield semantics.
 var contact_pole := Vector2(INF, INF)
+var contact_kind := ""
+var contact_static := false
 var detached := false
 var near_poles: Array[Vector2] = []
+# authored furniture wrap centres (tables/chairs/parasols/bins). Same
+# collision as poles, but typed so slip and contact metadata can differ.
+var furniture_poles: Array[Vector2] = []
 # points contributed by ANOTHER leash this frame: the rope drapes over
-# them exactly like poles, so two leashes crossing tangle for real
+# them, with dynamic slip, without claiming contact_pole
 var dynamic_obstacles: Array[Vector2] = []
 # while > 0 the rope slides freely on poles (no stick): set during a whirl
 # so the choreographed unwind can never be arrested by rope grip
@@ -39,6 +54,24 @@ var free_slip_t := 0.0
 # the player's leash draws every frame (hero element); NPC-pair leashes
 # only need ~30fps, halving their line-heavy rope draw on the web build
 var hero := false
+
+
+func slip_for(stretch_ratio: float, kind: String) -> float:
+	# Linear ramp from the kind's grip floor at rest length to free slip
+	# at STRETCH_CAP. Furniture and poles share the static curve; dynamic
+	# leash contacts start looser so a tangle does not lock like a pole.
+	var amin := STATIC_SLIP_MIN
+	if kind == KIND_DYNAMIC:
+		amin = DYNAMIC_SLIP_MIN
+	var t := clampf((stretch_ratio - 1.0) / (STRETCH_CAP - 1.0), 0.0, 1.0)
+	return lerpf(amin, 1.0, t)
+
+
+func _kind_at(pos: Vector2) -> String:
+	for f in furniture_poles:
+		if f.distance_squared_to(pos) < 0.25:
+			return KIND_FURNITURE
+	return KIND_POLE
 
 
 func setup(d: Node2D, h: Node2D, pole_list: Array[Vector2], max_len: float) -> void:
@@ -69,25 +102,21 @@ func resnap() -> void:
 func tick(delta: float) -> void:
 	var seg := rest_len / (N - 1)
 	free_slip_t = maxf(0.0, free_slip_t - delta)
-	# stick-slip: grip the pole at low tension (coils hold, winding
-	# accumulates), slide freely when overstretched (rope slips off
-	# instead of sticking to the pole forever)
+	# stick-slip: grip at low tension (coils hold, winding accumulates),
+	# approach free slip by STRETCH_CAP (rope slides off instead of
+	# locking forever against furniture/static snags)
 	var stretch_ratio := used_length() / maxf(rest_len, 1.0)
-	var slip := clampf(0.15 + (stretch_ratio - 1.0) * 0.8, 0.15, 1.0)
-	if free_slip_t > 0.0:
-		slip = 1.0
 	for i in range(1, N - 1):
 		var vel := (pts[i] - prev[i]) * 0.94
 		prev[i] = pts[i]
 		pts[i] += vel
 	var start := pts.duplicate()
+	# touched[i] -> {pos, kind, is_static}
 	var touched := {}
-	# only poles near the rope's bounding box matter this frame; checking
-	# every pole on the level per point per iteration is the single
-	# biggest per-frame cost otherwise. The box MUST cover every rope
-	# point, not just the endpoints - a partial wind puts both endpoints
-	# on one side of the pole, and an endpoint-only box excluded it,
-	# letting the rope ghost through (the slipping-off regression).
+	# only obstacles near the rope's bounding box matter this frame; the
+	# box MUST cover every rope point, not just the endpoints - a partial
+	# wind puts both endpoints on one side of the pole, and an
+	# endpoint-only box excluded it (the slipping-off regression).
 	var rl := pts[0].x
 	var rr := pts[0].x
 	var rt := pts[0].y
@@ -98,13 +127,16 @@ func tick(delta: float) -> void:
 		rt = minf(rt, rp.y)
 		rb = maxf(rb, rp.y)
 	near_poles.clear()
+	var near_obs: Array[Dictionary] = []
 	for npl in poles:
 		if npl.x > rl - 40.0 and npl.x < rr + 40.0 and npl.y > rt - 40.0 and npl.y < rb + 40.0:
 			near_poles.append(npl)
-	# another leash's points, if any, are obstacles too (the tangle)
+			var kind := _kind_at(npl)
+			near_obs.append({"pos": npl, "kind": kind, "is_static": true})
 	for dob in dynamic_obstacles:
 		if dob.x > rl - 40.0 and dob.x < rr + 40.0 and dob.y > rt - 40.0 and dob.y < rb + 40.0:
 			near_poles.append(dob)
+			near_obs.append({"pos": dob, "kind": KIND_DYNAMIC, "is_static": false})
 	for _iter in range(ITER):
 		pts[0] = dog.global_position
 		pts[N - 1] = _hand_pos()
@@ -122,13 +154,12 @@ func tick(delta: float) -> void:
 			if i + 1 < N - 1:
 				pts[i + 1] -= corr
 		# segment-vs-circle collision: point-only checks tunnel when
-		# stretched segments straddle the pole between two points. On open
-		# stretches nothing is near, so skip the whole scan (it was N-1
-		# empty inner loops per solver iteration, every frame).
-		if near_poles.is_empty():
+		# stretched segments straddle the pole between two points.
+		if near_obs.is_empty():
 			continue
 		for i in range(N - 1):
-			for pl in near_poles:
+			for obs in near_obs:
+				var pl: Vector2 = obs.pos
 				var cp := _closest_on_segment(pts[i], pts[i + 1], pl)
 				var dp := cp - pl
 				var l := dp.length()
@@ -136,28 +167,35 @@ func tick(delta: float) -> void:
 					var push := dp / l * (POLE_PAD - l)
 					if i > 0:
 						pts[i] += push
-						touched[i] = pl
+						touched[i] = obs
 					if i + 1 < N - 1:
 						pts[i + 1] += push
-						touched[i + 1] = pl
+						touched[i + 1] = obs
 	contacts = touched.size()
-	# remember the contact closest to the dog end (index 0 is the dog)
+	# static contact closest to the dog end owns contact_pole (vault etc.)
 	contact_pole = Vector2(INF, INF)
+	contact_kind = ""
+	contact_static = false
 	var best_i := 1 << 30
 	for i in touched:
+		var obs: Dictionary = touched[i]
+		if not bool(obs.is_static):
+			continue
 		if int(i) < best_i:
 			best_i = int(i)
-			contact_pole = touched[i]
-	# apply the stick-slip: contacted points keep only `slip` of the
-	# tangential travel the solver gave them this frame, and lose their
-	# sliding velocity memory
+			contact_pole = obs.pos
+			contact_kind = String(obs.kind)
+			contact_static = true
+	# apply stick-slip per contact kind
 	for i in touched:
-		var pl: Vector2 = touched[i]
-		var r0: Vector2 = start[i] - pl
-		var r1: Vector2 = pts[i] - pl
+		var obs2: Dictionary = touched[i]
+		var pl2: Vector2 = obs2.pos
+		var slip := 1.0 if free_slip_t > 0.0 else slip_for(stretch_ratio, String(obs2.kind))
+		var r0: Vector2 = start[i] - pl2
+		var r1: Vector2 = pts[i] - pl2
 		if r0.length_squared() > 0.001 and r1.length_squared() > 0.001:
 			var da := wrapf(r1.angle() - r0.angle(), -PI, PI)
-			pts[i] = pl + Vector2.from_angle(r0.angle() + da * slip) * r1.length()
+			pts[i] = pl2 + Vector2.from_angle(r0.angle() + da * slip) * r1.length()
 		prev[i] = prev[i].lerp(pts[i], FRICTION)
 	if hero or Engine.get_physics_frames() % 2 == 0:
 		queue_redraw()

@@ -33,6 +33,9 @@ jobs:
       - name: Leash winding regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_wrap.gd
 
+      - name: Furniture recovery regression test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_furniture_recovery.gd
+
       - name: Critter chase regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_critter_chase.gd
 

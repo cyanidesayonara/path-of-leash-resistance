@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-07-30 - v1.53 hardening: geometry and furniture recovery
+
+FUR-GONETA body, draw, blocker, scent and rope flanks now share one fitted
+centre - wrap contacts are appended after the corridor fit instead of being
+remapped without the van. The Boulevard terrace chairs no longer nest inside
+parasol wrap circles. Stick-slip uses named static/dynamic curves that can
+reach free slip inside the 1.15x geometry cap, with typed obstacle metadata so
+furniture and other leashes do not share pole-only contact_pole semantics.
+Dog-beach visual, animated and gameplay shorelines share beach_shore_x; the
+first beach throw gets the surf window; abandoned dig/sniff progress dirties
+freedomlayer again. Focused production-layout regression covers the terrace,
+FUR-GONETA alignment, capped-slip recovery and shoreline agreement.
+
 ## 2026-07-28 - v1.53 hardening: progression boundaries
 
 Fresh profiles now initialize complete records for every campaign walk, so a
