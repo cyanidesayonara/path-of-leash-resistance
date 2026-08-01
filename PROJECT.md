@@ -155,10 +155,15 @@ Every feature must serve at least one. If it serves none, cut it.
 - **v1.32–v1.52 - shipped.** Continued content and systems (see CHANGELOG):
   further walks, chase variants, goals/stars, cosmetics, fetch, park
   lifecycle, procedural audio, web-perf passes, and the FUR-GONETA.
-- **v1.53 - hardening (this branch).** Progression boundary fixes;
-  furniture / wrap recovery under the geometry cap; NPC-leash tangle
-  contacts with mercy release. Release workflow gated on green CI for the
-  tagged SHA. Known deferred: mobile Web canvas scaling.
+- **v1.53 - hardening, shipped.** Progression boundary fixes; furniture /
+  wrap recovery under the geometry cap; NPC-leash tangle contacts with mercy
+  release. Release workflow gated on green CI for the tagged SHA.
+- **v1.54 - shipped.** Mobile Web canvas scaling fix: stretch aspect "keep"
+  (hard letterbox on any non-16:9 window) replaced with "expand"; every HUD
+  overlay that anchored against the 1280x720 reference frame instead of the
+  actual viewport (touch controls, goals card, results/settings modals, the
+  pause dim) now follows the real viewport size. Verified locally at several
+  phone window shapes; not yet confirmed on a real device.
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
 - Every release also ships: mechanics tuning from playtests, at least
@@ -412,24 +417,23 @@ memorable.
   harder to perfect - Crash Bandicoot and Tony Hawk as the role models -
   and the game must keep throwing new things at you so it never becomes
   repetitive slop.
-    1. KERB GRIND - hold the teeter along a kerb or low wall at speed for
-       style points. Turns the balance module from a rescue into a scoring
-       verb. Cheapest big win, since teeter.gd already exists.
-    2. LEASH-VAULT - wind the leash on a pole and use the tension to
-       slingshot around it. Makes the best mechanic into locomotion.
-    3. SCENT TRAIL - a drifting smell you can follow to a buried thing.
-       Gives the nose a navigation purpose and rewards wandering.
-    4. RIVAL DOG - a recurring antagonist who steals fetched balls and
-       dug-up bones. One character does more for personality than three
-       levels.
-    5. THE PHONE CALL - the owner rooted for ~20s while you exploit maximum
-       slack. Their obliviousness as an opportunity, not an obstacle.
-    6. MUD STACKING - get muddy and everything you touch gets marked
-       (owner's trousers, cafe chairs, a white cat). Compounding comedy.
+    1. KERB GRIND - SHIPPED (teeter.gd / _tick_teeter). Hold the teeter
+       along a kerb or low wall at speed for style points.
+    2. LEASH-VAULT - SHIPPED (v1.45, swing.gd / _tick_vault). Wind the
+       leash on a pole and use the tension to slingshot around it.
+    3. SCENT TRAIL - SHIPPED (v1.46, _scent_sources / _draw_scents). A
+       drifting smell you can follow to a buried thing.
+    4. RIVAL DOG - SHIPPED (v1.48, rival.gd - Brutus). A recurring
+       antagonist who steals fetched balls and dug-up bones.
+    5. THE PHONE CALL - SHIPPED (call_active / human.gd). The owner rooted
+       for ~20s while you exploit maximum slack.
+    6. MUD STACKING - SHIPPED (v1.49, SUBSTANCES / substance_zones - eight
+       substances, not just mud). Get muddy and everything you touch gets
+       marked (owner's trousers, cafe chairs, a white cat).
     7. TWO DOGS, ONE OWNER - a second leash you also control. Chaos
-       multiplier and a natural co-op hook.
+       multiplier and a natural co-op hook. Not yet built.
     8. WEATHER TURNING MID-WALK - rain starting changes the route home,
-       not just the look.
+       not just the look. Not yet built.
     9. DOG MOODS (Santtu, July 2026) - the strongest idea in the pile, and
        worth refining before building. The scent trail proved that "see the
        world as a dog does" is a rich seam; mood is that seam gone deeper.

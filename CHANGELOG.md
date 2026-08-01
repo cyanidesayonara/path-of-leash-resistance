@@ -2,6 +2,51 @@
 
 Append-only session history, newest first.
 
+## 2026-08-01 - v1.54: mobile web canvas scaling
+
+The known-deferred gap from the v1.53 closeout: on a phone-shaped browser
+window the game rendered as a small fixed canvas with large black borders.
+Root cause was `window/stretch/aspect="keep"`, which letterboxes to the
+1280x720 reference frame instead of filling a window of a different aspect
+ratio - measured at a simulated 390x844 portrait window, only 219 of 844
+vertical pixels were game, the rest black. Switched to `"expand"`, which
+fills the window and reveals more or less than the reference frame on the
+short axis instead of blanking it - a strict improvement at every window
+shape tested (native 1280x720 unchanged, wider and narrower landscape, and
+portrait).
+
+That alone would have shipped a scaling fix with unusable touch controls:
+`touch_controls.gd` positioned its stick/button split and every button
+centre against literal 1280x720 coordinates. Under `expand`, a phone's real
+landscape aspect (e.g. 844x390, much wider than 16:9) reveals a visible
+width past 1280, so the buttons drifted away from the true corner and the
+old `touch.x < 620` stick-vs-button threshold stopped matching the screen's
+actual midpoint - a real "dead zone" that responded to neither. Buttons and
+the split now derive from `get_viewport_rect().size`, recomputed on resize;
+verified pixel-identical to the original layout at 1280x720 and correctly
+corner-anchored at 844x390.
+
+Same root cause, smaller stakes, fixed alongside: the goals card and the
+results/settings modals were positioned against the 1280x720 reference
+rather than the actual viewport, so they drifted off-centre or away from
+the true corner on any other aspect ratio; the pause/settings dim overlay
+was a fixed 1280x720 rect that left the newly-revealed edges of a wide or
+tall window undimmed during pause. Also fixed while in the same file: the
+settings panel's height was a fixed constant sized for 4 rows, so adding
+the "GOAL LIST" toggle row made it overlap the control-hint text at every
+resolution, including native - it now sizes to however many rows the
+current platform actually shows.
+
+Verified locally by launching with `--resolution WxH` at several phone
+landscape shapes (667x375, 844x390, 932x430, 915x412) and a portrait shape
+(390x844), full logic + render test suites, `--selftest` across all twelve
+walks, and autowalk (plain + all three chase variants). Not yet confirmed
+on a real device/browser - the auto-rotate-to-landscape behaviour some
+phones show is the browser's own orientation lock, not something this
+project requests, and its availability varies by browser (notably absent
+on iOS Safari), so a phone that stays in portrait is a real case, not an
+edge case.
+
 ## 2026-07-31 - v1.53 release
 
 In-game version label bumped to v1.53. Tag `v1.53` publishes web and

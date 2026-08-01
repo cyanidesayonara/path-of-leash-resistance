@@ -5,23 +5,45 @@ extends Control
 # strength; buttons on the right press the named actions. Gameplay code
 # reads Input exactly as it does for keyboard and gamepad - there is no
 # second control scheme to maintain. Only visible on touch devices.
+#
+# Button centres and the stick/button split are computed from the actual
+# viewport size, not hardcoded against the 1280x720 reference frame. The
+# project stretches with aspect "expand" so a phone's real aspect ratio
+# (almost always wider or narrower than 16:9) reveals MORE or LESS canvas
+# than 1280x720 rather than letterboxing it - a control cluster anchored to
+# literal x=1150..1244 would drift away from the true right edge on a wide
+# window, and the "< 620 = left half" stick threshold would stop matching
+# the screen's actual midpoint, opening a dead zone between the stick and
+# the buttons that responds to neither.
 
 var stick_id := -1
 var stick_origin := Vector2.ZERO
 var stick_vec := Vector2.ZERO
 var buttons: Array[Dictionary] = []
+var split_x := 620.0
 
 
 func _ready() -> void:
-	visible = DisplayServer.is_touchscreen_available()
+	visible = DisplayServer.is_touchscreen_available() or "--touch" in OS.get_cmdline_user_args()
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	_layout()
+	get_viewport().size_changed.connect(_layout)
+
+
+func _layout() -> void:
+	# button offsets from the bottom-right corner, preserved from the
+	# original tuning (authored against a 1280x720 corner at 130,130)
+	var sz := get_viewport_rect().size
+	var corner := sz - Vector2(130.0, 130.0)
 	buttons = [
-		{"action": "plant", "label": "DIG", "center": Vector2(1150, 590), "r": 56.0, "id": -1},
-		{"action": "bark", "label": "BARK", "center": Vector2(1155, 452), "r": 44.0, "id": -1},
-		{"action": "pee", "label": "PEE", "center": Vector2(1022, 652), "r": 44.0, "id": -1},
-		{"action": "restart", "label": "R", "center": Vector2(1244, 36), "r": 24.0, "id": -1},
+		{"action": "plant", "label": "DIG", "center": corner, "r": 56.0, "id": -1},
+		{"action": "bark", "label": "BARK", "center": corner + Vector2(5.0, -138.0), "r": 44.0, "id": -1},
+		{"action": "pee", "label": "PEE", "center": corner + Vector2(-128.0, 62.0), "r": 44.0, "id": -1},
+		{"action": "restart", "label": "R", "center": Vector2(sz.x - 36.0, 36.0), "r": 24.0, "id": -1},
 	]
+	split_x = sz.x * 0.5 - 20.0
+	queue_redraw()
 
 
 func _input(event: InputEvent) -> void:
@@ -37,7 +59,7 @@ func _input(event: InputEvent) -> void:
 					Input.action_press(b.action)
 					hit = true
 					break
-			if not hit and e.position.x < 620.0:
+			if not hit and e.position.x < split_x:
 				stick_id = e.index
 				stick_origin = e.position
 				stick_vec = Vector2.ZERO

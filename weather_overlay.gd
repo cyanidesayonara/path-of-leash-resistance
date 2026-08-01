@@ -16,13 +16,21 @@ var mode := "clear":
 		queue_redraw()
 var drops: Array[Vector2] = []
 var t := 0.0
+# the viewport stretches with aspect "expand", so a phone's real aspect ratio
+# reveals more or less than the 1280x720 reference frame; caching the actual
+# size (refreshed on resize) means rain/snow covers the whole visible screen
+# instead of stopping at a hardcoded edge and leaving a dry strip on wide
+# windows
+var view_size := Vector2(1280.0, 720.0)
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	view_size = get_viewport_rect().size
+	get_viewport().size_changed.connect(func() -> void: view_size = get_viewport_rect().size)
 	for i in range(90):
-		drops.append(Vector2(randf() * 1280.0, randf() * 720.0))
+		drops.append(Vector2(randf() * view_size.x, randf() * view_size.y))
 
 
 func _process(delta: float) -> void:
@@ -37,8 +45,8 @@ func _process(delta: float) -> void:
 	for i in range(drops.size()):
 		var drift := Vector2(sin(t * 1.3 + i) * 26.0, 0.0) if mode == "snow" else Vector2.ZERO
 		drops[i] += (vel + drift) * delta
-		if drops[i].y > 726.0 or drops[i].x < -6.0 or drops[i].x > 1286.0:
-			drops[i] = Vector2(randf() * 1360.0 - 40.0, -6.0 if mode != "wind" else randf() * 720.0)
+		if drops[i].y > view_size.y + 6.0 or drops[i].x < -6.0 or drops[i].x > view_size.x + 6.0:
+			drops[i] = Vector2(randf() * (view_size.x + 80.0) - 40.0, -6.0 if mode != "wind" else randf() * view_size.y)
 			if mode == "wind":
 				drops[i].x = -40.0
 	queue_redraw()

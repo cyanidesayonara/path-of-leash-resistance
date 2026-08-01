@@ -9,9 +9,9 @@ extends Control
 # fallbacks for everything except the row names, which are plain ASCII.
 
 const W := 600.0
-const H := 336.0
 const ROW_H := 52.0
 const ROWS_Y := 92.0
+const FOOTER_H := 36.0    # room below the last row for the hint line
 const NAME_X := 42.0
 const BAR_X := 296.0
 const BAR_W := 208.0
@@ -24,6 +24,19 @@ var sel: StyleBoxFlat
 
 func setup(m: Node2D) -> void:
 	main = m
+	# the row count (and so the panel's height) is only known once main is
+	# set - the web build drops the fullscreen row, and _ready() ran before
+	# this with a guessed count
+	_recentre()
+
+
+func _row_count() -> int:
+	# a sane guess before main is wired up; setup() re-centres for real
+	return main.settings_rows().size() if main != null else 4
+
+
+func _panel_height() -> float:
+	return ROWS_Y + float(_row_count()) * ROW_H + FOOTER_H
 
 
 func _ready() -> void:
@@ -36,6 +49,15 @@ func _ready() -> void:
 	sel = StyleBoxFlat.new()
 	sel.bg_color = Color(1.0, 0.88, 0.6, 0.11)
 	sel.set_corner_radius_all(9)
+	# centred on the actual viewport, not the 1280x720 reference - aspect
+	# "expand" reveals more or less than that on most phone shapes
+	_recentre()
+	get_viewport().size_changed.connect(_recentre)
+
+
+func _recentre() -> void:
+	var vs := get_viewport_rect().size
+	position = Vector2((vs.x - W) * 0.5, (vs.y - _panel_height()) * 0.5)
 
 
 func _process(_delta: float) -> void:
@@ -48,7 +70,8 @@ func _draw() -> void:
 	if main == null:
 		return
 	var f := ThemeDB.fallback_font
-	draw_style_box(sb, Rect2(0, 0, W, H))
+	var h := _panel_height()
+	draw_style_box(sb, Rect2(0, 0, W, h))
 	draw_string(f, Vector2(NAME_X, 46), "SETTINGS", HORIZONTAL_ALIGNMENT_LEFT, -1, 27,
 		Color(0.98, 0.94, 0.86))
 	draw_line(Vector2(NAME_X, 62), Vector2(W - NAME_X, 62), Color(1, 1, 1, 0.14), 1.5)
@@ -74,7 +97,7 @@ func _draw() -> void:
 			_toggle(f, y, bool(row.v), picked)
 	var hint := ("stick  choose     left/right  change     B  back" if main.pad_hints()
 		else "W / S  choose     A / D  change     ESC  back")
-	draw_string(f, Vector2(NAME_X, H - 24.0), hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 15,
+	draw_string(f, Vector2(NAME_X, h - 24.0), hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 15,
 		Color(0.78, 0.76, 0.72, 0.85))
 
 

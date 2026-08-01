@@ -2888,7 +2888,7 @@ func _build_hud() -> void:
 	menu_hint_l.modulate.a = 0.55
 	menu_hint_l.visible = false
 	var version_l := _hud_label(Vector2(1150, 686), 13)
-	version_l.text = "v1.53"
+	version_l.text = "v1.54"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	owner_l.size = Vector2(1280, 34)
@@ -2989,7 +2989,7 @@ func _build_hud() -> void:
 	challenge_l.visible = false
 	dim = ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.55)
-	dim.size = Vector2(1280, 720)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	dim.visible = false
 	hud.add_child(dim)
 	msg_label = _hud_label(Vector2(0, 200), 22)
@@ -3014,7 +3014,6 @@ func _build_hud() -> void:
 	progress_l.visible = false
 	settings_panel = Control.new()
 	settings_panel.set_script(load("res://settings_panel.gd"))
-	settings_panel.position = Vector2(340, 190)
 	settings_panel.visible = false
 	hud.add_child(settings_panel)
 	settings_panel.setup(self)

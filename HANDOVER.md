@@ -20,7 +20,7 @@ phone-distracted human walks on autopilot; the leash is real verlet-rope
 physics (visual and gameplay constraint — see AGENTS.md). Ships to itch
 (`html5` + `windows`) on a version tag after green CI.
 
-## Current state (v1.53 on `main`)
+## Current state (v1.54 on `main`)
 
 Hardening rounds shipped via PR #3:
 
@@ -39,10 +39,16 @@ PASS_WITH_GAPS (tangle scored; FX hard to frame in browser).
 
 ## Known deferred gap
 
-**Mobile Web canvas scaling:** on phone-sized Web the game can render as a
-small fixed canvas with large black borders. Documented only — not a full
-mobile overhaul in this closeout. Touch acceptance stays blocked until that
-scaling issue is fixed.
+**Mobile Web canvas scaling (fixed in v1.54, unconfirmed on a real device):**
+stretch aspect switched from "keep" (letterboxed hard on any non-16:9 window)
+to "expand" (fills the window, revealing more/less than the 1280x720
+reference on the short axis instead of blanking it). touch_controls.gd,
+goals_card.gd, results_panel.gd, settings_panel.gd, and the pause/settings
+dim overlay all anchored against the 1280x720 reference rather than the
+actual viewport and now use `get_viewport_rect().size`, recomputed on
+resize. Verified locally via `--resolution WxH` at several phone landscape
+shapes and one portrait shape — not yet played on a real phone browser.
+Touch acceptance testing can proceed once that happens.
 
 ## Release ritual
 

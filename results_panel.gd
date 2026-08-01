@@ -56,8 +56,12 @@ func _draw() -> void:
 	var h := PAD + 224.0 + float(per_col) * ROW_H + float(extras.size()) * 22.0
 	size = Vector2(W, h)
 	# centre the card on what it holds, so a twelve-goal walk and a
-	# three-goal walk are both framed
-	position = Vector2((1280.0 - W) * 0.5, maxf(20.0, (720.0 - h) * 0.5))
+	# three-goal walk are both framed. Against the actual viewport, not the
+	# 1280x720 reference - aspect "expand" reveals more or less than that on
+	# most phone shapes, and centring on the reference box left the card
+	# noticeably off-centre on a wide window.
+	var vs := get_viewport_rect().size
+	position = Vector2((vs.x - W) * 0.5, maxf(20.0, (vs.y - h) * 0.5))
 	draw_style_box(sb, Rect2(0, 0, W, h))
 
 	var y := PAD + 30.0

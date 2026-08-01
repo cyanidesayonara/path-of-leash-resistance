@@ -63,9 +63,12 @@ func _draw() -> void:
 	if not open:
 		h = 40.0
 	size = Vector2(w, h)
-	# right-aligned, so collapsing pulls it into the corner instead of
-	# leaving a stub floating mid-screen
-	position.x = GOALS_X + (W - w)
+	# right-aligned to the ACTUAL viewport edge (aspect "expand" reveals more
+	# or less than the 1280 reference width on most phone shapes), so
+	# collapsing pulls it into the true corner instead of drifting toward
+	# the middle of a wide window, or off the edge of a narrow one
+	var right_margin := 1280.0 - (GOALS_X + W)  # 8px, preserved from the original tuning
+	position.x = get_viewport_rect().size.x - right_margin - w
 	draw_style_box(sb, Rect2(0, 0, w, h))
 	var all_done: bool = bool(data.all_done)
 	var head_col := Color(0.62, 0.90, 0.66) if all_done else Color(0.91, 0.86, 0.75)
