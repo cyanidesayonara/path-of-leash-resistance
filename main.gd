@@ -25,6 +25,10 @@ const AUTOWALK_MIN_FINISH_TIME := 120.0
 const PAIR_MIN_SPAWN_DIST := 360.0
 const MAX_ACTIVE_PAIRS := 3
 const LEASH_LENGTH := 340.0  # a proper 5-meter leash
+# the frame the HUD is composed against; the live viewport is this grown along
+# one axis (see _pin_wide and friends)
+const REF_W := 1280.0
+const REF_H := 720.0
 const LEASH_STRETCH_CAP := 1.15
 const LEASH_K := 32.0
 const DOG_MASS := 1.0
@@ -2830,7 +2834,11 @@ func _build_hud() -> void:
 	grade_layer.layer = 1
 	add_child(grade_layer)
 	grade_rect = ColorRect.new()
-	grade_rect.size = Vector2(1280, 720)
+	# the whole viewport, not the reference frame: a fixed 1280x720 rect left
+	# the strip that aspect "expand" reveals on a wide window completely
+	# ungraded - no vignette, no grain, and visibly brighter than the picture
+	# beside it
+	grade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	grade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var gmat := ShaderMaterial.new()
 	gmat.shader = load("res://grade.gdshader")
@@ -2866,45 +2874,48 @@ func _build_hud() -> void:
 	hud.add_child(results_card)
 	results_card.setup(self)
 	hint_l = _hud_label(Vector2(24, 686), 15)
+	_pin_box(hint_l, 0.0, 0.0, 0.0, 1.0)
 	hint_l.modulate.a = 0.75
 	title_l = _hud_label(Vector2(0, 240), 44)
-	title_l.size = Vector2(1280, 52)
+	_pin_wide(title_l, 52.0, 0.5)
 	title_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title_l.text = "PATH OF LEASH RESISTANCE"
 	sub_l = _hud_label(Vector2(0, 300), 18)
-	sub_l.size = Vector2(1280, 30)
+	_pin_wide(sub_l, 30.0, 0.5)
 	sub_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub_l.text = "You are the dog. Go and touch grass."
 	select_l = _hud_label(Vector2(0, 348), 22)
-	select_l.size = Vector2(1280, 32)
+	_pin_wide(select_l, 32.0, 0.5)
 	select_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	select_l.text = "<   %s   >" % Game.LEVEL_NAMES[lvl]
 	record_l = _hud_label(Vector2(0, 300), 18)
-	record_l.size = Vector2(1280, 26)
+	_pin_wide(record_l, 26.0, 0.5)
 	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	record_l.modulate.a = 0.85
 	# stacked ABOVE the controls line, which occupies y=686 from step 2 on
 	menu_hint_l = _hud_label(Vector2(24, 662), 14)
+	_pin_box(menu_hint_l, 0.0, 0.0, 0.0, 1.0)
 	menu_hint_l.modulate.a = 0.55
 	menu_hint_l.visible = false
 	var version_l := _hud_label(Vector2(1150, 686), 13)
+	_pin_box(version_l, 0.0, 0.0, 1.0, 1.0)
 	version_l.text = "v1.54"
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
-	owner_l.size = Vector2(1280, 34)
+	_pin_wide(owner_l, 34.0, 0.5)
 	owner_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	night_l = _hud_label(Vector2(0, 340), 26)
-	night_l.size = Vector2(1280, 34)
+	_pin_wide(night_l, 34.0, 0.5)
 	night_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	weather_l = _hud_label(Vector2(0, 384), 26)
-	weather_l.size = Vector2(1280, 34)
+	_pin_wide(weather_l, 34.0, 0.5)
 	weather_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	prompt_l = _hud_label(Vector2(0, 470), 22)
-	prompt_l.size = Vector2(1280, 32)
+	_pin_wide(prompt_l, 32.0, 0.5)
 	prompt_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shop_preview_bg = ColorRect.new()
 	shop_preview_bg.position = Vector2(60.0, 190.0)
-	shop_preview_bg.size = Vector2(440.0, 390.0)
+	_pin_box(shop_preview_bg, 440.0, 390.0, 0.5, 0.5)
 	shop_preview_bg.color = Color(0.05, 0.06, 0.07, 0.72)
 	shop_preview_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	shop_preview_bg.visible = false
@@ -2919,16 +2930,16 @@ func _build_hud() -> void:
 	preview.z_index = 1
 	shop_preview = preview
 	shop_title_l = _hud_label(Vector2(0, 70), 30)
-	shop_title_l.size = Vector2(1280, 40)
+	_pin_wide(shop_title_l, 40.0)
 	shop_title_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shop_title_l.visible = false
 	shop_preview_l = _hud_label(Vector2(60.0, 145.0), 18)
-	shop_preview_l.size = Vector2(440.0, 30.0)
+	_pin_box(shop_preview_l, 440.0, 30.0, 0.5, 0.5)
 	shop_preview_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shop_preview_l.text = "HIGHLIGHTED LOOK"
 	shop_preview_l.visible = false
 	shop_l = _hud_label(Vector2(430.0, 150.0), 20)
-	shop_l.size = Vector2(800.0, 460.0)
+	_pin_box(shop_l, 800.0, 460.0, 0.5, 0.5)
 	shop_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shop_l.visible = false
 	for k in Game.COLLARS:
@@ -2956,20 +2967,20 @@ func _build_hud() -> void:
 	combo.setup(self)
 	combo_bar_bg = ColorRect.new()
 	combo_bar_bg.position = Vector2(440, 662)
-	combo_bar_bg.size = Vector2(400, 8)
+	_pin_box(combo_bar_bg, 400.0, 8.0, 0.5, 1.0)
 	combo_bar_bg.color = Color(0.05, 0.06, 0.07, 0.55)
 	combo_bar_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	combo_bar_bg.visible = false
 	hud.add_child(combo_bar_bg)
 	combo_bar = ColorRect.new()
 	combo_bar.position = Vector2(440, 662)
-	combo_bar.size = Vector2(400, 8)
+	_pin_box(combo_bar, 400.0, 8.0, 0.5, 1.0)
 	combo_bar.color = Color(1.0, 0.78, 0.32)
 	combo_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	combo_bar.visible = false
 	hud.add_child(combo_bar)
 	combo_l = _hud_label(Vector2(0, 624), 26)
-	combo_l.size = Vector2(1280, 34)
+	_pin_wide(combo_l, 34.0, 1.0)
 	combo_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	combo_l.visible = false
 	# the combo challenge (Phase B): a bounded trick dare from a bystander
@@ -2984,7 +2995,7 @@ func _build_hud() -> void:
 	grind.set_script(load("res://grind.gd"))
 	add_child(grind)
 	challenge_l = _hud_label(Vector2(0, 70), 24)
-	challenge_l.size = Vector2(1280, 30)
+	_pin_wide(challenge_l, 30.0)
 	challenge_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	challenge_l.visible = false
 	dim = ColorRect.new()
@@ -2993,23 +3004,23 @@ func _build_hud() -> void:
 	dim.visible = false
 	hud.add_child(dim)
 	msg_label = _hud_label(Vector2(0, 200), 22)
-	msg_label.size = Vector2(1280, 400)
+	_pin_wide(msg_label, 400.0, 0.5)
 	msg_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	msg_label.visible = false
 	pause_l = _hud_label(Vector2(0, 300), 26)
-	pause_l.size = Vector2(1280, 120)
+	_pin_wide(pause_l, 120.0, 0.5)
 	pause_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	pause_l.visible = false
 	tut_label = _hud_label(Vector2(0, 96), 30)
-	tut_label.size = Vector2(1280, 40)
+	_pin_wide(tut_label, 40.0)
 	tut_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tut_label.visible = false
 	tut_hint = _hud_label(Vector2(0, 136), 19)
-	tut_hint.size = Vector2(1280, 60)
+	_pin_wide(tut_hint, 60.0)
 	tut_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tut_hint.visible = false
 	progress_l = _hud_label(Vector2(0, 70), 19)
-	progress_l.size = Vector2(1280, 560)
+	_pin_wide(progress_l, 560.0)
 	progress_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	progress_l.visible = false
 	settings_panel = Control.new()
@@ -3103,6 +3114,10 @@ func _open_shop() -> void:
 	shop_preview_bg.visible = true
 	shop_preview_l.visible = true
 	shop_preview.visible = true
+	# the preview dog is a Node2D, so it cannot anchor itself the way the panel
+	# behind it does - park it on the panel's centre instead, read at open time
+	# so it follows the cluster onto whatever shape the screen turns out to be
+	shop_preview.position = shop_preview_bg.position + Vector2(220.0, 175.0)
 	_refresh_shop()
 
 
@@ -3367,6 +3382,57 @@ func _hud_label(pos: Vector2, size_px: int) -> Label:
 	l.add_theme_font_size_override("font_size", size_px)
 	hud.add_child(l)
 	return l
+
+
+# The HUD was composed against the 1280x720 reference frame, and stretch
+# aspect "expand" makes the real viewport that frame grown along one axis:
+# wider than 1280 on a landscape phone, taller than 720 in portrait. A label
+# holding size.x = 1280 therefore centres its text on x=640 instead of on the
+# middle of the screen, and a line placed at y=686 floats up the picture
+# instead of sitting on the bottom edge.
+#
+# These pin an element to the live viewport with anchors, which re-solve on
+# rotation with nothing listening for a resize. Anchors and then offsets are
+# both written outright, in that order: assigning an anchor rewrites the
+# offsets to preserve the current rect, so setting offsets afterwards is what
+# makes the result independent of wherever the node was first placed.
+
+func _pin_wide(c: Control, h: float, v_rule: float = 0.0) -> void:
+	# full screen width, so CENTER-aligned text centres on the middle of the
+	# screen instead of on x=640. v_rule picks which horizontal rule the
+	# authored y is measured from: 0 the top edge, 0.5 the middle, 1 the
+	# bottom. Everything sharing a rule shifts together, so a stack of lines
+	# keeps the spacing it was composed with.
+	var y := c.position.y - REF_H * v_rule
+	c.anchor_left = 0.0
+	c.anchor_right = 1.0
+	c.anchor_top = v_rule
+	c.anchor_bottom = v_rule
+	c.offset_left = 0.0
+	c.offset_right = 0.0
+	c.offset_top = y
+	c.offset_bottom = y + h
+
+
+func _pin_box(c: Control, w: float, h: float, h_rule: float, v_rule: float) -> void:
+	# a fixed-size element measured in from a chosen corner or rule: (0, 1) the
+	# bottom-left, (1, 1) the bottom-right, (0.5, 0.5) the middle of the
+	# screen. Elements composed as one cluster share a rule so they travel
+	# together rather than each hugging a different edge and pulling apart.
+	#
+	# Pass w or h as 0 to leave that axis to the node: a Control never shrinks
+	# below its own minimum size, so an auto-sized Label still fits its text.
+	# Anchoring both sides to the same rule also keeps the rect offset-driven,
+	# which is what lets the combo bar write size.x every frame as it drains.
+	var p := c.position - Vector2(REF_W * h_rule, REF_H * v_rule)
+	c.anchor_left = h_rule
+	c.anchor_right = h_rule
+	c.anchor_top = v_rule
+	c.anchor_bottom = v_rule
+	c.offset_left = p.x
+	c.offset_right = p.x + w
+	c.offset_top = p.y
+	c.offset_bottom = p.y + h
 
 
 func _update_hud() -> void:
@@ -3811,7 +3877,12 @@ func _process(_delta: float) -> void:
 	# film grain. Two uniform writes a frame - negligible next to a redraw.
 	if grade_rect != null:
 		var gm: ShaderMaterial = grade_rect.material
-		gm.set_shader_parameter("cam_off", cam.position - Vector2(640.0, 360.0))
+		# the screen's top-left in world space. Half of the ACTUAL viewport,
+		# since a wide window sees past the reference frame's edges - using
+		# half of 1280x720 would drag the ground texture along with the camera
+		var view_px := get_viewport_rect().size
+		gm.set_shader_parameter("view_px", view_px)
+		gm.set_shader_parameter("cam_off", cam.position - view_px * 0.5)
 		gm.set_shader_parameter("time_seed", fmod(elapsed * 7.0, 100.0))
 
 

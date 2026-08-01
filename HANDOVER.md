@@ -42,13 +42,22 @@ PASS_WITH_GAPS (tangle scored; FX hard to frame in browser).
 **Mobile Web canvas scaling (fixed in v1.54, unconfirmed on a real device):**
 stretch aspect switched from "keep" (letterboxed hard on any non-16:9 window)
 to "expand" (fills the window, revealing more/less than the 1280x720
-reference on the short axis instead of blanking it). touch_controls.gd,
-goals_card.gd, results_panel.gd, settings_panel.gd, and the pause/settings
-dim overlay all anchored against the 1280x720 reference rather than the
-actual viewport and now use `get_viewport_rect().size`, recomputed on
-resize. Verified locally via `--resolution WxH` at several phone landscape
-shapes and one portrait shape — not yet played on a real phone browser.
-Touch acceptance testing can proceed once that happens.
+reference on the short axis instead of blanking it). Everything that had
+anchored against the 1280x720 reference now anchors against the live
+viewport: the four panel scripts (touch_controls, goals_card, results_panel,
+settings_panel), the dim and weather overlays, the colour-grade rect and its
+world-space noise, and every element built in `main.gd/_build_hud` — sixteen
+centred lines, the bottom rule, the wardrobe cluster. In `_build_hud`, use
+`_pin_wide` / `_pin_box` rather than literal coordinates; each element names
+the rule it hangs off (top edge, middle, bottom edge).
+
+Guarded by `tests/test_hud_anchoring.gd`, which reshapes a real viewport to
+a landscape and a portrait phone and asserts the HUD follows (389 checks, in
+CI). Native 1280x720 is asserted unchanged, so desktop cannot regress.
+
+Verified locally via `--resolution WxH` and before/after screenshots at
+844x390 — **not yet played on a real phone browser.** Touch acceptance
+testing can proceed once that happens; it is the only part still unverified.
 
 ## Release ritual
 

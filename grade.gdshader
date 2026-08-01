@@ -15,6 +15,12 @@ shader_type canvas_item;
 
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear;
 uniform vec2 cam_off = vec2(0.0, 0.0);
+// the visible viewport in pixels. Not a constant 1280x720: stretch aspect
+// "expand" grows the viewport along one axis to match the window, and
+// SCREEN_UV spans whatever that turns out to be. Deriving world position
+// from a hardcoded frame instead would scale the aggregate with the window
+// and let it slide against the ground.
+uniform vec2 view_px = vec2(1280.0, 720.0);
 uniform vec3 cool_shadows = vec3(0.90, 0.95, 1.09);
 uniform vec3 warm_light = vec3(1.07, 1.01, 0.93);
 uniform float saturation = 1.12;
@@ -46,7 +52,7 @@ void fragment() {
 	vec3 col = texture(screen_tex, uv).rgb;
 
 	// world position of this pixel, for texture that stays put on the ground
-	vec2 wp = uv * vec2(1280.0, 720.0) + cam_off;
+	vec2 wp = uv * view_px + cam_off;
 
 	float lum = dot(col, vec3(0.299, 0.587, 0.114));
 

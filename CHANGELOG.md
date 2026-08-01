@@ -47,6 +47,46 @@ project requests, and its availability varies by browser (notably absent
 on iOS Safari), so a phone that stays in portrait is a real case, not an
 edge case.
 
+**Second pass, before tagging: the sweep above was incomplete.** It fixed
+the four separate panel scripts and missed every element built inside
+`main.gd/_build_hud`, which is most of the HUD. Shipping it as it stood
+would have replaced letterboxing with something worse-looking on exactly
+the devices it was meant to help:
+
+- `grade_rect` was a fixed 1280x720 rect, so the strip that `expand`
+  reveals on a wide window went completely ungraded - no vignette, no
+  grain, visibly brighter, with a hard vertical seam down the picture.
+  Screenshots at 844x390 before and after confirm both the fault and the
+  fix. The grade's world-locked surface noise also derived world position
+  from a hardcoded frame (`uv * vec2(1280, 720) + cam_off`, with `cam_off`
+  half of the reference frame), which would have scaled the asphalt
+  aggregate with the window and slid it against the ground; the shader now
+  takes a `view_px` uniform and the camera offset uses half the real
+  viewport.
+- Sixteen `HORIZONTAL_ALIGNMENT_CENTER` labels held `size.x = 1280`, so
+  every centred line - the title, the level carousel, owner and weather
+  callouts, messages, the pause and tutorial text - sat 139px left of
+  centre on a 1558px-wide viewport.
+- The bottom rule (hint line, version, combo meter) and the wardrobe
+  cluster measured in from the reference frame, so they drifted inward on
+  a wide window and floated up the picture on a tall one.
+
+These now go through two helpers, `_pin_wide` and `_pin_box`, which anchor
+against the live viewport and re-solve on rotation with nothing listening
+for a resize. Each element declares which rule it hangs off (top edge,
+middle of the screen, bottom edge) so stacks keep the spacing they were
+composed with. The wardrobe's preview dog is a Node2D and cannot anchor, so
+it reads the panel's rect when the screen opens.
+
+New CI test `tests/test_hud_anchoring.gd` reshapes a real viewport to
+1280x720, 844x390 and 390x844 and asserts the five invariants: the grade
+covers the viewport, full-width lines span it, bottom-rule elements hold
+their distance from the true bottom edge, the combo meter stays centred,
+and nothing hangs off any edge. 389 checks. It was confirmed to fail on the
+first-pass commit before being kept - a test that cannot fail is not a
+guard. Native 1280x720 is asserted unchanged, so the desktop layout is
+pinned too.
+
 ## 2026-07-31 - v1.53 release
 
 In-game version label bumped to v1.53. Tag `v1.53` publishes web and

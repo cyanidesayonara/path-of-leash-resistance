@@ -129,6 +129,12 @@ jobs:
       - name: NPC pair owner appearance regression test
         run: LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x1024x24" ./Godot_v4.7-stable_linux.x86_64 --rendering-method gl_compatibility --path . --script res://tests/test_pair_owner_appearance.gd
 
+      # reshapes a real viewport to a landscape phone and a portrait phone and
+      # asserts the HUD follows. Needs a rendering context: anchors only resolve
+      # against a live viewport, which is exactly what the headless run lacks.
+      - name: HUD anchoring across window shapes
+        run: LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x1024x24" ./Godot_v4.7-stable_linux.x86_64 --rendering-method gl_compatibility --path . --script res://tests/test_hud_anchoring.gd
+
       - name: Level structural sanity sweep (every walk)
         # validates each level inside the real runtime: props on their own
         # pavement, well-formed goal lists, and goals the level can actually
