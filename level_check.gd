@@ -52,8 +52,6 @@ static func check(m) -> Array:
 	# the beach is exempt: its sand / boardwalk / bike-path cross-section
 	# deliberately places things outside the walkway
 	if lv != "beach":
-		var lo: float = m.sw_l - 2.0
-		var hi: float = m.sw_r + 2.0
 		var groups := {
 			"stall": m.stalls, "bin": m.bins, "bench": m.benches,
 			"a-stand": m.astands, "van": m.vans, "performer": m.performers,
@@ -61,17 +59,24 @@ static func check(m) -> Array:
 			"wallcat": m.wallcat_spots, "guard": m.guard_posts,
 			"candy": m.candy_spots, "fountain": m.fountains,
 		}
+		# measured against the path AT EACH PROP'S OWN Y, so this keeps working
+		# when a street bends instead of quietly condemning every prop on the
+		# outside of a curve
 		for name in groups:
 			for v in groups[name]:
-				if v.x < lo or v.x > hi:
-					p.append("%s at x=%.0f is off the pavement (%.0f..%.0f)" % [name, v.x, lo, hi])
+				var e: Vector2 = m.walk_edges(v.y)
+				if v.x < e.x - 2.0 or v.x > e.y + 2.0:
+					p.append("%s at (%.0f, %.0f) is off the pavement (%.0f..%.0f there)" % [
+						name, v.x, v.y, e.x, e.y])
 					break
 		for d in m.hydrants:
-			if d.pos.x < lo or d.pos.x > hi:
+			var he: Vector2 = m.walk_edges(d.pos.y)
+			if d.pos.x < he.x - 2.0 or d.pos.x > he.y + 2.0:
 				p.append("hydrant at x=%.0f is off the pavement" % d.pos.x)
 				break
 		for d in m.kebabs:
-			if d.pos.x < lo or d.pos.x > hi:
+			var ke: Vector2 = m.walk_edges(d.pos.y)
+			if d.pos.x < ke.x - 2.0 or d.pos.x > ke.y + 2.0:
 				p.append("snack at x=%.0f is off the pavement" % d.pos.x)
 				break
 

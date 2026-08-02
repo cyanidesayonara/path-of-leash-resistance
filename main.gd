@@ -611,10 +611,33 @@ func _apply_corridor() -> void:
 	sw_l = walk_cx - walk_half
 	sw_r = walk_cx + walk_half
 	# The SHAPE of the corridor, on top of its width. Empty means a straight
-	# pair of vertical lines at exactly sw_l/sw_r, which is what every level
-	# was before this existed and still is until one is authored a bend. See
-	# edge_path.gd; walk_edges(y) is what everything should ask.
+	# pair of vertical lines at exactly sw_l/sw_r, which is what most levels
+	# still are. See edge_path.gd; walk_edges(y) is what everything should ask.
 	edge_nodes = []
+	# EL BOSC IS THE FIRST CANDIDATE TO BEND, and it is not bending yet. The
+	# shape below works - the pavement ribbon curves, the props and the mud
+	# follow it, and the self-test passes - but the walk still looks wrong,
+	# because a level is more than its corridor. The trail's mud patches are
+	# Rect2s, and a hard axis-aligned rectangle laid across a bend overhangs
+	# the path onto the grass on the outside of every curve. Same problem
+	# waiting in every other bespoke feature built from a rectangle: the
+	# stream, the station conveyor, the terrace canopies.
+	#
+	# So the blocker was only half of what it looked like. Making the EDGE a
+	# curve was the hard part and it is done; what is left is that the things
+	# lying ON the path have to become ribbons too, measured between
+	# walk_edges over a y-span instead of pinned to a rect. That is the next
+	# piece of work, and until it lands a curved level would look worse than a
+	# straight one, which is the opposite of the point.
+	#
+	#	edge_nodes = [
+	#		{"y": START_Y, "cx": 640.0, "half": 250.0},
+	#		{"y": -900.0, "cx": 566.0, "half": 250.0},
+	#		{"y": -2000.0, "cx": 716.0, "half": 212.0},   # the pinch
+	#		{"y": -3100.0, "cx": 578.0, "half": 246.0},
+	#		{"y": -4200.0, "cx": 668.0, "half": 250.0},
+	#		{"y": GATE_Y, "cx": 640.0, "half": 250.0},
+	#	]
 
 
 func _fit_x(x: float, lo: float, hi: float) -> float:
@@ -630,21 +653,25 @@ func _fit_props_to_corridor() -> void:
 	# cross-section deliberately places things outside the walkway.
 	if lvl == "beach":
 		return
+	# Fitted at each prop's OWN y, so a bend in the path carries its lampposts
+	# and bins around with it. Against the straight sw_l/sw_r a curved street
+	# would leave a trail of furniture standing out on the grass where the path
+	# used to be.
 	var pad := 26.0
-	var lo := sw_l + pad
-	var hi := sw_r - pad
 	for arr in [poles, tables, chairs, parasols, astands, vans, stalls, bins,
 			benches, performers, cone_spots, manholes, wallcat_spots,
 			guard_posts, candy_spots, fountains]:
 		for i in range(arr.size()):
 			var p: Vector2 = arr[i]
+			var e := walk_edges(p.y)
 			# remap proportionally so left-side props stay left, right stay right
-			arr[i] = Vector2(_fit_x(p.x, lo, hi), p.y)
+			arr[i] = Vector2(_fit_x(p.x, e.x + pad, e.y - pad), p.y)
 	# the dictionary-based pickups need the same treatment
 	for list in [hydrants, kebabs, candy]:
 		for d in list:
 			var dp: Vector2 = d.pos
-			d.pos = Vector2(_fit_x(dp.x, lo, hi), dp.y)
+			var de := walk_edges(dp.y)
+			d.pos = Vector2(_fit_x(dp.x, de.x + pad, de.y - pad), dp.y)
 	# FUR-GONETA is authored against sw_l/sw_r already, so it is not remapped
 	# here. Its rope flanks are appended after this fit from that same centre.
 
@@ -885,11 +912,15 @@ func _build_level_data() -> void:
 		# the going, and a stream to drink from. Calm, stop-start rhythm.
 		gate_text = "CLEARING"
 		signal_prone = true
-		mud_zones = [
-			Rect2(sw_l, -1600.0, sw_r - sw_l, 260.0),
-			Rect2(sw_l, -2900.0, sw_r - sw_l, 300.0),
-			Rect2(sw_l, -4100.0, sw_r - sw_l, 240.0),
-		]
+		# each patch spans the trail where the trail actually IS. A Rect2 cannot
+		# bend, so it is measured at the middle of its own band - close enough
+		# for a puddle, and far better than three rectangles pinned to where a
+		# straight path used to be
+		mud_zones = []
+		for band: Vector2 in [Vector2(-1600.0, 260.0), Vector2(-2900.0, 300.0),
+				Vector2(-4100.0, 240.0)]:
+			var me := walk_edges(band.x + band.y * 0.5)
+			mud_zones.append(Rect2(me.x, band.x, me.y - me.x, band.y))
 		fountains = [Vector2(360.0, -2400.0)]
 	elif lvl == "station":
 		# L'Estacio: a concourse with a moving walkway. On it you get carried
