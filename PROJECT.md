@@ -484,6 +484,101 @@ memorable.
        goals) -> its own look -> unlock placement in the run order. Each
        step needs level_check and the autowalk bot taught about it, or CI
        goes red on a half-built level.
+
+       REFINEMENT (Santtu, Aug 2026):
+
+       A CANYON, NOT A CORRIDOR. A narrow street with a narrow Spanish
+       sidewalk, buildings hard against both sides. This is the structural
+       difference from a normal walk, and it is not just a smaller number:
+       normal levels put their walls at the LEVEL edge (x=40/1240) and let
+       the dog roam grass and shoulders, held to the path only by the
+       owner's nagging (_offpath). A chase level closes both sides for
+       real - wall_sides both - so there is nowhere to go but south. Open
+       walk = a place to wander; chase = a place to be funnelled.
+
+       RESPITE BANDS, the Crash structure. The chase is not one continuous
+       squeeze but a rhythm: cross a trigger and it is on you, reach a
+       respite and it stalls (the brushes jam, the machine snags a skip),
+       and you get a breather - then the next trigger sets it going again.
+       Data, not code: an array of {trigger_y, respite_y} bands per level.
+       This is also what makes the tactical pee/poop real. Squatting costs
+       you ground, so you either spend a respite on it or gamble mid-run,
+       and the goals get somewhere to live that is not "while sprinting".
+
+       THE FOES, one per level, each earning its place by making a
+       DIFFERENT existing system the star rather than being a reskin:
+         1. SWEEPER - the narrow old-town street. The grinder, shipped art.
+         2. INCOMING TIDE - Passeig Maritim. The kill line is water, which
+            is already exactly what a chase needs (full width, no vehicle
+            art at all) and puts swimming and the shoreline centre stage.
+         3. RUNAWAY PARADE FLOAT - a festival street. Comedy and confetti,
+            and the substance system already has confetti in it.
+         4. SNOWPLOUGH - winter. Puts the ice physics (dog.ice) at the
+            centre, where they have never really been the point.
+       All four were already proposed as in-fiction devourers by setting
+       (see the threat grid above); this pins them to levels.
+
+       THE VILLAIN DOG IS A BOSS, NOT A CHASE. Considered as a fifth
+       pursuer and rejected on mechanics: a full-width kill line cannot be
+       juked, so its counterplay is pure pace, while a steering pursuer's
+       counterplay is CORNERING. rival.gd already states that contract -
+       "faster in a straight line but turns like a bus, so a dog who cuts
+       corners beats him" (_move_toward, TURN_RATE) - and it is a good,
+       realistic base for a hostile dog. But putting a juke-able pursuer in
+       a funnel with no room to cut, or a kill line in an arena, spoils
+       both. So: a hostile dog wants a BOUNDED ARENA boss level, reusing
+       rival.gd's turn-rate movement, and it is a separate backlog item
+       from the north-south runs.
+    11. THE CATALOGUE (Santtu, Aug 2026) - the unified-look pass, and the
+       thing a level editor would need first. Not one registry but THREE,
+       because the complaint "everything looks blocky and the sides of the
+       path are dead" is three separate gaps:
+
+       a. PROPS - what you bump into. One entry per kind declaring its
+          draw, radius, height (for the one light), leash role, markable,
+          shade. Object knowledge is currently spread across placement
+          arrays, per-level if/elif chains and draw code inside main.gd's
+          6000+ lines, with nothing declaring what "correct" is - which is
+          exactly why objects drifted apart. Three failure modes found by
+          hand so far, all mechanically checkable once declared: drawn in
+          the wrong projection (the challenge kid was side-on in a
+          top-down game), no shadow so no height, and flat fills with no
+          seams so it reads as a decal.
+
+       b. SURFACES - what it feels like underfoot. Today this is four
+          ad-hoc bools on dog.gd (sand_slow, swimming, slick, ice) read by
+          one speed expression, set from unrelated places: weather sets
+          slick/ice, a bare x threshold sets beach sand, Rect2 lists set
+          mud and water. There is no surface type, so "grass should feel
+          different from pavement" has nowhere to live. A surface registry
+          (drag, grip, sound, paw marks, whether the leash drags) is what
+          makes the sides of the path worth walking on, and it is the same
+          table the tide and snowplough chase levels would read.
+
+       c. EDGES - where the corridor is, and what is beyond it. Two jobs.
+          First, WALKABLE SIDES: grass verges with picnickers and
+          obstacles on the Boulevard, a beach and a slice of sea on the
+          Passeig, all of it distinct from a building frontage, which must
+          read as a wall and not as more walkable strip. Second, SHAPE.
+
+       THE BLOCKER, and it is real: corridor edges are plain floats
+       (sw_l/sw_r) with no y term, so every path in the game is a pair of
+       straight vertical lines and every building is an axis-aligned rect.
+       There is exactly one edge in the whole game that varies with y -
+       beach_shore_x(y) - and it is a straight diagonal that gameplay
+       approximates with a stack of 36px horizontal water strips
+       PRECISELY BECAUSE the collision model cannot express a slanted
+       edge. So "weavy, curvy paths and rounded buildings" is not a
+       drawing job; it needs the edge to become a function of y that both
+       the renderer and the collision builder read. That is a catalogue
+       change (c), not a per-level one, and it is the single highest-value
+       item here because it unblocks the whole "everything is blocky"
+       complaint at once.
+
+       Order: (b) surfaces first - smallest, and it makes the sides worth
+       having before they have anything on them. Then (c) edges, which is
+       the blocker and the big win. Then (a) props, the long tail. An
+       editor comes after all three, and is small by then.
   (Working title joke, recorded for posterity and not adopted: "Tony Dawg".)
 - Uniqueness rule (from playtesting): shared asset library for
   efficiency, but every setting must earn its own look AND at least one
