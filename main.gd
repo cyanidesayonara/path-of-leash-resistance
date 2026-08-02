@@ -35,6 +35,7 @@ const DOG_MASS := 1.0
 const HUMAN_MASS := 4.0
 const SwingMath := preload("res://swing.gd")
 const Mood := preload("res://mood.gd")
+const Surfaces := preload("res://surfaces.gd")
 const TangleGeom := preload("res://tangle_geom.gd")
 const POLE_RADIUS := 10.0
 const TREE_RADIUS := 13.0  # a trunk is stouter than a lamppost
@@ -1497,6 +1498,11 @@ func _draw_scents() -> void:
 	# so a mood makes a walk harder to read, never impossible to finish.
 	if mood != null:
 		reach *= mood.scent_mult()
+	# ...and what she is standing on. Grass and mud hold a day's worth of
+	# smell where pavement holds almost none and water holds none at all, so
+	# stepping onto the verge opens the street up. This is the reward half of
+	# the surface trade: grass costs a little speed and pays in nose.
+	reach *= Surfaces.scent_mult(dog.surface)
 	var t := Time.get_ticks_msec() / 1000.0
 	var shown := 0
 	for src in _scent_sources():
@@ -4694,24 +4700,54 @@ func _pairs(delta: float) -> void:
 			float_text(dog.global_position, "TANGLED! +3", Color(1, 0.85, 0.7))
 
 
+func surface_at(p: Vector2) -> int:
+	# The one place that decides what the ground is. Everything that cares -
+	# how fast she goes, how well she can turn, how far she can smell - asks
+	# this and then asks surfaces.gd, rather than each re-deriving it from a
+	# different bit of geometry the way the old bools did.
+	for w: Rect2 in water:
+		if w.has_point(p):
+			return Surfaces.S.WATER
+	for mz: Rect2 in mud_zones:
+		if mz.has_point(p):
+			return Surfaces.S.MUD
+	if lvl == "beach" and p.x < 340.0:
+		return Surfaces.S.SAND
+	for sz in substance_zones:
+		if bool(sz.get("slow", false)) and (sz.rect as Rect2).has_point(p):
+			return Surfaces.S.SAND
+	if p.x >= sw_l and p.x <= sw_r:
+		return Surfaces.S.PAVEMENT
+	# the carriageway and its shoulder are hard ground, not verge. Checked
+	# after the walkway so the wider levels, whose pavement reaches across
+	# this band, still read as pavement.
+	if p.x >= BLANE_L - 10.0 and p.x <= SHOULDER_R:
+		return Surfaces.S.PAVEMENT
+	# anything else is the green either side, which is now somewhere worth
+	# being rather than merely somewhere allowed
+	return Surfaces.S.GRASS
+
+
 func _offpath(delta: float) -> void:
 	# the dog may roam, but an undistracted owner has opinions: after a
 	# few seconds off the walk they tut and reel the leash in a notch
-	dog.sand_slow = lvl == "beach" and dog.global_position.x < 340.0
-	if lvl == "trail":
-		for mz in mud_zones:
-			if mz.has_point(dog.global_position):
-				dog.sand_slow = true
-				break
+	dog.surface = surface_at(dog.global_position)
+	# kept in step for the code that still asks the old question directly
+	# (the dog's own drawing, the wading owner, the splash at the edge)
+	dog.sand_slow = dog.surface == Surfaces.S.SAND or dog.surface == Surfaces.S.MUD
 	# stand in something and it comes with you
 	for sz in substance_zones:
 		if (sz.rect as Rect2).has_point(dog.global_position):
 			paw_kind = String(sz.kind)
 			var sd: Dictionary = SUBSTANCES[paw_kind]
 			wet_paws = float(sd.life)
-			if bool(sz.get("slow", false)):
-				dog.sand_slow = true
 			break
+	# ...and a swim takes it all straight back off. True of dogs, the only way
+	# to undo a substance, and the thing that makes water a trade rather than
+	# purely a slow patch you have to cross
+	if bool(Surfaces.feel(dog.surface)["washes"]) and wet_paws > 0.0:
+		wet_paws = 0.0
+		paw_kind = ""
 	wet_paws = maxf(0.0, wet_paws - delta)
 	if wet_paws > 0.0 and paw_last.distance_to(dog.global_position) > 26.0:
 		paw_last = dog.global_position

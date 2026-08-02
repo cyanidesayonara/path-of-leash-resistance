@@ -123,6 +123,9 @@ jobs:
       - name: Leash-vault swing geometry regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_vault.gd
 
+      - name: Ground surface test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_surfaces.gd
+
       - name: Dog mood test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_mood.gd
 

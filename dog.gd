@@ -5,6 +5,7 @@ extends CharacterBody2D
 
 const SPEED := 330.0
 const ACCEL := 2400.0
+const Surfaces := preload("res://surfaces.gd")
 
 var planted := false
 var input_active := false
@@ -12,6 +13,9 @@ var dragged := false
 var bladder_slow := false
 var sand_slow := false
 var swimming := false
+# what she is standing on right now, as a Surfaces.S value. Set by main
+# each tick from surface_at(); the table in surfaces.gd says what it means.
+var surface := Surfaces.S.PAVEMENT
 var slick := false
 var ice := false
 var auto := false
@@ -159,9 +163,12 @@ func tick(delta: float) -> void:
 		if ice:
 			# packed snow/ice: barely any grip, momentum carries you
 			accel *= 0.32
-		# a full bladder waddles; sand is heavy going; water is a happy
-		# dog-paddle (slower, but she would stay in all day); turbo rips
-		var top := SPEED * (0.88 if bladder_slow else 1.0) * (0.8 if sand_slow else 1.0) * (0.62 if swimming else 1.0)
+		# What she is standing on, from surfaces.gd rather than a multiplier
+		# hardcoded here: sand is heavy going, grass grips better than it
+		# runs, water is a happy dog-paddle. A full bladder is not a surface
+		# - it waddles wherever you are - so it stays its own term.
+		accel *= Surfaces.grip_mult(surface)
+		var top := SPEED * (0.88 if bladder_slow else 1.0) * Surfaces.top_mult(surface)
 		if turbo_active:
 			top *= TURBO_MULT
 			accel = maxf(accel, 3200.0)
