@@ -11,20 +11,33 @@ extends Node
 # in your hands before you notice it on the screen.
 #
 # WEATHER, NOT A MENU. A mood only ever arrives from something that HAPPENED -
-# a guard dog waking up, a cat seen off, a snack swallowed whole - and then
-# fades on its own. There is no button to choose one and no button to cancel
-# one. What the player controls is what they DO about it, and doing the thing a
-# mood wants feeds it: barking while barky keeps you barky, running while the
-# zoomies are on keeps them going. That is the whole influence model, and it is
-# why this reads as the dog reacting rather than the player picking a filter.
+# a guard dog waking up, a cat seen off, running yourself into the ground - and
+# then fades on its own. There is no button to choose one and no button to
+# cancel one. What the player controls is what they DO about it:
+#
+#   - doing what a mood wants FEEDS it. Barking while barky keeps you barky;
+#     running while the zoomies are on keeps them going.
+#   - doing what would genuinely ANSWER a mood shortens it, and only ever
+#     through something real in the world. Being tired is answered by stopping
+#     for a breather, getting into the shade, or finding something to eat,
+#     because those are what actually answer it for a dog. See soothe().
+#
+# Both halves are things you do on the pavement rather than keys you press at
+# a mood, which is what keeps this the dog reacting rather than the player
+# picking a filter.
 #
 # The price of having no cancel button is that a mood must never take the game
 # away from you, so every effect here is bounded and brief:
 #
 #   - nothing here changes the camera or the zoom. The one thing the player
-#     must always keep is the frame they are playing in.
-#   - SCARED narrows what you can SMELL, not what you can see well enough to
-#     play. The vignette closes part way, never to a keyhole.
+#     must always keep is the frame they are playing in. SCARED and BARKY do
+#     genuinely shorten how far you can SEE, but they do it by closing the
+#     picture in from the edges - the middle, where you and the leash are,
+#     stays readable at any strength. tests/test_mood.gd holds that to a
+#     number rather than to this paragraph.
+#   - SCARED also narrows what you can SMELL, and that is the real cost of it.
+#     It limits perception only: nothing becomes unfindable, so a mood makes a
+#     walk harder to read and never impossible to finish.
 #   - the biggest speed change is a fifth either way, so a mood re-colours how
 #     a stretch of pavement handles without ever driving for you.
 #   - the longest mood is fifteen seconds and the HUD names it the whole time,
@@ -34,18 +47,18 @@ extends Node
 # multipliers and a grade back out. No node lookups, no drawing, so the whole
 # thing is testable headless.
 
-enum M { HAPPY, SCARED, BARKY, ZOOMIES, FLAT }
+enum M { HAPPY, SCARED, BARKY, ZOOMIES, TIRED }
 
 # Seconds for a mood at full strength to fade back to nothing. ZOOMIES is the
 # shortest deliberately: a real frenetic-activity burst is half a minute of
-# madness, not a mode you settle into. FLAT is the longest because a dog that
-# has eaten a whole kebab off the pavement does not recover on a timer you
-# would call brief.
+# madness, not a mode you settle into. TIRED is the longest, because running
+# yourself empty is not something you shake off in a few strides - though it is
+# the one mood you can actively do something about (see soothe).
 const FADE := {
 	M.SCARED: 9.0,
 	M.BARKY: 10.0,
 	M.ZOOMIES: 7.0,
-	M.FLAT: 15.0,
+	M.TIRED: 15.0,
 }
 
 # A mood has to be properly provoked before it takes over, so a single event
@@ -70,8 +83,8 @@ const EFFECT := {
 	M.BARKY: {"speed": 1.06, "accel": 1.18, "scent": 0.80, "pull": 1.22},
 	# the zoomies: all legs, no steering, and nothing else gets a look in
 	M.ZOOMIES: {"speed": 1.22, "accel": 1.45, "scent": 0.55, "pull": 1.15},
-	# flat: heavy going, and easy for the human to simply tow
-	M.FLAT: {"speed": 0.80, "accel": 0.70, "scent": 0.90, "pull": 0.82},
+	# worn out: heavy going, and easy for the human to simply tow
+	M.TIRED: {"speed": 0.80, "accel": 0.70, "scent": 0.90, "pull": 0.82},
 }
 
 # The grade each mood pulls the picture toward. M.HAPPY holds the authored
@@ -79,30 +92,38 @@ const EFFECT := {
 # the game ships with rather than somewhere near it.
 const GRADE := {
 	M.HAPPY: {
-		"sat": 1.12, "con": 1.05, "vig": 0.26, "lift": 0.055,
+		"sat": 1.12, "con": 1.05, "vig": 0.26, "tight": 1.6, "exp": 1.00,
+		"lift": 0.055, "tint": Vector3(1.00, 1.00, 1.00),
 		"cool": Vector3(0.90, 0.95, 1.09), "warm": Vector3(1.07, 1.01, 0.93),
 	},
-	# cold, drained and closing in. The vignette does the work; the colour
-	# just stops being friendly
+	# Fright: the street goes DARK and the world closes to a tunnel. The two
+	# things doing the work are exposure (a genuinely dimmer picture, not a
+	# grey one) and a tight vignette, which shortens how far you can see
+	# rather than just shading the corners. Colour drains toward cold blue.
 	M.SCARED: {
-		"sat": 0.72, "con": 1.18, "vig": 0.52, "lift": 0.020,
-		"cool": Vector3(0.82, 0.90, 1.18), "warm": Vector3(0.92, 0.96, 1.06),
+		"sat": 0.55, "con": 1.22, "vig": 0.95, "tight": 3.4, "exp": 0.62,
+		"lift": 0.010, "tint": Vector3(0.80, 0.88, 1.10),
+		"cool": Vector3(0.74, 0.86, 1.24), "warm": Vector3(0.86, 0.93, 1.08),
 	},
-	# everything vivid and too close, the way a street looks when you have
-	# decided about it
+	# Seeing red. A flat red cast over the whole picture with the world pulled
+	# in close - not as far in as fright, because barky is a narrowing of
+	# ATTENTION onto the thing you have decided about, not a loss of nerve.
 	M.BARKY: {
-		"sat": 1.42, "con": 1.16, "vig": 0.20, "lift": 0.050,
-		"cool": Vector3(0.95, 0.95, 1.02), "warm": Vector3(1.16, 1.04, 0.88),
+		"sat": 1.30, "con": 1.20, "vig": 0.66, "tight": 2.5, "exp": 0.94,
+		"lift": 0.040, "tint": Vector3(1.22, 0.66, 0.58),
+		"cool": Vector3(1.02, 0.90, 0.88), "warm": Vector3(1.18, 0.94, 0.84),
 	},
 	# wide open and bright: the vignette lifts, which is what makes a burst
 	# feel like more room rather than more speed
 	M.ZOOMIES: {
-		"sat": 1.30, "con": 1.10, "vig": 0.12, "lift": 0.075,
+		"sat": 1.30, "con": 1.10, "vig": 0.12, "tight": 1.3, "exp": 1.06,
+		"lift": 0.075, "tint": Vector3(1.02, 1.03, 0.98),
 		"cool": Vector3(0.94, 0.98, 1.10), "warm": Vector3(1.12, 1.05, 0.94),
 	},
 	# washed out and hazy, contrast gone soft - the look of not caring
-	M.FLAT: {
-		"sat": 0.80, "con": 0.90, "vig": 0.30, "lift": 0.130,
+	M.TIRED: {
+		"sat": 0.80, "con": 0.90, "vig": 0.30, "tight": 1.5, "exp": 0.93,
+		"lift": 0.130, "tint": Vector3(1.00, 0.99, 0.96),
 		"cool": Vector3(0.98, 0.98, 1.02), "warm": Vector3(1.02, 1.00, 0.98),
 	},
 }
@@ -113,14 +134,14 @@ const SAID := {
 	M.SCARED: "SOMETHING IS WRONG. STAY LOW.",
 	M.BARKY: "EVERYTHING NEEDS TELLING.",
 	M.ZOOMIES: "THE LEGS HAVE DECIDED.",
-	M.FLAT: "EVERYTHING IS HEAVY.",
+	M.TIRED: "EVERYTHING IS HEAVY.",
 }
 # and a short badge for the vitals panel, where there is no room for a sentence
 const BADGE := {
 	M.SCARED: "SCARED",
 	M.BARKY: "BARKY",
 	M.ZOOMIES: "ZOOMIES",
-	M.FLAT: "FLAT",
+	M.TIRED: "TIRED",
 }
 # the colour the line and the badge are said in, pulled from each mood's own
 # grade so the words agree with the picture behind them
@@ -128,7 +149,7 @@ const TINT := {
 	M.SCARED: Color(0.72, 0.80, 1.00),
 	M.BARKY: Color(1.00, 0.72, 0.44),
 	M.ZOOMIES: Color(0.86, 1.00, 0.62),
-	M.FLAT: Color(0.80, 0.78, 0.72),
+	M.TIRED: Color(0.80, 0.78, 0.72),
 }
 
 # How fast the picture follows the mood. Slower than the mood itself on
@@ -166,7 +187,7 @@ func setup(m: Node2D) -> void:
 
 
 func reset() -> void:
-	charge = {M.SCARED: 0.0, M.BARKY: 0.0, M.ZOOMIES: 0.0, M.FLAT: 0.0}
+	charge = {M.SCARED: 0.0, M.BARKY: 0.0, M.ZOOMIES: 0.0, M.TIRED: 0.0}
 	active = M.HAPPY
 	intensity = 0.0
 	t = 0.0
@@ -181,6 +202,19 @@ func bump(m: int, amount: float) -> void:
 	if m == M.HAPPY or not charge.has(m):
 		return
 	charge[m] = clampf(float(charge[m]) + amount, 0.0, 1.0)
+
+
+# The other direction: something happened that makes this mood LESS true.
+#
+# Not a cancel button - the player never presses this, and no mood can be
+# soothed by wanting it gone. It is for things you do in the world that would
+# genuinely help, which is what keeps the influence model honest: being tired
+# is answered by getting your breath back, finding shade, or eating something,
+# because that is what actually answers it for a dog.
+func soothe(m: int, amount: float) -> void:
+	if m == M.HAPPY or not charge.has(m):
+		return
+	charge[m] = clampf(float(charge[m]) - amount, 0.0, 1.0)
 
 
 func tick(delta: float) -> void:

@@ -52,6 +52,7 @@ func _run() -> void:
 	_test_strongest_wins()
 	_test_effects_bounded()
 	_test_wobble()
+	_test_soothing()
 	_test_voice()
 
 	print("\n%d checks, %d failures" % [checks, failures.size()])
@@ -107,7 +108,7 @@ func _test_needs_provocation() -> void:
 
 func _test_every_mood_ends() -> void:
 	print("\n--- every mood ends on its own (there is no cancel button) ---")
-	for mk: int in [Mood.M.SCARED, Mood.M.BARKY, Mood.M.ZOOMIES, Mood.M.FLAT]:
+	for mk: int in [Mood.M.SCARED, Mood.M.BARKY, Mood.M.ZOOMIES, Mood.M.TIRED]:
 		var m := _fresh()
 		m.bump(mk, 1.0)
 		m.tick(DT)
@@ -195,16 +196,46 @@ func _test_effects_bounded() -> void:
 			"scent is never fully blinded (%s -> %.2f)" % [Mood.BADGE[mk], float(e["scent"])])
 		_check(float(e["pull"]) >= 0.7 and float(e["pull"]) <= 1.35,
 			"pull effect stays within reason (%s -> %.2f)" % [Mood.BADGE[mk], float(e["pull"])])
-	# the vignette must never close to a keyhole - the player keeps their frame
+	# THE FRAME YOU PLAY IN. SCARED and BARKY are meant to genuinely shorten
+	# how far you can see, so a flat cap on the vignette is the wrong test -
+	# what matters is that closing the world in never reaches the middle, where
+	# the dog and the leash are. This is the shader's own arithmetic:
+	#
+	#   brightness = exposure * (1 - vig * dot(d, d) * tight),  d = uv - 0.5
+	#
+	# checked at 20% of the screen out from the centre, which comfortably holds
+	# the dog, the human and the rope between them.
+	var d2 := 0.2 * 0.2
 	for mk: int in Mood.GRADE:
-		_check(float((Mood.GRADE[mk] as Dictionary)["vig"]) <= 0.60,
-			"vignette never becomes a keyhole (%s)" % mk)
+		var g: Dictionary = Mood.GRADE[mk]
+		var centre_lit: float = float(g["exp"]) * (1.0 - float(g["vig"]) * d2 * float(g["tight"]))
+		# Half brightness is the floor, and it is a legibility floor rather
+		# than a taste one: fright is SUPPOSED to make the street dark, so the
+		# test may not be tuned tighter than the design just to stay green.
+		# SCARED sits at 0.54 by intent and was eyeballed at that value.
+		_check(centre_lit >= 0.50,
+			"%s keeps the middle of the screen playable (%.2f of full)" % [
+				String(Mood.BADGE.get(mk, "HAPPY")), centre_lit])
+		# and the corners may go dark but the maths must not go negative and
+		# start brightening again
+		var corner: float = 1.0 - float(g["vig"]) * 0.5 * float(g["tight"])
+		_check(corner <= 1.0, "%s never brightens the corners" % String(Mood.BADGE.get(mk, "HAPPY")))
+	# fright really must be dark and narrow, or the mood is not doing its job
+	var scared: Dictionary = Mood.GRADE[Mood.M.SCARED]
+	_check(float(scared["exp"]) < 0.8, "SCARED genuinely darkens the street")
+	_check(float(scared["vig"]) * float(scared["tight"])
+		> float((Mood.GRADE[Mood.M.HAPPY] as Dictionary)["vig"]) * 3.0,
+		"SCARED genuinely shortens how far you can see")
+	# and barky really must be red
+	var barky_tint: Vector3 = (Mood.GRADE[Mood.M.BARKY] as Dictionary)["tint"]
+	_check(barky_tint.x > barky_tint.y * 1.3 and barky_tint.x > barky_tint.z * 1.3,
+		"BARKY sees red (%s)" % barky_tint)
 	# and the multipliers actually interpolate rather than snapping on
 	var m := _fresh()
-	m.bump(Mood.M.FLAT, 1.0)
+	m.bump(Mood.M.TIRED, 1.0)
 	m.tick(DT)
 	var full: float = m.speed_mult()
-	_check(absf(full - float((Mood.EFFECT[Mood.M.FLAT] as Dictionary)["speed"])) < 0.02,
+	_check(absf(full - float((Mood.EFFECT[Mood.M.TIRED] as Dictionary)["speed"])) < 0.02,
 		"a full mood applies its full effect (%.3f)" % full)
 	m.free()
 
@@ -238,18 +269,78 @@ func _test_wobble() -> void:
 	c.free()
 
 
+func _test_soothing() -> void:
+	print("\n--- being tired is answered by things a dog would actually do ---")
+	# soothing has to genuinely shorten a mood, or resting in the shade is just
+	# a nice idea that does nothing
+	var slow := _fresh()
+	var helped := _fresh()
+	slow.bump(Mood.M.TIRED, 1.0)
+	helped.bump(Mood.M.TIRED, 1.0)
+	# one tick to actually land the mood - active only moves inside tick()
+	slow.tick(DT)
+	helped.tick(DT)
+	_check(slow.active == Mood.M.TIRED and helped.active == Mood.M.TIRED,
+		"both runs start out tired")
+	var t_slow := 0.0
+	var t_helped := 0.0
+	while slow.active != Mood.M.HAPPY and t_slow < 40.0:
+		slow.tick(DT)
+		t_slow += DT
+	while helped.active != Mood.M.HAPPY and t_helped < 40.0:
+		# a breather plus shade, the way main.gd feeds it
+		helped.soothe(Mood.M.TIRED, DT * 0.30)
+		helped.soothe(Mood.M.TIRED, DT * 0.34)
+		helped.tick(DT)
+		t_helped += DT
+	_check(t_helped < t_slow * 0.75,
+		"resting in the shade really shortens it (%.1fs vs %.1fs)" % [t_helped, t_slow])
+	slow.free()
+	helped.free()
+
+	# a kebab is most of the way out of it in one go
+	var fed := _fresh()
+	fed.bump(Mood.M.TIRED, 1.0)
+	fed.tick(DT)
+	var before: float = fed.intensity
+	fed.soothe(Mood.M.TIRED, 0.55)
+	fed.tick(DT)
+	_check(fed.intensity < before - 0.4, "eating takes most of it away in one go")
+
+	# but soothing is not a cancel button, and it cannot go below nothing or
+	# leave a mood owing charge that would suppress the next one
+	fed.soothe(Mood.M.TIRED, 99.0)
+	fed.tick(DT)
+	_check(fed.active == Mood.M.HAPPY, "soothed all the way out")
+	_check(float(fed.charge[Mood.M.TIRED]) >= 0.0, "charge never goes negative")
+	fed.bump(Mood.M.TIRED, 1.0)
+	fed.tick(DT)
+	_check(fed.intensity > 0.95, "and the next tiring thing still lands in full")
+	fed.free()
+
+	# soothing one mood must not touch another - they are separate weathers
+	var mixed := _fresh()
+	mixed.bump(Mood.M.SCARED, 0.9)
+	mixed.bump(Mood.M.TIRED, 0.8)
+	mixed.soothe(Mood.M.TIRED, 0.8)
+	mixed.tick(DT)
+	_check(mixed.active == Mood.M.SCARED, "soothing tiredness leaves a fright alone")
+	_check(float(mixed.charge[Mood.M.SCARED]) > 0.8, "...at full strength")
+	mixed.free()
+
+
 func _test_voice() -> void:
 	print("\n--- the dog says it once ---")
 	var m := _fresh()
 	_check(m.badge() == "", "HAPPY wears no badge")
-	m.bump(Mood.M.FLAT, 1.0)
+	m.bump(Mood.M.TIRED, 1.0)
 	m.tick(DT)
 	var first: String = m.take_onset()
 	_check(first != "", "a mood arriving says its line: %s" % first)
 	_check(m.take_onset() == "", "...and does not repeat it every frame")
-	_check(m.badge() == "FLAT", "the badge names the mood")
+	_check(m.badge() == "TIRED", "the badge names the mood")
 	# every mood has both, or the HUD shows a blank
-	for mk: int in [Mood.M.SCARED, Mood.M.BARKY, Mood.M.ZOOMIES, Mood.M.FLAT]:
+	for mk: int in [Mood.M.SCARED, Mood.M.BARKY, Mood.M.ZOOMIES, Mood.M.TIRED]:
 		_check(String(Mood.SAID.get(mk, "")) != "", "mood %d has a line" % mk)
 		_check(String(Mood.BADGE.get(mk, "")) != "", "mood %d has a badge" % mk)
 		_check(Mood.FADE.has(mk) and Mood.EFFECT.has(mk) and Mood.GRADE.has(mk),

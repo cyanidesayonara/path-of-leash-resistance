@@ -26,6 +26,17 @@ uniform vec3 warm_light = vec3(1.07, 1.01, 0.93);
 uniform float saturation = 1.12;
 uniform float contrast = 1.05;
 uniform float vignette = 0.26;
+// how fast the vignette closes in from the edge. The ordinary grade wants a
+// wide, barely-there darkening; a mood wants to genuinely SHORTEN what you can
+// see, and that is a tighter falloff rather than simply a darker one - turning
+// vignette up alone just dims the whole picture evenly and reads as a fade.
+uniform float vignette_tight = 1.6;
+// a flat colour cast over everything, for moods that recolour the world
+// wholesale rather than nudging its split-tone (seeing red).
+uniform vec3 tint = vec3(1.0, 1.0, 1.0);
+// scales the whole picture's brightness. Fright makes the street DARK, and
+// darkness has to come off the light itself, not out of the black lift.
+uniform float exposure = 1.0;
 uniform float lift = 0.055;
 uniform float grain_fine = 0.055;
 uniform float grain_blotch = 0.045;
@@ -74,9 +85,16 @@ void fragment() {
 	// lift the blacks so shadowed ground keeps its shape at night
 	col += lift * (1.0 - col);
 
-	// vignette
+	// the mood's colour cast and its exposure, before the vignette so that
+	// closing the world in still darkens the tinted picture rather than
+	// fighting it
+	col *= tint * exposure;
+
+	// vignette. Squared distance from the middle, so it stays soft at the
+	// centre however far it is wound up: the frame the player is actually
+	// playing in never goes dark, only everything further out.
 	vec2 d = uv - 0.5;
-	col *= 1.0 - vignette * dot(d, d) * 1.6;
+	col *= max(0.0, 1.0 - vignette * dot(d, d) * vignette_tight);
 
 	// a whisper of animated grain over the top, so stills look filmic
 	float n = hash(uv * vec2(1280.0, 720.0) + time_seed);

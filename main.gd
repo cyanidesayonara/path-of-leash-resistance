@@ -390,7 +390,9 @@ var combo: Node
 var mood: Node
 # latch for the run-yourself-empty trigger, so hitting empty is a moment
 # rather than a condition (see _mood_ambient)
-var mood_spent := false
+var mood_worn := false
+# -1 for normal play; a Mood.M value when --mood= pins one on for photography
+var mood_forced := -1
 var challenge: Node
 var challenge_l: Label
 var challenge_giver: Node2D
@@ -3006,6 +3008,12 @@ func _build_hud() -> void:
 	mood.set_script(load("res://mood.gd"))
 	add_child(mood)
 	mood.setup(self)
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--mood="):
+			var want := a.substr(7).to_upper()
+			var names := {"SCARED": Mood.M.SCARED, "BARKY": Mood.M.BARKY,
+				"ZOOMIES": Mood.M.ZOOMIES, "TIRED": Mood.M.TIRED}
+			mood_forced = int(names.get(want, -1))
 	teeter = Node.new()
 	teeter.set_script(load("res://teeter.gd"))
 	add_child(teeter)
@@ -3927,6 +3935,9 @@ func _tick_mood(delta: float) -> void:
 		gm.set_shader_parameter("saturation", g["sat"])
 		gm.set_shader_parameter("contrast", g["con"])
 		gm.set_shader_parameter("vignette", g["vig"])
+		gm.set_shader_parameter("vignette_tight", g["tight"])
+		gm.set_shader_parameter("exposure", g["exp"])
+		gm.set_shader_parameter("tint", g["tint"])
 		gm.set_shader_parameter("lift", g["lift"])
 		gm.set_shader_parameter("cool_shadows", g["cool"])
 		gm.set_shader_parameter("warm_light", g["warm"])
@@ -3939,32 +3950,74 @@ func _mood_ambient(delta: float) -> void:
 	# The two moods a walk GROWS into, as opposed to the ones it gets startled
 	# into. Both are fed a little every frame the condition holds rather than
 	# landed in one go, so they arrive at the pace the walk does.
+	# --mood=scared|barky|zoomies|tired pins one on, so a look can be
+	# photographed and tuned without having to provoke it in play. Barky in
+	# particular needs a cat and a chase to arrive honestly.
+	if mood_forced >= 0:
+		mood.bump(mood_forced, delta * 3.0)
 	var spd: float = dog.velocity.length()
 	# Running yourself empty makes the legs go heavy - but as a one-off
 	# reaction to the moment you run out, not a tax on being tired. Fed every
-	# frame the tank was low it pinned FLAT on for the whole home leg, and
-	# since FLAT is slow AND gives the human an easier tow, a walk could get
+	# frame the tank was low it pinned TIRED on for the whole home leg, and
+	# since TIRED is slow AND gives the human an easier tow, a walk could get
 	# genuinely stuck in it. An edge trigger with hysteresis: it fires when you
 	# hit empty, and cannot fire again until you have got your breath back.
-	if dog.energy < 0.16 and not mood_spent:
-		mood_spent = true
-		mood.bump(Mood.M.FLAT, 0.70)
+	if dog.energy < 0.16 and not mood_worn:
+		mood_worn = true
+		mood.bump(Mood.M.TIRED, 0.70)
 	elif dog.energy > 0.35:
-		mood_spent = false
+		mood_worn = false
 	# a rested dog let off the leash is a dog with the zoomies
 	if phase == "freedom" and dog.energy > 0.80 and spd > 250.0:
 		mood.bump(Mood.M.ZOOMIES, delta * 0.65)
 	# Acting into a mood feeds it, and this is the whole of the player's
 	# influence over their own moods: keep running and the zoomies keep going.
-	# Only moods that reward DOING something get this. Feeding FLAT for being
+	# Only moods that reward DOING something get this. Feeding TIRED for being
 	# slow was the same idea run backwards and it made a trap - standing still
 	# is also what being stuck looks like, so it deepened the one mood you
 	# most need to be able to come out of.
 	if mood.active == Mood.M.ZOOMIES and spd > 240.0:
 		mood.bump(Mood.M.ZOOMIES, delta * 0.30)
+	# ...and the other half of the model: the things that genuinely ANSWER a
+	# mood shorten it. Being tired is the mood a dog can actually do something
+	# about, and all three answers are real ones rather than a button - stop
+	# and get your breath back, get out of the sun, or find something to eat
+	# (the eating is handled where the kebab is, since that is a moment).
+	if mood.active == Mood.M.TIRED:
+		if spd < 50.0:
+			mood.soothe(Mood.M.TIRED, delta * 0.30)
+		if _in_shade(dog.global_position):
+			# shade is worth more when there is actually a sun to get out of
+			mood.soothe(Mood.M.TIRED, delta * (0.34 if _sunny() else 0.12))
 	# something eating the pavement behind you is not a thing you get used to
 	if chase_active:
 		mood.bump(Mood.M.SCARED, delta * 0.50)
+
+
+func _sunny() -> bool:
+	return Game.weather == "clear" and not Game.night
+
+
+func _in_shade(p: Vector2) -> bool:
+	# Shade is where the SHADOW is, not where the tree is. Everything in this
+	# game throws its shadow along one light (LIGHT), so the cool patch under a
+	# plane tree sits clear of the trunk on the far side - standing on the tree
+	# does nothing, standing in its shadow is the thing. Costs nothing to agree
+	# with the picture, and it is the kind of detail a dog owner would notice.
+	for t: Vector2 in trees:
+		var d := p - (t + LIGHT * 46.0)
+		# the same squashed ellipse _draw_broadleaf lays its crown shadow on
+		if (d.x * d.x) / 1450.0 + (d.y * d.y) / 365.0 <= 1.0:
+			return true
+	for u: Vector2 in parasols:
+		var q := p - (u + LIGHT * 30.0)
+		if (q.x * q.x) / 900.0 + (q.y * q.y) / 230.0 <= 1.0:
+			return true
+	# the terrace awnings are proper roofs: under one is simply under it
+	for cn: Rect2 in canopies:
+		if cn.has_point(p):
+			return true
+	return false
 
 
 func _apply_leash(delta: float) -> void:
@@ -5160,7 +5213,10 @@ func _pickups(delta: float) -> void:
 			k.eaten = true
 			bones += 1
 			kebabs_eaten += 1
-			mood.bump(Mood.M.FLAT, 0.40)
+			# food answers being tired, it does not cause it. A whole kebab off
+			# the pavement is most of the way out of a flagging walk, which is
+			# both realistic and the reason to go out of your way for one
+			mood.soothe(Mood.M.TIRED, 0.55)
 			Sfx.play("snack")
 			combo.add("SNACK", 1)
 			float_text(k.pos, "snack +1", Color(1, 0.95, 0.7))
