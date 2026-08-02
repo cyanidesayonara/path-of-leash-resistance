@@ -459,6 +459,31 @@ memorable.
        mood should read on a pad or a phone, where there is no room for a
        sentence; and whether SCARED during the sweeper chase is one mood too
        many at the tensest moment of the walk.
+    10. CHASE LEVELS (Santtu, Aug 2026) - DESIGNED, NOT YET BUILT. The
+       sweeper stops being an optional modifier on a normal walk and gets
+       levels of its own, the way the boulder runs are their own levels in
+       Crash Bandicoot. The brief, verbatim in intent:
+         - a street and sidewalk in a NARROWER corridor, just wide enough to
+           take a careening sweeper. The narrowness is the level design.
+         - mostly about moving south quickly while dodging things, eating to
+           keep your strength up, and still finding goals and combos - it is
+           a chase, not a corridor with one input.
+         - you have to be TACTICAL about when and where to pee and poop,
+           which is the joke and the risk in one: the two things the game
+           makes you stop for are the two things that cost you ground.
+         - it opens CALM. Just an arrow telling you to go south. Then a
+           trigger point, and the sweeper is behind you.
+         - the closer it gets, the more fear you feel. (The proximity ramp
+           for this shipped early - see _mood_ambient - so the existing
+           chase legs already dread harder as the gap closes.)
+         - chase levels should feel notably DIFFERENT from normal ones, and
+           sit one per every three or four of them in the run order.
+       Explicitly a take-our-time feature, not a sprint. Build order that
+       keeps the tree green throughout: corridor width per level -> the
+       calm/trigger/chase phase machine -> level content (dodges, food,
+       goals) -> its own look -> unlock placement in the run order. Each
+       step needs level_check and the autowalk bot taught about it, or CI
+       goes red on a half-built level.
   (Working title joke, recorded for posterity and not adopted: "Tony Dawg".)
 - Uniqueness rule (from playtesting): shared asset library for
   efficiency, but every setting must earn its own look AND at least one

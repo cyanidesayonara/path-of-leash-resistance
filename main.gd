@@ -3989,9 +3989,18 @@ func _mood_ambient(delta: float) -> void:
 		if _in_shade(dog.global_position):
 			# shade is worth more when there is actually a sun to get out of
 			mood.soothe(Mood.M.TIRED, delta * (0.34 if _sunny() else 0.12))
-	# something eating the pavement behind you is not a thing you get used to
-	if chase_active:
-		mood.bump(Mood.M.SCARED, delta * 0.50)
+	# Something eating the pavement behind you is not a thing you get used to -
+	# and it gets worse the closer it is. A flat rate made the far end of a
+	# chase feel exactly like the near end, which wasted the one moment the
+	# whole sequence is built around. Squared, so dread is a slow background
+	# hum at a corridor's distance and climbs hard over the last stretch.
+	# Suppressed under --shot-sweeper only, so the machine's paint can be
+	# reviewed in daylight rather than through a frightened dog's eyes.
+	if chase_active and not "--shot-sweeper" in OS.get_cmdline_user_args():
+		var near := 0.0
+		if chase_sweeper != null:
+			near = clampf(1.0 - chase_sweeper.gap_to(dog.global_position) / 900.0, 0.0, 1.0)
+		mood.bump(Mood.M.SCARED, delta * (0.16 + 0.90 * near * near))
 
 
 func _sunny() -> bool:
@@ -5858,7 +5867,12 @@ func _enter_home() -> void:
 			spd = CHASE_SPEED_BOLT
 		elif chase_kind == "both":
 			spd = CHASE_SPEED_BOTH
-		chase_sweeper.setup(self, dog.global_position.y - CHASE_START_GAP, walk_cx, walk_half, spd)
+		# --shot-sweeper starts it right on your heels instead of a corridor
+		# away, so the machine can be photographed and its art reviewed. It
+		# spends the rest of the chase behind the camera, which is exactly how
+		# it went unlooked-at long enough to end up as a wall of rectangles.
+		var gap: float = 250.0 if "--shot-sweeper" in OS.get_cmdline_user_args() else CHASE_START_GAP
+		chase_sweeper.setup(self, dog.global_position.y - gap, walk_cx, walk_half, spd)
 		shake_t = 1.0
 		if owner_flees:
 			human.panic = true
