@@ -34,6 +34,7 @@ const LEASH_K := 32.0
 const DOG_MASS := 1.0
 const HUMAN_MASS := 4.0
 const SwingMath := preload("res://swing.gd")
+const Mood := preload("res://mood.gd")
 const TangleGeom := preload("res://tangle_geom.gd")
 const POLE_RADIUS := 10.0
 const TREE_RADIUS := 13.0  # a trunk is stouter than a lamppost
@@ -384,6 +385,12 @@ var shop_idx := 0
 var prompt_tw: Tween
 var msg_label: Label
 var combo: Node
+# the dog's mood: arrives from events, fades on its own, re-colours both the
+# picture and the handling while it lasts (mood.gd)
+var mood: Node
+# latch for the run-yourself-empty trigger, so hitting empty is a moment
+# rather than a condition (see _mood_ambient)
+var mood_spent := false
 var challenge: Node
 var challenge_l: Label
 var challenge_giver: Node2D
@@ -1481,6 +1488,13 @@ func _draw_scents() -> void:
 	# time, which is rather the point of a walk.
 	var speed := dog.velocity.length()
 	var reach: float = lerpf(SCENT_REACH_MAX, SCENT_REACH_MIN, clampf(speed / 300.0, 0.0, 1.0))
+	# and the mood closes the nose down on top of that. This is the sharpest
+	# thing a mood does: frightened, the street stops telling you anything, so
+	# SCARED costs you the sense the whole game is built on. It only shortens
+	# what you can PERCEIVE - nothing here changes what is actually findable,
+	# so a mood makes a walk harder to read, never impossible to finish.
+	if mood != null:
+		reach *= mood.scent_mult()
 	var t := Time.get_ticks_msec() / 1000.0
 	var shown := 0
 	for src in _scent_sources():
@@ -2988,6 +3002,10 @@ func _build_hud() -> void:
 	challenge.set_script(load("res://challenge.gd"))
 	add_child(challenge)
 	challenge.setup(self)
+	mood = Node.new()
+	mood.set_script(load("res://mood.gd"))
+	add_child(mood)
+	mood.setup(self)
 	teeter = Node.new()
 	teeter.set_script(load("res://teeter.gd"))
 	add_child(teeter)
@@ -3646,6 +3664,7 @@ func _physics_process(delta: float) -> void:
 	_progress(delta)
 	combo.tick(delta)
 	challenge.tick(delta)
+	_tick_mood(delta)
 	_tick_teeter(delta)
 	if tutorial_mode:
 		_tick_tutorial(delta)
@@ -3886,6 +3905,68 @@ func _process(_delta: float) -> void:
 		gm.set_shader_parameter("time_seed", fmod(elapsed * 7.0, 100.0))
 
 
+func _tick_mood(delta: float) -> void:
+	# A mood belongs to the walk. The menu has nothing to react to, and the
+	# tutorial teaches one thing at a time - a re-graded screen mid-lesson
+	# would read as a fault rather than a feeling.
+	if not started or tutorial_mode:
+		dog.mood_speed = 1.0
+		dog.mood_accel = 1.0
+		dog.mood_wobble = 0.0
+		return
+	_mood_ambient(delta)
+	mood.tick(delta)
+	# the handling first, the picture second - a mood should reach your hands
+	# before it reaches your eyes
+	dog.mood_speed = mood.speed_mult()
+	dog.mood_accel = mood.accel_mult()
+	dog.mood_wobble = mood.wobble()
+	if grade_rect != null:
+		var gm: ShaderMaterial = grade_rect.material
+		var g: Dictionary = mood.grade()
+		gm.set_shader_parameter("saturation", g["sat"])
+		gm.set_shader_parameter("contrast", g["con"])
+		gm.set_shader_parameter("vignette", g["vig"])
+		gm.set_shader_parameter("lift", g["lift"])
+		gm.set_shader_parameter("cool_shadows", g["cool"])
+		gm.set_shader_parameter("warm_light", g["warm"])
+	var line: String = mood.take_onset()
+	if line != "":
+		float_text(dog.global_position, line, mood.tint())
+
+
+func _mood_ambient(delta: float) -> void:
+	# The two moods a walk GROWS into, as opposed to the ones it gets startled
+	# into. Both are fed a little every frame the condition holds rather than
+	# landed in one go, so they arrive at the pace the walk does.
+	var spd: float = dog.velocity.length()
+	# Running yourself empty makes the legs go heavy - but as a one-off
+	# reaction to the moment you run out, not a tax on being tired. Fed every
+	# frame the tank was low it pinned FLAT on for the whole home leg, and
+	# since FLAT is slow AND gives the human an easier tow, a walk could get
+	# genuinely stuck in it. An edge trigger with hysteresis: it fires when you
+	# hit empty, and cannot fire again until you have got your breath back.
+	if dog.energy < 0.16 and not mood_spent:
+		mood_spent = true
+		mood.bump(Mood.M.FLAT, 0.70)
+	elif dog.energy > 0.35:
+		mood_spent = false
+	# a rested dog let off the leash is a dog with the zoomies
+	if phase == "freedom" and dog.energy > 0.80 and spd > 250.0:
+		mood.bump(Mood.M.ZOOMIES, delta * 0.65)
+	# Acting into a mood feeds it, and this is the whole of the player's
+	# influence over their own moods: keep running and the zoomies keep going.
+	# Only moods that reward DOING something get this. Feeding FLAT for being
+	# slow was the same idea run backwards and it made a trap - standing still
+	# is also what being stuck looks like, so it deepened the one mood you
+	# most need to be able to come out of.
+	if mood.active == Mood.M.ZOOMIES and spd > 240.0:
+		mood.bump(Mood.M.ZOOMIES, delta * 0.30)
+	# something eating the pavement behind you is not a thing you get used to
+	if chase_active:
+		mood.bump(Mood.M.SCARED, delta * 0.50)
+
+
 func _apply_leash(delta: float) -> void:
 	# The rope itself (leash.gd) is the constraint. Here: run the rope
 	# physics, then turn its stretch into tug-of-war forces. One tension,
@@ -3958,7 +4039,12 @@ func _apply_leash(delta: float) -> void:
 		# the dog's pulling feeds the whirl's spin-up
 		human.whirl_pull = maxf(float(human.whirl_pull), base_tension)
 	if not whirling:
-		human.velocity += h_dir * (base_tension * pulley / human_m) * delta
+		# the mood rides on the DOG's side of the tug of war: lunging at
+		# something worth telling off tows the human further than an ordinary
+		# pull would, and a flat dog barely troubles him at all. This is what
+		# makes a mood something the human notices too.
+		var lunge: float = mood.pull_mult() if mood != null else 1.0
+		human.velocity += h_dir * (base_tension * pulley * lunge / human_m) * delta
 	if not dog.planted:
 		dog.velocity += d_dir * (base_tension * shield / dog_m) * delta
 	# damp separating components so neither end bungees
@@ -4240,6 +4326,7 @@ func on_duck_disturbed(pos: Vector2) -> void:
 
 func on_critter_chase(pos: Vector2, kind: String) -> void:
 	squirrels_chased += 1
+	mood.bump(Mood.M.BARKY, 0.35)
 	if kind == "cat":
 		# not enemies - Tofu just prefers a respectful distance, and a
 		# nose boop is the closest Millie ever gets
@@ -4255,6 +4342,7 @@ func on_critter_chase(pos: Vector2, kind: String) -> void:
 
 func on_dog_hit() -> void:
 	dog_hits += 1
+	mood.bump(Mood.M.SCARED, 0.45)
 	# a knock is a wipeout: whatever chain you had going is gone
 	combo.bail()
 
@@ -4755,6 +4843,7 @@ func _update_tut_card() -> void:
 
 
 func on_rival_snatch(at: Vector2, what: String) -> void:
+	mood.bump(Mood.M.BARKY, 0.45)
 	# he has your things. This is a provocation, not a punishment: the combo
 	# survives, and you can have it straight back if you go and get it.
 	shake_t = maxf(shake_t, 0.3)
@@ -5071,6 +5160,7 @@ func _pickups(delta: float) -> void:
 			k.eaten = true
 			bones += 1
 			kebabs_eaten += 1
+			mood.bump(Mood.M.FLAT, 0.40)
 			Sfx.play("snack")
 			combo.add("SNACK", 1)
 			float_text(k.pos, "snack +1", Color(1, 0.95, 0.7))
@@ -5518,6 +5608,7 @@ func _spawn_wallcats() -> void:
 
 func on_wallcat_spooked(pos: Vector2) -> void:
 	Sfx.play("hiss")
+	mood.bump(Mood.M.BARKY, 0.30)
 	wall_cats_spooked += 1
 	bones += 2
 	combo.add("SHOO", 3)
@@ -5537,6 +5628,7 @@ func _spawn_guards() -> void:
 
 func on_guard_woken(pos: Vector2) -> void:
 	guards_woken += 1
+	mood.bump(Mood.M.SCARED, 0.60)
 	bones = maxi(0, bones - 2)
 	shake_t = maxf(shake_t, 0.5)
 	Sfx.play("bark", 0.6, -3.0)  # a deeper, angrier dog than Millie
@@ -5886,6 +5978,7 @@ func _build_daily_card(run_done: int, total: int, rec: Dictionary) -> void:
 
 func on_bark(pos: Vector2) -> void:
 	barks_done += 1
+	mood.bump(Mood.M.BARKY, 0.22)
 	Sfx.play("bark")
 	if human.global_position.distance_to(pos) < 170.0:
 		human.halt(0.8)

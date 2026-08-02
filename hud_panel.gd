@@ -66,6 +66,20 @@ func _draw() -> void:
 		if i < mini(main.marks.size(), 5):
 			draw_circle(p, 5.0, Color(0.95, 0.88, 0.5, 0.9))
 		draw_arc(p, 5.0, 0, TAU, 12, Color(1, 1, 1, 0.4), 1.2)
+	# The mood, when there is one. It rides on the card's bottom rule as a
+	# named badge with a bar, because a mood you cannot cancel has to be a mood
+	# you can at least SEE going: the bar draining is the promise that this
+	# passes on its own.
+	if main.mood != null:
+		var badge: String = main.mood.badge()
+		if badge != "":
+			var mi: float = clampf(main.mood.intensity, 0.0, 1.0)
+			var tint: Color = main.mood.tint()
+			draw_string(f, Vector2(60, 40), badge, HORIZONTAL_ALIGNMENT_LEFT, -1, 13,
+				Color(tint.r, tint.g, tint.b, 0.55 + 0.45 * mi))
+			var mb := Rect2(60, 46, 60, 4)
+			draw_rect(mb, Color(1, 1, 1, 0.12))
+			draw_rect(Rect2(mb.position, Vector2(60.0 * mi, 4)), Color(tint.r, tint.g, tint.b, 0.8))
 	# status line, gently pulsing beneath the card
 	var status: String = main.hud_status
 	if status != "":

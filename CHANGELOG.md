@@ -2,6 +2,71 @@
 
 Append-only session history, newest first.
 
+## 2026-08-02 - dog moods, first pass (unreleased)
+
+Backlog item 9, the one the plan calls the strongest idea in the pile. A mood
+is not a screen tint: it changes what the level IS to you, and the handling
+moves with the picture so you feel it in your hands before you read it on the
+screen. New `mood.gd`, pure logic like teeter.gd so it tests headless.
+
+Design decision taken this session: moods are **weather, not a menu**. They
+only ever arrive from something that HAPPENED and they fade on their own.
+There is no key to pick one and no key to cancel one. What the player controls
+is what they DO about it, and doing what a mood wants feeds it - barking while
+barky keeps you barky, running while the zoomies are on keeps them going.
+
+Having no cancel button is only safe if the fading is guaranteed, so the
+bounds are part of the design rather than tuning:
+
+- nothing here touches the camera or the zoom. The frame you play in is the
+  one thing a mood never takes.
+- SCARED shortens what you can SMELL, not what you can see. It only limits
+  perception - nothing becomes unfindable, so a mood makes a walk harder to
+  read and never impossible to finish.
+- the biggest speed change is a fifth either way, and the vignette closes part
+  way, never to a keyhole.
+- the longest mood is fifteen seconds and the HUD names it the whole time,
+  with a draining bar: the promise that this passes on its own, visible.
+
+Four moods. SCARED (a guard dog, a knock, something eating the pavement behind
+you): cold, drained, closing in, fast and stupid, and the street stops telling
+you anything. BARKY (a cat seen off, a chase, Brutus taking your things, your
+own barking): everything vivid and too close, and you lunge hard enough to tow
+the human off his line. ZOOMIES (rested and off the leash): wide open and
+bright, all legs and no steering - it adds a veer on top of wherever you
+pointed. FLAT (running yourself empty, or a whole kebab off the pavement):
+washed out, heavy going, and easy for the human to simply tow.
+
+The zoomies veer on layered sines rather than a random number, because the CI
+leans on `--autowalk` being deterministic and a mood in the movement path
+would otherwise take that with it.
+
+Two things the build caught that were worth catching:
+
+- `FADE` did not mean what it said. Decaying at a flat 1/FADE, a mood dropped
+  under the onset threshold at 66% of its stated time - SCARED lasted 5.9s
+  with a 9.0 constant. Now scaled so the number reads as "how long this mood
+  lasts", and the test holds it to that in both directions.
+- FLAT was a trap. It was fed every frame the tank was low AND fed again for
+  moving slowly, which is a spiral: slow makes you flat, flat makes you
+  slower. Autowalk found it as a hard stall on the home leg (the bot holds
+  turbo permanently, so its energy sits at zero and FLAT pinned on). Feeding a
+  mood for DOING something is right for the zoomies and exactly wrong for the
+  one mood you most need to come out of. Now an edge trigger with hysteresis:
+  hitting empty is a moment, not a condition.
+
+New `tests/test_mood.gd`, 79 checks, in CI. Most of it guards the promise
+rather than the feature: no mood starts by itself, one small event is not a
+mood, every mood ends within its own advertised fade, the grade lands back
+exactly on the authored values, and no entry in the effect tables may exceed
+its bounds - so a later tuning pass cannot quietly grow a mood into something
+that plays the game for you.
+
+Still open: how a mood should read on a controller or a phone, where there is
+no room for a sentence; and whether SCARED during the sweeper chase is one
+mood too many at the tensest moment of the walk. Both want playtesting rather
+than more design.
+
 ## 2026-08-01 - v1.54: mobile web canvas scaling
 
 The known-deferred gap from the v1.53 closeout: on a phone-shaped browser

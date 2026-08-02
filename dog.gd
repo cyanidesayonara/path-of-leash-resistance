@@ -19,6 +19,13 @@ var auto_move := Vector2.ZERO
 # the zoomies: a reserve of energy the dog is dying to burn. Turbo spends
 # it for a burst of speed; a walk should always shed some, like pee/poop.
 var energy := 1.0
+# set by main each tick from mood.gd: a mood changes how she handles, not just
+# how the screen looks, and the handling is meant to land first. 1.0 is an
+# ordinary unbothered dog; wobble is a veer in radians the zoomies add on top
+# of wherever the player actually pointed.
+var mood_speed := 1.0
+var mood_accel := 1.0
+var mood_wobble := 0.0
 var turbo_active := false
 const TURBO_MULT := 1.7
 var tumble_t := 0.0
@@ -158,9 +165,17 @@ func tick(delta: float) -> void:
 		if turbo_active:
 			top *= TURBO_MULT
 			accel = maxf(accel, 3200.0)
-		velocity = velocity.move_toward(iv * top, accel * delta)
+		# the mood goes on last, over the terrain and the turbo, so being
+		# scared on sand is both of those things at once
+		top *= mood_speed
+		accel *= mood_accel
+		# the zoomies do not steer: she goes roughly where you pointed. Only
+		# the executed direction veers - input_dir keeps the player's actual
+		# intent, which is what the rest of the game reads
+		var go := iv if mood_wobble == 0.0 else iv.rotated(mood_wobble)
+		velocity = velocity.move_toward(go * top, accel * delta)
 		if input_active:
-			facing = iv.normalized()
+			facing = go.normalized()
 	move_and_slide()
 	# the hips trail the shoulders: the body hinges mid-turn
 	gait += velocity.length() * delta * 0.055

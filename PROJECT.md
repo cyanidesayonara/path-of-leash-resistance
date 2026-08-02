@@ -434,18 +434,31 @@ memorable.
        multiplier and a natural co-op hook. Not yet built.
     8. WEATHER TURNING MID-WALK - rain starting changes the route home,
        not just the look. Not yet built.
-    9. DOG MOODS (Santtu, July 2026) - the strongest idea in the pile, and
-       worth refining before building. The scent trail proved that "see the
-       world as a dog does" is a rich seam; mood is that seam gone deeper.
-       HAPPY (normal), SCARED, BARKY and so on, where the mood does not just
-       tint the screen but changes what the level IS to you: scared might
-       shrink the world to a dim tunnel of looming shapes and long shadows
-       with hearing sharpened and scent muted; barky might light up every
-       dog, cat and pigeon as a target and make the owner harder to steer.
-       Best driven by events (a guard dog's bark, a chase, a full belly)
-       rather than chosen from a menu, so it reads as the dog REACTING.
-       Open design question: how the player influences it, because it must
-       never feel like losing control of your own camera.
+    9. DOG MOODS (Santtu, July 2026) - FIRST PASS SHIPPED (mood.gd, Aug
+       2026). The scent trail proved that "see the world as a dog does" is a
+       rich seam; mood is that seam gone deeper. Four moods, all arriving
+       from events and fading on their own: SCARED, BARKY, ZOOMIES, FLAT.
+       The open design question is answered - moods are WEATHER, NOT A MENU
+       (Santtu, Aug 2026). No key picks one and no key cancels one; the
+       player's influence is what they DO, and doing what a mood wants feeds
+       it. The safety rules that choice depends on, which are design and not
+       tuning: never touch the camera or the zoom, limit perception only
+       (nothing may become unfindable), a fifth of speed either way at most,
+       and the HUD names the mood with a draining bar the whole time so its
+       ending is always visible. tests/test_mood.gd guards all of it.
+       Next, in preference order, both realistic and both changing what the
+       LEASH means, which is where this game's moods pay best:
+         - ON A SCENT: nose-down tracking. Scent reach way up, everything
+           else muted, and she pulls toward the source. Deepens the system
+           that is already the best thing about being the dog.
+         - CLINGY: after a fright, or when the human goes out of sight. She
+           wants to be NEAR him, which inverts the game's usual tension -
+           slack becomes something you want, so it plays unlike anything
+           else here.
+       Still open, and wanting playtesting rather than more design: how a
+       mood should read on a pad or a phone, where there is no room for a
+       sentence; and whether SCARED during the sweeper chase is one mood too
+       many at the tensest moment of the walk.
   (Working title joke, recorded for posterity and not adopted: "Tony Dawg".)
 - Uniqueness rule (from playtesting): shared asset library for
   efficiency, but every setting must earn its own look AND at least one

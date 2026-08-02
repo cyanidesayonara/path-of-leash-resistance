@@ -20,6 +20,20 @@ phone-distracted human walks on autopilot; the leash is real verlet-rope
 physics (visual and gameplay constraint — see AGENTS.md). Ships to itch
 (`html5` + `windows`) on a version tag after green CI.
 
+## In flight (unreleased, on `main` after v1.54)
+
+**Dog moods** (`mood.gd`, backlog item 9). Four moods - SCARED, BARKY,
+ZOOMIES, FLAT - arriving from events and fading on their own. They are
+**weather, not a menu**: nothing picks a mood and nothing cancels one, so the
+bounds in `mood.gd`'s header are load-bearing rather than tuning. Never touch
+the camera. Limit perception only. A fifth of speed either way at most. Read
+that header before changing any number in it, and keep `tests/test_mood.gd`
+green - most of it guards the promise, not the feature.
+
+Also unreleased and untouched by me: branch `ms-store-msix` (Microsoft Store
+MSIX packaging, 5 commits, never pushed) predates the two v1.54 commits and
+needs a rebase onto `main` before it will build.
+
 ## Current state (v1.54 on `main`)
 
 Hardening rounds shipped via PR #3:
