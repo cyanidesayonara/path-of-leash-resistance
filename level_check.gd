@@ -24,6 +24,30 @@ static func check(m) -> Array:
 	if m.sw_l < 0.0 or m.sw_r > 1280.0:
 		p.append("corridor %.0f..%.0f leaves the viewport" % [m.sw_l, m.sw_r])
 
+	# --- the corridor's SHAPE, for walks whose path bends ---
+	# A path is a curve now (edge_path.gd), which is a good way to make a
+	# level stop looking blocky and an excellent way to author one that cannot
+	# be walked. Caught here rather than discovered as a dog wedged in a wall.
+	var EdgePathC = load("res://edge_path.gd")
+	var shape: Dictionary = EdgePathC.valid(m.edge_nodes, 120.0)
+	if not bool(shape["ok"]):
+		p.append("corridor shape: %s" % String(shape["why"]))
+	if not (m.edge_nodes as Array).is_empty():
+		# a corridor that slides sideways faster than a dog can strafe is a
+		# wall you cannot see coming
+		var slope: float = EdgePathC.max_slope(m.edge_nodes)
+		if slope > 0.85:
+			p.append("corridor veers %.2fpx sideways per px south - too sharp to run" % slope)
+		# and wherever it goes, it has to stay on screen and stay walkable
+		var ny: float = float((m.edge_nodes[0] as Dictionary)["y"])
+		var last_y: float = float((m.edge_nodes[(m.edge_nodes as Array).size() - 1] as Dictionary)["y"])
+		while ny <= last_y:
+			var e: Vector2 = m.walk_edges(ny)
+			if e.x < 40.0 or e.y > 1240.0:
+				p.append("corridor reaches %.0f..%.0f at y=%.0f, outside the level" % [e.x, e.y, ny])
+				break
+			ny += 120.0
+
 	# --- every prop on its own pavement ---
 	# the beach is exempt: its sand / boardwalk / bike-path cross-section
 	# deliberately places things outside the walkway

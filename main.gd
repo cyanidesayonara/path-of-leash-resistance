@@ -12,6 +12,12 @@ extends Node2D
 # opens out. (Set in _apply_corridor, per level.)
 var sw_l := 300.0
 var sw_r := 980.0
+# The corridor's shape down the level: a short list of {y, cx, half} control
+# nodes (edge_path.gd). Empty = the straight corridor sw_l..sw_r. Ask
+# walk_edges(y) rather than sw_l/sw_r anywhere the answer depends on WHERE
+# you are, or the path and the thing testing against it will disagree the
+# moment a level bends.
+var edge_nodes: Array = []
 # parallel bike lane along the right side, plus a narrow far shoulder
 # with temptations - crossing the lane is a voluntary risk
 const BLANE_L := 988.0
@@ -36,6 +42,7 @@ const HUMAN_MASS := 4.0
 const SwingMath := preload("res://swing.gd")
 const Mood := preload("res://mood.gd")
 const Surfaces := preload("res://surfaces.gd")
+const EdgePath := preload("res://edge_path.gd")
 const TangleGeom := preload("res://tangle_geom.gd")
 const POLE_RADIUS := 10.0
 const TREE_RADIUS := 13.0  # a trunk is stouter than a lamppost
@@ -603,6 +610,11 @@ func _apply_corridor() -> void:
 	walk_half = half
 	sw_l = walk_cx - walk_half
 	sw_r = walk_cx + walk_half
+	# The SHAPE of the corridor, on top of its width. Empty means a straight
+	# pair of vertical lines at exactly sw_l/sw_r, which is what every level
+	# was before this existed and still is until one is authored a bend. See
+	# edge_path.gd; walk_edges(y) is what everything should ask.
+	edge_nodes = []
 
 
 func _fit_x(x: float, lo: float, hi: float) -> float:
@@ -4700,6 +4712,51 @@ func _pairs(delta: float) -> void:
 			float_text(dog.global_position, "TANGLED! +3", Color(1, 0.85, 0.7))
 
 
+func _draw_walk_ribbon(vt: float, vb: float, bottom: float, col: Color) -> void:
+	# The pavement as a ribbon following the corridor, for a level whose path
+	# bends. Sampled ONLY down the visible range: a walk is five thousand
+	# pixels long and re-tracing all of it every frame is exactly the sort of
+	# thing that turns a smooth walk choppy.
+	#
+	# The straight case never comes here (see the caller) so nothing pays for
+	# this until a level actually uses it. The slab texture is left off a
+	# curved path on purpose for now - _draw_paving rules its slabs between
+	# the straight sw_l/sw_r and would overhang a bend.
+	var top: float = maxf(GATE_Y - 40.0, vt - 80.0)
+	var bot: float = minf(bottom, vb + 80.0)
+	if bot <= top:
+		return
+	const STEP := 48.0
+	var left := PackedVector2Array()
+	var right := PackedVector2Array()
+	var y := top
+	while y < bot + STEP:
+		var yy: float = minf(y, bot)
+		var e := walk_edges(yy)
+		left.append(Vector2(e.x, yy))
+		right.append(Vector2(e.y, yy))
+		if yy >= bot:
+			break
+		y += STEP
+	# one polygon: down the left edge and back up the right
+	var poly := PackedVector2Array(left)
+	for i in range(right.size() - 1, -1, -1):
+		poly.append(right[i])
+	draw_colored_polygon(poly, col)
+	# the kerbs, following the same two edges the surface test uses
+	for pts: PackedVector2Array in [left, right]:
+		for i in range(pts.size() - 1):
+			draw_line(pts[i], pts[i + 1], COL_SEAM, 3.0)
+
+
+func walk_edges(y: float) -> Vector2:
+	# (left_x, right_x) of the walkable path at this point down the level.
+	# The single source of truth for where the path IS - the pavement is drawn
+	# from it, the surface under her paws is decided by it, and props are
+	# fitted to it, so a bend moves all three together.
+	return EdgePath.edges(edge_nodes, y, walk_cx, walk_half)
+
+
 func surface_at(p: Vector2) -> int:
 	# The one place that decides what the ground is. Everything that cares -
 	# how fast she goes, how well she can turn, how far she can smell - asks
@@ -4716,7 +4773,8 @@ func surface_at(p: Vector2) -> int:
 	for sz in substance_zones:
 		if bool(sz.get("slow", false)) and (sz.rect as Rect2).has_point(p):
 			return Surfaces.S.SAND
-	if p.x >= sw_l and p.x <= sw_r:
+	var e := walk_edges(p.y)
+	if p.x >= e.x and p.x <= e.y:
 		return Surfaces.S.PAVEMENT
 	# the carriageway and its shoulder are hard ground, not verge. Checked
 	# after the walkway so the wider levels, whose pavement reaches across
@@ -6278,10 +6336,17 @@ func _draw_world() -> void:
 			if t.y > vt and t.y < vb:
 				draw_circle(t, 5.0, COL_GRASS_DARK)
 		# the walkway: sidewalk downtown, packed dirt in the park
-		draw_rect(Rect2(sw_l, GATE_Y - 40.0, sw_r - sw_l, bottom - GATE_Y), walkway)
-		_draw_paving(vt, vb, walkway)
-		draw_line(Vector2(sw_l, bottom), Vector2(sw_l, GATE_Y), COL_SEAM, 3.0)
-		draw_line(Vector2(sw_r, bottom), Vector2(sw_r, GATE_Y), COL_SEAM, 3.0)
+		if edge_nodes.is_empty():
+			# A straight corridor, which is every level until one is authored a
+			# bend: one rect and two lines, exactly as before. Kept as its own
+			# branch rather than folded into the ribbon so that straight levels
+			# pay nothing at all for the ability to curve.
+			draw_rect(Rect2(sw_l, GATE_Y - 40.0, sw_r - sw_l, bottom - GATE_Y), walkway)
+			_draw_paving(vt, vb, walkway)
+			draw_line(Vector2(sw_l, bottom), Vector2(sw_l, GATE_Y), COL_SEAM, 3.0)
+			draw_line(Vector2(sw_r, bottom), Vector2(sw_r, GATE_Y), COL_SEAM, 3.0)
+		else:
+			_draw_walk_ribbon(vt, vb, bottom, walkway)
 	# (what lies beyond the gate is drawn by freedomlayer, which owns
 	# everything up there - drawing it here put a green field on top of the
 	# cached canvas, which is how the dog beach briefly turned into a lawn)
