@@ -80,8 +80,9 @@ func _draw() -> void:
 			var mb := Rect2(60, 46, 60, 4)
 			draw_rect(mb, Color(1, 1, 1, 0.12))
 			draw_rect(Rect2(mb.position, Vector2(60.0 * mi, 4)), Color(tint.r, tint.g, tint.b, 0.8))
-	# status line, gently pulsing beneath the card
-	var status: String = main.hud_status
-	if status != "":
-		var a := 0.75 + 0.25 * sin(Time.get_ticks_msec() / 220.0)
-		draw_string(f, Vector2(4, 114), status, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(1, 0.92, 0.7, a))
+	# The status line used to live here, tucked under the card in the top-left
+	# corner - the furthest point on the screen from where anybody is looking.
+	# It is the feed's banner now (event_feed.gd): centre screen, just under the
+	# dog, in the one place the game says things. This card is for STATE that is
+	# always true - phone, bones, bladder, energy, marks, mood - and carries no
+	# announcements at all, which is what keeps it readable at a glance.

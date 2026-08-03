@@ -42,6 +42,7 @@ const HUMAN_MASS := 4.0
 const SwingMath := preload("res://swing.gd")
 const Mood := preload("res://mood.gd")
 const Surfaces := preload("res://surfaces.gd")
+const EventFeed := preload("res://event_feed.gd")
 const EdgePath := preload("res://edge_path.gd")
 const TangleGeom := preload("res://tangle_geom.gd")
 const POLE_RADIUS := 10.0
@@ -403,6 +404,8 @@ var combo: Node
 # the dog's mood: arrives from events, fades on its own, re-colours both the
 # picture and the handling while it lasts (mood.gd)
 var mood: Node
+# the one channel for announcements about the state of the walk
+var feed: Control
 # latch for the run-yourself-empty trigger, so hitting empty is a moment
 # rather than a condition (see _mood_ambient)
 var mood_worn := false
@@ -2957,7 +2960,7 @@ func _credit_goal(q: Dictionary) -> void:
 	bones += 5
 	var newly: bool = Game.mark_goal(lvl, id) if not Game.daily else false
 	var tag := "GOAL! " if (newly or Game.daily) else "goal (again) "
-	float_text(dog.global_position, tag + _quest_text(q), Color(0.8, 1.0, 0.8))
+	feed.say(tag + _quest_text(q), EventFeed.Tone.GOOD)
 
 
 func _check_goals() -> void:
@@ -3271,6 +3274,12 @@ func _build_hud() -> void:
 	_pin_wide(progress_l, 560.0)
 	progress_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	progress_l.visible = false
+	# The single announcement channel. Added late so it draws over the other
+	# HUD cards, and anchored to the live viewport like everything else.
+	feed = Control.new()
+	feed.set_script(load("res://event_feed.gd"))
+	hud.add_child(feed)
+	feed.setup(self)
 	settings_panel = Control.new()
 	settings_panel.set_script(load("res://settings_panel.gd"))
 	settings_panel.visible = false
@@ -3624,6 +3633,12 @@ func _progress_text() -> String:
 	return t
 
 
+	# The one-line answer to "what is going on" now lives in the feed
+	# banner, centre screen near the dog, instead of as small text tucked
+	# under the vitals card in the corner where it was never read.
+	if feed != null:
+		feed.set_banner(hud_status)
+
 func _hud_label(pos: Vector2, size_px: int) -> Label:
 	var l := Label.new()
 	l.position = pos
@@ -3687,36 +3702,36 @@ func _update_hud() -> void:
 	hud_status = ""
 	if phase == "freedom":
 		if romp_done:
-			hud_status = "walk back down to head home"
+			hud_status = "GO BACK DOWN TO HEAD HOME"
 		else:
-			hud_status = "FETCH!  bring it back  %d/%d   %ds left" % [romp_catches, romp_target, int(ceil(romp_timer))]
+			hud_status = "FETCH! BRING IT BACK  %d/%d   %ds" % [romp_catches, romp_target, int(ceil(romp_timer))]
 	elif phase == "home":
 		if chase_active and chase_sweeper != null:
 			if chase_kind == "both":
-				hud_status = "EMERGENCY!  sprint home together - don't fight it!"
+				hud_status = "RUN HOME TOGETHER!"
 			elif chase_kind == "bolt":
-				hud_status = "your human BOLTED - keep up and don't snag!"
+				hud_status = "HE'S RUNNING! KEEP UP"
 			else:
-				hud_status = "RUN!  keep the sweeper behind you - drag them along!"
+				hud_status = "RUN! DON'T LET IT CATCH YOU"
 		elif tofu_quest_active and not tofu_home:
-			hud_status = "herd Tofu home - keep after her!"
+			hud_status = "GET THE CAT HOME! FOLLOW HER"
 		else:
-			hud_status = "head home"
+			hud_status = "HEAD HOME"
 	elif poop_state == 1:
-		hud_status = "GOTTA GO!  find a spot, hold %s" % _kb_or_pad("SPACE", "A")
+		hud_status = "NEED A WEE! FIND A SPOT, HOLD %s" % _kb_or_pad("SPACE", "A")
 	elif poop_state >= 3:
 		hud_status = "UH OH..."
 	elif call_active:
 		# NOT "they are on the phone": he is on the phone for the whole walk, so
 		# saying so is never news. What is news is that he has stopped MOVING,
 		# which is the part you can actually spend.
-		hud_status = "HE HAS STOPPED DEAD - %ds of slack. GO." % int(ceil(human.call_left()))
+		hud_status = "LOOSE LEASH! %ds LEFT" % int(ceil(human.call_left()))
 	elif lvl == "scrap":
-		hud_status = "shhh... slow is silent. mind the cameras"
+		hud_status = "GO SLOW! SLOW IS QUIET"
 	elif pee >= 0.999:
 		hud_status = "FULL!"
 	elif pee <= 0.02:
-		hud_status = "empty - find a fountain"
+		hud_status = "THIRSTY! FIND A FOUNTAIN"
 	goals_card.visible = started and not tutorial_mode
 
 
@@ -3817,7 +3832,7 @@ func start_challenge(giver: Node2D, target: int, seconds: float) -> void:
 	challenge_giver = giver
 	challenge.begin(target, seconds)
 	shake_t = maxf(shake_t, 0.2)
-	float_text(dog.global_position + Vector2(0, -26), "%d TRICKS - GO!" % target, Color(1, 0.9, 0.5))
+	feed.say("DO %d TRICKS!" % target, EventFeed.Tone.LOUD)
 
 
 func on_challenge_done(win: bool, target: int, count: int) -> void:
@@ -3827,10 +3842,10 @@ func on_challenge_done(win: bool, target: int, count: int) -> void:
 	if win:
 		var reward := 20 + target * 3
 		bones += reward
-		float_text(dog.global_position + Vector2(0, -30), "CHALLENGE! +%d" % reward, Color(0.8, 1.0, 0.85))
+		feed.say("YOU DID IT!  +%d" % reward, EventFeed.Tone.GOOD)
 		_slowmo()
 	else:
-		float_text(dog.global_position + Vector2(0, -30), "so close - %d/%d" % [count, target], Color(1, 0.8, 0.6))
+		feed.say("SO CLOSE!  %d OF %d" % [count, target], EventFeed.Tone.BAD)
 
 
 func _physics_process(delta: float) -> void:
@@ -3898,6 +3913,10 @@ func _physics_process(delta: float) -> void:
 	combo.tick(delta)
 	challenge.tick(delta)
 	owner_news_cd = maxf(0.0, owner_news_cd - delta)
+	# the banner shows live countdowns (slack left, fetch timer, chase), and
+	# _update_hud is otherwise event-driven, so those would sit frozen
+	if call_active or chase_active or phase == "freedom":
+		_update_hud()
 	_tick_mood(delta)
 	_tick_teeter(delta)
 	if tutorial_mode:
@@ -4172,7 +4191,8 @@ func _tick_mood(delta: float) -> void:
 		gm.set_shader_parameter("warm_light", g["warm"])
 	var line: String = mood.take_onset()
 	if line != "":
-		float_text(dog.global_position, line, mood.tint())
+		# an announcement about her, not about a place: it goes in the feed
+		feed.say(line, EventFeed.Tone.LOUD)
 
 
 func _mood_ambient(delta: float) -> void:
@@ -4250,7 +4270,7 @@ func owner_news(line: String) -> void:
 	if owner_news_cd > 0.0:
 		return
 	owner_news_cd = 3.2
-	float_text(dog.global_position + Vector2(0, -46), line, Color(0.94, 0.90, 0.72))
+	feed.say(line, EventFeed.Tone.PLAIN)
 
 
 func _sunny() -> bool:
@@ -4941,7 +4961,7 @@ func _pairs(delta: float) -> void:
 			bones += 3
 			Sfx.play("tangle")
 			combo.add("TANGLE", 3)
-			float_text(dog.global_position, "TANGLED! +3", Color(1, 0.85, 0.7))
+			feed.say("YOU TANGLED THEM!  +3", EventFeed.Tone.GOOD)
 
 
 func _draw_walk_ribbon(vt: float, vb: float, bottom: float, col: Color) -> void:
@@ -5133,7 +5153,7 @@ func _tick_vault(delta: float) -> void:
 	vault_pole = pole
 	vault_recent = 2.6
 	Sfx.play("fling", 1.2, -8.0)
-	float_text(dog.global_position + Vector2(0, -28), "VAULT!", Color(0.9, 0.95, 1.0))
+	feed.say("POLE SWING!", EventFeed.Tone.LOUD)
 
 
 func _end_vault() -> void:
@@ -5153,7 +5173,7 @@ func _end_vault() -> void:
 		vaults_landed += 1
 		combo.add("VAULT", pts)
 		Sfx.play("star", 1.15)
-		float_text(dog.global_position + Vector2(0, -32), "VAULT! %d" % pts, Color(0.85, 0.95, 1.0))
+		feed.say("POLE SWING!  %d" % pts, EventFeed.Tone.LOUD)
 		_slowmo()
 		_update_hud()
 	vault_arc = 0.0
@@ -5283,8 +5303,8 @@ func _tick_call(_delta: float) -> void:
 		Sfx.play("ui", 0.8)
 		# at the DOG, not over an owner who may be most of a leash away. This is
 		# the biggest gift in the game and it was being missed completely.
-		float_text(dog.global_position + Vector2(0, -34), "THE WHOLE LEASH. GO.",
-			Color(0.8, 1.0, 0.85))
+		# no transient here: human.gd already says he has stopped, and the
+		# banner below carries the countdown. One event, one announcement.
 	elif not on_call and call_active:
 		call_active = false
 		set_leash_target(call_slack_was)
@@ -5293,10 +5313,10 @@ func _tick_call(_delta: float) -> void:
 			var bonus := 3 + call_haul * 2
 			bones += bonus
 			Sfx.play("star", 1.05)
-			float_text(dog.global_position + Vector2(0, -32), "GOOD CALL! %d things, +%d" % [call_haul, bonus], Color(0.85, 1.0, 0.8))
+			feed.say("NICE! YOU DID %d THINGS  +%d" % [call_haul, bonus], EventFeed.Tone.GOOD)
 			_update_hud()
 		else:
-			float_text(dog.global_position + Vector2(0, -30), "...you wasted it", Color(0.8, 0.8, 0.75))
+			feed.say("YOU MISSED YOUR CHANCE", EventFeed.Tone.BAD)
 
 
 func _tick_grind(delta: float) -> void:
@@ -5319,7 +5339,7 @@ func _tick_grind(delta: float) -> void:
 			grind_cd = 0.9
 			combo.bail()
 			Sfx.play("crack", 1.2, -10.0)
-			float_text(dog.global_position + Vector2(0, -28), "bailed!", Color(1, 0.6, 0.5))
+			feed.say("FELL OFF!", EventFeed.Tone.BAD)
 			dog.stumble()
 		elif off_rail or not fast_enough or not travelling_along:
 			var pts := int(grind.land())
@@ -5329,7 +5349,7 @@ func _tick_grind(delta: float) -> void:
 				grinds_landed += 1
 				combo.add("GRIND", pts)
 				Sfx.play("star", 1.2)
-				float_text(dog.global_position + Vector2(0, -30), "GRIND! %d" % pts, Color(1, 0.9, 0.5))
+				feed.say("KERB RIDE!  %d" % pts, EventFeed.Tone.LOUD)
 				_update_hud()
 		return
 	if grind_cd > 0.0 or dog.is_tumbling() or teeter.active or not fast_enough or not travelling_along:
@@ -5340,7 +5360,7 @@ func _tick_grind(delta: float) -> void:
 			grind_kerb_x = kx
 			grind.begin()
 			Sfx.play("save", 1.35, -10.0)
-			float_text(dog.global_position + Vector2(0, -26), "GRIND!", Color(1, 0.95, 0.6))
+			feed.say("KERB RIDE!", EventFeed.Tone.LOUD)
 			return
 
 
@@ -5395,7 +5415,7 @@ func _tick_teeter(delta: float) -> void:
 		bones += 4
 		Sfx.play("star", 1.1)
 		combo.add("BALANCE", 6)
-		float_text(dog.global_position + Vector2(0, -30), "WHOA! caught it +4", Color(0.75, 1.0, 0.8))
+		feed.say("SAVED IT!  +4", EventFeed.Tone.GOOD)
 		_slowmo()
 		_update_hud()
 		return
@@ -5406,7 +5426,7 @@ func _tick_teeter(delta: float) -> void:
 			# never ends the walk. It just breaks your run of tricks.
 			combo.bail()
 			Sfx.play("splash")
-			float_text(dog.global_position, "SPLASH! ...worth it", Color(0.7, 0.9, 1.0))
+			feed.say("SPLASH! WORTH IT", EventFeed.Tone.PLAIN)
 		_:
 			# a hole is a hole
 			if teeter_msg != "":
@@ -5667,7 +5687,7 @@ func _bodily(delta: float) -> void:
 				if marks.size() >= 5 and not mark_quest_done:
 					mark_quest_done = true
 					bones += 10
-					float_text(dog.global_position, "territory secured +10", Color(0.8, 1.0, 0.8))
+					feed.say("ALL YOUR SPOTS MARKED!  +10", EventFeed.Tone.GOOD)
 		else:
 			mark_target = Vector2(INF, INF)
 			mark_progress = 0.0
@@ -5733,9 +5753,9 @@ func _finish_business(voluntary: bool) -> void:
 	business_spot = dog.global_position + Vector2(0, 8)
 	if voluntary:
 		bones += 5
-		float_text(dog.global_position, "relief +5", Color(0.8, 1.0, 0.8))
+		feed.say("MUCH BETTER!  +5", EventFeed.Tone.GOOD)
 	else:
-		float_text(dog.global_position, "couldn't wait", Color(1, 0.8, 0.6))
+		feed.say("COULDN'T WAIT...", EventFeed.Tone.BAD)
 	bag_pending = true
 
 
@@ -5985,7 +6005,7 @@ func _enter_freedom() -> void:
 		add_child(rv)
 		rv.setup(self, dog, rb)
 		float_text(rv.position, "...oh no. Brutus.", Color(1, 0.85, 0.75))
-	float_text(dog.global_position, "OFF LEASH!  FETCH!", Color(0.8, 1.0, 0.8))
+	feed.say("OFF THE LEASH! GO FETCH", EventFeed.Tone.LOUD)
 
 
 func _spawn_wallcats() -> void:
@@ -6061,7 +6081,7 @@ func _caught(what: String) -> void:
 	bones = maxi(0, bones - 2)
 	shake_t = maxf(shake_t, 0.4)
 	Sfx.play("crack", 1.4)
-	float_text(dog.global_position + Vector2(0, -26), "SPOTTED by %s! -2" % what, Color(1, 0.55, 0.4))
+	feed.say("THE %s SAW YOU!  -2" % what.to_upper(), EventFeed.Tone.BAD)
 	# the racket wakes anyone dozing nearby
 	for g in get_tree().get_nodes_in_group("guards"):
 		g.hear_noise(dog.global_position, 200.0)
@@ -6115,7 +6135,7 @@ func _romp(delta: float) -> void:
 	if romp_timer <= 0.0:
 		romp_done = true
 		hud_status = ""
-		float_text(dog.global_position, "time to head home", Color(1, 0.95, 0.7))
+		feed.say("TIME TO HEAD HOME", EventFeed.Tone.PLAIN)
 
 
 func on_tofu_home(pos: Vector2) -> void:
@@ -6147,7 +6167,7 @@ func on_ball_returned(thrower: Node2D) -> void:
 	if romp_catches >= romp_target and not romp_done:
 		romp_done = true
 		bones += 10
-		float_text(dog.global_position, "GOOD FETCH! +10", Color(0.7, 1.0, 0.75))
+		feed.say("GOOD FETCH!  +10", EventFeed.Tone.GOOD)
 		_slowmo()
 
 
@@ -6210,9 +6230,9 @@ func _enter_home() -> void:
 		elif chase_kind == "bolt":
 			float_text(human.global_position, "AAH!  the owner BOLTED!", Color(1, 0.6, 0.3))
 		else:
-			float_text(dog.global_position, "THE STREET SWEEPER! RUN!", Color(1, 0.6, 0.3))
+			feed.say("STREET SWEEPER! RUN!", EventFeed.Tone.BAD)
 	else:
-		float_text(dog.global_position, "let's go home", Color(1, 0.95, 0.7))
+		feed.say("LET'S GO HOME", EventFeed.Tone.PLAIN)
 
 
 func _chase(delta: float) -> void:

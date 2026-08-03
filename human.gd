@@ -370,31 +370,31 @@ func _fire_event() -> void:
 		HState.STOPPED:
 			state = HState.STOPPED
 			state_t = randf_range(1.5, 2.8)
-			_show_bubble("ring ring", "HE HAS STOPPED TO ANSWER IT.")
+			_show_bubble("ring ring", "HE STOPPED TO ANSWER! GO")
 		HState.DRIFT:
 			state = HState.DRIFT
 			state_t = 1.8
-			_show_bubble("typing...", "HE IS TYPING. HE IS NOT WATCHING WHERE HE GOES.")
+			_show_bubble("typing...", "HE'S TEXTING! HE'S NOT LOOKING")
 			drift_dir = 1.0 if randf() < 0.5 else -1.0
 		HState.SELFIE:
 			state = HState.SELFIE
 			state_t = 2.2
-			_show_bubble("selfie!", "HE IS POINTING IT AT HIS OWN FACE AGAIN.")
+			_show_bubble("selfie!", "HE'S TAKING A SELFIE")
 		HState.FILM:
 			state = HState.FILM
 			state_t = randf_range(1.6, 2.4)
-			_show_bubble("filming...", "HE IS FILMING NOTHING AT ALL.")
+			_show_bubble("filming...", "HE'S FILMING! HE'S STOPPED")
 		HState.SIGNAL:
 			state = HState.SIGNAL
 			state_t = randf_range(2.6, 4.2)
-			_show_bubble("no signal...", "HE IS HUNTING FOR BARS. HE WILL BE A WHILE.")
+			_show_bubble("no signal...", "HE LOST SIGNAL! HE'LL BE AGES")
 		HState.CALL:
 			# a proper natter: long enough to be a real opportunity
 			state = HState.CALL
 			state_t = randf_range(16.0, 21.0)
 			call_total = state_t
 			call_used = true
-			_show_bubble("hello? ...oh HI", "SOMEONE IS TALKING BACK. HE HAS STOPPED DEAD.")
+			_show_bubble("hello? ...oh HI", "HE STOPPED! LEASH IS LOOSE")
 		HState.DASH:
 			var lo: float = main.walk_cx - main.walk_half + 40.0
 			var hi: float = main.walk_cx + main.walk_half - 40.0

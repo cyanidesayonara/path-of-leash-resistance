@@ -579,6 +579,24 @@ memorable.
        having before they have anything on them. Then (c) edges, which is
        the blocker and the big win. Then (a) props, the long tail. An
        editor comes after all three, and is small by then.
+    12. HUD REDESIGN (Santtu, Aug 2026) - PART DONE, the rest deferred.
+       Done: the announcement system. One channel (event_feed.gd) instead of
+       the same moment shouting from three places, big blocky outlined
+       capitals in the Crash / Tony Hawk manner rather than subtitle text,
+       and a copy pass so every line says what happened AND what it means -
+       the bar being that a child should understand it. "EVERYTHING IS
+       HEAVY" became "TIRED! EAT, REST OR FIND SHADE"; "VAULT!" became
+       "POLE SWING!", because vault and grind are words borrowed from
+       another game while a swing round a post is a thing anybody can
+       picture. Rules worth keeping: point-of-impact numbers stay in the
+       world at the thing they refer to, announcements go in the channel,
+       and nothing announces itself twice.
+       Still to do: the CARDS. The vitals card and the goals card are
+       small, thin, cornered and typographically nothing like the
+       announcements now sitting over them - the same treatment (weight,
+       outline, blocky caps) wants carrying across so the whole interface
+       reads as one thing. The pee/energy tubes and mark dots also want
+       looking at: they are tiny for what they tell you.
   (Working title joke, recorded for posterity and not adopted: "Tony Dawg".)
 - Uniqueness rule (from playtesting): shared asset library for
   efficiency, but every setting must earn its own look AND at least one

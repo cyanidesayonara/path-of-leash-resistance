@@ -131,10 +131,10 @@ const GRADE := {
 # In the dog's own voice, because that gimmick is doing a lot of work for this
 # game and a mood is exactly the place for it.
 const SAID := {
-	M.SCARED: "SOMETHING IS WRONG. STAY LOW.",
-	M.BARKY: "EVERYTHING NEEDS TELLING.",
-	M.ZOOMIES: "THE LEGS HAVE DECIDED.",
-	M.TIRED: "EVERYTHING IS HEAVY.",
+	M.SCARED: "SCARED! YOUR NOSE STOPS WORKING",
+	M.BARKY: "BARKY! YOU PULL HARDER",
+	M.ZOOMIES: "ZOOMIES! HARD TO STEER",
+	M.TIRED: "TIRED! EAT, REST OR FIND SHADE",
 }
 # and a short badge for the vitals panel, where there is no room for a sentence
 const BADGE := {
