@@ -629,6 +629,71 @@ memorable.
        not fun however well it is composed. Measure with --drawcost, keep
        static scenery on the cached canvases (edgelayer, freedomlayer,
        vergelayer) and out of the per-frame draw.
+    14. ARTIST-LED LEVELS (Santtu, Aug 2026) - a big part of the plan from
+       here, and the most promising idea in this document after moods.
+       Barcelona is the setting, so this is not pastiche: the city's own
+       artists ARE its scenery.
+
+       THE TEST EVERY ONE MUST PASS: an artist level has to earn a
+       MECHANIC, not just a palette. A style with no gameplay consequence is
+       a skin, and a skin on a physics comedy is decoration. Each entry
+       below is listed with what it changes about PLAYING, and any that
+       cannot answer that should not be built.
+
+       a. GAUDI - do this one first, and it is not close. Native to the
+          setting rather than borrowed, and the tooling built in Aug 2026
+          happens to be exactly what it needs.
+            * No straight lines: edge_path.gd already makes the corridor a
+              curve. A Park Guell serpentine is literally a strong weave.
+            * MECHANIC: the undulating bench is the best kerb-grind in the
+              world (grind.gd), and it is the reason to build this level.
+              Trencadis is glazed tile, so it wants a SURFACE entry - fast
+              and slick, low grip - which turns the mosaic into handling
+              rather than wallpaper.
+            * Trencadis itself: broken-tile mosaic, irregular shards. The
+              patch primitive already draws organic shards; a mosaic fill on
+              a cached canvas would be striking and cost nothing per frame.
+            * Catenary arches read top-down as repeating shadow bands you
+              pass under - the one-light system does that already. Casa
+              Mila's chimneys are perfect top-down silhouettes.
+            * Palette: warm sandstone, sea-glass green and blue, ceramic
+              white.
+
+       b. MIRO - the cheapest to execute and the most immediately legible,
+          because the world is already drawn from primitives. Flat primary
+          shapes, heavy black outline, biomorphic forms.
+            * MECHANIC: his visual vocabulary (star, eye, bird, ladder) 
+              becomes the level's collectibles, so what you are looking for
+              and what the level is made of are the same language.
+
+       c. ESCHER - greyscale pencil, incongruous paths and stairs. Honest
+          engineering note: true impossible geometry needs non-Euclidean
+          tricks a top-down rope game cannot fake cheaply, so aim at
+          LEGIBLE strangeness rather than real paradox - the corridor
+          splitting and rejoining, paths crossing over and under via
+          shadow and occlusion, stairs as tessellating bands.
+            * Nearly free already: the grade shader has saturation and tint,
+              so greyscale plus a paper tint plus a hatching pass IS the
+              pencil look.
+            * MECHANIC: a path that loops back on itself, so the dog can
+              drag the owner into a loop. That is an Escher joke that is
+              also a puzzle, and the leash makes it funny.
+
+       d. DALI - a FREEDOM SPACE rather than a whole walk: you come off the
+          leash and the world goes strange, which is the right dose. Emporda
+          is Catalan, so it belongs. Sagging lampposts (objects are drawn
+          procedurally, so a droop is a deformation), elephants on stilt
+          legs as distant silhouettes.
+            * MECHANIC: Dali is defined by long raking shadows, and shadow
+              length here is one constant per object height - so a Dali
+              space can genuinely change what you can see and what is
+              hidden.
+
+       e. PICASSO - the one to be careful with. Cubism shows several
+          viewpoints at once, which fights a top-down game's readability;
+          done to a walkable path it would read as broken rather than as
+          cubist. Restrain it to FACADES via the frontage system, where
+          readability matters least. Not a whole level.
   (Working title joke, recorded for posterity and not adopted: "Tony Dawg".)
 - Uniqueness rule (from playtesting): shared asset library for
   efficiency, but every setting must earn its own look AND at least one
