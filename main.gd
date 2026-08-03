@@ -120,6 +120,9 @@ var offpath_t := 0.0
 # beach furniture
 var towels: Array[Dictionary] = []
 var parasols: Array[Vector2] = []
+# the promenade palm ranks, kept so the paving cut-outs under them and the
+# benches between them are placed from the same numbers (see the beach block)
+var palm_spots: Array[Vector2] = []
 var canopies: Array[Rect2] = []
 # street furniture: chairs and A-stands share pole physics, vans are
 # multi-circle colliders drawn as one vehicle, performers are pure life
@@ -831,12 +834,44 @@ func _build_level_data() -> void:
 			gate_r = 980.0
 			tut_l = 110.0
 			tut_r = 1160.0
-			# palms: a row along the boardwalk, a row by the cafes -
-			# where the city actually plants them
-			for i in range(6):
-				poles.append(Vector2(462.0, -400.0 - i * 880.0))
-			for i in range(5):
-				poles.append(Vector2(998.0, -700.0 - i * 880.0))
+			# SAND ON THE PAVING. The most characteristic thing about a seafront
+			# walk, and the beach had a ruler-straight sand edge with nothing
+			# crossing it. Wind and feet carry it inland in tongues that thin
+			# out the further they get from the beach, so these run from the
+			# sand side and reach in - never across, because a promenade you
+			# cannot get a clean line down is a chore rather than a walk.
+			#
+			# They are real SAND underfoot (surfaces.gd): heavy going, poor
+			# grip, and they mark her paws, which feeds the existing substance
+			# chain for free. Weaving to keep off them is the whole point.
+			patches = [
+				{"y": -620.0, "at": 0.02, "rx": 104.0, "ry": 58.0, "seed": 1.7, "kind": "sand"},
+				{"y": -1340.0, "at": 0.10, "rx": 86.0, "ry": 48.0, "seed": 3.4, "kind": "sand"},
+				{"y": -2180.0, "at": 0.04, "rx": 118.0, "ry": 64.0, "seed": 5.1, "kind": "sand"},
+				{"y": -2960.0, "at": 0.14, "rx": 78.0, "ry": 44.0, "seed": 0.9, "kind": "sand"},
+				{"y": -3720.0, "at": 0.06, "rx": 110.0, "ry": 60.0, "seed": 2.6, "kind": "sand"},
+				{"y": -4380.0, "at": 0.12, "rx": 92.0, "ry": 52.0, "seed": 4.3, "kind": "sand"},
+			]
+			# PALMS IN ORDERLY SECTIONS, cut into the paving - exactly how the
+			# promenade is planted, and nothing like the six-per-row scattering
+			# this had. Two regular ranks at a proper street-tree spacing, kept
+			# at the edges of the walk because that is where street trees go and
+			# because a rank down the middle would choke a 420px corridor.
+			#
+			# Kept in their own list as well as in poles, so the paving cut-outs
+			# and the benches between them are placed from the same numbers
+			# rather than from a second copy that could drift.
+			palm_spots.clear()
+			for i in range(17):
+				palm_spots.append(Vector2(462.0, -260.0 - i * 300.0))
+			for i in range(15):
+				palm_spots.append(Vector2(1012.0, -380.0 - i * 340.0))
+			for ps: Vector2 in palm_spots:
+				poles.append(ps)
+			# long benches facing the sea, set between the seaward palms on the
+			# concrete - the promenade is lined with them
+			for i in range(16):
+				benches.append(Vector2(524.0, -410.0 - i * 300.0))
 			deco_pole_count = poles.size()
 			# terrace tables under canopies, twice along the route
 			tables = [
@@ -1214,7 +1249,12 @@ func _build_level_data() -> void:
 			prize_pos = pond.get_center() if pond.size.x > 0.0 else Vector2(640.0, -2700.0)
 			prize_text = "fetch the ball from the middle of the pond"
 		"beach":
-			prize_pos = Vector2(20.0, -2600.0)  # actually IN the sea, so she swims for it
+			# In the sea, so she swims for it - but x=20 was OUTSIDE THE FRAME.
+			# The camera is zoomed 1.28 and sits on x=640, so only world x
+			# 140..1140 is ever visible: the ball was a goal the player could
+			# not see. Placed just inside the visible edge instead, still well
+			# out past the shoreline.
+			prize_pos = Vector2(178.0, -2600.0)
 			prize_text = "swim out for the ball"
 		"market":
 			prize_pos = Vector2(640.0, -2050.0)  # by the drain in the middle aisle
@@ -2319,6 +2359,44 @@ func _draw_ground_title() -> void:
 		_draw_world_text(Vector2(mid + w * 0.5 + 44.0, y), ">", 46, style, 7.0)
 	# and no more than that: the records, the owner and the weather stay on the
 	# HUD, where a changing value belongs
+
+
+func _draw_seafront_works(vt: float, vb: float) -> void:
+	# THE OLD DISTILLERY. The landmark of this stretch of coast is a low
+	# industrial works with one very tall, very slender brick chimney, and from
+	# above the chimney is almost nothing - a small circle. What makes it read
+	# as a landmark is its SHADOW: the one light throws it right across the
+	# promenade, so you walk through it, which is the only way a tall thing can
+	# announce itself in a top-down game.
+	#
+	# The real works carries a liqueur brand that is very much still trading,
+	# so nothing of it is borrowed but the architecture: an old seafront
+	# distillery is a shed with a chimney, and that is vernacular rather than
+	# anybody's property. The sign reads LA FABRICA - the factory.
+	const WORKS_Y := -2450.0
+	if WORKS_Y < vt - 900.0 or WORKS_Y > vb + 900.0:
+		return
+	var wx := 1190.0
+	# the sheds: low, pale rendered walls with ribbed roofs
+	for i in range(3):
+		var sy := WORKS_Y + float(i) * 240.0 - 240.0
+		draw_rect(Rect2(wx - 60.0, sy, 190.0, 200.0), Color(0.80, 0.76, 0.66))
+		# barrel-vaulted roof ribs, which is what says "works" and not "flats"
+		for r in range(9):
+			var ry := sy + 14.0 + float(r) * 21.0
+			draw_line(Vector2(wx - 54.0, ry), Vector2(wx + 118.0, ry),
+				Color(0.62, 0.63, 0.62), 5.0)
+		draw_rect(Rect2(wx - 60.0, sy, 190.0, 200.0), Color(0.32, 0.29, 0.25), false, 2.5)
+	# the chimney: a tapering brick tower, and the long shadow that sells it
+	var cx := wx - 34.0
+	var cy := WORKS_Y
+	cast_shadow(self, Vector2(cx, cy), 15.0, 340.0, 0.26)
+	draw_circle(Vector2(cx, cy), 17.0, Color(0.52, 0.34, 0.25))
+	draw_circle(Vector2(cx, cy), 12.5, Color(0.63, 0.42, 0.30))
+	draw_circle(Vector2(cx - 2.0, cy - 2.0), 8.0, Color(0.72, 0.50, 0.36))
+	draw_circle(Vector2(cx, cy), 5.0, Color(0.17, 0.14, 0.13))
+	# a painted sign on the seaward shed wall, facing the walk
+	_draw_world_text(Vector2(wx + 16.0, WORKS_Y + 176.0), "LA FABRICA", 17, "paint", 9.0)
 
 
 func _draw_park_props(c: CanvasItem, vt: float, vb: float) -> void:
@@ -5388,8 +5466,15 @@ func surface_at(p: Vector2) -> int:
 				"mud": return Surfaces.S.MUD
 				"tile": return Surfaces.S.TILE
 				_: return Surfaces.S.SAND
-	if lvl == "beach" and p.x < 340.0:
-		return Surfaces.S.SAND
+	if lvl == "beach":
+		# THE SEAFRONT HAS NO GRASS. Its cross-section is sea, sand, boardwalk,
+		# bike path, promenade, then cafe paving - so once the sea and the sand
+		# are ruled out, everything left is firm ground. Falling through to the
+		# generic verge test made the boardwalk and the cafe side read as lawn,
+		# which is a third of the walk handling wrongly.
+		if p.x < 340.0:
+			return Surfaces.S.SAND
+		return Surfaces.S.PAVEMENT
 	for sz in substance_zones:
 		if bool(sz.get("slow", false)) and zone_has_point(sz, p):
 			return Surfaces.S.SAND
@@ -6926,26 +7011,37 @@ func _draw_world() -> void:
 	if lvl == "beach":
 		# Passeig Maritim, west to east: sea, sand, boardwalk, bike
 		# path, pavement, cafe strip, buildings
-		draw_rect(Rect2(-400, ctop, 630, bottom - ctop), Color(0.25, 0.45, 0.55))
+		# The sea, and it is a Mediterranean one: turquoise, not the grey-blue
+		# it was. A shallower band nearer the shore, because that is where the
+		# colour actually comes from - sand under clear water.
+		draw_rect(Rect2(-400, ctop, 630, bottom - ctop), Color(0.13, 0.47, 0.60))
+		draw_rect(Rect2(120, ctop, 110, bottom - ctop), Color(0.26, 0.66, 0.70))
 		var wt := Time.get_ticks_msec() / 1000.0
 		var fy := top + 40.0
 		while fy < bottom:
 			if fy > vt and fy < vb:
 				draw_line(Vector2(72 + sin(fy * 0.011 + wt * 1.5) * 9.0, fy), Vector2(84 + sin(fy * 0.013 + wt * 1.5) * 9.0, fy + 70.0), Color(1, 1, 1, 0.25), 3.0)
 			fy += 150.0
-		draw_rect(Rect2(230, ctop, 150, bottom - ctop), Color(0.87, 0.8, 0.66))
-		draw_rect(Rect2(380, ctop, 110, bottom - ctop), Color(0.74, 0.66, 0.53))
+		draw_rect(Rect2(230, ctop, 150, bottom - ctop), Color(0.88, 0.81, 0.64))
+		# THE TIMBER DECK, nearest the sand. These two strips were the wrong way
+		# round: the game had pale planks against the beach and a dark red strip
+		# inland, where the promenade actually runs a dark reddish-brown WOODEN
+		# deck along the sand edge and a pale concrete path with a dashed line
+		# behind it. Swapped, so the boardwalk reads as boards.
+		draw_rect(Rect2(380, ctop, 110, bottom - ctop), Color(0.46, 0.26, 0.21))
 		# start at the top of the visible window, not the top of the level
 		var py := minf(START_Y + 200.0, vb + 22.0 - fmod(vb, 22.0))
 		while py > GATE_Y and py > vt - 22.0:
 			if py < vb and py > vt:
-				draw_line(Vector2(380, py), Vector2(490, py), Color(0.66, 0.58, 0.45), 2.0)
+				# plank ends, running across the walk the way decking is laid
+				draw_line(Vector2(380, py), Vector2(490, py), Color(0.34, 0.19, 0.15), 2.0)
 			py -= 22.0
-		draw_rect(Rect2(490, ctop, 80, bottom - ctop), Color(0.44, 0.24, 0.2))
+		# the pale concrete path, with the dashed line down the middle of it
+		draw_rect(Rect2(490, ctop, 80, bottom - ctop), Color(0.82, 0.79, 0.73))
 		var ddy := minf(START_Y + 200.0, vb + 64.0 - fmod(vb, 64.0))
 		while ddy > GATE_Y and ddy > vt - 64.0:
 			if ddy < vb and ddy > vt:
-				draw_line(Vector2(530, ddy), Vector2(530, ddy - 26.0), Color(0.85, 0.82, 0.75, 0.5), 2.0)
+				draw_line(Vector2(530, ddy), Vector2(530, ddy - 26.0), Color(0.97, 0.96, 0.93, 0.8), 3.0)
 			ddy -= 64.0
 		draw_rect(Rect2(570, ctop, 410, bottom - ctop), Color(0.79, 0.76, 0.7))
 		var sy := minf(START_Y + 200.0, vb + 150.0 - fmod(vb, 150.0))
@@ -6954,7 +7050,23 @@ func _draw_world() -> void:
 				draw_line(Vector2(560, sy), Vector2(980, sy), Color(0.71, 0.68, 0.62), 2.0)
 			sy -= 150.0
 		draw_rect(Rect2(980, ctop, 200, bottom - ctop), Color(0.76, 0.72, 0.65))
-		draw_rect(Rect2(1180, ctop, 520, bottom - ctop), Color(0.35, 0.33, 0.31))
+		# The building strip was at x>=1180, and the camera never sees past
+		# x=1140 (zoom 1.28 on a fixed x=640) - so the whole landward side of
+		# this walk was being drawn where nobody could look at it. Brought
+		# inside the frame.
+		draw_rect(Rect2(1120, ctop, 580, bottom - ctop), Color(0.35, 0.33, 0.31))
+		_draw_seafront_works(vt, vb)
+		# SQUARE CUT-OUTS in the paving, one under each palm. The promenade's
+		# trees are not planted in a verge, they are set into the concrete in
+		# orderly openings with a kerb round them, and that grid of squares
+		# down the walk is a good part of what the place looks like.
+		for ps: Vector2 in palm_spots:
+			if ps.y < vt - 60.0 or ps.y > vb + 60.0:
+				continue
+			var cut := Rect2(ps.x - 27.0, ps.y - 27.0, 54.0, 54.0)
+			draw_rect(cut, Color(0.62, 0.58, 0.50))          # the kerb
+			draw_rect(cut.grow(-5.0), Color(0.40, 0.34, 0.26))  # the soil in it
+			draw_rect(cut, Color(0.34, 0.31, 0.27, 0.55), false, 2.0)
 		draw_line(Vector2(380, bottom), Vector2(380, GATE_Y), Color(0.55, 0.45, 0.32), 3.0)
 		draw_line(Vector2(490, bottom), Vector2(490, GATE_Y), COL_SEAM, 2.0)
 		draw_line(Vector2(570, bottom), Vector2(570, GATE_Y), COL_SEAM, 2.0)
@@ -7510,6 +7622,11 @@ func _draw_world() -> void:
 			continue
 		if String(sz.kind) == "mud" or String(sz.kind) == "cement":
 			continue  # those two draw themselves with their own level dressing
+		if sz.has("patch"):
+			# a patch already drew itself as an organic blob (draw_patch), and
+			# painting its bounding RECTANGLE over the top put a visible tinted
+			# box round every sand drift on the promenade
+			continue
 		var zc: Color = SUBSTANCES[String(sz.kind)].col
 		draw_rect(zr, Color(zc.r, zc.g, zc.b, 0.55))
 		draw_rect(zr, Color(zc.r, zc.g, zc.b, 0.85), false, 2.0)
