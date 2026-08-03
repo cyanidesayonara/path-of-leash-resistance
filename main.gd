@@ -408,6 +408,8 @@ var mood: Node
 var mood_worn := false
 # -1 for normal play; a Mood.M value when --mood= pins one on for photography
 var mood_forced := -1
+# floor between owner-event announcements at the dog (see owner_news)
+var owner_news_cd := 0.0
 var challenge: Node
 var challenge_l: Label
 var challenge_giver: Node2D
@@ -3705,7 +3707,10 @@ func _update_hud() -> void:
 	elif poop_state >= 3:
 		hud_status = "UH OH..."
 	elif call_active:
-		hud_status = "THEY'RE ON THE PHONE - %ds of freedom! go wild" % int(ceil(human.call_left()))
+		# NOT "they are on the phone": he is on the phone for the whole walk, so
+		# saying so is never news. What is news is that he has stopped MOVING,
+		# which is the part you can actually spend.
+		hud_status = "HE HAS STOPPED DEAD - %ds of slack. GO." % int(ceil(human.call_left()))
 	elif lvl == "scrap":
 		hud_status = "shhh... slow is silent. mind the cameras"
 	elif pee >= 0.999:
@@ -3892,6 +3897,7 @@ func _physics_process(delta: float) -> void:
 	_progress(delta)
 	combo.tick(delta)
 	challenge.tick(delta)
+	owner_news_cd = maxf(0.0, owner_news_cd - delta)
 	_tick_mood(delta)
 	_tick_teeter(delta)
 	if tutorial_mode:
@@ -4224,6 +4230,27 @@ func _mood_ambient(delta: float) -> void:
 		if chase_sweeper != null:
 			near = clampf(1.0 - chase_sweeper.gap_to(dog.global_position) / 900.0, 0.0, 1.0)
 		mood.bump(Mood.M.SCARED, delta * (0.16 + 0.90 * near * near))
+
+
+func owner_news(line: String) -> void:
+	# WHAT THE OWNER IS DOING, SAID WHERE THE PLAYER IS LOOKING.
+	#
+	# The owner announces himself with a speech bubble over his own head, which
+	# is right - it is his moment and it belongs on his body. The trouble is
+	# that the player is watching the DOG, and on a long leash he can be
+	# most of a screen away, so the one thing that tells you the walk has gone
+	# slack was arriving somewhere nobody was looking. Same news, repeated next
+	# to her, in her voice.
+	#
+	# Rate-limited: he has seven of these states and they fire every few
+	# seconds, so without a floor this would be a running commentary rather
+	# than a signal.
+	if not started or frozen or dog == null:
+		return
+	if owner_news_cd > 0.0:
+		return
+	owner_news_cd = 3.2
+	float_text(dog.global_position + Vector2(0, -46), line, Color(0.94, 0.90, 0.72))
 
 
 func _sunny() -> bool:
@@ -5254,7 +5281,10 @@ func _tick_call(_delta: float) -> void:
 		call_slack_was = leash_target
 		set_leash_target(440.0)
 		Sfx.play("ui", 0.8)
-		float_text(human.global_position + Vector2(0, -34), "...a CALL. go on then", Color(0.8, 1.0, 0.85))
+		# at the DOG, not over an owner who may be most of a leash away. This is
+		# the biggest gift in the game and it was being missed completely.
+		float_text(dog.global_position + Vector2(0, -34), "THE WHOLE LEASH. GO.",
+			Color(0.8, 1.0, 0.85))
 	elif not on_call and call_active:
 		call_active = false
 		set_leash_target(call_slack_was)

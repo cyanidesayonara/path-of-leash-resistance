@@ -370,29 +370,31 @@ func _fire_event() -> void:
 		HState.STOPPED:
 			state = HState.STOPPED
 			state_t = randf_range(1.5, 2.8)
+			_show_bubble("ring ring", "HE HAS STOPPED TO ANSWER IT.")
 		HState.DRIFT:
 			state = HState.DRIFT
 			state_t = 1.8
+			_show_bubble("typing...", "HE IS TYPING. HE IS NOT WATCHING WHERE HE GOES.")
 			drift_dir = 1.0 if randf() < 0.5 else -1.0
 		HState.SELFIE:
 			state = HState.SELFIE
 			state_t = 2.2
-			_show_bubble("selfie!")
+			_show_bubble("selfie!", "HE IS POINTING IT AT HIS OWN FACE AGAIN.")
 		HState.FILM:
 			state = HState.FILM
 			state_t = randf_range(1.6, 2.4)
-			_show_bubble("filming...")
+			_show_bubble("filming...", "HE IS FILMING NOTHING AT ALL.")
 		HState.SIGNAL:
 			state = HState.SIGNAL
 			state_t = randf_range(2.6, 4.2)
-			_show_bubble("no signal...")
+			_show_bubble("no signal...", "HE IS HUNTING FOR BARS. HE WILL BE A WHILE.")
 		HState.CALL:
 			# a proper natter: long enough to be a real opportunity
 			state = HState.CALL
 			state_t = randf_range(16.0, 21.0)
 			call_total = state_t
 			call_used = true
-			_show_bubble("hello? ...oh HI")
+			_show_bubble("hello? ...oh HI", "SOMEONE IS TALKING BACK. HE HAS STOPPED DEAD.")
 		HState.DASH:
 			var lo: float = main.walk_cx - main.walk_half + 40.0
 			var hi: float = main.walk_cx + main.walk_half - 40.0
@@ -424,9 +426,16 @@ func _end_dash() -> void:
 		state = HState.WALK
 
 
-func _show_bubble(text: String) -> void:
+func _show_bubble(text: String, dog_news: String = "") -> void:
+	# The bubble is diegetic and stays where it belongs, over the owner's head.
+	# But the player is watching the DOG - that is the whole camera of this
+	# game - so anything that changes what she can get away with was landing
+	# out in the corner of the eye and going unread. dog_news is the same
+	# moment said again next to her, in her voice.
 	bubble.text = text
 	bubble.visible = true
+	if dog_news != "" and main != null and main.has_method("owner_news"):
+		main.owner_news(dog_news)
 
 
 func is_whirling() -> bool:
