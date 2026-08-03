@@ -216,6 +216,9 @@ var wall_cats_spooked := 0
 # El Bosc: the owner keeps losing signal; muddy patches slow the going
 var signal_prone := false
 var mud_zones: Array[Rect2] = []
+# what sits on the grass either side of the walk (see _build_verge). Drawn on
+# the cached edge canvas, because a lawn does not move.
+var verge_items: Array[Dictionary] = []
 # L'Estacio: a moving walkway that carries whoever stands on it
 var conveyor_zone := Rect2()
 var conveyor_dir := Vector2.ZERO
@@ -260,6 +263,10 @@ var smudge_cd := 0.0
 var _scent_cache: Array = []
 var _scent_cache_t := 0.0
 var edge_layer: Node2D
+# the verge scenery's own cached canvas. Cannot share the edge layer: that
+# one is at z -5, behind the ground pass that would paint over it.
+var verge_layer: Node2D
+var _verge_drawn_y := 1.0e20
 var _edge_drawn_y := 1.0e20
 # La Castanyada: candy you must NOT eat (chocolate is poison to dogs)
 var candy_spots: Array[Vector2] = []
@@ -1112,6 +1119,9 @@ func _build_level_data() -> void:
 		lane_state.append({"t": randf_range(1.0, 2.5), "phase": 0, "dir": 1})
 	_build_substance_zones()
 	_fit_props_to_corridor()
+	# after the fit, deliberately: the verge is the one place whose contents
+	# must NOT be pulled onto the pavement
+	_build_verge()
 	if furgoneta.x < INF:
 		for off: float in [-52.0, -26.0, 0.0, 26.0, 52.0]:
 			poles.append(furgoneta + Vector2(0.0, off))
@@ -1478,6 +1488,154 @@ func _draw_edge_module(c: CanvasItem, r: Rect2, side: float, k: int) -> void:
 			_draw_doorway(c, inner_x, side, r.position.y + 168.0, felt)
 
 
+func _build_verge() -> void:
+	# WHAT LIVES ON THE VERGE.
+	#
+	# The grass either side of the walk was always walkable and always empty,
+	# which is why nobody ever went there: it was a different colour and
+	# nothing else. Now that grass reads as a surface in its own right (grips
+	# better, holds far more smell) it is worth putting the city's own use of
+	# it on there - people sitting about on a Sunday, and the things a lawn
+	# accumulates.
+	#
+	# Authored by hand rather than scattered, like every other prop here: a
+	# picnic wants to be somewhere that reads as a spot, and hand-placing also
+	# keeps it out of the global RNG, which the autowalk determinism depends on.
+	verge_items = []
+	# WHERE THE VERGE ACTUALLY IS ON SCREEN. The camera is zoomed 1.28, so only
+	# world x 140..1140 is ever visible - the level is 1200 wide but a fifth of
+	# it never appears. The first pass of this put picnics at x=150 and x=1170:
+	# one was clipped by the left edge of the frame and the other was
+	# completely off screen. So the verge is placed relative to the pavement
+	# and then held inside what the camera can see.
+	var vl: float = clampf(sw_l - 85.0, 195.0, 1085.0)
+	var vr: float = clampf(sw_r + 85.0, 195.0, 1085.0)
+	match lvl:
+		"street":
+			# El Passeig: the boulevard's lawn, all of it on the west side -
+			# east of the pavement is the bike lane and the shoulder, and what
+			# green is left out there is past the edge of the frame.
+			verge_items = [
+				{"pos": Vector2(vl, -520.0), "kind": "picnic"},
+				{"pos": Vector2(vl - 22.0, -1180.0), "kind": "stump"},
+				{"pos": Vector2(vl + 14.0, -1760.0), "kind": "picnic"},
+				{"pos": Vector2(vl - 30.0, -2480.0), "kind": "bush"},
+				{"pos": Vector2(vl + 8.0, -3020.0), "kind": "picnic"},
+				{"pos": Vector2(vl - 26.0, -3900.0), "kind": "bush"},
+				{"pos": Vector2(vl + 12.0, -4420.0), "kind": "picnic"},
+			]
+		"park":
+			# a park has verge on both sides, and the verge is the whole point
+			verge_items = [
+				{"pos": Vector2(vl, -760.0), "kind": "picnic"},
+				{"pos": Vector2(vr, -1500.0), "kind": "picnic"},
+				{"pos": Vector2(vl - 18.0, -2260.0), "kind": "stump"},
+				{"pos": Vector2(vr + 10.0, -3100.0), "kind": "picnic"},
+				{"pos": Vector2(vl + 16.0, -3820.0), "kind": "bush"},
+			]
+		"trail":
+			# out here it is fallen wood and undergrowth, not tablecloths
+			verge_items = [
+				{"pos": Vector2(vl, -700.0), "kind": "stump"},
+				{"pos": Vector2(vr, -1450.0), "kind": "bush"},
+				{"pos": Vector2(vl + 18.0, -2200.0), "kind": "bush"},
+				{"pos": Vector2(vr - 14.0, -2950.0), "kind": "stump"},
+				{"pos": Vector2(vl - 16.0, -3700.0), "kind": "bush"},
+				{"pos": Vector2(vr + 12.0, -4300.0), "kind": "stump"},
+			]
+	# Nothing on the verge may sit in a bike lane. They are drawn straight
+	# across the level, verge included, so the first pass had a tree stump
+	# apparently growing out of the tarmac. Pushed clear here rather than
+	# hand-avoided in the lists above, so moving a lane later cannot quietly
+	# strand a picnic in the middle of it.
+	var clear_by := LANE_HALF + 52.0
+	for i in range(verge_items.size()):
+		var it: Dictionary = verge_items[i]
+		var p: Vector2 = it["pos"]
+		for ly: float in lane_ys:
+			if absf(p.y - ly) < clear_by:
+				p.y = (ly - clear_by) if p.y <= ly else (ly + clear_by)
+		it["pos"] = p
+		verge_items[i] = it
+
+
+func draw_verge_onto(c: CanvasItem, vt: float, vb: float) -> void:
+	# On the cached edge canvas, NOT the per-frame world draw. A lawn does not
+	# move, and the edge treatment was already more than half the frame once
+	# before it was moved off it (see edgelayer.gd) - putting picnics into the
+	# 30-times-a-second draw is exactly how a walk starts to stutter.
+	for it: Dictionary in verge_items:
+		var p: Vector2 = it["pos"]
+		if p.y < vt - 160.0 or p.y > vb + 160.0:
+			continue
+		match String(it["kind"]):
+			"picnic":
+				_draw_picnic(c, p)
+			"stump":
+				_draw_stump(c, p)
+			"bush":
+				_draw_verge_bush(c, p)
+
+
+func _draw_picnic(c: CanvasItem, at: Vector2) -> void:
+	# A blanket on the grass with people sitting round it, from above: the
+	# blanket is the shape you read first, then heads. Same top-down anatomy as
+	# everyone else in this game - a body disc and a head with hair on it.
+	contact_shadow(c, at, 44.0, 6.0, 0.16)
+	var cloth := Color(0.80, 0.28, 0.30) if int(at.y) % 3 == 0 else Color(0.36, 0.48, 0.68)
+	c.draw_colored_polygon(
+		PackedVector2Array([
+			at + Vector2(-42.0, -30.0), at + Vector2(44.0, -34.0),
+			at + Vector2(41.0, 33.0), at + Vector2(-45.0, 29.0),
+		]), cloth)
+	# a check pattern, which is what stops it reading as a flat red lozenge
+	for i in range(1, 4):
+		var f := float(i) / 4.0
+		c.draw_line(at + Vector2(-43.0 + 86.0 * f, -32.0), at + Vector2(-44.0 + 86.0 * f, 31.0),
+			cloth.lightened(0.22), 2.0)
+		c.draw_line(at + Vector2(-43.0, -32.0 + 64.0 * f), at + Vector2(43.0, -33.0 + 64.0 * f),
+			cloth.lightened(0.22), 2.0)
+	# the spread: a basket and a couple of cups, which is the bit that smells
+	c.draw_rect(Rect2(at.x - 9.0, at.y - 8.0, 20.0, 15.0), Color(0.62, 0.45, 0.24))
+	c.draw_rect(Rect2(at.x - 9.0, at.y - 8.0, 20.0, 4.0), Color(0.74, 0.56, 0.32))
+	for cup: Vector2 in [Vector2(20.0, 10.0), Vector2(-24.0, 6.0)]:
+		c.draw_circle(at + cup, 4.0, Color(0.92, 0.90, 0.84))
+	# two or three sitters round the edge, facing in
+	var skins := [Color(0.88, 0.73, 0.58), Color(0.70, 0.54, 0.40), Color(0.94, 0.82, 0.70)]
+	var shirts := [Color(0.42, 0.52, 0.44), Color(0.78, 0.72, 0.42), Color(0.50, 0.42, 0.60)]
+	var seats := [Vector2(-30.0, -22.0), Vector2(32.0, -18.0), Vector2(6.0, 26.0)]
+	for i in range(3):
+		var s: Vector2 = at + seats[i]
+		contact_shadow(c, s, 11.0, 5.0, 0.14)
+		c.draw_circle(s, 11.0, shirts[i])
+		# head pushed toward the blanket's middle, so they read as facing in
+		var inward := (at - s).normalized() * 4.0
+		c.draw_circle(s + inward, 7.0, skins[i])
+		var back := (s - at).normalized().angle()
+		c.draw_arc(s + inward, 7.0, back - 1.1, back + 1.1, 10, Color(0.26, 0.19, 0.13), 4.0)
+
+
+func _draw_stump(c: CanvasItem, at: Vector2) -> void:
+	# a sawn-off trunk: end grain in rings, and a real shadow so it has height
+	cast_shadow(c, at, 17.0, 22.0, 0.20)
+	c.draw_circle(at, 17.0, Color(0.44, 0.33, 0.22))
+	c.draw_circle(at + Vector2(-2.0, -2.0), 14.0, Color(0.62, 0.49, 0.32))
+	for r: float in [10.0, 6.0, 3.0]:
+		c.draw_arc(at + Vector2(-2.0, -2.0), r, 0.0, TAU, 14, Color(0.48, 0.36, 0.23), 1.4)
+
+
+func _draw_verge_bush(c: CanvasItem, at: Vector2) -> void:
+	# clustered lobes with the light on the upper-left of each, same as the
+	# tree canopies, so a bush belongs to the same world as everything else
+	contact_shadow(c, at, 21.0, 14.0, 0.18)
+	var dark := Color(0.17, 0.30, 0.18)
+	var lit := Color(0.30, 0.46, 0.26)
+	for lobe: Vector2 in [Vector2(-9.0, 3.0), Vector2(9.0, 5.0), Vector2(0.0, -8.0)]:
+		c.draw_circle(at + lobe, 13.0, dark)
+	for lobe2: Vector2 in [Vector2(-11.0, -1.0), Vector2(-2.0, -11.0)]:
+		c.draw_circle(at + lobe2, 8.0, lit)
+
+
 func _scent_sources() -> Array:
 	# cached: this allocates a dictionary per source and does a group query,
 	# and it was being rebuilt on every single world redraw
@@ -1501,6 +1659,13 @@ func _build_scent_sources() -> Array:
 	for k in kebabs:
 		if not k.eaten:
 			out.append({"pos": k.pos, "col": Color(1.0, 0.76, 0.36)})
+	# somebody else's lunch, out on the grass. This is what makes
+	# the verge worth the detour rather than just a nicer colour: the best
+	# smell on the boulevard is well off the path, and grass carries it
+	# further than pavement would (see surfaces.gd)
+	for it: Dictionary in verge_items:
+		if String(it["kind"]) == "picnic":
+			out.append({"pos": it["pos"], "col": Color(1.0, 0.82, 0.44)})
 	for c in candy:
 		if not c.eaten:
 			out.append({"pos": c.pos, "col": Color(0.55, 0.85, 0.45)})
@@ -2677,6 +2842,12 @@ func _build_entities() -> void:
 	edge_layer.z_index = -5   # behind everything in the world
 	add_child(edge_layer)
 	edge_layer.setup(self)
+	verge_layer = Node2D.new()
+	verge_layer.set_script(load("res://vergelayer.gd"))
+	# above the ground pass, below the actors and props
+	verge_layer.z_index = 1
+	add_child(verge_layer)
+	verge_layer.setup(self)
 	# the off-leash space gets the same treatment: it is a fixed scene, so it
 	# is drawn once onto its own canvas rather than thirty times a second
 	freedomlayer = Node2D.new()
@@ -3946,6 +4117,9 @@ func _process(_delta: float) -> void:
 	if absf(cam.position.y - _edge_drawn_y) > 150.0:
 		_edge_drawn_y = cam.position.y
 		edge_layer.queue_redraw()
+	if verge_layer != null and absf(cam.position.y - _verge_drawn_y) > 150.0:
+		_verge_drawn_y = cam.position.y
+		verge_layer.queue_redraw()
 	if _redraw_acc >= 0.033 or shake_t > 0.0 or teeter.active or grind.active:
 		_redraw_acc = 0.0
 		queue_redraw()
