@@ -217,6 +217,12 @@ var wall_cats_spooked := 0
 # El Bosc: the owner keeps losing signal; muddy patches slow the going
 var signal_prone := false
 var mud_zones: Array[Rect2] = []
+# Patches of something underfoot, as organic blobs that follow the path
+# (see patch_has_point). Each carries its own substance kind, so a walk can
+# have puddles, another wet cement, another spilled paint. The Rect2 list
+# above is kept as their coarse bounds for culling and for the code that
+# still only speaks rectangles.
+var patches: Array[Dictionary] = []
 # what sits on the grass either side of the walk (see _build_verge). Drawn on
 # the cached edge canvas, because a lawn does not move.
 var verge_items: Array[Dictionary] = []
@@ -257,6 +263,12 @@ var paw_prints: Array[Dictionary] = []
 var paw_last := Vector2(INF, INF)
 var wet_paws := 0.0
 var paw_kind := "cement"
+# ...and the owner has feet too. He walks through the same wet cement she
+# does, and tracking it up the pavement without ever noticing is exactly
+# what he would do. Same array, flagged as boots so it draws as a shoe.
+var boot_last := Vector2(INF, INF)
+var wet_boots := 0.0
+var boot_kind := "cement"
 # smudges she has left on her human, which is the actual joke
 var owner_smudges: Array[Dictionary] = []
 var smudges_left := 0
@@ -626,30 +638,26 @@ func _apply_corridor() -> void:
 	# pair of vertical lines at exactly sw_l/sw_r, which is what most levels
 	# still are. See edge_path.gd; walk_edges(y) is what everything should ask.
 	edge_nodes = []
-	# EL BOSC IS THE FIRST CANDIDATE TO BEND, and it is not bending yet. The
-	# shape below works - the pavement ribbon curves, the props and the mud
-	# follow it, and the self-test passes - but the walk still looks wrong,
-	# because a level is more than its corridor. The trail's mud patches are
-	# Rect2s, and a hard axis-aligned rectangle laid across a bend overhangs
-	# the path onto the grass on the outside of every curve. Same problem
-	# waiting in every other bespoke feature built from a rectangle: the
-	# stream, the station conveyor, the terrace canopies.
-	#
-	# So the blocker was only half of what it looked like. Making the EDGE a
-	# curve was the hard part and it is done; what is left is that the things
-	# lying ON the path have to become ribbons too, measured between
-	# walk_edges over a y-span instead of pinned to a rect. That is the next
-	# piece of work, and until it lands a curved level would look worse than a
-	# straight one, which is the opposite of the point.
-	#
-	#	edge_nodes = [
-	#		{"y": START_Y, "cx": 640.0, "half": 250.0},
-	#		{"y": -900.0, "cx": 566.0, "half": 250.0},
-	#		{"y": -2000.0, "cx": 716.0, "half": 212.0},   # the pinch
-	#		{"y": -3100.0, "cx": 578.0, "half": 246.0},
-	#		{"y": -4200.0, "cx": 668.0, "half": 250.0},
-	#		{"y": GATE_Y, "cx": 640.0, "half": 250.0},
-	#	]
+	if lvl == "trail":
+		# EL BOSC BENDS - the first walk in the game that is not a straight
+		# line. A woodland trail has no business being ruler-drawn: it wanders
+		# either side of the centre and pinches where the trees close in, which
+		# makes the single-file stretch an actual place rather than a number.
+		#
+		# It went first because it has no building frontage and no wall
+		# blockers, so the bend has only the pavement, the props and the mud to
+		# agree with - and all three read walk_edges now, the mud as a band
+		# (see band_x) rather than as a rectangle that would hang off the
+		# outside of every curve. Both ends sit dead centre at the level's
+		# nominal width so the start line and the gate still line up.
+		edge_nodes = [
+			{"y": START_Y, "cx": 640.0, "half": 250.0},
+			{"y": -900.0, "cx": 566.0, "half": 250.0},
+			{"y": -2000.0, "cx": 716.0, "half": 212.0},   # the pinch
+			{"y": -3100.0, "cx": 578.0, "half": 246.0},
+			{"y": -4200.0, "cx": 668.0, "half": 250.0},
+			{"y": GATE_Y, "cx": 640.0, "half": 250.0},
+		]
 
 
 func _fit_x(x: float, lo: float, hi: float) -> float:
@@ -928,11 +936,19 @@ func _build_level_data() -> void:
 		# bend, so it is measured at the middle of its own band - close enough
 		# for a puddle, and far better than three rectangles pinned to where a
 		# straight path used to be
-		mud_zones = []
-		for band: Vector2 in [Vector2(-1600.0, 260.0), Vector2(-2900.0, 300.0),
-				Vector2(-4100.0, 240.0)]:
-			var me := walk_edges(band.x + band.y * 0.5)
-			mud_zones.append(Rect2(me.x, band.x, me.y - me.x, band.y))
+		# PUDDLES, not a band across the whole trail. A full-width strip is a
+		# wall you have to cross; puddles are things you weave between, which
+		# is both more interesting to walk and more like a wood after rain.
+		# Placed in pairs so a stretch reads as boggy rather than as one
+		# tidy pool, and offset across the path so a careful line gets through.
+		patches = [
+			{"y": -1520.0, "at": 0.28, "rx": 84.0, "ry": 46.0, "seed": 1.10, "kind": "mud"},
+			{"y": -1660.0, "at": 0.66, "rx": 70.0, "ry": 40.0, "seed": 2.40, "kind": "mud"},
+			{"y": -2860.0, "at": 0.72, "rx": 92.0, "ry": 52.0, "seed": 3.75, "kind": "mud"},
+			{"y": -3010.0, "at": 0.34, "rx": 66.0, "ry": 38.0, "seed": 5.02, "kind": "mud"},
+			{"y": -4080.0, "at": 0.46, "rx": 100.0, "ry": 54.0, "seed": 0.62, "kind": "mud"},
+			{"y": -4220.0, "at": 0.82, "rx": 58.0, "ry": 34.0, "seed": 4.18, "kind": "mud"},
+		]
 		fountains = [Vector2(360.0, -2400.0)]
 	elif lvl == "station":
 		# L'Estacio: a concourse with a moving walkway. On it you get carried
@@ -960,9 +976,17 @@ func _build_level_data() -> void:
 		# slows you AND takes a paw-print trail that follows you the rest of
 		# the walk (the evidence). Extra cones and a parked works van.
 		gate_text = "DETOUR"
-		cement_zones = [
-			Rect2(sw_l, -1700.0, sw_r - sw_l, 300.0),
-			Rect2(sw_l, -3300.0, sw_r - sw_l, 340.0),
+		# WET CEMENT, poured in patches rather than laid across the whole
+		# footway. A full-width slab is a wall with a paint penalty; poured
+		# patches are a line to pick through, and a works that has done half a
+		# job is more like a real works anyway. Same primitive as El Bosc's
+		# puddles - only the substance differs, which is the point of it.
+		cement_zones = []
+		patches = [
+			{"y": -1660.0, "at": 0.24, "rx": 96.0, "ry": 54.0, "seed": 2.05, "kind": "cement"},
+			{"y": -1810.0, "at": 0.70, "rx": 78.0, "ry": 46.0, "seed": 4.60, "kind": "cement"},
+			{"y": -3290.0, "at": 0.62, "rx": 104.0, "ry": 58.0, "seed": 1.35, "kind": "cement"},
+			{"y": -3460.0, "at": 0.30, "rx": 72.0, "ry": 42.0, "seed": 5.85, "kind": "cement"},
 		]
 		cone_spots = [Vector2(520, -1650), Vector2(760, -1650), Vector2(560, -2020), Vector2(720, -2020), Vector2(600, -3250), Vector2(700, -3650)]
 		vans = [Vector2(900, -2500)]
@@ -1054,6 +1078,9 @@ func _build_level_data() -> void:
 	_build_ground_detail()
 	_build_freedom_area()
 	_lift_props_out_of_water()
+	# after the water and the holes are known, so a puddle cannot end up in
+	# the pond and cement cannot be poured over a manhole
+	_settle_patches()
 	_build_dunes()
 	_build_park_props()
 	for i in range(140):
@@ -2392,8 +2419,9 @@ func _build_substance_zones() -> void:
 	# that also SLOW her (mud, wet cement) keep doing so; the rest are purely
 	# a mess to carry around, which is the fun of them.
 	substance_zones.clear()
-	for mz in mud_zones:
-		substance_zones.append({"rect": mz, "kind": "mud", "slow": true})
+	for pt: Dictionary in patches:
+		substance_zones.append({"rect": patch_bounds(pt), "patch": pt,
+			"kind": String(pt["kind"]), "slow": true})
 	for cz in cement_zones:
 		substance_zones.append({"rect": cz, "kind": "cement", "slow": true})
 	var w := sw_r - sw_l
@@ -2437,6 +2465,48 @@ func _build_freedom_area() -> void:
 			var shore := beach_shore_x(strip_y + strip_h * 0.5)
 			water.append(Rect2(-330.0, strip_y, shore + 330.0, strip_h + 0.5))
 			strip_y += strip_h
+
+
+func _patch_clear(pt: Dictionary) -> bool:
+	# is this somewhere a patch could sensibly be?
+	var b := patch_bounds(pt)
+	var c := patch_centre(pt)
+	if pond.size.x > 0.0 and pond.intersects(b):
+		return false
+	for w: Rect2 in water:
+		if w.intersects(b):
+			return false
+	for mh: Vector2 in manholes:
+		if b.has_point(mh):
+			return false
+	for cl: Rect2 in cellars:
+		if cl.intersects(b):
+			return false
+	var e := walk_edges(c.y)
+	return c.x >= e.x and c.x <= e.y
+
+
+func _settle_patches() -> void:
+	# Patches are authored by eye, and a perfectly plausible y can still land
+	# in the pond or on top of an open manhole - which is exactly what the
+	# first pass did, and it read as nonsense rather than as a mistake.
+	#
+	# So each one walks along the path until it finds ground that could hold
+	# it, searching outward in both directions from where it was authored. It
+	# never invents a position from nothing: the authored spot is the intent
+	# and this only moves it as far as it has to. level_check still fails if a
+	# patch cannot be placed at all, so nothing is quietly dropped.
+	for i in range(patches.size()):
+		var pt: Dictionary = patches[i]
+		var y0 := float(pt["y"])
+		if _patch_clear(pt):
+			continue
+		for step in range(16):
+			var off: float = float(step / 2 + 1) * 85.0
+			pt["y"] = y0 + (off if step % 2 == 0 else -off)
+			if _patch_clear(pt):
+				break
+		patches[i] = pt
 
 
 func _lift_props_out_of_water() -> void:
@@ -4964,6 +5034,182 @@ func _pairs(delta: float) -> void:
 			feed.say("YOU TANGLED THEM!  +3", EventFeed.Tone.GOOD)
 
 
+# A PATCH THAT LIES ON THE PATH.
+#
+# Everything that covers part of the walk - mud, a stream, the conveyor, a
+# terrace awning - was a Rect2, and a hard axis-aligned rectangle laid across a
+# bend overhangs the pavement onto the grass on the outside of every curve.
+# That, not the edge maths, is what actually stopped a level from bending: the
+# corridor could curve, but the things sitting on it could not follow.
+#
+# So a band spans a y RANGE and a fraction of the corridor's WIDTH, and asks
+# walk_edges where the path is at each point down itself. Full width is
+# {lo: 0, hi: 1}; the station's centre conveyor is about {lo: 0.38, hi: 0.62}.
+# Being fractions rather than pixels also means a band narrows where the path
+# narrows, which is what you want from a puddle and from a moving walkway both.
+#
+#   {"y": top y, "h": height, "lo": 0..1, "hi": 0..1}
+
+# ORGANIC PATCHES: mud, wet cement, spilled paint, a pond.
+#
+# In life not one of these has a straight edge, and every one of them was a
+# Rect2 - which is a good part of why the levels read as blocky. The park's
+# pond was the worst of it: a rectangle with a grey rim reads as a municipal
+# swimming pool rather than as water.
+#
+# A patch is a wobbled ellipse. Its outline is a sum of sines keyed to its own
+# seed, which makes it organic, cheap enough to test every frame, and
+# DETERMINISTIC - no RNG anywhere near it, so the autowalk stays reproducible.
+#
+# Position is PATH-RELATIVE: a fraction across the corridor plus a world y. So
+# a puddle sits in the same part of the trail wherever the trail goes, and
+# follows a bend for nothing.
+#
+#   {"y": float, "at": 0..1 across the path, "rx": float, "ry": float,
+#    "seed": float}
+
+const PATCH_LOBES := 22
+
+
+func _patch_lobes(rx: float, ry: float) -> int:
+	# segments scale with the patch, or a big one reads as a cut gem rather
+	# than as water. The pond was visibly faceted at a flat 22.
+	return clampi(int((rx + ry) * 0.5 / 6.0) + 12, 16, 56)
+
+
+func patch_centre(pt: Dictionary) -> Vector2:
+	var y := float(pt["y"])
+	var e := walk_edges(y)
+	return Vector2(e.x + (e.y - e.x) * float(pt["at"]), y)
+
+
+func _patch_wobble(pt: Dictionary, ang: float) -> float:
+	# three sines at unrelated frequencies: lumpy enough to read as natural,
+	# smooth enough that the outline never kinks
+	var sd := float(pt["seed"])
+	return (1.0 + 0.17 * sin(ang * 3.0 + sd) + 0.10 * sin(ang * 5.0 + sd * 1.7)
+		+ 0.06 * sin(ang * 8.0 + sd * 2.3))
+
+
+func patch_has_point(pt: Dictionary, p: Vector2) -> bool:
+	var d := p - patch_centre(pt)
+	var nx := d.x / float(pt["rx"])
+	var ny := d.y / float(pt["ry"])
+	var dist := sqrt(nx * nx + ny * ny)
+	if dist > 1.4:
+		return false      # outside even the lumpiest possible outline
+	return dist <= _patch_wobble(pt, atan2(ny, nx))
+
+
+func patch_bounds(pt: Dictionary) -> Rect2:
+	# a coarse box round the whole thing, for culling and for the code that
+	# still only speaks Rect2
+	var c := patch_centre(pt)
+	var rx: float = float(pt["rx"]) * 1.3
+	var ry: float = float(pt["ry"]) * 1.3
+	return Rect2(c.x - rx, c.y - ry, rx * 2.0, ry * 2.0)
+
+
+func _draw_pinned_patch(pt: Dictionary, at: Vector2, col: Color,
+		grow := 1.0) -> void:
+	# A patch at an absolute world position rather than a fraction across the
+	# path, for things authored against the level itself - the park's pond sits
+	# where the park put it, not where the path happens to be.
+	#
+	# grow scales the SAME outline outward, which is how the bank and the water
+	# stay concentric. Drawing them from two different seeds made the bank poke
+	# through the water as dark spikes wherever the two wobbles disagreed.
+	var rx: float = float(pt["rx"]) * grow
+	var ry: float = float(pt["ry"]) * grow
+	var n := _patch_lobes(rx, ry)
+	var poly := PackedVector2Array()
+	for i in range(n):
+		var a := TAU * float(i) / float(n)
+		var r := _patch_wobble(pt, a)
+		poly.append(at + Vector2(cos(a) * rx * r, sin(a) * ry * r))
+	draw_colored_polygon(poly, col)
+
+
+func draw_patch(c: CanvasItem, pt: Dictionary, col: Color,
+		rim := Color(0, 0, 0, 0)) -> void:
+	var mid := patch_centre(pt)
+	var rx := float(pt["rx"])
+	var ry := float(pt["ry"])
+	var n := _patch_lobes(rx, ry)
+	var poly := PackedVector2Array()
+	for i in range(n):
+		var a := TAU * float(i) / float(n)
+		var r := _patch_wobble(pt, a)
+		poly.append(mid + Vector2(cos(a) * rx * r, sin(a) * ry * r))
+	if rim.a > 0.0:
+		# a darker wet ring just outside, which is what makes a puddle read as
+		# a dip in the ground rather than a sticker on top of it
+		var out := PackedVector2Array()
+		for i in range(poly.size()):
+			out.append(mid + (poly[i] - mid) * 1.10)
+		c.draw_colored_polygon(out, rim)
+	c.draw_colored_polygon(poly, col)
+
+
+func zone_has_point(z: Dictionary, p: Vector2) -> bool:
+	# a substance zone is either a plain rectangle or a band that follows the
+	# path. Asking here rather than at each call site is what stops the two
+	# from drifting apart the way the old surface bools did.
+	if z.has("patch"):
+		return patch_has_point(z["patch"] as Dictionary, p)
+	return (z["rect"] as Rect2).has_point(p)
+
+
+func band_x(band: Dictionary, y: float) -> Vector2:
+	# the band's left and right edge at this point down the level
+	var e := walk_edges(y)
+	var w: float = e.y - e.x
+	return Vector2(e.x + w * float(band["lo"]), e.x + w * float(band["hi"]))
+
+
+func band_has_point(band: Dictionary, p: Vector2) -> bool:
+	var top: float = float(band["y"])
+	if p.y < top or p.y > top + float(band["h"]):
+		return false
+	var x := band_x(band, p.y)
+	return p.x >= x.x and p.x <= x.y
+
+
+func band_bounds(band: Dictionary) -> Rect2:
+	# a coarse rectangle around the whole band, for the cheap early-out tests
+	# and for the code that still only speaks Rect2
+	var top: float = float(band["y"])
+	var h: float = float(band["h"])
+	var a := band_x(band, top)
+	var b := band_x(band, top + h * 0.5)
+	var c := band_x(band, top + h)
+	var lo: float = minf(a.x, minf(b.x, c.x))
+	var hi: float = maxf(a.y, maxf(b.y, c.y))
+	return Rect2(lo, top, hi - lo, h)
+
+
+func draw_band(c: CanvasItem, band: Dictionary, col: Color, step := 40.0) -> void:
+	# the same ribbon trick the pavement uses, so a patch follows the bend it
+	# is lying on instead of hanging off the side of it
+	var top: float = float(band["y"])
+	var bot: float = top + float(band["h"])
+	var left := PackedVector2Array()
+	var right := PackedVector2Array()
+	var y := top
+	while true:
+		var yy: float = minf(y, bot)
+		var x := band_x(band, yy)
+		left.append(Vector2(x.x, yy))
+		right.append(Vector2(x.y, yy))
+		if yy >= bot:
+			break
+		y += step
+	var poly := PackedVector2Array(left)
+	for i in range(right.size() - 1, -1, -1):
+		poly.append(right[i])
+	c.draw_colored_polygon(poly, col)
+
+
 func _draw_walk_ribbon(vt: float, vb: float, bottom: float, col: Color) -> void:
 	# The pavement as a ribbon following the corridor, for a level whose path
 	# bends. Sampled ONLY down the visible range: a walk is five thousand
@@ -5017,13 +5263,13 @@ func surface_at(p: Vector2) -> int:
 	for w: Rect2 in water:
 		if w.has_point(p):
 			return Surfaces.S.WATER
-	for mz: Rect2 in mud_zones:
-		if mz.has_point(p):
-			return Surfaces.S.MUD
+	for pt: Dictionary in patches:
+		if patch_has_point(pt, p):
+			return Surfaces.S.MUD if String(pt["kind"]) == "mud" else Surfaces.S.SAND
 	if lvl == "beach" and p.x < 340.0:
 		return Surfaces.S.SAND
 	for sz in substance_zones:
-		if bool(sz.get("slow", false)) and (sz.rect as Rect2).has_point(p):
+		if bool(sz.get("slow", false)) and zone_has_point(sz, p):
 			return Surfaces.S.SAND
 	var e := walk_edges(p.y)
 	if p.x >= e.x and p.x <= e.y:
@@ -5047,7 +5293,7 @@ func _offpath(delta: float) -> void:
 	dog.sand_slow = dog.surface == Surfaces.S.SAND or dog.surface == Surfaces.S.MUD
 	# stand in something and it comes with you
 	for sz in substance_zones:
-		if (sz.rect as Rect2).has_point(dog.global_position):
+		if zone_has_point(sz, dog.global_position):
 			paw_kind = String(sz.kind)
 			var sd: Dictionary = SUBSTANCES[paw_kind]
 			wet_paws = float(sd.life)
@@ -5063,6 +5309,27 @@ func _offpath(delta: float) -> void:
 		paw_last = dog.global_position
 		var side: Vector2 = dog.facing.orthogonal() * (5.0 if paw_prints.size() % 2 == 0 else -5.0)
 		paw_prints.append({"pos": dog.global_position + side, "kind": paw_kind})
+		if paw_prints.size() > 90:
+			paw_prints.remove_at(0)
+	# THE OWNER'S BOOTS. He is not exempt from the pavement, and a man who
+	# has walked through wet cement while reading his phone leaves a trail
+	# of it behind him. Strides are longer than hers and set wider apart.
+	for sz in substance_zones:
+		if zone_has_point(sz, human.global_position):
+			boot_kind = String(sz.kind)
+			wet_boots = float((SUBSTANCES[boot_kind] as Dictionary)["life"])
+			break
+	if wet_boots > 0.0:
+		# he wades through the pond and it comes off him too
+		var hf: Dictionary = Surfaces.feel(surface_at(human.global_position))
+		if bool(hf["washes"]):
+			wet_boots = 0.0
+	wet_boots = maxf(0.0, wet_boots - delta)
+	if wet_boots > 0.0 and boot_last.distance_to(human.global_position) > 38.0:
+		boot_last = human.global_position
+		var bside: Vector2 = human.face_dir.orthogonal() * (8.0 if paw_prints.size() % 2 == 0 else -8.0)
+		paw_prints.append({"pos": human.global_position + bside, "kind": boot_kind,
+			"boot": true, "ang": human.face_dir.angle()})
 		if paw_prints.size() > 90:
 			paw_prints.remove_at(0)
 	# ...and so does your human, the moment you lean on their nice trousers
@@ -6630,13 +6897,28 @@ func _draw_world() -> void:
 		draw_line(Vector2(BLANE_R, bottom), Vector2(BLANE_R, GATE_Y), COL_SEAM, 2.0)
 		draw_line(Vector2(SHOULDER_R, bottom), Vector2(SHOULDER_R, GATE_Y), COL_SEAM, 3.0)
 	if pond.size.x > 0.0:
-		# the pond, and the bridge planks squeezing past it
-		draw_rect(pond.grow(14.0), Color(0.42, 0.4, 0.34))
-		draw_rect(pond, Color(0.33, 0.45, 0.52))
+		# THE POND. It was a rectangle with a grey rim, which read as a
+		# municipal swimming pool rather than as water in a park - a hard
+		# straight edge is the one thing a pond never has. Drawn as two blobs
+		# now: a muddy bank and the water inside it, both from the same
+		# primitive as the puddles and the wet cement.
+		#
+		# The Rect2 is kept for everything else that asks about the pond - the
+		# swim test, the keep-out margins that stop props being placed in it,
+		# the prize in the middle - because being slightly generous about where
+		# the water is, is the right way round for all of those.
+		var pc := pond.get_center()
+		var bank := {"y": pc.y, "at": 0.5, "rx": pond.size.x * 0.5,
+			"ry": pond.size.y * 0.5, "seed": 2.7}
+		# path-relative x would drag the pond sideways on a bend; the park does
+		# not bend and the pond is authored against the level, so pin it
+		# muddy bank, then the water inside it, from one outline
+		_draw_pinned_patch(bank, pc, Color(0.40, 0.36, 0.28), 1.08)
+		_draw_pinned_patch(bank, pc, Color(0.31, 0.44, 0.52), 0.94)
 		var wt := Time.get_ticks_msec() / 1000.0
 		for i in range(4):
 			var wy := pond.position.y + 70.0 + i * 105.0
-			draw_arc(Vector2(pond.get_center().x + sin(wt * 0.7 + i) * 40.0, wy), 26.0, PI * 0.15, PI * 0.85, 10, Color(1, 1, 1, 0.14), 2.0)
+			draw_arc(Vector2(pc.x + sin(wt * 0.7 + i) * 40.0, wy), 26.0, PI * 0.15, PI * 0.85, 10, Color(1, 1, 1, 0.14), 2.0)
 		var px := pond.end.x + 8.0
 		var py := pond.position.y
 		while py < pond.end.y:
@@ -7087,6 +7369,13 @@ func _draw_world() -> void:
 		if pp.y < vt - 20.0 or pp.y > vb + 20.0:
 			continue
 		var pc: Color = SUBSTANCES[String(pr.kind)].col
+		if bool(pr.get("boot", false)):
+			# a sole: an oval pointing the way he was walking, so his trail
+			# reads as a person's and hers reads as a dog's
+			draw_set_transform(pp, float(pr.get("ang", 0.0)), Vector2(1.0, 0.62))
+			draw_circle(Vector2.ZERO, 6.4, Color(pc.r, pc.g, pc.b, 0.62))
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			continue
 		draw_circle(pp, 3.2, Color(pc.r, pc.g, pc.b, 0.78))
 		draw_circle(pp + Vector2(-2.5, -3.0), 1.4, Color(pc.r, pc.g, pc.b, 0.72))
 		draw_circle(pp + Vector2(2.5, -3.0), 1.4, Color(pc.r, pc.g, pc.b, 0.72))
@@ -7175,14 +7464,28 @@ func _draw_world() -> void:
 				draw_line(Vector2(cz.position.x, cz.end.y), Vector2(cz.end.x, cz.end.y), Color(0.9, 0.75, 0.2, 0.8), 3.0)
 		pass  # prints are drawn for every walk now, further down
 	# El Bosc: muddy patches across the trail (slow going)
-	if lvl == "trail":
-		for mz in mud_zones:
-			if mz.end.y > vt and mz.position.y < vb:
-				draw_rect(mz, Color(0.34, 0.26, 0.18, 0.85))
-				for i in range(6):
-					var px := mz.position.x + fmod(i * 151.0, mz.size.x)
-					var py := mz.position.y + fmod(i * 97.0, mz.size.y)
-					draw_circle(Vector2(px, py), 5.0, Color(0.24, 0.18, 0.12, 0.7))
+	# whatever this walk has lying underfoot, drawn as the shape it would
+	# actually be. Colour comes from SUBSTANCES so a new kind needs no new
+	# drawing code.
+	for pi in range(patches.size()):
+		var pt: Dictionary = patches[pi]
+		var pb := patch_bounds(pt)
+		if pb.end.y < vt or pb.position.y > vb:
+			continue
+		var sk: String = String(pt["kind"])
+		var base: Color = Color(0.34, 0.26, 0.18)
+		if SUBSTANCES.has(sk):
+			base = Color((SUBSTANCES[sk] as Dictionary)["col"])
+		draw_patch(self, pt, Color(base.r, base.g, base.b, 0.88),
+			Color(base.r * 0.6, base.g * 0.6, base.b * 0.6, 0.45))
+		# a few darker flecks, so a big patch is not one flat colour
+		var mid := patch_centre(pt)
+		for i in range(5):
+			var a := float(i) * 1.31 + float(pt["seed"])
+			var rr := 0.34 + 0.4 * fmod(float(i) * 0.37, 1.0)
+			draw_circle(mid + Vector2(cos(a) * float(pt["rx"]) * rr,
+				sin(a) * float(pt["ry"]) * rr), 5.0,
+				Color(base.r * 0.7, base.g * 0.7, base.b * 0.7, 0.6))
 	# El Gotic: laundry strung across the alley overhead, a lantern or two
 	if lvl == "oldtown":
 		var lt := Time.get_ticks_msec() / 1000.0

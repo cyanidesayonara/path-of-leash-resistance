@@ -48,6 +48,36 @@ static func check(m) -> Array:
 				break
 			ny += 120.0
 
+	# --- patches on ground that could actually hold them ---
+	# A mud puddle in the middle of a pond is not a puddle, and wet cement
+	# poured over an open manhole is not a works - both are bugs that happen to
+	# read as level design. Patches are hand-authored against a walk, so this
+	# is the check that stops a plausible-looking number landing somewhere
+	# absurd. It FAILS rather than quietly relocating: the author should see it.
+	for pt in m.patches:
+		var pb: Rect2 = m.patch_bounds(pt)
+		var pc: Vector2 = m.patch_centre(pt)
+		var what: String = String(pt["kind"])
+		if m.pond.size.x > 0.0 and m.pond.intersects(pb):
+			p.append("%s patch at (%.0f, %.0f) overlaps the pond" % [what, pc.x, pc.y])
+		for w: Rect2 in m.water:
+			if w.intersects(pb):
+				p.append("%s patch at (%.0f, %.0f) is in water" % [what, pc.x, pc.y])
+				break
+		for mh: Vector2 in m.manholes:
+			if pb.has_point(mh):
+				p.append("%s patch at (%.0f, %.0f) covers a manhole" % [what, pc.x, pc.y])
+				break
+		for cl: Rect2 in m.cellars:
+			if cl.intersects(pb):
+				p.append("%s patch at (%.0f, %.0f) covers a cellar" % [what, pc.x, pc.y])
+				break
+		# and it has to be ON the walk, not out on the grass
+		var pe: Vector2 = m.walk_edges(pc.y)
+		if pc.x < pe.x or pc.x > pe.y:
+			p.append("%s patch at (%.0f, %.0f) is off the path (%.0f..%.0f there)" % [
+				what, pc.x, pc.y, pe.x, pe.y])
+
 	# --- every prop on its own pavement ---
 	# the beach is exempt: its sand / boardwalk / bike-path cross-section
 	# deliberately places things outside the walkway

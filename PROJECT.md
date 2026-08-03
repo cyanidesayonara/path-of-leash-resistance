@@ -591,12 +591,44 @@ memorable.
        picture. Rules worth keeping: point-of-impact numbers stay in the
        world at the thing they refer to, announcements go in the channel,
        and nothing announces itself twice.
-       Still to do: the CARDS. The vitals card and the goals card are
-       small, thin, cornered and typographically nothing like the
-       announcements now sitting over them - the same treatment (weight,
-       outline, blocky caps) wants carrying across so the whole interface
-       reads as one thing. The pee/energy tubes and mark dots also want
-       looking at: they are tiny for what they tell you.
+       Still to do, and PLANNED FOR LATER rather than half-done now
+       (Santtu, Aug 2026). The goal is stated as: the view of the LEVEL
+       itself as uncluttered as possible, and never two announcements
+       competing. Getting one channel was necessary but not sufficient -
+       a channel that shows two lines at once is still two things to read.
+       The rules to build to:
+         a. ONE transient on screen at a time, not two. A second arriving
+            waits, and waits behind a minimum gap so they cannot machine-gun.
+         b. PRIORITY, and a low-priority line that arrives late is DROPPED
+            rather than queued. Stale news is clutter: "SO CLOSE! 3 OF 5"
+            arriving after the chase has started is worse than silence.
+         c. Never announce what the player can already see. The leash
+            visibly detaching does not also need OFF THE LEASH.
+         d. Numbers are not announcements. "+10" belongs on the thing or in
+            the bones readout, never as a line of its own.
+         e. STATE IS NOT AN EVENT, and this is the big one. Several banner
+            strings are conditions rather than news - FULL!, THIRSTY! -
+            and they belong on the vitals card as a meter or an icon that
+            is simply true while it is true. Moving them off the banner is
+            most of the decluttering on its own.
+         f. Audit the ~55 remaining float_text calls against rule (d): how
+            many are genuinely point-of-impact and how many are noise.
+       And the CARDS: vitals and goals are small, thin, cornered and
+       typographically nothing like the announcements now sitting over them.
+       The same treatment (weight, outline, blocky caps) wants carrying
+       across so the interface reads as one thing, and the pee/energy tubes
+       and mark dots want re-drawing - they are tiny for what they tell you.
+    13. LEVEL-BY-LEVEL PASS (Santtu, Aug 2026) - not started, and it is the
+       one that decides whether this game is any good. The tooling work
+       (surfaces, curved edges, patches, the verge, the catalogue) is only
+       there to make this possible: go over each of the twelve walks with a
+       fine tooth comb and design it to be as FUN and as REALISTIC to play
+       as possible. Level design will make or break each one, so every
+       object wants a purpose that makes sense and feels like something -
+       and all of it has to stay optimised, because a walk that stutters is
+       not fun however well it is composed. Measure with --drawcost, keep
+       static scenery on the cached canvases (edgelayer, freedomlayer,
+       vergelayer) and out of the per-frame draw.
   (Working title joke, recorded for posterity and not adopted: "Tony Dawg".)
 - Uniqueness rule (from playtesting): shared asset library for
   efficiency, but every setting must earn its own look AND at least one
