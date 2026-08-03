@@ -37,7 +37,7 @@ extends RefCounted
 # whatever you are standing on, not a thing you stand on, so they stay a
 # separate grip multiplier (dog.slick / dog.ice) and compose with these.
 
-enum S { PAVEMENT, GRASS, SAND, MUD, WATER }
+enum S { PAVEMENT, GRASS, SAND, MUD, WATER, TILE }
 
 const FEEL := {
 	# the default: smooth, fast, and it tells you almost nothing
@@ -68,6 +68,16 @@ const FEEL := {
 	S.WATER: {
 		"top": 0.62, "grip": 0.72, "scent": 0.40,
 		"marks": false, "washes": true, "detour": false, "name": "water",
+	},
+	# TRENCADIS: glazed broken-tile mosaic, the surface Gaudi tiled El Parc
+	# with. Fast and slippery - claws find nothing on fired ceramic - and it
+	# holds no smell at all, being sealed. This is the entry that stops an
+	# artist level from being a reskin: the mosaic is not a texture on the
+	# ground, it is the fastest and least controllable footing in the game, so
+	# the look and the handling are the same decision.
+	S.TILE: {
+		"top": 1.10, "grip": 0.62, "scent": 0.30,
+		"marks": false, "washes": false, "detour": true, "name": "tiles",
 	},
 }
 

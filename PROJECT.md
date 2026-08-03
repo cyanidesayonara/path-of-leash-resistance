@@ -694,6 +694,48 @@ memorable.
           done to a walkable path it would read as broken rather than as
           cubist. Restrain it to FACADES via the frontage system, where
           readability matters least. Not a whole level.
+    15. LA RAMBLA, PACKED (Santtu, Aug 2026) - not built. The boulevard walk
+       is now named for the most iconic promenade in the city, and it should
+       play like it: authentically hard to weave through. Tourists dragging
+       wheeled luggage, hawkers with tables, living statues, and pickpockets.
+         * MECHANIC: catch a running pickpocket. That is the goal that makes
+           the crowd matter rather than merely obstruct - a target that
+           threads the crowd faster than you can, so the density becomes the
+           difficulty instead of the decoration. rival.gd's turn-rate pursuit
+           (fast in a line, turns like a bus) is the model to steal from,
+           inverted: he flees, you cut corners.
+         * Luggage is the good obstacle: it TRAILS behind its owner on a
+           handle, so it is a moving two-body obstacle - which is exactly
+           what this game's rope already knows how to tangle with. Sharing
+           otherpair.gd's tangle logic would make a suitcase a hazard with
+           no new physics at all.
+         * THE HARD CONSTRAINT is performance, and the owner has said so
+           twice: it must not get choppy. Crowds are the one thing most
+           likely to break the frame. Rules: static stalls and tables go on
+           the CACHED canvases (edgelayer / vergelayer), moving pedestrians
+           are pooled and culled to the visible band, and the count is
+           measured with --drawcost before it is raised. Prove the budget
+           first with a stress case, then dress it.
+    16. WHEELS (Santtu, Aug 2026) - not built. The bikes and scooter kids
+       already exist (bike.gd, the bike lanes) but they travel in straight
+       obedient lines, which is not how anybody rides in this city. They
+       should WEAVE - picking lines around pedestrians and each other at
+       speed, and cutting close enough to be genuinely alarming. And the
+       roster is missing the most ubiquitous wheels of all: rollerbladers
+       and skaters.
+         * The turn-rate movement in rival.gd is the right base again - a
+           rider who commits to a line and cannot correct instantly is both
+           more realistic and more readable as a threat than one who tracks
+           you perfectly.
+         * MECHANIC hook: a weaving rider is a moving gap that opens and
+           closes, which makes the bike lane a thing to TIME rather than a
+           thing to avoid. Pairs naturally with the kerb grind and with La
+           Rambla's crowd (item 15) - same problem, same solution.
+         * Skaters should read differently from bikes in silhouette AND in
+           behaviour: slower top speed, tighter turns, and they carve rather
+           than steer, so they belong on the smooth surfaces (see the TILE
+           entry in surfaces.gd - glazed mosaic is the fastest footing in
+           the game and a skater would go looking for it).
   (Working title joke, recorded for posterity and not adopted: "Tony Dawg".)
 - Uniqueness rule (from playtesting): shared asset library for
   efficiency, but every setting must earn its own look AND at least one

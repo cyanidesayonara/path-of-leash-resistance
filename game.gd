@@ -2,24 +2,58 @@ extends Node
 
 # Autoload: session state that must survive scene reloads.
 
-const LEVELS: Array[String] = ["street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap"]
+const LEVELS: Array[String] = ["street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap", "guell"]
 const LEVEL_NAMES := {
 	"daily": "Daily Walk",
 	"tutorial": "First Walk (tutorial)",
-	"street": "The Boulevard", "park": "The Park",
-	"beach": "Passeig Maritim", "rain": "El Aguacero", "market": "El Mercat",
+	# One scheme: a Catalan article plus one everyday noun for the place you
+	# are walking through, ASCII only (the web font has no accents, and the HUD
+	# upper-cases everything). The two MODE entries stay English on purpose -
+	# they name game modes, not places.
+	#
+	# "La Rambla" is a real street, and naming a level after the street it
+	# depicts is DESCRIPTIVE use, not trademark use - the same category as the
+	# Passeig Maritim and El Gotic already here. What would be a problem is an
+	# attraction's brand name used as branding (which is why the mosaic walk is
+	# "El Mosaic" and not the real site), or copying a protected work. A public
+	# thoroughfare is neither.
+	"street": "La Rambla", "park": "El Parc",
+	"beach": "Passeig Maritim", "rain": "El Diluvi", "market": "El Mercat",
 	"oldtown": "El Gotic", "trail": "El Bosc", "station": "L'Estacio", "site": "Les Obres",
-	"spook": "La Castanyada", "scrap": "El Desguas",
+	"spook": "La Castanyada", "scrap": "La Ferralla",
+	# invented, not the real site: the terraces are the STYLE reference, and
+	# style is not anybody's property. No real landmark name ships here.
+	"guell": "El Mosaic",
+}
+# The Catalan name carries the character; this carries the meaning. The game
+# ships in English, so a player who does not speak Catalan should never have to
+# guess what a walk is - the name is the flavour, the gloss is the information.
+# Kept lower case and short: it sits under the name chalked on the pavement.
+const LEVEL_SUBTITLES := {
+	"daily": "a new one every day",
+	"tutorial": "learn the ropes",
+	"street": "the crowded promenade",
+	"park": "the park",
+	"beach": "the seaside walk",
+	"rain": "the downpour",
+	"market": "the market",
+	"oldtown": "the old town",
+	"trail": "the forest",
+	"station": "the station",
+	"site": "the roadworks",
+	"spook": "the chestnut festival",
+	"scrap": "the scrapyard",
+	"guell": "the mosaic terraces",
 }
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
-const STAR_GATE := {"street": 0, "park": 2, "beach": 4, "rain": 5, "market": 7, "oldtown": 9, "trail": 11, "station": 13, "site": 15, "spook": 17, "scrap": 19}
+const STAR_GATE := {"street": 0, "park": 2, "beach": 4, "rain": 5, "market": 7, "oldtown": 9, "trail": 11, "station": 13, "site": 15, "spook": 17, "scrap": 19, "guell": 21}
 
 const WEATHERS: Array[String] = ["clear", "rain", "wind", "snow"]
 const WEATHER_NAMES := {"clear": "CLEAR", "rain": "RAIN", "wind": "WIND", "snow": "SNOW"}
 
 # the carousel on the title: the daily walk first, then the campaign walks
-const CAROUSEL: Array[String] = ["tutorial", "daily", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap"]
+const CAROUSEL: Array[String] = ["tutorial", "daily", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap", "guell"]
 
 # Cosmetics keep their catalog keys when equipped, but ownership is namespaced
 # by category so identically named items remain separate purchases.

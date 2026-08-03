@@ -630,6 +630,7 @@ func _apply_corridor() -> void:
 		"site": half = 295.0     # squeezed by the works
 		"spook": half = 275.0
 		"scrap": half = 305.0
+		"guell": half = 300.0   # terraces, wide enough to carve on
 	walk_cx = 640.0
 	walk_half = half
 	sw_l = walk_cx - walk_half
@@ -638,7 +639,26 @@ func _apply_corridor() -> void:
 	# pair of vertical lines at exactly sw_l/sw_r, which is what most levels
 	# still are. See edge_path.gd; walk_edges(y) is what everything should ask.
 	edge_nodes = []
-	if lvl == "trail":
+	if lvl == "guell":
+		# EL PARC. The serpentine, and the point of the whole level: Gaudi did
+		# not draw a straight line and neither does this path. It is a longer,
+		# deeper weave than El Bosc's - a bench terrace that swings right
+		# across the level and back, so carving it is the walk.
+		#
+		# Kept inside the slope the self-test allows (0.85) so it can be run
+		# rather than merely admired, and both ends sit centred so the start
+		# line and the gate still line up.
+		edge_nodes = [
+			{"y": START_Y, "cx": 640.0, "half": 300.0},
+			{"y": -700.0, "cx": 486.0, "half": 292.0},
+			{"y": -1500.0, "cx": 792.0, "half": 268.0},
+			{"y": -2300.0, "cx": 470.0, "half": 300.0},
+			{"y": -3100.0, "cx": 806.0, "half": 262.0},
+			{"y": -3900.0, "cx": 520.0, "half": 296.0},
+			{"y": -4600.0, "cx": 700.0, "half": 300.0},
+			{"y": GATE_Y, "cx": 640.0, "half": 300.0},
+		]
+	elif lvl == "trail":
 		# EL BOSC BENDS - the first walk in the game that is not a straight
 		# line. A woodland trail has no business being ruler-drawn: it wanders
 		# either side of the centre and pinches where the trees close in, which
@@ -708,7 +728,7 @@ func _build_level_data() -> void:
 		geo = "street"
 	elif lvl == "oldtown" or lvl == "spook":
 		geo = "market"
-	elif lvl == "trail":
+	elif lvl == "trail" or lvl == "guell":
 		geo = "park"
 	match geo:
 		"street":
@@ -991,6 +1011,25 @@ func _build_level_data() -> void:
 		cone_spots = [Vector2(520, -1650), Vector2(760, -1650), Vector2(560, -2020), Vector2(720, -2020), Vector2(600, -3250), Vector2(700, -3650)]
 		vans = [Vector2(900, -2500)]
 		fountains = [Vector2(335, -4200)]
+	elif lvl == "guell":
+		# El Parc: Gaudi's terraces. Broken-tile mosaic underfoot, which is
+		# fast and slippery to run on, laid in organic sweeps rather than
+		# slabs - the patch primitive was already the right shape for it.
+		gate_text = "TERRACE"
+		# It inherits the park's cross-section, which brings the park's pond
+		# with it - and the pond is authored against a STRAIGHT corridor, so on
+		# a serpentine it ends up swallowing whatever the path now runs over.
+		# The self-test caught a fountain and a cone standing in it. The
+		# terraces do their water as a fountain instead.
+		pond = Rect2()
+		patches = [
+			{"y": -640.0, "at": 0.44, "rx": 150.0, "ry": 86.0, "seed": 1.42, "kind": "tile"},
+			{"y": -1460.0, "at": 0.56, "rx": 168.0, "ry": 94.0, "seed": 3.07, "kind": "tile"},
+			{"y": -2280.0, "at": 0.40, "rx": 158.0, "ry": 90.0, "seed": 4.61, "kind": "tile"},
+			{"y": -3080.0, "at": 0.60, "rx": 174.0, "ry": 98.0, "seed": 0.88, "kind": "tile"},
+			{"y": -3880.0, "at": 0.46, "rx": 156.0, "ry": 88.0, "seed": 2.35, "kind": "tile"},
+		]
+		fountains = [Vector2(walk_cx - 150.0, -2650.0)]
 	elif lvl == "scrap":
 		# El Desguas: the scrapyard shortcut. Sleeping guard dogs, sweeping
 		# cameras, laser tripwires - and your stealth partner is a glowing,
@@ -2264,8 +2303,15 @@ func _draw_ground_title() -> void:
 	var name := String(Game.LEVEL_NAMES[lvl]).to_upper()
 	var y := START_Y - 190.0
 	_draw_world_text(Vector2(mid, y), name, 46, style, 4.0)
+	# The name is Catalan for character; this says what it MEANS, because the
+	# game ships in English and nobody should have to guess what a walk is.
+	# Smaller and set under the name, in the same medium, so it reads as a
+	# gloss rather than as a second title.
+	var gloss := String(Game.LEVEL_SUBTITLES.get(lvl, ""))
+	if gloss != "":
+		_draw_world_text(Vector2(mid, y + 30.0), gloss, 21, style, 8.0)
 	if not Game.is_unlocked(lvl):
-		_draw_world_text(Vector2(mid, y + 44.0), "LOCKED", 24, style, 5.0)
+		_draw_world_text(Vector2(mid, y + 62.0), "LOCKED", 24, style, 5.0)
 	elif menu_step == 1:
 		# the browse arrows, in the same medium as the name
 		var w: float = font.get_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, -1, 46).x
@@ -2420,6 +2466,10 @@ func _build_substance_zones() -> void:
 	# a mess to carry around, which is the fun of them.
 	substance_zones.clear()
 	for pt: Dictionary in patches:
+		# glazed tile is a surface, not a substance: it is fast and slippery
+		# but it does not come away on her paws the way wet cement does
+		if not SUBSTANCES.has(String(pt["kind"])):
+			continue
 		substance_zones.append({"rect": patch_bounds(pt), "patch": pt,
 			"kind": String(pt["kind"]), "slow": true})
 	for cz in cement_zones:
@@ -2956,6 +3006,10 @@ const LEVEL_GOAL_IDS := {
 	"site": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "snack", "combo", "prize"],
 	"spook": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "tummy", "snack", "combo", "prize"],
 	"scrap": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "ghost", "unseen", "combo", "prize"],
+	# El Parc leans on what the terraces are for: carving them (fling) and
+	# riding the serpentine bench (combo), plus the park staples.
+	"guell": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi",
+		"drink", "fling", "combo", "prize"],
 }
 
 
@@ -4050,6 +4104,11 @@ func _process(_delta: float) -> void:
 			if "--shot-settings" in OS.get_cmdline_user_args():
 				_open_settings_from_menu()
 				return
+			# --shot-title leaves the menu up instead of skipping it, so the
+			# walk-select screen and the name chalked on the pavement can be
+			# reviewed. Everything else about --shot exists to get PAST this.
+			if "--shot-title" in OS.get_cmdline_user_args():
+				return
 			started = true  # skip the title so the shot shows the world
 			frozen = false
 			_apply_menu_step()
@@ -5110,6 +5169,66 @@ func patch_bounds(pt: Dictionary) -> Rect2:
 	return Rect2(c.x - rx, c.y - ry, rx * 2.0, ry * 2.0)
 
 
+# TRENCADIS: a mosaic of broken tile, the technique El Parc's terraces are
+# surfaced with. Style, not any particular work - a way of laying shards, which
+# is nobody's property.
+#
+# Drawn as irregular shards inside the patch outline, from the same deterministic
+# sine hashing as everything else here, so it never touches the RNG the autowalk
+# depends on. The shard grid is bounded by the patch's own size, so a big terrace
+# costs proportionally and no more.
+const TRENCADIS := [
+	Color(0.86, 0.88, 0.84),   # ceramic white
+	Color(0.42, 0.66, 0.66),   # sea glass
+	Color(0.30, 0.48, 0.62),   # deep blue
+	Color(0.84, 0.62, 0.30),   # terracotta
+	Color(0.72, 0.76, 0.52),   # olive
+	Color(0.90, 0.80, 0.56),   # sand glaze
+]
+
+
+func _draw_trencadis(pt: Dictionary) -> void:
+	var mid := patch_centre(pt)
+	var rx := float(pt["rx"])
+	var ry := float(pt["ry"])
+	var sd := float(pt["seed"])
+	# the mortar bed first, so the gaps between shards read as grout
+	draw_patch(self, pt, Color(0.30, 0.28, 0.26, 0.95))
+	# then the shards. Stepped in a grid and jittered, which is how a real
+	# mosaic goes down - laid roughly in courses, never square.
+	var step := 17.0
+	var nx := int(rx * 2.0 / step)
+	var ny := int(ry * 2.0 / step)
+	for iy in range(ny):
+		for ix in range(nx):
+			var u := (float(ix) + 0.5) / float(nx) * 2.0 - 1.0
+			var v := (float(iy) + 0.5) / float(ny) * 2.0 - 1.0
+			# a deterministic wobble per cell, so shards are not on a lattice
+			var h := sin(float(ix) * 12.9898 + float(iy) * 78.233 + sd) * 43758.5453
+			h = h - floor(h)
+			var h2 := sin(float(ix) * 39.3468 + float(iy) * 11.135 + sd * 1.7) * 24634.6345
+			h2 = h2 - floor(h2)
+			# jitter kept well under the step: real trencadis is fitted tight
+			# with thin grout between shards, and at 0.8 of a step they drifted
+			# apart and read as scattered confetti on tarmac
+			var px := u * rx + (h - 0.5) * step * 0.42
+			var py := v * ry + (h2 - 0.5) * step * 0.42
+			# keep inside the patch's own wobbled outline
+			var d := Vector2(px / rx, py / ry)
+			if d.length() > _patch_wobble(pt, d.angle()) * 0.94:
+				continue
+			var col: Color = TRENCADIS[int(h * float(TRENCADIS.size())) % TRENCADIS.size()]
+			# a shard: a quad, tilted and unequal, never a tile
+			var w := step * (0.50 + 0.18 * h)
+			var t := (h2 - 0.5) * 1.1
+			var a := Vector2(cos(t), sin(t)) * w
+			var b := Vector2(-sin(t), cos(t)) * (w * (0.62 + 0.4 * h2))
+			var c := mid + Vector2(px, py)
+			draw_colored_polygon(
+				PackedVector2Array([c - a - b, c + a - b * 0.8, c + a * 0.9 + b, c - a * 0.8 + b]),
+				col)
+
+
 func _draw_pinned_patch(pt: Dictionary, at: Vector2, col: Color,
 		grow := 1.0) -> void:
 	# A patch at an absolute world position rather than a fraction across the
@@ -5265,7 +5384,10 @@ func surface_at(p: Vector2) -> int:
 			return Surfaces.S.WATER
 	for pt: Dictionary in patches:
 		if patch_has_point(pt, p):
-			return Surfaces.S.MUD if String(pt["kind"]) == "mud" else Surfaces.S.SAND
+			match String(pt["kind"]):
+				"mud": return Surfaces.S.MUD
+				"tile": return Surfaces.S.TILE
+				_: return Surfaces.S.SAND
 	if lvl == "beach" and p.x < 340.0:
 		return Surfaces.S.SAND
 	for sz in substance_zones:
@@ -6065,6 +6187,7 @@ const OPENERS := {
 	"site": "Past the works to the far fence. The cement is wet, and it stays with you.",
 	"spook": "Around the Castanyada and home. The sweets on the ground are not for dogs.",
 	"scrap": "Through the yard and out. Quietly - things are sleeping.",
+	"guell": "Up the terraces and back. The tiles are slippery. Run anyway.",
 	"tutorial": "A short one, to get the hang of it. Nothing out here can hurt you.",
 }
 
@@ -6074,6 +6197,7 @@ const OPENERS := {
 # gets a DOG BEACH instead: sand, and a sea you can actually swim in.
 const FREEDOM_KINDS := {
 	"beach": "beach", "trail": "clearing", "site": "lot", "scrap": "lot",
+	"guell": "clearing",
 }
 const BEACH_SEA_R := 430.0
 const BEACH_GATE_SHORE_X := 230.0
@@ -7473,6 +7597,9 @@ func _draw_world() -> void:
 		if pb.end.y < vt or pb.position.y > vb:
 			continue
 		var sk: String = String(pt["kind"])
+		if sk == "tile":
+			_draw_trencadis(pt)
+			continue
 		var base: Color = Color(0.34, 0.26, 0.18)
 		if SUBSTANCES.has(sk):
 			base = Color((SUBSTANCES[sk] as Dictionary)["col"])
