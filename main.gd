@@ -5265,6 +5265,69 @@ const TRENCADIS := [
 ]
 
 
+func _draw_sand_drift(pt: Dictionary) -> void:
+	# WIND-BLOWN SAND, which is not a puddle.
+	#
+	# The generic patch draw gave this a solid body and a darker RIM, and a rim
+	# is how you draw standing liquid - it reads as a depression holding
+	# something, so a sand drift came out looking like quicksand on the paving.
+	# Sand does the opposite of all of that. It arrives grain by grain, banks up
+	# thickest on the side it blew in from, and has no edge at all: it dissolves
+	# into the concrete.
+	#
+	# So: no rim and no outline. The body is several translucent passes, each
+	# smaller and pushed back toward the beach, so density builds seaward and
+	# thins inland instead of filling evenly. Then loose grains scattered past
+	# the body, reaching furthest INLAND because that is the direction the drift
+	# is creeping. All of it deterministic - no RNG anywhere near the autowalk.
+	var mid := patch_centre(pt)
+	var rx := float(pt["rx"])
+	var ry := float(pt["ry"])
+	var sd := float(pt["seed"])
+	var col := Color(0.87, 0.79, 0.59)
+	for i in range(4):
+		var g: float = 1.0 - float(i) * 0.21
+		# each pass sits a little further toward the sand it came from
+		var off := Vector2(-rx * 0.09 * float(i), 0.0)
+		# dense enough to be READ. This is a real surface - heavy going, poor
+		# grip, marks her paws - so a drift you cannot see is a slow patch that
+		# punishes you for nothing. Soft-edged, not faint.
+		_draw_pinned_patch(pt, mid + off, Color(col.r, col.g, col.b, 0.34), g)
+	# The dissolve: individual grains, thinning outward and carried further on
+	# the inland side so the drift reads as a tongue rather than a blot.
+	#
+	# Precomputed at build time (see _seed_drift_grains), because a drift never
+	# moves and hashing ninety positions per drift per frame is waste on
+	# principle. Measured honestly: it did NOT move the number - the beach draw
+	# is ~580us either way - so this is tidiness rather than a fix. The hot spot
+	# at the far end of that walk is somewhere else and is not the drifts.
+	var grains: PackedVector3Array = pt.get("grains", PackedVector3Array())
+	if grains.is_empty():
+		grains = _seed_drift_grains(pt)
+		pt["grains"] = grains
+	for gv: Vector3 in grains:
+		draw_circle(mid + Vector2(gv.x, gv.y) * Vector2(rx, ry), 1.5 + gv.z * 1.5,
+			Color(col.r, col.g, col.b, (1.0 - gv.z) * 0.55 + 0.12))
+
+
+func _seed_drift_grains(pt: Dictionary) -> PackedVector3Array:
+	# x,y are offsets in UNIT patch space (multiplied by rx/ry at draw time, so
+	# the same grains still work if a drift is resized); z carries how far out
+	# the grain got, which the draw turns into both its size and its fade.
+	var sd := float(pt["seed"])
+	var out := PackedVector3Array()
+	for i in range(90):
+		var h := sin(float(i) * 12.9898 + sd) * 43758.5453
+		h = h - floor(h)
+		var h2 := sin(float(i) * 78.233 + sd * 1.7) * 24634.6345
+		h2 = h2 - floor(h2)
+		var a := h * TAU
+		var reach: float = 0.58 * (1.0 + 0.9 * maxf(0.0, cos(a)))
+		var r: float = 0.94 + h2 * reach
+		out.append(Vector3(cos(a) * r, sin(a) * r, clampf((r - 0.94) / reach, 0.0, 1.0)))
+	return out
+
+
 func _draw_trencadis(pt: Dictionary) -> void:
 	var mid := patch_centre(pt)
 	var rx := float(pt["rx"])
@@ -7716,6 +7779,9 @@ func _draw_world() -> void:
 		var sk: String = String(pt["kind"])
 		if sk == "tile":
 			_draw_trencadis(pt)
+			continue
+		if sk == "sand":
+			_draw_sand_drift(pt)
 			continue
 		var base: Color = Color(0.34, 0.26, 0.18)
 		if SUBSTANCES.has(sk):
