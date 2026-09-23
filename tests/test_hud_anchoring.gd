@@ -74,6 +74,11 @@ func _run() -> void:
 		await main.ready
 	main.frozen = true
 
+	# the dim darkens the world behind a screen, never the screen itself
+	_check(main.results_card.get_index() > main.dim.get_index(),
+		"the results card draws above the dim (card %d, dim %d)" % [
+			main.results_card.get_index(), main.dim.get_index()])
+
 	# native first: the shape the layout was authored for, and the one the
 	# desktop build ships. Everything here must be exactly where it was drawn.
 	await _shape(main, Vector2i(1280, 720), true)
