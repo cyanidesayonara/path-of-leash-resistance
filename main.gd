@@ -1944,14 +1944,6 @@ func on_junk_kicked(pos: Vector2, kind: String) -> void:
 		"ball": Sfx.play("snack", 0.7, -14.0)
 		"sack", "crate": Sfx.play("crack", 0.6, -15.0)
 		_: Sfx.play("tangle", 1.3, -14.0)
-	# A-stands are entities too: light, toppleable, never re-stood
-	for a in astands:
-		var sa := Node2D.new()
-		sa.set_script(load("res://entities/astand.gd"))
-		sa.position = a
-		sa.z_index = 11
-		add_child(sa)
-		sa.setup(self, dog, human)
 
 
 func _build_hud() -> void:
