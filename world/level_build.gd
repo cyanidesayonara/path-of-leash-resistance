@@ -1224,18 +1224,18 @@ static func add_rect_body(m: Node2D, at: Vector2, size: Vector2) -> void:
 
 static func build_entities(m: Node2D) -> void:
 	m.leash = Node2D.new()
-	m.leash.set_script(load("res://leash.gd"))
+	m.leash.set_script(load("res://entities/leash.gd"))
 	m.leash.z_index = 5
 	m.add_child(m.leash)
 
 	m.dog = CharacterBody2D.new()
-	m.dog.set_script(load("res://dog.gd"))
+	m.dog.set_script(load("res://entities/dog.gd"))
 	m.dog.position = Vector2(700, m.START_Y)
 	m.add_child(m.dog)
 	m.dog.setup(m)
 
 	m.human = CharacterBody2D.new()
-	m.human.set_script(load("res://human.gd"))
+	m.human.set_script(load("res://entities/human.gd"))
 	m.human.position = Vector2(600, m.START_Y - 70.0)
 	m.add_child(m.human)
 	m.human.setup(m)
@@ -1245,12 +1245,12 @@ static func build_entities(m: Node2D) -> void:
 	m.leash.furniture_poles = m._furniture_wrap_poles()
 
 	m.edge_layer = Node2D.new()
-	m.edge_layer.set_script(load("res://edgelayer.gd"))
+	m.edge_layer.set_script(load("res://world/edgelayer.gd"))
 	m.edge_layer.z_index = -5   # behind everything in the world
 	m.add_child(m.edge_layer)
 	m.edge_layer.setup(m)
 	m.verge_layer = Node2D.new()
-	m.verge_layer.set_script(load("res://vergelayer.gd"))
+	m.verge_layer.set_script(load("res://world/vergelayer.gd"))
 	# above the ground pass, below the actors and props
 	m.verge_layer.z_index = 1
 	m.add_child(m.verge_layer)
@@ -1258,7 +1258,7 @@ static func build_entities(m: Node2D) -> void:
 	# the off-leash space gets the same treatment: it is a fixed scene, so it
 	# is drawn once onto its own canvas rather than thirty times a second
 	m.freedomlayer = Node2D.new()
-	m.freedomlayer.set_script(load("res://freedomlayer.gd"))
+	m.freedomlayer.set_script(load("res://world/freedomlayer.gd"))
 	m.freedomlayer.z_index = -9
 	m.add_child(m.freedomlayer)
 	m.freedomlayer.setup(m)
@@ -1290,7 +1290,7 @@ static func spawn_cones(m: Node2D) -> void:
 		spots.append(Vector2(c.position.x - 12, c.end.y - 10))
 	for s in spots:
 		var cn := Node2D.new()
-		cn.set_script(load("res://cone.gd"))
+		cn.set_script(load("res://entities/cone.gd"))
 		cn.position = s
 		cn.z_index = 11
 		m.add_child(cn)
@@ -1345,7 +1345,7 @@ static func spawn_cones(m: Node2D) -> void:
 
 static func spawn_junk(m: Node2D, at: Vector2, kind: String) -> void:
 	var jn := Node2D.new()
-	jn.set_script(load("res://cone.gd"))
+	jn.set_script(load("res://entities/cone.gd"))
 	jn.position = at
 	jn.z_index = 11
 	m.add_child(jn)

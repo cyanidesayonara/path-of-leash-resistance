@@ -9,7 +9,7 @@ extends SceneTree
 # Pure logic, driven by advance()/caught() with no rendering.
 
 const DT := 1.0 / 60.0
-const SweeperScript := preload("res://sweeper.gd")
+const SweeperScript := preload("res://entities/sweeper.gd")
 
 
 func _initialize() -> void:

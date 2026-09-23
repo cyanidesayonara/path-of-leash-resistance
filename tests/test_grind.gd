@@ -11,7 +11,7 @@ extends SceneTree
 #  6. the balance bar reads centred at the start
 
 const DT := 1.0 / 60.0
-const GrindScript := preload("res://grind.gd")
+const GrindScript := preload("res://systems/grind.gd")
 
 
 # a stand-in for a competent player: nudge against whichever way it is tipping

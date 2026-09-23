@@ -1,6 +1,6 @@
 extends Node2D
 
-const DogAppearanceScript := preload("res://dog_appearance.gd")
+const DogAppearanceScript := preload("res://entities/dog_appearance.gd")
 
 # An off-leash dog in the freedom area: no owner, no leash, all zoomies.
 #

@@ -11,7 +11,7 @@ extends RefCounted
 # _build_hud calls build() and then connects the joypad signal itself (a lambda
 # created in a static function would never be disconnected on scene reload).
 
-const Mood := preload("res://mood.gd")
+const Mood := preload("res://systems/mood.gd")
 
 # the frame the HUD was composed against; see pin_wide / pin_box
 const REF_W := 1280.0
@@ -32,7 +32,7 @@ static func build(m: Node2D) -> void:
 	m.grade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	m.grade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var gmat := ShaderMaterial.new()
-	gmat.shader = load("res://grade.gdshader")
+	gmat.shader = load("res://hud/grade.gdshader")
 	m.grade_rect.material = gmat
 	grade_layer.add_child(m.grade_rect)
 	m.hud = CanvasLayer.new()
@@ -40,27 +40,27 @@ static func build(m: Node2D) -> void:
 	m.add_child(m.hud)
 	# weather sits behind the HUD text but over the world
 	m.weather_fx = Control.new()
-	m.weather_fx.set_script(load("res://weather_overlay.gd"))
+	m.weather_fx.set_script(load("res://hud/weather_overlay.gd"))
 	m.weather_fx.mode = Game.weather
 	m.hud.add_child(m.weather_fx)
 	# one quiet card for the vitals, one quiet card for the quests -
 	# the world is busy on purpose, the overlay is not
 	m.panel = Control.new()
-	m.panel.set_script(load("res://hud_panel.gd"))
+	m.panel.set_script(load("res://hud/hud_panel.gd"))
 	m.panel.position = Vector2(16, 12)
 	m.hud.add_child(m.panel)
 	m.panel.setup(m)
 	# the goal list draws itself: real ticks and meters instead of ASCII, and
 	# a height that follows its contents
 	m.goals_card = Control.new()
-	m.goals_card.set_script(load("res://goals_card.gd"))
+	m.goals_card.set_script(load("res://hud/goals_card.gd"))
 	m.goals_card.position = Vector2(m.GOALS_X, 8)
 	m.hud.add_child(m.goals_card)
 	m.goals_card.setup(m)
 	# the end-of-walk card lays itself out: a twelve-goal walk used to run
 	# straight off the bottom of the screen
 	m.results_card = Control.new()
-	m.results_card.set_script(load("res://results_panel.gd"))
+	m.results_card.set_script(load("res://hud/results_panel.gd"))
 	m.results_card.visible = false
 	m.hud.add_child(m.results_card)
 	m.results_card.setup(m)
@@ -112,7 +112,7 @@ static func build(m: Node2D) -> void:
 	m.shop_preview_bg.visible = false
 	m.hud.add_child(m.shop_preview_bg)
 	var preview := CharacterBody2D.new()
-	preview.set_script(load("res://dog.gd"))
+	preview.set_script(load("res://entities/dog.gd"))
 	preview.preview_mode = true
 	preview.position = Vector2(280.0, 365.0)
 	preview.scale = Vector2(3.0, 3.0)
@@ -147,12 +147,12 @@ static func build(m: Node2D) -> void:
 	m.prompt_tw.tween_property(m.prompt_l, "modulate:a", 0.3, 0.7)
 	m.prompt_tw.tween_property(m.prompt_l, "modulate:a", 1.0, 0.7)
 	var touch := Control.new()
-	touch.set_script(load("res://touch_controls.gd"))
+	touch.set_script(load("res://hud/touch_controls.gd"))
 	m.hud.add_child(touch)
 	# the combo meter: trick string + score/multiplier over a draining
 	# window bar, bottom-centre, only visible while a chain is live
 	m.combo = Node.new()
-	m.combo.set_script(load("res://combo.gd"))
+	m.combo.set_script(load("res://systems/combo.gd"))
 	m.add_child(m.combo)
 	m.combo.setup(m)
 	m.combo_bar_bg = ColorRect.new()
@@ -175,11 +175,11 @@ static func build(m: Node2D) -> void:
 	m.combo_l.visible = false
 	# the combo challenge (Phase B): a bounded trick dare from a bystander
 	m.challenge = Node.new()
-	m.challenge.set_script(load("res://challenge.gd"))
+	m.challenge.set_script(load("res://systems/challenge.gd"))
 	m.add_child(m.challenge)
 	m.challenge.setup(m)
 	m.mood = Node.new()
-	m.mood.set_script(load("res://mood.gd"))
+	m.mood.set_script(load("res://systems/mood.gd"))
 	m.add_child(m.mood)
 	m.mood.setup(m)
 	for a in OS.get_cmdline_user_args():
@@ -189,10 +189,10 @@ static func build(m: Node2D) -> void:
 				"ZOOMIES": Mood.M.ZOOMIES, "TIRED": Mood.M.TIRED}
 			m.mood_forced = int(names.get(want, -1))
 	m.teeter = Node.new()
-	m.teeter.set_script(load("res://teeter.gd"))
+	m.teeter.set_script(load("res://systems/teeter.gd"))
 	m.add_child(m.teeter)
 	m.grind = Node.new()
-	m.grind.set_script(load("res://grind.gd"))
+	m.grind.set_script(load("res://systems/grind.gd"))
 	m.add_child(m.grind)
 	m.challenge_l = hud_label(m, Vector2(0, 70), 24)
 	pin_wide(m.challenge_l, 30.0)
@@ -229,18 +229,18 @@ static func build(m: Node2D) -> void:
 	# The single announcement channel. Added late so it draws over the other
 	# HUD cards, and anchored to the live viewport like everything else.
 	m.feed = Control.new()
-	m.feed.set_script(load("res://event_feed.gd"))
+	m.feed.set_script(load("res://hud/event_feed.gd"))
 	m.hud.add_child(m.feed)
 	m.feed.setup(m)
 	m.settings_panel = Control.new()
-	m.settings_panel.set_script(load("res://settings_panel.gd"))
+	m.settings_panel.set_script(load("res://hud/settings_panel.gd"))
 	m.settings_panel.visible = false
 	m.hud.add_child(m.settings_panel)
 	m.settings_panel.setup(m)
 	# a portrait window gets a "turn your phone" prompt and a paused game (#5).
 	# Its own layer, not under the HUD, so it covers everything
 	m.rotate_prompt = CanvasLayer.new()
-	m.rotate_prompt.set_script(load("res://rotate_prompt.gd"))
+	m.rotate_prompt.set_script(load("res://hud/rotate_prompt.gd"))
 	m.add_child(m.rotate_prompt)
 	m._update_hud()
 

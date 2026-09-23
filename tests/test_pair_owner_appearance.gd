@@ -1,8 +1,8 @@
 extends SceneTree
 
-const HumanAppearanceScript := preload("res://human_appearance.gd")
-const DogAppearanceScript := preload("res://dog_appearance.gd")
-const PairScript := preload("res://otherpair.gd")
+const HumanAppearanceScript := preload("res://entities/human_appearance.gd")
+const DogAppearanceScript := preload("res://entities/dog_appearance.gd")
+const PairScript := preload("res://entities/otherpair.gd")
 const PARK_BOUNDS := Rect2(20.0, -260.0, 360.0, 230.0)
 const PARK_SPOT := Vector2(300.0, -90.0)
 const WALKING := 0

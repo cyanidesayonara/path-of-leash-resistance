@@ -1,6 +1,6 @@
 extends Node2D
 
-const DogAppearanceScript := preload("res://dog_appearance.gd")
+const DogAppearanceScript := preload("res://entities/dog_appearance.gd")
 
 # BRUTUS. The dog at the park who is having a lovely time at your expense.
 #

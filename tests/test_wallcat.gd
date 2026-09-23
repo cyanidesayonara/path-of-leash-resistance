@@ -6,7 +6,7 @@ extends SceneTree
 # Pure logic, driven by scare()/_physics_process with no rendering.
 
 const DT := 1.0 / 60.0
-const WallcatScript := preload("res://wallcat.gd")
+const WallcatScript := preload("res://entities/wallcat.gd")
 
 
 class StubMain extends Node2D:

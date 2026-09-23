@@ -8,7 +8,7 @@ extends SceneTree
 # Pure logic, driven by _physics_process with no rendering.
 
 const DT := 1.0 / 60.0
-const GuardScript := preload("res://guarddog.gd")
+const GuardScript := preload("res://entities/guarddog.gd")
 
 
 class StubMain extends Node2D:

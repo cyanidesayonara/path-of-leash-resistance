@@ -1,6 +1,6 @@
 extends SceneTree
 
-const BIKE_SCRIPT := "res://bike.gd"
+const BIKE_SCRIPT := "res://entities/bike.gd"
 const DT := 0.02
 
 var failures := 0

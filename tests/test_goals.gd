@@ -8,7 +8,7 @@ extends SceneTree
 # Pure logic only: manipulates an isolated Game instance's `records`
 # in memory and never calls save (no disk writes).
 
-const GameScript := preload("res://game.gd")
+const GameScript := preload("res://autoload/game.gd")
 
 
 func _initialize() -> void:

@@ -1,6 +1,6 @@
 extends SceneTree
 
-const SCRIPT_PATH := "res://bypasser_route.gd"
+const SCRIPT_PATH := "res://systems/bypasser_route.gd"
 const DT := 0.1
 
 var failures := 0

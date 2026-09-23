@@ -12,7 +12,7 @@ extends SceneTree
 #     other way
 #  4. degenerate input (standing exactly on the pole) is handled, not NaN
 
-const SwingMath := preload("res://swing.gd")
+const SwingMath := preload("res://systems/swing.gd")
 
 
 func _initialize() -> void:

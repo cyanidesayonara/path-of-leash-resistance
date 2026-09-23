@@ -14,7 +14,7 @@ const CHASE_SPEED_BOLT := 205.0
 const CHASE_SPEED_BOTH := 220.0
 const CHASE_START_GAP := 650.0
 
-const EventFeed := preload("res://event_feed.gd")
+const EventFeed := preload("res://hud/event_feed.gd")
 
 
 # At level start. Forced with --chase (slow sweeper), --bolt (fast, owner
@@ -45,7 +45,7 @@ static func roll(m: Node2D) -> void:
 static func begin(m: Node2D) -> void:
 	var owner_flees: bool = m.chase_kind == "bolt" or m.chase_kind == "both"
 	var sweeper := Node2D.new()
-	sweeper.set_script(load("res://sweeper.gd"))
+	sweeper.set_script(load("res://entities/sweeper.gd"))
 	sweeper.z_index = 8
 	sweeper.kind = m.chase_kind
 	m.chase_sweeper = sweeper

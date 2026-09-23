@@ -43,7 +43,7 @@ func _check(cond: bool, msg: String) -> void:
 
 func _make_critter(main: Node2D, dog: Node2D, kind: String) -> Node2D:
 	var critter := Node2D.new()
-	critter.set_script(load("res://squirrel.gd"))
+	critter.set_script(load("res://entities/squirrel.gd"))
 	root.add_child(critter)
 	critter.setup(main, dog, kind)
 	return critter

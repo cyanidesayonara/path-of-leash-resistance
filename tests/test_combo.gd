@@ -9,7 +9,7 @@ extends SceneTree
 # Pure logic, driven by add()/tick() with no rendering.
 
 const DT := 1.0 / 60.0
-const ComboScript := preload("res://combo.gd")
+const ComboScript := preload("res://systems/combo.gd")
 
 
 class StubMain extends Node2D:

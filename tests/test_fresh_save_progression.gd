@@ -4,7 +4,7 @@ extends SceneTree
 # The temporary save path is mandatory: this regression must never touch the
 # player's real records.cfg.
 
-const GameScript := preload("res://game.gd")
+const GameScript := preload("res://autoload/game.gd")
 const MARK_SAVE := "user://v153_fresh_mark_goal.cfg"
 const RESULT_SAVE := "user://v153_fresh_record_result.cfg"
 const CORRUPT_SAVE := "user://v153_corrupt_profile.cfg"

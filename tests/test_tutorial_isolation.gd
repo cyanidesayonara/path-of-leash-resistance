@@ -4,8 +4,8 @@ extends SceneTree
 # exercises the real Game autoload and main scene while all writes are routed
 # to a disposable save.
 
-const GameScript := preload("res://game.gd")
-const ChallengerScript := preload("res://challenger.gd")
+const GameScript := preload("res://autoload/game.gd")
+const ChallengerScript := preload("res://entities/challenger.gd")
 const POPULATED_SAVE := "user://v153_tutorial_populated.cfg"
 const MISSING_SAVE := "user://v153_tutorial_missing.cfg"
 

@@ -7,7 +7,7 @@ extends SceneTree
 # Runs headless by driving _physics_process directly (no rendering).
 
 const DT := 1.0 / 60.0
-const TofuScript := preload("res://tofu.gd")
+const TofuScript := preload("res://entities/tofu.gd")
 
 
 class StubMain extends Node2D:
