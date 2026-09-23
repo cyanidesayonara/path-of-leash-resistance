@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-09-23 - WIP limit on unaccepted changes
+
+AGENTS.md gains a change-control rule: at most 5 player-facing changes on
+`main` awaiting acceptance by hand, and only hardening and tooling at the
+limit. Merging is not acceptance; the board's "Awaiting acceptance" column
+is. Every PR carries a feel card, 3-5 concrete things to check by hand.
+
+`main` starts over the limit: eight player-facing changes from 2026-08-02/03
+were never accepted. They are listed with feel cards in the acceptance
+backlog (#23).
+
 ## 2026-09-23 - Microsoft Store packaging (unreleased)
 
 The game now has a Partner Center product, "MSIX or PWA game", Store ID
