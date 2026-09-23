@@ -42,7 +42,7 @@ const HUMAN_MASS := 4.0
 const SwingMath := preload("res://swing.gd")
 const Mood := preload("res://mood.gd")
 const Surfaces := preload("res://surfaces.gd")
-const EventFeed := preload("res://event_feed.gd")
+const EventFeed := preload("res://hud/event_feed.gd")
 const EdgePath := preload("res://edge_path.gd")
 const TangleGeom := preload("res://tangle_geom.gd")
 const MoodWiring := preload("res://systems/mood_wiring.gd")
@@ -168,7 +168,7 @@ const SCENT_REACH_MIN := 130.0
 const SCENT_REACH_MAX := 430.0
 # the tutorial walk (see tutorial.gd): one lesson at a time, all skippable
 const TutorialSteps := preload("res://tutorial.gd")
-const UiIcons := preload("res://ui_icons.gd")
+const UiIcons := preload("res://hud/ui_icons.gd")
 var tutorial_mode := false
 var tut_step := 0
 var tut_flash := 0.0

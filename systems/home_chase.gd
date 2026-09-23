@@ -14,7 +14,7 @@ const CHASE_SPEED_BOLT := 205.0
 const CHASE_SPEED_BOTH := 220.0
 const CHASE_START_GAP := 650.0
 
-const EventFeed := preload("res://event_feed.gd")
+const EventFeed := preload("res://hud/event_feed.gd")
 
 
 # At level start. Forced with --chase (slow sweeper), --bolt (fast, owner

@@ -13,7 +13,7 @@ extends Control
 # Wrapping still comes from the font, via draw_multiline_string, so a long
 # goal name cannot spill out of the card.
 
-const Icons := preload("res://ui_icons.gd")
+const Icons := preload("res://hud/ui_icons.gd")
 
 const W := 416.0
 const GOALS_X := 856.0

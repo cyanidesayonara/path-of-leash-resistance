@@ -32,7 +32,7 @@ static func build(m: Node2D) -> void:
 	m.grade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	m.grade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var gmat := ShaderMaterial.new()
-	gmat.shader = load("res://grade.gdshader")
+	gmat.shader = load("res://hud/grade.gdshader")
 	m.grade_rect.material = gmat
 	grade_layer.add_child(m.grade_rect)
 	m.hud = CanvasLayer.new()
@@ -40,27 +40,27 @@ static func build(m: Node2D) -> void:
 	m.add_child(m.hud)
 	# weather sits behind the HUD text but over the world
 	m.weather_fx = Control.new()
-	m.weather_fx.set_script(load("res://weather_overlay.gd"))
+	m.weather_fx.set_script(load("res://hud/weather_overlay.gd"))
 	m.weather_fx.mode = Game.weather
 	m.hud.add_child(m.weather_fx)
 	# one quiet card for the vitals, one quiet card for the quests -
 	# the world is busy on purpose, the overlay is not
 	m.panel = Control.new()
-	m.panel.set_script(load("res://hud_panel.gd"))
+	m.panel.set_script(load("res://hud/hud_panel.gd"))
 	m.panel.position = Vector2(16, 12)
 	m.hud.add_child(m.panel)
 	m.panel.setup(m)
 	# the goal list draws itself: real ticks and meters instead of ASCII, and
 	# a height that follows its contents
 	m.goals_card = Control.new()
-	m.goals_card.set_script(load("res://goals_card.gd"))
+	m.goals_card.set_script(load("res://hud/goals_card.gd"))
 	m.goals_card.position = Vector2(m.GOALS_X, 8)
 	m.hud.add_child(m.goals_card)
 	m.goals_card.setup(m)
 	# the end-of-walk card lays itself out: a twelve-goal walk used to run
 	# straight off the bottom of the screen
 	m.results_card = Control.new()
-	m.results_card.set_script(load("res://results_panel.gd"))
+	m.results_card.set_script(load("res://hud/results_panel.gd"))
 	m.results_card.visible = false
 	m.hud.add_child(m.results_card)
 	m.results_card.setup(m)
@@ -147,7 +147,7 @@ static func build(m: Node2D) -> void:
 	m.prompt_tw.tween_property(m.prompt_l, "modulate:a", 0.3, 0.7)
 	m.prompt_tw.tween_property(m.prompt_l, "modulate:a", 1.0, 0.7)
 	var touch := Control.new()
-	touch.set_script(load("res://touch_controls.gd"))
+	touch.set_script(load("res://hud/touch_controls.gd"))
 	m.hud.add_child(touch)
 	# the combo meter: trick string + score/multiplier over a draining
 	# window bar, bottom-centre, only visible while a chain is live
@@ -229,18 +229,18 @@ static func build(m: Node2D) -> void:
 	# The single announcement channel. Added late so it draws over the other
 	# HUD cards, and anchored to the live viewport like everything else.
 	m.feed = Control.new()
-	m.feed.set_script(load("res://event_feed.gd"))
+	m.feed.set_script(load("res://hud/event_feed.gd"))
 	m.hud.add_child(m.feed)
 	m.feed.setup(m)
 	m.settings_panel = Control.new()
-	m.settings_panel.set_script(load("res://settings_panel.gd"))
+	m.settings_panel.set_script(load("res://hud/settings_panel.gd"))
 	m.settings_panel.visible = false
 	m.hud.add_child(m.settings_panel)
 	m.settings_panel.setup(m)
 	# a portrait window gets a "turn your phone" prompt and a paused game (#5).
 	# Its own layer, not under the HUD, so it covers everything
 	m.rotate_prompt = CanvasLayer.new()
-	m.rotate_prompt.set_script(load("res://rotate_prompt.gd"))
+	m.rotate_prompt.set_script(load("res://hud/rotate_prompt.gd"))
 	m.add_child(m.rotate_prompt)
 	m._update_hud()
 

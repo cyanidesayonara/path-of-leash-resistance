@@ -10,7 +10,7 @@ extends RefCounted
 # state stays on main, so nothing here changes what the walk does.
 
 const Mood := preload("res://mood.gd")
-const EventFeed := preload("res://event_feed.gd")
+const EventFeed := preload("res://hud/event_feed.gd")
 
 
 static func tick(m: Node2D, delta: float) -> void:

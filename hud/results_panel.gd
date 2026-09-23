@@ -12,7 +12,7 @@ extends Control
 # It also gets the icons: ticks, stars, bones and phone pips as shapes rather
 # than ASCII, so the browser build looks like the desktop one.
 
-const Icons := preload("res://ui_icons.gd")
+const Icons := preload("res://hud/ui_icons.gd")
 
 const W := 900.0
 const PAD := 34.0

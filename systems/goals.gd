@@ -9,8 +9,8 @@ extends RefCounted
 # _finish_walk, goal_card_data, results_data, ...), and LEVEL_GOAL_IDS as an
 # alias, so every existing path to them still works.
 
-const EventFeed := preload("res://event_feed.gd")
-const UiIcons := preload("res://ui_icons.gd")
+const EventFeed := preload("res://hud/event_feed.gd")
+const UiIcons := preload("res://hud/ui_icons.gd")
 
 const LEVEL_GOAL_IDS := {
 	"street": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "fling", "carry", "combo", "prize"],
