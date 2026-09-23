@@ -69,9 +69,9 @@ reference on the short axis instead of blanking it). Everything that had
 anchored against the 1280x720 reference now anchors against the live
 viewport: the four panel scripts (touch_controls, goals_card, results_panel,
 settings_panel), the dim and weather overlays, the colour-grade rect and its
-world-space noise, and every element built in `main.gd/_build_hud` — sixteen
-centred lines, the bottom rule, the wardrobe cluster. In `_build_hud`, use
-`_pin_wide` / `_pin_box` rather than literal coordinates; each element names
+world-space noise, and every element built by `hud/hud_build.gd` — sixteen
+centred lines, the bottom rule, the wardrobe cluster. In `HudBuild.build`, use
+`pin_wide` / `pin_box` rather than literal coordinates; each element names
 the rule it hangs off (top edge, middle, bottom edge).
 
 Guarded by `tests/test_hud_anchoring.gd`, which reshapes a real viewport to

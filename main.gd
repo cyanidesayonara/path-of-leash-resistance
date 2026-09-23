@@ -35,10 +35,6 @@ const AUTOWALK_MIN_FINISH_TIME := 120.0
 const PAIR_MIN_SPAWN_DIST := 360.0
 const MAX_ACTIVE_PAIRS := 3
 const LEASH_LENGTH := 340.0  # a proper 5-meter leash
-# the frame the HUD is composed against; the live viewport is this grown along
-# one axis (see _pin_wide and friends)
-const REF_W := 1280.0
-const REF_H := 720.0
 const LEASH_STRETCH_CAP := 1.15
 const LEASH_K := 32.0
 const DOG_MASS := 1.0
@@ -49,6 +45,12 @@ const Surfaces := preload("res://surfaces.gd")
 const EventFeed := preload("res://event_feed.gd")
 const EdgePath := preload("res://edge_path.gd")
 const TangleGeom := preload("res://tangle_geom.gd")
+const MoodWiring := preload("res://systems/mood_wiring.gd")
+const HomeChase := preload("res://systems/home_chase.gd")
+const Goals := preload("res://systems/goals.gd")
+const HudBuild := preload("res://hud/hud_build.gd")
+const MenuFlow := preload("res://hud/menu_flow.gd")
+const LevelBuild := preload("res://world/level_build.gd")
 const POLE_RADIUS := 10.0
 const TREE_RADIUS := 13.0  # a trunk is stouter than a lamppost
 const HYDRANT_RADIUS := 9.0
@@ -300,10 +302,6 @@ var cameras: Array[Dictionary] = []
 var lasers: Array[Dictionary] = []
 var guards_woken := 0
 var times_spotted := 0
-const CHASE_SPEED := 140.0
-const CHASE_SPEED_BOLT := 205.0
-const CHASE_SPEED_BOTH := 220.0
-const CHASE_START_GAP := 650.0
 # goals completed this run (ids), for scoring/toasts/results independent
 # of persistence; plus the star snapshot captured when the walk begins
 var run_goals_hit := {}
@@ -429,7 +427,7 @@ var mood: Node
 # the one channel for announcements about the state of the walk
 var feed: Control
 # latch for the run-yourself-empty trigger, so hitting empty is a moment
-# rather than a condition (see _mood_ambient)
+# rather than a condition (see systems/mood_wiring.gd)
 var mood_worn := false
 # -1 for normal play; a Mood.M value when --mood= pins one on for photography
 var mood_forced := -1
@@ -549,26 +547,8 @@ func _ready() -> void:
 		# so the full out->freedom->home->finish loop can be verified
 		dog.collision_mask = 0
 		human.collision_mask = 0
-	# a short chase can strike on the walk home. Forced with --chase (slow
-	# sweeper) or --bolt (fast, owner-panics variant); otherwise a seeded
-	# chance and a coin-flip on which kind. It takes over the home leg, so
-	# it and the Tofu herding are mutually exclusive.
-	var args := OS.get_cmdline_user_args()
-	var chase_forced := "--chase" in args
-	var bolt_forced := "--bolt" in args
-	var rescue_forced := "--rescue" in args
-	chase_active = (chase_forced or bolt_forced or rescue_forced or (not auto_walk and not Game.daily and randf() < 0.25)) and not tutorial_mode
-	if chase_active:
-		tofu_quest_active = false
-		if bolt_forced:
-			chase_kind = "bolt"
-		elif rescue_forced:
-			chase_kind = "both"
-		elif chase_forced:
-			chase_kind = "sweeper"
-		else:
-			var r := randf()
-			chase_kind = "sweeper" if r < 0.4 else ("bolt" if r < 0.75 else "both")
+	# whether this walk gets a chase on the way home: systems/home_chase.gd
+	HomeChase.roll(self)
 	_draw_cost_on = "--drawcost" in OS.get_cmdline_user_args()
 	for a in OS.get_cmdline_user_args():
 		if a == "--soak":
@@ -641,689 +621,19 @@ func _setup_input() -> void:
 
 
 func _apply_corridor() -> void:
-	# ONE width dial per walk. This is what makes the levels stop feeling
-	# like the same street redressed: a medieval alley that genuinely
-	# pinches, a station concourse that genuinely opens out. It moves the
-	# gameplay bounds and the pavement together, and narrow corridors are
-	# mechanically harder - less room to thread a distracted owner past a
-	# lamppost.
-	var half := 340.0
-	match lvl:
-		"street": half = 340.0   # a proper boulevard
-		"park": half = 300.0     # a dirt path through grass
-		"beach": half = 340.0    # bespoke cross-section, left alone
-		"rain": half = 320.0
-		"market": half = 270.0   # stalls crowd the aisle
-		"oldtown": half = 225.0  # the tightest: a medieval alley
-		"trail": half = 250.0    # a single-file woodland trail
-		"station": half = 390.0  # the widest: an open concourse
-		"site": half = 295.0     # squeezed by the works
-		"spook": half = 275.0
-		"scrap": half = 305.0
-		"guell": half = 300.0   # terraces, wide enough to carve on
-	walk_cx = 640.0
-	walk_half = half
-	sw_l = walk_cx - walk_half
-	sw_r = walk_cx + walk_half
-	# The SHAPE of the corridor, on top of its width. Empty means a straight
-	# pair of vertical lines at exactly sw_l/sw_r, which is what most levels
-	# still are. See edge_path.gd; walk_edges(y) is what everything should ask.
-	edge_nodes = []
-	if lvl == "guell":
-		# EL PARC. The serpentine, and the point of the whole level: Gaudi did
-		# not draw a straight line and neither does this path. It is a longer,
-		# deeper weave than El Bosc's - a bench terrace that swings right
-		# across the level and back, so carving it is the walk.
-		#
-		# Kept inside the slope the self-test allows (0.85) so it can be run
-		# rather than merely admired, and both ends sit centred so the start
-		# line and the gate still line up.
-		edge_nodes = [
-			{"y": START_Y, "cx": 640.0, "half": 300.0},
-			{"y": -700.0, "cx": 486.0, "half": 292.0},
-			{"y": -1500.0, "cx": 792.0, "half": 268.0},
-			{"y": -2300.0, "cx": 470.0, "half": 300.0},
-			{"y": -3100.0, "cx": 806.0, "half": 262.0},
-			{"y": -3900.0, "cx": 520.0, "half": 296.0},
-			{"y": -4600.0, "cx": 700.0, "half": 300.0},
-			{"y": GATE_Y, "cx": 640.0, "half": 300.0},
-		]
-	elif lvl == "trail":
-		# EL BOSC BENDS - the first walk in the game that is not a straight
-		# line. A woodland trail has no business being ruler-drawn: it wanders
-		# either side of the centre and pinches where the trees close in, which
-		# makes the single-file stretch an actual place rather than a number.
-		#
-		# It went first because it has no building frontage and no wall
-		# blockers, so the bend has only the pavement, the props and the mud to
-		# agree with - and all three read walk_edges now, the mud as a band
-		# (see band_x) rather than as a rectangle that would hang off the
-		# outside of every curve. Both ends sit dead centre at the level's
-		# nominal width so the start line and the gate still line up.
-		edge_nodes = [
-			{"y": START_Y, "cx": 640.0, "half": 250.0},
-			{"y": -900.0, "cx": 566.0, "half": 250.0},
-			{"y": -2000.0, "cx": 716.0, "half": 212.0},   # the pinch
-			{"y": -3100.0, "cx": 578.0, "half": 246.0},
-			{"y": -4200.0, "cx": 668.0, "half": 250.0},
-			{"y": GATE_Y, "cx": 640.0, "half": 250.0},
-		]
+	LevelBuild.apply_corridor(self)
 
 
 func _fit_x(x: float, lo: float, hi: float) -> float:
-	var f := clampf((x - 300.0) / 680.0, 0.0, 1.0)
-	return lerpf(lo, hi, f)
+	return LevelBuild.fit_x(self, x, lo, hi)
 
 
 func _fit_props_to_corridor() -> void:
-	# Props were all authored for the old fixed 300..980 corridor, so a
-	# narrower walk would leave them stranded out on the verge. Pull every
-	# placed prop back inside whatever corridor this level declared, keeping
-	# its side of the path. The beach is exempt: its sand/boardwalk/bike-path
-	# cross-section deliberately places things outside the walkway.
-	if lvl == "beach":
-		return
-	# Fitted at each prop's OWN y, so a bend in the path carries its lampposts
-	# and bins around with it. Against the straight sw_l/sw_r a curved street
-	# would leave a trail of furniture standing out on the grass where the path
-	# used to be.
-	var pad := 26.0
-	for arr in [poles, tables, chairs, parasols, astands, vans, stalls, bins,
-			benches, performers, cone_spots, manholes, wallcat_spots,
-			guard_posts, candy_spots, fountains]:
-		for i in range(arr.size()):
-			var p: Vector2 = arr[i]
-			var e := walk_edges(p.y)
-			# remap proportionally so left-side props stay left, right stay right
-			arr[i] = Vector2(_fit_x(p.x, e.x + pad, e.y - pad), p.y)
-	# the dictionary-based pickups need the same treatment
-	for list in [hydrants, kebabs, candy]:
-		for d in list:
-			var dp: Vector2 = d.pos
-			var de := walk_edges(dp.y)
-			d.pos = Vector2(_fit_x(dp.x, de.x + pad, de.y - pad), dp.y)
-	# FUR-GONETA is authored against sw_l/sw_r already, so it is not remapped
-	# here. Its rope flanks are appended after this fit from that same centre.
+	LevelBuild.fit_props_to_corridor(self)
 
 
 func _build_level_data() -> void:
-	_apply_corridor()
-	var hyd_list: Array[Vector2] = []
-	var keb_list: Array[Vector2] = []
-	# a couple of walks reuse a proven layout as a base for now (bespoke
-	# geometry is a later pass) and re-theme it below: El Aguacero on the
-	# boulevard, El Gotic on the stall-lined market channel.
-	var geo := lvl
-	if lvl == "rain" or lvl == "station" or lvl == "site" or lvl == "scrap":
-		geo = "street"
-	elif lvl == "oldtown" or lvl == "spook":
-		geo = "market"
-	elif lvl == "trail" or lvl == "guell":
-		geo = "park"
-	match geo:
-		"street":
-			lane_ys = [-1200.0, -2600.0, -4000.0]
-			gate_text = "PARK"
-			for i in range(7):
-				var x := sw_l + 30.0 if i % 2 == 0 else sw_r - 30.0
-				var y := -350.0 - i * 640.0
-				var near_lane := false
-				for ly in lane_ys:
-					if absf(y - ly) < LANE_HALF + 60.0:
-						near_lane = true
-				if not near_lane:
-					poles.append(Vector2(x, y))
-			for mp in [Vector2(640, -1750), Vector2(700, -2900), Vector2(580, -4250)]:
-				poles.append(mp)
-			# a slalom line of street trees mid-walkway (in grates)
-			for sl in [Vector2(590, -1880), Vector2(710, -2010), Vector2(590, -2140), Vector2(710, -2270)]:
-				poles.append(sl)
-			deco_pole_count = poles.size()
-			# cafe terrace: tables join the poles array so they block
-			# bodies and snag the leash, but they are drawn as tables.
-			# Chairs and umbrellas make it properly hard to thread a dog
-			# through, as in life.
-			# cafe terrace: keep wrap/body centres >= FURNITURE_MIN_SEP so
-			# chair and parasol colliders cannot nest under tension
-			tables = [Vector2(760, -3560), Vector2(840, -3660), Vector2(700, -3700), Vector2(790, -3780)]
-			chairs = [
-				Vector2(725, -3535), Vector2(830, -3570), Vector2(872, -3690),
-				Vector2(700, -3775), Vector2(670, -3672), Vector2(815, -3820),
-			]
-			parasols = [Vector2(800, -3610), Vector2(745, -3740)]
-			# off the crossing lanes, by the shopfronts where they belong
-			astands = [Vector2(365, -1600), Vector2(915, -2850), Vector2(372, -4330)]
-			# a delivery van parked half on the walkway, as they do
-			vans = [Vector2(890, -3050)]
-			performers = [Vector2(400, -1550)]
-			cone_spots = [Vector2(858, -2975), Vector2(920, -3130)]
-			manholes = [
-				Vector2(560, -700), Vector2(760, -950), Vector2(480, -1700),
-				Vector2(700, -2100), Vector2(600, -3100), Vector2(820, -3450),
-				Vector2(520, -4400),
-			]
-			cellars = [
-				Rect2(sw_l, -2750, 62, 88), Rect2(sw_r - 62, -750, 62, 82),
-				Rect2(sw_l, -4550, 62, 88),
-			]
-			bins = [
-				Vector2(sw_l + 30, -600), Vector2(sw_r - 30, -1400),
-				Vector2(sw_l + 30, -2150), Vector2(sw_r - 30, -3000),
-				Vector2(sw_l + 30, -3700), Vector2(sw_r - 30, -4700),
-			]
-			benches = [Vector2(336, -1300), Vector2(944, -2450), Vector2(336, -3850)]
-			hyd_list = [
-				Vector2(sw_l + 45, -500), Vector2(sw_r - 45, -1500),
-				Vector2(sw_l + 45, -2300), Vector2(sw_r - 45, -3300),
-				Vector2(sw_l + 45, -4600),
-				Vector2(SHOULDER_R - 12, -1000), Vector2(SHOULDER_R - 12, -3600),
-			]
-			keb_list = [Vector2(640, -1960), Vector2(700, -4200), Vector2(SHOULDER_R - 12, -2400)]
-		"park":
-			gate_text = "HOME"
-			# the pond bites into the path; the strip past it is the bridge
-			pond = Rect2(sw_l, -2950, 360, 470)
-			duck_ys = [randf_range(-2200.0, -1400.0), randf_range(-4300.0, -3400.0)]
-			for i in range(7):
-				var x := sw_l + 30.0 if i % 2 == 0 else sw_r - 30.0
-				var y := -350.0 - i * 640.0
-				if not pond.grow(40.0).has_point(Vector2(x, y)):
-					poles.append(Vector2(x, y))
-			for mp in [Vector2(640, -1750), Vector2(700, -2900), Vector2(580, -4250)]:
-				if not pond.grow(40.0).has_point(mp):
-					poles.append(mp)
-			# a tree slalom on the path, and repair cones by the bridge
-			for sl in [Vector2(570, -1150), Vector2(690, -1280), Vector2(570, -1410), Vector2(690, -1540)]:
-				poles.append(sl)
-			deco_pole_count = poles.size()
-			astands = [Vector2(350, -2050)]
-			cone_spots = [Vector2(720, -2500), Vector2(700, -2960)]
-			bins = [
-				Vector2(sw_l + 30, -600), Vector2(sw_r - 30, -1400),
-				Vector2(sw_l + 30, -2150), Vector2(sw_r - 30, -3000),
-				Vector2(sw_l + 30, -3700), Vector2(sw_r - 30, -4700),
-			]
-			benches = [Vector2(336, -1300), Vector2(944, -2450), Vector2(336, -3850), Vector2(944, -1900)]
-			hyd_list = [
-				Vector2(sw_l + 45, -500), Vector2(sw_r - 45, -1500),
-				Vector2(sw_l + 45, -2300), Vector2(sw_r - 45, -3300),
-				Vector2(sw_l + 45, -4600),
-			]
-			keb_list = [Vector2(620, -1900), Vector2(700, -4200)]
-		"beach":
-			# Passeig Maritim: sea | sand | boardwalk | bike path |
-			# pavement | palms and cafe terraces. The human walks the
-			# pavement; the dog walks wherever a dog walks.
-			gate_text = "HOME"
-			walk_cx = 770.0
-			walk_half = 210.0
-			gate_l = 560.0
-			gate_r = 980.0
-			tut_l = 110.0
-			tut_r = 1160.0
-			# SAND ON THE PAVING. The most characteristic thing about a seafront
-			# walk, and the beach had a ruler-straight sand edge with nothing
-			# crossing it. Wind and feet carry it inland in tongues that thin
-			# out the further they get from the beach, so these run from the
-			# sand side and reach in - never across, because a promenade you
-			# cannot get a clean line down is a chore rather than a walk.
-			#
-			# They are real SAND underfoot (surfaces.gd): heavy going, poor
-			# grip, and they mark her paws, which feeds the existing substance
-			# chain for free. Weaving to keep off them is the whole point.
-			patches = [
-				{"y": -620.0, "at": 0.02, "rx": 104.0, "ry": 58.0, "seed": 1.7, "kind": "sand"},
-				{"y": -1340.0, "at": 0.10, "rx": 86.0, "ry": 48.0, "seed": 3.4, "kind": "sand"},
-				{"y": -2180.0, "at": 0.04, "rx": 118.0, "ry": 64.0, "seed": 5.1, "kind": "sand"},
-				{"y": -2960.0, "at": 0.14, "rx": 78.0, "ry": 44.0, "seed": 0.9, "kind": "sand"},
-				{"y": -3720.0, "at": 0.06, "rx": 110.0, "ry": 60.0, "seed": 2.6, "kind": "sand"},
-				{"y": -4380.0, "at": 0.12, "rx": 92.0, "ry": 52.0, "seed": 4.3, "kind": "sand"},
-			]
-			# PALMS IN ORDERLY SECTIONS, cut into the paving - exactly how the
-			# promenade is planted, and nothing like the six-per-row scattering
-			# this had. Two regular ranks at a proper street-tree spacing, kept
-			# at the edges of the walk because that is where street trees go and
-			# because a rank down the middle would choke a 420px corridor.
-			#
-			# Kept in their own list as well as in poles, so the paving cut-outs
-			# and the benches between them are placed from the same numbers
-			# rather than from a second copy that could drift.
-			palm_spots.clear()
-			for i in range(17):
-				palm_spots.append(Vector2(462.0, -260.0 - i * 300.0))
-			for i in range(15):
-				palm_spots.append(Vector2(1012.0, -380.0 - i * 340.0))
-			for ps: Vector2 in palm_spots:
-				poles.append(ps)
-			# long benches facing the sea, set between the seaward palms on the
-			# concrete - the promenade is lined with them
-			for i in range(16):
-				benches.append(Vector2(524.0, -410.0 - i * 300.0))
-			deco_pole_count = poles.size()
-			# terrace tables under canopies, twice along the route
-			tables = [
-				Vector2(1040, -1500), Vector2(1110, -1560), Vector2(1050, -1620), Vector2(1120, -1680),
-				Vector2(1040, -3300), Vector2(1110, -3360), Vector2(1050, -3420), Vector2(1120, -3480),
-			]
-			canopies = [Rect2(1015, -1710, 135, 240), Rect2(1015, -3510, 135, 240)]
-			chairs = [
-				Vector2(1075, -1470), Vector2(1020, -1560), Vector2(1090, -1640),
-				Vector2(1075, -3270), Vector2(1020, -3360), Vector2(1090, -3440),
-			]
-			astands = [Vector2(600, -1450), Vector2(966, -3250)]
-			vans = [Vector2(930, -4050)]
-			performers = [Vector2(410, -2200)]
-			cone_spots = [Vector2(492, -1500), Vector2(548, -3050)]
-			# parasols are poles too: windable, markable, brilliant
-			parasols = [Vector2(268, -900), Vector2(300, -2300), Vector2(262, -3700), Vector2(330, -4500)]
-			var towel_cols := [Color(0.85, 0.4, 0.35), Color(0.35, 0.55, 0.8), Color(0.9, 0.75, 0.3), Color(0.5, 0.7, 0.5)]
-			var ty := -800.0
-			for i in range(5):
-				towels.append({
-					"rect": Rect2(randf_range(248.0, 330.0), ty, 46, 80),
-					"col": towel_cols[i % 4], "bather": i % 2 == 0, "cd": 0.0,
-				})
-				ty -= randf_range(700.0, 1000.0)
-			bins = [
-				Vector2(590, -700), Vector2(950, -1600), Vector2(590, -2500),
-				Vector2(950, -3400), Vector2(590, -4300),
-			]
-			benches = [Vector2(410, -1200), Vector2(410, -2800), Vector2(410, -4200)]
-			hyd_list = [
-				Vector2(578, -1000), Vector2(950, -2200), Vector2(578, -3200), Vector2(950, -4500),
-			]
-			keb_list = [Vector2(700, -1900), Vector2(860, -4200), Vector2(420, -3000)]
-			fountains = [Vector2(420, -1300), Vector2(1005, -3550)]
-		"market":
-			# El Mercat: stalls line both edges, produce underfoot, the
-			# cat is practically guaranteed (fish)
-			gate_text = "PLAZA"
-			stalls = [
-				Vector2(370, -800), Vector2(910, -1150), Vector2(370, -1750),
-				Vector2(910, -2300), Vector2(370, -2900), Vector2(910, -3500),
-				Vector2(370, -4150), Vector2(910, -4650),
-			]
-			for i in range(7):
-				var x := sw_l + 30.0 if i % 2 == 0 else sw_r - 30.0
-				var lp := Vector2(x, -350.0 - i * 640.0)
-				var clear := true
-				for st in stalls:
-					if absf(st.x - lp.x) < 75.0 and absf(st.y - lp.y) < 65.0:
-						clear = false
-				if clear:
-					poles.append(lp)
-			deco_pole_count = poles.size()
-			manholes = [Vector2(640, -2050), Vector2(560, -3800)]
-			bins = [
-				Vector2(330, -1400), Vector2(950, -2700),
-				Vector2(330, -3300), Vector2(950, -4400),
-			]
-			benches = [Vector2(336, -2450), Vector2(944, -3850)]
-			astands = [
-				Vector2(440, -880), Vector2(840, -1230), Vector2(440, -2980), Vector2(840, -3580),
-			]
-			performers = [Vector2(640, -2600), Vector2(400, -4400)]
-			cone_spots = [Vector2(600, -1990), Vector2(690, -2110)]
-			fountains = [Vector2(640, -3100)]
-			# 5, not 3: the "4 good sniffs" goal on this layout (and on El
-			# Gotic / La Castanyada, which inherit it) was impossible to
-			# complete with only three hydrants. Caught by --selftest.
-			hyd_list = [
-				Vector2(345, -600), Vector2(935, -1900), Vector2(345, -3600),
-				Vector2(935, -2900), Vector2(345, -4400),
-			]
-			keb_list = [
-				Vector2(500, -900), Vector2(780, -1250), Vector2(620, -1800),
-				Vector2(540, -2380), Vector2(760, -3000), Vector2(600, -3650),
-				Vector2(820, -4250), Vector2(480, -4550),
-			]
-	if lvl == "street":
-		fountains = [Vector2(335, -3350)]
-	elif lvl == "park":
-		fountains = [Vector2(944, -3300), Vector2(724, -2440)]
-	elif lvl == "rain":
-		# El Aguacero: get-out-of-the-rain gate, storm drains gaping open
-		# down the middle of the road (open holes, lethal in a downpour),
-		# a huddle of umbrella-toting pedestrians clogging the walkway, and
-		# a fountain nobody needs today
-		gate_text = "SHELTER"
-		manholes.append_array([Vector2(640, -1500), Vector2(600, -2650), Vector2(680, -3900)])
-		# a huddle of umbrellas clogging the walkway - dense enough to make
-		# you thread it, with gaps left so it is never a wall
-		performers.append_array([
-			Vector2(500, -2250), Vector2(790, -2320),
-			Vector2(560, -3560), Vector2(760, -3520),
-		])
-		fountains = [Vector2(335, -3350)]
-	elif lvl == "oldtown":
-		# El Gotic: a tight medieval alley. Wall cats perched on ledges up
-		# both walls, laundry strung overhead, lanterns. Extra poles pinch
-		# the channel so threading the owner through is the real work.
-		gate_text = "PLACA"
-		wallcat_spots = [
-			Vector2(360, -900), Vector2(920, -1450), Vector2(360, -2100),
-			Vector2(920, -2750), Vector2(360, -3350), Vector2(920, -3950),
-		]
-		laundry_lines = [-1250.0, -2000.0, -2850.0, -3650.0, -4300.0]
-		for yy in [-1150.0, -1700.0, -2500.0, -3200.0, -3800.0, -4400.0]:
-			poles.append(Vector2(walk_cx + (70.0 if int(yy) % 2 == 0 else -70.0), yy))
-		fountains = [Vector2(345, -2600.0)]
-	elif lvl == "trail":
-		# El Bosc: a forest trail. No bars out here, so the owner is forever
-		# stopping to hunt for a signal (see human.gd); muddy patches slow
-		# the going, and a stream to drink from. Calm, stop-start rhythm.
-		gate_text = "CLEARING"
-		signal_prone = true
-		# each patch spans the trail where the trail actually IS. A Rect2 cannot
-		# bend, so it is measured at the middle of its own band - close enough
-		# for a puddle, and far better than three rectangles pinned to where a
-		# straight path used to be
-		# PUDDLES, not a band across the whole trail. A full-width strip is a
-		# wall you have to cross; puddles are things you weave between, which
-		# is both more interesting to walk and more like a wood after rain.
-		# Placed in pairs so a stretch reads as boggy rather than as one
-		# tidy pool, and offset across the path so a careful line gets through.
-		patches = [
-			{"y": -1520.0, "at": 0.28, "rx": 84.0, "ry": 46.0, "seed": 1.10, "kind": "mud"},
-			{"y": -1660.0, "at": 0.66, "rx": 70.0, "ry": 40.0, "seed": 2.40, "kind": "mud"},
-			{"y": -2860.0, "at": 0.72, "rx": 92.0, "ry": 52.0, "seed": 3.75, "kind": "mud"},
-			{"y": -3010.0, "at": 0.34, "rx": 66.0, "ry": 38.0, "seed": 5.02, "kind": "mud"},
-			{"y": -4080.0, "at": 0.46, "rx": 100.0, "ry": 54.0, "seed": 0.62, "kind": "mud"},
-			{"y": -4220.0, "at": 0.82, "rx": 58.0, "ry": 34.0, "seed": 4.18, "kind": "mud"},
-		]
-		fountains = [Vector2(360.0, -2400.0)]
-	elif lvl == "station":
-		# L'Estacio: a concourse with a moving walkway. On it you get carried
-		# toward the platforms (north) - a boost on the way out, a shove to
-		# fight on the way home. Luggage carts clutter the floor.
-		gate_text = "PLATFORM"
-		conveyor_zone = Rect2(walk_cx - 90.0, -3400.0, 180.0, 1500.0)
-		conveyor_dir = Vector2(0, -1)
-		vans = [Vector2(380, -1500), Vector2(900, -2600), Vector2(400, -4200)]
-		fountains = [Vector2(1005, -3550)]
-	elif lvl == "spook":
-		# La Castanyada: the autumn festival at night. Sweets everywhere -
-		# and here's the cruelty: chocolate is poison to dogs, so the one
-		# thing you want most is the one thing you must NOT eat. Steer past
-		# the candy strewn across your path; real treats are still fair game.
-		gate_text = "PLACA"
-		candy_spots = [
-			Vector2(560, -1100), Vector2(700, -1400), Vector2(600, -1750),
-			Vector2(720, -2200), Vector2(560, -2600), Vector2(690, -2950),
-			Vector2(600, -3400), Vector2(720, -3800), Vector2(560, -4200),
-		]
-		performers.append_array([Vector2(400, -2100), Vector2(880, -3300)])
-	elif lvl == "site":
-		# Les Obres: a roadworks detour. Wet cement laid across the walkway
-		# slows you AND takes a paw-print trail that follows you the rest of
-		# the walk (the evidence). Extra cones and a parked works van.
-		gate_text = "DETOUR"
-		# WET CEMENT, poured in patches rather than laid across the whole
-		# footway. A full-width slab is a wall with a paint penalty; poured
-		# patches are a line to pick through, and a works that has done half a
-		# job is more like a real works anyway. Same primitive as El Bosc's
-		# puddles - only the substance differs, which is the point of it.
-		cement_zones = []
-		patches = [
-			{"y": -1660.0, "at": 0.24, "rx": 96.0, "ry": 54.0, "seed": 2.05, "kind": "cement"},
-			{"y": -1810.0, "at": 0.70, "rx": 78.0, "ry": 46.0, "seed": 4.60, "kind": "cement"},
-			{"y": -3290.0, "at": 0.62, "rx": 104.0, "ry": 58.0, "seed": 1.35, "kind": "cement"},
-			{"y": -3460.0, "at": 0.30, "rx": 72.0, "ry": 42.0, "seed": 5.85, "kind": "cement"},
-		]
-		cone_spots = [Vector2(520, -1650), Vector2(760, -1650), Vector2(560, -2020), Vector2(720, -2020), Vector2(600, -3250), Vector2(700, -3650)]
-		vans = [Vector2(900, -2500)]
-		fountains = [Vector2(335, -4200)]
-	elif lvl == "guell":
-		# El Parc: Gaudi's terraces. Broken-tile mosaic underfoot, which is
-		# fast and slippery to run on, laid in organic sweeps rather than
-		# slabs - the patch primitive was already the right shape for it.
-		gate_text = "TERRACE"
-		# It inherits the park's cross-section, which brings the park's pond
-		# with it - and the pond is authored against a STRAIGHT corridor, so on
-		# a serpentine it ends up swallowing whatever the path now runs over.
-		# The self-test caught a fountain and a cone standing in it. The
-		# terraces do their water as a fountain instead.
-		pond = Rect2()
-		patches = [
-			{"y": -640.0, "at": 0.44, "rx": 150.0, "ry": 86.0, "seed": 1.42, "kind": "tile"},
-			{"y": -1460.0, "at": 0.56, "rx": 168.0, "ry": 94.0, "seed": 3.07, "kind": "tile"},
-			{"y": -2280.0, "at": 0.40, "rx": 158.0, "ry": 90.0, "seed": 4.61, "kind": "tile"},
-			{"y": -3080.0, "at": 0.60, "rx": 174.0, "ry": 98.0, "seed": 0.88, "kind": "tile"},
-			{"y": -3880.0, "at": 0.46, "rx": 156.0, "ry": 88.0, "seed": 2.35, "kind": "tile"},
-		]
-		fountains = [Vector2(walk_cx - 150.0, -2650.0)]
-	elif lvl == "scrap":
-		# El Desguas: the scrapyard shortcut. Sleeping guard dogs, sweeping
-		# cameras, laser tripwires - and your stealth partner is a glowing,
-		# ringing phone zombie on the other end of the rope. Slow is silent;
-		# getting caught is embarrassing, not fatal.
-		gate_text = "BACK GATE"
-		guard_posts = [
-			Vector2(380, -1350), Vector2(900, -2250),
-			Vector2(390, -3150), Vector2(880, -4050),
-		]
-		cameras = [
-			{"pos": Vector2(330, -1900), "base": 0.0, "range": 0.9, "speed": 0.7, "cd": 0.0},
-			{"pos": Vector2(950, -3500), "base": PI, "range": 0.9, "speed": 0.55, "cd": 0.0},
-		]
-		lasers = [
-			{"x0": sw_l, "x1": sw_r, "y_lo": -2750.0, "y_hi": -2550.0, "speed": 1.1, "cd": 0.0},
-			{"x0": sw_l, "x1": sw_r, "y_lo": -4450.0, "y_hi": -4250.0, "speed": 0.8, "cd": 0.0},
-		]
-		# scrap heaps: wrecked cars (vans) and junk drums (cones)
-		vans = [Vector2(880, -1600), Vector2(390, -2650), Vector2(900, -4400)]
-		cone_spots = [Vector2(560, -1950), Vector2(720, -3050), Vector2(600, -3900)]
-		fountains = [Vector2(1005, -2950)]
-	if tutorial_mode:
-		# Take away everything that can hurt, keep everything worth learning.
-		# This has to run BEFORE the shared setup below consumes hyd_list /
-		# keb_list and builds lane_state from lane_ys - doing it later left a
-		# populated lane_state indexing an emptied lane_ys, which is exactly
-		# the out-of-bounds it produced.
-		lane_ys = []
-		lane_state = []
-		manholes = []
-		cellars = []
-		vans = []
-		astands = []
-		performers = []
-		# a generous supply of practice apparatus, spread out and unhurried
-		hyd_list = [Vector2(360.0, -700.0), Vector2(915.0, -1250.0), Vector2(360.0, -1900.0)]
-		keb_list = [Vector2(640.0, -1500.0), Vector2(700.0, -2400.0)]
-		poles.append(Vector2(500.0, -2100.0))
-		poles.append(Vector2(790.0, -2750.0))
-		deco_pole_count = poles.size()
-	for tb in tables:
-		poles.append(tb)
-	for pa in parasols:
-		poles.append(pa)
-	for ch in chairs:
-		poles.append(ch)
-	# trash bins: bag deposit targets for the owner's chore chain; they
-	# also join the poles array, so they block bodies, snag the leash,
-	# and can absolutely be marked
-	for bn in bins:
-		poles.append(bn)
-	# everything past body_pole_count is rope-wrap geometry only: vans
-	# and stalls get one solid rectangular body each in _build_walls
-	body_pole_count = poles.size()
-	for v in vans:
-		for off in [-52.0, -26.0, 0.0, 26.0, 52.0]:
-			poles.append(v + Vector2(0, off))
-	# stall wrap circles at the ENDS only: a mid circle made the rope
-	# snake weirdly across the tabletop
-	for st in stalls:
-		poles.append(st + Vector2(-48, 0))
-		poles.append(st + Vector2(48, 0))
-	urge_y = randf_range(-3200.0, -1500.0)
-	# rare visitors: a cat some walks, a pigeon flock or two most walks
-	# (seagulls at the beach, obviously)
-	var cat_p := 0.3
-	if lvl == "park":
-		cat_p = 0.4
-	elif lvl == "market":
-		cat_p = 0.75
-	if randf() < cat_p:
-		cat_y = randf_range(-4200.0, -1200.0)
-	flock_ys = [randf_range(-1800.0, -800.0), randf_range(-4400.0, -2600.0)]
-	if lvl != "street":
-		flock_ys.insert(1, randf_range(-2600.0, -1900.0))
-	for hp in hyd_list:
-		if pond.size.x > 0.0 and pond.grow(30.0).has_point(hp):
-			continue
-		hydrants.append({"pos": hp, "done": false, "progress": 0.0})
-	for kp in keb_list:
-		kebabs.append({"pos": kp, "eaten": false})
-	for cp in candy_spots:
-		candy.append({"pos": cp, "eaten": false})
-	_build_ground_detail()
-	_build_freedom_area()
-	_lift_props_out_of_water()
-	# after the water and the holes are known, so a puddle cannot end up in
-	# the pond and cement cannot be poured over a manhole
-	_settle_patches()
-	_build_dunes()
-	_build_park_props()
-	for i in range(140):
-		var side := -1.0 if randf() < 0.5 else 1.0
-		var x := 640.0 + side * randf_range(340.0, 620.0)
-		tufts.append(Vector2(x, randf_range(GATE_Y - 600.0, START_Y + 150.0)))
-	# The grove in the off-leash space. Fourteen is right for a park; a beach
-	# with fourteen palms in it is a plantation, and the woods want more than a
-	# park does. These are rope-wrap geometry as well as scenery, so the count
-	# changes what the space plays like, not just what it looks like.
-	# The clearing is ringed with woodland. Placed here rather than drawn as
-	# scenery so it is solid, wraps the rope, and reads as the edge of a wood
-	# you cannot simply walk out of.
-	if freedom_kind == "clearing":
-		var fr := _freedom_rect()
-		for i in range(14):
-			var f := float(i) / 13.0
-			var edge := i % 3
-			var tp := Vector2.ZERO
-			match edge:
-				0: tp = Vector2(lerpf(fr.position.x + 40.0, fr.end.x - 40.0, f), fr.position.y + 34.0)
-				1: tp = Vector2(fr.position.x + 46.0, lerpf(fr.position.y + 60.0, fr.end.y - 60.0, f))
-				_: tp = Vector2(fr.end.x - 46.0, lerpf(fr.position.y + 60.0, fr.end.y - 60.0, f))
-			trees.append(tp)
-	var grove := 14
-	# Where they can stand at all. Palms do not grow in the sea or halfway down
-	# a beach - they line the back of it - and a clearing is a clearing because
-	# the middle of it is empty. The grove is rope-wrap geometry too, so this
-	# decides how the space plays as well as how it looks.
-	var grove_lo := 200.0
-	var grove_hi := 1080.0
-	match freedom_kind:
-		"beach":
-			grove = 5
-			grove_lo = 800.0     # the back of the beach, inland of the dry sand
-			grove_hi = 1060.0
-		"clearing":
-			grove = 10           # plus the ring the clearing draws
-		"lot":
-			grove = 6
-			grove_lo = 150.0
-			grove_hi = 1120.0
-	for i in range(grove):
-		for attempt in range(20):
-			var tx := randf_range(grove_lo, grove_hi)
-			if freedom_kind == "clearing":
-				# outer thirds only: the middle is where the fetching happens
-				tx = randf_range(150.0, 340.0) if randf() < 0.5 else randf_range(940.0, 1120.0)
-			var tree := Vector2(tx, GATE_Y - randf_range(120.0, 550.0))
-			var clear := tree.distance_to(gate_bench) > 95.0
-			for w: Rect2 in water:
-				clear = clear and not w.grow(30.0).has_point(tree)
-			for slot in PAIR_PARK_SPOTS:
-				var spot: Vector2 = slot.position
-				clear = clear and tree.distance_to(spot) > 85.0
-			if clear:
-				trees.append(tree)
-				break
-	# THE FUR-GONETA, on the two walks a mobile groomer would actually work:
-	# the market (a trade in nervous poodles) and the boulevard. Position only
-	# here - wrap flanks are appended AFTER the corridor fit so body, draw,
-	# blocker, scent and rope contacts share one fitted centre.
-	if lvl == "market":
-		furgoneta = Vector2(sw_r - 74.0, -2150.0)
-	elif lvl == "street":
-		furgoneta = Vector2(sw_l + 66.0, -3560.0)
-	for ly in lane_ys:
-		lane_state.append({"t": randf_range(1.0, 2.5), "phase": 0, "dir": 1})
-	_build_substance_zones()
-	_fit_props_to_corridor()
-	# after the fit, deliberately: the verge is the one place whose contents
-	# must NOT be pulled onto the pavement
-	_build_verge()
-	if furgoneta.x < INF:
-		for off: float in [-52.0, -26.0, 0.0, 26.0, 52.0]:
-			poles.append(furgoneta + Vector2(0.0, off))
-	# The grove is wrap geometry too, so the rope catches on trunks. Appended
-	# AFTER the corridor fit on purpose: the trees stand in the open off-leash
-	# area, which is full width, so clamping them to the walkway would drag
-	# them out of position. They sit past body_pole_count, which is why they
-	# get their own collision bodies in _build_walls.
-	for t in trees:
-		poles.append(t)
-	# the hazardous hard-to-reach collectible: one per level, in a spot
-	# that costs you something to reach (deliberately outside the corridor
-	# on some walks, so it is exempt from the corridor fit)
-	match lvl:
-		"street":
-			prize_pos = Vector2(SHOULDER_R - 12.0, -2400.0)  # far shoulder, across the bike lane
-			prize_text = "fetch the frisbee across the bike lane"
-		"park":
-			prize_pos = pond.get_center() if pond.size.x > 0.0 else Vector2(640.0, -2700.0)
-			prize_text = "fetch the ball from the middle of the pond"
-		"beach":
-			# In the sea, so she swims for it - but x=20 was OUTSIDE THE FRAME.
-			# The camera is zoomed 1.28 and sits on x=640, so only world x
-			# 140..1140 is ever visible: the ball was a goal the player could
-			# not see. Placed just inside the visible edge instead, still well
-			# out past the shoreline.
-			prize_pos = Vector2(178.0, -2600.0)
-			prize_text = "swim out for the ball"
-		"market":
-			prize_pos = Vector2(640.0, -2050.0)  # by the drain in the middle aisle
-			prize_text = "grab the churro by the open drain"
-		"rain":
-			prize_pos = Vector2(640.0, -1500.0)  # right on a gaping storm drain
-			prize_text = "snatch the toy off the storm drain"
-		"oldtown":
-			prize_pos = Vector2(920.0, -2750.0)  # under a smug wall cat, up the wall
-			prize_text = "steal the sardine under the cat's ledge"
-		"trail":
-			prize_pos = Vector2(300.0, -3400.0)  # a pinecone off in the muddy brush
-			prize_text = "dig the pinecone out of the mud"
-		"station":
-			prize_pos = Vector2(640.0, -2650.0)  # a dropped sandwich mid-walkway
-			prize_text = "grab the sandwich off the moving walkway"
-		"site":
-			prize_pos = Vector2(640.0, -3130.0)  # a trowel dropped in the wet cement
-			prize_text = "fish the trowel out of the wet cement"
-		"spook":
-			prize_pos = Vector2(640.0, -2350.0)  # a dog-safe pumpkin treat, ringed by candy
-			prize_text = "get the pumpkin treat without eating the candy"
-		"scrap":
-			prize_pos = Vector2(925.0, -2270.0)  # right beside a sleeping guard dog
-			prize_text = "steal the bone from under the guard's nose"
-		_:
-			prize_pos = Vector2(SHOULDER_R - 12.0, -2400.0)
-			prize_text = "fetch the frisbee"
-	# carry / delivery mission on some walks: pick it up here, drop it there
-	match lvl:
-		"street":
-			carry_pickup = Vector2(360.0, -1150.0)
-			carry_drop = Vector2(905.0, -2850.0)
-			carry_item = "the newspaper"
-			carry_text = "deliver the newspaper to the stoop"
-		"market":
-			carry_pickup = Vector2(915.0, -1250.0)
-			carry_drop = Vector2(360.0, -3050.0)
-			carry_item = "the crate of oranges"
-			carry_text = "run the oranges to the far stall"
-		_:
-			pass
+	LevelBuild.build_level_data(self)
 
 
 func _draw_paving(vt: float, vb: float, base: Color) -> void:
@@ -1627,74 +937,7 @@ func _draw_edge_module(c: CanvasItem, r: Rect2, side: float, k: int) -> void:
 
 
 func _build_verge() -> void:
-	# WHAT LIVES ON THE VERGE.
-	#
-	# The grass either side of the walk was always walkable and always empty,
-	# which is why nobody ever went there: it was a different colour and
-	# nothing else. Now that grass reads as a surface in its own right (grips
-	# better, holds far more smell) it is worth putting the city's own use of
-	# it on there - people sitting about on a Sunday, and the things a lawn
-	# accumulates.
-	#
-	# Authored by hand rather than scattered, like every other prop here: a
-	# picnic wants to be somewhere that reads as a spot, and hand-placing also
-	# keeps it out of the global RNG, which the autowalk determinism depends on.
-	verge_items = []
-	# WHERE THE VERGE ACTUALLY IS ON SCREEN. The camera is zoomed 1.28, so only
-	# world x 140..1140 is ever visible - the level is 1200 wide but a fifth of
-	# it never appears. The first pass of this put picnics at x=150 and x=1170:
-	# one was clipped by the left edge of the frame and the other was
-	# completely off screen. So the verge is placed relative to the pavement
-	# and then held inside what the camera can see.
-	var vl: float = clampf(sw_l - 85.0, 195.0, 1085.0)
-	var vr: float = clampf(sw_r + 85.0, 195.0, 1085.0)
-	match lvl:
-		"street":
-			# El Passeig: the boulevard's lawn, all of it on the west side -
-			# east of the pavement is the bike lane and the shoulder, and what
-			# green is left out there is past the edge of the frame.
-			verge_items = [
-				{"pos": Vector2(vl, -520.0), "kind": "picnic"},
-				{"pos": Vector2(vl - 22.0, -1180.0), "kind": "stump"},
-				{"pos": Vector2(vl + 14.0, -1760.0), "kind": "picnic"},
-				{"pos": Vector2(vl - 30.0, -2480.0), "kind": "bush"},
-				{"pos": Vector2(vl + 8.0, -3020.0), "kind": "picnic"},
-				{"pos": Vector2(vl - 26.0, -3900.0), "kind": "bush"},
-				{"pos": Vector2(vl + 12.0, -4420.0), "kind": "picnic"},
-			]
-		"park":
-			# a park has verge on both sides, and the verge is the whole point
-			verge_items = [
-				{"pos": Vector2(vl, -760.0), "kind": "picnic"},
-				{"pos": Vector2(vr, -1500.0), "kind": "picnic"},
-				{"pos": Vector2(vl - 18.0, -2260.0), "kind": "stump"},
-				{"pos": Vector2(vr + 10.0, -3100.0), "kind": "picnic"},
-				{"pos": Vector2(vl + 16.0, -3820.0), "kind": "bush"},
-			]
-		"trail":
-			# out here it is fallen wood and undergrowth, not tablecloths
-			verge_items = [
-				{"pos": Vector2(vl, -700.0), "kind": "stump"},
-				{"pos": Vector2(vr, -1450.0), "kind": "bush"},
-				{"pos": Vector2(vl + 18.0, -2200.0), "kind": "bush"},
-				{"pos": Vector2(vr - 14.0, -2950.0), "kind": "stump"},
-				{"pos": Vector2(vl - 16.0, -3700.0), "kind": "bush"},
-				{"pos": Vector2(vr + 12.0, -4300.0), "kind": "stump"},
-			]
-	# Nothing on the verge may sit in a bike lane. They are drawn straight
-	# across the level, verge included, so the first pass had a tree stump
-	# apparently growing out of the tarmac. Pushed clear here rather than
-	# hand-avoided in the lists above, so moving a lane later cannot quietly
-	# strand a picnic in the middle of it.
-	var clear_by := LANE_HALF + 52.0
-	for i in range(verge_items.size()):
-		var it: Dictionary = verge_items[i]
-		var p: Vector2 = it["pos"]
-		for ly: float in lane_ys:
-			if absf(p.y - ly) < clear_by:
-				p.y = (ly - clear_by) if p.y <= ly else (ly + clear_by)
-		it["pos"] = p
-		verge_items[i] = it
+	LevelBuild.build_verge(self)
 
 
 func draw_verge_onto(c: CanvasItem, vt: float, vb: float) -> void:
@@ -2566,254 +1809,39 @@ func _draw_park_props(c: CanvasItem, vt: float, vb: float) -> void:
 
 
 func _build_substance_zones() -> void:
-	# Each walk offers whatever it would plausibly have lying about. The two
-	# that also SLOW her (mud, wet cement) keep doing so; the rest are purely
-	# a mess to carry around, which is the fun of them.
-	substance_zones.clear()
-	for pt: Dictionary in patches:
-		# glazed tile is a surface, not a substance: it is fast and slippery
-		# but it does not come away on her paws the way wet cement does
-		if not SUBSTANCES.has(String(pt["kind"])):
-			continue
-		substance_zones.append({"rect": patch_bounds(pt), "patch": pt,
-			"kind": String(pt["kind"]), "slow": true})
-	for cz in cement_zones:
-		substance_zones.append({"rect": cz, "kind": "cement", "slow": true})
-	var w := sw_r - sw_l
-	match lvl:
-		"site":
-			# a works has wet paint as well as wet cement
-			substance_zones.append({"rect": Rect2(sw_l + 20.0, -2500.0, w * 0.4, 150.0), "kind": "paint"})
-		"beach":
-			# the whole sand side, which is most of the beach
-			substance_zones.append({"rect": Rect2(230.0, GATE_Y, 150.0, absf(GATE_Y) + 400.0), "kind": "sand"})
-		"market":
-			# the fishmonger's patch, and everyone will know about it
-			substance_zones.append({"rect": Rect2(sw_l + 30.0, -3050.0, w * 0.35, 130.0), "kind": "fish"})
-		"scrap":
-			substance_zones.append({"rect": Rect2(sw_l + 40.0, -1850.0, w * 0.45, 140.0), "kind": "oil"})
-		"spook":
-			substance_zones.append({"rect": Rect2(sw_l + 25.0, -2150.0, w * 0.5, 160.0), "kind": "confetti"})
-		"trail":
-			substance_zones.append({"rect": Rect2(sw_l + 20.0, -3650.0, w * 0.5, 150.0), "kind": "mud", "slow": true})
-	# snow turns the whole walk to slush underfoot, whatever the level
-	if Game.weather == "snow":
-		substance_zones.append({"rect": Rect2(sw_l, GATE_Y, w, absf(GATE_Y) + 500.0), "kind": "slush"})
+	LevelBuild.build_substance_zones(self)
 
 
 func _build_freedom_area() -> void:
-	freedom_kind = String(FREEDOM_KINDS.get(lvl, "yard"))
-	water.clear()
-	if pond.size.x > 0.0:
-		water.append(pond)
-	if freedom_kind == "beach":
-		# The sea, in two pieces that meet at the gate: a band along the whole
-		# passeig (so she can go in ANYWHERE on the walk, which is the first
-		# thing anyone tries on a seafront), and the wide bay in the dog beach
-		# at the top. The bay uses thin horizontal strips so the diagonal
-		# shoreline from beach_shore_x is wet in gameplay, not just on screen.
-		water.append(Rect2(-360.0, GATE_Y - 40.0, 590.0, absf(GATE_Y) + 500.0))
-		var strip_y := freedom_lo - 40.0
-		var strip_h := 36.0
-		var gate_y := GATE_Y - 30.0
-		while strip_y < gate_y:
-			var shore := beach_shore_x(strip_y + strip_h * 0.5)
-			water.append(Rect2(-330.0, strip_y, shore + 330.0, strip_h + 0.5))
-			strip_y += strip_h
+	LevelBuild.build_freedom_area(self)
 
 
 func _patch_clear(pt: Dictionary) -> bool:
-	# is this somewhere a patch could sensibly be?
-	var b := patch_bounds(pt)
-	var c := patch_centre(pt)
-	if pond.size.x > 0.0 and pond.intersects(b):
-		return false
-	for w: Rect2 in water:
-		if w.intersects(b):
-			return false
-	for mh: Vector2 in manholes:
-		if b.has_point(mh):
-			return false
-	for cl: Rect2 in cellars:
-		if cl.intersects(b):
-			return false
-	var e := walk_edges(c.y)
-	return c.x >= e.x and c.x <= e.y
+	return LevelBuild.patch_clear(self, pt)
 
 
 func _settle_patches() -> void:
-	# Patches are authored by eye, and a perfectly plausible y can still land
-	# in the pond or on top of an open manhole - which is exactly what the
-	# first pass did, and it read as nonsense rather than as a mistake.
-	#
-	# So each one walks along the path until it finds ground that could hold
-	# it, searching outward in both directions from where it was authored. It
-	# never invents a position from nothing: the authored spot is the intent
-	# and this only moves it as far as it has to. level_check still fails if a
-	# patch cannot be placed at all, so nothing is quietly dropped.
-	for i in range(patches.size()):
-		var pt: Dictionary = patches[i]
-		var y0 := float(pt["y"])
-		if _patch_clear(pt):
-			continue
-		for step in range(16):
-			var off: float = float(step / 2 + 1) * 85.0
-			pt["y"] = y0 + (off if step % 2 == 0 else -off)
-			if _patch_clear(pt):
-				break
-		patches[i] = pt
+	LevelBuild.settle_patches(self)
 
 
 func _lift_props_out_of_water() -> void:
-	# Anything the level data put in a pond or the sea gets pushed to the
-	# nearest shore. The walks that reuse another walk's geometry inherit its
-	# water but not its prop placement, which is how El Bosc ended up with a
-	# roadworks cone standing in the middle of the pond.
-	if water.is_empty():
-		return
-	var groups: Array = [parasols, benches, bins, tables, astands, fountains,
-		cone_spots, manholes, performers, candy_spots, wallcat_spots, guard_posts]
-	for arr: Array in groups:
-		for i in range(arr.size()):
-			arr[i] = _nearest_dry(arr[i] as Vector2)
-	for k in kebabs:
-		k.pos = _nearest_dry(k.pos as Vector2)
-	for h in hydrants:
-		h.pos = _nearest_dry(h.pos as Vector2)
-	for tw in towels:
-		var tr: Rect2 = tw.rect
-		var moved := _nearest_dry(tr.get_center())
-		tw.rect = Rect2(moved - tr.size * 0.5, tr.size)
+	LevelBuild.lift_props_out_of_water(self)
 
 
 func _nearest_dry(at: Vector2) -> Vector2:
-	for w: Rect2 in water:
-		if not w.grow(10.0).has_point(at):
-			continue
-		# out the closest side, far enough that its footprint is clear too
-		var d_left: float = at.x - w.position.x
-		var d_right: float = w.end.x - at.x
-		var d_top: float = at.y - w.position.y
-		var d_bot: float = w.end.y - at.y
-		var m: float = minf(minf(d_left, d_right), minf(d_top, d_bot))
-		if m == d_left:
-			at.x = w.position.x - 30.0
-		elif m == d_right:
-			at.x = w.end.x + 30.0
-		elif m == d_top:
-			at.y = w.position.y - 30.0
-		else:
-			at.y = w.end.y + 30.0
-	return at
+	return LevelBuild.nearest_dry(self, at)
 
 
 func _build_dunes() -> void:
-	# The dune line is the beach's boundary in place of a fence, so it has to
-	# BE one: these get collision below, because a boundary you can stroll
-	# through is just a pattern on the floor.
-	dune_spots.clear()
-	if freedom_kind != "beach":
-		return
-	var r := _freedom_rect()
-	for i in range(26):
-		var f := float(i) / 25.0
-		if i % 2 == 0:
-			dune_spots.append(Vector2(r.end.x - 70.0,
-				lerpf(r.position.y + 60.0, r.end.y - 60.0, f)))
-		else:
-			dune_spots.append(Vector2(lerpf(r.position.x + 60.0, r.end.x - 60.0, f),
-				r.position.y + 40.0))
+	LevelBuild.build_dunes(self)
 
 
 func _build_park_props() -> void:
-	# Spread across the whole width, deliberately AWAY from the straight line
-	# between gate and meadow, so poking about off the direct route is what
-	# finds things. Local rng, so the deterministic autowalk is untouched.
-	park_props.clear()
-	var r := RandomNumberGenerator.new()
-	r.seed = 0xD06BA55
-	var flavour := ["log", "dig", "shrub", "post", "dig", "shrub"]
-	match lvl:
-		"beach": flavour = ["driftwood", "dig", "rock", "dig", "rock"]
-		"scrap", "site": flavour = ["tyre", "log", "dig", "tyre"]
-		"trail", "park": flavour = ["log", "dig", "shrub", "shrub", "post", "dig"]
-	var lo := freedom_lo + 70.0
-	var hi := GATE_Y - 90.0
-	# Guarantee the essentials rather than hoping the dice provide them: on
-	# junk-flavoured walks a random draw left only one dig patch, which the
-	# sanity sweep rightly failed. Digs are the main reward for exploring, so
-	# they are placed first, spread across the width.
-	var dig_xs: Array[float] = [250.0, 640.0, 1030.0]
-	if freedom_kind == "beach":
-		dig_xs = [560.0, 820.0, 1060.0]   # digging in dry sand, not in the sea
-	var dig_fs: Array[float] = [0.22, 0.68, 0.42]
-	for i in range(3):
-		var gy := lerpf(lo + 60.0, hi - 60.0, dig_fs[i])
-		park_props.append({"pos": Vector2(dig_xs[i], gy), "kind": "dig", "done": false, "prog": 0.0})
-	for i in range(14):
-		var kind: String = flavour[r.randi() % flavour.size()]
-		# bias to the flanks: the middle is the fetch runway
-		var side_pick := r.randf()
-		var x := 0.0
-		if freedom_kind == "beach":
-			# all of it on the dry sand, east of the tide line
-			x = r.randf_range(520.0, 780.0) if side_pick < 0.4 else r.randf_range(800.0, 1120.0)
-		elif side_pick < 0.42:
-			x = r.randf_range(140.0, 430.0)
-		elif side_pick < 0.84:
-			x = r.randf_range(860.0, 1150.0)
-		else:
-			x = r.randf_range(470.0, 820.0)
-		var at := Vector2(x, r.randf_range(lo, hi))
-		# keep clear of the owner's bench and the park slots
-		if at.distance_to(gate_bench) < 110.0:
-			continue
-		# and out of the water: driftwood floating twenty metres out to sea is
-		# not a sniffable object, it is a bug
-		var in_water := false
-		for w: Rect2 in water:
-			if w.grow(24.0).has_point(at):
-				in_water = true
-		if in_water:
-			continue
-		var clear := true
-		for slot in PAIR_PARK_SPOTS:
-			if at.distance_to(slot.position as Vector2) < 90.0:
-				clear = false
-		if not clear:
-			continue
-		park_props.append({"pos": at, "kind": kind, "done": false, "prog": 0.0})
-	# one water trough near the gate, because a romp is thirsty work
-	# one water trough near the gate, because a romp is thirsty work - by the
-	# shower on the beach, where the tap actually is
-	var trough_at := Vector2(gate_bench.x - 150.0, gate_bench.y + 24.0)
-	if freedom_kind == "beach":
-		trough_at = Vector2(BEACH_SEA_R + 172.0, freedom_lo + 148.0)
-	park_props.append({"pos": trough_at, "kind": "trough", "done": false, "prog": 0.0})
+	LevelBuild.build_park_props(self)
 
 
 func _build_ground_detail() -> void:
-	# a light dusting of wear over the whole walk: hairline cracks, grit,
-	# litter, damp stains. Cheap to draw (culled, and the world redraws at
-	# 30fps) but it is what stops a paved corridor looking like a colour
-	# swatch. Local rng: the global sequence stays byte-identical.
-	var r := RandomNumberGenerator.new()
-	r.seed = 0x1CEB00DA  # fixed, so a walk wears the same way every visit
-	ground_detail.clear()
-	# stop at the gate: past it the off-leash space draws its own ground, and
-	# pavement grit scattered over open water is not wear, it is a bug
-	var y := START_Y + 200.0
-	while y > GATE_Y + 20.0:
-		y -= r.randf_range(55.0, 130.0)
-		var kind := r.randi() % 4
-		var x := r.randf_range(sw_l + 12.0, sw_r - 12.0)
-		ground_detail.append({
-			"pos": Vector2(x, y),
-			"kind": kind,
-			"rot": r.randf_range(0.0, TAU),
-			"len": r.randf_range(14.0, 46.0),
-			"sz": r.randf_range(1.4, 3.4),
-		})
+	LevelBuild.build_ground_detail(self)
 
 
 func _draw_ground_detail(vt: float, vb: float) -> void:
@@ -2847,330 +1875,36 @@ func _draw_ground_detail(vt: float, vb: float) -> void:
 
 
 func _build_bypasser_blockers() -> void:
-	bypasser_blockers.clear()
-	for i in range(body_pole_count):
-		bypasser_blockers.append({
-			"id": "pole_%d" % i,
-			"center": poles[i],
-			"radius": POLE_RADIUS,
-		})
-	for i in range(hydrants.size()):
-		bypasser_blockers.append({
-			"id": "hydrant_%d" % i,
-			"center": hydrants[i].pos,
-			"radius": HYDRANT_RADIUS,
-		})
-	for i in range(fountains.size()):
-		bypasser_blockers.append({
-			"id": "fountain_%d" % i,
-			"center": fountains[i],
-			"radius": FOUNTAIN_RADIUS,
-		})
-	for i in range(performers.size()):
-		bypasser_blockers.append({
-			"id": "performer_%d" % i,
-			"center": performers[i],
-			"radius": PERFORMER_RADIUS,
-		})
-	for i in range(benches.size()):
-		bypasser_blockers.append({
-			"id": "bench_%d" % i,
-			"rect": Rect2(benches[i] - BENCH_BODY_SIZE * 0.5, BENCH_BODY_SIZE),
-		})
-	for i in range(vans.size()):
-		bypasser_blockers.append({
-			"id": "van_%d" % i,
-			"rect": Rect2(vans[i] - VAN_BODY_SIZE * 0.5, VAN_BODY_SIZE),
-		})
-	if furgoneta.x < INF:
-		bypasser_blockers.append({
-			"id": "furgoneta",
-			"rect": Rect2(furgoneta - VAN_BODY_SIZE * 0.5, VAN_BODY_SIZE),
-		})
-	for i in range(stalls.size()):
-		bypasser_blockers.append({
-			"id": "stall_%d" % i,
-			"rect": Rect2(stalls[i] - STALL_BODY_SIZE * 0.5, STALL_BODY_SIZE),
-		})
-	for i in range(manholes.size()):
-		bypasser_blockers.append({
-			"id": "manhole_%d" % i,
-			"center": manholes[i],
-			"radius": MANHOLE_RADIUS,
-		})
-	for i in range(cellars.size()):
-		bypasser_blockers.append({
-			"id": "cellar_%d" % i,
-			"rect": cellars[i],
-		})
-	if pond.size.x > 0.0 and pond.size.y > 0.0:
-		bypasser_blockers.append({
-			"id": "pond_0",
-			"rect": pond,
-			"forced_side": "right",
-		})
+	LevelBuild.build_bypasser_blockers(self)
 
 
 func _build_walls() -> void:
-	var walls := StaticBody2D.new()
-	walls.collision_layer = 1
-	var mid_y := (START_Y + GATE_Y) / 2.0
-	var span := absf(START_Y - GATE_Y) + 1600.0
-	# the walls sit at the LEVEL edges, not the path edges: the dog is
-	# free to roam grass, sand and shoulders; the human stays on the walk
-	# by inclination, not by invisible fences
-	# On the beach the west wall moves out into the water, so she can actually
-	# get in the sea - the whole point of walking a dog along the seafront.
-	# Everywhere else it stays at the level edge.
-	var west_x := -180.0 if lvl == "beach" else 40.0
-	var defs := [
-		[Vector2(west_x, mid_y), Vector2(100, span)],
-		[Vector2(1240.0, mid_y), Vector2(100, span)],
-		[Vector2(640, START_Y + 160.0), Vector2(1400, 100)],
-		[Vector2(640, GATE_Y - 700.0), Vector2(1400, 100)],
-	]
-	for d in defs:
-		var cs := CollisionShape2D.new()
-		var sh := RectangleShape2D.new()
-		sh.size = d[1]
-		cs.shape = sh
-		cs.position = d[0]
-		walls.add_child(cs)
-	add_child(walls)
-	for i in range(body_pole_count):
-		var sb := StaticBody2D.new()
-		sb.collision_layer = 1
-		sb.position = poles[i]
-		var cs := CollisionShape2D.new()
-		var sh := CircleShape2D.new()
-		sh.radius = POLE_RADIUS
-		cs.shape = sh
-		sb.add_child(cs)
-		add_child(sb)
-	# The grove in the off-leash area used to be pure decoration you could
-	# walk straight through - a flat texture, not an object. A tree is a
-	# solid trunk with real heft, so it blocks bodies and the leash wraps
-	# on it like any other pole.
-	for d in dune_spots:
-		var db := StaticBody2D.new()
-		db.collision_layer = 1
-		db.position = d
-		var dcs := CollisionShape2D.new()
-		var dsh := CircleShape2D.new()
-		dsh.radius = 22.0
-		dcs.shape = dsh
-		db.add_child(dcs)
-		add_child(db)
-	for t in trees:
-		var tb := StaticBody2D.new()
-		tb.collision_layer = 1
-		tb.position = t
-		var tcs := CollisionShape2D.new()
-		var tsh := CircleShape2D.new()
-		tsh.radius = TREE_RADIUS
-		tcs.shape = tsh
-		tb.add_child(tcs)
-		add_child(tb)
-	# Buildings are solid, so you cannot stroll onto a roof. Only on the sides
-	# that really ARE buildings, and only along the walking legs - the
-	# off-leash area past the gate stays open. The boulevard and El Aguacero
-	# keep their right side open because that is the bike lane and the far
-	# shoulder, where the frisbee prize deliberately sits; the green walks and
-	# the beach have no buildings at all.
-	var wall_sides := []
-	match lvl:
-		"street", "rain": wall_sides = [-1.0]
-		"park", "trail", "beach": wall_sides = []
-		_: wall_sides = [-1.0, 1.0]
-	for ws in wall_sides:
-		var bx: float = (sw_l - 60.0) if ws < 0.0 else (sw_r + 60.0)
-		var bb := StaticBody2D.new()
-		bb.collision_layer = 1
-		bb.position = Vector2(bx, (START_Y + GATE_Y) / 2.0)
-		var bcs := CollisionShape2D.new()
-		var bsh := RectangleShape2D.new()
-		bsh.size = Vector2(120.0, absf(START_Y - GATE_Y) + 400.0)
-		bcs.shape = bsh
-		bb.add_child(bcs)
-		add_child(bb)
-	# the park's solid furniture: you go round a log, not through it. Digs,
-	# shrubs and troughs stay walkable so nosing about is never obstructed.
-	for pp in park_props:
-		var pk := String(pp.kind)
-		if pk != "log" and pk != "driftwood" and pk != "tyre":
-			continue
-		var lb := StaticBody2D.new()
-		lb.collision_layer = 1
-		lb.position = pp.pos
-		var lcs := CollisionShape2D.new()
-		if pk == "tyre":
-			var csh := CircleShape2D.new()
-			csh.radius = 16.0
-			lcs.shape = csh
-		else:
-			var rsh := RectangleShape2D.new()
-			rsh.size = Vector2(62.0, 18.0)
-			lcs.shape = rsh
-		lb.add_child(lcs)
-		add_child(lb)
-	# vans and stalls are solid rectangles: no walking over the van roof
-	for v in vans:
-		_add_rect_body(v, VAN_BODY_SIZE)
-	if furgoneta.x < INF:
-		_add_rect_body(furgoneta, VAN_BODY_SIZE)
-	for st in stalls:
-		_add_rect_body(st, STALL_BODY_SIZE)
-	# performers have mass; you walk around a person, not through them
-	for pf in performers:
-		var pb := StaticBody2D.new()
-		pb.collision_layer = 1
-		pb.position = pf
-		var pcs := CollisionShape2D.new()
-		var psh := CircleShape2D.new()
-		psh.radius = PERFORMER_RADIUS
-		pcs.shape = psh
-		pb.add_child(pcs)
-		add_child(pb)
+	LevelBuild.build_walls(self)
 
 
 func _add_rect_body(at: Vector2, size: Vector2) -> void:
-	var sb := StaticBody2D.new()
-	sb.collision_layer = 1
-	sb.position = at
-	var cs := CollisionShape2D.new()
-	var sh := RectangleShape2D.new()
-	sh.size = size
-	cs.shape = sh
-	sb.add_child(cs)
-	add_child(sb)
+	LevelBuild.add_rect_body(self, at, size)
 
 
 func _build_entities() -> void:
-	leash = Node2D.new()
-	leash.set_script(load("res://leash.gd"))
-	leash.z_index = 5
-	add_child(leash)
-
-	dog = CharacterBody2D.new()
-	dog.set_script(load("res://dog.gd"))
-	dog.position = Vector2(700, START_Y)
-	add_child(dog)
-	dog.setup(self)
-
-	human = CharacterBody2D.new()
-	human.set_script(load("res://human.gd"))
-	human.position = Vector2(600, START_Y - 70.0)
-	add_child(human)
-	human.setup(self)
-
-	leash.setup(dog, human, poles, LEASH_LENGTH)
-	leash.hero = true  # the player's rope draws every frame; NPC ropes at 30fps
-	leash.furniture_poles = _furniture_wrap_poles()
-
-	edge_layer = Node2D.new()
-	edge_layer.set_script(load("res://edgelayer.gd"))
-	edge_layer.z_index = -5   # behind everything in the world
-	add_child(edge_layer)
-	edge_layer.setup(self)
-	verge_layer = Node2D.new()
-	verge_layer.set_script(load("res://vergelayer.gd"))
-	# above the ground pass, below the actors and props
-	verge_layer.z_index = 1
-	add_child(verge_layer)
-	verge_layer.setup(self)
-	# the off-leash space gets the same treatment: it is a fixed scene, so it
-	# is drawn once onto its own canvas rather than thirty times a second
-	freedomlayer = Node2D.new()
-	freedomlayer.set_script(load("res://freedomlayer.gd"))
-	freedomlayer.z_index = -9
-	add_child(freedomlayer)
-	freedomlayer.setup(self)
-	cam = Camera2D.new()
-	cam.position_smoothing_enabled = true
-	cam.position_smoothing_speed = 6.0
-	# the walkway is only ~680px of a 1280px frame, so half the screen used
-	# to be empty verge and the characters read as specks. Pushing in fills
-	# the frame and makes the animation and the rope legible - the single
-	# biggest framing win available. Trade-off: less warning time on
-	# oncoming hazards, so this is a feel dial (1.0 = the old framing).
-	cam.zoom = Vector2(CAM_ZOOM, CAM_ZOOM)
-	cam.position = Vector2(640, START_Y - 120.0)
-	add_child(cam)
-	cam.make_current()
+	LevelBuild.build_entities(self)
 
 
-const LEVEL_GOAL_IDS := {
-	"street": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "fling", "carry", "combo", "prize"],
-	"park": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "combo", "prize"],
-	"beach": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "save", "combo", "prize"],
-	"rain": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "drink", "combo", "prize"],
-	"market": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "zoom", "carry", "combo", "prize"],
-	"oldtown": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "cats", "snack", "combo", "prize"],
-	"trail": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "chase", "drink", "combo", "prize"],
-	"station": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "snack", "combo", "prize"],
-	"site": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "snack", "combo", "prize"],
-	"spook": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "tummy", "snack", "combo", "prize"],
-	"scrap": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "ghost", "unseen", "combo", "prize"],
-	# El Parc leans on what the terraces are for: carving them (fling) and
-	# riding the serpentine bench (combo), plus the park staples.
-	"guell": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi",
-		"drink", "fling", "combo", "prize"],
-}
+# each walk's goal list; defined in systems/goals.gd, aliased for level_check.gd
+const LEVEL_GOAL_IDS := Goals.LEVEL_GOAL_IDS
 
 
 func _goal_defs() -> Dictionary:
-	# every goal the game knows, keyed by a stable id (persistence-facing)
-	return {
-		"mark": {"text": "claim %d spots", "target": 5, "fn": func() -> int: return marks.size()},
-		"sniff": {"text": "%d proper sniffs", "target": 4, "fn": func() -> int: return sniffs_done},
-		"phone": {"text": "get the phone home unscratched", "target": 1, "fn": func() -> int: return 1 if phone_hp == 3 else 0},
-		"paws": {"text": "come home unscathed yourself", "target": 1, "fn": func() -> int: return 1 if dog_hits == 0 else 0},
-		"bag": {"text": "have your business bagged", "target": 1, "fn": func() -> int: return 1 if poop_state == 2 and not bag_pending else 0},
-		"fetch": {"text": "fetch %d balls back", "target": 3, "fn": func() -> int: return romp_catches},
-		"tofu": {"text": "bring Tofu home", "target": 1, "fn": func() -> int: return 1 if tofu_home else 0},
-		"hi": {"text": "greet %d other dogs", "target": 3, "fn": func() -> int: return dogs_greeted},
-		"drink": {"text": "have a proper long drink", "target": 1, "fn": func() -> int: return 1 if drunk_amount >= 0.4 else 0},
-		"zoom": {"text": "run the zoomies right out", "target": 1, "fn": func() -> int: return 1 if dog.energy <= 0.25 else 0},
-		"chase": {"text": "see off %d critters", "target": 2, "fn": func() -> int: return squirrels_chased},
-		"close": {"text": "%d near misses with traffic", "target": 3, "fn": func() -> int: return close_calls},
-		"save": {"text": "haul the human clear %d times", "target": 2, "fn": func() -> int: return saves_done},
-		"fling": {"text": "tetherball the human off a pole", "target": 1, "fn": func() -> int: return flings_done},
-		"tangle": {"text": "tangle leashes with a stranger", "target": 1, "fn": func() -> int: return 1 if tangles >= 1 else 0},
-		"snack": {"text": "hoover up %d dropped snacks", "target": 2, "fn": func() -> int: return kebabs_eaten},
-		"cats": {"text": "see off %d wall cats", "target": 3, "fn": func() -> int: return wall_cats_spooked},
-		"carry": {"text": carry_text, "target": 1, "fn": func() -> int: return 1 if carry_state >= 2 else 0},
-		"combo": {"text": "land an x%d combo", "target": 5, "fn": func() -> int: return int(combo.best_mult) if combo != null else 0},
-		"tummy": {"text": "walk past every chocolate", "target": 1, "fn": func() -> int: return 1 if candy_eaten == 0 else 0},
-		"ghost": {"text": "cross the yard, wake nobody", "target": 1, "fn": func() -> int: return 1 if guards_woken == 0 else 0},
-		"unseen": {"text": "never once be spotted", "target": 1, "fn": func() -> int: return 1 if times_spotted == 0 else 0},
-		"prize": {"text": prize_text, "target": 1, "fn": func() -> int: return 1 if prize_taken else 0},
-	}
+	# goals and scoring live in systems/goals.gd
+	return Goals.defs(self)
 
 
 func _build_quests() -> void:
-	# a fixed ~10-goal list per level (Tony Hawk style): completing a goal
-	# on any run marks it done for that level forever. Repeating goals,
-	# a couple of level flavours, and the unique hazardous prize.
-	if tutorial_mode:
-		active_quests.clear()
-		tofu_quest_active = false
-		return
-	var defs := _goal_defs()
-	var ids: Array = LEVEL_GOAL_IDS.get(lvl, LEVEL_GOAL_IDS["street"])
-	for id in ids:
-		var d: Dictionary = defs[id]
-		active_quests.append({
-			"id": id, "text": d.text, "target": int(d.target), "fn": d.fn,
-			"was_true": int(d.fn.call()) >= int(d.target),
-		})
-	tofu_quest_active = ("tofu" in ids) and not Game.goal_done(lvl, "tofu")
+	Goals.build_quests(self)
 
 
 func _quest_text(q: Dictionary) -> String:
-	var s: String = q.text
-	if "%d" in s:
-		s = s % int(q.target)
-	return s
+	return Goals.quest_text(q)
 
 
 func _peek_goals() -> void:
@@ -3178,105 +1912,19 @@ func _peek_goals() -> void:
 
 
 func _credit_goal(q: Dictionary) -> void:
-	# award + persist a goal the first time it completes this run
-	if tutorial_mode:
-		return
-	var id: String = q.id
-	if run_goals_hit.has(id):
-		return
-	run_goals_hit[id] = true
-	_peek_goals()
-	bones += 5
-	var newly: bool = Game.mark_goal(lvl, id) if not Game.daily else false
-	var tag := "GOAL! " if (newly or Game.daily) else "goal (again) "
-	feed.say(tag + _quest_text(q), EventFeed.Tone.GOOD)
+	Goals.credit(self, q)
 
 
 func _check_goals() -> void:
-	# accumulate goals credit the moment they cross target; "maintain"
-	# goals (true from the start, e.g. unscratched phone) are only judged
-	# at the finish so they cannot auto-complete on frame one
-	for q in active_quests:
-		if q.was_true or run_goals_hit.has(q.id):
-			continue
-		if int(q.fn.call()) >= int(q.target):
-			_credit_goal(q)
+	Goals.check(self)
 
 
 func _spawn_cones() -> void:
-	# real, kickable cones at every work site plus a few loose ones
-	var spots: Array[Vector2] = []
-	spots.append_array(cone_spots)
-	for m in manholes:
-		spots.append(m + Vector2(32, -18))
-		spots.append(m + Vector2(-30, 22))
-		spots.append(m + Vector2(26, 28))
-		spots.append(m + Vector2(-26, -26))
-	for c in cellars:
-		spots.append(Vector2(c.end.x + 14, c.position.y + 24))
-		spots.append(Vector2(c.position.x - 12, c.end.y - 10))
-	for s in spots:
-		var cn := Node2D.new()
-		cn.set_script(load("res://cone.gd"))
-		cn.position = s
-		cn.z_index = 11
-		add_child(cn)
-		cn.setup(self, dog, human, "cone")
-	# Loose junk scattered down the whole walk, because punting things is one
-	# of the reliable joys here and there was only ever cones. Mixed kinds so
-	# the heft varies: cans rattle away, sacks barely budge. Local rng, so the
-	# deterministic autowalk seed is untouched.
-	var jr := RandomNumberGenerator.new()
-	jr.seed = 0x7A17B0B
-	# the level's background litter, for stretches with nothing else nearby
-	var kinds := ["can", "bottle", "sack", "can"]
-	match lvl:
-		"scrap", "site": kinds = ["crate", "sack", "can", "bottle", "crate"]
-		"beach": kinds = ["bottle", "ball", "can"]
-		"park", "trail": kinds = ["bottle", "ball", "can"]
-		"market", "spook": kinds = ["crate", "bottle", "can"]
-		"station": kinds = ["can", "bottle", "bottle"]
-		"oldtown": kinds = ["sack", "bottle", "can"]
-	# Litter accumulates around whatever produced it, so junk is placed by
-	# AREA rather than sprinkled evenly: crates pile up behind market stalls,
-	# cans and bottles collect around cafe tables and buskers, sacks slump by
-	# the bins, crates and cones litter the works. Feels observed rather than
-	# randomised, and it makes each stretch of a walk look like somewhere.
-	var zones: Array[Dictionary] = []
-	for b in bins:
-		zones.append({"at": b, "pal": ["sack", "sack", "bottle"]})
-	for st in stalls:
-		zones.append({"at": st, "pal": ["crate", "crate", "bottle"]})
-	for tb in tables:
-		zones.append({"at": tb, "pal": ["can", "bottle", "can"]})
-	for pf in performers:
-		zones.append({"at": pf, "pal": ["can", "can", "bottle"]})
-	for v in vans:
-		zones.append({"at": v, "pal": ["crate", "sack", "can"]})
-	for bn in benches:
-		zones.append({"at": bn, "pal": ["can", "bottle", "ball"]})
-	for z in zones:
-		var pal: Array = z.pal
-		for i in range(jr.randi_range(1, 3)):
-			var at: Vector2 = z.at
-			var off := Vector2(jr.randf_range(-46.0, 46.0), jr.randf_range(-40.0, 46.0))
-			var px := clampf(at.x + off.x, sw_l + 16.0, sw_r - 16.0)
-			_spawn_junk(Vector2(px, at.y + off.y), pal[jr.randi() % pal.size()])
-	# then a thin background scatter, so the quiet stretches are not bare
-	var jy := START_Y - 120.0
-	while jy > GATE_Y + 160.0:
-		jy -= jr.randf_range(260.0, 520.0)
-		var jx := jr.randf_range(sw_l + 30.0, sw_r - 30.0)
-		_spawn_junk(Vector2(jx, jy), kinds[jr.randi() % kinds.size()])
+	LevelBuild.spawn_cones(self)
 
 
 func _spawn_junk(at: Vector2, kind: String) -> void:
-	var jn := Node2D.new()
-	jn.set_script(load("res://cone.gd"))
-	jn.position = at
-	jn.z_index = 11
-	add_child(jn)
-	jn.setup(self, dog, human, kind)
+	LevelBuild.spawn_junk(self, at, kind)
 
 
 func on_junk_kicked(pos: Vector2, kind: String) -> void:
@@ -3298,231 +1946,11 @@ func on_junk_kicked(pos: Vector2, kind: String) -> void:
 
 
 func _build_hud() -> void:
-	# the colour grade sits over the world but UNDER the HUD, so the
-	# interface stays crisp and unvignetted while the world gets graded
-	var grade_layer := CanvasLayer.new()
-	grade_layer.layer = 1
-	add_child(grade_layer)
-	grade_rect = ColorRect.new()
-	# the whole viewport, not the reference frame: a fixed 1280x720 rect left
-	# the strip that aspect "expand" reveals on a wide window completely
-	# ungraded - no vignette, no grain, and visibly brighter than the picture
-	# beside it
-	grade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	grade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var gmat := ShaderMaterial.new()
-	gmat.shader = load("res://grade.gdshader")
-	grade_rect.material = gmat
-	grade_layer.add_child(grade_rect)
-	hud = CanvasLayer.new()
-	hud.layer = 2
-	add_child(hud)
-	# weather sits behind the HUD text but over the world
-	weather_fx = Control.new()
-	weather_fx.set_script(load("res://weather_overlay.gd"))
-	weather_fx.mode = Game.weather
-	hud.add_child(weather_fx)
-	# one quiet card for the vitals, one quiet card for the quests -
-	# the world is busy on purpose, the overlay is not
-	panel = Control.new()
-	panel.set_script(load("res://hud_panel.gd"))
-	panel.position = Vector2(16, 12)
-	hud.add_child(panel)
-	panel.setup(self)
-	# the goal list draws itself: real ticks and meters instead of ASCII, and
-	# a height that follows its contents
-	goals_card = Control.new()
-	goals_card.set_script(load("res://goals_card.gd"))
-	goals_card.position = Vector2(GOALS_X, 8)
-	hud.add_child(goals_card)
-	goals_card.setup(self)
-	# the end-of-walk card lays itself out: a twelve-goal walk used to run
-	# straight off the bottom of the screen
-	results_card = Control.new()
-	results_card.set_script(load("res://results_panel.gd"))
-	results_card.visible = false
-	hud.add_child(results_card)
-	results_card.setup(self)
-	hint_l = _hud_label(Vector2(24, 686), 15)
-	_pin_box(hint_l, 0.0, 0.0, 0.0, 1.0)
-	hint_l.modulate.a = 0.75
-	title_l = _hud_label(Vector2(0, 240), 44)
-	_pin_wide(title_l, 52.0, 0.5)
-	title_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_l.text = "PATH OF LEASH RESISTANCE"
-	sub_l = _hud_label(Vector2(0, 300), 18)
-	_pin_wide(sub_l, 30.0, 0.5)
-	sub_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub_l.text = "You are the dog. Go and touch grass."
-	select_l = _hud_label(Vector2(0, 348), 22)
-	_pin_wide(select_l, 32.0, 0.5)
-	select_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	select_l.text = "<   %s   >" % Game.LEVEL_NAMES[lvl]
-	record_l = _hud_label(Vector2(0, 300), 18)
-	_pin_wide(record_l, 26.0, 0.5)
-	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	record_l.modulate.a = 0.85
-	# stacked ABOVE the controls line, which occupies y=686 from step 2 on
-	menu_hint_l = _hud_label(Vector2(24, 662), 14)
-	_pin_box(menu_hint_l, 0.0, 0.0, 0.0, 1.0)
-	menu_hint_l.modulate.a = 0.55
-	menu_hint_l.visible = false
-	var version_l := _hud_label(Vector2(1150, 686), 13)
-	_pin_box(version_l, 0.0, 0.0, 1.0, 1.0)
-	version_l.text = _build_label()
-	version_l.modulate.a = 0.5
-	owner_l = _hud_label(Vector2(0, 296), 26)
-	_pin_wide(owner_l, 34.0, 0.5)
-	owner_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	night_l = _hud_label(Vector2(0, 340), 26)
-	_pin_wide(night_l, 34.0, 0.5)
-	night_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	weather_l = _hud_label(Vector2(0, 384), 26)
-	_pin_wide(weather_l, 34.0, 0.5)
-	weather_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	prompt_l = _hud_label(Vector2(0, 470), 22)
-	_pin_wide(prompt_l, 32.0, 0.5)
-	prompt_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	shop_preview_bg = ColorRect.new()
-	shop_preview_bg.position = Vector2(60.0, 190.0)
-	_pin_box(shop_preview_bg, 440.0, 390.0, 0.5, 0.5)
-	shop_preview_bg.color = Color(0.05, 0.06, 0.07, 0.72)
-	shop_preview_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	shop_preview_bg.visible = false
-	hud.add_child(shop_preview_bg)
-	var preview := CharacterBody2D.new()
-	preview.set_script(load("res://dog.gd"))
-	preview.preview_mode = true
-	preview.position = Vector2(280.0, 365.0)
-	preview.scale = Vector2(3.0, 3.0)
-	preview.visible = false
-	hud.add_child(preview)
-	preview.z_index = 1
-	shop_preview = preview
-	shop_title_l = _hud_label(Vector2(0, 70), 30)
-	_pin_wide(shop_title_l, 40.0)
-	shop_title_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	shop_title_l.visible = false
-	shop_preview_l = _hud_label(Vector2(60.0, 145.0), 18)
-	_pin_box(shop_preview_l, 440.0, 30.0, 0.5, 0.5)
-	shop_preview_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	shop_preview_l.text = "HIGHLIGHTED LOOK"
-	shop_preview_l.visible = false
-	shop_l = _hud_label(Vector2(430.0, 150.0), 20)
-	_pin_box(shop_l, 800.0, 460.0, 0.5, 0.5)
-	shop_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	shop_l.visible = false
-	for k in Game.COLLARS:
-		shop_items.append({"kind": "collar", "key": k})
-	for k in Game.BANDANAS:
-		if k != "none":
-			shop_items.append({"kind": "bandana", "key": k})
-	shop_items.append({"kind": "bandana", "key": "none"})
-	# coats last: the biggest change to how Millie looks, and the first
-	# working piece of the dog creator
-	for k in Game.COATS:
-		shop_items.append({"kind": "coat", "key": k})
+	# every card, label and bar, in draw order: hud/hud_build.gd
+	HudBuild.build(self)
+	# connected here rather than in the builder: a lambda created in a static
+	# function would never be disconnected when the scene reloads
 	Input.joy_connection_changed.connect(func(_d: int, _c: bool) -> void: _refresh_menu_text())
-	prompt_tw = create_tween().set_loops()
-	prompt_tw.tween_property(prompt_l, "modulate:a", 0.3, 0.7)
-	prompt_tw.tween_property(prompt_l, "modulate:a", 1.0, 0.7)
-	var touch := Control.new()
-	touch.set_script(load("res://touch_controls.gd"))
-	hud.add_child(touch)
-	# the combo meter: trick string + score/multiplier over a draining
-	# window bar, bottom-centre, only visible while a chain is live
-	combo = Node.new()
-	combo.set_script(load("res://combo.gd"))
-	add_child(combo)
-	combo.setup(self)
-	combo_bar_bg = ColorRect.new()
-	combo_bar_bg.position = Vector2(440, 662)
-	_pin_box(combo_bar_bg, 400.0, 8.0, 0.5, 1.0)
-	combo_bar_bg.color = Color(0.05, 0.06, 0.07, 0.55)
-	combo_bar_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	combo_bar_bg.visible = false
-	hud.add_child(combo_bar_bg)
-	combo_bar = ColorRect.new()
-	combo_bar.position = Vector2(440, 662)
-	_pin_box(combo_bar, 400.0, 8.0, 0.5, 1.0)
-	combo_bar.color = Color(1.0, 0.78, 0.32)
-	combo_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	combo_bar.visible = false
-	hud.add_child(combo_bar)
-	combo_l = _hud_label(Vector2(0, 624), 26)
-	_pin_wide(combo_l, 34.0, 1.0)
-	combo_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	combo_l.visible = false
-	# the combo challenge (Phase B): a bounded trick dare from a bystander
-	challenge = Node.new()
-	challenge.set_script(load("res://challenge.gd"))
-	add_child(challenge)
-	challenge.setup(self)
-	mood = Node.new()
-	mood.set_script(load("res://mood.gd"))
-	add_child(mood)
-	mood.setup(self)
-	for a in OS.get_cmdline_user_args():
-		if a.begins_with("--mood="):
-			var want := a.substr(7).to_upper()
-			var names := {"SCARED": Mood.M.SCARED, "BARKY": Mood.M.BARKY,
-				"ZOOMIES": Mood.M.ZOOMIES, "TIRED": Mood.M.TIRED}
-			mood_forced = int(names.get(want, -1))
-	teeter = Node.new()
-	teeter.set_script(load("res://teeter.gd"))
-	add_child(teeter)
-	grind = Node.new()
-	grind.set_script(load("res://grind.gd"))
-	add_child(grind)
-	challenge_l = _hud_label(Vector2(0, 70), 24)
-	_pin_wide(challenge_l, 30.0)
-	challenge_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	challenge_l.visible = false
-	dim = ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.55)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dim.visible = false
-	hud.add_child(dim)
-	# the results card is built earlier but is what the dim is FOR: it has to
-	# sit above it, or the whole card comes out 55% darker than drawn
-	hud.move_child(results_card, dim.get_index() + 1)
-	msg_label = _hud_label(Vector2(0, 200), 22)
-	_pin_wide(msg_label, 400.0, 0.5)
-	msg_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	msg_label.visible = false
-	pause_l = _hud_label(Vector2(0, 300), 26)
-	_pin_wide(pause_l, 120.0, 0.5)
-	pause_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	pause_l.visible = false
-	tut_label = _hud_label(Vector2(0, 96), 30)
-	_pin_wide(tut_label, 40.0)
-	tut_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	tut_label.visible = false
-	tut_hint = _hud_label(Vector2(0, 136), 19)
-	_pin_wide(tut_hint, 60.0)
-	tut_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	tut_hint.visible = false
-	progress_l = _hud_label(Vector2(0, 70), 19)
-	_pin_wide(progress_l, 560.0)
-	progress_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	progress_l.visible = false
-	# The single announcement channel. Added late so it draws over the other
-	# HUD cards, and anchored to the live viewport like everything else.
-	feed = Control.new()
-	feed.set_script(load("res://event_feed.gd"))
-	hud.add_child(feed)
-	feed.setup(self)
-	settings_panel = Control.new()
-	settings_panel.set_script(load("res://settings_panel.gd"))
-	settings_panel.visible = false
-	hud.add_child(settings_panel)
-	settings_panel.setup(self)
-	# a portrait window gets a "turn your phone" prompt and a paused game (#5).
-	# Its own layer, not under the HUD, so it covers everything
-	rotate_prompt = CanvasLayer.new()
-	rotate_prompt.set_script(load("res://rotate_prompt.gd"))
-	add_child(rotate_prompt)
-	_update_hud()
 
 
 func _kb_or_pad(kb: String, pad: String) -> String:
@@ -3541,158 +1969,35 @@ func _weather_tint() -> Color:
 
 
 func _owner_label_text(owner_id: String) -> String:
-	return "WALKING:  %s" % owner_id.to_upper()
+	return MenuFlow.owner_label_text(self, owner_id)
 
 
 func _apply_menu_step() -> void:
-	# Tony Hawk rules: each screen shows ONE choice and ONE instruction.
-	# Gameplay HUD (panel, quests) stays hidden until the walk begins.
-	var in_menu := not started
-	panel.visible = started
-	goals_card.visible = started and not tutorial_mode
-	# The game's name and the walk's name are drawn INTO the level now (chalk
-	# on the pavement, a stick in the sand), so the labels that used to float
-	# over the top of them are gone. What is left on the HUD is the things a
-	# label is genuinely better at: the prompt and the run's details.
-	title_l.visible = false
-	sub_l.visible = false
-	select_l.visible = false
-	record_l.visible = in_menu and menu_step == 1
-	owner_l.visible = in_menu and menu_step == 2
-	night_l.visible = in_menu and menu_step == 2
-	weather_l.visible = in_menu and menu_step == 2
-	prompt_l.visible = in_menu
-	# discreet, bottom-left, the same treatment as the version tag - the
-	# middle of the title screen is already busy with the level blurb
-	menu_hint_l.visible = in_menu
-	menu_hint_l.text = "%s  settings" % _kb_or_pad("ESC", "Back")
-	if not in_menu:
-		return
-	match menu_step:
-		0:
-			title_l.add_theme_font_size_override("font_size", 60)
-			title_l.position.y = 210
-			title_l.text = "PATH OF LEASH RESISTANCE"
-			sub_l.add_theme_font_size_override("font_size", 22)
-			sub_l.position.y = 288
-			sub_l.text = "you are the dog. go and touch grass."
-		1:
-			title_l.add_theme_font_size_override("font_size", 30)
-			title_l.position.y = 150
-			title_l.text = "CHOOSE YOUR WALK   (%d stars)" % Game.total_stars()
-			var sel: String = Game.level_id  # carousel id (may be "daily")
-			var locked := not Game.is_unlocked(sel)
-			select_l.add_theme_font_size_override("font_size", 52)
-			select_l.text = ("[ %s ]" % Game.LEVEL_NAMES[sel]) if locked else ("<   %s   >" % Game.LEVEL_NAMES[sel])
-			select_l.position.y = 220
-			record_l.position.y = 300
-			var rl: String = Game.best_line(sel)
-			if sel != "daily" and Game.is_unlocked(sel):
-				rl += "    goals %d/%d" % [Game.goals_count(sel), int((LEVEL_GOAL_IDS.get(sel, []) as Array).size())]
-			record_l.text = rl
-		2:
-			title_l.add_theme_font_size_override("font_size", 40)
-			title_l.position.y = 150
-			title_l.text = Game.LEVEL_NAMES[Game.level_id].to_upper()
-			owner_l.text = _owner_label_text(Game.owner_id)
-	_refresh_menu_text()
+	MenuFlow.apply_menu_step(self)
 
 
 func _open_shop() -> void:
-	in_shop = true
-	for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, weather_l, record_l,
-			menu_hint_l]:
-		l.visible = false
-	shop_title_l.visible = true
-	shop_l.visible = true
-	shop_preview_bg.visible = true
-	shop_preview_l.visible = true
-	shop_preview.visible = true
-	# the preview dog is a Node2D, so it cannot anchor itself the way the panel
-	# behind it does - park it on the panel's centre instead, read at open time
-	# so it follows the cluster onto whatever shape the screen turns out to be
-	shop_preview.position = shop_preview_bg.position + Vector2(220.0, 175.0)
-	_refresh_shop()
+	MenuFlow.open_shop(self)
 
 
 func _shop_data(kind: String, key: String) -> Dictionary:
-	match kind:
-		"collar": return Game.COLLARS[key]
-		"coat": return Game.COATS[key]
-		_: return Game.BANDANAS[key]
+	return MenuFlow.shop_data(self, kind, key)
 
 
 func _equip(kind: String, key: String) -> void:
-	Game.equip(kind, key)
+	MenuFlow.equip(self, kind, key)
 
 
 func _shop_select() -> void:
-	var it: Dictionary = shop_items[shop_idx]
-	var kind: String = it.kind
-	var key: String = it.key
-	if Game.is_owned(kind, key) or Game.buy(kind, key):
-		_equip(kind, key)
-		Game.save_records()
-	# (if the buy failed, not enough bones - the price stays shown)
-	_refresh_shop()
+	MenuFlow.shop_select(self)
 
 
 func _refresh_shop() -> void:
-	shop_title_l.text = "MILLIE'S WARDROBE      %d bones" % Game.total_bones
-	var lines := ""
-	for i in range(shop_items.size()):
-		var it: Dictionary = shop_items[i]
-		var key: String = it.key
-		var data: Dictionary = _shop_data(String(it.kind), key)
-		var equipped: bool = (
-			(it.kind == "collar" and Game.collar == key)
-			or (it.kind == "bandana" and Game.bandana == key)
-			or (it.kind == "coat" and Game.coat == key)
-		)
-		var tag := ""
-		if equipped:
-			tag = "  [EQUIPPED]"
-		elif Game.is_owned(String(it.kind), key):
-			tag = "  (owned - press to wear)"
-		else:
-			tag = "  %d bones" % int(data.cost)
-		var cursor := ">  " if i == shop_idx else "    "
-		lines += "%s%s%s\n" % [cursor, data.name, tag]
-	lines += "\nleft / right browse    %s buy or wear    %s back" % [_kb_or_pad("SPACE", "A"), _kb_or_pad("E", "B")]
-	shop_l.text = lines
-	var highlighted: Dictionary = shop_items[shop_idx]
-	var preview_collar: String = Game.collar
-	var preview_bandana: String = Game.bandana
-	var preview_coat: String = Game.coat
-	match String(highlighted.kind):
-		"collar": preview_collar = highlighted.key
-		"coat": preview_coat = highlighted.key
-		_: preview_bandana = highlighted.key
-	shop_preview.set_cosmetic_preview(preview_collar, preview_bandana, preview_coat)
+	MenuFlow.refresh_shop(self)
 
 
 func _refresh_menu_text() -> void:
-	# controller labels only when a controller is attached
-	var pad := Input.get_connected_joypads().size() > 0
-	hint_l.text = ("stick: move   A: dig in / squat   X: pee   B: bark   RB: turbo   Back: pause" if pad
-		else "WASD: move   SPACE: dig in / squat   Q: pee   E: bark   SHIFT: turbo   ESC: pause")
-	var fixed := "  (fixed today)" if Game.daily else "        (%s)" % _kb_or_pad("E", "B")
-	night_l.text = "TIME:  %s%s" % [("NIGHT" if Game.night else "DAY"), fixed]
-	weather_l.text = "WEATHER:  %s%s" % [Game.WEATHER_NAMES[Game.weather], "" if Game.daily else "        (%s)" % _kb_or_pad("Q", "X")]
-	var go := _kb_or_pad("SPACE", "A")
-	match menu_step:
-		0:
-			prompt_l.text = "press  %s  to begin" % go
-			hint_l.visible = false
-		1:
-			if not Game.is_unlocked(Game.level_id):
-				prompt_l.text = "locked - earn %d stars" % int(Game.STAR_GATE.get(Game.level_id, 0))
-			else:
-				prompt_l.text = "%s / %s  browse     %s  choose     %s  wardrobe     %s  progress" % [_kb_or_pad("A", "<"), _kb_or_pad("D", ">"), go, _kb_or_pad("E", "B"), _kb_or_pad("Q", "X")]
-			hint_l.visible = false
-		2:
-			prompt_l.text = "press  %s  to go walkies" % go
-			hint_l.visible = true
+	MenuFlow.refresh_menu_text(self)
 
 
 # --- settings ----------------------------------------------------------
@@ -3710,241 +2015,43 @@ const SETTING_NAMES := {
 
 
 func settings_keys() -> Array:
-	# the browser owns the window, so offering a fullscreen toggle there
-	# would be a button that lies
-	if OS.has_feature("web"):
-		return ["master", "sfx", "music", "goals"]
-	return ["master", "sfx", "music", "fullscreen", "goals"]
+	return MenuFlow.settings_keys(self)
 
 
 func settings_rows() -> Array:
-	# the panel draws whatever this returns, so a new setting is one entry
-	var out := []
-	for k in settings_keys():
-		var v: float = 0.0
-		var kind := "slider"
-		match k:
-			"master": v = Game.vol_master
-			"sfx": v = Game.vol_sfx
-			"music": v = Game.vol_music
-			"fullscreen":
-				v = 1.0 if Game.fullscreen else 0.0
-				kind = "toggle"
-			"goals":
-				v = 1.0 if Game.goals_expanded else 0.0
-				kind = "toggle"
-		out.append({"name": SETTING_NAMES[k], "kind": kind, "v": v})
-	return out
+	return MenuFlow.settings_rows(self)
 
 
 func pad_hints() -> bool:
-	return Input.get_connected_joypads().size() > 0
+	return MenuFlow.pad_hints(self)
 
 
 func _check_settings_roundtrip() -> Array:
-	# The settings are only worth having if they survive a restart, and a
-	# typo in a ConfigFile key fails silently - the value simply reverts to
-	# its default the next time you launch. So write odd values, read them
-	# back, and put the player's own settings back afterwards.
-	var p: Array = []
-	var keep := [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen]
-	Game.vol_master = 0.3
-	Game.vol_sfx = 0.1
-	Game.vol_music = 0.7
-	Game.fullscreen = true
-	Game.save_records()
-	Game.vol_master = 0.0
-	Game.vol_sfx = 0.0
-	Game.vol_music = 0.0
-	Game.fullscreen = false
-	Game.load_records()
-	if not (is_equal_approx(Game.vol_master, 0.3) and is_equal_approx(Game.vol_sfx, 0.1)
-			and is_equal_approx(Game.vol_music, 0.7) and Game.fullscreen):
-		p.append("settings did not survive a save/load round trip (%.2f %.2f %.2f %s)"
-			% [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen])
-	Game.vol_master = keep[0]
-	Game.vol_sfx = keep[1]
-	Game.vol_music = keep[2]
-	Game.fullscreen = keep[3]
-	Game.save_records()
-	# and the slider steps must stay inside 0..1 however hard you lean on them
-	settings_idx = 0
-	for i in range(20):
-		_settings_adjust(-1)
-	if Game.vol_master < 0.0:
-		p.append("master volume ran below zero (%.2f)" % Game.vol_master)
-	for i in range(30):
-		_settings_adjust(1)
-	if Game.vol_master > 1.0:
-		p.append("master volume ran above one (%.2f)" % Game.vol_master)
-	Game.vol_master = keep[0]
-	Game.apply_settings()
-	Game.save_records()
-	return p
+	return MenuFlow.check_settings_roundtrip(self)
 
 
 func _open_settings_from_menu() -> void:
-	for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, weather_l, record_l,
-			hint_l, menu_hint_l]:
-		l.visible = false
-	_open_settings()
+	MenuFlow.open_settings_from_menu(self)
 
 
 func _open_settings() -> void:
-	in_settings = true
-	settings_idx = 0
-	settings_panel.visible = true
-	dim.visible = true
-	Sfx.play("ui")
+	MenuFlow.open_settings(self)
 
 
 func _close_settings() -> void:
-	in_settings = false
-	settings_panel.visible = false
-	Game.save_records()
-	Sfx.play("ui")
-	if paused:
-		# back to the pause card we came from
-		pause_l.visible = true
-		dim.visible = true
-	else:
-		dim.visible = false
-		_apply_menu_step()
-		_refresh_menu_text()
+	MenuFlow.close_settings(self)
 
 
 func _settings_adjust(dir: int) -> void:
-	var keys := settings_keys()
-	var key: String = keys[settings_idx]
-	match key:
-		"master":
-			Game.vol_master = clampf(Game.vol_master + 0.1 * dir, 0.0, 1.0)
-			Game.apply_settings()
-			Sfx.play("ui")
-		"sfx":
-			Game.vol_sfx = clampf(Game.vol_sfx + 0.1 * dir, 0.0, 1.0)
-			Sfx.play("ui")  # so you hear what you just set
-		"music":
-			Game.vol_music = clampf(Game.vol_music + 0.1 * dir, 0.0, 1.0)
-			Sfx.apply_music_volume()
-		"fullscreen":
-			Game.fullscreen = not Game.fullscreen
-			Game.apply_settings()
-			Sfx.play("ui")
-		"goals":
-			Game.goals_expanded = not Game.goals_expanded
-			Sfx.play("ui")
+	MenuFlow.settings_adjust(self, dir)
 
 
 func _tick_settings() -> void:
-	var n: int = settings_keys().size()
-	if Input.is_action_just_pressed("move_down"):
-		settings_idx = wrapi(settings_idx + 1, 0, n)
-		Sfx.play("ui")
-	elif Input.is_action_just_pressed("move_up"):
-		settings_idx = wrapi(settings_idx - 1, 0, n)
-		Sfx.play("ui")
-	elif Input.is_action_just_pressed("move_right"):
-		_settings_adjust(1)
-	elif Input.is_action_just_pressed("move_left"):
-		_settings_adjust(-1)
-	elif (Input.is_action_just_pressed("pause") or Input.is_action_just_pressed("bark")
-			or Input.is_action_just_pressed("plant")):
-		_close_settings()
+	MenuFlow.tick_settings(self)
 
 
 func _progress_text() -> String:
-	var t := "YOUR WALKS\n\n"
-	for lv in Game.LEVELS:
-		var nm: String = Game.LEVEL_NAMES[lv]
-		if not Game.is_unlocked(lv):
-			t += "%s   -   locked (%d stars)\n" % [nm, int(Game.STAR_GATE.get(lv, 0))]
-			continue
-		var total: int = (LEVEL_GOAL_IDS.get(lv, []) as Array).size()
-		var rec := "no record yet"
-		if Game.records.has(lv) and int(Game.records[lv].get("bones", 0)) > 0:
-			rec = "%d bones  %ds" % [int(Game.records[lv].bones), int(Game.records[lv].time)]
-		t += "%s   %s   goals %d/%d   %s\n" % [nm, Game.star_str(Game.stars(lv)), Game.goals_count(lv), total, rec]
-	t += "\nTOTAL:  %d stars    %d bones banked\n\n%s  back" % [
-		Game.total_stars(), Game.total_bones, _kb_or_pad("E", "B")]
-	return t
-
-
-	# The one-line answer to "what is going on" now lives in the feed
-	# banner, centre screen near the dog, instead of as small text tucked
-	# under the vitals card in the corner where it was never read.
-	if feed != null:
-		feed.set_banner(hud_status)
-
-# The version shown on the title. tools/stamp_version.sh writes the build's
-# tag and short commit into res://build_label.txt right before an export (the
-# file is gitignored, and each preset's include_filter packs it). A plain
-# editor or source run has no stamp and says "dev", so a screenshot can never
-# claim a release it did not come from.
-func _build_label() -> String:
-	if FileAccess.file_exists("res://build_label.txt"):
-		var s := FileAccess.get_file_as_string("res://build_label.txt").strip_edges()
-		if s != "":
-			return s
-	return "dev"
-
-func _hud_label(pos: Vector2, size_px: int) -> Label:
-	var l := Label.new()
-	l.position = pos
-	l.add_theme_font_size_override("font_size", size_px)
-	hud.add_child(l)
-	return l
-
-
-# The HUD was composed against the 1280x720 reference frame, and stretch
-# aspect "expand" makes the real viewport that frame grown along one axis:
-# wider than 1280 on a landscape phone, taller than 720 in portrait. A label
-# holding size.x = 1280 therefore centres its text on x=640 instead of on the
-# middle of the screen, and a line placed at y=686 floats up the picture
-# instead of sitting on the bottom edge.
-#
-# These pin an element to the live viewport with anchors, which re-solve on
-# rotation with nothing listening for a resize. Anchors and then offsets are
-# both written outright, in that order: assigning an anchor rewrites the
-# offsets to preserve the current rect, so setting offsets afterwards is what
-# makes the result independent of wherever the node was first placed.
-
-func _pin_wide(c: Control, h: float, v_rule: float = 0.0) -> void:
-	# full screen width, so CENTER-aligned text centres on the middle of the
-	# screen instead of on x=640. v_rule picks which horizontal rule the
-	# authored y is measured from: 0 the top edge, 0.5 the middle, 1 the
-	# bottom. Everything sharing a rule shifts together, so a stack of lines
-	# keeps the spacing it was composed with.
-	var y := c.position.y - REF_H * v_rule
-	c.anchor_left = 0.0
-	c.anchor_right = 1.0
-	c.anchor_top = v_rule
-	c.anchor_bottom = v_rule
-	c.offset_left = 0.0
-	c.offset_right = 0.0
-	c.offset_top = y
-	c.offset_bottom = y + h
-
-
-func _pin_box(c: Control, w: float, h: float, h_rule: float, v_rule: float) -> void:
-	# a fixed-size element measured in from a chosen corner or rule: (0, 1) the
-	# bottom-left, (1, 1) the bottom-right, (0.5, 0.5) the middle of the
-	# screen. Elements composed as one cluster share a rule so they travel
-	# together rather than each hugging a different edge and pulling apart.
-	#
-	# Pass w or h as 0 to leave that axis to the node: a Control never shrinks
-	# below its own minimum size, so an auto-sized Label still fits its text.
-	# Anchoring both sides to the same rule also keeps the rect offset-driven,
-	# which is what lets the combo bar write size.x every frame as it drains.
-	var p := c.position - Vector2(REF_W * h_rule, REF_H * v_rule)
-	c.anchor_left = h_rule
-	c.anchor_right = h_rule
-	c.anchor_top = v_rule
-	c.anchor_bottom = v_rule
-	c.offset_left = p.x
-	c.offset_right = p.x + w
-	c.offset_top = p.y
-	c.offset_bottom = p.y + h
+	return MenuFlow.progress_text(self)
 
 
 func _update_hud() -> void:
@@ -3985,42 +2092,7 @@ func _update_hud() -> void:
 
 
 func goal_card_data() -> Dictionary:
-	# The card draws whatever this returns. Open goals sort to the top so the
-	# live ones are always on screen, and finished ones stay in the list
-	# rather than vanishing - which is what made the row count wobble between
-	# runs and the card jump about.
-	var total := active_quests.size()
-	var done_count: int = run_goals_hit.size() if Game.daily else Game.goals_count(lvl)
-	done_count = mini(done_count, total)
-	var open_rows: Array = []
-	var done_rows: Array = []
-	for q in active_quests:
-		var persisted: bool = (not Game.daily) and Game.goal_done(lvl, q.id)
-		var hit: bool = run_goals_hit.has(q.id)
-		var target := int(q.target)
-		if hit or persisted:
-			done_rows.append({
-				"text": _quest_text(q), "target": target, "got": target,
-				# banked this run reads brighter than banked on a past walk
-				"state": UiIcons.Check.DONE_NOW if hit else UiIcons.Check.DONE_BEFORE,
-			})
-		else:
-			var got: int = mini(int(q.fn.call()), target)
-			open_rows.append({
-				"text": _quest_text(q), "target": target, "got": got,
-				"state": UiIcons.Check.PARTIAL if got > 0 else UiIcons.Check.OPEN,
-			})
-	var rows: Array = open_rows + done_rows
-	var shown: int = mini(rows.size(), GOALS_MAX_ROWS)
-	var open: bool = Game.goals_expanded or goals_peek > 0.0
-	return {
-		"done": done_count, "total": total,
-		"all_done": total > 0 and done_count >= total,
-		"rows": rows.slice(0, shown) if open else [],
-		"extra": (rows.size() - shown) if open else 0,
-		"open": open, "peeking": goals_peek > 0.0 and not Game.goals_expanded,
-		"key": _kb_or_pad("TAB", "up"),
-	}
+	return Goals.card_data(self)
 
 
 func _update_goal_card() -> void:
@@ -4469,100 +2541,8 @@ func _process(_delta: float) -> void:
 
 
 func _tick_mood(delta: float) -> void:
-	# A mood belongs to the walk. The menu has nothing to react to, and the
-	# tutorial teaches one thing at a time - a re-graded screen mid-lesson
-	# would read as a fault rather than a feeling.
-	if not started or tutorial_mode:
-		dog.mood_speed = 1.0
-		dog.mood_accel = 1.0
-		dog.mood_wobble = 0.0
-		return
-	_mood_ambient(delta)
-	mood.tick(delta)
-	if _soak_t0 >= 0.0 and mood.active != _soak_last_mood:
-		_soak_last_mood = mood.active
-		if mood.active != Mood.M.HAPPY:
-			var mname: String = Mood.M.keys()[mood.active]
-			_soak_moods[mname] = int(_soak_moods.get(mname, 0)) + 1
-			print("SOAK mood t=%.2f %s" % [elapsed - _soak_t0, mname])
-	# the handling first, the picture second - a mood should reach your hands
-	# before it reaches your eyes
-	dog.mood_speed = mood.speed_mult()
-	dog.mood_accel = mood.accel_mult()
-	dog.mood_wobble = mood.wobble()
-	if grade_rect != null:
-		var gm: ShaderMaterial = grade_rect.material
-		var g: Dictionary = mood.grade()
-		gm.set_shader_parameter("saturation", g["sat"])
-		gm.set_shader_parameter("contrast", g["con"])
-		gm.set_shader_parameter("vignette", g["vig"])
-		gm.set_shader_parameter("vignette_tight", g["tight"])
-		gm.set_shader_parameter("exposure", g["exp"])
-		gm.set_shader_parameter("tint", g["tint"])
-		gm.set_shader_parameter("lift", g["lift"])
-		gm.set_shader_parameter("cool_shadows", g["cool"])
-		gm.set_shader_parameter("warm_light", g["warm"])
-	var line: String = mood.take_onset()
-	if line != "":
-		# an announcement about her, not about a place: it goes in the feed
-		feed.say(line, EventFeed.Tone.LOUD)
-
-
-func _mood_ambient(delta: float) -> void:
-	# The two moods a walk GROWS into, as opposed to the ones it gets startled
-	# into. Both are fed a little every frame the condition holds rather than
-	# landed in one go, so they arrive at the pace the walk does.
-	# --mood=scared|barky|zoomies|tired pins one on, so a look can be
-	# photographed and tuned without having to provoke it in play. Barky in
-	# particular needs a cat and a chase to arrive honestly.
-	if mood_forced >= 0:
-		mood.bump(mood_forced, delta * 3.0)
-	var spd: float = dog.velocity.length()
-	# Running yourself empty makes the legs go heavy - but as a one-off
-	# reaction to the moment you run out, not a tax on being tired. Fed every
-	# frame the tank was low it pinned TIRED on for the whole home leg, and
-	# since TIRED is slow AND gives the human an easier tow, a walk could get
-	# genuinely stuck in it. An edge trigger with hysteresis: it fires when you
-	# hit empty, and cannot fire again until you have got your breath back.
-	if dog.energy < 0.16 and not mood_worn:
-		mood_worn = true
-		mood.bump(Mood.M.TIRED, 0.70)
-	elif dog.energy > 0.35:
-		mood_worn = false
-	# a rested dog let off the leash is a dog with the zoomies
-	if phase == "freedom" and dog.energy > 0.80 and spd > 250.0:
-		mood.bump(Mood.M.ZOOMIES, delta * 0.65)
-	# Acting into a mood feeds it, and this is the whole of the player's
-	# influence over their own moods: keep running and the zoomies keep going.
-	# Only moods that reward DOING something get this. Feeding TIRED for being
-	# slow was the same idea run backwards and it made a trap - standing still
-	# is also what being stuck looks like, so it deepened the one mood you
-	# most need to be able to come out of.
-	if mood.active == Mood.M.ZOOMIES and spd > 240.0:
-		mood.bump(Mood.M.ZOOMIES, delta * 0.30)
-	# ...and the other half of the model: the things that genuinely ANSWER a
-	# mood shorten it. Being tired is the mood a dog can actually do something
-	# about, and all three answers are real ones rather than a button - stop
-	# and get your breath back, get out of the sun, or find something to eat
-	# (the eating is handled where the kebab is, since that is a moment).
-	if mood.active == Mood.M.TIRED:
-		if spd < 50.0:
-			mood.soothe(Mood.M.TIRED, delta * 0.30)
-		if _in_shade(dog.global_position):
-			# shade is worth more when there is actually a sun to get out of
-			mood.soothe(Mood.M.TIRED, delta * (0.34 if _sunny() else 0.12))
-	# Something eating the pavement behind you is not a thing you get used to -
-	# and it gets worse the closer it is. A flat rate made the far end of a
-	# chase feel exactly like the near end, which wasted the one moment the
-	# whole sequence is built around. Squared, so dread is a slow background
-	# hum at a corridor's distance and climbs hard over the last stretch.
-	# Suppressed under --shot-sweeper only, so the machine's paint can be
-	# reviewed in daylight rather than through a frightened dog's eyes.
-	if chase_active and not "--shot-sweeper" in OS.get_cmdline_user_args():
-		var near := 0.0
-		if chase_sweeper != null:
-			near = clampf(1.0 - chase_sweeper.gap_to(dog.global_position) / 900.0, 0.0, 1.0)
-		mood.bump(Mood.M.SCARED, delta * (0.16 + 0.90 * near * near))
+	# how the walk feeds her moods and where they go: systems/mood_wiring.gd
+	MoodWiring.tick(self, delta)
 
 
 func owner_news(line: String) -> void:
@@ -4584,32 +2564,6 @@ func owner_news(line: String) -> void:
 		return
 	owner_news_cd = 3.2
 	feed.say(line, EventFeed.Tone.PLAIN)
-
-
-func _sunny() -> bool:
-	return Game.weather == "clear" and not Game.night
-
-
-func _in_shade(p: Vector2) -> bool:
-	# Shade is where the SHADOW is, not where the tree is. Everything in this
-	# game throws its shadow along one light (LIGHT), so the cool patch under a
-	# plane tree sits clear of the trunk on the far side - standing on the tree
-	# does nothing, standing in its shadow is the thing. Costs nothing to agree
-	# with the picture, and it is the kind of detail a dog owner would notice.
-	for t: Vector2 in trees:
-		var d := p - (t + LIGHT * 46.0)
-		# the same squashed ellipse _draw_broadleaf lays its crown shadow on
-		if (d.x * d.x) / 1450.0 + (d.y * d.y) / 365.0 <= 1.0:
-			return true
-	for u: Vector2 in parasols:
-		var q := p - (u + LIGHT * 30.0)
-		if (q.x * q.x) / 900.0 + (q.y * q.y) / 230.0 <= 1.0:
-			return true
-	# the terrace awnings are proper roofs: under one is simply under it
-	for cn: Rect2 in canopies:
-		if cn.has_point(p):
-			return true
-	return false
 
 
 func _apply_leash(delta: float) -> void:
@@ -6854,194 +4808,29 @@ func _enter_home() -> void:
 		tf.setup(self, dog, spots)
 		float_text(spots[0], "Tofu!? she got out again - get her home!", Color(1, 0.85, 0.7))
 	if chase_active:
-		var owner_flees := chase_kind == "bolt" or chase_kind == "both"
-		chase_sweeper = Node2D.new()
-		chase_sweeper.set_script(load("res://sweeper.gd"))
-		chase_sweeper.z_index = 8
-		chase_sweeper.kind = chase_kind
-		add_child(chase_sweeper)
-		var spd := CHASE_SPEED
-		if chase_kind == "bolt":
-			spd = CHASE_SPEED_BOLT
-		elif chase_kind == "both":
-			spd = CHASE_SPEED_BOTH
-		# --shot-sweeper starts it right on your heels instead of a corridor
-		# away, so the machine can be photographed and its art reviewed. It
-		# spends the rest of the chase behind the camera, which is exactly how
-		# it went unlooked-at long enough to end up as a wall of rectangles.
-		var gap: float = 250.0 if "--shot-sweeper" in OS.get_cmdline_user_args() else CHASE_START_GAP
-		chase_sweeper.setup(self, dog.global_position.y - gap, walk_cx, walk_half, spd)
-		shake_t = 1.0
-		if owner_flees:
-			human.panic = true
-		if chase_kind == "both":
-			float_text(human.global_position, "FIRE ENGINE!  GO GO GO!", Color(1, 0.55, 0.25))
-		elif chase_kind == "bolt":
-			float_text(human.global_position, "AAH!  the owner BOLTED!", Color(1, 0.6, 0.3))
-		else:
-			feed.say("STREET SWEEPER! RUN!", EventFeed.Tone.BAD)
+		HomeChase.begin(self)
 	else:
 		feed.say("LET'S GO HOME", EventFeed.Tone.PLAIN)
 
 
 func _chase(delta: float) -> void:
-	if chase_sweeper == null:
-		return
-	chase_sweeper.advance(delta)
-	chase_sweeper.global_position = Vector2(walk_cx, chase_sweeper.front_y)
-	chase_sweeper.queue_redraw()
-	# a low rumble the closer it gets to the dog
-	var gap: float = chase_sweeper.gap_to(dog.global_position)
-	if gap < 260.0:
-		shake_t = maxf(shake_t, 0.25)
-	if auto_walk:
-		return  # the attract/CI bot carries an unsweepable dog
-	if chase_sweeper.caught(human.global_position):
-		if chase_kind == "sweeper":
-			_death("THE SWEEPER GOT YOUR HUMAN\n\nThey never once looked up from the phone.\nYou did try to tell them.")
-		else:
-			_death("THEY GOT YOUR HUMAN\n\nYou pulled. You barked. It was not enough.")
-	elif chase_sweeper.caught(dog.global_position):
-		if chase_kind == "sweeper":
-			_death("YOU WENT INTO THE BRUSHES\n\nYou came out suspiciously clean.\nThe walk did not come out at all.")
-		else:
-			_death("NOBODY WAITED FOR YOU\n\nYou snagged, the leash went tight, and\nthey kept walking. They always keep walking.")
+	HomeChase.tick(self, delta)
 
 
 func _finish_walk() -> void:
-	if dog.global_position.y > HOME_Y and human.global_position.y > HOME_Y:
-		if tutorial_mode:
-			_finish_tutorial_walk()
-			return
-		finished = true
-		if auto_walk:
-			print("AUTOWALK FINISHED the whole walk at t=%.1f" % elapsed)
-		frozen = true
-		dim.visible = true
-		msg_label.visible = true
-		# credit any goal still satisfied at the finish (catches the
-		# "maintain" goals like unscratched phone / clean paws)
-		for q in active_quests:
-			if not run_goals_hit.has(q.id) and int(q.fn.call()) >= int(q.target):
-				_credit_goal(q)
-		var run_done := run_goals_hit.size()
-		var total := active_quests.size()
-		var rows: Array = _results_rows()
-		var lifetime: int = run_done if Game.daily else Game.goals_count(lvl)
-		# total == 0 made this TRUE, which is how a walk with no goal list
-		# banked a PERFECT for The Boulevard. The tutorial no longer reaches
-		# this path at all, but the trap should not be left armed.
-		var perfect := total > 0 and run_done >= total
-		var rating := ""
-		if run_done == 0:
-			rating = "...well. A dog, anyway."
-		elif perfect:
-			rating = "PERFECT WALK - every goal in one go"
-		var rec: Dictionary = Game.record_result("daily" if Game.daily else lvl, bones, elapsed, perfect)
-		var lines: Array = []
-		var star_gain: int = Game.stars(lvl) - run_pre_level_stars
-		var head := ""
-		if star_gain > 0 and not Game.daily:
-			head += "+%d STAR%s   " % [star_gain, "" if star_gain == 1 else "S"]
-		if rec.bones_record:
-			head += "NEW BONES RECORD   "
-		if rec.time_record:
-			head += "BEST TIME"
-		if head != "":
-			lines.append(head.strip_edges())
-		lines.append("%d/%d goals here    %d stars in all    %d bones banked"
-			% [lifetime, total, Game.total_stars(), Game.total_bones])
-		if combo.best_mult >= 2:
-			lines.append("best combo x%d    style %d" % [combo.best_mult, combo.run_style])
-		if overmarks > 0:
-			lines.append("%d spot%s over-marked. They will know."
-				% [overmarks, "" if overmarks == 1 else "s"])
-		if not Game.daily:
-			for other in Game.LEVELS:
-				if Game.gate_crossed(run_pre_total_stars, other):
-					lines.append("NEW WALK UNLOCKED: %s" % Game.LEVEL_NAMES[other])
-		if Game.daily:
-			_build_daily_card(run_done, total, rec)
-		else:
-			results = {
-				"title": "VERY GOOD DOG." if perfect else "GOOD DOG.", "stars": Game.stars(lvl),
-				"rating": rating,
-				"rows": rows, "bones": bones, "phone": phone_hp, "time": int(elapsed),
-				"goal_bones": run_done * 5, "lines": lines,
-				"prompt": "press  %s  for another walk" % _kb_or_pad("R", "Start"),
-			}
-			msg_label.visible = false
-			results_card.visible = true
-			# the in-walk HUD would otherwise sit on top of the card
-			goals_card.visible = false
-			panel.visible = false
+	Goals.finish_walk(self)
 
 
 func _finish_tutorial_walk() -> void:
-	finished = true
-	frozen = true
-	dim.visible = true
-	msg_label.visible = false
-	results = {
-		"title": "GOOD DOG.",
-		"stars": 0,
-		"rating": "You know the ropes.",
-		"rows": [],
-		"bones": bones,
-		"phone": phone_hp,
-		"time": int(elapsed),
-		"goal_bones": 0,
-		"lines": [
-			"%d practice bones - not banked" % bones,
-			"Lessons complete. The real walks are waiting.",
-		],
-		"prompt": "press  %s  for walk select" % _kb_or_pad("R", "Start"),
-	}
-	results_card.visible = true
-	goals_card.visible = false
-	panel.visible = false
-	tut_label.visible = false
-	tut_hint.visible = false
+	Goals.finish_tutorial_walk(self)
 
 
 func _results_rows() -> Array:
-	var rows: Array = []
-	for q in active_quests:
-		var hit: bool = run_goals_hit.has(q.id)
-		var had: bool = (not Game.daily) and Game.goal_done(lvl, q.id) and not hit
-		var target := int(q.target)
-		var got: int = mini(int(q.fn.call()), target)
-		var st: int = UiIcons.Check.OPEN
-		if hit:
-			st = UiIcons.Check.DONE_NOW
-		elif had:
-			st = UiIcons.Check.DONE_BEFORE
-		elif got > 0:
-			st = UiIcons.Check.PARTIAL
-		rows.append({"text": _quest_text(q), "state": st, "got": got, "target": target})
-	return rows
+	return Goals.results_rows(self)
 
 
 func results_data() -> Dictionary:
 	return results
-
-
-func _build_daily_card(run_done: int, total: int, rec: Dictionary) -> void:
-	# a compact, screenshot-friendly summary of today's shared walk, with a
-	# one-line share text the player can copy to the clipboard
-	var d := Time.get_date_dict_from_system()
-	var date_str := "%04d-%02d-%02d" % [d.year, d.month, d.day]
-	var stars_n := Game._milestone_stars(run_done)
-	var weather_bit: String = String(Game.WEATHER_NAMES[Game.weather]).to_lower()
-	var when_bit := "night" if Game.night else "day"
-	var combo_bit := "  combo x%d" % combo.best_mult if combo.best_mult >= 2 else ""
-	daily_share = "Path of Leash Resistance - Daily %s\n%s, %s, %s\n%s  %d/%d goals  %d bones  %ds%s" % [
-		date_str, Game.LEVEL_NAMES[lvl], weather_bit, when_bit,
-		Game.star_str(stars_n), run_done, total, bones, int(elapsed), combo_bit]
-	var best_line := "NEW DAILY BEST!\n\n" if rec.bones_record else ""
-	daily_copied = false
-	msg_label.text = "TODAY'S WALK\n\n%s\n\n%sPress %s to copy & share\nPress %s for another go" % [
-		daily_share, best_line, _kb_or_pad("C", "Y"), _kb_or_pad("R", "Start")]
 
 
 func on_bark(pos: Vector2) -> void:
