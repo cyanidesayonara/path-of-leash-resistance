@@ -6,7 +6,9 @@
 
   Identity Name, Publisher and PublisherDisplayName must match Partner Center >
   Path of Leash Resistance > Product management > Product identity exactly
-  (case-sensitive). Store ID 9P5D14V8RBQX.
+  (case-sensitive). Store ID 9P5D14V8RBQX. Note the Name is "Nyknen": Partner
+  Center drops the "ä" rather than writing "a", and an upload with any other
+  spelling fails validation with "Invalid package identity name".
 -->
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
@@ -16,7 +18,7 @@
   IgnorableNamespaces="uap uap10 rescap">
 
   <Identity
-    Name="SanttuNykanen.PathofLeashResistance"
+    Name="SanttuNyknen.PathofLeashResistance"
     Publisher="CN=B41D15B4-C2B7-498F-920E-E8D2AEA35338"
     Version="0.0.0.0"
     ProcessorArchitecture="x64" />

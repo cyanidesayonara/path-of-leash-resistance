@@ -64,7 +64,7 @@ identity shows:
 
 | Partner Center field | Value | In `store/msix/AppxManifest.xml` |
 |---|---|---|
-| Package/Identity/Name | `SanttuNykanen.PathofLeashResistance` | `<Identity Name>` |
+| Package/Identity/Name | `SanttuNyknen.PathofLeashResistance` | `<Identity Name>` |
 | Package/Identity/Publisher | `CN=B41D15B4-C2B7-498F-920E-E8D2AEA35338` | `<Identity Publisher>` |
 | Package/Properties/PublisherDisplayName | `Santtu Nykänen` | `<PublisherDisplayName>` |
 | Store ID | `9P5D14V8RBQX` | used by the CLI in step 7 |
