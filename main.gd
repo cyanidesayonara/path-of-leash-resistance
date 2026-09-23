@@ -461,6 +461,7 @@ var menu_hint_l: Label
 var in_settings := false
 var settings_idx := 0
 var settings_panel: Control
+var rotate_prompt: CanvasLayer
 var _redraw_acc := 0.0
 # a neighbour's ball: a parked NPC owner throws one you can intercept and
 # return to them for a shared-fetch bonus
@@ -3506,6 +3507,11 @@ func _build_hud() -> void:
 	settings_panel.visible = false
 	hud.add_child(settings_panel)
 	settings_panel.setup(self)
+	# a portrait window gets a "turn your phone" prompt and a paused game (#5).
+	# Its own layer, not under the HUD, so it covers everything
+	rotate_prompt = CanvasLayer.new()
+	rotate_prompt.set_script(load("res://rotate_prompt.gd"))
+	add_child(rotate_prompt)
 	_update_hud()
 
 
