@@ -10,6 +10,9 @@ var fixtures: Array[Node] = []
 class FakeMain:
 	extends Node2D
 
+	# game time, which entities use for anything that affects play
+	var elapsed := 0.0
+
 	# mirrors main.gd's shared light: the entities call this while drawing
 	func contact_shadow(_c: CanvasItem, _at: Vector2, _r: float, _h: float, _a := 0.24) -> void:
 		pass
@@ -190,7 +193,8 @@ func _run_past_blocker(
 func _assert_kid_wobble_updates_preference(kid: Node2D, label: String) -> void:
 	var route: RefCounted = kid.route
 	var before := float(route.get("preferred_x"))
-	var now := Time.get_ticks_msec() / 1000.0
+	# the wobble runs on game time (main.elapsed), so phase it to peak now
+	var now := float(kid.main.elapsed)
 	kid.base_x = before
 	kid.wob_seed = PI * 0.5 - now * 2.4
 	kid.swerve_t = 1.0

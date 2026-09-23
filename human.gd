@@ -138,7 +138,7 @@ func tick(delta: float) -> void:
 				bubble.visible = false
 		HState.FILM:
 			# walks backwards while filming, weaving
-			var sway := sin(Time.get_ticks_msec() / 250.0) * 30.0
+			var sway := sin(main.elapsed * 4.0) * 30.0
 			velocity = velocity.move_toward(Vector2(sway, 62.0), 220.0 * delta)
 			move_and_slide()
 			if state_t <= 0.0:
@@ -147,7 +147,7 @@ func tick(delta: float) -> void:
 		HState.CALL:
 			# planted, one hand to the ear, shifting their weight. They are
 			# not going anywhere and they are not watching the dog.
-			var shuf := sin(Time.get_ticks_msec() / 900.0) * 6.0
+			var shuf := sin(main.elapsed / 0.9) * 6.0
 			velocity = velocity.move_toward(Vector2(shuf, 0.0), 180.0 * delta)
 			move_and_slide()
 			if state_t <= 0.0:
@@ -156,7 +156,7 @@ func tick(delta: float) -> void:
 		HState.SIGNAL:
 			# no bars: plants and holds the phone aloft, wandering a step in
 			# hope of a signal - a dead stop as far as the dog is concerned
-			var hunt := sin(Time.get_ticks_msec() / 400.0) * 10.0
+			var hunt := sin(main.elapsed * 2.5) * 10.0
 			velocity = velocity.move_toward(Vector2(hunt, 0.0), 260.0 * delta)
 			move_and_slide()
 			if state_t <= 0.0:
@@ -278,7 +278,10 @@ func _walk(delta: float) -> void:
 		velocity = velocity.move_toward(Vector2.ZERO, 400.0 * delta)
 		move_and_slide()
 		return
-	var t := Time.get_ticks_msec() / 1000.0
+	# game time, not the wall clock: the weave decides where the owner (and a
+	# dragged dog) is across the path, so it must not depend on how long the
+	# game took to boot or how fast this machine renders (#6)
+	var t: float = main.elapsed
 	var speed := WALK_SPEED
 	var cx: float = main.walk_cx
 	var half: float = main.walk_half
