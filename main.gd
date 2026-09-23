@@ -456,6 +456,9 @@ var _soak_cracks := 0
 var _draw_cost_on := false
 var _draw_us := 0
 var _draw_n := 0
+# microseconds the most recent world draw took, while --drawcost (or the perf
+# probe, which turns it on) is timing draws
+var last_draw_us := 0
 # scattered ground detail (cracks, litter, stones, stains) so hard surfaces
 # stop reading as empty colour fields. Built with a LOCAL rng so it never
 # perturbs the global seed the deterministic autowalk depends on.
@@ -555,6 +558,12 @@ func _ready() -> void:
 			_soak_secs = 30.0
 		elif a.begins_with("--soak="):
 			_soak_secs = maxf(1.0, float(a.substr(7)))
+		elif a == "--perf" or a.begins_with("--perf="):
+			# frame-time probe; see dev/perf_probe.gd and tools/perf_sweep.sh
+			var probe := Node.new()
+			probe.set_script(load("res://dev/perf_probe.gd"))
+			probe.setup(self, float(a.substr(7)) if a.begins_with("--perf=") else 60.0)
+			add_child(probe)
 	menu_step = Game.menu_step
 	_apply_menu_step()
 	# --at-freedom drops her straight into the off-leash space. Walking there
@@ -4955,7 +4964,8 @@ func _draw() -> void:
 	var _t0 := Time.get_ticks_usec() if _draw_cost_on else 0
 	_draw_world()
 	if _draw_cost_on:
-		_draw_us += Time.get_ticks_usec() - _t0
+		last_draw_us = Time.get_ticks_usec() - _t0
+		_draw_us += last_draw_us
 		_draw_n += 1
 		if _draw_n >= 60:
 			print("DRAWCOST %s %dus avg over %d draws" % [lvl, _draw_us / _draw_n, _draw_n])
