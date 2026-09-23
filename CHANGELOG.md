@@ -14,8 +14,8 @@ session adds tooling only.
   results screens, and the street at 844x390 and 390x844 (xvfb and software GL
   on Linux, as the appearance tests in ci.yml do). `tools/contact_sheet.py`
   tiles them into two labelled sheets.
-- `.github/workflows/shots.yml` runs the sweep on every push to main and
-  uploads the sheets. It is a separate workflow, so it never gates ci.yml or
+- `.github/workflows/shots.yml` runs the sweep on every PR and push to
+  main and uploads the sheets. It is a separate workflow, so it never gates ci.yml or
   the release.
 - The title's hardcoded "v1.54" is gone. `tools/stamp_version.sh` writes the
   tag and short commit into `build_label.txt` during export, and a build

@@ -7,6 +7,9 @@ name: Screenshot sweep
 on:
   push:
     branches: [main]
+  # each PR gets its own sheets, so a visual change is seen before it merges
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:

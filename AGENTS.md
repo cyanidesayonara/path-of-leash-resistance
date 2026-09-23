@@ -139,8 +139,8 @@ soon as it is written. Other shot flags: `--shot-title`, `--shot-results`,
 
 Screenshot sweep (every walk, title, settings, results, street at 844x390 and
 390x844) into `shots/`, plus labelled contact sheets `shots/sheet-*.png`.
-Needs Pillow. `.github/workflows/shots.yml` runs the same thing on every push
-to main and uploads the sheets as an artifact; it does not gate CI:
+Needs Pillow. `.github/workflows/shots.yml` runs the same thing on every PR and
+push to main and uploads the sheets as an artifact; it does not gate CI:
 ```
 GODOT=godot/Godot_v4.7-stable_win64_console.exe bash tools/shot_sweep.sh
 ```
