@@ -20,6 +20,10 @@ var sw_r := 980.0
 var edge_nodes: Array = []
 # parallel bike lane along the right side, plus a narrow far shoulder
 # with temptations - crossing the lane is a voluntary risk
+# the hang-time beat on big moments: game speed, and how long it lasts in
+# real time
+const SLOWMO_SCALE := 0.3
+const SLOWMO_SECS := 0.35
 const BLANE_L := 988.0
 const BLANE_R := 1072.0
 const SHOULDER_R := 1100.0
@@ -7098,8 +7102,11 @@ func on_stumble_save(pos: Vector2) -> void:
 
 
 func _slowmo() -> void:
-	Engine.time_scale = 0.3
-	var t := get_tree().create_timer(0.35, true, false, true)
+	Engine.time_scale = SLOWMO_SCALE
+	# 0.35s of real time, measured in scaled game time rather than on the wall
+	# clock: a real-time timer let a slow machine spend more game frames in
+	# slow motion than a fast one, so the same walk played out differently (#6)
+	var t := get_tree().create_timer(SLOWMO_SECS * SLOWMO_SCALE, true, false, false)
 	t.timeout.connect(func() -> void: Engine.time_scale = 1.0)
 
 
