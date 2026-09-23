@@ -126,7 +126,7 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_menu_flow.gd
 
       - name: A-stands stand once test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_astands.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_astands.gd
 
       - name: Combo challenge regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_challenge.gd
