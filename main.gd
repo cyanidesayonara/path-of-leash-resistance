@@ -49,6 +49,7 @@ const Surfaces := preload("res://surfaces.gd")
 const EventFeed := preload("res://event_feed.gd")
 const EdgePath := preload("res://edge_path.gd")
 const TangleGeom := preload("res://tangle_geom.gd")
+const MoodWiring := preload("res://systems/mood_wiring.gd")
 const POLE_RADIUS := 10.0
 const TREE_RADIUS := 13.0  # a trunk is stouter than a lamppost
 const HYDRANT_RADIUS := 9.0
@@ -429,7 +430,7 @@ var mood: Node
 # the one channel for announcements about the state of the walk
 var feed: Control
 # latch for the run-yourself-empty trigger, so hitting empty is a moment
-# rather than a condition (see _mood_ambient)
+# rather than a condition (see systems/mood_wiring.gd)
 var mood_worn := false
 # -1 for normal play; a Mood.M value when --mood= pins one on for photography
 var mood_forced := -1
@@ -4469,100 +4470,8 @@ func _process(_delta: float) -> void:
 
 
 func _tick_mood(delta: float) -> void:
-	# A mood belongs to the walk. The menu has nothing to react to, and the
-	# tutorial teaches one thing at a time - a re-graded screen mid-lesson
-	# would read as a fault rather than a feeling.
-	if not started or tutorial_mode:
-		dog.mood_speed = 1.0
-		dog.mood_accel = 1.0
-		dog.mood_wobble = 0.0
-		return
-	_mood_ambient(delta)
-	mood.tick(delta)
-	if _soak_t0 >= 0.0 and mood.active != _soak_last_mood:
-		_soak_last_mood = mood.active
-		if mood.active != Mood.M.HAPPY:
-			var mname: String = Mood.M.keys()[mood.active]
-			_soak_moods[mname] = int(_soak_moods.get(mname, 0)) + 1
-			print("SOAK mood t=%.2f %s" % [elapsed - _soak_t0, mname])
-	# the handling first, the picture second - a mood should reach your hands
-	# before it reaches your eyes
-	dog.mood_speed = mood.speed_mult()
-	dog.mood_accel = mood.accel_mult()
-	dog.mood_wobble = mood.wobble()
-	if grade_rect != null:
-		var gm: ShaderMaterial = grade_rect.material
-		var g: Dictionary = mood.grade()
-		gm.set_shader_parameter("saturation", g["sat"])
-		gm.set_shader_parameter("contrast", g["con"])
-		gm.set_shader_parameter("vignette", g["vig"])
-		gm.set_shader_parameter("vignette_tight", g["tight"])
-		gm.set_shader_parameter("exposure", g["exp"])
-		gm.set_shader_parameter("tint", g["tint"])
-		gm.set_shader_parameter("lift", g["lift"])
-		gm.set_shader_parameter("cool_shadows", g["cool"])
-		gm.set_shader_parameter("warm_light", g["warm"])
-	var line: String = mood.take_onset()
-	if line != "":
-		# an announcement about her, not about a place: it goes in the feed
-		feed.say(line, EventFeed.Tone.LOUD)
-
-
-func _mood_ambient(delta: float) -> void:
-	# The two moods a walk GROWS into, as opposed to the ones it gets startled
-	# into. Both are fed a little every frame the condition holds rather than
-	# landed in one go, so they arrive at the pace the walk does.
-	# --mood=scared|barky|zoomies|tired pins one on, so a look can be
-	# photographed and tuned without having to provoke it in play. Barky in
-	# particular needs a cat and a chase to arrive honestly.
-	if mood_forced >= 0:
-		mood.bump(mood_forced, delta * 3.0)
-	var spd: float = dog.velocity.length()
-	# Running yourself empty makes the legs go heavy - but as a one-off
-	# reaction to the moment you run out, not a tax on being tired. Fed every
-	# frame the tank was low it pinned TIRED on for the whole home leg, and
-	# since TIRED is slow AND gives the human an easier tow, a walk could get
-	# genuinely stuck in it. An edge trigger with hysteresis: it fires when you
-	# hit empty, and cannot fire again until you have got your breath back.
-	if dog.energy < 0.16 and not mood_worn:
-		mood_worn = true
-		mood.bump(Mood.M.TIRED, 0.70)
-	elif dog.energy > 0.35:
-		mood_worn = false
-	# a rested dog let off the leash is a dog with the zoomies
-	if phase == "freedom" and dog.energy > 0.80 and spd > 250.0:
-		mood.bump(Mood.M.ZOOMIES, delta * 0.65)
-	# Acting into a mood feeds it, and this is the whole of the player's
-	# influence over their own moods: keep running and the zoomies keep going.
-	# Only moods that reward DOING something get this. Feeding TIRED for being
-	# slow was the same idea run backwards and it made a trap - standing still
-	# is also what being stuck looks like, so it deepened the one mood you
-	# most need to be able to come out of.
-	if mood.active == Mood.M.ZOOMIES and spd > 240.0:
-		mood.bump(Mood.M.ZOOMIES, delta * 0.30)
-	# ...and the other half of the model: the things that genuinely ANSWER a
-	# mood shorten it. Being tired is the mood a dog can actually do something
-	# about, and all three answers are real ones rather than a button - stop
-	# and get your breath back, get out of the sun, or find something to eat
-	# (the eating is handled where the kebab is, since that is a moment).
-	if mood.active == Mood.M.TIRED:
-		if spd < 50.0:
-			mood.soothe(Mood.M.TIRED, delta * 0.30)
-		if _in_shade(dog.global_position):
-			# shade is worth more when there is actually a sun to get out of
-			mood.soothe(Mood.M.TIRED, delta * (0.34 if _sunny() else 0.12))
-	# Something eating the pavement behind you is not a thing you get used to -
-	# and it gets worse the closer it is. A flat rate made the far end of a
-	# chase feel exactly like the near end, which wasted the one moment the
-	# whole sequence is built around. Squared, so dread is a slow background
-	# hum at a corridor's distance and climbs hard over the last stretch.
-	# Suppressed under --shot-sweeper only, so the machine's paint can be
-	# reviewed in daylight rather than through a frightened dog's eyes.
-	if chase_active and not "--shot-sweeper" in OS.get_cmdline_user_args():
-		var near := 0.0
-		if chase_sweeper != null:
-			near = clampf(1.0 - chase_sweeper.gap_to(dog.global_position) / 900.0, 0.0, 1.0)
-		mood.bump(Mood.M.SCARED, delta * (0.16 + 0.90 * near * near))
+	# how the walk feeds her moods and where they go: systems/mood_wiring.gd
+	MoodWiring.tick(self, delta)
 
 
 func owner_news(line: String) -> void:
@@ -4584,32 +4493,6 @@ func owner_news(line: String) -> void:
 		return
 	owner_news_cd = 3.2
 	feed.say(line, EventFeed.Tone.PLAIN)
-
-
-func _sunny() -> bool:
-	return Game.weather == "clear" and not Game.night
-
-
-func _in_shade(p: Vector2) -> bool:
-	# Shade is where the SHADOW is, not where the tree is. Everything in this
-	# game throws its shadow along one light (LIGHT), so the cool patch under a
-	# plane tree sits clear of the trunk on the far side - standing on the tree
-	# does nothing, standing in its shadow is the thing. Costs nothing to agree
-	# with the picture, and it is the kind of detail a dog owner would notice.
-	for t: Vector2 in trees:
-		var d := p - (t + LIGHT * 46.0)
-		# the same squashed ellipse _draw_broadleaf lays its crown shadow on
-		if (d.x * d.x) / 1450.0 + (d.y * d.y) / 365.0 <= 1.0:
-			return true
-	for u: Vector2 in parasols:
-		var q := p - (u + LIGHT * 30.0)
-		if (q.x * q.x) / 900.0 + (q.y * q.y) / 230.0 <= 1.0:
-			return true
-	# the terrace awnings are proper roofs: under one is simply under it
-	for cn: Rect2 in canopies:
-		if cn.has_point(p):
-			return true
-	return false
 
 
 func _apply_leash(delta: float) -> void:
