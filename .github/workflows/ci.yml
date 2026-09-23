@@ -44,133 +44,133 @@ jobs:
           fi
 
       - name: Leash winding regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_wrap.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_wrap.gd
 
       - name: Furniture recovery regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_furniture_recovery.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_furniture_recovery.gd
 
       - name: Critter chase regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_critter_chase.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_critter_chase.gd
 
       - name: Tangle event regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tangle_latch.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tangle_latch.gd
 
       - name: NPC leash tangle hardening regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tangle_hardening.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tangle_hardening.gd
 
       - name: Freedom traffic regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_freedom_traffic.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_freedom_traffic.gd
 
       - name: NPC pair direction regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_direction.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_direction.gd
 
       - name: Bandana preview regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_bandana_preview.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_bandana_preview.gd
 
       - name: Owner label regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_owner_label.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_owner_label.gd
 
       - name: Shared bypasser route regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_bypasser_route.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_bypasser_route.gd
 
       - name: Rider obstacle avoidance regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_rider_avoidance.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_rider_avoidance.gd
 
       - name: NPC pair obstacle avoidance regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_pond_avoidance.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_pond_avoidance.gd
 
       - name: NPC pair park lifecycle regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_park_lifecycle.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_park_lifecycle.gd
 
       - name: NPC pair park slot regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_park_slots.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_park_slots.gd
 
       - name: NPC pair park traffic regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_park_traffic.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_park_traffic.gd
 
       - name: Free-dog visual variety regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_free_dog_variety.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_free_dog_variety.gd
 
       - name: NPC pair dog appearance regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_dog_appearance.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_dog_appearance.gd
 
       - name: Bring-Tofu-home herding regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tofu_home.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tofu_home.gd
 
       - name: Per-level goal/star progression regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_goals.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_goals.gd
 
       - name: Fresh-save progression persistence regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_fresh_save_progression.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_fresh_save_progression.gd
 
       - name: Tutorial campaign-isolation regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tutorial_isolation.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tutorial_isolation.gd
 
       - name: Cosmetic ownership migration regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_cosmetic_ownership.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_cosmetic_ownership.gd
 
       - name: Combo/multiplier meter regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_combo.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_combo.gd
 
       - name: Sweeper chase devourer regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_sweeper.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_sweeper.gd
 
       # the autowalk steps cannot reach the chase's "caught" branch (the bot is
       # unsweepable), so this is what covers the chase ending a walk
       - name: Home-leg chase wiring test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_home_chase.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_home_chase.gd
 
       # headless runs skip the title, so this is the only check on the menu
       # steps, the wardrobe and the settings screen
       - name: Title, wardrobe and settings flow test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_menu_flow.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_menu_flow.gd
 
       - name: Status banner test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_status_banner.gd
 
       - name: Combo challenge regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_challenge.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_challenge.gd
 
       - name: El Gotic wall cat regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_wallcat.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_wallcat.gd
 
       - name: El Desguas guard dog regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_guarddog.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_guarddog.gd
 
       - name: Teeter / balance-save regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_teeter.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_teeter.gd
 
       - name: Kerb grind regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_grind.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_grind.gd
 
       - name: Leash-vault swing geometry regression test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_vault.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_vault.gd
 
       - name: Corridor shape test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_edge_path.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_edge_path.gd
 
       - name: Ground surface test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_surfaces.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_surfaces.gd
 
       - name: Dog mood test
-        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_mood.gd
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_mood.gd
 
       - name: Human appearance regression test
-        run: LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x1024x24" ./Godot_v4.7-stable_linux.x86_64 --rendering-method gl_compatibility --path . --script res://tests/test_human_appearance.gd
+        run: LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x1024x24" bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --rendering-method gl_compatibility --path . --script res://tests/test_human_appearance.gd
 
       - name: NPC pair owner appearance regression test
-        run: LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x1024x24" ./Godot_v4.7-stable_linux.x86_64 --rendering-method gl_compatibility --path . --script res://tests/test_pair_owner_appearance.gd
+        run: LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x1024x24" bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --rendering-method gl_compatibility --path . --script res://tests/test_pair_owner_appearance.gd
 
       # reshapes a real viewport to a landscape phone and a portrait phone and
       # asserts the HUD follows. Needs a rendering context: anchors only resolve
       # against a live viewport, which is exactly what the headless run lacks.
       - name: HUD anchoring across window shapes
-        run: LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x1024x24" ./Godot_v4.7-stable_linux.x86_64 --rendering-method gl_compatibility --path . --script res://tests/test_hud_anchoring.gd
+        run: LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x1024x24" bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --rendering-method gl_compatibility --path . --script res://tests/test_hud_anchoring.gd
 
       # a portrait window gets the "turn your phone" prompt and a paused walk
       # (#5); reshapes a real viewport, so it needs a rendering context too
       - name: Rotate prompt in portrait windows
-        run: LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x1024x24" ./Godot_v4.7-stable_linux.x86_64 --rendering-method gl_compatibility --path . --script res://tests/test_rotate_prompt.gd
+        run: LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x1024x24" bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --rendering-method gl_compatibility --path . --script res://tests/test_rotate_prompt.gd
 
       - name: Level structural sanity sweep (every walk)
         # validates each level inside the real runtime: props on their own
@@ -181,6 +181,7 @@ jobs:
             ./Godot_v4.7-stable_linux.x86_64 --headless --path . -- --level=$LV --selftest 2>&1 | tee sane-$LV.log
             grep -q "SELFTEST OK" sane-$LV.log
             ! grep -q "SELFTEST FAIL" sane-$LV.log
+            ! grep -qE "SCRIPT ERROR|Parse Error" sane-$LV.log
           done
 
       - name: Headless smoke tests (all levels)
