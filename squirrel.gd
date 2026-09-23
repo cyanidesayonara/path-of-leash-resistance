@@ -52,7 +52,7 @@ func _physics_process(delta: float) -> void:
 						scare()
 						break
 		2:
-			var t := Time.get_ticks_msec() / 1000.0
+			var t: float = main.elapsed
 			if kind == "cat" and hide_target.x < INF:
 				# a spooked cat skitters and zigzags to a NEW hiding
 				# spot, then resettles - cats relocate, they don't leave

@@ -6,6 +6,9 @@ var failures := 0
 class FakeMain:
 	extends Node2D
 
+	# game time, which entities use for anything that affects play
+	var elapsed := 0.0
+
 	# mirrors main.gd's shared light: the entities call this while drawing
 	func contact_shadow(_c: CanvasItem, _at: Vector2, _r: float, _h: float, _a := 0.24) -> void:
 		pass

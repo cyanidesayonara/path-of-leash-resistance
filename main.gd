@@ -20,6 +20,10 @@ var sw_r := 980.0
 var edge_nodes: Array = []
 # parallel bike lane along the right side, plus a narrow far shoulder
 # with temptations - crossing the lane is a voluntary risk
+# the hang-time beat on big moments: game speed, and how long it lasts in
+# real time
+const SLOWMO_SCALE := 0.3
+const SLOWMO_SECS := 0.35
 const BLANE_L := 988.0
 const BLANE_R := 1072.0
 const SHOULDER_R := 1100.0
@@ -384,6 +388,9 @@ var business_spot := Vector2(INF, INF)
 var elapsed := 0.0
 var frozen := false
 var shake_t := 0.0
+# camera shake draws from its own RNG: it runs per rendered frame, and the
+# global sequence has to stay the simulation's alone
+var _shake_rng := RandomNumberGenerator.new()
 
 var hud: CanvasLayer
 var panel: Control
@@ -439,6 +446,15 @@ var grade_rect: ColorRect
 var _shot_done := false
 var _shot_frames := 0
 var _shot_at := 320
+# --soak[=SECONDS]: start a walk, touch nothing, count what happens to the
+# dog, print one SOAK line and quit. See tools/idle_soak.sh.
+var _soak_secs := 0.0
+var _soak_frames := 0
+var _soak_t0 := -1.0
+var _soak_knocks := {}
+var _soak_moods := {}
+var _soak_last_mood := 0
+var _soak_cracks := 0
 var _draw_cost_on := false
 var _draw_us := 0
 var _draw_n := 0
@@ -491,6 +507,11 @@ func _ready() -> void:
 		Game.daily = false
 		if autowalk_requested:
 			seed(AUTOWALK_SEED)
+		# --seed=N pins every random layout and spawn, so a soak or a bug
+		# report can be replayed exactly
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--seed="):
+				seed(int(a.substr(7)))
 		lvl = Game.level_id
 	# El Aguacero is always a downpour, whatever the weather selection says
 	if lvl == "rain":
@@ -549,6 +570,11 @@ func _ready() -> void:
 			var r := randf()
 			chase_kind = "sweeper" if r < 0.4 else ("bolt" if r < 0.75 else "both")
 	_draw_cost_on = "--drawcost" in OS.get_cmdline_user_args()
+	for a in OS.get_cmdline_user_args():
+		if a == "--soak":
+			_soak_secs = 30.0
+		elif a.begins_with("--soak="):
+			_soak_secs = maxf(1.0, float(a.substr(7)))
 	menu_step = Game.menu_step
 	_apply_menu_step()
 	# --at-freedom drops her straight into the off-leash space. Walking there
@@ -4160,7 +4186,52 @@ func _physics_process(delta: float) -> void:
 		freedomlayer.tick(cam.position)
 
 
+# Straight into the walk, as if SPACE had been pressed on the title. For the
+# capture and soak modes, which exist to get past the menu.
+func _skip_title() -> void:
+	started = true
+	frozen = false
+	_apply_menu_step()
+	for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, weather_l, record_l]:
+		l.visible = false
+
+
+func _tick_soak() -> void:
+	_soak_frames += 1
+	if _soak_frames == 2:
+		_skip_title()
+		_soak_t0 = elapsed
+		_soak_last_mood = mood.active
+		return
+	if _soak_t0 < 0.0:
+		return
+	var ran := elapsed - _soak_t0
+	# frozen after the start means the walk ended on its own: a game-over or
+	# the finish. Report what happened up to there rather than hang.
+	var ended := ""
+	if frozen:
+		ended = "finish" if finished else ("phone" if phone_hp <= 0 else "gameover")
+		if ended == "gameover" and msg_label != null:
+			print("SOAK gameover: %s" % msg_label.text.get_slice("\n", 0))
+	if ran < _soak_secs and ended == "":
+		return
+	var knocks := 0
+	for k in _soak_knocks:
+		knocks += int(_soak_knocks[k])
+	var moods := 0
+	for m in _soak_moods:
+		moods += int(_soak_moods[m])
+	var vs := get_viewport_rect().size
+	print("SOAK level=%s size=%dx%d secs=%.1f knocks=%d moods=%d cracks=%d ended=%s by_cause=%s by_mood=%s" % [
+		lvl, int(vs.x), int(vs.y), ran, knocks, moods, _soak_cracks, ended if ended != "" else "no",
+		JSON.stringify(_soak_knocks), JSON.stringify(_soak_moods)])
+	_soak_secs = 0.0
+	get_tree().quit()
+
+
 func _process(_delta: float) -> void:
+	if _soak_secs > 0.0:
+		_tick_soak()
 	if not _shot_done and "--shot" in OS.get_cmdline_user_args():
 		# --shot-at=N photographs frame N instead of 320, so a prop halfway up
 		# the walk can be inspected by letting --autowalk drive there first
@@ -4208,11 +4279,7 @@ func _process(_delta: float) -> void:
 			# reviewed. Everything else about --shot exists to get PAST this.
 			if "--shot-title" in OS.get_cmdline_user_args():
 				return
-			started = true  # skip the title so the shot shows the world
-			frozen = false
-			_apply_menu_step()
-			for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, weather_l, record_l]:
-				l.visible = false
+			_skip_title()
 		if _shot_frames > _shot_at:
 			_shot_done = true
 			# --shot-out=PATH writes somewhere other than user://shot.png, so a
@@ -4369,7 +4436,7 @@ func _process(_delta: float) -> void:
 		target_y = dog.global_position.y  # owner is parked; follow the dog
 	cam.position = Vector2(640, target_y)
 	if shake_t > 0.0:
-		cam.offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * 9.0 * shake_t
+		cam.offset = Vector2(_shake_rng.randf_range(-1, 1), _shake_rng.randf_range(-1, 1)) * 9.0 * shake_t
 	else:
 		cam.offset = Vector2.ZERO
 	# the world is drawn in world space, so the camera scroll stays smooth
@@ -4412,6 +4479,12 @@ func _tick_mood(delta: float) -> void:
 		return
 	_mood_ambient(delta)
 	mood.tick(delta)
+	if _soak_t0 >= 0.0 and mood.active != _soak_last_mood:
+		_soak_last_mood = mood.active
+		if mood.active != Mood.M.HAPPY:
+			var mname: String = Mood.M.keys()[mood.active]
+			_soak_moods[mname] = int(_soak_moods.get(mname, 0)) + 1
+			print("SOAK mood t=%.2f %s" % [elapsed - _soak_t0, mname])
 	# the handling first, the picture second - a mood should reach your hands
 	# before it reaches your eyes
 	dog.mood_speed = mood.speed_mult()
@@ -4912,8 +4985,11 @@ func on_critter_chase(pos: Vector2, kind: String) -> void:
 	_update_hud()
 
 
-func on_dog_hit() -> void:
+func on_dog_hit(cause := "hit") -> void:
 	dog_hits += 1
+	if _soak_t0 >= 0.0:
+		_soak_knocks[cause] = int(_soak_knocks.get(cause, 0)) + 1
+		print("SOAK knock t=%.2f cause=%s dog=%s" % [elapsed - _soak_t0, cause, dog.global_position])
 	mood.bump(Mood.M.SCARED, 0.45)
 	# a knock is a wipeout: whatever chain you had going is gone
 	combo.bail()
@@ -6630,8 +6706,9 @@ func on_phone_noise(pos: Vector2) -> void:
 
 
 func _stealth(delta: float) -> void:
-	# sweeping cameras: a vision cone that pans back and forth
-	var t := Time.get_ticks_msec() / 1000.0
+	# sweeping cameras: a vision cone that pans back and forth. On game time,
+	# since the sweep decides detection
+	var t := elapsed
 	for c in cameras:
 		c.cd = maxf(0.0, float(c.cd) - delta)
 		var ang: float = float(c.base) + sin(t * float(c.speed)) * float(c.range)
@@ -7031,8 +7108,11 @@ func on_stumble_save(pos: Vector2) -> void:
 
 
 func _slowmo() -> void:
-	Engine.time_scale = 0.3
-	var t := get_tree().create_timer(0.35, true, false, true)
+	Engine.time_scale = SLOWMO_SCALE
+	# 0.35s of real time, measured in scaled game time rather than on the wall
+	# clock: a real-time timer let a slow machine spend more game frames in
+	# slow motion than a fast one, so the same walk played out differently (#6)
+	var t := get_tree().create_timer(SLOWMO_SECS * SLOWMO_SCALE, true, false, false)
 	t.timeout.connect(func() -> void: Engine.time_scale = 1.0)
 
 
@@ -7041,6 +7121,9 @@ func crack_phone(pos: Vector2) -> void:
 		return  # the attract/CI bot carries an unbreakable phone
 	Sfx.play("crack", 1.0, -2.0)
 	phone_hp -= 1
+	if _soak_t0 >= 0.0:
+		_soak_cracks += 1
+		print("SOAK crack t=%.2f phone_hp=%d" % [elapsed - _soak_t0, phone_hp])
 	streak = 0
 	shake_t = 1.0
 	_update_hud()

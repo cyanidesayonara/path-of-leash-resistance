@@ -1,0 +1,60 @@
+name: Idle soak
+
+# Every walk with no input for 30s of game time, at 1280x720, 1920x1080 and
+# 844x390, three seeds each (tools/idle_soak.sh). Counts knocks on the idle
+# dog, mood arrivals and phone cracks, and fails a run over the thresholds in
+# the script. One job per walk so the matrix finishes in minutes.
+#
+# Separate from ci.yml while the thresholds are provisional: it reports on
+# every PR and push to main but does not gate the release. Move it into
+# ci.yml once the thresholds have held for a while.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: soak-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  soak:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        level: [street, park, beach, rain, market, oldtown, trail, station, site, spook, scrap, guell]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Download Godot
+        run: |
+          curl -sL -o godot.zip https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
+          unzip -q godot.zip
+          chmod +x Godot_v4.7-stable_linux.x86_64
+
+      - name: Install virtual display
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgl1-mesa-dri mesa-utils
+
+      - name: Import resources
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --import
+
+      - name: Soak
+        env:
+          LEVELS: ${{ matrix.level }}
+        run: bash tools/idle_soak.sh soak
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: soak-${{ matrix.level }}
+          path: soak/
+          retention-days: 14

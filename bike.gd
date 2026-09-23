@@ -91,7 +91,7 @@ func _physics_process(delta: float) -> void:
 		if swerve_t <= 0.0:
 			swerve_t = randf_range(1.2, 2.8)
 			base_x = clampf(base_x + randf_range(-70.0, 70.0), band_lo, band_hi)
-		var t := Time.get_ticks_msec() / 1000.0
+		var t: float = main.elapsed
 		var target_x := base_x + sin(t * 2.4 + wob_seed) * 24.0
 		if route != null:
 			var route_min := float(route.get("min_x"))
