@@ -2,6 +2,35 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - main.gd split along its seams (freeze task 5)
+
+`main.gd` goes from 8,029 to 5,818 lines. Six seams move out verbatim, one
+commit each, as static functions over main's state:
+
+- `systems/mood_wiring.gd`: how the walk feeds the dog's moods
+- `systems/home_chase.gd`: the home-leg chase roll, start and tick
+- `systems/goals.gd`: goal lists, crediting, the goal card, the end of the walk
+- `hud/hud_build.gd`: every HUD node, in draw order
+- `hud/menu_flow.gd`: title steps, wardrobe, settings, progress screen
+- `world/level_build.gd`: corridor, level data, props, walls, entities
+
+main.gd keeps a same-name forwarder for everything the rest of the game and
+the tests call, so no caller changed. Every commit passed the whole ci.yml
+test list and a new `tools/behaviour_snapshot.sh`, which records 51
+fixed-seed runs (autowalks, idle soaks, self-tests) and must match
+byte-for-byte. It now runs four at a time, each with its own save, in about
+three minutes.
+
+Two new tests cover what CI could not reach: `test_home_chase.gd` (the chase
+catching someone and ending the walk) and `test_menu_flow.gd` (title steps,
+wardrobe and settings). The menu test found #33, the wardrobe preview dog
+erroring on every draw, which predates the split.
+
+Left in main.gd on purpose: world drawing (about 2,400 lines), the leash and
+tug, pairs and traffic, the dev modes and the input handling in `_process`.
+They are too coupled, or too pinned by tests, to split safely during the
+freeze.
+
 ## 2026-09-23 - the idle knock was the wall clock (#6)
 
 An idle dog got knocked by bikes on some machines and window sizes and not
