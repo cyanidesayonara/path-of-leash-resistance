@@ -3342,7 +3342,7 @@ func _build_hud() -> void:
 	menu_hint_l.visible = false
 	var version_l := _hud_label(Vector2(1150, 686), 13)
 	_pin_box(version_l, 0.0, 0.0, 1.0, 1.0)
-	version_l.text = "v1.54"
+	version_l.text = _build_label()
 	version_l.modulate.a = 0.5
 	owner_l = _hud_label(Vector2(0, 296), 26)
 	_pin_wide(owner_l, 34.0, 0.5)
@@ -3841,6 +3841,18 @@ func _progress_text() -> String:
 	if feed != null:
 		feed.set_banner(hud_status)
 
+# The version shown on the title. tools/stamp_version.sh writes the build's
+# tag and short commit into res://build_label.txt right before an export (the
+# file is gitignored, and each preset's include_filter packs it). A plain
+# editor or source run has no stamp and says "dev", so a screenshot can never
+# claim a release it did not come from.
+func _build_label() -> String:
+	if FileAccess.file_exists("res://build_label.txt"):
+		var s := FileAccess.get_file_as_string("res://build_label.txt").strip_edges()
+		if s != "":
+			return s
+	return "dev"
+
 func _hud_label(pos: Vector2, size_px: int) -> Label:
 	var l := Label.new()
 	l.position = pos
@@ -4194,9 +4206,21 @@ func _process(_delta: float) -> void:
 				l.visible = false
 		if _shot_frames > _shot_at:
 			_shot_done = true
+			# --shot-out=PATH writes somewhere other than user://shot.png, so a
+			# sweep can keep every shot; --shot-quit exits once the PNG is on
+			# disk instead of leaning on --quit-after
+			var out := "user://shot.png"
+			for a in OS.get_cmdline_user_args():
+				if a.begins_with("--shot-out="):
+					out = a.substr(11)
 			var img := get_viewport().get_texture().get_image()
-			img.save_png("user://shot.png")
-			print("SHOT saved to user://shot.png")
+			var err := img.save_png(out)
+			if err != OK:
+				push_error("SHOT failed to write %s (error %d)" % [out, err])
+			else:
+				print("SHOT saved to %s" % out)
+			if "--shot-quit" in OS.get_cmdline_user_args():
+				get_tree().quit(0 if err == OK else 1)
 	if in_settings:
 		_tick_settings()
 		return

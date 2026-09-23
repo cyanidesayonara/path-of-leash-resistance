@@ -82,7 +82,10 @@ jobs:
           echo "Timed out waiting for green CI on ${SHA}; refusing to publish."
           exit 1
 
+      # full history so tools/stamp_version.sh can see the tags
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Download Godot + export templates
         run: |
@@ -101,6 +104,10 @@ jobs:
         run: |
           set -euo pipefail
           ./Godot_v4.7-stable_linux.x86_64 --headless --path . --import
+
+      # the title's version label: this tag plus the short commit hash
+      - name: Stamp the build label
+        run: bash tools/stamp_version.sh
 
       - name: Export the web build
         run: |

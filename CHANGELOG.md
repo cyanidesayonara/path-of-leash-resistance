@@ -2,6 +2,30 @@
 
 Append-only session history, newest first.
 
+## 2026-09-23 - stabilization freeze: screenshot sweep tooling (unreleased)
+
+No features until verification catches up with 138 commits in 25 days. This
+session adds tooling only.
+
+- `--shot-out=PATH` and `--shot-quit` for `--shot` mode. Without them nothing
+  changes: the PNG still lands in `user://shot.png` and the run still ends on
+  `--quit-after`.
+- `tools/shot_sweep.sh` photographs all 12 walks, the title, settings and
+  results screens, and the street at 844x390 and 390x844 (xvfb and software GL
+  on Linux, as the appearance tests in ci.yml do). `tools/contact_sheet.py`
+  tiles them into two labelled sheets.
+- `.github/workflows/shots.yml` runs the sweep on every PR and push to
+  main and uploads the sheets. It is a separate workflow, so it never gates ci.yml or
+  the release.
+- The title's hardcoded "v1.54" is gone. `tools/stamp_version.sh` writes the
+  tag and short commit into `build_label.txt` during export, and a build
+  without the file says "dev".
+
+The first sweep already shows problems logged for triage rather than fixed:
+the portrait street renders tiny and shows the area behind the start line;
+the settings panel lets the title show through above it; the title dog sits
+on "press SPACE to begin".
+
 ## 2026-08-02 - dog moods, first pass (unreleased)
 
 Backlog item 9, the one the plan calls the strongest idea in the pile. A mood

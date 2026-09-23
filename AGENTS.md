@@ -133,6 +133,22 @@ Photograph a screen without playing (writes `user://shot.png`):
 godot\Godot_v4.7-stable_win64_console.exe --path . --quit-after 340 -- --shot --level=park
 godot\Godot_v4.7-stable_win64_console.exe --path . --quit-after 340 -- --shot --shot-settings
 ```
+`--shot-out=PATH` writes the PNG somewhere else and `--shot-quit` exits as
+soon as it is written. Other shot flags: `--shot-title`, `--shot-results`,
+`--shot-at=N`, `--shot-sweeper`.
+
+Screenshot sweep (every walk, title, settings, results, street at 844x390 and
+390x844) into `shots/`, plus labelled contact sheets `shots/sheet-*.png`.
+Needs Pillow. `.github/workflows/shots.yml` runs the same thing on every PR and
+push to main and uploads the sheets as an artifact; it does not gate CI:
+```
+GODOT=godot/Godot_v4.7-stable_win64_console.exe bash tools/shot_sweep.sh
+```
+
+The title's version label is not in the source: `tools/stamp_version.sh`
+writes the tag and short commit (`v1.55 (a1b2c3d)`) to the gitignored
+`build_label.txt`, which each export preset packs. `release.yml` runs it
+before exporting; a build without it says `dev`.
 
 ## Conventions
 

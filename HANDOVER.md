@@ -76,7 +76,8 @@ testing can proceed once that happens; it is the only part still unverified.
 ## Release ritual
 
 1. Green CI on the commit you intend to ship
-2. Update `CHANGELOG.md` and the in-game version label if needed
+2. Update `CHANGELOG.md` (the in-game version label is stamped from the
+   tag by `release.yml`; there is nothing to bump by hand)
 3. `git tag vX.Y && git push --tags`
 4. CI runs again for the tag SHA; `release.yml` waits for that success,
    then exports and publishes to itch. Missing `BUTLER_API_KEY` fails the

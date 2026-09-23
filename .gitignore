@@ -7,3 +7,9 @@ build/
 
 r.txt
 rr.txt
+
+# written by tools/stamp_version.sh before an export
+build_label.txt
+# tools/shot_sweep.sh output
+shots/
+__pycache__/
