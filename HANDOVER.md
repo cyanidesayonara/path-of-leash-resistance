@@ -32,7 +32,8 @@ green - most of it guards the promise, not the feature.
 
 Also unreleased and untouched by me: branch `ms-store-msix` (Microsoft Store
 MSIX packaging, 5 commits, never pushed) predates the two v1.54 commits and
-needs a rebase onto `main` before it will build.
+needs a rebase onto `main` before it will build. The submission steps from
+Partner Center onward are in `docs/MICROSOFT_STORE.md`.
 
 ## Current state (v1.54 on `main`)
 
