@@ -33,6 +33,16 @@ jobs:
       - name: Import resources
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --import
 
+      # every script's .uid is committed next to it; an import that creates a
+      # file git does not know about means one was forgotten (#16)
+      - name: Import leaves the checkout clean
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Import created or changed files - commit them:"
+            git status --porcelain
+            exit 1
+          fi
+
       - name: Leash winding regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_wrap.gd
 
