@@ -1245,12 +1245,12 @@ static func build_entities(m: Node2D) -> void:
 	m.leash.furniture_poles = m._furniture_wrap_poles()
 
 	m.edge_layer = Node2D.new()
-	m.edge_layer.set_script(load("res://edgelayer.gd"))
+	m.edge_layer.set_script(load("res://world/edgelayer.gd"))
 	m.edge_layer.z_index = -5   # behind everything in the world
 	m.add_child(m.edge_layer)
 	m.edge_layer.setup(m)
 	m.verge_layer = Node2D.new()
-	m.verge_layer.set_script(load("res://vergelayer.gd"))
+	m.verge_layer.set_script(load("res://world/vergelayer.gd"))
 	# above the ground pass, below the actors and props
 	m.verge_layer.z_index = 1
 	m.add_child(m.verge_layer)
@@ -1258,7 +1258,7 @@ static func build_entities(m: Node2D) -> void:
 	# the off-leash space gets the same treatment: it is a fixed scene, so it
 	# is drawn once onto its own canvas rather than thirty times a second
 	m.freedomlayer = Node2D.new()
-	m.freedomlayer.set_script(load("res://freedomlayer.gd"))
+	m.freedomlayer.set_script(load("res://world/freedomlayer.gd"))
 	m.freedomlayer.z_index = -9
 	m.add_child(m.freedomlayer)
 	m.freedomlayer.setup(m)

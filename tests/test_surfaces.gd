@@ -13,7 +13,7 @@ extends SceneTree
 #
 #   godot --headless --path . --script res://tests/test_surfaces.gd
 
-const Surfaces := preload("res://surfaces.gd")
+const Surfaces := preload("res://world/surfaces.gd")
 
 var failures: Array[String] = []
 var checks := 0

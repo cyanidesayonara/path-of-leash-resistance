@@ -41,9 +41,9 @@ const DOG_MASS := 1.0
 const HUMAN_MASS := 4.0
 const SwingMath := preload("res://swing.gd")
 const Mood := preload("res://mood.gd")
-const Surfaces := preload("res://surfaces.gd")
+const Surfaces := preload("res://world/surfaces.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
-const EdgePath := preload("res://edge_path.gd")
+const EdgePath := preload("res://world/edge_path.gd")
 const TangleGeom := preload("res://tangle_geom.gd")
 const MoodWiring := preload("res://systems/mood_wiring.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
@@ -572,7 +572,7 @@ func _ready() -> void:
 	# real runtime (autoloads and all), so CI can sweep every walk for
 	# content mistakes a pure-logic test cannot see.
 	if "--selftest" in OS.get_cmdline_user_args():
-		var problems: Array = load("res://level_check.gd").check(self)
+		var problems: Array = load("res://world/level_check.gd").check(self)
 		problems.append_array(_check_settings_roundtrip())
 		for pr in problems:
 			print("SELFTEST FAIL [%s] %s" % [lvl, pr])

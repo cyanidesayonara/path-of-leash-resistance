@@ -28,7 +28,7 @@ static func check(m) -> Array:
 	# A path is a curve now (edge_path.gd), which is a good way to make a
 	# level stop looking blocky and an excellent way to author one that cannot
 	# be walked. Caught here rather than discovered as a dog wedged in a wall.
-	var EdgePathC = load("res://edge_path.gd")
+	var EdgePathC = load("res://world/edge_path.gd")
 	var shape: Dictionary = EdgePathC.valid(m.edge_nodes, 120.0)
 	if not bool(shape["ok"]):
 		p.append("corridor shape: %s" % String(shape["why"]))

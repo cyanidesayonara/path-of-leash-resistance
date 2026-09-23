@@ -13,7 +13,7 @@ extends SceneTree
 #
 #   godot --headless --path . --script res://tests/test_edge_path.gd
 
-const EdgePath := preload("res://edge_path.gd")
+const EdgePath := preload("res://world/edge_path.gd")
 
 var failures: Array[String] = []
 var checks := 0

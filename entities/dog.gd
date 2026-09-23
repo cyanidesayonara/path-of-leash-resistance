@@ -5,7 +5,7 @@ extends CharacterBody2D
 
 const SPEED := 330.0
 const ACCEL := 2400.0
-const Surfaces := preload("res://surfaces.gd")
+const Surfaces := preload("res://world/surfaces.gd")
 
 var planted := false
 var input_active := false
