@@ -2,9 +2,10 @@
 
 How to get the Windows build of Path of Leash Resistance into the Microsoft
 Store through Partner Center. Written 2026-09-23 against Partner Center's
-"Apps and games" page as it stood then. Microsoft changed the game publishing
-options in mid-2026, so check the "Still unconfirmed" list before relying on
-the product-type choice.
+"Apps and games" page as it stood then. The game went live this way on
+2026-09-23 (1.54.0.0, https://apps.microsoft.com/detail/9p5d14v8rbqx).
+Everything entered in Partner Center for it is recorded in
+`store/listing.md`; this doc is the procedure, that file is the content.
 
 What already exists:
 
@@ -42,11 +43,9 @@ Partner Center > Apps and games > **New product** offers four types:
 | **MSIX or PWA game** | Store-hosted MSIX in the Games section | **Use this.** `store/msix/` is built for it |
 
 The docs route *UWP and PWA* games to "MSIX or PWA game" and *Win32* games to
-"GDK game". No doc says a full-trust Win32 MSIX is refused under "MSIX or PWA
-game", and a desktop-bridge MSIX is still an MSIX package. Try it first, since
-the reservation and the first upload cost nothing. If package ingestion
-refuses the full-trust package, switch to **GDK game** (see the end of this
-doc).
+"GDK game", but "MSIX or PWA game" does accept a full-trust Win32 MSIX: this
+game passed ingestion and certification that way. GDK game is only needed for
+Xbox features or a console release (see the end of this doc).
 
 Your existing live product (type "MSIX or PWA app") is not affected by any of
 this.
@@ -141,13 +140,18 @@ Start a submission on the product. Every section must be complete:
    never change category. Privacy policy URL: only required if the game
    collects personal information. It does not today (saves are local), so
    leave it empty unless that changes.
-3. **Age ratings:** complete the IARC questionnaire, or enter an existing
-   IARC rating ID if itch or another store already produced one.
-4. **Packages:** upload the `.msix` from step 3. Ingestion validates it here.
-   If it rejects the full-trust package for this product type, that is the
-   signal to switch to GDK game.
+3. **Age ratings:** complete the IARC questionnaire for this game. Only import
+   an existing IARC ID if it was issued for this same game; never another
+   product's. Answer from what the game shows, not its tone.
+   `store/listing.md` has the answers that got an accurate all-ages result,
+   and the two that went wrong on the first attempt.
+4. **Packages:** upload the `.msix` from step 3; ingestion validates it here.
+   "Invalid package identity name" means the manifest's `Identity Name` does
+   not match Product identity exactly. Tick only **Windows 10/11 Desktop**.
 5. **Store listings (English):**
-   - Description, and short description from `PROJECT.md`'s pitch.
+   - Text: copy the description, short description, features, keywords and
+     the other fields from `store/listing.md`, updated for what the build
+     actually contains.
    - Screenshots: PNG, at least **1366x768** (up to 3840x2160), at least 1,
      4 or more recommended, 10 at most. The sweep's shots are 1280x720, too
      small, so take listing shots at 1920x1080 with the existing flags:
@@ -156,21 +160,23 @@ Start a submission on the product. Every section must be complete:
      godot/Godot_v4.7-stable_win64_console.exe --rendering-method gl_compatibility --resolution 1920x1080 --path . -- --shot --shot-quit --shot-out=store-park.png --level=park
      ```
 
-     Use `--shot-at=N` with `--autowalk` for mid-walk moments, and
-     `--shot-title` for the title. Run it on a stamped build, or delete
-     `build_label.txt` first, so the corner label is what you want shown.
-   - Store logos: 2:3 poster art at 720x1080 (strongly recommended for
-     games), 1:1 box art at 1080x1080, 1:1 tile icon at 300x300. The concept
-     key art in `assets/concept/` is the starting point.
+     Use `--shot-at=N` with `--autowalk --fixed-fps 60` for mid-walk
+     moments, and `--shot-title` for the title. Shoot from a checkout of the
+     tag being submitted (`git worktree add ../pol-vX.Y vX.Y`), so the
+     screenshots show the build players get, not `main`.
+   - Store logos: run
+     `godot/Godot_v4.7-stable_win64_console.exe --rendering-method gl_compatibility --path . --script res://tools/make_store_art.gd`.
+     It writes the 9:16 poster (1440x2160), 1:1 box art (2160x2160) and the
+     300/150/71 tiles into `build/store-art/`, drawn from the same code as
+     the app icon.
    - A trailer is optional. If you add one, 16:9 hero art at 1920x1080 becomes
      required.
-6. **Submission options > Restricted capabilities:** a justification for
-   `runFullTrust` is required. Suggested text: "Path of Leash Resistance is a
-   Win32 desktop game built with the Godot engine. runFullTrust is required
-   to run the packaged Win32 executable; the game uses no other restricted
-   capabilities." A Partner Center bug reported in April 2026 can leave this
-   section showing "Incomplete" after it is filled. Re-save it, or ask
-   support if it persists.
+6. **Submission options:** choose the publishing hold ("Don't publish until I
+   select Publish now" lets you pick the moment). The `runFullTrust`
+   justification and test instructions go on the **Additional Testing
+   Information** page; the text is in `store/listing.md`. A Partner Center
+   bug reported in April 2026 can leave a section showing "Incomplete" after
+   it is filled. Re-save it, or ask support if it persists.
 7. **Submit to the Store.** Certification takes up to three business days.
    Once it passes, the listing appears in about 15 minutes.
 
@@ -212,11 +218,12 @@ not start it until the MSIX route has actually been refused.
 
 ## Still unconfirmed (as of 2026-09-23)
 
-1. Whether "MSIX or PWA game" accepts a full-trust Win32 MSIX. The docs only
-   route UWP and PWA games there. The first package upload answers this.
-2. Whether the GDK route truly needs no ID@Xbox enrolment. One GDK packaging
+Settled by the first submission: "MSIX or PWA game" accepts a full-trust
+Win32 MSIX, and WACK runs on GitHub's hosted Windows runners.
+
+1. Whether the GDK route truly needs no ID@Xbox enrolment. One GDK packaging
    page still says it does; the June 2026 self-service page says it does not.
-3. Whether `makemsix` on Linux produces packages Partner Center accepts.
+2. Whether `makemsix` on Linux produces packages Partner Center accepts.
 
 ## Sources
 
