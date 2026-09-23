@@ -325,10 +325,3 @@ static func progress_text(m: Node2D) -> String:
 	t += "\nTOTAL:  %d stars    %d bones banked\n\n%s  back" % [
 		Game.total_stars(), Game.total_bones, m._kb_or_pad("E", "B")]
 	return t
-
-
-	# The one-line answer to "what is going on" now lives in the feed
-	# banner, centre screen near the dog, instead of as small text tucked
-	# under the vitals card in the corner where it was never read.
-	if m.feed != null:
-		m.feed.set_banner(m.hud_status)
