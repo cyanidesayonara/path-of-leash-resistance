@@ -150,6 +150,33 @@ writes the tag and short commit (`v1.55 (a1b2c3d)`) to the gitignored
 `build_label.txt`, which each export preset packs. `release.yml` runs it
 before exporting; a build without it says `dev`.
 
+## Change control: the WIP limit
+
+Changes reach `main` faster than they can be played by hand, so this limit
+applies to every change, whoever makes it.
+
+- **What counts:** a change is one merged PR, or one group of commits, that
+  alters what the player sees, hears or feels (gameplay, levels, tuning,
+  visuals, audio, UI text). Tests, tooling, CI and docs do not count.
+- **Acceptance:** Santtu plays the change by hand and accepts it. Merging a
+  PR is not acceptance. A merged player-facing PR stays in the "Awaiting
+  acceptance" column of the project board
+  (https://github.com/users/cyanidesayonara/projects/4) until Santtu accepts it,
+  and only then moves to Done.
+- **The limit:** at most **5** changes on `main` awaiting acceptance. At the
+  limit, only hardening (bug fixes, tests, refactors with no player-facing
+  effect) and tooling may land. No new player-facing change starts until the
+  count drops below 5.
+- **Check before starting:** count the player-facing items in "Awaiting
+  acceptance" on the board. Changes older than the board are tracked in the
+  acceptance backlog issue (#23); each unticked entry there counts as one.
+- **Every change ships with a feel card:** a `## Feel card` section in the PR
+  description, 3-5 numbered things to check by hand, each a concrete action
+  and what should happen (for example "`--level=beach`: the sand drift reads
+  as sand, not a puddle"). Include the command-line flags that get there
+  fastest. Tooling and docs PRs get one too, even though they do not count
+  against the limit.
+
 ## Conventions
 
 - No emoji anywhere (code, UI, docs, commits)
