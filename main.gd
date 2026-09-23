@@ -49,6 +49,7 @@ const MoodWiring := preload("res://systems/mood_wiring.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
 const Goals := preload("res://systems/goals.gd")
 const HudBuild := preload("res://hud/hud_build.gd")
+const MenuFlow := preload("res://hud/menu_flow.gd")
 const POLE_RADIUS := 10.0
 const TREE_RADIUS := 13.0  # a trunk is stouter than a lamppost
 const HYDRANT_RADIUS := 9.0
@@ -3224,158 +3225,35 @@ func _weather_tint() -> Color:
 
 
 func _owner_label_text(owner_id: String) -> String:
-	return "WALKING:  %s" % owner_id.to_upper()
+	return MenuFlow.owner_label_text(self, owner_id)
 
 
 func _apply_menu_step() -> void:
-	# Tony Hawk rules: each screen shows ONE choice and ONE instruction.
-	# Gameplay HUD (panel, quests) stays hidden until the walk begins.
-	var in_menu := not started
-	panel.visible = started
-	goals_card.visible = started and not tutorial_mode
-	# The game's name and the walk's name are drawn INTO the level now (chalk
-	# on the pavement, a stick in the sand), so the labels that used to float
-	# over the top of them are gone. What is left on the HUD is the things a
-	# label is genuinely better at: the prompt and the run's details.
-	title_l.visible = false
-	sub_l.visible = false
-	select_l.visible = false
-	record_l.visible = in_menu and menu_step == 1
-	owner_l.visible = in_menu and menu_step == 2
-	night_l.visible = in_menu and menu_step == 2
-	weather_l.visible = in_menu and menu_step == 2
-	prompt_l.visible = in_menu
-	# discreet, bottom-left, the same treatment as the version tag - the
-	# middle of the title screen is already busy with the level blurb
-	menu_hint_l.visible = in_menu
-	menu_hint_l.text = "%s  settings" % _kb_or_pad("ESC", "Back")
-	if not in_menu:
-		return
-	match menu_step:
-		0:
-			title_l.add_theme_font_size_override("font_size", 60)
-			title_l.position.y = 210
-			title_l.text = "PATH OF LEASH RESISTANCE"
-			sub_l.add_theme_font_size_override("font_size", 22)
-			sub_l.position.y = 288
-			sub_l.text = "you are the dog. go and touch grass."
-		1:
-			title_l.add_theme_font_size_override("font_size", 30)
-			title_l.position.y = 150
-			title_l.text = "CHOOSE YOUR WALK   (%d stars)" % Game.total_stars()
-			var sel: String = Game.level_id  # carousel id (may be "daily")
-			var locked := not Game.is_unlocked(sel)
-			select_l.add_theme_font_size_override("font_size", 52)
-			select_l.text = ("[ %s ]" % Game.LEVEL_NAMES[sel]) if locked else ("<   %s   >" % Game.LEVEL_NAMES[sel])
-			select_l.position.y = 220
-			record_l.position.y = 300
-			var rl: String = Game.best_line(sel)
-			if sel != "daily" and Game.is_unlocked(sel):
-				rl += "    goals %d/%d" % [Game.goals_count(sel), int((LEVEL_GOAL_IDS.get(sel, []) as Array).size())]
-			record_l.text = rl
-		2:
-			title_l.add_theme_font_size_override("font_size", 40)
-			title_l.position.y = 150
-			title_l.text = Game.LEVEL_NAMES[Game.level_id].to_upper()
-			owner_l.text = _owner_label_text(Game.owner_id)
-	_refresh_menu_text()
+	MenuFlow.apply_menu_step(self)
 
 
 func _open_shop() -> void:
-	in_shop = true
-	for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, weather_l, record_l,
-			menu_hint_l]:
-		l.visible = false
-	shop_title_l.visible = true
-	shop_l.visible = true
-	shop_preview_bg.visible = true
-	shop_preview_l.visible = true
-	shop_preview.visible = true
-	# the preview dog is a Node2D, so it cannot anchor itself the way the panel
-	# behind it does - park it on the panel's centre instead, read at open time
-	# so it follows the cluster onto whatever shape the screen turns out to be
-	shop_preview.position = shop_preview_bg.position + Vector2(220.0, 175.0)
-	_refresh_shop()
+	MenuFlow.open_shop(self)
 
 
 func _shop_data(kind: String, key: String) -> Dictionary:
-	match kind:
-		"collar": return Game.COLLARS[key]
-		"coat": return Game.COATS[key]
-		_: return Game.BANDANAS[key]
+	return MenuFlow.shop_data(self, kind, key)
 
 
 func _equip(kind: String, key: String) -> void:
-	Game.equip(kind, key)
+	MenuFlow.equip(self, kind, key)
 
 
 func _shop_select() -> void:
-	var it: Dictionary = shop_items[shop_idx]
-	var kind: String = it.kind
-	var key: String = it.key
-	if Game.is_owned(kind, key) or Game.buy(kind, key):
-		_equip(kind, key)
-		Game.save_records()
-	# (if the buy failed, not enough bones - the price stays shown)
-	_refresh_shop()
+	MenuFlow.shop_select(self)
 
 
 func _refresh_shop() -> void:
-	shop_title_l.text = "MILLIE'S WARDROBE      %d bones" % Game.total_bones
-	var lines := ""
-	for i in range(shop_items.size()):
-		var it: Dictionary = shop_items[i]
-		var key: String = it.key
-		var data: Dictionary = _shop_data(String(it.kind), key)
-		var equipped: bool = (
-			(it.kind == "collar" and Game.collar == key)
-			or (it.kind == "bandana" and Game.bandana == key)
-			or (it.kind == "coat" and Game.coat == key)
-		)
-		var tag := ""
-		if equipped:
-			tag = "  [EQUIPPED]"
-		elif Game.is_owned(String(it.kind), key):
-			tag = "  (owned - press to wear)"
-		else:
-			tag = "  %d bones" % int(data.cost)
-		var cursor := ">  " if i == shop_idx else "    "
-		lines += "%s%s%s\n" % [cursor, data.name, tag]
-	lines += "\nleft / right browse    %s buy or wear    %s back" % [_kb_or_pad("SPACE", "A"), _kb_or_pad("E", "B")]
-	shop_l.text = lines
-	var highlighted: Dictionary = shop_items[shop_idx]
-	var preview_collar: String = Game.collar
-	var preview_bandana: String = Game.bandana
-	var preview_coat: String = Game.coat
-	match String(highlighted.kind):
-		"collar": preview_collar = highlighted.key
-		"coat": preview_coat = highlighted.key
-		_: preview_bandana = highlighted.key
-	shop_preview.set_cosmetic_preview(preview_collar, preview_bandana, preview_coat)
+	MenuFlow.refresh_shop(self)
 
 
 func _refresh_menu_text() -> void:
-	# controller labels only when a controller is attached
-	var pad := Input.get_connected_joypads().size() > 0
-	hint_l.text = ("stick: move   A: dig in / squat   X: pee   B: bark   RB: turbo   Back: pause" if pad
-		else "WASD: move   SPACE: dig in / squat   Q: pee   E: bark   SHIFT: turbo   ESC: pause")
-	var fixed := "  (fixed today)" if Game.daily else "        (%s)" % _kb_or_pad("E", "B")
-	night_l.text = "TIME:  %s%s" % [("NIGHT" if Game.night else "DAY"), fixed]
-	weather_l.text = "WEATHER:  %s%s" % [Game.WEATHER_NAMES[Game.weather], "" if Game.daily else "        (%s)" % _kb_or_pad("Q", "X")]
-	var go := _kb_or_pad("SPACE", "A")
-	match menu_step:
-		0:
-			prompt_l.text = "press  %s  to begin" % go
-			hint_l.visible = false
-		1:
-			if not Game.is_unlocked(Game.level_id):
-				prompt_l.text = "locked - earn %d stars" % int(Game.STAR_GATE.get(Game.level_id, 0))
-			else:
-				prompt_l.text = "%s / %s  browse     %s  choose     %s  wardrobe     %s  progress" % [_kb_or_pad("A", "<"), _kb_or_pad("D", ">"), go, _kb_or_pad("E", "B"), _kb_or_pad("Q", "X")]
-			hint_l.visible = false
-		2:
-			prompt_l.text = "press  %s  to go walkies" % go
-			hint_l.visible = true
+	MenuFlow.refresh_menu_text(self)
 
 
 # --- settings ----------------------------------------------------------
@@ -3393,171 +3271,43 @@ const SETTING_NAMES := {
 
 
 func settings_keys() -> Array:
-	# the browser owns the window, so offering a fullscreen toggle there
-	# would be a button that lies
-	if OS.has_feature("web"):
-		return ["master", "sfx", "music", "goals"]
-	return ["master", "sfx", "music", "fullscreen", "goals"]
+	return MenuFlow.settings_keys(self)
 
 
 func settings_rows() -> Array:
-	# the panel draws whatever this returns, so a new setting is one entry
-	var out := []
-	for k in settings_keys():
-		var v: float = 0.0
-		var kind := "slider"
-		match k:
-			"master": v = Game.vol_master
-			"sfx": v = Game.vol_sfx
-			"music": v = Game.vol_music
-			"fullscreen":
-				v = 1.0 if Game.fullscreen else 0.0
-				kind = "toggle"
-			"goals":
-				v = 1.0 if Game.goals_expanded else 0.0
-				kind = "toggle"
-		out.append({"name": SETTING_NAMES[k], "kind": kind, "v": v})
-	return out
+	return MenuFlow.settings_rows(self)
 
 
 func pad_hints() -> bool:
-	return Input.get_connected_joypads().size() > 0
+	return MenuFlow.pad_hints(self)
 
 
 func _check_settings_roundtrip() -> Array:
-	# The settings are only worth having if they survive a restart, and a
-	# typo in a ConfigFile key fails silently - the value simply reverts to
-	# its default the next time you launch. So write odd values, read them
-	# back, and put the player's own settings back afterwards.
-	var p: Array = []
-	var keep := [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen]
-	Game.vol_master = 0.3
-	Game.vol_sfx = 0.1
-	Game.vol_music = 0.7
-	Game.fullscreen = true
-	Game.save_records()
-	Game.vol_master = 0.0
-	Game.vol_sfx = 0.0
-	Game.vol_music = 0.0
-	Game.fullscreen = false
-	Game.load_records()
-	if not (is_equal_approx(Game.vol_master, 0.3) and is_equal_approx(Game.vol_sfx, 0.1)
-			and is_equal_approx(Game.vol_music, 0.7) and Game.fullscreen):
-		p.append("settings did not survive a save/load round trip (%.2f %.2f %.2f %s)"
-			% [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen])
-	Game.vol_master = keep[0]
-	Game.vol_sfx = keep[1]
-	Game.vol_music = keep[2]
-	Game.fullscreen = keep[3]
-	Game.save_records()
-	# and the slider steps must stay inside 0..1 however hard you lean on them
-	settings_idx = 0
-	for i in range(20):
-		_settings_adjust(-1)
-	if Game.vol_master < 0.0:
-		p.append("master volume ran below zero (%.2f)" % Game.vol_master)
-	for i in range(30):
-		_settings_adjust(1)
-	if Game.vol_master > 1.0:
-		p.append("master volume ran above one (%.2f)" % Game.vol_master)
-	Game.vol_master = keep[0]
-	Game.apply_settings()
-	Game.save_records()
-	return p
+	return MenuFlow.check_settings_roundtrip(self)
 
 
 func _open_settings_from_menu() -> void:
-	for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, weather_l, record_l,
-			hint_l, menu_hint_l]:
-		l.visible = false
-	_open_settings()
+	MenuFlow.open_settings_from_menu(self)
 
 
 func _open_settings() -> void:
-	in_settings = true
-	settings_idx = 0
-	settings_panel.visible = true
-	dim.visible = true
-	Sfx.play("ui")
+	MenuFlow.open_settings(self)
 
 
 func _close_settings() -> void:
-	in_settings = false
-	settings_panel.visible = false
-	Game.save_records()
-	Sfx.play("ui")
-	if paused:
-		# back to the pause card we came from
-		pause_l.visible = true
-		dim.visible = true
-	else:
-		dim.visible = false
-		_apply_menu_step()
-		_refresh_menu_text()
+	MenuFlow.close_settings(self)
 
 
 func _settings_adjust(dir: int) -> void:
-	var keys := settings_keys()
-	var key: String = keys[settings_idx]
-	match key:
-		"master":
-			Game.vol_master = clampf(Game.vol_master + 0.1 * dir, 0.0, 1.0)
-			Game.apply_settings()
-			Sfx.play("ui")
-		"sfx":
-			Game.vol_sfx = clampf(Game.vol_sfx + 0.1 * dir, 0.0, 1.0)
-			Sfx.play("ui")  # so you hear what you just set
-		"music":
-			Game.vol_music = clampf(Game.vol_music + 0.1 * dir, 0.0, 1.0)
-			Sfx.apply_music_volume()
-		"fullscreen":
-			Game.fullscreen = not Game.fullscreen
-			Game.apply_settings()
-			Sfx.play("ui")
-		"goals":
-			Game.goals_expanded = not Game.goals_expanded
-			Sfx.play("ui")
+	MenuFlow.settings_adjust(self, dir)
 
 
 func _tick_settings() -> void:
-	var n: int = settings_keys().size()
-	if Input.is_action_just_pressed("move_down"):
-		settings_idx = wrapi(settings_idx + 1, 0, n)
-		Sfx.play("ui")
-	elif Input.is_action_just_pressed("move_up"):
-		settings_idx = wrapi(settings_idx - 1, 0, n)
-		Sfx.play("ui")
-	elif Input.is_action_just_pressed("move_right"):
-		_settings_adjust(1)
-	elif Input.is_action_just_pressed("move_left"):
-		_settings_adjust(-1)
-	elif (Input.is_action_just_pressed("pause") or Input.is_action_just_pressed("bark")
-			or Input.is_action_just_pressed("plant")):
-		_close_settings()
+	MenuFlow.tick_settings(self)
 
 
 func _progress_text() -> String:
-	var t := "YOUR WALKS\n\n"
-	for lv in Game.LEVELS:
-		var nm: String = Game.LEVEL_NAMES[lv]
-		if not Game.is_unlocked(lv):
-			t += "%s   -   locked (%d stars)\n" % [nm, int(Game.STAR_GATE.get(lv, 0))]
-			continue
-		var total: int = (LEVEL_GOAL_IDS.get(lv, []) as Array).size()
-		var rec := "no record yet"
-		if Game.records.has(lv) and int(Game.records[lv].get("bones", 0)) > 0:
-			rec = "%d bones  %ds" % [int(Game.records[lv].bones), int(Game.records[lv].time)]
-		t += "%s   %s   goals %d/%d   %s\n" % [nm, Game.star_str(Game.stars(lv)), Game.goals_count(lv), total, rec]
-	t += "\nTOTAL:  %d stars    %d bones banked\n\n%s  back" % [
-		Game.total_stars(), Game.total_bones, _kb_or_pad("E", "B")]
-	return t
-
-
-	# The one-line answer to "what is going on" now lives in the feed
-	# banner, centre screen near the dog, instead of as small text tucked
-	# under the vitals card in the corner where it was never read.
-	if feed != null:
-		feed.set_banner(hud_status)
+	return MenuFlow.progress_text(self)
 
 
 func _update_hud() -> void:

@@ -120,6 +120,11 @@ jobs:
       - name: Home-leg chase wiring test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_home_chase.gd
 
+      # headless runs skip the title, so this is the only check on the menu
+      # steps, the wardrobe and the settings screen
+      - name: Title, wardrobe and settings flow test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_menu_flow.gd
+
       - name: Combo challenge regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_challenge.gd
 
