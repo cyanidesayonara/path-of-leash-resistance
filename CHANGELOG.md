@@ -12,6 +12,20 @@ is. Every PR carries a feel card, 3-5 concrete things to check by hand.
 `main` starts over the limit: eight player-facing changes from 2026-08-02/03
 were never accepted. They are listed with feel cards in the acceptance
 backlog (#23).
+## 2026-09-23 - portrait windows get a rotate prompt (#5)
+
+A window taller than it is wide cannot hold the layout: the world rendered at
+about a third of its size, the HUD was unreadable, and the camera showed the
+street behind the start line. `rotate_prompt.gd` now covers a portrait
+window with "Turn your phone sideways" ("Make the window wider" without a
+touchscreen) and pauses the walk until the window is landscape again. On the
+web it also requests the browser's landscape lock, which only Android Chrome
+offers, and only in fullscreen. `tests/test_rotate_prompt.gd` (in CI) checks
+the prompt follows the window shape, pauses only while it is up, never
+releases someone else's pause, and keeps its text at least 14px on a
+390x844 phone. Under `--shot` it shows without pausing, so the sweep can
+photograph it.
+
 ## 2026-09-23 - live on the Microsoft Store
 
 v1.54 went live on the Microsoft Store as 1.54.0.0
