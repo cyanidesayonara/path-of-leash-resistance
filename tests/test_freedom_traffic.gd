@@ -51,7 +51,7 @@ func _initialize() -> void:
 	var main := FakeMain.new()
 	root.add_child(main)
 
-	var bike := _make_traffic("res://bike.gd", main)
+	var bike := _make_traffic("res://entities/bike.gd", main)
 	bike._physics_process(0.0)
 	_check(bike.is_queued_for_deletion(), "active rider removes itself in freedom")
 
@@ -59,7 +59,7 @@ func _initialize() -> void:
 	player_dog.visible = false
 	root.add_child(player_dog)
 	var pair := Node2D.new()
-	pair.set_script(load("res://otherpair.gd"))
+	pair.set_script(load("res://entities/otherpair.gd"))
 	pair.visible = false
 	var poles: Array[Vector2] = [Vector2(300.0, 120.0)]
 	pair.setup(main, player_dog, poles, Vector2(200.0, 120.0), Vector2.UP)

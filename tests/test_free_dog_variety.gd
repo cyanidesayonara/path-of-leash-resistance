@@ -439,12 +439,12 @@ func _finish() -> void:
 
 
 func _run() -> void:
-	appearance_script = load("res://dog_appearance.gd") as GDScript
+	appearance_script = load("res://entities/dog_appearance.gd") as GDScript
 	if appearance_script == null:
 		_check(false, "dog_appearance.gd loads")
 		_finish()
 		return
-	free_dog_script = load("res://freedog.gd") as GDScript
+	free_dog_script = load("res://entities/freedog.gd") as GDScript
 	if free_dog_script == null:
 		_check(false, "freedog.gd loads")
 		_finish()

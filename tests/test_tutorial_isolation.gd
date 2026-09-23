@@ -5,7 +5,7 @@ extends SceneTree
 # to a disposable save.
 
 const GameScript := preload("res://autoload/game.gd")
-const ChallengerScript := preload("res://challenger.gd")
+const ChallengerScript := preload("res://entities/challenger.gd")
 const POPULATED_SAVE := "user://v153_tutorial_populated.cfg"
 const MISSING_SAVE := "user://v153_tutorial_missing.cfg"
 

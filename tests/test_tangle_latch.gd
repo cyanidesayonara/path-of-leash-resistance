@@ -28,7 +28,7 @@ func _check(cond: bool, msg: String) -> void:
 
 func _make_pair(main: Node2D) -> Node2D:
 	var pair := Node2D.new()
-	pair.set_script(load("res://otherpair.gd"))
+	pair.set_script(load("res://entities/otherpair.gd"))
 	pair.main = main
 	pair.npc_owner = Node2D.new()
 	pair.add_child(pair.npc_owner)

@@ -20,7 +20,7 @@ func _finish() -> void:
 
 func _initialize() -> void:
 	var dog := CharacterBody2D.new()
-	dog.set_script(load("res://dog.gd"))
+	dog.set_script(load("res://entities/dog.gd"))
 	var required := [
 		"set_cosmetic_preview",
 		"_cosmetic_collar_key",

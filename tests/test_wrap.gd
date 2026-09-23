@@ -39,7 +39,7 @@ func _settle(frames: int) -> void:
 
 func _initialize() -> void:
 	leash = Node2D.new()
-	leash.set_script(load("res://leash.gd"))
+	leash.set_script(load("res://entities/leash.gd"))
 	dog = Node2D.new()
 	human = Node2D.new()
 	root.add_child(dog)

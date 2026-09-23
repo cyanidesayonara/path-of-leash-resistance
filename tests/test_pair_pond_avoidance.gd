@@ -1,6 +1,6 @@
 extends SceneTree
 
-const PAIR_SCRIPT := "res://otherpair.gd"
+const PAIR_SCRIPT := "res://entities/otherpair.gd"
 const DT := 1.0 / 60.0
 const PREFERRED_X := 100.0
 const MIN_X := 0.0

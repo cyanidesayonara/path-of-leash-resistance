@@ -686,7 +686,7 @@ func _finish() -> void:
 
 
 func _run() -> void:
-	appearance_script = load("res://human_appearance.gd") as GDScript
+	appearance_script = load("res://entities/human_appearance.gd") as GDScript
 	if appearance_script == null:
 		_check(false, "human_appearance.gd loads")
 		_finish()

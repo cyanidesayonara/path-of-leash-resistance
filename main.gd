@@ -1938,7 +1938,7 @@ func on_junk_kicked(pos: Vector2, kind: String) -> void:
 	# A-stands are entities too: light, toppleable, never re-stood
 	for a in astands:
 		var sa := Node2D.new()
-		sa.set_script(load("res://astand.gd"))
+		sa.set_script(load("res://entities/astand.gd"))
 		sa.position = a
 		sa.z_index = 11
 		add_child(sa)
@@ -2717,7 +2717,7 @@ func _lanes(delta: float) -> void:
 
 func _spawn_bike(y: float, dir: int) -> void:
 	var b := Node2D.new()
-	b.set_script(load("res://bike.gd"))
+	b.set_script(load("res://entities/bike.gd"))
 	b.position = Vector2(-250.0 if dir > 0 else 1530.0, y)
 	b.z_index = 12
 	add_child(b)
@@ -2780,7 +2780,7 @@ func _vlane(delta: float) -> void:
 			band_lo = 450.0
 			band_hi = 830.0
 	var b := Node2D.new()
-	b.set_script(load("res://bike.gd"))
+	b.set_script(load("res://entities/bike.gd"))
 	b.position = Vector2(x, y)
 	b.z_index = 12
 	b.setup(self, dog, human, Vector2(0.0, -speed if up else speed), "kid" if kid else "bike")
@@ -2796,7 +2796,7 @@ func _squirrels(delta: float) -> void:
 	# rare visitors arrive when the camera approaches their spot
 	if cat_y < 0.0 and cam.position.y < cat_y + 700.0:
 		var c := Node2D.new()
-		c.set_script(load("res://squirrel.gd"))
+		c.set_script(load("res://entities/squirrel.gd"))
 		var cat_x := 336.0 if randf() < 0.5 else 944.0
 		if lvl == "beach":
 			cat_x = 1010.0 if randf() < 0.5 else 462.0
@@ -2810,7 +2810,7 @@ func _squirrels(delta: float) -> void:
 		var gulls := lvl == "beach"
 		for i in range(5):
 			var p := Node2D.new()
-			p.set_script(load("res://pigeon.gd"))
+			p.set_script(load("res://entities/pigeon.gd"))
 			var fx := randf_range(480.0, 820.0)
 			if gulls:
 				fx = randf_range(120.0, 320.0) if randf() < 0.7 else randf_range(350.0, 470.0)
@@ -2824,7 +2824,7 @@ func _squirrels(delta: float) -> void:
 		var start_x := 310.0 if ddir > 0.0 else 970.0
 		for i in range(5):
 			var d := Node2D.new()
-			d.set_script(load("res://duckling.gd"))
+			d.set_script(load("res://entities/duckling.gd"))
 			d.position = Vector2(start_x - ddir * i * 17.0, dy + sin(i * 1.7) * 4.0)
 			d.z_index = 9
 			add_child(d)
@@ -2851,7 +2851,7 @@ func _squirrels(delta: float) -> void:
 		# street: the far shoulder, live traffic between; park: far grass
 		x = randf_range(BLANE_R + 8.0, SHOULDER_R - 8.0) if lvl == "street" else randf_range(150.0, 290.0)
 	var s := Node2D.new()
-	s.set_script(load("res://squirrel.gd"))
+	s.set_script(load("res://entities/squirrel.gd"))
 	s.position = Vector2(x, y)
 	s.z_index = 9
 	add_child(s)
@@ -3021,7 +3021,7 @@ func _furniture_wrap_poles() -> Array[Vector2]:
 
 func _make_pair(start: Vector2, direction: Vector2, activate := true) -> Node2D:
 	var pair := Node2D.new()
-	pair.set_script(load("res://otherpair.gd"))
+	pair.set_script(load("res://entities/otherpair.gd"))
 	pair.setup(self, dog, poles, start, direction)
 	pair.leash.furniture_poles = _furniture_wrap_poles()
 	if not pair.configure_route(
@@ -4578,7 +4578,7 @@ func _enter_freedom() -> void:
 	romp_catches = 0
 	romp_done = false
 	ball = Node2D.new()
-	ball.set_script(load("res://ball.gd"))
+	ball.set_script(load("res://entities/ball.gd"))
 	ball.z_index = 10
 	ball.position = human.global_position
 	add_child(ball)
@@ -4590,7 +4590,7 @@ func _enter_freedom() -> void:
 	# other dogs to romp and say hi to
 	for i in range(3):
 		var fd := Node2D.new()
-		fd.set_script(load("res://freedog.gd"))
+		fd.set_script(load("res://entities/freedog.gd"))
 		fd.position = Vector2(randf_range(200.0, 1080.0), randf_range(freedom_lo + 40.0, GATE_Y - 60.0))
 		fd.z_index = 9
 		add_child(fd)
@@ -4600,7 +4600,7 @@ func _enter_freedom() -> void:
 	# place to meet him.
 	if not tutorial_mode and randf() < 0.5:
 		var rv := Node2D.new()
-		rv.set_script(load("res://rival.gd"))
+		rv.set_script(load("res://entities/rival.gd"))
 		var rb := _pair_park_bounds()
 		rv.position = Vector2(rb.position.x + 60.0, rb.get_center().y)
 		rv.z_index = 9
@@ -4615,7 +4615,7 @@ func _spawn_wallcats() -> void:
 	# from the centre when barked at.
 	for spot in wallcat_spots:
 		var wc := Node2D.new()
-		wc.set_script(load("res://wallcat.gd"))
+		wc.set_script(load("res://entities/wallcat.gd"))
 		wc.position = spot
 		wc.z_index = 7
 		add_child(wc)
@@ -4635,7 +4635,7 @@ func on_wallcat_spooked(pos: Vector2) -> void:
 func _spawn_guards() -> void:
 	for spot in guard_posts:
 		var gd := Node2D.new()
-		gd.set_script(load("res://guarddog.gd"))
+		gd.set_script(load("res://entities/guarddog.gd"))
 		gd.position = spot
 		gd.z_index = 7
 		add_child(gd)
@@ -4697,7 +4697,7 @@ func _spawn_challenger() -> void:
 	if tutorial_mode:
 		return
 	var giver := Node2D.new()
-	giver.set_script(load("res://challenger.gd"))
+	giver.set_script(load("res://entities/challenger.gd"))
 	giver.position = Vector2(walk_cx + 170.0, -1600.0)
 	giver.z_index = 6
 	add_child(giver)
@@ -4721,7 +4721,7 @@ func _neighbour_fetch() -> void:
 	for pair in get_tree().get_nodes_in_group("pairs"):
 		if pair.is_parked() and is_instance_valid(pair.npc_owner):
 			npc_ball = Node2D.new()
-			npc_ball.set_script(load("res://ball.gd"))
+			npc_ball.set_script(load("res://entities/ball.gd"))
 			npc_ball.z_index = 10
 			npc_ball.position = pair.npc_owner.global_position
 			add_child(npc_ball)
@@ -4802,7 +4802,7 @@ func _enter_home() -> void:
 				tx = walk_cx
 			spots.append(Vector2(tx, ty))
 		var tf := Node2D.new()
-		tf.set_script(load("res://tofu.gd"))
+		tf.set_script(load("res://entities/tofu.gd"))
 		tf.z_index = 9
 		add_child(tf)
 		tf.setup(self, dog, spots)

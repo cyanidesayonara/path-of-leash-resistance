@@ -61,7 +61,7 @@ func _settle(leash: Node2D, frames: int) -> void:
 
 func _make_leash(dog: Node2D, human: Node2D, poles: Array[Vector2], rest: float) -> Node2D:
 	var leash := Node2D.new()
-	leash.set_script(load("res://leash.gd"))
+	leash.set_script(load("res://entities/leash.gd"))
 	root.add_child(dog)
 	root.add_child(human)
 	root.add_child(leash)
@@ -71,7 +71,7 @@ func _make_leash(dog: Node2D, human: Node2D, poles: Array[Vector2], rest: float)
 
 func _make_pair(main: Node2D) -> Node2D:
 	var pair := Node2D.new()
-	pair.set_script(load("res://otherpair.gd"))
+	pair.set_script(load("res://entities/otherpair.gd"))
 	pair.main = main
 	pair.my_dog = Node2D.new()
 	pair.npc_owner = Node2D.new()
@@ -80,7 +80,7 @@ func _make_pair(main: Node2D) -> Node2D:
 	pair.add_child(pair.npc_owner)
 	pair.add_child(pair.npc_dog)
 	pair.leash = Node2D.new()
-	pair.leash.set_script(load("res://leash.gd"))
+	pair.leash.set_script(load("res://entities/leash.gd"))
 	pair.add_child(pair.leash)
 	var empty: Array[Vector2] = []
 	pair.leash.setup(pair.npc_dog, pair.npc_owner, empty, 150.0)

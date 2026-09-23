@@ -6,8 +6,8 @@ extends Node2D
 # flagship dog-park mayhem, emergent from the shared rope physics.
 
 const BypasserRouteScript := preload("res://bypasser_route.gd")
-const DogAppearanceScript := preload("res://dog_appearance.gd")
-const HumanAppearanceScript := preload("res://human_appearance.gd")
+const DogAppearanceScript := preload("res://entities/dog_appearance.gd")
+const HumanAppearanceScript := preload("res://entities/human_appearance.gd")
 const TANGLE_REARM_S := 0.5
 # Owner roots briefly on contact; bound so a stuck geometry contact cannot
 # freeze the lane forever. 90 frames at 60 Hz = ordinary recovery target.
@@ -96,7 +96,7 @@ func setup(m: Node2D, mine: Node2D, poles: Array[Vector2], start: Vector2, direc
 	npc_dog.position = start + INITIAL_DOG_OFFSET
 	add_child(npc_dog)
 	leash = Node2D.new()
-	leash.set_script(load("res://leash.gd"))
+	leash.set_script(load("res://entities/leash.gd"))
 	leash.z_index = 6
 	add_child(leash)
 	leash.setup(npc_dog, npc_owner, poles, 150.0)

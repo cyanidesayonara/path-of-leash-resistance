@@ -36,7 +36,7 @@ func _settle(leash: Node2D, frames: int) -> void:
 
 func _make_leash(dog: Node2D, human: Node2D, poles: Array, rest: float) -> Node2D:
 	var leash := Node2D.new()
-	leash.set_script(load("res://leash.gd"))
+	leash.set_script(load("res://entities/leash.gd"))
 	root.add_child(dog)
 	root.add_child(human)
 	root.add_child(leash)
@@ -53,7 +53,7 @@ func _free_node(n: Node) -> void:
 
 
 func _test_slip_constants_and_curves() -> void:
-	var LeashScript = load("res://leash.gd")
+	var LeashScript = load("res://entities/leash.gd")
 	var probe := Node2D.new()
 	probe.set_script(LeashScript)
 	_check(probe.get("STATIC_SLIP_MIN") != null, "leash exposes STATIC_SLIP_MIN")
@@ -357,7 +357,7 @@ func _test_single_pole_still_winds() -> void:
 
 
 func _test_ball_throw_window_before_first_throw() -> void:
-	var src := FileAccess.get_file_as_string("res://ball.gd")
+	var src := FileAccess.get_file_as_string("res://entities/ball.gd")
 	_check(src.contains("throw_x_lo") and src.contains("throw_x_hi"),
 		"ball.setup accepts throw_x_lo/throw_x_hi window args")
 	var setup_i := src.find("func setup(")

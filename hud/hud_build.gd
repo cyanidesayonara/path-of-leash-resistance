@@ -112,7 +112,7 @@ static func build(m: Node2D) -> void:
 	m.shop_preview_bg.visible = false
 	m.hud.add_child(m.shop_preview_bg)
 	var preview := CharacterBody2D.new()
-	preview.set_script(load("res://dog.gd"))
+	preview.set_script(load("res://entities/dog.gd"))
 	preview.preview_mode = true
 	preview.position = Vector2(280.0, 365.0)
 	preview.scale = Vector2(3.0, 3.0)
