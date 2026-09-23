@@ -388,6 +388,9 @@ var business_spot := Vector2(INF, INF)
 var elapsed := 0.0
 var frozen := false
 var shake_t := 0.0
+# camera shake draws from its own RNG: it runs per rendered frame, and the
+# global sequence has to stay the simulation's alone
+var _shake_rng := RandomNumberGenerator.new()
 
 var hud: CanvasLayer
 var panel: Control
@@ -4430,7 +4433,7 @@ func _process(_delta: float) -> void:
 		target_y = dog.global_position.y  # owner is parked; follow the dog
 	cam.position = Vector2(640, target_y)
 	if shake_t > 0.0:
-		cam.offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * 9.0 * shake_t
+		cam.offset = Vector2(_shake_rng.randf_range(-1, 1), _shake_rng.randf_range(-1, 1)) * 9.0 * shake_t
 	else:
 		cam.offset = Vector2.ZERO
 	# the world is drawn in world space, so the camera scroll stays smooth
