@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - scripts moved into folders (freeze task 5, part 2)
+
+Every script except `main.gd` now lives in a folder: `autoload/` (Game, Sfx),
+`entities/` (20 scripts), `hud/`, `world/` and `systems/`, next to the modules
+split out of main.gd. One folder per commit, each script moved with its .uid,
+and every `res://` path rewritten in the same commit (project.godot's
+autoloads, main.gd, the modules and 30-odd tests). Each commit passed the
+full ci.yml test list and an identical behaviour snapshot. AGENTS.md's project
+structure is rewritten to match (#15).
+
 ## 2026-09-24 - main.gd split along its seams (freeze task 5)
 
 `main.gd` goes from 8,029 to 5,818 lines. Six seams move out verbatim, one

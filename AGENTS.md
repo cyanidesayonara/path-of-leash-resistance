@@ -1,4 +1,4 @@
-# AGENTS.md -- touch-grass
+# AGENTS.md -- Path of Leash Resistance
 
 This file provides context and instructions for AI coding agents working on
 this project. It follows the AGENTS.md open standard (https://agents.md).
@@ -27,26 +27,40 @@ before proposing features.
 ## Project Structure
 
 ```
-touch-grass/
-  project.godot        # Godot project config
-  main.tscn            # Single scene: a root Node2D running main.gd
-  main.gd              # Level construction, game state, leash constraint, HUD
-  dog.gd               # Player: move, plant (anchor), bark
-  human.gd             # The payload: autopilot walking + telegraphed events
-  leash.gd             # The verlet rope: visual AND gameplay constraint
-  bike.gd              # Riders: crossing bikes, lane commuters, scooter kids
-  pee_tube.gd          # HUD test-tube widget for the pee meter
-  PROJECT.md              # Design pillars, phased roadmap (reference doc)
-  AGENTS.md            # This file (AI context, living document)
-  CHANGELOG.md         # Append-only session history
-  export_presets.cfg   # Web export preset (threads OFF: no SharedArrayBuffer)
-  godot/               # Local portable Godot editor + console exe (gitignored)
-  build/               # Export output (gitignored)
+path-of-leash-resistance/
+  project.godot, main.tscn   # config; the one scene, a Node2D running main.gd
+  main.gd              # game state, frame order, leash/tug, pairs and traffic,
+                       # world drawing, input; forwards to the modules below
+  autoload/            # Game (records, settings, levels), Sfx (procedural audio)
+  entities/            # dog, human, leash (the verlet rope), riders, NPC pairs,
+                       # free dogs, critters, props, the sweeper, appearances
+  systems/             # goals, home_chase, mood + mood_wiring, combo, challenge,
+                       # teeter, grind, tutorial, swing/tangle geometry, routes
+  hud/                 # hud_build (every HUD node, in draw order), menu_flow
+                       # (title, wardrobe, settings), panels, cards, event feed,
+                       # rotate prompt, touch controls, weather, grade shader
+  world/               # level_build (corridor, level data, props, walls),
+                       # edge/verge/freedom layers, surfaces, level_check
+  tests/               # headless and render regression tests, all run by CI
+  tools/               # shot sweep, idle soak, behaviour snapshot, perf, MSIX,
+                       # icon and Store art generators
+  store/               # Microsoft Store manifest, tile images, listing record
+  docs/                # Store procedure, handover archive, plans
+  PROJECT.md           # design pillars, roadmap
+  CHANGELOG.md         # newest-first session history
+  export_presets.cfg   # Web (threads off) and Windows presets
+  godot/, build/       # local editor and export output (gitignored)
 ```
+
+The split-out modules (`systems/goals.gd`, `hud/hud_build.gd`,
+`world/level_build.gd`, ...) are static functions over main's state: the
+state stays on main, and main.gd keeps a same-name forwarder for every
+function another script or a test calls. A refactor of main.gd must leave
+`tools/behaviour_snapshot.sh` output byte-identical.
 
 ## How things work (non-obvious bits)
 
-- **The rope IS the constraint** (`leash.gd`): the visible verlet rope is
+- **The rope IS the constraint** (`entities/leash.gd`): the visible verlet rope is
   also the gameplay physics. It wraps poles via segment-vs-circle
   collision (point-only checks tunnel when stretched), winds up, cinches
   when taut, and slips off under hard tension via stick-slip friction
@@ -64,15 +78,15 @@ touch-grass/
   contacts shield both ends from raw tension while the geometry cap -
   15% stretch, corrections along tangents - still constrains: that cap
   is what whips a wound human along the arc). A taut leash saps the DOG's
-  control authority (`dragged` flag in dog.gd; an idle dragged dog barely
+  control authority (`dragged` flag in entities/dog.gd; an idle dragged dog barely
   brakes) - never the human's motor. Leash length is dynamic: the HUMAN
   owns the retractable reel and fiddles with it on a timer ("click!").
-- **Wraps and snags** (`leash.gd`): still the same verlet rope - poles and
+- **Wraps and snags** (`entities/leash.gd`): still the same verlet rope - poles and
   authored furniture collide segment-vs-circle; stick-slip grips or frees
   by contact kind; static contacts own vault/shield metadata
   (`contact_pole`), while other-leash points are dynamic snags with their
   own slip. Do not reintroduce a separate pivot/angle bookkeeping layer.
-- **The whirl** (human.gd WHIRL state): when a wound human near a pole
+- **The whirl** (entities/human.gd WHIRL state): when a wound human near a pole
   keeps getting pulled, main.gd starts a choreographed accelerating orbit
   instead of letting them jam against the pole. The orbit runs for
   exactly the wound turn count (leash.free_slip_t is refreshed during
