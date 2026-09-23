@@ -22,6 +22,12 @@ What already exists:
   the Partner Center upload.
 - `msix.yml` runs the same pack, install and launch, plus WACK, on PRs that
   touch the packaging, against the latest release's exe.
+- WACK runs fine on GitHub's hosted Windows runners
+  (`tools/wack_msix.ps1`). The v1.54 package's overall result is WARNING:
+  "Blocked executables" fails, but it is optional (the Godot engine
+  references process-launch APIs, which only matters for Windows 10 S), and
+  "DPIAwarenessValidation" warns because Godot enables DPI awareness at
+  runtime, where a static scan can't see it. Neither blocks certification.
 - The old `ms-store-msix` branch was superseded by this and is not needed.
 
 ## 0. Pick the product type
@@ -211,8 +217,6 @@ not start it until the MSIX route has actually been refused.
 2. Whether the GDK route truly needs no ID@Xbox enrolment. One GDK packaging
    page still says it does; the June 2026 self-service page says it does not.
 3. Whether `makemsix` on Linux produces packages Partner Center accepts.
-4. Whether WACK runs on a GitHub-hosted Windows runner (it needs an
-   interactive session).
 
 ## Sources
 

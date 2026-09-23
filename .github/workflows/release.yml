@@ -187,8 +187,8 @@ jobs:
           generate_release_notes: true
 
   # The Microsoft Store package: packs the exe exported above into an unsigned
-  # MSIX, installs and launches it once to prove it runs packaged, and attaches
-  # it to the GitHub release for upload in Partner Center. A separate job after
+  # MSIX, installs and launches it once to prove it runs packaged, runs WACK,
+  # and attaches it to the GitHub release for upload in Partner Center. A separate job after
   # publish, so a Store packaging failure can never hold back itch.
   msix:
     needs: publish
@@ -213,6 +213,9 @@ jobs:
 
       - name: Install and launch it packaged
         run: ./tools/verify_msix.ps1 -Msix (Get-ChildItem build/msix/*.msix).FullName
+
+      - name: Windows App Certification Kit
+        run: ./tools/wack_msix.ps1 -Msix (Get-ChildItem build/msix/*.msix).FullName
 
       - name: Attach the MSIX to the GitHub release
         env:
