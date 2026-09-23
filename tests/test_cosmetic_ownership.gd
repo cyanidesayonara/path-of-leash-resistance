@@ -3,7 +3,7 @@ extends SceneTree
 # Collar, bandana, and coat ownership share catalog keys but not purchases.
 # Legacy raw ownership entries are migrated without changing equipped keys.
 
-const GameScript := preload("res://game.gd")
+const GameScript := preload("res://autoload/game.gd")
 const PURCHASE_SAVE := "user://v153_cosmetic_purchase.cfg"
 const LEGACY_SAVE := "user://v153_cosmetic_legacy.cfg"
 
