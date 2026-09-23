@@ -21,6 +21,22 @@ and prints knocks by cause, mood arrivals, phone cracks and any early end;
 PRs and main without gating CI. After the fix, a seed gives identical results
 at every window size, and no idle dog is knocked before 19 seconds on street
 or market.
+## 2026-09-23 - live on the Microsoft Store
+
+v1.54 went live on the Microsoft Store as 1.54.0.0
+(https://apps.microsoft.com/detail/9p5d14v8rbqx), packaged by `store/msix/` and
+certified on the first real submission. The v1.54 build was chosen over
+`main` because `main` holds 17 gameplay commits not yet accepted by hand.
+
+- `store/listing.md` records everything entered in Partner Center: the
+  listing text, properties, the age-rating answers, and the privacy policy.
+  Two things went wrong the first time and are written down there. The first
+  upload used the wrong identity spelling ("Nykanen"; Partner Center writes
+  "Nyknen"). The first IARC pass answered that innocents can be seriously
+  injured, which got PEGI 16.
+- `tools/make_store_art.gd` draws the poster, box art and tiles from the icon's
+  own drawing code, with the title in the game's font.
+- Settled: "MSIX or PWA game" accepts a full-trust Win32 MSIX.
 
 ## 2026-09-23 - Microsoft Store packaging (unreleased)
 
