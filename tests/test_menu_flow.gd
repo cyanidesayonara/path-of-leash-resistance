@@ -75,6 +75,8 @@ func _run() -> void:
 	_dump(main, "shop_open")
 	_check(main.in_shop and main.shop_l.visible and main.shop_preview.visible, "the wardrobe opens with its list and preview")
 	_check(String(main.shop_l.text).contains(">  "), "the wardrobe shows a cursor")
+	# the preview draws its shadow through main; without it every draw errored (#33)
+	_check(main.shop_preview.main == main, "the wardrobe preview dog is wired to main")
 	main.shop_idx = 1
 	main._refresh_shop()
 	_dump(main, "shop_cursor_1")
