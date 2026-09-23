@@ -1,0 +1,59 @@
+name: Screenshot sweep
+
+# Photographs every walk, the menu screens and both phone shapes, and uploads
+# the contact sheets as an artifact for eyeballing. Informational only: it is
+# a separate workflow, so ci.yml and the release gate never wait on it.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: shots-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # full history so tools/stamp_version.sh can see the tags
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Download Godot
+        run: |
+          curl -sL -o godot.zip https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
+          unzip -q godot.zip
+          chmod +x Godot_v4.7-stable_linux.x86_64
+
+      - name: Install virtual display and Pillow
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgl1-mesa-dri mesa-utils fonts-dejavu-core python3-pil
+
+      - name: Import resources
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --import
+
+      # the label on the title shot and the sheet headers
+      - name: Stamp the build label
+        run: bash tools/stamp_version.sh
+
+      - name: Sweep
+        run: bash tools/shot_sweep.sh shots
+
+      # upload whatever exists even if a shot failed, logs included, so the
+      # failure can be read from the artifact
+      - name: Upload sheets
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shots-${{ github.sha }}
+          path: |
+            shots/sheet-*.png
+            shots/*.png
+            shots/*.log
+          retention-days: 30
