@@ -5818,7 +5818,9 @@ func _draw_world() -> void:
 		draw_rect(Rect2(gate_l - 14, HOME_Y + 40.0, gate_r - gate_l + 28, 14), Color(0.4, 0.32, 0.3))
 		draw_string(font, Vector2(gate_l, HOME_Y + 78.0), "HOME", HORIZONTAL_ALIGNMENT_CENTER,
 			gate_r - gate_l, 24, Color(0.9, 0.85, 0.7))
-	if not started and vb > START_Y - 260.0:
+	# not under the settings panel: the dim only halves it, so the chalked
+	# name read straight through above the panel (#10)
+	if not started and not in_settings and vb > START_Y - 260.0:
 		_draw_ground_title()
 	# The line painted on the pavement at the start: where you are going, and
 	# the one thing about this walk that will get you. Eight of the twelve
