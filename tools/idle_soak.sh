@@ -14,10 +14,16 @@
 # the machine renders. No portrait size: a portrait window pauses the walk
 # behind the rotate prompt (#5), so there is nothing to soak.
 #
-# Thresholds (environment, provisional until tuned from soak data):
-#   GRACE_SECS=10   any knock before this many seconds fails the run
-#   MAX_KNOCKS=2    more knocks than this in the whole soak fails
-#   MAX_MOODS=3     more mood arrivals than this fails
+# Thresholds (environment). Set 2026-09-23 from the first full CI soak (108
+# runs): the earliest idle knock on any walk was 9.17s and no run had more
+# than 3 knocks or 1 mood. They guard against regressions from that baseline;
+# the bug they were written for knocked the dog at about 5s.
+#   GRACE_SECS=8    any knock before this many seconds fails the run
+#   MAX_KNOCKS=3    more knocks than this in the whole soak fails
+#   MAX_MOODS=2     more mood arrivals than this fails
+# The reference numbers come from CI (xvfb, software GL): a walk can diverge
+# slightly between machines through floating-point differences in the rope,
+# so compare local runs with local runs.
 # A walk that ends early (the idle owner walks into a manhole, say) is
 # reported but is not a failure: an idle dog is allowed to lose.
 set -uo pipefail
@@ -27,9 +33,9 @@ cd "$(dirname "$0")/.."
 OUT="${1:-soak}"
 GODOT="${GODOT:-./Godot_v4.7-stable_linux.x86_64}"
 SOAK_SECS="${SOAK_SECS:-30}"
-GRACE_SECS="${GRACE_SECS:-10}"
-MAX_KNOCKS="${MAX_KNOCKS:-2}"
-MAX_MOODS="${MAX_MOODS:-3}"
+GRACE_SECS="${GRACE_SECS:-8}"
+MAX_KNOCKS="${MAX_KNOCKS:-3}"
+MAX_MOODS="${MAX_MOODS:-2}"
 LEVELS="${LEVELS:-street park beach rain market oldtown trail station site spook scrap guell}"
 SIZES="${SIZES:-1280x720 1920x1080 844x390}"
 SEEDS="${SEEDS:-1 2 3}"
