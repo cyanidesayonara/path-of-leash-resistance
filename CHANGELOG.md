@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-09-23 - Microsoft Store packaging (unreleased)
+
+The game now has a Partner Center product, "MSIX or PWA game", Store ID
+9P5D14V8RBQX. The packaging is rebuilt from scratch on `main`; the unpushed
+`ms-store-msix` branch is superseded.
+
+- `store/msix/AppxManifest.xml` holds the product's identity and describes a
+  full-trust desktop game. `tools/make_msix_assets.py` derives the tile
+  images from `icon.png`. `store/.gdignore` keeps Godot from importing or
+  packing any of it.
+- `tools/pack_msix.ps1` turns an exported exe into an unsigned MSIX,
+  versioned from the tag (`v1.55` becomes `1.55.0.0`). The Store signs it.
+- `tools/verify_msix.ps1` installs the package with a throwaway certificate,
+  launches it packaged, and reads Godot's log from the package's private
+  AppData.
+- `release.yml` gains an `msix` job after the itch publish: pack, verify, and
+  attach the MSIX to the GitHub release. `msix.yml` runs pack, verify and
+  WACK on PRs that touch the packaging.
+
 ## 2026-09-23 - stabilization freeze: screenshot sweep tooling (unreleased)
 
 No features until verification catches up with 138 commits in 25 days. This

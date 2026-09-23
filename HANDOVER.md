@@ -30,10 +30,11 @@ the camera. Limit perception only. A fifth of speed either way at most. Read
 that header before changing any number in it, and keep `tests/test_mood.gd`
 green - most of it guards the promise, not the feature.
 
-Also unreleased and untouched by me: branch `ms-store-msix` (Microsoft Store
-MSIX packaging, 5 commits, never pushed) predates the two v1.54 commits and
-needs a rebase onto `main` before it will build. The submission steps from
-Partner Center onward are in `docs/MICROSOFT_STORE.md`.
+Microsoft Store: product reserved in Partner Center as an "MSIX or PWA game"
+(Store ID 9P5D14V8RBQX). `store/msix/` plus `tools/pack_msix.ps1` build the
+package, and `release.yml` attaches it to each tagged release. The old
+`ms-store-msix` branch is superseded and can be deleted. Full procedure:
+`docs/MICROSOFT_STORE.md`.
 
 ## Current state (v1.54 on `main`)
 

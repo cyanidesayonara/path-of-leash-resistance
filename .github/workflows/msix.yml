@@ -1,0 +1,81 @@
+name: MSIX package check
+
+# Packs a Windows build into the Store MSIX, installs it on a Windows runner,
+# launches it packaged, and runs the Windows App Certification Kit. Checks the
+# packaging, not the game: it packs the exe from an existing GitHub release
+# (the latest, unless a tag is given), so it needs no export templates.
+# release.yml packs the freshly exported exe for real on a version tag.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "store/**"
+      - "tools/pack_msix.ps1"
+      - "tools/verify_msix.ps1"
+      - "tools/make_msix_assets.py"
+      - ".github/workflows/msix.yml"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag whose Windows build to pack (empty = latest release)"
+        type: string
+        default: ""
+
+jobs:
+  msix:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Fetch the Windows build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          $tag = $env:TAG
+          if (-not $tag) { $tag = gh release view --repo $env:GITHUB_REPOSITORY --json tagName -q .tagName }
+          "TAG=$tag" | Out-File -Append $env:GITHUB_ENV
+          gh release download $tag --repo $env:GITHUB_REPOSITORY -p leash-resistance-windows.zip -D build/rel
+          Expand-Archive build/rel/leash-resistance-windows.zip -DestinationPath build/rel/win
+          Get-ChildItem build/rel/win
+
+      - name: Pack
+        run: ./tools/pack_msix.ps1 -Exe build/rel/win/PathOfLeashResistance.exe -Tag $env:TAG
+
+      - name: Install, launch, read the game's log
+        run: ./tools/verify_msix.ps1 -Msix (Get-ChildItem build/msix/*.msix).FullName
+
+      # WACK wants an interactive session, which a hosted runner may not give
+      # it; the result is uploaded either way and gates nothing yet
+      - name: Windows App Certification Kit
+        continue-on-error: true
+        run: |
+          $appcert = "${env:ProgramFiles(x86)}\Windows Kits\10\App Certification Kit\appcert.exe"
+          if (-not (Test-Path $appcert)) { Write-Host "appcert.exe is not on this runner"; exit 1 }
+          New-Item -ItemType Directory -Force build/wack | Out-Null
+          & $appcert reset
+          & $appcert test -appxpackagepath (Get-ChildItem build/msix/*.msix).FullName -reportoutputpath "$PWD\build\wack\report.xml"
+          if (-not (Test-Path build/wack/report.xml)) { Write-Host "WACK wrote no report"; exit 1 }
+          [xml]$r = Get-Content build/wack/report.xml
+          Write-Host "WACK overall: $($r.REPORT.OVERALL_RESULT)"
+          $r.SelectNodes("//TEST") | ForEach-Object {
+            "{0,-8} {1}" -f $_.RESULT.'#cdata-section', $_.NAME
+          }
+          if ($r.REPORT.OVERALL_RESULT -ne "PASS") { exit 1 }
+
+      - name: Upload
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: msix-${{ env.TAG }}
+          path: |
+            build/msix/*.msix
+            build/msix-verify/godot.log
+            build/wack/report.xml
+          retention-days: 14

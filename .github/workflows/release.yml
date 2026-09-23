@@ -129,6 +129,14 @@ jobs:
           # a packed single-file build should be tens of MB, not a stub
           test "$(stat -c%s build/win/PathOfLeashResistance.exe)" -gt 20000000
 
+      # handed to the msix job below, which needs a Windows runner
+      - name: Keep the Windows build for the MSIX job
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: build/win/PathOfLeashResistance.exe
+          retention-days: 7
+
       # keep producing the zip as well, so there is always a manual
       # fallback and something attached to the GitHub release
       - name: Zip them (manual-upload fallback)
@@ -177,3 +185,36 @@ jobs:
             leash-resistance-web.zip
             leash-resistance-windows.zip
           generate_release_notes: true
+
+  # The Microsoft Store package: packs the exe exported above into an unsigned
+  # MSIX, installs and launches it once to prove it runs packaged, and attaches
+  # it to the GitHub release for upload in Partner Center. A separate job after
+  # publish, so a Store packaging failure can never hold back itch.
+  msix:
+    needs: publish
+    if: ${{ github.ref_type == 'tag' }}
+    runs-on: windows-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-build
+          path: build/win
+
+      - name: Pack
+        run: ./tools/pack_msix.ps1 -Exe build/win/PathOfLeashResistance.exe -Tag $env:GITHUB_REF_NAME
+
+      - name: Install and launch it packaged
+        run: ./tools/verify_msix.ps1 -Msix (Get-ChildItem build/msix/*.msix).FullName
+
+      - name: Attach the MSIX to the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload $env:GITHUB_REF_NAME (Get-ChildItem build/msix/*.msix).FullName --repo $env:GITHUB_REPOSITORY --clobber
