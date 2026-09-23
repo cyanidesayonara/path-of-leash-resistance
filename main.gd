@@ -35,10 +35,6 @@ const AUTOWALK_MIN_FINISH_TIME := 120.0
 const PAIR_MIN_SPAWN_DIST := 360.0
 const MAX_ACTIVE_PAIRS := 3
 const LEASH_LENGTH := 340.0  # a proper 5-meter leash
-# the frame the HUD is composed against; the live viewport is this grown along
-# one axis (see _pin_wide and friends)
-const REF_W := 1280.0
-const REF_H := 720.0
 const LEASH_STRETCH_CAP := 1.15
 const LEASH_K := 32.0
 const DOG_MASS := 1.0
@@ -52,6 +48,7 @@ const TangleGeom := preload("res://tangle_geom.gd")
 const MoodWiring := preload("res://systems/mood_wiring.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
 const Goals := preload("res://systems/goals.gd")
+const HudBuild := preload("res://hud/hud_build.gd")
 const POLE_RADIUS := 10.0
 const TREE_RADIUS := 13.0  # a trunk is stouter than a lamppost
 const HYDRANT_RADIUS := 9.0
@@ -3204,231 +3201,11 @@ func on_junk_kicked(pos: Vector2, kind: String) -> void:
 
 
 func _build_hud() -> void:
-	# the colour grade sits over the world but UNDER the HUD, so the
-	# interface stays crisp and unvignetted while the world gets graded
-	var grade_layer := CanvasLayer.new()
-	grade_layer.layer = 1
-	add_child(grade_layer)
-	grade_rect = ColorRect.new()
-	# the whole viewport, not the reference frame: a fixed 1280x720 rect left
-	# the strip that aspect "expand" reveals on a wide window completely
-	# ungraded - no vignette, no grain, and visibly brighter than the picture
-	# beside it
-	grade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	grade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var gmat := ShaderMaterial.new()
-	gmat.shader = load("res://grade.gdshader")
-	grade_rect.material = gmat
-	grade_layer.add_child(grade_rect)
-	hud = CanvasLayer.new()
-	hud.layer = 2
-	add_child(hud)
-	# weather sits behind the HUD text but over the world
-	weather_fx = Control.new()
-	weather_fx.set_script(load("res://weather_overlay.gd"))
-	weather_fx.mode = Game.weather
-	hud.add_child(weather_fx)
-	# one quiet card for the vitals, one quiet card for the quests -
-	# the world is busy on purpose, the overlay is not
-	panel = Control.new()
-	panel.set_script(load("res://hud_panel.gd"))
-	panel.position = Vector2(16, 12)
-	hud.add_child(panel)
-	panel.setup(self)
-	# the goal list draws itself: real ticks and meters instead of ASCII, and
-	# a height that follows its contents
-	goals_card = Control.new()
-	goals_card.set_script(load("res://goals_card.gd"))
-	goals_card.position = Vector2(GOALS_X, 8)
-	hud.add_child(goals_card)
-	goals_card.setup(self)
-	# the end-of-walk card lays itself out: a twelve-goal walk used to run
-	# straight off the bottom of the screen
-	results_card = Control.new()
-	results_card.set_script(load("res://results_panel.gd"))
-	results_card.visible = false
-	hud.add_child(results_card)
-	results_card.setup(self)
-	hint_l = _hud_label(Vector2(24, 686), 15)
-	_pin_box(hint_l, 0.0, 0.0, 0.0, 1.0)
-	hint_l.modulate.a = 0.75
-	title_l = _hud_label(Vector2(0, 240), 44)
-	_pin_wide(title_l, 52.0, 0.5)
-	title_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_l.text = "PATH OF LEASH RESISTANCE"
-	sub_l = _hud_label(Vector2(0, 300), 18)
-	_pin_wide(sub_l, 30.0, 0.5)
-	sub_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub_l.text = "You are the dog. Go and touch grass."
-	select_l = _hud_label(Vector2(0, 348), 22)
-	_pin_wide(select_l, 32.0, 0.5)
-	select_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	select_l.text = "<   %s   >" % Game.LEVEL_NAMES[lvl]
-	record_l = _hud_label(Vector2(0, 300), 18)
-	_pin_wide(record_l, 26.0, 0.5)
-	record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	record_l.modulate.a = 0.85
-	# stacked ABOVE the controls line, which occupies y=686 from step 2 on
-	menu_hint_l = _hud_label(Vector2(24, 662), 14)
-	_pin_box(menu_hint_l, 0.0, 0.0, 0.0, 1.0)
-	menu_hint_l.modulate.a = 0.55
-	menu_hint_l.visible = false
-	var version_l := _hud_label(Vector2(1150, 686), 13)
-	_pin_box(version_l, 0.0, 0.0, 1.0, 1.0)
-	version_l.text = _build_label()
-	version_l.modulate.a = 0.5
-	owner_l = _hud_label(Vector2(0, 296), 26)
-	_pin_wide(owner_l, 34.0, 0.5)
-	owner_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	night_l = _hud_label(Vector2(0, 340), 26)
-	_pin_wide(night_l, 34.0, 0.5)
-	night_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	weather_l = _hud_label(Vector2(0, 384), 26)
-	_pin_wide(weather_l, 34.0, 0.5)
-	weather_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	prompt_l = _hud_label(Vector2(0, 470), 22)
-	_pin_wide(prompt_l, 32.0, 0.5)
-	prompt_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	shop_preview_bg = ColorRect.new()
-	shop_preview_bg.position = Vector2(60.0, 190.0)
-	_pin_box(shop_preview_bg, 440.0, 390.0, 0.5, 0.5)
-	shop_preview_bg.color = Color(0.05, 0.06, 0.07, 0.72)
-	shop_preview_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	shop_preview_bg.visible = false
-	hud.add_child(shop_preview_bg)
-	var preview := CharacterBody2D.new()
-	preview.set_script(load("res://dog.gd"))
-	preview.preview_mode = true
-	preview.position = Vector2(280.0, 365.0)
-	preview.scale = Vector2(3.0, 3.0)
-	preview.visible = false
-	hud.add_child(preview)
-	preview.z_index = 1
-	shop_preview = preview
-	shop_title_l = _hud_label(Vector2(0, 70), 30)
-	_pin_wide(shop_title_l, 40.0)
-	shop_title_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	shop_title_l.visible = false
-	shop_preview_l = _hud_label(Vector2(60.0, 145.0), 18)
-	_pin_box(shop_preview_l, 440.0, 30.0, 0.5, 0.5)
-	shop_preview_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	shop_preview_l.text = "HIGHLIGHTED LOOK"
-	shop_preview_l.visible = false
-	shop_l = _hud_label(Vector2(430.0, 150.0), 20)
-	_pin_box(shop_l, 800.0, 460.0, 0.5, 0.5)
-	shop_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	shop_l.visible = false
-	for k in Game.COLLARS:
-		shop_items.append({"kind": "collar", "key": k})
-	for k in Game.BANDANAS:
-		if k != "none":
-			shop_items.append({"kind": "bandana", "key": k})
-	shop_items.append({"kind": "bandana", "key": "none"})
-	# coats last: the biggest change to how Millie looks, and the first
-	# working piece of the dog creator
-	for k in Game.COATS:
-		shop_items.append({"kind": "coat", "key": k})
+	# every card, label and bar, in draw order: hud/hud_build.gd
+	HudBuild.build(self)
+	# connected here rather than in the builder: a lambda created in a static
+	# function would never be disconnected when the scene reloads
 	Input.joy_connection_changed.connect(func(_d: int, _c: bool) -> void: _refresh_menu_text())
-	prompt_tw = create_tween().set_loops()
-	prompt_tw.tween_property(prompt_l, "modulate:a", 0.3, 0.7)
-	prompt_tw.tween_property(prompt_l, "modulate:a", 1.0, 0.7)
-	var touch := Control.new()
-	touch.set_script(load("res://touch_controls.gd"))
-	hud.add_child(touch)
-	# the combo meter: trick string + score/multiplier over a draining
-	# window bar, bottom-centre, only visible while a chain is live
-	combo = Node.new()
-	combo.set_script(load("res://combo.gd"))
-	add_child(combo)
-	combo.setup(self)
-	combo_bar_bg = ColorRect.new()
-	combo_bar_bg.position = Vector2(440, 662)
-	_pin_box(combo_bar_bg, 400.0, 8.0, 0.5, 1.0)
-	combo_bar_bg.color = Color(0.05, 0.06, 0.07, 0.55)
-	combo_bar_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	combo_bar_bg.visible = false
-	hud.add_child(combo_bar_bg)
-	combo_bar = ColorRect.new()
-	combo_bar.position = Vector2(440, 662)
-	_pin_box(combo_bar, 400.0, 8.0, 0.5, 1.0)
-	combo_bar.color = Color(1.0, 0.78, 0.32)
-	combo_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	combo_bar.visible = false
-	hud.add_child(combo_bar)
-	combo_l = _hud_label(Vector2(0, 624), 26)
-	_pin_wide(combo_l, 34.0, 1.0)
-	combo_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	combo_l.visible = false
-	# the combo challenge (Phase B): a bounded trick dare from a bystander
-	challenge = Node.new()
-	challenge.set_script(load("res://challenge.gd"))
-	add_child(challenge)
-	challenge.setup(self)
-	mood = Node.new()
-	mood.set_script(load("res://mood.gd"))
-	add_child(mood)
-	mood.setup(self)
-	for a in OS.get_cmdline_user_args():
-		if a.begins_with("--mood="):
-			var want := a.substr(7).to_upper()
-			var names := {"SCARED": Mood.M.SCARED, "BARKY": Mood.M.BARKY,
-				"ZOOMIES": Mood.M.ZOOMIES, "TIRED": Mood.M.TIRED}
-			mood_forced = int(names.get(want, -1))
-	teeter = Node.new()
-	teeter.set_script(load("res://teeter.gd"))
-	add_child(teeter)
-	grind = Node.new()
-	grind.set_script(load("res://grind.gd"))
-	add_child(grind)
-	challenge_l = _hud_label(Vector2(0, 70), 24)
-	_pin_wide(challenge_l, 30.0)
-	challenge_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	challenge_l.visible = false
-	dim = ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.55)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dim.visible = false
-	hud.add_child(dim)
-	# the results card is built earlier but is what the dim is FOR: it has to
-	# sit above it, or the whole card comes out 55% darker than drawn
-	hud.move_child(results_card, dim.get_index() + 1)
-	msg_label = _hud_label(Vector2(0, 200), 22)
-	_pin_wide(msg_label, 400.0, 0.5)
-	msg_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	msg_label.visible = false
-	pause_l = _hud_label(Vector2(0, 300), 26)
-	_pin_wide(pause_l, 120.0, 0.5)
-	pause_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	pause_l.visible = false
-	tut_label = _hud_label(Vector2(0, 96), 30)
-	_pin_wide(tut_label, 40.0)
-	tut_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	tut_label.visible = false
-	tut_hint = _hud_label(Vector2(0, 136), 19)
-	_pin_wide(tut_hint, 60.0)
-	tut_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	tut_hint.visible = false
-	progress_l = _hud_label(Vector2(0, 70), 19)
-	_pin_wide(progress_l, 560.0)
-	progress_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	progress_l.visible = false
-	# The single announcement channel. Added late so it draws over the other
-	# HUD cards, and anchored to the live viewport like everything else.
-	feed = Control.new()
-	feed.set_script(load("res://event_feed.gd"))
-	hud.add_child(feed)
-	feed.setup(self)
-	settings_panel = Control.new()
-	settings_panel.set_script(load("res://settings_panel.gd"))
-	settings_panel.visible = false
-	hud.add_child(settings_panel)
-	settings_panel.setup(self)
-	# a portrait window gets a "turn your phone" prompt and a paused game (#5).
-	# Its own layer, not under the HUD, so it covers everything
-	rotate_prompt = CanvasLayer.new()
-	rotate_prompt.set_script(load("res://rotate_prompt.gd"))
-	add_child(rotate_prompt)
-	_update_hud()
 
 
 func _kb_or_pad(kb: String, pad: String) -> String:
@@ -3781,76 +3558,6 @@ func _progress_text() -> String:
 	# under the vitals card in the corner where it was never read.
 	if feed != null:
 		feed.set_banner(hud_status)
-
-# The version shown on the title. tools/stamp_version.sh writes the build's
-# tag and short commit into res://build_label.txt right before an export (the
-# file is gitignored, and each preset's include_filter packs it). A plain
-# editor or source run has no stamp and says "dev", so a screenshot can never
-# claim a release it did not come from.
-func _build_label() -> String:
-	if FileAccess.file_exists("res://build_label.txt"):
-		var s := FileAccess.get_file_as_string("res://build_label.txt").strip_edges()
-		if s != "":
-			return s
-	return "dev"
-
-func _hud_label(pos: Vector2, size_px: int) -> Label:
-	var l := Label.new()
-	l.position = pos
-	l.add_theme_font_size_override("font_size", size_px)
-	hud.add_child(l)
-	return l
-
-
-# The HUD was composed against the 1280x720 reference frame, and stretch
-# aspect "expand" makes the real viewport that frame grown along one axis:
-# wider than 1280 on a landscape phone, taller than 720 in portrait. A label
-# holding size.x = 1280 therefore centres its text on x=640 instead of on the
-# middle of the screen, and a line placed at y=686 floats up the picture
-# instead of sitting on the bottom edge.
-#
-# These pin an element to the live viewport with anchors, which re-solve on
-# rotation with nothing listening for a resize. Anchors and then offsets are
-# both written outright, in that order: assigning an anchor rewrites the
-# offsets to preserve the current rect, so setting offsets afterwards is what
-# makes the result independent of wherever the node was first placed.
-
-func _pin_wide(c: Control, h: float, v_rule: float = 0.0) -> void:
-	# full screen width, so CENTER-aligned text centres on the middle of the
-	# screen instead of on x=640. v_rule picks which horizontal rule the
-	# authored y is measured from: 0 the top edge, 0.5 the middle, 1 the
-	# bottom. Everything sharing a rule shifts together, so a stack of lines
-	# keeps the spacing it was composed with.
-	var y := c.position.y - REF_H * v_rule
-	c.anchor_left = 0.0
-	c.anchor_right = 1.0
-	c.anchor_top = v_rule
-	c.anchor_bottom = v_rule
-	c.offset_left = 0.0
-	c.offset_right = 0.0
-	c.offset_top = y
-	c.offset_bottom = y + h
-
-
-func _pin_box(c: Control, w: float, h: float, h_rule: float, v_rule: float) -> void:
-	# a fixed-size element measured in from a chosen corner or rule: (0, 1) the
-	# bottom-left, (1, 1) the bottom-right, (0.5, 0.5) the middle of the
-	# screen. Elements composed as one cluster share a rule so they travel
-	# together rather than each hugging a different edge and pulling apart.
-	#
-	# Pass w or h as 0 to leave that axis to the node: a Control never shrinks
-	# below its own minimum size, so an auto-sized Label still fits its text.
-	# Anchoring both sides to the same rule also keeps the rect offset-driven,
-	# which is what lets the combo bar write size.x every frame as it drains.
-	var p := c.position - Vector2(REF_W * h_rule, REF_H * v_rule)
-	c.anchor_left = h_rule
-	c.anchor_right = h_rule
-	c.anchor_top = v_rule
-	c.anchor_bottom = v_rule
-	c.offset_left = p.x
-	c.offset_right = p.x + w
-	c.offset_top = p.y
-	c.offset_bottom = p.y + h
 
 
 func _update_hud() -> void:
