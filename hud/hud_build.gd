@@ -114,6 +114,9 @@ static func build(m: Node2D) -> void:
 	var preview := CharacterBody2D.new()
 	preview.set_script(load("res://entities/dog.gd"))
 	preview.preview_mode = true
+	# the preview never ticks, but it draws its contact shadow through main
+	# like the real dog; without this every draw errored and stopped short (#33)
+	preview.setup(m)
 	preview.position = Vector2(280.0, 365.0)
 	preview.scale = Vector2(3.0, 3.0)
 	preview.visible = false

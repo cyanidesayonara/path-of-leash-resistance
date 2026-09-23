@@ -245,7 +245,8 @@ func _draw() -> void:
 	var t := Time.get_ticks_msec() / 1000.0
 	# a squashed contact shadow, offset as if the light is up and to the
 	# left. Nothing sells "solid object on ground" faster than this.
-	if not swimming:
+	# (a preview built without a main, as in the tests, simply has no shadow)
+	if not swimming and main != null:
 		var lift: float = 1.0 + clampf(velocity.length() / 700.0, 0.0, 0.35)
 		main.contact_shadow(self, Vector2.ZERO, 12.0, 8.0 * lift, 0.26)
 	# the coat comes from data now (Game.COATS), not baked-in colours, so a
