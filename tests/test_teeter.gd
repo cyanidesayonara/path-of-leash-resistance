@@ -9,7 +9,7 @@ extends SceneTree
 #  5. the meter reads 0 upright and rises as you tip
 
 const DT := 1.0 / 60.0
-const TeeterScript := preload("res://teeter.gd")
+const TeeterScript := preload("res://systems/teeter.gd")
 
 
 func _run(counter: float, seconds := 3.0) -> Dictionary:

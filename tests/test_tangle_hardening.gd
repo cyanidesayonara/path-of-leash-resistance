@@ -89,7 +89,7 @@ func _make_pair(main: Node2D) -> Node2D:
 
 
 func _load_geom():
-	return load("res://tangle_geom.gd")
+	return load("res://systems/tangle_geom.gd")
 
 
 func _test_true_crossing_and_parallel_miss() -> void:

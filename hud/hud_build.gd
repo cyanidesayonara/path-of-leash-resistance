@@ -11,7 +11,7 @@ extends RefCounted
 # _build_hud calls build() and then connects the joypad signal itself (a lambda
 # created in a static function would never be disconnected on scene reload).
 
-const Mood := preload("res://mood.gd")
+const Mood := preload("res://systems/mood.gd")
 
 # the frame the HUD was composed against; see pin_wide / pin_box
 const REF_W := 1280.0
@@ -152,7 +152,7 @@ static func build(m: Node2D) -> void:
 	# the combo meter: trick string + score/multiplier over a draining
 	# window bar, bottom-centre, only visible while a chain is live
 	m.combo = Node.new()
-	m.combo.set_script(load("res://combo.gd"))
+	m.combo.set_script(load("res://systems/combo.gd"))
 	m.add_child(m.combo)
 	m.combo.setup(m)
 	m.combo_bar_bg = ColorRect.new()
@@ -175,11 +175,11 @@ static func build(m: Node2D) -> void:
 	m.combo_l.visible = false
 	# the combo challenge (Phase B): a bounded trick dare from a bystander
 	m.challenge = Node.new()
-	m.challenge.set_script(load("res://challenge.gd"))
+	m.challenge.set_script(load("res://systems/challenge.gd"))
 	m.add_child(m.challenge)
 	m.challenge.setup(m)
 	m.mood = Node.new()
-	m.mood.set_script(load("res://mood.gd"))
+	m.mood.set_script(load("res://systems/mood.gd"))
 	m.add_child(m.mood)
 	m.mood.setup(m)
 	for a in OS.get_cmdline_user_args():
@@ -189,10 +189,10 @@ static func build(m: Node2D) -> void:
 				"ZOOMIES": Mood.M.ZOOMIES, "TIRED": Mood.M.TIRED}
 			m.mood_forced = int(names.get(want, -1))
 	m.teeter = Node.new()
-	m.teeter.set_script(load("res://teeter.gd"))
+	m.teeter.set_script(load("res://systems/teeter.gd"))
 	m.add_child(m.teeter)
 	m.grind = Node.new()
-	m.grind.set_script(load("res://grind.gd"))
+	m.grind.set_script(load("res://systems/grind.gd"))
 	m.add_child(m.grind)
 	m.challenge_l = hud_label(m, Vector2(0, 70), 24)
 	pin_wide(m.challenge_l, 30.0)

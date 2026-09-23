@@ -19,7 +19,7 @@ extends SceneTree
 #
 #   godot --headless --path . --script res://tests/test_mood.gd
 
-const Mood := preload("res://mood.gd")
+const Mood := preload("res://systems/mood.gd")
 const DT := 1.0 / 60.0
 const EPS := 0.0001
 

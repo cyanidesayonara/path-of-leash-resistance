@@ -5,7 +5,7 @@ extends Node2D
 # node rotates to the direction of travel.
 # Commuters knock the human flat (phone risk); kids just bump ("sorry!").
 
-const BypasserRouteScript := preload("res://bypasser_route.gd")
+const BypasserRouteScript := preload("res://systems/bypasser_route.gd")
 const RIDER_CLEARANCE := 18.0
 const RIDER_MAX_LATERAL_SPEED := 220.0
 const RIDER_MINIMUM_LOOKAHEAD := 220.0

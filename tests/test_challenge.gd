@@ -8,7 +8,7 @@ extends SceneTree
 # Pure logic, driven by begin()/add_trick()/tick().
 
 const DT := 1.0 / 60.0
-const ChallengeScript := preload("res://challenge.gd")
+const ChallengeScript := preload("res://systems/challenge.gd")
 
 
 class StubMain extends Node2D:

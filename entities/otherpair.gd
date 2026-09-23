@@ -5,7 +5,7 @@ extends Node2D
 # crosses yours, the two ropes drape over each other and TANGLE - the
 # flagship dog-park mayhem, emergent from the shared rope physics.
 
-const BypasserRouteScript := preload("res://bypasser_route.gd")
+const BypasserRouteScript := preload("res://systems/bypasser_route.gd")
 const DogAppearanceScript := preload("res://entities/dog_appearance.gd")
 const HumanAppearanceScript := preload("res://entities/human_appearance.gd")
 const TANGLE_REARM_S := 0.5

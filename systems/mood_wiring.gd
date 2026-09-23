@@ -9,7 +9,7 @@ extends RefCounted
 # Static functions over main's state, called from main.gd's _tick_mood. All the
 # state stays on main, so nothing here changes what the walk does.
 
-const Mood := preload("res://mood.gd")
+const Mood := preload("res://systems/mood.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 
 
