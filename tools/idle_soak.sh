@@ -41,7 +41,7 @@ echo "level,size,seed,secs,knocks,first_knock,moods,cracks,ended,by_cause,by_moo
 
 RUN=()
 if [ -z "${NO_XVFB:-}" ] && command -v xvfb-run >/dev/null 2>&1; then
-  RUN=(env LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x1024x24")
+  RUN=(env LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1920x1200x24")
   POS=()
 else
   POS=(--position 6000,6000)
