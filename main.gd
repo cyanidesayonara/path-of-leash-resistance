@@ -50,6 +50,7 @@ const EventFeed := preload("res://event_feed.gd")
 const EdgePath := preload("res://edge_path.gd")
 const TangleGeom := preload("res://tangle_geom.gd")
 const MoodWiring := preload("res://systems/mood_wiring.gd")
+const HomeChase := preload("res://systems/home_chase.gd")
 const POLE_RADIUS := 10.0
 const TREE_RADIUS := 13.0  # a trunk is stouter than a lamppost
 const HYDRANT_RADIUS := 9.0
@@ -301,10 +302,6 @@ var cameras: Array[Dictionary] = []
 var lasers: Array[Dictionary] = []
 var guards_woken := 0
 var times_spotted := 0
-const CHASE_SPEED := 140.0
-const CHASE_SPEED_BOLT := 205.0
-const CHASE_SPEED_BOTH := 220.0
-const CHASE_START_GAP := 650.0
 # goals completed this run (ids), for scoring/toasts/results independent
 # of persistence; plus the star snapshot captured when the walk begins
 var run_goals_hit := {}
@@ -550,26 +547,8 @@ func _ready() -> void:
 		# so the full out->freedom->home->finish loop can be verified
 		dog.collision_mask = 0
 		human.collision_mask = 0
-	# a short chase can strike on the walk home. Forced with --chase (slow
-	# sweeper) or --bolt (fast, owner-panics variant); otherwise a seeded
-	# chance and a coin-flip on which kind. It takes over the home leg, so
-	# it and the Tofu herding are mutually exclusive.
-	var args := OS.get_cmdline_user_args()
-	var chase_forced := "--chase" in args
-	var bolt_forced := "--bolt" in args
-	var rescue_forced := "--rescue" in args
-	chase_active = (chase_forced or bolt_forced or rescue_forced or (not auto_walk and not Game.daily and randf() < 0.25)) and not tutorial_mode
-	if chase_active:
-		tofu_quest_active = false
-		if bolt_forced:
-			chase_kind = "bolt"
-		elif rescue_forced:
-			chase_kind = "both"
-		elif chase_forced:
-			chase_kind = "sweeper"
-		else:
-			var r := randf()
-			chase_kind = "sweeper" if r < 0.4 else ("bolt" if r < 0.75 else "both")
+	# whether this walk gets a chase on the way home: systems/home_chase.gd
+	HomeChase.roll(self)
 	_draw_cost_on = "--drawcost" in OS.get_cmdline_user_args()
 	for a in OS.get_cmdline_user_args():
 		if a == "--soak":
@@ -6737,58 +6716,13 @@ func _enter_home() -> void:
 		tf.setup(self, dog, spots)
 		float_text(spots[0], "Tofu!? she got out again - get her home!", Color(1, 0.85, 0.7))
 	if chase_active:
-		var owner_flees := chase_kind == "bolt" or chase_kind == "both"
-		chase_sweeper = Node2D.new()
-		chase_sweeper.set_script(load("res://sweeper.gd"))
-		chase_sweeper.z_index = 8
-		chase_sweeper.kind = chase_kind
-		add_child(chase_sweeper)
-		var spd := CHASE_SPEED
-		if chase_kind == "bolt":
-			spd = CHASE_SPEED_BOLT
-		elif chase_kind == "both":
-			spd = CHASE_SPEED_BOTH
-		# --shot-sweeper starts it right on your heels instead of a corridor
-		# away, so the machine can be photographed and its art reviewed. It
-		# spends the rest of the chase behind the camera, which is exactly how
-		# it went unlooked-at long enough to end up as a wall of rectangles.
-		var gap: float = 250.0 if "--shot-sweeper" in OS.get_cmdline_user_args() else CHASE_START_GAP
-		chase_sweeper.setup(self, dog.global_position.y - gap, walk_cx, walk_half, spd)
-		shake_t = 1.0
-		if owner_flees:
-			human.panic = true
-		if chase_kind == "both":
-			float_text(human.global_position, "FIRE ENGINE!  GO GO GO!", Color(1, 0.55, 0.25))
-		elif chase_kind == "bolt":
-			float_text(human.global_position, "AAH!  the owner BOLTED!", Color(1, 0.6, 0.3))
-		else:
-			feed.say("STREET SWEEPER! RUN!", EventFeed.Tone.BAD)
+		HomeChase.begin(self)
 	else:
 		feed.say("LET'S GO HOME", EventFeed.Tone.PLAIN)
 
 
 func _chase(delta: float) -> void:
-	if chase_sweeper == null:
-		return
-	chase_sweeper.advance(delta)
-	chase_sweeper.global_position = Vector2(walk_cx, chase_sweeper.front_y)
-	chase_sweeper.queue_redraw()
-	# a low rumble the closer it gets to the dog
-	var gap: float = chase_sweeper.gap_to(dog.global_position)
-	if gap < 260.0:
-		shake_t = maxf(shake_t, 0.25)
-	if auto_walk:
-		return  # the attract/CI bot carries an unsweepable dog
-	if chase_sweeper.caught(human.global_position):
-		if chase_kind == "sweeper":
-			_death("THE SWEEPER GOT YOUR HUMAN\n\nThey never once looked up from the phone.\nYou did try to tell them.")
-		else:
-			_death("THEY GOT YOUR HUMAN\n\nYou pulled. You barked. It was not enough.")
-	elif chase_sweeper.caught(dog.global_position):
-		if chase_kind == "sweeper":
-			_death("YOU WENT INTO THE BRUSHES\n\nYou came out suspiciously clean.\nThe walk did not come out at all.")
-		else:
-			_death("NOBODY WAITED FOR YOU\n\nYou snagged, the leash went tight, and\nthey kept walking. They always keep walking.")
+	HomeChase.tick(self, delta)
 
 
 func _finish_walk() -> void:

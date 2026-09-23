@@ -115,6 +115,11 @@ jobs:
       - name: Sweeper chase devourer regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_sweeper.gd
 
+      # the autowalk steps cannot reach the chase's "caught" branch (the bot is
+      # unsweepable), so this is what covers the chase ending a walk
+      - name: Home-leg chase wiring test
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_home_chase.gd
+
       - name: Combo challenge regression test
         run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_challenge.gd
 
