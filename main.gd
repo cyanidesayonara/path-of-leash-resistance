@@ -51,6 +51,7 @@ const EdgePath := preload("res://edge_path.gd")
 const TangleGeom := preload("res://tangle_geom.gd")
 const MoodWiring := preload("res://systems/mood_wiring.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
+const Goals := preload("res://systems/goals.gd")
 const POLE_RADIUS := 10.0
 const TREE_RADIUS := 13.0  # a trunk is stouter than a lamppost
 const HYDRANT_RADIUS := 9.0
@@ -3079,78 +3080,21 @@ func _build_entities() -> void:
 	cam.make_current()
 
 
-const LEVEL_GOAL_IDS := {
-	"street": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "fling", "carry", "combo", "prize"],
-	"park": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "combo", "prize"],
-	"beach": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "save", "combo", "prize"],
-	"rain": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "drink", "combo", "prize"],
-	"market": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "zoom", "carry", "combo", "prize"],
-	"oldtown": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "cats", "snack", "combo", "prize"],
-	"trail": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "chase", "drink", "combo", "prize"],
-	"station": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "snack", "combo", "prize"],
-	"site": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "snack", "combo", "prize"],
-	"spook": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "tummy", "snack", "combo", "prize"],
-	"scrap": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "ghost", "unseen", "combo", "prize"],
-	# El Parc leans on what the terraces are for: carving them (fling) and
-	# riding the serpentine bench (combo), plus the park staples.
-	"guell": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi",
-		"drink", "fling", "combo", "prize"],
-}
+# each walk's goal list; defined in systems/goals.gd, aliased for level_check.gd
+const LEVEL_GOAL_IDS := Goals.LEVEL_GOAL_IDS
 
 
 func _goal_defs() -> Dictionary:
-	# every goal the game knows, keyed by a stable id (persistence-facing)
-	return {
-		"mark": {"text": "claim %d spots", "target": 5, "fn": func() -> int: return marks.size()},
-		"sniff": {"text": "%d proper sniffs", "target": 4, "fn": func() -> int: return sniffs_done},
-		"phone": {"text": "get the phone home unscratched", "target": 1, "fn": func() -> int: return 1 if phone_hp == 3 else 0},
-		"paws": {"text": "come home unscathed yourself", "target": 1, "fn": func() -> int: return 1 if dog_hits == 0 else 0},
-		"bag": {"text": "have your business bagged", "target": 1, "fn": func() -> int: return 1 if poop_state == 2 and not bag_pending else 0},
-		"fetch": {"text": "fetch %d balls back", "target": 3, "fn": func() -> int: return romp_catches},
-		"tofu": {"text": "bring Tofu home", "target": 1, "fn": func() -> int: return 1 if tofu_home else 0},
-		"hi": {"text": "greet %d other dogs", "target": 3, "fn": func() -> int: return dogs_greeted},
-		"drink": {"text": "have a proper long drink", "target": 1, "fn": func() -> int: return 1 if drunk_amount >= 0.4 else 0},
-		"zoom": {"text": "run the zoomies right out", "target": 1, "fn": func() -> int: return 1 if dog.energy <= 0.25 else 0},
-		"chase": {"text": "see off %d critters", "target": 2, "fn": func() -> int: return squirrels_chased},
-		"close": {"text": "%d near misses with traffic", "target": 3, "fn": func() -> int: return close_calls},
-		"save": {"text": "haul the human clear %d times", "target": 2, "fn": func() -> int: return saves_done},
-		"fling": {"text": "tetherball the human off a pole", "target": 1, "fn": func() -> int: return flings_done},
-		"tangle": {"text": "tangle leashes with a stranger", "target": 1, "fn": func() -> int: return 1 if tangles >= 1 else 0},
-		"snack": {"text": "hoover up %d dropped snacks", "target": 2, "fn": func() -> int: return kebabs_eaten},
-		"cats": {"text": "see off %d wall cats", "target": 3, "fn": func() -> int: return wall_cats_spooked},
-		"carry": {"text": carry_text, "target": 1, "fn": func() -> int: return 1 if carry_state >= 2 else 0},
-		"combo": {"text": "land an x%d combo", "target": 5, "fn": func() -> int: return int(combo.best_mult) if combo != null else 0},
-		"tummy": {"text": "walk past every chocolate", "target": 1, "fn": func() -> int: return 1 if candy_eaten == 0 else 0},
-		"ghost": {"text": "cross the yard, wake nobody", "target": 1, "fn": func() -> int: return 1 if guards_woken == 0 else 0},
-		"unseen": {"text": "never once be spotted", "target": 1, "fn": func() -> int: return 1 if times_spotted == 0 else 0},
-		"prize": {"text": prize_text, "target": 1, "fn": func() -> int: return 1 if prize_taken else 0},
-	}
+	# goals and scoring live in systems/goals.gd
+	return Goals.defs(self)
 
 
 func _build_quests() -> void:
-	# a fixed ~10-goal list per level (Tony Hawk style): completing a goal
-	# on any run marks it done for that level forever. Repeating goals,
-	# a couple of level flavours, and the unique hazardous prize.
-	if tutorial_mode:
-		active_quests.clear()
-		tofu_quest_active = false
-		return
-	var defs := _goal_defs()
-	var ids: Array = LEVEL_GOAL_IDS.get(lvl, LEVEL_GOAL_IDS["street"])
-	for id in ids:
-		var d: Dictionary = defs[id]
-		active_quests.append({
-			"id": id, "text": d.text, "target": int(d.target), "fn": d.fn,
-			"was_true": int(d.fn.call()) >= int(d.target),
-		})
-	tofu_quest_active = ("tofu" in ids) and not Game.goal_done(lvl, "tofu")
+	Goals.build_quests(self)
 
 
 func _quest_text(q: Dictionary) -> String:
-	var s: String = q.text
-	if "%d" in s:
-		s = s % int(q.target)
-	return s
+	return Goals.quest_text(q)
 
 
 func _peek_goals() -> void:
@@ -3158,29 +3102,11 @@ func _peek_goals() -> void:
 
 
 func _credit_goal(q: Dictionary) -> void:
-	# award + persist a goal the first time it completes this run
-	if tutorial_mode:
-		return
-	var id: String = q.id
-	if run_goals_hit.has(id):
-		return
-	run_goals_hit[id] = true
-	_peek_goals()
-	bones += 5
-	var newly: bool = Game.mark_goal(lvl, id) if not Game.daily else false
-	var tag := "GOAL! " if (newly or Game.daily) else "goal (again) "
-	feed.say(tag + _quest_text(q), EventFeed.Tone.GOOD)
+	Goals.credit(self, q)
 
 
 func _check_goals() -> void:
-	# accumulate goals credit the moment they cross target; "maintain"
-	# goals (true from the start, e.g. unscratched phone) are only judged
-	# at the finish so they cannot auto-complete on frame one
-	for q in active_quests:
-		if q.was_true or run_goals_hit.has(q.id):
-			continue
-		if int(q.fn.call()) >= int(q.target):
-			_credit_goal(q)
+	Goals.check(self)
 
 
 func _spawn_cones() -> void:
@@ -3965,42 +3891,7 @@ func _update_hud() -> void:
 
 
 func goal_card_data() -> Dictionary:
-	# The card draws whatever this returns. Open goals sort to the top so the
-	# live ones are always on screen, and finished ones stay in the list
-	# rather than vanishing - which is what made the row count wobble between
-	# runs and the card jump about.
-	var total := active_quests.size()
-	var done_count: int = run_goals_hit.size() if Game.daily else Game.goals_count(lvl)
-	done_count = mini(done_count, total)
-	var open_rows: Array = []
-	var done_rows: Array = []
-	for q in active_quests:
-		var persisted: bool = (not Game.daily) and Game.goal_done(lvl, q.id)
-		var hit: bool = run_goals_hit.has(q.id)
-		var target := int(q.target)
-		if hit or persisted:
-			done_rows.append({
-				"text": _quest_text(q), "target": target, "got": target,
-				# banked this run reads brighter than banked on a past walk
-				"state": UiIcons.Check.DONE_NOW if hit else UiIcons.Check.DONE_BEFORE,
-			})
-		else:
-			var got: int = mini(int(q.fn.call()), target)
-			open_rows.append({
-				"text": _quest_text(q), "target": target, "got": got,
-				"state": UiIcons.Check.PARTIAL if got > 0 else UiIcons.Check.OPEN,
-			})
-	var rows: Array = open_rows + done_rows
-	var shown: int = mini(rows.size(), GOALS_MAX_ROWS)
-	var open: bool = Game.goals_expanded or goals_peek > 0.0
-	return {
-		"done": done_count, "total": total,
-		"all_done": total > 0 and done_count >= total,
-		"rows": rows.slice(0, shown) if open else [],
-		"extra": (rows.size() - shown) if open else 0,
-		"open": open, "peeking": goals_peek > 0.0 and not Game.goals_expanded,
-		"key": _kb_or_pad("TAB", "up"),
-	}
+	return Goals.card_data(self)
 
 
 func _update_goal_card() -> void:
@@ -6726,139 +6617,19 @@ func _chase(delta: float) -> void:
 
 
 func _finish_walk() -> void:
-	if dog.global_position.y > HOME_Y and human.global_position.y > HOME_Y:
-		if tutorial_mode:
-			_finish_tutorial_walk()
-			return
-		finished = true
-		if auto_walk:
-			print("AUTOWALK FINISHED the whole walk at t=%.1f" % elapsed)
-		frozen = true
-		dim.visible = true
-		msg_label.visible = true
-		# credit any goal still satisfied at the finish (catches the
-		# "maintain" goals like unscratched phone / clean paws)
-		for q in active_quests:
-			if not run_goals_hit.has(q.id) and int(q.fn.call()) >= int(q.target):
-				_credit_goal(q)
-		var run_done := run_goals_hit.size()
-		var total := active_quests.size()
-		var rows: Array = _results_rows()
-		var lifetime: int = run_done if Game.daily else Game.goals_count(lvl)
-		# total == 0 made this TRUE, which is how a walk with no goal list
-		# banked a PERFECT for The Boulevard. The tutorial no longer reaches
-		# this path at all, but the trap should not be left armed.
-		var perfect := total > 0 and run_done >= total
-		var rating := ""
-		if run_done == 0:
-			rating = "...well. A dog, anyway."
-		elif perfect:
-			rating = "PERFECT WALK - every goal in one go"
-		var rec: Dictionary = Game.record_result("daily" if Game.daily else lvl, bones, elapsed, perfect)
-		var lines: Array = []
-		var star_gain: int = Game.stars(lvl) - run_pre_level_stars
-		var head := ""
-		if star_gain > 0 and not Game.daily:
-			head += "+%d STAR%s   " % [star_gain, "" if star_gain == 1 else "S"]
-		if rec.bones_record:
-			head += "NEW BONES RECORD   "
-		if rec.time_record:
-			head += "BEST TIME"
-		if head != "":
-			lines.append(head.strip_edges())
-		lines.append("%d/%d goals here    %d stars in all    %d bones banked"
-			% [lifetime, total, Game.total_stars(), Game.total_bones])
-		if combo.best_mult >= 2:
-			lines.append("best combo x%d    style %d" % [combo.best_mult, combo.run_style])
-		if overmarks > 0:
-			lines.append("%d spot%s over-marked. They will know."
-				% [overmarks, "" if overmarks == 1 else "s"])
-		if not Game.daily:
-			for other in Game.LEVELS:
-				if Game.gate_crossed(run_pre_total_stars, other):
-					lines.append("NEW WALK UNLOCKED: %s" % Game.LEVEL_NAMES[other])
-		if Game.daily:
-			_build_daily_card(run_done, total, rec)
-		else:
-			results = {
-				"title": "VERY GOOD DOG." if perfect else "GOOD DOG.", "stars": Game.stars(lvl),
-				"rating": rating,
-				"rows": rows, "bones": bones, "phone": phone_hp, "time": int(elapsed),
-				"goal_bones": run_done * 5, "lines": lines,
-				"prompt": "press  %s  for another walk" % _kb_or_pad("R", "Start"),
-			}
-			msg_label.visible = false
-			results_card.visible = true
-			# the in-walk HUD would otherwise sit on top of the card
-			goals_card.visible = false
-			panel.visible = false
+	Goals.finish_walk(self)
 
 
 func _finish_tutorial_walk() -> void:
-	finished = true
-	frozen = true
-	dim.visible = true
-	msg_label.visible = false
-	results = {
-		"title": "GOOD DOG.",
-		"stars": 0,
-		"rating": "You know the ropes.",
-		"rows": [],
-		"bones": bones,
-		"phone": phone_hp,
-		"time": int(elapsed),
-		"goal_bones": 0,
-		"lines": [
-			"%d practice bones - not banked" % bones,
-			"Lessons complete. The real walks are waiting.",
-		],
-		"prompt": "press  %s  for walk select" % _kb_or_pad("R", "Start"),
-	}
-	results_card.visible = true
-	goals_card.visible = false
-	panel.visible = false
-	tut_label.visible = false
-	tut_hint.visible = false
+	Goals.finish_tutorial_walk(self)
 
 
 func _results_rows() -> Array:
-	var rows: Array = []
-	for q in active_quests:
-		var hit: bool = run_goals_hit.has(q.id)
-		var had: bool = (not Game.daily) and Game.goal_done(lvl, q.id) and not hit
-		var target := int(q.target)
-		var got: int = mini(int(q.fn.call()), target)
-		var st: int = UiIcons.Check.OPEN
-		if hit:
-			st = UiIcons.Check.DONE_NOW
-		elif had:
-			st = UiIcons.Check.DONE_BEFORE
-		elif got > 0:
-			st = UiIcons.Check.PARTIAL
-		rows.append({"text": _quest_text(q), "state": st, "got": got, "target": target})
-	return rows
+	return Goals.results_rows(self)
 
 
 func results_data() -> Dictionary:
 	return results
-
-
-func _build_daily_card(run_done: int, total: int, rec: Dictionary) -> void:
-	# a compact, screenshot-friendly summary of today's shared walk, with a
-	# one-line share text the player can copy to the clipboard
-	var d := Time.get_date_dict_from_system()
-	var date_str := "%04d-%02d-%02d" % [d.year, d.month, d.day]
-	var stars_n := Game._milestone_stars(run_done)
-	var weather_bit: String = String(Game.WEATHER_NAMES[Game.weather]).to_lower()
-	var when_bit := "night" if Game.night else "day"
-	var combo_bit := "  combo x%d" % combo.best_mult if combo.best_mult >= 2 else ""
-	daily_share = "Path of Leash Resistance - Daily %s\n%s, %s, %s\n%s  %d/%d goals  %d bones  %ds%s" % [
-		date_str, Game.LEVEL_NAMES[lvl], weather_bit, when_bit,
-		Game.star_str(stars_n), run_done, total, bones, int(elapsed), combo_bit]
-	var best_line := "NEW DAILY BEST!\n\n" if rec.bones_record else ""
-	daily_copied = false
-	msg_label.text = "TODAY'S WALK\n\n%s\n\n%sPress %s to copy & share\nPress %s for another go" % [
-		daily_share, best_line, _kb_or_pad("C", "Y"), _kb_or_pad("R", "Start")]
 
 
 func on_bark(pos: Vector2) -> void:
