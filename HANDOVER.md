@@ -22,6 +22,11 @@ physics (visual and gameplay constraint — see AGENTS.md). Ships to itch
 
 ## In flight (unreleased, on `main` after v1.54)
 
+**WIP limit (AGENTS.md "Change control"): `main` is over it.** Eight
+player-facing changes since v1.54 await acceptance (#23), so only hardening
+and tooling land until they are accepted. Check the board's "Awaiting
+acceptance" column before starting anything player-facing.
+
 **Dog moods** (`mood.gd`, backlog item 9). Four moods - SCARED, BARKY,
 ZOOMIES, FLAT - arriving from events and fading on their own. They are
 **weather, not a menu**: nothing picks a mood and nothing cancels one, so the
