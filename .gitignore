@@ -13,3 +13,5 @@ build_label.txt
 # tools/shot_sweep.sh output
 shots/
 __pycache__/
+# the engine binary CI downloads into the checkout
+Godot_v*-stable_linux.x86_64
