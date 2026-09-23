@@ -11,7 +11,8 @@
 # --resolution says. So each run opens a real window: on Linux on an xvfb
 # display with software GL (as the appearance tests in ci.yml do), elsewhere
 # placed off-screen. --fixed-fps 60 makes game time independent of how fast
-# the machine renders.
+# the machine renders. No portrait size: a portrait window pauses the walk
+# behind the rotate prompt (#5), so there is nothing to soak.
 #
 # Thresholds (environment, provisional until tuned from soak data):
 #   GRACE_SECS=10   any knock before this many seconds fails the run
@@ -30,7 +31,7 @@ GRACE_SECS="${GRACE_SECS:-10}"
 MAX_KNOCKS="${MAX_KNOCKS:-2}"
 MAX_MOODS="${MAX_MOODS:-3}"
 LEVELS="${LEVELS:-street park beach rain market oldtown trail station site spook scrap guell}"
-SIZES="${SIZES:-1280x720 844x390 390x844}"
+SIZES="${SIZES:-1280x720 1920x1080 844x390}"
 SEEDS="${SEEDS:-1 2 3}"
 RUN_TIMEOUT="${RUN_TIMEOUT:-240}"
 

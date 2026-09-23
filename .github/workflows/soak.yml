@@ -1,7 +1,7 @@
 name: Idle soak
 
-# Every walk with no input for 30s of game time, at 1280x720, 844x390 and
-# 390x844, three seeds each (tools/idle_soak.sh). Counts knocks on the idle
+# Every walk with no input for 30s of game time, at 1280x720, 1920x1080 and
+# 844x390, three seeds each (tools/idle_soak.sh). Counts knocks on the idle
 # dog, mood arrivals and phone cracks, and fails a run over the thresholds in
 # the script. One job per walk so the matrix finishes in minutes.
 #

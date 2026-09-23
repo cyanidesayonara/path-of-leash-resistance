@@ -2,6 +2,26 @@
 
 Append-only session history, newest first.
 
+## 2026-09-23 - the idle knock was the wall clock (#6)
+
+An idle dog got knocked by bikes on some machines and window sizes and not
+others. The cause: the owner's sideways weave across the path read
+`Time.get_ticks_msec()`, the time since the program started. So where the
+owner walked, and where a dragged dog ended up relative to the bike lane,
+depended on boot time, time spent on the title and render speed. A bigger
+window renders slower, which is why it looked like window shape. The weave,
+the owner's phone-event movement, the scooter kid's wobble, a spooked cat's
+zigzag, duckling bobbing and the scrapyard cameras now run on `main.elapsed`.
+Drawing-only animation keeps the wall clock.
+
+New idle soak to measure it: `--soak[=SECONDS]` plays a walk with no input
+and prints knocks by cause, mood arrivals, phone cracks and any early end;
+`--seed=N` makes a run replayable. `tools/idle_soak.sh` covers every walk at
+1280x720, 1920x1080 and 844x390 over three seeds, and `soak.yml` runs it on
+PRs and main without gating CI. After the fix, a seed gives identical results
+at every window size, and no idle dog is knocked before 19 seconds on street
+or market.
+
 ## 2026-09-23 - Microsoft Store packaging (unreleased)
 
 The game now has a Partner Center product, "MSIX or PWA game", Store ID
