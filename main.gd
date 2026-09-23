@@ -3457,6 +3457,9 @@ func _build_hud() -> void:
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	dim.visible = false
 	hud.add_child(dim)
+	# the results card is built earlier but is what the dim is FOR: it has to
+	# sit above it, or the whole card comes out 55% darker than drawn
+	hud.move_child(results_card, dim.get_index() + 1)
 	msg_label = _hud_label(Vector2(0, 200), 22)
 	_pin_wide(msg_label, 400.0, 0.5)
 	msg_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
