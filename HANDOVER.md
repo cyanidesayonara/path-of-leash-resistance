@@ -35,8 +35,10 @@ the camera. Limit perception only. A fifth of speed either way at most. Read
 that header before changing any number in it, and keep `tests/test_mood.gd`
 green - most of it guards the promise, not the feature.
 
-Microsoft Store: product reserved in Partner Center as an "MSIX or PWA game"
-(Store ID 9P5D14V8RBQX). `store/msix/` plus `tools/pack_msix.ps1` build the
+Microsoft Store: **live since 2026-09-23 at 1.54.0.0**
+(https://apps.microsoft.com/detail/9p5d14v8rbqx), an "MSIX or PWA game",
+Store ID 9P5D14V8RBQX. What was entered in Partner Center is in
+`store/listing.md`. `store/msix/` plus `tools/pack_msix.ps1` build the
 package, and `release.yml` attaches it to each tagged release. The old
 `ms-store-msix` branch is superseded and can be deleted. Full procedure:
 `docs/MICROSOFT_STORE.md`.
