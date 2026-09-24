@@ -2,6 +2,24 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - where the draw calls go
+
+The Compatibility renderer gives every circle, polygon and thick line its own
+draw call; only rects and thin lines batch. A windowed site walk at 1280x720
+makes about 574 calls a frame (837 at most). `--perf-hide=` hides one kind of
+entity and shows its share: cones and junk 85, the edge layer 54, the dog 25,
+NPC pairs 22, the HUD card 19, the human 12, the leash 11. Everything else,
+about 340, is main.gd's own world draw.
+
+The probe now also reads the renderer's CPU and GPU time, which, unlike frame
+time, does not stretch when Windows throttles a background window. On the
+laptop the renderer's CPU time is 3.6 ms a frame and the GPU 0.7 ms. Hiding
+the cones' 85 calls saves 0.31 ms, about 3.6 us a call. WebGL pays far more
+per call, which fits the browser build being much choppier than the Windows
+one: fewer draw calls is the lever for the web. `tools/shot_diff.py`
+pixel-compares two screenshot sweeps, so merging shapes into fewer calls can
+be shown not to change the picture.
+
 ## 2026-09-24 - the NPC route planner: shared geometry and a broad phase
 
 Every NPC walker and rider built its own copy of the level's blocker clusters
