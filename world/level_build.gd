@@ -1341,6 +1341,17 @@ static func spawn_cones(m: Node2D) -> void:
 		jy -= jr.randf_range(260.0, 520.0)
 		var jx := jr.randf_range(m.sw_l + 30.0, m.sw_r - 30.0)
 		spawn_junk(m, Vector2(jx, jy), kinds[jr.randi() % kinds.size()])
+	# A-stands are entities too: light, toppleable, never re-stood. Spawned
+	# once here with the rest of the kickable furniture; this loop used to sit
+	# in on_junk_kicked, so none stood at the start and every kick added a
+	# full duplicate set (#30)
+	for a in m.astands:
+		var sa := Node2D.new()
+		sa.set_script(load("res://entities/astand.gd"))
+		sa.position = a
+		sa.z_index = 11
+		m.add_child(sa)
+		sa.setup(m, m.dog, m.human)
 
 
 static func spawn_junk(m: Node2D, at: Vector2, kind: String) -> void:
