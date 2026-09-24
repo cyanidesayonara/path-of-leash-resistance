@@ -20,17 +20,46 @@ phone-distracted human walks on autopilot; the leash is real verlet-rope
 physics (visual and gameplay constraint — see AGENTS.md). Ships to itch
 (`html5` + `windows`) on a version tag after green CI.
 
-## In flight (unreleased, on `main` after v1.54)
+## In flight (unreleased, on `main` after v1.54): stabilization freeze
 
-**WIP limit (AGENTS.md "Change control"): `main` is over it.** Eight
-player-facing changes since v1.54 await acceptance (#23), so only hardening
-and tooling land until they are accepted. Check the board's "Awaiting
-acceptance" column before starting anything player-facing.
+Started 2026-09-23: no new features, only verification tooling, bug fixes and
+refactors. The board is https://github.com/users/cyanidesayonara/projects/4;
+PROJECT.md stays the design source of truth.
 
-**Dog moods** (`mood.gd`, backlog item 9). Four moods - SCARED, BARKY,
-ZOOMIES, FLAT - arriving from events and fading on their own. They are
+**WIP limit (AGENTS.md "Change control"): `main` is over it.** Player-facing
+changes merged but not yet accepted by hand: the eight pre-freeze changes
+(#23) and the freeze fixes in the board's "Awaiting acceptance" column
+(portrait prompt, idle knock, results card, A-stands, mood badge, title
+prompt, results spacing, settings title, status banner, wardrobe preview).
+Only hardening and tooling land until the count drops below 5.
+
+What the freeze has added, so you can use it:
+- **Verification:** `tools/shot_sweep.sh` (every walk + menus + phone
+  shapes, contact sheets; `shots.yml` on PRs), `tools/idle_soak.sh` (no
+  input, counts knocks/moods; `soak.yml`), `tools/behaviour_snapshot.sh`
+  (51 fixed-seed runs; must be byte-identical for a refactor),
+  `--perf` + `tools/perf_sweep.sh` (frame times). CI fails on any SCRIPT
+  ERROR (`tools/godot_ci.sh`) and on files an import leaves untracked.
+- **Layout:** main.gd split along its seams into `systems/`, `hud/`,
+  `world/` (static functions over main's state, forwarders kept), and every
+  other script moved into `autoload/`, `entities/`, `hud/`, `world/`,
+  `systems/`. See AGENTS.md "Project Structure".
+- **Determinism:** gameplay motion runs on game time (`main.elapsed`), never
+  the wall clock, and visual randomness (weather particles, camera shake)
+  has its own RNG. Keep it that way, or window size and machine speed leak
+  back into play (#6).
+- **Performance:** tracked in #45 with the baseline and the leads.
+
+Still yours to do by hand: accept or reject the awaiting changes, the
+level-by-level review (#21), the real-phone check (#13), mood readability on
+pad and phone (#11), SCARED during the chase (#12), leash weight tuning (#14),
+and the sweeper's own narrow level (#20, a new level: after the WIP count
+drops).
+
+**Dog moods** (`systems/mood.gd`, backlog item 9). Four moods - SCARED, BARKY,
+ZOOMIES, TIRED - arriving from events and fading on their own. They are
 **weather, not a menu**: nothing picks a mood and nothing cancels one, so the
-bounds in `mood.gd`'s header are load-bearing rather than tuning. Never touch
+bounds in the mood header are load-bearing rather than tuning. Never touch
 the camera. Limit perception only. A fifth of speed either way at most. Read
 that header before changing any number in it, and keep `tests/test_mood.gd`
 green - most of it guards the promise, not the feature.
@@ -39,11 +68,11 @@ Microsoft Store: **live since 2026-09-23 at 1.54.0.0**
 (https://apps.microsoft.com/detail/9p5d14v8rbqx), an "MSIX or PWA game",
 Store ID 9P5D14V8RBQX. What was entered in Partner Center is in
 `store/listing.md`. `store/msix/` plus `tools/pack_msix.ps1` build the
-package, and `release.yml` attaches it to each tagged release. The old
-`ms-store-msix` branch is superseded and can be deleted. Full procedure:
-`docs/MICROSOFT_STORE.md`.
+package, and `release.yml` attaches it to each tagged release. Full
+procedure: `docs/MICROSOFT_STORE.md`. The next Store update is v1.55, once
+the freeze fixes and the pre-freeze changes are accepted.
 
-## Current state (v1.54 on `main`)
+## State at v1.54 (the last release)
 
 Hardening rounds shipped via PR #3:
 
