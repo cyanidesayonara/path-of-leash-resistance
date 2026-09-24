@@ -18,6 +18,7 @@ const W := 900.0
 const PAD := 34.0
 const ROW_H := 25.0
 const COL_SPLIT := 6        # more goals than this and it goes two-up
+const RATING_GAP := 12.0     # extra space under the rating line, when there is one
 
 var main: Node2D
 var sb: StyleBoxFlat
@@ -53,7 +54,8 @@ func _draw() -> void:
 	# derived from the layout below, in the order it draws: title, stars, rows,
 	# divider, tally, record lines, prompt. Guessing at this is how the prompt
 	# ended up straddling the bottom edge of the card.
-	var h := PAD + 224.0 + float(per_col) * ROW_H + float(extras.size()) * 22.0
+	var rating_gap: float = RATING_GAP if String(d.rating) != "" else 0.0
+	var h := PAD + 224.0 + rating_gap + float(per_col) * ROW_H + float(extras.size()) * 22.0
 	size = Vector2(W, h)
 	# centre the card on what it holds, so a twelve-goal walk and a
 	# three-goal walk are both framed. Against the actual viewport, not the
@@ -76,7 +78,9 @@ func _draw() -> void:
 	if String(d.rating) != "":
 		draw_string(f, Vector2(0, y + 30.0), String(d.rating), HORIZONTAL_ALIGNMENT_CENTER, W,
 			17, Color(0.86, 0.84, 0.72))
-	y += 50.0
+	# a rating line needs room under it: without the gap its descenders sat
+	# about 4px above the first row's check boxes (#31)
+	y += 50.0 + rating_gap
 
 	# the goals, in one or two columns
 	var col_w: float = (W - PAD * 2.0) / (2.0 if two_col else 1.0)
