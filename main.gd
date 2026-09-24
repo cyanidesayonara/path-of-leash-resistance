@@ -5085,7 +5085,11 @@ func _draw() -> void:
 
 func _draw_world() -> void:
 	var top := GATE_Y - 800.0
-	var bottom := START_Y + 320.0
+	# The ground runs well past the start line: the south wall stops the dog
+	# at about START_Y + 110, and the camera on her there sees 280 px further
+	# down at 1280x720 (375 at 1280x960). Stopping at START_Y + 320 left a
+	# strip of bare background along the bottom of the finish (#67).
+	var bottom := START_Y + 560.0
 	# The corridor's cross-section stops at the gate. It used to be painted all
 	# the way to the top of the level, which was invisible while the off-leash
 	# space was drawn afterwards in the same pass - but that space lives on its
