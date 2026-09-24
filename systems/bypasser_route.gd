@@ -33,6 +33,9 @@ var _travel_direction := 0
 var _blockers: Array[Dictionary] = []
 var _clusters: Array[Dictionary] = []
 var _active_navigation: Dictionary = {}
+# clearance -> the last blocker list configured with it, and what it built.
+# See configure_blockers.
+static var _shared_geometry := {}
 
 
 func _init(
@@ -56,13 +59,33 @@ func _init(
 
 func configure_blockers(descriptors: Array[Dictionary]) -> int:
 	normalization_passes += 1
-	_blockers.clear()
+	# Every walker and rider on a level configures the same blocker list, and
+	# clustering is O(n^2) in blockers (about 2 ms per spawn at 55). The result
+	# depends only on the list and the clearance, and nothing writes to it
+	# afterwards, so it is built once and shared. The list is compared by
+	# value, so a rebuilt level never reuses a stale entry.
+	var shared: Dictionary = _shared_geometry.get(clearance, {})
+	if not shared.is_empty() and shared.source == descriptors:
+		_blockers = shared.blockers
+		_clusters = shared.clusters
+		configured_blocker_count = _blockers.size()
+		configured_cluster_count = _clusters.size()
+		_clear_detour()
+		return configured_blocker_count
+	# fresh arrays, never cleared in place: an old pair may still share them
+	var normalized_blockers: Array[Dictionary] = []
+	_blockers = normalized_blockers
 	for descriptor in descriptors:
 		var normalized := _normalize_blocker(descriptor)
 		if not normalized.is_empty():
 			_blockers.append(normalized)
 	configured_blocker_count = _blockers.size()
 	_build_clusters()
+	_shared_geometry[clearance] = {
+		"source": descriptors.duplicate(true),
+		"blockers": _blockers,
+		"clusters": _clusters,
+	}
 	_clear_detour()
 	return configured_blocker_count
 
@@ -301,7 +324,8 @@ func _normalize_blocker(descriptor: Dictionary) -> Dictionary:
 
 
 func _build_clusters() -> void:
-	_clusters.clear()
+	var clusters: Array[Dictionary] = []
+	_clusters = clusters
 	var assigned: Array[bool] = []
 	assigned.resize(_blockers.size())
 	assigned.fill(false)
@@ -755,6 +779,8 @@ func _cluster_touches_rect(
 	top: float,
 	bottom: float
 ) -> bool:
+	if _cluster_clear_of(cluster, left, right, top, bottom):
+		return false
 	var members: Array[Dictionary] = cluster.members
 	for member in members:
 		if member.kind == "circle":
@@ -846,6 +872,8 @@ func _cluster_intersects_rect(
 	top: float,
 	bottom: float
 ) -> bool:
+	if _cluster_clear_of(cluster, left, right, top, bottom):
+		return false
 	var members: Array[Dictionary] = cluster.members
 	for member in members:
 		if _blocker_intersects_rect(member, left, right, top, bottom):
@@ -872,4 +900,21 @@ func _blocker_intersects_rect(
 		and float(blocker.left) < right
 		and float(blocker.bottom) > top
 		and float(blocker.top) < bottom
+	)
+
+
+# Broad phase for the two rect tests above: true when the rect lies wholly
+# outside the cluster's bounding box by more than CLEAR_MARGIN, so no member
+# can touch it. Every member lies inside that box, and the margin keeps the
+# reject clear of float rounding in the exact member tests, so skipping them
+# never changes a result.
+const CLEAR_MARGIN := 1.0
+
+
+func _cluster_clear_of(cluster: Dictionary, left: float, right: float, top: float, bottom: float) -> bool:
+	return (
+		float(cluster.right) + CLEAR_MARGIN < left
+		or float(cluster.left) - CLEAR_MARGIN > right
+		or float(cluster.bottom) + CLEAR_MARGIN < top
+		or float(cluster.top) - CLEAR_MARGIN > bottom
 	)
