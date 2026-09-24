@@ -127,6 +127,7 @@ jobs:
 
       - name: Status banner test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_status_banner.gd
+
       - name: A-stands stand once test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_astands.gd
 
