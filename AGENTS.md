@@ -166,6 +166,10 @@ python tools/shot_diff.py shots-before shots-after diffs
 ```
 Never read `Time.get_ticks_msec()` in a `_draw`; use `AnimClock.msec()`.
 
+Draw calls are what the web build pays for, and every circle and polygon is
+one in the Compatibility renderer. Draw runs of filled shapes through
+`ShapeBatch` (`systems/shape_batch.gd`): the same pixels in one call.
+
 Rope solver benchmark: time per `leash.tick()` in three fixed scenarios, plus
 a hash of every solver output. A speed-up meant to change nothing must leave
 all three hashes as they were (compare on one machine):

@@ -175,6 +175,11 @@ jobs:
       - name: Rotate prompt in portrait windows
         run: LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x1024x24" bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --rendering-method gl_compatibility --path . --script res://tests/test_rotate_prompt.gd
 
+      # ShapeBatch merges circles into one draw call and must match
+      # draw_circle pixel for pixel; renders offscreen, so it needs GL
+      - name: Shape batch matches draw_circle
+        run: LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x1024x24" bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --rendering-method gl_compatibility --path . --script res://tests/test_shape_batch.gd
+
       - name: Level structural sanity sweep (every walk)
         # validates each level inside the real runtime: props on their own
         # pavement, well-formed goal lists, and goals the level can actually
