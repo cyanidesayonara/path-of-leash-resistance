@@ -18,6 +18,8 @@ extends Node
 # main._prof). Diagnostics, which change gameplay: --perf-disable=a.gd,b.gd
 # switches off those scripts' physics, --perf-disable-process=... their
 # process and per-frame redraw, so the difference shows what they cost.
+# --perf-hide=... hides those scripts' nodes, so the drop in draw calls (a
+# windowed run; headless draws nothing) shows what they cost to render.
 #
 # To compare CPU cost between builds, run headless with --fixed-fps 60 and
 # read frame_p50. For real frame times (rendering included) run windowed with
@@ -38,6 +40,7 @@ var _rows: Array[Dictionary] = []
 var _warm: Array[Dictionary] = []
 var _disable: PackedStringArray = []
 var _disable_proc: PackedStringArray = []
+var _hide: PackedStringArray = []
 
 
 func setup(m: Node2D, seconds: float) -> void:
@@ -54,6 +57,9 @@ func setup(m: Node2D, seconds: float) -> void:
 		elif arg.begins_with("--perf-disable-process="):
 			_disable_proc = arg.substr(23).split(",")
 			print("PERF diagnostic: process (and its per-frame redraw) disabled for %s" % ", ".join(_disable_proc))
+		elif arg.begins_with("--perf-hide="):
+			_hide = arg.substr(12).split(",")
+			print("PERF diagnostic: hidden %s" % ", ".join(_hide))
 
 
 func _ready() -> void:
@@ -62,6 +68,11 @@ func _ready() -> void:
 	process_priority = 1000
 	main._draw_cost_on = true
 	main._prof_on = true
+	# the renderer's own CPU time (building and submitting draw calls) and GPU
+	# time per frame. Unlike frame time these do not stretch when Windows
+	# throttles a background window, so draw-call work can be compared in any
+	# windowed run. Both read 0 headless.
+	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 
 
 func _process(_delta: float) -> void:
@@ -75,7 +86,7 @@ func _process(_delta: float) -> void:
 		return
 	if _frames < 2:
 		return
-	if (not _disable.is_empty() or not _disable_proc.is_empty()) and _frames % 15 == 0:
+	if (not _disable.is_empty() or not _disable_proc.is_empty() or not _hide.is_empty()) and _frames % 15 == 0:
 		_apply_disable(main)
 	var row := {
 		"t": float(now - _t_start) / 1.0e6,
@@ -85,6 +96,8 @@ func _process(_delta: float) -> void:
 		"draw_ms": float(main.last_draw_us) / 1000.0,
 		"nodes": int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)),
 		"calls": int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
+		"rcpu_ms": RenderingServer.viewport_get_measured_render_time_cpu(get_viewport().get_viewport_rid()),
+		"rgpu_ms": RenderingServer.viewport_get_measured_render_time_gpu(get_viewport().get_viewport_rid()),
 		"edge_redraw": float(main._edge_drawn_y) != _edge_y,
 		"slowmo": Engine.time_scale < 1.0,
 		"riders": get_tree().get_node_count_in_group("bikes"),
@@ -134,7 +147,7 @@ func _report() -> void:
 	for x in ft:
 		total_s += float(x) / 1000.0
 	var draws := _col(_rows, "draw_ms", true)
-	print("PERF level=%s size=%dx%d secs=%.1f frames=%d fps=%.1f frame_p50=%.2f p95=%.2f p99=%.2f max=%.2f over16=%.1f%% over33=%d mon_proc_p50=%.2f mon_proc_p95=%.2f mon_phys_p50=%.2f mon_phys_p95=%.2f draw_p50=%.2f draw_p95=%.2f draw_max=%.2f nodes_max=%d calls_p50=%d calls_max=%d warmup_max=%.2f" % [
+	print("PERF level=%s size=%dx%d secs=%.1f frames=%d fps=%.1f frame_p50=%.2f p95=%.2f p99=%.2f max=%.2f over16=%.1f%% over33=%d mon_proc_p50=%.2f mon_proc_p95=%.2f mon_phys_p50=%.2f mon_phys_p95=%.2f draw_p50=%.2f draw_p95=%.2f draw_max=%.2f nodes_max=%d calls_p50=%d calls_max=%d render_cpu_p50=%.2f render_cpu_p95=%.2f render_gpu_p50=%.2f render_gpu_p95=%.2f warmup_max=%.2f" % [
 		main.lvl, int(vs.x), int(vs.y), total_s, ft.size(), (ft.size() / total_s) if total_s > 0.0 else 0.0,
 		_pct(ft, 0.5), _pct(ft, 0.95), _pct(ft, 0.99), _pct(ft, 1.0),
 		100.0 * over16 / maxf(1.0, ft.size()), over33,
@@ -143,6 +156,8 @@ func _report() -> void:
 		_pct(draws, 0.5), _pct(draws, 0.95), _pct(draws, 1.0),
 		int(_pct(_col(_rows, "nodes"), 1.0)),
 		int(_pct(_col(_rows, "calls"), 0.5)), int(_pct(_col(_rows, "calls"), 1.0)),
+		_pct(_col(_rows, "rcpu_ms"), 0.5), _pct(_col(_rows, "rcpu_ms"), 0.95),
+		_pct(_col(_rows, "rgpu_ms"), 0.5), _pct(_col(_rows, "rgpu_ms"), 0.95),
 		_pct(_col(_warm, "frame_ms"), 1.0)])
 	# where main's physics step goes, per subsystem, averaged over every frame
 	var frames := maxf(1.0, float(_rows.size() + _warm.size()))
@@ -170,4 +185,6 @@ func _apply_disable(n: Node) -> void:
 			c.set_physics_process(false)
 		if sc != null and sc.resource_path.get_file() in _disable_proc:
 			c.set_process(false)
+		if sc != null and sc.resource_path.get_file() in _hide and c is CanvasItem:
+			c.visible = false
 		_apply_disable(c)
