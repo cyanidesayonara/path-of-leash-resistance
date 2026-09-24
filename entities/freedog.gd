@@ -212,8 +212,20 @@ func _choose_errand(d_mine: float) -> void:
 	state_t = 0.0
 
 
+# the stand-in canvas for this node's drawing, made fresh each _draw
+var _b: ShapeBatch
+
+
 func _draw() -> void:
-	main.contact_shadow(self, Vector2.ZERO, 11.0, 8.0, 0.24)
+	# every draw call goes through a ShapeBatch standing in for the canvas: runs
+	# of shapes become one draw call, same pixels (systems/shape_batch.gd)
+	_b = ShapeBatch.new(self)
+	_draw_shapes()
+	_b.flush()
+
+
+func _draw_shapes() -> void:
+	main.contact_shadow(_b, Vector2.ZERO, 11.0, 8.0, 0.24)
 	var t := AnimClock.msec() / 1000.0
 	var b := sin(bow * 6.0 + seed_o) * 1.5
 	# the pose: sniffing crouches her over the spot, marking cocks a leg (a
@@ -229,27 +241,27 @@ func _draw() -> void:
 				squash = Vector2(1.0 + lean * 0.06, 1.0 - lean * 0.05)
 			S.PLAY:
 				squash = Vector2(1.0 + lean * 0.12, 1.0 - lean * 0.14)
-		draw_set_transform(face * lean * 3.0, tilt, squash)
+		_b.draw_set_transform(face * lean * 3.0, tilt, squash)
 	DogAppearanceScript.draw_dog(
-		self,
+		_b,
 		appearance_profile,
 		Vector2.ZERO,
 		face,
 		b,
 		t * (18.0 if state == S.PLAY else 12.0) + seed_o
 	)
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	_b.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	# what she is up to, in the only language a top-down view has room for
 	match state:
 		S.SNIFF:
 			for i in range(3):
 				var f := fmod(t * 1.6 + float(i) * 0.33, 1.0)
-				draw_circle(face * (13.0 + f * 9.0) + Vector2(0, 4),
+				_b.draw_circle(face * (13.0 + f * 9.0) + Vector2(0, 4),
 					2.2 - f * 1.2, Color(0.85, 0.88, 0.7, 0.5 - f * 0.4))
 		S.MARK:
-			draw_circle(face * 6.0 + Vector2(0, 10), 3.0 + lean * 2.0,
+			_b.draw_circle(face * 6.0 + Vector2(0, 10), 3.0 + lean * 2.0,
 				Color(0.88, 0.86, 0.42, 0.45))
 		S.PLAY:
 			if lean > 0.4:
-				draw_string(ThemeDB.fallback_font, Vector2(-10, -28), "!",
+				_b.draw_string(ThemeDB.fallback_font, Vector2(-10, -28), "!",
 					HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color(1, 0.95, 0.8, 0.9))

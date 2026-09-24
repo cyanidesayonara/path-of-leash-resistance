@@ -40,4 +40,8 @@ func tick(cam_pos: Vector2) -> void:
 func _draw() -> void:
 	if main == null:
 		return
-	main.draw_freedom_onto(self)
+	# through a ShapeBatch: the same pixels in a fraction of the draw calls
+	# (systems/shape_batch.gd)
+	var b := ShapeBatch.new(self)
+	main.draw_freedom_onto(b)
+	b.flush()
