@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - the hitch at the gate was a script compile
+
+The probe now names the three biggest parts of main's physics step in each
+spike frame, which pointed straight at the walk's phase changes: stepping
+into the off-leash area cost 36-49 ms in one frame, the way home 14-22 ms.
+Most of it was GDScript compiling ball.gd, freedog.gd and rival.gd (and
+tofu.gd, the sweeper) the first time they were load()ed, mid-walk. `_ready`
+now loads every script spawned after the level is built (MIDWALK_SCRIPTS),
+while the level is loading anyway; the later load() calls hit the cache. The
+worst headless frame on street fell from 46 to 25 ms, on park from 65 to
+19 ms, and the behaviour snapshot is identical.
+
+What was left at the phase changes was the autowalk bot's own "AUTOWALK
+reached ..." print: printing to a piped console on Windows costs 2-16 ms,
+against 0.03 ms when nothing reads it. Real play prints nothing. The
+physics-step marks are also corrected: in the off-leash phase the romp and
+fetch had no mark and were billed to "goals, progress", now "goals" and
+"progress" apart.
+
 ## 2026-09-24 - main's whole world draw through one batch
 
 Every draw call main.gd makes on its own canvas now goes through a ShapeBatch

@@ -41,6 +41,8 @@ var _warm: Array[Dictionary] = []
 var _disable: PackedStringArray = []
 var _disable_proc: PackedStringArray = []
 var _hide: PackedStringArray = []
+# main.prof_us as of the previous frame, so each frame's own split is known
+var _prof_last := {}
 
 
 func setup(m: Node2D, seconds: float) -> void:
@@ -103,6 +105,19 @@ func _process(_delta: float) -> void:
 		"riders": get_tree().get_node_count_in_group("bikes"),
 		"walkers": get_tree().get_node_count_in_group("pairs") + get_tree().get_node_count_in_group("freedogs"),
 	}
+	# this frame's physics-step split, kept as its three biggest parts so a
+	# spike says which subsystem it was (a physics frame, or the gap between)
+	var parts := []
+	for k: String in main.prof_us.keys():
+		var d := int(main.prof_us[k]) - int(_prof_last.get(k, 0))
+		if d > 0:
+			parts.append([d, k])
+	_prof_last = main.prof_us.duplicate()
+	parts.sort_custom(func(a: Array, b: Array) -> bool: return int(a[0]) > int(b[0]))
+	var top := []
+	for i in range(mini(3, parts.size())):
+		top.append("%s=%.1f" % [parts[i][1], float(parts[i][0]) / 1000.0])
+	row["phys_top"] = ",".join(top) if not top.is_empty() else "-"
 	_t_last = now
 	_edge_y = float(main._edge_drawn_y)
 	# a zero means no world draw this frame (the world redraws at ~30fps)
@@ -173,9 +188,9 @@ func _report() -> void:
 	worst.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a.frame_ms) > float(b.frame_ms))
 	for i in range(mini(TOP_SPIKES, worst.size())):
 		var r: Dictionary = worst[i]
-		print("PERF spike t=%.2f frame=%.2fms mon_proc=%.2f mon_phys=%.2f draw=%.2f nodes=%d calls=%d edge_redraw=%s slowmo=%s riders=%d walkers=%d" % [
+		print("PERF spike t=%.2f frame=%.2fms mon_proc=%.2f mon_phys=%.2f draw=%.2f nodes=%d calls=%d edge_redraw=%s slowmo=%s riders=%d walkers=%d physics_top=%s" % [
 			r.t, r.frame_ms, r.proc_ms, r.phys_ms, r.draw_ms, r.nodes, r.calls,
-			r.edge_redraw, r.slowmo, r.riders, r.walkers])
+			r.edge_redraw, r.slowmo, r.riders, r.walkers, r.phys_top])
 
 
 func _apply_disable(n: Node) -> void:
