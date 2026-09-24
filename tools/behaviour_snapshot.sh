@@ -21,7 +21,7 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 OUT="${1:?usage: tools/behaviour_snapshot.sh OUT.txt}"
 GODOT="${GODOT:-./Godot_v4.7-stable_linux.x86_64}"
-LEVELS="${LEVELS:-street park beach rain market oldtown trail station site spook scrap guell}"
+LEVELS="${LEVELS:-street park beach rain market oldtown trail station site spook scrap guell neteja}"
 JOBS="${JOBS:-4}"
 
 WORK="$(mktemp -d)"

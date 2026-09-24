@@ -36,6 +36,11 @@ static func apply_corridor(m: Node2D) -> void:
 		"spook": half = 275.0
 		"scrap": half = 305.0
 		"guell": half = 300.0   # terraces, wide enough to carve on
+		# The narrowest walk, on purpose: the sweeper chase lives here (#20),
+		# and a street sweeper only reads as a machine bearing down on you in a
+		# street it fills. Its body is 276 wide and its brush head is the full
+		# corridor, so there is no getting round it - only ahead of it.
+		"neteja": half = 185.0
 	m.walk_cx = 640.0
 	m.walk_half = half
 	m.sw_l = m.walk_cx - m.walk_half
@@ -131,7 +136,7 @@ static func build_level_data(m: Node2D) -> void:
 	var geo = m.lvl
 	if m.lvl == "rain" or m.lvl == "station" or m.lvl == "site" or m.lvl == "scrap":
 		geo = "street"
-	elif m.lvl == "oldtown" or m.lvl == "spook":
+	elif m.lvl == "oldtown" or m.lvl == "spook" or m.lvl == "neteja":
 		geo = "market"
 	elif m.lvl == "trail" or m.lvl == "guell":
 		geo = "park"
@@ -448,6 +453,22 @@ static func build_level_data(m: Node2D) -> void:
 		m.cone_spots = Array([Vector2(520, -1650), Vector2(760, -1650), Vector2(560, -2020), Vector2(720, -2020), Vector2(600, -3250), Vector2(700, -3650)], TYPE_VECTOR2, &"", null)
 		m.vans = Array([Vector2(900, -2500)], TYPE_VECTOR2, &"", null)
 		m.fountains = Array([Vector2(335, -4200)], TYPE_VECTOR2, &"", null)
+	elif m.lvl == "neteja":
+		# La Neteja: a narrow residential street at dawn, on the morning the
+		# sweeper comes through. The market's stalls and buskers are cleared
+		# out - the home leg is a run, and the aisle has to be runnable - and
+		# what is left is what a back street has: lampposts to snag the leash
+		# on, bins, washing overhead and cars' worth of clutter at the kerbs.
+		m.gate_text = "PLACA"
+		m.stalls = Array([], TYPE_VECTOR2, &"", null)
+		m.performers = Array([], TYPE_VECTOR2, &"", null)
+		m.fountains = Array([Vector2(640, -3100)], TYPE_VECTOR2, &"", null)
+		m.laundry_lines = Array([-900.0, -1700.0, -2500.0, -3300.0, -4100.0], TYPE_FLOAT, &"", null)
+		# a slalom of lampposts down the middle, far enough apart to run
+		# between, close enough that a straight line snags the leash
+		for yy in [-1300.0, -2200.0, -3700.0, -4500.0]:
+			m.poles.append(Vector2(m.walk_cx + (55.0 if int(yy) % 200 == 0 else -55.0), yy))
+		m.cone_spots = Array([Vector2(600, -1990), Vector2(690, -2110), Vector2(610, -4000)], TYPE_VECTOR2, &"", null)
 	elif m.lvl == "guell":
 		# El Parc: Gaudi's terraces. Broken-tile mosaic underfoot, which is
 		# fast and slippery to run on, laid in organic sweeps rather than

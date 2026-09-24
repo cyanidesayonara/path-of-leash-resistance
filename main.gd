@@ -219,6 +219,13 @@ const HOME_Y := 320.0
 var chase_active := false
 var chase_sweeper: Node2D
 var chase_kind := "sweeper"  # "sweeper" (slow, drag the owner) or "bolt" (fast, owner drags you)
+# the closest the machine has come to the dog or the human this chase (px);
+# INF until it starts. The "outrun" goal reads it.
+var chase_min_gap := INF
+# seconds left of the catch beat: the machine rolls over whoever it caught
+# before the card comes up (systems/home_chase.gd)
+var chase_catch_t := 0.0
+var chase_catch_msg := ""
 # El Gotic wall cats: perched temptations you shoo with a bark
 var wallcat_spots: Array[Vector2] = []
 var laundry_lines: Array[float] = []
@@ -4475,6 +4482,7 @@ const OPENERS := {
 	"spook": "Around the Castanyada and home. The sweets on the ground are not for dogs.",
 	"scrap": "Through the yard and out. Quietly - things are sleeping.",
 	"guell": "Up the terraces and back. The tiles are slippery. Run anyway.",
+	"neteja": "To the square and back before the sweeper comes through. It always comes through.",
 	"tutorial": "A short one, to get the hang of it. Nothing out here can hurt you.",
 }
 

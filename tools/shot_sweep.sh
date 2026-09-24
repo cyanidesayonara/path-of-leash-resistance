@@ -24,7 +24,7 @@ GODOT="${GODOT:-./Godot_v4.7-stable_linux.x86_64}"
 # a shot that has not quit by then is stuck; --shot-quit normally ends it
 # within a few seconds of the PNG landing
 SHOT_TIMEOUT="${SHOT_TIMEOUT:-120}"
-LEVELS=(street park beach rain market oldtown trail station site spook scrap guell)
+LEVELS=(street park beach rain market oldtown trail station site spook scrap guell neteja)
 
 mkdir -p "${OUT}"
 OUT_ABS="$(cd "${OUT}" && pwd)"

@@ -2,6 +2,36 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - La Neteja: the sweeper chase gets its own walk (#20)
+
+A thirteenth walk, and the chase's new home. La Neteja ("the dawn
+clean-up") is a narrow back street, 370 px wide where the boulevard is 680,
+so the sweeper - 276 wide, brush head the full width - fills it and reads as
+a machine bearing down rather than a slab across a road. It is built on the
+market's cross-section with the stalls and buskers cleared out (the home leg
+is a run), a slalom of lampposts to snag the leash on, washing overhead, a
+fountain in the square. Unlocks at 23 stars. Its goals swap Tofu (who never
+shares a home leg with a chase) for "never let the sweeper within a leash
+length", which judges the chase run well rather than merely survived.
+
+- The chase now rolls only here, every time; the other walks never get one.
+  Their random sequence is untouched: the old roll is still drawn and
+  ignored, so dailies and --seed replays play out as before (the chase test
+  checks it for 60 seeds).
+- The machine draws behind the dog and the human, so it can never paint over
+  them or the leash; the brushes reach 46 px past the kill line, which is
+  what #20 saw. When it catches someone it comes to the front and rolls over
+  them for 0.75 s, with a "SWEPT!" shout, before the game-over card.
+- Fixed on the way: a walk that rolled a chase was SCARED from the first
+  step of the way OUT, because the dread read chase_active, which is set at
+  level start. It now needs the machine on the road. With a chase forced on
+  street, the autowalk reached the park at 35.5 s instead of 30.3 s; now 30.3.
+
+The behaviour snapshot differs from main exactly there: the three forced
+chase autowalks, and five idle soaks whose seed used to roll a chase.
+Not yet: the dawn light, and the grass that shows beyond the pavement at the
+start of the market-based walks (El Gotic has it too; #21).
+
 ## 2026-09-24 - the feed no longer writes over itself (#59)
 
 The status banner came back in #43, and nobody had seen it and the feed at
