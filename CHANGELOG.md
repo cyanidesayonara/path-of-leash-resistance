@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - a faster rope solver, same numbers
+
+`entities/leash.gd`'s solve loops do less interpreter work: the rope ends are
+read once per tick instead of once per iteration, each point is read once per
+constraint pass, and the collision pass skips obstacles outside a segment's
+padded bounding box before the exact test (inlined). Same arithmetic in the
+same order, so the output is bit-identical: `tools/bench_leash.gd` hashes
+every solver output over three scenarios and the hashes match, and the
+behaviour snapshot is identical. Per tick: free rope 64 -> 58 us, wrapping
+poles 174 -> 132 us, tangled with another leash 640 -> 280 us.
+
+The profile also shows the NPC route planner (`bypasser_route.step`) costing
+more than the NPC ropes on site: about 0.65 ms a frame against 0.26 ms.
+
 ## 2026-09-24 - correction: measure frame time, not Godot's time monitors
 
 The entry below says "headless script time is 11-15 ms per frame". That came

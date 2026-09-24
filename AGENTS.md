@@ -159,6 +159,13 @@ push to main and uploads the sheets as an artifact; it does not gate CI:
 GODOT=godot/Godot_v4.7-stable_win64_console.exe bash tools/shot_sweep.sh
 ```
 
+Rope solver benchmark: time per `leash.tick()` in three fixed scenarios, plus
+a hash of every solver output. A speed-up meant to change nothing must leave
+all three hashes as they were (compare on one machine):
+```
+godot\Godot_v4.7-stable_win64_console.exe --headless --path . --script res://tools/bench_leash.gd
+```
+
 The title's version label is not in the source: `tools/stamp_version.sh`
 writes the tag and short commit (`v1.55 (a1b2c3d)`) to the gitignored
 `build_label.txt`, which each export preset packs. `release.yml` runs it
