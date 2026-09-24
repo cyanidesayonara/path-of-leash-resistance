@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - the 1.55 Store update
+
+Santtu uploaded PathOfLeashResistance-1.55.0.0.msix to Partner Center.
+`store/listing.md` now holds what goes with it: "What's new in this version",
+the description and short description at twelve walks with moods and
+surfaces, two new product features, a note for certification, and a new
+El Mosaic screenshot (`--level=guell --shot-at=3100`, stamped v1.55). Taking
+the screenshots turned up #59: the status banner and the feed lines draw on
+top of each other.
+
 ## 2026-09-24 - what is left on street in the browser is GPU fill
 
 On street in headless Chrome the script is small (physics step 0.6 ms, world
