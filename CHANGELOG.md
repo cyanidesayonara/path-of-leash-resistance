@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - snow follows the path on the walks that bend
+
+Second level-review pass (#21): every walk in rain, wind, snow and at night,
+and at 844x390. Night, wind and rain read on every walk and the phone
+landscape fits. Snow did not, on El Bosc and El Mosaic: its slush was a
+rectangle between the corridor's nominal edges, so the bending path ran out
+from under it (bare dirt beside the snow) and slush lay on the grass, over El
+Bosc's pond too. The slush is a band that follows `walk_edges()` now, using
+the band helpers the patches already had, and it draws only the stretch on
+screen. `tests/test_snow_slush.gd` checks the whole length of three walks and
+fails on the old rectangle. Also new: `--night`, for screenshots and reviews.
+
 ## 2026-09-24 - world labels keep clear of the feed (#66)
 
 World labels ("FULL!", "hello? ...oh hi", "click!") are drawn at their
