@@ -53,7 +53,6 @@ enum Tone { PLAIN, GOOD, BAD, LOUD }
 const SHOW_S := 2.4          # how long a transient line lives
 const FADE_S := 0.55         # ...and how much of that it spends fading
 const MAX_LINES := 2         # more than this is a wall of text, not a signal
-const GAP := 44.0
 # the shout and the standing instruction, which should not be the same weight:
 # a banner is on screen for twenty seconds and must not dominate the picture
 const SIZE_SAY := 34
@@ -63,6 +62,17 @@ const OUTLINE_BANNER := 7
 # the punch: a line arrives slightly oversized and settles, over this long
 const PUNCH_S := 0.13
 const PUNCH := 1.28
+# how far a feed line drifts up over its life, in px per second
+const RISE := 7.0
+# Every line owns a slot tall enough for everything it will ever do - its
+# capitals and outline at the biggest punch, and at the top of its rise - so
+# a rising or punching line can never climb into the one above (#59: the feed
+# used to sit 31px under the banner and rose into it). The text is always
+# capitals, so a line's ink reaches CAP_H * size above the baseline and
+# DESC_H * size below it (commas, Q, J), plus half its outline either way.
+const CAP_H := 0.73
+const DESC_H := 0.10
+const SLOT_MARGIN := 4.0
 
 const TONE_COL := {
 	Tone.PLAIN: Color(0.94, 0.92, 0.86),
@@ -128,30 +138,63 @@ func _draw() -> void:
 		return
 	var f := ThemeDB.fallback_font
 	var vs := get_viewport_rect().size
+	for e: Dictionary in layout(vs):
+		_line(f, vs.x, float(e["y"]), String(e["text"]), int(e["size"]), int(e["outline"]),
+			e["col"], float(e["punch"]))
+
+
+# Where every visible line goes this frame, banner first: text, size, outline,
+# colour, baseline y and punch scale. _draw paints exactly this, and
+# tests/test_event_feed.gd holds it to never letting two lines' ink meet.
+func layout(vs: Vector2) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
 	# a little below the middle: the camera holds the dog near the centre, so
 	# this sits just under her without covering her
 	var y: float = vs.y * 0.63
+	# the lowest ink drawn so far; the next slot starts under it
+	var floor_y: float = -INF
 	if banner != "":
 		# gently pulsing, so a standing instruction reads as live rather than
 		# as something painted on
 		var a: float = 0.82 + 0.18 * sin(AnimClock.msec() / 240.0)
-		_line(f, vs.x, y, banner, SIZE_BANNER, OUTLINE_BANNER,
-			Color(banner_col.r, banner_col.g, banner_col.b, a), 1.0)
-		y += GAP * 0.7
+		out.append({"text": banner, "size": SIZE_BANNER, "outline": OUTLINE_BANNER,
+			"col": Color(banner_col.r, banner_col.g, banner_col.b, a), "y": y, "punch": 1.0,
+			"rise": 0.0})
+		floor_y = y + ink_below(SIZE_BANNER, OUTLINE_BANNER, 1.0)
 	for l: Dictionary in lines:
 		var t := float(l["t"])
+		if floor_y > -INF:
+			y = floor_y + SLOT_MARGIN + slot_above(SIZE_SAY, OUTLINE_SAY)
 		var fade: float = 1.0 if t < SHOW_S - FADE_S else clampf((SHOW_S - t) / FADE_S, 0.0, 1.0)
 		# and rising slightly as it goes, which is what makes a queue read as
 		# a queue rather than as text swapping in place
-		var rise: float = minf(t, SHOW_S) * 7.0
+		var rise: float = minf(t, SHOW_S) * RISE
 		# the punch: oversized for a moment as it lands, then settles
 		var punch: float = 1.0
 		if t < PUNCH_S:
 			punch = lerpf(PUNCH, 1.0, t / PUNCH_S)
 		var col: Color = TONE_COL.get(int(l["tone"]), TONE_COL[Tone.PLAIN])
-		_line(f, vs.x, y - rise, String(l["text"]), SIZE_SAY, OUTLINE_SAY,
-			Color(col.r, col.g, col.b, fade), punch)
-		y += GAP
+		out.append({"text": String(l["text"]), "size": SIZE_SAY, "outline": OUTLINE_SAY,
+			"col": Color(col.r, col.g, col.b, fade), "y": y - rise, "punch": punch,
+			"rise": rise})
+		# the slot's floor is the line at rest (no rise) at its biggest punch
+		floor_y = y + ink_below(SIZE_SAY, OUTLINE_SAY, PUNCH)
+	return out
+
+
+# how far a line's ink reaches above and below its baseline at a punch scale
+func ink_above(size: int, outline: int, punch: float) -> float:
+	return (CAP_H * size + outline * 0.5) * punch
+
+
+func ink_below(size: int, outline: int, punch: float) -> float:
+	return (DESC_H * size + outline * 0.5) * punch
+
+
+# the room a feed line needs above its resting baseline over its whole life:
+# the bigger of landing oversized and having risen to the top
+func slot_above(size: int, outline: int) -> float:
+	return maxf(ink_above(size, outline, PUNCH), ink_above(size, outline, 1.0) + SHOW_S * RISE)
 
 
 func _line(f: Font, w: float, y: float, text: String, size: int, outline: int,

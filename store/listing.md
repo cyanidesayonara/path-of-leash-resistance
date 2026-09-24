@@ -48,7 +48,8 @@ Screenshots and logos are regenerated, not stored here:
   (see `docs/MICROSOFT_STORE.md` step 5). First set: station, beach, market,
   park, street in snow, spook, old town, trail. 1.55 added El Mosaic
   (`--level=guell --shot-at=3100`, with `tools/stamp_version.sh` run first so
-  the corner says the version, not "dev"). Never the sweeper chase until #20
+  the corner says the version, not "dev"), captioned "El Mosaic: the winding
+  terrace and its broken-tile mosaic". Never the sweeper chase until #20
   is fixed, and pick frames where no two feed lines overlap (#59).
 - Logos: `tools/make_store_art.gd` writes the 9:16 poster (1440x2160), 1:1
   box art (2160) and the 300/150/71 tiles into `build/store-art/`. No hero
