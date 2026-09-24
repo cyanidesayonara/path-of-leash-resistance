@@ -252,12 +252,16 @@ static func open_settings(m: Node2D) -> void:
 	m.settings_idx = 0
 	m.settings_panel.visible = true
 	m.dim.visible = true
+	# the world stops redrawing while settings are open (_process returns
+	# early), so redraw once now to drop the chalked title from behind the panel
+	m.queue_redraw()
 	Sfx.play("ui")
 
 
 static func close_settings(m: Node2D) -> void:
 	m.in_settings = false
 	m.settings_panel.visible = false
+	m.queue_redraw()
 	Game.save_records()
 	Sfx.play("ui")
 	if m.paused:
