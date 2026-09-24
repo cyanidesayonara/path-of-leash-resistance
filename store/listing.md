@@ -1,13 +1,11 @@
 # Microsoft Store listing
 
-What was entered in Partner Center for the first submission (1.54.0.0, live
-2026-09-23 at https://apps.microsoft.com/detail/9p5d14v8rbqx). Copy from here
-for the next submission, and update this file whenever the live listing
-changes, so it stays the record of what the Store says.
-
-Everything below describes v1.54. When moods, El Mosaic and the rest of
-`main` ship, the description and features need updating, and "What's new"
-gets filled in.
+What was entered in Partner Center. First submission 1.54.0.0, live
+2026-09-23 at https://apps.microsoft.com/detail/9p5d14v8rbqx; the second,
+1.55.0.0, was submitted on 2026-09-24 with the listing below (twelve walks,
+moods, surfaces, and "What's new" filled in). Copy from here for the next
+submission, and update this file whenever the live listing changes, so it
+stays the record of what the Store says.
 
 ## Properties
 
@@ -48,8 +46,10 @@ Screenshots and logos are regenerated, not stored here:
 - Screenshots: 1920x1080 from the shipped build via
   `--shot --shot-at=N --autowalk --fixed-fps 60 --resolution 1920x1080`
   (see `docs/MICROSOFT_STORE.md` step 5). First set: station, beach, market,
-  park, street in snow, spook, old town, trail. Never the sweeper chase until
-  #20 is fixed.
+  park, street in snow, spook, old town, trail. 1.55 added El Mosaic
+  (`--level=guell --shot-at=3100`, with `tools/stamp_version.sh` run first so
+  the corner says the version, not "dev"). Never the sweeper chase until #20
+  is fixed, and pick frames where no two feed lines overlap (#59).
 - Logos: `tools/make_store_art.gd` writes the 9:16 poster (1440x2160), 1:1
   box art (2160) and the 300/150/71 tiles into `build/store-art/`. No hero
   art, trailers or Xbox images.
@@ -61,7 +61,9 @@ You are the dog. Your human is glued to their phone and walking on autopilot. Ge
 
 The leash is real rope physics. Your human outweighs you four to one and wins every straight tug, so you win the way a dog does: dig in at the right moment, wrap the leash around a lamppost to hold them fast, and bark to stop them dead at the kerb. Get the timing right as a bike whizzes past and it counts as a save.
 
-Eleven walks through a sunny, slightly chaotic Barcelona: the boulevard and its bike lane, the park and its pond, the seafront, a rainy day, the market, the old town's narrow alleys, a forest trail, the station concourse, roadworks with wet cement, a festival night, and a scrapyard with a guard dog you really should not wake.
+Twelve walks through a sunny, slightly chaotic Barcelona: the boulevard and its bike lane, the park and its pond, the seafront, a rainy day, the market, the old town's narrow alleys, a forest trail, the station concourse, roadworks with wet cement, a festival night, a scrapyard with a guard dog you really should not wake, and a winding terrace paved in broken glazed tile.
+
+What happens on a walk changes how you feel, and how you feel changes how you move. A fright leaves you jumpy and half blind to smells, a good bark-off makes you barky, time off the leash brings on the zoomies, and running yourself empty leaves you flat. Moods fade on their own. The ground matters too: grass slows you down but holds far more scent than pavement, and polished tile is fast and hard to steer.
 
 Every walk has its own list of goals: sniff the good spots, mark your territory, fetch, greet other dogs, herd a runaway friend home, and land combo tricks like vaulting around a pole or grinding along a kerb. Earn stars to unlock new walks and bones to spend on leashes and bandanas.
 
@@ -73,22 +75,36 @@ Single player. No ads, no purchases, no account, and it plays offline. Keyboard 
 ### Short description
 
 ```
-You are the dog. Your phone-distracted human walks on autopilot, and the leash is real rope physics. Dig in, wrap lampposts and bark your way through eleven walks in Barcelona, and get them home with the phone intact.
+You are the dog. Your phone-distracted human walks on autopilot, and the leash is real rope physics. Dig in, wrap lampposts and bark your way through twelve walks in Barcelona, and get them home with the phone intact.
 ```
 
 ### Product features
 
 ```
 The leash is real rope physics: wrap it around poles, plant yourself, win the tug of war
-Eleven hand-built walks through Barcelona, plus a daily walk
+Twelve hand-built walks through Barcelona, plus a daily walk
 Goal lists on every walk, with stars that unlock new walks
 Combo tricks: leash-vaults, kerb grinds, near misses
 Chase walks where you drag your oblivious human to safety
+Dog moods: scared, barky, zoomies and flat, each changing how you move and what you notice
+Ground you can feel: grass holds scent, tile is fast and slippery
 Rain, wind, snow and night change how each walk plays
 Bones to spend on leashes and bandanas
 A gentle first walk that teaches the basics
 Full controller support
 No ads, no purchases, no account, and it plays offline
+```
+
+### What's new in this version (1.55)
+
+```
+- A twelfth walk: El Mosaic, a winding terrace path paved in broken glazed tile. The tile is the fastest footing in the game and the slipperiest, and it holds no scent at all.
+- Dog moods. What happens on a walk can leave you scared, barky, full of zoomies or flat, and each one changes how you move and what you notice. Moods fade on their own, and the HUD shows how long is left.
+- The ground matters: grass and mud slow you a little but hold far more scent than pavement.
+- A rebuilt seafront, sand drifting across the promenade, and picnics, stumps and bushes along the verges.
+- The street sweeper is a proper machine now.
+- Much smoother, especially in the browser: far fewer draw calls per frame, and no more stutter when you step into the off-leash area.
+- Fixes: the walk status (NEED A WEE, LOOSE LEASH, FETCH and more) shows again, the mood badge no longer covers the phone, the results card is easier to read, and a dog standing still no longer gets knocked over for no reason.
 ```
 
 ### Other fields
@@ -107,6 +123,8 @@ Publishing hold: "Don't publish until I select Publish now". Notes for
 certification (Additional Testing Information page):
 
 ```
+Update 1.55: a new level, new gameplay systems and performance work. No change to capabilities, network use, data handling or controls since 1.54.
+
 Path of Leash Resistance is a single-player Win32 desktop game built with the Godot engine (4.7), packaged as MSIX.
 
 runFullTrust: required to run the packaged Win32 game executable. The game uses no other restricted capabilities, no network access, no accounts and no in-app purchases.
