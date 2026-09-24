@@ -2089,6 +2089,15 @@ func _update_hud() -> void:
 		hud_status = "FULL!"
 	elif pee <= 0.02:
 		hud_status = "THIRSTY! FIND A FOUNTAIN"
+	# The one-line answer to "what is going on" lives in the feed banner,
+	# centre screen near the dog, instead of as small text tucked under the
+	# vitals card where it was never read. This call used to sit after a
+	# return in _progress_text, so the banner was never set and none of the
+	# lines above reached the screen (#29).
+	# Only during a walk: on the title the status would sit over the chalked
+	# name (the scrapyard's "GO SLOW" is set before you have set off).
+	if feed != null:
+		feed.set_banner(hud_status if started else "")
 	goals_card.visible = started and not tutorial_mode
 
 
