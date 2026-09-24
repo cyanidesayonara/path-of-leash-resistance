@@ -2,6 +2,38 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - freeze fixes, and the first performance numbers
+
+Bug fixes, each with a test that fails on the old code where one is possible:
+
+- **Wardrobe preview dog (#33):** never given `main`, so every draw errored
+  before the body was drawn. Now set up like the real dog.
+- **CI fails on any script error (#32):** `tools/godot_ci.sh` wraps every
+  test step. Its first run found no other hidden errors.
+- **A-stands (#30):** the spawn loop sat in `on_junk_kicked`, so none stood at
+  the start and every kick stacked a full set - 350 to 510 physics nodes per
+  walk by the one-minute mark. Now spawned once with the other furniture.
+  Physics median down about 25-35% on rain and site.
+- **Status banner (#29, S2):** the call that shows NEED A WEE, LOOSE LEASH,
+  FETCH, GO SLOW, THIRSTY and RUN sat after a `return` since 2026-08-03, so
+  none of them reached the screen. `_update_hud` sets it now, during a walk.
+- **Mood badge (#7):** moved off the third phone pip to the card's bottom row.
+- **Title prompt (#8):** moved below the dog.
+- **Results card (#31):** room under the rating line.
+- **Settings over the title (#10):** the chalked title is no longer drawn
+  behind the panel.
+- **CI queue:** the 12-job idle soak runs on PRs only when gameplay code
+  changes; every push to main still soaks.
+
+Performance (tracked in #45): the new `--perf` probe and `tools/perf_sweep.sh`.
+Headless script time is 11-15 ms per frame on every walk - the likely cause
+of the browser's choppiness, since GDScript runs several times slower there.
+Physics spikes line up with five or more NPC walkers on screen. Windowed
+sweeps on Windows are only valid with the game window in front: background
+windows get throttled to 30 fps, which is what eight walks showed in the
+first sweep. Tried and dropped: sleeping off-camera cones (identical
+behaviour, no measurable gain).
+
 ## 2026-09-24 - scripts moved into folders (freeze task 5, part 2)
 
 Every script except `main.gd` now lives in a folder: `autoload/` (Game, Sfx),
