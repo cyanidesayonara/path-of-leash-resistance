@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - what is left on street in the browser is GPU fill
+
+On street in headless Chrome the script is small (physics step 0.6 ms, world
+draw 2 ms, renderer CPU 0.6 ms) while frames take 12-16 ms, so the rest is
+GPU work WebGL cannot time. The new `--perf-no-grade` diagnostic switches
+off the full-screen grade pass (hud/grade.gdshader, which also forces a copy
+of the whole screen). Three alternating runs each: grade on 55-75 fps
+(frame p50 11.8-16.5 ms), off 74-93 fps (9.5-12.1 ms), about 3-4 ms a frame
+on the integrated Intel GPU, with a lot of run-to-run noise. Making the pass
+cheaper changes the picture, so it waits for a decision rather than landing
+under the WIP limit.
+
 ## 2026-09-24 - v1.55, and the browser measured
 
 v1.55 is tagged: everything since v1.54, including the freeze fixes awaiting

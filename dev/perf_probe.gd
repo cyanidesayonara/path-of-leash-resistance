@@ -20,6 +20,7 @@ extends Node
 # process and per-frame redraw, so the difference shows what they cost.
 # --perf-hide=... hides those scripts' nodes, so the drop in draw calls (a
 # windowed run; headless draws nothing) shows what they cost to render.
+# --perf-no-grade switches off the full-screen grade pass (GPU fill).
 #
 # To compare CPU cost between builds, run headless with --fixed-fps 60 and
 # read frame_p50. For real frame times (rendering included) run windowed with
@@ -59,6 +60,13 @@ func setup(m: Node2D, seconds: float) -> void:
 		elif arg.begins_with("--perf-disable-process="):
 			_disable_proc = arg.substr(23).split(",")
 			print("PERF diagnostic: process (and its per-frame redraw) disabled for %s" % ", ".join(_disable_proc))
+		elif arg == "--perf-no-grade":
+			# the full-screen grade pass (hud/grade.gdshader) is GPU fill work
+			# that the renderer's CPU timings never see; switching it off shows
+			# what it costs in frame time
+			if main.grade_rect != null:
+				main.grade_rect.visible = false
+			print("PERF diagnostic: grade pass off")
 		elif arg.begins_with("--perf-hide="):
 			_hide = arg.substr(12).split(",")
 			print("PERF diagnostic: hidden %s" % ", ".join(_hide))
