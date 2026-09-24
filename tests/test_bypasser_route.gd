@@ -635,6 +635,33 @@ func _test_configured_cache_and_filtering() -> void:
 	_check(cached.blocker_id != null, "configured geometry is immutable from source descriptor mutation")
 
 
+func _test_shared_geometry() -> void:
+	# Walkers on one level share the clustered geometry (configure_blockers);
+	# a changed list or clearance must build its own, and an older walker keeps
+	# what it was configured with.
+	var list_a: Array[Dictionary] = [
+		_circle("a1", Vector2(100, 40), 10.0),
+		_circle("a2", Vector2(110, 50), 10.0),
+		_rect("a3", Rect2(20, -200, 30, 30)),
+	]
+	var first := _planner()
+	var second := _planner()
+	if not _configure_planner(first, list_a, "shared") or not _configure_planner(second, list_a.duplicate(true), "shared"):
+		return
+	_check(is_same(first.get("_clusters"), second.get("_clusters")), "same blocker list and clearance share clusters")
+	_check(int(second.get("configured_cluster_count")) == int(first.get("configured_cluster_count")), "shared geometry reports the same cluster count")
+	var wider := _planner(100.0, 0.0, 200.0, 30.0)
+	_configure_planner(wider, list_a, "shared clearance")
+	_check(not is_same(first.get("_clusters"), wider.get("_clusters")), "another clearance builds its own clusters")
+	var list_b: Array[Dictionary] = [_circle("b1", Vector2(100, -60), 10.0)]
+	var third := _planner()
+	_configure_planner(third, list_b, "shared rebuild")
+	_check(int(third.get("configured_blocker_count")) == 1, "a changed list is normalized afresh")
+	_check(int(first.get("configured_blocker_count")) == 3 and first.get("_blockers").size() == 3, "an older planner keeps its geometry after a rebuild")
+	var ahead := _configured_step(first, Vector2(100, 120), -40.0, 0.1)
+	_check(ahead.blocker_id != null, "an older planner still detours around its own blockers")
+
+
 func _test_forward_sweep_spawn() -> void:
 	for direction in [-1, 1]:
 		var planner := _planner()
@@ -894,6 +921,7 @@ func _initialize() -> void:
 	_test_commanded_formation_path_and_bounds()
 	_test_clear_return_checks_all_clusters_and_bounds()
 	_test_configured_cache_and_filtering()
+	_test_shared_geometry()
 	_test_swept_candidate_rejection()
 	_test_circle_corner_precision()
 	_test_nearest_circle_uses_actual_corridor_contact()

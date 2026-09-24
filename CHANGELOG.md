@@ -2,6 +2,21 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - the NPC route planner: shared geometry and a broad phase
+
+Every NPC walker and rider built its own copy of the level's blocker clusters
+when it spawned, an O(n^2) pass that took about 2 ms per spawn on site and
+street (55 blockers) and would take about 26 ms at 200. The planner
+(`systems/bypasser_route.gd`) now builds it once per blocker list and
+clearance and shares it: later spawns take about 25 us. The list is compared
+by value, so a rebuilt level gets fresh geometry.
+
+The per-frame corridor tests also skip a cluster whose bounding box is clear of
+the corridor before testing its members. Route cost per frame: site
+0.31 -> 0.27 ms, street 0.17 -> 0.12 ms. Both changes leave every result the
+same: the behaviour snapshot is identical, and test_bypasser_route has a
+new sharing check.
+
 ## 2026-09-24 - a faster rope solver, same numbers
 
 `entities/leash.gd`'s solve loops do less interpreter work: the rope ends are
