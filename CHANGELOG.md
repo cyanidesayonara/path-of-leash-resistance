@@ -2,6 +2,23 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - correction: measure frame time, not Godot's time monitors
+
+The entry below says "headless script time is 11-15 ms per frame". That came
+from Godot's TIME_PROCESS monitor, which does not mean per-frame cost here:
+headless it read 12.5 ms while whole frames took 2.8 ms of wall-clock time.
+Measured properly, all game logic plus physics is about 2.3-3.2 ms per frame
+on the laptop, so the browser's choppiness is more likely rendering
+(800-1,150 draw calls a frame) than script. On site, NPC walker pairs cost
+about 1.2 ms of that and cones and junk about 0.9 ms. The probe now prints the
+monitors as mon_proc/mon_phys and says what to compare instead; #45 has the
+corrected baseline.
+
+The probe also splits main's physics step by subsystem (wall-clock marks):
+0.4-0.7 ms, most of it the rope solve. `--perf-disable=` and
+`--perf-disable-process=` switch off one kind of entity's physics or redraw,
+to measure what it costs.
+
 ## 2026-09-24 - scripts moved into folders (freeze task 5, part 2)
 
 Every script except `main.gd` now lives in a folder: `autoload/` (Game, Sfx),

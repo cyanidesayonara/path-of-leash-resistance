@@ -459,6 +459,11 @@ var _draw_n := 0
 # microseconds the most recent world draw took, while --drawcost (or the perf
 # probe, which turns it on) is timing draws
 var last_draw_us := 0
+# per-subsystem physics timing for the perf probe: _prof("name") charges the
+# time since the previous mark to that name. Off (one bool test) unless --perf.
+var _prof_on := false
+var _prof_t := 0
+var prof_us := {}
 # scattered ground detail (cracks, litter, stones, stains) so hard surfaces
 # stop reading as empty colour fields. Built with a LOCAL rng so it never
 # perturbs the global seed the deterministic autowalk depends on.
@@ -2174,6 +2179,7 @@ func _physics_process(delta: float) -> void:
 	if frozen:
 		return
 	elapsed += delta
+	_prof("")
 	riders_cache = get_tree().get_nodes_in_group("bikes")
 	critters_cache = get_tree().get_nodes_in_group("squirrels")
 	birds_cache = get_tree().get_nodes_in_group("pigeons")
@@ -2197,6 +2203,7 @@ func _physics_process(delta: float) -> void:
 		_watch_stall(delta)
 	dog.tick(delta)
 	human.tick(delta)
+	_prof("dog, owner, drive")
 	# the human owns the retractable leash: length changes on their whim
 	# ("click!" event), never the dog's
 	leash_len = move_toward(leash_len, leash_target, 150.0 * delta)
@@ -2204,18 +2211,29 @@ func _physics_process(delta: float) -> void:
 	# Dynamic NPC-rope obstacles must be current before the player leash
 	# solve; a post-solve feed left the hero rope one frame stale.
 	_refresh_pair_obstacles()
+	_prof("pair obstacles")
 	_apply_leash(delta)
+	_prof("leash solve")
 	if phase != "freedom":
 		_lanes(delta)
 		_vlane(delta)
+		_prof("lanes")
 	_squirrels(delta)
+	_prof("critters")
 	_temptation(delta)
+	_prof("temptation")
 	_offpath(delta)
+	_prof("offpath")
 	_greetings()
+	_prof("greetings")
 	_pairs(delta)
+	_prof("pairs")
 	_hazards(delta)
+	_prof("hazards")
 	_pickups(delta)
+	_prof("pickups")
 	_bodily(delta)
+	_prof("bodily")
 	for i in range(bag_flights.size() - 1, -1, -1):
 		var f: Dictionary = bag_flights[i]
 		f.t += delta / 0.45
@@ -2225,22 +2243,29 @@ func _physics_process(delta: float) -> void:
 			on_business_bagged(to)
 	if not cameras.is_empty() or not lasers.is_empty():
 		_stealth(delta)
+		_prof("stealth")
 	if phase == "freedom":
 		_romp(delta)
 		_neighbour_fetch()
 	elif phase == "home" and chase_active:
 		_chase(delta)
+		_prof("romp, chase")
 	_check_goals()
 	_progress(delta)
+	_prof("goals, progress")
 	combo.tick(delta)
 	challenge.tick(delta)
+	_prof("combo, challenge")
 	owner_news_cd = maxf(0.0, owner_news_cd - delta)
 	# the banner shows live countdowns (slack left, fetch timer, chase), and
 	# _update_hud is otherwise event-driven, so those would sit frozen
 	if call_active or chase_active or phase == "freedom":
 		_update_hud()
+		_prof("hud")
 	_tick_mood(delta)
+	_prof("mood")
 	_tick_teeter(delta)
+	_prof("teeter")
 	if tutorial_mode:
 		_tick_tutorial(delta)
 		_update_tut_card()
@@ -2248,6 +2273,7 @@ func _physics_process(delta: float) -> void:
 		_tick_grind(delta)
 		_tick_call(delta)
 		_tick_vault(delta)
+		_prof("grind, call, vault")
 	_update_combo_hud()
 	_update_challenge_hud()
 	goals_peek = maxf(0.0, goals_peek - delta)
@@ -2257,6 +2283,16 @@ func _physics_process(delta: float) -> void:
 	_scent_cache_t = maxf(0.0, _scent_cache_t - delta)
 	if freedomlayer != null:
 		freedomlayer.tick(cam.position)
+		_prof("rest")
+
+
+func _prof(tag: String) -> void:
+	if not _prof_on:
+		return
+	var now := Time.get_ticks_usec()
+	if tag != "":
+		prof_us[tag] = int(prof_us.get(tag, 0)) + (now - _prof_t)
+	_prof_t = now
 
 
 # Straight into the walk, as if SPACE had been pressed on the title. For the
