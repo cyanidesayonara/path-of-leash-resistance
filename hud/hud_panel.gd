@@ -4,6 +4,13 @@ extends Control
 # tube, mark dots, and a status line. The world is chaotic on purpose;
 # the overlay is not.
 
+# the card's size, and where the mood badge sits: its bottom row, under the
+# mark dots and to the right of the tubes
+const CARD_W := 196.0
+const CARD_H := 92.0
+const MOOD_X := 60.0
+const MOOD_BASELINE := 86.0
+
 var main: Node2D
 var sb: StyleBoxFlat
 
@@ -26,7 +33,7 @@ func _process(_delta: float) -> void:
 
 func _draw() -> void:
 	var f := ThemeDB.fallback_font
-	draw_style_box(sb, Rect2(0, 0, 196, 92))
+	draw_style_box(sb, Rect2(0, 0, CARD_W, CARD_H))
 	# phone pips: the phone's three lives
 	for i in range(3):
 		var r := Rect2(14 + i * 21, 12, 14, 24)
@@ -70,16 +77,21 @@ func _draw() -> void:
 	# named badge with a bar, because a mood you cannot cancel has to be a mood
 	# you can at least SEE going: the bar draining is the promise that this
 	# passes on its own.
+	# It sits in the card's bottom row, under the mark dots and clear of the
+	# tubes: drawn at y=40 its letters rose into the third phone pip (#7). The
+	# bar starts after the name's real width, so no badge runs into it.
 	if main.mood != null:
 		var badge: String = main.mood.badge()
 		if badge != "":
 			var mi: float = clampf(main.mood.intensity, 0.0, 1.0)
 			var tint: Color = main.mood.tint()
-			draw_string(f, Vector2(60, 40), badge, HORIZONTAL_ALIGNMENT_LEFT, -1, 13,
+			draw_string(f, Vector2(MOOD_X, MOOD_BASELINE), badge, HORIZONTAL_ALIGNMENT_LEFT, -1, 13,
 				Color(tint.r, tint.g, tint.b, 0.55 + 0.45 * mi))
-			var mb := Rect2(60, 46, 60, 4)
+			var bar_x: float = MOOD_X + f.get_string_size(badge, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 8.0
+			var bar_w: float = maxf(24.0, CARD_W - 10.0 - bar_x)
+			var mb := Rect2(bar_x, MOOD_BASELINE - 6.0, bar_w, 4)
 			draw_rect(mb, Color(1, 1, 1, 0.12))
-			draw_rect(Rect2(mb.position, Vector2(60.0 * mi, 4)), Color(tint.r, tint.g, tint.b, 0.8))
+			draw_rect(Rect2(mb.position, Vector2(bar_w * mi, 4)), Color(tint.r, tint.g, tint.b, 0.8))
 	# The status line used to live here, tucked under the card in the top-left
 	# corner - the furthest point on the screen from where anybody is looking.
 	# It is the feed's banner now (event_feed.gd): centre screen, just under the
