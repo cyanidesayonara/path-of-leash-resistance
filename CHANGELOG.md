@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - the feed no longer writes over itself (#59)
+
+The status banner came back in #43, and nobody had seen it and the feed at
+once since: the first feed line sat 31 px under the banner, then rose 17 px
+over its life and landed 28% oversized, so its capitals climbed straight
+into the banner's ("GET THE CAT HOME! FOLLOW HER" under "YOU TANGLED THEM!").
+`hud/event_feed.gd` now gives every line a slot tall enough for everything
+it will do (its capitals and outline at the biggest punch, and at the top of
+its rise), and the layout is a function that `tests/test_event_feed.gd`
+checks at every pair of ages: no two lines ever share a row of ink. With a
+banner up, the feed sits about 25 px lower. With no banner it starts where
+it always did.
+
+World labels such as the reel's "FULL!" are drawn at their object, not in
+the feed, and can still land behind a feed line.
+
 ## 2026-09-24 - the 1.55 Store update
 
 Santtu uploaded PathOfLeashResistance-1.55.0.0.msix to Partner Center.
