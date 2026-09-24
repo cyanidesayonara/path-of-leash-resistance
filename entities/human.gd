@@ -616,7 +616,19 @@ func _process(_delta: float) -> void:
 	queue_redraw()
 
 
+# the stand-in canvas for this node's drawing, made fresh each _draw
+var _b: ShapeBatch
+
+
 func _draw() -> void:
+	# every draw call goes through a ShapeBatch standing in for the canvas: runs
+	# of shapes become one draw call, same pixels (systems/shape_batch.gd)
+	_b = ShapeBatch.new(self)
+	_draw_shapes()
+	_b.flush()
+
+
+func _draw_shapes() -> void:
 	# at night the phone is a real light source: a cold blue-white pool on
 	# the pavement in front of them. The joke of the whole game, lit.
 	if Game.night:
@@ -625,14 +637,14 @@ func _draw() -> void:
 		var lit := face_dir * 26.0
 		for ring in range(4):
 			var rr := 96.0 - ring * 21.0
-			draw_circle(lit, rr, Color(0.62, 0.78, 1.0, (0.028 + ring * 0.020) * pulse))
+			_b.draw_circle(lit, rr, Color(0.62, 0.78, 1.0, (0.028 + ring * 0.020) * pulse))
 	# contact shadow first, matching the dog's light direction. A fallen
 	# owner's shadow spreads out under them.
 	if not wading:
 		var spread := 1.45 if state == HState.FALLEN else 1.0
-		draw_set_transform(Vector2(5.0, 9.0), 0.0, Vector2(1.2 * spread, 0.52))
-		draw_circle(Vector2.ZERO, 16.0, Color(0.06, 0.05, 0.08, 0.28))
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		_b.draw_set_transform(Vector2(5.0, 9.0), 0.0, Vector2(1.2 * spread, 0.52))
+		_b.draw_circle(Vector2.ZERO, 16.0, Color(0.06, 0.05, 0.08, 0.28))
+		_b.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	var woman: bool = Game.owner_id == "her"
 	var shirt := Color(0.6, 0.38, 0.44) if woman else Color(0.35, 0.42, 0.55)
 	var skin := Color(0.85, 0.72, 0.58)
@@ -644,64 +656,64 @@ func _draw() -> void:
 	# feet step along the walking direction
 	var stepping := velocity.length() > 5.0
 	var sa := sin(hgait) * 6.0 if stepping else 0.0
-	draw_circle(side * 7.0 + fd * sa, 5.0, pants)
-	draw_circle(-side * 7.0 - fd * sa, 5.0, pants)
+	_b.draw_circle(side * 7.0 + fd * sa, 5.0, pants)
+	_b.draw_circle(-side * 7.0 - fd * sa, 5.0, pants)
 	# body with a slight walking sway
 	var sway := side * (sin(hgait * 0.5) * 1.2) if stepping else Vector2.ZERO
-	draw_circle(sway, 16.0, shirt)
+	_b.draw_circle(sway, 16.0, shirt)
 	# arms reaching forward to the phone
-	draw_line(side * 10.0, side * 4.0 + fd * 17.0, skin, 5.0)
-	draw_line(-side * 10.0, -side * 4.0 + fd * 17.0, skin, 5.0)
+	_b.draw_line(side * 10.0, side * 4.0 + fd * 17.0, skin, 5.0)
+	_b.draw_line(-side * 10.0, -side * 4.0 + fd * 17.0, skin, 5.0)
 	# head, hair on the back of it; she gets the fuller cut and a ponytail
 	var head := fd * 5.0
-	draw_circle(head, 9.0, skin)
+	_b.draw_circle(head, 9.0, skin)
 	var back := (-fd).angle()
-	draw_arc(head, 9.0, back - (1.15 if woman else 0.85), back + (1.15 if woman else 0.85), 12, hair_col, 5.0)
+	_b.draw_arc(head, 9.0, back - (1.15 if woman else 0.85), back + (1.15 if woman else 0.85), 12, hair_col, 5.0)
 	if woman:
-		draw_circle(head - fd * 11.0, 3.6, hair_col)
+		_b.draw_circle(head - fd * 11.0, 3.6, hair_col)
 	# the phone, held out front, eternally glowing
 	var glow := 0.55 + 0.2 * sin(t * 7.3)
-	draw_set_transform(fd * 24.0, fd.angle() + PI / 2.0, Vector2.ONE)
-	draw_rect(Rect2(-6, -9, 12, 18), Color(0.1, 0.1, 0.12))
-	draw_rect(Rect2(-4.5, -7, 9, 14), Color(0.7, 0.85, 1.0, glow))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	_b.draw_set_transform(fd * 24.0, fd.angle() + PI / 2.0, Vector2.ONE)
+	_b.draw_rect(Rect2(-6, -9, 12, 18), Color(0.1, 0.1, 0.12))
+	_b.draw_rect(Rect2(-4.5, -7, 9, 14), Color(0.7, 0.85, 1.0, glow))
+	_b.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	if wading:
 		# waist-deep, phone held higher, ripples of shame around the middle
-		draw_circle(Vector2(0, 4), 17.0, Color(0.42, 0.56, 0.66, 0.55))
+		_b.draw_circle(Vector2(0, 4), 17.0, Color(0.42, 0.56, 0.66, 0.55))
 		for i in range(2):
 			var rr := fmod(t * 1.3 + i * 0.5, 1.2)
-			draw_arc(Vector2(0, 4), 16.0 + rr * 18.0, 0, TAU, 20, Color(0.82, 0.9, 1.0, 0.3 * (1.0 - rr / 1.2)), 2.0)
+			_b.draw_arc(Vector2(0, 4), 16.0 + rr * 18.0, 0, TAU, 20, Color(0.82, 0.9, 1.0, 0.3 * (1.0 - rr / 1.2)), 2.0)
 	# whatever she has stood in, now on your trousers. The compounding joke:
 	# they never notice, and it stacks up over the whole walk.
 	for sm in main.owner_smudges:
 		var sc: Color = main.SUBSTANCES[String(sm.kind)].col
 		var so: Vector2 = sm.off
-		draw_circle(so, 4.6, Color(sc.r, sc.g, sc.b, 0.85))
-		draw_circle(so + Vector2(-2.6, -2.2), 2.0, Color(sc.r, sc.g, sc.b, 0.8))
-		draw_circle(so + Vector2(2.6, -2.2), 2.0, Color(sc.r, sc.g, sc.b, 0.8))
+		_b.draw_circle(so, 4.6, Color(sc.r, sc.g, sc.b, 0.85))
+		_b.draw_circle(so + Vector2(-2.6, -2.2), 2.0, Color(sc.r, sc.g, sc.b, 0.8))
+		_b.draw_circle(so + Vector2(2.6, -2.2), 2.0, Color(sc.r, sc.g, sc.b, 0.8))
 	if carrying_bag:
-		draw_circle(side * 12.0 + fd * 2.0, 4.5, Color(0.9, 0.9, 0.92))
+		_b.draw_circle(side * 12.0 + fd * 2.0, 4.5, Color(0.9, 0.9, 0.92))
 	if state == HState.BAG:
 		# bent over the evidence, arm to the ground
-		draw_line(fd * 10.0, fd * 26.0, skin, 4.0)
-		draw_circle(fd * 26.0, 3.5, Color(0.9, 0.9, 0.92))
+		_b.draw_line(fd * 10.0, fd * 26.0, skin, 4.0)
+		_b.draw_circle(fd * 26.0, 3.5, Color(0.9, 0.9, 0.92))
 	if state == HState.SIGNAL:
 		# the phone thrust skyward, hunting for a bar that will not come
 		var up := head + Vector2(0, -22)
-		draw_line(head, up, skin, 4.0)
-		draw_rect(Rect2(up.x - 5.0, up.y - 8.0, 10.0, 15.0), Color(0.1, 0.1, 0.12))
-		draw_rect(Rect2(up.x - 3.5, up.y - 6.0, 7.0, 11.0), Color(0.7, 0.85, 1.0, 0.8))
+		_b.draw_line(head, up, skin, 4.0)
+		_b.draw_rect(Rect2(up.x - 5.0, up.y - 8.0, 10.0, 15.0), Color(0.1, 0.1, 0.12))
+		_b.draw_rect(Rect2(up.x - 3.5, up.y - 6.0, 7.0, 11.0), Color(0.7, 0.85, 1.0, 0.8))
 		for b in range(3):
-			draw_rect(Rect2(up.x - 5.0 + b * 3.0, up.y - 15.0 - b * 2.0, 2.0, 4.0 + b * 2.0), Color(0.6, 0.6, 0.65))
-		draw_line(up + Vector2(-6, -18), up + Vector2(7, -6), Color(1, 0.4, 0.4), 2.0)
+			_b.draw_rect(Rect2(up.x - 5.0 + b * 3.0, up.y - 15.0 - b * 2.0, 2.0, 4.0 + b * 2.0), Color(0.6, 0.6, 0.65))
+		_b.draw_line(up + Vector2(-6, -18), up + Vector2(7, -6), Color(1, 0.4, 0.4), 2.0)
 	if state == HState.FALLEN:
 		for i in range(3):
 			var a := t * 3.0 + TAU * i / 3.0
-			draw_circle(head + Vector2.from_angle(a) * 22.0, 2.5, Color(1, 0.9, 0.4))
+			_b.draw_circle(head + Vector2.from_angle(a) * 22.0, 2.5, Color(1, 0.9, 0.4))
 	elif state == HState.WHIRL:
 		# speed lines; the node itself is spinning, so they animate freely
 		for j in range(3):
-			draw_arc(Vector2.ZERO, 23.0 + j * 6.0, PI * 0.15, PI * 0.85, 10, Color(1, 1, 1, 0.34 - j * 0.09), 2.5)
+			_b.draw_arc(Vector2.ZERO, 23.0 + j * 6.0, PI * 0.15, PI * 0.85, 10, Color(1, 1, 1, 0.34 - j * 0.09), 2.5)
 	elif strain:
-		draw_line(Vector2(16, -36), Vector2(16, -27), Color(1, 0.85, 0.3), 3.0)
-		draw_circle(Vector2(16, -22), 2.0, Color(1, 0.85, 0.3))
+		_b.draw_line(Vector2(16, -36), Vector2(16, -27), Color(1, 0.85, 0.3), 3.0)
+		_b.draw_circle(Vector2(16, -22), 2.0, Color(1, 0.85, 0.3))

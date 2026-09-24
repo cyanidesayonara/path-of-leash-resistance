@@ -22,4 +22,8 @@ func _draw() -> void:
 		return
 	var vt: float = main.cam.position.y - 560.0
 	var vb: float = main.cam.position.y + 560.0
-	main.draw_verge_onto(self, vt, vb)
+	# through a ShapeBatch: the same pixels in a fraction of the draw calls
+	# (systems/shape_batch.gd)
+	var b := ShapeBatch.new(self)
+	main.draw_verge_onto(b, vt, vb)
+	b.flush()
