@@ -12,8 +12,20 @@ name: Idle soak
 on:
   push:
     branches: [main]
+  # on PRs only when gameplay code changes: twelve jobs per run is a lot of CI
+  # queue for a HUD tweak or a docs change, and every push to main still soaks
   pull_request:
     branches: [main]
+    paths:
+      - "main.gd"
+      - "main.tscn"
+      - "project.godot"
+      - "autoload/**"
+      - "entities/**"
+      - "systems/**"
+      - "world/**"
+      - "tools/idle_soak.sh"
+      - ".github/workflows/soak.yml"
   workflow_dispatch:
 
 concurrency:
