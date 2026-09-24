@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - the ground reaches the bottom of the finish (#67)
+
+The world's ground was painted down to 320 px past the start line. The south
+wall stops the dog about 110 px past it, and the camera on her there sees
+280 px further (375 at 1280x960), so the finish showed a strip of bare
+background along the bottom of the frame on every walk. It is painted to
+560 px past the start now.
+
 ## 2026-09-24 - world labels keep clear of the feed (#66)
 
 World labels ("FULL!", "hello? ...oh hi", "click!") are drawn at their
