@@ -617,6 +617,15 @@ func _ready() -> void:
 		get_tree().quit(1 if not problems.is_empty() else 0)
 
 
+func _input(event: InputEvent) -> void:
+	# the prompts follow whichever device the player last used; text set once
+	# (the pause menu, a death card) is re-filled, and the title's is rebuilt
+	if Prompts.note(event):
+		Prompts.refresh()
+		if not started:
+			MenuFlow.refresh_menu_text(self)
+
+
 func _setup_input() -> void:
 	if InputMap.has_action("plant"):
 		return
@@ -1994,10 +2003,6 @@ func _build_hud() -> void:
 	Input.joy_connection_changed.connect(func(_d: int, _c: bool) -> void: _refresh_menu_text())
 
 
-func _kb_or_pad(kb: String, pad: String) -> String:
-	return pad if Input.get_connected_joypads().size() > 0 else kb
-
-
 func _weather_tint() -> Color:
 	var c := Color(0.5, 0.55, 0.78) if Game.night else Color.WHITE
 	if Game.weather == "rain":
@@ -2115,7 +2120,7 @@ func _update_hud() -> void:
 		else:
 			hud_status = "HEAD HOME"
 	elif poop_state == 1:
-		hud_status = "NEED A WEE! FIND A SPOT, HOLD %s" % _kb_or_pad("SPACE", "A")
+		hud_status = Prompts.fill("NEED A WEE! FIND A SPOT, HOLD {plant}")
 	elif poop_state >= 3:
 		hud_status = "UH OH..."
 	elif call_active:
@@ -2417,7 +2422,7 @@ func _process(_delta: float) -> void:
 						"best combo x6    style 412",
 						"3 spots over-marked. They will know.",
 					],
-					"prompt": "press  R  for another walk",
+					"prompt": "press  {restart}  for another walk",
 				}
 				results_card.visible = true
 				goals_card.visible = false
@@ -2484,9 +2489,7 @@ func _process(_delta: float) -> void:
 		elif not frozen and Input.is_action_just_pressed("pause"):
 			paused = true
 			frozen = true
-			pause_l.text = "PAUSED\n\n%s  resume     %s  restart     %s  menu\n\n%s  settings     %s  toggle music" % [
-				_kb_or_pad("SPACE", "A"), _kb_or_pad("R", "Start"), _kb_or_pad("E", "B"),
-				_kb_or_pad("Q", "X"), _kb_or_pad("M", "LB")]
+			Prompts.set_text(pause_l, "PAUSED\n\n{plant}  resume     {restart}  restart     {bark}  menu\n\n{pee}  settings     {mute_music}  toggle music")
 			pause_l.visible = true
 			dim.visible = true
 			return
@@ -2531,7 +2534,7 @@ func _process(_delta: float) -> void:
 			for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, weather_l, record_l,
 					hint_l, menu_hint_l]:
 				l.visible = false
-			progress_l.text = _progress_text()
+			Prompts.set_text(progress_l, _progress_text())
 			progress_l.visible = true
 			dim.visible = true
 			return
@@ -3926,8 +3929,8 @@ func _update_tut_card() -> void:
 	tut_label.text = String(st.title)
 	var body := String(st.body)
 	if String(st.id) != "done":
-		body += "        (%s to skip)" % _kb_or_pad("C", "Y")
-	tut_hint.text = body
+		body += "        ({share} to skip)"
+	tut_hint.text = Prompts.fill(body)
 	# a green flash of acknowledgement as each lesson lands
 	var glow: float = clampf(tut_flash, 0.0, 1.0)
 	tut_label.modulate = Color(1, 1, 1).lerp(Color(0.6, 1.0, 0.65), glow)
@@ -4122,7 +4125,7 @@ func _death(msg: String) -> void:
 	frozen = true
 	dim.visible = true
 	msg_label.visible = true
-	msg_label.text = msg + "\n\nPress %s to try again" % _kb_or_pad("R", "Start")
+	Prompts.set_text(msg_label, msg + "\n\nPress {restart} to try again")
 
 
 func _hazards(delta: float) -> void:
@@ -5005,7 +5008,7 @@ func crack_phone(pos: Vector2) -> void:
 		frozen = true
 		dim.visible = true
 		msg_label.visible = true
-		msg_label.text = "THE PHONE IS SHATTERED\n\nThe human is inconsolable, and blaming\nsomeone who cannot answer back.\n\nPress %s to try again" % _kb_or_pad("R", "Start")
+		Prompts.set_text(msg_label, "THE PHONE IS SHATTERED\n\nThe human is inconsolable, and blaming\nsomeone who cannot answer back.\n\nPress {restart} to try again")
 
 
 func close_call(pos: Vector2) -> void:

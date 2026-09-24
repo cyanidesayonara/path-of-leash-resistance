@@ -104,6 +104,12 @@ function another script or a test calls. A refactor of main.gd must leave
   self-managing and order-independent).
 - Input actions are registered in code (`main.gd/_setup_input`), not in
   project.godot. Guarded against re-registration on scene reload.
+- **Button prompts** (`hud/prompts.gd`) name ACTIONS for the device the
+  player last used: `Prompts.key("plant")` is SPACE, A or DIG, and
+  `Prompts.fill("{plant} dig in")` fills tokens. Never write a key name into
+  UI text; one-shot labels go through `Prompts.set_text` so they re-fill when
+  the device changes. `tests/test_prompts.gd` fails on a key name in a UI
+  string. `--prompts=pad|touch` starts on that device, for screenshots.
 
 ## Commands
 

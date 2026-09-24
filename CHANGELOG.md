@@ -32,6 +32,26 @@ chase autowalks, and five idle soaks whose seed used to roll a chase.
 Not yet: the dawn light, and the grass that shows beyond the pavement at the
 start of the market-based walks (El Gotic has it too; #21).
 
+## 2026-09-24 - prompts follow the player's hands (#9)
+
+Button prompts used to pick keyboard or controller names by whether a pad
+was PLUGGED IN, some strings named keys directly (the settings hint, a
+results prompt, the tutorial's WASD, Q, E and SHIFT), and phones got
+keyboard keys they do not have. New `hud/prompts.gd` names actions for the
+device last used - keyboard, controller or touch (touch names are the touch
+buttons: DIG, BARK, PEE, R) - switching on a key press, a pad button, a
+stick pushed past half way, or a touch. A drifting stick and the mouse
+clicks a touch screen emulates do not count. One-shot text (the pause menu,
+the death cards, the daily share card) is re-filled when the device changes,
+unless the label has been rewritten since; the title is rebuilt.
+
+For keyboard players nothing changes: the screenshot sweep matches main on
+every shot outside the version label. `tests/test_prompts.gd` (71 checks)
+covers the switching and the re-fill, and fails on any key name written into
+a UI string or any {token} that is not an action. Touch has no button for
+settings, pause, turbo, share or the goal list, so those prompts fall back
+to the keyboard name on a phone (#62).
+
 ## 2026-09-24 - the feed no longer writes over itself (#59)
 
 The status banner came back in #43, and nobody had seen it and the feed at

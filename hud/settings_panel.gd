@@ -95,8 +95,7 @@ func _draw() -> void:
 			_slider(f, y, float(row.v), picked)
 		else:
 			_toggle(f, y, bool(row.v), picked)
-	var hint := ("stick  choose     left/right  change     B  back" if main.pad_hints()
-		else "W / S  choose     A / D  change     ESC  back")
+	var hint := Prompts.fill("{up_down}  choose     {left_right}  change     {back}  back")
 	draw_string(f, Vector2(NAME_X, h - 24.0), hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 15,
 		Color(0.78, 0.76, 0.72, 0.85))
 

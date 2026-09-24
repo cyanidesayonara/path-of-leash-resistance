@@ -154,7 +154,7 @@ static func card_data(m: Node2D) -> Dictionary:
 		"rows": rows.slice(0, shown) if open else [],
 		"extra": (rows.size() - shown) if open else 0,
 		"open": open, "peeking": m.goals_peek > 0.0 and not Game.goals_expanded,
-		"key": m._kb_or_pad("TAB", "up"),
+		"key": Prompts.key("goals"),
 	}
 
 
@@ -218,7 +218,7 @@ static func finish_walk(m: Node2D) -> void:
 				"rating": rating,
 				"rows": rows, "bones": m.bones, "phone": m.phone_hp, "time": int(m.elapsed),
 				"goal_bones": run_done * 5, "lines": lines,
-				"prompt": "press  %s  for another walk" % m._kb_or_pad("R", "Start"),
+				"prompt": "press  {restart}  for another walk",
 			}
 			m.msg_label.visible = false
 			m.results_card.visible = true
@@ -245,7 +245,7 @@ static func finish_tutorial_walk(m: Node2D) -> void:
 			"%d practice bones - not banked" % m.bones,
 			"Lessons complete. The real walks are waiting.",
 		],
-		"prompt": "press  %s  for walk select" % m._kb_or_pad("R", "Start"),
+		"prompt": "press  {restart}  for walk select",
 	}
 	m.results_card.visible = true
 	m.goals_card.visible = false
@@ -286,5 +286,5 @@ static func _build_daily_card(m: Node2D, run_done: int, total: int, rec: Diction
 		Game.star_str(stars_n), run_done, total, m.bones, int(m.elapsed), combo_bit]
 	var best_line := "NEW DAILY BEST!\n\n" if rec.bones_record else ""
 	m.daily_copied = false
-	m.msg_label.text = "TODAY'S WALK\n\n%s\n\n%sPress %s to copy & share\nPress %s for another go" % [
-		m.daily_share, best_line, m._kb_or_pad("C", "Y"), m._kb_or_pad("R", "Start")]
+	Prompts.set_text(m.msg_label, "TODAY'S WALK\n\n%s\n\n%sPress {share} to copy & share\nPress {restart} for another go" % [
+		m.daily_share, best_line])
