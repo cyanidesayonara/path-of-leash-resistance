@@ -78,6 +78,12 @@ func _draw_scene(c: Object, extras: bool) -> void:
 		if extras and n % 25 == 0:
 			c.draw_rect(Rect2(s[1] if s[1] is Vector2 else Vector2(40, 40), Vector2(17.5, 11.0)), Color(0.1, 0.1, 0.1, 0.8), false, 2.0)
 			c.draw_line(Vector2(5.0, float(n) * 0.9), Vector2(300.0, float(n) * 0.7), Color(1, 1, 1, 0.6))
+			# a helper's own batch flushed into c: straight onto a canvas, or
+			# into the stand-in's queue
+			var inner := ShapeBatch.new()
+			inner.circle(Vector2(float(n), 120.0), 9.5, Color(0.9, 0.9, 0.2, 0.5))
+			inner.rect(Rect2(float(n) - 4.0, 110.0, 8.0, 20.0), Color(0.2, 0.9, 0.9, 0.5))
+			inner.flush(c)
 	c.draw_set_transform(Vector2(160.5, 120.25), 0.3, Vector2(1.15, 0.5))
 	c.draw_circle(Vector2.ZERO, 30.0, Color(0, 0, 0, 0.3))
 	c.draw_rect(Rect2(-8.5, -3.25, 20.0, 9.0), Color(0.9, 0.3, 0.2, 0.7))

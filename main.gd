@@ -692,16 +692,16 @@ func _draw_paving(vt: float, vb: float, base: Color) -> void:
 				# a stable per-slab tone wobble, hashed from the grid position
 				var h := fmod(absf(sin(float(row) * 12.9898 + floorf(x / sw) * 78.233) * 43758.5453), 1.0)
 				var slab := base.lightened((h - 0.5) * 0.09) if h > 0.5 else base.darkened((0.5 - h) * 0.10)
-				draw_rect(Rect2(x0, y, x1 - x0, sh - 2.0), slab)
+				_wc.draw_rect(Rect2(x0, y, x1 - x0, sh - 2.0), slab)
 			x += sw
 		# the joints: a dark line, plus a light one below it so the slab edge
 		# catches the light like a real chamfer
-		draw_line(Vector2(sw_l, y), Vector2(sw_r, y), joint, 2.0)
-		draw_line(Vector2(sw_l, y + 2.0), Vector2(sw_r, y + 2.0), Color(1, 1, 1, 0.045), 1.5)
+		_wc.draw_line(Vector2(sw_l, y), Vector2(sw_r, y), joint, 2.0)
+		_wc.draw_line(Vector2(sw_l, y + 2.0), Vector2(sw_r, y + 2.0), Color(1, 1, 1, 0.045), 1.5)
 		var vx := sw_l - sw + off
 		while vx < sw_r:
 			if vx > sw_l and vx < sw_r:
-				draw_line(Vector2(vx, y), Vector2(vx, y + sh - 2.0), joint, 2.0)
+				_wc.draw_line(Vector2(vx, y), Vector2(vx, y + sh - 2.0), joint, 2.0)
 			vx += sw
 		row += 1
 		y += sh
@@ -779,7 +779,7 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 		y += mod
 
 
-func draw_edges_onto(c: CanvasItem) -> void:
+func draw_edges_onto(c: Object) -> void:
 	# called by the edge layer, which decides WHEN rather than what
 	var vt: float = cam.position.y - 560.0
 	var vb: float = cam.position.y + 560.0
@@ -959,7 +959,7 @@ func _build_verge() -> void:
 	LevelBuild.build_verge(self)
 
 
-func draw_verge_onto(c: CanvasItem, vt: float, vb: float) -> void:
+func draw_verge_onto(c: Object, vt: float, vb: float) -> void:
 	# On the cached edge canvas, NOT the per-frame world draw. A lawn does not
 	# move, and the edge treatment was already more than half the frame once
 	# before it was moved off it (see edgelayer.gd) - putting picnics into the
@@ -977,7 +977,7 @@ func draw_verge_onto(c: CanvasItem, vt: float, vb: float) -> void:
 				_draw_verge_bush(c, p)
 
 
-func _draw_picnic(c: CanvasItem, at: Vector2) -> void:
+func _draw_picnic(c: Object, at: Vector2) -> void:
 	# A blanket on the grass with people sitting round it, from above: the
 	# blanket is the shape you read first, then heads. Same top-down anatomy as
 	# everyone else in this game - a body disc and a head with hair on it.
@@ -1015,7 +1015,7 @@ func _draw_picnic(c: CanvasItem, at: Vector2) -> void:
 		c.draw_arc(s + inward, 7.0, back - 1.1, back + 1.1, 10, Color(0.26, 0.19, 0.13), 4.0)
 
 
-func _draw_stump(c: CanvasItem, at: Vector2) -> void:
+func _draw_stump(c: Object, at: Vector2) -> void:
 	# a sawn-off trunk: end grain in rings, and a real shadow so it has height
 	cast_shadow(c, at, 17.0, 22.0, 0.20)
 	c.draw_circle(at, 17.0, Color(0.44, 0.33, 0.22))
@@ -1024,7 +1024,7 @@ func _draw_stump(c: CanvasItem, at: Vector2) -> void:
 		c.draw_arc(at + Vector2(-2.0, -2.0), r, 0.0, TAU, 14, Color(0.48, 0.36, 0.23), 1.4)
 
 
-func _draw_verge_bush(c: CanvasItem, at: Vector2) -> void:
+func _draw_verge_bush(c: Object, at: Vector2) -> void:
 	# clustered lobes with the light on the upper-left of each, same as the
 	# tree canopies, so a bush belongs to the same world as everything else
 	contact_shadow(c, at, 21.0, 14.0, 0.18)
@@ -1159,7 +1159,7 @@ const LIGHT := Vector2(0.5, 0.866)      # the direction shadows fall
 const SHADOW_COL := Color(0.05, 0.05, 0.08)
 
 
-func contact_shadow(c: CanvasItem, at: Vector2, r: float, h: float, a := 0.24) -> void:
+func contact_shadow(c: Object, at: Vector2, r: float, h: float, a := 0.24) -> void:
 	# for things that sit ON the ground: a squashed ellipse, pushed away from
 	# the light by however tall the thing is
 	c.draw_set_transform(at + LIGHT * h, 0.0, Vector2(1.15, 0.5))
@@ -1167,7 +1167,7 @@ func contact_shadow(c: CanvasItem, at: Vector2, r: float, h: float, a := 0.24) -
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
-func cast_shadow(c: CanvasItem, at: Vector2, w: float, h: float, a := 0.20) -> void:
+func cast_shadow(c: Object, at: Vector2, w: float, h: float, a := 0.20) -> void:
 	# for uprights: a tapering shadow lying on the ground away from the light,
 	# plus the darker patch where the object actually meets it
 	var tip := at + LIGHT * h
@@ -1183,7 +1183,7 @@ func cast_shadow(c: CanvasItem, at: Vector2, w: float, h: float, a := 0.20) -> v
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
-func _draw_broadleaf(c: CanvasItem, p: Vector2, scale: float) -> void:
+func _draw_broadleaf(c: Object, p: Vector2, scale: float) -> void:
 	# A tree from above is a canopy, and a canopy is not one flat circle: it
 	# is clustered lobes with light on the top-left of each one, a trunk you
 	# can see through the gaps, and a shadow the same shape as the crown. The
@@ -1227,7 +1227,7 @@ func _draw_broadleaf(c: CanvasItem, p: Vector2, scale: float) -> void:
 	crown.flush(c)
 
 
-func _draw_palm(c: CanvasItem, p: Vector2) -> void:
+func _draw_palm(c: Object, p: Vector2) -> void:
 	# a palm from above: a ring of long fronds, each with a spine and leaflets,
 	# radiating from a fat trunk. The shadow copies the frond pattern, which is
 	# what makes the beach read as glaring midday sun.
@@ -1266,24 +1266,24 @@ func _draw_lamppost(p: Vector2) -> void:
 	# A lamppost seen from above is mostly a shadow: the column is directly
 	# under the lantern, so the long shadow lying away from it is what tells
 	# you it is three metres tall and not a manhole cover.
-	cast_shadow(self, p, 6.0, 52.0, 0.18)
+	cast_shadow(_wc, p, 6.0, 52.0, 0.18)
 	var halo_a := 0.32 if Game.night else 0.08
-	draw_circle(p, 62.0, Color(1.0, 0.9, 0.6, halo_a))
+	_wc.draw_circle(p, 62.0, Color(1.0, 0.9, 0.6, halo_a))
 	# the base plinth it is bolted to
-	draw_circle(p + Vector2(0, 2), POLE_RADIUS + 6.0, Color(0.24, 0.24, 0.27))
-	draw_circle(p + Vector2(0, 1), POLE_RADIUS + 3.5, Color(0.33, 0.33, 0.36))
+	_wc.draw_circle(p + Vector2(0, 2), POLE_RADIUS + 6.0, Color(0.24, 0.24, 0.27))
+	_wc.draw_circle(p + Vector2(0, 1), POLE_RADIUS + 3.5, Color(0.33, 0.33, 0.36))
 	# the fluted column, lit down one side
-	draw_circle(p, POLE_RADIUS, Color(0.38, 0.38, 0.42))
-	draw_circle(p + Vector2(-1.5, -1.5), POLE_RADIUS * 0.62, Color(0.52, 0.52, 0.57))
+	_wc.draw_circle(p, POLE_RADIUS, Color(0.38, 0.38, 0.42))
+	_wc.draw_circle(p + Vector2(-1.5, -1.5), POLE_RADIUS * 0.62, Color(0.52, 0.52, 0.57))
 	# four cross arms, each with a lantern on the end, glass and all
 	for bo: Vector2 in [Vector2(11, 0), Vector2(-11, 0), Vector2(0, 11), Vector2(0, -11)]:
-		draw_line(p, p + bo, Color(0.30, 0.30, 0.33), 3.5)
-		draw_line(p, p + bo, Color(0.46, 0.46, 0.5), 1.5)
+		_wc.draw_line(p, p + bo, Color(0.30, 0.30, 0.33), 3.5)
+		_wc.draw_line(p, p + bo, Color(0.46, 0.46, 0.5), 1.5)
 		var lp := p + bo * 1.4
-		draw_circle(lp, 5.0, Color(0.26, 0.26, 0.29))
-		draw_circle(lp, 3.6, Color(0.99, 0.95, 0.78) if Game.night else Color(0.86, 0.88, 0.9))
+		_wc.draw_circle(lp, 5.0, Color(0.26, 0.26, 0.29))
+		_wc.draw_circle(lp, 3.6, Color(0.99, 0.95, 0.78) if Game.night else Color(0.86, 0.88, 0.9))
 		if Game.night:
-			draw_circle(lp, 6.5, Color(1.0, 0.92, 0.66, 0.35))
+			_wc.draw_circle(lp, 6.5, Color(1.0, 0.92, 0.66, 0.35))
 
 
 func _freedom_dirty() -> void:
@@ -1293,7 +1293,7 @@ func _freedom_dirty() -> void:
 		freedomlayer.mark_dirty()
 
 
-func draw_freedom_onto(c: CanvasItem) -> void:
+func draw_freedom_onto(c: Object) -> void:
 	# Everything in the off-leash space that does not move, drawn onto
 	# freedomlayer's canvas so it survives between redraws. `c` is that canvas;
 	# the helpers below take it rather than assuming `self`.
@@ -1348,7 +1348,7 @@ func _draw_beach_water() -> void:
 				wy))
 			wy += 26.0
 		if pts.size() > 1:
-			draw_polyline(pts, Color(1, 1, 1, 0.22 - float(rank) * 0.055),
+			_wc.draw_polyline(pts, Color(1, 1, 1, 0.22 - float(rank) * 0.055),
 				4.0 - float(rank) * 0.8)
 	var swell := PackedVector2Array()
 	var sy2 := sea_top
@@ -1356,15 +1356,15 @@ func _draw_beach_water() -> void:
 		swell.append(Vector2(-210.0 + sin(sy2 * 0.007 - t * 0.6) * 26.0, sy2))
 		sy2 += 34.0
 	if swell.size() > 1:
-		draw_polyline(swell, Color(1, 1, 1, 0.07), 5.0)
+		_wc.draw_polyline(swell, Color(1, 1, 1, 0.07), 5.0)
 	var fy := r.position.y
 	while fy < r.end.y:
 		var fx := beach_shore_x(fy) + 4.0 + sin(fy * 0.02 + t * 1.4) * 4.0
-		draw_line(Vector2(fx, fy), Vector2(fx, fy + 40.0), Color(1, 1, 1, 0.30), 2.5)
+		_wc.draw_line(Vector2(fx, fy), Vector2(fx, fy + 40.0), Color(1, 1, 1, 0.30), 2.5)
 		fy += 52.0
 
 
-func _draw_freedom_fence(c: CanvasItem, r: Rect2, gravel: bool) -> void:
+func _draw_freedom_fence(c: Object, r: Rect2, gravel: bool) -> void:
 	# chain-link on all four sides, open at the gate
 	var fence := Color(0.62, 0.63, 0.6) if not gravel else Color(0.55, 0.5, 0.44)
 	var post := Color(0.5, 0.5, 0.48)
@@ -1387,7 +1387,7 @@ func _draw_freedom_fence(c: CanvasItem, r: Rect2, gravel: bool) -> void:
 		c.draw_circle(cp, 4.0, post)
 
 
-func _draw_freedom_benches(c: CanvasItem, r: Rect2, col: Color) -> void:
+func _draw_freedom_benches(c: Object, r: Rect2, col: Color) -> void:
 	for bx: Vector2 in [
 		Vector2(r.position.x + 70.0, r.position.y + 60.0),
 		Vector2(r.end.x - 70.0, r.position.y + 120.0),
@@ -1402,12 +1402,12 @@ func _draw_freedom_benches(c: CanvasItem, r: Rect2, col: Color) -> void:
 	c.draw_rect(Rect2(gate_bench.x - 18, gate_bench.y - 6, 36, 11), Color(0.54, 0.4, 0.27))
 
 
-func _freedom_sign(c: CanvasItem, r: Rect2, txt: String) -> void:
+func _freedom_sign(c: Object, r: Rect2, txt: String) -> void:
 	c.draw_string(font, Vector2(0, r.position.y - 14), txt, HORIZONTAL_ALIGNMENT_CENTER, 1280,
 		22, Color(0.9, 0.9, 0.82))
 
 
-func _draw_yard(c: CanvasItem, gravel: bool) -> void:
+func _draw_yard(c: Object, gravel: bool) -> void:
 	# the municipal dog park: grass (or a gravel compound on the industrial
 	# walks), a worn patch in the middle where every dog plays, and a fence
 	var r := _freedom_rect()
@@ -1432,7 +1432,7 @@ func _draw_yard(c: CanvasItem, gravel: bool) -> void:
 	_freedom_sign(c, r, "OFF-LEASH YARD" if gravel else "OFF-LEASH DOG PARK")
 
 
-func _draw_clearing(c: CanvasItem) -> void:
+func _draw_clearing(c: Object) -> void:
 	# a clearing in the woods: no fence, because nothing out here is fenced.
 	# The trees ARE the boundary, drawn with the same renderer as the ones on
 	# the trail so it reads as the same wood.
@@ -1449,7 +1449,7 @@ func _draw_clearing(c: CanvasItem) -> void:
 	_freedom_sign(c, r, "THE CLEARING")
 
 
-func _draw_dog_beach(c: CanvasItem) -> void:
+func _draw_dog_beach(c: Object) -> void:
 	# THE DOG BEACH. The other walks all end in the same municipal field; this
 	# one ends where the city ends. Dry sand, wet sand, and open sea on the
 	# west - and the sea is real water: she swims in it, the ball gets thrown
@@ -1569,11 +1569,11 @@ func _hand_text(at: Vector2, txt: String, px: int, col: Color, jitter: float,
 		var wob := fmod(absf(n), 1.0) * 2.0 - 1.0
 		var n2 := sin(float(i) * 78.233 + key * 1.7) * 12345.6789
 		var wob2 := fmod(absf(n2), 1.0) * 2.0 - 1.0
-		draw_set_transform(Vector2(x + w * 0.5, at.y + wob * jitter),
+		_wc.draw_set_transform(Vector2(x + w * 0.5, at.y + wob * jitter),
 			wob2 * jitter * 0.02, Vector2.ONE)
-		draw_char(f, Vector2(-w * 0.5, 0.0), ch, px, col)
+		_wc.draw_char(f, Vector2(-w * 0.5, 0.0), ch, px, col)
 		x += w
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	_wc.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 func _draw_world_text(at: Vector2, txt: String, px: int, style: String,
@@ -1605,11 +1605,11 @@ func _draw_world_text(at: Vector2, txt: String, px: int, style: String,
 			var pad := 16.0
 			var r := Rect2(at.x - w * 0.5 - pad, at.y - float(px) * 0.86,
 				w + pad * 2.0, float(px) * 1.2)
-			draw_rect(r, Color(0.90, 0.88, 0.82))
-			draw_rect(r, Color(0.30, 0.42, 0.62), false, 3.0)
+			_wc.draw_rect(r, Color(0.90, 0.88, 0.82))
+			_wc.draw_rect(r, Color(0.30, 0.42, 0.62), false, 3.0)
 			var tx := r.position.x
 			while tx < r.end.x:
-				draw_line(Vector2(tx, r.position.y), Vector2(tx, r.end.y),
+				_wc.draw_line(Vector2(tx, r.position.y), Vector2(tx, r.end.y),
 					Color(0.72, 0.72, 0.70, 0.6), 1.0)
 				tx += r.size.y * 0.5
 			_hand_text(at, txt, px, Color(0.18, 0.30, 0.55, 0.92), 0.8, key)
@@ -1618,9 +1618,9 @@ func _draw_world_text(at: Vector2, txt: String, px: int, style: String,
 			var bw: float = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
 			var br := Rect2(at.x - bw * 0.5 - 22.0, at.y - float(px) * 0.9,
 				bw + 44.0, float(px) * 1.3)
-			draw_rect(br, Color(0.14, 0.15, 0.16))
-			draw_rect(br, Color(0.40, 0.42, 0.44), false, 3.0)
-			draw_rect(Rect2(br.position.x + 4.0, br.position.y + 4.0, br.size.x - 8.0, 3.0),
+			_wc.draw_rect(br, Color(0.14, 0.15, 0.16))
+			_wc.draw_rect(br, Color(0.40, 0.42, 0.44), false, 3.0)
+			_wc.draw_rect(Rect2(br.position.x + 4.0, br.position.y + 4.0, br.size.x - 8.0, 3.0),
 				Color(1, 1, 1, 0.10))
 			_hand_text(at, txt, px, Color(0.98, 0.78, 0.28, 0.95), 0.0, key)
 
@@ -1677,26 +1677,26 @@ func _draw_seafront_works(vt: float, vb: float) -> void:
 	# the sheds: low, pale rendered walls with ribbed roofs
 	for i in range(3):
 		var sy := WORKS_Y + float(i) * 240.0 - 240.0
-		draw_rect(Rect2(wx - 60.0, sy, 190.0, 200.0), Color(0.80, 0.76, 0.66))
+		_wc.draw_rect(Rect2(wx - 60.0, sy, 190.0, 200.0), Color(0.80, 0.76, 0.66))
 		# barrel-vaulted roof ribs, which is what says "works" and not "flats"
 		for r in range(9):
 			var ry := sy + 14.0 + float(r) * 21.0
-			draw_line(Vector2(wx - 54.0, ry), Vector2(wx + 118.0, ry),
+			_wc.draw_line(Vector2(wx - 54.0, ry), Vector2(wx + 118.0, ry),
 				Color(0.62, 0.63, 0.62), 5.0)
-		draw_rect(Rect2(wx - 60.0, sy, 190.0, 200.0), Color(0.32, 0.29, 0.25), false, 2.5)
+		_wc.draw_rect(Rect2(wx - 60.0, sy, 190.0, 200.0), Color(0.32, 0.29, 0.25), false, 2.5)
 	# the chimney: a tapering brick tower, and the long shadow that sells it
 	var cx := wx - 34.0
 	var cy := WORKS_Y
-	cast_shadow(self, Vector2(cx, cy), 15.0, 340.0, 0.26)
-	draw_circle(Vector2(cx, cy), 17.0, Color(0.52, 0.34, 0.25))
-	draw_circle(Vector2(cx, cy), 12.5, Color(0.63, 0.42, 0.30))
-	draw_circle(Vector2(cx - 2.0, cy - 2.0), 8.0, Color(0.72, 0.50, 0.36))
-	draw_circle(Vector2(cx, cy), 5.0, Color(0.17, 0.14, 0.13))
+	cast_shadow(_wc, Vector2(cx, cy), 15.0, 340.0, 0.26)
+	_wc.draw_circle(Vector2(cx, cy), 17.0, Color(0.52, 0.34, 0.25))
+	_wc.draw_circle(Vector2(cx, cy), 12.5, Color(0.63, 0.42, 0.30))
+	_wc.draw_circle(Vector2(cx - 2.0, cy - 2.0), 8.0, Color(0.72, 0.50, 0.36))
+	_wc.draw_circle(Vector2(cx, cy), 5.0, Color(0.17, 0.14, 0.13))
 	# a painted sign on the seaward shed wall, facing the walk
 	_draw_world_text(Vector2(wx + 16.0, WORKS_Y + 176.0), "LA FABRICA", 17, "paint", 9.0)
 
 
-func _draw_park_props(c: CanvasItem, vt: float, vb: float) -> void:
+func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 	for pp in park_props:
 		var p: Vector2 = pp.pos
 		# these were drawn in full every redraw with no culling at all
@@ -1886,19 +1886,19 @@ func _draw_ground_detail(vt: float, vb: float) -> void:
 				# a hairline crack with a kink in it
 				var mid := p + dir * float(d.len) * 0.55
 				var kink := mid + dir.rotated(0.5) * float(d.len) * 0.45
-				draw_line(p, mid, crack, 1.4)
-				draw_line(mid, kink, crack, 1.1)
+				_wc.draw_line(p, mid, crack, 1.4)
+				_wc.draw_line(mid, kink, crack, 1.1)
 			1:
 				# a scatter of grit
 				for g in range(3):
-					draw_circle(p + dir.rotated(float(g) * 2.1) * (4.0 + g * 3.0), float(d.sz) * 0.5, grit)
+					_wc.draw_circle(p + dir.rotated(float(g) * 2.1) * (4.0 + g * 3.0), float(d.sz) * 0.5, grit)
 			2:
 				# a damp patch / old stain
-				draw_circle(p, float(d.len) * 0.35, stain)
+				_wc.draw_circle(p, float(d.len) * 0.35, stain)
 			_:
 				# a bit of litter: a leaf or a scrap of paper
 				var c: Color = litter[int(d.sz) % litter.size()]
-				draw_line(p - dir * float(d.sz) * 1.6, p + dir * float(d.sz) * 1.6, c, float(d.sz))
+				_wc.draw_line(p - dir * float(d.sz) * 1.6, p + dir * float(d.sz) * 1.6, c, float(d.sz))
 
 
 func _build_bypasser_blockers() -> void:
@@ -3428,7 +3428,7 @@ func _draw_sand_drift(pt: Dictionary) -> void:
 		grains = _seed_drift_grains(pt)
 		pt["grains"] = grains
 	for gv: Vector3 in grains:
-		draw_circle(mid + Vector2(gv.x, gv.y) * Vector2(rx, ry), 1.5 + gv.z * 1.5,
+		_wc.draw_circle(mid + Vector2(gv.x, gv.y) * Vector2(rx, ry), 1.5 + gv.z * 1.5,
 			Color(col.r, col.g, col.b, (1.0 - gv.z) * 0.55 + 0.12))
 
 
@@ -3456,7 +3456,7 @@ func _draw_trencadis(pt: Dictionary) -> void:
 	var ry := float(pt["ry"])
 	var sd := float(pt["seed"])
 	# the mortar bed first, so the gaps between shards read as grout
-	draw_patch(self, pt, Color(0.30, 0.28, 0.26, 0.95))
+	draw_patch(_wc, pt, Color(0.30, 0.28, 0.26, 0.95))
 	# then the shards. Stepped in a grid and jittered, which is how a real
 	# mosaic goes down - laid roughly in courses, never square.
 	var step := 17.0
@@ -3487,7 +3487,7 @@ func _draw_trencadis(pt: Dictionary) -> void:
 			var a := Vector2(cos(t), sin(t)) * w
 			var b := Vector2(-sin(t), cos(t)) * (w * (0.62 + 0.4 * h2))
 			var c := mid + Vector2(px, py)
-			draw_colored_polygon(
+			_wc.draw_colored_polygon(
 				PackedVector2Array([c - a - b, c + a - b * 0.8, c + a * 0.9 + b, c - a * 0.8 + b]),
 				col)
 
@@ -3509,10 +3509,10 @@ func _draw_pinned_patch(pt: Dictionary, at: Vector2, col: Color,
 		var a := TAU * float(i) / float(n)
 		var r := _patch_wobble(pt, a)
 		poly.append(at + Vector2(cos(a) * rx * r, sin(a) * ry * r))
-	draw_colored_polygon(poly, col)
+	_wc.draw_colored_polygon(poly, col)
 
 
-func draw_patch(c: CanvasItem, pt: Dictionary, col: Color,
+func draw_patch(c: Object, pt: Dictionary, col: Color,
 		rim := Color(0, 0, 0, 0)) -> void:
 	var mid := patch_centre(pt)
 	var rx := float(pt["rx"])
@@ -3570,7 +3570,7 @@ func band_bounds(band: Dictionary) -> Rect2:
 	return Rect2(lo, top, hi - lo, h)
 
 
-func draw_band(c: CanvasItem, band: Dictionary, col: Color, step := 40.0) -> void:
+func draw_band(c: Object, band: Dictionary, col: Color, step := 40.0) -> void:
 	# the same ribbon trick the pavement uses, so a patch follows the bend it
 	# is lying on instead of hanging off the side of it
 	var top: float = float(band["y"])
@@ -3622,11 +3622,11 @@ func _draw_walk_ribbon(vt: float, vb: float, bottom: float, col: Color) -> void:
 	var poly := PackedVector2Array(left)
 	for i in range(right.size() - 1, -1, -1):
 		poly.append(right[i])
-	draw_colored_polygon(poly, col)
+	_wc.draw_colored_polygon(poly, col)
 	# the kerbs, following the same two edges the surface test uses
 	for pts: PackedVector2Array in [left, right]:
 		for i in range(pts.size() - 1):
-			draw_line(pts[i], pts[i + 1], COL_SEAM, 3.0)
+			_wc.draw_line(pts[i], pts[i + 1], COL_SEAM, 3.0)
 
 
 func walk_edges(y: float) -> Vector2:
@@ -5006,13 +5006,22 @@ func float_text(pos: Vector2, text: String, color: Color = Color.WHITE) -> void:
 	tw.tween_callback(l.queue_free)
 
 
+# the stand-in canvas for main's own drawing, made fresh each _draw
+var _wc: ShapeBatch
+
+
 func _draw() -> void:
 	# --drawcost prints what the world costs to draw. Smooth beats pretty, and
 	# every visual pass since v1.31 has been signed off with this number rather
 	# than a guess - guessing is how the edge treatment quietly grew to over
 	# half the frame.
 	var _t0 := Time.get_ticks_usec() if _draw_cost_on else 0
+	# Every draw call on main goes through one ShapeBatch standing in for the
+	# canvas: runs of shapes become one draw call, same pixels
+	# (systems/shape_batch.gd), and anything else passes straight through.
+	_wc = ShapeBatch.new(self)
 	_draw_world()
+	_wc.flush()
 	if _draw_cost_on:
 		last_draw_us = Time.get_ticks_usec() - _t0
 		_draw_us += last_draw_us
@@ -5042,47 +5051,47 @@ func _draw_world() -> void:
 		# The sea, and it is a Mediterranean one: turquoise, not the grey-blue
 		# it was. A shallower band nearer the shore, because that is where the
 		# colour actually comes from - sand under clear water.
-		draw_rect(Rect2(-400, ctop, 630, bottom - ctop), Color(0.13, 0.47, 0.60))
-		draw_rect(Rect2(120, ctop, 110, bottom - ctop), Color(0.26, 0.66, 0.70))
+		_wc.draw_rect(Rect2(-400, ctop, 630, bottom - ctop), Color(0.13, 0.47, 0.60))
+		_wc.draw_rect(Rect2(120, ctop, 110, bottom - ctop), Color(0.26, 0.66, 0.70))
 		var wt := AnimClock.msec() / 1000.0
 		var fy := top + 40.0
 		while fy < bottom:
 			if fy > vt and fy < vb:
-				draw_line(Vector2(72 + sin(fy * 0.011 + wt * 1.5) * 9.0, fy), Vector2(84 + sin(fy * 0.013 + wt * 1.5) * 9.0, fy + 70.0), Color(1, 1, 1, 0.25), 3.0)
+				_wc.draw_line(Vector2(72 + sin(fy * 0.011 + wt * 1.5) * 9.0, fy), Vector2(84 + sin(fy * 0.013 + wt * 1.5) * 9.0, fy + 70.0), Color(1, 1, 1, 0.25), 3.0)
 			fy += 150.0
-		draw_rect(Rect2(230, ctop, 150, bottom - ctop), Color(0.88, 0.81, 0.64))
+		_wc.draw_rect(Rect2(230, ctop, 150, bottom - ctop), Color(0.88, 0.81, 0.64))
 		# THE TIMBER DECK, nearest the sand. These two strips were the wrong way
 		# round: the game had pale planks against the beach and a dark red strip
 		# inland, where the promenade actually runs a dark reddish-brown WOODEN
 		# deck along the sand edge and a pale concrete path with a dashed line
 		# behind it. Swapped, so the boardwalk reads as boards.
-		draw_rect(Rect2(380, ctop, 110, bottom - ctop), Color(0.46, 0.26, 0.21))
+		_wc.draw_rect(Rect2(380, ctop, 110, bottom - ctop), Color(0.46, 0.26, 0.21))
 		# start at the top of the visible window, not the top of the level
 		var py := minf(START_Y + 200.0, vb + 22.0 - fmod(vb, 22.0))
 		while py > GATE_Y and py > vt - 22.0:
 			if py < vb and py > vt:
 				# plank ends, running across the walk the way decking is laid
-				draw_line(Vector2(380, py), Vector2(490, py), Color(0.34, 0.19, 0.15), 2.0)
+				_wc.draw_line(Vector2(380, py), Vector2(490, py), Color(0.34, 0.19, 0.15), 2.0)
 			py -= 22.0
 		# the pale concrete path, with the dashed line down the middle of it
-		draw_rect(Rect2(490, ctop, 80, bottom - ctop), Color(0.82, 0.79, 0.73))
+		_wc.draw_rect(Rect2(490, ctop, 80, bottom - ctop), Color(0.82, 0.79, 0.73))
 		var ddy := minf(START_Y + 200.0, vb + 64.0 - fmod(vb, 64.0))
 		while ddy > GATE_Y and ddy > vt - 64.0:
 			if ddy < vb and ddy > vt:
-				draw_line(Vector2(530, ddy), Vector2(530, ddy - 26.0), Color(0.97, 0.96, 0.93, 0.8), 3.0)
+				_wc.draw_line(Vector2(530, ddy), Vector2(530, ddy - 26.0), Color(0.97, 0.96, 0.93, 0.8), 3.0)
 			ddy -= 64.0
-		draw_rect(Rect2(570, ctop, 410, bottom - ctop), Color(0.79, 0.76, 0.7))
+		_wc.draw_rect(Rect2(570, ctop, 410, bottom - ctop), Color(0.79, 0.76, 0.7))
 		var sy := minf(START_Y + 200.0, vb + 150.0 - fmod(vb, 150.0))
 		while sy > GATE_Y and sy > vt - 150.0:
 			if sy < vb and sy > vt:
-				draw_line(Vector2(560, sy), Vector2(980, sy), Color(0.71, 0.68, 0.62), 2.0)
+				_wc.draw_line(Vector2(560, sy), Vector2(980, sy), Color(0.71, 0.68, 0.62), 2.0)
 			sy -= 150.0
-		draw_rect(Rect2(980, ctop, 200, bottom - ctop), Color(0.76, 0.72, 0.65))
+		_wc.draw_rect(Rect2(980, ctop, 200, bottom - ctop), Color(0.76, 0.72, 0.65))
 		# The building strip was at x>=1180, and the camera never sees past
 		# x=1140 (zoom 1.28 on a fixed x=640) - so the whole landward side of
 		# this walk was being drawn where nobody could look at it. Brought
 		# inside the frame.
-		draw_rect(Rect2(1120, ctop, 580, bottom - ctop), Color(0.35, 0.33, 0.31))
+		_wc.draw_rect(Rect2(1120, ctop, 580, bottom - ctop), Color(0.35, 0.33, 0.31))
 		_draw_seafront_works(vt, vb)
 		# SQUARE CUT-OUTS in the paving, one under each palm. The promenade's
 		# trees are not planted in a verge, they are set into the concrete in
@@ -5092,23 +5101,23 @@ func _draw_world() -> void:
 			if ps.y < vt - 60.0 or ps.y > vb + 60.0:
 				continue
 			var cut := Rect2(ps.x - 27.0, ps.y - 27.0, 54.0, 54.0)
-			draw_rect(cut, Color(0.62, 0.58, 0.50))          # the kerb
-			draw_rect(cut.grow(-5.0), Color(0.40, 0.34, 0.26))  # the soil in it
-			draw_rect(cut, Color(0.34, 0.31, 0.27, 0.55), false, 2.0)
-		draw_line(Vector2(380, bottom), Vector2(380, GATE_Y), Color(0.55, 0.45, 0.32), 3.0)
-		draw_line(Vector2(490, bottom), Vector2(490, GATE_Y), COL_SEAM, 2.0)
-		draw_line(Vector2(570, bottom), Vector2(570, GATE_Y), COL_SEAM, 2.0)
-		draw_line(Vector2(980, bottom), Vector2(980, GATE_Y), COL_SEAM, 2.0)
+			_wc.draw_rect(cut, Color(0.62, 0.58, 0.50))          # the kerb
+			_wc.draw_rect(cut.grow(-5.0), Color(0.40, 0.34, 0.26))  # the soil in it
+			_wc.draw_rect(cut, Color(0.34, 0.31, 0.27, 0.55), false, 2.0)
+		_wc.draw_line(Vector2(380, bottom), Vector2(380, GATE_Y), Color(0.55, 0.45, 0.32), 3.0)
+		_wc.draw_line(Vector2(490, bottom), Vector2(490, GATE_Y), COL_SEAM, 2.0)
+		_wc.draw_line(Vector2(570, bottom), Vector2(570, GATE_Y), COL_SEAM, 2.0)
+		_wc.draw_line(Vector2(980, bottom), Vector2(980, GATE_Y), COL_SEAM, 2.0)
 		for t in tufts:
 			if t.y > vt and t.y < vb and t.x > 110.0 and (t.x < 330.0 or t.x > 1000.0) and t.x < 1170.0:
-				draw_circle(t, 4.0, Color(0.78, 0.7, 0.54))
+				_wc.draw_circle(t, 4.0, Color(0.78, 0.7, 0.54))
 		for twd in towels:
 			var r: Rect2 = twd.rect
-			draw_rect(r, twd.col)
-			draw_rect(r, Color(1, 1, 1, 0.25), false, 2.0)
+			_wc.draw_rect(r, twd.col)
+			_wc.draw_rect(r, Color(1, 1, 1, 0.25), false, 2.0)
 			if twd.bather:
-				draw_circle(r.get_center() + Vector2(0, -20), 6.0, Color(0.75, 0.6, 0.45))
-				draw_rect(Rect2(r.get_center().x - 7, r.get_center().y - 12, 14, 26), Color(0.55, 0.35, 0.45))
+				_wc.draw_circle(r.get_center() + Vector2(0, -20), 6.0, Color(0.75, 0.6, 0.45))
+				_wc.draw_rect(Rect2(r.get_center().x - 7, r.get_center().y - 12, 14, 26), Color(0.55, 0.35, 0.45))
 	else:
 		var grass := COL_GRASS if lvl == "street" else Color(0.3, 0.45, 0.28)
 		var walkway := Color(0.62, 0.55, 0.42)
@@ -5117,20 +5126,20 @@ func _draw_world() -> void:
 		elif lvl == "market":
 			grass = COL_GRASS
 			walkway = Color(0.76, 0.73, 0.66)
-		draw_rect(Rect2(-400, ctop, 2100, bottom - ctop), grass)
+		_wc.draw_rect(Rect2(-400, ctop, 2100, bottom - ctop), grass)
 		for t in tufts:
 			if t.y > vt and t.y < vb:
-				draw_circle(t, 5.0, COL_GRASS_DARK)
+				_wc.draw_circle(t, 5.0, COL_GRASS_DARK)
 		# the walkway: sidewalk downtown, packed dirt in the park
 		if edge_nodes.is_empty():
 			# A straight corridor, which is every level until one is authored a
 			# bend: one rect and two lines, exactly as before. Kept as its own
 			# branch rather than folded into the ribbon so that straight levels
 			# pay nothing at all for the ability to curve.
-			draw_rect(Rect2(sw_l, GATE_Y - 40.0, sw_r - sw_l, bottom - GATE_Y), walkway)
+			_wc.draw_rect(Rect2(sw_l, GATE_Y - 40.0, sw_r - sw_l, bottom - GATE_Y), walkway)
 			_draw_paving(vt, vb, walkway)
-			draw_line(Vector2(sw_l, bottom), Vector2(sw_l, GATE_Y), COL_SEAM, 3.0)
-			draw_line(Vector2(sw_r, bottom), Vector2(sw_r, GATE_Y), COL_SEAM, 3.0)
+			_wc.draw_line(Vector2(sw_l, bottom), Vector2(sw_l, GATE_Y), COL_SEAM, 3.0)
+			_wc.draw_line(Vector2(sw_r, bottom), Vector2(sw_r, GATE_Y), COL_SEAM, 3.0)
 		else:
 			_draw_walk_ribbon(vt, vb, bottom, walkway)
 	# (what lies beyond the gate is drawn by freedomlayer, which owns
@@ -5142,24 +5151,24 @@ func _draw_world() -> void:
 	# through the gaps.
 	if lvl == "street":
 		# parallel bike lane + far shoulder
-		draw_rect(Rect2(BLANE_L, GATE_Y - 40.0, BLANE_R - BLANE_L, bottom - GATE_Y), Color(0.4, 0.31, 0.29))
-		draw_rect(Rect2(BLANE_R, GATE_Y - 40.0, SHOULDER_R - BLANE_R, bottom - GATE_Y), COL_SIDEWALK)
+		_wc.draw_rect(Rect2(BLANE_L, GATE_Y - 40.0, BLANE_R - BLANE_L, bottom - GATE_Y), Color(0.4, 0.31, 0.29))
+		_wc.draw_rect(Rect2(BLANE_R, GATE_Y - 40.0, SHOULDER_R - BLANE_R, bottom - GATE_Y), COL_SIDEWALK)
 		var dy := minf(START_Y + 200.0, vb + 64.0 - fmod(vb, 64.0))
 		while dy > GATE_Y and dy > vt - 64.0:
 			if dy < vb and dy > vt:
-				draw_line(Vector2((BLANE_L + BLANE_R) / 2.0, dy), Vector2((BLANE_L + BLANE_R) / 2.0, dy - 26.0), Color(0.85, 0.82, 0.75, 0.5), 2.0)
+				_wc.draw_line(Vector2((BLANE_L + BLANE_R) / 2.0, dy), Vector2((BLANE_L + BLANE_R) / 2.0, dy - 26.0), Color(0.85, 0.82, 0.75, 0.5), 2.0)
 			dy -= 64.0
 		var gy := START_Y - 100.0
 		while gy > GATE_Y:
 			if gy < vb and gy > vt:
 				var cxx := (BLANE_L + BLANE_R) / 2.0 - 14.0
-				draw_circle(Vector2(cxx - 7, gy), 4.0, Color(1, 1, 1, 0.3))
-				draw_circle(Vector2(cxx + 7, gy), 4.0, Color(1, 1, 1, 0.3))
-				draw_line(Vector2(cxx - 7, gy), Vector2(cxx + 7, gy - 6), Color(1, 1, 1, 0.3), 2.0)
+				_wc.draw_circle(Vector2(cxx - 7, gy), 4.0, Color(1, 1, 1, 0.3))
+				_wc.draw_circle(Vector2(cxx + 7, gy), 4.0, Color(1, 1, 1, 0.3))
+				_wc.draw_line(Vector2(cxx - 7, gy), Vector2(cxx + 7, gy - 6), Color(1, 1, 1, 0.3), 2.0)
 			gy -= 600.0
-		draw_line(Vector2(BLANE_L, bottom), Vector2(BLANE_L, GATE_Y), COL_SEAM, 3.0)
-		draw_line(Vector2(BLANE_R, bottom), Vector2(BLANE_R, GATE_Y), COL_SEAM, 2.0)
-		draw_line(Vector2(SHOULDER_R, bottom), Vector2(SHOULDER_R, GATE_Y), COL_SEAM, 3.0)
+		_wc.draw_line(Vector2(BLANE_L, bottom), Vector2(BLANE_L, GATE_Y), COL_SEAM, 3.0)
+		_wc.draw_line(Vector2(BLANE_R, bottom), Vector2(BLANE_R, GATE_Y), COL_SEAM, 2.0)
+		_wc.draw_line(Vector2(SHOULDER_R, bottom), Vector2(SHOULDER_R, GATE_Y), COL_SEAM, 3.0)
 	if pond.size.x > 0.0:
 		# THE POND. It was a rectangle with a grey rim, which read as a
 		# municipal swimming pool rather than as water in a park - a hard
@@ -5182,29 +5191,29 @@ func _draw_world() -> void:
 		var wt := AnimClock.msec() / 1000.0
 		for i in range(4):
 			var wy := pond.position.y + 70.0 + i * 105.0
-			draw_arc(Vector2(pc.x + sin(wt * 0.7 + i) * 40.0, wy), 26.0, PI * 0.15, PI * 0.85, 10, Color(1, 1, 1, 0.14), 2.0)
+			_wc.draw_arc(Vector2(pc.x + sin(wt * 0.7 + i) * 40.0, wy), 26.0, PI * 0.15, PI * 0.85, 10, Color(1, 1, 1, 0.14), 2.0)
 		var px := pond.end.x + 8.0
 		var py := pond.position.y
 		while py < pond.end.y:
-			draw_line(Vector2(px, py), Vector2(sw_r, py), Color(0.5, 0.4, 0.28), 5.0)
+			_wc.draw_line(Vector2(px, py), Vector2(sw_r, py), Color(0.5, 0.4, 0.28), 5.0)
 			py += 16.0
-		draw_line(Vector2(px, pond.position.y), Vector2(px, pond.end.y), Color(0.36, 0.28, 0.2), 4.0)
+		_wc.draw_line(Vector2(px, pond.position.y), Vector2(px, pond.end.y), Color(0.36, 0.28, 0.2), 4.0)
 	# bike lanes crossing the sidewalk
 	for i in range(lane_ys.size()):
 		var ly: float = lane_ys[i]
-		draw_rect(Rect2(-400, ly - LANE_HALF, 2100, LANE_HALF * 2.0), COL_ROAD)
+		_wc.draw_rect(Rect2(-400, ly - LANE_HALF, 2100, LANE_HALF * 2.0), COL_ROAD)
 		var x := -380.0
 		while x < 1700.0:
-			draw_line(Vector2(x, ly), Vector2(x + 30.0, ly), COL_STRIPE, 3.0)
+			_wc.draw_line(Vector2(x, ly), Vector2(x + 30.0, ly), COL_STRIPE, 3.0)
 			x += 70.0
-		draw_line(Vector2(-400, ly - LANE_HALF), Vector2(1700, ly - LANE_HALF), COL_STRIPE, 2.0)
-		draw_line(Vector2(-400, ly + LANE_HALF), Vector2(1700, ly + LANE_HALF), COL_STRIPE, 2.0)
+		_wc.draw_line(Vector2(-400, ly - LANE_HALF), Vector2(1700, ly - LANE_HALF), COL_STRIPE, 2.0)
+		_wc.draw_line(Vector2(-400, ly + LANE_HALF), Vector2(1700, ly + LANE_HALF), COL_STRIPE, 2.0)
 		var ls: Dictionary = lane_state[i]
 		if ls.phase == 1 and fmod(AnimClock.msec() / 150.0, 2.0) < 1.0:
 			var wx := 40.0 if ls.dir > 0 else 1240.0
-			draw_circle(Vector2(wx, ly), 16.0, Color(0.95, 0.8, 0.25))
-			draw_rect(Rect2(wx - 2.0, ly - 9.0, 4.0, 10.0), Color(0.15, 0.15, 0.15))
-			draw_circle(Vector2(wx, ly + 6.0), 2.2, Color(0.15, 0.15, 0.15))
+			_wc.draw_circle(Vector2(wx, ly), 16.0, Color(0.95, 0.8, 0.25))
+			_wc.draw_rect(Rect2(wx - 2.0, ly - 9.0, 4.0, 10.0), Color(0.15, 0.15, 0.15))
+			_wc.draw_circle(Vector2(wx, ly + 6.0), 2.2, Color(0.15, 0.15, 0.15))
 	# manholes - open for street work; the cones are real nodes now.
 	# This one has to read as A HOLE from a glance at speed, because falling
 	# in ends the walk: hence the lifted cover leaning beside it, the lit
@@ -5214,25 +5223,25 @@ func _draw_world() -> void:
 			continue
 		# the cover, lifted off and propped against the kerb side
 		var cv := m + LIGHT * 30.0
-		contact_shadow(self, cv, 15.0, 5.0, 0.22)
-		draw_circle(cv, 14.0, Color(0.30, 0.30, 0.33))
-		draw_circle(cv, 11.0, Color(0.37, 0.37, 0.40))
+		contact_shadow(_wc, cv, 15.0, 5.0, 0.22)
+		_wc.draw_circle(cv, 14.0, Color(0.30, 0.30, 0.33))
+		_wc.draw_circle(cv, 11.0, Color(0.37, 0.37, 0.40))
 		for gi in range(3):
-			draw_line(cv + Vector2(-9.0, -6.0 + float(gi) * 6.0), cv + Vector2(9.0, -6.0 + float(gi) * 6.0),
+			_wc.draw_line(cv + Vector2(-9.0, -6.0 + float(gi) * 6.0), cv + Vector2(9.0, -6.0 + float(gi) * 6.0),
 				Color(0.26, 0.26, 0.29), 1.6)
 		# the collar of brickwork it is set into
-		draw_circle(m, 25.0, Color(0.34, 0.32, 0.31))
-		draw_circle(m, 22.0, Color(0.24, 0.23, 0.23))
+		_wc.draw_circle(m, 25.0, Color(0.34, 0.32, 0.31))
+		_wc.draw_circle(m, 22.0, Color(0.24, 0.23, 0.23))
 		# the shaft: dark, and darker away from the light
-		draw_circle(m, 19.0, Color(0.10, 0.10, 0.12))
-		draw_circle(m + LIGHT * 5.0, 15.0, Color(0.05, 0.05, 0.07))
+		_wc.draw_circle(m, 19.0, Color(0.10, 0.10, 0.12))
+		_wc.draw_circle(m + LIGHT * 5.0, 15.0, Color(0.05, 0.05, 0.07))
 		# the lit rim on the light side, which is what makes it a hole and
 		# not a disc
-		draw_arc(m, 19.5, PI * 0.95, PI * 1.95, 16, Color(0.55, 0.53, 0.50), 2.4)
-		draw_arc(m, 19.5, PI * 0.0, PI * 0.6, 12, Color(0.16, 0.16, 0.18), 2.0)
+		_wc.draw_arc(m, 19.5, PI * 0.95, PI * 1.95, 16, Color(0.55, 0.53, 0.50), 2.4)
+		_wc.draw_arc(m, 19.5, PI * 0.0, PI * 0.6, 12, Color(0.16, 0.16, 0.18), 2.0)
 		# rungs going down, just visible
 		for ri in range(2):
-			draw_line(m + Vector2(-6.0, 2.0 + float(ri) * 7.0), m + Vector2(6.0, 2.0 + float(ri) * 7.0),
+			_wc.draw_line(m + Vector2(-6.0, 2.0 + float(ri) * 7.0), m + Vector2(6.0, 2.0 + float(ri) * 7.0),
 				Color(0.22, 0.21, 0.20), 2.0)
 	# hydrants: cast iron, and the most important object in the world if you
 	# are a dog. Base flange, barrel, bonnet, two side outlets and a chain -
@@ -5242,29 +5251,29 @@ func _draw_world() -> void:
 		if hp.y < vt - 40.0 or hp.y > vb + 40.0:
 			continue
 		var c := Color(0.45, 0.4, 0.38) if h.done else Color(0.68, 0.23, 0.18)
-		cast_shadow(self, hp, 8.0, 26.0)
+		cast_shadow(_wc, hp, 8.0, 26.0)
 		# the flange it is bolted down with
-		draw_circle(hp + Vector2(0, 3), 12.0, c.darkened(0.45))
-		draw_circle(hp + Vector2(0, 3), 9.5, c.darkened(0.3))
+		_wc.draw_circle(hp + Vector2(0, 3), 12.0, c.darkened(0.45))
+		_wc.draw_circle(hp + Vector2(0, 3), 9.5, c.darkened(0.3))
 		# side outlets, one either side, with their caps
 		for so: float in [-1.0, 1.0]:
 			var op := hp + Vector2(10.0 * so, -1.0)
-			draw_line(hp, op, c.darkened(0.15), 5.0)
-			draw_circle(op, 3.6, c.lightened(0.08))
-			draw_circle(op, 1.8, c.darkened(0.35))
+			_wc.draw_line(hp, op, c.darkened(0.15), 5.0)
+			_wc.draw_circle(op, 3.6, c.lightened(0.08))
+			_wc.draw_circle(op, 1.8, c.darkened(0.35))
 		# the barrel, lit from the upper left
-		draw_circle(hp, 8.5, c)
-		draw_circle(hp + Vector2(-2.5, -2.5), 5.0, c.lightened(0.16))
+		_wc.draw_circle(hp, 8.5, c)
+		_wc.draw_circle(hp + Vector2(-2.5, -2.5), 5.0, c.lightened(0.16))
 		# the bonnet on top, and its little cap nut
-		draw_circle(hp + Vector2(0, -7), 5.6, c.darkened(0.12))
-		draw_circle(hp + Vector2(-1.5, -8.5), 3.0, c.lightened(0.22))
-		draw_circle(hp + Vector2(0, -11), 2.0, Color(0.85, 0.8, 0.7, 0.9))
+		_wc.draw_circle(hp + Vector2(0, -7), 5.6, c.darkened(0.12))
+		_wc.draw_circle(hp + Vector2(-1.5, -8.5), 3.0, c.lightened(0.22))
+		_wc.draw_circle(hp + Vector2(0, -11), 2.0, Color(0.85, 0.8, 0.7, 0.9))
 		# the chain, hanging off to one side
 		for ci in range(3):
-			draw_circle(hp + Vector2(7.0 + float(ci) * 2.6, 6.0 + float(ci) * 1.6), 1.5,
+			_wc.draw_circle(hp + Vector2(7.0 + float(ci) * 2.6, 6.0 + float(ci) * 1.6), 1.5,
 				Color(0.62, 0.6, 0.58))
 		if not h.done and h.progress > 0.0:
-			draw_arc(hp, 17.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
+			_wc.draw_arc(hp, 17.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
 	# the dropped snack. A brown circle could have been anything; this is a
 	# half-eaten kebab lying in its paper, which is unmistakably Barcelona
 	# pavement and unmistakably worth eating off it.
@@ -5272,23 +5281,23 @@ func _draw_world() -> void:
 		if k.eaten or k.pos.y < vt - 30.0 or k.pos.y > vb + 30.0:
 			continue
 		var kp: Vector2 = k.pos
-		contact_shadow(self, kp, 9.0, 4.0, 0.20)
+		contact_shadow(_wc, kp, 9.0, 4.0, 0.20)
 		# the paper wrapper, screwed open
-		draw_colored_polygon(
+		_wc.draw_colored_polygon(
 			PackedVector2Array([
 				kp + Vector2(-11, 3), kp + Vector2(-6, -8), kp + Vector2(7, -7),
 				kp + Vector2(11, 5), kp + Vector2(0, 9),
 			]), Color(0.90, 0.87, 0.79))
-		draw_colored_polygon(
+		_wc.draw_colored_polygon(
 			PackedVector2Array([
 				kp + Vector2(-7, 2), kp + Vector2(-3, -5), kp + Vector2(5, -4),
 				kp + Vector2(7, 3), kp + Vector2(0, 6),
 			]), Color(0.80, 0.77, 0.70))
 		# the meat, and a sad shred of salad nobody wants
-		draw_circle(kp + Vector2(-1, -1), 5.2, Color(0.62, 0.40, 0.22))
-		draw_circle(kp + Vector2(-2.5, -2.5), 3.0, Color(0.74, 0.50, 0.28))
-		draw_circle(kp + Vector2(3, 2), 2.4, Color(0.55, 0.34, 0.19))
-		draw_line(kp + Vector2(-5, 4), kp + Vector2(1, 5), Color(0.45, 0.62, 0.32), 2.0)
+		_wc.draw_circle(kp + Vector2(-1, -1), 5.2, Color(0.62, 0.40, 0.22))
+		_wc.draw_circle(kp + Vector2(-2.5, -2.5), 3.0, Color(0.74, 0.50, 0.28))
+		_wc.draw_circle(kp + Vector2(3, 2), 2.4, Color(0.55, 0.34, 0.19))
+		_wc.draw_line(kp + Vector2(-5, 4), kp + Vector2(1, 5), Color(0.45, 0.62, 0.32), 2.0)
 	# candy: shiny wrapped sweets - tempting, forbidden, faintly glinting
 	var candy_cols := [Color(0.85, 0.25, 0.35), Color(0.3, 0.5, 0.85), Color(0.55, 0.35, 0.7)]
 	for ci in range(candy.size()):
@@ -5297,33 +5306,33 @@ func _draw_world() -> void:
 			continue
 		var cc: Color = candy_cols[ci % candy_cols.size()]
 		var gl := 0.6 + 0.4 * sin(prize_glow + ci)
-		draw_circle(c.pos, 6.0, cc)
-		draw_line(c.pos + Vector2(-6, -3), c.pos + Vector2(-9, -5), cc, 2.0)  # wrapper twists
-		draw_line(c.pos + Vector2(-6, 3), c.pos + Vector2(-9, 5), cc, 2.0)
-		draw_line(c.pos + Vector2(6, -3), c.pos + Vector2(9, -5), cc, 2.0)
-		draw_line(c.pos + Vector2(6, 3), c.pos + Vector2(9, 5), cc, 2.0)
-		draw_circle(c.pos + Vector2(-2, -2), 1.6, Color(1, 1, 1, 0.4 + gl * 0.4))
+		_wc.draw_circle(c.pos, 6.0, cc)
+		_wc.draw_line(c.pos + Vector2(-6, -3), c.pos + Vector2(-9, -5), cc, 2.0)  # wrapper twists
+		_wc.draw_line(c.pos + Vector2(-6, 3), c.pos + Vector2(-9, 5), cc, 2.0)
+		_wc.draw_line(c.pos + Vector2(6, -3), c.pos + Vector2(9, -5), cc, 2.0)
+		_wc.draw_line(c.pos + Vector2(6, 3), c.pos + Vector2(9, 5), cc, 2.0)
+		_wc.draw_circle(c.pos + Vector2(-2, -2), 1.6, Color(1, 1, 1, 0.4 + gl * 0.4))
 	# the hazardous prize: a glinting collectible with a beckoning ring
 	if not prize_taken and prize_pos.x < INF and prize_pos.y > vt - 40.0 and prize_pos.y < vb + 40.0:
 		var pg := 0.5 + 0.5 * sin(prize_glow)
-		draw_arc(prize_pos, 16.0 + pg * 5.0, 0, TAU, 20, Color(1.0, 0.85, 0.3, 0.35 + pg * 0.3), 2.0)
-		draw_circle(prize_pos, 7.0, Color(0.95, 0.8, 0.35))
-		draw_circle(prize_pos + Vector2(-2, -2), 2.5, Color(1, 0.97, 0.85))
-		draw_string(font, prize_pos + Vector2(-30, -22), "!", HORIZONTAL_ALIGNMENT_CENTER, 60, 18, Color(1, 0.9, 0.5))
+		_wc.draw_arc(prize_pos, 16.0 + pg * 5.0, 0, TAU, 20, Color(1.0, 0.85, 0.3, 0.35 + pg * 0.3), 2.0)
+		_wc.draw_circle(prize_pos, 7.0, Color(0.95, 0.8, 0.35))
+		_wc.draw_circle(prize_pos + Vector2(-2, -2), 2.5, Color(1, 0.97, 0.85))
+		_wc.draw_string(font, prize_pos + Vector2(-30, -22), "!", HORIZONTAL_ALIGNMENT_CENTER, 60, 18, Color(1, 0.9, 0.5))
 	# carry mission: the parcel where it waits, the drop-off marker, and
 	# the parcel riding in Millie's mouth while she totes it
 	if carry_pickup.x < INF and carry_state < 2:
 		if carry_state == 0:
-			draw_rect(Rect2(carry_pickup.x - 8.0, carry_pickup.y - 5.0, 16.0, 10.0), Color(0.7, 0.6, 0.4))
-			draw_line(carry_pickup + Vector2(-8, -1), carry_pickup + Vector2(8, -1), Color(0.4, 0.32, 0.2), 1.0)
+			_wc.draw_rect(Rect2(carry_pickup.x - 8.0, carry_pickup.y - 5.0, 16.0, 10.0), Color(0.7, 0.6, 0.4))
+			_wc.draw_line(carry_pickup + Vector2(-8, -1), carry_pickup + Vector2(8, -1), Color(0.4, 0.32, 0.2), 1.0)
 		# the drop-off: a doormat with a downward chevron
 		var dp := 0.5 + 0.5 * sin(prize_glow)
-		draw_rect(Rect2(carry_drop.x - 16.0, carry_drop.y - 10.0, 32.0, 20.0), Color(0.35, 0.4, 0.5, 0.4 + dp * 0.25))
-		draw_rect(Rect2(carry_drop.x - 16.0, carry_drop.y - 10.0, 32.0, 20.0), Color(0.7, 0.8, 0.95, 0.5), false, 2.0)
-		draw_string(font, carry_drop + Vector2(-40, -16), "DROP", HORIZONTAL_ALIGNMENT_CENTER, 80, 13, Color(0.8, 0.9, 1.0, 0.8))
+		_wc.draw_rect(Rect2(carry_drop.x - 16.0, carry_drop.y - 10.0, 32.0, 20.0), Color(0.35, 0.4, 0.5, 0.4 + dp * 0.25))
+		_wc.draw_rect(Rect2(carry_drop.x - 16.0, carry_drop.y - 10.0, 32.0, 20.0), Color(0.7, 0.8, 0.95, 0.5), false, 2.0)
+		_wc.draw_string(font, carry_drop + Vector2(-40, -16), "DROP", HORIZONTAL_ALIGNMENT_CENTER, 80, 13, Color(0.8, 0.9, 1.0, 0.8))
 	if carry_state == 1:
 		var mp: Vector2 = dog.global_position + dog.facing * 20.0
-		draw_rect(Rect2(mp.x - 7.0, mp.y - 4.0, 14.0, 8.0), Color(0.7, 0.6, 0.4))
+		_wc.draw_rect(Rect2(mp.x - 7.0, mp.y - 4.0, 14.0, 8.0), Color(0.7, 0.6, 0.4))
 	# lampposts downtown, trees in the park, palms by the sea
 	# (same physics, different soul)
 	# night lighting: warm pools spilling from the lampposts. Layered
@@ -5344,27 +5353,27 @@ func _draw_world() -> void:
 				var f := float(ring) / 10.0
 				var rr := lerpf(185.0, 26.0, f)
 				var aa := (0.012 + f * f * 0.055) * flick
-				draw_circle(lp + Vector2(0, 16), rr, Color(1.0, 0.86, 0.55, aa))
-			draw_circle(lp + Vector2(0, -22), 7.0, Color(1.0, 0.94, 0.72, 0.9 * flick))
+				_wc.draw_circle(lp + Vector2(0, 16), rr, Color(1.0, 0.86, 0.55, aa))
+			_wc.draw_circle(lp + Vector2(0, -22), 7.0, Color(1.0, 0.94, 0.72, 0.9 * flick))
 	for i in range(deco_pole_count):
 		var p := poles[i]
 		if p.y < vt - 60.0 or p.y > vb + 60.0:
 			continue
 		if lvl == "park":
-			_draw_broadleaf(self, p, 1.0)
+			_draw_broadleaf(_wc, p, 1.0)
 		elif lvl == "beach":
-			_draw_palm(self, p)
+			_draw_palm(_wc, p)
 		elif p.x > sw_l + 60.0 and p.x < sw_r - 60.0:
 			# mid-walkway poles are street trees in grates - that is WHY
 			# they stand in the middle of a sidewalk
-			cast_shadow(self, p, 20.0, 40.0, 0.16)
-			draw_circle(p, 19.0, Color(0.26, 0.24, 0.22))          # the pit
-			draw_rect(Rect2(p.x - 16, p.y - 16, 32, 32), Color(0.34, 0.34, 0.37))
+			cast_shadow(_wc, p, 20.0, 40.0, 0.16)
+			_wc.draw_circle(p, 19.0, Color(0.26, 0.24, 0.22))          # the pit
+			_wc.draw_rect(Rect2(p.x - 16, p.y - 16, 32, 32), Color(0.34, 0.34, 0.37))
 			for gi in range(4):
 				var gy := p.y - 12.0 + float(gi) * 8.0
-				draw_line(Vector2(p.x - 15, gy), Vector2(p.x + 15, gy), Color(0.2, 0.2, 0.22), 2.0)
-			draw_rect(Rect2(p.x - 16, p.y - 16, 32, 32), Color(0.44, 0.44, 0.47), false, 2.0)
-			_draw_broadleaf(self, p, 0.72)
+				_wc.draw_line(Vector2(p.x - 15, gy), Vector2(p.x + 15, gy), Color(0.2, 0.2, 0.22), 2.0)
+			_wc.draw_rect(Rect2(p.x - 16, p.y - 16, 32, 32), Color(0.44, 0.44, 0.47), false, 2.0)
+			_draw_broadleaf(_wc, p, 0.72)
 		else:
 			_draw_lamppost(p)
 	# trash bins: green, lidded, with a visible mouth - the ONLY thing
@@ -5372,75 +5381,75 @@ func _draw_world() -> void:
 	for bn in bins:
 		if bn.y < vt - 40.0 or bn.y > vb + 40.0:
 			continue
-		cast_shadow(self, bn, 11.0, 24.0)
+		cast_shadow(_wc, bn, 11.0, 24.0)
 		# the drum, on its post, with a lit rim and a genuinely dark mouth
-		draw_circle(bn, 13.0, Color(0.18, 0.25, 0.20))
-		draw_circle(bn, 11.0, Color(0.26, 0.36, 0.28))
-		draw_circle(bn + Vector2(-3, -3), 7.0, Color(0.32, 0.44, 0.33))
-		draw_arc(bn, 11.0, PI * 1.05, PI * 1.95, 14, Color(0.42, 0.55, 0.42), 2.0)
+		_wc.draw_circle(bn, 13.0, Color(0.18, 0.25, 0.20))
+		_wc.draw_circle(bn, 11.0, Color(0.26, 0.36, 0.28))
+		_wc.draw_circle(bn + Vector2(-3, -3), 7.0, Color(0.32, 0.44, 0.33))
+		_wc.draw_arc(bn, 11.0, PI * 1.05, PI * 1.95, 14, Color(0.42, 0.55, 0.42), 2.0)
 		# the hinged lid, tipped open toward the light
-		draw_circle(bn + Vector2(1, 2), 8.6, Color(0.10, 0.14, 0.11))
-		draw_arc(bn + Vector2(1, 2), 8.6, PI * 0.1, PI * 0.9, 12, Color(0.20, 0.28, 0.22), 3.0)
+		_wc.draw_circle(bn + Vector2(1, 2), 8.6, Color(0.10, 0.14, 0.11))
+		_wc.draw_arc(bn + Vector2(1, 2), 8.6, PI * 0.1, PI * 0.9, 12, Color(0.20, 0.28, 0.22), 3.0)
 		# a bag someone has knotted round the handle, as always
-		draw_circle(bn + Vector2(12, 6), 4.0, Color(0.78, 0.78, 0.74, 0.85))
-		draw_line(bn + Vector2(10, 2), bn + Vector2(12, 5), Color(0.7, 0.7, 0.66), 1.5)
+		_wc.draw_circle(bn + Vector2(12, 6), 4.0, Color(0.78, 0.78, 0.74, 0.85))
+		_wc.draw_line(bn + Vector2(10, 2), bn + Vector2(12, 5), Color(0.7, 0.7, 0.66), 1.5)
 	# cafe tables with a little service on them
 	for tb in tables:
-		draw_circle(tb, 14.0, Color(0.6, 0.55, 0.48))
-		draw_arc(tb, 14.0, 0, TAU, 20, Color(0.45, 0.4, 0.34), 2.0)
-		draw_circle(tb + Vector2(5, -4), 3.2, Color(0.92, 0.9, 0.85))
-		draw_circle(tb + Vector2(-4, 4), 2.0, Color(0.5, 0.32, 0.2))
-		draw_circle(tb, 2.6, Color(0.4, 0.36, 0.3))
+		_wc.draw_circle(tb, 14.0, Color(0.6, 0.55, 0.48))
+		_wc.draw_arc(tb, 14.0, 0, TAU, 20, Color(0.45, 0.4, 0.34), 2.0)
+		_wc.draw_circle(tb + Vector2(5, -4), 3.2, Color(0.92, 0.9, 0.85))
+		_wc.draw_circle(tb + Vector2(-4, 4), 2.0, Color(0.5, 0.32, 0.2))
+		_wc.draw_circle(tb, 2.6, Color(0.4, 0.36, 0.3))
 	# canopies over the beach terraces: out by day, furled at night
 	for cn in canopies:
 		if Game.night:
-			draw_rect(Rect2(cn.position.x, cn.position.y, cn.size.x, 10), Color(0.72, 0.67, 0.57))
-			draw_rect(Rect2(cn.position.x, cn.position.y, cn.size.x, 10), Color(0.5, 0.46, 0.38), false, 1.5)
+			_wc.draw_rect(Rect2(cn.position.x, cn.position.y, cn.size.x, 10), Color(0.72, 0.67, 0.57))
+			_wc.draw_rect(Rect2(cn.position.x, cn.position.y, cn.size.x, 10), Color(0.5, 0.46, 0.38), false, 1.5)
 		else:
-			draw_rect(cn, Color(0.93, 0.9, 0.8, 0.45))
-			draw_rect(cn, Color(0.6, 0.55, 0.45, 0.6), false, 2.0)
-			draw_line(Vector2(cn.get_center().x, cn.position.y), Vector2(cn.get_center().x, cn.end.y), Color(0.6, 0.55, 0.45, 0.4), 1.5)
+			_wc.draw_rect(cn, Color(0.93, 0.9, 0.8, 0.45))
+			_wc.draw_rect(cn, Color(0.6, 0.55, 0.45, 0.6), false, 2.0)
+			_wc.draw_line(Vector2(cn.get_center().x, cn.position.y), Vector2(cn.get_center().x, cn.end.y), Color(0.6, 0.55, 0.45, 0.4), 1.5)
 	# umbrellas: wide, OVER the tables by day; furled spikes at night
 	var pcols := [Color(0.85, 0.45, 0.35, 0.7), Color(0.4, 0.6, 0.75, 0.7), Color(0.9, 0.8, 0.4, 0.7)]
 	for i in range(parasols.size()):
 		var pa := parasols[i]
 		if Game.night:
-			draw_line(pa + Vector2(-3, 24), pa + Vector2(3, -28), Color(0.45, 0.4, 0.35), 5.0)
-			draw_circle(pa + Vector2(3, -28), 4.0, pcols[i % 3])
+			_wc.draw_line(pa + Vector2(-3, 24), pa + Vector2(3, -28), Color(0.45, 0.4, 0.35), 5.0)
+			_wc.draw_circle(pa + Vector2(3, -28), 4.0, pcols[i % 3])
 		else:
-			draw_circle(pa, 40.0, pcols[i % 3])
-			draw_arc(pa, 40.0, 0, TAU, 24, Color(1, 1, 1, 0.4), 2.0)
+			_wc.draw_circle(pa, 40.0, pcols[i % 3])
+			_wc.draw_arc(pa, 40.0, 0, TAU, 24, Color(1, 1, 1, 0.4), 2.0)
 			for sp in range(6):
-				draw_line(pa, pa + Vector2.from_angle(TAU * sp / 6.0) * 40.0, Color(1, 1, 1, 0.25), 2.0)
-			draw_circle(pa, 3.5, Color(0.4, 0.35, 0.3))
+				_wc.draw_line(pa, pa + Vector2.from_angle(TAU * sp / 6.0) * 40.0, Color(1, 1, 1, 0.25), 2.0)
+			_wc.draw_circle(pa, 3.5, Color(0.4, 0.35, 0.3))
 	# benches
 	for b in benches:
-		draw_rect(Rect2(b.x - 8, b.y - 24, 16, 48), Color(0.5, 0.38, 0.26))
-		draw_line(Vector2(b.x, b.y - 22), Vector2(b.x, b.y + 22), Color(0.42, 0.32, 0.22), 2.0)
+		_wc.draw_rect(Rect2(b.x - 8, b.y - 24, 16, 48), Color(0.5, 0.38, 0.26))
+		_wc.draw_line(Vector2(b.x, b.y - 22), Vector2(b.x, b.y + 22), Color(0.42, 0.32, 0.22), 2.0)
 	# terrace chairs: round seats, four legs, a hint of backrest
 	for ch in chairs:
 		for lg in [Vector2(-5, -5), Vector2(5, -5), Vector2(-5, 5), Vector2(5, 5)]:
-			draw_circle(ch + lg, 1.5, Color(0.35, 0.27, 0.18))
-		draw_circle(ch, 6.5, Color(0.58, 0.44, 0.3))
-		draw_arc(ch, 6.5, PI * 1.15, PI * 1.85, 8, Color(0.4, 0.3, 0.2), 3.0)
+			_wc.draw_circle(ch + lg, 1.5, Color(0.35, 0.27, 0.18))
+		_wc.draw_circle(ch, 6.5, Color(0.58, 0.44, 0.3))
+		_wc.draw_arc(ch, 6.5, PI * 1.15, PI * 1.85, 8, Color(0.4, 0.3, 0.2), 3.0)
 	# fountains: where the tank refills
 	for f in fountains:
-		draw_circle(f, 12.0, Color(0.5, 0.55, 0.58))
-		draw_circle(f, 8.0, Color(0.4, 0.55, 0.65))
-		draw_circle(f + Vector2(0, -3), 2.5, Color(0.75, 0.88, 0.95))
-		draw_circle(f + Vector2(14, 8), 5.0, Color(0.45, 0.6, 0.7, 0.5))
+		_wc.draw_circle(f, 12.0, Color(0.5, 0.55, 0.58))
+		_wc.draw_circle(f, 8.0, Color(0.4, 0.55, 0.65))
+		_wc.draw_circle(f + Vector2(0, -3), 2.5, Color(0.75, 0.88, 0.95))
+		_wc.draw_circle(f + Vector2(14, 8), 5.0, Color(0.45, 0.6, 0.7, 0.5))
 	# market stalls: awnings, crates, produce
 	for i in range(stalls.size()):
 		var st := stalls[i]
-		draw_rect(Rect2(st.x - 48, st.y - 28, 96, 56), Color(0.55, 0.42, 0.3))
+		_wc.draw_rect(Rect2(st.x - 48, st.y - 28, 96, 56), Color(0.55, 0.42, 0.3))
 		var acol := Color(0.75, 0.3, 0.28) if i % 2 == 0 else Color(0.32, 0.5, 0.42)
 		for s2 in range(6):
-			draw_rect(Rect2(st.x - 48 + s2 * 16.0, st.y - 36, 8, 10), acol)
-			draw_rect(Rect2(st.x - 40 + s2 * 16.0, st.y - 36, 8, 10), Color(0.92, 0.9, 0.84))
-		draw_rect(Rect2(st.x - 40, st.y - 18, 24, 16), Color(0.7, 0.55, 0.35))
-		draw_circle(st + Vector2(18, -2), 5.0, Color(0.85, 0.45, 0.3))
-		draw_circle(st + Vector2(30, 6), 5.0, Color(0.9, 0.7, 0.3))
-		draw_circle(st + Vector2(6, 10), 4.0, Color(0.5, 0.65, 0.35))
+			_wc.draw_rect(Rect2(st.x - 48 + s2 * 16.0, st.y - 36, 8, 10), acol)
+			_wc.draw_rect(Rect2(st.x - 40 + s2 * 16.0, st.y - 36, 8, 10), Color(0.92, 0.9, 0.84))
+		_wc.draw_rect(Rect2(st.x - 40, st.y - 18, 24, 16), Color(0.7, 0.55, 0.35))
+		_wc.draw_circle(st + Vector2(18, -2), 5.0, Color(0.85, 0.45, 0.3))
+		_wc.draw_circle(st + Vector2(30, 6), 5.0, Color(0.9, 0.7, 0.3))
+		_wc.draw_circle(st + Vector2(6, 10), 4.0, Color(0.5, 0.65, 0.35))
 	# parked service vans, half on the walkway, hazards blinking in spirit
 	# The service van: the biggest object in the game and, until now, a white
 	# rectangle with four black tabs. A van seen from above is a roof - so it
@@ -5452,44 +5461,44 @@ func _draw_world() -> void:
 			continue
 		var body := Rect2(v.x - 32.0, v.y - 66.0, 64.0, 132.0)
 		# it sits high, so the shadow is offset a long way and shaped like it
-		draw_set_transform(v + LIGHT * 30.0, 0.0, Vector2.ONE)
-		draw_rect(Rect2(-34.0, -66.0, 68.0, 134.0),
+		_wc.draw_set_transform(v + LIGHT * 30.0, 0.0, Vector2.ONE)
+		_wc.draw_rect(Rect2(-34.0, -66.0, 68.0, 134.0),
 			Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		_wc.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		# tyres, visible past the body on both sides
 		for w: Vector2 in [Vector2(-35, -42), Vector2(29, -42), Vector2(-35, 28), Vector2(29, 28)]:
-			draw_rect(Rect2(v.x + w.x, v.y + w.y, 6.0, 17.0), Color(0.10, 0.10, 0.12))
+			_wc.draw_rect(Rect2(v.x + w.x, v.y + w.y, 6.0, 17.0), Color(0.10, 0.10, 0.12))
 		# the roof, lit down its light-facing side
-		draw_rect(body, Color(0.86, 0.86, 0.84))
-		draw_rect(Rect2(body.position.x, body.position.y, 20.0, body.size.y),
+		_wc.draw_rect(body, Color(0.86, 0.86, 0.84))
+		_wc.draw_rect(Rect2(body.position.x, body.position.y, 20.0, body.size.y),
 			Color(0.93, 0.93, 0.91))
-		draw_rect(Rect2(body.end.x - 12.0, body.position.y, 12.0, body.size.y),
+		_wc.draw_rect(Rect2(body.end.x - 12.0, body.position.y, 12.0, body.size.y),
 			Color(0.72, 0.72, 0.71))
-		draw_rect(body, Color(0.44, 0.44, 0.45), false, 2.0)
+		_wc.draw_rect(body, Color(0.44, 0.44, 0.45), false, 2.0)
 		# pressed ribs along the roof
 		for ri in range(5):
 			var ry := body.position.y + 26.0 + float(ri) * 20.0
-			draw_line(Vector2(body.position.x + 5.0, ry), Vector2(body.end.x - 5.0, ry),
+			_wc.draw_line(Vector2(body.position.x + 5.0, ry), Vector2(body.end.x - 5.0, ry),
 				Color(0.76, 0.76, 0.75), 1.5)
 		# windscreen at the front (north), raked, with a wiper
-		draw_rect(Rect2(v.x - 27.0, v.y - 63.0, 54.0, 20.0), Color(0.30, 0.38, 0.46))
-		draw_rect(Rect2(v.x - 27.0, v.y - 63.0, 54.0, 7.0), Color(0.52, 0.62, 0.70, 0.7))
-		draw_line(v + Vector2(-18, -46), v + Vector2(6, -52), Color(0.2, 0.2, 0.22), 1.6)
+		_wc.draw_rect(Rect2(v.x - 27.0, v.y - 63.0, 54.0, 20.0), Color(0.30, 0.38, 0.46))
+		_wc.draw_rect(Rect2(v.x - 27.0, v.y - 63.0, 54.0, 7.0), Color(0.52, 0.62, 0.70, 0.7))
+		_wc.draw_line(v + Vector2(-18, -46), v + Vector2(6, -52), Color(0.2, 0.2, 0.22), 1.6)
 		# mirrors, which is what makes it read as a VEHICLE and not a crate
 		for mx: float in [-1.0, 1.0]:
-			draw_rect(Rect2(v.x + mx * 38.0 - 3.0, v.y - 52.0, 6.0, 9.0), Color(0.30, 0.30, 0.32))
+			_wc.draw_rect(Rect2(v.x + mx * 38.0 - 3.0, v.y - 52.0, 6.0, 9.0), Color(0.30, 0.30, 0.32))
 		# roof vent and bars
-		draw_rect(Rect2(v.x - 11.0, v.y - 16.0, 22.0, 16.0), Color(0.74, 0.74, 0.72))
-		draw_rect(Rect2(v.x - 11.0, v.y - 16.0, 22.0, 16.0), Color(0.52, 0.52, 0.52), false, 1.5)
+		_wc.draw_rect(Rect2(v.x - 11.0, v.y - 16.0, 22.0, 16.0), Color(0.74, 0.74, 0.72))
+		_wc.draw_rect(Rect2(v.x - 11.0, v.y - 16.0, 22.0, 16.0), Color(0.52, 0.52, 0.52), false, 1.5)
 		for bx: float in [-20.0, 20.0]:
-			draw_line(v + Vector2(bx, -34.0), v + Vector2(bx, 46.0), Color(0.62, 0.62, 0.62), 2.5)
+			_wc.draw_line(v + Vector2(bx, -34.0), v + Vector2(bx, 46.0), Color(0.62, 0.62, 0.62), 2.5)
 		# the back doors and a livery stripe down the side
-		draw_line(v + Vector2(-30, 58), v + Vector2(30, 58), Color(0.55, 0.55, 0.56), 2.0)
-		draw_line(v + Vector2(0, 58), v + Vector2(0, 66), Color(0.55, 0.55, 0.56), 2.0)
-		draw_rect(Rect2(v.x - 32.0, v.y + 4.0, 64.0, 7.0), Color(0.62, 0.28, 0.24))
+		_wc.draw_line(v + Vector2(-30, 58), v + Vector2(30, 58), Color(0.55, 0.55, 0.56), 2.0)
+		_wc.draw_line(v + Vector2(0, 58), v + Vector2(0, 66), Color(0.55, 0.55, 0.56), 2.0)
+		_wc.draw_rect(Rect2(v.x - 32.0, v.y + 4.0, 64.0, 7.0), Color(0.62, 0.28, 0.24))
 		# a hazard beacon on the cab, because it is parked where it should not be
 		var beat := 0.55 + 0.45 * sin(AnimClock.msec() / 190.0)
-		draw_circle(v + Vector2(0, -40.0), 4.0, Color(0.95, 0.62, 0.15, 0.55 + beat * 0.45))
+		_wc.draw_circle(v + Vector2(0, -40.0), 4.0, Color(0.95, 0.62, 0.15, 0.55 + beat * 0.45))
 	# THE FUR-GONETA. A grooming van done up as a shaggy dog, in the tradition
 	# of every mobile groomer that has ever driven past you - fur over the whole
 	# body, floppy ears on the front corners, a fringe hanging over the eyes,
@@ -5507,42 +5516,42 @@ func _draw_world() -> void:
 		var cream := Color(0.88, 0.83, 0.72)
 		var cream_dk := Color(0.74, 0.68, 0.57)
 		# the shadow of a two-metre box, same as the other vans
-		draw_set_transform(v + LIGHT * 30.0, 0.0, Vector2.ONE)
-		draw_rect(Rect2(-34.0, -66.0, 68.0, 134.0),
+		_wc.draw_set_transform(v + LIGHT * 30.0, 0.0, Vector2.ONE)
+		_wc.draw_rect(Rect2(-34.0, -66.0, 68.0, 134.0),
 			Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		_wc.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		for w: Vector2 in [Vector2(-35, -40), Vector2(29, -40), Vector2(-35, 26), Vector2(29, 26)]:
-			draw_rect(Rect2(v.x + w.x, v.y + w.y, 6.0, 18.0), Color(0.10, 0.10, 0.12))
+			_wc.draw_rect(Rect2(v.x + w.x, v.y + w.y, 6.0, 18.0), Color(0.10, 0.10, 0.12))
 		# --- ears: big, floppy, hanging off the front corners --------------
 		for sx: float in [-1.0, 1.0]:
 			var ear_o := PackedVector2Array([
 				v + Vector2(24.0 * sx, -58.0), v + Vector2(50.0 * sx, -40.0),
 				v + Vector2(44.0 * sx, 2.0), v + Vector2(26.0 * sx, -12.0),
 			])
-			draw_colored_polygon(ear_o, fur_dark)
-			draw_colored_polygon(PackedVector2Array([
+			_wc.draw_colored_polygon(ear_o, fur_dark)
+			_wc.draw_colored_polygon(PackedVector2Array([
 				v + Vector2(26.0 * sx, -52.0), v + Vector2(43.0 * sx, -38.0),
 				v + Vector2(38.0 * sx, -6.0), v + Vector2(27.0 * sx, -18.0),
 			]), fur)
 			# a paler inner edge, and the shaggy fringe along the bottom
-			draw_line(v + Vector2(28.0 * sx, -48.0), v + Vector2(33.0 * sx, -14.0),
+			_wc.draw_line(v + Vector2(28.0 * sx, -48.0), v + Vector2(33.0 * sx, -14.0),
 				fur_lit, 2.5)
 			for tf in range(4):
 				var ty := -6.0 + float(tf) * 2.5
-				draw_line(v + Vector2((40.0 - float(tf) * 3.0) * sx, ty),
+				_wc.draw_line(v + Vector2((40.0 - float(tf) * 3.0) * sx, ty),
 					v + Vector2((36.0 - float(tf) * 3.0) * sx, ty + 7.0), fur_dark, 2.0)
 		# --- the body, in two tones like a real scruffy dog ---------------
-		draw_rect(Rect2(v.x - 32.0, v.y - 66.0, 64.0, 132.0), fur)
-		draw_rect(Rect2(v.x - 32.0, v.y - 66.0, 16.0, 132.0), fur_lit)   # lit flank
-		draw_rect(Rect2(v.x + 22.0, v.y - 66.0, 10.0, 132.0), fur_dark)  # shaded flank
+		_wc.draw_rect(Rect2(v.x - 32.0, v.y - 66.0, 64.0, 132.0), fur)
+		_wc.draw_rect(Rect2(v.x - 32.0, v.y - 66.0, 16.0, 132.0), fur_lit)   # lit flank
+		_wc.draw_rect(Rect2(v.x + 22.0, v.y - 66.0, 10.0, 132.0), fur_dark)  # shaded flank
 		# the cream patch over the face and along one side, which is what stops
 		# it reading as a plain brown box
-		draw_colored_polygon(PackedVector2Array([
+		_wc.draw_colored_polygon(PackedVector2Array([
 			v + Vector2(-30.0, -66.0), v + Vector2(30.0, -66.0),
 			v + Vector2(26.0, -30.0), v + Vector2(4.0, -24.0),
 			v + Vector2(-22.0, -34.0), v + Vector2(-30.0, -52.0),
 		]), cream)
-		draw_colored_polygon(PackedVector2Array([
+		_wc.draw_colored_polygon(PackedVector2Array([
 			v + Vector2(-30.0, 20.0), v + Vector2(-14.0, 26.0),
 			v + Vector2(-18.0, 54.0), v + Vector2(-30.0, 58.0),
 		]), cream_dk)
@@ -5554,34 +5563,34 @@ func _draw_world() -> void:
 				var on_cream: bool = ry < v.y - 28.0 or (rx < v.x - 14.0 and ry > v.y + 18.0)
 				var tc: Color = cream_dk if on_cream else (fur_lit if rx < v.x - 12.0 else fur_dark)
 				# a curl rather than a chevron: two short strokes at an angle
-				draw_line(Vector2(rx, ry), Vector2(rx - 3.0, ry + 6.0), tc, 1.8)
-				draw_line(Vector2(rx - 3.0, ry + 6.0), Vector2(rx + 1.0, ry + 8.0), tc, 1.6)
+				_wc.draw_line(Vector2(rx, ry), Vector2(rx - 3.0, ry + 6.0), tc, 1.8)
+				_wc.draw_line(Vector2(rx - 3.0, ry + 6.0), Vector2(rx + 1.0, ry + 8.0), tc, 1.6)
 		# --- the face on the front (north) end ----------------------------
 		# the fringe: a shaggy overhang that the eyes peer out from under
 		for i in range(11):
 			var fx := v.x - 25.0 + float(i) * 5.0
-			draw_line(Vector2(fx, v.y - 66.0), Vector2(fx - 2.0, v.y - 50.0), cream_dk, 3.0)
+			_wc.draw_line(Vector2(fx, v.y - 66.0), Vector2(fx - 2.0, v.y - 50.0), cream_dk, 3.0)
 		# small and dark, mostly hidden under the fringe - the reference van
 		# has eyes you have to look for, not headlamps
-		draw_circle(v + Vector2(-11.0, -46.0), 3.2, Color(0.13, 0.11, 0.11))
-		draw_circle(v + Vector2(11.0, -46.0), 3.2, Color(0.13, 0.11, 0.11))
-		draw_circle(v + Vector2(-11.6, -47.0), 1.0, Color(1, 1, 1, 0.55))
-		draw_circle(v + Vector2(10.4, -47.0), 1.0, Color(1, 1, 1, 0.55))
+		_wc.draw_circle(v + Vector2(-11.0, -46.0), 3.2, Color(0.13, 0.11, 0.11))
+		_wc.draw_circle(v + Vector2(11.0, -46.0), 3.2, Color(0.13, 0.11, 0.11))
+		_wc.draw_circle(v + Vector2(-11.6, -47.0), 1.0, Color(1, 1, 1, 0.55))
+		_wc.draw_circle(v + Vector2(10.4, -47.0), 1.0, Color(1, 1, 1, 0.55))
 		# the muzzle and a black nose where the grille would be. No tongue, no
 		# collar: on the real thing the joke is the fur, and everything else is
 		# still a work van.
-		draw_circle(v + Vector2(0.0, -57.0), 11.0, cream)
-		draw_circle(v + Vector2(0.0, -60.0), 7.0, Color(0.14, 0.12, 0.13))
-		draw_circle(v + Vector2(-2.0, -62.0), 2.4, Color(0.34, 0.31, 0.32))
+		_wc.draw_circle(v + Vector2(0.0, -57.0), 11.0, cream)
+		_wc.draw_circle(v + Vector2(0.0, -60.0), 7.0, Color(0.14, 0.12, 0.13))
+		_wc.draw_circle(v + Vector2(-2.0, -62.0), 2.4, Color(0.34, 0.31, 0.32))
 		# the front bumper, in van grey rather than a collar
-		draw_rect(Rect2(v.x - 31.0, v.y - 33.0, 62.0, 6.0), Color(0.40, 0.38, 0.36))
+		_wc.draw_rect(Rect2(v.x - 31.0, v.y - 33.0, 62.0, 6.0), Color(0.40, 0.38, 0.36))
 		# --- the tail, wagging, on the back doors -------------------------
 		var wag := sin(AnimClock.msec() / 210.0) * 0.55
 		var tail_dir := Vector2(0.0, 1.0).rotated(wag)
 		var tail_root := v + Vector2(0.0, 64.0)
-		draw_line(tail_root, tail_root + tail_dir * 30.0, fur_dark, 11.0)
-		draw_line(tail_root, tail_root + tail_dir * 26.0, fur, 7.0)
-		draw_circle(tail_root + tail_dir * 28.0, 5.0, cream)
+		_wc.draw_line(tail_root, tail_root + tail_dir * 30.0, fur_dark, 11.0)
+		_wc.draw_line(tail_root, tail_root + tail_dir * 26.0, fur, 7.0)
+		_wc.draw_circle(tail_root + tail_dir * 28.0, 5.0, cream)
 		# --- the livery ----------------------------------------------------
 		# Painted onto the roof rather than mounted above it. A light box the
 		# size of the van looked like a taxi sign and drowned the vehicle; the
@@ -5595,36 +5604,36 @@ func _draw_world() -> void:
 		var w_gon: float = font.get_string_size("GONETA", HORIZONTAL_ALIGNMENT_LEFT, -1, f_small).x
 		var pw: float = maxf(w_fur + 12.0, w_gon) + 12.0
 		var panel := Rect2(v.x - pw * 0.5, v.y - 22.0, pw, 45.0)
-		draw_rect(panel, Color(0.93, 0.90, 0.82, 0.93))
-		draw_rect(panel, Color(0.44, 0.31, 0.20, 0.55), false, 1.5)
+		_wc.draw_rect(panel, Color(0.93, 0.90, 0.82, 0.93))
+		_wc.draw_rect(panel, Color(0.44, 0.31, 0.20, 0.55), false, 1.5)
 		var ink := Color(0.40, 0.20, 0.16)
 		# FUR, with a paw print for the hyphen, then GONETA under it
 		var fur_x := v.x - (w_fur + 11.0) * 0.5
-		draw_string(font, Vector2(fur_x, v.y - 5.0), "FUR", HORIZONTAL_ALIGNMENT_LEFT, -1,
+		_wc.draw_string(font, Vector2(fur_x, v.y - 5.0), "FUR", HORIZONTAL_ALIGNMENT_LEFT, -1,
 			f_big, ink)
-		UiIcons.draw_paw(self, Vector2(fur_x + w_fur + 5.5, v.y - 12.0), 4.2,
+		UiIcons.draw_paw(_wc, Vector2(fur_x + w_fur + 5.5, v.y - 12.0), 4.2,
 			Color(0.62, 0.30, 0.22))
-		draw_string(font, Vector2(panel.position.x, v.y + 10.0), "GONETA",
+		_wc.draw_string(font, Vector2(panel.position.x, v.y + 10.0), "GONETA",
 			HORIZONTAL_ALIGNMENT_CENTER, panel.size.x, f_small, ink)
-		draw_string(font, Vector2(panel.position.x, v.y + 20.0), "dog grooming",
+		_wc.draw_string(font, Vector2(panel.position.x, v.y + 20.0), "dog grooming",
 			HORIZONTAL_ALIGNMENT_CENTER, panel.size.x, 8, Color(0.52, 0.36, 0.26))
 		if not furgoneta_sniffed:
 			# it is the best smell in the city, so the nose can find it
 			var fg := 0.5 + 0.5 * sin(prize_glow * 0.8)
-			draw_arc(v, 74.0 + fg * 6.0, 0, TAU, 28, Color(1.0, 0.86, 0.5, 0.10 + fg * 0.07), 2.0)
+			_wc.draw_arc(v, 74.0 + fg * 6.0, 0, TAU, 28, Color(1.0, 0.86, 0.5, 0.10 + fg * 0.07), 2.0)
 
 	# L'Estacio: the moving walkway - a metal band with chevrons scrolling
 	# in the carry direction
 	if conveyor_zone.size.y > 0.0 and conveyor_zone.end.y > vt and conveyor_zone.position.y < vb:
-		draw_rect(conveyor_zone, Color(0.32, 0.34, 0.38))
-		draw_rect(conveyor_zone, Color(0.55, 0.58, 0.62), false, 2.0)
+		_wc.draw_rect(conveyor_zone, Color(0.32, 0.34, 0.38))
+		_wc.draw_rect(conveyor_zone, Color(0.55, 0.58, 0.62), false, 2.0)
 		var scroll := fmod(AnimClock.msec() / 1000.0 * 90.0, 60.0) * conveyor_dir.y
 		var cy := conveyor_zone.position.y + fmod(scroll, 60.0)
 		while cy < conveyor_zone.end.y + 60.0:
 			if cy > vt - 20.0 and cy < vb + 20.0:
 				var cx := conveyor_zone.get_center().x
-				draw_line(Vector2(cx - 30.0, cy + 10.0), Vector2(cx, cy), Color(0.6, 0.63, 0.68), 3.0)
-				draw_line(Vector2(cx + 30.0, cy + 10.0), Vector2(cx, cy), Color(0.6, 0.63, 0.68), 3.0)
+				_wc.draw_line(Vector2(cx - 30.0, cy + 10.0), Vector2(cx, cy), Color(0.6, 0.63, 0.68), 3.0)
+				_wc.draw_line(Vector2(cx + 30.0, cy + 10.0), Vector2(cx, cy), Color(0.6, 0.63, 0.68), 3.0)
 			cy += 60.0
 	_draw_ground_detail(vt, vb)
 	# the paw trail, in whatever she stood in
@@ -5636,13 +5645,13 @@ func _draw_world() -> void:
 		if bool(pr.get("boot", false)):
 			# a sole: an oval pointing the way he was walking, so his trail
 			# reads as a person's and hers reads as a dog's
-			draw_set_transform(pp, float(pr.get("ang", 0.0)), Vector2(1.0, 0.62))
-			draw_circle(Vector2.ZERO, 6.4, Color(pc.r, pc.g, pc.b, 0.62))
-			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			_wc.draw_set_transform(pp, float(pr.get("ang", 0.0)), Vector2(1.0, 0.62))
+			_wc.draw_circle(Vector2.ZERO, 6.4, Color(pc.r, pc.g, pc.b, 0.62))
+			_wc.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 			continue
-		draw_circle(pp, 3.2, Color(pc.r, pc.g, pc.b, 0.78))
-		draw_circle(pp + Vector2(-2.5, -3.0), 1.4, Color(pc.r, pc.g, pc.b, 0.72))
-		draw_circle(pp + Vector2(2.5, -3.0), 1.4, Color(pc.r, pc.g, pc.b, 0.72))
+		_wc.draw_circle(pp, 3.2, Color(pc.r, pc.g, pc.b, 0.78))
+		_wc.draw_circle(pp + Vector2(-2.5, -3.0), 1.4, Color(pc.r, pc.g, pc.b, 0.72))
+		_wc.draw_circle(pp + Vector2(2.5, -3.0), 1.4, Color(pc.r, pc.g, pc.b, 0.72))
 	# the substance patches themselves
 	for sz in substance_zones:
 		var zr: Rect2 = sz.rect
@@ -5656,26 +5665,26 @@ func _draw_world() -> void:
 			# box round every sand drift on the promenade
 			continue
 		var zc: Color = SUBSTANCES[String(sz.kind)].col
-		draw_rect(zr, Color(zc.r, zc.g, zc.b, 0.55))
-		draw_rect(zr, Color(zc.r, zc.g, zc.b, 0.85), false, 2.0)
+		_wc.draw_rect(zr, Color(zc.r, zc.g, zc.b, 0.55))
+		_wc.draw_rect(zr, Color(zc.r, zc.g, zc.b, 0.85), false, 2.0)
 	_draw_scents()
 	# the grind: the rail lights up under her and a CENTRED balance bar shows
 	# which way she is tipping, with the running score beside it
 	if grind.active:
 		var gy0 := maxf(vt - 40.0, GATE_Y)
 		var gy1 := minf(vb + 40.0, START_Y + 200.0)
-		draw_line(Vector2(grind_kerb_x, gy0), Vector2(grind_kerb_x, gy1), Color(1.0, 0.88, 0.45, 0.55), 4.0)
+		_wc.draw_line(Vector2(grind_kerb_x, gy0), Vector2(grind_kerb_x, gy1), Color(1.0, 0.88, 0.45, 0.55), 4.0)
 		var gp: Vector2 = dog.global_position + Vector2(0.0, -42.0)
 		var gw := 74.0
-		draw_rect(Rect2(gp.x - gw * 0.5, gp.y - 5.0, gw, 10.0), Color(0.06, 0.05, 0.08, 0.72))
+		_wc.draw_rect(Rect2(gp.x - gw * 0.5, gp.y - 5.0, gw, 10.0), Color(0.06, 0.05, 0.08, 0.72))
 		# centre mark, then the needle: middle is balanced, edges are a bail
-		draw_line(Vector2(gp.x, gp.y - 5.0), Vector2(gp.x, gp.y + 5.0), Color(0.6, 0.62, 0.6, 0.8), 1.5)
+		_wc.draw_line(Vector2(gp.x, gp.y - 5.0), Vector2(gp.x, gp.y + 5.0), Color(0.6, 0.62, 0.6, 0.8), 1.5)
 		var nf: float = grind.fraction()
 		var nx: float = gp.x - gw * 0.5 + gw * nf
 		var tipping: float = absf(nf - 0.5) * 2.0
-		draw_rect(Rect2(nx - 3.0, gp.y - 6.0, 6.0, 12.0),
+		_wc.draw_rect(Rect2(nx - 3.0, gp.y - 6.0, 6.0, 12.0),
 			Color(0.6, 1.0, 0.6).lerp(Color(1.0, 0.4, 0.3), tipping))
-		draw_string(font, gp + Vector2(-18.0, -12.0), "GRIND %d" % grind.points(),
+		_wc.draw_string(font, gp + Vector2(-18.0, -12.0), "GRIND %d" % grind.points(),
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(1, 0.95, 0.65))
 	# the teeter meter: a tipping bar over the dog, filling toward the brink,
 	# plus an arrow showing which way to scramble. Drawn in the world rather
@@ -5684,17 +5693,17 @@ func _draw_world() -> void:
 		var f: float = teeter.fraction()
 		var bp: Vector2 = dog.global_position + Vector2(0.0, -40.0)
 		var bw := 66.0
-		draw_rect(Rect2(bp.x - bw * 0.5, bp.y - 5.0, bw, 10.0), Color(0.06, 0.05, 0.08, 0.72))
+		_wc.draw_rect(Rect2(bp.x - bw * 0.5, bp.y - 5.0, bw, 10.0), Color(0.06, 0.05, 0.08, 0.72))
 		var danger := Color(1.0, 0.86, 0.35).lerp(Color(1.0, 0.32, 0.25), f)
-		draw_rect(Rect2(bp.x - bw * 0.5 + 2.0, bp.y - 3.0, (bw - 4.0) * f, 6.0), danger)
-		draw_rect(Rect2(bp.x - bw * 0.5, bp.y - 5.0, bw, 10.0), Color(0.9, 0.9, 0.85, 0.5), false, 1.5)
+		_wc.draw_rect(Rect2(bp.x - bw * 0.5 + 2.0, bp.y - 3.0, (bw - 4.0) * f, 6.0), danger)
+		_wc.draw_rect(Rect2(bp.x - bw * 0.5, bp.y - 5.0, bw, 10.0), Color(0.9, 0.9, 0.85, 0.5), false, 1.5)
 		# which way to fight: away from the brink
 		var away: Vector2 = (dog.global_position - teeter_at).normalized()
 		var ap: Vector2 = bp + Vector2(0.0, -16.0)
 		var tip: Vector2 = ap + away * 17.0
-		draw_line(ap, tip, Color(0.85, 1.0, 0.85, 0.95), 3.0)
-		draw_line(tip, tip - away.rotated(0.5) * 7.0, Color(0.85, 1.0, 0.85, 0.95), 3.0)
-		draw_line(tip, tip - away.rotated(-0.5) * 7.0, Color(0.85, 1.0, 0.85, 0.95), 3.0)
+		_wc.draw_line(ap, tip, Color(0.85, 1.0, 0.85, 0.95), 3.0)
+		_wc.draw_line(tip, tip - away.rotated(0.5) * 7.0, Color(0.85, 1.0, 0.85, 0.95), 3.0)
+		_wc.draw_line(tip, tip - away.rotated(-0.5) * 7.0, Color(0.85, 1.0, 0.85, 0.95), 3.0)
 	# El Desguas: sweeping camera cones and laser tripwires
 	if lvl == "scrap":
 		var st := AnimClock.msec() / 1000.0
@@ -5710,27 +5719,27 @@ func _draw_world() -> void:
 			for k in range(9):
 				var a := ang - 0.32 + 0.64 * float(k) / 8.0
 				pts.append(cp + Vector2.from_angle(a) * 190.0)
-			draw_colored_polygon(pts, cone)
+			_wc.draw_colored_polygon(pts, cone)
 			# the unit itself: pole, housing, blinking eye
-			draw_rect(Rect2(cp.x - 2.0, cp.y, 4.0, 26.0), Color(0.35, 0.35, 0.38))
-			draw_rect(Rect2(cp.x - 9.0, cp.y - 10.0, 18.0, 12.0), Color(0.25, 0.26, 0.3))
-			draw_circle(cp + Vector2.from_angle(ang) * 8.0, 2.5, Color(1, 0.3, 0.25) if fmod(st, 1.0) < 0.5 else Color(0.5, 0.15, 0.12))
+			_wc.draw_rect(Rect2(cp.x - 2.0, cp.y, 4.0, 26.0), Color(0.35, 0.35, 0.38))
+			_wc.draw_rect(Rect2(cp.x - 9.0, cp.y - 10.0, 18.0, 12.0), Color(0.25, 0.26, 0.3))
+			_wc.draw_circle(cp + Vector2.from_angle(ang) * 8.0, 2.5, Color(1, 0.3, 0.25) if fmod(st, 1.0) < 0.5 else Color(0.5, 0.15, 0.12))
 		for lz in lasers:
 			var by := lerpf(float(lz.y_lo), float(lz.y_hi), 0.5 + 0.5 * sin(st * float(lz.speed)))
 			if by < vt - 20.0 or by > vb + 20.0:
 				continue
-			draw_line(Vector2(float(lz.x0), by), Vector2(float(lz.x1), by), Color(1.0, 0.2, 0.2, 0.75), 2.0)
-			draw_line(Vector2(float(lz.x0), by), Vector2(float(lz.x1), by), Color(1.0, 0.5, 0.4, 0.25), 6.0)
-			draw_rect(Rect2(float(lz.x0) - 8.0, by - 6.0, 8.0, 12.0), Color(0.3, 0.3, 0.34))
-			draw_rect(Rect2(float(lz.x1), by - 6.0, 8.0, 12.0), Color(0.3, 0.3, 0.34))
+			_wc.draw_line(Vector2(float(lz.x0), by), Vector2(float(lz.x1), by), Color(1.0, 0.2, 0.2, 0.75), 2.0)
+			_wc.draw_line(Vector2(float(lz.x0), by), Vector2(float(lz.x1), by), Color(1.0, 0.5, 0.4, 0.25), 6.0)
+			_wc.draw_rect(Rect2(float(lz.x0) - 8.0, by - 6.0, 8.0, 12.0), Color(0.3, 0.3, 0.34))
+			_wc.draw_rect(Rect2(float(lz.x1), by - 6.0, 8.0, 12.0), Color(0.3, 0.3, 0.34))
 	# Les Obres: wet cement patches, and the paw-print trail they take
 	if lvl == "site":
 		for cz in cement_zones:
 			if cz.end.y > vt and cz.position.y < vb:
-				draw_rect(cz, Color(0.62, 0.62, 0.6))
-				draw_rect(cz, Color(0.5, 0.5, 0.48), false, 2.0)
-				draw_line(Vector2(cz.position.x, cz.position.y), Vector2(cz.end.x, cz.position.y), Color(0.9, 0.75, 0.2, 0.8), 3.0)
-				draw_line(Vector2(cz.position.x, cz.end.y), Vector2(cz.end.x, cz.end.y), Color(0.9, 0.75, 0.2, 0.8), 3.0)
+				_wc.draw_rect(cz, Color(0.62, 0.62, 0.6))
+				_wc.draw_rect(cz, Color(0.5, 0.5, 0.48), false, 2.0)
+				_wc.draw_line(Vector2(cz.position.x, cz.position.y), Vector2(cz.end.x, cz.position.y), Color(0.9, 0.75, 0.2, 0.8), 3.0)
+				_wc.draw_line(Vector2(cz.position.x, cz.end.y), Vector2(cz.end.x, cz.end.y), Color(0.9, 0.75, 0.2, 0.8), 3.0)
 		pass  # prints are drawn for every walk now, further down
 	# El Bosc: muddy patches across the trail (slow going)
 	# whatever this walk has lying underfoot, drawn as the shape it would
@@ -5751,14 +5760,14 @@ func _draw_world() -> void:
 		var base: Color = Color(0.34, 0.26, 0.18)
 		if SUBSTANCES.has(sk):
 			base = Color((SUBSTANCES[sk] as Dictionary)["col"])
-		draw_patch(self, pt, Color(base.r, base.g, base.b, 0.88),
+		draw_patch(_wc, pt, Color(base.r, base.g, base.b, 0.88),
 			Color(base.r * 0.6, base.g * 0.6, base.b * 0.6, 0.45))
 		# a few darker flecks, so a big patch is not one flat colour
 		var mid := patch_centre(pt)
 		for i in range(5):
 			var a := float(i) * 1.31 + float(pt["seed"])
 			var rr := 0.34 + 0.4 * fmod(float(i) * 0.37, 1.0)
-			draw_circle(mid + Vector2(cos(a) * float(pt["rx"]) * rr,
+			_wc.draw_circle(mid + Vector2(cos(a) * float(pt["rx"]) * rr,
 				sin(a) * float(pt["ry"]) * rr), 5.0,
 				Color(base.r * 0.7, base.g * 0.7, base.b * 0.7, 0.6))
 	# El Gotic: laundry strung across the alley overhead, a lantern or two
@@ -5767,16 +5776,16 @@ func _draw_world() -> void:
 		var wash := [Color(0.8, 0.3, 0.35), Color(0.3, 0.5, 0.7), Color(0.9, 0.85, 0.6), Color(0.4, 0.65, 0.5)]
 		for i in range(laundry_lines.size()):
 			var ly: float = laundry_lines[i]
-			draw_line(Vector2(sw_l - 20.0, ly), Vector2(sw_r + 20.0, ly - 8.0), Color(0.2, 0.18, 0.16), 1.5)
+			_wc.draw_line(Vector2(sw_l - 20.0, ly), Vector2(sw_r + 20.0, ly - 8.0), Color(0.2, 0.18, 0.16), 1.5)
 			for j in range(5):
 				var hx := lerpf(sw_l + 20.0, sw_r - 20.0, float(j) / 4.0)
 				var sway := sin(lt * 1.2 + j + i) * 2.0
-				draw_rect(Rect2(hx - 9.0, ly - 6.0, 18.0, 26.0 + sway), wash[(i + j) % wash.size()])
+				_wc.draw_rect(Rect2(hx - 9.0, ly - 6.0, 18.0, 26.0 + sway), wash[(i + j) % wash.size()])
 		# lanterns down one wall
 		for i in range(laundry_lines.size()):
 			var lyy: float = laundry_lines[i] + 380.0
 			var glow := 0.6 + 0.25 * sin(lt * 3.0 + i)
-			draw_circle(Vector2(sw_l + 6.0, lyy), 6.0, Color(1.0, 0.8, 0.4, glow))
+			_wc.draw_circle(Vector2(sw_l + 6.0, lyy), 6.0, Color(1.0, 0.8, 0.4, glow))
 	# street performers: a hat, some coins, music in the air. In the rain
 	# they are an umbrella crowd instead - hunched under canopies, no busking.
 	var pt := AnimClock.msec() / 1000.0
@@ -5784,33 +5793,33 @@ func _draw_world() -> void:
 	var brolly_cols := [Color(0.75, 0.2, 0.25), Color(0.2, 0.35, 0.6), Color(0.25, 0.5, 0.35), Color(0.35, 0.3, 0.4)]
 	for idx in range(performers.size()):
 		var pf: Vector2 = performers[idx]
-		draw_circle(pf, 12.0, Color(0.5, 0.35, 0.5))
-		draw_circle(pf + Vector2(0, -4), 7.0, Color(0.85, 0.72, 0.58))
+		_wc.draw_circle(pf, 12.0, Color(0.5, 0.35, 0.5))
+		_wc.draw_circle(pf + Vector2(0, -4), 7.0, Color(0.85, 0.72, 0.58))
 		if raining:
 			# a wide domed umbrella over the head, on its stick
 			var bc: Color = brolly_cols[idx % brolly_cols.size()]
-			draw_line(pf + Vector2(0, -8), pf + Vector2(0, -30), Color(0.15, 0.14, 0.16), 2.0)
-			draw_arc(pf + Vector2(0, -30), 26.0, PI, TAU, 20, bc, 7.0)
+			_wc.draw_line(pf + Vector2(0, -8), pf + Vector2(0, -30), Color(0.15, 0.14, 0.16), 2.0)
+			_wc.draw_arc(pf + Vector2(0, -30), 26.0, PI, TAU, 20, bc, 7.0)
 			for r in range(2):
 				var rx := fmod(pt * 120.0 + idx * 30.0 + r * 60.0, 120.0)
-				draw_line(pf + Vector2(-24 + rx * 0.4, -28), pf + Vector2(-24 + rx * 0.4, 12), Color(0.6, 0.7, 0.85, 0.4), 1.0)
+				_wc.draw_line(pf + Vector2(-24 + rx * 0.4, -28), pf + Vector2(-24 + rx * 0.4, 12), Color(0.6, 0.7, 0.85, 0.4), 1.0)
 			continue
-		draw_arc(pf + Vector2(0, -4), 7.0, PI, TAU, 10, Color(0.2, 0.15, 0.1), 4.0)
-		draw_circle(pf + Vector2(18, 12), 6.0, Color(0.3, 0.25, 0.2))
-		draw_circle(pf + Vector2(16, 11), 1.5, Color(0.9, 0.8, 0.3))
-		draw_circle(pf + Vector2(20, 13), 1.5, Color(0.9, 0.8, 0.3))
+		_wc.draw_arc(pf + Vector2(0, -4), 7.0, PI, TAU, 10, Color(0.2, 0.15, 0.1), 4.0)
+		_wc.draw_circle(pf + Vector2(18, 12), 6.0, Color(0.3, 0.25, 0.2))
+		_wc.draw_circle(pf + Vector2(16, 11), 1.5, Color(0.9, 0.8, 0.3))
+		_wc.draw_circle(pf + Vector2(20, 13), 1.5, Color(0.9, 0.8, 0.3))
 		for i in range(2):
 			var ny := fmod(pt * 22.0 + i * 20.0, 44.0)
 			var np := pf + Vector2(14.0 + i * 10.0 - ny * 0.2, -14.0 - ny)
 			var na := clampf(1.0 - ny / 44.0, 0.0, 1.0) * 0.8
-			draw_circle(np, 3.0, Color(1, 1, 1, na))
-			draw_line(np + Vector2(2.5, -1), np + Vector2(2.5, -9), Color(1, 1, 1, na), 1.5)
+			_wc.draw_circle(np, 3.0, Color(1, 1, 1, na))
+			_wc.draw_line(np + Vector2(2.5, -1), np + Vector2(2.5, -9), Color(1, 1, 1, na), 1.5)
 	# cellar doors, propped open for a delivery
 	for c in cellars:
-		draw_rect(c, Color(0.1, 0.1, 0.12))
-		draw_rect(Rect2(c.position.x, c.position.y, c.size.x, 6), Color(0.35, 0.28, 0.22))
-		draw_line(c.position + Vector2(c.size.x / 2.0, 0), c.position + Vector2(c.size.x / 2.0, c.size.y), Color(0.3, 0.3, 0.33), 2.0)
-		draw_rect(Rect2(c.end.x + 4, c.position.y + 10, 16, 20), Color(0.6, 0.45, 0.3))
+		_wc.draw_rect(c, Color(0.1, 0.1, 0.12))
+		_wc.draw_rect(Rect2(c.position.x, c.position.y, c.size.x, 6), Color(0.35, 0.28, 0.22))
+		_wc.draw_line(c.position + Vector2(c.size.x / 2.0, 0), c.position + Vector2(c.size.x / 2.0, c.size.y), Color(0.3, 0.3, 0.33), 2.0)
+		_wc.draw_rect(Rect2(c.end.x + 4, c.position.y + 10, 16, 20), Color(0.6, 0.45, 0.3))
 	# marked spots, stray puddles and, discreetly, the business
 	var pud := Color(0.93, 0.85, 0.4, 0.4)
 	# the other dogs' marks: a small damp patch with a faint bloom, in their
@@ -5820,32 +5829,32 @@ func _draw_world() -> void:
 		if nmp.y < vt - 30.0 or nmp.y > vb + 30.0:
 			continue
 		var nc: Color = nm.col
-		draw_circle(nmp + Vector2(0, 6), 7.0, Color(0.82, 0.78, 0.32, 0.20))
-		draw_circle(nmp + Vector2(0, 6), 3.4, Color(nc.r, nc.g, nc.b, 0.35))
+		_wc.draw_circle(nmp + Vector2(0, 6), 7.0, Color(0.82, 0.78, 0.32, 0.20))
+		_wc.draw_circle(nmp + Vector2(0, 6), 3.4, Color(nc.r, nc.g, nc.b, 0.35))
 		if not bool(nm.sniffed):
 			var np := 0.5 + 0.5 * sin(prize_glow * 0.7 + nmp.x * 0.05)
-			draw_arc(nmp + Vector2(0, 6), 11.0 + np * 3.0, 0, TAU, 14,
+			_wc.draw_arc(nmp + Vector2(0, 6), 11.0 + np * 3.0, 0, TAU, 14,
 				Color(0.9, 0.92, 0.5, 0.12 + np * 0.10), 1.5)
 	for mk in marks:
-		draw_circle(mk + Vector2(6, 10), 6.0, pud)
-		draw_circle(mk + Vector2(11, 13), 3.5, pud)
-		draw_circle(mk + Vector2(7, 9), 3.0, Color(0.95, 0.88, 0.5, 0.7))
+		_wc.draw_circle(mk + Vector2(6, 10), 6.0, pud)
+		_wc.draw_circle(mk + Vector2(11, 13), 3.5, pud)
+		_wc.draw_circle(mk + Vector2(7, 9), 3.0, Color(0.95, 0.88, 0.5, 0.7))
 	for pd in puddles:
 		var pr: float = pd.r
-		draw_circle(pd.pos, pr, pud)
-		draw_circle((pd.pos as Vector2) + Vector2(pr * 0.7, pr * 0.4), pr * 0.6, pud)
+		_wc.draw_circle(pd.pos, pr, pud)
+		_wc.draw_circle((pd.pos as Vector2) + Vector2(pr * 0.7, pr * 0.4), pr * 0.6, pud)
 	if business_spot.x < INF:
 		# soft-serve, cartoon rules, nothing gross
 		var pcol := Color(0.36, 0.26, 0.16)
-		draw_circle(business_spot, 4.5, pcol)
-		draw_circle(business_spot + Vector2(0, -3), 3.2, pcol.lightened(0.08))
-		draw_circle(business_spot + Vector2(1, -5.5), 1.8, pcol.lightened(0.16))
+		_wc.draw_circle(business_spot, 4.5, pcol)
+		_wc.draw_circle(business_spot + Vector2(0, -3), 3.2, pcol.lightened(0.08))
+		_wc.draw_circle(business_spot + Vector2(1, -5.5), 1.8, pcol.lightened(0.16))
 	for f in bag_flights:
 		var e: float = f.t
 		var bp: Vector2 = f.from.lerp(f.to, e) + (f.to - f.from).orthogonal().normalized() * sin(e * PI) * 26.0
-		draw_circle(bp, 4.0 + sin(e * PI) * 2.0, Color(0.92, 0.92, 0.95))
+		_wc.draw_circle(bp, 4.0 + sin(e * PI) * 2.0, Color(0.92, 0.92, 0.95))
 	if mark_target.x < INF and mark_progress > 0.0:
-		draw_arc(mark_target, 17.0, -PI / 2.0, -PI / 2.0 + TAU * mark_progress / 0.7, 20, Color(1, 0.95, 0.6), 3.0)
+		_wc.draw_arc(mark_target, 17.0, -PI / 2.0, -PI / 2.0 + TAU * mark_progress / 0.7, 20, Color(1, 0.95, 0.6), 3.0)
 	# the off-leash freedom yard beyond the gate: a proper fenced dog
 	# park - grass, chain-link fence with posts, human benches, and a
 	# labelled entrance gate
@@ -5853,20 +5862,20 @@ func _draw_world() -> void:
 		# only the water moves; the sand and everything on it is on the layer
 		_draw_beach_water()
 	# the gate between the walk and the off-leash yard
-	draw_rect(Rect2(gate_l - 14, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
-	draw_rect(Rect2(gate_r, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
-	draw_rect(Rect2(gate_l - 14, GATE_Y - 58, gate_r - gate_l + 28, 14), Color(0.35, 0.3, 0.28))
+	_wc.draw_rect(Rect2(gate_l - 14, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
+	_wc.draw_rect(Rect2(gate_r, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
+	_wc.draw_rect(Rect2(gate_l - 14, GATE_Y - 58, gate_r - gate_l + 28, 14), Color(0.35, 0.3, 0.28))
 	# centred on the gate mouth, not nudged left by an eyeballed 40px
-	draw_string(font, Vector2(gate_l, GATE_Y - 66), gate_text, HORIZONTAL_ALIGNMENT_CENTER,
+	_wc.draw_string(font, Vector2(gate_l, GATE_Y - 66), gate_text, HORIZONTAL_ALIGNMENT_CENTER,
 		gate_r - gate_l, 26, Color(0.9, 0.88, 0.8))
 	var gx := gate_l
 	while gx < gate_r:
-		draw_line(Vector2(gx, GATE_Y), Vector2(gx + 16.0, GATE_Y), Color(0.9, 0.88, 0.8, 0.6), 3.0)
+		_wc.draw_line(Vector2(gx, GATE_Y), Vector2(gx + 16.0, GATE_Y), Color(0.9, 0.88, 0.8, 0.6), 3.0)
 		gx += 32.0
 	# HOME, at the bottom, where the walk both begins and ends
 	if vb > START_Y + 30.0:
-		draw_rect(Rect2(gate_l - 14, HOME_Y + 40.0, gate_r - gate_l + 28, 14), Color(0.4, 0.32, 0.3))
-		draw_string(font, Vector2(gate_l, HOME_Y + 78.0), "HOME", HORIZONTAL_ALIGNMENT_CENTER,
+		_wc.draw_rect(Rect2(gate_l - 14, HOME_Y + 40.0, gate_r - gate_l + 28, 14), Color(0.4, 0.32, 0.3))
+		_wc.draw_string(font, Vector2(gate_l, HOME_Y + 78.0), "HOME", HORIZONTAL_ALIGNMENT_CENTER,
 			gate_r - gate_l, 24, Color(0.9, 0.85, 0.7))
 	# not under the settings panel: the dim only halves it, so the chalked
 	# name read straight through above the panel (#10)
@@ -5876,5 +5885,5 @@ func _draw_world() -> void:
 	# the one thing about this walk that will get you. Eight of the twelve
 	# walks used to fall back on the boulevard's line, so El Gotic told you to
 	# mind bike lanes it does not have.
-	draw_string(font, Vector2(0, START_Y + 90), String(OPENERS.get(lvl, OPENERS["street"])),
+	_wc.draw_string(font, Vector2(0, START_Y + 90), String(OPENERS.get(lvl, OPENERS["street"])),
 		HORIZONTAL_ALIGNMENT_CENTER, 1280, 17, Color(1, 1, 1, 0.5))

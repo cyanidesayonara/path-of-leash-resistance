@@ -46,10 +46,17 @@ var canvas: CanvasItem
 var _points := PackedVector2Array()
 var _colors := PackedColorArray()
 var _fill := PackedColorArray()
+var _fan_fill := PackedColorArray()
+var _quad_fill := PackedColorArray()
+
+# a rect as two triangles, (0,0) (1,0) (1,1) and (0,0) (1,1) (0,1); read only
+static var UNIT_QUAD := PackedVector2Array([Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 0), Vector2(1, 1), Vector2(0, 1)])
 
 
 func _init(ci: CanvasItem = null) -> void:
 	canvas = ci
+	_fan_fill.resize(SEGMENTS * 3)
+	_quad_fill.resize(6)
 
 
 static func _build_unit() -> void:
@@ -91,13 +98,18 @@ func circle(pos: Vector2, radius: float, color: Color) -> void:
 	# This transform's x row is (radius, 0) and its y row (0, radius), so it
 	# does exactly that: radius * cos + 0 * sin, plus the centre.
 	_points.append_array(Transform2D(Vector2(radius, 0.0), Vector2(0.0, radius), pos) * _unit_fan)
-	_add_colors(color, _unit_fan.size())
+	_fan_fill.fill(color)
+	_colors.append_array(_fan_fill)
 
 
-# draw_rect(r, color), filled
+# draw_rect(r, color), filled. The engine's corners are position,
+# position + (w, 0), position + size and position + (0, h); the unit square
+# scaled by (w, h) and moved to position gives the same sums in 32 bits
+# (w * 1 + 0 * h + x), in one native multiply.
 func rect(r: Rect2, color: Color) -> void:
-	_quad(r.position, r.position + Vector2(r.size.x, 0.0), r.position + r.size,
-		r.position + Vector2(0.0, r.size.y), color)
+	_points.append_array(Transform2D(Vector2(r.size.x, 0.0), Vector2(0.0, r.size.y), r.position) * UNIT_QUAD)
+	_quad_fill.fill(color)
+	_colors.append_array(_quad_fill)
 
 
 # draw_line(from, to, color, width) for width >= 0
@@ -105,7 +117,16 @@ func line(from: Vector2, to: Vector2, color: Color, width: float) -> void:
 	assert(width >= 0.0, "ShapeBatch.line: a width of -1 is a GL line; draw it directly")
 	var dir := (from - to).orthogonal().normalized()
 	var t := dir * width * 0.5
-	_quad(from + t, from - t, to - t, to + t, _as_half(color))
+	var a := from + t
+	var c := to - t
+	_points.append(a)
+	_points.append(from - t)
+	_points.append(c)
+	_points.append(a)
+	_points.append(c)
+	_points.append(to + t)
+	_quad_fill.fill(_as_half(color))
+	_colors.append_array(_quad_fill)
 
 
 # draw_colored_polygon(points, color)
@@ -118,21 +139,20 @@ func polygon(points: PackedVector2Array, color: Color) -> void:
 	_add_colors(color, tri.size())
 
 
-func _quad(a: Vector2, b: Vector2, c: Vector2, d: Vector2, color: Color) -> void:
-	_points.append(a)
-	_points.append(b)
-	_points.append(c)
-	_points.append(a)
-	_points.append(c)
-	_points.append(d)
-	_add_colors(color, 6)
-
-
-func flush(ci: CanvasItem = null) -> void:
+# Draws what is queued onto ci (the batch's own canvas by default). ci may be
+# another ShapeBatch standing in for a canvas: the shapes then join its queue,
+# still in order, and go out in its draw call.
+func flush(ci: Object = null) -> void:
 	if _points.is_empty():
 		return
-	var target := ci if ci != null else canvas
-	RenderingServer.canvas_item_add_triangle_array(target.get_canvas_item(), PackedInt32Array(), _points, _colors)
+	var target: Object = ci if ci != null else canvas
+	if target is ShapeBatch:
+		var outer: ShapeBatch = target
+		outer._points.append_array(_points)
+		outer._colors.append_array(_colors)
+	else:
+		var item: CanvasItem = target
+		RenderingServer.canvas_item_add_triangle_array(item.get_canvas_item(), PackedInt32Array(), _points, _colors)
 	_points = PackedVector2Array()
 	_colors = PackedColorArray()
 
@@ -174,3 +194,40 @@ func draw_colored_polygon(points: PackedVector2Array, color: Color, uvs := Packe
 func draw_set_transform(pos: Vector2, rotation := 0.0, scale := Vector2.ONE) -> void:
 	flush()
 	canvas.draw_set_transform(pos, rotation, scale)
+
+
+# Everything else a stand-in's caller may draw: queued shapes go first, so the
+# order on the canvas is the order of the calls.
+func draw_arc(...args: Array) -> void:
+	flush()
+	canvas.callv("draw_arc", args)
+
+
+func draw_polyline(...args: Array) -> void:
+	flush()
+	canvas.callv("draw_polyline", args)
+
+
+func draw_string(...args: Array) -> void:
+	flush()
+	canvas.callv("draw_string", args)
+
+
+func draw_string_outline(...args: Array) -> void:
+	flush()
+	canvas.callv("draw_string_outline", args)
+
+
+func draw_multiline_string(...args: Array) -> void:
+	flush()
+	canvas.callv("draw_multiline_string", args)
+
+
+func draw_char(...args: Array) -> void:
+	flush()
+	canvas.callv("draw_char", args)
+
+
+func draw_style_box(...args: Array) -> void:
+	flush()
+	canvas.callv("draw_style_box", args)
