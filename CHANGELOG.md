@@ -2,6 +2,26 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - v1.55, and the browser measured
+
+v1.55 is tagged: everything since v1.54, including the freeze fixes awaiting
+acceptance and all of the performance work above.
+
+The web build was finally measured rather than inferred. `tools/web_perf.sh`
+exports it, serves it locally and plays each level's autowalk in headless
+Chrome on the laptop's integrated Intel GPU (through ANGLE, and not
+throttled like a background tab). Two runs each, before any batching against
+v1.55:
+
+| level | before | v1.55 |
+|---|---|---|
+| street | 9 fps, frame p50 93-100 ms | 45-51 fps, 18 ms |
+| park | 7-13 fps, 66-133 ms | 40-71 fps, 13-22 ms |
+| market | 9-16 fps, 50-95 ms | 91-101 fps, 9 ms |
+
+Every frame of the old build was over 16 ms in the browser. Street is still
+under 60 fps and is the next thing to look at.
+
 ## 2026-09-24 - the hitch at the gate was a script compile
 
 The probe now names the three biggest parts of main's physics step in each
