@@ -14,6 +14,9 @@ var main: Node2D
 var dog: Node2D
 var human: Node2D
 var vel := Vector2.ZERO
+# further than this from the camera, a resting cone or piece of junk skips its
+# checks; must stay above bike.gd's 1150px cull plus the largest hit radius
+const SLEEP_DIST := 1250.0
 var spin := 0.0
 var kind := "cone"
 
@@ -39,6 +42,12 @@ func setup(m: Node2D, d: Node2D, h: Node2D, knd := "cone") -> void:
 
 func _physics_process(delta: float) -> void:
 	if main.frozen:
+		return
+	# At rest and far off-camera, nothing can reach it: riders are freed
+	# 1150px from the camera (bike.gd) and the dog and owner stay near it. So
+	# skip the kick checks - a walk has around a hundred of these, and they
+	# each tested the dog, the owner and every rider every frame.
+	if vel.length_squared() <= 1.0 and absf(global_position.y - float(main.cam.position.y)) > SLEEP_DIST:
 		return
 	var k: Dictionary = KINDS[kind]
 	var hit_r: float = float(k.r) + 15.0
