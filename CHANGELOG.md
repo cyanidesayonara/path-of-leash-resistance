@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - main's whole world draw through one batch
+
+Every draw call main.gd makes on its own canvas now goes through a ShapeBatch
+standing in for the canvas (made fresh in `_draw`): runs of shapes become one
+draw call, and text, arcs and polylines flush the queue and pass straight
+through, so the order is kept. Helpers handed main as their canvas
+(`cast_shadow`, `contact_shadow`, the tree and palm drawers, `draw_patch`,
+`UiIcons.draw_paw`) take the batch instead, and a helper's own batch flushed
+into it joins the queue. Rects are placed with one native transform of a unit
+quad, so the batch costs no more script time than the plain calls.
+
+Windowed at 1280x720 (calls p50, renderer CPU p50, main's draw p50), against
+the build before any batching:
+street 833 -> 264 calls, 3.65 -> 1.57 ms render, 2.29 -> 2.37 ms draw;
+market 669 -> 202, 3.32 -> 1.31, 1.56 -> 1.45; site 572 -> 228,
+2.30 -> 1.17, 2.92 -> 2.45; park 409 -> 154, 2.12 -> 0.97, 1.20 -> 1.01.
+The screenshot sweep is identical on all 17 shots, and test_shape_batch now
+also covers a batch flushed into the stand-in.
+
 ## 2026-09-24 - fewer draw calls, same pixels
 
 `systems/shape_batch.gd` merges runs of filled circles, rects, wide lines and

@@ -87,7 +87,7 @@ static func draw_phone_pip(c: CanvasItem, at: Vector2, s: float, on: bool) -> vo
 	c.draw_rect(r.grow(-1.5), Color(0.70, 0.85, 1.0, 0.92) if on else Color(0.32, 0.34, 0.38))
 
 
-static func draw_paw(c: CanvasItem, at: Vector2, s: float, col: Color) -> void:
+static func draw_paw(c: Object, at: Vector2, s: float, col: Color) -> void:
 	# the pad and four toes: used as a bullet where a tick would be wrong
 	c.draw_circle(at + Vector2(0, s * 0.22), s * 0.42, col)
 	for i in range(4):
