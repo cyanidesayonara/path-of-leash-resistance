@@ -620,7 +620,7 @@ func _draw() -> void:
 	# at night the phone is a real light source: a cold blue-white pool on
 	# the pavement in front of them. The joke of the whole game, lit.
 	if Game.night:
-		var pt := Time.get_ticks_msec() / 1000.0
+		var pt := AnimClock.msec() / 1000.0
 		var pulse := 0.9 + 0.1 * sin(pt * 6.1)
 		var lit := face_dir * 26.0
 		for ring in range(4):
@@ -638,7 +638,7 @@ func _draw() -> void:
 	var skin := Color(0.85, 0.72, 0.58)
 	var pants := Color(0.3, 0.28, 0.34) if woman else Color(0.25, 0.27, 0.32)
 	var hair_col := Color(0.42, 0.3, 0.18) if woman else Color(0.3, 0.22, 0.15)
-	var t := Time.get_ticks_msec() / 1000.0
+	var t := AnimClock.msec() / 1000.0
 	var fd := face_dir
 	var side := fd.orthogonal()
 	# feet step along the walking direction

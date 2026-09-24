@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - screenshots that match pixel for pixel
+
+Two screenshot sweeps of one build used to differ almost everywhere, so the
+sweep could not show that a render refactor left the picture alone. Three
+causes: shots ran on the wall clock (the camera sat somewhere different each
+time), layouts and spawns were random, and cosmetic animation (tail wags,
+flicker, blinking prompts, rain) read the wall clock or an unseeded RNG. The
+sweep now passes `--fixed-fps 60 --seed=1`, cosmetic animation reads the new
+`AnimClock.msec()`, which shot mode pins to the frame count, and the weather
+overlay seeds its own RNG in shot mode. Two sweeps now match exactly on all
+17 shots. In play `AnimClock.msec()` is the wall clock, as before.
+
 ## 2026-09-24 - where the draw calls go
 
 The Compatibility renderer gives every circle, polygon and thick line its own

@@ -44,7 +44,7 @@ func scare() -> void:
 
 
 func _draw() -> void:
-	var t := Time.get_ticks_msec() / 1000.0
+	var t := AnimClock.msec() / 1000.0
 	# the ledge it lords over
 	draw_rect(Rect2(-16, 6, 32, 5), Color(0.32, 0.29, 0.26))
 	if spooked:

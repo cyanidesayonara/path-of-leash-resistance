@@ -54,7 +54,7 @@ func _draw() -> void:
 	var lh: float = 34.0 * clampf(main.pee, 0.0, 1.0)
 	if lh > 2.0:
 		var col := Color(0.93, 0.83, 0.25, 0.9)
-		if main.pee >= 0.999 and fmod(Time.get_ticks_msec() / 400.0, 2.0) < 1.0:
+		if main.pee >= 0.999 and fmod(AnimClock.msec() / 400.0, 2.0) < 1.0:
 			col = Color(1.0, 0.92, 0.35)
 		draw_rect(Rect2(17, 46 + 34.0 - lh, 10, lh), col)
 	draw_rect(tr, Color(1, 1, 1, 0.5), false, 1.5)
@@ -63,7 +63,7 @@ func _draw() -> void:
 	var eh: float = 34.0 * clampf(main.dog.energy, 0.0, 1.0)
 	if eh > 2.0:
 		var ecol := Color(0.4, 0.8, 0.5, 0.9)
-		if main.dog.turbo_active and fmod(Time.get_ticks_msec() / 120.0, 2.0) < 1.0:
+		if main.dog.turbo_active and fmod(AnimClock.msec() / 120.0, 2.0) < 1.0:
 			ecol = Color(0.6, 1.0, 0.7)
 		draw_rect(Rect2(35, 46 + 34.0 - eh, 10, eh), ecol)
 	draw_rect(er, Color(1, 1, 1, 0.5), false, 1.5)

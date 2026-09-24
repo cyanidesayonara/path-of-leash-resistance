@@ -66,7 +66,7 @@ func _draw() -> void:
 	if gull:
 		draw_line(Vector2(-r, -1), Vector2(-r - 3.0, 0), Color(0.4, 0.4, 0.45), 2.0)
 	if flying:
-		var t := Time.get_ticks_msec() / 1000.0
+		var t := AnimClock.msec() / 1000.0
 		var flap := sin(t * 24.0 + seed_o) * 4.0
 		draw_line(Vector2(-2, 0), Vector2(-7, -3 - flap), body.darkened(0.1), 2.0)
 		draw_line(Vector2(2, 0), Vector2(7, -3 - flap), body.darkened(0.1), 2.0)

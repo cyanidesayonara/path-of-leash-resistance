@@ -188,7 +188,7 @@ func scare() -> void:
 
 
 func _draw() -> void:
-	var tt := Time.get_ticks_msec() / 1000.0
+	var tt := AnimClock.msec() / 1000.0
 	# contact shadow, same light as everything else
 	main.contact_shadow(self, Vector2.ZERO, 13.0, 8.0, 0.26)
 	var bob := sin(tt * 9.0 + seed_o) * (2.0 if state == S.FLEE else 1.0)

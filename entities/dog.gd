@@ -242,7 +242,7 @@ func _process(_delta: float) -> void:
 
 
 func _draw() -> void:
-	var t := Time.get_ticks_msec() / 1000.0
+	var t := AnimClock.msec() / 1000.0
 	# a squashed contact shadow, offset as if the light is up and to the
 	# left. Nothing sells "solid object on ground" faster than this.
 	# (a preview built without a main, as in the tests, simply has no shadow)

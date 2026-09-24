@@ -214,7 +214,7 @@ func _choose_errand(d_mine: float) -> void:
 
 func _draw() -> void:
 	main.contact_shadow(self, Vector2.ZERO, 11.0, 8.0, 0.24)
-	var t := Time.get_ticks_msec() / 1000.0
+	var t := AnimClock.msec() / 1000.0
 	var b := sin(bow * 6.0 + seed_o) * 1.5
 	# the pose: sniffing crouches her over the spot, marking cocks a leg (a
 	# sideways tilt reads as one at this size), the play bow drops her front

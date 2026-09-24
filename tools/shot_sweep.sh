@@ -9,6 +9,10 @@
 # virtual display with software GL, exactly like the appearance tests in
 # ci.yml; elsewhere Godot opens a real window. Set NO_XVFB=1 to force that.
 #
+# Shots are deterministic on one machine: a fixed frame rate, a fixed seed,
+# and the cosmetic animation clock pinned to the frame count (AnimClock),
+# so tools/shot_diff.py can show a render refactor changed no pixel.
+#
 # Every shot must write its PNG; the script exits non-zero listing any that
 # did not, after still attempting the rest.
 set -uo pipefail
@@ -40,8 +44,8 @@ shot() {
   local png="${OUT_ABS}/${name}.png"
   echo "shot ${name} (${res})"
   timeout "${SHOT_TIMEOUT}" "${RUN[@]}" "${GODOT}" \
-    --rendering-method gl_compatibility --resolution "${res}" --path . \
-    -- --shot --shot-quit --shot-out="${png}" "$@" \
+    --fixed-fps 60 --rendering-method gl_compatibility --resolution "${res}" --path . \
+    -- --shot --shot-quit --shot-out="${png}" --seed=1 "$@" \
     > "${OUT_ABS}/${name}.log" 2>&1
   if [ ! -s "${png}" ] || grep -qE "SCRIPT ERROR|Parse Error" "${OUT_ABS}/${name}.log"; then
     echo "  FAILED - see ${OUT}/${name}.log"

@@ -58,7 +58,7 @@ func _draw() -> void:
 	# sticker rather than as somebody sitting there. Same anatomy language as
 	# human.gd now: feet, a body disc, a head with hair on the back of it, all
 	# oriented by which way they are facing.
-	var t := Time.get_ticks_msec() / 1000.0
+	var t := AnimClock.msec() / 1000.0
 	var fd := _facing()
 	var side := fd.orthogonal()
 	var skin := Color(0.88, 0.73, 0.58)

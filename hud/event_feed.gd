@@ -134,7 +134,7 @@ func _draw() -> void:
 	if banner != "":
 		# gently pulsing, so a standing instruction reads as live rather than
 		# as something painted on
-		var a: float = 0.82 + 0.18 * sin(Time.get_ticks_msec() / 240.0)
+		var a: float = 0.82 + 0.18 * sin(AnimClock.msec() / 240.0)
 		_line(f, vs.x, y, banner, SIZE_BANNER, OUTLINE_BANNER,
 			Color(banner_col.r, banner_col.g, banner_col.b, a), 1.0)
 		y += GAP * 0.7
