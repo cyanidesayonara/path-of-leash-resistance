@@ -197,22 +197,46 @@ func slot_above(size: int, outline: int) -> float:
 	return maxf(ink_above(size, outline, PUNCH), ink_above(size, outline, 1.0) + SHOW_S * RISE)
 
 
+# Never let a line run the full width of the screen. Big type only shouts if
+# it is short; a sentence set at 34px reaches both edges and stops reading as
+# a shout at all. Copy should be kept short, and this is the backstop for when
+# it is not - shrink to fit rather than spill. Returns [size, outline, width].
+func _fit(f: Font, w: float, up: String, size: int, outline: int) -> Array:
+	var tw: float = f.get_string_size(up, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+	var room: float = w * 0.78
+	while tw > room and size > 15:
+		size -= 2
+		outline = maxi(4, outline - 1)
+		tw = f.get_string_size(up, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+	return [size, outline, tw]
+
+
+# Where the feed's ink is on screen right now, one rect per line: what world
+# labels keep clear of (main.float_text, #66). Empty when the feed is empty.
+func ink_rects(vs: Vector2) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var f := ThemeDB.fallback_font
+	for e: Dictionary in layout(vs):
+		var fit := _fit(f, vs.x, String(e["text"]).to_upper(), int(e["size"]), int(e["outline"]))
+		var p := float(e["punch"])
+		var y := float(e["y"])
+		var half_w := (float(fit[2]) * 0.5 + int(fit[1]) * 0.5) * p
+		var top := y - ink_above(int(fit[0]), int(fit[1]), p)
+		var bottom := y + ink_below(int(fit[0]), int(fit[1]), p)
+		out.append(Rect2(vs.x * 0.5 - half_w, top, half_w * 2.0, bottom - top))
+	return out
+
+
 func _line(f: Font, w: float, y: float, text: String, size: int, outline: int,
 		col: Color, punch: float) -> void:
 	# Capitals with a heavy dark outline and no panel behind them. The outline
 	# is what makes this legible over pale paving and black tarmac alike, and
 	# it is why none of this needs a box drawn under it.
 	var up := text.to_upper()
-	var tw: float = f.get_string_size(up, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
-	# Never let a line run the full width of the screen. Big type only shouts
-	# if it is short; a sentence set at 34px reaches both edges and stops
-	# reading as a shout at all. Copy should be kept short, and this is the
-	# backstop for when it is not - shrink to fit rather than spill.
-	var room: float = w * 0.78
-	while tw > room and size > 15:
-		size -= 2
-		outline = maxi(4, outline - 1)
-		tw = f.get_string_size(up, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+	var fit := _fit(f, w, up, size, outline)
+	size = fit[0]
+	outline = fit[1]
+	var tw: float = fit[2]
 	var cx := w * 0.5
 	var shade := Color(0.04, 0.03, 0.06, col.a)
 	if punch != 1.0:

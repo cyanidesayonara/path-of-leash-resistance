@@ -32,6 +32,20 @@ chase autowalks, and five idle soaks whose seed used to roll a chase.
 Not yet: the dawn light, and the grass that shows beyond the pavement at the
 start of the market-based walks (El Gotic has it too; #21).
 
+## 2026-09-24 - world labels keep clear of the feed (#66)
+
+World labels ("FULL!", "hello? ...oh hi", "click!") are drawn at their
+object, and the owner and the dog sit near the middle of the screen, which
+is where the feed is. A label that would cross a feed line at any point of
+its rise now spawns above it instead (`main.clear_of_feed`, using the feed's
+new `ink_rects`). `tests/test_float_text.gd` spawns labels across the feed's
+band and checks none ever shares screen space with a line. A feed line that
+arrives after a label has spawned is not avoided; labels last 0.9 s.
+
+First level-review pass (#21): every walk at five points of the autowalk.
+Filed #65 (the built-up walks' frontage is hidden under grass since v1.51,
+a design call), #66 (this), and #67 (the beach finish shows flat grey).
+
 ## 2026-09-24 - prompts follow the player's hands (#9)
 
 Button prompts used to pick keyboard or controller names by whether a pad

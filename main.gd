@@ -5020,6 +5020,10 @@ func close_call(pos: Vector2) -> void:
 	_update_hud()
 
 
+# a world label rises this far (world px) over its life
+const FLOAT_RISE := 44.0
+
+
 func float_text(pos: Vector2, text: String, color: Color = Color.WHITE) -> void:
 	var l := Label.new()
 	l.text = text
@@ -5027,11 +5031,38 @@ func float_text(pos: Vector2, text: String, color: Color = Color.WHITE) -> void:
 	l.add_theme_font_size_override("font_size", 20)
 	l.add_theme_color_override("font_color", color)
 	add_child(l)
-	l.position = pos + Vector2(-40, -56)
+	l.position = clear_of_feed(pos + Vector2(-40, -56), l.get_minimum_size())
 	var tw := create_tween()
-	tw.tween_property(l, "position:y", l.position.y - 44.0, 0.9)
+	tw.tween_property(l, "position:y", l.position.y - FLOAT_RISE, 0.9)
 	tw.parallel().tween_property(l, "modulate:a", 0.0, 0.9)
 	tw.tween_callback(l.queue_free)
+
+
+# A world label at the owner or the dog sits near the middle of the screen,
+# which is where the feed is (#66). If the label, over its whole rise, would
+# cross a line the feed is showing, it goes up above that line instead.
+# at: the label's top-left in world space; size: its size in world px.
+func clear_of_feed(at: Vector2, size: Vector2) -> Vector2:
+	if feed == null:
+		return at
+	var xf := get_viewport().get_canvas_transform()
+	var zoom := xf.get_scale().y
+	var vs := get_viewport_rect().size
+	var p := at
+	# the lines are stacked downward, so rising above one can land on the one
+	# above it: check again until clear
+	for _pass in range(4):
+		var s := xf * p
+		var span := Rect2(s.x, s.y - FLOAT_RISE * zoom, size.x * zoom, (size.y + FLOAT_RISE) * zoom)
+		var hit := false
+		for r: Rect2 in feed.ink_rects(vs):
+			if span.intersects(r):
+				p.y -= (span.end.y - r.position.y) / zoom + 4.0
+				hit = true
+				break
+		if not hit:
+			break
+	return p
 
 
 # the stand-in canvas for main's own drawing, made fresh each _draw
