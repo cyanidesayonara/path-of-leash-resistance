@@ -124,5 +124,6 @@ func _draw() -> void:
 			Color(0.88, 0.84, 0.66))
 		y += 22.0
 	y += 14.0
-	draw_string(f, Vector2(0, y), String(d.prompt), HORIZONTAL_ALIGNMENT_CENTER, W, 16,
+	# the prompt is a template, filled here so it follows the device live
+	draw_string(f, Vector2(0, y), Prompts.fill(String(d.prompt)), HORIZONTAL_ALIGNMENT_CENTER, W, 16,
 		Color(0.78, 0.76, 0.72, 0.9))

@@ -238,7 +238,7 @@ func _run() -> void:
 		"time": int(main.elapsed),
 		"goal_bones": 0,
 		"lines": [practice_line, "Lessons complete. The real walks are waiting."],
-		"prompt": "press  %s  for walk select" % main.call("_kb_or_pad", "R", "Start"),
+		"prompt": "press  {restart}  for walk select",
 	}
 	_check(main.results == expected_results, "tutorial produces the complete practice-only result payload")
 	_check((main.results.lines as Array).has(practice_line), "rendered result text labels practice bones as not banked")
