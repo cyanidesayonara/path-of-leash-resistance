@@ -16,6 +16,7 @@ the corridor before testing its members. Route cost per frame: site
 0.31 -> 0.27 ms, street 0.17 -> 0.12 ms. Both changes leave every result the
 same: the behaviour snapshot is identical, and test_bypasser_route has a
 new sharing check.
+
 ## 2026-09-24 - a faster rope solver, same numbers
 
 `entities/leash.gd`'s solve loops do less interpreter work: the rope ends are
