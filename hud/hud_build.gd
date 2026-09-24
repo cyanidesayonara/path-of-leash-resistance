@@ -101,7 +101,9 @@ static func build(m: Node2D) -> void:
 	m.weather_l = hud_label(m, Vector2(0, 384), 26)
 	pin_wide(m.weather_l, 34.0, 0.5)
 	m.weather_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	m.prompt_l = hud_label(m, Vector2(0, 470), 22)
+	# below the dog, which stands at about y=460-530 on the title, and above the
+	# walk's blurb chalked at y~580; at 470 it sat right across her (#8)
+	m.prompt_l = hud_label(m, Vector2(0, 536), 22)
 	pin_wide(m.prompt_l, 32.0, 0.5)
 	m.prompt_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	m.shop_preview_bg = ColorRect.new()
