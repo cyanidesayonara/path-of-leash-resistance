@@ -212,39 +212,64 @@ func tick(delta: float) -> void:
 		_touch.resize(N)
 	for i in range(N):
 		_touch[i] = -1
+	# The ends do not move during the solve, so they are read once, not per
+	# iteration (both are property reads through the engine).
+	var dog_end := dog.global_position
+	var hand_end := _hand_pos()
+	# Obstacles further than this from a segment's bounding box cannot touch it.
+	# The margin is POLE_PAD plus slack, so the reject never skips a contact the
+	# exact test below would have found.
+	var reach := POLE_PAD + 1.0
 	for _iter in range(ITER):
-		pts[0] = dog.global_position
-		pts[N - 1] = _hand_pos()
+		pts[0] = dog_end
+		pts[N - 1] = hand_end
+		# a carries pts[i] from the previous step, so each point is read once
+		var a: Vector2 = pts[0]
 		for i in range(N - 1):
-			var d := pts[i + 1] - pts[i]
+			var b: Vector2 = pts[i + 1]
+			var d := b - a
 			var dist := d.length()
 			if dist < 0.001:
+				a = b
 				continue
 			# stiff against stretch, loose against compression so slack
 			# rope drapes instead of contracting into a straight line
 			var k := 0.9 if dist > seg else 0.05
 			var corr := d * ((dist - seg) / dist) * 0.5 * k
 			if i > 0:
-				pts[i] += corr
+				pts[i] = a + corr
 			if i + 1 < N - 1:
-				pts[i + 1] -= corr
+				b -= corr
+				pts[i + 1] = b
+			a = b
 		# segment-vs-circle collision: point-only checks tunnel when
 		# stretched segments straddle the pole between two points.
 		if obs_n == 0:
 			continue
 		for i in range(N - 1):
+			var sa: Vector2 = pts[i]
+			var sb: Vector2 = pts[i + 1]
 			for oi in range(obs_n):
 				var pl: Vector2 = _obs_pos[oi]
-				var cp := _closest_on_segment(pts[i], pts[i + 1], pl)
+				if pl.x + reach < minf(sa.x, sb.x) or pl.x - reach > maxf(sa.x, sb.x) 						or pl.y + reach < minf(sa.y, sb.y) or pl.y - reach > maxf(sa.y, sb.y):
+					continue
+				# _closest_on_segment, inlined: this is the solver's innermost loop
+				var cp := sa
+				var ab := sb - sa
+				var l2 := ab.length_squared()
+				if l2 >= 0.0001:
+					cp = sa + ab * clampf((pl - sa).dot(ab) / l2, 0.0, 1.0)
 				var dp := cp - pl
 				var l := dp.length()
 				if l < POLE_PAD and l > 0.001:
 					var push := dp / l * (POLE_PAD - l)
 					if i > 0:
-						pts[i] += push
+						sa += push
+						pts[i] = sa
 						_touch[i] = oi
 					if i + 1 < N - 1:
-						pts[i + 1] += push
+						sb += push
+						pts[i + 1] = sb
 						_touch[i + 1] = oi
 	contacts = 0
 	static_contacts = 0
