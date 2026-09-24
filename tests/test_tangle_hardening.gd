@@ -27,10 +27,10 @@ class FakeMain:
 	func _init() -> void:
 		add_child(cam)
 
-	func contact_shadow(_c: CanvasItem, _at: Vector2, _r: float, _h: float, _a := 0.24) -> void:
+	func contact_shadow(_c: Object, _at: Vector2, _r: float, _h: float, _a := 0.24) -> void:
 		pass
 
-	func cast_shadow(_c: CanvasItem, _at: Vector2, _w: float, _h: float, _a := 0.20) -> void:
+	func cast_shadow(_c: Object, _at: Vector2, _w: float, _h: float, _a := 0.20) -> void:
 		pass
 
 	func float_text(_pos: Vector2, text: String, _color: Color) -> void:

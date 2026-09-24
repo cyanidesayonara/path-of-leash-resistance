@@ -369,7 +369,19 @@ func human_pull_dir() -> Vector2:
 	return d.normalized() if d.length() > 0.001 else Vector2.ZERO
 
 
+# the stand-in canvas for this node's drawing, made fresh each _draw
+var _b: ShapeBatch
+
+
 func _draw() -> void:
+	# every draw call goes through a ShapeBatch standing in for the canvas: runs
+	# of shapes become one draw call, same pixels (systems/shape_batch.gd)
+	_b = ShapeBatch.new(self)
+	_draw_shapes()
+	_b.flush()
+
+
+func _draw_shapes() -> void:
 	var arr := PackedVector2Array()
 	for p in pts:
 		arr.append(to_local(p))
@@ -384,21 +396,21 @@ func _draw() -> void:
 	var shade := PackedVector2Array()
 	for p in arr:
 		shade.append(p + Vector2(2.0, 3.0))
-	draw_polyline(shade, Color(0.05, 0.04, 0.06, 0.22), wide)
-	draw_polyline(arr, body.darkened(0.35), wide)
-	draw_polyline(arr, body, wide * 0.6)
+	_b.draw_polyline(shade, Color(0.05, 0.04, 0.06, 0.22), wide)
+	_b.draw_polyline(arr, body.darkened(0.35), wide)
+	_b.draw_polyline(arr, body, wide * 0.6)
 	# the highlight runs slightly above the core, like light off a strap
 	var hi := PackedVector2Array()
 	for p in arr:
 		hi.append(p + Vector2(0.0, -0.9))
-	draw_polyline(hi, body.lightened(0.34), wide * 0.24)
+	_b.draw_polyline(hi, body.lightened(0.34), wide * 0.24)
 	if contact_dynamic.x < INF:
 		var cp := to_local(contact_dynamic)
-		draw_circle(cp + Vector2(1.2, 1.8), 5.2, Color(0.05, 0.04, 0.06, 0.28))
-		draw_circle(cp, 4.6, Color(0.95, 0.55, 0.22, 0.85 if taut else 0.65))
-		draw_circle(cp, 2.0, Color(1.0, 0.85, 0.55, 0.9))
+		_b.draw_circle(cp + Vector2(1.2, 1.8), 5.2, Color(0.05, 0.04, 0.06, 0.28))
+		_b.draw_circle(cp, 4.6, Color(0.95, 0.55, 0.22, 0.85 if taut else 0.65))
+		_b.draw_circle(cp, 2.0, Color(1.0, 0.85, 0.55, 0.9))
 	# the handle loop in the owner's fist
 	var hp := to_local(_hand_pos())
-	draw_circle(hp + Vector2(1.5, 2.0), 4.6, Color(0.05, 0.04, 0.06, 0.25))
-	draw_circle(hp, 4.4, body.darkened(0.45))
-	draw_circle(hp, 2.4, body.lightened(0.1))
+	_b.draw_circle(hp + Vector2(1.5, 2.0), 4.6, Color(0.05, 0.04, 0.06, 0.25))
+	_b.draw_circle(hp, 4.4, body.darkened(0.45))
+	_b.draw_circle(hp, 2.4, body.lightened(0.1))

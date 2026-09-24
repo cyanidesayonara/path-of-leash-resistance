@@ -359,7 +359,7 @@ static func _polygon_points(
 
 
 static func draw_dog(
-	canvas: CanvasItem,
+	canvas: Object,
 	profile: Dictionary,
 	origin: Vector2,
 	forward: Vector2,

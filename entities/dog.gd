@@ -241,14 +241,26 @@ func _process(_delta: float) -> void:
 	queue_redraw()
 
 
+# the stand-in canvas for this node's drawing, made fresh each _draw
+var _b: ShapeBatch
+
+
 func _draw() -> void:
+	# every draw call goes through a ShapeBatch standing in for the canvas: runs
+	# of shapes become one draw call, same pixels (systems/shape_batch.gd)
+	_b = ShapeBatch.new(self)
+	_draw_shapes()
+	_b.flush()
+
+
+func _draw_shapes() -> void:
 	var t := AnimClock.msec() / 1000.0
 	# a squashed contact shadow, offset as if the light is up and to the
 	# left. Nothing sells "solid object on ground" faster than this.
 	# (a preview built without a main, as in the tests, simply has no shadow)
 	if not swimming and main != null:
 		var lift: float = 1.0 + clampf(velocity.length() / 700.0, 0.0, 0.35)
-		main.contact_shadow(self, Vector2.ZERO, 12.0, 8.0 * lift, 0.26)
+		main.contact_shadow(_b, Vector2.ZERO, 12.0, 8.0 * lift, 0.26)
 	# the coat comes from data now (Game.COATS), not baked-in colours, so a
 	# dog creator later means adding a row of parameters rather than editing
 	# this renderer
@@ -264,7 +276,7 @@ func _draw() -> void:
 		# expanding wake rings behind her happy paddling self
 		for i in range(3):
 			var rr := fmod(t * 1.4 + i * 0.45, 1.35)
-			draw_arc(-facing * 6.0, 12.0 + rr * 26.0, 0, TAU, 22, Color(0.82, 0.9, 1.0, 0.32 * (1.0 - rr / 1.35)), 2.0)
+			_b.draw_arc(-facing * 6.0, 12.0 + rr * 26.0, 0, TAU, 22, Color(0.82, 0.9, 1.0, 0.32 * (1.0 - rr / 1.35)), 2.0)
 	# THE WIGGLE: the rump swings with the gait
 	var wiggle := hside * sin(gait) * clampf(velocity.length() / SPEED, 0.0, 1.0) * 2.6
 	var hip := shoulder + hip_dir * 17.0 + wiggle
@@ -276,26 +288,26 @@ func _draw() -> void:
 	for s in range(3):
 		tdir = tdir.rotated(sin(t * wag_speed - s * 0.9) * (0.15 if crouching else 0.38))
 		var nxt := tp + tdir * (9.0 - s * 1.5)
-		draw_line(tp, nxt, fur_dark, widths[s])
+		_b.draw_line(tp, nxt, fur_dark, widths[s])
 		tp = nxt
 	# four legs, trot gait: diagonal pairs move together, tucked when crouching
 	var amp := 0.0 if crouching else clampf(velocity.length() / SPEED, 0.0, 1.0) * 5.5
 	var ph := sin(gait)
 	# white-tipped paws, like she stepped in paint and regrets nothing
 	var paw := Color(0.78, 0.76, 0.73)
-	draw_circle(shoulder + side * 7.5 + facing * (6.0 + ph * amp), 3.0, paw)
-	draw_circle(shoulder - side * 7.5 + facing * (6.0 - ph * amp), 3.0, paw)
+	_b.draw_circle(shoulder + side * 7.5 + facing * (6.0 + ph * amp), 3.0, paw)
+	_b.draw_circle(shoulder - side * 7.5 + facing * (6.0 - ph * amp), 3.0, paw)
 	var rear_reach := 1.0 if crouching else 4.0
-	draw_circle(hip + hside * 7.0 - hip_dir * (rear_reach - ph * amp * 0.8), 3.2, paw)
-	draw_circle(hip - hside * 7.0 - hip_dir * (rear_reach + ph * amp * 0.8), 3.2, paw)
+	_b.draw_circle(hip + hside * 7.0 - hip_dir * (rear_reach - ph * amp * 0.8), 3.2, paw)
+	_b.draw_circle(hip - hside * 7.0 - hip_dir * (rear_reach + ph * amp * 0.8), 3.2, paw)
 	# lean street-dog torso, hinged; the rump drops into the squat
-	draw_line(shoulder, hip, fur, 13.0)
-	draw_circle(hip, 10.5 if crouching else 9.0, fur)
-	draw_circle(shoulder, 8.5, fur)
+	_b.draw_line(shoulder, hip, fur, 13.0)
+	_b.draw_circle(hip, 10.5 if crouching else 9.0, fur)
+	_b.draw_circle(shoulder, 8.5, fur)
 	# only a few subtle flecks on the body - the grey lives on the head
 	for i in range(6):
 		var base := hip if i % 2 == 0 else shoulder
-		draw_circle(base + flecks[i], 1.0, Color(grizzle, 0.22))
+		_b.draw_circle(base + flecks[i], 1.0, Color(grizzle, 0.22))
 	# the Julius K9 harness across the shoulders, and the collar - colour
 	# set by the equipped cosmetic (rainbow shimmers)
 	var collar_key := _cosmetic_collar_key()
@@ -307,49 +319,49 @@ func _draw() -> void:
 		var bcol: Color = Game.BANDANAS[bandana_key].col
 		var bandana := _bandana_points(shoulder, facing)
 		var edge := bcol.darkened(0.35)
-		draw_colored_polygon(bandana, bcol)
-		draw_line(bandana[0], bandana[1], edge, 1.5)
-		draw_line(bandana[1], bandana[2], edge, 1.5)
-		draw_line(bandana[2], bandana[0], edge, 1.5)
-	draw_line(shoulder + side * 8.0, shoulder - side * 8.0, col, 6.0)
-	draw_circle(shoulder, 2.2, Color(0.3, 0.3, 0.32))
+		_b.draw_colored_polygon(bandana, bcol)
+		_b.draw_line(bandana[0], bandana[1], edge, 1.5)
+		_b.draw_line(bandana[1], bandana[2], edge, 1.5)
+		_b.draw_line(bandana[2], bandana[0], edge, 1.5)
+	_b.draw_line(shoulder + side * 8.0, shoulder - side * 8.0, col, 6.0)
+	_b.draw_circle(shoulder, 2.2, Color(0.3, 0.3, 0.32))
 	var neck := shoulder + facing * 6.5
-	draw_line(neck + side * 5.5, neck - side * 5.5, col, 3.0)
+	_b.draw_line(neck + side * 5.5, neck - side * 5.5, col, 3.0)
 	# head with a LONG street-dog nose; grey on the crown and the face
 	var head := shoulder + facing * 10.0
-	draw_circle(head, 7.0, fur)
-	draw_line(head, head + facing * 10.0, fur, 5.5)
-	draw_circle(head + facing * 2.0, 4.0, Color(grizzle, 0.45))
-	draw_line(head + facing * 3.0, head + facing * 9.0, Color(grizzle, 0.5), 3.0)
-	draw_circle(head - facing * 2.5, 3.2, Color(grizzle, 0.3))
-	draw_circle(head + facing * 11.0, 2.4, Color(0.05, 0.05, 0.06))
+	_b.draw_circle(head, 7.0, fur)
+	_b.draw_line(head, head + facing * 10.0, fur, 5.5)
+	_b.draw_circle(head + facing * 2.0, 4.0, Color(grizzle, 0.45))
+	_b.draw_line(head + facing * 3.0, head + facing * 9.0, Color(grizzle, 0.5), 3.0)
+	_b.draw_circle(head - facing * 2.5, 3.2, Color(grizzle, 0.3))
+	_b.draw_circle(head + facing * 11.0, 2.4, Color(0.05, 0.05, 0.06))
 	# big floppy ears, swinging slightly with the stride
 	var flop := sin(gait) * 1.6
-	draw_line(head + side * 4.0, head + side * 9.5 - facing * 3.5 + side * flop, fur_dark, 5.5)
-	draw_line(head - side * 4.0, head - side * 9.5 - facing * 3.5 - side * flop, fur_dark, 5.5)
+	_b.draw_line(head + side * 4.0, head + side * 9.5 - facing * 3.5 + side * flop, fur_dark, 5.5)
+	_b.draw_line(head - side * 4.0, head - side * 9.5 - facing * 3.5 - side * flop, fur_dark, 5.5)
 	if peeing:
 		for i in range(2):
 			var a := t * 5.0 + i * 2.4
-			draw_circle(hip + hip_dir * 10.0 + hside * sin(a) * 3.0, 1.6, Color(0.93, 0.85, 0.4, 0.5))
+			_b.draw_circle(hip + hip_dir * 10.0 + hside * sin(a) * 3.0, 1.6, Color(0.93, 0.85, 0.4, 0.5))
 	if planted and not crouching:
 		for i in range(4):
 			var a2 := TAU * i / 4.0 + 0.4
 			var p := Vector2.from_angle(a2) * 19.0
-			draw_line(p, p + Vector2.from_angle(a2) * 6.0, Color(0.3, 0.25, 0.2), 3.0)
+			_b.draw_line(p, p + Vector2.from_angle(a2) * 6.0, Color(0.3, 0.25, 0.2), 3.0)
 	if tempted and tumble_t <= 0.0:
-		draw_line(Vector2(15, -30), Vector2(15, -22), Color(0.95, 0.62, 0.55), 3.0)
-		draw_circle(Vector2(15, -18), 2.0, Color(0.95, 0.62, 0.55))
+		_b.draw_line(Vector2(15, -30), Vector2(15, -22), Color(0.95, 0.62, 0.55), 3.0)
+		_b.draw_circle(Vector2(15, -18), 2.0, Color(0.95, 0.62, 0.55))
 	if bark_anim > 0.0:
 		var r := (0.35 - bark_anim) / 0.35
-		draw_arc(head + facing * 8.0, 10.0 + r * 34.0, 0, TAU, 24, Color(1, 1, 1, 0.7 * (1.0 - r)), 2.0)
+		_b.draw_arc(head + facing * 8.0, 10.0 + r * 34.0, 0, TAU, 24, Color(1, 1, 1, 0.7 * (1.0 - r)), 2.0)
 	if squat_ui > 0.0 or squat_t > 0.0:
 		for i in range(3):
-			draw_circle(Vector2(-8 + i * 8, -26), 2.0, Color(1, 1, 1, 0.7))
+			_b.draw_circle(Vector2(-8 + i * 8, -26), 2.0, Color(1, 1, 1, 0.7))
 		if squat_ui > 0.0:
-			draw_arc(Vector2.ZERO, 20.0, -PI / 2.0, -PI / 2.0 + TAU * clampf(squat_ui, 0.0, 1.0), 20, Color(1, 0.95, 0.7), 3.0)
+			_b.draw_arc(Vector2.ZERO, 20.0, -PI / 2.0, -PI / 2.0 + TAU * clampf(squat_ui, 0.0, 1.0), 20, Color(1, 0.95, 0.7), 3.0)
 	if swimming:
 		# waterline over the hindquarters and little paddle splashes up front
-		draw_circle(hip, 11.0, Color(0.42, 0.56, 0.66, 0.5))
-		draw_circle(shoulder + facing * 2.0, 9.0, Color(0.42, 0.56, 0.66, 0.32))
-		draw_circle(head + facing * 12.0 + side * sin(t * 18.0) * 4.0, 2.2, Color(0.9, 0.95, 1.0, 0.8))
-		draw_circle(head + facing * 12.0 - side * sin(t * 18.0) * 4.0, 1.8, Color(0.9, 0.95, 1.0, 0.6))
+		_b.draw_circle(hip, 11.0, Color(0.42, 0.56, 0.66, 0.5))
+		_b.draw_circle(shoulder + facing * 2.0, 9.0, Color(0.42, 0.56, 0.66, 0.32))
+		_b.draw_circle(head + facing * 12.0 + side * sin(t * 18.0) * 4.0, 2.2, Color(0.9, 0.95, 1.0, 0.8))
+		_b.draw_circle(head + facing * 12.0 - side * sin(t * 18.0) * 4.0, 1.8, Color(0.9, 0.95, 1.0, 0.6))

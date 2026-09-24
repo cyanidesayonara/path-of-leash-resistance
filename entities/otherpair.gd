@@ -554,13 +554,25 @@ func update_tangle_state(crossing: bool, delta: float) -> bool:
 	return false
 
 
+# the stand-in canvas for this node's drawing, made fresh each _draw
+var _b: ShapeBatch
+
+
 func _draw() -> void:
+	# every draw call goes through a ShapeBatch standing in for the canvas: runs
+	# of shapes become one draw call, same pixels (systems/shape_batch.gd)
+	_b = ShapeBatch.new(self)
+	_draw_shapes()
+	_b.flush()
+
+
+func _draw_shapes() -> void:
 	var t := AnimClock.msec() / 1000.0
 	# contact shadows under both ends of the pair, light up-and-left
 	for sh in [[npc_owner.position, 15.0], [npc_dog.position, 10.5]]:
-		draw_set_transform((sh[0] as Vector2) + Vector2(5.0, 8.0), 0.0, Vector2(1.2, 0.5))
-		draw_circle(Vector2.ZERO, sh[1], Color(0.06, 0.05, 0.08, 0.24))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		_b.draw_set_transform((sh[0] as Vector2) + Vector2(5.0, 8.0), 0.0, Vector2(1.2, 0.5))
+		_b.draw_circle(Vector2.ZERO, sh[1], Color(0.06, 0.05, 0.08, 0.24))
+	_b.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	var owner_forward := vel
 	var owner_gait_amount := (
 		0.0
@@ -569,7 +581,7 @@ func _draw() -> void:
 	)
 	var owner_phone_glow := 0.55 + 0.2 * sin(t * 7.3 + seed_o)
 	HumanAppearanceScript.draw_owner(
-		self,
+		_b,
 		owner_appearance_profile,
 		npc_owner.position,
 		owner_forward,
@@ -584,7 +596,7 @@ func _draw() -> void:
 	var bob := sin(t * 6.0 + seed_o) * 1.5
 	var wag := t * 8.0 + seed_o
 	DogAppearanceScript.draw_dog(
-		self,
+		_b,
 		appearance_profile,
 		dp,
 		facing,

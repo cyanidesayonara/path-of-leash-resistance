@@ -425,7 +425,7 @@ static func _arc_points(
 
 
 static func draw_owner(
-	canvas: CanvasItem,
+	canvas: Object,
 	profile: Dictionary,
 	origin: Vector2,
 	forward: Vector2,

@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - the layers and the busiest entities batched too
+
+The freedom and verge layers draw through a ShapeBatch like the edge layer,
+and so do the cones, the dog, the human, the NPC pairs, the free dogs, the
+leash and the HUD card (each `_draw` hands a stand-in batch to what used to
+be its body, so an early return can never skip the flush). The dog and human
+appearance drawers and main's shadow helpers take either a canvas or the
+stand-in; the tests' fake mains follow suit.
+
+Windowed at 1280x720, calls per frame p50 (max), after the world batch ->
+now: street 264 (537) -> 190 (299), market 202 -> 140, site 227 -> 167,
+park 154 (426) -> 98 (209), beach 159 (548) -> 123 (307). Against the build
+before any batching street is 833 -> 190. The worst frames fell most: the
+off-leash area's layer was the spike. The screenshot sweep is identical on
+all 17 shots.
+
 ## 2026-09-24 - main's whole world draw through one batch
 
 Every draw call main.gd makes on its own canvas now goes through a ShapeBatch
