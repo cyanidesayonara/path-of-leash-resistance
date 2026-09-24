@@ -707,7 +707,7 @@ func _draw_paving(vt: float, vb: float, base: Color) -> void:
 		y += sh
 
 
-func _draw_edges(c: CanvasItem, vt: float, vb: float) -> void:
+func _draw_edges(c: Object, vt: float, vb: float) -> void:
 	# What flanks the corridor is what actually gives a walk its identity:
 	# shopfronts say boulevard, stone walls say medieval alley, chain-link
 	# says scrapyard. Drawn as repeating modules down the walk and culled to
@@ -783,7 +783,12 @@ func draw_edges_onto(c: CanvasItem) -> void:
 	# called by the edge layer, which decides WHEN rather than what
 	var vt: float = cam.position.y - 560.0
 	var vb: float = cam.position.y + 560.0
-	_draw_edges(c, vt, vb)
+	# drawn through a ShapeBatch: the modules alternate rects, lines and discs,
+	# and every switch was a new draw call (316 of street's 781 a frame). Same
+	# pixels, see systems/shape_batch.gd. c is a CanvasItem or that stand-in.
+	var b := ShapeBatch.new(c)
+	_draw_edges(b, vt, vb)
+	b.flush()
 
 
 func _edge_base_color() -> Color:
@@ -796,7 +801,7 @@ func _edge_base_color() -> Color:
 		_: return Color(0.38, 0.35, 0.37)                    # city block
 
 
-func _draw_doorway(c: CanvasItem, inner_x: float, side: float, y: float, wall: Color) -> void:
+func _draw_doorway(c: Object, inner_x: float, side: float, y: float, wall: Color) -> void:
 	# A door from directly above is genuinely hard: the leaf is vertical, so
 	# there is nothing to see. What you DO see is a recess in the wall, a
 	# threshold sticking out onto the pavement, and the lintel's shadow lying
@@ -829,7 +834,7 @@ func _draw_doorway(c: CanvasItem, inner_x: float, side: float, y: float, wall: C
 			Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.30 * (1.0 - f)))
 
 
-func _draw_edge_module(c: CanvasItem, r: Rect2, side: float, k: int) -> void:
+func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 	var inner_x: float = r.end.x if side < 0.0 else r.position.x
 	var lit := fmod(float(k) * 0.37, 1.0)
 	# Roofscape, not facades: from overhead the readable features are roof
@@ -1108,6 +1113,8 @@ func _draw_scents() -> void:
 	reach *= Surfaces.scent_mult(dog.surface)
 	var t := AnimClock.msec() / 1000.0
 	var shown := 0
+	# every mote and bloom is one draw call (systems/shape_batch.gd)
+	var puffs := ShapeBatch.new()
 	for src in _scent_sources():
 		if shown >= 6:
 			break  # keep the draw cost bounded on busy walks
@@ -1129,10 +1136,11 @@ func _draw_scents() -> void:
 			# a lazy sideways wander, so it looks carried on the air
 			var wob := dir.orthogonal() * sin(f * 7.0 + float(i) * 1.7 + at.x * 0.01) * (9.0 + near * 7.0)
 			var a: float = (0.10 + near * 0.34) * (1.0 - f * 0.55)
-			draw_circle(along + wob, 2.0 + near * 2.4, Color(col.r, col.g, col.b, a))
+			puffs.circle(along + wob, 2.0 + near * 2.4, Color(col.r, col.g, col.b, a))
 		# right on top of it, a soft bloom so the last step is unmistakable
 		if near > 0.62:
-			draw_circle(at, 15.0 + near * 9.0, Color(col.r, col.g, col.b, 0.07 * near))
+			puffs.circle(at, 15.0 + near * 9.0, Color(col.r, col.g, col.b, 0.07 * near))
+	puffs.flush(self)
 
 
 # --- one light for the whole game -------------------------------------
@@ -1191,29 +1199,32 @@ func _draw_broadleaf(c: CanvasItem, p: Vector2, scale: float) -> void:
 	# The underside, then a solid crown, then lobes only on the lit side. Lobes
 	# ringed evenly around the centre left a dark hole in the middle and the
 	# canopy read as a doughnut.
-	c.draw_circle(p + Vector2(2, 3) * scale, r, dark)
-	c.draw_circle(p - LIGHT * r * 0.10, r * 0.86, mid)
+	# every disc from here on is one draw call (systems/shape_batch.gd)
+	var crown := ShapeBatch.new()
+	crown.circle(p + Vector2(2, 3) * scale, r, dark)
+	crown.circle(p - LIGHT * r * 0.10, r * 0.86, mid)
 	var lobes := [
 		Vector2(-0.42, -0.30), Vector2(0.40, -0.34), Vector2(0.46, 0.32),
 		Vector2(-0.38, 0.40), Vector2(0.02, -0.06),
 	]
 	for i in range(lobes.size()):
 		var lp: Vector2 = p + (lobes[i] as Vector2) * r
-		c.draw_circle(lp, r * 0.50, mid)
+		crown.circle(lp, r * 0.50, mid)
 	# the light falls on the upper-left of the crown, so only those lobes catch
 	for i in range(lobes.size()):
 		var lv: Vector2 = lobes[i]
 		if lv.dot(LIGHT) > 0.10:
 			continue          # this lobe is on the shaded side
-		c.draw_circle(p + lv * r - LIGHT * r * 0.14, r * 0.34, lit)
-	c.draw_circle(p - LIGHT * r * 0.42, r * 0.30, lit.lightened(0.08))
+		crown.circle(p + lv * r - LIGHT * r * 0.14, r * 0.34, lit)
+	crown.circle(p - LIGHT * r * 0.42, r * 0.30, lit.lightened(0.08))
 	# the trunk, visible in the middle where the canopy parts
-	c.draw_circle(p, 6.5 * scale, Color(0.22, 0.16, 0.11))
-	c.draw_circle(p + Vector2(-1, -1) * scale, 4.4 * scale, Color(0.36, 0.27, 0.18))
+	crown.circle(p, 6.5 * scale, Color(0.22, 0.16, 0.11))
+	crown.circle(p + Vector2(-1, -1) * scale, 4.4 * scale, Color(0.36, 0.27, 0.18))
 	# a few leaf tips breaking the outline, so it is not a perfect circle
 	for i in range(7):
 		var a := TAU * float(i) / 7.0 + p.x * 0.013
-		c.draw_circle(p + Vector2.from_angle(a) * r * 0.95, r * 0.17, mid)
+		crown.circle(p + Vector2.from_angle(a) * r * 0.95, r * 0.17, mid)
+	crown.flush(c)
 
 
 func _draw_palm(c: CanvasItem, p: Vector2) -> void:
@@ -1242,11 +1253,13 @@ func _draw_palm(c: CanvasItem, p: Vector2) -> void:
 			var ln := 9.0 * (1.0 - f * 0.5)
 			c.draw_line(at, at + (side + dir * 0.5).normalized() * ln, Color(0.24, 0.41, 0.21), 2.5)
 			c.draw_line(at, at - (side - dir * 0.5).normalized() * ln, Color(0.24, 0.41, 0.21), 2.5)
-	# the trunk, and the coconuts nobody should be under
-	c.draw_circle(p, 9.0, Color(0.34, 0.26, 0.17))
-	c.draw_circle(p + Vector2(-2, -2), 6.0, Color(0.48, 0.38, 0.25))
-	c.draw_circle(p + Vector2(5, 4), 3.4, Color(0.28, 0.22, 0.14))
-	c.draw_circle(p + Vector2(-4, 5), 3.0, Color(0.28, 0.22, 0.14))
+	# the trunk, and the coconuts nobody should be under: one draw call
+	var trunk := ShapeBatch.new()
+	trunk.circle(p, 9.0, Color(0.34, 0.26, 0.17))
+	trunk.circle(p + Vector2(-2, -2), 6.0, Color(0.48, 0.38, 0.25))
+	trunk.circle(p + Vector2(5, 4), 3.4, Color(0.28, 0.22, 0.14))
+	trunk.circle(p + Vector2(-4, 5), 3.0, Color(0.28, 0.22, 0.14))
+	trunk.flush(c)
 
 
 func _draw_lamppost(p: Vector2) -> void:

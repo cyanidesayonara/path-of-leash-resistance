@@ -2,6 +2,26 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - fewer draw calls, same pixels
+
+`systems/shape_batch.gd` merges runs of filled circles, rects, wide lines and
+polygons into one draw call. It rebuilds each shape's vertices exactly as
+Godot does, in the same float32 operations and order, so the picture is the
+same pixel for pixel. Lines needed one extra step: the renderer stores a
+line's colour as half floats, so the batch rounds it the same way.
+`tests/test_shape_batch.gd` renders 240 mixed shapes both ways and compares
+exactly, and the screenshot sweep is identical on all 17 shots. It also works
+as a stand-in canvas: a drawing function that takes `c` can be handed the
+batch, and anything it cannot reproduce (outlined rects, 1px lines, text)
+flushes and goes straight to the canvas.
+
+Used so far on the edge layer (shopfronts and walls, which alternated rects
+and lines and were 316 of street's 781 calls), tree canopies, palm trunks,
+scent motes and cone rings. Windowed at 1280x720, calls per frame (p50):
+park 408 -> 228, market 672 -> 359, street 833 -> 479, site 576 -> 459.
+Renderer CPU time falls 20-40%. Headless frame and draw times are unchanged,
+because each circle is placed by one native transform, not a script loop.
+
 ## 2026-09-24 - screenshots that match pixel for pixel
 
 Two screenshot sweeps of one build used to differ almost everywhere, so the
