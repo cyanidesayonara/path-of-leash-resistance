@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-09-24 - the hitch at the gate was a script compile
+
+The probe now names the three biggest parts of main's physics step in each
+spike frame, which pointed straight at the walk's phase changes: stepping
+into the off-leash area cost 36-49 ms in one frame, the way home 14-22 ms.
+Most of it was GDScript compiling ball.gd, freedog.gd and rival.gd (and
+tofu.gd, the sweeper) the first time they were load()ed, mid-walk. `_ready`
+now loads every script spawned after the level is built (MIDWALK_SCRIPTS),
+while the level is loading anyway; the later load() calls hit the cache. The
+worst headless frame on street fell from 46 to 25 ms, on park from 65 to
+19 ms, and the behaviour snapshot is identical.
+
+What was left at the phase changes was the autowalk bot's own "AUTOWALK
+reached ..." print: printing to a piped console on Windows costs 2-16 ms,
+against 0.03 ms when nothing reads it. Real play prints nothing. The
+physics-step marks are also corrected: in the off-leash phase the romp and
+fetch had no mark and were billed to "goals, progress", now "goals" and
+"progress" apart.
+
 ## 2026-09-24 - the layers and the busiest entities batched too
 
 The freedom and verge layers draw through a ShapeBatch like the edge layer,
@@ -132,6 +151,7 @@ The probe also splits main's physics step by subsystem (wall-clock marks):
 0.4-0.7 ms, most of it the rope solve. `--perf-disable=` and
 `--perf-disable-process=` switch off one kind of entity's physics or redraw,
 to measure what it costs.
+
 ## 2026-09-24 - freeze fixes, and the first performance numbers
 
 Bug fixes, each with a test that fails on the old code where one is possible:
@@ -222,6 +242,7 @@ and prints knocks by cause, mood arrivals, phone cracks and any early end;
 PRs and main without gating CI. After the fix, a seed gives identical results
 at every window size, and no idle dog is knocked before 19 seconds on street
 or market.
+
 ## 2026-09-23 - WIP limit on unaccepted changes
 
 AGENTS.md gains a change-control rule: at most 5 player-facing changes on
@@ -232,6 +253,7 @@ is. Every PR carries a feel card, 3-5 concrete things to check by hand.
 `main` starts over the limit: eight player-facing changes from 2026-08-02/03
 were never accepted. They are listed with feel cards in the acceptance
 backlog (#23).
+
 ## 2026-09-23 - portrait windows get a rotate prompt (#5)
 
 A window taller than it is wide cannot hold the layout: the world rendered at

@@ -489,6 +489,15 @@ var dim: ColorRect
 var font: Font
 
 
+# every script something spawns after the level is built (see _ready)
+const MIDWALK_SCRIPTS := [
+	"res://entities/ball.gd", "res://entities/freedog.gd", "res://entities/rival.gd",
+	"res://entities/tofu.gd", "res://entities/sweeper.gd", "res://entities/otherpair.gd",
+	"res://entities/bike.gd", "res://entities/squirrel.gd", "res://entities/pigeon.gd",
+	"res://entities/duckling.gd",
+]
+
+
 func _ready() -> void:
 	Engine.time_scale = 1.0
 	font = ThemeDB.fallback_font
@@ -536,6 +545,12 @@ func _ready() -> void:
 	_spawn_challenger()
 	_spawn_wallcats()
 	_spawn_guards()
+	# Scripts first needed mid-walk are compiled now, while the level loads
+	# anyway: load() keeps them, so the later load() calls cost nothing.
+	# Compiling ball.gd, freedog.gd and rival.gd on the spot was a 36-49 ms
+	# hitch at the gate, and tofu.gd and the sweeper hitched the way home.
+	for path in MIDWALK_SCRIPTS:
+		load(path)
 	# day/night + weather: a canvas tint; HUD lives on a CanvasLayer,
 	# unaffected
 	night_cm = CanvasModulate.new()
@@ -2263,6 +2278,7 @@ func _physics_process(delta: float) -> void:
 			var to: Vector2 = f.to
 			bag_flights.remove_at(i)
 			on_business_bagged(to)
+	_prof("bag flights")
 	if not cameras.is_empty() or not lasers.is_empty():
 		_stealth(delta)
 		_prof("stealth")
@@ -2271,10 +2287,11 @@ func _physics_process(delta: float) -> void:
 		_neighbour_fetch()
 	elif phase == "home" and chase_active:
 		_chase(delta)
-		_prof("romp, chase")
+	_prof("romp, chase")
 	_check_goals()
+	_prof("goals")
 	_progress(delta)
-	_prof("goals, progress")
+	_prof("progress")
 	combo.tick(delta)
 	challenge.tick(delta)
 	_prof("combo, challenge")
