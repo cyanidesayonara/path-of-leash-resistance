@@ -18,6 +18,8 @@ extends Node
 # main._prof). Diagnostics, which change gameplay: --perf-disable=a.gd,b.gd
 # switches off those scripts' physics, --perf-disable-process=... their
 # process and per-frame redraw, so the difference shows what they cost.
+# --perf-hide=... hides those scripts' nodes, so the drop in draw calls (a
+# windowed run; headless draws nothing) shows what they cost to render.
 #
 # To compare CPU cost between builds, run headless with --fixed-fps 60 and
 # read frame_p50. For real frame times (rendering included) run windowed with
@@ -38,6 +40,7 @@ var _rows: Array[Dictionary] = []
 var _warm: Array[Dictionary] = []
 var _disable: PackedStringArray = []
 var _disable_proc: PackedStringArray = []
+var _hide: PackedStringArray = []
 
 
 func setup(m: Node2D, seconds: float) -> void:
@@ -54,6 +57,9 @@ func setup(m: Node2D, seconds: float) -> void:
 		elif arg.begins_with("--perf-disable-process="):
 			_disable_proc = arg.substr(23).split(",")
 			print("PERF diagnostic: process (and its per-frame redraw) disabled for %s" % ", ".join(_disable_proc))
+		elif arg.begins_with("--perf-hide="):
+			_hide = arg.substr(12).split(",")
+			print("PERF diagnostic: hidden %s" % ", ".join(_hide))
 
 
 func _ready() -> void:
@@ -75,7 +81,7 @@ func _process(_delta: float) -> void:
 		return
 	if _frames < 2:
 		return
-	if (not _disable.is_empty() or not _disable_proc.is_empty()) and _frames % 15 == 0:
+	if (not _disable.is_empty() or not _disable_proc.is_empty() or not _hide.is_empty()) and _frames % 15 == 0:
 		_apply_disable(main)
 	var row := {
 		"t": float(now - _t_start) / 1.0e6,
@@ -170,4 +176,6 @@ func _apply_disable(n: Node) -> void:
 			c.set_physics_process(false)
 		if sc != null and sc.resource_path.get_file() in _disable_proc:
 			c.set_process(false)
+		if sc != null and sc.resource_path.get_file() in _hide and c is CanvasItem:
+			c.visible = false
 		_apply_disable(c)
