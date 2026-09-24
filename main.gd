@@ -3559,6 +3559,8 @@ func zone_has_point(z: Dictionary, p: Vector2) -> bool:
 	# from drifting apart the way the old surface bools did.
 	if z.has("patch"):
 		return patch_has_point(z["patch"] as Dictionary, p)
+	if z.has("band"):
+		return band_has_point(z["band"] as Dictionary, p)
 	return (z["rect"] as Rect2).has_point(p)
 
 
@@ -5720,6 +5722,16 @@ func _draw_world() -> void:
 			# box round every sand drift on the promenade
 			continue
 		var zc: Color = SUBSTANCES[String(sz.kind)].col
+		if sz.has("band"):
+			# only the stretch on screen: a band can run the length of the walk
+			var bd: Dictionary = (sz["band"] as Dictionary).duplicate()
+			var y0: float = maxf(float(bd["y"]), vt - 40.0)
+			var y1: float = minf(float(bd["y"]) + float(bd["h"]), vb + 40.0)
+			if y1 > y0:
+				bd["y"] = y0
+				bd["h"] = y1 - y0
+				draw_band(_wc, bd, Color(zc.r, zc.g, zc.b, 0.55))
+			continue
 		_wc.draw_rect(zr, Color(zc.r, zc.g, zc.b, 0.55))
 		_wc.draw_rect(zr, Color(zc.r, zc.g, zc.b, 0.85), false, 2.0)
 	_draw_scents()

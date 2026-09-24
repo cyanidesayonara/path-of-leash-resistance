@@ -803,9 +803,13 @@ static func build_substance_zones(m: Node2D) -> void:
 			m.substance_zones.append({"rect": Rect2(m.sw_l + 25.0, -2150.0, w * 0.5, 160.0), "kind": "confetti"})
 		"trail":
 			m.substance_zones.append({"rect": Rect2(m.sw_l + 20.0, -3650.0, w * 0.5, 150.0), "kind": "mud", "slow": true})
-	# snow turns the whole walk to slush underfoot, whatever the level
+	# snow turns the whole walk to slush underfoot, whatever the level. A band
+	# that follows the path, not a rectangle: on the walks that bend (El Bosc,
+	# El Mosaic) a rectangle between the nominal edges left the path running
+	# out from under the snow and laid slush over the ground beside it.
 	if Game.weather == "snow":
-		m.substance_zones.append({"rect": Rect2(m.sw_l, m.GATE_Y, w, absf(m.GATE_Y) + 500.0), "kind": "slush"})
+		var slush := {"lo": 0.0, "hi": 1.0, "y": m.GATE_Y, "h": absf(m.GATE_Y) + 500.0}
+		m.substance_zones.append({"band": slush, "rect": m.band_bounds(slush), "kind": "slush"})
 
 
 static func build_freedom_area(m: Node2D) -> void:

@@ -134,6 +134,9 @@ jobs:
       - name: World labels keep clear of the feed test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_float_text.gd
 
+      - name: Snow slush follows the path test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_snow_slush.gd
+
       - name: Button prompts follow the last device test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_prompts.gd
 
