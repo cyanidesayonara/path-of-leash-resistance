@@ -136,6 +136,12 @@ Requires export templates in `%APPDATA%\Godot\export_templates\4.7.stable\`
 the full ~1GB template pack, which is why that export lives in CI only - a
 local attempt fails with "No export template found" and nothing else.
 
+Measure the web build (frame times and draw calls per level, in headless
+Chrome on the real GPU; needs the web templates above):
+```
+GODOT=godot/Godot_v4.7-stable_win64_console.exe bash tools/web_perf.sh street park market
+```
+
 Regenerate the icon (after changing `tools/make_icon.gd`):
 ```
 godot\Godot_v4.7-stable_win64_console.exe --rendering-method gl_compatibility --path . --script res://tools/make_icon.gd
