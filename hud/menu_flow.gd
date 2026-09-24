@@ -36,7 +36,7 @@ static func apply_menu_step(m: Node2D) -> void:
 	# discreet, bottom-left, the same treatment as the version tag - the
 	# middle of the title screen is already busy with the level blurb
 	m.menu_hint_l.visible = in_menu
-	m.menu_hint_l.text = "%s  settings" % m._kb_or_pad("ESC", "Back")
+	Prompts.set_text(m.menu_hint_l, "{pause}  settings")
 	if not in_menu:
 		return
 	match m.menu_step:
@@ -129,8 +129,8 @@ static func refresh_shop(m: Node2D) -> void:
 			tag = "  %d bones" % int(data.cost)
 		var cursor: String = ">  " if i == m.shop_idx else "    "
 		lines += "%s%s%s\n" % [cursor, data.name, tag]
-	lines += "\nleft / right browse    %s buy or wear    %s back" % [m._kb_or_pad("SPACE", "A"), m._kb_or_pad("E", "B")]
-	m.shop_l.text = lines
+	lines += "\nleft / right browse    {plant} buy or wear    {bark} back"
+	Prompts.set_text(m.shop_l, lines)
 	var highlighted: Dictionary = m.shop_items[m.shop_idx]
 	var preview_collar: String = Game.collar
 	var preview_bandana: String = Game.bandana
@@ -143,14 +143,13 @@ static func refresh_shop(m: Node2D) -> void:
 
 
 static func refresh_menu_text(m: Node2D) -> void:
-	# controller labels only when a controller is attached
-	var pad := Input.get_connected_joypads().size() > 0
-	m.hint_l.text = ("stick: move   A: dig in / squat   X: pee   B: bark   RB: turbo   Back: pause" if pad
-		else "WASD: move   SPACE: dig in / squat   Q: pee   E: bark   SHIFT: turbo   ESC: pause")
-	var fixed: String = "  (fixed today)" if Game.daily else "        (%s)" % m._kb_or_pad("E", "B")
+	# the buttons of whatever the player last used (hud/prompts.gd); main
+	# re-runs this when that changes
+	m.hint_l.text = Prompts.fill("{move}: move   {plant}: dig in / squat   {pee}: pee   {bark}: bark   {turbo}: turbo   {pause}: pause")
+	var fixed: String = "  (fixed today)" if Game.daily else "        (%s)" % Prompts.key("bark")
 	m.night_l.text = "TIME:  %s%s" % [("NIGHT" if Game.night else "DAY"), fixed]
-	m.weather_l.text = "WEATHER:  %s%s" % [Game.WEATHER_NAMES[Game.weather], "" if Game.daily else "        (%s)" % m._kb_or_pad("Q", "X")]
-	var go = m._kb_or_pad("SPACE", "A")
+	m.weather_l.text = "WEATHER:  %s%s" % [Game.WEATHER_NAMES[Game.weather], "" if Game.daily else "        (%s)" % Prompts.key("pee")]
+	var go := Prompts.key("plant")
 	match m.menu_step:
 		0:
 			m.prompt_l.text = "press  %s  to begin" % go
@@ -159,7 +158,7 @@ static func refresh_menu_text(m: Node2D) -> void:
 			if not Game.is_unlocked(Game.level_id):
 				m.prompt_l.text = "locked - earn %d stars" % int(Game.STAR_GATE.get(Game.level_id, 0))
 			else:
-				m.prompt_l.text = "%s / %s  browse     %s  choose     %s  wardrobe     %s  progress" % [m._kb_or_pad("A", "<"), m._kb_or_pad("D", ">"), go, m._kb_or_pad("E", "B"), m._kb_or_pad("Q", "X")]
+				m.prompt_l.text = Prompts.fill("{left} / {right}  browse     {plant}  choose     {bark}  wardrobe     {pee}  progress")
 			m.hint_l.visible = false
 		2:
 			m.prompt_l.text = "press  %s  to go walkies" % go
@@ -195,7 +194,7 @@ static func settings_rows(m: Node2D) -> Array:
 
 
 static func pad_hints(m: Node2D) -> bool:
-	return Input.get_connected_joypads().size() > 0
+	return Prompts.pad()
 
 
 static func check_settings_roundtrip(m: Node2D) -> Array:
@@ -326,6 +325,6 @@ static func progress_text(m: Node2D) -> String:
 		if Game.records.has(lv) and int(Game.records[lv].get("bones", 0)) > 0:
 			rec = "%d bones  %ds" % [int(Game.records[lv].bones), int(Game.records[lv].time)]
 		t += "%s   %s   goals %d/%d   %s\n" % [nm, Game.star_str(Game.stars(lv)), Game.goals_count(lv), total, rec]
-	t += "\nTOTAL:  %d stars    %d bones banked\n\n%s  back" % [
-		Game.total_stars(), Game.total_bones, m._kb_or_pad("E", "B")]
+	t += "\nTOTAL:  %d stars    %d bones banked\n\n{bark}  back" % [
+		Game.total_stars(), Game.total_bones]
 	return t

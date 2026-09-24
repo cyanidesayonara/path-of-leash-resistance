@@ -17,7 +17,7 @@ const STEPS: Array[Dictionary] = [
 	{
 		"id": "walk",
 		"title": "You are the dog.",
-		"body": "Walk north with WASD. Your human follows - badly.",
+		"body": "Walk north with {move_with}. Your human follows - badly.",
 	},
 	{
 		"id": "pull",
@@ -27,7 +27,7 @@ const STEPS: Array[Dictionary] = [
 	{
 		"id": "pee",
 		"title": "Business first.",
-		"body": "Find a hydrant and hold Q to leave your mark.",
+		"body": "Find a hydrant and hold {pee} to leave your mark.",
 	},
 	{
 		"id": "sniff",
@@ -47,12 +47,12 @@ const STEPS: Array[Dictionary] = [
 	{
 		"id": "bark",
 		"title": "Use your voice.",
-		"body": "Press E to bark. It stops your human dead and scatters birds.",
+		"body": "Press {bark} to bark. It stops your human dead and scatters birds.",
 	},
 	{
 		"id": "turbo",
 		"title": "The zoomies.",
-		"body": "Hold SHIFT to burn them off. You are faster than they will ever be.",
+		"body": "Hold {turbo} to burn them off. You are faster than they will ever be.",
 	},
 	{
 		"id": "grind",
