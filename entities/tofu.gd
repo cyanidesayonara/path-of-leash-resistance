@@ -56,7 +56,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _draw() -> void:
-	var t := Time.get_ticks_msec() / 1000.0
+	var t := AnimClock.msec() / 1000.0
 	var white := Color(0.93, 0.91, 0.88)
 	var brown := Color(0.62, 0.45, 0.28)
 	var wag := sin(t * (2.0 if home else (10.0 if darting else 5.0)) + seed_o) * (0.2 if home else 0.45)

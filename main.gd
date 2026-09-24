@@ -1106,7 +1106,7 @@ func _draw_scents() -> void:
 	# stepping onto the verge opens the street up. This is the reward half of
 	# the surface trade: grass costs a little speed and pays in nose.
 	reach *= Surfaces.scent_mult(dog.surface)
-	var t := Time.get_ticks_msec() / 1000.0
+	var t := AnimClock.msec() / 1000.0
 	var shown := 0
 	for src in _scent_sources():
 		if shown >= 6:
@@ -1225,7 +1225,7 @@ func _draw_palm(c: CanvasItem, p: Vector2) -> void:
 		var sa := TAU * float(j) / 7.0 + p.x * 0.01 + p.y * 0.007
 		c.draw_line(sh, sh + Vector2.from_angle(sa) * 34.0,
 			Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.14), 7.0)
-	var t := Time.get_ticks_msec() / 1000.0
+	var t := AnimClock.msec() / 1000.0
 	for j in range(7):
 		var fa := TAU * float(j) / 7.0 + p.x * 0.01 + p.y * 0.007
 		# the whole frond nods in the sea breeze
@@ -1321,7 +1321,7 @@ func _draw_beach_water() -> void:
 	# the sea costs per frame. Crests and foam follow beach_shore_x so they
 	# never draw over dry sand in the headland taper.
 	var r := _freedom_rect()
-	var t := Time.get_ticks_msec() / 1000.0
+	var t := AnimClock.msec() / 1000.0
 	var sea_top := r.position.y - 40.0
 	var sea_bot := r.end.y
 	for rank in range(3):
@@ -1785,7 +1785,7 @@ func _draw_park_props(c: CanvasItem, vt: float, vb: float) -> void:
 				# A galvanised water trough: a thick rim, water sitting BELOW
 				# it, a highlight where the light hits the surface, and a
 				# slow ripple. It was three flat rectangles.
-				var tw := Time.get_ticks_msec() / 1000.0
+				var tw := AnimClock.msec() / 1000.0
 				c.draw_rect(Rect2(p.x - 23.0, p.y - 13.0, 46.0, 26.0), Color(0.34, 0.34, 0.38))
 				c.draw_rect(Rect2(p.x - 23.0, p.y - 13.0, 46.0, 5.0), Color(0.52, 0.52, 0.56))
 				# the water, inset and darker at the light-side wall
@@ -5031,7 +5031,7 @@ func _draw_world() -> void:
 		# colour actually comes from - sand under clear water.
 		draw_rect(Rect2(-400, ctop, 630, bottom - ctop), Color(0.13, 0.47, 0.60))
 		draw_rect(Rect2(120, ctop, 110, bottom - ctop), Color(0.26, 0.66, 0.70))
-		var wt := Time.get_ticks_msec() / 1000.0
+		var wt := AnimClock.msec() / 1000.0
 		var fy := top + 40.0
 		while fy < bottom:
 			if fy > vt and fy < vb:
@@ -5166,7 +5166,7 @@ func _draw_world() -> void:
 		# muddy bank, then the water inside it, from one outline
 		_draw_pinned_patch(bank, pc, Color(0.40, 0.36, 0.28), 1.08)
 		_draw_pinned_patch(bank, pc, Color(0.31, 0.44, 0.52), 0.94)
-		var wt := Time.get_ticks_msec() / 1000.0
+		var wt := AnimClock.msec() / 1000.0
 		for i in range(4):
 			var wy := pond.position.y + 70.0 + i * 105.0
 			draw_arc(Vector2(pc.x + sin(wt * 0.7 + i) * 40.0, wy), 26.0, PI * 0.15, PI * 0.85, 10, Color(1, 1, 1, 0.14), 2.0)
@@ -5187,7 +5187,7 @@ func _draw_world() -> void:
 		draw_line(Vector2(-400, ly - LANE_HALF), Vector2(1700, ly - LANE_HALF), COL_STRIPE, 2.0)
 		draw_line(Vector2(-400, ly + LANE_HALF), Vector2(1700, ly + LANE_HALF), COL_STRIPE, 2.0)
 		var ls: Dictionary = lane_state[i]
-		if ls.phase == 1 and fmod(Time.get_ticks_msec() / 150.0, 2.0) < 1.0:
+		if ls.phase == 1 and fmod(AnimClock.msec() / 150.0, 2.0) < 1.0:
 			var wx := 40.0 if ls.dir > 0 else 1240.0
 			draw_circle(Vector2(wx, ly), 16.0, Color(0.95, 0.8, 0.25))
 			draw_rect(Rect2(wx - 2.0, ly - 9.0, 4.0, 10.0), Color(0.15, 0.15, 0.15))
@@ -5317,7 +5317,7 @@ func _draw_world() -> void:
 	# concentric alpha fakes a falloff gradient cheaply, and because the
 	# lamps never move the 30fps world redraw is plenty.
 	if Game.night:
-		var lamp_t := Time.get_ticks_msec() / 1000.0
+		var lamp_t := AnimClock.msec() / 1000.0
 		for i in range(deco_pole_count):
 			var lp := poles[i]
 			if lp.y < vt - 190.0 or lp.y > vb + 190.0:
@@ -5475,7 +5475,7 @@ func _draw_world() -> void:
 		draw_line(v + Vector2(0, 58), v + Vector2(0, 66), Color(0.55, 0.55, 0.56), 2.0)
 		draw_rect(Rect2(v.x - 32.0, v.y + 4.0, 64.0, 7.0), Color(0.62, 0.28, 0.24))
 		# a hazard beacon on the cab, because it is parked where it should not be
-		var beat := 0.55 + 0.45 * sin(Time.get_ticks_msec() / 190.0)
+		var beat := 0.55 + 0.45 * sin(AnimClock.msec() / 190.0)
 		draw_circle(v + Vector2(0, -40.0), 4.0, Color(0.95, 0.62, 0.15, 0.55 + beat * 0.45))
 	# THE FUR-GONETA. A grooming van done up as a shaggy dog, in the tradition
 	# of every mobile groomer that has ever driven past you - fur over the whole
@@ -5563,7 +5563,7 @@ func _draw_world() -> void:
 		# the front bumper, in van grey rather than a collar
 		draw_rect(Rect2(v.x - 31.0, v.y - 33.0, 62.0, 6.0), Color(0.40, 0.38, 0.36))
 		# --- the tail, wagging, on the back doors -------------------------
-		var wag := sin(Time.get_ticks_msec() / 210.0) * 0.55
+		var wag := sin(AnimClock.msec() / 210.0) * 0.55
 		var tail_dir := Vector2(0.0, 1.0).rotated(wag)
 		var tail_root := v + Vector2(0.0, 64.0)
 		draw_line(tail_root, tail_root + tail_dir * 30.0, fur_dark, 11.0)
@@ -5605,7 +5605,7 @@ func _draw_world() -> void:
 	if conveyor_zone.size.y > 0.0 and conveyor_zone.end.y > vt and conveyor_zone.position.y < vb:
 		draw_rect(conveyor_zone, Color(0.32, 0.34, 0.38))
 		draw_rect(conveyor_zone, Color(0.55, 0.58, 0.62), false, 2.0)
-		var scroll := fmod(Time.get_ticks_msec() / 1000.0 * 90.0, 60.0) * conveyor_dir.y
+		var scroll := fmod(AnimClock.msec() / 1000.0 * 90.0, 60.0) * conveyor_dir.y
 		var cy := conveyor_zone.position.y + fmod(scroll, 60.0)
 		while cy < conveyor_zone.end.y + 60.0:
 			if cy > vt - 20.0 and cy < vb + 20.0:
@@ -5684,7 +5684,7 @@ func _draw_world() -> void:
 		draw_line(tip, tip - away.rotated(-0.5) * 7.0, Color(0.85, 1.0, 0.85, 0.95), 3.0)
 	# El Desguas: sweeping camera cones and laser tripwires
 	if lvl == "scrap":
-		var st := Time.get_ticks_msec() / 1000.0
+		var st := AnimClock.msec() / 1000.0
 		for c in cameras:
 			var cp: Vector2 = c.pos
 			if cp.y < vt - 220.0 or cp.y > vb + 220.0:
@@ -5750,7 +5750,7 @@ func _draw_world() -> void:
 				Color(base.r * 0.7, base.g * 0.7, base.b * 0.7, 0.6))
 	# El Gotic: laundry strung across the alley overhead, a lantern or two
 	if lvl == "oldtown":
-		var lt := Time.get_ticks_msec() / 1000.0
+		var lt := AnimClock.msec() / 1000.0
 		var wash := [Color(0.8, 0.3, 0.35), Color(0.3, 0.5, 0.7), Color(0.9, 0.85, 0.6), Color(0.4, 0.65, 0.5)]
 		for i in range(laundry_lines.size()):
 			var ly: float = laundry_lines[i]
@@ -5766,7 +5766,7 @@ func _draw_world() -> void:
 			draw_circle(Vector2(sw_l + 6.0, lyy), 6.0, Color(1.0, 0.8, 0.4, glow))
 	# street performers: a hat, some coins, music in the air. In the rain
 	# they are an umbrella crowd instead - hunched under canopies, no busking.
-	var pt := Time.get_ticks_msec() / 1000.0
+	var pt := AnimClock.msec() / 1000.0
 	var raining := Game.weather == "rain"
 	var brolly_cols := [Color(0.75, 0.2, 0.25), Color(0.2, 0.35, 0.6), Color(0.25, 0.5, 0.35), Color(0.35, 0.3, 0.4)]
 	for idx in range(performers.size()):

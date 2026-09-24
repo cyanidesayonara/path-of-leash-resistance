@@ -33,6 +33,9 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	view_size = get_viewport_rect().size
+	# shot mode photographs the same rain every time (see AnimClock)
+	if AnimClock.frame_clock:
+		_rng.seed = 1
 	get_viewport().size_changed.connect(func() -> void: view_size = get_viewport_rect().size)
 	for i in range(90):
 		drops.append(Vector2(_rng.randf() * view_size.x, _rng.randf() * view_size.y))

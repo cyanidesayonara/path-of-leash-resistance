@@ -89,7 +89,7 @@ func scare() -> void:
 
 
 func _draw() -> void:
-	var t := Time.get_ticks_msec() / 1000.0
+	var t := AnimClock.msec() / 1000.0
 	if kind == "rat":
 		# passeig rats: grey, quick, long naked tail; Millie finds them
 		# every bit as compelling as squirrels

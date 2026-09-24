@@ -33,7 +33,7 @@ class PhoneGlyph:
 		var h := minf(size.x, size.y) * 0.8
 		var w := h * 0.52
 		# drawing-only animation: the wall clock is fine here
-		var t := fmod(Time.get_ticks_msec() / 1000.0, 2.4)
+		var t := fmod(AnimClock.msec() / 1000.0, 2.4)
 		var k := clampf((t - 0.6) / 0.8, 0.0, 1.0)
 		k = k * k * (3.0 - 2.0 * k)
 		draw_set_transform(c, -PI * 0.5 * k)

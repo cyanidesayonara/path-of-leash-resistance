@@ -57,7 +57,7 @@ func wake() -> void:
 
 
 func _draw() -> void:
-	var t := Time.get_ticks_msec() / 1000.0
+	var t := AnimClock.msec() / 1000.0
 	# the post and chain
 	draw_rect(Rect2(-3, -26, 6, 14), Color(0.4, 0.33, 0.28))
 	var sag := Vector2(-14, -6 + sin(t + seed_o) * 1.0)

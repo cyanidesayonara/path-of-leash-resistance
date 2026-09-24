@@ -158,6 +158,13 @@ push to main and uploads the sheets as an artifact; it does not gate CI:
 ```
 GODOT=godot/Godot_v4.7-stable_win64_console.exe bash tools/shot_sweep.sh
 ```
+Sweeps are deterministic on one machine (fixed frame rate and seed, and
+cosmetic animation reads `AnimClock.msec()`, which shot mode pins to the frame
+count), so a render refactor can prove it changed no pixel:
+```
+python tools/shot_diff.py shots-before shots-after diffs
+```
+Never read `Time.get_ticks_msec()` in a `_draw`; use `AnimClock.msec()`.
 
 Rope solver benchmark: time per `leash.tick()` in three fixed scenarios, plus
 a hash of every solver output. A speed-up meant to change nothing must leave
