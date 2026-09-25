@@ -153,6 +153,10 @@ static func build(m: Node2D) -> void:
 	m.prompt_tw.tween_property(m.prompt_l, "modulate:a", 1.0, 0.7)
 	var touch := Control.new()
 	touch.set_script(load("res://hud/touch_controls.gd"))
+	touch.main = m
+	# pause and end-state controls sit over the dim, beside the card that asks
+	# for them; dead gameplay buttons hide while a result/death card is up
+	touch.z_index = 20
 	m.hud.add_child(touch)
 	# the combo meter: trick string + score/multiplier over a draining
 	# window bar, bottom-centre, only visible while a chain is live

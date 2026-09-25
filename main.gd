@@ -3924,7 +3924,7 @@ func _update_tut_card() -> void:
 	tut_label.text = String(st.title)
 	var body := String(st.body)
 	if String(st.id) != "done":
-		body += "        ({share} to skip)"
+		body += "        ({skip} to move on)"
 	tut_hint.text = Prompts.fill(body)
 	# a green flash of acknowledgement as each lesson lands
 	var glow: float = clampf(tut_flash, 0.0, 1.0)
