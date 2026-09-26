@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-09-26 - merges, a handover refresh, and a rope idea dropped
+
+#71 (touch controls, finished off with SKIP and SHARE) and #64 (La Neteja)
+merged; #20 closed. The behaviour-snapshot baseline was rebuilt on main now
+that the chase has moved, and HANDOVER.md rewritten for the state after
+v1.55. Tried and dropped: sleeping NPC walker ropes far off camera. The gain
+was within noise and the snapshot changed (two walks finished 0.6 s and
+8.2 s later), so it is recorded on #45 rather than merged.
+
 ## 2026-09-24 - La Neteja: the sweeper chase gets its own walk (#20)
 
 A thirteenth walk, and the chase's new home. La Neteja ("the dawn
