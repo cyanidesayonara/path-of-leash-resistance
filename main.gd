@@ -3566,6 +3566,8 @@ func zone_has_point(z: Dictionary, p: Vector2) -> bool:
 	# from drifting apart the way the old surface bools did.
 	if z.has("patch"):
 		return patch_has_point(z["patch"] as Dictionary, p)
+	if z.has("band"):
+		return band_has_point(z["band"] as Dictionary, p)
 	return (z["rect"] as Rect2).has_point(p)
 
 
@@ -3929,7 +3931,7 @@ func _update_tut_card() -> void:
 	tut_label.text = String(st.title)
 	var body := String(st.body)
 	if String(st.id) != "done":
-		body += "        ({share} to skip)"
+		body += "        ({skip} to move on)"
 	tut_hint.text = Prompts.fill(body)
 	# a green flash of acknowledgement as each lesson lands
 	var glow: float = clampf(tut_flash, 0.0, 1.0)
@@ -5093,7 +5095,11 @@ func _draw() -> void:
 
 func _draw_world() -> void:
 	var top := GATE_Y - 800.0
-	var bottom := START_Y + 320.0
+	# The ground runs well past the start line: the south wall stops the dog
+	# at about START_Y + 110, and the camera on her there sees 280 px further
+	# down at 1280x720 (375 at 1280x960). Stopping at START_Y + 320 left a
+	# strip of bare background along the bottom of the finish (#67).
+	var bottom := START_Y + 560.0
 	# The corridor's cross-section stops at the gate. It used to be painted all
 	# the way to the top of the level, which was invisible while the off-leash
 	# space was drawn afterwards in the same pass - but that space lives on its
@@ -5724,6 +5730,16 @@ func _draw_world() -> void:
 			# box round every sand drift on the promenade
 			continue
 		var zc: Color = SUBSTANCES[String(sz.kind)].col
+		if sz.has("band"):
+			# only the stretch on screen: a band can run the length of the walk
+			var bd: Dictionary = (sz["band"] as Dictionary).duplicate()
+			var y0: float = maxf(float(bd["y"]), vt - 40.0)
+			var y1: float = minf(float(bd["y"]) + float(bd["h"]), vb + 40.0)
+			if y1 > y0:
+				bd["y"] = y0
+				bd["h"] = y1 - y0
+				draw_band(_wc, bd, Color(zc.r, zc.g, zc.b, 0.55))
+			continue
 		_wc.draw_rect(zr, Color(zc.r, zc.g, zc.b, 0.55))
 		_wc.draw_rect(zr, Color(zc.r, zc.g, zc.b, 0.85), false, 2.0)
 	_draw_scents()

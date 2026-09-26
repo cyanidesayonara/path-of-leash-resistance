@@ -226,6 +226,8 @@ applies to every change, whoever makes it.
 - No emoji anywhere (code, UI, docs, commits)
 - Plain comments that state constraints, not narration
 - Honest, incremental git history; imperative commit subjects
+- Commits are authored only by Santtu Nykänen. Never add `Co-authored-by`
+  trailers or AI/tool acknowledgements.
 - Feel/tuning decisions are made by playtesting, not by argument. Tuning
   knobs live in named constants at the top of each script.
 - Update CHANGELOG.md at the end of every working session

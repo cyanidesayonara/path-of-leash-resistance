@@ -252,6 +252,10 @@ func _ready() -> void:
 			var w := arg.trim_prefix("--weather=")
 			if w in WEATHERS:
 				weather = w
+		elif arg == "--night":
+			# after dark, as the title's TIME toggle would set it - for
+			# screenshots and the level review (#21)
+			night = true
 		elif arg == "--daily":
 			level_id = "daily"
 		elif arg == "--tutorial":

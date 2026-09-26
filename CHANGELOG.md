@@ -32,6 +32,36 @@ chase autowalks, and five idle soaks whose seed used to roll a chase.
 Not yet: the dawn light, and the grass that shows beyond the pavement at the
 start of the market-based walks (El Gotic has it too; #21).
 
+## 2026-09-25 - the missing touch actions get buttons (#62)
+
+Touch now has context-sensitive controls for the actions missing in #62:
+RUN during a walk, MENU on the title and while walking or paused, SKIP during
+tutorial lessons, SHARE on daily results, and the goals card itself opens the
+goal list. Restart only appears once a walk has stopped, away from the goals
+card, instead of sitting one tap from an accidental reset throughout the walk.
+The controls are checked at three landscape window shapes in
+`tests/test_touch_controls.gd`.
+
+## 2026-09-24 - snow follows the path on the walks that bend
+
+Second level-review pass (#21): every walk in rain, wind, snow and at night,
+and at 844x390. Night, wind and rain read on every walk and the phone
+landscape fits. Snow did not, on El Bosc and El Mosaic: its slush was a
+rectangle between the corridor's nominal edges, so the bending path ran out
+from under it (bare dirt beside the snow) and slush lay on the grass, over El
+Bosc's pond too. The slush is a band that follows `walk_edges()` now, using
+the band helpers the patches already had, and it draws only the stretch on
+screen. `tests/test_snow_slush.gd` checks the whole length of three walks and
+fails on the old rectangle. Also new: `--night`, for screenshots and reviews.
+
+## 2026-09-24 - the ground reaches the bottom of the finish (#67)
+
+The world's ground was painted down to 320 px past the start line. The south
+wall stops the dog about 110 px past it, and the camera on her there sees
+280 px further (375 at 1280x960), so the finish showed a strip of bare
+background along the bottom of the frame on every walk. It is painted to
+560 px past the start now.
+
 ## 2026-09-24 - world labels keep clear of the feed (#66)
 
 World labels ("FULL!", "hello? ...oh hi", "click!") are drawn at their
