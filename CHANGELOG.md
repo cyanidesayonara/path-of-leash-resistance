@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-09-25 - the missing touch actions get buttons (#62)
+
+Touch now has context-sensitive controls for the actions missing in #62:
+RUN during a walk, MENU on the title and while walking or paused, SKIP during
+tutorial lessons, SHARE on daily results, and the goals card itself opens the
+goal list. Restart only appears once a walk has stopped, away from the goals
+card, instead of sitting one tap from an accidental reset throughout the walk.
+The controls are checked at three landscape window shapes in
+`tests/test_touch_controls.gd`.
+
 ## 2026-09-24 - snow follows the path on the walks that bend
 
 Second level-review pass (#21): every walk in rain, wind, snow and at night,

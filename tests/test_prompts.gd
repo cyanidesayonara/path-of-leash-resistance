@@ -75,7 +75,8 @@ func _names_and_fill() -> void:
 	_check(Prompts.key("plant") == "A" and Prompts.key("restart") == "Start" and Prompts.pad(), "controller names")
 	Prompts.device = Prompts.TOUCH
 	_check(Prompts.key("plant") == "DIG" and Prompts.key("pee") == "PEE", "touch names are the touch buttons' labels")
-	_check(Prompts.key("turbo") == "SHIFT", "an action with no touch button falls back to its key")
+	_check(Prompts.key("turbo") == "RUN" and Prompts.key("pause") == "MENU", "the touch buttons for turbo and the menu (#62)")
+	_check(Prompts.key("share") == "SHARE" and Prompts.key("skip") == "SKIP", "touch names distinguish sharing from tutorial skipping")
 	Prompts.device = Prompts.KEYS
 	var t := Prompts.fill("{plant}  resume     {restart}  restart")
 	_check(t == "SPACE  resume     R  restart", "fill replaces every token (%s)" % t)
