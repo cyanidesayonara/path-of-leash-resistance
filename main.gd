@@ -3679,6 +3679,8 @@ func surface_at(p: Vector2) -> int:
 			match String(pt["kind"]):
 				"mud": return Surfaces.S.MUD
 				"tile": return Surfaces.S.TILE
+				# a mess to carry around, not ground that slows you
+				"paint", "fish", "oil", "confetti": continue
 				_: return Surfaces.S.SAND
 	if lvl == "beach":
 		# THE SEAFRONT HAS NO GRASS. Its cross-section is sea, sand, boardwalk,
