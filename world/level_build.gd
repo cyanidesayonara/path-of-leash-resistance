@@ -575,6 +575,21 @@ static func build_level_data(m: Node2D) -> void:
 	build_ground_detail(m)
 	build_freedom_area(m)
 	lift_props_out_of_water(m)
+	# The messes that were painted as translucent rectangles (paint, fish,
+	# oil, confetti, El Bosc's big mud) are patches like the rest: an organic
+	# shape across the path where it is, not a box with an outline.
+	var mw: float = m.walk_half * 2.0
+	match m.lvl:
+		"site":
+			m.patches.append({"y": -2425.0, "at": 0.24, "rx": mw * 0.18, "ry": 62.0, "seed": 3.30, "kind": "paint"})
+		"market":
+			m.patches.append({"y": -2985.0, "at": 0.22, "rx": mw * 0.16, "ry": 56.0, "seed": 1.85, "kind": "fish"})
+		"scrap":
+			m.patches.append({"y": -1780.0, "at": 0.27, "rx": mw * 0.20, "ry": 60.0, "seed": 4.40, "kind": "oil"})
+		"spook":
+			m.patches.append({"y": -2070.0, "at": 0.29, "rx": mw * 0.22, "ry": 66.0, "seed": 2.65, "kind": "confetti"})
+		"trail":
+			m.patches.append({"y": -3575.0, "at": 0.28, "rx": mw * 0.20, "ry": 62.0, "seed": 5.55, "kind": "mud"})
 	# after the water and the holes are known, so a puddle cannot end up in
 	# the pond and cement cannot be poured over a manhole
 	settle_patches(m)
@@ -803,27 +818,16 @@ static func build_substance_zones(m: Node2D) -> void:
 		# but it does not come away on her paws the way wet cement does
 		if not m.SUBSTANCES.has(String(pt["kind"])):
 			continue
+		var pk := String(pt["kind"])
 		m.substance_zones.append({"rect": m.patch_bounds(pt), "patch": pt,
-			"kind": String(pt["kind"]), "slow": true})
+			"kind": pk, "slow": pk in ["mud", "cement", "sand"]})
 	for cz in m.cement_zones:
 		m.substance_zones.append({"rect": cz, "kind": "cement", "slow": true})
 	var w = m.sw_r - m.sw_l
 	match m.lvl:
-		"site":
-			# a works has wet paint as well as wet cement
-			m.substance_zones.append({"rect": Rect2(m.sw_l + 20.0, -2500.0, w * 0.4, 150.0), "kind": "paint"})
 		"beach":
 			# the whole sand side, which is most of the beach
 			m.substance_zones.append({"rect": Rect2(230.0, m.GATE_Y, 150.0, absf(m.GATE_Y) + 400.0), "kind": "sand"})
-		"market":
-			# the fishmonger's patch, and everyone will know about it
-			m.substance_zones.append({"rect": Rect2(m.sw_l + 30.0, -3050.0, w * 0.35, 130.0), "kind": "fish"})
-		"scrap":
-			m.substance_zones.append({"rect": Rect2(m.sw_l + 40.0, -1850.0, w * 0.45, 140.0), "kind": "oil"})
-		"spook":
-			m.substance_zones.append({"rect": Rect2(m.sw_l + 25.0, -2150.0, w * 0.5, 160.0), "kind": "confetti"})
-		"trail":
-			m.substance_zones.append({"rect": Rect2(m.sw_l + 20.0, -3650.0, w * 0.5, 150.0), "kind": "mud", "slow": true})
 	# snow turns the whole walk to slush underfoot, whatever the level. A band
 	# that follows the path, not a rectangle: on the walks that bend (El Bosc,
 	# El Mosaic) a rectangle between the nominal edges left the path running

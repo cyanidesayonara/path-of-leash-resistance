@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-09-26 - the last rectangles underfoot are patches
+
+Five substance zones were still translucent rectangles with an outline:
+Les Obres' wet paint, El Mercat's fish, La Ferralla's oil, La Castanyada's
+confetti and El Bosc's big mud. They are organic patches now, like the
+puddles, cement and sand, placed by the same settling pass. Paint, fish, oil
+and confetti stay a mess to carry (they never slowed the dog, and patches
+now only slow her for mud, cement and sand). Self-tests pass on all five
+walks, and the behaviour snapshot is identical.
+
 ## 2026-09-26 - merges, a handover refresh, and a rope idea dropped
 
 #71 (touch controls, finished off with SKIP and SHARE) and #64 (La Neteja)
