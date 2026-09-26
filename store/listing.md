@@ -7,6 +7,11 @@ moods, surfaces, and "What's new" filled in). Copy from here for the next
 submission, and update this file whenever the live listing changes, so it
 stays the record of what the Store says.
 
+Next release: La Neteja makes it thirteen walks, and the chase now has its
+own walk rather than turning up on any of them. The description ("Twelve
+walks ...", "Some walks turn into a chase ...") and the "Twelve hand-built
+walks" feature need updating then.
+
 ## Properties
 
 - Category: Games. Genres: Action + adventure, Family + kids.

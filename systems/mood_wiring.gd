@@ -103,10 +103,11 @@ static func _ambient(m: Node2D, delta: float) -> void:
 	# hum at a corridor's distance and climbs hard over the last stretch.
 	# Suppressed under --shot-sweeper only, so the machine's paint can be
 	# reviewed in daylight rather than through a frightened dog's eyes.
-	if m.chase_active and not "--shot-sweeper" in OS.get_cmdline_user_args():
-		var near := 0.0
-		if m.chase_sweeper != null:
-			near = clampf(1.0 - m.chase_sweeper.gap_to(m.dog.global_position) / 900.0, 0.0, 1.0)
+	# Only once the machine is on the road: chase_active is set at level start,
+	# and reading it alone kept the dog SCARED the whole way OUT, before there
+	# was anything behind her at all.
+	if m.chase_active and m.chase_sweeper != null and not "--shot-sweeper" in OS.get_cmdline_user_args():
+		var near := clampf(1.0 - m.chase_sweeper.gap_to(m.dog.global_position) / 900.0, 0.0, 1.0)
 		m.mood.bump(Mood.M.SCARED, delta * (0.16 + 0.90 * near * near))
 
 

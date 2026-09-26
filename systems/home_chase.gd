@@ -13,23 +13,41 @@ const CHASE_SPEED := 140.0
 const CHASE_SPEED_BOLT := 205.0
 const CHASE_SPEED_BOTH := 220.0
 const CHASE_START_GAP := 650.0
+# the walk the chase lives on (#20): only here does the home leg roll one
+const CHASE_LEVEL := "neteja"
+# the "outrun" goal: never let the machine closer than this to the dog or
+# the human, about a leash length
+const OUTRUN_GAP := 150.0
+# how long the machine rolls over whoever it caught before the card comes up,
+# so being swept is something you SEE happen rather than a cut to a caption
+const CATCH_BEAT := 0.75
 
 const EventFeed := preload("res://hud/event_feed.gd")
 
 
-# At level start. Forced with --chase (slow sweeper), --bolt (fast, owner
-# panics) or --rescue (both); otherwise a seeded chance and a roll for which
-# kind. It takes over the home leg, so it and the Tofu herding are mutually
-# exclusive. The randf() calls are part of the walk's seeded sequence: their
-# number and order must not change.
+# At level start. La Neteja always gets one; any walk can be forced with
+# --chase (slow sweeper), --bolt (fast, owner panics) or --rescue (both).
+# Then a roll for which kind. It takes over the home leg, so it and the Tofu
+# herding are mutually exclusive.
+#
+# The chase used to roll on a quarter of every walk. It lives on its own walk
+# now (#20), but the roll is still made, and ignored elsewhere: the randf()
+# calls are part of each walk's seeded sequence (dailies, --seed replays, the
+# soak), and dropping one would reshuffle everything drawn after it.
 static func roll(m: Node2D) -> void:
 	var args := OS.get_cmdline_user_args()
 	var chase_forced := "--chase" in args
 	var bolt_forced := "--bolt" in args
 	var rescue_forced := "--rescue" in args
-	m.chase_active = (chase_forced or bolt_forced or rescue_forced or (not m.auto_walk and not Game.daily and randf() < 0.25)) and not m.tutorial_mode
-	if m.chase_active:
-		m.tofu_quest_active = false
+	var chase_walk: bool = m.lvl == CHASE_LEVEL
+	var forced := chase_forced or bolt_forced or rescue_forced
+	# the old roll, drawn exactly when it always was
+	var rolled: bool = forced or (not m.auto_walk and not Game.daily and randf() < 0.25)
+	m.chase_active = (forced or chase_walk) and not m.tutorial_mode
+	# ...and so is the kind: whenever the old roll would have started a chase
+	if m.chase_active or (rolled and not m.tutorial_mode):
+		if m.chase_active:
+			m.tofu_quest_active = false
 		if bolt_forced:
 			m.chase_kind = "bolt"
 		elif rescue_forced:
@@ -46,10 +64,14 @@ static func begin(m: Node2D) -> void:
 	var owner_flees: bool = m.chase_kind == "bolt" or m.chase_kind == "both"
 	var sweeper := Node2D.new()
 	sweeper.set_script(load("res://entities/sweeper.gd"))
-	sweeper.z_index = 8
 	sweeper.kind = m.chase_kind
 	m.chase_sweeper = sweeper
 	m.add_child(sweeper)
+	# Behind the living: the brushes reach a little past the kill line, and a
+	# machine drawn over the human or the leash (#20) read as a bug, not a
+	# threat. Anyone it draws over is already caught - see the catch beat.
+	m.move_child(sweeper, mini(m.dog.get_index(), m.human.get_index()))
+	m.chase_min_gap = INF
 	var spd := CHASE_SPEED
 	if m.chase_kind == "bolt":
 		spd = CHASE_SPEED_BOLT
@@ -84,15 +106,34 @@ static func tick(m: Node2D, delta: float) -> void:
 	var gap: float = sweeper.gap_to(m.dog.global_position)
 	if gap < 260.0:
 		m.shake_t = maxf(m.shake_t, 0.25)
+	m.chase_min_gap = minf(m.chase_min_gap, minf(gap, sweeper.gap_to(m.human.global_position)))
+	if m.chase_catch_t > 0.0:
+		# the catch beat: the machine keeps rolling over them, then the card
+		m.chase_catch_t -= delta
+		m.shake_t = maxf(m.shake_t, 0.4)
+		if m.chase_catch_t <= 0.0:
+			m._death(m.chase_catch_msg)
+		return
 	if m.auto_walk:
 		return  # the attract/CI bot carries an unsweepable dog
 	if sweeper.caught(m.human.global_position):
 		if m.chase_kind == "sweeper":
-			m._death("THE SWEEPER GOT YOUR HUMAN\n\nThey never once looked up from the phone.\nYou did try to tell them.")
+			_catch(m, "THE SWEEPER GOT YOUR HUMAN\n\nThey never once looked up from the phone.\nYou did try to tell them.")
 		else:
-			m._death("THEY GOT YOUR HUMAN\n\nYou pulled. You barked. It was not enough.")
+			_catch(m, "THEY GOT YOUR HUMAN\n\nYou pulled. You barked. It was not enough.")
 	elif sweeper.caught(m.dog.global_position):
 		if m.chase_kind == "sweeper":
-			m._death("YOU WENT INTO THE BRUSHES\n\nYou came out suspiciously clean.\nThe walk did not come out at all.")
+			_catch(m, "YOU WENT INTO THE BRUSHES\n\nYou came out suspiciously clean.\nThe walk did not come out at all.")
 		else:
-			m._death("NOBODY WAITED FOR YOU\n\nYou snagged, the leash went tight, and\nthey kept walking. They always keep walking.")
+			_catch(m, "NOBODY WAITED FOR YOU\n\nYou snagged, the leash went tight, and\nthey kept walking. They always keep walking.")
+
+
+# Caught: bring the machine to the front so it visibly rolls over them, shout
+# it, and hold the card back for CATCH_BEAT.
+static func _catch(m: Node2D, msg: String) -> void:
+	var sweeper: Node2D = m.chase_sweeper
+	sweeper.z_index = 8
+	m.chase_catch_t = CATCH_BEAT
+	m.chase_catch_msg = msg
+	m.shake_t = 1.0
+	m.feed.say("SWEPT!", EventFeed.Tone.BAD)

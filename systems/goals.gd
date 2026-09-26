@@ -11,6 +11,7 @@ extends RefCounted
 
 const EventFeed := preload("res://hud/event_feed.gd")
 const UiIcons := preload("res://hud/ui_icons.gd")
+const HomeChase := preload("res://systems/home_chase.gd")
 
 const LEVEL_GOAL_IDS := {
 	"street": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "fling", "carry", "combo", "prize"],
@@ -28,6 +29,11 @@ const LEVEL_GOAL_IDS := {
 	# riding the serpentine bench (combo), plus the park staples.
 	"guell": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi",
 		"drink", "fling", "combo", "prize"],
+	# La Neteja: the chase is the walk home, so no Tofu (the two never share
+	# a home leg) and a goal for doing the chase WELL rather than just
+	# surviving it, which finishing already proves.
+	"neteja": ["mark", "sniff", "phone", "paws", "bag", "fetch", "hi", "snack",
+		"combo", "prize", "outrun"],
 }
 
 
@@ -55,6 +61,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"combo": {"text": "land an x%d combo", "target": 5, "fn": func() -> int: return int(m.combo.best_mult) if m.combo != null else 0},
 		"tummy": {"text": "walk past every chocolate", "target": 1, "fn": func() -> int: return 1 if m.candy_eaten == 0 else 0},
 		"ghost": {"text": "cross the yard, wake nobody", "target": 1, "fn": func() -> int: return 1 if m.guards_woken == 0 else 0},
+		"outrun": {"text": "never let the sweeper within a leash length", "target": 1, "fn": func() -> int: return 1 if m.chase_min_gap >= HomeChase.OUTRUN_GAP else 0},
 		"unseen": {"text": "never once be spotted", "target": 1, "fn": func() -> int: return 1 if m.times_spotted == 0 else 0},
 		"prize": {"text": m.prize_text, "target": 1, "fn": func() -> int: return 1 if m.prize_taken else 0},
 	}

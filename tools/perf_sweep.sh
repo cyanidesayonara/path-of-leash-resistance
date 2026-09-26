@@ -16,7 +16,7 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 OUT="${1:-perf}"
 GODOT="${GODOT:-./Godot_v4.7-stable_linux.x86_64}"
-LEVELS="${LEVELS:-street park beach rain market oldtown trail station site spook scrap guell}"
+LEVELS="${LEVELS:-street park beach rain market oldtown trail station site spook scrap guell neteja}"
 SECS="${SECS:-60}"
 RES="${RES:-1280x720}"
 
