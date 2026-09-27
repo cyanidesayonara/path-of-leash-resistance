@@ -276,16 +276,13 @@ door. The vocabulary grows in stages, each one a PR with its own test:
    polyline with widths instead of one edge pair per height, so an alley
    can turn a right angle, run sideways, double back. `walk_edges(y)`
    becomes a query over it; everything that asks it keeps working. This
-   is what El Gotic's alleys really need, and what an Escher walk needs.
-5. **Doors (the pinnacle).** Walk into one door, come out of another
-   somewhere else, over a bridge that could not connect. The hard part is
-   honest: the leash IS the physics, so a rope that runs through a door
-   has to be modelled as running through it (the dog through the door,
-   the owner still on the far side, the rope drawn from the dog to the
-   exit door and from the entry door to the owner, the tension carried
-   across). Worth it for one walk built around it: L'Escher, greyscale
-   pencil, stairs that tessellate, the owner dragged round a loop that
-   should not close.
+   is what El Gotic's alleys really need.
+5. **Doors between places (see Detours).** A door that leads into a
+   different room is a scene change, which the engine can already do: the
+   dog and the owner go through together, so the leash never has to span
+   two places. A door inside one place that the rope runs through while
+   the dog and the owner are on different sides is the hard version, and
+   is not planned.
 
 **Each walk's shape:**
 
@@ -304,7 +301,52 @@ door. The vocabulary grows in stages, each one a PR with its own test:
 | La Ferralla | A lane between scrap piles that shifts left and right, a crane's reach overhead. |
 | El Mosaic | The serpentine as now, the dragon stair splitting round the salamander (stage 2), the hypostyle grid, the viaduct's lean (see El Mosaic). |
 | La Neteja | Straight and narrow: the chase needs a straight. |
-| L'Escher | New walk, stages 4 and 5: doors, bridges, loops. |
+
+## Detours (art rooms off the main walks)
+
+Santtu: "easter egg-like detours from the main walks, like you enter through
+a secret door... say there's an entrance to a museum on the side of some
+level, and when you enter, it's a little secret level in the style of Dali,
+Picasso, Miro, maybe Joan Cornella... the levels don't have to be so secret,
+just more of a detour, like you walk past a Gaudi house and there's a big
+advertisement saying come in." Chosen over a separate art walk: the art
+walks list in PROJECT.md becomes these rooms.
+
+- **The door.** A doorway on the side of a walk with a banner over it
+  ("EXPOSICIO - ENTRADA LLIURE"), and a queue or a greeter. Walk the dog
+  in and the owner follows without looking up. Missing it costs nothing.
+- **The room.** A short scene, well under a minute, with its own rules and
+  its own look, then a door out onto the walk just past where you went in.
+  It gives dog business and one goal of its own; the walk's timer and
+  goals wait outside.
+- **One per walk at most**, placed where the real city would have it: the
+  modernist house on a La Rambla-like street, the gallery in El Gotic, the
+  museum on the hill above El Mosaic.
+- **Rooms, each an idea rather than a copy:**
+  - Melting (after Dali): lampposts that droop when you lean the leash on
+    them, long raking shadows that hide things, elephants on stilt legs on
+    the horizon.
+  - Primary shapes (after Miro): flat colours, heavy outlines, stars and
+    eyes and ladders as the things to collect, so the level and the goal
+    speak the same language.
+  - Many sides (after Picasso): kept to the walls and faces around a plain
+    floor, since a cubist floor would read as broken, not as art.
+  - Impossible stairs (after Escher): greyscale pencil, stairs that tile,
+    a loop that brings you back to the start one floor up, the owner
+    dragged round it.
+  - Deadpan (after Cornella): flat bright colours, blank smiles, one dark
+    joke that plays out whatever the dog does.
+  - Gaudi's house: curved walls, the mosaic, a chimney-pot roof garden as
+    the exit.
+- **Homage, not imitation.** The rooms borrow a way of seeing, never a
+  specific work or a character. The artists' names stay out of the game:
+  estates guard them (Picasso and Dali both as trademarks), and this game
+  has already been renamed once over a trademark. Banners name the show
+  ("EL SOMNI", "LA LINIA"), not the artist. Cornella is alive and working;
+  his style is the most distinctive and the easiest to cross the line
+  with, so that room waits until the others show how close is too close.
+- **Order.** After the walks themselves: one room first, as a test of the
+  door, the scene change and the way back out, then the rest.
 
 ## Pickpockets (a system for most walks)
 
@@ -363,4 +405,6 @@ slipping, all pretty slapstick of course, nothing too violent."
 
 Path shapes run alongside: stage 1 comes with each walk's own PR; stage 2
 (islands) before El Parc's pond split; stage 3 with Les Obres; stages 4 and
-5 are their own projects, El Gotic's turns first and L'Escher last.
+5 are their own projects, El Gotic's turns first.
+
+Detours come after the walks: one room to prove the door, then the rest.
