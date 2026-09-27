@@ -12,6 +12,16 @@ extends Node2D
 # opens out. (Set in _apply_corridor, per level.)
 var sw_l := 300.0
 var sw_r := 980.0
+# THE CROSS-SECTION either side of the walk (#65): pavement | strip | the
+# building line. Set per walk in LevelBuild.apply_corridor. A strip is "grass",
+# "sidewalk" or "none" (buildings straight onto the paving, as in an alley).
+# built is false on the green walks and the seafront, which keep their verge
+# out to the level edge and have no building line.
+var built := false
+var strip_l := 0.0
+var strip_r := 0.0
+var strip_kind_l := "none"
+var strip_kind_r := "none"
 # The corridor's shape down the level: a short list of {y, cx, half} control
 # nodes (edge_path.gd). Empty = the straight corridor sw_l..sw_r. Ask
 # walk_edges(y) rather than sw_l/sw_r anywhere the answer depends on WHERE
@@ -70,6 +80,10 @@ const COL_GRASS := Color(0.32, 0.42, 0.3)
 const COL_GRASS_DARK := Color(0.28, 0.37, 0.26)
 const COL_SIDEWALK := Color(0.68, 0.66, 0.61)
 const COL_SEAM := Color(0.6, 0.58, 0.53)
+# a sidewalk strip between the walk and the buildings (#65)
+const STRIP_SIDEWALK := Color(0.63, 0.61, 0.57)
+const STRIP_JOINT := Color(0.52, 0.50, 0.47, 0.6)
+const STRIP_KERB := Color(0.47, 0.46, 0.44)
 const COL_ROAD := Color(0.24, 0.24, 0.27)
 const COL_STRIPE := Color(0.75, 0.72, 0.63)
 
@@ -747,60 +761,52 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 		return  # bespoke cross-section, dressed in its own block
 	var mod := 220.0                     # height of one facade module
 	var depth := 78.0                    # how far the detailed frontage juts
-	# Built-up walks fill the whole verge with masonry, so no stray grass
-	# shows past the buildings - that is a big part of why an alley feels
-	# enclosed. Green walks (park, trail) keep their verge and just crowd
-	# the path with foliage instead.
-	var built := lvl != "park" and lvl != "trail"
+	# Built-up walks fill everything past the building line with masonry, so
+	# no stray grass shows past the buildings - a big part of why an alley
+	# feels enclosed. Green walks (park, trail) keep their verge and crowd
+	# the path with foliage instead. The line is main.frontage(y): the paving
+	# edge plus the walk's strip, and it follows the path where it bends, so
+	# everything here is drawn in horizontal slices at that slice's line.
 	if built:
 		var base := _edge_base_color()
 		var far := 520.0
-		var top_y := vt - 320.0
-		var h := (vb - vt) + 640.0
-		c.draw_rect(Rect2(sw_l - far, top_y, far, h), base)
-		c.draw_rect(Rect2(sw_r, top_y, far, h), base)
-		# Seen from directly overhead you do not see a facade at all - you
-		# see the ROOF. So the verge is roofscape, and the building reads as
-		# tall through three cues instead: a lit parapet cap along its edge,
-		# a hard shadow thrown across the pavement, and ambient darkening
-		# where wall meets ground.
-		# THE HEIGHT ILLUSION. A flat roof butted against flat pavement reads
-		# as ground you could stroll onto - which is exactly how it looked.
-		# So the roof is drawn inset from its footprint and the gap between
-		# them becomes a visible WALL FACE, angled toward the viewer: dark at
-		# the base, lighter up the wall, with a bright cap along the roof
-		# edge. Together with the cast shadow that gives a clear storey of
-		# height and makes the roofline unmistakably a roofline.
 		var face := 22.0
-		for i in range(7):
-			var f := float(i) / 6.0
-			# left block: its face looks right, into the street
-			var lx := sw_l - face + face * f
-			c.draw_rect(Rect2(lx, top_y, face / 6.0 + 1.0, h), base.darkened(0.52 - f * 0.34))
-			# right block: its face looks left, into the street
-			var rx := sw_r + face - face * f
-			c.draw_rect(Rect2(rx - face / 6.0 - 1.0, top_y, face / 6.0 + 1.0, h), base.darkened(0.56 - f * 0.34))
-		# the lit cap where the wall meets the roof, and a hard kerb line
-		c.draw_rect(Rect2(sw_l - face - 5.0, top_y, 5.0, h), base.lightened(0.30))
-		c.draw_rect(Rect2(sw_r + face, top_y, 5.0, h), base.lightened(0.24))
-		c.draw_line(Vector2(sw_l, top_y), Vector2(sw_l, top_y + h), Color(0.04, 0.03, 0.05, 0.55), 3.0)
-		c.draw_line(Vector2(sw_r, top_y), Vector2(sw_r, top_y + h), Color(0.04, 0.03, 0.05, 0.55), 3.0)
-		# the light is up-and-left, so the LEFT block throws a shadow out
-		# across the pavement; the right block throws its own away from us
 		var cast := 38.0
-		for i in range(6):
-			var f := float(i) / 5.0
-			c.draw_rect(Rect2(sw_l, top_y, cast * (1.0 - f * 0.82), h), Color(0.05, 0.04, 0.07, 0.055))
-		for i in range(3):
-			var g := float(i) / 2.0
-			c.draw_rect(Rect2(sw_r - 11.0 * (1.0 - g), top_y, 11.0 * (1.0 - g), h), Color(0.05, 0.04, 0.07, 0.05))
+		var slice := 55.0
+		var sy := floorf((vt - 320.0) / slice) * slice
+		while sy < vb + 320.0:
+			var f := frontage(sy + slice * 0.5)
+			var fl := f.x
+			var fr := f.y
+			c.draw_rect(Rect2(fl - far, sy, far, slice), base)
+			c.draw_rect(Rect2(fr, sy, far, slice), base)
+			# Seen from directly overhead you do not see a facade at all - you
+			# see the ROOF. The roof is inset from its footprint and the gap
+			# becomes a visible WALL FACE, angled toward the viewer: dark at the
+			# base, lighter up the wall, with a bright cap along the roof edge.
+			for i in range(7):
+				var t := float(i) / 6.0
+				c.draw_rect(Rect2(fl - face + face * t, sy, face / 6.0 + 1.0, slice), base.darkened(0.52 - t * 0.34))
+				c.draw_rect(Rect2(fr + face - face * t - face / 6.0 - 1.0, sy, face / 6.0 + 1.0, slice), base.darkened(0.56 - t * 0.34))
+			c.draw_rect(Rect2(fl - face - 5.0, sy, 5.0, slice), base.lightened(0.30))
+			c.draw_rect(Rect2(fr + face, sy, 5.0, slice), base.lightened(0.24))
+			# the light is up-and-left, so the LEFT block throws a shadow out
+			# across the ground; the right block throws its own away from us
+			for i in range(6):
+				var t := float(i) / 5.0
+				c.draw_rect(Rect2(fl, sy, cast * (1.0 - t * 0.82), slice), Color(0.05, 0.04, 0.07, 0.055))
+			for i in range(3):
+				var g := float(i) / 2.0
+				c.draw_rect(Rect2(fr - 11.0 * (1.0 - g), sy, 11.0 * (1.0 - g), slice), Color(0.05, 0.04, 0.07, 0.05))
+			sy += slice
 	# the roof sits BACK from the kerb by the depth of the wall face drawn
 	# above, otherwise the roof clutter would be painted over the wall
 	var inset := 27.0 if built else 0.0
 	var y := floorf((vt - mod) / mod) * mod
 	while y < vb + mod:
 		for side in [-1.0, 1.0]:
-			var inner: float = (sw_l - inset) if side < 0.0 else (sw_r + inset)
+			var line: Vector2 = frontage(y + mod * 0.5) if built else Vector2(sw_l, sw_r)
+			var inner: float = (line.x - inset) if side < 0.0 else (line.y + inset)
 			var x0: float = inner - depth if side < 0.0 else inner
 			# contiguous modules: gaps between them looked like missing wall
 			var r := Rect2(x0, y, depth, mod)
@@ -3621,6 +3627,59 @@ func draw_band(c: Object, band: Dictionary, col: Color, step := 40.0) -> void:
 	c.draw_colored_polygon(poly, col)
 
 
+# The strips either side of the walk on a built walk: grass, or a sidewalk
+# with its paving joints, from the paving edge out to the building line.
+# Sampled down the visible stretch, so they follow the path where it bends.
+func _draw_strips(vt: float, vb: float, grass: Color) -> void:
+	var y0 := maxf(vt - 60.0, GATE_Y - 40.0)
+	var y1 := minf(vb + 60.0, START_Y + 560.0)
+	for side: float in [-1.0, 1.0]:
+		var kind := strip_kind_l if side < 0.0 else strip_kind_r
+		if kind == "none":
+			continue
+		var col := grass if kind == "grass" else STRIP_SIDEWALK
+		var inner := PackedVector2Array()
+		var outer := PackedVector2Array()
+		var y := y0
+		while true:
+			var yy := minf(y, y1)
+			var e := walk_edges(yy)
+			var f := frontage(yy)
+			inner.append(Vector2(e.x if side < 0.0 else e.y, yy))
+			outer.append(Vector2(f.x if side < 0.0 else f.y, yy))
+			if yy >= y1:
+				break
+			y += 40.0
+		var poly := PackedVector2Array(inner)
+		for i in range(outer.size() - 1, -1, -1):
+			poly.append(outer[i])
+		_wc.draw_colored_polygon(poly, col)
+		if kind == "sidewalk":
+			# paving joints across the sidewalk, every slab
+			var jy := floorf(y0 / 48.0) * 48.0
+			while jy < y1:
+				var e2 := walk_edges(jy)
+				var f2 := frontage(jy)
+				var a := Vector2(e2.x if side < 0.0 else e2.y, jy)
+				var b := Vector2(f2.x if side < 0.0 else f2.y, jy)
+				_wc.draw_line(a, b, STRIP_JOINT, 1.5)
+				jy += 48.0
+			# the kerb along the paving edge
+			for i in range(inner.size() - 1):
+				_wc.draw_line(inner[i], inner[i + 1], STRIP_KERB, 3.0)
+
+
+func _on_grass_strip(p: Vector2) -> bool:
+	if not built:
+		return true
+	var e := walk_edges(p.y)
+	if p.x >= e.x and p.x <= e.y:
+		return false
+	var kind := strip_kind_l if p.x < e.x else strip_kind_r
+	var f := frontage(p.y)
+	return kind == "grass" and p.x > f.x and p.x < f.y
+
+
 func _draw_walk_ribbon(vt: float, vb: float, bottom: float, col: Color) -> void:
 	# The pavement as a ribbon following the corridor, for a level whose path
 	# bends. Sampled ONLY down the visible range: a walk is five thousand
@@ -3656,6 +3715,13 @@ func _draw_walk_ribbon(vt: float, vb: float, bottom: float, col: Color) -> void:
 	for pts: PackedVector2Array in [left, right]:
 		for i in range(pts.size() - 1):
 			_wc.draw_line(pts[i], pts[i + 1], COL_SEAM, 3.0)
+
+
+# Where the buildings start at this point down the walk: x = left building
+# line, y = right. Follows the path where it bends. Only meaningful when built.
+func frontage(y: float) -> Vector2:
+	var e := walk_edges(y)
+	return Vector2(e.x - strip_l, e.y + strip_r)
 
 
 func walk_edges(y: float) -> Vector2:
@@ -3700,8 +3766,16 @@ func surface_at(p: Vector2) -> int:
 	# the carriageway and its shoulder are hard ground, not verge. Checked
 	# after the walkway so the wider levels, whose pavement reaches across
 	# this band, still read as pavement.
-	if p.x >= BLANE_L - 10.0 and p.x <= SHOULDER_R:
+	# Only La Rambla has the bike lane; the other walks built on its
+	# cross-section have their own strips now (#65).
+	if lvl == "street" and p.x >= BLANE_L - 10.0 and p.x <= SHOULDER_R:
 		return Surfaces.S.PAVEMENT
+	# a sidewalk strip is paving; a grass strip falls through to grass. Only
+	# along the walk: the off-leash area past the gate keeps its own ground.
+	if built and p.y > GATE_Y:
+		var kind := strip_kind_l if p.x < e.x else strip_kind_r
+		if kind != "grass":
+			return Surfaces.S.PAVEMENT
 	# anything else is the green either side, which is now somewhere worth
 	# being rather than merely somewhere allowed
 	return Surfaces.S.GRASS
@@ -5193,9 +5267,15 @@ func _draw_world() -> void:
 		elif lvl == "market":
 			grass = COL_GRASS
 			walkway = Color(0.76, 0.73, 0.66)
-		_wc.draw_rect(Rect2(-400, ctop, 2100, bottom - ctop), grass)
+		if built:
+			# only the strips between the paving and the building line: beyond
+			# it the edge layer's buildings show (they sit behind the world, so
+			# a full-width lawn here hid every one of them, #65)
+			_draw_strips(vt, vb, grass)
+		else:
+			_wc.draw_rect(Rect2(-400, ctop, 2100, bottom - ctop), grass)
 		for t in tufts:
-			if t.y > vt and t.y < vb:
+			if t.y > vt and t.y < vb and _on_grass_strip(t):
 				_wc.draw_circle(t, 5.0, COL_GRASS_DARK)
 		# the walkway: sidewalk downtown, packed dirt in the park
 		if edge_nodes.is_empty():
