@@ -19,6 +19,14 @@ alone. `tests/test_cross_section.gd` checks all ten built walks; the
 behaviour snapshot is identical. Next: restyle each walk to look like its
 real counterpart, one per PR.
 
+## 2026-09-27 - v1.56
+
+Everything accepted since v1.55: La Neteja and the chase on its own walk
+(#64), touch controls (#71), prompts that follow the last device (#63), the
+feed and label overlap fixes (#61, #68), snow following the path (#70), the
+organic spills (#74) and the ground past the finish (#69). `store/listing.md`
+has the 1.56 Store text: thirteen walks, the new chase line, and "What's new".
+
 ## 2026-09-26 - the last rectangles underfoot are patches
 
 Five substance zones were still translucent rectangles with an outline:
