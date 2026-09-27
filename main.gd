@@ -1270,6 +1270,176 @@ func _draw_broadleaf(c: Object, p: Vector2, scale: float) -> void:
 	crown.flush(c)
 
 
+
+# El Bosc's ground: packed dark earth on the trail, leaf litter either side
+const TRAIL_DIRT := Color(0.50, 0.41, 0.29)
+const TRAIL_FLOOR := Color(0.25, 0.31, 0.19)
+const TRAIL_LITTER: Array = [
+	Color(0.36, 0.30, 0.17), Color(0.45, 0.33, 0.16), Color(0.21, 0.27, 0.16), Color(0.52, 0.40, 0.20),
+]
+
+
+# The wood is Collserola's: stone pines (a flat umbrella of needles on a red
+# trunk) and holm oaks (dense, dark, round). Roots run out across the trail
+# from the trunks at its edges, which is what makes it a trail and not a
+# park path.
+func _draw_forest_tree(c: Object, p: Vector2, i: int) -> void:
+	var e := walk_edges(p.y)
+	var edge_side := 0.0
+	if p.x < e.x + 50.0:
+		edge_side = 1.0
+	elif p.x > e.y - 50.0:
+		edge_side = -1.0
+	if edge_side != 0.0:
+		for ri in range(3):
+			var a := (float(ri) - 1.0) * 0.55 + (0.2 if i % 2 == 0 else -0.2)
+			var d := Vector2(edge_side, 0.0).rotated(a)
+			var tip := p + d * (34.0 + float((i + ri) % 3) * 12.0)
+			c.draw_line(p, tip, Color(0.33, 0.25, 0.16), 4.0 - float(ri % 2))
+			c.draw_line(p + Vector2(0, -1), tip + Vector2(0, -1), Color(0.44, 0.35, 0.23), 1.2)
+	if i % 3 == 1:
+		_draw_broadleaf(c, p, 0.85)   # holm oak
+		return
+	# stone pine: the umbrella crown, dark underneath, needle clumps on top
+	var r := 40.0
+	c.draw_set_transform(p + LIGHT * 52.0, 0.0, Vector2(1.15, 0.55))
+	c.draw_circle(Vector2.ZERO, r, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	var crown := ShapeBatch.new()
+	crown.circle(p + Vector2(2, 3), r, Color(0.20, 0.25, 0.13))
+	for k in range(9):
+		var a := TAU * float(k) / 9.0 + float(i) * 0.7
+		var lr := r * (0.58 + 0.12 * float((k + i) % 3))
+		crown.circle(p + Vector2.from_angle(a) * lr, r * 0.36, Color(0.30, 0.37, 0.18))
+	for k in range(5):
+		var a := TAU * float(k) / 5.0 + float(i) * 1.3
+		var lp := p + Vector2.from_angle(a) * r * 0.42 - LIGHT * 6.0
+		crown.circle(lp, r * 0.24, Color(0.40, 0.47, 0.24))
+	crown.circle(p - LIGHT * r * 0.5, r * 0.20, Color(0.48, 0.54, 0.29))
+	# the red-brown trunk showing through at the middle
+	crown.circle(p, 6.0, Color(0.42, 0.22, 0.14))
+	crown.circle(p + Vector2(-1, -1), 3.6, Color(0.58, 0.33, 0.20))
+	crown.flush(c)
+
+
+# A waymarker post, where the town has hydrants: a squared timber post with
+# the long-distance path's red-over-white bands. Marked posts go grey-brown.
+func _draw_waymarker(c: Object, h: Dictionary) -> void:
+	var hp: Vector2 = h.pos
+	cast_shadow(c, hp, 7.0, 30.0)
+	var wood := Color(0.47, 0.36, 0.24) if not h.done else Color(0.40, 0.36, 0.32)
+	c.draw_rect(Rect2(hp.x - 7.0, hp.y - 7.0, 14.0, 14.0), wood.darkened(0.3))
+	c.draw_rect(Rect2(hp.x - 6.0, hp.y - 6.0, 12.0, 12.0), wood)
+	c.draw_rect(Rect2(hp.x - 6.0, hp.y - 6.0, 5.0, 12.0), wood.lightened(0.12))
+	var band_a := 1.0 if not h.done else 0.35
+	c.draw_rect(Rect2(hp.x - 6.0, hp.y - 4.0, 12.0, 3.0), Color(0.95, 0.94, 0.90, band_a))
+	c.draw_rect(Rect2(hp.x - 6.0, hp.y - 1.0, 12.0, 3.0), Color(0.80, 0.16, 0.14, band_a))
+	if not h.done and h.progress > 0.0:
+		c.draw_arc(hp, 17.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
+
+
+# A half-eaten bocadillo in its foil, dropped off someone's picnic.
+func _draw_bocadillo(c: Object, kp: Vector2) -> void:
+	contact_shadow(c, kp, 11.0, 4.0, 0.20)
+	c.draw_colored_polygon(PackedVector2Array([
+		kp + Vector2(-12, -2), kp + Vector2(-4, -8), kp + Vector2(12, -5),
+		kp + Vector2(10, 6), kp + Vector2(-8, 7),
+	]), Color(0.78, 0.80, 0.83))
+	c.draw_line(kp + Vector2(-6, -6), kp + Vector2(8, -3), Color(0.93, 0.94, 0.96), 1.5)
+	c.draw_rect(Rect2(kp.x - 7.0, kp.y - 3.0, 14.0, 6.0), Color(0.80, 0.60, 0.33))
+	c.draw_rect(Rect2(kp.x - 7.0, kp.y - 3.0, 14.0, 2.0), Color(0.88, 0.70, 0.42))
+	c.draw_line(kp + Vector2(-6, 1), kp + Vector2(6, 1), Color(0.72, 0.26, 0.24), 1.6)
+
+
+# The wood either side of El Bosc's trail, from the wood line outward:
+# undergrowth along the line, then overlapping crowns to the edge of the
+# frame. One batch, and every clump is hashed from its row so it holds still.
+func _draw_wood(vt: float, vb: float) -> void:
+	var out: float = LevelBuild.TRAIL_WOOD_OUT
+	var b := ShapeBatch.new()
+	var step := 56.0
+	# stops at the gate: the clearing beyond has its own ring of trees
+	var sy := maxf(floorf((vt - 80.0) / step) * step, GATE_Y + 100.0)
+	while sy < vb + 80.0:
+		var e := walk_edges(sy + step * 0.5)
+		var row := int(absf(sy) / step)
+		for side: float in [-1.0, 1.0]:
+			var line: float = (e.x - out) if side < 0.0 else (e.y + out)
+			var far_x: float = line + side * 12.0
+			b.rect(Rect2(minf(far_x, far_x + side * 700.0), sy, 700.0, step + 1.0), Color(0.12, 0.20, 0.12))
+			for k in range(5):
+				var h := fmod(absf(sin(float(row * 7 + k) * 12.9898 + side * 3.1) * 43758.5453), 1.0)
+				var cx: float = line + side * (26.0 + float(k) * 60.0 + h * 18.0)
+				var cy := sy + step * 0.5 + (h - 0.5) * 30.0
+				var r := 30.0 + h * 14.0
+				b.circle(Vector2(cx, cy) + Vector2(3, 4), r, Color(0.10, 0.17, 0.10))
+				b.circle(Vector2(cx, cy), r * 0.9, Color(0.17, 0.29, 0.16) if (row + k) % 3 != 0 else Color(0.20, 0.31, 0.15))
+				b.circle(Vector2(cx, cy) - LIGHT * r * 0.35, r * 0.42, Color(0.25, 0.38, 0.20))
+			# undergrowth and a trunk or two right on the line
+			var hu := fmod(absf(sin(float(row) * 78.233 + side) * 43758.5453), 1.0)
+			b.circle(Vector2(line + side * 4.0, sy + hu * step), 13.0 + hu * 6.0, Color(0.19, 0.30, 0.17))
+			b.circle(Vector2(line - side * 6.0, sy + step * 0.5 + hu * 10.0), 9.0, Color(0.23, 0.35, 0.19))
+			if row % 2 == 0:
+				b.circle(Vector2(line + side * 16.0, sy + step * 0.3), 5.5, Color(0.30, 0.22, 0.15))
+		sy += step
+	b.flush(_wc)
+
+
+# The stream across the wood and the footbridge that carries the trail over
+# it. The water rects (level_build.trail_stream) stop at the bridge; the
+# stream is drawn across under it so it reads as running beneath.
+func _draw_trail_stream(vt: float, vb: float) -> void:
+	var sy: float = LevelBuild.TRAIL_STREAM_Y
+	var half: float = LevelBuild.TRAIL_STREAM_HALF
+	if sy < vt - 120.0 or sy > vb + 120.0:
+		return
+	var wt := AnimClock.msec() / 1000.0
+	var bank := PackedVector2Array()
+	var water := PackedVector2Array()
+	var xs: Array[float] = []
+	var x := -400.0
+	while x <= 1700.0:
+		xs.append(x)
+		x += 60.0
+	for bx: float in xs:
+		bank.append(Vector2(bx, sy - half - 10.0 + sin(bx * 0.021) * 5.0))
+	for k in range(xs.size() - 1, -1, -1):
+		bank.append(Vector2(xs[k], sy + half + 10.0 + sin(xs[k] * 0.017 + 1.0) * 5.0))
+	for bx: float in xs:
+		water.append(Vector2(bx, sy - half + sin(bx * 0.021) * 4.0))
+	for k in range(xs.size() - 1, -1, -1):
+		water.append(Vector2(xs[k], sy + half + sin(xs[k] * 0.017 + 1.0) * 4.0))
+	_wc.draw_colored_polygon(bank, Color(0.36, 0.30, 0.21))
+	_wc.draw_colored_polygon(water, Color(0.27, 0.42, 0.44))
+	# ripples running downstream (east)
+	for k in range(14):
+		var rx := fmod(float(k) * 157.0 + wt * 38.0, 2100.0) - 400.0
+		var ry := sy + (float(k % 3) - 1.0) * 14.0
+		_wc.draw_line(Vector2(rx, ry), Vector2(rx + 22.0, ry), Color(1, 1, 1, 0.16), 2.0)
+	# stones along the banks
+	for k in range(10):
+		var stx := -200.0 + float(k) * 190.0 + float(k % 3) * 23.0
+		var sty := sy + (half + 4.0) * (1.0 if k % 2 == 0 else -1.0)
+		_wc.draw_circle(Vector2(stx, sty), 6.0 + float(k % 3) * 2.0, Color(0.52, 0.50, 0.46))
+	# the footbridge: planks across the trail's width, a rail each side
+	var e := walk_edges(sy)
+	var bh: float = LevelBuild.TRAIL_BRIDGE_HALF
+	var deck := Rect2(e.x - 18.0, sy - bh, e.y - e.x + 36.0, bh * 2.0)
+	_wc.draw_rect(Rect2(deck.position + LIGHT * 8.0, deck.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+	_wc.draw_rect(deck, Color(0.55, 0.42, 0.28))
+	var px := deck.position.x
+	while px < deck.end.x:
+		_wc.draw_line(Vector2(px, deck.position.y), Vector2(px, deck.end.y), Color(0.40, 0.30, 0.20), 2.0)
+		px += 16.0
+	for ry: float in [deck.position.y + 3.0, deck.end.y - 3.0]:
+		_wc.draw_line(Vector2(deck.position.x, ry), Vector2(deck.end.x, ry), Color(0.36, 0.26, 0.16), 5.0)
+		_wc.draw_line(Vector2(deck.position.x, ry - 1.5), Vector2(deck.end.x, ry - 1.5), Color(0.62, 0.48, 0.32), 1.5)
+	# the four posts (they are poles: the rope wraps them)
+	for i in range(deco_pole_count, deco_pole_count + 4):
+		var bp := poles[i]
+		_wc.draw_circle(bp, 7.0, Color(0.34, 0.25, 0.16))
+		_wc.draw_circle(bp + Vector2(-1.5, -1.5), 4.5, Color(0.52, 0.40, 0.26))
+
 func _draw_palm(c: Object, p: Vector2) -> void:
 	# a palm from above: a ring of long fronds, each with a spine and leaflets,
 	# radiating from a fat trunk. The shadow copies the frond pattern, which is
@@ -2452,6 +2622,17 @@ func _process(_delta: float) -> void:
 			if "--shot-title" in OS.get_cmdline_user_args():
 				return
 			_skip_title()
+			# --shot-y=N starts the pair at that point down the walk, so one
+			# stretch of a level can be photographed without walking there
+			for a in OS.get_cmdline_user_args():
+				if a.begins_with("--shot-y="):
+					var sy := float(a.substr(9))
+					var se := walk_edges(sy)
+					var scx := (se.x + se.y) * 0.5
+					dog.global_position = Vector2(scx + 30.0, sy - 60.0)
+					human.global_position = Vector2(scx - 20.0, sy + 40.0)
+					leash.resnap()
+					cam.position = dog.global_position
 		if _shot_frames > _shot_at:
 			_shot_done = true
 			# --shot-out=PATH writes somewhere other than user://shot.png, so a
@@ -2940,6 +3121,11 @@ func _squirrels(delta: float) -> void:
 	var x := 0.0
 	if lvl == "beach":
 		x = randf_range(1000.0, 1150.0) if roll < 0.6 else randf_range(320.0, 480.0)
+	elif lvl == "trail":
+		# in the strip of forest floor either side, inside the wood line
+		var te := walk_edges(y)
+		var into := randf_range(24.0, LevelBuild.TRAIL_WOOD_OUT - 24.0)
+		x = (te.x - into) if roll < 0.5 else (te.y + into)
 	elif roll < 0.35:
 		# open grass now that the dog can roam it
 		x = randf_range(150.0, 290.0)
@@ -5304,6 +5490,9 @@ func _draw_world() -> void:
 		elif lvl == "market":
 			grass = COL_GRASS
 			walkway = Color(0.76, 0.73, 0.66)
+		elif lvl == "trail":
+			grass = TRAIL_FLOOR
+			walkway = TRAIL_DIRT
 		if built:
 			# only the strips between the paving and the building line: beyond
 			# it the edge layer's buildings show (they sit behind the world, so
@@ -5311,9 +5500,12 @@ func _draw_world() -> void:
 			_draw_strips(vt, vb, grass)
 		else:
 			_wc.draw_rect(Rect2(-400, ctop, 2100, bottom - ctop), grass)
-		for t in tufts:
+		# leaf litter on the forest floor, grass tufts everywhere else
+		var tuft_cols: Array = TRAIL_LITTER if lvl == "trail" else [COL_GRASS_DARK]
+		for ti in range(tufts.size()):
+			var t: Vector2 = tufts[ti]
 			if t.y > vt and t.y < vb and _on_grass_strip(t):
-				_wc.draw_circle(t, 5.0, COL_GRASS_DARK)
+				_wc.draw_circle(t, 5.0, tuft_cols[ti % tuft_cols.size()])
 		# the walkway: sidewalk downtown, packed dirt in the park
 		if edge_nodes.is_empty():
 			# A straight corridor, which is every level until one is authored a
@@ -5382,6 +5574,9 @@ func _draw_world() -> void:
 			_wc.draw_line(Vector2(px, py), Vector2(sw_r, py), Color(0.5, 0.4, 0.28), 5.0)
 			py += 16.0
 		_wc.draw_line(Vector2(px, pond.position.y), Vector2(px, pond.end.y), Color(0.36, 0.28, 0.2), 4.0)
+	if lvl == "trail":
+		_draw_wood(vt, vb)
+		_draw_trail_stream(vt, vb)
 	# bike lanes crossing the sidewalk
 	for i in range(lane_ys.size()):
 		var ly: float = lane_ys[i]
@@ -5434,6 +5629,9 @@ func _draw_world() -> void:
 		var hp: Vector2 = h.pos
 		if hp.y < vt - 40.0 or hp.y > vb + 40.0:
 			continue
+		if lvl == "trail":
+			_draw_waymarker(_wc, h)
+			continue
 		var c := Color(0.45, 0.4, 0.38) if h.done else Color(0.68, 0.23, 0.18)
 		cast_shadow(_wc, hp, 8.0, 26.0)
 		# the flange it is bolted down with
@@ -5465,6 +5663,9 @@ func _draw_world() -> void:
 		if k.eaten or k.pos.y < vt - 30.0 or k.pos.y > vb + 30.0:
 			continue
 		var kp: Vector2 = k.pos
+		if lvl == "trail":
+			_draw_bocadillo(_wc, kp)
+			continue
 		contact_shadow(_wc, kp, 9.0, 4.0, 0.20)
 		# the paper wrapper, screwed open
 		_wc.draw_colored_polygon(
@@ -5545,6 +5746,8 @@ func _draw_world() -> void:
 			continue
 		if lvl == "park":
 			_draw_broadleaf(_wc, p, 1.0)
+		elif lvl == "trail":
+			_draw_forest_tree(_wc, p, i)
 		elif lvl == "beach":
 			_draw_palm(_wc, p)
 		elif p.x > sw_l + 60.0 and p.x < sw_r - 60.0:
@@ -5618,6 +5821,8 @@ func _draw_world() -> void:
 		_wc.draw_arc(ch, 6.5, PI * 1.15, PI * 1.85, 8, Color(0.4, 0.3, 0.2), 3.0)
 	# fountains: where the tank refills
 	for f in fountains:
+		if lvl == "trail":
+			break     # El Bosc drinks from the stream, which draws itself
 		_wc.draw_circle(f, 12.0, Color(0.5, 0.55, 0.58))
 		_wc.draw_circle(f, 8.0, Color(0.4, 0.55, 0.65))
 		_wc.draw_circle(f + Vector2(0, -3), 2.5, Color(0.75, 0.88, 0.95))
