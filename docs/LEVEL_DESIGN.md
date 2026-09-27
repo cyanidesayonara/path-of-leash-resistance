@@ -208,6 +208,69 @@ with pickpockets and shenanigans happening around."
 ### First Walk (tutorial)
 - Follows La Rambla's restyle, calm by construction.
 
+## Path shapes (each walk its own)
+
+Santtu: "the shape the path takes should vary a bit more level by level
+too. right now only the windy path on mosaic is any different from the
+straight path... each level should have its own idiosyncratic shape." And
+the Escher walk (PROJECT.md, the art-walks list): "you would walk down one
+pathway, across a bridge and then appear out of a door somewhere else."
+
+**What the engine can do today.** The path is one corridor that runs up
+the screen: `walk_edges(y)` gives one left and one right edge for each
+height, shaped by `edge_nodes` (centre and half-width at points down the
+walk, slope capped at 0.85 so it can be run). That buys bends, pinches and
+bulges, and nothing else: no fork, no right-angle turn, no crossing, no
+door. The vocabulary grows in stages, each one a PR with its own test:
+
+1. **Bends, pinches and bulges, used properly (no engine work).** Today
+   only El Mosaic and El Bosc use them. Every walk gets its own rhythm:
+   where it narrows to single file, where it opens into a plaça, where it
+   doglegs.
+2. **Islands (small engine work).** The path splits round something and
+   rejoins: a pond, a kiosk block, a fountain, a row of stalls. Built as a
+   wide stretch with a solid island in it, so `walk_edges` stays one pair;
+   `surface_at`, props and the self-test learn that the island is not path.
+   The leash makes it a game: dog one side, owner the other, and the
+   island is the biggest pole on the walk.
+3. **Crossings and level changes (medium).** Stairs as bands you climb, a
+   ramp, a bridge over a cross-street or a stream, an underpass you walk
+   through in shadow. The path stays one corridor; what changes is what
+   lies across it and what it looks like.
+4. **A path that is not bound to "up the screen" (large).** A centreline
+   polyline with widths instead of one edge pair per height, so an alley
+   can turn a right angle, run sideways, double back. `walk_edges(y)`
+   becomes a query over it; everything that asks it keeps working. This
+   is what El Gotic's alleys really need, and what an Escher walk needs.
+5. **Doors (the pinnacle).** Walk into one door, come out of another
+   somewhere else, over a bridge that could not connect. The hard part is
+   honest: the leash IS the physics, so a rope that runs through a door
+   has to be modelled as running through it (the dog through the door,
+   the owner still on the far side, the rope drawn from the dog to the
+   exit door and from the entry door to the owner, the tension carried
+   across). Worth it for one walk built around it: L'Escher, greyscale
+   pencil, stairs that tessellate, the owner dragged round a loop that
+   should not close.
+
+**Each walk's shape:**
+
+| Walk | Shape |
+|---|---|
+| La Rambla | Dead straight, as the real one is: the straightness is the joke under the crowd. It bulges at the Pla de la Boqueria (Miro's pavement mosaic set in the middle, a free landmark) and pinches at the kiosks and stalls. |
+| El Parc | Splits round the pond and rejoins (stage 2); a looping side path round the bandstand. |
+| El Bosc | The winding trail it is now, with harder pinches between trunks, the ford as a narrow crossing (stage 3). |
+| Passeig Maritim | Long and straight along the sea, with the boardwalk splitting off across the sand and back (stage 2). |
+| El Diluvi | Arcades: a covered side walk behind pillars that runs alongside the open street and rejoins it, dry against wet (stage 2). |
+| El Mercat | The hall's aisles: two or three parallel aisles between stall rows, cross-aisles between them (stage 2, then 4). |
+| El Gotic | Narrow alleys with doglegs now (stage 1), tight plaça bulges, then real right-angle turns and an arch you pass under (stage 4). |
+| L'Estacio | Opens from the street into the wide concourse, then narrows to the platforms: pick one of two, the train between them (stage 2). |
+| Les Obres | The path diverted by the works: a chicane through barriers, a plank bridge over the trench (stages 1 and 3). |
+| La Castanyada | Round the square: the path circles the chestnut roaster's bonfire (stage 2). |
+| La Ferralla | A lane between scrap piles that shifts left and right, a crane's reach overhead. |
+| El Mosaic | The serpentine as now, the dragon stair splitting round the salamander (stage 2), the hypostyle grid, the viaduct's lean (see El Mosaic). |
+| La Neteja | Straight and narrow: the chase needs a straight. |
+| L'Escher | New walk, stages 4 and 5: doors, bridges, loops. |
+
 ## Pickpockets (a system for most walks)
 
 Santtu: "pickpockets would really suit many levels, if not all of them, and
@@ -262,3 +325,7 @@ slipping, all pretty slapstick of course, nothing too violent."
 6. El Mosaic, La Neteja, the beach additions; pickpockets and their
    stand-ins on the other walks.
 7. The off-leash areas, each to its walk.
+
+Path shapes run alongside: stage 1 comes with each walk's own PR; stage 2
+(islands) before El Parc's pond split; stage 3 with Les Obres; stages 4 and
+5 are their own projects, El Gotic's turns first and L'Escher last.
