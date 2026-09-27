@@ -1,16 +1,11 @@
 # Microsoft Store listing
 
 What was entered in Partner Center. First submission 1.54.0.0, live
-2026-09-23 at https://apps.microsoft.com/detail/9p5d14v8rbqx; the second,
-1.55.0.0, was submitted on 2026-09-24 with the listing below (twelve walks,
-moods, surfaces, and "What's new" filled in). Copy from here for the next
-submission, and update this file whenever the live listing changes, so it
-stays the record of what the Store says.
-
-Next release: La Neteja makes it thirteen walks, and the chase now has its
-own walk rather than turning up on any of them. The description ("Twelve
-walks ...", "Some walks turn into a chase ...") and the "Twelve hand-built
-walks" feature need updating then.
+2026-09-23 at https://apps.microsoft.com/detail/9p5d14v8rbqx; 1.55.0.0
+submitted 2026-09-24; 1.56.0.0 prepared 2026-09-27 with the listing below
+(thirteen walks, the chase on its own walk, touch controls in "What's new").
+Copy from here for the next submission, and update this file whenever the
+live listing changes, so it stays the record of what the Store says.
 
 ## Properties
 
@@ -67,13 +62,13 @@ You are the dog. Your human is glued to their phone and walking on autopilot. Ge
 
 The leash is real rope physics. Your human outweighs you four to one and wins every straight tug, so you win the way a dog does: dig in at the right moment, wrap the leash around a lamppost to hold them fast, and bark to stop them dead at the kerb. Get the timing right as a bike whizzes past and it counts as a save.
 
-Twelve walks through a sunny, slightly chaotic Barcelona: the boulevard and its bike lane, the park and its pond, the seafront, a rainy day, the market, the old town's narrow alleys, a forest trail, the station concourse, roadworks with wet cement, a festival night, a scrapyard with a guard dog you really should not wake, and a winding terrace paved in broken glazed tile.
+Thirteen walks through a sunny, slightly chaotic Barcelona: the boulevard and its bike lane, the park and its pond, the seafront, a rainy day, the market, the old town's narrow alleys, a forest trail, the station concourse, roadworks with wet cement, a festival night, a scrapyard with a guard dog you really should not wake, a winding terrace paved in broken glazed tile, and a narrow back street at dawn, just as the street sweeper comes through.
 
 What happens on a walk changes how you feel, and how you feel changes how you move. A fright leaves you jumpy and half blind to smells, a good bark-off makes you barky, time off the leash brings on the zoomies, and running yourself empty leaves you flat. Moods fade on their own. The ground matters too: grass slows you down but holds far more scent than pavement, and polished tile is fast and hard to steer.
 
 Every walk has its own list of goals: sniff the good spots, mark your territory, fetch, greet other dogs, herd a runaway friend home, and land combo tricks like vaulting around a pole or grinding along a kerb. Earn stars to unlock new walks and bones to spend on leashes and bandanas.
 
-Some walks turn into a chase, like outrunning a street sweeper with your oblivious human in tow. Weather and night change how every walk plays: rain, wind and snow, where the pavement turns to ice. There's a daily walk too, the same for everyone that day.
+One walk is a chase: a street sweeper fills the lane behind you, and you have to drag your oblivious human home ahead of it. Weather and night change how every walk plays: rain, wind and snow, where the pavement turns to ice. There's a daily walk too, the same for everyone that day.
 
 Single player. No ads, no purchases, no account, and it plays offline. Keyboard or controller.
 ```
@@ -88,10 +83,10 @@ You are the dog. Your phone-distracted human walks on autopilot, and the leash i
 
 ```
 The leash is real rope physics: wrap it around poles, plant yourself, win the tug of war
-Twelve hand-built walks through Barcelona, plus a daily walk
+Thirteen hand-built walks through Barcelona, plus a daily walk
 Goal lists on every walk, with stars that unlock new walks
 Combo tricks: leash-vaults, kerb grinds, near misses
-Chase walks where you drag your oblivious human to safety
+A chase walk: stay ahead of the street sweeper with your oblivious human in tow
 Dog moods: scared, barky, zoomies and flat, each changing how you move and what you notice
 Ground you can feel: grass holds scent, tile is fast and slippery
 Rain, wind, snow and night change how each walk plays
@@ -101,7 +96,19 @@ Full controller support
 No ads, no purchases, no account, and it plays offline
 ```
 
-### What's new in this version (1.55)
+### What's new in this version (1.56)
+
+```
+- A thirteenth walk: La Neteja, a narrow back street at dawn. The street sweeper comes through every time, it fills the lane, and you have to drag your human home ahead of it. Keep more than a leash length clear the whole way for a new goal.
+- The chase lives on its own walk now, so the other walks no longer end in one.
+- On-screen prompts show the buttons of whatever you last used: keyboard, controller or touch.
+- Touch controls on phones and tablets: RUN, MENU, SKIP and SHARE buttons, tap the goals card to open it, and the restart button only appears once the walk has stopped.
+- Messages no longer write over each other, and labels at the dog keep clear of them.
+- Snow now lies along the path on the walks that bend, and paint, oil, fish and confetti spills look like spills.
+- Fixes: a walk with a chase no longer leaves you scared from the very first step, the sweeper no longer draws over your human, and the ground reaches the bottom of the screen at the finish.
+```
+
+### What's new in 1.55 (for the record)
 
 ```
 - A twelfth walk: El Mosaic, a winding terrace path paved in broken glazed tile. The tile is the fastest footing in the game and the slipperiest, and it holds no scent at all.
