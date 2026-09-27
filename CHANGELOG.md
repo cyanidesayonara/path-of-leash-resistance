@@ -2,6 +2,23 @@
 
 Append-only session history, newest first.
 
+## 2026-09-27 - the buildings come back (#65, restyle step 1)
+
+Every built-up walk's frontage - shopfronts, stone walls, roofs, hoardings,
+chain-link - had been drawn under a full-width lawn since v1.51. Each walk
+now has a cross-section per side, pavement | strip | building line, from
+`LevelBuild.CROSS_SECTIONS`: a lawn, a sidewalk, or nothing where the real
+place puts its walls straight onto the paving (El Gotic, La Neteja). The
+ground is drawn only as those strips, so the edge layer's buildings show
+beyond them; the frontage follows the building line, in slices, so it bends
+with El Mosaic's serpentine. The building line is solid (the dog could walk
+out over the roofs before), with gaps where a road crosses and short of the
+gate. Sidewalk strips are pavement underfoot, grass strips grass; the
+off-leash area keeps its own ground, and the bike lane band is La Rambla's
+alone. `tests/test_cross_section.gd` checks all ten built walks; the
+behaviour snapshot is identical. Next: restyle each walk to look like its
+real counterpart, one per PR.
+
 ## 2026-09-26 - the last rectangles underfoot are patches
 
 Five substance zones were still translucent rectangles with an outline:

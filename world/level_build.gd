@@ -15,6 +15,22 @@ extends RefCounted
 
 
 
+# Per walk: [left strip, width, right strip, width]. Walks not listed (the
+# park, the trail, the seafront) have no building line. See main.frontage.
+const CROSS_SECTIONS := {
+	"street": ["grass", 160.0, "sidewalk", 120.0],   # the lawn; the bike lane side
+	"rain": ["sidewalk", 90.0, "sidewalk", 120.0],
+	"market": ["sidewalk", 70.0, "sidewalk", 70.0],
+	"oldtown": ["none", 0.0, "none", 0.0],            # an alley: walls at the paving
+	"station": ["sidewalk", 100.0, "sidewalk", 100.0],
+	"site": ["sidewalk", 60.0, "sidewalk", 60.0],
+	"spook": ["sidewalk", 80.0, "sidewalk", 80.0],
+	"scrap": ["grass", 70.0, "grass", 70.0],          # weeds up to the chain-link
+	"guell": ["grass", 110.0, "grass", 110.0],        # terrace planting
+	"neteja": ["none", 0.0, "none", 0.0],             # a back street
+}
+
+
 static func apply_corridor(m: Node2D) -> void:
 	# ONE width dial per walk. This is what makes the levels stop feeling
 	# like the same street redressed: a medieval alley that genuinely
@@ -45,6 +61,16 @@ static func apply_corridor(m: Node2D) -> void:
 	m.walk_half = half
 	m.sw_l = m.walk_cx - m.walk_half
 	m.sw_r = m.walk_cx + m.walk_half
+	# the cross-section either side (#65): [left kind, left width, right kind,
+	# right width]. What the real place would have between the path and its
+	# buildings - a lawn, a sidewalk, or the wall itself.
+	var xs: Array = CROSS_SECTIONS.get(m.lvl, [])
+	m.built = not xs.is_empty()
+	if m.built:
+		m.strip_kind_l = String(xs[0])
+		m.strip_l = float(xs[1])
+		m.strip_kind_r = String(xs[2])
+		m.strip_r = float(xs[3])
 	# The SHAPE of the corridor, on top of its width. Empty means a straight
 	# pair of vertical lines at exactly sw_l/sw_r, which is what most levels
 	# still are. See edge_path.gd; walk_edges(y) is what everything should ask.
@@ -1143,6 +1169,36 @@ static func build_walls(m: Node2D) -> void:
 		cs.position = d[0]
 		walls.add_child(cs)
 	m.add_child(walls)
+	# THE BUILDING LINE is solid (#65): she used to be able to walk out onto
+	# the roofs, because the only walls were at the level edges. Segments
+	# follow the path where it bends, with gaps where a road crosses, so a
+	# side street still leads somewhere.
+	if m.built:
+		var line := StaticBody2D.new()
+		line.collision_layer = 1
+		# stops short of the gate, so the gate mouth is exactly as it was: the
+		# off-leash area beyond it is wider than the walk, and a wall end right
+		# at the gate line caught a dog coming back through it
+		var top := float(m.GATE_Y) + 120.0
+		var y := float(m.START_Y) + 200.0
+		while y > top:
+			var y2 := maxf(y - 100.0, top)
+			var crossing := false
+			for ly: float in m.lane_ys:
+				if absf((y + y2) * 0.5 - ly) < float(m.LANE_HALF) + 50.0:
+					crossing = true
+			if not crossing:
+				var fa: Vector2 = m.frontage(y)
+				var fb: Vector2 = m.frontage(y2)
+				for pair in [[Vector2(fa.x - 6.0, y), Vector2(fb.x - 6.0, y2)], [Vector2(fa.y + 6.0, y), Vector2(fb.y + 6.0, y2)]]:
+					var seg := SegmentShape2D.new()
+					seg.a = pair[0]
+					seg.b = pair[1]
+					var cs := CollisionShape2D.new()
+					cs.shape = seg
+					line.add_child(cs)
+			y = y2
+		m.add_child(line)
 	for i in range(m.body_pole_count):
 		var sb := StaticBody2D.new()
 		sb.collision_layer = 1
