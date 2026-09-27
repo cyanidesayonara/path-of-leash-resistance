@@ -72,14 +72,36 @@ Signature line = the intended fun route. Keep = what already works.
 Cut = what is borrowed and wrong. Add = what the place needs.
 
 ### La Rambla (street) - the boulevard
-- Is: a tree-lined promenade, lawn on one side, bike lane and traffic on the
-  other, café terrace, human statues, the Canaletes-style drinking fountain.
-- Signature line: vault round the plane trees of the slalom, grind the
-  planter kerbs, dodge the riders at the crossings, fling the owner off a
-  lamppost into the terrace.
-- Keep: slalom, terrace, crossings, the FUR-GONETA, the lawn and picnics.
-- Add: a newspaper kiosk and a flower stall as landmarks; planter kerbs
-  worth grinding; the fountain as the drink stop.
+The flagship walk; it has to be nailed. Santtu: "it should be busy, with all
+kinds of stalls selling their wares, people selling stuff on the ground too,
+with pickpockets and shenanigans happening around."
+- Is: the promenade down the middle, trees either side, one lane of traffic
+  and a pavement past the building fronts on each side. Crowded: tourists
+  with maps and selfie sticks, groups following a guide's umbrella, locals
+  cutting through.
+- Stalls along the promenade: the newspaper and postcard kiosk, the flower
+  stalls, souvenir stands (football shirts, fans, fridge magnets), an ice
+  cream cart, a caricature artist with an easel. Each stall is furniture the
+  leash can wrap and a place the crowd bunches up.
+- On the ground: sellers with their wares on a blanket (bags, sunglasses,
+  toys). A blanket is a soft obstacle, not a wall: the dog can run across it
+  (the seller shouts), and when a whistle goes the sellers pull the blanket's
+  cords and walk off with the whole bundle, a moving obstacle for a moment.
+  They are part of the scene, never the villains.
+- Shenanigans: the human statues (who move when you are not looking), a
+  shell game on a cardboard box with a crowd round it, a mime, pigeons being
+  fed. Pickpockets working the crowd (see Pickpockets below); La Rambla has
+  the most.
+- Signature line: vault round the plane trees, grind the planter kerbs,
+  weave the stalls without wrapping the flower stall, trip a pickpocket
+  running the other way with the leash, fling the owner off a lamppost past
+  the statue.
+- Keep: the tree slalom, the FUR-GONETA, the crossings, the drinking
+  fountain.
+- Cut: the lawn and picnics (they belong to El Parc), the café terrace in
+  the middle of the promenade (a terrace sits against a building front).
+- Add: the stalls, blankets, statues and crowd above; planter kerbs worth
+  grinding; the Canaletes fountain as the drink stop.
 
 ### El Parc (park) - the city park
 - Is: open lawns, flowerbeds, the pond with its bridge and ducks, a
@@ -186,13 +208,57 @@ Cut = what is borrowed and wrong. Add = what the place needs.
 ### First Walk (tutorial)
 - Follows La Rambla's restyle, calm by construction.
 
+## Pickpockets (a system for most walks)
+
+Santtu: "pickpockets would really suit many levels, if not all of them, and
+stopping pickpocket should be a big goal too. there could be many ways to
+stop one, like tangling, bumping (wallet lost if falling into a manhole tho),
+slipping, all pretty slapstick of course, nothing too violent."
+
+- **The tell.** A pickpocket is readable before he strikes (the design
+  contract: predictable, never a surprise): cap pulled low, sidling up behind
+  a mark, a tiptoe walk, a glance over the shoulder. The lift gets a beat:
+  the hand goes in, a small "!" over the mark.
+- **The mark.** Anyone in the crowd, and the owner above all: a human who
+  never looks up from the phone is the perfect mark. He takes wallets, never
+  the phone (the phone is the walk's fail state and stays the owner's
+  problem).
+- **The getaway.** With the wallet he runs, weaving the crowd toward a side
+  street. The wallet is drawn in his hand so the player can follow it.
+- **Stopping him.** Every stop is slapstick; he falls over, drops the
+  wallet, sits up dazed and slinks off. Nobody gets hurt.
+  - Tangle: the leash across his path wraps his legs; he hops and falls.
+  - Bump: the dog charging at run speed bowls him over.
+  - Slip: fish meltwater, oil, wet paint, a dropped ice cream, a banana
+    skin from the fruit stall.
+  - Trip: a seller's blanket pulled at the right moment, a chair, a kerb.
+  - The owner: flung by the whirl into him, phone still up.
+  - The manhole: knocked over next to an open manhole, the wallet drops in.
+    He is stopped, but the wallet is gone ("...plop"): a stop that earns
+    nothing.
+- **The return.** The wallet pops into the air and lands; its owner picks it
+  up, and a crowd near by applauds the dog. Returning the owner's own
+  wallet is worth the most.
+- **The goal.** A big goal on the walks that have pickpockets ("Stop a
+  pickpocket", "Stop 3", "Stop one without the leash touching him", "Save
+  your human's wallet"). If a pickpocket gets away with the owner's wallet,
+  the results card says so.
+- **Where.** Every crowded walk: La Rambla the most, then El Mercat, El
+  Gotic, L'Estacio, La Castanyada and the beach. On walks with no crowd, a
+  local stand-in with the same verbs: a squirrel lifting a picnic sandwich
+  in El Parc, a magpie taking something shiny in El Bosc, a seagull taking
+  a chip at the beach.
+
 ## Order
 
 1. Footprints and tracked sand/snow (shared by every walk).
 2. El Bosc and El Parc: make them two places.
-3. The La Rambla clones: El Diluvi, L'Estacio, Les Obres, La Ferralla - cut
+3. Pickpockets: the thief, his tell, the stops and the goal, first on
+   La Rambla, with La Rambla's stalls, blankets and crowd.
+4. The La Rambla clones: El Diluvi, L'Estacio, Les Obres, La Ferralla - cut
    the borrowed terrace and crossings, give each its own furniture and its
    substances in their real shapes.
-4. The market clones: El Gotic, La Castanyada, then El Mercat itself.
-5. El Mosaic, La Neteja, the beach additions, La Rambla's additions.
-6. The off-leash areas, each to its walk.
+5. The market clones: El Gotic, La Castanyada, then El Mercat itself.
+6. El Mosaic, La Neteja, the beach additions; pickpockets and their
+   stand-ins on the other walks.
+7. The off-leash areas, each to its walk.
