@@ -102,6 +102,12 @@ Cut = what is borrowed and wrong. Add = what the place needs.
   its banks and in the ruts; fallen logs; roots; trees right up to the edge;
   a waymarker post as landmark; forest floor instead of lawn beside the path.
 - Off-leash: the clearing (as now), with a log pile and a stream pool.
+- Wild boar: Collserola's boars. A sow and her striped piglets root along
+  the path edge and cross it at their own pace; they steal nothing, but
+  get between one and her piglets and she bumps the dog (and the owner)
+  flat. Telegraphed: grunting and the piglets crossing first. A walk
+  where the owner, phone up, walks into a boar is the forest's big
+  slapstick moment.
 
 ### Passeig Maritim (beach) - the seafront
 - Is: largely right already.
@@ -170,13 +176,42 @@ Cut = what is borrowed and wrong. Add = what the place needs.
   them, the crane as landmark, the guard dog's kennel.
 
 ### El Mosaic (guell) - the terraces
-- Is: the serpentine terrace with its mosaic bench, a colonnade, a mosaic
-  salamander fountain, rubble-stone retaining walls with palms and agaves.
-- Signature line: grind the serpentine bench, carve the bends on the tile,
-  wrap round the colonnade's columns.
-- Cut: the park pond carry-over, city frontage (grey blocks).
-- Add: rubble-stone terrace walls as the frontage, the serpentine bench
-  along the edge (grind), columns, the salamander as landmark.
+Santtu: "doesn't actually look much like it really should, it just seems
+like a POC at this point. The mosaic texture looks nice but how to decorate
+the level with it still needs a few rounds of polish." The goal is a walk
+that reads as Park Guell from one screenshot. The mosaic is the finish on
+the landmarks, never wallpaper: most of the ground is sandy gravel and
+rubble stone, and the colour comes in where Gaudi put it.
+- Is, walked uphill from the gate:
+  1. **The entrance:** the two gingerbread gatehouses either side of the
+     start (wavy roofs, mosaic caps, one with the mushroom-and-cross
+     spire), the gravel forecourt between them.
+  2. **The dragon stair:** the double staircase splitting round the middle,
+     the mosaic salamander on its landing (the drink stop and the
+     landmark), the dripping-stone grotto walls either side.
+  3. **The hypostyle hall:** a grid of fat Doric columns under the plaza,
+     the best pole forest in the game. Wind, whirl and tangle here.
+  4. **The plaza and the serpentine bench:** the open sandy terrace on top,
+     edged the whole way by the wavy mosaic bench. The bench is the grind
+     line; its bays are where tourists sit.
+  5. **The viaducts:** the leaning rubble-stone colonnades along the hill,
+     columns like palm trunks, a covered walk with the pillars on one side
+     and the slope on the other; then the path climbs to the calvary cross
+     as the finish.
+- Signature line: vault the salamander, wind the owner through the
+  hypostyle columns and fling them out onto the plaza, grind the whole
+  serpentine bench, carve the viaduct's lean.
+- Life: tourists photographing the salamander and queueing at the gate, a
+  guitarist in the viaduct, a seller of fans, parakeets in the palms,
+  pickpockets in the queue.
+- Cut: the park pond carry-over, city frontage, flat mosaic floor as the
+  default ground.
+- Add: the five pieces above in order; rubble-stone terrace walls as the
+  frontage, palms and agaves along them; gravel and sand underfoot (takes
+  footprints), mosaic only on the bench, salamander, gatehouse roofs and
+  column medallions.
+- Rounds: expect several. First the layout and the pieces as shapes, then
+  the mosaic finish, then the life.
 
 ### La Neteja (neteja) - the back street at dawn
 - Is: a narrow street at street-cleaning time: dumpsters, parked scooters,
