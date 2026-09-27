@@ -282,7 +282,7 @@ const SUBSTANCES := {
 	"mud":      {"col": Color(0.34, 0.26, 0.18), "life": 2.6, "quip": "MUDDY PAWS!"},
 	"cement":   {"col": Color(0.62, 0.62, 0.60), "life": 2.5, "quip": "CEMENT PAWS!"},
 	"paint":    {"col": Color(0.85, 0.30, 0.35), "life": 3.4, "quip": "WET PAINT!"},
-	"sand":     {"col": Color(0.80, 0.72, 0.52), "life": 1.8, "quip": "SANDY PAWS!"},
+	"sand":     {"col": Color(0.80, 0.72, 0.52), "life": 3.2, "quip": "SANDY PAWS!"},
 	"fish":     {"col": Color(0.62, 0.68, 0.60), "life": 3.0, "quip": "FISHY PAWS!"},
 	"slush":    {"col": Color(0.78, 0.82, 0.88), "life": 2.0, "quip": "SLUSHY PAWS!"},
 	"confetti": {"col": Color(0.92, 0.55, 0.75), "life": 2.8, "quip": "COVERED IN CONFETTI!"},
@@ -290,6 +290,12 @@ const SUBSTANCES := {
 }
 var substance_zones: Array[Dictionary] = []
 var paw_prints: Array[Dictionary] = []
+# FOOTPRINTS PRESSED INTO THE GROUND: sand, and any ground under snow, takes
+# the shape of whatever walks on it. Hers and his, fading as it fills back in.
+# Separate from paw_prints, which is what a wet paw LEAVES on dry ground.
+var dents: Array[Dictionary] = []
+var dent_last_dog := Vector2(INF, INF)
+var dent_last_human := Vector2(INF, INF)
 var paw_last := Vector2(INF, INF)
 var wet_paws := 0.0
 var paw_kind := "cement"
@@ -3781,6 +3787,36 @@ func surface_at(p: Vector2) -> int:
 	return Surfaces.S.GRASS
 
 
+# how long a pressed footprint takes to fill back in (s), and how many are kept
+const DENT_LIFE := 40.0
+const DENT_MAX := 240
+
+
+func _takes_prints(p: Vector2) -> bool:
+	if Game.weather == "snow" and p.y > GATE_Y:
+		return true
+	if lvl != "beach":
+		return false
+	var s := surface_at(p)
+	# past the gate is the dog beach, sand from the fence to the water
+	if p.y < GATE_Y:
+		return s != Surfaces.S.WATER
+	return s == Surfaces.S.SAND
+
+
+func _press_dents() -> void:
+	if _takes_prints(dog.global_position) and dent_last_dog.distance_to(dog.global_position) > 20.0:
+		dent_last_dog = dog.global_position
+		var side: Vector2 = dog.facing.orthogonal() * (4.5 if dents.size() % 2 == 0 else -4.5)
+		dents.append({"pos": dog.global_position + side, "t": elapsed, "ang": dog.facing.angle()})
+	if _takes_prints(human.global_position) and dent_last_human.distance_to(human.global_position) > 32.0:
+		dent_last_human = human.global_position
+		var hside: Vector2 = human.face_dir.orthogonal() * (7.0 if dents.size() % 2 == 0 else -7.0)
+		dents.append({"pos": human.global_position + hside, "t": elapsed, "ang": human.face_dir.angle(), "boot": true})
+	while dents.size() > DENT_MAX or (not dents.is_empty() and elapsed - float(dents[0]["t"]) > DENT_LIFE):
+		dents.remove_at(0)
+
+
 func _offpath(delta: float) -> void:
 	# the dog may roam, but an undistracted owner has opinions: after a
 	# few seconds off the walk they tut and reel the leash in a notch
@@ -3829,6 +3865,7 @@ func _offpath(delta: float) -> void:
 			"boot": true, "ang": human.face_dir.angle()})
 		if paw_prints.size() > 90:
 			paw_prints.remove_at(0)
+	_press_dents()
 	# ...and so does your human, the moment you lean on their nice trousers
 	if wet_paws > 0.0 and dog.global_position.distance_to(human.global_position) < 26.0 and smudge_cd <= 0.0:
 		smudge_cd = 1.1
@@ -5784,6 +5821,28 @@ func _draw_world() -> void:
 			cy += 60.0
 	_draw_ground_detail(vt, vb)
 	# the paw trail, in whatever she stood in
+	# footprints pressed into sand or snow: a shadowed hollow with a lit lip on
+	# the far side (the one light is up-left), fading as it fills back in
+	var snow := Game.weather == "snow"
+	var hollow := Color(0.55, 0.60, 0.72) if snow else Color(0.58, 0.49, 0.33)
+	var lip := Color(1.0, 1.0, 1.0) if snow else Color(0.93, 0.87, 0.70)
+	for d in dents:
+		var dp: Vector2 = d.pos
+		if dp.y < vt - 20.0 or dp.y > vb + 20.0:
+			continue
+		var fade: float = clampf(1.0 - (elapsed - float(d.t)) / DENT_LIFE, 0.0, 1.0)
+		if bool(d.get("boot", false)):
+			_wc.draw_set_transform(dp, float(d.ang), Vector2(1.0, 0.6))
+			_wc.draw_circle(Vector2(0.8, 0.8), 6.8, Color(lip.r, lip.g, lip.b, 0.35 * fade))
+			_wc.draw_circle(Vector2.ZERO, 6.4, Color(hollow.r, hollow.g, hollow.b, 0.55 * fade))
+			_wc.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			continue
+		_wc.draw_circle(dp + Vector2(0.7, 0.7), 3.4, Color(lip.r, lip.g, lip.b, 0.35 * fade))
+		_wc.draw_circle(dp, 3.2, Color(hollow.r, hollow.g, hollow.b, 0.6 * fade))
+		var fwd := Vector2.from_angle(float(d.ang))
+		var sd := fwd.orthogonal()
+		_wc.draw_circle(dp + fwd * 4.0 + sd * 2.4, 1.4, Color(hollow.r, hollow.g, hollow.b, 0.55 * fade))
+		_wc.draw_circle(dp + fwd * 4.0 - sd * 2.4, 1.4, Color(hollow.r, hollow.g, hollow.b, 0.55 * fade))
 	for pr in paw_prints:
 		var pp: Vector2 = pr.pos
 		if pp.y < vt - 20.0 or pp.y > vb + 20.0:

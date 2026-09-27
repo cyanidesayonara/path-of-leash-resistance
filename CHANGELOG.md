@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-09-27 - footprints in sand and snow
+
+The level design brief (`docs/LEVEL_DESIGN.md`, from Santtu's "design every
+element to be fun and make sense") starts with the surfaces. Beach sand, the
+dog beach, and any ground under snow now take footprints - hers and the
+owner's boots - pressed in as a shadowed hollow with a lit lip, filling back
+in over 40 s (`main._press_dents`, at most 240 kept). Sandy paws last 3.2 s
+instead of 1.8, long enough to see the sand tracked onto the boardwalk.
+`tests/test_footprints.gd`; the behaviour snapshot is identical.
+
 ## 2026-09-27 - the buildings come back (#65, restyle step 1)
 
 Every built-up walk's frontage - shopfronts, stone walls, roofs, hoardings,
