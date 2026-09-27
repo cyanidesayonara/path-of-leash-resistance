@@ -137,6 +137,9 @@ jobs:
       - name: Snow slush follows the path test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_snow_slush.gd
 
+      - name: Footprints in sand and snow test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_footprints.gd
+
       - name: Built walks' cross-section test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_cross_section.gd
 
