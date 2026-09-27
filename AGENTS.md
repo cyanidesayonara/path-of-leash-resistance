@@ -182,6 +182,13 @@ Draw calls are what the web build pays for, and every circle and polygon is
 one in the Compatibility renderer. Draw runs of filled shapes through
 `ShapeBatch` (`systems/shape_batch.gd`): the same pixels in one call.
 
+Level inventory (what each walk contains: props by kind, patches, hazards,
+goals) and the design brief every walk is being rebuilt to,
+`docs/LEVEL_DESIGN.md`:
+```
+godot\Godot_v4.7-stable_win64_console.exe --headless --path . --script res://tools/level_inventory.gd
+```
+
 Rope solver benchmark: time per `leash.tick()` in three fixed scenarios, plus
 a hash of every solver output. A speed-up meant to change nothing must leave
 all three hashes as they were (compare on one machine):
