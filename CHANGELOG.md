@@ -2,6 +2,31 @@
 
 Append-only session history, newest first.
 
+## 2026-09-28 - El Bosc's boars, fallen trunks, and an owner who follows the bends
+
+- **The boars** (`entities/boar.gd`): a sow and four striped piglets come out
+  of the trees as the stretch at -3250 comes into view ("WILD BOAR! GIVE THEM
+  ROOM") and cross the trail, piglets first. They take nothing. Crowd the
+  piglets, get between her and them, or bark at her, and she snorts and
+  scrapes for 0.7 s, then charges; the charge knocks the dog over (a hit, like
+  a rider). The owner, phone up, gets a "...is that a pig?" bubble when she is
+  near and is only shoved after it has been up for 0.8 s. A bark near the
+  owner still halts them, so barking can stop the owner walking into her, at
+  the price of provoking her. New "grunt" sound.
+- **Fallen trunks** lie out of the wood across part of the trail at -2640
+  (from the left) and -3440 (from the right). They are on a new collision
+  layer that only the dog collides with, so the owner steps over them and the
+  dog goes round the end, where the rope catches.
+- **The owner's weave follows the path** (`human._walk`): it was centred on
+  the level's nominal line, so on El Bosc's narrowed pinch the owner could
+  drift up to 36 px off the trail. It now follows `walk_edges` at the owner's
+  height, as does the dash. This also changes El Mosaic's serpentine.
+
+`tests/test_boar.gd` (14 checks: the snort always comes before the charge,
+the bubble before the shove, the trunk blocks her and not him, the weave stays
+on the trail through the pinch). The snapshot changes only the autowalk times
+on El Bosc and El Mosaic.
+
 ## 2026-09-27 - El Bosc becomes a wood
 
 Planning first: `docs/LEVEL_DESIGN.md` now has Santtu's La Rambla (crowded,

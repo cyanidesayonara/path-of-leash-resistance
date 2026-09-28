@@ -127,6 +127,7 @@ var furgoneta_sniffed := false
 var freedomlayer: Node2D
 var gate_text := "PARK"
 var duck_ys: Array[float] = []
+var boars_out := false
 var ducks_disturbed := 0
 # where the HUMAN's autopilot lives; the dog may roam anywhere between
 # the outer walls, though an undistracted owner has opinions about it
@@ -521,7 +522,7 @@ const MIDWALK_SCRIPTS := [
 	"res://entities/ball.gd", "res://entities/freedog.gd", "res://entities/rival.gd",
 	"res://entities/tofu.gd", "res://entities/sweeper.gd", "res://entities/otherpair.gd",
 	"res://entities/bike.gd", "res://entities/squirrel.gd", "res://entities/pigeon.gd",
-	"res://entities/duckling.gd",
+	"res://entities/duckling.gd", "res://entities/boar.gd",
 ]
 
 
@@ -1382,6 +1383,26 @@ func _draw_wood(vt: float, vb: float) -> void:
 			if row % 2 == 0:
 				b.circle(Vector2(line + side * 16.0, sy + step * 0.3), 5.5, Color(0.30, 0.22, 0.15))
 		sy += step
+	b.flush(_wc)
+
+
+# A fallen trunk: bark with its furrows along it, a pale sawn or broken end
+# out on the trail, moss on the top, a shadow under it.
+func _draw_fallen_log(r: Rect2) -> void:
+	var b := ShapeBatch.new()
+	b.rect(Rect2(r.position + LIGHT * 7.0, r.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.28))
+	b.rect(r, Color(0.36, 0.26, 0.17))
+	b.rect(Rect2(r.position.x, r.position.y, r.size.x, 6.0), Color(0.46, 0.34, 0.22))
+	for k in range(4):
+		var fy := r.position.y + 5.0 + float(k) * 4.0
+		b.line(Vector2(r.position.x + 6.0 + float(k) * 9.0, fy), Vector2(r.end.x - 10.0 - float(k) * 7.0, fy), Color(0.27, 0.19, 0.12), 1.4)
+	var hx: float = r.get_center().x
+	b.circle(Vector2(hx - 20.0, r.position.y + 3.0), 6.0, Color(0.33, 0.44, 0.22))
+	b.circle(Vector2(hx + 14.0, r.position.y + 2.0), 4.5, Color(0.38, 0.50, 0.25))
+	# the broken ends: pale wood rings at both, splinters at the trail end
+	for ex: float in [r.position.x, r.end.x]:
+		b.circle(Vector2(ex, r.get_center().y), r.size.y * 0.5, Color(0.66, 0.54, 0.38))
+		b.circle(Vector2(ex, r.get_center().y), r.size.y * 0.28, Color(0.55, 0.43, 0.29))
 	b.flush(_wc)
 
 
@@ -3097,6 +3118,18 @@ func _squirrels(delta: float) -> void:
 			p.z_index = 8
 			add_child(p)
 			p.setup(self, dog, human, gulls)
+	# El Bosc's boars come out of the trees as the stretch comes into view,
+	# so the crossing happens on screen
+	if lvl == "trail" and not boars_out and not tutorial_mode and cam.position.y < LevelBuild.TRAIL_BOAR_Y + 520.0:
+		boars_out = true
+		var be := walk_edges(LevelBuild.TRAIL_BOAR_Y)
+		var bo := Node2D.new()
+		bo.set_script(load("res://entities/boar.gd"))
+		bo.z_index = 9
+		add_child(bo)
+		bo.setup(self, dog, human, LevelBuild.TRAIL_BOAR_Y,
+			be.x - LevelBuild.TRAIL_WOOD_OUT + 10.0, be.y + LevelBuild.TRAIL_WOOD_OUT + 60.0)
+		feed.say("WILD BOAR! GIVE THEM ROOM", EventFeed.Tone.LOUD)
 	while duck_ys.size() > 0 and cam.position.y < duck_ys[0] + 650.0:
 		var dy: float = duck_ys.pop_front()
 		var ddir := 1.0 if randf() < 0.5 else -1.0
@@ -5239,6 +5272,10 @@ func on_bark(pos: Vector2) -> void:
 	for wc in get_tree().get_nodes_in_group("wallcats"):
 		if wc.global_position.distance_to(pos) < 150.0:
 			wc.scare()
+	# barking at a boar is a bad idea
+	for bo in get_tree().get_nodes_in_group("boars"):
+		if bo.global_position.distance_to(pos) < bo.BARK_R:
+			bo.provoke()
 	# in the scrapyard, YOUR bark is noise too
 	for g in get_tree().get_nodes_in_group("guards"):
 		g.hear_noise(pos, 230.0)
@@ -5577,6 +5614,9 @@ func _draw_world() -> void:
 	if lvl == "trail":
 		_draw_wood(vt, vb)
 		_draw_trail_stream(vt, vb)
+		for lr: Rect2 in LevelBuild.trail_logs(self):
+			if lr.position.y > vt - 60.0 and lr.position.y < vb + 60.0:
+				_draw_fallen_log(lr)
 	# bike lanes crossing the sidewalk
 	for i in range(lane_ys.size()):
 		var ly: float = lane_ys[i]

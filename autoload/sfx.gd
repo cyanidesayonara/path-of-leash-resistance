@@ -86,6 +86,7 @@ func _build_library() -> void:
 	lib["ui"] = _tone(560.0, 0.05, 40.0, 0.35)
 	lib["tangle"] = _wobble(0.26)
 	lib["hiss"] = _noiseburst(0.16, 22.0)
+	lib["grunt"] = _grunt()
 
 
 # --- music -------------------------------------------------------------
@@ -199,6 +200,22 @@ func _bark() -> AudioStreamWAV:
 		var env := sin(PI * prog)  # swell in and out
 		var grit := rng.randf_range(-0.15, 0.15)
 		out[i] = (sin(TAU * f * t) * 0.7 + grit) * env * 0.6
+	return _pack(out)
+
+
+func _grunt() -> AudioStreamWAV:
+	# a boar: a low throaty rasp that pulses, two short snorts
+	var dur := 0.34
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		var prog := t / dur
+		var pulse := maxf(0.0, sin(TAU * 2.9 * t)) # two snorts
+		var f := lerpf(110.0, 80.0, prog)
+		var rasp := rng.randf_range(-0.5, 0.5) * (0.5 + 0.5 * sin(TAU * 38.0 * t))
+		out[i] = (sin(TAU * f * t) * 0.6 + rasp) * pulse * (1.0 - prog * 0.5) * 0.6
 	return _pack(out)
 
 

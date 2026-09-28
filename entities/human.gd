@@ -283,8 +283,11 @@ func _walk(delta: float) -> void:
 	# game took to boot or how fast this machine renders (#6)
 	var t: float = main.elapsed
 	var speed := WALK_SPEED
-	var cx: float = main.walk_cx
-	var half: float = main.walk_half
+	# the path where the owner IS, so the weave follows a bend instead of
+	# drifting off the outside of it (El Bosc's pinch, El Mosaic's serpentine)
+	var here: Vector2 = main.walk_edges(global_position.y)
+	var cx: float = (here.x + here.y) * 0.5
+	var half: float = (here.y - here.x) * 0.5
 	var tx := cx + sin(t * 0.35 + wobble_seed) * minf(110.0, half - 60.0)
 	if state == HState.DRIFT:
 		tx = cx + drift_dir * (half - 70.0)
@@ -399,8 +402,9 @@ func _fire_event() -> void:
 			call_used = true
 			_show_bubble("hello? ...oh HI", "HE STOPPED! LEASH IS LOOSE")
 		HState.DASH:
-			var lo: float = main.walk_cx - main.walk_half + 40.0
-			var hi: float = main.walk_cx + main.walk_half - 40.0
+			var de: Vector2 = main.walk_edges(global_position.y)
+			var lo: float = de.x + 40.0
+			var hi: float = de.y - 40.0
 			if pending_bench:
 				var b = main.nearest_bench(global_position)
 				if b == null:
@@ -427,6 +431,18 @@ func _end_dash() -> void:
 		_show_bubble("just a sec")
 	else:
 		state = HState.WALK
+
+
+# a remark that is not an event: the bubble for this long, then gone
+func notice(text: String, secs: float) -> void:
+	if state in [HState.FALLEN, HState.WHIRL]:
+		return
+	_show_bubble(text)
+	var tw := create_tween()
+	tw.tween_interval(secs)
+	tw.tween_callback(func() -> void:
+		if bubble.text == text:
+			bubble.visible = false)
 
 
 func _show_bubble(text: String, dog_news: String = "") -> void:
