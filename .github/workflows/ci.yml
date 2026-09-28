@@ -143,6 +143,9 @@ jobs:
       - name: El Bosc is its own wood test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_bosc.gd
 
+      - name: El Bosc boars and fallen trunks test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_boar.gd
+
       - name: Built walks' cross-section test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_cross_section.gd
 

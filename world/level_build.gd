@@ -53,6 +53,26 @@ const TRAIL_STREAM_HALF := 32.0
 # the wood is solid this far out from the trail's edge: a strip of forest
 # floor to nose about in, then trunks and undergrowth you cannot walk into
 const TRAIL_WOOD_OUT := 130.0
+# the boar family crosses the trail here, west to east
+const TRAIL_BOAR_Y := -3250.0
+# fallen trunks lying out of the wood across part of the trail: [y, side].
+# The owner steps over them (they are on LOW_LAYER, which only the dog
+# collides with); the dog has to go round the end, and the rope wraps it.
+const TRAIL_LOGS: Array = [[-2640.0, -1.0], [-3440.0, 1.0]]
+const LOG_INTO := 110.0        # how far a trunk reaches onto the trail
+const LOG_OUT := 70.0          # ...and back into the forest floor
+const LOG_THICK := 20.0
+const LOW_LAYER := 8           # collision bit for things the owner steps over
+
+
+static func trail_logs(m: Node2D) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	for spec: Array in TRAIL_LOGS:
+		var y := float(spec[0])
+		var e: Vector2 = m.walk_edges(y)
+		var x0: float = (e.x - LOG_OUT) if float(spec[1]) < 0.0 else (e.y - LOG_INTO)
+		out.append(Rect2(x0, y - LOG_THICK * 0.5, LOG_OUT + LOG_INTO, LOG_THICK))
+	return out
 
 
 # The stream as water either side of the footbridge: she can jump in off the
@@ -761,6 +781,12 @@ static func build_level_data(m: Node2D) -> void:
 	if m.furgoneta.x < INF:
 		for off: float in [-52.0, -26.0, 0.0, 26.0, 52.0]:
 			m.poles.append(m.furgoneta + Vector2(0.0, off))
+	# the end of each fallen trunk out on the trail is what the rope catches
+	if m.lvl == "trail":
+		for i in range(TRAIL_LOGS.size()):
+			var lr: Rect2 = trail_logs(m)[i]
+			var tip_x: float = lr.end.x if float(TRAIL_LOGS[i][1]) < 0.0 else lr.position.x
+			m.poles.append(Vector2(tip_x, lr.get_center().y))
 	# The grove is wrap geometry too, so the rope catches on trunks. Appended
 	# AFTER the corridor fit on purpose: the trees stand in the open off-leash
 	# area, which is full width, so clamping them to the walkway would drag
@@ -1291,6 +1317,17 @@ static func build_walls(m: Node2D) -> void:
 				wood.add_child(cs)
 			wy = wy2
 		m.add_child(wood)
+	if m.lvl == "trail":
+		for lr: Rect2 in trail_logs(m):
+			var lb := StaticBody2D.new()
+			lb.collision_layer = LOW_LAYER
+			lb.position = lr.get_center()
+			var lcs := CollisionShape2D.new()
+			var lsh := RectangleShape2D.new()
+			lsh.size = lr.size
+			lcs.shape = lsh
+			lb.add_child(lcs)
+			m.add_child(lb)
 	for i in range(m.body_pole_count):
 		var sb := StaticBody2D.new()
 		sb.collision_layer = 1

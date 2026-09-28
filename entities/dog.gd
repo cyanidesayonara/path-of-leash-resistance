@@ -99,7 +99,9 @@ func _ready() -> void:
 	z_index = 10
 	if not preview_mode:
 		collision_layer = 2
-		collision_mask = 1
+		# 1 is everything solid; 8 is what only she has to go round (El Bosc's
+		# fallen trunks, which the owner steps over)
+		collision_mask = 1 | 8
 		var cs := CollisionShape2D.new()
 		var sh := CircleShape2D.new()
 		sh.radius = 14.0
@@ -199,11 +201,17 @@ func tick(delta: float) -> void:
 
 
 func hit_by_rider(dir: Vector2) -> void:
+	knocked(dir, "rider")
+
+
+# bowled over by something moving (a rider, a charging boar): a tumble that
+# counts as taking a hit
+func knocked(dir: Vector2, cause: String) -> void:
 	if tumble_t > 0.0:
 		return
 	tumble_t = 0.8
 	velocity = dir * 320.0
-	main.on_dog_hit("rider")
+	main.on_dog_hit(cause)
 	main.float_text(global_position, "yipe!", Color(1, 0.8, 0.6))
 
 
