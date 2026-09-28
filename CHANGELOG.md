@@ -2,6 +2,36 @@
 
 Append-only session history, newest first.
 
+## 2026-09-28 - The First Walk, rebuilt as quiet stations
+
+Santtu: the tutorial should let the player "learn each trick & mechanic
+individually and in peace, without all the distractions of normal levels."
+It ran on La Rambla's boulevard with the lessons as a list of cards over a
+normal walk. Now it is El Barri emptied out and laid out as **stations**, one
+per lesson, 400 px apart so only one is on screen, each holding exactly what
+its lesson needs (`TutorialSteps.STEPS` gives each lesson its "at" and
+whether the owner waits):
+
+walk, the rope going tight (the owner has stopped), dig in (plant while the
+rope is tight), mark (one hydrant), sniff (the next hydrant), the nose (a
+snack out on the grass, found by going slow), bark (a flock of pigeons),
+the zoomies, ride the kerb, swing round the lamppost, tetherball (the owner
+waits by the second lamppost), the brink (a pond off the path's edge),
+nature calls (the urge comes at the station, a bin beside it), and in the dog
+park: dig.
+
+- **The owner waits** at a lesson that wants them still (`human.tut_hold_y`):
+  they walk up, stop short of the station on the phone, and walk on when the
+  lesson lands or is skipped. Nothing is rushed.
+- **Nothing else turns up**: no random squirrels, no cat, no ducks, no
+  crowd, no other walkers, none of El Barri's petanca or ping-pong.
+- New lesson checks for dig in, tetherball, the brink and the poop bag.
+- `--level=tutorial` (and `--level=daily`) now work from the command line,
+  so the tutorial can be shot and self-tested; CI self-tests and smokes it.
+
+`tests/test_tutorial_stations.gd` (15 checks); `test_tutorial_isolation`
+and `test_rambla` updated for the tutorial's new home.
+
 ## 2026-09-28 - El Barri, the everyday walk, comes first
 
 Santtu: La Rambla should not be the first walk; that should be a generic walk

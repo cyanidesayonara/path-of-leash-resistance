@@ -249,7 +249,8 @@ func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--level="):
 			var lv := arg.trim_prefix("--level=")
-			if lv in LEVELS:
+			# the two modes too, so the tutorial can be shot and tested directly
+			if lv in LEVELS or lv == "tutorial" or lv == "daily":
 				level_id = lv
 		elif arg.begins_with("--weather="):
 			var w := arg.trim_prefix("--weather=")

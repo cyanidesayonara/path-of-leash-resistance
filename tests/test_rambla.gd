@@ -3,8 +3,8 @@ extends SceneTree
 # La Rambla's own layout (docs/LEVEL_DESIGN.md): no lawn (a traffic lane
 # west of the promenade instead), stalls of every kind, sellers' blankets
 # that get you shouted at, human statues that bow if you stand and watch,
-# the square opening out round the pavement mosaic. The First Walk shares
-# the boulevard and keeps its lawn, picnics and calm.
+# the square opening out round the pavement mosaic. The First Walk no longer
+# shares the boulevard (it is El Barri's stations) and has none of this.
 
 var checks := 0
 var failures: Array[String] = []
@@ -120,8 +120,7 @@ func _run() -> void:
 	root.add_child(t)
 	if not t.is_node_ready():
 		await t.ready
-	_check(not t.rambla(), "the First Walk is not La Rambla")
-	_check(t.strip_kind_l == "grass" and not t.verge_items.is_empty(), "the First Walk keeps its lawn and picnics")
+	_check(not t.rambla() and t.lvl == "barri", "the First Walk is not La Rambla (it is El Barri's stations)")
 	_check(t.blankets.is_empty() and t.statues.is_empty() and t.stall_kinds.is_empty(), "and none of La Rambla's clutter")
 	t.queue_free()
 	await process_frame

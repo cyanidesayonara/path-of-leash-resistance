@@ -46,6 +46,8 @@ var call_total := 0.0
 var wading := false
 var pond_bank_x := 0.0
 var homeward := false
+# the tutorial holds the owner here (north of it is where they stop); -INF off
+var tut_hold_y := -INF
 var parked := false
 var park_target := Vector2.ZERO
 var park_throw_t := 0.0
@@ -278,6 +280,12 @@ func _fiddle_with_reel(delta: float) -> void:
 
 
 func _walk(delta: float) -> void:
+	# the tutorial's owner waits at a lesson (main.TUT_HOLD_BACK): stood still
+	# on the phone until it is done
+	if global_position.y <= tut_hold_y and not homeward:
+		velocity = velocity.move_toward(Vector2.ZERO, 400.0 * delta)
+		move_and_slide()
+		return
 	if halt_t > 0.0:
 		velocity = velocity.move_toward(Vector2.ZERO, 400.0 * delta)
 		move_and_slide()

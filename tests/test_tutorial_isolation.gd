@@ -1,6 +1,6 @@
 extends SceneTree
 
-# The tutorial reuses Street geometry, but it is not a campaign run. This test
+# The tutorial is laid out on El Barri, but it is not a campaign run. This test
 # exercises the real Game autoload and main scene while all writes are routed
 # to a disposable save.
 
@@ -190,7 +190,7 @@ func _run() -> void:
 	main.frozen = true
 
 	_check(main.tutorial_mode, "real main scene enters tutorial mode")
-	_check(main.lvl == "street", "tutorial still reuses Street geometry")
+	_check(main.lvl == "barri", "tutorial is laid out on El Barri")
 	_check(main.active_quests.is_empty(), "tutorial does not build Street campaign goals")
 	_check(not main.tofu_quest_active and not main.tofu_home, "tutorial has no Tofu campaign state")
 	_check(main.challenge_giver == null, "tutorial has no active challenge giver reference")
