@@ -31,6 +31,31 @@ const CROSS_SECTIONS := {
 }
 
 
+# EL PARC's pieces, all in level space (not fitted to the path: they stand
+# on the lawn beside it)
+const PARK_LAKE := Rect2(460.0, -2950.0, 360.0, 470.0)
+# flowerbeds on the lawns, hedged with box: each long edge is a grind rail
+const PARK_BEDS: Array[Rect2] = [
+	Rect2(200.0, -1400.0, 78.0, 500.0),
+	Rect2(1002.0, -3850.0, 78.0, 500.0),
+	Rect2(200.0, -4700.0, 78.0, 450.0),
+]
+const PARK_BANDSTAND := Vector2(1042.0, -1880.0)
+const BANDSTAND_R := 58.0
+const BANDSTAND_POSTS := 8
+# the Ciutadella mammoth, life size, standing on the west lawn facing north
+const PARK_MAMMOTH := Vector2(240.0, -3480.0)
+const MAMMOTH_BODY := Vector2(58.0, 112.0)
+const PARK_PLAYGROUND := Rect2(958.0, -4460.0, 166.0, 300.0)
+
+
+static func bandstand_posts() -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for i in range(BANDSTAND_POSTS):
+		out.append(PARK_BANDSTAND + Vector2.from_angle(TAU * float(i) / float(BANDSTAND_POSTS) + PI / 8.0) * BANDSTAND_R)
+	return out
+
+
 # El Bosc: trunks along and in the trail, authored in the 300..980 space
 # that fit_props_to_corridor maps onto the path at each y (300 = hard
 # against the left edge). Closer together at the pinch (-2000), none on the
@@ -94,7 +119,7 @@ static func apply_corridor(m: Node2D) -> void:
 	var half := 340.0
 	match m.lvl:
 		"street": half = 340.0   # a proper boulevard
-		"park": half = 300.0     # a dirt path through grass
+		"park": half = 230.0     # a gravel path between lawns
 		"beach": half = 340.0    # bespoke cross-section, left alone
 		"rain": half = 320.0
 		"market": half = 270.0   # stalls crowd the aisle
@@ -146,6 +171,19 @@ static func apply_corridor(m: Node2D) -> void:
 			{"y": -3900.0, "cx": 520.0, "half": 296.0},
 			{"y": -4600.0, "cx": 700.0, "half": 300.0},
 			{"y": m.GATE_Y, "cx": 640.0, "half": 300.0},
+		]
+	elif m.lvl == "park":
+		# EL PARC OPENS OUT ROUND THE LAKE: the path widens either side of it
+		# and the lake sits in the middle as an island (PARK_LAKE), so there is
+		# a west shore and an east shore to walk. The owner keeps to the east
+		# (main.islands); the dog can take either, which is the game.
+		m.edge_nodes = [
+			{"y": m.START_Y, "cx": 640.0, "half": 230.0},
+			{"y": -2100.0, "cx": 640.0, "half": 230.0},
+			{"y": -2400.0, "cx": 640.0, "half": 400.0},
+			{"y": -3030.0, "cx": 640.0, "half": 400.0},
+			{"y": -3330.0, "cx": 640.0, "half": 230.0},
+			{"y": m.GATE_Y, "cx": 640.0, "half": 230.0},
 		]
 	elif m.lvl == "trail":
 		# EL BOSC BENDS - the first walk in the game that is not a straight
@@ -280,8 +318,9 @@ static func build_level_data(m: Node2D) -> void:
 			keb_list = [Vector2(640, -1960), Vector2(700, -4200), Vector2(m.SHOULDER_R - 12, -2400)]
 		"park":
 			m.gate_text = "HOME"
-			# the pond bites into the path; the strip past it is the bridge
-			m.pond = Rect2(m.sw_l, -2950, 360, 470)
+			# El Parc's lake stands in the middle of its widened path; El Mosaic
+			# still builds on the old pond's footprint (and then drops it)
+			m.pond = PARK_LAKE if m.lvl == "park" else Rect2(m.sw_l, -2950, 360, 470)
 			m.duck_ys = Array([randf_range(-2200.0, -1400.0), randf_range(-4300.0, -3400.0)], TYPE_FLOAT, &"", null)
 			for i in range(7):
 				var x = m.sw_l + 30.0 if i % 2 == 0 else m.sw_r - 30.0
@@ -466,7 +505,16 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "street":
 		m.fountains = Array([Vector2(335, -3350)], TYPE_VECTOR2, &"", null)
 	elif m.lvl == "park":
-		m.fountains = Array([Vector2(944, -3300), Vector2(724, -2440)], TYPE_VECTOR2, &"", null)
+		# the drinking fountain on the north shore, and one by the bandstand
+		m.fountains = Array([Vector2(640, -2390), Vector2(944, -1650)], TYPE_VECTOR2, &"", null)
+		# no street A-board in a park
+		m.astands = Array([], TYPE_VECTOR2, &"", null)
+		# litter, well away from the lake (spawn_cones)
+		m.cone_spots = Array([Vector2(560, -1700), Vector2(720, -4000)], TYPE_VECTOR2, &"", null)
+		m.islands = Array([{"rect": PARK_LAKE, "side": 1.0}], TYPE_DICTIONARY, &"", null)
+		# the playground's sandpit is real sand: slow, and it takes prints
+		m.patches.append({"y": PARK_PLAYGROUND.get_center().y + 40.0, "at": 0.0, "rx": 44.0, "ry": 34.0,
+			"seed": 1.3, "kind": "sand", "pin": PARK_PLAYGROUND.get_center() + Vector2(-28.0, 40.0)})
 	elif m.lvl == "rain":
 		# El Aguacero: get-out-of-the-rain gate, storm drains gaping open
 		# down the middle of the road (open holes, lethal in a downpour),
@@ -781,6 +829,23 @@ static func build_level_data(m: Node2D) -> void:
 	if m.furgoneta.x < INF:
 		for off: float in [-52.0, -26.0, 0.0, 26.0, 52.0]:
 			m.poles.append(m.furgoneta + Vector2(0.0, off))
+	if m.lvl == "park":
+		m.rails.clear()
+		for bed: Rect2 in PARK_BEDS:
+			for bx: float in [bed.position.x, bed.end.x]:
+				m.rails.append({"x": bx, "y0": bed.position.y, "y1": bed.end.y})
+		# the lake is the biggest pole on the walk: wrap points round its shore
+		var lc: Vector2 = PARK_LAKE.get_center()
+		for i in range(36):
+			var a := TAU * float(i) / 36.0
+			m.poles.append(lc + Vector2(cos(a) * PARK_LAKE.size.x * 0.49, sin(a) * PARK_LAKE.size.y * 0.49))
+		for bp: Vector2 in bandstand_posts():
+			m.park_posts.append(bp)
+			m.poles.append(bp)
+		# the mammoth's legs catch the rope, and her front foot can be marked
+		for lg: Vector2 in [Vector2(-22, -30), Vector2(22, -30), Vector2(-22, 34), Vector2(22, 34)]:
+			m.poles.append(PARK_MAMMOTH + lg)
+		m.hydrants.append({"pos": PARK_MAMMOTH + Vector2(34.0, -40.0), "done": false, "progress": 0.0, "kind": "mammoth"})
 	# the end of each fallen trunk out on the trail is what the rope catches
 	if m.lvl == "trail":
 		for i in range(TRAIL_LOGS.size()):
@@ -892,14 +957,17 @@ static func build_verge(m: Node2D) -> void:
 				{"pos": Vector2(vl + 12.0, -4420.0), "kind": "picnic"},
 			], TYPE_DICTIONARY, &"", null)
 		"park":
-			# a park has verge on both sides, and the verge is the whole point
-			m.verge_items = Array([
-				{"pos": Vector2(vl, -760.0), "kind": "picnic"},
-				{"pos": Vector2(vr, -1500.0), "kind": "picnic"},
-				{"pos": Vector2(vl - 18.0, -2260.0), "kind": "stump"},
-				{"pos": Vector2(vr + 10.0, -3100.0), "kind": "picnic"},
-				{"pos": Vector2(vl + 16.0, -3820.0), "kind": "bush"},
-			], TYPE_DICTIONARY, &"", null)
+			# a park has verge on both sides, and the verge is the whole point.
+			# Set from the path's edge at each y, so the lake's widening cannot
+			# put a picnic on the path, and clear of the beds, the bandstand,
+			# the mammoth and the playground
+			var pv: Array[Dictionary] = []
+			for spec: Array in [[-760.0, -1.0, "picnic"], [-1250.0, 1.0, "picnic"], [-2260.0, -1.0, "stump"],
+					[-3860.0, -1.0, "bush"], [-4040.0, 1.0, "picnic"]]:
+				var pe: Vector2 = m.walk_edges(float(spec[0]))
+				var px: float = (pe.x - 85.0) if float(spec[1]) < 0.0 else (pe.y + 85.0)
+				pv.append({"pos": Vector2(clampf(px, 195.0, 1085.0), float(spec[0])), "kind": String(spec[2])})
+			m.verge_items = Array(pv, TYPE_DICTIONARY, &"", null)
 		"trail":
 			# out here it is fallen wood and undergrowth, not tablecloths. Set
 			# from the trail's own edge at each y, so a bend cannot leave one
@@ -1317,6 +1385,18 @@ static func build_walls(m: Node2D) -> void:
 				wood.add_child(cs)
 			wy = wy2
 		m.add_child(wood)
+	if m.lvl == "park":
+		add_rect_body(m, PARK_MAMMOTH, MAMMOTH_BODY)
+		for bp: Vector2 in bandstand_posts():
+			var pb := StaticBody2D.new()
+			pb.collision_layer = 1
+			pb.position = bp
+			var pcs := CollisionShape2D.new()
+			var psh := CircleShape2D.new()
+			psh.radius = m.POLE_RADIUS
+			pcs.shape = psh
+			pb.add_child(pcs)
+			m.add_child(pb)
 	if m.lvl == "trail":
 		for lr: Rect2 in trail_logs(m):
 			var lb := StaticBody2D.new()

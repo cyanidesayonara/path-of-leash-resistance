@@ -128,6 +128,11 @@ var freedomlayer: Node2D
 var gate_text := "PARK"
 var duck_ys: Array[float] = []
 var boars_out := false
+# where the path splits round something: {"rect", "side"}. The owner keeps
+# to that side of it (+1 east, -1 west); see human._walk
+var islands: Array[Dictionary] = []
+# solid posts standing off the path (El Parc's bandstand), drawn by their walk
+var park_posts: Array[Vector2] = []
 var ducks_disturbed := 0
 # where the HUMAN's autopilot lives; the dog may roam anywhere between
 # the outer walls, though an undistracted owner has opinions about it
@@ -198,6 +203,13 @@ var rivals_beaten := 0
 # the kerb grind (see grind.gd): ride the kerb line for style
 var grind: Node
 var grind_kerb_x := 0.0
+# what she is grinding: RAIL_EDGE_L / RAIL_EDGE_R are the path's own edges
+# (followed round a bend), 0.. index rails, the walk's other straight edges
+# (El Parc's flowerbed edging): {"x", "y0", "y1"}
+const RAIL_EDGE_L := -1
+const RAIL_EDGE_R := -2
+var grind_rail := RAIL_EDGE_L
+var rails: Array[Dictionary] = []
 var grind_cd := 0.0
 # the owner's phone call: a long window of maximum slack (see _tick_call)
 var call_active := false
@@ -1403,6 +1415,100 @@ func _draw_fallen_log(r: Rect2) -> void:
 	for ex: float in [r.position.x, r.end.x]:
 		b.circle(Vector2(ex, r.get_center().y), r.size.y * 0.5, Color(0.66, 0.54, 0.38))
 		b.circle(Vector2(ex, r.get_center().y), r.size.y * 0.28, Color(0.55, 0.43, 0.29))
+	b.flush(_wc)
+
+
+# EL PARC's own furniture, on the lawns beside the path: box-hedged
+# flowerbeds (their edging is a grind rail), the bandstand, the Ciutadella
+# mammoth, and the playground.
+func _draw_parc(vt: float, vb: float) -> void:
+	var b := ShapeBatch.new()
+	var flower_cols := [Color(0.86, 0.30, 0.34), Color(0.95, 0.78, 0.30), Color(0.62, 0.42, 0.78), Color(0.96, 0.95, 0.92)]
+	for bed: Rect2 in LevelBuild.PARK_BEDS:
+		if bed.end.y < vt - 40.0 or bed.position.y > vb + 40.0:
+			continue
+		b.rect(Rect2(bed.position + LIGHT * 5.0, bed.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+		b.rect(bed, Color(0.17, 0.30, 0.16))                   # the box hedge
+		b.rect(bed.grow(-7.0), Color(0.36, 0.26, 0.18))        # the soil
+		var fy := bed.position.y + 14.0
+		var k := 0
+		while fy < bed.end.y - 10.0:
+			for fx: float in [bed.position.x + 18.0, bed.get_center().x, bed.end.x - 18.0]:
+				var fc: Color = flower_cols[(k + int(fx)) % flower_cols.size()]
+				b.circle(Vector2(fx + float(k % 3) * 2.0, fy), 6.0, Color(0.24, 0.40, 0.20))
+				b.circle(Vector2(fx + float(k % 3) * 2.0, fy - 1.0), 3.6, fc)
+			fy += 19.0
+			k += 1
+	# the mammoth: grey stone, a huge domed head, the trunk curled, tusks
+	var mp: Vector2 = LevelBuild.PARK_MAMMOTH
+	if mp.y > vt - 120.0 and mp.y < vb + 120.0:
+		var stone := Color(0.42, 0.38, 0.35)
+		var mbs: Vector2 = LevelBuild.MAMMOTH_BODY
+		b.rect(Rect2(mp - mbs * 0.5 - Vector2(8, 22), mbs + Vector2(16, 44)), Color(0.70, 0.68, 0.63))   # the plinth
+		b.rect(Rect2(mp - mbs * 0.5 - Vector2(8, 22), mbs + Vector2(16, 44)).grow(-4.0), Color(0.64, 0.62, 0.57))
+		b.circle(mp + LIGHT * 22.0, 44.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+		for lg: Vector2 in [Vector2(-22, -30), Vector2(22, -30), Vector2(-22, 34), Vector2(22, 34)]:
+			b.circle(mp + lg, 10.0, stone.darkened(0.25))
+		b.circle(mp + Vector2(0, 16), 30.0, stone)
+		b.circle(mp + Vector2(0, -12), 28.0, stone)
+		b.circle(mp + Vector2(0, -44), 22.0, stone.lightened(0.06))      # the head
+		b.circle(mp + Vector2(-6, -50), 10.0, stone.lightened(0.14))
+		b.circle(mp + Vector2(-20, -40), 11.0, stone.darkened(0.12))     # ears
+		b.circle(mp + Vector2(20, -40), 11.0, stone.darkened(0.12))
+		b.line(mp + Vector2(0, -60), mp + Vector2(0, -78), stone.darkened(0.1), 9.0)   # the trunk
+		b.circle(mp + Vector2(4, -80), 5.0, stone.darkened(0.1))
+		for tx: float in [-1.0, 1.0]:
+			b.line(mp + Vector2(tx * 10.0, -60), mp + Vector2(tx * 22.0, -80), Color(0.88, 0.85, 0.76), 4.0)
+			b.line(mp + Vector2(tx * 22.0, -80), mp + Vector2(tx * 14.0, -92), Color(0.88, 0.85, 0.76), 3.5)
+		b.line(mp + Vector2(0, 46), mp + Vector2(4, 60), stone.darkened(0.2), 3.0)       # the tail
+	# the bandstand: an octagonal roof over eight iron posts, drawn as its
+	# roof ring so the posts and the space inside still read
+	var bs: Vector2 = LevelBuild.PARK_BANDSTAND
+	if bs.y > vt - 120.0 and bs.y < vb + 120.0:
+		var r: float = LevelBuild.BANDSTAND_R
+		b.circle(bs + LIGHT * 18.0, r + 18.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+		b.circle(bs, r + 8.0, Color(0.74, 0.70, 0.62))                 # the stone platform
+		b.circle(bs, r - 6.0, Color(0.66, 0.62, 0.55))
+		var roof := PackedVector2Array()
+		for i in range(8):
+			roof.append(bs + Vector2.from_angle(TAU * float(i) / 8.0 + PI / 8.0) * (r + 14.0))
+		var inner := PackedVector2Array()
+		for i in range(8):
+			inner.append(bs + Vector2.from_angle(TAU * float(i) / 8.0 + PI / 8.0) * (r - 12.0))
+		# the roof as eight panels round an open lantern, green copper
+		for i in range(8):
+			var j := (i + 1) % 8
+			var pan := PackedVector2Array([roof[i], roof[j], inner[j], inner[i]])
+			b.polygon(pan, Color(0.30, 0.52, 0.46) if i % 2 == 0 else Color(0.26, 0.46, 0.41))
+		b.circle(bs, 9.0, Color(0.36, 0.58, 0.51))
+		for bp: Vector2 in park_posts:
+			b.circle(bp, 5.0, Color(0.16, 0.17, 0.19))
+	# the playground: a soft red surface, a slide, a pair of swings
+	var pg: Rect2 = LevelBuild.PARK_PLAYGROUND
+	if pg.end.y > vt - 40.0 and pg.position.y < vb + 40.0:
+		b.rect(pg, Color(0.64, 0.36, 0.30))
+		b.rect(Rect2(pg.position.x, pg.position.y, pg.size.x, 4.0), Color(0.48, 0.26, 0.22))
+		# the slide: ladder, platform, chute
+		var sl := pg.position + Vector2(40.0, 60.0)
+		b.rect(Rect2(sl.x - 12.0, sl.y - 12.0, 24.0, 24.0), Color(0.30, 0.50, 0.72))
+		b.rect(Rect2(sl.x - 8.0, sl.y + 12.0, 16.0, 70.0), Color(0.92, 0.72, 0.24))
+		b.rect(Rect2(sl.x - 5.0, sl.y + 14.0, 10.0, 66.0), Color(0.98, 0.84, 0.38))
+		for rung in range(4):
+			b.line(Vector2(sl.x - 9.0, sl.y - 16.0 - float(rung) * 7.0), Vector2(sl.x + 9.0, sl.y - 16.0 - float(rung) * 7.0), Color(0.40, 0.40, 0.44), 2.0)
+		# swings, gently going
+		var st := AnimClock.msec() / 1000.0
+		var sw := pg.position + Vector2(118.0, 70.0)
+		b.line(sw + Vector2(-30, 0), sw + Vector2(30, 0), Color(0.34, 0.36, 0.40), 5.0)
+		for si: float in [-14.0, 14.0]:
+			var swing := sin(st * 2.2 + si) * 16.0
+			var seat := sw + Vector2(si, 22.0 + swing)
+			b.line(sw + Vector2(si - 6.0, 0), seat + Vector2(-6, 0), Color(0.55, 0.55, 0.58), 1.4)
+			b.line(sw + Vector2(si + 6.0, 0), seat + Vector2(6, 0), Color(0.55, 0.55, 0.58), 1.4)
+			b.rect(Rect2(seat.x - 8.0, seat.y - 3.0, 16.0, 6.0), Color(0.20, 0.22, 0.26))
+		# the sandpit's timber edge (the sand itself is a patch)
+		var sp: Vector2 = pg.get_center() + Vector2(-28.0, 40.0)
+		b.rect(Rect2(sp.x - 54.0, sp.y - 44.0, 108.0, 88.0), Color(0.46, 0.34, 0.22))
+		b.rect(Rect2(sp.x - 48.0, sp.y - 38.0, 96.0, 76.0), Color(0.86, 0.78, 0.58))
 	b.flush(_wc)
 
 
@@ -3595,6 +3701,10 @@ func _patch_lobes(rx: float, ry: float) -> int:
 
 
 func patch_centre(pt: Dictionary) -> Vector2:
+	# a pinned patch stands where it was put (a sandpit on the lawn); the rest
+	# sit across the path wherever the path is at their height
+	if pt.has("pin"):
+		return pt["pin"]
 	var y := float(pt["y"])
 	var e := walk_edges(y)
 	return Vector2(e.x + (e.y - e.x) * float(pt["at"]), y)
@@ -4015,7 +4125,9 @@ func _takes_prints(p: Vector2) -> bool:
 	if Game.weather == "snow" and p.y > GATE_Y:
 		return true
 	if lvl != "beach":
-		return false
+		# a sandpit, wet cement, mud: soft ground takes a print anywhere
+		var soft := surface_at(p)
+		return soft == Surfaces.S.SAND or soft == Surfaces.S.MUD
 	var s := surface_at(p)
 	# past the gate is the dog beach, sand from the fence to the water
 	if p.y < GATE_Y:
@@ -4354,7 +4466,12 @@ func _tick_grind(delta: float) -> void:
 		# way. Pressing left corrects a rightward tip.
 		var counter: float = -dog.input_dir.x
 		var res: String = grind.tick(delta, counter)
+		var dy: float = dog.global_position.y
+		grind_kerb_x = rail_x(grind_rail, dy)
 		var off_rail: bool = absf(dog.global_position.x - grind_kerb_x) > GRIND_BAND + 10.0
+		if grind_rail >= 0:
+			var gr: Dictionary = rails[grind_rail]
+			off_rail = off_rail or dy < float(gr["y0"]) or dy > float(gr["y1"])
 		if res == "bailed":
 			grind_cd = 0.9
 			combo.bail()
@@ -4374,14 +4491,30 @@ func _tick_grind(delta: float) -> void:
 		return
 	if grind_cd > 0.0 or dog.is_tumbling() or teeter.active or not fast_enough or not travelling_along:
 		return
-	# on a kerb? both corridor edges are rails
-	for kx in [sw_l, sw_r]:
+	# on a kerb? both path edges are rails, where the path is at her height,
+	# and so is any other straight edge the walk lays (rails)
+	var here_y: float = dog.global_position.y
+	var cands: Array[int] = [RAIL_EDGE_L, RAIL_EDGE_R]
+	for ri in range(rails.size()):
+		if here_y >= float(rails[ri]["y0"]) and here_y <= float(rails[ri]["y1"]):
+			cands.append(ri)
+	for rk: int in cands:
+		var kx := rail_x(rk, here_y)
 		if absf(dog.global_position.x - kx) < GRIND_BAND:
+			grind_rail = rk
 			grind_kerb_x = kx
 			grind.begin()
 			Sfx.play("save", 1.35, -10.0)
 			feed.say("KERB RIDE!", EventFeed.Tone.LOUD)
 			return
+
+
+func rail_x(rail: int, y: float) -> float:
+	if rail == RAIL_EDGE_L:
+		return walk_edges(y).x
+	if rail == RAIL_EDGE_R:
+		return walk_edges(y).y
+	return float(rails[rail]["x"])
 
 
 func _dist_to_rect_edge(r: Rect2, p: Vector2) -> float:
@@ -5530,6 +5663,8 @@ func _draw_world() -> void:
 		elif lvl == "trail":
 			grass = TRAIL_FLOOR
 			walkway = TRAIL_DIRT
+		elif lvl == "park":
+			walkway = Color(0.74, 0.67, 0.53)   # sandy gravel, as the city's parks are
 		if built:
 			# only the strips between the paving and the building line: beyond
 			# it the edge layer's buildings show (they sit behind the world, so
@@ -5605,12 +5740,21 @@ func _draw_world() -> void:
 		for i in range(4):
 			var wy := pond.position.y + 70.0 + i * 105.0
 			_wc.draw_arc(Vector2(pc.x + sin(wt * 0.7 + i) * 40.0, wy), 26.0, PI * 0.15, PI * 0.85, 10, Color(1, 1, 1, 0.14), 2.0)
-		var px := pond.end.x + 8.0
-		var py := pond.position.y
-		while py < pond.end.y:
-			_wc.draw_line(Vector2(px, py), Vector2(sw_r, py), Color(0.5, 0.4, 0.28), 5.0)
-			py += 16.0
-		_wc.draw_line(Vector2(px, pond.position.y), Vector2(px, pond.end.y), Color(0.36, 0.28, 0.2), 4.0)
+		# a rowing boat for hire, drifting round the lake
+		var bt := AnimClock.msec() / 1000.0
+		var bpos := pc + Vector2(sin(bt * 0.11) * pond.size.x * 0.24, cos(bt * 0.08) * pond.size.y * 0.28)
+		var bang := Vector2(cos(bt * 0.11) * 0.11, -sin(bt * 0.08) * 0.08).angle()
+		_wc.draw_set_transform(bpos, bang + PI / 2.0, Vector2.ONE)
+		_wc.draw_colored_polygon(PackedVector2Array([Vector2(0, -24), Vector2(10, -8), Vector2(10, 16),
+			Vector2(-10, 16), Vector2(-10, -8)]), Color(0.55, 0.30, 0.22))
+		_wc.draw_colored_polygon(PackedVector2Array([Vector2(0, -19), Vector2(7, -7), Vector2(7, 13),
+			Vector2(-7, 13), Vector2(-7, -7)]), Color(0.78, 0.66, 0.50))
+		_wc.draw_line(Vector2(-18, 2), Vector2(18, 2), Color(0.45, 0.33, 0.22), 2.0)
+		_wc.draw_circle(Vector2(0, 4), 5.0, Color(0.30, 0.42, 0.62))
+		_wc.draw_circle(Vector2(0, 3), 3.2, Color(0.80, 0.62, 0.48))
+		_wc.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	if lvl == "park":
+		_draw_parc(vt, vb)
 	if lvl == "trail":
 		_draw_wood(vt, vb)
 		_draw_trail_stream(vt, vb)
@@ -5672,6 +5816,10 @@ func _draw_world() -> void:
 		if lvl == "trail":
 			_draw_waymarker(_wc, h)
 			continue
+		if String(h.get("kind", "")) == "mammoth":
+			if not h.done and h.progress > 0.0:
+				_wc.draw_arc(hp, 17.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
+			continue     # the foot of the statue, drawn with it
 		var c := Color(0.45, 0.4, 0.38) if h.done else Color(0.68, 0.23, 0.18)
 		cast_shadow(_wc, hp, 8.0, 26.0)
 		# the flange it is bolted down with
@@ -6134,7 +6282,14 @@ func _draw_world() -> void:
 	if grind.active:
 		var gy0 := maxf(vt - 40.0, GATE_Y)
 		var gy1 := minf(vb + 40.0, START_Y + 200.0)
-		_wc.draw_line(Vector2(grind_kerb_x, gy0), Vector2(grind_kerb_x, gy1), Color(1.0, 0.88, 0.45, 0.55), 4.0)
+		if grind_rail >= 0:
+			gy0 = maxf(gy0, float(rails[grind_rail]["y0"]))
+			gy1 = minf(gy1, float(rails[grind_rail]["y1"]))
+		var ry := gy0
+		while ry < gy1:
+			var ry2 := minf(ry + 40.0, gy1)
+			_wc.draw_line(Vector2(rail_x(grind_rail, ry), ry), Vector2(rail_x(grind_rail, ry2), ry2), Color(1.0, 0.88, 0.45, 0.55), 4.0)
+			ry = ry2
 		var gp: Vector2 = dog.global_position + Vector2(0.0, -42.0)
 		var gw := 74.0
 		_wc.draw_rect(Rect2(gp.x - gw * 0.5, gp.y - 5.0, gw, 10.0), Color(0.06, 0.05, 0.08, 0.72))

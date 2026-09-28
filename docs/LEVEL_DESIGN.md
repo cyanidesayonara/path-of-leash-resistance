@@ -110,7 +110,9 @@ with pickpockets and shenanigans happening around."
   the gap), loop the owner round the bandstand posts.
 - Keep: pond, bridge, ducks, lawn verge, tree slalom.
 - Add: low hedged flowerbeds (grind), a bandstand landmark, a playground
-  corner (temptation), pigeons at the benches.
+  corner (temptation), pigeons at the benches, and the Ciutadella mammoth
+  statue as the landmark you can mark. The path opens out round the lake so
+  it is an island with a shore either side (path shapes, stage 2).
 - Off-leash: the dog park (as now).
 
 ### El Bosc (trail) - the forest
