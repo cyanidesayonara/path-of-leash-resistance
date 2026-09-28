@@ -2,6 +2,23 @@
 
 Append-only session history, newest first.
 
+## 2026-09-28 - La Rambla, step 3: the whistle, the shell game, a dropped ice cream
+
+- **The whistle** (first after 24 s, then every 42 s, only when a blanket is
+  in view): "PHWEEET!" and the sellers near the camera pull the cords, carry
+  the whole stall off in a sheet to the edge of the promenade, wait there,
+  and come back and lay it out again. On the move, each seller is a snag for
+  the rope like another lead (`leash.dynamic_obstacles`), and a thief running
+  into one goes down tripped. No shouting for walking where a blanket was.
+- **The shell game** on a cardboard box with its shills leaning in. Plough
+  through it at a run or bark at it and the game's up: cups everywhere, the
+  lot of them gone, +6 and a RIGGED trick, the crowd claps.
+- **A dropped ice cream** by the cart: a new "icecream" substance (sticky
+  pink paws), a mess on the paving rather than a surface, and a thief who
+  runs over it slips.
+
+`test_rambla` 26 checks, `test_pickpocket` 15. The snapshot is identical.
+
 ## 2026-09-28 - La Rambla, step 2: the crowd and the pickpockets (#80)
 
 - **The crowd** (`entities/tourist.gd`): fourteen tourists kept round the

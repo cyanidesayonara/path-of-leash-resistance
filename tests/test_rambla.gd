@@ -73,6 +73,44 @@ func _run() -> void:
 	for i in range(120):
 		m._tick_rambla(1.0 / 60.0)
 	_check(float(m.statue_bow.get(1, 0.0)) <= 0.0, "a statue does not bow to a dog trotting past")
+	# the whistle: the sellers near the camera bundle up, carry it off
+	# (snagging the rope on the way), wait, and come back and lay it out again
+	var nb: Dictionary = m.blankets[0]
+	m.cam.position = Vector2(640.0, (nb["rect"] as Rect2).get_center().y)
+	dog.global_position = Vector2(-3000, 0)
+	m.whistle_t = 0.0
+	m._tick_whistle(1.0 / 60.0)
+	_check(String(nb["state"]) == "pack", "at the whistle the seller packs up")
+	var saw_moving := false
+	var saw_snag := false
+	for i in range(int((0.6 + 3.0) * 60.0)):
+		m._tick_whistle(1.0 / 60.0)
+		if m.bundle_moving(nb):
+			saw_moving = true
+			m._refresh_pair_obstacles()
+			saw_snag = saw_snag or m.leash.dynamic_obstacles.has(m.seller_at(nb))
+	_check(saw_moving and saw_snag, "and carries the bundle off, a moving snag for the rope")
+	dog.global_position = (nb["rect"] as Rect2).get_center()
+	nb["cd"] = 0.0
+	m._tick_rambla(0.0)
+	_check(float(nb["cd"]) == 0.0, "no shout for walking where the blanket was")
+	for i in range(int((m.BUNDLE_AWAY + 6.0) * 60.0)):
+		m._tick_whistle(1.0 / 60.0)
+	_check(String(nb["state"]) == "laid", "then he comes back and lays it out again")
+	# the shell game: plough through it at a run and it is busted, once
+	var sg: Dictionary = m.shell_game
+	_check(not sg.is_empty() and not bool(sg["done"]), "there is a shell game running")
+	var b0: int = m.bones
+	dog.global_position = sg["pos"]
+	dog.velocity = Vector2(0, -300)
+	m._tick_shells(0.016)
+	_check(bool(sg["done"]) and m.bones > b0, "ploughing through the shell game busts it")
+	# the dropped ice cream is sticky underfoot, not ground that slows you
+	var ice_ok := false
+	for pt: Dictionary in m.patches:
+		if String(pt["kind"]) == "icecream":
+			ice_ok = m.surface_at(m.patch_centre(pt)) == m.Surfaces.S.PAVEMENT
+	_check(ice_ok, "the dropped ice cream is a mess on the paving, not a surface")
 	m.queue_free()
 	await process_frame
 

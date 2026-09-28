@@ -166,6 +166,9 @@ var blankets: Array[Dictionary] = []
 var statues: Array[Vector2] = []
 var statue_wait: Dictionary = {}     # index -> how long she has stood watching
 var statue_bow: Dictionary = {}      # index -> time left on the bow
+# the shell game: {"pos", "done", "t"}; empty where there is none
+var shell_game: Dictionary = {}
+var whistle_t := WHISTLE_FIRST
 # La Rambla's crowd and its pickpockets (entities/tourist.gd, pickpocket.gd).
 # The crowd has its own RNG so it never shifts the global sequence.
 var crowd_rng := RandomNumberGenerator.new()
@@ -318,6 +321,7 @@ const SUBSTANCES := {
 	"slush":    {"col": Color(0.78, 0.82, 0.88), "life": 2.0, "quip": "SLUSHY PAWS!"},
 	"confetti": {"col": Color(0.92, 0.55, 0.75), "life": 2.8, "quip": "COVERED IN CONFETTI!"},
 	"oil":      {"col": Color(0.20, 0.19, 0.22), "life": 3.2, "quip": "OILY PAWS!"},
+	"icecream": {"col": Color(0.96, 0.72, 0.78), "life": 2.6, "quip": "STICKY PAWS!"},
 }
 var substance_zones: Array[Dictionary] = []
 var paw_prints: Array[Dictionary] = []
@@ -1448,12 +1452,14 @@ func rambla() -> bool:
 
 func _tick_rambla(delta: float) -> void:
 	var dp := dog.global_position
+	_tick_whistle(delta)
+	_tick_shells(delta)
 	# walk across a seller's blanket and you hear about it
 	for i in range(blankets.size()):
 		var bl: Dictionary = blankets[i]
 		bl["cd"] = maxf(0.0, float(bl["cd"]) - delta)
 		var r: Rect2 = bl["rect"]
-		if r.grow(4.0).has_point(dp) and float(bl["cd"]) <= 0.0:
+		if String(bl.get("state", "laid")) == "laid" and r.grow(4.0).has_point(dp) and float(bl["cd"]) <= 0.0:
 			bl["cd"] = 3.0
 			float_text(_seller_pos(r) + Vector2(0, -22), "eh! EH!", Color(1, 0.9, 0.75))
 	# a human statue holds still until she stands and watches, then bows
@@ -1473,6 +1479,101 @@ func _tick_rambla(delta: float) -> void:
 
 # stand and watch a human statue this long and it bows to her
 const STATUE_WATCH := 1.0
+# the whistle: the sellers bundle up their blankets and clear off for a while
+const WHISTLE_FIRST := 24.0
+const WHISTLE_EVERY := 42.0
+const BUNDLE_SPEED := 150.0
+const BUNDLE_AWAY := 8.0
+
+
+func _tick_whistle(delta: float) -> void:
+	whistle_t -= delta
+	if whistle_t <= 0.0:
+		var near: Array[Dictionary] = []
+		for bl: Dictionary in blankets:
+			if String(bl["state"]) == "laid" and absf((bl["rect"] as Rect2).get_center().y - cam.position.y) < 460.0:
+				near.append(bl)
+		if near.is_empty():
+			whistle_t = 5.0
+		else:
+			whistle_t = WHISTLE_EVERY
+			# the whistle from somewhere up the promenade: the tell for all of it
+			float_text(Vector2(walk_cx, cam.position.y - 200.0), "PHWEEET!", Color(0.9, 0.95, 1.0))
+			feed.say("WHISTLE! THE SELLERS ARE OFF", EventFeed.Tone.LOUD)
+			for bl: Dictionary in near:
+				bl["state"] = "pack"
+				bl["t"] = 0.0
+	for bl: Dictionary in blankets:
+		var st := String(bl["state"])
+		if st == "laid":
+			continue
+		bl["t"] = float(bl["t"]) + delta
+		var r: Rect2 = bl["rect"]
+		var home: Vector2 = _seller_pos(r)
+		match st:
+			"pack":
+				if float(bl["t"]) >= 0.6:
+					# off to the nearer edge of the promenade, and along it
+					var e := walk_edges(r.get_center().y)
+					var ex := e.x + 18.0 if r.get_center().x < walk_cx else e.y - 18.0
+					var along := -220.0 if int(r.position.y) % 2 == 0 else 220.0
+					bl["to"] = Vector2(ex, r.get_center().y + along)
+					bl["state"] = "carry"
+					bl["t"] = 0.0
+			"carry":
+				var sp: Vector2 = bl["sp"]
+				sp = sp.move_toward(bl["to"], BUNDLE_SPEED * delta)
+				bl["sp"] = sp
+				if sp.distance_to(bl["to"]) < 2.0:
+					bl["state"] = "away"
+					bl["t"] = 0.0
+			"away":
+				if float(bl["t"]) >= BUNDLE_AWAY:
+					bl["state"] = "back"
+					bl["t"] = 0.0
+			"back":
+				var sp2: Vector2 = bl["sp"]
+				sp2 = sp2.move_toward(home, BUNDLE_SPEED * 0.7 * delta)
+				bl["sp"] = sp2
+				if sp2.distance_to(home) < 2.0:
+					bl["state"] = "unpack"
+					bl["t"] = 0.0
+			"unpack":
+				if float(bl["t"]) >= 0.6:
+					bl["state"] = "laid"
+
+
+# where a blanket seller is right now (on the move with the bundle, or by it)
+func seller_at(bl: Dictionary) -> Vector2:
+	return bl["sp"] if bl.has("sp") else _seller_pos(bl["rect"])
+
+
+func bundle_moving(bl: Dictionary) -> bool:
+	return String(bl.get("state", "laid")) in ["carry", "back"]
+
+
+func _tick_shells(delta: float) -> void:
+	if shell_game.is_empty():
+		return
+	if bool(shell_game["done"]):
+		shell_game["t"] = float(shell_game["t"]) + delta
+		return
+	var sp: Vector2 = shell_game["pos"]
+	if dog.global_position.distance_to(sp) < 34.0 and dog.velocity.length() > 200.0:
+		_bust_shells("the dog ploughed through it")
+
+
+func _bust_shells(_why: String) -> void:
+	shell_game["done"] = true
+	shell_game["t"] = 0.0
+	var sp: Vector2 = shell_game["pos"]
+	bones += 6
+	combo.add("RIGGED", 6)
+	float_text(sp + Vector2(0, -30), "THE GAME'S UP!", Color(1, 0.9, 0.5))
+	feed.say("SHELL GAME BUSTED +6", EventFeed.Tone.GOOD)
+	for tw: Node2D in get_tree().get_nodes_in_group("tourists"):
+		if tw.global_position.distance_to(sp) < 240.0:
+			tw.cheer()
 # the crowd: this many tourists kept around the camera
 const CROWD_SIZE := 14
 # pickpockets: the first this many seconds in, then one every PP_EVERY while
@@ -1617,10 +1718,25 @@ func _draw_rambla(vt: float, vb: float) -> void:
 		b.line(mc + Vector2(-52, 10), mc + Vector2(48, -20), Color(0.08, 0.08, 0.08), 5.0)
 		b.line(mc + Vector2(-8, 44), mc + Vector2(6, -50), Color(0.08, 0.08, 0.08), 4.0)
 		b.circle(mc + Vector2(26, 18), 5.0, Color(0.08, 0.08, 0.08))
-	# the blankets and their goods, and the seller beside each
+	# the blankets and their goods, and the seller beside each; bundled up
+	# and carried off when the whistle goes
 	for bl: Dictionary in blankets:
 		var r: Rect2 = bl["rect"]
-		if r.end.y < vt - 40.0 or r.position.y > vb + 40.0:
+		if r.end.y < vt - 240.0 or r.position.y > vb + 240.0:
+			continue
+		var bst := String(bl.get("state", "laid"))
+		if bst != "laid":
+			var sat := seller_at(bl)
+			if bst in ["pack", "unpack"]:
+				b.rect(Rect2(r.get_center() - Vector2(20, 14), Vector2(40, 28)), Color(0.86, 0.84, 0.80))
+			b.circle(sat + Vector2(2, 3), 11.0, Color(0, 0, 0, 0.18))
+			b.circle(sat, 11.0, Color(0.20, 0.24, 0.32))
+			b.circle(sat + Vector2(0, -3), 6.5, Color(0.36, 0.24, 0.17))
+			if bst in ["carry", "away", "back"]:
+				# the whole stall in a sheet over his shoulder
+				b.circle(sat + Vector2(12, 4), 13.0, Color(0.86, 0.84, 0.80))
+				b.circle(sat + Vector2(10, 2), 9.0, Color(0.93, 0.92, 0.89))
+				b.line(sat + Vector2(4, -4), sat + Vector2(10, -8), Color(0.55, 0.50, 0.45), 2.0)
 			continue
 		b.rect(Rect2(r.position + Vector2(2, 3), r.size), Color(0, 0, 0, 0.16))
 		b.rect(r, Color(0.86, 0.84, 0.80))
@@ -1642,6 +1758,35 @@ func _draw_rambla(vt: float, vb: float) -> void:
 		b.circle(sp + Vector2(2, 3), 11.0, Color(0, 0, 0, 0.18))
 		b.circle(sp, 11.0, Color(0.20, 0.24, 0.32))
 		b.circle(sp + Vector2(0, -3), 6.5, Color(0.36, 0.24, 0.17))
+	# the dropped ice cream: the cone, upside down in its pink puddle
+	var ic: Vector2 = LevelBuild.RAMBLA_ICECREAM
+	if ic.y > vt - 40.0 and ic.y < vb + 40.0:
+		b.polygon(PackedVector2Array([ic + Vector2(-3, -2), ic + Vector2(12, -9), ic + Vector2(10, -1)]), Color(0.85, 0.66, 0.40))
+		b.circle(ic + Vector2(-2, 1), 6.0, Color(0.98, 0.84, 0.88))
+	# the shell game: a cardboard box, three cups, the man working it and his
+	# shills leaning in; scattered and gone once it is busted
+	if not shell_game.is_empty():
+		var sg: Vector2 = shell_game["pos"]
+		if sg.y > vt - 80.0 and sg.y < vb + 80.0:
+			var busted := bool(shell_game["done"])
+			b.rect(Rect2(sg.x - 22.0 + 3.0, sg.y - 14.0 + 4.0, 44.0, 28.0), Color(0, 0, 0, 0.18))
+			b.rect(Rect2(sg.x - 22.0, sg.y - 14.0, 44.0, 28.0), Color(0.66, 0.50, 0.32))
+			b.line(Vector2(sg.x - 22.0, sg.y), Vector2(sg.x + 22.0, sg.y), Color(0.55, 0.40, 0.25), 1.5)
+			var tt2 := AnimClock.msec() / 1000.0
+			for k in range(3):
+				var cx := sg.x - 12.0 + float(k) * 12.0
+				var cup := Vector2(cx + (0.0 if busted else sin(tt2 * 6.0 + float(k) * 2.1) * 6.0), sg.y)
+				if busted:
+					cup = sg + Vector2(-30.0 + float(k) * 34.0, 22.0 - float(k % 2) * 40.0)
+				b.circle(cup, 5.0, Color(0.20, 0.20, 0.22))
+				b.circle(cup + Vector2(-1, -1), 3.0, Color(0.40, 0.40, 0.44))
+			if not busted:
+				b.circle(sg + Vector2(0, -28), 11.0, Color(0.30, 0.26, 0.22))      # the man with the cups
+				b.circle(sg + Vector2(0, -31), 6.5, Color(0.72, 0.56, 0.42))
+				for k in range(4):
+					var on := sg + Vector2.from_angle(PI * 0.25 + float(k) * PI * 0.33) * 34.0
+					b.circle(on, 10.0, [Color(0.55, 0.40, 0.60), Color(0.35, 0.55, 0.45), Color(0.70, 0.50, 0.30), Color(0.40, 0.45, 0.60)][k])
+					b.circle(on + Vector2(0, -3), 6.0, Color(0.86, 0.70, 0.56))
 	# the human statues: a box, and a figure painted all one metal colour
 	var t := AnimClock.msec() / 1000.0
 	for i in range(statues.size()):
@@ -3913,6 +4058,11 @@ func _refresh_pair_obstacles() -> void:
 	leash.dynamic_obstacles.clear()
 	if tutorial_mode or not is_inside_tree():
 		return
+	# a seller on the move with the bundle snags the rope like another lead
+	if rambla():
+		for bl: Dictionary in blankets:
+			if bundle_moving(bl):
+				leash.dynamic_obstacles.append(seller_at(bl))
 	var pairs := get_tree().get_nodes_in_group("pairs")
 	if leash.detached:
 		for pair in pairs:
@@ -4441,7 +4591,7 @@ func surface_at(p: Vector2) -> int:
 				"mud": return Surfaces.S.MUD
 				"tile": return Surfaces.S.TILE
 				# a mess to carry around, not ground that slows you
-				"paint", "fish", "oil", "confetti": continue
+				"paint", "fish", "oil", "confetti", "icecream": continue
 				_: return Surfaces.S.SAND
 	if lvl == "beach":
 		# THE SEAFRONT HAS NO GRASS. Its cross-section is sea, sand, boardwalk,
@@ -5765,6 +5915,10 @@ func on_bark(pos: Vector2) -> void:
 	for wc in get_tree().get_nodes_in_group("wallcats"):
 		if wc.global_position.distance_to(pos) < 150.0:
 			wc.scare()
+	# the shell game packs up at a bark
+	if rambla() and not shell_game.is_empty() and not bool(shell_game["done"]) \
+			and (shell_game["pos"] as Vector2).distance_to(pos) < 130.0:
+		_bust_shells("a bark")
 	# a pickpocket who is only sizing someone up thinks better of it
 	for pp in get_tree().get_nodes_in_group("pickpockets"):
 		if pp.global_position.distance_to(pos) < pp.BARK_R:
