@@ -10,6 +10,8 @@ const PANIC_SPEED := 230.0
 
 # how far before and after an island the owner is already on its side
 const ISLAND_LEAD := 400.0
+# ...and how far before a narrow the owner lines up for it
+const NARROW_LEAD := 480.0
 var state: HState = HState.WALK
 var state_t := 0.0
 var event_timer := 4.0
@@ -299,6 +301,14 @@ func _walk(delta: float) -> void:
 			var hi: float = (here.y - 30.0) if float(isl["side"]) > 0.0 else (ir.position.x - 30.0)
 			cx = (lo + hi) * 0.5
 			half = maxf((hi - lo) * 0.5 + 60.0, 70.0)
+	# where the path narrows to a single line (a plank over a trench) the
+	# owner lines up for it early and keeps to it
+	for nw: Dictionary in main.narrows:
+		if global_position.y > float(nw["y0"]) - NARROW_LEAD and global_position.y < float(nw["y1"]) + NARROW_LEAD:
+			cx = (float(nw["x0"]) + float(nw["x1"])) * 0.5
+			half = (float(nw["x1"]) - float(nw["x0"])) * 0.5 + 60.0
+			if state == HState.DASH:
+				dash_target.x = clampf(dash_target.x, float(nw["x0"]), float(nw["x1"]))
 	var tx := cx + sin(t * 0.35 + wobble_seed) * minf(110.0, half - 60.0)
 	if state == HState.DRIFT:
 		tx = cx + drift_dir * (half - 70.0)

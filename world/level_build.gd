@@ -31,6 +31,81 @@ const CROSS_SECTIONS := {
 }
 
 
+# LES OBRES. Wet cement poured in rectangular formwork, half the footway
+# at a time and alternating sides, so there is always a line past; cones at
+# the corners and tape between them. Level space, set against the chicane.
+const OBRES_SLABS: Array[Rect2] = [
+	Rect2(318.0, -1760.0, 170.0, 190.0),
+	Rect2(640.0, -3380.0, 186.0, 200.0),
+]
+# the freshly painted zebra crossing across the footway
+const OBRES_ZEBRA_Y := -2230.0
+const OBRES_ZEBRA_H := 64.0
+# the trench across the footway, and the plank bridge the owner walks over
+const OBRES_TRENCH_Y := -2860.0
+const OBRES_TRENCH_H := 44.0
+const OBRES_PLANK := 110.0
+const OBRES_DIGGER := Vector2(900.0, -1400.0)
+
+
+static func obres(m: Node2D) -> void:
+	m.gate_text = "DETOUR"
+	# a side street at each end of the works, with its traffic
+	m.lane_ys = Array([-1100.0, -4000.0], TYPE_FLOAT, &"", null)
+	m.poles.clear()
+	# lamp standards down the edges, clear of the crossings and the works
+	for i in range(8):
+		var x := 300.0 if i % 2 == 0 else 980.0
+		var y := -350.0 - float(i) * 600.0
+		var ok := true
+		for ly: float in m.lane_ys:
+			ok = ok and absf(y - ly) > m.LANE_HALF + 60.0
+		ok = ok and absf(y - OBRES_TRENCH_Y) > 120.0 and absf(y - OBRES_ZEBRA_Y) > 90.0
+		for sl: Rect2 in OBRES_SLABS:
+			ok = ok and not sl.grow(60.0).has_point(Vector2(x, y))
+		if ok:
+			m.poles.append(Vector2(x, y))
+	m.deco_pole_count = m.poles.size()
+	m.tables.clear()
+	m.chairs.clear()
+	m.parasols.clear()
+	m.benches.clear()
+	m.stalls.clear()
+	m.cellars.clear()
+	m.bins = Array([Vector2(330, -600), Vector2(950, -2050), Vector2(330, -4450)], TYPE_VECTOR2, &"", null)
+	# DESVIAMENT signs where the footway turns off
+	m.astands = Array([Vector2(420, -1320), Vector2(860, -3560)], TYPE_VECTOR2, &"", null)
+	# the lads in hi-vis, leaning on their shovels
+	m.performers = Array([Vector2(820, -1780), Vector2(440, -3300)], TYPE_VECTOR2, &"", null)
+	m.vans = Array([OBRES_DIGGER], TYPE_VECTOR2, &"", null)
+	m.manholes = Array([Vector2(700, -700), Vector2(560, -4300)], TYPE_VECTOR2, &"", null)
+	m.fountains = Array([Vector2(335, -4200)], TYPE_VECTOR2, &"", null)
+	m.patches.clear()
+	m.cement_zones = Array(OBRES_SLABS.duplicate(), TYPE_RECT2, &"", null)
+	# cones: the corners of every pour, both ends of the zebra, the trench ends
+	var cones: Array[Vector2] = []
+	for sl: Rect2 in OBRES_SLABS:
+		for c: Vector2 in [sl.position, Vector2(sl.end.x, sl.position.y), sl.end, Vector2(sl.position.x, sl.end.y)]:
+			cones.append(c + (c - sl.get_center()).normalized() * 16.0)
+	var ze: Vector2 = m.walk_edges(OBRES_ZEBRA_Y)
+	cones.append(Vector2(ze.x + 18.0, OBRES_ZEBRA_Y + OBRES_ZEBRA_H * 0.5))
+	cones.append(Vector2(ze.y - 18.0, OBRES_ZEBRA_Y + OBRES_ZEBRA_H * 0.5))
+	var tr: Vector2 = m.walk_edges(OBRES_TRENCH_Y)
+	cones.append(Vector2(tr.x + 16.0, OBRES_TRENCH_Y + OBRES_TRENCH_H + 20.0))
+	cones.append(Vector2(tr.y - 16.0, OBRES_TRENCH_Y - 20.0))
+	m.cone_spots = Array(cones, TYPE_VECTOR2, &"", null)
+	# the trench: open ground either side of the plank (a hole, like a cellar)
+	var te: Vector2 = m.walk_edges(OBRES_TRENCH_Y)
+	var pc: float = (te.x + te.y) * 0.5
+	m.cellars = Array([
+		Rect2(te.x - 60.0, OBRES_TRENCH_Y, pc - OBRES_PLANK * 0.5 - (te.x - 60.0), OBRES_TRENCH_H),
+		Rect2(pc + OBRES_PLANK * 0.5, OBRES_TRENCH_Y, te.y + 60.0 - (pc + OBRES_PLANK * 0.5), OBRES_TRENCH_H),
+	], TYPE_RECT2, &"", null)
+	# the owner keeps to the plank (human._walk)
+	m.narrows = Array([{"y0": OBRES_TRENCH_Y, "y1": OBRES_TRENCH_Y + OBRES_TRENCH_H,
+		"x0": pc - OBRES_PLANK * 0.5 + 12.0, "x1": pc + OBRES_PLANK * 0.5 - 12.0}], TYPE_DICTIONARY, &"", null)
+
+
 # LA RAMBLA. The square with the round pavement mosaic, halfway down.
 const RAMBLA_MOSAIC := Vector2(640.0, -1650.0)
 const RAMBLA_MOSAIC_R := 66.0
@@ -261,6 +336,18 @@ static func apply_corridor(m: Node2D) -> void:
 			{"y": -4600.0, "cx": 700.0, "half": 300.0},
 			{"y": m.GATE_Y, "cx": 640.0, "half": 300.0},
 		]
+	elif m.lvl == "site":
+		# LES OBRES: the footway diverted round the works, a chicane that
+		# swings one way past the first pour and back past the second
+		m.edge_nodes = [
+			{"y": m.START_Y, "cx": 640.0, "half": 295.0},
+			{"y": -1200.0, "cx": 640.0, "half": 295.0},
+			{"y": -1700.0, "cx": 590.0, "half": 295.0},
+			{"y": -2600.0, "cx": 690.0, "half": 280.0},
+			{"y": -3300.0, "cx": 600.0, "half": 295.0},
+			{"y": -3900.0, "cx": 640.0, "half": 295.0},
+			{"y": m.GATE_Y, "cx": 640.0, "half": 295.0},
+		]
 	elif m.lvl == "street" and not m.tutorial_mode:
 		# LA RAMBLA: dead straight, as the real one is, opening out at the
 		# square halfway down where the round pavement mosaic is set
@@ -328,6 +415,9 @@ static func fit_props_to_corridor(m: Node2D) -> void:
 	for arr in [m.poles, m.tables, m.chairs, m.parasols, m.astands, m.vans, m.stalls, m.bins,
 			m.benches, m.performers, m.cone_spots, m.manholes, m.wallcat_spots,
 			m.guard_posts, m.candy_spots, m.fountains, m.statues]:
+		# Les Obres sets its cones round its pours, in level space already
+		if m.lvl == "site" and arr == m.cone_spots:
+			continue
 		for i in range(arr.size()):
 			var p: Vector2 = arr[i]
 			var e = m.walk_edges(p.y)
@@ -351,7 +441,7 @@ static func build_level_data(m: Node2D) -> void:
 	# geometry is a later pass) and re-theme it below: El Aguacero on the
 	# boulevard, El Gotic on the stall-lined market channel.
 	var geo = m.lvl
-	if m.lvl == "rain" or m.lvl == "station" or m.lvl == "site" or m.lvl == "scrap":
+	if m.lvl == "rain" or m.lvl == "station" or m.lvl == "scrap":
 		geo = "street"
 	elif m.lvl == "oldtown" or m.lvl == "spook" or m.lvl == "neteja":
 		geo = "market"
@@ -475,6 +565,14 @@ static func build_level_data(m: Node2D) -> void:
 			]
 			# someone's bocadillo, dropped in its foil
 			keb_list = [Vector2(620, -1900), Vector2(700, -4200)]
+		"site":
+			# hydrants at the kerbs, clear of the works; the lads' dropped lunch
+			hyd_list = [
+				Vector2(m.sw_l + 45, -500), Vector2(m.sw_r - 45, -1500),
+				Vector2(m.sw_l + 45, -2500), Vector2(m.sw_r - 45, -3700),
+				Vector2(m.sw_l + 45, -4600),
+			]
+			keb_list = [Vector2(700, -2000), Vector2(560, -3900)]
 		"beach":
 			# Passeig Maritim: sea | sand | boardwalk | bike path |
 			# pavement | palms and cafe terraces. The human walks the
@@ -696,25 +794,7 @@ static func build_level_data(m: Node2D) -> void:
 		], TYPE_VECTOR2, &"", null)
 		m.performers.append_array([Vector2(400, -2100), Vector2(880, -3300)])
 	elif m.lvl == "site":
-		# Les Obres: a roadworks detour. Wet cement laid across the walkway
-		# slows you AND takes a paw-print trail that follows you the rest of
-		# the walk (the evidence). Extra cones and a parked works van.
-		m.gate_text = "DETOUR"
-		# WET CEMENT, poured in patches rather than laid across the whole
-		# footway. A full-width slab is a wall with a paint penalty; poured
-		# patches are a line to pick through, and a works that has done half a
-		# job is more like a real works anyway. Same primitive as El Bosc's
-		# puddles - only the substance differs, which is the point of it.
-		m.cement_zones = Array([], TYPE_RECT2, &"", null)
-		m.patches = Array([
-			{"y": -1660.0, "at": 0.24, "rx": 96.0, "ry": 54.0, "seed": 2.05, "kind": "cement"},
-			{"y": -1810.0, "at": 0.70, "rx": 78.0, "ry": 46.0, "seed": 4.60, "kind": "cement"},
-			{"y": -3290.0, "at": 0.62, "rx": 104.0, "ry": 58.0, "seed": 1.35, "kind": "cement"},
-			{"y": -3460.0, "at": 0.30, "rx": 72.0, "ry": 42.0, "seed": 5.85, "kind": "cement"},
-		], TYPE_DICTIONARY, &"", null)
-		m.cone_spots = Array([Vector2(520, -1650), Vector2(760, -1650), Vector2(560, -2020), Vector2(720, -2020), Vector2(600, -3250), Vector2(700, -3650)], TYPE_VECTOR2, &"", null)
-		m.vans = Array([Vector2(900, -2500)], TYPE_VECTOR2, &"", null)
-		m.fountains = Array([Vector2(335, -4200)], TYPE_VECTOR2, &"", null)
+		obres(m)
 	elif m.lvl == "neteja":
 		# La Neteja: a narrow residential street at dawn, on the morning the
 		# sweeper comes through. The market's stalls and buskers are cleared
@@ -842,8 +922,6 @@ static func build_level_data(m: Node2D) -> void:
 	# shape across the path where it is, not a box with an outline.
 	var mw: float = m.walk_half * 2.0
 	match m.lvl:
-		"site":
-			m.patches.append({"y": -2425.0, "at": 0.24, "rx": mw * 0.18, "ry": 62.0, "seed": 3.30, "kind": "paint"})
 		"market":
 			m.patches.append({"y": -2985.0, "at": 0.22, "rx": mw * 0.16, "ry": 56.0, "seed": 1.85, "kind": "fish"})
 		"scrap":
@@ -995,7 +1073,7 @@ static func build_level_data(m: Node2D) -> void:
 			m.prize_pos = Vector2(640.0, -2650.0)  # a dropped sandwich mid-walkway
 			m.prize_text = "grab the sandwich off the moving walkway"
 		"site":
-			m.prize_pos = Vector2(640.0, -3130.0)  # a trowel dropped in the wet cement
+			m.prize_pos = OBRES_SLABS[1].get_center() if OBRES_SLABS.size() > 1 else Vector2(640.0, -3130.0)  # a trowel dropped in the wet cement
 			m.prize_text = "fish the trowel out of the wet cement"
 		"spook":
 			m.prize_pos = Vector2(640.0, -2350.0)  # a dog-safe pumpkin treat, ringed by candy
@@ -1117,6 +1195,9 @@ static func build_substance_zones(m: Node2D) -> void:
 	for cz in m.cement_zones:
 		m.substance_zones.append({"rect": cz, "kind": "cement", "slow": true})
 	var w = m.sw_r - m.sw_l
+	if m.lvl == "site":
+		var ze: Vector2 = m.walk_edges(OBRES_ZEBRA_Y)
+		m.substance_zones.append({"rect": Rect2(ze.x, OBRES_ZEBRA_Y, ze.y - ze.x, OBRES_ZEBRA_H), "kind": "paint", "zebra": true})
 	match m.lvl:
 		"beach":
 			# the whole sand side, which is most of the beach
@@ -1702,7 +1783,11 @@ static func spawn_cones(m: Node2D) -> void:
 		spots.append(m_local + Vector2(-30, 22))
 		spots.append(m_local + Vector2(26, 28))
 		spots.append(m_local + Vector2(-26, -26))
+	# a cone each end of a cellar hatch; Les Obres' trench sets its own, and
+	# two on its plank would be two cones in the owner's way
 	for c in m.cellars:
+		if m.lvl == "site":
+			break
 		spots.append(Vector2(c.end.x + 14, c.position.y + 24))
 		spots.append(Vector2(c.position.x - 12, c.end.y - 10))
 	for s in spots:
