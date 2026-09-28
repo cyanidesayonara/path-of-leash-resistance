@@ -98,8 +98,9 @@ with pickpockets and shenanigans happening around."
   the statue.
 - Keep: the tree slalom, the FUR-GONETA, the crossings, the drinking
   fountain.
-- Cut: the lawn and picnics (they belong to El Parc), the café terrace in
-  the middle of the promenade (a terrace sits against a building front).
+- Cut: the lawn and picnics (they belong to El Parc). The café terrace
+  stays in the middle of the promenade: that is where La Rambla's terraces
+  really are.
 - Add: the stalls, blankets, statues and crowd above; planter kerbs worth
   grinding; the Canaletes fountain as the drink stop.
 

@@ -18,7 +18,7 @@ extends RefCounted
 # Per walk: [left strip, width, right strip, width]. Walks not listed (the
 # park, the trail, the seafront) have no building line. See main.frontage.
 const CROSS_SECTIONS := {
-	"street": ["grass", 160.0, "sidewalk", 120.0],   # the lawn; the bike lane side
+	"street": ["road", 160.0, "sidewalk", 120.0],    # a traffic lane; the bike lane side
 	"rain": ["sidewalk", 90.0, "sidewalk", 120.0],
 	"market": ["sidewalk", 70.0, "sidewalk", 70.0],
 	"oldtown": ["none", 0.0, "none", 0.0],            # an alley: walls at the paving
@@ -29,6 +29,82 @@ const CROSS_SECTIONS := {
 	"guell": ["grass", 110.0, "grass", 110.0],        # terrace planting
 	"neteja": ["none", 0.0, "none", 0.0],             # a back street
 }
+
+
+# LA RAMBLA. The square with the round pavement mosaic, halfway down.
+const RAMBLA_MOSAIC := Vector2(640.0, -1650.0)
+const RAMBLA_MOSAIC_R := 66.0
+# stalls along the promenade, in the 300..980 authored space: [pos, kind]
+const RAMBLA_STALLS: Array = [
+	[Vector2(760.0, -680.0), "kiosk"],
+	[Vector2(846.0, -1480.0), "souvenir"],
+	[Vector2(470.0, -2440.0), "caricature"],
+	[Vector2(800.0, -2380.0), "icecream"],
+	[Vector2(446.0, -2980.0), "flowers"],
+	[Vector2(446.0, -3110.0), "flowers"],
+	[Vector2(560.0, -3200.0), "flowers"],
+	[Vector2(470.0, -4560.0), "souvenir"],
+]
+# sellers' blankets on the paving, goods laid out: [rect, goods]
+const RAMBLA_BLANKETS: Array = [
+	[Rect2(352.0, -1080.0, 74.0, 52.0), "shades"],
+	[Rect2(846.0, -1980.0, 74.0, 52.0), "bags"],
+	[Rect2(352.0, -3700.0, 74.0, 52.0), "toys"],
+	[Rect2(846.0, -4420.0, 74.0, 52.0), "shades"],
+]
+# the human statues, painted head to foot on their boxes
+const RAMBLA_STATUES: Array[Vector2] = [
+	Vector2(880.0, -960.0), Vector2(520.0, -2780.0), Vector2(870.0, -4300.0),
+]
+
+
+# La Rambla's own layout on the boulevard base: plane trees in a row down
+# both edges of the promenade (the tree grates and the odd lamp standard),
+# stalls, sellers' blankets and human statues, the terrace where it is (in
+# the middle of the promenade, as the real terraces are), no lawn.
+static func rambla(m: Node2D, hyd_list: Array) -> void:
+	m.stalls.clear()
+	m.stall_kinds.clear()
+	for st: Array in RAMBLA_STALLS:
+		m.stalls.append(st[0])
+		m.stall_kinds.append(String(st[1]))
+	m.blankets.clear()
+	for bl: Array in RAMBLA_BLANKETS:
+		m.blankets.append({"rect": bl[0], "goods": String(bl[1]), "cd": 0.0})
+	m.statues = RAMBLA_STATUES.duplicate()
+	# the poles the boulevard base put up, less the lamp standard that stood
+	# where the mosaic is
+	var keep: Array[Vector2] = []
+	for p: Vector2 in m.poles:
+		if p.distance_to(RAMBLA_MOSAIC) > RAMBLA_MOSAIC_R + 40.0 and (p.x > 400.0 and p.x < 880.0):
+			keep.append(p)
+	# everything the row of trees must keep clear of
+	var taken: Array[Vector2] = []
+	for arr in [m.bins, m.benches, m.astands, m.vans, m.fountains, m.performers, m.cone_spots,
+			m.tables, m.chairs, m.parasols, m.stalls, m.statues, keep]:
+		for v: Vector2 in arr:
+			taken.append(v)
+	for hp: Vector2 in hyd_list:
+		taken.append(hp)
+	for cl: Rect2 in m.cellars:
+		taken.append(cl.get_center())
+	for bl: Dictionary in m.blankets:
+		taken.append((bl["rect"] as Rect2).get_center())
+	taken.append(Vector2(m.sw_l + 66.0, -3560.0))    # the FUR-GONETA
+	var y := -300.0
+	while y > m.GATE_Y + 260.0:
+		for x: float in [300.0, 980.0]:
+			var tp := Vector2(x, y)
+			var ok := true
+			for ly: float in m.lane_ys:
+				ok = ok and absf(y - ly) > m.LANE_HALF + 60.0
+			for tv: Vector2 in taken:
+				ok = ok and tv.distance_to(tp) > 78.0
+			if ok:
+				keep.append(tp)
+		y -= 270.0
+	m.poles = Array(keep, TYPE_VECTOR2, &"", null)
+	m.deco_pole_count = m.poles.size()
 
 
 # EL PARC's pieces, all in level space (not fitted to the path: they stand
@@ -143,6 +219,9 @@ static func apply_corridor(m: Node2D) -> void:
 	# right width]. What the real place would have between the path and its
 	# buildings - a lawn, a sidewalk, or the wall itself.
 	var xs: Array = CROSS_SECTIONS.get(m.lvl, [])
+	# the First Walk keeps the boulevard's lawn (and the picnics on it)
+	if m.tutorial_mode and m.lvl == "street":
+		xs = ["grass", 160.0, "sidewalk", 120.0]
 	m.built = not xs.is_empty()
 	if m.built:
 		m.strip_kind_l = String(xs[0])
@@ -171,6 +250,17 @@ static func apply_corridor(m: Node2D) -> void:
 			{"y": -3900.0, "cx": 520.0, "half": 296.0},
 			{"y": -4600.0, "cx": 700.0, "half": 300.0},
 			{"y": m.GATE_Y, "cx": 640.0, "half": 300.0},
+		]
+	elif m.lvl == "street" and not m.tutorial_mode:
+		# LA RAMBLA: dead straight, as the real one is, opening out at the
+		# square halfway down where the round pavement mosaic is set
+		m.edge_nodes = [
+			{"y": m.START_Y, "cx": 640.0, "half": 340.0},
+			{"y": RAMBLA_MOSAIC.y + 260.0, "cx": 640.0, "half": 340.0},
+			{"y": RAMBLA_MOSAIC.y + 120.0, "cx": 640.0, "half": 400.0},
+			{"y": RAMBLA_MOSAIC.y - 120.0, "cx": 640.0, "half": 400.0},
+			{"y": RAMBLA_MOSAIC.y - 260.0, "cx": 640.0, "half": 340.0},
+			{"y": m.GATE_Y, "cx": 640.0, "half": 340.0},
 		]
 	elif m.lvl == "park":
 		# EL PARC OPENS OUT ROUND THE LAKE: the path widens either side of it
@@ -227,7 +317,7 @@ static func fit_props_to_corridor(m: Node2D) -> void:
 	var pad := 26.0
 	for arr in [m.poles, m.tables, m.chairs, m.parasols, m.astands, m.vans, m.stalls, m.bins,
 			m.benches, m.performers, m.cone_spots, m.manholes, m.wallcat_spots,
-			m.guard_posts, m.candy_spots, m.fountains]:
+			m.guard_posts, m.candy_spots, m.fountains, m.statues]:
 		for i in range(arr.size()):
 			var p: Vector2 = arr[i]
 			var e = m.walk_edges(p.y)
@@ -504,6 +594,8 @@ static func build_level_data(m: Node2D) -> void:
 			]
 	if m.lvl == "street":
 		m.fountains = Array([Vector2(335, -3350)], TYPE_VECTOR2, &"", null)
+		if not m.tutorial_mode:
+			rambla(m, hyd_list)
 	elif m.lvl == "park":
 		# the drinking fountain on the north shore, and one by the bandstand
 		m.fountains = Array([Vector2(640, -2390), Vector2(944, -1650)], TYPE_VECTOR2, &"", null)
@@ -979,6 +1071,10 @@ static func build_verge(m: Node2D) -> void:
 				var tx: float = (te.x - 62.0) if float(spec[1]) < 0.0 else (te.y + 62.0)
 				tv.append({"pos": Vector2(tx, float(spec[0])), "kind": String(spec[2])})
 			m.verge_items = Array(tv, TYPE_DICTIONARY, &"", null)
+	# La Rambla has no lawn any more, so no picnics on it (the First Walk
+	# keeps its boulevard as it was)
+	if m.lvl == "street" and not m.tutorial_mode:
+		m.verge_items.clear()
 	# Nothing on the verge may sit in a bike lane. They are drawn straight
 	# across the level, verge included, so the first pass had a tree stump
 	# apparently growing out of the tarmac. Pushed clear here rather than
@@ -1268,6 +1364,12 @@ static func build_bypasser_blockers(m: Node2D) -> void:
 			"center": m.performers[i],
 			"radius": m.PERFORMER_RADIUS,
 		})
+	for i in range(m.statues.size()):
+		m.bypasser_blockers.append({
+			"id": "statue_%d" % i,
+			"center": m.statues[i],
+			"radius": m.PERFORMER_RADIUS + 4.0,
+		})
 	for i in range(m.benches.size()):
 		m.bypasser_blockers.append({
 			"id": "bench_%d" % i,
@@ -1491,6 +1593,17 @@ static func build_walls(m: Node2D) -> void:
 		add_rect_body(m, m.furgoneta, m.VAN_BODY_SIZE)
 	for st in m.stalls:
 		add_rect_body(m, st, m.STALL_BODY_SIZE)
+	# La Rambla's statues are people on boxes: solid
+	for sp: Vector2 in m.statues:
+		var stb := StaticBody2D.new()
+		stb.collision_layer = 1
+		stb.position = sp
+		var scs := CollisionShape2D.new()
+		var ssh := CircleShape2D.new()
+		ssh.radius = m.PERFORMER_RADIUS + 4.0
+		scs.shape = ssh
+		stb.add_child(scs)
+		m.add_child(stb)
 	# performers have mass; you walk around a person, not through them
 	for pf in m.performers:
 		var pb := StaticBody2D.new()
