@@ -2,6 +2,34 @@
 
 Append-only session history, newest first.
 
+## 2026-09-27 - El Bosc becomes a wood
+
+Planning first: `docs/LEVEL_DESIGN.md` now has Santtu's La Rambla (crowded,
+stalls, blanket sellers, pickpockets), pickpockets as a system with
+slapstick stops, Park Guell piece by piece for El Mosaic, Collserola's boars,
+a path shape per walk, and art rooms as detours off the walks (#79, #81,
+#82, #83).
+
+Then El Bosc, the first walk rebuilt to the brief. It was El Parc's layout
+with a bend: the pond, four park benches, six bins, lampposts along the
+trail, hydrants and kebabs. Now it has its own layout
+(`LevelBuild.TRAIL_TREES`):
+- a narrower trail (half 200, 150 at the pinch) crowded by stone pines and
+  holm oaks, with roots running out across it
+- a solid wood line 130 px out from the trail on both sides, drawn as
+  undergrowth and canopy to the edge of the frame; the forest floor between
+  is still hers to nose about in, and squirrels spawn there
+- a stream across the wood under a plank footbridge whose four posts wrap
+  the rope; she can jump in off the bank, the drink is at the bank, and mud
+  is churned up where feet come off the bridge
+- waymarker posts with red-and-white bands where the town has hydrants, a
+  dropped bocadillo where it has kebabs, one bench at the viewpoint, bins
+  only at the trailhead and the viewpoint
+
+`--shot-y=N` starts the pair at that point down a walk, for photographing
+one stretch. `tests/test_bosc.gd`. The snapshot changes only El Bosc's
+autowalk (it reaches the clearing 1.6 s sooner on the narrower trail).
+
 ## 2026-09-27 - footprints in sand and snow
 
 The level design brief (`docs/LEVEL_DESIGN.md`, from Santtu's "design every

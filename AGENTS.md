@@ -161,7 +161,8 @@ godot\Godot_v4.7-stable_win64_console.exe --path . --quit-after 340 -- --shot --
 ```
 `--shot-out=PATH` writes the PNG somewhere else and `--shot-quit` exits as
 soon as it is written. Other shot flags: `--shot-title`, `--shot-results`,
-`--shot-at=N`, `--shot-sweeper`.
+`--shot-at=N`, `--shot-sweeper`, and `--shot-y=N`, which starts the pair at that
+point down the walk (`--shot-y=-2450 --shot-at=40` photographs El Bosc's stream).
 
 Screenshot sweep (every walk, title, settings, results, street at 844x390 and
 390x844) into `shots/`, plus labelled contact sheets `shots/sheet-*.png`.

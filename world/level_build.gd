@@ -31,6 +31,39 @@ const CROSS_SECTIONS := {
 }
 
 
+# El Bosc: trunks along and in the trail, authored in the 300..980 space
+# that fit_props_to_corridor maps onto the path at each y (300 = hard
+# against the left edge). Closer together at the pinch (-2000), none on the
+# footbridge.
+const TRAIL_TREES: Array[Vector2] = [
+	Vector2(300, -380), Vector2(980, -700), Vector2(300, -960),
+	Vector2(600, -1150), Vector2(700, -1300), Vector2(600, -1450),
+	Vector2(980, -1180), Vector2(300, -1640), Vector2(980, -1780),
+	Vector2(300, -1880), Vector2(980, -1960), Vector2(300, -2060), Vector2(980, -2140),
+	Vector2(300, -2760), Vector2(980, -2960), Vector2(640, -3360),
+	Vector2(300, -3160), Vector2(980, -3560), Vector2(300, -3720),
+	Vector2(980, -4060), Vector2(300, -4300), Vector2(560, -4460), Vector2(720, -4580),
+	Vector2(980, -4760),
+]
+# the stream crosses the trail here, under a footbridge this many px either
+# side of it
+const TRAIL_STREAM_Y := -2450.0
+const TRAIL_BRIDGE_HALF := 44.0
+const TRAIL_STREAM_HALF := 32.0
+# the wood is solid this far out from the trail's edge: a strip of forest
+# floor to nose about in, then trunks and undergrowth you cannot walk into
+const TRAIL_WOOD_OUT := 130.0
+
+
+# The stream as water either side of the footbridge: she can jump in off the
+# bank and swim, and the owner stays on the boards.
+static func trail_stream(m: Node2D) -> Array[Rect2]:
+	var e: Vector2 = m.walk_edges(TRAIL_STREAM_Y)
+	var y0 := TRAIL_STREAM_Y - TRAIL_STREAM_HALF
+	var h := TRAIL_STREAM_HALF * 2.0
+	return [Rect2(-400.0, y0, e.x - 12.0 + 400.0, h), Rect2(e.y + 12.0, y0, 1700.0 - e.y - 12.0, h)]
+
+
 static func apply_corridor(m: Node2D) -> void:
 	# ONE width dial per walk. This is what makes the levels stop feeling
 	# like the same street redressed: a medieval alley that genuinely
@@ -46,7 +79,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"rain": half = 320.0
 		"market": half = 270.0   # stalls crowd the aisle
 		"oldtown": half = 225.0  # the tightest: a medieval alley
-		"trail": half = 250.0    # a single-file woodland trail
+		"trail": half = 200.0    # a single-file woodland trail
 		"station": half = 390.0  # the widest: an open concourse
 		"site": half = 295.0     # squeezed by the works
 		"spook": half = 275.0
@@ -107,12 +140,12 @@ static func apply_corridor(m: Node2D) -> void:
 		# outside of every curve. Both ends sit dead centre at the level's
 		# nominal width so the start line and the gate still line up.
 		m.edge_nodes = [
-			{"y": m.START_Y, "cx": 640.0, "half": 250.0},
-			{"y": -900.0, "cx": 566.0, "half": 250.0},
-			{"y": -2000.0, "cx": 716.0, "half": 212.0},   # the pinch
-			{"y": -3100.0, "cx": 578.0, "half": 246.0},
-			{"y": -4200.0, "cx": 668.0, "half": 250.0},
-			{"y": m.GATE_Y, "cx": 640.0, "half": 250.0},
+			{"y": m.START_Y, "cx": 640.0, "half": 200.0},
+			{"y": -900.0, "cx": 566.0, "half": 200.0},
+			{"y": -2000.0, "cx": 716.0, "half": 150.0},   # the pinch
+			{"y": -3100.0, "cx": 578.0, "half": 196.0},
+			{"y": -4200.0, "cx": 668.0, "half": 200.0},
+			{"y": m.GATE_Y, "cx": 640.0, "half": 200.0},
 		]
 
 
@@ -164,7 +197,7 @@ static func build_level_data(m: Node2D) -> void:
 		geo = "street"
 	elif m.lvl == "oldtown" or m.lvl == "spook" or m.lvl == "neteja":
 		geo = "market"
-	elif m.lvl == "trail" or m.lvl == "guell":
+	elif m.lvl == "guell":
 		geo = "park"
 	match geo:
 		"street":
@@ -255,6 +288,33 @@ static func build_level_data(m: Node2D) -> void:
 				Vector2(m.sw_l + 45, -2300), Vector2(m.sw_r - 45, -3300),
 				Vector2(m.sw_l + 45, -4600),
 			]
+			keb_list = [Vector2(620, -1900), Vector2(700, -4200)]
+		"trail":
+			# EL BOSC, its own wood rather than the park with a bent path. No
+			# pond, no lampposts, no park benches: trunks crowding both edges,
+			# closer together where the trail pinches, a few standing in it,
+			# and the stream crossing under a footbridge (build_freedom_area).
+			m.gate_text = "CLEARING"
+			for tp: Vector2 in TRAIL_TREES:
+				m.poles.append(tp)
+			m.deco_pole_count = m.poles.size()
+			# the footbridge's four posts: the rope wraps them like any post
+			var bl: float = TRAIL_STREAM_Y + TRAIL_BRIDGE_HALF
+			var bt: float = TRAIL_STREAM_Y - TRAIL_BRIDGE_HALF
+			for bp: Vector2 in [Vector2(300.0, bl), Vector2(980.0, bl), Vector2(300.0, bt), Vector2(980.0, bt)]:
+				m.poles.append(bp)
+			# litter someone left: a bottle and a can (spawn_cones)
+			m.cone_spots = Array([Vector2(720, -1320), Vector2(420, -3480)], TYPE_VECTOR2, &"", null)
+			# a bin at the trailhead and one at the viewpoint, and nowhere else
+			m.bins = Array([Vector2(m.sw_l + 30, -560), Vector2(m.sw_r - 30, -3760)], TYPE_VECTOR2, &"", null)
+			m.benches = Array([Vector2(944, -3880)], TYPE_VECTOR2, &"", null)
+			# waymarker posts (red and white bands), where hydrants stand in town
+			hyd_list = [
+				Vector2(m.sw_l + 45, -500), Vector2(m.sw_r - 45, -1580),
+				Vector2(m.sw_l + 45, -2780), Vector2(m.sw_r - 45, -3300),
+				Vector2(m.sw_l + 45, -4600),
+			]
+			# someone's bocadillo, dropped in its foil
 			keb_list = [Vector2(620, -1900), Vector2(700, -4200)]
 		"beach":
 			# Passeig Maritim: sea | sand | boardwalk | bike path |
@@ -418,7 +478,6 @@ static func build_level_data(m: Node2D) -> void:
 		# El Bosc: a forest trail. No bars out here, so the owner is forever
 		# stopping to hunt for a signal (see human.gd); muddy patches slow
 		# the going, and a stream to drink from. Calm, stop-start rhythm.
-		m.gate_text = "CLEARING"
 		m.signal_prone = true
 		# each patch spans the trail where the trail actually IS. A Rect2 cannot
 		# bend, so it is measured at the middle of its own band - close enough
@@ -436,8 +495,15 @@ static func build_level_data(m: Node2D) -> void:
 			{"y": -3010.0, "at": 0.34, "rx": 66.0, "ry": 38.0, "seed": 5.02, "kind": "mud"},
 			{"y": -4080.0, "at": 0.46, "rx": 100.0, "ry": 54.0, "seed": 0.62, "kind": "mud"},
 			{"y": -4220.0, "at": 0.82, "rx": 58.0, "ry": 34.0, "seed": 4.18, "kind": "mud"},
+			# churned up where feet come off the footbridge
+			{"y": TRAIL_STREAM_Y + 104.0, "at": 0.52, "rx": 96.0, "ry": 40.0, "seed": 2.90, "kind": "mud"},
+			{"y": TRAIL_STREAM_Y - 100.0, "at": 0.40, "rx": 74.0, "ry": 34.0, "seed": 3.30, "kind": "mud"},
 		], TYPE_DICTIONARY, &"", null)
-		m.fountains = Array([Vector2(360.0, -2400.0)], TYPE_VECTOR2, &"", null)
+		# the drink is the stream: stand at the bank beside the bridge
+		m.fountains = Array([
+			Vector2(300.0, TRAIL_STREAM_Y + TRAIL_BRIDGE_HALF + 34.0),
+			Vector2(980.0, TRAIL_STREAM_Y - TRAIL_BRIDGE_HALF - 34.0),
+		], TYPE_VECTOR2, &"", null)
 	elif m.lvl == "station":
 		# L'Estacio: a concourse with a moving walkway. On it you get carried
 		# toward the platforms (north) - a boost on the way out, a shove to
@@ -809,15 +875,16 @@ static func build_verge(m: Node2D) -> void:
 				{"pos": Vector2(vl + 16.0, -3820.0), "kind": "bush"},
 			], TYPE_DICTIONARY, &"", null)
 		"trail":
-			# out here it is fallen wood and undergrowth, not tablecloths
-			m.verge_items = Array([
-				{"pos": Vector2(vl, -700.0), "kind": "stump"},
-				{"pos": Vector2(vr, -1450.0), "kind": "bush"},
-				{"pos": Vector2(vl + 18.0, -2200.0), "kind": "bush"},
-				{"pos": Vector2(vr - 14.0, -2950.0), "kind": "stump"},
-				{"pos": Vector2(vl - 16.0, -3700.0), "kind": "bush"},
-				{"pos": Vector2(vr + 12.0, -4300.0), "kind": "stump"},
-			], TYPE_DICTIONARY, &"", null)
+			# out here it is fallen wood and undergrowth, not tablecloths. Set
+			# from the trail's own edge at each y, so a bend cannot leave one
+			# standing on the path or inside the solid wood
+			var tv: Array[Dictionary] = []
+			for spec: Array in [[-700.0, -1.0, "stump"], [-1450.0, 1.0, "bush"], [-2200.0, -1.0, "bush"],
+					[-2950.0, 1.0, "stump"], [-3700.0, -1.0, "bush"], [-4300.0, 1.0, "stump"]]:
+				var te: Vector2 = m.walk_edges(float(spec[0]))
+				var tx: float = (te.x - 62.0) if float(spec[1]) < 0.0 else (te.y + 62.0)
+				tv.append({"pos": Vector2(tx, float(spec[0])), "kind": String(spec[2])})
+			m.verge_items = Array(tv, TYPE_DICTIONARY, &"", null)
 	# Nothing on the verge may sit in a bike lane. They are drawn straight
 	# across the level, verge included, so the first pass had a tree stump
 	# apparently growing out of the tarmac. Pushed clear here rather than
@@ -868,6 +935,9 @@ static func build_freedom_area(m: Node2D) -> void:
 	m.water.clear()
 	if m.pond.size.x > 0.0:
 		m.water.append(m.pond)
+	if m.lvl == "trail":
+		for r: Rect2 in trail_stream(m):
+			m.water.append(r)
 	if m.freedom_kind == "beach":
 		# The sea, in two pieces that meet at the gate: a band along the whole
 		# passeig (so she can go in ANYWHERE on the walk, which is the first
@@ -1199,6 +1269,28 @@ static func build_walls(m: Node2D) -> void:
 					line.add_child(cs)
 			y = y2
 		m.add_child(line)
+	# EL BOSC'S WOOD LINE: the same kind of segments, TRAIL_WOOD_OUT out from
+	# the trail's edge on both sides, so the forest is a place with an inside
+	# rather than a lawn with a path across it
+	if m.lvl == "trail":
+		var wood := StaticBody2D.new()
+		wood.collision_layer = 1
+		var wtop := float(m.GATE_Y) + 120.0
+		var wy := float(m.START_Y) + 200.0
+		while wy > wtop:
+			var wy2 := maxf(wy - 100.0, wtop)
+			var ea: Vector2 = m.walk_edges(wy)
+			var eb: Vector2 = m.walk_edges(wy2)
+			for pair in [[Vector2(ea.x - TRAIL_WOOD_OUT, wy), Vector2(eb.x - TRAIL_WOOD_OUT, wy2)],
+					[Vector2(ea.y + TRAIL_WOOD_OUT, wy), Vector2(eb.y + TRAIL_WOOD_OUT, wy2)]]:
+				var seg := SegmentShape2D.new()
+				seg.a = pair[0]
+				seg.b = pair[1]
+				var cs := CollisionShape2D.new()
+				cs.shape = seg
+				wood.add_child(cs)
+			wy = wy2
+		m.add_child(wood)
 	for i in range(m.body_pole_count):
 		var sb := StaticBody2D.new()
 		sb.collision_layer = 1
