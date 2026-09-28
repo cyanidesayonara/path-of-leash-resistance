@@ -2,6 +2,28 @@
 
 Append-only session history, newest first.
 
+## 2026-09-28 - Les Obres becomes a roadworks
+
+Les Obres was La Rambla's layout with cement blobs and a pink paint blob on
+it, café terrace included. Now its own (`LevelBuild.obres`):
+- **A chicane**: the footway swings one way past the first pour and back past
+  the second (edge nodes), under scaffolded frontage.
+- **Wet cement poured in formwork**: two rectangular slabs, half the footway
+  each on alternate sides, in timber forms with float marks, a cone off every
+  corner and red-and-white tape between them. Still slow going and still
+  prints her paws; the trowel prize is in the second pour.
+- **A freshly painted zebra** across the footway: wet paint to carry off on
+  her paws, cones at both ends.
+- **A trench** across the footway with a plank over it. The trench is open
+  ground (a hole, like a cellar: the dog teeters, the owner must not fall
+  in), so the owner lines up for the plank early and keeps to it
+  (`main.narrows`, `human._walk`, a dash is held to it too).
+- **A parked digger** where the van was, **workers in hi-vis** on their
+  shovels where the buskers were, DESVIAMENT signs, two side streets with
+  traffic, open manholes at the ends of the works. No terrace, no benches.
+
+`tests/test_obres.gd` (10 checks). Only Les Obres' snapshot lines change.
+
 ## 2026-09-28 - La Rambla, step 3: the whistle, the shell game, a dropped ice cream
 
 - **The whistle** (first after 24 s, then every 42 s, only when a blanket is

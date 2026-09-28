@@ -155,6 +155,9 @@ jobs:
       - name: Pickpockets test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pickpocket.gd
 
+      - name: Les Obres is its own roadworks test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_obres.gd
+
       - name: Built walks' cross-section test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_cross_section.gd
 

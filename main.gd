@@ -133,6 +133,9 @@ var boars_out := false
 var islands: Array[Dictionary] = []
 # solid posts standing off the path (El Parc's bandstand), drawn by their walk
 var park_posts: Array[Vector2] = []
+# where the owner is kept to a narrow line across the path (Les Obres' plank
+# over the trench): {"y0", "y1", "x0", "x1"}; see human._walk
+var narrows: Array[Dictionary] = []
 var ducks_disturbed := 0
 # where the HUMAN's autopilot lives; the dog may roam anywhere between
 # the outer walls, though an undistracted owner has opinions about it
@@ -1438,6 +1441,87 @@ func _draw_fallen_log(r: Rect2) -> void:
 	for ex: float in [r.position.x, r.end.x]:
 		b.circle(Vector2(ex, r.get_center().y), r.size.y * 0.5, Color(0.66, 0.54, 0.38))
 		b.circle(Vector2(ex, r.get_center().y), r.size.y * 0.28, Color(0.55, 0.43, 0.29))
+	b.flush(_wc)
+
+
+# The parked digger: tracks, the cab, the counterweight, and the arm folded
+# forward with the bucket resting on the paving. Same footprint as a van.
+func _draw_digger(v: Vector2) -> void:
+	var b := ShapeBatch.new()
+	b.rect(Rect2(v.x - 34.0 + 26.0, v.y - 60.0 + 20.0, 68.0, 120.0), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+	for tx: float in [-34.0, 20.0]:
+		b.rect(Rect2(v.x + tx, v.y - 50.0, 14.0, 100.0), Color(0.16, 0.16, 0.17))
+		var ty := v.y - 46.0
+		while ty < v.y + 46.0:
+			b.line(Vector2(v.x + tx, ty), Vector2(v.x + tx + 14.0, ty), Color(0.28, 0.28, 0.30), 2.0)
+			ty += 9.0
+	b.circle(v + Vector2(0, 8), 30.0, Color(0.92, 0.70, 0.12))
+	b.rect(Rect2(v.x - 26.0, v.y + 22.0, 52.0, 18.0), Color(0.78, 0.58, 0.10))     # counterweight
+	b.rect(Rect2(v.x - 20.0, v.y - 14.0, 22.0, 24.0), Color(0.30, 0.38, 0.44))     # the cab glass
+	b.rect(Rect2(v.x - 20.0, v.y - 14.0, 22.0, 6.0), Color(0.55, 0.65, 0.72))
+	# the boom and dipper, folded forward, the bucket down
+	b.line(v + Vector2(10, -6), v + Vector2(14, -62), Color(0.90, 0.68, 0.12), 10.0)
+	b.line(v + Vector2(14, -62), v + Vector2(4, -74), Color(0.86, 0.64, 0.10), 8.0)
+	b.rect(Rect2(v.x - 12.0, v.y - 86.0, 26.0, 14.0), Color(0.30, 0.30, 0.32))
+	for k in range(4):
+		b.line(Vector2(v.x - 10.0 + float(k) * 7.0, v.y - 86.0), Vector2(v.x - 10.0 + float(k) * 7.0, v.y - 90.0), Color(0.5, 0.5, 0.52), 2.0)
+	b.flush(_wc)
+
+
+# LES OBRES: the pours in their formwork with tape round them, the fresh
+# zebra, the trench with its plank and pipe, all drawn over the paving.
+func _draw_obres(vt: float, vb: float) -> void:
+	var b := ShapeBatch.new()
+	for cz: Rect2 in cement_zones:
+		if cz.end.y < vt - 40.0 or cz.position.y > vb + 40.0:
+			continue
+		# the timber formwork, then the wet pour inside it, float marks on top
+		b.rect(cz.grow(7.0), Color(0.56, 0.42, 0.26))
+		b.rect(cz.grow(3.0), Color(0.44, 0.32, 0.20))
+		b.rect(cz, Color(0.60, 0.60, 0.58))
+		var fy := cz.position.y + 16.0
+		while fy < cz.end.y - 8.0:
+			b.line(Vector2(cz.position.x + 10.0, fy), Vector2(cz.end.x - 10.0, fy + 4.0), Color(0.68, 0.68, 0.66), 2.0)
+			fy += 22.0
+		# tape round the cones at the corners, red and white
+		var corners: Array[Vector2] = []
+		for c: Vector2 in [cz.position, Vector2(cz.end.x, cz.position.y), cz.end, Vector2(cz.position.x, cz.end.y)]:
+			corners.append(c + (c - cz.get_center()).normalized() * 16.0)
+		for k in range(4):
+			var a: Vector2 = corners[k]
+			var c2: Vector2 = corners[(k + 1) % 4]
+			var n := int(a.distance_to(c2) / 12.0)
+			for j in range(n):
+				var p0 := a.lerp(c2, float(j) / float(n))
+				var p1 := a.lerp(c2, float(j + 1) / float(n))
+				b.line(p0, p1, Color(0.90, 0.20, 0.18) if j % 2 == 0 else Color(0.96, 0.96, 0.94), 2.0)
+	# the zebra, freshly painted: wet white bars with a sheen
+	var zy: float = LevelBuild.OBRES_ZEBRA_Y
+	if zy > vt - 80.0 and zy < vb + 80.0:
+		var ze := walk_edges(zy)
+		var zx := ze.x + 36.0
+		while zx < ze.y - 36.0:
+			b.rect(Rect2(zx, zy + 4.0, 26.0, LevelBuild.OBRES_ZEBRA_H - 8.0), Color(0.96, 0.95, 0.90))
+			b.rect(Rect2(zx + 3.0, zy + 6.0, 5.0, LevelBuild.OBRES_ZEBRA_H - 12.0), Color(1, 1, 1, 0.9))
+			zx += 46.0
+	# the trench: dug earth at the lips, dark inside, a pipe along the bottom,
+	# and the plank across it
+	var ty: float = LevelBuild.OBRES_TRENCH_Y
+	var th: float = LevelBuild.OBRES_TRENCH_H
+	if ty > vt - 80.0 and ty < vb + 80.0:
+		for c: Rect2 in cellars:
+			b.rect(c.grow(6.0), Color(0.46, 0.36, 0.25))
+			b.rect(c, Color(0.16, 0.13, 0.11))
+			b.rect(Rect2(c.position.x, c.position.y + th * 0.5 - 5.0, c.size.x, 10.0), Color(0.72, 0.42, 0.20))
+			b.rect(Rect2(c.position.x, c.position.y + th * 0.5 - 5.0, c.size.x, 3.0), Color(0.84, 0.56, 0.30))
+		var te := walk_edges(ty)
+		var pc := (te.x + te.y) * 0.5
+		var plank := Rect2(pc - LevelBuild.OBRES_PLANK * 0.5 - 6.0, ty - 10.0, LevelBuild.OBRES_PLANK + 12.0, th + 20.0)
+		b.rect(Rect2(plank.position + LIGHT * 6.0, plank.size), Color(0, 0, 0, 0.22))
+		b.rect(plank, Color(0.66, 0.50, 0.30))
+		for k in range(3):
+			var px := plank.position.x + 8.0 + float(k) * (plank.size.x - 16.0) / 2.0
+			b.line(Vector2(px, plank.position.y), Vector2(px, plank.end.y), Color(0.50, 0.37, 0.22), 2.0)
 	b.flush(_wc)
 
 
@@ -6564,6 +6648,9 @@ func _draw_world() -> void:
 	for v in vans:
 		if v.y < vt - 140.0 or v.y > vb + 140.0:
 			continue
+		if lvl == "site":
+			_draw_digger(v)
+			continue
 		var body := Rect2(v.x - 32.0, v.y - 66.0, 64.0, 132.0)
 		# it sits high, so the shadow is offset a long way and shaped like it
 		_wc.draw_set_transform(v + LIGHT * 30.0, 0.0, Vector2.ONE)
@@ -6786,6 +6873,8 @@ func _draw_world() -> void:
 			continue
 		if String(sz.kind) == "mud" or String(sz.kind) == "cement":
 			continue  # those two draw themselves with their own level dressing
+		if sz.has("zebra"):
+			continue  # Les Obres' crossing draws itself as painted bars
 		if sz.has("patch"):
 			# a patch already drew itself as an organic blob (draw_patch), and
 			# painting its bounding RECTANGLE over the top put a visible tinted
@@ -6878,12 +6967,7 @@ func _draw_world() -> void:
 			_wc.draw_rect(Rect2(float(lz.x1), by - 6.0, 8.0, 12.0), Color(0.3, 0.3, 0.34))
 	# Les Obres: wet cement patches, and the paw-print trail they take
 	if lvl == "site":
-		for cz in cement_zones:
-			if cz.end.y > vt and cz.position.y < vb:
-				_wc.draw_rect(cz, Color(0.62, 0.62, 0.6))
-				_wc.draw_rect(cz, Color(0.5, 0.5, 0.48), false, 2.0)
-				_wc.draw_line(Vector2(cz.position.x, cz.position.y), Vector2(cz.end.x, cz.position.y), Color(0.9, 0.75, 0.2, 0.8), 3.0)
-				_wc.draw_line(Vector2(cz.position.x, cz.end.y), Vector2(cz.end.x, cz.end.y), Color(0.9, 0.75, 0.2, 0.8), 3.0)
+		_draw_obres(vt, vb)
 		pass  # prints are drawn for every walk now, further down
 	# El Bosc: muddy patches across the trail (slow going)
 	# whatever this walk has lying underfoot, drawn as the shape it would
@@ -6937,6 +7021,15 @@ func _draw_world() -> void:
 	var brolly_cols := [Color(0.75, 0.2, 0.25), Color(0.2, 0.35, 0.6), Color(0.25, 0.5, 0.35), Color(0.35, 0.3, 0.4)]
 	for idx in range(performers.size()):
 		var pf: Vector2 = performers[idx]
+		if lvl == "site":
+			# a worker in hi-vis and a hard hat, leaning on a shovel
+			contact_shadow(_wc, pf, 12.0, 5.0, 0.2)
+			_wc.draw_circle(pf, 12.0, Color(0.96, 0.62, 0.12))
+			_wc.draw_line(pf + Vector2(-10, -2), pf + Vector2(10, -2), Color(0.85, 0.88, 0.80), 3.0)
+			_wc.draw_circle(pf + Vector2(0, -4), 7.5, Color(0.98, 0.86, 0.20))
+			_wc.draw_line(pf + Vector2(10, 2), pf + Vector2(22, 20), Color(0.40, 0.30, 0.20), 2.5)
+			_wc.draw_rect(Rect2(pf.x + 19.0, pf.y + 18.0, 8.0, 8.0), Color(0.45, 0.46, 0.48))
+			continue
 		_wc.draw_circle(pf, 12.0, Color(0.5, 0.35, 0.5))
 		_wc.draw_circle(pf + Vector2(0, -4), 7.0, Color(0.85, 0.72, 0.58))
 		if raining:
