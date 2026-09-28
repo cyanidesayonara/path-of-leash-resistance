@@ -178,9 +178,10 @@ func _stopped_by() -> bool:
 	if h.global_position.distance_to(p) < 30.0 and (h.is_whirling() or h.velocity.length() > 150.0):
 		_go_down("owner", (p - h.global_position).normalized())
 		return true
-	# a seller's blanket underfoot
+	# a seller's blanket underfoot, or a seller running past with the bundle
 	for bl: Dictionary in main.blankets:
-		if (bl["rect"] as Rect2).has_point(p):
+		var laid := String(bl.get("state", "laid")) == "laid"
+		if (laid and (bl["rect"] as Rect2).has_point(p)) or (main.bundle_moving(bl) and main.seller_at(bl).distance_to(p) < 20.0):
 			_go_down("blanket", run_dir)
 			return true
 	# something slippery on the paving

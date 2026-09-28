@@ -52,6 +52,10 @@ const RAMBLA_BLANKETS: Array = [
 	[Rect2(352.0, -3700.0, 74.0, 52.0), "toys"],
 	[Rect2(846.0, -4420.0, 74.0, 52.0), "shades"],
 ]
+# the shell game on its cardboard box, a crowd of shills round it
+const RAMBLA_SHELLS := Vector2(806.0, -3300.0)
+# the ice cream someone dropped, by the cart
+const RAMBLA_ICECREAM := Vector2(744.0, -2318.0)
 # the human statues, painted head to foot on their boxes
 const RAMBLA_STATUES: Array[Vector2] = [
 	Vector2(880.0, -960.0), Vector2(520.0, -2780.0), Vector2(870.0, -4300.0),
@@ -70,7 +74,13 @@ static func rambla(m: Node2D, hyd_list: Array) -> void:
 		m.stall_kinds.append(String(st[1]))
 	m.blankets.clear()
 	for bl: Array in RAMBLA_BLANKETS:
-		m.blankets.append({"rect": bl[0], "goods": String(bl[1]), "cd": 0.0})
+		var br: Rect2 = bl[0]
+		m.blankets.append({"rect": br, "goods": String(bl[1]), "cd": 0.0,
+			"state": "laid", "t": 0.0, "sp": m._seller_pos(br), "to": Vector2.ZERO})
+	m.shell_game = {"pos": RAMBLA_SHELLS, "done": false, "t": 0.0}
+	# a dropped ice cream by the cart: sticky, and a thief running over it slips
+	m.patches.append({"y": RAMBLA_ICECREAM.y, "at": 0.0, "rx": 20.0, "ry": 15.0, "seed": 2.2,
+		"kind": "icecream", "pin": RAMBLA_ICECREAM})
 	m.statues = RAMBLA_STATUES.duplicate()
 	# the poles the boulevard base put up, less the lamp standard that stood
 	# where the mosaic is

@@ -88,6 +88,8 @@ func _run() -> void:
 		tw.queue_free()
 	m.blankets.clear()
 	m.manholes.clear()
+	# and nothing slippery lying about (La Rambla's dropped ice cream)
+	m.patches.clear()
 
 	# the tell comes first: no lift before STALK_MIN, however close he is
 	var tw := _tourist(m, here)
@@ -141,6 +143,18 @@ func _run() -> void:
 	_step(pp, 0.2)
 	_check(pp.state == pp.S.DOWN and pp.down_why == "blanket", "a seller's blanket trips him")
 	m.blankets.clear()
+	pp.queue_free()
+	tw.queue_free()
+	await process_frame
+
+	# a dropped ice cream underfoot
+	tw = _tourist(m, here)
+	pp = _running(m, tw, false)
+	var iat: Vector2 = pp.global_position + pp.run_dir * 10.0
+	m.patches.append({"y": iat.y, "at": 0.0, "rx": 24.0, "ry": 18.0, "seed": 1.0, "kind": "icecream", "pin": iat})
+	_step(pp, 0.2)
+	_check(pp.state == pp.S.DOWN and pp.down_why == "slip", "he slips on a dropped ice cream")
+	m.patches.clear()
 	pp.queue_free()
 	tw.queue_free()
 	await process_frame
