@@ -72,7 +72,8 @@ func _run() -> void:
 			on_plank = on_plank and human.global_position.x > float(nw["x0"]) - 10.0 and human.global_position.x < float(nw["x1"]) + 10.0
 	_check(on_plank, "the owner's weave keeps to the plank over the trench")
 	# walking up to the trench, the owner is lined up before the edge
-	human.global_position = Vector2(te.x + 60.0, LevelBuild.OBRES_TRENCH_Y + 300.0)
+	# from as far to the side as the footway goes, a full lead away
+	human.global_position = Vector2(te.x + 40.0, LevelBuild.OBRES_TRENCH_Y + human.NARROW_LEAD)
 	human.velocity = Vector2.ZERO
 	for f in range(900):
 		m.elapsed += 1.0 / 30.0

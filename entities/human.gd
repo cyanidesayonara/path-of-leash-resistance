@@ -11,7 +11,7 @@ const PANIC_SPEED := 230.0
 # how far before and after an island the owner is already on its side
 const ISLAND_LEAD := 400.0
 # ...and how far before a narrow the owner lines up for it
-const NARROW_LEAD := 260.0
+const NARROW_LEAD := 480.0
 var state: HState = HState.WALK
 var state_t := 0.0
 var event_timer := 4.0
