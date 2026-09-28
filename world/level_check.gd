@@ -110,6 +110,9 @@ static func check(m) -> Array:
 				break
 		for d in m.kebabs:
 			var ke: Vector2 = m.walk_edges(d.pos.y)
+			# a snack left off the path on purpose (the tutorial's nose lesson)
+			if bool(d.get("off_path", false)):
+				continue
 			if d.pos.x < ke.x - 2.0 or d.pos.x > ke.y + 2.0:
 				p.append("snack at x=%.0f is off the pavement" % d.pos.x)
 				break
@@ -120,7 +123,8 @@ static func check(m) -> Array:
 	var kickables: int = m.get_tree().get_nodes_in_group("cones").size()
 	if kickables < 6:
 		p.append("only %d kickable objects on the whole walk" % kickables)
-	if m.hydrants.size() < 3:
+	# the tutorial has exactly what its lessons need, and no goals
+	if m.hydrants.size() < 3 and not m.tutorial_mode:
 		p.append("only %d sniffable spots" % m.hydrants.size())
 	# the off-leash area is the one place the dog is free, so it must not be
 	# a bare field: it needs things to dig, sniff, climb and drink from
@@ -155,7 +159,7 @@ static func check(m) -> Array:
 	for id in ids:
 		if not defs.has(id):
 			p.append("goal id '%s' has no definition" % id)
-	if not ids.is_empty() and m.active_quests.size() != ids.size():
+	if not ids.is_empty() and m.active_quests.size() != ids.size() and not m.tutorial_mode:
 		p.append("built %d quests for %d ids" % [m.active_quests.size(), ids.size()])
 
 	# --- the level can actually satisfy what it asks for ---

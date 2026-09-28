@@ -215,6 +215,10 @@ const TutorialSteps := preload("res://systems/tutorial.gd")
 const UiIcons := preload("res://hud/ui_icons.gd")
 var tutorial_mode := false
 var tut_step := 0
+# where the owner stands to wait, this far south of the lesson's station
+const TUT_HOLD_BACK := 150.0
+var tut_plant_t := 0.0
+var tut_teetered := false
 var tut_flash := 0.0
 var tut_start_y := 0.0
 var tut_label: Label
@@ -576,12 +580,12 @@ func _ready() -> void:
 		Game.weather = Game.daily_weather()
 		Game.night = Game.daily_night()
 	elif Game.is_tutorial(Game.level_id):
-		# THE FIRST WALK: the boulevard's shape, but calm and safe by
-		# construction - no traffic to dodge, no chase, no other walkers, and
-		# a bright clear day. Nothing here can end your walk.
+		# THE FIRST WALK: El Barri laid out as one station per lesson, calm and
+		# safe by construction - no traffic to dodge, no chase, no other
+		# walkers, and a bright clear day. Nothing here can end your walk.
 		Game.daily = false
 		tutorial_mode = true
-		lvl = "street"
+		lvl = "barri"
 		Game.weather = "clear"
 		Game.night = false
 	else:
@@ -1972,6 +1976,15 @@ func _draw_rambla_stall(st: Vector2, kind: String, i: int) -> void:
 			b.rect(Rect2(st.x + 12.0, st.y - 24.0, 28.0, 20.0), Color(0.98, 0.97, 0.94))
 			b.circle(Vector2(st.x + 26.0, st.y + 30.0), 7.0, Color(0.36, 0.26, 0.18))
 	b.flush(_wc)
+
+
+# the brink lesson's pond: a muddy bank and the water, like El Parc's lake
+func _draw_tutorial_pond() -> void:
+	var r: Rect2 = LevelBuild.tutorial_pond(self)
+	var pc := r.get_center()
+	var bank := {"y": pc.y, "at": 0.5, "rx": r.size.x * 0.5, "ry": r.size.y * 0.5, "seed": 1.9}
+	_draw_pinned_patch(bank, pc, Color(0.40, 0.36, 0.28), 1.08)
+	_draw_pinned_patch(bank, pc, Color(0.31, 0.44, 0.52), 0.94)
 
 
 # EL BARRI: the petanca pitch with its boules, and the playground. Nothing
@@ -3852,6 +3865,8 @@ func _squirrels(delta: float) -> void:
 			d.z_index = 9
 			add_child(d)
 			d.setup(self, dog, ddir, i == 0)
+	if tutorial_mode:
+		return      # the tutorial has only the critters its lessons need
 	sq_spawn_t -= delta
 	if sq_spawn_t > 0.0:
 		return
@@ -4949,17 +4964,14 @@ func _tut_step_done(id: String) -> bool:
 	match id:
 		"walk": return tut_start_y - dog.global_position.y > 240.0
 		"pull": return leash.taut and leash.used_length() > leash_len * 0.98
+		"plant": return tut_plant_t >= 1.0
 		"pee": return marks.size() >= 1
 		"sniff": return sniffs_done >= 1
-		"nose":
-			# ambling near something worth smelling: the lesson IS going slow
-			if dog.velocity.length() > 110.0:
-				return false
-			for src in _scent_sources():
-				if dog.global_position.distance_to(src.pos) < 240.0:
-					return true
-			return false
-		"dig": return digs_done >= 1 or kebabs_eaten >= 1
+		"nose": return kebabs_eaten >= 1
+		"dig": return digs_done >= 1
+		"fling": return flings_done >= 1
+		"teeter": return tut_teetered and not teeter.active
+		"bag": return poop_state == 2 and not bag_pending
 		"bark": return barks_done >= 1
 		"turbo": return dog.turbo_active and dog.energy < 0.94
 		"grind": return grinds_landed >= 1
@@ -4972,6 +4984,12 @@ func _tick_tutorial(delta: float) -> void:
 	tut_flash = maxf(0.0, tut_flash - delta)
 	var st: Dictionary = TutorialSteps.step(tut_step)
 	var id := String(st.id)
+	# the owner waits at a lesson that wants them still, just short of it
+	human.tut_hold_y = (float(st["at"]) + TUT_HOLD_BACK) if bool(st.get("hold", false)) else -INF
+	if id == "plant" and dog.planted and leash.taut:
+		tut_plant_t += delta
+	if teeter.active:
+		tut_teetered = true
 	if id == "":
 		return
 	# skippable, always: a tutorial that traps a player who cannot do the
@@ -6395,8 +6413,10 @@ func _draw_world() -> void:
 		_wc.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	if lvl == "park":
 		_draw_parc(vt, vb)
-	if lvl == "barri":
+	if lvl == "barri" and not tutorial_mode:
 		_draw_barri(vt, vb)
+	if tutorial_mode:
+		_draw_tutorial_pond()
 	if rambla():
 		_draw_rambla(vt, vb)
 	if lvl == "trail":
@@ -6576,7 +6596,9 @@ func _draw_world() -> void:
 		var p := poles[i]
 		if p.y < vt - 60.0 or p.y > vb + 60.0:
 			continue
-		if lvl == "park" or lvl == "barri":
+		if tutorial_mode:
+			_draw_lamppost(p)       # the lesson posts are lampposts, as the cards say
+		elif lvl == "park" or lvl == "barri":
 			_draw_broadleaf(_wc, p, 1.0)
 		elif lvl == "trail":
 			_draw_forest_tree(_wc, p, i)

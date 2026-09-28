@@ -17,6 +17,10 @@ extends RefCounted
 
 # Per walk: [left strip, width, right strip, width]. Walks not listed (the
 # park, the trail, the seafront) have no building line. See main.frontage.
+const TUT := preload("res://systems/tutorial.gd")
+# the tutorial's pond for the brink lesson, beside the path at its station
+const TUT_POND_W := 150.0
+
 const CROSS_SECTIONS := {
 	"street": ["road", 160.0, "sidewalk", 120.0],    # a traffic lane; the bike lane side
 	"rain": ["sidewalk", 90.0, "sidewalk", 120.0],
@@ -29,6 +33,13 @@ const CROSS_SECTIONS := {
 	"guell": ["grass", 110.0, "grass", 110.0],        # terrace planting
 	"neteja": ["none", 0.0, "none", 0.0],             # a back street
 }
+
+
+# the brink lesson's pond, on the grass just off the path's east edge
+static func tutorial_pond(m: Node2D) -> Rect2:
+	var y: float = TUT.at("teeter")
+	var e: Vector2 = m.walk_edges(y)
+	return Rect2(e.y + 20.0, y - 90.0, TUT_POND_W, 150.0)
 
 
 # EL BARRI's pieces, in level space
@@ -311,9 +322,6 @@ static func apply_corridor(m: Node2D) -> void:
 	# right width]. What the real place would have between the path and its
 	# buildings - a lawn, a sidewalk, or the wall itself.
 	var xs: Array = CROSS_SECTIONS.get(m.lvl, [])
-	# the First Walk keeps the boulevard's lawn (and the picnics on it)
-	if m.tutorial_mode and m.lvl == "street":
-		xs = ["grass", 160.0, "sidewalk", 120.0]
 	m.built = not xs.is_empty()
 	if m.built:
 		m.strip_kind_l = String(xs[0])
@@ -433,6 +441,8 @@ static func fit_props_to_corridor(m: Node2D) -> void:
 	# the dictionary-based pickups need the same treatment
 	for list in [m.hydrants, m.kebabs, m.candy]:
 		for d in list:
+			if bool(d.get("off_path", false)):
+				continue
 			var dp: Vector2 = d.pos
 			var de = m.walk_edges(dp.y)
 			d.pos = Vector2(fit_x(m, dp.x, de.x + pad, de.y - pad), dp.y)
@@ -906,12 +916,20 @@ static func build_level_data(m: Node2D) -> void:
 		m.vans = Array([], TYPE_VECTOR2, &"", null)
 		m.astands = Array([], TYPE_VECTOR2, &"", null)
 		m.performers = Array([], TYPE_VECTOR2, &"", null)
-		# a generous supply of practice apparatus, spread out and unhurried
-		hyd_list = [Vector2(360.0, -700.0), Vector2(915.0, -1250.0), Vector2(360.0, -1900.0)]
-		keb_list = [Vector2(640.0, -1500.0), Vector2(700.0, -2400.0)]
-		m.poles.append(Vector2(500.0, -2100.0))
-		m.poles.append(Vector2(790.0, -2750.0))
+		# THE STATIONS: El Barri emptied out, and each lesson given only what
+		# it needs (systems/tutorial.gd has the order and the spacing)
+		m.stalls.clear()
+		m.stall_kinds.clear()
+		m.benches.clear()
+		m.patches.clear()
+		m.poles.clear()
+		m.poles.append(Vector2(640.0, TUT.at("vault")))
+		m.poles.append(Vector2(640.0, TUT.at("fling")))
 		m.deco_pole_count = m.poles.size()
+		hyd_list = [Vector2(560.0, TUT.at("pee") - 40.0), Vector2(720.0, TUT.at("sniff") - 40.0)]
+		keb_list = []
+		m.bins = Array([Vector2(m.sw_r - 30.0, TUT.at("bag") - 60.0)], TYPE_VECTOR2, &"", null)
+		m.fountains = Array([], TYPE_VECTOR2, &"", null)
 	for tb in m.tables:
 		m.poles.append(tb)
 	for pa in m.parasols:
@@ -953,6 +971,16 @@ static func build_level_data(m: Node2D) -> void:
 		m.hydrants.append({"pos": hp, "done": false, "progress": 0.0})
 	for kp in keb_list:
 		m.kebabs.append({"pos": kp, "eaten": false})
+	if m.tutorial_mode:
+		# the nose lesson's snack is out on the grass, off the path, so it is
+		# found by smell; the flock waits at the bark station; the urge comes
+		# at the business station, and never before it
+		var ne: Vector2 = m.walk_edges(TUT.at("nose"))
+		m.kebabs.append({"pos": Vector2(ne.x - 110.0, TUT.at("nose") - 80.0), "eaten": false, "off_path": true})
+		m.flock_ys = Array([TUT.at("bark") - 60.0], TYPE_FLOAT, &"", null)
+		m.duck_ys = Array([], TYPE_FLOAT, &"", null)
+		m.cat_y = 0.0
+		m.urge_y = TUT.at("bag") + 40.0
 	for cp in m.candy_spots:
 		m.candy.append({"pos": cp, "eaten": false})
 	build_ground_detail(m)
@@ -1263,6 +1291,8 @@ static func build_freedom_area(m: Node2D) -> void:
 	if m.lvl == "trail":
 		for r: Rect2 in trail_stream(m):
 			m.water.append(r)
+	if m.tutorial_mode:
+		m.water.append(tutorial_pond(m))
 	if m.freedom_kind == "beach":
 		# The sea, in two pieces that meet at the gate: a band along the whole
 		# passeig (so she can go in ANYWHERE on the walk, which is the first
