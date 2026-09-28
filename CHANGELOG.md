@@ -2,6 +2,31 @@
 
 Append-only session history, newest first.
 
+## 2026-09-28 - El Parc becomes its own park
+
+El Parc was a 600 px dirt road with a pond biting into one side and a strip
+of planks past it. Now, from `docs/LEVEL_DESIGN.md`:
+- **The lake is an island** (path shapes, stage 2): a sandy gravel path
+  (half 230) opens out to half 400 round it, with a shore to walk either
+  side. `main.islands` names the side the owner keeps to (east), and
+  `human._walk` crosses over early enough to be there before the water. Wrap
+  points round the shore make the lake the biggest pole on the walk. A
+  rowing boat drifts on it.
+- **Flowerbeds** hedged with box on the lawns. Their long edges are grind
+  rails: the grind now takes `main.rails` as well as the path's edges, and
+  the path's edges are followed round a bend (`rail_x`); they were fixed at
+  the nominal line before, which was wrong on El Bosc and El Mosaic.
+- **The bandstand**, eight solid posts under a green copper roof, for
+  looping the owner round.
+- **The Ciutadella mammoth** on its plinth; the rope catches its legs, and
+  her front foot can be marked like a hydrant.
+- **A playground** with a slide, swings and a sandpit. The sandpit is real
+  sand, and any sand or mud underfoot on any walk now takes footprints
+  (wet cement too, which is sand to `surface_at`).
+- The A-board is gone, and the picnics are set from the path's edge.
+
+`tests/test_parc.gd` (11 checks). Only El Parc's snapshot lines change.
+
 ## 2026-09-28 - El Bosc's boars, fallen trunks, and an owner who follows the bends
 
 - **The boars** (`entities/boar.gd`): a sow and four striped piglets come out

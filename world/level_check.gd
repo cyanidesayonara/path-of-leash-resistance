@@ -72,9 +72,10 @@ static func check(m) -> Array:
 			if cl.intersects(pb):
 				p.append("%s patch at (%.0f, %.0f) covers a cellar" % [what, pc.x, pc.y])
 				break
-		# and it has to be ON the walk, not out on the grass
+		# and it has to be ON the walk, not out on the grass - unless it was
+		# pinned to a spot off it on purpose (El Parc's sandpit)
 		var pe: Vector2 = m.walk_edges(pc.y)
-		if pc.x < pe.x or pc.x > pe.y:
+		if not pt.has("pin") and (pc.x < pe.x or pc.x > pe.y):
 			p.append("%s patch at (%.0f, %.0f) is off the path (%.0f..%.0f there)" % [
 				what, pc.x, pc.y, pe.x, pe.y])
 
@@ -101,6 +102,9 @@ static func check(m) -> Array:
 					break
 		for d in m.hydrants:
 			var he: Vector2 = m.walk_edges(d.pos.y)
+			# a markable landmark (El Parc's mammoth) stands where it stands
+			if d.has("kind"):
+				continue
 			if d.pos.x < he.x - 2.0 or d.pos.x > he.y + 2.0:
 				p.append("hydrant at x=%.0f is off the pavement" % d.pos.x)
 				break

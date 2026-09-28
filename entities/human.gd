@@ -8,6 +8,8 @@ enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, SIGNAL, CALL, WHIRL, GO_
 const WALK_SPEED := 92.0
 const PANIC_SPEED := 230.0
 
+# how far before and after an island the owner is already on its side
+const ISLAND_LEAD := 400.0
 var state: HState = HState.WALK
 var state_t := 0.0
 var event_timer := 4.0
@@ -288,6 +290,15 @@ func _walk(delta: float) -> void:
 	var here: Vector2 = main.walk_edges(global_position.y)
 	var cx: float = (here.x + here.y) * 0.5
 	var half: float = (here.y - here.x) * 0.5
+	# where the path splits round an island (El Parc's lake) the owner keeps
+	# to its side of it, and starts crossing over early enough to get there
+	for isl: Dictionary in main.islands:
+		var ir: Rect2 = isl["rect"]
+		if global_position.y > ir.position.y - ISLAND_LEAD and global_position.y < ir.end.y + ISLAND_LEAD:
+			var lo: float = (ir.end.x + 30.0) if float(isl["side"]) > 0.0 else (here.x + 30.0)
+			var hi: float = (here.y - 30.0) if float(isl["side"]) > 0.0 else (ir.position.x - 30.0)
+			cx = (lo + hi) * 0.5
+			half = maxf((hi - lo) * 0.5 + 60.0, 70.0)
 	var tx := cx + sin(t * 0.35 + wobble_seed) * minf(110.0, half - 60.0)
 	if state == HState.DRIFT:
 		tx = cx + drift_dir * (half - 70.0)
