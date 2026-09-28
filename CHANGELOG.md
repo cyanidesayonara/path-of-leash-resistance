@@ -2,6 +2,31 @@
 
 Append-only session history, newest first.
 
+## 2026-09-28 - La Rambla, step 1: the boulevard itself
+
+The flagship walk, first pass from `docs/LEVEL_DESIGN.md` (the crowd and the
+pickpockets come next). La Rambla shares its layout with the First Walk,
+which keeps everything it had (lawn, picnics, calm).
+- **No lawn.** The west strip is a traffic lane with a narrow pavement by
+  the buildings (a new "road" strip kind); the picnics went with the lawn.
+- **Plane trees in a row down both edges** of the promenade, in grates,
+  every third one a lamp standard, in place of lampposts on alternate sides.
+- **Stalls by kind** (`stall_kinds`): the newspaper kiosk, flower stalls
+  (three together, as on the real one), souvenir stands, an ice cream cart,
+  a caricaturist. Same bodies and rope points as the market's stalls.
+- **Sellers' blankets** with sunglasses, bags or toys laid out. Soft ground:
+  walk across one and the seller shouts ("eh! EH!").
+- **Human statues** on their boxes, solid. Stand still and watch one for a
+  second and it bows (+2 bones, a STATUE trick in the combo).
+- **The square**: the promenade opens out halfway down round a round
+  pavement mosaic of flat primary shapes.
+- **The Canaletes fountain** is the drink stop, drawn as the black cast-iron
+  column with its four taps and lamp.
+- `--shot-y` now redraws the world after the jump.
+
+`tests/test_rambla.gd` (19 checks); `test_surfaces` checks the lawn on El
+Parc now. Only La Rambla's snapshot lines change.
+
 ## 2026-09-28 - El Parc becomes its own park
 
 El Parc was a 600 px dirt road with a pond biting into one side and a strip

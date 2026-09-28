@@ -126,8 +126,9 @@ func _test_resolution() -> void:
 	beach.queue_free()
 	await process_frame
 
-	# the boulevard: the green either side of the walk is grass now, which is
-	# the whole point of the exercise
+	# the boulevard: the walk is paving, and so is everything either side of
+	# it - La Rambla has a traffic lane west (the lawn went, #87) and the
+	# bike lane east
 	game.level_id = "street"
 	var street = load("res://main.tscn").instantiate()
 	root.add_child(street)
@@ -136,14 +137,24 @@ func _test_resolution() -> void:
 	street.frozen = true
 	_check(street.surface_at(Vector2(street.walk_cx, -1200.0)) == Surfaces.S.PAVEMENT,
 		"the walk itself is pavement")
-	_check(street.surface_at(Vector2(street.sw_l - 60.0, -1200.0)) == Surfaces.S.GRASS,
-		"the verge west of the walk is grass")
+	_check(street.surface_at(Vector2(street.sw_l - 60.0, -1200.0)) == Surfaces.S.PAVEMENT,
+		"the lane west of the walk is hard ground, not a lawn")
 	# the carriageway is hard ground, not verge - a road is not a lawn
 	_check(street.surface_at(Vector2((street.BLANE_L + street.BLANE_R) * 0.5, -1200.0))
 		== Surfaces.S.PAVEMENT, "the bike lane is hard ground, not grass")
+	street.queue_free()
+	await process_frame
 
-	# and the dog is actually told about it, rather than the registry sitting
-	# there unread
+	# the park: the green either side of the walk is grass, and the dog is
+	# actually told about it, rather than the registry sitting there unread
+	game.level_id = "park"
+	street = load("res://main.tscn").instantiate()
+	root.add_child(street)
+	if not street.is_node_ready():
+		await street.ready
+	street.frozen = true
+	_check(street.surface_at(Vector2(street.sw_l - 60.0, -1200.0)) == Surfaces.S.GRASS,
+		"the verge west of the walk is grass")
 	street.dog.global_position = Vector2(street.sw_l - 60.0, -1200.0)
 	street._offpath(0.016)
 	_check(street.dog.surface == Surfaces.S.GRASS, "the dog is told it is on grass")
