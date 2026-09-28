@@ -243,8 +243,49 @@ rubble stone, and the colour comes in where Gaudi put it.
   shutters down, delivery crates, wet streaks where the water truck went.
 - Add: wet streaks and puddles, dumpsters, scooters, shutters, dawn light.
 
-### First Walk (tutorial)
-- Follows La Rambla's restyle, calm by construction.
+### El Barri - the neighbourhood park (the first walk)
+Santtu: "la rambla shouldn't be the primary walk... that should be just a
+generic walk in the park, without anything distinctly barcelonian", and "the
+park could be just a neighborhood park in bcn."
+- Is: the little park at the end of your street. A gravel square under plane
+  trees, benches, a drinking fountain, a fenced dog area (the pipicà), a
+  playground, a ping-pong table, old men playing petanca. Nothing a tourist
+  would photograph; the walk you do every day.
+- Where: open from the start and first in the list; La Rambla moves back and
+  needs a couple of stars. The Daily Walk still rotates through every walk.
+- Signature line: nothing fancy. Wind the owner round a plane tree, mark
+  every bench leg, sneak through the petanca game.
+- Built from El Parc's green layout (not the boulevard), kept small and
+  calm: a short walk, few hazards, the off-leash area is the pipicà.
+
+### First Walk (tutorial) - learn each trick in peace
+Santtu: "we should really upgrade the tutorial too, so that the user can
+learn each trick & mechanic individually and in peace, without all the
+distractions of normal levels."
+- Is: El Barri, emptied out and laid out as a row of **stations**, one per
+  lesson, far enough apart that only one is on screen. Each station holds
+  exactly what its lesson needs (one hydrant, one kerb, one lamppost, one
+  patch of turned earth) and nothing else: no crowd, no traffic, no riders,
+  no critters except the one the lesson is about.
+- **The owner waits.** At each station the owner stops (on a bench, on the
+  phone) until the lesson is done or skipped, so nothing is ever rushed.
+  Then they get up and walk on to the next station.
+- **One card per lesson**: the title, one line of what to do with the
+  button for the device in use, and a ghost of the move where it helps (a
+  dotted arc round the lamppost for the vault). A tick and a chime when it
+  lands; the skip button always works.
+- **The lessons**, in order from "you already know this" to "nobody would
+  guess this":
+  1. Walk. 2. The leash is rope (walk until it goes tight). 3. Dig in
+  (plant and win the tug). 4. Mark (pee on the hydrant). 5. Sniff.
+  6. The nose (go slow, follow the scent). 7. Dig (the turned earth).
+  8. Bark (it stops your human). 9. The zoomies (turbo). 10. Ride the kerb
+  (grind). 11. Swing round the lamppost (vault). 12. Tetherball the owner
+  (wind them round the pole and fling). 13. The brink (the teeter, at a
+  safe fountain edge). 14. Business (the poop, and the owner bagging it).
+  Then the pipicà: off the lead, fetch.
+- A lesson a player has done on a real walk can still be practised; the
+  tutorial is replayable from the menu.
 
 ## Path shapes (each walk its own)
 
@@ -405,6 +446,7 @@ slipping, all pretty slapstick of course, nothing too violent."
 6. El Mosaic, La Neteja, the beach additions; pickpockets and their
    stand-ins on the other walks.
 7. The off-leash areas, each to its walk.
+8. El Barri as the first walk, then the tutorial rebuilt on it as stations.
 
 Path shapes run alongside: stage 1 comes with each walk's own PR; stage 2
 (islands) before El Parc's pond split; stage 3 with Les Obres; stages 4 and
