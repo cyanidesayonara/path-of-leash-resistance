@@ -156,14 +156,14 @@ func _initialize() -> void:
 	_check_record(mark_game.records["street"], 0, 0.0, 0, 2, goal_ids, "six-goal Street record")
 	_check(mark_game.goals_count("street") == 6, "six pre-result goals remain in the Street record")
 	_check(mark_game.stars("street") == 2, "six pre-result goals earn two stars")
-	_check(mark_game.is_unlocked("park"), "pre-result stars contribute to campaign unlocks")
+	_check(mark_game.is_unlocked("street"), "pre-result stars contribute to campaign unlocks")
 	_check_unrelated_profile(mark_game, 41, "mark_goal")
 
 	var mark_reopened = GameScript.new()
 	mark_reopened.set("save_path", MARK_SAVE)
 	mark_reopened.load_records()
 	_check_record(mark_reopened.records["street"], 0, 0.0, 0, 2, goal_ids, "reloaded Street goals")
-	_check(mark_reopened.is_unlocked("park"), "the mark_goal unlock survives a save reload")
+	_check(mark_reopened.is_unlocked("street"), "the mark_goal unlock survives a save reload")
 	_check_unrelated_profile(mark_reopened, 41, "mark_goal reload")
 
 	var result_game = GameScript.new()

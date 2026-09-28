@@ -768,8 +768,8 @@ func _draw_paving(vt: float, vb: float, base: Color) -> void:
 			sh = 96.0
 		"site", "scrap":
 			return       # broken ground: no paving pattern at all
-		"park", "trail":
-			return       # dirt, not slabs
+		"park", "trail", "barri":
+			return       # dirt and gravel, not slabs
 	var row := int(floorf(vt / sh)) - 1
 	var y := float(row) * sh
 	while y < vb + sh:
@@ -1974,6 +1974,36 @@ func _draw_rambla_stall(st: Vector2, kind: String, i: int) -> void:
 	b.flush(_wc)
 
 
+# EL BARRI: the petanca pitch with its boules, and the playground. Nothing
+# here is anywhere in particular.
+func _draw_barri(vt: float, vb: float) -> void:
+	var b := ShapeBatch.new()
+	var pp: Rect2 = LevelBuild.BARRI_PETANCA
+	if pp.end.y > vt - 40.0 and pp.position.y < vb + 40.0:
+		b.rect(pp.grow(5.0), Color(0.52, 0.40, 0.26))
+		b.rect(pp, Color(0.82, 0.74, 0.56))
+		for k in range(6):
+			var bp := pp.position + Vector2(20.0 + fmod(float(k) * 37.0, pp.size.x - 40.0), 30.0 + fmod(float(k) * 71.0, pp.size.y - 60.0))
+			b.circle(bp + Vector2(1, 2), 5.0, Color(0, 0, 0, 0.2))
+			b.circle(bp, 5.0, Color(0.62, 0.62, 0.64))
+			b.circle(bp + Vector2(-1.5, -1.5), 2.0, Color(0.85, 0.85, 0.88))
+		b.circle(pp.position + Vector2(pp.size.x * 0.5, 40.0), 3.0, Color(0.85, 0.30, 0.20))   # the jack
+	var pg: Rect2 = LevelBuild.BARRI_PLAYGROUND
+	if pg.end.y > vt - 40.0 and pg.position.y < vb + 40.0:
+		_playground(b, pg)
+	b.flush(_wc)
+
+
+# the ping-pong table: concrete, a net across it, a white line round
+func _draw_pingpong(st: Vector2) -> void:
+	var r := Rect2(st.x - 44.0, st.y - 24.0, 88.0, 48.0)
+	contact_shadow(_wc, st, 44.0, 8.0, 0.22)
+	_wc.draw_rect(r, Color(0.36, 0.48, 0.44))
+	_wc.draw_rect(r.grow(-3.0), Color(0.42, 0.56, 0.50))
+	_wc.draw_rect(r.grow(-3.0), Color(0.92, 0.92, 0.88), false, 1.5)
+	_wc.draw_line(Vector2(st.x, r.position.y - 4.0), Vector2(st.x, r.end.y + 4.0), Color(0.18, 0.18, 0.20), 3.0)
+
+
 # EL PARC's own furniture, on the lawns beside the path: box-hedged
 # flowerbeds (their edging is a grind rail), the bandstand, the Ciutadella
 # mammoth, and the playground.
@@ -2042,6 +2072,14 @@ func _draw_parc(vt: float, vb: float) -> void:
 	# the playground: a soft red surface, a slide, a pair of swings
 	var pg: Rect2 = LevelBuild.PARK_PLAYGROUND
 	if pg.end.y > vt - 40.0 and pg.position.y < vb + 40.0:
+		_playground(b, pg)
+	b.flush(_wc)
+
+
+# A playground: a soft red surface, a slide, a pair of swings, and a sandpit
+# (whose sand is a patch the level lays at the same spot).
+func _playground(b: ShapeBatch, pg: Rect2) -> void:
+	if true:
 		b.rect(pg, Color(0.64, 0.36, 0.30))
 		b.rect(Rect2(pg.position.x, pg.position.y, pg.size.x, 4.0), Color(0.48, 0.26, 0.22))
 		# the slide: ladder, platform, chute
@@ -2065,7 +2103,6 @@ func _draw_parc(vt: float, vb: float) -> void:
 		var sp: Vector2 = pg.get_center() + Vector2(-28.0, 40.0)
 		b.rect(Rect2(sp.x - 54.0, sp.y - 44.0, 108.0, 88.0), Color(0.46, 0.34, 0.22))
 		b.rect(Rect2(sp.x - 48.0, sp.y - 38.0, 96.0, 76.0), Color(0.86, 0.78, 0.58))
-	b.flush(_wc)
 
 
 # The stream across the wood and the footbridge that carries the trail over
@@ -2443,7 +2480,7 @@ func _draw_dog_beach(c: Object) -> void:
 
 const SIGN_STYLES := {
 	"street": "chalk", "market": "chalk", "spook": "chalk",
-	"beach": "sand", "park": "dirt", "trail": "dirt",
+	"beach": "sand", "park": "dirt", "trail": "dirt", "barri": "dirt",
 	"station": "board", "site": "board", "scrap": "board",
 	"rain": "wet", "oldtown": "tile", "tutorial": "chalk",
 }
@@ -5534,7 +5571,8 @@ func on_business_bagged(pos: Vector2) -> void:
 
 
 const OPENERS := {
-	"street": "To the park and back. Mind the bike lanes.",
+	"barri": "Round the park at the end of the street and home. The usual.",
+	"street": "Down La Rambla and back. Mind your human's pockets.",
 	"park": "Through the park to the meadow, then home. Mind the pond.",
 	"beach": "Along the passeig and back. The sea is right there. So is the bike path.",
 	"rain": "Out in it, because you insisted. Mind the drains.",
@@ -6265,7 +6303,7 @@ func _draw_world() -> void:
 		elif lvl == "trail":
 			grass = TRAIL_FLOOR
 			walkway = TRAIL_DIRT
-		elif lvl == "park":
+		elif lvl == "park" or lvl == "barri":
 			walkway = Color(0.74, 0.67, 0.53)   # sandy gravel, as the city's parks are
 		if built:
 			# only the strips between the paving and the building line: beyond
@@ -6357,6 +6395,8 @@ func _draw_world() -> void:
 		_wc.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	if lvl == "park":
 		_draw_parc(vt, vb)
+	if lvl == "barri":
+		_draw_barri(vt, vb)
 	if rambla():
 		_draw_rambla(vt, vb)
 	if lvl == "trail":
@@ -6536,7 +6576,7 @@ func _draw_world() -> void:
 		var p := poles[i]
 		if p.y < vt - 60.0 or p.y > vb + 60.0:
 			continue
-		if lvl == "park":
+		if lvl == "park" or lvl == "barri":
 			_draw_broadleaf(_wc, p, 1.0)
 		elif lvl == "trail":
 			_draw_forest_tree(_wc, p, i)
@@ -6627,6 +6667,9 @@ func _draw_world() -> void:
 	# market stalls: awnings, crates, produce
 	for i in range(stalls.size()):
 		var st := stalls[i]
+		if i < stall_kinds.size() and stall_kinds[i] == "pingpong":
+			_draw_pingpong(st)
+			continue
 		if i < stall_kinds.size() and stall_kinds[i] != "":
 			_draw_rambla_stall(st, stall_kinds[i], i)
 			continue
@@ -7021,6 +7064,14 @@ func _draw_world() -> void:
 	var brolly_cols := [Color(0.75, 0.2, 0.25), Color(0.2, 0.35, 0.6), Color(0.25, 0.5, 0.35), Color(0.35, 0.3, 0.4)]
 	for idx in range(performers.size()):
 		var pf: Vector2 = performers[idx]
+		if lvl == "barri":
+			# an old man at the petanca, flat cap, hands behind his back
+			contact_shadow(_wc, pf, 12.0, 5.0, 0.2)
+			_wc.draw_circle(pf, 12.0, [Color(0.42, 0.40, 0.36), Color(0.30, 0.34, 0.42), Color(0.50, 0.44, 0.34)][idx % 3])
+			_wc.draw_circle(pf + Vector2(0, -4), 6.5, Color(0.84, 0.68, 0.56))
+			_wc.draw_circle(pf + Vector2(0, -5), 6.8, Color(0.30, 0.28, 0.26))
+			_wc.draw_rect(Rect2(pf.x - 5.0, pf.y - 14.0, 10.0, 4.0), Color(0.26, 0.24, 0.22))
+			continue
 		if lvl == "site":
 			# a worker in hi-vis and a hard hat, leaning on a shovel
 			contact_shadow(_wc, pf, 12.0, 5.0, 0.2)
