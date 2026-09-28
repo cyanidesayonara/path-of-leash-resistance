@@ -31,6 +31,12 @@ const CROSS_SECTIONS := {
 }
 
 
+# EL BARRI's pieces, in level space
+const BARRI_PETANCA := Rect2(360.0, -1980.0, 150.0, 260.0)
+const BARRI_PLAYGROUND := Rect2(790.0, -4000.0, 166.0, 300.0)
+const BARRI_PINGPONG := Vector2(760.0, -2560.0)
+
+
 # LES OBRES. Wet cement poured in rectangular formwork, half the footway
 # at a time and alternating sides, so there is always a line past; cones at
 # the corners and tape between them. Level space, set against the chicane.
@@ -281,6 +287,7 @@ static func apply_corridor(m: Node2D) -> void:
 	match m.lvl:
 		"street": half = 340.0   # a proper boulevard
 		"park": half = 230.0     # a gravel path between lawns
+		"barri": half = 240.0    # the little park at the end of the street
 		"beach": half = 340.0    # bespoke cross-section, left alone
 		"rain": half = 320.0
 		"market": half = 270.0   # stalls crowd the aisle
@@ -565,6 +572,40 @@ static func build_level_data(m: Node2D) -> void:
 			]
 			# someone's bocadillo, dropped in its foil
 			keb_list = [Vector2(620, -1900), Vector2(700, -4200)]
+		"barri":
+			# EL BARRI: the neighbourhood park. Plane trees in rows down both
+			# edges of a gravel square, benches facing each other, a
+			# ping-pong table, the petanca pitch, a playground, a fountain.
+			m.gate_text = "PIPICA"
+			var y := -320.0
+			var k := 0
+			while y > m.GATE_Y + 260.0:
+				for x: float in [300.0, 980.0]:
+					var tp := Vector2(x, y + (40.0 if (k + int(x)) % 2 == 0 else 0.0))
+					if not BARRI_PETANCA.grow(70.0).has_point(tp) and not BARRI_PLAYGROUND.grow(70.0).has_point(tp):
+						m.poles.append(tp)
+				y -= 380.0
+				k += 1
+			m.deco_pole_count = m.poles.size()
+			m.benches = Array([Vector2(336, -900), Vector2(944, -900), Vector2(336, -2600),
+				Vector2(944, -3400), Vector2(336, -4300)], TYPE_VECTOR2, &"", null)
+			m.bins = Array([Vector2(m.sw_l + 30, -700), Vector2(m.sw_r - 30, -2200),
+				Vector2(m.sw_l + 30, -3700)], TYPE_VECTOR2, &"", null)
+			m.stalls = Array([BARRI_PINGPONG], TYPE_VECTOR2, &"", null)
+			m.stall_kinds = Array(["pingpong"], TYPE_STRING, &"", null)
+			# the petanca players, stood round the pitch
+			var pc: Vector2 = BARRI_PETANCA.get_center()
+			m.performers = Array([pc + Vector2(-70, -40), pc + Vector2(-66, 50), pc + Vector2(70, 10)], TYPE_VECTOR2, &"", null)
+			m.fountains = Array([Vector2(640, -2950)], TYPE_VECTOR2, &"", null)
+			hyd_list = [
+				Vector2(m.sw_l + 45, -500), Vector2(m.sw_r - 45, -1500),
+				Vector2(m.sw_l + 45, -2300), Vector2(m.sw_r - 45, -3100),
+				Vector2(m.sw_l + 45, -4600),
+			]
+			keb_list = [Vector2(600, -1300), Vector2(700, -4000)]
+			# the playground's sandpit is sand
+			m.patches.append({"y": BARRI_PLAYGROUND.get_center().y + 40.0, "at": 0.0, "rx": 44.0, "ry": 34.0,
+				"seed": 3.1, "kind": "sand", "pin": BARRI_PLAYGROUND.get_center() + Vector2(-28.0, 40.0)})
 		"site":
 			# hydrants at the kerbs, clear of the works; the lads' dropped lunch
 			hyd_list = [
@@ -1043,6 +1084,9 @@ static func build_level_data(m: Node2D) -> void:
 	# that costs you something to reach (deliberately outside the corridor
 	# on some walks, so it is exempt from the corridor fit)
 	match m.lvl:
+		"barri":
+			m.prize_pos = BARRI_PINGPONG + Vector2(0.0, 44.0)   # under the ping-pong table
+			m.prize_text = "get the ball back from under the ping-pong table"
 		"street":
 			m.prize_pos = Vector2(m.SHOULDER_R - 12.0, -2400.0)  # far shoulder, across the bike lane
 			m.prize_text = "fetch the frisbee across the bike lane"

@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-09-28 - El Barri, the everyday walk, comes first
+
+Santtu: La Rambla should not be the first walk; that should be a generic walk
+in the park, a neighbourhood park, nothing distinctly Barcelona. **El Barri**
+("the neighbourhood park") is a new walk, first in the list after the
+tutorial and the Daily Walk and open from the start; La Rambla now needs 2
+stars and El Parc 3. The Daily Walk still rotates through every walk.
+
+A gravel square under rows of plane trees, benches facing each other, a
+concrete ping-pong table (the prize ball is under it), the petanca pitch with
+its old men in flat caps, a playground with a sandpit, a drinking fountain,
+and the fenced dog park at the top ("PIPICA"). No traffic, no crowd, no
+pickpockets. The playground is now one drawing shared with El Parc.
+
+Added to CI's self-test, smoke and soak lists and to the snapshot, sweep,
+soak and perf tools. `tests/test_barri.gd`; the unlock check in
+`test_fresh_save_progression` now looks at La Rambla's gate. The snapshot
+only gains El Barri's lines.
+
 ## 2026-09-28 - Les Obres becomes a roadworks
 
 Les Obres was La Rambla's layout with cement blobs and a pink paint blob on

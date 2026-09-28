@@ -14,6 +14,8 @@ const UiIcons := preload("res://hud/ui_icons.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
 
 const LEVEL_GOAL_IDS := {
+	# El Barri, the everyday walk: the staples and nothing exotic
+	"barri": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "combo", "prize"],
 	# La Rambla trades the traffic near-misses for its pickpockets
 	"street": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "thief", "wallet", "fling", "carry", "combo", "prize"],
 	"park": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "combo", "prize"],

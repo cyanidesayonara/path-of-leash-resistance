@@ -2,7 +2,7 @@ extends Node
 
 # Autoload: session state that must survive scene reloads.
 
-const LEVELS: Array[String] = ["street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap", "guell", "neteja"]
+const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap", "guell", "neteja"]
 const LEVEL_NAMES := {
 	"daily": "Daily Walk",
 	"tutorial": "First Walk (tutorial)",
@@ -17,6 +17,8 @@ const LEVEL_NAMES := {
 	# attraction's brand name used as branding (which is why the mosaic walk is
 	# "El Mosaic" and not the real site), or copying a protected work. A public
 	# thoroughfare is neither.
+	# the everyday walk: the little park at the end of the street, anywhere
+	"barri": "El Barri",
 	"street": "La Rambla", "park": "El Parc",
 	"beach": "Passeig Maritim", "rain": "El Diluvi", "market": "El Mercat",
 	"oldtown": "El Gotic", "trail": "El Bosc", "station": "L'Estacio", "site": "Les Obres",
@@ -34,6 +36,7 @@ const LEVEL_NAMES := {
 const LEVEL_SUBTITLES := {
 	"daily": "a new one every day",
 	"tutorial": "learn the ropes",
+	"barri": "the neighbourhood park",
 	"street": "the crowded promenade",
 	"park": "the park",
 	"beach": "the seaside walk",
@@ -50,13 +53,13 @@ const LEVEL_SUBTITLES := {
 }
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
-const STAR_GATE := {"street": 0, "park": 2, "beach": 4, "rain": 5, "market": 7, "oldtown": 9, "trail": 11, "station": 13, "site": 15, "spook": 17, "scrap": 19, "guell": 21, "neteja": 23}
+const STAR_GATE := {"barri": 0, "street": 2, "park": 3, "beach": 4, "rain": 5, "market": 7, "oldtown": 9, "trail": 11, "station": 13, "site": 15, "spook": 17, "scrap": 19, "guell": 21, "neteja": 23}
 
 const WEATHERS: Array[String] = ["clear", "rain", "wind", "snow"]
 const WEATHER_NAMES := {"clear": "CLEAR", "rain": "RAIN", "wind": "WIND", "snow": "SNOW"}
 
 # the carousel on the title: the daily walk first, then the campaign walks
-const CAROUSEL: Array[String] = ["tutorial", "daily", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap", "guell", "neteja"]
+const CAROUSEL: Array[String] = ["tutorial", "daily", "barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap", "guell", "neteja"]
 
 # Cosmetics keep their catalog keys when equipped, but ownership is namespaced
 # by category so identically named items remain separate purchases.
@@ -114,7 +117,7 @@ const DEFAULT_VOL_SFX := 0.9
 const DEFAULT_VOL_MUSIC := 0.55
 
 var save_path := SAVE_PATH
-var level_id := "street"
+var level_id := "barri"
 var owner_id := "him"  # "him" | "her"; a proper character creator can come later
 var night := false
 var weather := "clear"
