@@ -14,7 +14,8 @@ const UiIcons := preload("res://hud/ui_icons.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
 
 const LEVEL_GOAL_IDS := {
-	"street": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "fling", "carry", "combo", "prize"],
+	# La Rambla trades the traffic near-misses for its pickpockets
+	"street": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "thief", "wallet", "fling", "carry", "combo", "prize"],
 	"park": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "combo", "prize"],
 	"beach": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "save", "combo", "prize"],
 	"rain": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "drink", "combo", "prize"],
@@ -63,6 +64,8 @@ static func defs(m: Node2D) -> Dictionary:
 		"ghost": {"text": "cross the yard, wake nobody", "target": 1, "fn": func() -> int: return 1 if m.guards_woken == 0 else 0},
 		"outrun": {"text": "never let the sweeper within a leash length", "target": 1, "fn": func() -> int: return 1 if m.chase_min_gap >= HomeChase.OUTRUN_GAP else 0},
 		"unseen": {"text": "never once be spotted", "target": 1, "fn": func() -> int: return 1 if m.times_spotted == 0 else 0},
+		"thief": {"text": "stop %d pickpockets", "target": 2, "fn": func() -> int: return m.thieves_stopped},
+		"wallet": {"text": "keep your human's wallet", "target": 1, "fn": func() -> int: return 0 if (m.owner_wallet_taken or m.owner_wallet_lost) else 1},
 		"prize": {"text": m.prize_text, "target": 1, "fn": func() -> int: return 1 if m.prize_taken else 0},
 	}
 

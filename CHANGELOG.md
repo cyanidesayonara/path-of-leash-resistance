@@ -2,6 +2,30 @@
 
 Append-only session history, newest first.
 
+## 2026-09-28 - La Rambla, step 2: the crowd and the pickpockets (#80)
+
+- **The crowd** (`entities/tourist.gd`): fourteen tourists kept round the
+  camera, ambling up and down the promenade with maps, cameras and selfie
+  sticks, stopping for photos. They step aside rather than block, so the
+  crowd is dense without wedging the walk. Their own RNG, so nothing else's
+  randomness shifts.
+- **Pickpockets** (`entities/pickpocket.gd`), from the brief: a readable
+  tell (cap low, glancing, "..." over him) for at least 1.6 s while he
+  sidles up behind his mark, then the lift. The first one of the walk goes
+  for the owner; the rest for tourists. With the wallet (drawn in his hand)
+  he runs for the nearest side street at 190, well under her sprint.
+- **Stopping him**, all slapstick: the dog at a run bowls him over, the
+  leash across his legs trips him, a seller's blanket trips him, something
+  slippery drops him, the owner flung into him flattens him. He sits up
+  with stars round his head and slinks off; the wallet goes back (+8, +15
+  for the owner's, a THIEF trick) and the crowd round about claps. A bark
+  or a charge while he is still stalking busts him (+4). Down beside an
+  open manhole: "...plop", the wallet is gone and the stop earns nothing.
+- **Goals**: "stop 2 pickpockets" and "keep your human's wallet" replace the
+  traffic near-misses on La Rambla.
+
+`tests/test_pickpocket.gd` (14 checks). The behaviour snapshot is identical.
+
 ## 2026-09-28 - La Rambla, step 1: the boulevard itself
 
 The flagship walk, first pass from `docs/LEVEL_DESIGN.md` (the crowd and the

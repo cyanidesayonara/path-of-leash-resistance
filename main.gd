@@ -166,6 +166,16 @@ var blankets: Array[Dictionary] = []
 var statues: Array[Vector2] = []
 var statue_wait: Dictionary = {}     # index -> how long she has stood watching
 var statue_bow: Dictionary = {}      # index -> time left on the bow
+# La Rambla's crowd and its pickpockets (entities/tourist.gd, pickpocket.gd).
+# The crowd has its own RNG so it never shifts the global sequence.
+var crowd_rng := RandomNumberGenerator.new()
+var crowd_seeded := false
+var pp_spawn_t := PP_FIRST
+var pp_spawned := 0
+var thieves_stopped := 0
+var wallets_returned := 0
+var owner_wallet_taken := false      # he has it right now
+var owner_wallet_lost := false       # and he got away with it, or it went down a drain
 var fountains: Array[Vector2] = []
 var body_pole_count := 0
 var bypasser_blockers: Array[Dictionary] = []
@@ -542,7 +552,8 @@ const MIDWALK_SCRIPTS := [
 	"res://entities/ball.gd", "res://entities/freedog.gd", "res://entities/rival.gd",
 	"res://entities/tofu.gd", "res://entities/sweeper.gd", "res://entities/otherpair.gd",
 	"res://entities/bike.gd", "res://entities/squirrel.gd", "res://entities/pigeon.gd",
-	"res://entities/duckling.gd", "res://entities/boar.gd",
+	"res://entities/duckling.gd", "res://entities/boar.gd", "res://entities/tourist.gd",
+	"res://entities/pickpocket.gd",
 ]
 
 
@@ -1462,6 +1473,126 @@ func _tick_rambla(delta: float) -> void:
 
 # stand and watch a human statue this long and it bows to her
 const STATUE_WATCH := 1.0
+# the crowd: this many tourists kept around the camera
+const CROWD_SIZE := 14
+# pickpockets: the first this many seconds in, then one every PP_EVERY while
+# none is at work, PP_MAX a walk. The first one always goes for the owner.
+const PP_FIRST := 10.0
+const PP_EVERY := 28.0
+const PP_MAX := 3
+
+
+func _tick_crowd(delta: float) -> void:
+	if not crowd_seeded:
+		crowd_seeded = true
+		crowd_rng.seed = 0xC40D
+	var cy: float = cam.position.y
+	var n := 0
+	for tw: Node2D in get_tree().get_nodes_in_group("tourists"):
+		if absf(tw.global_position.y - cy) > 950.0:
+			tw.queue_free()
+		else:
+			n += 1
+	# the first fill puts people on screen too; after that they arrive from
+	# off screen, so nobody pops into view
+	var first_fill := n == 0
+	while n < CROWD_SIZE:
+		var y := cy + crowd_rng.randf_range(-680.0, 680.0)
+		if absf(y - cy) < 420.0 and not first_fill:
+			y = cy + (420.0 + crowd_rng.randf_range(0.0, 300.0)) * (1.0 if crowd_rng.randf() < 0.5 else -1.0)
+		if y < GATE_Y + 200.0 or y > START_Y - 60.0:
+			break
+		var e := walk_edges(y)
+		var tw := Node2D.new()
+		tw.set_script(load("res://entities/tourist.gd"))
+		tw.z_index = 8
+		add_child(tw)
+		tw.setup(self, crowd_rng, Vector2(crowd_rng.randf_range(e.x + 40.0, e.y - 40.0), y),
+			-1.0 if crowd_rng.randf() < 0.5 else 1.0)
+		n += 1
+	# a pickpocket, now and then, while none is at work
+	if get_tree().get_nodes_in_group("pickpockets").size() > 0 or pp_spawned >= PP_MAX:
+		return
+	if cy > START_Y - 500.0 or cy < GATE_Y + 900.0:
+		return
+	pp_spawn_t -= delta
+	if pp_spawn_t > 0.0:
+		return
+	pp_spawn_t = PP_EVERY
+	var target: Node2D = human
+	var is_owner := pp_spawned == 0
+	if not is_owner:
+		var best := INF
+		for tw: Node2D in get_tree().get_nodes_in_group("tourists"):
+			var d: float = tw.global_position.distance_to(dog.global_position)
+			if tw.has_wallet and d > 120.0 and d < best and absf(tw.global_position.y - cy) < 300.0:
+				best = d
+				target = tw
+		if target == human:
+			return
+	pp_spawned += 1
+	var pe := walk_edges(cy - 260.0)
+	var from := Vector2(pe.x + 50.0 if target.global_position.x > walk_cx else pe.y - 50.0, cy - 260.0)
+	var pp := Node2D.new()
+	pp.set_script(load("res://entities/pickpocket.gd"))
+	pp.z_index = 9
+	add_child(pp)
+	pp.setup(self, from, target, is_owner, crowd_rng.randf() * 10.0)
+	feed.say("PICKPOCKET! WATCH HIS HANDS", EventFeed.Tone.LOUD)
+
+
+func on_pickpocket_lift(at: Vector2, from_owner: bool) -> void:
+	float_text(at + Vector2(0, -30), "my wallet?!" if not from_owner else "!", Color(1, 0.6, 0.5))
+	feed.say("HE'S GOT %s WALLET! STOP HIM" % ("YOUR HUMAN'S" if from_owner else "A"), EventFeed.Tone.BAD)
+
+
+const PP_WHY := {"bump": "BOWLED OVER!", "tangle": "TANGLED!", "owner": "HUMAN BOWLING!",
+	"blanket": "TRIPPED!", "slip": "SLIP!"}
+
+
+func on_pickpocket_stopped(at: Vector2, why: String, lost: bool, mark: Node2D, from_owner: bool) -> void:
+	Sfx.play("crack", 0.8, -6.0)
+	float_text(at + Vector2(0, -28), String(PP_WHY.get(why, "GOT HIM!")), Color(1, 0.9, 0.5))
+	if lost:
+		# stopped, but the wallet went down the hole: a stop that earns nothing
+		float_text(at + Vector2(0, -8), "...plop", Color(0.8, 0.85, 1.0))
+		feed.say("IT WENT DOWN THE DRAIN", EventFeed.Tone.BAD)
+		if from_owner:
+			owner_wallet_taken = false
+			owner_wallet_lost = true
+		return
+	thieves_stopped += 1
+	wallets_returned += 1
+	var pay := 15 if from_owner else 8
+	bones += pay
+	combo.add("THIEF", 10)
+	if from_owner:
+		owner_wallet_taken = false
+		feed.say("YOUR HUMAN'S WALLET IS BACK +%d" % pay, EventFeed.Tone.GOOD)
+	else:
+		if mark != null and is_instance_valid(mark) and "has_wallet" in mark:
+			mark.has_wallet = true
+		feed.say("WALLET SAVED! +%d" % pay, EventFeed.Tone.GOOD)
+	# the crowd round about applauds the dog
+	for tw: Node2D in get_tree().get_nodes_in_group("tourists"):
+		if tw.global_position.distance_to(at) < 260.0:
+			tw.cheer()
+	_update_hud()
+
+
+func on_pickpocket_escaped(from_owner: bool) -> void:
+	feed.say("HE GOT AWAY", EventFeed.Tone.BAD)
+	if from_owner:
+		owner_wallet_taken = false
+		owner_wallet_lost = true
+
+
+func on_pickpocket_busted(at: Vector2) -> void:
+	# seen off before the lift
+	thieves_stopped += 1
+	bones += 4
+	combo.add("BUSTED", 5)
+	float_text(at + Vector2(0, -26), "BUSTED", Color(1, 0.9, 0.5))
 
 
 func _seller_pos(r: Rect2) -> Vector2:
@@ -2775,6 +2906,7 @@ func _physics_process(delta: float) -> void:
 	_squirrels(delta)
 	if rambla():
 		_tick_rambla(delta)
+		_tick_crowd(delta)
 	_prof("critters")
 	_temptation(delta)
 	_prof("temptation")
@@ -5633,6 +5765,10 @@ func on_bark(pos: Vector2) -> void:
 	for wc in get_tree().get_nodes_in_group("wallcats"):
 		if wc.global_position.distance_to(pos) < 150.0:
 			wc.scare()
+	# a pickpocket who is only sizing someone up thinks better of it
+	for pp in get_tree().get_nodes_in_group("pickpockets"):
+		if pp.global_position.distance_to(pos) < pp.BARK_R:
+			pp.scare()
 	# barking at a boar is a bad idea
 	for bo in get_tree().get_nodes_in_group("boars"):
 		if bo.global_position.distance_to(pos) < bo.BARK_R:
