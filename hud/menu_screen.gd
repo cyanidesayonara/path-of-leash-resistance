@@ -56,10 +56,12 @@ func _process(delta: float) -> void:
 	if s == "walking" and _drawn in ["title", "walk", "details"]:
 		_fade_from = _drawn
 		_fade = FADE_S
+	var fading := _fade > 0.0
 	_fade = maxf(0.0, _fade - delta)
 	modulate.a = (_fade / FADE_S) if s == "walking" and _fade > 0.0 else 1.0
-	# nothing to draw during a walk, so nothing to redraw
-	if s != "walking" or _drawn != "walking" or _fade > 0.0:
+	# nothing to draw during a walk, so nothing to redraw - except the frame
+	# the fade ends on, which has to clear the last faded picture
+	if s != "walking" or _drawn != "walking" or fading:
 		queue_redraw()
 	_drawn = s
 

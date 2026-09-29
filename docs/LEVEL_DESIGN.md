@@ -287,6 +287,38 @@ distractions of normal levels."
 - A lesson a player has done on a real walk can still be practised; the
   tutorial is replayable from the menu.
 
+## Writing on the ground (each walk's name, in its own stuff)
+
+The walk's name is not a label over the level; it lies on the ground at the
+start, made of whatever that place has to hand, as loose pieces
+(`world/world_sign.gd`, letters as strokes in `world/sign_letters.gd`):
+
+| Walk | Material | How it behaves |
+|---|---|---|
+| El Barri | fallen plane leaves | scatter, spin, stay scattered |
+| La Rambla | cut carnations from the stalls | scatter |
+| El Parc | a planted flowerbed | shoved plants spring back |
+| Passeig Maritim | heaped sand in a dug trench | heaps scuff flat under a paw |
+| El Diluvi | puddles | do not move; ring when run through |
+| El Mercat | oranges, lemons, apples | roll a long way |
+| El Bosc | sticks | knocked aside and turned |
+| Les Obres | traffic cones | go over when hit at a run |
+| La Castanyada | chestnuts | roll |
+| La Ferralla | torch-cut rusty plate | heavy; shift and turn a little |
+| El Mosaic | trencadis | set in; stays |
+| La Neteja | soap suds | pop |
+| any walk in snow | her own paw prints | pressed in; stay |
+
+The dog, the human and the rope all move pieces (the rope only brushes);
+nothing pushes back, so gameplay is unchanged. HOME at the start line is
+written the same way, so you come home past whatever you did to the name on
+the way out. The walks without a material (El Gotic's tile plaque, the
+station board, the chalked First Walk and daily) keep their drawn signs.
+
+More writing on the path, sparingly, where a real place would have it: a
+message worth sending is one the place would carry anyway (HOME, an OFF
+LEASH board at the gate), never a tutorial line painted on the pavement.
+
 ## Path shapes (each walk its own)
 
 Santtu: "the shape the path takes should vary a bit more level by level

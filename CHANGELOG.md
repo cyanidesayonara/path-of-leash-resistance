@@ -2,6 +2,28 @@
 
 Append-only session history, newest first.
 
+## 2026-09-29 - Each walk's name is made of the walk, and you can kick it about
+
+The walk's name was one font in a few inks. Now twelve walks spell it out of
+their own stuff, as loose pieces lying at the start (`world/world_sign.gd`,
+stroke letters in `world/sign_letters.gd`): leaves on El Barri, carnations on
+La Rambla, a flowerbed in El Parc, heaped sand on the passeig, puddles in El
+Diluvi, fruit at El Mercat, sticks in El Bosc, traffic cones at Les Obres,
+chestnuts at La Castanyada, rusty plate at La Ferralla, trencadis on El
+Mosaic, soap suds on La Neteja, and paw prints on any walk in snow.
+- The walk starts right on top of it. The dog, the human and the rope shove
+  the pieces: leaves scatter, fruit and chestnuts roll away, cones go over
+  when hit at a run, suds pop, the flowerbed springs back, sand scuffs flat,
+  puddles ring. Bodies kick things aside rather than bulldozing them; the
+  rope only brushes.
+- The pieces stay where they end up, and HOME at the start line is spelled
+  the same way, so you come home past what you did to the name.
+- The line under the name fades as the walk begins; the name stays.
+- Nothing pushes back: the behaviour snapshot is unchanged.
+- Locked walks show the browse arrows too.
+
+`tests/test_world_sign.gd` (16 checks).
+
 ## 2026-09-29 - Every menu screen gets its own card, and one prompt bar
 
 Every screen off the title was a stack of plain labels in one size and

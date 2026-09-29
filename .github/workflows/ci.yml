@@ -123,6 +123,8 @@ jobs:
       - name: Title, wardrobe and settings flow test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_menu_flow.gd
 
+      - name: World sign test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_world_sign.gd
       - name: Status banner test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_status_banner.gd
 

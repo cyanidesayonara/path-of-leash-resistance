@@ -91,8 +91,9 @@ static func apply_menu_step(m: Node2D) -> void:
 	m.panel.visible = m.started
 	m.goals_card.visible = m.started and not m.tutorial_mode
 	m.dim.visible = (not m.started) and (m.in_shop or m.in_progress_view)
-	# the chalked name is part of the world, so the world redraws to add or
-	# drop it
+	# the name is part of the world, so the world redraws to add or drop it,
+	# and its pieces are laid for what this step says
+	m.build_signs()
 	m.queue_redraw()
 
 
@@ -167,6 +168,8 @@ static func details_change(m: Node2D, dir: int) -> void:
 			Game.cycle_weather(dir)
 			m.night_cm.color = m._weather_tint()
 			m.weather_fx.mode = Game.weather
+			# snow writes the name in paw prints
+			m.build_signs()
 	Sfx.play("ui")
 
 
@@ -186,6 +189,8 @@ static func start_walk(m: Node2D) -> void:
 	m.panel.visible = true
 	m.goals_card.visible = not m.tutorial_mode
 	m.dim.visible = false
+	# the name stays on the ground; the line under it is menu text
+	m.create_tween().tween_property(m, "gloss_a", 0.0, 1.2)
 	m.queue_redraw()
 
 
