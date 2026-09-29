@@ -62,7 +62,8 @@ func _run() -> void:
 		sy += 6.0
 	_check(clear, "no label crosses a feed line at any point of its rise")
 	_check(moved > 0, "labels spawned on the feed were moved (%d)" % moved)
-	var far: Vector2 = inv * Vector2(vs.x * 0.5, 40.0)
+	# between the banner pill at the top and the shouts under the dog
+	var far: Vector2 = inv * Vector2(vs.x * 0.5, vs.y * 0.3)
 	_check(main.clear_of_feed(far, size) == far, "a label nowhere near the feed stays where it was put")
 	feed.banner = ""
 	feed.lines = Array([], TYPE_DICTIONARY, &"", null)

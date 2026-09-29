@@ -28,7 +28,9 @@ class FakeMain:
 	func _init() -> void:
 		add_child(cam)
 
-	func float_text(_position: Vector2, _text: String, _color: Color) -> void:
+	const POP_SAY := 0
+
+	func float_text(_position: Vector2, _text: String, _color: Color, _kind := -1) -> void:
 		pass
 
 	func close_call(_position: Vector2) -> void:

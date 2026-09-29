@@ -75,7 +75,7 @@ func _physics_process(delta: float) -> void:
 				target_ref = mark
 				target_pos = mark["pos"]
 				state = S.STALK
-				main.float_text(global_position + Vector2(0, -26), "oh, is that FREE?", Color(1, 0.85, 0.7))
+				main.float_text(global_position + Vector2(0, -26), "oh, is that FREE?", Color(1, 0.85, 0.7), main.POP_SAY)
 		S.STALK:
 			# is it still there? if you picked it up he loses interest
 			if target_ref == null or not _loot_still_there(target_ref):

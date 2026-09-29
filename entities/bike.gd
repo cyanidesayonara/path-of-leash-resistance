@@ -127,7 +127,7 @@ func _physics_process(delta: float) -> void:
 		else:
 			hit_done = true
 			human.bumped((hp - global_position).normalized())
-			main.float_text(global_position, "sorry!", Color(1, 1, 1, 0.9))
+			main.float_text(global_position, "sorry!", Color(1, 1, 1, 0.9), main.POP_SAY)
 	if global_position.distance_to(dog.global_position) < 32.0:
 		dog.hit_by_rider(vel.normalized())
 	var gone_x := global_position.x < -320.0 or global_position.x > 1600.0

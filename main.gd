@@ -62,6 +62,9 @@ const HudBuild := preload("res://hud/hud_build.gd")
 const MenuFlow := preload("res://hud/menu_flow.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const WorldSign := preload("res://world/world_sign.gd")
+const PopsLayer := preload("res://world/pops_layer.gd")
+# float_text(..., POP_SAY) draws a speech bubble rather than a sound or a score
+const POP_SAY := 0
 const POLE_RADIUS := 10.0
 const TREE_RADIUS := 13.0  # a trunk is stouter than a lamppost
 const HYDRANT_RADIUS := 9.0
@@ -1849,7 +1852,7 @@ func _tick_rambla(delta: float) -> void:
 		var r: Rect2 = bl["rect"]
 		if String(bl.get("state", "laid")) == "laid" and r.grow(4.0).has_point(dp) and float(bl["cd"]) <= 0.0:
 			bl["cd"] = 3.0
-			float_text(_seller_pos(r) + Vector2(0, -22), "eh! EH!", Color(1, 0.9, 0.75))
+			float_text(_seller_pos(r) + Vector2(0, -22), "eh! EH!", Color(1, 0.9, 0.75), POP_SAY)
 	# a human statue holds still until she stands and watches, then bows
 	for i in range(statues.size()):
 		statue_bow[i] = maxf(0.0, float(statue_bow.get(i, 0.0)) - delta)
@@ -2031,7 +2034,7 @@ func _tick_crowd(delta: float) -> void:
 
 
 func on_pickpocket_lift(at: Vector2, from_owner: bool) -> void:
-	float_text(at + Vector2(0, -30), "my wallet?!" if not from_owner else "!", Color(1, 0.6, 0.5))
+	float_text(at + Vector2(0, -30), "my wallet?!" if not from_owner else "!", Color(1, 0.6, 0.5), POP_SAY)
 	feed.say("HE'S GOT %s WALLET! STOP HIM" % ("YOUR HUMAN'S" if from_owner else "A"), EventFeed.Tone.BAD)
 
 
@@ -2871,6 +2874,11 @@ func _draw_world_text(at: Vector2, txt: String, px: int, style: String,
 			_hand_text(at, txt, px, Color(0.98, 0.78, 0.28, 0.95), 0.0, key)
 
 
+# the tutorial walks another walk's ground, but it is still the First Walk
+func _walk_name() -> String:
+	return String(Game.LEVEL_NAMES["tutorial" if tutorial_mode else lvl])
+
+
 func _sign_mat() -> String:
 	return WorldSign.material_for(lvl, Game.weather)
 
@@ -2895,7 +2903,7 @@ func build_signs() -> void:
 		signs.append(WorldSign.build("PATH OF", Vector2(mid, START_Y - 232.0), 44.0, mat, 1.0, room))
 		signs.append(WorldSign.build("LEASH RESISTANCE", Vector2(mid, START_Y - 172.0), 44.0, mat, 2.0, room))
 	else:
-		var name := String(Game.LEVEL_NAMES[lvl])
+		var name := _walk_name()
 		var nm := WorldSign.build(name, Vector2(mid, START_Y - 190.0), 44.0, mat, 4.0, room - 120.0)
 		signs.append(nm)
 		if arrows:
@@ -2944,7 +2952,7 @@ func _draw_ground_title() -> void:
 			_draw_world_text(Vector2(mid, START_Y - 176.0), "LEASH RESISTANCE", 52, style, 2.0)
 		_draw_gloss(Vector2(mid, START_Y - 122.0), "you are the dog", mat, style, 3.0)
 		return
-	var name := String(Game.LEVEL_NAMES[lvl]).to_upper()
+	var name := _walk_name().to_upper()
 	var y := START_Y - 190.0
 	if mat == "":
 		_draw_world_text(Vector2(mid, y), name, 46, style, 4.0)
@@ -2954,7 +2962,7 @@ func _draw_ground_title() -> void:
 			_draw_world_text(Vector2(mid + w * 0.5 + 44.0, y), ">", 46, style, 7.0)
 	# The name is Catalan for character; this says what it MEANS, because the
 	# game ships in English and nobody should have to guess what a walk is.
-	var gloss := String(Game.LEVEL_SUBTITLES.get(lvl, ""))
+	var gloss := String(Game.LEVEL_SUBTITLES.get("tutorial" if tutorial_mode else lvl, ""))
 	if gloss != "":
 		_draw_gloss(Vector2(mid, y + 34.0), gloss, mat, style, 8.0)
 
@@ -3374,7 +3382,7 @@ func _update_hud() -> void:
 	hud_status = ""
 	if phase == "freedom":
 		if romp_done:
-			hud_status = "GO BACK DOWN TO HEAD HOME"
+			hud_status = "BACK OUT THROUGH THE GATE, THEN HOME"
 		else:
 			hud_status = "FETCH! BRING IT BACK  %d/%d   %ds" % [romp_catches, romp_target, int(ceil(romp_timer))]
 	elif phase == "home":
@@ -3401,7 +3409,7 @@ func _update_hud() -> void:
 	elif lvl == "scrap":
 		hud_status = "GO SLOW! SLOW IS QUIET"
 	elif pee >= 0.999:
-		hud_status = "FULL!"
+		hud_status = "FULL TANK! GO MARK A SPOT"
 	elif pee <= 0.02:
 		hud_status = "THIRSTY! FIND A FOUNTAIN"
 	# The one-line answer to "what is going on" lives in the feed banner,
@@ -3412,7 +3420,8 @@ func _update_hud() -> void:
 	# Only during a walk: on the title the status would sit over the chalked
 	# name (the scrapyard's "GO SLOW" is set before you have set off).
 	if feed != null:
-		feed.set_banner(hud_status if started else "")
+		# the tutorial teaches one thing at a time: the lesson card is the only instruction
+		feed.set_banner(hud_status if started and not tutorial_mode else "")
 	goals_card.visible = started and not tutorial_mode
 
 
@@ -3876,7 +3885,7 @@ func owner_news(line: String) -> void:
 	if owner_news_cd > 0.0:
 		return
 	owner_news_cd = 3.2
-	feed.say(line, EventFeed.Tone.PLAIN)
+	feed.flash(line)
 
 
 func _apply_leash(delta: float) -> void:
@@ -5537,7 +5546,7 @@ func _hazards(delta: float) -> void:
 		if tw.cd <= 0.0 and (tw.rect as Rect2).has_point(human.global_position):
 			tw.cd = 4.0
 			human.bumped((human.global_position - (tw.rect as Rect2).get_center()).normalized())
-			float_text(human.global_position, "hey! my towel!", Color(1, 0.85, 0.7))
+			float_text(human.global_position, "hey! my towel!", Color(1, 0.85, 0.7), POP_SAY)
 	# Millie LOVES the water. In she goes, paddling happily - and whatever is
 	# on the other end of the leash comes too. The owner wades in reluctantly,
 	# phone held high, and edges back to the bank. Nobody drowns; it is just
@@ -5572,7 +5581,7 @@ func _hazards(delta: float) -> void:
 		human.wading = hum_wet
 		human.pond_bank_x = bank_x
 		if hum_wet and not was_wade:
-			float_text(human.global_position, "no no no-", Color(0.7, 0.85, 1.0))
+			float_text(human.global_position, "no no no-", Color(0.7, 0.85, 1.0), POP_SAY)
 	# open holes are the TOP tier of danger: falling in ends the walk,
 	# full stop. Bumps hurt a little; holes hurt completely.
 	# (auto_walk is a test/attract traversal - it is not allowed to die)
@@ -6079,7 +6088,7 @@ func _enter_freedom() -> void:
 		rv.z_index = 9
 		add_child(rv)
 		rv.setup(self, dog, rb)
-		float_text(rv.position, "...oh no. Brutus.", Color(1, 0.85, 0.75))
+		float_text(rv.position, "...oh no. Brutus.", Color(1, 0.85, 0.75), POP_SAY)
 	feed.say("OFF THE LEASH! GO FETCH", EventFeed.Tone.LOUD)
 
 
@@ -6200,7 +6209,7 @@ func _neighbour_fetch() -> void:
 			add_child(npc_ball)
 			npc_ball.setup(self, dog, pair.npc_owner, freedom_lo, GATE_Y - 30.0)
 			npc_ball_pair = pair
-			float_text(pair.npc_owner.global_position + Vector2(0, -20), "fancy a game?", Color(0.85, 0.95, 1.0))
+			float_text(pair.npc_owner.global_position + Vector2(0, -20), "fancy a game?", Color(0.85, 0.95, 1.0), POP_SAY)
 			return
 
 
@@ -6279,7 +6288,7 @@ func _enter_home() -> void:
 		tf.z_index = 9
 		add_child(tf)
 		tf.setup(self, dog, spots)
-		float_text(spots[0], "Tofu!? she got out again - get her home!", Color(1, 0.85, 0.7))
+		float_text(spots[0], "Tofu!? she got out again - get her home!", Color(1, 0.85, 0.7), POP_SAY)
 	if chase_active:
 		HomeChase.begin(self)
 	else:
@@ -6419,18 +6428,20 @@ func close_call(pos: Vector2) -> void:
 const FLOAT_RISE := 44.0
 
 
-func float_text(pos: Vector2, text: String, color: Color = Color.WHITE) -> void:
-	var l := Label.new()
-	l.text = text
-	l.z_index = 100
-	l.add_theme_font_size_override("font_size", 20)
-	l.add_theme_color_override("font_color", color)
-	add_child(l)
-	l.position = clear_of_feed(pos + Vector2(-40, -56), l.get_minimum_size())
-	var tw := create_tween()
-	tw.tween_property(l, "position:y", l.position.y - FLOAT_RISE, 0.9)
-	tw.parallel().tween_property(l, "modulate:a", 0.0, 0.9)
-	tw.tween_callback(l.queue_free)
+var pops: Node2D
+
+
+# What the world says, at the place it said it: a speech bubble when `kind`
+# is POP_SAY, a score chip when the text ends in +N or -N, otherwise a sound
+# (world/pops_layer.gd).
+func float_text(pos: Vector2, text: String, color: Color = Color.WHITE, kind := -1) -> void:
+	if pops == null:
+		pops = PopsLayer.new()
+		add_child(pops)
+	var k: int = kind if kind >= 0 else PopsLayer.classify(text)
+	var sz := Vector2(font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x + 30.0, 30.0)
+	var at := clear_of_feed(pos + Vector2(-sz.x * 0.5, -40.0), sz) + Vector2(sz.x * 0.5, 30.0)
+	pops.add(at, text, color, k)
 
 
 # A world label at the owner or the dog sits near the middle of the screen,
