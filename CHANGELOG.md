@@ -2,6 +2,26 @@
 
 Append-only session history, newest first.
 
+## 2026-09-29 - El Gotic becomes the old town
+
+El Gotic was El Mercat's layout with walls: eight market stalls in a
+medieval alley. Now its own (`LevelBuild.gotic`):
+- **Alleys that jink** left and right round the old blocks (half 170, eased
+  under the slope limit), cobbled in staggered setts that follow them, and
+  one opening into **the plaça**: a plane tree, benches, a guitarist, and a
+  round stone fountain. The basin is solid; the owner walks round its east
+  side (an island), and the drink is at its rim.
+- **The bridge** between two buildings over the alley, carved stone with
+  pointed windows, on a new **overhead layer** drawn above everyone
+  (`world/overheadlayer.gd`), with its shadow on the setts below.
+- **Steps** across one alley, **scooters** parked against the walls (solid,
+  the rope catches them), **flowerpots** of geraniums at the doors where a
+  street has hydrants, bollards where the alley pinches, cats on the ledges.
+- The laundry and the lanterns follow the alley's walls now, and La Neteja's
+  laundry, which it always defined, is drawn at last.
+
+`tests/test_gotic.gd` (9 checks). The snapshot changes only El Gotic's lines.
+
 ## 2026-09-29 - La Ferralla becomes a scrapyard
 
 La Ferralla was La Rambla's layout with guard dogs, café terrace and hydrant
