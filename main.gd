@@ -6008,6 +6008,17 @@ func _auto_drive(_delta: float) -> void:
 	dog.auto = true
 	# weave so a head-on pole doesn't stall the dumb driver forever
 	var weave := sin(elapsed * 1.6) * 0.6 + clampf((walk_cx - dog.global_position.x) / 300.0, -0.6, 0.6)
+	# the bot has no collision, so round an island (L'Estacio's train, El
+	# Parc's lake) it keeps to the owner's side, as human._walk does: aimed
+	# at the middle it would walk into the train and wind the rope through
+	# the wrap points along its sides
+	var dp := dog.global_position
+	for isl: Dictionary in islands:
+		var ir: Rect2 = isl["rect"]
+		if dp.y > ir.position.y - human.ISLAND_LEAD and dp.y < ir.end.y + human.ISLAND_LEAD:
+			var here := walk_edges(dp.y)
+			var side_x: float = (ir.end.x + here.y) * 0.5 if float(isl["side"]) > 0.0 else (here.x + ir.position.x) * 0.5
+			weave = clampf((side_x - dp.x) / 60.0, -1.0, 1.0)
 	match phase:
 		"out":
 			dog.auto_move = Vector2(weave, -1.0).normalized()

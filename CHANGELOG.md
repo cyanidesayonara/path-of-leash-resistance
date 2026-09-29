@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-09-30 - The autowalk bot keeps to the owner's side of the train
+
+On L'Estacio the bot took 78 s to reach FREEDOM (107 s with the other
+walkers' changes, and then never finished within 12000 frames); other walks
+take 30-40 s. The bot has no collision (`--autowalk` zeroes the dog's and the
+owner's masks so it can glide through clutter), and its weave pulls it to the
+middle of the path, which on L'Estacio is the middle of the train. It walked
+into the train, dragged the owner in after it, and the rope - which still
+collides - wound through the wrap points down the train's sides, one whirl
+after another, for the length of the platform.
+- The bot now keeps to the owner's side of any island (the train, El Parc's
+  lake, El Gotic's plaça), the same rule `human._walk` follows.
+- L'Estacio: FREEDOM at t=29.5 (was 78.3); on top of the other walkers'
+  change, t=31.3 (was 107.5, unfinished). El Parc 33.8 -> 34.3, El Gotic
+  29.4 -> 26.7. No other walk has an island, so nothing else changes.
+- A real player's owner does not get caught: with collision left on, the bot
+  reaches FREEDOM at t=29.8 down the east platform and t=28.9 down the west
+  one (the rope round the train's south end), with no whirls. The level is
+  left as it is.
 ## 2026-09-30 - Every kind of message gets its own place and look
 
 In a walk everything was said the same way: outlined capitals in the middle
@@ -27,6 +46,7 @@ Now each kind has a place:
   its ground sign says FIRST WALK.
 - Two banner lines rewritten: "FULL!" is "FULL TANK! GO MARK A SPOT", and
   "GO BACK DOWN TO HEAD HOME" is "BACK OUT THROUGH THE GATE, THEN HOME".
+
 
 ## 2026-09-29 - Each walk's name is made of the walk, and you can kick it about
 
