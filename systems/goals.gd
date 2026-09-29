@@ -25,7 +25,8 @@ const LEVEL_GOAL_IDS := {
 	"market": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "zoom", "carry", "combo", "prize"],
 	"oldtown": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "cats", "snack", "combo", "prize"],
 	"trail": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "chase", "drink", "combo", "prize"],
-	"station": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "snack", "combo", "prize"],
+	# L'Estacio: ride the walkway, squeeze through the barriers
+	"station": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "walkway", "snack", "combo", "prize"],
 	"site": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "snack", "combo", "prize"],
 	"spook": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "tummy", "snack", "combo", "prize"],
 	"scrap": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "ghost", "unseen", "combo", "prize"],
@@ -67,6 +68,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"ghost": {"text": "cross the yard, wake nobody", "target": 1, "fn": func() -> int: return 1 if m.guards_woken == 0 else 0},
 		"outrun": {"text": "never let the sweeper within a leash length", "target": 1, "fn": func() -> int: return 1 if m.chase_min_gap >= HomeChase.OUTRUN_GAP else 0},
 		"unseen": {"text": "never once be spotted", "target": 1, "fn": func() -> int: return 1 if m.times_spotted == 0 else 0},
+		"walkway": {"text": "ride the moving walkway end to end", "target": 1, "fn": func() -> int: return m.walkway_rides},
 		"dry": {"text": "bring your human home less than half soaked", "target": 1, "fn": func() -> int: return 1 if m.human_soak < 0.5 else 0},
 		"splash": {"text": "splash through %d puddles at speed", "target": 4, "fn": func() -> int: return m.splashes},
 		"thief": {"text": "stop %d pickpockets", "target": 2, "fn": func() -> int: return m.thieves_stopped},

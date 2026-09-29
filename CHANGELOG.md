@@ -2,6 +2,32 @@
 
 Append-only session history, newest first.
 
+## 2026-09-29 - L'Estacio becomes a station
+
+L'Estacio was La Rambla's layout indoors, café terrace, bike crossings and
+drains included. Now its own (`LevelBuild.estacio`), and a path with a shape:
+in off the street through the doors, out into a concourse twice as wide,
+through the ticket barriers, and down the platforms either side of a train.
+- **The concourse**: big polished tiles, the departures board hung over the
+  way in, two rows of fat pillars (they wrap the rope), bench rows, rows of
+  nested luggage trolleys, a busker, potted palms where a street has
+  hydrants, and the moving walkway up the middle.
+- **The ticket barriers**: a line of cabinets across the concourse, solid
+  except at three gaps. The owner lines up for the middle one; the dog can
+  take either side, and the rope goes where she went.
+- **The train** stands between two platforms (path shapes, stage 2: an
+  island). It is solid, the rope wraps it, and the owner keeps to the east
+  platform. Yellow lines along both edges.
+- New goal: "ride the moving walkway end to end", in place of the traffic
+  near-misses there is no traffic for.
+- The owner lines up for a narrow (the plank, the gate) only on the way up to
+  it and across it; once past, the path is theirs again, which is what lets
+  them round the train's end straight after the gate.
+
+`tests/test_estacio.gd` (10 checks); `test_obres` checks the plank on the
+approach and across. The snapshot changes L'Estacio's lines, and Les Obres'
+autowalk times with the narrow change.
+
 ## 2026-09-29 - El Diluvi becomes a rainy shopping street
 
 El Diluvi was La Rambla's layout, wet, café terrace and lawn included. Now its
