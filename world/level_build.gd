@@ -26,7 +26,7 @@ const CROSS_SECTIONS := {
 	"rain": ["none", 0.0, "none", 0.0],             # a shopping street, shopfronts on the paving
 	"market": ["sidewalk", 70.0, "sidewalk", 70.0],
 	"oldtown": ["none", 0.0, "none", 0.0],            # an alley: walls at the paving
-	"station": ["sidewalk", 100.0, "sidewalk", 100.0],
+	"station": ["none", 0.0, "none", 0.0],          # indoors: the walls are the concourse's
 	"site": ["sidewalk", 60.0, "sidewalk", 60.0],
 	"spook": ["sidewalk", 80.0, "sidewalk", 80.0],
 	"scrap": ["grass", 70.0, "grass", 70.0],          # weeds up to the chain-link
@@ -40,6 +40,61 @@ static func tutorial_pond(m: Node2D) -> Rect2:
 	var y: float = TUT.at("teeter")
 	var e: Vector2 = m.walk_edges(y)
 	return Rect2(e.y + 20.0, y - 90.0, TUT_POND_W, 150.0)
+
+
+# L'ESTACIO, in level space (its posts are not fitted to the path)
+const ESTACIO_PILLAR_XS: Array[float] = [400.0, 880.0]
+const ESTACIO_PILLAR_YS: Array[float] = [-1150.0, -1500.0, -1850.0, -2200.0, -2550.0]
+const ESTACIO_WALKWAY := Rect2(550.0, -2750.0, 180.0, 1500.0)
+const ESTACIO_BARRIER_Y := -3000.0
+# gaps in the barrier line: the owner's in the middle, one either side
+const ESTACIO_GAPS: Array[float] = [400.0, 640.0, 880.0]
+const ESTACIO_GAP_W := 72.0
+const ESTACIO_TRAIN := Rect2(560.0, -4700.0, 160.0, 1450.0)
+const ESTACIO_BOARD := Vector2(640.0, -1020.0)
+
+
+static func estacio(m: Node2D) -> void:
+	# L'ESTACIO: inside a station. The departures board over the concourse,
+	# fat pillars, bench rows, the moving walkway up the middle, rows of
+	# nested trolleys, the ticket barriers, and the train standing between two
+	# platforms. No terrace, no crossings, no drains, no lawn: it is indoors.
+	m.gate_text = "PLATFORM"
+	m.lane_ys = Array([], TYPE_FLOAT, &"", null)
+	m.tables.clear()
+	m.chairs.clear()
+	m.parasols.clear()
+	m.cellars.clear()
+	m.manholes = Array([], TYPE_VECTOR2, &"", null)
+	m.astands = Array([], TYPE_VECTOR2, &"", null)
+	m.cone_spots = Array([], TYPE_VECTOR2, &"", null)
+	m.poles.clear()
+	for y: float in ESTACIO_PILLAR_YS:
+		for x: float in ESTACIO_PILLAR_XS:
+			m.poles.append(Vector2(x, y))
+	# the barrier line: cabinets close enough together that only the gaps pass
+	var be: Vector2 = m.walk_edges(ESTACIO_BARRIER_Y)
+	var bx := be.x + 14.0
+	while bx < be.y - 10.0:
+		var in_gap := false
+		for g: float in ESTACIO_GAPS:
+			in_gap = in_gap or absf(bx - g) < ESTACIO_GAP_W * 0.5
+		if not in_gap:
+			m.poles.append(Vector2(bx, ESTACIO_BARRIER_Y))
+		bx += 34.0
+	m.deco_pole_count = m.poles.size()
+	m.conveyor_zone = ESTACIO_WALKWAY
+	m.conveyor_dir = Vector2(0, -1)
+	m.benches = Array([Vector2(336, -1700), Vector2(944, -1700), Vector2(336, -2400), Vector2(944, -2400)], TYPE_VECTOR2, &"", null)
+	m.bins = Array([Vector2(m.sw_l + 30, -800), Vector2(m.sw_r - 30, -2000), Vector2(m.sw_l + 30, -4000)], TYPE_VECTOR2, &"", null)
+	# rows of nested trolleys, where a street has parked vans
+	m.vans = Array([Vector2(360, -1320), Vector2(920, -2750)], TYPE_VECTOR2, &"", null)
+	m.performers = Array([Vector2(880, -1150)], TYPE_VECTOR2, &"", null)   # a busker by the pillars
+	m.fountains = Array([Vector2(930, -3300)], TYPE_VECTOR2, &"", null)
+	# the owner goes through the middle gate, and keeps to the east platform
+	m.narrows = Array([{"y0": ESTACIO_BARRIER_Y - 12.0, "y1": ESTACIO_BARRIER_Y + 12.0,
+		"x0": ESTACIO_GAPS[1] - ESTACIO_GAP_W * 0.5 + 16.0, "x1": ESTACIO_GAPS[1] + ESTACIO_GAP_W * 0.5 - 16.0}], TYPE_DICTIONARY, &"", null)
+	m.islands = Array([{"rect": ESTACIO_TRAIN, "side": 1.0}], TYPE_DICTIONARY, &"", null)
 
 
 # EL DILUVI. The arcade down the west side: a covered walk behind a row of
@@ -425,6 +480,18 @@ static func apply_corridor(m: Node2D) -> void:
 			{"y": -4600.0, "cx": 700.0, "half": 300.0},
 			{"y": m.GATE_Y, "cx": 640.0, "half": 300.0},
 		]
+	elif m.lvl == "station":
+		# L'ESTACIO: in off the street through the doors, out into the wide
+		# concourse, through the ticket barriers, and down the platforms
+		# either side of the train
+		m.edge_nodes = [
+			{"y": m.START_Y, "cx": 640.0, "half": 220.0},
+			{"y": -650.0, "cx": 640.0, "half": 220.0},
+			{"y": -950.0, "cx": 640.0, "half": 420.0},
+			{"y": -2900.0, "cx": 640.0, "half": 420.0},
+			{"y": -3150.0, "cx": 640.0, "half": 380.0},
+			{"y": m.GATE_Y, "cx": 640.0, "half": 380.0},
+		]
 	elif m.lvl == "site":
 		# LES OBRES: the footway diverted round the works, a chicane that
 		# swings one way past the first pour and back past the second
@@ -504,8 +571,11 @@ static func fit_props_to_corridor(m: Node2D) -> void:
 	for arr in [m.poles, m.tables, m.chairs, m.parasols, m.astands, m.vans, m.stalls, m.bins,
 			m.benches, m.performers, m.cone_spots, m.manholes, m.wallcat_spots,
 			m.guard_posts, m.candy_spots, m.fountains, m.statues]:
-		# Les Obres sets its cones round its pours, in level space already
+		# Les Obres sets its cones round its pours, and L'Estacio its pillars
+		# and barriers, in level space already
 		if m.lvl == "site" and arr == m.cone_spots:
+			continue
+		if m.lvl == "station" and arr == m.poles:
 			continue
 		for i in range(arr.size()):
 			var p: Vector2 = arr[i]
@@ -532,7 +602,7 @@ static func build_level_data(m: Node2D) -> void:
 	# geometry is a later pass) and re-theme it below: El Aguacero on the
 	# boulevard, El Gotic on the stall-lined market channel.
 	var geo = m.lvl
-	if m.lvl == "station" or m.lvl == "scrap":
+	if m.lvl == "scrap":
 		geo = "street"
 	elif m.lvl == "oldtown" or m.lvl == "spook" or m.lvl == "neteja":
 		geo = "market"
@@ -656,6 +726,14 @@ static func build_level_data(m: Node2D) -> void:
 			]
 			# someone's bocadillo, dropped in its foil
 			keb_list = [Vector2(620, -1900), Vector2(700, -4200)]
+		"station":
+			# planters where a street has hydrants: the station's potted palms
+			hyd_list = [
+				Vector2(m.sw_l + 40, -400), Vector2(m.sw_r - 40, -1300),
+				Vector2(m.sw_l + 40, -2100), Vector2(m.sw_r - 40, -2600),
+				Vector2(m.sw_l + 40, -4500),
+			]
+			keb_list = [Vector2(460, -1650), Vector2(820, -3900)]
 		"rain":
 			hyd_list = [
 				Vector2(m.sw_l + 110, -500), Vector2(m.sw_r - 40, -1300),
@@ -893,14 +971,7 @@ static func build_level_data(m: Node2D) -> void:
 			Vector2(980.0, TRAIL_STREAM_Y - TRAIL_BRIDGE_HALF - 34.0),
 		], TYPE_VECTOR2, &"", null)
 	elif m.lvl == "station":
-		# L'Estacio: a concourse with a moving walkway. On it you get carried
-		# toward the platforms (north) - a boost on the way out, a shove to
-		# fight on the way home. Luggage carts clutter the floor.
-		m.gate_text = "PLATFORM"
-		m.conveyor_zone = Rect2(m.walk_cx - 90.0, -3400.0, 180.0, 1500.0)
-		m.conveyor_dir = Vector2(0, -1)
-		m.vans = Array([Vector2(380, -1500), Vector2(900, -2600), Vector2(400, -4200)], TYPE_VECTOR2, &"", null)
-		m.fountains = Array([Vector2(1005, -3550)], TYPE_VECTOR2, &"", null)
+		estacio(m)
 	elif m.lvl == "spook":
 		# La Castanyada: the autumn festival at night. Sweets everywhere -
 		# and here's the cruelty: chocolate is poison to dogs, so the one
@@ -1147,6 +1218,18 @@ static func build_level_data(m: Node2D) -> void:
 	if m.furgoneta.x < INF:
 		for off: float in [-52.0, -26.0, 0.0, 26.0, 52.0]:
 			m.poles.append(m.furgoneta + Vector2(0.0, off))
+	if m.lvl == "station":
+		# the train is the biggest thing on the walk: the rope wraps its ends
+		# and sides
+		var tr := ESTACIO_TRAIN
+		var ty := tr.position.y
+		while ty <= tr.end.y:
+			m.poles.append(Vector2(tr.position.x - 4.0, ty))
+			m.poles.append(Vector2(tr.end.x + 4.0, ty))
+			ty += 40.0
+		for tx: float in [tr.position.x + 40.0, tr.get_center().x, tr.end.x - 40.0]:
+			m.poles.append(Vector2(tx, tr.position.y - 4.0))
+			m.poles.append(Vector2(tx, tr.end.y + 4.0))
 	if m.lvl == "park":
 		m.rails.clear()
 		for bed: Rect2 in PARK_BEDS:
@@ -1211,7 +1294,7 @@ static func build_level_data(m: Node2D) -> void:
 			m.prize_pos = Vector2(300.0, -3400.0)  # a pinecone off in the muddy brush
 			m.prize_text = "dig the pinecone out of the mud"
 		"station":
-			m.prize_pos = Vector2(640.0, -2650.0)  # a dropped sandwich mid-walkway
+			m.prize_pos = ESTACIO_WALKWAY.get_center() + Vector2(0.0, -300.0)  # a dropped sandwich mid-walkway
 			m.prize_text = "grab the sandwich off the moving walkway"
 		"site":
 			m.prize_pos = OBRES_SLABS[1].get_center() if OBRES_SLABS.size() > 1 else Vector2(640.0, -3130.0)  # a trowel dropped in the wet cement
@@ -1721,6 +1804,8 @@ static func build_walls(m: Node2D) -> void:
 				wood.add_child(cs)
 			wy = wy2
 		m.add_child(wood)
+	if m.lvl == "station":
+		add_rect_body(m, ESTACIO_TRAIN.get_center(), ESTACIO_TRAIN.size)
 	if m.lvl == "park":
 		add_rect_body(m, PARK_MAMMOTH, MAMMOTH_BODY)
 		for bp: Vector2 in bandstand_posts():

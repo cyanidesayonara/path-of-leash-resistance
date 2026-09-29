@@ -62,7 +62,8 @@ func _run() -> void:
 	var nw: Dictionary = m.narrows[0]
 	var human: CharacterBody2D = m.human
 	var on_plank := true
-	for y in [LevelBuild.OBRES_TRENCH_Y - 20.0, ty, LevelBuild.OBRES_TRENCH_Y + LevelBuild.OBRES_TRENCH_H + 20.0]:
+	# across the trench and on the approach to it (once past, the path is theirs)
+	for y in [LevelBuild.OBRES_TRENCH_Y + 4.0, ty, LevelBuild.OBRES_TRENCH_Y + LevelBuild.OBRES_TRENCH_H + 20.0]:
 		human.global_position = Vector2(pc, y)
 		human.velocity = Vector2.ZERO
 		for f in range(900):

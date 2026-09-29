@@ -139,6 +139,9 @@ var narrows: Array[Dictionary] = []
 # where it is dry (El Diluvi's arcade and awnings), and how wet the owner is
 var shelters: Array[Rect2] = []
 var human_soak := 0.0          # 0 dry, 1 wet through
+# L'Estacio: where she got on the walkway (INF off it), and full rides
+var walkway_from := INF
+var walkway_rides := 0
 var splashes := 0
 var splash_cd := 0.0
 # out in it, the owner soaks through in SOAK_T seconds; under cover, dries in DRY_T
@@ -1458,6 +1461,18 @@ func _draw_fallen_log(r: Rect2) -> void:
 	b.flush(_wc)
 
 
+# A row of luggage trolleys nested into each other, the length of a van.
+func _draw_trolleys(v: Vector2) -> void:
+	var b := ShapeBatch.new()
+	b.rect(Rect2(v.x - 26.0 + 8.0, v.y - 64.0 + 10.0, 52.0, 128.0), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+	for k in range(6):
+		var ty := v.y - 64.0 + float(k) * 21.0
+		b.rect(Rect2(v.x - 24.0, ty, 48.0, 30.0), Color(0.62, 0.64, 0.68))
+		b.rect(Rect2(v.x - 20.0, ty + 4.0, 40.0, 22.0), Color(0.40, 0.42, 0.46))
+		b.line(Vector2(v.x - 26.0, ty), Vector2(v.x + 26.0, ty), Color(0.80, 0.20, 0.20), 3.0)
+	b.flush(_wc)
+
+
 # The parked digger: tracks, the cab, the counterweight, and the arm folded
 # forward with the bucket resting on the paving. Same footprint as a van.
 func _draw_digger(v: Vector2) -> void:
@@ -1570,6 +1585,61 @@ func _tick_wet(delta: float) -> void:
 				if human.global_position.distance_to(dog.global_position) < 70.0:
 					human_soak = minf(1.0, human_soak + 0.06)
 				break
+
+
+# L'ESTACIO: the concourse floor's big tiles, the departures board, the
+# barrier cabinets, the platform edges and the train standing between them.
+func _draw_estacio(vt: float, vb: float) -> void:
+	var b := ShapeBatch.new()
+	# big polished tiles, ruled inside the path wherever it is
+	var ty := floorf((vt - 60.0) / 132.0) * 132.0
+	while ty < vb + 60.0:
+		var e := walk_edges(ty)
+		b.line(Vector2(e.x, ty), Vector2(e.y, ty), Color(0, 0, 0, 0.07), 2.0)
+		var tx := floorf(e.x / 132.0) * 132.0 + 132.0
+		while tx < e.y:
+			b.line(Vector2(tx, ty), Vector2(tx, ty + 132.0), Color(0, 0, 0, 0.07), 2.0)
+			tx += 132.0
+		ty += 132.0
+	# the departures board, hung over the way in
+	var bd: Vector2 = LevelBuild.ESTACIO_BOARD
+	if bd.y > vt - 80.0 and bd.y < vb + 80.0:
+		b.rect(Rect2(bd.x - 150.0 + 10.0, bd.y - 34.0 + 16.0, 300.0, 68.0), Color(0, 0, 0, 0.18))
+		b.rect(Rect2(bd.x - 150.0, bd.y - 34.0, 300.0, 68.0), Color(0.10, 0.10, 0.12))
+		for row in range(4):
+			var ry := bd.y - 24.0 + float(row) * 14.0
+			b.rect(Rect2(bd.x - 138.0, ry, 60.0, 7.0), Color(0.98, 0.80, 0.20))
+			b.rect(Rect2(bd.x - 70.0, ry, 150.0, 7.0), Color(0.96, 0.92, 0.80))
+			b.rect(Rect2(bd.x + 96.0, ry, 30.0, 7.0), Color(0.98, 0.80, 0.20) if row != 1 else Color(0.95, 0.35, 0.30))
+	# the ticket barriers: grey cabinets, and the glass paddles in each gap
+	var by: float = LevelBuild.ESTACIO_BARRIER_Y
+	if by > vt - 60.0 and by < vb + 60.0:
+		for i in range(deco_pole_count):
+			var p := poles[i]
+			if absf(p.y - by) < 1.0:
+				b.rect(Rect2(p.x - 12.0, p.y - 18.0, 24.0, 36.0), Color(0.46, 0.48, 0.52))
+				b.rect(Rect2(p.x - 12.0, p.y - 18.0, 24.0, 6.0), Color(0.62, 0.64, 0.68))
+				b.circle(p + Vector2(0, 4), 3.0, Color(0.30, 0.85, 0.40))
+		for g: float in LevelBuild.ESTACIO_GAPS:
+			b.rect(Rect2(g - 30.0, by - 2.0, 22.0, 4.0), Color(0.75, 0.85, 0.95, 0.6))
+			b.rect(Rect2(g + 8.0, by - 2.0, 22.0, 4.0), Color(0.75, 0.85, 0.95, 0.6))
+	# the train, and the yellow lines along both platform edges
+	var tr: Rect2 = LevelBuild.ESTACIO_TRAIN
+	if tr.end.y > vt - 40.0 and tr.position.y < vb + 40.0:
+		for ex: float in [tr.position.x - 22.0, tr.end.x + 14.0]:
+			b.rect(Rect2(ex, maxf(tr.position.y - 30.0, vt - 40.0), 8.0, minf(tr.end.y + 30.0, vb + 40.0) - maxf(tr.position.y - 30.0, vt - 40.0)), Color(0.95, 0.80, 0.20))
+		b.rect(Rect2(tr.position + Vector2(10, 14), tr.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+		var cy := tr.position.y
+		while cy < tr.end.y - 10.0:
+			var car := Rect2(tr.position.x, cy, tr.size.x, minf(230.0, tr.end.y - cy))
+			b.rect(car, Color(0.80, 0.82, 0.84))
+			b.rect(Rect2(car.position.x, car.position.y, 10.0, car.size.y), Color(0.86, 0.87, 0.89))
+			b.rect(Rect2(car.end.x - 22.0, car.position.y, 12.0, car.size.y), Color(0.72, 0.16, 0.18))
+			for vk in range(3):
+				b.rect(Rect2(car.get_center().x - 22.0, car.position.y + 34.0 + float(vk) * 64.0, 44.0, 18.0), Color(0.64, 0.66, 0.70))
+			cy += 240.0
+		b.circle(Vector2(tr.get_center().x, tr.position.y + 6.0), 10.0, Color(0.95, 0.95, 0.80))   # the headlamp
+	b.flush(_wc)
 
 
 # EL DILUVI: the arcade (a roof behind its pillars, arches between), the
@@ -3254,6 +3324,16 @@ func _physics_process(delta: float) -> void:
 		var carry := conveyor_dir * CONV_SPEED
 		if conveyor_zone.has_point(dog.global_position):
 			dog.velocity += carry * delta
+			# a ride counts from getting on near one end to off at the other
+			if walkway_from == INF:
+				walkway_from = dog.global_position.y
+			elif walkway_from > conveyor_zone.end.y - 120.0 and dog.global_position.y < conveyor_zone.position.y + 40.0:
+				walkway_rides += 1
+				walkway_from = -INF
+				combo.add("WALKWAY", 4)
+				float_text(dog.global_position + Vector2(0, -26), "ALL THE WAY!", Color(0.8, 0.95, 1.0))
+		else:
+			walkway_from = INF
 		if conveyor_zone.has_point(human.global_position):
 			human.velocity += carry * delta
 	if auto_walk:
@@ -6511,6 +6591,8 @@ func _draw_world() -> void:
 		_draw_barri(vt, vb)
 	if lvl == "rain":
 		_draw_diluvi(vt, vb)
+	if lvl == "station":
+		_draw_estacio(vt, vb)
 	if tutorial_mode:
 		_draw_tutorial_pond()
 	if rambla():
@@ -6575,6 +6657,17 @@ func _draw_world() -> void:
 			continue
 		if lvl == "trail":
 			_draw_waymarker(_wc, h)
+			continue
+		if lvl == "station":
+			# a planter with a potted palm, the station's stand-in for a hydrant
+			contact_shadow(_wc, hp, 13.0, 5.0, 0.2)
+			_wc.draw_circle(hp, 12.0, Color(0.36, 0.32, 0.30) if not h.done else Color(0.30, 0.28, 0.27))
+			_wc.draw_circle(hp, 9.0, Color(0.30, 0.24, 0.18))
+			for k in range(5):
+				var fa := TAU * float(k) / 5.0 + 0.4
+				_wc.draw_line(hp, hp + Vector2.from_angle(fa) * 16.0, Color(0.26, 0.48, 0.26), 4.0)
+			if not h.done and h.progress > 0.0:
+				_wc.draw_arc(hp, 17.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
 			continue
 		if String(h.get("kind", "")) == "mammoth":
 			if not h.done and h.progress > 0.0:
@@ -6694,6 +6787,13 @@ func _draw_world() -> void:
 			continue
 		if tutorial_mode:
 			_draw_lamppost(p)       # the lesson posts are lampposts, as the cards say
+		elif lvl == "station":
+			if absf(p.y - LevelBuild.ESTACIO_BARRIER_Y) < 1.0:
+				continue      # a barrier cabinet, drawn with the barriers
+			cast_shadow(_wc, p, 18.0, 36.0, 0.2)
+			_wc.draw_rect(Rect2(p.x - 17.0, p.y - 17.0, 34.0, 34.0), Color(0.70, 0.70, 0.72))
+			_wc.draw_rect(Rect2(p.x - 17.0, p.y - 17.0, 10.0, 34.0), Color(0.80, 0.80, 0.82))
+			_wc.draw_rect(Rect2(p.x - 17.0, p.y - 17.0, 34.0, 34.0), Color(0.52, 0.52, 0.55), false, 2.0)
 		elif lvl == "rain" and p.x < walk_cx:
 			# the arcade's pillars: square stone, lit on one face
 			cast_shadow(_wc, p, 12.0, 30.0, 0.2)
@@ -6816,6 +6916,9 @@ func _draw_world() -> void:
 			continue
 		if lvl == "site":
 			_draw_digger(v)
+			continue
+		if lvl == "station":
+			_draw_trolleys(v)
 			continue
 		var body := Rect2(v.x - 32.0, v.y - 66.0, 64.0, 132.0)
 		# it sits high, so the shadow is offset a long way and shaped like it

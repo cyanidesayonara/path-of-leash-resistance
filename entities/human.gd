@@ -311,8 +311,12 @@ func _walk(delta: float) -> void:
 			half = maxf((hi - lo) * 0.5 + 60.0, 70.0)
 	# where the path narrows to a single line (a plank over a trench) the
 	# owner lines up for it early and keeps to it
+	# (only on the way up to it and across it: once past, the path is theirs
+	# again, or a narrow just before an island would steer them into it)
 	for nw: Dictionary in main.narrows:
-		if global_position.y > float(nw["y0"]) - NARROW_LEAD and global_position.y < float(nw["y1"]) + NARROW_LEAD:
+		var lo_y: float = float(nw["y0"]) - (NARROW_LEAD if homeward else 0.0)
+		var hi_y: float = float(nw["y1"]) + (0.0 if homeward else NARROW_LEAD)
+		if global_position.y > lo_y and global_position.y < hi_y:
 			cx = (float(nw["x0"]) + float(nw["x1"])) * 0.5
 			half = (float(nw["x1"]) - float(nw["x0"])) * 0.5 + 60.0
 			if state == HState.DASH:
