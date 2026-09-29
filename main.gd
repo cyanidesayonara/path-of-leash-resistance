@@ -485,24 +485,16 @@ var results: Dictionary = {}
 var weather_fx: Control
 var menu_step := 0
 var hud_status := ""
-var title_l: Label
-var sub_l: Label
-var prompt_l: Label
-var select_l: Label
-var owner_l: Label
-var night_l: Label
-var weather_l: Label
-var hint_l: Label
-var record_l: Label
-var shop_title_l: Label
-var shop_l: Label
-var shop_preview_bg: ColorRect
-var shop_preview_l: Label
+# every menu screen (hud/menu_screen.gd) and where the cursor is on the ones
+# with rows; locked_nudge shakes whatever refused a press
+var menu_screen: Control
+var details_idx := 0
+var pause_idx := 0
+var locked_nudge := 0.0
 var shop_preview: CharacterBody2D
 var in_shop := false
 var shop_items: Array[Dictionary] = []
 var shop_idx := 0
-var prompt_tw: Tween
 var msg_label: Label
 var combo: Node
 # the dog's mood: arrives from events, fades on its own, re-colours both the
@@ -523,7 +515,6 @@ var challenge_giver: Node2D
 var challenge_offered := false
 var dog_carrying := false
 var paused := false
-var pause_l: Label
 var grade_rect: ColorRect
 var _shot_done := false
 var _shot_frames := 0
@@ -553,8 +544,6 @@ var prof_us := {}
 # perturbs the global seed the deterministic autowalk depends on.
 var ground_detail: Array[Dictionary] = []
 var in_progress_view := false
-var progress_l: Label
-var menu_hint_l: Label
 var in_settings := false
 var settings_idx := 0
 var settings_panel: Control
@@ -671,6 +660,10 @@ func _ready() -> void:
 			add_child(probe)
 	menu_step = Game.menu_step
 	_apply_menu_step()
+	# "try again" and "start again" come straight back into the walk
+	if Game.quick_start:
+		Game.quick_start = false
+		MenuFlow.start_walk(self)
 	# --at-freedom drops her straight into the off-leash space. Walking there
 	# takes half a minute of real time per look, which is no way to iterate on
 	# how the dog beach or the clearing is drawn.
@@ -700,8 +693,6 @@ func _input(event: InputEvent) -> void:
 	# (the pause menu, a death card) is re-filled, and the title's is rebuilt
 	if Prompts.note(event):
 		Prompts.refresh()
-		if not started:
-			MenuFlow.refresh_menu_text(self)
 
 
 func _setup_input() -> void:
@@ -3214,9 +3205,6 @@ func on_junk_kicked(pos: Vector2, kind: String) -> void:
 func _build_hud() -> void:
 	# every card, label and bar, in draw order: hud/hud_build.gd
 	HudBuild.build(self)
-	# connected here rather than in the builder: a lambda created in a static
-	# function would never be disconnected when the scene reloads
-	Input.joy_connection_changed.connect(func(_d: int, _c: bool) -> void: _refresh_menu_text())
 
 
 func _weather_tint() -> Color:
@@ -3228,10 +3216,6 @@ func _weather_tint() -> Color:
 	elif Game.weather == "snow":
 		c = c * Color(0.9, 0.94, 1.02)  # cold, bright, blue-white
 	return c
-
-
-func _owner_label_text(owner_id: String) -> String:
-	return MenuFlow.owner_label_text(self, owner_id)
 
 
 func _apply_menu_step() -> void:
@@ -3256,10 +3240,6 @@ func _shop_select() -> void:
 
 func _refresh_shop() -> void:
 	MenuFlow.refresh_shop(self)
-
-
-func _refresh_menu_text() -> void:
-	MenuFlow.refresh_menu_text(self)
 
 
 # --- settings ----------------------------------------------------------
@@ -3312,8 +3292,8 @@ func _tick_settings() -> void:
 	MenuFlow.tick_settings(self)
 
 
-func _progress_text() -> String:
-	return MenuFlow.progress_text(self)
+func _progress_rows() -> Array:
+	return MenuFlow.progress_rows(self)
 
 
 func _update_hud() -> void:
@@ -3577,14 +3557,32 @@ func _prof(tag: String) -> void:
 	_prof_t = now
 
 
+# The menu screens by name, for screenshots: each is left as pressing
+# through the title would leave it.
+func _shot_menu(which: String) -> void:
+	match which:
+		"walk", "details", "shop", "progress":
+			menu_step = 2 if which == "details" else 1
+			Game.menu_step = menu_step
+			_apply_menu_step()
+			if which == "shop":
+				MenuFlow.open_shop(self)
+			elif which == "progress":
+				MenuFlow.open_progress(self)
+		"pause":
+			_skip_title()
+			MenuFlow.open_pause(self)
+		"notice":
+			_skip_title()
+			_death("OFF THE EDGE\n\nShe went over, and the human went with her.")
+
+
 # Straight into the walk, as if SPACE had been pressed on the title. For the
 # capture and soak modes, which exist to get past the menu.
 func _skip_title() -> void:
 	started = true
 	frozen = false
 	_apply_menu_step()
-	for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, weather_l, record_l]:
-		l.visible = false
 
 
 func _tick_soak() -> void:
@@ -3658,9 +3656,6 @@ func _process(_delta: float) -> void:
 				results_card.visible = true
 				goals_card.visible = false
 				panel.visible = false
-				for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l,
-						weather_l, record_l, hint_l, menu_hint_l]:
-					l.visible = false
 				return
 			if "--shot-settings" in OS.get_cmdline_user_args():
 				_open_settings_from_menu()
@@ -3670,6 +3665,11 @@ func _process(_delta: float) -> void:
 			# reviewed. Everything else about --shot exists to get PAST this.
 			if "--shot-title" in OS.get_cmdline_user_args():
 				return
+			# --shot-menu=walk|details|shop|progress|pause|notice opens that screen
+			for a in OS.get_cmdline_user_args():
+				if a.begins_with("--shot-menu="):
+					_shot_menu(a.substr(12))
+					return
 			_skip_title()
 			# --shot-y=N starts the pair at that point down the walk, so one
 			# stretch of a level can be photographed without walking there
@@ -3718,128 +3718,30 @@ func _process(_delta: float) -> void:
 		goals_peek = 0.0
 	if Input.is_action_just_pressed("mute_music"):
 		Sfx.toggle_music()
-	if Input.is_action_just_pressed("restart"):
-		get_tree().reload_current_scene()
+	if started and paused:
+		MenuFlow.tick_pause(self)
 		return
-	# pause: only while actively walking (not on the title, a death, or the
-	# results). Resume with the pause key or plant; bark quits to the menu.
-	if started and not in_shop:
-		if paused:
-			if Input.is_action_just_pressed("pause") or Input.is_action_just_pressed("plant"):
-				paused = false
-				frozen = false
-				pause_l.visible = false
-				dim.visible = false
-			elif Input.is_action_just_pressed("pee"):
-				pause_l.visible = false
-				_open_settings()
-			elif Input.is_action_just_pressed("bark"):
-				Game.menu_step = 1
-				get_tree().reload_current_scene()
+	if started and frozen:
+		# a result, a game-over or the daily card: the walk has stopped
+		if finished and Game.daily and not daily_copied and daily_share != "" and Input.is_action_just_pressed("share"):
+			DisplayServer.clipboard_set(daily_share)
+			daily_copied = true
+			msg_label.text += "\nCopied. Paste it anywhere."
 			return
-		elif not frozen and Input.is_action_just_pressed("pause"):
-			paused = true
-			frozen = true
-			Prompts.set_text(pause_l, "PAUSED\n\n{plant}  resume     {restart}  restart     {bark}  menu\n\n{pee}  settings     {mute_music}  toggle music")
-			pause_l.visible = true
-			dim.visible = true
+		if MenuFlow.tick_end(self):
 			return
-	if finished and Game.daily and not daily_copied and daily_share != "" and Input.is_action_just_pressed("share"):
-		DisplayServer.clipboard_set(daily_share)
-		daily_copied = true
-		msg_label.text += "\n\n(copied to clipboard!)"
-		return
-	if not started and in_shop:
-		if Input.is_action_just_pressed("move_left"):
-			shop_idx = wrapi(shop_idx - 1, 0, shop_items.size())
-			_refresh_shop()
-		if Input.is_action_just_pressed("move_right"):
-			shop_idx = wrapi(shop_idx + 1, 0, shop_items.size())
-			_refresh_shop()
-		if Input.is_action_just_pressed("plant"):
-			_shop_select()
-		if Input.is_action_just_pressed("bark"):
-			in_shop = false
-			shop_title_l.visible = false
-			shop_l.visible = false
-			shop_preview_bg.visible = false
-			shop_preview_l.visible = false
-			shop_preview.visible = false
-			_apply_menu_step()
-		return
-	if not started:
-		if Input.is_action_just_pressed("pause") and not in_progress_view:
-			_open_settings_from_menu()
-			return
-		# the career overview: every walk's stars, goals and best run
-		if in_progress_view:
-			if Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pee") or Input.is_action_just_pressed("plant"):
-				in_progress_view = false
-				progress_l.visible = false
-				dim.visible = false
-				_apply_menu_step()
-				_refresh_menu_text()
-			return
-		if menu_step == 1 and Input.is_action_just_pressed("pee"):
-			in_progress_view = true
-			for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, weather_l, record_l,
-					hint_l, menu_hint_l]:
-				l.visible = false
-			Prompts.set_text(progress_l, _progress_text())
-			progress_l.visible = true
-			dim.visible = true
-			return
-		# Tony Hawk rules: one screen, one instruction. Step 0 is just
-		# the title; step 1 picks the walk; step 2 picks the details.
-		if menu_step == 1 and Input.is_action_just_pressed("bark"):
-			_open_shop()
-			return
-		if menu_step == 1 and (Input.is_action_just_pressed("move_left") or Input.is_action_just_pressed("move_right")):
-			Game.cycle_level(1 if Input.is_action_just_pressed("move_right") else -1)
-			Game.menu_step = 1
+	elif Input.is_action_just_pressed("restart"):
+		# R mid-walk starts it again; on the title it just reloads
+		if started:
+			MenuFlow.restart_walk(self)
+		else:
 			get_tree().reload_current_scene()
-			return
-		if menu_step == 2 and (Input.is_action_just_pressed("move_up") or Input.is_action_just_pressed("move_down")):
-			Game.toggle_owner()
-			owner_l.text = _owner_label_text(Game.owner_id)
-		# weather and time are fixed by the seed on the daily walk
-		if menu_step == 2 and not Game.daily and Input.is_action_just_pressed("bark"):
-			Game.night = not Game.night
-			night_cm.color = _weather_tint()
-			_refresh_menu_text()
-		if menu_step == 2 and not Game.daily and Input.is_action_just_pressed("pee"):
-			Game.cycle_weather(1)
-			night_cm.color = _weather_tint()
-			weather_fx.mode = Game.weather
-			_refresh_menu_text()
-		if Input.is_action_just_pressed("plant"):
-			# cannot advance past a locked walk
-			if menu_step == 1 and not Game.is_unlocked(Game.level_id):
-				select_l.text = "%s  (locked)" % Game.LEVEL_NAMES[Game.level_id]
-				return
-			Sfx.play("ui")
-			if menu_step < 2:
-				menu_step += 1
-				Game.menu_step = menu_step
-				_apply_menu_step()
-				return
-			started = true
-			frozen = false
-			# snapshot progress so the results can report stars/unlocks
-			run_pre_total_stars = Game.total_stars()
-			run_pre_level_stars = Game.stars(lvl)
-			Game.menu_step = 1
-			prompt_tw.kill()
-			panel.visible = true
-			goals_card.visible = not tutorial_mode
-			for l: Label in [title_l, sub_l, prompt_l, select_l, owner_l, night_l, weather_l, record_l]:
-				var tw := create_tween()
-				tw.tween_property(l, "modulate:a", 0.0, 0.5)
-			# the hint earns its keep for a few seconds, then gets out
-			# of the way
-			var htw := create_tween()
-			htw.tween_interval(6.0)
-			htw.tween_property(hint_l, "modulate:a", 0.0, 1.2)
+		return
+	if started and not frozen and Input.is_action_just_pressed("pause"):
+		MenuFlow.open_pause(self)
+		return
+	if not started and MenuFlow.tick_title(self):
+		return
 	var target_y := (dog.global_position.y + human.global_position.y) / 2.0 - 60.0
 	if phase == "freedom":
 		target_y = dog.global_position.y  # owner is parked; follow the dog
@@ -5551,10 +5453,7 @@ func _tick_teeter(delta: float) -> void:
 
 
 func _death(msg: String) -> void:
-	frozen = true
-	dim.visible = true
-	msg_label.visible = true
-	Prompts.set_text(msg_label, msg + "\n\nPress {restart} to try again")
+	MenuFlow.show_notice(self, msg)
 
 
 func _hazards(delta: float) -> void:
@@ -5900,24 +5799,6 @@ func on_business_bagged(pos: Vector2) -> void:
 	float_text(pos, "swish! responsible +2", Color(0.8, 1.0, 0.8))
 	_update_hud()
 
-
-const OPENERS := {
-	"barri": "Round the park at the end of the street and home. The usual.",
-	"street": "Down La Rambla and back. Mind your human's pockets.",
-	"park": "Through the park to the meadow, then home. Mind the pond.",
-	"beach": "Along the passeig and back. The sea is right there. So is the bike path.",
-	"rain": "Out in it, because you insisted. Mind the drains.",
-	"market": "Through the market to the plaza, then home. Everything smells edible.",
-	"oldtown": "Up the alleys and back. Narrow, and the cats own the walls.",
-	"trail": "Into the woods to the clearing. Everything out here moves.",
-	"station": "Across the concourse and back. Nobody here is looking down.",
-	"site": "Past the works to the far fence. The cement is wet, and it stays with you.",
-	"spook": "Around the Castanyada and home. The sweets on the ground are not for dogs.",
-	"scrap": "Through the yard and out. Quietly - things are sleeping.",
-	"guell": "Up the terraces and back. The tiles are slippery. Run anyway.",
-	"neteja": "To the square and back before the sweeper comes through. It always comes through.",
-	"tutorial": "A short one, to get the hang of it. Nothing out here can hurt you.",
-}
 
 # The off-leash space at the top of the walk. Every level ended in the same
 # fenced municipal dog park, which is a big part of why the walks still felt
@@ -6447,10 +6328,7 @@ func crack_phone(pos: Vector2) -> void:
 	_update_hud()
 	float_text(pos, "PHONE CRACKED", Color(1, 0.45, 0.4))
 	if phone_hp <= 0:
-		frozen = true
-		dim.visible = true
-		msg_label.visible = true
-		Prompts.set_text(msg_label, "THE PHONE IS SHATTERED\n\nThe human is inconsolable, and blaming\nsomeone who cannot answer back.\n\nPress {restart} to try again")
+		MenuFlow.show_notice(self, "PHONE SMASHED\n\nThree cracks and it is gone. Your human is inconsolable,\nand blaming the one member of the household who cannot answer back.")
 
 
 func close_call(pos: Vector2) -> void:
@@ -7565,13 +7443,8 @@ func _draw_world() -> void:
 		_wc.draw_rect(Rect2(gate_l - 14, HOME_Y + 40.0, gate_r - gate_l + 28, 14), Color(0.4, 0.32, 0.3))
 		_wc.draw_string(font, Vector2(gate_l, HOME_Y + 78.0), "HOME", HORIZONTAL_ALIGNMENT_CENTER,
 			gate_r - gate_l, 24, Color(0.9, 0.85, 0.7))
-	# not under the settings panel: the dim only halves it, so the chalked
-	# name read straight through above the panel (#10)
-	if not started and not in_settings and vb > START_Y - 260.0:
+	# not under the settings panel, the wardrobe or the progress table: the
+	# dim only halves it, so the chalked name read straight through (#10)
+	if not started and not in_settings and not in_shop and not in_progress_view \
+			and vb > START_Y - 260.0:
 		_draw_ground_title()
-	# The line painted on the pavement at the start: where you are going, and
-	# the one thing about this walk that will get you. Eight of the twelve
-	# walks used to fall back on the boulevard's line, so El Gotic told you to
-	# mind bike lanes it does not have.
-	_wc.draw_string(font, Vector2(0, START_Y + 90), String(OPENERS.get(lvl, OPENERS["street"])),
-		HORIZONTAL_ALIGNMENT_CENTER, 1280, 17, Color(1, 1, 1, 0.5))

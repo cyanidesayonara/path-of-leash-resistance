@@ -12,6 +12,7 @@ extends RefCounted
 const EventFeed := preload("res://hud/event_feed.gd")
 const UiIcons := preload("res://hud/ui_icons.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
+const MenuFlow := preload("res://hud/menu_flow.gd")
 
 const LEVEL_GOAL_IDS := {
 	# El Barri, the everyday walk: the staples and nothing exotic
@@ -178,7 +179,6 @@ static func finish_walk(m: Node2D) -> void:
 			print("AUTOWALK FINISHED the whole walk at t=%.1f" % m.elapsed)
 		m.frozen = true
 		m.dim.visible = true
-		m.msg_label.visible = true
 		# credit any goal still satisfied at the finish (catches the
 		# "maintain" goals like unscratched phone / clean paws)
 		for q in m.active_quests:
@@ -228,7 +228,6 @@ static func finish_walk(m: Node2D) -> void:
 				"rating": rating,
 				"rows": rows, "bones": m.bones, "phone": m.phone_hp, "time": int(m.elapsed),
 				"goal_bones": run_done * 5, "lines": lines,
-				"prompt": "press  {restart}  for another walk",
 			}
 			m.msg_label.visible = false
 			m.results_card.visible = true
@@ -255,7 +254,6 @@ static func finish_tutorial_walk(m: Node2D) -> void:
 			"%d practice bones - not banked" % m.bones,
 			"Lessons complete. The real walks are waiting.",
 		],
-		"prompt": "press  {restart}  for walk select",
 	}
 	m.results_card.visible = true
 	m.goals_card.visible = false
@@ -294,7 +292,6 @@ static func _build_daily_card(m: Node2D, run_done: int, total: int, rec: Diction
 	m.daily_share = "Path of Leash Resistance - Daily %s\n%s, %s, %s\n%s  %d/%d goals  %d bones  %ds%s" % [
 		date_str, Game.LEVEL_NAMES[m.lvl], weather_bit, when_bit,
 		Game.star_str(stars_n), run_done, total, m.bones, int(m.elapsed), combo_bit]
-	var best_line := "NEW DAILY BEST!\n\n" if rec.bones_record else ""
 	m.daily_copied = false
-	Prompts.set_text(m.msg_label, "TODAY'S WALK\n\n%s\n\n%sPress {share} to copy & share\nPress {restart} for another go" % [
-		m.daily_share, best_line])
+	MenuFlow.show_notice(m, "%s\n\n%s" % ["NEW DAILY BEST" if rec.bones_record else "TODAY'S WALK",
+		m.daily_share])

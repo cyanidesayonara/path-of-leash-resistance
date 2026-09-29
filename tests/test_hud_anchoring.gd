@@ -33,16 +33,13 @@ const EPS := 0.6
 # that whatever y they hold, their distance from their own rule survives a
 # reshape - which is the property that actually keeps a stack together.
 const WIDE_LINES := {
-	"title_l": 0.5, "sub_l": 0.5, "select_l": 0.5, "record_l": 0.5,
-	"owner_l": 0.5, "night_l": 0.5, "weather_l": 0.5, "prompt_l": 0.5,
-	"msg_label": 0.5, "pause_l": 0.5, "shop_title_l": 0.0,
+	"msg_label": 0.5,
 	"challenge_l": 0.0, "tut_label": 0.0, "tut_hint": 0.0,
-	"progress_l": 0.0, "combo_l": 1.0,
+	"combo_l": 1.0,
 }
 # name -> authored y, for elements that belong on the bottom rule
 const BOTTOM_LINES := {
-	"hint_l": 686.0, "menu_hint_l": 662.0, "combo_l": 624.0,
-	"combo_bar": 662.0, "combo_bar_bg": 662.0,
+	"combo_l": 624.0, "combo_bar": 662.0, "combo_bar_bg": 662.0,
 }
 
 var failures: Array[String] = []

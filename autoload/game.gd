@@ -5,7 +5,7 @@ extends Node
 const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap", "guell", "neteja"]
 const LEVEL_NAMES := {
 	"daily": "Daily Walk",
-	"tutorial": "First Walk (tutorial)",
+	"tutorial": "First Walk",
 	# One scheme: a Catalan article plus one everyday noun for the place you
 	# are walking through, ASCII only (the web font has no accents, and the HUD
 	# upper-cases everything). The two MODE entries stay English on purpose -
@@ -34,8 +34,8 @@ const LEVEL_NAMES := {
 # guess what a walk is - the name is the flavour, the gloss is the information.
 # Kept lower case and short: it sits under the name chalked on the pavement.
 const LEVEL_SUBTITLES := {
-	"daily": "a new one every day",
-	"tutorial": "learn the ropes",
+	"daily": "the same walk for everyone today",
+	"tutorial": "one trick at a time",
 	"barri": "the neighbourhood park",
 	"street": "the crowded promenade",
 	"park": "the park",
@@ -125,6 +125,8 @@ var daily := false
 # which title-menu step to land on (survives the level-cycle reload;
 # after a first run the splash is skipped straight to walk select)
 var menu_step := 0
+# set by "try again": the next scene load starts the same walk at once
+var quick_start := false
 # local records per level + the spendable bones wallet
 var records := {}
 var total_bones := 0

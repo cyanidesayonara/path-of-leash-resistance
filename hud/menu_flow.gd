@@ -1,89 +1,358 @@
 extends RefCounted
 
-# The title-screen flow and the screens reachable from it: the menu steps
-# (owner, walk select, night/weather toggles), the wardrobe shop, the settings
-# panel's rows and navigation, and the progress screen.
+# The title-screen flow and every screen reachable from it: the title, the
+# walk select, getting ready (who walks, day or night, the weather), the
+# wardrobe, the progress screen, settings, the pause menu, and the notice
+# cards a walk can end on.
 #
-# Static functions over main's state. main.gd keeps a same-name forwarder for
-# each (tests, settings_panel.gd and level_check.gd call several by name) and
-# keeps the input handling that drives them in its _process for now.
+# This file is the MODEL: which screen is up, what it holds, and what the
+# player can press on it. hud/menu_screen.gd draws it and hud/ui_kit.gd holds
+# the shared look. Static functions over main's state; main.gd keeps a
+# same-name forwarder for each one another script or a test calls.
+
+const DETAIL_ROWS := ["walker", "time", "weather"]
+const PAUSE_ROWS := ["resume", "restart", "settings", "quit"]
+const SHOP_TABS := ["collar", "bandana", "coat"]
+const SHOP_TAB_NAMES := {"collar": "COLLARS", "bandana": "BANDANAS", "coat": "COATS"}
+const STEP_NAMES := ["CHOOSE A WALK", "GET READY"]
 
 
+# --- which screen is up ---------------------------------------------------
+
+static func screen(m: Node2D) -> String:
+	if m.in_settings:
+		return "settings"
+	if m.msg_label != null and m.msg_label.visible:
+		return "notice"
+	if m.results_card != null and m.results_card.visible:
+		return "results"
+	if m.paused:
+		return "pause"
+	if m.started:
+		return "walking"
+	if m.in_shop:
+		return "shop"
+	if m.in_progress_view:
+		return "progress"
+	return ["title", "walk", "details"][clampi(m.menu_step, 0, 2)]
 
 
-static func owner_label_text(m: Node2D, owner_id: String) -> String:
-	return "WALKING:  %s" % owner_id.to_upper()
+# What the player can press on this screen, as [action, verb] pairs for the
+# prompt bar (ui_kit.gd). An optional third entry of false dims the item.
+static func prompts(m: Node2D, which := "") -> Array:
+	match which if which != "" else screen(m):
+		"title":
+			return [["plant", "start"], ["pause", "settings"]]
+		"walk":
+			var open := Game.is_unlocked(Game.level_id)
+			return [["left_right", "browse"], ["plant", "choose", open], ["bark", "wardrobe"],
+				["pee", "progress"], ["pause", "settings"]]
+		"details":
+			return [["up_down", "pick"], ["left_right", "change"], ["plant", "go walkies"],
+				["bark", "back"]]
+		"shop":
+			var it: Dictionary = m.shop_items[m.shop_idx]
+			var st := shop_state(String(it.kind), String(it.key))
+			var verb := "wear"
+			if st == "wearing":
+				verb = "wearing"
+			elif st != "owned":
+				verb = "buy"
+			return [["left_right", "tab"], ["up_down", "browse"],
+				["plant", verb, st == "owned" or st == "afford"], ["bark", "back"]]
+		"progress":
+			return [["bark", "back"]]
+		"settings":
+			return [["up_down", "pick"], ["left_right", "change"], ["back", "done"]]
+		"pause":
+			return [["up_down", "pick"], ["plant", "select"], ["pause", "resume"]]
+		"results":
+			return end_prompts(m)
+		"notice":
+			var out := end_prompts(m)
+			if m.finished and Game.daily and not m.daily_copied and m.daily_share != "":
+				out.insert(0, ["share", "copy result"])
+			return out
+	return []
 
+
+static func end_prompts(m: Node2D) -> Array:
+	if m.tutorial_mode:
+		return [["bark", "on to the walks"], ["restart", "practise again"]]
+	if m.finished:
+		return [["restart", "walk it again"], ["bark", "walk select"]]
+	return [["restart", "try again"], ["bark", "walk select"]]
+
+
+# --- the title's steps ------------------------------------------------------
 
 static func apply_menu_step(m: Node2D) -> void:
-	# Tony Hawk rules: each screen shows ONE choice and ONE instruction.
-	# Gameplay HUD (panel, quests) stays hidden until the walk begins.
-	var in_menu: bool = not m.started
+	# one screen, one choice: the walk HUD stays down until the walk begins
 	m.panel.visible = m.started
 	m.goals_card.visible = m.started and not m.tutorial_mode
-	# The game's name and the walk's name are drawn INTO the level now (chalk
-	# on the pavement, a stick in the sand), so the labels that used to float
-	# over the top of them are gone. What is left on the HUD is the things a
-	# label is genuinely better at: the prompt and the run's details.
-	m.title_l.visible = false
-	m.sub_l.visible = false
-	m.select_l.visible = false
-	m.record_l.visible = in_menu and m.menu_step == 1
-	m.owner_l.visible = in_menu and m.menu_step == 2
-	m.night_l.visible = in_menu and m.menu_step == 2
-	m.weather_l.visible = in_menu and m.menu_step == 2
-	m.prompt_l.visible = in_menu
-	# discreet, bottom-left, the same treatment as the version tag - the
-	# middle of the title screen is already busy with the level blurb
-	m.menu_hint_l.visible = in_menu
-	Prompts.set_text(m.menu_hint_l, "{pause}  settings")
-	if not in_menu:
+	m.dim.visible = (not m.started) and (m.in_shop or m.in_progress_view)
+	# the chalked name is part of the world, so the world redraws to add or
+	# drop it
+	m.queue_redraw()
+
+
+static func refresh_menu_text(m: Node2D) -> void:
+	# everything on the menus is drawn from the model each frame, and follows
+	# the device in hand by itself; nothing to re-fill
+	pass
+
+
+# The walk-select plaque: what the player has done on the walk in view.
+static func walk_info(m: Node2D) -> Dictionary:
+	var sel: String = Game.level_id
+	var info := {"id": sel, "locked": not Game.is_unlocked(sel), "index": Game.CAROUSEL.find(sel),
+		"count": Game.CAROUSEL.size(), "lines": []}
+	if sel == "daily":
+		var today := "%s, %s%s" % [Game.LEVEL_NAMES[Game.daily_level()],
+			String(Game.WEATHER_NAMES[Game.daily_weather()]).to_lower(),
+			", at night" if Game.daily_night() else ""]
+		info.lines = ["Today: " + today]
+		if Game.records.has("daily") and int(Game.records["daily"].bones) > 0:
+			info.lines.append("Your best today: %d bones" % int(Game.records["daily"].bones))
+		else:
+			info.lines.append("The same walk for everyone, new every day.")
+		return info
+	if sel == "tutorial":
+		info.lines = ["One trick at a time, with nothing to get in the way."]
+		return info
+	if info.locked:
+		var gate := int(Game.STAR_GATE.get(sel, 0))
+		info["gate"] = gate
+		info["have"] = Game.total_stars()
+		info.lines = ["Earn %d more star%s to open this walk." % [gate - Game.total_stars(),
+			"" if gate - Game.total_stars() == 1 else "s"]]
+		return info
+	info["stars"] = Game.stars(sel)
+	info["goals"] = Game.goals_count(sel)
+	info["goals_total"] = (m.LEVEL_GOAL_IDS.get(sel, []) as Array).size()
+	if Game.records.has(sel) and int(Game.records[sel].bones) > 0:
+		info["best"] = "Best: %d bones in %s" % [int(Game.records[sel].bones), clock(float(Game.records[sel].time))]
+	else:
+		info["best"] = "Not walked yet"
+	return info
+
+
+static func clock(secs: float) -> String:
+	var s := int(round(secs))
+	return "%d:%02d" % [s / 60, s % 60]
+
+
+# The getting-ready rows. `fixed` rows are set by the day on the daily walk.
+static func details_rows(m: Node2D) -> Array:
+	return [
+		{"id": "walker", "name": "YOUR HUMAN", "value": "HIM" if Game.owner_id == "him" else "HER", "fixed": false},
+		{"id": "time", "name": "TIME", "value": "NIGHT" if Game.night else "DAY", "fixed": Game.daily},
+		{"id": "weather", "name": "WEATHER", "value": String(Game.WEATHER_NAMES[Game.weather]),
+			"fixed": Game.daily},
+	]
+
+
+static func details_change(m: Node2D, dir: int) -> void:
+	var row: Dictionary = details_rows(m)[m.details_idx]
+	if bool(row.fixed):
 		return
+	match String(row.id):
+		"walker":
+			Game.toggle_owner()
+			m.human.queue_redraw()
+		"time":
+			Game.night = not Game.night
+			m.night_cm.color = m._weather_tint()
+		"weather":
+			Game.cycle_weather(dir)
+			m.night_cm.color = m._weather_tint()
+			m.weather_fx.mode = Game.weather
+	Sfx.play("ui")
+
+
+# The controls, for the getting-ready card: [action, what it does].
+static func controls() -> Array:
+	return [["move", "move"], ["plant", "dig in / squat"], ["pee", "pee"], ["bark", "bark"],
+		["turbo", "run"], ["pause", "pause"]]
+
+
+static func start_walk(m: Node2D) -> void:
+	m.started = true
+	m.frozen = false
+	# snapshot progress so the results can report stars and unlocks
+	m.run_pre_total_stars = Game.total_stars()
+	m.run_pre_level_stars = Game.stars(m.lvl)
+	Game.menu_step = 1
+	m.panel.visible = true
+	m.goals_card.visible = not m.tutorial_mode
+	m.dim.visible = false
+	m.queue_redraw()
+
+
+# Title input. Returns true when _process should stop for this frame.
+static func tick_title(m: Node2D) -> bool:
+	if m.in_shop:
+		tick_shop(m)
+		return true
+	if m.in_progress_view:
+		if (Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pee")
+				or Input.is_action_just_pressed("plant") or Input.is_action_just_pressed("pause")):
+			close_progress(m)
+		return true
+	if Input.is_action_just_pressed("pause"):
+		open_settings_from_menu(m)
+		return true
 	match m.menu_step:
 		0:
-			m.title_l.add_theme_font_size_override("font_size", 60)
-			m.title_l.position.y = 210
-			m.title_l.text = "PATH OF LEASH RESISTANCE"
-			m.sub_l.add_theme_font_size_override("font_size", 22)
-			m.sub_l.position.y = 288
-			m.sub_l.text = "you are the dog. go and touch grass."
+			if Input.is_action_just_pressed("plant"):
+				Sfx.play("ui")
+				_go_step(m, 1)
 		1:
-			m.title_l.add_theme_font_size_override("font_size", 30)
-			m.title_l.position.y = 150
-			m.title_l.text = "CHOOSE YOUR WALK   (%d stars)" % Game.total_stars()
-			var sel: String = Game.level_id  # carousel id (may be "daily")
-			var locked := not Game.is_unlocked(sel)
-			m.select_l.add_theme_font_size_override("font_size", 52)
-			m.select_l.text = ("[ %s ]" % Game.LEVEL_NAMES[sel]) if locked else ("<   %s   >" % Game.LEVEL_NAMES[sel])
-			m.select_l.position.y = 220
-			m.record_l.position.y = 300
-			var rl: String = Game.best_line(sel)
-			if sel != "daily" and Game.is_unlocked(sel):
-				rl += "    goals %d/%d" % [Game.goals_count(sel), int((m.LEVEL_GOAL_IDS.get(sel, []) as Array).size())]
-			m.record_l.text = rl
+			if Input.is_action_just_pressed("pee"):
+				open_progress(m)
+				return true
+			if Input.is_action_just_pressed("bark"):
+				open_shop(m)
+				return true
+			if Input.is_action_just_pressed("move_left") or Input.is_action_just_pressed("move_right"):
+				Game.cycle_level(1 if Input.is_action_just_pressed("move_right") else -1)
+				Game.menu_step = 1
+				m.get_tree().reload_current_scene()
+				return true
+			if Input.is_action_just_pressed("plant"):
+				if not Game.is_unlocked(Game.level_id):
+					# a locked walk shakes its plaque instead of opening
+					m.locked_nudge = 0.35
+					return false
+				Sfx.play("ui")
+				m.details_idx = 0
+				_go_step(m, 2)
 		2:
-			m.title_l.add_theme_font_size_override("font_size", 40)
-			m.title_l.position.y = 150
-			m.title_l.text = Game.LEVEL_NAMES[Game.level_id].to_upper()
-			m.owner_l.text = owner_label_text(m, Game.owner_id)
-	refresh_menu_text(m)
+			if Input.is_action_just_pressed("move_down"):
+				m.details_idx = wrapi(m.details_idx + 1, 0, DETAIL_ROWS.size())
+				Sfx.play("ui")
+			elif Input.is_action_just_pressed("move_up"):
+				m.details_idx = wrapi(m.details_idx - 1, 0, DETAIL_ROWS.size())
+				Sfx.play("ui")
+			elif Input.is_action_just_pressed("move_right"):
+				details_change(m, 1)
+			elif Input.is_action_just_pressed("move_left"):
+				details_change(m, -1)
+			elif Input.is_action_just_pressed("bark"):
+				Sfx.play("ui")
+				_go_step(m, 1)
+			elif Input.is_action_just_pressed("plant"):
+				Sfx.play("ui")
+				start_walk(m)
+	return false
 
+
+static func _go_step(m: Node2D, step: int) -> void:
+	m.menu_step = step
+	Game.menu_step = step
+	apply_menu_step(m)
+
+
+# --- the pause menu ---------------------------------------------------------
+
+static func open_pause(m: Node2D) -> void:
+	m.paused = true
+	m.frozen = true
+	m.pause_idx = 0
+	m.dim.visible = true
+	Sfx.play("ui")
+
+
+static func resume(m: Node2D) -> void:
+	m.paused = false
+	m.frozen = false
+	m.dim.visible = false
+	Sfx.play("ui")
+
+
+static func tick_pause(m: Node2D) -> void:
+	if Input.is_action_just_pressed("pause") or Input.is_action_just_pressed("bark"):
+		resume(m)
+	elif Input.is_action_just_pressed("move_down"):
+		m.pause_idx = wrapi(m.pause_idx + 1, 0, PAUSE_ROWS.size())
+		Sfx.play("ui")
+	elif Input.is_action_just_pressed("move_up"):
+		m.pause_idx = wrapi(m.pause_idx - 1, 0, PAUSE_ROWS.size())
+		Sfx.play("ui")
+	elif Input.is_action_just_pressed("pee"):
+		open_settings(m)
+	elif Input.is_action_just_pressed("plant"):
+		match String(PAUSE_ROWS[m.pause_idx]):
+			"resume":
+				resume(m)
+			"restart":
+				restart_walk(m)
+			"settings":
+				open_settings(m)
+			"quit":
+				to_walk_select(m)
+
+
+static func pause_rows(m: Node2D) -> Array:
+	return ["RESUME", "START AGAIN", "SETTINGS", "QUIT TO WALK SELECT"]
+
+
+# Straight back into the same walk, skipping the menus: what "try again"
+# means. main._ready starts the walk when it finds this set.
+static func restart_walk(m: Node2D) -> void:
+	Game.quick_start = true
+	m.get_tree().reload_current_scene()
+
+
+static func to_walk_select(m: Node2D) -> void:
+	Game.menu_step = 1
+	# out of the tutorial, the walk select opens on the first real walk
+	if m.tutorial_mode:
+		Game.level_id = "barri"
+	m.get_tree().reload_current_scene()
+
+
+# Input on a stopped walk: a result, a game-over or the daily card.
+static func tick_end(m: Node2D) -> bool:
+	if Input.is_action_just_pressed("restart"):
+		restart_walk(m)
+		return true
+	if Input.is_action_just_pressed("bark"):
+		to_walk_select(m)
+		return true
+	return false
+
+
+# --- the wardrobe -----------------------------------------------------------
 
 static func open_shop(m: Node2D) -> void:
 	m.in_shop = true
-	for l: Label in [m.title_l, m.sub_l, m.prompt_l, m.select_l, m.owner_l, m.night_l, m.weather_l, m.record_l,
-			m.menu_hint_l]:
-		l.visible = false
-	m.shop_title_l.visible = true
-	m.shop_l.visible = true
-	m.shop_preview_bg.visible = true
-	m.shop_preview_l.visible = true
 	m.shop_preview.visible = true
-	# the preview dog is a Node2D, so it cannot anchor itself the way the panel
-	# behind it does - park it on the panel's centre instead, read at open time
-	# so it follows the cluster onto whatever shape the screen turns out to be
-	m.shop_preview.position = m.shop_preview_bg.position + Vector2(220.0, 175.0)
+	apply_menu_step(m)
 	refresh_shop(m)
+	Sfx.play("ui")
+
+
+static func close_shop(m: Node2D) -> void:
+	m.in_shop = false
+	m.shop_preview.visible = false
+	apply_menu_step(m)
+	Sfx.play("ui")
+
+
+static func tick_shop(m: Node2D) -> void:
+	if Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pause"):
+		close_shop(m)
+	elif Input.is_action_just_pressed("move_down"):
+		shop_step(m, 1)
+	elif Input.is_action_just_pressed("move_up"):
+		shop_step(m, -1)
+	elif Input.is_action_just_pressed("move_right"):
+		shop_tab(m, 1)
+	elif Input.is_action_just_pressed("move_left"):
+		shop_tab(m, -1)
+	elif Input.is_action_just_pressed("plant"):
+		shop_select(m)
 
 
 static func shop_data(m: Node2D, kind: String, key: String) -> Dictionary:
@@ -97,6 +366,56 @@ static func equip(m: Node2D, kind: String, key: String) -> void:
 	Game.equip(kind, key)
 
 
+static func wearing(kind: String, key: String) -> bool:
+	return ((kind == "collar" and Game.collar == key) or (kind == "bandana" and Game.bandana == key)
+		or (kind == "coat" and Game.coat == key))
+
+
+# "wearing", "owned", "afford" (not owned, enough bones) or "short"
+static func shop_state(kind: String, key: String) -> String:
+	if wearing(kind, key):
+		return "wearing"
+	if Game.is_owned(kind, key):
+		return "owned"
+	var cost := int(shop_data(null, kind, key).cost)
+	return "afford" if Game.total_bones >= cost else "short"
+
+
+static func shop_tab_of(m: Node2D) -> String:
+	return String(m.shop_items[m.shop_idx].kind)
+
+
+# the item indices on one tab, in list order
+static func shop_tab_items(m: Node2D, kind: String) -> Array:
+	var out := []
+	for i in range(m.shop_items.size()):
+		if String(m.shop_items[i].kind) == kind:
+			out.append(i)
+	return out
+
+
+static func shop_step(m: Node2D, dir: int) -> void:
+	var items := shop_tab_items(m, shop_tab_of(m))
+	var at := items.find(m.shop_idx)
+	m.shop_idx = int(items[wrapi(at + dir, 0, items.size())])
+	refresh_shop(m)
+	Sfx.play("ui")
+
+
+static func shop_tab(m: Node2D, dir: int) -> void:
+	var t := SHOP_TABS.find(shop_tab_of(m))
+	var kind: String = SHOP_TABS[wrapi(t + dir, 0, SHOP_TABS.size())]
+	var items := shop_tab_items(m, kind)
+	# land on what she is wearing from that tab, so the cursor starts on
+	# something that means something
+	m.shop_idx = int(items[0])
+	for i: int in items:
+		if wearing(kind, String(m.shop_items[i].key)):
+			m.shop_idx = i
+	refresh_shop(m)
+	Sfx.play("ui")
+
+
 static func shop_select(m: Node2D) -> void:
 	var it: Dictionary = m.shop_items[m.shop_idx]
 	var kind: String = it.kind
@@ -104,33 +423,14 @@ static func shop_select(m: Node2D) -> void:
 	if Game.is_owned(kind, key) or Game.buy(kind, key):
 		equip(m, kind, key)
 		Game.save_records()
-	# (if the buy failed, not enough bones - the price stays shown)
+		Sfx.play("ui")
+	else:
+		m.locked_nudge = 0.35
 	refresh_shop(m)
 
 
 static func refresh_shop(m: Node2D) -> void:
-	m.shop_title_l.text = "MILLIE'S WARDROBE      %d bones" % Game.total_bones
-	var lines := ""
-	for i in range(m.shop_items.size()):
-		var it: Dictionary = m.shop_items[i]
-		var key: String = it.key
-		var data: Dictionary = shop_data(m, String(it.kind), key)
-		var equipped: bool = (
-			(it.kind == "collar" and Game.collar == key)
-			or (it.kind == "bandana" and Game.bandana == key)
-			or (it.kind == "coat" and Game.coat == key)
-		)
-		var tag := ""
-		if equipped:
-			tag = "  [EQUIPPED]"
-		elif Game.is_owned(String(it.kind), key):
-			tag = "  (owned - press to wear)"
-		else:
-			tag = "  %d bones" % int(data.cost)
-		var cursor: String = ">  " if i == m.shop_idx else "    "
-		lines += "%s%s%s\n" % [cursor, data.name, tag]
-	lines += "\nleft / right browse    {plant} buy or wear    {bark} back"
-	Prompts.set_text(m.shop_l, lines)
+	# the preview wears what is highlighted, over what she has on
 	var highlighted: Dictionary = m.shop_items[m.shop_idx]
 	var preview_collar: String = Game.collar
 	var preview_bandana: String = Game.bandana
@@ -142,28 +442,61 @@ static func refresh_shop(m: Node2D) -> void:
 	m.shop_preview.set_cosmetic_preview(preview_collar, preview_bandana, preview_coat)
 
 
-static func refresh_menu_text(m: Node2D) -> void:
-	# the buttons of whatever the player last used (hud/prompts.gd); main
-	# re-runs this when that changes
-	m.hint_l.text = Prompts.fill("{move}: move   {plant}: dig in / squat   {pee}: pee   {bark}: bark   {turbo}: turbo   {pause}: pause")
-	var fixed: String = "  (fixed today)" if Game.daily else "        (%s)" % Prompts.key("bark")
-	m.night_l.text = "TIME:  %s%s" % [("NIGHT" if Game.night else "DAY"), fixed]
-	m.weather_l.text = "WEATHER:  %s%s" % [Game.WEATHER_NAMES[Game.weather], "" if Game.daily else "        (%s)" % Prompts.key("pee")]
-	var go := Prompts.key("plant")
-	match m.menu_step:
-		0:
-			m.prompt_l.text = "press  %s  to begin" % go
-			m.hint_l.visible = false
-		1:
-			if not Game.is_unlocked(Game.level_id):
-				m.prompt_l.text = "locked - earn %d stars" % int(Game.STAR_GATE.get(Game.level_id, 0))
-			else:
-				m.prompt_l.text = Prompts.fill("{left} / {right}  browse     {plant}  choose     {bark}  wardrobe     {pee}  progress")
-			m.hint_l.visible = false
-		2:
-			m.prompt_l.text = "press  %s  to go walkies" % go
-			m.hint_l.visible = true
+# --- the progress screen ------------------------------------------------------
 
+static func open_progress(m: Node2D) -> void:
+	m.in_progress_view = true
+	apply_menu_step(m)
+	Sfx.play("ui")
+
+
+static func close_progress(m: Node2D) -> void:
+	m.in_progress_view = false
+	apply_menu_step(m)
+	Sfx.play("ui")
+
+
+static func progress_rows(m: Node2D) -> Array:
+	var out := []
+	for lv in Game.LEVELS:
+		var row := {"id": lv, "name": Game.LEVEL_NAMES[lv], "gloss": Game.LEVEL_SUBTITLES.get(lv, ""),
+			"locked": not Game.is_unlocked(lv), "gate": int(Game.STAR_GATE.get(lv, 0))}
+		row["stars"] = Game.stars(lv)
+		row["goals"] = Game.goals_count(lv)
+		row["goals_total"] = (m.LEVEL_GOAL_IDS.get(lv, []) as Array).size()
+		row["best"] = ""
+		if Game.records.has(lv) and int(Game.records[lv].get("bones", 0)) > 0:
+			row["best"] = "%d bones  %s" % [int(Game.records[lv].bones), clock(float(Game.records[lv].time))]
+		out.append(row)
+	return out
+
+
+# --- notices: the cards a walk can end on ---------------------------------
+
+static func show_notice(m: Node2D, template: String) -> void:
+	# the first line is the card's title, the rest its body. The label holds
+	# the text (the soak tool reads it) and menu_screen.gd draws the card.
+	m.frozen = true
+	m.dim.visible = true
+	m.msg_label.visible = true
+	Prompts.set_text(m.msg_label, template)
+
+
+static func notice(m: Node2D) -> Dictionary:
+	var parts := String(m.msg_label.text).split("\n")
+	var title := parts[0] if parts.size() > 0 else ""
+	var body: Array[String] = []
+	for i in range(1, parts.size()):
+		body.append(parts[i])
+	# no blank lines at either end of the body
+	while not body.is_empty() and body[0].strip_edges() == "":
+		body.remove_at(0)
+	while not body.is_empty() and body[body.size() - 1].strip_edges() == "":
+		body.remove_at(body.size() - 1)
+	return {"title": title, "body": body}
+
+
+# --- settings ---------------------------------------------------------------
 
 static func settings_keys(m: Node2D) -> Array:
 	# the browser owns the window, so offering a fullscreen toggle there
@@ -240,9 +573,6 @@ static func check_settings_roundtrip(m: Node2D) -> Array:
 
 
 static func open_settings_from_menu(m: Node2D) -> void:
-	for l: Label in [m.title_l, m.sub_l, m.prompt_l, m.select_l, m.owner_l, m.night_l, m.weather_l, m.record_l,
-			m.hint_l, m.menu_hint_l]:
-		l.visible = false
 	open_settings(m)
 
 
@@ -264,13 +594,10 @@ static func close_settings(m: Node2D) -> void:
 	Game.save_records()
 	Sfx.play("ui")
 	if m.paused:
-		# back to the pause card we came from
-		m.pause_l.visible = true
+		# back to the pause menu we came from
 		m.dim.visible = true
 	else:
-		m.dim.visible = false
 		apply_menu_step(m)
-		refresh_menu_text(m)
 
 
 static func settings_adjust(m: Node2D, dir: int) -> void:
@@ -311,20 +638,3 @@ static func tick_settings(m: Node2D) -> void:
 	elif (Input.is_action_just_pressed("pause") or Input.is_action_just_pressed("bark")
 			or Input.is_action_just_pressed("plant")):
 		close_settings(m)
-
-
-static func progress_text(m: Node2D) -> String:
-	var t := "YOUR WALKS\n\n"
-	for lv in Game.LEVELS:
-		var nm: String = Game.LEVEL_NAMES[lv]
-		if not Game.is_unlocked(lv):
-			t += "%s   -   locked (%d stars)\n" % [nm, int(Game.STAR_GATE.get(lv, 0))]
-			continue
-		var total: int = (m.LEVEL_GOAL_IDS.get(lv, []) as Array).size()
-		var rec := "no record yet"
-		if Game.records.has(lv) and int(Game.records[lv].get("bones", 0)) > 0:
-			rec = "%d bones  %ds" % [int(Game.records[lv].bones), int(Game.records[lv].time)]
-		t += "%s   %s   goals %d/%d   %s\n" % [nm, Game.star_str(Game.stars(lv)), Game.goals_count(lv), total, rec]
-	t += "\nTOTAL:  %d stars    %d bones banked\n\n{bark}  back" % [
-		Game.total_stars(), Game.total_bones]
-	return t

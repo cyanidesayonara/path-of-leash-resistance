@@ -72,9 +72,9 @@ func _run() -> void:
 			"%s walking: RUN and MENU show, R does not (%s)" % [window, walking])
 		main.frozen = true
 		var stopped := _shown(t)
-		_check("R" in stopped and not "RUN" in stopped and not "MENU" in stopped
-				and not "DIG" in stopped and not "BARK" in stopped and not "PEE" in stopped,
-			"%s stopped: only end-state controls remain" % window)
+		_check("R" in stopped and "BARK" in stopped and not "RUN" in stopped and not "MENU" in stopped
+				and not "DIG" in stopped and not "PEE" in stopped,
+			"%s stopped: only the end-state controls remain, R and BARK (walk select)" % window)
 		main.paused = true
 		_check("MENU" in _shown(t), "%s paused: MENU can resume" % window)
 		main.paused = false

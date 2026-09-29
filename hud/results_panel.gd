@@ -13,6 +13,7 @@ extends Control
 # than ASCII, so the browser build looks like the desktop one.
 
 const Icons := preload("res://hud/ui_icons.gd")
+const Kit := preload("res://hud/ui_kit.gd")
 
 const W := 900.0
 const PAD := 34.0
@@ -21,7 +22,6 @@ const COL_SPLIT := 6        # more goals than this and it goes two-up
 const RATING_GAP := 12.0     # extra space under the rating line, when there is one
 
 var main: Node2D
-var sb: StyleBoxFlat
 
 
 func setup(m: Node2D) -> void:
@@ -30,11 +30,6 @@ func setup(m: Node2D) -> void:
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	sb = StyleBoxFlat.new()
-	sb.bg_color = Color(0.07, 0.075, 0.09, 0.93)
-	sb.set_corner_radius_all(16)
-	sb.border_width_top = 3
-	sb.border_color = Color(0.86, 0.72, 0.36, 0.8)
 
 
 func _process(_delta: float) -> void:
@@ -55,7 +50,7 @@ func _draw() -> void:
 	# divider, tally, record lines, prompt. Guessing at this is how the prompt
 	# ended up straddling the bottom edge of the card.
 	var rating_gap: float = RATING_GAP if String(d.rating) != "" else 0.0
-	var h := PAD + 224.0 + rating_gap + float(per_col) * ROW_H + float(extras.size()) * 22.0
+	var h := PAD + 190.0 + rating_gap + float(per_col) * ROW_H + float(extras.size()) * 22.0
 	size = Vector2(W, h)
 	# centre the card on what it holds, so a twelve-goal walk and a
 	# three-goal walk are both framed. Against the actual viewport, not the
@@ -64,11 +59,10 @@ func _draw() -> void:
 	# noticeably off-centre on a wide window.
 	var vs := get_viewport_rect().size
 	position = Vector2((vs.x - W) * 0.5, maxf(20.0, (vs.y - h) * 0.5))
-	draw_style_box(sb, Rect2(0, 0, W, h))
+	Kit.card(self, Rect2(0, 0, W, h), Kit.accent("results"), 16)
 
 	var y := PAD + 30.0
-	draw_string(f, Vector2(0, y), String(d.title), HORIZONTAL_ALIGNMENT_CENTER, W, 30,
-		Color(0.98, 0.95, 0.88))
+	Kit.heading(self, Vector2(0, y), String(d.title), 32, Kit.GOLD, HORIZONTAL_ALIGNMENT_CENTER, W)
 	y += 34.0
 	# the stars, drawn, with the line that comments on them
 	var stars: int = int(d.stars)
@@ -123,7 +117,5 @@ func _draw() -> void:
 		draw_string(f, Vector2(0, y), line, HORIZONTAL_ALIGNMENT_CENTER, W, 16,
 			Color(0.88, 0.84, 0.66))
 		y += 22.0
-	y += 14.0
-	# the prompt is a template, filled here so it follows the device live
-	draw_string(f, Vector2(0, y), Prompts.fill(String(d.prompt)), HORIZONTAL_ALIGNMENT_CENTER, W, 16,
-		Color(0.78, 0.76, 0.72, 0.9))
+	# what to do next is on the prompt bar along the bottom of the screen,
+	# with every other screen's (menu_screen.gd)

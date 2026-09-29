@@ -164,9 +164,16 @@ soon as it is written. Other shot flags: `--shot-title`, `--shot-results`,
 `--shot-at=N`, `--shot-sweeper`, and `--shot-y=N`, which starts the pair at that
 point down the walk (`--shot-y=-2450 --shot-at=40` photographs El Bosc's stream;
 give it 40 frames or so, a shot taken sooner can show the start line's ground).
+`--shot-menu=walk|details|shop|progress|pause|notice` opens that menu screen.
 
-Screenshot sweep (every walk, title, settings, results, street at 844x390 and
-390x844) into `shots/`, plus labelled contact sheets `shots/sheet-*.png`.
+Every menu screen is drawn by `hud/menu_screen.gd` from the model in
+`hud/menu_flow.gd` (which screen is up, what it holds, what its prompt bar
+offers), in the shared look of `hud/ui_kit.gd`: a card with the screen's own
+accent, a heavy heading face, and the buttons as key caps in one bar along
+the bottom of the screen. A new screen is a new case in all three.
+
+Screenshot sweep (every walk, the title and each menu screen, settings,
+results, street at 844x390 and 390x844) into `shots/`, plus labelled contact sheets `shots/sheet-*.png`.
 Needs Pillow. `.github/workflows/shots.yml` runs the same thing on every PR and
 push to main and uploads the sheets as an artifact; it does not gate CI:
 ```

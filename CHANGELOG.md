@@ -2,6 +2,41 @@
 
 Append-only session history, newest first.
 
+## 2026-09-29 - Every menu screen gets its own card, and one prompt bar
+
+Every screen off the title was a stack of plain labels in one size and
+colour, so the walk select, the owner choice, the wardrobe, a game-over and
+the pause text all read as the same wall of text, and each put its button
+hints somewhere different. The wardrobe listed every item in one column that
+ran off the bottom of the screen, over the chalked walk name, with no clear
+way out. Now (`hud/menu_flow.gd` the model, `hud/menu_screen.gd` the view,
+`hud/ui_kit.gd` the shared look):
+- **One prompt bar** along the bottom of every screen: the buttons as key
+  caps for the device in hand, and a verb for each. The title has only that.
+- **The walk select** has the two title steps across the top (CHOOSE A WALK,
+  GET READY) with the current one lit, your stars and bones in the corner,
+  dots above the name for where this walk sits in the list, and a plaque
+  under it: stars, goals, best, or what it takes to open.
+- **Getting ready** is a card beside the pair: your human, time and weather
+  as rows you move through and change with left and right, and the controls
+  once, before you set off. Back returns to the walk select.
+- **The wardrobe** takes the screen: Millie on a spotlight wearing what is
+  highlighted, tabs for collars, bandanas and coats, a swatch and a price
+  for each, and back on the bar.
+- **Progress** is one table of every walk. **Pause** is a short menu you move
+  through (resume, start again, settings, quit to walk select). A game-over is
+  a card with a title, and offers trying again or the walk select.
+- **Try again means the same walk again**, straight in; R used to drop you
+  on the walk select to press through the title twice more.
+- The line under the start ("To the park and back...") is gone.
+- Headings use an emboldened face of the built-in font, and each screen has
+  its own accent colour.
+
+`--shot-menu=walk|details|shop|progress|pause|notice` photographs each
+screen, and the shot sweep takes them all. `tests/test_menu_flow.gd` is
+rewritten for the new screens (34 checks); the owner-label test went with
+the label.
+
 ## 2026-09-29 - El Gotic becomes the old town
 
 El Gotic was El Mercat's layout with walls: eight market stalls in a
