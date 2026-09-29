@@ -136,6 +136,15 @@ var park_posts: Array[Vector2] = []
 # where the owner is kept to a narrow line across the path (Les Obres' plank
 # over the trench): {"y0", "y1", "x0", "x1"}; see human._walk
 var narrows: Array[Dictionary] = []
+# where it is dry (El Diluvi's arcade and awnings), and how wet the owner is
+var shelters: Array[Rect2] = []
+var human_soak := 0.0          # 0 dry, 1 wet through
+var splashes := 0
+var splash_cd := 0.0
+# out in it, the owner soaks through in SOAK_T seconds; under cover, dries in DRY_T
+const SOAK_T := 150.0
+const DRY_T := 40.0
+const SPLASH_SPEED := 250.0
 var ducks_disturbed := 0
 # where the HUMAN's autopilot lives; the dog may roam anywhere between
 # the outer walls, though an undistracted owner has opinions about it
@@ -328,6 +337,7 @@ const SUBSTANCES := {
 	"slush":    {"col": Color(0.78, 0.82, 0.88), "life": 2.0, "quip": "SLUSHY PAWS!"},
 	"confetti": {"col": Color(0.92, 0.55, 0.75), "life": 2.8, "quip": "COVERED IN CONFETTI!"},
 	"oil":      {"col": Color(0.20, 0.19, 0.22), "life": 3.2, "quip": "OILY PAWS!"},
+	"puddle":   {"col": Color(0.42, 0.50, 0.58), "life": 1.4, "quip": "WET PAWS!"},
 	"icecream": {"col": Color(0.96, 0.72, 0.78), "life": 2.6, "quip": "STICKY PAWS!"},
 }
 var substance_zones: Array[Dictionary] = []
@@ -1526,6 +1536,88 @@ func _draw_obres(vt: float, vb: float) -> void:
 		for k in range(3):
 			var px := plank.position.x + 8.0 + float(k) * (plank.size.x - 16.0) / 2.0
 			b.line(Vector2(px, plank.position.y), Vector2(px, plank.end.y), Color(0.50, 0.37, 0.22), 2.0)
+	b.flush(_wc)
+
+
+func sheltered(p: Vector2) -> bool:
+	for r: Rect2 in shelters:
+		if r.has_point(p):
+			return true
+	return false
+
+
+# El Diluvi: the owner soaks in the open and dries under cover; the dog
+# splashing through a puddle at speed is a trick
+func _tick_wet(delta: float) -> void:
+	var was := human_soak
+	if sheltered(human.global_position):
+		human_soak = maxf(0.0, human_soak - delta / DRY_T)
+	else:
+		human_soak = minf(1.0, human_soak + delta / SOAK_T)
+	if was < 0.5 and human_soak >= 0.5:
+		human.notice("I'm SOAKED", 1.6)
+		feed.say("YOUR HUMAN IS HALF SOAKED", EventFeed.Tone.BAD)
+	splash_cd = maxf(0.0, splash_cd - delta)
+	if splash_cd <= 0.0 and dog.velocity.length() > SPLASH_SPEED:
+		for pt: Dictionary in patches:
+			if String(pt["kind"]) == "puddle" and patch_has_point(pt, dog.global_position):
+				splashes += 1
+				splash_cd = 0.8
+				Sfx.play("splash", 1.2)
+				combo.add("SPLASH", 3)
+				float_text(dog.global_position + Vector2(0, -26), "SPLASH!", Color(0.75, 0.88, 1.0))
+				# and anyone near gets it too
+				if human.global_position.distance_to(dog.global_position) < 70.0:
+					human_soak = minf(1.0, human_soak + 0.06)
+				break
+
+
+# EL DILUVI: the arcade (a roof behind its pillars, arches between), the
+# awnings, the gutters running down both sides, and the owner's wet meter.
+func _draw_diluvi(vt: float, vb: float) -> void:
+	var b := ShapeBatch.new()
+	var t := AnimClock.msec() / 1000.0
+	# the gutters, running
+	var gy := floorf((vt - 60.0) / 46.0) * 46.0
+	while gy < vb + 60.0:
+		var ge := walk_edges(gy)
+		for gx: float in [ge.x + 6.0, ge.y - 6.0]:
+			b.rect(Rect2(gx - 4.0, gy, 8.0, 46.0), Color(0.30, 0.36, 0.42))
+			var fl := fmod(gy + t * 90.0, 46.0)
+			b.line(Vector2(gx, gy + fl), Vector2(gx, gy + fl + 12.0), Color(0.75, 0.84, 0.92, 0.6), 2.0)
+		gy += 46.0
+	# the awnings: striped canvas over the pavement, dripping at the edge
+	for i in range(1, shelters.size()):
+		var r: Rect2 = shelters[i]
+		if r.end.y < vt - 40.0 or r.position.y > vb + 40.0:
+			continue
+		b.rect(Rect2(r.position + Vector2(-8, 10), r.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+		var ac: Color = [Color(0.62, 0.20, 0.22), Color(0.20, 0.36, 0.30), Color(0.22, 0.30, 0.50)][i % 3]
+		b.rect(r, ac)
+		var sx := r.position.x + 6.0
+		while sx < r.end.x:
+			b.rect(Rect2(sx, r.position.y, 6.0, r.size.y), ac.lightened(0.25))
+			sx += 14.0
+		for k in range(3):
+			var dy := fmod(t * 60.0 + float(k) * 13.0 + r.position.y, 26.0)
+			b.circle(Vector2(r.position.x - 3.0, r.position.y + 12.0 + float(k) * r.size.y / 3.0 + dy * 0.3), 1.6, Color(0.8, 0.88, 0.95, 0.8))
+	# the arcade: its vaulted roof seen from above, a shadow under it
+	if not shelters.is_empty():
+		var ar: Rect2 = shelters[0]
+		if ar.end.y > vt - 40.0 and ar.position.y < vb + 40.0:
+			var y0 := maxf(ar.position.y, vt - 40.0)
+			var y1 := minf(ar.end.y, vb + 40.0)
+			b.rect(Rect2(ar.position.x, y0, ar.size.x, y1 - y0), Color(0.46, 0.40, 0.36))
+			b.rect(Rect2(ar.end.x - 10.0, y0, 10.0, y1 - y0), Color(0.36, 0.31, 0.28))
+			var vy := floorf(y0 / 120.0) * 120.0 + 20.0
+			while vy < y1:
+				b.line(Vector2(ar.position.x, vy), Vector2(ar.end.x, vy), Color(0.54, 0.48, 0.43), 3.0)
+				vy += 120.0
+	# how wet the owner is, a drip meter over their head once it shows
+	if human_soak > 0.08:
+		var hp: Vector2 = human.global_position + Vector2(-16.0, -40.0)
+		b.rect(Rect2(hp.x, hp.y, 32.0, 5.0), Color(0.08, 0.08, 0.10, 0.7))
+		b.rect(Rect2(hp.x, hp.y, 32.0 * human_soak, 5.0), Color(0.45, 0.65, 0.95) if human_soak < 0.5 else Color(0.30, 0.45, 0.85))
 	b.flush(_wc)
 
 
@@ -3149,7 +3241,9 @@ func _physics_process(delta: float) -> void:
 	birds_cache = get_tree().get_nodes_in_group("pigeons")
 	# weather nudges: rain makes the pavement slick, wind shoves everyone
 	# gently downwind (the owner, dead weight, catches more of it)
-	dog.slick = Game.weather == "rain"
+	dog.slick = Game.weather == "rain" and not sheltered(dog.global_position)
+	if lvl == "rain":
+		_tick_wet(delta)
 	dog.ice = Game.weather == "snow"
 	human.ice = Game.weather == "snow"
 	if Game.weather == "wind":
@@ -4727,7 +4821,7 @@ func surface_at(p: Vector2) -> int:
 				"mud": return Surfaces.S.MUD
 				"tile": return Surfaces.S.TILE
 				# a mess to carry around, not ground that slows you
-				"paint", "fish", "oil", "confetti", "icecream": continue
+				"paint", "fish", "oil", "confetti", "icecream", "puddle": continue
 				_: return Surfaces.S.SAND
 	if lvl == "beach":
 		# THE SEAFRONT HAS NO GRASS. Its cross-section is sea, sand, boardwalk,
@@ -6415,6 +6509,8 @@ func _draw_world() -> void:
 		_draw_parc(vt, vb)
 	if lvl == "barri" and not tutorial_mode:
 		_draw_barri(vt, vb)
+	if lvl == "rain":
+		_draw_diluvi(vt, vb)
 	if tutorial_mode:
 		_draw_tutorial_pond()
 	if rambla():
@@ -6598,6 +6694,11 @@ func _draw_world() -> void:
 			continue
 		if tutorial_mode:
 			_draw_lamppost(p)       # the lesson posts are lampposts, as the cards say
+		elif lvl == "rain" and p.x < walk_cx:
+			# the arcade's pillars: square stone, lit on one face
+			cast_shadow(_wc, p, 12.0, 30.0, 0.2)
+			_wc.draw_rect(Rect2(p.x - 11.0, p.y - 11.0, 22.0, 22.0), Color(0.55, 0.50, 0.45))
+			_wc.draw_rect(Rect2(p.x - 11.0, p.y - 11.0, 8.0, 22.0), Color(0.64, 0.59, 0.53))
 		elif lvl == "park" or lvl == "barri":
 			_draw_broadleaf(_wc, p, 1.0)
 		elif lvl == "trail":

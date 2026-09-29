@@ -2,6 +2,28 @@
 
 Append-only session history, newest first.
 
+## 2026-09-29 - El Diluvi becomes a rainy shopping street
+
+El Diluvi was La Rambla's layout, wet, café terrace and lawn included. Now its
+own (`LevelBuild.diluvi`):
+- **A narrow shopping street** (half 230), shopfronts straight onto the
+  paving, the gutters running down both sides, two side streets with traffic,
+  three storm drains gaping open, umbrellas clogging the way.
+- **The arcade** down the west side for 2000 px: a covered walk behind a row
+  of square stone pillars (they wrap the rope). **Awnings** over the east
+  side, striped and dripping.
+- **Shelter matters now**: under the arcade or an awning her paws are not
+  slick, and the owner dries off. Out in it the owner soaks through
+  (`human_soak`, 150 s to wet through, 40 s under cover to dry, a drip meter
+  over their head), and says so at half. New goal: "bring your human home
+  less than half soaked", so dragging them under the arcade is the walk.
+- **Puddles** in the dips of the paving (a new "puddle" substance: wet paws,
+  not slow going). Splash through one at a run for a SPLASH trick; the owner
+  close by gets splashed too. New goal: "splash through 4 puddles at speed".
+  Both replace the traffic near-misses.
+
+`tests/test_diluvi.gd` (10 checks). Only El Diluvi's snapshot lines change.
+
 ## 2026-09-28 - The First Walk, rebuilt as quiet stations
 
 Santtu: the tutorial should let the player "learn each trick & mechanic
