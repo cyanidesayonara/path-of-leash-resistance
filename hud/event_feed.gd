@@ -249,7 +249,12 @@ func _draw_toasts(vs: Vector2) -> void:
 		else:
 			x = 16.0 - (1.0 - slide) * 60.0
 			y = 112.0 + float(i) * 58.0
-		var r := Rect2(x, y, TOAST_W, 50.0)
+		# as wide as its text needs, within reason, so a long goal is not cut
+		var tw: float = clampf(maxf(Kit.text_w(Kit.display(), String(tst.title), 15) + 40.0,
+			Kit.text_w(Kit.body(), String(tst.text), 14) + 32.0), 220.0, 460.0)
+		if side == "goal":
+			x = vs.x - 8.0 - tw + (1.0 - slide) * 60.0
+		var r := Rect2(x, y, tw, 50.0)
 		draw_rect(Rect2(r.position + Vector2(0, 3), r.size), Color(0, 0, 0, 0.25 * a))
 		draw_rect(r, Color(0.07, 0.075, 0.09, 0.9 * a))
 		draw_rect(Rect2(r.position, Vector2(4.0, r.size.y)), Color(col.r, col.g, col.b, a))
@@ -260,7 +265,7 @@ func _draw_toasts(vs: Vector2) -> void:
 		draw_string(Kit.display(), Vector2(tx, r.position.y + 22.0), String(tst.title), HORIZONTAL_ALIGNMENT_LEFT,
 			-1, 15, Color(col.r, col.g, col.b, a))
 		draw_string(Kit.body(), Vector2(r.position.x + 16.0, r.position.y + 41.0), String(tst.text),
-			HORIZONTAL_ALIGNMENT_LEFT, TOAST_W - 28.0, 14, Color(0.92, 0.90, 0.85, a))
+			HORIZONTAL_ALIGNMENT_LEFT, tw - 28.0, 14, Color(0.92, 0.90, 0.85, a))
 
 
 func _draw_cards(vs: Vector2) -> void:
