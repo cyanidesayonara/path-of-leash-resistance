@@ -1461,6 +1461,72 @@ func _draw_fallen_log(r: Rect2) -> void:
 	b.flush(_wc)
 
 
+# A stack of wrecked cars from above: the top car's roof, rusted and dented,
+# the ones under it showing past its edges at a skew, glass long gone.
+func _draw_wreck_stack(v: Vector2) -> void:
+	var b := ShapeBatch.new()
+	var h := int(absf(v.y)) % 5
+	var cols := [Color(0.55, 0.22, 0.18), Color(0.30, 0.38, 0.46), Color(0.48, 0.46, 0.30), Color(0.62, 0.62, 0.60), Color(0.24, 0.34, 0.26)]
+	b.rect(Rect2(v.x - 32.0 + 30.0, v.y - 66.0 + 30.0, 68.0, 134.0), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.26))
+	for k in range(3):
+		var off := Vector2(float((h + k) % 3 - 1) * 6.0, float(k - 1) * 5.0)
+		var c: Color = (cols[(h + k) % cols.size()] as Color).darkened(0.18 * float(2 - k))
+		b.rect(Rect2(v.x - 30.0 + off.x, v.y - 62.0 + off.y, 60.0, 124.0), c)
+	var top: Color = cols[(h + 2) % cols.size()]
+	b.rect(Rect2(v.x - 22.0, v.y - 26.0, 44.0, 52.0), top.lightened(0.08))                # the roof
+	b.rect(Rect2(v.x - 22.0, v.y - 46.0, 44.0, 18.0), Color(0.12, 0.12, 0.13))             # no windscreen
+	b.rect(Rect2(v.x - 22.0, v.y + 28.0, 44.0, 12.0), Color(0.12, 0.12, 0.13))
+	for k in range(4):
+		b.circle(v + Vector2(-14.0 + float(k % 2) * 28.0, -8.0 + float(k / 2) * 20.0), 4.0 + float((h + k) % 3), Color(0.44, 0.28, 0.16, 0.8))  # rust
+	b.flush(_wc)
+
+
+# a kennel beside each sleeping guard dog, its chain run out to the dog
+func _draw_kennels(vt: float, vb: float) -> void:
+	var b := ShapeBatch.new()
+	for gp: Vector2 in guard_posts:
+		if gp.y < vt - 80.0 or gp.y > vb + 80.0:
+			continue
+		var side := -1.0 if gp.x < walk_cx else 1.0
+		var kp := gp + Vector2(side * 46.0, -10.0)
+		b.rect(Rect2(kp.x - 22.0 + 6.0, kp.y - 18.0 + 8.0, 44.0, 36.0), Color(0, 0, 0, 0.2))
+		b.rect(Rect2(kp.x - 22.0, kp.y - 18.0, 44.0, 36.0), Color(0.44, 0.30, 0.18))
+		b.rect(Rect2(kp.x - 22.0, kp.y - 18.0, 44.0, 10.0), Color(0.34, 0.22, 0.14))
+		b.line(Vector2(kp.x, kp.y - 18.0), Vector2(kp.x, kp.y + 18.0), Color(0.30, 0.20, 0.12), 2.0)
+		b.rect(Rect2(kp.x - side * 22.0 - 5.0, kp.y - 6.0, 10.0, 14.0), Color(0.08, 0.06, 0.05))
+		var n := 5
+		for k in range(n):
+			b.circle(kp.lerp(gp, (float(k) + 0.5) / float(n)), 2.0, Color(0.62, 0.62, 0.64))
+	b.flush(_wc)
+
+
+# The crane over the yard: its tracks and cab off the lane's east side, and
+# the long shadow of its boom lying across the lane with the magnet's.
+func _draw_crane(vt: float, vb: float) -> void:
+	var cb: Vector2 = LevelBuild.FERRALLA_CRANE
+	var tip: Vector2 = LevelBuild.FERRALLA_BOOM_TO
+	if maxf(cb.y, tip.y) < vt - 120.0 or minf(cb.y, tip.y) > vb + 120.0:
+		return
+	var b := ShapeBatch.new()
+	var sh := Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22)
+	b.line(cb + Vector2(20, 40), tip + Vector2(30, 60), sh, 18.0)
+	b.circle(tip + Vector2(30, 90), 26.0, sh)
+	b.rect(Rect2(cb.x - 40.0, cb.y - 50.0, 80.0, 100.0), Color(0.16, 0.16, 0.17))
+	b.rect(Rect2(cb.x - 30.0, cb.y - 30.0, 60.0, 60.0), Color(0.92, 0.70, 0.12))
+	b.rect(Rect2(cb.x - 26.0, cb.y - 26.0, 22.0, 22.0), Color(0.30, 0.38, 0.44))
+	# the boom itself, lattice, from the cab out over the lane
+	b.line(cb, tip, Color(0.90, 0.68, 0.10), 10.0)
+	var n := int(cb.distance_to(tip) / 24.0)
+	for k in range(n):
+		var p0: Vector2 = cb.lerp(tip, float(k) / float(n))
+		var p1: Vector2 = cb.lerp(tip, float(k + 1) / float(n))
+		b.line(p0 + Vector2(0, -5), p1 + Vector2(0, 5), Color(0.70, 0.52, 0.08), 2.0)
+	# the magnet, hanging
+	b.circle(tip, 20.0, Color(0.22, 0.22, 0.24))
+	b.circle(tip, 14.0, Color(0.36, 0.36, 0.40))
+	b.flush(_wc)
+
+
 # A row of luggage trolleys nested into each other, the length of a van.
 func _draw_trolleys(v: Vector2) -> void:
 	var b := ShapeBatch.new()
@@ -6497,6 +6563,8 @@ func _draw_world() -> void:
 			walkway = TRAIL_DIRT
 		elif lvl == "park" or lvl == "barri":
 			walkway = Color(0.74, 0.67, 0.53)   # sandy gravel, as the city's parks are
+		elif lvl == "scrap":
+			grass = Color(0.36, 0.37, 0.25)     # dusty weeds up to the fence
 		if built:
 			# only the strips between the paving and the building line: beyond
 			# it the edge layer's buildings show (they sit behind the world, so
@@ -6593,6 +6661,9 @@ func _draw_world() -> void:
 		_draw_diluvi(vt, vb)
 	if lvl == "station":
 		_draw_estacio(vt, vb)
+	if lvl == "scrap":
+		_draw_crane(vt, vb)
+		_draw_kennels(vt, vb)
 	if tutorial_mode:
 		_draw_tutorial_pond()
 	if rambla():
@@ -6657,6 +6728,16 @@ func _draw_world() -> void:
 			continue
 		if lvl == "trail":
 			_draw_waymarker(_wc, h)
+			continue
+		if lvl == "scrap":
+			# a stack of old tyres, the scrapyard's stand-in for a hydrant
+			contact_shadow(_wc, hp, 15.0, 6.0, 0.22)
+			for k in range(3):
+				var tp := hp + Vector2(float(k % 2) * 3.0 - 1.5, -float(k) * 4.0)
+				_wc.draw_circle(tp, 14.0, Color(0.10, 0.10, 0.11) if not h.done else Color(0.20, 0.19, 0.18))
+				_wc.draw_circle(tp, 6.0, Color(0.26, 0.24, 0.22))
+			if not h.done and h.progress > 0.0:
+				_wc.draw_arc(hp, 19.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
 			continue
 		if lvl == "station":
 			# a planter with a potted palm, the station's stand-in for a hydrant
@@ -6787,6 +6868,8 @@ func _draw_world() -> void:
 			continue
 		if tutorial_mode:
 			_draw_lamppost(p)       # the lesson posts are lampposts, as the cards say
+		elif lvl == "scrap":
+			_draw_lamppost(p)       # floodlight masts over the yard
 		elif lvl == "station":
 			if absf(p.y - LevelBuild.ESTACIO_BARRIER_Y) < 1.0:
 				continue      # a barrier cabinet, drawn with the barriers
@@ -6919,6 +7002,9 @@ func _draw_world() -> void:
 			continue
 		if lvl == "station":
 			_draw_trolleys(v)
+			continue
+		if lvl == "scrap":
+			_draw_wreck_stack(v)
 			continue
 		var body := Rect2(v.x - 32.0, v.y - 66.0, 64.0, 132.0)
 		# it sits high, so the shadow is offset a long way and shaped like it

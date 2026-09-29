@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-09-29 - La Ferralla becomes a scrapyard
+
+La Ferralla was La Rambla's layout with guard dogs, café terrace and hydrant
+grid included. Now its own (`LevelBuild.ferralla`):
+- **A lane that shifts** side to side between the stacks as they were dumped
+  (edge nodes, half 250), weeds up to the fence.
+- **Wreck stacks** down both sides: three rusted, windowless cars skewed on
+  top of each other, solid, the rope wrapping their ends. **Oil** pooled on
+  the lane side of five of them.
+- **The crane**: its tracks and cab off the east side, the lattice boom out
+  over the lane with the magnet hanging, and their long shadow across it.
+- **Kennels** beside the sleeping guard dogs, chains run out to them; the
+  bone prize is right by the second one. Tyre stacks where a street has
+  hydrants, a rain barrel to drink from, floodlight masts.
+- The lasers now span the lane where it actually is. No terrace, benches,
+  crossings or drains.
+
+`tests/test_ferralla.gd` (9 checks). Only La Ferralla's snapshot lines change.
+
 ## 2026-09-29 - L'Estacio becomes a station
 
 L'Estacio was La Rambla's layout indoors, café terrace, bike crossings and
