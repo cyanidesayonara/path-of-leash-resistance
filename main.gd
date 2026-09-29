@@ -136,6 +136,8 @@ var park_posts: Array[Vector2] = []
 # where the owner is kept to a narrow line across the path (Les Obres' plank
 # over the trench): {"y0", "y1", "x0", "x1"}; see human._walk
 var narrows: Array[Dictionary] = []
+# El Gotic's parked scooters (they are also rope poles), drawn by their walk
+var scooters: Array[Vector2] = []
 # where it is dry (El Diluvi's arcade and awnings), and how wet the owner is
 var shelters: Array[Rect2] = []
 var human_soak := 0.0          # 0 dry, 1 wet through
@@ -1479,6 +1481,77 @@ func _draw_wreck_stack(v: Vector2) -> void:
 	for k in range(4):
 		b.circle(v + Vector2(-14.0 + float(k % 2) * 28.0, -8.0 + float(k / 2) * 20.0), 4.0 + float((h + k) % 3), Color(0.44, 0.28, 0.16, 0.8))  # rust
 	b.flush(_wc)
+
+
+# EL GOTIC: the steps, the parked scooters, and the bridge between two
+# buildings, drawn as its shadow across the alley and its stone lip at each
+# wall (the overhead layer draws the bridge itself above everyone)
+func _draw_gotic(vt: float, vb: float) -> void:
+	var b := ShapeBatch.new()
+	# setts, staggered, ruled inside the alley wherever it has jinked to
+	var row := int(floorf((vt - 60.0) / 56.0))
+	var ry := float(row) * 56.0
+	while ry < vb + 60.0:
+		var e0 := walk_edges(ry)
+		b.line(Vector2(e0.x, ry), Vector2(e0.y, ry), Color(0, 0, 0, 0.10), 2.0)
+		var off := 32.0 if row % 2 == 0 else 0.0
+		var rx := floorf(e0.x / 64.0) * 64.0 + off
+		while rx < e0.y:
+			if rx > e0.x:
+				b.line(Vector2(rx, ry), Vector2(rx, ry + 56.0), Color(0, 0, 0, 0.10), 2.0)
+			rx += 64.0
+		ry += 56.0
+		row += 1
+	# the plaça's fountain: a round stone basin, water, a spout in the middle
+	var fp: Vector2 = LevelBuild.GOTIC_PLACA
+	if fp.y > vt - 80.0 and fp.y < vb + 80.0:
+		b.circle(fp + LIGHT * 10.0, 40.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+		b.circle(fp, 38.0, Color(0.62, 0.58, 0.52))
+		b.circle(fp, 31.0, Color(0.34, 0.48, 0.56))
+		b.circle(fp + Vector2(-8, -8), 12.0, Color(0.46, 0.60, 0.68))
+		b.circle(fp, 7.0, Color(0.58, 0.54, 0.48))
+	var sy: float = LevelBuild.GOTIC_STEPS_Y
+	if sy > vt - 80.0 and sy < vb + 80.0:
+		for k in range(5):
+			var yy := sy + float(k) * 12.0
+			var e := walk_edges(yy)
+			b.rect(Rect2(e.x, yy, e.y - e.x, 12.0), Color(0.58, 0.54, 0.48).darkened(0.05 * float(k)))
+			b.line(Vector2(e.x, yy), Vector2(e.y, yy), Color(0.72, 0.68, 0.62), 2.0)
+	for sc: Vector2 in scooters:
+		if sc.y < vt - 60.0 or sc.y > vb + 60.0:
+			continue
+		var c: Color = [Color(0.70, 0.16, 0.16), Color(0.86, 0.84, 0.78), Color(0.22, 0.40, 0.56)][int(absf(sc.y)) % 3]
+		b.rect(Rect2(sc.x - 9.0 + 5.0, sc.y - 26.0 + 7.0, 18.0, 52.0), Color(0, 0, 0, 0.2))
+		b.circle(sc + Vector2(0, -20), 7.0, Color(0.10, 0.10, 0.11))
+		b.circle(sc + Vector2(0, 20), 7.0, Color(0.10, 0.10, 0.11))
+		b.rect(Rect2(sc.x - 9.0, sc.y - 16.0, 18.0, 34.0), c)
+		b.circle(sc + Vector2(0, 4), 8.0, (c as Color).darkened(0.25))
+		b.line(sc + Vector2(-12, -18), sc + Vector2(12, -18), Color(0.2, 0.2, 0.22), 3.0)
+	var by: float = LevelBuild.GOTIC_BRIDGE_Y
+	if by > vt - 120.0 and by < vb + 120.0:
+		var e2 := walk_edges(by)
+		b.rect(Rect2(e2.x, by + 20.0, e2.y - e2.x, 70.0), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+	b.flush(_wc)
+
+
+# the overhead layer's picture: El Gotic's bridge, carved stone, a
+# pointed-arch window in its side, over the alley at GOTIC_BRIDGE_Y
+func draw_overhead_onto(c: CanvasItem) -> void:
+	if lvl != "oldtown":
+		return
+	var by: float = LevelBuild.GOTIC_BRIDGE_Y
+	var e := walk_edges(by)
+	var b := ShapeBatch.new(c)
+	var r := Rect2(e.x - 30.0, by - 34.0, e.y - e.x + 60.0, 68.0)
+	b.rect(r, Color(0.52, 0.47, 0.40))
+	b.rect(Rect2(r.position.x, r.position.y, r.size.x, 8.0), Color(0.64, 0.58, 0.50))
+	b.rect(Rect2(r.position.x, r.end.y - 8.0, r.size.x, 8.0), Color(0.40, 0.36, 0.31))
+	var wx := r.position.x + 40.0
+	while wx < r.end.x - 40.0:
+		b.rect(Rect2(wx - 10.0, by - 14.0, 20.0, 28.0), Color(0.22, 0.20, 0.18))
+		b.circle(Vector2(wx, by - 14.0), 10.0, Color(0.22, 0.20, 0.18))
+		wx += 70.0
+	b.flush()
 
 
 # a kennel beside each sleeping guard dog, its chain run out to the dog
@@ -6664,6 +6737,8 @@ func _draw_world() -> void:
 	if lvl == "scrap":
 		_draw_crane(vt, vb)
 		_draw_kennels(vt, vb)
+	if lvl == "oldtown":
+		_draw_gotic(vt, vb)
 	if tutorial_mode:
 		_draw_tutorial_pond()
 	if rambla():
@@ -6728,6 +6803,16 @@ func _draw_world() -> void:
 			continue
 		if lvl == "trail":
 			_draw_waymarker(_wc, h)
+			continue
+		if lvl == "oldtown":
+			# a terracotta pot of geraniums by a door
+			contact_shadow(_wc, hp, 12.0, 5.0, 0.22)
+			_wc.draw_circle(hp, 11.0, Color(0.70, 0.38, 0.24) if not h.done else Color(0.52, 0.34, 0.26))
+			_wc.draw_circle(hp, 8.0, Color(0.30, 0.44, 0.22))
+			for k in range(4):
+				_wc.draw_circle(hp + Vector2.from_angle(TAU * float(k) / 4.0 + 0.5) * 5.0, 3.0, Color(0.88, 0.18, 0.22))
+			if not h.done and h.progress > 0.0:
+				_wc.draw_arc(hp, 17.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
 			continue
 		if lvl == "scrap":
 			# a stack of old tyres, the scrapyard's stand-in for a hydrant
@@ -6966,6 +7051,8 @@ func _draw_world() -> void:
 		if rambla():
 			_draw_canaletes(f)
 			continue
+		if lvl == "oldtown":
+			continue      # the plaça's fountain draws with the plaça
 		_wc.draw_circle(f, 12.0, Color(0.5, 0.55, 0.58))
 		_wc.draw_circle(f, 8.0, Color(0.4, 0.55, 0.65))
 		_wc.draw_circle(f + Vector2(0, -3), 2.5, Color(0.75, 0.88, 0.95))
@@ -7354,21 +7441,22 @@ func _draw_world() -> void:
 				sin(a) * float(pt["ry"]) * rr), 5.0,
 				Color(base.r * 0.7, base.g * 0.7, base.b * 0.7, 0.6))
 	# El Gotic: laundry strung across the alley overhead, a lantern or two
-	if lvl == "oldtown":
+	if lvl == "oldtown" or lvl == "neteja":
 		var lt := AnimClock.msec() / 1000.0
 		var wash := [Color(0.8, 0.3, 0.35), Color(0.3, 0.5, 0.7), Color(0.9, 0.85, 0.6), Color(0.4, 0.65, 0.5)]
 		for i in range(laundry_lines.size()):
 			var ly: float = laundry_lines[i]
-			_wc.draw_line(Vector2(sw_l - 20.0, ly), Vector2(sw_r + 20.0, ly - 8.0), Color(0.2, 0.18, 0.16), 1.5)
+			var le := walk_edges(ly)
+			_wc.draw_line(Vector2(le.x - 20.0, ly), Vector2(le.y + 20.0, ly - 8.0), Color(0.2, 0.18, 0.16), 1.5)
 			for j in range(5):
-				var hx := lerpf(sw_l + 20.0, sw_r - 20.0, float(j) / 4.0)
+				var hx := lerpf(le.x + 20.0, le.y - 20.0, float(j) / 4.0)
 				var sway := sin(lt * 1.2 + j + i) * 2.0
 				_wc.draw_rect(Rect2(hx - 9.0, ly - 6.0, 18.0, 26.0 + sway), wash[(i + j) % wash.size()])
 		# lanterns down one wall
 		for i in range(laundry_lines.size()):
 			var lyy: float = laundry_lines[i] + 380.0
 			var glow := 0.6 + 0.25 * sin(lt * 3.0 + i)
-			_wc.draw_circle(Vector2(sw_l + 6.0, lyy), 6.0, Color(1.0, 0.8, 0.4, glow))
+			_wc.draw_circle(Vector2(walk_edges(lyy).x + 6.0, lyy), 6.0, Color(1.0, 0.8, 0.4, glow))
 	# street performers: a hat, some coins, music in the air. In the rain
 	# they are an umbrella crowd instead - hunched under canopies, no busking.
 	var pt := AnimClock.msec() / 1000.0

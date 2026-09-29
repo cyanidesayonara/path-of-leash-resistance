@@ -42,6 +42,58 @@ static func tutorial_pond(m: Node2D) -> Rect2:
 	return Rect2(e.y + 20.0, y - 90.0, TUT_POND_W, 150.0)
 
 
+# EL GOTIC, in level space against its own walls
+const GOTIC_BRIDGE_Y := -1150.0
+const GOTIC_STEPS_Y := -2000.0
+const GOTIC_PLACA := Vector2(680.0, -2800.0)
+
+
+# a point this far in from the west (east=false) or east wall at height y
+static func gotic_wall(m: Node2D, y: float, east: bool, inset: float) -> Vector2:
+	var e: Vector2 = m.walk_edges(y)
+	return Vector2((e.y - inset) if east else (e.x + inset), y)
+
+
+static func gotic(m: Node2D) -> void:
+	# EL GOTIC: medieval alleys, walls straight onto the paving, laundry
+	# overhead, cats on the ledges, bollards where it pinches, steps, the
+	# stone bridge between two buildings, flowerpots at the doors, scooters
+	# parked against the walls, and the plaça with its fountain. None of the
+	# market's stalls.
+	m.gate_text = "PLACA"
+	m.stalls.clear()
+	m.stall_kinds.clear()
+	m.astands = Array([], TYPE_VECTOR2, &"", null)
+	m.manholes = Array([], TYPE_VECTOR2, &"", null)
+	m.cone_spots = Array([], TYPE_VECTOR2, &"", null)
+	m.poles.clear()
+	# bollards in the middle where the alley jinks: wind the owner round one
+	for y: float in [-650.0, -1580.0, -3500.0, -4050.0]:
+		var e: Vector2 = m.walk_edges(y)
+		m.poles.append(Vector2((e.x + e.y) * 0.5, y))
+	# the plaça's plane tree
+	m.poles.append(GOTIC_PLACA + Vector2(-150.0, -60.0))
+	m.deco_pole_count = m.poles.size()
+	# scooters parked against the walls: solid, and the rope catches them
+	m.scooters = Array([gotic_wall(m, -1300.0, false, 26.0), gotic_wall(m, -2100.0, true, 26.0),
+		gotic_wall(m, -3650.0, false, 26.0), gotic_wall(m, -4400.0, true, 26.0)], TYPE_VECTOR2, &"", null)
+	for sc: Vector2 in m.scooters:
+		m.poles.append(sc)
+	m.benches = Array([GOTIC_PLACA + Vector2(-250.0, 80.0), GOTIC_PLACA + Vector2(250.0, -80.0)], TYPE_VECTOR2, &"", null)
+	m.bins = Array([gotic_wall(m, -900.0, true, 26.0), gotic_wall(m, -3200.0, false, 26.0)], TYPE_VECTOR2, &"", null)
+	# the drink is at the basin's rim, where a dog can reach it
+	m.fountains = Array([GOTIC_PLACA + Vector2(0.0, 48.0)], TYPE_VECTOR2, &"", null)
+	m.performers = Array([GOTIC_PLACA + Vector2(150.0, 110.0)], TYPE_VECTOR2, &"", null)
+	m.wallcat_spots = Array([
+		gotic_wall(m, -900.0, false, 8.0), gotic_wall(m, -1450.0, true, 8.0),
+		gotic_wall(m, -2100.0, false, 8.0), gotic_wall(m, -3350.0, true, 8.0),
+		gotic_wall(m, -3950.0, false, 8.0), gotic_wall(m, -4300.0, true, 8.0),
+	], TYPE_VECTOR2, &"", null)
+	m.laundry_lines = Array([-1000.0, -1850.0, -3450.0, -3900.0, -4400.0], TYPE_FLOAT, &"", null)
+	# the owner walks round the fountain, not through it (east side)
+	m.islands = Array([{"rect": Rect2(GOTIC_PLACA - Vector2(40.0, 40.0), Vector2(80.0, 80.0)), "side": 1.0}], TYPE_DICTIONARY, &"", null)
+
+
 # LA FERRALLA. Wreck stacks along both sides of the lane (authored in the
 # 300..980 space, fitted to the lane like vans), the crane's base and the
 # line of its boom across the yard.
@@ -541,6 +593,24 @@ static func apply_corridor(m: Node2D) -> void:
 			{"y": -4600.0, "cx": 700.0, "half": 300.0},
 			{"y": m.GATE_Y, "cx": 640.0, "half": 300.0},
 		]
+	elif m.lvl == "oldtown":
+		# EL GOTIC: narrow alleys that jink left and right round the old
+		# blocks, opening once into the little plaça with its fountain
+		m.edge_nodes = [
+			{"y": m.START_Y, "cx": 640.0, "half": 225.0},
+			{"y": -400.0, "cx": 640.0, "half": 170.0},
+			{"y": -800.0, "cx": 520.0, "half": 170.0},
+			{"y": -1400.0, "cx": 520.0, "half": 170.0},
+			{"y": -1850.0, "cx": 760.0, "half": 170.0},
+			{"y": -2250.0, "cx": 760.0, "half": 170.0},
+			{"y": -2650.0, "cx": 680.0, "half": 300.0},
+			{"y": -2950.0, "cx": 680.0, "half": 300.0},
+			{"y": -3400.0, "cx": 560.0, "half": 170.0},
+			{"y": -3800.0, "cx": 560.0, "half": 170.0},
+			{"y": -4250.0, "cx": 740.0, "half": 170.0},
+			{"y": -4700.0, "cx": 640.0, "half": 225.0},
+			{"y": m.GATE_Y, "cx": 640.0, "half": 225.0},
+		]
 	elif m.lvl == "scrap":
 		# LA FERRALLA: the lane between the wreck stacks shifts one way and
 		# the other as the stacks were dumped
@@ -629,6 +699,9 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 
 
 static func fit_props_to_corridor(m: Node2D) -> void:
+	# El Gotic places everything against its own jinking walls already
+	if m.lvl == "oldtown":
+		return
 	# Props were all authored for the old fixed 300..980 corridor, so a
 	# narrower walk would leave them stranded out on the verge. Pull every
 	# placed prop back inside whatever corridor this level declared, keeping
@@ -675,7 +748,7 @@ static func build_level_data(m: Node2D) -> void:
 	# geometry is a later pass) and re-theme it below: El Aguacero on the
 	# boulevard, El Gotic on the stall-lined market channel.
 	var geo = m.lvl
-	if m.lvl == "oldtown" or m.lvl == "spook" or m.lvl == "neteja":
+	if m.lvl == "spook" or m.lvl == "neteja":
 		geo = "market"
 	elif m.lvl == "guell":
 		geo = "park"
@@ -797,6 +870,12 @@ static func build_level_data(m: Node2D) -> void:
 			]
 			# someone's bocadillo, dropped in its foil
 			keb_list = [Vector2(620, -1900), Vector2(700, -4200)]
+		"oldtown":
+			# flowerpots at the doors: geraniums in terracotta
+			hyd_list = [gotic_wall(m, -600.0, false, 16.0), gotic_wall(m, -1600.0, true, 16.0),
+				gotic_wall(m, -2150.0, false, 16.0), gotic_wall(m, -3550.0, true, 16.0),
+				gotic_wall(m, -4450.0, false, 16.0)]
+			keb_list = [gotic_wall(m, -1250.0, true, 70.0), gotic_wall(m, -3900.0, false, 70.0)]
 		"scrap":
 			# tyre stacks where a street has hydrants: what gets marked here
 			hyd_list = [
@@ -1007,18 +1086,7 @@ static func build_level_data(m: Node2D) -> void:
 	elif m.lvl == "rain":
 		diluvi(m)
 	elif m.lvl == "oldtown":
-		# El Gotic: a tight medieval alley. Wall cats perched on ledges up
-		# both walls, laundry strung overhead, lanterns. Extra poles pinch
-		# the channel so threading the owner through is the real work.
-		m.gate_text = "PLACA"
-		m.wallcat_spots = Array([
-			Vector2(360, -900), Vector2(920, -1450), Vector2(360, -2100),
-			Vector2(920, -2750), Vector2(360, -3350), Vector2(920, -3950),
-		], TYPE_VECTOR2, &"", null)
-		m.laundry_lines = Array([-1250.0, -2000.0, -2850.0, -3650.0, -4300.0], TYPE_FLOAT, &"", null)
-		for yy in [-1150.0, -1700.0, -2500.0, -3200.0, -3800.0, -4400.0]:
-			m.poles.append(Vector2(m.walk_cx + (70.0 if int(yy) % 2 == 0 else -70.0), yy))
-		m.fountains = Array([Vector2(345, -2600.0)], TYPE_VECTOR2, &"", null)
+		gotic(m)
 	elif m.lvl == "trail":
 		# El Bosc: a forest trail. No bars out here, so the owner is forever
 		# stopping to hunt for a signal (see human.gd); muddy patches slow
@@ -1345,7 +1413,7 @@ static func build_level_data(m: Node2D) -> void:
 			m.prize_pos = Vector2(640.0, -1500.0)  # right on a gaping storm drain
 			m.prize_text = "snatch the toy off the storm drain"
 		"oldtown":
-			m.prize_pos = Vector2(920.0, -2750.0)  # under a smug wall cat, up the wall
+			m.prize_pos = gotic_wall(m, m.wallcat_spots[3].y, m.wallcat_spots[3].x > m.walk_edges(m.wallcat_spots[3].y).x + 100.0, 34.0)  # under a smug wall cat
 			m.prize_text = "steal the sardine under the cat's ledge"
 		"trail":
 			m.prize_pos = Vector2(300.0, -3400.0)  # a pinecone off in the muddy brush
@@ -1863,6 +1931,16 @@ static func build_walls(m: Node2D) -> void:
 		m.add_child(wood)
 	if m.lvl == "station":
 		add_rect_body(m, ESTACIO_TRAIN.get_center(), ESTACIO_TRAIN.size)
+	if m.lvl == "oldtown":
+		var fb := StaticBody2D.new()
+		fb.collision_layer = 1
+		fb.position = GOTIC_PLACA
+		var fcs := CollisionShape2D.new()
+		var fsh := CircleShape2D.new()
+		fsh.radius = 34.0
+		fcs.shape = fsh
+		fb.add_child(fcs)
+		m.add_child(fb)
 	if m.lvl == "park":
 		add_rect_body(m, PARK_MAMMOTH, MAMMOTH_BODY)
 		for bp: Vector2 in bandstand_posts():
@@ -2031,6 +2109,13 @@ static func build_entities(m: Node2D) -> void:
 	m.edge_layer = Node2D.new()
 	m.edge_layer.set_script(load("res://world/edgelayer.gd"))
 	m.edge_layer.z_index = -5   # behind everything in the world
+	# what hangs over the walk, above everyone (El Gotic's bridge)
+	if m.lvl == "oldtown":
+		var ov := Node2D.new()
+		ov.set_script(load("res://world/overheadlayer.gd"))
+		ov.z_index = 14
+		m.add_child(ov)
+		ov.setup(m)
 	m.add_child(m.edge_layer)
 	m.edge_layer.setup(m)
 	m.verge_layer = Node2D.new()
