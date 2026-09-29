@@ -170,6 +170,9 @@ jobs:
       - name: L'Estacio is its own station test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_estacio.gd
 
+      - name: La Ferralla is its own scrapyard test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_ferralla.gd
+
       - name: Built walks' cross-section test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_cross_section.gd
 

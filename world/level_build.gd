@@ -42,6 +42,67 @@ static func tutorial_pond(m: Node2D) -> Rect2:
 	return Rect2(e.y + 20.0, y - 90.0, TUT_POND_W, 150.0)
 
 
+# LA FERRALLA. Wreck stacks along both sides of the lane (authored in the
+# 300..980 space, fitted to the lane like vans), the crane's base and the
+# line of its boom across the yard.
+const FERRALLA_STACKS: Array[Vector2] = [
+	Vector2(300, -700), Vector2(980, -950), Vector2(300, -1650), Vector2(980, -1800),
+	Vector2(300, -2350), Vector2(980, -2900), Vector2(300, -3550), Vector2(980, -3750),
+	Vector2(300, -4250), Vector2(980, -4650),
+]
+const FERRALLA_CRANE := Vector2(1080.0, -2500.0)
+const FERRALLA_BOOM_TO := Vector2(420.0, -2380.0)
+
+
+static func ferralla(m: Node2D) -> void:
+	# LA FERRALLA: the scrapyard shortcut. A lane between stacked wrecks,
+	# oil pooled behind them, the crane over the yard, the guard dogs asleep
+	# by their kennels, cameras and lasers. Slow is silent; getting caught is
+	# embarrassing, not fatal. No terrace, no benches, no hydrant grid, no
+	# road crossings.
+	m.gate_text = "BACK GATE"
+	m.lane_ys = Array([], TYPE_FLOAT, &"", null)
+	m.tables.clear()
+	m.chairs.clear()
+	m.parasols.clear()
+	m.benches.clear()
+	m.cellars.clear()
+	m.stalls.clear()
+	m.manholes = Array([], TYPE_VECTOR2, &"", null)
+	m.astands = Array([], TYPE_VECTOR2, &"", null)
+	m.performers = Array([], TYPE_VECTOR2, &"", null)
+	m.poles.clear()
+	# floodlight masts, the only upright things that are not scrap
+	for y: float in [-450.0, -1450.0, -2600.0, -3900.0]:
+		m.poles.append(Vector2(640.0 + (150.0 if int(-y) % 2 == 0 else -150.0), y))
+	m.deco_pole_count = m.poles.size()
+	m.vans = Array(FERRALLA_STACKS.duplicate(), TYPE_VECTOR2, &"", null)
+	m.bins = Array([Vector2(m.sw_l + 30, -900), Vector2(m.sw_r - 30, -3000)], TYPE_VECTOR2, &"", null)
+	m.fountains = Array([Vector2(m.sw_r - 40, -2700)], TYPE_VECTOR2, &"", null)   # a rain barrel
+	m.cone_spots = Array([Vector2(560, -1950), Vector2(720, -3050), Vector2(600, -3900)], TYPE_VECTOR2, &"", null)
+	m.guard_posts = Array([
+		Vector2(400, -1350), Vector2(880, -2250),
+		Vector2(400, -3150), Vector2(880, -4050),
+	], TYPE_VECTOR2, &"", null)
+	m.cameras = Array([
+		{"pos": Vector2(330, -1900), "base": 0.0, "range": 0.9, "speed": 0.7, "cd": 0.0},
+		{"pos": Vector2(950, -3500), "base": PI, "range": 0.9, "speed": 0.55, "cd": 0.0},
+	], TYPE_DICTIONARY, &"", null)
+	# the lasers run across the lane where it is at their height
+	var l1: Vector2 = m.walk_edges(-2650.0)
+	var l2: Vector2 = m.walk_edges(-4350.0)
+	m.lasers = Array([
+		{"x0": l1.x, "x1": l1.y, "y_lo": -2750.0, "y_hi": -2550.0, "speed": 1.1, "cd": 0.0},
+		{"x0": l2.x, "x1": l2.y, "y_lo": -4450.0, "y_hi": -4250.0, "speed": 0.8, "cd": 0.0},
+	], TYPE_DICTIONARY, &"", null)
+	# oil pooled on the lane side of some of the stacks
+	m.patches = Array([], TYPE_DICTIONARY, &"", null)
+	for i: int in [1, 3, 4, 6, 8]:
+		var sv: Vector2 = FERRALLA_STACKS[i]
+		m.patches.append({"y": sv.y + 40.0, "at": 0.18 if sv.x < 640.0 else 0.82, "rx": 40.0, "ry": 26.0,
+			"seed": float(i) * 0.7, "kind": "oil"})
+
+
 # L'ESTACIO, in level space (its posts are not fitted to the path)
 const ESTACIO_PILLAR_XS: Array[float] = [400.0, 880.0]
 const ESTACIO_PILLAR_YS: Array[float] = [-1150.0, -1500.0, -1850.0, -2200.0, -2550.0]
@@ -436,7 +497,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"station": half = 390.0  # the widest: an open concourse
 		"site": half = 295.0     # squeezed by the works
 		"spook": half = 275.0
-		"scrap": half = 305.0
+		"scrap": half = 250.0    # a lane between the wreck stacks
 		"guell": half = 300.0   # terraces, wide enough to carve on
 		# The narrowest walk, on purpose: the sweeper chase lives here (#20),
 		# and a street sweeper only reads as a machine bearing down on you in a
@@ -479,6 +540,18 @@ static func apply_corridor(m: Node2D) -> void:
 			{"y": -3900.0, "cx": 520.0, "half": 296.0},
 			{"y": -4600.0, "cx": 700.0, "half": 300.0},
 			{"y": m.GATE_Y, "cx": 640.0, "half": 300.0},
+		]
+	elif m.lvl == "scrap":
+		# LA FERRALLA: the lane between the wreck stacks shifts one way and
+		# the other as the stacks were dumped
+		m.edge_nodes = [
+			{"y": m.START_Y, "cx": 640.0, "half": 250.0},
+			{"y": -700.0, "cx": 640.0, "half": 250.0},
+			{"y": -1400.0, "cx": 570.0, "half": 240.0},
+			{"y": -2300.0, "cx": 710.0, "half": 250.0},
+			{"y": -3200.0, "cx": 570.0, "half": 240.0},
+			{"y": -4100.0, "cx": 700.0, "half": 250.0},
+			{"y": m.GATE_Y, "cx": 640.0, "half": 250.0},
 		]
 	elif m.lvl == "station":
 		# L'ESTACIO: in off the street through the doors, out into the wide
@@ -602,9 +675,7 @@ static func build_level_data(m: Node2D) -> void:
 	# geometry is a later pass) and re-theme it below: El Aguacero on the
 	# boulevard, El Gotic on the stall-lined market channel.
 	var geo = m.lvl
-	if m.lvl == "scrap":
-		geo = "street"
-	elif m.lvl == "oldtown" or m.lvl == "spook" or m.lvl == "neteja":
+	if m.lvl == "oldtown" or m.lvl == "spook" or m.lvl == "neteja":
 		geo = "market"
 	elif m.lvl == "guell":
 		geo = "park"
@@ -726,6 +797,14 @@ static func build_level_data(m: Node2D) -> void:
 			]
 			# someone's bocadillo, dropped in its foil
 			keb_list = [Vector2(620, -1900), Vector2(700, -4200)]
+		"scrap":
+			# tyre stacks where a street has hydrants: what gets marked here
+			hyd_list = [
+				Vector2(m.sw_l + 40, -500), Vector2(m.sw_r - 40, -1200),
+				Vector2(m.sw_l + 40, -2000), Vector2(m.sw_r - 40, -3400),
+				Vector2(m.sw_l + 40, -4600),
+			]
+			keb_list = [Vector2(620, -1700), Vector2(700, -3700)]
 		"station":
 			# planters where a street has hydrants: the station's potted palms
 			hyd_list = [
@@ -1022,27 +1101,7 @@ static func build_level_data(m: Node2D) -> void:
 		], TYPE_DICTIONARY, &"", null)
 		m.fountains = Array([Vector2(m.walk_cx - 150.0, -2650.0)], TYPE_VECTOR2, &"", null)
 	elif m.lvl == "scrap":
-		# El Desguas: the scrapyard shortcut. Sleeping guard dogs, sweeping
-		# cameras, laser tripwires - and your stealth partner is a glowing,
-		# ringing phone zombie on the other end of the rope. Slow is silent;
-		# getting caught is embarrassing, not fatal.
-		m.gate_text = "BACK GATE"
-		m.guard_posts = Array([
-			Vector2(380, -1350), Vector2(900, -2250),
-			Vector2(390, -3150), Vector2(880, -4050),
-		], TYPE_VECTOR2, &"", null)
-		m.cameras = Array([
-			{"pos": Vector2(330, -1900), "base": 0.0, "range": 0.9, "speed": 0.7, "cd": 0.0},
-			{"pos": Vector2(950, -3500), "base": PI, "range": 0.9, "speed": 0.55, "cd": 0.0},
-		], TYPE_DICTIONARY, &"", null)
-		m.lasers = Array([
-			{"x0": m.sw_l, "x1": m.sw_r, "y_lo": -2750.0, "y_hi": -2550.0, "speed": 1.1, "cd": 0.0},
-			{"x0": m.sw_l, "x1": m.sw_r, "y_lo": -4450.0, "y_hi": -4250.0, "speed": 0.8, "cd": 0.0},
-		], TYPE_DICTIONARY, &"", null)
-		# scrap heaps: wrecked cars (vans) and junk drums (cones)
-		m.vans = Array([Vector2(880, -1600), Vector2(390, -2650), Vector2(900, -4400)], TYPE_VECTOR2, &"", null)
-		m.cone_spots = Array([Vector2(560, -1950), Vector2(720, -3050), Vector2(600, -3900)], TYPE_VECTOR2, &"", null)
-		m.fountains = Array([Vector2(1005, -2950)], TYPE_VECTOR2, &"", null)
+		ferralla(m)
 	if m.tutorial_mode:
 		# Take away everything that can hurt, keep everything worth learning.
 		# This has to run BEFORE the shared setup below consumes hyd_list /
@@ -1133,8 +1192,6 @@ static func build_level_data(m: Node2D) -> void:
 	match m.lvl:
 		"market":
 			m.patches.append({"y": -2985.0, "at": 0.22, "rx": mw * 0.16, "ry": 56.0, "seed": 1.85, "kind": "fish"})
-		"scrap":
-			m.patches.append({"y": -1780.0, "at": 0.27, "rx": mw * 0.20, "ry": 60.0, "seed": 4.40, "kind": "oil"})
 		"spook":
 			m.patches.append({"y": -2070.0, "at": 0.29, "rx": mw * 0.22, "ry": 66.0, "seed": 2.65, "kind": "confetti"})
 		"trail":
@@ -1303,7 +1360,7 @@ static func build_level_data(m: Node2D) -> void:
 			m.prize_pos = Vector2(640.0, -2350.0)  # a dog-safe pumpkin treat, ringed by candy
 			m.prize_text = "get the pumpkin treat without eating the candy"
 		"scrap":
-			m.prize_pos = Vector2(925.0, -2270.0)  # right beside a sleeping guard dog
+			m.prize_pos = m.guard_posts[1] + Vector2(-30.0, 22.0)  # right beside a sleeping guard dog
 			m.prize_text = "steal the bone from under the guard's nose"
 		_:
 			m.prize_pos = Vector2(m.SHOULDER_R - 12.0, -2400.0)
