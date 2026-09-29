@@ -11,14 +11,15 @@ extends Control
 const W := 600.0
 const ROW_H := 52.0
 const ROWS_Y := 92.0
-const FOOTER_H := 36.0    # room below the last row for the hint line
+const FOOTER_H := 14.0
 const NAME_X := 42.0
 const BAR_X := 296.0
 const BAR_W := 208.0
 const BAR_H := 13.0
 
+const Kit := preload("res://hud/ui_kit.gd")
+
 var main: Node2D
-var sb: StyleBoxFlat
 var sel: StyleBoxFlat
 
 
@@ -41,13 +42,9 @@ func _panel_height() -> float:
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	sb = StyleBoxFlat.new()
-	sb.bg_color = Color(0.07, 0.075, 0.09, 0.93)
-	sb.set_corner_radius_all(14)
-	sb.border_width_top = 3
-	sb.border_color = Color(0.86, 0.72, 0.36, 0.75)
+	var acc := Kit.accent("settings")
 	sel = StyleBoxFlat.new()
-	sel.bg_color = Color(1.0, 0.88, 0.6, 0.11)
+	sel.bg_color = Color(acc.r, acc.g, acc.b, 0.13)
 	sel.set_corner_radius_all(9)
 	# centred on the actual viewport, not the 1280x720 reference - aspect
 	# "expand" reveals more or less than that on most phone shapes
@@ -71,9 +68,8 @@ func _draw() -> void:
 		return
 	var f := ThemeDB.fallback_font
 	var h := _panel_height()
-	draw_style_box(sb, Rect2(0, 0, W, h))
-	draw_string(f, Vector2(NAME_X, 46), "SETTINGS", HORIZONTAL_ALIGNMENT_LEFT, -1, 27,
-		Color(0.98, 0.94, 0.86))
+	Kit.card(self, Rect2(0, 0, W, h), Kit.accent("settings"))
+	Kit.heading(self, Vector2(NAME_X, 46), "SETTINGS", 27, Kit.accent("settings"))
 	draw_line(Vector2(NAME_X, 62), Vector2(W - NAME_X, 62), Color(1, 1, 1, 0.14), 1.5)
 	var rows: Array = main.settings_rows()
 	for i in range(rows.size()):
@@ -87,17 +83,15 @@ func _draw() -> void:
 				PackedVector2Array([
 					Vector2(NAME_X - 24.0, y - 7.0), Vector2(NAME_X - 24.0, y + 5.0),
 					Vector2(NAME_X - 15.0, y - 1.0)
-				]), Color(0.98, 0.82, 0.42))
+				]), Kit.accent("settings"))
 		var name_col := Color(0.98, 0.95, 0.88) if picked else Color(0.72, 0.72, 0.75)
-		draw_string(f, Vector2(NAME_X, y + 6.0), String(row.name), HORIZONTAL_ALIGNMENT_LEFT,
-			-1, 20, name_col)
+		draw_string(Kit.display(), Vector2(NAME_X, y + 6.0), String(row.name), HORIZONTAL_ALIGNMENT_LEFT,
+			-1, 18, name_col)
 		if String(row.kind) == "slider":
 			_slider(f, y, float(row.v), picked)
 		else:
 			_toggle(f, y, bool(row.v), picked)
-	var hint := Prompts.fill("{up_down}  choose     {left_right}  change     {back}  back")
-	draw_string(f, Vector2(NAME_X, h - 24.0), hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 15,
-		Color(0.78, 0.76, 0.72, 0.85))
+	# the buttons are on the prompt bar along the bottom (menu_screen.gd)
 
 
 func _slider(f: Font, y: float, v: float, picked: bool) -> void:

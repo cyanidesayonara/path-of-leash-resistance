@@ -68,7 +68,8 @@ func _layout() -> void:
 	# sat on top of the goals card all walk, one tap from restarting it.
 	buttons = [
 		{"action": "plant", "label": "DIG", "center": corner, "r": 56.0, "id": -1, "when": "primary"},
-		{"action": "bark", "label": "BARK", "center": corner + Vector2(5.0, -138.0), "r": 44.0, "id": -1, "when": "primary"},
+		# BARK is also "walk select" once a walk has stopped
+		{"action": "bark", "label": "BARK", "center": corner + Vector2(5.0, -138.0), "r": 44.0, "id": -1, "when": "bark"},
 		{"action": "pee", "label": "PEE", "center": corner + Vector2(-128.0, 62.0), "r": 44.0, "id": -1, "when": "primary"},
 		# turbo is held, like the rest: in reach of the thumb on DIG
 		{"action": "turbo", "label": "RUN", "center": corner + Vector2(-130.0, -72.0), "r": 40.0, "id": -1, "when": "walking"},
@@ -192,6 +193,8 @@ func _shown(b: Dictionary) -> bool:
 			return _menu_button()
 		"primary":
 			return _primary_controls()
+		"bark":
+			return _primary_controls() or _stopped()
 	return true
 
 

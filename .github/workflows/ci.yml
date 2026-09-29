@@ -67,8 +67,6 @@ jobs:
       - name: Bandana preview regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_bandana_preview.gd
 
-      - name: Owner label regression test
-        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_owner_label.gd
 
       - name: Shared bypasser route regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_bypasser_route.gd

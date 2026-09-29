@@ -64,55 +64,12 @@ static func build(m: Node2D) -> void:
 	m.results_card.visible = false
 	m.hud.add_child(m.results_card)
 	m.results_card.setup(m)
-	m.hint_l = hud_label(m, Vector2(24, 686), 15)
-	pin_box(m.hint_l, 0.0, 0.0, 0.0, 1.0)
-	m.hint_l.modulate.a = 0.75
-	m.title_l = hud_label(m, Vector2(0, 240), 44)
-	pin_wide(m.title_l, 52.0, 0.5)
-	m.title_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	m.title_l.text = "PATH OF LEASH RESISTANCE"
-	m.sub_l = hud_label(m, Vector2(0, 300), 18)
-	pin_wide(m.sub_l, 30.0, 0.5)
-	m.sub_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	m.sub_l.text = "You are the dog. Go and touch grass."
-	m.select_l = hud_label(m, Vector2(0, 348), 22)
-	pin_wide(m.select_l, 32.0, 0.5)
-	m.select_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	m.select_l.text = "<   %s   >" % Game.LEVEL_NAMES[m.lvl]
-	m.record_l = hud_label(m, Vector2(0, 300), 18)
-	pin_wide(m.record_l, 26.0, 0.5)
-	m.record_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	m.record_l.modulate.a = 0.85
-	# stacked ABOVE the controls line, which occupies y=686 from step 2 on
-	m.menu_hint_l = hud_label(m, Vector2(24, 662), 14)
-	pin_box(m.menu_hint_l, 0.0, 0.0, 0.0, 1.0)
-	m.menu_hint_l.modulate.a = 0.55
-	m.menu_hint_l.visible = false
 	var version_l: Label = hud_label(m, Vector2(1150, 686), 13)
 	pin_box(version_l, 0.0, 0.0, 1.0, 1.0)
 	version_l.text = build_label()
 	version_l.modulate.a = 0.5
-	m.owner_l = hud_label(m, Vector2(0, 296), 26)
-	pin_wide(m.owner_l, 34.0, 0.5)
-	m.owner_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	m.night_l = hud_label(m, Vector2(0, 340), 26)
-	pin_wide(m.night_l, 34.0, 0.5)
-	m.night_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	m.weather_l = hud_label(m, Vector2(0, 384), 26)
-	pin_wide(m.weather_l, 34.0, 0.5)
-	m.weather_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	# below the dog, which stands at about y=460-530 on the title, and above the
-	# walk's blurb chalked at y~580; at 470 it sat right across her (#8)
-	m.prompt_l = hud_label(m, Vector2(0, 536), 22)
-	pin_wide(m.prompt_l, 32.0, 0.5)
-	m.prompt_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	m.shop_preview_bg = ColorRect.new()
-	m.shop_preview_bg.position = Vector2(60.0, 190.0)
-	pin_box(m.shop_preview_bg, 440.0, 390.0, 0.5, 0.5)
-	m.shop_preview_bg.color = Color(0.05, 0.06, 0.07, 0.72)
-	m.shop_preview_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	m.shop_preview_bg.visible = false
-	m.hud.add_child(m.shop_preview_bg)
+	# the wardrobe's model of Millie: menu_screen.gd parks it on the
+	# wardrobe's spotlight while that screen is up
 	var preview := CharacterBody2D.new()
 	preview.set_script(load("res://entities/dog.gd"))
 	preview.preview_mode = true
@@ -123,34 +80,18 @@ static func build(m: Node2D) -> void:
 	preview.scale = Vector2(3.0, 3.0)
 	preview.visible = false
 	m.hud.add_child(preview)
+	# above the dim and the wardrobe card, which are drawn after it
 	preview.z_index = 1
 	m.shop_preview = preview
-	m.shop_title_l = hud_label(m, Vector2(0, 70), 30)
-	pin_wide(m.shop_title_l, 40.0)
-	m.shop_title_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	m.shop_title_l.visible = false
-	m.shop_preview_l = hud_label(m, Vector2(60.0, 145.0), 18)
-	pin_box(m.shop_preview_l, 440.0, 30.0, 0.5, 0.5)
-	m.shop_preview_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	m.shop_preview_l.text = "HIGHLIGHTED LOOK"
-	m.shop_preview_l.visible = false
-	m.shop_l = hud_label(m, Vector2(430.0, 150.0), 20)
-	pin_box(m.shop_l, 800.0, 460.0, 0.5, 0.5)
-	m.shop_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	m.shop_l.visible = false
 	for k in Game.COLLARS:
 		m.shop_items.append({"kind": "collar", "key": k})
+	# "none" is first in its catalogue, so it heads the bandana list
 	for k in Game.BANDANAS:
-		if k != "none":
-			m.shop_items.append({"kind": "bandana", "key": k})
-	m.shop_items.append({"kind": "bandana", "key": "none"})
+		m.shop_items.append({"kind": "bandana", "key": k})
 	# coats last: the biggest change to how Millie looks, and the first
 	# working piece of the dog creator
 	for k in Game.COATS:
 		m.shop_items.append({"kind": "coat", "key": k})
-	m.prompt_tw = m.create_tween().set_loops()
-	m.prompt_tw.tween_property(m.prompt_l, "modulate:a", 0.3, 0.7)
-	m.prompt_tw.tween_property(m.prompt_l, "modulate:a", 1.0, 0.7)
 	var touch := Control.new()
 	touch.set_script(load("res://hud/touch_controls.gd"))
 	touch.main = m
@@ -215,14 +156,19 @@ static func build(m: Node2D) -> void:
 	# the results card is built earlier but is what the dim is FOR: it has to
 	# sit above it, or the whole card comes out 55% darker than drawn
 	m.hud.move_child(m.results_card, m.dim.get_index() + 1)
+	# The notice a walk can end on. The label holds its text (the soak tool
+	# reads it, and Prompts re-fills it when the device changes); the menu
+	# screen draws it as a card, so the label itself never shows.
 	m.msg_label = hud_label(m, Vector2(0, 200), 22)
 	pin_wide(m.msg_label, 400.0, 0.5)
-	m.msg_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	m.msg_label.visible = false
-	m.pause_l = hud_label(m, Vector2(0, 300), 26)
-	pin_wide(m.pause_l, 120.0, 0.5)
-	m.pause_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	m.pause_l.visible = false
+	m.msg_label.self_modulate.a = 0.0
+	# every menu screen and the prompt bar; above the dim, which is what it
+	# sits on
+	m.menu_screen = Control.new()
+	m.menu_screen.set_script(load("res://hud/menu_screen.gd"))
+	m.hud.add_child(m.menu_screen)
+	m.menu_screen.setup(m)
 	m.tut_label = hud_label(m, Vector2(0, 96), 30)
 	pin_wide(m.tut_label, 40.0)
 	m.tut_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -231,10 +177,6 @@ static func build(m: Node2D) -> void:
 	pin_wide(m.tut_hint, 60.0)
 	m.tut_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	m.tut_hint.visible = false
-	m.progress_l = hud_label(m, Vector2(0, 70), 19)
-	pin_wide(m.progress_l, 560.0)
-	m.progress_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	m.progress_l.visible = false
 	# The single announcement channel. Added late so it draws over the other
 	# HUD cards, and anchored to the live viewport like everything else.
 	m.feed = Control.new()
