@@ -38,7 +38,9 @@ class FakeMain:
 	func release_pair_park_spot(pair_instance_id: int) -> void:
 		released_pair_ids.append(pair_instance_id)
 
-	func float_text(_position: Vector2, text: String, _color: Color) -> void:
+	const POP_SAY := 0
+
+	func float_text(_position: Vector2, text: String, _color: Color, _kind := -1) -> void:
 		if text == "oh - sorry!":
 			apologies += 1
 

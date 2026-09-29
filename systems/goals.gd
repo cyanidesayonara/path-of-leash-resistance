@@ -115,8 +115,12 @@ static func credit(m: Node2D, q: Dictionary) -> void:
 	m._peek_goals()
 	m.bones += 5
 	var newly: bool = Game.mark_goal(m.lvl, id) if not Game.daily else false
-	var tag := "GOAL! " if (newly or Game.daily) else "goal (again) "
-	m.feed.say(tag + quest_text(q), EventFeed.Tone.GOOD)
+	# by the goal list, not in the middle of the screen: a first time is
+	# gold, one already done on an earlier walk is quieter
+	if newly or Game.daily:
+		m.feed.toast("goal", "GOAL!  +5", quest_text(q), Color(0.98, 0.80, 0.38))
+	else:
+		m.feed.toast("goal", "DONE AGAIN  +5", quest_text(q), Color(0.58, 0.78, 0.62))
 
 
 static func check(m: Node2D) -> void:

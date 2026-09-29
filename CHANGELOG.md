@@ -2,6 +2,32 @@
 
 Append-only session history, newest first.
 
+## 2026-09-30 - Every kind of message gets its own place and look
+
+In a walk everything was said the same way: outlined capitals in the middle
+of the screen for goals, moods, the owner stopping and tricks alike, and one
+small white label in the world for a stranger's apology, a splash and a +3.
+Now each kind has a place:
+- **In the world** (`world/pops_layer.gd`): speech is a white bubble at the
+  speaker, sounds are tilted comic lettering, scores are a word and a gold
+  chip with a bone on it (red for a loss). A new pop stacks clear of a live
+  one. The owner's telegraph bubble is a real bubble too.
+- **The banner** (what is true right now) is a pill at the top centre. The
+  owner's news ("HE'S TEXTING! HE'S NOT LOOKING") takes it over for a moment
+  instead of shouting.
+- **Toasts**: a goal slides in under the goal list (gold the first time,
+  green when it was done on an earlier walk); a mood arrives under the vitals
+  in its own colour.
+- **Cards**: a tutorial lesson and a bystander's dare are cards under the
+  banner; the dare has a count and a timer bar.
+- **Shouts** in the middle are only for what she just did or what needs her
+  now, in the heavy face; a score for a shout already up lands in that line
+  ("POLE SWING!" then "POLE SWING! 14") instead of stacking a copy.
+- The tutorial hides the banner, so the lesson is the only instruction, and
+  its ground sign says FIRST WALK.
+- Two banner lines rewritten: "FULL!" is "FULL TANK! GO MARK A SPOT", and
+  "GO BACK DOWN TO HEAD HOME" is "BACK OUT THROUGH THE GATE, THEN HOME".
+
 ## 2026-09-29 - Each walk's name is made of the walk, and you can kick it about
 
 The walk's name was one font in a few inks. Now twelve walks spell it out of

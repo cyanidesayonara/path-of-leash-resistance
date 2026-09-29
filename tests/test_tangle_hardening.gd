@@ -33,7 +33,9 @@ class FakeMain:
 	func cast_shadow(_c: Object, _at: Vector2, _w: float, _h: float, _a := 0.20) -> void:
 		pass
 
-	func float_text(_pos: Vector2, text: String, _color: Color) -> void:
+	const POP_SAY := 0
+
+	func float_text(_pos: Vector2, text: String, _color: Color, _kind := -1) -> void:
 		if text == "oh - sorry!":
 			apologies += 1
 		elif text.to_lower().contains("go on") or text.to_lower().contains("excuse"):

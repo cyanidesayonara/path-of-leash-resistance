@@ -521,7 +521,7 @@ func update_tangle_state(crossing: bool, delta: float) -> bool:
 			leash.free_slip_t = maxf(leash.free_slip_t, 0.35 + ramp_t * 0.4)
 			if not mercy_shown and is_instance_valid(main):
 				mercy_shown = true
-				main.float_text(npc_owner.position, "excuse me - go on", Color(1, 0.92, 0.78))
+				main.float_text(npc_owner.position, "excuse me - go on", Color(1, 0.92, 0.78), main.POP_SAY)
 		if tangle_hold_t >= TANGLE_MERCY_S:
 			var need_line := not mercy_shown
 			tangled_t = 0.0
@@ -535,12 +535,12 @@ func update_tangle_state(crossing: bool, delta: float) -> bool:
 				leash.dynamic_obstacles.clear()
 				leash.free_slip_t = maxf(leash.free_slip_t, 1.0)
 			if need_line and is_instance_valid(main):
-				main.float_text(npc_owner.position, "excuse me - go on", Color(1, 0.92, 0.78))
+				main.float_text(npc_owner.position, "excuse me - go on", Color(1, 0.92, 0.78), main.POP_SAY)
 			return false
 		if tangle_active:
 			return false
 		tangle_active = true
-		main.float_text(npc_owner.position, "oh - sorry!", Color(1, 0.9, 0.8))
+		main.float_text(npc_owner.position, "oh - sorry!", Color(1, 0.9, 0.8), main.POP_SAY)
 		return true
 	tangle_root_acc = maxf(0.0, tangle_root_acc - delta * 2.0)
 	tangle_hold_t = maxf(0.0, tangle_hold_t - delta)
