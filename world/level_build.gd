@@ -23,7 +23,7 @@ const TUT_POND_W := 150.0
 
 const CROSS_SECTIONS := {
 	"street": ["road", 160.0, "sidewalk", 120.0],    # a traffic lane; the bike lane side
-	"rain": ["sidewalk", 90.0, "sidewalk", 120.0],
+	"rain": ["none", 0.0, "none", 0.0],             # a shopping street, shopfronts on the paving
 	"market": ["sidewalk", 70.0, "sidewalk", 70.0],
 	"oldtown": ["none", 0.0, "none", 0.0],            # an alley: walls at the paving
 	"station": ["sidewalk", 100.0, "sidewalk", 100.0],
@@ -40,6 +40,80 @@ static func tutorial_pond(m: Node2D) -> Rect2:
 	var y: float = TUT.at("teeter")
 	var e: Vector2 = m.walk_edges(y)
 	return Rect2(e.y + 20.0, y - 90.0, TUT_POND_W, 150.0)
+
+
+# EL DILUVI. The arcade down the west side: a covered walk behind a row of
+# pillars, the one long stretch of dry on the walk.
+const DILUVI_ARCADE_Y0 := -3300.0
+const DILUVI_ARCADE_Y1 := -1300.0
+const DILUVI_ARCADE_W := 84.0          # from the building line to the pillars
+# the shop awnings over the east side: [y, length]
+const DILUVI_AWNINGS: Array = [[-700.0, 110.0], [-1050.0, 90.0], [-1650.0, 120.0], [-2150.0, 100.0],
+	[-2650.0, 110.0], [-3150.0, 90.0], [-3650.0, 120.0], [-4150.0, 100.0], [-4550.0, 90.0]]
+const DILUVI_AWNING_D := 56.0
+
+
+# Where it is dry on El Diluvi: the arcade and under each awning.
+static func diluvi_shelters(m: Node2D) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var e: Vector2 = m.walk_edges(DILUVI_ARCADE_Y1)
+	out.append(Rect2(e.x - 4.0, DILUVI_ARCADE_Y0, DILUVI_ARCADE_W + 4.0, DILUVI_ARCADE_Y1 - DILUVI_ARCADE_Y0))
+	for aw: Array in DILUVI_AWNINGS:
+		var ay := float(aw[0])
+		var ae: Vector2 = m.walk_edges(ay)
+		out.append(Rect2(ae.y - DILUVI_AWNING_D, ay - float(aw[1]) * 0.5, DILUVI_AWNING_D + 4.0, float(aw[1])))
+	return out
+
+
+static func diluvi(m: Node2D) -> void:
+	# EL DILUVI: a narrow shopping street in a downpour. Shopfronts straight
+	# onto the paving, awnings over the east side, the arcade down the west,
+	# puddles everywhere, the gutters running, umbrellas. The terrace is
+	# stacked and chained somewhere dry; there is no lawn.
+	m.gate_text = "SHELTER"
+	m.lane_ys = Array([-900.0, -3900.0], TYPE_FLOAT, &"", null)
+	m.tables.clear()
+	m.chairs.clear()
+	m.parasols.clear()
+	m.benches.clear()
+	m.cellars.clear()
+	m.stalls.clear()
+	m.vans.clear()
+	m.astands = Array([Vector2(860, -2900)], TYPE_VECTOR2, &"", null)
+	# lamp standards down the east side, the arcade's pillars down the west
+	m.poles.clear()
+	for i in range(8):
+		var y := -400.0 - float(i) * 600.0
+		var ok := true
+		for ly: float in m.lane_ys:
+			ok = ok and absf(y - ly) > m.LANE_HALF + 60.0
+		if ok:
+			m.poles.append(Vector2(980.0, y))
+	var e: Vector2 = m.walk_edges(DILUVI_ARCADE_Y1)
+	var py := DILUVI_ARCADE_Y1 - 40.0
+	while py > DILUVI_ARCADE_Y0 + 30.0:
+		m.poles.append(Vector2(e.x + DILUVI_ARCADE_W, py))
+		py -= 120.0
+	m.deco_pole_count = m.poles.size()
+	m.bins = Array([Vector2(m.sw_r - 30, -1500), Vector2(m.sw_r - 30, -3300)], TYPE_VECTOR2, &"", null)
+	# storm drains gaping open in the middle of the street
+	m.manholes = Array([Vector2(640, -1500), Vector2(600, -2650), Vector2(680, -4300)], TYPE_VECTOR2, &"", null)
+	# a huddle of umbrellas clogging the street, gaps left so it is never a wall
+	m.performers = Array([Vector2(560, -2250), Vector2(790, -2320), Vector2(600, -3560), Vector2(760, -3520)], TYPE_VECTOR2, &"", null)
+	m.fountains = Array([Vector2(860, -2000)], TYPE_VECTOR2, &"", null)
+	m.cone_spots = Array([], TYPE_VECTOR2, &"", null)
+	# puddles on the paving, in the dips where the street was laid badly
+	m.patches = Array([
+		{"y": -600.0, "at": 0.55, "rx": 60.0, "ry": 34.0, "seed": 1.2, "kind": "puddle"},
+		{"y": -1150.0, "at": 0.30, "rx": 74.0, "ry": 40.0, "seed": 2.7, "kind": "puddle"},
+		{"y": -1900.0, "at": 0.62, "rx": 56.0, "ry": 30.0, "seed": 3.9, "kind": "puddle"},
+		{"y": -2450.0, "at": 0.45, "rx": 84.0, "ry": 46.0, "seed": 0.8, "kind": "puddle"},
+		{"y": -3000.0, "at": 0.66, "rx": 62.0, "ry": 34.0, "seed": 4.4, "kind": "puddle"},
+		{"y": -3350.0, "at": 0.40, "rx": 70.0, "ry": 38.0, "seed": 5.1, "kind": "puddle"},
+		{"y": -4100.0, "at": 0.55, "rx": 90.0, "ry": 48.0, "seed": 2.2, "kind": "puddle"},
+		{"y": -4700.0, "at": 0.35, "rx": 58.0, "ry": 32.0, "seed": 3.3, "kind": "puddle"},
+	], TYPE_DICTIONARY, &"", null)
+	m.shelters = diluvi_shelters(m)
 
 
 # EL BARRI's pieces, in level space
@@ -300,7 +374,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"park": half = 230.0     # a gravel path between lawns
 		"barri": half = 240.0    # the little park at the end of the street
 		"beach": half = 340.0    # bespoke cross-section, left alone
-		"rain": half = 320.0
+		"rain": half = 230.0     # a narrow shopping street
 		"market": half = 270.0   # stalls crowd the aisle
 		"oldtown": half = 225.0  # the tightest: a medieval alley
 		"trail": half = 200.0    # a single-file woodland trail
@@ -458,7 +532,7 @@ static func build_level_data(m: Node2D) -> void:
 	# geometry is a later pass) and re-theme it below: El Aguacero on the
 	# boulevard, El Gotic on the stall-lined market channel.
 	var geo = m.lvl
-	if m.lvl == "rain" or m.lvl == "station" or m.lvl == "scrap":
+	if m.lvl == "station" or m.lvl == "scrap":
 		geo = "street"
 	elif m.lvl == "oldtown" or m.lvl == "spook" or m.lvl == "neteja":
 		geo = "market"
@@ -582,6 +656,13 @@ static func build_level_data(m: Node2D) -> void:
 			]
 			# someone's bocadillo, dropped in its foil
 			keb_list = [Vector2(620, -1900), Vector2(700, -4200)]
+		"rain":
+			hyd_list = [
+				Vector2(m.sw_l + 110, -500), Vector2(m.sw_r - 40, -1300),
+				Vector2(m.sw_r - 40, -2300), Vector2(m.sw_l + 110, -3500),
+				Vector2(m.sw_r - 40, -4400),
+			]
+			keb_list = [Vector2(760, -1800), Vector2(700, -3900)]
 		"barri":
 			# EL BARRI: the neighbourhood park. Plane trees in rows down both
 			# edges of a gravel square, benches facing each other, a
@@ -767,19 +848,7 @@ static func build_level_data(m: Node2D) -> void:
 		m.patches.append({"y": PARK_PLAYGROUND.get_center().y + 40.0, "at": 0.0, "rx": 44.0, "ry": 34.0,
 			"seed": 1.3, "kind": "sand", "pin": PARK_PLAYGROUND.get_center() + Vector2(-28.0, 40.0)})
 	elif m.lvl == "rain":
-		# El Aguacero: get-out-of-the-rain gate, storm drains gaping open
-		# down the middle of the road (open holes, lethal in a downpour),
-		# a huddle of umbrella-toting pedestrians clogging the walkway, and
-		# a fountain nobody needs today
-		m.gate_text = "SHELTER"
-		m.manholes.append_array([Vector2(640, -1500), Vector2(600, -2650), Vector2(680, -3900)])
-		# a huddle of umbrellas clogging the walkway - dense enough to make
-		# you thread it, with gaps left so it is never a wall
-		m.performers.append_array([
-			Vector2(500, -2250), Vector2(790, -2320),
-			Vector2(560, -3560), Vector2(760, -3520),
-		])
-		m.fountains = Array([Vector2(335, -3350)], TYPE_VECTOR2, &"", null)
+		diluvi(m)
 	elif m.lvl == "oldtown":
 		# El Gotic: a tight medieval alley. Wall cats perched on ledges up
 		# both walls, laundry strung overhead, lanterns. Extra poles pinch
@@ -1717,7 +1786,8 @@ static func build_walls(m: Node2D) -> void:
 	# the beach have no buildings at all.
 	var wall_sides := []
 	match m.lvl:
-		"street", "rain": wall_sides = [-1.0]
+		"street": wall_sides = [-1.0]
+		"rain": wall_sides = []      # its frontage walls are the building line
 		"park", "trail", "beach": wall_sides = []
 		_: wall_sides = [-1.0, 1.0]
 	for ws in wall_sides:
