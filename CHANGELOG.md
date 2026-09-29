@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-09-30 - The other walkers look alive
+
+The other owners and their dogs were drawn from the speed they were given,
+not from where they went, so a rooted owner walked on the spot and faced down
+their lane through a sideways detour, and their dog glided at one speed,
+stared at yours from across the park and wagged like a metronome. Now
+(`entities/otherpair.gd`):
+- Both are drawn from their actual movement: the owner's legs go only when
+  the owner moves, and they face where they are going.
+- The dog eases up to speed, stops now and then with its nose down for a
+  sniff (the leash tows it on if it lingers), faces where it is heading, and
+  looks at your dog only once it is close. It wags slowly on a sniff, and
+  hard when your dog is right there.
+- Sniff stops roll their own dice, so the shared seed is untouched; the
+  behaviour snapshot shifts where the dogs now stand when ropes meet.
+
 ## 2026-09-30 - Every kind of message gets its own place and look
 
 In a walk everything was said the same way: outlined capitals in the middle
