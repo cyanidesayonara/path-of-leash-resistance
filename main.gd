@@ -61,6 +61,7 @@ const Goals := preload("res://systems/goals.gd")
 const HudBuild := preload("res://hud/hud_build.gd")
 const MenuFlow := preload("res://hud/menu_flow.gd")
 const LevelBuild := preload("res://world/level_build.gd")
+const WorldSign := preload("res://world/world_sign.gd")
 const POLE_RADIUS := 10.0
 const TREE_RADIUS := 13.0  # a trunk is stouter than a lamppost
 const HYDRANT_RADIUS := 9.0
@@ -488,6 +489,12 @@ var hud_status := ""
 # every menu screen (hud/menu_screen.gd) and where the cursor is on the ones
 # with rows; locked_nudge shakes whatever refused a press
 var menu_screen: Control
+# the walk's name and HOME, made of loose things on the ground
+# (world/world_sign.gd); rebuilt when the menu step changes what it says
+var signs: Array[Dictionary] = []
+var _signs_for := ""
+# the gloss under the name is menu text: it fades as the walk begins
+var gloss_a := 1.0
 var details_idx := 0
 var pause_idx := 0
 var locked_nudge := 0.0
@@ -660,6 +667,7 @@ func _ready() -> void:
 			add_child(probe)
 	menu_step = Game.menu_step
 	_apply_menu_step()
+	build_signs()
 	# "try again" and "start again" come straight back into the walk
 	if Game.quick_start:
 		Game.quick_start = false
@@ -2863,37 +2871,103 @@ func _draw_world_text(at: Vector2, txt: String, px: int, style: String,
 			_hand_text(at, txt, px, Color(0.98, 0.78, 0.28, 0.95), 0.0, key)
 
 
+func _sign_mat() -> String:
+	return WorldSign.material_for(lvl, Game.weather)
+
+
+# The name, the browse arrows and HOME, as loose pieces for a walk with a
+# material. Built from what the title step says; the same step twice keeps
+# the pieces where they are.
+func build_signs() -> void:
+	var mat := _sign_mat()
+	var arrows := not started and menu_step == 1
+	var want := "%s/%d/%s" % [mat, 0 if menu_step == 0 and not started else 1, arrows]
+	if want == _signs_for:
+		return
+	_signs_for = want
+	signs.clear()
+	if mat == "":
+		return
+	var e := walk_edges(START_Y - 190.0)
+	var room := maxf(300.0, e.y - e.x - 80.0)
+	var mid := (e.x + e.y) * 0.5
+	if menu_step == 0 and not started:
+		signs.append(WorldSign.build("PATH OF", Vector2(mid, START_Y - 232.0), 44.0, mat, 1.0, room))
+		signs.append(WorldSign.build("LEASH RESISTANCE", Vector2(mid, START_Y - 172.0), 44.0, mat, 2.0, room))
+	else:
+		var name := String(Game.LEVEL_NAMES[lvl])
+		var nm := WorldSign.build(name, Vector2(mid, START_Y - 190.0), 44.0, mat, 4.0, room - 120.0)
+		signs.append(nm)
+		if arrows:
+			var hw: float = WorldSign.Letters.width(name.to_upper(), float(nm.h)) * 0.5
+			signs.append(WorldSign.build("<", Vector2(mid - hw - 44.0, START_Y - 190.0), 44.0, mat, 6.0, 80.0))
+			signs.append(WorldSign.build(">", Vector2(mid + hw + 44.0, START_Y - 190.0), 44.0, mat, 7.0, 80.0))
+	var he := walk_edges(HOME_Y + 84.0)
+	signs.append(WorldSign.build("HOME", Vector2((he.x + he.y) * 0.5, HOME_Y + 84.0), 26.0, mat, 9.0, 300.0))
+
+
+func _tick_signs(delta: float) -> void:
+	if signs.is_empty():
+		return
+	var bodies := [[dog.global_position, dog.velocity, 15.0], [human.global_position, human.velocity, 18.0]]
+	var rope := []
+	if not leash.detached:
+		for k in range(leash.pts.size()):
+			rope.append([leash.pts[k], (leash.pts[k] - leash.prev[k]) / maxf(delta, 0.001)])
+	var toppled := 0
+	for sg: Dictionary in signs:
+		toppled += WorldSign.tick(sg, bodies, rope, delta, elapsed)
+	if toppled > 0:
+		Sfx.play("tangle", 1.7, -16.0)
+
+
+func _draw_signs(vt: float, vb: float) -> void:
+	for sg: Dictionary in signs:
+		if float(sg.bottom) < vt - 60.0 or float(sg.top) > vb + 60.0:
+			continue
+		WorldSign.draw(_wc, sg, AnimClock.msec() / 1000.0, LIGHT)
+
+
 func _draw_ground_title() -> void:
-	# On the title screen the game's name is chalked on the ground she is
-	# standing on; on the walk-select screen it is the walk's name, in that
-	# walk's own medium. Both scroll away with the world once you set off,
-	# which is the whole reason to draw them here rather than on the HUD.
+	# On the title screen the game's name is on the ground she is standing
+	# on; on the walk select it is the walk's name. A walk with a material
+	# (world/world_sign.gd) spells it in loose pieces, drawn by _draw_signs
+	# whether or not the walk has started; the rest write it in their medium
+	# here. The gloss is menu text, and fades as the walk begins.
 	var style := String(SIGN_STYLES.get(lvl, "chalk"))
-	var mid := 640.0
-	if menu_step == 0:
-		_draw_world_text(Vector2(mid, START_Y - 232.0), "PATH OF", 52, style, 1.0)
-		_draw_world_text(Vector2(mid, START_Y - 176.0), "LEASH RESISTANCE", 52, style, 2.0)
-		_draw_world_text(Vector2(mid, START_Y - 132.0), "you are the dog", 22, style, 3.0)
+	var mat := _sign_mat()
+	var ge := walk_edges(START_Y - 190.0)
+	var mid := (ge.x + ge.y) * 0.5
+	if menu_step == 0 and not started:
+		if mat == "":
+			_draw_world_text(Vector2(mid, START_Y - 232.0), "PATH OF", 52, style, 1.0)
+			_draw_world_text(Vector2(mid, START_Y - 176.0), "LEASH RESISTANCE", 52, style, 2.0)
+		_draw_gloss(Vector2(mid, START_Y - 122.0), "you are the dog", mat, style, 3.0)
 		return
 	var name := String(Game.LEVEL_NAMES[lvl]).to_upper()
 	var y := START_Y - 190.0
-	_draw_world_text(Vector2(mid, y), name, 46, style, 4.0)
+	if mat == "":
+		_draw_world_text(Vector2(mid, y), name, 46, style, 4.0)
+		if menu_step == 1 and not started:
+			var w: float = font.get_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, -1, 46).x
+			_draw_world_text(Vector2(mid - w * 0.5 - 44.0, y), "<", 46, style, 6.0)
+			_draw_world_text(Vector2(mid + w * 0.5 + 44.0, y), ">", 46, style, 7.0)
 	# The name is Catalan for character; this says what it MEANS, because the
 	# game ships in English and nobody should have to guess what a walk is.
-	# Smaller and set under the name, in the same medium, so it reads as a
-	# gloss rather than as a second title.
 	var gloss := String(Game.LEVEL_SUBTITLES.get(lvl, ""))
 	if gloss != "":
-		_draw_world_text(Vector2(mid, y + 30.0), gloss, 21, style, 8.0)
-	if not Game.is_unlocked(lvl):
-		_draw_world_text(Vector2(mid, y + 62.0), "LOCKED", 24, style, 5.0)
-	elif menu_step == 1:
-		# the browse arrows, in the same medium as the name
-		var w: float = font.get_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, -1, 46).x
-		_draw_world_text(Vector2(mid - w * 0.5 - 44.0, y), "<", 46, style, 6.0)
-		_draw_world_text(Vector2(mid + w * 0.5 + 44.0, y), ">", 46, style, 7.0)
-	# and no more than that: the records, the owner and the weather stay on the
-	# HUD, where a changing value belongs
+		_draw_gloss(Vector2(mid, y + 34.0), gloss, mat, style, 8.0)
+
+
+func _draw_gloss(at: Vector2, txt: String, mat: String, style: String, key: float) -> void:
+	if gloss_a <= 0.01:
+		return
+	if mat == "":
+		_draw_world_text(at, txt, 21, style, key)
+		return
+	var col: Color = WorldSign.GLOSS.get(mat, Color(1, 1, 1, 0.8))
+	_hand_text(at + Vector2(1.5, 1.5), txt, 21, Color(0, 0, 0, 0.25 * col.a * gloss_a), 1.6, key)
+	_hand_text(at, txt, 21, Color(col.r, col.g, col.b, col.a * gloss_a), 1.6, key)
 
 
 func _draw_seafront_works(vt: float, vb: float) -> void:
@@ -3815,6 +3889,7 @@ func _apply_leash(delta: float) -> void:
 	# both ends from raw tension while geometry still constrains), timing.
 	human.strain = false
 	dog.dragged = false
+	_tick_signs(delta)
 	if leash.detached:
 		return  # off leash during the freedom romp
 	leash.tick(delta)
@@ -7441,10 +7516,13 @@ func _draw_world() -> void:
 	# HOME, at the bottom, where the walk both begins and ends
 	if vb > START_Y + 30.0:
 		_wc.draw_rect(Rect2(gate_l - 14, HOME_Y + 40.0, gate_r - gate_l + 28, 14), Color(0.4, 0.32, 0.3))
-		_wc.draw_string(font, Vector2(gate_l, HOME_Y + 78.0), "HOME", HORIZONTAL_ALIGNMENT_CENTER,
-			gate_r - gate_l, 24, Color(0.9, 0.85, 0.7))
+		if signs.is_empty():
+			_wc.draw_string(font, Vector2(gate_l, HOME_Y + 78.0), "HOME", HORIZONTAL_ALIGNMENT_CENTER,
+				gate_r - gate_l, 24, Color(0.9, 0.85, 0.7))
 	# not under the settings panel, the wardrobe or the progress table: the
 	# dim only halves it, so the chalked name read straight through (#10)
-	if not started and not in_settings and not in_shop and not in_progress_view \
-			and vb > START_Y - 260.0:
+	var menu_over := in_settings or in_shop or in_progress_view
+	if not menu_over and vb > START_Y - 260.0 and (not started or gloss_a > 0.01 or _sign_mat() == ""):
 		_draw_ground_title()
+	if not (menu_over and not started):
+		_draw_signs(vt, vb)
