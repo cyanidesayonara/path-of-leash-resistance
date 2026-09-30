@@ -6,6 +6,11 @@ extends CharacterBody2D
 enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, SIGNAL, CALL, WHIRL, GO_POOP, BAG, GO_BIN, TOSS, STUMBLE, FALLEN }
 
 const WALK_SPEED := 92.0
+# the whirl's orbit radius, and how fast it tightens onto it from wherever
+# the owner was when it began (px/s)
+const WHIRL_R := 30.0
+const WHIRL_TIGHTEN := 200.0
+var whirl_r := WHIRL_R
 const PANIC_SPEED := 230.0
 
 # how far before and after an island the owner is already on its side
@@ -25,6 +30,11 @@ var iframes := 0.0
 var halt_t := 0.0
 var pull_cd := 0.0
 var reel_timer := 5.0
+# The reel is telegraphed like every other owner event: "click!" first, and
+# the new length only REEL_WARN later, so the change never lands unseen.
+const REEL_WARN := 0.8
+var reel_pending_t := 0.0
+var reel_pending_len := 0.0
 var whirl_pole := Vector2.ZERO
 var whirl_dir := 1.0
 var whirl_omega := 0.0
@@ -235,8 +245,9 @@ func tick(delta: float) -> void:
 			var step := whirl_dir * whirl_omega * delta
 			whirl_angle += step
 			whirl_unwound += absf(step)
-			global_position = whirl_pole + Vector2.from_angle(whirl_angle) * 30.0
-			velocity = Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0) * whirl_omega * 30.0
+			whirl_r = move_toward(whirl_r, WHIRL_R, WHIRL_TIGHTEN * delta)
+			global_position = whirl_pole + Vector2.from_angle(whirl_angle) * whirl_r
+			velocity = Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0) * whirl_omega * whirl_r
 			rotation += whirl_dir * whirl_omega * 1.4 * delta
 			# orbit EXACTLY the wound amount (over-orbiting re-wraps the
 			# rope the other way and the fling gets arrested), then hold
@@ -272,6 +283,10 @@ func tick(delta: float) -> void:
 func _fiddle_with_reel(delta: float) -> void:
 	# constantly fiddles with the retractable leash, independent of the
 	# event system: new random length on every "click!"
+	if reel_pending_t > 0.0:
+		reel_pending_t -= delta
+		if reel_pending_t <= 0.0:
+			main.set_leash_target(reel_pending_len)
 	if state in [HState.FALLEN, HState.STUMBLE, HState.WHIRL]:
 		return
 	reel_timer -= delta
@@ -281,10 +296,11 @@ func _fiddle_with_reel(delta: float) -> void:
 		reel_timer = 0.5
 		return
 	reel_timer = randf_range(4.0, 8.0)
-	main.set_leash_target(randf_range(170.0, 430.0))
+	reel_pending_len = randf_range(170.0, 430.0)
+	reel_pending_t = REEL_WARN
 	_show_bubble("click!")
 	var tw := create_tween()
-	tw.tween_interval(0.7)
+	tw.tween_interval(REEL_WARN + 0.3)
 	tw.tween_callback(func() -> void:
 		if telegraph_t <= 0.0:
 			bubble.visible = false)
@@ -518,7 +534,10 @@ func start_whirl(pole: Vector2, dir: float, turns: float) -> void:
 	whirl_unwound = 0.0
 	whirl_pull = 0.0
 	whirl_angle = (global_position - pole).angle()
-	whirl_omega = clampf(velocity.length() / 30.0, 8.0, 14.0)
+	# the orbit starts where they are and tightens in, rather than snapping
+	# them onto the 30 px circle on the first frame
+	whirl_r = global_position.distance_to(pole)
+	whirl_omega = clampf(velocity.length() / maxf(whirl_r, 30.0), 8.0, 14.0)
 	telegraph_t = 0.0
 	_show_bubble("wheee!")
 

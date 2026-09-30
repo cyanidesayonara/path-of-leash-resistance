@@ -50,6 +50,10 @@ var dynamic_contacts := 0
 var contact_pole := Vector2(INF, INF)
 var contact_kind := ""
 var contact_static := false
+# the static contact nearest the HUMAN end, and what it is: the thing the
+# owner is actually wound on, which is what a whirl orbits
+var human_contact_pole := Vector2(INF, INF)
+var human_contact_is_pole := false
 # nearest dynamic snag (another leash) for tangle presentation. INF when free.
 var contact_dynamic := Vector2(INF, INF)
 var detached := false
@@ -277,6 +281,8 @@ func tick(delta: float) -> void:
 	# static contact closest to the dog end owns contact_pole (vault etc.)
 	contact_pole = Vector2(INF, INF)
 	contact_kind = ""
+	human_contact_pole = Vector2(INF, INF)
+	human_contact_is_pole = false
 	contact_static = false
 	contact_dynamic = Vector2(INF, INF)
 	# the slip a contact gets depends only on this tick's stretch and the kind,
@@ -298,6 +304,9 @@ func tick(delta: float) -> void:
 				contact_dynamic = pl2      # nearest the dog end: i ascends
 		else:
 			static_contacts += 1
+			# i ascends from the dog, so the last one wins: nearest the human
+			human_contact_pole = pl2
+			human_contact_is_pole = code == K_POLE
 			if not contact_static:
 				contact_pole = pl2
 				contact_kind = _name_for(code)

@@ -435,6 +435,11 @@ var whirl_flipped := false
 var vault_recent := 0.0
 
 var leash_len := LEASH_LENGTH
+# set when the owner is deliberately hauling the leash in (the nag), which
+# may shorten a taut rope; a plain reel click only takes up slack
+var leash_haul := false
+const NAG_WARN := 0.8
+var nag_haul_t := 0.0
 var leash_target := LEASH_LENGTH
 var started := false
 var bones := 0
@@ -3546,8 +3551,7 @@ func _physics_process(delta: float) -> void:
 	_prof("dog, owner, drive")
 	# the human owns the retractable leash: length changes on their whim
 	# ("click!" event), never the dog's
-	leash_len = move_toward(leash_len, leash_target, 150.0 * delta)
-	leash.rest_len = leash_len
+	_tick_reel_length(delta)
 	# Dynamic NPC-rope obstacles must be current before the player leash
 	# solve; a post-solve feed left the hero rope one frame stale.
 	_refresh_pair_obstacles()
@@ -4003,7 +4007,13 @@ func _apply_leash(delta: float) -> void:
 		# 0.55 turns covers the 270-degree partial wind that used to jam
 		# awkwardly without ever whirling
 		if absf(leash.winding()) > 0.55 and absf(end_wind) > 2.4:
-			var wp := _nearest_pole_to(human.global_position, 70.0)
+			# the pole the rope is actually wound on at the owner's end - not
+			# merely the nearest one - and a real pole: a café table or a
+			# chair is not something anyone swings round, and orbiting the
+			# wrong thing never unwinds the rope
+			var wp := Vector2(INF, INF)
+			if leash.human_contact_is_pole and leash.human_contact_pole.distance_to(human.global_position) < 70.0:
+				wp = leash.human_contact_pole
 			if wp.x < INF:
 				armed = true
 				whirl_arm += delta
@@ -5164,9 +5174,14 @@ func _offpath(delta: float) -> void:
 		if offpath_t > 3.0:
 			offpath_t = 0.0
 			human.show_nag()
-			set_leash_target(180.0)
+			# said first, hauled a moment later, like every owner event
+			nag_haul_t = NAG_WARN
 	else:
 		offpath_t = maxf(0.0, offpath_t - delta)
+	if nag_haul_t > 0.0:
+		nag_haul_t -= delta
+		if nag_haul_t <= 0.0:
+			set_leash_target(180.0, true)
 
 
 func _tick_vault(delta: float) -> void:
@@ -6350,8 +6365,28 @@ func on_bark(pos: Vector2) -> void:
 		g.hear_noise(pos, 230.0)
 
 
-func set_leash_target(v: float) -> void:
+# A retractable reel winds slack in briskly; against a taut rope its spring
+# only draws in gently, so a "click!" never yanks the dog, yet a dog being
+# towed along is still slowly brought in (with no give at all the leash only
+# ever lengthened, and an idle dog trailed out into the bike lanes). A
+# deliberate haul (the nag) pulls a taut rope in at full speed.
+const REEL_RATE := 150.0
+const REEL_TAUT_RATE := 45.0
+
+
+func _tick_reel_length(delta: float) -> void:
+	var rate := REEL_RATE
+	if leash_target < leash_len and not leash_haul and leash.used_length() >= leash_len:
+		rate = REEL_TAUT_RATE
+	leash_len = move_toward(leash_len, leash_target, rate * delta)
+	if is_equal_approx(leash_len, leash_target):
+		leash_haul = false
+	leash.rest_len = leash_len
+
+
+func set_leash_target(v: float, haul := false) -> void:
 	leash_target = clampf(v, 150.0, 440.0)
+	leash_haul = haul
 
 
 func _nearest_pole_to(pos: Vector2, max_d: float) -> Vector2:
