@@ -2,6 +2,24 @@
 
 Append-only session history, newest first.
 
+## 2026-09-30 - The reel warns first, and the whirl swings round the right pole
+
+- **The reel is telegraphed.** "click!" comes 0.8 s before the leash length
+  changes, like every other owner event; it used to change on the same frame.
+- **A reel winds in slack only.** A click that shortens the leash against a
+  taut rope holds instead of dragging the dog away from what she was doing.
+  The owner's deliberate haul when she roams off the path still pulls a taut
+  rope in, and now also comes 0.8 s after the tut.
+- **The whirl orbits the pole the rope is actually wound on** at the owner's
+  end, and only a real pole. It used to pick the nearest thing in the pole
+  list, café tables and chairs included, which on La Rambla's terrace held an
+  owner in a whirl-stumble loop that never unwound.
+- **The whirl starts where the owner stands** and tightens onto its orbit in
+  a fraction of a second, instead of snapping them up to 40 px onto it.
+
+`tests/test_reel.gd` (6 checks) and `tests/test_whirl.gd` (5 checks), both in
+CI. The behaviour snapshot shifts on most walks; most get home sooner.
+
 ## 2026-09-30 - The other walkers look alive
 
 The other owners and their dogs were drawn from the speed they were given,
