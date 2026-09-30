@@ -2,6 +2,34 @@
 
 Append-only session history, newest first.
 
+## 2026-09-30 - El Mercat becomes a market hall
+
+El Mercat was eight stalls on a sidewalk with lampposts and a grooming van.
+Now a covered market hall, the Boqueria kind (`LevelBuild.mercat`):
+- **In under the arch**: off the street through an iron span with a fan of
+  stained glass and MERCAT on its board, drawn over everyone, into a hall
+  twice the street's width, and out at the far end under a second arch
+  into the plaça.
+- **Stall blocks down the middle**: four of them, solid, each with counters
+  facing both aisles and its trade signed in Catalan (VERDURES, FORMATGES,
+  BACALLA, XARCUTERIA...). The owner keeps to alternate aisles round them;
+  the dog takes either. A **green iron column** at every corner to wind the
+  leash on.
+- **Stalls along the walls**: fruit in tipped crates, a juice stand, jamon
+  legs, the **fish counter** on crushed ice with meltwater and scales on the
+  floor in front, olives in tubs, pick-and-mix sweets. Crates stacked behind
+  the fruit, sawdust by the fish and the ham.
+- **Orange-crate stacks** by the wall are what gets marked; dropped produce
+  in the aisles; the churro prize by the drain in the middle aisle; the
+  oranges run from the stall by the door to the far one.
+- A **terrazzo** floor under a glazed roof on red iron trusses. The grooming
+  van parks on La Rambla only.
+- The strollers and delivery scooters go down the two aisles, not through
+  the middle where the blocks are.
+
+La Castanyada and La Neteja still use the old market layout.
+`tests/test_mercat.gd` (10 checks).
+
 ## 2026-09-30 - One voice for the game's text
 
 A pass over the player-facing text, and the rules written down in AGENTS.md
