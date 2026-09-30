@@ -200,6 +200,13 @@ with pickpockets and shenanigans happening around."
   a small stage.
 - Keep: candy, the stalls (festival stalls belong here), performers.
 - Add: confetti as scattered pieces, lanterns, the roaster as landmark.
+- Built (2026-09-30, `LevelBuild.castanyada`): an old-town street opening
+  into a plaça; the chestnut roaster in its middle (solid, the owner walks
+  round its east side), drum glowing and smoking, its light on the setts; a
+  stage on the west side with the band; plane trees; festival stalls
+  (chestnuts, panellets, roast sweet potatoes, sweets); paper-lantern strings
+  over the street, lit; confetti thrown from the stage and chestnut shells
+  underfoot; chocolate to steer past; hessian sacks of chestnuts to mark.
 
 ### La Ferralla (scrap) - the scrapyard
 - Is: stacked wrecks, a crane, oil, the guard dog, cameras and lasers.

@@ -2,6 +2,30 @@
 
 Append-only session history, newest first.
 
+## 2026-09-30 - La Castanyada becomes a night festival in a plaça
+
+La Castanyada was El Mercat's old stall-lined sidewalk with sweets on it.
+Now its own (`LevelBuild.castanyada`, `main._draw_castanyada`):
+- **An old-town street opening into the plaça** where the festival is, and
+  narrowing again beyond it.
+- **The chestnut roaster** in the middle of the plaça as the landmark: a
+  castanyera's stand with the drum glowing and flickering, chestnuts on the
+  grille, paper cones, smoke drifting up, and its warm light on the setts.
+  Solid; your human walks round its east side.
+- **A stage** on the plaça's west side with the band on it, speakers at the
+  corners, and confetti thrown across the setts in front of it. Plane trees
+  round the plaça to wind the leash on.
+- **Festival stalls** along the street: chestnut barrows, trays of panellets,
+  roast sweet potatoes on a griddle, sweets.
+- **Paper-lantern strings** from balcony to balcony over the street, sagging,
+  lit and glowing, drawn over everyone, with their light on the ground.
+- **Chocolate underfoot** as before (steer past it), chestnut shells and
+  confetti all along, hessian sacks of chestnuts to mark, and the panellet
+  prize off the roaster's tray.
+
+`tests/test_castanyada.gd` (10 checks). La Neteja is the last walk on the old
+market layout.
+
 ## 2026-09-30 - El Mercat becomes a market hall
 
 El Mercat was eight stalls on a sidewalk with lampposts and a grooming van.
