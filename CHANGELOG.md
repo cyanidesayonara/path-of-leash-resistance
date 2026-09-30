@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+
+## 2026-09-30 - The station bot walks home beside the walkway
+
+The autowalk bot stalled twice on L'Estacio's home leg, walking down the
+middle of the concourse against the moving walkway that carries up it. Going
+home it now walks beside the walkway, on its human's side
+(`main._auto_drive`). Station's bot finishes at 120 s instead of 162 s with
+two stalls; every other snapshot line is unchanged. Bot only: nothing a
+player sees.
 ## 2026-09-30 - El Mosaic gets its people and parakeets (round 2)
 
 Round 1 built the park's pieces; this round puts the life in them
