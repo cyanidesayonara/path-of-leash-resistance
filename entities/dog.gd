@@ -8,6 +8,10 @@ const ACCEL := 2400.0
 const Surfaces := preload("res://world/surfaces.gd")
 
 var planted := false
+# dug in and being hauled anyway: set by main when the leash drags a planted
+# dog along, 1.0 on the frame it happens and fading; skid_dir is which way
+var skid := 0.0
+var skid_dir := Vector2.ZERO
 var input_active := false
 var dragged := false
 var bladder_slow := false
@@ -118,6 +122,7 @@ func _ready() -> void:
 
 func tick(delta: float) -> void:
 	bark_cd = maxf(0.0, bark_cd - delta)
+	skid = maxf(0.0, skid - delta * 4.0)
 	bark_anim = maxf(0.0, bark_anim - delta)
 	hole_cd = maxf(0.0, hole_cd - delta)
 	if squat_t > 0.0:
@@ -351,6 +356,12 @@ func _draw_shapes() -> void:
 		for i in range(2):
 			var a := t * 5.0 + i * 2.4
 			_b.draw_circle(hip + hip_dir * 10.0 + hside * sin(a) * 3.0, 1.6, Color(0.93, 0.85, 0.4, 0.5))
+	if skid > 0.0 and not crouching:
+		# dust kicked up off the braced front paws, thrown ahead along the haul
+		for i in range(3):
+			var kp := fmod(t * 5.0 + float(i) * 0.33, 1.0)
+			var dp := facing * (14.0 + kp * 16.0) + side * (float(i) - 1.0) * 8.0 * (1.0 + kp)
+			_b.draw_circle(dp, 3.0 + kp * 5.0, Color(0.72, 0.66, 0.56, 0.35 * skid * (1.0 - kp)))
 	if planted and not crouching:
 		for i in range(4):
 			var a2 := TAU * i / 4.0 + 0.4

@@ -49,6 +49,16 @@ const LEASH_STRETCH_CAP := 1.15
 const LEASH_K := 32.0
 const DOG_MASS := 1.0
 const HUMAN_MASS := 4.0
+# how much planting multiplies the dog's mass in the tug: dug in on dry
+# ground, on wet ground, and on packed snow, where she skids a long way
+const PLANT_GRIP := 14.0
+const PLANT_GRIP_WET := 9.0
+const PLANT_GRIP_ICE := 5.0
+# a planted dog dragged at least this far in a frame is skidding, and leaves
+# paw furrows that fade over SKID_LIFE seconds, at most SKID_MAX of them
+const SKID_MIN := 0.25
+const SKID_LIFE := 8.0
+const SKID_MAX := 120
 const SwingMath := preload("res://systems/swing.gd")
 const Mood := preload("res://systems/mood.gd")
 const Surfaces := preload("res://world/surfaces.gd")
@@ -4593,7 +4603,7 @@ func _apply_leash(delta: float) -> void:
 	var shield := 1.0 / (1.0 + 0.3 * float(leash.static_contacts))
 	var dog_m := DOG_MASS
 	if dog.planted:
-		dog_m *= 14.0
+		dog_m *= PLANT_GRIP_ICE if dog.ice else (PLANT_GRIP_WET if dog.slick else PLANT_GRIP)
 	elif dog.input_active:
 		dog_m *= 2.0
 	var human_m := HUMAN_MASS * (2.0 if human.is_fallen() else 1.0)
@@ -4634,6 +4644,8 @@ func _apply_leash(delta: float) -> void:
 		var w_d := (1.0 / dog_m) / (1.0 / dog_m + 1.0 / human_m)
 		var yank_speed := maxf(human.velocity.dot(-h_dir), 0.0)
 		dog.move_and_collide(d_dir * over * w_d)
+		if dog.planted:
+			_skid(d_dir, over * w_d)
 		if not whirling:
 			human.move_and_collide(h_dir * over * (1.0 - w_d))
 			var rel := human.velocity.dot(-h_dir)
@@ -5151,6 +5163,69 @@ func _sample_player_rope() -> void:
 	my_rope_sample.clear()
 	for i in range(0, leash.N, 2):
 		my_rope_sample.append(leash.pts[i])
+
+
+# paw furrows a planted dog leaves as the leash hauls her: {"a", "b", "col",
+# "w", "t"}, two per stretch, one for each front paw
+var skids: Array[Dictionary] = []
+var skid_from := Vector2(INF, INF)
+var skid_snd_t := 0.0
+
+
+func _skid(dir: Vector2, step: float) -> void:
+	if step < SKID_MIN:
+		return
+	dog.skid = 1.0
+	dog.skid_dir = dir
+	# braced: facing the one hauling her, leaning back on the collar
+	dog.facing = dog.facing.slerp(dir, 0.3).normalized()
+	var at: Vector2 = dog.global_position
+	if skid_from.x == INF or skid_from.distance_to(at) > 40.0:
+		skid_from = at
+	if skid_from.distance_to(at) >= 6.0:
+		var look := _skid_look()
+		if float(look[1]) > 0.0:
+			var off := dir.orthogonal() * 5.0
+			for sd: float in [-1.0, 1.0]:
+				skids.append({"a": skid_from + off * sd, "b": at + off * sd, "col": look[0], "w": look[1], "t": elapsed})
+			while skids.size() > SKID_MAX:
+				skids.pop_front()
+		skid_from = at
+	if elapsed >= skid_snd_t:
+		skid_snd_t = elapsed + 0.3
+		Sfx.play("hiss", 0.55, -16.0)
+
+
+# what her paws dig into: [colour, width]; water takes no marks
+func _skid_look() -> Array:
+	if dog.ice:
+		return [Color(0.60, 0.66, 0.80, 0.6), 5.0]
+	match dog.surface:
+		Surfaces.S.SAND:
+			return [Color(0.52, 0.40, 0.26, 0.45), 4.5]
+		Surfaces.S.MUD:
+			return [Color(0.22, 0.15, 0.10, 0.55), 5.0]
+		Surfaces.S.GRASS:
+			return [Color(0.38, 0.27, 0.16, 0.5), 4.0]
+		Surfaces.S.WATER:
+			return [Color(), 0.0]
+	return [Color(0.08, 0.08, 0.08, 0.22), 2.5]
+
+
+func _draw_skids(vt: float, vb: float) -> void:
+	if skids.is_empty():
+		return
+	while not skids.is_empty() and elapsed - float(skids[0]["t"]) > SKID_LIFE:
+		skids.pop_front()
+	var b := ShapeBatch.new()
+	for sk: Dictionary in skids:
+		var a: Vector2 = sk["a"]
+		if a.y < vt - 40.0 or a.y > vb + 40.0:
+			continue
+		var c: Color = sk["col"]
+		c.a *= clampf(1.0 - (elapsed - float(sk["t"])) / SKID_LIFE, 0.0, 1.0)
+		b.line(a, sk["b"], c, float(sk["w"]))
+	b.flush(_wc)
 
 
 func _refresh_pair_obstacles() -> void:
@@ -8265,6 +8340,7 @@ func _draw_world() -> void:
 		_wc.draw_rect(Rect2(c.position.x, c.position.y, c.size.x, 6), Color(0.35, 0.28, 0.22))
 		_wc.draw_line(c.position + Vector2(c.size.x / 2.0, 0), c.position + Vector2(c.size.x / 2.0, c.size.y), Color(0.3, 0.3, 0.33), 2.0)
 		_wc.draw_rect(Rect2(c.end.x + 4, c.position.y + 10, 16, 20), Color(0.6, 0.45, 0.3))
+	_draw_skids(vt, vb)
 	# marked spots, stray puddles and, discreetly, the business
 	var pud := Color(0.93, 0.85, 0.4, 0.4)
 	# the other dogs' marks: a small damp patch with a faint bloom, in their
