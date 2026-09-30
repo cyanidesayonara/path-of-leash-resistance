@@ -1,7 +1,9 @@
 extends Node2D
 
-# One of La Rambla's crowd: a tourist ambling up or down the promenade,
-# stopping now and then for a photo. The crowd is what the pickpockets work,
+# One of La Rambla's or El Mosaic's crowd: a tourist ambling up or down the
+# promenade, stopping now and then for a photo; or, at El Mosaic, standing in
+# the queue at the gate, or posing round the salamander for photos of it (and
+# of any dog who comes up to drink). The crowd is what the pickpockets work,
 # and what the dog and her owner have to thread. Tourists are not bodies: they
 # step aside from the dog, the owner and each other rather than blocking, so a
 # crowd can be dense without ever wedging the walk shut.
@@ -26,6 +28,10 @@ var has_wallet := true
 var robbed_t := 0.0            # the "!" after a lift
 var cheer_t := 0.0             # clapping for a dog who got a wallet back
 var look := "map"              # what they are holding: map, camera, stick
+var mode := "amble"            # amble | queue | pose
+var anchor := Vector2.ZERO     # where a queuer or poser stands
+var face := Vector2.ZERO       # what a poser photographs
+var shuffle_t := 0.0           # the queue edging forward
 
 
 func setup(m: Node2D, r: RandomNumberGenerator, at: Vector2, d: float) -> void:
@@ -41,6 +47,31 @@ func setup(m: Node2D, r: RandomNumberGenerator, at: Vector2, d: float) -> void:
 		Color(0.55, 0.75, 0.45), Color(0.85, 0.85, 0.88), Color(0.70, 0.45, 0.75)][rng.randi() % 6]
 	hair = [Color(0.15, 0.12, 0.10), Color(0.55, 0.40, 0.22), Color(0.85, 0.75, 0.50), Color(0.60, 0.60, 0.62)][rng.randi() % 4]
 	look = ["map", "camera", "stick", "map"][rng.randi() % 4]
+
+
+# stand in one place instead of walking: in the gate queue, or posing and
+# photographing `at`
+func stand(how: String, at: Vector2) -> void:
+	mode = how
+	anchor = global_position
+	face = at
+	shuffle_t = rng.randf_range(3.0, 7.0)
+	if how == "pose":
+		look = "camera" if rng.randf() < 0.6 else "stick"
+		next_photo = rng.randf_range(0.5, 3.0)
+
+
+func facing() -> Vector2:
+	if mode == "amble":
+		return Vector2(0.0, dir)
+	var to_dog: Vector2 = main.dog.global_position - global_position
+	# a poser turns to photograph a dog who comes close
+	if mode == "pose" and to_dog.length() < 130.0:
+		return to_dog.normalized()
+	if mode == "queue":
+		return Vector2.UP
+	var to := face - global_position
+	return to.normalized() if to.length() > 1.0 else Vector2.UP
 
 
 func is_stopped() -> bool:
@@ -61,6 +92,9 @@ func _physics_process(delta: float) -> void:
 		return
 	robbed_t = maxf(0.0, robbed_t - delta)
 	cheer_t = maxf(0.0, cheer_t - delta)
+	if mode != "amble":
+		_tick_standing(delta)
+		return
 	if photo_t > 0.0:
 		photo_t -= delta
 		return
@@ -82,28 +116,52 @@ func _physics_process(delta: float) -> void:
 	global_position.x = clampf(global_position.x, e.x + 16.0, e.y - 16.0)
 
 
+func _tick_standing(delta: float) -> void:
+	if mode == "pose":
+		photo_t = maxf(0.0, photo_t - delta)
+		next_photo -= delta
+		if next_photo <= 0.0:
+			photo_t = PHOTO_T * 0.6
+			next_photo = rng.randf_range(2.5, 6.0)
+	else:
+		# the queue edges forward a step, then the next person closes up
+		shuffle_t -= delta
+		if shuffle_t <= 0.0:
+			shuffle_t = rng.randf_range(4.0, 8.0)
+			anchor.y -= 6.0
+	# step aside for the dog and her human, then back into place
+	var home := anchor
+	for other: Node2D in [main.dog, main.human]:
+		var away: Vector2 = global_position - other.global_position
+		if away.length() < GIVE_WAY_R + 14.0:
+			home += away.normalized() * (GIVE_WAY_R + 16.0 - away.length())
+	global_position = global_position.lerp(home, minf(1.0, delta * 6.0))
+
+
 func _process(_delta: float) -> void:
 	queue_redraw()
 
 
 func _draw() -> void:
 	var t := AnimClock.msec() / 1000.0
-	var bob := 0.0 if photo_t > 0.0 else sin(t * 7.0 + lane_x) * 1.2
+	var bob := 0.0 if photo_t > 0.0 or mode != "amble" else sin(t * 7.0 + lane_x) * 1.2
 	var b := ShapeBatch.new()
 	b.circle(Vector2(3, 4), 11.0, Color(0, 0, 0, 0.18))
 	b.circle(Vector2(0, bob), 11.0, col)
 	b.circle(Vector2(0, -4.0 + bob), 6.5, Color(0.90, 0.74, 0.60))
 	b.circle(Vector2(0, -6.0 + bob), 5.5, hair)
-	var fwd := Vector2(0, dir)
+	var fwd := facing()
 	match look:
 		"map":
-			b.rect(Rect2(-8.0, dir * 10.0 - 4.0 + bob, 16.0, 8.0), Color(0.95, 0.93, 0.85))
-			b.line(Vector2(-2, dir * 10.0 - 4.0 + bob), Vector2(-2, dir * 10.0 + 4.0 + bob), Color(0.6, 0.7, 0.8), 1.0)
+			var mp := fwd * 10.0 + Vector2(0.0, bob)
+			b.rect(Rect2(mp.x - 8.0, mp.y - 4.0, 16.0, 8.0), Color(0.95, 0.93, 0.85))
+			b.line(mp + Vector2(-2, -4), mp + Vector2(-2, 4), Color(0.6, 0.7, 0.8), 1.0)
 		"camera":
-			b.rect(Rect2(-4.0, dir * 11.0 - 3.0 + bob, 8.0, 6.0), Color(0.12, 0.12, 0.14))
+			var cp := fwd * 11.0 + Vector2(0.0, bob)
+			b.rect(Rect2(cp.x - 4.0, cp.y - 3.0, 8.0, 6.0), Color(0.12, 0.12, 0.14))
 		"stick":
-			var tip := fwd * (26.0 if photo_t > 0.0 else 14.0) + Vector2(8, 0)
-			b.line(Vector2(4, 0), tip, Color(0.3, 0.3, 0.32), 1.5)
+			var tip := fwd * (26.0 if photo_t > 0.0 else 14.0) + fwd.orthogonal() * 8.0
+			b.line(fwd.orthogonal() * 4.0, tip, Color(0.3, 0.3, 0.32), 1.5)
 			b.rect(Rect2(tip.x - 3.0, tip.y - 2.0, 6.0, 4.0), Color(0.1, 0.1, 0.12))
 	if photo_t > 0.0 and fmod(photo_t, 0.9) < 0.08:
 		b.circle(fwd * 16.0, 7.0, Color(1, 1, 0.9, 0.8))     # the flash

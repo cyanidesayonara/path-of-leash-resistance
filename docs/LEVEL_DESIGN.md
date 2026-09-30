@@ -266,6 +266,13 @@ rubble stone, and the colour comes in where Gaudi put it.
   Still to come: the life (tourists at the salamander, the queue at the gate,
   the fan seller, parakeets, pickpockets in the queue) and a second finish
   pass.
+- Round 2 built (2026-09-30, `main._tick_mosaic_groups`): the life - the
+  gate queue up the forecourt's west side, tourists posing round the
+  salamander (west and south, off the owner's way round) who photograph a
+  dog who comes close, La Rambla's crowd and pickpockets with the first
+  pickpocket stepping out of the queue, monk parakeets under the palms who
+  go up over their wall, the fan seller on the plaza and the guitarist in
+  the viaduct.
 
 ### La Neteja (neteja) - the back street at dawn
 - Is: a narrow street at street-cleaning time: dumpsters, parked scooters,

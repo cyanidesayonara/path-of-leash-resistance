@@ -2,13 +2,16 @@ extends Node2D
 
 # A pigeon. Waddles around minding its own business until someone gets
 # close, then the whole flock scatters. Pure distraction; scattering a
-# flock is its own reward.
+# flock is its own reward. At El Mosaic it is a monk parakeet instead,
+# feeding under the palms: green, loud, and off over the terrace wall.
 
 var main: Node2D
 var dog: Node2D
 var human: Node2D
 var flying := false
 var gull := false
+var parakeet := false
+var wall_side := 0.0           # a parakeet flies off over this side's wall
 var fly_dir := Vector2.UP
 var wander_t := 0.0
 var seed_o := 0.0
@@ -21,6 +24,11 @@ func setup(m: Node2D, d: Node2D, h: Node2D, is_gull: bool = false) -> void:
 	human = h
 	gull = is_gull
 	seed_o = randf() * 10.0
+
+
+func make_parakeet(side: float) -> void:
+	parakeet = true
+	wall_side = side
 
 
 func _physics_process(delta: float) -> void:
@@ -55,13 +63,21 @@ func scare() -> void:
 		return
 	flying = true
 	fly_dir = (global_position - dog.global_position).normalized().rotated(randf_range(-0.5, 0.5))
+	if parakeet:
+		# up into the palms over the wall, all shouting about it
+		fly_dir = Vector2(wall_side, randf_range(-0.9, -0.2)).normalized()
+		main.parakeet_squawk(global_position)
 
 
 func _draw() -> void:
 	var body := Color(0.88, 0.88, 0.9) if gull else Color(0.55, 0.56, 0.6)
+	if parakeet:
+		body = Color(0.40, 0.74, 0.30)
 	var r := 5.2 if gull else 4.0
 	draw_circle(Vector2.ZERO, r, body)
-	draw_circle(Vector2(r - 1.0, -2), r * 0.55, body)
+	draw_circle(Vector2(r - 1.0, -2), r * 0.55, Color(0.74, 0.78, 0.74) if parakeet else body)
+	if parakeet:
+		draw_line(Vector2(-r, 0), Vector2(-r - 5.0, 1.0), Color(0.30, 0.60, 0.26), 2.0)
 	draw_circle(Vector2(r + 0.6, -2), 1.0, Color(0.9, 0.6, 0.2))
 	if gull:
 		draw_line(Vector2(-r, -1), Vector2(-r - 3.0, 0), Color(0.4, 0.4, 0.45), 2.0)
