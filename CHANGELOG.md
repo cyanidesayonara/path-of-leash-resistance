@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-09-30 - You can see the owner being dragged
+
+A dragged owner was drawn exactly like a walking one: facing the way they
+were moving, legs stepping, so being hauled across the path by the dog looked
+like strolling cheerfully towards her, with a small "!" the only sign. Now,
+when the leash is taut and they are moving somewhere other than where they
+are walking (`human._track_drag`), they turn to face the pull, brace their
+feet wide and stop stepping, lean back against it, reach along the leash
+with their free hand, and scuff dust up at their heels while they slide.
+Presentation only; `tests/test_owner_drag.gd` (4 checks).
+
 ## 2026-09-30 - A tangle with another walker no longer borrows the pole's pulley
 
 A rope wound round a pole amplifies the dog's pull on the owner (the pulley).
