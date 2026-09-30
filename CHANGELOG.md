@@ -102,6 +102,42 @@ Now a covered market hall, the Boqueria kind (`LevelBuild.mercat`):
 La Castanyada and La Neteja still use the old market layout.
 `tests/test_mercat.gd` (10 checks).
 
+## 2026-09-30 - The scrapyard autowalk finishes at the same time every run
+
+`--level=scrap --autowalk` finished at t=120.0 on some runs and t=121.7 on
+others, on one commit. Two causes:
+- The camera shake's RNG was unseeded. The shake goes into `cam.offset`,
+  which `get_screen_center_position()` includes, and the pair spawner reads
+  that for where a walker pair appears. Getting caught on the way home (the
+  cameras, lasers and guard dogs) shakes the screen, so pair spawns moved by
+  a few pixels at random and the walk forked from there. It now has a fixed
+  seed (`SHAKE_SEED` in main.gd); the shake looks the same as before.
+- `--autowalk` read and wrote `user://records.cfg`. A finished walk marked
+  "bring Tofu home" done, so the next run on the same machine skipped Tofu
+  and walked a different home leg (and the bot was ticking goals in the
+  player's own save). The bot now runs from a blank in-memory save and
+  never writes it (`Game.persist`).
+The behaviour snapshot is otherwise unchanged; the scrap finish now reads
+t=120.0 every run.
+## 2026-09-30 - The autowalk bot keeps to the owner's side of the train
+
+On L'Estacio the bot took 78 s to reach FREEDOM (107 s with the other
+walkers' changes, and then never finished within 12000 frames); other walks
+take 30-40 s. The bot has no collision (`--autowalk` zeroes the dog's and the
+owner's masks so it can glide through clutter), and its weave pulls it to the
+middle of the path, which on L'Estacio is the middle of the train. It walked
+into the train, dragged the owner in after it, and the rope - which still
+collides - wound through the wrap points down the train's sides, one whirl
+after another, for the length of the platform.
+- The bot now keeps to the owner's side of any island (the train, El Parc's
+  lake, El Gotic's plaça), the same rule `human._walk` follows.
+- L'Estacio: FREEDOM at t=29.5 (was 78.3); on top of the other walkers'
+  change, t=31.3 (was 107.5, unfinished). El Parc 33.8 -> 34.3, El Gotic
+  29.4 -> 26.7. No other walk has an island, so nothing else changes.
+- A real player's owner does not get caught: with collision left on, the bot
+  reaches FREEDOM at t=29.8 down the east platform and t=28.9 down the west
+  one (the rope round the train's south end), with no whirls. The level is
+  left as it is.
 ## 2026-09-30 - One voice for the game's text
 
 A pass over the player-facing text, and the rules written down in AGENTS.md
@@ -216,6 +252,7 @@ Now each kind has a place:
   its ground sign says FIRST WALK.
 - Two banner lines rewritten: "FULL!" is "FULL TANK! GO MARK A SPOT", and
   "GO BACK DOWN TO HEAD HOME" is "BACK OUT THROUGH THE GATE, THEN HOME".
+
 
 ## 2026-09-29 - Each walk's name is made of the walk, and you can kick it about
 

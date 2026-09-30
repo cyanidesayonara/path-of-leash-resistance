@@ -480,7 +480,10 @@ var elapsed := 0.0
 var frozen := false
 var shake_t := 0.0
 # camera shake draws from its own RNG: it runs per rendered frame, and the
-# global sequence has to stay the simulation's alone
+# global sequence has to stay the simulation's alone. Fixed seed: the shake
+# lands in cam.offset, which get_screen_center_position() includes, and the
+# pair spawner reads that - an unseeded shake made the autowalk vary run to run
+const SHAKE_SEED := 0x5AFE
 var _shake_rng := RandomNumberGenerator.new()
 
 var hud: CanvasLayer
@@ -591,6 +594,7 @@ func _ready() -> void:
 	Engine.time_scale = 1.0
 	font = ThemeDB.fallback_font
 	var autowalk_requested := "--autowalk" in OS.get_cmdline_user_args()
+	_shake_rng.seed = SHAKE_SEED
 	if Game.is_daily(Game.level_id):
 		# same layout, weather and time for everyone, all day
 		Game.daily = true
@@ -6595,6 +6599,17 @@ func _auto_drive(_delta: float) -> void:
 	dog.auto = true
 	# weave so a head-on pole doesn't stall the dumb driver forever
 	var weave := sin(elapsed * 1.6) * 0.6 + clampf((walk_cx - dog.global_position.x) / 300.0, -0.6, 0.6)
+	# the bot has no collision, so round an island (L'Estacio's train, El
+	# Parc's lake) it keeps to the owner's side, as human._walk does: aimed
+	# at the middle it would walk into the train and wind the rope through
+	# the wrap points along its sides
+	var dp := dog.global_position
+	for isl: Dictionary in islands:
+		var ir: Rect2 = isl["rect"]
+		if dp.y > ir.position.y - human.ISLAND_LEAD and dp.y < ir.end.y + human.ISLAND_LEAD:
+			var here := walk_edges(dp.y)
+			var side_x: float = (ir.end.x + here.y) * 0.5 if float(isl["side"]) > 0.0 else (here.x + ir.position.x) * 0.5
+			weave = clampf((side_x - dp.x) / 60.0, -1.0, 1.0)
 	match phase:
 		"out":
 			dog.auto_move = Vector2(weave, -1.0).normalized()
