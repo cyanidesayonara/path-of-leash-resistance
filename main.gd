@@ -6367,14 +6367,20 @@ func on_bark(pos: Vector2) -> void:
 		g.hear_noise(pos, 230.0)
 
 
-# A retractable reel winds in SLACK: against a taut rope it just holds, so a
-# "click!" never drags the dog. Only a deliberate haul (the nag) pulls a taut
-# rope in.
+# A retractable reel winds slack in briskly; against a taut rope its spring
+# only draws in gently, so a "click!" never yanks the dog, yet a dog being
+# towed along is still slowly brought in (with no give at all the leash only
+# ever lengthened, and an idle dog trailed out into the bike lanes). A
+# deliberate haul (the nag) pulls a taut rope in at full speed.
+const REEL_RATE := 150.0
+const REEL_TAUT_RATE := 45.0
+
+
 func _tick_reel_length(delta: float) -> void:
-	var next_len := move_toward(leash_len, leash_target, 150.0 * delta)
-	if next_len < leash_len and not leash_haul:
-		next_len = maxf(next_len, minf(leash_len, leash.used_length()))
-	leash_len = next_len
+	var rate := REEL_RATE
+	if leash_target < leash_len and not leash_haul and leash.used_length() >= leash_len:
+		rate = REEL_TAUT_RATE
+	leash_len = move_toward(leash_len, leash_target, rate * delta)
 	if is_equal_approx(leash_len, leash_target):
 		leash_haul = false
 	leash.rest_len = leash_len

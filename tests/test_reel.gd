@@ -4,7 +4,7 @@ extends SceneTree
 # Like every owner event it is telegraphed: the "click!" comes first and the
 # new length REEL_WARN later, never on the same frame. And a reel winds in
 # slack only: a click that shortens the leash against a taut rope holds
-# rather than dragging the dog, while the owner's deliberate haul (the nag)
+# gently rather than yanking the dog, while the owner's deliberate haul (the nag)
 # does pull a taut rope in, also after its warning.
 
 var checks := 0
@@ -52,11 +52,13 @@ func _run() -> void:
 	m.leash_len = 400.0
 	m.leash.rest_len = 400.0
 	m.leash.resnap()
-	var used: float = m.leash.used_length()
 	m.set_leash_target(170.0)
 	for i in range(60):
 		m._tick_reel_length(dt)
-	_check(m.leash_len >= minf(400.0, used) - 0.5, "a click never reels in a taut leash (%.0f, rope %.0f)" % [m.leash_len, used])
+	# one second of reeling against a taut rope: the spring's gentle rate, not
+	# the brisk one
+	_check(m.leash_len >= 400.0 - m.REEL_TAUT_RATE - 1.0, "a click only draws a taut leash in gently (%.0f after 1 s)" % m.leash_len)
+	_check(m.leash_len < 400.0, "but it does draw it in, or a towed dog trails ever further out")
 
 	# with slack it winds in, down to what is actually out
 	m.dog.global_position = hp + Vector2(0, -200.0)

@@ -25,8 +25,11 @@ error (seen in La Rambla's bolt-chase bot walk). He passes no mark now.
 
 - **The reel is telegraphed.** "click!" comes 0.8 s before the leash length
   changes, like every other owner event; it used to change on the same frame.
-- **A reel winds in slack only.** A click that shortens the leash against a
-  taut rope holds instead of dragging the dog away from what she was doing.
+- **A reel no longer yanks.** It winds slack in briskly, but against a taut
+  rope its spring only draws in gently (45 px/s instead of 150), so a click
+  never drags the dog away from what she was doing, yet a dog being towed is
+  still slowly brought in. (With no give at all the leash only ever
+  lengthened, and the idle soak's dog trailed out into El Mercat's bike lane.)
   The owner's deliberate haul when she roams off the path still pulls a taut
   rope in, and now also comes 0.8 s after the tut.
 - **The whirl orbits the pole the rope is actually wound on** at the owner's
