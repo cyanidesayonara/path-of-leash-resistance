@@ -91,7 +91,7 @@ static func build(txt: String, at: Vector2, h: float, mat: String, key: float, m
 	var lines: Array = lay[0]
 	h = float(lay[1])
 	var feel: Dictionary = FEEL.get(mat, {"fixed": true})
-	var sign := {"mat": mat, "lines": lines, "h": h, "key": key, "pieces": [], "rings": [],
+	var sign := {"txt": txt, "mat": mat, "lines": lines, "h": h, "key": key, "pieces": [], "rings": [],
 		"feel": feel, "top": at.y - h * 1.3, "bottom": at.y + h * 0.5, "moving": false}
 	if bool(feel.get("fixed", false)):
 		return sign
