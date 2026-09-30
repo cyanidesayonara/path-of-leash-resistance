@@ -2,6 +2,36 @@
 
 Append-only session history, newest first.
 
+## 2026-09-30 - El Mosaic is walked through Park Guell's pieces (round 1)
+
+El Mosaic was El Parc's layout on a serpentine with patches of slippery
+mosaic floor: in your words, a proof of concept. Now the walk goes through
+the park's pieces in order, uphill, on sandy gravel between rubble-stone
+terrace walls with palms and agaves; the colour is only where Gaudi put it
+(`LevelBuild.mosaic`, `main._draw_mosaic`):
+- **The gatehouses** either side of the start: gingerbread walls, wavy roofs
+  iced white with trencadis caps, and the red mushroom spire with its cross.
+- **The dragon stair**: steps at its foot and head, dripping grotto stone
+  along its sides, and on the landing the **salamander** in trencadis, head
+  down the stair and tail curling up it. Solid; your human walks round it;
+  the drink is the water from its mouth.
+- **The hypostyle hall**: a 4 by 5 forest of fat columns with mosaic
+  medallions on their capitals, in the shade under the plaza, with a lane
+  left through the middle for your human. Wind, whirl and tangle here.
+- **The plaza** opens out beyond it, edged the whole way by the
+  **serpentine bench**: the plaza's edges wave, the bench is finished in
+  trencadis, and since the path's edges are what a grind rides, the whole
+  bench grinds end to end ("BENCH GRIND!").
+- **The viaduct**: a covered walk with leaning rubble columns down one side,
+  their lean read in their long shadows, and the slope on the other.
+- **The calvary** at the top: three crosses on a heap of stones.
+- No pond, no mosaic floor, no city frontage.
+
+The life comes next round (tourists photographing the salamander, the queue
+at the gate, the fan seller, parakeets, pickpockets). `tests/test_mosaic.gd`
+(11 checks); the cross-section test now expects the terrace walls at the
+path's edge.
+
 ## 2026-09-30 - La Neteja becomes a back street at dawn
 
 La Neteja was the old market layout with the stalls taken out. Now its own

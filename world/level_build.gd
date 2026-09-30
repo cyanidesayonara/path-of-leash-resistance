@@ -30,7 +30,7 @@ const CROSS_SECTIONS := {
 	"site": ["sidewalk", 60.0, "sidewalk", 60.0],
 	"spook": ["none", 0.0, "none", 0.0],              # an old-town street and its plaça
 	"scrap": ["grass", 70.0, "grass", 70.0],          # weeds up to the chain-link
-	"guell": ["grass", 110.0, "grass", 110.0],        # terrace planting
+	"guell": ["none", 0.0, "none", 0.0],              # rubble-stone terrace walls
 	"neteja": ["none", 0.0, "none", 0.0],             # a back street
 }
 
@@ -92,6 +92,69 @@ static func gotic(m: Node2D) -> void:
 	m.laundry_lines = Array([-1000.0, -1850.0, -3450.0, -3900.0, -4400.0], TYPE_FLOAT, &"", null)
 	# the owner walks round the fountain, not through it (east side)
 	m.islands = Array([{"rect": Rect2(GOTIC_PLACA - Vector2(40.0, 40.0), Vector2(80.0, 80.0)), "side": 1.0}], TYPE_DICTIONARY, &"", null)
+
+
+# EL MOSAIC: Park Guell's style, walked uphill (docs/LEVEL_DESIGN.md). Sandy
+# gravel and rubble stone underfoot; the colour only where Gaudi put it -
+# the gatehouse roofs, the salamander, the column medallions and the bench.
+const MOSAIC_STAIR_Y0 := -500.0       # the dragon stair, bottom step
+const MOSAIC_STAIR_Y1 := -1350.0      # ...and top
+const MOSAIC_SALAMANDER := Vector2(640.0, -930.0)
+const MOSAIC_SALAMANDER_SIZE := Vector2(110.0, 200.0)
+const MOSAIC_HALL_Y0 := -1550.0       # the hypostyle hall
+const MOSAIC_HALL_Y1 := -2550.0
+const MOSAIC_HALL_COLS: Array[float] = [460.0, 575.0, 705.0, 820.0]
+const MOSAIC_HALL_ROWS: Array[float] = [-1660.0, -1860.0, -2060.0, -2260.0, -2460.0]
+const MOSAIC_PLAZA_Y0 := -2750.0      # the plaza and its serpentine bench
+const MOSAIC_PLAZA_Y1 := -3650.0
+const MOSAIC_BAY := 150.0
+const MOSAIC_VIADUCT_Y0 := -4100.0    # the viaduct
+const MOSAIC_VIADUCT_Y1 := -4650.0
+const MOSAIC_VIADUCT_CX := 590.0
+const MOSAIC_CALVARY := Vector2(860.0, -4760.0)
+
+
+static func mosaic(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
+	m.gate_text = "EL CALVARI"
+	m.pond = Rect2()
+	m.patches.clear()
+	m.stalls.clear()
+	m.stall_kinds.clear()
+	m.poles.clear()
+	# the hypostyle hall: a grid of fat Doric columns, a clear lane between
+	# the middle two for the owner, the best pole forest in the game
+	for y: float in MOSAIC_HALL_ROWS:
+		for x: float in MOSAIC_HALL_COLS:
+			m.poles.append(Vector2(x, y))
+	# the viaduct's leaning columns down its east side
+	var vy := MOSAIC_VIADUCT_Y0 - 40.0
+	while vy > MOSAIC_VIADUCT_Y1 + 20.0:
+		m.poles.append(Vector2(m.walk_edges(vy).y - 30.0, vy))
+		vy -= 110.0
+	m.deco_pole_count = m.poles.size()
+	m.astands = Array([], TYPE_VECTOR2, &"", null)
+	m.manholes = Array([], TYPE_VECTOR2, &"", null)
+	m.cone_spots = Array([], TYPE_VECTOR2, &"", null)
+	m.benches = Array([], TYPE_VECTOR2, &"", null)
+	m.bins = Array([Vector2(m.walk_edges(-300.0).x + 30.0, -300.0), Vector2(m.walk_edges(-3700.0).y - 30.0, -3700.0)],
+		TYPE_VECTOR2, &"", null)
+	# the drink is the water from the salamander's mouth
+	m.fountains = Array([MOSAIC_SALAMANDER + Vector2(0.0, MOSAIC_SALAMANDER_SIZE.y * 0.5 + 18.0)], TYPE_VECTOR2, &"", null)
+	# a guitarist in the viaduct, a fan seller on the plaza
+	m.performers = Array([Vector2(m.walk_edges(-4400.0).x + 60.0, -4400.0),
+		Vector2(m.walk_edges(-3200.0).x + 80.0, -3200.0)], TYPE_VECTOR2, &"", null)
+	# agave planters of rubble stone: what gets marked here
+	hyd_list.clear()
+	for hy: Array in [[-300.0, false], [-1450.0, true], [-2650.0, false], [-3850.0, true], [-4550.0, true]]:
+		var e: Vector2 = m.walk_edges(float(hy[0]))
+		hyd_list.append(Vector2(e.x + 30.0 if bool(hy[1]) else e.y - 30.0, float(hy[0])))
+	# tourists' dropped snacks
+	keb_list.clear()
+	for k: Vector2 in [Vector2(560.0, -1450.0), Vector2(760.0, -3100.0), Vector2(520.0, -3500.0)]:
+		keb_list.append(k)
+	# the owner walks round the salamander on its east side
+	m.islands = Array([{"rect": Rect2(MOSAIC_SALAMANDER - MOSAIC_SALAMANDER_SIZE * 0.5 - Vector2(24.0, 24.0),
+		MOSAIC_SALAMANDER_SIZE + Vector2(48.0, 48.0)), "side": 1.0}], TYPE_DICTIONARY, &"", null)
 
 
 # LA NETEJA: a narrow back street at dawn, on the morning the sweeper comes
@@ -792,24 +855,31 @@ static func apply_corridor(m: Node2D) -> void:
 	# still are. See edge_path.gd; walk_edges(y) is what everything should ask.
 	m.edge_nodes = []
 	if m.lvl == "guell":
-		# EL PARC. The serpentine, and the point of the whole level: Gaudi did
-		# not draw a straight line and neither does this path. It is a longer,
-		# deeper weave than El Bosc's - a bench terrace that swings right
-		# across the level and back, so carving it is the walk.
-		#
-		# Kept inside the slope the self-test allows (0.85) so it can be run
-		# rather than merely admired, and both ends sit centred so the start
-		# line and the gate still line up.
-		m.edge_nodes = [
+		# EL MOSAIC, walked uphill: the entrance forecourt between the
+		# gatehouses, the dragon stair, the hypostyle hall, the plaza edged
+		# by the serpentine bench (its edges wave, and the edges are the
+		# grind line, so the whole bench can be ground), the viaduct, and the
+		# calvary at the top
+		var nodes: Array = [
 			{"y": m.START_Y, "cx": 640.0, "half": 300.0},
-			{"y": -700.0, "cx": 486.0, "half": 292.0},
-			{"y": -1500.0, "cx": 792.0, "half": 268.0},
-			{"y": -2300.0, "cx": 470.0, "half": 300.0},
-			{"y": -3100.0, "cx": 806.0, "half": 262.0},
-			{"y": -3900.0, "cx": 520.0, "half": 296.0},
-			{"y": -4600.0, "cx": 700.0, "half": 300.0},
-			{"y": m.GATE_Y, "cx": 640.0, "half": 300.0},
+			{"y": MOSAIC_STAIR_Y0 + 60.0, "cx": 640.0, "half": 300.0},
+			{"y": MOSAIC_STAIR_Y0 - 60.0, "cx": 640.0, "half": 320.0},
+			{"y": MOSAIC_HALL_Y0 + 80.0, "cx": 640.0, "half": 320.0},
+			{"y": MOSAIC_HALL_Y0 - 40.0, "cx": 640.0, "half": 360.0},
+			{"y": MOSAIC_PLAZA_Y0 + 80.0, "cx": 640.0, "half": 360.0},
 		]
+		var wy: float = MOSAIC_PLAZA_Y0
+		var k := 0
+		while wy > MOSAIC_PLAZA_Y1:
+			nodes.append({"y": wy, "cx": 640.0, "half": 400.0 if k % 2 == 0 else 370.0})
+			wy -= MOSAIC_BAY
+			k += 1
+		nodes.append({"y": MOSAIC_PLAZA_Y1, "cx": 640.0, "half": 400.0})
+		nodes.append({"y": MOSAIC_VIADUCT_Y0, "cx": MOSAIC_VIADUCT_CX, "half": 280.0})
+		nodes.append({"y": MOSAIC_VIADUCT_Y1, "cx": MOSAIC_VIADUCT_CX, "half": 280.0})
+		nodes.append({"y": m.GATE_Y + 150.0, "cx": 640.0, "half": 300.0})
+		nodes.append({"y": m.GATE_Y, "cx": 640.0, "half": 300.0})
+		m.edge_nodes = nodes
 	elif m.lvl == "oldtown":
 		# EL GOTIC: narrow alleys that jink left and right round the old
 		# blocks, opening once into the little plaça with its fountain
@@ -938,8 +1008,9 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 
 
 static func fit_props_to_corridor(m: Node2D) -> void:
-	# El Gotic, El Mercat and La Castanyada place everything in level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook":
+	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
+	# level space
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell":
 		return
 	# Props were all authored for the old fixed 300..980 corridor, so a
 	# narrower walk would leave them stranded out on the verge. Pull every
@@ -1367,24 +1438,7 @@ static func build_level_data(m: Node2D) -> void:
 	elif m.lvl == "neteja":
 		neteja(m)
 	elif m.lvl == "guell":
-		# El Parc: Gaudi's terraces. Broken-tile mosaic underfoot, which is
-		# fast and slippery to run on, laid in organic sweeps rather than
-		# slabs - the patch primitive was already the right shape for it.
-		m.gate_text = "TERRACE"
-		# It inherits the park's cross-section, which brings the park's pond
-		# with it - and the pond is authored against a STRAIGHT corridor, so on
-		# a serpentine it ends up swallowing whatever the path now runs over.
-		# The self-test caught a fountain and a cone standing in it. The
-		# terraces do their water as a fountain instead.
-		m.pond = Rect2()
-		m.patches = Array([
-			{"y": -640.0, "at": 0.44, "rx": 150.0, "ry": 86.0, "seed": 1.42, "kind": "tile"},
-			{"y": -1460.0, "at": 0.56, "rx": 168.0, "ry": 94.0, "seed": 3.07, "kind": "tile"},
-			{"y": -2280.0, "at": 0.40, "rx": 158.0, "ry": 90.0, "seed": 4.61, "kind": "tile"},
-			{"y": -3080.0, "at": 0.60, "rx": 174.0, "ry": 98.0, "seed": 0.88, "kind": "tile"},
-			{"y": -3880.0, "at": 0.46, "rx": 156.0, "ry": 88.0, "seed": 2.35, "kind": "tile"},
-		], TYPE_DICTIONARY, &"", null)
-		m.fountains = Array([Vector2(m.walk_cx - 150.0, -2650.0)], TYPE_VECTOR2, &"", null)
+		mosaic(m, hyd_list, keb_list)
 	elif m.lvl == "scrap":
 		ferralla(m)
 	if m.tutorial_mode:
@@ -2261,6 +2315,9 @@ static func build_walls(m: Node2D) -> void:
 		add_rect_body(m, m.furgoneta, m.VAN_BODY_SIZE)
 	for st in m.stalls:
 		add_rect_body(m, st, m.STALL_BODY_SIZE)
+	# El Mosaic's salamander
+	if m.lvl == "guell":
+		add_rect_body(m, MOSAIC_SALAMANDER, MOSAIC_SALAMANDER_SIZE)
 	# La Neteja's dumpsters
 	if m.lvl == "neteja":
 		for d: Vector2 in neteja_dumpsters(m):
