@@ -237,6 +237,26 @@ applies to every change, whoever makes it.
   fastest. Tooling and docs PRs get one too, even though they do not count
   against the limit.
 
+## The game's voice (every player-facing string)
+
+Dry, fond, from the dog's side of the leash; British spelling; short.
+Each kind of text has one form, and its look comes from where it is drawn:
+- **Goals**: sentence case, an instruction to the dog ("Mark 5 spots",
+  "Get your human home less than half soaked"). `goals.quest_text`
+  capitalises the first letter of every goal, wherever it was written.
+- **Shouts** (`feed.say`): capitals, a few words, what she just did or what
+  needs her now ("KERB RIDE!", "PICKPOCKET! WATCH HIS HANDS").
+- **The banner** (`hud_status`): capitals, what is true right now, as an
+  instruction ("FULL TANK! GO MARK A SPOT").
+- **Speech** (`float_text(..., POP_SAY)`): lower case, as people talk.
+- **Sounds**: whatever the noise is ("plop", "THUMP").
+- **Scores**: a lower-case word and the amount last ("marked! +3"), which
+  world/pops_layer.gd puts on a chip.
+- **Menus**: headings in capitals; body text in plain sentences; button
+  hints only through the prompt bar, never written into a sentence.
+Say "leash" (never "lead"), "your human" for the owner, and name the place
+in Catalan with an English gloss under it.
+
 ## Conventions
 
 - No emoji anywhere (code, UI, docs, commits)

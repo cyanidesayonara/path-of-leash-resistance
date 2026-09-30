@@ -22,7 +22,7 @@ const STEPS: Array[Dictionary] = [
 	{
 		"id": "walk", "at": 60.0, "hold": false,
 		"title": "You are the dog.",
-		"body": "Walk north with {move_with}. Your human follows - badly.",
+		"body": "Walk up the path with {move_with}. Your human follows - badly.",
 	},
 	{
 		"id": "pull", "at": -420.0, "hold": true,
@@ -47,7 +47,7 @@ const STEPS: Array[Dictionary] = [
 	{
 		"id": "nose", "at": -2020.0, "hold": true,
 		"title": "Your nose beats your eyes.",
-		"body": "Someone dropped a snack on the grass. SLOW DOWN: the slower you go, the further you smell. Find it.",
+		"body": "Someone dropped a snack on the grass. Slow down: the slower you go, the further you smell. Find it.",
 	},
 	{
 		"id": "bark", "at": -2420.0, "hold": true,
@@ -62,7 +62,7 @@ const STEPS: Array[Dictionary] = [
 	{
 		"id": "grind", "at": -3220.0, "hold": true,
 		"title": "Ride the kerb.",
-		"body": "Run fast along the edge of the path, then counter-steer left/right to keep your balance.",
+		"body": "Run fast along the edge of the path, and steer against the wobble to stay on.",
 	},
 	{
 		"id": "vault", "at": -3620.0, "hold": true,
@@ -86,13 +86,13 @@ const STEPS: Array[Dictionary] = [
 	},
 	{
 		"id": "dig", "at": -5200.0, "hold": false,
-		"title": "Off the lead.",
+		"title": "Off the leash.",
 		"body": "In the dog park: stand on the turned earth and stay put to dig something up.",
 	},
 	{
 		"id": "done", "at": -5300.0, "hold": false,
 		"title": "Good dog.",
-		"body": "That is the lot. Fetch the ball, then take your human home.",
+		"body": "That is everything. Fetch the ball, then take your human home.",
 	},
 ]
 
