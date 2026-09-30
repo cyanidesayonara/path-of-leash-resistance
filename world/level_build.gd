@@ -28,7 +28,7 @@ const CROSS_SECTIONS := {
 	"oldtown": ["none", 0.0, "none", 0.0],            # an alley: walls at the paving
 	"station": ["none", 0.0, "none", 0.0],          # indoors: the walls are the concourse's
 	"site": ["sidewalk", 60.0, "sidewalk", 60.0],
-	"spook": ["sidewalk", 80.0, "sidewalk", 80.0],
+	"spook": ["none", 0.0, "none", 0.0],              # an old-town street and its plaça
 	"scrap": ["grass", 70.0, "grass", 70.0],          # weeds up to the chain-link
 	"guell": ["grass", 110.0, "grass", 110.0],        # terrace planting
 	"neteja": ["none", 0.0, "none", 0.0],             # a back street
@@ -92,6 +92,76 @@ static func gotic(m: Node2D) -> void:
 	m.laundry_lines = Array([-1000.0, -1850.0, -3450.0, -3900.0, -4400.0], TYPE_FLOAT, &"", null)
 	# the owner walks round the fountain, not through it (east side)
 	m.islands = Array([{"rect": Rect2(GOTIC_PLACA - Vector2(40.0, 40.0), Vector2(80.0, 80.0)), "side": 1.0}], TYPE_DICTIONARY, &"", null)
+
+
+# LA CASTANYADA: the chestnut festival at night, in an old-town plaça. The
+# roaster is the landmark in the middle of the plaça (solid; the owner walks
+# round it), a little stage on its west side with the band on it, plane trees
+# round it, festival stalls along the street - chestnuts, panellets, roast
+# sweet potatoes, sweets - paper-lantern strings overhead, confetti and
+# chocolate underfoot (the dog must not eat the chocolate), and hessian sacks
+# of chestnuts where a street has hydrants.
+const CAST_PLACA := Vector2(640.0, -2700.0)
+const CAST_ROASTER := Vector2(110.0, 64.0)
+const CAST_LANTERN_YS: Array[float] = [-700.0, -1150.0, -1600.0, -2050.0, -3350.0, -3800.0, -4250.0]
+# [y, west side?, kind]
+const CAST_STALLS: Array = [
+	[-850.0, true, "panellets"], [-1200.0, false, "castanyes"], [-1650.0, true, "moniatos"],
+	[-2400.0, false, "panellets"], [-2950.0, false, "sweets"],
+	[-3700.0, false, "moniatos"], [-4100.0, true, "sweets"], [-4450.0, false, "castanyes"],
+]
+
+
+static func castanyada_stage(m: Node2D) -> Rect2:
+	var e: Vector2 = m.walk_edges(CAST_PLACA.y)
+	return Rect2(e.x + 14.0, CAST_PLACA.y - 190.0, 110.0, 300.0)
+
+
+static func castanyada(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
+	m.gate_text = "PLACA"
+	m.stalls.clear()
+	m.stall_kinds.clear()
+	for st: Array in CAST_STALLS:
+		var e: Vector2 = m.walk_edges(float(st[0]))
+		m.stalls.append(Vector2(e.x + 62.0 if bool(st[1]) else e.y - 62.0, float(st[0])))
+		m.stall_kinds.append(String(st[2]))
+	m.poles.clear()
+	# the plaça's plane trees
+	for t: Vector2 in [Vector2(-300.0, -300.0), Vector2(300.0, -330.0), Vector2(310.0, 320.0), Vector2(-180.0, 360.0)]:
+		m.poles.append(CAST_PLACA + t)
+	m.deco_pole_count = m.poles.size()
+	m.astands = Array([], TYPE_VECTOR2, &"", null)
+	m.manholes = Array([], TYPE_VECTOR2, &"", null)
+	m.benches = Array([CAST_PLACA + Vector2(240.0, 60.0)], TYPE_VECTOR2, &"", null)
+	var eb: Vector2 = m.walk_edges(-1400.0)
+	m.bins = Array([Vector2(eb.y - 26.0, -1400.0), Vector2(m.walk_edges(-3950.0).x + 26.0, -3950.0)], TYPE_VECTOR2, &"", null)
+	m.fountains = Array([Vector2(m.walk_edges(-1000.0).y - 30.0, -1000.0)], TYPE_VECTOR2, &"", null)
+	# the band on the stage, and a juggler in the street
+	var stage := castanyada_stage(m)
+	m.performers = Array([stage.get_center() + Vector2(0.0, -60.0), stage.get_center() + Vector2(0.0, 60.0),
+		Vector2(m.walk_edges(-3600.0).x + 70.0, -3600.0)], TYPE_VECTOR2, &"", null)
+	# litter round the stalls
+	m.cone_spots = Array([], TYPE_VECTOR2, &"", null)
+	for i in range(0, m.stalls.size(), 2):
+		m.cone_spots.append(m.stalls[i] + Vector2(0.0, -60.0))
+	# sweets underfoot everywhere, chocolate among them: steer past it
+	m.candy_spots = Array([
+		Vector2(560, -1000), Vector2(720, -1450), Vector2(590, -1850),
+		CAST_PLACA + Vector2(-130.0, 150.0), CAST_PLACA + Vector2(140.0, 120.0), CAST_PLACA + Vector2(60.0, -200.0),
+		Vector2(700, -3500), Vector2(570, -3950), Vector2(710, -4350),
+	], TYPE_VECTOR2, &"", null)
+	# hessian sacks of chestnuts: what gets marked
+	hyd_list.clear()
+	for hy: Array in [[-600.0, false], [-1450.0, true], [-2300.0, true], [-3550.0, true], [-4300.0, false]]:
+		var e2: Vector2 = m.walk_edges(float(hy[0]))
+		hyd_list.append(Vector2(e2.x + 30.0 if bool(hy[1]) else e2.y - 30.0, float(hy[0])))
+	# a dropped paper cone of chestnuts, and a panellet off a tray
+	keb_list.clear()
+	for k: Vector2 in [Vector2(700.0, -1300.0), CAST_PLACA + Vector2(200.0, -120.0), Vector2(580.0, -4000.0)]:
+		keb_list.append(k)
+	# the owner walks round the roaster on its east side
+	m.islands = Array([{"rect": Rect2(CAST_PLACA - CAST_ROASTER * 0.5 - Vector2(20.0, 20.0), CAST_ROASTER + Vector2(40.0, 40.0)),
+		"side": 1.0}], TYPE_DICTIONARY, &"", null)
 
 
 # EL MERCAT: a covered market hall, the Boqueria kind. In under an iron and
@@ -700,6 +770,17 @@ static func apply_corridor(m: Node2D) -> void:
 			{"y": -4700.0, "cx": 640.0, "half": 225.0},
 			{"y": m.GATE_Y, "cx": 640.0, "half": 225.0},
 		]
+	elif m.lvl == "spook":
+		# LA CASTANYADA: an old-town street opening into the plaça where the
+		# festival is, and narrowing again beyond it
+		m.edge_nodes = [
+			{"y": m.START_Y, "cx": 640.0, "half": 250.0},
+			{"y": CAST_PLACA.y + 750.0, "cx": 640.0, "half": 250.0},
+			{"y": CAST_PLACA.y + 450.0, "cx": 640.0, "half": 440.0},
+			{"y": CAST_PLACA.y - 450.0, "cx": 640.0, "half": 440.0},
+			{"y": CAST_PLACA.y - 750.0, "cx": 640.0, "half": 250.0},
+			{"y": m.GATE_Y, "cx": 640.0, "half": 250.0},
+		]
 	elif m.lvl == "market":
 		# EL MERCAT: in off the street under the iron arch, out into the wide
 		# hall, and out through the far door into the plaça
@@ -799,8 +880,8 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 
 
 static func fit_props_to_corridor(m: Node2D) -> void:
-	# El Gotic and El Mercat place everything in level space already
-	if m.lvl == "oldtown" or m.lvl == "market":
+	# El Gotic, El Mercat and La Castanyada place everything in level space
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook":
 		return
 	# Props were all authored for the old fixed 300..980 corridor, so a
 	# narrower walk would leave them stranded out on the verge. Pull every
@@ -1222,17 +1303,7 @@ static func build_level_data(m: Node2D) -> void:
 	elif m.lvl == "station":
 		estacio(m)
 	elif m.lvl == "spook":
-		# La Castanyada: the autumn festival at night. Sweets everywhere -
-		# and here's the cruelty: chocolate is poison to dogs, so the one
-		# thing you want most is the one thing you must NOT eat. Steer past
-		# the candy strewn across your path; real treats are still fair game.
-		m.gate_text = "PLACA"
-		m.candy_spots = Array([
-			Vector2(560, -1100), Vector2(700, -1400), Vector2(600, -1750),
-			Vector2(720, -2200), Vector2(560, -2600), Vector2(690, -2950),
-			Vector2(600, -3400), Vector2(720, -3800), Vector2(560, -4200),
-		], TYPE_VECTOR2, &"", null)
-		m.performers.append_array([Vector2(400, -2100), Vector2(880, -3300)])
+		castanyada(m, hyd_list, keb_list)
 	elif m.lvl == "site":
 		obres(m)
 	elif m.lvl == "neteja":
@@ -1360,8 +1431,6 @@ static func build_level_data(m: Node2D) -> void:
 	# shape across the path where it is, not a box with an outline.
 	var mw: float = m.walk_half * 2.0
 	match m.lvl:
-		"spook":
-			m.patches.append({"y": -2070.0, "at": 0.29, "rx": mw * 0.22, "ry": 66.0, "seed": 2.65, "kind": "confetti"})
 		"trail":
 			m.patches.append({"y": -3575.0, "at": 0.28, "rx": mw * 0.20, "ry": 62.0, "seed": 5.55, "kind": "mud"})
 	# after the water and the holes are known, so a puddle cannot end up in
@@ -1524,7 +1593,7 @@ static func build_level_data(m: Node2D) -> void:
 			m.prize_pos = OBRES_SLABS[1].get_center() if OBRES_SLABS.size() > 1 else Vector2(640.0, -3130.0)  # a trowel dropped in the wet cement
 			m.prize_text = "fish the trowel out of the wet cement"
 		"spook":
-			m.prize_pos = Vector2(640.0, -2350.0)  # a dog-safe pumpkin treat, ringed by candy
+			m.prize_pos = CAST_PLACA + Vector2(0.0, 96.0)  # a panellet off the roaster's tray, ringed by sweets
 			m.prize_text = "get the panellet without eating the sweets"
 		"scrap":
 			m.prize_pos = m.guard_posts[1] + Vector2(-30.0, 22.0)  # right beside a sleeping guard dog
@@ -2148,6 +2217,10 @@ static func build_walls(m: Node2D) -> void:
 		add_rect_body(m, m.furgoneta, m.VAN_BODY_SIZE)
 	for st in m.stalls:
 		add_rect_body(m, st, m.STALL_BODY_SIZE)
+	# La Castanyada's roaster and stage
+	if m.lvl == "spook":
+		add_rect_body(m, CAST_PLACA, CAST_ROASTER)
+		add_rect_body(m, castanyada_stage(m).get_center(), castanyada_stage(m).size)
 	# El Mercat's stall blocks down the middle of the hall
 	if m.lvl == "market":
 		for blk: Rect2 in MERCAT_BLOCKS:
@@ -2213,8 +2286,9 @@ static func build_entities(m: Node2D) -> void:
 	m.edge_layer = Node2D.new()
 	m.edge_layer.set_script(load("res://world/edgelayer.gd"))
 	m.edge_layer.z_index = -5   # behind everything in the world
-	# what hangs over the walk, above everyone (El Gotic's bridge, El Mercat's arches)
-	if m.lvl == "oldtown" or m.lvl == "market":
+	# what hangs over the walk, above everyone (El Gotic's bridge, El Mercat's
+	# arches, La Castanyada's lantern strings)
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook":
 		var ov := Node2D.new()
 		ov.set_script(load("res://world/overheadlayer.gd"))
 		ov.z_index = 14
