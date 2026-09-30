@@ -2,6 +2,24 @@
 
 Append-only session history, newest first.
 
+## 2026-09-30 - The scrapyard autowalk finishes at the same time every run
+
+`--level=scrap --autowalk` finished at t=120.0 on some runs and t=121.7 on
+others, on one commit. Two causes:
+- The camera shake's RNG was unseeded. The shake goes into `cam.offset`,
+  which `get_screen_center_position()` includes, and the pair spawner reads
+  that for where a walker pair appears. Getting caught on the way home (the
+  cameras, lasers and guard dogs) shakes the screen, so pair spawns moved by
+  a few pixels at random and the walk forked from there. It now has a fixed
+  seed (`SHAKE_SEED` in main.gd); the shake looks the same as before.
+- `--autowalk` read and wrote `user://records.cfg`. A finished walk marked
+  "bring Tofu home" done, so the next run on the same machine skipped Tofu
+  and walked a different home leg (and the bot was ticking goals in the
+  player's own save). The bot now runs from a blank in-memory save and
+  never writes it (`Game.persist`).
+The behaviour snapshot is unchanged apart from the scrap finish, which now
+reads t=121.7 every run (it was 120.0 or 121.7).
+
 ## 2026-09-29 - Each walk's name is made of the walk, and you can kick it about
 
 The walk's name was one font in a few inks. Now twelve walks spell it out of
