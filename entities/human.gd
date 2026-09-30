@@ -6,6 +6,11 @@ extends CharacterBody2D
 enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, SIGNAL, CALL, WHIRL, GO_POOP, BAG, GO_BIN, TOSS, STUMBLE, FALLEN }
 
 const WALK_SPEED := 92.0
+# the whirl's orbit radius, and how fast it tightens onto it from wherever
+# the owner was when it began (px/s)
+const WHIRL_R := 30.0
+const WHIRL_TIGHTEN := 200.0
+var whirl_r := WHIRL_R
 const PANIC_SPEED := 230.0
 
 # how far before and after an island the owner is already on its side
@@ -25,6 +30,11 @@ var iframes := 0.0
 var halt_t := 0.0
 var pull_cd := 0.0
 var reel_timer := 5.0
+# The reel is telegraphed like every other owner event: "click!" first, and
+# the new length only REEL_WARN later, so the change never lands unseen.
+const REEL_WARN := 0.8
+var reel_pending_t := 0.0
+var reel_pending_len := 0.0
 var whirl_pole := Vector2.ZERO
 var whirl_dir := 1.0
 var whirl_omega := 0.0
@@ -52,6 +62,15 @@ var parked := false
 var park_target := Vector2.ZERO
 var park_throw_t := 0.0
 var strain := false
+# Being dragged, shown: when the leash is taut and they are moving somewhere
+# other than where they are walking, they turn to the pull, brace their feet,
+# lean back, reach along the leash and scuff dust at their heels, instead of
+# "walking" cheerfully towards the dog. Presentation only.
+const DRAG_MIN := 50.0      # px/s of motion away from where they mean to go
+const DRAG_EASE := 5.0
+var walk_intent := Vector2.ZERO
+var drag_amt := 0.0
+var drag_dir := Vector2.DOWN
 var panic := false
 var ice := false
 var wobble_seed := 0.0
@@ -99,6 +118,7 @@ func is_fallen() -> bool:
 
 
 func tick(delta: float) -> void:
+	walk_intent = Vector2.ZERO
 	iframes = maxf(0.0, iframes - delta)
 	pull_cd = maxf(0.0, pull_cd - delta)
 	halt_t = maxf(0.0, halt_t - delta)
@@ -235,8 +255,9 @@ func tick(delta: float) -> void:
 			var step := whirl_dir * whirl_omega * delta
 			whirl_angle += step
 			whirl_unwound += absf(step)
-			global_position = whirl_pole + Vector2.from_angle(whirl_angle) * 30.0
-			velocity = Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0) * whirl_omega * 30.0
+			whirl_r = move_toward(whirl_r, WHIRL_R, WHIRL_TIGHTEN * delta)
+			global_position = whirl_pole + Vector2.from_angle(whirl_angle) * whirl_r
+			velocity = Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0) * whirl_omega * whirl_r
 			rotation += whirl_dir * whirl_omega * 1.4 * delta
 			# orbit EXACTLY the wound amount (over-orbiting re-wraps the
 			# rope the other way and the fling gets arrested), then hold
@@ -255,6 +276,7 @@ func tick(delta: float) -> void:
 			_walk(delta)
 	_events(delta)
 	_fiddle_with_reel(delta)
+	_track_drag(delta)
 	# face the direction of travel - except when deliberately walking
 	# backwards (filming, backing up for a selfie)
 	hgait += velocity.length() * delta * 0.06
@@ -272,6 +294,10 @@ func tick(delta: float) -> void:
 func _fiddle_with_reel(delta: float) -> void:
 	# constantly fiddles with the retractable leash, independent of the
 	# event system: new random length on every "click!"
+	if reel_pending_t > 0.0:
+		reel_pending_t -= delta
+		if reel_pending_t <= 0.0:
+			main.set_leash_target(reel_pending_len)
 	if state in [HState.FALLEN, HState.STUMBLE, HState.WHIRL]:
 		return
 	reel_timer -= delta
@@ -281,10 +307,11 @@ func _fiddle_with_reel(delta: float) -> void:
 		reel_timer = 0.5
 		return
 	reel_timer = randf_range(4.0, 8.0)
-	main.set_leash_target(randf_range(170.0, 430.0))
+	reel_pending_len = randf_range(170.0, 430.0)
+	reel_pending_t = REEL_WARN
 	_show_bubble("click!")
 	var tw := create_tween()
-	tw.tween_interval(0.7)
+	tw.tween_interval(REEL_WARN + 0.3)
 	tw.tween_callback(func() -> void:
 		if telegraph_t <= 0.0:
 			bubble.visible = false)
@@ -363,6 +390,7 @@ func _walk(delta: float) -> void:
 		# a heavy body on ice: grip drops, so momentum carries the owner
 		# past where they meant to stop - and the leash yanks compound it
 		accel *= 0.4
+	walk_intent = dir * speed
 	velocity = velocity.move_toward(dir * speed, accel * delta)
 	move_and_slide()
 
@@ -518,7 +546,10 @@ func start_whirl(pole: Vector2, dir: float, turns: float) -> void:
 	whirl_unwound = 0.0
 	whirl_pull = 0.0
 	whirl_angle = (global_position - pole).angle()
-	whirl_omega = clampf(velocity.length() / 30.0, 8.0, 14.0)
+	# the orbit starts where they are and tightens in, rather than snapping
+	# them onto the 30 px circle on the first frame
+	whirl_r = global_position.distance_to(pole)
+	whirl_omega = clampf(velocity.length() / maxf(whirl_r, 30.0), 8.0, 14.0)
 	telegraph_t = 0.0
 	_show_bubble("wheee!")
 
@@ -631,6 +662,14 @@ func bumped(dir: Vector2) -> void:
 	bubble.visible = false
 
 
+func _track_drag(delta: float) -> void:
+	var off := velocity - walk_intent
+	var dragged := strain and off.length() > DRAG_MIN and not (state in [HState.WHIRL, HState.FALLEN])
+	drag_amt = move_toward(drag_amt, 1.0 if dragged else 0.0, DRAG_EASE * delta)
+	if off.length() > 5.0:
+		drag_dir = drag_dir.slerp(off.normalized(), minf(6.0 * delta, 1.0)).normalized()
+
+
 func notify_strain() -> void:
 	if state != HState.FALLEN:
 		strain = true
@@ -714,20 +753,40 @@ func _draw_shapes() -> void:
 	var hair_col := Color(0.42, 0.3, 0.18) if woman else Color(0.3, 0.22, 0.15)
 	var t := AnimClock.msec() / 1000.0
 	var fd := face_dir
+	# dragged: turned to face the pull
+	if drag_amt > 0.01:
+		fd = fd.slerp(drag_dir, drag_amt).normalized()
 	var side := fd.orthogonal()
-	# feet step along the walking direction
-	var stepping := velocity.length() > 5.0
+	# feet step along the walking direction; dragged, they are braced wide
+	# and forward and slide instead
+	var stepping := velocity.length() > 5.0 and drag_amt < 0.5
 	var sa := sin(hgait) * 6.0 if stepping else 0.0
-	_b.draw_circle(side * 7.0 + fd * sa, 5.0, pants)
-	_b.draw_circle(-side * 7.0 - fd * sa, 5.0, pants)
-	# body with a slight walking sway
+	var brace := side * (7.0 + 3.0 * drag_amt) + fd * 6.0 * drag_amt
+	var brace2 := -side * (7.0 + 3.0 * drag_amt) + fd * 6.0 * drag_amt
+	if drag_amt > 0.3 and velocity.length() > 40.0:
+		# dust scuffed up at the heels as they are hauled along
+		for k in range(3):
+			var ph := fmod(t * 5.0 + float(k) * 0.33, 1.0)
+			var dust := Color(0.94, 0.91, 0.84, 0.6 * (1.0 - ph) * drag_amt)
+			_b.draw_circle(brace - fd * (20.0 + ph * 16.0) + side * (ph * 4.0), 3.0 + ph * 4.0, dust)
+			_b.draw_circle(brace2 - fd * (20.0 + ph * 16.0) - side * (ph * 4.0), 3.0 + ph * 4.0, dust)
+	_b.draw_circle(brace + fd * sa, 5.0, pants)
+	_b.draw_circle(brace2 - fd * sa, 5.0, pants)
+	# body with a slight walking sway; dragged, leaning back against the pull
 	var sway := side * (sin(hgait * 0.5) * 1.2) if stepping else Vector2.ZERO
+	sway -= fd * 5.0 * drag_amt
 	_b.draw_circle(sway, 16.0, shirt)
+	if drag_amt > 0.05:
+		# the leash hand, stretched out along the pull
+		# out to the side, clear of the phone
+		var hand := sway + side * 17.0 + fd * (12.0 + 12.0 * drag_amt)
+		_b.draw_line(sway + side * 11.0, hand, skin, 5.0)
+		_b.draw_circle(hand, 3.4, skin)
 	# arms reaching forward to the phone
 	_b.draw_line(side * 10.0, side * 4.0 + fd * 17.0, skin, 5.0)
 	_b.draw_line(-side * 10.0, -side * 4.0 + fd * 17.0, skin, 5.0)
 	# head, hair on the back of it; she gets the fuller cut and a ponytail
-	var head := fd * 5.0
+	var head := fd * 5.0 - fd * 6.0 * drag_amt
 	_b.draw_circle(head, 9.0, skin)
 	var back := (-fd).angle()
 	_b.draw_arc(head, 9.0, back - (1.15 if woman else 0.85), back + (1.15 if woman else 0.85), 12, hair_col, 5.0)

@@ -435,6 +435,11 @@ var whirl_flipped := false
 var vault_recent := 0.0
 
 var leash_len := LEASH_LENGTH
+# set when the owner is deliberately hauling the leash in (the nag), which
+# may shorten a taut rope; a plain reel click only takes up slack
+var leash_haul := false
+const NAG_WARN := 0.8
+var nag_haul_t := 0.0
 var leash_target := LEASH_LENGTH
 var started := false
 var bones := 0
@@ -1890,7 +1895,7 @@ func _tick_whistle(delta: float) -> void:
 			whistle_t = WHISTLE_EVERY
 			# the whistle from somewhere up the promenade: the tell for all of it
 			float_text(Vector2(walk_cx, cam.position.y - 200.0), "PHWEEET!", Color(0.9, 0.95, 1.0))
-			feed.say("WHISTLE! THE SELLERS ARE OFF", EventFeed.Tone.LOUD)
+			feed.say("PHWEET! THE SELLERS BOLT", EventFeed.Tone.LOUD)
 			for bl: Dictionary in near:
 				bl["state"] = "pack"
 				bl["t"] = 0.0
@@ -3487,7 +3492,7 @@ func start_challenge(giver: Node2D, target: int, seconds: float) -> void:
 	challenge_giver = giver
 	challenge.begin(target, seconds)
 	shake_t = maxf(shake_t, 0.2)
-	feed.say("DO %d TRICKS!" % target, EventFeed.Tone.LOUD)
+	feed.say("DARE: %d TRICKS, GO!" % target, EventFeed.Tone.LOUD)
 
 
 func on_challenge_done(win: bool, target: int, count: int) -> void:
@@ -3497,10 +3502,10 @@ func on_challenge_done(win: bool, target: int, count: int) -> void:
 	if win:
 		var reward := 20 + target * 3
 		bones += reward
-		feed.say("YOU DID IT!  +%d" % reward, EventFeed.Tone.GOOD)
+		feed.say("DARE DONE!  +%d" % reward, EventFeed.Tone.GOOD)
 		_slowmo()
 	else:
-		feed.say("SO CLOSE!  %d OF %d" % [count, target], EventFeed.Tone.BAD)
+		feed.say("DARE MISSED: %d OF %d" % [count, target], EventFeed.Tone.BAD)
 
 
 func _physics_process(delta: float) -> void:
@@ -3546,8 +3551,7 @@ func _physics_process(delta: float) -> void:
 	_prof("dog, owner, drive")
 	# the human owns the retractable leash: length changes on their whim
 	# ("click!" event), never the dog's
-	leash_len = move_toward(leash_len, leash_target, 150.0 * delta)
-	leash.rest_len = leash_len
+	_tick_reel_length(delta)
 	# Dynamic NPC-rope obstacles must be current before the player leash
 	# solve; a post-solve feed left the hero rope one frame stale.
 	_refresh_pair_obstacles()
@@ -3921,7 +3925,7 @@ func _apply_leash(delta: float) -> void:
 		if vault_recent > 0.0:
 			bones += 8
 			combo.add("SLINGSHOT", 8)
-			float_text(human.global_position + Vector2(0, -34), "SLINGSHOT! +8",
+			float_text(human.global_position + Vector2(0, -34), "slingshot! +8",
 				Color(1.0, 0.86, 0.5))
 			vault_recent = 0.0
 		Sfx.play("fling")
@@ -3953,7 +3957,9 @@ func _apply_leash(delta: float) -> void:
 	# pulley: with the rope wound and the dog working its end, the pole
 	# redirects and amplifies the pull on the human continuously - not
 	# only during the whirl. Wraps still shield the DOG from raw yanks.
-	var wind_turns := absf(leash.winding())
+	# turning round poles and furniture only: draped over another walker's
+	# rope is a tangle, and a tangle does not get the pole's pulley
+	var wind_turns := absf(leash.static_winding())
 	var pulley := 1.0
 	if wind_turns > 0.3 and (dog.input_active or dog.planted):
 		pulley = 1.0 + 0.4 * minf(wind_turns, 3.0)
@@ -4003,7 +4009,13 @@ func _apply_leash(delta: float) -> void:
 		# 0.55 turns covers the 270-degree partial wind that used to jam
 		# awkwardly without ever whirling
 		if absf(leash.winding()) > 0.55 and absf(end_wind) > 2.4:
-			var wp := _nearest_pole_to(human.global_position, 70.0)
+			# the pole the rope is actually wound on at the owner's end - not
+			# merely the nearest one - and a real pole: a café table or a
+			# chair is not something anyone swings round, and orbiting the
+			# wrong thing never unwinds the rope
+			var wp := Vector2(INF, INF)
+			if leash.human_contact_is_pole and leash.human_contact_pole.distance_to(human.global_position) < 70.0:
+				wp = leash.human_contact_pole
 			if wp.x < INF:
 				armed = true
 				whirl_arm += delta
@@ -5164,9 +5176,14 @@ func _offpath(delta: float) -> void:
 		if offpath_t > 3.0:
 			offpath_t = 0.0
 			human.show_nag()
-			set_leash_target(180.0)
+			# said first, hauled a moment later, like every owner event
+			nag_haul_t = NAG_WARN
 	else:
 		offpath_t = maxf(0.0, offpath_t - delta)
+	if nag_haul_t > 0.0:
+		nag_haul_t -= delta
+		if nag_haul_t <= 0.0:
+			set_leash_target(180.0, true)
 
 
 func _tick_vault(delta: float) -> void:
@@ -5393,10 +5410,10 @@ func _tick_call(_delta: float) -> void:
 			var bonus := 3 + call_haul * 2
 			bones += bonus
 			Sfx.play("star", 1.05)
-			feed.say("NICE! YOU DID %d THINGS  +%d" % [call_haul, bonus], EventFeed.Tone.GOOD)
+			feed.say("BUSY DOG! %d THINGS  +%d" % [call_haul, bonus], EventFeed.Tone.GOOD)
 			_update_hud()
 		else:
-			feed.say("YOU MISSED YOUR CHANCE", EventFeed.Tone.BAD)
+			feed.say("THE CALL'S OVER", EventFeed.Tone.BAD)
 
 
 func _tick_grind(delta: float) -> void:
@@ -5733,7 +5750,7 @@ func _pickups(delta: float) -> void:
 			bones = maxi(0, bones - 3)
 			shake_t = maxf(shake_t, 0.4)
 			Sfx.play("tangle", 0.7)
-			float_text(c.pos, "BLEH! not for dogs -3", Color(1, 0.5, 0.45))
+			float_text(c.pos, "bleh, not for dogs -3", Color(1, 0.5, 0.45))
 			_update_hud()
 
 
@@ -5880,7 +5897,7 @@ func toss_bag(from: Vector2, to: Vector2) -> void:
 func on_business_bagged(pos: Vector2) -> void:
 	bag_pending = false
 	bones += 2
-	float_text(pos, "swish! responsible +2", Color(0.8, 1.0, 0.8))
+	float_text(pos, "bagged, responsibly +2", Color(0.8, 1.0, 0.8))
 	_update_hud()
 
 
@@ -6142,7 +6159,7 @@ func on_guard_woken(pos: Vector2) -> void:
 	shake_t = maxf(shake_t, 0.5)
 	Sfx.play("bark", 0.6, -3.0)  # a deeper, angrier dog than Millie
 	human.halt(1.0)
-	float_text(pos + Vector2(0, -26), "WOOF WOOF WOOF -2", Color(1, 0.5, 0.4))
+	float_text(pos + Vector2(0, -26), "woof woof woof -2", Color(1, 0.5, 0.4))
 	_update_hud()
 
 
@@ -6240,7 +6257,7 @@ func on_tofu_home(pos: Vector2) -> void:
 	Sfx.play("star")
 	tofu_home = true
 	bones += 15
-	float_text(pos, "TOFU'S COMING HOME! +15", Color(1, 0.85, 0.7))
+	float_text(pos, "Tofu's coming home! +15", Color(1, 0.85, 0.7))
 	_slowmo()
 
 
@@ -6361,8 +6378,28 @@ func on_bark(pos: Vector2) -> void:
 		g.hear_noise(pos, 230.0)
 
 
-func set_leash_target(v: float) -> void:
+# A retractable reel winds slack in briskly; against a taut rope its spring
+# only draws in gently, so a "click!" never yanks the dog, yet a dog being
+# towed along is still slowly brought in (with no give at all the leash only
+# ever lengthened, and an idle dog trailed out into the bike lanes). A
+# deliberate haul (the nag) pulls a taut rope in at full speed.
+const REEL_RATE := 150.0
+const REEL_TAUT_RATE := 45.0
+
+
+func _tick_reel_length(delta: float) -> void:
+	var rate := REEL_RATE
+	if leash_target < leash_len and not leash_haul and leash.used_length() >= leash_len:
+		rate = REEL_TAUT_RATE
+	leash_len = move_toward(leash_len, leash_target, rate * delta)
+	if is_equal_approx(leash_len, leash_target):
+		leash_haul = false
+	leash.rest_len = leash_len
+
+
+func set_leash_target(v: float, haul := false) -> void:
 	leash_target = clampf(v, 150.0, 440.0)
+	leash_haul = haul
 
 
 func _nearest_pole_to(pos: Vector2, max_d: float) -> Vector2:
@@ -6395,7 +6432,7 @@ func on_stumble_save(pos: Vector2) -> void:
 			bones += streak
 			Sfx.play("save", 1.0 + 0.06 * streak)
 			combo.add("SAVE", 5)
-			float_text(pos + Vector2(0, -30), "NICE SAVE +%d" % streak, Color(0.7, 1.0, 0.75))
+			float_text(pos + Vector2(0, -30), "nice save +%d" % streak, Color(0.7, 1.0, 0.75))
 			_slowmo()
 			_update_hud()
 			return

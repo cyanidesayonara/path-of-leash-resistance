@@ -21,6 +21,95 @@ after another, for the length of the platform.
   reaches FREEDOM at t=29.8 down the east platform and t=28.9 down the west
   one (the rope round the train's south end), with no whirls. The level is
   left as it is.
+## 2026-09-30 - One voice for the game's text
+
+A pass over the player-facing text, and the rules written down in AGENTS.md
+("The game's voice") so it stays consistent:
+- **Goals** are sentence-case instructions to the dog, and clearer about
+  what to do: "Mark 5 spots", "Say hello to 3 dogs", "Run yourself tired",
+  "Scrape past traffic 3 times", "Keep the sweeper a leash length away",
+  "Get yourself home without a knock". Every goal, including the per-walk
+  prize and delivery ones, is capitalised where it is formatted.
+- **Scores** are all a lower-case word and the amount ("nice save +4",
+  "bleh, not for dogs -3"), where some shouted in capitals.
+- **Dares** read as dares: "DARE: 5 TRICKS, GO!", "DARE DONE!", "DARE
+  MISSED: 3 OF 5". Other shouts tightened ("PHWEET! THE SELLERS BOLT",
+  "BUSY DOG! 4 THINGS", "THE CALL'S OVER").
+- **The tutorial** says "leash" throughout ("Off the leash."), stops
+  shouting "SLOW DOWN" mid-sentence, and tells you to walk up the path
+  rather than "north".
+- **La Castanyada's prize** is a panellet among the sweets, not a pumpkin
+  treat among the candy: it is the chestnut festival, not Halloween.
+- **Glosses** say a little more: the city park, the seafront, the market
+  hall, the old town alleys, the railway station, the tiled terraces.
+
+## 2026-09-30 - You can see the owner being dragged
+
+A dragged owner was drawn exactly like a walking one: facing the way they
+were moving, legs stepping, so being hauled across the path by the dog looked
+like strolling cheerfully towards her, with a small "!" the only sign. Now,
+when the leash is taut and they are moving somewhere other than where they
+are walking (`human._track_drag`), they turn to face the pull, brace their
+feet wide and stop stepping, lean back against it, reach along the leash
+with their free hand, and scuff dust up at their heels while they slide.
+Presentation only; `tests/test_owner_drag.gd` (4 checks).
+
+## 2026-09-30 - A tangle with another walker no longer borrows the pole's pulley
+
+A rope wound round a pole amplifies the dog's pull on the owner (the pulley).
+It measured winding round ANY contact, so a rope draped over another
+walker's leash hauled the owner up to 2.2 times harder, as if it were a
+pole, against the rule that tangles do not get pole behaviour. The pulley
+now reads `leash.static_winding()`, turning only where the rope touches poles
+and furniture.
+
+The leash audit also suggested a wrap's shield depended on reel length (it
+counts rope points touching the pole). Measured, the same one-turn wrap
+touches 6 points on a 170 px reel and on a 430 px one, so the shield is left
+as it is, and `tests/test_wrap.gd` now holds both facts: the same wrap reads
+alike on a short and a long reel, and a tangle has no static winding.
+
+Also fixed: a pickpocket stopped after the tourist he robbed had walked off
+screen passed the freed tourist to `main.on_pickpocket_stopped`, a script
+error (seen in La Rambla's bolt-chase bot walk). He passes no mark now.
+
+## 2026-09-30 - The reel warns first, and the whirl swings round the right pole
+
+- **The reel is telegraphed.** "click!" comes 0.8 s before the leash length
+  changes, like every other owner event; it used to change on the same frame.
+- **A reel no longer yanks.** It winds slack in briskly, but against a taut
+  rope its spring only draws in gently (45 px/s instead of 150), so a click
+  never drags the dog away from what she was doing, yet a dog being towed is
+  still slowly brought in. (With no give at all the leash only ever
+  lengthened, and the idle soak's dog trailed out into El Mercat's bike lane.)
+  The owner's deliberate haul when she roams off the path still pulls a taut
+  rope in, and now also comes 0.8 s after the tut.
+- **The whirl orbits the pole the rope is actually wound on** at the owner's
+  end, and only a real pole. It used to pick the nearest thing in the pole
+  list, café tables and chairs included, which on La Rambla's terrace held an
+  owner in a whirl-stumble loop that never unwound.
+- **The whirl starts where the owner stands** and tightens onto its orbit in
+  a fraction of a second, instead of snapping them up to 40 px onto it.
+
+`tests/test_reel.gd` (6 checks) and `tests/test_whirl.gd` (5 checks), both in
+CI. The behaviour snapshot shifts on most walks; most get home sooner.
+
+## 2026-09-30 - The other walkers look alive
+
+The other owners and their dogs were drawn from the speed they were given,
+not from where they went, so a rooted owner walked on the spot and faced down
+their lane through a sideways detour, and their dog glided at one speed,
+stared at yours from across the park and wagged like a metronome. Now
+(`entities/otherpair.gd`):
+- Both are drawn from their actual movement: the owner's legs go only when
+  the owner moves, and they face where they are going.
+- The dog eases up to speed, stops now and then with its nose down for a
+  sniff (the leash tows it on if it lingers), faces where it is heading, and
+  looks at your dog only once it is close. It wags slowly on a sniff, and
+  hard when your dog is right there.
+- Sniff stops roll their own dice, so the shared seed is untouched; the
+  behaviour snapshot shifts where the dogs now stand when ropes meet.
+
 ## 2026-09-30 - Every kind of message gets its own place and look
 
 In a walk everything was said the same way: outlined capitals in the middle
