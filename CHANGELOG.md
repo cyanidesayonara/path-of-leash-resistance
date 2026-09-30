@@ -2,6 +2,21 @@
 
 Append-only session history, newest first.
 
+
+## 2026-09-30 - Other people's dogs mark posts
+
+The dogs out on the walk with their people used to stop to sniff at random,
+in the middle of nowhere. Now a sniff stop goes where a dog would go
+(`entities/otherpair.gd`):
+- If a hydrant, lamppost or tree is coming up by its line, the dog pulls
+  over to it, nose down at its foot.
+- A good sniff there usually gets a reply: it stands side on to the post a
+  moment and leaves a mark, in its own colour, at most two a walk each.
+- Those marks are the same ones the off-leash dogs leave: your dog can read
+  them ("a beagle was here +2") and over-mark them. So a street other dogs
+  have walked has messages on it.
+- Towed off a post by its human before it is done, a dog gives up on it.
+- `tests/test_pair_marks.gd`.
 ## 2026-09-30 - El Mosaic gets its people and parakeets (round 2)
 
 Round 1 built the park's pieces; this round puts the life in them
