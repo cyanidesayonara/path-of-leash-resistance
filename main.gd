@@ -3957,7 +3957,9 @@ func _apply_leash(delta: float) -> void:
 	# pulley: with the rope wound and the dog working its end, the pole
 	# redirects and amplifies the pull on the human continuously - not
 	# only during the whirl. Wraps still shield the DOG from raw yanks.
-	var wind_turns := absf(leash.winding())
+	# turning round poles and furniture only: draped over another walker's
+	# rope is a tangle, and a tangle does not get the pole's pulley
+	var wind_turns := absf(leash.static_winding())
 	var pulley := 1.0
 	if wind_turns > 0.3 and (dog.input_active or dog.planted):
 		pulley = 1.0 + 0.4 * minf(wind_turns, 3.0)
