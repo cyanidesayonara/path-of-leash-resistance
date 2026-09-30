@@ -42,6 +42,17 @@ const SNIFF_MAX := 1.9
 const SNIFF_GAP_MIN := 3.0
 const SNIFF_GAP_MAX := 7.5
 const CURIOUS_R := 160.0
+# a sniff stop goes to a post if there is one coming up by the dog's line: a
+# hydrant, a lamppost, a tree, up to SPOT_REACH across and SPOT_AHEAD along
+# the way they are walking. A good sniff there gets a reply MARK_P of the
+# time, at most MARKS_MAX a walk, and leaves a mark your dog can read.
+const SPOT_REACH := 120.0
+const SPOT_AHEAD := 150.0
+const MARK_P := 0.6
+const MARK_T := 1.1
+const MARKS_MAX := 2
+const NAMES := ["a terrier", "a beagle", "a whippet", "a poodle", "a sausage dog", "a labrador",
+	"a staffie", "a pug", "a greyhound", "a collie", "a spaniel", "a chihuahua"]
 const POSE_EASE := 0.25
 
 enum PairState {
@@ -99,6 +110,11 @@ var dog_stride := 0.0
 var dog_speed_now := 0.0
 var sniff_t := 0.0
 var sniff_gap := 0.0
+var sniff_spot := Vector2(INF, INF)   # the post it is going to, or sniffing
+var at_spot := false
+var mark_t := 0.0
+var marks_left := MARKS_MAX
+var dog_name := "a dog"
 # its own dice, so a sniff stop never moves the shared seed the rest of the
 # walk (and the autowalk) depends on
 var life_rng := RandomNumberGenerator.new()
@@ -112,6 +128,7 @@ func setup(m: Node2D, mine: Node2D, poles: Array[Vector2], start: Vector2, direc
 	seed_o = randf() * 10.0
 	life_rng.seed = int(seed_o * 100000.0) + 7
 	sniff_gap = life_rng.randf_range(1.0, SNIFF_GAP_MAX)
+	dog_name = NAMES[life_rng.randi() % NAMES.size()]
 	owner_face = direction.normalized() if direction.length() > 0.1 else Vector2.DOWN
 	dog_face = owner_face
 	var owner_appearance_key := randi()
@@ -355,23 +372,84 @@ func _tick_walking(delta: float, _allow_arrival: bool) -> void:
 				float(route.get("min_x")),
 				float(route.get("max_x"))
 			)
-		if sniff_t > 0.0:
+		if mark_t > 0.0:
+			mark_t -= delta
+			dog_speed_now = 0.0
+			if mark_t <= 0.0:
+				main.on_npc_mark(sniff_spot + Vector2(0.0, 8.0), dog_col, dog_name)
+				marks_left -= 1
+				sniff_spot = Vector2(INF, INF)
+		elif sniff_t > 0.0:
 			sniff_t -= delta
 			dog_speed_now = 0.0
+			if sniff_t <= 0.0 and at_spot:
+				# a good sniff at a post usually deserves a reply
+				if marks_left > 0 and life_rng.randf() < MARK_P:
+					mark_t = MARK_T
+				else:
+					sniff_spot = Vector2(INF, INF)
+				at_spot = false
+		elif sniff_spot.x < INF:
+			# off to the post, nose first
+			dog_speed_now = move_toward(dog_speed_now, DOG_SPEED, DOG_ACCEL * delta)
+			npc_dog.position = npc_dog.position.move_toward(sniff_spot, dog_speed_now * delta)
+			if npc_dog.position.distance_to(sniff_spot) < 16.0:
+				at_spot = true
+				sniff_t = life_rng.randf_range(SNIFF_MIN, SNIFF_MAX)
 		else:
 			sniff_gap -= delta
 			if sniff_gap <= 0.0 and route_was_clear:
-				sniff_t = life_rng.randf_range(SNIFF_MIN, SNIFF_MAX)
 				sniff_gap = life_rng.randf_range(SNIFF_GAP_MIN, SNIFF_GAP_MAX)
+				sniff_spot = _pick_spot()
+				if sniff_spot.x == INF:
+					sniff_t = life_rng.randf_range(SNIFF_MIN, SNIFF_MAX)
 			dog_speed_now = move_toward(dog_speed_now, DOG_SPEED, DOG_ACCEL * delta)
 			npc_dog.position = npc_dog.position.move_toward(target, dog_speed_now * delta)
-	# keep the dog within their (short) leash
+	# keep the dog within their (short) leash; towed off a post, it gives up
+	# on it, mark or no mark
 	var span := npc_dog.position - npc_owner.position
 	if span.length() > LEASH_CAP:
 		npc_dog.position = npc_owner.position + span.normalized() * LEASH_CAP
+		if sniff_spot.x < INF:
+			sniff_spot = Vector2(INF, INF)
+			at_spot = false
+			sniff_t = 0.0
+			mark_t = 0.0
 	leash.tick(delta)
 	_sync_leash_taut()
 	_sample_rope()
+
+
+# a post coming up by the dog's line that no dog has marked yet, or none
+func _pick_spot() -> Vector2:
+	var fwd := signf(desired_vertical_speed)
+	# (a stand-in main, as in the tests, has no posts)
+	if fwd == 0.0 or main == null or not ("hydrants" in main):
+		return Vector2(INF, INF)
+	var spots: Array[Vector2] = []
+	for h: Dictionary in main.hydrants:
+		spots.append(h["pos"])
+	for tr: Vector2 in main.trees:
+		spots.append(tr)
+	for i in range(mini(int(main.deco_pole_count), main.poles.size())):
+		spots.append(main.poles[i])
+	var best := Vector2(INF, INF)
+	var best_d := INF
+	var from: Vector2 = npc_owner.position
+	for sp: Vector2 in spots:
+		var ahead := (sp.y - from.y) * fwd
+		if ahead < 20.0 or ahead > SPOT_AHEAD or absf(sp.x - npc_dog.position.x) > SPOT_REACH:
+			continue
+		if not main._npc_mark_at(sp + Vector2(0.0, 8.0)).is_empty():
+			continue
+		var d := npc_dog.position.distance_to(sp)
+		if d < best_d:
+			best_d = d
+			best = sp
+	# the dog noses up to the post's foot on its own side, not into it
+	if best.x < INF:
+		best += Vector2(signf(npc_dog.position.x - best.x) * 14.0, 0.0)
+	return best
 
 
 func _update_pose(owner_was: Vector2, dog_was: Vector2, delta: float) -> void:
@@ -392,7 +470,13 @@ func _update_pose(owner_was: Vector2, dog_was: Vector2, delta: float) -> void:
 		owner_face = owner_face.lerp(owner_pose_vel.normalized(), 0.2).normalized()
 	var want := dog_face
 	var near := my_dog != null and my_dog.global_position.distance_to(npc_dog.global_position) < CURIOUS_R
-	if sniff_t > 0.0:
+	if mark_t > 0.0 and sniff_spot.x < INF:
+		# side on to the post, leg up
+		var to_post := Vector2(signf(sniff_spot.x - npc_dog.position.x - 0.01) * -14.0, 0.0)
+		want = to_post.normalized().orthogonal()
+	elif sniff_t > 0.0 and sniff_spot.x < INF:
+		want = (sniff_spot - npc_dog.position + Vector2(0.0, -1.0)).normalized()
+	elif sniff_t > 0.0:
 		want = dog_face
 	elif near:
 		want = (my_dog.global_position - npc_dog.global_position).normalized()

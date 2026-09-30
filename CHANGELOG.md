@@ -14,6 +14,28 @@ at the start (`main.build_signs`): carnations on La Rambla, trencadis at El
 Mosaic, traffic cones (bigger, so they read) on the building site. They can
 be bumped and scattered like the name. Walks without a material keep the
 painted name. `tests/test_gate_sign.gd`.
+## 2026-09-30 - Other people's dogs mark posts
+
+The dogs out on the walk with their people used to stop to sniff at random,
+in the middle of nowhere. Now a sniff stop goes where a dog would go
+(`entities/otherpair.gd`):
+- If a hydrant, lamppost or tree is coming up by its line, the dog pulls
+  over to it, nose down at its foot.
+- A good sniff there usually gets a reply: it stands side on to the post a
+  moment and leaves a mark, in its own colour, at most two a walk each.
+- Those marks are the same ones the off-leash dogs leave: your dog can read
+  them ("a beagle was here +2") and over-mark them. So a street other dogs
+  have walked has messages on it.
+- Towed off a post by its human before it is done, a dog gives up on it.
+- `tests/test_pair_marks.gd`.
+## 2026-09-30 - The station bot walks home beside the walkway
+
+The autowalk bot stalled twice on L'Estacio's home leg, walking down the
+middle of the concourse against the moving walkway that carries up it. Going
+home it now walks beside the walkway, on its human's side
+(`main._auto_drive`). Station's bot finishes at 120 s instead of 162 s with
+two stalls; every other snapshot line is unchanged. Bot only: nothing a
+player sees.
 ## 2026-09-30 - A planted dog skids
 
 Planting and getting hauled anyway used to slide the dog along the ground

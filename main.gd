@@ -6773,6 +6773,11 @@ func _auto_drive(_delta: float) -> void:
 			var here := walk_edges(dp.y)
 			var side_x: float = (ir.end.x + here.y) * 0.5 if float(isl["side"]) > 0.0 else (here.x + ir.position.x) * 0.5
 			weave = clampf((side_x - dp.x) / 60.0, -1.0, 1.0)
+	# L'Estacio's moving walkway carries up the middle: going home the bot
+	# walks down beside it, on its human's side, not against it
+	if phase == "home" and conveyor_zone.size.y > 0.0 and conveyor_dir.y < 0.0 			and dp.y > conveyor_zone.position.y - 80.0 and dp.y < conveyor_zone.end.y + 40.0:
+		var beside_x: float = conveyor_zone.end.x + 70.0 if human.global_position.x >= conveyor_zone.get_center().x 			else conveyor_zone.position.x - 70.0
+		weave = clampf((beside_x - dp.x) / 60.0, -1.0, 1.0)
 	match phase:
 		"out":
 			dog.auto_move = Vector2(weave, -1.0).normalized()
