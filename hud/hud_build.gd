@@ -12,6 +12,7 @@ extends RefCounted
 # created in a static function would never be disconnected on scene reload).
 
 const Mood := preload("res://systems/mood.gd")
+const Kit := preload("res://hud/ui_kit.gd")
 
 # the frame the HUD was composed against; see pin_wide / pin_box
 const REF_W := 1280.0
@@ -120,6 +121,10 @@ static func build(m: Node2D) -> void:
 	m.combo_bar.visible = false
 	m.hud.add_child(m.combo_bar)
 	m.combo_l = hud_label(m, Vector2(0, 624), 26)
+	# the trick string in the heavy face, outlined like the shouts
+	m.combo_l.add_theme_font_override("font", Kit.display())
+	m.combo_l.add_theme_constant_override("outline_size", 8)
+	m.combo_l.add_theme_color_override("font_outline_color", Color(0.04, 0.03, 0.06, 0.85))
 	pin_wide(m.combo_l, 34.0, 1.0)
 	m.combo_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	m.combo_l.visible = false
@@ -148,6 +153,8 @@ static func build(m: Node2D) -> void:
 	pin_wide(m.challenge_l, 30.0)
 	m.challenge_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	m.challenge_l.visible = false
+	# the dare's card is drawn by the feed; this holds whether it is up
+	m.challenge_l.self_modulate.a = 0.0
 	m.dim = ColorRect.new()
 	m.dim.color = Color(0, 0, 0, 0.55)
 	m.dim.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -173,10 +180,13 @@ static func build(m: Node2D) -> void:
 	pin_wide(m.tut_label, 40.0)
 	m.tut_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	m.tut_label.visible = false
+	# the lesson card is drawn by the feed; these hold its text
+	m.tut_label.self_modulate.a = 0.0
 	m.tut_hint = hud_label(m, Vector2(0, 136), 19)
 	pin_wide(m.tut_hint, 60.0)
 	m.tut_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	m.tut_hint.visible = false
+	m.tut_hint.self_modulate.a = 0.0
 	# The single announcement channel. Added late so it draws over the other
 	# HUD cards, and anchored to the live viewport like everything else.
 	m.feed = Control.new()

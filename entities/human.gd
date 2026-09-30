@@ -73,12 +73,23 @@ func _ready() -> void:
 	sh.radius = 15.0
 	cs.shape = sh
 	add_child(cs)
+	# a speech bubble, the same white bubble the world's other voices use
+	# (world/pops_layer.gd): what the owner is about to do, telegraphed
 	bubble = Label.new()
 	bubble.position = Vector2(-60, -92)
-	bubble.size = Vector2(120, 24)
 	bubble.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	bubble.add_theme_font_size_override("font_size", 16)
-	bubble.add_theme_color_override("font_color", Color(1, 0.95, 0.75))
+	bubble.add_theme_font_size_override("font_size", 15)
+	bubble.add_theme_color_override("font_color", Color(0.12, 0.11, 0.12))
+	var bsb := StyleBoxFlat.new()
+	bsb.bg_color = Color(0.98, 0.97, 0.94)
+	bsb.set_corner_radius_all(9)
+	bsb.content_margin_left = 9
+	bsb.content_margin_right = 9
+	bsb.content_margin_top = 2
+	bsb.content_margin_bottom = 3
+	bsb.shadow_color = Color(0, 0, 0, 0.2)
+	bsb.shadow_size = 3
+	bubble.add_theme_stylebox_override("normal", bsb)
 	bubble.visible = false
 	add_child(bubble)
 
@@ -485,6 +496,8 @@ func _show_bubble(text: String, dog_news: String = "") -> void:
 	# out in the corner of the eye and going unread. dog_news is the same
 	# moment said again next to her, in her voice.
 	bubble.text = text
+	bubble.reset_size()
+	bubble.position.x = -bubble.size.x * 0.5
 	bubble.visible = true
 	if dog_news != "" and main != null and main.has_method("owner_news"):
 		main.owner_news(dog_news)

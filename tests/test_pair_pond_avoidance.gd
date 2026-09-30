@@ -30,7 +30,9 @@ class FakeMain:
 	func _init() -> void:
 		add_child(cam)
 
-	func float_text(_position: Vector2, text: String, _color: Color) -> void:
+	const POP_SAY := 0
+
+	func float_text(_position: Vector2, text: String, _color: Color, _kind := -1) -> void:
 		if text == "oh - sorry!":
 			apologies += 1
 
@@ -545,6 +547,41 @@ func _test_spawn_selection_and_rejection(world: Dictionary) -> void:
 	)
 
 
+# The pair is drawn from where it actually went: a rooted owner stands still
+# rather than walking on the spot, a dog far from yours faces where it is
+# going rather than staring, and a sniff stop holds the dog still.
+func _test_pair_life(world: Dictionary) -> void:
+	var pair := _make_pair(world, Vector2(100, 300), Vector2.UP)
+	var blockers: Array[Dictionary] = []
+	if not _require_route(pair, 100.0, 0.0, 250.0, blockers, "life pair"):
+		return
+	world.dog.position = pair.npc_dog.global_position + Vector2(900, 0)
+	pair.sniff_gap = 1000.0
+	for i in range(60):
+		pair._physics_process(DT)
+	_check(pair.owner_pose_vel.length() > 30.0, "a walking owner is drawn walking (%.0f px/s)" % pair.owner_pose_vel.length())
+	var mv: Vector2 = pair.dog_pose_vel
+	_check(mv.length() < 12.0 or pair.dog_face.dot(mv.normalized()) > 0.6,
+		"a dog far from yours faces where it is going, not at your dog")
+	pair.tangled_t = 10.0
+	for i in range(40):
+		pair._physics_process(DT)
+	_check(pair.owner_pose_vel.length() < 3.0, "a rooted owner stands still (%.1f px/s)" % pair.owner_pose_vel.length())
+	pair.tangled_t = 0.0
+	pair.sniff_t = 1.0
+	var at: Vector2 = pair.npc_dog.position
+	for i in range(20):
+		pair._physics_process(DT)
+	_check(pair.npc_dog.position.distance_to(at) < 3.0, "a dog on a sniff stays put until the leash tows it")
+	world.dog.position = pair.npc_dog.global_position + Vector2(60, 0)
+	pair.sniff_t = 0.0
+	for i in range(40):
+		pair._physics_process(DT)
+	_check(pair.dog_face.dot((world.dog.position - pair.npc_dog.global_position).normalized()) > 0.8,
+		"up close, it looks at your dog")
+	pair.queue_free()
+
+
 func _test_normal_target_semantics(world: Dictionary) -> void:
 	var pair := _make_pair(world, Vector2(100, 300), Vector2.UP)
 	var blockers: Array[Dictionary] = []
@@ -552,6 +589,10 @@ func _test_normal_target_semantics(world: Dictionary) -> void:
 		return
 	pair.wander_t = 1000.0
 	pair.wander = Vector2(17.0, -11.0)
+	# already up to speed and no sniff stop due, so this checks the target
+	# alone (the dog eases up to speed and stops to sniff; see otherpair.gd)
+	pair.dog_speed_now = 90.0
+	pair.sniff_gap = 1000.0
 	world.dog.position = pair.npc_dog.global_position + Vector2(100, 0)
 	var owner_expected: Vector2 = pair.npc_owner.position + Vector2(0, pair.vel.y * DT)
 	var curious := Vector2(34.0, 0.0)
@@ -658,6 +699,7 @@ func _initialize() -> void:
 	_test_beach_clear_offset_is_route_bounded(world)
 	_test_spawn_selection_and_rejection(world)
 	_test_normal_target_semantics(world)
+	_test_pair_life(world)
 	_test_blocked_hold_and_tangle_rooting(world)
 	_test_freedom_cleanup(world)
 	_finish()

@@ -20,6 +20,48 @@ others, on one commit. Two causes:
 The behaviour snapshot is unchanged apart from the scrap finish, which now
 reads t=121.7 every run (it was 120.0 or 121.7).
 
+## 2026-09-30 - The other walkers look alive
+
+The other owners and their dogs were drawn from the speed they were given,
+not from where they went, so a rooted owner walked on the spot and faced down
+their lane through a sideways detour, and their dog glided at one speed,
+stared at yours from across the park and wagged like a metronome. Now
+(`entities/otherpair.gd`):
+- Both are drawn from their actual movement: the owner's legs go only when
+  the owner moves, and they face where they are going.
+- The dog eases up to speed, stops now and then with its nose down for a
+  sniff (the leash tows it on if it lingers), faces where it is heading, and
+  looks at your dog only once it is close. It wags slowly on a sniff, and
+  hard when your dog is right there.
+- Sniff stops roll their own dice, so the shared seed is untouched; the
+  behaviour snapshot shifts where the dogs now stand when ropes meet.
+
+## 2026-09-30 - Every kind of message gets its own place and look
+
+In a walk everything was said the same way: outlined capitals in the middle
+of the screen for goals, moods, the owner stopping and tricks alike, and one
+small white label in the world for a stranger's apology, a splash and a +3.
+Now each kind has a place:
+- **In the world** (`world/pops_layer.gd`): speech is a white bubble at the
+  speaker, sounds are tilted comic lettering, scores are a word and a gold
+  chip with a bone on it (red for a loss). A new pop stacks clear of a live
+  one. The owner's telegraph bubble is a real bubble too.
+- **The banner** (what is true right now) is a pill at the top centre. The
+  owner's news ("HE'S TEXTING! HE'S NOT LOOKING") takes it over for a moment
+  instead of shouting.
+- **Toasts**: a goal slides in under the goal list (gold the first time,
+  green when it was done on an earlier walk); a mood arrives under the vitals
+  in its own colour.
+- **Cards**: a tutorial lesson and a bystander's dare are cards under the
+  banner; the dare has a count and a timer bar.
+- **Shouts** in the middle are only for what she just did or what needs her
+  now, in the heavy face; a score for a shout already up lands in that line
+  ("POLE SWING!" then "POLE SWING! 14") instead of stacking a copy.
+- The tutorial hides the banner, so the lesson is the only instruction, and
+  its ground sign says FIRST WALK.
+- Two banner lines rewritten: "FULL!" is "FULL TANK! GO MARK A SPOT", and
+  "GO BACK DOWN TO HEAD HOME" is "BACK OUT THROUGH THE GATE, THEN HOME".
+
 ## 2026-09-29 - Each walk's name is made of the walk, and you can kick it about
 
 The walk's name was one font in a few inks. Now twelve walks spell it out of

@@ -49,8 +49,13 @@ static func tick(m: Node2D, delta: float) -> void:
 		gm.set_shader_parameter("warm_light", g["warm"])
 	var line: String = m.mood.take_onset()
 	if line != "":
-		# an announcement about her, not about a place: it goes in the feed
-		m.feed.say(line, EventFeed.Tone.LOUD)
+		# about her, so it arrives by her vitals, in the mood's colour:
+		# "TIRED! EAT, REST OR FIND SHADE" as TIRED! over "Eat, rest or find shade"
+		var parts := line.split("!", true, 1)
+		var rest := parts[1].strip_edges().to_lower() if parts.size() > 1 else ""
+		if rest != "":
+			rest = rest.substr(0, 1).to_upper() + rest.substr(1)
+		m.feed.toast("mood", parts[0].strip_edges() + "!", rest, m.mood.tint())
 
 
 static func _ambient(m: Node2D, delta: float) -> void:

@@ -31,6 +31,18 @@ const PARK_RECALL_SPEED := 150.0
 const PARK_STAY_MIN := 7.0
 const PARK_STAY_MAX := 15.0
 const RELEASH_DISTANCE := 18.0
+# How the pair LOOKS alive (presentation, plus the dog's sniff stops): the
+# owner walks only when actually moving and faces where they go; the dog
+# eases up to speed instead of gliding, stops now and then to sniff (the
+# leash then tows it on), looks at your dog only when it is close, and wags
+# harder when it does.
+const DOG_ACCEL := 320.0
+const SNIFF_MIN := 0.8
+const SNIFF_MAX := 1.9
+const SNIFF_GAP_MIN := 3.0
+const SNIFF_GAP_MAX := 7.5
+const CURIOUS_R := 160.0
+const POSE_EASE := 0.25
 
 enum PairState {
 	WALKING,
@@ -75,6 +87,21 @@ var park_dog_vel := Vector2.ZERO
 var park_slot_id := -1
 var park_area_configured := false
 var walking_lane_x := 0.0
+# the pose: velocities measured from where the owner and dog actually went,
+# where each faces, and how far each has walked (the gait follows distance,
+# so a rooted owner stands still instead of walking on the spot)
+var owner_pose_vel := Vector2.ZERO
+var dog_pose_vel := Vector2.ZERO
+var owner_face := Vector2.DOWN
+var dog_face := Vector2.DOWN
+var owner_stride := 0.0
+var dog_stride := 0.0
+var dog_speed_now := 0.0
+var sniff_t := 0.0
+var sniff_gap := 0.0
+# its own dice, so a sniff stop never moves the shared seed the rest of the
+# walk (and the autowalk) depends on
+var life_rng := RandomNumberGenerator.new()
 
 
 func setup(m: Node2D, mine: Node2D, poles: Array[Vector2], start: Vector2, direction: Vector2) -> void:
@@ -83,6 +110,10 @@ func setup(m: Node2D, mine: Node2D, poles: Array[Vector2], start: Vector2, direc
 	my_dog = mine
 	vel = direction * randf_range(58.0, 82.0)
 	seed_o = randf() * 10.0
+	life_rng.seed = int(seed_o * 100000.0) + 7
+	sniff_gap = life_rng.randf_range(1.0, SNIFF_GAP_MAX)
+	owner_face = direction.normalized() if direction.length() > 0.1 else Vector2.DOWN
+	dog_face = owner_face
 	var owner_appearance_key := randi()
 	owner_appearance_profile = HumanAppearanceScript.profile_for_key(owner_appearance_key)
 	owner_col = owner_appearance_profile["shirt_color"]
@@ -221,6 +252,8 @@ func _physics_process(delta: float) -> void:
 		return
 	if main.frozen:
 		return
+	var owner_was: Vector2 = npc_owner.position
+	var dog_was: Vector2 = npc_dog.position
 	tangled_t = maxf(0.0, tangled_t - delta)
 	if main.phase == "home" and (
 		pair_state == PairState.PARKED or pair_state == PairState.ARRIVING
@@ -240,6 +273,7 @@ func _physics_process(delta: float) -> void:
 	if pair_state == PairState.WALKING:
 		if absf(npc_owner.position.y - float(main.cam.position.y)) > 1200.0:
 			queue_free()
+	_update_pose(owner_was, dog_was, delta)
 	# owner/dog move via transform every frame; redraw the pose at ~30fps
 	if Engine.get_physics_frames() % 2 == 0:
 		queue_redraw()
@@ -311,7 +345,9 @@ func _tick_walking(delta: float, _allow_arrival: bool) -> void:
 			DOG_SPEED * delta
 		)
 	else:
-		# Outside a detour the pair retains its original wandering behavior.
+		# Outside a detour the dog wanders about its owner, and now and then
+		# stops dead with its nose down; the leash tows it on if that goes on
+		# too long, which is exactly what a dog on a sniff does.
 		var target := npc_owner.position + clear_dog_offset
 		if route != null:
 			target.x = clampf(
@@ -319,7 +355,16 @@ func _tick_walking(delta: float, _allow_arrival: bool) -> void:
 				float(route.get("min_x")),
 				float(route.get("max_x"))
 			)
-		npc_dog.position = npc_dog.position.move_toward(target, DOG_SPEED * delta)
+		if sniff_t > 0.0:
+			sniff_t -= delta
+			dog_speed_now = 0.0
+		else:
+			sniff_gap -= delta
+			if sniff_gap <= 0.0 and route_was_clear:
+				sniff_t = life_rng.randf_range(SNIFF_MIN, SNIFF_MAX)
+				sniff_gap = life_rng.randf_range(SNIFF_GAP_MIN, SNIFF_GAP_MAX)
+			dog_speed_now = move_toward(dog_speed_now, DOG_SPEED, DOG_ACCEL * delta)
+			npc_dog.position = npc_dog.position.move_toward(target, dog_speed_now * delta)
 	# keep the dog within their (short) leash
 	var span := npc_dog.position - npc_owner.position
 	if span.length() > LEASH_CAP:
@@ -327,6 +372,34 @@ func _tick_walking(delta: float, _allow_arrival: bool) -> void:
 	leash.tick(delta)
 	_sync_leash_taut()
 	_sample_rope()
+
+
+func _update_pose(owner_was: Vector2, dog_was: Vector2, delta: float) -> void:
+	if delta <= 0.0:
+		return
+	var ov: Vector2 = (npc_owner.position - owner_was) / delta
+	var dv: Vector2 = (npc_dog.position - dog_was) / delta
+	# a re-leash or a respawn is a jump, not a walk
+	if ov.length() > 400.0:
+		ov = Vector2.ZERO
+	if dv.length() > 600.0:
+		dv = Vector2.ZERO
+	owner_pose_vel = owner_pose_vel.lerp(ov, POSE_EASE)
+	dog_pose_vel = dog_pose_vel.lerp(dv, POSE_EASE)
+	owner_stride += owner_pose_vel.length() * delta
+	dog_stride += dog_pose_vel.length() * delta
+	if owner_pose_vel.length() > 8.0:
+		owner_face = owner_face.lerp(owner_pose_vel.normalized(), 0.2).normalized()
+	var want := dog_face
+	var near := my_dog != null and my_dog.global_position.distance_to(npc_dog.global_position) < CURIOUS_R
+	if sniff_t > 0.0:
+		want = dog_face
+	elif near:
+		want = (my_dog.global_position - npc_dog.global_position).normalized()
+	elif dog_pose_vel.length() > 12.0:
+		want = dog_pose_vel.normalized()
+	if want.length() > 0.5:
+		dog_face = dog_face.lerp(want, 0.18).normalized()
 
 
 func _tick_arriving(delta: float) -> void:
@@ -521,7 +594,7 @@ func update_tangle_state(crossing: bool, delta: float) -> bool:
 			leash.free_slip_t = maxf(leash.free_slip_t, 0.35 + ramp_t * 0.4)
 			if not mercy_shown and is_instance_valid(main):
 				mercy_shown = true
-				main.float_text(npc_owner.position, "excuse me - go on", Color(1, 0.92, 0.78))
+				main.float_text(npc_owner.position, "excuse me - go on", Color(1, 0.92, 0.78), main.POP_SAY)
 		if tangle_hold_t >= TANGLE_MERCY_S:
 			var need_line := not mercy_shown
 			tangled_t = 0.0
@@ -535,12 +608,12 @@ func update_tangle_state(crossing: bool, delta: float) -> bool:
 				leash.dynamic_obstacles.clear()
 				leash.free_slip_t = maxf(leash.free_slip_t, 1.0)
 			if need_line and is_instance_valid(main):
-				main.float_text(npc_owner.position, "excuse me - go on", Color(1, 0.92, 0.78))
+				main.float_text(npc_owner.position, "excuse me - go on", Color(1, 0.92, 0.78), main.POP_SAY)
 			return false
 		if tangle_active:
 			return false
 		tangle_active = true
-		main.float_text(npc_owner.position, "oh - sorry!", Color(1, 0.9, 0.8))
+		main.float_text(npc_owner.position, "oh - sorry!", Color(1, 0.9, 0.8), main.POP_SAY)
 		return true
 	tangle_root_acc = maxf(0.0, tangle_root_acc - delta * 2.0)
 	tangle_hold_t = maxf(0.0, tangle_hold_t - delta)
@@ -573,11 +646,12 @@ func _draw_shapes() -> void:
 		_b.draw_set_transform((sh[0] as Vector2) + Vector2(5.0, 8.0), 0.0, Vector2(1.2, 0.5))
 		_b.draw_circle(Vector2.ZERO, sh[1], Color(0.06, 0.05, 0.08, 0.24))
 	_b.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	var owner_forward := vel
+	# drawn from where they actually went, not the lane speed they were given
+	var owner_forward := owner_face
 	var owner_gait_amount := (
 		0.0
 		if pair_state == PairState.PARKED or pair_state == PairState.RECALLING
-		else clampf(vel.length() / 82.0, 0.0, 1.0)
+		else clampf(owner_pose_vel.length() / 82.0, 0.0, 1.0)
 	)
 	var owner_phone_glow := 0.55 + 0.2 * sin(t * 7.3 + seed_o)
 	HumanAppearanceScript.draw_owner(
@@ -585,16 +659,21 @@ func _draw_shapes() -> void:
 		owner_appearance_profile,
 		npc_owner.position,
 		owner_forward,
-		t * 6.0 + seed_o,
+		owner_stride * 0.075 + seed_o,
 		owner_gait_amount,
 		owner_phone_glow,
 		"held"
 	)
 	# NPC dog remains drawn by the pair parent; npc_dog stays the real endpoint.
 	var dp: Vector2 = npc_dog.position
-	var facing := (my_dog.global_position - dp).normalized()
-	var bob := sin(t * 6.0 + seed_o) * 1.5
-	var wag := t * 8.0 + seed_o
+	var facing := dog_face
+	var dspeed := clampf(dog_pose_vel.length() / 70.0, 0.0, 1.0)
+	var bob := sin(dog_stride * 0.09 + seed_o) * 1.5 * dspeed
+	# a slow wag while sniffing, an ordinary one walking, a blur when your
+	# dog is right there
+	var near := my_dog.global_position.distance_to(npc_dog.global_position) < CURIOUS_R
+	var wag_rate := 16.0 if near else (4.0 if sniff_t > 0.0 else 8.0)
+	var wag := t * wag_rate + seed_o
 	DogAppearanceScript.draw_dog(
 		_b,
 		appearance_profile,
