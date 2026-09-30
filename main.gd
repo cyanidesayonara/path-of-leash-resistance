@@ -1895,7 +1895,7 @@ func _tick_whistle(delta: float) -> void:
 			whistle_t = WHISTLE_EVERY
 			# the whistle from somewhere up the promenade: the tell for all of it
 			float_text(Vector2(walk_cx, cam.position.y - 200.0), "PHWEEET!", Color(0.9, 0.95, 1.0))
-			feed.say("WHISTLE! THE SELLERS ARE OFF", EventFeed.Tone.LOUD)
+			feed.say("PHWEET! THE SELLERS BOLT", EventFeed.Tone.LOUD)
 			for bl: Dictionary in near:
 				bl["state"] = "pack"
 				bl["t"] = 0.0
@@ -3492,7 +3492,7 @@ func start_challenge(giver: Node2D, target: int, seconds: float) -> void:
 	challenge_giver = giver
 	challenge.begin(target, seconds)
 	shake_t = maxf(shake_t, 0.2)
-	feed.say("DO %d TRICKS!" % target, EventFeed.Tone.LOUD)
+	feed.say("DARE: %d TRICKS, GO!" % target, EventFeed.Tone.LOUD)
 
 
 func on_challenge_done(win: bool, target: int, count: int) -> void:
@@ -3502,10 +3502,10 @@ func on_challenge_done(win: bool, target: int, count: int) -> void:
 	if win:
 		var reward := 20 + target * 3
 		bones += reward
-		feed.say("YOU DID IT!  +%d" % reward, EventFeed.Tone.GOOD)
+		feed.say("DARE DONE!  +%d" % reward, EventFeed.Tone.GOOD)
 		_slowmo()
 	else:
-		feed.say("SO CLOSE!  %d OF %d" % [count, target], EventFeed.Tone.BAD)
+		feed.say("DARE MISSED: %d OF %d" % [count, target], EventFeed.Tone.BAD)
 
 
 func _physics_process(delta: float) -> void:
@@ -3925,7 +3925,7 @@ func _apply_leash(delta: float) -> void:
 		if vault_recent > 0.0:
 			bones += 8
 			combo.add("SLINGSHOT", 8)
-			float_text(human.global_position + Vector2(0, -34), "SLINGSHOT! +8",
+			float_text(human.global_position + Vector2(0, -34), "slingshot! +8",
 				Color(1.0, 0.86, 0.5))
 			vault_recent = 0.0
 		Sfx.play("fling")
@@ -5410,10 +5410,10 @@ func _tick_call(_delta: float) -> void:
 			var bonus := 3 + call_haul * 2
 			bones += bonus
 			Sfx.play("star", 1.05)
-			feed.say("NICE! YOU DID %d THINGS  +%d" % [call_haul, bonus], EventFeed.Tone.GOOD)
+			feed.say("BUSY DOG! %d THINGS  +%d" % [call_haul, bonus], EventFeed.Tone.GOOD)
 			_update_hud()
 		else:
-			feed.say("YOU MISSED YOUR CHANCE", EventFeed.Tone.BAD)
+			feed.say("THE CALL'S OVER", EventFeed.Tone.BAD)
 
 
 func _tick_grind(delta: float) -> void:
@@ -5750,7 +5750,7 @@ func _pickups(delta: float) -> void:
 			bones = maxi(0, bones - 3)
 			shake_t = maxf(shake_t, 0.4)
 			Sfx.play("tangle", 0.7)
-			float_text(c.pos, "BLEH! not for dogs -3", Color(1, 0.5, 0.45))
+			float_text(c.pos, "bleh, not for dogs -3", Color(1, 0.5, 0.45))
 			_update_hud()
 
 
@@ -5897,7 +5897,7 @@ func toss_bag(from: Vector2, to: Vector2) -> void:
 func on_business_bagged(pos: Vector2) -> void:
 	bag_pending = false
 	bones += 2
-	float_text(pos, "swish! responsible +2", Color(0.8, 1.0, 0.8))
+	float_text(pos, "bagged, responsibly +2", Color(0.8, 1.0, 0.8))
 	_update_hud()
 
 
@@ -6148,7 +6148,7 @@ func on_guard_woken(pos: Vector2) -> void:
 	shake_t = maxf(shake_t, 0.5)
 	Sfx.play("bark", 0.6, -3.0)  # a deeper, angrier dog than Millie
 	human.halt(1.0)
-	float_text(pos + Vector2(0, -26), "WOOF WOOF WOOF -2", Color(1, 0.5, 0.4))
+	float_text(pos + Vector2(0, -26), "woof woof woof -2", Color(1, 0.5, 0.4))
 	_update_hud()
 
 
@@ -6246,7 +6246,7 @@ func on_tofu_home(pos: Vector2) -> void:
 	Sfx.play("star")
 	tofu_home = true
 	bones += 15
-	float_text(pos, "TOFU'S COMING HOME! +15", Color(1, 0.85, 0.7))
+	float_text(pos, "Tofu's coming home! +15", Color(1, 0.85, 0.7))
 	_slowmo()
 
 
@@ -6421,7 +6421,7 @@ func on_stumble_save(pos: Vector2) -> void:
 			bones += streak
 			Sfx.play("save", 1.0 + 0.06 * streak)
 			combo.add("SAVE", 5)
-			float_text(pos + Vector2(0, -30), "NICE SAVE +%d" % streak, Color(0.7, 1.0, 0.75))
+			float_text(pos + Vector2(0, -30), "nice save +%d" % streak, Color(0.7, 1.0, 0.75))
 			_slowmo()
 			_update_hud()
 			return

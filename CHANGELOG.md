@@ -2,6 +2,28 @@
 
 Append-only session history, newest first.
 
+## 2026-09-30 - One voice for the game's text
+
+A pass over the player-facing text, and the rules written down in AGENTS.md
+("The game's voice") so it stays consistent:
+- **Goals** are sentence-case instructions to the dog, and clearer about
+  what to do: "Mark 5 spots", "Say hello to 3 dogs", "Run yourself tired",
+  "Scrape past traffic 3 times", "Keep the sweeper a leash length away",
+  "Get yourself home without a knock". Every goal, including the per-walk
+  prize and delivery ones, is capitalised where it is formatted.
+- **Scores** are all a lower-case word and the amount ("nice save +4",
+  "bleh, not for dogs -3"), where some shouted in capitals.
+- **Dares** read as dares: "DARE: 5 TRICKS, GO!", "DARE DONE!", "DARE
+  MISSED: 3 OF 5". Other shouts tightened ("PHWEET! THE SELLERS BOLT",
+  "BUSY DOG! 4 THINGS", "THE CALL'S OVER").
+- **The tutorial** says "leash" throughout ("Off the leash."), stops
+  shouting "SLOW DOWN" mid-sentence, and tells you to walk up the path
+  rather than "north".
+- **La Castanyada's prize** is a panellet among the sweets, not a pumpkin
+  treat among the candy: it is the chestnut festival, not Halloween.
+- **Glosses** say a little more: the city park, the seafront, the market
+  hall, the old town alleys, the railway station, the tiled terraces.
+
 ## 2026-09-30 - You can see the owner being dragged
 
 A dragged owner was drawn exactly like a walking one: facing the way they
