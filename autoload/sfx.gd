@@ -87,6 +87,7 @@ func _build_library() -> void:
 	lib["tangle"] = _wobble(0.26)
 	lib["hiss"] = _noiseburst(0.16, 22.0)
 	lib["grunt"] = _grunt()
+	lib["squawk"] = _squawk()
 
 
 # --- music -------------------------------------------------------------
@@ -184,6 +185,20 @@ func _arp(freqs: Array, note: float) -> AudioStreamWAV:
 		for i in range(per):
 			var t := float(i) / RATE
 			out[k * per + i] = sin(TAU * f * t) * exp(-t * 9.0) * 0.5
+	return _pack(out)
+
+
+func _squawk() -> AudioStreamWAV:
+	# a parakeet: a harsh up-and-down screech, clipped so it rasps
+	var dur := 0.12
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var ph := 0.0
+	for i in range(n):
+		var prog := float(i) / float(n)
+		ph += TAU * (1700.0 + sin(PI * prog) * 1100.0) / RATE
+		out[i] = clampf(sin(ph) * 2.2, -1.0, 1.0) * sin(PI * prog) * 0.3
 	return _pack(out)
 
 

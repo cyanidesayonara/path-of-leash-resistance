@@ -2,6 +2,29 @@
 
 Append-only session history, newest first.
 
+## 2026-09-30 - El Mosaic gets its people and parakeets (round 2)
+
+Round 1 built the park's pieces; this round puts the life in them
+(`main._tick_mosaic_groups`, `entities/tourist.gd`, `entities/pigeon.gd`):
+- **The gate queue**: nine people standing up the west side of the
+  forecourt between the gatehouses, edging forward now and then, stepping
+  aside for the dog and her human and back into line.
+- **The salamander's photographers**: five tourists posing round it with
+  cameras and selfie sticks, on its west and south, clear of your human's
+  way round the east side. They turn to photograph a dog who comes close,
+  and the first time she comes up to drink one of them says so.
+- **Pickpockets**: El Mosaic now has La Rambla's crowd rules (fewer people
+  walking, since most stand). They start at the gate, and the first steps
+  out of the queue to go for your human's wallet.
+- **Parakeets**: the flocks here are monk parakeets, green with grey faces,
+  feeding under the palms at the foot of the terrace walls; scared, they go
+  up over the wall they were under, and one squawk goes up with them.
+- **The fan seller** on the plaza with a tray of paper fans and one open in
+  hand, waving; **the guitarist** in the viaduct has a guitar now.
+- `tests/test_mosaic_life.gd`: the queue clear of your human's line, the
+  posers out only as the salamander comes into view and clear of the way
+  round, the coo, the pickpocket from the queue, the parakeets' flight.
+
 ## 2026-09-30 - El Mosaic is walked through Park Guell's pieces (round 1)
 
 El Mosaic was El Parc's layout on a serpentine with patches of slippery

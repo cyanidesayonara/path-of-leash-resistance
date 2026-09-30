@@ -196,6 +196,10 @@ var crowd_rng := RandomNumberGenerator.new()
 var crowd_seeded := false
 var pp_spawn_t := PP_FIRST
 var pp_spawned := 0
+# El Mosaic's standing groups, out once each walk, and the salamander's "aww"
+var mosaic_queue_out := false
+var mosaic_posers_out := false
+var mosaic_aww := false
 var thieves_stopped := 0
 var wallets_returned := 0
 var owner_wallet_taken := false      # he has it right now
@@ -2435,8 +2439,68 @@ func _bust_shells(_why: String) -> void:
 	for tw: Node2D in get_tree().get_nodes_in_group("tourists"):
 		if tw.global_position.distance_to(sp) < 240.0:
 			tw.cheer()
-# the crowd: this many tourists kept around the camera
+# the crowd: this many tourists kept walking around the camera (El Mosaic's
+# walkers are fewer; most of its tourists stand in the queue or at the
+# salamander)
 const CROWD_SIZE := 14
+const MOSAIC_CROWD := 6
+# El Mosaic's gate queue: this many people up the west side of the forecourt
+const MOSAIC_QUEUE := 9
+# where the posers stand round the salamander, from its middle: on its west
+# and south, clear of the owner's way round its east side
+const MOSAIC_POSERS: Array[Vector2] = [Vector2(-125, -60), Vector2(-120, 30), Vector2(-95, 115),
+	Vector2(-170, -5), Vector2(-135, -140)]
+
+
+# La Rambla and El Mosaic have a crowd, and pickpockets working it
+func crowded() -> bool:
+	return (lvl == "street" or lvl == "guell") and not tutorial_mode
+
+
+func _spawn_tourist(at: Vector2, d: float) -> Node2D:
+	var tw := Node2D.new()
+	tw.set_script(load("res://entities/tourist.gd"))
+	tw.z_index = 8
+	add_child(tw)
+	tw.setup(self, crowd_rng, at, d)
+	return tw
+
+
+# a flock of parakeets going up: one squawk for the lot of them
+var squawk_t := 0.0
+
+
+func parakeet_squawk(at: Vector2) -> void:
+	if elapsed < squawk_t:
+		return
+	squawk_t = elapsed + 1.5
+	Sfx.play("squawk", randf_range(0.9, 1.1), -8.0)
+	float_text(at + Vector2(0, -16), "squawk!", Color(0.6, 0.9, 0.5))
+
+
+func _tick_mosaic_groups() -> void:
+	var cy: float = cam.position.y
+	if not mosaic_queue_out:
+		mosaic_queue_out = true
+		var qe := walk_edges(0.0)
+		for i in range(MOSAIC_QUEUE):
+			var qy := 150.0 - float(i) * 36.0
+			var tw := _spawn_tourist(Vector2(qe.x + 70.0 + crowd_rng.randf_range(-6.0, 6.0), qy), -1.0)
+			tw.stand("queue", Vector2.ZERO)
+	var sm: Vector2 = LevelBuild.MOSAIC_SALAMANDER
+	if not mosaic_posers_out and cy < sm.y + 900.0:
+		mosaic_posers_out = true
+		for off: Vector2 in MOSAIC_POSERS:
+			var tw := _spawn_tourist(sm + off, -1.0)
+			tw.stand("pose", sm)
+	# a dog drinking at the salamander is the photo everyone wanted
+	if not mosaic_aww and dog.global_position.distance_to(sm) < 130.0:
+		for tw: Node2D in get_tree().get_nodes_in_group("tourists"):
+			if tw.mode == "pose" and tw.global_position.distance_to(dog.global_position) < 200.0:
+				mosaic_aww = true
+				float_text(tw.global_position + Vector2(0, -26), "aww, look at her", Color(1, 0.9, 0.95), POP_SAY)
+				tw.photo_t = 1.2
+				break
 # pickpockets: the first this many seconds in, then one every PP_EVERY while
 # none is at work, PP_MAX a walk. The first one always goes for the owner.
 const PP_FIRST := 10.0
@@ -2453,29 +2517,29 @@ func _tick_crowd(delta: float) -> void:
 	for tw: Node2D in get_tree().get_nodes_in_group("tourists"):
 		if absf(tw.global_position.y - cy) > 950.0:
 			tw.queue_free()
-		else:
+		elif tw.mode == "amble":
 			n += 1
+	var mosaic := lvl == "guell"
+	if mosaic:
+		_tick_mosaic_groups()
 	# the first fill puts people on screen too; after that they arrive from
 	# off screen, so nobody pops into view
 	var first_fill := n == 0
-	while n < CROWD_SIZE:
+	while n < (MOSAIC_CROWD if mosaic else CROWD_SIZE):
 		var y := cy + crowd_rng.randf_range(-680.0, 680.0)
 		if absf(y - cy) < 420.0 and not first_fill:
 			y = cy + (420.0 + crowd_rng.randf_range(0.0, 300.0)) * (1.0 if crowd_rng.randf() < 0.5 else -1.0)
 		if y < GATE_Y + 200.0 or y > START_Y - 60.0:
 			break
 		var e := walk_edges(y)
-		var tw := Node2D.new()
-		tw.set_script(load("res://entities/tourist.gd"))
-		tw.z_index = 8
-		add_child(tw)
-		tw.setup(self, crowd_rng, Vector2(crowd_rng.randf_range(e.x + 40.0, e.y - 40.0), y),
+		_spawn_tourist(Vector2(crowd_rng.randf_range(e.x + 40.0, e.y - 40.0), y),
 			-1.0 if crowd_rng.randf() < 0.5 else 1.0)
 		n += 1
 	# a pickpocket, now and then, while none is at work
 	if get_tree().get_nodes_in_group("pickpockets").size() > 0 or pp_spawned >= PP_MAX:
 		return
-	if cy > START_Y - 500.0 or cy < GATE_Y + 900.0:
+	# El Mosaic's work the gate queue, so they start at the gate
+	if cy > START_Y - (100.0 if mosaic else 500.0) or cy < GATE_Y + 900.0:
 		return
 	pp_spawn_t -= delta
 	if pp_spawn_t > 0.0:
@@ -2495,6 +2559,13 @@ func _tick_crowd(delta: float) -> void:
 	pp_spawned += 1
 	var pe := walk_edges(cy - 260.0)
 	var from := Vector2(pe.x + 50.0 if target.global_position.x > walk_cx else pe.y - 50.0, cy - 260.0)
+	# at El Mosaic he steps out of the queue, when there is one in sight
+	if mosaic:
+		for tw: Node2D in get_tree().get_nodes_in_group("tourists"):
+			if tw.mode == "queue" and absf(tw.global_position.y - cy) < 300.0 \
+					and tw.global_position.distance_to(target.global_position) > 90.0:
+				from = tw.global_position + Vector2(24.0, 0.0)
+				break
 	var pp := Node2D.new()
 	pp.set_script(load("res://entities/pickpocket.gd"))
 	pp.z_index = 9
@@ -4133,6 +4204,7 @@ func _physics_process(delta: float) -> void:
 	_squirrels(delta)
 	if rambla():
 		_tick_rambla(delta)
+	if crowded():
 		_tick_crowd(delta)
 	_prof("critters")
 	_temptation(delta)
@@ -4712,16 +4784,25 @@ func _squirrels(delta: float) -> void:
 	while flock_ys.size() > 0 and cam.position.y < flock_ys[0] + 650.0:
 		var fy: float = flock_ys.pop_front()
 		var gulls := lvl == "beach"
-		for i in range(5):
+		var keets := lvl == "guell"
+		var fe := walk_edges(fy)
+		# only El Mosaic draws a side, so other walks keep their random sequence
+		var west := keets and randf() < 0.5
+		for i in range(6 if keets else 5):
 			var p := Node2D.new()
 			p.set_script(load("res://entities/pigeon.gd"))
 			var fx := randf_range(480.0, 820.0)
 			if gulls:
 				fx = randf_range(120.0, 320.0) if randf() < 0.7 else randf_range(350.0, 470.0)
+			elif keets:
+				# parakeets feed along the foot of the terrace wall, under the palms
+				fx = (fe.x + randf_range(14.0, 60.0)) if west else (fe.y - randf_range(14.0, 60.0))
 			p.position = Vector2(fx, fy + randf_range(-40.0, 40.0))
 			p.z_index = 8
 			add_child(p)
 			p.setup(self, dog, human, gulls)
+			if keets:
+				p.make_parakeet(-1.0 if west else 1.0)
 	# El Bosc's boars come out of the trees as the stretch comes into view,
 	# so the crossing happens on screen
 	if lvl == "trail" and not boars_out and not tutorial_mode and cam.position.y < LevelBuild.TRAIL_BOAR_Y + 520.0:
@@ -8110,6 +8191,24 @@ func _draw_world() -> void:
 			_wc.draw_circle(pf + Vector2(0, -5), 6.8, Color(0.30, 0.28, 0.26))
 			_wc.draw_rect(Rect2(pf.x - 5.0, pf.y - 14.0, 10.0, 4.0), Color(0.26, 0.24, 0.22))
 			continue
+		if lvl == "guell" and idx == 1 and not raining:
+			# a fan seller: a tray of paper fans opened out to show, one open
+			# in hand, waving
+			contact_shadow(_wc, pf, 12.0, 5.0, 0.2)
+			var fcols := [Color(0.90, 0.24, 0.30), Color(0.20, 0.50, 0.80), Color(0.98, 0.80, 0.26), Color(0.30, 0.66, 0.40), Color(0.86, 0.46, 0.70)]
+			_wc.draw_rect(Rect2(pf.x + 14.0, pf.y - 16.0, 34.0, 40.0), Color(0.46, 0.34, 0.24))
+			for k in range(4):
+				var fc: Vector2 = pf + Vector2(22.0 + float(k % 2) * 16.0, -6.0 + float(k / 2) * 20.0)
+				_wc.draw_colored_polygon(PackedVector2Array([fc, fc + Vector2(-8, -9), fc + Vector2(0, -12), fc + Vector2(8, -9)]), fcols[(k + 1) % 5])
+			_wc.draw_circle(pf, 12.0, Color(0.30, 0.30, 0.36))
+			_wc.draw_circle(pf + Vector2(0, -4), 7.0, Color(0.72, 0.54, 0.40))
+			var wave := sin(pt * 5.0) * 0.5
+			var fh: Vector2 = pf + Vector2(-12, -8)
+			var fpts := PackedVector2Array([fh])
+			for k in range(7):
+				fpts.append(fh + Vector2.from_angle(-PI * 0.5 + wave + (float(k) / 6.0 - 0.5) * 2.0) * 16.0)
+			_wc.draw_colored_polygon(fpts, fcols[idx % 5])
+			continue
 		if lvl == "site":
 			# a worker in hi-vis and a hard hat, leaning on a shovel
 			contact_shadow(_wc, pf, 12.0, 5.0, 0.2)
@@ -8131,6 +8230,11 @@ func _draw_world() -> void:
 				_wc.draw_line(pf + Vector2(-24 + rx * 0.4, -28), pf + Vector2(-24 + rx * 0.4, 12), Color(0.6, 0.7, 0.85, 0.4), 1.0)
 			continue
 		_wc.draw_arc(pf + Vector2(0, -4), 7.0, PI, TAU, 10, Color(0.2, 0.15, 0.1), 4.0)
+		if lvl == "guell":
+			# El Mosaic's guitarist, in the viaduct's shade
+			_wc.draw_circle(pf + Vector2(-2, 10), 7.0, Color(0.70, 0.44, 0.22))
+			_wc.draw_circle(pf + Vector2(-2, 10), 2.2, Color(0.20, 0.14, 0.10))
+			_wc.draw_line(pf + Vector2(-2, 6), pf + Vector2(12, -10), Color(0.46, 0.30, 0.18), 3.0)
 		_wc.draw_circle(pf + Vector2(18, 12), 6.0, Color(0.3, 0.25, 0.2))
 		_wc.draw_circle(pf + Vector2(16, 11), 1.5, Color(0.9, 0.8, 0.3))
 		_wc.draw_circle(pf + Vector2(20, 13), 1.5, Color(0.9, 0.8, 0.3))
