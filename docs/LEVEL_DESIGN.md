@@ -252,6 +252,20 @@ rubble stone, and the colour comes in where Gaudi put it.
   column medallions.
 - Rounds: expect several. First the layout and the pieces as shapes, then
   the mosaic finish, then the life.
+- Round 1 built (2026-09-30, `LevelBuild.mosaic`): the five pieces in
+  order on sandy gravel between rubble-stone terrace walls with palms and
+  agaves - the gatehouses either side of the start (gingerbread walls, iced
+  wavy roofs, mosaic caps, the red mushroom spire with its cross); the dragon
+  stair with steps at foot and head, grotto stone along its sides, and the
+  trencadis salamander on its landing (solid, walked round, the drink at its
+  mouth); the hypostyle hall's 4x5 columns with mosaic medallions and a lane
+  through the middle, in the shade under the plaza; the plaza, its edges
+  waving as the serpentine bench, finished in trencadis, and the bench
+  grinds end to end ("BENCH GRIND!"); the viaduct with leaning rubble
+  columns and the slope beside it; the calvary's three crosses at the top.
+  Still to come: the life (tourists at the salamander, the queue at the gate,
+  the fan seller, parakeets, pickpockets in the queue) and a second finish
+  pass.
 
 ### La Neteja (neteja) - the back street at dawn
 - Is: a narrow street at street-cleaning time: dumpsters, parked scooters,

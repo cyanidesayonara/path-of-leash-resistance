@@ -950,11 +950,32 @@ func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 	# genuinely project over the pavement (awnings) and the things that sit
 	# in the ground plane (doorsteps).
 	var style := lvl
+	if lvl == "guell":
+		style = "guell"
 	if lvl == "market":
 		# inside the hall the edge is the hall's own roof; outside it, the city's
 		var in_hall: bool = r.position.y < LevelBuild.MERCAT_ARCH_Y and r.end.y > LevelBuild.MERCAT_DOOR_Y
 		style = "hall" if in_hall else "oldtown"
 	match style:
+		"guell":
+			# rubble-stone terrace walls, the stones laid rough, and the
+			# planting along the top: palms and agaves
+			var stone := Color(0.56, 0.48, 0.38).lightened(lit * 0.08)
+			c.draw_rect(r, stone)
+			for si in range(14):
+				var sp := r.position + Vector2(fmod(float(si) * 53.0 + float(k) * 17.0, r.size.x),
+					fmod(float(si) * 31.0 + float(k) * 41.0, r.size.y))
+				c.draw_circle(sp, 9.0 + float(si % 3) * 4.0, stone.darkened(0.12) if si % 2 == 0 else stone.lightened(0.08))
+			c.draw_line(Vector2(inner_x + side * 3.0, r.position.y), Vector2(inner_x + side * 3.0, r.end.y),
+				Color(0.40, 0.33, 0.26), 6.0)
+			var palm := Vector2(inner_x + side * 60.0, r.position.y + 70.0 + float(k % 3) * 30.0)
+			for f in range(8):
+				var fd := Vector2.from_angle(float(f) * TAU / 8.0 + float(k))
+				c.draw_line(palm, palm + fd * 34.0, Color(0.30, 0.48, 0.24), 5.0)
+			c.draw_circle(palm, 6.0, Color(0.46, 0.36, 0.24))
+			var ag := Vector2(inner_x + side * 34.0, r.position.y + 170.0)
+			for f in range(6):
+				c.draw_line(ag, ag + Vector2.from_angle(float(f) * TAU / 6.0 + 0.3) * 18.0, Color(0.42, 0.56, 0.52), 4.0)
 		"hall":
 			# the market hall's roof: glazing between red iron trusses, and a
 			# glow of the stalls' light coming up through it
@@ -1575,6 +1596,174 @@ func _draw_scooters(b: ShapeBatch, vt: float, vb: float) -> void:
 		b.rect(Rect2(sc.x - 9.0, sc.y - 16.0, 18.0, 34.0), c)
 		b.circle(sc + Vector2(0, 4), 8.0, (c as Color).darkened(0.25))
 		b.line(sc + Vector2(-12, -18), sc + Vector2(12, -18), Color(0.2, 0.2, 0.22), 3.0)
+
+
+# El Mosaic's plaza edges are the serpentine bench: grinding them is the bench
+func on_mosaic_bench(y: float) -> bool:
+	return lvl == "guell" and y < LevelBuild.MOSAIC_PLAZA_Y0 + 40.0 and y > LevelBuild.MOSAIC_PLAZA_Y1 - 40.0
+
+
+const SHARDS := [Color(0.12, 0.30, 0.70), Color(0.18, 0.62, 0.70), Color(0.34, 0.62, 0.30),
+	Color(0.96, 0.80, 0.24), Color(0.92, 0.50, 0.18), Color(0.97, 0.96, 0.92), Color(0.82, 0.24, 0.26)]
+
+
+# broken tile set in mortar, as a disc: every shard its own odd shape
+func _trencadis_disc(c: Object, at: Vector2, r: float, key: int) -> void:
+	c.draw_circle(at, r, Color(0.92, 0.90, 0.84))
+	for k in range(9):
+		var a := float(k) * 2.39996 + float(key % 7)
+		var d := r * sqrt(fmod(float(k) * 0.37 + 0.13, 1.0)) * 0.8
+		var q := at + Vector2(cos(a), sin(a)) * d
+		var poly := PackedVector2Array()
+		for v in range(4):
+			var va := a + float(v) * 1.57 + float((key + k + v) % 5) * 0.2
+			poly.append(q + Vector2(cos(va), sin(va)) * r * (0.22 + 0.08 * float((k + v) % 3)))
+		c.draw_colored_polygon(poly, SHARDS[(k + key) % SHARDS.size()])
+
+
+# ...and as a band between two points, for the bench
+func _trencadis_band(b: ShapeBatch, a: Vector2, z: Vector2, w: float, key: int) -> void:
+	b.line(a, z, Color(0.92, 0.90, 0.84), w)
+	var n := int(a.distance_to(z) / 9.0)
+	var side := (z - a).normalized().orthogonal()
+	for k in range(n):
+		var q := a.lerp(z, (float(k) + 0.5) / float(maxi(n, 1))) + side * (fmod(float(k * 7 + key), 5.0) - 2.0) * w * 0.12
+		var poly := PackedVector2Array()
+		for v in range(4):
+			var va := float(v) * 1.57 + float((k + key + v) % 5) * 0.35
+			poly.append(q + Vector2(cos(va), sin(va)) * w * (0.26 + 0.06 * float((k + v) % 3)))
+		b.polygon(poly, SHARDS[(k * 3 + key) % SHARDS.size()])
+
+
+func _draw_mosaic(vt: float, vb: float) -> void:
+	var b := ShapeBatch.new()
+	# gravel: the sandy ground, with its stones
+	var gy := floorf((vt - 20.0) / 31.0) * 31.0
+	while gy < vb + 20.0:
+		var e := walk_edges(gy)
+		var gx := e.x + fmod(absf(gy) * 0.61, 23.0)
+		while gx < e.y:
+			var n := fmod(absf(gx * 12.9898 + gy * 78.233), 5.0)
+			b.circle(Vector2(gx, gy), 1.3 + n * 0.3, Color(0.64, 0.56, 0.42, 0.55) if int(n) % 2 == 0 else Color(0.90, 0.84, 0.70, 0.5))
+			gx += 23.0 + n * 4.0
+		gy += 31.0
+	# the dragon stair: steps across the whole width at its foot and its head
+	for sy: float in [LevelBuild.MOSAIC_STAIR_Y0, LevelBuild.MOSAIC_STAIR_Y1]:
+		if sy < vt - 80.0 or sy > vb + 80.0:
+			continue
+		for k in range(6):
+			var yy := sy - float(k) * 13.0
+			var e := walk_edges(yy)
+			b.rect(Rect2(e.x, yy - 13.0, e.y - e.x, 13.0), Color(0.72, 0.66, 0.56).darkened(0.04 * float(k)))
+			b.line(Vector2(e.x, yy - 13.0), Vector2(e.y, yy - 13.0), Color(0.86, 0.80, 0.70), 2.0)
+	# the dripping-stone grotto walls either side of the stair
+	var ya := maxf(vt - 40.0, LevelBuild.MOSAIC_STAIR_Y1)
+	var yz := minf(vb + 40.0, LevelBuild.MOSAIC_STAIR_Y0)
+	var dy := floorf(ya / 40.0) * 40.0
+	while dy < yz:
+		var e := walk_edges(dy)
+		for sx: float in [e.x, e.y]:
+			var into := 1.0 if sx == e.x else -1.0
+			b.circle(Vector2(sx + into * 8.0, dy), 11.0, Color(0.52, 0.46, 0.38))
+			b.circle(Vector2(sx + into * 12.0, dy + 14.0), 5.0, Color(0.44, 0.38, 0.32))
+		dy += 40.0
+	b.flush(_wc)
+	# the salamander on the landing: the landmark, in trencadis
+	var sm: Vector2 = LevelBuild.MOSAIC_SALAMANDER
+	if sm.y > vt - 120.0 and sm.y < vb + 120.0:
+		var sz: Vector2 = LevelBuild.MOSAIC_SALAMANDER_SIZE
+		var b2 := ShapeBatch.new()
+		b2.rect(Rect2(sm - sz * 0.5 + LIGHT * 12.0, sz), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+		b2.rect(Rect2(sm - sz * 0.5, sz), Color(0.66, 0.60, 0.50))
+		b2.flush(_wc)
+		# its body, head down the stair and tail curling up it: a chain of
+		# trencadis scales, fattest at the shoulders
+		var spine := [sm + Vector2(0, 74), sm + Vector2(10, 46), sm + Vector2(-4, 16), sm + Vector2(10, -14),
+			sm + Vector2(-2, -44), sm + Vector2(-18, -66), sm + Vector2(-30, -80)]
+		var bw := [16.0, 24.0, 27.0, 24.0, 18.0, 12.0, 8.0]
+		for leg: Vector2 in [Vector2(-34, 40), Vector2(36, 34), Vector2(-30, -20), Vector2(32, -26)]:
+			_trencadis_disc(_wc, sm + leg, 11.0, int(leg.x + leg.y))
+		for k in range(spine.size()):
+			_trencadis_disc(_wc, spine[k], bw[k], k * 5 + 3)
+		# its head, with a blunt snout and two dark eyes
+		var hd: Vector2 = sm + Vector2(0, 86)
+		_wc.draw_colored_polygon(PackedVector2Array([hd + Vector2(-16, -10), hd + Vector2(16, -10), hd + Vector2(10, 16),
+			hd + Vector2(-10, 16)]), Color(0.18, 0.62, 0.70))
+		_trencadis_disc(_wc, hd, 13.0, 21)
+		_wc.draw_circle(hd + Vector2(-7, 6), 3.0, Color(0.1, 0.1, 0.1))
+		_wc.draw_circle(hd + Vector2(7, 6), 3.0, Color(0.1, 0.1, 0.1))
+		# the water from its mouth
+		_wc.draw_circle(sm + Vector2(0, sz.y * 0.5 + 14.0), 12.0, Color(0.34, 0.50, 0.62))
+	# the hypostyle hall: in the shade under the plaza, its floor darker
+	var b3 := ShapeBatch.new()
+	var h0: float = LevelBuild.MOSAIC_HALL_Y0
+	var h1: float = LevelBuild.MOSAIC_HALL_Y1
+	if h1 < vb + 40.0 and h0 > vt - 40.0:
+		var y0 := maxf(vt - 40.0, h1)
+		var y1 := minf(vb + 40.0, h0)
+		var hy := floorf(y0 / 60.0) * 60.0
+		while hy < y1:
+			var e := walk_edges(hy)
+			b3.rect(Rect2(e.x, hy, e.y - e.x, 60.0), Color(0.10, 0.08, 0.06, 0.12))
+			hy += 60.0
+	# the serpentine bench: the plaza's edges, finished in trencadis
+	var p0: float = LevelBuild.MOSAIC_PLAZA_Y0 + 40.0
+	var p1: float = LevelBuild.MOSAIC_PLAZA_Y1 - 40.0
+	if p1 < vb + 40.0 and p0 > vt - 40.0:
+		var y0 := maxf(vt - 40.0, p1)
+		var y1 := minf(vb + 40.0, p0)
+		var by := floorf(y0 / 24.0) * 24.0
+		while by < y1:
+			var ea := walk_edges(by)
+			var ez := walk_edges(by + 24.0)
+			_trencadis_band(b3, Vector2(ea.x - 9.0, by), Vector2(ez.x - 9.0, by + 24.0), 18.0, int(absf(by)) % 11)
+			_trencadis_band(b3, Vector2(ea.y + 9.0, by), Vector2(ez.y + 9.0, by + 24.0), 18.0, int(absf(by)) % 13)
+			by += 24.0
+	# the viaduct: the covered walk, the slope on its west side
+	var v0: float = LevelBuild.MOSAIC_VIADUCT_Y0
+	var v1: float = LevelBuild.MOSAIC_VIADUCT_Y1
+	if v1 < vb + 60.0 and v0 > vt - 60.0:
+		var y0 := maxf(vt - 60.0, v1)
+		var y1 := minf(vb + 60.0, v0)
+		var vy := floorf(y0 / 50.0) * 50.0
+		while vy < y1:
+			var e := walk_edges(vy)
+			b3.rect(Rect2(e.x - 120.0, vy, 120.0, 50.0), Color(0.46, 0.52, 0.34))
+			b3.circle(Vector2(e.x - 60.0, vy + 25.0), 14.0, Color(0.36, 0.44, 0.28))
+			vy += 50.0
+	# the calvary: three crosses on a heap of stones at the top
+	var cv: Vector2 = LevelBuild.MOSAIC_CALVARY
+	if cv.y > vt - 80.0 and cv.y < vb + 80.0:
+		b3.circle(cv, 46.0, Color(0.54, 0.46, 0.36))
+		b3.circle(cv + Vector2(-8, -8), 32.0, Color(0.62, 0.54, 0.42))
+		for cx: Vector2 in [Vector2(0, -6), Vector2(-26, 14), Vector2(26, 14)]:
+			b3.rect(Rect2(cv + cx - Vector2(3, 14), Vector2(6, 28)), Color(0.86, 0.84, 0.80))
+			b3.rect(Rect2(cv + cx - Vector2(12, 3), Vector2(24, 6)), Color(0.86, 0.84, 0.80))
+	b3.flush(_wc)
+	# the gatehouses either side of the entrance: gingerbread walls, wavy
+	# roofs iced white with mosaic caps, one with the mushroom and its cross
+	for gs: float in [-1.0, 1.0]:
+		var e := walk_edges(-60.0)
+		var gc := Vector2((e.x - 130.0) if gs < 0.0 else (e.y + 130.0), -60.0)
+		if gc.y < vt - 200.0 or gc.y > vb + 200.0:
+			continue
+		var b4 := ShapeBatch.new()
+		b4.rect(Rect2(gc - Vector2(90, 110) + LIGHT * 16.0, Vector2(180, 220)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+		b4.rect(Rect2(gc - Vector2(90, 110), Vector2(180, 220)), Color(0.66, 0.46, 0.30))
+		for w in range(9):
+			b4.circle(gc + Vector2(-80.0 + float(w) * 20.0, -104.0), 12.0, Color(0.96, 0.94, 0.90))
+			b4.circle(gc + Vector2(-80.0 + float(w) * 20.0, 104.0), 12.0, Color(0.96, 0.94, 0.90))
+		b4.rect(Rect2(gc - Vector2(70, 80), Vector2(140, 160)), Color(0.56, 0.36, 0.22))
+		b4.flush(_wc)
+		_trencadis_disc(_wc, gc + Vector2(-34, -30), 22.0, 4 if gs < 0.0 else 9)
+		_trencadis_disc(_wc, gc + Vector2(36, 34), 18.0, 7 if gs < 0.0 else 2)
+		if gs > 0.0:
+			# the mushroom spire and its cross, from above
+			_wc.draw_circle(gc + Vector2(30, -40), 26.0, Color(0.86, 0.24, 0.26))
+			for d in range(6):
+				_wc.draw_circle(gc + Vector2(30, -40) + Vector2.from_angle(float(d)) * 16.0, 5.0, Color(0.97, 0.96, 0.92))
+			_wc.draw_rect(Rect2(gc + Vector2(26, -56), Vector2(8, 32)), Color(0.90, 0.88, 0.84))
+			_wc.draw_rect(Rect2(gc + Vector2(14, -44), Vector2(32, 8)), Color(0.90, 0.88, 0.84))
 
 
 func _draw_neteja(vt: float, vb: float) -> void:
@@ -5831,7 +6020,8 @@ func _tick_grind(delta: float) -> void:
 				grinds_landed += 1
 				combo.add("GRIND", pts)
 				Sfx.play("star", 1.2)
-				feed.say("KERB RIDE!  %d" % pts, EventFeed.Tone.LOUD)
+				feed.say(("BENCH GRIND!  %d" if on_mosaic_bench(dog.global_position.y) else "KERB RIDE!  %d") % pts,
+					EventFeed.Tone.LOUD)
 				_update_hud()
 		return
 	if grind_cd > 0.0 or dog.is_tumbling() or teeter.active or not fast_enough or not travelling_along:
@@ -5850,7 +6040,7 @@ func _tick_grind(delta: float) -> void:
 			grind_kerb_x = kx
 			grind.begin()
 			Sfx.play("save", 1.35, -10.0)
-			feed.say("KERB RIDE!", EventFeed.Tone.LOUD)
+			feed.say("BENCH GRIND!" if on_mosaic_bench(here_y) else "KERB RIDE!", EventFeed.Tone.LOUD)
 			return
 
 
@@ -7014,6 +7204,8 @@ func _draw_world() -> void:
 			walkway = Color(0.76, 0.73, 0.66)
 		elif lvl == "neteja":
 			walkway = Color(0.52, 0.50, 0.50)   # a back street's grey setts, still wet
+		elif lvl == "guell":
+			walkway = Color(0.80, 0.72, 0.56)   # sandy gravel, the park's own ground
 		elif lvl == "trail":
 			grass = TRAIL_FLOOR
 			walkway = TRAIL_DIRT
@@ -7128,6 +7320,8 @@ func _draw_world() -> void:
 		_draw_castanyada(vt, vb)
 	if lvl == "neteja":
 		_draw_neteja(vt, vb)
+	if lvl == "guell":
+		_draw_mosaic(vt, vb)
 	if tutorial_mode:
 		_draw_tutorial_pond()
 	if rambla():
@@ -7202,6 +7396,16 @@ func _draw_world() -> void:
 				_wc.draw_circle(hp + Vector2.from_angle(TAU * float(k) / 4.0 + 0.5) * 5.0, 3.0, Color(0.88, 0.18, 0.22))
 			if not h.done and h.progress > 0.0:
 				_wc.draw_arc(hp, 17.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
+			continue
+		if lvl == "guell":
+			# a rubble-stone planter with an agave in it
+			contact_shadow(_wc, hp, 15.0, 6.0, 0.22)
+			_wc.draw_circle(hp, 15.0, Color(0.56, 0.48, 0.38) if not h.done else Color(0.48, 0.42, 0.34))
+			_wc.draw_circle(hp, 11.0, Color(0.34, 0.28, 0.22))
+			for f in range(7):
+				_wc.draw_line(hp, hp + Vector2.from_angle(float(f) * TAU / 7.0) * 15.0, Color(0.44, 0.60, 0.54), 3.5)
+			if not h.done and h.progress > 0.0:
+				_wc.draw_arc(hp, 21.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
 			continue
 		if lvl == "spook":
 			# a hessian sack of chestnuts, top rolled down, some spilt
@@ -7378,6 +7582,23 @@ func _draw_world() -> void:
 			cast_shadow(_wc, p, 12.0, 30.0, 0.2)
 			_wc.draw_rect(Rect2(p.x - 11.0, p.y - 11.0, 22.0, 22.0), Color(0.55, 0.50, 0.45))
 			_wc.draw_rect(Rect2(p.x - 11.0, p.y - 11.0, 8.0, 22.0), Color(0.64, 0.59, 0.53))
+		elif lvl == "guell":
+			if p.y > LevelBuild.MOSAIC_HALL_Y1 - 50.0 and p.y < LevelBuild.MOSAIC_HALL_Y0 + 50.0:
+				# a fat Doric column of the hypostyle hall, from above: the
+				# round capital, its ring, a trencadis medallion on top
+				cast_shadow(_wc, p, 20.0, 50.0, 0.22)
+				_wc.draw_circle(p, 24.0, Color(0.78, 0.74, 0.66))
+				_wc.draw_circle(p, 19.0, Color(0.86, 0.83, 0.76))
+				_trencadis_disc(_wc, p, 11.0, int(absf(p.x + p.y)))
+			else:
+				# a viaduct column: rubble stone, leaning into the hill like a
+				# palm trunk, its lean read from the long shadow
+				_wc.draw_colored_polygon(PackedVector2Array([p + Vector2(-14, 10), p + Vector2(14, 10),
+					p + Vector2(40, 60), p + Vector2(18, 64)]), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+				_wc.draw_circle(p, 17.0, Color(0.50, 0.42, 0.34))
+				_wc.draw_circle(p + Vector2(-6, -10), 14.0, Color(0.58, 0.49, 0.39))
+				for k in range(5):
+					_wc.draw_circle(p + Vector2(-6, -10) + Vector2.from_angle(float(k) * 1.4) * 8.0, 3.0, Color(0.44, 0.37, 0.30))
 		elif lvl == "market":
 			# the hall's cast-iron columns, painted green, on a flared foot
 			cast_shadow(_wc, p, 10.0, 40.0, 0.2)

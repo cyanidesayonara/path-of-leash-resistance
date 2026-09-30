@@ -66,7 +66,8 @@ func _run() -> void:
 		_check(dog.global_position.x > f.x - 30.0, "%s: the dog stops at the left building line (x %.0f, line %.0f)" % [lv, dog.global_position.x, f.x])
 		main.queue_free()
 		await process_frame
-	# El Mosaic's building line follows the serpentine
+	# El Mosaic's terrace walls follow the path through every bend and wave,
+	# standing right at its edge
 	game.level_id = "guell"
 	var g: Node2D = load("res://main.tscn").instantiate()
 	root.add_child(g)
@@ -75,7 +76,7 @@ func _run() -> void:
 	var follows := true
 	var yy: float = g.GATE_Y + 100.0
 	while yy < g.START_Y:
-		follows = follows and is_equal_approx(g.walk_edges(yy).x - g.frontage(yy).x, 110.0)
+		follows = follows and is_equal_approx(g.walk_edges(yy).x - g.frontage(yy).x, 0.0)
 		yy += 137.0
 	_check(follows, "guell: the building line follows the path through every bend")
 	g.queue_free()
