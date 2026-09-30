@@ -17,6 +17,29 @@ in the middle of nowhere. Now a sniff stop goes where a dog would go
   have walked has messages on it.
 - Towed off a post by its human before it is done, a dog gives up on it.
 - `tests/test_pair_marks.gd`.
+## 2026-09-30 - The station bot walks home beside the walkway
+
+The autowalk bot stalled twice on L'Estacio's home leg, walking down the
+middle of the concourse against the moving walkway that carries up it. Going
+home it now walks beside the walkway, on its human's side
+(`main._auto_drive`). Station's bot finishes at 120 s instead of 162 s with
+two stalls; every other snapshot line is unchanged. Bot only: nothing a
+player sees.
+## 2026-09-30 - A planted dog skids
+
+Planting and getting hauled anyway used to slide the dog along the ground
+like a hockey puck, with nothing to show for it. Now it is a skid
+(`main._skid`, `entities/dog.gd`):
+- She braces facing whoever is hauling her, leaning back on the collar, and
+  her front paws throw dust ahead of her.
+- Her paws leave a pair of furrows that suit the ground: scuffs on paving,
+  deeper ones in sand, dark in mud, torn earth on grass, blue-grey in snow,
+  none in water. They fade over eight seconds.
+- A low scrape while it lasts.
+- A plant grips less on wet ground and least on packed snow
+  (`PLANT_GRIP`, `PLANT_GRIP_WET`, `PLANT_GRIP_ICE`): the same haul drags
+  her about a fifth further in the rain and nearly twice as far in snow.
+- `tests/test_plant_skid.gd`.
 ## 2026-09-30 - El Mosaic gets its people and parakeets (round 2)
 
 Round 1 built the park's pieces; this round puts the life in them
