@@ -117,6 +117,9 @@ const DEFAULT_VOL_SFX := 0.9
 const DEFAULT_VOL_MUSIC := 0.55
 
 var save_path := SAVE_PATH
+# false for the autowalk bot: it runs from a blank save and never writes one,
+# so its walk does not depend on (or change) whoever last played here
+var persist := true
 var level_id := "barri"
 var owner_id := "him"  # "him" | "her"; a proper character creator can come later
 var night := false
@@ -242,6 +245,7 @@ func apply_settings() -> void:
 
 
 func _ready() -> void:
+	persist = not ("--autowalk" in OS.get_cmdline_user_args())
 	load_records()
 	# the daily best is per-day: wipe it when the date rolls over
 	if records.has("daily") and int(records["daily"].get("seed", 0)) != daily_seed():
@@ -301,6 +305,8 @@ func _reset_persisted_state() -> void:
 
 func load_records() -> void:
 	_reset_persisted_state()
+	if not persist:
+		return
 	var cf := ConfigFile.new()
 	if cf.load(save_path) != OK:
 		return
@@ -350,6 +356,8 @@ func load_records() -> void:
 
 
 func save_records() -> void:
+	if not persist:
+		return
 	var cf := ConfigFile.new()
 	for lv in LEVELS:
 		if not records.has(lv):
