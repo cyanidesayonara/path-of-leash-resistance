@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-09-30 - A tangle with another walker no longer borrows the pole's pulley
+
+A rope wound round a pole amplifies the dog's pull on the owner (the pulley).
+It measured winding round ANY contact, so a rope draped over another
+walker's leash hauled the owner up to 2.2 times harder, as if it were a
+pole, against the rule that tangles do not get pole behaviour. The pulley
+now reads `leash.static_winding()`, turning only where the rope touches poles
+and furniture.
+
+The leash audit also suggested a wrap's shield depended on reel length (it
+counts rope points touching the pole). Measured, the same one-turn wrap
+touches 6 points on a 170 px reel and on a 430 px one, so the shield is left
+as it is, and `tests/test_wrap.gd` now holds both facts: the same wrap reads
+alike on a short and a long reel, and a tangle has no static winding.
+
+Also fixed: a pickpocket stopped after the tourist he robbed had walked off
+screen passed the freed tourist to `main.on_pickpocket_stopped`, a script
+error (seen in La Rambla's bolt-chase bot walk). He passes no mark now.
+
 ## 2026-09-30 - The reel warns first, and the whirl swings round the right pole
 
 - **The reel is telegraphed.** "click!" comes 0.8 s before the leash length

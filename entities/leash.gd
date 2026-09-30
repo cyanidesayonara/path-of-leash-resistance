@@ -356,6 +356,24 @@ func winding() -> float:
 	return total / TAU
 
 
+# winding() counted only where the rope touches something static: turning
+# round another walker's rope is a tangle, not a pole, and must not borrow
+# the pole's pulley
+func static_winding() -> float:
+	var total := 0.0
+	if _touch.size() < N:
+		return 0.0
+	for i in range(1, N - 1):
+		var oi := _touch[i]
+		if oi < 0 or _obs_kind[oi] == K_DYNAMIC:
+			continue
+		var a := pts[i] - pts[i - 1]
+		var b := pts[i + 1] - pts[i]
+		if a.length_squared() > 0.01 and b.length_squared() > 0.01:
+			total += a.angle_to(b)
+	return total / TAU
+
+
 func human_end_winding() -> float:
 	# signed turning (radians) of the last few segments at the human end:
 	# tells whether the HUMAN is the wound-up one, and which way unwinds

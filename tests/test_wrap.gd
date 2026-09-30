@@ -100,6 +100,45 @@ func _initialize() -> void:
 			finite = false
 	_check(finite, "rope points stay finite")
 
+	# 5) a wrap's shield comes from its static contact count, which must read
+	#    alike for the same wrap on a short reel and a long one, or a reel
+	#    click would switch a wrap's shield on or off; and a pole wrap counts
+	#    as static winding (which is what the pulley reads)
+	var wraps := []
+	for rl: float in [170.0, 430.0]:
+		leash.rest_len = rl
+		human.global_position = Vector2(-200, 0)
+		dog.global_position = Vector2(60, 0)
+		leash.resnap()
+		_settle(60)
+		_orbit(0.0, 0.0, 60.0, 40.0, 360.0)
+		_settle(30)
+		wraps.append(leash.static_contacts)
+		print("one turn at rest %.0f: %d static contacts, static winding %.2f" % [
+			rl, leash.static_contacts, leash.static_winding()])
+		_check(absf(leash.static_winding()) > 0.5, "a pole wrap counts as static winding at rest %.0f" % rl)
+	_check(absi(int(wraps[0]) - int(wraps[1])) <= 2,
+		"the same wrap shields alike on a short and a long reel (%d vs %d contacts)" % [wraps[0], wraps[1]])
+
+	# 6) wound over another walker's rope (a dynamic snag) the rope has
+	#    winding but no STATIC winding, so a tangle never borrows the pole's
+	#    pulley on the owner
+	var pole_keep: Array[Vector2] = leash.poles.duplicate()
+	leash.poles.clear()
+	leash.dynamic_obstacles = Array([Vector2.ZERO], TYPE_VECTOR2, &"", null)
+	leash.rest_len = 260.0
+	human.global_position = Vector2(-200, 0)
+	dog.global_position = Vector2(60, 0)
+	leash.resnap()
+	_settle(60)
+	_orbit(0.0, 0.0, 60.0, 40.0, 360.0)
+	_settle(10)
+	print("wound on a snag: winding %.2f, static winding %.2f, dynamic contacts %d" % [
+		leash.winding(), leash.static_winding(), leash.dynamic_contacts])
+	_check(absf(leash.static_winding()) < 0.1, "a tangle is not a pole: no static winding (%.2f)" % leash.static_winding())
+	leash.dynamic_obstacles.clear()
+	leash.poles.assign(pole_keep)
+
 	if failures > 0:
 		print("test_wrap: %d FAILURES" % failures)
 		quit(1)

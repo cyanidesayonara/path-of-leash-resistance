@@ -206,7 +206,10 @@ func _go_down(why: String, fling: Vector2) -> void:
 	if not wallet_lost:
 		wallet_pos = global_position + fling * 30.0
 	wallet_t = 0.0
-	main.on_pickpocket_stopped(global_position, why, wallet_lost, mark, mark_is_owner)
+	# the mark may have walked off and been freed mid-chase: a freed object
+	# will not pass as a Node2D argument, and main handles no mark
+	var who: Node2D = mark if is_instance_valid(mark) else null
+	main.on_pickpocket_stopped(global_position, why, wallet_lost, who, mark_is_owner)
 
 
 func _process(_delta: float) -> void:
