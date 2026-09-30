@@ -3,6 +3,17 @@
 Append-only session history, newest first.
 
 
+
+## 2026-09-30 - OFF LEASH over the gate, in the walk's own stuff
+
+The gate into the off-leash area had its name painted on in the plain font,
+the one piece of ground writing left that was not made of anything. On a
+walk with a material (`WorldSign.MATERIALS`) the gate now spells where it
+goes and, over that, OFF LEASH, in the same loose pieces as the walk's name
+at the start (`main.build_signs`): carnations on La Rambla, trencadis at El
+Mosaic, traffic cones (bigger, so they read) on the building site. They can
+be bumped and scattered like the name. Walks without a material keep the
+painted name. `tests/test_gate_sign.gd`.
 ## 2026-09-30 - A planted dog skids
 
 Planting and getting hauled anyway used to slide the dog along the ground

@@ -3567,6 +3567,13 @@ func build_signs() -> void:
 			signs.append(WorldSign.build(">", Vector2(mid + hw + 44.0, START_Y - 190.0), 44.0, mat, 7.0, 80.0))
 	var he := walk_edges(HOME_Y + 84.0)
 	signs.append(WorldSign.build("HOME", Vector2((he.x + he.y) * 0.5, HOME_Y + 84.0), 26.0, mat, 9.0, 300.0))
+	# over the gate, what is through it and what that means, in the same stuff
+	var gm := (gate_l + gate_r) * 0.5
+	var gw := maxf(160.0, gate_r - gate_l - 20.0)
+	# traffic cones are fat pieces: small words in them are a pile of cones
+	var gk := 1.4 if mat == "cones" else 1.0
+	signs.append(WorldSign.build(gate_text, Vector2(gm, GATE_Y - 72.0 * gk), 36.0 * gk, mat, 11.0, gw))
+	signs.append(WorldSign.build("OFF LEASH", Vector2(gm, GATE_Y - 124.0 * gk - 4.0), 24.0 * gk, mat, 12.0, gw))
 
 
 func _tick_signs(delta: float) -> void:
@@ -8386,9 +8393,11 @@ func _draw_world() -> void:
 	_wc.draw_rect(Rect2(gate_l - 14, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
 	_wc.draw_rect(Rect2(gate_r, GATE_Y - 46, 14, 60), Color(0.35, 0.3, 0.28))
 	_wc.draw_rect(Rect2(gate_l - 14, GATE_Y - 58, gate_r - gate_l + 28, 14), Color(0.35, 0.3, 0.28))
-	# centred on the gate mouth, not nudged left by an eyeballed 40px
-	_wc.draw_string(font, Vector2(gate_l, GATE_Y - 66), gate_text, HORIZONTAL_ALIGNMENT_CENTER,
-		gate_r - gate_l, 26, Color(0.9, 0.88, 0.8))
+	# centred on the gate mouth, not nudged left by an eyeballed 40px; a walk
+	# with a material spells it in pieces instead (build_signs)
+	if _sign_mat() == "":
+		_wc.draw_string(font, Vector2(gate_l, GATE_Y - 66), gate_text, HORIZONTAL_ALIGNMENT_CENTER,
+			gate_r - gate_l, 26, Color(0.9, 0.88, 0.8))
 	var gx := gate_l
 	while gx < gate_r:
 		_wc.draw_line(Vector2(gx, GATE_Y), Vector2(gx + 16.0, GATE_Y), Color(0.9, 0.88, 0.8, 0.6), 3.0)
