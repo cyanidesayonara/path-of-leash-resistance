@@ -94,6 +94,64 @@ static func gotic(m: Node2D) -> void:
 	m.islands = Array([{"rect": Rect2(GOTIC_PLACA - Vector2(40.0, 40.0), Vector2(80.0, 80.0)), "side": 1.0}], TYPE_DICTIONARY, &"", null)
 
 
+# LA NETEJA: a narrow back street at dawn, on the morning the sweeper comes
+# through. The home leg is a run, so the street stays runnable: what narrows
+# it is what a back street has at that hour - dumpsters out at the kerbs
+# (solid), scooters parked up, delivery crates stacked by the dumpsters, the
+# lampposts, washing overhead, the shops' shutters still down, and the wet
+# streaks and puddles the water truck left.
+const NETEJA_DUMPSTERS: Array = [[-1000.0, true], [-1900.0, false], [-2800.0, true], [-3600.0, false], [-4300.0, true]]
+const NETEJA_DUMPSTER := Vector2(46.0, 90.0)
+const NETEJA_SCOOTERS: Array = [[-1450.0, false], [-2350.0, true], [-3200.0, false], [-4000.0, true]]
+
+
+static func neteja_kerb(m: Node2D, y: float, west: bool, inset: float) -> Vector2:
+	var e: Vector2 = m.walk_edges(y)
+	return Vector2(e.x + inset if west else e.y - inset, y)
+
+
+static func neteja_dumpsters(m: Node2D) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for d: Array in NETEJA_DUMPSTERS:
+		out.append(neteja_kerb(m, float(d[0]), bool(d[1]), NETEJA_DUMPSTER.x * 0.5 + 6.0))
+	return out
+
+
+static func neteja(m: Node2D) -> void:
+	m.gate_text = "PLACA"
+	m.stalls = Array([], TYPE_VECTOR2, &"", null)
+	m.stall_kinds.clear()
+	m.performers = Array([], TYPE_VECTOR2, &"", null)
+	m.astands = Array([], TYPE_VECTOR2, &"", null)
+	m.benches = Array([], TYPE_VECTOR2, &"", null)
+	m.fountains = Array([Vector2(640, -3100)], TYPE_VECTOR2, &"", null)
+	m.laundry_lines = Array([-900.0, -1700.0, -2500.0, -3300.0, -4100.0], TYPE_FLOAT, &"", null)
+	m.poles.clear()
+	# a slalom of lampposts down the middle, far enough apart to run between,
+	# close enough that a straight line snags the leash
+	for yy in [-1300.0, -2200.0, -3700.0, -4500.0]:
+		m.poles.append(Vector2(m.walk_cx + (55.0 if int(yy) % 200 == 0 else -55.0), yy))
+	m.deco_pole_count = m.poles.size()
+	# scooters parked at the kerbs: solid, and the rope catches them
+	m.scooters = Array([], TYPE_VECTOR2, &"", null)
+	for sc: Array in NETEJA_SCOOTERS:
+		var sp := neteja_kerb(m, float(sc[0]), bool(sc[1]), 22.0)
+		m.scooters.append(sp)
+		m.poles.append(sp)
+	# the dumpsters' corners catch the rope too
+	for d: Vector2 in neteja_dumpsters(m):
+		m.poles.append(d + Vector2(0.0, -NETEJA_DUMPSTER.y * 0.5 + 8.0))
+		m.poles.append(d + Vector2(0.0, NETEJA_DUMPSTER.y * 0.5 - 8.0))
+	# delivery crates stacked by the dumpsters
+	m.cone_spots = Array([], TYPE_VECTOR2, &"", null)
+	for d: Vector2 in neteja_dumpsters(m):
+		m.cone_spots.append(d + Vector2(0.0, -NETEJA_DUMPSTER.y * 0.5 - 34.0))
+	# what the water truck left: puddles in the gutters and down the middle
+	for pz: Array in [[-800.0, 0.2], [-1650.0, 0.75], [-2550.0, 0.3], [-3400.0, 0.7], [-4150.0, 0.35]]:
+		m.patches.append({"y": float(pz[0]), "at": float(pz[1]), "rx": 60.0, "ry": 34.0,
+			"seed": 1.7 + float(pz[1]) * 3.0, "kind": "puddle"})
+
+
 # LA CASTANYADA: the chestnut festival at night, in an old-town plaça. The
 # roaster is the landmark in the middle of the plaça (solid; the owner walks
 # round it), a little stage on its west side with the band on it, plane trees
@@ -1307,21 +1365,7 @@ static func build_level_data(m: Node2D) -> void:
 	elif m.lvl == "site":
 		obres(m)
 	elif m.lvl == "neteja":
-		# La Neteja: a narrow residential street at dawn, on the morning the
-		# sweeper comes through. The market's stalls and buskers are cleared
-		# out - the home leg is a run, and the aisle has to be runnable - and
-		# what is left is what a back street has: lampposts to snag the leash
-		# on, bins, washing overhead and cars' worth of clutter at the kerbs.
-		m.gate_text = "PLACA"
-		m.stalls = Array([], TYPE_VECTOR2, &"", null)
-		m.performers = Array([], TYPE_VECTOR2, &"", null)
-		m.fountains = Array([Vector2(640, -3100)], TYPE_VECTOR2, &"", null)
-		m.laundry_lines = Array([-900.0, -1700.0, -2500.0, -3300.0, -4100.0], TYPE_FLOAT, &"", null)
-		# a slalom of lampposts down the middle, far enough apart to run
-		# between, close enough that a straight line snags the leash
-		for yy in [-1300.0, -2200.0, -3700.0, -4500.0]:
-			m.poles.append(Vector2(m.walk_cx + (55.0 if int(yy) % 200 == 0 else -55.0), yy))
-		m.cone_spots = Array([Vector2(600, -1990), Vector2(690, -2110), Vector2(610, -4000)], TYPE_VECTOR2, &"", null)
+		neteja(m)
 	elif m.lvl == "guell":
 		# El Parc: Gaudi's terraces. Broken-tile mosaic underfoot, which is
 		# fast and slippery to run on, laid in organic sweeps rather than
@@ -2217,6 +2261,10 @@ static func build_walls(m: Node2D) -> void:
 		add_rect_body(m, m.furgoneta, m.VAN_BODY_SIZE)
 	for st in m.stalls:
 		add_rect_body(m, st, m.STALL_BODY_SIZE)
+	# La Neteja's dumpsters
+	if m.lvl == "neteja":
+		for d: Vector2 in neteja_dumpsters(m):
+			add_rect_body(m, d, NETEJA_DUMPSTER)
 	# La Castanyada's roaster and stage
 	if m.lvl == "spook":
 		add_rect_body(m, CAST_PLACA, CAST_ROASTER)
@@ -2359,6 +2407,7 @@ static func spawn_cones(m: Node2D) -> void:
 		"beach": kinds = ["bottle", "ball", "can"]
 		"park", "trail": kinds = ["bottle", "ball", "can"]
 		"market", "spook": kinds = ["crate", "bottle", "can"]
+		"neteja": kinds = ["crate", "crate", "sack", "bottle"]
 		"station": kinds = ["can", "bottle", "bottle"]
 		"oldtown": kinds = ["sack", "bottle", "can"]
 	# Litter accumulates around whatever produced it, so junk is placed by
