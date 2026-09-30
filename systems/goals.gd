@@ -46,34 +46,34 @@ const LEVEL_GOAL_IDS := {
 static func defs(m: Node2D) -> Dictionary:
 	# every goal the game knows, keyed by a stable id (persistence-facing)
 	return {
-		"mark": {"text": "claim %d spots", "target": 5, "fn": func() -> int: return m.marks.size()},
-		"sniff": {"text": "%d proper sniffs", "target": 4, "fn": func() -> int: return m.sniffs_done},
-		"phone": {"text": "get the phone home unscratched", "target": 1, "fn": func() -> int: return 1 if m.phone_hp == 3 else 0},
-		"paws": {"text": "come home unscathed yourself", "target": 1, "fn": func() -> int: return 1 if m.dog_hits == 0 else 0},
-		"bag": {"text": "have your business bagged", "target": 1, "fn": func() -> int: return 1 if m.poop_state == 2 and not m.bag_pending else 0},
-		"fetch": {"text": "fetch %d balls back", "target": 3, "fn": func() -> int: return m.romp_catches},
-		"tofu": {"text": "bring Tofu home", "target": 1, "fn": func() -> int: return 1 if m.tofu_home else 0},
-		"hi": {"text": "greet %d other dogs", "target": 3, "fn": func() -> int: return m.dogs_greeted},
-		"drink": {"text": "have a proper long drink", "target": 1, "fn": func() -> int: return 1 if m.drunk_amount >= 0.4 else 0},
-		"zoom": {"text": "run the zoomies right out", "target": 1, "fn": func() -> int: return 1 if m.dog.energy <= 0.25 else 0},
-		"chase": {"text": "see off %d critters", "target": 2, "fn": func() -> int: return m.squirrels_chased},
-		"close": {"text": "%d near misses with traffic", "target": 3, "fn": func() -> int: return m.close_calls},
-		"save": {"text": "haul the human clear %d times", "target": 2, "fn": func() -> int: return m.saves_done},
-		"fling": {"text": "tetherball the human off a pole", "target": 1, "fn": func() -> int: return m.flings_done},
-		"tangle": {"text": "tangle leashes with a stranger", "target": 1, "fn": func() -> int: return 1 if m.tangles >= 1 else 0},
-		"snack": {"text": "hoover up %d dropped snacks", "target": 2, "fn": func() -> int: return m.kebabs_eaten},
-		"cats": {"text": "see off %d wall cats", "target": 3, "fn": func() -> int: return m.wall_cats_spooked},
+		"mark": {"text": "Mark %d spots", "target": 5, "fn": func() -> int: return m.marks.size()},
+		"sniff": {"text": "Have %d proper sniffs", "target": 4, "fn": func() -> int: return m.sniffs_done},
+		"phone": {"text": "Get the phone home without a scratch", "target": 1, "fn": func() -> int: return 1 if m.phone_hp == 3 else 0},
+		"paws": {"text": "Get yourself home without a knock", "target": 1, "fn": func() -> int: return 1 if m.dog_hits == 0 else 0},
+		"bag": {"text": "Get your business bagged", "target": 1, "fn": func() -> int: return 1 if m.poop_state == 2 and not m.bag_pending else 0},
+		"fetch": {"text": "Bring the ball back %d times", "target": 3, "fn": func() -> int: return m.romp_catches},
+		"tofu": {"text": "Bring Tofu the cat home", "target": 1, "fn": func() -> int: return 1 if m.tofu_home else 0},
+		"hi": {"text": "Say hello to %d dogs", "target": 3, "fn": func() -> int: return m.dogs_greeted},
+		"drink": {"text": "Have a proper long drink", "target": 1, "fn": func() -> int: return 1 if m.drunk_amount >= 0.4 else 0},
+		"zoom": {"text": "Run yourself tired", "target": 1, "fn": func() -> int: return 1 if m.dog.energy <= 0.25 else 0},
+		"chase": {"text": "See off %d critters", "target": 2, "fn": func() -> int: return m.squirrels_chased},
+		"close": {"text": "Scrape past traffic %d times", "target": 3, "fn": func() -> int: return m.close_calls},
+		"save": {"text": "Haul your human out of trouble %d times", "target": 2, "fn": func() -> int: return m.saves_done},
+		"fling": {"text": "Tetherball your human round a pole", "target": 1, "fn": func() -> int: return m.flings_done},
+		"tangle": {"text": "Tangle leashes with a stranger", "target": 1, "fn": func() -> int: return 1 if m.tangles >= 1 else 0},
+		"snack": {"text": "Hoover up %d dropped snacks", "target": 2, "fn": func() -> int: return m.kebabs_eaten},
+		"cats": {"text": "See off %d cats on the walls", "target": 3, "fn": func() -> int: return m.wall_cats_spooked},
 		"carry": {"text": m.carry_text, "target": 1, "fn": func() -> int: return 1 if m.carry_state >= 2 else 0},
-		"combo": {"text": "land an x%d combo", "target": 5, "fn": func() -> int: return int(m.combo.best_mult) if m.combo != null else 0},
-		"tummy": {"text": "walk past every chocolate", "target": 1, "fn": func() -> int: return 1 if m.candy_eaten == 0 else 0},
-		"ghost": {"text": "cross the yard, wake nobody", "target": 1, "fn": func() -> int: return 1 if m.guards_woken == 0 else 0},
-		"outrun": {"text": "never let the sweeper within a leash length", "target": 1, "fn": func() -> int: return 1 if m.chase_min_gap >= HomeChase.OUTRUN_GAP else 0},
-		"unseen": {"text": "never once be spotted", "target": 1, "fn": func() -> int: return 1 if m.times_spotted == 0 else 0},
-		"walkway": {"text": "ride the moving walkway end to end", "target": 1, "fn": func() -> int: return m.walkway_rides},
-		"dry": {"text": "bring your human home less than half soaked", "target": 1, "fn": func() -> int: return 1 if m.human_soak < 0.5 else 0},
-		"splash": {"text": "splash through %d puddles at speed", "target": 4, "fn": func() -> int: return m.splashes},
-		"thief": {"text": "stop %d pickpockets", "target": 2, "fn": func() -> int: return m.thieves_stopped},
-		"wallet": {"text": "keep your human's wallet", "target": 1, "fn": func() -> int: return 0 if (m.owner_wallet_taken or m.owner_wallet_lost) else 1},
+		"combo": {"text": "Land an x%d combo", "target": 5, "fn": func() -> int: return int(m.combo.best_mult) if m.combo != null else 0},
+		"tummy": {"text": "Walk past every chocolate", "target": 1, "fn": func() -> int: return 1 if m.candy_eaten == 0 else 0},
+		"ghost": {"text": "Cross the yard without waking anyone", "target": 1, "fn": func() -> int: return 1 if m.guards_woken == 0 else 0},
+		"outrun": {"text": "Keep the sweeper a leash length away", "target": 1, "fn": func() -> int: return 1 if m.chase_min_gap >= HomeChase.OUTRUN_GAP else 0},
+		"unseen": {"text": "Never get spotted", "target": 1, "fn": func() -> int: return 1 if m.times_spotted == 0 else 0},
+		"walkway": {"text": "Ride the moving walkway end to end", "target": 1, "fn": func() -> int: return m.walkway_rides},
+		"dry": {"text": "Get your human home less than half soaked", "target": 1, "fn": func() -> int: return 1 if m.human_soak < 0.5 else 0},
+		"splash": {"text": "Splash through %d puddles at speed", "target": 4, "fn": func() -> int: return m.splashes},
+		"thief": {"text": "Stop %d pickpockets", "target": 2, "fn": func() -> int: return m.thieves_stopped},
+		"wallet": {"text": "Keep your human's wallet safe", "target": 1, "fn": func() -> int: return 0 if (m.owner_wallet_taken or m.owner_wallet_lost) else 1},
 		"prize": {"text": m.prize_text, "target": 1, "fn": func() -> int: return 1 if m.prize_taken else 0},
 	}
 
@@ -101,7 +101,8 @@ static func quest_text(q: Dictionary) -> String:
 	var s: String = q.text
 	if "%d" in s:
 		s = s % int(q.target)
-	return s
+	# sentence case, whichever list the goal came from
+	return s.substr(0, 1).to_upper() + s.substr(1)
 
 
 static func credit(m: Node2D, q: Dictionary) -> void:

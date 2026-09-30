@@ -1426,7 +1426,7 @@ static func build_level_data(m: Node2D) -> void:
 			m.prize_text = "fish the trowel out of the wet cement"
 		"spook":
 			m.prize_pos = Vector2(640.0, -2350.0)  # a dog-safe pumpkin treat, ringed by candy
-			m.prize_text = "get the pumpkin treat without eating the candy"
+			m.prize_text = "get the panellet without eating the sweets"
 		"scrap":
 			m.prize_pos = m.guard_posts[1] + Vector2(-30.0, 22.0)  # right beside a sleeping guard dog
 			m.prize_text = "steal the bone from under the guard's nose"

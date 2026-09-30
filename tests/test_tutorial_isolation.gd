@@ -210,7 +210,7 @@ func _run() -> void:
 	_check(not main.tofu_home, "tutorial ignores the Tofu campaign completion path")
 	_check(main.bones == post_lesson_bones, "tutorial does not award Tofu campaign bones")
 
-	var campaign_goal := {"id": "mark", "text": "claim %d spots", "target": 5}
+	var campaign_goal := {"id": "mark", "text": "Mark %d spots", "target": 5}
 	main.call("_credit_goal", campaign_goal)
 	_check(game.records["street"] == street_before, "tutorial campaign-goal path leaves Street unchanged")
 	_check(game.total_bones == wallet_before, "tutorial campaign-goal path leaves wallet unchanged")
