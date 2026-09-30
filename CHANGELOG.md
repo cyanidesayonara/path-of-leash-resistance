@@ -17,8 +17,8 @@ others, on one commit. Two causes:
   and walked a different home leg (and the bot was ticking goals in the
   player's own save). The bot now runs from a blank in-memory save and
   never writes it (`Game.persist`).
-The behaviour snapshot is unchanged apart from the scrap finish, which now
-reads t=121.7 every run (it was 120.0 or 121.7).
+The behaviour snapshot is otherwise unchanged; the scrap finish now reads
+t=120.0 every run.
 
 ## 2026-09-30 - The other walkers look alive
 
