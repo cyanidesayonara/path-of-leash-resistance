@@ -2,6 +2,24 @@
 
 Append-only session history, newest first.
 
+## 2026-09-30 - La Neteja becomes a back street at dawn
+
+La Neteja was the old market layout with the stalls taken out. Now its own
+(`LevelBuild.neteja`, `main._draw_neteja`), still the narrowest walk and
+still runnable for the sweeper chase:
+- **Dumpsters** out at alternate kerbs, solid, their corners catching the
+  rope, with delivery crates stacked beside them and a bag that did not fit.
+- **Scooters** parked up at the kerbs (solid, drawn as El Gotic's are).
+- The water truck's **wet streaks** down the street and **puddles** in the
+  gutters, on grey setts rather than the market's pale paving.
+- The shops' **shutters** still down along the frontage, tagged, with no
+  awnings out yet.
+- A low **pink-gold dawn light** over the whole walk.
+- Washing overhead and the lamppost slalom, as before.
+
+`tests/test_neteja.gd` (8 checks, including a runnable gap past every
+dumpster). No walk uses the old market layout any more.
+
 ## 2026-09-30 - La Castanyada becomes a night festival in a plaça
 
 La Castanyada was El Mercat's old stall-lined sidewalk with sweets on it.

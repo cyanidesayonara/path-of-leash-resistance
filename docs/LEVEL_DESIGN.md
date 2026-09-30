@@ -257,6 +257,12 @@ rubble stone, and the colour comes in where Gaudi put it.
 - Is: a narrow street at street-cleaning time: dumpsters, parked scooters,
   shutters down, delivery crates, wet streaks where the water truck went.
 - Add: wet streaks and puddles, dumpsters, scooters, shutters, dawn light.
+- Built (2026-09-30, `LevelBuild.neteja`): still the narrowest walk and
+  still runnable for the sweeper chase; dumpsters out at alternate kerbs
+  (solid, their corners catch the rope) with crates stacked by them, scooters
+  parked up, the lamppost slalom, washing overhead, the water truck's wet
+  streaks and puddles on grey setts, the shops' shutters down and tagged, and
+  a low pink-gold dawn light. No market left in it.
 
 ### El Barri - the neighbourhood park (the first walk)
 Santtu: "la rambla shouldn't be the primary walk... that should be just a

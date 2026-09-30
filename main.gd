@@ -1073,9 +1073,21 @@ func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 				var sk := Rect2(inner_x + side * 66.0, r.position.y + 96.0, 34.0, 46.0)
 				c.draw_rect(sk, Color(0.88, 0.83, 0.52, 0.85) if Game.night else Color(0.62, 0.72, 0.78, 0.8))
 				c.draw_rect(sk, felt.darkened(0.35), false, 3.0)
+			# La Neteja at dawn: the shops' shutter boxes over their fronts,
+			# the shutters down, tagged, and no awnings out yet
+			if lvl == "neteja":
+				var sx: float = inner_x if side < 0.0 else inner_x - 14.0
+				c.draw_rect(Rect2(sx, r.position.y + 30.0, 14.0, r.size.y - 60.0), Color(0.56, 0.57, 0.58))
+				var sl := r.position.y + 34.0
+				while sl < r.end.y - 30.0:
+					c.draw_line(Vector2(sx, sl), Vector2(sx + 14.0, sl), Color(0.42, 0.43, 0.45), 1.5)
+					sl += 6.0
+				var tag: Color = [Color(0.86, 0.26, 0.40), Color(0.30, 0.66, 0.86), Color(0.96, 0.80, 0.24)][k % 3]
+				c.draw_line(Vector2(sx + 2.0, r.position.y + 70.0), Vector2(sx + 12.0, r.position.y + 96.0), tag, 3.0)
+				c.draw_line(Vector2(sx + 12.0, r.position.y + 96.0), Vector2(sx + 3.0, r.position.y + 118.0), tag, 3.0)
 			# the awning: projects over the pavement, so it reads correctly
 			# from overhead, and throws a shadow onto the paving below it
-			if k % 2 == 0:
+			if k % 2 == 0 and lvl != "neteja":
 				var ac := Color(0.72, 0.3, 0.28) if k % 4 == 0 else Color(0.28, 0.42, 0.55)
 				var aw_x: float = inner_x if side < 0.0 else inner_x - 34.0
 				c.draw_rect(Rect2(aw_x, r.position.y + 44.0, 34.0, 76.0), Color(0.05, 0.04, 0.07, 0.16))
@@ -1547,6 +1559,16 @@ func _draw_gotic(vt: float, vb: float) -> void:
 			var e := walk_edges(yy)
 			b.rect(Rect2(e.x, yy, e.y - e.x, 12.0), Color(0.58, 0.54, 0.48).darkened(0.05 * float(k)))
 			b.line(Vector2(e.x, yy), Vector2(e.y, yy), Color(0.72, 0.68, 0.62), 2.0)
+	_draw_scooters(b, vt, vb)
+	var by: float = LevelBuild.GOTIC_BRIDGE_Y
+	if by > vt - 120.0 and by < vb + 120.0:
+		var e2 := walk_edges(by)
+		b.rect(Rect2(e2.x, by + 20.0, e2.y - e2.x, 70.0), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+	b.flush(_wc)
+
+
+# parked scooters, El Gotic's and La Neteja's: seat, wheels, handlebars
+func _draw_scooters(b: ShapeBatch, vt: float, vb: float) -> void:
 	for sc: Vector2 in scooters:
 		if sc.y < vt - 60.0 or sc.y > vb + 60.0:
 			continue
@@ -1557,10 +1579,34 @@ func _draw_gotic(vt: float, vb: float) -> void:
 		b.rect(Rect2(sc.x - 9.0, sc.y - 16.0, 18.0, 34.0), c)
 		b.circle(sc + Vector2(0, 4), 8.0, (c as Color).darkened(0.25))
 		b.line(sc + Vector2(-12, -18), sc + Vector2(12, -18), Color(0.2, 0.2, 0.22), 3.0)
-	var by: float = LevelBuild.GOTIC_BRIDGE_Y
-	if by > vt - 120.0 and by < vb + 120.0:
-		var e2 := walk_edges(by)
-		b.rect(Rect2(e2.x, by + 20.0, e2.y - e2.x, 70.0), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+
+
+func _draw_neteja(vt: float, vb: float) -> void:
+	var b := ShapeBatch.new()
+	# the water truck's wet streaks down the street, a darker sheen on the
+	# paving with the dawn catching one edge
+	var y := floorf((vt - 40.0) / 220.0) * 220.0
+	while y < vb + 40.0:
+		var e := walk_edges(y)
+		for lane: float in [0.3, 0.68]:
+			var x := lerpf(e.x, e.y, lane) + sin(y * 0.01) * 12.0
+			b.rect(Rect2(x - 22.0, y, 44.0, 200.0), Color(0.16, 0.18, 0.22, 0.16))
+			b.rect(Rect2(x - 22.0, y, 5.0, 200.0), Color(1.0, 0.82, 0.70, 0.10))
+		y += 220.0
+	# the dumpsters: steel bins with their lids, and a bag that did not fit
+	for d: Vector2 in LevelBuild.neteja_dumpsters(self):
+		if d.y < vt - 80.0 or d.y > vb + 80.0:
+			continue
+		var sz: Vector2 = LevelBuild.NETEJA_DUMPSTER
+		var r := Rect2(d - sz * 0.5, sz)
+		b.rect(Rect2(r.position + LIGHT * 12.0, r.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+		var col := Color(0.24, 0.40, 0.30) if int(absf(d.y)) % 3 == 0 else Color(0.30, 0.32, 0.36)
+		b.rect(r, col)
+		b.rect(Rect2(r.position.x + 3.0, r.position.y + 3.0, r.size.x - 6.0, r.size.y * 0.5 - 4.0), col.lightened(0.12))
+		b.rect(Rect2(r.position.x + 3.0, d.y + 1.0, r.size.x - 6.0, r.size.y * 0.5 - 4.0), col.lightened(0.06))
+		b.line(Vector2(r.position.x, d.y), Vector2(r.end.x, d.y), col.darkened(0.3), 2.0)
+		b.circle(d + Vector2(0.0, sz.y * 0.5 + 12.0), 10.0, Color(0.14, 0.14, 0.16))
+	_draw_scooters(b, vt, vb)
 	b.flush(_wc)
 
 
@@ -3630,6 +3676,9 @@ func _build_hud() -> void:
 
 func _weather_tint() -> Color:
 	var c := Color(0.5, 0.55, 0.78) if Game.night else Color.WHITE
+	# La Neteja is at dawn: the light comes in low, pink and gold
+	if lvl == "neteja" and not Game.night:
+		c = Color(1.0, 0.86, 0.78)
 	if Game.weather == "rain":
 		c = c * Color(0.72, 0.76, 0.82)  # grey, overcast
 	elif Game.weather == "wind":
@@ -6978,6 +7027,8 @@ func _draw_world() -> void:
 		elif lvl == "market":
 			grass = COL_GRASS
 			walkway = Color(0.76, 0.73, 0.66)
+		elif lvl == "neteja":
+			walkway = Color(0.52, 0.50, 0.50)   # a back street's grey setts, still wet
 		elif lvl == "trail":
 			grass = TRAIL_FLOOR
 			walkway = TRAIL_DIRT
@@ -7090,6 +7141,8 @@ func _draw_world() -> void:
 		_draw_mercat(vt, vb)
 	if lvl == "spook":
 		_draw_castanyada(vt, vb)
+	if lvl == "neteja":
+		_draw_neteja(vt, vb)
 	if tutorial_mode:
 		_draw_tutorial_pond()
 	if rambla():
