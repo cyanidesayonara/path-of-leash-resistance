@@ -480,7 +480,10 @@ var elapsed := 0.0
 var frozen := false
 var shake_t := 0.0
 # camera shake draws from its own RNG: it runs per rendered frame, and the
-# global sequence has to stay the simulation's alone
+# global sequence has to stay the simulation's alone. Fixed seed: the shake
+# lands in cam.offset, which get_screen_center_position() includes, and the
+# pair spawner reads that - an unseeded shake made the autowalk vary run to run
+const SHAKE_SEED := 0x5AFE
 var _shake_rng := RandomNumberGenerator.new()
 
 var hud: CanvasLayer
@@ -591,6 +594,7 @@ func _ready() -> void:
 	Engine.time_scale = 1.0
 	font = ThemeDB.fallback_font
 	var autowalk_requested := "--autowalk" in OS.get_cmdline_user_args()
+	_shake_rng.seed = SHAKE_SEED
 	if Game.is_daily(Game.level_id):
 		# same layout, weather and time for everyone, all day
 		Game.daily = true
