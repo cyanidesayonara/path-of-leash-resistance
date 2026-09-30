@@ -156,6 +156,14 @@ with pickpockets and shenanigans happening around."
   snatch from the crates.
 - Add: iron columns (wrap), fish counter with meltwater and ice, crate
   stacks, an entrance arch as landmark.
+- Built (2026-09-30, `LevelBuild.mercat`): in off the street under an iron
+  and stained-glass arch (MERCAT) into a hall 800 wide; four stall blocks
+  down the middle, solid, the owner keeping to alternate aisles round them,
+  a green iron column at each corner; wall stalls (fruit, juice, jamon,
+  fish on ice, olives, sweets) with meltwater and scales in front of the fish
+  and sawdust by the fish and ham; orange-crate stacks to mark; a terrazzo
+  floor under a glazed roof on red trusses; out through the far door (PLACA).
+  No van indoors.
 
 ### El Gotic (oldtown) - the medieval alleys
 - Is: alleys with walls at the paving (done in #76), laundry overhead,

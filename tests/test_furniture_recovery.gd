@@ -404,9 +404,10 @@ func _load_level(level_id: String) -> Node2D:
 
 
 func _test_furgoneta_alignment() -> void:
-	var main: Node2D = await _load_level("market")
-	_check(main.lvl == "market", "market level id sticks (got %s)" % main.lvl)
-	_check(main.furgoneta.x < INF, "market places the FUR-GONETA")
+	# on La Rambla: El Mercat is a hall now, and a van is not parked indoors
+	var main: Node2D = await _load_level("street")
+	_check(main.lvl == "street", "street level id sticks (got %s)" % main.lvl)
+	_check(main.furgoneta.x < INF, "La Rambla places the FUR-GONETA")
 	var body: Vector2 = main.furgoneta
 	var flank_xs: Array[float] = []
 	for p: Vector2 in main.poles:

@@ -953,7 +953,26 @@ func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 	# material, chimneys, vents, skylights and plant - plus the things that
 	# genuinely project over the pavement (awnings) and the things that sit
 	# in the ground plane (doorsteps).
-	match lvl:
+	var style := lvl
+	if lvl == "market":
+		# inside the hall the edge is the hall's own roof; outside it, the city's
+		var in_hall: bool = r.position.y < LevelBuild.MERCAT_ARCH_Y and r.end.y > LevelBuild.MERCAT_DOOR_Y
+		style = "hall" if in_hall else "oldtown"
+	match style:
+		"hall":
+			# the market hall's roof: glazing between red iron trusses, and a
+			# glow of the stalls' light coming up through it
+			var glass := Color(0.60, 0.66, 0.66).lightened(lit * 0.06)
+			c.draw_rect(r, glass)
+			var ty := r.position.y
+			while ty < r.end.y:
+				c.draw_line(Vector2(r.position.x, ty), Vector2(r.end.x, ty), Color(0.56, 0.20, 0.16), 5.0)
+				c.draw_line(Vector2(r.position.x, ty + 5.0), Vector2(r.end.x, ty + 5.0), Color(0.80, 0.86, 0.86, 0.45), 1.5)
+				ty += 48.0
+			var spine := r.get_center().x
+			c.draw_line(Vector2(spine, r.position.y), Vector2(spine, r.end.y), Color(0.50, 0.18, 0.14), 7.0)
+			c.draw_line(Vector2(inner_x + side * 4.0, r.position.y), Vector2(inner_x + side * 4.0, r.end.y),
+				Color(0.40, 0.34, 0.30), 8.0)
 		"oldtown", "spook":
 			# terracotta pantiles running in courses, with chimney stacks
 			var tile := Color(0.55, 0.31, 0.22).lightened(lit * 0.10)
@@ -1545,9 +1564,111 @@ func _draw_gotic(vt: float, vb: float) -> void:
 	b.flush(_wc)
 
 
+# El Mercat's arches, drawn over everyone: an iron span across the street
+# with a fan of stained glass in it and the name in iron letters
+func _draw_mercat_arch(c: CanvasItem, y: float, sign: String) -> void:
+	var e := walk_edges(y)
+	var b := ShapeBatch.new(c)
+	var r := Rect2(e.x - 40.0, y - 26.0, e.y - e.x + 80.0, 52.0)
+	b.rect(Rect2(r.position + Vector2(0, 60.0), r.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+	b.rect(r, Color(0.46, 0.16, 0.13))
+	var glass := [Color(0.86, 0.30, 0.22), Color(0.96, 0.78, 0.26), Color(0.26, 0.52, 0.72), Color(0.34, 0.62, 0.32)]
+	var x := r.position.x + 10.0
+	var k := 0
+	while x < r.end.x - 14.0:
+		b.rect(Rect2(x, y - 18.0, 20.0, 36.0), glass[k % 4])
+		b.rect(Rect2(x, y - 18.0, 20.0, 5.0), Color(1, 1, 1, 0.2))
+		x += 24.0
+		k += 1
+	b.rect(Rect2(r.position.x, y - 26.0, r.size.x, 6.0), Color(0.34, 0.12, 0.10))
+	b.rect(Rect2(r.position.x, y + 20.0, r.size.x, 6.0), Color(0.34, 0.12, 0.10))
+	# the name board in the middle of the span
+	var nb := Rect2(r.get_center().x - 90.0, y - 16.0, 180.0, 32.0)
+	b.rect(nb, Color(0.12, 0.10, 0.10))
+	b.flush()
+	c.draw_string(font, Vector2(nb.position.x, y + 8.0), sign, HORIZONTAL_ALIGNMENT_CENTER, nb.size.x, 22,
+		Color(0.96, 0.86, 0.56))
+
+
+func _draw_mercat(vt: float, vb: float) -> void:
+	var b := ShapeBatch.new()
+	var top: float = LevelBuild.MERCAT_ARCH_Y
+	var bot: float = LevelBuild.MERCAT_DOOR_Y
+	# terrazzo: the hall floor, chips of stone set in the pale slab
+	var y0 := maxf(vt - 20.0, bot)
+	var y1 := minf(vb + 20.0, top)
+	var yy := floorf(y0 / 37.0) * 37.0
+	while yy < y1:
+		var e := walk_edges(yy)
+		var xx := e.x + fmod(absf(yy) * 0.37, 29.0)
+		while xx < e.y:
+			var n := fmod(absf(xx * 12.9898 + yy * 78.233), 7.0)
+			b.circle(Vector2(xx, yy), 1.4 + n * 0.25, [Color(0.52, 0.48, 0.44, 0.5), Color(0.66, 0.42, 0.36, 0.45),
+				Color(0.40, 0.44, 0.40, 0.45)][int(n) % 3])
+			xx += 29.0 + n * 3.0
+		yy += 37.0
+	# sawdust in front of the fish and the ham, where the floor gets swept
+	for i in range(LevelBuild.MERCAT_WALL_STALLS.size()):
+		var kind := String(LevelBuild.MERCAT_WALL_STALLS[i][2])
+		if kind != "fish" and kind != "jamon":
+			continue
+		var f := LevelBuild.mercat_stall_front(self, i)
+		if f.y < vt - 80.0 or f.y > vb + 80.0:
+			continue
+		for k in range(22):
+			var sp := f + Vector2(fmod(float(k) * 37.3, 90.0) - 45.0, fmod(float(k) * 23.7, 70.0) - 35.0)
+			b.circle(sp, 1.6, Color(0.86, 0.74, 0.50, 0.7))
+	# the stall blocks down the middle: counters facing both aisles round a
+	# back wall, each side its own trade, with its sign in Catalan
+	var signs := ["VERDURES", "FORMATGES", "FRUITES", "OUS", "BACALLA", "ESPECIES", "XARCUTERIA", "BOLETS"]
+	for bi in range(LevelBuild.MERCAT_BLOCKS.size()):
+		var blk: Rect2 = LevelBuild.MERCAT_BLOCKS[bi]
+		if blk.end.y < vt - 80.0 or blk.position.y > vb + 80.0:
+			continue
+		b.rect(Rect2(blk.position + LIGHT * 14.0, blk.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+		b.rect(blk, Color(0.40, 0.30, 0.22))
+		var mid := blk.get_center().x
+		b.rect(Rect2(mid - 6.0, blk.position.y + 6.0, 12.0, blk.size.y - 12.0), Color(0.30, 0.22, 0.16))
+		for side in [-1.0, 1.0]:
+			var cx: float = mid + side * 50.0
+			var trade := (bi * 2 + (0 if side < 0.0 else 1)) % 8
+			var pal: Array = [[Color(0.34, 0.60, 0.22), Color(0.56, 0.74, 0.30), Color(0.86, 0.40, 0.20)],
+				[Color(0.96, 0.84, 0.46), Color(0.92, 0.72, 0.36), Color(0.98, 0.92, 0.70)],
+				[Color(0.96, 0.56, 0.12), Color(0.78, 0.14, 0.12), Color(0.96, 0.86, 0.26)],
+				[Color(0.96, 0.92, 0.82), Color(0.84, 0.66, 0.46), Color(0.96, 0.92, 0.82)],
+				[Color(0.88, 0.86, 0.80), Color(0.76, 0.74, 0.68), Color(0.88, 0.86, 0.80)],
+				[Color(0.80, 0.36, 0.14), Color(0.92, 0.70, 0.20), Color(0.56, 0.30, 0.18)],
+				[Color(0.56, 0.22, 0.18), Color(0.82, 0.46, 0.40), Color(0.92, 0.84, 0.74)],
+				[Color(0.62, 0.46, 0.30), Color(0.84, 0.72, 0.52), Color(0.46, 0.34, 0.22)]][trade]
+			var ty := blk.position.y + 18.0
+			while ty < blk.end.y - 18.0:
+				b.rect(Rect2(cx - 36.0, ty - 12.0, 72.0, 26.0), Color(0.62, 0.50, 0.36))
+				for f in range(8):
+					b.circle(Vector2(cx - 30.0 + float(f % 4) * 20.0, ty - 5.0 + float(f / 4) * 12.0), 5.0,
+						pal[(f + int(ty)) % 3])
+				ty += 34.0
+		b.flush(_wc)
+		b = ShapeBatch.new()
+		for side in [-1.0, 1.0]:
+			var trade := (bi * 2 + (0 if side < 0.0 else 1)) % 8
+			var sx: float = mid + side * 50.0
+			_wc.draw_rect(Rect2(sx - 38.0, blk.position.y - 4.0, 76.0, 16.0), Color(0.12, 0.26, 0.20))
+			_wc.draw_string(font, Vector2(sx - 38.0, blk.position.y + 8.0), String(signs[trade]),
+				HORIZONTAL_ALIGNMENT_CENTER, 76.0, 11, Color(0.96, 0.90, 0.72))
+	# the drain in the middle aisle, grated, a little wet round it
+	var dr: Vector2 = LevelBuild.MERCAT_DRAIN
+	if dr.y > vt - 60.0 and dr.y < vb + 60.0:
+		b.circle(dr, 22.0, Color(0.40, 0.44, 0.48, 0.25))
+	b.flush(_wc)
+
+
 # the overhead layer's picture: El Gotic's bridge, carved stone, a
 # pointed-arch window in its side, over the alley at GOTIC_BRIDGE_Y
 func draw_overhead_onto(c: CanvasItem) -> void:
+	if lvl == "market":
+		_draw_mercat_arch(c, LevelBuild.MERCAT_ARCH_Y, "MERCAT")
+		_draw_mercat_arch(c, LevelBuild.MERCAT_DOOR_Y, "PLACA")
+		return
 	if lvl != "oldtown":
 		return
 	var by: float = LevelBuild.GOTIC_BRIDGE_Y
@@ -2276,6 +2397,71 @@ func _draw_rambla_stall(st: Vector2, kind: String, i: int) -> void:
 			b.circle(st, 3.0, Color(0.4, 0.35, 0.3))
 			for wx: float in [-22.0, 22.0]:
 				b.circle(Vector2(st.x + wx, st.y + 20.0), 5.0, Color(0.15, 0.15, 0.16))
+		"fruit":
+			# a greengrocer's counter: crates tipped towards the aisle, piled
+			# with oranges, lemons, apples, grapes, and little price cards
+			b.rect(r, Color(0.46, 0.33, 0.22))
+			for k in range(6):
+				var cr := Rect2(r.position.x + 4.0 + float(k % 3) * 30.0, r.position.y + 4.0 + float(k / 3) * 26.0, 28.0, 24.0)
+				b.rect(cr, Color(0.66, 0.50, 0.32))
+				var fc: Color = [Color(0.96, 0.56, 0.12), Color(0.96, 0.86, 0.26), Color(0.78, 0.14, 0.12),
+					Color(0.52, 0.72, 0.20), Color(0.48, 0.24, 0.46), Color(0.96, 0.56, 0.12)][(k + i) % 6]
+				for f in range(5):
+					b.circle(cr.position + Vector2(6.0 + float(f % 3) * 8.0, 7.0 + float(f / 3) * 9.0), 4.6, fc)
+				b.rect(Rect2(cr.position.x + 18.0, cr.end.y - 7.0, 9.0, 6.0), Color(0.97, 0.96, 0.92))
+		"fish":
+			# the fish counter: steel, a bed of crushed ice, the catch laid on
+			# it head to tail, lemon halves; the meltwater is on the floor
+			b.rect(r, Color(0.58, 0.60, 0.62))
+			b.rect(r.grow(-4.0), Color(0.88, 0.93, 0.96))
+			for k in range(14):
+				b.circle(r.position + Vector2(8.0 + float(k * 13 % 80), 8.0 + float(k * 7 % 40)), 2.5, Color(1, 1, 1, 0.8))
+			for k in range(5):
+				var fp := Vector2(r.position.x + 14.0 + float(k) * 17.0, st.y + (6.0 if k % 2 == 0 else -6.0))
+				var fcol: Color = [Color(0.66, 0.70, 0.74), Color(0.86, 0.56, 0.52), Color(0.56, 0.62, 0.70)][k % 3]
+				b.polygon(PackedVector2Array([fp + Vector2(0, -12), fp + Vector2(5, -2), fp + Vector2(0, 10),
+					fp + Vector2(-5, -2)]), fcol)
+				b.polygon(PackedVector2Array([fp + Vector2(0, 9), fp + Vector2(5, 15), fp + Vector2(-5, 15)]), fcol.darkened(0.2))
+			b.circle(Vector2(r.end.x - 10.0, r.position.y + 10.0), 5.0, Color(0.98, 0.88, 0.30))
+		"jamon":
+			# the ham counter: whole legs laid in a row, hoof to hip, sausages
+			# hanging off the front rail
+			b.rect(r, Color(0.30, 0.20, 0.14))
+			for k in range(4):
+				var hp := Vector2(r.position.x + 14.0 + float(k) * 23.0, st.y - 4.0)
+				b.circle(hp + Vector2(0, 6), 10.0, Color(0.56, 0.24, 0.18))
+				b.circle(hp + Vector2(-2, 4), 5.0, Color(0.92, 0.84, 0.74))
+				b.line(hp + Vector2(0, -4), hp + Vector2(0, -16), Color(0.20, 0.13, 0.10), 4.0)
+			for k in range(7):
+				b.circle(Vector2(r.position.x + 8.0 + float(k) * 13.0, r.end.y - 5.0), 4.0, Color(0.52, 0.16, 0.14))
+		"olives":
+			# tubs of olives and pickles, green and black and purple
+			b.rect(r, Color(0.44, 0.36, 0.26))
+			for k in range(6):
+				var tp := Vector2(r.position.x + 16.0 + float(k % 3) * 32.0, r.position.y + 15.0 + float(k / 3) * 26.0)
+				b.circle(tp, 12.0, Color(0.86, 0.84, 0.78))
+				var oc: Color = [Color(0.42, 0.52, 0.18), Color(0.16, 0.14, 0.14), Color(0.40, 0.20, 0.30)][(k + i) % 3]
+				b.circle(tp, 9.5, oc)
+				b.circle(tp + Vector2(-3, -3), 2.5, oc.lightened(0.35))
+		"juice":
+			# the juice stand: cups in rows, every colour of fruit going
+			b.rect(r, Color(0.94, 0.92, 0.86))
+			for k in range(12):
+				var cp := Vector2(r.position.x + 10.0 + float(k % 6) * 15.0, r.position.y + 16.0 + float(k / 6) * 22.0)
+				var jc: Color = [Color(0.96, 0.56, 0.12), Color(0.86, 0.22, 0.34), Color(0.56, 0.78, 0.24),
+					Color(0.98, 0.84, 0.30), Color(0.64, 0.30, 0.60), Color(0.98, 0.66, 0.60)][k % 6]
+				b.circle(cp, 6.0, Color(1, 1, 1, 0.9))
+				b.circle(cp, 4.6, jc)
+		"sweets":
+			# pick-and-mix: bins of jellies and chocolates under the counter glass
+			b.rect(r, Color(0.86, 0.60, 0.70))
+			for k in range(8):
+				var bin := Rect2(r.position.x + 4.0 + float(k % 4) * 22.5, r.position.y + 4.0 + float(k / 4) * 24.0, 20.0, 22.0)
+				b.rect(bin, Color(0.97, 0.95, 0.94))
+				var sc: Color = [Color(0.96, 0.40, 0.56), Color(0.98, 0.86, 0.30), Color(0.40, 0.66, 0.92),
+					Color(0.36, 0.22, 0.14)][(k + i) % 4]
+				for d in range(4):
+					b.circle(bin.position + Vector2(5.0 + float(d % 2) * 10.0, 6.0 + float(d / 2) * 10.0), 3.4, sc)
 		"caricature":
 			# an easel, a stool for the sitter, drawings pegged up to show
 			b.rect(Rect2(st.x - 46.0, st.y - 26.0, 44.0, 52.0), Color(0.93, 0.92, 0.88))
@@ -4111,13 +4297,14 @@ func _vlane(delta: float) -> void:
 				band_lo = 486.0
 				band_hi = 554.0
 		"market":
-			# strollers and the occasional delivery scooter, kept to the
-			# middle aisle between the stall rows
+			# strollers and the occasional delivery scooter, down one of the
+			# hall's two aisles, between the wall stalls and the middle blocks
 			kid = randf() < 0.75
 			speed = randf_range(60.0, 105.0) if kid else randf_range(200.0, 300.0)
-			x = randf_range(460.0, 820.0)
-			band_lo = 450.0
-			band_hi = 830.0
+			var east := randf() < 0.5
+			band_lo = 770.0 if east else 370.0
+			band_hi = 910.0 if east else 510.0
+			x = randf_range(band_lo, band_hi)
 	var b := Node2D.new()
 	b.set_script(load("res://entities/bike.gd"))
 	b.position = Vector2(x, y)
@@ -6755,6 +6942,8 @@ func _draw_world() -> void:
 		_draw_kennels(vt, vb)
 	if lvl == "oldtown":
 		_draw_gotic(vt, vb)
+	if lvl == "market":
+		_draw_mercat(vt, vb)
 	if tutorial_mode:
 		_draw_tutorial_pond()
 	if rambla():
@@ -6829,6 +7018,17 @@ func _draw_world() -> void:
 				_wc.draw_circle(hp + Vector2.from_angle(TAU * float(k) / 4.0 + 0.5) * 5.0, 3.0, Color(0.88, 0.18, 0.22))
 			if not h.done and h.progress > 0.0:
 				_wc.draw_arc(hp, 17.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
+			continue
+		if lvl == "market":
+			# a stack of orange crates by the wall: what gets marked in a hall
+			contact_shadow(_wc, hp, 15.0, 6.0, 0.22)
+			var cc := Color(0.66, 0.50, 0.32) if not h.done else Color(0.52, 0.42, 0.30)
+			_wc.draw_rect(Rect2(hp.x - 14.0, hp.y - 12.0, 28.0, 22.0), cc)
+			_wc.draw_rect(Rect2(hp.x - 12.0, hp.y - 18.0, 24.0, 12.0), cc.darkened(0.12))
+			for k in range(4):
+				_wc.draw_circle(hp + Vector2(-8.0 + float(k) * 5.5, -13.0), 3.2, Color(0.96, 0.56, 0.12))
+			if not h.done and h.progress > 0.0:
+				_wc.draw_arc(hp, 19.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
 			continue
 		if lvl == "scrap":
 			# a stack of old tyres, the scrapyard's stand-in for a hydrant
@@ -6983,6 +7183,12 @@ func _draw_world() -> void:
 			cast_shadow(_wc, p, 12.0, 30.0, 0.2)
 			_wc.draw_rect(Rect2(p.x - 11.0, p.y - 11.0, 22.0, 22.0), Color(0.55, 0.50, 0.45))
 			_wc.draw_rect(Rect2(p.x - 11.0, p.y - 11.0, 8.0, 22.0), Color(0.64, 0.59, 0.53))
+		elif lvl == "market":
+			# the hall's cast-iron columns, painted green, on a flared foot
+			cast_shadow(_wc, p, 10.0, 40.0, 0.2)
+			_wc.draw_circle(p, 13.0, Color(0.16, 0.26, 0.22))
+			_wc.draw_circle(p, 9.0, Color(0.22, 0.36, 0.30))
+			_wc.draw_circle(p + Vector2(-2.5, -2.5), 4.0, Color(0.36, 0.52, 0.44))
 		elif lvl == "park" or lvl == "barri":
 			_draw_broadleaf(_wc, p, 1.0)
 		elif lvl == "trail":

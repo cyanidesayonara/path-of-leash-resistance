@@ -24,7 +24,7 @@ const TUT_POND_W := 150.0
 const CROSS_SECTIONS := {
 	"street": ["road", 160.0, "sidewalk", 120.0],    # a traffic lane; the bike lane side
 	"rain": ["none", 0.0, "none", 0.0],             # a shopping street, shopfronts on the paving
-	"market": ["sidewalk", 70.0, "sidewalk", 70.0],
+	"market": ["none", 0.0, "none", 0.0],             # a market hall: its walls at the aisles
 	"oldtown": ["none", 0.0, "none", 0.0],            # an alley: walls at the paving
 	"station": ["none", 0.0, "none", 0.0],          # indoors: the walls are the concourse's
 	"site": ["sidewalk", 60.0, "sidewalk", 60.0],
@@ -92,6 +92,95 @@ static func gotic(m: Node2D) -> void:
 	m.laundry_lines = Array([-1000.0, -1850.0, -3450.0, -3900.0, -4400.0], TYPE_FLOAT, &"", null)
 	# the owner walks round the fountain, not through it (east side)
 	m.islands = Array([{"rect": Rect2(GOTIC_PLACA - Vector2(40.0, 40.0), Vector2(80.0, 80.0)), "side": 1.0}], TYPE_DICTIONARY, &"", null)
+
+
+# EL MERCAT: a covered market hall, the Boqueria kind. In under an iron and
+# stained-glass arch, then the hall: four blocks of stalls down the middle
+# (solid; the owner keeps to one aisle, the dog takes either), an iron column
+# at every corner to wind the leash on, stalls along both walls - fruit, the
+# fish counter on its ice, jamon, olives, juices, sweets - meltwater and fish
+# scales in front of the fish, crates stacked behind the fruit, sawdust, and
+# a terrazzo floor. Out through the far door into the plaça.
+const MERCAT_ARCH_Y := -700.0
+const MERCAT_DOOR_Y := -4650.0
+const MERCAT_HALL_HALF := 400.0
+const MERCAT_BLOCKS: Array[Rect2] = [
+	Rect2(545.0, -1500.0, 190.0, 300.0), Rect2(545.0, -2400.0, 190.0, 300.0),
+	Rect2(545.0, -3300.0, 190.0, 300.0), Rect2(545.0, -4200.0, 190.0, 300.0),
+]
+# [y, west wall?, kind]
+const MERCAT_WALL_STALLS: Array = [
+	[-1050.0, false, "fruit"], [-1250.0, true, "juice"], [-1750.0, false, "jamon"],
+	[-2050.0, true, "fish"], [-2650.0, false, "olives"], [-2950.0, true, "fruit"],
+	[-3550.0, false, "sweets"], [-3850.0, true, "jamon"], [-4350.0, false, "fruit"],
+	[-4450.0, true, "fish"],
+]
+const MERCAT_DRAIN := Vector2(640.0, -1920.0)
+
+
+static func mercat_stall_pos(m: Node2D, i: int) -> Vector2:
+	var st: Array = MERCAT_WALL_STALLS[i]
+	var e: Vector2 = m.walk_edges(float(st[0]))
+	return Vector2(e.x + 62.0 if bool(st[1]) else e.y - 62.0, float(st[0]))
+
+
+# where a customer (or a dog with a delivery) stands at a wall stall
+static func mercat_stall_front(m: Node2D, i: int) -> Vector2:
+	var p := mercat_stall_pos(m, i)
+	var st: Array = MERCAT_WALL_STALLS[i]
+	return p + Vector2(80.0 if bool(st[1]) else -80.0, 0.0)
+
+
+static func mercat(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
+	m.gate_text = "PLACA"
+	m.stalls.clear()
+	m.stall_kinds.clear()
+	for i in range(MERCAT_WALL_STALLS.size()):
+		m.stalls.append(mercat_stall_pos(m, i))
+		m.stall_kinds.append(String(MERCAT_WALL_STALLS[i][2]))
+	m.poles.clear()
+	# the hall's iron columns, one at each corner of every stall block
+	for blk: Rect2 in MERCAT_BLOCKS:
+		for c: Vector2 in [blk.position + Vector2(-26.0, -26.0), Vector2(blk.end.x + 26.0, blk.position.y - 26.0),
+				Vector2(blk.position.x - 26.0, blk.end.y + 26.0), blk.end + Vector2(26.0, 26.0)]:
+			m.poles.append(c)
+	m.deco_pole_count = m.poles.size()
+	m.astands = Array([], TYPE_VECTOR2, &"", null)
+	m.benches = Array([], TYPE_VECTOR2, &"", null)
+	m.manholes = Array([MERCAT_DRAIN], TYPE_VECTOR2, &"", null)
+	var ew: Vector2 = m.walk_edges(-2400.0)
+	m.bins = Array([Vector2(ew.x + 26.0, -2350.0), Vector2(ew.y - 26.0, -3450.0)], TYPE_VECTOR2, &"", null)
+	m.fountains = Array([Vector2(m.walk_edges(-900.0).x + 30.0, -900.0)], TYPE_VECTOR2, &"", null)
+	# a busker under the arch, where the acoustics are
+	m.performers = Array([Vector2(820.0, MERCAT_ARCH_Y + 60.0)], TYPE_VECTOR2, &"", null)
+	# crates stacked out behind the fruit stalls
+	m.cone_spots = Array([], TYPE_VECTOR2, &"", null)
+	for i in range(MERCAT_WALL_STALLS.size()):
+		if String(MERCAT_WALL_STALLS[i][2]) == "fruit":
+			m.cone_spots.append(mercat_stall_pos(m, i) + Vector2(0.0, -58.0))
+	# crate stacks of oranges at the wall between stalls: what gets marked here
+	hyd_list.clear()
+	for y: float in [-900.0, -1550.0, -2350.0, -3200.0, -4000.0]:
+		var e: Vector2 = m.walk_edges(y)
+		hyd_list.append(Vector2(e.x + 30.0 if int(absf(y)) % 2 == 0 else e.y - 30.0, y))
+	# dropped produce in the aisles
+	keb_list.clear()
+	for k: Vector2 in [Vector2(470.0, -1300.0), Vector2(810.0, -2000.0), Vector2(470.0, -2800.0),
+			Vector2(810.0, -3500.0), Vector2(470.0, -4100.0)]:
+		keb_list.append(k)
+	# meltwater off the fish counters' ice, and the scales that come with it
+	for i in range(MERCAT_WALL_STALLS.size()):
+		if String(MERCAT_WALL_STALLS[i][2]) == "fish":
+			var f := mercat_stall_front(m, i)
+			m.patches.append({"y": f.y, "at": 0.0, "rx": 58.0, "ry": 40.0, "seed": 2.2 + float(i),
+				"kind": "puddle", "pin": f + Vector2(0.0, 30.0)})
+			m.patches.append({"y": f.y, "at": 0.0, "rx": 34.0, "ry": 24.0, "seed": 3.1 + float(i),
+				"kind": "fish", "pin": f + Vector2(0.0, -20.0)})
+	# the owner keeps to one aisle round each block, alternating
+	var isl: Array[Dictionary] = []
+	for i in range(MERCAT_BLOCKS.size()):
+		isl.append({"rect": MERCAT_BLOCKS[i].grow(20.0), "side": 1.0 if i % 2 == 0 else -1.0})
+	m.islands = isl
 
 
 # LA FERRALLA. Wreck stacks along both sides of the lane (authored in the
@@ -611,6 +700,17 @@ static func apply_corridor(m: Node2D) -> void:
 			{"y": -4700.0, "cx": 640.0, "half": 225.0},
 			{"y": m.GATE_Y, "cx": 640.0, "half": 225.0},
 		]
+	elif m.lvl == "market":
+		# EL MERCAT: in off the street under the iron arch, out into the wide
+		# hall, and out through the far door into the plaça
+		m.edge_nodes = [
+			{"y": m.START_Y, "cx": 640.0, "half": 240.0},
+			{"y": MERCAT_ARCH_Y + 180.0, "cx": 640.0, "half": 240.0},
+			{"y": MERCAT_ARCH_Y - 120.0, "cx": 640.0, "half": MERCAT_HALL_HALF},
+			{"y": MERCAT_DOOR_Y + 160.0, "cx": 640.0, "half": MERCAT_HALL_HALF},
+			{"y": MERCAT_DOOR_Y - 160.0, "cx": 640.0, "half": 240.0},
+			{"y": m.GATE_Y, "cx": 640.0, "half": 240.0},
+		]
 	elif m.lvl == "scrap":
 		# LA FERRALLA: the lane between the wreck stacks shifts one way and
 		# the other as the stacks were dumped
@@ -699,8 +799,8 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 
 
 static func fit_props_to_corridor(m: Node2D) -> void:
-	# El Gotic places everything against its own jinking walls already
-	if m.lvl == "oldtown":
+	# El Gotic and El Mercat place everything in level space already
+	if m.lvl == "oldtown" or m.lvl == "market":
 		return
 	# Props were all authored for the old fixed 300..980 corridor, so a
 	# narrower walk would leave them stranded out on the verge. Pull every
@@ -1087,6 +1187,8 @@ static func build_level_data(m: Node2D) -> void:
 		diluvi(m)
 	elif m.lvl == "oldtown":
 		gotic(m)
+	elif m.lvl == "market":
+		mercat(m, hyd_list, keb_list)
 	elif m.lvl == "trail":
 		# El Bosc: a forest trail. No bars out here, so the owner is forever
 		# stopping to hunt for a signal (see human.gd); muddy patches slow
@@ -1258,8 +1360,6 @@ static func build_level_data(m: Node2D) -> void:
 	# shape across the path where it is, not a box with an outline.
 	var mw: float = m.walk_half * 2.0
 	match m.lvl:
-		"market":
-			m.patches.append({"y": -2985.0, "at": 0.22, "rx": mw * 0.16, "ry": 56.0, "seed": 1.85, "kind": "fish"})
 		"spook":
 			m.patches.append({"y": -2070.0, "at": 0.29, "rx": mw * 0.22, "ry": 66.0, "seed": 2.65, "kind": "confetti"})
 		"trail":
@@ -1325,13 +1425,12 @@ static func build_level_data(m: Node2D) -> void:
 			if clear:
 				m.trees.append(tree)
 				break
-	# THE FUR-GONETA, on the two walks a mobile groomer would actually work:
-	# the market (a trade in nervous poodles) and the boulevard. Position only
+	# THE FUR-GONETA, where a mobile groomer would actually work: the
+	# boulevard (a trade in nervous poodles). Position only
 	# here - wrap flanks are appended AFTER the corridor fit so body, draw,
 	# blocker, scent and rope contacts share one fitted centre.
-	if m.lvl == "market":
-		m.furgoneta = Vector2(m.sw_r - 74.0, -2150.0)
-	elif m.lvl == "street":
+	# (not El Mercat any more: a van has no business inside a market hall)
+	if m.lvl == "street":
 		m.furgoneta = Vector2(m.sw_l + 66.0, -3560.0)
 	for ly in m.lane_ys:
 		m.lane_state.append({"t": randf_range(1.0, 2.5), "phase": 0, "dir": 1})
@@ -1407,7 +1506,7 @@ static func build_level_data(m: Node2D) -> void:
 			m.prize_pos = Vector2(178.0, -2600.0)
 			m.prize_text = "swim out for the ball"
 		"market":
-			m.prize_pos = Vector2(640.0, -2050.0)  # by the drain in the middle aisle
+			m.prize_pos = MERCAT_DRAIN + Vector2(0.0, -40.0)  # by the drain in the middle aisle
 			m.prize_text = "grab the churro by the open drain"
 		"rain":
 			m.prize_pos = Vector2(640.0, -1500.0)  # right on a gaping storm drain
@@ -1441,8 +1540,9 @@ static func build_level_data(m: Node2D) -> void:
 			m.carry_item = "the newspaper"
 			m.carry_text = "deliver the newspaper to the stoop"
 		"market":
-			m.carry_pickup = Vector2(915.0, -1250.0)
-			m.carry_drop = Vector2(360.0, -3050.0)
+			# from the fruit stall by the door to the one at the far end
+			m.carry_pickup = mercat_stall_front(m, 0)
+			m.carry_drop = mercat_stall_front(m, MERCAT_WALL_STALLS.size() - 2)
 			m.carry_item = "the crate of oranges"
 			m.carry_text = "run the oranges to the far stall"
 		_:
@@ -2048,6 +2148,10 @@ static func build_walls(m: Node2D) -> void:
 		add_rect_body(m, m.furgoneta, m.VAN_BODY_SIZE)
 	for st in m.stalls:
 		add_rect_body(m, st, m.STALL_BODY_SIZE)
+	# El Mercat's stall blocks down the middle of the hall
+	if m.lvl == "market":
+		for blk: Rect2 in MERCAT_BLOCKS:
+			add_rect_body(m, blk.get_center(), blk.size)
 	# La Rambla's statues are people on boxes: solid
 	for sp: Vector2 in m.statues:
 		var stb := StaticBody2D.new()
@@ -2109,8 +2213,8 @@ static func build_entities(m: Node2D) -> void:
 	m.edge_layer = Node2D.new()
 	m.edge_layer.set_script(load("res://world/edgelayer.gd"))
 	m.edge_layer.z_index = -5   # behind everything in the world
-	# what hangs over the walk, above everyone (El Gotic's bridge)
-	if m.lvl == "oldtown":
+	# what hangs over the walk, above everyone (El Gotic's bridge, El Mercat's arches)
+	if m.lvl == "oldtown" or m.lvl == "market":
 		var ov := Node2D.new()
 		ov.set_script(load("res://world/overheadlayer.gd"))
 		ov.z_index = 14
