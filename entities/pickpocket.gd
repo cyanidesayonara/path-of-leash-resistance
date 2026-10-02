@@ -109,6 +109,10 @@ func _physics_process(delta: float) -> void:
 				state = S.LIFT
 				state_t = 0.0
 		S.LIFT:
+			# a tourist culled off screen mid-lift: nothing left to take
+			if mark == null or not is_instance_valid(mark):
+				_start_slink()
+				return
 			global_position = _behind(mark)
 			if state_t >= LIFT_T:
 				if mark_is_owner:
@@ -246,7 +250,7 @@ func _draw() -> void:
 		b.rect(Rect2(-4.0, 2.0, 8.0, 4.0), body.darkened(0.3))
 		if state == S.LIFT:
 			# the hand going in
-			var hand := (_behind(mark) - global_position) * 0.0 + Vector2(-2, -18)
+			var hand := Vector2(-2, -18)
 			b.line(Vector2(4, -4), hand, body.lightened(0.1), 3.0)
 		if state == S.RUN:
 			# the wallet, held up where the player can follow it

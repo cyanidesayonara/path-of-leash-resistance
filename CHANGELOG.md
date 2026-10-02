@@ -7,6 +7,39 @@ Append-only session history, newest first.
 
 
 
+
+## 2026-10-02 - A facelift for everyone on the walk
+
+Every character and most of the street got a going-over, in the game's soft,
+cartoonish, plasticine style: seen from above, bold silhouettes, light from
+the upper left with a lighter top and a darker rim.
+- **People** (`human_appearance.gd`, now one renderer for everyone): a head
+  of hair seen from above (your human looked bald: the hair was a thin strip
+  round the back of a skin circle), a crescent of face, ears, haircuts
+  (short, long, bun, curly, the bald spot that is meant to show), caps with a
+  peak, beanies with a bobble, shoulders, hands and shoes. Your human, the
+  other walkers, the tourists, the pickpocket (hood up now) and the "bet you
+  can't" kid all use it.
+- **Dressed for the weather**: raincoats with the hood up in the rain, a coat,
+  a scarf and a woolly hat in the snow, a scarf in the wind, sunglasses and
+  now and then a sunhat on the seafront.
+- **Millie**: a shaped, shaded body instead of a thick line, a proper muzzle,
+  eyes with the brows from the icon, ears that hang back and flap, a shiny
+  nose.
+- **Animals**: the other walkers' and the off-leash dogs are real breeds
+  now (a dachshund, a poodle, a pug, a dalmatian, a greyhound...), the boar
+  is shaped like a boar, the duck, pigeons, gulls and parakeets read as birds,
+  and the cats, the wall cats and Tofu are told apart (`clay.gd` shades them).
+- **The street**: the Fur-Goneta reads as a dog-grooming van, the buskers
+  have guitars and cases with coins, the statues stand on boxes, stalls,
+  benches, bins, hydrants and A-boards have their detail, the cyclists wear
+  helmets, and the sweeper is shaded like the rest.
+- **The walk's subtitle** ("the crowded promenade") is set plainly in the
+  menus' face, no wobble, and fades with the rest of the menu.
+- Fixes: junk no longer lands on a seller's blanket; a pickpocket whose
+  tourist is cleared off screen mid-lift gives up instead of erroring.
+- `tools/entity_lineup.gd`: every character and loose prop, big, side by
+  side (`cells=K,N` to zoom, `weather=`, `level=`), for judging looks.
 ## 2026-10-02 - The town walks end in a square
 
 El Mercat, El Gòtic, La Castanyada and La Neteja have PLAÇA over their gates,
