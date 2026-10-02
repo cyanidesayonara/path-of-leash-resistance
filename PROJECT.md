@@ -337,6 +337,14 @@ memorable.
   rather than editable ones. Santtu's idea of it as a paid add-on only
   matters once there are players.
 - Character creator: two preset owners exist (HIM/HER); creator later.
+  October 2026: the facelift moved every person onto one renderer
+  (human_appearance.gd: head, hair styles, headwear, torso, weather
+  outfits), so a creator is now picking values for that, not new drawing.
+- Dog roster (a later release, a major feature): a selector of dogs, each
+  with a name, a backstory, a size and their own handling (speed, pull,
+  nose, stamina), some locked until earned. Millie stays the first. Needs
+  the dog drawing split into data (coat, size, ears, muzzle, tail) the way
+  the people now are, and handling numbers per dog rather than constants.
 - "Bring Tofu home" quest (shipped v1.7, redesigned v1.7.1): an inside
   joke - the real Tofu is an escape artist. She turns up loose on the
   walk home and you herd her south from hiding spot to hiding spot (she
