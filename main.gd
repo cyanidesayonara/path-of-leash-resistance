@@ -28,6 +28,9 @@ var strip_kind_r := "none"
 # you are, or the path and the thing testing against it will disagree the
 # moment a level bends.
 var edge_nodes: Array = []
+# every solid rectangle LevelBuild.add_rect_body made (stall blocks, the
+# salamander, dumpsters...), for placing loose things clear of them
+var solid_rects: Array[Rect2] = []
 # parallel bike lane along the right side, plus a narrow far shoulder
 # with temptations - crossing the lane is a voluntary risk
 # the hang-time beat on big moments: game speed, and how long it lasts in
