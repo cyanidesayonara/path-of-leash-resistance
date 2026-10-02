@@ -468,7 +468,9 @@ static func _chestnuts(c: Object, sign: Dictionary, h: float, light: Vector2) ->
 	for pc: Dictionary in sign.pieces:
 		var p: Vector2 = pc.p
 		var r: float = pc.r
-		c.draw_circle(p, r * 1.12, Color(0.86, 0.62, 0.34, 0.9))
+		# a pale paper-cone rim, so a dark nut still reads on the dark ground
+		# of a festival night
+		c.draw_circle(p, r * 1.28, Color(0.98, 0.88, 0.66, 0.95))
 		c.draw_circle(p, r, Color(0.46, 0.24, 0.12))
 		# the pale base turns with the nut as it rolls
 		c.draw_circle(p + Vector2.from_angle(float(pc.rot)) * r * 0.5, r * 0.55, Color(0.78, 0.64, 0.44))
