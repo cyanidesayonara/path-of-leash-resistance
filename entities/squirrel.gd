@@ -1,5 +1,8 @@
 extends Node2D
 
+const Clay := preload("res://entities/clay.gd")
+const TofuScript := preload("res://entities/tofu.gd")
+
 # A critter: squirrel, rat, or (rarely) Tofu the cat. The temptation
 # that tugs at the DOG (main.gd applies the pull; Tofu pulls hardest).
 # Squirrels and rats are never catchable. Tofu and Millie are NOT
@@ -90,36 +93,86 @@ func scare() -> void:
 
 func _draw() -> void:
 	var t := AnimClock.msec() / 1000.0
-	if kind == "rat":
-		# passeig rats: grey, quick, long naked tail; Millie finds them
-		# every bit as compelling as squirrels
-		var grey := Color(0.45, 0.4, 0.38)
-		draw_line(Vector2(-5, 1), Vector2(-14, 3 + sin(t * 5.0 + seed_o) * 2.0), Color(0.58, 0.48, 0.45), 1.5)
-		draw_circle(Vector2.ZERO, 4.5, grey)
-		draw_circle(Vector2(4, -1), 2.8, grey)
-		draw_circle(Vector2(3.5, -3.5), 1.3, grey.darkened(0.15))
-		draw_circle(Vector2(6.2, -1), 0.9, Color(0.12, 0.1, 0.1))
+	if Clay.offscreen(self, main):
 		return
-	if kind == "cat":
-		# Tofu: white with brown on top, pink harness, friendly but
-		# professionally skittish
-		var white := Color(0.93, 0.91, 0.88)
-		var brown := Color(0.62, 0.45, 0.28)
-		draw_line(Vector2(-6, 0), Vector2(-6, 0) + Vector2(-9, -6).rotated(sin(t * 2.0 + seed_o) * 0.25), brown, 2.5)
-		draw_circle(Vector2.ZERO, 6.5, white)
-		draw_circle(Vector2(-1, -2), 4.0, brown)
-		draw_circle(Vector2(5, -3), 4.0, white)
-		draw_circle(Vector2(6, -5), 2.2, brown)
-		draw_line(Vector2(3, -6), Vector2(2, -9), brown, 2.0)
-		draw_line(Vector2(7, -6), Vector2(8, -9), brown, 2.0)
-		draw_line(Vector2(1, 0), Vector2(7, 0), Color(0.9, 0.45, 0.62), 2.0)
-		if state == 1:
-			draw_circle(Vector2(6, -3), 1.0, Color(0.75, 0.9, 0.3))
-		return
-	var body := Color(0.5, 0.33, 0.2)
+	# which way it looks: its own way idle, at the dog when alert, away when
+	# running (the cat at her new hiding spot)
+	var face := Vector2.from_angle(seed_o * 2.7)
+	if state == 1 and dog != null:
+		var to := dog.global_position - global_position
+		if to.length() > 0.5:
+			face = to.normalized()
+	elif state == 2:
+		face = flee_dir
+		if kind == "cat" and hide_target.x < INF:
+			var to := hide_target - global_position
+			if to.length() > 0.5:
+				face = to.normalized()
+	var b := ShapeBatch.new(self)
+	match kind:
+		"rat":
+			_draw_rat(b, face, t)
+		"cat":
+			Clay.ground_shadow(b, Vector2.ZERO, 9.0, 6.0, 4.0, 0.24)
+			TofuScript.draw_cat(b, Vector2.ZERO, face, TofuScript.TOFU_COAT, 1.0 if state == 2 else 0.0, 0.0,
+				sin(t * 2.0 + seed_o) * 0.45, state == 1, 1.1)
+		_:
+			_draw_squirrel(b, face, t)
+	b.flush()
+
+
+# a squirrel from above: a small russet body, and the tail - the whole
+# silhouette - a big fluffy plume curling up over its back
+func _draw_squirrel(b: ShapeBatch, face: Vector2, t: float) -> void:
+	var fwd := face
+	var side := fwd.orthogonal()
+	var body := Color(0.66, 0.36, 0.17)
+	var belly := Color(0.93, 0.82, 0.64)
 	var up := state == 1
-	# the tail is the whole silhouette
-	draw_arc(Vector2(-7, 2), 6.0, PI * 0.2 + sin(t * 6.0 + seed_o) * 0.3, PI * 1.4, 10, body.lightened(0.15), 4.0)
-	draw_circle(Vector2.ZERO, 5.5, body)
-	draw_circle(Vector2(2, -6) if up else Vector2(4, -3), 3.5, body)
-	draw_circle(Vector2(3, -8) if up else Vector2(5, -5), 1.2, Color(0.1, 0.08, 0.06))
+	var run := 1.0 if state == 2 else 0.0
+	var flick := sin(t * (14.0 if up else 6.0) + seed_o) * (0.5 if up else 0.25)
+	Clay.ground_shadow(b, Vector2.ZERO, 7.0, 4.5, 3.0, 0.22)
+	# the tail: three puffs swinging out behind and curling round
+	var tail_root := -fwd * 4.5
+	var curl := 1.0 - run
+	var d1 := (-fwd).rotated((0.6 * curl + flick) * 0.5)
+	var d2 := (-fwd).rotated(1.3 * curl + flick)
+	var plume := body.lightened(0.12)
+	Clay.blob(b, tail_root + d1 * 4.0, Vector2(5.0, 3.4), d1, plume)
+	Clay.ball(b, tail_root + d1 * 5.0 + d2 * 4.0, 4.0, plume)
+	b.draw_circle(tail_root + d1 * 5.0 + d2 * 5.5, 1.6, plume.lightened(0.25))
+	# hind feet, body, and the front paws held up at the chest when alert
+	for sd: float in [-1.0, 1.0]:
+		b.draw_circle(-fwd * 2.5 + side * 3.6 * sd, 1.4, body.darkened(0.2))
+	Clay.blob(b, Vector2.ZERO, Vector2(5.0 + run, 3.6), fwd, body)
+	var hc := fwd * (5.5 + run)
+	if up:
+		for sd: float in [-1.0, 1.0]:
+			b.draw_circle(fwd * 3.6 + side * 1.6 * sd, 1.1, belly)
+	Clay.ball(b, hc, 3.0, body)
+	for sd: float in [-1.0, 1.0]:
+		# tufted ears, and the bright black eyes
+		b.draw_circle(hc - fwd * 1.0 + side * 2.4 * sd, 1.1, body.darkened(0.25))
+		b.draw_circle(hc + fwd * 0.9 + side * 1.6 * sd, 0.8, Color(0.08, 0.06, 0.05))
+	b.draw_circle(hc + fwd * 2.8, 0.7, Color(0.25, 0.15, 0.12))
+
+
+# a rat from above: a grey teardrop, pink ears and a long bare tail
+func _draw_rat(b: ShapeBatch, face: Vector2, t: float) -> void:
+	var fwd := face
+	var side := fwd.orthogonal()
+	var grey := Color(0.47, 0.43, 0.41)
+	var pink := Color(0.86, 0.62, 0.60)
+	Clay.ground_shadow(b, Vector2.ZERO, 6.0, 3.6, 2.0, 0.20)
+	var tail := PackedVector2Array()
+	for k in range(5):
+		var f := float(k) / 4.0
+		tail.append(-fwd * (4.5 + f * 10.0) + side * sin(t * 5.0 + seed_o + f * 2.5) * f * 2.5)
+	Clay.stroke(b, tail, 1.4, 0.6, pink.darkened(0.15))
+	Clay.blob(b, Vector2.ZERO, Vector2(5.2, 3.2), fwd, grey)
+	var hc := fwd * 4.6
+	b.draw_colored_polygon(PackedVector2Array([hc - side * 2.2, hc + fwd * 3.6, hc + side * 2.2]), grey)
+	for sd: float in [-1.0, 1.0]:
+		b.draw_circle(hc - fwd * 0.6 + side * 2.1 * sd, 1.2, pink)
+		b.draw_circle(hc + fwd * 1.2 + side * 1.0 * sd, 0.55, Color(0.08, 0.06, 0.06))
+	b.draw_circle(hc + fwd * 3.6, 0.6, pink.darkened(0.2))

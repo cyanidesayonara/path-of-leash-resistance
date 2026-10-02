@@ -1,11 +1,24 @@
 extends Node2D
 
+const Clay := preload("res://entities/clay.gd")
+const TofuScript := preload("res://entities/tofu.gd")
+
 # A wall cat, the signature of El Gotic: a cat perched on a ledge above the
 # alley, insufferably smug and just out of reach. As Millie passes it arches
 # and hisses; a good BARK sends it leaping off with a yowl. Shooing them is a
 # goal. Pure temptation - you can never actually get one (that is the joke).
 
 const NOTICE_R := 100.0
+# alley cats, picked by position so a wall keeps its cat: black, grey tabby,
+# ginger tabby
+const COATS := [
+	{"base": Color(0.17, 0.16, 0.19), "tail": Color(0.17, 0.16, 0.19), "muzzle": Color(0.22, 0.21, 0.24),
+		"eyes": Color(0.88, 0.86, 0.30)},
+	{"base": Color(0.55, 0.55, 0.57), "stripe": Color(0.33, 0.33, 0.36), "tail": Color(0.55, 0.55, 0.57),
+		"muzzle": Color(0.86, 0.85, 0.82), "eyes": Color(0.55, 0.85, 0.40)},
+	{"base": Color(0.88, 0.56, 0.27), "stripe": Color(0.70, 0.38, 0.15), "tail": Color(0.88, 0.56, 0.27),
+		"muzzle": Color(0.96, 0.86, 0.70), "eyes": Color(0.90, 0.72, 0.25)},
+]
 
 var main: Node2D
 var my_dog: Node2D
@@ -45,31 +58,38 @@ func scare() -> void:
 
 func _draw() -> void:
 	var t := AnimClock.msec() / 1000.0
-	# the ledge it lords over
-	draw_rect(Rect2(-16, 6, 32, 5), Color(0.32, 0.29, 0.26))
+	if Clay.offscreen(self, main):
+		return
+	var b := ShapeBatch.new(self)
+	# the top of the wall it lords over: coping stones, lit along the top edge
+	var stone := Color(0.42, 0.37, 0.33)
+	b.draw_rect(Rect2(-18, -7, 36, 15), Clay.rim_of(stone))
+	b.draw_rect(Rect2(-18, -7, 36, 13), stone)
+	b.draw_rect(Rect2(-18, -7, 36, 1.5), Clay.lit_of(stone))
+	for k in range(3):
+		b.draw_rect(Rect2(-7.0 + float(k) * 12.0, -7, 1, 13), Clay.rim_of(stone))
+	var coat: Dictionary = COATS[int(seed_o * 10.0) % COATS.size()]
+	var face := Vector2.DOWN
+	if my_dog != null:
+		var to := my_dog.global_position - global_position
+		if to.length() > 1.0:
+			face = to.normalized()
 	if spooked:
-		# leaping away with an indignant yowl
+		# leaping away: up towards the camera (bigger) and off over the wall
 		var off := Vector2(side * 30.0, -46.0) * leap
+		var lift := sin(leap * PI)
 		var a := 1.0 - leap
+		Clay.ground_shadow(b, Vector2(off.x * 0.6, 4.0), 7.0, 4.0, 2.0 + lift * 6.0, 0.22 * a)
+		var faded := coat.duplicate()
+		for key: String in ["base", "patch", "stripe", "tail", "eyes", "muzzle"]:
+			if faded.has(key):
+				faded[key] = Color(faded[key], a)
+		TofuScript.draw_cat(b, off, Vector2(side, -0.6), faded, 1.0, 0.6, sin(t * 20.0), true, 1.15 + lift * 0.35)
+		b.flush()
 		draw_string(ThemeDB.fallback_font, Vector2(-6, -20), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(1, 0.9, 0.5, a))
-		_cat(off, -0.5 * side, a)
 		return
 	# perched: rises and arches as the dog closes in
-	var rise := -arch * 3.0 + sin(t * 2.0 + seed_o) * 0.6
-	_cat(Vector2(0, rise), 0.0, 1.0)
-
-
-func _cat(off: Vector2, tilt: float, a: float) -> void:
-	var fur := Color(0.24, 0.22, 0.26, a)
-	var back_lift := arch * 4.0
-	# body: an arched loaf, higher at the shoulders when arched
-	draw_circle(off + Vector2(0, -4 - back_lift * 0.5), 6.0, fur)
-	draw_circle(off + Vector2(6, -6 - back_lift), 5.0, fur)
-	# head + ears
-	draw_circle(off + Vector2(9, -9 - back_lift), 3.5, fur)
-	draw_line(off + Vector2(7, -12 - back_lift), off + Vector2(6, -15 - back_lift), fur, 1.5)
-	draw_line(off + Vector2(11, -12 - back_lift), off + Vector2(12, -15 - back_lift), fur, 1.5)
-	# tail: a question mark, higher when arched or spooked
-	draw_arc(off + Vector2(-6, -4), 5.0, 0.4, 3.4 + arch * 1.5, 8, fur, 2.0)
-	# eyes catch the light
-	draw_circle(off + Vector2(10, -9 - back_lift), 1.0, Color(0.85, 0.9, 0.4, a))
+	var rise := -arch * 1.5 + sin(t * 2.0 + seed_o) * 0.4
+	Clay.ground_shadow(b, Vector2(0, 2), 7.0 + arch, 4.5, 2.5 + arch * 1.5, 0.26)
+	TofuScript.draw_cat(b, Vector2(0, rise), face, coat, 0.0, arch, sin(t * 1.5 + seed_o), arch > 0.3, 1.15 + arch * 0.08)
+	b.flush()

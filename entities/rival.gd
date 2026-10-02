@@ -1,6 +1,7 @@
 extends Node2D
 
 const DogAppearanceScript := preload("res://entities/dog_appearance.gd")
+const Clay := preload("res://entities/clay.gd")
 
 # BRUTUS. The dog at the park who is having a lovely time at your expense.
 #
@@ -47,8 +48,8 @@ func setup(m: Node2D, mine: Node2D, area: Rect2) -> void:
 	main = m
 	my_dog = mine
 	bounds = area
-	# a big scruffy one, picked deterministically so Brutus is always Brutus
-	appearance = DogAppearanceScript.profile_for_key(0x8B2705)
+	# his own look, which no other dog gets: a brindle bruiser in a bandit mask
+	appearance = DogAppearanceScript.get_profile("brutus")
 	seed_o = fmod(absf(position.x) * 0.017, TAU)
 	_pick_wander()
 
@@ -189,22 +190,36 @@ func scare() -> void:
 
 func _draw() -> void:
 	var tt := AnimClock.msec() / 1000.0
-	# contact shadow, same light as everything else
-	main.contact_shadow(self, Vector2.ZERO, 13.0, 8.0, 0.26)
-	var bob := sin(tt * 9.0 + seed_o) * (2.0 if state == S.FLEE else 1.0)
-	DogAppearanceScript.draw_dog(self, appearance, Vector2.ZERO, face, bob, tt * 12.0 + seed_o)
-	# what he is carrying, plainly visible so you know what you are chasing
+	if Clay.offscreen(self, main):
+		return
+	# one batch for the dog and his loot; text and arcs go after the flush
+	var b := ShapeBatch.new(self)
+	Clay.ground_shadow(b, Vector2.ZERO, 15.0, 8.0, 7.0, 0.26)
+	var bob := sin(tt * 9.0 + seed_o) * (1.5 if state == S.FLEE else 0.8)
+	# fleeing he wags like mad, sulking the tail hangs still
+	var wag := tt * (20.0 if state == S.FLEE else 12.0) + seed_o
+	if state == S.SULK:
+		wag = -PI * 0.5
+	DogAppearanceScript.draw_dog(b, appearance, Vector2.ZERO, face, bob, wag)
+	# what he is carrying, plainly visible so you know what you are chasing,
+	# held in his jaws at the end of the muzzle
+	var held := face * 21.0
 	if loot == "ball":
-		draw_circle(face * 17.0, 6.0, Color(0.82, 0.86, 0.3))
+		Clay.ball(b, held, 5.0, Color(0.82, 0.86, 0.3))
+		b.draw_line(held + face.orthogonal() * 4.6 - face, held - face.orthogonal() * 4.6 - face, Color(0.96, 0.96, 0.9), 1.0)
 	elif loot == "bone":
-		var bp := face * 17.0
-		draw_rect(Rect2(bp.x - 7.0, bp.y - 2.0, 14.0, 4.0), Color(0.92, 0.89, 0.80))
-		draw_circle(bp + Vector2(-7.0, 0.0), 3.2, Color(0.92, 0.89, 0.80))
-		draw_circle(bp + Vector2(7.0, 0.0), 3.2, Color(0.92, 0.89, 0.80))
+		var bone := Color(0.94, 0.91, 0.82)
+		var across := face.orthogonal()
+		b.draw_line(held - across * 7.0, held + across * 7.0, Clay.rim_of(bone), 4.4)
+		b.draw_line(held - across * 7.0, held + across * 7.0, bone, 3.0)
+		for e: float in [-1.0, 1.0]:
+			for k: float in [-1.0, 1.0]:
+				Clay.ball(b, held + across * 7.5 * e + face * 1.8 * k, 2.4, bone)
+	b.flush()
 	if state == S.SULK:
 		draw_string(ThemeDB.fallback_font, Vector2(-8, -26), "...", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.85, 0.85, 0.9))
 	elif state == S.FLEE:
 		# smug speed lines
 		for i in range(2):
-			var o := -face * (12.0 + float(i) * 7.0)
+			var o := -face * (18.0 + float(i) * 7.0)
 			draw_line(o, o - face * 8.0, Color(1, 1, 1, 0.35 - float(i) * 0.12), 2.0)
