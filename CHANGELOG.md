@@ -8,6 +8,19 @@ Append-only session history, newest first.
 
 
 
+
+## 2026-10-02 - v1.57
+
+Everything accepted since v1.56 (#76 to #123): every walk rebuilt as its own
+place (El Bosc, El Parc, La Rambla in three steps, Les Obres, El Barri first,
+the First Walk, El Diluvi, L'Estació, La Ferralla, El Gòtic, El Mercat, La
+Castanyada, La Neteja, El Mosaic in two rounds), the walk names made of each
+walk's stuff, the menu cards and prompt bar, the message feed, the game's text
+in one voice, the reel and whirl fixes, the dragged owner, the planted skid,
+other dogs marking and greeting, the town squares off the leash, the level
+review fixes, the Catalan accents, the new logo and the facelift.
+`store/listing.md` has the 1.57 Store text: fourteen walks, the rebuilt places,
+the other dogs, and "What's new".
 ## 2026-10-02 - A facelift for everyone on the walk
 
 Every character and most of the street got a going-over, in the game's soft,
