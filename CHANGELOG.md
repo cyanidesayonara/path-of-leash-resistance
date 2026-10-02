@@ -6,6 +6,15 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-02 - A lighter logo
+
+The icon and Store art had Millie on a dark green that swallowed both the
+black dog and the title. Same Millie, same mid-yank, now on a warm, light sky
+with a green hill behind her shoulders, three yank lines at the collar ring,
+and the Store poster's title in dark brown on a thick cream outline
+(`tools/make_icon.gd`, `tools/make_store_art.gd`). The icon still reads at
+16px. Regenerated: icon.png, icon.ico, the MSIX tiles (the wide tile now sits
+on the sky colour).
 ## 2026-10-02 - Catalan with its accents
 
 The Catalan names were written without their accents, because the stroke

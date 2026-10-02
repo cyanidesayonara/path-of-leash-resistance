@@ -5,7 +5,7 @@ Run after tools/make_icon.gd, alongside tools/make_ico.py:
 
 Writes store/msix/Assets/, which store/msix/AppxManifest.xml references. The
 square sizes are straight downsamples of the icon; the wide tile centres the
-icon on the icon's own grass colour so it reads as one piece. WACK rejects
+icon on the icon's own sky colour so it reads as one piece. WACK rejects
 images over 200 KB and anything that looks like a template placeholder, so
 these stay generated from the real icon. Requires Pillow, a build-time
 dependency only - the game ships no Python.
@@ -19,8 +19,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "icon.png")
 DST = os.path.join(ROOT, "store", "msix", "Assets")
 
-# GRASS in tools/make_icon.gd, Color(0.16, 0.28, 0.21)
-GRASS = (41, 71, 54, 255)
+# SKY in tools/make_icon.gd, Color(0.98, 0.86, 0.58)
+SKY = (250, 219, 148, 255)
 
 SQUARES = {
     "StoreLogo.png": 50,
@@ -36,7 +36,7 @@ def main():
     for name, px in SQUARES.items():
         icon.resize((px, px), Image.LANCZOS).save(os.path.join(DST, name), optimize=True)
     name, (w, h) = WIDE
-    wide = Image.new("RGBA", (w, h), GRASS)
+    wide = Image.new("RGBA", (w, h), SKY)
     inner = icon.resize((h, h), Image.LANCZOS)
     wide.alpha_composite(inner, ((w - h) // 2, 0))
     wide.save(os.path.join(DST, name), optimize=True)
