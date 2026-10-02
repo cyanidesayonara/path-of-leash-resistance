@@ -18,9 +18,14 @@ Castanyada, La Neteja, El Mosaic in two rounds), the walk names made of each
 walk's stuff, the menu cards and prompt bar, the message feed, the game's text
 in one voice, the reel and whirl fixes, the dragged owner, the planted skid,
 other dogs marking and greeting, the town squares off the leash, the level
-review fixes, the Catalan accents, the new logo and the facelift.
+review fixes, the Catalan accents, the new logo and the facelift. Then La
+Neteja's sweeper as a careening machine that chases you (#125), played before
+the tag.
 `store/listing.md` has the 1.57 Store text: fourteen walks, the rebuilt places,
-the other dogs, and "What's new".
+the other dogs, the sweeper chase (now photographable, so a tenth screenshot),
+and "What's new". 1.56 was never submitted to the Store, so 1.57's "What's new"
+covers both, starting with the two new walks.
+
 ## 2026-10-02 - A facelift for everyone on the walk
 
 Every character and most of the street got a going-over, in the game's soft,

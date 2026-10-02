@@ -2,9 +2,10 @@
 
 What was entered in Partner Center. First submission 1.54.0.0, live
 2026-09-23 at https://apps.microsoft.com/detail/9p5d14v8rbqx; 1.55.0.0
-submitted 2026-09-24; 1.56.0.0 prepared 2026-09-27; 1.57.0.0 prepared
-2026-10-02 with the listing below (fourteen walks, every one rebuilt as its
-own place, the new icon and Store art).
+submitted 2026-09-24; 1.56.0.0 prepared 2026-09-27 but never submitted, so
+1.57.0.0 is the first update since 1.55 and its "What's new" covers both;
+1.57.0.0 prepared 2026-10-02 with the listing below (fourteen walks, every
+one rebuilt as its own place, the sweeper chase, the new icon and Store art).
 Copy from here for the next submission, and update this file whenever the
 live listing changes, so it stays the record of what the Store says.
 
@@ -51,8 +52,9 @@ Screenshots and logos are regenerated, not stored here:
   (`--level=guell --shot-at=3100`, with `tools/stamp_version.sh` run first so
   the corner says the version, not "dev"), captioned "El Mosaic: the winding
   terrace and its broken-tile mosaic". 1.57 replaces the set with the
-  rebuilt walks (see "Screenshots for 1.57" below). Never the sweeper chase
-  until #20 is fixed, and pick frames where no two feed lines overlap (#59).
+  rebuilt walks (see "Screenshots for 1.57" below). The chase can be shot
+  since #20 (`--level=neteja --shot-y=-4300 --shot-home --shot-sweeper`),
+  and pick frames where no two feed lines overlap.
 - Logos: `tools/make_store_art.gd` writes the 9:16 poster (1440x2160), 1:1
   box art (2160) and the 300/150/71 tiles into `build/store-art/`. No hero
   art, trailers or Xbox images.
@@ -63,7 +65,8 @@ Shot at 1920x1080 from a checkout of the v1.57 tag (`tools/stamp_version.sh`
 first, so the corner reads the version): La Rambla's crowd and the Fur-Goneta,
 El Mercat's hall, La Castanyada's plaça at night, El Mosaic's salamander, the
 square off the leash, El Bosc's boars, the seafront in the sun, a rainy walk
-in raincoats, and the walk select with a name laid out on the ground.
+in raincoats, La Neteja's sweeper careening after you, and the walk select
+with a name laid out on the ground.
 
 ### Description
 
@@ -80,7 +83,7 @@ Other dogs have lives of their own. They sniff and mark the posts you pass, and 
 
 Every walk has its own list of goals: sniff the good spots, mark your territory, fetch, greet other dogs, herd a runaway friend home, and land combo tricks like vaulting around a pole or grinding along a kerb. Earn stars to unlock new walks and bones to spend on leashes and bandanas.
 
-One walk is a chase: a street sweeper fills the lane behind you, and you have to drag your oblivious human home ahead of it. Weather and night change how every walk plays: rain, wind and snow, where the pavement turns to ice. There's a daily walk too, the same for everyone that day.
+One walk is a chase: a street sweeper careens down a narrow back street after you, flinging junk as it comes, and you have to drag your oblivious human home ahead of it. Weather and night change how every walk plays: rain, wind and snow, where the pavement turns to ice. There's a daily walk too, the same for everyone that day.
 
 Single player. No ads, no purchases, no account, and it plays offline. Keyboard or controller.
 ```
@@ -112,7 +115,8 @@ No ads, no purchases, no account, and it plays offline
 ### What's new in this version (1.57)
 
 ```
-- Every walk rebuilt as its own place: La Rambla's crowds, sellers and pickpockets, the park's lake, a wood with wild boar, a rainy shopping street, the station and its train, roadworks, a scrapyard, a covered market hall, a chestnut festival at night, a hilltop park with a mosaic salamander, a back street at dawn, and El Barri, the everyday walk, first.
+- Two new walks. El Barri, the everyday walk, comes first. La Neteja is a narrow back street at dawn: a street sweeper careens after you, flinging junk, and you drag your human home ahead of it. It is the only walk with a chase now.
+- Every walk rebuilt as its own place: La Rambla's crowds, sellers and pickpockets, the park's lake, a wood with wild boar, a rainy shopping street, the station and its train, roadworks, a scrapyard, a covered market hall, a chestnut festival at night, and a hilltop park with a mosaic salamander.
 - Each walk's name is laid out on the ground in its own stuff (flowers, fruit, sand, cones, chestnuts, tiles) and you can kick it about.
 - The town walks end off the leash in a square with a fountain to jump in.
 - New menus: a clear screen for each step, and every message on the walk in its own place.
@@ -120,9 +124,10 @@ No ads, no purchases, no account, and it plays offline
 - The leash: the reel warns before it changes, plant and get hauled and you skid, and a dragged human leans back.
 - A facelift for everyone, with outfits for the weather, and a brighter icon.
 - A gentler first walk, and the Catalan names spelt properly.
+- Button prompts show whatever you last used, keyboard or controller.
 ```
 
-### What's new in 1.56 (for the record)
+### What's new in 1.56 (prepared, never submitted)
 
 ```
 - A thirteenth walk: La Neteja, a narrow back street at dawn. The street sweeper comes through every time, it fills the lane, and you have to drag your human home ahead of it. Keep more than a leash length clear the whole way for a new goal.
@@ -162,7 +167,7 @@ Publishing hold: "Don't publish until I select Publish now". Notes for
 certification (Additional Testing Information page):
 
 ```
-Update 1.55: a new level, new gameplay systems and performance work. No change to capabilities, network use, data handling or controls since 1.54.
+Update 1.57: two new levels, every level rebuilt, new menus and art. No change to capabilities, network use, data handling or controls since 1.55.
 
 Path of Leash Resistance is a single-player Win32 desktop game built with the Godot engine (4.7), packaged as MSIX.
 
