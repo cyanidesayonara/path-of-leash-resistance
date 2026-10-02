@@ -26,6 +26,41 @@ the other dogs, the sweeper chase (now photographable, so a tenth screenshot),
 and "What's new". 1.56 was never submitted to the Store, so 1.57's "What's new"
 covers both, starting with the two new walks.
 
+## 2026-10-02 - La Neteja: a sweeper that comes after you
+
+The chase as a Crash boulder run with some Tony Hawk in it, from the August
+chase-level brief (PROJECT.md, fun-mechanic backlog item 10).
+- **A real street sweeper**, not a wall: a compact road sweeper with the cab
+  at the front and the driver in hi-vis behind the windscreen, the hopper
+  behind, and a gutter broom on a swing arm at each front corner, out at the
+  kerbs. The spray between the brooms marks the kill line, which still
+  spans the street. The brooms swing in round the scooters and dumpsters
+  parked at the kerb.
+- **It careens**: the body swerves about the street, leaning at the dog,
+  and lurches faster and slower round its old speed. When it drops back far
+  enough to leave the screen it guns it and comes roaring back, so it
+  looms at the top of the screen instead of rumbling behind the camera; it
+  is never quicker up close than its lurch. The camera leans back up the
+  street (at most 90) to keep its front in shot.
+- **Junk comes at you**: anything loose the brooms reach (the crates by the
+  dumpsters, bottles, sacks) is flung down the street, and a hit knocks the
+  dog over. What comes back under the brooms is swallowed.
+- **Two respites**: a broom snags a dumpster (at -3600 and -1900), it stalls
+  for 2.2s with sparks and steam ("IT'S JAMMED!", the banner says catch your
+  breath), then VRRROOM. The one safe moment to stop for dog business.
+- **CLOSE SHAVE**: let the brooms within a whisker of the rearmost of you
+  and get clear again for +2 bones and a combo trick. The "outrun" goal
+  (never within a leash length) pulls the other way, on purpose.
+- `--shot-home` turns the pair for home at `--shot-y`, so a chase can be
+  photographed without walking out first.
+- Tests: `test_sweeper.gd` rewritten for the motion (the lurch averages to
+  the set speed, catch-up only when far, jams once, junk flung then
+  swallowed, the brooms round parked things, the body inside the street);
+  `test_home_chase.gd` gains the jams still ahead, the close shave, the lean
+  and the knock.
+- The behaviour snapshot is byte-identical: it records when the bot reaches
+  each leg, and the chase runs after the last of them.
+
 ## 2026-10-02 - A facelift for everyone on the walk
 
 Every character and most of the street got a going-over, in the game's soft,

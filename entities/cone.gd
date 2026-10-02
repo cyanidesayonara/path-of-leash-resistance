@@ -19,6 +19,12 @@ var vel := Vector2.ZERO
 const SLEEP_DIST := 1250.0
 var spin := 0.0
 var kind := "cone"
+# the chase sweeper's brooms: how often they have reached this (flung the
+# first time, swallowed the next), and how long a fling can still knock the
+# dog over
+var swept := 0
+var flung_t := 0.0
+const FLUNG_KNOCK_SPEED := 160.0
 
 # per-kind feel: how hard it launches, how fast it slows, how big it is
 const KINDS := {
@@ -52,6 +58,12 @@ func _physics_process(delta: float) -> void:
 		return
 	var k: Dictionary = KINDS[kind]
 	var hit_r: float = float(k.r) + 15.0
+	if flung_t > 0.0:
+		flung_t -= delta
+		if vel.length() > FLUNG_KNOCK_SPEED and global_position.distance_to(dog.global_position) < hit_r:
+			dog.knocked(vel.normalized(), "junk")
+			vel *= 0.35
+			flung_t = 0.0
 	_kick_by(dog.global_position, dog.velocity, hit_r)
 	_kick_by(human.global_position, human.velocity, hit_r + 2.0)
 	for b in main.riders_cache:

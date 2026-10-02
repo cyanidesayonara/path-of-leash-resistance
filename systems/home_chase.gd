@@ -21,6 +21,17 @@ const OUTRUN_GAP := 150.0
 # how long the machine rolls over whoever it caught before the card comes up,
 # so being swept is something you SEE happen rather than a cut to a caption
 const CATCH_BEAT := 0.75
+# CLOSE SHAVE: let the brooms within this of the rearmost of you, then get
+# back out past CLOSE_SHAVE_CLEAR without being swept
+const CLOSE_SHAVE_GAP := 60.0
+const CLOSE_SHAVE_CLEAR := 200.0
+const CLOSE_SHAVE_BONES := 2
+# The camera leans back up the street, at most this far, to keep the machine
+# LEAN_SHOW deep in the top of the screen: the boulder is something you watch
+# coming. Never further, or there is no road left to see ahead of the dog.
+const LEAN_MAX := 90.0
+const LEAN_SHOW := 80.0
+const LEAN_RATE := 3.0
 
 const EventFeed := preload("res://hud/event_feed.gd")
 
@@ -83,6 +94,14 @@ static func begin(m: Node2D) -> void:
 	# it went unlooked-at long enough to end up as a wall of rectangles.
 	var gap: float = 250.0 if "--shot-sweeper" in OS.get_cmdline_user_args() else CHASE_START_GAP
 	sweeper.setup(m, m.dog.global_position.y - gap, m.walk_cx, m.walk_half, spd)
+	# only the dumpsters still ahead of it: a chase forced on from further
+	# down the street must not start stuck on one it never reached
+	for j: Vector2 in m.chase_jams:
+		if j.y > sweeper.front_y:
+			sweeper.jams.append(j)
+	sweeper.kerb_blocks = m.chase_kerb_blocks.duplicate()
+	m.chase_lean = 0.0
+	m.chase_shave_armed = false
 	m.shake_t = 1.0
 	if owner_flees:
 		m.human.panic = true
@@ -99,14 +118,27 @@ static func tick(m: Node2D, delta: float) -> void:
 	var sweeper: Node2D = m.chase_sweeper
 	if sweeper == null:
 		return
-	sweeper.advance(delta)
+	var rear: float = minf(sweeper.gap_to(m.dog.global_position), sweeper.gap_to(m.human.global_position))
+	sweeper.advance(delta, rear, m.dog.global_position.x - m.walk_cx)
 	sweeper.global_position = Vector2(m.walk_cx, sweeper.front_y)
 	sweeper.queue_redraw()
+	if sweeper.jammed_now:
+		m.shake_t = maxf(m.shake_t, 0.6)
+		Sfx.play("crack", 0.5, -4.0)
+		m.float_text(Vector2(m.walk_cx + sweeper.jam_side * (m.walk_half - 40.0), sweeper.front_y), "CLONK", Color(1.0, 0.85, 0.5))
+		m.feed.say("IT'S JAMMED!", EventFeed.Tone.GOOD)
+	elif sweeper.freed_now:
+		Sfx.play("hiss", 0.6, -6.0)
+		m.float_text(Vector2(m.walk_cx + sweeper.sway, sweeper.front_y - 60.0), "VRRROOM", Color(1.0, 0.7, 0.4))
+	if sweeper.sweep_junk(m.get_tree().get_nodes_in_group("cones")) > 0:
+		Sfx.play("tangle", 0.8, -10.0)
 	# a low rumble the closer it gets to the dog
 	var gap: float = sweeper.gap_to(m.dog.global_position)
 	if gap < 260.0:
 		m.shake_t = maxf(m.shake_t, 0.25)
-	m.chase_min_gap = minf(m.chase_min_gap, minf(gap, sweeper.gap_to(m.human.global_position)))
+	rear = minf(gap, sweeper.gap_to(m.human.global_position))
+	m.chase_min_gap = minf(m.chase_min_gap, rear)
+	_lean(m, sweeper, delta)
 	if m.chase_catch_t > 0.0:
 		# the catch beat: the machine keeps rolling over them, then the card
 		m.chase_catch_t -= delta
@@ -116,6 +148,14 @@ static func tick(m: Node2D, delta: float) -> void:
 		return
 	if m.auto_walk:
 		return  # the attract/CI bot carries an unsweepable dog
+	if rear > 0.0 and rear < CLOSE_SHAVE_GAP:
+		m.chase_shave_armed = true
+	elif m.chase_shave_armed and rear > CLOSE_SHAVE_CLEAR:
+		m.chase_shave_armed = false
+		m.bones += CLOSE_SHAVE_BONES
+		m.combo.add("CLOSE SHAVE", 6)
+		Sfx.play("save", 1.3)
+		m.float_text(m.dog.global_position, "close shave! +%d" % CLOSE_SHAVE_BONES, Color(0.75, 0.9, 1.0))
 	if sweeper.caught(m.human.global_position):
 		if m.chase_kind == "sweeper":
 			_catch(m, "THE SWEEPER GOT YOUR HUMAN\n\nThey never once looked up from the phone.\nYou did try to tell them.")
@@ -126,6 +166,17 @@ static func tick(m: Node2D, delta: float) -> void:
 			_catch(m, "YOU WENT INTO THE BRUSHES\n\nYou came out suspiciously clean.\nThe walk did not come out at all.")
 		else:
 			_catch(m, "NOBODY WAITED FOR YOU\n\nYou snagged, the leash went tight, and\nthey kept walking. They always keep walking.")
+
+
+# How far the camera leans back up the street this frame: just enough to
+# bring the machine's front LEAN_SHOW into the top of the screen, eased.
+static func _lean(m: Node2D, sweeper: Node2D, delta: float) -> void:
+	var view_half: float = m.get_viewport_rect().size.y * 0.5 / maxf(float(m.cam.zoom.y), 0.01)
+	var cam_y: float = (m.dog.global_position.y + m.human.global_position.y) * 0.5 - 60.0
+	var need: float = (cam_y - view_half) - (float(sweeper.front_y) - LEAN_SHOW)
+	# past twice the most it can lean, leaning shows nothing but a dark road
+	var want := clampf(need, 0.0, LEAN_MAX) if need < LEAN_MAX * 2.0 else 0.0
+	m.chase_lean = lerpf(float(m.chase_lean), want, 1.0 - exp(-LEAN_RATE * delta))
 
 
 # Caught: bring the machine to the front so it visibly rolls over them, shout

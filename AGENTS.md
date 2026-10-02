@@ -161,7 +161,9 @@ godot\Godot_v4.7-stable_win64_console.exe --path . --quit-after 340 -- --shot --
 ```
 `--shot-out=PATH` writes the PNG somewhere else and `--shot-quit` exits as
 soon as it is written. Other shot flags: `--shot-title`, `--shot-results`,
-`--shot-at=N`, `--shot-sweeper`, and `--shot-y=N`, which starts the pair at that
+`--shot-at=N`, `--shot-sweeper`, `--shot-home` (turns the pair for home at
+`--shot-y`, so `--level=neteja --shot-y=-4300 --shot-home --shot-sweeper`
+photographs the chase), and `--shot-y=N`, which starts the pair at that
 point down the walk (`--shot-y=-2450 --shot-at=40` photographs El Bosc's stream;
 give it 40 frames or so, a shot taken sooner can show the start line's ground).
 `--shot-menu=walk|details|shop|progress|pause|notice` opens that menu screen.
