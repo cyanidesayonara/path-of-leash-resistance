@@ -49,6 +49,12 @@ func _place(m: Node2D, script: String, label: String, i: int) -> Node2D:
 func _run() -> void:
 	var game: Node = root.get_node("Game")
 	game.level_id = "street"
+	# weather=rain|snow|wind and level=<id> dress the lineup for that walk
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("weather="):
+			game.weather = arg.substr(8)
+		elif arg.begins_with("level="):
+			game.level_id = arg.substr(6)
 	var m: Node2D = load("res://main.tscn").instantiate()
 	root.add_child(m)
 	if not m.is_node_ready():
@@ -154,6 +160,20 @@ func _run() -> void:
 	m.cam.position_smoothing_enabled = false
 	m.cam.zoom = Vector2(ZOOM, ZOOM) * minf(1280.0 / (CELL.x * COLS * ZOOM), 720.0 / (CELL.y * rows * ZOOM))
 	m.cam.position = bd.rect.get_center()
+	# a second user arg, cells=K,N, frames N cells from cell K, close up
+	var args0 := OS.get_cmdline_user_args()
+	var cells_arg := ""
+	for arg in args0:
+		if arg.begins_with("cells="):
+			cells_arg = arg
+	if cells_arg != "":
+		var kn := cells_arg.substr(6).split(",")
+		var k0 := int(kn[0])
+		var n := int(kn[1])
+		var a := _cell(k0) - CELL * 0.5
+		var r := Rect2(a, Vector2(CELL.x * n, CELL.y))
+		m.cam.zoom = Vector2.ONE * minf(1280.0 / r.size.x, 720.0 / r.size.y)
+		m.cam.position = r.get_center()
 	for k in range(6):
 		await process_frame
 	await RenderingServer.frame_post_draw

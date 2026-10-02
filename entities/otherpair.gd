@@ -765,7 +765,11 @@ func _draw_shapes() -> void:
 		owner_stride * 0.075 + seed_o,
 		owner_gait_amount,
 		owner_phone_glow,
-		"held"
+		"held",
+		Game.weather,
+		Game.level_id,
+		Game.night,
+		int(seed_o * 1000.0)
 	)
 	# NPC dog remains drawn by the pair parent; npc_dog stays the real endpoint.
 	var dp: Vector2 = npc_dog.position

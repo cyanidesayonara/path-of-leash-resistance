@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+const HumanLook := preload("res://entities/human_appearance.gd")
+
 # The human. Dead weight with a phone. Walks north on autopilot,
 # occasionally does something stupid. Telegraphs it first, to be fair.
 
@@ -770,28 +772,43 @@ func _draw_shapes() -> void:
 			var dust := Color(0.94, 0.91, 0.84, 0.6 * (1.0 - ph) * drag_amt)
 			_b.draw_circle(brace - fd * (20.0 + ph * 16.0) + side * (ph * 4.0), 3.0 + ph * 4.0, dust)
 			_b.draw_circle(brace2 - fd * (20.0 + ph * 16.0) - side * (ph * 4.0), 3.0 + ph * 4.0, dust)
-	_b.draw_circle(brace + fd * sa, 5.0, pants)
-	_b.draw_circle(brace2 - fd * sa, 5.0, pants)
+	# dressed for the weather (human_appearance.gd outfit): a raincoat and
+	# hood in the rain, coat, scarf and hat in the snow, shades by the sea
+	var dress: Dictionary = HumanLook.outfit(Game.weather, Game.level_id, Game.night, 3 if woman else 2, shirt,
+		"none", Color.BLACK, "none")
+	shirt = dress["shirt"]
+	# shoes, toes out in front
+	var shoe := pants.darkened(0.4)
+	for fp: Vector2 in [brace + fd * sa, brace2 - fd * sa]:
+		_b.draw_colored_polygon(HumanLook._disc_points(fp + fd * 1.5, Vector2(6.2, 4.4), fd), shoe)
 	# body with a slight walking sway; dragged, leaning back against the pull
 	var sway := side * (sin(hgait * 0.5) * 1.2) if stepping else Vector2.ZERO
 	sway -= fd * 5.0 * drag_amt
-	_b.draw_circle(sway, 16.0, shirt)
+	HumanLook.draw_torso(_b, sway, fd, Vector2(13.5, 17.0), shirt, bool(dress["coat"]), dress["scarf"])
 	if drag_amt > 0.05:
 		# the leash hand, stretched out along the pull
 		# out to the side, clear of the phone
 		var hand := sway + side * 17.0 + fd * (12.0 + 12.0 * drag_amt)
 		_b.draw_line(sway + side * 11.0, hand, skin, 5.0)
 		_b.draw_circle(hand, 3.4, skin)
-	# arms reaching forward to the phone
-	_b.draw_line(side * 10.0, side * 4.0 + fd * 17.0, skin, 5.0)
-	_b.draw_line(-side * 10.0, -side * 4.0 + fd * 17.0, skin, 5.0)
-	# head, hair on the back of it; she gets the fuller cut and a ponytail
+	# arms reaching forward to the phone, sleeves then hands
+	var sleeve := shirt.darkened(0.08)
+	for sg: float in [-1.0, 1.0]:
+		_b.draw_line(side * 10.0 * sg, side * 7.0 * sg + fd * 9.0, sleeve, 6.0)
+		_b.draw_line(side * 7.0 * sg + fd * 9.0, side * 4.0 * sg + fd * 17.0, skin, 4.6)
+		_b.draw_circle(side * 4.0 * sg + fd * 17.5, 3.0, skin)
+	# head: seen from above, a proper head of hair; she has a ponytail
 	var head := fd * 5.0 - fd * 6.0 * drag_amt
-	_b.draw_circle(head, 9.0, skin)
-	var back := (-fd).angle()
-	_b.draw_arc(head, 9.0, back - (1.15 if woman else 0.85), back + (1.15 if woman else 0.85), 12, hair_col, 5.0)
-	if woman:
-		_b.draw_circle(head - fd * 11.0, 3.6, hair_col)
+	var hood: bool = String(dress["headwear"]) == "hood"
+	if woman and not hood:
+		_b.draw_colored_polygon(HumanLook._disc_points(head - fd * 12.0, Vector2(6.5, 3.8), fd), hair_col.darkened(0.12))
+		_b.draw_circle(head - fd * 8.0, 2.4, Color(0.86, 0.30, 0.42))
+	HumanLook.draw_head(_b, head, fd, 9.0, skin, hair_col, "long" if woman else "short", String(dress["headwear"]),
+		dress["headwear_col"])
+	if String(dress["eyewear"]) == "sunglasses":
+		for sg2: float in [-1.0, 1.0]:
+			_b.draw_circle(head + fd * 5.9 + side * 3.2 * sg2, 2.4, Color(0.08, 0.08, 0.10))
+		_b.draw_line(head + fd * 5.9 + side * 1.0, head + fd * 5.9 - side * 1.0, Color(0.08, 0.08, 0.10), 1.0)
 	# the phone, held out front, eternally glowing
 	var glow := 0.55 + 0.2 * sin(t * 7.3)
 	_b.draw_set_transform(fd * 24.0, fd.angle() + PI / 2.0, Vector2.ONE)
