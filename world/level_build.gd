@@ -2442,8 +2442,9 @@ static func spawn_cones(m: Node2D) -> void:
 	for c in m.cellars:
 		if m.lvl == "site":
 			break
-		spots.append(Vector2(c.end.x + 14, c.position.y + 24))
-		spots.append(Vector2(c.position.x - 12, c.end.y - 10))
+		for cs: Vector2 in [Vector2(c.end.x + 14, c.position.y + 24), Vector2(c.position.x - 12, c.end.y - 10)]:
+			if not on_cross_street(m, cs):
+				spots.append(cs)
 	for s in spots:
 		var cn := Node2D.new()
 		cn.set_script(load("res://entities/cone.gd"))
@@ -2489,15 +2490,21 @@ static func spawn_cones(m: Node2D) -> void:
 		var pal: Array = z.pal
 		for i in range(jr.randi_range(1, 3)):
 			var at: Vector2 = z.at
-			var off := Vector2(jr.randf_range(-46.0, 46.0), jr.randf_range(-40.0, 46.0))
-			var px := clampf(at.x + off.x, m.sw_l + 16.0, m.sw_r - 16.0)
-			spawn_junk(m, Vector2(px, at.y + off.y), pal[jr.randi() % pal.size()])
+			# round whatever produced it, never on top of it: a few tries for
+			# a clear spot, or it is not dropped at all
+			for attempt in range(6):
+				var off := Vector2(jr.randf_range(-70.0, 70.0), jr.randf_range(-60.0, 66.0))
+				var jp := Vector2(clampf(at.x + off.x, m.sw_l + 16.0, m.sw_r - 16.0), at.y + off.y)
+				if junk_spot_clear(m, jp):
+					spawn_junk(m, jp, pal[jr.randi() % pal.size()])
+					break
 	# then a thin background scatter, so the quiet stretches are not bare
 	var jy = m.START_Y - 120.0
 	while jy > m.GATE_Y + 160.0:
 		jy -= jr.randf_range(260.0, 520.0)
 		var jx := jr.randf_range(m.sw_l + 30.0, m.sw_r - 30.0)
-		spawn_junk(m, Vector2(jx, jy), kinds[jr.randi() % kinds.size()])
+		if junk_spot_clear(m, Vector2(jx, jy)):
+			spawn_junk(m, Vector2(jx, jy), kinds[jr.randi() % kinds.size()])
 	# A-stands are entities too: light, toppleable, never re-stood. Spawned
 	# once here with the rest of the kickable furniture; this loop used to sit
 	# in on_junk_kicked, so none stood at the start and every kick added a
@@ -2509,6 +2516,28 @@ static func spawn_cones(m: Node2D) -> void:
 		sa.z_index = 11
 		m.add_child(sa)
 		sa.setup(m, m.dog, m.human)
+
+
+# on one of the side streets that cross the walk (the traffic lanes)
+static func on_cross_street(m: Node2D, p: Vector2) -> bool:
+	for ly: float in m.lane_ys:
+		if absf(p.y - ly) < m.LANE_HALF + 14.0:
+			return true
+	return false
+
+
+# somewhere loose junk can lie: off the side streets and not inside anything
+# solid (bypasser_blockers: stalls, vans, benches, the pond, manholes...)
+static func junk_spot_clear(m: Node2D, p: Vector2) -> bool:
+	if on_cross_street(m, p):
+		return false
+	for b: Dictionary in m.bypasser_blockers:
+		if b.has("center"):
+			if p.distance_to(b["center"]) < float(b["radius"]) + 14.0:
+				return false
+		elif Rect2(b["rect"]).grow(14.0).has_point(p):
+			return false
+	return true
 
 
 static func spawn_junk(m: Node2D, at: Vector2, kind: String) -> void:
