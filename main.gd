@@ -4990,7 +4990,27 @@ func _greetings() -> void:
 			greeted[id] = true
 			dogs_greeted += 1
 			combo.add("HELLO", 3)
-			float_text(op + Vector2(0, -18), "sniff! hi", Color(0.8, 1.0, 0.85))
+			if o.is_in_group("pairs"):
+				_greet_pair(o)
+			else:
+				float_text(op + Vector2(0, -18), "sniff! hi", Color(0.8, 1.0, 0.85))
+
+
+# what another walker's dog and its owner make of yours coming up to say hello
+const GREET_LINES := ["aw, hello", "say hello!", "he loves other dogs", "hi, pup", "go on then"]
+const GRUMPY_LINES := ["sorry, he's not keen", "leave it, Bruno", "sorry! he's grumpy", "not today, mate"]
+
+
+func _greet_pair(pair: Node2D) -> void:
+	pair.greet()
+	var dp: Vector2 = pair.npc_dog.position
+	var op: Vector2 = pair.npc_owner.position
+	if bool(pair.grumpy):
+		float_text(dp + Vector2(0, -18), "grrr", Color(1.0, 0.7, 0.55))
+		float_text(op + Vector2(0, -30), String(GRUMPY_LINES[int(pair.seed_o * 1000.0) % GRUMPY_LINES.size()]), Color(1, 0.92, 0.85), POP_SAY)
+	else:
+		float_text(dp + Vector2(0, -18), "sniff! hi", Color(0.8, 1.0, 0.85))
+		float_text(op + Vector2(0, -30), String(GREET_LINES[int(pair.seed_o * 1000.0) % GREET_LINES.size()]), Color(1, 0.95, 0.9), POP_SAY)
 
 
 func _pair_spawn_distance(camera_y: float) -> float:

@@ -51,6 +51,10 @@ const SPOT_AHEAD := 150.0
 const MARK_P := 0.6
 const MARK_T := 1.1
 const MARKS_MAX := 2
+# meeting your dog nose to nose: the other dog stops and sniffs back, and
+# its owner waits that long; GRUMPY_P of dogs would rather not
+const GREET_HOLD := 1.4
+const GRUMPY_P := 0.2
 const NAMES := ["a terrier", "a beagle", "a whippet", "a poodle", "a sausage dog", "a labrador",
 	"a staffie", "a pug", "a greyhound", "a collie", "a spaniel", "a chihuahua"]
 const POSE_EASE := 0.25
@@ -115,6 +119,8 @@ var at_spot := false
 var mark_t := 0.0
 var marks_left := MARKS_MAX
 var dog_name := "a dog"
+var greet_t := 0.0
+var grumpy := false
 # its own dice, so a sniff stop never moves the shared seed the rest of the
 # walk (and the autowalk) depends on
 var life_rng := RandomNumberGenerator.new()
@@ -129,6 +135,7 @@ func setup(m: Node2D, mine: Node2D, poles: Array[Vector2], start: Vector2, direc
 	life_rng.seed = int(seed_o * 100000.0) + 7
 	sniff_gap = life_rng.randf_range(1.0, SNIFF_GAP_MAX)
 	dog_name = NAMES[life_rng.randi() % NAMES.size()]
+	grumpy = life_rng.randf() < GRUMPY_P
 	owner_face = direction.normalized() if direction.length() > 0.1 else Vector2.DOWN
 	dog_face = owner_face
 	var owner_appearance_key := randi()
@@ -296,7 +303,17 @@ func _physics_process(delta: float) -> void:
 		queue_redraw()
 
 
+# your dog has come up nose to nose: stop, sniff back, the owner waits
+func greet() -> void:
+	greet_t = GREET_HOLD
+	sniff_t = maxf(sniff_t, GREET_HOLD)
+	sniff_spot = Vector2(INF, INF)
+	at_spot = false
+	mark_t = 0.0
+
+
 func _tick_walking(delta: float, _allow_arrival: bool) -> void:
+	greet_t = maxf(0.0, greet_t - delta)
 	var route_was_clear := (
 		route != null
 		and int(route.get("detour_side")) == 0
@@ -309,7 +326,7 @@ func _tick_walking(delta: float, _allow_arrival: bool) -> void:
 			wander = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * 40.0
 	var clear_dog_offset := _clear_dog_offset()
 	# the owner ambles in their lane; a tangle roots them in place
-	if tangled_t <= 0.0 and route != null:
+	if tangled_t <= 0.0 and greet_t <= 0.0 and route != null:
 		var before: Vector2 = npc_owner.position
 		var formation_offsets: Array[Vector2] = [
 			Vector2.ZERO,
@@ -470,7 +487,9 @@ func _update_pose(owner_was: Vector2, dog_was: Vector2, delta: float) -> void:
 		owner_face = owner_face.lerp(owner_pose_vel.normalized(), 0.2).normalized()
 	var want := dog_face
 	var near := my_dog != null and my_dog.global_position.distance_to(npc_dog.global_position) < CURIOUS_R
-	if mark_t > 0.0 and sniff_spot.x < INF:
+	if greet_t > 0.0 and my_dog != null:
+		want = (my_dog.global_position - npc_dog.global_position).normalized()
+	elif mark_t > 0.0 and sniff_spot.x < INF:
 		# side on to the post, leg up
 		var to_post := Vector2(signf(sniff_spot.x - npc_dog.position.x - 0.01) * -14.0, 0.0)
 		want = to_post.normalized().orthogonal()
@@ -757,6 +776,9 @@ func _draw_shapes() -> void:
 	# dog is right there
 	var near := my_dog.global_position.distance_to(npc_dog.global_position) < CURIOUS_R
 	var wag_rate := 16.0 if near else (4.0 if sniff_t > 0.0 else 8.0)
+	# a grumpy dog meeting yours holds its tail still
+	if grumpy and greet_t > 0.0:
+		wag_rate = 0.0
 	var wag := t * wag_rate + seed_o
 	DogAppearanceScript.draw_dog(
 		_b,

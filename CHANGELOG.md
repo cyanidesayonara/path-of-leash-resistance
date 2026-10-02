@@ -5,6 +5,18 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-02 - Meeting another dog takes two
+
+Your dog going nose to nose with another walker's dog used to be a "sniff! hi"
+and nothing else: the other dog walked on as if she were not there. Now it is
+a meeting (`main._greet_pair`, `otherpair.greet`):
+- The other dog stops and turns to sniff her back, and its owner waits for it
+  (1.4 s), then they walk on.
+- Its owner says something ("aw, hello", "he loves other dogs").
+- About one dog in five is not keen: it holds its tail still, there is a
+  "grrr", and its owner apologises ("sorry! he's grumpy"). It still counts as
+  a hello.
+- `tests/test_pair_greet.gd`.
 ## 2026-10-02 - La Castanyada's chestnut letters read at night
 
 The walk's name, HOME and the gate sign at La Castanyada are spelt in roast
