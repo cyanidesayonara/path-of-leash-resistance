@@ -18,7 +18,8 @@ const OUT_DIR := "res://build/store-art"
 const SS := 2
 const IconScript := preload("res://tools/make_icon.gd")
 
-const CREAM := Color(0.96, 0.93, 0.84)
+const CREAM := Color(0.99, 0.96, 0.88)
+const INK := Color(0.30, 0.18, 0.10)
 
 
 class PosterCanvas:
@@ -29,7 +30,7 @@ class PosterCanvas:
 	var icon_at := Vector2.ZERO
 
 	func _draw() -> void:
-		draw_rect(Rect2(Vector2.ZERO, size_px), GRASS)
+		draw_rect(Rect2(Vector2.ZERO, size_px), SKY)
 		# the dog first, sitting on the bottom edge with her shoulders running
 		# off it (the icon's own crop); everything else goes on top, so neither
 		# the icon's light nor its square background can cover the title or
@@ -51,15 +52,18 @@ class PosterCanvas:
 		for line in lines:
 			var w := f.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 			var p := Vector2((size_px.x - w) * 0.5, y)
-			draw_string(f, p + Vector2(0.0, fs * 0.05), line, HORIZONTAL_ALIGNMENT_LEFT, -1, fs,
-				Color(0, 0, 0, 0.35))
-			draw_string(f, p, line, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, CREAM)
+			# dark brown on a thick cream outline, so it reads on the sky at
+			# any size the Store shows it
+			draw_string_outline(f, p + Vector2(0.0, fs * 0.05), line, HORIZONTAL_ALIGNMENT_LEFT, -1, fs,
+				int(fs * 0.16), Color(0.30, 0.18, 0.10, 0.25))
+			draw_string_outline(f, p, line, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, int(fs * 0.14), CREAM)
+			draw_string(f, p, line, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK)
 			y += fs * 1.02
 		var tag := "you are the dog"
 		var ts := int(fs * 0.36)
 		var tw := f.get_string_size(tag, HORIZONTAL_ALIGNMENT_LEFT, -1, ts).x
 		draw_string(f, Vector2((size_px.x - tw) * 0.5, y + ts * 0.3), tag,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, ts, Color(CREAM.r, CREAM.g, CREAM.b, 0.8))
+			HORIZONTAL_ALIGNMENT_LEFT, -1, ts, Color(INK.r, INK.g, INK.b, 0.85))
 
 
 func _initialize() -> void:
