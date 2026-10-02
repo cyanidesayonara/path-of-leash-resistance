@@ -3844,8 +3844,8 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 				c.draw_circle(p, 7.0, Color(0.16, 0.17, 0.18))
 				c.draw_circle(p + Vector2(-1.5, -1.5), 4.5, Color(0.28, 0.29, 0.31))
 				c.draw_circle(p + Vector2(-2.0, -2.0), 1.6, Color(0.50, 0.52, 0.54))
-			"shrub" when freedom_kind == "placa":
-				# a stone planter with a clipped bush in it
+			"planter":
+				# a stone planter with a clipped bush in it: solid, go round it
 				c.draw_rect(Rect2(p - Vector2(17, 17), Vector2(34, 34)), Color(0.74, 0.70, 0.62))
 				c.draw_rect(Rect2(p - Vector2(17, 17), Vector2(34, 34)), Color(0.56, 0.52, 0.46), false, 2.0)
 				c.draw_circle(p, 12.0, Color(0.26, 0.42, 0.24))
@@ -6566,7 +6566,7 @@ func _pickups(delta: float) -> void:
 						pp.prog = maxf(0.0, was_dig - delta * 0.6)
 						if was_dig > 0.0 and float(pp.prog) < was_dig:
 							_freedom_dirty()
-				"shrub", "post", "rock", "driftwood", "tyre":
+				"shrub", "post", "rock", "driftwood", "tyre", "planter":
 					if d < 34.0 and dog.velocity.length() < 80.0:
 						pp.prog = float(pp.prog) + delta
 						_freedom_dirty()
@@ -6774,7 +6774,7 @@ func beach_shore_x(y: float) -> float:
 	return lerpf(BEACH_SEA_R, BEACH_GATE_SHORE_X, (y - bend_y) / (gate_y - bend_y))
 
 
-const MARKABLE_PARK_KINDS := ["post", "shrub", "log", "rock", "driftwood", "tyre"]
+const MARKABLE_PARK_KINDS := ["post", "shrub", "log", "rock", "driftwood", "tyre", "planter"]
 
 
 func _nearest_markable(pos: Vector2) -> Vector2:

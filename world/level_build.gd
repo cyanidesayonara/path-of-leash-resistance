@@ -1990,7 +1990,10 @@ static func build_park_props(m: Node2D) -> void:
 		"scrap", "site": flavour = ["tyre", "log", "dig", "tyre"]
 		"trail", "park": flavour = ["log", "dig", "shrub", "shrub", "post", "dig"]
 	if m.freedom_kind == "placa":
-		flavour = ["post", "shrub", "post", "dig"]
+		flavour = ["post", "planter", "post", "dig"]
+		# two stone planters always, the square's solid things to run round
+		for pa: Vector2 in [Vector2(370.0, m.GATE_Y - 470.0), Vector2(1010.0, m.GATE_Y - 230.0)]:
+			m.park_props.append({"pos": pa, "kind": "planter", "done": false, "prog": 0.0})
 	var lo = m.freedom_lo + 70.0
 	var hi = m.GATE_Y - 90.0
 	# Guarantee the essentials rather than hoping the dice provide them: on
@@ -2315,7 +2318,7 @@ static func build_walls(m: Node2D) -> void:
 	# shrubs and troughs stay walkable so nosing about is never obstructed.
 	for pp in m.park_props:
 		var pk := String(pp.kind)
-		if pk != "log" and pk != "driftwood" and pk != "tyre":
+		if pk != "log" and pk != "driftwood" and pk != "tyre" and pk != "planter":
 			continue
 		var lb := StaticBody2D.new()
 		lb.collision_layer = 1
@@ -2325,6 +2328,10 @@ static func build_walls(m: Node2D) -> void:
 			var csh := CircleShape2D.new()
 			csh.radius = 16.0
 			lcs.shape = csh
+		elif pk == "planter":
+			var psh := RectangleShape2D.new()
+			psh.size = Vector2(34.0, 34.0)
+			lcs.shape = psh
 		else:
 			var rsh := RectangleShape2D.new()
 			rsh.size = Vector2(62.0, 18.0)
