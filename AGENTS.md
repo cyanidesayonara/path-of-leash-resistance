@@ -254,8 +254,9 @@ Each kind of text has one form, and its look comes from where it is drawn:
   world/pops_layer.gd puts on a chip.
 - **Menus**: headings in capitals; body text in plain sentences; button
   hints only through the prompt bar, never written into a sentence.
-Say "leash" (never "lead"), "your human" for the owner, and name the place
-in Catalan with an English gloss under it.
+Say "leash" (never "lead"), "your human" for the owner, and name the place in Catalan, accents and all (PLAÇA, L'Estació; the
+stroke letters in `world/sign_letters.gd` have them), with an English gloss
+under it.
 
 ## Conventions
 

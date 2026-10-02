@@ -15,6 +15,14 @@ and the Store poster's title in dark brown on a thick cream outline
 (`tools/make_icon.gd`, `tools/make_store_art.gd`). The icon still reads at
 16px. Regenerated: icon.png, icon.ico, the MSIX tiles (the wide tile now sits
 on the sky colour).
+## 2026-10-02 - Catalan with its accents
+
+The Catalan names were written without their accents, because the stroke
+letters the ground signs are made of had none. They have them now (À È É Í Ï
+Ò Ó Ú Ü and Ç: the base letter and one more stroke, `SignLetters.ACCENTED`),
+and the names are spelt properly: PLAÇA over the gates and El Mercat's far
+arch, PIPICÀ, Passeig Marítim, El Gòtic, L'Estació. The voice rules in
+AGENTS.md now say so.
 ## 2026-10-02 - Meeting another dog takes two
 
 Your dog going nose to nose with another walker's dog used to be a "sniff! hi"
