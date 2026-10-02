@@ -137,7 +137,7 @@ static func check(m) -> Array:
 		var k := String(pp.kind)
 		if k == "dig":
 			diggable += 1
-		elif k == "log" or k == "driftwood" or k == "tyre":
+		elif k == "log" or k == "driftwood" or k == "tyre" or k == "planter":
 			solid += 1
 	if diggable < 2:
 		p.append("off-leash area has only %d dig patches" % diggable)

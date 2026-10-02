@@ -60,7 +60,7 @@ static func gotic(m: Node2D) -> void:
 	# stone bridge between two buildings, flowerpots at the doors, scooters
 	# parked against the walls, and the plaça with its fountain. None of the
 	# market's stalls.
-	m.gate_text = "PLACA"
+	m.gate_text = "PLAÇA"
 	m.stalls.clear()
 	m.stall_kinds.clear()
 	m.astands = Array([], TYPE_VECTOR2, &"", null)
@@ -183,7 +183,7 @@ static func neteja_dumpsters(m: Node2D) -> Array[Vector2]:
 
 
 static func neteja(m: Node2D) -> void:
-	m.gate_text = "PLACA"
+	m.gate_text = "PLAÇA"
 	m.stalls = Array([], TYPE_VECTOR2, &"", null)
 	m.stall_kinds.clear()
 	m.performers = Array([], TYPE_VECTOR2, &"", null)
@@ -241,7 +241,7 @@ static func castanyada_stage(m: Node2D) -> Rect2:
 
 
 static func castanyada(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
-	m.gate_text = "PLACA"
+	m.gate_text = "PLAÇA"
 	m.stalls.clear()
 	m.stall_kinds.clear()
 	for st: Array in CAST_STALLS:
@@ -325,7 +325,7 @@ static func mercat_stall_front(m: Node2D, i: int) -> Vector2:
 
 
 static func mercat(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
-	m.gate_text = "PLACA"
+	m.gate_text = "PLAÇA"
 	m.stalls.clear()
 	m.stall_kinds.clear()
 	for i in range(MERCAT_WALL_STALLS.size()):
@@ -454,7 +454,7 @@ static func estacio(m: Node2D) -> void:
 	# fat pillars, bench rows, the moving walkway up the middle, rows of
 	# nested trolleys, the ticket barriers, and the train standing between two
 	# platforms. No terrace, no crossings, no drains, no lawn: it is indoors.
-	m.gate_text = "PIPICA"
+	m.gate_text = "PIPICÀ"
 	m.lane_ys = Array([], TYPE_FLOAT, &"", null)
 	m.tables.clear()
 	m.chairs.clear()
@@ -1215,7 +1215,7 @@ static func build_level_data(m: Node2D) -> void:
 			# EL BARRI: the neighbourhood park. Plane trees in rows down both
 			# edges of a gravel square, benches facing each other, a
 			# ping-pong table, the petanca pitch, a playground, a fountain.
-			m.gate_text = "PIPICA"
+			m.gate_text = "PIPICÀ"
 			var y := -320.0
 			var k := 0
 			while y > m.GATE_Y + 260.0:
@@ -1340,7 +1340,7 @@ static func build_level_data(m: Node2D) -> void:
 		"market":
 			# El Mercat: stalls line both edges, produce underfoot, the
 			# cat is practically guaranteed (fish)
-			m.gate_text = "PLAZA"
+			m.gate_text = "PLAÇA"
 			m.stalls = Array([
 				Vector2(370, -800), Vector2(910, -1150), Vector2(370, -1750),
 				Vector2(910, -2300), Vector2(370, -2900), Vector2(910, -3500),
@@ -1578,6 +1578,17 @@ static func build_level_data(m: Node2D) -> void:
 			grove = 6
 			grove_lo = 150.0
 			grove_hi = 1120.0
+		"placa":
+			# plane trees in rows, as a square has them: along the top and
+			# down both sides, never in the middle
+			grove = 0
+			for tx: float in [200.0, 376.0, 552.0, 728.0, 1080.0]:
+				m.trees.append(Vector2(tx, m.GATE_Y - 560.0))
+			for ty: float in [-300.0, -450.0]:
+				m.trees.append(Vector2(140.0, m.GATE_Y + ty))
+				m.trees.append(Vector2(1140.0, m.GATE_Y + ty))
+			# and the pigeons that live in every square
+			m.flock_ys.append(m.GATE_Y - 330.0)
 	for i in range(grove):
 		for attempt in range(20):
 			var tx := randf_range(grove_lo, grove_hi)
@@ -1839,6 +1850,8 @@ static func build_freedom_area(m: Node2D) -> void:
 			m.water.append(r)
 	if m.tutorial_mode:
 		m.water.append(tutorial_pond(m))
+	if m.freedom_kind == "placa":
+		m.water.append(placa_fountain(m))
 	if m.freedom_kind == "beach":
 		# The sea, in two pieces that meet at the gate: a band along the whole
 		# passeig (so she can go in ANYWHERE on the walk, which is the first
@@ -1853,6 +1866,12 @@ static func build_freedom_area(m: Node2D) -> void:
 			var shore = m.beach_shore_x(strip_y + strip_h * 0.5)
 			m.water.append(Rect2(-330.0, strip_y, shore + 330.0, strip_h + 0.5))
 			strip_y += strip_h
+
+
+# the plaça's fountain basin, off to the east of the fetching runway and clear
+# of the parked pairs' spots; it is water, so she can drink or get in
+static func placa_fountain(m: Node2D) -> Rect2:
+	return Rect2(Vector2(825.0, m.GATE_Y - 470.0), Vector2(150.0, 96.0))
 
 
 static func patch_clear(m: Node2D, pt: Dictionary) -> bool:
@@ -1970,6 +1989,11 @@ static func build_park_props(m: Node2D) -> void:
 		"beach": flavour = ["driftwood", "dig", "rock", "dig", "rock"]
 		"scrap", "site": flavour = ["tyre", "log", "dig", "tyre"]
 		"trail", "park": flavour = ["log", "dig", "shrub", "shrub", "post", "dig"]
+	if m.freedom_kind == "placa":
+		flavour = ["post", "planter", "post", "dig"]
+		# two stone planters always, the square's solid things to run round
+		for pa: Vector2 in [Vector2(370.0, m.GATE_Y - 470.0), Vector2(1010.0, m.GATE_Y - 230.0)]:
+			m.park_props.append({"pos": pa, "kind": "planter", "done": false, "prog": 0.0})
 	var lo = m.freedom_lo + 70.0
 	var hi = m.GATE_Y - 90.0
 	# Guarantee the essentials rather than hoping the dice provide them: on
@@ -2294,7 +2318,7 @@ static func build_walls(m: Node2D) -> void:
 	# shrubs and troughs stay walkable so nosing about is never obstructed.
 	for pp in m.park_props:
 		var pk := String(pp.kind)
-		if pk != "log" and pk != "driftwood" and pk != "tyre":
+		if pk != "log" and pk != "driftwood" and pk != "tyre" and pk != "planter":
 			continue
 		var lb := StaticBody2D.new()
 		lb.collision_layer = 1
@@ -2304,6 +2328,10 @@ static func build_walls(m: Node2D) -> void:
 			var csh := CircleShape2D.new()
 			csh.radius = 16.0
 			lcs.shape = csh
+		elif pk == "planter":
+			var psh := RectangleShape2D.new()
+			psh.size = Vector2(34.0, 34.0)
+			lcs.shape = psh
 		else:
 			var rsh := RectangleShape2D.new()
 			rsh.size = Vector2(62.0, 18.0)
