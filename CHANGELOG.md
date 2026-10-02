@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-10-03 - v1.57 submitted to the Microsoft Store
+
+Version 1.57.0.0 was submitted with the listing, What's new text and
+certification notes prepared on 2026-10-02. The uploaded screenshot set
+contained ten 1920x1080 images in the documented order. El Parc's dog park
+replaced the planned square off the leash because the daytime El Gòtic square
+duplicated La Castanyada's night plaça too closely.
+
 
 
 
