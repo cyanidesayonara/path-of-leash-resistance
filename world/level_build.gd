@@ -117,6 +117,8 @@ const MOSAIC_CALVARY := Vector2(860.0, -4760.0)
 static func mosaic(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 	m.gate_text = "EL CALVARI"
 	m.pond = Rect2()
+	# no pond, so no duck family off it (El Parc's set them before this)
+	m.duck_ys.clear()
 	m.patches.clear()
 	m.stalls.clear()
 	m.stall_kinds.clear()
@@ -452,7 +454,7 @@ static func estacio(m: Node2D) -> void:
 	# fat pillars, bench rows, the moving walkway up the middle, rows of
 	# nested trolleys, the ticket barriers, and the train standing between two
 	# platforms. No terrace, no crossings, no drains, no lawn: it is indoors.
-	m.gate_text = "PLATFORM"
+	m.gate_text = "PIPICA"
 	m.lane_ys = Array([], TYPE_FLOAT, &"", null)
 	m.tables.clear()
 	m.chairs.clear()
@@ -1122,7 +1124,7 @@ static func build_level_data(m: Node2D) -> void:
 			]
 			keb_list = [Vector2(640, -1960), Vector2(700, -4200), Vector2(m.SHOULDER_R - 12, -2400)]
 		"park":
-			m.gate_text = "HOME"
+			m.gate_text = "DOG PARK"
 			# El Parc's lake stands in the middle of its widened path; El Mosaic
 			# still builds on the old pond's footprint (and then drops it)
 			m.pond = PARK_LAKE if m.lvl == "park" else Rect2(m.sw_l, -2950, 360, 470)
@@ -1255,7 +1257,7 @@ static func build_level_data(m: Node2D) -> void:
 			# Passeig Maritim: sea | sand | boardwalk | bike path |
 			# pavement | palms and cafe terraces. The human walks the
 			# pavement; the dog walks wherever a dog walks.
-			m.gate_text = "HOME"
+			m.gate_text = "DOG BEACH"
 			m.walk_cx = 770.0
 			m.walk_half = 210.0
 			m.gate_l = 560.0
@@ -2364,6 +2366,7 @@ static func add_rect_body(m: Node2D, at: Vector2, size: Vector2) -> void:
 	cs.shape = sh
 	sb.add_child(cs)
 	m.add_child(sb)
+	m.solid_rects.append(Rect2(at - size * 0.5, size))
 
 
 static func build_entities(m: Node2D) -> void:
@@ -2430,13 +2433,18 @@ static func build_entities(m: Node2D) -> void:
 
 static func spawn_cones(m: Node2D) -> void:
 	# real, kickable cones at every work site plus a few loose ones
-	var spots: Array[Vector2] = []
-	spots.append_array(m.cone_spots)
+	# [where, kind]: cones unless the place calls for something else
+	var spots: Array = []
+	for cs: Vector2 in m.cone_spots:
+		spots.append([cs, "cone"])
 	for m_local in m.manholes:
-		spots.append(m_local + Vector2(32, -18))
-		spots.append(m_local + Vector2(-30, 22))
-		spots.append(m_local + Vector2(26, 28))
-		spots.append(m_local + Vector2(-26, -26))
+		# a market hall's open drain gets the wet-floor signs, not road cones
+		if m.lvl == "market":
+			spots.append([m_local + Vector2(34, -20), "wetfloor"])
+			spots.append([m_local + Vector2(-32, 22), "wetfloor"])
+			continue
+		for off: Vector2 in [Vector2(32, -18), Vector2(-30, 22), Vector2(26, 28), Vector2(-26, -26)]:
+			spots.append([m_local + off, "cone"])
 	# a cone each end of a cellar hatch; Les Obres' trench sets its own, and
 	# two on its plank would be two cones in the owner's way
 	for c in m.cellars:
@@ -2444,14 +2452,14 @@ static func spawn_cones(m: Node2D) -> void:
 			break
 		for cs: Vector2 in [Vector2(c.end.x + 14, c.position.y + 24), Vector2(c.position.x - 12, c.end.y - 10)]:
 			if not on_cross_street(m, cs):
-				spots.append(cs)
-	for s in spots:
+				spots.append([cs, "cone"])
+	for sp: Array in spots:
 		var cn := Node2D.new()
 		cn.set_script(load("res://entities/cone.gd"))
-		cn.position = s
+		cn.position = sp[0]
 		cn.z_index = 11
 		m.add_child(cn)
-		cn.setup(m, m.dog, m.human, "cone")
+		cn.setup(m, m.dog, m.human, String(sp[1]))
 	# Loose junk scattered down the whole walk, because punting things is one
 	# of the reliable joys here and there was only ever cones. Mixed kinds so
 	# the heft varies: cans rattle away, sacks barely budge. Local rng, so the
@@ -2526,16 +2534,26 @@ static func on_cross_street(m: Node2D, p: Vector2) -> bool:
 	return false
 
 
-# somewhere loose junk can lie: off the side streets and not inside anything
-# solid (bypasser_blockers: stalls, vans, benches, the pond, manholes...)
+# somewhere loose junk can lie: on the path, off the side streets and not
+# inside anything solid (bypasser_blockers: stalls, vans, benches, the pond,
+# manholes...)
 static func junk_spot_clear(m: Node2D, p: Vector2) -> bool:
 	if on_cross_street(m, p):
 		return false
+	# a walk whose path winds (edge_nodes) has roofs and terrace walls where
+	# the old straight corridor was: on the path, or nowhere
+	if not m.edge_nodes.is_empty():
+		var e: Vector2 = m.walk_edges(p.y)
+		if p.x < e.x + 14.0 or p.x > e.y - 14.0:
+			return false
 	for b: Dictionary in m.bypasser_blockers:
 		if b.has("center"):
 			if p.distance_to(b["center"]) < float(b["radius"]) + 14.0:
 				return false
 		elif Rect2(b["rect"]).grow(14.0).has_point(p):
+			return false
+	for r: Rect2 in m.solid_rects:
+		if r.grow(14.0).has_point(p):
 			return false
 	return true
 
