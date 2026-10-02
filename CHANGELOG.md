@@ -6,6 +6,25 @@ Append-only session history, newest first.
 
 
 
+
+## 2026-10-02 - The town walks end in a square
+
+El Mercat, El Gòtic, La Castanyada and La Neteja have PLAÇA over their gates,
+and behind them was the same fenced green dog park every walk ends in. Now
+they end in a square (`main._draw_placa`, `FREEDOM_KINDS` "placa"):
+- Paving in big squares, house fronts round three sides instead of a fence,
+  and a sign: PLAÇA DELS GOSSOS.
+- Plane trees in rows along the top and down both sides, in their pits (the
+  trees are still rope-wrap posts), never in the middle where the fetching
+  happens.
+- A stone fountain off to one side that is real water: drink, or get in.
+- Iron bollards and stone planters to sniff and mark, and the dig spots are in
+  squares of earth, not through the paving.
+- A flock of pigeons.
+Also, on every walk: the street's buildings and each walk's own ground (La
+Neteja's wet streaks and slabs, El Gòtic's setts...) used to carry on past the
+gate and cover the sides and middle of the off-leash space. They stop at the
+gate now. `tests/test_placa_freedom.gd`.
 ## 2026-10-02 - A lighter logo
 
 The icon and Store art had Millie on a dark green that swallowed both the

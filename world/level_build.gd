@@ -1578,6 +1578,17 @@ static func build_level_data(m: Node2D) -> void:
 			grove = 6
 			grove_lo = 150.0
 			grove_hi = 1120.0
+		"placa":
+			# plane trees in rows, as a square has them: along the top and
+			# down both sides, never in the middle
+			grove = 0
+			for tx: float in [200.0, 376.0, 552.0, 728.0, 1080.0]:
+				m.trees.append(Vector2(tx, m.GATE_Y - 560.0))
+			for ty: float in [-300.0, -450.0]:
+				m.trees.append(Vector2(140.0, m.GATE_Y + ty))
+				m.trees.append(Vector2(1140.0, m.GATE_Y + ty))
+			# and the pigeons that live in every square
+			m.flock_ys.append(m.GATE_Y - 330.0)
 	for i in range(grove):
 		for attempt in range(20):
 			var tx := randf_range(grove_lo, grove_hi)
@@ -1839,6 +1850,8 @@ static func build_freedom_area(m: Node2D) -> void:
 			m.water.append(r)
 	if m.tutorial_mode:
 		m.water.append(tutorial_pond(m))
+	if m.freedom_kind == "placa":
+		m.water.append(placa_fountain(m))
 	if m.freedom_kind == "beach":
 		# The sea, in two pieces that meet at the gate: a band along the whole
 		# passeig (so she can go in ANYWHERE on the walk, which is the first
@@ -1853,6 +1866,12 @@ static func build_freedom_area(m: Node2D) -> void:
 			var shore = m.beach_shore_x(strip_y + strip_h * 0.5)
 			m.water.append(Rect2(-330.0, strip_y, shore + 330.0, strip_h + 0.5))
 			strip_y += strip_h
+
+
+# the plaça's fountain basin, off to the east of the fetching runway and clear
+# of the parked pairs' spots; it is water, so she can drink or get in
+static func placa_fountain(m: Node2D) -> Rect2:
+	return Rect2(Vector2(825.0, m.GATE_Y - 470.0), Vector2(150.0, 96.0))
 
 
 static func patch_clear(m: Node2D, pt: Dictionary) -> bool:
@@ -1970,6 +1989,11 @@ static func build_park_props(m: Node2D) -> void:
 		"beach": flavour = ["driftwood", "dig", "rock", "dig", "rock"]
 		"scrap", "site": flavour = ["tyre", "log", "dig", "tyre"]
 		"trail", "park": flavour = ["log", "dig", "shrub", "shrub", "post", "dig"]
+	if m.freedom_kind == "placa":
+		flavour = ["post", "planter", "post", "dig"]
+		# two stone planters always, the square's solid things to run round
+		for pa: Vector2 in [Vector2(370.0, m.GATE_Y - 470.0), Vector2(1010.0, m.GATE_Y - 230.0)]:
+			m.park_props.append({"pos": pa, "kind": "planter", "done": false, "prog": 0.0})
 	var lo = m.freedom_lo + 70.0
 	var hi = m.GATE_Y - 90.0
 	# Guarantee the essentials rather than hoping the dice provide them: on
@@ -2294,7 +2318,7 @@ static func build_walls(m: Node2D) -> void:
 	# shrubs and troughs stay walkable so nosing about is never obstructed.
 	for pp in m.park_props:
 		var pk := String(pp.kind)
-		if pk != "log" and pk != "driftwood" and pk != "tyre":
+		if pk != "log" and pk != "driftwood" and pk != "tyre" and pk != "planter":
 			continue
 		var lb := StaticBody2D.new()
 		lb.collision_layer = 1
@@ -2304,6 +2328,10 @@ static func build_walls(m: Node2D) -> void:
 			var csh := CircleShape2D.new()
 			csh.radius = 16.0
 			lcs.shape = csh
+		elif pk == "planter":
+			var psh := RectangleShape2D.new()
+			psh.size = Vector2(34.0, 34.0)
+			lcs.shape = psh
 		else:
 			var rsh := RectangleShape2D.new()
 			rsh.size = Vector2(62.0, 18.0)
