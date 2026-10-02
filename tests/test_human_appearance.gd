@@ -419,6 +419,10 @@ func _test_exact_api() -> bool:
 			"gait_amount",
 			"phone_glow",
 			"phone_state",
+			"weather",
+			"level",
+			"night",
+			"key",
 		]),
 		PackedInt32Array([
 			TYPE_OBJECT,
@@ -429,6 +433,10 @@ func _test_exact_api() -> bool:
 			TYPE_FLOAT,
 			TYPE_FLOAT,
 			TYPE_STRING,
+			TYPE_STRING,
+			TYPE_STRING,
+			TYPE_BOOL,
+			TYPE_INT,
 		]),
 		TYPE_NIL
 	)
@@ -439,8 +447,13 @@ func _test_exact_api() -> bool:
 			public_methods.append(method_name)
 	public_methods.sort()
 	var expected_public := PackedStringArray([
+		"draw_hair_fall",
+		"draw_head",
 		"draw_owner",
+		"draw_torso",
+		"env",
 		"get_profile",
+		"outfit",
 		"profile_for_key",
 		"profile_id_for_key",
 		"profile_ids",

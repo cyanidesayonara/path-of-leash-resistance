@@ -95,7 +95,8 @@ func _draw() -> void:
 		draw_line(sit + side * e * 5.0, sit + side * e * 6.5 + fd * 17.0, jeans, 6.0)
 		draw_circle(sit + side * e * 6.5 + fd * 19.0, 3.6, Color(0.22, 0.22, 0.26))
 	# body, drawn like every other person (human_appearance.gd)
-	var dress: Dictionary = HumanLook.outfit(Game.weather, Game.level_id, Game.night, 5, shirt, "cap",
+	var env: Array = HumanLook.env(self)
+	var dress: Dictionary = HumanLook.outfit(String(env[0]), String(env[1]), bool(env[2]), 5, shirt, "cap",
 		Color(0.20, 0.36, 0.62), "none")
 	HumanLook.draw_torso(self, sit, fd, Vector2(10.0, 12.5), dress["shirt"], bool(dress["coat"]), dress["scarf"])
 	# the far arm resting along the bench back, the near one up mid-dare

@@ -449,6 +449,15 @@ const WOOLS := [Color(0.42, 0.22, 0.20), Color(0.24, 0.28, 0.36), Color(0.36, 0.
 const SCARVES := [Color(0.86, 0.24, 0.26), Color(0.94, 0.80, 0.30), Color(0.30, 0.56, 0.80), Color(0.92, 0.92, 0.88)]
 
 
+# the walk's [weather, level, night], read from the Game autoload when there is
+# one: scripts that tests load before the autoload exists cannot name Game
+static func env(node: Node) -> Array:
+	var g: Node = node.get_node_or_null("/root/Game") if node != null and node.is_inside_tree() else null
+	if g == null:
+		return ["clear", "", false]
+	return [String(g.get("weather")), String(g.get("level_id")), bool(g.get("night"))]
+
+
 static func outfit(weather: String, level: String, night: bool, key: int, shirt: Color, headwear: String,
 		headwear_col: Color, eyewear: String) -> Dictionary:
 	var o := {"shirt": shirt, "headwear": headwear, "headwear_col": headwear_col, "eyewear": eyewear,

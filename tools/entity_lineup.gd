@@ -70,6 +70,7 @@ func _run() -> void:
 	# the player's pair
 	m.dog.global_position = _cell(i)
 	m.dog.facing = Vector2.DOWN
+	m.dog.hip_dir = Vector2.UP
 	labels.append([_cell(i), "Millie"])
 	i += 1
 	m.human.global_position = _cell(i)

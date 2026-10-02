@@ -266,6 +266,25 @@ func _draw() -> void:
 	_b.flush()
 
 
+# the light comes from the upper left, as everywhere in the game
+const LIGHT_DIR := Vector2(-0.6, -0.8)
+
+
+# the torso as one shape: a capsule from the shoulders (ra) to the hips (rb)
+static func _body_points(a: Vector2, b: Vector2, ra: float, rb: float) -> PackedVector2Array:
+	var d := (b - a)
+	var fwd := d.normalized() if d.length() > 0.01 else Vector2.DOWN
+	var sd := fwd.orthogonal()
+	var pts := PackedVector2Array()
+	for k in range(9):
+		var ang := PI * 0.5 + PI * float(k) / 8.0
+		pts.append(a + (fwd * cos(ang) + sd * sin(ang)) * ra)
+	for k in range(9):
+		var ang := -PI * 0.5 + PI * float(k) / 8.0
+		pts.append(b + (fwd * cos(ang) + sd * sin(ang)) * rb)
+	return pts
+
+
 func _draw_shapes() -> void:
 	var t := AnimClock.msec() / 1000.0
 	# a squashed contact shadow, offset as if the light is up and to the
@@ -313,10 +332,15 @@ func _draw_shapes() -> void:
 	var rear_reach := 1.0 if crouching else 4.0
 	_b.draw_circle(hip + hside * 7.0 - hip_dir * (rear_reach - ph * amp * 0.8), 3.2, paw)
 	_b.draw_circle(hip - hside * 7.0 - hip_dir * (rear_reach + ph * amp * 0.8), 3.2, paw)
-	# lean street-dog torso, hinged; the rump drops into the squat
-	_b.draw_line(shoulder, hip, fur, 13.0)
-	_b.draw_circle(hip, 10.5 if crouching else 9.0, fur)
-	_b.draw_circle(shoulder, 8.5, fur)
+	# lean street-dog torso, hinged; the rump drops into the squat. A rim a
+	# shade darker on the side away from the light first, then the fur, then
+	# the light along her back: plasticine, not a flat cut-out
+	var hip_r := 10.5 if crouching else 9.0
+	var rim := Vector2(1.2, 1.6)
+	_b.draw_colored_polygon(_body_points(shoulder + rim, hip + rim, 7.4, hip_r), fur_dark.darkened(0.25))
+	_b.draw_colored_polygon(_body_points(shoulder, hip, 7.4, hip_r), fur)
+	_b.draw_colored_polygon(_body_points(shoulder + LIGHT_DIR * 2.6, hip + LIGHT_DIR * 2.6, 4.2, 4.6),
+		fur.lightened(0.10))
 	# only a few subtle flecks on the body - the grey lives on the head
 	for i in range(6):
 		var base := hip if i % 2 == 0 else shoulder
@@ -342,16 +366,35 @@ func _draw_shapes() -> void:
 	_b.draw_line(neck + side * 5.5, neck - side * 5.5, col, 3.0)
 	# head with a LONG street-dog nose; grey on the crown and the face
 	var head := shoulder + facing * 10.0
+	var flop := sin(gait) * 1.6
+	# big floppy ears, under the skull, swinging slightly with the stride
+	for sg: float in [-1.0, 1.0]:
+		# hanging back along the sides of her head, the tips flapping
+		var root := head + side * 5.0 * sg + facing * 1.0
+		var tip := head + side * (7.6 + flop * 0.7 * sg) * sg - facing * 8.0
+		_b.draw_colored_polygon(PackedVector2Array([root + facing * 1.6 - side * sg * 1.0, root + side * sg * 1.6,
+			tip + side * sg * 1.8, tip - facing * 2.0, tip - side * sg * 1.6]), fur_dark)
+	_b.draw_circle(head + rim * 0.7, 7.0, fur_dark.darkened(0.25))
 	_b.draw_circle(head, 7.0, fur)
-	_b.draw_line(head, head + facing * 10.0, fur, 5.5)
+	# the muzzle: tapering out to the nose, not a stick
+	var muzzle := PackedVector2Array([head + side * 4.6 + facing * 2.0, head + side * 2.2 + facing * 10.5,
+		head - side * 2.2 + facing * 10.5, head - side * 4.6 + facing * 2.0])
+	_b.draw_colored_polygon(muzzle, fur)
 	_b.draw_circle(head + facing * 2.0, 4.0, Color(grizzle, 0.45))
 	_b.draw_line(head + facing * 3.0, head + facing * 9.0, Color(grizzle, 0.5), 3.0)
 	_b.draw_circle(head - facing * 2.5, 3.2, Color(grizzle, 0.3))
-	_b.draw_circle(head + facing * 11.0, 2.4, Color(0.05, 0.05, 0.06))
-	# big floppy ears, swinging slightly with the stride
-	var flop := sin(gait) * 1.6
-	_b.draw_line(head + side * 4.0, head + side * 9.5 - facing * 3.5 + side * flop, fur_dark, 5.5)
-	_b.draw_line(head - side * 4.0, head - side * 9.5 - facing * 3.5 - side * flop, fur_dark, 5.5)
+	_b.draw_circle(head + LIGHT_DIR * 2.4, 2.4, fur.lightened(0.12))
+	# eyes, set back on the skull, with the brows that make her a dog with a
+	# plan (the icon's trick)
+	for sg2: float in [-1.0, 1.0]:
+		var eye := head + facing * 2.2 + side * 3.6 * sg2
+		_b.draw_circle(eye, 1.9, Color(0.96, 0.94, 0.88))
+		_b.draw_circle(eye + facing * 0.5, 1.15, Color(0.06, 0.05, 0.06))
+		_b.draw_line(eye - facing * 1.8 + side * sg2 * 1.6, eye - facing * 2.3 - side * sg2 * 1.4,
+			Color(grizzle, 0.75), 1.2)
+	# the nose, with the shine on it
+	_b.draw_circle(head + facing * 11.0, 2.6, Color(0.05, 0.05, 0.06))
+	_b.draw_circle(head + facing * 11.0 + LIGHT_DIR * 0.9, 0.9, Color(0.55, 0.55, 0.58))
 	if peeing:
 		for i in range(2):
 			var a := t * 5.0 + i * 2.4

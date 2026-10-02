@@ -3629,18 +3629,22 @@ func _draw_ground_title() -> void:
 	# game ships in English and nobody should have to guess what a walk is.
 	var gloss := String(Game.LEVEL_SUBTITLES.get("tutorial" if tutorial_mode else lvl, ""))
 	if gloss != "":
-		_draw_gloss(Vector2(mid, y + 34.0), gloss, mat, style, 8.0)
+		_draw_gloss(Vector2(mid, y + 30.0), gloss, mat, style, 8.0)
 
 
 func _draw_gloss(at: Vector2, txt: String, mat: String, style: String, key: float) -> void:
 	if gloss_a <= 0.01:
 		return
-	if mat == "":
-		_draw_world_text(at, txt, 21, style, key)
-		return
-	var col: Color = WorldSign.GLOSS.get(mat, Color(1, 1, 1, 0.8))
-	_hand_text(at + Vector2(1.5, 1.5), txt, 21, Color(0, 0, 0, 0.25 * col.a * gloss_a), 1.6, key)
-	_hand_text(at, txt, 21, Color(col.r, col.g, col.b, col.a * gloss_a), 1.6, key)
+	# the line under the walk's name is menu text, so it is set plainly in the
+	# menus' face (not hand-wobbled) and fades with the rest as the walk begins
+	var col: Color = WorldSign.GLOSS.get(mat, Color(0.97, 0.95, 0.88, 0.9))
+	var f: Font = load("res://hud/ui_kit.gd").body()
+	var px := 20
+	var w: float = f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	var p := at - Vector2(w * 0.5, 0.0)
+	_wc.draw_string(f, p + Vector2(1.0, 1.5), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px,
+		Color(0, 0, 0, 0.30 * col.a * gloss_a))
+	_wc.draw_string(f, p, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px, Color(col.r, col.g, col.b, col.a * gloss_a))
 
 
 func _draw_seafront_works(vt: float, vb: float) -> void:

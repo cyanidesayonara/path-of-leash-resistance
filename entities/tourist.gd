@@ -157,7 +157,8 @@ func _draw() -> void:
 	# and a holiday look of their own (a cap or a sunhat, now and then)
 	var k := int(absf(lane_x) * 7.0) + int(col.r * 100.0)
 	var own_hat: String = ["none", "cap", "none", "sunhat"][k % 4]
-	var dress: Dictionary = HumanLook.outfit(Game.weather, Game.level_id, Game.night, k, col, own_hat,
+	var env: Array = HumanLook.env(self)
+	var dress: Dictionary = HumanLook.outfit(String(env[0]), String(env[1]), bool(env[2]), k, col, own_hat,
 		[Color(0.92, 0.84, 0.62), Color(0.86, 0.30, 0.28), Color(0.25, 0.45, 0.70)][k % 3], "none")
 	var skin: Color = SKINS[k % SKINS.size()]
 	var c0 := Vector2(0, bob)
