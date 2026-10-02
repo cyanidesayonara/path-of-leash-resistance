@@ -8,6 +8,27 @@ Append-only session history, newest first.
 
 
 
+
+## 2026-10-02 - v1.57
+
+Everything accepted since v1.56 (#76 to #123): every walk rebuilt as its own
+place (El Bosc, El Parc, La Rambla in three steps, Les Obres, El Barri first,
+the First Walk, El Diluvi, L'Estació, La Ferralla, El Gòtic, El Mercat, La
+Castanyada, La Neteja, El Mosaic in two rounds), the walk names made of each
+walk's stuff, the menu cards and prompt bar, the message feed, the game's text
+in one voice, the reel and whirl fixes, the dragged owner, the planted skid,
+other dogs marking and greeting, the town squares off the leash, the level
+review fixes, the Catalan accents, the new logo and the facelift. Then La
+Neteja's sweeper as a careening machine that chases you (#125), played before
+the tag.
+`store/listing.md` has the 1.57 Store text: fourteen walks, the rebuilt places,
+the other dogs, the sweeper chase (now photographable, so a tenth screenshot),
+and "What's new". 1.56 was never submitted to the Store, so 1.57's "What's new"
+covers both, starting with the two new walks.
+CI's smoke job gets 20 minutes instead of 10: a green run takes 8 to 9.5, and
+half of the day's runs were cancelled at the limit, which would have blocked
+the tag's release.
+
 ## 2026-10-02 - La Neteja: a sweeper that comes after you
 
 The chase as a Crash boulder run with some Tony Hawk in it, from the August

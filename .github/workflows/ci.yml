@@ -12,7 +12,8 @@ on:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # a green run takes 8 to 9.5 minutes; at 10, half of them were cancelled
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v5

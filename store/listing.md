@@ -2,8 +2,10 @@
 
 What was entered in Partner Center. First submission 1.54.0.0, live
 2026-09-23 at https://apps.microsoft.com/detail/9p5d14v8rbqx; 1.55.0.0
-submitted 2026-09-24; 1.56.0.0 prepared 2026-09-27 with the listing below
-(thirteen walks, the chase on its own walk, touch controls in "What's new").
+submitted 2026-09-24; 1.56.0.0 prepared 2026-09-27 but never submitted, so
+1.57.0.0 is the first update since 1.55 and its "What's new" covers both;
+1.57.0.0 prepared 2026-10-02 with the listing below (fourteen walks, every
+one rebuilt as its own place, the sweeper chase, the new icon and Store art).
 Copy from here for the next submission, and update this file whenever the
 live listing changes, so it stays the record of what the Store says.
 
@@ -49,11 +51,22 @@ Screenshots and logos are regenerated, not stored here:
   park, street in snow, spook, old town, trail. 1.55 added El Mosaic
   (`--level=guell --shot-at=3100`, with `tools/stamp_version.sh` run first so
   the corner says the version, not "dev"), captioned "El Mosaic: the winding
-  terrace and its broken-tile mosaic". Never the sweeper chase until #20
-  is fixed, and pick frames where no two feed lines overlap (#59).
+  terrace and its broken-tile mosaic". 1.57 replaces the set with the
+  rebuilt walks (see "Screenshots for 1.57" below). The chase can be shot
+  since #20 (`--level=neteja --shot-y=-4300 --shot-home --shot-sweeper`),
+  and pick frames where no two feed lines overlap.
 - Logos: `tools/make_store_art.gd` writes the 9:16 poster (1440x2160), 1:1
   box art (2160) and the 300/150/71 tiles into `build/store-art/`. No hero
   art, trailers or Xbox images.
+
+### Screenshots for 1.57
+
+Shot at 1920x1080 from a checkout of the v1.57 tag (`tools/stamp_version.sh`
+first, so the corner reads the version): La Rambla's crowd and the Fur-Goneta,
+El Mercat's hall, La Castanyada's plaça at night, El Mosaic's salamander, the
+square off the leash, El Bosc's boars, the seafront in the sun, a rainy walk
+in raincoats, La Neteja's sweeper careening after you, and the walk select
+with a name laid out on the ground.
 
 ### Description
 
@@ -62,13 +75,15 @@ You are the dog. Your human is glued to their phone and walking on autopilot. Ge
 
 The leash is real rope physics. Your human outweighs you four to one and wins every straight tug, so you win the way a dog does: dig in at the right moment, wrap the leash around a lamppost to hold them fast, and bark to stop them dead at the kerb. Get the timing right as a bike whizzes past and it counts as a save.
 
-Thirteen walks through a sunny, slightly chaotic Barcelona: the boulevard and its bike lane, the park and its pond, the seafront, a rainy day, the market, the old town's narrow alleys, a forest trail, the station concourse, roadworks with wet cement, a festival night, a scrapyard with a guard dog you really should not wake, a winding terrace paved in broken glazed tile, and a narrow back street at dawn, just as the street sweeper comes through.
+Fourteen walks through a sunny, slightly chaotic Barcelona, each its own place: the little park at the end of your street, La Rambla with its crowds, street sellers and pickpockets, the city park and its lake, the seafront, a rainy shopping street, a covered market hall, the old town's narrow alleys, a wood with wild boar in it, the station and its train, roadworks with wet cement, a chestnut festival at night, a scrapyard with a guard dog you really should not wake, a hilltop park of gingerbread gatehouses and a mosaic salamander, and a narrow back street at dawn, just as the street sweeper comes through. Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, or a town square with a fountain to jump in.
 
-What happens on a walk changes how you feel, and how you feel changes how you move. A fright leaves you jumpy and half blind to smells, a good bark-off makes you barky, time off the leash brings on the zoomies, and running yourself empty leaves you flat. Moods fade on their own. The ground matters too: grass slows you down but holds far more scent than pavement, and polished tile is fast and hard to steer.
+What happens on a walk changes how you feel, and how you feel changes how you move. A fright leaves you jumpy and half blind to smells, a good bark-off makes you barky, time off the leash brings on the zoomies, and running yourself empty leaves you flat. Moods fade on their own. The ground matters too: grass and mud slow you down but hold far more scent than pavement, sand drags at your paws, and wet ground and snow make you skid.
+
+Other dogs have lives of their own. They sniff and mark the posts you pass, and you can read who was there; meet one nose to nose and it stops to sniff you back, unless it is the grumpy sort.
 
 Every walk has its own list of goals: sniff the good spots, mark your territory, fetch, greet other dogs, herd a runaway friend home, and land combo tricks like vaulting around a pole or grinding along a kerb. Earn stars to unlock new walks and bones to spend on leashes and bandanas.
 
-One walk is a chase: a street sweeper fills the lane behind you, and you have to drag your oblivious human home ahead of it. Weather and night change how every walk plays: rain, wind and snow, where the pavement turns to ice. There's a daily walk too, the same for everyone that day.
+One walk is a chase: a street sweeper careens down a narrow back street after you, flinging junk as it comes, and you have to drag your oblivious human home ahead of it. Weather and night change how every walk plays: rain, wind and snow, where the pavement turns to ice. There's a daily walk too, the same for everyone that day.
 
 Single player. No ads, no purchases, no account, and it plays offline. Keyboard or controller.
 ```
@@ -76,19 +91,20 @@ Single player. No ads, no purchases, no account, and it plays offline. Keyboard 
 ### Short description
 
 ```
-You are the dog. Your phone-distracted human walks on autopilot, and the leash is real rope physics. Dig in, wrap lampposts and bark your way through twelve walks in Barcelona, and get them home with the phone intact.
+You are the dog. Your phone-distracted human walks on autopilot, and the leash is real rope physics. Dig in, wrap lampposts and bark your way through fourteen walks in Barcelona, and get them home with the phone intact.
 ```
 
 ### Product features
 
 ```
 The leash is real rope physics: wrap it around poles, plant yourself, win the tug of war
-Thirteen hand-built walks through Barcelona, plus a daily walk
+Fourteen hand-built walks through Barcelona, plus a daily walk
 Goal lists on every walk, with stars that unlock new walks
 Combo tricks: leash-vaults, kerb grinds, near misses
 A chase walk: stay ahead of the street sweeper with your oblivious human in tow
 Dog moods: scared, barky, zoomies and flat, each changing how you move and what you notice
-Ground you can feel: grass holds scent, tile is fast and slippery
+Ground you can feel: grass and mud hold scent, sand drags, wet ground skids
+Other dogs and their people with lives of their own: they sniff, mark, greet and tangle
 Rain, wind, snow and night change how each walk plays
 Bones to spend on leashes and bandanas
 A gentle first walk that teaches the basics
@@ -96,7 +112,22 @@ Full controller support
 No ads, no purchases, no account, and it plays offline
 ```
 
-### What's new in this version (1.56)
+### What's new in this version (1.57)
+
+```
+- Two new walks. El Barri, the everyday walk, comes first. La Neteja is a narrow back street at dawn: a street sweeper careens after you, flinging junk, and you drag your human home ahead of it. It is the only walk with a chase now.
+- Every walk rebuilt as its own place: La Rambla's crowds, sellers and pickpockets, the park's lake, a wood with wild boar, a rainy shopping street, the station and its train, roadworks, a scrapyard, a covered market hall, a chestnut festival at night, and a hilltop park with a mosaic salamander.
+- Each walk's name is laid out on the ground in its own stuff (flowers, fruit, sand, cones, chestnuts, tiles) and you can kick it about.
+- The town walks end off the leash in a square with a fountain to jump in.
+- New menus: a clear screen for each step, and every message on the walk in its own place.
+- Other dogs sniff and mark posts you can read, stop to say hello (some grumble), and their people look alive.
+- The leash: the reel warns before it changes, plant and get hauled and you skid, and a dragged human leans back.
+- A facelift for everyone, with outfits for the weather, and a brighter icon.
+- A gentler first walk, and the Catalan names spelt properly.
+- Button prompts show whatever you last used, keyboard or controller.
+```
+
+### What's new in 1.56 (prepared, never submitted)
 
 ```
 - A thirteenth walk: La Neteja, a narrow back street at dawn. The street sweeper comes through every time, it fills the lane, and you have to drag your human home ahead of it. Keep more than a leash length clear the whole way for a new goal.
@@ -136,7 +167,7 @@ Publishing hold: "Don't publish until I select Publish now". Notes for
 certification (Additional Testing Information page):
 
 ```
-Update 1.55: a new level, new gameplay systems and performance work. No change to capabilities, network use, data handling or controls since 1.54.
+Update 1.57: two new levels, every level rebuilt, new menus and art. No change to capabilities, network use, data handling or controls since 1.55.
 
 Path of Leash Resistance is a single-player Win32 desktop game built with the Godot engine (4.7), packaged as MSIX.
 
