@@ -28,6 +28,7 @@ const KINDS := {
 	"ball":   {"kick": 1.55, "drag": 110.0, "r": 8.0,  "min": 200.0},
 	"sack":   {"kick": 0.30, "drag": 620.0, "r": 13.0, "min": 40.0},
 	"crate":  {"kick": 0.38, "drag": 520.0, "r": 12.0, "min": 50.0},
+	"wetfloor": {"kick": 0.85, "drag": 280.0, "r": 10.0, "min": 100.0},
 }
 
 
@@ -143,6 +144,15 @@ func _draw_shapes() -> void:
 				var sy := -rr * 0.5 + float(s) * rr * 0.5
 				_b.draw_line(Vector2(-rr * 0.92, sy), Vector2(rr * 0.92, sy), Color(0.40, 0.29, 0.17), 1.6)
 			_b.draw_rect(Rect2(-rr * 0.35, -rr * 0.3, rr * 0.7, rr * 0.6), Color(0.30, 0.22, 0.14, 0.5))
+		"wetfloor":
+			# the yellow folding wet-floor sign, seen from above: the two
+			# boards meeting at a ridge, a slipping figure on the face
+			_b.draw_rect(Rect2(-rr, -rr * 0.75, rr * 2.0, rr * 1.5), Color(0.98, 0.82, 0.16))
+			_b.draw_rect(Rect2(-rr, -rr * 0.75, rr * 2.0, rr * 1.5), Color(0.62, 0.50, 0.08), false, 1.5)
+			_b.draw_line(Vector2(-rr, 0.0), Vector2(rr, 0.0), Color(0.80, 0.64, 0.10), 2.0)
+			_b.draw_circle(Vector2(-rr * 0.2, rr * 0.28), 1.6, Color(0.12, 0.12, 0.12))
+			_b.draw_line(Vector2(-rr * 0.2, rr * 0.36), Vector2(rr * 0.25, rr * 0.55), Color(0.12, 0.12, 0.12), 1.4)
+			_b.draw_line(Vector2(rr * 0.25, rr * 0.55), Vector2(rr * 0.55, rr * 0.40), Color(0.12, 0.12, 0.12), 1.4)
 		_:
 			# The traffic cone, which from above is a bullseye: square base
 			# flange, then rings climbing to the tip, each one a little

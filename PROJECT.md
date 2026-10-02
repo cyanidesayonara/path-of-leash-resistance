@@ -328,6 +328,14 @@ memorable.
 - Level editor: data-driven levels FIRST (due at setting four), which
   makes an internal editor nearly free and player-facing editing a
   realistic post-launch option. Not before.
+  October 2026 check: still true, and further off than it was. The rebuilt
+  walks (El Mercat, La Castanyada, La Neteja, El Mosaic) are code, not
+  data: per-walk constants and builders in level_build.gd and their own
+  drawing in main.gd. So the order stays: walks as data files read by one
+  builder (the big, risky part), then the editor (the small part), with
+  the one-off set pieces (salamander, arches, train) as placeable pieces
+  rather than editable ones. Santtu's idea of it as a paid add-on only
+  matters once there are players.
 - Character creator: two preset owners exist (HIM/HER); creator later.
 - "Bring Tofu home" quest (shipped v1.7, redesigned v1.7.1): an inside
   joke - the real Tofu is an escape artist. She turns up loose on the

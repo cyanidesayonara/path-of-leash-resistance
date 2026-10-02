@@ -17,6 +17,35 @@ a meeting (`main._greet_pair`, `otherpair.greet`):
   "grrr", and its owner apologises ("sorry! he's grumpy"). It still counts as
   a hello.
 - `tests/test_pair_greet.gd`.
+## 2026-10-02 - La Castanyada's chestnut letters read at night
+
+The walk's name, HOME and the gate sign at La Castanyada are spelt in roast
+chestnuts, and the festival is always at night: dark nuts on dark ground
+under the night tint were hard to read, the gate sign on the grass hardest.
+Each nut now sits in a pale paper-cone rim (`WorldSign._chestnuts`), so the
+letters read at a glance and still look like chestnuts.
+## 2026-10-02 - Level review, round 1: things where they cannot be
+
+A screenshot pass along every walk (a frame every 700px, issue #21) turned up
+things placed where they could not be:
+- **Loose junk on top of things.** Crates scattered round a stall, a van or a
+  wrecked car landed on top of it: on La Rambla's flower stalls and kiosk,
+  El Mercat's stall blocks, La Ferralla's wrecks. Junk now looks for a clear
+  spot (off every stall, van, bench, manhole, pond and solid block, off the
+  side streets) or is not dropped (`LevelBuild.junk_spot_clear`).
+- **Junk on the roofs.** On walks whose path winds (El Gotic, El Bosc, El
+  Mosaic, L'Estacio), the background litter was scattered over the old
+  straight corridor and landed on rooftops and in the trees. It stays on the
+  path now.
+- **A cone in the road**: the cone at a cellar hatch by a side street stood
+  in the traffic lane. Not any more.
+- **El Mercat's drain** had road cones round it inside the market hall; it
+  has yellow wet-floor signs now (a new kickable kind).
+- **Gate names**: El Parc's and the Passeig's off-leash gates said HOME, which
+  is where the walk ends, not the dog park; they say DOG PARK and DOG BEACH.
+  L'Estacio's said PLATFORM over a patch of grass; it says PIPICA.
+- **Ducks at El Mosaic**, which has no pond, waddling along the terrace wall:
+  gone.
 ## 2026-09-30 - OFF LEASH over the gate, in the walk's own stuff
 
 The gate into the off-leash area had its name painted on in the plain font,
