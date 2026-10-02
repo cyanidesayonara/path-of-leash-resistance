@@ -4,7 +4,7 @@ What was entered in Partner Center. First submission 1.54.0.0, live
 2026-09-23 at https://apps.microsoft.com/detail/9p5d14v8rbqx; 1.55.0.0
 submitted 2026-09-24; 1.56.0.0 prepared 2026-09-27 but never submitted, so
 1.57.0.0 is the first update since 1.55 and its "What's new" covers both;
-1.57.0.0 prepared 2026-10-02 with the listing below (fourteen walks, every
+1.57.0.0 submitted 2026-10-03 with the listing below (fourteen walks, every
 one rebuilt as its own place, the sweeper chase, the new icon and Store art).
 Copy from here for the next submission, and update this file whenever the
 live listing changes, so it stays the record of what the Store says.
@@ -61,12 +61,15 @@ Screenshots and logos are regenerated, not stored here:
 
 ### Screenshots for 1.57
 
-Shot at 1920x1080 from a checkout of the v1.57 tag (`tools/stamp_version.sh`
-first, so the corner reads the version): La Rambla's crowd and the Fur-Goneta,
-El Mercat's hall, La Castanyada's plaça at night, El Mosaic's salamander, the
-square off the leash, El Bosc's boars, the seafront in the sun, a rainy walk
-in raincoats, La Neteja's sweeper careening after you, and the walk select
-with a name laid out on the ground.
+The uploaded set contained ten 1920x1080 images from a checkout of the v1.57
+tag (`tools/stamp_version.sh` first, so the corner reads the version), in this
+order: La Rambla's crowd and the Fur-Goneta, El Mercat's hall, La
+Castanyada's plaça at night, El Mosaic's salamander, El Parc's dog park, El
+Bosc's boars, the seafront in the sun, a rainy walk in raincoats, La Neteja's
+sweeper careening after you, and the walk select with a name laid out on the
+ground. El Parc's dog park replaced the planned square off the leash because
+the daytime El Gòtic square duplicated La Castanyada's night plaça too
+closely.
 
 ### Description
 
