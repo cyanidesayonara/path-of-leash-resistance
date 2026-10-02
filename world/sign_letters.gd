@@ -14,6 +14,12 @@ extends RefCounted
 const CAP := 6.0
 const GAP := 1.5
 const SPACE := 2.6
+# accented capitals: [base letter, the mark added to it]
+const ACCENTED := {
+	"À": ["A", "grave"], "È": ["E", "grave"], "É": ["E", "acute"], "Í": ["I", "acute"],
+	"Ï": ["I", "diaeresis"], "Ò": ["O", "grave"], "Ó": ["O", "acute"], "Ú": ["U", "acute"],
+	"Ü": ["U", "diaeresis"], "Ç": ["C", "cedilla"],
+}
 
 # an ellipse's outline, for O, Q and the round parts of other letters
 static func _arc(cx: float, cy: float, rx: float, ry: float, a0: float, a1: float, n: int) -> PackedVector2Array:
@@ -70,6 +76,20 @@ static func glyph(ch: String) -> Array:
 		".": return [0.3, [_p([[0.1, 5.7], [0.2, 6]])]]
 		"<": return [2.6, [_p([[2.6, 1], [0, 3], [2.6, 5]])]]
 		">": return [2.6, [_p([[0, 1], [2.6, 3], [0, 5]])]]
+	# the Catalan names need their accents: the base letter and one more stroke
+	if ACCENTED.has(ch):
+		var base: Array = glyph(String(ACCENTED[ch][0]))
+		var w: float = base[0]
+		var strokes: Array = (base[1] as Array).duplicate()
+		var c := w * 0.5
+		match String(ACCENTED[ch][1]):
+			"grave": strokes.append(_p([[c - 0.7, -1.7], [c + 0.5, -0.7]]))
+			"acute": strokes.append(_p([[c + 0.7, -1.7], [c - 0.5, -0.7]]))
+			"diaeresis":
+				strokes.append(_p([[c - 1.0, -1.1], [c - 0.8, -0.9]]))
+				strokes.append(_p([[c + 0.8, -1.1], [c + 1.0, -0.9]]))
+			"cedilla": strokes.append(_p([[c, 6.0], [c + 0.6, 6.7], [c - 0.4, 7.4]]))
+		return [w, strokes]
 	return []
 
 
