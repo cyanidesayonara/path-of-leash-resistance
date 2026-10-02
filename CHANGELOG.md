@@ -5,6 +5,13 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-02 - La Castanyada's chestnut letters read at night
+
+The walk's name, HOME and the gate sign at La Castanyada are spelt in roast
+chestnuts, and the festival is always at night: dark nuts on dark ground
+under the night tint were hard to read, the gate sign on the grass hardest.
+Each nut now sits in a pale paper-cone rim (`WorldSign._chestnuts`), so the
+letters read at a glance and still look like chestnuts.
 ## 2026-10-02 - Level review, round 1: things where they cannot be
 
 A screenshot pass along every walk (a frame every 700px, issue #21) turned up
