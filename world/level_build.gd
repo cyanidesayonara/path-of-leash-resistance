@@ -168,6 +168,8 @@ static func mosaic(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 const NETEJA_DUMPSTERS: Array = [[-1000.0, true], [-1900.0, false], [-2800.0, true], [-3600.0, false], [-4300.0, true]]
 const NETEJA_DUMPSTER := Vector2(46.0, 90.0)
 const NETEJA_SCOOTERS: Array = [[-1450.0, false], [-2350.0, true], [-3200.0, false], [-4000.0, true]]
+# the dumpsters the sweeper snags a broom on, by y: the chase's two respites
+const NETEJA_JAMS: Array[float] = [-3600.0, -1900.0]
 
 
 static func neteja_kerb(m: Node2D, y: float, west: bool, inset: float) -> Vector2:
@@ -211,6 +213,16 @@ static func neteja(m: Node2D) -> void:
 	m.cone_spots = Array([], TYPE_VECTOR2, &"", null)
 	for d: Vector2 in neteja_dumpsters(m):
 		m.cone_spots.append(d + Vector2(0.0, -NETEJA_DUMPSTER.y * 0.5 - 34.0))
+	# where the kill line is when a broom reaches a jamming dumpster's end,
+	# and what is parked at the kerbs for the brooms to swing in round
+	m.chase_jams.clear()
+	m.chase_kerb_blocks.clear()
+	for d: Vector2 in neteja_dumpsters(m):
+		m.chase_kerb_blocks.append(Rect2(d - NETEJA_DUMPSTER * 0.5, NETEJA_DUMPSTER))
+		if NETEJA_JAMS.has(d.y):
+			m.chase_jams.append(Vector2(d.x, d.y - NETEJA_DUMPSTER.y * 0.5 - 4.0))
+	for sp: Vector2 in m.scooters:
+		m.chase_kerb_blocks.append(Rect2(sp - Vector2(16.0, 28.0), Vector2(32.0, 56.0)))
 	# what the water truck left: puddles in the gutters and down the middle
 	for pz: Array in [[-800.0, 0.2], [-1650.0, 0.75], [-2550.0, 0.3], [-3400.0, 0.7], [-4150.0, 0.35]]:
 		m.patches.append({"y": float(pz[0]), "at": float(pz[1]), "rx": 60.0, "ry": 34.0,

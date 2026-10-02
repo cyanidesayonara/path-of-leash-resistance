@@ -316,6 +316,13 @@ var chase_min_gap := INF
 # before the card comes up (systems/home_chase.gd)
 var chase_catch_t := 0.0
 var chase_catch_msg := ""
+# how far the camera leans back up the street to keep the machine in shot
+var chase_lean := 0.0
+# the brooms have come within a whisker; getting clear again is a CLOSE SHAVE
+var chase_shave_armed := false
+# where this walk's sweeper snags a broom on a dumpster and stalls (level data)
+var chase_jams: Array[Vector2] = []
+var chase_kerb_blocks: Array[Rect2] = []
 # El Gotic wall cats: perched temptations you shoo with a bark
 var wallcat_spots: Array[Vector2] = []
 var laundry_lines: Array[float] = []
@@ -4470,7 +4477,9 @@ func _update_hud() -> void:
 			hud_status = "FETCH! BRING IT BACK  %d/%d   %ds" % [romp_catches, romp_target, int(ceil(romp_timer))]
 	elif phase == "home":
 		if chase_active and chase_sweeper != null:
-			if chase_kind == "both":
+			if chase_sweeper.jammed():
+				hud_status = "IT'S STUCK! CATCH YOUR BREATH"
+			elif chase_kind == "both":
 				hud_status = "RUN HOME TOGETHER!"
 			elif chase_kind == "bolt":
 				hud_status = "HE'S RUNNING! KEEP UP"
@@ -4857,6 +4866,12 @@ func _process(_delta: float) -> void:
 					if verge_layer != null:
 						verge_layer.queue_redraw()
 						_verge_drawn_y = cam.position.y
+			# --shot-home turns the pair for home there, so a chase can be
+			# photographed without walking the whole way out first
+			if "--shot-home" in OS.get_cmdline_user_args():
+				dog.global_position.y = human.global_position.y + 100.0
+				leash.resnap()
+				_enter_home()
 		if _shot_frames > _shot_at:
 			_shot_done = true
 			# --shot-out=PATH writes somewhere other than user://shot.png, so a
@@ -4911,6 +4926,8 @@ func _process(_delta: float) -> void:
 	var target_y := (dog.global_position.y + human.global_position.y) / 2.0 - 60.0
 	if phase == "freedom":
 		target_y = dog.global_position.y  # owner is parked; follow the dog
+	elif phase == "home" and chase_sweeper != null:
+		target_y -= chase_lean
 	cam.position = Vector2(640, target_y)
 	if shake_t > 0.0:
 		cam.offset = Vector2(_shake_rng.randf_range(-1, 1), _shake_rng.randf_range(-1, 1)) * 9.0 * shake_t

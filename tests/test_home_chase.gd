@@ -122,6 +122,54 @@ func _run() -> void:
 		_check(await _catch(main, true) == "", "%s: the autowalk bot is never swept" % kind)
 		await _drop(main)
 
+	# the chase level's set pieces, on a sweeper chase
+	var cm := await _fresh_main()
+	cm.auto_walk = false
+	cm.frozen = false
+	cm.chase_active = true
+	cm.chase_kind = "sweeper"
+	var dy: float = cm.dog.global_position.y
+	cm.chase_jams = [Vector2(800.0, dy - 2000.0), Vector2(800.0, dy + 400.0)] as Array[Vector2]
+	HomeChase.begin(cm)
+	var csw: Node2D = cm.chase_sweeper
+	_check(csw.jams.size() == 1 and csw.jams[0].y > csw.front_y,
+		"only the dumpsters still ahead of the machine can jam it (%d)" % csw.jams.size())
+	csw.jams.clear()
+	csw.speed = 0.0
+	# CLOSE SHAVE: the brooms within a whisker of the rearmost, then clear
+	cm.human.global_position.y = dy - 50.0
+	var bones0: int = cm.bones
+	csw.front_y = cm.human.global_position.y - HomeChase.CLOSE_SHAVE_GAP * 0.5
+	HomeChase.tick(cm, 0.0)
+	_check(cm.chase_shave_armed and cm.bones == bones0, "within a whisker arms a close shave, pays nothing yet")
+	csw.front_y = cm.human.global_position.y - HomeChase.CLOSE_SHAVE_CLEAR - 20.0
+	HomeChase.tick(cm, 0.0)
+	_check(not cm.chase_shave_armed and cm.bones == bones0 + HomeChase.CLOSE_SHAVE_BONES,
+		"getting clear again is a close shave (+%d bones)" % (cm.bones - bones0))
+	# the camera leans back just far enough to get the machine in shot
+	var view_half: float = cm.get_viewport_rect().size.y * 0.5 / float(cm.cam.zoom.y)
+	var cam_y: float = (cm.dog.global_position.y + cm.human.global_position.y) * 0.5 - 60.0
+	csw.front_y = cam_y - view_half + HomeChase.LEAN_SHOW - 50.0
+	for i in range(60):
+		HomeChase.tick(cm, 0.1)
+	_check(absf(float(cm.chase_lean) - 50.0) < 2.0, "leans 50 to show a machine 50 out of shot (%.1f)" % float(cm.chase_lean))
+	csw.front_y = cam_y - view_half - 600.0
+	for i in range(60):
+		HomeChase.tick(cm, 0.1)
+	_check(float(cm.chase_lean) < 1.0, "does not lean for a machine far out of reach (%.1f)" % float(cm.chase_lean))
+	# junk the brooms flung knocks the dog over if it hits her
+	var junk: Node2D = Node2D.new()
+	junk.set_script(load("res://entities/cone.gd"))
+	cm.add_child(junk)
+	junk.setup(cm, cm.dog, cm.human, "crate")
+	junk.global_position = cm.dog.global_position + Vector2(0.0, -10.0)
+	junk.vel = Vector2(0.0, 400.0)
+	junk.flung_t = 1.0
+	cm.dog.tumble_t = 0.0
+	junk._physics_process(1.0 / 60.0)
+	_check(float(cm.dog.tumble_t) > 0.0, "flung junk knocks the dog over")
+	await _drop(cm)
+
 	# the chase lives on La Neteja: never elsewhere, always there. And the
 	# other walks draw exactly the random numbers the old roll drew (one, and
 	# a second when it came up under 0.25), so seeded walks replay unchanged.
