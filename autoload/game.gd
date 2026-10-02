@@ -13,15 +13,15 @@ const LEVEL_NAMES := {
 	#
 	# "La Rambla" is a real street, and naming a level after the street it
 	# depicts is DESCRIPTIVE use, not trademark use - the same category as the
-	# Passeig Maritim and El Gotic already here. What would be a problem is an
+	# Passeig Marítim and El Gòtic already here. What would be a problem is an
 	# attraction's brand name used as branding (which is why the mosaic walk is
 	# "El Mosaic" and not the real site), or copying a protected work. A public
 	# thoroughfare is neither.
 	# the everyday walk: the little park at the end of the street, anywhere
 	"barri": "El Barri",
 	"street": "La Rambla", "park": "El Parc",
-	"beach": "Passeig Maritim", "rain": "El Diluvi", "market": "El Mercat",
-	"oldtown": "El Gotic", "trail": "El Bosc", "station": "L'Estacio", "site": "Les Obres",
+	"beach": "Passeig Marítim", "rain": "El Diluvi", "market": "El Mercat",
+	"oldtown": "El Gòtic", "trail": "El Bosc", "station": "L'Estació", "site": "Les Obres",
 	"spook": "La Castanyada", "scrap": "La Ferralla",
 	# invented, not the real site: the terraces are the STYLE reference, and
 	# style is not anybody's property. No real landmark name ships here.

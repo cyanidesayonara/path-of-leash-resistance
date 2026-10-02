@@ -20,8 +20,14 @@ const SIZE := 256
 class IconCanvas:
 	extends Node2D
 
-	const GRASS := Color(0.16, 0.28, 0.21)
-	const GRASS_LIT := Color(0.22, 0.36, 0.27)
+	# a warm, light sky and a green hill: a black dog reads on it at 32px, and
+	# it is the soft, sunny, plasticine look the game is going for (the dark
+	# green it replaced swallowed both the dog and the title)
+	const SKY := Color(0.98, 0.86, 0.58)
+	const SKY_LIT := Color(1.0, 0.96, 0.82)
+	const HILL := Color(0.47, 0.66, 0.35)
+	const HILL_LIT := Color(0.56, 0.74, 0.42)
+	const YANK := Color(0.36, 0.24, 0.16)
 	const FUR := Color(0.13, 0.13, 0.15)
 	const FUR_LIT := Color(0.21, 0.21, 0.24)
 	const COLLAR := Color(0.93, 0.35, 0.55)
@@ -44,13 +50,17 @@ class IconCanvas:
 		# full bleed; _run() masks the rounded corners back in afterwards, which
 		# means the lighting can spill past the edges without leaving square
 		# corners behind
-		draw_rect(Rect2(Vector2.ZERO, Vector2(256.0, 256.0) * s), GRASS)
+		draw_rect(Rect2(Vector2.ZERO, Vector2(256.0, 256.0) * s), SKY)
 		# light from the upper left, the same direction every shadow in the
 		# game falls away from
 		for i in range(10):
 			var k := float(i) / 9.0
 			_ellipse(f.call(Vector2(74.0, 58.0)), Vector2(210.0 - k * 150.0, 190.0 - k * 140.0) * s,
-				Color(GRASS_LIT.r, GRASS_LIT.g, GRASS_LIT.b, 0.10))
+				Color(SKY_LIT.r, SKY_LIT.g, SKY_LIT.b, 0.14))
+		# the hill she is being hauled up, behind her shoulders
+		_ellipse(f.call(Vector2(110.0, 318.0)), Vector2(250.0, 150.0) * s, HILL)
+		_ellipse(f.call(Vector2(80.0, 196.0)), Vector2(110.0, 22.0) * s,
+			Color(HILL_LIT.r, HILL_LIT.g, HILL_LIT.b, 0.6), -0.12)
 
 		# --- the leash, from the ring up out of frame ---
 		# It is what the game is named after, so it earns the diagonal. Drawn
@@ -107,7 +117,13 @@ class IconCanvas:
 		draw_line(f.call(chest + Vector2(-58.0, -6.0)), f.call(chest + Vector2(58.0, 2.0)),
 			COLLAR, 17.0 * s)
 		draw_circle(f.call(ring), 9.0 * s, Color(0.85, 0.85, 0.88))
-		draw_circle(f.call(ring), 4.5 * s, GRASS)
+		draw_circle(f.call(ring), 4.5 * s, HILL)
+		# mid-yank: speed lines beside the ring, along the pull
+		var d := Vector2(74.0, -190.0).normalized()
+		var side := Vector2(-d.y, d.x)
+		for k2 in range(3):
+			var o: Vector2 = ring + side * (18.0 + float(k2) * 9.0) + d * (8.0 - float(k2) * 6.0)
+			draw_line(f.call(o), f.call(o + d * (26.0 - float(k2) * 6.0)), YANK, 3.5 * s)
 
 
 func _round_corners(img: Image, r: float) -> void:

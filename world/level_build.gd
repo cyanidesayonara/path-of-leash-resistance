@@ -60,7 +60,7 @@ static func gotic(m: Node2D) -> void:
 	# stone bridge between two buildings, flowerpots at the doors, scooters
 	# parked against the walls, and the plaça with its fountain. None of the
 	# market's stalls.
-	m.gate_text = "PLACA"
+	m.gate_text = "PLAÇA"
 	m.stalls.clear()
 	m.stall_kinds.clear()
 	m.astands = Array([], TYPE_VECTOR2, &"", null)
@@ -183,7 +183,7 @@ static func neteja_dumpsters(m: Node2D) -> Array[Vector2]:
 
 
 static func neteja(m: Node2D) -> void:
-	m.gate_text = "PLACA"
+	m.gate_text = "PLAÇA"
 	m.stalls = Array([], TYPE_VECTOR2, &"", null)
 	m.stall_kinds.clear()
 	m.performers = Array([], TYPE_VECTOR2, &"", null)
@@ -241,7 +241,7 @@ static func castanyada_stage(m: Node2D) -> Rect2:
 
 
 static func castanyada(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
-	m.gate_text = "PLACA"
+	m.gate_text = "PLAÇA"
 	m.stalls.clear()
 	m.stall_kinds.clear()
 	for st: Array in CAST_STALLS:
@@ -325,7 +325,7 @@ static func mercat_stall_front(m: Node2D, i: int) -> Vector2:
 
 
 static func mercat(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
-	m.gate_text = "PLACA"
+	m.gate_text = "PLAÇA"
 	m.stalls.clear()
 	m.stall_kinds.clear()
 	for i in range(MERCAT_WALL_STALLS.size()):
@@ -454,7 +454,7 @@ static func estacio(m: Node2D) -> void:
 	# fat pillars, bench rows, the moving walkway up the middle, rows of
 	# nested trolleys, the ticket barriers, and the train standing between two
 	# platforms. No terrace, no crossings, no drains, no lawn: it is indoors.
-	m.gate_text = "PIPICA"
+	m.gate_text = "PIPICÀ"
 	m.lane_ys = Array([], TYPE_FLOAT, &"", null)
 	m.tables.clear()
 	m.chairs.clear()
@@ -1215,7 +1215,7 @@ static func build_level_data(m: Node2D) -> void:
 			# EL BARRI: the neighbourhood park. Plane trees in rows down both
 			# edges of a gravel square, benches facing each other, a
 			# ping-pong table, the petanca pitch, a playground, a fountain.
-			m.gate_text = "PIPICA"
+			m.gate_text = "PIPICÀ"
 			var y := -320.0
 			var k := 0
 			while y > m.GATE_Y + 260.0:
@@ -1340,7 +1340,7 @@ static func build_level_data(m: Node2D) -> void:
 		"market":
 			# El Mercat: stalls line both edges, produce underfoot, the
 			# cat is practically guaranteed (fish)
-			m.gate_text = "PLAZA"
+			m.gate_text = "PLAÇA"
 			m.stalls = Array([
 				Vector2(370, -800), Vector2(910, -1150), Vector2(370, -1750),
 				Vector2(910, -2300), Vector2(370, -2900), Vector2(910, -3500),
