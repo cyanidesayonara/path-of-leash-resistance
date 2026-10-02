@@ -83,7 +83,19 @@ func _palette() -> Dictionary:
 			}
 
 
+# a rounded rectangle as one polygon, corners in three steps
+static func _rr(r: Rect2, rad: float) -> PackedVector2Array:
+	var cs := [Vector2(r.end.x - rad, r.position.y + rad), Vector2(r.end.x - rad, r.end.y - rad),
+		Vector2(r.position.x + rad, r.end.y - rad), Vector2(r.position.x + rad, r.position.y + rad)]
+	var pts := PackedVector2Array()
+	for ci in range(4):
+		for s in range(4):
+			pts.append(cs[ci] + Vector2.from_angle(-PI * 0.5 + float(ci) * PI * 0.5 + float(s) * PI / 6.0) * rad)
+	return pts
+
+
 func _draw() -> void:
+	var b := ShapeBatch.new(self)
 	var full := half * 2.0
 	var pal := _palette()
 	var steel := Color(0.21, 0.22, 0.25)
@@ -92,26 +104,26 @@ func _draw() -> void:
 	# --- the road it has already been over --------------------------------
 	# ground-up and oil-dark, and deliberately featureless: the eye should
 	# read it as "no longer a place you can be", not as more pavement
-	draw_rect(Rect2(-half, -1600.0, full, 1600.0), Color(0.09, 0.09, 0.11, 0.95))
+	b.draw_rect(Rect2(-half, -1600.0, full, 1600.0), Color(0.09, 0.09, 0.11, 0.95))
 	# freshly scoured strip right behind the head, still wet
-	draw_rect(Rect2(-half, -74.0, full, 74.0), Color(0.15, 0.15, 0.17, 0.92))
+	b.draw_rect(Rect2(-half, -74.0, full, 74.0), Color(0.15, 0.15, 0.17, 0.92))
 	# swirl marks drifting back up the wake
 	for i in range(16):
 		var gx := -half + fmod(float(i) * 137.0 + rumble * 40.0, full)
 		var gy := -70.0 - fmod(float(i) * 90.0 + rumble * 30.0, 430.0)
-		draw_circle(Vector2(gx, gy), 3.0, Color(0.32, 0.30, 0.25, 0.30))
+		b.draw_circle(Vector2(gx, gy), 3.0, Color(0.32, 0.30, 0.25, 0.30))
 
 	# --- the shadow -------------------------------------------------------
 	# thrown ahead of the machine and toward the player, which is what makes
 	# it read as a tall solid object bearing down rather than a flat sprite
 	if main != null:
-		main.cast_shadow(self, Vector2(0.0, -70.0), BODY_HALF, 92.0, 0.30)
+		main.cast_shadow(b, Vector2(0.0, -70.0), BODY_HALF, 92.0, 0.30)
 
 	# --- the wide brush head, spanning the carriageway --------------------
 	# a heavy steel beam on the kill line itself, so what kills you is
 	# visibly the thing doing the sweeping
-	draw_rect(Rect2(-half, -46.0, full, 46.0), steel)
-	draw_rect(Rect2(-half, -46.0, full, 7.0), steel_lit)   # top edge catches light
+	b.draw_rect(Rect2(-half, -46.0, full, 46.0), steel)
+	b.draw_rect(Rect2(-half, -46.0, full, 7.0), steel_lit)   # top edge catches light
 	# hazard chevrons across the blade: the universal "do not be here"
 	var stripe := 34.0
 	var n := int(full / stripe) + 2
@@ -119,83 +131,99 @@ func _draw() -> void:
 		var x0 := -half + float(i) * stripe
 		if i % 2 == 0:
 			continue
-		draw_colored_polygon(
+		b.draw_colored_polygon(
 			PackedVector2Array([
 				Vector2(x0, -39.0), Vector2(x0 + stripe * 0.5, -39.0),
 				Vector2(x0 + stripe * 0.5 - 14.0, -8.0), Vector2(x0 - 14.0, -8.0),
 			]), Color(0.96, 0.78, 0.12))
 	# the lower lip, in shadow
-	draw_rect(Rect2(-half, -10.0, full, 10.0), Color(0.12, 0.12, 0.14))
+	b.draw_rect(Rect2(-half, -10.0, full, 10.0), Color(0.12, 0.12, 0.14))
 
 	# --- the two brushes, right on the kill line --------------------------
 	var spin := rumble * 9.0
 	for sx: float in [-half * 0.62, half * 0.62]:
 		var at := Vector2(sx, -4.0)
-		draw_circle(at, 50.0, Color(0.16, 0.16, 0.18))
-		for b in range(14):
-			var a := spin + float(b) * TAU / 14.0
-			draw_line(at, at + Vector2.from_angle(a) * 50.0, Color(0.80, 0.72, 0.34), 3.5)
-		draw_circle(at, 15.0, Color(0.30, 0.31, 0.34))
-		draw_circle(at + Vector2(-4.0, -4.0), 8.0, Color(0.44, 0.45, 0.48))
+		b.draw_circle(at, 50.0, Color(0.16, 0.16, 0.18))
+		for bi in range(14):
+			var a := spin + float(bi) * TAU / 14.0
+			b.draw_line(at, at + Vector2.from_angle(a) * 50.0, Color(0.80, 0.72, 0.34), 3.5)
+		b.draw_circle(at, 15.0, Color(0.30, 0.31, 0.34))
+		b.draw_circle(at + Vector2(-4.0, -4.0), 8.0, Color(0.44, 0.45, 0.48))
 	# grit thrown out sideways by the brushes
 	for i in range(12):
 		var ph := fmod(rumble * 2.2 + float(i) * 0.37, 1.0)
 		var side: float = -1.0 if i % 2 == 0 else 1.0
 		var gx2: float = side * (half * 0.62 + ph * 120.0)
 		var gy2: float = -6.0 - sin(ph * PI) * 34.0
-		draw_circle(Vector2(gx2, gy2), 2.6 * (1.0 - ph), Color(0.72, 0.66, 0.48, 0.7 * (1.0 - ph)))
+		b.draw_circle(Vector2(gx2, gy2), 2.6 * (1.0 - ph), Color(0.72, 0.66, 0.48, 0.7 * (1.0 - ph)))
 
 	# --- the machine body -------------------------------------------------
 	# sides first, so the lit top plate sits proud of them
-	draw_rect(Rect2(-BODY_HALF, -186.0, BODY_HALF * 2.0, 146.0), pal.dark)
-	draw_rect(Rect2(-BODY_HALF + 9.0, -186.0, BODY_HALF * 2.0 - 18.0, 138.0), pal.body)
+	b.draw_colored_polygon(_rr(Rect2(-BODY_HALF, -186.0, BODY_HALF * 2.0, 146.0), 18.0), pal.dark)
+	b.draw_colored_polygon(_rr(Rect2(-BODY_HALF + 9.0, -186.0, BODY_HALF * 2.0 - 18.0, 138.0), 14.0), pal.body)
+	# a soft plasticine sheen on the lit corner of the hopper
+	var sheen: Color = (pal.lit as Color)
+	b.draw_colored_polygon(_rr(Rect2(-BODY_HALF + 16.0, -180.0, BODY_HALF * 0.9, 60.0), 14.0),
+		Color(sheen.r, sheen.g, sheen.b, 0.45))
 	# the hopper's lit upper-left face, following the one light
-	draw_colored_polygon(
+	b.draw_colored_polygon(
 		PackedVector2Array([
-			Vector2(-BODY_HALF + 9.0, -186.0), Vector2(BODY_HALF - 9.0, -186.0),
-			Vector2(BODY_HALF - 26.0, -170.0), Vector2(-BODY_HALF + 26.0, -170.0),
+			Vector2(-BODY_HALF + 22.0, -186.0), Vector2(BODY_HALF - 22.0, -186.0),
+			Vector2(BODY_HALF - 34.0, -172.0), Vector2(-BODY_HALF + 34.0, -172.0),
 		]), pal.lit)
 	# panel seams, so a big flat flank is not one dead colour
 	for sy: float in [-160.0, -128.0, -96.0]:
-		draw_line(Vector2(-BODY_HALF + 12.0, sy), Vector2(BODY_HALF - 12.0, sy),
+		b.draw_line(Vector2(-BODY_HALF + 12.0, sy), Vector2(BODY_HALF - 12.0, sy),
 			Color(0, 0, 0, 0.18), 2.0)
+		b.draw_line(Vector2(-BODY_HALF + 12.0, sy + 2.0), Vector2(BODY_HALF - 12.0, sy + 2.0),
+			Color(1, 1, 1, 0.10), 1.0)
+		# rivets along each seam
+		for rx in range(7):
+			var rv := Vector2(-BODY_HALF + 22.0 + float(rx) * (BODY_HALF * 2.0 - 44.0) / 6.0, sy - 5.0)
+			b.draw_circle(rv, 2.2, (pal.dark as Color))
+			b.draw_circle(rv + Vector2(-0.6, -0.6), 1.2, (pal.lit as Color))
 	# the intake maw under the hopper: a dark slot that is doing the eating
-	draw_rect(Rect2(-BODY_HALF + 30.0, -60.0, BODY_HALF * 2.0 - 60.0, 22.0), Color(0.06, 0.06, 0.07))
+	b.draw_rect(Rect2(-BODY_HALF + 30.0, -60.0, BODY_HALF * 2.0 - 60.0, 22.0), Color(0.06, 0.06, 0.07))
 	for i in range(9):
 		var tx := -BODY_HALF + 40.0 + float(i) * (BODY_HALF * 2.0 - 80.0) / 8.0
-		draw_line(Vector2(tx, -58.0), Vector2(tx, -40.0), Color(0.30, 0.30, 0.33), 2.5)
+		b.draw_line(Vector2(tx, -58.0), Vector2(tx, -40.0), Color(0.30, 0.30, 0.33), 2.5)
 
 	# --- wheels -----------------------------------------------------------
 	for wy: float in [-166.0, -74.0]:
 		for wx: float in [-BODY_HALF - 6.0, BODY_HALF - 16.0]:
-			draw_rect(Rect2(wx, wy, 22.0, 40.0), Color(0.10, 0.10, 0.12))
-			draw_rect(Rect2(wx + 4.0, wy + 6.0, 14.0, 28.0), Color(0.22, 0.22, 0.25))
+			b.draw_colored_polygon(_rr(Rect2(wx, wy, 22.0, 40.0), 7.0), Color(0.10, 0.10, 0.12))
+			b.draw_colored_polygon(_rr(Rect2(wx + 4.0, wy + 6.0, 14.0, 28.0), 4.0), Color(0.22, 0.22, 0.25))
+			for ti in range(4):
+				b.draw_line(Vector2(wx + 4.0, wy + 9.0 + float(ti) * 7.0), Vector2(wx + 18.0, wy + 9.0 + float(ti) * 7.0),
+					Color(0.14, 0.14, 0.16), 1.5)
 
 	# --- the cab ----------------------------------------------------------
-	draw_rect(Rect2(-CAB_HALF, -272.0, CAB_HALF * 2.0, 92.0), pal.dark)
-	draw_rect(Rect2(-CAB_HALF + 7.0, -272.0, CAB_HALF * 2.0 - 14.0, 84.0), pal.body)
-	draw_colored_polygon(
+	b.draw_colored_polygon(_rr(Rect2(-CAB_HALF, -272.0, CAB_HALF * 2.0, 92.0), 18.0), pal.dark)
+	b.draw_colored_polygon(_rr(Rect2(-CAB_HALF + 7.0, -272.0, CAB_HALF * 2.0 - 14.0, 84.0), 14.0), pal.body)
+	b.draw_colored_polygon(_rr(Rect2(-CAB_HALF + 14.0, -266.0, CAB_HALF * 0.8, 40.0), 12.0),
+		Color(sheen.r, sheen.g, sheen.b, 0.45))
+	b.draw_colored_polygon(
 		PackedVector2Array([
-			Vector2(-CAB_HALF + 7.0, -272.0), Vector2(CAB_HALF - 7.0, -272.0),
-			Vector2(CAB_HALF - 20.0, -258.0), Vector2(-CAB_HALF + 20.0, -258.0),
+			Vector2(-CAB_HALF + 20.0, -272.0), Vector2(CAB_HALF - 20.0, -272.0),
+			Vector2(CAB_HALF - 32.0, -259.0), Vector2(-CAB_HALF + 32.0, -259.0),
 		]), pal.lit)
 	# Windscreen, at the SOUTH end of the cab: this thing drives south, so the
 	# glass and the driver behind it face down the road at you. Putting it at
 	# the north end made the machine look like it was reversing after you.
-	draw_rect(Rect2(-CAB_HALF + 18.0, -212.0, CAB_HALF * 2.0 - 36.0, 30.0), Color(0.12, 0.16, 0.20))
+	b.draw_rect(Rect2(-CAB_HALF + 18.0, -212.0, CAB_HALF * 2.0 - 36.0, 30.0), Color(0.12, 0.16, 0.20))
 	# the top edge catches the light, like every other upright here
-	draw_rect(Rect2(-CAB_HALF + 18.0, -212.0, CAB_HALF * 2.0 - 36.0, 10.0), Color(0.42, 0.54, 0.62, 0.75))
+	b.draw_rect(Rect2(-CAB_HALF + 18.0, -212.0, CAB_HALF * 2.0 - 36.0, 10.0), Color(0.42, 0.54, 0.62, 0.75))
 	# a wiper, because it is the small wrong-looking details that give a
 	# drawn object away as a box with a window painted on it
-	draw_line(Vector2(-24.0, -184.0), Vector2(6.0, -200.0), Color(0.10, 0.10, 0.12), 2.5)
+	b.draw_line(Vector2(-24.0, -184.0), Vector2(6.0, -200.0), Color(0.10, 0.10, 0.12), 2.5)
 	# wing mirrors, out where a driver would actually need them
 	for mx: float in [-CAB_HALF - 12.0, CAB_HALF - 2.0]:
-		draw_rect(Rect2(mx, -214.0, 14.0, 9.0), Color(0.14, 0.14, 0.16))
+		b.draw_rect(Rect2(mx, -214.0, 14.0, 9.0), Color(0.14, 0.14, 0.16))
 	# exhaust stack, with the heat coming off it
-	draw_rect(Rect2(CAB_HALF - 34.0, -292.0, 13.0, 26.0), Color(0.26, 0.26, 0.29))
+	b.draw_rect(Rect2(CAB_HALF - 34.0, -292.0, 13.0, 26.0), Color(0.26, 0.26, 0.29))
 	for i in range(3):
 		var pf := fmod(rumble * 0.8 + float(i) * 0.33, 1.0)
-		draw_circle(Vector2(CAB_HALF - 27.0, -294.0 - pf * 40.0), 5.0 + pf * 9.0,
+		b.draw_circle(Vector2(CAB_HALF - 27.0, -294.0 - pf * 40.0), 5.0 + pf * 9.0,
 			Color(0.42, 0.42, 0.44, 0.26 * (1.0 - pf)))
 
 	# --- beacons ----------------------------------------------------------
@@ -203,17 +231,17 @@ func _draw() -> void:
 	# emergency variant. They alternate, which reads as urgency at a glance
 	var on := fmod(rumble, 0.5) < 0.25
 	if kind == "both":
-		draw_circle(Vector2(-46.0, -282.0), 8.0,
+		b.draw_circle(Vector2(-46.0, -282.0), 8.0,
 			Color(1.0, 0.24, 0.20) if on else Color(0.34, 0.08, 0.07))
-		draw_circle(Vector2(46.0, -282.0), 8.0,
+		b.draw_circle(Vector2(46.0, -282.0), 8.0,
 			Color(0.32, 0.46, 1.0) if not on else Color(0.09, 0.13, 0.34))
 	else:
 		for bx: float in [-46.0, 46.0]:
 			var lit: bool = on if bx < 0.0 else not on
-			draw_circle(Vector2(bx, -282.0), 8.0,
+			b.draw_circle(Vector2(bx, -282.0), 8.0,
 				Color(1.0, 0.78, 0.16) if lit else Color(0.38, 0.28, 0.06))
 			if lit:
-				draw_circle(Vector2(bx, -282.0), 16.0, Color(1.0, 0.80, 0.25, 0.18))
+				b.draw_circle(Vector2(bx, -282.0), 16.0, Color(1.0, 0.80, 0.25, 0.18))
 	# A wash of beacon light on the road it is about to take. Full corridor
 	# width and faded in bands rather than one polygon: the first version was
 	# a trapezoid from the cab to the kerbs, and its two straight edges read
@@ -221,5 +249,6 @@ func _draw() -> void:
 	var glow: float = 0.055 + 0.025 * sin(rumble * 6.0)
 	for i in range(5):
 		var f := float(i) / 4.0
-		draw_rect(Rect2(-half, -6.0 + f * 46.0, full, 12.0),
+		b.draw_rect(Rect2(-half, -6.0 + f * 46.0, full, 12.0),
 			Color(1.0, 0.80, 0.30, glow * (1.0 - f)))
+	b.flush()

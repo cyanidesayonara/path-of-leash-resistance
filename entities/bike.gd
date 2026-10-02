@@ -139,22 +139,77 @@ func _physics_process(delta: float) -> void:
 	queue_redraw()
 
 
+# the direction shadows fall (main.LIGHT), repeated here so a rider drawn
+# without a main (a test, the lineup) still lights the same way
+const LIGHT := Vector2(0.5, 0.866)
+const HELMETS: Array[Color] = [Color(0.92, 0.30, 0.22), Color(0.98, 0.84, 0.26), Color(0.26, 0.56, 0.86),
+	Color(0.94, 0.94, 0.92)]
+const SKIN := Color(0.86, 0.70, 0.56)
+
+
+static func _oval(at: Vector2, rx: float, ry: float) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for k in range(12):
+		var a := TAU * float(k) / 12.0
+		pts.append(at + Vector2(cos(a) * rx, sin(a) * ry))
+	return pts
+
+
+# Seen from directly above, facing +x: wheels are thin tyres seen edge on, the
+# rider is a hunched back, two arms out to the bars and a helmet. Lit from the
+# upper left of the SCREEN, so the light is turned into the rider's own frame.
+# Everything goes through one ShapeBatch: one draw call per rider.
 func _draw() -> void:
+	var b := ShapeBatch.new(self)
+	var sh := LIGHT.rotated(-rotation)       # where shadows fall, in local space
+	var hi := -sh                            # where the light comes from
+	var helmet: Color = HELMETS[int(wob_seed * 7.0) % HELMETS.size()]
+	var tyre := Color(0.12, 0.12, 0.14)
 	if kind == "bike":
-		var wheel := Color(0.15, 0.15, 0.17)
-		draw_circle(Vector2(-18, 0), 8.0, wheel)
-		draw_circle(Vector2(18, 0), 8.0, wheel)
-		draw_line(Vector2(-18, 0), Vector2(18, 0), tint.darkened(0.3), 4.0)
-		draw_circle(Vector2.ZERO, 10.0, tint)
-		draw_circle(Vector2(6, 0), 6.0, Color(0.85, 0.72, 0.58))
-		draw_arc(Vector2(6, 0), 6.5, PI * 0.5, PI * 1.5, 10, Color(0.8, 0.3, 0.25), 3.0)
+		b.polygon(_oval(sh * 7.0, 26.0, 8.0), Color(0.05, 0.05, 0.08, 0.20))
+		# the tyres and the frame between them
+		for wx: float in [-18.0, 18.0]:
+			b.line(Vector2(wx - 8.5, 0), Vector2(wx + 8.5, 0), tyre, 4.2)
+			b.line(Vector2(wx - 6.0, 0), Vector2(wx + 6.0, 0), Color(0.30, 0.30, 0.33), 1.4)
+		b.line(Vector2(-18, 0), Vector2(14, 0), tint.darkened(0.45), 3.6)
+		b.line(Vector2(-18, -0.6), Vector2(14, -0.6), tint.lightened(0.15), 1.4)
+		# the bars, with grips
+		b.line(Vector2(13, -8.5), Vector2(13, 8.5), Color(0.20, 0.20, 0.22), 2.4)
+		b.circle(Vector2(13, -8.5), 1.8, Color(0.10, 0.10, 0.10))
+		b.circle(Vector2(13, 8.5), 1.8, Color(0.10, 0.10, 0.10))
+		# arms out to the bars
+		for sy: float in [-1.0, 1.0]:
+			b.line(Vector2(0, 6.5 * sy), Vector2(12.5, 8.0 * sy), tint.darkened(0.25), 3.6)
+			b.circle(Vector2(12.5, 8.0 * sy), 2.0, SKIN)
+		# the back, hunched over the bars, a ball of jersey lit on one side
+		b.polygon(_oval(Vector2(-2, 0) + sh * 0.8, 9.5, 9.0), tint.darkened(0.35))
+		b.polygon(_oval(Vector2(-2, 0), 8.8, 8.3), tint)
+		b.polygon(_oval(Vector2(-2, 0) + hi * 3.5, 3.6, 3.0), tint.lightened(0.25))
+		# the helmet, long and vented, with its sheen
+		b.polygon(_oval(Vector2(5.5, 0) + sh * 0.6, 6.6, 5.6), helmet.darkened(0.40))
+		b.polygon(_oval(Vector2(5.5, 0), 6.0, 5.0), helmet)
+		for vy: float in [-2.2, 0.0, 2.2]:
+			b.line(Vector2(2.5, vy), Vector2(8.0, vy * 0.8), helmet.darkened(0.30), 1.0)
+		b.circle(Vector2(5.5, 0) + hi * 2.6, 1.6, helmet.lightened(0.45))
 		for i in range(3):
 			var x := -(30.0 + i * 11.0)
-			draw_line(Vector2(x, -4 + i * 4), Vector2(x - 8.0, -4 + i * 4), Color(1, 1, 1, 0.25), 2.0)
+			b.line(Vector2(x, -4 + i * 4), Vector2(x - 8.0, -4 + i * 4), Color(1, 1, 1, 0.25), 2.0)
 	else:
-		draw_rect(Rect2(-11, -3, 22, 6), tint.darkened(0.25))
-		draw_circle(Vector2(-12, 0), 3.5, Color(0.15, 0.15, 0.17))
-		draw_circle(Vector2(12, 0), 3.5, Color(0.15, 0.15, 0.17))
-		draw_circle(Vector2.ZERO, 7.0, tint)
-		draw_circle(Vector2(4, 0), 5.0, Color(0.85, 0.72, 0.58))
-		draw_arc(Vector2(4, 0), 5.5, PI * 0.5, PI * 1.5, 8, Color(0.95, 0.85, 0.3), 2.5)
+		b.polygon(_oval(sh * 4.0, 15.0, 6.0), Color(0.05, 0.05, 0.08, 0.20))
+		# the deck, the little wheels at either end, the T-bar up front
+		for wx: float in [-12.5, 12.5]:
+			b.line(Vector2(wx - 3.5, 0), Vector2(wx + 3.5, 0), tyre, 3.4)
+		b.line(Vector2(-11, 0), Vector2(11, 0), tint.darkened(0.40), 6.5)
+		b.line(Vector2(-10, -1.2), Vector2(10, -1.2), tint.darkened(0.10), 2.0)
+		b.line(Vector2(11, -6.5), Vector2(11, 6.5), Color(0.24, 0.24, 0.26), 2.0)
+		for sy: float in [-1.0, 1.0]:
+			b.line(Vector2(0, 4.5 * sy), Vector2(10.5, 6.0 * sy), tint.darkened(0.15), 2.8)
+			b.circle(Vector2(10.5, 6.0 * sy), 1.6, SKIN)
+		# a small kid, mostly coat and helmet
+		b.polygon(_oval(Vector2(-1.5, 0) + sh * 0.6, 7.0, 6.6), tint.darkened(0.35))
+		b.polygon(_oval(Vector2(-1.5, 0), 6.4, 6.0), tint)
+		b.polygon(_oval(Vector2(-1.5, 0) + hi * 2.6, 2.6, 2.2), tint.lightened(0.25))
+		b.circle(Vector2(3.5, 0) + sh * 0.5, 5.4, helmet.darkened(0.40))
+		b.circle(Vector2(3.5, 0), 4.8, helmet)
+		b.circle(Vector2(3.5, 0) + hi * 2.0, 1.4, helmet.lightened(0.45))
+	b.flush()

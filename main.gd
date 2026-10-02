@@ -2688,8 +2688,13 @@ func _draw_rambla(vt: float, vb: float) -> void:
 				b.line(sat + Vector2(4, -4), sat + Vector2(10, -8), Color(0.55, 0.50, 0.45), 2.0)
 			continue
 		b.rect(Rect2(r.position + Vector2(2, 3), r.size), Color(0, 0, 0, 0.16))
-		b.rect(r, Color(0.86, 0.84, 0.80))
-		b.rect(r.grow(-3.0), Color(0.92, 0.91, 0.88))
+		# a white sheet, tasselled at its ends, with the fold still in it
+		for tx in range(int(r.size.y / 6.0)):
+			for side: float in [r.position.x - 3.0, r.end.x]:
+				b.rect(Rect2(side, r.position.y + 3.0 + float(tx) * 6.0, 3.0, 2.0), Color(0.80, 0.78, 0.74))
+		b.rect(r, Color(0.84, 0.82, 0.78))
+		b.rect(Rect2(r.position, r.size - Vector2(2, 2)), Color(0.92, 0.91, 0.88))
+		b.line(Vector2(r.get_center().x, r.position.y + 2.0), Vector2(r.get_center().x, r.end.y - 3.0), Color(0.82, 0.80, 0.76), 1.5)
 		var goods := String(bl["goods"])
 		for gi in range(6):
 			var gp := r.position + Vector2(12.0 + float(gi % 3) * 24.0, 14.0 + float(gi / 3) * 24.0)
@@ -2718,17 +2723,20 @@ func _draw_rambla(vt: float, vb: float) -> void:
 		var sg: Vector2 = shell_game["pos"]
 		if sg.y > vt - 80.0 and sg.y < vb + 80.0:
 			var busted := bool(shell_game["done"])
-			b.rect(Rect2(sg.x - 22.0 + 3.0, sg.y - 14.0 + 4.0, 44.0, 28.0), Color(0, 0, 0, 0.18))
-			b.rect(Rect2(sg.x - 22.0, sg.y - 14.0, 44.0, 28.0), Color(0.66, 0.50, 0.32))
-			b.line(Vector2(sg.x - 22.0, sg.y), Vector2(sg.x + 22.0, sg.y), Color(0.55, 0.40, 0.25), 1.5)
+			var sbox := Rect2(sg.x - 22.0, sg.y - 14.0, 44.0, 28.0)
+			box_shadow(b, sbox, 3.0, 5.0)
+			clay_slab(b, sbox, 3.0, Color(0.66, 0.50, 0.32), 2.0)
+			b.line(Vector2(sg.x - 21.0, sg.y), Vector2(sg.x + 20.0, sg.y), Color(0.52, 0.38, 0.24), 1.5)
 			var tt2 := AnimClock.msec() / 1000.0
 			for k in range(3):
 				var cx := sg.x - 12.0 + float(k) * 12.0
 				var cup := Vector2(cx + (0.0 if busted else sin(tt2 * 6.0 + float(k) * 2.1) * 6.0), sg.y)
 				if busted:
 					cup = sg + Vector2(-30.0 + float(k) * 34.0, 22.0 - float(k % 2) * 40.0)
-				b.circle(cup, 5.0, Color(0.20, 0.20, 0.22))
-				b.circle(cup + Vector2(-1, -1), 3.0, Color(0.40, 0.40, 0.44))
+				b.circle(cup + Vector2(1.0, 1.6), 5.0, Color(0, 0, 0, 0.22))
+				b.circle(cup, 5.0, Color(0.16, 0.16, 0.18))
+				b.circle(cup + Vector2(-0.6, -0.6), 3.8, Color(0.32, 0.32, 0.36))
+				b.circle(cup + Vector2(-1.6, -1.6), 1.4, Color(0.70, 0.70, 0.74))
 			if not busted:
 				b.circle(sg + Vector2(0, -28), 11.0, Color(0.30, 0.26, 0.22))      # the man with the cups
 				b.circle(sg + Vector2(0, -31), 6.5, Color(0.72, 0.56, 0.42))
@@ -2743,22 +2751,51 @@ func _draw_rambla(vt: float, vb: float) -> void:
 		if sp.y < vt - 60.0 or sp.y > vb + 60.0:
 			continue
 		var paint := Color(0.80, 0.66, 0.30) if i % 2 == 0 else Color(0.72, 0.74, 0.76)
-		b.rect(Rect2(sp.x - 16.0 + 4.0, sp.y - 16.0 + 5.0, 32.0, 32.0), Color(0, 0, 0, 0.2))
-		b.rect(Rect2(sp.x - 16.0, sp.y - 16.0, 32.0, 32.0), Color(0.24, 0.22, 0.22))
+		var box := Rect2(sp.x - 16.0, sp.y - 16.0, 32.0, 32.0)
+		box_shadow(b, box, 4.0, 9.0)
+		# the box: a painted crate, lit on its upper-left, a seam near the front
+		clay_slab(b, box, 4.0, Color(0.30, 0.27, 0.27), 3.0)
+		b.line(Vector2(box.position.x + 3.0, box.end.y - 6.0), Vector2(box.end.x - 5.0, box.end.y - 6.0), Color(0.20, 0.18, 0.18), 1.5)
 		var bow := float(statue_bow.get(i, 0.0))
 		var lean := Vector2(0, 8.0 * sin(clampf(bow / 2.2, 0.0, 1.0) * PI)) if bow > 0.0 else Vector2.ZERO
-		b.circle(sp, 12.0, paint)
-		b.circle(sp + Vector2(-3, -3), 6.0, paint.lightened(0.25))
-		b.circle(sp + Vector2(0, -5) + lean, 7.0, paint.darkened(0.08))
-		# the arm held out, frozen (it drops for the bow)
+		# the figure, painted head to foot in one metal: shoulders, the arm
+		# held out frozen (it drops for the bow), the head under a hat, and
+		# a hard sheen on the lit side that says paint, not skin
+		b.polygon(ellipse_pts(sp + Vector2(0, 1), 13.0, 9.0), paint.darkened(0.35))
+		b.polygon(ellipse_pts(sp + Vector2(-0.8, 0.2), 12.0, 8.0), paint)
+		b.polygon(ellipse_pts(sp + Vector2(-4.5, -2.0), 5.0, 3.2), paint.lightened(0.30))
 		var arm := Vector2(18, -10) if bow <= 0.0 else Vector2(8, 10)
-		b.line(sp + Vector2(6, -2), sp + arm, paint.darkened(0.15), 4.0)
+		b.line(sp + Vector2(7, -1), sp + arm, paint.darkened(0.35), 5.5)
+		b.line(sp + Vector2(7, -1.6), sp + arm + Vector2(0, -0.6), paint.darkened(0.02), 3.0)
+		b.circle(sp + arm, 3.2, paint.darkened(0.30))
+		b.circle(sp + arm + Vector2(-0.5, -0.5), 2.5, paint)
+		# the other arm, down at the side
+		b.circle(sp + Vector2(-11.0, 2.5), 3.6, paint.darkened(0.30))
+		b.circle(sp + Vector2(-11.4, 2.0), 2.8, paint.darkened(0.04))
+		var hp := sp + Vector2(0, -3) + lean
+		b.circle(hp + Vector2(0.6, 0.6), 6.6, paint.darkened(0.38))
+		b.circle(hp, 6.0, paint.darkened(0.06))
+		if i % 2 == 1:
+			# a bowler hat: brim and crown
+			b.circle(hp + Vector2(0.4, 0.2), 7.6, paint.darkened(0.42))
+			b.circle(hp + Vector2(-0.3, -0.5), 4.8, paint.darkened(0.12))
+		else:
+			# sculpted curls
+			for cu in range(4):
+				b.circle(hp + Vector2.from_angle(PI * 0.9 + float(cu) * 0.55) * 3.6, 2.0, paint.darkened(0.16))
+		b.circle(hp + Vector2(-2.0, -2.2), 1.8, paint.lightened(0.50))
+		b.circle(hp + Vector2(0.4, 5.6), 1.8, paint.darkened(0.22))    # the nose, to the front
+		b.circle(sp + Vector2(-6.5, -1.5), 1.2, Color(1, 1, 1, 0.75))
 		# the hat for coins on the paving in front
-		b.circle(sp + Vector2(-2, 24), 6.0, Color(0.16, 0.14, 0.14))
-		b.circle(sp + Vector2(-3, 23), 1.6, Color(0.95, 0.82, 0.30))
+		b.circle(sp + Vector2(-2, 25), 7.0, Color(0.10, 0.09, 0.09))
+		b.circle(sp + Vector2(-2.4, 24.4), 5.4, Color(0.20, 0.18, 0.18))
+		b.circle(sp + Vector2(-4, 23.5), 1.7, Color(0.95, 0.82, 0.30))
+		b.circle(sp + Vector2(-0.5, 25.5), 1.5, Color(0.84, 0.70, 0.26))
 		if bow <= 0.0 and float(statue_wait.get(i, 0.0)) > 0.3:
-			# the eyes slide towards her: it is alive
-			b.circle(sp + Vector2(2.0 + sin(t * 3.0), -6), 1.4, Color(0.1, 0.1, 0.1))
+			# the eyes slide towards her, under the brim: it is alive
+			for ex: float in [-2.6, 2.6]:
+				b.circle(hp + Vector2(ex, 3.6), 1.4, Color(0.98, 0.96, 0.92))
+				b.circle(hp + Vector2(ex + 0.6 * sin(t * 3.0), 3.9), 0.8, Color(0.1, 0.1, 0.1))
 	b.flush(_wc)
 
 
@@ -2777,12 +2814,72 @@ func _draw_canaletes(f: Vector2) -> void:
 	_wc.draw_circle(f + Vector2(14, 10), 5.0, Color(0.45, 0.6, 0.7, 0.5))     # the wet step
 
 
+# A busker, from above: shoulders and a head of hair, a guitar slung across
+# the front with the strumming hand going, the case lying open on the paving
+# beside him with the day's coins in it, and notes going up. Colours come from
+# where he stands, so the same busker always wears the same jumper.
+func _draw_busker(pf: Vector2, idx: int, pt: float) -> void:
+	var k := int(absf(pf.x * 3.0 + pf.y))
+	var jumper: Color = [Color(0.52, 0.34, 0.54), Color(0.24, 0.46, 0.50), Color(0.30, 0.48, 0.30), Color(0.30, 0.34, 0.52)][k % 4]
+	var hair: Color = [Color(0.20, 0.14, 0.10), Color(0.46, 0.28, 0.14), Color(0.12, 0.11, 0.11)][k % 3]
+	var skin: Color = [Color(0.86, 0.70, 0.56), Color(0.64, 0.44, 0.32), Color(0.92, 0.76, 0.62)][(k / 3) % 3]
+	var wood := Color(0.86, 0.50, 0.20)
+	contact_shadow(_wc, pf, 14.0, 5.0, 0.22)
+	# the open case, on the paving to his right: lid, red lining, coins
+	var cs := pf + Vector2(28.0, 13.0)
+	contact_shadow(_wc, cs, 14.0, 2.0, 0.16)
+	_wc.draw_colored_polygon(round_rect_pts(Rect2(cs.x - 14.0, cs.y - 7.0, 28.0, 15.0), 6.0), Color(0.16, 0.12, 0.10))
+	_wc.draw_colored_polygon(round_rect_pts(Rect2(cs.x - 12.0, cs.y - 5.0, 24.0, 11.0), 5.0), Color(0.62, 0.14, 0.18))
+	_wc.draw_colored_polygon(round_rect_pts(Rect2(cs.x - 11.0, cs.y - 4.5, 12.0, 5.0), 2.5), Color(0.76, 0.24, 0.26))
+	for c in range(4):
+		var cp := cs + Vector2(-7.0 + float((k + c * 5) % 14), -2.0 + float((k + c * 3) % 5))
+		_wc.draw_circle(cp, 1.9, Color(0.70, 0.56, 0.20))
+		_wc.draw_circle(cp + Vector2(-0.4, -0.4), 1.3, Color(0.98, 0.86, 0.38))
+	# the shoulders, a ball of jumper lit on its upper-left
+	_wc.draw_colored_polygon(ellipse_pts(pf + Vector2(0.5, 1.0), 13.0, 10.0), jumper.darkened(0.32))
+	_wc.draw_colored_polygon(ellipse_pts(pf + Vector2(-0.6, -0.2), 12.0, 9.0), jumper)
+	_wc.draw_colored_polygon(ellipse_pts(pf + Vector2(-4.5, -3.0), 5.0, 3.4), jumper.lightened(0.22))
+	# the guitar, slung across the front: body low on his left, neck up to
+	# his right with the fretting hand on it
+	var gb := pf + Vector2(-5.0, 9.0)
+	var gn := pf + Vector2(16.0, -3.0)
+	_wc.draw_line(gb, gn, Color(0.30, 0.20, 0.12), 3.6)
+	_wc.draw_line(gb, gn, Color(0.50, 0.34, 0.20), 1.6)
+	_wc.draw_colored_polygon(round_rect_pts(Rect2(gn.x - 1.0, gn.y - 3.5, 6.0, 5.0), 1.5), Color(0.24, 0.16, 0.10))
+	_wc.draw_circle(gb + Vector2(-3.0, 1.5), 7.4, wood.darkened(0.40))
+	_wc.draw_circle(gb + Vector2(-3.4, 1.2), 6.6, wood)
+	_wc.draw_circle(gb + Vector2(2.6, -1.2), 5.4, wood.darkened(0.40))
+	_wc.draw_circle(gb + Vector2(2.2, -1.5), 4.7, wood)
+	_wc.draw_circle(gb + Vector2(-5.4, -0.8), 2.4, wood.lightened(0.30))
+	_wc.draw_circle(gb + Vector2(0.4, -0.2), 2.2, Color(0.14, 0.09, 0.06))
+	# the hands: one on the neck, one strumming over the sound hole
+	var strum := sin(pt * 9.0 + float(idx)) * 2.2
+	_wc.draw_circle(pf + Vector2(10.0, -1.0), 2.8, skin.darkened(0.15))
+	_wc.draw_circle(gb + Vector2(1.5 + strum * 0.3, 2.5 + strum), 2.8, skin)
+	# the head: mostly hair from up here, a sliver of face to the front
+	var hp := pf + Vector2(0.0, -2.0)
+	_wc.draw_circle(hp + Vector2(0.5, 2.6), 6.4, skin.darkened(0.10))
+	_wc.draw_circle(hp, 6.8, hair.darkened(0.20))
+	_wc.draw_circle(hp + Vector2(-0.5, -0.6), 6.0, hair)
+	_wc.draw_circle(hp + Vector2(-2.4, -2.4), 2.2, hair.lightened(0.28))
+	# music, going up
+	for i in range(2):
+		var ny := fmod(pt * 22.0 + i * 20.0, 44.0)
+		var np := pf + Vector2(14.0 + i * 10.0 - ny * 0.2, -14.0 - ny)
+		var na := clampf(1.0 - ny / 44.0, 0.0, 1.0) * 0.8
+		_wc.draw_circle(np, 3.0, Color(1, 1, 1, na))
+		_wc.draw_line(np + Vector2(2.5, -1), np + Vector2(2.5, -9), Color(1, 1, 1, na), 1.5)
+
+
 # A La Rambla stall by what it sells. Same footprint as a market stall
 # (STALL_BODY_SIZE), so bodies, wrap points and blockers are unchanged.
 func _draw_rambla_stall(st: Vector2, kind: String, i: int) -> void:
 	var b := ShapeBatch.new()
 	var r := Rect2(st.x - 48.0, st.y - 28.0, 96.0, 56.0)
-	b.rect(Rect2(r.position + LIGHT * 12.0, r.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+	if kind == "icecream" or kind == "caricature":
+		b.rect(Rect2(r.position + LIGHT * 12.0, r.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+	else:
+		box_shadow(b, r, 5.0, 12.0)
 	match kind:
 		"kiosk":
 			# the newspaper kiosk: a dark green box with a pitched roof,
@@ -2936,6 +3033,13 @@ func _draw_rambla_stall(st: Vector2, kind: String, i: int) -> void:
 			b.line(Vector2(st.x + 40.0, st.y - 20.0), Vector2(st.x + 26.0, st.y + 22.0), Color(0.45, 0.32, 0.20), 3.0)
 			b.rect(Rect2(st.x + 12.0, st.y - 24.0, 28.0, 20.0), Color(0.98, 0.97, 0.94))
 			b.circle(Vector2(st.x + 26.0, st.y + 30.0), 7.0, Color(0.36, 0.26, 0.18))
+	if kind != "icecream" and kind != "caricature":
+		# the counter's edges, plasticine-soft: a lit lip along the top and
+		# left, a dark rim along the bottom and right where it turns away
+		b.line(Vector2(r.position.x + 1.0, r.position.y + 1.5), Vector2(r.end.x - 2.0, r.position.y + 1.5), Color(1, 1, 1, 0.26), 3.0)
+		b.line(Vector2(r.position.x + 1.5, r.position.y + 1.0), Vector2(r.position.x + 1.5, r.end.y - 2.0), Color(1, 1, 1, 0.20), 3.0)
+		b.line(Vector2(r.position.x + 2.0, r.end.y - 1.5), Vector2(r.end.x, r.end.y - 1.5), Color(0, 0, 0, 0.26), 3.0)
+		b.line(Vector2(r.end.x - 1.5, r.position.y + 2.0), Vector2(r.end.x - 1.5, r.end.y), Color(0, 0, 0, 0.30), 3.0)
 	b.flush(_wc)
 
 
@@ -3191,6 +3295,227 @@ func _draw_lamppost(p: Vector2) -> void:
 		_wc.draw_circle(lp, 3.6, Color(0.99, 0.95, 0.78) if Game.night else Color(0.86, 0.88, 0.9))
 		if Game.night:
 			_wc.draw_circle(lp, 6.5, Color(1.0, 0.92, 0.66, 0.35))
+
+
+# A rounded rectangle as one polygon: four corners of three steps each. One
+# polygon is one batched run, where four circles and two rects would be six.
+static func round_rect_pts(r: Rect2, rad: float) -> PackedVector2Array:
+	var k := minf(rad, minf(r.size.x, r.size.y) * 0.5)
+	var cs := [Vector2(r.end.x - k, r.position.y + k), Vector2(r.end.x - k, r.end.y - k),
+		Vector2(r.position.x + k, r.end.y - k), Vector2(r.position.x + k, r.position.y + k)]
+	var pts := PackedVector2Array()
+	for ci in range(4):
+		for s in range(4):
+			pts.append(cs[ci] + Vector2.from_angle(-PI * 0.5 + float(ci) * PI * 0.5 + float(s) * PI / 6.0) * k)
+	return pts
+
+
+# An ellipse as one polygon of n points, for shoulders and seats; batchable
+# where a transformed circle is not.
+static func ellipse_pts(at: Vector2, rx: float, ry: float, n := 14) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for k in range(n):
+		var a := TAU * float(k) / float(n)
+		pts.append(at + Vector2(cos(a) * rx, sin(a) * ry))
+	return pts
+
+
+# A slab of plasticine seen from above: a darker rim showing on the side away
+# from the light, the face itself, and a soft sheen on the lit corner. Three
+# polygons, all batchable.
+func clay_slab(c: Object, r: Rect2, rad: float, col: Color, lift := 2.5) -> void:
+	c.draw_colored_polygon(round_rect_pts(r, rad), col.darkened(0.30))
+	c.draw_colored_polygon(round_rect_pts(Rect2(r.position, r.size - Vector2(lift, lift)), rad), col)
+	var sheen := Rect2(r.position + Vector2(lift, lift), Vector2(r.size.x * 0.55, r.size.y * 0.42))
+	var lit := col.lightened(0.22)
+	c.draw_colored_polygon(round_rect_pts(sheen, rad * 0.8), Color(lit.r, lit.g, lit.b, 0.55))
+
+
+# The long soft shadow of anything a couple of metres tall and boxy: a firm
+# core and a fainter fringe, both pushed away from the light.
+func box_shadow(c: Object, r: Rect2, rad: float, h: float) -> void:
+	var sc := Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.10)
+	c.draw_colored_polygon(round_rect_pts(Rect2(r.position + LIGHT * (h * 1.15), r.size).grow(3.0), rad + 3.0), sc)
+	c.draw_colored_polygon(round_rect_pts(Rect2(r.position + LIGHT * h, r.size), rad),
+		Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+
+
+# The service van: a van seen from above is a roof, so it gets one - rounded
+# corners, ribs across it, a vent, roof bars, the windscreen raked under the
+# front edge, mirrors sticking out past the body, and the long shadow a
+# two-metre box throws.
+func _draw_service_van(v: Vector2) -> void:
+	var body := Rect2(v.x - 32.0, v.y - 66.0, 64.0, 132.0)
+	box_shadow(_wc, body, 12.0, 26.0)
+	# tyres, visible past the body on both sides
+	for w: Vector2 in [Vector2(-35, -42), Vector2(29, -42), Vector2(-35, 28), Vector2(29, 28)]:
+		_wc.draw_colored_polygon(round_rect_pts(Rect2(v.x + w.x, v.y + w.y, 6.0, 17.0), 2.5), Color(0.10, 0.10, 0.12))
+	# the roof, plasticine white, lit on its upper-left corner
+	clay_slab(_wc, body, 12.0, Color(0.88, 0.88, 0.86), 3.0)
+	# pressed ribs along the roof, each a groove with a lit lip behind it
+	for ri in range(5):
+		var ry := body.position.y + 26.0 + float(ri) * 20.0
+		_wc.draw_line(Vector2(body.position.x + 6.0, ry), Vector2(body.end.x - 7.0, ry), Color(0.72, 0.72, 0.71), 2.0)
+		_wc.draw_line(Vector2(body.position.x + 6.0, ry + 2.0), Vector2(body.end.x - 7.0, ry + 2.0), Color(0.97, 0.97, 0.95), 1.0)
+	# windscreen at the front (north), raked, with a glare streak and a wiper
+	_wc.draw_colored_polygon(PackedVector2Array([v + Vector2(-27, -62), v + Vector2(27, -62),
+		v + Vector2(24, -43), v + Vector2(-24, -43)]), Color(0.27, 0.35, 0.43))
+	_wc.draw_colored_polygon(PackedVector2Array([v + Vector2(-24, -61), v + Vector2(-10, -61),
+		v + Vector2(-17, -44), v + Vector2(-22, -44)]), Color(0.62, 0.72, 0.80, 0.55))
+	_wc.draw_line(v + Vector2(-18, -46), v + Vector2(6, -52), Color(0.16, 0.16, 0.18), 1.6)
+	# mirrors, which is what makes it read as a VEHICLE and not a crate
+	for mx: float in [-1.0, 1.0]:
+		_wc.draw_colored_polygon(round_rect_pts(Rect2(v.x + mx * 38.0 - 3.0, v.y - 52.0, 6.0, 9.0), 2.5), Color(0.28, 0.28, 0.30))
+	# roof vent and bars
+	clay_slab(_wc, Rect2(v.x - 11.0, v.y - 16.0, 22.0, 16.0), 4.0, Color(0.76, 0.76, 0.74), 2.0)
+	for bx: float in [-20.0, 20.0]:
+		_wc.draw_line(v + Vector2(bx, -34.0), v + Vector2(bx, 46.0), Color(0.58, 0.58, 0.58), 3.0)
+		_wc.draw_line(v + Vector2(bx - 1.0, -34.0), v + Vector2(bx - 1.0, 46.0), Color(0.78, 0.78, 0.78), 1.0)
+	# the back doors and a livery stripe down the side
+	_wc.draw_line(v + Vector2(-29, 58), v + Vector2(29, 58), Color(0.58, 0.58, 0.59), 2.0)
+	_wc.draw_line(v + Vector2(0, 58), v + Vector2(0, 65), Color(0.58, 0.58, 0.59), 2.0)
+	_wc.draw_rect(Rect2(v.x - 31.0, v.y + 4.0, 61.0, 7.0), Color(0.66, 0.30, 0.25))
+	_wc.draw_rect(Rect2(v.x - 31.0, v.y + 4.0, 61.0, 2.0), Color(0.80, 0.42, 0.35))
+	# a hazard beacon on the cab, because it is parked where it should not be
+	var beat := 0.55 + 0.45 * sin(AnimClock.msec() / 190.0)
+	_wc.draw_circle(v + Vector2(0, -38.0), 5.0, Color(0.55, 0.36, 0.10))
+	_wc.draw_circle(v + Vector2(0, -38.0), 4.0, Color(0.95, 0.62, 0.15, 0.55 + beat * 0.45))
+	_wc.draw_circle(v + Vector2(-1.2, -39.2), 1.4, Color(1.0, 0.95, 0.80, 0.8))
+
+
+# THE FUR-GONETA. A grooming van done up as a shaggy dog, in the tradition of
+# every mobile groomer that has ever driven past you: fur over the roof,
+# floppy ears hanging down the sides, a fringe falling over the windscreen
+# with the eyes peering out from under it, a wet nose on the bonnet, a tail
+# on the back doors. Our own name and livery: the van it tips its hat to
+# belongs to somebody else.
+#
+# The one surface you can read from directly overhead is the roof, so the
+# signwriting is painted up there, which is where a real grooming van puts it
+# anyway. Front is north; body, wheels and footprint are the service van's.
+func _draw_furgoneta(v: Vector2) -> void:
+	var fur := Color(0.50, 0.33, 0.19)
+	var fur_lit := Color(0.64, 0.45, 0.27)
+	var fur_dark := Color(0.33, 0.21, 0.12)
+	var cream := Color(0.92, 0.86, 0.74)
+	var cream_dk := Color(0.76, 0.69, 0.57)
+	var ink := Color(0.40, 0.20, 0.16)
+	var body := Rect2(v.x - 32.0, v.y - 66.0, 64.0, 132.0)
+	box_shadow(_wc, body, 14.0, 26.0)
+	for w: Vector2 in [Vector2(-35, -40), Vector2(29, -40), Vector2(-35, 26), Vector2(29, 26)]:
+		_wc.draw_colored_polygon(round_rect_pts(Rect2(v.x + w.x, v.y + w.y, 6.0, 18.0), 2.5), Color(0.10, 0.10, 0.12))
+	# --- ears: big and floppy, hung from the front of the roof down the sides
+	for sx: float in [-1.0, 1.0]:
+		_wc.draw_colored_polygon(PackedVector2Array([
+			v + Vector2(24.0 * sx, -40.0), v + Vector2(48.0 * sx, -26.0),
+			v + Vector2(46.0 * sx, 6.0), v + Vector2(38.0 * sx, 16.0),
+			v + Vector2(27.0 * sx, 2.0),
+		]), fur_dark)
+		_wc.draw_colored_polygon(PackedVector2Array([
+			v + Vector2(26.0 * sx, -35.0), v + Vector2(42.0 * sx, -24.0),
+			v + Vector2(40.0 * sx, 4.0), v + Vector2(36.0 * sx, 10.0),
+			v + Vector2(28.0 * sx, -2.0),
+		]), fur if sx > 0.0 else fur_lit)
+		# the shaggy ends of the ear
+		for tf in range(3):
+			var tx := (32.0 + float(tf) * 4.5) * sx
+			_wc.draw_line(v + Vector2(tx, 6.0 + float(tf)), v + Vector2(tx - 1.5 * sx, 14.0 + float(tf) * 1.5), fur_dark, 2.2)
+	# --- the body: a soft fur slab, cream down the face and one rear corner
+	clay_slab(_wc, body, 14.0, fur, 3.0)
+	_wc.draw_colored_polygon(round_rect_pts(Rect2(v.x - 31.0, v.y + 22.0, 18.0, 41.0), 9.0), cream_dk)
+	# --- fur: rows of little curls over the roof, lit side and shaded side
+	for row in range(9):
+		var ry := v.y - 26.0 + float(row) * 10.5
+		for col in range(6):
+			var rx := v.x - 26.0 + float(col) * 10.5 + (5.0 if row % 2 == 0 else 0.0)
+			if absf(rx - v.x) < 25.0 and ry > v.y - 25.0 and ry < v.y + 26.0:
+				continue     # under the signwriting
+			var on_cream: bool = rx < v.x - 13.0 and ry > v.y + 22.0
+			var tc: Color = cream if on_cream else (fur_lit if rx < v.x - 6.0 else fur_dark)
+			_wc.draw_line(Vector2(rx, ry), Vector2(rx - 3.0, ry + 5.0), tc, 2.0)
+			_wc.draw_line(Vector2(rx - 3.0, ry + 5.0), Vector2(rx + 1.0, ry + 7.5), tc, 1.6)
+	# --- the face on the front (north) end -------------------------------
+	# the bumper, peeking out in front of the muzzle, with its two headlamps
+	_wc.draw_colored_polygon(round_rect_pts(Rect2(v.x - 30.0, v.y - 69.0, 60.0, 8.0), 4.0), Color(0.36, 0.34, 0.33))
+	for hx: float in [-21.0, 21.0]:
+		_wc.draw_circle(v + Vector2(hx, -64.0), 4.6, Color(0.30, 0.28, 0.26))
+		_wc.draw_circle(v + Vector2(hx, -64.0), 3.4, Color(0.98, 0.94, 0.78))
+		_wc.draw_circle(v + Vector2(hx - 1.0, -65.0), 1.2, Color(1, 1, 1))
+	# the muzzle over the bonnet, and a big wet nose where the grille would be
+	clay_slab(_wc, Rect2(v.x - 17.0, v.y - 66.0, 34.0, 19.0), 9.0, cream, 2.0)
+	_wc.draw_circle(v + Vector2(0.0, -59.0), 7.5, Color(0.10, 0.09, 0.10))
+	_wc.draw_circle(v + Vector2(-0.6, -59.8), 6.0, Color(0.17, 0.15, 0.16))
+	_wc.draw_circle(v + Vector2(-2.6, -62.0), 2.2, Color(0.62, 0.60, 0.62))
+	_wc.draw_line(v + Vector2(0.0, -52.5), v + Vector2(0.0, -48.5), Color(0.30, 0.22, 0.18), 1.6)
+	# the windscreen, raked, with a glare streak across it
+	_wc.draw_colored_polygon(PackedVector2Array([v + Vector2(-27, -47), v + Vector2(27, -47),
+		v + Vector2(25, -30), v + Vector2(-25, -30)]), Color(0.22, 0.29, 0.36))
+	_wc.draw_colored_polygon(PackedVector2Array([v + Vector2(-25, -46), v + Vector2(-13, -46),
+		v + Vector2(-19, -31), v + Vector2(-24, -31)]), Color(0.58, 0.68, 0.76, 0.5))
+	# the eyes, painted on the glass the way a cartoon car's are, peering out
+	# from under the fringe; the pupils slide towards the dog when she is near
+	var look := Vector2.ZERO
+	if dog != null and dog.global_position.distance_to(v) < 260.0:
+		look = (dog.global_position - v).normalized() * 1.6
+	for ex: float in [-10.5, 10.5]:
+		var ep := v + Vector2(ex, -40.5)
+		_wc.draw_circle(ep, 6.0, Color(0.20, 0.16, 0.14))
+		_wc.draw_circle(ep, 5.0, Color(0.98, 0.97, 0.94))
+		_wc.draw_circle(ep + Vector2(0.4, 1.2) + look, 2.6, Color(0.12, 0.10, 0.10))
+		_wc.draw_circle(ep + Vector2(-0.6, 0.2) + look, 0.9, Color(1, 1, 1))
+	# the fringe, hanging off the front of the roof over the tops of the eyes
+	for i in range(10):
+		var fx := v.x - 24.0 + float(i) * 5.4
+		var fl := 6.0 + float((i * 7) % 4) * 1.4
+		var fc: Color = fur_lit if fx < v.x - 6.0 else fur
+		_wc.draw_colored_polygon(PackedVector2Array([Vector2(fx - 3.4, v.y - 29.0),
+			Vector2(fx + 3.4, v.y - 29.0), Vector2(fx - 1.0, v.y - 29.0 - fl)]), fc)
+	# mirrors, out past the ears' roots
+	for mx: float in [-1.0, 1.0]:
+		_wc.draw_colored_polygon(round_rect_pts(Rect2(v.x + mx * 37.0 - 3.0, v.y - 47.0, 6.0, 8.0), 2.5), Color(0.28, 0.26, 0.25))
+	# --- the tail, wagging, on the back doors -----------------------------
+	var wag := sin(AnimClock.msec() / 210.0) * 0.55
+	var tail_dir := Vector2(0.0, 1.0).rotated(wag)
+	var tail_root := v + Vector2(0.0, 62.0)
+	_wc.draw_line(tail_root, tail_root + tail_dir * 30.0, fur_dark, 11.0)
+	_wc.draw_line(tail_root, tail_root + tail_dir * 26.0, fur, 7.0)
+	_wc.draw_line(tail_root - tail_dir.orthogonal() * 1.5, tail_root + tail_dir * 22.0 - tail_dir.orthogonal() * 1.5, fur_lit, 2.0)
+	_wc.draw_circle(tail_root + tail_dir * 29.0, 5.5, cream_dk)
+	_wc.draw_circle(tail_root + tail_dir * 28.0 + Vector2(-1, -1), 4.2, cream)
+	# --- the livery ----------------------------------------------------------
+	# Painted onto the roof rather than mounted above it: a light box the size
+	# of the van looked like a taxi sign. Two lines, inside the van's width.
+	var f_big := 16
+	var f_small := 13
+	var w_fur: float = font.get_string_size("FUR", HORIZONTAL_ALIGNMENT_LEFT, -1, f_big).x
+	var w_gon: float = font.get_string_size("GONETA", HORIZONTAL_ALIGNMENT_LEFT, -1, f_small).x
+	var pw: float = maxf(w_fur + 12.0, w_gon) + 12.0
+	var panel := Rect2(v.x - pw * 0.5, v.y - 23.0, pw, 47.0)
+	_wc.draw_colored_polygon(round_rect_pts(panel.grow(1.5), 8.0), Color(0.44, 0.28, 0.17))
+	clay_slab(_wc, panel, 7.0, Color(0.95, 0.91, 0.82), 2.0)
+	# a bone under the lettering, the one emblem every dog can read
+	var bc := v + Vector2(0.0, 30.0)
+	_wc.draw_line(bc + Vector2(-8, 0), bc + Vector2(8, 0), Color(0.40, 0.26, 0.16), 6.0)
+	for bx2: float in [-1.0, 1.0]:
+		for by2: float in [-1.0, 1.0]:
+			_wc.draw_circle(bc + Vector2(9.0 * bx2, 3.2 * by2), 4.4, Color(0.40, 0.26, 0.16))
+	_wc.draw_line(bc + Vector2(-8, 0), bc + Vector2(8, 0), cream, 3.6)
+	for bx2: float in [-1.0, 1.0]:
+		for by2: float in [-1.0, 1.0]:
+			_wc.draw_circle(bc + Vector2(9.0 * bx2, 3.2 * by2), 3.2, cream)
+	# FUR, with a paw print for the hyphen, then GONETA under it
+	var fur_x := v.x - (w_fur + 11.0) * 0.5
+	UiIcons.draw_paw(_wc, Vector2(fur_x + w_fur + 5.5, v.y - 13.0), 4.2, Color(0.66, 0.30, 0.22))
+	_wc.draw_string(font, Vector2(fur_x, v.y - 6.0), "FUR", HORIZONTAL_ALIGNMENT_LEFT, -1,
+		f_big, ink)
+	_wc.draw_string(font, Vector2(panel.position.x, v.y + 9.0), "GONETA",
+		HORIZONTAL_ALIGNMENT_CENTER, panel.size.x, f_small, ink)
+	_wc.draw_string(font, Vector2(panel.position.x, v.y + 19.0), "dog grooming",
+		HORIZONTAL_ALIGNMENT_CENTER, panel.size.x, 8, Color(0.52, 0.36, 0.26))
+	if not furgoneta_sniffed:
+		# it is the best smell in the city, so the nose can find it
+		var fg := 0.5 + 0.5 * sin(prize_glow * 0.8)
+		_wc.draw_arc(v, 74.0 + fg * 6.0, 0, TAU, 28, Color(1.0, 0.86, 0.5, 0.10 + fg * 0.07), 2.0)
 
 
 func _freedom_dirty() -> void:
@@ -7851,11 +8176,18 @@ func _draw_world() -> void:
 		_wc.draw_line(bn + Vector2(10, 2), bn + Vector2(12, 5), Color(0.7, 0.7, 0.66), 1.5)
 	# cafe tables with a little service on them
 	for tb in tables:
-		_wc.draw_circle(tb, 14.0, Color(0.6, 0.55, 0.48))
-		_wc.draw_arc(tb, 14.0, 0, TAU, 20, Color(0.45, 0.4, 0.34), 2.0)
-		_wc.draw_circle(tb + Vector2(5, -4), 3.2, Color(0.92, 0.9, 0.85))
-		_wc.draw_circle(tb + Vector2(-4, 4), 2.0, Color(0.5, 0.32, 0.2))
-		_wc.draw_circle(tb, 2.6, Color(0.4, 0.36, 0.3))
+		if tb.y < vt - 40.0 or tb.y > vb + 40.0:
+			continue
+		contact_shadow(_wc, tb, 14.0, 9.0, 0.20)
+		# a round marble-ish top with a soft rim, lit on its upper-left
+		_wc.draw_circle(tb + Vector2(0.6, 0.8), 14.0, Color(0.44, 0.40, 0.34))
+		_wc.draw_circle(tb + Vector2(-0.4, -0.4), 12.8, Color(0.62, 0.57, 0.50))
+		_wc.draw_circle(tb + Vector2(-4.0, -4.0), 5.5, Color(0.70, 0.66, 0.59))
+		# a cup on its saucer, and a sugar sachet
+		_wc.draw_circle(tb + Vector2(5, -4), 4.4, Color(0.80, 0.78, 0.74))
+		_wc.draw_circle(tb + Vector2(5, -4), 3.2, Color(0.96, 0.94, 0.90))
+		_wc.draw_circle(tb + Vector2(5.2, -3.8), 2.0, Color(0.36, 0.22, 0.12))
+		_wc.draw_rect(Rect2(tb.x - 7.0, tb.y + 2.0, 5.0, 3.0), Color(0.92, 0.82, 0.56))
 	# canopies over the beach terraces: out by day, furled at night
 	for cn in canopies:
 		if Game.night:
@@ -7879,9 +8211,24 @@ func _draw_world() -> void:
 				_wc.draw_line(pa, pa + Vector2.from_angle(TAU * sp / 6.0) * 40.0, Color(1, 1, 1, 0.25), 2.0)
 			_wc.draw_circle(pa, 3.5, Color(0.4, 0.35, 0.3))
 	# benches
+	# benches: three slats on cast-iron ends, each slat a soft plank lit on
+	# its upper-left, and the shadow of something knee high
 	for b in benches:
-		_wc.draw_rect(Rect2(b.x - 8, b.y - 24, 16, 48), Color(0.5, 0.38, 0.26))
-		_wc.draw_line(Vector2(b.x, b.y - 22), Vector2(b.x, b.y + 22), Color(0.42, 0.32, 0.22), 2.0)
+		if b.y < vt - 60.0 or b.y > vb + 60.0:
+			continue
+		var bseat := Rect2(b.x - 8.0, b.y - 24.0, 16.0, 48.0)
+		box_shadow(_wc, bseat, 4.0, 7.0)
+		for ey: float in [-21.0, 17.0]:
+			_wc.draw_colored_polygon(round_rect_pts(Rect2(b.x - 10.0, b.y + ey, 20.0, 4.0), 2.0), Color(0.16, 0.16, 0.17))
+		for si in range(3):
+			var sl := Rect2(b.x - 8.0 + float(si) * 5.5, b.y - 24.0, 5.0, 48.0)
+			var wc := Color(0.56, 0.41, 0.27).lightened(0.10 if si == 0 else 0.0).darkened(0.12 if si == 2 else 0.0)
+			_wc.draw_colored_polygon(round_rect_pts(sl, 2.2), wc.darkened(0.30))
+			_wc.draw_colored_polygon(round_rect_pts(Rect2(sl.position, sl.size - Vector2(1.2, 1.2)), 2.0), wc)
+			_wc.draw_line(sl.position + Vector2(1.2, 3.0), sl.position + Vector2(1.2, 20.0), wc.lightened(0.25), 1.2)
+		for ey: float in [-19.0, 19.0]:
+			for bx: float in [-5.5, 0.0, 5.5]:
+				_wc.draw_circle(Vector2(b.x + bx, b.y + ey), 0.9, Color(0.20, 0.18, 0.16))
 	# terrace chairs: round seats, four legs, a hint of backrest
 	for ch in chairs:
 		for lg in [Vector2(-5, -5), Vector2(5, -5), Vector2(-5, 5), Vector2(5, 5)]:
@@ -7897,10 +8244,21 @@ func _draw_world() -> void:
 			continue
 		if lvl == "oldtown":
 			continue      # the plaça's fountain draws with the plaça
-		_wc.draw_circle(f, 12.0, Color(0.5, 0.55, 0.58))
-		_wc.draw_circle(f, 8.0, Color(0.4, 0.55, 0.65))
-		_wc.draw_circle(f + Vector2(0, -3), 2.5, Color(0.75, 0.88, 0.95))
-		_wc.draw_circle(f + Vector2(14, 8), 5.0, Color(0.45, 0.6, 0.7, 0.5))
+		if f.y < vt - 40.0 or f.y > vb + 40.0:
+			continue
+		# a drinking fountain: a stone bowl on a post, water in it, the
+		# spout, and the wet patch it always leaves on the paving
+		_wc.draw_circle(f + Vector2(14, 8), 6.0, Color(0.45, 0.6, 0.7, 0.45))
+		_wc.draw_circle(f + Vector2(19, 12), 3.5, Color(0.45, 0.6, 0.7, 0.35))
+		contact_shadow(_wc, f, 12.0, 8.0, 0.22)
+		_wc.draw_circle(f + Vector2(0.8, 1.0), 12.5, Color(0.40, 0.44, 0.46))
+		_wc.draw_circle(f + Vector2(-0.4, -0.4), 11.4, Color(0.60, 0.64, 0.66))
+		_wc.draw_circle(f + Vector2(-3.5, -3.5), 5.0, Color(0.72, 0.76, 0.78))
+		_wc.draw_circle(f + Vector2(0.6, 0.6), 7.8, Color(0.26, 0.40, 0.50))
+		_wc.draw_circle(f, 7.0, Color(0.38, 0.58, 0.70))
+		_wc.draw_circle(f + Vector2(-2.4, -2.0), 2.4, Color(0.80, 0.92, 0.98, 0.85))
+		_wc.draw_line(f + Vector2(0, -12), f + Vector2(0, -5), Color(0.30, 0.32, 0.34), 3.0)
+		_wc.draw_circle(f + Vector2(0, -4.5), 1.6, Color(0.75, 0.88, 0.95))
 	# market stalls: awnings, crates, produce
 	for i in range(stalls.size()):
 		var st := stalls[i]
@@ -7910,15 +8268,24 @@ func _draw_world() -> void:
 		if i < stall_kinds.size() and stall_kinds[i] != "":
 			_draw_rambla_stall(st, stall_kinds[i], i)
 			continue
-		_wc.draw_rect(Rect2(st.x - 48, st.y - 28, 96, 56), Color(0.55, 0.42, 0.3))
+		if st.y < vt - 90.0 or st.y > vb + 90.0:
+			continue
+		var sr := Rect2(st.x - 48, st.y - 28, 96, 56)
+		box_shadow(_wc, sr, 5.0, 12.0)
+		clay_slab(_wc, sr, 5.0, Color(0.55, 0.42, 0.3), 3.0)
+		# the striped awning along the back, each stripe rounded at its hem
 		var acol := Color(0.75, 0.3, 0.28) if i % 2 == 0 else Color(0.32, 0.5, 0.42)
+		_wc.draw_rect(Rect2(st.x - 48, st.y - 37, 96, 4), acol.darkened(0.3))
 		for s2 in range(6):
-			_wc.draw_rect(Rect2(st.x - 48 + s2 * 16.0, st.y - 36, 8, 10), acol)
-			_wc.draw_rect(Rect2(st.x - 40 + s2 * 16.0, st.y - 36, 8, 10), Color(0.92, 0.9, 0.84))
-		_wc.draw_rect(Rect2(st.x - 40, st.y - 18, 24, 16), Color(0.7, 0.55, 0.35))
-		_wc.draw_circle(st + Vector2(18, -2), 5.0, Color(0.85, 0.45, 0.3))
-		_wc.draw_circle(st + Vector2(30, 6), 5.0, Color(0.9, 0.7, 0.3))
-		_wc.draw_circle(st + Vector2(6, 10), 4.0, Color(0.5, 0.65, 0.35))
+			_wc.draw_colored_polygon(round_rect_pts(Rect2(st.x - 48 + s2 * 16.0, st.y - 37, 8, 11), 3.0), acol)
+			_wc.draw_colored_polygon(round_rect_pts(Rect2(st.x - 40 + s2 * 16.0, st.y - 37, 8, 11), 3.0), Color(0.94, 0.92, 0.86))
+		clay_slab(_wc, Rect2(st.x - 40, st.y - 18, 24, 16), 3.0, Color(0.7, 0.55, 0.35), 2.0)
+		for fr: Array in [[Vector2(18, -2), 5.0, Color(0.85, 0.45, 0.3)], [Vector2(30, 6), 5.0, Color(0.9, 0.7, 0.3)],
+				[Vector2(6, 10), 4.0, Color(0.5, 0.65, 0.35)]]:
+			var fc: Color = fr[2]
+			_wc.draw_circle(st + (fr[0] as Vector2) + Vector2(0.6, 0.6), float(fr[1]), fc.darkened(0.3))
+			_wc.draw_circle(st + (fr[0] as Vector2), float(fr[1]) - 0.6, fc)
+			_wc.draw_circle(st + (fr[0] as Vector2) + Vector2(-1.5, -1.5), float(fr[1]) * 0.35, fc.lightened(0.35))
 	# parked service vans, half on the walkway, hazards blinking in spirit
 	# The service van: the biggest object in the game and, until now, a white
 	# rectangle with four black tabs. A van seen from above is a roof - so it
@@ -7937,168 +8304,9 @@ func _draw_world() -> void:
 		if lvl == "scrap":
 			_draw_wreck_stack(v)
 			continue
-		var body := Rect2(v.x - 32.0, v.y - 66.0, 64.0, 132.0)
-		# it sits high, so the shadow is offset a long way and shaped like it
-		_wc.draw_set_transform(v + LIGHT * 30.0, 0.0, Vector2.ONE)
-		_wc.draw_rect(Rect2(-34.0, -66.0, 68.0, 134.0),
-			Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
-		_wc.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-		# tyres, visible past the body on both sides
-		for w: Vector2 in [Vector2(-35, -42), Vector2(29, -42), Vector2(-35, 28), Vector2(29, 28)]:
-			_wc.draw_rect(Rect2(v.x + w.x, v.y + w.y, 6.0, 17.0), Color(0.10, 0.10, 0.12))
-		# the roof, lit down its light-facing side
-		_wc.draw_rect(body, Color(0.86, 0.86, 0.84))
-		_wc.draw_rect(Rect2(body.position.x, body.position.y, 20.0, body.size.y),
-			Color(0.93, 0.93, 0.91))
-		_wc.draw_rect(Rect2(body.end.x - 12.0, body.position.y, 12.0, body.size.y),
-			Color(0.72, 0.72, 0.71))
-		_wc.draw_rect(body, Color(0.44, 0.44, 0.45), false, 2.0)
-		# pressed ribs along the roof
-		for ri in range(5):
-			var ry := body.position.y + 26.0 + float(ri) * 20.0
-			_wc.draw_line(Vector2(body.position.x + 5.0, ry), Vector2(body.end.x - 5.0, ry),
-				Color(0.76, 0.76, 0.75), 1.5)
-		# windscreen at the front (north), raked, with a wiper
-		_wc.draw_rect(Rect2(v.x - 27.0, v.y - 63.0, 54.0, 20.0), Color(0.30, 0.38, 0.46))
-		_wc.draw_rect(Rect2(v.x - 27.0, v.y - 63.0, 54.0, 7.0), Color(0.52, 0.62, 0.70, 0.7))
-		_wc.draw_line(v + Vector2(-18, -46), v + Vector2(6, -52), Color(0.2, 0.2, 0.22), 1.6)
-		# mirrors, which is what makes it read as a VEHICLE and not a crate
-		for mx: float in [-1.0, 1.0]:
-			_wc.draw_rect(Rect2(v.x + mx * 38.0 - 3.0, v.y - 52.0, 6.0, 9.0), Color(0.30, 0.30, 0.32))
-		# roof vent and bars
-		_wc.draw_rect(Rect2(v.x - 11.0, v.y - 16.0, 22.0, 16.0), Color(0.74, 0.74, 0.72))
-		_wc.draw_rect(Rect2(v.x - 11.0, v.y - 16.0, 22.0, 16.0), Color(0.52, 0.52, 0.52), false, 1.5)
-		for bx: float in [-20.0, 20.0]:
-			_wc.draw_line(v + Vector2(bx, -34.0), v + Vector2(bx, 46.0), Color(0.62, 0.62, 0.62), 2.5)
-		# the back doors and a livery stripe down the side
-		_wc.draw_line(v + Vector2(-30, 58), v + Vector2(30, 58), Color(0.55, 0.55, 0.56), 2.0)
-		_wc.draw_line(v + Vector2(0, 58), v + Vector2(0, 66), Color(0.55, 0.55, 0.56), 2.0)
-		_wc.draw_rect(Rect2(v.x - 32.0, v.y + 4.0, 64.0, 7.0), Color(0.62, 0.28, 0.24))
-		# a hazard beacon on the cab, because it is parked where it should not be
-		var beat := 0.55 + 0.45 * sin(AnimClock.msec() / 190.0)
-		_wc.draw_circle(v + Vector2(0, -40.0), 4.0, Color(0.95, 0.62, 0.15, 0.55 + beat * 0.45))
-	# THE FUR-GONETA. A grooming van done up as a shaggy dog, in the tradition
-	# of every mobile groomer that has ever driven past you - fur over the whole
-	# body, floppy ears on the front corners, a fringe hanging over the eyes,
-	# a wet nose and a tongue out. Our own name and livery: the van it tips its
-	# hat to belongs to somebody else.
-	#
-	# The one surface you can read from directly overhead is the roof, so the
-	# signwriting goes in a raised sign box up there, which is where a real
-	# grooming van puts it anyway.
+		_draw_service_van(v)
 	if furgoneta.x < INF and furgoneta.y > vt - 150.0 and furgoneta.y < vb + 150.0:
-		var v := furgoneta
-		var fur := Color(0.46, 0.30, 0.17)
-		var fur_lit := Color(0.58, 0.40, 0.23)
-		var fur_dark := Color(0.31, 0.20, 0.11)
-		var cream := Color(0.88, 0.83, 0.72)
-		var cream_dk := Color(0.74, 0.68, 0.57)
-		# the shadow of a two-metre box, same as the other vans
-		_wc.draw_set_transform(v + LIGHT * 30.0, 0.0, Vector2.ONE)
-		_wc.draw_rect(Rect2(-34.0, -66.0, 68.0, 134.0),
-			Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
-		_wc.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-		for w: Vector2 in [Vector2(-35, -40), Vector2(29, -40), Vector2(-35, 26), Vector2(29, 26)]:
-			_wc.draw_rect(Rect2(v.x + w.x, v.y + w.y, 6.0, 18.0), Color(0.10, 0.10, 0.12))
-		# --- ears: big, floppy, hanging off the front corners --------------
-		for sx: float in [-1.0, 1.0]:
-			var ear_o := PackedVector2Array([
-				v + Vector2(24.0 * sx, -58.0), v + Vector2(50.0 * sx, -40.0),
-				v + Vector2(44.0 * sx, 2.0), v + Vector2(26.0 * sx, -12.0),
-			])
-			_wc.draw_colored_polygon(ear_o, fur_dark)
-			_wc.draw_colored_polygon(PackedVector2Array([
-				v + Vector2(26.0 * sx, -52.0), v + Vector2(43.0 * sx, -38.0),
-				v + Vector2(38.0 * sx, -6.0), v + Vector2(27.0 * sx, -18.0),
-			]), fur)
-			# a paler inner edge, and the shaggy fringe along the bottom
-			_wc.draw_line(v + Vector2(28.0 * sx, -48.0), v + Vector2(33.0 * sx, -14.0),
-				fur_lit, 2.5)
-			for tf in range(4):
-				var ty := -6.0 + float(tf) * 2.5
-				_wc.draw_line(v + Vector2((40.0 - float(tf) * 3.0) * sx, ty),
-					v + Vector2((36.0 - float(tf) * 3.0) * sx, ty + 7.0), fur_dark, 2.0)
-		# --- the body, in two tones like a real scruffy dog ---------------
-		_wc.draw_rect(Rect2(v.x - 32.0, v.y - 66.0, 64.0, 132.0), fur)
-		_wc.draw_rect(Rect2(v.x - 32.0, v.y - 66.0, 16.0, 132.0), fur_lit)   # lit flank
-		_wc.draw_rect(Rect2(v.x + 22.0, v.y - 66.0, 10.0, 132.0), fur_dark)  # shaded flank
-		# the cream patch over the face and along one side, which is what stops
-		# it reading as a plain brown box
-		_wc.draw_colored_polygon(PackedVector2Array([
-			v + Vector2(-30.0, -66.0), v + Vector2(30.0, -66.0),
-			v + Vector2(26.0, -30.0), v + Vector2(4.0, -24.0),
-			v + Vector2(-22.0, -34.0), v + Vector2(-30.0, -52.0),
-		]), cream)
-		_wc.draw_colored_polygon(PackedVector2Array([
-			v + Vector2(-30.0, 20.0), v + Vector2(-14.0, 26.0),
-			v + Vector2(-18.0, 54.0), v + Vector2(-30.0, 58.0),
-		]), cream_dk)
-		# --- fur: ranks of little curved tufts, denser on the shaded side --
-		for row in range(13):
-			var ry := v.y - 62.0 + float(row) * 10.0
-			for col in range(6):
-				var rx := v.x - 27.0 + float(col) * 11.0 + (5.0 if row % 2 == 0 else 0.0)
-				var on_cream: bool = ry < v.y - 28.0 or (rx < v.x - 14.0 and ry > v.y + 18.0)
-				var tc: Color = cream_dk if on_cream else (fur_lit if rx < v.x - 12.0 else fur_dark)
-				# a curl rather than a chevron: two short strokes at an angle
-				_wc.draw_line(Vector2(rx, ry), Vector2(rx - 3.0, ry + 6.0), tc, 1.8)
-				_wc.draw_line(Vector2(rx - 3.0, ry + 6.0), Vector2(rx + 1.0, ry + 8.0), tc, 1.6)
-		# --- the face on the front (north) end ----------------------------
-		# the fringe: a shaggy overhang that the eyes peer out from under
-		for i in range(11):
-			var fx := v.x - 25.0 + float(i) * 5.0
-			_wc.draw_line(Vector2(fx, v.y - 66.0), Vector2(fx - 2.0, v.y - 50.0), cream_dk, 3.0)
-		# small and dark, mostly hidden under the fringe - the reference van
-		# has eyes you have to look for, not headlamps
-		_wc.draw_circle(v + Vector2(-11.0, -46.0), 3.2, Color(0.13, 0.11, 0.11))
-		_wc.draw_circle(v + Vector2(11.0, -46.0), 3.2, Color(0.13, 0.11, 0.11))
-		_wc.draw_circle(v + Vector2(-11.6, -47.0), 1.0, Color(1, 1, 1, 0.55))
-		_wc.draw_circle(v + Vector2(10.4, -47.0), 1.0, Color(1, 1, 1, 0.55))
-		# the muzzle and a black nose where the grille would be. No tongue, no
-		# collar: on the real thing the joke is the fur, and everything else is
-		# still a work van.
-		_wc.draw_circle(v + Vector2(0.0, -57.0), 11.0, cream)
-		_wc.draw_circle(v + Vector2(0.0, -60.0), 7.0, Color(0.14, 0.12, 0.13))
-		_wc.draw_circle(v + Vector2(-2.0, -62.0), 2.4, Color(0.34, 0.31, 0.32))
-		# the front bumper, in van grey rather than a collar
-		_wc.draw_rect(Rect2(v.x - 31.0, v.y - 33.0, 62.0, 6.0), Color(0.40, 0.38, 0.36))
-		# --- the tail, wagging, on the back doors -------------------------
-		var wag := sin(AnimClock.msec() / 210.0) * 0.55
-		var tail_dir := Vector2(0.0, 1.0).rotated(wag)
-		var tail_root := v + Vector2(0.0, 64.0)
-		_wc.draw_line(tail_root, tail_root + tail_dir * 30.0, fur_dark, 11.0)
-		_wc.draw_line(tail_root, tail_root + tail_dir * 26.0, fur, 7.0)
-		_wc.draw_circle(tail_root + tail_dir * 28.0, 5.0, cream)
-		# --- the livery ----------------------------------------------------
-		# Painted onto the roof rather than mounted above it. A light box the
-		# size of the van looked like a taxi sign and drowned the vehicle; the
-		# van this nods to just has its name written on it, so this does too.
-		# Two lines, which keeps the panel inside the van's own width - the roof
-		# is the only surface you can read from directly overhead, and that is
-		# the one liberty being taken.
-		var f_big := 16
-		var f_small := 13
-		var w_fur: float = font.get_string_size("FUR", HORIZONTAL_ALIGNMENT_LEFT, -1, f_big).x
-		var w_gon: float = font.get_string_size("GONETA", HORIZONTAL_ALIGNMENT_LEFT, -1, f_small).x
-		var pw: float = maxf(w_fur + 12.0, w_gon) + 12.0
-		var panel := Rect2(v.x - pw * 0.5, v.y - 22.0, pw, 45.0)
-		_wc.draw_rect(panel, Color(0.93, 0.90, 0.82, 0.93))
-		_wc.draw_rect(panel, Color(0.44, 0.31, 0.20, 0.55), false, 1.5)
-		var ink := Color(0.40, 0.20, 0.16)
-		# FUR, with a paw print for the hyphen, then GONETA under it
-		var fur_x := v.x - (w_fur + 11.0) * 0.5
-		_wc.draw_string(font, Vector2(fur_x, v.y - 5.0), "FUR", HORIZONTAL_ALIGNMENT_LEFT, -1,
-			f_big, ink)
-		UiIcons.draw_paw(_wc, Vector2(fur_x + w_fur + 5.5, v.y - 12.0), 4.2,
-			Color(0.62, 0.30, 0.22))
-		_wc.draw_string(font, Vector2(panel.position.x, v.y + 10.0), "GONETA",
-			HORIZONTAL_ALIGNMENT_CENTER, panel.size.x, f_small, ink)
-		_wc.draw_string(font, Vector2(panel.position.x, v.y + 20.0), "dog grooming",
-			HORIZONTAL_ALIGNMENT_CENTER, panel.size.x, 8, Color(0.52, 0.36, 0.26))
-		if not furgoneta_sniffed:
-			# it is the best smell in the city, so the nose can find it
-			var fg := 0.5 + 0.5 * sin(prize_glow * 0.8)
-			_wc.draw_arc(v, 74.0 + fg * 6.0, 0, TAU, 28, Color(1.0, 0.86, 0.5, 0.10 + fg * 0.07), 2.0)
+		_draw_furgoneta(furgoneta)
 
 	# L'Estacio: the moving walkway - a metal band with chevrons scrolling
 	# in the carry direction
@@ -8343,32 +8551,22 @@ func _draw_world() -> void:
 			_wc.draw_line(pf + Vector2(10, 2), pf + Vector2(22, 20), Color(0.40, 0.30, 0.20), 2.5)
 			_wc.draw_rect(Rect2(pf.x + 19.0, pf.y + 18.0, 8.0, 8.0), Color(0.45, 0.46, 0.48))
 			continue
+		if pf.y < vt - 60.0 or pf.y > vb + 60.0:
+			continue
+		# a busker with a guitar and its open case; in the rain, an umbrella
+		# crowd instead, hunched under canopies, no busking
+		if not raining:
+			_draw_busker(pf, idx, pt)
+			continue
 		_wc.draw_circle(pf, 12.0, Color(0.5, 0.35, 0.5))
 		_wc.draw_circle(pf + Vector2(0, -4), 7.0, Color(0.85, 0.72, 0.58))
-		if raining:
-			# a wide domed umbrella over the head, on its stick
-			var bc: Color = brolly_cols[idx % brolly_cols.size()]
-			_wc.draw_line(pf + Vector2(0, -8), pf + Vector2(0, -30), Color(0.15, 0.14, 0.16), 2.0)
-			_wc.draw_arc(pf + Vector2(0, -30), 26.0, PI, TAU, 20, bc, 7.0)
-			for r in range(2):
-				var rx := fmod(pt * 120.0 + idx * 30.0 + r * 60.0, 120.0)
-				_wc.draw_line(pf + Vector2(-24 + rx * 0.4, -28), pf + Vector2(-24 + rx * 0.4, 12), Color(0.6, 0.7, 0.85, 0.4), 1.0)
-			continue
-		_wc.draw_arc(pf + Vector2(0, -4), 7.0, PI, TAU, 10, Color(0.2, 0.15, 0.1), 4.0)
-		if lvl == "guell":
-			# El Mosaic's guitarist, in the viaduct's shade
-			_wc.draw_circle(pf + Vector2(-2, 10), 7.0, Color(0.70, 0.44, 0.22))
-			_wc.draw_circle(pf + Vector2(-2, 10), 2.2, Color(0.20, 0.14, 0.10))
-			_wc.draw_line(pf + Vector2(-2, 6), pf + Vector2(12, -10), Color(0.46, 0.30, 0.18), 3.0)
-		_wc.draw_circle(pf + Vector2(18, 12), 6.0, Color(0.3, 0.25, 0.2))
-		_wc.draw_circle(pf + Vector2(16, 11), 1.5, Color(0.9, 0.8, 0.3))
-		_wc.draw_circle(pf + Vector2(20, 13), 1.5, Color(0.9, 0.8, 0.3))
-		for i in range(2):
-			var ny := fmod(pt * 22.0 + i * 20.0, 44.0)
-			var np := pf + Vector2(14.0 + i * 10.0 - ny * 0.2, -14.0 - ny)
-			var na := clampf(1.0 - ny / 44.0, 0.0, 1.0) * 0.8
-			_wc.draw_circle(np, 3.0, Color(1, 1, 1, na))
-			_wc.draw_line(np + Vector2(2.5, -1), np + Vector2(2.5, -9), Color(1, 1, 1, na), 1.5)
+		# a wide domed umbrella over the head, on its stick
+		var bc: Color = brolly_cols[idx % brolly_cols.size()]
+		_wc.draw_line(pf + Vector2(0, -8), pf + Vector2(0, -30), Color(0.15, 0.14, 0.16), 2.0)
+		_wc.draw_arc(pf + Vector2(0, -30), 26.0, PI, TAU, 20, bc, 7.0)
+		for r in range(2):
+			var rx := fmod(pt * 120.0 + idx * 30.0 + r * 60.0, 120.0)
+			_wc.draw_line(pf + Vector2(-24 + rx * 0.4, -28), pf + Vector2(-24 + rx * 0.4, 12), Color(0.6, 0.7, 0.85, 0.4), 1.0)
 	# cellar doors, propped open for a delivery
 	for c in cellars:
 		_wc.draw_rect(c, Color(0.1, 0.1, 0.12))
