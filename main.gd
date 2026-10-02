@@ -867,6 +867,11 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 		var slice := 55.0
 		var sy := floorf((vt - 320.0) / slice) * slice
 		while sy < vb + 320.0:
+			# past the gate the off-leash space draws its own surroundings:
+			# the street's buildings stop at the gate, not halfway across it
+			if sy + slice <= GATE_Y - 30.0:
+				sy += slice
+				continue
 			var f := frontage(sy + slice * 0.5)
 			var fl := f.x
 			var fr := f.y
@@ -896,6 +901,9 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 	var inset := 27.0 if built else 0.0
 	var y := floorf((vt - mod) / mod) * mod
 	while y < vb + mod:
+		if y + mod * 0.5 < GATE_Y:
+			y += mod
+			continue
 		for side in [-1.0, 1.0]:
 			var line: Vector2 = frontage(y + mod * 0.5) if built else Vector2(sw_l, sw_r)
 			var inner: float = (line.x - inset) if side < 0.0 else (line.y + inset)
@@ -1791,7 +1799,7 @@ func _draw_neteja(vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
 	# the water truck's wet streaks down the street, a darker sheen on the
 	# paving with the dawn catching one edge
-	var y := floorf((vt - 40.0) / 220.0) * 220.0
+	var y := ceilf(vt / 220.0) * 220.0
 	while y < vb + 40.0:
 		var e := walk_edges(y)
 		for lane: float in [0.3, 0.68]:
@@ -3210,11 +3218,13 @@ func draw_freedom_onto(c: Object) -> void:
 		"beach": surround = Color(0.80, 0.74, 0.59)
 		"clearing": surround = Color(0.20, 0.30, 0.19)
 		"lot": surround = Color(0.32, 0.31, 0.29)
+		"placa": surround = Color(0.36, 0.32, 0.30)
 	c.draw_rect(Rect2(-400.0, GATE_Y - 800.0, 2100.0, 800.0), surround)
 	match freedom_kind:
 		"beach": _draw_dog_beach(c)
 		"clearing": _draw_clearing(c)
 		"lot": _draw_yard(c, true)
+		"placa": _draw_placa(c)
 		_: _draw_yard(c, false)
 	# the grove stands in the off-leash area, so it is static too. It used to be
 	# drawn every frame in the world, with its own near-duplicate tree
@@ -3337,6 +3347,64 @@ func _draw_yard(c: Object, gravel: bool) -> void:
 	_draw_freedom_fence(c, r, gravel)
 	_draw_freedom_benches(c, r, Color(0.5, 0.38, 0.26))
 	_freedom_sign(c, r, "OFF-LEASH YARD" if gravel else "OFF-LEASH DOG PARK")
+
+
+func _draw_placa(c: Object) -> void:
+	# a town square: paving in big squares, house fronts round three sides
+	# instead of a fence, plane trees in their pits, and the fountain
+	var r := _freedom_rect()
+	c.draw_rect(r, Color(0.66, 0.60, 0.52))
+	var gx := r.position.x
+	while gx < r.end.x:
+		c.draw_line(Vector2(gx, r.position.y), Vector2(gx, r.end.y), Color(0.56, 0.50, 0.43, 0.5), 1.5)
+		gx += 56.0
+	var gy := r.position.y
+	while gy < r.end.y:
+		c.draw_line(Vector2(r.position.x, gy), Vector2(r.end.x, gy), Color(0.56, 0.50, 0.43, 0.5), 1.5)
+		gy += 56.0
+	# worn pale where every dog in the barri plays
+	c.draw_circle(r.get_center() + Vector2(-80.0, 40.0), 140.0, Color(0.74, 0.68, 0.58, 0.35))
+	# the house fronts: a strip of facade with doorways, shutters and a
+	# balcony rail, along the top and both sides
+	var fcols := [Color(0.62, 0.44, 0.34), Color(0.70, 0.58, 0.42), Color(0.56, 0.48, 0.44)]
+	var k := 0
+	var fx := r.position.x
+	while fx < r.end.x:
+		var w := minf(150.0, r.end.x - fx)
+		var col: Color = fcols[k % 3]
+		c.draw_rect(Rect2(fx, r.position.y - 46.0, w, 46.0), col)
+		c.draw_rect(Rect2(fx, r.position.y - 6.0, w, 6.0), col.darkened(0.3))
+		c.draw_rect(Rect2(fx + w * 0.5 - 12.0, r.position.y - 30.0, 24.0, 30.0), Color(0.22, 0.17, 0.14))
+		c.draw_line(Vector2(fx + 10.0, r.position.y - 38.0), Vector2(fx + w - 10.0, r.position.y - 38.0), Color(0.16, 0.16, 0.18), 2.0)
+		fx += 150.0
+		k += 1
+	for sx: float in [r.position.x - 40.0, r.end.x]:
+		var fy := r.position.y
+		k = 1
+		while fy < r.end.y - 60.0:
+			var col2: Color = fcols[k % 3]
+			c.draw_rect(Rect2(sx, fy, 40.0, 130.0), col2)
+			c.draw_rect(Rect2(sx + (34.0 if sx < r.position.x else 0.0), fy, 6.0, 130.0), col2.darkened(0.3))
+			c.draw_rect(Rect2(sx + 8.0, fy + 50.0, 24.0, 30.0), Color(0.22, 0.17, 0.14))
+			fy += 130.0
+			k += 1
+	# the plane trees' pits: squares of earth in the paving
+	for t: Vector2 in trees:
+		c.draw_rect(Rect2(t - Vector2(20, 20), Vector2(40, 40)), Color(0.36, 0.28, 0.20))
+		c.draw_rect(Rect2(t - Vector2(20, 20), Vector2(40, 40)), Color(0.30, 0.30, 0.32), false, 2.0)
+	# the fountain: a stone basin, water a dog can get into, a spout
+	var fr: Rect2 = LevelBuild.placa_fountain(self)
+	contact_shadow(c, fr.get_center(), fr.size.x * 0.5, 10.0, 0.2)
+	c.draw_rect(fr.grow(10.0), Color(0.78, 0.74, 0.66))
+	c.draw_rect(fr.grow(10.0), Color(0.58, 0.54, 0.48), false, 2.0)
+	c.draw_rect(fr, Color(0.30, 0.50, 0.58))
+	c.draw_rect(Rect2(fr.position, Vector2(fr.size.x, 8.0)), Color(0.22, 0.40, 0.48))
+	for i in range(3):
+		c.draw_arc(fr.get_center(), 16.0 + float(i) * 14.0, 0.0, TAU, 24, Color(0.70, 0.86, 0.92, 0.35 - float(i) * 0.1), 1.5)
+	c.draw_circle(fr.get_center(), 9.0, Color(0.70, 0.66, 0.58))
+	c.draw_circle(fr.get_center(), 4.0, Color(0.84, 0.94, 0.98))
+	_draw_freedom_benches(c, r, Color(0.36, 0.30, 0.24))
+	_freedom_sign(c, r, "PLAÇA DELS GOSSOS")
 
 
 func _draw_clearing(c: Object) -> void:
@@ -3692,6 +3760,12 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 		# everything gets a shadow: it is an object, not a decal. Uprights get
 		# a cast one, things lying on the ground get a contact patch.
 		match String(pp.kind):
+			"post" when freedom_kind == "placa":
+				contact_shadow(c, p, 8.0, 5.0)
+			"dig" when freedom_kind == "placa":
+				# dug in a tree pit's earth, not through the paving
+				c.draw_rect(Rect2(p - Vector2(24, 24), Vector2(48, 48)), Color(0.38, 0.30, 0.22))
+				c.draw_rect(Rect2(p - Vector2(24, 24), Vector2(48, 48)), Color(0.30, 0.30, 0.32), false, 2.0)
 			"post":
 				cast_shadow(c, p, 5.0, 34.0)
 			"shrub":
@@ -3764,6 +3838,18 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 					top.append(p - LIGHT * 4.0 + Vector2(cos(a2), sin(a2) * 0.9) * 8.0)
 				c.draw_colored_polygon(top, Color(0.63, 0.61, 0.57))
 				c.draw_polyline(rp, Color(0.34, 0.33, 0.32, 0.8), 1.4)
+			"post" when freedom_kind == "placa":
+				# a cast-iron bollard, the barri's lamp-post for dogs
+				c.draw_circle(p, 13.0, Color(0.52, 0.48, 0.42, 0.35))
+				c.draw_circle(p, 7.0, Color(0.16, 0.17, 0.18))
+				c.draw_circle(p + Vector2(-1.5, -1.5), 4.5, Color(0.28, 0.29, 0.31))
+				c.draw_circle(p + Vector2(-2.0, -2.0), 1.6, Color(0.50, 0.52, 0.54))
+			"shrub" when freedom_kind == "placa":
+				# a stone planter with a clipped bush in it
+				c.draw_rect(Rect2(p - Vector2(17, 17), Vector2(34, 34)), Color(0.74, 0.70, 0.62))
+				c.draw_rect(Rect2(p - Vector2(17, 17), Vector2(34, 34)), Color(0.56, 0.52, 0.46), false, 2.0)
+				c.draw_circle(p, 12.0, Color(0.26, 0.42, 0.24))
+				c.draw_circle(p - LIGHT * 4.0, 7.0, Color(0.34, 0.52, 0.30))
 			"post":
 				# A sniff post: a round timber post with a chamfered top, the
 				# grain showing, and the bare patch every dog in the park has
@@ -6668,6 +6754,8 @@ func on_business_bagged(pos: Vector2) -> void:
 const FREEDOM_KINDS := {
 	"beach": "beach", "trail": "clearing", "site": "lot", "scrap": "lot",
 	"guell": "clearing",
+	# the town walks end in a square, the way their gates say
+	"market": "placa", "oldtown": "placa", "spook": "placa", "neteja": "placa",
 }
 const BEACH_SEA_R := 430.0
 const BEACH_GATE_SHORE_X := 230.0
@@ -7439,7 +7527,7 @@ func _draw_world() -> void:
 			# branch rather than folded into the ribbon so that straight levels
 			# pay nothing at all for the ability to curve.
 			_wc.draw_rect(Rect2(sw_l, GATE_Y - 40.0, sw_r - sw_l, bottom - GATE_Y), walkway)
-			_draw_paving(vt, vb, walkway)
+			_draw_paving(maxf(vt, GATE_Y - 30.0), vb, walkway)
 			_wc.draw_line(Vector2(sw_l, bottom), Vector2(sw_l, GATE_Y), COL_SEAM, 3.0)
 			_wc.draw_line(Vector2(sw_r, bottom), Vector2(sw_r, GATE_Y), COL_SEAM, 3.0)
 		else:
@@ -7507,27 +7595,30 @@ func _draw_world() -> void:
 		_wc.draw_circle(Vector2(0, 4), 5.0, Color(0.30, 0.42, 0.62))
 		_wc.draw_circle(Vector2(0, 3), 3.2, Color(0.80, 0.62, 0.48))
 		_wc.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	# each walk's own ground stops at the gate: past it is the off-leash
+	# space, which freedomlayer draws
+	var wvt := maxf(vt, GATE_Y - 30.0)
 	if lvl == "park":
-		_draw_parc(vt, vb)
+		_draw_parc(wvt, vb)
 	if lvl == "barri" and not tutorial_mode:
-		_draw_barri(vt, vb)
+		_draw_barri(wvt, vb)
 	if lvl == "rain":
-		_draw_diluvi(vt, vb)
+		_draw_diluvi(wvt, vb)
 	if lvl == "station":
-		_draw_estacio(vt, vb)
+		_draw_estacio(wvt, vb)
 	if lvl == "scrap":
-		_draw_crane(vt, vb)
-		_draw_kennels(vt, vb)
+		_draw_crane(wvt, vb)
+		_draw_kennels(wvt, vb)
 	if lvl == "oldtown":
-		_draw_gotic(vt, vb)
+		_draw_gotic(wvt, vb)
 	if lvl == "market":
-		_draw_mercat(vt, vb)
+		_draw_mercat(wvt, vb)
 	if lvl == "spook":
-		_draw_castanyada(vt, vb)
+		_draw_castanyada(wvt, vb)
 	if lvl == "neteja":
-		_draw_neteja(vt, vb)
+		_draw_neteja(wvt, vb)
 	if lvl == "guell":
-		_draw_mosaic(vt, vb)
+		_draw_mosaic(wvt, vb)
 	if tutorial_mode:
 		_draw_tutorial_pond()
 	if rambla():
