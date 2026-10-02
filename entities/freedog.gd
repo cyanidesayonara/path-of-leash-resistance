@@ -1,6 +1,7 @@
 extends Node2D
 
 const DogAppearanceScript := preload("res://entities/dog_appearance.gd")
+const Clay := preload("res://entities/clay.gd")
 
 # An off-leash dog in the freedom area: no owner, no leash, all zoomies.
 #
@@ -58,6 +59,15 @@ func _appearance_key(y_lo: float, y_hi: float) -> int:
 	)
 
 
+# Taken straight modulo a power-of-two breed count, the key would pick the
+# breed from the low bits of the rounded spawn position alone; mixed first,
+# every bit counts. Looks only: the key itself still seeds everything else.
+static func _breed_key(key: int) -> int:
+	var k := key ^ (key >> 16)
+	k = (k * 0x45D9F3B) & 0x7FFFFFFF
+	return k ^ (k >> 13)
+
+
 func setup(m: Node2D, mine: Node2D, y_lo: float, y_hi: float) -> void:
 	add_to_group("freedogs")
 	main = m
@@ -65,7 +75,7 @@ func setup(m: Node2D, mine: Node2D, y_lo: float, y_hi: float) -> void:
 	lo = y_lo
 	hi = y_hi
 	var appearance_key := _appearance_key(y_lo, y_hi)
-	appearance_profile = DogAppearanceScript.profile_for_key(appearance_key)
+	appearance_profile = DogAppearanceScript.profile_for_key(_breed_key(appearance_key))
 	var phase_bucket := ((appearance_key % 10000) + 10000) % 10000
 	seed_o = float(phase_bucket) / 1000.0
 	col = appearance_profile["base_color"]
@@ -225,7 +235,10 @@ func _draw() -> void:
 
 
 func _draw_shapes() -> void:
-	main.contact_shadow(_b, Vector2.ZERO, 11.0, 8.0, 0.24)
+	if Clay.offscreen(self, main):
+		return
+	var size: float = appearance_profile.get("size_scale", 1.0)
+	Clay.ground_shadow(_b, Vector2.ZERO, 13.0 * size, 7.0 * size, 7.0, 0.24)
 	var t := AnimClock.msec() / 1000.0
 	var b := sin(bow * 6.0 + seed_o) * 1.5
 	# the pose: sniffing crouches her over the spot, marking cocks a leg (a

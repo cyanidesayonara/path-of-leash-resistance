@@ -1,5 +1,7 @@
 extends Node2D
 
+const HumanLook := preload("res://entities/human_appearance.gd")
+
 # A pickpocket working La Rambla's crowd (docs/LEVEL_DESIGN.md, Pickpockets).
 #
 # Readable before he strikes, by contract: he picks a mark and sidles in
@@ -107,6 +109,10 @@ func _physics_process(delta: float) -> void:
 				state = S.LIFT
 				state_t = 0.0
 		S.LIFT:
+			# a tourist culled off screen mid-lift: nothing left to take
+			if mark == null or not is_instance_valid(mark):
+				_start_slink()
+				return
 			global_position = _behind(mark)
 			if state_t >= LIFT_T:
 				if mark_is_owner:
@@ -218,7 +224,7 @@ func _process(_delta: float) -> void:
 
 func _draw() -> void:
 	var t := AnimClock.msec() / 1000.0
-	var b := ShapeBatch.new()
+	var b := ShapeBatch.new(self)
 	var down := state == S.DOWN
 	var body := Color(0.22, 0.22, 0.26)
 	b.circle(Vector2(3, 4), 11.0, Color(0, 0, 0, 0.2))
@@ -233,15 +239,18 @@ func _draw() -> void:
 			var a := t * 4.0 + TAU * float(k) / 3.0
 			b.circle(Vector2(0, -10) + Vector2(cos(a) * 12.0, sin(a) * 5.0), 2.2, Color(1, 0.9, 0.4))
 	else:
-		b.circle(Vector2.ZERO, 11.0, body)
-		b.circle(Vector2(0, -4), 6.5, Color(0.80, 0.64, 0.50))
-		# the cap pulled low, peak forward; the glance side to side
-		var glance := sin(t * 3.0 + weave_seed) * 3.0 if state == S.STALK else 0.0
-		b.circle(Vector2(glance, -5), 6.8, Color(0.14, 0.14, 0.16))
-		b.rect(Rect2(glance - 5.0, -14.0, 10.0, 4.0), Color(0.10, 0.10, 0.12))
+		# a dark hoodie, hood up, the face in its shadow; the head turns side
+		# to side while he sizes someone up
+		var glance := sin(t * 3.0 + weave_seed) * 0.5 if state == S.STALK else 0.0
+		var fd := (run_dir if state == S.RUN else Vector2.UP).rotated(glance)
+		HumanLook.draw_torso(b, Vector2.ZERO, fd, Vector2(9.0, 11.5), body)
+		HumanLook.draw_head(b, fd * 3.5, fd, 6.6, Color(0.66, 0.52, 0.42), Color(0.12, 0.10, 0.10), "short", "hood",
+			Color(0.16, 0.16, 0.19))
+		# hands in the hoodie's front pocket
+		b.rect(Rect2(-4.0, 2.0, 8.0, 4.0), body.darkened(0.3))
 		if state == S.LIFT:
 			# the hand going in
-			var hand := (_behind(mark) - global_position) * 0.0 + Vector2(-2, -18)
+			var hand := Vector2(-2, -18)
 			b.line(Vector2(4, -4), hand, body.lightened(0.1), 3.0)
 		if state == S.RUN:
 			# the wallet, held up where the player can follow it

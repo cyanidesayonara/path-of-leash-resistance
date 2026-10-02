@@ -424,6 +424,161 @@ static func _arc_points(
 	return points
 
 
+# Seen from above you see the top of a head, so hair covers the crown and
+# only a crescent of face shows toward where they are looking, with ears at
+# the sides. A thin arc of hair round the back of a skin circle read as bald.
+# Light comes from the upper left, as everywhere in the game.
+const LIGHT_DIR := Vector2(-0.6, -0.8)
+
+
+static func _disc_points(c: Vector2, r: Vector2, facing: Vector2, n := 18) -> PackedVector2Array:
+	var side := facing.orthogonal()
+	var pts := PackedVector2Array()
+	for k in range(n):
+		var a := TAU * float(k) / float(n)
+		pts.append(c + facing * cos(a) * r.x + side * sin(a) * r.y)
+	return pts
+
+
+# What the weather puts people in: a raincoat with the hood up in the rain, a
+# winter coat, a scarf and a woolly hat in the snow, sunglasses (and now and
+# then a sunhat) on a sunny seafront; a scarf in the wind. `key` is the
+# person's own stable number, so the same person dresses the same way.
+const RAINCOATS := [Color(0.96, 0.80, 0.20), Color(0.20, 0.30, 0.52), Color(0.80, 0.24, 0.22), Color(0.26, 0.52, 0.40)]
+const WOOLS := [Color(0.42, 0.22, 0.20), Color(0.24, 0.28, 0.36), Color(0.36, 0.34, 0.30), Color(0.20, 0.36, 0.32)]
+const SCARVES := [Color(0.86, 0.24, 0.26), Color(0.94, 0.80, 0.30), Color(0.30, 0.56, 0.80), Color(0.92, 0.92, 0.88)]
+
+
+# the walk's [weather, level, night], read from the Game autoload when there is
+# one: scripts that tests load before the autoload exists cannot name Game
+static func env(node: Node) -> Array:
+	var g: Node = node.get_node_or_null("/root/Game") if node != null and node.is_inside_tree() else null
+	if g == null:
+		return ["clear", "", false]
+	return [String(g.get("weather")), String(g.get("level_id")), bool(g.get("night"))]
+
+
+static func outfit(weather: String, level: String, night: bool, key: int, shirt: Color, headwear: String,
+		headwear_col: Color, eyewear: String) -> Dictionary:
+	var o := {"shirt": shirt, "headwear": headwear, "headwear_col": headwear_col, "eyewear": eyewear,
+		"scarf": Color(0, 0, 0, 0), "coat": false}
+	var k := absi(key)
+	match weather:
+		"rain":
+			o["shirt"] = RAINCOATS[k % RAINCOATS.size()]
+			o["headwear"] = "hood"
+			o["headwear_col"] = o["shirt"]
+			o["coat"] = true
+		"snow":
+			o["shirt"] = WOOLS[k % WOOLS.size()]
+			o["coat"] = true
+			o["scarf"] = SCARVES[(k / 4) % SCARVES.size()]
+			if headwear == "none" or headwear == "cap":
+				o["headwear"] = "beanie"
+				o["headwear_col"] = SCARVES[(k / 4 + 1) % SCARVES.size()]
+		"wind":
+			if k % 2 == 0:
+				o["scarf"] = SCARVES[(k / 2) % SCARVES.size()]
+		_:
+			if level == "beach" and not night:
+				if eyewear == "none" and k % 2 == 0:
+					o["eyewear"] = "sunglasses"
+				if headwear == "none" and k % 3 == 0:
+					o["headwear"] = "sunhat"
+					o["headwear_col"] = Color(0.92, 0.84, 0.62)
+	return o
+
+
+# long hair falling down the back, over the shoulders: drawn before the body
+static func draw_hair_fall(canvas: Object, center: Vector2, facing: Vector2, r: float, hair: Color) -> void:
+	canvas.draw_colored_polygon(_disc_points(center - facing * r * 1.05, Vector2(r * 1.15, r * 1.05), facing), hair.darkened(0.12))
+
+
+# shoulders: wider than deep, a lit upper-left and a darker rim
+static func draw_torso(canvas: Object, center: Vector2, facing: Vector2, half: Vector2, col: Color,
+		coat := false, scarf := Color(0, 0, 0, 0)) -> void:
+	var h := half * (1.08 if coat else 1.0)
+	canvas.draw_colored_polygon(_disc_points(center + Vector2(1.2, 1.6), h, facing), col.darkened(0.28))
+	canvas.draw_colored_polygon(_disc_points(center, h, facing), col)
+	canvas.draw_colored_polygon(_disc_points(center + LIGHT_DIR * h.y * 0.32, h * 0.55, facing), col.lightened(0.12))
+	var side := facing.orthogonal()
+	if coat:
+		# the coat's collar standing up round the neck, and its front seam
+		canvas.draw_colored_polygon(_disc_points(center + facing * h.x * 0.25, Vector2(h.x * 0.42, h.y * 0.62), facing),
+			col.darkened(0.16))
+		canvas.draw_line(center + facing * h.x * 0.45, center + facing * h.x * 0.98, col.darkened(0.3), 1.2)
+	if scarf.a > 0.0:
+		# wrapped round the neck, one end hanging down the front
+		canvas.draw_colored_polygon(_disc_points(center + facing * h.x * 0.32, Vector2(h.x * 0.34, h.y * 0.56), facing), scarf)
+		canvas.draw_line(center + facing * h.x * 0.5 + side * h.y * 0.3, center + facing * h.x * 1.05 + side * h.y * 0.42,
+			scarf.darkened(0.12), h.y * 0.22)
+
+
+static func draw_head(canvas: Object, center: Vector2, facing: Vector2, r: float, skin: Color, hair: Color,
+		hair_style: String, headwear := "none", headwear_col := Color.BLACK) -> void:
+	var side := facing.orthogonal()
+	for s2: float in [-1.0, 1.0]:
+		canvas.draw_circle(center + side * r * 0.95 + facing * r * 0.12, r * 0.27, skin.darkened(0.10))
+	canvas.draw_circle(center + Vector2(0.8, 1.0), r, skin.darkened(0.30))
+	canvas.draw_circle(center, r, skin)
+	canvas.draw_circle(center + facing * r * 0.55, r * 0.42, skin.lightened(0.08))
+	var crown := center - facing * r * 0.36
+	match hair_style:
+		"bald":
+			pass
+		"bald_spot":
+			# the hair a ring round a shiny crown: the joke is meant to show
+			canvas.draw_circle(crown, r * 0.98, hair)
+			canvas.draw_circle(crown - facing * r * 0.08, r * 0.52, skin)
+			canvas.draw_circle(crown - facing * r * 0.08 + LIGHT_DIR * r * 0.18, r * 0.18, skin.lightened(0.3))
+		"curly":
+			canvas.draw_circle(crown, r * 0.86, hair)
+			for k in range(8):
+				var a := PI * 0.5 + PI * float(k) / 7.0
+				var dir := facing * cos(a) + side * sin(a)
+				canvas.draw_circle(crown + dir * r * 0.72, r * 0.36, hair)
+		_:
+			canvas.draw_circle(crown, r * (1.02 if hair_style == "long" else 0.97), hair)
+			# a fringe across the forehead, so the front edge is hair, not a cut line
+			for k in range(3):
+				canvas.draw_circle(crown + facing * r * 0.62 + side * r * (float(k) - 1.0) * 0.42, r * 0.3, hair)
+			# the sheen
+			canvas.draw_colored_polygon(_disc_points(crown + LIGHT_DIR * r * 0.32, Vector2(r * 0.34, r * 0.22), facing),
+				hair.lightened(0.22))
+			if hair_style == "bun":
+				canvas.draw_circle(center - facing * r * 1.08, r * 0.48, hair)
+				canvas.draw_circle(center - facing * r * 1.08 + LIGHT_DIR * r * 0.15, r * 0.2, hair.lightened(0.2))
+	match headwear:
+		"cap":
+			# a cap from above: the crown dome, a button on top, the peak out front
+			canvas.draw_colored_polygon(_disc_points(center + facing * r * 1.0, Vector2(r * 0.62, r * 0.82), facing),
+				headwear_col.darkened(0.18))
+			canvas.draw_circle(center - facing * r * 0.12, r * 1.0, headwear_col)
+			canvas.draw_colored_polygon(_disc_points(center - facing * r * 0.12 + LIGHT_DIR * r * 0.3,
+				Vector2(r * 0.42, r * 0.3), facing), headwear_col.lightened(0.18))
+			canvas.draw_circle(center - facing * r * 0.12, r * 0.16, headwear_col.darkened(0.25))
+		"hood":
+			# a raincoat's hood up: it covers the hair, the face peers out the front
+			canvas.draw_circle(center - facing * r * 0.18, r * 1.16, headwear_col.darkened(0.08))
+			canvas.draw_colored_polygon(_disc_points(center - facing * r * 0.3 + LIGHT_DIR * r * 0.3,
+				Vector2(r * 0.5, r * 0.36), facing), headwear_col.lightened(0.14))
+			canvas.draw_colored_polygon(_disc_points(center + facing * r * 0.56, Vector2(r * 0.42, r * 0.6), facing), skin)
+			canvas.draw_arc(center - facing * r * 0.18, r * 1.0, facing.angle() - 0.9, facing.angle() + 0.9, 8,
+				headwear_col.darkened(0.3), r * 0.18)
+		"sunhat":
+			# a straw sunhat: a wide brim with the crown and its band
+			canvas.draw_circle(center + Vector2(1.5, 2.0), r * 1.62, Color(0.05, 0.04, 0.06, 0.18))
+			canvas.draw_circle(center, r * 1.6, headwear_col)
+			canvas.draw_circle(center, r * 0.92, headwear_col.darkened(0.08))
+			canvas.draw_arc(center, r * 0.92, 0.0, TAU, 18, Color(0.70, 0.30, 0.24), r * 0.2)
+			canvas.draw_circle(center + LIGHT_DIR * r * 0.3, r * 0.42, headwear_col.lightened(0.12))
+		"beanie":
+			canvas.draw_circle(center - facing * r * 0.2, r * 1.04, headwear_col)
+			canvas.draw_line(center + facing * r * 0.62 + side * r * 0.8, center + facing * r * 0.62 - side * r * 0.8,
+				headwear_col.lightened(0.18), r * 0.34)
+			canvas.draw_circle(center - facing * r * 0.25, r * 0.34, headwear_col.lightened(0.28))
+
+
 static func draw_owner(
 	canvas: Object,
 	profile: Dictionary,
@@ -432,7 +587,11 @@ static func draw_owner(
 	gait_phase: float,
 	gait_amount: float,
 	phone_glow: float,
-	phone_state: String
+	phone_state: String,
+	weather := "clear",
+	level := "",
+	night := false,
+	key := 0
 ) -> void:
 	if (
 		not _is_finite_vector(origin)
@@ -476,6 +635,10 @@ static func draw_owner(
 		phone_screen_base.a * glow
 	)
 	var phone_accent_color: Color = active_profile["phone_accent_color"]
+	var dress := outfit(weather, level, night, key, shirt_color, String(active_profile["headwear_style"]),
+		headwear_color, String(active_profile["eyewear_style"]))
+	shirt_color = dress["shirt"]
+	headwear_color = dress["headwear_col"]
 	var step := sin(gait_phase) * step_distance * amount
 	var sway := sin(gait_phase * 0.5) * MAX_SWAY * amount * scale
 	var body_center := Vector2(0.0, sway)
@@ -487,222 +650,37 @@ static func draw_owner(
 	)
 	var phone_center := Vector2(phone_forward * scale, 0.0)
 
-	canvas.draw_circle(_to_canvas(left_foot, origin, facing, side), foot_radius, pants_color)
-	canvas.draw_circle(_to_canvas(right_foot, origin, facing, side), foot_radius, pants_color)
+	# shoes, the toes showing in front of the body
+	var shoe := pants_color.darkened(0.35)
+	for foot: Vector2 in [left_foot, right_foot]:
+		canvas.draw_colored_polygon(_ellipse_points(foot + Vector2(foot_radius * 0.35, 0.0),
+			Vector2(foot_radius * 1.25, foot_radius * 0.85), origin, facing, side), shoe)
+	if String(active_profile["hair_style"]) == "long" and String(dress["headwear"]) != "hood":
+		draw_hair_fall(canvas, _to_canvas(head_center, origin, facing, side), facing, head_radius, hair_color)
+	draw_torso(canvas, _to_canvas(body_center, origin, facing, side), facing,
+		Vector2(body_size.x * 0.88, body_size.y * 1.12), shirt_color, bool(dress["coat"]), dress["scarf"])
+	draw_head(canvas, _to_canvas(head_center, origin, facing, side), facing, head_radius, skin_color,
+		hair_color, String(active_profile["hair_style"]), String(dress["headwear"]), headwear_color)
 
-	match String(active_profile["hair_style"]):
-		"long":
-			canvas.draw_colored_polygon(
-				_ellipse_points(
-					head_center - Vector2(head_radius * 0.35, 0.0),
-					Vector2(head_radius * 1.15, head_radius * 1.35),
-					origin,
-					facing,
-					side
-				),
-				hair_color
-			)
-		"bun":
-			canvas.draw_circle(
-				_to_canvas(
-					head_center - Vector2(head_radius * 1.15, 0.0),
-					origin,
-					facing,
-					side
-				),
-				head_radius * 0.55,
-				hair_color
-			)
-
-	canvas.draw_colored_polygon(
-		_ellipse_points(body_center, body_size, origin, facing, side),
-		shirt_color
-	)
-	canvas.draw_circle(_to_canvas(head_center, origin, facing, side), head_radius, skin_color)
-
-	match String(active_profile["hair_style"]):
-		"short":
-			canvas.draw_polyline(
-				_arc_points(
-					head_center,
-					head_radius * 0.95,
-					PI * 0.55,
-					PI * 1.45,
-					10,
-					origin,
-					facing,
-					side
-				),
-				hair_color,
-				maxf(1.0, head_radius * 0.38),
-				true
-			)
-		"long":
-			canvas.draw_polyline(
-				_arc_points(
-					head_center,
-					head_radius * 0.92,
-					PI * 0.58,
-					PI * 1.42,
-					10,
-					origin,
-					facing,
-					side
-				),
-				hair_color,
-				maxf(1.0, head_radius * 0.28),
-				true
-			)
-		"bun":
-			canvas.draw_polyline(
-				_arc_points(
-					head_center,
-					head_radius * 0.95,
-					PI * 0.58,
-					PI * 1.42,
-					10,
-					origin,
-					facing,
-					side
-				),
-				hair_color,
-				maxf(1.0, head_radius * 0.32),
-				true
-			)
-		"bald_spot":
-			canvas.draw_polyline(
-				_arc_points(
-					head_center,
-					head_radius * 0.96,
-					PI * 0.45,
-					PI * 1.55,
-					12,
-					origin,
-					facing,
-					side
-				),
-				hair_color,
-				maxf(1.0, head_radius * 0.42),
-				true
-			)
-			canvas.draw_circle(
-				_to_canvas(
-					head_center - Vector2(head_radius * 0.72, 0.0),
-					origin,
-					facing,
-					side
-				),
-				head_radius * 0.25,
-				skin_color
-			)
-
-	match String(active_profile["headwear_style"]):
-		"cap":
-			canvas.draw_polyline(
-				_arc_points(
-					head_center,
-					head_radius * 1.08,
-					PI * 0.62,
-					PI * 1.38,
-					10,
-					origin,
-					facing,
-					side
-				),
-				headwear_color,
-				maxf(1.0, head_radius * 0.42),
-				true
-			)
-			canvas.draw_line(
-				_to_canvas(
-					head_center + Vector2(head_radius * 0.65, -head_radius * 0.45),
-					origin,
-					facing,
-					side
-				),
-				_to_canvas(
-					head_center + Vector2(head_radius * 1.35, -head_radius * 0.12),
-					origin,
-					facing,
-					side
-				),
-				headwear_color,
-				maxf(1.0, 2.2 * scale),
-				true
-			)
-		"beanie":
-			canvas.draw_colored_polygon(
-				_ellipse_points(
-					head_center - Vector2(head_radius * 0.28, 0.0),
-					Vector2(head_radius * 0.78, head_radius * 1.04),
-					origin,
-					facing,
-					side
-				),
-				headwear_color
-			)
-			canvas.draw_line(
-				_to_canvas(
-					head_center + Vector2(-head_radius * 0.15, -head_radius),
-					origin,
-					facing,
-					side
-				),
-				_to_canvas(
-					head_center + Vector2(-head_radius * 0.15, head_radius),
-					origin,
-					facing,
-					side
-				),
-				hair_color,
-				maxf(1.0, 2.0 * scale),
-				true
-			)
-
-	match String(active_profile["eyewear_style"]):
+	match String(dress["eyewear"]):
 		"glasses":
 			for eye_side in [-1.0, 1.0]:
 				canvas.draw_arc(
-					_to_canvas(
-						head_center + Vector2(head_radius * 0.38, head_radius * 0.38 * eye_side),
-						origin,
-						facing,
-						side
-					),
-					head_radius * 0.25,
-					0.0,
-					TAU,
-					10,
-					eyewear_color,
-					maxf(1.0, scale),
-					true
-				)
+					_to_canvas(head_center + Vector2(head_radius * 0.66, head_radius * 0.36 * eye_side), origin, facing, side),
+					head_radius * 0.24, 0.0, TAU, 10, eyewear_color, maxf(1.0, scale), true)
 			canvas.draw_line(
-				_to_canvas(head_center + Vector2(head_radius * 0.38, -head_radius * 0.13), origin, facing, side),
-				_to_canvas(head_center + Vector2(head_radius * 0.38, head_radius * 0.13), origin, facing, side),
-				eyewear_color,
-				maxf(1.0, scale),
-				true
-			)
+				_to_canvas(head_center + Vector2(head_radius * 0.66, -head_radius * 0.12), origin, facing, side),
+				_to_canvas(head_center + Vector2(head_radius * 0.66, head_radius * 0.12), origin, facing, side),
+				eyewear_color, maxf(1.0, scale), true)
 		"sunglasses":
 			for eye_side in [-1.0, 1.0]:
 				canvas.draw_circle(
-					_to_canvas(
-						head_center + Vector2(head_radius * 0.38, head_radius * 0.38 * eye_side),
-						origin,
-						facing,
-						side
-					),
-					head_radius * 0.25,
-					eyewear_color
-				)
+					_to_canvas(head_center + Vector2(head_radius * 0.66, head_radius * 0.36 * eye_side), origin, facing, side),
+					head_radius * 0.26, eyewear_color)
 			canvas.draw_line(
-				_to_canvas(head_center + Vector2(head_radius * 0.38, -head_radius * 0.13), origin, facing, side),
-				_to_canvas(head_center + Vector2(head_radius * 0.38, head_radius * 0.13), origin, facing, side),
-				eyewear_color,
-				maxf(1.0, scale),
-				true
-			)
+				_to_canvas(head_center + Vector2(head_radius * 0.66, -head_radius * 0.12), origin, facing, side),
+				_to_canvas(head_center + Vector2(head_radius * 0.66, head_radius * 0.12), origin, facing, side),
+				eyewear_color, maxf(1.0, scale), true)
 
 	for arm_side in [-1.0, 1.0]:
 		var arm_start := body_center + Vector2(body_size.x * 0.45, body_size.y * 0.72 * arm_side)
@@ -714,6 +692,7 @@ static func draw_owner(
 			arm_width,
 			true
 		)
+		canvas.draw_circle(_to_canvas(arm_end, origin, facing, side), arm_width * 0.75, skin_color)
 
 	var phone_half := Vector2(phone_size.y * 0.5, phone_size.x * 0.5)
 	if String(active_profile["phone_treatment"]) == "bumper":

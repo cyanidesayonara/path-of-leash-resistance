@@ -52,15 +52,41 @@ func _topple(dir: Vector2) -> void:
 	queue_redraw()
 
 
+const WOOD := Color(0.64, 0.47, 0.30)
+const SLATE := Color(0.20, 0.25, 0.23)
+const CHALK := Color(0.94, 0.93, 0.88, 0.85)
+
+
+# Standing, it is an A-frame seen from above: two chalkboards leaning on a
+# hinge across the middle, the one facing the light paler than the one
+# facing away, a tall shadow. Flat on its face it is one board, scrawled
+# with the day's menu. One ShapeBatch, so one draw call.
 func _draw() -> void:
 	var w := 22.0
 	var h := lerpf(28.0, 40.0, tip)
+	var b := ShapeBatch.new(self)
 	if tip > 0.0:
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 1.0 - tip * 0.3))
-	draw_rect(Rect2(-w / 2.0 - 2, -h / 2.0 + 3, w, h), Color(0, 0, 0, 0.12))
-	draw_rect(Rect2(-w / 2.0, -h / 2.0, w, h), Color(0.92, 0.88, 0.8))
-	draw_rect(Rect2(-w / 2.0, -h / 2.0, w, h), Color(0.4, 0.36, 0.3), false, 2.0)
-	draw_line(Vector2(-6, -6), Vector2(6, -6), Color(0.5, 0.45, 0.38), 2.0)
-	draw_line(Vector2(-6, 0), Vector2(6, 0), Color(0.5, 0.45, 0.38), 2.0)
-	draw_line(Vector2(-6, 6), Vector2(2, 6), Color(0.75, 0.4, 0.3), 2.0)
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		b.draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 1.0 - tip * 0.3))
+	var lift := 1.0 - tip
+	b.rect(Rect2(-w / 2.0 + 1.0 + 4.0 * lift, -h / 2.0 + 2.0 + 6.0 * lift, w, h), Color(0.05, 0.05, 0.08, 0.18))
+	b.rect(Rect2(-w / 2.0, -h / 2.0, w, h), WOOD.darkened(0.30))
+	b.rect(Rect2(-w / 2.0, -h / 2.0, w - 1.5, h - 1.5), WOOD)
+	if tip < 0.5:
+		# the north board catches the light, the south one leans away from it
+		b.rect(Rect2(-w / 2.0 + 2.5, -h / 2.0 + 2.5, w - 5.0, h / 2.0 - 4.0), SLATE.lightened(0.10))
+		b.rect(Rect2(-w / 2.0 + 2.5, 1.5, w - 5.0, h / 2.0 - 4.0), SLATE.darkened(0.25))
+		b.line(Vector2(-w / 2.0, 0), Vector2(w / 2.0, 0), WOOD.lightened(0.15), 2.0)
+		b.circle(Vector2(-w / 2.0 + 2.0, 0), 1.3, Color(0.30, 0.30, 0.32))
+		b.circle(Vector2(w / 2.0 - 2.0, 0), 1.3, Color(0.30, 0.30, 0.32))
+		b.line(Vector2(-6, -9), Vector2(5, -9), CHALK, 1.6)
+		b.line(Vector2(-6, -5), Vector2(2, -5), Color(0.96, 0.70, 0.40, 0.85), 1.6)
+		b.line(Vector2(-6, 6), Vector2(4, 6), Color(CHALK.r, CHALK.g, CHALK.b, 0.45), 1.4)
+	else:
+		b.rect(Rect2(-w / 2.0 + 2.5, -h / 2.0 + 2.5, w - 5.0, h - 5.0), SLATE)
+		b.line(Vector2(-6, -11), Vector2(6, -11), CHALK, 1.8)
+		b.line(Vector2(-6, -5), Vector2(4, -5), CHALK, 1.6)
+		b.line(Vector2(-6, 1), Vector2(6, 1), CHALK, 1.6)
+		b.line(Vector2(-6, 8), Vector2(2, 8), Color(0.96, 0.70, 0.40, 0.85), 1.8)
+	b.flush()
+	if tip > 0.0:
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

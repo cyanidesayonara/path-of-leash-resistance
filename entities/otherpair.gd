@@ -757,6 +757,7 @@ func _draw_shapes() -> void:
 		else clampf(owner_pose_vel.length() / 82.0, 0.0, 1.0)
 	)
 	var owner_phone_glow := 0.55 + 0.2 * sin(t * 7.3 + seed_o)
+	var env: Array = HumanAppearanceScript.env(self)
 	HumanAppearanceScript.draw_owner(
 		_b,
 		owner_appearance_profile,
@@ -765,7 +766,11 @@ func _draw_shapes() -> void:
 		owner_stride * 0.075 + seed_o,
 		owner_gait_amount,
 		owner_phone_glow,
-		"held"
+		"held",
+		String(env[0]),
+		String(env[1]),
+		bool(env[2]),
+		int(seed_o * 1000.0)
 	)
 	# NPC dog remains drawn by the pair parent; npc_dog stays the real endpoint.
 	var dp: Vector2 = npc_dog.position

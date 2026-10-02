@@ -1,5 +1,7 @@
 extends Node2D
 
+const HumanLook := preload("res://entities/human_appearance.gd")
+
 # The combo-challenge giver (Combo Phase B): a show-off kid on a bench who
 # dares you into a bounded trick window as you pass. One offer per walk;
 # after that they just cheer (or commiserate). Pure flavour + a proximity
@@ -92,8 +94,11 @@ func _draw() -> void:
 	for e: float in [-1.0, 1.0]:
 		draw_line(sit + side * e * 5.0, sit + side * e * 6.5 + fd * 17.0, jeans, 6.0)
 		draw_circle(sit + side * e * 6.5 + fd * 19.0, 3.6, Color(0.22, 0.22, 0.26))
-	# body
-	draw_circle(sit, 12.5, shirt)
+	# body, drawn like every other person (human_appearance.gd)
+	var env: Array = HumanLook.env(self)
+	var dress: Dictionary = HumanLook.outfit(String(env[0]), String(env[1]), bool(env[2]), 5, shirt, "cap",
+		Color(0.20, 0.36, 0.62), "none")
+	HumanLook.draw_torso(self, sit, fd, Vector2(10.0, 12.5), dress["shirt"], bool(dress["coat"]), dress["scarf"])
 	# the far arm resting along the bench back, the near one up mid-dare
 	draw_line(sit + side * 9.0, sit + side * 15.0 - fd * 9.0, skin, 4.5)
 	var wave := sit - side * 9.0 + fd * 4.0
@@ -102,11 +107,8 @@ func _draw() -> void:
 	draw_circle(tip, 3.2, skin)
 	# head, hair on the back of it, cap peak pointing the way they look
 	var head := sit + fd * 5.0 + fd * bob * 0.4
-	draw_circle(head, 8.0, skin)
-	var back := (-fd).angle()
-	draw_arc(head, 8.0, back - 1.0, back + 1.0, 12, Color(0.24, 0.17, 0.12), 5.0)
-	draw_arc(head, 8.4, back - 1.9, back + 1.9, 16, Color(0.20, 0.36, 0.62), 5.0)
-	draw_colored_polygon(_bar(head + fd * 9.0, side, 13.0, 6.0), Color(0.17, 0.31, 0.55))
+	HumanLook.draw_head(self, head, fd, 8.0, skin, Color(0.24, 0.17, 0.12), "short", String(dress["headwear"]),
+		dress["headwear_col"])
 
 	# --- what they are shouting -------------------------------------------
 	var line := "bet you can't!" if result == "" else ("nice!!" if result == "win" else "heh, next time")

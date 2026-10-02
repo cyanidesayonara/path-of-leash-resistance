@@ -2583,6 +2583,10 @@ static func junk_spot_clear(m: Node2D, p: Vector2) -> bool:
 	for r: Rect2 in m.solid_rects:
 		if r.grow(14.0).has_point(p):
 			return false
+	# nor on a street seller's blanket of goods
+	for bl: Dictionary in m.blankets:
+		if Rect2(bl["rect"]).grow(10.0).has_point(p):
+			return false
 	return true
 
 

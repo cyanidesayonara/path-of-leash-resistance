@@ -1,8 +1,12 @@
 class_name DogAppearance
 extends RefCounted
 
+const Clay := preload("res://entities/clay.gd")
+
 const MAX_LOCAL_RADIUS := 40.0
 const MAX_BOB := 1.5
+# the walkers' and the park's dogs, one breed each, so a park full of them
+# reads as a park full of different dogs
 const PROFILE_IDS := [
 	"compact_point_ear",
 	"long_low_drop_ear",
@@ -10,6 +14,8 @@ const PROFILE_IDS := [
 	"stocky_fold_ear",
 	"fluffy_curl_tail",
 	"shaggy_drop_ear",
+	"sturdy_otter_tail",
+	"spotted_drop_ear",
 ]
 const REQUIRED_FIELDS := [
 	"id",
@@ -57,134 +63,259 @@ const EAR_STYLES := ["point", "drop", "rose", "fold"]
 const TAIL_STYLES := ["straight", "whip", "curl", "plume"]
 const MARKING_STYLES := ["solid", "patch", "blaze_points", "brindle"]
 
+# body_size is the body's half length and half width; muzzle_size is its
+# length and half width. "brutus" (the park thief) and "guard" (the
+# scrapyard's chained dog) are not in PROFILE_IDS: nobody else gets their look.
 const PROFILES := {
 	"compact_point_ear": {
 		"id": "compact_point_ear",
-		"name": "Compact Point-Ear",
-		"size_scale": 0.92,
-		"body_size": Vector2(8.5, 6.5),
-		"head_radius": 5.4,
-		"muzzle_size": Vector2(3.8, 1.8),
+		"name": "Terrier",
+		"size_scale": 1.0,
+		"body_size": Vector2(9.0, 5.6),
+		"head_radius": 5.0,
+		"muzzle_size": Vector2(3.4, 2.0),
 		"ear_style": "point",
-		"ear_size": Vector2(3.0, 5.0),
-		"ear_offset": Vector2(-1.0, 3.6),
+		"ear_size": Vector2(2.6, 3.8),
+		"ear_offset": Vector2(-1.4, 3.2),
 		"tail_style": "straight",
-		"tail_length": 9.0,
-		"tail_thickness": 2.2,
-		"tail_carriage": 0.35,
-		"base_color": Color(0.63, 0.43, 0.25),
-		"secondary_color": Color(0.78, 0.62, 0.40),
-		"marking_color": Color(0.94, 0.86, 0.68),
-		"marking_style": "solid",
-		"marking_offset": Vector2(-1.0, 0.0),
-		"marking_scale": Vector2(2.0, 1.5),
+		"tail_length": 5.5,
+		"tail_thickness": 2.4,
+		"tail_carriage": 0.0,
+		"base_color": Color(0.95, 0.93, 0.87),
+		"secondary_color": Color(0.74, 0.50, 0.27),
+		"marking_color": Color(0.70, 0.46, 0.24),
+		"marking_style": "patch",
+		"marking_offset": Vector2(-3.5, 1.2),
+		"marking_scale": Vector2(3.8, 3.4),
 	},
 	"long_low_drop_ear": {
 		"id": "long_low_drop_ear",
-		"name": "Long Low Drop-Ear",
-		"size_scale": 0.88,
-		"body_size": Vector2(14.0, 5.0),
-		"head_radius": 5.0,
-		"muzzle_size": Vector2(5.0, 2.0),
+		"name": "Dachshund",
+		"size_scale": 1.0,
+		"body_size": Vector2(15.0, 4.4),
+		"head_radius": 4.6,
+		"muzzle_size": Vector2(5.6, 1.9),
 		"ear_style": "drop",
-		"ear_size": Vector2(3.0, 6.0),
-		"ear_offset": Vector2(-2.0, 3.8),
+		"ear_size": Vector2(2.8, 5.6),
+		"ear_offset": Vector2(-1.6, 3.4),
 		"tail_style": "whip",
-		"tail_length": 12.0,
-		"tail_thickness": 1.4,
-		"tail_carriage": -0.15,
-		"base_color": Color(0.74, 0.57, 0.34),
-		"secondary_color": Color(0.52, 0.35, 0.20),
-		"marking_color": Color(0.91, 0.80, 0.60),
-		"marking_style": "patch",
-		"marking_offset": Vector2(-2.5, 1.0),
-		"marking_scale": Vector2(5.0, 2.8),
+		"tail_length": 10.0,
+		"tail_thickness": 1.8,
+		"tail_carriage": -0.1,
+		"base_color": Color(0.64, 0.32, 0.15),
+		"secondary_color": Color(0.44, 0.21, 0.10),
+		"marking_color": Color(0.80, 0.52, 0.30),
+		"marking_style": "solid",
+		"marking_offset": Vector2(0.0, 0.0),
+		"marking_scale": Vector2(1.0, 1.0),
 	},
 	"tall_narrow_rose_ear": {
 		"id": "tall_narrow_rose_ear",
-		"name": "Tall Narrow Rose-Ear",
-		"size_scale": 1.08,
-		"body_size": Vector2(9.0, 4.2),
-		"head_radius": 4.6,
-		"muzzle_size": Vector2(4.2, 1.6),
+		"name": "Greyhound",
+		"size_scale": 1.22,
+		"body_size": Vector2(11.0, 3.7),
+		"head_radius": 3.8,
+		"muzzle_size": Vector2(6.0, 1.5),
 		"ear_style": "rose",
-		"ear_size": Vector2(3.5, 3.0),
-		"ear_offset": Vector2(-1.2, 3.0),
-		"tail_style": "straight",
-		"tail_length": 12.5,
-		"tail_thickness": 1.2,
-		"tail_carriage": 0.05,
-		"base_color": Color(0.42, 0.43, 0.46),
-		"secondary_color": Color(0.61, 0.61, 0.63),
-		"marking_color": Color(0.92, 0.91, 0.86),
-		"marking_style": "blaze_points",
-		"marking_offset": Vector2(1.5, 0.0),
-		"marking_scale": Vector2(4.2, 1.1),
+		"ear_size": Vector2(3.0, 2.6),
+		"ear_offset": Vector2(-2.2, 2.4),
+		"tail_style": "whip",
+		"tail_length": 14.0,
+		"tail_thickness": 1.1,
+		"tail_carriage": -0.35,
+		"base_color": Color(0.72, 0.58, 0.42),
+		"secondary_color": Color(0.56, 0.43, 0.30),
+		"marking_color": Color(0.33, 0.24, 0.17),
+		"marking_style": "brindle",
+		"marking_offset": Vector2(-0.5, 0.0),
+		"marking_scale": Vector2(17.0, 3.4),
 	},
 	"stocky_fold_ear": {
 		"id": "stocky_fold_ear",
-		"name": "Stocky Fold-Ear",
-		"size_scale": 1.12,
-		"body_size": Vector2(10.0, 7.2),
+		"name": "Pug",
+		"size_scale": 1.0,
+		"body_size": Vector2(8.0, 6.8),
 		"head_radius": 6.2,
-		"muzzle_size": Vector2(3.8, 2.6),
+		"muzzle_size": Vector2(1.6, 3.0),
 		"ear_style": "fold",
-		"ear_size": Vector2(4.2, 4.0),
-		"ear_offset": Vector2(-1.8, 4.0),
-		"tail_style": "whip",
-		"tail_length": 8.0,
-		"tail_thickness": 2.0,
-		"tail_carriage": 0.55,
-		"base_color": Color(0.24, 0.22, 0.21),
-		"secondary_color": Color(0.39, 0.32, 0.27),
-		"marking_color": Color(0.62, 0.48, 0.34),
-		"marking_style": "brindle",
-		"marking_offset": Vector2(-1.0, 0.0),
-		"marking_scale": Vector2(6.0, 5.0),
+		"ear_size": Vector2(3.0, 3.2),
+		"ear_offset": Vector2(-1.0, 4.4),
+		"tail_style": "curl",
+		"tail_length": 7.0,
+		"tail_thickness": 2.6,
+		"tail_carriage": 0.0,
+		"base_color": Color(0.88, 0.75, 0.55),
+		"secondary_color": Color(0.17, 0.14, 0.13),
+		"marking_color": Color(0.17, 0.14, 0.13),
+		"marking_style": "solid",
+		"marking_offset": Vector2(0.0, 0.0),
+		"marking_scale": Vector2(1.0, 1.0),
 	},
 	"fluffy_curl_tail": {
 		"id": "fluffy_curl_tail",
-		"name": "Fluffy Curl-Tail",
-		"size_scale": 1.02,
-		"body_size": Vector2(11.0, 7.6),
-		"head_radius": 6.0,
-		"muzzle_size": Vector2(4.0, 2.3),
+		"name": "Husky",
+		"size_scale": 1.16,
+		"body_size": Vector2(11.0, 6.4),
+		"head_radius": 5.6,
+		"muzzle_size": Vector2(4.0, 2.4),
 		"ear_style": "point",
-		"ear_size": Vector2(4.0, 5.5),
-		"ear_offset": Vector2(-1.5, 4.2),
+		"ear_size": Vector2(3.4, 4.6),
+		"ear_offset": Vector2(-1.2, 3.4),
 		"tail_style": "curl",
 		"tail_length": 10.0,
-		"tail_thickness": 3.0,
-		"tail_carriage": 0.9,
-		"base_color": Color(0.87, 0.78, 0.58),
-		"secondary_color": Color(0.96, 0.90, 0.73),
-		"marking_color": Color(0.58, 0.43, 0.27),
-		"marking_style": "patch",
-		"marking_offset": Vector2(0.5, -2.0),
-		"marking_scale": Vector2(4.0, 2.8),
+		"tail_thickness": 3.6,
+		"tail_carriage": 0.0,
+		"base_color": Color(0.43, 0.45, 0.51),
+		"secondary_color": Color(0.30, 0.31, 0.36),
+		"marking_color": Color(0.95, 0.95, 0.93),
+		"marking_style": "blaze_points",
+		"marking_offset": Vector2(1.6, 0.0),
+		"marking_scale": Vector2(4.0, 4.4),
 	},
 	"shaggy_drop_ear": {
 		"id": "shaggy_drop_ear",
-		"name": "Shaggy Drop-Ear",
-		"size_scale": 0.98,
-		"body_size": Vector2(12.0, 6.2),
-		"head_radius": 5.8,
-		"muzzle_size": Vector2(5.2, 2.4),
+		"name": "Poodle",
+		"size_scale": 1.1,
+		"body_size": Vector2(10.0, 5.6),
+		"head_radius": 5.0,
+		"muzzle_size": Vector2(4.6, 1.8),
 		"ear_style": "drop",
-		"ear_size": Vector2(3.8, 6.2),
-		"ear_offset": Vector2(-1.8, 4.0),
+		"ear_size": Vector2(3.4, 5.4),
+		"ear_offset": Vector2(-1.6, 3.8),
 		"tail_style": "plume",
+		"tail_length": 8.0,
+		"tail_thickness": 1.6,
+		"tail_carriage": 0.2,
+		"base_color": Color(0.88, 0.66, 0.46),
+		"secondary_color": Color(0.80, 0.56, 0.37),
+		"marking_color": Color(0.94, 0.78, 0.60),
+		"marking_style": "solid",
+		"marking_offset": Vector2(0.0, 0.0),
+		"marking_scale": Vector2(1.0, 1.0),
+	},
+	"sturdy_otter_tail": {
+		"id": "sturdy_otter_tail",
+		"name": "Labrador",
+		"size_scale": 1.24,
+		"body_size": Vector2(12.0, 6.4),
+		"head_radius": 6.0,
+		"muzzle_size": Vector2(4.6, 2.8),
+		"ear_style": "drop",
+		"ear_size": Vector2(3.2, 4.6),
+		"ear_offset": Vector2(-1.8, 4.2),
+		"tail_style": "straight",
+		"tail_length": 11.0,
+		"tail_thickness": 3.4,
+		"tail_carriage": 0.1,
+		"base_color": Color(0.19, 0.18, 0.18),
+		"secondary_color": Color(0.14, 0.13, 0.13),
+		"marking_color": Color(0.30, 0.28, 0.27),
+		"marking_style": "solid",
+		"marking_offset": Vector2(0.0, 0.0),
+		"marking_scale": Vector2(1.0, 1.0),
+	},
+	"spotted_drop_ear": {
+		"id": "spotted_drop_ear",
+		"name": "Dalmatian",
+		"size_scale": 1.18,
+		"body_size": Vector2(12.0, 5.4),
+		"head_radius": 5.2,
+		"muzzle_size": Vector2(4.8, 2.2),
+		"ear_style": "drop",
+		"ear_size": Vector2(3.0, 4.4),
+		"ear_offset": Vector2(-1.6, 3.8),
+		"tail_style": "whip",
 		"tail_length": 13.0,
-		"tail_thickness": 2.8,
-		"tail_carriage": 0.45,
-		"base_color": Color(0.36, 0.30, 0.24),
-		"secondary_color": Color(0.60, 0.53, 0.42),
-		"marking_color": Color(0.78, 0.72, 0.62),
+		"tail_thickness": 1.8,
+		"tail_carriage": 0.15,
+		"base_color": Color(0.96, 0.95, 0.92),
+		"secondary_color": Color(0.13, 0.13, 0.14),
+		"marking_color": Color(0.13, 0.13, 0.14),
+		"marking_style": "solid",
+		"marking_offset": Vector2(0.0, 0.0),
+		"marking_scale": Vector2(1.0, 1.0),
+	},
+	"brutus": {
+		"id": "brutus",
+		"name": "Brutus",
+		"size_scale": 1.28,
+		"body_size": Vector2(10.5, 7.0),
+		"head_radius": 6.6,
+		"muzzle_size": Vector2(3.4, 3.4),
+		"ear_style": "rose",
+		"ear_size": Vector2(3.2, 2.8),
+		"ear_offset": Vector2(-2.0, 4.6),
+		"tail_style": "whip",
+		"tail_length": 8.0,
+		"tail_thickness": 2.6,
+		"tail_carriage": 0.2,
+		"base_color": Color(0.40, 0.29, 0.20),
+		"secondary_color": Color(0.27, 0.19, 0.13),
+		"marking_color": Color(0.20, 0.14, 0.10),
 		"marking_style": "brindle",
-		"marking_offset": Vector2(-1.0, 0.0),
-		"marking_scale": Vector2(7.0, 4.5),
+		"marking_offset": Vector2(-0.5, 0.0),
+		"marking_scale": Vector2(16.0, 6.4),
+	},
+	"guard": {
+		"id": "guard",
+		"name": "Guard dog",
+		"size_scale": 1.3,
+		"body_size": Vector2(11.0, 7.0),
+		"head_radius": 6.4,
+		"muzzle_size": Vector2(3.8, 3.2),
+		"ear_style": "fold",
+		"ear_size": Vector2(3.2, 3.4),
+		"ear_offset": Vector2(-1.2, 4.6),
+		"tail_style": "straight",
+		"tail_length": 3.5,
+		"tail_thickness": 3.0,
+		"tail_carriage": 0.0,
+		"base_color": Color(0.15, 0.13, 0.13),
+		"secondary_color": Color(0.11, 0.10, 0.10),
+		"marking_color": Color(0.72, 0.46, 0.22),
+		"marking_style": "blaze_points",
+		"marking_offset": Vector2(1.0, 0.0),
+		"marking_scale": Vector2(3.0, 3.0),
 	},
 }
+
+# What a profile's numbers cannot say: the face, the coat's texture, the leg
+# length, the collar. Drawing only, keyed by profile id; a profile without an
+# entry draws plainly.
+#   legs: paw spread and reach (short dachshund 0.55, long greyhound 1.5)
+#   coat: "smooth" | "fluffy" | "curly" | "wire"
+#   head, muzzle, tail: colours that differ from the body
+#   face: "white" a husky's white face and dark cap, "brows" tan points
+#   mask: a band across the eyes; spots: dalmatian spots; studs: collar studs
+#   eyes: iris colour where it shows; wrinkles: a pug's forehead
+const LOOKS := {
+	"compact_point_ear": {"legs": 0.9, "coat": "wire", "head": Color(0.74, 0.50, 0.27),
+		"muzzle": Color(0.95, 0.93, 0.87), "collar": Color(0.82, 0.20, 0.18)},
+	"long_low_drop_ear": {"legs": 0.55, "muzzle": Color(0.55, 0.27, 0.12),
+		"collar": Color(0.26, 0.60, 0.40)},
+	"tall_narrow_rose_ear": {"legs": 1.5, "muzzle": Color(0.62, 0.48, 0.34),
+		"collar": Color(0.28, 0.44, 0.78), "collar_w": 2.2},
+	"stocky_fold_ear": {"legs": 0.7, "tail": Color(0.86, 0.72, 0.52),
+		"muzzle": Color(0.17, 0.14, 0.13), "wrinkles": true, "collar": Color(0.20, 0.66, 0.66)},
+	"fluffy_curl_tail": {"legs": 1.0, "coat": "fluffy", "face": "white",
+		"muzzle": Color(0.95, 0.95, 0.93), "eyes": Color(0.45, 0.72, 0.98),
+		"collar": Color(0.86, 0.24, 0.20)},
+	"shaggy_drop_ear": {"legs": 1.2, "coat": "curly", "muzzle": Color(0.93, 0.76, 0.58),
+		"collar": Color(0.56, 0.34, 0.72)},
+	"sturdy_otter_tail": {"legs": 1.1, "collar": Color(0.95, 0.56, 0.14)},
+	"spotted_drop_ear": {"legs": 1.25, "spots": true, "tail": Color(0.96, 0.95, 0.92),
+		"collar": Color(0.84, 0.22, 0.24)},
+	"brutus": {"legs": 1.0, "mask": Color(0.09, 0.07, 0.07), "studs": true,
+		"collar": Color(0.10, 0.09, 0.09), "collar_w": 2.6, "muzzle": Color(0.30, 0.22, 0.16)},
+	"guard": {"legs": 1.0, "face": "brows", "muzzle": Color(0.72, 0.46, 0.22),
+		"collar": Color(0.62, 0.62, 0.66), "collar_w": 2.4, "studs": true},
+}
+# where a dalmatian's spots sit, in body half-extents (x along, y across)
+const SPOTS := [
+	Vector2(0.55, -0.35), Vector2(0.20, 0.45), Vector2(-0.15, -0.55), Vector2(-0.45, 0.10),
+	Vector2(-0.70, -0.30), Vector2(0.35, 0.05), Vector2(-0.30, 0.60), Vector2(0.75, 0.40),
+	Vector2(-0.05, -0.10),
+]
 
 
 static func profile_ids() -> PackedStringArray:
@@ -322,49 +453,19 @@ static func validation_errors(profile: Dictionary) -> PackedStringArray:
 	return errors
 
 
-static func _to_canvas(
-	local_point: Vector2,
-	origin: Vector2,
-	forward: Vector2,
-	side: Vector2
-) -> Vector2:
-	return origin + forward * local_point.x + side * local_point.y
-
-
-static func _ellipse_points(
-	center: Vector2,
-	half_extents: Vector2,
-	origin: Vector2,
-	forward: Vector2,
-	side: Vector2
-) -> PackedVector2Array:
-	var points := PackedVector2Array()
-	for index in range(16):
-		var angle := TAU * float(index) / 16.0
-		var local_point := center + Vector2(cos(angle) * half_extents.x, sin(angle) * half_extents.y)
-		points.append(_to_canvas(local_point, origin, forward, side))
-	return points
-
-
-static func _polygon_points(
-	local_points: PackedVector2Array,
-	origin: Vector2,
-	forward: Vector2,
-	side: Vector2
-) -> PackedVector2Array:
-	var points := PackedVector2Array()
-	for local_point: Vector2 in local_points:
-		points.append(_to_canvas(local_point, origin, forward, side))
-	return points
-
-
+# A dog seen from straight above, in soft plasticine: paws poking out under
+# the body, the body, the head, the face. Only filled circles, polygons and
+# wide lines, so a ShapeBatch standing in for `canvas` draws the whole dog in
+# one call. `bob` is the stride's sine (scaled to MAX_BOB), which also swings
+# the paws; `mouth` (0..1) opens the jaw for a bark.
 static func draw_dog(
 	canvas: Object,
 	profile: Dictionary,
 	origin: Vector2,
 	forward: Vector2,
 	bob: float,
-	wag_phase: float
+	wag_phase: float,
+	mouth := 0.0
 ) -> void:
 	if (
 		not _is_finite_vector(origin)
@@ -372,267 +473,237 @@ static func draw_dog(
 		or not is_finite(wag_phase)
 	):
 		return
-	var active_profile := profile
-	if not validation_errors(active_profile).is_empty():
-		active_profile = get_profile(String(PROFILE_IDS[0]))
+	var p := profile
+	if not validation_errors(p).is_empty():
+		p = get_profile(String(PROFILE_IDS[0]))
+	var look: Dictionary = LOOKS.get(String(p["id"]), {})
 
-	var facing := forward
-	if not _is_finite_vector(facing) or facing.is_zero_approx():
-		facing = Vector2.RIGHT
+	var fwd := forward
+	if not _is_finite_vector(fwd) or fwd.is_zero_approx():
+		fwd = Vector2.RIGHT
 	else:
-		facing = facing.normalized()
-	var side := facing.orthogonal()
-	var draw_origin := origin + Vector2(0.0, clampf(bob, -MAX_BOB, MAX_BOB))
-	var scale: float = active_profile["size_scale"]
-	var body_size: Vector2 = active_profile["body_size"] * scale
-	var head_radius: float = active_profile["head_radius"] * scale
-	var muzzle_size: Vector2 = active_profile["muzzle_size"] * scale
-	var ear_size: Vector2 = active_profile["ear_size"] * scale
-	var ear_offset: Vector2 = active_profile["ear_offset"] * scale
-	var tail_length: float = active_profile["tail_length"] * scale
-	var tail_thickness: float = active_profile["tail_thickness"] * scale
-	var tail_carriage: float = active_profile["tail_carriage"]
-	var marking_offset: Vector2 = active_profile["marking_offset"] * scale
-	var marking_scale: Vector2 = active_profile["marking_scale"] * scale
-	var base_color: Color = active_profile["base_color"]
-	var secondary_color: Color = active_profile["secondary_color"]
-	var marking_color: Color = active_profile["marking_color"]
-	var head_center := Vector2(body_size.x * 0.65 + head_radius * 0.35, 0.0)
-	var tail_base := Vector2(-body_size.x * 0.8, 0.0)
-	var wag := sin(wag_phase) * 0.35
-	var tail_angle := tail_carriage + wag
-	var tail_direction := Vector2(-cos(tail_angle), sin(tail_angle))
+		fwd = fwd.normalized()
+	var side := fwd.orthogonal()
+	var bob_c := clampf(bob, -MAX_BOB, MAX_BOB)
+	var o := origin + Vector2(0.0, bob_c)
+	var s: float = p["size_scale"]
+	var bs: Vector2 = p["body_size"] * s
+	var hr: float = p["head_radius"] * s
+	var mz: Vector2 = p["muzzle_size"] * s
+	var ear: Vector2 = p["ear_size"] * s
+	var ear_off: Vector2 = p["ear_offset"] * s
+	var tl: float = p["tail_length"] * s
+	var tw: float = p["tail_thickness"] * s
+	var base: Color = p["base_color"]
+	var sec: Color = p["secondary_color"]
+	var mark: Color = p["marking_color"]
+	var head_col: Color = look.get("head", base)
+	var muzzle_col: Color = look.get("muzzle", base.darkened(0.06))
+	var tail_col: Color = look.get("tail", sec)
+	var legs: float = look.get("legs", 1.0)
+	var coat: String = look.get("coat", "smooth")
+	var dark := Color(0.08, 0.07, 0.06)
+	# the stride: diagonal pairs swing together
+	var ph := bob_c / MAX_BOB
+	var head_c := Vector2(bs.x * 0.80 + hr * 0.45, 0.0)
 
-	match String(active_profile["tail_style"]):
+	# paws, under everything
+	var pr := clampf(bs.y * 0.30, 1.4, 2.8)
+	var paw_col: Color = look.get("paw", base.darkened(0.14))
+	var reach := bs.x * 0.58 + pr * maxf(0.0, legs - 1.0) * 1.6
+	var spread := bs.y * 0.70 + pr * 0.55 * legs
+	var swing := ph * bs.x * 0.16 * legs
+	for k in range(4):
+		var front := k < 2
+		var sd := 1.0 if k % 2 == 0 else -1.0
+		var sw := swing * sd * (1.0 if front else -1.0)
+		var lp := Vector2((reach if front else -reach) + sw, spread * sd)
+		canvas.draw_circle(_pt(o, fwd, side, lp), pr, paw_col)
+
+	# the tail, which lies on the ground behind (a curl sits on the back)
+	var style: String = p["tail_style"]
+	var tail_base := Vector2(-bs.x * 0.90, 0.0)
+	var a: float = float(p["tail_carriage"]) + sin(wag_phase) * 0.35
+	var tdir := Vector2(-cos(a), sin(a))
+	var tperp := Vector2(-tdir.y, tdir.x)
+	match style:
 		"straight":
-			canvas.draw_line(
-				_to_canvas(tail_base, draw_origin, facing, side),
-				_to_canvas(tail_base + tail_direction * tail_length, draw_origin, facing, side),
-				secondary_color,
-				tail_thickness,
-				true
-			)
+			var tip := tail_base + tdir * tl
+			var pts := PackedVector2Array([_pt(o, fwd, side, tail_base), _pt(o, fwd, side, tail_base.lerp(tip, 0.55)), _pt(o, fwd, side, tip)])
+			Clay.stroke(canvas, pts, tw * 1.25, tw * 0.70, Clay.rim_of(tail_col))
+			Clay.stroke(canvas, pts, tw * 0.85, tw * 0.40, tail_col)
+			canvas.draw_circle(pts[2], tw * 0.35, Clay.rim_of(tail_col))
 		"whip":
-			var whip := PackedVector2Array([
-				_to_canvas(tail_base, draw_origin, facing, side),
-				_to_canvas(
-					tail_base + tail_direction * tail_length * 0.55 + Vector2(0.0, wag * 3.0),
-					draw_origin,
-					facing,
-					side
-				),
-				_to_canvas(
-					tail_base + tail_direction * tail_length + Vector2(0.0, wag * 5.0),
-					draw_origin,
-					facing,
-					side
-				),
-			])
-			canvas.draw_polyline(whip, secondary_color, tail_thickness, true)
-		"curl":
-			var curl_radius := tail_length * 0.42
-			var curl_center_local := (
-				tail_base
-				+ tail_direction * (tail_length - curl_radius)
-				+ Vector2(0.0, wag * 2.0)
-			)
-			var curl_center := _to_canvas(curl_center_local, draw_origin, facing, side)
-			var curl_start := facing.angle() + tail_angle + PI * 0.25
-			canvas.draw_arc(
-				curl_center,
-				curl_radius,
-				curl_start,
-				curl_start + PI * 1.65,
-				14,
-				secondary_color,
-				tail_thickness,
-				true
-			)
+			var pts := PackedVector2Array()
+			for i in range(5):
+				var f := float(i) / 4.0
+				var bend := sin(wag_phase - f * 2.4) * f * tl * 0.22
+				pts.append(_pt(o, fwd, side, tail_base + tdir * (tl * f) + tperp * bend))
+			Clay.stroke(canvas, pts, tw * 1.3, tw * 0.6, Clay.rim_of(tail_col))
+			Clay.stroke(canvas, pts, tw * 0.9, tw * 0.3, tail_col)
 		"plume":
-			var plume := PackedVector2Array([
-				_to_canvas(tail_base, draw_origin, facing, side),
-				_to_canvas(
-					tail_base + tail_direction * tail_length * 0.5 + Vector2(0.0, -tail_length * 0.2),
-					draw_origin,
-					facing,
-					side
-				),
-				_to_canvas(
-					tail_base + tail_direction * tail_length + Vector2(0.0, wag * 4.0),
-					draw_origin,
-					facing,
-					side
-				),
-			])
-			canvas.draw_polyline(plume, secondary_color, tail_thickness * 1.65, true)
-			canvas.draw_polyline(plume, base_color, tail_thickness * 0.7, true)
+			# a poodle's pompom on a slim stalk
+			var tip := tail_base + tdir * tl
+			var pts := PackedVector2Array([_pt(o, fwd, side, tail_base), _pt(o, fwd, side, tip)])
+			Clay.stroke(canvas, pts, tw, tw * 0.8, tail_col.darkened(0.1))
+			_curly_ball(canvas, _pt(o, fwd, side, tip), tw * 2.3, base)
 
-	canvas.draw_colored_polygon(
-		_ellipse_points(Vector2.ZERO, body_size, draw_origin, facing, side),
-		base_color
-	)
+	# the body, and the coat's texture around it
+	var body_at := _pt(o, fwd, side, Vector2.ZERO)
+	if coat == "fluffy" or coat == "wire":
+		var n := 12 if coat == "fluffy" else 8
+		var fr := bs.y * (0.34 if coat == "fluffy" else 0.24)
+		for i in range(n):
+			var ang := TAU * (float(i) + 0.5) / float(n)
+			var lp := Vector2(cos(ang) * bs.x * 0.92, sin(ang) * bs.y * 0.92)
+			var wp := _pt(o, fwd, side, lp)
+			var lit := (wp - body_at).normalized().dot(Clay.LIGHT)
+			canvas.draw_circle(wp, fr, Clay.rim_of(base) if lit > -0.2 else base)
+	Clay.blob(canvas, body_at, bs, fwd, base)
+	if coat == "curly":
+		for cp: Vector2 in [Vector2(0.5, -0.4), Vector2(0.5, 0.4), Vector2(0.0, 0.0), Vector2(-0.5, -0.4), Vector2(-0.5, 0.4)]:
+			_curly_ball(canvas, _pt(o, fwd, side, Vector2(cp.x * bs.x, cp.y * bs.y)), bs.y * 0.52, base)
 
-	match String(active_profile["marking_style"]):
-		"solid":
-			pass
+	# markings on the coat
+	match String(p["marking_style"]):
 		"patch":
-			canvas.draw_colored_polygon(
-				_ellipse_points(marking_offset, marking_scale, draw_origin, facing, side),
-				marking_color
-			)
-		"blaze_points":
-			var blaze_center := head_center + marking_offset
-			canvas.draw_line(
-				_to_canvas(
-					blaze_center - Vector2(marking_scale.x * 0.5, 0.0),
-					draw_origin,
-					facing,
-					side
-				),
-				_to_canvas(
-					blaze_center + Vector2(marking_scale.x * 0.5, 0.0),
-					draw_origin,
-					facing,
-					side
-				),
-				marking_color,
-				maxf(1.0, marking_scale.y),
-				true
-			)
-			canvas.draw_circle(
-				_to_canvas(
-					head_center + Vector2(0.0, head_radius * 0.55),
-					draw_origin,
-					facing,
-					side
-				),
-				maxf(0.8, marking_scale.y * 0.65),
-				marking_color
-			)
-			canvas.draw_circle(
-				_to_canvas(
-					head_center + Vector2(0.0, -head_radius * 0.55),
-					draw_origin,
-					facing,
-					side
-				),
-				maxf(0.8, marking_scale.y * 0.65),
-				marking_color
-			)
+			var mo: Vector2 = p["marking_offset"] * s
+			var ms: Vector2 = p["marking_scale"] * s
+			Clay.patch(canvas, _pt(o, fwd, side, mo), ms, fwd, mark)
+			Clay.patch(canvas, _pt(o, fwd, side, mo) - Clay.LIGHT * ms.y * 0.3, ms * 0.5, fwd, Clay.lit_of(mark))
 		"brindle":
-			for stripe_index in range(-2, 3):
-				var stripe_x := marking_offset.x + float(stripe_index) * marking_scale.x * 0.22
-				var stripe_half_y := marking_scale.y * (0.45 + 0.08 * absf(float(stripe_index)))
-				canvas.draw_line(
-					_to_canvas(
-						Vector2(stripe_x - marking_scale.x * 0.08, marking_offset.y - stripe_half_y),
-						draw_origin,
-						facing,
-						side
-					),
-					_to_canvas(
-						Vector2(stripe_x + marking_scale.x * 0.08, marking_offset.y + stripe_half_y),
-						draw_origin,
-						facing,
-						side
-					),
-					marking_color,
-					maxf(0.8, scale),
-					true
-				)
+			var stripe := Color(mark, 0.70)
+			for i in range(7):
+				var f := -0.78 + float(i) * 0.26
+				var hy := bs.y * 0.82 * sqrt(maxf(0.0, 1.0 - f * f))
+				var a0 := _pt(o, fwd, side, Vector2(bs.x * f - 0.8 * s, -hy))
+				var a1 := _pt(o, fwd, side, Vector2(bs.x * f + 0.8 * s, hy))
+				canvas.draw_line(a0, a1, stripe, maxf(1.0, 1.1 * s))
+	if look.get("spots", false):
+		for i in range(SPOTS.size()):
+			var sp: Vector2 = SPOTS[i]
+			canvas.draw_circle(_pt(o, fwd, side, Vector2(sp.x * bs.x, sp.y * bs.y)),
+				(0.9 + 0.35 * float(i % 3)) * s, sec)
 
-	canvas.draw_colored_polygon(
-		_ellipse_points(head_center, Vector2(head_radius, head_radius), draw_origin, facing, side),
-		base_color
-	)
+	# a curled tail rides on the rump
+	if style == "curl":
+		var cr := tl * 0.36
+		var cc := _pt(o, fwd, side, Vector2(-bs.x * 0.62, sin(wag_phase) * bs.y * 0.18))
+		if coat == "fluffy":
+			# a fluffy curl: a lighter underside showing through the swirl
+			Clay.ball(canvas, cc, cr * 1.1, tail_col)
+			canvas.draw_circle(cc + Clay.LIGHT * cr * 0.25, cr * 0.45, tail_col.lerp(mark, 0.45))
+			canvas.draw_circle(cc + Clay.LIGHT * cr * 0.05, cr * 0.25, tail_col)
+		else:
+			Clay.ball(canvas, cc, cr, tail_col)
+			canvas.draw_circle(cc + Clay.LIGHT * cr * 0.1, cr * 0.38, Clay.rim_of(tail_col))
 
-	for ear_side in [-1.0, 1.0]:
-		var ear_base := head_center + Vector2(ear_offset.x, ear_offset.y * ear_side)
-		match String(active_profile["ear_style"]):
+	# the collar, where the neck meets the head
+	var collar_col: Color = look.get("collar", Color(0.80, 0.25, 0.22))
+	var cx := head_c.x - hr * 0.80
+	var cw := minf(bs.y, hr) * 0.92
+	var c0 := _pt(o, fwd, side, Vector2(cx, -cw))
+	var c1 := _pt(o, fwd, side, Vector2(cx, cw))
+	canvas.draw_line(c0, c1, collar_col, float(look.get("collar_w", 1.7)) * s)
+	if look.get("studs", false):
+		for f: float in [-0.6, 0.0, 0.6]:
+			canvas.draw_circle(c0.lerp(c1, 0.5 + f * 0.5), 0.7 * s, Color(0.85, 0.85, 0.88))
+
+	# the head
+	var hc := _pt(o, fwd, side, head_c)
+	Clay.ball(canvas, hc, hr, head_col)
+	var face: String = look.get("face", "")
+	if face == "white":
+		# a husky's white face, with the dark cap running down between the eyes
+		Clay.patch(canvas, _pt(o, fwd, side, head_c + Vector2(hr * 0.30, 0.0)), Vector2(hr * 0.68, hr * 0.80), fwd, mark)
+		canvas.draw_colored_polygon(PackedVector2Array([
+			_pt(o, fwd, side, head_c + Vector2(-hr * 0.7, -hr * 0.45)),
+			_pt(o, fwd, side, head_c + Vector2(hr * 0.45, 0.0)),
+			_pt(o, fwd, side, head_c + Vector2(-hr * 0.7, hr * 0.45)),
+		]), head_col)
+	elif face == "brows":
+		for sd: float in [-1.0, 1.0]:
+			canvas.draw_circle(_pt(o, fwd, side, head_c + Vector2(hr * 0.12, hr * 0.42 * sd)), maxf(0.9, hr * 0.17), mark)
+	if look.get("wrinkles", false):
+		for k in range(2):
+			var wx := head_c.x + hr * (0.05 + 0.22 * float(k))
+			canvas.draw_line(_pt(o, fwd, side, Vector2(wx, -hr * 0.30)), _pt(o, fwd, side, Vector2(wx + hr * 0.08, hr * 0.30)),
+				Clay.rim_of(head_col), maxf(0.8, 0.6 * s))
+	if coat == "curly":
+		# the topknot
+		_curly_ball(canvas, _pt(o, fwd, side, head_c - Vector2(hr * 0.25, 0.0)), hr * 0.62, base)
+
+	# ears
+	var es: String = p["ear_style"]
+	for sd: float in [-1.0, 1.0]:
+		var eb := head_c + Vector2(ear_off.x, ear_off.y * sd)
+		match es:
 			"point":
-				var point_ear := PackedVector2Array([
-					ear_base + Vector2(ear_size.x * 0.45, -ear_size.x * 0.45 * ear_side),
-					ear_base + Vector2(-ear_size.y, 0.0),
-					ear_base + Vector2(ear_size.x * 0.45, ear_size.x * 0.45 * ear_side),
+				var tri := PackedVector2Array([
+					_pt(o, fwd, side, eb + Vector2(ear.x * 0.65, -ear.x * 0.15 * sd)),
+					_pt(o, fwd, side, eb + Vector2(-ear.x * 0.65, -ear.x * 0.25 * sd)),
+					_pt(o, fwd, side, eb + Vector2(-ear.y * 0.30, ear.y * 0.80 * sd)),
 				])
-				canvas.draw_colored_polygon(
-					_polygon_points(point_ear, draw_origin, facing, side),
-					secondary_color
-				)
+				canvas.draw_colored_polygon(tri, sec)
+				var inner := PackedVector2Array([
+					tri[0].lerp(tri[2], 0.18).lerp(tri[1], 0.25),
+					tri[1].lerp(tri[2], 0.18).lerp(tri[0], 0.25),
+					tri[2].lerp(tri[0], 0.30).lerp(tri[1], 0.30),
+				])
+				canvas.draw_colored_polygon(inner, Color(0.86, 0.62, 0.58))
 			"drop":
-				var drop_ear := PackedVector2Array([
-					ear_base + Vector2(ear_size.x * 0.35, -ear_size.x * 0.45 * ear_side),
-					ear_base + Vector2(-ear_size.x * 0.3, ear_size.y * ear_side),
-					ear_base + Vector2(-ear_size.x, ear_size.y * 0.65 * ear_side),
-					ear_base + Vector2(-ear_size.x * 0.4, ear_size.x * 0.45 * ear_side),
-				])
-				canvas.draw_colored_polygon(
-					_polygon_points(drop_ear, draw_origin, facing, side),
-					secondary_color
-				)
+				var flap := eb + Vector2(-ear.x * 0.25, ear.y * 0.30 * sd + ph * 0.5 * sd)
+				Clay.blob(canvas, _pt(o, fwd, side, flap), Vector2(ear.x * 0.62, ear.y * 0.48), fwd, sec)
 			"rose":
-				var rose_ear := PackedVector2Array([
-					ear_base + Vector2(ear_size.x * 0.45, -ear_size.y * 0.5 * ear_side),
-					ear_base + Vector2(-ear_size.x, 0.0),
-					ear_base + Vector2(ear_size.x * 0.25, ear_size.y * 0.5 * ear_side),
-				])
-				canvas.draw_colored_polygon(
-					_polygon_points(rose_ear, draw_origin, facing, side),
-					secondary_color
-				)
+				var fl := eb + Vector2(-ear.x * 0.55, ear.y * 0.22 * sd)
+				var rdir := (fwd.rotated(0.5 * sd)).normalized()
+				canvas.draw_colored_polygon(Clay.ellipse_pts(_pt(o, fwd, side, fl), Vector2(ear.x * 0.62, ear.y * 0.38), rdir, 12), Clay.rim_of(sec))
+				canvas.draw_colored_polygon(Clay.ellipse_pts(_pt(o, fwd, side, fl) - Clay.LIGHT * 0.4, Vector2(ear.x * 0.45, ear.y * 0.25), rdir, 10), sec)
 			"fold":
-				var fold_ear := PackedVector2Array([
-					ear_base + Vector2(ear_size.x * 0.5, -ear_size.y * 0.4 * ear_side),
-					ear_base + Vector2(-ear_size.x, -ear_size.y * 0.2 * ear_side),
-					ear_base + Vector2(-ear_size.x * 0.2, ear_size.y * ear_side),
-					ear_base + Vector2(ear_size.x * 0.45, ear_size.y * 0.35 * ear_side),
+				var tri := PackedVector2Array([
+					_pt(o, fwd, side, eb + Vector2(-ear.x * 0.65, -ear.y * 0.10 * sd)),
+					_pt(o, fwd, side, eb + Vector2(ear.x * 0.55, -ear.y * 0.10 * sd)),
+					_pt(o, fwd, side, eb + Vector2(ear.x * 0.35, ear.y * 0.80 * sd)),
 				])
-				canvas.draw_colored_polygon(
-					_polygon_points(fold_ear, draw_origin, facing, side),
-					secondary_color
-				)
-				canvas.draw_line(
-					_to_canvas(ear_base, draw_origin, facing, side),
-					_to_canvas(
-						ear_base + Vector2(-ear_size.x * 0.35, ear_size.y * 0.35 * ear_side),
-						draw_origin,
-						facing,
-						side
-					),
-					base_color,
-					maxf(0.8, scale),
-					true
-				)
+				canvas.draw_colored_polygon(tri, sec)
+				canvas.draw_line(tri[0], tri[1], Clay.lit_of(sec), maxf(0.8, 0.5 * s))
 
-	var muzzle_center := head_center + Vector2(head_radius + muzzle_size.x * 0.45, 0.0)
-	canvas.draw_colored_polygon(
-		_ellipse_points(
-			muzzle_center,
-			Vector2(muzzle_size.x * 0.55, muzzle_size.y),
-			draw_origin,
-			facing,
-			side
-		),
-		secondary_color
-	)
-	for eye_side in [-1.0, 1.0]:
-		canvas.draw_circle(
-			_to_canvas(
-				head_center + Vector2(head_radius * 0.3, head_radius * 0.42 * eye_side),
-				draw_origin,
-				facing,
-				side
-			),
-			maxf(0.7, scale),
-			Color(0.08, 0.07, 0.06)
-		)
-	canvas.draw_circle(
-		_to_canvas(
-			muzzle_center + Vector2(muzzle_size.x * 0.52, 0.0),
-			draw_origin,
-			facing,
-			side
-		),
-		maxf(1.0, muzzle_size.y * 0.45),
-		Color(0.08, 0.07, 0.06)
-	)
+	# the face: muzzle, mask, eyes, nose
+	var mc := head_c + Vector2(hr * 0.82 + mz.x * 0.40, 0.0)
+	var jaw := clampf(mouth, 0.0, 1.0)
+	if jaw > 0.0:
+		var open_at := _pt(o, fwd, side, mc + Vector2(mz.x * 0.45, 0.0))
+		canvas.draw_colored_polygon(Clay.ellipse_pts(open_at, Vector2(mz.x * 0.35 + jaw * 2.2 * s, mz.y * 0.85), fwd, 12), Color(0.42, 0.10, 0.10))
+		canvas.draw_circle(open_at + fwd * jaw * 1.2 * s, mz.y * 0.45, Color(0.92, 0.48, 0.52))
+	Clay.blob(canvas, _pt(o, fwd, side, mc), Vector2(mz.x * 0.60, mz.y), fwd, muzzle_col)
+	var eye_r := maxf(0.75, 0.85 * s)
+	var mask_col: Variant = look.get("mask", null)
+	if mask_col != null:
+		canvas.draw_line(_pt(o, fwd, side, head_c + Vector2(hr * 0.32, -hr * 0.95)),
+			_pt(o, fwd, side, head_c + Vector2(hr * 0.32, hr * 0.95)), mask_col, hr * 0.55)
+	for sd: float in [-1.0, 1.0]:
+		var ep := _pt(o, fwd, side, head_c + Vector2(hr * 0.34, hr * 0.44 * sd))
+		if mask_col != null:
+			canvas.draw_circle(ep, eye_r * 1.25, Color(0.96, 0.94, 0.88))
+			canvas.draw_circle(ep + fwd * eye_r * 0.35, eye_r * 0.7, dark)
+		elif look.has("eyes"):
+			canvas.draw_circle(ep, eye_r * 1.1, look["eyes"])
+			canvas.draw_circle(ep + fwd * eye_r * 0.2, eye_r * 0.55, dark)
+		else:
+			canvas.draw_circle(ep, eye_r, dark)
+	var nose := _pt(o, fwd, side, mc + Vector2(mz.x * 0.55, 0.0))
+	canvas.draw_circle(nose, maxf(1.0, minf(mz.y * 0.5, 1.6 * s)), dark)
+	canvas.draw_circle(nose - Clay.LIGHT * 0.5, maxf(0.4, 0.4 * s), Color(0.45, 0.42, 0.40))
+
+
+static func _pt(o: Vector2, fwd: Vector2, side: Vector2, lp: Vector2) -> Vector2:
+	return o + fwd * lp.x + side * lp.y
+
+
+# a tight curly tuft: a lump with a few lighter curls on it
+static func _curly_ball(canvas: Object, at: Vector2, r: float, col: Color) -> void:
+	Clay.ball(canvas, at, r, col)
+	var lit := Clay.lit_of(col)
+	for k in range(3):
+		var ang := -2.2 + float(k) * 1.1
+		canvas.draw_circle(at + Vector2.from_angle(ang) * r * 0.45, r * 0.26, lit)
