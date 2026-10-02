@@ -25,6 +25,9 @@ the tag.
 the other dogs, the sweeper chase (now photographable, so a tenth screenshot),
 and "What's new". 1.56 was never submitted to the Store, so 1.57's "What's new"
 covers both, starting with the two new walks.
+CI's smoke job gets 20 minutes instead of 10: a green run takes 8 to 9.5, and
+half of the day's runs were cancelled at the limit, which would have blocked
+the tag's release.
 
 ## 2026-10-02 - La Neteja: a sweeper that comes after you
 
