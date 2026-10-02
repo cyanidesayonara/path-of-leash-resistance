@@ -2028,7 +2028,7 @@ func draw_overhead_onto(c: CanvasItem) -> void:
 		return
 	if lvl == "market":
 		_draw_mercat_arch(c, LevelBuild.MERCAT_ARCH_Y, "MERCAT")
-		_draw_mercat_arch(c, LevelBuild.MERCAT_DOOR_Y, "PLACA")
+		_draw_mercat_arch(c, LevelBuild.MERCAT_DOOR_Y, "PLAÇA")
 		return
 	if lvl != "oldtown":
 		return
