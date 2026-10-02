@@ -475,7 +475,13 @@ memorable.
        mood should read on a pad or a phone, where there is no room for a
        sentence; and whether SCARED during the sweeper chase is one mood too
        many at the tensest moment of the walk.
-    10. CHASE LEVELS (Santtu, Aug 2026) - DESIGNED, NOT YET BUILT. The
+    10. CHASE LEVELS (Santtu, Aug 2026) - PART BUILT on La Neteja (Oct
+       2026): the narrow street, a careening sweeper that guns it back into
+       shot when it drops behind, junk flung at you, two respites where a
+       broom jams on a dumpster (data: NETEJA_JAMS), and CLOSE SHAVE. Still
+       to come: the calm opening and trigger point (it is still the home
+       leg of a normal walk), food to keep your strength up, and the other
+       three foes. The
        sweeper stops being an optional modifier on a normal walk and gets
        levels of its own, the way the boulder runs are their own levels in
        Crash Bandicoot. The brief, verbatim in intent:
