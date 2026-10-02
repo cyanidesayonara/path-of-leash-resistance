@@ -1,5 +1,7 @@
 extends Node2D
 
+const Clay := preload("res://entities/clay.gd")
+
 # Collserola's wild boar: a sow and her striped piglets crossing El Bosc's
 # trail at their own pace. They take nothing. Crowd the piglets, get between
 # her and them, or bark at her, and she snorts, scrapes the ground, and then
@@ -161,58 +163,106 @@ func _process(_delta: float) -> void:
 
 func _draw() -> void:
 	var t := AnimClock.msec() / 1000.0
+	if Clay.offscreen(self, main):
+		return
+	# the whole family in one batch
+	var b := ShapeBatch.new(self)
+	var cross := Vector2(dir, 0.0)
 	# the piglets, drawn in world space relative to this node
 	for i in range(PIGLETS):
 		var pp := piglet_pos(i) - global_position
-		_draw_boar(pp, 0.62, dir, true, t + float(i))
+		_draw_boar(b, pp, 0.62, cross, true, t + float(i))
 	var rock := 0.0
 	if state == S.ALARM:
 		rock = sin(t * 40.0) * 2.5
-	var facing := dir
+	var facing := cross
 	if state in [S.ALARM, S.CHARGE]:
-		facing = signf(charge_dir.x + 0.001)
-	_draw_boar(Vector2(rock, 0.0), 1.4, facing, false, t)
+		facing = charge_dir
+	elif state == S.RETURN:
+		var to := sow_home() - global_position
+		if to.length() > 1.0:
+			facing = to.normalized()
+	_draw_boar(b, Vector2(rock, 0.0), 1.4, facing, false, t)
 	if state == S.ALARM:
-		# the scrape: dust kicked back, and a mark over her
+		# the scrape: dust kicked back
 		for k in range(3):
-			draw_circle(Vector2(-facing * (26.0 + float(k) * 7.0), 8.0 + float(k % 2) * 4.0), 3.0, Color(0.55, 0.45, 0.32, 0.7))
+			b.draw_circle(-facing * (30.0 + float(k) * 7.0) + facing.orthogonal() * (float(k) - 1.0) * 6.0,
+				3.0 + float(k % 2), Color(0.55, 0.45, 0.32, 0.7))
+	b.flush()
+	if state == S.ALARM:
 		draw_string(ThemeDB.fallback_font, Vector2(-5, -30), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color(1, 0.55, 0.4))
 
 
-# A boar from above: a long wedge body, bristly dark ridge down the spine,
-# the long snout forward, small ears. Piglets are ginger with pale stripes.
-func _draw_boar(at: Vector2, s: float, facing: float, piglet: bool, t: float) -> void:
-	var body := Color(0.44, 0.31, 0.20) if piglet else Color(0.29, 0.24, 0.20)
-	var ridge := Color(0.25, 0.17, 0.10) if piglet else Color(0.16, 0.13, 0.11)
-	var b := ShapeBatch.new()
-	var fwd := Vector2(facing, 0.0)
-	var legs := sin(t * 11.0) * 3.0 * s
-	# shadow, legs, body
-	b.circle(at + Vector2(4, 6) * s, 17.0 * s, Color(0, 0, 0, 0.18))
-	for lx: float in [-10.0, 10.0]:
-		b.circle(at + fwd * (lx * s + legs * signf(lx)) + Vector2(0, -9.0 * s), 3.5 * s, ridge)
-		b.circle(at + fwd * (lx * s - legs * signf(lx)) + Vector2(0, 9.0 * s), 3.5 * s, ridge)
-	b.circle(at - fwd * 8.0 * s, 13.0 * s, body)
-	b.circle(at + fwd * 5.0 * s, 12.0 * s, body)
-	b.circle(at + fwd * 17.0 * s, 8.0 * s, body.darkened(0.08))
-	# the snout, with its flat disc at the end
-	b.circle(at + fwd * 25.0 * s, 5.0 * s, body.darkened(0.15))
-	b.circle(at + fwd * 29.0 * s, 3.4 * s, Color(0.50, 0.38, 0.33))
-	# ears
-	b.circle(at + fwd * 14.0 * s + Vector2(0, -7.0 * s), 3.2 * s, ridge)
-	b.circle(at + fwd * 14.0 * s + Vector2(0, 7.0 * s), 3.2 * s, ridge)
+# A boar from straight above: a heavy wedge, all shoulders, tapering to the
+# rump; a bristly dark mane down the spine; a long head ending in the flat
+# pink-grey disc of the snout, with tusks. Piglets are ginger humbugs with
+# pale stripes running nose to tail.
+func _draw_boar(b: ShapeBatch, at: Vector2, s: float, facing: Vector2, piglet: bool, t: float) -> void:
+	var fwd := facing.normalized() if facing.length() > 0.01 else Vector2.RIGHT
+	var side := fwd.orthogonal()
+	var body := Color(0.62, 0.42, 0.24) if piglet else Color(0.38, 0.30, 0.24)
+	var ridge := Color(0.40, 0.25, 0.13) if piglet else Color(0.18, 0.14, 0.11)
+	var legs := sin(t * 11.0) * 2.5 * s
+	Clay.ground_shadow(b, at, 20.0 * s, 11.0 * s, 4.0 * s, 0.20)
+	# hooves poking out under the body, trotting
+	for lx: float in [-1.0, 1.0]:
+		for sd: float in [-1.0, 1.0]:
+			var step := legs * lx * sd
+			b.draw_circle(at + fwd * (lx * 9.0 * s + step) + side * sd * 9.0 * s, 2.6 * s, ridge.darkened(0.2))
+	# the tail, flicking
+	var tail_end := at - fwd * 24.0 * s + side * sin(t * 6.0) * 3.0 * s
+	b.draw_line(at - fwd * 15.0 * s, tail_end, ridge, 1.6 * s)
+	b.draw_circle(tail_end, 1.6 * s, ridge)
+	# rump, then the big shoulders over it
+	var trunk := PackedVector2Array()
+	for k in range(20):
+		# an egg: broad at the shoulders, narrower at the rump
+		var ang := TAU * float(k) / 20.0
+		var w := 10.5 + 1.8 * cos(ang)
+		trunk.append(at + fwd * (cos(ang) * 16.0 * s + 1.0 * s) + side * (sin(ang) * w * s))
+	b.draw_colored_polygon(trunk, Clay.rim_of(body))
+	var lit_trunk := PackedVector2Array()
+	for p in trunk:
+		lit_trunk.append(at + (p - at) * 0.88 - Clay.LIGHT * 1.2 * s)
+	b.draw_colored_polygon(lit_trunk, body)
+	Clay.patch(b, at + fwd * 3.0 * s - Clay.LIGHT * 4.0 * s, Vector2(8.0, 4.5) * s, fwd, Clay.lit_of(body, 0.10))
+	# the head: a wedge narrowing to the snout
+	var neck := at + fwd * 12.0 * s
+	var snout := at + fwd * 27.0 * s
+	var head := PackedVector2Array([
+		neck + side * 7.5 * s, snout + side * 2.8 * s, snout - side * 2.8 * s, neck - side * 7.5 * s,
+		neck - fwd * 2.0 * s,
+	])
+	b.draw_colored_polygon(head, Clay.rim_of(body))
+	var head_lit := PackedVector2Array()
+	for p in head:
+		head_lit.append(p.lerp(neck + fwd * 6.0 * s, 0.18) - Clay.LIGHT * 0.6 * s)
+	b.draw_colored_polygon(head_lit, body.darkened(0.04))
+	# ears pricked back at the base of the head
+	for sd: float in [-1.0, 1.0]:
+		var eb := neck + side * sd * 5.5 * s
+		b.draw_colored_polygon(PackedVector2Array([
+			eb + fwd * 2.0 * s, eb - fwd * 3.5 * s + side * sd * 3.0 * s, eb - fwd * 1.0 * s - side * sd * 1.5 * s,
+		]), ridge)
+	# the snout disc and its nostrils
+	b.draw_circle(snout, 3.2 * s, Color(0.58, 0.44, 0.40))
+	for sd: float in [-1.0, 1.0]:
+		b.draw_circle(snout + fwd * 0.6 * s + side * sd * 1.2 * s, 0.75 * s, Color(0.22, 0.14, 0.12))
+	# small eyes either side of the head
+	for sd: float in [-1.0, 1.0]:
+		b.draw_circle(neck + fwd * 5.0 * s + side * sd * 4.2 * s, 0.9 * s, Color(0.06, 0.05, 0.04))
 	if piglet:
-		for k in range(3):
-			var off := (float(k) - 1.0) * 5.0 * s
-			b.line(at + Vector2(-16.0 * s * facing, off), at + Vector2(14.0 * s * facing, off), Color(0.86, 0.74, 0.52, 0.8), 1.6 * s)
+		for k in range(4):
+			var off := (float(k) - 1.5) * 3.6 * s
+			b.draw_line(at - fwd * 14.0 * s + side * off * 0.8, at + fwd * 12.0 * s + side * off, Color(0.92, 0.80, 0.58, 0.85), 1.4 * s)
 	else:
-		b.line(at - fwd * 20.0 * s, at + fwd * 14.0 * s, ridge, 5.0 * s)
-		# bristles along the ridge, and the pale tusks at the snout
-		for k in range(5):
-			var bx := at - fwd * (16.0 - float(k) * 7.0) * s
-			b.line(bx + Vector2(0, -4.0 * s), bx + Vector2(0, 4.0 * s), ridge.darkened(0.3), 1.4)
-		for ty: float in [-4.0, 4.0]:
-			b.line(at + fwd * 23.0 * s + Vector2(0, ty * s), at + fwd * 27.0 * s + Vector2(0, ty * 1.5 * s), Color(0.92, 0.88, 0.78), 1.6)
-		# the tail, flicking
-		b.line(at - fwd * 20.0 * s, at - fwd * 27.0 * s + Vector2(0, sin(t * 6.0) * 3.0), ridge, 2.0)
-	b.flush(self)
+		# the mane: a dark bristly ridge from the head down the spine
+		b.draw_line(neck, at - fwd * 13.0 * s, ridge, 4.0 * s)
+		for k in range(7):
+			var bx := neck - fwd * float(k) * 3.6 * s
+			var w := (4.2 - float(k) * 0.35) * s
+			b.draw_line(bx - side * w, bx + side * w + fwd * 1.6 * s, ridge.darkened(0.25), 1.3 * s)
+		# the pale tusks curling up from the snout
+		for sd: float in [-1.0, 1.0]:
+			var tb := snout - fwd * 2.5 * s + side * sd * 2.6 * s
+			b.draw_line(tb, tb + fwd * 2.2 * s + side * sd * 1.4 * s, Color(0.94, 0.90, 0.80), 1.2 * s)

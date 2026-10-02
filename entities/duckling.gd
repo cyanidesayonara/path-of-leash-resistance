@@ -1,5 +1,7 @@
 extends Node2D
 
+const Clay := preload("res://entities/clay.gd")
+
 # A duck family member crossing the path in a line: mother in front,
 # ducklings behind. A moving no-go zone - disturbing them is quest
 # failure material, not points. They hop away flustered and regroup.
@@ -56,9 +58,50 @@ func _physics_process(delta: float) -> void:
 
 
 func _draw() -> void:
-	var c := Color(0.45, 0.35, 0.2) if leader else Color(0.95, 0.85, 0.35)
-	var r := 6.5 if leader else 3.5
-	var fx := signf(vel.x)
-	draw_circle(Vector2.ZERO, r, c)
-	draw_circle(Vector2(fx * (r - 1.0), -1.5), r * 0.55, c)
-	draw_circle(Vector2(fx * (r + 1.5), -1.8), 1.0, Color(0.9, 0.55, 0.15))
+	if Clay.offscreen(self, main):
+		return
+	var t := AnimClock.msec() / 1000.0
+	var fwd := Vector2(signf(vel.x) if vel.x != 0.0 else 1.0, 0.0)
+	if flustered and dog != null:
+		var away := global_position - dog.global_position
+		if away.length() > 0.5:
+			fwd = away.normalized()
+	# the waddle: a rock from side to side, quicker when flustered
+	fwd = fwd.rotated(sin(t * (16.0 if flustered else 8.0) + bob_seed) * 0.12)
+	var side := fwd.orthogonal()
+	var b := ShapeBatch.new(self)
+	var bill := Color(0.95, 0.58, 0.16)
+	if leader:
+		# a mallard hen from above: a speckled brown teardrop, the folded
+		# wings meeting at the tail, a blue flash on each, an orange bill
+		var brown := Color(0.55, 0.42, 0.27)
+		Clay.ground_shadow(b, Vector2.ZERO, 9.0, 5.5, 3.0, 0.22)
+		b.draw_colored_polygon(PackedVector2Array([
+			-fwd * 6.0 + side * 3.0, -fwd * 12.0, -fwd * 6.0 - side * 3.0]), brown.darkened(0.30))
+		Clay.blob(b, Vector2.ZERO, Vector2(8.0, 5.6), fwd, brown)
+		for sd: float in [-1.0, 1.0]:
+			# the folded wing, with its blue speculum
+			b.draw_colored_polygon(PackedVector2Array([
+				fwd * 3.0 + side * sd * 5.0, -fwd * 9.0 + side * sd * 1.0, -fwd * 4.0 + side * sd * 5.2]),
+				brown.darkened(0.18))
+			b.draw_line(-fwd * 1.5 + side * sd * 4.8, -fwd * 4.5 + side * sd * 4.4, Color(0.25, 0.38, 0.78), 1.4)
+		for k in range(4):
+			b.draw_circle(fwd * (2.0 - float(k) * 2.2) + side * (float(k % 2) * 2.0 - 1.0), 0.7, brown.darkened(0.35))
+		var hc := fwd * 8.0
+		Clay.ball(b, hc, 3.4, brown.lightened(0.05))
+		b.draw_line(hc - side * 2.9 + fwd * 0.4, hc + side * 2.9 + fwd * 0.4, brown.darkened(0.35), 0.8)
+		b.draw_colored_polygon(Clay.ellipse_pts(hc + fwd * 4.0, Vector2(2.2, 1.5), fwd, 10), bill)
+		for sd: float in [-1.0, 1.0]:
+			b.draw_circle(hc + fwd * 0.8 + side * sd * 1.8, 0.65, Color(0.06, 0.05, 0.04))
+	else:
+		# a duckling: a yellow fluff ball with a smudge of brown down its back
+		var fluff := Color(0.98, 0.86, 0.36)
+		Clay.ground_shadow(b, Vector2.ZERO, 5.0, 3.2, 2.0, 0.20)
+		Clay.ball(b, -fwd * 0.5, 4.2, fluff)
+		b.draw_colored_polygon(Clay.ellipse_pts(-fwd * 1.5, Vector2(2.4, 1.6), fwd, 10), Color(0.62, 0.50, 0.26, 0.75))
+		var hc := fwd * 3.6
+		Clay.ball(b, hc, 2.4, fluff)
+		b.draw_circle(hc + fwd * 2.4, 1.0, bill)
+		for sd: float in [-1.0, 1.0]:
+			b.draw_circle(hc + fwd * 0.6 + side * sd * 1.3, 0.5, Color(0.06, 0.05, 0.04))
+	b.flush()

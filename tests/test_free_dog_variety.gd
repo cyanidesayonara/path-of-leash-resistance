@@ -7,6 +7,8 @@ var EXPECTED_IDS := PackedStringArray([
 	"stocky_fold_ear",
 	"fluffy_curl_tail",
 	"shaggy_drop_ear",
+	"sturdy_otter_tail",
+	"spotted_drop_ear",
 ])
 var REQUIRED_FIELDS := PackedStringArray([
 	"id",
@@ -158,16 +160,11 @@ func _test_public_api_and_selection() -> bool:
 		"profile ID lookup returns an independent array"
 	)
 
-	var expected_by_key := {
-		0: EXPECTED_IDS[0],
-		1: EXPECTED_IDS[1],
-		5: EXPECTED_IDS[5],
-		6: EXPECTED_IDS[0],
-		7: EXPECTED_IDS[1],
-		-1: EXPECTED_IDS[5],
-		-6: EXPECTED_IDS[0],
-		-7: EXPECTED_IDS[5],
-	}
+	# keys select by plain modulo over the catalogue, negatives wrapping round
+	var n_ids := EXPECTED_IDS.size()
+	var expected_by_key := {}
+	for key: int in [0, 1, n_ids - 1, n_ids, n_ids + 1, -1, -n_ids, -n_ids - 1]:
+		expected_by_key[key] = EXPECTED_IDS[posmod(key, n_ids)]
 	for key: int in expected_by_key:
 		var first: String = appearance_script.call("profile_id_for_key", key)
 		var second: String = appearance_script.call("profile_id_for_key", key)
