@@ -465,11 +465,13 @@ var birds_cache: Array = []
 var hud_t := 0.0
 var sq_spawn_t := 6.0
 var whirl_arm := 0.0
-var whirl_dir_acc := 0.0
-# her coil, summed over the arming frames, and how many of them: the orbit's
-# length comes from the average, so one frame of the rope mid-solve cannot set
-# how far she goes round any more than it can set which way
-var whirl_turns_acc := 0.0
+# Her coil, SIGNED, added up over the arming frames, and how many of them. One
+# number for both halves of the decision: a window that keeps changing its mind
+# nets out to nearly nothing, and nearly nothing is what there is to take off -
+# votes for the way round counted separately from how wound she was would read a
+# contested coil as a busy one and send her round as far as a coil that never
+# wavered.
+var whirl_coil_acc := 0.0
 var whirl_arm_n := 0
 var vault_recent := 0.0
 
@@ -5046,7 +5048,11 @@ func _leash_tug(delta: float) -> void:
 	dog.drag_amt = 0.0
 	_tick_signs(delta)
 	if leash.detached:
-		return  # off leash during the freedom romp
+		# off leash during the freedom romp. A window left standing here would
+		# telegraph rings for an orbit that is not coming, and refuse her a
+		# vault for as long as it stood.
+		_disarm_whirl()
+		return
 	leash.tick(delta)
 	# The whirl manages its own release (aimed at the dog); no early exit, or
 	# the launch direction would be random. `whirling` means the owner's
@@ -5074,6 +5080,7 @@ func _leash_tug(delta: float) -> void:
 	var h_dir: Vector2 = leash.human_pull_dir()
 	var d_dir: Vector2 = leash.dog_pull_dir()
 	if h_dir == Vector2.ZERO or d_dir == Vector2.ZERO:
+		_disarm_whirl()
 		return
 	human.notify_strain()
 	# the tug eases in over the leash's onset band: force, separation damping
@@ -5156,44 +5163,39 @@ func _leash_tug(delta: float) -> void:
 			if wp.x < INF:
 				armed = true
 				whirl_arm += delta
-				# Which way round THIS pole unwinds her end of the rope: the
-				# rope's own probe, a tiny virtual step each way against the
-				# human-end geometry, summed over the window so one noisy
-				# frame cannot decide it. Same geometry, same window, every
-				# frame - and what the orbit then commits to for good.
-				whirl_dir_acc += leash.unwind_bias(wp)
-				# and the SAME measure over the SAME window for how far she
-				# goes round: a rope mid-solve reads a coil a little larger or
-				# smaller than the one she is standing in, and the frame the
-				# window happens to fill up on has no claim to be the right one
-				whirl_turns_acc += leash.coil_turns(wp)
+				# The coil beside THIS pole at her end, signed, every frame of
+				# the window - not the whole rope's winding, which reads the
+				# dog's coil too and would size an orbit that keeps going after
+				# hers is spent and winds it up the other way. Added up so that
+				# no one frame of a rope mid-solve decides either how far she
+				# goes round or which way; _commit_whirl settles both from the
+				# average, once, for good.
+				whirl_coil_acc += leash.coil_winding(wp)
 				whirl_arm_n += 1
 				if whirl_arm >= WHIRL_ARM_T:
-					# A rope with no opinion at all over the whole window -
-					# no coil beside this pole to read - does not get a
-					# direction picked out of the air: she keeps going the way
-					# she is already travelling round it.
-					var dir := whirl_dir_acc
-					if dir == 0.0:
-						dir = human.orbit_sense(human.global_position - wp, human.velocity)
-					# and the budget is the same coil the direction came from,
-					# averaged over the same window - not the whole rope's
-					# winding, which reads the dog's coil too and sizes an orbit
-					# that keeps going after hers is spent, winding it up the
-					# other way
-					human.start_whirl(wp, dir,
-						whirl_turns_acc / float(maxi(whirl_arm_n, 1)))
+					_commit_whirl(wp, whirl_coil_acc / float(maxi(whirl_arm_n, 1)))
 					armed = false
 	if not armed:
 		_disarm_whirl()
+
+
+# Which way round, and how far, from the coil averaged over the arming window:
+# the rope's own probe, a tiny virtual step each way against that average, and
+# then the same average for the length. A window that cancels has no opinion to
+# give, and a direction is not picked out of the air: she keeps going the way she
+# is already travelling round the pole, for the shortest orbit there is.
+func _commit_whirl(pole: Vector2, coil: float) -> void:
+	var dir: float = leash.unwind_bias_of(coil)
+	if dir == 0.0:
+		dir = human.orbit_sense(human.global_position - pole, human.velocity)
+	human.start_whirl(pole, dir, absf(coil) / TAU)
 
 
 # Nothing held over from an arming window that came to nothing, or the next one
 # decides its way round and its length partly from a rope that has moved on.
 func _disarm_whirl() -> void:
 	whirl_arm = 0.0
-	whirl_dir_acc = 0.0
-	whirl_turns_acc = 0.0
+	whirl_coil_acc = 0.0
 	whirl_arm_n = 0
 
 

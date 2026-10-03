@@ -454,24 +454,16 @@ func coil_reach_for(hand_gap: float) -> float:
 	return maxf(WHIRL_COIL_REACH, hand_gap + POLE_PAD)
 
 
-# The coil at `pole` her end is standing in, in radians. ONE measure over one
-# window: the whirl's direction and its turn budget both come from here, so an
-# orbit cannot be sent one way and sized by something wound the other.
+# The coil at `pole` her end is standing in, in radians, signed. ONE measure, and
+# main adds up this one over the arming window: the whirl's direction and its turn
+# budget both come off that single signed average, so an orbit cannot be sent one
+# way and sized by something wound the other, and a coil that keeps changing its
+# mind nets out to the nothing it is worth.
 func coil_winding(pole: Vector2) -> float:
 	var tail := human_tail()
 	if tail.size() == 0:
 		return 0.0
 	return pole_winding(tail, pole, coil_reach_for(tail[tail.size() - 1].distance_to(pole)))
-
-
-# the same coil in whole turns: what an orbit round this pole has to take off
-func coil_turns(pole: Vector2) -> float:
-	return absf(coil_winding(pole)) / TAU
-
-
-# Which way round `pole` unwinds the human end: positive for anticlockwise.
-func unwind_bias(pole: Vector2) -> float:
-	return unwind_bias_of(coil_winding(pole), WHIRL_PROBE_STEP)
 
 
 # The two below read their arguments and nothing else, so the whirl's
@@ -508,7 +500,7 @@ func pole_winding(p: PackedVector2Array, pole: Vector2, reach := WHIRL_COIL_REAC
 # Probing by displacing the hand POINT and re-measuring does not work: that
 # reads the kink beside the hand, whose sign has nothing to do with which way
 # the coil goes. On a rope the dog had wound it picked the winding-UP way.
-func unwind_bias_of(local_winding: float, step: float) -> float:
+func unwind_bias_of(local_winding: float, step := WHIRL_PROBE_STEP) -> float:
 	var bias := absf(local_winding - step) - absf(local_winding + step)
 	return 0.0 if absf(bias) < WIND_EPS else bias
 

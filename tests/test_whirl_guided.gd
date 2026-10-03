@@ -85,6 +85,17 @@ func _initialize() -> void:
 	call_deferred("_run")
 
 
+# The two readings main's arming composes, composed the same way here: the coil
+# at a pole in turns, and which way round that coil unwinds. The rope offers the
+# signed coil and the probe; putting them together is the caller's business.
+func _turns_at(l: Node2D, pole: Vector2) -> float:
+	return absf(float(l.coil_winding(pole))) / TAU
+
+
+func _bias_at(l: Node2D, pole: Vector2) -> float:
+	return float(l.unwind_bias_of(l.coil_winding(pole)))
+
+
 func _bare_leash() -> Node2D:
 	var l: Node2D = Node2D.new()
 	l.set_script(load("res://entities/leash.gd"))
@@ -274,7 +285,7 @@ func _the_reach_is_the_gap_out_to_her_hand() -> void:
 				% [got, inside, outside])
 		_check(absf(got - (inside + outside)) > 1.0,
 			"and plainly not both arcs (%.3f rad, both would be %.3f)" % [got, inside + outside])
-		_check(signf(float(l.unwind_bias(pole))) == -sense, "so the probe unwinds the near arc")
+		_check(signf(_bias_at(l, pole)) == -sense, "so the probe unwinds the near arc")
 	l.queue_free()
 
 
@@ -307,10 +318,10 @@ func _a_coil_is_worth_what_it_sweeps() -> void:
 			_check(absf(absf(got) - want) < TOL_RAD and signf(got) == sense,
 				"an arc of %d corners stepped %.2f turns %.4f rad (measured %.4f)"
 					% [TAIL_PTS - 2, step, want, got])
-			_check(absf(float(l.coil_turns(pole)) - want / TAU) < TOL_RAD,
+			_check(absf(_turns_at(l, pole) - want / TAU) < TOL_RAD,
 				"which is %.4f turns of orbit to take off (measured %.4f)"
-					% [want / TAU, float(l.coil_turns(pole))])
-			_check(float(l.coil_turns(pole)) <= CEILING_TURNS + TOL_RAD,
+					% [want / TAU, _turns_at(l, pole)])
+			_check(_turns_at(l, pole) <= CEILING_TURNS + TOL_RAD,
 				"and never more than the window can hold (%.4f turns)" % CEILING_TURNS)
 	# The window's ceiling, stated outright: seven corners, and no corner can
 	# read past half a turn. Beyond it a coil is not merely clipped, it is
@@ -326,9 +337,9 @@ func _a_coil_is_worth_what_it_sweeps() -> void:
 	_check(absf(float(l.coil_winding(pole)) + 3.0 * TAU) < TOL_RAD,
 		"a coil of four turns over nine points reads as three the other way (%.4f rad)"
 			% float(l.coil_winding(pole)))
-	_check(absf(float(l.coil_turns(pole)) - 3.0) < TOL_RAD,
+	_check(absf(_turns_at(l, pole) - 3.0) < TOL_RAD,
 		"so its size is misread too, and still inside the ceiling (%.4f turns)"
-			% float(l.coil_turns(pole)))
+			% _turns_at(l, pole))
 	l.queue_free()
 
 
@@ -413,7 +424,7 @@ func _probe_agrees_with_a_real_rope() -> void:
 		var a := deg_to_rad(float(i))
 		dog.global_position = near + Vector2(-40.0, 0.0).rotated(-a)
 		leash.tick(DT)
-	if not (leash.has_method("human_tail") and leash.has_method("unwind_bias")
+	if not (leash.has_method("human_tail") and leash.has_method("unwind_bias_of")
 			and leash.has_method("pole_winding")):
 		_check(false, "the rope exposes its human-end tail and the probe over it")
 	else:
@@ -423,7 +434,7 @@ func _probe_agrees_with_a_real_rope() -> void:
 		_check(tail[tail.size() - 1] == leash.pts[n - 1] and tail[0] == leash.pts[n - TAIL_PTS],
 			"and it is exactly the rope's own last %d points" % TAIL_PTS)
 		var pole: Vector2 = leash.human_contact_pole
-		var bias: float = leash.unwind_bias(pole)
+		var bias: float = _bias_at(leash, pole)
 		# and it must pick the way that really does unwind this rope: walk the
 		# hand round the pole each way, free-slipping as a whirl does, and see
 		# which way takes turns off the rope. winding() is the measure, because
@@ -498,7 +509,7 @@ func _the_probe_follows_her_end_not_the_whole_rope() -> void:
 		leash.prev = posed.duplicate()
 		dog.global_position = posed[0]
 		human.global_position = posed[n - 1] - Vector2(9.0, -16.0)
-		if not (leash.has_method("unwind_bias") and leash.has_method("pole_winding")
+		if not (leash.has_method("unwind_bias_of") and leash.has_method("pole_winding")
 				and leash.has_method("human_tail")):
 			_check(false, "the rope exposes its human-end tail and the probe over it")
 		else:
@@ -510,7 +521,7 @@ func _the_probe_follows_her_end_not_the_whole_rope() -> void:
 					and signf(local) == -signf(global_w),
 				"her coil and the whole rope's winding disagree (local %.3f rad, rope %.3f turns)"
 					% [local, global_w])
-			var bias: float = leash.unwind_bias(hers)
+			var bias: float = _bias_at(leash, hers)
 			_check(bias != 0.0 and signf(bias) == -signf(local),
 				"the probe unwinds the coil she is standing in (bias %.4f, coil %.3f rad)" % [bias, local])
 			_check(signf(bias) != -signf(global_w),
@@ -577,6 +588,10 @@ func _run() -> void:
 	_arming_is_wired_to_the_probe(m)
 	_the_budget_is_her_coil_too(m)
 	_the_budget_is_the_whole_window(m)
+	_a_contested_coil_is_worth_only_its_net(m)
+	_a_cancelling_window_is_worth_nothing(m)
+	_an_exact_tie_keeps_her_going_round(m)
+	_a_window_that_dies_leaves_nothing_behind(m)
 	_the_budget_keeps_its_bounds(m)
 	_a_tie_keeps_her_going_the_way_she_is(m)
 	_direction_is_committed(m)
@@ -664,7 +679,7 @@ func _arming_is_wired_to_the_probe(m: Node2D) -> void:
 	var want := 0.0
 	var wavered := false
 	while not h.is_whirling() and frames < 40:
-		var s := signf(float(leash.unwind_bias(pole)))
+		var s := signf(_bias_at(leash, pole))
 		if s != 0.0:
 			if want == 0.0:
 				want = s
@@ -730,7 +745,7 @@ func _two_coil_rope(m: Node2D, hers: Vector2, sense: float, coil_mul := 1.0) -> 
 func _the_budget_is_her_coil_too(m: Node2D) -> void:
 	var h: CharacterBody2D = m.human
 	var leash: Node2D = m.leash
-	if not leash.has_method("coil_turns"):
+	if not leash.has_method("coil_winding"):
 		_check(false, "the rope can say how many turns the coil at a pole is worth")
 		return
 	for sense: float in [1.0, -1.0]:
@@ -744,7 +759,7 @@ func _the_budget_is_her_coil_too(m: Node2D) -> void:
 		# reads: the pose as the solver leaves it, not as it was built
 		m._apply_leash(DT)
 		var local: float = leash.coil_winding(hers)
-		var turns: float = leash.coil_turns(hers)
+		var turns: float = _turns_at(leash, hers)
 		var rope: float = leash.winding()
 		# the premise: the two measures disagree both ways round, and by enough
 		# that a budget taken from the wrong one is a different orbit
@@ -805,7 +820,7 @@ func _the_budget_is_the_whole_window(m: Node2D) -> void:
 			# one it armed on (which resets the window as it fires)
 			var arm_now: float = m.whirl_arm
 			if arm_now > arm_was or h.is_whirling():
-				seen.append(float(leash.coil_turns(hers)))
+				seen.append(_turns_at(leash, hers))
 			arm_was = arm_now
 			frames += 1
 		_check(h.is_whirling(), "a coil that changes while it arms still arms (%d frames)" % frames)
@@ -835,6 +850,211 @@ func _the_budget_is_the_whole_window(m: Node2D) -> void:
 	# start, so this is the average being stable, not the rope being bit-exact.
 	_check(absf(runs[0] - runs[1]) < 0.001,
 		"and the same coil armed twice gives the same orbit (%.6f, %.6f)" % [runs[0], runs[1]])
+
+
+# Drive main's own arming on the two-coil rope with one authored sense per frame,
+# and hand back the coil main read on each frame it counted - signed, which is
+# what a contested window turns on.
+func _arm_through(m: Node2D, hers: Vector2, senses: Array[float]) -> Array[float]:
+	var h: CharacterBody2D = m.human
+	var leash: Node2D = m.leash
+	var seen: Array[float] = []
+	var arm_was := 0.0
+	var frames := 0
+	while not h.is_whirling() and frames < 60:
+		_two_coil_rope(m, hers, senses[frames % senses.size()])
+		m._apply_leash(DT)
+		# the frames main counted: the ones its own window grew on, and the one
+		# it armed on, which resets the window as it fires
+		var arm_now: float = m.whirl_arm
+		if arm_now > arm_was or h.is_whirling():
+			seen.append(float(leash.coil_winding(hers)))
+		arm_was = arm_now
+		frames += 1
+	return seen
+
+
+# A window where her coil keeps changing its mind. Summing which WAY each frame
+# votes while averaging how MUCH each frame was wound reads a contested coil as a
+# busy one: three frames one way and two the other would send her round for as
+# long as a coil that was wound hard one way the whole time. One signed average
+# settles both halves - the net is what an orbit can actually take off, and a
+# coil that nearly cancels is worth nearly nothing.
+func _a_contested_coil_is_worth_only_its_net(m: Node2D) -> void:
+	var h: CharacterBody2D = m.human
+	var leash: Node2D = m.leash
+	var was_len: float = m.leash_len
+	for majority: float in [1.0, -1.0]:
+		for split: Array in [[3, 2], [4, 1]]:
+			var senses: Array[float] = []
+			for k in range(int(split[0])):
+				senses.append(majority)
+			for k in range(int(split[1])):
+				senses.append(-majority)
+			var hers: Vector2 = h.global_position + Vector2(200.0, 0.0)
+			h.rotation = 0.0
+			h.velocity = Vector2.ZERO
+			_two_coil_rope(m, hers, majority)
+			m.leash_len = maxf(float(leash.used_length()) - 60.0, 40.0)
+			var seen := _arm_through(m, hers, senses)
+			var tag := "%d of every %d her way" % [int(split[0]), int(split[0]) + int(split[1])]
+			_check(h.is_whirling(), "a coil that changes its mind still arms (%s)" % tag)
+			if h.is_whirling() and seen.size() > 2:
+				var net := 0.0
+				var gross := 0.0
+				var hers_way := 0
+				for v: float in seen:
+					net += v
+					gross += absf(v)
+					if signf(v) == majority:
+						hers_way += 1
+				net /= float(seen.size())
+				gross /= float(seen.size())
+				var want := clampf(absf(net) / TAU, TURNS_MIN, TURNS_MAX) * TAU
+				var busy := clampf(gross / TAU, TURNS_MIN, TURNS_MAX) * TAU
+				_check(hers_way > seen.size() - hers_way and hers_way < seen.size(),
+					"the window really was contested (%d of %d, %s)" % [hers_way, seen.size(), tag])
+				_check(absf(want - busy) > 0.3,
+					"and what it netted is not what it was busy doing (%.2f rad against %.2f)"
+						% [want, busy])
+				_check(h.whirl_dir == -signf(net),
+					"she goes the way the net coil unwinds (%+.0f, net %.2f rad)"
+						% [float(h.whirl_dir), net])
+				_check(absf(float(h.whirl_turns) - want) < 0.002,
+					"for as long as the net coil is worth (%.2f rad, wanted %.2f)"
+						% [float(h.whirl_turns), want])
+				_check(absf(float(h.whirl_turns) - busy) > 0.3,
+					"not as long as all that winding added up (%.2f rad)" % busy)
+			m.leash_len = was_len
+			h.bail_whirl()
+			m._apply_leash(DT)
+
+
+# A coil that spends the window arguing with itself: half the frames each way.
+# There is next to nothing left to take off, so there is next to no orbit - the
+# shortest one there is - however hard the rope was working while it argued.
+func _a_cancelling_window_is_worth_nothing(m: Node2D) -> void:
+	var h: CharacterBody2D = m.human
+	var leash: Node2D = m.leash
+	var was_len: float = m.leash_len
+	for first: float in [1.0, -1.0]:
+		var hers: Vector2 = h.global_position + Vector2(200.0, 0.0)
+		h.rotation = 0.0
+		h.velocity = Vector2.ZERO
+		_two_coil_rope(m, hers, first)
+		m.leash_len = maxf(float(leash.used_length()) - 60.0, 40.0)
+		var seen := _arm_through(m, hers, [first, -first] as Array[float])
+		_check(h.is_whirling(), "a coil that cancels itself still arms")
+		if h.is_whirling() and seen.size() > 2:
+			var net := 0.0
+			var gross := 0.0
+			for v: float in seen:
+				net += v
+				gross += absf(v)
+			net /= float(seen.size())
+			gross /= float(seen.size())
+			_check(absf(net) < 0.25 * gross,
+				"the window all but cancels (net %.2f rad against %.2f of winding)" % [net, gross])
+			_check(absf(float(h.whirl_turns) - TURNS_MIN * TAU) < 0.001,
+				"so she gets the shortest orbit there is (%.3f rad)" % float(h.whirl_turns))
+			_check(float(h.whirl_turns) < clampf(gross / TAU, TURNS_MIN, TURNS_MAX) * TAU - 0.3,
+				"and not the long one all that winding would have bought (%.2f rad)"
+					% (clampf(gross / TAU, TURNS_MIN, TURNS_MAX) * TAU))
+		m.leash_len = was_len
+		h.bail_whirl()
+		m._apply_leash(DT)
+
+
+# A window that cancels to EXACTLY nothing cannot be built out of a solved rope -
+# two mirrored frames of it never agree to the last bit - so the tie is pinned
+# where main decides, with the window's average handed in as the zero it would be.
+# Nothing to read is no reason to pick a side out of the air: she keeps going the
+# way she is already travelling round the post, for the shortest orbit there is.
+func _an_exact_tie_keeps_her_going_round(m: Node2D) -> void:
+	var h: CharacterBody2D = m.human
+	if not m.has_method("_commit_whirl"):
+		_check(false, "main decides the way round and how far in one place")
+		return
+	var pole: Vector2 = h.global_position + Vector2(60.0, 0.0)
+	_one_pole(m, pole)
+	for sense: float in [1.0, -1.0]:
+		h.global_position = pole + Vector2(-46.0, 0.0)
+		var radial: Vector2 = h.global_position - pole
+		h.velocity = radial.normalized().rotated(sense * PI / 2.0) * 180.0
+		m._commit_whirl(pole, 0.0)
+		_check(h.is_whirling(), "an exact tie still starts an orbit")
+		_check(h.whirl_dir == sense,
+			"the way she was already travelling round it (%+.0f, wanted %+.0f)"
+				% [float(h.whirl_dir), sense])
+		_check(absf(float(h.whirl_turns) - TURNS_MIN * TAU) < 0.001,
+			"for the shortest orbit there is (%.3f rad)" % float(h.whirl_turns))
+		h.bail_whirl()
+		m._apply_leash(DT)
+
+
+# The whole rope in a heap on one spot, dog and owner standing on it: there is no
+# tangent at either end to pull along. The solver will not hold any less
+# degenerate version of this - coincident points next to a rope that has length
+# get nudged apart, and the nudge amplifies - so a heap is what the guard is for.
+func _no_tangent_rope(m: Node2D, at: Vector2) -> void:
+	var leash: Node2D = m.leash
+	var poles: Array[Vector2] = []
+	var furn: Array[Vector2] = []
+	leash.poles = poles
+	leash.furniture_poles = furn
+	var posed: Array[Vector2] = []
+	for k in range(PTS):
+		posed.append(at)
+	leash.pts = posed
+	leash.prev = posed.duplicate()
+	m.dog.global_position = at
+	m.human.global_position = at - Vector2(9.0, -16.0)
+
+
+# A window that never finished must leave nothing behind it. The rings she is
+# telegraphed with come straight off the timer, and a vault is refused outright
+# while one is up, so a window left standing by a tug that went home early would
+# both draw rings for an orbit that is not coming and quietly cost her the vault.
+# Both of the tug's early ways out therefore drop it on their way.
+func _a_window_that_dies_leaves_nothing_behind(m: Node2D) -> void:
+	var h: CharacterBody2D = m.human
+	var leash: Node2D = m.leash
+	if not ("whirl_coil_acc" in m):
+		_check(false, "main adds her coil up over the arming window as one signed measure")
+		return
+	for way: String in ["off the leash", "no pull in the rope"]:
+		var was_len: float = m.leash_len
+		var hers: Vector2 = h.global_position + Vector2(200.0, 0.0)
+		h.rotation = 0.0
+		h.velocity = Vector2.ZERO
+		_two_coil_rope(m, hers, 1.0)
+		m.leash_len = maxf(float(leash.used_length()) - 60.0, 40.0)
+		for i in range(6):
+			_two_coil_rope(m, hers, 1.0)
+			m._apply_leash(DT)
+		_check(m.whirl_arm > 0.0 and float(m.whirl_arm_amount()) > 0.0,
+			"a window part way up, with its rings drawn (%s: %.3f)" % [way, float(m.whirl_arm)])
+		if way == "off the leash":
+			leash.detached = true
+			m._apply_leash(DT)
+			leash.detached = false
+		else:
+			_no_tangent_rope(m, h.global_position + Vector2(240.0, 0.0))
+			# A heap of rope is nothing like taut, so only a reel shorter than
+			# nothing gets it past the guard above this one. That is the honest
+			# shape of this branch: it is the last line of defence, not a state
+			# the walk arrives in.
+			m.leash_len = -1.0
+			m._apply_leash(DT)
+			_check(leash.human_pull_dir() == Vector2.ZERO and float(leash.used_length()) == 0.0,
+				"the rope really has no pull in it, and length is not why")
+		_check(float(m.whirl_arm) == 0.0, "the timer is dropped (%s)" % way)
+		_check(float(m.whirl_coil_acc) == 0.0 and int(m.whirl_arm_n) == 0,
+			"and so is the coil it had added up (%s: %.3f over %d)"
+				% [way, float(m.whirl_coil_acc), int(m.whirl_arm_n)])
+		_check(float(m.whirl_arm_amount()) == 0.0,
+			"so nothing is telegraphed for an orbit that is not coming (%s)" % way)
+		m.leash_len = was_len
 
 
 # the budget is still bounded: a coil of nothing is worth a turn and a bit, and
