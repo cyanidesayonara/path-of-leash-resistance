@@ -147,6 +147,9 @@ var glance_t := 0.0
 var grumbled := false
 var waited := 0.0
 var grace_t := 0.0
+# the dog was already dug in when the HEY went up: bracing then is no answer
+# to the telegraph, so it earns nothing (holding plant cannot farm the reward)
+var planted_at_hey := false
 var ice := false
 var wobble_seed := 0.0
 var main: Node2D
@@ -396,6 +399,14 @@ func _converse(delta: float) -> void:
 	# lesson they are not keeping score
 	var minding := state in [HState.WALK, HState.DRIFT] and tut_hold_y == -INF
 	if correct_t > 0.0:
+		# something else took over mid-telegraph (an orbit, a fall, a call):
+		# the correction is off, and leaves them still short of patience
+		if not (state in [HState.WALK, HState.DRIFT]):
+			correct_t = 0.0
+			patience = maxf(patience, 0.2)
+			if bubble.text == "HEY!":
+				bubble.visible = false
+			return
 		correct_t -= delta
 		if correct_t <= 0.0:
 			_correct()
@@ -412,7 +423,7 @@ func _converse(delta: float) -> void:
 	if patience < PATIENCE_WARN:
 		# looking up from the phone: the first warning is a mutter, then a
 		# glance at her every couple of seconds
-		if not grumbled:
+		if not grumbled and telegraph_t <= 0.0:
 			grumbled = true
 			notice("oi...", 1.0)
 		if glance_t <= 0.0:
@@ -421,6 +432,7 @@ func _converse(delta: float) -> void:
 		grumbled = false
 	if patience <= 0.0 and telegraph_t <= 0.0 and halt_t <= 0.0:
 		correct_t = CORRECT_WARN
+		planted_at_hey = bool(main.dog.planted)
 		_show_bubble("HEY!", "HE'S HAD ENOUGH! DIG IN")
 
 
@@ -429,6 +441,8 @@ func _correct() -> void:
 	grace_t = CORRECT_GRACE
 	grumbled = false
 	bubble.visible = false
+	# a click already armed would land after this and undo the short leash
+	reel_pending_t = 0.0
 	var to_dog: Vector2 = main.dog.global_position - global_position
 	var away := -to_dog.normalized() if to_dog.length() > 1.0 else Vector2(0.0, 1.0 if homeward else -1.0)
 	if main.dog.planted:
@@ -437,7 +451,8 @@ func _correct() -> void:
 		state = HState.STUMBLE
 		state_t = 0.5
 		velocity = -away * 150.0
-		main.on_correction_braced(global_position)
+		if not planted_at_hey:
+			main.on_correction_braced(global_position)
 		return
 	velocity += away * CORRECT_HAUL
 	main.set_leash_target(float(main.leash_len) * CORRECT_REEL, true)
@@ -463,7 +478,7 @@ func _fiddle_with_reel(delta: float) -> void:
 	reel_timer -= delta
 	if reel_timer > 0.0:
 		return
-	if telegraph_t > 0.0:
+	if telegraph_t > 0.0 or correct_t > 0.0:
 		reel_timer = 0.5
 		return
 	reel_timer = randf_range(4.0, 8.0)
@@ -497,7 +512,7 @@ func _walk(delta: float) -> void:
 	if main.dog.squat_t > 0.0 or main.dog.peeing:
 		waited += delta
 		if waited < WAIT_MAX:
-			if waited <= delta * 1.5:
+			if waited <= delta * 1.5 and telegraph_t <= 0.0 and correct_t <= 0.0:
 				notice("go on then", 1.4)
 			velocity = velocity.move_toward(Vector2.ZERO, 400.0 * delta)
 			move_and_slide()
@@ -580,7 +595,8 @@ func _walk(delta: float) -> void:
 
 
 func _events(delta: float) -> void:
-	if state != HState.WALK or halt_t > 0.0:
+	# a HEY! winding up owns the bubble: no new event starts over it
+	if state != HState.WALK or halt_t > 0.0 or correct_t > 0.0:
 		return
 	if telegraph_t > 0.0:
 		telegraph_t -= delta

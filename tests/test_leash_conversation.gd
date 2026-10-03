@@ -104,6 +104,33 @@ func _run() -> void:
 		h._converse(dt)
 	_check(h.state == h.HState.STUMBLE, "dug in when it lands: it is him that lurches")
 	_check(int(m.bones) > bones_before, "and holding firm pays")
+	# already dug in when the HEY went up: he still lurches, but it pays nothing
+	h.state = h.HState.WALK
+	h.patience = 0.0
+	h.grace_t = 0.0
+	h.correct_t = 0.0
+	m.dog.planted = true
+	var bones_mid: int = m.bones
+	h.felt_pull = Vector2(0.0, 1.0) * (h.PATIENCE_HARD * 1.6)
+	h._pull_now = h.felt_pull
+	h.strain = true
+	h._converse(dt)
+	for i in range(int(h.CORRECT_WARN * 60.0) + 2):
+		h._converse(dt)
+	_check(h.state == h.HState.STUMBLE and int(m.bones) == bones_mid, "holding plant all along cannot farm the reward")
+	# a HEY cut short by something else taking over is called off
+	h.state = h.HState.WALK
+	m.dog.planted = false
+	h.patience = 0.0
+	h.grace_t = 0.0
+	h.correct_t = 0.0
+	h._pull_now = h.felt_pull
+	h._converse(dt)
+	_check(h.is_correcting(), "a HEY is up")
+	h.state = h.HState.FALLEN
+	h._converse(dt)
+	_check(not h.is_correcting() and h.state == h.HState.FALLEN, "a fall mid-telegraph calls the correction off")
+	h.state = h.HState.WALK
 	# they wait while she does her business
 	h.state = h.HState.WALK
 	m.dog.planted = false
