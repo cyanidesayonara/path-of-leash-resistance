@@ -20,7 +20,7 @@ phone-distracted human walks on autopilot; the leash is real verlet-rope
 physics (visual and gameplay constraint — see AGENTS.md). Ships to itch
 (`html5` + `windows`) on a version tag after green CI.
 
-## Where things stand (2026-09-26)
+## Where things stand (2026-10-03)
 
 **Released: v1.55** on itch (web + Windows) and submitted to the Microsoft
 Store as 1.55.0.0 (listing record: `store/listing.md`). It carried the freeze
@@ -54,11 +54,27 @@ mostly fixed; what is left needs play.
 picture (the full-screen grade costs 3-4 ms a frame on an integrated GPU in
 the browser) or the behaviour (walker ropes; tried and dropped 2026-09-26).
 
+**Guided whirl overhaul (built, not yet accepted):** the owner now commits to
+one direction and the exact local human-end coil measured over the arming
+window. Normal release is the pure tangent; the bounded missed-tangent path
+leans dogward only when it can still preserve the orbit, otherwise it bails
+into a controlled stumble. Timeout, lost-pole and furniture cases bail too,
+with their exit frame still shielded from the tug. The anticipation rings,
+orbit ghosts, speed lines, grit and fling streaks are procedural and
+deterministic. `tests/test_whirl_guided.gd` is the exhaustive guard.
+
+Hand-play only the final commit. At the shortest reel, measurable coils fall
+under the 0.6-turn minimum, so every short-reel orbit uses that floor. A coil
+still tightening through the 0.25-second arming window is slightly under-read
+by its mean. A safe refusal deliberately loses the old FLING reward. The
+dogward lean on the forced path remains a tuning point; do not retune any of
+these without play evidence and a failing regression where appropriate.
+
 ## Tools and rules added since the freeze began
 
 - Verification: `tools/shot_sweep.sh` (deterministic: fixed frame rate,
   seed, `AnimClock`), `tools/shot_diff.py` (pixel diff of two sweeps),
-  `tools/behaviour_snapshot.sh` (59 fixed-seed runs over 14 walks;
+  `tools/behaviour_snapshot.sh` (fixed-seed runs over every non-tutorial walk;
   byte-identical for a refactor, line-by-line explained for intentional
   handling changes), `tools/idle_soak.sh`, `--perf` with
   `--perf-hide=`, `--perf-no-grade`, per-spike `physics_top`,

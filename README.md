@@ -43,12 +43,12 @@ mutt who squats like a lady.
   Wind it around a pole as many turns as you like: the bend stays on the
   obstacle, the coil cinches when taut, the pull curves around the pole
   (tetherball!), and a hard enough wrench slips the whole coil off.
-- The fling: wind the human around a pole and keep pulling. Instead of
-  jamming against it they WHIRL - orbiting faster the harder you pull
-  (the leash is a pulley) - and launch TOWARD you when the rope runs
-  out. A fast fling sails past you, and then it is your turn to be
-  yanked along: the bungee. Winding the human up or flinging them
-  across danger is a core move.
+- The fling: wind your human around a pole and keep pulling. Instead of
+  jamming, they commit to one way round and WHIRL off the coil at their end
+  of the leash. Pull harder and the pulley spins them faster. The ordinary
+  launch is the orbit's own tangent when it points at you; if there is no
+  honest way to make that throw, they stagger out dizzy instead. A clean,
+  fast fling sails past you. Then the bungee collects the dog.
 - Dog business is dog business: pee anywhere with Q - marking hydrants
   and poles scores, five marks secures the territory, stray breaks just
   leave a puddle. The test tube lasts about nine breaks, and a full
