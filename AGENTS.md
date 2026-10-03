@@ -55,8 +55,10 @@ path-of-leash-resistance/
 The split-out modules (`systems/goals.gd`, `hud/hud_build.gd`,
 `world/level_build.gd`, ...) are static functions over main's state: the
 state stays on main, and main.gd keeps a same-name forwarder for every
-function another script or a test calls. A refactor of main.gd must leave
-`tools/behaviour_snapshot.sh` output byte-identical.
+function another script or a test calls. A behaviour-preserving refactor of
+main.gd must leave `tools/behaviour_snapshot.sh` output byte-identical. An
+intentional behaviour change needs a fresh baseline comparison and must
+explain every changed snapshot line; this does not relax the refactor rule.
 
 ## How things work (non-obvious bits)
 
@@ -67,20 +69,31 @@ function another script or a test calls. A refactor of main.gd must leave
   (grip at low stretch, free slide when overstretched). There is NO
   separate wrap bookkeeping - three generations of pivot/angle tracking
   systems all desynced from the visual; do not reintroduce one.
-  used_length() is the polyline length; dog_pull_dir()/human_pull_dir()
-  are the rope's end tangents, which is why a wound human is flung in an
-  arc. Regression test: tests/test_wrap.gd (runs in CI) - any change to
-  rope physics must keep it green and should extend it.
-- **Tug of war** (`main.gd/_apply_leash`): tension = LEASH_K * stretch
-  excess, applied to both ends inversely to effective mass along the rope
-  tangents. HUMAN_MASS is 4x DOG_MASS, so the human wins raw tugs; the
-  dog wins via planting (x14), moving (x2), and winding poles (pole
-  contacts shield both ends from raw tension while the geometry cap -
-  15% stretch, corrections along tangents - still constrains: that cap
-  is what whips a wound human along the arc). A taut leash saps the DOG's
-  control authority (`dragged` flag in entities/dog.gd; an idle dragged dog barely
-  brakes) - never the human's motor. Leash length is dynamic: the HUMAN
-  owns the retractable reel and fiddles with it on a timer ("click!").
+  `setup()` always replaces the rope with exactly `N` current and previous
+  points; repeated setup must never append another rope.
+  `used_length()` is the solver polyline length. `visible_path()` is the
+  public, fixed-size visual path: every solver point is pinned, spans beside
+  contacts stay straight, and a curved midpoint is rejected if either new
+  segment would enter an obstacle. Drawing must consume that path and reuse
+  its fixed buffers. `dog_pull_dir()` / `human_pull_dir()` use a
+  three-segment length-weighted chord on an open end; any contact in that run
+  restores the first-segment tangent, preserving wound arcs. Regression tests:
+  `test_wrap.gd`, `test_leash_setup.gd`, `test_leash_render_path.gd`,
+  `test_leash_draw_buffers.gd`, `test_leash_weighted_tangent.gd`,
+  `test_leash_taut_transition.gd`, `test_leash_taut_settling.gd` and
+  `test_leash_tension_wiring.gd`. `test_wrap.gd` runs in CI; every rope
+  physics change must keep it green and should extend it.
+- **Tug of war** (`main.gd/_apply_leash`): `taut_amount()` eases continuously
+  from zero to one over stretch ratio 1.00-1.05. `tension_force()` applies
+  that amount to `LEASH_K * stretch excess`; separation damping and
+  `dog.drag_amt` use the same amount, so force and loss of dog control begin
+  together. The boolean `dragged` remains the state flag. HUMAN_MASS is 4x
+  DOG_MASS, so the human wins raw tugs; the dog wins via planting (x14),
+  moving (x2), and winding poles. Pole contacts shield both ends from raw
+  tension while the 15% geometry cap still constrains along the tangents;
+  that cap whips a wound human along the arc. The human's motor is never
+  reduced. Leash length is dynamic: the HUMAN owns the retractable reel and
+  fiddles with it on a timer ("click!").
 - **Wraps and snags** (`entities/leash.gd`): still the same verlet rope - poles and
   authored furniture collide segment-vs-circle; stick-slip grips or frees
   by contact kind; static contacts own vault/shield metadata
@@ -206,6 +219,17 @@ all three hashes as they were (compare on one machine):
 ```
 godot\Godot_v4.7-stable_win64_console.exe --headless --path . --script res://tools/bench_leash.gd
 ```
+Draw-path benchmark: time for `visible_path()` and `_draw_shapes()` in the
+same fixtures, plus a geometry hash:
+```
+godot\Godot_v4.7-stable_win64_console.exe --headless --path . --script res://tools/bench_leash_draw.gd
+```
+The leash stays at exactly four rope polylines plus the existing batched
+circles. On the October 2026 Windows baseline, solver cost is about 58 / 129 /
+254 microseconds and draw preparation 19 / 22 / 40 microseconds for free /
+pole / tangle. Compare timings on one machine; investigate solver growth over
+5% free or 15% contacted, any unexplained hash change, any added draw call, or
+draw preparation materially above these figures.
 
 The title's version label is not in the source: `tools/stamp_version.sh`
 writes the tag and short commit (`v1.55 (a1b2c3d)`) to the gitignored

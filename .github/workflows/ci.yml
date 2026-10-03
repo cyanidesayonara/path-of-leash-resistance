@@ -47,6 +47,27 @@ jobs:
       - name: Leash winding regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_wrap.gd
 
+      - name: Leash repeated setup regression test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_leash_setup.gd
+
+      - name: Leash pull tangent regression test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_leash_weighted_tangent.gd
+
+      - name: Leash visible path regression test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_leash_render_path.gd
+
+      - name: Leash draw buffer regression test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_leash_draw_buffers.gd
+
+      - name: Leash taut onset regression test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_leash_taut_transition.gd
+
+      - name: Leash taut settling regression test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_leash_taut_settling.gd
+
+      - name: Leash tension wiring regression test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_leash_tension_wiring.gd
+
       - name: Furniture recovery regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_furniture_recovery.gd
 

@@ -14,6 +14,9 @@ var skid := 0.0
 var skid_dir := Vector2.ZERO
 var input_active := false
 var dragged := false
+# how hard the taut leash has her, 0..1 (the leash's taut amount), set by
+# main.gd with `dragged`: control authority eases out with it, not at once
+var drag_amt := 0.0
 var bladder_slow := false
 var sand_slow := false
 var swimming := false
@@ -163,7 +166,7 @@ func tick(delta: float) -> void:
 		# silently cancelling the human's drag forces.
 		var accel := ACCEL
 		if dragged:
-			accel = 1000.0 if input_active else 250.0
+			accel = lerpf(ACCEL, 1000.0 if input_active else 250.0, drag_amt)
 		if slick:
 			# wet ground: less grip, more skate
 			accel *= 0.45

@@ -22,6 +22,16 @@ const STRETCH_CAP := 1.15
 const STATIC_SLIP_MIN := 0.15
 const FURNITURE_SLIP_MIN := 0.35
 const DYNAMIC_SLIP_MIN := 0.40
+# Tension eases in over the first 5% of stretch instead of switching on at
+# rest length; both the tug force and the strap's look read the same amount.
+const TAUT_ONSET_END := 1.05
+# Interior velocity damping on a rope that touches nothing, scaled by the
+# taut amount, so a stretched rope settles instead of swinging on and on.
+const TAUT_DAMP := 0.1
+# The pull tangent is the chord over this many segments, so one displaced
+# point next to the end cannot steer it; a contact within them falls back to
+# the first segment alone.
+const TANGENT_RUN := 3
 # Public kind names: contact_kind and slip_for() are read by main.gd and
 # pinned by tests, so they stay Strings.
 const KIND_POLE := "pole"
@@ -120,6 +130,20 @@ func _slip_code(stretch_ratio: float, code: int) -> float:
 	return lerpf(amin, 1.0, t)
 
 
+# 0 at rest length, 1 from TAUT_ONSET_END on, smooth in between.
+func taut_amount(stretch_ratio: float) -> float:
+	return smoothstep(1.0, TAUT_ONSET_END, stretch_ratio)
+
+
+# The spring force main.gd applies for `excess_px` of stretch past rest_len:
+# eased in through the onset band, the full spring_k * excess beyond it.
+func tension_force(excess_px: float, spring_k: float) -> float:
+	if excess_px <= 0.0:
+		return 0.0
+	var ratio := (rest_len + excess_px) / maxf(rest_len, 1.0)
+	return spring_k * excess_px * taut_amount(ratio)
+
+
 func _ensure_pole_kinds() -> void:
 	# Rebuilt only when the pole list or the furniture list changes size, which
 	# is what main.gd does at build time (trees and the FUR-GONETA are appended
@@ -142,10 +166,12 @@ func setup(d: Node2D, h: Node2D, pole_list: Array[Vector2], max_len: float) -> v
 	human = h
 	poles = pole_list
 	rest_len = max_len
+	pts.resize(N)
+	prev.resize(N)
 	for i in range(N):
 		var p := d.global_position.lerp(h.global_position, float(i) / (N - 1))
-		pts.append(p)
-		prev.append(p)
+		pts[i] = p
+		prev[i] = p
 
 
 func _hand_pos() -> Vector2:
@@ -322,6 +348,13 @@ func tick(delta: float) -> void:
 			var da := wrapf(r1.angle() - r0.angle(), -PI, PI)
 			pts[i] = pl2 + Vector2.from_angle(r0.angle() + da * slip) * r1.length()
 		prev[i] = prev[i].lerp(pts[i], FRICTION)
+	# A taut rope touching nothing settles instead of swinging: its interior
+	# momentum is damped. A rope on anything keeps all its momentum, which is
+	# what winds a coil and slides it off.
+	var damp := TAUT_DAMP * taut_amount(stretch_ratio)
+	if damp > 0.0 and contacts == 0:
+		for i in range(1, N - 1):
+			prev[i] = prev[i].lerp(pts[i], damp)
 	if hero or Engine.get_physics_frames() % 2 == 0:
 		queue_redraw()
 
@@ -387,17 +420,78 @@ func human_end_winding() -> float:
 
 
 func dog_pull_dir() -> Vector2:
-	var d := pts[1] - pts[0]
-	return d.normalized() if d.length() > 0.001 else Vector2.ZERO
+	return _end_tangent(0, 1)
 
 
 func human_pull_dir() -> Vector2:
-	var d := pts[N - 2] - pts[N - 1]
+	return _end_tangent(N - 1, -1)
+
+
+# The chord from an end over TANGENT_RUN segments: the sum of those segments,
+# so each is weighted by its length. A contact anywhere in that run means the
+# rope is on something right by the end, and the pull is the first segment
+# alone, as it always was: wraps, vaults and flings aim along it.
+func _end_tangent(end: int, step: int) -> Vector2:
+	var j := end + step * TANGENT_RUN
+	if _touch.size() == N:
+		for k in range(1, TANGENT_RUN + 1):
+			if _touch[end + step * k] >= 0:
+				j = end + step
+				break
+	var d := pts[j] - pts[end]
+	if d.length() <= 0.001:
+		d = pts[end + step] - pts[end]
 	return d.normalized() if d.length() > 0.001 else Vector2.ZERO
 
 
 # the stand-in canvas for this node's drawing, made fresh each _draw
 var _b: ShapeBatch
+# Draw buffers, all 2N-1 samples long, sized once and overwritten by index
+# every frame: this runs on every rope on screen, so it must not reallocate.
+const VIS_N := 2 * N - 1
+var _vis := PackedVector2Array()
+var _loc := PackedVector2Array()
+var _shade := PackedVector2Array()
+var _hi := PackedVector2Array()
+
+
+# The rope as drawn, in global coordinates: always VIS_N samples, every solver
+# point exactly at the even ones and between each pair a Catmull-Rom midpoint
+# so slack curves flow. A segment ending on a contact keeps its chord
+# midpoint, and so does one whose curve would bring the strap inside POLE_PAD
+# of an obstacle, so the drawn rope never cuts across what the solver
+# wrapped it round.
+func visible_path() -> PackedVector2Array:
+	if _vis.size() != VIS_N:
+		_vis.resize(VIS_N)
+	var has_touch := _touch.size() == N
+	var obs_n := _obs_pos.size() if has_touch else 0
+	var reach := POLE_PAD + 1.0
+	for i in range(N - 1):
+		var a: Vector2 = pts[i]
+		var b: Vector2 = pts[i + 1]
+		_vis[2 * i] = a
+		var chord := (a + b) * 0.5
+		_vis[2 * i + 1] = chord
+		if has_touch and (_touch[i] >= 0 or _touch[i + 1] >= 0):
+			continue
+		var ta: Vector2 = pts[mini(i + 1, N - 1)] - pts[maxi(i - 1, 0)]
+		var tb: Vector2 = pts[mini(i + 2, N - 1)] - pts[i]
+		var mid := chord + (ta - tb) * 0.0625
+		var clear := true
+		for oi in range(obs_n):
+			var pl: Vector2 = _obs_pos[oi]
+			if pl.x + reach < minf(minf(a.x, b.x), mid.x) or pl.x - reach > maxf(maxf(a.x, b.x), mid.x) \
+					or pl.y + reach < minf(minf(a.y, b.y), mid.y) or pl.y - reach > maxf(maxf(a.y, b.y), mid.y):
+				continue
+			if _closest_on_segment(a, mid, pl).distance_to(pl) < POLE_PAD \
+					or _closest_on_segment(mid, b, pl).distance_to(pl) < POLE_PAD:
+				clear = false
+				break
+		if clear:
+			_vis[2 * i + 1] = mid
+	_vis[VIS_N - 1] = pts[N - 1]
+	return _vis
 
 
 func _draw() -> void:
@@ -409,32 +503,35 @@ func _draw() -> void:
 
 
 func _draw_shapes() -> void:
-	var arr := PackedVector2Array()
-	for p in pts:
-		arr.append(to_local(p))
-	# a flat 3px line reads as a debug gizmo. Three passes make it read as
-	# webbing: a dropped shadow, a dark body, and a lit top edge - plus it
-	# cinches visibly thinner and hotter when taut. A dynamic leash snag
+	var path := visible_path()
+	var n := path.size()
+	if _loc.size() != n:
+		_loc.resize(n)
+		_shade.resize(n)
+		_hi.resize(n)
+	for i in range(n):
+		var p := to_local(path[i])
+		_loc[i] = p
+		_shade[i] = p + Vector2(2.0, 3.0)
+		_hi[i] = p + Vector2(0.0, -0.9)
+	# a flat 3px line reads as a debug gizmo. Four passes make it read as
+	# webbing: a dropped shadow, a dark edge, the body, and a lit top edge
+	# running slightly above the core like light off a strap - plus it
+	# cinches thinner and hotter as it comes taut. A dynamic leash snag
 	# warms the strap so the tangle reads separately from a pole wrap.
-	var body := Color(0.72, 0.28, 0.22) if taut else Color(0.55, 0.27, 0.23)
+	var tight := taut_amount(used_length() / maxf(rest_len, 1.0))
+	var body := Color(0.55, 0.27, 0.23).lerp(Color(0.72, 0.28, 0.22), tight)
 	if dynamic_contacts > 0:
-		body = Color(0.88, 0.42, 0.18) if taut else Color(0.72, 0.38, 0.22)
-	var wide := 3.4 if taut else 4.2
-	var shade := PackedVector2Array()
-	for p in arr:
-		shade.append(p + Vector2(2.0, 3.0))
-	_b.draw_polyline(shade, Color(0.05, 0.04, 0.06, 0.22), wide)
-	_b.draw_polyline(arr, body.darkened(0.35), wide)
-	_b.draw_polyline(arr, body, wide * 0.6)
-	# the highlight runs slightly above the core, like light off a strap
-	var hi := PackedVector2Array()
-	for p in arr:
-		hi.append(p + Vector2(0.0, -0.9))
-	_b.draw_polyline(hi, body.lightened(0.34), wide * 0.24)
+		body = Color(0.72, 0.38, 0.22).lerp(Color(0.88, 0.42, 0.18), tight)
+	var wide := lerpf(4.2, 3.4, tight)
+	_b.draw_polyline(_shade, Color(0.05, 0.04, 0.06, 0.22), wide)
+	_b.draw_polyline(_loc, body.darkened(0.35), wide)
+	_b.draw_polyline(_loc, body, wide * 0.6)
+	_b.draw_polyline(_hi, body.lightened(0.34), wide * 0.24)
 	if contact_dynamic.x < INF:
 		var cp := to_local(contact_dynamic)
 		_b.draw_circle(cp + Vector2(1.2, 1.8), 5.2, Color(0.05, 0.04, 0.06, 0.28))
-		_b.draw_circle(cp, 4.6, Color(0.95, 0.55, 0.22, 0.85 if taut else 0.65))
+		_b.draw_circle(cp, 4.6, Color(0.95, 0.55, 0.22, lerpf(0.65, 0.85, tight)))
 		_b.draw_circle(cp, 2.0, Color(1.0, 0.85, 0.55, 0.9))
 	# the handle loop in the owner's fist
 	var hp := to_local(_hand_pos())

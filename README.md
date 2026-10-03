@@ -38,8 +38,10 @@ mutt who squats like a lady.
   and grinds to a stop. Release when clear.
 - A hard yank while anchored makes the human stumble toward you; doing it
   as a bike whizzes past is a NICE SAVE and builds your streak.
-- The leash is a real rope. Wind it around a pole as many turns as you
-  like - the coil cinches when taut, the pull curves around the pole
+- Your leash is a real rope. It hangs in a smooth span, then eases into the
+  pull - and steals your steering with it - over the first 5% of stretch.
+  Wind it around a pole as many turns as you like: the bend stays on the
+  obstacle, the coil cinches when taut, the pull curves around the pole
   (tetherball!), and a hard enough wrench slips the whole coil off.
 - The fling: wind the human around a pole and keep pulling. Instead of
   jamming against it they WHIRL - orbiting faster the harder you pull
