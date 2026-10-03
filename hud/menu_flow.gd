@@ -10,6 +10,9 @@ extends RefCounted
 # the shared look. Static functions over main's state; main.gd keeps a
 # same-name forwarder for each one another script or a test calls.
 
+const Goals := preload("res://systems/goals.gd")
+const TutorialSteps := preload("res://systems/tutorial.gd")
+
 const DETAIL_ROWS := ["walker", "time", "weather"]
 const PAUSE_CELLS := ["resume", "walk", "restart", "settings", "select", "exit"]
 const PAUSE_LABELS := {"resume": "RESUME", "walk": "THIS WALK", "restart": "START AGAIN",
@@ -36,7 +39,7 @@ static func screen(m: Node2D) -> String:
 	if m.results_card != null and m.results_card.visible:
 		return "results"
 	if m.paused:
-		return "pause"
+		return "walkcard" if m.pause_view == "walk" else "pause"
 	if m.started:
 		return "walking"
 	if m.in_shop:
@@ -57,6 +60,8 @@ static func prompts(m: Node2D, which := "") -> Array:
 			return out
 		"confirm":
 			return [["plant", "yes"], ["bark", "cancel"]]
+		"walkcard":
+			return [["bark", "back"]]
 		"walk":
 			var open := Game.is_unlocked(Game.level_id)
 			return [["left_right", "browse"], ["plant", "choose", open], ["bark", "wardrobe"],
@@ -283,6 +288,8 @@ static func open_pause(m: Node2D) -> void:
 	m.paused = true
 	m.frozen = true
 	m.pause_idx = 0
+	m.pause_view = ""
+	m.confirm_id = ""
 	m.dim.visible = true
 	Sfx.play("ui")
 
@@ -290,6 +297,8 @@ static func open_pause(m: Node2D) -> void:
 static func resume(m: Node2D) -> void:
 	m.paused = false
 	m.frozen = false
+	m.pause_view = ""
+	m.confirm_id = ""
 	m.dim.visible = false
 	Sfx.play("ui")
 
@@ -297,6 +306,9 @@ static func resume(m: Node2D) -> void:
 static func tick_pause(m: Node2D) -> void:
 	if m.confirm_id != "":
 		tick_confirm(m)
+		return
+	if m.pause_view == "walk":
+		tick_walk_card(m)
 		return
 	if Input.is_action_just_pressed("pause") or Input.is_action_just_pressed("bark"):
 		resume(m)
@@ -368,6 +380,37 @@ static func pause_move(m: Node2D, dx: int, dy: int) -> void:
 
 static func open_walk_card(m: Node2D) -> void:
 	m.pause_view = "walk"
+	Sfx.play("ui")
+
+
+static func close_walk_card(m: Node2D) -> void:
+	m.pause_view = ""
+	Sfx.play("ui")
+
+
+# The walk you are on, from what the game already knows: its name and gloss,
+# then each goal with how far along it is, or the lesson in the tutorial.
+static func walk_card(m: Node2D) -> Dictionary:
+	var key := "tutorial" if m.tutorial_mode else String(m.lvl)
+	var out := {"name": m._walk_name(), "gloss": String(Game.LEVEL_SUBTITLES.get(key, "")),
+		"time": clock(float(m.elapsed)), "goals": [], "lesson": ""}
+	if m.tutorial_mode:
+		var st: Dictionary = TutorialSteps.step(m.tut_step)
+		if String(st.id) != "":
+			out.lesson = "Lesson %d of %d: %s" % [int(m.tut_step) + 1, TutorialSteps.step_count(), String(st.title)]
+		return out
+	for q: Dictionary in m.active_quests:
+		var target := int(q.target)
+		var done: bool = m.run_goals_hit.has(q.id) or ((not Game.daily) and Game.goal_done(m.lvl, q.id))
+		var got := target if done else mini(int(q.fn.call()), target)
+		out.goals.append({"text": Goals.quest_text(q), "got": got, "target": target, "done": done})
+	return out
+
+
+static func tick_walk_card(m: Node2D) -> void:
+	if (Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pause")
+			or Input.is_action_just_pressed("plant")):
+		close_walk_card(m)
 
 
 # --- questions: START AGAIN and EXIT GAME ask first --------------------------
