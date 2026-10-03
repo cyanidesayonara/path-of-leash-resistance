@@ -10,7 +10,6 @@ extends RefCounted
 # the shared look. Static functions over main's state; main.gd keeps a
 # same-name forwarder for each one another script or a test calls.
 
-const Goals := preload("res://systems/goals.gd")
 const TutorialSteps := preload("res://systems/tutorial.gd")
 
 const DETAIL_ROWS := ["walker", "time", "weather"]
@@ -396,14 +395,16 @@ static func walk_card(m: Node2D) -> Dictionary:
 		"time": clock(float(m.elapsed)), "goals": [], "lesson": ""}
 	if m.tutorial_mode:
 		var st: Dictionary = TutorialSteps.step(m.tut_step)
-		if String(st.id) != "":
-			out.lesson = "Lesson %d of %d: %s" % [int(m.tut_step) + 1, TutorialSteps.step_count(), String(st.title)]
+		# the closing "done" step is the tutorial's last card, not a lesson
+		if String(st.id) != "" and String(st.id) != "done":
+			out.lesson = "Lesson %d of %d: %s" % [int(m.tut_step) + 1, TutorialSteps.step_count() - 1,
+				String(st.title)]
 		return out
 	for q: Dictionary in m.active_quests:
 		var target := int(q.target)
 		var done: bool = m.run_goals_hit.has(q.id) or ((not Game.daily) and Game.goal_done(m.lvl, q.id))
 		var got := target if done else mini(int(q.fn.call()), target)
-		out.goals.append({"text": Goals.quest_text(q), "got": got, "target": target, "done": done})
+		out.goals.append({"text": m._quest_text(q), "got": got, "target": target, "done": done})
 	return out
 
 
