@@ -27,9 +27,10 @@ const DYNAMIC_SLIP_MIN := 0.40
 const TAUT_ONSET_END := 1.05
 # Interior velocity damping on a rope that touches nothing, scaled by the
 # taut amount, so a stretched rope settles instead of swinging on and on.
-const TAUT_DAMP := 0.2
-# The pull tangent is the chord over this many segments, cut short at the
-# first contact, so one displaced point next to the end cannot steer it.
+const TAUT_DAMP := 0.1
+# The pull tangent is the chord over this many segments, so one displaced
+# point next to the end cannot steer it; a contact within them falls back to
+# the first segment alone.
 const TANGENT_RUN := 3
 # Public kind names: contact_kind and slip_for() are read by main.gd and
 # pinned by tests, so they stay Strings.
@@ -425,15 +426,16 @@ func human_pull_dir() -> Vector2:
 
 
 # The chord from an end over TANGENT_RUN segments: the sum of those segments,
-# so each is weighted by its length. It stops at the first contact, because
-# past a wrap the rope no longer points the way it pulls.
+# so each is weighted by its length. A contact anywhere in that run means the
+# rope is on something right by the end, and the pull is the first segment
+# alone, as it always was: wraps, vaults and flings aim along it.
 func _end_tangent(end: int, step: int) -> Vector2:
-	var has_touch := _touch.size() == N
-	var j := end
-	for _k in range(TANGENT_RUN):
-		j += step
-		if has_touch and _touch[j] >= 0:
-			break
+	var j := end + step * TANGENT_RUN
+	if _touch.size() == N:
+		for k in range(1, TANGENT_RUN + 1):
+			if _touch[end + step * k] >= 0:
+				j = end + step
+				break
 	var d := pts[j] - pts[end]
 	if d.length() <= 0.001:
 		d = pts[end + step] - pts[end]
@@ -442,28 +444,38 @@ func _end_tangent(end: int, step: int) -> Vector2:
 
 # the stand-in canvas for this node's drawing, made fresh each _draw
 var _b: ShapeBatch
+# Draw buffers, all 2N-1 samples long, sized once and overwritten by index
+# every frame: this runs on every rope on screen, so it must not reallocate.
+const VIS_N := 2 * N - 1
 var _vis := PackedVector2Array()
+var _loc := PackedVector2Array()
+var _shade := PackedVector2Array()
+var _hi := PackedVector2Array()
 
 
-# The rope as drawn, in global coordinates: every solver point exactly, plus a
-# Catmull-Rom midpoint on each open segment so slack curves flow. Segments
-# that end on a contact stay straight, and a midpoint that would bring the
-# strap inside POLE_PAD of an obstacle is dropped, so the drawn rope never
-# cuts across what the solver wrapped it round.
+# The rope as drawn, in global coordinates: always VIS_N samples, every solver
+# point exactly at the even ones and between each pair a Catmull-Rom midpoint
+# so slack curves flow. A segment ending on a contact keeps its chord
+# midpoint, and so does one whose curve would bring the strap inside POLE_PAD
+# of an obstacle, so the drawn rope never cuts across what the solver
+# wrapped it round.
 func visible_path() -> PackedVector2Array:
+	if _vis.size() != VIS_N:
+		_vis.resize(VIS_N)
 	var has_touch := _touch.size() == N
 	var obs_n := _obs_pos.size() if has_touch else 0
 	var reach := POLE_PAD + 1.0
-	_vis.clear()
 	for i in range(N - 1):
 		var a: Vector2 = pts[i]
 		var b: Vector2 = pts[i + 1]
-		_vis.append(a)
+		_vis[2 * i] = a
+		var chord := (a + b) * 0.5
+		_vis[2 * i + 1] = chord
 		if has_touch and (_touch[i] >= 0 or _touch[i + 1] >= 0):
 			continue
 		var ta: Vector2 = pts[mini(i + 1, N - 1)] - pts[maxi(i - 1, 0)]
 		var tb: Vector2 = pts[mini(i + 2, N - 1)] - pts[i]
-		var mid := (a + b) * 0.5 + (ta - tb) * 0.0625
+		var mid := chord + (ta - tb) * 0.0625
 		var clear := true
 		for oi in range(obs_n):
 			var pl: Vector2 = _obs_pos[oi]
@@ -475,8 +487,8 @@ func visible_path() -> PackedVector2Array:
 				clear = false
 				break
 		if clear:
-			_vis.append(mid)
-	_vis.append(pts[N - 1])
+			_vis[2 * i + 1] = mid
+	_vis[VIS_N - 1] = pts[N - 1]
 	return _vis
 
 
@@ -489,11 +501,20 @@ func _draw() -> void:
 
 
 func _draw_shapes() -> void:
-	var arr := PackedVector2Array()
-	for p in visible_path():
-		arr.append(to_local(p))
-	# a flat 3px line reads as a debug gizmo. Three passes make it read as
-	# webbing: a dropped shadow, a dark body, and a lit top edge - plus it
+	var path := visible_path()
+	var n := path.size()
+	if _loc.size() != n:
+		_loc.resize(n)
+		_shade.resize(n)
+		_hi.resize(n)
+	for i in range(n):
+		var p := to_local(path[i])
+		_loc[i] = p
+		_shade[i] = p + Vector2(2.0, 3.0)
+		_hi[i] = p + Vector2(0.0, -0.9)
+	# a flat 3px line reads as a debug gizmo. Four passes make it read as
+	# webbing: a dropped shadow, a dark edge, the body, and a lit top edge
+	# running slightly above the core like light off a strap - plus it
 	# cinches thinner and hotter as it comes taut. A dynamic leash snag
 	# warms the strap so the tangle reads separately from a pole wrap.
 	var tight := taut_amount(used_length() / maxf(rest_len, 1.0))
@@ -501,17 +522,10 @@ func _draw_shapes() -> void:
 	if dynamic_contacts > 0:
 		body = Color(0.72, 0.38, 0.22).lerp(Color(0.88, 0.42, 0.18), tight)
 	var wide := lerpf(4.2, 3.4, tight)
-	var shade := PackedVector2Array()
-	for p in arr:
-		shade.append(p + Vector2(2.0, 3.0))
-	_b.draw_polyline(shade, Color(0.05, 0.04, 0.06, 0.22), wide)
-	_b.draw_polyline(arr, body.darkened(0.35), wide)
-	_b.draw_polyline(arr, body, wide * 0.6)
-	# the highlight runs slightly above the core, like light off a strap
-	var hi := PackedVector2Array()
-	for p in arr:
-		hi.append(p + Vector2(0.0, -0.9))
-	_b.draw_polyline(hi, body.lightened(0.34), wide * 0.24)
+	_b.draw_polyline(_shade, Color(0.05, 0.04, 0.06, 0.22), wide)
+	_b.draw_polyline(_loc, body.darkened(0.35), wide)
+	_b.draw_polyline(_loc, body, wide * 0.6)
+	_b.draw_polyline(_hi, body.lightened(0.34), wide * 0.24)
 	if contact_dynamic.x < INF:
 		var cp := to_local(contact_dynamic)
 		_b.draw_circle(cp + Vector2(1.2, 1.8), 5.2, Color(0.05, 0.04, 0.06, 0.28))

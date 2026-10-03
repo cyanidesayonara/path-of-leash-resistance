@@ -53,6 +53,9 @@ jobs:
       - name: Leash visible path regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_leash_render_path.gd
 
+      - name: Leash draw buffer regression test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_leash_draw_buffers.gd
+
       - name: Leash taut onset regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_leash_taut_transition.gd
 

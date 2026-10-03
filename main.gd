@@ -4998,6 +4998,7 @@ func _apply_leash(delta: float) -> void:
 	# both ends from raw tension while geometry still constrains), timing.
 	human.strain = false
 	dog.dragged = false
+	dog.drag_amt = 0.0
 	_tick_signs(delta)
 	if leash.detached:
 		return  # off leash during the freedom romp
@@ -5039,7 +5040,11 @@ func _apply_leash(delta: float) -> void:
 	if h_dir == Vector2.ZERO or d_dir == Vector2.ZERO:
 		return
 	human.notify_strain()
+	# the tug eases in over the leash's onset band: force, separation damping
+	# and how much of the dog's control the leash takes all follow one amount
+	var tight: float = leash.taut_amount(used / maxf(leash.rest_len, 1.0))
 	dog.dragged = not dog.planted
+	dog.drag_amt = tight if dog.dragged else 0.0
 	# Only static wraps (poles/furniture) shield/anchor. Dynamic leash
 	# tangles must not borrow pole-vault semantics.
 	var shield := 1.0 / (1.0 + 0.3 * float(leash.static_contacts))
@@ -5074,10 +5079,10 @@ func _apply_leash(delta: float) -> void:
 	# damp separating components so neither end bungees
 	var sep_h := human.velocity.dot(-h_dir)
 	if sep_h > 0.0 and not whirling:
-		human.velocity += h_dir * sep_h * minf(5.0 * delta, 1.0)
+		human.velocity += h_dir * sep_h * minf(5.0 * delta, 1.0) * tight
 	var sep_d := dog.velocity.dot(-d_dir)
 	if sep_d > 0.0 and not dog.planted:
-		dog.velocity += d_dir * sep_d * minf(3.0 * delta, 1.0)
+		dog.velocity += d_dir * sep_d * minf(3.0 * delta, 1.0) * tight
 	# hard cap: geometry always wins. Corrections follow the rope tangents
 	# (unshielded), which is what whips a wound human along the arc.
 	var cap := leash_len * (LEASH_STRETCH_CAP - 1.0)
