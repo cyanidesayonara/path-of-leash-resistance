@@ -466,6 +466,11 @@ var hud_t := 0.0
 var sq_spawn_t := 6.0
 var whirl_arm := 0.0
 var whirl_dir_acc := 0.0
+# her coil, summed over the arming frames, and how many of them: the orbit's
+# length comes from the average, so one frame of the rope mid-solve cannot set
+# how far she goes round any more than it can set which way
+var whirl_turns_acc := 0.0
+var whirl_arm_n := 0
 var vault_recent := 0.0
 
 var leash_len := LEASH_LENGTH
@@ -5064,8 +5069,7 @@ func _leash_tug(delta: float) -> void:
 	var excess := used - leash_len
 	leash.taut = excess > 0.0
 	if excess <= 0.0:
-		whirl_arm = 0.0
-		whirl_dir_acc = 0.0
+		_disarm_whirl()
 		return
 	var h_dir: Vector2 = leash.human_pull_dir()
 	var d_dir: Vector2 = leash.dog_pull_dir()
@@ -5158,6 +5162,12 @@ func _leash_tug(delta: float) -> void:
 				# frame cannot decide it. Same geometry, same window, every
 				# frame - and what the orbit then commits to for good.
 				whirl_dir_acc += leash.unwind_bias(wp)
+				# and the SAME measure over the SAME window for how far she
+				# goes round: a rope mid-solve reads a coil a little larger or
+				# smaller than the one she is standing in, and the frame the
+				# window happens to fill up on has no claim to be the right one
+				whirl_turns_acc += leash.coil_turns(wp)
+				whirl_arm_n += 1
 				if whirl_arm >= WHIRL_ARM_T:
 					# A rope with no opinion at all over the whole window -
 					# no coil beside this pole to read - does not get a
@@ -5166,15 +5176,25 @@ func _leash_tug(delta: float) -> void:
 					var dir := whirl_dir_acc
 					if dir == 0.0:
 						dir = human.orbit_sense(human.global_position - wp, human.velocity)
-					# and the budget is the SAME coil the direction came from,
-					# not the whole rope's winding: a rope wound at both ends
-					# reads the dog's coil too, and an orbit sized by that keeps
-					# going after hers is spent, winding it up the other way
-					human.start_whirl(wp, dir, leash.coil_turns(wp))
+					# and the budget is the same coil the direction came from,
+					# averaged over the same window - not the whole rope's
+					# winding, which reads the dog's coil too and sizes an orbit
+					# that keeps going after hers is spent, winding it up the
+					# other way
+					human.start_whirl(wp, dir,
+						whirl_turns_acc / float(maxi(whirl_arm_n, 1)))
 					armed = false
 	if not armed:
-		whirl_arm = 0.0
-		whirl_dir_acc = 0.0
+		_disarm_whirl()
+
+
+# Nothing held over from an arming window that came to nothing, or the next one
+# decides its way round and its length partly from a rope that has moved on.
+func _disarm_whirl() -> void:
+	whirl_arm = 0.0
+	whirl_dir_acc = 0.0
+	whirl_turns_acc = 0.0
+	whirl_arm_n = 0
 
 
 # how far into the arming window a whirl is, 0 to 1: what the owner's

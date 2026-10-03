@@ -44,12 +44,23 @@ const PTS := 24
 const HAND_GAP := 30.0
 const IN_R := 39.0
 const OUT_R := 50.0
+# and an arc out beyond the reach a hand at twice that gap implies
+const FAR_ARC := 90.0
 # how far off a pole the solver holds rope points, so the two-coil fixture can
 # put her coil just inside that and be certain of a contact
 const PAD := 13.0
 # the two-coil fixture's radii: hers hugging her pole, and a tighter one further
 # off that therefore turns harder per point, the other way
 const FAR_R := 6.0
+# An authored arc's radius, far enough inside the reach its own hand implies
+# (that reach is the radius plus a pad) that no corner is near the boundary.
+const ARC_R := 30.0
+# Nine points leave seven corners, and no corner can read more than half a turn:
+# a turn is the same angle whichever way round it is measured, so half a turn is
+# where the two answers meet. That ceiling is the window's, not the rope's.
+const CEILING_TURNS := 7.0 * PI / TAU
+# radians, over seven accumulated corners: float slack, nothing more
+const TOL_RAD := 1.0e-4
 
 var checks := 0
 var failures: Array[String] = []
@@ -66,6 +77,7 @@ func _initialize() -> void:
 	_probe_picks_the_unwinding_way()
 	_the_coil_here_outvotes_the_rest_of_the_tail()
 	_the_reach_is_the_gap_out_to_her_hand()
+	_a_coil_is_worth_what_it_sweeps()
 	_a_coil_somewhere_else_is_not_this_poles()
 	_probe_agrees_with_a_real_rope()
 	_the_probe_follows_her_end_not_the_whole_rope()
@@ -234,6 +246,17 @@ func _the_reach_is_the_gap_out_to_her_hand() -> void:
 	_check(l.coil_reach_for(0.0) >= COIL_REACH,
 		"a hand against the pole still has the coil beside it to read (%.1f px)" % l.coil_reach_for(0.0))
 	_check(l.coil_reach_for(HAND_GAP) == reach, "and the reach is the same answer every time")
+	# A second gap, well clear of the floor, pins the rate as well as the one
+	# point: a hand twice as far out reaches exactly that much further, so a
+	# reach that grew faster or slower than her arm would be caught even where
+	# it happened to land inside the window above.
+	var far_reach: float = l.coil_reach_for(2.0 * HAND_GAP)
+	_check(absf(far_reach - reach - HAND_GAP) < 0.001,
+		"a hand %.0f px further out reaches %.0f px further (%.1f px against %.1f)"
+			% [HAND_GAP, HAND_GAP, far_reach, reach])
+	_check(far_reach > 2.0 * HAND_GAP + 3.0 and far_reach < FAR_ARC - 3.0,
+		"and from there it still clears her hand and stops short of an arc %.0f px out (%.1f px)"
+			% [FAR_ARC, far_reach])
 	for sense: float in [1.0, -1.0]:
 		var tail := _two_arc_tail(pole, sense)
 		var inside := _turning_at(tail, 4, 7)
@@ -252,6 +275,60 @@ func _the_reach_is_the_gap_out_to_her_hand() -> void:
 		_check(absf(got - (inside + outside)) > 1.0,
 			"and plainly not both arcs (%.3f rad, both would be %.3f)" % [got, inside + outside])
 		_check(signf(float(l.unwind_bias(pole))) == -sense, "so the probe unwinds the near arc")
+	l.queue_free()
+
+
+# An ideal circular arc round `pole`: `n` points on a circle of radius `r`,
+# `step` radians apart. Each chord of a circular arc lies at the angle of the
+# arc's midpoint between its ends, so consecutive chords differ by exactly the
+# angular step, and a polyline of n points has n - 2 corners to turn at. The
+# arc's turning is therefore (n - 2) * step - authored geometry, worked out from
+# the circle, with no reference to how anything measures it.
+func _arc_tail(pole: Vector2, r: float, step: float, n: int) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for k in range(n):
+		out.append(pole + Vector2(r, 0.0).rotated(step * float(k)))
+	return out
+
+
+# The coil's SIZE is what the orbit's length is now taken from, so the measure
+# owes an answer in radians, not just a way round. Authored arcs of known sweep,
+# at several sizes and both ways, every point of them well inside the reach its
+# own hand implies.
+func _a_coil_is_worth_what_it_sweeps() -> void:
+	var l := _bare_leash()
+	var pole := Vector2(-40.0, 210.0)
+	for sense: float in [1.0, -1.0]:
+		for step: float in [0.25, 0.6, 0.9, 1.5, 2.4, 3.0]:
+			var tail := _arc_tail(pole, ARC_R, sense * step, TAIL_PTS)
+			l.pts = _posed_tail(pole, tail)
+			var want := float(TAIL_PTS - 2) * step
+			var got: float = l.coil_winding(pole)
+			_check(absf(absf(got) - want) < TOL_RAD and signf(got) == sense,
+				"an arc of %d corners stepped %.2f turns %.4f rad (measured %.4f)"
+					% [TAIL_PTS - 2, step, want, got])
+			_check(absf(float(l.coil_turns(pole)) - want / TAU) < TOL_RAD,
+				"which is %.4f turns of orbit to take off (measured %.4f)"
+					% [want / TAU, float(l.coil_turns(pole))])
+			_check(float(l.coil_turns(pole)) <= CEILING_TURNS + TOL_RAD,
+				"and never more than the window can hold (%.4f turns)" % CEILING_TURNS)
+	# The window's ceiling, stated outright: seven corners, and no corner can
+	# read past half a turn. Beyond it a coil is not merely clipped, it is
+	# misread - an arc of four turns over nine points steps more than half a
+	# turn at a time, which is the same as stepping the shortfall backwards, and
+	# reads as three turns the OTHER way. No rope reaches it: a coil that tight
+	# needs its points closer together than the pole is wide, and the solver
+	# holds them off the pole by the pad. It is the small end of this range that
+	# a real coil lives at, which is why the budget saturates long before the
+	# four-turn clamp in start_whirl can ever bind.
+	var alias := _arc_tail(pole, ARC_R, 4.0 * TAU / float(TAIL_PTS - 2), TAIL_PTS)
+	l.pts = _posed_tail(pole, alias)
+	_check(absf(float(l.coil_winding(pole)) + 3.0 * TAU) < TOL_RAD,
+		"a coil of four turns over nine points reads as three the other way (%.4f rad)"
+			% float(l.coil_winding(pole)))
+	_check(absf(float(l.coil_turns(pole)) - 3.0) < TOL_RAD,
+		"so its size is misread too, and still inside the ceiling (%.4f turns)"
+			% float(l.coil_turns(pole)))
 	l.queue_free()
 
 
@@ -499,6 +576,7 @@ func _run() -> void:
 		await m.ready
 	_arming_is_wired_to_the_probe(m)
 	_the_budget_is_her_coil_too(m)
+	_the_budget_is_the_whole_window(m)
 	_the_budget_keeps_its_bounds(m)
 	_a_tie_keeps_her_going_the_way_she_is(m)
 	_direction_is_committed(m)
@@ -613,7 +691,7 @@ func _arming_is_wired_to_the_probe(m: Node2D) -> void:
 # the coil she is standing in, so both halves of the arming decision - which way,
 # and how far - have to come from hers, or an orbit sized by the whole rope keeps
 # going after her coil is spent and winds it up again the other way.
-func _two_coil_rope(m: Node2D, hers: Vector2, sense: float) -> void:
+func _two_coil_rope(m: Node2D, hers: Vector2, sense: float, coil_mul := 1.0) -> void:
 	var leash: Node2D = m.leash
 	var poles: Array[Vector2] = [hers]
 	var furn: Array[Vector2] = []
@@ -626,7 +704,9 @@ func _two_coil_rope(m: Node2D, hers: Vector2, sense: float) -> void:
 	var seg: float = float(leash.rest_len) / float(PTS - 1)
 	var r_hers := maxf(PAD - 1.0, seg * 0.55)
 	var r_far := maxf(FAR_R, seg * 0.55)
-	var step_hers := 2.0 * asin(minf(seg / (2.0 * r_hers), 1.0))
+	# coil_mul winds her coil tighter or looser than the rest at the same radius,
+	# which is how a fixture can change the size of her coil while it arms
+	var step_hers := 2.0 * asin(minf(seg / (2.0 * r_hers), 1.0)) * coil_mul
 	var step_far := 2.0 * asin(minf(seg / (2.0 * r_far), 1.0))
 	var far_c := hers + Vector2(0.0, -6.5 * seg - r_far - r_hers)
 	var posed: Array[Vector2] = []
@@ -694,6 +774,67 @@ func _the_budget_is_her_coil_too(m: Node2D) -> void:
 		m.leash_len = was_len
 		h.bail_whirl()
 		m._apply_leash(DT)
+
+
+# One window, not one frame. The direction is summed over the whole quarter
+# second of arming so a single noisy frame cannot decide it, and the size has to
+# be read the same way or the orbit's length is still a coin toss - whatever her
+# coil happened to be on the frame the window filled up. The fixture winds her
+# coil a little looser every frame: deterministic, the same every run, and never
+# twice the same, so an average over the window is a different number from the
+# last frame's and the two cannot be confused.
+func _the_budget_is_the_whole_window(m: Node2D) -> void:
+	var h: CharacterBody2D = m.human
+	var leash: Node2D = m.leash
+	var was_len: float = m.leash_len
+	var runs: Array[float] = []
+	var seen: Array[float] = []
+	for attempt in range(2):
+		var hers: Vector2 = h.global_position + Vector2(200.0, 0.0)
+		h.rotation = 0.0
+		h.velocity = Vector2.ZERO
+		_two_coil_rope(m, hers, 1.0)
+		m.leash_len = maxf(float(leash.used_length()) - 60.0, 40.0)
+		seen = []
+		var arm_was := 0.0
+		var frames := 0
+		while not h.is_whirling() and frames < 40:
+			_two_coil_rope(m, hers, 1.0, 1.0 - 0.02 * float(frames))
+			m._apply_leash(DT)
+			# the frames main counted: the ones its own window grew on, and the
+			# one it armed on (which resets the window as it fires)
+			var arm_now: float = m.whirl_arm
+			if arm_now > arm_was or h.is_whirling():
+				seen.append(float(leash.coil_turns(hers)))
+			arm_was = arm_now
+			frames += 1
+		_check(h.is_whirling(), "a coil that changes while it arms still arms (%d frames)" % frames)
+		if h.is_whirling():
+			runs.append(float(h.whirl_turns))
+		m.leash_len = was_len
+		h.bail_whirl()
+		m._apply_leash(DT)
+	if seen.size() < 2 or runs.size() < 2:
+		return
+	var mean := 0.0
+	for v: float in seen:
+		mean += v
+	mean /= float(seen.size())
+	var last: float = seen[seen.size() - 1]
+	var first: float = seen[0]
+	_check(seen.size() >= 10, "the window is many frames of coil, not one (%d)" % seen.size())
+	_check(absf(first - last) > 0.1,
+		"and her coil really does change across it (%.3f turns to %.3f)" % [first, last])
+	_check(absf(runs[0] - clampf(mean, TURNS_MIN, TURNS_MAX) * TAU) < 0.002,
+		"the orbit is as long as the coil averaged over the window (%.3f rad, wanted %.3f)"
+			% [runs[0], clampf(mean, TURNS_MIN, TURNS_MAX) * TAU])
+	_check(absf(runs[0] - clampf(last, TURNS_MIN, TURNS_MAX) * TAU) > 0.1,
+		"not as long as the frame it happened to arm on (%.3f rad)"
+			% [clampf(last, TURNS_MIN, TURNS_MAX) * TAU])
+	# The second run is the same fixture from a slightly different standing
+	# start, so this is the average being stable, not the rope being bit-exact.
+	_check(absf(runs[0] - runs[1]) < 0.001,
+		"and the same coil armed twice gives the same orbit (%.6f, %.6f)" % [runs[0], runs[1]])
 
 
 # the budget is still bounded: a coil of nothing is worth a turn and a bit, and
