@@ -443,19 +443,35 @@ func human_tail() -> PackedVector2Array:
 	return out
 
 
-# Which way round `pole` unwinds the human end: positive for anticlockwise.
-# The coil an orbit round this pole could take off lies between the pole and
-# her hand, so that is how far out the measure looks - her own distance from
-# it, plus the pad rope points are held off it at. A taut rope's corners sit
-# most of that way out, which is why the reach is not a fixed small radius;
-# what it must still exclude is whatever the rope is wound round elsewhere,
-# and that is poles away, not hand-lengths.
-func unwind_bias(pole: Vector2) -> float:
+# How far out from a pole the coil an orbit round it could take off reaches:
+# that coil lies between the pole and her hand, so the gap out to her hand is
+# the measure, plus the pad rope points are held off the pole at. A taut rope's
+# corners sit most of that way out, which is why this is not a fixed small
+# radius; what it must still exclude is whatever the rope is wound round
+# somewhere else, and that is poles away, not hand-lengths. Reads its argument
+# only, so the boundary can be pinned without a rope.
+func coil_reach_for(hand_gap: float) -> float:
+	return maxf(WHIRL_COIL_REACH, hand_gap + POLE_PAD)
+
+
+# The coil at `pole` her end is standing in, in radians. ONE measure over one
+# window: the whirl's direction and its turn budget both come from here, so an
+# orbit cannot be sent one way and sized by something wound the other.
+func coil_winding(pole: Vector2) -> float:
 	var tail := human_tail()
-	var reach := WHIRL_COIL_REACH
-	if tail.size() > 0:
-		reach = maxf(reach, tail[tail.size() - 1].distance_to(pole) + POLE_PAD)
-	return unwind_bias_of(pole_winding(tail, pole, reach), WHIRL_PROBE_STEP)
+	if tail.size() == 0:
+		return 0.0
+	return pole_winding(tail, pole, coil_reach_for(tail[tail.size() - 1].distance_to(pole)))
+
+
+# the same coil in whole turns: what an orbit round this pole has to take off
+func coil_turns(pole: Vector2) -> float:
+	return absf(coil_winding(pole)) / TAU
+
+
+# Which way round `pole` unwinds the human end: positive for anticlockwise.
+func unwind_bias(pole: Vector2) -> float:
+	return unwind_bias_of(coil_winding(pole), WHIRL_PROBE_STEP)
 
 
 # The two below read their arguments and nothing else, so the whirl's

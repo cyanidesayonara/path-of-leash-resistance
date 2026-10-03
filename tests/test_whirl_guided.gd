@@ -34,6 +34,22 @@ const LOSE_R := 140.0
 const ORBIT_R := 30.0
 const COIL_REACH := 26.0
 const STRETCH_CAP := 1.15
+const AIM_COS := 0.5
+const TURNS_MIN := 0.6
+const TURNS_MAX := 4.0
+# the rope's own point count, so a posed rope is the length of a real one
+const PTS := 24
+# the reach boundary fixture: her hand, an arc inside the reach her hand
+# implies, and an arc outside it
+const HAND_GAP := 30.0
+const IN_R := 39.0
+const OUT_R := 50.0
+# how far off a pole the solver holds rope points, so the two-coil fixture can
+# put her coil just inside that and be certain of a contact
+const PAD := 13.0
+# the two-coil fixture's radii: hers hugging her pole, and a tighter one further
+# off that therefore turns harder per point, the other way
+const FAR_R := 6.0
 
 var checks := 0
 var failures: Array[String] = []
@@ -49,6 +65,7 @@ func _check(ok: bool, what: String) -> void:
 func _initialize() -> void:
 	_probe_picks_the_unwinding_way()
 	_the_coil_here_outvotes_the_rest_of_the_tail()
+	_the_reach_is_the_gap_out_to_her_hand()
 	_a_coil_somewhere_else_is_not_this_poles()
 	_probe_agrees_with_a_real_rope()
 	_the_probe_follows_her_end_not_the_whole_rope()
@@ -159,6 +176,82 @@ func _the_coil_here_outvotes_the_rest_of_the_tail() -> void:
 		_check(absf(near + dir * PROBE) < absf(near),
 			"the committed step leaves less of the coil here (%.4f from %.4f)"
 				% [absf(near + dir * PROBE), absf(near)])
+	l.queue_free()
+
+
+# the turning at the corners from `from_i` to `to_i` of a tail: the test's own
+# expectation, taken by index rather than by distance, so it cannot drift along
+# with whatever the implementation decides "beside the pole" means
+func _turning_at(p: Array[Vector2], from_i: int, to_i: int) -> float:
+	var total := 0.0
+	for i in range(from_i, to_i + 1):
+		var a := p[i] - p[i - 1]
+		var b := p[i + 1] - p[i]
+		if a.length_squared() > 0.01 and b.length_squared() > 0.01:
+			total += a.angle_to(b)
+	return total
+
+
+# A tail of two arcs round `pole` turning opposite ways: four points at OUT_R,
+# four at IN_R, and her hand HAND_GAP out. Corners 1..3 are the far arc's,
+# 4..7 the near one's.
+func _two_arc_tail(pole: Vector2, sense: float) -> Array[Vector2]:
+	var tail: Array[Vector2] = []
+	for k in range(4):
+		tail.append(pole + Vector2(OUT_R, 0.0).rotated(-sense * (2.0 + 0.55 * float(k))))
+	for k in range(4):
+		tail.append(pole + Vector2(IN_R, 0.0).rotated(sense * (0.3 + 0.55 * float(k))))
+	tail.append(pole + Vector2(HAND_GAP, 0.0).rotated(sense * 2.5))
+	return tail
+
+
+# a real rope posed around a crafted tail: the earlier points parked far enough
+# away that nothing about them can reach the measure
+func _posed_tail(pole: Vector2, tail: Array[Vector2]) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for k in range(PTS - tail.size()):
+		out.append(pole + Vector2(-900.0 - 12.0 * float(k), 0.0))
+	out.append_array(tail)
+	return out
+
+
+# The reach is computed, not fixed, so its boundary needs pinning on both sides:
+# a coil just inside the gap out to her hand is hers to unwind, and an arc
+# further out than that is the rope on its way somewhere else. The distances are
+# absolute on purpose - a test that placed them FROM the computed reach would
+# follow the margin wherever it went and prove nothing about it.
+func _the_reach_is_the_gap_out_to_her_hand() -> void:
+	var l := _bare_leash()
+	if not (l.has_method("coil_reach_for") and l.has_method("coil_winding")):
+		_check(false, "the rope can say how far out the coil at a pole reaches, and what it is")
+		l.queue_free()
+		return
+	var pole := Vector2(120.0, -80.0)
+	var reach: float = l.coil_reach_for(HAND_GAP)
+	_check(reach > HAND_GAP + 3.0 and reach < OUT_R - 3.0,
+		"the reach runs past her hand and stops short of the arc beyond it (%.1f px, hand %.0f, far arc %.0f)"
+			% [reach, HAND_GAP, OUT_R])
+	_check(l.coil_reach_for(0.0) >= COIL_REACH,
+		"a hand against the pole still has the coil beside it to read (%.1f px)" % l.coil_reach_for(0.0))
+	_check(l.coil_reach_for(HAND_GAP) == reach, "and the reach is the same answer every time")
+	for sense: float in [1.0, -1.0]:
+		var tail := _two_arc_tail(pole, sense)
+		var inside := _turning_at(tail, 4, 7)
+		var outside := _turning_at(tail, 1, 3)
+		_check(tail[7].distance_to(pole) < reach and tail[3].distance_to(pole) > reach,
+			"the near arc is inside the reach and the far one is outside it")
+		_check(signf(inside) == sense and absf(inside) > 1.0,
+			"the near arc turns her way (%.3f rad)" % inside)
+		_check(signf(outside) == -sense and absf(outside) > 1.0,
+			"and the far one turns the other way, by enough to be noticed (%.3f rad)" % outside)
+		l.pts = _posed_tail(pole, tail)
+		var got: float = l.coil_winding(pole)
+		_check(absf(got - inside) < 0.001,
+			"the coil at the pole is the near arc and nothing else (%.3f rad, near %.3f, far %.3f)"
+				% [got, inside, outside])
+		_check(absf(got - (inside + outside)) > 1.0,
+			"and plainly not both arcs (%.3f rad, both would be %.3f)" % [got, inside + outside])
+		_check(signf(float(l.unwind_bias(pole))) == -sense, "so the probe unwinds the near arc")
 	l.queue_free()
 
 
@@ -405,6 +498,8 @@ func _run() -> void:
 	if not m.is_node_ready():
 		await m.ready
 	_arming_is_wired_to_the_probe(m)
+	_the_budget_is_her_coil_too(m)
+	_the_budget_keeps_its_bounds(m)
 	_a_tie_keeps_her_going_the_way_she_is(m)
 	_direction_is_committed(m)
 	_the_tug_cannot_move_a_whirling_owner(m)
@@ -420,6 +515,7 @@ func _run() -> void:
 	_a_bail_in_her_tick_is_still_a_whirl_to_main(m)
 	_the_way_out_always_leaves_the_rope_slipping(m)
 	_a_bail_off_the_leash_does_not_leak(m)
+	_a_fling_off_the_leash_is_still_paid_for(m)
 	_main_abandons_an_orbit_round_a_non_pole(m)
 	_a_nowhere_pole_is_refused(m)
 	m.queue_free()
@@ -508,6 +604,112 @@ func _arming_is_wired_to_the_probe(m: Node2D) -> void:
 	_check(h.whirl_dir == want, "and that is the way the orbit committed to (%+.0f)" % want)
 	m.leash_len = was_len
 	h.bail_whirl()
+	m._apply_leash(DT)
+
+
+# Pose the game's own rope: her coil round the post at her elbow one way, and a
+# tighter loop the other way where the rope has doubled back on itself up the
+# way. The whole rope's winding is then the wrong SIGN and the wrong SIZE for
+# the coil she is standing in, so both halves of the arming decision - which way,
+# and how far - have to come from hers, or an orbit sized by the whole rope keeps
+# going after her coil is spent and winds it up again the other way.
+func _two_coil_rope(m: Node2D, hers: Vector2, sense: float) -> void:
+	var leash: Node2D = m.leash
+	var poles: Array[Vector2] = [hers]
+	var furn: Array[Vector2] = []
+	leash.poles = poles
+	leash.furniture_poles = furn
+	# Every chord is the rope's own segment length, so the pose is a rope at
+	# rest rather than a shape the solver has to fight: a coil's radius is then
+	# what sets how hard it turns, and the two coils can be given different
+	# amounts of winding without either being stretched.
+	var seg: float = float(leash.rest_len) / float(PTS - 1)
+	var r_hers := maxf(PAD - 1.0, seg * 0.55)
+	var r_far := maxf(FAR_R, seg * 0.55)
+	var step_hers := 2.0 * asin(minf(seg / (2.0 * r_hers), 1.0))
+	var step_far := 2.0 * asin(minf(seg / (2.0 * r_far), 1.0))
+	var far_c := hers + Vector2(0.0, -6.5 * seg - r_far - r_hers)
+	var posed: Array[Vector2] = []
+	# the rope doubled back on itself up the way: turning the whole rope's
+	# winding counts and an orbit at her pole cannot take off
+	for k in range(10):
+		posed.append(far_c + Vector2(r_far, 0.0).rotated(-sense * step_far * float(k)))
+	var coil: Array[Vector2] = []
+	for k in range(TAIL_PTS):
+		coil.append(hers + Vector2(r_hers, 0.0).rotated(sense * step_hers * float(k)))
+	var run := PTS - 10 - TAIL_PTS
+	for k in range(run):
+		posed.append(posed[9].lerp(coil[0], float(k + 1) / float(run + 1)))
+	posed.append_array(coil)
+	leash.pts = posed
+	leash.prev = posed.duplicate()
+	m.dog.global_position = posed[0]
+	m.human.global_position = posed[PTS - 1] - Vector2(9.0, -16.0)
+
+
+func _the_budget_is_her_coil_too(m: Node2D) -> void:
+	var h: CharacterBody2D = m.human
+	var leash: Node2D = m.leash
+	if not leash.has_method("coil_turns"):
+		_check(false, "the rope can say how many turns the coil at a pole is worth")
+		return
+	for sense: float in [1.0, -1.0]:
+		var was_len: float = m.leash_len
+		var hers: Vector2 = h.global_position + Vector2(200.0, 0.0)
+		h.rotation = 0.0
+		h.velocity = Vector2.ZERO
+		_two_coil_rope(m, hers, sense)
+		m.leash_len = maxf(float(leash.used_length()) - 60.0, 40.0)
+		# one frame first, so the measures below are the ones main's arming
+		# reads: the pose as the solver leaves it, not as it was built
+		m._apply_leash(DT)
+		var local: float = leash.coil_winding(hers)
+		var turns: float = leash.coil_turns(hers)
+		var rope: float = leash.winding()
+		# the premise: the two measures disagree both ways round, and by enough
+		# that a budget taken from the wrong one is a different orbit
+		_check(signf(local) == -signf(rope) and absf(turns - absf(rope)) > 0.25,
+			"her coil and the whole rope disagree on way and size (coil %.2f turns, rope %.2f)"
+				% [turns, absf(rope)])
+		# Re-posed before each frame: the fixture is the geometry, not whatever
+		# a dozen frames of solving a hand-built rope makes of it. main's own
+		# arming runs for real on it.
+		var frames := 0
+		while not h.is_whirling() and frames < 40:
+			_two_coil_rope(m, hers, sense)
+			m._apply_leash(DT)
+			frames += 1
+		_check(h.is_whirling(), "a rope wound at both ends still arms an orbit (%d frames)" % frames)
+		if h.is_whirling():
+			_check(h.whirl_pole.distance_to(hers) < 1.0,
+				"round the pole she is actually standing in, %s" % str(h.whirl_pole))
+			_check(h.whirl_dir == -signf(local),
+				"round her coil's way (%+.0f, coil %.2f rad)" % [float(h.whirl_dir), local])
+			var want := clampf(turns, TURNS_MIN, TURNS_MAX) * TAU
+			_check(absf(float(h.whirl_turns) - want) < 0.05,
+				"for as many turns as HER coil is worth (%.2f rad, wanted %.2f)" % [float(h.whirl_turns), want])
+			var wrong := clampf(absf(rope), TURNS_MIN, TURNS_MAX) * TAU
+			_check(absf(float(h.whirl_turns) - wrong) > 0.5,
+				"not as many as the whole rope's winding (%.2f rad)" % wrong)
+		m.leash_len = was_len
+		h.bail_whirl()
+		m._apply_leash(DT)
+
+
+# the budget is still bounded: a coil of nothing is worth a turn and a bit, and
+# no coil is worth more than four turns of orbit
+func _the_budget_keeps_its_bounds(m: Node2D) -> void:
+	var h: CharacterBody2D = m.human
+	var pole: Vector2 = h.global_position + Vector2(60.0, 0.0)
+	_one_pole(m, pole)
+	for pair: Array in [[0.0, TURNS_MIN], [0.01, TURNS_MIN], [99.0, TURNS_MAX], [2.0, 2.0]]:
+		h.global_position = pole + Vector2(-46.0, 0.0)
+		h.velocity = Vector2(0.0, -120.0)
+		h.start_whirl(pole, 1.0, float(pair[0]))
+		_check(absf(float(h.whirl_turns) - float(pair[1]) * TAU) < 0.001,
+			"a budget of %.2f turns orbits %.2f (%.2f rad)" % [float(pair[0]), float(pair[1]),
+				float(h.whirl_turns)])
+		h.bail_whirl()
 	m._apply_leash(DT)
 
 
@@ -714,6 +916,8 @@ func _release_never_fires_away_from_the_dog(m: Node2D) -> void:
 	var over_lean := 0
 	var wild := 0
 	var flung := 0
+	var dogward := 0
+	var in_cone := 0
 	var worst := 1.0
 	for k in range(12):
 		for dist: float in [0.0, 6.0, 18.0, 29.0, 44.0, 150.0]:
@@ -742,15 +946,30 @@ func _release_never_fires_away_from_the_dog(m: Node2D) -> void:
 				flung += 1
 				var to_dog: Vector2 = d.global_position - h.global_position
 				if to_dog.length() > 0.001:
-					worst = minf(worst, v.normalized().dot(to_dog.normalized()))
+					var dot := v.normalized().dot(to_dog.normalized())
+					worst = minf(worst, dot)
+					if dot > 0.0:
+						dogward += 1
+					if dot >= AIM_COS - 0.01:
+						in_cone += 1
+				else:
+					dogward += 1
+					in_cone += 1
 			elif v.length() > BAIL_SPEED + 1.0:
 				wild += 1
 	_check(ended == cases, "every orbit ends, wherever the dog is (%d of %d)" % [ended, cases])
-	_check(flung > 0, "most of them as flings (%d of %d)" % [flung, cases])
+	# A stagger is a legitimate way out, so this does not demand that every case
+	# flings - but with a dog that stays put the tangent comes round to it, and
+	# all but a stray case should be a fling that lands inside the release cone,
+	# not merely somewhere on the dogward side of the circle.
+	_check(flung >= cases - 2, "all but a stray one are flings (%d of %d)" % [flung, cases])
+	_check(dogward == flung, "every fling goes dogward (%d of %d)" % [dogward, flung])
+	_check(in_cone >= flung - 2,
+		"all but a stray one inside the release cone (%d of %d, worst dot %.3f)" % [in_cone, flung, worst])
 	_check(reversed == 0, "none of them launches against the way she went (%d)" % reversed)
 	_check(over_lean == 0, "none leans past the cap (%d)" % over_lean)
-	_check(worst > 0.0, "no fling ever throws her away from the dog (worst dot %.3f)" % worst)
-	_check(wild == 0, "and the ones that give up leave at a controlled speed (%d wild)" % wild)
+	_check(worst > 0.0, "and none away from the dog (worst dot %.3f)" % worst)
+	_check(wild == 0, "the ones that give up leave at a controlled speed (%d wild)" % wild)
 	h.just_flung = false
 
 
@@ -993,6 +1212,33 @@ func _a_bail_off_the_leash_does_not_leak(m: Node2D) -> void:
 	leash.detached = false
 	_check(h.get("whirl_bailed") == false,
 		"which is consumed even with the leash off, so it cannot leak into a later frame")
+
+
+# The fling's one-shot has the same shape as the abandoned orbit's, and the same
+# frames to survive: a fling is paid for on the frame it happens, including the
+# frames the tug leaves early. Off the leash there is no rope to keep slipping,
+# but the flag must still die and the fling must still count.
+func _a_fling_off_the_leash_is_still_paid_for(m: Node2D) -> void:
+	var h: CharacterBody2D = m.human
+	var leash: Node2D = m.leash
+	var pole: Vector2 = h.global_position + Vector2(60.0, 0.0)
+	_one_pole(m, pole)
+	h.global_position = pole + Vector2(-46.0, 0.0)
+	h.velocity = Vector2(0.0, -120.0)
+	h.just_flung = false
+	h.start_whirl(pole, 1.0, 0.6)
+	for i in range(6):
+		h.tick(DT)
+	h.release_whirl()
+	_check(h.just_flung, "a release asks to be paid for")
+	var before: int = int(m.flings_done)
+	leash.detached = true
+	leash.free_slip_t = 0.0
+	m._apply_leash(DT)
+	leash.detached = false
+	_check(not h.just_flung, "which is consumed even with the leash off")
+	_check(int(m.flings_done) == before + 1, "and the fling still counted (%d)" % int(m.flings_done))
+	_check(float(leash.free_slip_t) == 0.0, "with no rope asked to keep slipping")
 
 
 # main owns the frame order, so main is what notices the orbit pole stopped

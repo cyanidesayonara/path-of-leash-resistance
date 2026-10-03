@@ -5000,16 +5000,32 @@ func owner_news(line: String) -> void:
 
 func _apply_leash(delta: float) -> void:
 	_leash_tug(delta)
-	# One-shot, consumed once the tug above has had its frame - on EVERY path
-	# through it, including the early ones (no leash at all, a slack rope), or
-	# it survives into a frame where she is not whirling and shields her from
-	# a tug she should feel.
+	# The two ways an orbit ends, as one-shots, consumed once the tug above has
+	# had its frame - on EVERY path through it, including the early ones (no
+	# leash at all, a slack rope, degenerate tangents). A flag that survives the
+	# frame it was raised on is paid out twice, or shields her from a tug she
+	# should feel; a flag the early returns swallow is never paid out at all.
 	if human.whirl_bailed:
 		# an abandoned orbit is not a fling: no score, no sfx, just enough
 		# slip left for her to stagger clear of the coil
 		human.whirl_bailed = false
 		if not leash.detached:
 			leash.free_slip_t = maxf(float(leash.free_slip_t), WHIRL_SLIP_BAIL)
+	if human.just_flung:
+		human.just_flung = false
+		flings_done += 1
+		# the two moves now CHAIN: wind him up with a carve, then let go
+		if vault_recent > 0.0:
+			bones += 8
+			combo.add("SLINGSHOT", 8)
+			float_text(human.global_position + Vector2(0, -34), "slingshot! +8",
+				Color(1.0, 0.86, 0.5))
+			vault_recent = 0.0
+		Sfx.play("fling")
+		combo.add("FLING", 8)
+		if not leash.detached:
+			# a fresh fling must never be arrested by a residual wrap
+			leash.free_slip_t = 1.2
 
 
 func _leash_tug(delta: float) -> void:
@@ -5044,20 +5060,6 @@ func _leash_tug(delta: float) -> void:
 		# not to be a pole, and orbiting a cafe table unwinds nothing.
 		if not leash.is_real_pole(human.whirl_pole):
 			human.bail_whirl()
-	if human.just_flung:
-		# a fresh fling must never be arrested by a residual wrap
-		human.just_flung = false
-		flings_done += 1
-		# the two moves now CHAIN: wind him up with a carve, then let go
-		if vault_recent > 0.0:
-			bones += 8
-			combo.add("SLINGSHOT", 8)
-			float_text(human.global_position + Vector2(0, -34), "slingshot! +8",
-				Color(1.0, 0.86, 0.5))
-			vault_recent = 0.0
-		Sfx.play("fling")
-		combo.add("FLING", 8)
-		leash.free_slip_t = 1.2
 	var used: float = leash.used_length()
 	var excess := used - leash_len
 	leash.taut = excess > 0.0
@@ -5164,7 +5166,11 @@ func _leash_tug(delta: float) -> void:
 					var dir := whirl_dir_acc
 					if dir == 0.0:
 						dir = human.orbit_sense(human.global_position - wp, human.velocity)
-					human.start_whirl(wp, dir, absf(leash.winding()))
+					# and the budget is the SAME coil the direction came from,
+					# not the whole rope's winding: a rope wound at both ends
+					# reads the dog's coil too, and an orbit sized by that keeps
+					# going after hers is spent, winding it up the other way
+					human.start_whirl(wp, dir, leash.coil_turns(wp))
 					armed = false
 	if not armed:
 		whirl_arm = 0.0
