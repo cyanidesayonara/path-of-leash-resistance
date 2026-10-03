@@ -11,6 +11,32 @@ Append-only session history, newest first.
   starts (the line it labels is still drawn).
 - El Mosaic's viaduct slope tapers in and out at each end of the viaduct
   instead of stopping in a straight edge.
+## 2026-10-04 - Natural ground looks and moves like itself (terrain pass 2, part 1)
+
+The terrain spec (`docs/superpowers/specs/2026-10-03-menu-terrain-design.md`,
+pass 2) asks for grass, sand, mud and water that are open to walk into and
+recognisable in motion. Part 1:
+- **Access, audited.** `tools/terrain_audit.gd` samples every walk's grass,
+  sand, mud and water and reports anything inside static collision. Nothing
+  invisible blocks natural ground any more (#129 removed the last of it, on
+  El Barri); what remains is the outer level edge and things solid on purpose
+  (La Ferralla's fence and wrecks, El Parc's bandstand, beach huts).
+- **Grass** has tufts in two greens, seed heads and the odd flower, wherever
+  `surface_at()` says grass (so the look can never disagree with the
+  handling), on the cached verge canvas: a redraw every 150 px of camera, never
+  a frame. Kept off roofs, flowerbeds, playgrounds and the petanca pitch; the
+  forest floor is browner and has no meadow flowers.
+- **Mud** has ruts, brown water standing in its hollows with a glint of sky,
+  a wet sheen on the lit side, and suction rings; one batch a patch.
+- **El Bosc's stream** has a deeper band down the middle, foam along both
+  banks and current lines that run quicker in the deep water.
+- **Her paws mark it**: grass she runs over is flattened and springs back,
+  mud flies up at a run (with a quiet squelch on the way in), and a step into
+  water rings out. Pooled and capped at 24, deterministic, cosmetic only.
+- Not in this part: the spec's mosaic-tile item (El Mosaic has had no tile
+  floor since its rebuild), gait by surface, and the other sounds.
+- `tests/test_terrain.gd`: no wall across natural ground on the walks that
+  have it, and the marks (kinds, cap, expiry).
 ## 2026-10-04 - The leash conversation
 
 Your human used to answer the leash only as physics: a heavy body walking its

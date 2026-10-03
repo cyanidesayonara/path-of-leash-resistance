@@ -88,6 +88,8 @@ func _build_library() -> void:
 	lib["hiss"] = _noiseburst(0.16, 22.0)
 	lib["grunt"] = _grunt()
 	lib["squawk"] = _squawk()
+	# a paw going into mud: a short, low, wet suck
+	lib["squelch"] = _squelch()
 
 
 # --- music -------------------------------------------------------------
@@ -185,6 +187,22 @@ func _arp(freqs: Array, note: float) -> AudioStreamWAV:
 		for i in range(per):
 			var t := float(i) / RATE
 			out[k * per + i] = sin(TAU * f * t) * exp(-t * 9.0) * 0.5
+	return _pack(out)
+
+
+func _squelch() -> AudioStreamWAV:
+	var dur := 0.14
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var ph := 0.0
+	var noise := 0.0
+	for i in range(n):
+		var prog := float(i) / float(n)
+		ph += TAU * lerpf(260.0, 120.0, prog) / RATE
+		# filtered noise for the wet part, a falling tone for the suck
+		noise = noise * 0.85 + (fmod(sin(float(i) * 12.9898) * 43758.5453, 1.0) - 0.5) * 0.15
+		out[i] = (sin(ph) * 0.5 + noise * 1.6) * sin(PI * prog) * 0.35
 	return _pack(out)
 
 

@@ -264,6 +264,8 @@ jobs:
 
       - name: Ground surface test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_surfaces.gd
+      - name: Natural terrain test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_terrain.gd
 
       - name: Dog mood test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_mood.gd
