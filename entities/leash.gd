@@ -32,6 +32,19 @@ const TAUT_DAMP := 0.1
 # point next to the end cannot steer it; a contact within them falls back to
 # the first segment alone.
 const TANGENT_RUN := 3
+# The human end's own geometry: the last WHIRL_TAIL points, which is exactly
+# the window human_end_winding() measures. The whirl's direction is decided by
+# stepping the hand WHIRL_PROBE_STEP radians each way round the pole and
+# keeping the step that leaves her end less wound (main.gd/_apply_leash).
+# Only corners within WHIRL_COIL_REACH of the pole count as its coil; rope
+# points held against a pole sit POLE_PAD out from it.
+const WHIRL_TAIL := 9
+const WHIRL_PROBE_STEP := 0.08
+const WHIRL_COIL_REACH := 2.0 * POLE_PAD
+# turning below this is no turning at all, so a tie is a tie every time
+const WIND_EPS := 1.0e-6
+# how close a point has to be to a listed pole to BE that pole (px squared)
+const POLE_MATCH_SQ := 1.0
 # Public kind names: contact_kind and slip_for() are read by main.gd and
 # pinned by tests, so they stay Strings.
 const KIND_POLE := "pole"
@@ -417,6 +430,73 @@ func human_end_winding() -> float:
 		if a.length_squared() > 0.01 and b.length_squared() > 0.01:
 			total += a.angle_to(b)
 	return total
+
+
+# The human end's last WHIRL_TAIL points, oldest first: the only geometry the
+# whirl's direction choice is allowed to look at. Same window
+# human_end_winding() measures.
+func human_tail() -> PackedVector2Array:
+	var out := PackedVector2Array()
+	for i in range(maxi(0, N - WHIRL_TAIL), N):
+		out.append(pts[i])
+	return out
+
+
+# Which way round `pole` unwinds the human end: positive for anticlockwise.
+func unwind_bias(pole: Vector2) -> float:
+	return unwind_bias_of(pole_winding(human_tail(), pole), WHIRL_PROBE_STEP)
+
+
+# The two below read their arguments and nothing else, so the whirl's
+# direction choice can be pinned without a rope (tests/test_whirl_guided.gd).
+
+# The tail's signed turning about `pole`, in radians: the corners of the coil
+# it is wound in, which is the only part of her end an orbit round THIS pole
+# can take off. A long straight run out to the hand therefore cannot outvote
+# the coil. With nothing close enough to be a coil, the whole tail stands in.
+func pole_winding(p: PackedVector2Array, pole: Vector2, reach := WHIRL_COIL_REACH) -> float:
+	var near := 0.0
+	var all := 0.0
+	for i in range(1, p.size() - 1):
+		var a := p[i] - p[i - 1]
+		var b := p[i + 1] - p[i]
+		if a.length_squared() <= 0.01 or b.length_squared() <= 0.01:
+			continue
+		var turn := a.angle_to(b)
+		all += turn
+		if p[i].distance_squared_to(pole) < reach * reach:
+			near += turn
+	return near if absf(near) > WIND_EPS else all
+
+
+# How much less wound the owner's end would be if her hand took a tiny step
+# anticlockwise round the pole rather than clockwise. An orbit step of `step`
+# radians round the pole adds exactly that much turning to the rope where it
+# is wound, so the two candidates leave the local winding at w + step and
+# w - step, and the one with less of it is the way that unwinds. Positive
+# commits anticlockwise; a tail wound neither way reads exactly zero, so the
+# tie always goes the same way.
+#
+# Probing by displacing the hand POINT and re-measuring does not work: that
+# reads the kink beside the hand, whose sign has nothing to do with which way
+# the coil goes. On a rope the dog had wound it picked the winding-UP way.
+func unwind_bias_of(local_winding: float, step: float) -> float:
+	var bias := absf(local_winding - step) - absf(local_winding + step)
+	return 0.0 if absf(bias) < WIND_EPS else bias
+
+
+# Is `p` still a real pole in this level - the only thing a whirl may orbit?
+# Furniture unwinds nothing (La Rambla's terrace once held an owner in a
+# whirl-stumble loop for two minutes) and neither does a point that is in no
+# list at all.
+func is_real_pole(p: Vector2) -> bool:
+	if not (is_finite(p.x) and is_finite(p.y)):
+		return false
+	_ensure_pole_kinds()
+	for i in range(poles.size()):
+		if pole_kinds[i] == K_POLE and poles[i].distance_squared_to(p) < POLE_MATCH_SQ:
+			return true
+	return false
 
 
 func dog_pull_dir() -> Vector2:
