@@ -11,6 +11,7 @@ extends RefCounted
 # same-name forwarder for each one another script or a test calls.
 
 const TutorialSteps := preload("res://systems/tutorial.gd")
+const UiIcons := preload("res://hud/ui_icons.gd")
 
 const DETAIL_ROWS := ["walker", "time", "weather"]
 const PAUSE_CELLS := ["resume", "walk", "restart", "settings", "select", "exit"]
@@ -402,9 +403,18 @@ static func walk_card(m: Node2D) -> Dictionary:
 		return out
 	for q: Dictionary in m.active_quests:
 		var target := int(q.target)
-		var done: bool = m.run_goals_hit.has(q.id) or ((not Game.daily) and Game.goal_done(m.lvl, q.id))
+		var hit: bool = m.run_goals_hit.has(q.id)
+		var done: bool = hit or ((not Game.daily) and Game.goal_done(m.lvl, q.id))
 		var got := target if done else mini(int(q.fn.call()), target)
-		out.goals.append({"text": m._quest_text(q), "got": got, "target": target, "done": done})
+		var state: int
+		if hit:
+			state = UiIcons.Check.DONE_NOW
+		elif done:
+			state = UiIcons.Check.DONE_BEFORE
+		else:
+			state = UiIcons.Check.PARTIAL if got > 0 else UiIcons.Check.OPEN
+		out.goals.append({"text": m._quest_text(q), "got": got, "target": target, "done": done,
+			"state": state})
 	return out
 
 

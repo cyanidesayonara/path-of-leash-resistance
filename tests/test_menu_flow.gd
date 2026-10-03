@@ -200,6 +200,8 @@ func _run() -> void:
 	_check(Flow.screen(main) == "walkcard", "THIS WALK opens its card")
 	_check(String(wc.name) == main._walk_name() and wc.has("gloss"), "the card names the walk and its gloss")
 	_check((wc.goals as Array).size() == main.active_quests.size(), "one line per goal on this walk")
+	_check((wc.goals as Array).all(func(g: Dictionary) -> bool: return g.has("state")),
+		"every goal line says how it stands")
 	_check(_verbs(main) == ["back"], "the card's only way on is back")
 	Flow.close_walk_card(main)
 	_check(Flow.screen(main) == "pause", "back returns to the pause grid")

@@ -409,7 +409,7 @@ func _walk_card(vs: Vector2) -> void:
 	var h := 130.0 + float(maxi(lines, 1)) * 30.0 + 20.0
 	var r := Rect2(vs.x * 0.5 - WALKCARD_W * 0.5, vs.y * 0.5 - h * 0.5 - 20.0, WALKCARD_W, h)
 	Kit.card(self, r, acc)
-	Kit.heading(self, Vector2(r.position.x, r.position.y + 52.0), String(wc.name), 30, acc,
+	Kit.heading(self, Vector2(r.position.x, r.position.y + 52.0), String(wc.name).to_upper(), 30, acc,
 		HORIZONTAL_ALIGNMENT_CENTER, WALKCARD_W)
 	draw_string(Kit.body(), Vector2(r.position.x, r.position.y + 80.0), "%s    %s" % [String(wc.gloss), String(wc.time)],
 		HORIZONTAL_ALIGNMENT_CENTER, WALKCARD_W, 15, Kit.INK_FAINT)
@@ -425,8 +425,7 @@ func _walk_card(vs: Vector2) -> void:
 		return
 	for g: Dictionary in goals:
 		var done := bool(g.done)
-		Icons.draw_check(self, Vector2(r.position.x + 32.0, y - 11.0), 14.0,
-			Icons.Check.DONE_NOW if done else (Icons.Check.PARTIAL if int(g.got) > 0 else Icons.Check.OPEN))
+		Icons.draw_check(self, Vector2(r.position.x + 32.0, y - 11.0), 14.0, int(g.state))
 		draw_string(body, Vector2(r.position.x + 56.0, y), String(g.text), HORIZONTAL_ALIGNMENT_LEFT,
 			WALKCARD_W - 180.0, 17, Kit.INK_FAINT if done else Kit.INK)
 		if int(g.target) > 1 and not done:
