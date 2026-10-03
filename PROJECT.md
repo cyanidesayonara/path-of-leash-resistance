@@ -430,7 +430,7 @@ memorable.
   October 2026 leash measurements on Windows: the fixed 24-point solver uses
   58 / 129 / 254 microseconds per tick in free / pole / tangle fixtures.
   `visible_path()` inserts one checked midpoint per segment into a reused
-  47-point buffer; complete draw preparation costs 19 / 21 / 40 microseconds.
+  47-point buffer; complete draw preparation costs 19 / 22 / 40 microseconds.
   That is four rope polylines plus the existing circle batch, unchanged in
   draw-call count. Browser cost remains unmeasured until the Godot 4.7
   no-thread Web templates are installed.

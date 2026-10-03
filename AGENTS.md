@@ -226,7 +226,7 @@ godot\Godot_v4.7-stable_win64_console.exe --headless --path . --script res://too
 ```
 The leash stays at exactly four rope polylines plus the existing batched
 circles. On the October 2026 Windows baseline, solver cost is about 58 / 129 /
-254 microseconds and draw preparation 19 / 21 / 40 microseconds for free /
+254 microseconds and draw preparation 19 / 22 / 40 microseconds for free /
 pole / tangle. Compare timings on one machine; investigate solver growth over
 5% free or 15% contacted, any unexplained hash change, any added draw call, or
 draw preparation materially above these figures.
