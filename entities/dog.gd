@@ -195,7 +195,9 @@ func tick(delta: float) -> void:
 			facing = go.normalized()
 	move_and_slide()
 	# the hips trail the shoulders: the body hinges mid-turn
-	gait += velocity.length() * delta * 0.055
+	# how she steps on what she is on: quick short steps on sand (no purchase),
+	# slow heavy ones in mud, a slightly higher step through grass
+	gait += velocity.length() * delta * 0.055 * _cadence()
 	var target_hip := -facing
 	hip_dir = hip_dir.slerp(target_hip, minf(10.0 * delta, 1.0))
 	if hip_dir.length() < 0.1:
@@ -269,6 +271,29 @@ func _draw() -> void:
 	_b.flush()
 
 
+# gait by surface (see tick): steps per distance, and how long each step is
+func _cadence() -> float:
+	match surface:
+		Surfaces.S.SAND:
+			return 1.35
+		Surfaces.S.MUD:
+			return 0.8
+		Surfaces.S.GRASS:
+			return 1.05
+	return 1.0
+
+
+func _stride() -> float:
+	match surface:
+		Surfaces.S.SAND:
+			return 0.7
+		Surfaces.S.MUD:
+			return 1.25
+		Surfaces.S.GRASS:
+			return 1.1
+	return 1.0
+
+
 # the light comes from the upper left, as everywhere in the game
 const LIGHT_DIR := Vector2(-0.6, -0.8)
 
@@ -326,10 +351,13 @@ func _draw_shapes() -> void:
 		_b.draw_line(tp, nxt, fur_dark, widths[s])
 		tp = nxt
 	# four legs, trot gait: diagonal pairs move together, tucked when crouching
-	var amp := 0.0 if crouching else clampf(velocity.length() / SPEED, 0.0, 1.0) * 5.5
+	var amp := 0.0 if crouching else clampf(velocity.length() / SPEED, 0.0, 1.0) * 5.5 * _stride()
 	var ph := sin(gait)
 	# white-tipped paws, like she stepped in paint and regrets nothing
 	var paw := Color(0.78, 0.76, 0.73)
+	if surface == Surfaces.S.MUD:
+		# sunk in it to the ankles
+		paw = Color(0.36, 0.28, 0.20)
 	_b.draw_circle(shoulder + side * 7.5 + facing * (6.0 + ph * amp), 3.0, paw)
 	_b.draw_circle(shoulder - side * 7.5 + facing * (6.0 - ph * amp), 3.0, paw)
 	var rear_reach := 1.0 if crouching else 4.0

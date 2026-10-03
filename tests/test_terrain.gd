@@ -6,8 +6,10 @@ extends SceneTree
 #   sample away from the outer level edge sits inside a wall (a long strip of
 #   static collision; compact props on the grass are solid on purpose)
 #   (tools/terrain_audit.gd prints the full report for every walk);
-# - her paws mark it: grass is flattened, mud splatters at a run, a step into
-#   water rings out, never more than MARKS_MAX at once, and they expire.
+# - her paws mark it: grass is flattened, mud splatters and sand is kicked up
+#   at a run, a step into water rings out, never more than MARKS_MAX at once,
+#   and they expire;
+# - and she steps differently on it (dog._cadence, _stride).
 
 const Surfaces := preload("res://world/surfaces.gd")
 const OPEN_WALKS := ["barri", "park", "trail", "beach", "tutorial"]
@@ -102,6 +104,22 @@ func _run() -> void:
 	dog.surface = Surfaces.S.WATER
 	m2._ground_marks()
 	_check(not m2.ground_marks.is_empty() and String(m2.ground_marks[0]["kind"]) == "ring", "a step into water rings out, at any speed")
+	m2.ground_marks.clear()
+	dog.velocity = Vector2(200.0, 0.0)
+	dog.surface = Surfaces.S.SAND
+	m2.mark_surface = Surfaces.S.SAND
+	m2.mark_last = Vector2(INF, INF)
+	m2._ground_marks()
+	_check(not m2.ground_marks.is_empty() and String(m2.ground_marks[0]["kind"]) == "grains", "sand is kicked up at a run")
+	# her gait follows the ground: quick short steps on sand, heavy long ones in mud
+	dog.surface = Surfaces.S.SAND
+	var sand_c: float = dog._cadence()
+	var sand_s: float = dog._stride()
+	dog.surface = Surfaces.S.MUD
+	_check(sand_c > 1.0 and sand_s < 1.0, "on sand: quicker, shorter steps")
+	_check(dog._cadence() < 1.0 and dog._stride() > 1.0, "in mud: slower, longer steps")
+	dog.surface = Surfaces.S.PAVEMENT
+	_check(dog._cadence() == 1.0 and dog._stride() == 1.0, "on pavement: her ordinary trot")
 	m2.elapsed += 5.0
 	m2._draw_ground_marks(-1e9, 1e9)
 	_check(m2.ground_marks.is_empty(), "and the marks expire")

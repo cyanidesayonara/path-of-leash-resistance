@@ -2076,6 +2076,12 @@ static func build_ground_detail(m: Node2D) -> void:
 	while y > m.GATE_Y + 20.0:
 		y -= r.randf_range(55.0, 130.0)
 		var kind := r.randi() % 4
+		# now and then a drain grate or an old repair, chosen by position in
+		# the list so the RNG sequence (and every other detail) is unchanged
+		if m.ground_detail.size() % 11 == 7:
+			kind = 4
+		elif m.ground_detail.size() % 17 == 3:
+			kind = 5
 		var x := r.randf_range(m.sw_l + 12.0, m.sw_r - 12.0)
 		m.ground_detail.append({
 			"pos": Vector2(x, y),
