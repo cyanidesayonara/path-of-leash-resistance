@@ -134,7 +134,32 @@ func _run() -> void:
 	Flow.open_pause(main)
 	_dump(main, "pause")
 	_check(Flow.screen(main) == "pause" and main.frozen and main.dim.visible, "pausing opens the pause menu")
-	_check(Flow.pause_rows(main).size() == Flow.PAUSE_ROWS.size(), "one pause row per action")
+	Flow.exit_hidden = false
+	var ids: Array = Flow.pause_ids(main)
+	_check(ids == ["resume", "walk", "restart", "settings", "select", "exit"] or OS.has_feature("web"),
+		"desktop pause grid order (%s)" % [ids])
+	_check(Flow.pause_labels(main).size() == ids.size(), "one label per pause cell")
+	Flow.exit_hidden = true
+	_check(not Flow.pause_ids(main).has("exit") and Flow.pause_ids(main).size() == 5,
+		"without exit the grid has five cells and no disabled one")
+	Flow.exit_hidden = false
+	# two axes: right, down, left, up all move one cell
+	main.pause_idx = 0
+	Flow.pause_move(main, 1, 0)
+	_check(main.pause_idx == 1, "right moves to the next column")
+	Flow.pause_move(main, 0, 1)
+	_check(main.pause_idx == 3, "down moves one row")
+	Flow.pause_move(main, -1, 0)
+	_check(main.pause_idx == 2, "left moves back a column")
+	Flow.pause_move(main, 0, -1)
+	Flow.pause_move(main, 0, -1)
+	_check(main.pause_idx == 4, "up from the top row wraps to the bottom")
+	Flow.exit_hidden = true
+	main.pause_idx = 1
+	Flow.pause_move(main, 0, 2)
+	_check(main.pause_idx == 4, "a five-cell grid lands on its lone last cell")
+	Flow.exit_hidden = false
+	main.pause_idx = 0
 	main._open_settings()
 	main._close_settings()
 	_check(Flow.screen(main) == "pause" and main.dim.visible, "settings opened from pause close back to the pause menu")

@@ -366,7 +366,7 @@ func _progress(vs: Vector2) -> void:
 
 func _pause(vs: Vector2) -> void:
 	var acc := Kit.accent("pause")
-	var rows := Flow.pause_rows(main)
+	var rows := Flow.pause_labels(main)
 	var h := 110.0 + float(rows.size()) * PAUSE_ROW_H + 18.0
 	var r := Rect2(vs.x * 0.5 - PAUSE_W * 0.5, vs.y * 0.5 - h * 0.5 - 20.0, PAUSE_W, h)
 	Kit.card(self, r, acc)

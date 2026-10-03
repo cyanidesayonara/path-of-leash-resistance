@@ -551,6 +551,10 @@ var _signs_for := ""
 var gloss_a := 1.0
 var details_idx := 0
 var pause_idx := 0
+# a question the menus are waiting on ("restart", "exit"), and which pause
+# card is open over the grid ("walk"); empty when neither
+var confirm_id := ""
+var pause_view := ""
 var locked_nudge := 0.0
 var shop_preview: CharacterBody2D
 var in_shop := false
@@ -637,6 +641,8 @@ func _ready() -> void:
 	Engine.time_scale = 1.0
 	font = ThemeDB.fallback_font
 	var autowalk_requested := "--autowalk" in OS.get_cmdline_user_args()
+	if "--no-exit" in OS.get_cmdline_user_args():
+		MenuFlow.exit_hidden = true
 	_shake_rng.seed = SHAKE_SEED
 	if Game.is_daily(Game.level_id):
 		# same layout, weather and time for everyone, all day

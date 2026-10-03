@@ -11,10 +11,17 @@ extends RefCounted
 # same-name forwarder for each one another script or a test calls.
 
 const DETAIL_ROWS := ["walker", "time", "weather"]
-const PAUSE_ROWS := ["resume", "restart", "settings", "quit"]
+const PAUSE_CELLS := ["resume", "walk", "restart", "settings", "select", "exit"]
+const PAUSE_LABELS := {"resume": "RESUME", "walk": "THIS WALK", "restart": "START AGAIN",
+	"settings": "SETTINGS", "select": "WALK SELECT", "exit": "EXIT GAME"}
+const PAUSE_COLS := 2
 const SHOP_TABS := ["collar", "bandana", "coat"]
 const SHOP_TAB_NAMES := {"collar": "COLLARS", "bandana": "BANDANAS", "coat": "COATS"}
 const STEP_NAMES := ["CHOOSE A WALK", "GET READY"]
+
+# Leaving the application is a desktop thing: a browser tab is closed by
+# the browser. `--no-exit` and tests set this to see the web layout anywhere.
+static var exit_hidden := false
 
 
 # --- which screen is up ---------------------------------------------------
@@ -65,7 +72,7 @@ static func prompts(m: Node2D, which := "") -> Array:
 		"settings":
 			return [["up_down", "pick"], ["left_right", "change"], ["back", "done"]]
 		"pause":
-			return [["up_down", "pick"], ["plant", "select"], ["pause", "resume"]]
+			return [["move", "pick"], ["plant", "select"], ["pause", "resume"]]
 		"results":
 			return end_prompts(m)
 		"notice":
@@ -279,27 +286,77 @@ static func tick_pause(m: Node2D) -> void:
 	if Input.is_action_just_pressed("pause") or Input.is_action_just_pressed("bark"):
 		resume(m)
 	elif Input.is_action_just_pressed("move_down"):
-		m.pause_idx = wrapi(m.pause_idx + 1, 0, PAUSE_ROWS.size())
-		Sfx.play("ui")
+		pause_move(m, 0, 1)
 	elif Input.is_action_just_pressed("move_up"):
-		m.pause_idx = wrapi(m.pause_idx - 1, 0, PAUSE_ROWS.size())
-		Sfx.play("ui")
+		pause_move(m, 0, -1)
+	elif Input.is_action_just_pressed("move_right"):
+		pause_move(m, 1, 0)
+	elif Input.is_action_just_pressed("move_left"):
+		pause_move(m, -1, 0)
 	elif Input.is_action_just_pressed("pee"):
 		open_settings(m)
 	elif Input.is_action_just_pressed("plant"):
-		match String(PAUSE_ROWS[m.pause_idx]):
-			"resume":
-				resume(m)
-			"restart":
-				restart_walk(m)
-			"settings":
-				open_settings(m)
-			"quit":
-				to_walk_select(m)
+		pause_activate(m)
 
 
-static func pause_rows(m: Node2D) -> Array:
-	return ["RESUME", "START AGAIN", "SETTINGS", "QUIT TO WALK SELECT"]
+static func pause_activate(m: Node2D) -> void:
+	match String(pause_ids(m)[m.pause_idx]):
+		"resume":
+			resume(m)
+		"walk":
+			open_walk_card(m)
+		"restart":
+			open_confirm(m, "restart")
+		"settings":
+			open_settings(m)
+		"select":
+			to_walk_select(m)
+		"exit":
+			open_confirm(m, "exit")
+
+
+static func can_exit() -> bool:
+	return not exit_hidden and not OS.has_feature("web")
+
+
+static func pause_ids(m: Node2D) -> Array:
+	var out := PAUSE_CELLS.duplicate()
+	if not can_exit():
+		out.erase("exit")
+	return out
+
+
+static func pause_labels(m: Node2D) -> Array:
+	var out := []
+	for id: String in pause_ids(m):
+		out.append(PAUSE_LABELS[id])
+	return out
+
+
+# One step across the grid. Rows wrap; a short last row (the web's five
+# cells) only has its left cell, so landing on the gap takes that instead.
+static func pause_move(m: Node2D, dx: int, dy: int) -> void:
+	var n := pause_ids(m).size()
+	var rows := (n + PAUSE_COLS - 1) / PAUSE_COLS
+	var col: int = int(m.pause_idx) % PAUSE_COLS
+	var row: int = int(m.pause_idx) / PAUSE_COLS
+	if dx != 0:
+		col = wrapi(col + dx, 0, PAUSE_COLS)
+	if dy != 0:
+		row = wrapi(row + dy, 0, rows)
+	var i := row * PAUSE_COLS + col
+	if i >= n:
+		i = row * PAUSE_COLS
+	m.pause_idx = i
+	Sfx.play("ui")
+
+
+static func open_walk_card(m: Node2D) -> void:
+	m.pause_view = "walk"
+
+
+static func open_confirm(m: Node2D, which: String) -> void:
+	m.confirm_id = which
 
 
 # Straight back into the same walk, skipping the menus: what "try again"
