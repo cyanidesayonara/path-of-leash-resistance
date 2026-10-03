@@ -1,7 +1,8 @@
 extends SceneTree
 
-# The first few pixels beyond rest length need a continuous onset for both
-# visible cinching and force. A bool threshold cannot represent that ramp.
+# The first few pixels beyond rest length need one continuous amount that
+# presentation and force can consume. Integration is pinned once those callers
+# exist; this RED test defines only the narrow public value contract.
 
 var failures := 0
 
@@ -12,25 +13,33 @@ func _check(cond: bool, msg: String) -> void:
 		failures += 1
 
 
-func _check_ramp(leash: Node2D, method: String, label: String) -> void:
-	_check(leash.has_method(method), "leash exposes %s(stretch_ratio)" % method)
-	if not leash.has_method(method):
-		return
-	var slack: float = float(leash.call(method, 1.0))
-	var middle: float = float(leash.call(method, 1.025))
-	var taut: float = float(leash.call(method, 1.05))
-	_check(slack <= 0.001, "%s is zero at rest (got %.3f)" % [label, slack])
-	_check(middle > 0.05 and middle < 0.95,
-		"%s exposes an intermediate onset value (got %.3f)" % [label, middle])
-	_check(taut >= 0.99, "%s reaches full value after the onset band (got %.3f)" % [label, taut])
-
-
 func _initialize() -> void:
 	var leash := Node2D.new()
 	leash.set_script(load("res://entities/leash.gd"))
 	root.add_child(leash)
-	_check_ramp(leash, "taut_visual_amount", "taut presentation")
-	_check_ramp(leash, "tension_onset_amount", "tension onset")
+	_check(leash.has_method("taut_amount"),
+		"leash exposes one taut_amount(stretch_ratio) transition value")
+	if leash.has_method("taut_amount"):
+		var samples: Array[float] = []
+		for i in range(11):
+			var ratio := 1.0 + float(i) * 0.005
+			samples.append(float(leash.taut_amount(ratio)))
+		_check(samples[0] <= 0.001, "taut amount is zero at rest (got %.3f)" % samples[0])
+		_check(samples[-1] >= 0.99,
+			"taut amount reaches full value after the onset band (got %.3f)" % samples[-1])
+		var strict_steps := 0
+		for i in range(1, samples.size()):
+			_check(samples[i] + 0.0001 >= samples[i - 1],
+				"taut amount is monotonic at sample %d (%.3f after %.3f)" % [
+					i, samples[i], samples[i - 1]])
+			if samples[i] > samples[i - 1] + 0.01:
+				strict_steps += 1
+			_check(samples[i] >= -0.001 and samples[i] <= 1.001,
+				"taut amount remains normalized at sample %d (got %.3f)" % [i, samples[i]])
+		_check(strict_steps >= 3,
+			"taut onset progresses across several samples, not one binary step (%s)" % samples)
+		_check(samples[5] > 0.05 and samples[5] < 0.95,
+			"taut onset exposes an intermediate midpoint (got %.3f)" % samples[5])
 	leash.free()
 
 	if failures > 0:
