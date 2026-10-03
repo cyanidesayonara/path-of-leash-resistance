@@ -103,8 +103,9 @@ explain every changed snapshot line; this does not relax the refactor rule.
   keeps getting pulled, main.gd starts a choreographed accelerating orbit
   instead of letting them jam against the pole. Arming averages one signed
   `leash.coil_winding()` measure over the 0.25-second window; `_commit_whirl`
-  uses that same number for both the immutable direction and the exact local
-  turn budget. `coil_reach_for()` is the pure hand-gap boundary helper (not
+  uses that same number for both the immutable direction and the local turn
+  budget, clamped to the authored 0.6-4.0-turn range. `coil_reach_for()` is
+  the pure hand-gap boundary helper (not
   the removed single-frame `unwind_bias()` wrapper); `unwind_bias_of()` and
   `human.orbit_sense()` settle the direction without mutating rope state.
   Only `human_contact_pole` with `human_contact_is_pole`, rechecked through

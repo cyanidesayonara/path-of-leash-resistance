@@ -391,14 +391,15 @@ func _probe_picks_the_unwinding_way() -> void:
 		_check(signf(w) == sense, "the coil's own turning reads its way round (%.3f rad)" % w)
 		var bias: float = l.unwind_bias_of(w, PROBE)
 		_check(signf(bias) == -sense,
-			"a tail wound %s unwinds the other way (bias %.4f)" % ["anticlockwise" if sense > 0.0 else "clockwise", bias])
+			"a tail with %s winding unwinds the other way (bias %.4f)"
+				% ["positive" if sense > 0.0 else "negative", bias])
 		# and the committed step really is the one that leaves less winding
 		var dir := 1.0 if bias >= 0.0 else -1.0
 		_check(absf(w + dir * PROBE) < absf(w) and absf(w + dir * PROBE) < absf(w - dir * PROBE),
 			"the committed step reduces the local winding (%.4f from %.4f, other way %.4f)"
 				% [absf(w + dir * PROBE), absf(w), absf(w - dir * PROBE)])
 		_check(l.unwind_bias_of(w, PROBE) == bias, "the probe is deterministic")
-	# a tail wound neither way has no opinion, and the tie commits anticlockwise
+	# a tail wound neither way has no opinion, and the tie commits consistently
 	var w0: float = l.pole_winding(_spoke(pole), pole)
 	var bias0: float = l.unwind_bias_of(w0, PROBE)
 	_check(absf(bias0) < 1.0e-5, "a tail wound neither way reads as no bias (%.7f)" % bias0)
@@ -1083,9 +1084,9 @@ func _a_tie_keeps_her_going_the_way_she_is(m: Node2D) -> void:
 		_check(false, "the owner can say which way she is already going round a pole")
 		return
 	_check(h.orbit_sense(Vector2(30.0, 0.0), Vector2(0.0, 40.0)) == 1.0,
-		"travelling anticlockwise reads anticlockwise")
+		"travelling in the positive-angle direction reads positive")
 	_check(h.orbit_sense(Vector2(30.0, 0.0), Vector2(0.0, -40.0)) == -1.0,
-		"and clockwise, clockwise")
+		"and travelling in the negative-angle direction reads negative")
 	_check(h.orbit_sense(Vector2(0.0, -30.0), Vector2(40.0, 0.0)) == 1.0,
 		"wherever round the pole she is")
 	_check(h.orbit_sense(Vector2(30.0, 0.0), Vector2.ZERO) == 1.0,

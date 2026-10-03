@@ -489,13 +489,13 @@ func pole_winding(p: PackedVector2Array, pole: Vector2, reach := WHIRL_COIL_REAC
 	return 0.0 if absf(near) < WIND_EPS else near
 
 
-# How much less wound the owner's end would be if her hand took a tiny step
-# anticlockwise round the pole rather than clockwise. An orbit step of `step`
-# radians round the pole adds exactly that much turning to the rope where it
-# is wound, so the two candidates leave the local winding at w + step and
-# w - step, and the one with less of it is the way that unwinds. Positive
-# commits anticlockwise; a tail wound neither way reads exactly zero, so the
-# tie always goes the same way.
+# How much less wound the owner's end would be after a tiny negative-angle
+# step round the pole rather than a positive-angle step. An orbit step of
+# `step` radians adds exactly that much turning to the rope where it is wound,
+# so the two candidates leave the local winding at w + step and w - step, and
+# the one with less of it is the way that unwinds. Positive bias commits the
+# positive-angle step; a tail wound neither way reads exactly zero, so the tie
+# always goes the same way.
 #
 # Probing by displacing the hand POINT and re-measuring does not work: that
 # reads the kink beside the hand, whose sign has nothing to do with which way
