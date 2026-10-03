@@ -29,6 +29,28 @@ recognisable in motion. Part 1:
   floor since its rebuild), gait by surface, and the other sounds.
 - `tests/test_terrain.gd`: no wall across natural ground on the walks that
   have it, and the marks (kinds, cap, expiry).
+## 2026-10-04 - The leash conversation
+
+Your human used to answer the leash only as physics: a heavy body walking its
+own line, with the leash pulling against it, and a reel that shortened at
+random. Now they answer it like a person (`human.gd`, `_converse`):
+- **Led by a steady pull.** A moderate, sustained pull draws them across the
+  path (up to about 150 px), quickens them if it is the way they are going,
+  and slows them, waiting, if it is back. You steer with tension instead of
+  fighting their weight.
+- **Patience.** Hard, constant hauling wears it down; a slack leash builds it
+  back. Low, they glance up from the phone at you, a temper cloud scribbles
+  over their head, and they mutter "oi...". Empty, it is a telegraphed "HEY!"
+  (with "HE'S HAD ENOUGH! DIG IN" by the dog) and a correction: a step back
+  and the leash cut short ("HEEL"). Dug in when it lands, it is him that
+  lurches: "held firm! +3". After a correction there is a grace before
+  patience drains again. Measured on the bot, which pulls flat out the whole
+  walk: two to four corrections a walk; an idle dog never gets one.
+- **They wait while she does her business**, up to four seconds ("go on
+  then").
+- **The reel follows their mood**: the random clicks are scaled by patience,
+  so walking nicely earns a longer leash and pulling earns a short one.
+- `tests/test_leash_conversation.gd`.
 ## 2026-10-03 - The pause grid, and a tutorial snack in reach
 
 The first of the two passes below. The tutorial's nose lesson could not be
