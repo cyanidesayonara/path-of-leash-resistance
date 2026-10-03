@@ -2,6 +2,43 @@
 
 Append-only session history, newest first.
 
+## 2026-10-03 - The pause grid, and a tutorial snack in reach
+
+The first of the two passes below. The tutorial's nose lesson could not be
+finished: the snack sat out of reach. Three causes stacked up. El Barri, a
+green walk, was never in the no-wall list of `LevelBuild.build_walls`, so it
+got the default invisible 120 px solids along both path edges (x 280-400 and
+880-1000), which even swallowed its own plane trees and benches; the held
+owner waited about 420 px from the snack, past the leash's stretch of about
+391 px; and the owner kept re-reeling to random lengths (170-430) and weaving
+across the path. Now:
+
+- `"barri"` joins the no-wall list, so on the regular El Barri walk too the
+  dog can reach the verge grass.
+- A tutorial step can give a `stand` side (the nose lesson west, the teeter
+  east), and the waiting owner shuffles over to that edge
+  (`main.tut_hold_point`, `TUT_STAND_IN`, `human.tut_hold_x`).
+- While a lesson holds the owner, the reel is pinned at full length and they
+  stop fiddling with it.
+- The snack lies on the grass beside the west spot, inside a full leash but
+  still off the path, so the nose finds it.
+
+The pause menu is a two-column grid you move through in both directions:
+RESUME, THIS WALK, START AGAIN, SETTINGS, WALK SELECT and EXIT GAME. THIS
+WALK opens a card with the walk's name, its gloss, the time and each goal
+with its progress (the lesson in the tutorial). START AGAIN and EXIT GAME ask
+first ("Start this walk again?", "Quit the game?"). EXIT GAME is also on the
+title's prompt bar, on bark. It is desktop only: on the web the grid has five
+cells and the title offers no exit. Every exit goes through
+`MenuFlow.quit_game`.
+
+`--no-exit` shows the web menus on desktop; `--shot-menu=` gains `walkcard`
+and `confirm`, and the shot sweep photographs both.
+`tests/test_tutorial_stations.gd` now checks that every held lesson's target
+is in reach of where the owner waits, that the snack is on grass, and drives
+the dog to eat it; `tests/test_menu_flow.gd` covers the grid's moves, both
+questions, the title's exit and the walk card.
+
 ## 2026-10-03 - Menu, tutorial reach, and terrain design
 
 The next current-game work is specified as two passes. The first turns pause

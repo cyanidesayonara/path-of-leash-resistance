@@ -202,7 +202,14 @@ soon as it is written. Other shot flags: `--shot-title`, `--shot-results`,
 photographs the chase), and `--shot-y=N`, which starts the pair at that
 point down the walk (`--shot-y=-2450 --shot-at=40` photographs El Bosc's stream;
 give it 40 frames or so, a shot taken sooner can show the start line's ground).
-`--shot-menu=walk|details|shop|progress|pause|notice` opens that menu screen.
+`--shot-menu=walk|details|shop|progress|pause|walkcard|confirm|notice` opens
+that menu screen (`walkcard` is the pause menu's THIS WALK card, `confirm` its
+EXIT GAME question). `--no-exit` shows the web menus on desktop: no EXIT GAME
+on the title or in pause, and a five-cell pause grid.
+
+EXIT GAME is desktop only (`MenuFlow.can_exit()`: never on web or under
+`--no-exit`), always asks first, and leaves through `MenuFlow.quit_game`,
+never a bare `get_tree().quit()`, so tests can swap in `quit_hook`.
 
 Every menu screen is drawn by `hud/menu_screen.gd` from the model in
 `hud/menu_flow.gd` (which screen is up, what it holds, what its prompt bar
