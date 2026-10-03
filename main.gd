@@ -393,6 +393,17 @@ var paw_prints: Array[Dictionary] = []
 # the shape of whatever walks on it. Hers and his, fading as it fills back in.
 # Separate from paw_prints, which is what a wet paw LEAVES on dry ground.
 var dents: Array[Dictionary] = []
+# what her paws do to the ground as she goes (_ground_marks): grass she
+# flattens springs back, mud she runs through flies up, water she steps into
+# rings out. Pooled and capped at MARKS_MAX, deterministic, cosmetic only.
+var ground_marks: Array[Dictionary] = []
+var mark_last := Vector2(INF, INF)
+var mark_surface := -1
+var squelch_t := 0.0
+const MARKS_MAX := 24
+const FLAT_LIFE := 2.5
+const SPLAT_LIFE := 1.2
+const RING_LIFE := 1.0
 var dent_last_dog := Vector2(INF, INF)
 var dent_last_human := Vector2(INF, INF)
 var paw_last := Vector2(INF, INF)
@@ -1185,6 +1196,7 @@ func draw_verge_onto(c: Object, vt: float, vb: float) -> void:
 	# move, and the edge treatment was already more than half the frame once
 	# before it was moved off it (see edgelayer.gd) - putting picnics into the
 	# 30-times-a-second draw is exactly how a walk starts to stutter.
+	_draw_grass_detail(c, vt, vb)
 	for it: Dictionary in verge_items:
 		var p: Vector2 = it["pos"]
 		if p.y < vt - 160.0 or p.y > vb + 160.0:
@@ -1196,6 +1208,82 @@ func draw_verge_onto(c: Object, vt: float, vb: float) -> void:
 				_draw_stump(c, p)
 			"bush":
 				_draw_verge_bush(c, p)
+
+
+# GRASS THAT READS AS GRASS: tufts in two greens, now and then a seed head or
+# a flower, on a jittered grid wherever surface_at() says grass - so it can
+# never disagree with the handling. Drawn on the cached verge canvas: a redraw
+# every 150px of camera, never a frame. Positions are hashed from the grid
+# cell, never from the RNG, so the same lawn grows the same way every walk.
+const GRASS_STEP := 34.0
+
+
+static func _cell01(x: float, y: float) -> float:
+	var n := sin(x * 12.9898 + y * 78.233) * 43758.5453
+	return n - floorf(n)
+
+
+func _grass_blocked(p: Vector2) -> bool:
+	if built:
+		# past the building line are roofs, which the edge layer draws
+		var f := frontage(p.y)
+		if p.x < f.x or p.x > f.y:
+			return true
+	if lvl == "trail":
+		var e := walk_edges(p.y)
+		if p.x < e.x - LevelBuild.TRAIL_WOOD_OUT or p.x > e.y + LevelBuild.TRAIL_WOOD_OUT:
+			return true
+	for r: Rect2 in solid_rects:
+		if r.grow(6.0).has_point(p):
+			return true
+	if lvl == "park":
+		for r: Rect2 in LevelBuild.PARK_BEDS:
+			if r.grow(8.0).has_point(p):
+				return true
+		if LevelBuild.PARK_PLAYGROUND.grow(8.0).has_point(p):
+			return true
+	if lvl == "barri" or tutorial_mode:
+		if LevelBuild.BARRI_PETANCA.grow(8.0).has_point(p) or LevelBuild.BARRI_PLAYGROUND.grow(8.0).has_point(p):
+			return true
+	for it: Dictionary in verge_items:
+		if p.distance_to(it["pos"]) < 52.0:
+			return true
+	return false
+
+
+func _draw_grass_detail(c: Object, vt: float, vb: float) -> void:
+	var dark := Color(0.16, 0.30, 0.16, 0.55)
+	var lite := Color(0.50, 0.66, 0.36, 0.55)
+	var seedc := Color(0.86, 0.82, 0.62, 0.7)
+	if lvl == "trail":
+		# the forest floor: browner, and no meadow flowers under the trees
+		dark = Color(0.14, 0.22, 0.12, 0.6)
+		lite = Color(0.42, 0.50, 0.26, 0.5)
+	var flowers := [Color(0.97, 0.96, 0.92), Color(0.98, 0.84, 0.30), Color(0.86, 0.48, 0.70)]
+	var y := floorf((vt - 40.0) / GRASS_STEP) * GRASS_STEP
+	while y < vb + 40.0:
+		var x := -200.0
+		while x < 1480.0:
+			var h := _cell01(x, y)
+			var p := Vector2(x + (h - 0.5) * GRASS_STEP * 0.9, y + (fmod(h * 7.13, 1.0) - 0.5) * GRASS_STEP * 0.9)
+			if p.y > GATE_Y and surface_at(p) == Surfaces.S.GRASS and not _grass_blocked(p):
+				var lean := (h - 0.5) * 0.8
+				for bl in range(3):
+					var a := -PI * 0.5 + lean + (float(bl) - 1.0) * 0.45
+					var foot := p + Vector2((float(bl) - 1.0) * 1.6, 0.0)
+					var ln := 5.0 + fmod(h * 13.0 + float(bl), 1.0) * 3.5
+					c.draw_line(foot, foot + Vector2.from_angle(a) * ln, lite if bl == 1 else dark, 1.6)
+				var kind := int(h * 1000.0) % 29
+				if kind == 0 and lvl != "trail":
+					var fc: Color = flowers[int(h * 97.0) % 3]
+					for pe in range(4):
+						c.draw_circle(p + Vector2(3.0, -7.0) + Vector2.from_angle(float(pe) * PI * 0.5) * 1.8, 1.4, fc)
+					c.draw_circle(p + Vector2(3.0, -7.0), 1.0, Color(0.95, 0.72, 0.20))
+				elif kind < 4:
+					c.draw_line(p, p + Vector2(lean * 4.0, -11.0), dark, 1.0)
+					c.draw_circle(p + Vector2(lean * 4.0, -11.5), 1.6, seedc)
+			x += GRASS_STEP
+		y += GRASS_STEP
 
 
 func _draw_picnic(c: Object, at: Vector2) -> void:
@@ -3249,11 +3337,29 @@ func _draw_trail_stream(vt: float, vb: float) -> void:
 		water.append(Vector2(xs[k], sy + half + sin(xs[k] * 0.017 + 1.0) * 4.0))
 	_wc.draw_colored_polygon(bank, Color(0.36, 0.30, 0.21))
 	_wc.draw_colored_polygon(water, Color(0.27, 0.42, 0.44))
-	# ripples running downstream (east)
-	for k in range(14):
-		var rx := fmod(float(k) * 157.0 + wt * 38.0, 2100.0) - 400.0
-		var ry := sy + (float(k % 3) - 1.0) * 14.0
-		_wc.draw_line(Vector2(rx, ry), Vector2(rx + 22.0, ry), Color(1, 1, 1, 0.16), 2.0)
+	var wb := ShapeBatch.new()
+	# deeper down the middle: a darker band where the current runs
+	var deep := PackedVector2Array()
+	for bx: float in xs:
+		deep.append(Vector2(bx, sy - half * 0.45 + sin(bx * 0.019 + 0.5) * 3.0))
+	for k in range(xs.size() - 1, -1, -1):
+		deep.append(Vector2(xs[k], sy + half * 0.40 + sin(xs[k] * 0.015 + 1.7) * 3.0))
+	wb.polygon(deep, Color(0.18, 0.32, 0.36, 0.55))
+	# foam where the water meets each bank, drifting with the current
+	for k in range(34):
+		var fx := fmod(float(k) * 61.0 + wt * 22.0, 2100.0) - 400.0
+		var top := sy - half + sin(fx * 0.021) * 4.0 + 2.0
+		var bot := sy + half + sin(fx * 0.017 + 1.0) * 4.0 - 2.0
+		wb.line(Vector2(fx, top), Vector2(fx + 12.0, top), Color(0.92, 0.95, 0.94, 0.35), 2.0)
+		wb.line(Vector2(fx + 30.0, bot), Vector2(fx + 40.0, bot), Color(0.92, 0.95, 0.94, 0.30), 2.0)
+	# current lines running downstream (east), quicker in the deep middle
+	for k in range(18):
+		var lane := float(k % 3) - 1.0
+		var speed := 52.0 if lane == 0.0 else 34.0
+		var rx := fmod(float(k) * 127.0 + wt * speed, 2100.0) - 400.0
+		var ry := sy + lane * half * 0.5 + sin(rx * 0.02) * 2.0
+		wb.line(Vector2(rx, ry), Vector2(rx + 26.0, ry + 1.0), Color(1, 1, 1, 0.18 if lane == 0.0 else 0.12), 2.0)
+	wb.flush(_wc)
 	# stones along the banks
 	for k in range(10):
 		var stx := -200.0 + float(k) * 190.0 + float(k % 3) * 23.0
@@ -6100,6 +6206,50 @@ func _draw_pinned_patch(pt: Dictionary, at: Vector2, col: Color,
 	_wc.draw_colored_polygon(poly, col)
 
 
+# MUD THAT READS AS MUD: wet, rutted, holding water. Two ruts curving through
+# it where wheels and boots have gone, little pools sitting in its hollows
+# with the sky in them, a wet sheen on the lit side, and a few suction rings.
+# One batch, a handful of shapes, and only for patches on screen.
+func _draw_mud_detail(pt: Dictionary, base: Color) -> void:
+	var b := ShapeBatch.new()
+	var mid := patch_centre(pt)
+	var rx := float(pt["rx"])
+	var ry := float(pt["ry"])
+	var sd := float(pt["seed"])
+	var rut := Color(base.r * 0.55, base.g * 0.55, base.b * 0.55, 0.7)
+	var ridge := Color(minf(base.r * 1.25, 1.0), minf(base.g * 1.22, 1.0), minf(base.b * 1.18, 1.0), 0.45)
+	for side: float in [-1.0, 1.0]:
+		var prev := Vector2(INF, INF)
+		for k in range(7):
+			var f := float(k) / 6.0
+			var q := mid + Vector2(side * rx * 0.22 + sin(f * PI + sd) * rx * 0.08, lerpf(-ry * 0.82, ry * 0.82, f))
+			if prev.x < INF:
+				b.line(prev, q, rut, 4.5)
+				b.line(prev + Vector2(-2.2, 0.0), q + Vector2(-2.2, 0.0), ridge, 1.2)
+			prev = q
+	# brown water standing in the hollows: flat, dark, a thin glint of sky on
+	# the far edge (round grey discs read as stones)
+	for i in range(3):
+		var a := sd * 2.1 + float(i) * 2.3
+		var pp := mid + Vector2(cos(a) * rx * 0.42, sin(a) * ry * 0.4)
+		var pw := 9.0 + fmod(sd * 3.7 + float(i), 1.0) * 9.0
+		var pool := PackedVector2Array()
+		for k in range(12):
+			var t := TAU * float(k) / 12.0
+			pool.append(pp + Vector2(cos(t) * pw * (1.0 + 0.15 * sin(t * 3.0 + sd)), sin(t) * pw * 0.45))
+		b.polygon(pool, Color(base.r * 0.62, base.g * 0.62, base.b * 0.66, 0.9))
+		b.line(pp + Vector2(-pw * 0.5, -pw * 0.22), pp + Vector2(pw * 0.3, -pw * 0.3), Color(0.78, 0.84, 0.88, 0.40), 1.5)
+	# the wet sheen on the side the light comes from
+	b.circle(mid + LIGHT * rx * 0.35, minf(rx, ry) * 0.36, Color(1.0, 1.0, 1.0, 0.06))
+	# suction rings where something sank in and came out again
+	for i in range(2):
+		var a2 := sd * 5.3 + float(i) * 3.1
+		var sp := mid + Vector2(cos(a2) * rx * 0.6, sin(a2) * ry * 0.55)
+		b.circle(sp, 4.5, Color(base.r * 0.6, base.g * 0.6, base.b * 0.6, 0.7))
+		b.circle(sp, 2.6, base)
+	b.flush(_wc)
+
+
 func draw_patch(c: Object, pt: Dictionary, col: Color,
 		rim := Color(0, 0, 0, 0)) -> void:
 	var mid := patch_centre(pt)
@@ -6376,6 +6526,82 @@ func _takes_prints(p: Vector2) -> bool:
 	return s == Surfaces.S.SAND
 
 
+func _ground_marks() -> void:
+	var dp: Vector2 = dog.global_position
+	var s: int = dog.surface
+	var speed: float = dog.velocity.length()
+	# stepping into water: a ring, whatever the speed
+	if s == Surfaces.S.WATER and mark_surface != Surfaces.S.WATER and mark_surface != -1:
+		_add_mark({"kind": "ring", "pos": dp, "t": elapsed})
+	# into mud at a run: a squelch, not more than one a second
+	if s == Surfaces.S.MUD and mark_surface != Surfaces.S.MUD and speed > 80.0 and elapsed >= squelch_t:
+		squelch_t = elapsed + 1.0
+		Sfx.play("squelch", 1.0, -12.0)
+	mark_surface = s
+	if speed < 70.0:
+		return
+	var gap := 22.0 if s == Surfaces.S.GRASS else 18.0
+	if mark_last.x < INF and mark_last.distance_to(dp) < gap:
+		return
+	mark_last = dp
+	var ang: float = dog.velocity.angle()
+	match s:
+		Surfaces.S.GRASS:
+			_add_mark({"kind": "flat", "pos": dp, "t": elapsed, "ang": ang})
+		Surfaces.S.MUD:
+			if speed > 140.0:
+				_add_mark({"kind": "splat", "pos": dp, "t": elapsed, "ang": ang})
+
+
+func _add_mark(m: Dictionary) -> void:
+	ground_marks.append(m)
+	while ground_marks.size() > MARKS_MAX:
+		ground_marks.remove_at(0)
+
+
+func _draw_ground_marks(vt: float, vb: float) -> void:
+	if ground_marks.is_empty():
+		return
+	var b := ShapeBatch.new()
+	var i := 0
+	while i < ground_marks.size():
+		var m: Dictionary = ground_marks[i]
+		var age := elapsed - float(m["t"])
+		var life: float = FLAT_LIFE if m["kind"] == "flat" else (SPLAT_LIFE if m["kind"] == "splat" else RING_LIFE)
+		if age > life:
+			ground_marks.remove_at(i)
+			continue
+		i += 1
+		var p: Vector2 = m["pos"]
+		if p.y < vt - 30.0 or p.y > vb + 30.0:
+			continue
+		var f := 1.0 - age / life
+		match String(m["kind"]):
+			"flat":
+				# two lighter streaks where the blades are pressed flat
+				var fwd := Vector2.from_angle(float(m["ang"]))
+				var sd := fwd.orthogonal() * 4.0
+				for k: float in [-1.0, 1.0]:
+					b.line(p + sd * k - fwd * 5.0, p + sd * k + fwd * 5.0, Color(0.70, 0.80, 0.52, 0.30 * f), 3.0)
+			"splat":
+				# drops thrown out sideways and behind
+				var fwd2 := Vector2.from_angle(float(m["ang"]))
+				var sd2 := fwd2.orthogonal()
+				var spread := 6.0 + (1.0 - f) * 10.0
+				for k in range(3):
+					var o := sd2 * (float(k) - 1.0) * spread - fwd2 * (4.0 + float(k) * 2.0)
+					b.circle(p + o, 2.4, Color(0.30, 0.22, 0.14, 0.8 * f))
+			"ring":
+				var r := 6.0 + (1.0 - f) * 26.0
+				var pts := 18
+				var prev := p + Vector2(r, 0.0)
+				for k in range(1, pts + 1):
+					var q := p + Vector2.from_angle(TAU * float(k) / float(pts)) * r
+					b.line(prev, q, Color(0.90, 0.95, 1.0, 0.5 * f), 2.0)
+					prev = q
+	b.flush(_wc)
+
+
 func _press_dents() -> void:
 	if _takes_prints(dog.global_position) and dent_last_dog.distance_to(dog.global_position) > 20.0:
 		dent_last_dog = dog.global_position
@@ -6438,6 +6664,7 @@ func _offpath(delta: float) -> void:
 		if paw_prints.size() > 90:
 			paw_prints.remove_at(0)
 	_press_dents()
+	_ground_marks()
 	# ...and so does your human, the moment you lean on their nice trousers
 	if wet_paws > 0.0 and dog.global_position.distance_to(human.global_position) < 26.0 and smudge_cd <= 0.0:
 		smudge_cd = 1.1
@@ -8564,6 +8791,7 @@ func _draw_world() -> void:
 				_wc.draw_line(Vector2(cx + 30.0, cy + 10.0), Vector2(cx, cy), Color(0.6, 0.63, 0.68), 3.0)
 			cy += 60.0
 	_draw_ground_detail(vt, vb)
+	_draw_ground_marks(vt, vb)
 	# the paw trail, in whatever she stood in
 	# footprints pressed into sand or snow: a shadowed hollow with a lit lip on
 	# the far side (the one light is up-left), fading as it fills back in
@@ -8726,6 +8954,9 @@ func _draw_world() -> void:
 			base = Color((SUBSTANCES[sk] as Dictionary)["col"])
 		draw_patch(_wc, pt, Color(base.r, base.g, base.b, 0.88),
 			Color(base.r * 0.6, base.g * 0.6, base.b * 0.6, 0.45))
+		if sk == "mud":
+			_draw_mud_detail(pt, base)
+			continue
 		# a few darker flecks, so a big patch is not one flat colour
 		var mid := patch_centre(pt)
 		for i in range(5):

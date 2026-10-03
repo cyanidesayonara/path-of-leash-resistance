@@ -20,27 +20,25 @@ phone-distracted human walks on autopilot; the leash is real verlet-rope
 physics (visual and gameplay constraint — see AGENTS.md). Ships to itch
 (`html5` + `windows`) on a version tag after green CI.
 
-## Where things stand (2026-10-03)
+## Where things stand (2026-10-04)
 
 **Released: v1.57** on itch (web + Windows) and submitted to the Microsoft
 Store as 1.57.0.0 on 2026-10-03 (listing record: `store/listing.md`). Its
 Store submission uses the ten current screenshots in `store/screenshots/`.
 
-**On `main`, awaiting hand acceptance** (board column "Awaiting acceptance",
-https://github.com/users/cyanidesayonara/projects/4):
-- #127 leash overhaul: smooth collision-aware drawing over the same physical
-  verlet rope, adaptive stabilisation and weighted end control.
-- #128 guided whirl overhaul (below).
+**Accepted and on `main` since:** #127 (leash drawing), #128 (guided whirl),
+#129 (pause grid, desktop exit, tutorial reach) and #130 (the leash
+conversation: your human is led by a steady pull, worn down by a hard one,
+and answers with a telegraphed "HEY!" and a correction; see AGENTS.md and
+`tests/test_leash_conversation.gd`). Nothing is awaiting acceptance.
 
-**In review, not yet merged:** branch `menu-shell-tutorial-reach`, the first
-of the two passes in `docs/superpowers/specs/2026-10-03-menu-terrain-design.md`
-(plan: `docs/superpowers/plans/2026-10-03-menu-shell-tutorial-reach.md`). The
-tutorial's nose snack is reachable again (El Barri lost its accidental edge
-walls, held lessons stand the owner by the right edge with the reel pinned
-long); pause is a two-column grid with THIS WALK, confirmed START AGAIN and
-EXIT GAME, and EXIT GAME on the desktop title. Its PR is player-facing: once
-merged it makes 3 of 5 awaiting acceptance. The second pass (terrain audit
-and surface looks) has not started.
+**In progress:** pass 2 of `docs/superpowers/specs/2026-10-03-menu-terrain-design.md`.
+Part 1 (the access audit, `tools/terrain_audit.gd`; grass, mud and stream
+detail; paw marks on grass, mud and water) is its own PR. Left for part 2:
+gait by surface, the remaining sounds (rustle, grit, claw tick), sand
+ripples and kicked grains, pavement repairs and drains. The spec's
+mosaic-tile item no longer applies (El Mosaic has had no tile floor since its
+rebuild).
 
 The older acceptance backlog (#23) is closed with every entry ticked. The
 board and that issue are the source of truth for the WIP count.
@@ -48,9 +46,8 @@ board and that issue are the source of truth for the WIP count.
 **Needs Santtu:**
 - #65 (S2, decision): the built-up walks' frontage has been hidden under
   full-width grass since v1.51. Three options in the issue.
-- Play #127, #128 and, once merged, the menu and tutorial PR (its feel
-  card); the real-phone check (#13) now includes the
-  touch controls; #11, #12, #14.
+- Play the terrain PR (part 1) once merged, from its feel card; the
+  real-phone check (#13) now includes the touch controls; #11, #12, #14.
 
 **Level review (#21):** two automated passes done (every walk at five points;
 every walk in rain, wind, snow, night and at 844x390). Findings filed and
@@ -60,7 +57,7 @@ mostly fixed; what is left needs play.
 picture (the full-screen grade costs 3-4 ms a frame on an integrated GPU in
 the browser) or the behaviour (walker ropes; tried and dropped 2026-09-26).
 
-**Guided whirl overhaul (built, not yet accepted):** the owner now commits to
+**Guided whirl overhaul (accepted, #128):** the owner now commits to
 one direction and the exact local human-end coil measured over the arming
 window. Normal release is the pure tangent; the bounded missed-tangent path
 leans dogward only when it can still preserve the orbit, otherwise it bails
