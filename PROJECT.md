@@ -164,6 +164,12 @@ Every feature must serve at least one. If it serves none, cut it.
   actual viewport (touch controls, goals card, results/settings modals, the
   pause dim) now follows the real viewport size. Verified locally at several
   phone window shapes; not yet confirmed on a real device.
+- **post-v1.57 leash tuning - completed.** Open spans draw smoothly without
+  moving solver or contact points; obstacle checks reject unsafe curve
+  samples. Open-end pull uses a three-segment weighted tangent, while contacts
+  keep the first-segment direction. Spring force, separation damping and lost
+  dog control ease in together over the first 5% of stretch. The rope still
+  draws as four polylines plus batched circles.
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
 - Every release also ships: mechanics tuning from playtests, at least
@@ -179,7 +185,8 @@ Iterate the 2D prototype until the core loop is fun for 10 minutes.
 - [x] Pole wrapping as a real constraint (the verlet rope wraps via
       segment-vs-circle collision — no separate pivot bookkeeping) — this
       is where the puzzle design opens up
-- [ ] Leash weight tuning round 2 (after wrap physics changes the feel)
+- [x] Leash weight tuning round 2 — completed by the post-v1.57 smooth-path,
+      weighted-tangent and continuous-onset pass
 - [x] 2-3 more human event types (sits on bench, walks backwards filming,
       stops for selfie in the worst spot)
 - [x] 1-2 more hazard types (open cellar door, cafe terrace)
@@ -420,6 +427,13 @@ memorable.
   pooling, and possibly enabling web thread_support (needs COOP/COEP
   headers on the host). Native/Steam has ample headroom; a desktop build
   sidesteps the ceiling entirely. Renderer is already gl_compatibility.
+  October 2026 leash measurements on Windows: the fixed 24-point solver uses
+  58 / 129 / 254 microseconds per tick in free / pole / tangle fixtures.
+  `visible_path()` inserts one checked midpoint per segment into a reused
+  47-point buffer; complete draw preparation costs 19 / 21 / 40 microseconds.
+  That is four rope polylines plus the existing circle batch, unchanged in
+  draw-call count. Browser cost remains unmeasured until the Godot 4.7
+  no-thread Web templates are installed.
 - UI/UX + art to "professional": the biggest lift-per-effort is a real
   art + HUD pass - consistent type scale and spacing, a cohesive palette,
   eased transitions and juice (screen shake, hit-stop, particles are

@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-10-03 - Smoother leash, continuous tug
+
+The verlet rope remains the one physical leash, but its open spans now draw
+with a contact-safe curve: solver points stay on the path, bends beside a
+contact stay straight, and curved samples that would cut an obstacle fall back
+to the rope chord. Pull direction uses a three-segment length-weighted tangent
+on open ends and the original first segment near a contact, preserving wrapped
+flings.
+
+The first 5% of stretch now eases in the spring force, separation damping,
+drawn strap weight and the dog's loss of control together. Taut, unwrapped
+ropes also damp small settled oscillations. Regression tests cover the public
+path, fixed draw buffers, weighted tangents, settling, onset and caller wiring.
+The solver benchmark remains within its same-machine guardrails; draw
+preparation is 18.62 / 21.18 / 40.04 microseconds for free, pole and tangle
+fixtures, with the same four rope polylines and existing batched circles.
+Behaviour snapshots change intentionally where the softer onset changes walk
+timing.
+
 ## 2026-10-03 - v1.57 submitted to the Microsoft Store
 
 Version 1.57.0.0 was submitted with the listing, What's new text and

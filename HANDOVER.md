@@ -58,10 +58,12 @@ the browser) or the behaviour (walker ropes; tried and dropped 2026-09-26).
 
 - Verification: `tools/shot_sweep.sh` (deterministic: fixed frame rate,
   seed, `AnimClock`), `tools/shot_diff.py` (pixel diff of two sweeps),
-  `tools/behaviour_snapshot.sh` (55 fixed-seed runs over 13 walks;
-  byte-identical for a refactor), `tools/idle_soak.sh`, `--perf` with
+  `tools/behaviour_snapshot.sh` (59 fixed-seed runs over 14 walks;
+  byte-identical for a refactor, line-by-line explained for intentional
+  handling changes), `tools/idle_soak.sh`, `--perf` with
   `--perf-hide=`, `--perf-no-grade`, per-spike `physics_top`,
-  `tools/perf_sweep.sh`, `tools/web_perf.sh`, `tools/bench_leash.gd`.
+  `tools/perf_sweep.sh`, `tools/web_perf.sh`, `tools/bench_leash.gd`,
+  `tools/bench_leash_draw.gd`.
   Flags for screenshots: `--night`, `--weather=`, `--prompts=pad|touch`,
   `--touch`, `--shot-at=N`.
 - Rendering: draw runs of filled shapes through `ShapeBatch`
