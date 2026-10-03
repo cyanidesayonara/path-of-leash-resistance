@@ -9,7 +9,9 @@ with a contact-safe curve: solver points stay on the path, bends beside a
 contact stay straight, and curved samples that would cut an obstacle fall back
 to the rope chord. Pull direction uses a three-segment length-weighted tangent
 on open ends and the original first segment near a contact, preserving wrapped
-flings.
+flings. Repeated leash setup now replaces the existing solver points instead
+of appending a second rope, keeping setup idempotent and plant-grip tests on
+the current endpoints.
 
 The first 5% of stretch now eases in the spring force, separation damping,
 drawn strap weight and the dog's loss of control together. Taut, unwrapped

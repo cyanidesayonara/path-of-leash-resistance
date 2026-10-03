@@ -68,6 +68,8 @@ deliberate handling change must explain every changed snapshot line.
   (grip at low stretch, free slide when overstretched). There is NO
   separate wrap bookkeeping - three generations of pivot/angle tracking
   systems all desynced from the visual; do not reintroduce one.
+  `setup()` always replaces the rope with exactly `N` current and previous
+  points; repeated setup must never append another rope.
   `used_length()` is the solver polyline length. `visible_path()` is the
   public, fixed-size visual path: every solver point is pinned, spans beside
   contacts stay straight, and a curved midpoint is rejected if either new

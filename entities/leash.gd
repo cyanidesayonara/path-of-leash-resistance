@@ -166,10 +166,12 @@ func setup(d: Node2D, h: Node2D, pole_list: Array[Vector2], max_len: float) -> v
 	human = h
 	poles = pole_list
 	rest_len = max_len
+	pts.resize(N)
+	prev.resize(N)
 	for i in range(N):
 		var p := d.global_position.lerp(h.global_position, float(i) / (N - 1))
-		pts.append(p)
-		prev.append(p)
+		pts[i] = p
+		prev[i] = p
 
 
 func _hand_pos() -> Vector2:
