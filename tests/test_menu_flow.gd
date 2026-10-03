@@ -62,6 +62,17 @@ func _run() -> void:
 		_check(not main.panel.visible, "step %d: the walk HUD stays hidden on the title" % s)
 		_check(not Flow.prompts(main).is_empty(), "step %d: the prompt bar offers something" % s)
 	_check(_verbs(main).has("back"), "getting ready has a way back to the walk select")
+	main.menu_step = 0
+	main._apply_menu_step()
+	Flow.exit_hidden = false
+	_check(_verbs(main).has("exit game") or OS.has_feature("web"), "the title offers EXIT GAME on desktop")
+	Flow.exit_hidden = true
+	_check(not _verbs(main).has("exit game"), "and not where the game cannot quit")
+	Flow.exit_hidden = false
+	Flow.open_confirm(main, "exit")
+	_check(Flow.screen(main) == "confirm", "exit from the title asks first")
+	Flow.confirm_cancel(main)
+	_check(Flow.screen(main) == "title", "cancel returns to the title")
 
 	# getting ready: rows, and left/right changes the picked one
 	var rows: Array = Flow.details_rows(main)
@@ -160,11 +171,37 @@ func _run() -> void:
 	_check(main.pause_idx == 4, "a five-cell grid lands on its lone last cell")
 	Flow.exit_hidden = false
 	main.pause_idx = 0
+	# START AGAIN and EXIT GAME ask first; cancelling returns to the grid
+	var quit_calls := [0]
+	Flow.quit_hook = func() -> void: quit_calls[0] += 1
+	main.pause_idx = Flow.pause_ids(main).find("exit")
+	Flow.pause_activate(main)
+	_dump(main, "confirm_exit")
+	_check(Flow.screen(main) == "confirm" and main.confirm_id == "exit" and quit_calls[0] == 0,
+		"EXIT GAME asks before quitting")
+	_check(_verbs(main) == ["yes", "cancel"], "a question offers yes and cancel (%s)" % [_verbs(main)])
+	_check(String(Flow.confirm_card(main).body) == "Quit the game?", "the exit question")
+	Flow.confirm_cancel(main)
+	_check(Flow.screen(main) == "pause" and quit_calls[0] == 0, "cancel returns to the pause grid")
+	Flow.open_confirm(main, "exit")
+	Flow.confirm_accept(main)
+	_check(quit_calls[0] == 1, "yes quits, once")
+	main.confirm_id = ""
+	main.pause_idx = Flow.pause_ids(main).find("restart")
+	Flow.pause_activate(main)
+	_check(main.confirm_id == "restart" and String(Flow.confirm_card(main).body) == "Start this walk again?",
+		"START AGAIN asks first")
+	Flow.confirm_cancel(main)
+	Flow.quit_hook = Callable()
 	main._open_settings()
 	main._close_settings()
 	_check(Flow.screen(main) == "pause" and main.dim.visible, "settings opened from pause close back to the pause menu")
 	Flow.resume(main)
 	_check(not main.paused and not main.frozen and not main.dim.visible, "resume gets back to the walk")
+	var Prompts: GDScript = load("res://hud/prompts.gd")
+	for which in ["title", "pause", "confirm", "walkcard"]:
+		for it: Array in Flow.prompts(main, which):
+			_check(Prompts.NAMES.has(String(it[0])), "%s prompt '%s' is an action Prompts knows" % [which, it[0]])
 
 	# a notice card: its first line is the title, the rest the body
 	Flow.show_notice(main, "TITLE LINE\n\nbody one\nbody two")

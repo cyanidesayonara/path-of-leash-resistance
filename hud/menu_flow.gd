@@ -29,6 +29,8 @@ static var exit_hidden := false
 static func screen(m: Node2D) -> String:
 	if m.in_settings:
 		return "settings"
+	if m.confirm_id != "":
+		return "confirm"
 	if m.msg_label != null and m.msg_label.visible:
 		return "notice"
 	if m.results_card != null and m.results_card.visible:
@@ -49,7 +51,12 @@ static func screen(m: Node2D) -> String:
 static func prompts(m: Node2D, which := "") -> Array:
 	match which if which != "" else screen(m):
 		"title":
-			return [["plant", "start"], ["pause", "settings"]]
+			var out := [["plant", "start"], ["pause", "settings"]]
+			if can_exit():
+				out.append(["bark", "exit game"])
+			return out
+		"confirm":
+			return [["plant", "yes"], ["bark", "cancel"]]
 		"walk":
 			var open := Game.is_unlocked(Game.level_id)
 			return [["left_right", "browse"], ["plant", "choose", open], ["bark", "wardrobe"],
@@ -203,6 +210,9 @@ static func start_walk(m: Node2D) -> void:
 
 # Title input. Returns true when _process should stop for this frame.
 static func tick_title(m: Node2D) -> bool:
+	if m.confirm_id != "":
+		tick_confirm(m)
+		return true
 	if m.in_shop:
 		tick_shop(m)
 		return true
@@ -219,6 +229,8 @@ static func tick_title(m: Node2D) -> bool:
 			if Input.is_action_just_pressed("plant"):
 				Sfx.play("ui")
 				_go_step(m, 1)
+			elif Input.is_action_just_pressed("bark") and can_exit():
+				open_confirm(m, "exit")
 		1:
 			if Input.is_action_just_pressed("pee"):
 				open_progress(m)
@@ -283,6 +295,9 @@ static func resume(m: Node2D) -> void:
 
 
 static func tick_pause(m: Node2D) -> void:
+	if m.confirm_id != "":
+		tick_confirm(m)
+		return
 	if Input.is_action_just_pressed("pause") or Input.is_action_just_pressed("bark"):
 		resume(m)
 	elif Input.is_action_just_pressed("move_down"):
@@ -355,8 +370,53 @@ static func open_walk_card(m: Node2D) -> void:
 	m.pause_view = "walk"
 
 
+# --- questions: START AGAIN and EXIT GAME ask first --------------------------
+
+# tests swap this in so a confirmed exit can be checked without ending the run
+static var quit_hook := Callable()
+
+const CONFIRMS := {
+	"restart": {"title": "START AGAIN", "body": "Start this walk again?"},
+	"exit": {"title": "EXIT GAME", "body": "Quit the game?"},
+}
+
+
 static func open_confirm(m: Node2D, which: String) -> void:
 	m.confirm_id = which
+	Sfx.play("ui")
+
+
+static func confirm_card(m: Node2D) -> Dictionary:
+	return CONFIRMS.get(String(m.confirm_id), {"title": "", "body": ""})
+
+
+static func confirm_cancel(m: Node2D) -> void:
+	m.confirm_id = ""
+	Sfx.play("ui")
+
+
+static func confirm_accept(m: Node2D) -> void:
+	var which := String(m.confirm_id)
+	m.confirm_id = ""
+	match which:
+		"restart":
+			restart_walk(m)
+		"exit":
+			quit_game(m)
+
+
+static func quit_game(m: Node2D) -> void:
+	if quit_hook.is_valid():
+		quit_hook.call()
+		return
+	m.get_tree().quit()
+
+
+static func tick_confirm(m: Node2D) -> void:
+	if Input.is_action_just_pressed("plant"):
+		confirm_accept(m)
+	elif Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pause"):
+		confirm_cancel(m)
 
 
 # Straight back into the same walk, skipping the menus: what "try again"
