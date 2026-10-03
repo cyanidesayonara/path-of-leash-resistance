@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-10-03 - Menu, tutorial reach, and terrain design
+
+The next current-game work is specified as two passes. The first turns pause
+into a two-column grid, adds a confirmed desktop exit on the title and pause
+screens, and makes every held tutorial target reachable without taking the
+nose snack off the grass. The second audits every walk so grass, sand, mud,
+puddles and water are traversable, then gives each surface a procedural look
+and gait while keeping the existing feel table and the web frame budget.
+
 ## 2026-10-03 - The whirl commits to one way round
 
 The tetherball now reads one signed measure of the human-end coil over its
