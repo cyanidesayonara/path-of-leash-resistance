@@ -4772,6 +4772,14 @@ func _shot_menu(which: String) -> void:
 		"pause":
 			_skip_title()
 			MenuFlow.open_pause(self)
+		"walkcard":
+			_skip_title()
+			MenuFlow.open_pause(self)
+			MenuFlow.open_walk_card(self)
+		"confirm":
+			_skip_title()
+			MenuFlow.open_pause(self)
+			MenuFlow.open_confirm(self, "exit")
 		"notice":
 			_skip_title()
 			_death("OFF THE EDGE\n\nShe went over, and the human went with her.")
@@ -4865,7 +4873,7 @@ func _process(_delta: float) -> void:
 			# reviewed. Everything else about --shot exists to get PAST this.
 			if "--shot-title" in OS.get_cmdline_user_args():
 				return
-			# --shot-menu=walk|details|shop|progress|pause|notice opens that screen
+			# --shot-menu=walk|details|shop|progress|pause|walkcard|confirm|notice opens that screen
 			for a in OS.get_cmdline_user_args():
 				if a.begins_with("--shot-menu="):
 					_shot_menu(a.substr(12))
