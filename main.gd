@@ -5133,6 +5133,9 @@ func _leash_tug(delta: float) -> void:
 		# makes a mood something the human notices too.
 		var lunge: float = mood.pull_mult() if mood != null else 1.0
 		human.velocity += h_dir * (base_tension * pulley * lunge / human_m) * delta
+		# and what they make of it: led by a steady pull, worn down by a hard
+		# one (human.gd, the leash conversation)
+		human.feel_pull(h_dir, base_tension * tight)
 	if not dog.planted:
 		dog.velocity += d_dir * (base_tension * shield / dog_m) * delta
 	# damp separating components so neither end bungees
@@ -7732,6 +7735,22 @@ func nearest_bench(pos: Vector2):
 			best_d = d
 			best = b
 	return best
+
+
+# your human ran out of patience and hauled her in: a step back and a short
+# leash (human.gd/_correct)
+func on_correction(pos: Vector2) -> void:
+	Sfx.play("tangle", 0.8, -8.0)
+	float_text(pos + Vector2(0, -30), "HEEL", Color(1, 0.85, 0.75))
+
+
+# ...but she was dug in for it, and it is him that lurches
+func on_correction_braced(pos: Vector2) -> void:
+	Sfx.play("crack", 0.9, -8.0)
+	bones += 3
+	combo.add("BRACED", 4)
+	float_text(pos + Vector2(0, -30), "held firm! +3", Color(0.7, 1.0, 0.75))
+	_update_hud()
 
 
 func on_stumble_save(pos: Vector2) -> void:
