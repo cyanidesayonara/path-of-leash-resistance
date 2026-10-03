@@ -56,8 +56,9 @@ The split-out modules (`systems/goals.gd`, `hud/hud_build.gd`,
 `world/level_build.gd`, ...) are static functions over main's state: the
 state stays on main, and main.gd keeps a same-name forwarder for every
 function another script or a test calls. A behaviour-preserving refactor of
-main.gd must leave `tools/behaviour_snapshot.sh` output byte-identical. A
-deliberate handling change must explain every changed snapshot line.
+main.gd must leave `tools/behaviour_snapshot.sh` output byte-identical. An
+intentional behaviour change needs a fresh baseline comparison and must
+explain every changed snapshot line; this does not relax the refactor rule.
 
 ## How things work (non-obvious bits)
 
@@ -77,8 +78,11 @@ deliberate handling change must explain every changed snapshot line.
   its fixed buffers. `dog_pull_dir()` / `human_pull_dir()` use a
   three-segment length-weighted chord on an open end; any contact in that run
   restores the first-segment tangent, preserving wound arcs. Regression tests:
-  `test_wrap.gd`, `test_leash_render_path.gd`,
-  `test_leash_draw_buffers.gd` and `test_leash_weighted_tangent.gd`.
+  `test_wrap.gd`, `test_leash_setup.gd`, `test_leash_render_path.gd`,
+  `test_leash_draw_buffers.gd`, `test_leash_weighted_tangent.gd`,
+  `test_leash_taut_transition.gd`, `test_leash_taut_settling.gd` and
+  `test_leash_tension_wiring.gd`. `test_wrap.gd` runs in CI; every rope
+  physics change must keep it green and should extend it.
 - **Tug of war** (`main.gd/_apply_leash`): `taut_amount()` eases continuously
   from zero to one over stretch ratio 1.00-1.05. `tension_force()` applies
   that amount to `LEASH_K * stretch excess`; separation damping and

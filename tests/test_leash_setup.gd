@@ -45,7 +45,7 @@ func _initialize() -> void:
 				and current.is_equal_approx(expected) \
 				and previous.is_equal_approx(expected)
 	_check(laid_between_current_endpoints,
-			"repeated setup lays a finite rope between the current endpoints")
+			"repeated setup exactly interpolates finite current and previous points")
 
 	print("\n%d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():

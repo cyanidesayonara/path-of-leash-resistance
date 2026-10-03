@@ -18,7 +18,7 @@ drawn strap weight and the dog's loss of control together. Taut, unwrapped
 ropes also damp small settled oscillations. Regression tests cover the public
 path, fixed draw buffers, weighted tangents, settling, onset and caller wiring.
 The solver benchmark remains within its same-machine guardrails; draw
-preparation is 18.62 / 21.18 / 40.04 microseconds for free, pole and tangle
+preparation is about 19 / 22 / 40 microseconds for free, pole and tangle
 fixtures, with the same four rope polylines and existing batched circles.
 Behaviour snapshots change intentionally where the softer onset changes walk
 timing.
