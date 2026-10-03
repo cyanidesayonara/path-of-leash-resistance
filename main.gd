@@ -4999,6 +4999,20 @@ func owner_news(line: String) -> void:
 
 
 func _apply_leash(delta: float) -> void:
+	_leash_tug(delta)
+	# One-shot, consumed once the tug above has had its frame - on EVERY path
+	# through it, including the early ones (no leash at all, a slack rope), or
+	# it survives into a frame where she is not whirling and shields her from
+	# a tug she should feel.
+	if human.whirl_bailed:
+		# an abandoned orbit is not a fling: no score, no sfx, just enough
+		# slip left for her to stagger clear of the coil
+		human.whirl_bailed = false
+		if not leash.detached:
+			leash.free_slip_t = maxf(float(leash.free_slip_t), WHIRL_SLIP_BAIL)
+
+
+func _leash_tug(delta: float) -> void:
 	# The rope itself (leash.gd) is the constraint. Here: run the rope
 	# physics, then turn its stretch into tug-of-war forces. One tension,
 	# applied to each end inversely to effective mass along the rope's end
@@ -5015,10 +5029,13 @@ func _apply_leash(delta: float) -> void:
 	leash.tick(delta)
 	# The whirl manages its own release (aimed at the dog); no early exit, or
 	# the launch direction would be random. `whirling` means the owner's
-	# motion is the orbit's to choreograph, which includes the frame an orbit
-	# is given up on: raw forces and the geometry cap skip her either way.
-	var whirling: bool = human.is_whirling()
-	if whirling:
+	# motion is the orbit's to choreograph, and that includes the frame an
+	# orbit is given up on. human.tick runs BEFORE this, so a timeout or a
+	# pole that stopped being reachable has already put her in a stumble by
+	# now: raw forces and the geometry cap must still skip her on that frame,
+	# or the way out gets exactly the yank the orbit was shielding her from.
+	var whirling: bool = human.is_whirling() or human.whirl_bailed
+	if human.is_whirling():
 		# the choreographed unwind must never be arrested by rope grip
 		leash.free_slip_t = WHIRL_SLIP
 		# There is no wrong-way correction: the direction was committed from
@@ -5027,11 +5044,6 @@ func _apply_leash(delta: float) -> void:
 		# not to be a pole, and orbiting a cafe table unwinds nothing.
 		if not leash.is_real_pole(human.whirl_pole):
 			human.bail_whirl()
-	if human.whirl_bailed:
-		# an abandoned orbit is not a fling: no score, no sfx, just enough
-		# slip left for her to stagger clear of the coil
-		human.whirl_bailed = false
-		leash.free_slip_t = maxf(float(leash.free_slip_t), WHIRL_SLIP_BAIL)
 	if human.just_flung:
 		# a fresh fling must never be arrested by a residual wrap
 		human.just_flung = false
@@ -5145,7 +5157,14 @@ func _apply_leash(delta: float) -> void:
 				# frame - and what the orbit then commits to for good.
 				whirl_dir_acc += leash.unwind_bias(wp)
 				if whirl_arm >= WHIRL_ARM_T:
-					human.start_whirl(wp, 1.0 if whirl_dir_acc >= 0.0 else -1.0, absf(leash.winding()))
+					# A rope with no opinion at all over the whole window -
+					# no coil beside this pole to read - does not get a
+					# direction picked out of the air: she keeps going the way
+					# she is already travelling round it.
+					var dir := whirl_dir_acc
+					if dir == 0.0:
+						dir = human.orbit_sense(human.global_position - wp, human.velocity)
+					human.start_whirl(wp, dir, absf(leash.winding()))
 					armed = false
 	if not armed:
 		whirl_arm = 0.0

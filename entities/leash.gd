@@ -36,8 +36,9 @@ const TANGENT_RUN := 3
 # the window human_end_winding() measures. The whirl's direction is decided by
 # stepping the hand WHIRL_PROBE_STEP radians each way round the pole and
 # keeping the step that leaves her end less wound (main.gd/_apply_leash).
-# Only corners within WHIRL_COIL_REACH of the pole count as its coil; rope
-# points held against a pole sit POLE_PAD out from it.
+# Only corners beside the pole count as its coil - WHIRL_COIL_REACH at the
+# least, and as far out as her hand when the rope has it further (see
+# unwind_bias). Rope points held against a pole sit POLE_PAD out from it.
 const WHIRL_TAIL := 9
 const WHIRL_PROBE_STEP := 0.08
 const WHIRL_COIL_REACH := 2.0 * POLE_PAD
@@ -443,8 +444,18 @@ func human_tail() -> PackedVector2Array:
 
 
 # Which way round `pole` unwinds the human end: positive for anticlockwise.
+# The coil an orbit round this pole could take off lies between the pole and
+# her hand, so that is how far out the measure looks - her own distance from
+# it, plus the pad rope points are held off it at. A taut rope's corners sit
+# most of that way out, which is why the reach is not a fixed small radius;
+# what it must still exclude is whatever the rope is wound round elsewhere,
+# and that is poles away, not hand-lengths.
 func unwind_bias(pole: Vector2) -> float:
-	return unwind_bias_of(pole_winding(human_tail(), pole), WHIRL_PROBE_STEP)
+	var tail := human_tail()
+	var reach := WHIRL_COIL_REACH
+	if tail.size() > 0:
+		reach = maxf(reach, tail[tail.size() - 1].distance_to(pole) + POLE_PAD)
+	return unwind_bias_of(pole_winding(tail, pole, reach), WHIRL_PROBE_STEP)
 
 
 # The two below read their arguments and nothing else, so the whirl's
@@ -453,20 +464,21 @@ func unwind_bias(pole: Vector2) -> float:
 # The tail's signed turning about `pole`, in radians: the corners of the coil
 # it is wound in, which is the only part of her end an orbit round THIS pole
 # can take off. A long straight run out to the hand therefore cannot outvote
-# the coil. With nothing close enough to be a coil, the whole tail stands in.
+# the coil, and neither can a coil wound round something else further along.
+# Nothing beside the pole, or corners beside it that cancel, is no coil here
+# and reads as exactly 0.0 - never the whole tail's turning, which is the
+# measure this function exists to avoid. Its callers settle their own ties.
 func pole_winding(p: PackedVector2Array, pole: Vector2, reach := WHIRL_COIL_REACH) -> float:
 	var near := 0.0
-	var all := 0.0
 	for i in range(1, p.size() - 1):
+		if p[i].distance_squared_to(pole) >= reach * reach:
+			continue
 		var a := p[i] - p[i - 1]
 		var b := p[i + 1] - p[i]
 		if a.length_squared() <= 0.01 or b.length_squared() <= 0.01:
 			continue
-		var turn := a.angle_to(b)
-		all += turn
-		if p[i].distance_squared_to(pole) < reach * reach:
-			near += turn
-	return near if absf(near) > WIND_EPS else all
+		near += a.angle_to(b)
+	return 0.0 if absf(near) < WIND_EPS else near
 
 
 # How much less wound the owner's end would be if her hand took a tiny step

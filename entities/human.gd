@@ -26,9 +26,10 @@ const WHIRL_SPIN_LOOK := 1.4
 const WHIRL_FLING_PER_OMEGA := 54.0
 const WHIRL_FLING_MIN := 360.0
 const WHIRL_FLING_MAX := 950.0
-# Release. The ideal launch is the tangent once it points within this cone of
-# the dog. If it never does, she keeps orbiting at most WHIRL_EXTRA_ARC past
-# the wound-turn budget, and the launch leans toward the dog by at most
+# Release. The launch is the tangent, once it points within this cone of the
+# dog - the wait is what aims it, so there is nothing to correct. If it never
+# does point there, she keeps orbiting at most WHIRL_EXTRA_ARC past the
+# wound-turn budget, and only THAT launch leans toward the dog, by at most
 # WHIRL_BLEND_MAX - under a quarter turn, so a lean can never reach the far
 # side of the radius and reverse the way she was going round.
 const WHIRL_AIM_COS := 0.5
@@ -307,18 +308,24 @@ func tick(delta: float) -> void:
 				global_position = whirl_pole + Vector2.from_angle(whirl_angle) * whirl_r
 				velocity = Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0) * whirl_omega * whirl_r
 				rotation += whirl_dir * whirl_omega * WHIRL_SPIN_LOOK * delta
-				# orbit EXACTLY the wound amount (over-orbiting re-wraps the
+				# Orbit EXACTLY the wound amount (over-orbiting re-wraps the
 				# rope the other way and the fling gets arrested), then hold
 				# for the tangent to sweep toward the dog - at most
-				# WHIRL_EXTRA_ARC, after which the launch leans dogward
-				# instead of waiting for a tangent that never comes
+				# WHIRL_EXTRA_ARC. The ordinary release has nothing left to
+				# decide: the orbit waited for the tangent, so the tangent IS
+				# the launch. Only the launch the cap forces leans, and if even
+				# a full lean would throw her away from the dog there is no
+				# fling to be had and she staggers out instead.
 				if whirl_unwound >= whirl_turns:
 					var tangent := Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0)
 					var aim := _aim_at_dog()
 					if aim != Vector2.ZERO and tangent.dot(aim) > WHIRL_AIM_COS:
 						release_whirl()
 					elif whirl_unwound - whirl_turns >= WHIRL_EXTRA_ARC:
-						release_whirl()
+						if whirl_can_fling(global_position - whirl_pole, whirl_dir, aim):
+							release_whirl(1.0)
+						else:
+							bail_whirl()
 		_:
 			if state == HState.DASH and state_t <= 0.0:
 				_end_dash()
@@ -637,7 +644,29 @@ func whirl_fling_dir(radial: Vector2, spin: float, aim: Vector2, lean: float) ->
 	return out.rotated(turn)
 
 
-func release_whirl() -> void:
+# Is there a dogward launch to be had at all? The lean is bounded, so a dog
+# sitting behind the way she is going cannot be thrown at: a launch that still
+# points away from her is worse than no fling, so that is a stagger instead.
+# A dog with no direction to give (at her feet, or none at all) is no reason to
+# refuse. Reads its arguments only.
+func whirl_can_fling(radial: Vector2, spin: float, aim: Vector2) -> bool:
+	if aim == Vector2.ZERO:
+		return true
+	return whirl_fling_dir(radial, spin, aim, 1.0).dot(aim) > 0.0
+
+
+# Which way she is already going round a point: the tie-break for a rope with
+# no opinion about which way unwinds it (main.gd/_apply_leash). Reads its
+# arguments only; a dead stop is settled the same way every time.
+func orbit_sense(radial: Vector2, vel: Vector2) -> float:
+	var sense := signf(radial.cross(vel))
+	return sense if sense != 0.0 else 1.0
+
+
+# `lean` is how far the launch may be turned toward the dog, 0 for not at all:
+# only a release forced by the extra-arc cap gets one, because every other
+# release already waited for the tangent to point where it wanted.
+func release_whirl(lean := 0.0) -> void:
 	if state != HState.WHIRL:
 		return
 	# The "toward the dog" part is release timing: the orbit waits for the
@@ -646,7 +675,6 @@ func release_whirl() -> void:
 	var radial := global_position - whirl_pole
 	if radial.length() < 0.001 or not (is_finite(radial.x) and is_finite(radial.y)):
 		radial = Vector2.from_angle(whirl_angle)
-	var lean := (whirl_unwound - whirl_turns) / WHIRL_EXTRA_ARC
 	var launch := whirl_fling_dir(radial, whirl_dir, _aim_at_dog(), lean)
 	state = HState.STUMBLE
 	state_t = 1.0
