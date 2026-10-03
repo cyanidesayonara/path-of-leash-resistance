@@ -1786,12 +1786,19 @@ func _draw_mosaic(vt: float, vb: float) -> void:
 	if v1 < vb + 60.0 and v0 > vt - 60.0:
 		var y0 := maxf(vt - 60.0, v1)
 		var y1 := minf(vb + 60.0, v0)
-		var vy := floorf(y0 / 50.0) * 50.0
+		var vy := floorf(y0 / 25.0) * 25.0
 		while vy < y1:
 			var e := walk_edges(vy)
-			b3.rect(Rect2(e.x - 120.0, vy, 120.0, 50.0), Color(0.46, 0.52, 0.34))
-			b3.circle(Vector2(e.x - 60.0, vy + 25.0), 14.0, Color(0.36, 0.44, 0.28))
-			vy += 50.0
+			# the slope tapers in and out at each end of the viaduct instead
+			# of stopping in a straight edge (#21)
+			var f := smoothstep(0.0, 1.0, clampf(minf(vy - v1, v0 - vy) / 160.0, 0.0, 1.0))
+			var w := 120.0 * f
+			if w > 2.0:
+				b3.rect(Rect2(e.x - w, vy, w, 25.0), Color(0.46, 0.52, 0.34))
+				b3.circle(Vector2(e.x - w, vy + 12.5), 12.5, Color(0.46, 0.52, 0.34))
+				if int(absf(vy) / 25.0) % 2 == 0 and f > 0.5:
+					b3.circle(Vector2(e.x - w * 0.5, vy + 12.5), 14.0 * f, Color(0.36, 0.44, 0.28))
+			vy += 25.0
 	# the calvary: three crosses on a heap of stones at the top
 	var cv: Vector2 = LevelBuild.MOSAIC_CALVARY
 	if cv.y > vt - 80.0 and cv.y < vb + 80.0:
@@ -4022,6 +4029,10 @@ func _tick_signs(delta: float) -> void:
 func _draw_signs(vt: float, vb: float) -> void:
 	for sg: Dictionary in signs:
 		if float(sg.bottom) < vt - 60.0 or float(sg.top) > vb + 60.0:
+			continue
+		# HOME means nothing before she has set off, and on the title and the
+		# walk select it sits under the prompt bar (#21)
+		if not started and String(sg.get("txt", "")) == "HOME":
 			continue
 		WorldSign.draw(_wc, sg, AnimClock.msec() / 1000.0, LIGHT)
 
@@ -8873,7 +8884,7 @@ func _draw_world() -> void:
 	# HOME, at the bottom, where the walk both begins and ends
 	if vb > START_Y + 30.0:
 		_wc.draw_rect(Rect2(gate_l - 14, HOME_Y + 40.0, gate_r - gate_l + 28, 14), Color(0.4, 0.32, 0.3))
-		if signs.is_empty():
+		if signs.is_empty() and started:
 			_wc.draw_string(font, Vector2(gate_l, HOME_Y + 78.0), "HOME", HORIZONTAL_ALIGNMENT_CENTER,
 				gate_r - gate_l, 24, Color(0.9, 0.85, 0.7))
 	# not under the settings panel, the wardrobe or the progress table: the

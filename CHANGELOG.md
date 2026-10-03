@@ -3,6 +3,14 @@
 Append-only session history, newest first.
 
 
+
+## 2026-10-04 - Two level review leftovers (#21)
+
+- The HOME sign no longer sits under the prompt bar on the title and the walk
+  select: it means nothing before she has set off, so it shows once the walk
+  starts (the line it labels is still drawn).
+- El Mosaic's viaduct slope tapers in and out at each end of the viaduct
+  instead of stopping in a straight edge.
 ## 2026-10-04 - The leash conversation
 
 Your human used to answer the leash only as physics: a heavy body walking its
