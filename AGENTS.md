@@ -131,6 +131,21 @@ explain every changed snapshot line; this does not relax the refactor rule.
   mid-tighten orbit adds five calls (one ghost batch, three speed arcs, one
   grit batch), and settled orbit adds four after the grit is gone. Keep
   focused sequence captures with performance evidence for any visual change.
+- **The leash conversation** (`entities/human.gd`, `_converse`): your human
+  answers the leash like a person. `_leash_tug` hands them the frame's pull
+  (`feel_pull`: toward the dog along the rope, times tension); a steady,
+  moderate pull LEADS them (their walk target moves across the path, their
+  pace rises with a pull their way and drops with one back). Their motor is
+  never weakened: the give changes where they mean to go, not how hard they
+  walk. Hard hauling (over `PATIENCE_HARD`) drains `patience`; a slack leash
+  refills it. Low patience shows (a glance at the dog, a temper cloud over
+  their head, "oi..."); empty, it is a telegraphed "HEY!" (`CORRECT_WARN`,
+  0.8 s like every owner event) and a correction: a step back and a shorter
+  leash, then `CORRECT_GRACE` before patience drains again. A dog planted
+  when it lands turns it into his stumble and a reward. They wait up to
+  `WAIT_MAX` while she does her business, and the reel's random clicks are
+  scaled by patience, so walking nicely earns slack. Test:
+  `tests/test_leash_conversation.gd`.
 - **Human events** are telegraphed with a speech bubble 0.8s before firing.
   Never add an untelegraphed hazard to the human - predictable-but-dumb is
   the design contract (see PROJECT.md pillars).

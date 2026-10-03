@@ -116,6 +116,37 @@ var walk_intent := Vector2.ZERO
 var drag_amt := 0.0
 var drag_dir := Vector2.DOWN
 var panic := false
+# THE LEASH CONVERSATION. Your human answers the leash like a person, not a
+# fridge: a steady, moderate pull leads them (sideways across the path, a bit
+# quicker if it is the way they are going, slower and waiting if it is back);
+# hard, constant hauling wears their patience down, and when it runs out it is
+# a telegraphed "HEY!" and a correction - a step back and a short leash. Dug in
+# when it lands, it is them that stumbles. A slack leash builds patience back,
+# and a patient human lets the reel out longer. They wait while she does her
+# business. Tuning by playtest.
+const GIVE_FULL := 520.0       # rope tension at which they give way fully
+const GIVE_LAT := 150.0        # px across the path a full pull leads them
+const GIVE_FWD := 0.35         # pulled their way: up to this much quicker
+const GIVE_BACK := 0.65        # pulled back: up to this much slower
+const PULL_EASE := 2.5         # 1/s: how fast the felt pull follows the rope
+const PATIENCE_HARD := 900.0   # tension above which patience drains
+const PATIENCE_DRAIN := 0.14   # per second at a hard pull
+const PATIENCE_REFILL := 0.18  # per second with the leash slack
+const PATIENCE_WARN := 0.45    # below this they glance up and grumble
+const CORRECT_WARN := 0.8      # the "HEY!" telegraph, as every owner event
+const CORRECT_HAUL := 240.0    # px/s they step back with
+const CORRECT_REEL := 0.65     # the leash, cut to this much of its length
+const CORRECT_REST := 0.7      # patience after a correction
+const CORRECT_GRACE := 8.0     # s after a correction before patience drains again
+const WAIT_MAX := 4.0          # s they wait while she does her business
+var felt_pull := Vector2.ZERO
+var _pull_now := Vector2.ZERO
+var patience := 1.0
+var correct_t := 0.0
+var glance_t := 0.0
+var grumbled := false
+var waited := 0.0
+var grace_t := 0.0
 var ice := false
 var wobble_seed := 0.0
 var main: Node2D
@@ -334,6 +365,7 @@ func tick(delta: float) -> void:
 				_end_dash()
 			_walk(delta)
 	_events(delta)
+	_converse(delta)
 	_fiddle_with_reel(delta)
 	_track_drag(delta)
 	# face the direction of travel - except when deliberately walking
@@ -343,11 +375,77 @@ func tick(delta: float) -> void:
 		var ft := velocity.normalized()
 		if state == HState.FILM or state == HState.SELFIE:
 			ft = -ft
+		# looking up from the phone at her, and longer while a "HEY!" winds up
+		if (glance_t > 1.6 or correct_t > 0.0) and main != null:
+			var at: Vector2 = main.dog.global_position - global_position
+			if at.length() > 1.0:
+				ft = at.normalized()
 		face_dir = face_dir.slerp(ft, minf(8.0 * delta, 1.0))
 		if face_dir.length() < 0.1:
 			face_dir = ft
 		else:
 			face_dir = face_dir.normalized()
+
+
+func _converse(delta: float) -> void:
+	felt_pull = felt_pull.lerp(_pull_now, minf(PULL_EASE * delta, 1.0))
+	_pull_now = Vector2.ZERO
+	glance_t = maxf(0.0, glance_t - delta)
+	grace_t = maxf(0.0, grace_t - delta)
+	# only a walking owner minds: on a call, in an orbit, down or held for a
+	# lesson they are not keeping score
+	var minding := state in [HState.WALK, HState.DRIFT] and tut_hold_y == -INF
+	if correct_t > 0.0:
+		correct_t -= delta
+		if correct_t <= 0.0:
+			_correct()
+		return
+	if not minding:
+		return
+	var t := felt_pull.length()
+	if t > PATIENCE_HARD and grace_t <= 0.0:
+		var fwd := Vector2(0.0, 1.0 if homeward else -1.0)
+		var back := 1.5 if felt_pull.dot(fwd) < 0.0 else 1.0
+		patience -= PATIENCE_DRAIN * clampf(t / PATIENCE_HARD, 1.0, 2.0) * back * delta
+	elif not strain:
+		patience = minf(1.0, patience + PATIENCE_REFILL * delta)
+	if patience < PATIENCE_WARN:
+		# looking up from the phone: the first warning is a mutter, then a
+		# glance at her every couple of seconds
+		if not grumbled:
+			grumbled = true
+			notice("oi...", 1.0)
+		if glance_t <= 0.0:
+			glance_t = 2.2
+	elif patience > PATIENCE_WARN + 0.15:
+		grumbled = false
+	if patience <= 0.0 and telegraph_t <= 0.0 and halt_t <= 0.0:
+		correct_t = CORRECT_WARN
+		_show_bubble("HEY!", "HE'S HAD ENOUGH! DIG IN")
+
+
+func _correct() -> void:
+	patience = CORRECT_REST
+	grace_t = CORRECT_GRACE
+	grumbled = false
+	bubble.visible = false
+	var to_dog: Vector2 = main.dog.global_position - global_position
+	var away := -to_dog.normalized() if to_dog.length() > 1.0 else Vector2(0.0, 1.0 if homeward else -1.0)
+	if main.dog.planted:
+		# she was ready for it: the haul meets a dog dug in, and it is him
+		# that lurches forward
+		state = HState.STUMBLE
+		state_t = 0.5
+		velocity = -away * 150.0
+		main.on_correction_braced(global_position)
+		return
+	velocity += away * CORRECT_HAUL
+	main.set_leash_target(float(main.leash_len) * CORRECT_REEL, true)
+	main.on_correction(global_position)
+
+
+func is_correcting() -> bool:
+	return correct_t > 0.0
 
 
 func _fiddle_with_reel(delta: float) -> void:
@@ -370,6 +468,8 @@ func _fiddle_with_reel(delta: float) -> void:
 		return
 	reel_timer = randf_range(4.0, 8.0)
 	reel_pending_len = randf_range(170.0, 430.0)
+	# a patient human lets it out; a fed-up one keeps her close
+	reel_pending_len = 170.0 + (reel_pending_len - 170.0) * (0.55 + 0.45 * patience)
 	reel_pending_t = REEL_WARN
 	_show_bubble("click!")
 	var tw := create_tween()
@@ -393,6 +493,17 @@ func _walk(delta: float) -> void:
 		velocity = velocity.move_toward(Vector2.ZERO, 400.0 * delta)
 		move_and_slide()
 		return
+	# she is doing her business: a decent human waits, for a while
+	if main.dog.squat_t > 0.0 or main.dog.peeing:
+		waited += delta
+		if waited < WAIT_MAX:
+			if waited <= delta * 1.5:
+				notice("go on then", 1.4)
+			velocity = velocity.move_toward(Vector2.ZERO, 400.0 * delta)
+			move_and_slide()
+			return
+	else:
+		waited = 0.0
 	# game time, not the wall clock: the weave decides where the owner (and a
 	# dragged dog) is across the path, so it must not depend on how long the
 	# game took to boot or how fast this machine renders (#6)
@@ -434,6 +545,12 @@ func _walk(delta: float) -> void:
 			state = HState.WALK
 	# forward is up on the way out, down on the walk home
 	var fwd_y := 1.0 if homeward else -1.0
+	# led by the leash: a steady pull draws them across the path and speeds or
+	# slows them along it (the conversation, above)
+	if state == HState.WALK or state == HState.DRIFT:
+		tx = clampf(tx + clampf(felt_pull.x / GIVE_FULL, -1.0, 1.0) * GIVE_LAT, cx - half + 40.0, cx + half - 40.0)
+		var along := felt_pull.y * fwd_y / GIVE_FULL
+		speed *= 1.0 + GIVE_FWD * clampf(along, 0.0, 1.0) - GIVE_BACK * clampf(-along, 0.0, 1.0)
 	var dir := Vector2(clampf((tx - global_position.x) / 60.0, -1.0, 1.0) * 0.8, fwd_y).normalized()
 	if state == HState.DASH:
 		var to_target := dash_target - global_position
@@ -810,6 +927,12 @@ func _track_drag(delta: float) -> void:
 		drag_dir = drag_dir.slerp(off.normalized(), minf(6.0 * delta, 1.0)).normalized()
 
 
+# the leash's pull on them this frame: toward the dog along the rope, times
+# its tension (main.gd/_leash_tug); read on the next tick
+func feel_pull(dir: Vector2, tension: float) -> void:
+	_pull_now = dir * tension
+
+
 func notify_strain() -> void:
 	if state != HState.FALLEN:
 		strain = true
@@ -1019,6 +1142,21 @@ func _draw_shapes() -> void:
 			for k in range(2):
 				_b.draw_arc(at, 9.0 + 7.0 * float(k) * wind, 0.0, TAU, 12,
 					Color(1.0, 0.95, 0.7, 0.34 * wind / (1.0 + float(k))), 2.0)
+	elif patience < PATIENCE_WARN and correct_t <= 0.0:
+		# the patience running out, over their head: a scribble of temper that
+		# grows as it goes
+		var g := clampf((PATIENCE_WARN - patience) / PATIENCE_WARN, 0.0, 1.0)
+		var tc := AnimClock.msec() / 1000.0
+		var gc := Color(0.95, 0.35, 0.30, 0.45 + 0.55 * g)
+		var n := 3 + int(g * 3.0)
+		var gx := Vector2(-4.5 * float(n), -44.0)
+		# a little storm cloud of temper, then the scribble under it
+		_b.draw_circle(Vector2(-6.0, -50.0), 6.0 + 2.0 * g, Color(0.30, 0.28, 0.32, 0.5 + 0.4 * g))
+		_b.draw_circle(Vector2(4.0, -51.0), 7.0 + 2.0 * g, Color(0.30, 0.28, 0.32, 0.5 + 0.4 * g))
+		for k in range(n):
+			var nx := gx + Vector2(9.0, -6.0 if k % 2 == 0 else 6.0) + Vector2(0.0, sin(tc * 14.0 + float(k)) * 1.5 * g)
+			_b.draw_line(gx, nx, gc, 3.0)
+			gx = nx
 	elif strain:
 		_b.draw_line(Vector2(16, -36), Vector2(16, -27), Color(1, 0.85, 0.3), 3.0)
 		_b.draw_circle(Vector2(16, -22), 2.0, Color(1, 0.85, 0.3))
