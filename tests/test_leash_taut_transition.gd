@@ -48,7 +48,7 @@ func _initialize() -> void:
 			_check(samples[i] >= -0.001 and samples[i] <= 1.001,
 				"taut amount remains normalized at sample %d (got %.3f)" % [i, samples[i]])
 		_check(strict_steps >= 3,
-			"taut onset progresses across several samples, not one binary step (%s)" % samples)
+			"taut onset progresses across several samples, not one binary step (%s)" % [samples])
 		_check(samples[5] > 0.05 and samples[5] < 0.95,
 			"taut onset exposes an intermediate midpoint (got %.3f)" % samples[5])
 	leash.free()
@@ -71,7 +71,7 @@ func _initialize() -> void:
 			"tension force consumes the continuous taut amount")
 		_check(forces[0] <= 0.001, "zero onset produces zero force (got %.3f)" % forces[0])
 		_check(forces[1] > forces[0] and forces[1] < forces[2],
-			"intermediate onset produces intermediate force (%s)" % forces)
+			"intermediate onset produces intermediate force (%s)" % [forces])
 		_check(absf(forces[2] - 1000.0) < 0.01,
 			"full onset preserves spring force (got %.3f)" % forces[2])
 	force_probe.free()

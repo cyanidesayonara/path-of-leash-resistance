@@ -5049,7 +5049,7 @@ func _apply_leash(delta: float) -> void:
 	elif dog.input_active:
 		dog_m *= 2.0
 	var human_m := HUMAN_MASS * (2.0 if human.is_fallen() else 1.0)
-	var base_tension := minf(LEASH_K * excess, 1600.0)
+	var base_tension := minf(leash.tension_force(excess, LEASH_K), 1600.0)
 	# pulley: with the rope wound and the dog working its end, the pole
 	# redirects and amplifies the pull on the human continuously - not
 	# only during the whirl. Wraps still shield the DOG from raw yanks.
