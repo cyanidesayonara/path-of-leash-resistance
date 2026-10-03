@@ -264,6 +264,8 @@ var tutorial_mode := false
 var tut_step := 0
 # where the owner stands to wait, this far south of the lesson's station
 const TUT_HOLD_BACK := 150.0
+# how far in from the path's edge a lesson's "stand" puts the waiting owner
+const TUT_STAND_IN := 60.0
 var tut_plant_t := 0.0
 var tut_teetered := false
 var tut_flash := 0.0
@@ -6561,12 +6563,33 @@ func _tut_step_done(id: String) -> bool:
 	return false
 
 
+# Where the owner waits for lesson i: y short of the station, and x by the
+# path's edge when the lesson gives a "stand" (INF when it does not, so the
+# owner keeps their own place in the weave).
+func tut_hold_point(i: int) -> Vector2:
+	var st: Dictionary = TutorialSteps.step(i)
+	if not bool(st.get("hold", false)):
+		return Vector2(INF, -INF)
+	var y := float(st["at"]) + TUT_HOLD_BACK
+	var side := int(st.get("stand", 0))
+	if side == 0:
+		return Vector2(INF, y)
+	var e := walk_edges(y)
+	return Vector2((e.x + TUT_STAND_IN) if side < 0 else (e.y - TUT_STAND_IN), y)
+
+
 func _tick_tutorial(delta: float) -> void:
 	tut_flash = maxf(0.0, tut_flash - delta)
 	var st: Dictionary = TutorialSteps.step(tut_step)
 	var id := String(st.id)
 	# the owner waits at a lesson that wants them still, just short of it
-	human.tut_hold_y = (float(st["at"]) + TUT_HOLD_BACK) if bool(st.get("hold", false)) else -INF
+	var hp := tut_hold_point(tut_step)
+	human.tut_hold_y = hp.y
+	human.tut_hold_x = hp.x
+	# a waiting owner leaves the reel alone at full length: a lesson's target
+	# is laid out for the whole leash, and a click to 170 would put it out of reach
+	if bool(st.get("hold", false)) and leash_target < LEASH_LENGTH:
+		set_leash_target(LEASH_LENGTH)
 	if id == "plant" and dog.planted and leash.taut:
 		tut_plant_t += delta
 	if teeter.active:

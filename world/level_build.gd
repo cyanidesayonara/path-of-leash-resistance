@@ -1524,11 +1524,12 @@ static func build_level_data(m: Node2D) -> void:
 	for kp in keb_list:
 		m.kebabs.append({"pos": kp, "eaten": false})
 	if m.tutorial_mode:
-		# the nose lesson's snack is out on the grass, off the path, so it is
-		# found by smell; the flock waits at the bark station; the urge comes
-		# at the business station, and never before it
+		# on the grass beside where the owner waits (the lesson stands west),
+		# well inside a full leash but off the path, so the nose still finds it
 		var ne: Vector2 = m.walk_edges(TUT.at("nose"))
-		m.kebabs.append({"pos": Vector2(ne.x - 110.0, TUT.at("nose") - 80.0), "eaten": false, "off_path": true})
+		m.kebabs.append({"pos": Vector2(ne.x - 70.0, TUT.at("nose") - 20.0), "eaten": false, "off_path": true})
+		# the flock waits at the bark station; the urge comes at the business
+		# station, and never before it
 		m.flock_ys = Array([TUT.at("bark") - 60.0], TYPE_FLOAT, &"", null)
 		m.duck_ys = Array([], TYPE_FLOAT, &"", null)
 		m.cat_y = 0.0
@@ -2313,7 +2314,7 @@ static func build_walls(m: Node2D) -> void:
 	match m.lvl:
 		"street": wall_sides = [-1.0]
 		"rain": wall_sides = []      # its frontage walls are the building line
-		"park", "trail", "beach": wall_sides = []
+		"park", "trail", "beach", "barri": wall_sides = []
 		_: wall_sides = [-1.0, 1.0]
 	for ws in wall_sides:
 		var bx: float = (m.sw_l - 60.0) if ws < 0.0 else (m.sw_r + 60.0)

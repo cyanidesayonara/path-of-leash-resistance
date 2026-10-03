@@ -64,6 +64,44 @@ func _run() -> void:
 	_check(m.water.has(pond), "the brink lesson has its pond")
 	_check(absf(m.urge_y - TUT.at("bag")) < 120.0 and m.bins.size() == 1, "the call of nature comes at the business station, a bin beside it")
 	_check(m.stalls.is_empty() and m.performers.is_empty() and m.benches.is_empty(), "none of El Barri's furniture")
+	# every held lesson's target is inside leash reach from where the owner
+	# waits: a full leash, short of the stretch cap, from the worst spot the
+	# owner can stand (their own spot if the lesson gives one, otherwise
+	# either end of their weave across the path)
+	var Surfaces: GDScript = load("res://world/surfaces.gd")
+	var reach: float = float(m.LEASH_LENGTH) - 20.0
+	var targets := {
+		"pee": [(m.hydrants[0].pos as Vector2)],
+		"sniff": [(m.hydrants[1].pos as Vector2)],
+		"nose": [(m.kebabs[0].pos as Vector2)],
+		"vault": [(m.poles[0] as Vector2)],
+		"fling": [(m.poles[1] as Vector2)],
+	}
+	for id: String in targets.keys():
+		var i: int = TUT.index_of(id)
+		var hp: Vector2 = m.tut_hold_point(i)
+		var spots: Array[Vector2] = []
+		if hp.x < INF:
+			spots.append(hp)
+		else:
+			var e: Vector2 = m.walk_edges(hp.y)
+			var cx := (e.x + e.y) * 0.5
+			var sway := minf(110.0, (e.y - e.x) * 0.5 - 60.0)
+			spots.append(Vector2(cx - sway, hp.y))
+			spots.append(Vector2(cx + sway, hp.y))
+		for s: Vector2 in spots:
+			var far := 0.0
+			for t: Vector2 in targets[id]:
+				far = maxf(far, s.distance_to(t))
+			_check(far <= reach, "the %s lesson's target is in reach from (%.0f, %.0f): %.0f > %.0f" % [id, s.x, s.y, far, reach] if far > reach else "the %s lesson's target is in reach" % id)
+	# the pond's near edge, from the brink lesson's spot
+	var tp: Vector2 = m.tut_hold_point(TUT.index_of("teeter"))
+	var near_pond := Vector2(clampf(tp.x, pond.position.x, pond.end.x), clampf(tp.y, pond.position.y, pond.end.y))
+	_check(tp.x < INF and tp.distance_to(near_pond) <= reach,
+		"the brink lesson's owner waits within reach of the pond (%.0f)" % tp.distance_to(near_pond))
+	# the snack is on grass, not pavement
+	var kp0: Vector2 = m.kebabs[0].pos
+	_check(m.surface_at(kp0) == Surfaces.S.GRASS, "the nose lesson's snack lies on grass")
 
 	# the owner waits at a lesson that wants them still
 	m.tut_step = TUT.index_of("pull")
@@ -84,6 +122,32 @@ func _run() -> void:
 		m.elapsed += 1.0 / 30.0
 		human._walk(1.0 / 30.0)
 	_check(human.global_position.y < stop_y - 200.0, "and walks on when the lesson is done")
+
+	# the nose lesson can be finished, not only skipped: from where the owner
+	# waits, the dog walks to the snack and eats it
+	m.started = true
+	m.frozen = false
+	m.tut_step = TUT.index_of("nose")
+	m._tick_tutorial(0.0)
+	var stand: Vector2 = m.tut_hold_point(m.tut_step)
+	human.global_position = stand
+	human.velocity = Vector2.ZERO
+	m.leash_len = float(m.LEASH_LENGTH)
+	m.dog.global_position = stand + Vector2(0.0, -40.0)
+	m.dog.velocity = Vector2.ZERO
+	m.leash.resnap()
+	var snack: Vector2 = m.kebabs[0].pos
+	var ate_before: int = m.kebabs_eaten
+	m.dog.auto = true
+	for f in range(900):
+		m.dog.auto_move = (snack - m.dog.global_position).normalized()
+		await physics_frame
+		if m.kebabs_eaten > ate_before:
+			break
+	m.dog.auto = false
+	m.dog.auto_move = Vector2.ZERO
+	_check(m.kebabs_eaten > ate_before,
+		"the dog reaches and eats the snack (stopped at %.0f from it)" % m.dog.global_position.distance_to(snack))
 
 	# nothing turns up that no lesson asked for
 	for i in range(600):
