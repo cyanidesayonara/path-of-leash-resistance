@@ -18,6 +18,8 @@ extends RefCounted
 # needs and nothing else (see LevelBuild.tutorial_stations). "hold" means the
 # owner waits at the station until the lesson lands or is skipped, so nothing
 # is ever rushed; a lesson that needs the owner walking leaves it off.
+# "stand" (-1 west, 1 east) puts the waiting owner by that edge of the path,
+# for a lesson whose target is off to one side.
 const STEPS: Array[Dictionary] = [
 	{
 		"id": "walk", "at": 60.0, "hold": false,
@@ -45,7 +47,7 @@ const STEPS: Array[Dictionary] = [
 		"body": "Stand still by the next hydrant and have a proper read of it.",
 	},
 	{
-		"id": "nose", "at": -2020.0, "hold": true,
+		"id": "nose", "at": -2020.0, "hold": true, "stand": -1,
 		"title": "Your nose beats your eyes.",
 		"body": "Someone dropped a snack on the grass. Slow down: the slower you go, the further you smell. Find it.",
 	},
@@ -75,7 +77,7 @@ const STEPS: Array[Dictionary] = [
 		"body": "Your human is waiting by the post. Run round it twice to wind them up, then pull away.",
 	},
 	{
-		"id": "teeter", "at": -4400.0, "hold": true,
+		"id": "teeter", "at": -4400.0, "hold": true, "stand": 1,
 		"title": "The brink.",
 		"body": "Run at the pond's edge. When you wobble, scramble the other way.",
 	},

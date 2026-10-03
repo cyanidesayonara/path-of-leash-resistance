@@ -51,6 +51,8 @@ const PANIC_SPEED := 230.0
 const ISLAND_LEAD := 400.0
 # ...and how far before a narrow the owner lines up for it
 const NARROW_LEAD := 480.0
+# how far short of a lesson's stop the owner starts drifting to its standing x
+const TUT_STAND_LEAD := 420.0
 var state: HState = HState.WALK
 var state_t := 0.0
 var event_timer := 4.0
@@ -99,6 +101,7 @@ var pond_bank_x := 0.0
 var homeward := false
 # the tutorial holds the owner here (north of it is where they stop); -INF off
 var tut_hold_y := -INF
+var tut_hold_x := INF
 var parked := false
 var park_target := Vector2.ZERO
 var park_throw_t := 0.0
@@ -354,6 +357,9 @@ func _fiddle_with_reel(delta: float) -> void:
 		reel_pending_t -= delta
 		if reel_pending_t <= 0.0:
 			main.set_leash_target(reel_pending_len)
+	if tut_hold_y > -INF:
+		reel_pending_t = 0.0
+		return
 	if state in [HState.FALLEN, HState.STUMBLE, HState.WHIRL]:
 		return
 	reel_timer -= delta
@@ -375,9 +381,12 @@ func _fiddle_with_reel(delta: float) -> void:
 
 func _walk(delta: float) -> void:
 	# the tutorial's owner waits at a lesson (main.TUT_HOLD_BACK): stood still
-	# on the phone until it is done
+	# on the phone until it is done, shuffling over to the lesson's spot first
 	if global_position.y <= tut_hold_y and not homeward:
-		velocity = velocity.move_toward(Vector2.ZERO, 400.0 * delta)
+		var want := Vector2.ZERO
+		if tut_hold_x < INF and absf(global_position.x - tut_hold_x) > 6.0:
+			want = Vector2(signf(tut_hold_x - global_position.x) * WALK_SPEED * 0.6, 0.0)
+		velocity = velocity.move_toward(want, 400.0 * delta)
 		move_and_slide()
 		return
 	if halt_t > 0.0:
@@ -416,6 +425,8 @@ func _walk(delta: float) -> void:
 			if state == HState.DASH:
 				dash_target.x = clampf(dash_target.x, float(nw["x0"]), float(nw["x1"]))
 	var tx := cx + sin(t * 0.35 + wobble_seed) * minf(110.0, half - 60.0)
+	if tut_hold_x < INF and global_position.y < tut_hold_y + TUT_STAND_LEAD:
+		tx = tut_hold_x
 	if state == HState.DRIFT:
 		tx = cx + drift_dir * (half - 70.0)
 		speed = 72.0

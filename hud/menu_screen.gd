@@ -13,7 +13,9 @@ extends Control
 #   shop      the wardrobe takes the screen: Millie on a spotlight, tabs,
 #             and a list with a swatch for every item
 #   progress  one table of every walk
-#   pause     a short menu you move through, not a line of shortcuts
+#   pause     a grid you move through, not a line of shortcuts
+#   walkcard  THIS WALK from the pause grid: the walk's name and its goals
+#   confirm   the question before starting again or quitting
 #   notice    the cards a walk ends on
 #
 # and every one of them has its buttons in the same bar along the bottom.
@@ -28,8 +30,11 @@ const SHOP_ROW_H := 44.0
 const DETAILS_W := 400.0
 const PROGRESS_W := 900.0
 const PROGRESS_ROW_H := 30.0
-const PAUSE_W := 420.0
-const PAUSE_ROW_H := 50.0
+const PAUSE_W := 560.0
+const PAUSE_CELL_H := 58.0
+const PAUSE_GAP := 12.0
+const WALKCARD_W := 620.0
+const CONFIRM_W := 460.0
 const NOTICE_W := 660.0
 
 var main: Node2D
@@ -90,6 +95,10 @@ func _draw() -> void:
 			_progress(vs)
 		"pause":
 			_pause(vs)
+		"walkcard":
+			_walk_card(vs)
+		"confirm":
+			_confirm(vs)
 		"notice":
 			_notice(vs)
 	var a := 1.0
@@ -366,27 +375,75 @@ func _progress(vs: Vector2) -> void:
 
 func _pause(vs: Vector2) -> void:
 	var acc := Kit.accent("pause")
-	var rows := Flow.pause_rows(main)
-	var h := 110.0 + float(rows.size()) * PAUSE_ROW_H + 18.0
+	var labels := Flow.pause_labels(main)
+	var rows := (labels.size() + Flow.PAUSE_COLS - 1) / Flow.PAUSE_COLS
+	var h := 110.0 + float(rows) * (PAUSE_CELL_H + PAUSE_GAP) + 14.0
 	var r := Rect2(vs.x * 0.5 - PAUSE_W * 0.5, vs.y * 0.5 - h * 0.5 - 20.0, PAUSE_W, h)
 	Kit.card(self, r, acc)
 	Kit.heading(self, Vector2(r.position.x, r.position.y + 50.0), "PAUSED", 30, acc,
 		HORIZONTAL_ALIGNMENT_CENTER, PAUSE_W)
-	var sub := "%s    %s" % [String(Game.LEVEL_NAMES.get(main.lvl, "")), Flow.clock(float(main.elapsed))]
+	var sub := "%s    %s" % [String(main._walk_name()), Flow.clock(float(main.elapsed))]
 	draw_string(Kit.body(), Vector2(r.position.x, r.position.y + 78.0), sub, HORIZONTAL_ALIGNMENT_CENTER,
 		PAUSE_W, 15, Kit.INK_FAINT)
-	var y := r.position.y + 100.0
 	var f := Kit.display()
-	for i in range(rows.size()):
+	var cw := (PAUSE_W - 48.0 - PAUSE_GAP) * 0.5
+	for i in range(labels.size()):
+		var col := i % Flow.PAUSE_COLS
+		var row := i / Flow.PAUSE_COLS
+		var cell := Rect2(r.position.x + 24.0 + float(col) * (cw + PAUSE_GAP),
+			r.position.y + 100.0 + float(row) * (PAUSE_CELL_H + PAUSE_GAP), cw, PAUSE_CELL_H)
 		var picked: bool = i == int(main.pause_idx)
-		var rr := Rect2(r.position.x + 24.0, y, PAUSE_W - 48.0, PAUSE_ROW_H - 8.0)
+		draw_rect(cell, Color(acc.r, acc.g, acc.b, 0.16) if picked else Color(1, 1, 1, 0.04))
+		draw_rect(cell, acc if picked else Color(1, 1, 1, 0.10), false, 2.0 if picked else 1.0)
 		if picked:
-			draw_rect(rr, Color(acc.r, acc.g, acc.b, 0.15))
-			draw_rect(Rect2(rr.position, Vector2(4.0, rr.size.y)), acc)
-			Kit.chevron(self, Vector2(rr.position.x + 22.0, y + rr.size.y * 0.5), 8.0, acc)
-		draw_string(f, Vector2(rr.position.x + 40.0, y + 28.0), String(rows[i]), HORIZONTAL_ALIGNMENT_LEFT,
-			-1, 19, Kit.INK if picked else Kit.INK_SOFT)
-		y += PAUSE_ROW_H
+			Kit.chevron(self, Vector2(cell.position.x + 20.0, cell.get_center().y), 8.0, acc)
+		draw_string(f, Vector2(cell.position.x + 36.0, cell.get_center().y + 7.0), String(labels[i]),
+			HORIZONTAL_ALIGNMENT_LEFT, cw - 44.0, 19, Kit.INK if picked else Kit.INK_SOFT)
+
+
+func _walk_card(vs: Vector2) -> void:
+	var acc := Kit.accent("pause")
+	var wc := Flow.walk_card(main)
+	var goals: Array = wc.goals
+	var lines := goals.size() if String(wc.lesson) == "" else 1
+	var h := 130.0 + float(maxi(lines, 1)) * 30.0 + 20.0
+	var r := Rect2(vs.x * 0.5 - WALKCARD_W * 0.5, vs.y * 0.5 - h * 0.5 - 20.0, WALKCARD_W, h)
+	Kit.card(self, r, acc)
+	Kit.heading(self, Vector2(r.position.x, r.position.y + 52.0), String(wc.name).to_upper(), 30, acc,
+		HORIZONTAL_ALIGNMENT_CENTER, WALKCARD_W)
+	draw_string(Kit.body(), Vector2(r.position.x, r.position.y + 80.0), "%s    %s" % [String(wc.gloss), String(wc.time)],
+		HORIZONTAL_ALIGNMENT_CENTER, WALKCARD_W, 15, Kit.INK_FAINT)
+	var y := r.position.y + 122.0
+	var body := Kit.body()
+	if String(wc.lesson) != "":
+		draw_string(body, Vector2(r.position.x, y), String(wc.lesson), HORIZONTAL_ALIGNMENT_CENTER,
+			WALKCARD_W, 17, Kit.INK_SOFT)
+		return
+	if goals.is_empty():
+		draw_string(body, Vector2(r.position.x, y), "No goals on this walk.", HORIZONTAL_ALIGNMENT_CENTER,
+			WALKCARD_W, 17, Kit.INK_FAINT)
+		return
+	for g: Dictionary in goals:
+		var done := bool(g.done)
+		Icons.draw_check(self, Vector2(r.position.x + 32.0, y - 11.0), 14.0, int(g.state))
+		draw_string(body, Vector2(r.position.x + 56.0, y), String(g.text), HORIZONTAL_ALIGNMENT_LEFT,
+			WALKCARD_W - 180.0, 17, Kit.INK_FAINT if done else Kit.INK)
+		if int(g.target) > 1 and not done:
+			draw_string(body, Vector2(r.end.x - 110.0, y), "%d / %d" % [int(g.got), int(g.target)],
+				HORIZONTAL_ALIGNMENT_RIGHT, 80.0, 15, Kit.INK_SOFT)
+		y += 30.0
+
+
+func _confirm(vs: Vector2) -> void:
+	var acc := Kit.accent("notice")
+	var c := Flow.confirm_card(main)
+	var h := 150.0
+	var r := Rect2(vs.x * 0.5 - CONFIRM_W * 0.5, vs.y * 0.5 - h * 0.5 - 20.0, CONFIRM_W, h)
+	Kit.card(self, r, acc)
+	Kit.heading(self, Vector2(r.position.x, r.position.y + 56.0), String(c.title), 28, acc,
+		HORIZONTAL_ALIGNMENT_CENTER, CONFIRM_W)
+	draw_string(Kit.body(), Vector2(r.position.x, r.position.y + 100.0), String(c.body),
+		HORIZONTAL_ALIGNMENT_CENTER, CONFIRM_W, 19, Kit.INK_SOFT)
 
 
 func _notice(vs: Vector2) -> void:

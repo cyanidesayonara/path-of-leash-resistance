@@ -30,6 +30,17 @@ Store submission uses the ten current screenshots in `store/screenshots/`.
 https://github.com/users/cyanidesayonara/projects/4):
 - #127 leash overhaul: smooth collision-aware drawing over the same physical
   verlet rope, adaptive stabilisation and weighted end control.
+- #128 guided whirl overhaul (below).
+
+**In review, not yet merged:** branch `menu-shell-tutorial-reach`, the first
+of the two passes in `docs/superpowers/specs/2026-10-03-menu-terrain-design.md`
+(plan: `docs/superpowers/plans/2026-10-03-menu-shell-tutorial-reach.md`). The
+tutorial's nose snack is reachable again (El Barri lost its accidental edge
+walls, held lessons stand the owner by the right edge with the reel pinned
+long); pause is a two-column grid with THIS WALK, confirmed START AGAIN and
+EXIT GAME, and EXIT GAME on the desktop title. Its PR is player-facing: once
+merged it makes 3 of 5 awaiting acceptance. The second pass (terrain audit
+and surface looks) has not started.
 
 The older acceptance backlog (#23) is closed with every entry ticked. The
 board and that issue are the source of truth for the WIP count.
@@ -37,7 +48,8 @@ board and that issue are the source of truth for the WIP count.
 **Needs Santtu:**
 - #65 (S2, decision): the built-up walks' frontage has been hidden under
   full-width grass since v1.51. Three options in the issue.
-- Play #127; the real-phone check (#13) now includes the
+- Play #127, #128 and, once merged, the menu and tutorial PR (its feel
+  card); the real-phone check (#13) now includes the
   touch controls; #11, #12, #14.
 
 **Level review (#21):** two automated passes done (every walk at five points;
@@ -75,7 +87,8 @@ these without play evidence and a failing regression where appropriate.
   `tools/perf_sweep.sh`, `tools/web_perf.sh`, `tools/bench_leash.gd`,
   `tools/bench_leash_draw.gd`.
   Flags for screenshots: `--night`, `--weather=`, `--prompts=pad|touch`,
-  `--touch`, `--shot-at=N`.
+  `--touch`, `--shot-at=N`, `--shot-menu=walkcard|confirm`, and `--no-exit`
+  for the web menus on desktop.
 - Rendering: draw runs of filled shapes through `ShapeBatch`
   (`systems/shape_batch.gd`, pixel-exact, test in CI). Cosmetic animation
   reads `AnimClock.msec()`, never the wall clock.

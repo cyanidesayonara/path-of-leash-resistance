@@ -10,11 +10,21 @@ extends RefCounted
 # the shared look. Static functions over main's state; main.gd keeps a
 # same-name forwarder for each one another script or a test calls.
 
+const TutorialSteps := preload("res://systems/tutorial.gd")
+const UiIcons := preload("res://hud/ui_icons.gd")
+
 const DETAIL_ROWS := ["walker", "time", "weather"]
-const PAUSE_ROWS := ["resume", "restart", "settings", "quit"]
+const PAUSE_CELLS := ["resume", "walk", "restart", "settings", "select", "exit"]
+const PAUSE_LABELS := {"resume": "RESUME", "walk": "THIS WALK", "restart": "START AGAIN",
+	"settings": "SETTINGS", "select": "WALK SELECT", "exit": "EXIT GAME"}
+const PAUSE_COLS := 2
 const SHOP_TABS := ["collar", "bandana", "coat"]
 const SHOP_TAB_NAMES := {"collar": "COLLARS", "bandana": "BANDANAS", "coat": "COATS"}
 const STEP_NAMES := ["CHOOSE A WALK", "GET READY"]
+
+# Leaving the application is a desktop thing: a browser tab is closed by
+# the browser. `--no-exit` and tests set this to see the web layout anywhere.
+static var exit_hidden := false
 
 
 # --- which screen is up ---------------------------------------------------
@@ -22,12 +32,14 @@ const STEP_NAMES := ["CHOOSE A WALK", "GET READY"]
 static func screen(m: Node2D) -> String:
 	if m.in_settings:
 		return "settings"
+	if m.confirm_id != "":
+		return "confirm"
 	if m.msg_label != null and m.msg_label.visible:
 		return "notice"
 	if m.results_card != null and m.results_card.visible:
 		return "results"
 	if m.paused:
-		return "pause"
+		return "walkcard" if m.pause_view == "walk" else "pause"
 	if m.started:
 		return "walking"
 	if m.in_shop:
@@ -42,7 +54,14 @@ static func screen(m: Node2D) -> String:
 static func prompts(m: Node2D, which := "") -> Array:
 	match which if which != "" else screen(m):
 		"title":
-			return [["plant", "start"], ["pause", "settings"]]
+			var out := [["plant", "start"], ["pause", "settings"]]
+			if can_exit():
+				out.append(["bark", "exit game"])
+			return out
+		"confirm":
+			return [["plant", "yes"], ["bark", "cancel"]]
+		"walkcard":
+			return [["bark", "back"]]
 		"walk":
 			var open := Game.is_unlocked(Game.level_id)
 			return [["left_right", "browse"], ["plant", "choose", open], ["bark", "wardrobe"],
@@ -65,7 +84,7 @@ static func prompts(m: Node2D, which := "") -> Array:
 		"settings":
 			return [["up_down", "pick"], ["left_right", "change"], ["back", "done"]]
 		"pause":
-			return [["up_down", "pick"], ["plant", "select"], ["pause", "resume"]]
+			return [["move", "pick"], ["plant", "select"], ["pause", "resume"]]
 		"results":
 			return end_prompts(m)
 		"notice":
@@ -196,6 +215,9 @@ static func start_walk(m: Node2D) -> void:
 
 # Title input. Returns true when _process should stop for this frame.
 static func tick_title(m: Node2D) -> bool:
+	if m.confirm_id != "":
+		tick_confirm(m)
+		return true
 	if m.in_shop:
 		tick_shop(m)
 		return true
@@ -212,6 +234,8 @@ static func tick_title(m: Node2D) -> bool:
 			if Input.is_action_just_pressed("plant"):
 				Sfx.play("ui")
 				_go_step(m, 1)
+			elif Input.is_action_just_pressed("bark") and can_exit():
+				open_confirm(m, "exit")
 		1:
 			if Input.is_action_just_pressed("pee"):
 				open_progress(m)
@@ -264,6 +288,8 @@ static func open_pause(m: Node2D) -> void:
 	m.paused = true
 	m.frozen = true
 	m.pause_idx = 0
+	m.pause_view = ""
+	m.confirm_id = ""
 	m.dim.visible = true
 	Sfx.play("ui")
 
@@ -271,35 +297,180 @@ static func open_pause(m: Node2D) -> void:
 static func resume(m: Node2D) -> void:
 	m.paused = false
 	m.frozen = false
+	m.pause_view = ""
+	m.confirm_id = ""
 	m.dim.visible = false
 	Sfx.play("ui")
 
 
 static func tick_pause(m: Node2D) -> void:
+	if m.confirm_id != "":
+		tick_confirm(m)
+		return
+	if m.pause_view == "walk":
+		tick_walk_card(m)
+		return
 	if Input.is_action_just_pressed("pause") or Input.is_action_just_pressed("bark"):
 		resume(m)
 	elif Input.is_action_just_pressed("move_down"):
-		m.pause_idx = wrapi(m.pause_idx + 1, 0, PAUSE_ROWS.size())
-		Sfx.play("ui")
+		pause_move(m, 0, 1)
 	elif Input.is_action_just_pressed("move_up"):
-		m.pause_idx = wrapi(m.pause_idx - 1, 0, PAUSE_ROWS.size())
-		Sfx.play("ui")
+		pause_move(m, 0, -1)
+	elif Input.is_action_just_pressed("move_right"):
+		pause_move(m, 1, 0)
+	elif Input.is_action_just_pressed("move_left"):
+		pause_move(m, -1, 0)
 	elif Input.is_action_just_pressed("pee"):
 		open_settings(m)
 	elif Input.is_action_just_pressed("plant"):
-		match String(PAUSE_ROWS[m.pause_idx]):
-			"resume":
-				resume(m)
-			"restart":
-				restart_walk(m)
-			"settings":
-				open_settings(m)
-			"quit":
-				to_walk_select(m)
+		pause_activate(m)
 
 
-static func pause_rows(m: Node2D) -> Array:
-	return ["RESUME", "START AGAIN", "SETTINGS", "QUIT TO WALK SELECT"]
+static func pause_activate(m: Node2D) -> void:
+	match String(pause_ids(m)[m.pause_idx]):
+		"resume":
+			resume(m)
+		"walk":
+			open_walk_card(m)
+		"restart":
+			open_confirm(m, "restart")
+		"settings":
+			open_settings(m)
+		"select":
+			to_walk_select(m)
+		"exit":
+			open_confirm(m, "exit")
+
+
+static func can_exit() -> bool:
+	return not exit_hidden and not OS.has_feature("web")
+
+
+static func pause_ids(m: Node2D) -> Array:
+	var out := PAUSE_CELLS.duplicate()
+	if not can_exit():
+		out.erase("exit")
+	return out
+
+
+static func pause_labels(m: Node2D) -> Array:
+	var out := []
+	for id: String in pause_ids(m):
+		out.append(PAUSE_LABELS[id])
+	return out
+
+
+# One step across the grid. Rows wrap; a short last row (the web's five
+# cells) only has its left cell, so landing on the gap takes that instead.
+static func pause_move(m: Node2D, dx: int, dy: int) -> void:
+	var n := pause_ids(m).size()
+	var rows := (n + PAUSE_COLS - 1) / PAUSE_COLS
+	var col: int = int(m.pause_idx) % PAUSE_COLS
+	var row: int = int(m.pause_idx) / PAUSE_COLS
+	if dx != 0:
+		col = wrapi(col + dx, 0, PAUSE_COLS)
+	if dy != 0:
+		row = wrapi(row + dy, 0, rows)
+	var i := row * PAUSE_COLS + col
+	if i >= n:
+		i = row * PAUSE_COLS
+	m.pause_idx = i
+	Sfx.play("ui")
+
+
+static func open_walk_card(m: Node2D) -> void:
+	m.pause_view = "walk"
+	Sfx.play("ui")
+
+
+static func close_walk_card(m: Node2D) -> void:
+	m.pause_view = ""
+	Sfx.play("ui")
+
+
+# The walk you are on, from what the game already knows: its name and gloss,
+# then each goal with how far along it is, or the lesson in the tutorial.
+static func walk_card(m: Node2D) -> Dictionary:
+	var key := "tutorial" if m.tutorial_mode else String(m.lvl)
+	var out := {"name": m._walk_name(), "gloss": String(Game.LEVEL_SUBTITLES.get(key, "")),
+		"time": clock(float(m.elapsed)), "goals": [], "lesson": ""}
+	if m.tutorial_mode:
+		var st: Dictionary = TutorialSteps.step(m.tut_step)
+		# the closing "done" step is the tutorial's last card, not a lesson
+		if String(st.id) != "" and String(st.id) != "done":
+			out.lesson = "Lesson %d of %d: %s" % [int(m.tut_step) + 1, TutorialSteps.step_count() - 1,
+				String(st.title)]
+		return out
+	for q: Dictionary in m.active_quests:
+		var target := int(q.target)
+		var hit: bool = m.run_goals_hit.has(q.id)
+		var done: bool = hit or ((not Game.daily) and Game.goal_done(m.lvl, q.id))
+		var got := target if done else mini(int(q.fn.call()), target)
+		var state: int
+		if hit:
+			state = UiIcons.Check.DONE_NOW
+		elif done:
+			state = UiIcons.Check.DONE_BEFORE
+		else:
+			state = UiIcons.Check.PARTIAL if got > 0 else UiIcons.Check.OPEN
+		out.goals.append({"text": m._quest_text(q), "got": got, "target": target, "done": done,
+			"state": state})
+	return out
+
+
+static func tick_walk_card(m: Node2D) -> void:
+	if (Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pause")
+			or Input.is_action_just_pressed("plant")):
+		close_walk_card(m)
+
+
+# --- questions: START AGAIN and EXIT GAME ask first --------------------------
+
+# tests swap this in so a confirmed exit can be checked without ending the run
+static var quit_hook := Callable()
+
+const CONFIRMS := {
+	"restart": {"title": "START AGAIN", "body": "Start this walk again?"},
+	"exit": {"title": "EXIT GAME", "body": "Quit the game?"},
+}
+
+
+static func open_confirm(m: Node2D, which: String) -> void:
+	m.confirm_id = which
+	Sfx.play("ui")
+
+
+static func confirm_card(m: Node2D) -> Dictionary:
+	return CONFIRMS.get(String(m.confirm_id), {"title": "", "body": ""})
+
+
+static func confirm_cancel(m: Node2D) -> void:
+	m.confirm_id = ""
+	Sfx.play("ui")
+
+
+static func confirm_accept(m: Node2D) -> void:
+	var which := String(m.confirm_id)
+	m.confirm_id = ""
+	match which:
+		"restart":
+			restart_walk(m)
+		"exit":
+			quit_game(m)
+
+
+static func quit_game(m: Node2D) -> void:
+	if quit_hook.is_valid():
+		quit_hook.call()
+		return
+	m.get_tree().quit()
+
+
+static func tick_confirm(m: Node2D) -> void:
+	if Input.is_action_just_pressed("plant"):
+		confirm_accept(m)
+	elif Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pause"):
+		confirm_cancel(m)
 
 
 # Straight back into the same walk, skipping the menus: what "try again"

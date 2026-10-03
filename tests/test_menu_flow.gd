@@ -62,6 +62,17 @@ func _run() -> void:
 		_check(not main.panel.visible, "step %d: the walk HUD stays hidden on the title" % s)
 		_check(not Flow.prompts(main).is_empty(), "step %d: the prompt bar offers something" % s)
 	_check(_verbs(main).has("back"), "getting ready has a way back to the walk select")
+	main.menu_step = 0
+	main._apply_menu_step()
+	Flow.exit_hidden = false
+	_check(_verbs(main).has("exit game") or OS.has_feature("web"), "the title offers EXIT GAME on desktop")
+	Flow.exit_hidden = true
+	_check(not _verbs(main).has("exit game"), "and not where the game cannot quit")
+	Flow.exit_hidden = false
+	Flow.open_confirm(main, "exit")
+	_check(Flow.screen(main) == "confirm", "exit from the title asks first")
+	Flow.confirm_cancel(main)
+	_check(Flow.screen(main) == "title", "cancel returns to the title")
 
 	# getting ready: rows, and left/right changes the picked one
 	var rows: Array = Flow.details_rows(main)
@@ -134,12 +145,75 @@ func _run() -> void:
 	Flow.open_pause(main)
 	_dump(main, "pause")
 	_check(Flow.screen(main) == "pause" and main.frozen and main.dim.visible, "pausing opens the pause menu")
-	_check(Flow.pause_rows(main).size() == Flow.PAUSE_ROWS.size(), "one pause row per action")
+	Flow.exit_hidden = false
+	var ids: Array = Flow.pause_ids(main)
+	_check(ids == ["resume", "walk", "restart", "settings", "select", "exit"] or OS.has_feature("web"),
+		"desktop pause grid order (%s)" % [ids])
+	_check(Flow.pause_labels(main).size() == ids.size(), "one label per pause cell")
+	Flow.exit_hidden = true
+	_check(not Flow.pause_ids(main).has("exit") and Flow.pause_ids(main).size() == 5,
+		"without exit the grid has five cells and no disabled one")
+	Flow.exit_hidden = false
+	# two axes: right, down, left, up all move one cell
+	main.pause_idx = 0
+	Flow.pause_move(main, 1, 0)
+	_check(main.pause_idx == 1, "right moves to the next column")
+	Flow.pause_move(main, 0, 1)
+	_check(main.pause_idx == 3, "down moves one row")
+	Flow.pause_move(main, -1, 0)
+	_check(main.pause_idx == 2, "left moves back a column")
+	Flow.pause_move(main, 0, -1)
+	Flow.pause_move(main, 0, -1)
+	_check(main.pause_idx == 4, "up from the top row wraps to the bottom")
+	Flow.exit_hidden = true
+	main.pause_idx = 1
+	Flow.pause_move(main, 0, 2)
+	_check(main.pause_idx == 4, "a five-cell grid lands on its lone last cell")
+	Flow.exit_hidden = false
+	main.pause_idx = 0
+	# START AGAIN and EXIT GAME ask first; cancelling returns to the grid
+	var quit_calls := [0]
+	Flow.quit_hook = func() -> void: quit_calls[0] += 1
+	main.pause_idx = Flow.pause_ids(main).find("exit")
+	Flow.pause_activate(main)
+	_dump(main, "confirm_exit")
+	_check(Flow.screen(main) == "confirm" and main.confirm_id == "exit" and quit_calls[0] == 0,
+		"EXIT GAME asks before quitting")
+	_check(_verbs(main) == ["yes", "cancel"], "a question offers yes and cancel (%s)" % [_verbs(main)])
+	_check(String(Flow.confirm_card(main).body) == "Quit the game?", "the exit question")
+	Flow.confirm_cancel(main)
+	_check(Flow.screen(main) == "pause" and quit_calls[0] == 0, "cancel returns to the pause grid")
+	Flow.open_confirm(main, "exit")
+	Flow.confirm_accept(main)
+	_check(quit_calls[0] == 1, "yes quits, once")
+	main.confirm_id = ""
+	main.pause_idx = Flow.pause_ids(main).find("restart")
+	Flow.pause_activate(main)
+	_check(main.confirm_id == "restart" and String(Flow.confirm_card(main).body) == "Start this walk again?",
+		"START AGAIN asks first")
+	Flow.confirm_cancel(main)
+	Flow.quit_hook = Callable()
+	main.pause_idx = Flow.pause_ids(main).find("walk")
+	Flow.pause_activate(main)
+	_dump(main, "walkcard")
+	var wc: Dictionary = Flow.walk_card(main)
+	_check(Flow.screen(main) == "walkcard", "THIS WALK opens its card")
+	_check(String(wc.name) == main._walk_name() and wc.has("gloss"), "the card names the walk and its gloss")
+	_check((wc.goals as Array).size() == main.active_quests.size(), "one line per goal on this walk")
+	_check((wc.goals as Array).all(func(g: Dictionary) -> bool: return g.has("state")),
+		"every goal line says how it stands")
+	_check(_verbs(main) == ["back"], "the card's only way on is back")
+	Flow.close_walk_card(main)
+	_check(Flow.screen(main) == "pause", "back returns to the pause grid")
 	main._open_settings()
 	main._close_settings()
 	_check(Flow.screen(main) == "pause" and main.dim.visible, "settings opened from pause close back to the pause menu")
 	Flow.resume(main)
 	_check(not main.paused and not main.frozen and not main.dim.visible, "resume gets back to the walk")
+	var Prompts: GDScript = load("res://hud/prompts.gd")
+	for which in ["title", "pause", "confirm", "walkcard"]:
+		for it: Array in Flow.prompts(main, which):
+			_check(Prompts.NAMES.has(String(it[0])), "%s prompt '%s' is an action Prompts knows" % [which, it[0]])
 
 	# a notice card: its first line is the title, the rest the body
 	Flow.show_notice(main, "TITLE LINE\n\nbody one\nbody two")

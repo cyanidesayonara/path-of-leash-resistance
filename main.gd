@@ -264,6 +264,8 @@ var tutorial_mode := false
 var tut_step := 0
 # where the owner stands to wait, this far south of the lesson's station
 const TUT_HOLD_BACK := 150.0
+# how far in from the path's edge a lesson's "stand" puts the waiting owner
+const TUT_STAND_IN := 60.0
 var tut_plant_t := 0.0
 var tut_teetered := false
 var tut_flash := 0.0
@@ -549,6 +551,10 @@ var _signs_for := ""
 var gloss_a := 1.0
 var details_idx := 0
 var pause_idx := 0
+# a question the menus are waiting on ("restart", "exit"), and which pause
+# card is open over the grid ("walk"); empty when neither
+var confirm_id := ""
+var pause_view := ""
 var locked_nudge := 0.0
 var shop_preview: CharacterBody2D
 var in_shop := false
@@ -635,6 +641,8 @@ func _ready() -> void:
 	Engine.time_scale = 1.0
 	font = ThemeDB.fallback_font
 	var autowalk_requested := "--autowalk" in OS.get_cmdline_user_args()
+	if "--no-exit" in OS.get_cmdline_user_args():
+		MenuFlow.exit_hidden = true
 	_shake_rng.seed = SHAKE_SEED
 	if Game.is_daily(Game.level_id):
 		# same layout, weather and time for everyone, all day
@@ -4764,6 +4772,14 @@ func _shot_menu(which: String) -> void:
 		"pause":
 			_skip_title()
 			MenuFlow.open_pause(self)
+		"walkcard":
+			_skip_title()
+			MenuFlow.open_pause(self)
+			MenuFlow.open_walk_card(self)
+		"confirm":
+			_skip_title()
+			MenuFlow.open_pause(self)
+			MenuFlow.open_confirm(self, "exit")
 		"notice":
 			_skip_title()
 			_death("OFF THE EDGE\n\nShe went over, and the human went with her.")
@@ -4857,7 +4873,7 @@ func _process(_delta: float) -> void:
 			# reviewed. Everything else about --shot exists to get PAST this.
 			if "--shot-title" in OS.get_cmdline_user_args():
 				return
-			# --shot-menu=walk|details|shop|progress|pause|notice opens that screen
+			# --shot-menu=walk|details|shop|progress|pause|walkcard|confirm|notice opens that screen
 			for a in OS.get_cmdline_user_args():
 				if a.begins_with("--shot-menu="):
 					_shot_menu(a.substr(12))
@@ -6561,12 +6577,33 @@ func _tut_step_done(id: String) -> bool:
 	return false
 
 
+# Where the owner waits for lesson i: y short of the station, and x by the
+# path's edge when the lesson gives a "stand" (INF when it does not, so the
+# owner keeps their own place in the weave).
+func tut_hold_point(i: int) -> Vector2:
+	var st: Dictionary = TutorialSteps.step(i)
+	if not bool(st.get("hold", false)):
+		return Vector2(INF, -INF)
+	var y := float(st["at"]) + TUT_HOLD_BACK
+	var side := int(st.get("stand", 0))
+	if side == 0:
+		return Vector2(INF, y)
+	var e := walk_edges(y)
+	return Vector2((e.x + TUT_STAND_IN) if side < 0 else (e.y - TUT_STAND_IN), y)
+
+
 func _tick_tutorial(delta: float) -> void:
 	tut_flash = maxf(0.0, tut_flash - delta)
 	var st: Dictionary = TutorialSteps.step(tut_step)
 	var id := String(st.id)
 	# the owner waits at a lesson that wants them still, just short of it
-	human.tut_hold_y = (float(st["at"]) + TUT_HOLD_BACK) if bool(st.get("hold", false)) else -INF
+	var hp := tut_hold_point(tut_step)
+	human.tut_hold_y = hp.y
+	human.tut_hold_x = hp.x
+	# a waiting owner leaves the reel alone at full length: a lesson's target
+	# is laid out for the whole leash, and a click to 170 would put it out of reach
+	if bool(st.get("hold", false)) and leash_target < LEASH_LENGTH:
+		set_leash_target(LEASH_LENGTH)
 	if id == "plant" and dog.planted and leash.taut:
 		tut_plant_t += delta
 	if teeter.active:

@@ -28,6 +28,9 @@ mutt who squats like a lady.
   hold Q / X
 - Bark (freezes the human for a beat): E / B
 - Restart: R / Start
+- Pause: Esc / Back. A grid you move through in both directions: resume,
+  this walk (its name and goals so far), start again, settings, walk
+  select, and on desktop exit game. Starting again and exiting ask first.
 
 ## What to feel for
 
