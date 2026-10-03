@@ -170,6 +170,17 @@ Every feature must serve at least one. If it serves none, cut it.
   keep the first-segment direction. Spring force, separation damping and lost
   dog control ease in together over the first 5% of stretch. The rope still
   draws as four polylines plus batched circles.
+- **post-v1.57 guided whirl overhaul - built, awaiting hand play.** Arming
+  reads one signed mean of the local human-end coil, then commits its direction
+  and exact turn budget for the whole orbit. Pull still controls spin-up.
+  Ordinary launches are pure tangents; a missed tangent gets one bounded
+  dogward attempt or a controlled stumble, while lost poles and furniture
+  cannot produce a false fling. Anticipation, orbit and release now read from
+  outside. Remaining feel questions are explicit: whether short-reel coils
+  collapsing to the 0.6-turn minimum feel too samey, whether an actively
+  tightening coil looks under-read by the arming-window mean, whether losing
+  the old FLING reward on a safe refusal feels fair, and how much dogward lean
+  the forced release wants. Assess all four only on the final overhaul commit.
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
 - Every release also ships: mechanics tuning from playtests, at least

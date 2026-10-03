@@ -101,13 +101,36 @@ explain every changed snapshot line; this does not relax the refactor rule.
   own slip. Do not reintroduce a separate pivot/angle bookkeeping layer.
 - **The whirl** (entities/human.gd WHIRL state): when a wound human near a pole
   keeps getting pulled, main.gd starts a choreographed accelerating orbit
-  instead of letting them jam against the pole. The orbit runs for
-  exactly the wound turn count (leash.free_slip_t is refreshed during
-  the whirl so rope grip can never arrest the unwind), spin-up scales
-  with pull tension (pulley), and release waits for the tangent to aim
-  at the dog - flings land toward/past the dog so the bungee yank-back
-  happens. Leash forces skip a whirling human. The rope stays honest;
-  the human's response is the cartoon - keep it that way.
+  instead of letting them jam against the pole. Arming averages one signed
+  `leash.coil_winding()` measure over the 0.25-second window; `_commit_whirl`
+  uses that same number for both the immutable direction and the local turn
+  budget, clamped to the authored 0.6-4.0-turn range. `coil_reach_for()` is
+  the pure hand-gap boundary helper (not
+  the removed single-frame `unwind_bias()` wrapper); `unwind_bias_of()` and
+  `human.orbit_sense()` settle the direction without mutating rope state.
+  Only `human_contact_pole` with `human_contact_is_pole`, rechecked through
+  `is_real_pole()`, may start and sustain an orbit: furniture and dynamic
+  snags never whirl.
+  `leash.free_slip_t` is refreshed throughout WHIRL so grip cannot arrest the
+  unwind, and pull tension drives spin-up. Normal release is the pure tangent
+  after it enters the dog-facing cone. A missed tangent gets one bounded extra
+  arc and, only then, a capped dogward lean; `whirl_can_fling()` refuses a
+  launch that would still point away. Timeout, lost-pole and refused-release
+  paths call `bail_whirl()` for a controlled tangent stumble, not a fling.
+  `whirl_bailed` keeps the entire bail frame shielded from raw tension,
+  separation damping and the geometry cap even though `human.tick()` runs
+  before `_apply_leash`; `_apply_leash` consumes both bail and fling one-shots
+  after every `_leash_tug` path. Never call `_leash_tug` directly.
+  Tests: `test_whirl.gd` and `test_whirl_guided.gd` cover the pole, starting
+  continuity, signed measure and reach, one-way progress, local budget,
+  pull-dependent speed, pure and forced releases, refusal, real-pole guard,
+  bail shielding and one-shot consumption. The rope stays honest; the human's
+  response is the cartoon. Whirl visuals use `AnimClock`, remain allocation-free
+  inside the per-frame loops, and must not materially increase human draw time
+  or draw calls. The 0.25-second arming telegraph adds two direct arcs;
+  mid-tighten orbit adds five calls (one ghost batch, three speed arcs, one
+  grit batch), and settled orbit adds four after the grit is gone. Keep
+  focused sequence captures with performance evidence for any visual change.
 - **Human events** are telegraphed with a speech bubble 0.8s before firing.
   Never add an untelegraphed hazard to the human - predictable-but-dumb is
   the design contract (see PROJECT.md pillars).

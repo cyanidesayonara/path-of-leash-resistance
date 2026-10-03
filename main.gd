@@ -57,6 +57,18 @@ const HUMAN_MASS := 4.0
 const PLANT_GRIP := 14.0
 const PLANT_GRIP_WET := 9.0
 const PLANT_GRIP_ICE := 5.0
+# The whirl's arming (_apply_leash). The rope must be wound, at the owner's
+# end, on a real pole within reach, and stay that way for WHIRL_ARM_T before
+# the orbit starts - walking past a pole briefly curves the rope and must not
+# trigger. WHIRL_SLIP keeps the rope free-slipping for the choreographed
+# unwind, and WHIRL_SLIP_BAIL does the same while she staggers out of one.
+const WHIRL_ARM_T := 0.25
+const WHIRL_ARM_EXCESS := 8.0
+const WHIRL_ARM_WIND := 0.55
+const WHIRL_ARM_END_WIND := 2.4
+const WHIRL_ARM_RANGE := 70.0
+const WHIRL_SLIP := 0.7
+const WHIRL_SLIP_BAIL := 0.5
 # a planted dog dragged at least this far in a frame is skidding, and leaves
 # paw furrows that fade over SKID_LIFE seconds, at most SKID_MAX of them
 const SKID_MIN := 0.25
@@ -453,9 +465,14 @@ var birds_cache: Array = []
 var hud_t := 0.0
 var sq_spawn_t := 6.0
 var whirl_arm := 0.0
-var whirl_wind_acc := 0.0
-var whirl_start_wind := 0.0
-var whirl_flipped := false
+# Her coil, SIGNED, added up over the arming frames, and how many of them. One
+# number for both halves of the decision: a window that keeps changing its mind
+# nets out to nearly nothing, and nearly nothing is what there is to take off -
+# votes for the way round counted separately from how wound she was would read a
+# contested coil as a busy one and send her round as far as a coil that never
+# wavered.
+var whirl_coil_acc := 0.0
+var whirl_arm_n := 0
 var vault_recent := 0.0
 
 var leash_len := LEASH_LENGTH
@@ -4989,6 +5006,36 @@ func owner_news(line: String) -> void:
 
 
 func _apply_leash(delta: float) -> void:
+	_leash_tug(delta)
+	# The two ways an orbit ends, as one-shots, consumed once the tug above has
+	# had its frame - on EVERY path through it, including the early ones (no
+	# leash at all, a slack rope, degenerate tangents). A flag that survives the
+	# frame it was raised on is paid out twice, or shields her from a tug she
+	# should feel; a flag the early returns swallow is never paid out at all.
+	if human.whirl_bailed:
+		# an abandoned orbit is not a fling: no score, no sfx, just enough
+		# slip left for her to stagger clear of the coil
+		human.whirl_bailed = false
+		if not leash.detached:
+			leash.free_slip_t = maxf(float(leash.free_slip_t), WHIRL_SLIP_BAIL)
+	if human.just_flung:
+		human.just_flung = false
+		flings_done += 1
+		# the two moves now CHAIN: wind him up with a carve, then let go
+		if vault_recent > 0.0:
+			bones += 8
+			combo.add("SLINGSHOT", 8)
+			float_text(human.global_position + Vector2(0, -34), "slingshot! +8",
+				Color(1.0, 0.86, 0.5))
+			vault_recent = 0.0
+		Sfx.play("fling")
+		combo.add("FLING", 8)
+		if not leash.detached:
+			# a fresh fling must never be arrested by a residual wrap
+			leash.free_slip_t = 1.2
+
+
+func _leash_tug(delta: float) -> void:
 	# The rope itself (leash.gd) is the constraint. Here: run the rope
 	# physics, then turn its stretch into tug-of-war forces. One tension,
 	# applied to each end inversely to effective mass along the rope's end
@@ -5001,43 +5048,39 @@ func _apply_leash(delta: float) -> void:
 	dog.drag_amt = 0.0
 	_tick_signs(delta)
 	if leash.detached:
-		return  # off leash during the freedom romp
+		# off leash during the freedom romp. A window left standing here would
+		# telegraph rings for an orbit that is not coming, and refuse her a
+		# vault for as long as it stood.
+		_disarm_whirl()
+		return
 	leash.tick(delta)
-	# the whirl manages its own release (aimed at the dog); no early exit,
-	# or the launch direction would be random
-	var whirling: bool = human.is_whirling()
-	if whirling:
+	# The whirl manages its own release (aimed at the dog); no early exit, or
+	# the launch direction would be random. `whirling` means the owner's
+	# motion is the orbit's to choreograph, and that includes the frame an
+	# orbit is given up on. human.tick runs BEFORE this, so a timeout or a
+	# pole that stopped being reachable has already put her in a stumble by
+	# now: raw forces and the geometry cap must still skip her on that frame,
+	# or the way out gets exactly the yank the orbit was shielding her from.
+	var whirling: bool = human.is_whirling() or human.whirl_bailed
+	if human.is_whirling():
 		# the choreographed unwind must never be arrested by rope grip
-		leash.free_slip_t = 0.7
-		# wrong-way guard: if the rope is winding TIGHTER, the direction
-		# guess was wrong - flip once
-		if not whirl_flipped and absf(leash.winding()) > whirl_start_wind + 0.35:
-			human.flip_whirl()
-			whirl_flipped = true
-	if human.just_flung:
-		# a fresh fling must never be arrested by a residual wrap
-		human.just_flung = false
-		flings_done += 1
-		# the two moves now CHAIN: wind him up with a carve, then let go
-		if vault_recent > 0.0:
-			bones += 8
-			combo.add("SLINGSHOT", 8)
-			float_text(human.global_position + Vector2(0, -34), "slingshot! +8",
-				Color(1.0, 0.86, 0.5))
-			vault_recent = 0.0
-		Sfx.play("fling")
-		combo.add("FLING", 8)
-		leash.free_slip_t = 1.2
+		leash.free_slip_t = WHIRL_SLIP
+		# There is no wrong-way correction: the direction was committed from
+		# the rope's own human-end geometry at arming and an orbit in flight
+		# cannot change it. What CAN go wrong is the orbit pole turning out
+		# not to be a pole, and orbiting a cafe table unwinds nothing.
+		if not leash.is_real_pole(human.whirl_pole):
+			human.bail_whirl()
 	var used: float = leash.used_length()
 	var excess := used - leash_len
 	leash.taut = excess > 0.0
 	if excess <= 0.0:
-		whirl_arm = 0.0
-		whirl_wind_acc = 0.0
+		_disarm_whirl()
 		return
 	var h_dir: Vector2 = leash.human_pull_dir()
 	var d_dir: Vector2 = leash.dog_pull_dir()
 	if h_dir == Vector2.ZERO or d_dir == Vector2.ZERO:
+		_disarm_whirl()
 		return
 	human.notify_strain()
 	# the tug eases in over the leash's onset band: force, separation damping
@@ -5103,37 +5146,63 @@ func _apply_leash(delta: float) -> void:
 	# cartoon tetherball: a human wound around a nearby pole who keeps
 	# getting pulled starts to WHIRL - an accelerating orbit that unwinds
 	# the rope and flings them when it runs out (Bugs Bunny physics).
-	# The condition must hold for a quarter second (walking past a pole
-	# briefly curves the rope and must not trigger), and the unwind
-	# direction is averaged over that window instead of one noisy frame.
+	# The condition must hold for WHIRL_ARM_T, and the direction is decided
+	# over that same window.
 	var armed := false
-	if not whirling and not human.is_fallen() and excess > 8.0:
-		var end_wind: float = leash.human_end_winding()
-		# 0.55 turns covers the 270-degree partial wind that used to jam
+	if not whirling and not human.is_fallen() and excess > WHIRL_ARM_EXCESS:
+		# WHIRL_ARM_WIND covers the 270-degree partial wind that used to jam
 		# awkwardly without ever whirling
-		if absf(leash.winding()) > 0.55 and absf(end_wind) > 2.4:
+		if absf(leash.winding()) > WHIRL_ARM_WIND and absf(leash.human_end_winding()) > WHIRL_ARM_END_WIND:
 			# the pole the rope is actually wound on at the owner's end - not
 			# merely the nearest one - and a real pole: a café table or a
 			# chair is not something anyone swings round, and orbiting the
 			# wrong thing never unwinds the rope
 			var wp := Vector2(INF, INF)
-			if leash.human_contact_is_pole and leash.human_contact_pole.distance_to(human.global_position) < 70.0:
+			if leash.human_contact_is_pole and leash.human_contact_pole.distance_to(human.global_position) < WHIRL_ARM_RANGE:
 				wp = leash.human_contact_pole
 			if wp.x < INF:
 				armed = true
 				whirl_arm += delta
-				whirl_wind_acc += end_wind
-				if whirl_arm >= 0.25:
-					var spin_dir := -signf(whirl_wind_acc)
-					if spin_dir == 0.0:
-						spin_dir = 1.0
-					whirl_start_wind = absf(leash.winding())
-					whirl_flipped = false
-					human.start_whirl(wp, spin_dir, whirl_start_wind)
+				# The coil beside THIS pole at her end, signed, every frame of
+				# the window - not the whole rope's winding, which reads the
+				# dog's coil too and would size an orbit that keeps going after
+				# hers is spent and winds it up the other way. Added up so that
+				# no one frame of a rope mid-solve decides either how far she
+				# goes round or which way; _commit_whirl settles both from the
+				# average, once, for good.
+				whirl_coil_acc += leash.coil_winding(wp)
+				whirl_arm_n += 1
+				if whirl_arm >= WHIRL_ARM_T:
+					_commit_whirl(wp, whirl_coil_acc / float(maxi(whirl_arm_n, 1)))
 					armed = false
 	if not armed:
-		whirl_arm = 0.0
-		whirl_wind_acc = 0.0
+		_disarm_whirl()
+
+
+# Which way round, and how far, from the coil averaged over the arming window:
+# the rope's own probe, a tiny virtual step each way against that average, and
+# then the same average for the length. A window that cancels has no opinion to
+# give, and a direction is not picked out of the air: she keeps going the way she
+# is already travelling round the pole, for the shortest orbit there is.
+func _commit_whirl(pole: Vector2, coil: float) -> void:
+	var dir: float = leash.unwind_bias_of(coil)
+	if dir == 0.0:
+		dir = human.orbit_sense(human.global_position - pole, human.velocity)
+	human.start_whirl(pole, dir, absf(coil) / TAU)
+
+
+# Nothing held over from an arming window that came to nothing, or the next one
+# decides its way round and its length partly from a rope that has moved on.
+func _disarm_whirl() -> void:
+	whirl_arm = 0.0
+	whirl_coil_acc = 0.0
+	whirl_arm_n = 0
+
+
+# how far into the arming window a whirl is, 0 to 1: what the owner's
+# anticipation is drawn from (entities/human.gd)
+func whirl_arm_amount() -> float:
+	return clampf(whirl_arm / WHIRL_ARM_T, 0.0, 1.0)
 
 
 func _lanes(delta: float) -> void:

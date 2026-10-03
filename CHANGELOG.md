@@ -2,6 +2,33 @@
 
 Append-only session history, newest first.
 
+## 2026-10-03 - The whirl commits to one way round
+
+The tetherball now reads one signed measure of the human-end coil over its
+quarter-second arming window. That one mean chooses the direction and the exact
+local-coil turn measure, clamped to the authored 0.6-4.0-turn budget, so
+winding elsewhere on the leash cannot buy another lap and a contested window
+is worth only what it nets. The committed direction cannot flip in flight.
+Pull harder and the pulley still spins the orbit up faster.
+
+An ordinary release is the pure orbit tangent after it points at the dog. A
+missed tangent gets only the bounded extra arc and a dogward lean; if no
+non-reversing dogward fling exists, the human staggers out instead. Timeouts,
+lost poles and furniture posing as poles use the same controlled bail, with
+the bail frame still shielded from raw tension and the geometry cap. No false
+FLING is scored.
+
+The quarter-second take-up rings, orbit ghosts, speed lines, tightening grit
+and fling streaks make the motion readable. `tests/test_whirl_guided.gd`
+pins the signed coil and its reach, one-way progress, pull response,
+pure-tangent and forced releases, refusal, real-pole guard, bail shielding,
+one-shot handling and deterministic arming; it is registered in CI beside
+`test_whirl.gd`. The rope solver and draw path are unchanged, all six leash
+benchmark hashes still match the merged leash overhaul, and the new drawing
+builds no per-frame geometry arrays in the whirl branches: two calls while
+arming, five while tightening and four once settled, with renderer-time
+differences inside measurement spread.
+
 ## 2026-10-03 - Smoother leash, continuous tug
 
 The verlet rope remains the one physical leash, but its open spans now draw

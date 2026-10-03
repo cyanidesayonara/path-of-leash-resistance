@@ -13,6 +13,38 @@ const WALK_SPEED := 92.0
 const WHIRL_R := 30.0
 const WHIRL_TIGHTEN := 200.0
 var whirl_r := WHIRL_R
+# The whirl, tuned. Spin-up is rad/s^2: a base rate plus whatever the dog is
+# pulling with (main.gd feeds whirl_pull the leash tension, so the pole works
+# as a pulley), and the pull fades over the frames after it stops.
+const WHIRL_SPIN_BASE := 8.0
+const WHIRL_SPIN_PER_PULL := 0.016
+const WHIRL_OMEGA_MAX := 24.0
+const WHIRL_PULL_DECAY := 0.9
+# how much faster than the orbit she spins on the spot, for the look of it
+const WHIRL_SPIN_LOOK := 1.4
+# the fling: px/s per rad/s of orbit, floored and capped
+const WHIRL_FLING_PER_OMEGA := 54.0
+const WHIRL_FLING_MIN := 360.0
+const WHIRL_FLING_MAX := 950.0
+# Release. The launch is the tangent, once it points within this cone of the
+# dog - the wait is what aims it, so there is nothing to correct. If it never
+# does point there, she keeps orbiting at most WHIRL_EXTRA_ARC past the
+# wound-turn budget, and only THAT launch leans toward the dog, by at most
+# WHIRL_BLEND_MAX - under a quarter turn, so a lean can never reach the far
+# side of the radius and reverse the way she was going round.
+const WHIRL_AIM_COS := 0.5
+const WHIRL_EXTRA_ARC := 0.6 * TAU
+const WHIRL_BLEND_MAX := PI / 3.0
+# The orbit's own timer, and the bail: a whirl that outlives the timer, or one
+# whose pole stops being somewhere she could be wound on, staggers out along
+# the tangent she is already on instead of being flung.
+const WHIRL_TIMEOUT := 3.5
+const WHIRL_LOSE_R := 140.0
+const WHIRL_BAIL_MIN := 60.0
+const WHIRL_BAIL_SPEED := 260.0
+const WHIRL_BAIL_STUMBLE := 0.7
+# how long she reads as stretched out along a fling after one. Cosmetic.
+const WHIRL_STRETCH_T := 0.35
 const PANIC_SPEED := 230.0
 
 # how far before and after an island the owner is already on its side
@@ -42,9 +74,16 @@ var whirl_dir := 1.0
 var whirl_omega := 0.0
 var whirl_angle := 0.0
 var whirl_turns := 0.0
+# signed angular progress round whirl_pole in the direction committed at
+# arming. It only grows, and nothing resets it: the budget is the turn count
+# the rope was wound by, swept once, one way.
 var whirl_unwound := 0.0
 var whirl_pull := 0.0
 var just_flung := false
+var whirl_flung_t := 0.0
+# set when an orbit was abandoned rather than flung, so main.gd can keep the
+# rope slipping while she staggers clear without paying her for a fling
+var whirl_bailed := false
 var face_dir := Vector2.UP
 var hgait := 0.0
 var chain_target := Vector2.ZERO
@@ -124,6 +163,7 @@ func tick(delta: float) -> void:
 	iframes = maxf(0.0, iframes - delta)
 	pull_cd = maxf(0.0, pull_cd - delta)
 	halt_t = maxf(0.0, halt_t - delta)
+	whirl_flung_t = maxf(0.0, whirl_flung_t - delta)
 	state_t -= delta
 	# parked at the off-leash area: shuffle to the bench, then play
 	# fetch - throwing the ball out for the dog to bring back
@@ -249,29 +289,43 @@ func tick(delta: float) -> void:
 				state_t = 0.8
 		HState.WHIRL:
 			# cartoon tetherball: choreographed accelerating orbit that
-			# runs for exactly as many turns as the rope was wound (the
-			# rope free-slips along underneath). Pulling harder spins it
-			# up faster - the leash as a pulley.
-			whirl_omega = minf(whirl_omega + (8.0 + whirl_pull * 0.016) * delta, 24.0)
-			whirl_pull *= 0.9
-			var step := whirl_dir * whirl_omega * delta
-			whirl_angle += step
-			whirl_unwound += absf(step)
-			whirl_r = move_toward(whirl_r, WHIRL_R, WHIRL_TIGHTEN * delta)
-			global_position = whirl_pole + Vector2.from_angle(whirl_angle) * whirl_r
-			velocity = Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0) * whirl_omega * whirl_r
-			rotation += whirl_dir * whirl_omega * 1.4 * delta
-			# orbit EXACTLY the wound amount (over-orbiting re-wraps the
-			# rope the other way and the fling gets arrested), then hold
-			# briefly - at most 0.6 extra turn - for the tangent to sweep
-			# toward the dog
-			if whirl_unwound >= whirl_turns:
-				var tangent := Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0)
-				var aim: Vector2 = (main.dog.global_position - global_position).normalized()
-				if tangent.dot(aim) > 0.5 or whirl_unwound > whirl_turns + 0.6 * TAU:
-					release_whirl()
-			if state_t <= 0.0:
-				release_whirl()
+			# runs for exactly as many turns as the rope was wound, the one
+			# way it committed to at arming (the rope free-slips along
+			# underneath). Pulling harder spins it up faster - the leash as
+			# a pulley.
+			if state_t <= 0.0 or not _whirl_pole_ok():
+				# out of time, or the pole is not where the orbit is any
+				# more: leave under control instead of orbiting nothing
+				bail_whirl()
+			else:
+				whirl_omega = minf(whirl_omega + (WHIRL_SPIN_BASE + whirl_pull * WHIRL_SPIN_PER_PULL) * delta,
+					WHIRL_OMEGA_MAX)
+				whirl_pull *= WHIRL_PULL_DECAY
+				var was := whirl_angle
+				whirl_angle += whirl_dir * whirl_omega * delta
+				whirl_unwound += whirl_dir * (whirl_angle - was)
+				whirl_r = move_toward(whirl_r, WHIRL_R, WHIRL_TIGHTEN * delta)
+				global_position = whirl_pole + Vector2.from_angle(whirl_angle) * whirl_r
+				velocity = Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0) * whirl_omega * whirl_r
+				rotation += whirl_dir * whirl_omega * WHIRL_SPIN_LOOK * delta
+				# Orbit EXACTLY the wound amount (over-orbiting re-wraps the
+				# rope the other way and the fling gets arrested), then hold
+				# for the tangent to sweep toward the dog - at most
+				# WHIRL_EXTRA_ARC. The ordinary release has nothing left to
+				# decide: the orbit waited for the tangent, so the tangent IS
+				# the launch. Only the launch the cap forces leans, and if even
+				# a full lean would throw her away from the dog there is no
+				# fling to be had and she staggers out instead.
+				if whirl_unwound >= whirl_turns:
+					var tangent := Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0)
+					var aim := _aim_at_dog()
+					if aim != Vector2.ZERO and tangent.dot(aim) > WHIRL_AIM_COS:
+						release_whirl()
+					elif whirl_unwound - whirl_turns >= WHIRL_EXTRA_ARC:
+						if whirl_can_fling(global_position - whirl_pole, whirl_dir, aim):
+							release_whirl(1.0)
+						else:
+							bail_whirl()
 		_:
 			if state == HState.DASH and state_t <= 0.0:
 				_end_dash()
@@ -540,13 +594,19 @@ func is_whirling() -> bool:
 func start_whirl(pole: Vector2, dir: float, turns: float) -> void:
 	if state == HState.WHIRL or state == HState.FALLEN:
 		return
+	# a pole nobody could find is not something to be swung round
+	if not (is_finite(pole.x) and is_finite(pole.y)):
+		return
 	state = HState.WHIRL
-	state_t = 3.5
+	state_t = WHIRL_TIMEOUT
 	whirl_pole = pole
-	whirl_dir = dir
+	# the direction main.gd committed to at arming, and the only one this
+	# orbit will ever have
+	whirl_dir = 1.0 if dir >= 0.0 else -1.0
 	whirl_turns = clampf(turns, 0.6, 4.0) * TAU
 	whirl_unwound = 0.0
 	whirl_pull = 0.0
+	whirl_bailed = false
 	whirl_angle = (global_position - pole).angle()
 	# the orbit starts where they are and tightens in, rather than snapping
 	# them onto the 30 px circle on the first frame
@@ -556,32 +616,99 @@ func start_whirl(pole: Vector2, dir: float, turns: float) -> void:
 	_show_bubble("wheee!")
 
 
-func flip_whirl() -> void:
-	# main.gd noticed the rope winding tighter: the direction guess was
-	# wrong. Reverse, and start the unwind count fresh.
-	if state != HState.WHIRL:
-		return
-	whirl_dir = -whirl_dir
-	whirl_unwound = 0.0
+# the orbit is only honest while the pole is still somewhere she could be
+# wound on; main.gd checks the harder question of whether it is a pole at all
+func _whirl_pole_ok() -> bool:
+	if not (is_finite(whirl_pole.x) and is_finite(whirl_pole.y)):
+		return false
+	return global_position.distance_squared_to(whirl_pole) < WHIRL_LOSE_R * WHIRL_LOSE_R
 
 
-func release_whirl() -> void:
+func _aim_at_dog() -> Vector2:
+	if main == null or main.dog == null:
+		return Vector2.ZERO
+	var to_dog: Vector2 = main.dog.global_position - global_position
+	return to_dog.normalized() if to_dog.length() > 0.001 else Vector2.ZERO
+
+
+# The launch direction. The tangent always moves away from the pole, so
+# getting stuck on it is geometrically impossible, and `lean` is how far the
+# budget has been overrun: a tangent that never lined up is leaned toward the
+# dog, by less than a quarter turn, so the launch always keeps the angular
+# direction the orbit had. Reads its arguments only.
+func whirl_fling_dir(radial: Vector2, spin: float, aim: Vector2, lean: float) -> Vector2:
+	var out := radial.normalized().rotated(spin * PI / 2.0)
+	if aim == Vector2.ZERO or lean <= 0.0:
+		return out
+	var turn := clampf(out.angle_to(aim), -WHIRL_BLEND_MAX, WHIRL_BLEND_MAX) * minf(lean, 1.0)
+	return out.rotated(turn)
+
+
+# Is there a dogward launch to be had at all? The lean is bounded, so a dog
+# sitting behind the way she is going cannot be thrown at: a launch that still
+# points away from her is worse than no fling, so that is a stagger instead.
+# A dog with no direction to give (at her feet, or none at all) is no reason to
+# refuse. Reads its arguments only.
+func whirl_can_fling(radial: Vector2, spin: float, aim: Vector2) -> bool:
+	if aim == Vector2.ZERO:
+		return true
+	return whirl_fling_dir(radial, spin, aim, 1.0).dot(aim) > 0.0
+
+
+# Which way she is already going round a point: the tie-break for a rope with
+# no opinion about which way unwinds it (main.gd/_apply_leash). Reads its
+# arguments only; a dead stop is settled the same way every time.
+func orbit_sense(radial: Vector2, vel: Vector2) -> float:
+	var sense := signf(radial.cross(vel))
+	return sense if sense != 0.0 else 1.0
+
+
+# `lean` is how far the launch may be turned toward the dog, 0 for not at all:
+# only a release forced by the extra-arc cap gets one, because every other
+# release already waited for the tangent to point where it wanted.
+func release_whirl(lean := 0.0) -> void:
 	if state != HState.WHIRL:
 		return
-	# launch along the PURE tangent: a tangent ray always moves away from
-	# the pole, so getting stuck on it is geometrically impossible. The
-	# "toward the dog" part comes from release timing. Fast flings sail
-	# PAST the dog, whose turn it then is to get yanked along (the bungee).
-	var tangent := Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0)
+	# The "toward the dog" part is release timing: the orbit waits for the
+	# tangent to sweep at the dog. Fast flings sail PAST her, whose turn it
+	# then is to get yanked along (the bungee).
+	var radial := global_position - whirl_pole
+	if radial.length() < 0.001 or not (is_finite(radial.x) and is_finite(radial.y)):
+		radial = Vector2.from_angle(whirl_angle)
+	var launch := whirl_fling_dir(radial, whirl_dir, _aim_at_dog(), lean)
 	state = HState.STUMBLE
 	state_t = 1.0
 	rotation = 0.0
 	bubble.visible = false
-	var speed := clampf(whirl_omega * 30.0 * 1.8, 360.0, 950.0)
-	velocity = tangent * speed
+	whirl_pull = 0.0
+	velocity = launch * clampf(whirl_omega * WHIRL_FLING_PER_OMEGA, WHIRL_FLING_MIN, WHIRL_FLING_MAX)
 	just_flung = true
+	whirl_flung_t = WHIRL_STRETCH_T
 	main.float_text(global_position, "AAAA", Color(1, 0.9, 0.6))
 	main.shake_t = maxf(float(main.shake_t), 0.35)
+
+
+func bail_whirl() -> void:
+	# Not a fling: the orbit ran out of time or lost its pole, so she carries
+	# on along the tangent she is already travelling, at a stagger, from
+	# exactly where she stands. No snap, and nothing to score.
+	if state != HState.WHIRL:
+		return
+	var away := velocity.normalized()
+	if away == Vector2.ZERO or not (is_finite(away.x) and is_finite(away.y)):
+		away = Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0)
+	state = HState.STUMBLE
+	state_t = WHIRL_BAIL_STUMBLE
+	rotation = 0.0
+	whirl_pull = 0.0
+	velocity = away * clampf(whirl_omega * whirl_r, WHIRL_BAIL_MIN, WHIRL_BAIL_SPEED)
+	whirl_bailed = true
+	_show_bubble("ugh, dizzy")
+	var tw := create_tween()
+	tw.tween_interval(WHIRL_BAIL_STUMBLE + 0.3)
+	tw.tween_callback(func() -> void:
+		if telegraph_t <= 0.0:
+			bubble.visible = false)
 
 
 func throw_pose() -> void:
@@ -849,9 +976,46 @@ func _draw_shapes() -> void:
 			var a := t * 3.0 + TAU * i / 3.0
 			_b.draw_circle(head + Vector2.from_angle(a) * 22.0, 2.5, Color(1, 0.9, 0.4))
 	elif state == HState.WHIRL:
-		# speed lines; the node itself is spinning, so they animate freely
+		# The orbit, read from outside: where she has just been, how fast she
+		# is going now, and that she is still being hauled in. The node itself
+		# is spinning, so world directions come back into its frame and the
+		# arcs animate freely.
+		var spin := clampf(whirl_omega / WHIRL_OMEGA_MAX, 0.0, 1.0)
+		var inward := clampf((whirl_r - WHIRL_R) / WHIRL_R, 0.0, 1.0)
+		for j in range(4):
+			var back := whirl_angle - whirl_dir * (0.12 + 0.11 * float(j))
+			var ghost := whirl_pole + Vector2.from_angle(back) * whirl_r
+			_b.draw_circle((ghost - global_position).rotated(-rotation), 11.0 - 1.8 * float(j),
+				Color(0.92, 0.9, 0.95, (0.26 - 0.055 * float(j)) * spin))
+		# speed lines, longer and brighter the faster the orbit has wound up
 		for j in range(3):
-			_b.draw_arc(Vector2.ZERO, 23.0 + j * 6.0, PI * 0.15, PI * 0.85, 10, Color(1, 1, 1, 0.34 - j * 0.09), 2.5)
+			_b.draw_arc(Vector2.ZERO, 23.0 + j * 6.0, PI * 0.15, PI * (0.85 + 0.1 * spin), 10,
+				Color(1, 1, 1, (0.34 - j * 0.09) * (0.45 + 0.55 * spin)), 2.5 + spin)
+		if inward > 0.02:
+			# grit kicked up behind her while the orbit still tightens in
+			var out := (global_position - whirl_pole).normalized().rotated(-rotation)
+			for k in range(3):
+				var ph := fmod(t * 6.0 + float(k) * 0.33, 1.0)
+				_b.draw_circle(out * (14.0 + ph * 20.0), 2.5 + ph * 3.5,
+					Color(0.94, 0.91, 0.84, 0.5 * (1.0 - ph) * inward))
+	elif main.whirl_arm_amount() > 0.0:
+		# the quarter second before an orbit: the rope taking up round the
+		# pole she is about to go round, so it is never a surprise
+		var wind: float = main.whirl_arm_amount()
+		var to_pole: Vector2 = main.leash.human_contact_pole - global_position
+		if to_pole.length() > 1.0 and is_finite(to_pole.x) and is_finite(to_pole.y):
+			var at := to_pole.normalized().rotated(-rotation) * 16.0
+			for k in range(2):
+				_b.draw_arc(at, 9.0 + 7.0 * float(k) * wind, 0.0, TAU, 12,
+					Color(1.0, 0.95, 0.7, 0.34 * wind / (1.0 + float(k))), 2.0)
 	elif strain:
 		_b.draw_line(Vector2(16, -36), Vector2(16, -27), Color(1, 0.85, 0.3), 3.0)
 		_b.draw_circle(Vector2(16, -22), 2.0, Color(1, 0.85, 0.3))
+	if whirl_flung_t > 0.0 and velocity.length() > 60.0:
+		# flung: stretched out along the launch, with the air she left behind
+		var amt := whirl_flung_t / WHIRL_STRETCH_T
+		var trail := -velocity.normalized().rotated(-rotation)
+		for k in range(3):
+			var o := side * (6.0 - 6.0 * float(k))
+			_b.draw_line(o, o + trail * (26.0 + 14.0 * float(k)) * amt,
+				Color(1.0, 0.97, 0.88, 0.40 * amt), 3.0 - 0.6 * float(k))

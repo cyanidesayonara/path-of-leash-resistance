@@ -20,31 +20,25 @@ phone-distracted human walks on autopilot; the leash is real verlet-rope
 physics (visual and gameplay constraint — see AGENTS.md). Ships to itch
 (`html5` + `windows`) on a version tag after green CI.
 
-## Where things stand (2026-09-26)
+## Where things stand (2026-10-03)
 
-**Released: v1.55** on itch (web + Windows) and submitted to the Microsoft
-Store as 1.55.0.0 (listing record: `store/listing.md`). It carried the freeze
-fixes, the pre-freeze changes (moods, El Mosaic, surfaces, verge) and the
-performance work: the browser build went from about 9 fps to 45-100 fps on
-an integrated GPU (`tools/web_perf.sh`, CHANGELOG 2026-09-24).
+**Released: v1.57** on itch (web + Windows) and submitted to the Microsoft
+Store as 1.57.0.0 on 2026-10-03 (listing record: `store/listing.md`). Its
+Store submission uses the ten current screenshots in `store/screenshots/`.
 
-**On `main` since v1.55, player-facing** (board column "Awaiting acceptance",
+**On `main`, awaiting hand acceptance** (board column "Awaiting acceptance",
 https://github.com/users/cyanidesayonara/projects/4):
-- #64 La Neteja: walk 13, the sweeper chase's own narrow street; the chase
-  no longer rolls on other walks. Closes #20.
-- #71 touch controls: RUN, MENU, SKIP, SHARE, tappable goals card; R only once
-  the walk stops. Closes #62.
-- #70 snow's slush follows the path on the walks that bend.
-Accepted since v1.55: #61 feed spacing, #63 prompts follow the last device,
-#68 world labels clear of the feed, #69 ground past the finish.
+- #127 leash overhaul: smooth collision-aware drawing over the same physical
+  verlet rope, adaptive stabilisation and weighted end control.
+
+The older acceptance backlog (#23) is closed with every entry ticked. The
+board and that issue are the source of truth for the WIP count.
 
 **Needs Santtu:**
 - #65 (S2, decision): the built-up walks' frontage has been hidden under
   full-width grass since v1.51. Three options in the issue.
-- Play the awaiting changes; the real-phone check (#13) now includes the
+- Play #127; the real-phone check (#13) now includes the
   touch controls; #11, #12, #14.
-- The next release (1.56): the Store listing needs "thirteen walks" and the
-  chase text (see `store/listing.md`).
 
 **Level review (#21):** two automated passes done (every walk at five points;
 every walk in rain, wind, snow, night and at 844x390). Findings filed and
@@ -53,6 +47,22 @@ mostly fixed; what is left needs play.
 **Performance (#45):** see the CHANGELOG. Levers that are left change the
 picture (the full-screen grade costs 3-4 ms a frame on an integrated GPU in
 the browser) or the behaviour (walker ropes; tried and dropped 2026-09-26).
+
+**Guided whirl overhaul (built, not yet accepted):** the owner now commits to
+one direction and the exact local human-end coil measured over the arming
+window. Normal release is the pure tangent; the bounded missed-tangent path
+leans dogward only when it can still preserve the orbit, otherwise it bails
+into a controlled stumble. Timeout, lost-pole and furniture cases bail too,
+with their exit frame still shielded from the tug. The anticipation rings,
+orbit ghosts, speed lines, grit and fling streaks are procedural and
+deterministic. `tests/test_whirl_guided.gd` is the exhaustive guard.
+
+Hand-play only the final commit. At the shortest reel, measurable coils fall
+under the 0.6-turn minimum, so every short-reel orbit uses that floor. A coil
+still tightening through the 0.25-second arming window is slightly under-read
+by its mean. A safe refusal deliberately loses the old FLING reward. The
+dogward lean on the forced path remains a tuning point; do not retune any of
+these without play evidence and a failing regression where appropriate.
 
 ## Tools and rules added since the freeze began
 
