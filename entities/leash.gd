@@ -38,7 +38,7 @@ const TANGENT_RUN := 3
 # keeping the step that leaves her end less wound (main.gd/_apply_leash).
 # Only corners beside the pole count as its coil - WHIRL_COIL_REACH at the
 # least, and as far out as her hand when the rope has it further (see
-# unwind_bias). Rope points held against a pole sit POLE_PAD out from it.
+# coil_reach_for()). Rope points held against a pole sit POLE_PAD out from it.
 const WHIRL_TAIL := 9
 const WHIRL_PROBE_STEP := 0.08
 const WHIRL_COIL_REACH := 2.0 * POLE_PAD

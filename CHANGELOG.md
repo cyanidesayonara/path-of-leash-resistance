@@ -25,7 +25,9 @@ pure-tangent and forced releases, refusal, real-pole guard, bail shielding,
 one-shot handling and deterministic arming; it is registered in CI beside
 `test_whirl.gd`. The rope solver and draw path are unchanged, all six leash
 benchmark hashes still match the merged leash overhaul, and the new drawing
-adds no recurring allocation or material frame-time cost.
+adds no recurring allocation: two calls while arming, five while tightening
+and four once settled, with renderer-time differences inside measurement
+spread.
 
 ## 2026-10-03 - Smoother leash, continuous tug
 

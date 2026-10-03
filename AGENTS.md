@@ -126,9 +126,10 @@ explain every changed snapshot line; this does not relax the refactor rule.
   bail shielding and one-shot consumption. The rope stays honest; the human's
   response is the cartoon. Whirl visuals use `AnimClock`, remain allocation-free
   inside the per-frame loops, and must not materially increase human draw time
-  or draw calls; the two arming arcs may add calls for only the 0.25-second
-  telegraph. Keep focused sequence captures with performance evidence for any
-  visual change.
+  or draw calls. The 0.25-second arming telegraph adds two direct arcs;
+  mid-tighten orbit adds five calls (one ghost batch, three speed arcs, one
+  grit batch), and settled orbit adds four after the grit is gone. Keep
+  focused sequence captures with performance evidence for any visual change.
 - **Human events** are telegraphed with a speech bubble 0.8s before firing.
   Never add an untelegraphed hazard to the human - predictable-but-dumb is
   the design contract (see PROJECT.md pillars).

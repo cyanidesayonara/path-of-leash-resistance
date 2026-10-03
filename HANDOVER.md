@@ -74,7 +74,7 @@ these without play evidence and a failing regression where appropriate.
 
 - Verification: `tools/shot_sweep.sh` (deterministic: fixed frame rate,
   seed, `AnimClock`), `tools/shot_diff.py` (pixel diff of two sweeps),
-  `tools/behaviour_snapshot.sh` (fixed-seed runs over every non-tutorial walk;
+  `tools/behaviour_snapshot.sh` (59 fixed-seed runs over 14 walks;
   byte-identical for a refactor, line-by-line explained for intentional
   handling changes), `tools/idle_soak.sh`, `--perf` with
   `--perf-hide=`, `--perf-no-grade`, per-spike `physics_top`,
