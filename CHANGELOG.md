@@ -26,6 +26,66 @@ Append-only session history, newest first.
   draws the three looks that were compared. The two other storyboards,
   "Down from the rooftops" and "The title fights back", are kept as
   renderable scenes.
+## 2026-10-04 - The README, Store listing and itch page say what the game is now
+
+- No tagline any more. "You are the dog. Go touch grass." is gone from the
+  README, the Store manifest's description and the Windows export's file
+  description (now just "Path of Leash Resistance").
+- **README.md** rewritten for the GitHub page: what the game is, what you do,
+  the features as they stand (the leash conversation, the off-leash ends, moods,
+  terrain, weather outfits), the fourteen walks with their glosses, controls,
+  links to itch and the Store, and the build commands.
+- **store/listing.md**: a new description, short description, feature list and
+  keywords for the next submission, recorded as not yet live (the 1.57 text is
+  in the file's history).
+- **docs/itch-page.md**: ready-to-paste itch page text (short description, body,
+  controls, a "what's new" draft from the changes since v1.57), and the GitHub
+  About line and suggested topics for the repo settings.
+- In-game text is unchanged: the start line's "you are the dog" gloss, the
+  tutorial's first title and the Store poster's tag line still say it.
+
+## 2026-10-04 - No subtitle
+
+- "you are the dog" is gone from under the title on the title screen and from
+  the Store poster art, and "You are the dog. Go touch grass." from the
+  Windows file description and the Store package description. The title
+  stands alone (Santtu: tired of it, and it was not needed).
+- The First Walk's opening card is headed "Walkies." instead.
+- The README, AGENTS.md, PROJECT.md and the Store listing record follow.
+## 2026-10-04 - The off-leash break, part 1: fixed, walled in, explained
+
+An audit of every off-leash space (#21) found it leaky and quietly broken.
+
+- **She stays on screen.** The camera's x was fixed at 640, and the space is
+  wider than the view, so she could run off either side (and swim out of
+  sight at the dog beach). Past the gate line the camera now follows her
+  sideways, clamped to the space (`main._cam_x`). `tools/freedom_bounds.gd`
+  drives her flat out in eight directions on every walk and reports any
+  escape or loss of sight.
+- **The bottom fence holds.** It was drawn only, so she could leave anywhere
+  along it and the leash re-snapped across the gap. It is solid either side
+  of the gate mouth now, and on the dog beach a breakwater of rocks (an
+  espigó) carries the line across the water.
+- **Brutus no longer ends fetch.** A ball he ran off with, or that was taken
+  back off him, was never replaced. Your human throws another ("here, another
+  one!").
+- **A bone taken back off Brutus is kept.** He could steal the same bone
+  again and again, worth +9 each time.
+- **Brutus goes home with everyone else.** He stayed behind and went on
+  stealing bones off-screen for the rest of the walk.
+- **Nobody in the sea.** On the dog beach two benches, two parked pairs,
+  Brutus and the free dogs could all start in the water; they start on the
+  sand now.
+- **The bag survives a sit-down.** Your human parking on the bench made the
+  bag vanish, so after the break the bag chore could never finish.
+- **The trough answers.** Drinking laps, and a proper long drink says so,
+  +2 (it was silent: nothing told her the drink goal had been met). Logs can
+  be sniffed like posts.
+- **What else is here.** After fetch, the banner takes turns suggesting what
+  is left (digging, a drink, sniffing round) before pointing home, and
+  heading for the gate mid-fetch warns "LEAVING ALREADY? FETCH ISN'T DONE".
+- New test: `tests/test_freedom_fixes.gd` (11 checks), in CI in place of a
+  duplicated step.
 ## 2026-10-04 - El Bosc's floor, edges and spring (level audit, #21)
 
 - The trail had a kerb: a pale ruled line down both edges, as in town. A

@@ -23,7 +23,7 @@ extends RefCounted
 const STEPS: Array[Dictionary] = [
 	{
 		"id": "walk", "at": 60.0, "hold": false,
-		"title": "You are the dog.",
+		"title": "Walkies.",
 		"body": "Walk up the path with {move_with}. Your human follows - badly.",
 	},
 	{

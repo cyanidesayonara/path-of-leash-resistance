@@ -1612,8 +1612,8 @@ static func build_level_data(m: Node2D) -> void:
 			var clear := tree.distance_to(m.gate_bench) > 95.0
 			for w: Rect2 in m.water:
 				clear = clear and not w.grow(30.0).has_point(tree)
-			for slot in m.PAIR_PARK_SPOTS:
-				var spot: Vector2 = slot.position
+			for si in range(m.PAIR_PARK_SPOTS.size()):
+				var spot: Vector2 = m.pair_park_spot(si)
 				clear = clear and tree.distance_to(spot) > 85.0
 			if clear:
 				m.trees.append(tree)
@@ -2049,8 +2049,8 @@ static func build_park_props(m: Node2D) -> void:
 		if in_water:
 			continue
 		var clear := true
-		for slot in m.PAIR_PARK_SPOTS:
-			if at.distance_to(slot.position as Vector2) < 90.0:
+		for si in range(m.PAIR_PARK_SPOTS.size()):
+			if at.distance_to(m.pair_park_spot(si)) < 90.0:
 				clear = false
 		if not clear:
 			continue
@@ -2196,7 +2196,7 @@ static func build_walls(m: Node2D) -> void:
 	# On the beach the west wall moves out into the water, so she can actually
 	# get in the sea - the whole point of walking a dog along the seafront.
 	# Everywhere else it stays at the level edge.
-	var west_x := -180.0 if m.lvl == "beach" else 40.0
+	var west_x: float = m.FREEDOM_WALL_W if m.lvl == "beach" else 40.0
 	var defs := [
 		[Vector2(west_x, mid_y), Vector2(100, span)],
 		[Vector2(1240.0, mid_y), Vector2(100, span)],
@@ -2210,6 +2210,16 @@ static func build_walls(m: Node2D) -> void:
 		cs.shape = sh
 		cs.position = d[0]
 		walls.add_child(cs)
+	# the off-leash space's bottom fence (and, on the beach, the breakwater
+	# across the water): solid either side of the gate mouth
+	var fy: float = m.GATE_Y - 30.0
+	for seg: Array in [[Vector2(west_x, fy), Vector2(m.gate_l - 20.0, fy)], [Vector2(m.gate_r + 20.0, fy), Vector2(1240.0, fy)]]:
+		var ss := SegmentShape2D.new()
+		ss.a = seg[0]
+		ss.b = seg[1]
+		var fcs := CollisionShape2D.new()
+		fcs.shape = ss
+		walls.add_child(fcs)
 	m.add_child(walls)
 	# THE BUILDING LINE is solid (#65): she used to be able to walk out onto
 	# the roofs, because the only walls were at the level edges. Segments

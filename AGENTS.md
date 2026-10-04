@@ -5,7 +5,7 @@ this project. It follows the AGENTS.md open standard (https://agents.md).
 
 ## Project Overview
 
-**Path of Leash Resistance** (tagline: "You are the dog. Go touch grass.")
+**Path of Leash Resistance** (no subtitle or tagline, by choice, October 2026)
 is a top-down physics comedy game. You are a dog leashed to a
 phone-distracted human who walks on autopilot. Get them through the walk
 with their phone intact while sneaking in as much dog business as
