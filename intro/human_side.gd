@@ -64,7 +64,7 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 	var shoulder := hip + up * 62.0
 	# the neck juts forward and the head tips down into the phone: the stoop
 	# of someone who has not looked up in an hour
-	head_t += 0.55 * phone
+	head_t += 0.75 * phone
 	var neck_top := shoulder + up.rotated(0.35 * phone) * 14.0
 	var head := neck_top + up.rotated(head_t * 0.6) * 18.0 + Vector2(5, 0)
 	var legs := []
@@ -79,7 +79,7 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 			bend = lerpf(bend, 0.35 + 0.35 * float(side) + sin(phase * 2.0) * 0.25, lift)
 		legs.append(_two(hip + Vector2(4.0 * float(side) - 2.0, 0), thigh_dir, 48.0, 50.0, bend))
 	# the phone held up near the chin, elbow down, the screen tipped to the face
-	var phone_at := (Vector2(34, 2) * phone + Vector2(14, 58) * (1.0 - phone)) + Vector2(5, -7) * jolt
+	var phone_at := (Vector2(40, 30) * phone + Vector2(14, 58) * (1.0 - phone)) + Vector2(14, -12) * jolt
 	var phone_hand := shoulder + phone_at.rotated(lean)
 	var elbow := shoulder + Vector2(10, 30).rotated(lean)
 	var arm1 := [shoulder + Vector2(4, 4), elbow, phone_hand]
@@ -153,7 +153,7 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 	# the phone, tipped up to the face, and its cold light on it
 	if phone > 0.3:
 		var ph := phone_hand + Vector2(3, -6)
-		var tip := -0.5 + jolt * 0.6
+		var tip := -0.5 + jolt * 0.9
 		var pr := PackedVector2Array([ph + Vector2(-5, -11).rotated(tip), ph + Vector2(5, -11).rotated(tip),
 			ph + Vector2(5, 11).rotated(tip), ph + Vector2(-5, 11).rotated(tip)])
 		c.draw_colored_polygon(_fat(pr, 1.6), OUT)
@@ -163,8 +163,8 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 		var sc: float = pose.get("scroll", 0.0)
 		c.draw_circle(ph + Vector2(1, 4 - 7.0 * fposmod(sc, 1.0)).rotated(tip), 2.6, SKIN.darkened(0.1))
 		if glow > 0.0:
-			# the screen's light on the face: warm white, soft, fading out
-			for i in range(6):
-				c.draw_colored_polygon(_ell(head + Vector2(13, 7).rotated(hr), Vector2(11, 14) * (1.0 - float(i) * 0.14), hr),
-					Color(1.0, 0.98, 0.92, 0.045 * glow))
+			# the screen's light on the face: a cool rim down the front of it
+			for i in range(4):
+				c.draw_colored_polygon(_ell(head + Vector2(12, 8).rotated(hr), Vector2(9, 14) * (1.0 - float(i) * 0.2), hr),
+					Color(0.88, 0.95, 1.0, 0.10 * glow))
 	return arm2[2]

@@ -10,7 +10,7 @@ extends CanvasLayer
 # camera moves within that.
 
 const SCENE := preload("res://intro/scene_walkies.gd")
-const END_AT := 13.8          # after the tow has left the frame
+const END_AT := 14.4          # after the tow has left the frame
 const FADE_OUT := 0.45
 # the sound cues: [time, sound, pitch, volume dB]
 const CUES := [
@@ -21,7 +21,7 @@ const CUES := [
 	[9.22, "bark", 1.0, -3.0],       # the YANK
 	[9.3, "fling", 0.9, -4.0],
 	[9.5, "crack", 0.7, -6.0],       # the door
-	[10.9, "star", 1.0, -6.0],       # the title lands
+	[10.65, "star", 1.0, -6.0],      # the title lands
 ]
 
 var main: Node

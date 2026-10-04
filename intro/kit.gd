@@ -65,7 +65,7 @@ static func human(c: CanvasItem, pos: Vector2, s: float, face: float, sq: Vector
 # fold into zigzags.
 const ROPE_N := 24
 const ROPE_DAMP := 0.93
-const ROPE_ITER := 24
+const ROPE_ITER := 30
 static var rope_p := PackedVector2Array()
 static var rope_q := PackedVector2Array()
 static var rope_t := -1.0
@@ -98,7 +98,7 @@ static func _rope_step(a: Vector2, b: Vector2, b_held: bool, seg: float, floor_y
 		for i in range(ROPE_N):
 			if rope_p[i].y > floor_y:
 				rope_p[i].y = floor_y
-				rope_q[i].x = lerpf(rope_q[i].x, rope_p[i].x, 0.5)
+				rope_q[i] = rope_p[i]
 		rope_p[0] = a
 		if b_held:
 			rope_p[ROPE_N - 1] = b
@@ -152,10 +152,10 @@ static func rope(c: CanvasItem, t: float, a: Vector2, b: Vector2, b_held: bool, 
 static func breath(c: CanvasItem, at: Vector2, f: float) -> void:
 	if f <= 0.0 or f >= 1.0:
 		return
-	var a := 0.55 * (1.0 - f)
+	var a := 0.8 * (1.0 - f)
 	for k in range(3):
-		var p := at + Vector2(14.0 * f + float(k) * 7.0, -26.0 * f - float(k) * 5.0 + sin(f * 6.0 + float(k)) * 3.0)
-		c.draw_circle(p, (5.0 + float(k) * 2.0) * (0.6 + f * 0.6), Color(1, 1, 1, a))
+		var p := at + Vector2(30.0 * f + float(k) * 16.0, -50.0 * f - float(k) * 12.0 + sin(f * 6.0 + float(k)) * 6.0)
+		c.draw_circle(p, (11.0 + float(k) * 5.0) * (0.6 + f * 0.7), Color(1, 1, 1, a))
 
 
 # a leash from a to b: `slack` is how far it sags in the middle (0 is taut)

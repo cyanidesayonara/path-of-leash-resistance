@@ -245,8 +245,11 @@ static func _draw_face(c: CanvasItem, p: Dictionary, o: Vector2, s: float, pose:
 		c.draw_line(_x(eye + Vector2(-4, 0), o, s), _x(eye + Vector2(4, 1), o, s), INK, 1.8 * s)
 	else:
 		c.draw_colored_polygon(ellipse(_x(eye, o, s), Vector2(6.0, 7.0) * s), Color(0.97, 0.95, 0.90))
-		c.draw_colored_polygon(ellipse(_x(eye + Vector2(1.8, 0.6), o, s), Vector2(3.8, 4.6) * s), INK)
-		c.draw_circle(_x(eye + Vector2(0.6, -1.8), o, s), 1.6 * s, Color.WHITE)
+		# `look_back` (0..1) slides the pupil to the back of the eye: a glance
+		# over her shoulder without turning her whole body round
+		var lb: float = pose.get("look_back", 0.0)
+		c.draw_colored_polygon(ellipse(_x(eye + Vector2(1.8 - 4.0 * lb, 0.6), o, s), Vector2(3.8, 4.6) * s), INK)
+		c.draw_circle(_x(eye + Vector2(0.6 - 4.0 * lb, -1.8), o, s), 1.6 * s, Color.WHITE)
 	var brow_lift: float = pose.get("brow", 0.0)
 	c.draw_line(_x(eye + Vector2(-6, -11 - brow_lift * 3.0), o, s), _x(eye + Vector2(5, -12 + brow_lift), o, s),
 		Color(GRIZZLE, 0.9), 2.0 * s)
