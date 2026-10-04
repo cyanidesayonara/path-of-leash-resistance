@@ -4,6 +4,24 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-04 - The README, Store listing and itch page say what the game is now
+
+- No tagline any more. "You are the dog. Go touch grass." is gone from the
+  README, the Store manifest's description and the Windows export's file
+  description (now just "Path of Leash Resistance").
+- **README.md** rewritten for the GitHub page: what the game is, what you do,
+  the features as they stand (the leash conversation, the off-leash ends, moods,
+  terrain, weather outfits), the fourteen walks with their glosses, controls,
+  links to itch and the Store, and the build commands.
+- **store/listing.md**: a new description, short description, feature list and
+  keywords for the next submission, recorded as not yet live (the 1.57 text is
+  in the file's history).
+- **docs/itch-page.md**: ready-to-paste itch page text (short description, body,
+  controls, a "what's new" draft from the changes since v1.57), and the GitHub
+  About line and suggested topics for the repo settings.
+- In-game text is unchanged: the start line's "you are the dog" gloss, the
+  tutorial's first title and the Store poster's tag line still say it.
+
 ## 2026-10-04 - No subtitle
 
 - "you are the dog" is gone from under the title on the title screen and from
