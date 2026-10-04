@@ -36,7 +36,8 @@ func _run() -> void:
 	main.phase = "freedom"
 	main.romp_done = true
 	main._update_hud()
-	_check(main.feed.banner == "BACK OUT THROUGH THE GATE, THEN HOME", "the banner follows the status as it changes (banner '%s')" % main.feed.banner)
+	# after fetch the off-leash banner takes turns suggesting what is left to do
+	_check(main.feed.banner == main._freedom_hint() and main.feed.banner != "", "the banner follows the status as it changes (banner '%s')" % main.feed.banner)
 
 	# on the title the status stays off the screen
 	main.started = false

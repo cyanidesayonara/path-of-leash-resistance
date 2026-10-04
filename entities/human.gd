@@ -871,7 +871,6 @@ func park_at(seat: Vector2) -> void:
 	state = HState.WALK
 	state_t = 0.0
 	telegraph_t = 0.0
-	carrying_bag = false
 
 
 func unpark() -> void:
