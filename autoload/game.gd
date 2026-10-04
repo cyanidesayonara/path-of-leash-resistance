@@ -146,6 +146,9 @@ var vol_master := DEFAULT_VOL_MASTER
 var vol_sfx := DEFAULT_VOL_SFX
 var vol_music := DEFAULT_VOL_MUSIC
 var fullscreen := false
+# the off-leash agility course's best time in seconds (0: never run). One
+# record for all of them: it is the same course in every space.
+var agility_best := 0.0
 # The goal card is a big block of text in the corner of a game whose whole
 # point is the mess in the middle. Collapsed it is one line; the player
 # decides, and the choice sticks.
@@ -303,6 +306,7 @@ func _reset_persisted_state() -> void:
 	vol_music = DEFAULT_VOL_MUSIC
 	fullscreen = false
 	goals_expanded = false
+	agility_best = 0.0
 
 
 func load_records() -> void:
@@ -355,6 +359,7 @@ func load_records() -> void:
 	vol_music = clampf(float(cf.get_value("settings", "vol_music", DEFAULT_VOL_MUSIC)), 0.0, 1.0)
 	fullscreen = bool(cf.get_value("settings", "fullscreen", false))
 	goals_expanded = bool(cf.get_value("settings", "goals_expanded", false))
+	agility_best = maxf(0.0, float(cf.get_value("freedom", "agility_best", 0.0)))
 
 
 func save_records() -> void:
@@ -382,6 +387,7 @@ func save_records() -> void:
 	cf.set_value("settings", "vol_music", vol_music)
 	cf.set_value("settings", "fullscreen", fullscreen)
 	cf.set_value("settings", "goals_expanded", goals_expanded)
+	cf.set_value("freedom", "agility_best", agility_best)
 	cf.save(save_path)
 
 

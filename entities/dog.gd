@@ -59,6 +59,9 @@ var preview_coat := ""
 # the raw movement input, so main can tell how hard she is scrambling away
 # from a brink during a teeter
 var input_dir := Vector2.ZERO
+# a jump's height (the agility course's jumps): looks only, the body is drawn
+# that far up over a shadow that stays on the ground
+var hop := 0.0
 
 
 func setup(m: Node2D) -> void:
@@ -268,6 +271,7 @@ func _draw() -> void:
 	# of shapes become one draw call, same pixels (systems/shape_batch.gd)
 	_b = ShapeBatch.new(self)
 	_draw_shapes()
+	_b.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	_b.flush()
 
 
@@ -321,6 +325,8 @@ func _draw_shapes() -> void:
 	if not swimming and main != null:
 		var lift: float = 1.0 + clampf(velocity.length() / 700.0, 0.0, 0.35)
 		main.contact_shadow(_b, Vector2.ZERO, 12.0, 8.0 * lift, 0.26)
+	if hop > 0.0:
+		_b.draw_set_transform(Vector2(0.0, -hop), 0.0, Vector2.ONE * (1.0 + hop * 0.008))
 	# the coat comes from data now (Game.COATS), not baked-in colours, so a
 	# dog creator later means adding a row of parameters rather than editing
 	# this renderer

@@ -16,7 +16,7 @@ const Clay := preload("res://entities/clay.gd")
 # Local RNG throughout. The deterministic autowalk crosses this area, and
 # every randf() here would otherwise shift the global sequence.
 
-enum S { WANDER, SEEK, SNIFF, MARK, PLAY, DODGE }
+enum S { WANDER, SEEK, SNIFF, MARK, PLAY, DODGE, OFFER, TUG }
 
 const TROT := 118.0
 const SEEK_SPEED := 132.0
@@ -48,6 +48,11 @@ var my_name := "a spaniel"
 var rng := RandomNumberGenerator.new()
 var face := Vector2.DOWN
 var lean := 0.0        # sniffing tips her forward, marking tips her sideways
+# the rope toy (systems/freedom_games.gd): one dog in each space has it, brings
+# it over to offer an end, and holds on through a tug-of-war, during which the
+# tug moves her and she only faces Millie
+var rope := false
+var offer_cd := 4.0
 
 
 func _appearance_key(y_lo: float, y_hi: float) -> int:
@@ -90,9 +95,17 @@ func _physics_process(delta: float) -> void:
 		return
 	state_t -= delta
 	mark_cd -= delta
+	offer_cd -= delta
 	bow += delta
 	var to_mine: Vector2 = my_dog.global_position - global_position
 	var d_mine := to_mine.length()
+	if state == S.TUG:
+		if d_mine > 1.0:
+			face = to_mine / d_mine
+		lean = minf(lean + delta * 4.0, 1.0)
+		if Engine.get_physics_frames() % 2 == 0:
+			queue_redraw()
+		return
 
 	# Getting barged into by a strange dog at speed is worth reacting to,
 	# and it is the one thing that interrupts anything else.
@@ -164,8 +177,19 @@ func _physics_process(delta: float) -> void:
 			lean = 0.0
 			if state_t <= 0.0:
 				_go_wander(0.5)
+		S.OFFER:
+			# up to her with the rope, then the bow: one end held out
+			if d_mine > 420.0 or state_t <= 0.0 or not rope:
+				offer_cd = 6.0
+				_go_wander(rng.randf_range(1.0, 2.0))
+			elif d_mine < 62.0:
+				vel = vel.move_toward(Vector2.ZERO, 700.0 * delta)
+				lean = minf(lean + delta * 3.0, 1.0)
+			else:
+				lean = maxf(lean - delta * 3.0, 0.0)
+				vel = vel.move_toward(to_mine.normalized() * BOLT, ACCEL * delta)
 
-	if state != S.SNIFF and state != S.MARK and state != S.PLAY:
+	if state != S.SNIFF and state != S.MARK and state != S.PLAY and state != S.OFFER:
 		lean = maxf(lean - delta * 4.0, 0.0)
 	position += vel * delta
 	if state == S.WANDER:
@@ -179,12 +203,18 @@ func _physics_process(delta: float) -> void:
 		var tf := target - global_position
 		if tf.length() > 1.0:
 			face = tf.normalized()
-	elif state == S.PLAY and d_mine > 1.0:
+	elif (state == S.PLAY or state == S.OFFER) and d_mine > 1.0:
 		face = to_mine / d_mine
 	# the node moves via its transform every frame; the drawn pose only
 	# needs ~30fps, halving this entity's draw cost (web-build budget)
 	if Engine.get_physics_frames() % 2 == 0:
 		queue_redraw()
+
+
+# the free end of the rope she carries: what Millie grabs
+func rope_end() -> Vector2:
+	var sway := face.orthogonal() * sin(bow * 6.0) * 4.0
+	return global_position + face * 38.0 + sway
 
 
 func _go_wander(t: float) -> void:
@@ -195,6 +225,19 @@ func _go_wander(t: float) -> void:
 
 
 func _choose_errand(d_mine: float) -> void:
+	# the rope first, before any dice: never under the autowalk, so its
+	# random sequence is the one it always was. Only the rope's dog asks.
+	if offer_cd <= 0.0 and (rope or main.get("tug_dog") == self) and not main.auto_walk:
+		if rope and d_mine < 420.0:
+			state = S.OFFER
+			state_t = 7.0
+			return
+		var loose: Vector2 = main.rope_loose
+		if not rope and loose.x < INF:
+			target = loose
+			state = S.SEEK
+			state_t = 0.0
+			return
 	# a new arrival beats furniture, which beats milling about
 	if d_mine < 300.0 and rng.randf() < 0.38:
 		state = S.PLAY
@@ -252,7 +295,7 @@ func _draw_shapes() -> void:
 			S.MARK:
 				tilt = lean * 0.30
 				squash = Vector2(1.0 + lean * 0.06, 1.0 - lean * 0.05)
-			S.PLAY:
+			S.PLAY, S.OFFER, S.TUG:
 				squash = Vector2(1.0 + lean * 0.12, 1.0 - lean * 0.14)
 		_b.draw_set_transform(face * lean * 3.0, tilt, squash)
 	DogAppearanceScript.draw_dog(
@@ -264,6 +307,12 @@ func _draw_shapes() -> void:
 		t * (18.0 if state == S.PLAY else 12.0) + seed_o
 	)
 	_b.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	# the rope toy, an end dangling from her mouth (in a tug the rope is drawn
+	# between the two of them instead)
+	if rope and state != S.TUG:
+		var mouth := face * 15.0
+		var end := rope_end() - global_position
+		FreedomGames.draw_rope(_b, mouth, end)
 	# what she is up to, in the only language a top-down view has room for
 	match state:
 		S.SNIFF:

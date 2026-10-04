@@ -4,6 +4,38 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-04 - Games in the off-leash space
+
+- The same three games in every off-leash space (yard, lot, clearing, plaça,
+  beach), as Santtu asked:
+  - **Agility**: a course along a lane across the space (green flags, a jump,
+    five weave poles, a tunnel, a second jump, the chequered finish), run left
+    to right against the clock. She hops the jumps, vanishes into the tunnel,
+    and each pole woven on the wrong side or element skipped is two seconds.
+    The best time is kept (`Game.agility_best`, one record for every space,
+    since it is the same course) and beating it pays extra.
+  - **Tug-of-war**: one free dog carries a little rope toy and brings it over
+    to offer an end. Take it and the two of you haul: running away gains
+    ground, digging in holds (it still gives), standing about loses it, turbo
+    is a heave. Win it and she parades it, then drops it for the other dog to
+    fetch back; lose and it trots off with it.
+  - **Frisbee**: once fetch is over and the ball is back, your human throws
+    a frisbee long ("ready...?" first, every time), three throws. Snatch it
+    out of the air for an air catch; off the grass it still counts, just.
+- The banner says what is on (the agility clock and the next element, the
+  tug's balance, catch it in the air) and the hints after fetch point at the
+  course and the rope.
+- Props, digs and trees are nudged off the lane rather than re-rolled, so the
+  random numbers that placed everything are unchanged; on the beach the
+  parasols are spaced round it. The behaviour snapshot is identical to main:
+  the autowalk never gets a rope or a frisbee, and the course only watches.
+- The two drawing layers redraw only what moves (the flags at half rate, the
+  rope while one is in play).
+- `systems/agility.gd`, `systems/rope_tug.gd` (pure rules), `entities/frisbee.gd`,
+  `systems/freedom_games.gd` (the glue), `world/games_layer.gd`;
+  `tests/test_freedom_games.gd` (rules) and `tests/test_freedom_games_live.gd`
+  (in a level) in CI; `tools/games_shots.gd` photographs the games' moments.
+
 ## 2026-10-04 - An intro: "Walkies?" (nine rounds of polish)
 
 - After four frame-by-frame critiques and Santtu's notes: the leash is a
