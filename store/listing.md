@@ -74,7 +74,7 @@ closely.
 ### Description
 
 ```
-You are the dog. Your human is glued to their phone and walking on autopilot. Get them home in one piece, with the phone intact, while sneaking in as much dog business as you can get away with.
+You play the dog. Your human is glued to their phone and walking on autopilot. Get them home in one piece, with the phone intact, while sneaking in as much dog business as you can get away with.
 
 The leash is real rope physics. Your human outweighs you four to one and wins every straight tug, so you win the way a dog does: dig in at the right moment, wrap the leash around a lamppost to hold them fast, and bark to stop them dead at the kerb. Get the timing right as a bike whizzes past and it counts as a save.
 
@@ -94,7 +94,7 @@ Single player. No ads, no purchases, no account, and it plays offline. Keyboard 
 ### Short description
 
 ```
-You are the dog. Your phone-distracted human walks on autopilot, and the leash is real rope physics. Dig in, wrap lampposts and bark your way through fourteen walks in Barcelona, and get them home with the phone intact.
+You play the dog. Your phone-distracted human walks on autopilot, and the leash is real rope physics. Dig in, wrap lampposts and bark your way through fourteen walks in Barcelona, and get them home with the phone intact.
 ```
 
 ### Product features

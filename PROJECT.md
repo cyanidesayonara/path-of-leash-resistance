@@ -1,6 +1,7 @@
 # Path of Leash Resistance — development plan
 
-Tagline: "You are the dog. Go touch grass."
+Tagline: none. "You are the dog. Go touch grass." was dropped in October 2026;
+the title stands alone (Santtu: tired of it, and it was not needed).
 Retitled July 2026 after the trademark check found "Touch Grass" taken
 on Steam (LionsHead Development, trademark claimed). "Path of Leash
 Resistance" searched clear; verify at EUIPO/USPTO before the store page.
