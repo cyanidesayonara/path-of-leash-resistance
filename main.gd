@@ -1307,6 +1307,8 @@ func _grass_blocked(p: Vector2) -> bool:
 				return true
 		if LevelBuild.PARK_PLAYGROUND.grow(8.0).has_point(p):
 			return true
+		if p.distance_to(LevelBuild.PARK_BANDSTAND) < LevelBuild.BANDSTAND_R + 22.0:
+			return true
 	if lvl == "barri" or tutorial_mode:
 		if LevelBuild.BARRI_PETANCA.grow(8.0).has_point(p) or LevelBuild.BARRI_PLAYGROUND.grow(8.0).has_point(p):
 			return true
@@ -3539,18 +3541,7 @@ func _draw_parc(vt: float, vb: float) -> void:
 	for bed: Rect2 in LevelBuild.PARK_BEDS:
 		if bed.end.y < vt - 40.0 or bed.position.y > vb + 40.0:
 			continue
-		b.rect(Rect2(bed.position + LIGHT * 5.0, bed.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
-		b.rect(bed, Color(0.17, 0.30, 0.16))                   # the box hedge
-		b.rect(bed.grow(-7.0), Color(0.36, 0.26, 0.18))        # the soil
-		var fy := bed.position.y + 14.0
-		var k := 0
-		while fy < bed.end.y - 10.0:
-			for fx: float in [bed.position.x + 18.0, bed.get_center().x, bed.end.x - 18.0]:
-				var fc: Color = flower_cols[(k + int(fx)) % flower_cols.size()]
-				b.circle(Vector2(fx + float(k % 3) * 2.0, fy), 6.0, Color(0.24, 0.40, 0.20))
-				b.circle(Vector2(fx + float(k % 3) * 2.0, fy - 1.0), 3.6, fc)
-			fy += 19.0
-			k += 1
+		_flowerbed(b, bed, flower_cols)
 	# the mammoth: grey stone, a huge domed head, the trunk curled, tusks
 	var mp: Vector2 = LevelBuild.PARK_MAMMOTH
 	if mp.y > vt - 120.0 and mp.y < vb + 120.0:
@@ -3599,22 +3590,194 @@ func _draw_parc(vt: float, vb: float) -> void:
 	var pg: Rect2 = LevelBuild.PARK_PLAYGROUND
 	if pg.end.y > vt - 40.0 and pg.position.y < vb + 40.0:
 		_playground(b, pg)
+	var lk: Rect2 = LevelBuild.PARK_LAKE
+	if lk.end.y > vt - 80.0 and lk.position.y < vb + 80.0:
+		_lake_shore(b, lk)
 	b.flush(_wc)
+
+
+# A flowerbed on the lawn: a low clipped box hedge round it, soft at the
+# corners and lit along its top, and the planting in drifts - a run of one
+# colour, foliage mounds between, a few taller spikes - not a grid of dots.
+func _flowerbed(b: ShapeBatch, bed: Rect2, cols: Array) -> void:
+	b.rect(Rect2(bed.position + LIGHT * 5.0, bed.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+	var hedge := Color(0.17, 0.30, 0.16)
+	b.rect(bed.grow(-4.0), hedge)
+	for cx: float in [bed.position.x + 4.0, bed.end.x - 4.0]:
+		for cy: float in [bed.position.y + 4.0, bed.end.y - 4.0]:
+			b.circle(Vector2(cx, cy), 4.0, hedge)
+	b.rect(Rect2(bed.position.x + 4.0, bed.position.y, bed.size.x - 8.0, bed.size.y), hedge)
+	b.rect(Rect2(bed.position.x, bed.position.y + 4.0, bed.size.x, bed.size.y - 8.0), hedge)
+	# the clipped top of the box: a lit rim, and its leafy texture
+	b.rect(Rect2(bed.position.x + 4.0, bed.position.y + 1.0, bed.size.x - 8.0, 2.0), hedge.lightened(0.22))
+	var t := bed.position.y + 6.0
+	var k := 0
+	while t < bed.end.y - 6.0:
+		for hx: float in [bed.position.x + 3.5, bed.end.x - 3.5]:
+			b.circle(Vector2(hx, t + float(k % 3)), 2.2, hedge.lightened(0.10 + 0.06 * float(k % 2)))
+		t += 7.0
+		k += 1
+	var soil := bed.grow(-8.0)
+	b.rect(soil, Color(0.36, 0.26, 0.18))
+	# drifts, top to bottom, each its own colour and its own length
+	var y := soil.position.y + 6.0
+	var d := int(bed.position.y) & 7
+	while y < soil.end.y - 6.0:
+		var run := 34.0 + float((d * 17) % 5) * 9.0
+		var fc: Color = cols[d % cols.size()]
+		var y1 := minf(y + run, soil.end.y - 4.0)
+		var fy := y
+		var j := 0
+		while fy < y1:
+			var fx := soil.position.x + 8.0 + float((j * 7 + d * 3) % 5) * (soil.size.x - 16.0) / 4.0
+			b.circle(Vector2(fx, fy), 6.5, Color(0.22, 0.38, 0.19))
+			b.circle(Vector2(fx - 2.0, fy - 2.0), 3.4, fc)
+			b.circle(Vector2(fx + 2.5, fy - 0.5), 3.0, fc.lightened(0.12))
+			b.circle(Vector2(fx + 0.5, fy + 2.5), 2.6, fc.darkened(0.08))
+			fy += 7.5
+			j += 1
+		# a foliage mound and a spike or two before the next drift
+		var my := minf(y1 + 6.0, soil.end.y - 6.0)
+		b.circle(Vector2(soil.get_center().x + float(d % 3 - 1) * 10.0, my), 8.0, Color(0.26, 0.44, 0.22))
+		b.circle(Vector2(soil.get_center().x + float(d % 3 - 1) * 10.0 - 2.0, my - 2.0), 5.0, Color(0.32, 0.52, 0.26))
+		if d % 2 == 0:
+			for sx: float in [soil.position.x + 10.0, soil.end.x - 10.0]:
+				b.line(Vector2(sx, my + 6.0), Vector2(sx, my - 6.0), Color(0.56, 0.44, 0.74), 2.6)
+		y = y1 + 16.0
+		d += 1
+
+
+# The lake's shore: clumps of reeds round the bank, a timber jetty on the
+# south side with two rowing boats tied up for hire, and ducks resting on the
+# bank. All drawn on the bank and the water: the path round the lake stays
+# clear for walking.
+func _lake_shore(b: ShapeBatch, lk: Rect2) -> void:
+	var lc := lk.get_center()
+	var rx := lk.size.x * 0.5
+	var ry := lk.size.y * 0.5
+	var at := func(a: float, f: float) -> Vector2:
+		return lc + Vector2(cos(a) * rx * f, sin(a) * ry * f)
+	# the jetty: out from the south bank into the water
+	var jb: Vector2 = at.call(PI * 0.5, 1.0)
+	var jet := Rect2(jb.x - 12.0, jb.y - 70.0, 24.0, 76.0)
+	b.rect(Rect2(jet.position + LIGHT * 5.0, jet.size), Color(0, 0, 0, 0.2))
+	b.rect(jet, Color(0.50, 0.36, 0.22))
+	var py := jet.position.y + 3.0
+	while py < jet.end.y - 2.0:
+		b.line(Vector2(jet.position.x + 1.0, py), Vector2(jet.end.x - 1.0, py), Color(0.40, 0.28, 0.16), 1.2)
+		py += 6.0
+	for px: float in [jet.position.x - 1.0, jet.end.x + 1.0]:
+		for pyy: float in [jet.position.y + 2.0, jet.position.y + 36.0]:
+			b.circle(Vector2(px, pyy), 3.2, Color(0.30, 0.20, 0.12))
+	# the boats tied alongside, nosing at their ropes
+	var bt := AnimClock.msec() / 1000.0
+	for side: float in [-1.0, 1.0]:
+		var bp := Vector2(jet.get_center().x + side * 28.0, jet.position.y + 22.0 + sin(bt * 1.3 + side) * 1.5)
+		var hull := PackedVector2Array()
+		var deck := PackedVector2Array()
+		for q: Vector2 in [Vector2(0, -24), Vector2(10, -8), Vector2(10, 16), Vector2(-10, 16), Vector2(-10, -8)]:
+			hull.append(bp + q)
+			deck.append(bp + q * 0.74)
+		b.polygon(hull, Color(0.55, 0.30, 0.22) if side < 0.0 else Color(0.24, 0.42, 0.56))
+		b.polygon(deck, Color(0.78, 0.66, 0.50))
+		b.line(bp + Vector2(-7, 2), bp + Vector2(7, 2), Color(0.45, 0.33, 0.22), 2.0)
+		b.line(bp + Vector2(side * -10.0, -10.0), Vector2(jet.position.x if side < 0.0 else jet.end.x, jet.position.y + 4.0),
+			Color(0.82, 0.78, 0.66), 1.0)
+	# reeds round the bank, in clumps, leaving the jetty clear
+	for i in range(9):
+		var a := PI * 0.5 + 0.55 + float(i) * (TAU - 1.1) / 8.0
+		var c: Vector2 = at.call(a, 1.0 + 0.02 * float(i % 2))
+		b.circle(c + Vector2(2, 3), 9.0, Color(0, 0, 0, 0.12))
+		for s in range(9):
+			var off := Vector2(float((s * 5 + i) % 7) - 3.0, float((s * 3 + i) % 5) - 2.0) * 2.4
+			var lean := Vector2(float((s + i) % 3 - 1) * 4.0, -16.0 - float((s * 7 + i) % 4) * 3.0)
+			b.line(c + off, c + off + lean, Color(0.30, 0.48, 0.22) if s % 2 == 0 else Color(0.42, 0.58, 0.28), 2.0)
+			if (s + i) % 3 == 0:
+				b.line(c + off + lean * 0.7, c + off + lean * 0.95, Color(0.42, 0.26, 0.14), 3.2)
+	# ducks having a rest on the east bank, heads tucked or up
+	for d in range(3):
+		var dp: Vector2 = at.call(-0.25 + float(d) * 0.22, 1.05)
+		b.circle(dp + Vector2(2, 2), 6.0, Color(0, 0, 0, 0.16))
+		b.circle(dp, 6.0, Color(0.52, 0.40, 0.28))
+		b.circle(dp + Vector2(-2, -1), 3.6, Color(0.60, 0.48, 0.34))
+		var hd := dp + Vector2(5.0 if d % 2 == 0 else 3.0, -4.0)
+		b.circle(hd, 3.2, Color(0.16, 0.42, 0.24) if d != 1 else Color(0.48, 0.36, 0.24))
+		b.circle(hd + Vector2(3, 0.5), 1.4, Color(0.92, 0.74, 0.24))
 
 
 # A playground: a soft red surface, a slide, a pair of swings, and a sandpit
 # (whose sand is a patch the level lays at the same spot).
+# a rectangle with rounded corners, in one colour
+func _soft_rect(b: ShapeBatch, r: Rect2, rad: float, col: Color) -> void:
+	rad = minf(rad, minf(r.size.x, r.size.y) * 0.5)
+	b.rect(Rect2(r.position.x + rad, r.position.y, r.size.x - rad * 2.0, r.size.y), col)
+	b.rect(Rect2(r.position.x, r.position.y + rad, r.size.x, r.size.y - rad * 2.0), col)
+	for cx: float in [r.position.x + rad, r.end.x - rad]:
+		for cy: float in [r.position.y + rad, r.end.y - rad]:
+			b.circle(Vector2(cx, cy), rad, col)
+
+
 func _playground(b: ShapeBatch, pg: Rect2) -> void:
 	if true:
-		b.rect(pg, Color(0.64, 0.36, 0.30))
-		b.rect(Rect2(pg.position.x, pg.position.y, pg.size.x, 4.0), Color(0.48, 0.26, 0.22))
+		# poured rubber, soft-cornered, with a darker kerb round it and a
+		# hopscotch let into it; a low fence with a gate on the path side
+		var rub := Color(0.64, 0.36, 0.30)
+		_soft_rect(b, pg.grow(4.0), 14.0, rub.darkened(0.25))
+		_soft_rect(b, pg, 12.0, rub)
+		for k in range(4):
+			b.rect(Rect2(pg.position.x + 14.0, pg.end.y - 30.0 - float(k) * 18.0, 16.0, 16.0),
+				Color(0.98, 0.84, 0.38, 0.55) if k % 2 == 0 else Color(0.40, 0.62, 0.80, 0.55))
+		var fence := Color(0.66, 0.52, 0.34)
+		var fr := pg.grow(10.0)
+		for seg: Array in [[fr.position, Vector2(fr.end.x, fr.position.y)], [Vector2(fr.end.x, fr.position.y), fr.end],
+				[fr.end, Vector2(fr.position.x, fr.end.y)],
+				[fr.position, Vector2(fr.position.x, fr.get_center().y - 22.0)],
+				[Vector2(fr.position.x, fr.get_center().y + 22.0), Vector2(fr.position.x, fr.end.y)]]:
+			b.line((seg[0] as Vector2) + LIGHT * 3.0, (seg[1] as Vector2) + LIGHT * 3.0, Color(0, 0, 0, 0.16), 3.0)
+			b.line(seg[0], seg[1], fence, 3.0)
+		var fy := fr.position.y
+		while fy <= fr.end.y:
+			for fx: float in [fr.position.x, fr.end.x]:
+				if absf(fy - fr.get_center().y) > 22.0 or fx == fr.end.x:
+					b.circle(Vector2(fx, fy), 3.0, fence.darkened(0.3))
+			fy += 20.0
+		var fx2 := fr.position.x
+		while fx2 <= fr.end.x:
+			for fyy: float in [fr.position.y, fr.end.y]:
+				b.circle(Vector2(fx2, fyy), 3.0, fence.darkened(0.3))
+			fx2 += 20.0
+		# a spring rider: a little red horse on its coil
+		var sr := pg.position + Vector2(126.0, 248.0)
+		b.circle(sr + Vector2(2, 3), 9.0, Color(0, 0, 0, 0.16))
+		b.circle(sr, 4.0, Color(0.36, 0.36, 0.40))
+		b.rect(Rect2(sr.x - 6.0, sr.y - 12.0, 12.0, 22.0), Color(0.86, 0.26, 0.24))
+		b.circle(sr + Vector2(0, -14), 5.0, Color(0.90, 0.30, 0.26))
+		b.line(sr + Vector2(-7, -6), sr + Vector2(7, -6), Color(0.96, 0.84, 0.30), 2.0)
 		# the slide: ladder, platform, chute
 		var sl := pg.position + Vector2(40.0, 60.0)
-		b.rect(Rect2(sl.x - 12.0, sl.y - 12.0, 24.0, 24.0), Color(0.30, 0.50, 0.72))
-		b.rect(Rect2(sl.x - 8.0, sl.y + 12.0, 16.0, 70.0), Color(0.92, 0.72, 0.24))
-		b.rect(Rect2(sl.x - 5.0, sl.y + 14.0, 10.0, 66.0), Color(0.98, 0.84, 0.38))
+		# its shadow, falling long from the platform
+		b.polygon(PackedVector2Array([sl + Vector2(-8, -10), sl + Vector2(22, -4), sl + Vector2(26, 94),
+			sl + Vector2(-2, 94)]), Color(0, 0, 0, 0.14))
+		# the ladder's rails and rungs, up to the platform
+		for lx: float in [-9.0, 9.0]:
+			b.line(Vector2(sl.x + lx, sl.y - 42.0), Vector2(sl.x + lx, sl.y - 12.0), Color(0.36, 0.36, 0.40), 2.4)
 		for rung in range(4):
-			b.line(Vector2(sl.x - 9.0, sl.y - 16.0 - float(rung) * 7.0), Vector2(sl.x + 9.0, sl.y - 16.0 - float(rung) * 7.0), Color(0.40, 0.40, 0.44), 2.0)
+			b.line(Vector2(sl.x - 9.0, sl.y - 16.0 - float(rung) * 7.0), Vector2(sl.x + 9.0, sl.y - 16.0 - float(rung) * 7.0), Color(0.46, 0.46, 0.50), 2.0)
+		# the platform, its corner posts and the hand rail round it
+		b.rect(Rect2(sl.x - 13.0, sl.y - 13.0, 26.0, 26.0), Color(0.22, 0.38, 0.58))
+		b.rect(Rect2(sl.x - 11.0, sl.y - 11.0, 22.0, 22.0), Color(0.30, 0.50, 0.72))
+		for pc: Vector2 in [Vector2(-11, -11), Vector2(11, -11), Vector2(-11, 11), Vector2(11, 11)]:
+			b.circle(sl + pc, 2.6, Color(0.92, 0.30, 0.28))
+		# the chute: a trough widening into its run-out, raised side rails,
+		# and the shine down the middle where it is polished by every child
+		var chute := PackedVector2Array([sl + Vector2(-8, 12), sl + Vector2(8, 12), sl + Vector2(11, 84),
+			sl + Vector2(-11, 84)])
+		b.polygon(chute, Color(0.92, 0.72, 0.24))
+		b.polygon(PackedVector2Array([sl + Vector2(-5, 13), sl + Vector2(5, 13), sl + Vector2(7, 82),
+			sl + Vector2(-7, 82)]), Color(0.98, 0.84, 0.38))
+		b.line(sl + Vector2(-1, 16), sl + Vector2(-1, 80), Color(1, 0.96, 0.78), 2.0)
+		for rs: float in [-1.0, 1.0]:
+			b.line(sl + Vector2(8.5 * rs, 12), sl + Vector2(11.5 * rs, 84), Color(0.78, 0.56, 0.16), 2.0)
 		# swings, gently going
 		var st := AnimClock.msec() / 1000.0
 		var sw := pg.position + Vector2(118.0, 70.0)
@@ -3625,10 +3788,18 @@ func _playground(b: ShapeBatch, pg: Rect2) -> void:
 			b.line(sw + Vector2(si - 6.0, 0), seat + Vector2(-6, 0), Color(0.55, 0.55, 0.58), 1.4)
 			b.line(sw + Vector2(si + 6.0, 0), seat + Vector2(6, 0), Color(0.55, 0.55, 0.58), 1.4)
 			b.rect(Rect2(seat.x - 8.0, seat.y - 3.0, 16.0, 6.0), Color(0.20, 0.22, 0.26))
-		# the sandpit's timber edge (the sand itself is a patch)
+		# the sandpit's timber edge, its corner seats, a bucket and spade
+		# left in it (the sand itself is a patch)
 		var sp: Vector2 = pg.get_center() + Vector2(-28.0, 40.0)
-		b.rect(Rect2(sp.x - 54.0, sp.y - 44.0, 108.0, 88.0), Color(0.46, 0.34, 0.22))
-		b.rect(Rect2(sp.x - 48.0, sp.y - 38.0, 96.0, 76.0), Color(0.86, 0.78, 0.58))
+		var timber := Rect2(sp.x - 54.0, sp.y - 44.0, 108.0, 88.0)
+		_soft_rect(b, timber, 8.0, Color(0.46, 0.34, 0.22))
+		_soft_rect(b, timber.grow(-6.0), 5.0, Color(0.86, 0.78, 0.58))
+		for cs: Vector2 in [timber.position, Vector2(timber.end.x, timber.position.y), Vector2(timber.position.x, timber.end.y), timber.end]:
+			b.circle(cs.move_toward(timber.get_center(), 9.0), 7.0, Color(0.56, 0.42, 0.28))
+		b.rect(Rect2(sp.x + 14.0, sp.y + 6.0, 10.0, 12.0), Color(0.24, 0.52, 0.82))
+		b.line(Vector2(sp.x + 13.0, sp.y + 6.0), Vector2(sp.x + 25.0, sp.y + 6.0), Color(0.18, 0.40, 0.66), 2.0)
+		b.line(Vector2(sp.x - 20.0, sp.y - 10.0), Vector2(sp.x - 6.0, sp.y + 2.0), Color(0.90, 0.30, 0.28), 2.0)
+		b.circle(Vector2(sp.x - 6.0, sp.y + 2.0), 3.0, Color(0.90, 0.30, 0.28))
 
 
 # The stream across the wood and the footbridge that carries the trail over
