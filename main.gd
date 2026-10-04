@@ -4467,6 +4467,30 @@ func _draw_ground_detail(vt: float, vb: float) -> void:
 				_wc.draw_line(p - dir * float(d.sz) * 1.6, p + dir * float(d.sz) * 1.6, c, float(d.sz))
 
 
+# A parasol from above, as the dog beach draws them: eight panels in two
+# tones round a hub, a scalloped hem, the lit side, and its shade falling
+# clear on the ground. Still see-through, so she can be seen under it.
+func _draw_parasol(pa: Vector2, col: Color, key: float) -> void:
+	var R := 40.0
+	var turn := key * 0.37
+	var b := ShapeBatch.new()
+	b.circle(pa + LIGHT * 16.0, R * 0.92, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
+	var light := Color(minf(col.r + 0.30, 1.0), minf(col.g + 0.30, 1.0), minf(col.b + 0.28, 1.0), col.a)
+	for panel in range(8):
+		var a0 := TAU * float(panel) / 8.0 + turn
+		var a1 := a0 + TAU / 8.0
+		var mid := Vector2.from_angle((a0 + a1) * 0.5) * R * 1.03
+		b.polygon(PackedVector2Array([pa, pa + Vector2.from_angle(a0) * R * 0.97, pa + mid,
+			pa + Vector2.from_angle(a1) * R * 0.97]), col if panel % 2 == 0 else light)
+	for panel in range(8):
+		var a := TAU * float(panel) / 8.0 + turn
+		b.line(pa, pa + Vector2.from_angle(a) * R * 0.97, Color(col.r * 0.6, col.g * 0.6, col.b * 0.6, 0.55), 1.5)
+	b.circle(pa - LIGHT * 12.0, 13.0, Color(1, 1, 1, 0.12))
+	b.circle(pa, 4.5, Color(0.42, 0.38, 0.34))
+	b.circle(pa, 2.0, Color(0.66, 0.62, 0.56))
+	b.flush(_wc)
+
+
 # A BEACH TOWEL: striped across both ends, fringed, and either someone lying
 # on it in the sun or the things they left (flip-flops, a paperback, the sun
 # cream). In rain or snow nobody is sunbathing: the towel is left out, wet or
@@ -8758,15 +8782,28 @@ func _draw_world() -> void:
 		if tb.y < vt - 40.0 or tb.y > vb + 40.0:
 			continue
 		contact_shadow(_wc, tb, 14.0, 9.0, 0.20)
-		# a round marble-ish top with a soft rim, lit on its upper-left
-		_wc.draw_circle(tb + Vector2(0.6, 0.8), 14.0, Color(0.44, 0.40, 0.34))
-		_wc.draw_circle(tb + Vector2(-0.4, -0.4), 12.8, Color(0.62, 0.57, 0.50))
-		_wc.draw_circle(tb + Vector2(-4.0, -4.0), 5.5, Color(0.70, 0.66, 0.59))
-		# a cup on its saucer, and a sugar sachet
-		_wc.draw_circle(tb + Vector2(5, -4), 4.4, Color(0.80, 0.78, 0.74))
-		_wc.draw_circle(tb + Vector2(5, -4), 3.2, Color(0.96, 0.94, 0.90))
-		_wc.draw_circle(tb + Vector2(5.2, -3.8), 2.0, Color(0.36, 0.22, 0.12))
-		_wc.draw_rect(Rect2(tb.x - 7.0, tb.y + 2.0, 5.0, 3.0), Color(0.92, 0.82, 0.56))
+		# a bistro table: a pale marble top in a dark metal rim, its lit edge on
+		# the upper-left. (A grey top the colour of the paving, with a round
+		# cup and a highlight disc on it, read as a face looking up at you.)
+		_wc.draw_circle(tb + Vector2(0.6, 0.8), 14.0, Color(0.20, 0.20, 0.22))
+		_wc.draw_circle(tb + Vector2(-0.3, -0.3), 12.4, Color(0.90, 0.88, 0.84))
+		_wc.draw_arc(tb + Vector2(-0.3, -0.3), 12.4, PI * 0.1, PI * 0.9, 8, Color(0.74, 0.72, 0.68), 2.0)
+		_wc.draw_line(tb + Vector2(-6, -2), tb + Vector2(2, 5), Color(0.78, 0.76, 0.74, 0.7), 1.0)
+		# a coffee in a small cup on its saucer, the handle out to the side
+		var cup := tb + Vector2(4.5, -4)
+		_wc.draw_circle(cup, 3.6, Color(0.76, 0.74, 0.70))
+		_wc.draw_circle(cup, 2.3, Color(0.36, 0.22, 0.12))
+		_wc.draw_line(cup + Vector2(2.4, 0.8), cup + Vector2(4.6, 1.8), Color(0.76, 0.74, 0.70), 1.6)
+		# then whatever else they ordered: a croissant, or a glass of water
+		if int(absf(tb.x * 0.13 + tb.y * 0.07)) % 2 == 0:
+			var cr := tb + Vector2(-4.0, 4.0)
+			_wc.draw_arc(cr, 3.2, PI * 0.1, PI * 1.1, 7, Color(0.70, 0.44, 0.16), 3.6)
+			_wc.draw_arc(cr, 3.2, PI * 0.3, PI * 0.9, 5, Color(0.90, 0.66, 0.30), 1.6)
+		else:
+			var gl := tb + Vector2(-4.0, 4.5)
+			_wc.draw_circle(gl, 2.8, Color(0.60, 0.76, 0.84, 0.8))
+			_wc.draw_arc(gl, 2.8, PI * 1.1, PI * 1.6, 5, Color(1, 1, 1, 0.9), 1.0)
+		_wc.draw_rect(Rect2(tb.x - 8.0, tb.y - 6.0, 5.0, 3.0), Color(0.92, 0.82, 0.56))
 	# canopies over the beach terraces: out by day, furled at night
 	for cn in canopies:
 		if Game.night:
@@ -8784,11 +8821,7 @@ func _draw_world() -> void:
 			_wc.draw_line(pa + Vector2(-3, 24), pa + Vector2(3, -28), Color(0.45, 0.4, 0.35), 5.0)
 			_wc.draw_circle(pa + Vector2(3, -28), 4.0, pcols[i % 3])
 		else:
-			_wc.draw_circle(pa, 40.0, pcols[i % 3])
-			_wc.draw_arc(pa, 40.0, 0, TAU, 24, Color(1, 1, 1, 0.4), 2.0)
-			for sp in range(6):
-				_wc.draw_line(pa, pa + Vector2.from_angle(TAU * sp / 6.0) * 40.0, Color(1, 1, 1, 0.25), 2.0)
-			_wc.draw_circle(pa, 3.5, Color(0.4, 0.35, 0.3))
+			_draw_parasol(pa, pcols[i % 3], float(i))
 	# benches
 	# benches: three slats on cast-iron ends, each slat a soft plank lit on
 	# its upper-left, and the shadow of something knee high
