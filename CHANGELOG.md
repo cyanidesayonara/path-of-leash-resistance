@@ -11,6 +11,17 @@ Append-only session history, newest first.
   SORTIDES strip (glossed "departures") and four rows in amber, time, where to
   and platform, the way Rodalies boards read: Sitges, Girona, Vic, and the
   Mataró train, CANCEL·LAT in red, as one always is.
+## 2026-10-04 - Les Obres' digger, and close-up screenshots
+
+- The parked digger was a yellow disc on two black bars. It is drawn from
+  above as a digger is: rubber tracks on their rollers, the house with its
+  lit deck, engine louvres and exhaust, a hazard-striped counterweight, the
+  cab with its glass roof, and the boom and dipper folded forward on their
+  rams, the bucket's teeth down on a heap of spoil. Same footprint, one batch.
+- Tooling: `--shot-zoom=Z` magnifies a screenshot, `--shot-cam=X,Y` points
+  the camera at a spot rather than the pair, and `--shot-x=N` puts the pair
+  at that x, so a prop or a person can be judged at a size where the drawing
+  shows (the play zoom is too far out to tell).
 ## 2026-10-04 - Parasols and café tables
 
 - The parasols over La Rambla's terrace and along the seafront were a flat

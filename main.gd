@@ -18,6 +18,8 @@ var sw_r := 980.0
 # built is false on the green walks and the seafront, which keep their verge
 # out to the level edge and have no building line.
 var built := false
+# where --shot-cam points the camera (INF: follow the pair as usual)
+var shot_cam := Vector2(INF, INF)
 var strip_l := 0.0
 var strip_r := 0.0
 var strip_kind_l := "none"
@@ -2240,27 +2242,81 @@ func _draw_trolleys(v: Vector2) -> void:
 	b.flush(_wc)
 
 
-# The parked digger: tracks, the cab, the counterweight, and the arm folded
-# forward with the bucket resting on the paving. Same footprint as a van.
+# The parked digger, from above: two rubber tracks on their rollers, the
+# yellow house on top with its engine deck, exhaust and striped counterweight
+# at the back, the cab with its glass roof on the left, and the boom and dipper
+# folded forward on their rams, the bucket's teeth resting on a heap of spoil.
+# Same footprint as a van; one batch, one draw call.
 func _draw_digger(v: Vector2) -> void:
 	var b := ShapeBatch.new()
-	b.rect(Rect2(v.x - 34.0 + 26.0, v.y - 60.0 + 20.0, 68.0, 120.0), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
-	for tx: float in [-34.0, 20.0]:
-		b.rect(Rect2(v.x + tx, v.y - 50.0, 14.0, 100.0), Color(0.16, 0.16, 0.17))
-		var ty := v.y - 46.0
-		while ty < v.y + 46.0:
-			b.line(Vector2(v.x + tx, ty), Vector2(v.x + tx + 14.0, ty), Color(0.28, 0.28, 0.30), 2.0)
-			ty += 9.0
-	b.circle(v + Vector2(0, 8), 30.0, Color(0.92, 0.70, 0.12))
-	b.rect(Rect2(v.x - 26.0, v.y + 22.0, 52.0, 18.0), Color(0.78, 0.58, 0.10))     # counterweight
-	b.rect(Rect2(v.x - 20.0, v.y - 14.0, 22.0, 24.0), Color(0.30, 0.38, 0.44))     # the cab glass
-	b.rect(Rect2(v.x - 20.0, v.y - 14.0, 22.0, 6.0), Color(0.55, 0.65, 0.72))
-	# the boom and dipper, folded forward, the bucket down
-	b.line(v + Vector2(10, -6), v + Vector2(14, -62), Color(0.90, 0.68, 0.12), 10.0)
-	b.line(v + Vector2(14, -62), v + Vector2(4, -74), Color(0.86, 0.64, 0.10), 8.0)
-	b.rect(Rect2(v.x - 12.0, v.y - 86.0, 26.0, 14.0), Color(0.30, 0.30, 0.32))
+	var yel := Color(0.93, 0.70, 0.12)
+	var yel_d := Color(0.72, 0.52, 0.08)
+	var yel_l := Color(1.0, 0.84, 0.36)
+	var steel := Color(0.70, 0.72, 0.74)
+	b.polygon(round_rect_pts(Rect2(v.x - 36.0 + 10.0, v.y - 50.0 + 14.0, 72.0, 100.0), 10.0),
+		Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.20))
+	# the tracks: rubber pads over a sprocket and an idler at each end
+	for tx: float in [-36.0, 20.0]:
+		var tr := Rect2(v.x + tx, v.y - 50.0, 16.0, 100.0)
+		b.polygon(round_rect_pts(tr, 7.0), Color(0.13, 0.13, 0.14))
+		b.polygon(round_rect_pts(tr.grow(-3.0), 5.0), Color(0.22, 0.22, 0.24))
+		var ty := v.y - 44.0
+		while ty < v.y + 44.0:
+			b.line(Vector2(tr.position.x + 2.0, ty), Vector2(tr.end.x - 2.0, ty), Color(0.10, 0.10, 0.11), 2.4)
+			ty += 7.0
+		for ey: float in [-41.0, 41.0]:
+			b.circle(Vector2(tr.get_center().x, v.y + ey), 4.0, Color(0.34, 0.34, 0.36))
+	# the house: rounded, its shaded rim, the lit upper-left of the deck
+	var house := Rect2(v.x - 28.0, v.y - 26.0, 56.0, 64.0)
+	b.polygon(round_rect_pts(house.grow(1.5), 12.0), yel_d)
+	b.polygon(round_rect_pts(house, 11.0), yel)
+	b.polygon(round_rect_pts(Rect2(house.position + Vector2(4, 4), Vector2(30, 22)), 8.0), yel_l)
+	# the counterweight at the back, hazard-striped
+	var cw := Rect2(v.x - 26.0, v.y + 30.0, 52.0, 12.0)
+	b.polygon(round_rect_pts(cw, 5.0), Color(0.16, 0.16, 0.17))
+	for k in range(6):
+		var sx := cw.position.x + 4.0 + float(k) * 8.0
+		b.line(Vector2(sx, cw.end.y - 2.0), Vector2(sx + 6.0, cw.position.y + 2.0), yel, 3.0)
+	# the engine deck: louvres, and the exhaust stack with soot round it
 	for k in range(4):
-		b.line(Vector2(v.x - 10.0 + float(k) * 7.0, v.y - 86.0), Vector2(v.x - 10.0 + float(k) * 7.0, v.y - 90.0), Color(0.5, 0.5, 0.52), 2.0)
+		var gy := v.y + 12.0 + float(k) * 4.0
+		b.line(Vector2(v.x + 4.0, gy), Vector2(v.x + 22.0, gy), yel_d, 1.6)
+	b.circle(Vector2(v.x + 18.0, v.y + 4.0), 4.0, Color(0.20, 0.20, 0.20, 0.5))
+	b.circle(Vector2(v.x + 18.0, v.y + 4.0), 2.6, Color(0.16, 0.16, 0.17))
+	# the cab on the left: a dark frame, a glass roof with the sky in it
+	var cab := Rect2(v.x - 26.0, v.y - 22.0, 22.0, 30.0)
+	b.polygon(round_rect_pts(cab, 4.0), Color(0.18, 0.18, 0.20))
+	b.polygon(round_rect_pts(cab.grow(-2.5), 3.0), Color(0.36, 0.48, 0.56))
+	b.polygon(PackedVector2Array([cab.position + Vector2(4, 4), cab.position + Vector2(14, 4),
+		cab.position + Vector2(5, 15)]), Color(0.72, 0.84, 0.90, 0.7))
+	b.line(Vector2(cab.position.x + 2.5, cab.get_center().y + 2.0), Vector2(cab.end.x - 2.5, cab.get_center().y + 2.0),
+		Color(0.18, 0.18, 0.20), 1.6)
+	# the boom from its foot beside the cab, the dipper folded back down
+	var foot := v + Vector2(8.0, -22.0)
+	var knee := v + Vector2(10.0, -66.0)
+	var wrist := v + Vector2(2.0, -80.0)
+	b.line(foot + LIGHT * 4.0, knee + LIGHT * 4.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25), 12.0)
+	b.polygon(PackedVector2Array([foot + Vector2(-7, 0), foot + Vector2(7, 0), knee + Vector2(4, 0), knee + Vector2(-4, 0)]), yel_d)
+	b.polygon(PackedVector2Array([foot + Vector2(-5, 0), foot + Vector2(3, 0), knee + Vector2(1, 0), knee + Vector2(-3, 0)]), yel)
+	# the ram along the boom: a steel rod out of its yellow cylinder
+	b.line(foot + Vector2(-1, -4), foot.lerp(knee, 0.55) + Vector2(-1, 0), yel_d, 4.0)
+	b.line(foot.lerp(knee, 0.55) + Vector2(-1, 0), knee + Vector2(-1, 6), steel, 2.0)
+	b.line(knee, wrist, yel_d, 8.0)
+	b.line(knee, wrist, yel, 5.0)
+	b.circle(knee, 4.0, Color(0.28, 0.28, 0.30))
+	b.circle(knee, 1.6, steel)
+	# the spoil heap, and the bucket on it, teeth down
+	# (heaped on the road side: the kerb side has a hydrant by it)
+	b.circle(wrist + Vector2(10, -6), 12.0, Color(0.46, 0.36, 0.25))
+	b.circle(wrist + Vector2(0, -10), 9.0, Color(0.52, 0.41, 0.28))
+	b.circle(wrist + Vector2(16, -12), 6.0, Color(0.58, 0.47, 0.33))
+	var bk := Rect2(wrist.x - 13.0, wrist.y - 13.0, 26.0, 12.0)
+	b.polygon(round_rect_pts(bk, 3.0), Color(0.26, 0.26, 0.28))
+	b.polygon(round_rect_pts(Rect2(bk.position + Vector2(2, 2), bk.size - Vector2(4, 6)), 2.0), Color(0.40, 0.40, 0.42))
+	for k in range(5):
+		var tx2 := bk.position.x + 3.0 + float(k) * 5.0
+		b.polygon(PackedVector2Array([Vector2(tx2 - 1.6, bk.position.y), Vector2(tx2 + 1.6, bk.position.y),
+			Vector2(tx2, bk.position.y - 4.0)]), steel)
 	b.flush(_wc)
 
 
@@ -5138,6 +5194,11 @@ func _process(_delta: float) -> void:
 					var sy := float(a.substr(9))
 					var se := walk_edges(sy)
 					var scx := (se.x + se.y) * 0.5
+					# --shot-x=N puts the pair at that x instead of mid-walk, to
+					# frame something at the side of the path
+					for a2 in OS.get_cmdline_user_args():
+						if a2.begins_with("--shot-x="):
+							scx = float(a2.substr(9))
 					dog.global_position = Vector2(scx + 30.0, sy - 60.0)
 					human.global_position = Vector2(scx - 20.0, sy + 40.0)
 					leash.resnap()
@@ -5151,6 +5212,21 @@ func _process(_delta: float) -> void:
 					if verge_layer != null:
 						verge_layer.queue_redraw()
 						_verge_drawn_y = cam.position.y
+			# --shot-zoom=Z magnifies the shot Z times, to judge how a prop or a
+			# person is drawn: the play zoom is too far out to tell; and
+			# --shot-cam=X,Y points the camera there instead of at the pair
+			for a in OS.get_cmdline_user_args():
+				if a.begins_with("--shot-zoom="):
+					cam.zoom *= float(a.substr(12))
+				elif a.begins_with("--shot-cam="):
+					var xy := a.substr(11).split(",")
+					shot_cam = Vector2(float(xy[0]), float(xy[1]))
+					queue_redraw()
+					edge_layer.queue_redraw()
+					_edge_drawn_y = shot_cam.y
+					if verge_layer != null:
+						verge_layer.queue_redraw()
+						_verge_drawn_y = shot_cam.y
 			# --shot-home turns the pair for home there, so a chase can be
 			# photographed without walking the whole way out first
 			if "--shot-home" in OS.get_cmdline_user_args():
@@ -5214,6 +5290,9 @@ func _process(_delta: float) -> void:
 	elif phase == "home" and chase_sweeper != null:
 		target_y -= chase_lean
 	cam.position = Vector2(640, target_y)
+	if shot_cam.x < INF:
+		cam.position = shot_cam
+		cam.reset_smoothing()
 	if shake_t > 0.0:
 		cam.offset = Vector2(_shake_rng.randf_range(-1, 1), _shake_rng.randf_range(-1, 1)) * 9.0 * shake_t
 	else:
