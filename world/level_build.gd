@@ -406,7 +406,7 @@ static func ferralla(m: Node2D) -> void:
 	# by their kennels, cameras and lasers. Slow is silent; getting caught is
 	# embarrassing, not fatal. No terrace, no benches, no hydrant grid, no
 	# road crossings.
-	m.gate_text = "BACK GATE"
+	m.gate_text = "EL PATI"
 	m.lane_ys = Array([], TYPE_FLOAT, &"", null)
 	m.tables.clear()
 	m.chairs.clear()
@@ -532,7 +532,7 @@ static func diluvi(m: Node2D) -> void:
 	# onto the paving, awnings over the east side, the arcade down the west,
 	# puddles everywhere, the gutters running, umbrellas. The terrace is
 	# stacked and chained somewhere dry; there is no lawn.
-	m.gate_text = "SHELTER"
+	m.gate_text = "EL PORXO"
 	m.lane_ys = Array([-900.0, -3900.0], TYPE_FLOAT, &"", null)
 	m.tables.clear()
 	m.chairs.clear()
@@ -602,7 +602,7 @@ const OBRES_DIGGER := Vector2(900.0, -1400.0)
 
 
 static func obres(m: Node2D) -> void:
-	m.gate_text = "DETOUR"
+	m.gate_text = "EL SOLAR"
 	# a side street at each end of the works, with its traffic
 	m.lane_ys = Array([-1100.0, -4000.0], TYPE_FLOAT, &"", null)
 	m.poles.clear()
@@ -1079,7 +1079,7 @@ static func build_level_data(m: Node2D) -> void:
 	match geo:
 		"street":
 			m.lane_ys = Array([-1200.0, -2600.0, -4000.0], TYPE_FLOAT, &"", null)
-			m.gate_text = "PARK"
+			m.gate_text = "PIPICÀ"
 			for i in range(7):
 				var x = m.sw_l + 30.0 if i % 2 == 0 else m.sw_r - 30.0
 				var y := -350.0 - i * 640.0
@@ -1136,7 +1136,7 @@ static func build_level_data(m: Node2D) -> void:
 			]
 			keb_list = [Vector2(640, -1960), Vector2(700, -4200), Vector2(m.SHOULDER_R - 12, -2400)]
 		"park":
-			m.gate_text = "DOG PARK"
+			m.gate_text = "PIPICÀ"
 			# El Parc's lake stands in the middle of its widened path; El Mosaic
 			# still builds on the old pond's footprint (and then drops it)
 			m.pond = PARK_LAKE if m.lvl == "park" else Rect2(m.sw_l, -2950, 360, 470)
@@ -1172,7 +1172,7 @@ static func build_level_data(m: Node2D) -> void:
 			# pond, no lampposts, no park benches: trunks crowding both edges,
 			# closer together where the trail pinches, a few standing in it,
 			# and the stream crossing under a footbridge (build_freedom_area).
-			m.gate_text = "CLEARING"
+			m.gate_text = "LA CLARIANA"
 			for tp: Vector2 in TRAIL_TREES:
 				m.poles.append(tp)
 			m.deco_pole_count = m.poles.size()
@@ -1269,7 +1269,7 @@ static func build_level_data(m: Node2D) -> void:
 			# Passeig Maritim: sea | sand | boardwalk | bike path |
 			# pavement | palms and cafe terraces. The human walks the
 			# pavement; the dog walks wherever a dog walks.
-			m.gate_text = "DOG BEACH"
+			m.gate_text = "PLATJA DELS GOSSOS"
 			m.walk_cx = 770.0
 			m.walk_half = 210.0
 			m.gate_l = 560.0
@@ -1986,8 +1986,10 @@ static func build_dunes(m: Node2D) -> void:
 			m.dune_spots.append(Vector2(r.end.x - 70.0,
 				lerpf(r.position.y + 60.0, r.end.y - 60.0, f)))
 		else:
-			m.dune_spots.append(Vector2(lerpf(r.position.x + 60.0, r.end.x - 60.0, f),
-				r.position.y + 40.0))
+			var dx := lerpf(r.position.x + 60.0, r.end.x - 60.0, f)
+			# on the sand only: a dune does not stand in the sea
+			if dx > m.BEACH_SEA_R + 50.0:
+				m.dune_spots.append(Vector2(dx, r.position.y + 40.0))
 
 
 static func build_park_props(m: Node2D) -> void:
