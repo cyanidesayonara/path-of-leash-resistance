@@ -90,6 +90,9 @@ func _build_library() -> void:
 	lib["squawk"] = _squawk()
 	# a paw going into mud: a short, low, wet suck
 	lib["squelch"] = _squelch()
+	# grass brushed through, and sand underfoot: short, soft noise
+	lib["rustle"] = _noiseburst(0.20, 12.0)
+	lib["grit"] = _noiseburst(0.07, 46.0)
 
 
 # --- music -------------------------------------------------------------

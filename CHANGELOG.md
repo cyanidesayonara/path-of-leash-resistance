@@ -4,6 +4,19 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-04 - She walks differently on different ground (terrain pass 2, part 2)
+
+- **Gait by surface** (`dog._cadence`, `_stride`): quick, short steps on sand,
+  where there is no purchase; slow, heavy, long ones in mud, with her paws
+  sunk brown to the ankles; a slightly higher step through grass. Drawing
+  only: nothing else reads her gait.
+- **Kicked sand**: running on sand throws grains up behind her (the same
+  pooled, capped marks as the grass and mud).
+- **Quiet sounds on the way in**: a rustle into grass and grit onto sand,
+  alongside the squelch into mud and the existing splash into water; at a
+  run only, and never more than one a second.
+- **Pavement** now and then has a drain grate or an old repair patch among its
+  cracks and grit (chosen by position in the list, so no other detail moves).
 ## 2026-10-04 - Two level review leftovers (#21)
 
 - The HOME sign no longer sits under the prompt bar on the title and the walk

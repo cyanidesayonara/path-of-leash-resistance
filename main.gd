@@ -4444,6 +4444,20 @@ func _draw_ground_detail(vt: float, vb: float) -> void:
 			2:
 				# a damp patch / old stain
 				_wc.draw_circle(p, float(d.len) * 0.35, stain)
+			4:
+				# a drain grate set in the paving: a dark frame and its slots
+				var dq := PackedVector2Array([p + dir * 9.0 + dir.orthogonal() * 6.0, p + dir * 9.0 - dir.orthogonal() * 6.0,
+					p - dir * 9.0 - dir.orthogonal() * 6.0, p - dir * 9.0 + dir.orthogonal() * 6.0])
+				_wc.draw_colored_polygon(dq, Color(0.20, 0.20, 0.22, 0.75))
+				for k in range(4):
+					var sx := p + dir * (-6.0 + float(k) * 4.0)
+					_wc.draw_line(sx + dir.orthogonal() * 4.0, sx - dir.orthogonal() * 4.0, Color(0.08, 0.08, 0.10, 0.8), 1.4)
+			5:
+				# an old repair: a patch of newer, darker surface with a seam
+				var rq := PackedVector2Array([p + dir * 16.0 + dir.orthogonal() * 10.0, p + dir * 14.0 - dir.orthogonal() * 11.0,
+					p - dir * 15.0 - dir.orthogonal() * 9.0, p - dir * 13.0 + dir.orthogonal() * 12.0])
+				_wc.draw_colored_polygon(rq, Color(0.22, 0.22, 0.24, 0.16))
+				_wc.draw_polyline(rq + PackedVector2Array([rq[0]]), Color(0.18, 0.18, 0.20, 0.25), 1.2)
 			_:
 				# a bit of litter: a leaf or a scrap of paper
 				var c: Color = litter[int(d.sz) % litter.size()]
@@ -6544,10 +6558,19 @@ func _ground_marks() -> void:
 	# stepping into water: a ring, whatever the speed
 	if s == Surfaces.S.WATER and mark_surface != Surfaces.S.WATER and mark_surface != -1:
 		_add_mark({"kind": "ring", "pos": dp, "t": elapsed})
-	# into mud at a run: a squelch, not more than one a second
-	if s == Surfaces.S.MUD and mark_surface != Surfaces.S.MUD and speed > 80.0 and elapsed >= squelch_t:
-		squelch_t = elapsed + 1.0
-		Sfx.play("squelch", 1.0, -12.0)
+	# into mud at a run: a squelch; into grass, a rustle; onto sand, grit.
+	# Quiet, and not more than one a second between them
+	if s != mark_surface and mark_surface != -1 and speed > 80.0 and elapsed >= squelch_t:
+		match s:
+			Surfaces.S.MUD:
+				squelch_t = elapsed + 1.0
+				Sfx.play("squelch", 1.0, -12.0)
+			Surfaces.S.GRASS:
+				squelch_t = elapsed + 1.0
+				Sfx.play("rustle", 1.0, -18.0)
+			Surfaces.S.SAND:
+				squelch_t = elapsed + 1.0
+				Sfx.play("grit", 1.0, -16.0)
 	mark_surface = s
 	if speed < 70.0:
 		return
@@ -6562,6 +6585,9 @@ func _ground_marks() -> void:
 		Surfaces.S.MUD:
 			if speed > 140.0:
 				_add_mark({"kind": "splat", "pos": dp, "t": elapsed, "ang": ang})
+		Surfaces.S.SAND:
+			if speed > 120.0:
+				_add_mark({"kind": "grains", "pos": dp, "t": elapsed, "ang": ang})
 
 
 func _add_mark(m: Dictionary) -> void:
@@ -6578,7 +6604,7 @@ func _draw_ground_marks(vt: float, vb: float) -> void:
 	while i < ground_marks.size():
 		var m: Dictionary = ground_marks[i]
 		var age := elapsed - float(m["t"])
-		var life: float = FLAT_LIFE if m["kind"] == "flat" else (SPLAT_LIFE if m["kind"] == "splat" else RING_LIFE)
+		var life: float = FLAT_LIFE if m["kind"] == "flat" else (RING_LIFE if m["kind"] == "ring" else SPLAT_LIFE)
 		if age > life:
 			ground_marks.remove_at(i)
 			continue
@@ -6602,6 +6628,14 @@ func _draw_ground_marks(vt: float, vb: float) -> void:
 				for k in range(3):
 					var o := sd2 * (float(k) - 1.0) * spread - fwd2 * (4.0 + float(k) * 2.0)
 					b.circle(p + o, 2.4, Color(0.30, 0.22, 0.14, 0.8 * f))
+			"grains":
+				# sand kicked up behind her: no purchase
+				var fwd3 := Vector2.from_angle(float(m["ang"]))
+				var sd3 := fwd3.orthogonal()
+				var fly := 4.0 + (1.0 - f) * 14.0
+				for k in range(4):
+					var o3 := -fwd3 * (fly + float(k) * 2.5) + sd3 * (float(k) - 1.5) * 3.0 * (1.0 + (1.0 - f))
+					b.circle(p + o3, 1.5, Color(0.86, 0.76, 0.54, 0.85 * f))
 			"ring":
 				var r := 6.0 + (1.0 - f) * 26.0
 				var pts := 18
