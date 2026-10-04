@@ -1538,6 +1538,8 @@ static func build_level_data(m: Node2D) -> void:
 		m.candy.append({"pos": cp, "eaten": false})
 	build_ground_detail(m)
 	build_freedom_area(m)
+	# the agility course's lane, before anything is placed in the space
+	FreedomGames.plan(m)
 	lift_props_out_of_water(m)
 	# The messes that were painted as translucent rectangles (paint, fish,
 	# oil, confetti, El Bosc's big mud) are patches like the rest: an organic
@@ -1609,6 +1611,7 @@ static func build_level_data(m: Node2D) -> void:
 				# outer thirds only: the middle is where the fetching happens
 				tx = randf_range(150.0, 340.0) if randf() < 0.5 else randf_range(940.0, 1120.0)
 			var tree := Vector2(tx, m.GATE_Y - randf_range(120.0, 550.0))
+			tree = m.agility.push_out(tree, 34.0)
 			var clear := tree.distance_to(m.gate_bench) > 95.0
 			for w: Rect2 in m.water:
 				clear = clear and not w.grow(30.0).has_point(tree)
@@ -2008,7 +2011,7 @@ static func build_park_props(m: Node2D) -> void:
 		flavour = ["post", "planter", "post", "dig"]
 		# two stone planters always, the square's solid things to run round
 		for pa: Vector2 in [Vector2(370.0, m.GATE_Y - 470.0), Vector2(1010.0, m.GATE_Y - 230.0)]:
-			m.park_props.append({"pos": pa, "kind": "planter", "done": false, "prog": 0.0})
+			m.park_props.append({"pos": m.agility.push_out(pa, 26.0), "kind": "planter", "done": false, "prog": 0.0})
 	var lo = m.freedom_lo + 70.0
 	var hi = m.GATE_Y - 90.0
 	# Guarantee the essentials rather than hoping the dice provide them: on
@@ -2021,7 +2024,8 @@ static func build_park_props(m: Node2D) -> void:
 	var dig_fs: Array[float] = [0.22, 0.68, 0.42]
 	for i in range(3):
 		var gy := lerpf(lo + 60.0, hi - 60.0, dig_fs[i])
-		m.park_props.append({"pos": Vector2(dig_xs[i], gy), "kind": "dig", "done": false, "prog": 0.0})
+		var dig_at: Vector2 = m.agility.push_out(Vector2(dig_xs[i], gy), 26.0)
+		m.park_props.append({"pos": dig_at, "kind": "dig", "done": false, "prog": 0.0})
 	for i in range(14):
 		var kind: String = flavour[r.randi() % flavour.size()]
 		# bias to the flanks: the middle is the fetch runway
@@ -2037,6 +2041,7 @@ static func build_park_props(m: Node2D) -> void:
 		else:
 			x = r.randf_range(470.0, 820.0)
 		var at := Vector2(x, r.randf_range(lo, hi))
+		at = m.agility.push_out(at, 26.0)
 		# keep clear of the owner's bench and the park slots
 		if at.distance_to(m.gate_bench) < 110.0:
 			continue
