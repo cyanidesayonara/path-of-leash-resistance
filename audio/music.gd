@@ -17,7 +17,7 @@ extends RefCounted
 # deterministic (no global RNG), so a style always sounds the same.
 
 const RATE := 22050
-const CHUNK := 1024          # samples rendered per slice; must be even
+const CHUNK := 256           # samples per slice (about a millisecond); a multiple of 4
 const TAIL := 3.0            # seconds rendered past the loop, folded onto its start
 const TARGET_RMS := 0.15     # every track as loud as every other
 const HUMAN_T := 0.006       # timing looseness, seconds
@@ -103,6 +103,13 @@ const JINGLES := {
 
 static func is_style(name: String) -> bool:
 	return STYLES.has(name)
+
+
+# a walk's own arrangement (the tutorial walks the barri, like the first walk)
+static func walk_style(level: String) -> String:
+	if level == "title" or level == "freedom" or not STYLES.has(level):
+		return "title"
+	return level
 
 
 static func job(name: String) -> Job:
@@ -385,6 +392,7 @@ class Job extends RefCounted:
 	var verb_wet := 0.2
 	var events: Array = []     # [start sample, kind, params], sorted by start
 	var stream: AudioStreamWAV
+	var cancel := false        # set from another thread to stop early
 	var _ev := 0
 	var _voices: Array = []
 	var _buf := PackedFloat32Array()
@@ -404,7 +412,7 @@ class Job extends RefCounted:
 	# Render for about `budget_usec` microseconds; true when the stream is ready.
 	func step(budget_usec: int) -> bool:
 		var t_end := Time.get_ticks_usec() + budget_usec
-		while _stage < 4 and Time.get_ticks_usec() < t_end:
+		while _stage != 4 and Time.get_ticks_usec() < t_end and not cancel:
 			match _stage:
 				0:
 					_buf.resize(total)
@@ -418,14 +426,20 @@ class Job extends RefCounted:
 					_pos = b
 					if _pos >= total:
 						_voices.clear()
-						# the tail rings on into the loop's start, as it would the
-						# second time round
+						_pos = 0
+						_stage = 5
+				5:
+					# the tail rings on into the loop's start, as it would the
+					# second time round (a sting fades out instead)
+					var t := total - n if loop else mini(4000, n)
+					var b5 := mini(_pos + CHUNK * 8, t)
+					for i in range(_pos, b5):
 						if loop:
-							for i in range(total - n):
-								_buf[i] += _buf[n + i]
+							_buf[i] += _buf[n + i]
 						else:
-							for i in range(mini(4000, n)):
-								_buf[n - 1 - i] *= float(i) / 4000.0
+							_buf[n - 1 - i] *= float(i) / 4000.0
+					_pos = b5
+					if _pos >= t:
 						_pos = 0
 						_stage = 2
 				2:
