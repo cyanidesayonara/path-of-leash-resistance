@@ -27,6 +27,43 @@ static func word(c: CanvasItem, txt: String, centre: Vector2, px: int, rot := 0.
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
+# The title on its leash: the leash comes down from above the screen to a red
+# collar buckled round the O of PATH OF, and the whole title hangs from it -
+# drops in, overshoots, and swings to rest about that point.
+static func _hanging(c: CanvasItem, t: float, cx: float, y1: float, y2: float) -> void:
+	var f := UI.display()
+	var top := "PATH OF"
+	var w1 := f.get_string_size(top, HORIZONTAL_ALIGNMENT_LEFT, -1, 64).x
+	var o_x := cx - w1 * 0.5 + f.get_string_size("PATH ", HORIZONTAL_ALIGNMENT_LEFT, -1, 64).x \
+		+ f.get_string_size("O", HORIZONTAL_ALIGNMENT_LEFT, -1, 64).x * 0.5
+	var ring := Vector2(o_x, y1 - 14.0)
+	var fall: float = Anim.k(t, [[0.0, -560.0], [0.5, 26.0, "in"], [0.75, -10.0, "out"], [1.0, 0.0, "io"]])
+	var ang: float = sin(t * 5.2) * 0.10 * exp(-t * 1.6)
+	var pivot := Vector2(o_x, -60.0)
+	var hang := ring + Vector2(0, fall)
+	var r_now := pivot + (hang - pivot).rotated(ang)
+	# the leash, down from off the top of the screen to the collar's ring
+	c.draw_line(pivot, r_now + Vector2(0, -49).rotated(ang), INK, 10.0)
+	c.draw_line(pivot, r_now + Vector2(0, -49).rotated(ang), LEASH, 6.0)
+	# everything below hangs: draw it rotated about the pivot
+	var to_title := func(p: Vector2) -> Vector2:
+		return pivot + (p + Vector2(0, fall) - pivot).rotated(ang)
+	word(c, top, to_title.call(Vector2(cx, y1)), 64, ang)
+	word(c, "LEASH RESISTANCE", to_title.call(Vector2(cx, y2)), 104, ang)
+	# the collar round the O, its buckle, and the ring the leash clips to
+	var oc: Vector2 = to_title.call(ring)
+	c.draw_set_transform(oc, ang, Vector2.ONE)
+	# a broad band over the top of the O, like a collar on a neck
+	c.draw_arc(Vector2(0, 6), 30.0, PI * 0.92, PI * 2.08, 28, INK, 17.0)
+	c.draw_arc(Vector2(0, 6), 30.0, PI * 0.92, PI * 2.08, 28, LEASH, 11.0)
+	c.draw_arc(Vector2(0, 6), 27.0, PI * 1.1, PI * 1.5, 12, LEASH.lightened(0.35), 3.0)
+	c.draw_rect(Rect2(-9, -34, 18, 16), INK)
+	c.draw_rect(Rect2(-6, -31, 12, 10), Color(0.90, 0.78, 0.42))
+	c.draw_arc(Vector2(0, -41), 8.0, 0, TAU, 16, INK, 7.0)
+	c.draw_arc(Vector2(0, -41), 8.0, 0, TAU, 16, Color(0.90, 0.78, 0.42), 3.5)
+	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
 static func draw(c: CanvasItem, t: float, drop := "swing", size := Vector2(1280, 720)) -> void:
 	var cx := size.x * 0.5
 	var y1 := size.y * 0.33
@@ -36,14 +73,8 @@ static func draw(c: CanvasItem, t: float, drop := "swing", size := Vector2(1280,
 	var sc := Vector2.ONE
 	match drop:
 		"swing":
-			# falls on its leash, overshoots, swings to rest
-			var fall: float = Anim.k(t, [[0.0, -520.0], [0.45, 30.0, "in"], [0.7, -12.0, "out"], [0.95, 0.0, "io"]])
-			off = Vector2(0, fall)
-			rot = sin(t * 6.0) * 0.12 * exp(-t * 2.2)
-			# the leash it hangs from, off the top of the screen
-			var hook := Vector2(cx, -40.0)
-			c.draw_line(hook, Vector2(cx, y1 - 70.0) + off, INK, 8.0)
-			c.draw_line(hook, Vector2(cx, y1 - 70.0) + off, LEASH, 4.5)
+			_hanging(c, t, cx, y1, y2)
+			return
 		"slam":
 			var sx: float = Anim.k(t, [[0.0, 1400.0], [0.28, -30.0, "in"], [0.45, 0.0, "back"]])
 			off = Vector2(sx, 0)

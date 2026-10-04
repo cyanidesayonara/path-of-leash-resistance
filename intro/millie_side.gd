@@ -69,7 +69,10 @@ static func parts(pose: Dictionary) -> Dictionary:
 	var head_up: float = pose.get("head_up", 0.0)
 	var ear: float = pose.get("ear", 0.0)
 	var tail: float = pose.get("tail", 0.0)
-	var drop := 8.0 * crouch
+	# `gait` (0..1) and `phase` (radians): a trot, the legs in diagonal pairs
+	var g: float = pose.get("gait", 0.0)
+	var ph: float = pose.get("phase", 0.0)
+	var drop := 8.0 * crouch - absf(cos(ph)) * 2.5 * g
 	var body_c := Vector2(0.0, -40.0 + drop)
 	var fwd := Vector2.RIGHT.rotated(lean)
 	var chest := body_c + fwd * 30.0 + Vector2(0, -2)
@@ -79,8 +82,13 @@ static func parts(pose: Dictionary) -> Dictionary:
 	var muzzle := head + Vector2(22.0, 7.0).rotated(-head_up)
 	var p := {}
 	p["tail"] = limb(rump + Vector2(-14, -8), rump + Vector2(-30, -26).rotated(tail), 4.5, 2.0)
-	p["leg_bl"] = limb(rump + Vector2(4, 8), Vector2(-30.0 - push * 16.0, -4.0), 7.0, 4.0)
-	p["leg_fl"] = limb(chest + Vector2(-2, 8), Vector2(34.0 + reach * 18.0, -4.0), 6.5, 4.0)
+	var swing := 14.0 * g
+	var f_fl := Vector2(34.0 + reach * 18.0 + sin(ph + PI) * swing, -4.0 - maxf(0.0, cos(ph + PI)) * 7.0 * g)
+	var f_fr := Vector2(42.0 + reach * 12.0 + sin(ph) * swing, -4.0 - maxf(0.0, cos(ph)) * 7.0 * g)
+	var f_bl := Vector2(-30.0 - push * 16.0 + sin(ph) * swing, -4.0 - maxf(0.0, cos(ph)) * 7.0 * g)
+	var f_br := Vector2(-22.0 - push * 10.0 + sin(ph + PI) * swing, -4.0 - maxf(0.0, cos(ph + PI)) * 7.0 * g)
+	p["leg_bl"] = limb(rump + Vector2(4, 8), f_bl, 7.0, 4.0)
+	p["leg_fl"] = limb(chest + Vector2(-2, 8), f_fl, 6.5, 4.0)
 	p["rump"] = ellipse(rump, Vector2(21, 20), lean)
 	# the haunch: the folded back leg showing on her side when she sits
 	p["haunch"] = ellipse(rump + Vector2(8, 6), Vector2(16 * sit + 0.01, 12 * sit + 0.01), lean * 0.5)
@@ -89,8 +97,8 @@ static func parts(pose: Dictionary) -> Dictionary:
 	p["neck"] = limb(chest + Vector2(2, -6), neck_top, 13.0, 10.0)
 	p["head"] = ellipse(head, Vector2(23, 20), -head_up * 0.5)
 	p["muzzle"] = ellipse(muzzle, Vector2(16, 10.5), -head_up * 0.5 + 0.1)
-	p["leg_br"] = limb(rump + Vector2(10, 10), Vector2(-22.0 - push * 10.0, -4.0), 7.0, 4.0)
-	p["leg_fr"] = limb(chest + Vector2(4, 10), Vector2(42.0 + reach * 12.0, -4.0), 6.5, 4.0)
+	p["leg_br"] = limb(rump + Vector2(10, 10), f_br, 7.0, 4.0)
+	p["leg_fr"] = limb(chest + Vector2(4, 10), f_fr, 6.5, 4.0)
 	# the ear, a floppy teardrop hanging back from the top of the head
 	# hanging from the back of the skull; `ear` swings it back and up, the
 	# way an ear streams when she lunges
@@ -103,8 +111,7 @@ static func parts(pose: Dictionary) -> Dictionary:
 	p["_chest"] = chest
 	p["_rump"] = rump
 	p["_body"] = body_c
-	p["_feet"] = [Vector2(-30.0 - push * 16.0, 0.0), Vector2(34.0 + reach * 18.0, 0.0),
-		Vector2(-22.0 - push * 10.0, 0.0), Vector2(42.0 + reach * 12.0, 0.0)]
+	p["_feet"] = [f_bl + Vector2(0, 4), f_fl + Vector2(0, 4), f_br + Vector2(0, 4), f_fr + Vector2(0, 4)]
 	return p
 
 

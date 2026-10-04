@@ -140,7 +140,8 @@ static func _light(c: CanvasItem) -> void:
 
 
 static func draw(c: CanvasItem, t_real: float) -> void:
-	var t := Anim.twos(t_real)
+	# smooth: animating on twos with a boil read as judder, not as clay
+	var t := t_real
 	if t_real >= 10.4:
 		_title(c, t_real)
 		return
@@ -153,10 +154,10 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 		[9.75, 1350.0, "in"]])
 	var my: float = Anim.k(t, [[0.0, 0.0], [2.9, 0.0], [3.15, -70.0, "out"], [3.4, 0.0, "in"],
 		[6.6, 0.0], [6.9, -40.0, "out"], [7.4, 0.0, "in"]])
-	var face: float = Anim.k(t, [[0.0, 1.0], [1.6, 1.0], [1.65, -1.0, "hold"], [2.3, -1.0], [2.35, 1.0, "hold"],
-		[3.35, 1.0], [3.4, -1.0, "hold"], [8.55, -1.0], [8.6, 1.0, "hold"]])
-	var trot := Anim.span(t, 3.5, 5.1) * (1.0 - Anim.span(t, 5.0, 5.1))
-	var gait := sin(t_real * 14.0) * trot
+	# turns pass through a squash rather than flipping in one frame
+	var face: float = Anim.k(t, [[0.0, 1.0], [1.55, 1.0], [1.75, -1.0, "io"], [2.25, -1.0], [2.45, 1.0, "io"],
+		[3.3, 1.0], [3.5, -1.0, "io"], [8.45, -1.0], [8.65, 1.0, "io"]])
+	var trot := Anim.span(t, 3.5, 3.7) * (1.0 - Anim.span(t, 4.9, 5.1))
 	var sitting := 1.0 - Anim.span(t, 2.6, 2.8) + Anim.span(t, 5.3, 5.6) - Anim.span(t, 6.5, 6.6) \
 		+ Anim.span(t, 7.4, 7.7) - Anim.span(t, 8.6, 8.7)
 	sitting = clampf(sitting, 0.0, 1.0)
@@ -164,10 +165,11 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 	var yank := Anim.span(t, 9.3, 9.45)
 	var pose := {
 		"sit": sitting,
+		"gait": trot, "phase": t * 15.0,
 		"crouch": crouch,
 		"lean": 0.22 * crouch + 0.12 * yank,
-		"push": gait * 0.6 + crouch * 0.4 + yank * 0.9,
-		"reach": gait * -0.6 + yank * 1.0,
+		"push": crouch * 0.4 + yank * 0.9,
+		"reach": yank * 1.0,
 		"head_up": Anim.k(t, [[0.0, 0.0], [0.8, 0.55, "io"], [1.5, 0.55], [1.6, 0.0, "io"], [2.4, 0.0], [2.5, 0.5, "io"],
 			[3.4, 0.2], [5.3, 0.0], [5.6, 0.35, "io"], [6.6, 0.35], [6.9, 0.7, "out"], [7.4, 0.3], [7.7, -0.35, "io"],
 			[8.5, -0.35], [8.7, 0.0], [9.0, -0.1]]),
@@ -182,7 +184,7 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 		[8.75, 1.0], [9.05, 0.78, "io"], [9.3, 0.78], [9.4, 1.35, "snap"]]))
 	if t > 9.3:
 		sq = Vector2(1.35, 0.78)   # stretched along the dash
-	var mpos := Vector2(mx, FLOOR + my) + Anim.boil(t_real, 1.0, 0.5)
+	var mpos := Vector2(mx, FLOOR + my)
 	# --- your human: on the sofa, until they are not
 	var hx: float = Anim.k(t, [[9.45, SOFA_X], [9.95, 1500.0, "in"]])
 	var hy: float = Anim.k(t, [[9.45, FLOOR], [9.6, FLOOR - 50.0, "out"]])
@@ -234,23 +236,56 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 	IntroKit.fade(c, 1.0 - Anim.span(t_real, 0.0, 0.8))
 
 
+# the street they burst out into, in daylight and kept soft so the title is
+# what you look at: sky, a row of house fronts with shutters and balconies,
+# two plane trees, a lamppost, the pavement and the kerb
+static func _street(c: CanvasItem) -> void:
+	for i in range(10):
+		var f := float(i) / 9.0
+		c.draw_rect(Rect2(-200, f * 420.0, 1680, 420.0 / 9.0 + 1.0), Color(0.62, 0.80, 0.92).lerp(Color(0.94, 0.92, 0.84), f))
+	var fronts := [Color(0.90, 0.78, 0.60), Color(0.86, 0.66, 0.52), Color(0.92, 0.86, 0.72), Color(0.84, 0.72, 0.60)]
+	var x := -120.0
+	var k := 0
+	while x < 1400.0:
+		var w := 230.0 + float((k * 37) % 60)
+		var top := 150.0 + float((k * 53) % 70)
+		var col: Color = fronts[k % fronts.size()]
+		c.draw_rect(Rect2(x, top, w, 640.0 - top), col)
+		c.draw_rect(Rect2(x, top, w, 10), col.darkened(0.12))
+		var wy := top + 40.0
+		while wy < 560.0:
+			var wx := x + 30.0
+			while wx < x + w - 50.0:
+				c.draw_rect(Rect2(wx, wy, 34, 54), Color(0.46, 0.60, 0.54))
+				c.draw_line(Vector2(wx - 6, wy + 56), Vector2(wx + 40, wy + 56), col.darkened(0.35), 3.0)
+				wx += 66.0
+			wy += 96.0
+		x += w
+		k += 1
+	# a light haze over the fronts, so they sit back behind the title
+	c.draw_rect(Rect2(-200, 0, 1680, 640), Color(0.98, 0.95, 0.88, 0.45))
+	for tx: float in [180.0, 1100.0]:
+		c.draw_rect(Rect2(tx - 6, 470, 12, 170), Color(0.42, 0.34, 0.26))
+		for blob: Vector2 in [Vector2(0, -20), Vector2(-46, 6), Vector2(46, 6), Vector2(-22, 34), Vector2(26, 34)]:
+			c.draw_circle(Vector2(tx, 470) + blob, 52.0, Color(0.48, 0.64, 0.38))
+		c.draw_circle(Vector2(tx - 20, 440), 30.0, Color(0.58, 0.74, 0.44))
+	c.draw_line(Vector2(960, 640), Vector2(960, 430), Color(0.22, 0.24, 0.26), 6.0)
+	c.draw_circle(Vector2(960, 424), 12.0, Color(0.98, 0.94, 0.78))
+	c.draw_rect(Rect2(-200, 640, 1680, 100), Color(0.80, 0.76, 0.70))
+	c.draw_rect(Rect2(-200, 700, 1680, 40), Color(0.62, 0.60, 0.58))
+	c.draw_line(Vector2(-200, 640), Vector2(1480, 640), IntroKit.INK, 3.0)
+
+
 static func _title(c: CanvasItem, t: float) -> void:
-	# a sunny street wash behind the title, a pavement along the bottom
-	for i in range(8):
-		var f := float(i) / 7.0
-		c.draw_rect(Rect2(0, f * 720.0, 1280, 720.0 / 7.0 + 1.0), Color(1.0, 0.93, 0.74).lerp(Color(0.98, 0.80, 0.52), f))
-	c.draw_circle(Vector2(1060, 150), 90.0, Color(1.0, 0.98, 0.86, 0.6))
-	c.draw_rect(Rect2(0, 640, 1280, 80), Color(0.80, 0.74, 0.66))
-	c.draw_line(Vector2(0, 640), Vector2(1280, 640), IntroKit.INK, 3.0)
+	_street(c)
 	IntroTitle.draw(c, t - 10.4, "swing")
 	# and there they go: Millie trotting along the bottom, towing your human,
 	# who is still looking at the phone
-	var tt := Anim.twos(t)
+	var tt := t
 	var x: float = Anim.k(tt, [[10.9, -260.0], [13.6, 1500.0, "lin"]])
 	if tt > 10.9 and tt < 13.6:
-		var trot := sin(t * 14.0)
 		var m := IntroKit.millie(c, Vector2(x, 652.0), 0.9, 1.0, Vector2.ONE,
-			{"reach": trot * 0.6, "push": -trot * 0.6, "head_up": 0.3, "tail": trot * 0.4, "brow": 1.0, "mouth": 0.3})
+			{"gait": 1.0, "phase": t * 15.0, "head_up": 0.3, "tail": sin(t * 15.0) * 0.4, "brow": 1.0, "mouth": 0.3})
 		var hand := IntroKit.human(c, Vector2(x - 190.0, 652.0), 0.9, 1.0, Vector2.ONE,
 			{"stride": t * 11.0, "stride_amp": 1.0, "phone": 1.0, "glow": 0.5, "reach": 0.8, "lean": 0.3})
 		IntroKit.leash(c, m["ring"], hand, 6.0)
