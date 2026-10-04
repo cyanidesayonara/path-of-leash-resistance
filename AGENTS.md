@@ -280,6 +280,14 @@ pole / tangle. Compare timings on one machine; investigate solver growth over
 5% free or 15% contacted, any unexplained hash change, any added draw call, or
 draw preparation materially above these figures.
 
+The intro (`intro/`): a side-on film drawn in code like everything else,
+played by `intro/intro_player.gd` on a plain launch only (no command-line
+arguments, not headless), once a session. Render a scene to frames and a GIF:
+```
+godot\Godot_v4.7-stable_win64_console.exe --rendering-method gl_compatibility --path . --script res://tools/intro_render.gd -- walkies OUTDIR 24 640
+python tools/frames_to_gif.py OUTDIR intro.gif 24
+```
+
 The title's version label is not in the source: `tools/stamp_version.sh`
 writes the tag and short commit (`v1.55 (a1b2c3d)`) to the gitignored
 `build_label.txt`, which each export preset packs. `release.yml` runs it
