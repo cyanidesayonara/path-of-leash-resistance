@@ -592,6 +592,10 @@ var menu_screen: Control
 # (world/world_sign.gd); rebuilt when the menu step changes what it says
 var signs: Array[Dictionary] = []
 var _signs_for := ""
+# counts rebuilds of `signs`, so their canvas knows the pieces are new
+var signs_built := 0
+# the signs' own cached canvas (world/sign_layer.gd)
+var sign_layer: Node2D
 # the gloss under the name is menu text: it fades as the walk begins
 var gloss_a := 1.0
 var details_idx := 0
@@ -4757,6 +4761,7 @@ func build_signs() -> void:
 		return
 	_signs_for = want
 	signs.clear()
+	signs_built += 1
 	if mat == "":
 		return
 	var e := walk_edges(START_Y - 190.0)
@@ -4799,15 +4804,24 @@ func _tick_signs(delta: float) -> void:
 		Sfx.play("tangle", 1.7, -16.0)
 
 
+# Whether a sign is drawn with the world drawn for the band vt..vb.
+func sign_shown(sg: Dictionary, vt: float, vb: float) -> bool:
+	if float(sg.bottom) < vt - 60.0 or float(sg.top) > vb + 60.0:
+		return false
+	# HOME means nothing before she has set off, and on the title and the
+	# walk select it sits under the prompt bar (#21)
+	return started or String(sg.get("txt", "")) != "HOME"
+
+
 func _draw_signs(vt: float, vb: float) -> void:
+	draw_signs_onto(_wc, vt, vb)
+
+
+# the sign layer's picture: every sign shown for the band vt..vb
+func draw_signs_onto(c: Object, vt: float, vb: float) -> void:
 	for sg: Dictionary in signs:
-		if float(sg.bottom) < vt - 60.0 or float(sg.top) > vb + 60.0:
-			continue
-		# HOME means nothing before she has set off, and on the title and the
-		# walk select it sits under the prompt bar (#21)
-		if not started and String(sg.get("txt", "")) == "HOME":
-			continue
-		WorldSign.draw(_wc, sg, AnimClock.msec() / 1000.0, LIGHT)
+		if sign_shown(sg, vt, vb):
+			WorldSign.draw(c, sg, AnimClock.msec() / 1000.0, LIGHT)
 
 
 func _draw_ground_title() -> void:
@@ -10131,5 +10145,10 @@ func _draw_world() -> void:
 	var menu_over := in_settings or in_shop or in_progress_view
 	if not menu_over and vb > START_Y - 260.0 and (not started or gloss_a > 0.01 or _sign_mat() == ""):
 		_draw_ground_title()
-	if not (menu_over and not started):
+	# the signs are the last thing in the world pass, so their canvas sits
+	# directly above this one and is told what this pass would have drawn
+	var show_signs := not (menu_over and not started)
+	if sign_layer != null:
+		sign_layer.refresh(vt, vb, show_signs)
+	elif show_signs:
 		_draw_signs(vt, vb)

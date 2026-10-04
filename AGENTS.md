@@ -40,7 +40,7 @@ path-of-leash-resistance/
                        # (title, wardrobe, settings), panels, cards, event feed,
                        # rotate prompt, touch controls, weather, grade shader
   world/               # level_build (corridor, level data, props, walls),
-                       # edge/verge/freedom layers, surfaces, level_check
+                       # edge/verge/freedom/sign layers, surfaces, level_check
   tests/               # headless and render regression tests, all run by CI
   tools/               # shot sweep, idle soak, behaviour snapshot, perf, MSIX,
                        # icon and Store art generators

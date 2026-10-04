@@ -149,6 +149,9 @@ static func tick(sign: Dictionary, bodies: Array, rope: Array, dt: float, t: flo
 	var spring: float = float(feel.get("spring", 0.0))
 	var seg: bool = bool(feel.get("segment", false))
 	var moving := false
+	# whether anything drawn changed: the sign's canvas (world/sign_layer.gd)
+	# redraws when `rev` moves on, and only then
+	var changed := false
 	var hits: Array = []
 	for b: Array in bodies:
 		hits.append(b)
@@ -159,6 +162,9 @@ static func tick(sign: Dictionary, bodies: Array, rope: Array, dt: float, t: flo
 		if not bool(pc.alive):
 			continue
 		var p: Vector2 = pc.p
+		var rot0: float = pc.rot
+		var size0: float = pc.size
+		var up0: bool = pc.up
 		for b: Array in hits:
 			var bp: Vector2 = b[0]
 			var bv: Vector2 = b[1]
@@ -217,9 +223,13 @@ static func tick(sign: Dictionary, bodies: Array, rope: Array, dt: float, t: flo
 			v = Vector2.ZERO
 		elif v.length() >= REST:
 			moving = true
+		changed = changed or p != (pc.p as Vector2) or float(pc.rot) != rot0 or float(pc.size) != size0 \
+				or bool(pc.up) != up0 or not bool(pc.alive)
 		pc.p = p
 		pc.v = v
 	sign.moving = moving
+	if changed:
+		sign.rev = int(sign.get("rev", 0)) + 1
 	_age_rings(sign, t)
 	return toppled
 
@@ -262,6 +272,13 @@ static func _age_rings(sign: Dictionary, t: float) -> void:
 
 
 # --- drawing ------------------------------------------------------------------
+
+# Whether the sign's picture changes with time alone: puddles shimmer, suds
+# breathe, and rings fade. Anything else looks the same until a piece moves.
+static func animated(sign: Dictionary) -> bool:
+	var mat := String(sign.mat)
+	return mat == "puddle" or mat == "suds" or not (sign.rings as Array).is_empty()
+
 
 static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 	var h: float = sign.h

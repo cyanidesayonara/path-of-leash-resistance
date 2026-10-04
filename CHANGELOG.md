@@ -2,6 +2,50 @@
 
 Append-only session history, newest first.
 
+## 2026-10-05 - the web frame times, measured again: the machine, then the signs
+
+`tools/web_perf.sh` on main read street at 11 fps (frame p50 72.7 ms), park
+20 and beach 16. Most of that was the machine: XCOM 2 and a busy browser
+were sharing its CPU and GPU, and the same build swung from 15 to 60 ms over
+twenty minutes without a change. A first bisect run through those twenty
+minutes blamed the leash overhaul (#127), wrongly. On a quiet machine,
+alternating builds, street reads:
+
+| build | frame p50 |
+|---|---|
+| v1.55 | 11-12 ms (75 fps) |
+| v1.57, #127 and its parent, eeba92e | 17-22 ms |
+| main | 22-24 ms (41-44 fps) |
+
+Nothing since v1.57 slowed the browser build, so 1.58 shipped as it was.
+Between v1.55 and v1.57 street grew from 290 to 461 nodes and its world draw
+from 1.3 to 3.2 ms (native), mostly in the restyle (#76) and La Rambla's
+boulevard (#87): new things to draw, not a slow path.
+
+Profiling the world pass by section found one: the loose-piece signs (the
+walk's name, HOME, the gate's words, #99 and #116). A sign of about ninety
+carnations cost 3.5-4.5 ms of every 30 fps world redraw natively, to repeat a
+picture that had not changed. They now live on their own canvas,
+`world/sign_layer.gd`, which redraws only when a piece moves (a sign's new
+`rev`, bumped by `WorldSign.tick` only when something drawn changed), a sign
+enters or leaves view, the signs are rebuilt or hidden, or one animates
+(puddles, suds, rings). It is main's first child at main's z, so it draws
+exactly where the signs were. Over street's whole autowalk, native and fixed
+step: world draw mean 6.9 -> 4.6 ms, p95 16.6 -> 5.9 ms, worst 22.2 -> 9.3
+ms, and the walk takes 5% less wall time. In the browser over 75 seconds
+the world draw's p95 halves (13.3 and 14.9 ms against 7.3 and 7.9), but
+whole frames stay within this machine's run-to-run noise (19.5-25.8 ms p50
+before, 20.4-28.6 after), so this alone does not bring street back to
+60 fps: the rest is the spread-out cost of the new content. The
+behaviour snapshot is byte-identical and all 56 sweep shots are
+pixel-identical. `tests/test_sign_layer.gd` pins when the canvas must and
+must not redraw.
+
+`tools/web_perf.sh` now prints every PERF line (the physics-step split and
+the worst frames as well as the summary), takes probe flags in PERF_ARGS,
+keeps Chrome's log with LOGDIR, and says in its header how background load
+wrecks a comparison.
+
 
 
 ## 2026-10-04 - El Parc: audit fixes (#150)
