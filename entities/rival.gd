@@ -175,7 +175,10 @@ func _drop(msg: String, earned: bool) -> void:
 	loot = ""
 	state = S.SULK
 	sulk_t = 2.2
-	main.on_rival_drop(global_position, had, msg, earned)
+	var prop: Dictionary = {}
+	if had == "bone" and target_ref is Dictionary and target_ref.has("prop"):
+		prop = target_ref["prop"]
+	main.on_rival_drop(global_position, had, msg, earned, prop)
 
 
 func scare() -> void:

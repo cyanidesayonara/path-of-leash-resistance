@@ -1612,8 +1612,8 @@ static func build_level_data(m: Node2D) -> void:
 			var clear := tree.distance_to(m.gate_bench) > 95.0
 			for w: Rect2 in m.water:
 				clear = clear and not w.grow(30.0).has_point(tree)
-			for slot in m.PAIR_PARK_SPOTS:
-				var spot: Vector2 = slot.position
+			for si in range(m.PAIR_PARK_SPOTS.size()):
+				var spot: Vector2 = m.pair_park_spot(si)
 				clear = clear and tree.distance_to(spot) > 85.0
 			if clear:
 				m.trees.append(tree)
@@ -2047,8 +2047,8 @@ static func build_park_props(m: Node2D) -> void:
 		if in_water:
 			continue
 		var clear := true
-		for slot in m.PAIR_PARK_SPOTS:
-			if at.distance_to(slot.position as Vector2) < 90.0:
+		for si in range(m.PAIR_PARK_SPOTS.size()):
+			if at.distance_to(m.pair_park_spot(si)) < 90.0:
 				clear = false
 		if not clear:
 			continue

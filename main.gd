@@ -366,6 +366,10 @@ const CONV_SPEED := 118.0
 const CAM_ZOOM := 1.28
 # the west wall's x on the beach, out in the sea (LevelBuild.build_walls)
 const FREEDOM_WALL_W := -180.0
+# how quickly the camera's x catches up when it starts or stops following her
+# sideways (it eases, so crossing the gate never jumps the view)
+const CAM_X_EASE := 5.0
+var cam_x_now := 1e9
 # autowalk stall watchdog: how long a travelling leg may make no headway
 # the goals card: wide enough that the longest goal name cannot spill out
 const GOALS_X := 856.0
@@ -522,6 +526,8 @@ var bins: Array[Vector2] = []
 var bag_pending := false
 # Brutus, while he is about (off the leash, some walks)
 var rival: Node2D = null
+# when she came through the gate this visit
+var freedom_at := 0.0
 var bag_flights: Array[Dictionary] = []
 var cat_y := 0.0
 var flock_ys: Array[float] = []
@@ -3781,8 +3787,10 @@ func draw_freedom_onto(c: Object) -> void:
 # either side, and on the beach swim out of sight. It follows her, clamped so
 # the view never shows past the space's walls.
 func _cam_x() -> float:
-	# past the gate line, off the leash or on it again going home
-	if dog.global_position.y > GATE_Y + 20.0:
+	# off the leash, or on it again but still inside the space going home;
+	# never on the way out, where the path fits the view
+	var inside := dog.global_position.y < GATE_Y + 20.0
+	if not (phase == "freedom" or (phase == "home" and inside)):
 		return 640.0
 	var hw := get_viewport_rect().size.x / (2.0 * cam.zoom.x)
 	var lo := FREEDOM_WALL_W + 50.0 if freedom_kind == "beach" else _freedom_rect().position.x - 20.0
@@ -4814,6 +4822,17 @@ func _tick_settings() -> void:
 	MenuFlow.tick_settings(self)
 
 
+# the moment the "drink" goal is met, wherever she was drinking: said once
+func _praise_drink(at: Vector2) -> void:
+	if drink_praised or drunk_amount < DRINK_ENOUGH:
+		return
+	drink_praised = true
+	bones += 2
+	combo.add("DRINK", 2)
+	float_text(at, "a proper long drink! +2", Color(0.8, 0.92, 1.0))
+	_update_hud()
+
+
 # After fetch, the banner says what else there is to do here, a few seconds
 # each, instead of only pointing home: the off-leash space is a break with
 # things in it, and nothing else ever told her about digging or the water.
@@ -4832,7 +4851,7 @@ func _freedom_hint() -> String:
 	if drunk_amount < DRINK_ENOUGH:
 		hints.append("HAVE A LONG DRINK AT THE WATER")
 	if sniffs_left:
-		hints.append("SNIFF ROUND THE POSTS AND LOGS")
+		hints.append("SNIFF OUT WHAT'S LYING ABOUT")
 	hints.append("BACK OUT THROUGH THE GATE, THEN HOME")
 	return hints[int(elapsed / 4.0) % hints.size()]
 
@@ -4844,7 +4863,8 @@ func _progress_rows() -> Array:
 func _update_hud() -> void:
 	hud_status = ""
 	if phase == "freedom":
-		if not romp_done and dog.global_position.y > GATE_Y - 70.0:
+		var dp := dog.global_position
+		if not romp_done and elapsed - freedom_at > 2.0 and dp.y > GATE_Y - 70.0 				and dp.x > gate_l and dp.x < gate_r and dog.velocity.y > 40.0:
 			# heading back out with the round still on: say so before it is lost
 			hud_status = "LEAVING ALREADY? FETCH ISN'T DONE"
 		elif romp_done:
@@ -5332,7 +5352,11 @@ func _process(_delta: float) -> void:
 		target_y = dog.global_position.y  # owner is parked; follow the dog
 	elif phase == "home" and chase_sweeper != null:
 		target_y -= chase_lean
-	cam.position = Vector2(_cam_x(), target_y)
+	var cx_want := _cam_x()
+	if cam_x_now > 1e8:
+		cam_x_now = cx_want
+	cam_x_now = lerpf(cam_x_now, cx_want, 1.0 - exp(-CAM_X_EASE * get_process_delta_time()))
+	cam.position = Vector2(cam_x_now, target_y)
 	if shot_cam.x < INF:
 		cam.position = shot_cam
 		cam.reset_smoothing()
@@ -7178,10 +7202,10 @@ func on_rival_snatch(at: Vector2, what: String) -> void:
 	_update_hud()
 
 
-func on_rival_drop(at: Vector2, what: String, msg: String, earned: bool) -> void:
+func on_rival_drop(at: Vector2, what: String, msg: String, earned: bool, prop: Dictionary = {}) -> void:
 	if what == "":
 		return
-	if what == "ball" and phase == "freedom" and not is_instance_valid(ball):
+	if what == "ball" and phase == "freedom" and not romp_done and not is_instance_valid(ball):
 		# whatever became of that one, your human has another
 		_spawn_romp_ball()
 		float_text(human.global_position + Vector2(0, -34), "here, another one!", Color(1, 0.92, 0.8), POP_SAY)
@@ -7202,11 +7226,15 @@ func on_rival_drop(at: Vector2, what: String, msg: String, earned: bool) -> void
 	_slowmo()
 	# only a genuine recovery puts the bone back within reach; letting him
 	# escape with it means it is gone for good
-	for pp in park_props:
-		if String(pp.kind) == "dig" and pp.get("looted", false):
-			pp["looted"] = false
-			pp["kept"] = true
-			break
+	if what == "bone" and not prop.is_empty():
+		prop["looted"] = false
+		prop["kept"] = true
+	else:
+		for pp in park_props:
+			if String(pp.kind) == "dig" and pp.get("looted", false):
+				pp["looted"] = false
+				pp["kept"] = true
+				break
 	_update_hud()
 
 
@@ -7573,12 +7601,7 @@ func _pickups(delta: float) -> void:
 						if lap_t <= 0.0:
 							lap_t = 0.32
 							Sfx.play("squelch", 1.9, -18.0)
-						if not drink_praised and drunk_amount >= DRINK_ENOUGH:
-							drink_praised = true
-							bones += 2
-							combo.add("DRINK", 2)
-							float_text(pp.pos, "a proper long drink! +2", Color(0.8, 0.92, 1.0))
-							_update_hud()
+						_praise_drink(pp.pos)
 	# the candy you should not have: chocolate is poison to dogs, so
 	# wolfing it costs you (and your clean-tummy goal)
 	for c in candy:
@@ -7601,6 +7624,7 @@ func _bodily(delta: float) -> void:
 		if dog.global_position.distance_to(f) < 34.0 and dog.velocity.length() < 40.0:
 			pee = minf(1.0, pee + 0.3 * delta)
 			drunk_amount += 0.3 * delta
+			_praise_drink(f)
 	dog.bladder_slow = pee >= 0.999
 	# peeing has its own button now; a yank that gets you moving
 	# interrupts it (the tank is a per-walk budget, ~9 breaks)
@@ -7932,6 +7956,7 @@ func _enter_freedom() -> void:
 	romp_timer = 30.0
 	romp_catches = 0
 	romp_done = false
+	freedom_at = elapsed
 	_spawn_romp_ball()
 	# other dogs to romp and say hi to (on the sand, not out in the sea)
 	var fd_x0 := BEACH_SEA_R + 60.0 if freedom_kind == "beach" else 200.0
@@ -7983,10 +8008,14 @@ func _dry_x0() -> float:
 # a parked pair's spot, moved onto the sand on the dog beach (two of the three
 # stood in the sea there)
 func pair_park_spot(i: int) -> Vector2:
-	var p: Vector2 = PAIR_PARK_SPOTS[i].position
-	if freedom_kind == "beach":
-		p.x = maxf(p.x, _dry_x0() + 70.0 + float(i) * 40.0)
-	return p
+	if lvl == "beach":
+		return BEACH_PAIR_SPOTS[i]
+	return PAIR_PARK_SPOTS[i].position
+
+
+# the dog beach's three: on dry sand, clear of the benches, the owner's bench
+# and the shower's trough
+const BEACH_PAIR_SPOTS := [Vector2(780.0, GATE_Y - 100.0), Vector2(600.0, GATE_Y - 320.0), Vector2(1040.0, GATE_Y - 120.0)]
 
 
 func _spawn_wallcats() -> void:

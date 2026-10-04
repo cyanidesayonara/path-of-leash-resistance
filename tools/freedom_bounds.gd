@@ -37,7 +37,7 @@ func _run() -> void:
 		var hi := Vector2(-INF, -INF)
 		var out: Array[String] = []
 		# down through the gate last: that turns the walk for home
-		for d: int in [6, 5, 7, 4, 0, 3, 1, 2]:
+		for d: int in [6, 5, 7, 4, 0, 2]:
 			var dir := Vector2.from_angle(TAU * float(d) / 8.0)
 			m.dog.global_position = mid
 			m.dog.velocity = Vector2.ZERO

@@ -104,8 +104,16 @@ func _run() -> void:
 	_check(seen.has("BACK OUT THROUGH THE GATE, THEN HOME") and seen.size() >= 2, "after fetch the banner suggests other things to do")
 	m.romp_done = false
 	m.dog.global_position = Vector2(640.0, m.GATE_Y - 40.0)
+	m.dog.velocity = Vector2(0.0, 120.0)
+	m.freedom_at = m.elapsed
 	m._update_hud()
-	_check(String(m.hud_status).begins_with("LEAVING ALREADY"), "leaving mid-fetch is flagged")
+	_check(not String(m.hud_status).begins_with("LEAVING ALREADY"), "no leaving warning the moment she arrives")
+	m.freedom_at = m.elapsed - 5.0
+	m._update_hud()
+	_check(String(m.hud_status).begins_with("LEAVING ALREADY"), "heading out mid-fetch is flagged")
+	m.dog.velocity = Vector2.ZERO
+	m._update_hud()
+	_check(not String(m.hud_status).begins_with("LEAVING ALREADY"), "standing by the gate is not leaving")
 
 	# --- the bottom fence holds either side of the gate
 	m.dog.auto_move = Vector2.DOWN
