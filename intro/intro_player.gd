@@ -20,7 +20,7 @@ const CUES := [
 	[7.65, "hiss", 0.6, -15.0],      # the sigh
 	[9.22, "bark", 1.0, -3.0],       # the YANK
 	[9.3, "fling", 0.9, -4.0],
-	[9.5, "crack", 0.7, -6.0],       # the door
+	[9.44, "crack", 0.7, -6.0],      # the door
 	[10.65, "star", 1.0, -6.0],      # the title lands
 ]
 

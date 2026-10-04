@@ -15,12 +15,13 @@ const S := 1.6                 # character scale
 const MS := 1.52               # Millie's scale
 const FLOOR := 610.0
 const DOOR := Rect2(1060, 250, 150, 360)
-const HOOK := Vector2(1010, 360)
+const HOOK := Vector2(1010, 320)
 const SOFA_X := 380.0
 const LEASH_LEN := 300.0
 const CARRY_LEN := 120.0     # the leash gathered up in her mouth
 const KNEE := Vector2(SOFA_X + 76.0, FLOOR - 104.0)   # where the loop lands
 const TITLE_AT := 10.1
+const TS := 1.2                # the two of them on the street
 # where the phone is in your human's hand on the sofa (for the nudge)
 const PHONE := Vector2(466.0, 468.0)
 
@@ -188,7 +189,7 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 		return
 	# the door bursts open as she reaches it, overshoots, and swings back a
 	# little after your human has gone through
-	var door_open: float = Anim.k(t, [[9.5, 0.0], [9.58, 1.08, "snap"], [9.67, 0.94, "io"], [9.73, 1.0, "io"],
+	var door_open: float = Anim.k(t, [[9.42, 0.0], [9.5, 1.08, "snap"], [9.6, 0.94, "io"], [9.67, 1.0, "io"],
 		[9.82, 1.0], [9.94, 0.75, "io"]])
 	_room(c, t, door_open)
 	_dressing(c)
@@ -200,8 +201,8 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 		[9.25, 690.0], [9.55, 1060.0, "in"]])
 	# turns are quick (two frames) and hidden in a little dip, so she never
 	# shows as a sliver
-	var face_raw: float = Anim.k(t, [[0.0, 1.0], [3.5, 1.0], [3.58, -1.0, "io"], [8.54, -1.0], [8.72, 1.0, "io"]])
-	var face := signf(face_raw) * maxf(absf(face_raw), 0.55) if face_raw != 0.0 else 0.55
+	var face_raw: float = Anim.k(t, [[0.0, 1.0], [3.5, 1.0], [3.58, -1.0, "io"], [8.62, -1.0], [8.7, 1.0, "io"]])
+	var face := signf(face_raw) * maxf(absf(face_raw), 0.75) if face_raw != 0.0 else 0.75
 	var turn_dip := maxf(maxf(1.0 - absf(face_raw), 0.0), 0.0)
 	var trot := Anim.span(t, 3.6, 3.75) * (1.0 - Anim.span(t, 4.8, 4.95)) \
 		+ 0.6 * Anim.span(t, 5.4, 5.5) * (1.0 - Anim.span(t, 5.6, 5.7)) \
@@ -216,14 +217,14 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 	var nudge := Anim.span(t, 6.75, 6.92) * (1.0 - Anim.span(t, 7.0, 7.15))
 	var pose := {
 		"sit": sitting,
-		"gait": trot, "phase": t * 15.0,
-		"crouch": maxf(maxf(windup, crouch), 0.5 * turn_dip),
+		"gait": trot, "phase": -mx * TAU / (56.0 * MS),
+		"crouch": maxf(maxf(windup, crouch), 0.25 * turn_dip),
 		# up and forward at the hook, nose first; tipping down to land
 		"lean": 0.25 * crouch + 0.12 * dash - 0.8 * paws_up - 0.75 * nudge
 			+ Anim.k(t, [[2.9, 0.0], [3.0, -0.5, "out"], [3.12, -0.45], [3.3, 0.3, "io"], [3.4, 0.0, "io"]]),
 		"push": crouch * 0.5 + dash * 0.9 + 0.8 * air,
 		"reach": dash + 0.8 * air + 0.3 * paws_up,
-		"head_up": Anim.k(t, [[0.0, 0.0], [0.8, 0.55, "io"], [1.45, 0.55], [1.55, 0.05, "io"], [2.35, 0.05], [2.5, 0.6, "io"],
+		"head_up": Anim.k(t, [[0.0, 0.0], [0.8, 0.8, "io"], [1.45, 0.8], [1.55, 0.5, "io"], [2.35, 0.5], [2.5, 0.75, "io"],
 			[3.12, 0.7], [3.5, 0.15, "io"], [4.95, 0.1], [5.15, 0.05, "io"], [5.5, 0.1], [5.9, 0.35, "io"], [6.6, 0.35],
 			[6.88, 0.95, "out"], [7.1, 0.3, "io"], [7.6, -0.35, "io"], [8.45, -0.35], [8.65, 0.05, "io"], [9.0, -0.12]]),
 		"ear": 0.35 * trot * sin(t * 15.0 + 1.0) + Anim.k(t, [[7.55, 0.0], [7.85, -0.4, "io"], [8.45, -0.4], [8.65, 0.0, "io"],
@@ -238,7 +239,7 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 	var stretch: float = Anim.k(t, [[2.7, 1.0], [2.8, 0.7, "io"], [2.9, 0.7], [2.95, 1.25, "snap"], [3.12, 1.05, "out"],
 		[3.3, 1.12, "in"], [3.36, 0.8, "snap"], [3.5, 1.0, "back"],
 		[7.6, 1.0], [7.75, 1.07, "out"], [8.0, 0.95, "io"], [8.2, 1.0, "io"],
-		[8.72, 1.0], [9.1, 0.68, "io"], [9.25, 0.68]]) * (1.0 - 0.12 * turn_dip)
+		[8.72, 1.0], [9.1, 0.68, "io"], [9.25, 0.68]])
 	var sq := Anim.squash(stretch)
 	if t >= 9.25:
 		sq = Vector2(1.38, 0.76)   # stretched along the dash
@@ -257,10 +258,10 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 	if nudge > 0.0:
 		# up on her hind legs until her nose is on the phone
 		var probe2 := IntroKit.millie_points(Vector2.ZERO, MS, face, sq, pose)
-		mpos = mpos.lerp(PHONE - probe2["mouth"], Anim.curve("io", nudge))
+		mpos = mpos.lerp(PHONE + Vector2(-6, 22) - probe2["mouth"], Anim.curve("io", nudge))
 	# heading out through the door in the back wall is heading away from us:
 	# she gets smaller as she nears it, small enough to fit the doorway
-	var mdepth := lerpf(1.0, 0.5, Anim.curve("in", Anim.span(mx, 820.0, 1060.0))) if t > 9.25 else 1.0
+	var mdepth := lerpf(1.0, 0.5, Anim.curve("out", Anim.span(mx, 760.0, 1060.0))) if t > 9.25 else 1.0
 	var ms := MS * mdepth
 	var mp := IntroKit.millie_points(mpos, ms, face, sq, pose)
 
@@ -284,13 +285,13 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 		"reach_down": Anim.k(t, [[8.1, 0.0], [8.3, 0.6, "out"], [8.55, 0.0, "io"]]),
 		"lift": off_sofa,
 		"stride": t * 26.0,
-		"phone_jolt": Anim.k(t, [[6.88, 0.0], [6.93, 1.0, "snap"], [7.15, 0.0, "back"]]),
+		"phone_jolt": Anim.k(t, [[6.88, 0.0], [6.93, 1.0, "snap"], [7.02, 1.0], [7.22, 0.0, "back"]]),
 		"head": Anim.k(t, [[6.88, 0.0], [6.93, -0.2, "snap"], [7.2, 0.0, "io"], [9.38, 0.0], [9.44, 0.25, "snap"]]),
 		"mouth": 1.0 if t > 9.42 else 0.0,
 	}
 	var hsq := Vector2.ONE if t < 9.42 else Vector2(1.2, 0.86)
 	# and so does your human, after her
-	var hdepth := lerpf(1.0, 0.45, Anim.curve("in", Anim.span(hx, 760.0, 1060.0)))
+	var hdepth := lerpf(1.0, 0.45, Anim.curve("out", Anim.span(hx, 700.0, 1060.0)))
 
 	# ------------------------------------------------------------------ draw
 	_light(c)
@@ -310,14 +311,14 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 	var hook_pt := HOOK + Vector2(0, 8)
 	# while she carries it the leash is drawn in front of her, so you can see
 	# she has it; the rest of the time behind; and not at all once they are out
-	var rope_front := t >= 3.12 and t < 5.25
+	var rope_front := t >= 3.3 and t < 5.25
 	var draw_rope := func() -> void:
 		if t < 3.12:
 			IntroKit.rope(c, t, hook_pt, hook_pt + Vector2(5, 0), true, LEASH_LEN, FLOOR - 4.0)
 		elif t < 5.25:
 			# carried gathered up in her mouth: a short swinging bight under
 			# her chin, taken in as she lands
-			var gather := Anim.curve("io", Anim.span(t, 3.12, 3.3))
+			var gather := Anim.curve("io", Anim.span(t, 3.12, 3.45))
 			IntroKit.rope(c, t, mp["ring"], mp["mouth"], true, lerpf(LEASH_LEN, CARRY_LEN, gather), FLOOR - 4.0)
 		elif t < 8.3:
 			# let go on their knee, it pays back out to its whole length
@@ -327,6 +328,9 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 		else:
 			var take := Anim.curve("io", Anim.span(t, 8.3, 8.6))
 			IntroKit.rope(c, t, mp["ring"], KNEE.lerp(hand, take), true, LEASH_LEN, FLOOR - 4.0)
+	if m_gone:
+		# she is through: the leash runs from the hand into the doorway's light
+		mp["ring"] = Vector2(DOOR.end.x - 16.0, FLOOR - 60.0)
 	if not rope_front and not h_gone:
 		draw_rope.call()
 	var m := mp
@@ -338,7 +342,7 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 	if t > 7.25 and t < 8.15:
 		IntroKit.dots(c, Vector2(SOFA_X + 96, FLOOR - 352), t - 7.25)
 	# the sigh: a soft curl of breath, drifting up and away from them
-	IntroKit.breath(c, m["mouth"] + Vector2(10, -10), Anim.span(t, 7.62, 8.4))
+	IntroKit.breath(c, m["mouth"] + Vector2(signf(face) * 14.0, -8.0), Anim.span(t, 7.62, 8.4), face)
 	# the dash: speed lines behind both, a puff of dust where she left
 	if t > 9.27 and not m_gone:
 		IntroKit.speed_lines(c, mpos + Vector2(-60, -60), Vector2.RIGHT, 80.0, 3, 0.7)
@@ -408,21 +412,21 @@ static func _title(c: CanvasItem, t: float) -> void:
 	IntroTitle.draw(c, t - TITLE_AT, "swing")
 	# and there they go along the bottom: Millie trotting ahead, the leash
 	# taut, your human towed after her, leaning in, still on the phone
-	var x: float = Anim.k(t, [[10.25, -150.0], [14.3, 1460.0, "lin"]])
+	var x: float = Anim.k(t, [[10.25, -150.0], [14.3, 1720.0, "lin"]])
 	if t > 10.25 and t < 14.3:
 		# feet matched to the ground: her trot and their stride advance with
 		# the distance covered, not the clock
-		var mphase := x * 0.125
+		var mphase := x * TAU / (56.0 * TS)
 		var mpose := {"gait": 1.0, "phase": mphase, "lean": 0.35, "crouch": 0.45, "push": 0.7, "head_up": 0.05,
 			"tail": sin(mphase) * 0.3, "brow": 0.8, "mouth": 0.6}
 		# towed: leaning back against it, short skidding steps, heels kicking dust
-		var hp := Vector2(x - 250.0, 668.0)
-		var hand := IntroKit.human(c, hp, 1.1, 1.0, Vector2.ONE,
-			{"stride": x * 0.05, "stride_amp": 0.45, "phone": 1.0, "glow": 0.5, "reach": 1.0, "lean": -0.25}, 0.0, 668.0)
+		var hp := Vector2(x - 300.0, 676.0)
+		var hand := IntroKit.human(c, hp, TS, 1.0, Vector2.ONE,
+			{"stride": x * 0.04, "stride_amp": 0.25, "phone": 1.0, "glow": 0.5, "reach": 1.0, "lean": -0.6}, 0.0, 676.0)
 		for k in range(2):
 			var dp := hp + Vector2(-20.0 - float(k) * 16.0, -6.0 - float(k) * 6.0)
 			IntroKit.puff(c, dp, 7.0 - float(k) * 2.0 + sin(x * 0.2 + float(k)) * 1.5, 0.7)
-		var mpt := IntroKit.millie_points(Vector2(x, 668.0), 1.1, 1.0, Vector2.ONE, mpose)
+		var mpt := IntroKit.millie_points(Vector2(x, 676.0), TS, 1.0, Vector2.ONE, mpose)
 		IntroKit.leash(c, mpt["ring"], hand, 2.0 + 2.0 * sin(mphase * 2.0))
-		IntroKit.millie(c, Vector2(x, 668.0), 1.1, 1.0, Vector2.ONE, mpose, 668.0)
+		IntroKit.millie(c, Vector2(x, 676.0), TS, 1.0, Vector2.ONE, mpose, 676.0)
 	IntroKit.fade(c, 1.0 - Anim.span(t, TITLE_AT, TITLE_AT + 0.22), Color(1.0, 0.98, 0.92))

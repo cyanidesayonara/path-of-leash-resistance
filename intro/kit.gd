@@ -91,14 +91,15 @@ static func _rope_step(a: Vector2, b: Vector2, b_held: bool, seg: float, floor_y
 		for i in range(ROPE_N - 2):
 			var d2 := rope_p[i + 2] - rope_p[i]
 			var l2 := d2.length()
-			if l2 < seg * 1.25 and l2 > 0.0001:
-				var corr2 := d2 * (1.0 - seg * 1.25 / l2) * 0.2
+			if l2 < seg * 1.65 and l2 > 0.0001:
+				var corr2 := d2 * (1.0 - seg * 1.65 / l2) * 0.35
 				rope_p[i] += corr2
 				rope_p[i + 2] -= corr2
 		for i in range(ROPE_N):
 			if rope_p[i].y > floor_y:
 				rope_p[i].y = floor_y
-				rope_q[i] = rope_p[i]
+				rope_q[i].y = rope_p[i].y
+				rope_q[i].x = lerpf(rope_q[i].x, rope_p[i].x, 0.5)
 		rope_p[0] = a
 		if b_held:
 			rope_p[ROPE_N - 1] = b
@@ -149,12 +150,13 @@ static func rope(c: CanvasItem, t: float, a: Vector2, b: Vector2, b_held: bool, 
 
 
 # a soft curl of breath (the sigh): no outline, rising and fading
-static func breath(c: CanvasItem, at: Vector2, f: float) -> void:
+static func breath(c: CanvasItem, at: Vector2, f: float, face := 1.0) -> void:
 	if f <= 0.0 or f >= 1.0:
 		return
 	var a := 0.8 * (1.0 - f)
+	var dx := signf(face)
 	for k in range(3):
-		var p := at + Vector2(30.0 * f + float(k) * 16.0, -50.0 * f - float(k) * 12.0 + sin(f * 6.0 + float(k)) * 6.0)
+		var p := at + Vector2((30.0 * f + float(k) * 16.0) * dx, -50.0 * f - float(k) * 12.0 + sin(f * 6.0 + float(k)) * 6.0)
 		c.draw_circle(p, (11.0 + float(k) * 5.0) * (0.6 + f * 0.7), Color(1, 1, 1, a))
 
 
@@ -184,8 +186,9 @@ static func speed_lines(c: CanvasItem, at: Vector2, dir: Vector2, length: float,
 static func puff(c: CanvasItem, at: Vector2, r: float, a := 1.0) -> void:
 	if a <= 0.0:
 		return
-	c.draw_circle(at, r + 3.0, Color(INK, a))
-	c.draw_circle(at, r, Color(0.97, 0.94, 0.86, a))
+	var grow := 1.0 + (1.0 - a) * 0.8
+	c.draw_circle(at, r * grow, Color(0.88, 0.84, 0.78, 0.6 * a))
+	c.draw_circle(at + Vector2(-r * 0.25, -r * 0.25), r * grow * 0.55, Color(0.96, 0.94, 0.90, 0.5 * a))
 
 
 # a rounded rectangle as a polygon
