@@ -126,8 +126,7 @@ static func job(name: String) -> Job:
 # the whole track in one call (tools, tests)
 static func render_stream(name: String) -> AudioStreamWAV:
 	var j := job(name)
-	while not j.step(1000000):
-		pass
+	j.run()
 	return j.stream
 
 
@@ -409,16 +408,39 @@ class Job extends RefCounted:
 	func done() -> bool:
 		return _stage == 4
 
+	# the whole render in one go (a thread, a tool); stops early if cancelled
+	func run() -> void:
+		while not cancel and not step(1 << 40):
+			pass
+
 	# Render for about `budget_usec` microseconds; true when the stream is ready.
 	func step(budget_usec: int) -> bool:
 		var t_end := Time.get_ticks_usec() + budget_usec
-		while _stage != 4 and Time.get_ticks_usec() < t_end and not cancel:
+		# the two one-off jobs (allocating the buffer, handing over the
+		# stream) each get a step to themselves, so neither lands on a slice
+		# whose budget is already spent
+		if _stage == 0:
+			_buf.resize(total)
+			_verb = Reverb.new(verb_wet)
+			_pos = 0
+			_stage = 1
+			return false
+		if _stage == 6:
+			stream = AudioStreamWAV.new()
+			stream.format = AudioStreamWAV.FORMAT_16_BITS
+			stream.mix_rate = RATE
+			stream.stereo = false
+			stream.data = _bytes
+			if loop:
+				stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+				stream.loop_begin = 0
+				stream.loop_end = n
+			_buf = PackedFloat32Array()
+			_bytes = PackedByteArray()
+			_stage = 4
+			return true
+		while _stage != 4 and _stage != 6 and Time.get_ticks_usec() < t_end and not cancel:
 			match _stage:
-				0:
-					_buf.resize(total)
-					_verb = Reverb.new(verb_wet)
-					_pos = 0
-					_stage = 1
 				1:
 					var b := mini(_pos + CHUNK, total)
 					_voices_into(_pos, b)
@@ -471,18 +493,7 @@ class Job extends RefCounted:
 						_bytes.encode_s16(i * 2, int(x * 32000.0))
 					_pos = b3
 					if _pos >= n:
-						stream = AudioStreamWAV.new()
-						stream.format = AudioStreamWAV.FORMAT_16_BITS
-						stream.mix_rate = RATE
-						stream.stereo = false
-						stream.data = _bytes
-						if loop:
-							stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
-							stream.loop_begin = 0
-							stream.loop_end = n
-						_buf = PackedFloat32Array()
-						_bytes = PackedByteArray()
-						_stage = 4
+						_stage = 6
 		return _stage == 4
 
 	func _voices_into(a: int, b: int) -> void:

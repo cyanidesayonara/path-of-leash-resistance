@@ -807,6 +807,9 @@ func _music_cue() -> String:
 
 # ...and the one to have ready for when it changes
 func _music_next() -> String:
+	# the intro is silent and the title theme is next: built while it plays
+	if intro_playing:
+		return "title"
 	if not started:
 		return Music.walk_style(lvl)
 	if phase == "freedom":

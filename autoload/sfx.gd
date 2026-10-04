@@ -158,10 +158,11 @@ func _process(delta: float) -> void:
 	apply_music_volume()
 
 
-# swap the players: the old loop fades out where it is, the new one fades in
+# swap the players: the old loop fades out where it is, the new one fades in.
+# Mid-crossfade, the quieter of the two is the one cut.
 func _crossfade(loop_name: String) -> void:
 	_music_now = loop_name
-	if music_player.playing:
+	if music_player.playing and not (_music_out.playing and _fade_out > _fade_in):
 		var t := _music_out
 		_music_out = music_player
 		music_player = t
@@ -173,8 +174,8 @@ func _crossfade(loop_name: String) -> void:
 		music_player.play()
 
 
-# Keep one track rendering: the loop wanted now, then the stings, then the
-# next loop. Finished tracks go in the cache, which keeps the few in use.
+# Keep one track rendering: the loop wanted now, then the next one, then the
+# stings. Finished tracks go in the cache, which keeps the few in use.
 func _music_work(delta: float) -> void:
 	if _music_job != null:
 		if _music_thread != null:
@@ -189,12 +190,12 @@ func _music_work(delta: float) -> void:
 		if _music_job.step(budget):
 			_music_finish()
 		return
-	for track: String in [_music_want, "won", "lost", _music_next]:
+	for track: String in [_music_want, _music_next, "won", "lost"]:
 		if track != "" and not _music_cache.has(track):
 			_music_job = Music.job(track)
 			if not OS.has_feature("web"):
 				_music_thread = Thread.new()
-				_music_thread.start(_music_job.step.bind(1 << 40), Thread.PRIORITY_LOW)
+				_music_thread.start(_music_job.run, Thread.PRIORITY_LOW)
 			return
 
 
