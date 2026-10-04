@@ -4408,10 +4408,9 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 				c.draw_circle(p + Vector2(0.0, -27.0), 7.0, Color(0.60, 0.47, 0.30))
 				c.draw_arc(p + Vector2(0.0, -27.0), 4.0, 0, TAU, 10, Color(0.48, 0.36, 0.23), 1.4)
 				c.draw_arc(p + Vector2(0.0, -27.0), 6.5, 0, TAU, 12, Color(0.42, 0.31, 0.20), 1.2)
-			"trough" when freedom_kind == "clearing":
+			"trough" when lvl == "trail":
 				# a forest spring, a font: a stone back with a pipe, the water
 				# falling from it into a round stone basin, moss on the stones
-				var tw2 := AnimClock.msec() / 1000.0
 				c.draw_circle(p + LIGHT * 5.0, 22.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
 				c.draw_rect(Rect2(p.x - 16.0, p.y - 26.0, 32.0, 12.0), Color(0.50, 0.47, 0.42))
 				c.draw_rect(Rect2(p.x - 16.0, p.y - 26.0, 32.0, 3.0), Color(0.64, 0.61, 0.56))
@@ -4424,8 +4423,9 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 				# the pipe, and the water falling into the basin, rings spreading
 				c.draw_line(p + Vector2(0, -20), p + Vector2(0, -12), Color(0.36, 0.34, 0.32), 3.0)
 				c.draw_line(p + Vector2(0, -12), p + Vector2(0, -4), Color(0.78, 0.88, 0.94, 0.8), 2.0)
-				var rr := 3.0 + fmod(tw2 * 6.0, 8.0)
-				c.draw_arc(p + Vector2(0, -3), rr, 0, TAU, 14, Color(0.80, 0.90, 0.96, 0.5 * (1.0 - rr / 11.0)), 1.2)
+				# a still ring where it falls: this canvas is cached, so anything
+				# animated here would freeze wherever the last redraw left it
+				c.draw_arc(p + Vector2(0, -3), 5.0, 0, TAU, 14, Color(0.80, 0.90, 0.96, 0.4), 1.2)
 			"trough":
 				# A galvanised water trough: a thick rim, water sitting BELOW
 				# it, a highlight where the light hits the surface, and a
@@ -6671,31 +6671,49 @@ func _draw_walk_ribbon(vt: float, vb: float, bottom: float, col: Color) -> void:
 
 
 # A forest trail has no kerb: it frays into the floor. A darker trodden band
-# just inside each edge, scallops of loose dirt spilling outward, and now and
-# then a root running across the edge. Positions hash from y, so the same
-# trail frays the same way every frame. One batch.
+# just inside each edge, clods of loose dirt spilling outward, and now and
+# then a root running across the edge. Everything is placed on a grid fixed
+# in the world (never on the camera-relative samples the ribbon uses, which
+# moved with every pixel of scrolling and re-rolled the whole edge), so the
+# same trail frays the same way every frame. Clods are hexagons, not circles:
+# one batch, a few hundred triangles at a typical view.
+const TRAIL_FRAY_STEP := 48.0
+
+
 func _draw_trail_edges(left: PackedVector2Array, right: PackedVector2Array, col: Color) -> void:
+	if left.size() < 2:
+		return
 	var b := ShapeBatch.new()
 	var worn := Color(col.r * 0.86, col.g * 0.86, col.b * 0.86, 0.6)
 	var loose := Color(col.r * 0.92, col.g * 0.9, col.b * 0.86, 0.85)
 	var root := Color(0.36, 0.26, 0.17)
-	for side in range(2):
-		var pts: PackedVector2Array = left if side == 0 else right
-		var out := -1.0 if side == 0 else 1.0
-		for i in range(pts.size() - 1):
-			var a := pts[i]
-			var c := pts[i + 1]
+	var top: float = left[0].y
+	var bot: float = left[left.size() - 1].y
+	var y := floorf(top / TRAIL_FRAY_STEP) * TRAIL_FRAY_STEP
+	while y < bot:
+		var e0 := walk_edges(y)
+		var e1 := walk_edges(y + TRAIL_FRAY_STEP)
+		for side in range(2):
+			var out := -1.0 if side == 0 else 1.0
+			var a := Vector2(e0.x if side == 0 else e0.y, y)
+			var c := Vector2(e1.x if side == 0 else e1.y, y + TRAIL_FRAY_STEP)
 			b.line(a + Vector2(-out * 7.0, 0.0), c + Vector2(-out * 7.0, 0.0), worn, 10.0)
-			for k in range(3):
-				var q := a.lerp(c, (float(k) + 0.5) / 3.0)
+			for k in range(2):
+				var q := a.lerp(c, (float(k) + 0.5) / 2.0)
 				var h := _cell01(q.y, float(side) * 31.0)
-				b.circle(q + Vector2(out * (2.0 + h * 6.0), 0.0), 6.0 + h * 5.0, loose)
-			var hr := _cell01(a.y, 7.0 + float(side))
+				var rr := 6.0 + h * 5.0
+				var cq := q + Vector2(out * (2.0 + h * 6.0), 0.0)
+				var hex := PackedVector2Array()
+				for v in range(6):
+					hex.append(cq + Vector2.from_angle(TAU * float(v) / 6.0 + h) * rr)
+				b.polygon(hex, loose)
+			var hr := _cell01(y, 7.0 + float(side))
 			if hr < 0.22:
 				# a root across the edge, from the wood into the path
 				var rq := a.lerp(c, hr * 4.0)
 				b.line(rq + Vector2(out * 26.0, -4.0), rq + Vector2(-out * 18.0, 3.0), root, 3.0)
 				b.line(rq + Vector2(out * 6.0, -1.0), rq + Vector2(-out * 6.0, 9.0), root, 2.0)
+		y += TRAIL_FRAY_STEP
 	b.flush(_wc)
 
 
