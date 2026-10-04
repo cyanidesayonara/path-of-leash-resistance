@@ -3985,11 +3985,12 @@ func _draw_freedom_benches(c: Object, r: Rect2, col: Color) -> void:
 
 
 func _freedom_sign(c: Object, r: Rect2, txt: String, gloss := "") -> void:
-	c.draw_string(font, Vector2(0, r.position.y - 14), txt, HORIZONTAL_ALIGNMENT_CENTER, 1280,
+	# both lines above the far fence: the gloss used to sit on the fence line
+	c.draw_string(font, Vector2(0, r.position.y - 30), txt, HORIZONTAL_ALIGNMENT_CENTER, 1280,
 		22, Color(0.9, 0.9, 0.82))
 	if gloss != "":
-		c.draw_string(font, Vector2(0, r.position.y + 6), gloss, HORIZONTAL_ALIGNMENT_CENTER, 1280,
-			14, Color(0.9, 0.9, 0.82, 0.75))
+		c.draw_string(font, Vector2(0, r.position.y - 12), gloss, HORIZONTAL_ALIGNMENT_CENTER, 1280,
+			14, Color(0.9, 0.9, 0.82, 0.8))
 
 
 func _draw_yard(c: Object, gravel: bool) -> void:
@@ -9452,15 +9453,16 @@ func _draw_world() -> void:
 	if vt < GATE_Y + 60.0 and freedom_kind == "beach":
 		# only the water moves; the sand and everything on it is on the layer
 		_draw_beach_water()
-	# the gate between the walk and the off-leash space
-	_draw_gate()
+	# the gate between the walk and the off-leash space, when it is in view
+	if vt < GATE_Y + 100.0 and vb > GATE_Y - 120.0:
+		_draw_gate()
 	# centred on the gate mouth, not nudged left by an eyeballed 40px; a walk
 	# with a material spells it in pieces instead (build_signs)
 	if _sign_mat() == "":
 		_wc.draw_string(font, Vector2(gate_l, GATE_Y - 66), gate_text, HORIZONTAL_ALIGNMENT_CENTER,
 			gate_r - gate_l, 26, Color(0.9, 0.88, 0.8))
 		# the place in Catalan, and what it means under it
-		_wc.draw_string(font, Vector2(gate_l, GATE_Y - 46), "off leash", HORIZONTAL_ALIGNMENT_CENTER,
+		_wc.draw_string(font, Vector2(gate_l, GATE_Y - 46), "OFF LEASH", HORIZONTAL_ALIGNMENT_CENTER,
 			gate_r - gate_l, 14, Color(0.9, 0.88, 0.8, 0.75))
 	# HOME, at the bottom, where the walk both begins and ends
 	if vb > START_Y + 30.0:
