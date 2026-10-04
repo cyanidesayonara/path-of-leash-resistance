@@ -15,6 +15,8 @@ const FLOOR := 610.0
 const DOOR := Rect2(1060, 250, 150, 360)
 const HOOK := Vector2(1010, 360)
 const SOFA_X := 380.0
+# where the dropped loop lay when your human reached for it
+static var loop_at := Vector2(560, 600)
 
 
 # the camera: [centre, zoom] in scene units. Close on her and the hook, across
@@ -204,17 +206,23 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 	var hand := IntroKit.human(c, Vector2(hx, hy), S, 1.0, hsq, hpose)
 	# the leash: on its hook; in her mouth; dropped at their feet; then from
 	# her collar to the hand that took it
-	var m := IntroKit.millie(c, mpos, S * 0.95, face, sq, pose)
+	var m := IntroKit.millie(c, mpos, S * 0.95, face, sq, pose, FLOOR)
+	# one leash, as rope: hanging doubled on its hook; then clipped to her
+	# collar with the loop in her mouth, swinging and dragging as she trots;
+	# dropped at their feet; then the loop in the hand that took it
+	var hook_pt := HOOK + Vector2(0, 8)
 	if t < 3.2:
-		IntroKit.leash(c, HOOK + Vector2(0, 8), HOOK + Vector2(-14, 130), 24.0)
-		IntroKit.leash(c, HOOK + Vector2(0, 8), HOOK + Vector2(12, 120), 16.0)
+		# hanging doubled on its hook: both ends there, the loop below
+		IntroKit.rope(c, t, hook_pt, hook_pt + Vector2(6, 0), true, 300.0, FLOOR - 4.0, 0)
 	elif t < 5.2:
-		IntroKit.leash(c, m["mouth"], m["mouth"] + Vector2(70, 40), 28.0)
-	elif t < 8.35:
-		IntroKit.leash(c, m["ring"], Vector2(560, FLOOR - 6) if t < 8.1 else hand, 30.0 if t < 8.1 else 40.0)
+		IntroKit.rope(c, t, m["ring"], m["mouth"], true, 300.0, FLOOR - 4.0, 1)
+	elif t < 8.25:
+		IntroKit.rope(c, t, m["ring"], Vector2.ZERO, false, 300.0, FLOOR - 4.0, 2)
+		loop_at = IntroKit.rope_p[IntroKit.ROPE_N - 1]
 	else:
-		var slack: float = Anim.k(t, [[8.35, 40.0], [9.1, 34.0], [9.4, 0.0, "snap"]])
-		IntroKit.leash(c, m["ring"], hand, slack)
+		# the loop rises from the floor into the hand that reached for it
+		var up := Anim.curve("io", Anim.span(t, 8.25, 8.6))
+		IntroKit.rope(c, t, m["ring"], loop_at.lerp(hand, up), true, 300.0, FLOOR - 4.0, 2)
 	# the nudge: the phone wobbles; "..."
 	if t > 7.0 and t < 8.1:
 		IntroKit.dots(c, Vector2(SOFA_X + 120, FLOOR - 330), t - 7.0)

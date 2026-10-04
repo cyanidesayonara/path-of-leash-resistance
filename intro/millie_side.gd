@@ -124,8 +124,9 @@ static func draw(c: CanvasItem, origin: Vector2, s: float, pose: Dictionary, sty
 	var p := parts(pose)
 	var ring := _x(p["_neck"] + Vector2(-8, 6), origin, s)
 	# the ground shadow, squashed, under her feet
-	var shadow_c := origin + Vector2(4.0, 2.0) * s
-	c.draw_colored_polygon(ellipse(shadow_c, Vector2(62, 7) * s), Color(0.15, 0.12, 0.10, 0.28))
+	if not pose.get("no_shadow", false):
+		var shadow_c := origin + Vector2(4.0, 2.0) * s
+		c.draw_colored_polygon(ellipse(shadow_c, Vector2(62, 7) * s), Color(0.15, 0.12, 0.10, 0.28))
 	if style == "ink":
 		_draw_ink(c, p, origin, s, pose)
 	else:
