@@ -61,12 +61,12 @@ static func _hanging(c: CanvasItem, t: float, cx: float, y1: float, y2: float) -
 	# round (wide enough to show the letter inside it), the buckle on top, and
 	# the ring the leash clips to above the buckle
 	# sized to the O itself, so it does not run into the H or the F
-	var rx := 23.0
-	var ry := 26.0
+	var rx := 24.0
+	var ry := 27.0
 	var band := MillieSide.ellipse(Vector2.ZERO, Vector2(rx, ry), 0.0, 40)
 	band.append(band[0])
-	c.draw_polyline(band, INK, 10.0)
-	c.draw_polyline(band, LEASH, 5.5)
+	c.draw_polyline(band, INK, 12.0)
+	c.draw_polyline(band, LEASH, 7.0)
 	var hi := PackedVector2Array()
 	for i in range(9):
 		var a := PI * 1.15 + float(i) / 8.0 * PI * 0.5

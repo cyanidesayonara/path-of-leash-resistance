@@ -140,12 +140,16 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 	c.draw_colored_polygon(_ell(eye + Vector2(1.2, 1.4).rotated(hr), Vector2(1.9, 2.2), hr), OUT)
 	c.draw_line(eye + Vector2(-3.5, -1.2).rotated(hr), eye + Vector2(3.5, -0.4).rotated(hr), SKIN.darkened(0.25), 2.2)
 	c.draw_line(eye + Vector2(-4, -6).rotated(hr), eye + Vector2(3, -6.5).rotated(hr), HAIR.darkened(0.3), 2.0)
+	if pose.get("blink", 0.0) > 0.5:
+		c.draw_colored_polygon(_ell(eye, Vector2(3.4, 3.8), hr), SKIN)
+		c.draw_line(eye + Vector2(-3.5, 0.5).rotated(hr), eye + Vector2(3.5, 1.2).rotated(hr), OUT, 1.6)
 	var mouth: float = pose.get("mouth", 0.0)
 	var mp := head + Vector2(12, 11).rotated(hr)
 	if mouth > 0.05:
 		c.draw_colored_polygon(_ell(mp, Vector2(3.0, 4.5 * mouth)), Color(0.35, 0.08, 0.08))
 	else:
-		c.draw_line(mp + Vector2(-3, 0), mp + Vector2(3, 0.5), Color(0.45, 0.22, 0.18), 1.6)
+		# a small flat mouth, absorbed
+		c.draw_line(mp + Vector2(-4, -0.5).rotated(hr), mp + Vector2(3, 0.5).rotated(hr), Color(0.32, 0.14, 0.12), 2.0)
 	# the phone, tipped up to the face, and its cold light on it
 	if phone > 0.3:
 		var ph := phone_hand + Vector2(3, -6)
@@ -154,9 +158,13 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 			ph + Vector2(5, 11).rotated(tip), ph + Vector2(-5, 11).rotated(tip)])
 		c.draw_colored_polygon(_fat(pr, 1.6), OUT)
 		c.draw_colored_polygon(pr, Color(0.14, 0.15, 0.18))
-		c.draw_line(ph + Vector2(-3, -9).rotated(tip), ph + Vector2(-3, 9).rotated(tip), Color(0.70, 0.86, 1.0), 2.0)
+		c.draw_line(ph + Vector2(-3, -9).rotated(tip), ph + Vector2(-3, 9).rotated(tip), Color(0.86, 0.94, 1.0), 2.0)
+		# the thumb, scrolling
+		var sc: float = pose.get("scroll", 0.0)
+		c.draw_circle(ph + Vector2(1, 4 - 7.0 * fposmod(sc, 1.0)).rotated(tip), 2.6, SKIN.darkened(0.1))
 		if glow > 0.0:
-			for i in range(5):
-				c.draw_colored_polygon(_ell(head + Vector2(12, 6).rotated(hr), Vector2(13, 17) * (1.0 - float(i) * 0.17), hr),
-					Color(0.70, 0.86, 1.0, 0.09 * glow))
+			# the screen's light on the face: warm white, soft, fading out
+			for i in range(6):
+				c.draw_colored_polygon(_ell(head + Vector2(13, 7).rotated(hr), Vector2(11, 14) * (1.0 - float(i) * 0.14), hr),
+					Color(1.0, 0.98, 0.92, 0.045 * glow))
 	return arm2[2]

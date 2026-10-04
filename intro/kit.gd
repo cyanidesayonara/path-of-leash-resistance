@@ -86,12 +86,13 @@ static func _rope_step(a: Vector2, b: Vector2, b_held: bool, seg: float, floor_y
 			var corr := d * (1.0 - seg / l) * 0.5
 			rope_p[i] += corr
 			rope_p[i + 1] -= corr
-		# bending: two links apart stay at least 1.7 links apart
+		# bending: two links apart stay at least 1.25 links apart, enough to
+		# stop it folding into zigzags but slack enough to drape and lie down
 		for i in range(ROPE_N - 2):
 			var d2 := rope_p[i + 2] - rope_p[i]
 			var l2 := d2.length()
-			if l2 < seg * 1.7 and l2 > 0.0001:
-				var corr2 := d2 * (1.0 - seg * 1.7 / l2) * 0.25
+			if l2 < seg * 1.25 and l2 > 0.0001:
+				var corr2 := d2 * (1.0 - seg * 1.25 / l2) * 0.2
 				rope_p[i] += corr2
 				rope_p[i + 2] -= corr2
 		for i in range(ROPE_N):
@@ -126,10 +127,25 @@ static func rope(c: CanvasItem, t: float, a: Vector2, b: Vector2, b_held: bool, 
 	for _s in range(steps):
 		_rope_step(a, b, b_held, seg, floor_y, dt)
 	rope_t = t
-	c.draw_polyline(rope_p, INK, w + 3.0)
-	c.draw_polyline(rope_p, LEASH, w)
-	c.draw_arc(rope_p[ROPE_N - 1], 7.0, 0, TAU, 12, INK, 5.0)
-	c.draw_arc(rope_p[ROPE_N - 1], 7.0, 0, TAU, 12, LEASH, 2.5)
+	# drawn through a Catmull-Rom curve, four points to a link, so it is a
+	# smooth line and not a chain of straight segments
+	var sm := PackedVector2Array()
+	for i in range(ROPE_N - 1):
+		var p0 := rope_p[maxi(i - 1, 0)]
+		var p1 := rope_p[i]
+		var p2 := rope_p[i + 1]
+		var p3 := rope_p[mini(i + 2, ROPE_N - 1)]
+		for k in range(4):
+			var u := float(k) / 4.0
+			var u2 := u * u
+			var u3 := u2 * u
+			sm.append(0.5 * ((2.0 * p1) + (-p0 + p2) * u + (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * u2 + (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * u3))
+	sm.append(rope_p[ROPE_N - 1])
+	c.draw_polyline(sm, INK, w + 3.0)
+	c.draw_polyline(sm, LEASH, w)
+	# the handle loop at the end
+	c.draw_arc(rope_p[ROPE_N - 1] + Vector2(0, 6), 9.0, 0, TAU, 28, INK, 5.5)
+	c.draw_arc(rope_p[ROPE_N - 1] + Vector2(0, 6), 9.0, 0, TAU, 28, LEASH, 3.0)
 
 
 # a soft curl of breath (the sigh): no outline, rising and fading
@@ -152,13 +168,17 @@ static func leash(c: CanvasItem, a: Vector2, b: Vector2, slack: float, w := 4.0)
 	c.draw_polyline(pts, LEASH, w)
 
 
-# streaks behind something moving fast in direction dir
+# streaks behind something moving fast in direction dir: thin, tapering off
 static func speed_lines(c: CanvasItem, at: Vector2, dir: Vector2, length: float, n := 4, a := 0.8) -> void:
 	var nrm := dir.orthogonal()
 	for i in range(n):
-		var off := nrm * (float(i) - float(n - 1) * 0.5) * 22.0
-		var back := -dir * (40.0 + float(i % 2) * 30.0)
-		c.draw_line(at + off + back, at + off + back - dir * length, Color(INK, a), 4.0)
+		var off := nrm * (float(i) - float(n - 1) * 0.5) * 18.0
+		var back := -dir * (30.0 + float(i % 2) * 22.0)
+		var p0 := at + off + back
+		for k in range(4):
+			var f0 := float(k) / 4.0
+			var f1 := float(k + 1) / 4.0
+			c.draw_line(p0 - dir * length * f0, p0 - dir * length * f1, Color(INK, a * (1.0 - f0)), 2.5 - f0 * 1.5)
 
 
 static func puff(c: CanvasItem, at: Vector2, r: float, a := 1.0) -> void:

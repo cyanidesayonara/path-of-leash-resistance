@@ -103,7 +103,7 @@ static func parts(pose: Dictionary) -> Dictionary:
 	# hanging from the back of the skull; `ear` swings it back and up, the
 	# way an ear streams when she lunges
 	var ear_root := head + Vector2(-8, -12).rotated(-head_up * 0.5)
-	var ear_tip := ear_root + Vector2(-4, 24).rotated(ear)
+	var ear_tip := ear_root + Vector2(-4, 24).rotated(clampf(ear, -0.6, 0.7))
 	p["ear"] = limb(ear_root, ear_tip, 6.5, 9.0)
 	p["_head"] = head
 	p["_muzzle"] = muzzle
@@ -111,6 +111,7 @@ static func parts(pose: Dictionary) -> Dictionary:
 	p["_chest"] = chest
 	p["_rump"] = rump
 	p["_body"] = body_c
+	p["_lean"] = lean
 	p["_feet"] = [f_bl + Vector2(0, 4), f_fl + Vector2(0, 4), f_br + Vector2(0, 4), f_fr + Vector2(0, 4)]
 	return p
 
@@ -149,21 +150,23 @@ static func _draw_clay(c: CanvasItem, p: Dictionary, o: Vector2, s: float, pose:
 		c.draw_colored_polygon(_xf(p[k], o, s), COAT)
 	# soft light from the upper left, built up in thin layers so it has no
 	# edge: across the back, the top of the head, the top of the muzzle
+	# (in the body's own tilted frame, so they stay on her when she sits)
 	var body_c: Vector2 = p["_body"]
 	var head: Vector2 = p["_head"]
+	var ln: float = p["_lean"]
 	for i in range(5):
 		var f := 1.0 - float(i) * 0.17
 		var a := 0.10
-		c.draw_colored_polygon(_xf(ellipse(body_c + Vector2(-6, -9), Vector2(40, 9) * f, 0.0), o, s), Color(COAT_LIT, a))
+		c.draw_colored_polygon(_xf(ellipse(body_c + Vector2(-6, -9).rotated(ln), Vector2(36, 8) * f, ln), o, s), Color(COAT_LIT, a))
 		c.draw_colored_polygon(_xf(ellipse(head + Vector2(-4, -9), Vector2(15, 7) * f, -0.2), o, s), Color(COAT_LIT, a))
-		c.draw_colored_polygon(_xf(ellipse(p["_rump"] + Vector2(-4, -10), Vector2(13, 6) * f, 0.0), o, s), Color(COAT_LIT, a))
+		c.draw_colored_polygon(_xf(ellipse(p["_rump"] + Vector2(-4, -10).rotated(ln), Vector2(12, 5) * f, ln), o, s), Color(COAT_LIT, a))
 		c.draw_colored_polygon(_xf(ellipse(p["_muzzle"] + Vector2(0, -5), Vector2(10, 3) * f, 0.1), o, s), Color(COAT_LIT, a))
 	# warm light bouncing up off the ground, along the belly and chest: the
 	# thing that makes a dark form look like a lump of clay in the sun
 	for i in range(3):
 		var f3 := 1.0 - float(i) * 0.25
-		c.draw_colored_polygon(_xf(ellipse(body_c + Vector2(4, 13), Vector2(34, 5) * f3, 0.0), o, s), Color(0.55, 0.40, 0.28, 0.10))
-		c.draw_colored_polygon(_xf(ellipse(p["_chest"] + Vector2(4, 14), Vector2(12, 5) * f3, 0.0), o, s), Color(0.55, 0.40, 0.28, 0.10))
+		c.draw_colored_polygon(_xf(ellipse(body_c + Vector2(4, 12).rotated(ln), Vector2(30, 4.5) * f3, ln), o, s), Color(0.55, 0.40, 0.28, 0.10))
+		c.draw_colored_polygon(_xf(ellipse(p["_chest"] + Vector2(2, 13).rotated(ln), Vector2(10, 4.5) * f3, ln), o, s), Color(0.55, 0.40, 0.28, 0.10))
 	c.draw_colored_polygon(_xf(p["ear"], o + Vector2(1.0, 1.5) * s, s), COAT_DARK)
 	c.draw_colored_polygon(_xf(p["ear"], o, s), Color(0.16, 0.16, 0.18))
 	# white paws
