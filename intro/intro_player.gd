@@ -26,7 +26,7 @@ const CUES := [
 
 var main: Node
 var t := 0.0
-var stage: Node2D
+var stage: Stage
 var done_t := -1.0
 var cued := 0
 
@@ -73,6 +73,9 @@ func _process(delta: float) -> void:
 		cued += 1
 	if done_t < 0.0 and t >= END_AT:
 		done_t = t
+	# the title takes over as the film fades, so it is not frozen under it
+	if done_t >= 0.0:
+		main.set("intro_playing", false)
 	_place()
 	stage.t = minf(t, END_AT)
 	stage.queue_redraw()
@@ -80,7 +83,6 @@ func _process(delta: float) -> void:
 		var f := clampf((t - done_t) / FADE_OUT, 0.0, 1.0)
 		stage.modulate.a = 1.0 - f
 		if f >= 1.0:
-			main.set("intro_playing", false)
 			queue_free()
 
 

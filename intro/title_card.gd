@@ -3,7 +3,7 @@ extends RefCounted
 
 # The title as the intros end on it: PATH OF / LEASH RESISTANCE in the heavy
 # face, cream with a dark outline and a soft drop shadow (the intro's look),
-# then a pulsing PRESS START. `t` is seconds since the
+# and nothing under it. `t` is seconds since the
 # card began; `drop` chooses the entrance: "swing" (hung on a leash from the
 # top and swinging to rest), "slam" (in from the right with a thump), "none"
 # (already there, for when a scene places the letters itself).
@@ -55,10 +55,5 @@ static func draw(c: CanvasItem, t: float, drop := "swing", size := Vector2(1280,
 		word(c, "PATH OF", Vector2(cx, y1) + off, 64, rot, sc)
 		word(c, "LEASH RESISTANCE", Vector2(cx, y2) + off * Vector2(1.15, 1.0), 104, rot * 0.8, sc)
 	# no subtitle: the title stands alone (October 2026)
-	if t > 2.0:
-		var pulse := 0.55 + 0.45 * sin((t - 2.0) * 4.0)
-		var f2 := UI.display()
-		var ps := "PRESS START"
-		var w2 := f2.get_string_size(ps, HORIZONTAL_ALIGNMENT_LEFT, -1, 28).x
-		c.draw_string_outline(f2, Vector2(cx - w2 * 0.5, size.y * 0.86), ps, HORIZONTAL_ALIGNMENT_LEFT, -1, 28, 7, Color(INK, pulse))
-		c.draw_string(f2, Vector2(cx - w2 * 0.5, size.y * 0.86), ps, HORIZONTAL_ALIGNMENT_LEFT, -1, 28, Color(CREAM, pulse))
+	# no prompt here: the title screen it fades into has its own prompt bar,
+	# and a key name written into the film would break the Prompts rule

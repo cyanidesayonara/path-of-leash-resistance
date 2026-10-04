@@ -5425,6 +5425,10 @@ func _process(_delta: float) -> void:
 				print("SHOT saved to %s" % out)
 			if "--shot-quit" in OS.get_cmdline_user_args():
 				get_tree().quit(0 if err == OK else 1)
+	# while the intro plays the title screen waits: the key that skips the
+	# intro must not also start a walk, restart, or toggle the music
+	if intro_playing:
+		return
 	if in_settings:
 		_tick_settings()
 		return
@@ -5456,10 +5460,6 @@ func _process(_delta: float) -> void:
 		return
 	if started and not frozen and Input.is_action_just_pressed("pause"):
 		MenuFlow.open_pause(self)
-		return
-	# while the intro plays the title screen waits: the key that skips the
-	# intro must not also start a walk
-	if intro_playing:
 		return
 	if not started and MenuFlow.tick_title(self):
 		return
