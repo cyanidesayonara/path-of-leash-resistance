@@ -602,6 +602,10 @@ var pause_idx := 0
 # a question the menus are waiting on ("restart", "exit"), and which pause
 # card is open over the grid ("walk"); empty when neither
 var confirm_id := ""
+# the tutorial's halfway card has been answered "the tricks", and how long
+# the last card has been up (the tutorial ends itself after it)
+var tut_basics_seen := false
+var tut_done_t := 0.0
 var pause_view := ""
 var locked_nudge := 0.0
 var shop_preview: CharacterBody2D
@@ -5746,6 +5750,10 @@ func _shot_menu(which: String) -> void:
 		"first":
 			# the title's first-walk question, as a new player sees it
 			MenuFlow.open_confirm(self, "first")
+		"basics":
+			# the tutorial's halfway card (use with --level=tutorial)
+			_skip_title()
+			MenuFlow.open_basics(self)
 		"notice":
 			_skip_title()
 			_death("OFF THE EDGE\n\nShe went over, and the human went with her.")
@@ -5840,7 +5848,7 @@ func _process(_delta: float) -> void:
 			# reviewed. Everything else about --shot exists to get PAST this.
 			if "--shot-title" in OS.get_cmdline_user_args():
 				return
-			# --shot-menu=walk|details|shop|progress|pause|walkcard|confirm|first|notice opens that screen
+			# --shot-menu=walk|details|shop|progress|pause|walkcard|confirm|first|basics|notice opens that screen
 			for a in OS.get_cmdline_user_args():
 				if a.begins_with("--shot-menu="):
 					_shot_menu(a.substr(12))
@@ -7803,6 +7811,12 @@ func _tick_tutorial(delta: float) -> void:
 		tut_teetered = true
 	if id == "":
 		return
+	# the end, in the dog park: no walk home with nothing left to learn
+	if id == "done":
+		tut_done_t += delta
+		if tut_done_t > 2.5 and not finished:
+			_finish_tutorial_walk()
+		return
 	# skippable, always: a tutorial that traps a player who cannot do the
 	# thing is worse than no tutorial at all
 	if Input.is_action_just_pressed("share") and id != "done":
@@ -7813,7 +7827,11 @@ func _tick_tutorial(delta: float) -> void:
 
 
 func _tut_advance(earned: bool) -> void:
+	var was := String(TutorialSteps.step(tut_step).id)
 	tut_step += 1
+	# the basics done: a card offering the first real walk now, or the tricks
+	if was == "bag" and not tut_basics_seen:
+		MenuFlow.open_basics(self)
 	tut_flash = 1.1
 	if earned:
 		Sfx.play("star", 1.15)
@@ -8898,6 +8916,10 @@ func _chase(delta: float) -> void:
 
 func _finish_walk() -> void:
 	Goals.finish_walk(self)
+
+
+func complete_tutorial() -> bool:
+	return Goals.complete_tutorial(self)
 
 
 func _finish_tutorial_walk() -> void:

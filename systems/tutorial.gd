@@ -12,6 +12,11 @@ extends RefCounted
 # the driver, and every one is skippable, because a tutorial that traps a
 # player who cannot do the thing is worse than no tutorial at all. Order
 # runs from "you already know this" to "nobody would guess this".
+#
+# Two parts. THE BASICS (up to "bag") are what every walk needs; then a card
+# offers the first real walk straight away, or the tricks for whoever wants
+# them. THE TRICKS end in the dog park, and the tutorial ends there too: no
+# long walk home with nothing left to learn.
 
 # Each lesson has a STATION: "at" is how far up the walk it stands, far enough
 # from the next that only one is on screen, holding exactly what the lesson
@@ -62,29 +67,29 @@ const STEPS: Array[Dictionary] = [
 		"body": "Hold {turbo} to burn them off. You are faster than they will ever be.",
 	},
 	{
-		"id": "grind", "at": -3220.0, "hold": true,
+		"id": "bag", "at": -3220.0, "hold": true,
+		"title": "Nature calls.",
+		"body": "Stand still and hold {plant} to go. Your human bags it - eventually.",
+	},
+	{
+		"id": "grind", "at": -3620.0, "hold": true,
 		"title": "Ride the kerb.",
 		"body": "Run fast along the edge of the path, and steer against the wobble to stay on.",
 	},
 	{
-		"id": "vault", "at": -3620.0, "hold": true,
+		"id": "vault", "at": -4020.0, "hold": true,
 		"title": "The rope is a pivot.",
 		"body": "Catch the leash on the lamppost and keep running - swing round it and fly out.",
 	},
 	{
-		"id": "fling", "at": -4020.0, "hold": true,
+		"id": "fling", "at": -4400.0, "hold": true,
 		"title": "Tetherball.",
 		"body": "Your human is waiting by the post. Run round it twice to wind them up, then pull away.",
 	},
 	{
-		"id": "teeter", "at": -4400.0, "hold": true, "stand": 1,
+		"id": "teeter", "at": -4780.0, "hold": true, "stand": 1,
 		"title": "The brink.",
 		"body": "Run at the pond's edge. When you wobble, scramble the other way.",
-	},
-	{
-		"id": "bag", "at": -4780.0, "hold": true,
-		"title": "Nature calls.",
-		"body": "Stand still and hold {plant} to go. Your human bags it - eventually.",
 	},
 	{
 		"id": "dig", "at": -5200.0, "hold": false,
@@ -94,7 +99,7 @@ const STEPS: Array[Dictionary] = [
 	{
 		"id": "done", "at": -5300.0, "hold": false,
 		"title": "Good dog.",
-		"body": "That is everything. Fetch the ball, then take your human home.",
+		"body": "That is everything. Every trick in the book.",
 	},
 ]
 
