@@ -4,6 +4,18 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-04 - Beach towels with someone on them
+
+- Passeig Marítim's towels were flat rectangles with a circle and a box for a
+  bather. Now each is striped across both ends and fringed, and the bather
+  lies on it properly: legs, arms, a swimsuit, hair and sunglasses, drawn with
+  the same head and shoulders as everyone else (`main._draw_towel`).
+- The empty towels have what their owner left: flip-flops, a paperback and
+  the sun cream.
+- Nobody sunbathes in the rain, in the snow or at night: the towels are left
+  out, darker when wet and dusted white in snow.
+- Drawing only: where a towel is and what happens when your human walks over
+  it are unchanged.
 ## 2026-10-04 - Drains and repairs only where they belong
 
 - The drain grates and repair patches from the last terrain pass landed on

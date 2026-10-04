@@ -4467,6 +4467,72 @@ func _draw_ground_detail(vt: float, vb: float) -> void:
 				_wc.draw_line(p - dir * float(d.sz) * 1.6, p + dir * float(d.sz) * 1.6, c, float(d.sz))
 
 
+# A BEACH TOWEL: striped across both ends, fringed, and either someone lying
+# on it in the sun or the things they left (flip-flops, a paperback, the sun
+# cream). In rain or snow nobody is sunbathing: the towel is left out, wet or
+# dusted white. Drawing only; where a towel is and what it does stays put.
+const TOWEL_SKINS := [Color(0.94, 0.78, 0.64), Color(0.80, 0.60, 0.44), Color(0.58, 0.40, 0.28), Color(0.96, 0.70, 0.60)]
+const TOWEL_HAIR := [Color(0.20, 0.14, 0.10), Color(0.62, 0.42, 0.20), Color(0.86, 0.74, 0.44), Color(0.12, 0.10, 0.10)]
+const TOWEL_SUITS := [Color(0.16, 0.30, 0.62), Color(0.86, 0.26, 0.30), Color(0.12, 0.52, 0.46), Color(0.96, 0.62, 0.20)]
+
+
+func _draw_towel(twd: Dictionary, i: int) -> void:
+	var r: Rect2 = twd.rect
+	var col: Color = twd.col
+	var wx: String = Game.weather
+	if wx == "rain":
+		col = col.darkened(0.3)
+	_wc.draw_rect(r, col)
+	# stripes across each end, and the fringe past them
+	var stripe := Color(1, 1, 1, 0.55) if i % 2 == 0 else col.darkened(0.25)
+	for e: float in [r.position.y + 8.0, r.end.y - 13.0]:
+		_wc.draw_rect(Rect2(r.position.x, e, r.size.x, 5.0), stripe)
+	var fx := r.position.x + 3.0
+	while fx < r.end.x - 1.0:
+		_wc.draw_line(Vector2(fx, r.position.y), Vector2(fx, r.position.y - 4.0), col.lightened(0.2), 1.2)
+		_wc.draw_line(Vector2(fx, r.end.y), Vector2(fx, r.end.y + 4.0), col.lightened(0.2), 1.2)
+		fx += 5.0
+	if wx == "snow":
+		_wc.draw_rect(r.grow(-3.0), Color(0.96, 0.97, 1.0, 0.55))
+	var c := r.get_center()
+	var basking: bool = twd.bather and wx != "rain" and wx != "snow" and not Game.night
+	if basking:
+		var skin: Color = TOWEL_SKINS[i % TOWEL_SKINS.size()]
+		var suit: Color = TOWEL_SUITS[(i + 1) % TOWEL_SUITS.size()]
+		var sh := Color(0, 0, 0, 0.18)
+		# lying on their back, head at the top end: shadow, legs, arms, body
+		_wc.draw_line(c + Vector2(-4, 4) + LIGHT * 2.0, c + Vector2(-5, 30) + LIGHT * 2.0, sh, 6.0)
+		_wc.draw_line(c + Vector2(4, 4) + LIGHT * 2.0, c + Vector2(6, 30) + LIGHT * 2.0, sh, 6.0)
+		for s: float in [-1.0, 1.0]:
+			var foot := c + Vector2(s * (5.0 + float(i % 2)), 30.0)
+			_wc.draw_line(c + Vector2(s * 4.0, 4.0), foot, skin, 5.5)
+			_wc.draw_circle(foot, 2.8, skin)
+			_wc.draw_line(c + Vector2(s * 8.0, -14.0), c + Vector2(s * 11.0, 2.0), skin.darkened(0.06), 3.6)
+			_wc.draw_circle(c + Vector2(s * 11.0, 2.0), 2.2, skin.darkened(0.06))
+		HumanAppearance.draw_torso(_wc, c + Vector2(0, -8), Vector2.UP, Vector2(9.0, 8.0), skin)
+		# the swimsuit: trunks, or a one-piece
+		if i % 2 == 0:
+			_wc.draw_rect(Rect2(c.x - 6.0, c.y - 2.0, 12.0, 7.0), suit)
+		else:
+			_wc.draw_colored_polygon(PackedVector2Array([c + Vector2(-6, -15), c + Vector2(6, -15),
+				c + Vector2(6, 5), c + Vector2(-6, 5)]), suit)
+		var head := c + Vector2(0, -24)
+		HumanAppearance.draw_head(_wc, head, Vector2.UP, 6.0, skin, TOWEL_HAIR[i % TOWEL_HAIR.size()],
+			"long" if i % 2 == 1 else "short")
+		# sunglasses on, eyes shut
+		_wc.draw_line(head + Vector2(-4.0, -2.2), head + Vector2(4.0, -2.2), Color(0.08, 0.08, 0.10), 2.2)
+	else:
+		# what they left: flip-flops at the foot, the paperback and the sun cream
+		for s: float in [-1.0, 1.0]:
+			var ff := Vector2(c.x + s * 6.0, r.end.y - 22.0)
+			_wc.draw_colored_polygon(HumanAppearance._disc_points(ff, Vector2(6.0, 3.0), Vector2.UP), Color(0.20, 0.62, 0.86))
+			_wc.draw_line(ff + Vector2(0, -3), ff + Vector2(s * 2.0, 1.0), Color(0.96, 0.96, 0.94), 1.0)
+		_wc.draw_rect(Rect2(c.x - 8.0, c.y - 18.0, 13.0, 9.0), Color(0.94, 0.90, 0.80))
+		_wc.draw_line(Vector2(c.x - 1.5, c.y - 18.0), Vector2(c.x - 1.5, c.y - 9.0), Color(0.6, 0.55, 0.5), 1.0)
+		_wc.draw_rect(Rect2(c.x + 7.0, c.y - 4.0, 5.0, 11.0), Color(0.98, 0.84, 0.30))
+		_wc.draw_rect(Rect2(c.x + 7.5, c.y - 6.0, 4.0, 2.5), Color(0.90, 0.40, 0.20))
+
+
 func _build_bypasser_blockers() -> void:
 	LevelBuild.build_bypasser_blockers(self)
 
@@ -8232,13 +8298,9 @@ func _draw_world() -> void:
 		for t in tufts:
 			if t.y > vt and t.y < vb and t.x > 110.0 and (t.x < 330.0 or t.x > 1000.0) and t.x < 1170.0:
 				_wc.draw_circle(t, 4.0, Color(0.78, 0.7, 0.54))
-		for twd in towels:
-			var r: Rect2 = twd.rect
-			_wc.draw_rect(r, twd.col)
-			_wc.draw_rect(r, Color(1, 1, 1, 0.25), false, 2.0)
-			if twd.bather:
-				_wc.draw_circle(r.get_center() + Vector2(0, -20), 6.0, Color(0.75, 0.6, 0.45))
-				_wc.draw_rect(Rect2(r.get_center().x - 7, r.get_center().y - 12, 14, 26), Color(0.55, 0.35, 0.45))
+		for ti in range(towels.size()):
+			if (towels[ti].rect as Rect2).end.y > vt - 40.0 and (towels[ti].rect as Rect2).position.y < vb + 40.0:
+				_draw_towel(towels[ti], ti)
 	else:
 		var grass := COL_GRASS if lvl == "street" else Color(0.3, 0.45, 0.28)
 		var walkway := Color(0.62, 0.55, 0.42)
