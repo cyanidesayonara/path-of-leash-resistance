@@ -125,7 +125,17 @@ Full controller support
 No ads, no purchases, no account, and it plays offline
 ```
 
-### What's new in this version (1.57)
+### What's new in this version (1.58, for the next submission)
+
+```
+- A short animated intro, and a new soundtrack with its own arrangement for every walk.
+- Games off the leash: an agility course against the clock, tug-of-war over a rope toy, and frisbee.
+- Your human answers the leash: lead them nicely and they give you slack; haul and they lose patience.
+- A smoother leash, footsteps that change with the ground, and every walk ending at its own gate.
+- La Rambla and El Parc upgraded, the off-leash spaces fenced in properly, and many smaller fixes.
+```
+
+### What's new in 1.57 (submitted 2026-10-03)
 
 ```
 - Two new walks. El Barri, the everyday walk, comes first. La Neteja is a narrow back street at dawn: a street sweeper careens after you, flinging junk, and you drag your human home ahead of it. It is the only walk with a chase now.

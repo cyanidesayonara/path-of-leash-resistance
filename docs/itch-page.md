@@ -100,12 +100,17 @@ Single player. No ads, no purchases, no account. The download plays offline; the
 Made in Godot by Santtu Nykänen. The dog is Millie, a distinguished salt-and-pepper mutt who squats like a lady.
 ```
 
-## What's new in 1.58 (placeholder: confirm the version and trim before posting)
+## What's new in 1.58
 
 For a devlog post or the top of the body. Everything since v1.57, from
 CHANGELOG.md:
 
 ```
+- A short animated intro, "Walkies?": Millie fetches the leash and drags her human out of the door. Any key skips it.
+- A new soundtrack: every walk has its own arrangement of the game's tune (a bossa on the seafront, Spanish guitar in El Gòtic, an accordion in the market, a rumba in El Mosaic, a music box on the chestnut night), a title theme, a tune for off the leash, and a fanfare or a sad trombone at the end of a walk.
+- Games in every off-leash space: an agility course against the clock (jumps, weave poles, a tunnel; your best time is kept), tug-of-war over a free dog's rope toy, and a frisbee your human throws after fetch. Catch it in the air.
+- The off-leash spaces are fenced in properly, the camera follows her round them, and the banner says what there is to do.
+- La Rambla and El Parc upgraded: plane trees and browsing crowds, cellar hatches and blanket sellers' goods that look like themselves, hedged flowerbeds, a real playground, and reeds, ducks and rowing boats on the lake.
 - Your human answers the leash. A steady pull leads them across the path and speeds them up or slows them down; constant hauling wears their patience down to a telegraphed "HEY!" and a shorter leash, and walking nicely earns a longer one. They wait while she does her business, too.
 - A smoother leash: the tug eases in over the first bit of stretch instead of snapping taut, and the whirl commits to one way round the pole.
 - She walks differently on different ground: quick short steps on sand, heavy ones in mud, a higher step through grass. Grass, mud and the forest stream look like themselves, and her paws mark them.
