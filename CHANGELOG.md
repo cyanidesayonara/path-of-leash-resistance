@@ -4,6 +4,17 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-04 - Drains and repairs only where they belong
+
+- The drain grates and repair patches from the last terrain pass landed on
+  every walk alike, so the same grey square sat beside each walk's name at the
+  start, and drains turned up on the park's gravel path, the forest trail and
+  the seafront's brick bike path. They now appear only in made ground
+  (`LevelBuild.works_ground_at`: not El Barri, El Parc, El Bosc, La Ferralla
+  or El Mosaic, and on the seafront only on the promenade), and never under
+  the signs at either end of the walk.
+- A repair patch is now an uneven six-sided patch with its seam showing on
+  one side, not an outlined box.
 ## 2026-10-04 - She walks differently on different ground (terrain pass 2, part 2)
 
 - **Gait by surface** (`dog._cadence`, `_stride`): quick, short steps on sand,
