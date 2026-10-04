@@ -4,6 +4,23 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-04 - El Parc: audit fixes (#150)
+
+- The flowerbeds are gardens: a low clipped box hedge round each (soft
+  corners, a lit top, leafy texture) and the planting in drifts, a run of one
+  colour, a foliage mound, a few lavender spikes, then the next colour,
+  instead of a grid of dots.
+- The bandstand's floor is stone, not lawn: no grass tufts drawn on it.
+- The playground: poured rubber with soft corners and a darker kerb, a
+  hopscotch let into it, a timber fence round it with a gate on the path side,
+  the slide with its ladder, platform, rail posts and a chute widening into
+  its run-out, a spring rider, and the sandpit in rounded timber with corner
+  seats and a bucket and spade left in it.
+- The lake has a shore: clumps of reeds and bulrushes round the bank, a
+  timber jetty on the south side with two rowing boats tied up for hire, and
+  ducks resting on the east bank. The path round it stays clear.
+- Drawing only: the behaviour snapshot is identical.
+
 ## 2026-10-04 - Games in the off-leash space
 
 - The same three games in every off-leash space (yard, lot, clearing, plaça,
