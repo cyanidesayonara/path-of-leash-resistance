@@ -855,6 +855,17 @@ func bail_whirl() -> void:
 			bubble.visible = false)
 
 
+# a line in the speech bubble for a moment, from the park bench (the
+# frisbee's "ready...?", which is the telegraph before every throw)
+func say_line(text: String) -> void:
+	_show_bubble(text)
+	var tw := create_tween()
+	tw.tween_interval(0.8)
+	tw.tween_callback(func() -> void:
+		if bubble.text == text:
+			bubble.visible = false)
+
+
 func throw_pose() -> void:
 	park_throw_t = 0.5
 	_show_bubble("go get it!")

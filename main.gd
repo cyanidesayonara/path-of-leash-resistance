@@ -317,6 +317,22 @@ const VAULT_LAUNCH := 470.0
 const GRIND_SPEED := 190.0   # you have to be moving to get up on it
 const GRIND_BAND := 13.0     # how close to the kerb line counts as on it
 var ball: Node2D
+# the off-leash games (systems/freedom_games.gd)
+var agility: AgilityCourse
+var agility_prev := Vector2.ZERO
+var agility_runs := 0
+var games_ground: Node2D
+var games_cover: Node2D
+var frisbee: Node2D
+var frisbee_done := false
+var frisbee_air := 0
+var tug: RopeTug
+var tug_dog: Node2D
+var tug_prev := Vector2.ZERO
+var tugs_won := 0
+var rope_loose := Vector2(INF, INF)
+var rope_carry_t := 0.0
+var hop_t := 0.0
 var romp_timer := 0.0
 var romp_catches := 0
 var romp_target := 3
@@ -4417,8 +4433,9 @@ func _draw_dog_beach(c: Object) -> void:
 	c.draw_rect(Rect2(lg.x - 9.0, lg.y - 9.0, 18.0, 18.0), Color(0.94, 0.90, 0.58))
 	var pcol := [Color(0.85, 0.45, 0.35, 0.85), Color(0.4, 0.6, 0.75, 0.85),
 		Color(0.9, 0.8, 0.4, 0.85)]
+	# spaced round the agility lane, which runs between the first two
 	for i in range(3):
-		var pa := Vector2(r.end.x - 260.0, r.position.y + 180.0 + float(i) * 210.0)
+		var pa := Vector2(r.end.x - 260.0, r.position.y + [150.0, 390.0, 600.0][i])
 		# a parasol from above is panels radiating from a hub, with the shade
 		# it is there to cast falling clear of it
 		contact_shadow(c, pa, 36.0, 30.0, 0.20)
@@ -5240,6 +5257,7 @@ func _freedom_hint() -> String:
 		hints.append("HAVE A LONG DRINK AT THE WATER")
 	if sniffs_left:
 		hints.append("SNIFF OUT WHAT'S LYING ABOUT")
+	hints.append_array(FreedomGames.hints(self))
 	hints.append("BACK OUT THROUGH THE GATE, THEN HOME")
 	return hints[int(elapsed / 4.0) % hints.size()]
 
@@ -5255,6 +5273,8 @@ func _update_hud() -> void:
 		if not romp_done and elapsed - freedom_at > 2.0 and dp.y > GATE_Y - 70.0 				and dp.x > gate_l and dp.x < gate_r and dog.velocity.y > 40.0:
 			# heading back out with the round still on: say so before it is lost
 			hud_status = "LEAVING ALREADY? FETCH ISN'T DONE"
+		elif FreedomGames.banner(self) != "":
+			hud_status = FreedomGames.banner(self)
 		elif romp_done:
 			hud_status = _freedom_hint()
 		else:
@@ -5467,6 +5487,7 @@ func _physics_process(delta: float) -> void:
 	if phase == "freedom":
 		_romp(delta)
 		_neighbour_fetch()
+		freedom_games_tick(delta)
 	elif phase == "home" and chase_active:
 		_chase(delta)
 	_prof("romp, chase")
@@ -8423,6 +8444,7 @@ func _enter_freedom() -> void:
 		add_child(rv)
 		rv.setup(self, dog, rb)
 		float_text(rv.position, "...oh no. Brutus.", Color(1, 0.85, 0.75), POP_SAY)
+	FreedomGames.begin(self)
 	feed.say("OFF THE LEASH! GO FETCH", EventFeed.Tone.LOUD)
 
 
@@ -8602,6 +8624,18 @@ func on_tofu_home(pos: Vector2) -> void:
 	_slowmo()
 
 
+func freedom_games_tick(delta: float) -> void:
+	FreedomGames.tick(self, delta)
+
+
+func on_frisbee_caught(air: bool) -> void:
+	FreedomGames.on_frisbee_caught(self, air)
+
+
+func on_frisbee_returned(left: int) -> void:
+	FreedomGames.on_frisbee_returned(self, left)
+
+
 func on_ball_grabbed() -> void:
 	float_text(dog.global_position, "got it!", Color(0.85, 1.0, 0.85))
 
@@ -8629,6 +8663,7 @@ func _enter_home() -> void:
 	if auto_walk:
 		print("AUTOWALK reached HOME leg at t=%.1f" % elapsed)
 	phase = "home"
+	FreedomGames.end(self)
 	leash.detached = false
 	leash.resnap()
 	leash.visible = true
