@@ -136,7 +136,7 @@ func _find_loot():
 		if bounds.has_point(main.ball.global_position):
 			return {"kind": "ball", "pos": main.ball.global_position}
 	for pp in main.park_props:
-		if String(pp.kind) == "dig" and pp.done and not pp.get("looted", false):
+		if String(pp.kind) == "dig" and pp.done and not pp.get("looted", false) and not pp.get("kept", false):
 			return {"kind": "bone", "pos": pp.pos, "prop": pp}
 	return null
 

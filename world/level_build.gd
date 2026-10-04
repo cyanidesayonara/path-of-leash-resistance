@@ -2194,7 +2194,7 @@ static func build_walls(m: Node2D) -> void:
 	# On the beach the west wall moves out into the water, so she can actually
 	# get in the sea - the whole point of walking a dog along the seafront.
 	# Everywhere else it stays at the level edge.
-	var west_x := -180.0 if m.lvl == "beach" else 40.0
+	var west_x: float = m.FREEDOM_WALL_W if m.lvl == "beach" else 40.0
 	var defs := [
 		[Vector2(west_x, mid_y), Vector2(100, span)],
 		[Vector2(1240.0, mid_y), Vector2(100, span)],
@@ -2208,6 +2208,16 @@ static func build_walls(m: Node2D) -> void:
 		cs.shape = sh
 		cs.position = d[0]
 		walls.add_child(cs)
+	# the off-leash space's bottom fence (and, on the beach, the breakwater
+	# across the water): solid either side of the gate mouth
+	var fy: float = m.GATE_Y - 30.0
+	for seg: Array in [[Vector2(west_x, fy), Vector2(m.gate_l - 20.0, fy)], [Vector2(m.gate_r + 20.0, fy), Vector2(1240.0, fy)]]:
+		var ss := SegmentShape2D.new()
+		ss.a = seg[0]
+		ss.b = seg[1]
+		var fcs := CollisionShape2D.new()
+		fcs.shape = ss
+		walls.add_child(fcs)
 	m.add_child(walls)
 	# THE BUILDING LINE is solid (#65): she used to be able to walk out onto
 	# the roofs, because the only walls were at the level edges. Segments

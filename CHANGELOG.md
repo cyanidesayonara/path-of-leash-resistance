@@ -4,6 +4,40 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-04 - The off-leash break, part 1: fixed, walled in, explained
+
+An audit of every off-leash space (#21) found it leaky and quietly broken.
+
+- **She stays on screen.** The camera's x was fixed at 640, and the space is
+  wider than the view, so she could run off either side (and swim out of
+  sight at the dog beach). Past the gate line the camera now follows her
+  sideways, clamped to the space (`main._cam_x`). `tools/freedom_bounds.gd`
+  drives her flat out in eight directions on every walk and reports any
+  escape or loss of sight.
+- **The bottom fence holds.** It was drawn only, so she could leave anywhere
+  along it and the leash re-snapped across the gap. It is solid either side
+  of the gate mouth now, and on the dog beach a breakwater of rocks (an
+  espigó) carries the line across the water.
+- **Brutus no longer ends fetch.** A ball he ran off with, or that was taken
+  back off him, was never replaced. Your human throws another ("here, another
+  one!").
+- **A bone taken back off Brutus is kept.** He could steal the same bone
+  again and again, worth +9 each time.
+- **Brutus goes home with everyone else.** He stayed behind and went on
+  stealing bones off-screen for the rest of the walk.
+- **Nobody in the sea.** On the dog beach two benches, two parked pairs,
+  Brutus and the free dogs could all start in the water; they start on the
+  sand now.
+- **The bag survives a sit-down.** Your human parking on the bench made the
+  bag vanish, so after the break the bag chore could never finish.
+- **The trough answers.** Drinking laps, and a proper long drink says so,
+  +2 (it was silent: nothing told her the drink goal had been met). Logs can
+  be sniffed like posts.
+- **What else is here.** After fetch, the banner takes turns suggesting what
+  is left (digging, a drink, sniffing round) before pointing home, and
+  heading for the gate mid-fetch warns "LEAVING ALREADY? FETCH ISN'T DONE".
+- New test: `tests/test_freedom_fixes.gd` (11 checks), in CI in place of a
+  duplicated step.
 ## 2026-10-04 - Les Obres' digger, and close-up screenshots
 
 - The parked digger was a yellow disc on two black bars. It is drawn from
