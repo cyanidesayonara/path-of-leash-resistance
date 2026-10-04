@@ -2977,7 +2977,7 @@ func _draw_rambla(vt: float, vb: float) -> void:
 		for corner: Vector2 in [r.position, Vector2(r.end.x, r.position.y), Vector2(r.position.x, r.end.y), r.end]:
 			b.line(corner, corner.lerp(sp, 0.35), Color(0.30, 0.30, 0.34, 0.8), 1.2)
 		b.line(Vector2(r.position.x + 2.0, r.get_center().y), Vector2(r.end.x - 3.0, r.get_center().y), Color(0.84, 0.82, 0.78), 1.0)
-		var bi := int(r.position.y) % 7
+		var bi := posmod(int(r.position.y), 7)
 		for gi in range(6):
 			# laid out by hand: not quite a grid, not quite straight
 			var jx := float((gi * 5 + bi) % 7) - 3.0
@@ -3460,7 +3460,10 @@ func _draw_rambla_stall(st: Vector2, kind: String, i: int) -> void:
 			b.line(Vector2(st.x + 40.0, st.y - 20.0), Vector2(st.x + 26.0, st.y + 22.0), Color(0.45, 0.32, 0.20), 3.0)
 			b.rect(Rect2(st.x + 12.0, st.y - 24.0, 28.0, 20.0), Color(0.98, 0.97, 0.94))
 			b.circle(Vector2(st.x + 26.0, st.y + 30.0), 7.0, Color(0.36, 0.26, 0.18))
-	if kind != "caricature":
+	if kind == "icecream":
+		# the cart is narrower than a stall: they queue at its side
+		_draw_browsers(b, r.grow_individual(-18.0, 0.0, -18.0, 0.0), i)
+	elif kind != "caricature":
 		_draw_browsers(b, r, i)
 	if kind != "icecream" and kind != "caricature" and kind != "painter":
 		# the counter's edges, plasticine-soft: a lit lip along the top and
@@ -9853,8 +9856,9 @@ func _draw_world() -> void:
 	# hatch, the two steel leaves folded back flat either side (tread plate,
 	# hinges), the stair going down into the dark, and the crates waiting on
 	# a sack truck beside it
+	# (Les Obres keeps its trench in `cellars` too, and draws it itself)
 	for c in cellars:
-		if c.end.y < vt - 40.0 or c.position.y > vb + 40.0:
+		if lvl == "site" or c.end.y < vt - 40.0 or c.position.y > vb + 40.0:
 			continue
 		_draw_cellar(c)
 	_draw_skids(vt, vb)
