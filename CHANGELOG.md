@@ -4,6 +4,20 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-05 - A way in for new players (#169, part 1)
+
+- The title asks a new player first: pressing start on a fresh save opens
+  FIRST TIME? "A short walk that shows you the ropes", with learn the ropes on
+  the main button (straight into the tutorial), straight to the walks on the
+  second, and don't ask again on a third (it says so on the card, and it is
+  saved). It stops asking once the tutorial has been walked to the end.
+- The tutorial ends by leading on: its result card offers "on to El Barri",
+  which goes straight into the first real walk with no menu in between, and
+  the bones earned in it are banked rather than thrown away as practice.
+- The first walks open sooner: La Rambla at 1 star, El Parc at 2, the
+  seafront at 3, El Diluvi at 4 (were 2, 3, 4 and 5).
+- `--shot-menu=first` photographs the question.
+
 ## 2026-10-04 - El Parc: audit fixes (#150)
 
 - The flowerbeds are gardens: a low clipped box hedge round each (soft

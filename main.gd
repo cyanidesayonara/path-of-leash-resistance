@@ -5731,6 +5731,9 @@ func _shot_menu(which: String) -> void:
 			_skip_title()
 			MenuFlow.open_pause(self)
 			MenuFlow.open_confirm(self, "exit")
+		"first":
+			# the title's first-walk question, as a new player sees it
+			MenuFlow.open_confirm(self, "first")
 		"notice":
 			_skip_title()
 			_death("OFF THE EDGE\n\nShe went over, and the human went with her.")
@@ -5825,7 +5828,7 @@ func _process(_delta: float) -> void:
 			# reviewed. Everything else about --shot exists to get PAST this.
 			if "--shot-title" in OS.get_cmdline_user_args():
 				return
-			# --shot-menu=walk|details|shop|progress|pause|walkcard|confirm|notice opens that screen
+			# --shot-menu=walk|details|shop|progress|pause|walkcard|confirm|first|notice opens that screen
 			for a in OS.get_cmdline_user_args():
 				if a.begins_with("--shot-menu="):
 					_shot_menu(a.substr(12))

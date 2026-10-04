@@ -444,6 +444,10 @@ func _confirm(vs: Vector2) -> void:
 		HORIZONTAL_ALIGNMENT_CENTER, CONFIRM_W)
 	draw_string(Kit.body(), Vector2(r.position.x, r.position.y + 100.0), String(c.body),
 		HORIZONTAL_ALIGNMENT_CENTER, CONFIRM_W, 19, Kit.INK_SOFT)
+	if String(main.confirm_id) == "first" and not Game.ask_tutorial:
+		# the box, once ticked: it says so on the card as well as in the bar
+		draw_string(Kit.body(), Vector2(r.position.x, r.position.y + 130.0), "It will not ask again.",
+			HORIZONTAL_ALIGNMENT_CENTER, CONFIRM_W, 15, Kit.INK_FAINT)
 
 
 func _notice(vs: Vector2) -> void:

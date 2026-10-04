@@ -57,11 +57,11 @@ func _initialize() -> void:
 	if g.total_stars() != 4:
 		print("FAIL: expected 4 total stars, got %d" % g.total_stars())
 		failures += 1
-	if not g.gate_crossed(3, "beach"):
-		print("FAIL: going 3 -> 4 total stars should cross the beach gate (4)")
+	if not g.gate_crossed(2, "beach"):
+		print("FAIL: going 2 -> 4 total stars should cross the beach gate (3)")
 		failures += 1
-	if g.gate_crossed(4, "beach"):
-		print("FAIL: starting already at 4 should not re-cross the beach gate")
+	if g.gate_crossed(3, "beach"):
+		print("FAIL: starting already at 3 should not re-cross the beach gate")
 		failures += 1
 	if not g.is_unlocked("beach"):
 		print("FAIL: beach should be unlocked at 4 stars")

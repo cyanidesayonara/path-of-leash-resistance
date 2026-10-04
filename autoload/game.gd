@@ -53,7 +53,8 @@ const LEVEL_SUBTITLES := {
 }
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
-const STAR_GATE := {"barri": 0, "street": 2, "park": 3, "beach": 4, "rain": 5, "market": 7, "oldtown": 9, "trail": 11, "station": 13, "site": 15, "spook": 17, "scrap": 19, "guell": 21, "neteja": 23}
+# The first few open quickly, so a new player is never stuck on one walk.
+const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "rain": 4, "market": 7, "oldtown": 9, "trail": 11, "station": 13, "site": 15, "spook": 17, "scrap": 19, "guell": 21, "neteja": 23}
 
 const WEATHERS: Array[String] = ["clear", "rain", "wind", "snow"]
 const WEATHER_NAMES := {"clear": "CLEAR", "rain": "RAIN", "wind": "WIND", "snow": "SNOW"}
@@ -153,6 +154,10 @@ var agility_best := 0.0
 # point is the mess in the middle. Collapsed it is one line; the player
 # decides, and the choice sticks.
 var goals_expanded := false
+# The first walk (the tutorial): whether the title still offers it before the
+# walks, and whether it has been walked to the end.
+var ask_tutorial := true
+var tutorial_done := false
 
 
 func daily_seed() -> int:
@@ -306,6 +311,8 @@ func _reset_persisted_state() -> void:
 	vol_music = DEFAULT_VOL_MUSIC
 	fullscreen = false
 	goals_expanded = false
+	ask_tutorial = true
+	tutorial_done = false
 	agility_best = 0.0
 
 
@@ -359,6 +366,8 @@ func load_records() -> void:
 	vol_music = clampf(float(cf.get_value("settings", "vol_music", DEFAULT_VOL_MUSIC)), 0.0, 1.0)
 	fullscreen = bool(cf.get_value("settings", "fullscreen", false))
 	goals_expanded = bool(cf.get_value("settings", "goals_expanded", false))
+	ask_tutorial = bool(cf.get_value("settings", "ask_tutorial", true))
+	tutorial_done = bool(cf.get_value("global", "tutorial_done", false))
 	agility_best = maxf(0.0, float(cf.get_value("freedom", "agility_best", 0.0)))
 
 
@@ -387,6 +396,8 @@ func save_records() -> void:
 	cf.set_value("settings", "vol_music", vol_music)
 	cf.set_value("settings", "fullscreen", fullscreen)
 	cf.set_value("settings", "goals_expanded", goals_expanded)
+	cf.set_value("settings", "ask_tutorial", ask_tutorial)
+	cf.set_value("global", "tutorial_done", tutorial_done)
 	cf.set_value("freedom", "agility_best", agility_best)
 	cf.save(save_path)
 

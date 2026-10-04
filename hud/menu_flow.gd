@@ -59,6 +59,9 @@ static func prompts(m: Node2D, which := "") -> Array:
 				out.append(["bark", "exit game"])
 			return out
 		"confirm":
+			if String(m.confirm_id) == "first":
+				return [["plant", "learn the ropes"], ["bark", "straight to the walks"],
+					["pee", "ask me again" if not Game.ask_tutorial else "don't ask again"]]
 			return [["plant", "yes"], ["bark", "cancel"]]
 		"walkcard":
 			return [["bark", "back"]]
@@ -97,7 +100,7 @@ static func prompts(m: Node2D, which := "") -> Array:
 
 static func end_prompts(m: Node2D) -> Array:
 	if m.tutorial_mode:
-		return [["bark", "on to the walks"], ["restart", "practise again"]]
+		return [["plant", "on to El Barri"], ["bark", "walk select"], ["restart", "practise again"]]
 	if m.finished:
 		return [["restart", "walk it again"], ["bark", "walk select"]]
 	return [["restart", "try again"], ["bark", "walk select"]]
@@ -232,6 +235,9 @@ static func tick_title(m: Node2D) -> bool:
 	match m.menu_step:
 		0:
 			if Input.is_action_just_pressed("plant"):
+				if Game.ask_tutorial and not Game.tutorial_done:
+					open_confirm(m, "first")
+					return true
 				Sfx.play("ui")
 				_go_step(m, 1)
 			elif Input.is_action_just_pressed("bark") and can_exit():
@@ -432,6 +438,7 @@ static var quit_hook := Callable()
 const CONFIRMS := {
 	"restart": {"title": "START AGAIN", "body": "Start this walk again?"},
 	"exit": {"title": "EXIT GAME", "body": "Quit the game?"},
+	"first": {"title": "FIRST TIME?", "body": "A short walk that shows you the ropes."},
 }
 
 
@@ -467,10 +474,45 @@ static func quit_game(m: Node2D) -> void:
 
 
 static func tick_confirm(m: Node2D) -> void:
+	if String(m.confirm_id) == "first":
+		tick_first(m)
+		return
 	if Input.is_action_just_pressed("plant"):
 		confirm_accept(m)
 	elif Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pause"):
 		confirm_cancel(m)
+
+
+# The title's first-walk question: the tutorial (the default, on the main
+# button), straight to the walks, or a box ticked so it never asks again.
+static func tick_first(m: Node2D) -> void:
+	if Input.is_action_just_pressed("plant"):
+		m.confirm_id = ""
+		Sfx.play("ui")
+		start_tutorial(m)
+	elif Input.is_action_just_pressed("bark"):
+		m.confirm_id = ""
+		Sfx.play("ui")
+		_go_step(m, 1)
+	elif Input.is_action_just_pressed("pee"):
+		Game.ask_tutorial = not Game.ask_tutorial
+		Game.save_records()
+		Sfx.play("ui")
+	elif Input.is_action_just_pressed("pause"):
+		confirm_cancel(m)
+
+
+static func start_tutorial(m: Node2D) -> void:
+	Game.level_id = "tutorial"
+	Game.quick_start = true
+	m.get_tree().reload_current_scene()
+
+
+# Straight from the first walk into the first real one: no menu between.
+static func to_first_walk(m: Node2D) -> void:
+	Game.level_id = "barri"
+	Game.quick_start = true
+	m.get_tree().reload_current_scene()
 
 
 # Straight back into the same walk, skipping the menus: what "try again"
@@ -490,6 +532,9 @@ static func to_walk_select(m: Node2D) -> void:
 
 # Input on a stopped walk: a result, a game-over or the daily card.
 static func tick_end(m: Node2D) -> bool:
+	if m.tutorial_mode and m.finished and Input.is_action_just_pressed("plant"):
+		to_first_walk(m)
+		return true
 	if Input.is_action_just_pressed("restart"):
 		restart_walk(m)
 		return true
