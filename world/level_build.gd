@@ -2062,6 +2062,22 @@ static func build_park_props(m: Node2D) -> void:
 	m.park_props.append({"pos": trough_at, "kind": "trough", "done": false, "prog": 0.0})
 
 
+# Where a council would put a drain or patch a pothole: asphalt and laid
+# paving. Not a park's gravel path, a forest trail, the scrapyard's dirt or
+# El Mosaic's terraces, and on the seafront only the promenade, not the brick
+# bike path beside it.
+const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell"]
+const BEACH_PROM_X := 560.0
+
+
+static func works_ground_at(m: Node2D, p: Vector2) -> bool:
+	if m.lvl in WORKS_FREE or m.tutorial_mode:
+		return false
+	if m.lvl == "beach" and p.x < BEACH_PROM_X:
+		return false
+	return true
+
+
 static func build_ground_detail(m: Node2D) -> void:
 	# a light dusting of wear over the whole walk: hairline cracks, grit,
 	# litter, damp stains. Cheap to draw (culled, and the world redraws at
@@ -2076,13 +2092,17 @@ static func build_ground_detail(m: Node2D) -> void:
 	while y > m.GATE_Y + 20.0:
 		y -= r.randf_range(55.0, 130.0)
 		var kind := r.randi() % 4
-		# now and then a drain grate or an old repair, chosen by position in
-		# the list so the RNG sequence (and every other detail) is unchanged
-		if m.ground_detail.size() % 11 == 7:
-			kind = 4
-		elif m.ground_detail.size() % 17 == 3:
-			kind = 5
 		var x := r.randf_range(m.sw_l + 12.0, m.sw_r - 12.0)
+		# now and then a drain grate or an old repair, chosen by position in
+		# the list so the RNG sequence (and every other detail) is unchanged.
+		# Only in made ground (works_ground_at), and never under the signs at
+		# either end, where a grey box beside the walk's name read as a bug.
+		var works_ok: bool = works_ground_at(m, Vector2(x, y)) \
+			and y < m.START_Y - 420.0 and y > m.GATE_Y + 260.0
+		if works_ok and m.ground_detail.size() % 11 == 7:
+			kind = 4
+		elif works_ok and m.ground_detail.size() % 17 == 3:
+			kind = 5
 		m.ground_detail.append({
 			"pos": Vector2(x, y),
 			"kind": kind,

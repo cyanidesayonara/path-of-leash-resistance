@@ -4453,11 +4453,14 @@ func _draw_ground_detail(vt: float, vb: float) -> void:
 					var sx := p + dir * (-6.0 + float(k) * 4.0)
 					_wc.draw_line(sx + dir.orthogonal() * 4.0, sx - dir.orthogonal() * 4.0, Color(0.08, 0.08, 0.10, 0.8), 1.4)
 			5:
-				# an old repair: a patch of newer, darker surface with a seam
-				var rq := PackedVector2Array([p + dir * 16.0 + dir.orthogonal() * 10.0, p + dir * 14.0 - dir.orthogonal() * 11.0,
-					p - dir * 15.0 - dir.orthogonal() * 9.0, p - dir * 13.0 + dir.orthogonal() * 12.0])
-				_wc.draw_colored_polygon(rq, Color(0.22, 0.22, 0.24, 0.16))
-				_wc.draw_polyline(rq + PackedVector2Array([rq[0]]), Color(0.18, 0.18, 0.20, 0.25), 1.2)
+				# an old repair: an uneven patch of newer, darker surface, its seam
+				# showing only along the edges the roller missed. Six corners, so
+				# it reads as patched ground, not a box set on it
+				var o := dir.orthogonal()
+				var rq := PackedVector2Array([p + dir * 17.0 + o * 6.0, p + dir * 9.0 - o * 11.0,
+					p - dir * 8.0 - o * 10.0, p - dir * 16.0 - o * 2.0, p - dir * 10.0 + o * 11.0, p + dir * 6.0 + o * 12.0])
+				_wc.draw_colored_polygon(rq, Color(0.22, 0.22, 0.24, 0.12))
+				_wc.draw_polyline(PackedVector2Array([rq[4], rq[5], rq[0], rq[1]]), Color(0.18, 0.18, 0.20, 0.22), 1.1)
 			_:
 				# a bit of litter: a leaf or a scrap of paper
 				var c: Color = litter[int(d.sz) % litter.size()]
