@@ -217,6 +217,10 @@ soon as it is written. Other shot flags: `--shot-title`, `--shot-results`,
 photographs the chase), and `--shot-y=N`, which starts the pair at that
 point down the walk (`--shot-y=-2450 --shot-at=40` photographs El Bosc's stream;
 give it 40 frames or so, a shot taken sooner can show the start line's ground).
+`--shot-x=N` puts the pair at that x instead of mid-walk, `--shot-zoom=Z`
+magnifies the shot, and `--shot-cam=X,Y` points the camera at a spot rather
+than the pair, to judge how a prop or a person is drawn
+(`--level=site --shot-y=-1200 --shot-zoom=2.5 --shot-cam=900,-1400` is the digger).
 `--shot-menu=walk|details|shop|progress|pause|walkcard|confirm|notice` opens
 that menu screen (`walkcard` is the pause menu's THIS WALK card, `confirm` its
 EXIT GAME question). `--no-exit` shows the web menus on desktop: no EXIT GAME
