@@ -789,6 +789,34 @@ func _ready() -> void:
 		get_tree().quit(1 if not problems.is_empty() else 0)
 
 
+# the soundtrack: the loop that belongs on screen now (see Sfx.music_tick)
+func _music_cue() -> String:
+	if intro_playing:
+		return ""
+	if not started:
+		return "title"
+	if finished:
+		return "won"
+	# frozen and not paused, mid-walk: a card the walk ended on
+	if frozen and not paused:
+		return "lost"
+	if phase == "freedom":
+		return "freedom"
+	return Music.walk_style(lvl)
+
+
+# ...and the one to have ready for when it changes
+func _music_next() -> String:
+	# the intro is silent and the title theme is next: built while it plays
+	if intro_playing:
+		return "title"
+	if not started:
+		return Music.walk_style(lvl)
+	if phase == "freedom":
+		return Music.walk_style(lvl)
+	return "freedom" if phase != "home" else ""
+
+
 func _input(event: InputEvent) -> void:
 	# the prompts follow whichever device the player last used; text set once
 	# (the pause menu, a death card) is re-filled, and the title's is rebuilt
@@ -5401,6 +5429,7 @@ func _tick_soak() -> void:
 
 
 func _process(_delta: float) -> void:
+	Sfx.music_tick(_music_cue(), _music_next(), started and paused, started and not frozen)
 	if _soak_secs > 0.0:
 		_tick_soak()
 	if not _shot_done and "--shot" in OS.get_cmdline_user_args():

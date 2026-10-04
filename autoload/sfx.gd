@@ -16,8 +16,38 @@ var next_player := 0
 var lib := {}
 var rng := RandomNumberGenerator.new()
 var muted := false
-var music_player: AudioStreamPlayer
 var music_on := true
+
+# --- the soundtrack (audio/music.gd) ---
+# Each loop is synthesised when first wanted: on a thread on desktop, a few
+# milliseconds a frame on the web (no threads there). Until it is ready the
+# loop before it carries on. main.gd says every frame what should be playing,
+# through music_tick(); nothing here knows about walks or menus.
+const MUSIC_DB := -17.0          # loops sit under the effects
+const MUSIC_FADE := 1.4          # seconds for a crossfade
+const MUSIC_KEEP := 6            # loops kept in memory (about 1.6 MB each)
+const MUFFLE_HZ := 650.0         # the pause menu hears the music through a door
+const BUDGET_PLAY := 2000        # usec of synthesis a frame while walking (web)
+const BUDGET_MENU := 7000        # ... and on menus and cards
+const BUDGET_HEAVY := 800        # ... on a frame that already ran long
+var music_player: AudioStreamPlayer       # the loop playing (or fading in)
+var _music_out: AudioStreamPlayer         # the loop fading out
+var _jingle: AudioStreamPlayer
+var _music_cache := {}                    # name -> AudioStreamWAV
+var _music_job: Music.Job
+var _music_thread: Thread
+var _music_cue := ""
+var _music_want := ""                     # the loop that should be playing
+var _music_now := ""                      # the loop that is
+var _music_next := ""                     # the loop to have ready next
+var _music_hold := 0.0                    # seconds a sting keeps the loop away
+var _fade_in := 1.0
+var _fade_out := 0.0
+var _muffle_bus := -1
+var _muffled := false
+var _menu_budget := true
+# no synthesis headless (CI, tests, tools) or while photographing
+var music_enabled := DisplayServer.get_name() != "headless" and not "--shot" in OS.get_cmdline_user_args()
 
 
 func _ready() -> void:
@@ -28,31 +58,161 @@ func _ready() -> void:
 		add_child(p)
 		players.append(p)
 	_build_library()
+	if not music_enabled:
+		return
+	var bus := _music_bus()
 	music_player = AudioStreamPlayer.new()
-	music_player.volume_db = -16.0  # ambient, well under the SFX
-	music_player.stream = _build_music()
-	add_child(music_player)
+	_music_out = AudioStreamPlayer.new()
+	_jingle = AudioStreamPlayer.new()
+	for pl: AudioStreamPlayer in [music_player, _music_out, _jingle]:
+		pl.bus = bus
+		add_child(pl)
+
+
+# the music's own bus, so the pause muffle leaves the effects alone
+func _music_bus() -> String:
+	var bus_name := "Music"
+	_muffle_bus = AudioServer.get_bus_index(bus_name)
+	if _muffle_bus < 0:
+		AudioServer.add_bus()
+		_muffle_bus = AudioServer.bus_count - 1
+		AudioServer.set_bus_name(_muffle_bus, bus_name)
+		AudioServer.set_bus_send(_muffle_bus, "Master")
+		var lp := AudioEffectLowPassFilter.new()
+		lp.cutoff_hz = MUFFLE_HZ
+		AudioServer.add_bus_effect(_muffle_bus, lp)
+		AudioServer.set_bus_effect_enabled(_muffle_bus, 0, false)
+	return bus_name
 
 
 func start_music() -> void:
 	apply_music_volume()
-	if music_on and music_player != null and not music_player.playing:
-		music_player.play()
 
 
 func apply_music_volume() -> void:
 	if music_player == null:
 		return
-	# -16db was the hardcoded ambient level; the setting scales from there
-	music_player.volume_db = -16.0 + linear_to_db(clampf(Game.vol_music, 0.0001, 1.0)) + 6.0
+	var base := MUSIC_DB + linear_to_db(clampf(Game.vol_music, 0.0001, 1.0)) + 6.0
+	music_player.volume_db = base + linear_to_db(maxf(_fade_in, 0.0001))
+	_music_out.volume_db = base + linear_to_db(maxf(_fade_out, 0.0001))
+	_jingle.volume_db = base + 2.0
 
 
 func toggle_music() -> void:
 	music_on = not music_on
-	if music_on:
-		music_player.play()
-	else:
+	if music_player == null:
+		return
+	if not music_on:
 		music_player.stop()
+		_music_out.stop()
+		_jingle.stop()
+		_music_now = ""
+
+
+# Called by main every frame. `cue` is the loop that belongs on screen now:
+# "" for silence, or "won" / "lost" for an end-of-walk sting, which then gives
+# way to the title theme. `next` is the loop to have ready, `paused` muffles
+# the music, and `playing` keeps synthesis to a small slice of the frame.
+func music_tick(cue: String, next: String, paused: bool, playing: bool) -> void:
+	if music_player == null:
+		return
+	_menu_budget = not playing
+	_music_next = next
+	if cue != _music_cue:
+		_music_cue = cue
+		if cue == "won" or cue == "lost":
+			_music_want = "title"
+			_play_sting(cue)
+		else:
+			_music_want = cue
+			_music_hold = 0.0
+			_jingle.stop()
+	if _muffled != paused:
+		_muffled = paused
+		AudioServer.set_bus_effect_enabled(_muffle_bus, 0, paused)
+
+
+func _play_sting(sting: String) -> void:
+	# the walk's loop gets out of the way
+	_crossfade("")
+	_music_hold = 1.5
+	if music_on and _music_cache.has(sting):
+		_jingle.stream = _music_cache[sting]
+		_jingle.play()
+		_music_hold = _jingle.stream.get_length() + 1.2
+
+
+func _process(delta: float) -> void:
+	if music_player == null:
+		return
+	_music_work(delta)
+	if _music_hold > 0.0:
+		_music_hold -= delta
+	elif _music_want != _music_now and music_on:
+		if _music_want == "" or _music_cache.has(_music_want):
+			_crossfade(_music_want)
+	_fade_in = minf(1.0, _fade_in + delta / MUSIC_FADE)
+	_fade_out = maxf(0.0, _fade_out - delta / MUSIC_FADE)
+	if _fade_out <= 0.0 and _music_out.playing:
+		_music_out.stop()
+	apply_music_volume()
+
+
+# swap the players: the old loop fades out where it is, the new one fades in.
+# Mid-crossfade, the quieter of the two is the one cut.
+func _crossfade(loop_name: String) -> void:
+	_music_now = loop_name
+	if music_player.playing and not (_music_out.playing and _fade_out > _fade_in):
+		var t := _music_out
+		_music_out = music_player
+		music_player = t
+		_fade_out = _fade_in
+	music_player.stop()
+	_fade_in = 0.0
+	if loop_name != "" and music_on:
+		music_player.stream = _music_cache[loop_name]
+		music_player.play()
+
+
+# Keep one track rendering: the loop wanted now, then the next one, then the
+# stings. Finished tracks go in the cache, which keeps the few in use.
+func _music_work(delta: float) -> void:
+	if _music_job != null:
+		if _music_thread != null:
+			if _music_job.done():
+				_music_thread.wait_to_finish()
+				_music_thread = null
+				_music_finish()
+			return
+		var budget := BUDGET_MENU if _menu_budget else BUDGET_PLAY
+		if delta > 1.0 / 40.0:
+			budget = BUDGET_HEAVY
+		if _music_job.step(budget):
+			_music_finish()
+		return
+	for track: String in [_music_want, _music_next, "won", "lost"]:
+		if track != "" and not _music_cache.has(track):
+			_music_job = Music.job(track)
+			if not OS.has_feature("web"):
+				_music_thread = Thread.new()
+				_music_thread.start(_music_job.run, Thread.PRIORITY_LOW)
+			return
+
+
+func _music_finish() -> void:
+	_music_cache[_music_job.name] = _music_job.stream
+	_music_job = null
+	if _music_cache.size() > MUSIC_KEEP:
+		for k: String in _music_cache.keys():
+			if not k in [_music_want, _music_now, _music_next, "won", "lost"]:
+				_music_cache.erase(k)
+				break
+
+
+func _exit_tree() -> void:
+	if _music_thread != null:
+		_music_job.cancel = true
+		_music_thread.wait_to_finish()
 
 
 func play(name: String, pitch := 1.0, vol_db := -6.0) -> void:
@@ -94,55 +254,6 @@ func _build_library() -> void:
 	lib["rustle"] = _noiseburst(0.20, 12.0)
 	lib["grit"] = _noiseburst(0.07, 46.0)
 
-
-# --- music -------------------------------------------------------------
-
-func _build_music() -> AudioStreamWAV:
-	# a gentle, looping ambient bed: soft sine bass + a quiet fifth pad
-	# under a sparse C-pentatonic melody, over an I-vi-IV-V progression.
-	# Deliberately calm so it never grates on repeat.
-	var beat := 60.0 / 80.0        # 80 BPM
-	var bar := beat * 4.0
-	var bars := 8
-	var n := int(bar * bars * RATE)
-	var out := PackedFloat32Array()
-	out.resize(n)
-	# roots for C - Am - F - G, twice
-	var roots := [130.81, 110.0, 87.31, 98.0, 130.81, 110.0, 87.31, 98.0]
-	var pent := [261.63, 293.66, 329.63, 392.0, 440.0]  # C D E G A
-	for b in range(bars):
-		var root: float = roots[b]
-		var base := int(b * bar * RATE)
-		var bn := int(bar * RATE)
-		for i in range(bn):
-			var idx := base + i
-			if idx >= n:
-				break
-			var t := float(i) / RATE
-			var swell: float = sin(PI * clampf(t / bar, 0.0, 1.0))  # breathe per bar
-			var bass := sin(TAU * root * t) * 0.16 * (0.6 + 0.4 * swell)
-			var pad := (sin(TAU * root * 1.5 * t) + sin(TAU * root * 2.0 * t)) * 0.03 * swell
-			out[idx] += bass + pad
-		# sparse melody: a soft pentatonic note on a couple of beats
-		for nb in [0, 2, 3]:
-			if rng.randf() < 0.55:
-				var mf: float = pent[rng.randi() % pent.size()]
-				var mbase := base + int(nb * beat * RATE)
-				var mn := int(beat * 0.9 * RATE)
-				for i in range(mn):
-					var idx := mbase + i
-					if idx >= n:
-						break
-					var t := float(i) / RATE
-					out[idx] += sin(TAU * mf * t) * exp(-t * 3.2) * 0.14
-	var s := _pack(out)
-	s.loop_mode = AudioStreamWAV.LOOP_FORWARD
-	s.loop_begin = 0
-	s.loop_end = n
-	return s
-
-
-# --- synthesis helpers -------------------------------------------------
 
 func _pack(samples: PackedFloat32Array) -> AudioStreamWAV:
 	var bytes := PackedByteArray()
