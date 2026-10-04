@@ -35,6 +35,26 @@ Append-only session history, newest first.
   `systems/freedom_games.gd` (the glue), `world/games_layer.gd`;
   `tests/test_freedom_games.gd` (rules) and `tests/test_freedom_games_live.gd`
   (in a level) in CI; `tools/games_shots.gd` photographs the games' moments.
+## 2026-10-04 - A new soundtrack
+
+- One tune, sixteen bars in D, arranged for every walk on synthesised
+  instruments (`audio/music.gd`): a marimba title theme, a whistled barri, a
+  bossa on the seafront, El Gòtic in D minor on Spanish guitar with
+  castanets, an accordion oompah in the market, a rumba catalana in the Güell
+  park, a music-box spook walk, a driving minor chase for the street
+  cleaners, and so on, fifteen loops in all. The off-leash space has its own
+  loop, and a walk ends on a short sting (a fanfare, or a sad trombone)
+  before the title theme comes back.
+- Loops crossfade, and the pause menu hears the music as if through a door.
+  The intro plays without music; the title theme starts on the title screen.
+- Each loop is synthesised when first wanted (about 1.4 s of work on
+  desktop): on a thread on desktop, so it costs no frame time; in small
+  slices on the web, about 2 ms a frame while walking and less when a frame
+  is already heavy. The loop playing carries on until the next is ready. No
+  music is built headless or in screenshot mode.
+- `tools/render_music.gd` writes any style to a WAV; `tests/test_music.gd`
+  checks every walk has an arrangement, that a sliced render is identical
+  to a whole one, and that loops are healthy and equally loud.
 
 ## 2026-10-04 - An intro: "Walkies?" (nine rounds of polish)
 
