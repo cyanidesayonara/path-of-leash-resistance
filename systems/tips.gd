@@ -10,6 +10,9 @@ extends RefCounted
 
 const SHOW_S := 6.0
 
+# tests set this to exercise tips in a headless run
+static var force_headless := false
+
 const TEXT := {
 	"start": "{plant} DIGS IN WHEN THEY PULL. {pee} MARKS A SPOT",
 	"crack": "KEEP YOUR HUMAN ON THEIR FEET. THREE CRACKS AND THE PHONE IS GONE",
@@ -22,6 +25,12 @@ const TEXT := {
 # Show a tip if this player has never seen it. True when it was shown.
 static func show(m: Node2D, id: String) -> bool:
 	if m.tutorial_mode or m.auto_walk or not TEXT.has(id) or Game.tips_seen.has(id):
+		return false
+	# not for test and tool runs: they would spend the player's tips and
+	# write their save, and screenshots want the walk's own banner
+	if DisplayServer.get_name() == "headless" and not force_headless:
+		return false
+	if "--shot" in OS.get_cmdline_user_args():
 		return false
 	Game.tips_seen.append(id)
 	Game.save_records()

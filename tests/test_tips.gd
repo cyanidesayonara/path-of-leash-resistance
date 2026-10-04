@@ -34,6 +34,8 @@ func _run() -> void:
 		await physics_frame
 	m._skip_title()
 	var T: GDScript = load("res://systems/tips.gd")
+	_check(not T.show(m, "teeter"), "no tips in a headless run")
+	T.force_headless = true
 
 	for id: String in T.TEXT:
 		var raw := String(T.TEXT[id])
