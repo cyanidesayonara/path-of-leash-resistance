@@ -130,6 +130,8 @@ var daily := false
 var menu_step := 0
 # set by "try again": the next scene load starts the same walk at once
 var quick_start := false
+# the intro has played this session (intro/intro_player.gd): once is plenty
+var intro_seen := false
 # local records per level + the spendable bones wallet
 var records := {}
 var total_bones := 0

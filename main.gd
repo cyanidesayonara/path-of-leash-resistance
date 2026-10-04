@@ -18,6 +18,8 @@ var sw_r := 980.0
 # built is false on the green walks and the seafront, which keep their verge
 # out to the level edge and have no building line.
 var built := false
+# the intro is playing over the title (intro/intro_player.gd)
+var intro_playing := false
 # where --shot-cam points the camera (INF: follow the pair as usual)
 var shot_cam := Vector2(INF, INF)
 var strip_l := 0.0
@@ -771,6 +773,9 @@ func _ready() -> void:
 		cam.position = dog.global_position
 		_enter_freedom()
 	Sfx.start_music()
+	# the intro, on a plain launch, once a session (intro/intro_player.gd)
+	if not started and IntroPlayer.should_play(self):
+		IntroPlayer.play(self)
 	# --selftest: validate the level we just built and exit. Runs inside the
 	# real runtime (autoloads and all), so CI can sweep every walk for
 	# content mistakes a pure-logic test cannot see.
@@ -5511,6 +5516,10 @@ func _process(_delta: float) -> void:
 				print("SHOT saved to %s" % out)
 			if "--shot-quit" in OS.get_cmdline_user_args():
 				get_tree().quit(0 if err == OK else 1)
+	# while the intro plays the title screen waits: the key that skips the
+	# intro must not also start a walk, restart, or toggle the music
+	if intro_playing:
+		return
 	if in_settings:
 		_tick_settings()
 		return

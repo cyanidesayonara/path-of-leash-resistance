@@ -11,7 +11,7 @@ extends SceneTree
 var checks := 0
 var failures: Array[String] = []
 
-const SOURCES := ["res://main.gd", "res://hud", "res://systems", "res://world", "res://entities", "res://autoload"]
+const SOURCES := ["res://main.gd", "res://hud", "res://systems", "res://world", "res://entities", "res://autoload", "res://intro"]
 const KEY_NAMES := ["SPACE", "ESC", "SHIFT", "TAB", "WASD"]
 
 

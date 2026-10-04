@@ -4,6 +4,39 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-04 - An intro: "Walkies?" (nine rounds of polish)
+
+- After four frame-by-frame critiques and Santtu's notes: the leash is a
+  simulated rope (settled at rest, carried gathered, draped, taut when
+  pulled); shadows stay on the floor; Millie glances with her eyes, sits for
+  real, arcs her jump to the hook, drops the loop on the knee and bumps the
+  phone from below; your human is absorbed in the phone, takes the loop
+  without looking, tips forward on the yank and flies out; both go through
+  the door, shrinking with distance into its light; the title's O is a red
+  collar on a leash hanging from the top of the screen; on a daylight street
+  she tows your human, leaning back and skidding, out of frame.
+## 2026-10-04 - An intro: "Walkies?"
+
+- The game opens on a short animated film (about 14 seconds), in a new side-on
+  look: soft clay forms with a thin dark outline, animated on twos with a
+  little boil. Morning in the flat; your human on the sofa, lit by the phone;
+  Millie fetches the leash off its hook, drops it at their feet, waits,
+  nudges the phone ("..."), sighs, and once they take the loop without looking
+  up, crouches and yanks them off the sofa and out of the door into the sun.
+  The title swings down on its leash and she tows them past along the bottom.
+- It plays on a plain launch, once a session, with sound on its beats, and any
+  key, click, tap or pad button skips it into the title screen. Never
+  headless and never with command-line arguments, so screenshots, the
+  autowalk, the soak and tests never wait on it (`intro/intro_player.gd`).
+- Side-on puppets for Millie and your human (`intro/millie_side.gd`,
+  `intro/human_side.gd`), a keyframe and easing toolkit (`intro/anim.gd`),
+  and the title card (`intro/title_card.gd`), reusable for more animation
+  later (an end-of-walk scene, unlocks).
+- Tooling: `tools/intro_render.gd` renders a scene frame by frame to PNGs and
+  `tools/frames_to_gif.py` joins them into a GIF; `tools/intro_style.gd`
+  draws the three looks that were compared. The two other storyboards,
+  "Down from the rooftops" and "The title fights back", are kept as
+  renderable scenes.
 ## 2026-10-04 - The README, Store listing and itch page say what the game is now
 
 - No tagline any more. "You are the dog. Go touch grass." is gone from the
