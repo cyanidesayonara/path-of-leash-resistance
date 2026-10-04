@@ -40,6 +40,8 @@ const LEVEL_GOAL_IDS := {
 	# surviving it, which finishing already proves.
 	"neteja": ["mark", "sniff", "phone", "paws", "bag", "fetch", "hi", "snack",
 		"combo", "prize", "outrun"],
+	# Montjuic: the climb, with the park staples
+	"montjuic": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "combo", "prize"],
 }
 
 

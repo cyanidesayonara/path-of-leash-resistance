@@ -855,6 +855,7 @@ static func apply_corridor(m: Node2D) -> void:
 		# street it fills. Its body is 276 wide and its brush head is the full
 		# corridor, so there is no getting round it - only ahead of it.
 		"neteja": half = 185.0
+		"montjuic": half = 175.0   # a hillside path, winding (Montjuic.edge_nodes)
 	m.walk_cx = 640.0
 	m.walk_half = half
 	m.sw_l = m.walk_cx - m.walk_half
@@ -999,6 +1000,8 @@ static func apply_corridor(m: Node2D) -> void:
 			{"y": -3330.0, "cx": 640.0, "half": 230.0},
 			{"y": m.GATE_Y, "cx": 640.0, "half": 230.0},
 		]
+	elif m.lvl == "montjuic":
+		m.edge_nodes = Montjuic.edge_nodes(m)
 	elif m.lvl == "trail":
 		# EL BOSC BENDS - the first walk in the game that is not a straight
 		# line. A woodland trail has no business being ruler-drawn: it wanders
@@ -1082,6 +1085,8 @@ static func build_level_data(m: Node2D) -> void:
 	elif m.lvl == "guell":
 		geo = "park"
 	match geo:
+		"montjuic":
+			hyd_list.assign(Montjuic.build(m))
 		"street":
 			m.lane_ys = Array([-1200.0, -2600.0, -4000.0], TYPE_FLOAT, &"", null)
 			m.gate_text = "PIPICÀ"

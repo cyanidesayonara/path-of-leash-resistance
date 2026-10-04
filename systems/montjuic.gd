@@ -1,0 +1,352 @@
+class_name Montjuic
+extends RefCounted
+
+# MONTJUÏC, the climb (La Pujada). A top-down view has no up, so the climb is
+# sold by everything round it at once:
+# - the path winds left and right up the hill (the walk's edge_nodes);
+# - terraces: stone retaining walls across the hillside, each casting its
+#   shadow down onto the one below, with a short flight of steps where the
+#   path cuts through, handrail posts the rope can catch on;
+# - the hill narrows as it rises and the city falls away past its rim, the
+#   rooftops smaller and hazier the higher she gets, the port and the sea
+#   opening up near the top;
+# - effort: your human slows on the way up (a dog leading on the leash helps,
+#   through the leash conversation's give) and speeds up on the way home;
+# - stone posts give the height in metres;
+# - wind that rises with the climb, in gusts, each one telegraphed by leaves
+#   streaking past and a whoosh before it shoves.
+# Static functions over main's state, like the other systems.
+
+const TOP_M := 173.0              # the castle's height, near enough
+const UPHILL := 0.72              # your human's pace on the climb
+const DOWNHILL := 1.22            # ...and on the way back down
+const STEPS_SLOW := 0.82          # on a flight of steps, going up
+const DOG_SLOPE := 0.5            # the dog feels half of it
+const TERRACE_STEP := 300.0       # a retaining wall every this far up
+const STEP_H := 34.0              # the flight of steps where the path cuts a wall
+const HILL_BOTTOM := 820.0        # the hill's half-width at the foot...
+const HILL_TOP := 400.0           # ...and at the top
+const GUST_WARN := 0.8            # the telegraph, as every hazard has
+const GUST_S := 0.9
+const GUST_FORCE := 300.0         # px/s/s on the dog at the top
+const GUST_EVERY := Vector2(6.0, 11.0)
+
+
+static func is_on(m: Node2D) -> bool:
+	return m.lvl == "montjuic"
+
+
+# 0 at the foot of the hill, 1 at the castle gate
+static func climb(m: Node2D, y: float) -> float:
+	return clampf((m.START_Y - y) / (m.START_Y - m.GATE_Y), 0.0, 1.0)
+
+
+static func hill_half(m: Node2D, y: float) -> float:
+	return lerpf(HILL_BOTTOM, HILL_TOP, climb(m, y))
+
+
+static func terrace_ys(m: Node2D) -> Array[float]:
+	var out: Array[float] = []
+	var y: float = m.START_Y - 260.0
+	while y > m.GATE_Y + 200.0:
+		out.append(y)
+		y -= TERRACE_STEP
+	return out
+
+
+static func on_steps(m: Node2D, y: float) -> bool:
+	var k := roundf((m.START_Y - 260.0 - y) / TERRACE_STEP)
+	var wy: float = m.START_Y - 260.0 - k * TERRACE_STEP
+	return y <= wy + 6.0 and y >= wy - STEP_H - 6.0
+
+
+# Pace on the slope: uphill out, downhill home, slower again on the steps.
+# Exactly 1.0 on every other walk.
+static func slope_mult(m: Node2D, y: float, fwd_y: float) -> float:
+	if not is_on(m) or y > m.START_Y or y < m.GATE_Y:
+		return 1.0
+	if fwd_y < 0.0:
+		return UPHILL * (STEPS_SLOW if on_steps(m, y) else 1.0)
+	return DOWNHILL
+
+
+static func dog_slope_mult(m: Node2D, y: float, vel_y: float) -> float:
+	if not is_on(m) or absf(vel_y) < 20.0:
+		return 1.0
+	return lerpf(1.0, slope_mult(m, y, signf(vel_y)), DOG_SLOPE)
+
+
+# --- the build -----------------------------------------------------------------
+
+# The path, winding up: each turn as sharp as level_check allows (a peak
+# slope under 0.85 through the smoothstep), half the width of a park path.
+static func edge_nodes(m: Node2D) -> Array:
+	return [
+		{"y": m.START_Y, "cx": 640.0, "half": 200.0},
+		{"y": -500.0, "cx": 430.0, "half": 175.0},
+		{"y": -1350.0, "cx": 850.0, "half": 170.0},
+		{"y": -2200.0, "cx": 430.0, "half": 165.0},
+		{"y": -3050.0, "cx": 850.0, "half": 165.0},
+		{"y": -3900.0, "cx": 430.0, "half": 170.0},
+		{"y": -4600.0, "cx": 640.0, "half": 190.0},
+		{"y": m.GATE_Y, "cx": 640.0, "half": 200.0},
+	]
+
+
+static func build(m: Node2D) -> Array:
+	m.gate_text = "EL CASTELL"
+	# Aleppo pines along the path's edges (the rope wraps them), in the 300..980
+	# authored space the corridor fit maps onto the bends
+	var y := -380.0
+	var side := 0
+	while y > m.GATE_Y + 260.0:
+		if not on_steps(m, y):
+			m.poles.append(Vector2(300.0 if side % 2 == 0 else 980.0, y))
+		y -= 230.0
+		side += 1
+	# the handrails up each flight of steps: a post each side, top and bottom
+	for wy: float in terrace_ys(m):
+		for px: float in [300.0, 980.0]:
+			m.poles.append(Vector2(px, wy - STEP_H - 2.0))
+	m.deco_pole_count = m.poles.size()
+	m.bins = Array([Vector2(m.sw_l + 30, -700), Vector2(m.sw_r - 30, -2900), Vector2(m.sw_l + 30, -4400)],
+		TYPE_VECTOR2, &"", null)
+	# benches where the view is, on the outside of the bends
+	m.benches = Array([Vector2(960, -1350), Vector2(320, -2200), Vector2(960, -3050)], TYPE_VECTOR2, &"", null)
+	m.cone_spots = Array([Vector2(700, -1700), Vector2(560, -3500)], TYPE_VECTOR2, &"", null)
+	# a drinking fountain at the halfway viewpoint, as the hill's paths have
+	m.fountains = Array([Vector2(m.sw_r - 50, -2650)], TYPE_VECTOR2, &"", null)
+	# waymarker posts where hydrants stand in town
+	return [
+		Vector2(m.sw_l + 45, -900), Vector2(m.sw_r - 45, -1900), Vector2(m.sw_l + 45, -3300),
+		Vector2(m.sw_r - 45, -4300),
+	]
+
+
+# --- the wind -------------------------------------------------------------------
+
+static func tick_wind(m: Node2D, delta: float) -> void:
+	if not is_on(m) or m.phase == "freedom" or m.frozen:
+		return
+	if m.wind_rng_seeded == false:
+		m.wind_rng.seed = 0x4D4A
+		m.wind_rng_seeded = true
+		m.wind_next = m.wind_rng.randf_range(GUST_EVERY.x, GUST_EVERY.y)
+	var h := climb(m, m.dog.global_position.y)
+	if m.wind_gust > 0.0:
+		m.wind_gust -= delta
+		var f := 0.3 + 0.7 * h
+		var swell := sin(PI * clampf(1.0 - m.wind_gust / GUST_S, 0.0, 1.0))
+		m.dog.velocity += m.wind_dir * GUST_FORCE * f * swell * delta
+		m.human.velocity += m.wind_dir * GUST_FORCE * 0.3 * f * swell * delta
+		return
+	if m.wind_warn > 0.0:
+		m.wind_warn -= delta
+		if m.wind_warn <= 0.0:
+			m.wind_gust = GUST_S
+		return
+	m.wind_next -= delta
+	if m.wind_next <= 0.0 and h > 0.12:
+		m.wind_warn = GUST_WARN
+		m.wind_next = m.wind_rng.randf_range(GUST_EVERY.x, GUST_EVERY.y) * lerpf(1.3, 0.75, h)
+		# off the sea, mostly: from one side, a little down the hill
+		var s := -1.0 if m.wind_rng.randf() < 0.65 else 1.0
+		m.wind_dir = Vector2(s, m.wind_rng.randf_range(0.0, 0.35)).normalized()
+		Sfx.play("hiss", 0.45, -8.0)
+		m.float_text(m.dog.global_position + Vector2(-s * 60.0, -30.0), "whoooosh", Color(0.92, 0.95, 1.0))
+
+
+# --- drawing --------------------------------------------------------------------
+
+const SAULO := Color(0.78, 0.70, 0.54)        # the paths' packed sand
+const HILL := Color(0.46, 0.50, 0.30)         # dry Mediterranean scrub
+const STONE := Color(0.70, 0.64, 0.54)
+const HAZE := Color(0.72, 0.78, 0.84)
+const SEA := Color(0.30, 0.50, 0.68)
+
+
+# The hillside, under the path: a polygon between its rims, which narrow as it
+# climbs. (Past the rims the edge layer shows the city below.)
+static func draw_hill(m: Node2D, c: Object, vt: float, vb: float) -> void:
+	# in horizontal strips, rim to rim (a single long polygon with wavy sides
+	# does not always triangulate)
+	var left := PackedVector2Array()
+	var right := PackedVector2Array()
+	var y := floorf((vt - 60.0) / 20.0) * 20.0
+	var y1 := vb + 60.0
+	while y <= y1:
+		var e: Vector2 = m.walk_edges(y + 10.0)
+		var cx := (e.x + e.y) * 0.5
+		var hh := hill_half(m, y + 10.0) + sin((y + 10.0) * 0.013) * 26.0
+		c.draw_rect(Rect2(cx - hh, y, hh * 2.0, 21.0), HILL)
+		left.append(Vector2(cx - hh, y + 10.0))
+		right.append(Vector2(cx + hh, y + 10.0))
+		y += 20.0
+	# the rim: rock breaking out where the hill drops away
+	for pts: PackedVector2Array in [left, right]:
+		c.draw_polyline(pts, Color(0.36, 0.33, 0.27), 7.0)
+		c.draw_polyline(pts, Color(0.58, 0.54, 0.44), 3.0)
+
+
+# What stands on the hill: the terraces and their steps, pines and agaves,
+# the height posts, and, in a gust, the wind itself.
+static func draw_on_hill(m: Node2D, c: Object, vt: float, vb: float) -> void:
+	# straight onto the world's canvas batch: it can pass text through
+	var b: ShapeBatch = c if c is ShapeBatch else ShapeBatch.new(c as CanvasItem)
+	for wy: float in terrace_ys(m):
+		if wy < vt - 80.0 or wy > vb + 80.0:
+			continue
+		var e: Vector2 = m.walk_edges(wy)
+		var cx := (e.x + e.y) * 0.5
+		var hh := hill_half(m, wy) + sin(wy * 0.013) * 26.0
+		# the wall: its cap along the top, its face below in shadow, and the
+		# shade it throws on the terrace beneath
+		for seg: Vector2 in [Vector2(cx - hh, e.x - 4.0), Vector2(e.y + 4.0, cx + hh)]:
+			if seg.y - seg.x < 8.0:
+				continue
+			b.rect(Rect2(seg.x, wy + 14.0, seg.y - seg.x, 22.0), Color(0, 0, 0, 0.16))
+			b.rect(Rect2(seg.x, wy, seg.y - seg.x, 14.0), STONE.darkened(0.30))
+			b.rect(Rect2(seg.x, wy - 6.0, seg.y - seg.x, 7.0), STONE)
+			b.rect(Rect2(seg.x, wy - 6.0, seg.y - seg.x, 2.0), STONE.lightened(0.25))
+			var jx := seg.x + 18.0
+			while jx < seg.y - 6.0:
+				b.line(Vector2(jx, wy + 1.0), Vector2(jx, wy + 13.0), STONE.darkened(0.42), 1.2)
+				jx += 26.0
+		# the flight of steps where the path cuts through it
+		for k in range(4):
+			var sy := wy - float(k) * (STEP_H / 4.0)
+			var se: Vector2 = m.walk_edges(sy)
+			b.rect(Rect2(se.x, sy - 3.0, se.y - se.x, 3.0), SAULO.darkened(0.22))
+			b.rect(Rect2(se.x, sy - 5.0, se.y - se.x, 2.0), SAULO.lightened(0.12))
+		# pier ends where the wall meets the path
+		for px: float in [e.x - 8.0, e.y + 2.0]:
+			b.rect(Rect2(px, wy - 8.0, 8.0, 24.0), STONE.darkened(0.12))
+		# the height, cut in a stone post at every third wall
+		var k3 := int(roundf((m.START_Y - 260.0 - wy) / TERRACE_STEP))
+		if k3 % 3 == 1:
+			var post := Vector2(e.x - 30.0, wy - 26.0)
+			b.rect(Rect2(post.x - 12.0, post.y - 10.0, 24.0, 20.0), STONE.darkened(0.08))
+			b.rect(Rect2(post.x - 12.0, post.y - 10.0, 24.0, 3.0), STONE.lightened(0.2))
+			var metres := int(roundf(climb(m, wy) * TOP_M / 5.0) * 5.0)
+			b.draw_string(ThemeDB.fallback_font, post + Vector2(-10, 5), "%dm" % metres,
+				HORIZONTAL_ALIGNMENT_LEFT, 24, 11, Color(0.22, 0.18, 0.14))
+	# agaves and prickly pears on the terraces, pines leaning out over the rim
+	var y := floorf((vt - 120.0) / 140.0) * 140.0
+	while y < vb + 120.0:
+		var e2: Vector2 = m.walk_edges(y)
+		var cx2 := (e2.x + e2.y) * 0.5
+		var hh2 := hill_half(m, y)
+		var k := int(absf(y) / 140.0)
+		for s: float in [-1.0, 1.0]:
+			var inner: float = e2.x - 50.0 if s < 0.0 else e2.y + 50.0
+			var outer := cx2 + s * (hh2 - 40.0)
+			if absf(outer - inner) < 60.0:
+				continue
+			var f := float((k * 7 + int(s + 1.0) * 3) % 10) / 10.0
+			var p := Vector2(lerpf(inner, outer, 0.25 + 0.6 * f), y + float(k % 3) * 20.0)
+			if k % 3 == 0:
+				_agave(b, p)
+			elif k % 3 == 1:
+				_prickly_pear(b, p)
+			else:
+				_pine(b, Vector2(outer - s * 20.0, y), s)
+		y += 140.0
+	# the wind, seen: leaves and streaks across the view while a gust is
+	# coming and while it blows
+	var w: float = m.wind_warn + m.wind_gust
+	if w > 0.0:
+		var t := AnimClock.msec() / 1000.0
+		var a: float = 0.5 if m.wind_gust > 0.0 else 0.35 * (1.0 - m.wind_warn / GUST_WARN)
+		var d: Vector2 = m.wind_dir
+		var cam: Vector2 = m.cam.global_position
+		for i in range(18):
+			var row := float(i) / 18.0
+			var run := fmod(t * 520.0 + float(i) * 173.0, 1500.0) - 750.0
+			var p0 := cam + Vector2(-d.x * run, (row - 0.5) * 680.0 + d.y * run * 0.3)
+			b.line(p0, p0 + d * 46.0, Color(1, 1, 1, a * 0.6), 1.5)
+			if i % 3 == 0:
+				b.circle(p0 + d * 50.0, 3.0, Color(0.56, 0.58, 0.28, a))
+	if b != c:
+		b.flush()
+
+
+static func _agave(b: ShapeBatch, p: Vector2) -> void:
+	b.circle(p + Vector2(4, 5), 12.0, Color(0, 0, 0, 0.14))
+	for i in range(7):
+		var a := TAU * float(i) / 7.0
+		b.line(p, p + Vector2.from_angle(a) * 15.0, Color(0.42, 0.58, 0.52), 4.0)
+	b.circle(p, 4.0, Color(0.50, 0.66, 0.58))
+
+
+static func _prickly_pear(b: ShapeBatch, p: Vector2) -> void:
+	b.circle(p + Vector2(4, 5), 12.0, Color(0, 0, 0, 0.14))
+	for q: Vector2 in [Vector2(0, 0), Vector2(-9, -8), Vector2(8, -9), Vector2(2, -17)]:
+		b.circle(p + q, 7.0, Color(0.34, 0.52, 0.30))
+		b.circle(p + q + Vector2(-1.5, -1.5), 3.5, Color(0.42, 0.60, 0.36))
+	b.circle(p + Vector2(8, -15), 2.2, Color(0.86, 0.36, 0.40))
+
+
+static func _pine(b: ShapeBatch, p: Vector2, s: float) -> void:
+	# an umbrella crown, leaning out over the drop
+	var crown := p + Vector2(s * 16.0, -6.0)
+	b.circle(crown + Vector2(10, 12), 24.0, Color(0, 0, 0, 0.16))
+	b.line(p, crown, Color(0.42, 0.30, 0.20), 4.0)
+	b.circle(crown, 22.0, Color(0.20, 0.34, 0.20))
+	b.circle(crown + Vector2(-5, -5), 14.0, Color(0.26, 0.42, 0.24))
+
+
+# The city below, past the rims (drawn on the edge layer, behind the hill):
+# the Eixample's grid of chamfered blocks round their courtyards, streets
+# between, shrinking and hazing with height; from halfway up, the port and
+# the sea open on the left.
+static func draw_below(m: Node2D, c: Object, vt: float, vb: float) -> void:
+	var b := ShapeBatch.new()
+	var y := floorf((vt - 300.0) / 60.0) * 60.0
+	var street := Color(0.60, 0.58, 0.56)
+	while y < vb + 300.0:
+		var h := climb(m, y + 30.0)
+		var haze := 0.18 + 0.55 * h
+		var e: Vector2 = m.walk_edges(y + 30.0)
+		var cx := (e.x + e.y) * 0.5
+		var hh := hill_half(m, y + 30.0) - 30.0
+		var sea_to := lerpf(-900.0, cx - hh - 40.0, clampf((h - 0.45) / 0.4, 0.0, 1.0))
+		b.rect(Rect2(-400.0, y, 2100.0, 61.0), street.lerp(HAZE, haze))
+		if sea_to > -400.0:
+			b.rect(Rect2(-400.0, y, sea_to + 400.0, 61.0), SEA.lerp(HAZE, haze * 0.8))
+		y += 60.0
+	# the blocks, on their own grid so they do not jump between strips
+	var cell := 64.0
+	var by := floorf((vt - 300.0) / cell) * cell
+	while by < vb + 300.0:
+		var h2 := climb(m, by)
+		var haze2 := 0.18 + 0.55 * h2
+		var s := lerpf(1.0, 0.45, h2)            # further below, smaller
+		var e2: Vector2 = m.walk_edges(by)
+		var cx2 := (e2.x + e2.y) * 0.5
+		var hh2 := hill_half(m, by) - 30.0
+		var sea2 := lerpf(-900.0, cx2 - hh2 - 40.0, clampf((h2 - 0.45) / 0.4, 0.0, 1.0))
+		var step := cell * s
+		var bx := -400.0
+		while bx < 1680.0:
+			if (bx + step < cx2 - hh2 or bx > cx2 + hh2) and bx > sea2 + 6.0:
+				_block(b, Vector2(bx, by), step, haze2)
+			bx += step
+		by += step
+	b.flush(c)
+
+
+# one Eixample block from above: chamfered corners, a ring of roofs, the
+# courtyard green in the middle
+static func _block(b: ShapeBatch, at: Vector2, step: float, haze: float) -> void:
+	var w := step * 0.78
+	var ch := w * 0.22
+	var o := at + Vector2(step * 0.11, step * 0.11)
+	var n := sin(at.x * 12.9898 + at.y * 78.233) * 43758.5
+	n -= floorf(n)
+	var roof: Color = [Color(0.74, 0.46, 0.34), Color(0.70, 0.64, 0.56), Color(0.80, 0.68, 0.50)][int(n * 3.0)]
+	var oct := PackedVector2Array([o + Vector2(ch, 0), o + Vector2(w - ch, 0), o + Vector2(w, ch), o + Vector2(w, w - ch),
+		o + Vector2(w - ch, w), o + Vector2(ch, w), o + Vector2(0, w - ch), o + Vector2(0, ch)])
+	b.polygon(oct, roof.lerp(HAZE, haze))
+	var yard := w * 0.42
+	b.rect(Rect2(o + Vector2((w - yard) * 0.5, (w - yard) * 0.5), Vector2(yard, yard)),
+		Color(0.40, 0.50, 0.34).lerp(HAZE, haze))

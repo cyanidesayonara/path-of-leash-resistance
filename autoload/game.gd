@@ -2,7 +2,7 @@ extends Node
 
 # Autoload: session state that must survive scene reloads.
 
-const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap", "guell", "neteja"]
+const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap", "guell", "neteja", "montjuic"]
 const LEVEL_NAMES := {
 	"daily": "Daily Walk",
 	"tutorial": "First Walk",
@@ -28,6 +28,8 @@ const LEVEL_NAMES := {
 	"guell": "El Mosaic",
 	# the hour the city washes itself, and the walk the sweeper chase lives on
 	"neteja": "La Neteja",
+	# the hill over the port, and the winding climb up it
+	"montjuic": "Montjuïc",
 }
 # The Catalan name carries the character; this carries the meaning. The game
 # ships in English, so a player who does not speak Catalan should never have to
@@ -50,16 +52,17 @@ const LEVEL_SUBTITLES := {
 	"scrap": "the scrapyard",
 	"guell": "the tiled terraces",
 	"neteja": "the dawn clean-up",
+	"montjuic": "the hill",
 }
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
-const STAR_GATE := {"barri": 0, "street": 2, "park": 3, "beach": 4, "rain": 5, "market": 7, "oldtown": 9, "trail": 11, "station": 13, "site": 15, "spook": 17, "scrap": 19, "guell": 21, "neteja": 23}
+const STAR_GATE := {"barri": 0, "street": 2, "park": 3, "beach": 4, "rain": 5, "market": 7, "oldtown": 9, "trail": 11, "station": 13, "site": 15, "spook": 17, "scrap": 19, "guell": 21, "neteja": 23, "montjuic": 25}
 
 const WEATHERS: Array[String] = ["clear", "rain", "wind", "snow"]
 const WEATHER_NAMES := {"clear": "CLEAR", "rain": "RAIN", "wind": "WIND", "snow": "SNOW"}
 
 # the carousel on the title: the daily walk first, then the campaign walks
-const CAROUSEL: Array[String] = ["tutorial", "daily", "barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap", "guell", "neteja"]
+const CAROUSEL: Array[String] = ["tutorial", "daily", "barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap", "guell", "neteja", "montjuic"]
 
 # Cosmetics keep their catalog keys when equipped, but ownership is namespaced
 # by category so identically named items remain separate purchases.
