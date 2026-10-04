@@ -4,6 +4,17 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-04 - Parasols and café tables
+
+- The parasols over La Rambla's terrace and along the seafront were a flat
+  disc with six white lines. They are drawn the way the dog beach's already
+  were: eight panels in two tones, a scalloped hem, the lit side and their
+  shade on the ground, still see-through so she shows under them, and batched
+  into one draw call each (`main._draw_parasol`).
+- The café tables read as faces: a grey top the colour of the paving with a
+  highlight disc and a round cup on it. Each is now a pale marble top in a
+  dark metal rim, with a small coffee (handle and all) and a croissant or a
+  glass of water.
 ## 2026-10-04 - She walks differently on different ground (terrain pass 2, part 2)
 
 - **Gait by surface** (`dog._cadence`, `_stride`): quick, short steps on sand,
