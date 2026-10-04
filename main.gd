@@ -1276,7 +1276,16 @@ func _draw_grass_detail(c: Object, vt: float, vb: float) -> void:
 					var ln := 5.0 + fmod(h * 13.0 + float(bl), 1.0) * 3.5
 					c.draw_line(foot, foot + Vector2.from_angle(a) * ln, lite if bl == 1 else dark, 1.6)
 				var kind := int(h * 1000.0) % 29
-				if kind == 0 and lvl != "trail":
+				if lvl == "trail" and kind < 12:
+					# ferns, and leaves come down off the trees
+					if kind < 7:
+						for fr in range(5):
+							var fa := -PI * 0.5 + (float(fr) - 2.0) * 0.55 + lean
+							c.draw_line(p, p + Vector2.from_angle(fa) * (9.0 + float(fr % 2) * 3.0), Color(0.26, 0.42, 0.20, 0.8), 2.0)
+					else:
+						c.draw_circle(p + Vector2(4.0, 2.0), 2.4, Color(0.62, 0.42, 0.18, 0.8))
+						c.draw_circle(p + Vector2(-3.0, 4.0), 2.0, Color(0.52, 0.34, 0.14, 0.8))
+				elif kind == 0 and lvl != "trail":
 					var fc: Color = flowers[int(h * 97.0) % 3]
 					for pe in range(4):
 						c.draw_circle(p + Vector2(3.0, -7.0) + Vector2.from_angle(float(pe) * PI * 0.5) * 1.8, 1.4, fc)
@@ -4399,6 +4408,24 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 				c.draw_circle(p + Vector2(0.0, -27.0), 7.0, Color(0.60, 0.47, 0.30))
 				c.draw_arc(p + Vector2(0.0, -27.0), 4.0, 0, TAU, 10, Color(0.48, 0.36, 0.23), 1.4)
 				c.draw_arc(p + Vector2(0.0, -27.0), 6.5, 0, TAU, 12, Color(0.42, 0.31, 0.20), 1.2)
+			"trough" when freedom_kind == "clearing":
+				# a forest spring, a font: a stone back with a pipe, the water
+				# falling from it into a round stone basin, moss on the stones
+				var tw2 := AnimClock.msec() / 1000.0
+				c.draw_circle(p + LIGHT * 5.0, 22.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+				c.draw_rect(Rect2(p.x - 16.0, p.y - 26.0, 32.0, 12.0), Color(0.50, 0.47, 0.42))
+				c.draw_rect(Rect2(p.x - 16.0, p.y - 26.0, 32.0, 3.0), Color(0.64, 0.61, 0.56))
+				c.draw_circle(p, 20.0, Color(0.46, 0.43, 0.38))
+				c.draw_circle(p - LIGHT * 3.0, 18.0, Color(0.58, 0.55, 0.49))
+				c.draw_circle(p, 14.0, Color(0.20, 0.34, 0.40))
+				c.draw_circle(p + Vector2(-3.0, -3.0), 9.0, Color(0.32, 0.50, 0.58))
+				for mo: Vector2 in [Vector2(-14, 8), Vector2(12, 12), Vector2(-10, -24)]:
+					c.draw_circle(p + mo, 4.0, Color(0.30, 0.44, 0.22, 0.85))
+				# the pipe, and the water falling into the basin, rings spreading
+				c.draw_line(p + Vector2(0, -20), p + Vector2(0, -12), Color(0.36, 0.34, 0.32), 3.0)
+				c.draw_line(p + Vector2(0, -12), p + Vector2(0, -4), Color(0.78, 0.88, 0.94, 0.8), 2.0)
+				var rr := 3.0 + fmod(tw2 * 6.0, 8.0)
+				c.draw_arc(p + Vector2(0, -3), rr, 0, TAU, 14, Color(0.80, 0.90, 0.96, 0.5 * (1.0 - rr / 11.0)), 1.2)
 			"trough":
 				# A galvanised water trough: a thick rim, water sitting BELOW
 				# it, a highlight where the light hits the surface, and a
@@ -6634,10 +6661,42 @@ func _draw_walk_ribbon(vt: float, vb: float, bottom: float, col: Color) -> void:
 	for i in range(right.size() - 1, -1, -1):
 		poly.append(right[i])
 	_wc.draw_colored_polygon(poly, col)
+	if lvl == "trail":
+		_draw_trail_edges(left, right, col)
+		return
 	# the kerbs, following the same two edges the surface test uses
 	for pts: PackedVector2Array in [left, right]:
 		for i in range(pts.size() - 1):
 			_wc.draw_line(pts[i], pts[i + 1], COL_SEAM, 3.0)
+
+
+# A forest trail has no kerb: it frays into the floor. A darker trodden band
+# just inside each edge, scallops of loose dirt spilling outward, and now and
+# then a root running across the edge. Positions hash from y, so the same
+# trail frays the same way every frame. One batch.
+func _draw_trail_edges(left: PackedVector2Array, right: PackedVector2Array, col: Color) -> void:
+	var b := ShapeBatch.new()
+	var worn := Color(col.r * 0.86, col.g * 0.86, col.b * 0.86, 0.6)
+	var loose := Color(col.r * 0.92, col.g * 0.9, col.b * 0.86, 0.85)
+	var root := Color(0.36, 0.26, 0.17)
+	for side in range(2):
+		var pts: PackedVector2Array = left if side == 0 else right
+		var out := -1.0 if side == 0 else 1.0
+		for i in range(pts.size() - 1):
+			var a := pts[i]
+			var c := pts[i + 1]
+			b.line(a + Vector2(-out * 7.0, 0.0), c + Vector2(-out * 7.0, 0.0), worn, 10.0)
+			for k in range(3):
+				var q := a.lerp(c, (float(k) + 0.5) / 3.0)
+				var h := _cell01(q.y, float(side) * 31.0)
+				b.circle(q + Vector2(out * (2.0 + h * 6.0), 0.0), 6.0 + h * 5.0, loose)
+			var hr := _cell01(a.y, 7.0 + float(side))
+			if hr < 0.22:
+				# a root across the edge, from the wood into the path
+				var rq := a.lerp(c, hr * 4.0)
+				b.line(rq + Vector2(out * 26.0, -4.0), rq + Vector2(-out * 18.0, 3.0), root, 3.0)
+				b.line(rq + Vector2(out * 6.0, -1.0), rq + Vector2(-out * 6.0, 9.0), root, 2.0)
+	b.flush(_wc)
 
 
 # Where the buildings start at this point down the walk: x = left building
