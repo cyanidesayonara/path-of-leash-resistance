@@ -28,64 +28,75 @@ static func word(c: CanvasItem, txt: String, centre: Vector2, px: int, rot := 0.
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
-# The title on its leash: the leash comes down from above the screen to a red
-# collar buckled round the O of PATH OF, and the whole title hangs from it -
-# drops in, overshoots, and swings to rest about that point.
+# The title on its leash. The O of PATH OF is a dog's collar: a red band the
+# size and weight of the letter, outlined and shadowed like the letters round
+# it, buckled at the top, with the D-ring there that the leash clips to. The
+# leash hangs straight down from the top of the screen, and the whole title
+# hangs from it: drops in, overshoots, and swings to rest about that point.
 static func _hanging(c: CanvasItem, t: float, cx: float, y1: float, y2: float) -> void:
 	var f := UI.display()
-	var top := "PATH OF"
-	var w1 := f.get_string_size(top, HORIZONTAL_ALIGNMENT_LEFT, -1, TOP_PX).x
-	var o_x := cx - w1 * 0.5 + f.get_string_size("PATH ", HORIZONTAL_ALIGNMENT_LEFT, -1, TOP_PX).x \
-		+ f.get_string_size("O", HORIZONTAL_ALIGNMENT_LEFT, -1, TOP_PX).x * 0.5
-	# the O's centre: the font's cap height sits about a third of the size
-	# above the baseline offset `word` uses
-	var ring := Vector2(o_x, y1 - 1.0)
+	var px := TOP_PX
+	var w_all := f.get_string_size("PATH OF", HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	var x0 := cx - w_all * 0.5
+	var w_path := f.get_string_size("PATH", HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	var w_pre := f.get_string_size("PATH ", HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	var w_o := f.get_string_size("O", HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	var w_f := f.get_string_size("F", HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	var path_c := Vector2(x0 + w_path * 0.5, y1)
+	var o_c := Vector2(x0 + w_pre + w_o * 0.5, y1)
+	var f_c := Vector2(x0 + w_pre + w_o + w_f * 0.5, y1)
 	# a beat on the empty street, then it drops, overshoots and swings to rest
 	var fall: float = Anim.k(t, [[0.0, -620.0], [0.1, -620.0], [0.55, 24.0, "io"], [0.78, -8.0, "out"], [1.0, 0.0, "io"]])
 	var ts := maxf(t - 0.55, 0.0)
 	var ang: float = sin(ts * 5.2) * 0.11 * exp(-ts * 1.5)
-	# hung from an iron sign bracket off the house on the left, in the frame,
-	# so the leash comes from somewhere
-	var pivot := Vector2(o_x, 34.0)
-	var wall := Vector2(o_x - 230.0, 34.0)
-	c.draw_rect(Rect2(wall + Vector2(-8, -18), Vector2(16, 36)), INK)
-	c.draw_line(wall, pivot + Vector2(12, 0), INK, 7.0)
-	c.draw_line(wall + Vector2(0, 14), wall + Vector2(70, 0), INK, 4.0)
-	c.draw_arc(wall + Vector2(40, 6), 9.0, PI * 0.2, PI * 1.6, 10, INK, 3.0)
-	c.draw_arc(pivot + Vector2(0, 6), 6.0, -PI * 0.5, PI, 10, INK, 4.0)
-	var hang := ring + Vector2(0, fall)
-	var r_now := pivot + (hang - pivot).rotated(ang)
-	# the leash, down from off the top of the screen to the collar's ring
-	c.draw_line(pivot + Vector2(0, 10), r_now + Vector2(0, -55).rotated(ang), INK, 10.0)
-	c.draw_line(pivot + Vector2(0, 10), r_now + Vector2(0, -55).rotated(ang), LEASH, 6.0)
-	# everything below hangs: draw it rotated about the pivot
-	var to_title := func(p: Vector2) -> Vector2:
-		return pivot + (p + Vector2(0, fall) - pivot).rotated(ang)
-	word(c, top, to_title.call(Vector2(cx, y1)), TOP_PX, ang)
+	var pivot := Vector2(o_c.x, -60.0)
+	var to_title := func(q: Vector2) -> Vector2:
+		return pivot + (q + Vector2(0, fall) - pivot).rotated(ang)
+	# the collar's size, from the letter it stands in for
+	var stroke := float(px) * 0.135
+	var rx := w_o * 0.5 - stroke * 0.15
+	var ry := float(px) * 0.37 - stroke * 0.5
+	var dring := Vector2(0, -ry - stroke * 0.5 - 10.0)
+	# the leash, straight down from the top of the screen to the D-ring
+	var ring_now: Vector2 = to_title.call(o_c + dring + Vector2(0, -6))
+	c.draw_line(pivot, ring_now, INK, 10.0)
+	c.draw_line(pivot, ring_now, LEASH, 6.0)
+	word(c, "PATH", to_title.call(path_c), px, ang)
+	word(c, "F", to_title.call(f_c), px, ang)
 	word(c, "LEASH RESISTANCE", to_title.call(Vector2(cx, y2)), 104, ang)
-	# the collar round the O, its buckle, and the ring the leash clips to
-	var oc: Vector2 = to_title.call(ring)
+	# the collar: shadow, outline, band, the light along its top, stitching
+	var oc: Vector2 = to_title.call(o_c)
 	c.draw_set_transform(oc, ang, Vector2.ONE)
-	# a whole collar buckled round the O, as round a neck: the band all the way
-	# round (wide enough to show the letter inside it), the buckle on top, and
-	# the ring the leash clips to above the buckle
-	# sized to the O itself, so it does not run into the H or the F
-	var rx := 30.0
-	var ry := 34.0
-	var band := MillieSide.ellipse(Vector2.ZERO, Vector2(rx, ry), 0.0, 40)
+	var band := MillieSide.ellipse(Vector2.ZERO, Vector2(rx, ry), 0.0, 48)
 	band.append(band[0])
-	c.draw_polyline(band, INK, 12.0)
-	c.draw_polyline(band, LEASH, 7.0)
-	var hi := PackedVector2Array()
-	for i in range(9):
-		var a := PI * 1.15 + float(i) / 8.0 * PI * 0.5
-		hi.append(Vector2(cos(a) * rx, sin(a) * ry))
-	c.draw_polyline(hi, LEASH.lightened(0.35), 2.0)
-	c.draw_rect(Rect2(-7, -ry - 7, 14, 13), INK)
-	c.draw_rect(Rect2(-5, -ry - 5, 10, 9), Color(0.90, 0.78, 0.42))
-	c.draw_line(Vector2(0, -ry - 5), Vector2(0, -ry + 4), INK, 1.6)
-	c.draw_arc(Vector2(0, -ry - 14), 6.5, 0, TAU, 16, INK, 6.0)
-	c.draw_arc(Vector2(0, -ry - 14), 6.5, 0, TAU, 16, Color(0.90, 0.78, 0.42), 3.0)
+	var sh := PackedVector2Array()
+	for q in band:
+		sh.append(q + Vector2(6, 8))
+	c.draw_polyline(sh, SHADOW, stroke + 8.0)
+	c.draw_polyline(band, INK, stroke + 7.0)
+	c.draw_polyline(band, LEASH, stroke)
+	var lit := PackedVector2Array()
+	for i in range(12):
+		var a := PI * 1.05 + float(i) / 11.0 * PI * 0.62
+		lit.append(Vector2(cos(a) * rx, sin(a) * ry) + Vector2(0, -stroke * 0.18))
+	c.draw_polyline(lit, LEASH.lightened(0.38), stroke * 0.22)
+	for i in range(18):
+		var a0 := TAU * float(i) / 18.0
+		var a1 := a0 + TAU / 36.0
+		var r0 := Vector2(cos(a0) * rx, sin(a0) * ry)
+		var r1 := Vector2(cos(a1) * rx, sin(a1) * ry)
+		c.draw_line(r0, r1, LEASH.darkened(0.35), 1.4)
+	# the buckle across the top of the band, and the D-ring above it
+	var brass := Color(0.92, 0.78, 0.40)
+	var bk := Rect2(Vector2(-stroke * 0.7, -ry - stroke * 0.75), Vector2(stroke * 1.4, stroke * 1.5))
+	c.draw_rect(bk.grow(2.5), INK)
+	c.draw_rect(bk, brass)
+	c.draw_rect(bk.grow(-stroke * 0.32), LEASH.darkened(0.1))
+	c.draw_line(Vector2(0, bk.position.y + 2.0), Vector2(0, bk.end.y - 2.0), INK, 2.0)
+	c.draw_arc(dring, 8.0, PI, TAU, 14, INK, 7.0)
+	c.draw_line(dring + Vector2(-8, 0), dring + Vector2(8, 0), INK, 7.0)
+	c.draw_arc(dring, 8.0, PI, TAU, 14, brass, 3.5)
+	c.draw_line(dring + Vector2(-8, 0), dring + Vector2(8, 0), brass, 3.5)
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
