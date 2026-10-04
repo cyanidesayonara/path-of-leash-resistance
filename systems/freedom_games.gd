@@ -156,13 +156,15 @@ static func _tick_tug(m: Node2D, delta: float) -> void:
 			m.rope_carry_t -= delta
 			if m.rope_carry_t <= 0.0:
 				m.dog_carrying = false
-				m.rope_loose = mouth
+				# where the other dog can get to it (free dogs keep to a box)
+				m.rope_loose = mouth.clamp(Vector2(100.0, m.freedom_lo + 50.0), Vector2(1180.0, m.GATE_Y - 40.0))
 				fd.offer_cd = ROPE_BACK_S
 				m.games_cover.refresh()
 		# the other dog picks a dropped rope back up
 		if m.rope_loose.x < INF and fd.global_position.distance_to(m.rope_loose) < 20.0:
 			fd.rope = true
 			fd.offer_cd = 5.0
+			fd._go_wander(1.0)      # got it: no sniffing the spot it lay on
 			m.rope_loose = Vector2(INF, INF)
 			m.games_cover.refresh()
 		# grabbing the free end starts it
@@ -181,7 +183,8 @@ static func _tick_tug(m: Node2D, delta: float) -> void:
 	var out: Array = m.tug.step(me, fd.global_position, m.dog.input_dir, m.dog.planted,
 		m.dog.turbo_active, delta)
 	var r: Rect2 = m._freedom_rect()
-	m.dog.global_position = (out[0] as Vector2).clamp(r.position, r.end)
+	# moved, not placed: a tree or the fence stops her being dragged into it
+	m.dog.move_and_collide((out[0] as Vector2).clamp(r.position, r.end) - m.dog.global_position)
 	fd.global_position = (out[1] as Vector2).clamp(r.position, r.end)
 	m.tug_prev = m.dog.global_position
 	if String(out[2]) != "":
