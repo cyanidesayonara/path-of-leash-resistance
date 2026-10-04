@@ -61,6 +61,8 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 	var up := Vector2.UP.rotated(lean)
 	var shoulder := hip + up * 64.0
 	var neck := shoulder + up * 10.0
+	# with the phone up they look down at it: the classic stoop
+	head_t += 0.35 * phone
 	var head := neck + up.rotated(head_t * 0.5) * 20.0 + Vector2(4, 0)
 	# legs: standing and striding, or sitting with the thighs forward, or
 	# trailing behind and off the ground when the dog takes them
@@ -75,8 +77,11 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 			bend = lerpf(bend, 0.5 + 0.3 * float(side), lift)
 		legs.append(_two(hip + Vector2(4.0 * float(side) - 2.0, 0), thigh_dir, 48.0, 50.0, bend))
 	# arms: one holding the phone up at the face, one free (or out on the leash)
-	var phone_hand := shoulder.lerp(head + Vector2(26, 6), phone) + Vector2(16, 30) * (1.0 - phone)
-	var arm1 := [shoulder + Vector2(4, 4), (shoulder + phone_hand) * 0.5 + Vector2(10, 14) * phone, phone_hand]
+	# the phone held low in front of the chest, elbow tucked in, so the face
+	# stays in profile above it (held at the face, the hand hid it)
+	var phone_hand := shoulder + (Vector2(30, 26) * phone + Vector2(14, 58) * (1.0 - phone)).rotated(lean)
+	var elbow := shoulder + Vector2(8, 34).rotated(lean)
+	var arm1 := [shoulder + Vector2(4, 4), elbow, phone_hand]
 	var free_dir := Vector2.DOWN.rotated(-0.2).lerp(Vector2.RIGHT.rotated(0.15), reach).normalized()
 	var arm2 := _two(shoulder + Vector2(-2, 4), free_dir, 34.0, 32.0, -0.3 * (1.0 - reach))
 	# --- the far leg and far arm, a shade darker
@@ -129,13 +134,14 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 		c.draw_line(mp + Vector2(-3, 0), mp + Vector2(3, 0.5), Color(0.45, 0.22, 0.18), 1.6)
 	# the phone, and its light on the face
 	if phone > 0.3:
-		var ph := phone_hand + Vector2(4, -4)
-		var pr := PackedVector2Array([ph + Vector2(-3, -11), ph + Vector2(3, -12), ph + Vector2(5, 10), ph + Vector2(-1, 11)])
+		var ph := phone_hand + Vector2(4, -6)
+		# tilted back towards the face
+		var pr := PackedVector2Array([ph + Vector2(-9, -6), ph + Vector2(-5, -11), ph + Vector2(10, 4), ph + Vector2(6, 9)])
 		c.draw_colored_polygon(_fat(pr, 1.6), OUT)
 		c.draw_colored_polygon(pr, Color(0.14, 0.15, 0.18))
-		c.draw_line(ph + Vector2(-3.4, -9), ph + Vector2(-0.6, 9), Color(0.70, 0.86, 1.0), 1.6)
+		c.draw_line(ph + Vector2(-6, -9), ph + Vector2(7, 4), Color(0.70, 0.86, 1.0), 2.0)
 		if glow > 0.0:
 			for i in range(4):
-				c.draw_colored_polygon(_ell(head + Vector2(14, 0), Vector2(16, 20) * (1.0 - float(i) * 0.2)),
-					Color(0.70, 0.86, 1.0, 0.07 * glow))
+				c.draw_colored_polygon(_ell(head + Vector2(12, 8), Vector2(14, 16) * (1.0 - float(i) * 0.2)),
+					Color(0.70, 0.86, 1.0, 0.08 * glow))
 	return arm2[2]

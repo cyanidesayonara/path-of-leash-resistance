@@ -59,10 +59,13 @@ static func _xf(pts: PackedVector2Array, o: Vector2, s: float) -> PackedVector2A
 
 # the shapes of her silhouette, in drawing order, for a pose
 static func parts(pose: Dictionary) -> Dictionary:
-	var lean: float = pose.get("lean", 0.0)
-	var crouch: float = pose.get("crouch", 0.0)
-	var reach: float = pose.get("reach", 0.0)
-	var push: float = pose.get("push", 0.0)
+	# `sit` (0..1): rump down on the floor, chest up, front legs straight
+	# under it, back paws tucked forward under the haunch
+	var sit: float = pose.get("sit", 0.0)
+	var lean: float = lerpf(pose.get("lean", 0.0), -0.62, sit)
+	var crouch: float = lerpf(pose.get("crouch", 0.0), 0.0, sit)
+	var reach: float = lerpf(pose.get("reach", 0.0), -0.45, sit)
+	var push: float = lerpf(pose.get("push", 0.0), -1.25, sit)
 	var head_up: float = pose.get("head_up", 0.0)
 	var ear: float = pose.get("ear", 0.0)
 	var tail: float = pose.get("tail", 0.0)
@@ -79,6 +82,8 @@ static func parts(pose: Dictionary) -> Dictionary:
 	p["leg_bl"] = limb(rump + Vector2(4, 8), Vector2(-30.0 - push * 16.0, -4.0), 7.0, 4.0)
 	p["leg_fl"] = limb(chest + Vector2(-2, 8), Vector2(34.0 + reach * 18.0, -4.0), 6.5, 4.0)
 	p["rump"] = ellipse(rump, Vector2(21, 20), lean)
+	# the haunch: the folded back leg showing on her side when she sits
+	p["haunch"] = ellipse(rump + Vector2(8, 6), Vector2(16 * sit + 0.01, 12 * sit + 0.01), lean * 0.5)
 	p["body"] = ellipse(body_c, Vector2(42, 19), lean)
 	p["chest"] = ellipse(chest, Vector2(20, 21), lean)
 	p["neck"] = limb(chest + Vector2(2, -6), neck_top, 13.0, 10.0)
@@ -104,7 +109,7 @@ static func parts(pose: Dictionary) -> Dictionary:
 
 
 const BACK := ["tail", "leg_bl", "leg_fl"]
-const MAIN := ["rump", "body", "chest", "neck", "head", "muzzle", "leg_br", "leg_fr"]
+const MAIN := ["rump", "body", "chest", "neck", "head", "muzzle", "leg_br", "leg_fr", "haunch"]
 
 
 # draws her; returns the collar ring's position, where a leash attaches

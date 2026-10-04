@@ -56,11 +56,33 @@ static func puff(c: CanvasItem, at: Vector2, r: float, a := 1.0) -> void:
 	c.draw_circle(at, r, Color(0.97, 0.94, 0.86, a))
 
 
+# a rounded rectangle as a polygon
+static func rrect(r: Rect2, rad: float) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	var cs := [Vector2(r.end.x - rad, r.position.y + rad), Vector2(r.end.x - rad, r.end.y - rad),
+		Vector2(r.position.x + rad, r.end.y - rad), Vector2(r.position.x + rad, r.position.y + rad)]
+	for k in range(4):
+		for i in range(7):
+			var a := -PI * 0.5 + float(k) * PI * 0.5 + float(i) / 6.0 * PI * 0.5
+			pts.append(cs[k] + Vector2.from_angle(a) * rad)
+	return pts
+
+
+# a filled shape with the intro's outline round it
+static func box(c: CanvasItem, r: Rect2, rad: float, col: Color, w := 3.0) -> void:
+	c.draw_colored_polygon(rrect(r.grow(w), rad + w), INK)
+	c.draw_colored_polygon(rrect(r, rad), col)
+
+
 static func dots(c: CanvasItem, at: Vector2, t: float) -> void:
-	# a "..." bubble, the dots arriving one by one
-	var r := Rect2(at - Vector2(42, 26), Vector2(84, 46))
-	c.draw_rect(r.grow(3.0), INK)
-	c.draw_rect(r, Color(0.99, 0.97, 0.92))
+	# a "..." speech bubble with its tail, the dots arriving one by one
+	var r := Rect2(at - Vector2(46, 28), Vector2(92, 52))
+	var tail := PackedVector2Array([r.position + Vector2(18, 48), r.position + Vector2(40, 48), r.position + Vector2(10, 74)])
+	c.draw_colored_polygon(rrect(r.grow(3.0), 23.0), INK)
+	c.draw_line(tail[0], tail[2], INK, 7.0)
+	c.draw_line(tail[1], tail[2], INK, 7.0)
+	c.draw_colored_polygon(tail, Color(0.99, 0.97, 0.92))
+	c.draw_colored_polygon(rrect(r, 20.0), Color(0.99, 0.97, 0.92))
 	for i in range(3):
 		if t > float(i) * 0.25:
 			c.draw_circle(r.get_center() + Vector2(-20.0 + float(i) * 20.0, 0), 5.0, INK)

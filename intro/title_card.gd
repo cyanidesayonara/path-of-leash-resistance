@@ -3,7 +3,7 @@ extends RefCounted
 
 # The title as the intros end on it: PATH OF / LEASH RESISTANCE in the heavy
 # face, cream with a dark outline and a soft drop shadow (the intro's look),
-# then "you are the dog" and a pulsing PRESS START. `t` is seconds since the
+# then a pulsing PRESS START. `t` is seconds since the
 # card began; `drop` chooses the entrance: "swing" (hung on a leash from the
 # top and swinging to rest), "slam" (in from the right with a thump), "none"
 # (already there, for when a scene places the letters itself).
@@ -54,14 +54,7 @@ static func draw(c: CanvasItem, t: float, drop := "swing", size := Vector2(1280,
 	if drop != "none-letters":
 		word(c, "PATH OF", Vector2(cx, y1) + off, 64, rot, sc)
 		word(c, "LEASH RESISTANCE", Vector2(cx, y2) + off * Vector2(1.15, 1.0), 104, rot * 0.8, sc)
-	var sub := Anim.span(t, 1.1, 1.6)
-	if sub > 0.0:
-		var f := UI.display()
-		var s := "you are the dog"
-		var w := f.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, 34).x
-		c.draw_string_outline(f, Vector2(cx - w * 0.5, size.y * 0.63), s, HORIZONTAL_ALIGNMENT_LEFT, -1, 34, 8,
-			Color(INK, sub))
-		c.draw_string(f, Vector2(cx - w * 0.5, size.y * 0.63), s, HORIZONTAL_ALIGNMENT_LEFT, -1, 34, Color(1.0, 0.86, 0.50, sub))
+	# no subtitle: the title stands alone (October 2026)
 	if t > 2.0:
 		var pulse := 0.55 + 0.45 * sin((t - 2.0) * 4.0)
 		var f2 := UI.display()

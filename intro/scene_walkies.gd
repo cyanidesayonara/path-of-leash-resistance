@@ -71,21 +71,72 @@ static func _room(c: CanvasItem, t: float, door_open: float) -> void:
 
 
 static func _sofa(c: CanvasItem) -> void:
-	var o := IntroKit.INK
 	var body := Color(0.78, 0.36, 0.28)
-	var back := Rect2(SOFA_X - 110, FLOOR - 230, 50, 200)
-	var seat := Rect2(SOFA_X - 110, FLOOR - 100, 300, 75)
-	var arm := Rect2(SOFA_X + 150, FLOOR - 150, 50, 125)
-	for r: Rect2 in [back, seat, arm]:
-		c.draw_rect(r.grow(3.0), o)
-	for r: Rect2 in [back, seat, arm]:
-		c.draw_rect(r, body)
-		c.draw_rect(Rect2(r.position + Vector2(4, 4), Vector2(r.size.x - 8, 10)), body.lightened(0.18))
-	# the cushion under them, and the feet
-	c.draw_rect(Rect2(SOFA_X - 60, FLOOR - 110, 210, 22).grow(3.0), o)
-	c.draw_rect(Rect2(SOFA_X - 60, FLOOR - 110, 210, 22), body.lightened(0.1))
-	for fx: float in [SOFA_X - 100, SOFA_X + 180]:
-		c.draw_rect(Rect2(fx, FLOOR - 25, 12, 25), Color(0.30, 0.22, 0.16))
+	var lit := body.lightened(0.16)
+	# legs, then the back, the arm and the seat as soft rounded forms
+	for fx: float in [SOFA_X - 98.0, SOFA_X + 176.0]:
+		IntroKit.box(c, Rect2(fx, FLOOR - 26, 14, 26), 3.0, Color(0.30, 0.22, 0.16), 2.0)
+	IntroKit.box(c, Rect2(SOFA_X - 118, FLOOR - 236, 62, 210), 24.0, body)
+	IntroKit.box(c, Rect2(SOFA_X - 118, FLOOR - 112, 316, 88), 20.0, body)
+	IntroKit.box(c, Rect2(SOFA_X + 150, FLOOR - 164, 58, 140), 26.0, body)
+	# the seat cushions, their seam, and the light along the back's top
+	IntroKit.box(c, Rect2(SOFA_X - 64, FLOOR - 128, 220, 34), 14.0, lit, 2.0)
+	c.draw_line(Vector2(SOFA_X + 46, FLOOR - 126), Vector2(SOFA_X + 46, FLOOR - 96), IntroKit.INK, 2.0)
+	c.draw_line(Vector2(SOFA_X - 100, FLOOR - 224), Vector2(SOFA_X - 100, FLOOR - 140), lit, 6.0)
+	# a throw pillow wedged in the corner
+	c.draw_colored_polygon(IntroKit.rrect(Rect2(SOFA_X - 70, FLOOR - 204, 54, 74).grow(2.0), 16.0), IntroKit.INK)
+	c.draw_colored_polygon(IntroKit.rrect(Rect2(SOFA_X - 70, FLOOR - 204, 54, 74), 16.0), Color(0.96, 0.82, 0.40))
+	for k in range(3):
+		c.draw_line(Vector2(SOFA_X - 62 + k * 16, FLOOR - 196), Vector2(SOFA_X - 62 + k * 16, FLOOR - 138), Color(0.86, 0.64, 0.24), 3.0)
+
+
+# the flat: a lamp by the sofa, a plant at the window, a rug, a coat on the
+# hook beside the leash, and her own bed by the door (empty: she has plans)
+static func _dressing(c: CanvasItem) -> void:
+	# the rug, flat on the boards in front of the sofa
+	c.draw_colored_polygon(MillieSide.ellipse(Vector2(560, FLOOR + 22), Vector2(300, 22)), IntroKit.INK)
+	c.draw_colored_polygon(MillieSide.ellipse(Vector2(560, FLOOR + 22), Vector2(296, 18)), Color(0.36, 0.48, 0.62))
+	c.draw_colored_polygon(MillieSide.ellipse(Vector2(560, FLOOR + 22), Vector2(250, 12)), Color(0.86, 0.70, 0.44))
+	# the floor lamp, lit
+	c.draw_line(Vector2(130, FLOOR), Vector2(130, FLOOR - 300), IntroKit.INK, 6.0)
+	IntroKit.box(c, Rect2(110, FLOOR - 8, 40, 8), 3.0, Color(0.20, 0.20, 0.22), 2.0)
+	c.draw_colored_polygon(MillieSide.ellipse(Vector2(130, FLOOR - 300), Vector2(90, 80)), Color(1.0, 0.92, 0.66, 0.16))
+	var shade := PackedVector2Array([Vector2(100, FLOOR - 340), Vector2(160, FLOOR - 340), Vector2(178, FLOOR - 288), Vector2(82, FLOOR - 288)])
+	c.draw_colored_polygon(PackedVector2Array([shade[0] + Vector2(-3, -3), shade[1] + Vector2(3, -3), shade[2] + Vector2(4, 3), shade[3] + Vector2(-4, 3)]), IntroKit.INK)
+	c.draw_colored_polygon(shade, Color(0.98, 0.90, 0.68))
+	# the plant on the windowsill
+	IntroKit.box(c, Rect2(320, 344, 34, 30), 6.0, Color(0.76, 0.42, 0.28), 2.0)
+	for k in range(5):
+		var a := -PI * 0.5 + (float(k) - 2.0) * 0.45
+		var tip := Vector2(337, 344) + Vector2.from_angle(a) * 44.0
+		c.draw_line(Vector2(337, 344), tip, IntroKit.INK, 9.0)
+		c.draw_line(Vector2(337, 344), tip, Color(0.32, 0.56, 0.30), 6.0)
+	# a coat on the next hook: rounded shoulders on its loop, a collar, a
+	# sleeve hanging down the front, a pocket
+	var ch := HOOK + Vector2(-60, 0)
+	c.draw_rect(Rect2(ch + Vector2(-10, -8), Vector2(20, 10)), Color(0.40, 0.30, 0.22))
+	var coat := Color(0.36, 0.46, 0.40)
+	IntroKit.box(c, Rect2(ch.x - 26, ch.y + 6, 52, 150), 18.0, coat)
+	c.draw_colored_polygon(PackedVector2Array([ch + Vector2(-12, 6), ch + Vector2(12, 6), ch + Vector2(0, 30)]), coat.darkened(0.25))
+	IntroKit.box(c, Rect2(ch.x + 6, ch.y + 24, 16, 104), 8.0, coat.darkened(0.1), 2.0)
+	c.draw_line(ch + Vector2(-14, 96), ch + Vector2(2, 96), coat.darkened(0.35), 3.0)
+	# her bed by the door, side on: a cushioned basket with a raised rim
+	IntroKit.box(c, Rect2(808, FLOOR - 44, 150, 44), 18.0, Color(0.42, 0.56, 0.74))
+	IntroKit.box(c, Rect2(826, FLOOR - 30, 114, 18), 9.0, Color(0.88, 0.82, 0.72), 2.0)
+	c.draw_line(Vector2(818, FLOOR - 34), Vector2(948, FLOOR - 34), Color(0.56, 0.70, 0.86), 3.0)
+
+
+# the morning light from the window, a soft shaft across the room, and the
+# edges of the room falling into shade
+static func _light(c: CanvasItem) -> void:
+	for i in range(4):
+		var f := float(i) * 18.0
+		c.draw_colored_polygon(PackedVector2Array([Vector2(150 - f, 130), Vector2(360 + f, 130), Vector2(760 + f * 2.0, FLOOR + 80),
+			Vector2(300 - f, FLOOR + 80)]), Color(1.0, 0.95, 0.78, 0.05))
+	for i in range(6):
+		var w := 40.0 + float(i) * 40.0
+		c.draw_rect(Rect2(-200, -100, w, 900), Color(0.20, 0.12, 0.08, 0.035))
+		c.draw_rect(Rect2(1480 - w, -100, w, 900), Color(0.20, 0.12, 0.08, 0.035))
 
 
 static func draw(c: CanvasItem, t_real: float) -> void:
@@ -95,6 +146,7 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 		return
 	var door_open: float = Anim.k(t, [[9.5, 0.0], [9.65, 1.0, "snap"]])
 	_room(c, t, door_open)
+	_dressing(c)
 	# --- Millie's path through the scene
 	var mx: float = Anim.k(t, [[0.0, 930.0], [3.3, 930.0], [3.5, 960.0, "out"], [5.1, 560.0, "io"],
 		[6.7, 560.0], [7.0, 520.0, "out"], [7.5, 560.0, "io"], [8.6, 600.0], [9.3, 600.0],
@@ -111,9 +163,10 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 	var crouch := Anim.span(t, 8.75, 9.05) * (1.0 - Anim.span(t, 9.3, 9.4))
 	var yank := Anim.span(t, 9.3, 9.45)
 	var pose := {
-		"crouch": maxf(sitting * 0.9, crouch),
-		"lean": -0.32 * sitting + 0.22 * crouch + 0.12 * yank,
-		"push": -0.6 * sitting + gait * 0.6 + crouch * 0.4 + yank * 0.9,
+		"sit": sitting,
+		"crouch": crouch,
+		"lean": 0.22 * crouch + 0.12 * yank,
+		"push": gait * 0.6 + crouch * 0.4 + yank * 0.9,
 		"reach": gait * -0.6 + yank * 1.0,
 		"head_up": Anim.k(t, [[0.0, 0.0], [0.8, 0.55, "io"], [1.5, 0.55], [1.6, 0.0, "io"], [2.4, 0.0], [2.5, 0.5, "io"],
 			[3.4, 0.2], [5.3, 0.0], [5.6, 0.35, "io"], [6.6, 0.35], [6.9, 0.7, "out"], [7.4, 0.3], [7.7, -0.35, "io"],
@@ -174,6 +227,7 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 		for k in range(3):
 			IntroKit.puff(c, Vector2(600.0 - float(k) * 30.0, FLOOR - 10.0 - float(k % 2) * 14.0), 14.0 - float(k) * 3.0,
 				1.0 - Anim.span(t, 9.4, 10.2))
+	_light(c)
 	# sunlight flooding in through the door, then white
 	var flash: float = Anim.k(t_real, [[9.6, 0.0], [10.1, 1.0, "in"], [10.4, 1.0]])
 	IntroKit.fade(c, flash, Color(1.0, 0.97, 0.88))
@@ -181,10 +235,23 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 
 
 static func _title(c: CanvasItem, t: float) -> void:
-	# a sunny street wash behind the title
+	# a sunny street wash behind the title, a pavement along the bottom
 	for i in range(8):
 		var f := float(i) / 7.0
 		c.draw_rect(Rect2(0, f * 720.0, 1280, 720.0 / 7.0 + 1.0), Color(1.0, 0.93, 0.74).lerp(Color(0.98, 0.80, 0.52), f))
 	c.draw_circle(Vector2(1060, 150), 90.0, Color(1.0, 0.98, 0.86, 0.6))
+	c.draw_rect(Rect2(0, 640, 1280, 80), Color(0.80, 0.74, 0.66))
+	c.draw_line(Vector2(0, 640), Vector2(1280, 640), IntroKit.INK, 3.0)
 	IntroTitle.draw(c, t - 10.4, "swing")
+	# and there they go: Millie trotting along the bottom, towing your human,
+	# who is still looking at the phone
+	var tt := Anim.twos(t)
+	var x: float = Anim.k(tt, [[10.9, -260.0], [13.6, 1500.0, "lin"]])
+	if tt > 10.9 and tt < 13.6:
+		var trot := sin(t * 14.0)
+		var m := IntroKit.millie(c, Vector2(x, 652.0), 0.9, 1.0, Vector2.ONE,
+			{"reach": trot * 0.6, "push": -trot * 0.6, "head_up": 0.3, "tail": trot * 0.4, "brow": 1.0, "mouth": 0.3})
+		var hand := IntroKit.human(c, Vector2(x - 190.0, 652.0), 0.9, 1.0, Vector2.ONE,
+			{"stride": t * 11.0, "stride_amp": 1.0, "phone": 1.0, "glow": 0.5, "reach": 0.8, "lean": 0.3})
+		IntroKit.leash(c, m["ring"], hand, 6.0)
 	IntroKit.fade(c, 1.0 - Anim.span(t, 10.4, 10.8), Color(1.0, 0.97, 0.88))
