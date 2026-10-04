@@ -227,7 +227,7 @@ func _run() -> void:
 	main.human.global_position.y = main.HOME_Y + 10.0
 	main.call("_finish_walk")
 	_check(main.finished, "tutorial reaches its own completion state")
-	var practice_line := "%d practice bones - not banked" % int(main.bones)
+	var practice_line := "%d bones banked" % int(main.bones)
 	var expected_results := {
 		"title": "GOOD DOG.",
 		"stars": 0,
@@ -237,10 +237,10 @@ func _run() -> void:
 		"phone": int(main.phone_hp),
 		"time": int(main.elapsed),
 		"goal_bones": 0,
-		"lines": [practice_line, "Lessons complete. The real walks are waiting."],
+		"lines": [practice_line, "Next: El Barri, the everyday walk."],
 	}
-	_check(main.results == expected_results, "tutorial produces the complete practice-only result payload")
-	_check((main.results.lines as Array).has(practice_line), "rendered result text labels practice bones as not banked")
+	_check(main.results == expected_results, "tutorial produces its complete result payload")
+	_check((main.results.lines as Array).has(practice_line), "rendered result text says the bones are banked")
 	_check(
 		main.results_card.visible
 		and not main.tut_label.visible
@@ -252,20 +252,24 @@ func _run() -> void:
 		"visible tutorial result replaces the lesson and campaign HUD"
 	)
 	_check(game.records["street"] == street_before, "tutorial completion leaves Street record unchanged")
-	_check(game.total_bones == wallet_before, "tutorial completion leaves wallet unchanged")
+	# finishing the first walk banks its bones and remembers it was walked,
+	# and touches nothing else
+	_check(game.total_bones == wallet_before + int(main.bones), "tutorial completion banks the bones it earned")
+	_check(game.tutorial_done, "tutorial completion is remembered")
 	_check(not main.tofu_quest_active and not main.tofu_home, "tutorial completion leaves Tofu state inactive")
 	_check(not bool(main.challenge.active), "tutorial completion leaves campaign challenge inactive")
-	_check(not FileAccess.file_exists(MISSING_SAVE), "tutorial paths do not create the missing save fixture")
 
 	var reopened = GameScript.new()
 	reopened.set("save_path", MISSING_SAVE)
 	reopened.load_records()
 	_check(reopened.records["street"] == street_before, "Street record remains unchanged after reload")
-	_check(reopened.total_bones == wallet_before, "wallet remains unchanged after reload")
+	_check(reopened.total_bones == wallet_before + int(main.bones), "the banked bones survive a reload")
+	_check(reopened.tutorial_done, "the finished first walk survives a reload")
 	_check(not reopened.records.has("tutorial"), "reload contains no tutorial campaign record")
 
 	reopened.free()
 	main.free()
+	_remove(MISSING_SAVE)
 	_finish()
 
 
