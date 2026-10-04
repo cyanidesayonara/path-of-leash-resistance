@@ -241,15 +241,21 @@ static func finish_walk(m: Node2D) -> void:
 			m.panel.visible = false
 
 
-static func finish_tutorial_walk(m: Node2D) -> void:
-	# the first walk is done: the title stops offering it first, and the bones
-	# earned learning it are real ones - the first time only, or practising
-	# again would be a bone farm with no risk in it
+# The first walk is done (at its end, or at the basics checkpoint): the title
+# stops offering it first, and the bones earned learning are real ones - the
+# first time only, or practising again would be a bone farm with no risk in
+# it. True when they were banked.
+static func complete_tutorial(m: Node2D) -> bool:
 	var banked := not Game.tutorial_done
 	if banked:
 		Game.total_bones += m.bones
 	Game.tutorial_done = true
 	Game.save_records()
+	return banked
+
+
+static func finish_tutorial_walk(m: Node2D) -> void:
+	var banked := complete_tutorial(m)
 	m.finished = true
 	m.frozen = true
 	m.dim.visible = true

@@ -59,6 +59,8 @@ static func prompts(m: Node2D, which := "") -> Array:
 				out.append(["bark", "exit game"])
 			return out
 		"confirm":
+			if String(m.confirm_id) == "basics":
+				return [["plant", "on to El Barri"], ["bark", "teach me the tricks"]]
 			if String(m.confirm_id) == "first":
 				return [["plant", "learn the ropes"], ["bark", "straight to the walks"],
 					["pee", "ask me again" if not Game.ask_tutorial else "don't ask again"]]
@@ -438,7 +440,8 @@ static var quit_hook := Callable()
 const CONFIRMS := {
 	"restart": {"title": "START AGAIN", "body": "Start this walk again?"},
 	"exit": {"title": "EXIT GAME", "body": "Quit the game?"},
-	"first": {"title": "FIRST TIME?", "body": "A short walk that shows you the ropes."},
+	"first": {"title": "FIRST TIME?", "body": "A three-minute walk that shows you the ropes."},
+	"basics": {"title": "THAT'S THE BASICS", "body": "Enough for any walk. The tricks are a bonus."},
 }
 
 
@@ -477,6 +480,9 @@ static func tick_confirm(m: Node2D) -> void:
 	if String(m.confirm_id) == "first":
 		tick_first(m)
 		return
+	if String(m.confirm_id) == "basics":
+		tick_basics(m)
+		return
 	if Input.is_action_just_pressed("plant"):
 		confirm_accept(m)
 	elif Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pause"):
@@ -500,6 +506,26 @@ static func tick_first(m: Node2D) -> void:
 		Sfx.play("ui")
 	elif Input.is_action_just_pressed("pause"):
 		confirm_cancel(m)
+
+
+# The tutorial's checkpoint, halfway: the first real walk now (the tutorial
+# counts as done), or on to the tricks.
+static func open_basics(m: Node2D) -> void:
+	m.paused = true
+	m.frozen = true
+	m.dim.visible = true
+	open_confirm(m, "basics")
+
+
+static func tick_basics(m: Node2D) -> void:
+	if Input.is_action_just_pressed("plant"):
+		m.confirm_id = ""
+		Sfx.play("ui")
+		m.complete_tutorial()
+		to_first_walk(m)
+	elif Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pause"):
+		resume(m)
+		m.tut_basics_seen = true
 
 
 static func start_tutorial(m: Node2D) -> void:

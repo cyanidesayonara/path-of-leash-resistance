@@ -4,6 +4,21 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-05 - The tutorial in two parts (#169, part 2)
+
+- THE BASICS first: walking, the leash going tight, digging in, business,
+  a sniff, the nose, the bark, the zoomies and bagging it, about three
+  minutes. Then the walk stops on THAT'S THE BASICS ("Enough for any walk. The
+  tricks are a bonus."): on to El Barri straight away (the tutorial counts as
+  done and its bones are banked), or teach me the tricks.
+- THE TRICKS for whoever wants them: riding the kerb, the vault, tetherball
+  and the brink, then digging in the dog park, where the tutorial now ends by
+  itself a moment after the last card. No more walking home with nothing left
+  to learn.
+- The title's FIRST TIME? card can say three minutes now, and does.
+- `tests/test_tutorial_checkpoint.gd` in CI; `--level=tutorial
+  --shot-menu=basics` photographs the card.
+
 ## 2026-10-05 - A way in for new players (#169, part 1)
 
 - The title asks a new player first: pressing start on a fresh save opens
