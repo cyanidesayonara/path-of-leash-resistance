@@ -2370,14 +2370,18 @@ func _draw_estacio(vt: float, vb: float) -> void:
 		ty += 132.0
 	# the departures board, hung over the way in
 	var bd: Vector2 = LevelBuild.ESTACIO_BOARD
-	if bd.y > vt - 80.0 and bd.y < vb + 80.0:
-		b.rect(Rect2(bd.x - 150.0 + 10.0, bd.y - 34.0 + 16.0, 300.0, 68.0), Color(0, 0, 0, 0.18))
-		b.rect(Rect2(bd.x - 150.0, bd.y - 34.0, 300.0, 68.0), Color(0.10, 0.10, 0.12))
+	var board_on := bd.y > vt - 80.0 and bd.y < vb + 80.0
+	if board_on:
+		# its shadow, the steel case with a lit top edge, the dark face, and
+		# the heading strip; the rows are written after the batch (text)
+		b.rect(Rect2(bd.x - 154.0 + 10.0, bd.y - 38.0 + 16.0, 308.0, 76.0), Color(0, 0, 0, 0.18))
+		b.rect(Rect2(bd.x - 154.0, bd.y - 38.0, 308.0, 76.0), Color(0.42, 0.44, 0.48))
+		b.rect(Rect2(bd.x - 154.0, bd.y - 38.0, 308.0, 3.0), Color(0.66, 0.68, 0.72))
+		b.rect(Rect2(bd.x - 150.0, bd.y - 34.0, 300.0, 68.0), Color(0.07, 0.07, 0.09))
+		b.rect(Rect2(bd.x - 150.0, bd.y - 34.0, 300.0, 13.0), Color(0.16, 0.30, 0.56))
 		for row in range(4):
-			var ry := bd.y - 24.0 + float(row) * 14.0
-			b.rect(Rect2(bd.x - 138.0, ry, 60.0, 7.0), Color(0.98, 0.80, 0.20))
-			b.rect(Rect2(bd.x - 70.0, ry, 150.0, 7.0), Color(0.96, 0.92, 0.80))
-			b.rect(Rect2(bd.x + 96.0, ry, 30.0, 7.0), Color(0.98, 0.80, 0.20) if row != 1 else Color(0.95, 0.35, 0.30))
+			b.line(Vector2(bd.x - 146.0, bd.y - 7.0 + float(row) * 11.0), Vector2(bd.x + 146.0, bd.y - 7.0 + float(row) * 11.0),
+				Color(1, 1, 1, 0.04), 1.0)
 	# the ticket barriers: grey cabinets, and the glass paddles in each gap
 	var by: float = LevelBuild.ESTACIO_BARRIER_Y
 	if by > vt - 60.0 and by < vb + 60.0:
@@ -2407,6 +2411,30 @@ func _draw_estacio(vt: float, vb: float) -> void:
 			cy += 240.0
 		b.circle(Vector2(tr.get_center().x, tr.position.y + 6.0), 10.0, Color(0.95, 0.95, 0.80))   # the headlamp
 	b.flush(_wc)
+	if board_on:
+		_draw_departures(bd)
+
+
+# The departures board's rows, amber dot-matrix on black: time, where to and
+# the platform, the way Rodalies boards read. One train is always cancelled.
+const DEPARTURES := [["10:42", "SITGES", "4"], ["10:47", "MATARÓ", "CANCEL·LAT"],
+	["10:55", "GIRONA", "2"], ["11:03", "VIC", "5"]]
+
+
+func _draw_departures(bd: Vector2) -> void:
+	var amber := Color(1.0, 0.72, 0.18)
+	_wc.draw_string(font, Vector2(bd.x - 144.0, bd.y - 24.0), "SORTIDES", HORIZONTAL_ALIGNMENT_LEFT, -1, 10,
+		Color(0.94, 0.96, 1.0))
+	_wc.draw_string(font, Vector2(bd.x + 40.0, bd.y - 24.0), "departures", HORIZONTAL_ALIGNMENT_LEFT, -1, 9,
+		Color(0.80, 0.86, 0.96, 0.8))
+	for row in range(DEPARTURES.size()):
+		var d: Array = DEPARTURES[row]
+		var y := bd.y - 10.0 + float(row) * 11.0
+		_wc.draw_string(font, Vector2(bd.x - 144.0, y), String(d[0]), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, amber)
+		_wc.draw_string(font, Vector2(bd.x - 100.0, y), String(d[1]), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, amber)
+		var cancelled := String(d[2]).length() > 2
+		_wc.draw_string(font, Vector2(bd.x + 144.0 - (68.0 if cancelled else 10.0), y), String(d[2]),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.98, 0.34, 0.28) if cancelled else amber)
 
 
 # EL DILUVI: the arcade (a roof behind its pillars, arches between), the
