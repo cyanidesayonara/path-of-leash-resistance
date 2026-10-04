@@ -4,6 +4,17 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-04 - An intro: "Walkies?" (nine rounds of polish)
+
+- After four frame-by-frame critiques and Santtu's notes: the leash is a
+  simulated rope (settled at rest, carried gathered, draped, taut when
+  pulled); shadows stay on the floor; Millie glances with her eyes, sits for
+  real, arcs her jump to the hook, drops the loop on the knee and bumps the
+  phone from below; your human is absorbed in the phone, takes the loop
+  without looking, tips forward on the yank and flies out; both go through
+  the door, shrinking with distance into its light; the title's O is a red
+  collar on a leash hanging from the top of the screen; on a daylight street
+  she tows your human, leaning back and skidding, out of frame.
 ## 2026-10-04 - An intro: "Walkies?"
 
 - The game opens on a short animated film (about 14 seconds), in a new side-on
