@@ -1,112 +1,127 @@
 # Path of Leash Resistance
 
-*You are the dog. Go touch grass.*
+A top-down physics comedy about a dog walk. You play the dog. Your human is
+glued to their phone and walking on autopilot, and the only thing between
+them and the bike lane is you, on the other end of a leash. Get them home
+with the phone in one piece, and sneak in as much dog business on the way as
+you can get away with.
 
-(Retitled July 2026: "Touch Grass" is an existing trademarked Steam game;
-the old tagline was better as a title anyway.)
+Play it in the browser or download it for Windows on
+[itch.io](https://cyanidesayonara.itch.io/path-of-leash-resistance), or get
+it from the [Microsoft Store](https://apps.microsoft.com/detail/9p5d14v8rbqx).
 
-A top-down physics comedy game. You are the dog. Your human is glued to
-their phone and walking on autopilot. Get them through the walk with the
-phone intact — dodge the bikes, mind the manholes (and the pond), and
-sneak in as much sniffing as you can get away with.
+## What you do
 
-Two walks so far, picked on the title screen with left/right: The
-Boulevard (bike lane, crossings, cafe terrace) and The Park (pond,
-bridge, duck crossings, windable trees).
+Your human is four times your weight and wins every straight tug. So you win
+the way a dog does: dig in at the right moment, wind the leash round a
+lamppost to hold them fast, and bark to stop them dead at the kerb. Wind
+them round a pole and keep pulling, and they whirl off the coil like a
+tetherball. In between there are posts to sniff, spots to mark, balls to
+fetch, other dogs to meet and squirrels you will never catch.
 
-Built in Godot 4.7, GDScript, currently all placeholder vector art.
-Playtest builds ship to a private itch.io page.
-The default dog is modeled after Millie, a distinguished salt-and-pepper
-mutt who squats like a lady.
+Your human answers the leash like a person. A steady pull leads them where
+you want to go; constant hauling wears their patience down until they say
+"HEY!" and cut the leash short. Walk nicely and the reel lets you out.
+
+## Features
+
+- **The leash is real rope.** The one you see is the one doing the physics:
+  it wraps poles, cinches when taut, slips off under a hard wrench, and
+  tangles with other people's leashes.
+- **A human with patience**, who telegraphs everything they are about to do
+  ("ring ring", "selfie!", "ooh!") and is never smarter than that.
+- **Fourteen walks through Barcelona**, each built as its own place, plus a
+  first walk that teaches one trick at a time and a daily walk that is the
+  same for everyone that day.
+- **Off the leash at the end**: a dog park, a dog beach, a clearing in the
+  woods, a yard, or a plaça with a fountain to jump in.
+- **Goals on every walk**, stars that unlock the next walk, and bones to
+  spend on collars, bandanas and coats.
+- **Combo tricks**: vaulting round a pole, grinding along a kerb, near misses.
+- **One chase**: a street sweeper careens down a back street at dawn, and you
+  drag your oblivious human home ahead of it.
+- **Moods**: a fright, a bark-off or a run off the leash leaves her jumpy,
+  barky, full of zoomies or flat, and each changes how she moves.
+- **Ground you can feel**: grass and mud slow her but hold scent, sand drags
+  at her paws, wet ground and snow make her skid.
+- **Weather and night**: rain, wind and snow on any walk, with everyone
+  dressed for it.
+- **Other dogs with lives of their own**: they sniff and mark the posts you
+  pass, and stop to sniff you back, unless they are the grumpy sort.
+- No ads, no purchases, no account. Plays offline.
+
+## The walks
+
+| Walk | |
+|---|---|
+| El Barri | the neighbourhood park |
+| La Rambla | the crowded promenade |
+| El Parc | the city park |
+| Passeig Marítim | the seafront |
+| El Diluvi | the downpour |
+| El Mercat | the market hall |
+| El Gòtic | the old town alleys |
+| El Bosc | the forest |
+| L'Estació | the railway station |
+| Les Obres | the roadworks |
+| La Castanyada | the chestnut festival |
+| La Ferralla | the scrapyard |
+| El Mosaic | the tiled terraces |
+| La Neteja | the dawn clean-up |
 
 ## Controls
 
-- Move: WASD / arrows / left stick
-- Dig in (anchor yourself; the leash stops the human. Doubles as the
-  squat when nature calls): hold Space / A
-- Pee (mark spots for points; five marks completes the territory quest):
-  hold Q / X
-- Bark (freezes the human for a beat): E / B
-- Restart: R / Start
-- Pause: Esc / Back. A grid you move through in both directions: resume,
-  this walk (its name and goals so far), start again, settings, walk
-  select, and on desktop exit game. Starting again and exiting ask first.
+Keyboard, controller or touch. The on-screen prompts show the buttons of
+whatever you used last.
 
-## What to feel for
+| Action | Keyboard | Controller |
+|---|---|---|
+| Move | WASD or arrows | left stick |
+| Dig in (hold): brace against the leash, and squat when nature calls | Space | A |
+| Mark a spot (hold) | Q | X |
+| Bark: stops your human for a beat, scares off squirrels | E | B |
+| Run | Shift | RB |
+| Goals | Tab | d-pad up |
+| Pause | Esc | Back |
+| Start again | R | Start |
 
-- It is a tug of war you lose on raw muscle: the human is four times your
-  mass and will yank you around. You win by bracing (plant), leverage
-  (pole wraps multiply your holding power like a capstan), and timing.
-- Plant yourself before bike lanes so the human strains against the leash
-  and grinds to a stop. Release when clear.
-- A hard yank while anchored makes the human stumble toward you; doing it
-  as a bike whizzes past is a NICE SAVE and builds your streak.
-- Your leash is a real rope. It hangs in a smooth span, then eases into the
-  pull - and steals your steering with it - over the first 5% of stretch.
-  Wind it around a pole as many turns as you like: the bend stays on the
-  obstacle, the coil cinches when taut, the pull curves around the pole
-  (tetherball!), and a hard enough wrench slips the whole coil off.
-- The fling: wind your human around a pole and keep pulling. Instead of
-  jamming, they commit to one way round and WHIRL off the coil at their end
-  of the leash. Pull harder and the pulley spins them faster. The ordinary
-  launch is the orbit's own tangent when it points at you; if there is no
-  honest way to make that throw, they stagger out dizzy instead. A clean,
-  fast fling sails past you. Then the bungee collects the dog.
-- Dog business is dog business: pee anywhere with Q - marking hydrants
-  and poles scores, five marks secures the territory, stray breaks just
-  leave a puddle. The test tube lasts about nine breaks, and a full
-  bladder slows you down. Once per walk nature calls for a longer stop -
-  find a safe moment, or the dog will pick the moment for you. Then
-  watch the owner: they walk to it, bag it, and carry it to the nearest
-  bin, and that whole errand is yours to protect (or sabotage).
-- A wound leash is a pulley: the dog pulling one end multiplies the drag
-  on the human around the pole, all the time, not just during the whirl.
-- Open holes swallow dogs too. Watch your own paws.
-- A marked bike lane runs alongside the sidewalk: fast commuters hold
-  their line, kids on scooters weave everywhere - including onto the
-  sidewalk. The far shoulder has good sniffing, if you dare cross.
-- Squirrels. A nearby squirrel pulls at you - literally, your paws drift
-  toward it - and chasing one pays bones even though it always escapes
-  at the last second. Bark to scare them off when duty calls.
-- Every walk draws three quests from a pool (top right of the HUD).
-  Completing them pays bones and raises your GOOD DOG rating at the
-  gate; all three is a PERFECT WALK.
-- The human owns the retractable leash. "click!" means they just changed
-  its length on a whim — sometimes reeling you in against your will.
-- The human telegraphs every event with a speech bubble: "ring ring" stops,
-  "typing..." drifts, "ooh!" dashes, "selfie!" backs up blindly,
-  "filming..." walks backwards, "tired..." heads for a bench.
-- Sniffing hydrants and eating dropped kebabs scores bones, but every
-  second sniffing is a second the human spends unsupervised.
+On a phone or tablet: a stick on the left, DIG, PEE, BARK and RUN on the
+right, and MENU at the top.
 
-## Development
+## Building and running
 
-Requires Godot 4.7. A portable copy lives in `godot/` locally (gitignored);
-grab it from https://godotengine.org/download or the GitHub releases.
+Godot 4.7, GDScript only. A portable editor lives in `godot/` locally
+(gitignored); get it from https://godotengine.org/download.
 
 Run:
 ```
 godot\Godot_v4.7-stable_win64.exe --path .
 ```
 
-Headless smoke test (same as CI):
+Headless smoke test (what CI runs):
 ```
 godot\Godot_v4.7-stable_win64_console.exe --headless --path . --quit-after 1800
 ```
 
-Web export (needs export templates installed, see AGENTS.md):
+Web export (needs the web export templates, see AGENTS.md):
 ```
 godot\Godot_v4.7-stable_win64_console.exe --headless --path . --export-release "Web" build/web/index.html
 ```
 
-Releasing is a tag: `git tag v1.51 && git push --tags` builds web and
-Windows and pushes both to their itch channels. See AGENTS.md.
+Releasing is a tag: `git tag v1.58 && git push --tags` builds web and Windows
+and pushes each to its own itch channel. AGENTS.md has the rest: tests,
+screenshots and benchmarks.
 
 ## Documentation
 
-- `PROJECT.md` — design pillars, phased roadmap, meta/retention direction
-- `AGENTS.md` — technical map and conventions (for AI agents and humans alike)
-- `CHANGELOG.md` — append-only session history
+- `PROJECT.md`: design pillars and roadmap
+- `AGENTS.md`: technical map and conventions, for people and agents alike
+- `CHANGELOG.md`: session history, newest first
 
-All rights reserved. Source is public for reading and learning; the game
-itself is a commercial work in progress.
+## Credits
+
+Made by Santtu Nykänen. The default dog is Millie, a distinguished
+salt-and-pepper mutt who squats like a lady.
+
+All rights reserved. The source is public for reading and learning; the game
+itself is a commercial work.
