@@ -4,6 +4,14 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-04 - No subtitle
+
+- "you are the dog" is gone from under the title on the title screen and from
+  the Store poster art, and "You are the dog. Go touch grass." from the
+  Windows file description and the Store package description. The title
+  stands alone (Santtu: tired of it, and it was not needed).
+- The First Walk's opening card is headed "Walkies." instead.
+- The README, AGENTS.md, PROJECT.md and the Store listing record follow.
 ## 2026-10-04 - How every walk ends (level audit, #21)
 
 - **The gate** was a dark bar across the path over a dashed line, which read

@@ -1,8 +1,8 @@
 extends Node2D
 
 # Path of Leash Resistance.
-# You are the dog. Walk the phone-zombie human through it with the
-# phone intact. Go touch grass.
+# You play the dog. Walk the phone-zombie human through it with the
+# phone intact.
 
 # The walkable corridor. These used to be fixed constants, which is why
 # every walk had identical proportions no matter how differently it was
@@ -4384,7 +4384,7 @@ func _draw_ground_title() -> void:
 		if mat == "":
 			_draw_world_text(Vector2(mid, START_Y - 232.0), "PATH OF", 52, style, 1.0)
 			_draw_world_text(Vector2(mid, START_Y - 176.0), "LEASH RESISTANCE", 52, style, 2.0)
-		_draw_gloss(Vector2(mid, START_Y - 122.0), "you are the dog", mat, style, 3.0)
+		# no subtitle under the title: the name and the walk say it
 		return
 	var name := _walk_name().to_upper()
 	var y := START_Y - 190.0

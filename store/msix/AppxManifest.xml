@@ -48,7 +48,7 @@
       uap10:TrustLevel="mediumIL">
       <uap:VisualElements
         DisplayName="Path of Leash Resistance"
-        Description="You are the dog. Go touch grass."
+        Description="A top-down physics comedy: walk your phone-glued human home."
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
