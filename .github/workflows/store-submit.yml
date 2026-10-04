@@ -1,0 +1,87 @@
+# Put a release's MSIX and its "What's new" into a Partner Center DRAFT, from
+# the GitHub release that release.yml made. It never starts certification:
+# look at the draft in Partner Center and click "Submit for certification"
+# yourself. Ported from Stemma's partner-center-submit.yml, which works with
+# the same seller account. See docs/MICROSOFT_STORE.md, step 7.
+#
+# Secrets (repo settings): PARTNER_CENTER_TENANT_ID, PARTNER_CENTER_SELLER_ID,
+# PARTNER_CENTER_CLIENT_ID, PARTNER_CENTER_CLIENT_SECRET.
+
+name: Store submit (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v1.58)"
+        required: true
+        type: string
+      mode:
+        description: "configure = check credentials; update_draft = MSIX + What's new into a draft; get_draft = print the draft"
+        type: choice
+        options: [configure, update_draft, get_draft]
+        default: configure
+
+env:
+  PRODUCT_ID: 9P5D14V8RBQX     # the Store ID (public; Partner Center > Product identity)
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        if: ${{ inputs.mode == 'update_draft' }}
+
+      - name: Download the release's MSIX
+        if: ${{ inputs.mode == 'update_draft' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release download "${{ inputs.tag }}" --repo "${{ github.repository }}" --pattern "*.msix" --dir pkg
+          ls -lh pkg
+
+      - name: Linux credential storage for msstore
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnome-keyring dbus-x11
+          eval "$(dbus-launch --sh-syntax)"
+          echo "DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS" >> "$GITHUB_ENV"
+          echo "DBUS_SESSION_BUS_PID=$DBUS_SESSION_BUS_PID" >> "$GITHUB_ENV"
+          echo "anypass_just_to_unlock" | gnome-keyring-daemon --unlock
+          eval "$(echo "anypass_just_to_unlock" | gnome-keyring-daemon --start --components=secrets)"
+          echo "GNOME_KEYRING_CONTROL=$GNOME_KEYRING_CONTROL" >> "$GITHUB_ENV"
+
+      - uses: microsoft/setup-msstore-cli@v1
+
+      - name: Configure Store credentials
+        run: |
+          set -euo pipefail
+          msstore reconfigure \
+            --tenantId "${{ secrets.PARTNER_CENTER_TENANT_ID }}" \
+            --sellerId "${{ secrets.PARTNER_CENTER_SELLER_ID }}" \
+            --clientId "${{ secrets.PARTNER_CENTER_CLIENT_ID }}" \
+            --clientSecret "${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}"
+          msstore info
+
+      - name: Upload the MSIX into a draft
+        if: ${{ inputs.mode == 'update_draft' }}
+        run: |
+          set -euo pipefail
+          msstore publish pkg/*.msix --appId "$PRODUCT_ID" --noCommit --verbose
+
+      - name: Set the draft's What's new from store/listing.md
+        if: ${{ inputs.mode == 'update_draft' }}
+        run: |
+          set -euo pipefail
+          NO_COLOR=1 msstore submission get "$PRODUCT_ID" --verbose > submission.json
+          python3 tools/store_whats_new.py submission.json store/listing.md metadata.json
+          msstore submission updateMetadata "$PRODUCT_ID" "$(cat metadata.json)" --verbose
+          echo "Draft updated. Check it in Partner Center, then click Submit for certification."
+
+      - name: Print the draft
+        if: ${{ inputs.mode == 'get_draft' }}
+        run: |
+          set -euo pipefail
+          NO_COLOR=1 msstore submission status "$PRODUCT_ID" --verbose
+          NO_COLOR=1 msstore submission get "$PRODUCT_ID" --verbose
