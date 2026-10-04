@@ -14,6 +14,33 @@ Append-only session history, newest first.
 - The clearing's water is a stone spring, a font: a stone back with a pipe,
   water falling into a round mossy basin, rings spreading, instead of a
   galvanised trough.
+## 2026-10-04 - How every walk ends (level audit, #21)
+
+- **The gate** was a dark bar across the path over a dashed line, which read
+  as a road to cross on every walk, the forest included. It is now the gate
+  the place would have (`main._draw_gate`): timber posts and no sill where a
+  walk ends in nature, stone gateposts and a stone sill into a plaça, and an
+  iron dog-park gate with both leaves swung open everywhere else, at the
+  path's real edges.
+- **Past the far fence** the off-leash spaces stopped in a ruled line onto
+  flat grey. Now there is a place beyond (`main._draw_freedom_beyond`): a
+  clipped hedge and trees behind a dog park, a block wall and shed roofs
+  behind a yard, more forest round a clearing, terracotta roofs behind a
+  plaça's houses, and the sea and sand going on at the beach.
+- **Names in Catalan** over every gate, with OFF LEASH as the gloss: PIPICÀ,
+  LA CLARIANA, PLATJA DELS GOSSOS, EL PATI, EL PORXO, EL SOLAR (was PARK, DOG
+  PARK, CLEARING, DOG BEACH, BACK GATE, SHELTER, DETOUR). The signs inside
+  say the same with an English line under them, and a gate without a
+  lettering material writes "off leash" under its name.
+- The dune row along the top of the dog beach no longer stands out in the
+  sea: dunes only on the sand.
+## 2026-10-04 - L'Estació's departures board says something
+
+- The departures board over the way in was a black slab with yellow and
+  cream bars standing for text. It is a steel-cased board with a blue
+  SORTIDES strip (glossed "departures") and four rows in amber, time, where to
+  and platform, the way Rodalies boards read: Sitges, Girona, Vic, and the
+  Mataró train, CANCEL·LAT in red, as one always is.
 ## 2026-10-04 - Les Obres' digger, and close-up screenshots
 
 - The parked digger was a yellow disc on two black bars. It is drawn from

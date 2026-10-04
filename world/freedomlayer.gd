@@ -31,6 +31,10 @@ func mark_dirty() -> void:
 
 
 func tick(cam_pos: Vector2) -> void:
+	# far down the walk none of this is on screen, and the canvas keeps what it
+	# drew: moving the camera there is no reason to redraw the whole space
+	if not dirty and cam_pos.y > main.GATE_Y + 900.0:
+		return
 	if dirty or cam_pos.distance_to(last_cam) > 110.0:
 		dirty = false
 		last_cam = cam_pos
