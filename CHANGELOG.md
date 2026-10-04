@@ -4,6 +4,16 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-04 - El Bosc's floor, edges and spring (level audit, #21)
+
+- The trail had a kerb: a pale ruled line down both edges, as in town. A
+  forest path frays instead: a trodden band just inside each edge, loose dirt
+  spilling out into the floor, and now and then a root across the edge
+  (`main._draw_trail_edges`).
+- The forest floor grows ferns and has fallen leaves among its tufts.
+- The clearing's water is a stone spring, a font: a stone back with a pipe,
+  water falling into a round mossy basin, rings spreading, instead of a
+  galvanised trough.
 ## 2026-10-04 - How every walk ends (level audit, #21)
 
 - **The gate** was a dark bar across the path over a dashed line, which read
