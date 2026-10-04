@@ -187,20 +187,38 @@ Start a submission on the product. Every section must be complete:
 2. Create a new submission in Partner Center (it copies the previous one),
    replace the package, update "What's new", and submit.
 
-## 7. Automating it later (optional)
+## 7. The Store submit workflow
 
-Only once the first submission is live, and only while the game is free:
+`.github/workflows/store-submit.yml` (Actions > Store submit (manual) > Run
+workflow) puts a release's MSIX and its "What's new" into a Partner Center
+**draft**. It never starts certification. Ported from Stemma's workflow, which
+works with the same seller account (last run 2026-08-01).
 
-- The Microsoft Store Developer CLI (`msstore`, runs on Windows, macOS and
-  Linux, needs .NET 9) pushes a package to an existing product:
-  `msstore publish . --inputFile PathOfLeashResistance-1.55.0.0.msix --appId <Store ID>`.
-  It needs an Entra ID tenant linked to Partner Center and an app
-  registration with the Manager role (`msstore reconfigure --tenantId
-  --sellerId --clientId --clientSecret`), stored as repo secrets.
-- The official Action is `microsoft/microsoft-store-apppublisher`. Its
-  examples run on `windows-latest`, which the MakeAppx step needs anyway, so
-  the job would be a Windows job in `release.yml`, after the itch push, so a
-  Store failure never blocks itch.
+One-time setup, in this repo's Settings > Secrets and variables > Actions,
+with the same values as Stemma's secrets of the same names (GitHub never
+shows a saved secret again, so copy them from wherever you keep them, or make
+a new client secret for the Entra app in the Azure portal and update both
+repos):
+
+- `PARTNER_CENTER_TENANT_ID`
+- `PARTNER_CENTER_SELLER_ID`
+- `PARTNER_CENTER_CLIENT_ID`
+- `PARTNER_CENTER_CLIENT_SECRET`
+
+The Store ID is public and set in the workflow (`9P5D14V8RBQX`).
+
+Each release:
+
+1. Tag it. `release.yml` attaches `PathOfLeashResistance-<version>.msix`.
+2. Write the "What's new in this version" block in `store/listing.md`.
+3. Run the workflow with the tag and mode `update_draft` (run `configure`
+   once first to check the credentials).
+4. In Partner Center, open the draft, check the package and the text, and
+   click **Submit for certification**.
+
+The description, features, keywords and screenshots are not touched: change
+them by hand when they change. `msstore publish` is documented for free
+products only, which this game is.
 
 ## Fallback: GDK game
 
