@@ -61,7 +61,7 @@ static func prompts(m: Node2D, which := "") -> Array:
 		"confirm":
 			if String(m.confirm_id) == "first":
 				return [["plant", "learn the ropes"], ["bark", "straight to the walks"],
-					["pee", "ask again: no" if not Game.ask_tutorial else "don't ask again"]]
+					["pee", "ask me again" if not Game.ask_tutorial else "don't ask again"]]
 			return [["plant", "yes"], ["bark", "cancel"]]
 		"walkcard":
 			return [["bark", "back"]]
