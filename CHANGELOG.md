@@ -3,6 +3,14 @@
 Append-only session history, newest first.
 
 
+
+## 2026-10-04 - Two level review leftovers (#21)
+
+- The HOME sign no longer sits under the prompt bar on the title and the walk
+  select: it means nothing before she has set off, so it shows once the walk
+  starts (the line it labels is still drawn).
+- El Mosaic's viaduct slope tapers in and out at each end of the viaduct
+  instead of stopping in a straight edge.
 ## 2026-10-04 - Natural ground looks and moves like itself (terrain pass 2, part 1)
 
 The terrain spec (`docs/superpowers/specs/2026-10-03-menu-terrain-design.md`,
