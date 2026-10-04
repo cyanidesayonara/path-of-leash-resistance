@@ -4,6 +4,27 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-04 - La Rambla: audit fixes (#149)
+
+- The promenade is fuller: the plane trees down both edges stand every 180 px
+  instead of 270 (a lamp standard every fourth instead of every third), and
+  every stall has two or three people browsing at its counter, pressed up to
+  the front so nobody walks through them.
+- The cellar hatches are drawn as what they are: a stone kerb, the two steel
+  leaves folded back flat with tread plate and hinges, a stair going down
+  into the dark, the crates waiting on a sack truck. All three are set back
+  from the kerb, and the one by the cross street no longer runs into it.
+- The stalls are spread out: the three flower stalls in a huddle are now two,
+  far apart, with a painter's pitch (framed views of the city, an easel)
+  where the third stood; the second souvenir stall at the end of the walk is
+  a second-hand book stall.
+- The sellers' blankets lay out real goods, by hand and not quite in a grid:
+  folded sunglasses in four frames, handbags with straps and clasps, and
+  footballs, light-up spinners and plush bears; cords run from the corners
+  toward the seller, ready to pull it all into a bundle.
+- Drain grates and repairs in the paving keep clear of café tables, chairs
+  and parasols.
+
 ## 2026-10-04 - A new soundtrack
 
 - One tune, sixteen bars in D, arranged for every walk on synthesised

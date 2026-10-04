@@ -2971,19 +2971,20 @@ func _draw_rambla(vt: float, vb: float) -> void:
 		b.rect(Rect2(r.position, r.size - Vector2(2, 2)), Color(0.92, 0.91, 0.88))
 		b.line(Vector2(r.get_center().x, r.position.y + 2.0), Vector2(r.get_center().x, r.end.y - 3.0), Color(0.82, 0.80, 0.76), 1.5)
 		var goods := String(bl["goods"])
+		# the cords at the corners, gathered to the seller's hand: one pull
+		# and the whole stall is a bundle
+		var sp: Vector2 = bl["sp"]
+		for corner: Vector2 in [r.position, Vector2(r.end.x, r.position.y), Vector2(r.position.x, r.end.y), r.end]:
+			b.line(corner, corner.lerp(sp, 0.35), Color(0.30, 0.30, 0.34, 0.8), 1.2)
+		b.line(Vector2(r.position.x + 2.0, r.get_center().y), Vector2(r.end.x - 3.0, r.get_center().y), Color(0.84, 0.82, 0.78), 1.0)
+		var bi := int(r.position.y) % 7
 		for gi in range(6):
-			var gp := r.position + Vector2(12.0 + float(gi % 3) * 24.0, 14.0 + float(gi / 3) * 24.0)
-			match goods:
-				"shades":
-					b.circle(gp + Vector2(-5, 0), 4.0, Color(0.10, 0.10, 0.12))
-					b.circle(gp + Vector2(5, 0), 4.0, Color(0.10, 0.10, 0.12))
-					b.line(gp + Vector2(-2, 0), gp + Vector2(2, 0), Color(0.6, 0.5, 0.2), 1.5)
-				"bags":
-					b.rect(Rect2(gp.x - 8.0, gp.y - 6.0, 16.0, 12.0), [Color(0.55, 0.30, 0.18), Color(0.12, 0.12, 0.14), Color(0.70, 0.60, 0.40)][gi % 3])
-					b.line(gp + Vector2(-5, -6), gp + Vector2(5, -6), Color(0.3, 0.2, 0.1), 1.5)
-				_:
-					b.circle(gp, 6.0, [Color(0.95, 0.30, 0.25), Color(0.30, 0.65, 0.90), Color(0.98, 0.80, 0.25)][gi % 3])
-		var sp := _seller_pos(r)
+			# laid out by hand: not quite a grid, not quite straight
+			var jx := float((gi * 5 + bi) % 7) - 3.0
+			var jy := float((gi * 3 + bi) % 5) - 2.0
+			var gp := r.position + Vector2(13.0 + float(gi % 3) * 24.0 + jx, 14.0 + float(gi / 3) * 23.0 + jy)
+			var tilt := (float((gi + bi) % 5) - 2.0) * 0.18
+			_draw_blanket_good(b, goods, gp, tilt, gi + bi)
 		b.circle(sp + Vector2(2, 3), 11.0, Color(0, 0, 0, 0.18))
 		b.circle(sp, 11.0, Color(0.20, 0.24, 0.32))
 		b.circle(sp + Vector2(0, -3), 6.5, Color(0.36, 0.24, 0.17))
@@ -3148,6 +3149,118 @@ func _draw_busker(pf: Vector2, idx: int, pt: float) -> void:
 
 # A La Rambla stall by what it sells. Same footprint as a market stall
 # (STALL_BODY_SIZE), so bodies, wrap points and blockers are unchanged.
+func _draw_cellar(c: Rect2) -> void:
+	var b := ShapeBatch.new()
+	var steel := Color(0.40, 0.41, 0.44)
+	var tread := Color(0.54, 0.55, 0.58)
+	b.rect(Rect2(c.position + LIGHT * 4.0, c.size).grow(3.0), Color(0, 0, 0, 0.18))
+	b.rect(c.grow(3.0), Color(0.60, 0.58, 0.54))
+	var lw := c.size.x * 0.24
+	var hole := Rect2(c.position.x + lw, c.position.y + 3.0, c.size.x - lw * 2.0, c.size.y - 6.0)
+	for side in range(2):
+		var leaf := Rect2(c.position.x if side == 0 else c.end.x - lw, c.position.y, lw, c.size.y)
+		b.rect(leaf, steel)
+		b.rect(Rect2(leaf.position.x, leaf.position.y, leaf.size.x, 2.0), steel.lightened(0.25))
+		var ty := leaf.position.y + 5.0
+		var k := 0
+		while ty < leaf.end.y - 4.0:
+			var x0 := leaf.position.x + (3.0 if k % 2 == 0 else 6.0)
+			b.line(Vector2(x0, ty), Vector2(x0 + 3.5, ty + 2.0), tread, 1.4)
+			ty += 6.0
+			k += 1
+		var hx := leaf.end.x - 2.0 if side == 0 else leaf.position.x
+		for hy: float in [leaf.position.y + 8.0, leaf.end.y - 14.0]:
+			b.rect(Rect2(hx, hy, 2.0, 6.0), Color(0.16, 0.16, 0.18))
+	b.rect(hole, Color(0.06, 0.06, 0.07))
+	# the treads, lit where the daylight reaches down into it
+	var n := 5
+	for k in range(n):
+		var sy := hole.end.y - float(k + 1) * hole.size.y / float(n + 1)
+		b.rect(Rect2(hole.position.x, sy, hole.size.x, 4.0),
+			Color(0.36, 0.32, 0.28, 0.85 - 0.15 * float(k)))
+	# the delivery: two crates on a sack truck beside the hatch
+	var tx := c.end.x + 6.0
+	b.line(Vector2(tx + 2.0, c.position.y + 6.0), Vector2(tx + 2.0, c.position.y + 46.0), Color(0.22, 0.22, 0.24), 2.0)
+	for cr in range(2):
+		var cy := c.position.y + 8.0 + float(cr) * 18.0
+		b.rect(Rect2(tx + 4.0, cy, 18.0, 16.0), Color(0.62, 0.46, 0.28))
+		b.rect(Rect2(tx + 4.0, cy, 18.0, 3.0), Color(0.72, 0.56, 0.36))
+		b.line(Vector2(tx + 4.0, cy + 9.0), Vector2(tx + 22.0, cy + 9.0), Color(0.48, 0.34, 0.20), 1.2)
+	b.circle(Vector2(tx + 4.0, c.position.y + 47.0), 3.0, Color(0.12, 0.12, 0.13))
+	b.circle(Vector2(tx + 20.0, c.position.y + 47.0), 3.0, Color(0.12, 0.12, 0.13))
+	b.flush(_wc)
+
+
+# people browsing at a La Rambla stall, pressed up to its front: not solid,
+# so they stand close enough to the counter that nobody walks through them
+const BROWSER_SHIRTS := [Color(0.86, 0.30, 0.28), Color(0.25, 0.45, 0.70), Color(0.92, 0.84, 0.62),
+	Color(0.30, 0.52, 0.36), Color(0.62, 0.40, 0.62), Color(0.95, 0.95, 0.92)]
+const BROWSER_HAIR := [Color(0.16, 0.12, 0.10), Color(0.42, 0.28, 0.16), Color(0.80, 0.66, 0.40), Color(0.30, 0.30, 0.32)]
+const BROWSER_SKIN := [Color(0.92, 0.76, 0.62), Color(0.62, 0.44, 0.32), Color(0.82, 0.64, 0.50), Color(0.45, 0.30, 0.22)]
+
+
+func _draw_browsers(b: ShapeBatch, r: Rect2, i: int) -> void:
+	# the counter faces the middle of the promenade
+	var face_right := r.get_center().x < 640.0
+	var fwd := Vector2.LEFT if face_right else Vector2.RIGHT
+	var fx := r.end.x + 12.0 if face_right else r.position.x - 12.0
+	var count := 2 + (i % 2)
+	for k in range(count):
+		var h := (i * 7 + k * 13) % 97
+		var p := Vector2(fx + float(h % 5) - 2.0, r.position.y + 10.0 + float(k) * (r.size.y - 16.0) / float(maxi(count - 1, 1)))
+		var lean := fwd.rotated((float(h % 7) - 3.0) * 0.08)
+		b.circle(p + Vector2(3, 4), 10.0, Color(0, 0, 0, 0.16))
+		HumanAppearance.draw_torso(b, p, lean, Vector2(8.0, 10.5), BROWSER_SHIRTS[h % BROWSER_SHIRTS.size()])
+		HumanAppearance.draw_head(b, p + lean * 3.0, lean, 6.0, BROWSER_SKIN[h % BROWSER_SKIN.size()],
+			BROWSER_HAIR[(h / 3) % BROWSER_HAIR.size()], ["short", "long", "curly", "bun"][h % 4])
+
+
+# one thing on a seller's blanket, drawn as itself
+func _draw_blanket_good(b: ShapeBatch, goods: String, p: Vector2, tilt: float, k: int) -> void:
+	var ax := Vector2.RIGHT.rotated(tilt)
+	var ay := ax.orthogonal()
+	match goods:
+		"shades":
+			# a pair of sunglasses, folded: two lenses, the bridge, the arms
+			var frame: Color = [Color(0.08, 0.08, 0.10), Color(0.46, 0.28, 0.16), Color(0.92, 0.90, 0.86), Color(0.70, 0.16, 0.18)][k % 4]
+			for s: float in [-1.0, 1.0]:
+				var lc := p + ax * 5.0 * s
+				b.circle(lc, 4.4, frame)
+				b.circle(lc, 3.2, Color(0.12, 0.14, 0.18))
+				b.circle(lc - Vector2(1.2, 1.2), 1.0, Color(1, 1, 1, 0.6))
+				b.line(lc - ay * 3.6 + ax * 3.0 * s, lc - ay * 3.6 - ax * 3.0 * s, frame, 1.2)
+			b.line(p - ax * 1.2, p + ax * 1.2, frame, 1.6)
+		"bags":
+			# a handbag: a soft trapezoid body, the strap up over it, a clasp
+			var col: Color = [Color(0.66, 0.46, 0.28), Color(0.12, 0.12, 0.14), Color(0.72, 0.18, 0.22), Color(0.90, 0.86, 0.76)][k % 4]
+			var body := PackedVector2Array([p - ax * 8.0 + ay * 6.0, p + ax * 8.0 + ay * 6.0,
+				p + ax * 6.0 - ay * 3.0, p - ax * 6.0 - ay * 3.0])
+			b.polygon(body, col)
+			b.line(p - ax * 4.0 - ay * 3.0, p - ax * 2.0 - ay * 8.0, col.darkened(0.3), 1.6)
+			b.line(p - ax * 2.0 - ay * 8.0, p + ax * 2.0 - ay * 8.0, col.darkened(0.3), 1.6)
+			b.line(p + ax * 2.0 - ay * 8.0, p + ax * 4.0 - ay * 3.0, col.darkened(0.3), 1.6)
+			b.circle(p + ay * 0.5, 1.4, Color(0.86, 0.74, 0.34))
+		_:
+			# toys: a football, a light-up spinner, a little plush bear
+			match k % 3:
+				0:
+					b.circle(p, 5.0, Color(0.96, 0.96, 0.94))
+					b.circle(p, 2.0, Color(0.12, 0.12, 0.14))
+					for a in range(5):
+						b.circle(p + Vector2.from_angle(TAU * float(a) / 5.0 + tilt) * 4.0, 1.0, Color(0.12, 0.12, 0.14))
+				1:
+					for a in range(3):
+						var bl := Vector2.from_angle(TAU * float(a) / 3.0 + tilt)
+						b.line(p, p + bl * 7.0, [Color(0.95, 0.3, 0.6), Color(0.3, 0.8, 0.95), Color(0.98, 0.85, 0.3)][a], 2.4)
+					b.circle(p, 2.2, Color(0.95, 0.95, 0.9))
+				_:
+					b.circle(p + ay * 2.0, 4.6, Color(0.66, 0.46, 0.30))
+					b.circle(p - ay * 3.0, 3.6, Color(0.70, 0.50, 0.32))
+					b.circle(p - ay * 3.0 - ax * 3.0 - ay * 2.0, 1.6, Color(0.56, 0.38, 0.24))
+					b.circle(p - ay * 3.0 + ax * 3.0 - ay * 2.0, 1.6, Color(0.56, 0.38, 0.24))
+					b.circle(p - ay * 2.4, 0.8, Color(0.1, 0.1, 0.1))
+
+
 func _draw_rambla_stall(st: Vector2, kind: String, i: int) -> void:
 	var b := ShapeBatch.new()
 	var r := Rect2(st.x - 48.0, st.y - 28.0, 96.0, 56.0)
@@ -3186,6 +3299,45 @@ func _draw_rambla_stall(st: Vector2, kind: String, i: int) -> void:
 				b.line(Vector2(sx - 6.0, r.position.y + 12.0), Vector2(sx + 6.0, r.position.y + 12.0), [Color(0.12, 0.22, 0.52), Color(0.62, 0.12, 0.24)][k % 2], 3.0)
 			for k in range(6):
 				b.circle(Vector2(r.position.x + 12.0 + float(k) * 15.0, r.end.y - 12.0), 5.0, [Color(0.95, 0.75, 0.2), Color(0.9, 0.3, 0.25), Color(0.3, 0.6, 0.85)][k % 3])
+		"books":
+			# second-hand books on a trestle, spines up in rows, a couple
+			# lying open, a crate of comics at the end
+			b.rect(r, Color(0.44, 0.32, 0.22))
+			b.rect(r.grow(-4.0), Color(0.52, 0.38, 0.26))
+			var spine := [Color(0.62, 0.16, 0.18), Color(0.16, 0.30, 0.52), Color(0.86, 0.78, 0.56),
+				Color(0.24, 0.42, 0.28), Color(0.20, 0.18, 0.18), Color(0.82, 0.52, 0.22)]
+			for row in range(2):
+				var bx := r.position.x + 6.0
+				var k := row * 5 + i
+				while bx < r.end.x - 34.0:
+					var w := 3.0 + float(k % 3)
+					b.rect(Rect2(bx, r.position.y + 6.0 + float(row) * 22.0, w, 16.0 - float(k % 2) * 2.0), spine[k % spine.size()])
+					bx += w + 1.0
+					k += 1
+			for ob in range(2):
+				var op := Vector2(r.end.x - 30.0, r.position.y + 7.0 + float(ob) * 22.0)
+				b.rect(Rect2(op, Vector2(24.0, 16.0)), Color(0.96, 0.95, 0.90))
+				b.line(op + Vector2(12, 1), op + Vector2(12, 15), Color(0.70, 0.68, 0.62), 1.2)
+				for ln in range(3):
+					b.line(op + Vector2(3, 4 + ln * 4), op + Vector2(10, 4 + ln * 4), Color(0.6, 0.6, 0.6), 1.0)
+					b.line(op + Vector2(14, 4 + ln * 4), op + Vector2(21, 4 + ln * 4), Color(0.6, 0.6, 0.6), 1.0)
+		"painter":
+			# a painter's pitch: a rack of small framed views of the city
+			# (the sea, the Sagrada's spires, a sunset) and the easel
+			b.rect(Rect2(r.position.x, r.position.y, 60.0, r.size.y), Color(0.30, 0.24, 0.20))
+			var views := [[Color(0.30, 0.56, 0.80), Color(0.94, 0.84, 0.56)], [Color(0.96, 0.62, 0.30), Color(0.62, 0.36, 0.28)],
+				[Color(0.40, 0.66, 0.42), Color(0.86, 0.86, 0.80)], [Color(0.92, 0.46, 0.40), Color(0.32, 0.30, 0.52)]]
+			for k in range(6):
+				var fp := Vector2(r.position.x + 5.0 + float(k % 3) * 18.0, r.position.y + 5.0 + float(k / 3) * 25.0)
+				var v: Array = views[(k + i) % views.size()]
+				b.rect(Rect2(fp, Vector2(16.0, 21.0)), Color(0.78, 0.62, 0.30))
+				b.rect(Rect2(fp + Vector2(2, 2), Vector2(12.0, 17.0)), v[0])
+				b.rect(Rect2(fp + Vector2(2, 12), Vector2(12.0, 7.0)), v[1])
+			b.line(Vector2(st.x + 24.0, st.y - 22.0), Vector2(st.x + 34.0, st.y + 20.0), Color(0.45, 0.32, 0.20), 3.0)
+			b.line(Vector2(st.x + 44.0, st.y - 22.0), Vector2(st.x + 34.0, st.y + 20.0), Color(0.45, 0.32, 0.20), 3.0)
+			b.rect(Rect2(st.x + 22.0, st.y - 26.0, 24.0, 18.0), Color(0.98, 0.97, 0.94))
+			b.rect(Rect2(st.x + 25.0, st.y - 23.0, 18.0, 6.0), Color(0.30, 0.56, 0.80))
+			b.rect(Rect2(st.x + 25.0, st.y - 17.0, 18.0, 6.0), Color(0.94, 0.84, 0.56))
 		"icecream":
 			# the ice cream cart under its striped umbrella
 			b.rect(Rect2(st.x - 30.0, st.y - 18.0, 60.0, 36.0), Color(0.95, 0.93, 0.88))
@@ -3308,7 +3460,9 @@ func _draw_rambla_stall(st: Vector2, kind: String, i: int) -> void:
 			b.line(Vector2(st.x + 40.0, st.y - 20.0), Vector2(st.x + 26.0, st.y + 22.0), Color(0.45, 0.32, 0.20), 3.0)
 			b.rect(Rect2(st.x + 12.0, st.y - 24.0, 28.0, 20.0), Color(0.98, 0.97, 0.94))
 			b.circle(Vector2(st.x + 26.0, st.y + 30.0), 7.0, Color(0.36, 0.26, 0.18))
-	if kind != "icecream" and kind != "caricature":
+	if kind != "caricature":
+		_draw_browsers(b, r, i)
+	if kind != "icecream" and kind != "caricature" and kind != "painter":
 		# the counter's edges, plasticine-soft: a lit lip along the top and
 		# left, a dark rim along the bottom and right where it turns away
 		b.line(Vector2(r.position.x + 1.0, r.position.y + 1.5), Vector2(r.end.x - 2.0, r.position.y + 1.5), Color(1, 1, 1, 0.26), 3.0)
@@ -9256,9 +9410,10 @@ func _draw_world() -> void:
 			_draw_forest_tree(_wc, p, i)
 		elif lvl == "beach":
 			_draw_palm(_wc, p)
-		elif (p.x > sw_l + 60.0 and p.x < sw_r - 60.0) or (rambla() and int(absf(p.y) / 270.0) % 3 != 1):
+		elif (p.x > sw_l + 60.0 and p.x < sw_r - 60.0) \
+				or (rambla() and int(absf(p.y) / LevelBuild.RAMBLA_TREE_STEP) % 4 != 1):
 			# mid-walkway poles are street trees in grates, and so is La
-			# Rambla's row of plane trees down each edge (every third one a
+			# Rambla's row of plane trees down each edge (every fourth one a
 			# lamp standard instead) - that is WHY
 			# they stand in the middle of a sidewalk
 			cast_shadow(_wc, p, 20.0, 40.0, 0.16)
@@ -9694,12 +9849,14 @@ func _draw_world() -> void:
 		for r in range(2):
 			var rx := fmod(pt * 120.0 + idx * 30.0 + r * 60.0, 120.0)
 			_wc.draw_line(pf + Vector2(-24 + rx * 0.4, -28), pf + Vector2(-24 + rx * 0.4, 12), Color(0.6, 0.7, 0.85, 0.4), 1.0)
-	# cellar doors, propped open for a delivery
+	# cellar doors, propped open for a delivery: a stone kerb round the
+	# hatch, the two steel leaves folded back flat either side (tread plate,
+	# hinges), the stair going down into the dark, and the crates waiting on
+	# a sack truck beside it
 	for c in cellars:
-		_wc.draw_rect(c, Color(0.1, 0.1, 0.12))
-		_wc.draw_rect(Rect2(c.position.x, c.position.y, c.size.x, 6), Color(0.35, 0.28, 0.22))
-		_wc.draw_line(c.position + Vector2(c.size.x / 2.0, 0), c.position + Vector2(c.size.x / 2.0, c.size.y), Color(0.3, 0.3, 0.33), 2.0)
-		_wc.draw_rect(Rect2(c.end.x + 4, c.position.y + 10, 16, 20), Color(0.6, 0.45, 0.3))
+		if c.end.y < vt - 40.0 or c.position.y > vb + 40.0:
+			continue
+		_draw_cellar(c)
 	_draw_skids(vt, vb)
 	# marked spots, stray puddles and, discreetly, the business
 	var pud := Color(0.93, 0.85, 0.4, 0.4)

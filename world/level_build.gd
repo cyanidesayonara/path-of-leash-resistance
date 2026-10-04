@@ -663,16 +663,21 @@ static func obres(m: Node2D) -> void:
 const RAMBLA_MOSAIC := Vector2(640.0, -1650.0)
 const RAMBLA_MOSAIC_R := 66.0
 # stalls along the promenade, in the 300..980 authored space: [pos, kind]
+# Spread down the whole walk, no two alike side by side: the flower stalls
+# were three in a huddle, and the end of the walk had a second souvenir stall.
 const RAMBLA_STALLS: Array = [
 	[Vector2(760.0, -680.0), "kiosk"],
 	[Vector2(846.0, -1480.0), "souvenir"],
 	[Vector2(470.0, -2440.0), "caricature"],
 	[Vector2(800.0, -2380.0), "icecream"],
 	[Vector2(446.0, -2980.0), "flowers"],
-	[Vector2(446.0, -3110.0), "flowers"],
-	[Vector2(560.0, -3200.0), "flowers"],
-	[Vector2(470.0, -4560.0), "souvenir"],
+	[Vector2(560.0, -3200.0), "painter"],
+	[Vector2(470.0, -3840.0), "flowers"],
+	[Vector2(470.0, -4560.0), "books"],
 ]
+# the plane trees down each edge of the promenade, this far apart (every
+# fourth a lamp standard instead)
+const RAMBLA_TREE_STEP := 180.0
 # sellers' blankets on the paving, goods laid out: [rect, goods]
 const RAMBLA_BLANKETS: Array = [
 	[Rect2(352.0, -1080.0, 74.0, 52.0), "shades"],
@@ -740,7 +745,7 @@ static func rambla(m: Node2D, hyd_list: Array) -> void:
 				ok = ok and tv.distance_to(tp) > 78.0
 			if ok:
 				keep.append(tp)
-		y -= 270.0
+		y -= RAMBLA_TREE_STEP
 	m.poles = Array(keep, TYPE_VECTOR2, &"", null)
 	m.deco_pole_count = m.poles.size()
 
@@ -1119,8 +1124,10 @@ static func build_level_data(m: Node2D) -> void:
 				Vector2(520, -4400),
 			], TYPE_VECTOR2, &"", null)
 			m.cellars = Array([
-				Rect2(m.sw_l, -2750, 62, 88), Rect2(m.sw_r - 62, -750, 62, 82),
-				Rect2(m.sw_l, -4550, 62, 88),
+				# set back from the kerb, as hatches are, and clear of the
+				# cross street
+				Rect2(m.sw_l + 20, -2800, 62, 88), Rect2(m.sw_r - 82, -750, 62, 82),
+				Rect2(m.sw_l + 20, -4550, 62, 88),
 			], TYPE_RECT2, &"", null)
 			m.bins = Array([
 				Vector2(m.sw_l + 30, -600), Vector2(m.sw_r - 30, -1400),
@@ -2080,6 +2087,15 @@ static func works_ground_at(m: Node2D, p: Vector2) -> bool:
 	return true
 
 
+# a grate or a repair has no business under a cafe table or chair
+static func _under_terrace(m: Node2D, p: Vector2) -> bool:
+	for arr in [m.tables, m.chairs, m.parasols]:
+		for v: Vector2 in arr:
+			if v.distance_to(p) < 48.0:
+				return true
+	return false
+
+
 static func build_ground_detail(m: Node2D) -> void:
 	# a light dusting of wear over the whole walk: hairline cracks, grit,
 	# litter, damp stains. Cheap to draw (culled, and the world redraws at
@@ -2100,7 +2116,8 @@ static func build_ground_detail(m: Node2D) -> void:
 		# Only in made ground (works_ground_at), and never under the signs at
 		# either end, where a grey box beside the walk's name read as a bug.
 		var works_ok: bool = works_ground_at(m, Vector2(x, y)) \
-			and y < m.START_Y - 420.0 and y > m.GATE_Y + 260.0
+			and y < m.START_Y - 420.0 and y > m.GATE_Y + 260.0 \
+			and not _under_terrace(m, Vector2(x, y))
 		if works_ok and m.ground_detail.size() % 11 == 7:
 			kind = 4
 		elif works_ok and m.ground_detail.size() % 17 == 3:
