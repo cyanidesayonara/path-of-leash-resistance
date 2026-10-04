@@ -243,9 +243,12 @@ static func finish_walk(m: Node2D) -> void:
 
 static func finish_tutorial_walk(m: Node2D) -> void:
 	# the first walk is done: the title stops offering it first, and the bones
-	# earned learning are real ones
+	# earned learning it are real ones - the first time only, or practising
+	# again would be a bone farm with no risk in it
+	var banked := not Game.tutorial_done
+	if banked:
+		Game.total_bones += m.bones
 	Game.tutorial_done = true
-	Game.total_bones += m.bones
 	Game.save_records()
 	m.finished = true
 	m.frozen = true
@@ -261,7 +264,7 @@ static func finish_tutorial_walk(m: Node2D) -> void:
 		"time": int(m.elapsed),
 		"goal_bones": 0,
 		"lines": [
-			"%d bones banked" % m.bones,
+			("%d bones banked" % m.bones) if banked else ("%d bones (banked the first time round)" % m.bones),
 			"Next: El Barri, the everyday walk.",
 		],
 	}
