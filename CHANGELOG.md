@@ -4,6 +4,19 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-05 - First-time tips (#169, part 3)
+
+- The first time something non-obvious happens, the banner says what to do
+  about it, once, for six seconds, and never again (saved): the first walk
+  for a player who skipped the tutorial ("{plant} DIGS IN WHEN THEY PULL.
+  {pee} MARKS A SPOT"), a cracked phone ("KEEP YOUR HUMAN ON THEIR FEET. THREE
+  CRACKS AND THE PHONE IS GONE"), a wobble at an edge ("WOBBLING! STEER AWAY
+  FROM THE EDGE"), a "HEY!" from your human ("PULL GENTLY AND YOUR HUMAN
+  FOLLOWS. HAUL AND THEY SNAP") and your human wound round a post ("WOUND
+  ROUND A POST! PULL AWAY TO SPIN THEM OFF"). Not in the tutorial, and not
+  for the autowalk.
+- `systems/tips.gd`; `tests/test_tips.gd` in CI.
+
 ## 2026-10-05 - A way in for new players (#169, part 1)
 
 - The title asks a new player first: pressing start on a fresh save opens

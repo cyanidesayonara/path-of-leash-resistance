@@ -529,6 +529,9 @@ var started := false
 var bones := 0
 var streak := 0
 var phone_hp := 3
+# a first-time tip on the banner (systems/tips.gd), and how long it has left
+var tip_text := ""
+var tip_t := 0.0
 var pee := 1.0
 var marks: Array[Vector2] = []
 var puddles: Array[Dictionary] = []
@@ -5487,6 +5490,9 @@ func _update_hud() -> void:
 	# Only during a walk: on the title the status would sit over the chalked
 	# name (the scrapyard's "GO SLOW" is set before you have set off).
 	if feed != null:
+		# a first-time tip takes the banner while it is up
+		if tip_t > 0.0 and tip_text != "":
+			hud_status = tip_text
 		# the tutorial teaches one thing at a time: the lesson card is the only instruction
 		feed.set_banner(hud_status if started and not tutorial_mode else "")
 	goals_card.visible = started and not tutorial_mode
@@ -5568,6 +5574,11 @@ func on_challenge_done(win: bool, target: int, count: int) -> void:
 		_slowmo()
 	else:
 		feed.say("DARE MISSED: %d OF %d" % [count, target], EventFeed.Tone.BAD)
+
+
+# a first-time tip, from a script that has no Tips (human.gd)
+func tip(id: String) -> void:
+	Tips.show(self, id)
 
 
 func _physics_process(delta: float) -> void:
@@ -5668,6 +5679,7 @@ func _physics_process(delta: float) -> void:
 	_prof("progress")
 	combo.tick(delta)
 	challenge.tick(delta)
+	Tips.tick(self, delta)
 	_prof("combo, challenge")
 	owner_news_cd = maxf(0.0, owner_news_cd - delta)
 	# the banner shows live countdowns (slack left, fetch timer, chase), and
@@ -6190,6 +6202,7 @@ func _leash_tug(delta: float) -> void:
 # give, and a direction is not picked out of the air: she keeps going the way she
 # is already travelling round the pole, for the shortest orbit there is.
 func _commit_whirl(pole: Vector2, coil: float) -> void:
+	Tips.show(self, "whirl")
 	var dir: float = leash.unwind_bias_of(coil)
 	if dir == 0.0:
 		dir = human.orbit_sense(human.global_position - pole, human.velocity)
@@ -7988,6 +8001,7 @@ func _start_teeter(kind: String, at: Vector2, fail_msg := "") -> void:
 	teeter_at = at
 	teeter_msg = fail_msg
 	teeter.begin()
+	Tips.show(self, "teeter")
 	Sfx.play("save", 1.5, -8.0)
 	shake_t = maxf(shake_t, 0.25)
 	_slowmo()  # a beat of hang time, so you register that you can fight it
@@ -9030,6 +9044,8 @@ func crack_phone(pos: Vector2) -> void:
 	shake_t = 1.0
 	_update_hud()
 	float_text(pos, "PHONE CRACKED", Color(1, 0.45, 0.4))
+	if phone_hp > 0:
+		Tips.show(self, "crack")
 	if phone_hp <= 0:
 		MenuFlow.show_notice(self, "PHONE SMASHED\n\nThree cracks and it is gone. Your human is inconsolable,\nand blaming the one member of the household who cannot answer back.")
 

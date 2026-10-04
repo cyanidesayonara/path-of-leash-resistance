@@ -437,6 +437,8 @@ func _converse(delta: float) -> void:
 
 
 func _correct() -> void:
+	if main != null and main.has_method("tip"):
+		main.tip("correct")
 	patience = CORRECT_REST
 	grace_t = CORRECT_GRACE
 	grumbled = false
