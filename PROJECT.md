@@ -1,6 +1,7 @@
 # Path of Leash Resistance — development plan
 
-Tagline: "You are the dog. Go touch grass."
+Tagline: none. "You are the dog. Go touch grass." was dropped in October 2026;
+the title stands alone (Santtu: tired of it, and it was not needed).
 Retitled July 2026 after the trademark check found "Touch Grass" taken
 on Steam (LionsHead Development, trademark claimed). "Path of Leash
 Resistance" searched clear; verify at EUIPO/USPTO before the store page.
@@ -354,6 +355,18 @@ memorable.
   the one-off set pieces (salamander, arches, train) as placeable pieces
   rather than editable ones. Santtu's idea of it as a paid add-on only
   matters once there are players.
+- New walks (October 2026 ideas, none started). Santtu's direction: the
+  less famous but good-looking parts of Barcelona and round it, and every
+  new walk ships with an upgrade to an existing one so the standard keeps
+  rising. Pitched: El Veterinari (the walk in reverse: your human is
+  dragging you to the vet, and you win by stalling), El Port (the swing
+  bridge and fishermen's lines, a second rope to tangle), Els Búnquers del
+  Carmel at sunset, Les Escales Mecàniques (outdoor escalators), Dia de
+  Partit (a match-day crowd flowing one way; Santtu's favourite). Santtu's
+  own: the winding walk up Montjuïc, Plaça Catalunya, Plaça d'Espanya,
+  Poble Espanyol, and neighbourhoods from Sarrià to Santa Coloma. Others:
+  Poblenou's superilla, the Laberint d'Horta hedge maze, the Carretera de
+  les Aigües, the Fòrum. Plenty is left over for a sequel.
 - Character creator: two preset owners exist (HIM/HER); creator later.
   October 2026: the facelift moved every person onto one renderer
   (human_appearance.gd: head, hair styles, headwear, torso, weather

@@ -59,11 +59,7 @@ class PosterCanvas:
 			draw_string_outline(f, p, line, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, int(fs * 0.14), CREAM)
 			draw_string(f, p, line, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, INK)
 			y += fs * 1.02
-		var tag := "you are the dog"
-		var ts := int(fs * 0.36)
-		var tw := f.get_string_size(tag, HORIZONTAL_ALIGNMENT_LEFT, -1, ts).x
-		draw_string(f, Vector2((size_px.x - tw) * 0.5, y + ts * 0.3), tag,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, ts, Color(INK.r, INK.g, INK.b, 0.85))
+		# the title alone: no subtitle under it
 
 
 func _initialize() -> void:
