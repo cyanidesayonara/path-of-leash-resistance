@@ -4,6 +4,13 @@ Append-only session history, newest first.
 
 
 
+## 2026-10-04 - L'Estació's departures board says something
+
+- The departures board over the way in was a black slab with yellow and
+  cream bars standing for text. It is a steel-cased board with a blue
+  SORTIDES strip (glossed "departures") and four rows in amber, time, where to
+  and platform, the way Rodalies boards read: Sitges, Girona, Vic, and the
+  Mataró train, CANCEL·LAT in red, as one always is.
 ## 2026-10-04 - Les Obres' digger, and close-up screenshots
 
 - The parked digger was a yellow disc on two black bars. It is drawn from
