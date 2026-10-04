@@ -29,8 +29,26 @@ static func millie(c: CanvasItem, pos: Vector2, s: float, face: float, sq: Vecto
 	return {"ring": pos + ring_l * xs, "mouth": pos + mouth_l * xs}
 
 
-# your human at pos (their feet). Returns the leash hand on screen.
-static func human(c: CanvasItem, pos: Vector2, s: float, face: float, sq: Vector2, pose: Dictionary, rot := 0.0) -> Vector2:
+# where Millie's collar ring and mouth will be for this pose, without drawing
+# her (so the leash can be drawn behind her)
+static func millie_points(pos: Vector2, s: float, face: float, sq: Vector2, pose: Dictionary) -> Dictionary:
+	var xs := Vector2(face * s * sq.x, s * sq.y)
+	var p := MillieSide.parts(pose)
+	var ring_l: Vector2 = p["_neck"] + Vector2(-8, 6)
+	var mouth_l: Vector2 = p["_muzzle"] + Vector2(6, 6)
+	return {"ring": pos + ring_l * xs, "mouth": pos + mouth_l * xs}
+
+
+# your human at pos (their feet). Returns the leash hand on screen. `ground`
+# puts their shadow on the floor (none if not given).
+static func human(c: CanvasItem, pos: Vector2, s: float, face: float, sq: Vector2, pose: Dictionary, rot := 0.0,
+		ground := INF) -> Vector2:
+	if ground != INF:
+		var lift := maxf(0.0, ground - pos.y)
+		var k := clampf(1.0 - lift / 220.0, 0.3, 1.0)
+		var w := 46.0 if pose.get("sit", 0.0) < 0.5 else 30.0
+		c.draw_colored_polygon(MillieSide.ellipse(Vector2(pos.x + 6.0 * s, ground + 2.0 * s), Vector2(w, 7) * s * Vector2(k, 1.0)),
+			Color(0.15, 0.12, 0.10, 0.26 * k))
 	var xs := Vector2(face * s * sq.x, s * sq.y)
 	c.draw_set_transform(pos, rot, xs)
 	var hand_l: Vector2 = HumanSide.draw(c, pose)
@@ -39,22 +57,56 @@ static func human(c: CanvasItem, pos: Vector2, s: float, face: float, sq: Vector
 
 
 # THE LEASH AS ROPE: a little verlet rope, so it swings, drags and drapes
-# instead of hanging rigid. End a is always held; end b is held or free
-# (then it falls and lies on the floor). The state carries over between
-# frames and starts again whenever time goes backwards, so a scene stays a
-# function of time for anything that plays it from the start.
-const ROPE_N := 26
+# instead of hanging rigid. End a is always held; end b is held or free (then
+# it falls and lies on the floor). It is laid once, when the scene starts (or
+# time goes backwards), and settled before the first frame so it begins at
+# rest; after that its ends simply move, so it never jumps. Well damped, with
+# a bending stiffness (every other point kept apart) so it does not wobble or
+# fold into zigzags.
+const ROPE_N := 24
+const ROPE_DAMP := 0.93
+const ROPE_ITER := 24
 static var rope_p := PackedVector2Array()
 static var rope_q := PackedVector2Array()
 static var rope_t := -1.0
-static var rope_phase := -1
 
 
-# `phase` names what is holding it; when it changes the rope is laid afresh as
-# a loop hanging between its ends (carrying the old shape across would fling it)
-static func rope(c: CanvasItem, t: float, a: Vector2, b: Vector2, b_held: bool, length: float, floor_y: float,
-		phase := 0, w := 4.0) -> void:
-	if rope_t < 0.0 or t < rope_t or rope_p.size() != ROPE_N or (phase != rope_phase and b_held):
+static func _rope_step(a: Vector2, b: Vector2, b_held: bool, seg: float, floor_y: float, dt: float) -> void:
+	for i in range(ROPE_N):
+		var cur := rope_p[i]
+		var vel := (cur - rope_q[i]) * ROPE_DAMP
+		rope_q[i] = cur
+		rope_p[i] = cur + vel + Vector2(0, 1500.0) * dt * dt
+	for _it in range(ROPE_ITER):
+		for i in range(ROPE_N - 1):
+			var d := rope_p[i + 1] - rope_p[i]
+			var l := d.length()
+			if l < 0.0001:
+				continue
+			var corr := d * (1.0 - seg / l) * 0.5
+			rope_p[i] += corr
+			rope_p[i + 1] -= corr
+		# bending: two links apart stay at least 1.7 links apart
+		for i in range(ROPE_N - 2):
+			var d2 := rope_p[i + 2] - rope_p[i]
+			var l2 := d2.length()
+			if l2 < seg * 1.7 and l2 > 0.0001:
+				var corr2 := d2 * (1.0 - seg * 1.7 / l2) * 0.25
+				rope_p[i] += corr2
+				rope_p[i + 2] -= corr2
+		for i in range(ROPE_N):
+			if rope_p[i].y > floor_y:
+				rope_p[i].y = floor_y
+				rope_q[i].x = lerpf(rope_q[i].x, rope_p[i].x, 0.5)
+		rope_p[0] = a
+		if b_held:
+			rope_p[ROPE_N - 1] = b
+
+
+static func rope(c: CanvasItem, t: float, a: Vector2, b: Vector2, b_held: bool, length: float, floor_y: float, w := 4.0) -> void:
+	var seg := length / float(ROPE_N - 1)
+	var dt := 1.0 / 240.0
+	if rope_t < 0.0 or t < rope_t or rope_p.size() != ROPE_N:
 		rope_p.resize(ROPE_N)
 		rope_q.resize(ROPE_N)
 		var sag := maxf(0.0, (length - a.distance_to(b)) * 0.5)
@@ -64,48 +116,30 @@ static func rope(c: CanvasItem, t: float, a: Vector2, b: Vector2, b_held: bool, 
 			p.y = minf(p.y, floor_y)
 			rope_p[i] = p
 			rope_q[i] = p
-		rope_t = t
-	rope_phase = phase
-	var steps := clampi(int(ceil((t - rope_t) * 240.0)), 0, 480)
-	var dt := 1.0 / 240.0
-	var seg := length / float(ROPE_N - 1)
-	for _s in range(steps):
+		# settle it: two seconds of simulation before anyone sees it
+		for _s in range(480):
+			_rope_step(a, b, b_held, seg, floor_y, dt)
 		for i in range(ROPE_N):
-			var cur := rope_p[i]
-			var vel := (cur - rope_q[i]) * 0.955
-			rope_q[i] = cur
-			rope_p[i] = cur + vel + Vector2(0, 1400.0) * dt * dt
-		for _it in range(14):
-			rope_p[0] = a
-			if b_held:
-				rope_p[ROPE_N - 1] = b
-			for i in range(ROPE_N - 1):
-				var d := rope_p[i + 1] - rope_p[i]
-				var l := d.length()
-				if l < 0.0001:
-					continue
-				var corr := d * (1.0 - seg / l) * 0.5
-				if i == 0:
-					rope_p[i + 1] -= corr * 2.0
-				elif i + 1 == ROPE_N - 1 and b_held:
-					rope_p[i] += corr * 2.0
-				else:
-					rope_p[i] += corr
-					rope_p[i + 1] -= corr
-			for i in range(ROPE_N):
-				if rope_p[i].y > floor_y:
-					# lying on the floor: it stops there and drags rather than slides
-					rope_p[i].y = floor_y
-					rope_q[i].x = lerpf(rope_q[i].x, rope_p[i].x, 0.3)
-		rope_p[0] = a
-		if b_held:
-			rope_p[ROPE_N - 1] = b
+			rope_q[i] = rope_p[i]
+		rope_t = t
+	var steps := clampi(int(ceil((t - rope_t) / dt)), 0, 480)
+	for _s in range(steps):
+		_rope_step(a, b, b_held, seg, floor_y, dt)
 	rope_t = t
 	c.draw_polyline(rope_p, INK, w + 3.0)
 	c.draw_polyline(rope_p, LEASH, w)
-	# the loop at the free or held end
 	c.draw_arc(rope_p[ROPE_N - 1], 7.0, 0, TAU, 12, INK, 5.0)
 	c.draw_arc(rope_p[ROPE_N - 1], 7.0, 0, TAU, 12, LEASH, 2.5)
+
+
+# a soft curl of breath (the sigh): no outline, rising and fading
+static func breath(c: CanvasItem, at: Vector2, f: float) -> void:
+	if f <= 0.0 or f >= 1.0:
+		return
+	var a := 0.55 * (1.0 - f)
+	for k in range(3):
+		var p := at + Vector2(14.0 * f + float(k) * 7.0, -26.0 * f - float(k) * 5.0 + sin(f * 6.0 + float(k)) * 3.0)
+		c.draw_circle(p, (5.0 + float(k) * 2.0) * (0.6 + f * 0.6), Color(1, 1, 1, a))
 
 
 # a leash from a to b: `slack` is how far it sags in the middle (0 is taut)

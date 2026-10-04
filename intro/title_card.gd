@@ -36,15 +36,19 @@ static func _hanging(c: CanvasItem, t: float, cx: float, y1: float, y2: float) -
 	var w1 := f.get_string_size(top, HORIZONTAL_ALIGNMENT_LEFT, -1, 64).x
 	var o_x := cx - w1 * 0.5 + f.get_string_size("PATH ", HORIZONTAL_ALIGNMENT_LEFT, -1, 64).x \
 		+ f.get_string_size("O", HORIZONTAL_ALIGNMENT_LEFT, -1, 64).x * 0.5
-	var ring := Vector2(o_x, y1 - 14.0)
-	var fall: float = Anim.k(t, [[0.0, -560.0], [0.5, 26.0, "in"], [0.75, -10.0, "out"], [1.0, 0.0, "io"]])
-	var ang: float = sin(t * 5.2) * 0.10 * exp(-t * 1.6)
+	# the O's centre: the font's cap height sits about a third of the size
+	# above the baseline offset `word` uses
+	var ring := Vector2(o_x, y1 - 1.0)
+	# a beat on the empty street, then it drops, overshoots and swings to rest
+	var fall: float = Anim.k(t, [[0.0, -620.0], [0.2, -620.0], [0.78, 28.0, "in"], [1.02, -10.0, "out"], [1.3, 0.0, "io"]])
+	var ts := maxf(t - 0.78, 0.0)
+	var ang: float = sin(ts * 5.2) * 0.11 * exp(-ts * 1.5)
 	var pivot := Vector2(o_x, -60.0)
 	var hang := ring + Vector2(0, fall)
 	var r_now := pivot + (hang - pivot).rotated(ang)
 	# the leash, down from off the top of the screen to the collar's ring
-	c.draw_line(pivot, r_now + Vector2(0, -49).rotated(ang), INK, 10.0)
-	c.draw_line(pivot, r_now + Vector2(0, -49).rotated(ang), LEASH, 6.0)
+	c.draw_line(pivot, r_now + Vector2(0, -46).rotated(ang), INK, 10.0)
+	c.draw_line(pivot, r_now + Vector2(0, -46).rotated(ang), LEASH, 6.0)
 	# everything below hangs: draw it rotated about the pivot
 	var to_title := func(p: Vector2) -> Vector2:
 		return pivot + (p + Vector2(0, fall) - pivot).rotated(ang)
@@ -53,14 +57,26 @@ static func _hanging(c: CanvasItem, t: float, cx: float, y1: float, y2: float) -
 	# the collar round the O, its buckle, and the ring the leash clips to
 	var oc: Vector2 = to_title.call(ring)
 	c.draw_set_transform(oc, ang, Vector2.ONE)
-	# a broad band over the top of the O, like a collar on a neck
-	c.draw_arc(Vector2(0, 6), 30.0, PI * 0.92, PI * 2.08, 28, INK, 17.0)
-	c.draw_arc(Vector2(0, 6), 30.0, PI * 0.92, PI * 2.08, 28, LEASH, 11.0)
-	c.draw_arc(Vector2(0, 6), 27.0, PI * 1.1, PI * 1.5, 12, LEASH.lightened(0.35), 3.0)
-	c.draw_rect(Rect2(-9, -34, 18, 16), INK)
-	c.draw_rect(Rect2(-6, -31, 12, 10), Color(0.90, 0.78, 0.42))
-	c.draw_arc(Vector2(0, -41), 8.0, 0, TAU, 16, INK, 7.0)
-	c.draw_arc(Vector2(0, -41), 8.0, 0, TAU, 16, Color(0.90, 0.78, 0.42), 3.5)
+	# a whole collar buckled round the O, as round a neck: the band all the way
+	# round (wide enough to show the letter inside it), the buckle on top, and
+	# the ring the leash clips to above the buckle
+	# sized to the O itself, so it does not run into the H or the F
+	var rx := 23.0
+	var ry := 26.0
+	var band := MillieSide.ellipse(Vector2.ZERO, Vector2(rx, ry), 0.0, 40)
+	band.append(band[0])
+	c.draw_polyline(band, INK, 10.0)
+	c.draw_polyline(band, LEASH, 5.5)
+	var hi := PackedVector2Array()
+	for i in range(9):
+		var a := PI * 1.15 + float(i) / 8.0 * PI * 0.5
+		hi.append(Vector2(cos(a) * rx, sin(a) * ry))
+	c.draw_polyline(hi, LEASH.lightened(0.35), 2.0)
+	c.draw_rect(Rect2(-7, -ry - 7, 14, 13), INK)
+	c.draw_rect(Rect2(-5, -ry - 5, 10, 9), Color(0.90, 0.78, 0.42))
+	c.draw_line(Vector2(0, -ry - 5), Vector2(0, -ry + 4), INK, 1.6)
+	c.draw_arc(Vector2(0, -ry - 14), 6.5, 0, TAU, 16, INK, 6.0)
+	c.draw_arc(Vector2(0, -ry - 14), 6.5, 0, TAU, 16, Color(0.90, 0.78, 0.42), 3.0)
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 

@@ -14,14 +14,14 @@ const END_AT := 13.8          # after the tow has left the frame
 const FADE_OUT := 0.45
 # the sound cues: [time, sound, pitch, volume dB]
 const CUES := [
-	[3.25, "pickup", 0.8, -8.0],     # the leash off its hook
-	[5.25, "ui", 0.7, -6.0],         # dropped at their feet
-	[6.95, "tangle", 1.3, -10.0],    # the nudge
-	[7.7, "hiss", 0.6, -14.0],       # the sigh
-	[9.35, "bark", 1.0, -3.0],       # the YANK
-	[9.45, "fling", 0.9, -4.0],
-	[9.62, "crack", 0.7, -6.0],      # the door
-	[10.85, "star", 1.0, -6.0],      # the title lands
+	[3.12, "pickup", 0.8, -8.0],     # the leash off its hook
+	[5.3, "ui", 0.7, -6.0],          # the loop on their knee
+	[6.92, "tangle", 1.3, -10.0],    # the nose against the phone
+	[7.65, "hiss", 0.6, -15.0],      # the sigh
+	[9.22, "bark", 1.0, -3.0],       # the YANK
+	[9.3, "fling", 0.9, -4.0],
+	[9.5, "crack", 0.7, -6.0],       # the door
+	[10.9, "star", 1.0, -6.0],       # the title lands
 ]
 
 var main: Node

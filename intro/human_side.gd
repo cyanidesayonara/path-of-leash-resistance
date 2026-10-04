@@ -54,18 +54,19 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 	var amp: float = pose.get("stride_amp", 0.0)
 	var phone: float = pose.get("phone", 1.0)
 	var reach: float = pose.get("reach", 0.0)
+	var reach_down: float = pose.get("reach_down", 0.0)
 	var lift: float = pose.get("lift", 0.0)
 	var head_t: float = pose.get("head", 0.0)
 	var glow: float = pose.get("glow", 0.0)
+	var jolt: float = pose.get("phone_jolt", 0.0)
 	var hip := Vector2(0.0, lerpf(-100.0, -58.0, sit))
 	var up := Vector2.UP.rotated(lean)
-	var shoulder := hip + up * 64.0
-	var neck := shoulder + up * 10.0
-	# with the phone up they look down at it: the classic stoop
-	head_t += 0.35 * phone
-	var head := neck + up.rotated(head_t * 0.5) * 20.0 + Vector2(4, 0)
-	# legs: standing and striding, or sitting with the thighs forward, or
-	# trailing behind and off the ground when the dog takes them
+	var shoulder := hip + up * 62.0
+	# the neck juts forward and the head tips down into the phone: the stoop
+	# of someone who has not looked up in an hour
+	head_t += 0.55 * phone
+	var neck_top := shoulder + up.rotated(0.35 * phone) * 14.0
+	var head := neck_top + up.rotated(head_t * 0.6) * 18.0 + Vector2(5, 0)
 	var legs := []
 	for side in range(2):
 		var ph := phase + PI * float(side)
@@ -73,75 +74,89 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 		var thigh_dir := Vector2.DOWN.rotated(-swing).lerp(Vector2.RIGHT, sit).normalized()
 		var bend := maxf(0.0, -cos(ph)) * 0.9 * amp + sit * 1.45
 		if lift > 0.0:
-			thigh_dir = thigh_dir.lerp(Vector2(-0.8, 0.6).normalized(), lift).normalized()
-			bend = lerpf(bend, 0.5 + 0.3 * float(side), lift)
+			# trailing out behind, the far leg further, whipping as they go
+			thigh_dir = thigh_dir.lerp(Vector2(-0.85, 0.5).normalized(), lift).normalized()
+			bend = lerpf(bend, 0.35 + 0.35 * float(side) + sin(phase * 2.0) * 0.25, lift)
 		legs.append(_two(hip + Vector2(4.0 * float(side) - 2.0, 0), thigh_dir, 48.0, 50.0, bend))
-	# arms: one holding the phone up at the face, one free (or out on the leash)
-	# the phone held low in front of the chest, elbow tucked in, so the face
-	# stays in profile above it (held at the face, the hand hid it)
-	var phone_hand := shoulder + (Vector2(30, 26) * phone + Vector2(14, 58) * (1.0 - phone)).rotated(lean)
-	var elbow := shoulder + Vector2(8, 34).rotated(lean)
+	# the phone held up near the chin, elbow down, the screen tipped to the face
+	var phone_at := (Vector2(34, 2) * phone + Vector2(14, 58) * (1.0 - phone)) + Vector2(5, -7) * jolt
+	var phone_hand := shoulder + phone_at.rotated(lean)
+	var elbow := shoulder + Vector2(10, 30).rotated(lean)
 	var arm1 := [shoulder + Vector2(4, 4), elbow, phone_hand]
-	var free_dir := Vector2.DOWN.rotated(-0.2).lerp(Vector2.RIGHT.rotated(0.15), reach).normalized()
-	var arm2 := _two(shoulder + Vector2(-2, 4), free_dir, 34.0, 32.0, -0.3 * (1.0 - reach))
-	# --- the far leg and far arm, a shade darker
+	# the free arm: hanging, out ahead on the leash, or down to the floor
+	var free_dir := Vector2.DOWN.rotated(-0.2).lerp(Vector2.RIGHT.rotated(0.12), reach).normalized()
+	free_dir = free_dir.lerp(Vector2(0.55, 0.85).normalized(), reach_down).normalized()
+	var arm2 := _two(shoulder + Vector2(-2, 4), free_dir, 34.0, 32.0, -0.3 * (1.0 - reach) * (1.0 - reach_down))
 	var far_leg: Array = legs[1]
 	var near_leg: Array = legs[0]
+	var arm2_parts := [
+		[_limb(arm2[0], arm2[1], 7.5, 6.5), SHIRT if reach > 0.25 else SHIRT.darkened(0.25)],
+		[_limb(arm2[1], arm2[2], 6.5, 5.5), SKIN if reach > 0.25 else SKIN.darkened(0.15)],
+	]
 	var parts_back := [
 		[_limb(far_leg[0], far_leg[1], 11.0, 9.0), TROUSERS.darkened(0.25)],
 		[_limb(far_leg[1], far_leg[2], 9.0, 7.5), TROUSERS.darkened(0.25)],
 		[_ell(far_leg[2] + Vector2(7, 0), Vector2(13, 6)), SHOE],
-		[_limb(arm2[0], arm2[1], 7.5, 6.5), SHIRT.darkened(0.25)],
-		[_limb(arm2[1], arm2[2], 6.5, 5.5), SKIN.darkened(0.15)],
 	]
+	# when the hand is out holding something it is the arm we see in front
+	if reach <= 0.25:
+		parts_back.append_array(arm2_parts)
 	var torso := _limb(hip + Vector2(0, -6), shoulder + up * 2.0, 21.0, 22.0)
 	var parts_front := [
 		[torso, SHIRT],
 		[_limb(near_leg[0], near_leg[1], 12.0, 9.5), TROUSERS],
 		[_limb(near_leg[1], near_leg[2], 9.5, 7.5), TROUSERS],
 		[_ell(near_leg[2] + Vector2(8, 0), Vector2(14, 6.5)), SHOE],
-		[_ell(head, Vector2(19, 21), 0.0), SKIN],
-		[_ell(head + Vector2(17, 4).rotated(head_t * 0.5), Vector2(5, 5)), SKIN],
+		[_limb(shoulder + up * 2.0, neck_top, 7.5, 6.5), SKIN.darkened(0.06)],
+		[_ell(head, Vector2(18, 20), head_t * 0.3), SKIN],
+		[_ell(head + Vector2(16, 5).rotated(head_t * 0.6), Vector2(5, 5)), SKIN],
 		[_limb(arm1[0], arm1[1], 7.5, 6.5), SHIRT],
 		[_limb(arm1[1], arm1[2], 6.5, 5.5), SKIN],
 	]
-	# outline everything, then fill
+	if reach > 0.25:
+		parts_front.append_array(arm2_parts)
 	for pr: Array in parts_back + parts_front:
 		c.draw_colored_polygon(_fat(pr[0], 2.0), OUT)
 	for pr: Array in parts_back:
 		c.draw_colored_polygon(pr[0], pr[1])
 	for pr: Array in parts_front:
 		c.draw_colored_polygon(pr[0], pr[1])
-	# soft light on the back of the shirt and the top of the head
+	# soft light down the back of the shirt
 	for i in range(4):
 		var f := 1.0 - float(i) * 0.2
 		c.draw_colored_polygon(_ell((hip + shoulder) * 0.5 + Vector2(-8, -6), Vector2(9, 26) * f, lean), Color(1, 1, 1, 0.05))
-	# hair: a cap over the back and top of the head, a fringe at the front
-	c.draw_colored_polygon(_fat(_ell(head + Vector2(-5, -8), Vector2(18, 15), -0.3), 2.0), OUT)
-	c.draw_colored_polygon(_ell(head + Vector2(-5, -8), Vector2(18, 15), -0.3), HAIR)
-	c.draw_colored_polygon(_ell(head + Vector2(8, -15), Vector2(10, 6), 0.3), HAIR)
-	c.draw_colored_polygon(_ell(head + Vector2(-8, -16), Vector2(8, 4), -0.4), HAIR.lightened(0.18))
-	# ear, eye, brow, mouth
-	c.draw_colored_polygon(_ell(head + Vector2(-3, 2), Vector2(4.5, 6)), SKIN.darkened(0.12))
-	var eye := head + Vector2(10, -2).rotated(head_t * 0.5)
-	c.draw_colored_polygon(_ell(eye, Vector2(2.6, 3.4)), OUT)
-	c.draw_line(eye + Vector2(-4, -7), eye + Vector2(3, -8), HAIR.darkened(0.3), 2.0)
+	# hair: a cap over the back and crown, well back off the eye, and a fringe
+	var hr := head_t * 0.6
+	var cap := head + Vector2(-9, -9).rotated(hr)
+	c.draw_colored_polygon(_fat(_ell(cap, Vector2(16, 14), -0.3 + hr), 2.0), OUT)
+	c.draw_colored_polygon(_ell(cap, Vector2(16, 14), -0.3 + hr), HAIR)
+	c.draw_colored_polygon(_ell(head + Vector2(4, -17).rotated(hr), Vector2(9, 5), 0.2 + hr), HAIR)
+	c.draw_colored_polygon(_ell(cap + Vector2(-2, -8).rotated(hr), Vector2(7, 3.5), -0.4 + hr), HAIR.lightened(0.18))
+	# the ear, below the hairline and behind the cheek
+	c.draw_colored_polygon(_ell(head + Vector2(-5, 3).rotated(hr), Vector2(4.5, 6), hr), SKIN.darkened(0.12))
+	# the eye, looking down at the screen, its lid half lowered
+	var eye := head + Vector2(9, -1).rotated(hr)
+	c.draw_colored_polygon(_ell(eye, Vector2(3.0, 3.4), hr), Color(0.97, 0.95, 0.92))
+	c.draw_colored_polygon(_ell(eye + Vector2(1.2, 1.4).rotated(hr), Vector2(1.9, 2.2), hr), OUT)
+	c.draw_line(eye + Vector2(-3.5, -1.2).rotated(hr), eye + Vector2(3.5, -0.4).rotated(hr), SKIN.darkened(0.25), 2.2)
+	c.draw_line(eye + Vector2(-4, -6).rotated(hr), eye + Vector2(3, -6.5).rotated(hr), HAIR.darkened(0.3), 2.0)
 	var mouth: float = pose.get("mouth", 0.0)
-	var mp := head + Vector2(13, 11).rotated(head_t * 0.5)
+	var mp := head + Vector2(12, 11).rotated(hr)
 	if mouth > 0.05:
 		c.draw_colored_polygon(_ell(mp, Vector2(3.0, 4.5 * mouth)), Color(0.35, 0.08, 0.08))
 	else:
 		c.draw_line(mp + Vector2(-3, 0), mp + Vector2(3, 0.5), Color(0.45, 0.22, 0.18), 1.6)
-	# the phone, and its light on the face
+	# the phone, tipped up to the face, and its cold light on it
 	if phone > 0.3:
-		var ph := phone_hand + Vector2(4, -6)
-		# tilted back towards the face
-		var pr := PackedVector2Array([ph + Vector2(-9, -6), ph + Vector2(-5, -11), ph + Vector2(10, 4), ph + Vector2(6, 9)])
+		var ph := phone_hand + Vector2(3, -6)
+		var tip := -0.5 + jolt * 0.6
+		var pr := PackedVector2Array([ph + Vector2(-5, -11).rotated(tip), ph + Vector2(5, -11).rotated(tip),
+			ph + Vector2(5, 11).rotated(tip), ph + Vector2(-5, 11).rotated(tip)])
 		c.draw_colored_polygon(_fat(pr, 1.6), OUT)
 		c.draw_colored_polygon(pr, Color(0.14, 0.15, 0.18))
-		c.draw_line(ph + Vector2(-6, -9), ph + Vector2(7, 4), Color(0.70, 0.86, 1.0), 2.0)
+		c.draw_line(ph + Vector2(-3, -9).rotated(tip), ph + Vector2(-3, 9).rotated(tip), Color(0.70, 0.86, 1.0), 2.0)
 		if glow > 0.0:
-			for i in range(4):
-				c.draw_colored_polygon(_ell(head + Vector2(12, 8), Vector2(14, 16) * (1.0 - float(i) * 0.2)),
-					Color(0.70, 0.86, 1.0, 0.08 * glow))
+			for i in range(5):
+				c.draw_colored_polygon(_ell(head + Vector2(12, 6).rotated(hr), Vector2(13, 17) * (1.0 - float(i) * 0.17), hr),
+					Color(0.70, 0.86, 1.0, 0.09 * glow))
 	return arm2[2]
