@@ -27,6 +27,15 @@ JOBS="${JOBS:-4}"
 WORK="$(mktemp -d)"
 trap 'rm -rf "${WORK}"' EXIT
 
+# A stale class cache (a class_name added since the last import) makes every
+# run a parse error, and a snapshot of parse errors diffs as noise half an hour
+# later. Check once, up front.
+if "${GODOT}" --headless --path . --quit-after 2 2>&1 | grep -qE 'SCRIPT ERROR|Parse Error'; then
+  echo "behaviour_snapshot: scripts fail to parse; refresh the class cache first:" >&2
+  echo "  ${GODOT} --headless --path . --import" >&2
+  exit 1
+fi
+
 # one line per job: an ordering key, a header, then the Godot user args
 n=0
 add() { n=$((n + 1)); printf '%03d\t%s\t%s\n' "${n}" "$1" "$2" >> "${WORK}/jobs"; }
@@ -56,3 +65,7 @@ done < "${WORK}/jobs" | xargs -0 -n 3 -P "${JOBS}" bash -c 'run_job "$1" "$2" "$
 
 cat "${WORK}"/out-* > "${OUT}"
 echo "snapshot: ${OUT} ($(wc -l < "${OUT}") lines, ${n} runs)"
+if grep -qE 'SCRIPT ERROR|Parse Error' "${OUT}"; then
+  echo "behaviour_snapshot: script errors in the snapshot; it is not a valid baseline" >&2
+  exit 1
+fi
