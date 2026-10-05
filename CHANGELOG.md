@@ -2,6 +2,23 @@
 
 Append-only session history, newest first.
 
+## 2026-10-05 - the first minutes, worded right (#169 audit)
+
+From the fresh-eyes audit of a new player's first ten minutes:
+- The urge banner said "NEED A WEE! ... HOLD {plant}" for what is a poo; the
+  wee is a different key, so a new player pressed it at a hydrant and nothing
+  happened. Now "NATURE CALLS! STAND STILL, HOLD {plant}", the tutorial's own
+  name for it, and the bagging lesson says "hold {plant} to squat" to match
+  GET READY's legend.
+- One word per key: GET READY calls the run key "zoomies", as the tutorial does.
+- Loss cards say "your human" (YOUR HUMAN WENT DOWN THE MANHOLE, ...).
+- FIRST TIME? draws its "Don't ask me again" box on the card, empty or
+  ticked; the bar's label no longer flips to "ask me again", which read as a
+  new choice.
+- The nose lesson is shorter (it ran into the HUD), and the last card no
+  longer claims "every trick in the book" in a park full of untaught agility
+  gear: "That is the lot. The park is yours: go and play."
+
 ## 2026-10-05 - a gentler lost walk (#169)
 
 - The card a lost walk ends on keeps its joke and now adds one plain line on

@@ -54,7 +54,7 @@ const STEPS: Array[Dictionary] = [
 	{
 		"id": "nose", "at": -2020.0, "hold": true, "stand": -1,
 		"title": "Your nose beats your eyes.",
-		"body": "Someone dropped a snack on the grass. Slow down: the slower you go, the further you smell. Find it.",
+		"body": "A snack is somewhere on the grass. Go slowly: the slower you go, the further you smell.",
 	},
 	{
 		"id": "bark", "at": -2420.0, "hold": true,
@@ -69,7 +69,7 @@ const STEPS: Array[Dictionary] = [
 	{
 		"id": "bag", "at": -3220.0, "hold": true,
 		"title": "Nature calls.",
-		"body": "Stand still and hold {plant} to go. Your human bags it - eventually.",
+		"body": "Stand still and hold {plant} to squat. Your human bags it - eventually.",
 	},
 	{
 		"id": "grind", "at": -3620.0, "hold": true,
@@ -99,7 +99,7 @@ const STEPS: Array[Dictionary] = [
 	{
 		"id": "done", "at": -5300.0, "hold": false,
 		"title": "Good dog.",
-		"body": "That is everything. Every trick in the book.",
+		"body": "That is the lot. The park is yours: go and play.",
 	},
 ]
 
