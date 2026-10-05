@@ -2476,6 +2476,14 @@ static func add_rect_body(m: Node2D, at: Vector2, size: Vector2) -> void:
 
 
 static func build_entities(m: Node2D) -> void:
+	# the signs' cached canvas: main's first child at main's own z, so it
+	# draws straight after the world pass and under everything else
+	m.sign_layer = Node2D.new()
+	m.sign_layer.set_script(load("res://world/sign_layer.gd"))
+	m.add_child(m.sign_layer)
+	m.move_child(m.sign_layer, 0)
+	m.sign_layer.setup(m)
+
 	m.leash = Node2D.new()
 	m.leash.set_script(load("res://entities/leash.gd"))
 	m.leash.z_index = 5

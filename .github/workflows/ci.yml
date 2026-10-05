@@ -149,6 +149,8 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_world_sign.gd
       - name: Gate sign test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_gate_sign.gd
+      - name: Sign layer test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_sign_layer.gd
       - name: Town square off-leash test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_placa_freedom.gd
       - name: Off-leash fixes test
@@ -159,6 +161,8 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_freedom_games_live.gd
       - name: Soundtrack test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_music.gd
+      - name: Tutorial checkpoint test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tutorial_checkpoint.gd
       - name: Junk placement test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_junk_placement.gd
       - name: Reel test
@@ -308,7 +312,7 @@ jobs:
         # pavement, well-formed goal lists, and goals the level can actually
         # satisfy. Catches content mistakes a pure-logic test cannot see.
         run: |
-          for LV in barri street park beach rain market oldtown trail station site spook scrap guell neteja tutorial; do
+          for LV in barri street park beach rain market oldtown trail station site spook scrap guell neteja montjuic tutorial; do
             ./Godot_v4.7-stable_linux.x86_64 --headless --path . -- --level=$LV --selftest 2>&1 | tee sane-$LV.log
             grep -q "SELFTEST OK" sane-$LV.log
             ! grep -q "SELFTEST FAIL" sane-$LV.log
@@ -319,7 +323,7 @@ jobs:
         # Runs each level for 1800 simulated frames (~30s): catches parse
         # errors and runtime script errors in the main gameplay loop.
         run: |
-          for LV in barri street park beach rain market oldtown trail station site spook scrap guell neteja tutorial; do
+          for LV in barri street park beach rain market oldtown trail station site spook scrap guell neteja montjuic tutorial; do
             ./Godot_v4.7-stable_linux.x86_64 --headless --path . --quit-after 1800 -- --level=$LV 2>&1 | tee smoke-$LV.log
             ! grep -E "SCRIPT ERROR|Parse Error|Failed to load script" smoke-$LV.log
           done

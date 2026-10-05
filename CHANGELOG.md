@@ -2,8 +2,120 @@
 
 Append-only session history, newest first.
 
+## 2026-10-05 - Montjuïc, the climb (a first version)
+
+- A new walk, MONTJUÏC ("the hill"), opening at 25 stars: a narrow path
+  winding up the hill between stone terraces, a flight of steps where it cuts
+  each retaining wall (handrail posts the leash catches on), Aleppo pines,
+  agaves and prickly pears on the terraces, and stone posts counting the
+  metres up to 173.
+- The hill narrows as you climb, and past its rim the city falls away: the
+  Eixample's chamfered blocks below, smaller and hazier the higher you get,
+  and near the top the sea.
+- Your human walks slower uphill (and slower again on the steps) and quicker
+  coming home; lead them on the leash and they keep up better. The dog feels
+  half of it.
+- Wind: from a little way up, gusts every few seconds, more often and harder
+  higher up, each telegraphed by leaves and streaks across the view and a
+  whoosh before it shoves you sideways.
+- Its own arrangement of the soundtrack (whistle and vibes, brushes). The
+  off-leash space at the top is a plaça for now; the cable car, the
+  escalators, the castle esplanade and the rest come next (#146).
+- In every level list: CI's selftest and smoke sweeps, the soak matrix, the
+  screenshot, perf and idle-soak sweeps, the behaviour snapshot, the terrain
+  and off-leash bounds audits, the junk placement test.
+
+## 2026-10-05 - the web frame times, measured again: the machine, then the signs
+
+`tools/web_perf.sh` on main read street at 11 fps (frame p50 72.7 ms), park
+20 and beach 16. Most of that was the machine: XCOM 2 and a busy browser
+were sharing its CPU and GPU, and the same build swung from 15 to 60 ms over
+twenty minutes without a change. A first bisect run through those twenty
+minutes blamed the leash overhaul (#127), wrongly. On a quiet machine,
+alternating builds, street reads:
+
+| build | frame p50 |
+|---|---|
+| v1.55 | 11-12 ms (75 fps) |
+| v1.57, #127 and its parent, eeba92e | 17-22 ms |
+| main | 22-24 ms (41-44 fps) |
+
+Nothing since v1.57 slowed the browser build, so 1.58 shipped as it was.
+Between v1.55 and v1.57 street grew from 290 to 461 nodes and its world draw
+from 1.3 to 3.2 ms (native), mostly in the restyle (#76) and La Rambla's
+boulevard (#87): new things to draw, not a slow path.
+
+Profiling the world pass by section found one: the loose-piece signs (the
+walk's name, HOME, the gate's words, #99 and #116). A sign of about ninety
+carnations cost 3.5-4.5 ms of every 30 fps world redraw natively, to repeat a
+picture that had not changed. They now live on their own canvas,
+`world/sign_layer.gd`, which redraws only when a piece moves (a sign's new
+`rev`, bumped by `WorldSign.tick` only when something drawn changed), a sign
+enters or leaves view, the signs are rebuilt or hidden, or one animates
+(puddles, suds, rings). It is main's first child at main's z, so it draws
+exactly where the signs were. Over street's whole autowalk, native and fixed
+step: world draw mean 6.9 -> 4.6 ms, p95 16.6 -> 5.9 ms, worst 22.2 -> 9.3
+ms, and the walk takes 5% less wall time. In the browser over 75 seconds
+the world draw's p95 halves (13.3 and 14.9 ms against 7.3 and 7.9), but
+whole frames stay within this machine's run-to-run noise (19.5-25.8 ms p50
+before, 20.4-28.6 after), so this alone does not bring street back to
+60 fps: the rest is the spread-out cost of the new content. The
+behaviour snapshot is byte-identical and all 56 sweep shots are
+pixel-identical. `tests/test_sign_layer.gd` pins when the canvas must and
+must not redraw.
+
+`tools/web_perf.sh` now prints every PERF line (the physics-step split and
+the worst frames as well as the summary), takes probe flags in PERF_ARGS,
+keeps Chrome's log with LOGDIR, and says in its header how background load
+wrecks a comparison.
 
 
+
+## 2026-10-05 - The tutorial in two parts (#169, part 2)
+
+- THE BASICS first: walking, the leash going tight, digging in, business,
+  a sniff, the nose, the bark, the zoomies and bagging it, about three
+  minutes. Then the walk stops on THAT'S THE BASICS ("Enough for any walk. The
+  tricks are a bonus."): on to El Barri straight away (the tutorial counts as
+  done and its bones are banked), or teach me the tricks.
+- THE TRICKS for whoever wants them: riding the kerb, the vault, tetherball
+  and the brink, then digging in the dog park, where the tutorial now ends by
+  itself a moment after the last card. No more walking home with nothing left
+  to learn.
+- The title's FIRST TIME? card can say three minutes now, and does.
+- `tests/test_tutorial_checkpoint.gd` in CI; `--level=tutorial
+  --shot-menu=basics` photographs the card.
+
+## 2026-10-05 - A way in for new players (#169, part 1)
+
+- The title asks a new player first: pressing start on a fresh save opens
+  FIRST TIME? "A short walk that shows you the ropes", with learn the ropes on
+  the main button (straight into the tutorial), straight to the walks on the
+  second, and don't ask again on a third (it says so on the card, and it is
+  saved). It stops asking once the tutorial has been walked to the end.
+- The tutorial ends by leading on: its result card offers "on to El Barri",
+  which goes straight into the first real walk with no menu in between, and
+  the bones earned in it are banked rather than thrown away as practice.
+- The first walks open sooner: La Rambla at 1 star, El Parc at 2, the
+  seafront at 3, El Diluvi at 4 (were 2, 3, 4 and 5).
+- `--shot-menu=first` photographs the question.
+
+## 2026-10-04 - El Parc: audit fixes (#150)
+
+- The flowerbeds are gardens: a low clipped box hedge round each (soft
+  corners, a lit top, leafy texture) and the planting in drifts, a run of one
+  colour, a foliage mound, a few lavender spikes, then the next colour,
+  instead of a grid of dots.
+- The bandstand's floor is stone, not lawn: no grass tufts drawn on it.
+- The playground: poured rubber with soft corners and a darker kerb, a
+  hopscotch let into it, a timber fence round it with a gate on the path side,
+  the slide with its ladder, platform, rail posts and a chute widening into
+  its run-out, a spring rider, and the sandpit in rounded timber with corner
+  seats and a bucket and spade left in it.
+- The lake has a shore: clumps of reeds and bulrushes round the bank, a
+  timber jetty on the south side with two rowing boats tied up for hire, and
+  ducks resting on the east bank. The path round it stays clear.
+- Drawing only: the behaviour snapshot is identical.
 ## 2026-10-04 - La Rambla: audit fixes (#149)
 
 - The promenade is fuller: the plane trees down both edges stand every 180 px
