@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-10-05 - a gentler lost walk (#169)
+
+- The card a lost walk ends on keeps its joke and now adds one plain line on
+  how to avoid that loss next time: bikes (dig in at a crossing, keep out of
+  the bike lane), open manholes, cellar hatches, the brink of a hole or an
+  edge, and the sweeper (pull steadily for home).
+- It says how many new goals the walk ticked, since those stay ticked even
+  on a lost walk.
+- A player's very first lost walk adds "Everyone loses a walk now and then.
+  It starts fresh every time." `Game.walks_lost` is saved under `[global]`;
+  headless runs and screenshots never write it.
+- Try again stays one press away. Every loss now goes through `_death(msg,
+  cause)` and `systems/losses.gd`; `tests/test_losses.gd` is in CI.
+
 ## 2026-10-05 - Montjuïc, the climb (a first version)
 
 - A new walk, MONTJUÏC ("the hill"), opening at 25 stars: a narrow path
