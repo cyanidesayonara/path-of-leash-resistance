@@ -205,6 +205,10 @@ static func controls() -> Array:
 
 static func start_walk(m: Node2D) -> void:
 	m.started = true
+	# the very first real walk, for a player who skipped the tutorial: the
+	# two buttons nobody would guess
+	if not Game.tutorial_done:
+		Tips.show(m, "start")
 	m.frozen = false
 	# snapshot progress so the results can report stars and unlocks
 	m.run_pre_total_stars = Game.total_stars()
