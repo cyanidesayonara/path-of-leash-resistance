@@ -221,11 +221,28 @@ func _pill(vs: Vector2, y: float, text: String, col: Color) -> void:
 	var up := text.to_upper()
 	var tw := Kit.text_w(f, up, BANNER_PX)
 	var r := Rect2(vs.x * 0.5 - tw * 0.5 - 30.0, y - 22.0, tw + 50.0, 32.0)
+	# on a narrow screen (a small window, or a phone's enlarged interface) the
+	# open goal list can reach the middle: the pill moves into the gap between
+	# the vitals card and the list instead of running under it
+	r.position.x = pill_x(r, vs)
 	draw_rect(Rect2(r.position + Vector2(0, 3), r.size), Color(0, 0, 0, 0.25 * col.a))
 	draw_rect(r, Color(0.07, 0.075, 0.09, 0.82 * col.a))
 	draw_circle(Vector2(r.position.x + 16.0, y - 6.0), 5.0, Color(col.r, col.g, col.b, col.a))
 	draw_string(f, Vector2(r.position.x + 30.0, y), up, HORIZONTAL_ALIGNMENT_LEFT, -1, BANNER_PX,
 		Color(col.r, col.g, col.b, col.a))
+
+
+# The pill's left edge: centred, unless that would meet the goal list, then
+# centred in the gap between the vitals card and the list.
+func pill_x(r: Rect2, vs: Vector2) -> float:
+	if main == null or main.goals_card == null or not main.goals_card.visible:
+		return r.position.x
+	var card: Rect2 = main.goals_card.get_rect()
+	if not card.intersects(r.grow(6.0)):
+		return r.position.x
+	var left: float = main.panel.position.x + main.panel.CARD_W if main.panel != null else 0.0
+	var gap_mid := (left + card.position.x) * 0.5
+	return clampf(gap_mid - r.size.x * 0.5, left + 6.0, maxf(left + 6.0, card.position.x - 6.0 - r.size.x))
 
 
 func _draw_toasts(vs: Vector2) -> void:

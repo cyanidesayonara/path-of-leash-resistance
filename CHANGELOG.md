@@ -2,6 +2,21 @@
 
 Append-only session history, newest first.
 
+## 2026-10-05 - readable on a small screen (#169 audit)
+
+- A sideways phone (844x390) drew the 1280x720 composition at 0.54, so 15px
+  text landed at about 8px. Below a 0.78 frame scale the window's content
+  scale factor now grows (up to 1.45) to bring it back to 0.78, and the
+  camera's zoom is divided by the same factor: the HUD, menus and lesson
+  cards get bigger, the walk shows exactly what it did. Measured in logical
+  pixels (the browser's device pixel ratio), re-applied on resize, never in
+  headless runs. `--ui-scale=K` forces it for screenshots.
+- On a narrow screen the open goal list can reach the middle, so the banner
+  pill moves into the gap beside it rather than under it; and with the
+  enlarged interface the open list shows four rows, the rest as "+ N more".
+- Desktop sizes (frame scale 0.78 and up) are untouched.
+- `tests/test_ui_scale.gd` in CI.
+
 ## 2026-10-05 - a gentler lost walk (#169)
 
 - The card a lost walk ends on keeps its joke and now adds one plain line on
