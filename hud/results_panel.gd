@@ -20,6 +20,8 @@ const PAD := 34.0
 const ROW_H := 25.0
 const COL_SPLIT := 6        # more goals than this and it goes two-up
 const RATING_GAP := 12.0     # extra space under the rating line, when there is one
+# the room kept clear either side of the card when it has to shrink to fit
+const SIDE_ROOM := 190.0
 
 var main: Node2D
 
@@ -58,7 +60,11 @@ func _draw() -> void:
 	# most phone shapes, and centring on the reference box left the card
 	# noticeably off-centre on a wide window.
 	var vs := get_viewport_rect().size
-	position = Vector2((vs.x - W) * 0.5, maxf(20.0, (vs.y - h) * 0.5))
+	# a narrow or short viewport (a phone's enlarged interface) shrinks the
+	# card to fit, leaving the side margins the touch buttons stand in
+	var k := minf(1.0, minf((vs.x - 2.0 * SIDE_ROOM) / W, (vs.y - 40.0) / h))
+	scale = Vector2(k, k)
+	position = Vector2((vs.x - W * k) * 0.5, maxf(20.0, (vs.y - h * k) * 0.5))
 	Kit.card(self, Rect2(0, 0, W, h), Kit.accent("results"), 16)
 
 	var y := PAD + 30.0

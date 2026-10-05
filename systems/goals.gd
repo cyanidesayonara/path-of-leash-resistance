@@ -41,7 +41,7 @@ const LEVEL_GOAL_IDS := {
 	"neteja": ["mark", "sniff", "phone", "paws", "bag", "fetch", "hi", "snack",
 		"combo", "prize", "outrun"],
 	# Montjuic: the climb, with the park staples
-	"montjuic": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "combo", "prize"],
+	"montjuic": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "cable", "combo", "prize"],
 }
 
 
@@ -57,6 +57,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"tofu": {"text": "Bring Tofu the cat home", "target": 1, "fn": func() -> int: return 1 if m.tofu_home else 0},
 		"hi": {"text": "Say hello to %d dogs", "target": 3, "fn": func() -> int: return m.dogs_greeted},
 		"drink": {"text": "Have a proper long drink", "target": 1, "fn": func() -> int: return 1 if m.drunk_amount >= 0.4 else 0},
+		"cable": {"text": "Find a ticket and ride the telefèric", "target": 1, "fn": func() -> int: return mini(int(m.cable_rides), 1)},
 		"zoom": {"text": "Run yourself tired", "target": 1, "fn": func() -> int: return 1 if m.dog.energy <= 0.25 else 0},
 		"chase": {"text": "See off %d critters", "target": 2, "fn": func() -> int: return m.squirrels_chased},
 		"close": {"text": "Scrape past traffic %d times", "target": 3, "fn": func() -> int: return m.close_calls},
@@ -139,6 +140,10 @@ static func check(m: Node2D) -> void:
 			m._credit_goal(q)
 
 
+# the goal list's open rows when the interface is enlarged for a small screen
+const GOALS_ROWS_SMALL := 4
+
+
 static func card_data(m: Node2D) -> Dictionary:
 	# The card draws whatever this returns. Open goals sort to the top so the
 	# live ones are always on screen, and finished ones stay in the list
@@ -166,7 +171,10 @@ static func card_data(m: Node2D) -> Dictionary:
 				"state": UiIcons.Check.PARTIAL if got > 0 else UiIcons.Check.OPEN,
 			})
 	var rows: Array = open_rows + done_rows
-	var shown: int = mini(rows.size(), m.GOALS_MAX_ROWS)
+	# with a phone's enlarged interface (hud/ui_scale.gd) the open list would
+	# cover a third of the walk: fewer rows there, the rest as "+ N more"
+	var cap: int = m.GOALS_MAX_ROWS if float(m.ui_scale) <= 1.0 else GOALS_ROWS_SMALL
+	var shown: int = mini(rows.size(), cap)
 	var open: bool = Game.goals_expanded or m.goals_peek > 0.0
 	return {
 		"done": done_count, "total": total,
