@@ -111,6 +111,21 @@ func _run() -> void:
 	dog.global_position = Vector2(wz.get_center().x, wz.position.y + 20.0)
 	m._physics_process(1.0 / 60.0)
 	_check(m.walkway_rides == r0 + 1, "riding it from the bottom to the top counts")
+	# a still dog on it rises; the same dog beside it does not
+	dog.global_position = Vector2(wz.get_center().x, wz.end.y - 20.0)
+	human.global_position = dog.global_position + Vector2(0, 40)
+	m.leash.resnap()
+	var y0: float = dog.global_position.y
+	for i in range(40):
+		await physics_frame
+	_check(dog.global_position.y < y0 - 20.0, "standing on the walkway carries her up (%.0f)" % (y0 - dog.global_position.y))
+	dog.global_position = Vector2(wz.end.x + 80.0, wz.end.y - 20.0)
+	human.global_position = dog.global_position + Vector2(0, 40)
+	m.leash.resnap()
+	y0 = dog.global_position.y
+	for i in range(40):
+		await physics_frame
+	_check(absf(dog.global_position.y - y0) < 20.0, "beside the walkway, she stays put")
 	m.queue_free()
 	await process_frame
 	print("\n%d checks, %d failures" % [checks, failures.size()])

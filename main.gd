@@ -5674,17 +5674,13 @@ func _physics_process(delta: float) -> void:
 	if lvl == "montjuic":
 		Montjuic.tick_wind(self, delta)
 		CableCar.tick(self, delta)
-	# the moving walkway carries whoever is standing on it (L'Estacio)
+	# the moving walkway (L'Estacio) and the escalators (Montjuic) move whoever
+	# stands on them outright: a push on velocity is eased away by a dog or
+	# human standing still
 	if conveyor_zone.size.y > 0.0:
 		var carry := conveyor_dir * CONV_SPEED
-		# Montjuic's escalators move whoever stands on them outright: a push on
-		# velocity is eased away by a dog or human standing still
-		var outright := lvl == "montjuic"
 		if conveyor_zone.has_point(dog.global_position):
-			if outright:
-				dog.move_and_collide(carry * delta)
-			else:
-				dog.velocity += carry * delta
+			dog.move_and_collide(carry * delta)
 			# a ride counts from getting on near one end to off at the other
 			if walkway_from == INF:
 				walkway_from = dog.global_position.y
@@ -5696,10 +5692,7 @@ func _physics_process(delta: float) -> void:
 		else:
 			walkway_from = INF
 		if conveyor_zone.has_point(human.global_position):
-			if outright:
-				human.move_and_collide(carry * delta)
-			else:
-				human.velocity += carry * delta
+			human.move_and_collide(carry * delta)
 	if auto_walk:
 		_auto_drive(delta)
 		_watch_stall(delta)

@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-10-05 - L'Estació's walkway carries you
+
+- The moving walkway now moves whoever stands on it outright, as Montjuïc's
+  escalators do. Before, it pushed the body's velocity, and a dog or human
+  standing still eased that straight back to nothing, so a still dog barely
+  moved on it. The `outright` per-level switch is gone; every conveyor
+  behaves the same way.
+- `tests/test_estacio.gd`: a still dog at the bottom of the walkway rises
+  over 40 physics frames, and the same dog beside it stays put.
+- Behaviour snapshot (station): only the bot's leg times move, FREEDOM
+  31.1 to 31.5 s and HOME leg 38.1 to 38.5 s. The pair clear the walkway
+  about 1.5 s sooner, then the bot takes longer to find a ticket-barrier gap.
+
 ## 2026-10-05 - the Font Màgica at the foot of Montjuïc (#146)
 
 - A great stone-rimmed basin beside the path at the foot of the hill: a ring
