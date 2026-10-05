@@ -24,7 +24,8 @@ extends RefCounted
 # owner waits at the station until the lesson lands or is skipped, so nothing
 # is ever rushed; a lesson that needs the owner walking leaves it off.
 # "stand" (-1 west, 1 east) puts the waiting owner by that edge of the path,
-# for a lesson whose target is off to one side.
+# for a lesson whose target is off to one side. "meter" names the HUD meter the
+# lesson uses (hud_panel.gd outlines it while the lesson is up).
 const STEPS: Array[Dictionary] = [
 	{
 		"id": "walk", "at": 60.0, "hold": false,
@@ -42,9 +43,9 @@ const STEPS: Array[Dictionary] = [
 		"body": "Hold {plant} while the rope is tight. Your human cannot budge you.",
 	},
 	{
-		"id": "pee", "at": -1220.0, "hold": true,
+		"id": "pee", "at": -1220.0, "hold": true, "meter": "tank",
 		"title": "Business first.",
-		"body": "Go to the hydrant and hold {pee} to leave your mark.",
+		"body": "Hold {pee} at the hydrant to leave your mark. Your tank is the yellow bar.",
 	},
 	{
 		"id": "sniff", "at": -1620.0, "hold": true,
@@ -62,9 +63,9 @@ const STEPS: Array[Dictionary] = [
 		"body": "Press {bark} at the pigeons. It scatters them, and stops your human dead.",
 	},
 	{
-		"id": "turbo", "at": -2820.0, "hold": true,
+		"id": "turbo", "at": -2820.0, "hold": true, "meter": "zoomies",
 		"title": "The zoomies.",
-		"body": "Hold {turbo} to burn them off. You are faster than they will ever be.",
+		"body": "Hold {turbo} to burn off the green bar. You are faster than they will ever be.",
 	},
 	{
 		"id": "bag", "at": -3220.0, "hold": true,

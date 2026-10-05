@@ -619,6 +619,9 @@ var confirm_id := ""
 # the tutorial's halfway card has been answered "the tricks", and how long
 # the last card has been up (the tutorial ends itself after it)
 var tut_basics_seen := false
+# the HUD meter the current lesson uses ("tank", "zoomies"), outlined on the
+# card while the lesson is up; "" for none
+var hud_point := ""
 var tut_done_t := 0.0
 var pause_view := ""
 var locked_nudge := 0.0
@@ -7830,6 +7833,7 @@ func _tick_tutorial(delta: float) -> void:
 	tut_flash = maxf(0.0, tut_flash - delta)
 	var st: Dictionary = TutorialSteps.step(tut_step)
 	var id := String(st.id)
+	hud_point = String(st.get("meter", ""))
 	# the owner waits at a lesson that wants them still, just short of it
 	var hp := tut_hold_point(tut_step)
 	human.tut_hold_y = hp.y
