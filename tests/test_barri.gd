@@ -3,7 +3,7 @@ extends SceneTree
 # El Barri is the first walk (docs/LEVEL_DESIGN.md): open from the start and
 # first in the list after the tutorial and the Daily Walk, with La Rambla now
 # behind a couple of stars. It is the everyday park at the end of the
-# street: no traffic, no crowd, no pickpockets, nothing that says where.
+# street: no traffic, no riders, no crowd, no pickpockets, nothing that says where.
 
 var checks := 0
 var failures: Array[String] = []
@@ -41,6 +41,14 @@ func _run() -> void:
 		await physics_frame
 	_check(m.get_tree().get_nodes_in_group("tourists").is_empty() and m.get_tree().get_nodes_in_group("pickpockets").is_empty(),
 		"no crowd and no pickpockets")
+	# no rider lane, so no riders: once a stray rider stood at x=0 off screen
+	m._skip_title()
+	m.auto_walk = true
+	var riders := 0
+	for i in range(900):
+		await physics_frame
+		riders = maxi(riders, m.get_tree().get_nodes_in_group("bikes").size())
+	_check(riders == 0, "no riders on a walk without a rider lane (saw %d)" % riders)
 	m.queue_free()
 	await process_frame
 	print("\n%d checks, %d failures" % [checks, failures.size()])

@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-10-05 - no riders on walks without a rider lane
+
+- `_vlane` only had rider cases for street, park, beach and market. Every
+  other walk fell through the match and spawned a motionless "bike" at x=0,
+  off screen, every 2-4 seconds (up to the cap of seven): invisible, but full
+  riders ticked every frame, counted by the critters' scatter checks. Now it
+  runs on those four walks only (`VLANE_LEVELS`).
+- `test_barri` drives El Barri for 900 frames and checks no rider appears
+  (it saw 3 before the fix).
+
 ## 2026-10-05 - Montjuïc, the climb (a first version)
 
 - A new walk, MONTJUÏC ("the hill"), opening at 25 stars: a narrow path
