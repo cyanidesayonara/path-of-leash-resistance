@@ -20,6 +20,14 @@ var sw_r := 980.0
 var built := false
 # the intro is playing over the title (intro/intro_player.gd)
 var intro_playing := false
+# Montjuic's wind (systems/montjuic.gd): its own RNG, the next gust, the
+# telegraph and the gust itself
+var wind_rng := RandomNumberGenerator.new()
+var wind_rng_seeded := false
+var wind_next := 0.0
+var wind_warn := 0.0
+var wind_gust := 0.0
+var wind_dir := Vector2.RIGHT
 # where --shot-cam points the camera (INF: follow the pair as usual)
 var shot_cam := Vector2(INF, INF)
 var strip_l := 0.0
@@ -970,6 +978,9 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 	# the view, on both verges, facing inward.
 	if lvl == "beach":
 		return  # bespoke cross-section, dressed in its own block
+	if lvl == "montjuic":
+		Montjuic.draw_below(self, c, vt, vb)
+		return
 	var mod := 220.0                     # height of one facade module
 	var depth := 78.0                    # how far the detailed frontage juts
 	# Built-up walks fill everything past the building line with masonry, so
@@ -1311,6 +1322,10 @@ func _grass_blocked(p: Vector2) -> bool:
 			return true
 	for r: Rect2 in solid_rects:
 		if r.grow(6.0).has_point(p):
+			return true
+	if lvl == "montjuic":
+		var me := walk_edges(p.y)
+		if absf(p.x - (me.x + me.y) * 0.5) > Montjuic.hill_half(self, p.y) - 16.0:
 			return true
 	if lvl == "park":
 		for r: Rect2 in LevelBuild.PARK_BEDS:
@@ -5617,6 +5632,8 @@ func _physics_process(delta: float) -> void:
 	if Game.weather == "wind":
 		dog.velocity += Vector2(46.0, 0) * delta
 		human.velocity += Vector2(70.0, 0) * delta
+	if lvl == "montjuic":
+		Montjuic.tick_wind(self, delta)
 	# the moving walkway carries whoever is standing on it (L'Estacio)
 	if conveyor_zone.size.y > 0.0:
 		var carry := conveyor_dir * CONV_SPEED
@@ -8456,6 +8473,8 @@ const FREEDOM_KINDS := {
 	"guell": "clearing",
 	# the town walks end in a square, the way their gates say
 	"market": "placa", "oldtown": "placa", "spook": "placa", "neteja": "placa",
+	# the castle's esplanade at the top of the hill
+	"montjuic": "placa",
 }
 const BEACH_SEA_R := 430.0
 const BEACH_GATE_SHORE_X := 230.0
@@ -8846,6 +8865,15 @@ func on_tofu_home(pos: Vector2) -> void:
 
 func freedom_games_tick(delta: float) -> void:
 	FreedomGames.tick(self, delta)
+
+
+# the slope under your human and the dog: 1.0 everywhere but Montjuic
+func slope_mult(y: float, fwd_y: float) -> float:
+	return Montjuic.slope_mult(self, y, fwd_y)
+
+
+func dog_slope_mult(y: float, vel_y: float) -> float:
+	return Montjuic.dog_slope_mult(self, y, vel_y)
 
 
 func on_frisbee_caught(air: bool) -> void:
@@ -9273,7 +9301,13 @@ func _draw_world() -> void:
 			walkway = Color(0.74, 0.67, 0.53)   # sandy gravel, as the city's parks are
 		elif lvl == "scrap":
 			grass = Color(0.36, 0.37, 0.25)     # dusty weeds up to the fence
-		if built:
+		elif lvl == "montjuic":
+			grass = Montjuic.HILL
+			walkway = Montjuic.SAULO
+		if lvl == "montjuic":
+			# the hill only, between its rims: past them, the city below
+			Montjuic.draw_hill(self, _wc, vt, vb)
+		elif built:
 			# only the strips between the paving and the building line: beyond
 			# it the edge layer's buildings show (they sit behind the world, so
 			# a full-width lawn here hid every one of them, #65)
@@ -9366,6 +9400,8 @@ func _draw_world() -> void:
 	var wvt := maxf(vt, GATE_Y - 30.0)
 	if lvl == "park":
 		_draw_parc(wvt, vb)
+	if lvl == "montjuic":
+		Montjuic.draw_on_hill(self, _wc, wvt, vb)
 	if lvl == "barri" and not tutorial_mode:
 		_draw_barri(wvt, vb)
 	if lvl == "rain":

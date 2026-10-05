@@ -2,6 +2,29 @@
 
 Append-only session history, newest first.
 
+## 2026-10-05 - Montjuïc, the climb (a first version)
+
+- A new walk, MONTJUÏC ("the hill"), opening at 25 stars: a narrow path
+  winding up the hill between stone terraces, a flight of steps where it cuts
+  each retaining wall (handrail posts the leash catches on), Aleppo pines,
+  agaves and prickly pears on the terraces, and stone posts counting the
+  metres up to 173.
+- The hill narrows as you climb, and past its rim the city falls away: the
+  Eixample's chamfered blocks below, smaller and hazier the higher you get,
+  and near the top the sea.
+- Your human walks slower uphill (and slower again on the steps) and quicker
+  coming home; lead them on the leash and they keep up better. The dog feels
+  half of it.
+- Wind: from a little way up, gusts every few seconds, more often and harder
+  higher up, each telegraphed by leaves and streaks across the view and a
+  whoosh before it shoves you sideways.
+- Its own arrangement of the soundtrack (whistle and vibes, brushes). The
+  off-leash space at the top is a plaça for now; the cable car, the
+  escalators, the castle esplanade and the rest come next (#146).
+- In every level list: CI's selftest and smoke sweeps, the soak matrix, the
+  screenshot, perf and idle-soak sweeps, the behaviour snapshot, the terrain
+  and off-leash bounds audits, the junk placement test.
+
 ## 2026-10-05 - the web frame times, measured again: the machine, then the signs
 
 `tools/web_perf.sh` on main read street at 11 fps (frame p50 72.7 ms), park

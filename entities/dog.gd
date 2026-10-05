@@ -182,6 +182,8 @@ func tick(delta: float) -> void:
 		# - it waddles wherever you are - so it stays its own term.
 		accel *= Surfaces.grip_mult(surface)
 		var top := SPEED * (0.88 if bladder_slow else 1.0) * Surfaces.top_mult(surface)
+		if main != null and main.has_method("dog_slope_mult"):
+			top *= main.dog_slope_mult(global_position.y, velocity.y)
 		if turbo_active:
 			top *= TURBO_MULT
 			accel = maxf(accel, 3200.0)

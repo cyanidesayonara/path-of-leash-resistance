@@ -82,6 +82,8 @@ const STYLES := {
 		"bass": "root", "drums": "claps", "verb": 0.26},
 	"neteja": {"bpm": 132, "key": 0, "minor": true, "lead": "marimba", "comp": "skank",
 		"bass": "eighths", "drums": "drive", "verb": 0.16},
+	"montjuic": {"bpm": 92, "key": 2, "lead": "whistle", "lead2": ["vibes", 0], "comp": "arp",
+		"bass": "walk", "drums": "brush", "verb": 0.36},
 	"freedom": {"bpm": 120, "key": 5, "lead": "whistle", "lead2": ["glock", 12], "comp": "arp",
 		"bass": "walk", "drums": "kickrim", "swing": 0.1, "verb": 0.22},
 }

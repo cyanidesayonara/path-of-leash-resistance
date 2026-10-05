@@ -591,6 +591,9 @@ func _walk(delta: float) -> void:
 		# a heavy body on ice: grip drops, so momentum carries the owner
 		# past where they meant to stop - and the leash yanks compound it
 		accel *= 0.4
+	# the hill (Montjuic): slower up, quicker down; 1.0 on every other walk
+	if main != null and main.has_method("slope_mult"):
+		speed *= main.slope_mult(global_position.y, fwd_y)
 	walk_intent = dir * speed
 	velocity = velocity.move_toward(dir * speed, accel * delta)
 	move_and_slide()
