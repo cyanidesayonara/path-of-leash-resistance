@@ -14,7 +14,10 @@ extends RefCounted
 #   through the leash conversation's give) and speeds up on the way home;
 # - stone posts give the height in metres;
 # - wind that rises with the climb, in gusts, each one telegraphed by leaves
-#   streaking past and a whoosh before it shoves.
+#   streaking past and a whoosh before it shoves;
+# - the outdoor escalators up the last straight to the castle, stone stairs
+#   either side: your human rides, the dog races them or rides along, and
+#   going home the up escalator is the cheeky way down.
 # Static functions over main's state, like the other systems.
 
 const TOP_M := 173.0              # the castle's height, near enough
@@ -30,6 +33,12 @@ const GUST_WARN := 0.8            # the telegraph, as every hazard has
 const GUST_S := 0.9
 const GUST_FORCE := 300.0         # px/s/s on the dog at the top
 const GUST_EVERY := Vector2(6.0, 11.0)
+# the escalators: up the middle of the last straight (x 640 from y -4600 to the
+# gate), clear of the last terrace's steps; main's conveyor carries on them
+const ESC_BOTTOM := -4560.0
+const ESC_TOP := -4900.0
+const ESC_W := 120.0
+const ESC_TREAD := 14.0
 
 
 static func is_on(m: Node2D) -> bool:
@@ -116,6 +125,9 @@ static func build(m: Node2D) -> Array:
 	m.cone_spots = Array([Vector2(700, -1700), Vector2(560, -3500)], TYPE_VECTOR2, &"", null)
 	# a drinking fountain at the halfway viewpoint, as the hill's paths have
 	m.fountains = Array([Vector2(m.sw_r - 50, -2650)], TYPE_VECTOR2, &"", null)
+	# the escalators, carrying up (main's conveyor, as L'Estacio's walkway)
+	m.conveyor_zone = Rect2(640.0 - ESC_W * 0.5, ESC_TOP, ESC_W, ESC_BOTTOM - ESC_TOP)
+	m.conveyor_dir = Vector2(0, -1)
 	# waymarker posts where hydrants stand in town
 	return [
 		Vector2(m.sw_l + 45, -900), Vector2(m.sw_r - 45, -1900), Vector2(m.sw_l + 45, -3300),
@@ -157,6 +169,46 @@ static func tick_wind(m: Node2D, delta: float) -> void:
 
 
 # --- drawing --------------------------------------------------------------------
+
+# The escalators and the stairs beside them: two steel runs with black rubber
+# handrails, treads scrolling up, comb plates at either end, and stone steps
+# filling the rest of the path's width.
+static func draw_escalator(m: Node2D, c: Object, vt: float, vb: float) -> void:
+	var z: Rect2 = m.conveyor_zone
+	if z.end.y < vt - 40.0 or z.position.y > vb + 40.0:
+		return
+	var b: ShapeBatch = c if c is ShapeBatch else ShapeBatch.new(c as CanvasItem)
+	var e: Vector2 = m.walk_edges(z.get_center().y)
+	# the stairs either side: treads every ESC_TREAD * 2, a shadow under each nose
+	var sy := z.position.y
+	while sy < z.end.y:
+		for seg: Vector2 in [Vector2(e.x + 6.0, z.position.x - 10.0), Vector2(z.end.x + 10.0, e.y - 6.0)]:
+			b.rect(Rect2(seg.x, sy, seg.y - seg.x, ESC_TREAD * 2.0), STONE)
+			b.rect(Rect2(seg.x, sy + ESC_TREAD * 2.0 - 4.0, seg.y - seg.x, 4.0), STONE.darkened(0.25))
+			b.rect(Rect2(seg.x, sy, seg.y - seg.x, 2.0), STONE.lightened(0.2))
+		sy += ESC_TREAD * 2.0
+	# the casing, a steel strip down the middle between the two runs
+	b.rect(Rect2(z.position.x - 10.0, z.position.y - 8.0, z.size.x + 20.0, z.size.y + 16.0), Color(0.38, 0.40, 0.43))
+	var half := z.size.x * 0.5
+	for run in range(2):
+		var x0 := z.position.x + float(run) * (half + 4.0)
+		var w := half - 4.0
+		b.rect(Rect2(x0, z.position.y, w, z.size.y), Color(0.24, 0.25, 0.27))
+		# treads, moving up the hill
+		var scroll := fmod(AnimClock.msec() / 1000.0 * 118.0, ESC_TREAD)
+		var ty := z.position.y + ESC_TREAD - scroll
+		while ty < z.end.y:
+			b.rect(Rect2(x0 + 2.0, ty, w - 4.0, 2.0), Color(0.50, 0.52, 0.55))
+			ty += ESC_TREAD
+		# the handrails, black rubber, each side of the run
+		b.rect(Rect2(x0 - 3.0, z.position.y - 6.0, 4.0, z.size.y + 12.0), Color(0.08, 0.08, 0.09))
+		b.rect(Rect2(x0 + w - 1.0, z.position.y - 6.0, 4.0, z.size.y + 12.0), Color(0.08, 0.08, 0.09))
+	# comb plates, top and bottom
+	for py: float in [z.position.y - 8.0, z.end.y]:
+		b.rect(Rect2(z.position.x, py, z.size.x, 8.0), Color(0.72, 0.68, 0.30))
+	if b != c:
+		b.flush()
+
 
 const SAULO := Color(0.78, 0.70, 0.54)        # the paths' packed sand
 const HILL := Color(0.46, 0.50, 0.30)         # dry Mediterranean scrub

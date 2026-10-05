@@ -5677,8 +5677,14 @@ func _physics_process(delta: float) -> void:
 	# the moving walkway carries whoever is standing on it (L'Estacio)
 	if conveyor_zone.size.y > 0.0:
 		var carry := conveyor_dir * CONV_SPEED
+		# Montjuic's escalators move whoever stands on them outright: a push on
+		# velocity is eased away by a dog or human standing still
+		var outright := lvl == "montjuic"
 		if conveyor_zone.has_point(dog.global_position):
-			dog.velocity += carry * delta
+			if outright:
+				dog.move_and_collide(carry * delta)
+			else:
+				dog.velocity += carry * delta
 			# a ride counts from getting on near one end to off at the other
 			if walkway_from == INF:
 				walkway_from = dog.global_position.y
@@ -5690,7 +5696,10 @@ func _physics_process(delta: float) -> void:
 		else:
 			walkway_from = INF
 		if conveyor_zone.has_point(human.global_position):
-			human.velocity += carry * delta
+			if outright:
+				human.move_and_collide(carry * delta)
+			else:
+				human.velocity += carry * delta
 	if auto_walk:
 		_auto_drive(delta)
 		_watch_stall(delta)
@@ -9934,7 +9943,10 @@ func _draw_world() -> void:
 
 	# L'Estacio: the moving walkway - a metal band with chevrons scrolling
 	# in the carry direction
-	if conveyor_zone.size.y > 0.0 and conveyor_zone.end.y > vt and conveyor_zone.position.y < vb:
+	if lvl == "montjuic":
+		# Montjuic's conveyor is its escalators, drawn as such
+		Montjuic.draw_escalator(self, _wc, vt, vb)
+	elif conveyor_zone.size.y > 0.0 and conveyor_zone.end.y > vt and conveyor_zone.position.y < vb:
 		_wc.draw_rect(conveyor_zone, Color(0.32, 0.34, 0.38))
 		_wc.draw_rect(conveyor_zone, Color(0.55, 0.58, 0.62), false, 2.0)
 		var scroll := fmod(AnimClock.msec() / 1000.0 * 90.0, 60.0) * conveyor_dir.y
