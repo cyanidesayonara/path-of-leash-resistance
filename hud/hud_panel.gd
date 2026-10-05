@@ -11,6 +11,13 @@ const CARD_H := 92.0
 const MOOD_X := 60.0
 const MOOD_BASELINE := 86.0
 
+# what a lesson can point at, and the outline drawn round it
+const POINT_RECTS := {
+	"phone": Rect2(9, 7, 68, 34),
+	"tank": Rect2(11, 39, 22, 48),
+	"zoomies": Rect2(29, 39, 22, 48),
+}
+
 var main: Node2D
 var sb: StyleBoxFlat
 
@@ -79,6 +86,12 @@ func _draw_shapes() -> void:
 			ecol = Color(0.6, 1.0, 0.7)
 		_b.draw_rect(Rect2(35, 46 + 34.0 - eh, 10, eh), ecol)
 	_b.draw_rect(er, Color(1, 1, 1, 0.5), false, 1.5)
+	# the meter a lesson is about, outlined and pulsing while it is up; the
+	# phone's pips while THAT'S THE BASICS names them
+	var point := "phone" if String(main.confirm_id) == "basics" else String(main.hud_point)
+	if POINT_RECTS.has(point):
+		var a := 0.55 + 0.45 * sin(AnimClock.msec() / 160.0)
+		_b.draw_rect(POINT_RECTS[point], Color(0.98, 0.80, 0.38, a), false, 2.5)
 	# mark dots: territory progress
 	for i in range(5):
 		var p := Vector2(60 + i * 16, 64)

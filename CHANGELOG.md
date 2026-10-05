@@ -16,6 +16,33 @@ Append-only session history, newest first.
   enlarged interface the open list shows four rows, the rest as "+ N more".
 - Desktop sizes (frame scale 0.78 and up) are untouched.
 - `tests/test_ui_scale.gd` in CI.
+## 2026-10-05 - the tutorial names the meters and the phone (#169 audit)
+
+- The pee lesson names the yellow bar ("Your tank is the yellow bar") and
+  the zoomies lesson the green one, and while each is up the HUD card
+  outlines that meter with a slow gold pulse (`hud_point`, from the step's
+  new "meter" key).
+- THAT'S THE BASICS, the card before the first real walk, now says the one
+  rule nothing else had taught: "One rule: keep your human on their feet.
+  Three cracks and the phone is gone." The phone's pips are outlined behind
+  it. Confirm cards take more than one line of body text.
+
+## 2026-10-05 - the first minutes, worded right (#169 audit)
+
+From the fresh-eyes audit of a new player's first ten minutes:
+- The urge banner said "NEED A WEE! ... HOLD {plant}" for what is a poo; the
+  wee is a different key, so a new player pressed it at a hydrant and nothing
+  happened. Now "NATURE CALLS! STAND STILL, HOLD {plant}", the tutorial's own
+  name for it, and the bagging lesson says "hold {plant} to squat" to match
+  GET READY's legend.
+- One word per key: GET READY calls the run key "zoomies", as the tutorial does.
+- Loss cards say "your human" (YOUR HUMAN WENT DOWN THE MANHOLE, ...).
+- FIRST TIME? draws its "Don't ask me again" box on the card, empty or
+  ticked; the bar's label no longer flips to "ask me again", which read as a
+  new choice.
+- The nose lesson is shorter (it ran into the HUD), and the last card no
+  longer claims "every trick in the book" in a park full of untaught agility
+  gear: "That is the lot. The park is yours: go and play."
 
 ## 2026-10-05 - a gentler lost walk (#169)
 

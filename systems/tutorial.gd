@@ -24,7 +24,8 @@ extends RefCounted
 # owner waits at the station until the lesson lands or is skipped, so nothing
 # is ever rushed; a lesson that needs the owner walking leaves it off.
 # "stand" (-1 west, 1 east) puts the waiting owner by that edge of the path,
-# for a lesson whose target is off to one side.
+# for a lesson whose target is off to one side. "meter" names the HUD meter the
+# lesson uses (hud_panel.gd outlines it while the lesson is up).
 const STEPS: Array[Dictionary] = [
 	{
 		"id": "walk", "at": 60.0, "hold": false,
@@ -42,9 +43,9 @@ const STEPS: Array[Dictionary] = [
 		"body": "Hold {plant} while the rope is tight. Your human cannot budge you.",
 	},
 	{
-		"id": "pee", "at": -1220.0, "hold": true,
+		"id": "pee", "at": -1220.0, "hold": true, "meter": "tank",
 		"title": "Business first.",
-		"body": "Go to the hydrant and hold {pee} to leave your mark.",
+		"body": "Hold {pee} at the hydrant to leave your mark. Your tank is the yellow bar.",
 	},
 	{
 		"id": "sniff", "at": -1620.0, "hold": true,
@@ -54,7 +55,7 @@ const STEPS: Array[Dictionary] = [
 	{
 		"id": "nose", "at": -2020.0, "hold": true, "stand": -1,
 		"title": "Your nose beats your eyes.",
-		"body": "Someone dropped a snack on the grass. Slow down: the slower you go, the further you smell. Find it.",
+		"body": "A snack is somewhere on the grass. Go slowly: the slower you go, the further you smell.",
 	},
 	{
 		"id": "bark", "at": -2420.0, "hold": true,
@@ -62,14 +63,14 @@ const STEPS: Array[Dictionary] = [
 		"body": "Press {bark} at the pigeons. It scatters them, and stops your human dead.",
 	},
 	{
-		"id": "turbo", "at": -2820.0, "hold": true,
+		"id": "turbo", "at": -2820.0, "hold": true, "meter": "zoomies",
 		"title": "The zoomies.",
-		"body": "Hold {turbo} to burn them off. You are faster than they will ever be.",
+		"body": "Hold {turbo} to burn off the green bar. You are faster than they will ever be.",
 	},
 	{
 		"id": "bag", "at": -3220.0, "hold": true,
 		"title": "Nature calls.",
-		"body": "Stand still and hold {plant} to go. Your human bags it - eventually.",
+		"body": "Stand still and hold {plant} to squat. Your human bags it - eventually.",
 	},
 	{
 		"id": "grind", "at": -3620.0, "hold": true,
@@ -99,7 +100,7 @@ const STEPS: Array[Dictionary] = [
 	{
 		"id": "done", "at": -5300.0, "hold": false,
 		"title": "Good dog.",
-		"body": "That is everything. Every trick in the book.",
+		"body": "That is the lot. The park is yours: go and play.",
 	},
 ]
 

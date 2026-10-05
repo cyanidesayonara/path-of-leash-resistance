@@ -38,6 +38,12 @@ func _run() -> void:
 	var bag: int = TUT.index_of("bag")
 	_check(bag > 0 and bag < TUT.index_of("grind"), "bagging is among the basics, before the tricks")
 
+	# a lesson that uses a meter outlines it on the HUD card, and only then
+	for pair: Array in [["pee", "tank"], ["turbo", "zoomies"], ["walk", ""]]:
+		m.tut_step = TUT.index_of(String(pair[0]))
+		m._tick_tutorial(0.0)
+		_check(String(m.hud_point) == String(pair[1]), "the %s lesson points at '%s' (got '%s')" % [pair[0], pair[1], m.hud_point])
+
 	m.tut_step = bag
 	m._tut_advance(true)
 	_check(m.paused and m.frozen and String(m.confirm_id) == "basics", "the basics done: the walk stops on the card")
@@ -46,6 +52,7 @@ func _run() -> void:
 	for p: Array in Flow.prompts(m):
 		verbs.append(String(p[1]))
 	_check("on to El Barri" in verbs and "teach me the tricks" in verbs, "it offers the first walk or the tricks")
+	_check(String(Flow.confirm_card(m).body).contains("Three cracks and the phone is gone"), "the card names the one rule: the phone")
 
 	# the tricks: carry on, and it does not ask again
 	Flow.resume(m)

@@ -623,6 +623,9 @@ var tut_basics_seen := false
 # the window's content scale factor on a small screen (hud/ui_scale.gd); the
 # camera's zoom is divided by it, so only the interface grows
 var ui_scale := 1.0
+# the HUD meter the current lesson uses ("tank", "zoomies"), outlined on the
+# card while the lesson is up; "" for none
+var hud_point := ""
 var tut_done_t := 0.0
 var pause_view := ""
 var locked_nudge := 0.0
@@ -5514,7 +5517,7 @@ func _update_hud() -> void:
 		else:
 			hud_status = "HEAD HOME"
 	elif poop_state == 1:
-		hud_status = Prompts.fill("NEED A WEE! FIND A SPOT, HOLD {plant}")
+		hud_status = Prompts.fill("NATURE CALLS! STAND STILL, HOLD {plant}")
 	elif poop_state >= 3:
 		hud_status = "UH OH..."
 	elif call_active:
@@ -5800,7 +5803,7 @@ func _shot_menu(which: String) -> void:
 			MenuFlow.open_basics(self)
 		"notice":
 			_skip_title()
-			_death("OFF THE EDGE\n\nShe went over, and the human went with her.", "edge")
+			_death("OFF THE EDGE\n\nShe went over, and your human went with her.", "edge")
 
 
 # Straight into the walk, as if SPACE had been pressed on the title. For the
@@ -7841,6 +7844,7 @@ func _tick_tutorial(delta: float) -> void:
 	tut_flash = maxf(0.0, tut_flash - delta)
 	var st: Dictionary = TutorialSteps.step(tut_step)
 	var id := String(st.id)
+	hud_point = String(st.get("meter", ""))
 	# the owner waits at a lesson that wants them still, just short of it
 	var hp := tut_hold_point(tut_step)
 	human.tut_hold_y = hp.y
@@ -8175,7 +8179,7 @@ func _hazards(delta: float) -> void:
 		return
 	for m in manholes:
 		if human.global_position.distance_to(m) < 18.0 and not human.is_fallen():
-			_death("THE HUMAN WENT DOWN THE MANHOLE\n\nThe phone gets a signal down there.\nThe walk does not.", "manhole")
+			_death("YOUR HUMAN WENT DOWN THE MANHOLE\n\nThe phone gets a signal down there.\nThe walk does not.", "manhole")
 			return
 		# the dog gets a teeter first: a brink is a skill moment, not an
 		# instant punishment
@@ -8184,7 +8188,7 @@ func _hazards(delta: float) -> void:
 			return
 	for c in cellars:
 		if c.has_point(human.global_position):
-			_death("THE HUMAN FELL IN THE CELLAR\n\nRight onto the delivery. You did warn them,\nin the only language you have.", "cellar")
+			_death("YOUR HUMAN FELL IN THE CELLAR\n\nRight onto the delivery. You did warn them,\nin the only language you have.", "cellar")
 			return
 		if c.grow(6.0).has_point(dog.global_position):
 			_start_teeter("hole", c.get_center(), "MILLIE FELL INTO THE CELLAR\n\nShe found the sausages. The walk is still over.")
