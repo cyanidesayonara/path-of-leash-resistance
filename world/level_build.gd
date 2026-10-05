@@ -1880,6 +1880,8 @@ static func build_freedom_area(m: Node2D) -> void:
 		m.water.append(tutorial_pond(m))
 	if m.freedom_kind == "placa":
 		m.water.append(placa_fountain(m))
+	if m.lvl == "montjuic":
+		m.water.append(Montjuic.FONT)
 	if m.freedom_kind == "beach":
 		# The sea, in two pieces that meet at the gate: a band along the whole
 		# passeig (so she can go in ANYWHERE on the walk, which is the first

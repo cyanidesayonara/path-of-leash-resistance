@@ -1,6 +1,8 @@
 class_name Montjuic
 extends RefCounted
 
+const EventFeed := preload("res://hud/event_feed.gd")
+
 # MONTJUÏC, the climb (La Pujada). A top-down view has no up, so the climb is
 # sold by everything round it at once:
 # - the path winds left and right up the hill (the walk's edge_nodes);
@@ -17,7 +19,10 @@ extends RefCounted
 #   streaking past and a whoosh before it shoves;
 # - the outdoor escalators up the last straight to the castle, stone stairs
 #   either side: your human rides, the dog races them or rides along, and
-#   going home the up escalator is the cheeky way down.
+#   going home the up escalator is the cheeky way down;
+# - the Font Màgica at the foot of the hill: a great basin beside the path
+#   whose jets rise into a show every few seconds. It is water, so she can get
+#   in; in during the show, once a walk, is a treat.
 # Static functions over main's state, like the other systems.
 
 const TOP_M := 173.0              # the castle's height, near enough
@@ -39,6 +44,12 @@ const ESC_BOTTOM := -4560.0
 const ESC_TOP := -4900.0
 const ESC_W := 120.0
 const ESC_TREAD := 14.0
+# the Font Màgica, at the foot of the hill east of the path, and its show:
+# calm, the jets rising, the full show in waves, falling, calm again
+const FONT := Rect2(870.0, -240.0, 230.0, 170.0)
+const SHOW_PERIOD := 16.0
+const SHOW_RISE := Vector2(5.0, 7.0)      # from, to (seconds into the period)
+const SHOW_FALL := Vector2(12.0, 14.0)
 
 
 static func is_on(m: Node2D) -> bool:
@@ -137,9 +148,34 @@ static func build(m: Node2D) -> Array:
 
 # --- the wind -------------------------------------------------------------------
 
+# How high the show is now, 0 calm to 1 at its height, on the walk's clock.
+static func show_level(m: Node2D) -> float:
+	var t := fmod(float(m.elapsed), SHOW_PERIOD)
+	if t < SHOW_RISE.x or t > SHOW_FALL.y:
+		return 0.0
+	if t < SHOW_RISE.y:
+		return smoothstep(SHOW_RISE.x, SHOW_RISE.y, t)
+	if t > SHOW_FALL.x:
+		return 1.0 - smoothstep(SHOW_FALL.x, SHOW_FALL.y, t)
+	return 1.0
+
+
+# In the fountain while the show is on: once a walk, a treat.
+static func tick_font(m: Node2D) -> void:
+	if m.has_meta("font_show_done") or m.auto_walk:
+		return
+	if FONT.grow(-8.0).has_point(m.dog.global_position) and show_level(m) > 0.6:
+		m.set_meta("font_show_done", true)
+		m.bones += 5
+		m.combo.add("SHOW", 4)
+		m.feed.say("THE MAGIC FOUNTAIN!", EventFeed.Tone.GOOD)
+		m.float_text(m.dog.global_position + Vector2(0, -30), "in the show! +5", Color(0.75, 0.9, 1.0))
+
+
 static func tick_wind(m: Node2D, delta: float) -> void:
 	if not is_on(m) or m.phase == "freedom" or m.frozen:
 		return
+	tick_font(m)
 	if m.wind_rng_seeded == false:
 		m.wind_rng.seed = 0x4D4A
 		m.wind_rng_seeded = true
@@ -169,6 +205,53 @@ static func tick_wind(m: Node2D, delta: float) -> void:
 
 
 # --- drawing --------------------------------------------------------------------
+
+# The Font Màgica: a stone rim and steps, the basin, and its jets - a ring of
+# small ones round a great central plume - rising and falling with the show,
+# in waves. By night the water is lit in slow-turning colours.
+static func draw_font(m: Node2D, c: Object, vt: float, vb: float) -> void:
+	if FONT.end.y < vt - 60.0 or FONT.position.y > vb + 60.0:
+		return
+	var b: ShapeBatch = c if c is ShapeBatch else ShapeBatch.new(c as CanvasItem)
+	var r := FONT
+	b.rect(r.grow(22.0), STONE.darkened(0.15))
+	b.rect(r.grow(14.0), STONE)
+	b.rect(r.grow(4.0), STONE.lightened(0.18))
+	var lv := show_level(m)
+	var t := float(m.elapsed)
+	var night: bool = Game.night
+	var deep := Color(0.20, 0.42, 0.58) if not night else Color(0.10, 0.18, 0.32)
+	b.rect(r, deep)
+	# ripples, more of them in the show
+	for i in range(6):
+		var ry := r.position.y + 18.0 + float(i) * 26.0
+		var rx := r.position.x + 20.0 + fmod(t * (14.0 + 10.0 * lv) + float(i) * 37.0, r.size.x - 60.0)
+		b.rect(Rect2(rx, ry, 26.0, 2.0), Color(1, 1, 1, 0.18 + 0.2 * lv))
+	var c0 := r.get_center()
+	var tint := Color(1, 1, 1)
+	if night:
+		tint = Color.from_hsv(fmod(t * 0.05, 1.0), 0.55, 1.0)
+	# the ring of small jets, each rising on its own beat in the wave
+	for i in range(10):
+		var a := TAU * float(i) / 10.0
+		var p := c0 + Vector2(cos(a) * r.size.x * 0.36, sin(a) * r.size.y * 0.34)
+		var wave := 0.5 + 0.5 * sin(t * 3.0 - float(i) * 0.9)
+		var h := 3.0 + lv * (6.0 + 9.0 * wave)
+		b.circle(p, h + 3.0, Color(tint.r, tint.g, tint.b, 0.16))
+		b.circle(p, h, Color(tint.r, tint.g, tint.b, 0.45))
+		b.circle(p, maxf(1.5, h * 0.4), Color(1, 1, 1, 0.85))
+	# the great plume in the middle, and its falling spray
+	var big := 6.0 + lv * (22.0 + 6.0 * sin(t * 1.7))
+	b.circle(c0, big + 10.0, Color(tint.r, tint.g, tint.b, 0.12 * (0.3 + lv)))
+	b.circle(c0, big, Color(tint.r, tint.g, tint.b, 0.4))
+	b.circle(c0, big * 0.55, Color(1, 1, 1, 0.8))
+	if lv > 0.2:
+		for i in range(14):
+			var a2 := TAU * float(i) / 14.0 + t * 0.6
+			var d := big + 8.0 + fmod(t * 40.0 + float(i) * 11.0, 26.0)
+			b.circle(c0 + Vector2(cos(a2), sin(a2) * 0.8) * d, 1.8, Color(1, 1, 1, 0.55 * lv))
+	if b != c:
+		b.flush()
 
 # The escalators and the stairs beside them: two steel runs with black rubber
 # handrails, treads scrolling up, comb plates at either end, and stone steps
@@ -245,6 +328,7 @@ static func draw_hill(m: Node2D, c: Object, vt: float, vb: float) -> void:
 static func draw_on_hill(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	# straight onto the world's canvas batch: it can pass text through
 	var b: ShapeBatch = c if c is ShapeBatch else ShapeBatch.new(c as CanvasItem)
+	draw_font(m, b, vt, vb)
 	for wy: float in terrace_ys(m):
 		if wy < vt - 80.0 or wy > vb + 80.0:
 			continue
@@ -296,6 +380,8 @@ static func draw_on_hill(m: Node2D, c: Object, vt: float, vb: float) -> void:
 				continue
 			var f := float((k * 7 + int(s + 1.0) * 3) % 10) / 10.0
 			var p := Vector2(lerpf(inner, outer, 0.25 + 0.6 * f), y + float(k % 3) * 20.0)
+			if FONT.grow(40.0).has_point(p):
+				continue
 			if k % 3 == 0:
 				_agave(b, p)
 			elif k % 3 == 1:
