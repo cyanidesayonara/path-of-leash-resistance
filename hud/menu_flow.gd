@@ -63,7 +63,7 @@ static func prompts(m: Node2D, which := "") -> Array:
 				return [["plant", "on to El Barri"], ["bark", "teach me the tricks"]]
 			if String(m.confirm_id) == "first":
 				return [["plant", "learn the ropes"], ["bark", "straight to the walks"],
-					["pee", "ask me again" if not Game.ask_tutorial else "don't ask again"]]
+					["pee", "don't ask again"]]
 			return [["plant", "yes"], ["bark", "cancel"]]
 		"walkcard":
 			return [["bark", "back"]]
@@ -200,7 +200,7 @@ static func details_change(m: Node2D, dir: int) -> void:
 # The controls, for the getting-ready card: [action, what it does].
 static func controls() -> Array:
 	return [["move", "move"], ["plant", "dig in / squat"], ["pee", "pee"], ["bark", "bark"],
-		["turbo", "run"], ["pause", "pause"]]
+		["turbo", "zoomies"], ["pause", "pause"]]
 
 
 static func start_walk(m: Node2D) -> void:

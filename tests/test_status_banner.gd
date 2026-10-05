@@ -1,6 +1,6 @@
 extends SceneTree
 
-# The one-line status ("NEED A WEE!", "LOOSE LEASH!", "FETCH! ...", "RUN!")
+# The one-line status ("NATURE CALLS!", "LOOSE LEASH!", "FETCH! ...", "RUN!")
 # reaches the screen through the event feed's banner, during a walk only.
 # From 2026-08-03 the call that set it sat after a return, so the banner was
 # never set and none of those lines were shown anywhere (#29).
@@ -29,7 +29,7 @@ func _run() -> void:
 	main.started = true
 	main.poop_state = 1
 	main._update_hud()
-	_check(String(main.hud_status).begins_with("NEED A WEE"), "the status names the need (got '%s')" % main.hud_status)
+	_check(String(main.hud_status).begins_with("NATURE CALLS"), "the status names the need (got '%s')" % main.hud_status)
 	_check(main.feed.banner == main.hud_status, "the banner shows the status (banner '%s')" % main.feed.banner)
 
 	main.poop_state = 0
