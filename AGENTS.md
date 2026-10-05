@@ -223,7 +223,9 @@ than the pair, to judge how a prop or a person is drawn
 (`--level=site --shot-y=-1200 --shot-zoom=2.5 --shot-cam=900,-1400` is the digger).
 `--shot-menu=walk|details|shop|progress|pause|walkcard|confirm|notice` opens
 that menu screen (`walkcard` is the pause menu's THIS WALK card, `confirm` its
-EXIT GAME question). `--no-exit` shows the web menus on desktop: no EXIT GAME
+EXIT GAME question). `--ui-scale=K` forces the small-screen interface factor (`hud/ui_scale.gd`;
+below a 0.78 frame scale the HUD and menus grow and the camera compensates,
+so a sideways phone keeps the walk's framing). `--no-exit` shows the web menus on desktop: no EXIT GAME
 on the title or in pause, and a five-cell pause grid.
 
 EXIT GAME is desktop only (`MenuFlow.can_exit()`: never on web or under
