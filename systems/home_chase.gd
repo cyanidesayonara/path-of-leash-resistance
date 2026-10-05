@@ -144,7 +144,7 @@ static func tick(m: Node2D, delta: float) -> void:
 		m.chase_catch_t -= delta
 		m.shake_t = maxf(m.shake_t, 0.4)
 		if m.chase_catch_t <= 0.0:
-			m._death(m.chase_catch_msg)
+			m._death(m.chase_catch_msg, "chase")
 		return
 	if m.auto_walk:
 		return  # the attract/CI bot carries an unsweepable dog

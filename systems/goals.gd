@@ -118,6 +118,8 @@ static func credit(m: Node2D, q: Dictionary) -> void:
 	m._peek_goals()
 	m.bones += 5
 	var newly: bool = Game.mark_goal(m.lvl, id) if not Game.daily else false
+	if newly:
+		m.run_goals_new += 1
 	# by the goal list, not in the middle of the screen: a first time is
 	# gold, one already done on an earlier walk is quieter
 	if newly or Game.daily:

@@ -11,6 +11,47 @@ Append-only session history, newest first.
   runs on those four walks only (`VLANE_LEVELS`).
 - `test_barri` drives El Barri for 900 frames and checks no rider appears
   (it saw 3 before the fix).
+## 2026-10-05 - the tutorial names the meters and the phone (#169 audit)
+
+- The pee lesson names the yellow bar ("Your tank is the yellow bar") and
+  the zoomies lesson the green one, and while each is up the HUD card
+  outlines that meter with a slow gold pulse (`hud_point`, from the step's
+  new "meter" key).
+- THAT'S THE BASICS, the card before the first real walk, now says the one
+  rule nothing else had taught: "One rule: keep your human on their feet.
+  Three cracks and the phone is gone." The phone's pips are outlined behind
+  it. Confirm cards take more than one line of body text.
+
+## 2026-10-05 - the first minutes, worded right (#169 audit)
+
+From the fresh-eyes audit of a new player's first ten minutes:
+- The urge banner said "NEED A WEE! ... HOLD {plant}" for what is a poo; the
+  wee is a different key, so a new player pressed it at a hydrant and nothing
+  happened. Now "NATURE CALLS! STAND STILL, HOLD {plant}", the tutorial's own
+  name for it, and the bagging lesson says "hold {plant} to squat" to match
+  GET READY's legend.
+- One word per key: GET READY calls the run key "zoomies", as the tutorial does.
+- Loss cards say "your human" (YOUR HUMAN WENT DOWN THE MANHOLE, ...).
+- FIRST TIME? draws its "Don't ask me again" box on the card, empty or
+  ticked; the bar's label no longer flips to "ask me again", which read as a
+  new choice.
+- The nose lesson is shorter (it ran into the HUD), and the last card no
+  longer claims "every trick in the book" in a park full of untaught agility
+  gear: "That is the lot. The park is yours: go and play."
+
+## 2026-10-05 - a gentler lost walk (#169)
+
+- The card a lost walk ends on keeps its joke and now adds one plain line on
+  how to avoid that loss next time: bikes (dig in at a crossing, keep out of
+  the bike lane), open manholes, cellar hatches, the brink of a hole or an
+  edge, and the sweeper (pull steadily for home).
+- It says how many new goals the walk ticked, since those stay ticked even
+  on a lost walk.
+- A player's very first lost walk adds "Everyone loses a walk now and then.
+  It starts fresh every time." `Game.walks_lost` is saved under `[global]`;
+  headless runs and screenshots never write it.
+- Try again stays one press away. Every loss now goes through `_death(msg,
+  cause)` and `systems/losses.gd`; `tests/test_losses.gd` is in CI.
 
 ## 2026-10-05 - Montjuïc, the climb (a first version)
 

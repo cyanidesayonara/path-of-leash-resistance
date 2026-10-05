@@ -482,6 +482,8 @@ var times_spotted := 0
 # goals completed this run (ids), for scoring/toasts/results independent
 # of persistence; plus the star snapshot captured when the walk begins
 var run_goals_hit := {}
+# goals ticked for the first time ever on this walk (the loss card counts them)
+var run_goals_new := 0
 var run_pre_total_stars := 0
 var run_pre_level_stars := 0
 # the hazardous hard-to-reach collectible, one per level
@@ -619,6 +621,9 @@ var confirm_id := ""
 # the tutorial's halfway card has been answered "the tricks", and how long
 # the last card has been up (the tutorial ends itself after it)
 var tut_basics_seen := false
+# the HUD meter the current lesson uses ("tank", "zoomies"), outlined on the
+# card while the lesson is up; "" for none
+var hud_point := ""
 var tut_done_t := 0.0
 var pause_view := ""
 var locked_nudge := 0.0
@@ -5503,7 +5508,7 @@ func _update_hud() -> void:
 		else:
 			hud_status = "HEAD HOME"
 	elif poop_state == 1:
-		hud_status = Prompts.fill("NEED A WEE! FIND A SPOT, HOLD {plant}")
+		hud_status = Prompts.fill("NATURE CALLS! STAND STILL, HOLD {plant}")
 	elif poop_state >= 3:
 		hud_status = "UH OH..."
 	elif call_active:
@@ -5789,7 +5794,7 @@ func _shot_menu(which: String) -> void:
 			MenuFlow.open_basics(self)
 		"notice":
 			_skip_title()
-			_death("OFF THE EDGE\n\nShe went over, and the human went with her.")
+			_death("OFF THE EDGE\n\nShe went over, and your human went with her.", "edge")
 
 
 # Straight into the walk, as if SPACE had been pressed on the title. For the
@@ -7834,6 +7839,7 @@ func _tick_tutorial(delta: float) -> void:
 	tut_flash = maxf(0.0, tut_flash - delta)
 	var st: Dictionary = TutorialSteps.step(tut_step)
 	var id := String(st.id)
+	hud_point = String(st.get("meter", ""))
 	# the owner waits at a lesson that wants them still, just short of it
 	var hp := tut_hold_point(tut_step)
 	human.tut_hold_y = hp.y
@@ -8109,13 +8115,14 @@ func _tick_teeter(delta: float) -> void:
 		_:
 			# a hole is a hole
 			if teeter_msg != "":
-				_death(teeter_msg)
+				_death(teeter_msg, "dog_hole")
 			else:
 				dog.fall_in(teeter_at)
 
 
-func _death(msg: String) -> void:
-	MenuFlow.show_notice(self, msg)
+# A lost walk: the card (systems/losses.gd adds how to avoid it next time).
+func _death(msg: String, cause := "") -> void:
+	MenuFlow.show_notice(self, Losses.card(self, msg, cause))
 
 
 func _hazards(delta: float) -> void:
@@ -8167,7 +8174,7 @@ func _hazards(delta: float) -> void:
 		return
 	for m in manholes:
 		if human.global_position.distance_to(m) < 18.0 and not human.is_fallen():
-			_death("THE HUMAN WENT DOWN THE MANHOLE\n\nThe phone gets a signal down there.\nThe walk does not.")
+			_death("YOUR HUMAN WENT DOWN THE MANHOLE\n\nThe phone gets a signal down there.\nThe walk does not.", "manhole")
 			return
 		# the dog gets a teeter first: a brink is a skill moment, not an
 		# instant punishment
@@ -8176,7 +8183,7 @@ func _hazards(delta: float) -> void:
 			return
 	for c in cellars:
 		if c.has_point(human.global_position):
-			_death("THE HUMAN FELL IN THE CELLAR\n\nRight onto the delivery. You did warn them,\nin the only language you have.")
+			_death("YOUR HUMAN FELL IN THE CELLAR\n\nRight onto the delivery. You did warn them,\nin the only language you have.", "cellar")
 			return
 		if c.grow(6.0).has_point(dog.global_position):
 			_start_teeter("hole", c.get_center(), "MILLIE FELL INTO THE CELLAR\n\nShe found the sausages. The walk is still over.")
@@ -9117,7 +9124,7 @@ func crack_phone(pos: Vector2) -> void:
 	if phone_hp > 0:
 		Tips.show(self, "crack")
 	if phone_hp <= 0:
-		MenuFlow.show_notice(self, "PHONE SMASHED\n\nThree cracks and it is gone. Your human is inconsolable,\nand blaming the one member of the household who cannot answer back.")
+		_death("PHONE SMASHED\n\nThree cracks and it is gone. Your human is inconsolable,\nand blaming the one member of the household who cannot answer back.", "phone")
 
 
 func close_call(pos: Vector2) -> void:
