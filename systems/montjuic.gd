@@ -326,8 +326,9 @@ static func draw_below(m: Node2D, c: Object, vt: float, vb: float) -> void:
 		var hh2 := hill_half(m, by) - 30.0
 		var sea2 := lerpf(-900.0, cx2 - hh2 - 40.0, clampf((h2 - 0.45) / 0.4, 0.0, 1.0))
 		var step := cell * s
-		var bx := -400.0
-		while bx < 1680.0:
+		# the camera never leaves 0..1280 on this walk: nothing wider is seen
+		var bx := -40.0
+		while bx < 1320.0:
 			if (bx + step < cx2 - hh2 or bx > cx2 + hh2) and bx > sea2 + 6.0:
 				_block(b, Vector2(bx, by), step, haze2)
 			bx += step
