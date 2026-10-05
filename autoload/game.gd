@@ -163,6 +163,8 @@ var ask_tutorial := true
 # first-time tips already shown (systems/tips.gd): each shows once, ever
 var tips_seen: Array[String] = []
 var tutorial_done := false
+# walks lost, ever (systems/losses.gd): the first loss gets a word of comfort
+var walks_lost := 0
 
 
 func daily_seed() -> int:
@@ -318,6 +320,7 @@ func _reset_persisted_state() -> void:
 	goals_expanded = false
 	ask_tutorial = true
 	tutorial_done = false
+	walks_lost = 0
 	tips_seen = []
 	agility_best = 0.0
 
@@ -374,6 +377,7 @@ func load_records() -> void:
 	goals_expanded = bool(cf.get_value("settings", "goals_expanded", false))
 	ask_tutorial = bool(cf.get_value("settings", "ask_tutorial", true))
 	tutorial_done = bool(cf.get_value("global", "tutorial_done", false))
+	walks_lost = int(cf.get_value("global", "walks_lost", 0))
 	tips_seen.assign(Array(cf.get_value("tips", "seen", PackedStringArray())))
 	agility_best = maxf(0.0, float(cf.get_value("freedom", "agility_best", 0.0)))
 
@@ -405,6 +409,7 @@ func save_records() -> void:
 	cf.set_value("settings", "goals_expanded", goals_expanded)
 	cf.set_value("settings", "ask_tutorial", ask_tutorial)
 	cf.set_value("global", "tutorial_done", tutorial_done)
+	cf.set_value("global", "walks_lost", walks_lost)
 	cf.set_value("tips", "seen", PackedStringArray(tips_seen))
 	cf.set_value("freedom", "agility_best", agility_best)
 	cf.save(save_path)
