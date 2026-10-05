@@ -114,6 +114,7 @@ const Goals := preload("res://systems/goals.gd")
 const HudBuild := preload("res://hud/hud_build.gd")
 const MenuFlow := preload("res://hud/menu_flow.gd")
 const CableCar := preload("res://systems/cable_car.gd")
+const UiScale := preload("res://hud/ui_scale.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const WorldSign := preload("res://world/world_sign.gd")
 const PopsLayer := preload("res://world/pops_layer.gd")
@@ -636,6 +637,9 @@ var confirm_id := ""
 # the tutorial's halfway card has been answered "the tricks", and how long
 # the last card has been up (the tutorial ends itself after it)
 var tut_basics_seen := false
+# the window's content scale factor on a small screen (hud/ui_scale.gd); the
+# camera's zoom is divided by it, so only the interface grows
+var ui_scale := 1.0
 # the HUD meter the current lesson uses ("tank", "zoomies"), outlined on the
 # card while the lesson is up; "" for none
 var hud_point := ""
@@ -771,6 +775,8 @@ func _ready() -> void:
 		CableCar.build(self)
 	_spawn_cones()
 	_build_quests()
+	UiScale.apply(self)
+	get_tree().root.size_changed.connect(_on_window_resized)
 	_build_hud()
 	_spawn_challenger()
 	_spawn_wallcats()
@@ -846,6 +852,11 @@ func _ready() -> void:
 		if problems.is_empty():
 			print("SELFTEST OK [%s]" % lvl)
 		get_tree().quit(1 if not problems.is_empty() else 0)
+
+
+# a small screen gets a bigger interface, the same walk (hud/ui_scale.gd)
+func _on_window_resized() -> void:
+	UiScale.apply(self)
 
 
 # the soundtrack: the loop that belongs on screen now (see Sfx.music_tick)

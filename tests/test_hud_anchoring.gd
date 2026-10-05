@@ -101,9 +101,12 @@ func _shape(main: Node, window: Vector2i, native: bool) -> void:
 	await process_frame
 	var vs := root.get_visible_rect().size
 	print("\n--- window %dx%d -> viewport %.0fx%.0f ---" % [window.x, window.y, vs.x, vs.y])
-	# aspect "expand" never crops the reference frame, it only reveals past it
-	_check(vs.x >= 1280.0 - EPS and vs.y >= 720.0 - EPS,
-		"viewport %.0fx%.0f is at least the reference frame" % [vs.x, vs.y])
+	# aspect "expand" never crops the reference frame, it only reveals past it;
+	# on a small screen the interface is enlarged (hud/ui_scale.gd) and the
+	# viewport is the frame divided by that factor
+	var k: float = root.content_scale_factor
+	_check(vs.x * k >= 1280.0 - EPS and vs.y * k >= 720.0 - EPS,
+		"viewport %.0fx%.0f at interface scale %.2f is at least the reference frame" % [vs.x, vs.y, k])
 
 	# 1. the grade is a post-process and has to cover everything, or the
 	#    revealed strip reads as a brighter, grainless panel with a hard seam
