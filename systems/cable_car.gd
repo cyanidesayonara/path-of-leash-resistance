@@ -117,6 +117,10 @@ static func _arrive(m: Node2D) -> void:
 	m.human.visible = true
 	m.leash.visible = true
 	m.leash.resnap()
+	# Tofu, if she is following you home, rode with you
+	if m.tofu_quest_active:
+		for tf in m.get_tree().get_nodes_in_group("tofu"):
+			tf.global_position = m.human.global_position + Vector2(-26.0, 10.0)
 	m.bones += 5
 	m.float_text(m.dog.global_position + Vector2(0, -34), "what a view! +5", Color(0.7, 1.0, 0.75))
 	if m.phase == "home":
