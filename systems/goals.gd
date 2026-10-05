@@ -41,7 +41,7 @@ const LEVEL_GOAL_IDS := {
 	"neteja": ["mark", "sniff", "phone", "paws", "bag", "fetch", "hi", "snack",
 		"combo", "prize", "outrun"],
 	# Montjuic: the climb, with the park staples
-	"montjuic": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "combo", "prize"],
+	"montjuic": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "cable", "combo", "prize"],
 }
 
 
@@ -57,6 +57,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"tofu": {"text": "Bring Tofu the cat home", "target": 1, "fn": func() -> int: return 1 if m.tofu_home else 0},
 		"hi": {"text": "Say hello to %d dogs", "target": 3, "fn": func() -> int: return m.dogs_greeted},
 		"drink": {"text": "Have a proper long drink", "target": 1, "fn": func() -> int: return 1 if m.drunk_amount >= 0.4 else 0},
+		"cable": {"text": "Find a ticket and ride the telefèric", "target": 1, "fn": func() -> int: return mini(int(m.cable_rides), 1)},
 		"zoom": {"text": "Run yourself tired", "target": 1, "fn": func() -> int: return 1 if m.dog.energy <= 0.25 else 0},
 		"chase": {"text": "See off %d critters", "target": 2, "fn": func() -> int: return m.squirrels_chased},
 		"close": {"text": "Scrape past traffic %d times", "target": 3, "fn": func() -> int: return m.close_calls},
