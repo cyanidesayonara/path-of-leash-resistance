@@ -2,6 +2,21 @@
 
 Append-only session history, newest first.
 
+## 2026-10-05 - Montjuïc's telefèric, the hidden way up (#146)
+
+- A tourist has dropped a telefèric ticket out on a terrace below the first
+  bend, off the path (it glints now and then). Pick it up and take your human
+  to the low station, on the inside of the first big bend: the pair ride a
+  cabin up the cable, straight over the zigzag, to the top station by the
+  last bend. On the way home the same ticket rides them back down.
+- The ride is a 6.5-second cinematic: the walk holds still, the camera
+  follows the cabin with two heads at its window, and at the far station the
+  leash is laid straight again. "what a view! +5".
+- A new Montjuïc goal: "Find a ticket and ride the telefèric". The price is
+  everything on the stretch it flies over.
+- `systems/cable_car.gd`, `world/cable_layer.gd`; `tests/test_cable_car.gd`
+  (16 checks) in CI. The autowalk bot never takes the ticket.
+
 ## 2026-10-05 - readable on a small screen (#169 audit)
 
 - A sideways phone (844x390) drew the 1280x720 composition at 0.54, so 15px

@@ -28,6 +28,20 @@ var wind_next := 0.0
 var wind_warn := 0.0
 var wind_gust := 0.0
 var wind_dir := Vector2.RIGHT
+# Montjuic's telefèric (systems/cable_car.gd): the stations and the dropped
+# ticket, whether she has it, and the ride under way
+var cable_low := Vector2.ZERO
+var cable_top := Vector2.ZERO
+var cable_ticket_pos := Vector2.ZERO
+var cable_ticket := false
+var cable_ticket_taken := false
+var cable_riding := false
+var cable_up_done := false
+var cable_down_done := false
+var cable_from := Vector2.ZERO
+var cable_to := Vector2.ZERO
+var cable_t := 0.0
+var cable_rides := 0
 # where --shot-cam points the camera (INF: follow the pair as usual)
 var shot_cam := Vector2(INF, INF)
 var strip_l := 0.0
@@ -99,6 +113,7 @@ const HomeChase := preload("res://systems/home_chase.gd")
 const Goals := preload("res://systems/goals.gd")
 const HudBuild := preload("res://hud/hud_build.gd")
 const MenuFlow := preload("res://hud/menu_flow.gd")
+const CableCar := preload("res://systems/cable_car.gd")
 const UiScale := preload("res://hud/ui_scale.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const WorldSign := preload("res://world/world_sign.gd")
@@ -756,6 +771,8 @@ func _ready() -> void:
 	_build_bypasser_blockers()
 	_build_walls()
 	_build_entities()
+	if lvl == "montjuic":
+		CableCar.build(self)
 	_spawn_cones()
 	_build_quests()
 	UiScale.apply(self)
@@ -5636,6 +5653,10 @@ func _physics_process(delta: float) -> void:
 	if frozen:
 		return
 	elapsed += delta
+	# the telefèric ride is a short cinematic: the walk holds still round it
+	if cable_riding:
+		CableCar.tick_ride(self, delta)
+		return
 	_prof("")
 	riders_cache = get_tree().get_nodes_in_group("bikes")
 	critters_cache = get_tree().get_nodes_in_group("squirrels")
@@ -5652,6 +5673,7 @@ func _physics_process(delta: float) -> void:
 		human.velocity += Vector2(70.0, 0) * delta
 	if lvl == "montjuic":
 		Montjuic.tick_wind(self, delta)
+		CableCar.tick(self, delta)
 	# the moving walkway carries whoever is standing on it (L'Estacio)
 	if conveyor_zone.size.y > 0.0:
 		var carry := conveyor_dir * CONV_SPEED
