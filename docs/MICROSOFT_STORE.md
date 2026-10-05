@@ -191,7 +191,7 @@ Start a submission on the product. Every section must be complete:
 
 `.github/workflows/store-submit.yml` (Actions > Store submit (manual) > Run
 workflow) puts a release's MSIX and its "What's new" into a Partner Center
-**draft**. It never starts certification. Ported from Stemma's workflow, which
+**draft**, then commits it when asked. Ported from Stemma's workflow, which
 works with the same seller account (last run 2026-08-01).
 
 One-time setup, in this repo's Settings > Secrets and variables > Actions,
@@ -212,9 +212,13 @@ Each release:
 1. Tag it. `release.yml` attaches `PathOfLeashResistance-<version>.msix`.
 2. Write the "What's new in this version" block in `store/listing.md`.
 3. Run the workflow with the tag and mode `update_draft` (run `configure`
-   once first to check the credentials).
-4. In Partner Center, open the draft, check the package and the text, and
-   click **Submit for certification**.
+   once first to check the credentials). It stages the package and the text;
+   the run's log ends with the staged submission (package names, What's new).
+   Partner Center's own page keeps saying "Unchanged" until commit: the Store
+   only ingests an API-uploaded package when the submission is committed.
+4. Run it again with mode `submit`. That commits the draft: the package is
+   ingested and certification starts. Do not click Partner Center's Submit
+   button for an API-staged draft; it does not carry the staged package.
 
 The description, features, keywords and screenshots are not touched: change
 them by hand when they change. `msstore publish` is documented for free
