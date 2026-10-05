@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-10-05 - Montjuïc's escalators (#146)
+
+- The last straight up to the castle (y -4560 to -4900) is the outdoor
+  escalators: two steel runs up the middle with black rubber handrails and
+  treads scrolling up, comb plates at either end, stone stairs filling the
+  rest of the path either side.
+- Whoever stands on them is carried up outright (main's conveyor, moving the
+  body rather than nudging its velocity, which a still dog or human eased
+  straight back to nothing): your human rides past the slow last climb, and
+  the dog can race them on the stairs. Going home, the bot takes the stairs
+  beside them; a dog can try running down the up escalator.
+- `tests/test_montjuic.gd` in CI: the slope (slower up, quicker down,
+  nothing off the hill), the escalators on the path, clear of the last
+  terrace's steps and carrying a still dog while the stairs do not, and every
+  gust telegraphed before it shoves.
+
 ## 2026-10-05 - no riders on walks without a rider lane
 
 - `_vlane` only had rider cases for street, park, beach and market. Every
