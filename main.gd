@@ -59,6 +59,8 @@ const AUTOWALK_SEED := 0x5A17C0DE
 const AUTOWALK_MIN_FINISH_TIME := 120.0
 const PAIR_MIN_SPAWN_DIST := 360.0
 const MAX_ACTIVE_PAIRS := 3
+# the walks with riders along the path (_vlane has a case for each)
+const VLANE_LEVELS := ["street", "park", "beach", "market"]
 const LEASH_LENGTH := 340.0  # a proper 5-meter leash
 const LEASH_STRETCH_CAP := 1.15
 const LEASH_K := 32.0
@@ -6296,6 +6298,10 @@ func _spawn_bike(y: float, dir: int) -> void:
 func _vlane(delta: float) -> void:
 	# the parallel bike lane: fast commuters hold their line, kids on
 	# scooters weave - and sometimes ride on the sidewalk itself
+	# only walks with a rider lane: anywhere else the match below has no case
+	# and would spawn a motionless rider at x=0, off screen, every few seconds
+	if not lvl in VLANE_LEVELS:
+		return
 	vspawn_t -= delta
 	if vspawn_t > 0.0:
 		return
