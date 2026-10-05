@@ -3,7 +3,7 @@ extends SceneTree
 # Montjuic (systems/montjuic.gd): the climb slows your human going up and
 # speeds them coming down, and nowhere else; every gust is telegraphed before
 # it shoves; and the escalators up the last straight sit on the path and carry
-# whoever stands on them up the hill.
+# whoever stands on them up the hill. The Font Magica is water with a show.
 
 var checks := 0
 var failures: Array[String] = []
@@ -75,6 +75,28 @@ func _run() -> void:
 		if m.wind_gust > 0.0 and not warned:
 			gusted_unwarned = true
 	_check(warned and not gusted_unwarned, "every gust is telegraphed first")
+
+	# the Font Màgica: water, a show that comes and goes, and a treat for being
+	# in it during the show, once
+	var Surf: GDScript = load("res://world/surfaces.gd")
+	_check(m.surface_at(M.FONT.get_center()) == Surf.S.WATER, "the fountain is water")
+	var fe: Vector2 = m.walk_edges(M.FONT.get_center().y)
+	_check(M.FONT.position.x > fe.y + 40.0, "beside the path, not on it")
+	m.elapsed = 1.0
+	var calm: float = M.show_level(m)
+	m.elapsed = 9.0
+	var show: float = M.show_level(m)
+	_check(calm == 0.0 and show == 1.0, "the show comes and goes (%.1f, %.1f)" % [calm, show])
+	m.dog.global_position = M.FONT.get_center()
+	m.elapsed = 1.0
+	var b0: int = m.bones
+	M.tick_font(m)
+	_check(m.bones == b0, "in the fountain while it is calm: just a swim")
+	m.elapsed = 9.0
+	M.tick_font(m)
+	_check(m.bones == b0 + 5, "in it during the show: a treat")
+	M.tick_font(m)
+	_check(m.bones == b0 + 5, "once a walk")
 
 	m.free()
 	print("test_montjuic: %d checks, %s" % [checks, "OK" if failures.is_empty() else "%d FAILED" % failures.size()])

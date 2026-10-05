@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-10-05 - the Font Màgica at the foot of Montjuïc (#146)
+
+- A great stone-rimmed basin beside the path at the foot of the hill: a ring
+  of ten small jets round a central plume, calm, then rising into a show in
+  waves every 16 seconds (on the walk's own clock), spray falling round the
+  plume; by night the water glows in slow-turning colours.
+- It is water (`m.water`): she can swim in it, wobble at its edge, and your
+  human wades out after her. In it while the show is on, once a walk:
+  "THE MAGIC FOUNTAIN!" and +5.
+- `tests/test_montjuic.gd` gains the fountain: water, beside the path, a show
+  that comes and goes, the treat only during the show and only once.
+
 ## 2026-10-05 - Montjuïc's escalators (#146)
 
 - The last straight up to the castle (y -4560 to -4900) is the outdoor
