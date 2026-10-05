@@ -14,6 +14,9 @@ Append-only session history, newest first.
 - On a narrow screen the open goal list can reach the middle, so the banner
   pill moves into the gap beside it rather than under it; and with the
   enlarged interface the open list shows four rows, the rest as "+ N more".
+- The results card (900 wide) shrinks to fit a narrow or short viewport,
+  keeping the side margins the touch buttons stand in; at desktop sizes it
+  is exactly as before.
 - Desktop sizes (frame scale 0.78 and up) are untouched.
 - `tests/test_ui_scale.gd` in CI.
 ## 2026-10-05 - no riders on walks without a rider lane
