@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-10-05 - the tutorial names the meters and the phone (#169 audit)
+
+- The pee lesson names the yellow bar ("Your tank is the yellow bar") and
+  the zoomies lesson the green one, and while each is up the HUD card
+  outlines that meter with a slow gold pulse (`hud_point`, from the step's
+  new "meter" key).
+- THAT'S THE BASICS, the card before the first real walk, now says the one
+  rule nothing else had taught: "One rule: keep your human on their feet.
+  Three cracks and the phone is gone." The phone's pips are outlined behind
+  it. Confirm cards take more than one line of body text.
+
 ## 2026-10-05 - the first minutes, worded right (#169 audit)
 
 From the fresh-eyes audit of a new player's first ten minutes:

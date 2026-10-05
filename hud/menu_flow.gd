@@ -445,7 +445,7 @@ const CONFIRMS := {
 	"restart": {"title": "START AGAIN", "body": "Start this walk again?"},
 	"exit": {"title": "EXIT GAME", "body": "Quit the game?"},
 	"first": {"title": "FIRST TIME?", "body": "A three-minute walk that shows you the ropes."},
-	"basics": {"title": "THAT'S THE BASICS", "body": "Enough for any walk. The tricks are a bonus."},
+	"basics": {"title": "THAT'S THE BASICS", "body": "Enough for any walk. The tricks are a bonus.\nOne rule: keep your human on their feet.\nThree cracks and the phone is gone."},
 }
 
 

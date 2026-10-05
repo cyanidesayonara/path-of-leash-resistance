@@ -438,13 +438,15 @@ func _confirm(vs: Vector2) -> void:
 	var acc := Kit.accent("notice")
 	var c := Flow.confirm_card(main)
 	var first := String(main.confirm_id) == "first"
-	var h := 182.0 if first else 150.0
+	var lines := String(c.body).split("\n")
+	var h := (182.0 if first else 150.0) + 26.0 * float(lines.size() - 1)
 	var r := Rect2(vs.x * 0.5 - CONFIRM_W * 0.5, vs.y * 0.5 - h * 0.5 - 20.0, CONFIRM_W, h)
 	Kit.card(self, r, acc)
 	Kit.heading(self, Vector2(r.position.x, r.position.y + 56.0), String(c.title), 28, acc,
 		HORIZONTAL_ALIGNMENT_CENTER, CONFIRM_W)
-	draw_string(Kit.body(), Vector2(r.position.x, r.position.y + 100.0), String(c.body),
-		HORIZONTAL_ALIGNMENT_CENTER, CONFIRM_W, 19, Kit.INK_SOFT)
+	for i in range(lines.size()):
+		draw_string(Kit.body(), Vector2(r.position.x, r.position.y + 100.0 + 26.0 * i), lines[i],
+			HORIZONTAL_ALIGNMENT_CENTER, CONFIRM_W, 19, Kit.INK_SOFT)
 	if first:
 		# the "don't ask again" box: the prompt bar's key ticks it, and the
 		# card shows whether it is ticked
@@ -452,7 +454,7 @@ func _confirm(vs: Vector2) -> void:
 		var tw: float = Kit.body().get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
 		var box := 16.0
 		var x0 := r.position.x + CONFIRM_W * 0.5 - (box + 10.0 + tw) * 0.5
-		var by := r.position.y + 132.0
+		var by := r.position.y + 132.0 + 26.0 * float(lines.size() - 1)
 		Icons.draw_check(self, Vector2(x0, by), box,
 			Icons.Check.DONE_NOW if not Game.ask_tutorial else Icons.Check.OPEN)
 		draw_string(Kit.body(), Vector2(x0 + box + 10.0, by + 13.0), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 16,
