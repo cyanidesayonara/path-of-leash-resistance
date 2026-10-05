@@ -139,6 +139,10 @@ static func check(m: Node2D) -> void:
 			m._credit_goal(q)
 
 
+# the goal list's open rows when the interface is enlarged for a small screen
+const GOALS_ROWS_SMALL := 4
+
+
 static func card_data(m: Node2D) -> Dictionary:
 	# The card draws whatever this returns. Open goals sort to the top so the
 	# live ones are always on screen, and finished ones stay in the list
@@ -166,7 +170,10 @@ static func card_data(m: Node2D) -> Dictionary:
 				"state": UiIcons.Check.PARTIAL if got > 0 else UiIcons.Check.OPEN,
 			})
 	var rows: Array = open_rows + done_rows
-	var shown: int = mini(rows.size(), m.GOALS_MAX_ROWS)
+	# with a phone's enlarged interface (hud/ui_scale.gd) the open list would
+	# cover a third of the walk: fewer rows there, the rest as "+ N more"
+	var cap: int = m.GOALS_MAX_ROWS if float(m.ui_scale) <= 1.0 else GOALS_ROWS_SMALL
+	var shown: int = mini(rows.size(), cap)
 	var open: bool = Game.goals_expanded or m.goals_peek > 0.0
 	return {
 		"done": done_count, "total": total,
