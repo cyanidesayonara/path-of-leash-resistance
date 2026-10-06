@@ -125,7 +125,17 @@ Full controller support
 No ads, no purchases, no account, and it plays offline
 ```
 
-### What's new in this version (1.58, for the next submission)
+### What's new in this version (1.59, for the next submission)
+
+```
+- A new walk, Montjuïc: the climb up the hill, with a hidden cable car, escalators, the Font Màgica and the castle at the top.
+- A way in for new players: a two-part tutorial, gentler first walks and first-time tips.
+- A lost walk says how to avoid it next time, and keeps the goals you ticked.
+- Readable on small screens: the menus and HUD grow, the walk keeps its view.
+- Clearer words throughout, and many smaller fixes.
+```
+
+### What's new in 1.58 (submitted 2026-10-05, live 2026-10-05)
 
 ```
 - A short animated intro, and a new soundtrack with its own arrangement for every walk.
