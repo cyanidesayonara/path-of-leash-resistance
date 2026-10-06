@@ -98,6 +98,30 @@ func _run() -> void:
 	M.tick_font(m)
 	_check(m.bones == b0 + 5, "once a walk")
 
+	# the cactus garden: off the path, the cacti are posts, a run into one
+	# pricks and bounces, a still sniff at the great barrel cactus counts once
+	var ce: Vector2 = m.walk_edges(M.CACTUS_BED.get_center().y)
+	_check(M.CACTUS_BED.position.x > ce.y + 20.0, "the cactus garden is off the path")
+	var all_poles := true
+	for c: Vector2 in M.CACTI:
+		all_poles = all_poles and m.poles.has(c) and M.CACTUS_BED.has_point(c)
+	_check(all_poles, "every cactus is a post the leash wraps, in its bed")
+	var c1: Vector2 = M.CACTI[1]
+	m.dog.global_position = c1 + Vector2(-18, 0)
+	m.dog.velocity = Vector2(220, 0)
+	m.set_meta("cactus_cool", 0.0)
+	M.tick_cacti(m, 1.0 / 60.0)
+	_check(m.dog.velocity.x < 0.0, "running into a cactus bounces her off")
+	m.dog.global_position = M.CACTI[0] + Vector2(40, 0)
+	m.dog.velocity = Vector2.ZERO
+	var s0: int = m.sniffs_done
+	for i in range(100):
+		M.tick_cacti(m, 1.0 / 60.0)
+	_check(m.sniffs_done == s0 + 1, "a still, careful sniff at the barrel cactus counts")
+	for i in range(100):
+		M.tick_cacti(m, 1.0 / 60.0)
+	_check(m.sniffs_done == s0 + 1, "once")
+
 	m.free()
 	print("test_montjuic: %d checks, %s" % [checks, "OK" if failures.is_empty() else "%d FAILED" % failures.size()])
 	quit(1 if not failures.is_empty() else 0)

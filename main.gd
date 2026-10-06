@@ -1355,6 +1355,8 @@ func _grass_blocked(p: Vector2) -> bool:
 		var e := walk_edges(p.y)
 		if p.x < e.x - LevelBuild.TRAIL_WOOD_OUT or p.x > e.y + LevelBuild.TRAIL_WOOD_OUT:
 			return true
+	if lvl == "montjuic" and (Montjuic.CACTUS_BED.grow(8.0).has_point(p) or Montjuic.FONT.grow(16.0).has_point(p)):
+		return true
 	for r: Rect2 in solid_rects:
 		if r.grow(6.0).has_point(p):
 			return true

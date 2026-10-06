@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-10-06 - Montjuïc's cactus garden (#146)
+
+- JARDÍ DE CACTUS: a pale gravel bed on the terrace right of the path below
+  the -2100 wall, clear of the telefèric's pylons, with a great barrel cactus
+  (ribs, spines, a crown of yellow flowers) and four column cacti with arms.
+- The cacti are posts the leash wraps, solid to walk into. Running into one
+  at speed is a prick: she bounces off, "OW! CACTUS", and the combo breaks.
+- Standing still beside the barrel cactus for a moment is "a very careful
+  sniff +4", which counts as one of the walk's sniffs, once.
+- The cacti are added after the corridor fit (which would have pulled them
+  onto the path) with bodies of their own; grass tufts keep off the bed and
+  the Font Màgica.
+
 ## 2026-10-05 - L'Estació's walkway carries you
 
 - The moving walkway now moves whoever stands on it outright, as Montjuïc's

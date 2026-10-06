@@ -22,7 +22,10 @@ const EventFeed := preload("res://hud/event_feed.gd")
 #   going home the up escalator is the cheeky way down;
 # - the Font Màgica at the foot of the hill: a great basin beside the path
 #   whose jets rise into a show every few seconds. It is water, so she can get
-#   in; in during the show, once a walk, is a treat.
+#   in; in during the show, once a walk, is a treat;
+# - the cactus garden on a terrace beside the path: the cacti are posts the
+#   leash wraps, running into one at speed is a prick and a bounce, and a
+#   careful, still sniff at the great barrel cactus is a sniff worth having.
 # Static functions over main's state, like the other systems.
 
 const TOP_M := 173.0              # the castle's height, near enough
@@ -50,6 +53,16 @@ const FONT := Rect2(870.0, -240.0, 230.0, 170.0)
 const SHOW_PERIOD := 16.0
 const SHOW_RISE := Vector2(5.0, 7.0)      # from, to (seconds into the period)
 const SHOW_FALL := Vector2(12.0, 14.0)
+# the cactus garden: its gravel bed, right of the path below the -2100 wall,
+# clear of the telefèric's pylons; the cacti in it (the first is the great
+# barrel cactus); how fast a run into one pricks, and the sniff it rewards
+const CACTUS_BED := Rect2(720.0, -2060.0, 200.0, 205.0)
+const CACTI: Array[Vector2] = [Vector2(820.0, -1960.0), Vector2(760.0, -2010.0), Vector2(880.0, -2020.0),
+	Vector2(755.0, -1895.0), Vector2(890.0, -1890.0)]
+const PRICK_R := 24.0
+const PRICK_SPEED := 130.0
+const PRICK_BOUNCE := 260.0
+const CACTUS_SNIFF_S := 1.4
 
 
 static func is_on(m: Node2D) -> bool:
@@ -172,10 +185,53 @@ static func tick_font(m: Node2D) -> void:
 		m.float_text(m.dog.global_position + Vector2(0, -30), "in the show! +5", Color(0.75, 0.9, 1.0))
 
 
+# The cacti: a prick for a dog who runs into one, and a careful sniff at the
+# great barrel cactus for one who stands still beside it.
+static func tick_cacti(m: Node2D, delta: float) -> void:
+	var dp: Vector2 = m.dog.global_position
+	if not CACTUS_BED.grow(60.0).has_point(dp):
+		return
+	var cool: float = float(m.get_meta("cactus_cool", 0.0)) - delta
+	m.set_meta("cactus_cool", cool)
+	for c: Vector2 in CACTI:
+		if cool <= 0.0 and dp.distance_to(c) < PRICK_R and m.dog.velocity.length() > PRICK_SPEED:
+			m.set_meta("cactus_cool", 1.2)
+			m.dog.velocity = (dp - c).normalized() * PRICK_BOUNCE
+			m.combo.bail()
+			Sfx.play("grunt", 1.6, -4.0)
+			m.feed.say("OW! CACTUS", EventFeed.Tone.BAD)
+			m.float_text(dp + Vector2(0, -28), "prickly", Color(1, 0.8, 0.7))
+			return
+	if m.has_meta("cactus_sniffed"):
+		return
+	if dp.distance_to(CACTI[0]) < 52.0 and m.dog.velocity.length() < 30.0:
+		var t: float = float(m.get_meta("cactus_sniff_t", 0.0)) + delta
+		m.set_meta("cactus_sniff_t", t)
+		if t >= CACTUS_SNIFF_S:
+			m.set_meta("cactus_sniffed", true)
+			m.sniffs_done += 1
+			m.bones += 4
+			m.combo.add("CAREFUL", 3)
+			Sfx.play("mark", 1.1)
+			m.float_text(CACTI[0] + Vector2(0, -40), "a very careful sniff +4", Color(0.85, 1.0, 0.7))
+			m._update_hud()
+	else:
+		m.set_meta("cactus_sniff_t", 0.0)
+
+
+static func is_cactus(p: Vector2) -> bool:
+	for c: Vector2 in CACTI:
+		if c.distance_squared_to(p) < 1.0:
+			return true
+	return false
+
+
 static func tick_wind(m: Node2D, delta: float) -> void:
 	if not is_on(m) or m.phase == "freedom" or m.frozen:
 		return
 	tick_font(m)
+	if not m.auto_walk:
+		tick_cacti(m, delta)
 	if m.wind_rng_seeded == false:
 		m.wind_rng.seed = 0x4D4A
 		m.wind_rng_seeded = true
@@ -205,6 +261,47 @@ static func tick_wind(m: Node2D, delta: float) -> void:
 
 
 # --- drawing --------------------------------------------------------------------
+
+# The cactus garden's bed: pale gravel, a few stones, and a little sign.
+static func draw_cactus_bed(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	var r := CACTUS_BED
+	if r.end.y < vt - 40.0 or r.position.y > vb + 40.0:
+		return
+	b.rect(r.grow(6.0), STONE.darkened(0.1))
+	b.rect(r, Color(0.86, 0.80, 0.66))
+	for i in range(18):
+		var sp := r.position + Vector2(fmod(float(i) * 53.0, r.size.x - 10.0) + 5.0, fmod(float(i) * 37.0, r.size.y - 10.0) + 5.0)
+		b.circle(sp, 2.0 + float(i % 3), Color(0.70, 0.64, 0.54))
+	b.draw_string(ThemeDB.fallback_font, r.position + Vector2(4, -10), "JARDÍ DE CACTUS",
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.30, 0.26, 0.20))
+
+
+# A cactus from above: the great barrel cactus (ribs and a crown of yellow
+# flowers), or a column with arms; spines as pale ticks either way.
+static func draw_cactus(c: Object, p: Vector2, big: bool) -> void:
+	var green := Color(0.30, 0.52, 0.30)
+	var dark := Color(0.20, 0.38, 0.22)
+	var spine := Color(0.96, 0.93, 0.78)
+	c.draw_circle(p + Vector2(5, 7), 20.0 if big else 14.0, Color(0, 0, 0, 0.18))
+	if big:
+		c.draw_circle(p, 20.0, dark)
+		c.draw_circle(p, 17.0, green)
+		for k in range(12):
+			var a := TAU * float(k) / 12.0
+			c.draw_line(p + Vector2.from_angle(a) * 5.0, p + Vector2.from_angle(a) * 17.0, dark, 1.4)
+			c.draw_line(p + Vector2.from_angle(a + 0.13) * 18.0, p + Vector2.from_angle(a + 0.13) * 23.0, spine, 1.0)
+		for k in range(5):
+			c.draw_circle(p + Vector2.from_angle(TAU * float(k) / 5.0) * 4.0, 2.6, Color(0.98, 0.84, 0.30))
+		return
+	c.draw_circle(p, 12.0, dark)
+	c.draw_circle(p, 9.5, green)
+	for arm: Vector2 in [Vector2(-1, 0.3), Vector2(1, -0.4)]:
+		var q := p + arm * 15.0
+		c.draw_circle(q, 6.0, dark)
+		c.draw_circle(q, 4.5, green)
+	for k in range(8):
+		var a2 := TAU * float(k) / 8.0
+		c.draw_line(p + Vector2.from_angle(a2) * 12.0, p + Vector2.from_angle(a2) * 16.0, spine, 1.0)
 
 # The Font Màgica: a stone rim and steps, the basin, and its jets - a ring of
 # small ones round a great central plume - rising and falling with the show,
@@ -329,6 +426,10 @@ static func draw_on_hill(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	# straight onto the world's canvas batch: it can pass text through
 	var b: ShapeBatch = c if c is ShapeBatch else ShapeBatch.new(c as CanvasItem)
 	draw_font(m, b, vt, vb)
+	draw_cactus_bed(m, b, vt, vb)
+	if CACTUS_BED.end.y > vt - 40.0 and CACTUS_BED.position.y < vb + 40.0:
+		for i in range(CACTI.size()):
+			draw_cactus(b, CACTI[i], i == 0)
 	for wy: float in terrace_ys(m):
 		if wy < vt - 80.0 or wy > vb + 80.0:
 			continue
@@ -380,7 +481,7 @@ static func draw_on_hill(m: Node2D, c: Object, vt: float, vb: float) -> void:
 				continue
 			var f := float((k * 7 + int(s + 1.0) * 3) % 10) / 10.0
 			var p := Vector2(lerpf(inner, outer, 0.25 + 0.6 * f), y + float(k % 3) * 20.0)
-			if FONT.grow(40.0).has_point(p):
+			if FONT.grow(40.0).has_point(p) or CACTUS_BED.grow(40.0).has_point(p):
 				continue
 			if k % 3 == 0:
 				_agave(b, p)
