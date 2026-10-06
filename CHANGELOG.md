@@ -2,6 +2,28 @@
 
 Append-only session history, newest first.
 
+## 2026-10-06 - combos count tricks, and golden zoomies (#193, part 2)
+
+- Only tricks start a combo and raise its multiplier: the grindables, the
+  pole swing, the fling and slingshot, saves (balance, save, braced), air
+  catches, agility, close shaves, a walkway ride. Business (sniffs, marks,
+  hellos, snacks) adds its points and keeps a running chain alive but never
+  multiplies it, so walking about is no longer a combo. The window is 4 s
+  (was 3.2). The kid's dare counts tricks only. "Land an x3 trick combo" is
+  the goal (was x5 of anything).
+- Points rebalanced toward the leash: fling 8 -> 30 (and +6 bones),
+  slingshot 8 -> 20, pole swing 8 + 40/turn -> 14 + 50/turn (its combo name
+  is POLE SWING now, as shouted), grind rate 9 -> 6 a second, a brink save
+  6 -> 4.
+- GOLDEN ZOOMIES: the zoomies were a single reserve that never refilled.
+  Now every trick refills them by what it was worth; filling them that way
+  turns them golden for 6 s: tricks score double, the grind's wobble eases,
+  and the green tube glows gold. "GOLDEN ZOOMIES!"
+- Each walk keeps its best style (the banked combos, summed) as a record;
+  beating it says BEST STYLE on the results card.
+- `tests/test_combo.gd` rewritten for tricks-only chains;
+  `tests/test_golden_zoomies.gd` in CI.
+
 ## 2026-10-06 - grinds on grindables, not the edge of the path (#193, part 1)
 
 - No more kerb ride: the path's edges were rails, so any run along the

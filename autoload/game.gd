@@ -292,7 +292,7 @@ func _ready() -> void:
 
 
 func _default_level_record() -> Dictionary:
-	return {"bones": 0, "time": 0.0, "perfects": 0, "stars": 0, "goals": []}
+	return {"bones": 0, "time": 0.0, "perfects": 0, "stars": 0, "goals": [], "style": 0}
 
 
 func _ensure_level_record(lv: String) -> Dictionary:
@@ -339,6 +339,7 @@ func load_records() -> void:
 		record.time = float(cf.get_value(lv, "time", 0.0))
 		record.perfects = int(cf.get_value(lv, "perfects", 0))
 		record.stars = int(cf.get_value(lv, "stars", 0))
+		record.style = int(cf.get_value(lv, "style", 0))
 		record.goals = gl
 		records[lv] = record
 	total_bones = int(cf.get_value("global", "total_bones", 0))
@@ -392,6 +393,7 @@ func save_records() -> void:
 		cf.set_value(lv, "bones", records[lv].bones)
 		cf.set_value(lv, "time", records[lv].time)
 		cf.set_value(lv, "perfects", records[lv].perfects)
+		cf.set_value(lv, "style", records[lv].get("style", 0))
 		cf.set_value(lv, "stars", records[lv].get("stars", 0))
 		cf.set_value(lv, "goals", records[lv].get("goals", []))
 	if records.has("daily"):
@@ -469,6 +471,20 @@ func is_unlocked(lv: String) -> bool:
 	if lv == "daily" or lv == "tutorial":
 		return true  # the daily and the tutorial are always open
 	return total_stars() >= int(STAR_GATE.get(lv, 0))
+
+
+# A walk's style (its banked combos, summed): kept per walk as a record. True
+# when it beat the old one.
+func record_style(lv: String, style: int) -> bool:
+	if not lv in LEVELS or style <= 0:
+		return false
+	var r := _ensure_level_record(lv)
+	if style <= int(r.get("style", 0)):
+		return false
+	r.style = style
+	records[lv] = r
+	save_records()
+	return true
 
 
 func record_result(lv: String, bones: int, time: float, perfect: bool) -> Dictionary:

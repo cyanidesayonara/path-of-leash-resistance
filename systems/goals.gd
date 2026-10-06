@@ -67,7 +67,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"snack": {"text": "Hoover up %d dropped snacks", "target": 2, "fn": func() -> int: return m.kebabs_eaten},
 		"cats": {"text": "See off %d cats on the walls", "target": 3, "fn": func() -> int: return m.wall_cats_spooked},
 		"carry": {"text": m.carry_text, "target": 1, "fn": func() -> int: return 1 if m.carry_state >= 2 else 0},
-		"combo": {"text": "Land an x%d combo", "target": 5, "fn": func() -> int: return int(m.combo.best_mult) if m.combo != null else 0},
+		"combo": {"text": "Land an x%d trick combo", "target": 3, "fn": func() -> int: return int(m.combo.best_mult) if m.combo != null else 0},
 		"tummy": {"text": "Walk past every chocolate", "target": 1, "fn": func() -> int: return 1 if m.candy_eaten == 0 else 0},
 		"ghost": {"text": "Cross the yard without waking anyone", "target": 1, "fn": func() -> int: return 1 if m.guards_woken == 0 else 0},
 		"outrun": {"text": "Keep the sweeper a leash length away", "target": 1, "fn": func() -> int: return 1 if m.chase_min_gap >= HomeChase.OUTRUN_GAP else 0},
@@ -229,7 +229,9 @@ static func finish_walk(m: Node2D) -> void:
 		lines.append("%d/%d goals here    %d stars in all    %d bones banked"
 			% [lifetime, total, Game.total_stars(), Game.total_bones])
 		if m.combo.best_mult >= 2:
-			lines.append("best combo x%d    style %d" % [m.combo.best_mult, m.combo.run_style])
+			var best_style: bool = Game.record_style(m.lvl, int(m.combo.run_style)) if not Game.daily else false
+			lines.append("best combo x%d    style %d%s" % [m.combo.best_mult, m.combo.run_style,
+				"    BEST STYLE" if best_style else ""])
 		if m.overmarks > 0:
 			lines.append("%d spot%s over-marked. They will know."
 				% [m.overmarks, "" if m.overmarks == 1 else "s"])

@@ -1,16 +1,19 @@
 extends Node
 
-# Passive combo / multiplier meter (Tony Hawk Phase A). Every scored bit
-# of dog business - sniff, mark, say-hi, fling, boop, tangle, save - is a
-# "trick". Land another within WINDOW seconds and the chain grows; the
-# multiplier is the number of links. When the window lapses the chain
-# BANKS: a style score of (summed points x links), plus a bones bonus
-# that scales with the multiplier. A bail (the dog takes a hit) drops the
-# whole thing. The per-event bones rewards elsewhere are untouched - this
-# is a bonus on top for stringing them together, and the push-your-luck
-# tension is bank-it-safe vs keep-the-chain-alive for a fatter multiplier.
+# The combo / multiplier meter (Tony Hawk style). A chain starts with a
+# TRICK - a grind, a pole swing, a fling, a save, an air catch (TRICKS, plus
+# every grindable's name) - and only tricks raise the multiplier. Dog
+# business (a sniff, a mark, a hello) adds its points and keeps a chain that
+# is already going alive, but never starts one or multiplies it: walking
+# about is not a combo. Land another trick within WINDOW and the chain
+# grows; when the window lapses it BANKS a style score of points x links,
+# plus a bones bonus that scales with the multiplier. A bail drops it all.
 
-const WINDOW := 3.2
+const WINDOW := 4.0
+# the tricks: everything else that scores is business
+const TRICKS := ["POLE SWING", "FLING", "SLINGSHOT", "BALANCE", "SAVE", "BRACED", "AIR CATCH",
+	"AGILITY", "CLOSE SHAVE", "WALKWAY",
+	"LEDGE RUN", "HEDGE RUN", "BENCH GRIND", "WALL WALK", "HANDRAIL"]
 const MAX_LABELS := 4  # trick names kept in the display string
 const BONUS_CAP := 40
 
@@ -28,20 +31,29 @@ func setup(m: Node2D) -> void:
 	main = m
 
 
+static func is_trick(label: String) -> bool:
+	return label in TRICKS
+
+
 func add(label: String, pts: int) -> void:
-	# a fresh trick after the window lapsed starts a new chain
+	var trick := is_trick(label)
+	# the main game hears about everything (the phone call counts it all) and
+	# tricks feed the zoomies and the dare; golden zoomies double a trick
+	if main != null and main.has_method("on_scored"):
+		pts = int(main.on_scored(label, pts, trick))
 	if timer <= 0.0:
+		# only a trick starts a chain
+		if not trick:
+			return
 		links = 0
 		points = 0
 		names.clear()
-	links += 1
+	if trick:
+		links += 1
 	points += pts
 	if names.is_empty() or names[names.size() - 1] != label:
 		names.append(label)
 	timer = WINDOW
-	# every trick also feeds an active combo challenge, if one is running
-	if main != null and main.has_method("on_trick"):
-		main.on_trick()
 
 
 func bail() -> void:

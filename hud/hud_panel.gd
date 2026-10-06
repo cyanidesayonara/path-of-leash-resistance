@@ -82,6 +82,9 @@ func _draw_shapes() -> void:
 	var eh: float = 34.0 * clampf(main.dog.energy, 0.0, 1.0)
 	if eh > 2.0:
 		var ecol := Color(0.4, 0.8, 0.5, 0.9)
+		# golden zoomies: earned by tricks, they glow gold while they last
+		if float(main.golden_t) > 0.0:
+			ecol = Color(1.0, 0.80, 0.30).lerp(Color(1.0, 0.95, 0.6), 0.5 + 0.5 * sin(AnimClock.msec() / 90.0))
 		if main.dog.turbo_active and fmod(AnimClock.msec() / 120.0, 2.0) < 1.0:
 			ecol = Color(0.6, 1.0, 0.7)
 		_b.draw_rect(Rect2(35, 46 + 34.0 - eh, 10, eh), ecol)

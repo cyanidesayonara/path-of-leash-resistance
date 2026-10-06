@@ -1,11 +1,15 @@
 extends SceneTree
 
-# Regression for the passive combo/multiplier meter (combo.gd):
-#  1. a lone trick never banks (no multiplier)
-#  2. two+ tricks in the window bank once, score = points x links
-#  3. a new trick refreshes the window (the chain survives)
-#  4. a bail drops the chain with nothing banked
-#  5. the bones bonus scales with the multiplier and caps
+# Regression for the combo/multiplier meter (combo.gd), tricks-only:
+#  1. business alone (sniffs, marks) never starts a chain
+#  2. a lone trick never banks (no multiplier)
+#  3. two tricks in the window bank once, score = points x links
+#  4. business inside a live chain adds its points and keeps it alive, but
+#     never raises the multiplier
+#  5. a bail drops the chain with nothing banked
+#  6. the bones bonus scales with the multiplier and caps
+#  7. the main game hears every score, and can change a trick's points
+#     (golden zoomies double them)
 # Pure logic, driven by add()/tick() with no rendering.
 
 const DT := 1.0 / 60.0
@@ -14,98 +18,104 @@ const ComboScript := preload("res://systems/combo.gd")
 
 class StubMain extends Node2D:
 	var banks: Array = []
+	var heard: Array = []
+	var double := false
 	func on_combo_banked(score: int, mult: int, bonus: int) -> void:
 		banks.append({"score": score, "mult": mult, "bonus": bonus})
+	func on_scored(label: String, pts: int, trick: bool) -> int:
+		heard.append([label, trick])
+		return pts * 2 if double and trick else pts
+
+
+var failures := 0
+
+
+func _check(ok: bool, what: String) -> void:
+	if not ok:
+		failures += 1
+		print("FAIL: " + what)
 
 
 func _tick(c, seconds: float) -> void:
-	var n := int(round(seconds / DT))
-	for i in range(n):
+	for i in range(int(round(seconds / DT))):
 		c.tick(DT)
 
 
-func _initialize() -> void:
-	var failures := 0
-
-	# 1) a single trick, then let the window lapse -> no bank
+func _fresh() -> Array:
 	var m := StubMain.new()
 	var c = ComboScript.new()
 	c.setup(m)
-	c.add("SNIFF", 2)
-	_tick(c, 4.0)
-	if m.banks.size() != 0:
-		print("FAIL: a lone trick should not bank, got %d" % m.banks.size())
-		failures += 1
-	if c.active():
-		print("FAIL: chain should be dead after the window")
-		failures += 1
+	return [m, c]
 
-	# 2) two tricks inside the window -> one bank, score = (2+3)*2 = 10
-	var m2 := StubMain.new()
-	var c2 = ComboScript.new()
-	c2.setup(m2)
-	c2.add("SNIFF", 2)
-	_tick(c2, 1.0)
-	c2.add("MARK", 3)
-	if c2.mult() != 2:
-		print("FAIL: multiplier should be 2, got %d" % c2.mult())
-		failures += 1
-	_tick(c2, 4.0)
-	if m2.banks.size() != 1:
-		print("FAIL: expected exactly one bank, got %d" % m2.banks.size())
-		failures += 1
-	elif m2.banks[0].score != 10 or m2.banks[0].mult != 2:
-		print("FAIL: bank should be score 10 x2, got %s" % m2.banks[0])
-		failures += 1
-	if c2.best_mult != 2 or c2.run_style != 10:
-		print("FAIL: run totals wrong (best=%d style=%d)" % [c2.best_mult, c2.run_style])
-		failures += 1
 
-	# 3) a trick just before the window closes refreshes it -> chain lives
-	var m3 := StubMain.new()
-	var c3 = ComboScript.new()
-	c3.setup(m3)
-	c3.add("SNIFF", 2)
-	_tick(c3, 3.0)  # under WINDOW (3.2)
-	if not c3.active():
-		print("FAIL: chain should still be alive just under the window")
-		failures += 1
-	c3.add("MARK", 3)  # refresh
-	_tick(c3, 3.0)
-	c3.add("FLING", 8)
-	if c3.mult() != 3:
-		print("FAIL: refreshed chain should reach x3, got %d" % c3.mult())
-		failures += 1
-	_tick(c3, 4.0)
-	if m3.banks.size() != 1 or m3.banks[0].mult != 3 or m3.banks[0].score != 39:
-		print("FAIL: refreshed chain should bank x3 score 39, got %s" % m3.banks)
-		failures += 1
+func _initialize() -> void:
+	# 1) business alone never starts a chain
+	var p1 := _fresh()
+	p1[1].add("SNIFF", 2)
+	p1[1].add("MARK", 3)
+	_check(not p1[1].active() and p1[1].mult() == 0, "sniffing and marking is not a combo")
+	_tick(p1[1], 5.0)
+	_check(p1[0].banks.is_empty(), "and banks nothing")
 
-	# 4) a bail drops the chain, nothing banked
-	var m4 := StubMain.new()
-	var c4 = ComboScript.new()
-	c4.setup(m4)
-	c4.add("SNIFF", 2)
-	c4.add("MARK", 3)
-	c4.bail()
-	if c4.active() or c4.mult() != 0:
-		print("FAIL: bail should clear the chain")
-		failures += 1
-	_tick(c4, 4.0)
-	if m4.banks.size() != 0:
-		print("FAIL: a bailed chain must never bank, got %d" % m4.banks.size())
-		failures += 1
+	# 2) a lone trick never banks
+	var p2 := _fresh()
+	p2[1].add("FLING", 30)
+	_check(p2[1].active() and p2[1].mult() == 1, "a trick starts a chain")
+	_tick(p2[1], 5.0)
+	_check(p2[0].banks.is_empty(), "a lone trick does not bank")
 
-	# 5) the bonus curve: scales with the multiplier, capped at 40
-	if ComboScript.bonus_for(1) != 0:
-		print("FAIL: x1 should pay no bonus")
-		failures += 1
-	if ComboScript.bonus_for(2) != 2 or ComboScript.bonus_for(3) != 6 or ComboScript.bonus_for(5) != 20:
-		print("FAIL: bonus curve wrong (x2=%d x3=%d x5=%d)" % [ComboScript.bonus_for(2), ComboScript.bonus_for(3), ComboScript.bonus_for(5)])
-		failures += 1
-	if ComboScript.bonus_for(9) != 40:
-		print("FAIL: bonus should cap at 40, got %d" % ComboScript.bonus_for(9))
-		failures += 1
+	# 3) two tricks bank once: (30 + 20) x 2
+	var p3 := _fresh()
+	p3[1].add("FLING", 30)
+	_tick(p3[1], 1.0)
+	p3[1].add("POLE SWING", 20)
+	_check(p3[1].mult() == 2, "two tricks make x2")
+	_tick(p3[1], 5.0)
+	_check(p3[0].banks.size() == 1 and p3[0].banks[0].score == 100 and p3[0].banks[0].mult == 2,
+		"they bank once, points x links (got %s)" % [p3[0].banks])
+	_check(p3[1].best_mult == 2 and p3[1].run_style == 100, "run totals kept")
+
+	# 4) business keeps a live chain going and adds points, never links
+	var p4 := _fresh()
+	p4[1].add("HEDGE RUN", 40)
+	_tick(p4[1], 3.5)
+	p4[1].add("SNIFF", 2)        # refreshes the window, no new link
+	_check(p4[1].mult() == 1, "business never raises the multiplier")
+	_tick(p4[1], 3.5)
+	_check(p4[1].active(), "but it keeps the chain alive")
+	p4[1].add("BALANCE", 4)
+	_tick(p4[1], 5.0)
+	_check(p4[0].banks.size() == 1 and p4[0].banks[0].mult == 2 and p4[0].banks[0].score == 92,
+		"banked x2 on 40 + 2 + 4 (got %s)" % [p4[0].banks])
+
+	# 5) a bail drops the chain
+	var p5 := _fresh()
+	p5[1].add("FLING", 30)
+	p5[1].add("WALL WALK", 20)
+	p5[1].bail()
+	_check(not p5[1].active() and p5[1].mult() == 0, "a bail clears the chain")
+	_tick(p5[1], 5.0)
+	_check(p5[0].banks.is_empty(), "and it never banks")
+
+	# 6) the bonus curve
+	_check(ComboScript.bonus_for(1) == 0, "x1 pays no bonus")
+	_check(ComboScript.bonus_for(2) == 2 and ComboScript.bonus_for(3) == 6 and ComboScript.bonus_for(5) == 20,
+		"the bonus scales with the multiplier")
+	_check(ComboScript.bonus_for(9) == 40, "and caps at 40")
+
+	# 7) the main game hears everything and can double a trick
+	var p7 := _fresh()
+	p7[0].double = true
+	p7[1].add("SNIFF", 2)
+	p7[1].add("FLING", 30)
+	p7[1].add("SNIFF", 2)
+	_check(p7[0].heard.size() == 3 and p7[0].heard[0][1] == false and p7[0].heard[1][1] == true,
+		"every score is heard, tricks told apart from business")
+	_check(p7[1].points == 62, "a doubled trick counts double, business does not (got %d)" % p7[1].points)
+	for t: String in ["LEDGE RUN", "HEDGE RUN", "BENCH GRIND", "WALL WALK", "HANDRAIL"]:
+		_check(ComboScript.is_trick(t), "%s is a trick" % t)
+	for b: String in ["SNIFF", "MARK", "HELLO", "SNACK", "DIG"]:
+		_check(not ComboScript.is_trick(b), "%s is business" % b)
 
 	if failures > 0:
 		print("test_combo: %d FAILURES" % failures)

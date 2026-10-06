@@ -317,6 +317,13 @@ var grind: Node
 # the walk's grindables (systems/rails.gd), and which one she is on
 var grind_rail := -1
 var rails: Array[Dictionary] = []
+# GOLDEN ZOOMIES: tricks refill the zoomies, and filling them that way turns
+# them golden for GOLDEN_S - tricks score double and the grind steadies
+const GOLDEN_S := 6.0
+const ZOOM_REFILL_PER_PT := 1.0 / 110.0
+const ZOOM_REFILL := Vector2(0.05, 0.35)   # the least and most one trick refills
+const GOLDEN_EASE := 0.6
+var golden_t := 0.0
 var grind_cd := 0.0
 # the owner's phone call: a long window of maximum slack (see _tick_call)
 var call_active := false
@@ -5650,11 +5657,33 @@ func _update_challenge_hud() -> void:
 	challenge_l.modulate = Color(1, 0.95, 0.6) if challenge.fraction() > 0.3 else Color(1, 0.55, 0.4)
 
 
-func on_trick() -> void:
-	challenge.add_trick()
+# Every scored thing passes through here on its way into the combo
+# (systems/combo.gd), which takes back the points it returns.
+func on_scored(label: String, pts: int, trick: bool) -> int:
 	# anything she gets up to during the call counts toward the payout
 	if call_active:
 		call_haul += 1
+	if not trick:
+		return pts
+	challenge.add_trick()
+	if golden_t > 0.0:
+		pts *= 2
+	else:
+		_refill_zoomies(pts)
+	return pts
+
+
+# A trick refills the zoomies by how much it was worth; filling them that
+# way turns them golden.
+func _refill_zoomies(pts: int) -> void:
+	var was: float = dog.energy
+	dog.energy = minf(1.0, was + clampf(float(pts) * ZOOM_REFILL_PER_PT, ZOOM_REFILL.x, ZOOM_REFILL.y))
+	if was < 1.0 and dog.energy >= 1.0:
+		golden_t = GOLDEN_S
+		Sfx.play("star", 1.4)
+		feed.say("GOLDEN ZOOMIES!", EventFeed.Tone.LOUD)
+		_update_hud()
+
 
 
 func start_challenge(giver: Node2D, target: int, seconds: float) -> void:
@@ -6155,12 +6184,14 @@ func _apply_leash(delta: float) -> void:
 		# the two moves now CHAIN: wind him up with a carve, then let go
 		if vault_recent > 0.0:
 			bones += 8
-			combo.add("SLINGSHOT", 8)
+			combo.add("SLINGSHOT", 20)
 			float_text(human.global_position + Vector2(0, -34), "slingshot! +8",
 				Color(1.0, 0.86, 0.5))
 			vault_recent = 0.0
 		Sfx.play("fling")
-		combo.add("FLING", 8)
+		# the hardest thing on the leash, and paid like it
+		bones += 6
+		combo.add("FLING", 30)
 		if not leash.detached:
 			# a fresh fling must never be arrested by a residual wrap
 			leash.free_slip_t = 1.2
@@ -7857,10 +7888,10 @@ func _end_vault() -> void:
 	if turns > 0.12:
 		var tan := SwingMath.vault_tangent(vault_pole, dog.global_position, dog.velocity)
 		dog.velocity = tan * VAULT_LAUNCH
-		var pts := int(round(8.0 + turns * 40.0))
+		var pts := int(round(14.0 + turns * 50.0))
 		bones += int(pts / 4)
 		vaults_landed += 1
-		combo.add("VAULT", pts)
+		combo.add("POLE SWING", pts)
 		Sfx.play("star", 1.15)
 		feed.say("POLE SWING!  %d" % pts, EventFeed.Tone.LOUD)
 		_slowmo()
@@ -8059,6 +8090,8 @@ func _tick_grind(delta: float) -> void:
 	# lands when she runs off its end or slows. Bailing costs the trick and
 	# the combo but nothing else, because this is a thing you go looking for.
 	grind_cd = maxf(0.0, grind_cd - delta)
+	golden_t = maxf(0.0, golden_t - delta)
+	grind.ease = GOLDEN_EASE if golden_t > 0.0 else 1.0
 	if grind.active:
 		var r: Dictionary = rails[grind_rail]
 		var n: Dictionary = Rails.nearest(r, dog.global_position)
@@ -8154,7 +8187,7 @@ func _tick_teeter(delta: float) -> void:
 		streak += 1
 		bones += 4
 		Sfx.play("star", 1.1)
-		combo.add("BALANCE", 6)
+		combo.add("BALANCE", 4)
 		feed.say("SAVED IT!  +4", EventFeed.Tone.GOOD)
 		_slowmo()
 		_update_hud()
