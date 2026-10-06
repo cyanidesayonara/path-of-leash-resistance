@@ -2,6 +2,21 @@
 
 Append-only session history, newest first.
 
+## 2026-10-06 - saves that save the phone, and teaching the tricks (#193, part 4)
+
+- A stumble save (she digs in and yanks your human back) scores only when
+  it saved the phone: a bike or the road train was really coming at them
+  in the next second. A bike already past, riding away or passing wide no
+  longer turns any yank into a save, and the road train now counts.
+- The brink save pays 2 bones (was 4): nearly falling in is not worth what
+  a real save is.
+- The tutorial teaches the leash tricks first (the pole swing, then the
+  fling) and the grind last, on its ledge.
+- First-time tips: a wrap at pace without the zoomies says to hold them to
+  swing round the post; running along a ledge without them says to hold
+  them to ride it.
+- `tests/test_saves.gd` in CI.
+
 ## 2026-10-06 - leash tricks lead (#193, part 3)
 
 - The pole swing takes the zoomies to start, like a grind, so a wrap at a

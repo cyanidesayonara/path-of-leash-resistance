@@ -114,6 +114,7 @@ const Goals := preload("res://systems/goals.gd")
 const HudBuild := preload("res://hud/hud_build.gd")
 const MenuFlow := preload("res://hud/menu_flow.gd")
 const Rails := preload("res://systems/rails.gd")
+const Saves := preload("res://systems/saves.gd")
 const CableCar := preload("res://systems/cable_car.gd")
 const UiScale := preload("res://hud/ui_scale.gd")
 const LevelBuild := preload("res://world/level_build.gd")
@@ -7874,6 +7875,8 @@ func _tick_vault(delta: float) -> void:
 		return
 	# the zoomies say she means it: a wrap at a trot is just a wrap
 	if not dog.turbo_active:
+		if leash.taut and dog.velocity.length() >= VAULT_TRIGGER_SPEED:
+			tip("swing")
 		return
 	# THE FLING HAS RIGHT OF WAY.
 	#
@@ -8216,9 +8219,14 @@ func _tick_grind(delta: float) -> void:
 				feed.say("%s!  %d" % [trick, pts], EventFeed.Tone.LOUD)
 				_update_hud()
 		return
-	if grind_cd > 0.0 or dog.is_tumbling() or teeter.active or not dog.turbo_active:
+	if grind_cd > 0.0 or dog.is_tumbling() or teeter.active:
 		return
 	if dog.velocity.length() < GRIND_SPEED:
+		return
+	if not dog.turbo_active:
+		# running along a grindable without them: say how, once
+		if not Game.tips_seen.has("grind") and Rails.mountable(self, dog.global_position, dog.velocity) >= 0:
+			tip("grind")
 		return
 	var ri: int = Rails.mountable(self, dog.global_position, dog.velocity)
 	if ri < 0:
@@ -8278,10 +8286,10 @@ func _tick_teeter(delta: float) -> void:
 		# a real recovery, scored like the stumble saves it echoes
 		saves_done += 1
 		streak += 1
-		bones += 4
+		bones += 2
 		Sfx.play("star", 1.1)
 		combo.add("BALANCE", 4)
-		feed.say("SAVED IT!  +4", EventFeed.Tone.GOOD)
+		feed.say("SAVED IT!  +2", EventFeed.Tone.GOOD)
 		_slowmo()
 		_update_hud()
 		return
@@ -9267,18 +9275,34 @@ func on_correction_braced(pos: Vector2) -> void:
 	_update_hud()
 
 
+# She dug in and yanked your human back. A save only when it saved the phone:
+# a bike or the road train was really coming at them (systems/saves.gd).
 func on_stumble_save(pos: Vector2) -> void:
+	if not stumble_saved_phone(pos):
+		return
+	streak += 1
+	saves_done += 1
+	bones += streak
+	Sfx.play("save", 1.0 + 0.06 * streak)
+	combo.add("SAVE", 5)
+	float_text(pos + Vector2(0, -30), "nice save +%d" % streak, Color(0.7, 1.0, 0.75))
+	_slowmo()
+	_update_hud()
+
+
+func stumble_saved_phone(pos: Vector2) -> bool:
 	for b in get_tree().get_nodes_in_group("bikes"):
-		if b.global_position.distance_to(pos) < 170.0:
-			streak += 1
-			saves_done += 1
-			bones += streak
-			Sfx.play("save", 1.0 + 0.06 * streak)
-			combo.add("SAVE", 5)
-			float_text(pos + Vector2(0, -30), "nice save +%d" % streak, Color(0.7, 1.0, 0.75))
-			_slowmo()
-			_update_hud()
-			return
+		# a kid on a scooter bumps him, it never costs the phone
+		if String(b.get("kind")) != "bike" or bool(b.get("hit_done")):
+			continue
+		if Saves.threatens(b.global_position, b.get("vel"), pos, Saves.HORIZON, Saves.RADIUS):
+			return true
+	if has_meta("train"):
+		var tr = get_meta("train")
+		if is_instance_valid(tr) and not bool(tr.get("hit_done")):
+			if Saves.train_threatens(tr.rect(), float(tr.dir), tr.SPEED, pos, Saves.HORIZON, 30.0):
+				return true
+	return false
 
 
 func _slowmo() -> void:
