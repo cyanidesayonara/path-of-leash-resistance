@@ -100,6 +100,23 @@ Single player. No ads, no purchases, no account. The download plays offline; the
 Made in Godot by Santtu Nykänen. The dog is Millie, a distinguished salt-and-pepper mutt who squats like a lady.
 ```
 
+## What's new in 1.59
+
+For a devlog post or the top of the body. Everything since v1.58, from
+CHANGELOG.md:
+
+```
+- A new walk: MONTJUÏC, the climb. A path winding up the hill between stone terraces, your human slower going up and quicker coming down, the city falling away below and the sea opening up near the top, and the wind getting up the higher you climb.
+- Montjuïc's hidden telefèric: find a tourist's dropped ticket and ride the cable car up over the switchbacks, and back down on the way home.
+- And the rest of the hill: the outdoor escalators, the Font Màgica and its show, a cactus garden (careful), el trenet ringing at its crossing, and off the leash the castle's esplanade, with kites.
+- A way in for new players: the game asks if it is your first time, the tutorial comes in two parts (the basics, then the tricks for whoever wants them), and the first few walks open sooner.
+- First-time tips, once each, when something new happens: a cracked phone, a wobble at an edge, a "HEY!" from your human.
+- A lost walk now says how to avoid that next time and keeps the goals you ticked, and trying again is one press away.
+- The tutorial names the meters and the phone, the banner says "NATURE CALLS" when it means it, and the words are the same everywhere.
+- Readable on a small screen: on a phone the menus, lesson cards and HUD grow, and the walk keeps its view.
+- L'Estació's moving walkway actually carries you now.
+```
+
 ## What's new in 1.58
 
 For a devlog post or the top of the body. Everything since v1.57, from
