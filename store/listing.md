@@ -132,6 +132,7 @@ No ads, no purchases, no account, and it plays offline
 - A way in for new players: a two-part tutorial, gentler first walks and first-time tips.
 - A lost walk says how to avoid it next time, and keeps the goals you ticked.
 - Readable on small screens: the menus and HUD grow, the walk keeps its view.
+- Tricks reworked: ride ledges and handrails with the zoomies, new leash tricks, and golden zoomies for stringing tricks together.
 - Clearer words throughout, and many smaller fixes.
 ```
 
