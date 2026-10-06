@@ -113,6 +113,7 @@ const HomeChase := preload("res://systems/home_chase.gd")
 const Goals := preload("res://systems/goals.gd")
 const HudBuild := preload("res://hud/hud_build.gd")
 const MenuFlow := preload("res://hud/menu_flow.gd")
+const Rails := preload("res://systems/rails.gd")
 const CableCar := preload("res://systems/cable_car.gd")
 const UiScale := preload("res://hud/ui_scale.gd")
 const LevelBuild := preload("res://world/level_build.gd")
@@ -311,15 +312,10 @@ var barks_done := 0
 var grinds_landed := 0
 var vaults_landed := 0
 var rivals_beaten := 0
-# the kerb grind (see grind.gd): ride the kerb line for style
+# the grind (see grind.gd): ride a grindable for style
 var grind: Node
-var grind_kerb_x := 0.0
-# what she is grinding: RAIL_EDGE_L / RAIL_EDGE_R are the path's own edges
-# (followed round a bend), 0.. index rails, the walk's other straight edges
-# (El Parc's flowerbed edging): {"x", "y0", "y1"}
-const RAIL_EDGE_L := -1
-const RAIL_EDGE_R := -2
-var grind_rail := RAIL_EDGE_L
+# the walk's grindables (systems/rails.gd), and which one she is on
+var grind_rail := -1
 var rails: Array[Dictionary] = []
 var grind_cd := 0.0
 # the owner's phone call: a long window of maximum slack (see _tick_call)
@@ -770,6 +766,7 @@ func _ready() -> void:
 	_build_level_data()
 	_build_bypasser_blockers()
 	_build_walls()
+	Rails.build(self)
 	_build_entities()
 	if lvl == "montjuic":
 		CableCar.build(self)
@@ -1887,6 +1884,17 @@ func _draw_scooters(b: ShapeBatch, vt: float, vb: float) -> void:
 
 
 # El Mosaic's plaza edges are the serpentine bench: grinding them is the bench
+# a grindable's line, where it is on screen
+func _draw_rail(r: Dictionary, vt: float, vb: float, col: Color, w: float) -> void:
+	var pts: PackedVector2Array = r["pts"]
+	for i in range(pts.size() - 1):
+		var a := pts[i]
+		var bb := pts[i + 1]
+		if maxf(a.y, bb.y) < vt - 20.0 or minf(a.y, bb.y) > vb + 20.0:
+			continue
+		_wc.draw_line(a, bb, col, w)
+
+
 func on_mosaic_bench(y: float) -> bool:
 	return lvl == "guell" and y < LevelBuild.MOSAIC_PLAZA_Y0 + 40.0 and y > LevelBuild.MOSAIC_PLAZA_Y1 - 40.0
 
@@ -3563,6 +3571,24 @@ func _draw_tutorial_pond() -> void:
 	var bank := {"y": pc.y, "at": 0.5, "rx": r.size.x * 0.5, "ry": r.size.y * 0.5, "seed": 1.9}
 	_draw_pinned_patch(bank, pc, Color(0.40, 0.36, 0.28), 1.08)
 	_draw_pinned_patch(bank, pc, Color(0.31, 0.44, 0.52), 0.94)
+
+
+# The grind lesson's stone ledge: a long low wall beside the path, its coping
+# pale and worn smooth, made to be ridden (systems/rails.gd).
+func _draw_tutorial_ledge(vt: float, vb: float) -> void:
+	var at := TutorialSteps.at("grind")
+	var r := Rect2(Rails.TUT_LEDGE_X - 9.0, at - Rails.TUT_LEDGE_HALF, 18.0, Rails.TUT_LEDGE_HALF * 2.0)
+	if r.end.y < vt or r.position.y > vb:
+		return
+	var b := ShapeBatch.new()
+	b.rect(Rect2(r.position + Vector2(5, 6), r.size), Color(0, 0, 0, 0.18))
+	b.rect(r, Color(0.62, 0.58, 0.52))
+	b.rect(Rect2(r.position.x + 2.0, r.position.y, r.size.x - 4.0, r.size.y), Color(0.80, 0.77, 0.70))
+	var y := r.position.y + 30.0
+	while y < r.end.y:
+		b.rect(Rect2(r.position.x, y, r.size.x, 2.0), Color(0.52, 0.48, 0.42))
+		y += 30.0
+	b.flush(_wc)
 
 
 # EL BARRI: the petanca pitch with its boules, and the playground. Nothing
@@ -8027,70 +8053,54 @@ func _tick_call(_delta: float) -> void:
 
 
 func _tick_grind(delta: float) -> void:
-	# The kerb is a rail. Run along one at a clip and you get up on it; hold
-	# the balance with left/right nudges and it pays by the second. Bailing
-	# costs the trick and the combo but nothing else, because this is a thing
-	# you go looking for rather than a hazard to be survived.
+	# A grind is a trick on something built to be ridden (systems/rails.gd):
+	# run onto it along its length with the zoomies on and she is up, held to
+	# its line; left and right work the balance; it pays by the second and
+	# lands when she runs off its end or slows. Bailing costs the trick and
+	# the combo but nothing else, because this is a thing you go looking for.
 	grind_cd = maxf(0.0, grind_cd - delta)
-	var travelling_along := absf(dog.velocity.y) > absf(dog.velocity.x) * 1.4
-	var fast_enough := dog.velocity.length() > GRIND_SPEED
 	if grind.active:
-		# lateral nudges feather the balance; leaving the rail lands it
-		# Counter-steering, and the mapping is deliberately literal: your
-		# stick tilts the balance, so you hold it up by leaning the other
-		# way. Pressing left corrects a rightward tip.
-		var counter: float = -dog.input_dir.x
+		var r: Dictionary = rails[grind_rail]
+		var n: Dictionary = Rails.nearest(r, dog.global_position)
+		var dir: Vector2 = n["dir"]
+		var along := dog.velocity.dot(dir)
+		# held to the rail: only her speed along it is her own
+		dog.global_position = n["q"]
+		dog.velocity = dir * along
+		# Counter-steering, deliberately literal: the stick tilts the balance,
+		# so you hold it up by leaning the other way
+		var counter: float = -dog.input_dir.dot(Rails.side(dir))
 		var res: String = grind.tick(delta, counter)
-		var dy: float = dog.global_position.y
-		grind_kerb_x = rail_x(grind_rail, dy)
-		var off_rail: bool = absf(dog.global_position.x - grind_kerb_x) > GRIND_BAND + 10.0
-		if grind_rail >= 0:
-			var gr: Dictionary = rails[grind_rail]
-			off_rail = off_rail or dy < float(gr["y0"]) or dy > float(gr["y1"])
+		var at_end := float(n["s"]) <= 1.0 or float(n["s"]) >= float(n["len"]) - 1.0
 		if res == "bailed":
 			grind_cd = 0.9
 			combo.bail()
 			Sfx.play("crack", 1.2, -10.0)
 			feed.say("FELL OFF!", EventFeed.Tone.BAD)
 			dog.stumble()
-		elif off_rail or not fast_enough or not travelling_along:
+		elif at_end or absf(along) < GRIND_SPEED:
 			var pts := int(grind.land())
 			grind_cd = 0.5
 			if pts > 0:
+				var trick := String(r["name"])
 				bones += int(pts / 4)
 				grinds_landed += 1
-				combo.add("GRIND", pts)
+				combo.add(trick, pts)
 				Sfx.play("star", 1.2)
-				feed.say(("BENCH GRIND!  %d" if on_mosaic_bench(dog.global_position.y) else "KERB RIDE!  %d") % pts,
-					EventFeed.Tone.LOUD)
+				feed.say("%s!  %d" % [trick, pts], EventFeed.Tone.LOUD)
 				_update_hud()
 		return
-	if grind_cd > 0.0 or dog.is_tumbling() or teeter.active or not fast_enough or not travelling_along:
+	if grind_cd > 0.0 or dog.is_tumbling() or teeter.active or not dog.turbo_active:
 		return
-	# on a kerb? both path edges are rails, where the path is at her height,
-	# and so is any other straight edge the walk lays (rails)
-	var here_y: float = dog.global_position.y
-	var cands: Array[int] = [RAIL_EDGE_L, RAIL_EDGE_R]
-	for ri in range(rails.size()):
-		if here_y >= float(rails[ri]["y0"]) and here_y <= float(rails[ri]["y1"]):
-			cands.append(ri)
-	for rk: int in cands:
-		var kx := rail_x(rk, here_y)
-		if absf(dog.global_position.x - kx) < GRIND_BAND:
-			grind_rail = rk
-			grind_kerb_x = kx
-			grind.begin()
-			Sfx.play("save", 1.35, -10.0)
-			feed.say("BENCH GRIND!" if on_mosaic_bench(here_y) else "KERB RIDE!", EventFeed.Tone.LOUD)
-			return
-
-
-func rail_x(rail: int, y: float) -> float:
-	if rail == RAIL_EDGE_L:
-		return walk_edges(y).x
-	if rail == RAIL_EDGE_R:
-		return walk_edges(y).y
-	return float(rails[rail]["x"])
+	if dog.velocity.length() < GRIND_SPEED:
+		return
+	var ri: int = Rails.mountable(self, dog.global_position, dog.velocity)
+	if ri < 0:
+		return
+	grind_rail = ri
+	grind.begin()
+	Sfx.play("save", 1.35, -10.0)
+	feed.say("%s!" % String(rails[ri]["name"]), EventFeed.Tone.LOUD)
 
 
 func _dist_to_rect_edge(r: Rect2, p: Vector2) -> float:
@@ -9482,6 +9492,7 @@ func _draw_world() -> void:
 		_draw_mosaic(wvt, vb)
 	if tutorial_mode:
 		_draw_tutorial_pond()
+		_draw_tutorial_ledge(wvt, vb)
 	if rambla():
 		_draw_rambla(vt, vb)
 	if lvl == "trail":
@@ -10031,17 +10042,13 @@ func _draw_world() -> void:
 	_draw_scents()
 	# the grind: the rail lights up under her and a CENTRED balance bar shows
 	# which way she is tipping, with the running score beside it
+	# with the zoomies on, the grindables near her show themselves faintly
+	if dog.turbo_active and not grind.active:
+		for gr: Dictionary in rails:
+			if float(Rails.nearest(gr, dog.global_position)["d"]) < 160.0:
+				_draw_rail(gr, vt, vb, Color(1.0, 0.92, 0.6, 0.30), 3.0)
 	if grind.active:
-		var gy0 := maxf(vt - 40.0, GATE_Y)
-		var gy1 := minf(vb + 40.0, START_Y + 200.0)
-		if grind_rail >= 0:
-			gy0 = maxf(gy0, float(rails[grind_rail]["y0"]))
-			gy1 = minf(gy1, float(rails[grind_rail]["y1"]))
-		var ry := gy0
-		while ry < gy1:
-			var ry2 := minf(ry + 40.0, gy1)
-			_wc.draw_line(Vector2(rail_x(grind_rail, ry), ry), Vector2(rail_x(grind_rail, ry2), ry2), Color(1.0, 0.88, 0.45, 0.55), 4.0)
-			ry = ry2
+		_draw_rail(rails[grind_rail], vt, vb, Color(1.0, 0.88, 0.45, 0.55), 4.0)
 		var gp: Vector2 = dog.global_position + Vector2(0.0, -42.0)
 		var gw := 74.0
 		_wc.draw_rect(Rect2(gp.x - gw * 0.5, gp.y - 5.0, gw, 10.0), Color(0.06, 0.05, 0.08, 0.72))

@@ -59,10 +59,12 @@ func _run() -> void:
 			break
 	_check(human.global_position.x > lake.end.x, "walking up to the lake, the owner has crossed to the east shore by the water (x %.0f)" % human.global_position.x)
 
-	# rails: each flowerbed's long edges, and the path's own edges follow the bend
-	_check(m.rails.size() == LevelBuild.PARK_BEDS.size() * 2, "every flowerbed edge is a rail")
-	_check(is_equal_approx(m.rail_x(m.RAIL_EDGE_L, ly), e.x) and is_equal_approx(m.rail_x(m.RAIL_EDGE_R, ly), e.y),
-		"the path edges as rails are where the path is at that height")
+	# grindables: each flowerbed's clipped hedge edging, both long sides
+	_check(m.rails.size() == LevelBuild.PARK_BEDS.size() * 2, "every flowerbed's edging is grindable")
+	var hedges := true
+	for r: Dictionary in m.rails:
+		hedges = hedges and String(r["name"]) == "HEDGE RUN"
+	_check(hedges, "and grinding it is a hedge run")
 
 	# the bandstand's posts are solid
 	var dog: CharacterBody2D = m.dog

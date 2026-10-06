@@ -60,7 +60,12 @@ func _run() -> void:
 		y -= 25.0
 	_check(halves.max() > (hall.y - hall.x) * 0.5 + 20.0, "the plaza opens out beyond the hall")
 	_check(halves.max() - halves.min() > 15.0, "the plaza's edges wave: the serpentine bench")
-	_check(m.on_mosaic_bench(-3200.0) and not m.on_mosaic_bench(-2000.0), "grinding the plaza edge is grinding the bench")
+	_check(m.on_mosaic_bench(-3200.0) and not m.on_mosaic_bench(-2000.0), "the plaza edge is the bench")
+	var benches := 0
+	for r: Dictionary in m.rails:
+		if String(r["name"]) == "BENCH GRIND":
+			benches += 1
+	_check(benches == 2, "the serpentine bench is grindable, both sides of the plaza")
 	# the salamander: solid, walked round, the drink at its mouth
 	_check(m.islands.size() == 1, "the owner walks round the salamander")
 	var sm: Vector2 = LevelBuild.MOSAIC_SALAMANDER
