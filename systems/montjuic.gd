@@ -234,10 +234,12 @@ static func tick_cacti(m: Node2D, delta: float) -> void:
 static func tick_train(m: Node2D, delta: float) -> void:
 	var near := absf(m.dog.global_position.y - TRAIN_Y) < TRAIN_NEAR
 	# (a meta set to null is erased, and get_meta's null default means none)
-	var train: Node2D = m.get_meta("train") if m.has_meta("train") else null
-	if train != null and not is_instance_valid(train):
-		train = null
+	# a freed train cannot even be assigned to a typed variable: check it first
+	var held: Variant = m.get_meta("train") if m.has_meta("train") else null
+	if held != null and not is_instance_valid(held):
+		held = null
 		m.remove_meta("train")
+	var train: Node2D = held
 	m.set_meta("train_warn", maxf(0.0, float(m.get_meta("train_warn", 0.0)) - delta))
 	if train == null:
 		if not near:
