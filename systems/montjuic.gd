@@ -48,6 +48,11 @@ const GUST_WARN := 0.8            # the telegraph, as every hazard has
 const GUST_S := 0.9
 const GUST_FORCE := 300.0         # px/s/s on the dog at the top
 const GUST_EVERY := Vector2(6.0, 11.0)
+# once a walk, a gust this far up the climb takes your human's sunhat, and
+# sends it off downwind at HAT_SPEED
+const HAT_CLIMB := 0.4
+const HAT_SPEED := 300.0
+const Sunhat := preload("res://entities/sunhat.gd")
 # the escalators: up the middle of the last straight (x 640 from y -4600 to the
 # gate), clear of the last terrace's steps; main's conveyor carries on them
 const ESC_BOTTOM := -4560.0
@@ -314,6 +319,8 @@ static func tick_wind(m: Node2D, delta: float) -> void:
 		m.wind_warn -= delta
 		if m.wind_warn <= 0.0:
 			m.wind_gust = GUST_S
+			if h > HAT_CLIMB and not m.auto_walk:
+				blow_hat(m)
 		return
 	m.wind_next -= delta
 	if m.wind_next <= 0.0 and h > 0.12:
@@ -324,6 +331,24 @@ static func tick_wind(m: Node2D, delta: float) -> void:
 		m.wind_dir = Vector2(s, m.wind_rng.randf_range(0.0, 0.35)).normalized()
 		Sfx.play("hiss", 0.45, -8.0)
 		m.float_text(m.dog.global_position + Vector2(-s * 60.0, -30.0), "whoooosh", Color(0.92, 0.95, 1.0))
+
+
+# The gust takes your human's sunhat: once a walk, and never while they are
+# down. It goes off downwind (entities/sunhat.gd); main.on_hat_returned is
+# her bringing it back.
+static func blow_hat(m: Node2D) -> bool:
+	if m.has_meta("hat_done") or m.human.is_fallen():
+		return false
+	m.set_meta("hat_done", true)
+	m.human.hat_off = true
+	var hat := Node2D.new()
+	hat.set_script(Sunhat)
+	m.add_child(hat)
+	var dir: Vector2 = m.wind_dir if m.wind_dir.length() > 0.1 else Vector2(-1, 0.2).normalized()
+	hat.setup(m, m.human.global_position + Vector2(0, -6), dir * HAT_SPEED)
+	m.float_text(m.human.global_position + Vector2(0, -34), "my hat!", Color(1, 1, 1), m.POP_SAY)
+	Sfx.play("hiss", 0.7, -6.0)
+	return true
 
 
 # --- drawing --------------------------------------------------------------------

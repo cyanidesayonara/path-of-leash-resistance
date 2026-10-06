@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-10-06 - your human's sunhat on Montjuïc (#146)
+
+- On Montjuïc your human climbs in a straw sunhat, and once a walk, high
+  up, a gust takes it ("my hat!"). It tumbles off downwind and fetches up
+  at the path's edge. She can pick it up and take it back: it goes back on,
+  6 bones, and your human's patience is full again ("my hat! good girl").
+  Or leave it; nothing is lost but the hat, which stays behind.
+- A hat carried into the esplanade is dropped at the gate. Never for the
+  autowalk, so the behaviour snapshot is unchanged.
+- `entities/sunhat.gd`; `tests/test_sunhat.gd` in CI.
 ## 2026-10-06 - saves that save the phone, and teaching the tricks (#193, part 4)
 
 - A stumble save (she digs in and yanks your human back) scores only when
