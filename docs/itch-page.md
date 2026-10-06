@@ -115,6 +115,10 @@ CHANGELOG.md:
 - The tutorial names the meters and the phone, the banner says "NATURE CALLS" when it means it, and the words are the same everywhere.
 - Readable on a small screen: on a phone the menus, lesson cards and HUD grow, and the walk keeps its view.
 - L'Estació's moving walkway actually carries you now.
+- Tricks reworked. No more kerb rides: hold the zoomies and run onto something made for it (a stone ledge, El Parc's hedges, Güell's bench, Montjuïc's terrace walls and the escalator handrails) to ride it. The pole swing takes the zoomies too, and pays for the pace you carry round.
+- New leash tricks: the FIGURE EIGHT (swing one post, then the next the other way round) and THREAD THE NEEDLE (dash between two people walking close together).
+- Combos count tricks only, and every trick refills the zoomies. Fill them with a trick and they go GOLDEN: tricks score double for a few seconds. Each walk keeps its best style.
+- A save counts when it saves the phone: dig in as a bike or the little train bears down on your human.
 ```
 
 ## What's new in 1.58
