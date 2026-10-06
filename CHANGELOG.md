@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-10-06 - paper bags on Montjuïc's wind (#146)
+
+- A gust on the hill lifts a paper bag upwind of her and sends it
+  skittering along the path in hops; every gust shoves it on, and between
+  gusts it creeps and settles. Pounce on it at speed: "got it! +2". One
+  loose at a time, three a walk, never for the autowalk (the snapshot is
+  unchanged). White paper with an inked edge, so it reads on the sand.
+- `entities/litter.gd`; `tests/test_litter.gd` in CI.
+
 ## 2026-10-06 - your human's sunhat on Montjuïc (#146)
 
 - On Montjuïc your human climbs in a straw sunhat, and once a walk, high

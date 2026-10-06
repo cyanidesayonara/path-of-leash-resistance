@@ -53,6 +53,12 @@ const GUST_EVERY := Vector2(6.0, 11.0)
 const HAT_CLIMB := 0.4
 const HAT_SPEED := 300.0
 const Sunhat := preload("res://entities/sunhat.gd")
+# a paper bag lifts on a gust past LITTER_CLIMB, one loose at a time and
+# LITTER_MAX a walk, from LITTER_UPWIND upwind of her
+const LITTER_CLIMB := 0.15
+const LITTER_MAX := 3
+const LITTER_UPWIND := 260.0
+const Litter := preload("res://entities/litter.gd")
 # the escalators: up the middle of the last straight (x 640 from y -4600 to the
 # gate), clear of the last terrace's steps; main's conveyor carries on them
 const ESC_BOTTOM := -4560.0
@@ -321,6 +327,8 @@ static func tick_wind(m: Node2D, delta: float) -> void:
 			m.wind_gust = GUST_S
 			if h > HAT_CLIMB and not m.auto_walk:
 				blow_hat(m)
+			if h > LITTER_CLIMB and not m.auto_walk:
+				blow_litter(m)
 		return
 	m.wind_next -= delta
 	if m.wind_next <= 0.0 and h > 0.12:
@@ -348,6 +356,26 @@ static func blow_hat(m: Node2D) -> bool:
 	hat.setup(m, m.human.global_position + Vector2(0, -6), dir * HAT_SPEED)
 	m.float_text(m.human.global_position + Vector2(0, -34), "my hat!", Color(1, 1, 1), m.POP_SAY)
 	Sfx.play("hiss", 0.7, -6.0)
+	return true
+
+
+# A gust lifts a paper bag upwind of her and sends it skittering along the
+# path (entities/litter.gd); main.on_litter_caught is her pouncing on it.
+static func blow_litter(m: Node2D) -> bool:
+	var n: int = int(m.get_meta("litter_n", 0))
+	if n >= LITTER_MAX:
+		return false
+	if m.has_meta("litter") and is_instance_valid(m.get_meta("litter")):
+		return false
+	var dir: Vector2 = m.wind_dir if m.wind_dir.length() > 0.1 else Vector2.RIGHT
+	var at: Vector2 = m.dog.global_position - Vector2(dir.x, 0.0).normalized() * LITTER_UPWIND + Vector2(0, -60)
+	var bag := Node2D.new()
+	bag.set_script(Litter)
+	m.add_child(bag)
+	bag.setup(m, at, dir * 160.0)
+	m.set_meta("litter", bag)
+	m.set_meta("litter_n", n + 1)
+	Sfx.play("rustle", 1.2, -8.0)
 	return true
 
 
