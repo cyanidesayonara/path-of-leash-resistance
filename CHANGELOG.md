@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-10-06 - L'Esplanada: the castle at the top of Montjuïc (#146)
+
+- The off-leash space at the top of the climb is the castle's esplanade, no
+  longer a borrowed town plaça: gravel inside low stone parapets with old
+  cannons trained over them, planters round its trees, a stone cistern for
+  the fountain, and past its top edge the castle itself (the rampart and its
+  crenellations, a bastion's point, the gate, and the flag, four red stripes
+  on gold). The sea lies past the west parapet, the city's haze past the
+  east. Signed L'ESPLANADA, "the castle esplanade, off leash".
+- Kites ride the wind over it: four, each on a sagging string down to its
+  flyer at the edge, bobbing, leaning downwind (harder in a gust), tails
+  streaming, their shadows on the gravel.
+- Mechanics are the plaça's (agility lane, frisbee, tug, the fountain's water).
+- Fixed: the hill and the city below were drawn on past the gate, so most of
+  the old off-leash space was buried under rooftops; both now stop there.
+
 ## 2026-10-06 - el trenet, Montjuïc's road train (#146)
 
 - A hill road crosses the path at y -2850, asphalt with a striped crossing
