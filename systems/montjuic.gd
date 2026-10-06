@@ -198,7 +198,7 @@ static func tick_cacti(m: Node2D, delta: float) -> void:
 			m.set_meta("cactus_cool", 1.2)
 			m.dog.velocity = (dp - c).normalized() * PRICK_BOUNCE
 			m.combo.bail()
-			Sfx.play("bump", 1.4, -4.0)
+			Sfx.play("grunt", 1.6, -4.0)
 			m.feed.say("OW! CACTUS", EventFeed.Tone.BAD)
 			m.float_text(dp + Vector2(0, -28), "prickly", Color(1, 0.8, 0.7))
 			return
