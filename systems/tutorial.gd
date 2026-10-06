@@ -80,7 +80,7 @@ const STEPS: Array[Dictionary] = [
 	{
 		"id": "vault", "at": -4020.0, "hold": true,
 		"title": "The rope is a pivot.",
-		"body": "Catch the leash on the lamppost and keep running - swing round it and fly out.",
+		"body": "Hold {turbo}, catch the leash on the lamppost and keep running - swing round it and fly out.",
 	},
 	{
 		"id": "fling", "at": -4400.0, "hold": true,
