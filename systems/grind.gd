@@ -29,9 +29,11 @@ const WOBBLE_RAMP := 0.35
 const CORRECT := 5.4        # authority of a lateral nudge
 const DAMP := 0.86          # takes the jitter out of the wobble
 const LIMIT := 1.0          # past this you are off
-const SCORE_RATE := 9.0     # points per second, before the length bonus
+const SCORE_RATE := 6.0     # points per second, before the length bonus
 
 var active := false
+# how hard the balance is, 1 normally; golden zoomies steady it (main sets it)
+var ease := 1.0
 var lean := 0.0
 var vel := 0.0
 var t := 0.0
@@ -59,8 +61,8 @@ func tick(delta: float, counter: float) -> String:
 	# time; deterministic, so a kerb always behaves the same way
 	var push := sin(phase * 2.3) + 0.55 * sin(phase * 5.7)
 	# the pendulum: any lean grows, and faster the longer you have ridden
-	vel += lean * (DIVERGE + t * DIVERGE_RAMP) * delta
-	vel += push * (WOBBLE_GAIN + t * WOBBLE_RAMP) * delta
+	vel += lean * (DIVERGE + t * DIVERGE_RAMP) * ease * delta
+	vel += push * (WOBBLE_GAIN + t * WOBBLE_RAMP) * ease * delta
 	# counter is positive when it pushes lean back toward centre from the
 	# positive side, so it always subtracts
 	vel -= clampf(counter, -1.0, 1.0) * CORRECT * delta
