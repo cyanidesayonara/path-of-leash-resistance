@@ -21,6 +21,35 @@ Append-only session history, newest first.
 - A hat carried into the esplanade is dropped at the gate. Never for the
   autowalk, so the behaviour snapshot is unchanged.
 - `entities/sunhat.gd`; `tests/test_sunhat.gd` in CI.
+## 2026-10-06 - saves that save the phone, and teaching the tricks (#193, part 4)
+
+- A stumble save (she digs in and yanks your human back) scores only when
+  it saved the phone: a bike or the road train was really coming at them
+  in the next second. A bike already past, riding away or passing wide no
+  longer turns any yank into a save, and the road train now counts.
+- The brink save pays 2 bones (was 4): nearly falling in is not worth what
+  a real save is.
+- The tutorial teaches the leash tricks first (the pole swing, then the
+  fling) and the grind last, on its ledge.
+- First-time tips: a wrap at pace without the zoomies says to hold them to
+  swing round the post; running along a ledge without them says to hold
+  them to ride it.
+- `tests/test_saves.gd` in CI.
+
+## 2026-10-06 - leash tricks lead (#193, part 3)
+
+- The pole swing takes the zoomies to start, like a grind, so a wrap at a
+  trot is just a wrap and never an accidental trick. Holding the zoomies
+  keeps the swing going (up to 2.4 s) for more turns, and it pays for the
+  pace she carried round as well as the turns (up to 1.6x).
+- FIGURE EIGHT: swing one post, then the next the other way round, within
+  3 s. 60 points and 8 bones on top of the swing.
+- THREAD THE NEEDLE: dash between two people walking close together
+  (tourists, or two other walkers). Not between an owner and their own dog:
+  that is their leash, and a tangle. 25 points and 3 bones.
+- No clothesline: knocking people over is not who she is.
+- The tutorial's swing lesson says to hold the zoomies.
+- `tests/test_leash_tricks.gd` in CI.
 
 ## 2026-10-06 - combos count tricks, and golden zoomies (#193, part 2)
 

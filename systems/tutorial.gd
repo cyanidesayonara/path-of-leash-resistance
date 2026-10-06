@@ -73,19 +73,19 @@ const STEPS: Array[Dictionary] = [
 		"body": "Stand still and hold {plant} to squat. Your human bags it - eventually.",
 	},
 	{
-		"id": "grind", "at": -3620.0, "hold": true,
-		"title": "Ride the ledge.",
-		"body": "Hold {turbo} and run along the stone ledge to get up on it. Steer against the wobble.",
-	},
-	{
-		"id": "vault", "at": -4020.0, "hold": true,
+		"id": "vault", "at": -3620.0, "hold": true,
 		"title": "The rope is a pivot.",
-		"body": "Catch the leash on the lamppost and keep running - swing round it and fly out.",
+		"body": "Hold {turbo}, catch the leash on the lamppost and keep running - swing round it and fly out.",
 	},
 	{
-		"id": "fling", "at": -4400.0, "hold": true,
+		"id": "fling", "at": -4020.0, "hold": true,
 		"title": "Tetherball.",
 		"body": "Your human is waiting by the post. Run round it twice to wind them up, then pull away.",
+	},
+	{
+		"id": "grind", "at": -4400.0, "hold": true,
+		"title": "Ride the ledge.",
+		"body": "Hold {turbo} and run along the stone ledge to get up on it. Steer against the wobble.",
 	},
 	{
 		"id": "teeter", "at": -4780.0, "hold": true, "stand": 1,

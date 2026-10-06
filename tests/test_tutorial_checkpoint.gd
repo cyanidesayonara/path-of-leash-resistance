@@ -36,7 +36,9 @@ func _run() -> void:
 	var TUT: GDScript = load("res://systems/tutorial.gd")
 	var Flow: GDScript = load("res://hud/menu_flow.gd")
 	var bag: int = TUT.index_of("bag")
-	_check(bag > 0 and bag < TUT.index_of("grind"), "bagging is among the basics, before the tricks")
+	_check(bag > 0 and bag < TUT.index_of("vault"), "bagging is among the basics, before the tricks")
+	_check(TUT.index_of("vault") < TUT.index_of("grind") and TUT.index_of("fling") < TUT.index_of("grind"),
+		"the leash tricks come before the grind")
 
 	# a lesson that uses a meter outlines it on the HUD card, and only then
 	for pair: Array in [["pee", "tank"], ["turbo", "zoomies"], ["walk", ""]]:
