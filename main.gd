@@ -114,6 +114,7 @@ const Goals := preload("res://systems/goals.gd")
 const HudBuild := preload("res://hud/hud_build.gd")
 const MenuFlow := preload("res://hud/menu_flow.gd")
 const Rails := preload("res://systems/rails.gd")
+const Saves := preload("res://systems/saves.gd")
 const CableCar := preload("res://systems/cable_car.gd")
 const UiScale := preload("res://hud/ui_scale.gd")
 const LevelBuild := preload("res://world/level_build.gd")
@@ -334,6 +335,16 @@ var vault_t := 0.0
 var vault_cd := 0.0
 var vault_arc := 0.0
 var vault_pole := Vector2.ZERO
+var vault_elapsed := 0.0
+var vault_speed_sum := 0.0
+# the last swing, for the figure eight: {"pole", "sense"} while it counts
+var last_swing: Dictionary = {}
+var last_swing_t := 0.0
+var needles_done := 0
+var needle_cd := 0.0
+var needle_prev := Vector2(INF, INF)
+var _needle_people: Array[Vector2] = []
+var _needle_owner: Array[int] = []
 # the pole she last vaulted, and whether she has since cleared it. Without
 # this she can sit in one pole's orbit re-triggering forever: the autowalk
 # stall watchdog caught it, and it would also have been a score exploit
@@ -343,6 +354,22 @@ const VAULT_TRIGGER_SPEED := 200.0
 const VAULT_MIN_SPEED := 210.0
 const VAULT_MAX_SPEED := 430.0
 const VAULT_LAUNCH := 470.0
+# the swing takes the zoomies to start, so it is never an accident; holding
+# them keeps it going (its clock runs at VAULT_HELD speed) up to VAULT_MAX_T,
+# and a fast swing pays up to VAULT_SPEED_PAY times more
+const VAULT_HELD := 0.35
+const VAULT_MAX_T := 2.4
+const VAULT_SPEED_PAY := 1.6
+# FIGURE EIGHT: two swings, opposite ways round two posts at least
+# FIG8_APART apart, the second ending within FIG8_WINDOW of the first
+const FIG8_WINDOW := 3.0
+const FIG8_APART := 40.0
+const FIG8_PTS := 60
+# THREAD THE NEEDLE: a dash between two people standing NEEDLE_GAP apart
+const NEEDLE_GAP := Vector2(26.0, 96.0)
+const NEEDLE_SPEED := 250.0
+const NEEDLE_PTS := 25
+const NEEDLE_CD := 1.5
 const GRIND_SPEED := 190.0   # you have to be moving to get up on it
 const GRIND_BAND := 13.0     # how close to the kerb line counts as on it
 var ball: Node2D
@@ -7820,10 +7847,18 @@ func _tick_vault(delta: float) -> void:
 	# It steers her velocity rather than teleporting her, so the verlet rope
 	# stays the source of truth and holds the radius honestly.
 	vault_cd = maxf(0.0, vault_cd - delta)
+	last_swing_t = maxf(0.0, last_swing_t - delta)
+	if last_swing_t <= 0.0:
+		last_swing.clear()
+	_tick_needle(delta)
 	var pole: Vector2 = leash.contact_pole
 	var wrapped: bool = pole.x < INF and leash.static_contacts > 0 and leash.contact_static
 	if vault_t > 0.0:
-		vault_t -= delta
+		# held zoomies keep the swing going, up to its cap
+		var held: bool = dog.turbo_active and vault_elapsed < VAULT_MAX_T
+		vault_t -= delta * (VAULT_HELD if held else 1.0)
+		vault_elapsed += delta
+		vault_speed_sum += dog.velocity.length() * delta
 		if not wrapped or dog.velocity.length() < 90.0 or dog.is_tumbling():
 			_end_vault()
 			return
@@ -7837,6 +7872,11 @@ func _tick_vault(delta: float) -> void:
 			_end_vault()
 		return
 	if vault_cd > 0.0 or not wrapped or dog.is_tumbling() or teeter.active or grind.active:
+		return
+	# the zoomies say she means it: a wrap at a trot is just a wrap
+	if not dog.turbo_active:
+		if leash.taut and dog.velocity.length() >= VAULT_TRIGGER_SPEED:
+			tip("swing")
 		return
 	# THE FLING HAS RIGHT OF WAY.
 	#
@@ -7870,6 +7910,8 @@ func _tick_vault(delta: float) -> void:
 		return
 	vault_t = 0.85
 	vault_arc = 0.0
+	vault_elapsed = 0.0
+	vault_speed_sum = 0.0
 	vault_pole = pole
 	vault_recent = 2.6
 	Sfx.play("fling", 1.2, -8.0)
@@ -7886,17 +7928,71 @@ func _end_vault() -> void:
 	# actually carved, so a committed swing throws her further than a clip
 	var turns: float = vault_arc / TAU
 	if turns > 0.12:
+		var s := SwingMath.sense(vault_pole, dog.global_position, dog.velocity)
 		var tan := SwingMath.vault_tangent(vault_pole, dog.global_position, dog.velocity)
 		dog.velocity = tan * VAULT_LAUNCH
-		var pts := int(round(14.0 + turns * 50.0))
+		# paid for the turns and for the pace she carried round them
+		var pace: float = vault_speed_sum / maxf(vault_elapsed, 0.01)
+		var pay: float = clampf(pace / VAULT_MIN_SPEED, 1.0, VAULT_SPEED_PAY)
+		var pts := int(round((14.0 + turns * 50.0) * pay))
 		bones += int(pts / 4)
 		vaults_landed += 1
 		combo.add("POLE SWING", pts)
 		Sfx.play("star", 1.15)
-		feed.say("POLE SWING!  %d" % pts, EventFeed.Tone.LOUD)
+		if SwingMath.is_figure_eight(last_swing, vault_pole, s, FIG8_APART):
+			bones += 8
+			combo.add("FIGURE EIGHT", FIG8_PTS)
+			feed.say("FIGURE EIGHT!  %d" % FIG8_PTS, EventFeed.Tone.LOUD)
+			last_swing.clear()
+		else:
+			feed.say("POLE SWING!  %d" % pts, EventFeed.Tone.LOUD)
+			last_swing = {"pole": vault_pole, "sense": s}
+			last_swing_t = FIG8_WINDOW
 		_slowmo()
 		_update_hud()
 	vault_arc = 0.0
+
+
+# THREAD THE NEEDLE: a dash between two people walking close together. Not
+# an owner and their own dog - between those is their leash, and that is a
+# tangle, not a trick - so each pair's two share an id.
+func _tick_needle(delta: float) -> void:
+	needle_cd = maxf(0.0, needle_cd - delta)
+	var p1: Vector2 = dog.global_position
+	var p0: Vector2 = needle_prev
+	needle_prev = p1
+	if p0.x == INF or needle_cd > 0.0 or dog.is_tumbling() or grind.active:
+		return
+	if dog.velocity.length() < NEEDLE_SPEED:
+		return
+	_needle_people.clear()
+	_needle_owner.clear()
+	var near: float = NEEDLE_GAP.y + 30.0
+	var id := 0
+	for tw: Node2D in get_tree().get_nodes_in_group("tourists"):
+		id += 1
+		if tw.global_position.distance_to(p1) < near:
+			_needle_people.append(tw.global_position)
+			_needle_owner.append(id)
+	for pr: Node2D in get_tree().get_nodes_in_group("pairs"):
+		id += 1
+		for who in [pr.get("npc_owner"), pr.get("npc_dog")]:
+			if who is Node2D and is_instance_valid(who) and (who as Node2D).global_position.distance_to(p1) < near:
+				_needle_people.append((who as Node2D).global_position)
+				_needle_owner.append(id)
+	var n := _needle_people.size()
+	for i in range(n):
+		for j in range(i + 1, n):
+			if _needle_owner[i] == _needle_owner[j]:
+				continue
+			if SwingMath.crosses_gap(p0, p1, _needle_people[i], _needle_people[j], NEEDLE_GAP.x, NEEDLE_GAP.y):
+				needle_cd = NEEDLE_CD
+				needles_done += 1
+				bones += 3
+				combo.add("THREAD THE NEEDLE", NEEDLE_PTS)
+				Sfx.play("star", 1.3, -6.0)
+				feed.say("THREAD THE NEEDLE!", EventFeed.Tone.LOUD)
+				return
 
 
 func _tut_step_done(id: String) -> bool:
@@ -8123,9 +8219,14 @@ func _tick_grind(delta: float) -> void:
 				feed.say("%s!  %d" % [trick, pts], EventFeed.Tone.LOUD)
 				_update_hud()
 		return
-	if grind_cd > 0.0 or dog.is_tumbling() or teeter.active or not dog.turbo_active:
+	if grind_cd > 0.0 or dog.is_tumbling() or teeter.active:
 		return
 	if dog.velocity.length() < GRIND_SPEED:
+		return
+	if not dog.turbo_active:
+		# running along a grindable without them: say how, once
+		if not Game.tips_seen.has("grind") and Rails.mountable(self, dog.global_position, dog.velocity) >= 0:
+			tip("grind")
 		return
 	var ri: int = Rails.mountable(self, dog.global_position, dog.velocity)
 	if ri < 0:
@@ -8185,10 +8286,10 @@ func _tick_teeter(delta: float) -> void:
 		# a real recovery, scored like the stumble saves it echoes
 		saves_done += 1
 		streak += 1
-		bones += 4
+		bones += 2
 		Sfx.play("star", 1.1)
 		combo.add("BALANCE", 4)
-		feed.say("SAVED IT!  +4", EventFeed.Tone.GOOD)
+		feed.say("SAVED IT!  +2", EventFeed.Tone.GOOD)
 		_slowmo()
 		_update_hud()
 		return
@@ -9174,18 +9275,34 @@ func on_correction_braced(pos: Vector2) -> void:
 	_update_hud()
 
 
+# She dug in and yanked your human back. A save only when it saved the phone:
+# a bike or the road train was really coming at them (systems/saves.gd).
 func on_stumble_save(pos: Vector2) -> void:
+	if not stumble_saved_phone(pos):
+		return
+	streak += 1
+	saves_done += 1
+	bones += streak
+	Sfx.play("save", 1.0 + 0.06 * streak)
+	combo.add("SAVE", 5)
+	float_text(pos + Vector2(0, -30), "nice save +%d" % streak, Color(0.7, 1.0, 0.75))
+	_slowmo()
+	_update_hud()
+
+
+func stumble_saved_phone(pos: Vector2) -> bool:
 	for b in get_tree().get_nodes_in_group("bikes"):
-		if b.global_position.distance_to(pos) < 170.0:
-			streak += 1
-			saves_done += 1
-			bones += streak
-			Sfx.play("save", 1.0 + 0.06 * streak)
-			combo.add("SAVE", 5)
-			float_text(pos + Vector2(0, -30), "nice save +%d" % streak, Color(0.7, 1.0, 0.75))
-			_slowmo()
-			_update_hud()
-			return
+		# a kid on a scooter bumps him, it never costs the phone
+		if String(b.get("kind")) != "bike" or bool(b.get("hit_done")):
+			continue
+		if Saves.threatens(b.global_position, b.get("vel"), pos, Saves.HORIZON, Saves.RADIUS):
+			return true
+	if has_meta("train"):
+		var tr = get_meta("train")
+		if is_instance_valid(tr) and not bool(tr.get("hit_done")):
+			if Saves.train_threatens(tr.rect(), float(tr.dir), tr.SPEED, pos, Saves.HORIZON, 30.0):
+				return true
+	return false
 
 
 func _slowmo() -> void:
