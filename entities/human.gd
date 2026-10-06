@@ -142,6 +142,8 @@ const WAIT_MAX := 4.0          # s they wait while she does her business
 var felt_pull := Vector2.ZERO
 var _pull_now := Vector2.ZERO
 var patience := 1.0
+# on Montjuïc they wear a sunhat, until a gust takes it (montjuic.blow_hat)
+var hat_off := false
 var correct_t := 0.0
 var glance_t := 0.0
 var grumbled := false
@@ -1069,6 +1071,9 @@ func _draw_shapes() -> void:
 	var dress: Dictionary = HumanLook.outfit(Game.weather, Game.level_id, Game.night, 3 if woman else 2, shirt,
 		"none", Color.BLACK, "none")
 	shirt = dress["shirt"]
+	if Game.level_id == "montjuic" and String(dress["headwear"]) == "none" and not hat_off:
+		dress["headwear"] = "sunhat"
+		dress["headwear_col"] = Color(0.92, 0.84, 0.62)
 	# shoes, toes out in front
 	var shoe := pants.darkened(0.4)
 	for fp: Vector2 in [brace + fd * sa, brace2 - fd * sa]:

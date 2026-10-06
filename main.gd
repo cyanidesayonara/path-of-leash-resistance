@@ -9188,6 +9188,19 @@ func on_stumble_save(pos: Vector2) -> void:
 			return
 
 
+# She brought your human's hat back (entities/sunhat.gd): it goes back on,
+# and they are delighted with her.
+func on_hat_returned(_pos: Vector2) -> void:
+	human.hat_off = false
+	human.patience = 1.0
+	bones += 6
+	combo.add("HAT", 5)
+	Sfx.play("fetch", 1.1)
+	float_text(human.global_position + Vector2(0, -34), "my hat! good girl", Color(1, 1, 1), POP_SAY)
+	feed.say("HAT RETURNED!", EventFeed.Tone.GOOD)
+	_update_hud()
+
+
 func _slowmo() -> void:
 	Engine.time_scale = SLOWMO_SCALE
 	# 0.35s of real time, measured in scaled game time rather than on the wall
