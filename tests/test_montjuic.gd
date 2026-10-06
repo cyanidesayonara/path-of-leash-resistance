@@ -157,6 +157,12 @@ func _run() -> void:
 			fell = true
 			break
 	_check(fell, "a human in its way goes over")
+	# once it has gone, it is let go of (a freed train held on to would error
+	# every frame)
+	train.queue_free()
+	for i in range(5):
+		await physics_frame
+	_check(not m.has_meta("train"), "a train that has gone is let go of")
 
 	m.free()
 	print("test_montjuic: %d checks, %s" % [checks, "OK" if failures.is_empty() else "%d FAILED" % failures.size()])
