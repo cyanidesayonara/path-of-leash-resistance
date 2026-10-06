@@ -1692,6 +1692,11 @@ static func build_level_data(m: Node2D) -> void:
 	# get their own collision bodies in _build_walls.
 	for t in m.trees:
 		m.poles.append(t)
+	# Montjuic's cacti stand in their garden off the path, so they too come
+	# after the fit (and get their own bodies in _build_walls)
+	if m.lvl == "montjuic":
+		for c: Vector2 in Montjuic.CACTI:
+			m.poles.append(c)
 	# the hazardous hard-to-reach collectible: one per level, in a spot
 	# that costs you something to reach (deliberately outside the corridor
 	# on some walks, so it is exempt from the corridor fit)
@@ -2361,6 +2366,17 @@ static func build_walls(m: Node2D) -> void:
 		dcs.shape = dsh
 		db.add_child(dcs)
 		m.add_child(db)
+	if m.lvl == "montjuic":
+		for c: Vector2 in Montjuic.CACTI:
+			var kb := StaticBody2D.new()
+			kb.collision_layer = 1
+			kb.position = c
+			var kcs := CollisionShape2D.new()
+			var ksh := CircleShape2D.new()
+			ksh.radius = 13.0
+			kcs.shape = ksh
+			kb.add_child(kcs)
+			m.add_child(kb)
 	for t in m.trees:
 		var tb := StaticBody2D.new()
 		tb.collision_layer = 1
