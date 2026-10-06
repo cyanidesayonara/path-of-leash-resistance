@@ -83,12 +83,13 @@ func _check_record(
 	goals: Array,
 	label: String
 ) -> void:
-	_check(record.size() == 5, label + " contains exactly the five record fields")
+	_check(record.size() == 6, label + " contains exactly the six record fields")
 	_check(int(record.get("bones", -1)) == bones, label + " has the expected bones field")
 	_check(is_equal_approx(float(record.get("time", -1.0)), time), label + " has the expected time field")
 	_check(int(record.get("perfects", -1)) == perfects, label + " has the expected perfects field")
 	_check(int(record.get("stars", -1)) == stars, label + " has the expected stars field")
 	_check((record.get("goals", []) as Array) == goals, label + " has the expected goals field")
+	_check(int(record.get("style", -1)) == 0, label + " has no style yet")
 
 
 func _check_canonical_profile(game: Node, label: String) -> void:
