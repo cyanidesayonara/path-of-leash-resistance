@@ -25,7 +25,10 @@ const EventFeed := preload("res://hud/event_feed.gd")
 #   in; in during the show, once a walk, is a treat;
 # - the cactus garden on a terrace beside the path: the cacti are posts the
 #   leash wraps, running into one at speed is a prick and a bounce, and a
-#   careful, still sniff at the great barrel cactus is a sniff worth having.
+#   careful, still sniff at the great barrel cactus is a sniff worth having;
+# - el trenet, the tourist road train, crossing the path on the hill road: it
+#   rings its bell and the crossing lights flash before it gets there, and a
+#   human it catches goes over like one a bike catches.
 # Static functions over main's state, like the other systems.
 
 const TOP_M := 173.0              # the castle's height, near enough
@@ -63,6 +66,13 @@ const PRICK_R := 24.0
 const PRICK_SPEED := 130.0
 const PRICK_BOUNCE := 260.0
 const CACTUS_SNIFF_S := 1.4
+# the road train: the road it crosses on, how near the pair must be before it
+# runs, how often, and how long before it reaches the path it rings
+const TRAIN_Y := -2850.0
+const TRAIN_NEAR := 800.0
+const TRAIN_EVERY := Vector2(14.0, 20.0)
+const TRAIN_WARN := 1.4
+const RoadTrain := preload("res://entities/road_train.gd")
 
 
 static func is_on(m: Node2D) -> bool:
@@ -219,6 +229,53 @@ static func tick_cacti(m: Node2D, delta: float) -> void:
 		m.set_meta("cactus_sniff_t", 0.0)
 
 
+# The road train: one at a time, while the pair is near the road, on its own
+# seeded clock; the bell and the crossing lights before it reaches the path.
+static func tick_train(m: Node2D, delta: float) -> void:
+	var near := absf(m.dog.global_position.y - TRAIN_Y) < TRAIN_NEAR
+	# (a meta set to null is erased, and get_meta's null default means none)
+	var train: Node2D = m.get_meta("train") if m.has_meta("train") else null
+	if train != null and not is_instance_valid(train):
+		train = null
+		m.remove_meta("train")
+	m.set_meta("train_warn", maxf(0.0, float(m.get_meta("train_warn", 0.0)) - delta))
+	if train == null:
+		if not near:
+			return
+		if not m.has_meta("train_rng"):
+			var rng := RandomNumberGenerator.new()
+			rng.seed = 0x7E4E
+			m.set_meta("train_rng", rng)
+			m.set_meta("train_next", rng.randf_range(2.0, 5.0))
+			m.set_meta("train_dir", 1.0)
+		var next: float = float(m.get_meta("train_next")) - delta
+		m.set_meta("train_next", next)
+		if next > 0.0:
+			return
+		var going: float = m.get_meta("train_dir")
+		m.set_meta("train_dir", -going)
+		var rng2: RandomNumberGenerator = m.get_meta("train_rng")
+		m.set_meta("train_next", rng2.randf_range(TRAIN_EVERY.x, TRAIN_EVERY.y))
+		var tr := Node2D.new()
+		tr.set_script(RoadTrain)
+		tr.position = Vector2(-180.0 if going > 0.0 else 1460.0, TRAIN_Y)
+		m.add_child(tr)
+		tr.setup(m, going)
+		m.set_meta("train", tr)
+		m.set_meta("train_rang", false)
+		return
+	# the bell, once, as the nose comes within TRAIN_WARN of the path
+	var e: Vector2 = m.walk_edges(TRAIN_Y)
+	var edge: float = e.x - 12.0 if train.dir > 0.0 else e.y + 12.0
+	var eta: float = (edge - train.nose_x()) / (train.dir * RoadTrain.SPEED)
+	if not bool(m.get_meta("train_rang")) and eta < TRAIN_WARN:
+		m.set_meta("train_rang", true)
+		m.set_meta("train_warn", TRAIN_WARN + train.length() / RoadTrain.SPEED + (e.y - e.x) / RoadTrain.SPEED)
+		Sfx.play("pickup", 1.6, -4.0)
+		if near:
+			m.float_text(Vector2(edge, TRAIN_Y - 40.0), "ding ding!", Color(1, 0.95, 0.75), m.POP_SAY)
+
+
 static func is_cactus(p: Vector2) -> bool:
 	for c: Vector2 in CACTI:
 		if c.distance_squared_to(p) < 1.0:
@@ -230,6 +287,7 @@ static func tick_wind(m: Node2D, delta: float) -> void:
 	if not is_on(m) or m.phase == "freedom" or m.frozen:
 		return
 	tick_font(m)
+	tick_train(m, delta)
 	if not m.auto_walk:
 		tick_cacti(m, delta)
 	if m.wind_rng_seeded == false:
@@ -261,6 +319,41 @@ static func tick_wind(m: Node2D, delta: float) -> void:
 
 
 # --- drawing --------------------------------------------------------------------
+
+# The hill road the train runs on: asphalt across the hillside, a striped
+# crossing over the path, and a post each side with two red lights that
+# flash in turn while the train is coming.
+static func draw_road(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	if TRAIN_Y + 40.0 < vt or TRAIN_Y - 40.0 > vb:
+		return
+	var e: Vector2 = m.walk_edges(TRAIN_Y)
+	# across the whole view and on down the hill either side, so the train
+	# arrives along it rather than appearing at the hillside's rim
+	var cx := 640.0
+	var hh := 980.0
+	b.rect(Rect2(cx - hh, TRAIN_Y - 26.0, hh * 2.0, 52.0), Color(0.36, 0.36, 0.38))
+	b.rect(Rect2(cx - hh, TRAIN_Y - 26.0, hh * 2.0, 3.0), Color(0.55, 0.53, 0.50))
+	b.rect(Rect2(cx - hh, TRAIN_Y + 23.0, hh * 2.0, 3.0), Color(0.55, 0.53, 0.50))
+	var x := cx - hh + 20.0
+	while x < cx + hh - 30.0:
+		if x < e.x - 20.0 or x > e.y + 10.0:
+			b.rect(Rect2(x, TRAIN_Y - 1.5, 26.0, 3.0), Color(0.92, 0.88, 0.70, 0.8))
+		x += 52.0
+	var sx := e.x + 8.0
+	while sx < e.y - 16.0:
+		b.rect(Rect2(sx, TRAIN_Y - 22.0, 12.0, 44.0), Color(0.94, 0.94, 0.92, 0.85))
+		sx += 24.0
+	var warn: float = float(m.get_meta("train_warn", 0.0))
+	var blink := int(AnimClock.msec() / 350) % 2
+	for px: float in [e.x - 22.0, e.y + 22.0]:
+		var pp := Vector2(px, TRAIN_Y - 40.0)
+		b.rect(Rect2(pp.x - 3.0, pp.y, 6.0, 14.0), Color(0.25, 0.25, 0.27))
+		b.rect(Rect2(pp.x - 14.0, pp.y - 6.0, 28.0, 10.0), Color(0.12, 0.12, 0.13))
+		for k in range(2):
+			var on := warn > 0.0 and blink == k
+			b.circle(pp + Vector2(-7.0 + 14.0 * float(k), -1.0), 4.0,
+				Color(1.0, 0.25, 0.2) if on else Color(0.35, 0.12, 0.10))
+
 
 # The cactus garden's bed: pale gravel, a few stones, and a little sign.
 static func draw_cactus_bed(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
@@ -426,6 +519,7 @@ static func draw_on_hill(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	# straight onto the world's canvas batch: it can pass text through
 	var b: ShapeBatch = c if c is ShapeBatch else ShapeBatch.new(c as CanvasItem)
 	draw_font(m, b, vt, vb)
+	draw_road(m, b, vt, vb)
 	draw_cactus_bed(m, b, vt, vb)
 	if CACTUS_BED.end.y > vt - 40.0 and CACTUS_BED.position.y < vb + 40.0:
 		for i in range(CACTI.size()):

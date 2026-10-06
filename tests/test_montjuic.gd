@@ -122,6 +122,42 @@ func _run() -> void:
 		M.tick_cacti(m, 1.0 / 60.0)
 	_check(m.sniffs_done == s0 + 1, "once")
 
+	# the road train: it comes while the pair are near the road, rings before
+	# it reaches the path, and bowls over a human standing in its way
+	m.dog.global_position = Vector2(m.walk_edges(M.TRAIN_Y + 200.0).x + 60.0, M.TRAIN_Y + 200.0)
+	m.human.global_position = m.dog.global_position + Vector2(0, 40)
+	m.leash.resnap()
+	var train: Node2D = null
+	for i in range(60 * 8):
+		await physics_frame
+		train = m.get_meta("train") if m.has_meta("train") else null
+		if train != null:
+			break
+	_check(train != null, "the train comes while the pair are near the road")
+	var te: Vector2 = m.walk_edges(M.TRAIN_Y)
+	var rang_outside := false
+	for i in range(60 * 20):
+		await physics_frame
+		if not is_instance_valid(train):
+			break
+		if bool(m.get_meta("train_rang", false)):
+			var nx: float = train.nose_x()
+			rang_outside = nx < te.x - 20.0 or nx > te.y + 20.0
+			break
+	_check(rang_outside, "it rings before it reaches the path")
+	m.human.iframes = 0.0
+	m.human.global_position = Vector2(train.nose_x() + train.dir * 40.0, M.TRAIN_Y)
+	m.dog.global_position = m.human.global_position + Vector2(0, 60)
+	m.leash.resnap()
+	var fell := false
+	for i in range(120):
+		await physics_frame
+		m.human.global_position.x = train.nose_x() + train.dir * 4.0
+		if m.human.is_fallen():
+			fell = true
+			break
+	_check(fell, "a human in its way goes over")
+
 	m.free()
 	print("test_montjuic: %d checks, %s" % [checks, "OK" if failures.is_empty() else "%d FAILED" % failures.size()])
 	quit(1 if not failures.is_empty() else 0)
