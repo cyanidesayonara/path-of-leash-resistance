@@ -2,6 +2,21 @@
 
 Append-only session history, newest first.
 
+## 2026-10-06 - leash tricks lead (#193, part 3)
+
+- The pole swing takes the zoomies to start, like a grind, so a wrap at a
+  trot is just a wrap and never an accidental trick. Holding the zoomies
+  keeps the swing going (up to 2.4 s) for more turns, and it pays for the
+  pace she carried round as well as the turns (up to 1.6x).
+- FIGURE EIGHT: swing one post, then the next the other way round, within
+  3 s. 60 points and 8 bones on top of the swing.
+- THREAD THE NEEDLE: dash between two people walking close together
+  (tourists, or two other walkers). Not between an owner and their own dog:
+  that is their leash, and a tangle. 25 points and 3 bones.
+- No clothesline: knocking people over is not who she is.
+- The tutorial's swing lesson says to hold the zoomies.
+- `tests/test_leash_tricks.gd` in CI.
+
 ## 2026-10-06 - combos count tricks, and golden zoomies (#193, part 2)
 
 - Only tricks start a combo and raise its multiplier: the grindables, the

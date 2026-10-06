@@ -13,7 +13,8 @@ const WINDOW := 4.0
 # the tricks: everything else that scores is business
 const TRICKS := ["POLE SWING", "FLING", "SLINGSHOT", "BALANCE", "SAVE", "BRACED", "AIR CATCH",
 	"AGILITY", "CLOSE SHAVE", "WALKWAY",
-	"LEDGE RUN", "HEDGE RUN", "BENCH GRIND", "WALL WALK", "HANDRAIL"]
+	"LEDGE RUN", "HEDGE RUN", "BENCH GRIND", "WALL WALK", "HANDRAIL",
+	"FIGURE EIGHT", "THREAD THE NEEDLE"]
 const MAX_LABELS := 4  # trick names kept in the display string
 const BONUS_CAP := 40
 
