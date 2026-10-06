@@ -9201,6 +9201,15 @@ func on_hat_returned(_pos: Vector2) -> void:
 	_update_hud()
 
 
+# She pounced on a paper bag blowing along Montjuïc's path
+# (entities/litter.gd).
+func on_litter_caught(pos: Vector2) -> void:
+	bones += 2
+	combo.add("POUNCE", 2)
+	Sfx.play("rustle", 0.8)
+	float_text(pos + Vector2(0, -24), "got it! +2", Color(0.95, 0.88, 0.7))
+
+
 func _slowmo() -> void:
 	Engine.time_scale = SLOWMO_SCALE
 	# 0.35s of real time, measured in scaled game time rather than on the wall
