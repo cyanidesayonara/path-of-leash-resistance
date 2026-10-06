@@ -28,7 +28,11 @@ const EventFeed := preload("res://hud/event_feed.gd")
 #   careful, still sniff at the great barrel cactus is a sniff worth having;
 # - el trenet, the tourist road train, crossing the path on the hill road: it
 #   rings its bell and the crossing lights flash before it gets there, and a
-#   human it catches goes over like one a bike catches.
+#   human it catches goes over like one a bike catches;
+# - and at the top, off the leash: the castle's esplanade, gravel inside low
+#   parapets with old cannons on them, the bastioned walls beyond, the sea past
+#   the west parapet, and kites riding the wind over it all (the plaça's
+#   mechanics, the castle's look).
 # Static functions over main's state, like the other systems.
 
 const TOP_M := 173.0              # the castle's height, near enough
@@ -324,6 +328,131 @@ static func tick_wind(m: Node2D, delta: float) -> void:
 
 # --- drawing --------------------------------------------------------------------
 
+const RAMPART := Color(0.62, 0.56, 0.46)
+const CANNON := Color(0.18, 0.18, 0.20)
+
+# Past the esplanade's top edge: the castle, a stone rampart with its
+# crenellations, a bastion's point jutting out, the gate and the flag; the sea
+# out past the west side, the city's haze past the east.
+static func draw_castle_beyond(m: Node2D, c: Object) -> void:
+	var r: Rect2 = m._freedom_rect()
+	var top := r.position.y
+	var b := ShapeBatch.new()
+	b.rect(Rect2(-400.0, top - 2000.0, r.position.x + 400.0, 2000.0 + r.size.y), SEA)
+	b.rect(Rect2(r.position.x - 70.0, top - 2000.0, 40.0, 2000.0 + r.size.y), SEA.lightened(0.12))
+	b.rect(Rect2(r.end.x, top - 2000.0, 700.0, 2000.0 + r.size.y), HAZE.darkened(0.08))
+	# the rampart, thick, along the whole top
+	b.rect(Rect2(r.position.x - 30.0, top - 230.0, r.size.x + 60.0, 190.0), RAMPART.darkened(0.12))
+	b.rect(Rect2(r.position.x - 30.0, top - 64.0, r.size.x + 60.0, 24.0), RAMPART)
+	var cx := r.position.x - 24.0
+	while cx < r.end.x + 24.0:
+		b.rect(Rect2(cx, top - 76.0, 22.0, 14.0), RAMPART.lightened(0.1))
+		cx += 40.0
+	# a bastion's point, out over the esplanade's corner
+	var bp := Vector2(r.position.x + r.size.x * 0.22, top - 40.0)
+	b.polygon(PackedVector2Array([bp + Vector2(-90, -150), bp + Vector2(90, -150), bp + Vector2(0, 30)]), RAMPART.darkened(0.04))
+	b.polygon(PackedVector2Array([bp + Vector2(-70, -150), bp + Vector2(70, -150), bp + Vector2(0, 8)]), RAMPART.lightened(0.06))
+	# the gate, and the flag over it: four red stripes on gold
+	var gp := Vector2(r.get_center().x + 160.0, top - 64.0)
+	b.rect(Rect2(gp.x - 26.0, gp.y - 20.0, 52.0, 44.0), Color(0.18, 0.14, 0.12))
+	b.rect(Rect2(gp.x - 3.0, gp.y - 150.0, 6.0, 110.0), Color(0.30, 0.28, 0.26))
+	var fl := Rect2(gp.x + 3.0, gp.y - 150.0, 54.0, 34.0)
+	b.rect(fl, Color(0.96, 0.80, 0.22))
+	for k in range(4):
+		b.rect(Rect2(fl.position.x, fl.position.y + 4.0 + float(k) * 8.0, fl.size.x, 4.0), Color(0.80, 0.16, 0.14))
+	b.flush(c)
+
+
+# The esplanade itself: gravel, a paved margin, low parapets down both sides
+# with old cannons trained over them, planters round the trees, the cistern
+# that is the plaça's fountain here, benches and the sign.
+static func draw_esplanade(m: Node2D, c: Object) -> void:
+	var r: Rect2 = m._freedom_rect()
+	var b := ShapeBatch.new()
+	b.rect(r, Color(0.74, 0.68, 0.56))
+	b.rect(Rect2(r.position.x, r.position.y, r.size.x, 18.0), STONE)
+	for i in range(140):
+		var sp := r.position + Vector2(fmod(float(i) * 97.0, r.size.x), fmod(float(i) * 61.0, r.size.y))
+		b.circle(sp, 1.6 + float(i % 3) * 0.6, Color(0.62, 0.56, 0.46, 0.6))
+	b.circle(r.get_center() + Vector2(-80.0, 40.0), 150.0, Color(0.80, 0.74, 0.62, 0.35))
+	for sx: float in [r.position.x - 34.0, r.end.x]:
+		b.rect(Rect2(sx, r.position.y, 34.0, r.size.y), RAMPART)
+		b.rect(Rect2(sx + (28.0 if sx < r.position.x else 0.0), r.position.y, 6.0, r.size.y), RAMPART.darkened(0.25))
+		var cy := r.position.y + 90.0
+		while cy < r.end.y - 60.0:
+			var out := -1.0 if sx < r.position.x else 1.0
+			var base := Vector2(sx + 17.0, cy)
+			b.rect(Rect2(base.x - 12.0, base.y - 9.0, 24.0, 18.0), Color(0.40, 0.30, 0.20))
+			b.line(base, base + Vector2(out * 34.0, 0.0), CANNON, 10.0)
+			b.circle(base + Vector2(out * 34.0, 0.0), 6.0, CANNON.lightened(0.2))
+			cy += 170.0
+	for t: Vector2 in m.trees:
+		b.circle(t + Vector2(3, 4), 26.0, Color(0, 0, 0, 0.15))
+		b.circle(t, 24.0, STONE)
+		b.circle(t, 19.0, Color(0.36, 0.28, 0.20))
+	# loaded, not preloaded: level_build itself refers to Montjuic
+	var fr: Rect2 = load("res://world/level_build.gd").placa_fountain(m)
+	b.rect(fr.grow(12.0), STONE.darkened(0.1))
+	b.rect(fr.grow(6.0), STONE)
+	b.rect(fr, Color(0.28, 0.46, 0.54))
+	b.rect(Rect2(fr.position, Vector2(fr.size.x, 8.0)), Color(0.20, 0.36, 0.44))
+	b.flush(c)
+	m._draw_freedom_benches(c, r, Color(0.36, 0.30, 0.24))
+	m._freedom_sign(c, r, "L'ESPLANADA", "the castle esplanade, off leash")
+
+
+# Kites over the esplanade, riding the wind: each on its string down to its
+# flyer at the edge, bobbing, leaning downwind, its tail ribbons streaming,
+# and its shadow on the gravel below.
+const KITES := [
+	[Vector2(260.0, -5260.0), Vector2(150.0, -5060.0), Color(0.90, 0.30, 0.26)],
+	[Vector2(560.0, -5420.0), Vector2(430.0, -5130.0), Color(0.26, 0.56, 0.86)],
+	[Vector2(900.0, -5300.0), Vector2(1080.0, -5100.0), Color(0.96, 0.78, 0.22)],
+	[Vector2(1040.0, -5480.0), Vector2(1110.0, -5200.0), Color(0.42, 0.74, 0.40)],
+]
+
+
+static func draw_kites(m: Node2D, c: Object, vt: float, vb: float) -> void:
+	if vt > m.GATE_Y:
+		return
+	var b: ShapeBatch = c if c is ShapeBatch else ShapeBatch.new(c as CanvasItem)
+	var t := AnimClock.msec() / 1000.0
+	var lean: Vector2 = m.wind_dir * (14.0 if float(m.wind_gust) > 0.0 else 6.0)
+	for i in range(KITES.size()):
+		var k: Array = KITES[i]
+		var p: Vector2 = k[0] + lean + Vector2(sin(t * 0.9 + float(i)) * 14.0, cos(t * 1.3 + float(i) * 2.0) * 9.0)
+		var f: Vector2 = k[1]
+		var col: Color = k[2]
+		if p.y > vb + 80.0 or f.y < vt - 80.0:
+			continue
+		# the flyer: a head and shoulders, arms up to the string
+		b.circle(f + Vector2(3, 4), 10.0, Color(0, 0, 0, 0.18))
+		b.circle(f, 10.0, Color(0.30 + 0.1 * float(i % 2), 0.34, 0.50))
+		b.circle(f, 5.5, Color(0.50, 0.36, 0.26))
+		# the string, sagging a little
+		var mid := (f + p) * 0.5 + Vector2(10.0, 18.0)
+		b.line(f, mid, Color(1, 1, 1, 0.55), 1.0)
+		b.line(mid, p, Color(1, 1, 1, 0.55), 1.0)
+		# its shadow, then the kite: a diamond with its spars, and a tail
+		var a := sin(t * 1.7 + float(i)) * 0.25
+		var dia := PackedVector2Array()
+		for v: Vector2 in [Vector2(0, -20), Vector2(14, 0), Vector2(0, 26), Vector2(-14, 0)]:
+			dia.append(p + v.rotated(a))
+		var sh := PackedVector2Array()
+		for q: Vector2 in dia:
+			sh.append(q + Vector2(46, 70))
+		b.polygon(sh, Color(0, 0, 0, 0.12))
+		b.polygon(dia, col)
+		b.line(dia[0], dia[2], col.darkened(0.35), 1.4)
+		b.line(dia[1], dia[3], col.darkened(0.35), 1.4)
+		var prev := dia[2]
+		for j in range(5):
+			var tp := dia[2] + Vector2(sin(t * 4.0 + float(j) * 0.9) * 6.0, 10.0 + float(j) * 9.0).rotated(a) - lean * 0.2 * float(j)
+			b.line(prev, tp, col.lightened(0.2), 2.0)
+			prev = tp
+	if b != c:
+		b.flush()
+
 # The hill road the train runs on: asphalt across the hillside, a striped
 # crossing over the path, and a post each side with two red lights that
 # flash in turn while the train is coming.
@@ -501,7 +630,9 @@ static func draw_hill(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	# does not always triangulate)
 	var left := PackedVector2Array()
 	var right := PackedVector2Array()
-	var y := floorf((vt - 60.0) / 20.0) * 20.0
+	# up to the gate only: past it is the castle's esplanade, freedomlayer's
+	var y := floorf((maxf(vt, m.GATE_Y - 30.0) - 60.0) / 20.0) * 20.0
+	y = maxf(y, m.GATE_Y - 40.0)
 	var y1 := vb + 60.0
 	while y <= y1:
 		var e: Vector2 = m.walk_edges(y + 10.0)
@@ -638,7 +769,9 @@ static func _pine(b: ShapeBatch, p: Vector2, s: float) -> void:
 # the sea open on the left.
 static func draw_below(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
-	var y := floorf((vt - 300.0) / 60.0) * 60.0
+	# up to the gate: past it the esplanade draws its own sea and haze
+	var y := floorf((maxf(vt, m.GATE_Y) - 300.0) / 60.0) * 60.0
+	y = maxf(y, m.GATE_Y - 60.0)
 	var street := Color(0.60, 0.58, 0.56)
 	while y < vb + 300.0:
 		var h := climb(m, y + 30.0)
@@ -653,7 +786,7 @@ static func draw_below(m: Node2D, c: Object, vt: float, vb: float) -> void:
 		y += 60.0
 	# the blocks, on their own grid so they do not jump between strips
 	var cell := 64.0
-	var by := floorf((vt - 300.0) / cell) * cell
+	var by := maxf(floorf((vt - 300.0) / cell) * cell, m.GATE_Y - 40.0)
 	while by < vb + 300.0:
 		var h2 := climb(m, by)
 		var haze2 := 0.18 + 0.55 * h2

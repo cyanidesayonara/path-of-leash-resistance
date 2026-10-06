@@ -4236,14 +4236,22 @@ func draw_freedom_onto(c: Object) -> void:
 		"clearing": surround = Color(0.20, 0.30, 0.19)
 		"lot": surround = Color(0.32, 0.31, 0.29)
 		"placa": surround = Color(0.36, 0.32, 0.30)
+	if lvl == "montjuic":
+		surround = Montjuic.RAMPART.darkened(0.2)
 	c.draw_rect(Rect2(-400.0, GATE_Y - 2400.0, 2100.0, 2400.0), surround)
-	_draw_freedom_beyond(c)
-	match freedom_kind:
-		"beach": _draw_dog_beach(c)
-		"clearing": _draw_clearing(c)
-		"lot": _draw_yard(c, true)
-		"placa": _draw_placa(c)
-		_: _draw_yard(c, false)
+	# Montjuic's off-leash space is a plaça in everything but its look: the
+	# castle's esplanade
+	if lvl == "montjuic":
+		Montjuic.draw_castle_beyond(self, c)
+		Montjuic.draw_esplanade(self, c)
+	else:
+		_draw_freedom_beyond(c)
+		match freedom_kind:
+			"beach": _draw_dog_beach(c)
+			"clearing": _draw_clearing(c)
+			"lot": _draw_yard(c, true)
+			"placa": _draw_placa(c)
+			_: _draw_yard(c, false)
 	# the grove stands in the off-leash area, so it is static too. It used to be
 	# drawn every frame in the world, with its own near-duplicate tree
 	# renderer: 16 trees at ~20 draw calls each, measured at over a
@@ -9452,6 +9460,7 @@ func _draw_world() -> void:
 		_draw_parc(wvt, vb)
 	if lvl == "montjuic":
 		Montjuic.draw_on_hill(self, _wc, wvt, vb)
+		Montjuic.draw_kites(self, _wc, vt, vb)
 	if lvl == "barri" and not tutorial_mode:
 		_draw_barri(wvt, vb)
 	if lvl == "rain":
