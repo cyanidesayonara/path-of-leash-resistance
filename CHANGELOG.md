@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-10-06 - a kerb to ride in the grind lesson (#169 audit)
+
+- The tutorial's "Ride the kerb." lesson asked for "the edge of the path"
+  with nothing to show where it was, and the band that counts is 13 px. Both
+  edges along its station are now laid as pale kerbstones with arrows up
+  them, glowing gold while the lesson is up. Drawing only.
+
 ## 2026-10-06 - L'Esplanada: the castle at the top of Montjuïc (#146)
 
 - The off-leash space at the top of the climb is the castle's esplanade, no

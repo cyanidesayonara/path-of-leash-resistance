@@ -3565,6 +3565,33 @@ func _draw_tutorial_pond() -> void:
 	_draw_pinned_patch(bank, pc, Color(0.31, 0.44, 0.52), 0.94)
 
 
+# The grind lesson's kerbs: both edges of the path along its station laid as
+# pale kerbstones with arrows up them, glowing while the lesson is up, so
+# "ride the edge of the path" has an edge to see.
+func _draw_tutorial_kerb(vt: float, vb: float) -> void:
+	var at := TutorialSteps.at("grind")
+	var y0 := at - 260.0
+	var y1 := at + 300.0
+	if y1 < vt or y0 > vb:
+		return
+	var live := String(TutorialSteps.step(tut_step).id) == "grind"
+	var glow := 0.5 + 0.5 * sin(AnimClock.msec() / 220.0) if live else -1.0
+	var b := ShapeBatch.new()
+	var y := maxf(y0, floorf(vt / 24.0) * 24.0)
+	while y < minf(y1, vb + 24.0):
+		var e := walk_edges(y)
+		for x: float in [e.x, e.y]:
+			b.rect(Rect2(x - 6.0, y, 12.0, 22.0), Color(0.86, 0.84, 0.78))
+			b.rect(Rect2(x - 6.0, y + 22.0, 12.0, 2.0), Color(0.52, 0.50, 0.46))
+			if glow >= 0.0:
+				b.rect(Rect2(x - 9.0, y, 18.0, 24.0), Color(1.0, 0.86, 0.40, 0.18 + 0.30 * glow))
+			if int(absf(y)) % 120 < 24:
+				b.line(Vector2(x - 4.0, y + 14.0), Vector2(x, y + 6.0), Color(0.40, 0.38, 0.34), 2.0)
+				b.line(Vector2(x + 4.0, y + 14.0), Vector2(x, y + 6.0), Color(0.40, 0.38, 0.34), 2.0)
+		y += 24.0
+	b.flush(_wc)
+
+
 # EL BARRI: the petanca pitch with its boules, and the playground. Nothing
 # here is anywhere in particular.
 func _draw_barri(vt: float, vb: float) -> void:
@@ -9482,6 +9509,7 @@ func _draw_world() -> void:
 		_draw_mosaic(wvt, vb)
 	if tutorial_mode:
 		_draw_tutorial_pond()
+		_draw_tutorial_kerb(wvt, vb)
 	if rambla():
 		_draw_rambla(vt, vb)
 	if lvl == "trail":
