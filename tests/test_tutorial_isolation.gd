@@ -36,7 +36,7 @@ func _cleanup() -> void:
 
 
 func _default_record() -> Dictionary:
-	return {"bones": 0, "time": 0.0, "perfects": 0, "stars": 0, "goals": []}
+	return {"bones": 0, "time": 0.0, "perfects": 0, "stars": 0, "goals": [], "style": 0}
 
 
 func _write_populated_profile(game: Node) -> void:
