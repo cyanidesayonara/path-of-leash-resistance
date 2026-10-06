@@ -2,6 +2,21 @@
 
 Append-only session history, newest first.
 
+## 2026-10-06 - el trenet, Montjuïc's road train (#146)
+
+- A hill road crosses the path at y -2850, asphalt with a striped crossing
+  and a post either side with two red lights. While the pair are near it,
+  the little tourist road train (a green loco and two striped carriages of
+  bobbing tourists) trundles across every 14-20 seconds, alternating sides,
+  on its own seeded clock.
+- 1.4 seconds before its nose reaches the path it rings ("ding ding!") and
+  the crossing lights flash until it is past. It is slow (72 px/s) but long:
+  a human it catches goes over and the phone cracks, as a bike would; a dog
+  it catches tumbles. Dig in at the crossing and let it by.
+- `entities/road_train.gd` (self-managing, like the bikes);
+  `tests/test_montjuic.gd` gains the train: it comes while the pair are near,
+  rings before it reaches the path, and bowls over a human in its way.
+
 ## 2026-10-06 - Montjuïc's cactus garden (#146)
 
 - JARDÍ DE CACTUS: a pale gravel bed on the terrace right of the path below
