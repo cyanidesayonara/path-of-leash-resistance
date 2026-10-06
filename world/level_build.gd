@@ -1663,10 +1663,7 @@ static func build_level_data(m: Node2D) -> void:
 			m.poles.append(Vector2(tx, tr.position.y - 4.0))
 			m.poles.append(Vector2(tx, tr.end.y + 4.0))
 	if m.lvl == "park":
-		m.rails.clear()
-		for bed: Rect2 in PARK_BEDS:
-			for bx: float in [bed.position.x, bed.end.x]:
-				m.rails.append({"x": bx, "y0": bed.position.y, "y1": bed.end.y})
+		# (the flowerbeds' edging is grindable: systems/rails.gd)
 		# the lake is the biggest pole on the walk: wrap points round its shore
 		var lc: Vector2 = PARK_LAKE.get_center()
 		for i in range(36):

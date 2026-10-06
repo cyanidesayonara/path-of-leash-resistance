@@ -74,8 +74,8 @@ const STEPS: Array[Dictionary] = [
 	},
 	{
 		"id": "grind", "at": -3620.0, "hold": true,
-		"title": "Ride the kerb.",
-		"body": "Run fast along the edge of the path, and steer against the wobble to stay on.",
+		"title": "Ride the ledge.",
+		"body": "Hold {turbo} and run along the stone ledge to get up on it. Steer against the wobble.",
 	},
 	{
 		"id": "vault", "at": -4020.0, "hold": true,

@@ -2,6 +2,23 @@
 
 Append-only session history, newest first.
 
+## 2026-10-06 - grinds on grindables, not the edge of the path (#193, part 1)
+
+- No more kerb ride: the path's edges were rails, so any run along the
+  border of path and grass at normal speed started a "trick". Grinds now
+  happen only on things built to be ridden (`systems/rails.gd`): El Parc's
+  clipped hedge edging (HEDGE RUN), El Mosaic's serpentine bench (BENCH
+  GRIND), Montjuïc's terrace walls (WALL WALK) and escalator handrails
+  (HANDRAIL), and a stone ledge at the tutorial's grind lesson (LEDGE RUN).
+- Getting up is deliberate: run onto one along its length with the zoomies
+  held. With the zoomies on, the grindables near her show themselves.
+- Once up she is held to its line, so the stick only works the balance, and
+  the balance follows the rail whichever way it runs. Rails are polylines in
+  any direction now, each with the name she shouts and the combo scores (the
+  same word in both places).
+- The tutorial's lesson is "Ride the ledge.": hold the zoomies and run along
+  the stone ledge. `tests/test_rails.gd` in CI.
+
 ## 2026-10-06 - L'Esplanada: the castle at the top of Montjuïc (#146)
 
 - The off-leash space at the top of the climb is the castle's esplanade, no
