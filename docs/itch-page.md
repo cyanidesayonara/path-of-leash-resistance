@@ -108,7 +108,7 @@ CHANGELOG.md:
 ```
 - A new walk: MONTJUÏC, the climb. A path winding up the hill between stone terraces, your human slower going up and quicker coming down, the city falling away below and the sea opening up near the top, and the wind getting up the higher you climb.
 - Montjuïc's hidden telefèric: find a tourist's dropped ticket and ride the cable car up over the switchbacks, and back down on the way home.
-- And the rest of the hill: the outdoor escalators, the Font Màgica and its show, a cactus garden (careful), el trenet ringing at its crossing, and off the leash the castle's esplanade, with kites.
+- And the rest of the hill: the outdoor escalators, the Font Màgica and its show, a cactus garden (careful), el trenet ringing at its crossing, a gust that takes your human's sunhat (fetch it back), paper bags on the wind to pounce on, and off the leash the castle's esplanade, with kites.
 - A way in for new players: the game asks if it is your first time, the tutorial comes in two parts (the basics, then the tricks for whoever wants them), and the first few walks open sooner.
 - First-time tips, once each, when something new happens: a cracked phone, a wobble at an edge, a "HEY!" from your human.
 - A lost walk now says how to avoid that next time and keeps the goals you ticked, and trying again is one press away.
