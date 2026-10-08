@@ -1308,18 +1308,20 @@ static func build_level_data(m: Node2D) -> void:
 			], TYPE_DICTIONARY, &"", null)
 			# PALMS IN ORDERLY SECTIONS, cut into the paving - exactly how the
 			# promenade is planted, and nothing like the six-per-row scattering
-			# this had. Two regular ranks at a proper street-tree spacing, kept
-			# at the edges of the walk because that is where street trees go and
-			# because a rank down the middle would choke a 420px corridor.
+			# this had. Two ranks at the edges of the walk, because that is where
+			# street trees go and because a rank down the middle would choke a
+			# 420px corridor. Planted in runs between the things on the
+			# promenade, not on a ruler (#151): every stretch at one spacing
+			# made every stretch the same stretch.
 			#
 			# Kept in their own list as well as in poles, so the paving cut-outs
-			# and the benches between them are placed from the same numbers
-			# rather than from a second copy that could drift.
+			# are placed from the same numbers rather than from a second copy
+			# that could drift.
 			m.palm_spots.clear()
-			for i in range(17):
-				m.palm_spots.append(Vector2(462.0, -260.0 - i * 300.0))
-			for i in range(15):
-				m.palm_spots.append(Vector2(1012.0, -380.0 - i * 340.0))
+			for py: float in BEACH_PALMS_SEA:
+				m.palm_spots.append(Vector2(462.0, py))
+			for py: float in BEACH_PALMS_LAND:
+				m.palm_spots.append(Vector2(1012.0, py))
 			for ps: Vector2 in m.palm_spots:
 				m.poles.append(ps)
 			# long benches facing the sea, set between the seaward palms on the
@@ -1327,6 +1329,12 @@ static func build_level_data(m: Node2D) -> void:
 			for i in range(16):
 				m.benches.append(Vector2(524.0, -410.0 - i * 300.0))
 			m.deco_pole_count = m.poles.size()
+			# the showers' columns and the volleyball net's posts are poles:
+			# solid, markable, and the rope wraps them
+			for sp: Vector2 in BEACH_SHOWERS:
+				m.poles.append(sp)
+			for np: Vector2 in beach_net_posts():
+				m.poles.append(np)
 			# terrace tables under canopies, twice along the route
 			m.tables = Array([
 				Vector2(1040, -1500), Vector2(1110, -1560), Vector2(1050, -1620), Vector2(1120, -1680),
@@ -1351,6 +1359,15 @@ static func build_level_data(m: Node2D) -> void:
 					"col": towel_cols[i % 4], "bather": i % 2 == 0, "cd": 0.0,
 				})
 				ty -= randf_range(700.0, 1000.0)
+			# nobody lays a towel across the volleyball court, under the
+			# lifeguard tower or in a shower's puddle: one that lands there
+			# moves along the sand past it (no draws, so the sequence holds)
+			for tw in m.towels:
+				var tr: Rect2 = tw.rect
+				for keep: Rect2 in beach_sand_keepouts():
+					if tr.intersects(keep):
+						tr.position.y = keep.end.y + 14.0
+				tw.rect = tr
 			m.bins = Array([
 				Vector2(590, -700), Vector2(950, -1600), Vector2(590, -2500),
 				Vector2(950, -3400), Vector2(590, -4300),
@@ -1859,8 +1876,12 @@ static func build_substance_zones(m: Node2D) -> void:
 		m.substance_zones.append({"rect": Rect2(ze.x, OBRES_ZEBRA_Y, ze.y - ze.x, OBRES_ZEBRA_H), "kind": "paint", "zebra": true})
 	match m.lvl:
 		"beach":
-			# the whole sand side, which is most of the beach
-			m.substance_zones.append({"rect": Rect2(230.0, m.GATE_Y, 150.0, absf(m.GATE_Y) + 400.0), "kind": "sand"})
+			# the whole sand side, which is most of the beach. It is the beach's
+			# own ground, drawn with the cross-section ("ground"), so it is not
+			# washed over again as a tinted box: that box stopped at the gate
+			# line in a hard edge, and greyed the shore and all on it (#151)
+			m.substance_zones.append({"rect": Rect2(230.0, m.GATE_Y, 150.0, absf(m.GATE_Y) + 400.0), "kind": "sand",
+				"ground": true})
 	# snow turns the whole walk to slush underfoot, whatever the level. A band
 	# that follows the path, not a rectangle: on the walks that bend (El Bosc,
 	# El Mosaic) a rectangle between the nominal edges left the path running
@@ -2092,6 +2113,34 @@ static func build_park_props(m: Node2D) -> void:
 const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell"]
 const BEACH_PROM_X := 560.0
 
+# PASSEIG MARÍTIM's landmarks, on the walk itself so its stretches differ
+# (#151): showers at the top of the sand, a volleyball court, a lifeguard
+# tower, and a bar hut at the end of each chiringuito's terrace. The palms
+# come in runs between them, seaward on the deck and landward on the cafe
+# strip, rather than at one spacing all the way.
+const BEACH_PALMS_SEA: Array[float] = [-260.0, -500.0, -760.0, -1620.0, -1790.0, -1960.0,
+	-2380.0, -2620.0, -3300.0, -3480.0, -3660.0, -3840.0, -4560.0, -4800.0, -5060.0]
+const BEACH_PALMS_LAND: Array[float] = [-330.0, -560.0, -900.0, -1150.0, -1380.0, -1860.0,
+	-2120.0, -2700.0, -2960.0, -3120.0, -3680.0, -4300.0, -4700.0, -5140.0]
+const BEACH_SHOWERS: Array[Vector2] = [Vector2(360.0, -1080.0), Vector2(360.0, -4290.0)]
+const BEACH_COURT := Rect2(246.0, -2120.0, 120.0, 240.0)
+const BEACH_TOWER := Vector2(300.0, -3050.0)
+const BEACH_BARS: Array[Rect2] = [Rect2(1004.0, -1786.0, 176.0, 66.0), Rect2(1004.0, -3262.0, 176.0, 60.0)]
+
+
+# the net runs across the court's middle, its posts just outside the lines
+static func beach_net_posts() -> Array[Vector2]:
+	var cy := BEACH_COURT.get_center().y
+	return [Vector2(BEACH_COURT.position.x - 10.0, cy), Vector2(BEACH_COURT.end.x + 10.0, cy)]
+
+
+# the sand a towel keeps off: the court, the tower's footprint, the showers
+static func beach_sand_keepouts() -> Array[Rect2]:
+	var out: Array[Rect2] = [BEACH_COURT.grow(16.0), Rect2(BEACH_TOWER - Vector2(40.0, 40.0), Vector2(80.0, 90.0))]
+	for sp: Vector2 in BEACH_SHOWERS:
+		out.append(Rect2(sp - Vector2(36.0, 36.0), Vector2(72.0, 72.0)))
+	return out
+
 
 static func works_ground_at(m: Node2D, p: Vector2) -> bool:
 	if m.lvl in WORKS_FREE or m.tutorial_mode:
@@ -2252,6 +2301,10 @@ static func build_walls(m: Node2D) -> void:
 		fcs.shape = ss
 		walls.add_child(fcs)
 	m.add_child(walls)
+	# the chiringuitos' bar huts are buildings, not decals
+	if m.lvl == "beach":
+		for br: Rect2 in BEACH_BARS:
+			add_rect_body(m, br.get_center(), br.size)
 	# THE BUILDING LINE is solid (#65): she used to be able to walk out onto
 	# the roofs, because the only walls were at the level edges. Segments
 	# follow the path where it bends, with gaps where a road crosses, so a
@@ -2525,7 +2578,7 @@ static func build_entities(m: Node2D) -> void:
 	m.edge_layer.z_index = -5   # behind everything in the world
 	# what hangs over the walk, above everyone (El Gotic's bridge, El Mercat's
 	# arches, La Castanyada's lantern strings)
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "beach":
 		var ov := Node2D.new()
 		ov.set_script(load("res://world/overheadlayer.gd"))
 		ov.z_index = 14
