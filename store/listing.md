@@ -125,7 +125,7 @@ Full controller support
 No ads, no purchases, no account, and it plays offline
 ```
 
-### What's new in this version (1.59, for the next submission)
+### What's new in 1.59 (live by 2026-10-09)
 
 ```
 - A new walk, Montjuïc: the climb up the hill, with a hidden cable car, escalators, the Font Màgica and the castle at the top.
