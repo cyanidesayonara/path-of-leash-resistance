@@ -164,6 +164,13 @@ with pickpockets and shenanigans happening around."
   and sawdust by the fish and ham; orange-crate stacks to mark; a terrazzo
   floor under a glazed roof on red trusses; out through the far door (PLACA).
   No van indoors.
+- Audit fixes (2026-10-09, #153, `world/mercat.gd`): the wall stalls stand
+  against the walls; the fish counter is steel, ice, whole fish, red mullet,
+  prawns, mussels, price cards and a scale; the street manhole is a floor
+  drain (harmless, with its wet-floor signs); crate stacks, parked shopping
+  trolleys, a porter's sack truck and chatting shoppers along both walls,
+  all solid; the approach street has shop awnings, the greengrocer's
+  delivery van at the kerb and crate stacks by the doors.
 
 ### El Gotic (oldtown) - the medieval alleys
 - Is: alleys with walls at the paving (done in #76), laundry overhead,

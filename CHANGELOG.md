@@ -2,6 +2,27 @@
 
 Append-only session history, newest first.
 
+## 2026-10-09 - El Mercat: audit fixes (#153)
+
+- The wall stalls stand with their backs against the hall's walls instead
+  of a gap's width off them, and the fish counter is a counter: steel, a
+  bed of crushed ice, whole fish heads to the customer, red mullet, a tray
+  of prawns, a tray of mussels, lemon, price cards and the scale. Its
+  meltwater lies on the floor past the customers, not over the counter.
+- The street manhole in the middle aisle is a floor drain: a steel grate,
+  the floor damp round it, the wet-floor signs still out. Nothing to fall
+  down indoors; the churro by it is "off the wet floor" now.
+- The side aisles have things in them: crate stacks, parked tartan
+  shopping trolleys, a porter's sack truck and shoppers stopped for a chat,
+  all along the walls and all solid, clear of the stalls and the crates
+  she marks.
+- The street before the arch has the shops' striped awnings, the
+  greengrocer's delivery van at the kerb with its back doors open, and
+  crate stacks by the doors.
+- `world/mercat.gd`; `tests/test_mercat.gd` checks the stalls, the drain,
+  the dressing and the van. The market autowalk still finishes (leg times
+  shift by a second or so round the new solids).
+
 ## 2026-10-06 - paper bags on Montjuïc's wind (#146)
 
 - A gust on the hill lifts a paper bag upwind of her and sends it
