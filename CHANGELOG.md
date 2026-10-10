@@ -2,6 +2,29 @@
 
 Append-only session history, newest first.
 
+## 2026-10-09 - Passeig Marítim: audit fixes (#151)
+
+- The palms come in runs now, not one every 300px all the way: a tight
+  three by the volleyball court, four in a row past the lifeguard tower,
+  a pair flanking each chiringuito, and long gaps between.
+- On the walk itself: two showers at the top of the sand (columns on a
+  slatted footplate, a puddle beside), a volleyball court with its net
+  across the middle, and a lifeguard tower on stilts that she runs under
+  (its cabin is on the overhead layer). The shower columns and the net
+  posts are poles: solid, markable, and the rope wraps them. The dog
+  beach's shower and lifeguard chair use the same drawing.
+- Each chiringuito stands on a timber deck under a reed pergola, with
+  oleanders in planters along the back and its bar hut at the end of the
+  terrace (thatched at one, blue and white canvas at the other, stools at
+  the counter). The huts are solid.
+- Behind the terraces, where a sideways phone saw one flat grey, the
+  blocks' flat roofs: tiled terraces, stairwells, water tanks, a washing
+  line or an awning, a narrow street between.
+- The walk's sea and the dog beach's sea are one sea: the same colours,
+  the same width of shallows, and a strip of wet sand with foam down the
+  whole walk. The tinted box laid over the walk's sand (which stopped in a
+  hard line at the gate) is gone; the sand underfoot plays as before.
+- `tests/test_passeig.gd` in CI.
 ## 2026-10-09 - El Gòtic audit fixes (#154)
 
 - The washing over the alley is washing: shirts with their sleeves out and
