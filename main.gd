@@ -699,6 +699,11 @@ var mood_forced := -1
 var owner_news_cd := 0.0
 var challenge: Node
 var challenge_l: Label
+# what the kid's dare pays (start_challenge): a base and a bit a trick, and
+# a retry pays DARE_RETRY_CUT less, so the first go is still the one to land
+const DARE_BASE := 20
+const DARE_PER_TRICK := 3
+const DARE_RETRY_CUT := 10
 var challenge_giver: Node2D
 var challenge_offered := false
 var dog_carrying := false
@@ -6449,13 +6454,19 @@ func on_combo_banked(score: int, mult: int, bonus: int) -> void:
 
 
 func _update_challenge_hud() -> void:
-	var live: bool = challenge.active
-	challenge_l.visible = live
-	if not live:
+	# the card itself is drawn by the feed (hud/event_feed.gd) from challenge
+	var up: bool = challenge.showing()
+	challenge_l.visible = up
+	if not up:
 		return
-	challenge_l.text = "COMBO CHALLENGE   %d/%d tricks   %ds" % [
-		challenge.count, challenge.target, int(ceil(challenge.timer))]
-	challenge_l.modulate = Color(1, 0.95, 0.6) if challenge.fraction() > 0.3 else Color(1, 0.55, 0.4)
+	challenge_l.text = "DARE %s %d/%d" % [challenge.phase, challenge.count, challenge.target]
+	match String(challenge.phase):
+		"live":
+			challenge_l.modulate = Color(1, 0.95, 0.6) if challenge.fraction() > 0.3 else Color(1, 0.55, 0.4)
+		"end":
+			challenge_l.modulate = Color(0.58, 0.90, 0.62) if challenge.succeeded else Color(1.0, 0.56, 0.48)
+		_:
+			challenge_l.modulate = Color(1, 0.95, 0.6)
 
 
 # Every scored thing passes through here on its way into the combo
@@ -6487,14 +6498,27 @@ func _refill_zoomies(pts: int) -> void:
 
 
 
-func start_challenge(giver: Node2D, target: int, seconds: float) -> void:
-	if challenge_offered or challenge.active:
+# What a dare pays: the first go, and a second go (less, but worth having).
+static func dare_reward(target: int, retry: bool) -> int:
+	return DARE_BASE + target * DARE_PER_TRICK - (DARE_RETRY_CUT if retry else 0)
+
+
+# The kid has said the dare; the clock starts after the offer has been read
+# (systems/challenge.gd). A retry is the same dare again, once it is over.
+func start_challenge(giver: Node2D, target: int, seconds: float, retry := false) -> void:
+	if challenge.showing():
+		return
+	if challenge_offered and not retry:
 		return
 	challenge_offered = true
 	challenge_giver = giver
-	challenge.begin(target, seconds)
+	challenge.offer(target, seconds, dare_reward(target, retry), retry)
+	Sfx.play("ui")
+
+
+func on_challenge_live() -> void:
 	shake_t = maxf(shake_t, 0.2)
-	feed.say("DARE: %d TRICKS, GO!" % target, EventFeed.Tone.LOUD)
+	feed.say("GO! %d TRICKS!" % challenge.target, EventFeed.Tone.LOUD)
 
 
 func on_challenge_done(win: bool, target: int, count: int) -> void:
@@ -6502,12 +6526,12 @@ func on_challenge_done(win: bool, target: int, count: int) -> void:
 	if is_instance_valid(challenge_giver):
 		challenge_giver.resolve(win)
 	if win:
-		var reward := 20 + target * 3
+		var reward: int = challenge.reward if challenge.reward > 0 else dare_reward(target, false)
 		bones += reward
-		feed.say("DARE DONE!  +%d" % reward, EventFeed.Tone.GOOD)
+		feed.say("DARE WON! +%d" % reward, EventFeed.Tone.GOOD)
 		_slowmo()
 	else:
-		feed.say("DARE MISSED: %d OF %d" % [count, target], EventFeed.Tone.BAD)
+		feed.say("DARE LOST: %d OF %d" % [count, target], EventFeed.Tone.BAD)
 
 
 # a first-time tip, from a script that has no Tips (human.gd)

@@ -2,6 +2,26 @@
 
 Append-only session history, newest first.
 
+## 2026-10-10 - the kid's dare says what it wants, and you can try again
+
+- The dare is offered before its clock starts: the kid says "bet you can't
+  do 5 tricks in 12 seconds!" and a card under the banner spells it out for
+  2.6 seconds - what counts ("swing around a pole, grind a ledge, fling
+  your human", with the turbo button named for the device in hand), what it
+  pays, and a bar filling up to GO. Tricks landed while it is being read do
+  not count.
+- While it runs the card counts tricks and drains the clock ("2 / 5",
+  "11 seconds left") and the kid counts down ("3 more! go go go!").
+- It says how it ended, for a few seconds: DARE WON! +35, or DARE LOST with
+  how many of the 5 tricks she landed.
+- A lost dare can be tried again: stay near the bench for 5 seconds after
+  it ends, or walk off and come back, and the kid offers it again ("heh.
+  want another go?"). Two retries at most; a retry pays 25 instead of 35, so
+  the first go is still the one to land. A won dare is done. The autowalk
+  never gets a retry.
+- New strings are in American English. `tests/test_dare_retry.gd` in CI;
+  `tests/test_challenge.gd` covers the offer and the result card.
+
 ## 2026-10-10 - a main menu, and one way back from everywhere
 
 - The title is a main menu now: PLAY, TUTORIAL, WARDROBE, YOUR WALKS,
