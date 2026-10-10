@@ -22,6 +22,15 @@ Append-only session history, newest first.
 - `world/mercat.gd`; `tests/test_mercat.gd` checks the stalls, the drain,
   the dressing and the van. The market autowalk still finishes (leg times
   shift by a second or so round the new solids).
+## 2026-10-09 - every CI test, locally, the way CI runs it
+
+- `tools/run_tests.sh` reads the test list from `.github/workflows/ci.yml`
+  and runs each one as CI does, through `tools/godot_ci.sh` (so a SCRIPT
+  ERROR fails it). The six render tests (appearance, HUD anchoring, touch,
+  rotate prompt, ShapeBatch) get a real rendering context: run headless,
+  they fail or hang, which had read as local failures that CI did not see.
+  All 102 pass on main. A filter picks tests by path; failures are listed
+  at the end.
 
 ## 2026-10-06 - paper bags on Montjuïc's wind (#146)
 
