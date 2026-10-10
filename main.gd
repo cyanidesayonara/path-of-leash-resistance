@@ -95,6 +95,11 @@ const WHIRL_ARM_EXCESS := 8.0
 const WHIRL_ARM_WIND := 0.55
 const WHIRL_ARM_END_WIND := 2.4
 const WHIRL_ARM_RANGE := 70.0
+# Round the pole, not into it: with the rope over a pole beside the owner, the
+# pull at their end points almost straight at the pole, and a body pulled into
+# a pole just pins there. Within POLE_STEP_R of it, the part of the pull aimed
+# into the pole becomes a step round it, the way that unwinds the rope.
+const POLE_STEP_R := 48.0
 const WHIRL_SLIP := 0.7
 const WHIRL_SLIP_BAIL := 0.5
 # a planted dog dragged at least this far in a frame is skidding, and leaves
@@ -6300,6 +6305,8 @@ func _leash_tug(delta: float) -> void:
 		# the dog's pulling feeds the whirl's spin-up
 		human.whirl_pull = maxf(float(human.whirl_pull), base_tension)
 	if not whirling:
+		h_dir = round_pole_dir(h_dir)
+	if not whirling:
 		# the mood rides on the DOG's side of the tug of war: lunging at
 		# something worth telling off tows the human further than an ordinary
 		# pull would, and a flat dog barely troubles him at all. This is what
@@ -6369,6 +6376,32 @@ func _leash_tug(delta: float) -> void:
 					armed = false
 	if not armed:
 		_disarm_whirl()
+
+
+# The pull on the owner, with the part aimed into the pole the rope is over
+# beside them turned into a step round it (POLE_STEP_R): the way the rope's
+# own probe says unwinds it, as the whirl goes, or with no opinion, the way
+# that brings them toward the dog. Unchanged when there is no such pole or the
+# pull is not into it.
+func round_pole_dir(h_dir: Vector2) -> Vector2:
+	if leash.static_contacts == 0 or not leash.human_contact_is_pole:
+		return h_dir
+	var pole: Vector2 = leash.human_contact_pole
+	var to_pole: Vector2 = pole - human.global_position
+	var d := to_pole.length()
+	if d > POLE_STEP_R or d < 0.001:
+		return h_dir
+	var n := to_pole / d
+	var into := h_dir.dot(n)
+	if into <= 0.0:
+		return h_dir
+	var radial := -n
+	var s: float = leash.unwind_bias_of(leash.coil_winding(pole))
+	if s == 0.0:
+		var to_dog: Vector2 = dog.global_position - human.global_position
+		s = 1.0 if radial.rotated(PI / 2.0).dot(to_dog) >= 0.0 else -1.0
+	var tangent := radial.rotated(signf(s) * PI / 2.0)
+	return (h_dir - n * into + tangent * into).normalized()
 
 
 # Which way round, and how far, from the coil averaged over the arming window:

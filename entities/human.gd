@@ -113,6 +113,22 @@ var strain := false
 const DRAG_MIN := 50.0      # px/s of motion away from where they mean to go
 const DRAG_EASE := 5.0
 var walk_intent := Vector2.ZERO
+# Walking into something (a bin, a stall, a post) they would otherwise press
+# against for ever: blocked for STUCK_T while meaning to walk, they sidestep
+# along it for SIDESTEP_T, and for as long as it still blocks them up to
+# SIDESTEP_MAX; the way that is more forward, or with nothing to choose,
+# toward the middle of the path. Blocked again within SIDESTEP_KEEP, they keep
+# to the side they chose, so they do not dither either side of a wide thing.
+const STUCK_T := 0.3
+const SIDESTEP_T := 0.55
+const SIDESTEP_MAX := 2.0
+const SIDESTEP_KEEP := 1.5
+const STUCK_SPEED := 0.35   # moving at under this share of what they meant
+var stuck_t := 0.0
+var sidestep_t := 0.0
+var sidestep_total := 0.0
+var sidestep_keep_t := 0.0
+var sidestep_dir := Vector2.ZERO
 var drag_amt := 0.0
 var drag_dir := Vector2.DOWN
 var panic := false
@@ -596,9 +612,49 @@ func _walk(delta: float) -> void:
 	# the hill (Montjuic): slower up, quicker down; 1.0 on every other walk
 	if main != null and main.has_method("slope_mult"):
 		speed *= main.slope_mult(global_position.y, fwd_y)
+	if sidestep_t > 0.0:
+		sidestep_t -= delta
+		dir = (sidestep_dir + dir * 0.25).normalized()
 	walk_intent = dir * speed
 	velocity = velocity.move_toward(dir * speed, accel * delta)
 	move_and_slide()
+	_check_stuck(delta, dir, cx)
+
+
+# Blocked while meaning to walk: after STUCK_T, a sidestep along whatever is in
+# the way (see STUCK_T). Reads the slide's own collisions, so it only ever
+# reacts to something they actually walked into.
+func _check_stuck(delta: float, dir: Vector2, path_cx: float) -> void:
+	sidestep_keep_t = maxf(0.0, sidestep_keep_t - delta)
+	if sidestep_t > 0.0:
+		sidestep_total += delta
+		# still against it: keep going along it, up to the cap
+		if get_slide_collision_count() > 0 and sidestep_total < SIDESTEP_MAX:
+			sidestep_t = maxf(sidestep_t, 0.2)
+		if sidestep_t <= delta:
+			sidestep_keep_t = SIDESTEP_KEEP
+		return
+	if get_slide_collision_count() == 0:
+		stuck_t = 0.0
+		return
+	var meant := walk_intent.length()
+	if meant < 1.0 or get_real_velocity().length() > meant * STUCK_SPEED:
+		stuck_t = 0.0
+		return
+	stuck_t += delta
+	if stuck_t < STUCK_T:
+		return
+	stuck_t = 0.0
+	var normal := get_slide_collision(0).get_normal()
+	var side := normal.orthogonal()
+	var ahead := side.dot(dir)
+	if sidestep_keep_t > 0.0 and sidestep_dir != Vector2.ZERO:
+		ahead = side.dot(sidestep_dir)
+	elif absf(ahead) < 0.05:
+		ahead = side.x * (path_cx - global_position.x)
+	sidestep_dir = side if ahead >= 0.0 else -side
+	sidestep_t = SIDESTEP_T
+	sidestep_total = 0.0
 
 
 func _events(delta: float) -> void:

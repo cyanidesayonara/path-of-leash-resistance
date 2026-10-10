@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-10-10 - your human steps round things instead of pinning on them
+
+- Pulled toward a pole the leash is over, your human used to press into it
+  and stick. The part of the pull aimed into the pole now becomes a step
+  round it, the way that unwinds the rope (the same probe the whirl uses),
+  within 48 px of it (`main.round_pole_dir`).
+- Walking into a bin, a stall or a post, they no longer press on for ever:
+  blocked for 0.3 s while meaning to walk, they sidestep along it, and keep
+  going while it still blocks them (up to 2 s), keeping to the side they
+  chose if blocked again soon after (`human._check_stuck`).
+- `tests/test_owner_unstick.gd` in CI.
+
 ## 2026-10-09 - every CI test, locally, the way CI runs it
 
 - `tools/run_tests.sh` reads the test list from `.github/workflows/ci.yml`
