@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-10-10 - under the trees, not over them
+
+- Tree crowns draw above Millie, your human and the leash, on their own
+  layer (`world/canopylayer.gd`, z 13, under what hangs overhead): she and
+  the rope go round the trunk under the leaves instead of over them. The
+  ground pass keeps what lies on the ground: the crown's shadow, the pit or
+  grate, the roots, and the trunk itself.
+- A crown someone is under turns see-through, as one sheet (a CanvasGroup,
+  so the overlapping leaf clumps do not blotch), and its trunk stays solid.
+- Every kind: El Parc's and El Barri's trees, El Bosc's oaks and pines, the
+  palms, the street trees in their grates, El Gòtic's plaça tree, and the
+  groves in the off-leash spaces. One shared rule (`main.pole_tree`) says
+  which posts are trees, for both passes. The crowns are one batch.
+- Drawing only: the behavior snapshot is identical. `tests/test_canopy.gd`
+  in CI.
+
 ## 2026-10-09 - El Gòtic audit fixes (#154)
 
 - The washing over the alley is washing: shirts with their sleeves out and

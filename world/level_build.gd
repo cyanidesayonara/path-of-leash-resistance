@@ -2566,6 +2566,12 @@ static func build_entities(m: Node2D) -> void:
 		ov.z_index = 14
 		m.add_child(ov)
 		ov.setup(m)
+	# tree crowns, above everyone on the ground and under what hangs overhead
+	var canopy := Node2D.new()
+	canopy.set_script(load("res://world/canopylayer.gd"))
+	canopy.z_index = 13
+	m.add_child(canopy)
+	canopy.setup(m)
 	m.add_child(m.edge_layer)
 	m.edge_layer.setup(m)
 	m.verge_layer = Node2D.new()
