@@ -324,6 +324,15 @@ const MERCAT_WALL_STALLS: Array = [
 	[-4450.0, true, "fish"],
 ]
 const MERCAT_DRAIN := Vector2(640.0, -1920.0)
+# how far each column stands out from its block's corner, diagonally: under
+# a pole's radius, so the corner is inside the column's body
+const MERCAT_COLUMN_SET := 6.0
+# how far past each stall block the owner already keeps to its side: the
+# whole cross aisle between two blocks (900 apart, 300 long, grown by 20)
+const MERCAT_ISLAND_LEAD := 560.0
+# and how steeply he cuts across to it: 1.4 sideways for each 1 forward
+# (0.8 elsewhere), so 560 forward carries him the 400-odd across
+const MERCAT_ISLAND_STEER := 1.4
 
 
 static func mercat_stall_pos(m: Node2D, i: int) -> Vector2:
@@ -349,10 +358,14 @@ static func mercat(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 		m.stalls.append(mercat_stall_pos(m, i))
 		m.stall_kinds.append(String(MERCAT_WALL_STALLS[i][2]))
 	m.poles.clear()
-	# the hall's iron columns, one at each corner of every stall block
+	# the hall's iron columns, one at each corner of every stall block. Set
+	# into the corner, so the column and the block are one obstacle: 26 px out
+	# they left a 16 px slot that your human walked into and wedged in (#153)
 	for blk: Rect2 in MERCAT_BLOCKS:
-		for c: Vector2 in [blk.position + Vector2(-26.0, -26.0), Vector2(blk.end.x + 26.0, blk.position.y - 26.0),
-				Vector2(blk.position.x - 26.0, blk.end.y + 26.0), blk.end + Vector2(26.0, 26.0)]:
+		for c: Vector2 in [blk.position + Vector2(-MERCAT_COLUMN_SET, -MERCAT_COLUMN_SET),
+				Vector2(blk.end.x + MERCAT_COLUMN_SET, blk.position.y - MERCAT_COLUMN_SET),
+				Vector2(blk.position.x - MERCAT_COLUMN_SET, blk.end.y + MERCAT_COLUMN_SET),
+				blk.end + Vector2(MERCAT_COLUMN_SET, MERCAT_COLUMN_SET)]:
 			m.poles.append(c)
 	m.deco_pole_count = m.poles.size()
 	m.astands = Array([], TYPE_VECTOR2, &"", null)
@@ -395,7 +408,12 @@ static func mercat(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 	# the owner keeps to one aisle round each block, alternating
 	var isl: Array[Dictionary] = []
 	for i in range(MERCAT_BLOCKS.size()):
-		isl.append({"rect": MERCAT_BLOCKS[i].grow(20.0), "side": 1.0 if i % 2 == 0 else -1.0})
+		# the lead fills the cross aisle, so the owner starts over to the next
+		# block's side as soon as he is past the last one, and is there before
+		# its end face (#153: with the default 400 he met the face still
+		# crossing, and wedged against it)
+		isl.append({"rect": MERCAT_BLOCKS[i].grow(20.0), "side": 1.0 if i % 2 == 0 else -1.0,
+			"lead": MERCAT_ISLAND_LEAD, "steer": MERCAT_ISLAND_STEER})
 	m.islands = isl
 
 
@@ -2215,6 +2233,10 @@ static func build_bypasser_blockers(m: Node2D) -> void:
 			"radius": m.MANHOLE_RADIUS,
 		})
 	if m.lvl == "market":
+		# the stall blocks down the middle of the hall: solid, so walkers
+		# and riders go round them like round anything else
+		for i in range(MERCAT_BLOCKS.size()):
+			m.bypasser_blockers.append({"id": "mercat_block_%d" % i, "rect": MERCAT_BLOCKS[i]})
 		var ms: Array[Rect2] = Mercat.solids(m)
 		for i in range(ms.size()):
 			m.bypasser_blockers.append({"id": "mercat_%d" % i, "rect": ms[i]})
@@ -2411,14 +2433,23 @@ static func build_walls(m: Node2D) -> void:
 		"rain": wall_sides = []      # its frontage walls are the building line
 		"park", "trail", "beach", "barri": wall_sides = []
 		_: wall_sides = [-1.0, 1.0]
+	# the straight wall runs the whole walk at sw_l/sw_r, START_Y + 200 to
+	# GATE_Y - 200. El Mercat's hall is far wider than its sw_l..sw_r, so
+	# there the straight wall stood 130 px inside each hall wall (#153): its
+	# building line follows the walls, and the straight wall only closes the
+	# stretch past the far door where that line stops short of the gate.
+	var wall_lo := float(m.GATE_Y) - 200.0
+	var wall_hi := float(m.START_Y) + 200.0
+	if m.lvl == "market":
+		wall_hi = MERCAT_DOOR_Y - 160.0
 	for ws in wall_sides:
 		var bx: float = (m.sw_l - 60.0) if ws < 0.0 else (m.sw_r + 60.0)
 		var bb := StaticBody2D.new()
 		bb.collision_layer = 1
-		bb.position = Vector2(bx, (m.START_Y + m.GATE_Y) / 2.0)
+		bb.position = Vector2(bx, (wall_lo + wall_hi) / 2.0)
 		var bcs := CollisionShape2D.new()
 		var bsh := RectangleShape2D.new()
-		bsh.size = Vector2(120.0, absf(m.START_Y - m.GATE_Y) + 400.0)
+		bsh.size = Vector2(120.0, wall_hi - wall_lo)
 		bcs.shape = bsh
 		bb.add_child(bcs)
 		m.add_child(bb)
