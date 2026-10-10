@@ -1,18 +1,37 @@
 extends RefCounted
 
-# The title-screen flow and every screen reachable from it: the title, the
-# walk select, getting ready (who walks, day or night, the weather), the
-# wardrobe, the progress screen, settings, the pause menu, and the notice
-# cards a walk can end on.
+# The menus: the main menu (the title screen), the walk select, getting ready
+# (who walks, day or night, the weather), the wardrobe, the progress screen,
+# settings, the pause menu, and the notice cards a walk can end on.
 #
 # This file is the MODEL: which screen is up, what it holds, and what the
 # player can press on it. hud/menu_screen.gd draws it and hud/ui_kit.gd holds
 # the shared look. Static functions over main's state; main.gd keeps a
 # same-name forwarder for each one another script or a test calls.
+#
+# The tree, and the one rule for getting about it:
+#
+#   main menu   PLAY, TUTORIAL, WARDROBE, YOUR WALKS, SETTINGS, EXIT GAME
+#     walk select   (PLAY)  -> getting ready -> the walk
+#     wardrobe, your walks, settings: opened over whatever screen opened
+#     them, and closed back to it
+#   pause menu  (mid-walk) RESUME, THIS WALK, START AGAIN, SETTINGS,
+#               WALK SELECT, EXIT GAME
+#
+# Confirm is always the plant action. BACK is the bark action or the pause
+# action, on every screen: it closes the screen on top, steps back one screen
+# (getting ready -> walk select -> main menu), cancels a question, resumes
+# from the pause menu, and on the main menu asks EXIT GAME (desktop only;
+# on the web it does nothing). Nothing else closes a screen.
 
 const TutorialSteps := preload("res://systems/tutorial.gd")
 const UiIcons := preload("res://hud/ui_icons.gd")
 
+const MAIN_ITEMS := ["play", "tutorial", "shop", "progress", "settings", "exit"]
+const MAIN_LABELS := {"play": "PLAY", "tutorial": "TUTORIAL", "shop": "WARDROBE",
+	"progress": "YOUR WALKS", "settings": "SETTINGS", "exit": "EXIT GAME"}
+# the first-time question's two answers, in list order
+const FIRST_OPTIONS := ["LEARN THE ROPES", "STRAIGHT TO THE WALKS"]
 const DETAIL_ROWS := ["walker", "time", "weather"]
 const PAUSE_CELLS := ["resume", "walk", "restart", "settings", "select", "exit"]
 const PAUSE_LABELS := {"resume": "RESUME", "walk": "THIS WALK", "restart": "START AGAIN",
@@ -54,26 +73,26 @@ static func screen(m: Node2D) -> String:
 static func prompts(m: Node2D, which := "") -> Array:
 	match which if which != "" else screen(m):
 		"title":
-			var out := [["plant", "start"], ["pause", "settings"]]
+			var out := [["up_down", "pick"], ["plant", "select"]]
 			if can_exit():
-				out.append(["bark", "exit game"])
+				out.append(["back", "exit game"])
 			return out
 		"confirm":
 			if String(m.confirm_id) == "basics":
-				return [["plant", "on to El Barri"], ["bark", "teach me the tricks"]]
+				return [["plant", "on to El Barri"], ["back", "teach me the tricks"]]
 			if String(m.confirm_id) == "first":
-				return [["plant", "learn the ropes"], ["bark", "straight to the walks"],
-					["pee", "don't ask again"]]
-			return [["plant", "yes"], ["bark", "cancel"]]
+				return [["up_down", "pick"], ["plant", "choose"], ["pee", "don't ask again"],
+					["back", "back"]]
+			return [["plant", "yes"], ["back", "cancel"]]
 		"walkcard":
-			return [["bark", "back"]]
+			return [["back", "back"]]
 		"walk":
 			var open := Game.is_unlocked(Game.level_id)
-			return [["left_right", "browse"], ["plant", "choose", open], ["bark", "wardrobe"],
-				["pee", "progress"], ["pause", "settings"]]
+			return [["left_right", "browse"], ["plant", "choose", open], ["pee", "wardrobe"],
+				["back", "main menu"]]
 		"details":
 			return [["up_down", "pick"], ["left_right", "change"], ["plant", "go walkies"],
-				["bark", "back"]]
+				["back", "back"]]
 		"shop":
 			var it: Dictionary = m.shop_items[m.shop_idx]
 			var st := shop_state(String(it.kind), String(it.key))
@@ -83,13 +102,13 @@ static func prompts(m: Node2D, which := "") -> Array:
 			elif st != "owned":
 				verb = "buy"
 			return [["left_right", "tab"], ["up_down", "browse"],
-				["plant", verb, st == "owned" or st == "afford"], ["bark", "back"]]
+				["plant", verb, st == "owned" or st == "afford"], ["back", "back"]]
 		"progress":
-			return [["bark", "back"]]
+			return [["back", "back"]]
 		"settings":
-			return [["up_down", "pick"], ["left_right", "change"], ["back", "done"]]
+			return [["up_down", "pick"], ["left_right", "change"], ["back", "back"]]
 		"pause":
-			return [["move", "pick"], ["plant", "select"], ["pause", "resume"]]
+			return [["move", "pick"], ["plant", "select"], ["back", "resume"]]
 		"results":
 			return end_prompts(m)
 		"notice":
@@ -102,10 +121,75 @@ static func prompts(m: Node2D, which := "") -> Array:
 
 static func end_prompts(m: Node2D) -> Array:
 	if m.tutorial_mode:
-		return [["plant", "on to El Barri"], ["bark", "walk select"], ["restart", "practise again"]]
+		return [["plant", "on to El Barri"], ["back", "walk select"], ["restart", "practise again"]]
 	if m.finished:
-		return [["restart", "walk it again"], ["bark", "walk select"]]
-	return [["restart", "try again"], ["bark", "walk select"]]
+		return [["restart", "walk it again"], ["back", "walk select"]]
+	return [["restart", "try again"], ["back", "walk select"]]
+
+
+# BACK, the same on every screen: the bark action or the pause action.
+static func back_pressed() -> bool:
+	return Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pause")
+
+
+# --- the main menu ------------------------------------------------------------
+
+static func main_ids(m: Node2D = null) -> Array:
+	var out := MAIN_ITEMS.duplicate()
+	if not can_exit():
+		out.erase("exit")
+	return out
+
+
+static func main_labels(m: Node2D = null) -> Array:
+	var out := []
+	for id: String in main_ids(m):
+		out.append(MAIN_LABELS[id])
+	return out
+
+
+static func main_move(m: Node2D, dir: int) -> void:
+	m.main_idx = wrapi(int(m.main_idx) + dir, 0, main_ids(m).size())
+	Sfx.play("ui")
+
+
+static func main_activate(m: Node2D) -> void:
+	var ids := main_ids(m)
+	m.main_idx = clampi(int(m.main_idx), 0, ids.size() - 1)
+	match String(ids[m.main_idx]):
+		"play":
+			if Game.ask_tutorial and not Game.tutorial_done:
+				open_first(m)
+				return
+			Sfx.play("ui")
+			_go_step(m, 1)
+		"tutorial":
+			Sfx.play("ui")
+			start_tutorial(m)
+		"shop":
+			open_shop(m)
+		"progress":
+			open_progress(m)
+		"settings":
+			open_settings_from_menu(m)
+		"exit":
+			open_confirm(m, "exit")
+
+
+# Returns true when the press opened something, as tick_title does.
+static func tick_main(m: Node2D) -> bool:
+	if Input.is_action_just_pressed("move_down"):
+		main_move(m, 1)
+	elif Input.is_action_just_pressed("move_up"):
+		main_move(m, -1)
+	elif Input.is_action_just_pressed("plant"):
+		main_activate(m)
+		return true
+	elif back_pressed() and can_exit():
+		# back from the top of the tree is leaving; the browser has its own
+		open_confirm(m, "exit")
+		return true
+	return false
 
 
 # --- the title's steps ------------------------------------------------------
@@ -231,34 +315,24 @@ static func tick_title(m: Node2D) -> bool:
 		tick_shop(m)
 		return true
 	if m.in_progress_view:
-		if (Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pee")
-				or Input.is_action_just_pressed("plant") or Input.is_action_just_pressed("pause")):
+		if back_pressed():
 			close_progress(m)
-		return true
-	if Input.is_action_just_pressed("pause"):
-		open_settings_from_menu(m)
 		return true
 	match m.menu_step:
 		0:
-			if Input.is_action_just_pressed("plant"):
-				if Game.ask_tutorial and not Game.tutorial_done:
-					open_confirm(m, "first")
-					return true
-				Sfx.play("ui")
-				_go_step(m, 1)
-			elif Input.is_action_just_pressed("bark") and can_exit():
-				open_confirm(m, "exit")
+			return tick_main(m)
 		1:
-			if Input.is_action_just_pressed("pee"):
-				open_progress(m)
+			if back_pressed():
+				Sfx.play("ui")
+				_go_step(m, 0)
 				return true
-			if Input.is_action_just_pressed("bark"):
+			if Input.is_action_just_pressed("pee"):
 				open_shop(m)
 				return true
 			if Input.is_action_just_pressed("move_left") or Input.is_action_just_pressed("move_right"):
 				Game.cycle_level(1 if Input.is_action_just_pressed("move_right") else -1)
 				Game.menu_step = 1
-				m.get_tree().reload_current_scene()
+				reload(m)
 				return true
 			if Input.is_action_just_pressed("plant"):
 				if not Game.is_unlocked(Game.level_id):
@@ -279,7 +353,7 @@ static func tick_title(m: Node2D) -> bool:
 				details_change(m, 1)
 			elif Input.is_action_just_pressed("move_left"):
 				details_change(m, -1)
-			elif Input.is_action_just_pressed("bark"):
+			elif back_pressed():
 				Sfx.play("ui")
 				_go_step(m, 1)
 			elif Input.is_action_just_pressed("plant"):
@@ -322,7 +396,7 @@ static func tick_pause(m: Node2D) -> void:
 	if m.pause_view == "walk":
 		tick_walk_card(m)
 		return
-	if Input.is_action_just_pressed("pause") or Input.is_action_just_pressed("bark"):
+	if back_pressed():
 		resume(m)
 	elif Input.is_action_just_pressed("move_down"):
 		pause_move(m, 0, 1)
@@ -332,8 +406,6 @@ static func tick_pause(m: Node2D) -> void:
 		pause_move(m, 1, 0)
 	elif Input.is_action_just_pressed("move_left"):
 		pause_move(m, -1, 0)
-	elif Input.is_action_just_pressed("pee"):
-		open_settings(m)
 	elif Input.is_action_just_pressed("plant"):
 		pause_activate(m)
 
@@ -431,8 +503,7 @@ static func walk_card(m: Node2D) -> Dictionary:
 
 
 static func tick_walk_card(m: Node2D) -> void:
-	if (Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pause")
-			or Input.is_action_just_pressed("plant")):
+	if back_pressed():
 		close_walk_card(m)
 
 
@@ -440,6 +511,9 @@ static func tick_walk_card(m: Node2D) -> void:
 
 # tests swap this in so a confirmed exit can be checked without ending the run
 static var quit_hook := Callable()
+# and this, so a menu that reloads the scene (a walk, the tutorial, the next
+# walk on the walk select) can be checked without the reload
+static var reload_hook := Callable()
 
 const CONFIRMS := {
 	"restart": {"title": "START AGAIN", "body": "Start this walk again?"},
@@ -489,26 +563,38 @@ static func tick_confirm(m: Node2D) -> void:
 		return
 	if Input.is_action_just_pressed("plant"):
 		confirm_accept(m)
-	elif Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pause"):
+	elif back_pressed():
 		confirm_cancel(m)
 
 
-# The title's first-walk question: the tutorial (the default, on the main
-# button), straight to the walks, or a box ticked so it never asks again.
-static func tick_first(m: Node2D) -> void:
-	if Input.is_action_just_pressed("plant"):
-		m.confirm_id = ""
-		Sfx.play("ui")
+# PLAY's first-walk question: a list of two answers, the tutorial (the
+# default, on top) or straight to the walks, and a box ticked so it never
+# asks again. BACK returns to the main menu.
+static func open_first(m: Node2D) -> void:
+	m.first_idx = 0
+	open_confirm(m, "first")
+
+
+static func first_choose(m: Node2D) -> void:
+	m.confirm_id = ""
+	Sfx.play("ui")
+	if int(m.first_idx) == 0:
 		start_tutorial(m)
-	elif Input.is_action_just_pressed("bark"):
-		m.confirm_id = ""
-		Sfx.play("ui")
+	else:
 		_go_step(m, 1)
+
+
+static func tick_first(m: Node2D) -> void:
+	if Input.is_action_just_pressed("move_down") or Input.is_action_just_pressed("move_up"):
+		m.first_idx = 1 - clampi(int(m.first_idx), 0, 1)
+		Sfx.play("ui")
+	elif Input.is_action_just_pressed("plant"):
+		first_choose(m)
 	elif Input.is_action_just_pressed("pee"):
 		Game.ask_tutorial = not Game.ask_tutorial
 		Game.save_records()
 		Sfx.play("ui")
-	elif Input.is_action_just_pressed("pause"):
+	elif back_pressed():
 		confirm_cancel(m)
 
 
@@ -527,7 +613,7 @@ static func tick_basics(m: Node2D) -> void:
 		Sfx.play("ui")
 		m.complete_tutorial()
 		to_first_walk(m)
-	elif Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pause"):
+	elif back_pressed():
 		resume(m)
 		m.tut_basics_seen = true
 
@@ -535,6 +621,15 @@ static func tick_basics(m: Node2D) -> void:
 static func start_tutorial(m: Node2D) -> void:
 	Game.level_id = "tutorial"
 	Game.quick_start = true
+	reload(m)
+
+
+# Every menu that leaves for another walk or screen state reloads the scene
+# through here.
+static func reload(m: Node2D) -> void:
+	if reload_hook.is_valid():
+		reload_hook.call()
+		return
 	m.get_tree().reload_current_scene()
 
 
@@ -542,14 +637,14 @@ static func start_tutorial(m: Node2D) -> void:
 static func to_first_walk(m: Node2D) -> void:
 	Game.level_id = "barri"
 	Game.quick_start = true
-	m.get_tree().reload_current_scene()
+	reload(m)
 
 
 # Straight back into the same walk, skipping the menus: what "try again"
 # means. main._ready starts the walk when it finds this set.
 static func restart_walk(m: Node2D) -> void:
 	Game.quick_start = true
-	m.get_tree().reload_current_scene()
+	reload(m)
 
 
 static func to_walk_select(m: Node2D) -> void:
@@ -557,7 +652,7 @@ static func to_walk_select(m: Node2D) -> void:
 	# out of the tutorial, the walk select opens on the first real walk
 	if m.tutorial_mode:
 		Game.level_id = "barri"
-	m.get_tree().reload_current_scene()
+	reload(m)
 
 
 # Input on a stopped walk: a result, a game-over or the daily card.
@@ -568,7 +663,7 @@ static func tick_end(m: Node2D) -> bool:
 	if Input.is_action_just_pressed("restart"):
 		restart_walk(m)
 		return true
-	if Input.is_action_just_pressed("bark"):
+	if back_pressed():
 		to_walk_select(m)
 		return true
 	return false
@@ -592,7 +687,7 @@ static func close_shop(m: Node2D) -> void:
 
 
 static func tick_shop(m: Node2D) -> void:
-	if Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pause"):
+	if back_pressed():
 		close_shop(m)
 	elif Input.is_action_just_pressed("move_down"):
 		shop_step(m, 1)
@@ -886,6 +981,10 @@ static func tick_settings(m: Node2D) -> void:
 		settings_adjust(m, 1)
 	elif Input.is_action_just_pressed("move_left"):
 		settings_adjust(m, -1)
-	elif (Input.is_action_just_pressed("pause") or Input.is_action_just_pressed("bark")
-			or Input.is_action_just_pressed("plant")):
+	elif Input.is_action_just_pressed("plant"):
+		# confirm flips a switch; a slider is stepped with left/right
+		var row: Dictionary = settings_rows(m)[m.settings_idx]
+		if String(row.kind) == "toggle":
+			settings_adjust(m, 1)
+	elif back_pressed():
 		close_settings(m)

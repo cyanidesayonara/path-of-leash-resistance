@@ -144,6 +144,9 @@ jobs:
       # steps, the wardrobe and the settings screen
       - name: Title, wardrobe and settings flow test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_menu_flow.gd
+      # every screen reached from the main menu, and back with BACK alone
+      - name: Menu tree test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_menu_tree.gd
 
       - name: World sign test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_world_sign.gd

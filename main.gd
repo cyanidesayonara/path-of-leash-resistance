@@ -661,6 +661,9 @@ var sign_layer: Node2D
 var gloss_a := 1.0
 var details_idx := 0
 var pause_idx := 0
+# the main menu's cursor, and the first-time question's (hud/menu_flow.gd)
+var main_idx := 0
+var first_idx := 0
 # a question the menus are waiting on ("restart", "exit"), and which pause
 # card is open over the grid ("walk"); empty when neither
 var confirm_id := ""
@@ -6664,6 +6667,11 @@ func _prof(tag: String) -> void:
 # through the title would leave it.
 func _shot_menu(which: String) -> void:
 	match which:
+		"main":
+			# the main menu is the title screen, as a launch leaves it
+			menu_step = 0
+			Game.menu_step = 0
+			_apply_menu_step()
 		"walk", "details", "shop", "progress":
 			menu_step = 2 if which == "details" else 1
 			Game.menu_step = menu_step
@@ -6684,8 +6692,8 @@ func _shot_menu(which: String) -> void:
 			MenuFlow.open_pause(self)
 			MenuFlow.open_confirm(self, "exit")
 		"first":
-			# the title's first-walk question, as a new player sees it
-			MenuFlow.open_confirm(self, "first")
+			# PLAY's first-walk question, as a new player sees it
+			MenuFlow.open_first(self)
 		"basics":
 			# the tutorial's halfway card (use with --level=tutorial)
 			_skip_title()
@@ -6779,12 +6787,12 @@ func _process(_delta: float) -> void:
 			if "--shot-settings" in OS.get_cmdline_user_args():
 				_open_settings_from_menu()
 				return
-			# --shot-title leaves the menu up instead of skipping it, so the
-			# walk-select screen and the name chalked on the pavement can be
-			# reviewed. Everything else about --shot exists to get PAST this.
+			# --shot-title leaves the main menu up instead of skipping it, so
+			# it and the name chalked on the pavement can be reviewed.
+			# Everything else about --shot exists to get PAST this.
 			if "--shot-title" in OS.get_cmdline_user_args():
 				return
-			# --shot-menu=walk|details|shop|progress|pause|walkcard|confirm|first|basics|notice opens that screen
+			# --shot-menu=main|walk|details|shop|progress|pause|walkcard|confirm|first|basics|notice opens that screen
 			for a in OS.get_cmdline_user_args():
 				if a.begins_with("--shot-menu="):
 					_shot_menu(a.substr(12))

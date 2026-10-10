@@ -57,7 +57,7 @@ for lv in "${LEVELS[@]}"; do
   shot "walk-${lv}" 1280x720 --level="${lv}"
 done
 shot title 1280x720 --shot-title
-for sc in walk details shop progress pause walkcard confirm notice; do
+for sc in main walk details shop progress pause walkcard confirm notice; do
   shot "menu-${sc}" 1280x720 --shot-menu="${sc}" --level=street --shot-at=90
 done
 shot settings 1280x720 --shot-settings
