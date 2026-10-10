@@ -2329,10 +2329,13 @@ func _draw_mercat(vt: float, vb: float) -> void:
 			_wc.draw_rect(Rect2(sx - 38.0, blk.position.y - 4.0, 76.0, 16.0), Color(0.12, 0.26, 0.20))
 			_wc.draw_string(font, Vector2(sx - 38.0, blk.position.y + 8.0), String(signs[trade]),
 				HORIZONTAL_ALIGNMENT_CENTER, 76.0, 11, Color(0.96, 0.90, 0.72))
-	# the drain in the middle aisle, grated, a little wet round it
+	# the floor drain in the middle aisle
 	var dr: Vector2 = LevelBuild.MERCAT_DRAIN
 	if dr.y > vt - 60.0 and dr.y < vb + 60.0:
-		b.circle(dr, 22.0, Color(0.40, 0.44, 0.48, 0.25))
+		Mercat.draw_floor_drain(b, dr)
+	# what stands along the walls, and the street outside the arch
+	Mercat.draw_hall(self, b, vt, vb)
+	Mercat.draw_approach(self, b, vt, vb)
 	b.flush(_wc)
 
 
@@ -3485,19 +3488,7 @@ func _draw_rambla_stall(st: Vector2, kind: String, i: int) -> void:
 					b.circle(cr.position + Vector2(6.0 + float(f % 3) * 8.0, 7.0 + float(f / 3) * 9.0), 4.6, fc)
 				b.rect(Rect2(cr.position.x + 18.0, cr.end.y - 7.0, 9.0, 6.0), Color(0.97, 0.96, 0.92))
 		"fish":
-			# the fish counter: steel, a bed of crushed ice, the catch laid on
-			# it head to tail, lemon halves; the meltwater is on the floor
-			b.rect(r, Color(0.58, 0.60, 0.62))
-			b.rect(r.grow(-4.0), Color(0.88, 0.93, 0.96))
-			for k in range(14):
-				b.circle(r.position + Vector2(8.0 + float(k * 13 % 80), 8.0 + float(k * 7 % 40)), 2.5, Color(1, 1, 1, 0.8))
-			for k in range(5):
-				var fp := Vector2(r.position.x + 14.0 + float(k) * 17.0, st.y + (6.0 if k % 2 == 0 else -6.0))
-				var fcol: Color = [Color(0.66, 0.70, 0.74), Color(0.86, 0.56, 0.52), Color(0.56, 0.62, 0.70)][k % 3]
-				b.polygon(PackedVector2Array([fp + Vector2(0, -12), fp + Vector2(5, -2), fp + Vector2(0, 10),
-					fp + Vector2(-5, -2)]), fcol)
-				b.polygon(PackedVector2Array([fp + Vector2(0, 9), fp + Vector2(5, 15), fp + Vector2(-5, 15)]), fcol.darkened(0.2))
-			b.circle(Vector2(r.end.x - 10.0, r.position.y + 10.0), 5.0, Color(0.98, 0.88, 0.30))
+			Mercat.draw_fish_counter(b, r, r.get_center().x < 640.0, i)
 		"jamon":
 			# the ham counter: whole legs laid in a row, hoof to hip, sausages
 			# hanging off the front rail
@@ -10120,6 +10111,9 @@ func _draw_world() -> void:
 			continue
 		if lvl == "station":
 			_draw_trolleys(v)
+			continue
+		if lvl == "market":
+			Mercat.draw_van(self, _wc, v)
 			continue
 		if lvl == "scrap":
 			_draw_wreck_stack(v)
