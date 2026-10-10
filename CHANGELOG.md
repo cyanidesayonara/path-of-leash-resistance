@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-10-10 - a slack leash lies in curves, not an accordion
+
+- The rope had no stiffness against bending, so spare length folded into a
+  regular zigzag. A bending constraint (`entities/leash.gd`, BEND_MIN): two
+  points one apart may come no closer than 1.55 segments, so a joint never
+  folds back on itself and slack lies in loose curves and loops on the
+  ground.
+- Run once, before the length passes, so it can never stretch the rope
+  into a false pull (the moving walkways caught that).
+- Only with no pole or obstacle within 120 px of the rope: wraps, the
+  whirl's winding measures and its unwinding all read the rope's shape near
+  a pole, so there the solver is exactly as it was (the pole and tangle
+  benchmark hashes are unchanged). Slack near trees still folds; that is
+  the next step.
+- `tests/test_leash_slack.gd` in CI.
+
 ## 2026-10-09 - every CI test, locally, the way CI runs it
 
 - `tools/run_tests.sh` reads the test list from `.github/workflows/ci.yml`

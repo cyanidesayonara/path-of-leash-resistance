@@ -28,6 +28,17 @@ const TAUT_ONSET_END := 1.05
 # Interior velocity damping on a rope that touches nothing, scaled by the
 # taut amount, so a stretched rope settles instead of swinging on and on.
 const TAUT_DAMP := 0.1
+# Bending: a real strap resists folding back on itself, so slack lies in loose
+# curves on the ground instead of the accordion a chain of free joints makes.
+# Two points one apart may come no closer than BEND_MIN segments (a turn of
+# at most about 2 acos(BEND_MIN / 2) per joint), corrected at BEND_K. Only on
+# a rope with no obstacle within BEND_BERTH of its box: a coil round a pole is
+# a tight bend by design, and the wrap, the whirl's winding measures and its
+# unwinding all read the shape a rope takes as it comes round a pole, so
+# anywhere near one the solver is exactly what it was without bending.
+const BEND_MIN := 1.55
+const BEND_K := 0.6
+const BEND_BERTH := 120.0
 # The pull tangent is the chord over this many segments, so one displaced
 # point next to the end cannot steer it; a contact within them falls back to
 # the first segment alone.
@@ -238,17 +249,22 @@ func tick(delta: float) -> void:
 	_obs_pos.clear()
 	_obs_kind.clear()
 	_ensure_pole_kinds()
+	var berth_clear := true
 	for pi in range(poles.size()):
 		var npl: Vector2 = poles[pi]
-		if npl.x > rl - 40.0 and npl.x < rr + 40.0 and npl.y > rt - 40.0 and npl.y < rb + 40.0:
-			near_poles.append(npl)
-			_obs_pos.append(npl)
-			_obs_kind.append(pole_kinds[pi])
+		if npl.x > rl - BEND_BERTH and npl.x < rr + BEND_BERTH and npl.y > rt - BEND_BERTH and npl.y < rb + BEND_BERTH:
+			berth_clear = false
+			if npl.x > rl - 40.0 and npl.x < rr + 40.0 and npl.y > rt - 40.0 and npl.y < rb + 40.0:
+				near_poles.append(npl)
+				_obs_pos.append(npl)
+				_obs_kind.append(pole_kinds[pi])
 	for dob in dynamic_obstacles:
-		if dob.x > rl - 40.0 and dob.x < rr + 40.0 and dob.y > rt - 40.0 and dob.y < rb + 40.0:
-			near_poles.append(dob)
-			_obs_pos.append(dob)
-			_obs_kind.append(K_DYNAMIC)
+		if dob.x > rl - BEND_BERTH and dob.x < rr + BEND_BERTH and dob.y > rt - BEND_BERTH and dob.y < rb + BEND_BERTH:
+			berth_clear = false
+			if dob.x > rl - 40.0 and dob.x < rr + 40.0 and dob.y > rt - 40.0 and dob.y < rb + 40.0:
+				near_poles.append(dob)
+				_obs_pos.append(dob)
+				_obs_kind.append(K_DYNAMIC)
 	var obs_n := _obs_pos.size()
 	# which obstacle each rope point ended up against: -1 for none. An int per
 	# point, allocated once, replaces a Dictionary of Dictionaries per frame.
@@ -267,6 +283,10 @@ func tick(delta: float) -> void:
 	for _iter in range(ITER):
 		pts[0] = dog_end
 		pts[N - 1] = hand_end
+		# bending first, so the length passes below take back any stretch it
+		# adds: a bend that lengthened the rope would read as tension
+		if _iter == 0 and berth_clear:
+			_bend(seg)
 		# a carries pts[i] from the previous step, so each point is read once
 		var a: Vector2 = pts[0]
 		for i in range(N - 1):
@@ -371,6 +391,27 @@ func tick(delta: float) -> void:
 			prev[i] = prev[i].lerp(pts[i], damp)
 	if hero or Engine.get_physics_frames() % 2 == 0:
 		queue_redraw()
+
+
+# One pass of the bending constraint (see BEND_MIN), before the solve: it only
+# opens joints folded tighter than BEND_MIN allows, so a taut rope (every
+# joint near straight) is untouched.
+func _bend(seg: float) -> void:
+	var bend_min := seg * BEND_MIN
+	var bend_min_sq := bend_min * bend_min
+	for i in range(N - 2):
+		var a: Vector2 = pts[i]
+		var c: Vector2 = pts[i + 2]
+		var d := c - a
+		var dist_sq := d.length_squared()
+		if dist_sq >= bend_min_sq or dist_sq < 0.000001:
+			continue
+		var dist := sqrt(dist_sq)
+		var corr := d * ((dist - bend_min) / dist) * 0.5 * BEND_K
+		if i > 0:
+			pts[i] = a + corr
+		if i + 2 < N - 1:
+			pts[i + 2] = c - corr
 
 
 func _closest_on_segment(a: Vector2, b: Vector2, c: Vector2) -> Vector2:
