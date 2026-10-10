@@ -25,6 +25,41 @@ Append-only session history, newest first.
   whole walk. The tinted box laid over the walk's sand (which stopped in a
   hard line at the gate) is gone; the sand underfoot plays as before.
 - `tests/test_passeig.gd` in CI.
+## 2026-10-09 - El Gòtic audit fixes (#154)
+
+- The washing over the alley is washing: shirts with their sleeves out and
+  a collar, sheets folded over the line with their creases, jeans by the
+  waistband, socks in pairs and striped towels, every piece pegged to a
+  line that sags between the walls, batched and culled to the view (La
+  Neteja shares it).
+- Past the alley's own roofs the frame was bare masonry, flat grey over
+  two fifths of the view. Now the old town goes on from above: pantile
+  roofs with their ridges either way, terrats with stair huts, water tanks,
+  pots and washing, courtyards and light wells, the odd zinc roof, on a
+  grid fixed in the world and slid row by row so it never reads as a grid.
+  It runs on round the plaça at the top, where the plain rows of tiles were.
+  All of it in the edge layer's one batch.
+- The parked scooters are Vespas: rear cowls wider than the saddle, the
+  floorboard, the curved leg shield, the mudguard and the headlamp in the
+  handlebars. Red, cream and mint.
+- The posts down the alley were drawing as trees growing out of the
+  paving; they are the cast-iron bollards the level always called them.
+  The plaça's plane tree stands in a stone-kerbed pit with its grate.
+- The off-leash plaça turns away a prop that would land on another, a
+  tree's pit, the trough or the fountain, so pits no longer overlap and no
+  planter sits on a dig (all four plaça walks). The plaça's house fronts
+  have cornices, shuttered windows on iron balconies and doors in stone
+  surrounds.
+
+## 2026-10-09 - every CI test, locally, the way CI runs it
+
+- `tools/run_tests.sh` reads the test list from `.github/workflows/ci.yml`
+  and runs each one as CI does, through `tools/godot_ci.sh` (so a SCRIPT
+  ERROR fails it). The six render tests (appearance, HUD anchoring, touch,
+  rotate prompt, ShapeBatch) get a real rendering context: run headless,
+  they fail or hang, which had read as local failures that CI did not see.
+  All 102 pass on main. A filter picks tests by path; failures are listed
+  at the end.
 
 ## 2026-10-06 - paper bags on Montjuïc's wind (#146)
 

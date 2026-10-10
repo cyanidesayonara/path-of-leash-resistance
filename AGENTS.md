@@ -174,6 +174,13 @@ Headless smoke test (what CI runs; catches parse and runtime script errors):
 godot\Godot_v4.7-stable_win64_console.exe --headless --path . --quit-after 1800
 ```
 
+Every test CI runs, each run the way CI runs it (the render tests with a
+real rendering context; run headless, they fail or hang for no reason in
+the code). A filter picks tests by path; TIMEOUT sets seconds per test:
+```
+GODOT=godot/Godot_v4.7-stable_win64_console.exe bash tools/run_tests.sh [leash]
+```
+
 Release (both platforms, both itch channels):
 ```
 git tag v1.53 && git push --tags
