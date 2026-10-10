@@ -281,6 +281,8 @@ jobs:
 
       - name: Combo challenge regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_challenge.gd
+      - name: Dare offer and retry test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_dare_retry.gd
 
       - name: El Gotic wall cat regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_wallcat.gd

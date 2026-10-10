@@ -3,11 +3,18 @@ extends Node2D
 const HumanLook := preload("res://entities/human_appearance.gd")
 
 # The combo-challenge giver (Combo Phase B): a show-off kid on a bench who
-# dares you into a bounded trick window as you pass. One offer per walk;
-# after that they just cheer (or commiserate). Pure flavour + a proximity
-# trigger - the challenge logic and reward live in challenge.gd / main.
+# dares you into a bounded trick window as you pass. A lost dare can be
+# tried again: walk away and come back, or hang about near the bench for
+# RETRY_WAIT, and the kid offers it once more, up to RETRIES times. A won
+# dare is done. Pure flavour + a proximity trigger - the challenge logic and
+# reward live in challenge.gd / main.
 
 const NOTICE_R := 240.0
+# a retry: offered when she comes back within NOTICE_R after leaving it, or
+# after RETRY_WAIT while she is still within NEAR_R (on screen)
+const NEAR_R := 420.0
+const RETRY_WAIT := 5.0
+const RETRIES := 2
 
 var main: Node2D
 var my_dog: Node2D
@@ -16,6 +23,12 @@ var window := 12.0
 var fired := false
 var result := ""  # "", "win", "lose" once resolved
 var seed_o := 0.0
+# how many second goes have been offered, the time since the last dare ended,
+# and whether she has left the bench since it did
+var retries := 0
+var since_end := 0.0
+var left_since := false
+var _said := ""
 
 
 func setup(m: Node2D, mine: Node2D, target: int, seconds: float) -> void:
@@ -29,19 +42,50 @@ func setup(m: Node2D, mine: Node2D, target: int, seconds: float) -> void:
 	seed_o = fmod(absf(position.x) * 0.017, TAU)
 
 
-func _physics_process(_delta: float) -> void:
-	if main.frozen or fired:
+func _physics_process(delta: float) -> void:
+	if main.frozen:
 		return
+	# the bubble says what the dare is doing, so redraw when that changes
+	var said := _line()
+	if said != _said:
+		_said = said
+		queue_redraw()
 	# only offer while walking out - not mid off-leash romp or the way home
 	if main.phase != "out":
 		return
-	if my_dog.global_position.distance_to(global_position) < NOTICE_R:
-		fired = true
-		main.start_challenge(self, trick_target, window)
+	var d: float = my_dog.global_position.distance_to(global_position)
+	if not fired:
+		if d < NOTICE_R:
+			fired = true
+			main.start_challenge(self, trick_target, window)
+		return
+	if not can_retry():
+		return
+	since_end += delta
+	if d > NOTICE_R:
+		left_since = true
+	# back at the bench, or still close by after a moment: the same dare again
+	if (left_since and d < NOTICE_R) or (since_end >= RETRY_WAIT and d < NEAR_R):
+		retries += 1
+		result = ""
+		queue_redraw()
+		main.start_challenge(self, trick_target, window, true)
+
+
+# A second go is for a player who lost: never after a win, never once the
+# retries are used up, and never for the autowalk bot.
+func can_retry() -> bool:
+	return result == "lose" and has_another_go() and not main.challenge.showing()
+
+
+func has_another_go() -> bool:
+	return retries < RETRIES and main != null and not bool(main.auto_walk)
 
 
 func resolve(win: bool) -> void:
 	result = "win" if win else "lose"
+	since_end = 0.0
+	left_since = false
 	queue_redraw()
 
 
@@ -111,12 +155,30 @@ func _draw() -> void:
 		dress["headwear_col"])
 
 	# --- what they are shouting -------------------------------------------
-	var line := "bet you can't!" if result == "" else ("nice!!" if result == "win" else "heh, next time")
+	var line := _line()
 	var col := Color(0.16, 0.15, 0.18)
 	var bg := Color(0.97, 0.95, 0.88, 0.95)
 	if result == "win":
 		bg = Color(0.86, 0.98, 0.86, 0.95)
 	_bubble(fd * 26.0 + Vector2(0.0, -40.0), line, bg, col)
+
+
+# What the kid is saying, as people talk: the dare spelled out while it is
+# being offered, a count while it runs, and how it went.
+func _line() -> String:
+	var ch: Node = main.challenge if main != null else null
+	var mine: bool = ch != null and main.challenge_giver == self
+	if mine and String(ch.phase) == "offer":
+		return "%sbet you can't do %d tricks in %d seconds!" % ["again? " if bool(ch.retry) else "",
+			int(ch.target), int(round(float(ch.duration)))]
+	if mine and String(ch.phase) == "live":
+		var left := int(ch.target) - int(ch.count)
+		return "%d more! go go go!" % left if left > 1 else "one more!"
+	if result == "win":
+		return "no way!! nice!!"
+	if result == "lose":
+		return "heh. want another go?" if has_another_go() else "heh, next time"
+	return "bet you can't!"
 
 
 func _bar(at: Vector2, side: Vector2, length: float, depth: float) -> PackedVector2Array:
