@@ -78,7 +78,9 @@ func _watch() -> void:
 	if human_hist.size() == 90 and human_hist[0].distance_to(human_hist[89]) < 6.0:
 		# only while plainly walking: a stop for a selfie or lost signal is
 		# the owner's own event, not being stuck
-		if m.human.state == 0 and m.human.walk_intent.length() > 30.0 and float(m.human.get("halt_t")) <= 0.0:
+		# nor while waiting at a tutorial lesson, which is standing still on purpose
+		var waiting: bool = float(m.human.get("tut_hold_y")) > -INF
+		if m.human.state == 0 and m.human.walk_intent.length() > 30.0 and float(m.human.get("halt_t")) <= 0.0 				and not waiting:
 			_note("HUMAN STUCK", m.human.global_position)
 	for g in ["pairs", "tourists"]:
 		for n: Node in get_nodes_in_group(g):
