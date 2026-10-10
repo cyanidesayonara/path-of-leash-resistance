@@ -230,6 +230,9 @@ jobs:
       - name: El Parc is its own park test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_parc.gd
 
+      - name: Passeig Maritim landmarks test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_passeig.gd
+
       - name: La Rambla layout test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_rambla.gd
 
