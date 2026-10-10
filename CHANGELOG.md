@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-10-10 - playtest a walk through its real inputs
+
+- `tools/playtest.gd` plays a walk from a script of steps through the same
+  input actions a player's keys press, photographs it as it goes, and logs
+  what a player would notice: DOG STUCK (a direction held and no headway,
+  nothing to explain it), HUMAN STUCK (walking and going nowhere), NPC IN
+  SOLID (a walker, their dog or a tourist inside a solid). Its first run on
+  El Mercat found the pinches between the stall blocks and the bins that
+  Santtu hit by hand.
+- Driving the web build in the app's browser pane was tried first: with the
+  app window hidden the page barely renders, inputs go missing and the dog
+  hardly moves, so it cannot stand in for play. AGENTS.md says so.
+
 ## 2026-10-09 - Passeig Marítim: audit fixes (#151)
 
 - The palms come in runs now, not one every 300px all the way: a tight
