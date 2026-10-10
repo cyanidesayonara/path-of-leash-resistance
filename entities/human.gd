@@ -102,6 +102,9 @@ var homeward := false
 # the tutorial holds the owner here (north of it is where they stop); -INF off
 var tut_hold_y := -INF
 var tut_hold_x := INF
+# waiting at a lesson, they hold their ground: dragged further than this past
+# their spot, they walk back to it (main.gd braces them against the pull)
+const TUT_HOLD_SLACK := 30.0
 var parked := false
 var park_target := Vector2.ZERO
 var park_throw_t := 0.0
@@ -498,6 +501,11 @@ func _fiddle_with_reel(delta: float) -> void:
 			bubble.visible = false)
 
 
+# Waiting at a tutorial lesson (main.tut_hold_point): at or past their spot.
+func tut_holding() -> bool:
+	return tut_hold_y > -INF and not homeward and global_position.y <= tut_hold_y + 10.0
+
+
 func _walk(delta: float) -> void:
 	# the tutorial's owner waits at a lesson (main.TUT_HOLD_BACK): stood still
 	# on the phone until it is done, shuffling over to the lesson's spot first
@@ -505,6 +513,9 @@ func _walk(delta: float) -> void:
 		var want := Vector2.ZERO
 		if tut_hold_x < INF and absf(global_position.x - tut_hold_x) > 6.0:
 			want = Vector2(signf(tut_hold_x - global_position.x) * WALK_SPEED * 0.6, 0.0)
+		# towed on past their spot: back they go, so the lesson stays in reach
+		if global_position.y < tut_hold_y - TUT_HOLD_SLACK:
+			want.y = WALK_SPEED * 0.6
 		velocity = velocity.move_toward(want, 400.0 * delta)
 		move_and_slide()
 		return
