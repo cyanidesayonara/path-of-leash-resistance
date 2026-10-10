@@ -661,6 +661,9 @@ var sign_layer: Node2D
 var gloss_a := 1.0
 var details_idx := 0
 var pause_idx := 0
+# the main menu's cursor, and the first-time question's (hud/menu_flow.gd)
+var main_idx := 0
+var first_idx := 0
 # a question the menus are waiting on ("restart", "exit"), and which pause
 # card is open over the grid ("walk"); empty when neither
 var confirm_id := ""
@@ -696,6 +699,11 @@ var mood_forced := -1
 var owner_news_cd := 0.0
 var challenge: Node
 var challenge_l: Label
+# what the kid's dare pays (start_challenge): a base and a bit a trick, and
+# a retry pays DARE_RETRY_CUT less, so the first go is still the one to land
+const DARE_BASE := 20
+const DARE_PER_TRICK := 3
+const DARE_RETRY_CUT := 10
 var challenge_giver: Node2D
 var challenge_offered := false
 var dog_carrying := false
@@ -6623,13 +6631,19 @@ func on_combo_banked(score: int, mult: int, bonus: int) -> void:
 
 
 func _update_challenge_hud() -> void:
-	var live: bool = challenge.active
-	challenge_l.visible = live
-	if not live:
+	# the card itself is drawn by the feed (hud/event_feed.gd) from challenge
+	var up: bool = challenge.showing()
+	challenge_l.visible = up
+	if not up:
 		return
-	challenge_l.text = "COMBO CHALLENGE   %d/%d tricks   %ds" % [
-		challenge.count, challenge.target, int(ceil(challenge.timer))]
-	challenge_l.modulate = Color(1, 0.95, 0.6) if challenge.fraction() > 0.3 else Color(1, 0.55, 0.4)
+	challenge_l.text = "DARE %s %d/%d" % [challenge.phase, challenge.count, challenge.target]
+	match String(challenge.phase):
+		"live":
+			challenge_l.modulate = Color(1, 0.95, 0.6) if challenge.fraction() > 0.3 else Color(1, 0.55, 0.4)
+		"end":
+			challenge_l.modulate = Color(0.58, 0.90, 0.62) if challenge.succeeded else Color(1.0, 0.56, 0.48)
+		_:
+			challenge_l.modulate = Color(1, 0.95, 0.6)
 
 
 # Every scored thing passes through here on its way into the combo
@@ -6661,14 +6675,27 @@ func _refill_zoomies(pts: int) -> void:
 
 
 
-func start_challenge(giver: Node2D, target: int, seconds: float) -> void:
-	if challenge_offered or challenge.active:
+# What a dare pays: the first go, and a second go (less, but worth having).
+static func dare_reward(target: int, retry: bool) -> int:
+	return DARE_BASE + target * DARE_PER_TRICK - (DARE_RETRY_CUT if retry else 0)
+
+
+# The kid has said the dare; the clock starts after the offer has been read
+# (systems/challenge.gd). A retry is the same dare again, once it is over.
+func start_challenge(giver: Node2D, target: int, seconds: float, retry := false) -> void:
+	if challenge.showing():
+		return
+	if challenge_offered and not retry:
 		return
 	challenge_offered = true
 	challenge_giver = giver
-	challenge.begin(target, seconds)
+	challenge.offer(target, seconds, dare_reward(target, retry), retry)
+	Sfx.play("ui")
+
+
+func on_challenge_live() -> void:
 	shake_t = maxf(shake_t, 0.2)
-	feed.say("DARE: %d TRICKS, GO!" % target, EventFeed.Tone.LOUD)
+	feed.say("GO! %d TRICKS!" % challenge.target, EventFeed.Tone.LOUD)
 
 
 func on_challenge_done(win: bool, target: int, count: int) -> void:
@@ -6676,12 +6703,12 @@ func on_challenge_done(win: bool, target: int, count: int) -> void:
 	if is_instance_valid(challenge_giver):
 		challenge_giver.resolve(win)
 	if win:
-		var reward := 20 + target * 3
+		var reward: int = challenge.reward if challenge.reward > 0 else dare_reward(target, false)
 		bones += reward
-		feed.say("DARE DONE!  +%d" % reward, EventFeed.Tone.GOOD)
+		feed.say("DARE WON! +%d" % reward, EventFeed.Tone.GOOD)
 		_slowmo()
 	else:
-		feed.say("DARE MISSED: %d OF %d" % [count, target], EventFeed.Tone.BAD)
+		feed.say("DARE LOST: %d OF %d" % [count, target], EventFeed.Tone.BAD)
 
 
 # a first-time tip, from a script that has no Tips (human.gd)
@@ -6841,6 +6868,11 @@ func _prof(tag: String) -> void:
 # through the title would leave it.
 func _shot_menu(which: String) -> void:
 	match which:
+		"main":
+			# the main menu is the title screen, as a launch leaves it
+			menu_step = 0
+			Game.menu_step = 0
+			_apply_menu_step()
 		"walk", "details", "shop", "progress":
 			menu_step = 2 if which == "details" else 1
 			Game.menu_step = menu_step
@@ -6861,8 +6893,8 @@ func _shot_menu(which: String) -> void:
 			MenuFlow.open_pause(self)
 			MenuFlow.open_confirm(self, "exit")
 		"first":
-			# the title's first-walk question, as a new player sees it
-			MenuFlow.open_confirm(self, "first")
+			# PLAY's first-walk question, as a new player sees it
+			MenuFlow.open_first(self)
 		"basics":
 			# the tutorial's halfway card (use with --level=tutorial)
 			_skip_title()
@@ -6956,12 +6988,12 @@ func _process(_delta: float) -> void:
 			if "--shot-settings" in OS.get_cmdline_user_args():
 				_open_settings_from_menu()
 				return
-			# --shot-title leaves the menu up instead of skipping it, so the
-			# walk-select screen and the name chalked on the pavement can be
-			# reviewed. Everything else about --shot exists to get PAST this.
+			# --shot-title leaves the main menu up instead of skipping it, so
+			# it and the name chalked on the pavement can be reviewed.
+			# Everything else about --shot exists to get PAST this.
 			if "--shot-title" in OS.get_cmdline_user_args():
 				return
-			# --shot-menu=walk|details|shop|progress|pause|walkcard|confirm|first|basics|notice opens that screen
+			# --shot-menu=main|walk|details|shop|progress|pause|walkcard|confirm|first|basics|notice opens that screen
 			for a in OS.get_cmdline_user_args():
 				if a.begins_with("--shot-menu="):
 					_shot_menu(a.substr(12))
