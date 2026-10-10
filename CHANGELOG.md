@@ -2,6 +2,33 @@
 
 Append-only session history, newest first.
 
+## 2026-10-10 - a main menu, and one way back from everywhere
+
+- The title is a main menu now: PLAY, TUTORIAL, WARDROBE, YOUR WALKS,
+  SETTINGS and EXIT GAME, a list at the left under the name, picked with
+  up/down and the plant action. Quitting no longer means starting a walk
+  to reach the pause menu.
+- One rule on every screen: plant confirms, and bark or pause is BACK.
+  BACK closes the wardrobe, YOUR WALKS and settings to whichever screen
+  opened them, steps back from GET READY to the walk select and from there
+  to the main menu, cancels a question, resumes from the pause menu, and on
+  the main menu asks EXIT GAME (desktop only; on the web it does nothing).
+  The prompt bar shows it as one BACK key everywhere. Keys no longer mean
+  different things on different screens: bark used to open the wardrobe on
+  the walk select and pause opened settings; now the walk select opens the
+  wardrobe on pee and everything else is on the main menu.
+- PLAY's first-time question is a list of its two answers (learn the
+  ropes, straight to the walks), so bark can be BACK there too.
+- Plant on a switch in settings flips it; it no longer closes the screen.
+  Plant no longer closes YOUR WALKS or the pause menu's THIS WALK card.
+- Touch: the stick picks, DIG confirms, BARK is back; the MENU button is
+  only for pausing and resuming a walk.
+- `tests/test_menu_tree.gd` in CI walks the whole tree with real presses:
+  every screen from the main menu and back again with BACK alone, EXIT GAME
+  only on desktop and only after the yes. `--shot-menu=main` photographs the
+  main menu, and the shot sweep includes it. The behaviour snapshot is
+  unchanged.
+
 ## 2026-10-09 - every CI test, locally, the way CI runs it
 
 - `tools/run_tests.sh` reads the test list from `.github/workflows/ci.yml`
