@@ -2,6 +2,32 @@
 
 Append-only session history, newest first.
 
+## 2026-10-09 - El Gòtic audit fixes (#154)
+
+- The washing over the alley is washing: shirts with their sleeves out and
+  a collar, sheets folded over the line with their creases, jeans by the
+  waistband, socks in pairs and striped towels, every piece pegged to a
+  line that sags between the walls, batched and culled to the view (La
+  Neteja shares it).
+- Past the alley's own roofs the frame was bare masonry, flat grey over
+  two fifths of the view. Now the old town goes on from above: pantile
+  roofs with their ridges either way, terrats with stair huts, water tanks,
+  pots and washing, courtyards and light wells, the odd zinc roof, on a
+  grid fixed in the world and slid row by row so it never reads as a grid.
+  It runs on round the plaça at the top, where the plain rows of tiles were.
+  All of it in the edge layer's one batch.
+- The parked scooters are Vespas: rear cowls wider than the saddle, the
+  floorboard, the curved leg shield, the mudguard and the headlamp in the
+  handlebars. Red, cream and mint.
+- The posts down the alley were drawing as trees growing out of the
+  paving; they are the cast-iron bollards the level always called them.
+  The plaça's plane tree stands in a stone-kerbed pit with its grate.
+- The off-leash plaça turns away a prop that would land on another, a
+  tree's pit, the trough or the fountain, so pits no longer overlap and no
+  planter sits on a dig (all four plaça walks). The plaça's house fronts
+  have cornices, shuttered windows on iron balconies and doors in stone
+  surrounds.
+
 ## 2026-10-09 - every CI test, locally, the way CI runs it
 
 - `tools/run_tests.sh` reads the test list from `.github/workflows/ci.yml`

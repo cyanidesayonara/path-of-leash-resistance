@@ -1609,11 +1609,7 @@ static func build_level_data(m: Node2D) -> void:
 			# plane trees in rows, as a square has them: along the top and
 			# down both sides, never in the middle
 			grove = 0
-			for tx: float in [200.0, 376.0, 552.0, 728.0, 1080.0]:
-				m.trees.append(Vector2(tx, m.GATE_Y - 560.0))
-			for ty: float in [-300.0, -450.0]:
-				m.trees.append(Vector2(140.0, m.GATE_Y + ty))
-				m.trees.append(Vector2(1140.0, m.GATE_Y + ty))
+			m.trees.append_array(placa_trees(m))
 			# and the pigeons that live in every square
 			m.flock_ys.append(m.GATE_Y - 330.0)
 	for i in range(grove):
@@ -2042,7 +2038,13 @@ static func build_park_props(m: Node2D) -> void:
 		var gy := lerpf(lo + 60.0, hi - 60.0, dig_fs[i])
 		var dig_at: Vector2 = m.agility.push_out(Vector2(dig_xs[i], gy), 26.0)
 		m.park_props.append({"pos": dig_at, "kind": "dig", "done": false, "prog": 0.0})
-	for i in range(14):
+	# the plaça turns away whatever would land on something already there, so
+	# it keeps drawing until it has as many as the other walks get
+	var placa: bool = m.freedom_kind == "placa"
+	var placed := 0
+	for i in range(40 if placa else 14):
+		if placa and placed >= 10:
+			break
 		var kind: String = flavour[r.randi() % flavour.size()]
 		# bias to the flanks: the middle is the fetch runway
 		var side_pick := r.randf()
@@ -2073,9 +2075,14 @@ static func build_park_props(m: Node2D) -> void:
 		for si in range(m.PAIR_PARK_SPOTS.size()):
 			if at.distance_to(m.pair_park_spot(si)) < 90.0:
 				clear = false
+		# in a plaça every pit and planter is a square in the paving: two
+		# laid over each other, or a planter on a dig, is a drawing error
+		if placa and not placa_clear(m, at):
+			clear = false
 		if not clear:
 			continue
 		m.park_props.append({"pos": at, "kind": kind, "done": false, "prog": 0.0})
+		placed += 1
 	# one water trough near the gate, because a romp is thirsty work
 	# one water trough near the gate, because a romp is thirsty work - by the
 	# shower on the beach, where the tap actually is
@@ -2083,6 +2090,34 @@ static func build_park_props(m: Node2D) -> void:
 	if m.freedom_kind == "beach":
 		trough_at = Vector2(m.BEACH_SEA_R + 172.0, m.freedom_lo + 148.0)
 	m.park_props.append({"pos": trough_at, "kind": "trough", "done": false, "prog": 0.0})
+
+
+# the plaça's plane trees: along the top and down both sides, never in the
+# middle
+static func placa_trees(m: Node2D) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for tx: float in [200.0, 376.0, 552.0, 728.0, 1080.0]:
+		out.append(Vector2(tx, m.GATE_Y - 560.0))
+	for ty: float in [-300.0, -450.0]:
+		out.append(Vector2(140.0, m.GATE_Y + ty))
+		out.append(Vector2(1140.0, m.GATE_Y + ty))
+	return out
+
+
+# room in the plaça's paving for one more thing: clear of everything already
+# placed there and of the plane trees' pits
+static func placa_clear(m: Node2D, at: Vector2) -> bool:
+	for pp: Dictionary in m.park_props:
+		if at.distance_to(pp.pos) < 72.0:
+			return false
+	# the plane trees are planted after the props, so ask where they will be
+	for t: Vector2 in placa_trees(m):
+		if at.distance_to(t) < 66.0:
+			return false
+	# the trough goes in after them, by the bench, and the fountain is solid
+	if at.distance_to(Vector2(m.gate_bench.x - 150.0, m.gate_bench.y + 24.0)) < 64.0:
+		return false
+	return not placa_fountain(m).grow(34.0).has_point(at)
 
 
 # Where a council would put a drain or patch a pothole: asphalt and laid
