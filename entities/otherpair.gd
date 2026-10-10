@@ -22,9 +22,39 @@ const PAIR_MAX_LATERAL_SPEED := 90.0
 const PAIR_MINIMUM_LOOKAHEAD := 240.0
 const PAIR_LOOKAHEAD_TIME := 1.35
 const DOG_SPEED := 90.0
-const LEASH_CAP := 150.0
-const INITIAL_DOG_OFFSET := Vector2(40, 30)
+# A dog that has dropped behind its place (a sniff stop left it there) trots
+# to catch up, faster than any owner walks; DOG_TROT is also the fastest the
+# dog ever goes on the walk.
+const DOG_TROT := 150.0
+const DOG_TROT_GAP := 30.0
+# the owner ambles at this share of their pace while the dog sniffs or marks
+const SNIFF_PACE := 0.75
+# The walk: the dog goes a little ahead of its owner and to one side of the
+# line, DOG_LEAD along the way they are walking and DOG_SIDE across, and the
+# wander roll moves it about that spot (WANDER_ACROSS and WANDER_ALONG of it).
+const DOG_LEAD := 70.0
+const DOG_SIDE := 16.0
+const WANDER_ACROSS := 0.6
+const WANDER_ALONG := 0.45
+# The leash: LEASH_LEN of strap from the fist to the collar. The owner takes
+# in what the dog is not using, down to LEASH_MIN, keeping LEASH_SLACK of it
+# as a gentle droop, at LEASH_REEL_SPEED; so slack never trails behind the
+# pair. The dog can go LEASH_TAUT past the full length, which is the strap
+# drawn taut, and never further than LEASH_CAP from its owner.
+const LEASH_LEN := 92.0
+const LEASH_MIN := 28.0
+const LEASH_SLACK := 1.1
+const LEASH_REEL_SPEED := 180.0
+const LEASH_TAUT := 1.04
+const LEASH_CAP := 118.0
+# the fist holding the strap: beside the phone, on the dog's side
+const HAND_FORWARD := 16.0
+const HAND_SIDE := 7.0
 const DOG_DETOUR_OFFSET := 12.0
+# share of DOG_LEAD the dog keeps ahead while the pair detours round something
+const DETOUR_LEAD := 0.7
+# how far to the side of a held-up owner the dog waits
+const DOG_WAIT_SIDE := 24.0
 const PARK_OWNER_SPEED := 82.0
 const PARK_DOG_SPEED := 110.0
 const PARK_RECALL_SPEED := 150.0
@@ -46,7 +76,7 @@ const CURIOUS_R := 160.0
 # hydrant, a lamppost, a tree, up to SPOT_REACH across and SPOT_AHEAD along
 # the way they are walking. A good sniff there gets a reply MARK_P of the
 # time, at most MARKS_MAX a walk, and leaves a mark your dog can read.
-const SPOT_REACH := 120.0
+const SPOT_REACH := 80.0
 const SPOT_AHEAD := 150.0
 const MARK_P := 0.6
 const MARK_T := 1.1
@@ -121,6 +151,10 @@ var marks_left := MARKS_MAX
 var dog_name := "a dog"
 var greet_t := 0.0
 var grumpy := false
+# which side of the line this dog walks on: +1 right, -1 left (in x)
+var dog_side := 1.0
+# how far ahead of the dog's center its collar is drawn
+var collar_reach := 0.0
 # its own dice, so a sniff stop never moves the shared seed the rest of the
 # walk (and the autowalk) depends on
 var life_rng := RandomNumberGenerator.new()
@@ -133,6 +167,8 @@ func setup(m: Node2D, mine: Node2D, poles: Array[Vector2], start: Vector2, direc
 	vel = direction * randf_range(58.0, 82.0)
 	seed_o = randf() * 10.0
 	life_rng.seed = int(seed_o * 100000.0) + 7
+	# from the seed already rolled, so the shared dice are not moved
+	dog_side = 1.0 if int(seed_o * 1000.0) % 2 == 0 else -1.0
 	sniff_gap = life_rng.randf_range(1.0, SNIFF_GAP_MAX)
 	dog_name = NAMES[life_rng.randi() % NAMES.size()]
 	grumpy = life_rng.randf() < GRUMPY_P
@@ -144,17 +180,20 @@ func setup(m: Node2D, mine: Node2D, poles: Array[Vector2], start: Vector2, direc
 	var dog_appearance_key := randi()
 	appearance_profile = DogAppearanceScript.profile_for_key(dog_appearance_key)
 	dog_col = appearance_profile["base_color"]
+	collar_reach = DogAppearanceScript.collar_reach(appearance_profile)
 	npc_owner = Node2D.new()
 	npc_owner.position = start
 	add_child(npc_owner)
 	npc_dog = Node2D.new()
-	npc_dog.position = start + INITIAL_DOG_OFFSET
+	npc_dog.position = start + _lead_offset(owner_face)
 	add_child(npc_dog)
 	leash = Node2D.new()
 	leash.set_script(load("res://entities/leash.gd"))
 	leash.z_index = 6
 	add_child(leash)
-	leash.setup(npc_dog, npc_owner, poles, 150.0)
+	leash.setup(npc_dog, npc_owner, poles, LEASH_LEN)
+	_place_hand()
+	leash.rest_len = _leash_want()
 
 
 func configure_route(
@@ -175,7 +214,7 @@ func configure_route(
 	route.call("configure_blockers", blockers)
 	desired_vertical_speed = vel.y
 	walking_lane_x = preferred_x
-	var formation_offsets: Array[Vector2] = [Vector2.ZERO, INITIAL_DOG_OFFSET]
+	var formation_offsets: Array[Vector2] = [Vector2.ZERO, npc_dog.position - npc_owner.position]
 	var spawn: Dictionary = route.call(
 		"find_clear_spawn_x",
 		npc_owner.global_position.y,
@@ -322,9 +361,13 @@ func _tick_walking(delta: float, _allow_arrival: bool) -> void:
 	if route_was_clear:
 		wander_t -= delta
 		if wander_t <= 0.0:
-			wander_t = randf_range(0.6, 1.6)
-			wander = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * 40.0
+			# its own dice: how often this rolls depends on the route, and must
+			# not move the shared seed the rest of the walk depends on
+			wander_t = life_rng.randf_range(0.6, 1.6)
+			wander = Vector2(life_rng.randf_range(-1, 1), life_rng.randf_range(-1, 1)) * 40.0
 	var clear_dog_offset := _clear_dog_offset()
+	# round an obstacle the dog still goes a little ahead, on the detour's side
+	var detour_lead := _lead_offset(Vector2(0.0, desired_vertical_speed)).y * DETOUR_LEAD
 	# the owner ambles in their lane; a tangle roots them in place
 	if tangled_t <= 0.0 and greet_t <= 0.0 and route != null:
 		var before: Vector2 = npc_owner.position
@@ -334,11 +377,11 @@ func _tick_walking(delta: float, _allow_arrival: bool) -> void:
 		]
 		var left_offsets: Array[Vector2] = [
 			Vector2.ZERO,
-			Vector2(-DOG_DETOUR_OFFSET, 0.0),
+			Vector2(-DOG_DETOUR_OFFSET, detour_lead),
 		]
 		var right_offsets: Array[Vector2] = [
 			Vector2.ZERO,
-			Vector2(DOG_DETOUR_OFFSET, 0.0),
+			Vector2(DOG_DETOUR_OFFSET, detour_lead),
 		]
 		var clear_offsets: Array[Vector2] = [
 			Vector2.ZERO,
@@ -358,14 +401,14 @@ func _tick_walking(delta: float, _allow_arrival: bool) -> void:
 			float(result.x),
 			before.y
 				if bool(result.blocked) or bool(result.formation_transitioning)
-				else before.y + desired_vertical_speed * delta
+				else before.y + desired_vertical_speed * delta * _owner_pace()
 		)
 	var detour_side := int(route.get("detour_side")) if route != null else 0
 	var route_blocked := bool(route.get("blocked")) if route != null else false
 	if detour_side != 0:
 		var detour_target := Vector2(
 			float(route.get("detour_target_x")) + detour_side * DOG_DETOUR_OFFSET,
-			npc_owner.position.y
+			npc_owner.position.y + detour_lead
 		)
 		npc_dog.position = _move_dog_lateral_first(
 			npc_dog.position,
@@ -373,9 +416,10 @@ func _tick_walking(delta: float, _allow_arrival: bool) -> void:
 			DOG_SPEED * delta
 		)
 	elif route_blocked:
+		# the way ahead is shut: it waits at its owner's side, not on their feet
 		npc_dog.position = _move_dog_lateral_first(
 			npc_dog.position,
-			npc_owner.position,
+			npc_owner.position + Vector2(dog_side * DOG_WAIT_SIDE, 0.0),
 			DOG_SPEED * delta
 		)
 	else:
@@ -420,19 +464,17 @@ func _tick_walking(delta: float, _allow_arrival: bool) -> void:
 				sniff_spot = _pick_spot()
 				if sniff_spot.x == INF:
 					sniff_t = life_rng.randf_range(SNIFF_MIN, SNIFF_MAX)
-			dog_speed_now = move_toward(dog_speed_now, DOG_SPEED, DOG_ACCEL * delta)
+			var pace := DOG_TROT if npc_dog.position.distance_to(target) > DOG_TROT_GAP else DOG_SPEED
+			dog_speed_now = move_toward(dog_speed_now, pace, DOG_ACCEL * delta)
 			npc_dog.position = npc_dog.position.move_toward(target, dog_speed_now * delta)
 	# keep the dog within their (short) leash; towed off a post, it gives up
-	# on it, mark or no mark
-	var span := npc_dog.position - npc_owner.position
-	if span.length() > LEASH_CAP:
-		npc_dog.position = npc_owner.position + span.normalized() * LEASH_CAP
-		if sniff_spot.x < INF:
-			sniff_spot = Vector2(INF, INF)
-			at_spot = false
-			sniff_t = 0.0
-			mark_t = 0.0
-	leash.tick(delta)
+	# on it, mark or no mark, and towed off any sniff it comes along
+	if _cap_dog_to_owner() and (sniff_spot.x < INF or (sniff_t > 0.0 and greet_t <= 0.0)):
+		sniff_spot = Vector2(INF, INF)
+		at_spot = false
+		sniff_t = 0.0
+		mark_t = 0.0
+	_tick_leash(delta)
 	_sync_leash_taut()
 	_sample_rope()
 
@@ -509,10 +551,10 @@ func _tick_arriving(delta: float) -> void:
 	var before := npc_owner.position
 	npc_owner.position = npc_owner.position.move_toward(park_spot, PARK_OWNER_SPEED * delta)
 	vel = (npc_owner.position - before) / delta if delta > 0.0 else Vector2.ZERO
-	var target := npc_owner.position + INITIAL_DOG_OFFSET * 0.55
+	var target := npc_owner.position + _lead_offset(park_spot - npc_owner.position) * 0.55
 	npc_dog.position = npc_dog.position.move_toward(target, DOG_SPEED * delta)
 	_cap_dog_to_owner()
-	leash.tick(delta)
+	_tick_leash(delta)
 	_sync_leash_taut()
 	_sample_rope()
 	if npc_owner.position.is_equal_approx(park_spot):
@@ -555,6 +597,8 @@ func _tick_recalling(delta: float) -> void:
 	if npc_dog.position.distance_to(npc_owner.position) <= RELEASH_DISTANCE:
 		leash.detached = false
 		_cancel_tangle()
+		_place_hand()
+		leash.rest_len = _leash_want()
 		leash.resnap()
 		leash.visible = true
 		pair_state = PairState.DEPARTING
@@ -576,10 +620,10 @@ func _tick_departing(delta: float) -> void:
 	var before := npc_owner.position
 	npc_owner.position = npc_owner.position.move_toward(gate_exit, PARK_OWNER_SPEED * delta)
 	vel = (npc_owner.position - before) / delta if delta > 0.0 else Vector2.ZERO
-	var target := npc_owner.position + INITIAL_DOG_OFFSET
+	var target := npc_owner.position + _lead_offset(gate_exit - npc_owner.position)
 	npc_dog.position = npc_dog.position.move_toward(target, DOG_SPEED * delta)
 	_cap_dog_to_owner()
-	leash.tick(delta)
+	_tick_leash(delta)
 	_sync_leash_taut()
 	_sample_rope()
 	if npc_owner.position.is_equal_approx(gate_exit):
@@ -608,10 +652,66 @@ func _sync_leash_taut() -> void:
 	leash.taut = leash.used_length() > leash.rest_len
 
 
-func _cap_dog_to_owner() -> void:
+# Holds the dog to the strap: no further than the taut leash from the fist,
+# and never past LEASH_CAP from the owner. True when it had to tow.
+func _cap_dog_to_owner() -> bool:
+	var towed := false
+	var hand := _hand_local()
+	var reach := LEASH_LEN * LEASH_TAUT
+	var from_hand := npc_dog.position - hand
+	if from_hand.length() > reach:
+		npc_dog.position = hand + from_hand.normalized() * reach
+		towed = true
 	var span := npc_dog.position - npc_owner.position
 	if span.length() > LEASH_CAP:
 		npc_dog.position = npc_owner.position + span.normalized() * LEASH_CAP
+		towed = true
+	return towed
+
+
+# A dog with its nose down slows its owner; they do not stop for it.
+func _owner_pace() -> float:
+	return SNIFF_PACE if (sniff_t > 0.0 or mark_t > 0.0) and greet_t <= 0.0 else 1.0
+
+
+# the dog's place on the walk for a pair heading `way`: DOG_LEAD ahead, on its
+# own side of the line
+func _lead_offset(way: Vector2) -> Vector2:
+	var along := signf(way.y) if absf(way.y) > 0.01 else signf(owner_face.y)
+	if along == 0.0:
+		along = 1.0
+	return Vector2(dog_side * DOG_SIDE, along * DOG_LEAD)
+
+
+func _hand_local() -> Vector2:
+	return npc_owner.position + leash.hand_offset
+
+
+# the strap's fist follows the way the owner faces, on the dog's side, and
+# the other end is clipped to the collar, wherever the dog faces
+func _place_hand() -> void:
+	leash.hand_offset = owner_face * HAND_FORWARD + Vector2(dog_side * HAND_SIDE, 0.0)
+	leash.dog_offset = dog_face * collar_reach
+
+
+# the strap the owner lets out for where the dog is now
+func _leash_want() -> float:
+	var collar: Vector2 = npc_dog.position + leash.dog_offset
+	return clampf(_hand_local().distance_to(collar) * LEASH_SLACK, LEASH_MIN, LEASH_LEN)
+
+
+# The owner takes in or lets out strap toward _leash_want(), then the rope
+# solves. A leash caught on anything (a pole, furniture, your leash) is never
+# taken in: the wrap or the tangle keeps the rope it is using.
+func _tick_leash(delta: float) -> void:
+	_place_hand()
+	var want := _leash_want()
+	if want < leash.rest_len and (
+		leash.contacts > 0 or tangle_active or tangled_t > 0.0 or not leash.dynamic_obstacles.is_empty()
+	):
+		want = leash.rest_len
+	leash.rest_len = move_toward(leash.rest_len, want, LEASH_REEL_SPEED * delta)
+	leash.tick(delta)
 
 
 func _cancel_tangle() -> void:
@@ -668,7 +768,8 @@ func _raw_clear_dog_offset() -> Vector2:
 	var curious := Vector2.ZERO
 	if tangled_t <= 0.0 and not tangle_active and not mercy_hold and to_mine.length() < 160.0:
 		curious = to_mine.normalized() * 34.0
-	return Vector2(30, 24) + wander + curious
+	var lead := _lead_offset(Vector2(0.0, desired_vertical_speed))
+	return lead + Vector2(wander.x * WANDER_ACROSS, signf(lead.y) * wander.y * WANDER_ALONG) + curious
 
 
 func update_tangle_state(crossing: bool, delta: float) -> bool:

@@ -421,7 +421,7 @@ func _test_recall_attach_gate_release_and_route_resume() -> void:
 	_check(not bool(pair.leash.detached), "attach reconnects leash")
 	_check(pair.leash.dynamic_obstacles.is_empty(), "attach clears stale rope obstacles")
 	_check(
-		pair.leash.pts[0].is_equal_approx(pair.npc_dog.global_position),
+		pair.leash.pts[0].is_equal_approx(pair.npc_dog.global_position + pair.leash.dog_offset),
 		"attach resnaps dog end"
 	)
 	_check(

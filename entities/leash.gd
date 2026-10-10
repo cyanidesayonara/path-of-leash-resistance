@@ -104,6 +104,13 @@ var free_slip_t := 0.0
 # the player's leash draws every frame (hero element); NPC-pair leashes
 # only need ~30fps, halving their line-heavy rope draw on the web build
 var hero := false
+# where the hand end sits relative to the human, in the human's own frame.
+# The player's human keeps the default; an NPC owner moves it to the fist
+# that actually holds the strap (entities/otherpair.gd).
+var hand_offset := Vector2(9, -16)
+# and where the dog end sits relative to the dog: the player's dog keeps her
+# center; an NPC dog's leash clips to its collar
+var dog_offset := Vector2.ZERO
 
 
 func slip_for(stretch_ratio: float, kind: String) -> float:
@@ -189,13 +196,13 @@ func setup(d: Node2D, h: Node2D, pole_list: Array[Vector2], max_len: float) -> v
 
 
 func _hand_pos() -> Vector2:
-	return human.global_position + Vector2(9, -16).rotated(human.rotation)
+	return human.global_position + hand_offset.rotated(human.rotation)
 
 
 func resnap() -> void:
 	# lay the rope fresh in a straight line from dog to hand, so
 	# re-clipping the leash after the off-leash romp doesn't snap
-	var a := dog.global_position
+	var a := dog.global_position + dog_offset
 	var b := _hand_pos()
 	for i in range(N):
 		pts[i] = a.lerp(b, float(i) / (N - 1))
@@ -258,7 +265,7 @@ func tick(delta: float) -> void:
 		_touch[i] = -1
 	# The ends do not move during the solve, so they are read once, not per
 	# iteration (both are property reads through the engine).
-	var dog_end := dog.global_position
+	var dog_end := dog.global_position + dog_offset
 	var hand_end := _hand_pos()
 	# Obstacles further than this from a segment's bounding box cannot touch it.
 	# The margin is POLE_PAD plus slack, so the reject never skips a contact the

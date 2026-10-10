@@ -2,6 +2,33 @@
 
 Append-only session history, newest first.
 
+## 2026-10-10 - Other walkers' dogs walk ahead on a short leash
+
+- Another walker's dog goes a little ahead of its owner and to one side of
+  the line, wanders about that spot, stops to sniff, gets towed on when the
+  owner walks past, and trots to catch up again. It used to walk level
+  with the owner, or behind them when the pair walked up the screen: its
+  place was a fixed offset down and to the right, whichever way they went.
+- Their leash runs from the owner's fist (beside the phone, on the dog's
+  side) to the dog's collar with a gentle droop, and goes taut when the dog
+  pulls out to the end of it or a sniff holds it back. It used to be a
+  150 px rope between two ends about 40 px apart, so 110 px of slack piled
+  up and dragged behind the pair. The owner now takes in what the dog is
+  not using (never while the leash is caught on anything) and lets out up
+  to 92 px.
+- Round an obstacle the dog keeps a little ahead on the detour's side
+  instead of falling in level with its owner, and when the way ahead is
+  shut it waits at its owner's side instead of standing on their feet.
+- The owner eases to three quarters of their pace while the dog has its nose
+  down; a dog towed off a sniff gives it up and trots back in front.
+- The pair's wander rolls on the pair's own dice, so how often it rolls
+  (which depends on the route) no longer moves the walk's shared random
+  sequence.
+- tests/test_pair_walk.gd: over 30 seconds of walking either way, the dog is
+  ahead of or level with its owner most of the time, the leash never carries
+  more than a hand's worth of slack or bulges off the fist-to-collar line,
+  and the dog stays on its leash.
+
 ## 2026-10-09 - Passeig Marítim: audit fixes (#151)
 
 - The palms come in runs now, not one every 300px all the way: a tight
