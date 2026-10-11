@@ -5,7 +5,8 @@ extends Control
 # so choosing a walk, getting ready, dressing Millie and reading your
 # progress no longer look like four copies of one list:
 #
-#   title     the name is chalked in the world; only the prompt bar here
+#   title     the main menu: the name is chalked in the world, and the
+#             list of where to go is a card at the left, under it
 #   walk      the walk's name is in the world too, in its own material; a
 #             plaque under it says what you have done there
 #   details   a card at the left: who walks, day or night, the weather, and
@@ -24,6 +25,8 @@ const Kit := preload("res://hud/ui_kit.gd")
 const Icons := preload("res://hud/ui_icons.gd")
 const Flow := preload("res://hud/menu_flow.gd")
 
+const MAIN_W := 300.0
+const MAIN_ROW_H := 44.0
 const SHOP_W := 1040.0
 const SHOP_H := 540.0
 const SHOP_ROW_H := 44.0
@@ -35,6 +38,7 @@ const PAUSE_CELL_H := 58.0
 const PAUSE_GAP := 12.0
 const WALKCARD_W := 620.0
 const CONFIRM_W := 460.0
+const FIRST_ROW_H := 50.0
 const NOTICE_W := 660.0
 
 var main: Node2D
@@ -85,6 +89,8 @@ func _draw() -> void:
 	if s == "walking" and _fade > 0.0:
 		s = _fade_from
 	match s:
+		"title":
+			_main(vs)
 		"walk":
 			_walk(vs)
 		"details":
@@ -101,11 +107,7 @@ func _draw() -> void:
 			_confirm(vs)
 		"notice":
 			_notice(vs)
-	var a := 1.0
-	if s == "title":
-		# the one thing on the title screen, breathing so it reads as waiting
-		a = 0.65 + 0.35 * sin(AnimClock.msec() / 420.0)
-	Kit.prompt_bar(self, vs, Flow.prompts(main, s), a)
+	Kit.prompt_bar(self, vs, Flow.prompts(main, s))
 
 
 func _top(vs: Vector2, step: int) -> void:
@@ -120,6 +122,37 @@ func _top(vs: Vector2, step: int) -> void:
 func _name_at() -> Vector2:
 	var y: float = float(main.START_Y) - 190.0
 	return main.get_global_transform_with_canvas() * Vector2(640.0, y)
+
+
+# The main menu: one row per place to go, picked with up/down. The card sits
+# at the left, below the chalked name and clear of the pair, in the band
+# between the name and the prompt bar; on a small screen the rows close up
+# to fit that band rather than run under the bar.
+func _main(vs: Vector2) -> void:
+	var acc := Kit.accent("title")
+	var labels := Flow.main_labels(main)
+	var n := labels.size()
+	var top := maxf(24.0, _name_at().y + 76.0)
+	var bottom := vs.y - Kit.BAR_FROM_BOTTOM - 24.0
+	var pad := 14.0
+	var row_h := clampf((bottom - top - pad * 2.0) / float(n), 30.0, MAIN_ROW_H)
+	var h := pad * 2.0 + row_h * float(n)
+	var y0 := maxf(top, (top + bottom) * 0.5 - h * 0.5)
+	var r := Rect2(48.0, y0, MAIN_W, h)
+	Kit.card(self, r, acc)
+	var f := Kit.display()
+	var px := 20 if row_h >= 40.0 else 17
+	var picked_i := clampi(int(main.main_idx), 0, n - 1)
+	for i in range(n):
+		var rr := Rect2(r.position.x + 12.0, r.position.y + pad + row_h * float(i), r.size.x - 24.0, row_h)
+		var picked := i == picked_i
+		if picked:
+			draw_rect(rr, Color(acc.r, acc.g, acc.b, 0.14))
+			draw_rect(Rect2(rr.position, Vector2(4.0, rr.size.y)), acc)
+			Kit.chevron(self, Vector2(rr.position.x + 22.0, rr.get_center().y), 8.0, acc)
+		draw_string(f, Vector2(rr.position.x + 40.0, rr.get_center().y + float(px) * 0.36), String(labels[i]),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, px, Kit.INK if picked else Kit.INK_SOFT)
+	Kit.purse(self, Vector2(vs.x - 40.0, 48.0), Game.total_stars(), Game.total_bones)
 
 
 func _walk(vs: Vector2) -> void:
@@ -439,7 +472,9 @@ func _confirm(vs: Vector2) -> void:
 	var c := Flow.confirm_card(main)
 	var first := String(main.confirm_id) == "first"
 	var lines := String(c.body).split("\n")
-	var h := (182.0 if first else 150.0) + 26.0 * float(lines.size() - 1)
+	var opts: Array = Flow.FIRST_OPTIONS if first else []
+	var extra := 16.0 + FIRST_ROW_H * float(opts.size()) + 44.0 if first else 0.0
+	var h := 150.0 + extra + 26.0 * float(lines.size() - 1)
 	var r := Rect2(vs.x * 0.5 - CONFIRM_W * 0.5, vs.y * 0.5 - h * 0.5 - 20.0, CONFIRM_W, h)
 	Kit.card(self, r, acc)
 	Kit.heading(self, Vector2(r.position.x, r.position.y + 56.0), String(c.title), 28, acc,
@@ -448,13 +483,25 @@ func _confirm(vs: Vector2) -> void:
 		draw_string(Kit.body(), Vector2(r.position.x, r.position.y + 100.0 + 26.0 * i), lines[i],
 			HORIZONTAL_ALIGNMENT_CENTER, CONFIRM_W, 19, Kit.INK_SOFT)
 	if first:
+		# the two answers, a list like the main menu's
+		var oy := r.position.y + 124.0 + 26.0 * float(lines.size() - 1)
+		var f := Kit.display()
+		for i in range(opts.size()):
+			var rr := Rect2(r.position.x + 28.0, oy + FIRST_ROW_H * float(i), CONFIRM_W - 56.0, FIRST_ROW_H - 6.0)
+			var picked: bool = i == int(main.first_idx)
+			draw_rect(rr, Color(acc.r, acc.g, acc.b, 0.16) if picked else Color(1, 1, 1, 0.04))
+			draw_rect(rr, acc if picked else Color(1, 1, 1, 0.10), false, 2.0 if picked else 1.0)
+			if picked:
+				Kit.chevron(self, Vector2(rr.position.x + 20.0, rr.get_center().y), 8.0, acc)
+			draw_string(f, Vector2(rr.position.x + 38.0, rr.get_center().y + 6.5), String(opts[i]),
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Kit.INK if picked else Kit.INK_SOFT)
 		# the "don't ask again" box: the prompt bar's key ticks it, and the
 		# card shows whether it is ticked
 		var label := "Don't ask me again"
 		var tw: float = Kit.body().get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
 		var box := 16.0
 		var x0 := r.position.x + CONFIRM_W * 0.5 - (box + 10.0 + tw) * 0.5
-		var by := r.position.y + 132.0 + 26.0 * float(lines.size() - 1)
+		var by := oy + FIRST_ROW_H * float(opts.size()) + 12.0
 		Icons.draw_check(self, Vector2(x0, by), box,
 			Icons.Check.DONE_NOW if not Game.ask_tutorial else Icons.Check.OPEN)
 		draw_string(Kit.body(), Vector2(x0 + box + 10.0, by + 13.0), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 16,

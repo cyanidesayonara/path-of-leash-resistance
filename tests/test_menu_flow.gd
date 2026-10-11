@@ -12,6 +12,7 @@ extends SceneTree
 # diffed when a change is meant to leave the menus alone.
 
 var Flow: GDScript
+var Prompts: GDScript
 
 var checks := 0
 var failures: Array[String] = []
@@ -42,6 +43,7 @@ func _dump(main: Node2D, step: String) -> void:
 
 func _run() -> void:
 	Flow = load("res://hud/menu_flow.gd")
+	Prompts = load("res://hud/prompts.gd")
 	var game = root.get_node("Game")
 	var keep := [game.vol_master, game.vol_sfx, game.vol_music, game.menu_step, game.owner_id,
 		game.night, game.weather, game.collar, game.bandana, game.coat]
@@ -65,9 +67,14 @@ func _run() -> void:
 	main.menu_step = 0
 	main._apply_menu_step()
 	Flow.exit_hidden = false
-	_check(_verbs(main).has("exit game") or OS.has_feature("web"), "the title offers EXIT GAME on desktop")
+	_check(_verbs(main).has("exit game") or OS.has_feature("web"), "the main menu's BACK offers EXIT GAME on desktop")
+	_check(Flow.main_ids(main) == ["play", "tutorial", "shop", "progress", "settings", "exit"]
+			or OS.has_feature("web"), "the main menu's list (%s)" % [Flow.main_ids(main)])
+	_check(Flow.main_labels(main).size() == Flow.main_ids(main).size(), "one label per main menu row")
 	Flow.exit_hidden = true
 	_check(not _verbs(main).has("exit game"), "and not where the game cannot quit")
+	_check(not Flow.main_ids(main).has("exit") and Flow.main_ids(main).size() == 5,
+		"without exit the main menu has five rows")
 	Flow.exit_hidden = false
 	Flow.open_confirm(main, "exit")
 	_check(Flow.screen(main) == "confirm", "exit from the title asks first")
@@ -137,7 +144,7 @@ func _run() -> void:
 	main._close_settings()
 	_dump(main, "settings_closed_to_title")
 	_check(not main.in_settings and not main.dim.visible and Flow.screen(main) == "walk",
-		"closing settings returns to the title")
+		"closing settings returns to the walk select it was opened from")
 
 	# the pause menu, and settings from it
 	main.started = true
@@ -210,10 +217,6 @@ func _run() -> void:
 	_check(Flow.screen(main) == "pause" and main.dim.visible, "settings opened from pause close back to the pause menu")
 	Flow.resume(main)
 	_check(not main.paused and not main.frozen and not main.dim.visible, "resume gets back to the walk")
-	var Prompts: GDScript = load("res://hud/prompts.gd")
-	for which in ["title", "pause", "confirm", "walkcard"]:
-		for it: Array in Flow.prompts(main, which):
-			_check(Prompts.NAMES.has(String(it[0])), "%s prompt '%s' is an action Prompts knows" % [which, it[0]])
 
 	# a notice card: its first line is the title, the rest the body
 	Flow.show_notice(main, "TITLE LINE\n\nbody one\nbody two")
@@ -235,6 +238,20 @@ func _run() -> void:
 	_dump(main, "progress")
 	_check(Flow.screen(main) == "progress" and main.dim.visible, "the progress table opens over a dimmed title")
 	Flow.close_progress(main)
+	# every prompt on every screen names an action Prompts knows, and BACK is
+	# always the one "back" prompt
+	main.menu_step = 0
+	main._apply_menu_step()
+	for which in ["title", "walk", "details", "progress", "settings", "pause", "walkcard", "confirm"]:
+		var backs := 0
+		for it: Array in Flow.prompts(main, which):
+			_check(Prompts.NAMES.has(String(it[0])), "%s prompt '%s' is an action Prompts knows" % [which, it[0]])
+			if String(it[0]) == "back":
+				backs += 1
+			_check(String(it[0]) != "bark" and String(it[0]) != "pause",
+				"%s: back is shown as the one back prompt, not as bark or pause" % which)
+		_check(backs == (0 if which == "title" and not Flow.can_exit() else 1),
+			"%s shows BACK once (%d)" % [which, backs])
 
 	game.vol_master = keep[0]
 	game.vol_sfx = keep[1]

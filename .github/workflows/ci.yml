@@ -144,6 +144,9 @@ jobs:
       # steps, the wardrobe and the settings screen
       - name: Title, wardrobe and settings flow test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_menu_flow.gd
+      # every screen reached from the main menu, and back with BACK alone
+      - name: Menu tree test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_menu_tree.gd
 
       - name: World sign test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_world_sign.gd
@@ -177,8 +180,16 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_litter.gd
       - name: Leash tricks test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_leash_tricks.gd
+      - name: Owner unstick test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_owner_unstick.gd
       - name: Saves test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_saves.gd
+      - name: Tutorial brace test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tutorial_brace.gd
+      - name: Leash slack test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_leash_slack.gd
+      - name: Canopy test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_canopy.gd
       - name: Montjuic test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_montjuic.gd
       - name: Telefèric test
@@ -278,6 +289,8 @@ jobs:
 
       - name: Combo challenge regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_challenge.gd
+      - name: Dare offer and retry test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_dare_retry.gd
 
       - name: El Gotic wall cat regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_wallcat.gd

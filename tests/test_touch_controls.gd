@@ -80,7 +80,8 @@ func _run() -> void:
 		main.paused = false
 		main.started = false
 		var title := _shown(t)
-		_check("MENU" in title and "DIG" in title and not "R" in title, "%s title: MENU and DIG, no R" % window)
+		_check("DIG" in title and "BARK" in title and not "MENU" in title and not "R" in title,
+			"%s title: DIG confirms and BARK is back; no MENU, no R" % window)
 		# every button, in whichever state it shows, clear of the others it
 		# can show with, of the vitals card, and of the goals card
 		var vitals := Rect2(16.0, 12.0, 196.0, 92.0)
