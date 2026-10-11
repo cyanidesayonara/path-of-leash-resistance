@@ -5,8 +5,10 @@ extends SceneTree
 #     point two along stays at least most of BEND_MIN segments away
 #  2. bending never lengthens the rope into a false pull: a slack rope stays
 #     shorter than its rest length, so it never reads as taut
-#  3. near a pole the solver is exactly what it was: no bending inside
-#     BEND_BERTH, checked by the rope being free to fold there
+#  3. near a pole the solver is exactly what it was: no bending within
+#     BEND_NEAR of it, checked by the rope being free to fold there
+#  4. but a pole by the hand does not stiffen the whole rope: slack lying out
+#     past BEND_NEAR still has no folded joint
 
 const DT := 1.0 / 60.0
 var checks := 0
@@ -69,6 +71,22 @@ func _run() -> void:
 		lb.tick(DT)
 	_check(_min_fold(lb) < l.BEND_MIN * 0.75, "beside a pole it is the old solver, folds and all (%.2f)" % _min_fold(lb))
 	for n in b:
+		n.queue_free()
+
+	# 4) a pole beside the hand, the slack out by the dog: the far joints curve
+	var c := _rope([Vector2(-30, 0)] as Array[Vector2])
+	var lc: Node2D = c[0]
+	var dogc: Node2D = c[1]
+	for i in range(240):
+		dogc.global_position = Vector2(200, 0).lerp(Vector2(90, 10), minf(float(i) / 120.0, 1.0))
+		lc.tick(DT)
+	var segc: float = lc.rest_len / float(lc.N - 1)
+	var far_worst := INF
+	for i in range(lc.N - 2):
+		if lc.pts[i + 1].distance_to(Vector2(-30, 0)) > lc.BEND_NEAR + 10.0:
+			far_worst = minf(far_worst, lc.pts[i].distance_to(lc.pts[i + 2]) / segc)
+	_check(far_worst > lc.BEND_MIN * 0.75, "with a pole by the hand, slack out past BEND_NEAR still curves (%.2f)" % far_worst)
+	for n in c:
 		n.queue_free()
 
 	print("test_leash_slack: %d checks, %s" % [checks, "OK" if failures.is_empty() else "%d FAILED" % failures.size()])

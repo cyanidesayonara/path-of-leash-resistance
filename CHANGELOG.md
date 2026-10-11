@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-10-11 - slack curls beside poles too
+
+- The leash's bending stiffness (slack in curves, not zigzags) switched off
+  for the whole rope whenever any pole or snag was within 120 px of it, so
+  near trees and lampposts the slack went back to an accordion. Now only
+  joints within 70 px of an obstacle (`BEND_NEAR`) keep the unbent shape;
+  the rest of the rope curls as it does on open ground.
+- 70 px, not less: the wrap and the whirl's winding probe read the rope's
+  shape as it comes round a pole, and at 45 px the probe's choice of which
+  way unwinds the rope disagreed with the rope (test_whirl_guided). The kink
+  right at a trunk stays for now.
+- test_leash_slack checks the new case (a pole by the hand, slack out by
+  the dog curves; the old whole-rope rule folds it to 0.36 segments).
+  Solver cost is unchanged within noise; the free bench hash is identical,
+  the pole and tangle hashes change because far joints now bend.
+
 ## 2026-10-11 - the flaky fence test, explained
 
 - test_freedom_fixes "the bottom fence holds beside the gate" failed now and
