@@ -2,6 +2,28 @@
 
 Append-only session history, newest first.
 
+## 2026-10-11 - she walks under what hangs overhead, and the leash over the junk
+
+- A draw-order sweep of every walk after the tree crowns (#208). Overhead
+  things were drawn in the ground pass, so Millie, your human and the
+  leash drew on top of them. They are now pieces of the canopy layer
+  (`world/canopylayer.gd`, z 13; `main.overhead_pieces`), above the dog,
+  your human, the rope, every NPC and the riders, and faded over whoever
+  is under them like the crowns: the terrace parasols (La Rambla, the
+  seafront), the seafront terraces' canopies, El Diluvi's awnings and
+  arcade roof, the washing lines and wall lanterns over El Gòtic and La
+  Neteja, L'Estació's departures board, the park bandstand's roof, the ice
+  cream cart's umbrella, the performers' umbrellas in the rain, the dog
+  beach's parasols, and El Mercat's shop awnings on the approach street.
+  Lamppost heads go overhead too (the rope wound on the
+  column runs under the arms) but never fade. Shadows, posts and plinths
+  stay on the ground.
+- The dog beach's lifeguard cabin joins the seafront's on the overhead
+  layer; its legs and ladder stay on the sand.
+- Cones and loose junk (`level_build.JUNK_Z`, was 11, now 4) lie under the
+  rope, the dog and your human: the leash drew under every can and crate
+  it crossed.
+- `tests/test_zorder_overhead.gd` in CI.
 ## 2026-10-11 - slack curls beside poles too
 
 - The leash's bending stiffness (slack in curves, not zigzags) switched off

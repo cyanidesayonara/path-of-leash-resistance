@@ -93,23 +93,38 @@ static func draw_approach(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> voi
 		if c.y < vt - 60.0 or c.y > vb + 60.0:
 			continue
 		draw_crate_stack(b, Rect2(c - APPROACH_CRATE_SIZE * 0.5, APPROACH_CRATE_SIZE), i + 3)
-	for aw: Array in AWNINGS:
-		var y0 := float(aw[0])
-		var y1 := float(aw[1])
-		if y1 < vt - 40.0 or y0 > vb + 40.0:
+	# the awnings' shadows on the ground; the awnings themselves are
+	# overhead (main.draw_overhead_piece, draw_awning)
+	for i in range(AWNINGS.size()):
+		var r := awning_rect(m, i)
+		if r.end.y < vt - 40.0 or r.position.y > vb + 40.0:
 			continue
-		_draw_awning(m, b, y0, y1, bool(aw[2]), AWNING_COLS[int(aw[3])])
+		b.rect(Rect2(r.position + LIGHT * 18.0, r.size), SHADOW)
+
+
+# where awning i hangs, out from its wall over the pavement
+static func awning_rect(m: Node2D, i: int) -> Rect2:
+	var aw: Array = AWNINGS[i]
+	var y0 := float(aw[0])
+	var y1 := float(aw[1])
+	var e: Vector2 = m.walk_edges((y0 + y1) * 0.5)
+	var wall: float = e.x if bool(aw[2]) else e.y
+	return Rect2(minf(wall, wall + (1.0 if bool(aw[2]) else -1.0) * AWNING_DEPTH), y0, AWNING_DEPTH, y1 - y0)
 
 
 # a striped shop awning out over the pavement, its scalloped edge at the
-# front and its shadow on the ground under it
-static func _draw_awning(m: Node2D, b: ShapeBatch, y0: float, y1: float, west: bool, col: Color) -> void:
+# front: overhead, above the dog, the owner and the leash
+static func draw_awning(m: Node2D, b: ShapeBatch, i: int) -> void:
+	var aw: Array = AWNINGS[i]
+	var y0 := float(aw[0])
+	var y1 := float(aw[1])
+	var west := bool(aw[2])
+	var col: Color = AWNING_COLS[int(aw[3])]
 	var e: Vector2 = m.walk_edges((y0 + y1) * 0.5)
 	var wall: float = e.x if west else e.y
 	var out := 1.0 if west else -1.0
 	var front: float = wall + out * AWNING_DEPTH
 	var x0 := minf(wall, front)
-	b.rect(Rect2(x0 + LIGHT.x * 18.0, y0 + LIGHT.y * 18.0, AWNING_DEPTH, y1 - y0), SHADOW)
 	var y := y0
 	var k := 0
 	while y < y1:

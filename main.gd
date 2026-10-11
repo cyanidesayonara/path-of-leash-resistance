@@ -2161,6 +2161,192 @@ func draw_tree_crown(b: ShapeBatch, t: Dictionary, faded := false) -> void:
 		TREE_PIT: _broadleaf_crown(b, p, 0.8, trunk)
 
 
+# What else is over her head, drawn by the canopy layer with the crowns: above
+# the dog, the owner, the rope, every NPC and the riders, and faded over the
+# dog or the owner when either is under it. The ground pass keeps what lies on
+# the ground (shadows, posts, plinths). Every piece is fixed in place, so the
+# list is built once per walk and only culled to the view each redraw.
+# {"over" (Over), "id", "i", "p", "top", "bot", and "r" (round: under within
+# r of p) or "rect" (under inside it); "solid" if it never fades: a lamp head
+# is too small to hide her, and she is always by a lamppost}
+enum Over { PARASOL, PERGOLA, AWNING, ARCADE, LAUNDRY, WALL_LAMP, BOARD, BANDSTAND, LAMP,
+	ICECREAM, BROLLY, BEACH_PARASOL, SHOP_AWNING }
+# clear of the tree ids (pole index, and 100000 + grove index)
+const OVER_ID := 200000
+const PARASOL_R := 40.0
+const BEACH_PARASOL_R := 36.0
+const LAMP_HEAD_R := 21.0
+const ICECREAM_BROLLY_R := 34.0
+const PARASOL_COLS: Array[Color] = [Color(0.85, 0.45, 0.35, 0.7), Color(0.4, 0.6, 0.75, 0.7), Color(0.9, 0.8, 0.4, 0.7)]
+const BROLLY_COLS: Array[Color] = [Color(0.75, 0.2, 0.25), Color(0.2, 0.35, 0.6), Color(0.25, 0.5, 0.35), Color(0.35, 0.3, 0.4)]
+const BEACH_PARASOL_COLS: Array[Color] = [Color(0.85, 0.45, 0.35, 0.85), Color(0.4, 0.6, 0.75, 0.85), Color(0.9, 0.8, 0.4, 0.85)]
+var _over_all: Array[Dictionary] = []
+var _over_built := false
+var _over: Array[Dictionary] = []
+
+
+func _add_over(kind: Over, i: int, p: Vector2, r: float, rect := Rect2()) -> void:
+	var t := {"over": kind, "id": OVER_ID + int(kind) * 1000 + i, "i": i, "p": p,
+		"solid": kind == Over.LAMP or kind == Over.WALL_LAMP}
+	if rect.size != Vector2.ZERO:
+		t["rect"] = rect
+		t["top"] = rect.position.y
+		t["bot"] = rect.end.y
+	else:
+		t["r"] = r
+		t["top"] = p.y - r
+		t["bot"] = p.y + r
+	_over_all.append(t)
+
+
+func _build_overhead() -> void:
+	_over_built = true
+	_over_all.clear()
+	for i in range(parasols.size()):
+		_add_over(Over.PARASOL, i, parasols[i], PARASOL_R)
+	for i in range(canopies.size()):
+		_add_over(Over.PERGOLA, i, canopies[i].get_center(), 0.0, canopies[i])
+	if lvl == "rain":
+		for i in range(shelters.size()):
+			_add_over(Over.ARCADE if i == 0 else Over.AWNING, i, shelters[i].get_center(), 0.0, shelters[i])
+	if lvl == "oldtown" or lvl == "neteja":
+		for i in range(laundry_lines.size()):
+			var ly: float = laundry_lines[i]
+			var le := walk_edges(ly)
+			_add_over(Over.LAUNDRY, i, Vector2(walk_cx, ly), 0.0, Rect2(le.x - 20.0, ly - 16.0, le.y - le.x + 40.0, 64.0))
+			var wy := ly + 380.0
+			_add_over(Over.WALL_LAMP, i, Vector2(walk_edges(wy).x + 6.0, wy), 10.0)
+	if lvl == "market":
+		for i in range(Mercat.AWNINGS.size()):
+			var ar := Mercat.awning_rect(self, i)
+			_add_over(Over.SHOP_AWNING, i, ar.get_center(), 0.0, ar)
+	if lvl == "station":
+		var bd: Vector2 = LevelBuild.ESTACIO_BOARD
+		_add_over(Over.BOARD, 0, bd, 0.0, Rect2(bd.x - 154.0, bd.y - 38.0, 308.0, 76.0))
+	if lvl == "park":
+		_add_over(Over.BANDSTAND, 0, LevelBuild.PARK_BANDSTAND, LevelBuild.BANDSTAND_R + 14.0)
+	for i in range(deco_pole_count):
+		if is_lamppost(i):
+			_add_over(Over.LAMP, i, poles[i], LAMP_HEAD_R)
+	for i in range(mini(stalls.size(), stall_kinds.size())):
+		if stall_kinds[i] == "icecream":
+			_add_over(Over.ICECREAM, i, stalls[i], ICECREAM_BROLLY_R)
+	if lvl != "barri" and lvl != "site":
+		for i in range(performers.size()):
+			_add_over(Over.BROLLY, i, performers[i] + Vector2(0, -20), 30.0)
+	if freedom_kind == "beach" and lvl != "montjuic" and lvl != "oldtown":
+		var spots := beach_parasol_spots()
+		for i in range(spots.size()):
+			_add_over(Over.BEACH_PARASOL, i, spots[i], BEACH_PARASOL_R)
+
+
+# what is overhead in view, for the canopy layer; a reused array
+func overhead_pieces() -> Array[Dictionary]:
+	if not _over_built:
+		_build_overhead()
+	_over.clear()
+	var vt: float = cam.position.y - 500.0
+	var vb: float = cam.position.y + 500.0
+	var raining := Game.weather == "rain"
+	for t: Dictionary in _over_all:
+		if float(t["bot"]) < vt or float(t["top"]) > vb:
+			continue
+		# a performer only puts an umbrella up in the rain
+		if int(t["over"]) == Over.BROLLY and not raining:
+			continue
+		_over.append(t)
+	return _over
+
+
+# the post chain's lampposts (_draw_world): their heads are overhead
+func is_lamppost(i: int) -> bool:
+	if pole_tree(i) != TREE_NONE:
+		return false
+	if tutorial_mode or lvl == "scrap":
+		return true
+	if lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "oldtown":
+		return false
+	return not (lvl == "rain" and poles[i].x < walk_cx)
+
+
+# the dog beach's lifeguard tower, on the sand above the sea
+func dog_beach_tower() -> Vector2:
+	return Vector2(BEACH_SEA_R + 240.0, _freedom_rect().get_center().y)
+
+
+# a dog beach parasol from above, overhead: panels radiating from a hub
+func _beach_parasol_canopy(b: ShapeBatch, pa: Vector2, i: int) -> void:
+	var pc: Color = BEACH_PARASOL_COLS[i % 3]
+	b.circle(pa, BEACH_PARASOL_R, pc)
+	for panel in range(8):
+		var a0 := TAU * float(panel) / 8.0 + float(i) * 0.2
+		b.line(pa, pa + Vector2.from_angle(a0) * BEACH_PARASOL_R, pc.darkened(0.22), 2.0)
+		if panel % 2 == 0:
+			b.polygon(PackedVector2Array([pa, pa + Vector2.from_angle(a0) * BEACH_PARASOL_R,
+				pa + Vector2.from_angle(a0 + TAU / 8.0) * BEACH_PARASOL_R]), Color(1, 1, 1, 0.10))
+	b.circle(pa - LIGHT * 10.0, 12.0, Color(1, 1, 1, 0.13))   # the lit side
+	b.circle(pa, 5.0, Color(0.42, 0.38, 0.34))                # the pole
+	b.circle(pa, 2.2, Color(0.62, 0.58, 0.52))
+
+
+# the dog beach's parasols, round its agility lane
+func beach_parasol_spots() -> Array[Vector2]:
+	var r := _freedom_rect()
+	var out: Array[Vector2] = []
+	for dy: float in [150.0, 390.0, 600.0]:
+		out.append(Vector2(r.end.x - 260.0, r.position.y + dy))
+	return out
+
+
+# One overhead piece into the canopy layer's batch. `b` stands in for that
+# layer's canvas, so text and arcs pass straight through to it.
+func draw_overhead_piece(b: ShapeBatch, t: Dictionary, _faded := false) -> void:
+	var p: Vector2 = t["p"]
+	var i: int = t["i"]
+	match int(t["over"]):
+		Over.PARASOL:
+			# wide, over the tables by day; furled spikes at night
+			if Game.night:
+				b.line(p + Vector2(-3, 24), p + Vector2(3, -28), Color(0.45, 0.4, 0.35), 5.0)
+				b.circle(p + Vector2(3, -28), 4.0, PARASOL_COLS[i % 3])
+			else:
+				_parasol_canopy(b, p, PARASOL_COLS[i % 3], float(i))
+		Over.PERGOLA:
+			# the beach terraces' canopies: out by day, furled at night
+			var cn: Rect2 = t["rect"]
+			if Game.night:
+				b.draw_rect(Rect2(cn.position.x, cn.position.y, cn.size.x, 10), Color(0.72, 0.67, 0.57))
+				b.draw_rect(Rect2(cn.position.x, cn.position.y, cn.size.x, 10), Color(0.5, 0.46, 0.38), false, 1.5)
+			else:
+				_draw_pergola(b, cn)
+		Over.AWNING:
+			_diluvi_awning(b, t["rect"], i)
+		Over.ARCADE:
+			_diluvi_arcade_roof(b, t["rect"])
+		Over.LAUNDRY:
+			_laundry_line(b, i, AnimClock.msec() / 1000.0)
+		Over.WALL_LAMP:
+			var glow := 0.6 + 0.25 * sin(AnimClock.msec() / 1000.0 * 3.0 + i)
+			b.circle(p, 6.0, Color(1.0, 0.8, 0.4, glow))
+		Over.BOARD:
+			_departures_board(b, p)
+		Over.BANDSTAND:
+			_bandstand_roof(b, p)
+		Over.LAMP:
+			_lamp_head(b, p)
+		Over.ICECREAM:
+			_icecream_brolly(b, p)
+		Over.BROLLY:
+			# a performer's wide domed umbrella over the head, on its stick
+			var pf: Vector2 = performers[i]
+			b.line(pf + Vector2(0, -8), pf + Vector2(0, -30), Color(0.15, 0.14, 0.16), 2.0)
+			b.draw_arc(pf + Vector2(0, -30), 26.0, PI, TAU, 20, BROLLY_COLS[i % BROLLY_COLS.size()], 7.0)
+		Over.BEACH_PARASOL:
+			_beach_parasol_canopy(b, p, i)
+		Over.SHOP_AWNING:
+			Mercat.draw_awning(self, b, i)
+
+
 func _draw_tree_pit(p: Vector2) -> void:
 	var b := ShapeBatch.new()
 	var pit := Rect2(p - Vector2(38.0, 38.0), Vector2(76.0, 76.0))
@@ -2192,41 +2378,38 @@ func _laundry_y(a: Vector2, z: Vector2, x: float) -> float:
 	return lerpf(a.y, z.y, f) + 12.0 * 4.0 * f * (1.0 - f)
 
 
-func _draw_laundry(vt: float, vb: float, lt: float) -> void:
-	var b := ShapeBatch.new()
+# one line of it, overhead (draw_overhead_piece): over the dog, the owner and
+# the rope, not under them
+func _laundry_line(b: ShapeBatch, i: int, lt: float) -> void:
 	var cord := Color(0.20, 0.18, 0.16)
 	var peg := Color(0.80, 0.68, 0.48)
-	for i in range(laundry_lines.size()):
-		var ly: float = laundry_lines[i]
-		if ly < vt - 80.0 or ly > vb + 60.0:
-			continue
-		var le := walk_edges(ly)
-		var a := Vector2(le.x - 20.0, ly)
-		var z := Vector2(le.y + 20.0, ly - 8.0)
-		var prev := a
-		for s in range(1, 9):
-			var qx := lerpf(a.x, z.x, float(s) / 8.0)
-			var q := Vector2(qx, _laundry_y(a, z, qx))
-			b.line(prev, q, cord, 1.5)
-			prev = q
-		var x := le.x + 14.0
-		var j := 0
-		while true:
-			var kind: String = WASH_KINDS[(i * 3 + j) % WASH_KINDS.size()]
-			var w: float = WASH_W[kind]
-			if x + w > le.y - 14.0:
-				break
-			var cx := x + w * 0.5
-			var top := Vector2(cx, _laundry_y(a, z, cx))
-			var col: Color = WASH_COLS[(i * 2 + j) % WASH_COLS.size()]
-			var dx := sin(lt * 1.2 + float(j) + float(i)) * 2.0
-			_draw_wash(b, kind, top, col, dx)
-			for px: float in _wash_pegs(kind):
-				var pp := Vector2(cx + px, _laundry_y(a, z, cx + px))
-				b.rect(Rect2(pp.x - 1.4, pp.y - 3.5, 2.8, 7.0), peg)
-			x += w + 4.0
-			j += 1
-	b.flush(_wc)
+	var ly: float = laundry_lines[i]
+	var le := walk_edges(ly)
+	var a := Vector2(le.x - 20.0, ly)
+	var z := Vector2(le.y + 20.0, ly - 8.0)
+	var prev := a
+	for s in range(1, 9):
+		var qx := lerpf(a.x, z.x, float(s) / 8.0)
+		var q := Vector2(qx, _laundry_y(a, z, qx))
+		b.line(prev, q, cord, 1.5)
+		prev = q
+	var x := le.x + 14.0
+	var j := 0
+	while true:
+		var kind: String = WASH_KINDS[(i * 3 + j) % WASH_KINDS.size()]
+		var w: float = WASH_W[kind]
+		if x + w > le.y - 14.0:
+			break
+		var cx := x + w * 0.5
+		var top := Vector2(cx, _laundry_y(a, z, cx))
+		var col: Color = WASH_COLS[(i * 2 + j) % WASH_COLS.size()]
+		var dx := sin(lt * 1.2 + float(j) + float(i)) * 2.0
+		_draw_wash(b, kind, top, col, dx)
+		for px: float in _wash_pegs(kind):
+			var pp := Vector2(cx + px, _laundry_y(a, z, cx + px))
+			b.rect(Rect2(pp.x - 1.4, pp.y - 3.5, 2.8, 7.0), peg)
+		x += w + 4.0
+		j += 1
 
 
 func _wash_pegs(kind: String) -> Array[float]:
@@ -2970,6 +3153,7 @@ func _draw_mercat(vt: float, vb: float) -> void:
 func draw_overhead_onto(c: CanvasItem) -> void:
 	if lvl == "beach":
 		_draw_lifeguard_tower(c, LevelBuild.BEACH_TOWER, false, true)
+		_draw_lifeguard_tower(c, dog_beach_tower(), false, true)
 		return
 	if lvl == "spook":
 		_draw_castanyada_lanterns(c)
@@ -3235,20 +3419,11 @@ func _draw_estacio(vt: float, vb: float) -> void:
 			b.line(Vector2(tx, ty), Vector2(tx, ty + 132.0), Color(0, 0, 0, 0.07), 2.0)
 			tx += 132.0
 		ty += 132.0
-	# the departures board, hung over the way in
+	# the departures board, hung over the way in: overhead
+	# (draw_overhead_piece), and here its shadow on the floor
 	var bd: Vector2 = LevelBuild.ESTACIO_BOARD
-	var board_on := bd.y > vt - 80.0 and bd.y < vb + 80.0
-	if board_on:
-		# its shadow, the steel case with a lit top edge, the dark face, and
-		# the heading strip; the rows are written after the batch (text)
+	if bd.y > vt - 80.0 and bd.y < vb + 80.0:
 		b.rect(Rect2(bd.x - 154.0 + 10.0, bd.y - 38.0 + 16.0, 308.0, 76.0), Color(0, 0, 0, 0.18))
-		b.rect(Rect2(bd.x - 154.0, bd.y - 38.0, 308.0, 76.0), Color(0.42, 0.44, 0.48))
-		b.rect(Rect2(bd.x - 154.0, bd.y - 38.0, 308.0, 3.0), Color(0.66, 0.68, 0.72))
-		b.rect(Rect2(bd.x - 150.0, bd.y - 34.0, 300.0, 68.0), Color(0.07, 0.07, 0.09))
-		b.rect(Rect2(bd.x - 150.0, bd.y - 34.0, 300.0, 13.0), Color(0.16, 0.30, 0.56))
-		for row in range(4):
-			b.line(Vector2(bd.x - 146.0, bd.y - 7.0 + float(row) * 11.0), Vector2(bd.x + 146.0, bd.y - 7.0 + float(row) * 11.0),
-				Color(1, 1, 1, 0.04), 1.0)
 	# the ticket barriers: grey cabinets, and the glass paddles in each gap
 	var by: float = LevelBuild.ESTACIO_BARRIER_Y
 	if by > vt - 60.0 and by < vb + 60.0:
@@ -3278,8 +3453,6 @@ func _draw_estacio(vt: float, vb: float) -> void:
 			cy += 240.0
 		b.circle(Vector2(tr.get_center().x, tr.position.y + 6.0), 10.0, Color(0.95, 0.95, 0.80))   # the headlamp
 	b.flush(_wc)
-	if board_on:
-		_draw_departures(bd)
 
 
 # The departures board's rows, amber dot-matrix on black: time, where to and
@@ -3288,19 +3461,29 @@ const DEPARTURES := [["10:42", "SITGES", "4"], ["10:47", "MATARÓ", "CANCEL·LAT
 	["10:55", "GIRONA", "2"], ["11:03", "VIC", "5"]]
 
 
-func _draw_departures(bd: Vector2) -> void:
+# The board itself, overhead: the steel case with a lit top edge, the dark
+# face, the heading strip, then the rows (text, which flushes the batch and
+# goes straight to the canvas it stands in for).
+func _departures_board(b: ShapeBatch, bd: Vector2) -> void:
+	b.rect(Rect2(bd.x - 154.0, bd.y - 38.0, 308.0, 76.0), Color(0.42, 0.44, 0.48))
+	b.rect(Rect2(bd.x - 154.0, bd.y - 38.0, 308.0, 3.0), Color(0.66, 0.68, 0.72))
+	b.rect(Rect2(bd.x - 150.0, bd.y - 34.0, 300.0, 68.0), Color(0.07, 0.07, 0.09))
+	b.rect(Rect2(bd.x - 150.0, bd.y - 34.0, 300.0, 13.0), Color(0.16, 0.30, 0.56))
+	for row in range(4):
+		b.line(Vector2(bd.x - 146.0, bd.y - 7.0 + float(row) * 11.0), Vector2(bd.x + 146.0, bd.y - 7.0 + float(row) * 11.0),
+			Color(1, 1, 1, 0.04), 1.0)
 	var amber := Color(1.0, 0.72, 0.18)
-	_wc.draw_string(font, Vector2(bd.x - 144.0, bd.y - 24.0), "SORTIDES", HORIZONTAL_ALIGNMENT_LEFT, -1, 10,
+	b.draw_string(font, Vector2(bd.x - 144.0, bd.y - 24.0), "SORTIDES", HORIZONTAL_ALIGNMENT_LEFT, -1, 10,
 		Color(0.94, 0.96, 1.0))
-	_wc.draw_string(font, Vector2(bd.x + 40.0, bd.y - 24.0), "departures", HORIZONTAL_ALIGNMENT_LEFT, -1, 9,
+	b.draw_string(font, Vector2(bd.x + 40.0, bd.y - 24.0), "departures", HORIZONTAL_ALIGNMENT_LEFT, -1, 9,
 		Color(0.80, 0.86, 0.96, 0.8))
 	for row in range(DEPARTURES.size()):
 		var d: Array = DEPARTURES[row]
 		var y := bd.y - 10.0 + float(row) * 11.0
-		_wc.draw_string(font, Vector2(bd.x - 144.0, y), String(d[0]), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, amber)
-		_wc.draw_string(font, Vector2(bd.x - 100.0, y), String(d[1]), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, amber)
+		b.draw_string(font, Vector2(bd.x - 144.0, y), String(d[0]), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, amber)
+		b.draw_string(font, Vector2(bd.x - 100.0, y), String(d[1]), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, amber)
 		var cancelled := String(d[2]).length() > 2
-		_wc.draw_string(font, Vector2(bd.x + 144.0 - (68.0 if cancelled else 10.0), y), String(d[2]),
+		b.draw_string(font, Vector2(bd.x + 144.0 - (68.0 if cancelled else 10.0), y), String(d[2]),
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.98, 0.34, 0.28) if cancelled else amber)
 
 
@@ -3318,39 +3501,58 @@ func _draw_diluvi(vt: float, vb: float) -> void:
 			var fl := fmod(gy + t * 90.0, 46.0)
 			b.line(Vector2(gx, gy + fl), Vector2(gx, gy + fl + 12.0), Color(0.75, 0.84, 0.92, 0.6), 2.0)
 		gy += 46.0
-	# the awnings: striped canvas over the pavement, dripping at the edge
+	# the awnings and the arcade's roof are overhead (draw_overhead_piece):
+	# here the shade each throws on the paving
 	for i in range(1, shelters.size()):
 		var r: Rect2 = shelters[i]
 		if r.end.y < vt - 40.0 or r.position.y > vb + 40.0:
 			continue
 		b.rect(Rect2(r.position + Vector2(-8, 10), r.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
-		var ac: Color = [Color(0.62, 0.20, 0.22), Color(0.20, 0.36, 0.30), Color(0.22, 0.30, 0.50)][i % 3]
-		b.rect(r, ac)
-		var sx := r.position.x + 6.0
-		while sx < r.end.x:
-			b.rect(Rect2(sx, r.position.y, 6.0, r.size.y), ac.lightened(0.25))
-			sx += 14.0
-		for k in range(3):
-			var dy := fmod(t * 60.0 + float(k) * 13.0 + r.position.y, 26.0)
-			b.circle(Vector2(r.position.x - 3.0, r.position.y + 12.0 + float(k) * r.size.y / 3.0 + dy * 0.3), 1.6, Color(0.8, 0.88, 0.95, 0.8))
-	# the arcade: its vaulted roof seen from above, a shadow under it
 	if not shelters.is_empty():
 		var ar: Rect2 = shelters[0]
 		if ar.end.y > vt - 40.0 and ar.position.y < vb + 40.0:
 			var y0 := maxf(ar.position.y, vt - 40.0)
 			var y1 := minf(ar.end.y, vb + 40.0)
-			b.rect(Rect2(ar.position.x, y0, ar.size.x, y1 - y0), Color(0.46, 0.40, 0.36))
-			b.rect(Rect2(ar.end.x - 10.0, y0, 10.0, y1 - y0), Color(0.36, 0.31, 0.28))
-			var vy := floorf(y0 / 120.0) * 120.0 + 20.0
-			while vy < y1:
-				b.line(Vector2(ar.position.x, vy), Vector2(ar.end.x, vy), Color(0.54, 0.48, 0.43), 3.0)
-				vy += 120.0
+			b.rect(Rect2(ar.position.x, y0, ar.size.x, y1 - y0), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
 	# how wet the owner is, a drip meter over their head once it shows
 	if human_soak > 0.08:
 		var hp: Vector2 = human.global_position + Vector2(-16.0, -40.0)
 		b.rect(Rect2(hp.x, hp.y, 32.0, 5.0), Color(0.08, 0.08, 0.10, 0.7))
 		b.rect(Rect2(hp.x, hp.y, 32.0 * human_soak, 5.0), Color(0.45, 0.65, 0.95) if human_soak < 0.5 else Color(0.30, 0.45, 0.85))
 	b.flush(_wc)
+
+
+# an El Diluvi awning: striped canvas over the pavement, dripping at the edge
+const DILUVI_AWNING_COLS: Array[Color] = [Color(0.62, 0.20, 0.22), Color(0.20, 0.36, 0.30), Color(0.22, 0.30, 0.50)]
+
+
+func _diluvi_awning(b: ShapeBatch, r: Rect2, i: int) -> void:
+	var t := AnimClock.msec() / 1000.0
+	var ac: Color = DILUVI_AWNING_COLS[i % 3]
+	b.rect(r, ac)
+	var sx := r.position.x + 6.0
+	while sx < r.end.x:
+		b.rect(Rect2(sx, r.position.y, 6.0, r.size.y), ac.lightened(0.25))
+		sx += 14.0
+	for k in range(3):
+		var dy := fmod(t * 60.0 + float(k) * 13.0 + r.position.y, 26.0)
+		b.circle(Vector2(r.position.x - 3.0, r.position.y + 12.0 + float(k) * r.size.y / 3.0 + dy * 0.3), 1.6, Color(0.8, 0.88, 0.95, 0.8))
+
+
+# the arcade's vaulted roof seen from above, only the stretch on screen
+func _diluvi_arcade_roof(b: ShapeBatch, ar: Rect2) -> void:
+	var vt: float = cam.position.y - 440.0
+	var vb: float = cam.position.y + 440.0
+	var y0 := maxf(ar.position.y, vt - 40.0)
+	var y1 := minf(ar.end.y, vb + 40.0)
+	if y1 <= y0:
+		return
+	b.rect(Rect2(ar.position.x, y0, ar.size.x, y1 - y0), Color(0.46, 0.40, 0.36))
+	b.rect(Rect2(ar.end.x - 10.0, y0, 10.0, y1 - y0), Color(0.36, 0.31, 0.28))
+	var vy := floorf(y0 / 120.0) * 120.0 + 20.0
+	while vy < y1:
+		b.line(Vector2(ar.position.x, vy), Vector2(ar.end.x, vy), Color(0.54, 0.48, 0.43), 3.0)
+		vy += 120.0
 
 
 # the narrow pavement between a "road" strip and the building line
@@ -3902,6 +4104,32 @@ func _draw_busker(pf: Vector2, idx: int, pt: float) -> void:
 		_wc.draw_line(np + Vector2(2.5, -1), np + Vector2(2.5, -9), Color(1, 1, 1, na), 1.5)
 
 
+# the ice cream cart's striped umbrella, overhead (draw_overhead_piece)
+func _icecream_brolly(b: ShapeBatch, st: Vector2) -> void:
+	for k in range(8):
+		var a := TAU * float(k) / 8.0
+		b.polygon(PackedVector2Array([st, st + Vector2.from_angle(a) * ICECREAM_BROLLY_R,
+			st + Vector2.from_angle(a + TAU / 8.0) * ICECREAM_BROLLY_R]),
+			Color(0.95, 0.45, 0.55, 0.85) if k % 2 == 0 else Color(0.98, 0.96, 0.92, 0.85))
+	b.circle(st, 3.0, Color(0.4, 0.35, 0.3))
+
+
+# the bandstand's octagonal roof over its eight iron posts, overhead
+# (draw_overhead_piece): a ring of eight green copper panels round an open
+# lantern, the post heads showing where they meet it
+func _bandstand_roof(b: ShapeBatch, bs: Vector2) -> void:
+	var r: float = LevelBuild.BANDSTAND_R
+	for i in range(8):
+		var a0 := TAU * float(i) / 8.0 + PI / 8.0
+		var a1 := TAU * float(i + 1) / 8.0 + PI / 8.0
+		var pan := PackedVector2Array([bs + Vector2.from_angle(a0) * (r + 14.0), bs + Vector2.from_angle(a1) * (r + 14.0),
+			bs + Vector2.from_angle(a1) * (r - 12.0), bs + Vector2.from_angle(a0) * (r - 12.0)])
+		b.polygon(pan, Color(0.30, 0.52, 0.46) if i % 2 == 0 else Color(0.26, 0.46, 0.41))
+	b.circle(bs, 9.0, Color(0.36, 0.58, 0.51))
+	for bp: Vector2 in park_posts:
+		b.circle(bp, 5.0, Color(0.16, 0.17, 0.19))
+
+
 # A La Rambla stall by what it sells. Same footprint as a market stall
 # (STALL_BODY_SIZE), so bodies, wrap points and blockers are unchanged.
 func _draw_cellar(c: Rect2) -> void:
@@ -4094,14 +4322,10 @@ func _draw_rambla_stall(st: Vector2, kind: String, i: int) -> void:
 			b.rect(Rect2(st.x + 25.0, st.y - 23.0, 18.0, 6.0), Color(0.30, 0.56, 0.80))
 			b.rect(Rect2(st.x + 25.0, st.y - 17.0, 18.0, 6.0), Color(0.94, 0.84, 0.56))
 		"icecream":
-			# the ice cream cart under its striped umbrella
+			# the ice cream cart; its striped umbrella is overhead
+			# (_icecream_brolly)
 			b.rect(Rect2(st.x - 30.0, st.y - 18.0, 60.0, 36.0), Color(0.95, 0.93, 0.88))
 			b.rect(Rect2(st.x - 30.0, st.y - 18.0, 60.0, 6.0), Color(0.55, 0.78, 0.86))
-			for k in range(8):
-				var a := TAU * float(k) / 8.0
-				b.polygon(PackedVector2Array([st, st + Vector2.from_angle(a) * 34.0, st + Vector2.from_angle(a + TAU / 8.0) * 34.0]),
-					Color(0.95, 0.45, 0.55, 0.85) if k % 2 == 0 else Color(0.98, 0.96, 0.92, 0.85))
-			b.circle(st, 3.0, Color(0.4, 0.35, 0.3))
 			for wx: float in [-22.0, 22.0]:
 				b.circle(Vector2(st.x + wx, st.y + 20.0), 5.0, Color(0.15, 0.15, 0.16))
 		"fruit":
@@ -4307,26 +4531,14 @@ func _draw_parc(vt: float, vb: float) -> void:
 			b.line(mp + Vector2(tx * 10.0, -60), mp + Vector2(tx * 22.0, -80), Color(0.88, 0.85, 0.76), 4.0)
 			b.line(mp + Vector2(tx * 22.0, -80), mp + Vector2(tx * 14.0, -92), Color(0.88, 0.85, 0.76), 3.5)
 		b.line(mp + Vector2(0, 46), mp + Vector2(4, 60), stone.darkened(0.2), 3.0)       # the tail
-	# the bandstand: an octagonal roof over eight iron posts, drawn as its
-	# roof ring so the posts and the space inside still read
+	# the bandstand: its shadow, the stone platform and the iron posts; the
+	# roof over them is overhead (draw_overhead_piece)
 	var bs: Vector2 = LevelBuild.PARK_BANDSTAND
 	if bs.y > vt - 120.0 and bs.y < vb + 120.0:
 		var r: float = LevelBuild.BANDSTAND_R
 		b.circle(bs + LIGHT * 18.0, r + 18.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
 		b.circle(bs, r + 8.0, Color(0.74, 0.70, 0.62))                 # the stone platform
 		b.circle(bs, r - 6.0, Color(0.66, 0.62, 0.55))
-		var roof := PackedVector2Array()
-		for i in range(8):
-			roof.append(bs + Vector2.from_angle(TAU * float(i) / 8.0 + PI / 8.0) * (r + 14.0))
-		var inner := PackedVector2Array()
-		for i in range(8):
-			inner.append(bs + Vector2.from_angle(TAU * float(i) / 8.0 + PI / 8.0) * (r - 12.0))
-		# the roof as eight panels round an open lantern, green copper
-		for i in range(8):
-			var j := (i + 1) % 8
-			var pan := PackedVector2Array([roof[i], roof[j], inner[j], inner[i]])
-			b.polygon(pan, Color(0.30, 0.52, 0.46) if i % 2 == 0 else Color(0.26, 0.46, 0.41))
-		b.circle(bs, 9.0, Color(0.36, 0.58, 0.51))
 		for bp: Vector2 in park_posts:
 			b.circle(bp, 5.0, Color(0.16, 0.17, 0.19))
 	# the playground: a soft red surface, a slide, a pair of swings
@@ -4680,15 +4892,23 @@ func _draw_lamppost(p: Vector2) -> void:
 	# the fluted column, lit down one side
 	_wc.draw_circle(p, POLE_RADIUS, Color(0.38, 0.38, 0.42))
 	_wc.draw_circle(p + Vector2(-1.5, -1.5), POLE_RADIUS * 0.62, Color(0.52, 0.52, 0.57))
-	# four cross arms, each with a lantern on the end, glass and all
-	for bo: Vector2 in [Vector2(11, 0), Vector2(-11, 0), Vector2(0, 11), Vector2(0, -11)]:
-		_wc.draw_line(p, p + bo, Color(0.30, 0.30, 0.33), 3.5)
-		_wc.draw_line(p, p + bo, Color(0.46, 0.46, 0.5), 1.5)
+	# (its head, up top, is overhead: _lamp_head)
+
+
+const LAMP_ARMS: Array[Vector2] = [Vector2(11, 0), Vector2(-11, 0), Vector2(0, 11), Vector2(0, -11)]
+
+
+# a lamppost's head: four cross arms, each with a lantern on the end, glass and
+# all. Overhead (draw_overhead_piece): the rope wound on the column runs under it.
+func _lamp_head(b: ShapeBatch, p: Vector2) -> void:
+	for bo: Vector2 in LAMP_ARMS:
+		b.line(p, p + bo, Color(0.30, 0.30, 0.33), 3.5)
+		b.line(p, p + bo, Color(0.46, 0.46, 0.5), 1.5)
 		var lp := p + bo * 1.4
-		_wc.draw_circle(lp, 5.0, Color(0.26, 0.26, 0.29))
-		_wc.draw_circle(lp, 3.6, Color(0.99, 0.95, 0.78) if Game.night else Color(0.86, 0.88, 0.9))
+		b.circle(lp, 5.0, Color(0.26, 0.26, 0.29))
+		b.circle(lp, 3.6, Color(0.99, 0.95, 0.78) if Game.night else Color(0.86, 0.88, 0.9))
 		if Game.night:
-			_wc.draw_circle(lp, 6.5, Color(1.0, 0.92, 0.66, 0.35))
+			b.circle(lp, 6.5, Color(1.0, 0.92, 0.66, 0.35))
 
 
 # A rounded rectangle as one polygon: four corners of three steps each. One
@@ -5405,30 +5625,14 @@ func _draw_dog_beach(c: Object) -> void:
 	# furniture, and the shower is hers - it fills the tank back up
 	# (the walk has the same two, from the same drawing code)
 	_draw_beach_shower(c, Vector2(BEACH_SEA_R + 150.0, r.position.y + 120.0))
-	var lg := Vector2(BEACH_SEA_R + 240.0, r.get_center().y)
-	_draw_lifeguard_tower(c, lg, true, true)
-	var pcol := [Color(0.85, 0.45, 0.35, 0.85), Color(0.4, 0.6, 0.75, 0.85),
-		Color(0.9, 0.8, 0.4, 0.85)]
-	# spaced round the agility lane, which runs between the first two
-	for i in range(3):
-		var pa := Vector2(r.end.x - 260.0, r.position.y + [150.0, 390.0, 600.0][i])
-		# a parasol from above is panels radiating from a hub, with the shade
-		# it is there to cast falling clear of it
-		contact_shadow(c, pa, 36.0, 30.0, 0.20)
-		var pc: Color = pcol[i % 3]
-		c.draw_circle(pa, 36.0, pc)
-		for panel in range(8):
-			var a0 := TAU * float(panel) / 8.0 + float(i) * 0.2
-			c.draw_line(pa, pa + Vector2.from_angle(a0) * 36.0, pc.darkened(0.22), 2.0)
-			if panel % 2 == 0:
-				c.draw_colored_polygon(
-					PackedVector2Array([
-						pa, pa + Vector2.from_angle(a0) * 36.0,
-						pa + Vector2.from_angle(a0 + TAU / 8.0) * 36.0,
-					]), Color(1, 1, 1, 0.10))
-		c.draw_circle(pa - LIGHT * 10.0, 12.0, Color(1, 1, 1, 0.13))   # the lit side
-		c.draw_circle(pa, 5.0, Color(0.42, 0.38, 0.34))                # the pole
-		c.draw_circle(pa, 2.2, Color(0.62, 0.58, 0.52))
+	# the tower's legs and ladder; on the seafront walk its cabin is over
+	# everyone (the overhead layer, draw_overhead_onto)
+	_draw_lifeguard_tower(c, dog_beach_tower(), true, lvl != "beach")
+	# the parasols, spaced round the agility lane (which runs between the
+	# first two): here the shade each casts falling clear of it, and their
+	# canopies overhead (draw_overhead_piece)
+	for pa: Vector2 in beach_parasol_spots():
+		contact_shadow(c, pa, BEACH_PARASOL_R, 30.0, 0.20)
 	_draw_freedom_benches(c, r, Color(0.62, 0.5, 0.34))
 	_freedom_sign(c, r, "PLATJA DELS GOSSOS", "the dog beach, off leash")
 	_draw_espigo(c)
@@ -5883,9 +6087,9 @@ func _bar_hut(b: ShapeBatch, r: Rect2, thatch: bool, faces_north: bool) -> void:
 
 
 # the shade over a chiringuito's terrace: a timber pergola with reed matting
-# laid across it, the tables showing through between the reeds
-func _draw_pergola(cn: Rect2) -> void:
-	var b := ShapeBatch.new()
+# laid across it, the tables showing through between the reeds. Overhead
+# (draw_overhead_piece), into the canopy layer's batch.
+func _draw_pergola(b: ShapeBatch, cn: Rect2) -> void:
 	var ry := cn.position.y + 4.0
 	var k := 0
 	while ry < cn.end.y - 2.0:
@@ -5898,7 +6102,6 @@ func _draw_pergola(cn: Rect2) -> void:
 		b.line(Vector2(bx, cn.position.y), Vector2(bx, cn.end.y), Color(0.52, 0.36, 0.22), 4.0)
 	for corner: Vector2 in [cn.position, Vector2(cn.end.x, cn.position.y), Vector2(cn.position.x, cn.end.y), cn.end]:
 		b.circle(corner, 5.0, Color(0.40, 0.28, 0.18))
-	b.flush(_wc)
 
 
 # THE BLOCKS BEHIND THE SEAFRONT, from above: their flat roofs. Tiled
@@ -6250,11 +6453,10 @@ func _draw_ground_detail(vt: float, vb: float) -> void:
 # A parasol from above, as the dog beach draws them: eight panels in two
 # tones round a hub, a scalloped hem, the lit side, and its shade falling
 # clear on the ground. Still see-through, so she can be seen under it.
-func _draw_parasol(pa: Vector2, col: Color, key: float) -> void:
-	var R := 40.0
+# The canopy is overhead (draw_overhead_piece); the shade is the ground pass's.
+func _parasol_canopy(b: ShapeBatch, pa: Vector2, col: Color, key: float) -> void:
+	var R := PARASOL_R
 	var turn := key * 0.37
-	var b := ShapeBatch.new()
-	b.circle(pa + LIGHT * 16.0, R * 0.92, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
 	var light := Color(minf(col.r + 0.30, 1.0), minf(col.g + 0.30, 1.0), minf(col.b + 0.28, 1.0), col.a)
 	for panel in range(8):
 		var a0 := TAU * float(panel) / 8.0 + turn
@@ -6268,7 +6470,6 @@ func _draw_parasol(pa: Vector2, col: Color, key: float) -> void:
 	b.circle(pa - LIGHT * 12.0, 13.0, Color(1, 1, 1, 0.12))
 	b.circle(pa, 4.5, Color(0.42, 0.38, 0.34))
 	b.circle(pa, 2.0, Color(0.66, 0.62, 0.56))
-	b.flush(_wc)
 
 
 # A BEACH TOWEL: striped across both ends, fringed, and either someone lying
@@ -11034,24 +11235,11 @@ func _draw_world() -> void:
 			_wc.draw_circle(gl, 2.8, Color(0.60, 0.76, 0.84, 0.8))
 			_wc.draw_arc(gl, 2.8, PI * 1.1, PI * 1.6, 5, Color(1, 1, 1, 0.9), 1.0)
 		_wc.draw_rect(Rect2(tb.x - 8.0, tb.y - 6.0, 5.0, 3.0), Color(0.92, 0.82, 0.56))
-	# canopies over the beach terraces: out by day, furled at night
-	for cn in canopies:
-		if cn.end.y < vt - 40.0 or cn.position.y > vb + 40.0:
-			continue
-		if Game.night:
-			_wc.draw_rect(Rect2(cn.position.x, cn.position.y, cn.size.x, 10), Color(0.72, 0.67, 0.57))
-			_wc.draw_rect(Rect2(cn.position.x, cn.position.y, cn.size.x, 10), Color(0.5, 0.46, 0.38), false, 1.5)
-		else:
-			_draw_pergola(cn)
-	# umbrellas: wide, OVER the tables by day; furled spikes at night
-	var pcols := [Color(0.85, 0.45, 0.35, 0.7), Color(0.4, 0.6, 0.75, 0.7), Color(0.9, 0.8, 0.4, 0.7)]
-	for i in range(parasols.size()):
-		var pa := parasols[i]
-		if Game.night:
-			_wc.draw_line(pa + Vector2(-3, 24), pa + Vector2(3, -28), Color(0.45, 0.4, 0.35), 5.0)
-			_wc.draw_circle(pa + Vector2(3, -28), 4.0, pcols[i % 3])
-		else:
-			_draw_parasol(pa, pcols[i % 3], float(i))
+	# the beach terraces' canopies and the parasols over the tables are
+	# overhead (draw_overhead_piece); here only the shade a parasol casts
+	if not Game.night:
+		for pa in parasols:
+			_wc.circle(pa + LIGHT * 16.0, PARASOL_R * 0.92, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
 	# benches
 	# benches: three slats on cast-iron ends, each slat a soft plank lit on
 	# its upper-left, and the shadow of something knee high
@@ -11342,20 +11530,12 @@ func _draw_world() -> void:
 			_wc.draw_circle(mid + Vector2(cos(a) * float(pt["rx"]) * rr,
 				sin(a) * float(pt["ry"]) * rr), 5.0,
 				Color(base.r * 0.7, base.g * 0.7, base.b * 0.7, 0.6))
-	# El Gotic: laundry strung across the alley overhead, a lantern or two
-	if lvl == "oldtown" or lvl == "neteja":
-		var lt := AnimClock.msec() / 1000.0
-		_draw_laundry(vt, vb, lt)
-		# lanterns down one wall
-		for i in range(laundry_lines.size()):
-			var lyy: float = laundry_lines[i] + 380.0
-			var glow := 0.6 + 0.25 * sin(lt * 3.0 + i)
-			_wc.draw_circle(Vector2(walk_edges(lyy).x + 6.0, lyy), 6.0, Color(1.0, 0.8, 0.4, glow))
+	# (El Gotic's and La Neteja's laundry strung across the alley, and the
+	# lanterns down one wall, are overhead: draw_overhead_piece)
 	# street performers: a hat, some coins, music in the air. In the rain
 	# they are an umbrella crowd instead - hunched under canopies, no busking.
 	var pt := AnimClock.msec() / 1000.0
 	var raining := Game.weather == "rain"
-	var brolly_cols := [Color(0.75, 0.2, 0.25), Color(0.2, 0.35, 0.6), Color(0.25, 0.5, 0.35), Color(0.35, 0.3, 0.4)]
 	for idx in range(performers.size()):
 		var pf: Vector2 = performers[idx]
 		if lvl == "barri":
@@ -11402,10 +11582,8 @@ func _draw_world() -> void:
 			continue
 		_wc.draw_circle(pf, 12.0, Color(0.5, 0.35, 0.5))
 		_wc.draw_circle(pf + Vector2(0, -4), 7.0, Color(0.85, 0.72, 0.58))
-		# a wide domed umbrella over the head, on its stick
-		var bc: Color = brolly_cols[idx % brolly_cols.size()]
-		_wc.draw_line(pf + Vector2(0, -8), pf + Vector2(0, -30), Color(0.15, 0.14, 0.16), 2.0)
-		_wc.draw_arc(pf + Vector2(0, -30), 26.0, PI, TAU, 20, bc, 7.0)
+		# (the wide domed umbrella over the head, on its stick, is overhead:
+		# draw_overhead_piece)
 		for r in range(2):
 			var rx := fmod(pt * 120.0 + idx * 30.0 + r * 60.0, 120.0)
 			_wc.draw_line(pf + Vector2(-24 + rx * 0.4, -28), pf + Vector2(-24 + rx * 0.4, 12), Color(0.6, 0.7, 0.85, 0.4), 1.0)
