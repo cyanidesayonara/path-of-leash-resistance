@@ -177,7 +177,7 @@ func _line() -> String:
 	if result == "win":
 		return "no way!! nice!!"
 	if result == "lose":
-		return "heh. want another go?" if has_another_go() else "heh, next time"
+		return "heh. want another try?" if has_another_go() else "heh, next time"
 	return "bet you can't!"
 
 

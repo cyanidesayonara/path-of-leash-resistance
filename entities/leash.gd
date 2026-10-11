@@ -31,14 +31,16 @@ const TAUT_DAMP := 0.1
 # Bending: a real strap resists folding back on itself, so slack lies in loose
 # curves on the ground instead of the accordion a chain of free joints makes.
 # Two points one apart may come no closer than BEND_MIN segments (a turn of
-# at most about 2 acos(BEND_MIN / 2) per joint), corrected at BEND_K. Only on
-# a rope with no obstacle within BEND_BERTH of its box: a coil round a pole is
-# a tight bend by design, and the wrap, the whirl's winding measures and its
-# unwinding all read the shape a rope takes as it comes round a pole, so
-# anywhere near one the solver is exactly what it was without bending.
+# at most about 2 acos(BEND_MIN / 2) per joint), corrected at BEND_K. A coil
+# round a pole is a tight bend by design, and the wrap, the whirl's winding
+# measures and its unwinding all read the shape a rope takes as it comes round
+# a pole, so no joint within BEND_NEAR of an obstacle is bent: there the solver
+# is exactly what it was without bending. A rope with nothing within
+# BEND_BERTH of its box bends everywhere without checking.
 const BEND_MIN := 1.55
 const BEND_K := 0.6
 const BEND_BERTH := 120.0
+const BEND_NEAR := 70.0
 # The pull tangent is the chord over this many segments, so one displaced
 # point next to the end cannot steer it; a contact within them falls back to
 # the first segment alone.
@@ -104,6 +106,9 @@ var _kinds_stamp := -1
 # scratch reused every tick, so a frame allocates nothing
 var _obs_pos := PackedVector2Array()
 var _obs_kind := PackedInt32Array()
+# obstacles within BEND_BERTH of the rope's box, which no bent joint may be
+# within BEND_NEAR of
+var _bend_obs := PackedVector2Array()
 var _touch := PackedInt32Array()
 var _start: Array[Vector2] = []
 # points contributed by ANOTHER leash this frame: the rope drapes over
@@ -115,6 +120,13 @@ var free_slip_t := 0.0
 # the player's leash draws every frame (hero element); NPC-pair leashes
 # only need ~30fps, halving their line-heavy rope draw on the web build
 var hero := false
+# where the hand end sits relative to the human, in the human's own frame.
+# The player's human keeps the default; an NPC owner moves it to the fist
+# that actually holds the strap (entities/otherpair.gd).
+var hand_offset := Vector2(9, -16)
+# and where the dog end sits relative to the dog: the player's dog keeps her
+# center; an NPC dog's leash clips to its collar
+var dog_offset := Vector2.ZERO
 
 
 func slip_for(stretch_ratio: float, kind: String) -> float:
@@ -200,13 +212,13 @@ func setup(d: Node2D, h: Node2D, pole_list: Array[Vector2], max_len: float) -> v
 
 
 func _hand_pos() -> Vector2:
-	return human.global_position + Vector2(9, -16).rotated(human.rotation)
+	return human.global_position + hand_offset.rotated(human.rotation)
 
 
 func resnap() -> void:
 	# lay the rope fresh in a straight line from dog to hand, so
 	# re-clipping the leash after the off-leash romp doesn't snap
-	var a := dog.global_position
+	var a := dog.global_position + dog_offset
 	var b := _hand_pos()
 	for i in range(N):
 		pts[i] = a.lerp(b, float(i) / (N - 1))
@@ -249,18 +261,18 @@ func tick(delta: float) -> void:
 	_obs_pos.clear()
 	_obs_kind.clear()
 	_ensure_pole_kinds()
-	var berth_clear := true
+	_bend_obs.clear()
 	for pi in range(poles.size()):
 		var npl: Vector2 = poles[pi]
 		if npl.x > rl - BEND_BERTH and npl.x < rr + BEND_BERTH and npl.y > rt - BEND_BERTH and npl.y < rb + BEND_BERTH:
-			berth_clear = false
+			_bend_obs.append(npl)
 			if npl.x > rl - 40.0 and npl.x < rr + 40.0 and npl.y > rt - 40.0 and npl.y < rb + 40.0:
 				near_poles.append(npl)
 				_obs_pos.append(npl)
 				_obs_kind.append(pole_kinds[pi])
 	for dob in dynamic_obstacles:
 		if dob.x > rl - BEND_BERTH and dob.x < rr + BEND_BERTH and dob.y > rt - BEND_BERTH and dob.y < rb + BEND_BERTH:
-			berth_clear = false
+			_bend_obs.append(dob)
 			if dob.x > rl - 40.0 and dob.x < rr + 40.0 and dob.y > rt - 40.0 and dob.y < rb + 40.0:
 				near_poles.append(dob)
 				_obs_pos.append(dob)
@@ -274,7 +286,7 @@ func tick(delta: float) -> void:
 		_touch[i] = -1
 	# The ends do not move during the solve, so they are read once, not per
 	# iteration (both are property reads through the engine).
-	var dog_end := dog.global_position
+	var dog_end := dog.global_position + dog_offset
 	var hand_end := _hand_pos()
 	# Obstacles further than this from a segment's bounding box cannot touch it.
 	# The margin is POLE_PAD plus slack, so the reject never skips a contact the
@@ -285,7 +297,7 @@ func tick(delta: float) -> void:
 		pts[N - 1] = hand_end
 		# bending first, so the length passes below take back any stretch it
 		# adds: a bend that lengthened the rope would read as tension
-		if _iter == 0 and berth_clear:
+		if _iter == 0:
 			_bend(seg)
 		# a carries pts[i] from the previous step, so each point is read once
 		var a: Vector2 = pts[0]
@@ -399,12 +411,23 @@ func tick(delta: float) -> void:
 func _bend(seg: float) -> void:
 	var bend_min := seg * BEND_MIN
 	var bend_min_sq := bend_min * bend_min
+	var near_sq := BEND_NEAR * BEND_NEAR
+	var nob := _bend_obs.size()
 	for i in range(N - 2):
 		var a: Vector2 = pts[i]
 		var c: Vector2 = pts[i + 2]
 		var d := c - a
 		var dist_sq := d.length_squared()
 		if dist_sq >= bend_min_sq or dist_sq < 0.000001:
+			continue
+		# a joint near an obstacle keeps the unbent solver's shape
+		var mid: Vector2 = pts[i + 1]
+		var close := false
+		for k in range(nob):
+			if mid.distance_squared_to(_bend_obs[k]) < near_sq:
+				close = true
+				break
+		if close:
 			continue
 		var dist := sqrt(dist_sq)
 		var corr := d * ((dist - bend_min) / dist) * 0.5 * BEND_K

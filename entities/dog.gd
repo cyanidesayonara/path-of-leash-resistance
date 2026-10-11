@@ -62,6 +62,13 @@ var input_dir := Vector2.ZERO
 # a jump's height (the agility course's jumps): looks only, the body is drawn
 # that far up over a shadow that stays on the ground
 var hop := 0.0
+# While set (not zero) she faces this way whatever the stick says: in the rope
+# tug she faces the toy, so pulling away from it is backing up, rump first.
+var face_lock := Vector2.ZERO
+# how braced she is, 0..1, easing in while face_lock holds: front paws
+# planted out ahead, back paws spread
+var brace := 0.0
+const BRACE_RATE := 4.0
 
 
 func setup(m: Node2D) -> void:
@@ -196,13 +203,20 @@ func tick(delta: float) -> void:
 		# intent, which is what the rest of the game reads
 		var go := iv if mood_wobble == 0.0 else iv.rotated(mood_wobble)
 		velocity = velocity.move_toward(go * top, accel * delta)
-		if input_active:
+		if face_lock != Vector2.ZERO:
+			facing = face_lock
+		elif input_active:
 			facing = go.normalized()
 	move_and_slide()
+	brace = move_toward(brace, 1.0 if face_lock != Vector2.ZERO else 0.0, BRACE_RATE * delta)
 	# the hips trail the shoulders: the body hinges mid-turn
 	# how she steps on what she is on: quick short steps on sand (no purchase),
 	# slow heavy ones in mud, a slightly higher step through grass
-	gait += velocity.length() * delta * 0.055 * _cadence()
+	# the stride runs the way she is actually going: backing up, it runs back
+	var stepping := velocity.length()
+	if velocity.dot(facing) < -0.2 * stepping:
+		stepping = -stepping
+	gait += stepping * delta * 0.055 * _cadence()
 	var target_hip := -facing
 	hip_dir = hip_dir.slerp(target_hip, minf(10.0 * delta, 1.0))
 	if hip_dir.length() < 0.1:
@@ -366,11 +380,15 @@ func _draw_shapes() -> void:
 	if surface == Surfaces.S.MUD:
 		# sunk in it to the ankles
 		paw = Color(0.36, 0.28, 0.20)
-	_b.draw_circle(shoulder + side * 7.5 + facing * (6.0 + ph * amp), 3.0, paw)
-	_b.draw_circle(shoulder - side * 7.5 + facing * (6.0 - ph * amp), 3.0, paw)
+	# braced (the rope tug), the front paws dig in out ahead and the back
+	# paws spread
+	var front_reach := 6.0 + brace * 3.5
+	_b.draw_circle(shoulder + side * 7.5 + facing * (front_reach + ph * amp), 3.0, paw)
+	_b.draw_circle(shoulder - side * 7.5 + facing * (front_reach - ph * amp), 3.0, paw)
 	var rear_reach := 1.0 if crouching else 4.0
-	_b.draw_circle(hip + hside * 7.0 - hip_dir * (rear_reach - ph * amp * 0.8), 3.2, paw)
-	_b.draw_circle(hip - hside * 7.0 - hip_dir * (rear_reach + ph * amp * 0.8), 3.2, paw)
+	var rear_spread := 7.0 + brace * 1.5
+	_b.draw_circle(hip + hside * rear_spread - hip_dir * (rear_reach - ph * amp * 0.8), 3.2, paw)
+	_b.draw_circle(hip - hside * rear_spread - hip_dir * (rear_reach + ph * amp * 0.8), 3.2, paw)
 	# lean street-dog torso, hinged; the rump drops into the squat. A rim a
 	# shade darker on the side away from the light first, then the fur, then
 	# the light along her back: plasticine, not a flat cut-out

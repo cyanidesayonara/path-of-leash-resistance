@@ -1777,7 +1777,7 @@ static func build_level_data(m: Node2D) -> void:
 			m.prize_text = "fish the trowel out of the wet cement"
 		"spook":
 			m.prize_pos = CAST_PLACA + Vector2(0.0, 96.0)  # a panellet off the roaster's tray, ringed by sweets
-			m.prize_text = "get the panellet without eating the sweets"
+			m.prize_text = "get the panellet without eating the candy"
 		"scrap":
 			m.prize_pos = m.guard_posts[1] + Vector2(-30.0, 22.0)  # right beside a sleeping guard dog
 			m.prize_text = "steal the bone from under the guard's nose"
@@ -2703,6 +2703,12 @@ static func build_entities(m: Node2D) -> void:
 	m.cam.make_current()
 
 
+# Cones and loose junk lie on the ground: under the rope (z 5) that crosses
+# them, the dog and the owner (z 10) and everyone else. At 11 they drew over
+# the leash wherever it lay across a can or a crate.
+const JUNK_Z := 4
+
+
 static func spawn_cones(m: Node2D) -> void:
 	# real, kickable cones at every work site plus a few loose ones
 	# [where, kind]: cones unless the place calls for something else
@@ -2728,7 +2734,7 @@ static func spawn_cones(m: Node2D) -> void:
 		var cn := Node2D.new()
 		cn.set_script(load("res://entities/cone.gd"))
 		cn.position = sp[0]
-		cn.z_index = 11
+		cn.z_index = JUNK_Z
 		m.add_child(cn)
 		cn.setup(m, m.dog, m.human, String(sp[1]))
 	# Loose junk scattered down the whole walk, because punting things is one
@@ -2837,6 +2843,6 @@ static func spawn_junk(m: Node2D, at: Vector2, kind: String) -> void:
 	var jn := Node2D.new()
 	jn.set_script(load("res://entities/cone.gd"))
 	jn.position = at
-	jn.z_index = 11
+	jn.z_index = JUNK_Z
 	m.add_child(jn)
 	jn.setup(m, m.dog, m.human, kind)

@@ -42,11 +42,17 @@ func _run() -> void:
 	m.dog.global_position = Vector2(640, hp.y - 120.0)
 	m.leash.resnap()
 	await physics_frame
+	# no owner event (a call, a selfie) may stop them mid-test
+	m.human.event_timer = 999.0
 	# she pulls on ahead, flat out, for six seconds
 	Input.action_press("move_up")
 	Input.action_press("turbo")
 	for i in range(360):
 		m.dog.energy = 1.0
+		# the brace, not their patience: six seconds of hauling would
+		# otherwise end in a correction, a step back by design
+		m.human.patience = 1.0
+		m.human.event_timer = 999.0
 		await physics_frame
 	Input.action_release("move_up")
 	Input.action_release("turbo")
@@ -59,6 +65,8 @@ func _run() -> void:
 	m.tut_step = vi + 1
 	var y0: float = m.human.global_position.y
 	for i in range(240):
+		# and no phone call or selfie stopping them in the window
+		m.human.event_timer = 999.0
 		await physics_frame
 	_check(m.human.global_position.y < y0 - 60.0, "with the lesson moved on, they walk on")
 
