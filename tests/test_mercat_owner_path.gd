@@ -11,8 +11,10 @@ const STEP := 1.0 / 60.0
 # a walking human who covers less than this in WINDOW seconds is stuck
 const WINDOW := 4.0
 const MIN_MOVE := 20.0
-const SEEDS: Array[int] = [1, 2, 3]
+const SEEDS: Array[int] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 const MAX_T := 400.0
+# LevelBuild.MERCAT_DOOR_Y (class names do not resolve in a SceneTree script)
+const MERCAT_DOOR_Y := -4650.0
 
 var checks := 0
 var failures: Array[String] = []
@@ -106,6 +108,62 @@ func _run() -> void:
 		var up: float = start.y - mb.human.global_position.y
 		_check(up > 300.0, "from %s, the wrong side of a block, he walks on up the aisle (%.0f px)" % [start, up])
 		mb.queue_free()
+		await process_frame
+	# The wedges a wider seed sweep found. The dog keeps near him by her own
+	# movement (never placed: put past a wall, she drags him through it).
+	# Just short of a block's end face, across it on the wrong side for its
+	# aisle: he crosses before he walks on, and does not meet the end face and
+	# then its corner column sliding along it (he wedged in that corner).
+	# Just below a wall stall at the mouth of a block's aisle, or what stands
+	# by the wall between stalls, with his weave and the dog both drawing him
+	# to the wall: he steers out round it instead of walking into its end.
+	# [start, what, weave toward (-1 west, +1 east), dog's offset from him at first]
+	var scenarios: Array = [
+		[Vector2(700, -3835), "below block 3's end, east of its west aisle", -1.0, Vector2(0, -36)],
+		[Vector2(700, -1935), "below block 1's end, east of its west aisle", -1.0, Vector2(0, -36)],
+		[Vector2(580, -2935), "below block 2's end, west of its east aisle", 1.0, Vector2(0, -36)],
+		[Vector2(262, -3790), "below the west wall's jamon stall", -1.0, Vector2(-30, -36)],
+		[Vector2(262, -1990), "below the west wall's fish stall", -1.0, Vector2(-30, -36)],
+		[Vector2(1018, -1320), "below the crates on the east wall", 1.0, Vector2(30, -36)],
+	]
+	for sc: Array in scenarios:
+		var start: Vector2 = sc[0]
+		var heel_off: Vector2 = sc[3]
+		seed(1)
+		var ms: Node2D = load("res://main.tscn").instantiate()
+		root.add_child(ms)
+		if not ms.is_node_ready():
+			await ms.ready
+		ms._skip_title()
+		ms.human.global_position = start
+		# behind him, where he came from: always open floor
+		ms.dog.global_position = start + Vector2(0, 24)
+		ms.leash.resnap()
+		ms.dog.auto = true
+		# his weave held at one end throughout
+		ms.human.wobble_seed = PI * 0.5 * float(sc[2]) - ms.elapsed * 0.35
+		# where he was over the last two seconds: covering under 20 px in that
+		# time, short of the far door, is a wedge
+		var trail: Array[Vector2] = []
+		var stuck_at := Vector2.INF
+		for i in range(480):
+			ms.human.event_timer = 999.0
+			# drawing him to the wall only at the start: kept up, she snags the
+			# leash on a bin by the wall and holds him there
+			var off: Vector2 = heel_off if i < 40 else Vector2(0, -36)
+			var ahead: Vector2 = ms.human.global_position + off - ms.dog.global_position
+			ms.dog.auto_move = ahead.limit_length(40.0) / 40.0
+			ms._physics_process(STEP)
+			var hp_s: Vector2 = ms.human.global_position
+			trail.append(hp_s)
+			if trail.size() > 120:
+				var then: Vector2 = trail.pop_front()
+				if then.distance_to(hp_s) < 20.0 and hp_s.y > MERCAT_DOOR_Y and stuck_at == Vector2.INF:
+					stuck_at = hp_s
+		var up_s: float = start.y - ms.human.global_position.y
+		_check(up_s > 300.0 and stuck_at == Vector2.INF, "%s: he goes round and on up (%.0f px; wedged at %s)" % [
+			sc[1], up_s, stuck_at])
+		ms.queue_free()
 		await process_frame
 	print("\n%d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():

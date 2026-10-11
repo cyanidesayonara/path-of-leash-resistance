@@ -204,6 +204,10 @@ var park_posts: Array[Vector2] = []
 # where the owner is kept to a narrow line across the path (Les Obres' plank
 # over the trench): {"y0", "y1", "x0", "x1"}; see human._walk
 var narrows: Array[Dictionary] = []
+# solid things against the path's edges (El Mercat's wall stalls and what
+# stands between them) that the owner steers wide of before he meets them;
+# see human._walk
+var owner_keepouts: Array[Rect2] = []
 # El Gotic's parked scooters (they are also rope poles), drawn by their walk
 var scooters: Array[Vector2] = []
 # where it is dry (El Diluvi's arcade and awnings), and how wet the owner is
