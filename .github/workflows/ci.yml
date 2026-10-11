@@ -165,6 +165,9 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_freedom_games.gd
       - name: Off-leash games test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_freedom_games_live.gd
+
+      - name: Rope tug backing-up regression test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_rope_tug_backing.gd
       - name: Soundtrack test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_music.gd
       - name: Tutorial checkpoint test

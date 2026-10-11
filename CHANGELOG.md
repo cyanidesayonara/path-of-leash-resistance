@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-10-10 - Millie backs up to win a rope tug
+
+- In the off-leash rope tug Millie faces the other dog along the rope the
+  whole time. Pushing away from it backs her up, rump first, instead of
+  turning her round to run with the rope trailing over her back; the rope
+  now runs mouth to mouth. Scoring and controls are unchanged: pushing
+  away still pulls, digging in still holds.
+- She braces while she tugs: front paws planted out ahead, back paws
+  spread. Her stride runs the way she is actually going, so backing up
+  (here, or dragged backwards anywhere) steps backwards.
+- tests/test_rope_tug_backing.gd: while she pulls she faces the toy every
+  frame, moves away from it every frame, her stride runs in reverse and she
+  braces; when the tug ends the stick turns her again.
 ## 2026-10-10 - Other walkers' dogs walk ahead on a short leash
 
 - Another walker's dog goes a little ahead of its owner and to one side of
