@@ -2672,6 +2672,12 @@ static func build_entities(m: Node2D) -> void:
 	m.cam.make_current()
 
 
+# Cones and loose junk lie on the ground: under the rope (z 5) that crosses
+# them, the dog and the owner (z 10) and everyone else. At 11 they drew over
+# the leash wherever it lay across a can or a crate.
+const JUNK_Z := 4
+
+
 static func spawn_cones(m: Node2D) -> void:
 	# real, kickable cones at every work site plus a few loose ones
 	# [where, kind]: cones unless the place calls for something else
@@ -2697,7 +2703,7 @@ static func spawn_cones(m: Node2D) -> void:
 		var cn := Node2D.new()
 		cn.set_script(load("res://entities/cone.gd"))
 		cn.position = sp[0]
-		cn.z_index = 11
+		cn.z_index = JUNK_Z
 		m.add_child(cn)
 		cn.setup(m, m.dog, m.human, String(sp[1]))
 	# Loose junk scattered down the whole walk, because punting things is one
@@ -2806,6 +2812,6 @@ static func spawn_junk(m: Node2D, at: Vector2, kind: String) -> void:
 	var jn := Node2D.new()
 	jn.set_script(load("res://entities/cone.gd"))
 	jn.position = at
-	jn.z_index = 11
+	jn.z_index = JUNK_Z
 	m.add_child(jn)
 	jn.setup(m, m.dog, m.human, kind)
