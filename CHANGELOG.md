@@ -2,6 +2,28 @@
 
 Append-only session history, newest first.
 
+## 2026-10-12 - hand-stepped tests step inside a physics frame
+
+- A market walk stepped by hand reached the gate in 214 s the first time
+  in a process and 39 s the next, same seed, nobody steering. Not state
+  carried between walks: `CharacterBody2D.move_and_slide` moves by the
+  physics step only inside an engine physics step, and by the process
+  delta (the wall time of the last frame, about 0.12 s headless) outside
+  one. A test's first walk runs from the deferred `_run`, inside a physics
+  step; everything after an `await process_frame` runs outside one, so the
+  dog and your human moved about seven times further than their velocities.
+- The game is not affected: the dog and your human move only from
+  `main._physics_process`, which only the engine calls, and a walk
+  restarted through `MenuFlow.restart_walk` moves exactly by its velocities
+  (`tools/walk_carryover_restart.gd`).
+- The four tests that stepped bodies after a `process_frame` now
+  `await physics_frame` first: `test_mercat_owner_path` (which also checks
+  it), `test_plant_skid` (whose hauls varied run to run because of it),
+  `test_boar` and `test_cross_section`. Found by a probe on every
+  `move_and_slide` across the whole suite; no other test does it.
+- `tools/walk_carryover.gd` shows the two walks side by side; with
+  `-- --in-physics` they agree to the pixel.
+
 ## 2026-10-11 - she walks under what hangs overhead, and the leash over the junk
 
 - A draw-order sweep of every walk after the tree crowns (#208). Overhead
