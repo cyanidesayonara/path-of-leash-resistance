@@ -95,6 +95,13 @@ const WHIRL_ARM_EXCESS := 8.0
 const WHIRL_ARM_WIND := 0.55
 const WHIRL_ARM_END_WIND := 2.4
 const WHIRL_ARM_RANGE := 70.0
+# how much heavier a tutorial owner waiting at a lesson is in the tug of war
+const TUT_BRACE := 8.0
+# Round the pole, not into it: with the rope over a pole beside the owner, the
+# pull at their end points almost straight at the pole, and a body pulled into
+# a pole just pins there. Within POLE_STEP_R of it, the part of the pull aimed
+# into the pole becomes a step round it, the way that unwinds the rope.
+const POLE_STEP_R := 48.0
 const WHIRL_SLIP := 0.7
 const WHIRL_SLIP_BAIL := 0.5
 # a planted dog dragged at least this far in a frame is skidding, and leaves
@@ -1675,49 +1682,65 @@ func cast_shadow(c: Object, at: Vector2, w: float, h: float, a := 0.20) -> void:
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
+const BROADLEAF_LOBES: Array[Vector2] = [
+	Vector2(-0.42, -0.30), Vector2(0.40, -0.34), Vector2(0.46, 0.32),
+	Vector2(-0.38, 0.40), Vector2(0.02, -0.06),
+]
+
+
 func _draw_broadleaf(c: Object, p: Vector2, scale: float) -> void:
 	# A tree from above is a canopy, and a canopy is not one flat circle: it
 	# is clustered lobes with light on the top-left of each one, a trunk you
 	# can see through the gaps, and a shadow the same shape as the crown. The
 	# old version was two translucent discs.
+	_broadleaf_ground(c, p, scale)
+	var crown := ShapeBatch.new()
+	_broadleaf_crown(crown, p, scale)
+	crown.flush(c)
+
+
+# what of a broadleaf lies on the ground: the crown's shadow, thrown clear of
+# the trunk so the tree stands up
+func _broadleaf_ground(c: Object, p: Vector2, scale: float) -> void:
 	var r := 34.0 * scale
-	# the crown's shadow, thrown clear of the trunk so the tree stands up
 	c.draw_set_transform(p + LIGHT * (46.0 * scale), 0.0, Vector2(1.1, 0.55))
 	c.draw_circle(Vector2.ZERO, r * 1.02, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.17))
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+# the trunk: on the ground pass too, so a faded crown still stands on solid wood
+func _broadleaf_trunk(b: Object, p: Vector2, scale: float) -> void:
+	b.circle(p, 6.5 * scale, Color(0.22, 0.16, 0.11))
+	b.circle(p + Vector2(-1, -1) * scale, 4.4 * scale, Color(0.36, 0.27, 0.18))
+
+
+# a broadleaf's crown, into a batch (the canopy layer draws it over everyone);
+# `trunk` false for a faded crown, whose trunk shows from the ground pass
+func _broadleaf_crown(crown: ShapeBatch, p: Vector2, scale: float, trunk := true) -> void:
+	var r := 34.0 * scale
 	var dark := Color(0.15, 0.27, 0.16)
 	var mid := Color(0.21, 0.36, 0.20)
 	var lit := Color(0.31, 0.48, 0.26)
 	# The underside, then a solid crown, then lobes only on the lit side. Lobes
 	# ringed evenly around the centre left a dark hole in the middle and the
 	# canopy read as a doughnut.
-	# every disc from here on is one draw call (systems/shape_batch.gd)
-	var crown := ShapeBatch.new()
 	crown.circle(p + Vector2(2, 3) * scale, r, dark)
 	crown.circle(p - LIGHT * r * 0.10, r * 0.86, mid)
-	var lobes := [
-		Vector2(-0.42, -0.30), Vector2(0.40, -0.34), Vector2(0.46, 0.32),
-		Vector2(-0.38, 0.40), Vector2(0.02, -0.06),
-	]
-	for i in range(lobes.size()):
-		var lp: Vector2 = p + (lobes[i] as Vector2) * r
-		crown.circle(lp, r * 0.50, mid)
+	for lv: Vector2 in BROADLEAF_LOBES:
+		crown.circle(p + lv * r, r * 0.50, mid)
 	# the light falls on the upper-left of the crown, so only those lobes catch
-	for i in range(lobes.size()):
-		var lv: Vector2 = lobes[i]
+	for lv: Vector2 in BROADLEAF_LOBES:
 		if lv.dot(LIGHT) > 0.10:
 			continue          # this lobe is on the shaded side
 		crown.circle(p + lv * r - LIGHT * r * 0.14, r * 0.34, lit)
 	crown.circle(p - LIGHT * r * 0.42, r * 0.30, lit.lightened(0.08))
 	# the trunk, visible in the middle where the canopy parts
-	crown.circle(p, 6.5 * scale, Color(0.22, 0.16, 0.11))
-	crown.circle(p + Vector2(-1, -1) * scale, 4.4 * scale, Color(0.36, 0.27, 0.18))
+	if trunk:
+		_broadleaf_trunk(crown, p, scale)
 	# a few leaf tips breaking the outline, so it is not a perfect circle
 	for i in range(7):
 		var a := TAU * float(i) / 7.0 + p.x * 0.013
 		crown.circle(p + Vector2.from_angle(a) * r * 0.95, r * 0.17, mid)
-	crown.flush(c)
-
 
 
 # El Bosc's ground: packed dark earth on the trail, leaf litter either side
@@ -1733,6 +1756,15 @@ const TRAIL_LITTER: Array = [
 # from the trunks at its edges, which is what makes it a trail and not a
 # park path.
 func _draw_forest_tree(c: Object, p: Vector2, i: int) -> void:
+	_forest_ground(c, p, i)
+	var crown := ShapeBatch.new()
+	_forest_crown(crown, p, i)
+	crown.flush(c)
+
+
+# what of a forest tree lies on the ground: roots out across the trail from a
+# trunk at its edge, and the crown's shadow
+func _forest_ground(c: Object, p: Vector2, i: int) -> void:
 	var e := walk_edges(p.y)
 	var edge_side := 0.0
 	if p.x < e.x + 50.0:
@@ -1747,14 +1779,20 @@ func _draw_forest_tree(c: Object, p: Vector2, i: int) -> void:
 			c.draw_line(p, tip, Color(0.33, 0.25, 0.16), 4.0 - float(ri % 2))
 			c.draw_line(p + Vector2(0, -1), tip + Vector2(0, -1), Color(0.44, 0.35, 0.23), 1.2)
 	if i % 3 == 1:
-		_draw_broadleaf(c, p, 0.85)   # holm oak
+		_broadleaf_ground(c, p, 0.85)   # holm oak
 		return
-	# stone pine: the umbrella crown, dark underneath, needle clumps on top
-	var r := 40.0
 	c.draw_set_transform(p + LIGHT * 52.0, 0.0, Vector2(1.15, 0.55))
-	c.draw_circle(Vector2.ZERO, r, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+	c.draw_circle(Vector2.ZERO, 40.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	var crown := ShapeBatch.new()
+
+
+# a forest tree's crown: a holm oak, or a stone pine's umbrella of needles on
+# its red trunk
+func _forest_crown(crown: ShapeBatch, p: Vector2, i: int, trunk := true) -> void:
+	if i % 3 == 1:
+		_broadleaf_crown(crown, p, 0.85, trunk)
+		return
+	var r := 40.0
 	crown.circle(p + Vector2(2, 3), r, Color(0.20, 0.25, 0.13))
 	for k in range(9):
 		var a := TAU * float(k) / 9.0 + float(i) * 0.7
@@ -1766,9 +1804,13 @@ func _draw_forest_tree(c: Object, p: Vector2, i: int) -> void:
 		crown.circle(lp, r * 0.24, Color(0.40, 0.47, 0.24))
 	crown.circle(p - LIGHT * r * 0.5, r * 0.20, Color(0.48, 0.54, 0.29))
 	# the red-brown trunk showing through at the middle
-	crown.circle(p, 6.0, Color(0.42, 0.22, 0.14))
-	crown.circle(p + Vector2(-1, -1), 3.6, Color(0.58, 0.33, 0.20))
-	crown.flush(c)
+	if trunk:
+		_pine_trunk(crown, p)
+
+
+func _pine_trunk(b: Object, p: Vector2) -> void:
+	b.circle(p, 6.0, Color(0.42, 0.22, 0.14))
+	b.circle(p + Vector2(-1, -1), 3.6, Color(0.58, 0.33, 0.20))
 
 
 # A waymarker post, where the town has hydrants: a squared timber post with
@@ -1992,6 +2034,133 @@ func _draw_bollard(p: Vector2) -> void:
 
 # a street tree's pit, square in the paving: a stone kerb, earth, and the
 # iron grate over it, wide enough to show round the crown
+# Which of the walk's posts are trees, and what kind: the one place that says,
+# for the ground pass and the canopy layer alike. Order matters: it is the
+# post-drawing chain's order (a post in La Rambla's row that is not a tree is
+# a lamp standard; the tutorial's posts are all lampposts).
+const TREE_NONE := 0
+const TREE_OAK := 1        # a broadleaf in the open
+const TREE_FOREST := 2     # El Bosc: holm oak or stone pine
+const TREE_PALM := 3
+const TREE_STREET := 4     # a street tree in its grate
+const TREE_PIT := 5        # El Gotic's plaça tree in its stone pit
+
+func pole_tree(i: int) -> int:
+	var p := poles[i]
+	if tutorial_mode or lvl == "scrap" or lvl == "station" or lvl == "guell" or lvl == "market":
+		return TREE_NONE
+	if lvl == "rain" and p.x < walk_cx:
+		return TREE_NONE
+	if lvl == "park" or lvl == "barri" or lvl == "spook":
+		return TREE_OAK
+	if lvl == "trail":
+		return TREE_FOREST
+	if lvl == "beach":
+		return TREE_PALM
+	if lvl == "oldtown":
+		return TREE_PIT if p.distance_to(LevelBuild.GOTIC_PLACA) < 260.0 else TREE_NONE
+	if (p.x > sw_l + 60.0 and p.x < sw_r - 60.0) \
+			or (rambla() and int(absf(p.y) / LevelBuild.RAMBLA_TREE_STEP) % 4 != 1):
+		# mid-walkway poles are street trees in grates, and so is La Rambla's
+		# row of plane trees down each edge (every fourth one a lamp standard
+		# instead) - that is WHY they stand in the middle of a sidewalk
+		return TREE_STREET
+	return TREE_NONE
+
+
+# what of a tree lies on the ground: its pit or grate, the crown's shadow, roots
+func _draw_tree_ground(c: Object, p: Vector2, i: int, kind: int) -> void:
+	_draw_tree_ground_only(c, p, i, kind)
+	var b := ShapeBatch.new()
+	_tree_trunk(b, p, i, kind)
+	b.flush(c)
+
+
+func _tree_trunk(b: ShapeBatch, p: Vector2, i: int, kind: int) -> void:
+	match kind:
+		TREE_OAK: _broadleaf_trunk(b, p, 1.0)
+		TREE_FOREST:
+			if i % 3 == 1:
+				_broadleaf_trunk(b, p, 0.85)
+			else:
+				_pine_trunk(b, p)
+		TREE_PALM: _palm_trunk(b, p)
+		TREE_STREET: _broadleaf_trunk(b, p, 0.72)
+		TREE_PIT: _broadleaf_trunk(b, p, 0.8)
+
+
+func _draw_tree_ground_only(c: Object, p: Vector2, i: int, kind: int) -> void:
+	match kind:
+		TREE_OAK:
+			_broadleaf_ground(c, p, 1.0)
+		TREE_FOREST:
+			_forest_ground(c, p, i)
+		TREE_PALM:
+			_palm_ground(c, p)
+		TREE_PIT:
+			_draw_tree_pit(p)
+			_broadleaf_ground(c, p, 0.8)
+		TREE_STREET:
+			cast_shadow(c, p, 20.0, 40.0, 0.16)
+			c.draw_circle(p, 19.0, Color(0.26, 0.24, 0.22))          # the pit
+			c.draw_rect(Rect2(p.x - 16, p.y - 16, 32, 32), Color(0.34, 0.34, 0.37))
+			for gi in range(4):
+				var gy := p.y - 12.0 + float(gi) * 8.0
+				c.draw_line(Vector2(p.x - 15, gy), Vector2(p.x + 15, gy), Color(0.2, 0.2, 0.22), 2.0)
+			c.draw_rect(Rect2(p.x - 16, p.y - 16, 32, 32), Color(0.44, 0.44, 0.47), false, 2.0)
+			_broadleaf_ground(c, p, 0.72)
+
+
+# The crowns in view, for the canopy layer: the walk's tree posts and the
+# off-leash grove. {"p", "kind", "i", "r" (the crown's radius), "id"}
+var _canopy: Array[Dictionary] = []
+
+func canopy_trees() -> Array[Dictionary]:
+	_canopy.clear()
+	var vt: float = cam.position.y - 500.0
+	var vb: float = cam.position.y + 500.0
+	for i in range(deco_pole_count):
+		var p := poles[i]
+		if p.y < vt or p.y > vb:
+			continue
+		var k := pole_tree(i)
+		if k != TREE_NONE:
+			_canopy.append({"p": p, "kind": k, "i": i, "r": _crown_r(k, i), "id": i})
+	for gi in range(trees.size()):
+		var t: Vector2 = trees[gi]
+		if t.y < vt or t.y > vb:
+			continue
+		var gk := TREE_PALM if freedom_kind == "beach" else TREE_FOREST
+		# the grove's broadleaves are holm-oak sized: drawn as TREE_FOREST's
+		# oak (i % 3 == 1) so they keep the 0.85 they always had
+		_canopy.append({"p": t, "kind": gk, "i": 1 if gk == TREE_FOREST else gi, "r": 34.0 * 0.85,
+			"id": 100000 + gi})
+	return _canopy
+
+
+func _crown_r(kind: int, i: int) -> float:
+	match kind:
+		TREE_OAK: return 34.0
+		TREE_FOREST: return 34.0 * 0.85 if i % 3 == 1 else 40.0
+		TREE_PALM: return 38.0
+		TREE_STREET: return 34.0 * 0.72
+		TREE_PIT: return 34.0 * 0.8
+	return 0.0
+
+
+# `faded`: the crown is drawn see-through (canopylayer.gd), so it leaves out
+# the trunk, which the ground pass draws solid beneath it
+func draw_tree_crown(b: ShapeBatch, t: Dictionary, faded := false) -> void:
+	var p: Vector2 = t["p"]
+	var trunk := not faded
+	match int(t["kind"]):
+		TREE_OAK: _broadleaf_crown(b, p, 1.0, trunk)
+		TREE_FOREST: _forest_crown(b, p, int(t["i"]), trunk)
+		TREE_PALM: _palm_crown(b, p, trunk)
+		TREE_STREET: _broadleaf_crown(b, p, 0.72, trunk)
+		TREE_PIT: _broadleaf_crown(b, p, 0.8, trunk)
+
+
 func _draw_tree_pit(p: Vector2) -> void:
 	var b := ShapeBatch.new()
 	var pit := Rect2(p - Vector2(38.0, 38.0), Vector2(76.0, 76.0))
@@ -2786,10 +2955,13 @@ func _draw_mercat(vt: float, vb: float) -> void:
 			_wc.draw_rect(Rect2(sx - 38.0, blk.position.y - 4.0, 76.0, 16.0), Color(0.12, 0.26, 0.20))
 			_wc.draw_string(font, Vector2(sx - 38.0, blk.position.y + 8.0), String(signs[trade]),
 				HORIZONTAL_ALIGNMENT_CENTER, 76.0, 11, Color(0.96, 0.90, 0.72))
-	# the drain in the middle aisle, grated, a little wet round it
+	# the floor drain in the middle aisle
 	var dr: Vector2 = LevelBuild.MERCAT_DRAIN
 	if dr.y > vt - 60.0 and dr.y < vb + 60.0:
-		b.circle(dr, 22.0, Color(0.40, 0.44, 0.48, 0.25))
+		Mercat.draw_floor_drain(b, dr)
+	# what stands along the walls, and the street outside the arch
+	Mercat.draw_hall(self, b, vt, vb)
+	Mercat.draw_approach(self, b, vt, vb)
 	b.flush(_wc)
 
 
@@ -3945,19 +4117,7 @@ func _draw_rambla_stall(st: Vector2, kind: String, i: int) -> void:
 					b.circle(cr.position + Vector2(6.0 + float(f % 3) * 8.0, 7.0 + float(f / 3) * 9.0), 4.6, fc)
 				b.rect(Rect2(cr.position.x + 18.0, cr.end.y - 7.0, 9.0, 6.0), Color(0.97, 0.96, 0.92))
 		"fish":
-			# the fish counter: steel, a bed of crushed ice, the catch laid on
-			# it head to tail, lemon halves; the meltwater is on the floor
-			b.rect(r, Color(0.58, 0.60, 0.62))
-			b.rect(r.grow(-4.0), Color(0.88, 0.93, 0.96))
-			for k in range(14):
-				b.circle(r.position + Vector2(8.0 + float(k * 13 % 80), 8.0 + float(k * 7 % 40)), 2.5, Color(1, 1, 1, 0.8))
-			for k in range(5):
-				var fp := Vector2(r.position.x + 14.0 + float(k) * 17.0, st.y + (6.0 if k % 2 == 0 else -6.0))
-				var fcol: Color = [Color(0.66, 0.70, 0.74), Color(0.86, 0.56, 0.52), Color(0.56, 0.62, 0.70)][k % 3]
-				b.polygon(PackedVector2Array([fp + Vector2(0, -12), fp + Vector2(5, -2), fp + Vector2(0, 10),
-					fp + Vector2(-5, -2)]), fcol)
-				b.polygon(PackedVector2Array([fp + Vector2(0, 9), fp + Vector2(5, 15), fp + Vector2(-5, 15)]), fcol.darkened(0.2))
-			b.circle(Vector2(r.end.x - 10.0, r.position.y + 10.0), 5.0, Color(0.98, 0.88, 0.30))
+			Mercat.draw_fish_counter(b, r, r.get_center().x < 640.0, i)
 		"jamon":
 			# the ham counter: whole legs laid in a row, hoof to hip, sausages
 			# hanging off the front rail
@@ -4459,14 +4619,25 @@ func _draw_trail_stream(vt: float, vb: float) -> void:
 		_wc.draw_circle(bp + Vector2(-1.5, -1.5), 4.5, Color(0.52, 0.40, 0.26))
 
 func _draw_palm(c: Object, p: Vector2) -> void:
-	# a palm from above: a ring of long fronds, each with a spine and leaflets,
-	# radiating from a fat trunk. The shadow copies the frond pattern, which is
-	# what makes the beach read as glaring midday sun.
+	_palm_ground(c, p)
+	var crown := ShapeBatch.new()
+	_palm_crown(crown, p)
+	crown.flush(c)
+
+
+# a palm's shadow copies the frond pattern, which is what makes the beach read
+# as glaring midday sun
+func _palm_ground(c: Object, p: Vector2) -> void:
 	var sh := p + LIGHT * 40.0
 	for j in range(7):
 		var sa := TAU * float(j) / 7.0 + p.x * 0.01 + p.y * 0.007
 		c.draw_line(sh, sh + Vector2.from_angle(sa) * 34.0,
 			Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.14), 7.0)
+
+
+# a palm from above: a ring of long fronds, each with a spine and leaflets,
+# radiating from a fat trunk
+func _palm_crown(crown: ShapeBatch, p: Vector2, trunk := true) -> void:
 	var t := AnimClock.msec() / 1000.0
 	for j in range(7):
 		var fa := TAU * float(j) / 7.0 + p.x * 0.01 + p.y * 0.007
@@ -4474,23 +4645,26 @@ func _draw_palm(c: Object, p: Vector2) -> void:
 		fa += sin(t * 0.7 + float(j) * 1.3 + p.y * 0.01) * 0.05
 		var dir := Vector2.from_angle(fa)
 		var tip := p + dir * 38.0
-		c.draw_line(p, tip, Color(0.20, 0.36, 0.19), 6.0)
-		c.draw_line(p, tip, Color(0.29, 0.47, 0.24), 3.0)
+		crown.line(p, tip, Color(0.20, 0.36, 0.19), 6.0)
+		crown.line(p, tip, Color(0.29, 0.47, 0.24), 3.0)
 		# leaflets down both sides of the spine
 		var side := dir.orthogonal()
 		for k in range(4):
 			var f := 0.35 + float(k) * 0.2
 			var at := p + dir * (38.0 * f)
 			var ln := 9.0 * (1.0 - f * 0.5)
-			c.draw_line(at, at + (side + dir * 0.5).normalized() * ln, Color(0.24, 0.41, 0.21), 2.5)
-			c.draw_line(at, at - (side - dir * 0.5).normalized() * ln, Color(0.24, 0.41, 0.21), 2.5)
-	# the trunk, and the coconuts nobody should be under: one draw call
-	var trunk := ShapeBatch.new()
-	trunk.circle(p, 9.0, Color(0.34, 0.26, 0.17))
-	trunk.circle(p + Vector2(-2, -2), 6.0, Color(0.48, 0.38, 0.25))
-	trunk.circle(p + Vector2(5, 4), 3.4, Color(0.28, 0.22, 0.14))
-	trunk.circle(p + Vector2(-4, 5), 3.0, Color(0.28, 0.22, 0.14))
-	trunk.flush(c)
+			crown.line(at, at + (side + dir * 0.5).normalized() * ln, Color(0.24, 0.41, 0.21), 2.5)
+			crown.line(at, at - (side - dir * 0.5).normalized() * ln, Color(0.24, 0.41, 0.21), 2.5)
+	# the trunk's top, and the coconuts nobody should be under
+	if trunk:
+		_palm_trunk(crown, p)
+
+
+func _palm_trunk(b: Object, p: Vector2) -> void:
+	b.circle(p, 9.0, Color(0.34, 0.26, 0.17))
+	b.circle(p + Vector2(-2, -2), 6.0, Color(0.48, 0.38, 0.25))
+	b.circle(p + Vector2(5, 4), 3.4, Color(0.28, 0.22, 0.14))
+	b.circle(p + Vector2(-4, 5), 3.0, Color(0.28, 0.22, 0.14))
 
 
 func _draw_lamppost(p: Vector2) -> void:
@@ -4785,11 +4959,12 @@ func draw_freedom_onto(c: Object) -> void:
 	# The grove doubles as rope-wrap geometry, so it exists on every walk and
 	# has to be drawn on every walk - but a broadleaf on a beach is nonsense,
 	# so it wears whatever that place grows.
+	# Its crowns are the canopy layer's (world/canopylayer.gd), above her.
 	for t in trees:
 		if freedom_kind == "beach":
-			_draw_palm(c, t)
+			_draw_tree_ground(c, t, 0, TREE_PALM)
 		else:
-			_draw_broadleaf(c, t, 0.85)
+			_draw_tree_ground(c, t, 1, TREE_FOREST)
 	_draw_park_props(c, -1e9, 1e9)
 
 
@@ -7089,6 +7264,10 @@ func _leash_tug(delta: float) -> void:
 	elif dog.input_active:
 		dog_m *= 2.0
 	var human_m := HUMAN_MASS * (2.0 if human.is_fallen() else 1.0)
+	# a tutorial owner waiting at a lesson plants their feet, as she does:
+	# pulling ahead must not tow them past the lesson and out of the tutorial
+	if human.tut_holding():
+		human_m *= TUT_BRACE
 	var base_tension := minf(leash.tension_force(excess, LEASH_K), 1600.0)
 	# pulley: with the rope wound and the dog working its end, the pole
 	# redirects and amplifies the pull on the human continuously - not
@@ -7102,6 +7281,8 @@ func _leash_tug(delta: float) -> void:
 	if whirling:
 		# the dog's pulling feeds the whirl's spin-up
 		human.whirl_pull = maxf(float(human.whirl_pull), base_tension)
+	if not whirling:
+		h_dir = round_pole_dir(h_dir)
 	if not whirling:
 		# the mood rides on the DOG's side of the tug of war: lunging at
 		# something worth telling off tows the human further than an ordinary
@@ -7172,6 +7353,32 @@ func _leash_tug(delta: float) -> void:
 					armed = false
 	if not armed:
 		_disarm_whirl()
+
+
+# The pull on the owner, with the part aimed into the pole the rope is over
+# beside them turned into a step round it (POLE_STEP_R): the way the rope's
+# own probe says unwinds it, as the whirl goes, or with no opinion, the way
+# that brings them toward the dog. Unchanged when there is no such pole or the
+# pull is not into it.
+func round_pole_dir(h_dir: Vector2) -> Vector2:
+	if leash.static_contacts == 0 or not leash.human_contact_is_pole:
+		return h_dir
+	var pole: Vector2 = leash.human_contact_pole
+	var to_pole: Vector2 = pole - human.global_position
+	var d := to_pole.length()
+	if d > POLE_STEP_R or d < 0.001:
+		return h_dir
+	var n := to_pole / d
+	var into := h_dir.dot(n)
+	if into <= 0.0:
+		return h_dir
+	var radial := -n
+	var s: float = leash.unwind_bias_of(leash.coil_winding(pole))
+	if s == 0.0:
+		var to_dog: Vector2 = dog.global_position - human.global_position
+		s = 1.0 if radial.rotated(PI / 2.0).dot(to_dog) >= 0.0 else -1.0
+	var tangent := radial.rotated(signf(s) * PI / 2.0)
+	return (h_dir - n * into + tangent * into).normalized()
 
 
 # Which way round, and how far, from the coil averaged over the arming window:
@@ -10733,6 +10940,12 @@ func _draw_world() -> void:
 		var p := poles[i]
 		if p.y < vt - 60.0 or p.y > vb + 60.0:
 			continue
+		# a tree's crown is the canopy layer's (world/canopylayer.gd); here
+		# only what lies on the ground
+		var tk := pole_tree(i)
+		if tk != TREE_NONE:
+			_draw_tree_ground(_wc, p, i, tk)
+			continue
 		if tutorial_mode:
 			_draw_lamppost(p)       # the lesson posts are lampposts, as the cards say
 		elif lvl == "scrap":
@@ -10772,34 +10985,9 @@ func _draw_world() -> void:
 			_wc.draw_circle(p, 13.0, Color(0.16, 0.26, 0.22))
 			_wc.draw_circle(p, 9.0, Color(0.22, 0.36, 0.30))
 			_wc.draw_circle(p + Vector2(-2.5, -2.5), 4.0, Color(0.36, 0.52, 0.44))
-		elif lvl == "park" or lvl == "barri" or lvl == "spook":
-			_draw_broadleaf(_wc, p, 1.0)
-		elif lvl == "trail":
-			_draw_forest_tree(_wc, p, i)
-		elif lvl == "beach":
-			_draw_palm(_wc, p)
 		elif lvl == "oldtown":
-			# the plaça's plane tree stands in its own pit; the posts down
-			# the alley are the old town's cast-iron bollards
-			if p.distance_to(LevelBuild.GOTIC_PLACA) < 260.0:
-				_draw_tree_pit(p)
-				_draw_broadleaf(_wc, p, 0.8)
-			else:
-				_draw_bollard(p)
-		elif (p.x > sw_l + 60.0 and p.x < sw_r - 60.0) \
-				or (rambla() and int(absf(p.y) / LevelBuild.RAMBLA_TREE_STEP) % 4 != 1):
-			# mid-walkway poles are street trees in grates, and so is La
-			# Rambla's row of plane trees down each edge (every fourth one a
-			# lamp standard instead) - that is WHY
-			# they stand in the middle of a sidewalk
-			cast_shadow(_wc, p, 20.0, 40.0, 0.16)
-			_wc.draw_circle(p, 19.0, Color(0.26, 0.24, 0.22))          # the pit
-			_wc.draw_rect(Rect2(p.x - 16, p.y - 16, 32, 32), Color(0.34, 0.34, 0.37))
-			for gi in range(4):
-				var gy := p.y - 12.0 + float(gi) * 8.0
-				_wc.draw_line(Vector2(p.x - 15, gy), Vector2(p.x + 15, gy), Color(0.2, 0.2, 0.22), 2.0)
-			_wc.draw_rect(Rect2(p.x - 16, p.y - 16, 32, 32), Color(0.44, 0.44, 0.47), false, 2.0)
-			_draw_broadleaf(_wc, p, 0.72)
+			# the posts down the alley are the old town's cast-iron bollards
+			_draw_bollard(p)
 		else:
 			_draw_lamppost(p)
 	# trash bins: green, lidded, with a visible mouth - the ONLY thing
@@ -10954,6 +11142,9 @@ func _draw_world() -> void:
 			continue
 		if lvl == "station":
 			_draw_trolleys(v)
+			continue
+		if lvl == "market":
+			Mercat.draw_van(self, _wc, v)
 			continue
 		if lvl == "scrap":
 			_draw_wreck_stack(v)
