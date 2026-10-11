@@ -2,6 +2,27 @@
 
 Append-only session history, newest first.
 
+## 2026-10-10 - El Mercat: stall blocks, walls and a wedged owner (#153)
+
+- The other dog-walkers and the riders go round the stall blocks down the
+  middle of the hall. The blocks were solid but never in the list the
+  passers-by route round, so a pair spawned mid-hall walked straight over
+  the food.
+- She reaches the hall's walls. The straight wall every walk has at the
+  edge of its corridor stood 130 px inside each hall wall (the hall is far
+  wider than the corridor); the building line along the walls does that
+  job now, and the straight wall only closes the stretch past the far door.
+- Your human no longer wedges in the hall. The iron columns stood 26 px off
+  each block's corner, a slot just too narrow for him; they are set into
+  the corners now. And he starts across to the next block's side as soon
+  as he is past the last one, cutting across more steeply, so he is there
+  before its end face instead of walking into it.
+- `tests/test_mercat.gd` checks the blocks are blockers, a pair from any
+  lane keeps off them, she reaches every clear stretch of wall, and no two
+  solids leave a gap he could wedge in; `tests/test_mercat_owner_path.gd`
+  (CI) walks him up the hall on three seeds with nobody steering and
+  fails if he stands stuck while walking.
+
 ## 2026-10-09 - El Mercat: audit fixes (#153)
 
 - The wall stalls stand with their backs against the hall's walls instead

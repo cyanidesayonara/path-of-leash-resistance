@@ -561,14 +561,37 @@ func _walk(delta: float) -> void:
 	var cx: float = (here.x + here.y) * 0.5
 	var half: float = (here.y - here.x) * 0.5
 	# where the path splits round an island (El Parc's lake) the owner keeps
-	# to its side of it, and starts crossing over early enough to get there
+	# to its side of it, and starts crossing over early enough to get there.
+	# An island may set its own "lead". Where two are in range (El Mercat's
+	# stall blocks, each on the other side), the one beside them wins, then
+	# the nearest one ahead: the one behind is already passed.
+	var isl_pick: Dictionary = {}
+	var isl_rank := INF
+	# how hard the owner may cut across the path for the weave; an island
+	# with a short cross aisle before it may allow more ("steer")
+	var lat_max := 0.8
+	var fwd_sign := 1.0 if homeward else -1.0
 	for isl: Dictionary in main.islands:
 		var ir: Rect2 = isl["rect"]
-		if global_position.y > ir.position.y - ISLAND_LEAD and global_position.y < ir.end.y + ISLAND_LEAD:
-			var lo: float = (ir.end.x + 30.0) if float(isl["side"]) > 0.0 else (here.x + 30.0)
-			var hi: float = (here.y - 30.0) if float(isl["side"]) > 0.0 else (ir.position.x - 30.0)
-			cx = (lo + hi) * 0.5
-			half = maxf((hi - lo) * 0.5 + 60.0, 70.0)
+		var lead: float = float(isl.get("lead", ISLAND_LEAD))
+		if global_position.y > ir.position.y - lead and global_position.y < ir.end.y + lead:
+			var rank := 0.0
+			var ahead_by: float = (ir.position.y - global_position.y) if fwd_sign > 0.0 else (global_position.y - ir.end.y)
+			var behind_by: float = (global_position.y - ir.end.y) if fwd_sign > 0.0 else (ir.position.y - global_position.y)
+			if ahead_by > 0.0:
+				rank = ahead_by
+			elif behind_by > 0.0:
+				rank = 100000.0 + behind_by
+			if rank <= isl_rank:
+				isl_rank = rank
+				isl_pick = isl
+	if not isl_pick.is_empty():
+		var pr: Rect2 = isl_pick["rect"]
+		var lo: float = (pr.end.x + 30.0) if float(isl_pick["side"]) > 0.0 else (here.x + 30.0)
+		var hi: float = (here.y - 30.0) if float(isl_pick["side"]) > 0.0 else (pr.position.x - 30.0)
+		cx = (lo + hi) * 0.5
+		half = maxf((hi - lo) * 0.5 + 60.0, 70.0)
+		lat_max = float(isl_pick.get("steer", lat_max))
 	# where the path narrows to a single line (a plank over a trench) the
 	# owner lines up for it early and keeps to it
 	# (only on the way up to it and across it: once past, the path is theirs
@@ -597,7 +620,7 @@ func _walk(delta: float) -> void:
 		tx = clampf(tx + clampf(felt_pull.x / GIVE_FULL, -1.0, 1.0) * GIVE_LAT, cx - half + 40.0, cx + half - 40.0)
 		var along := felt_pull.y * fwd_y / GIVE_FULL
 		speed *= 1.0 + GIVE_FWD * clampf(along, 0.0, 1.0) - GIVE_BACK * clampf(-along, 0.0, 1.0)
-	var dir := Vector2(clampf((tx - global_position.x) / 60.0, -1.0, 1.0) * 0.8, fwd_y).normalized()
+	var dir := Vector2(clampf((tx - global_position.x) / 60.0, -1.0, 1.0) * lat_max, fwd_y).normalized()
 	if state == HState.DASH:
 		var to_target := dash_target - global_position
 		if to_target.length() < 14.0:
