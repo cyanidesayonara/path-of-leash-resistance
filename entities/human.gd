@@ -102,6 +102,9 @@ var homeward := false
 # the tutorial holds the owner here (north of it is where they stop); -INF off
 var tut_hold_y := -INF
 var tut_hold_x := INF
+# waiting at a lesson, they hold their ground: dragged further than this past
+# their spot, they walk back to it (main.gd braces them against the pull)
+const TUT_HOLD_SLACK := 30.0
 var parked := false
 var park_target := Vector2.ZERO
 var park_throw_t := 0.0
@@ -314,7 +317,7 @@ func tick(delta: float) -> void:
 				main.on_business_picked()
 				chain_target = main.nearest_bin(global_position)
 				state = HState.GO_BIN
-				_show_bubble("where's a bin...")
+				_show_bubble("where's a trash can...")
 		HState.GO_BIN:
 			var to_bin := chain_target - global_position
 			var before_x := global_position
@@ -443,7 +446,7 @@ func _converse(delta: float) -> void:
 		# glance at her every couple of seconds
 		if not grumbled and telegraph_t <= 0.0:
 			grumbled = true
-			notice("oi...", 1.0)
+			notice("ugh...", 1.0)
 		if glance_t <= 0.0:
 			glance_t = 2.2
 	elif patience > PATIENCE_WARN + 0.15:
@@ -514,6 +517,11 @@ func _fiddle_with_reel(delta: float) -> void:
 			bubble.visible = false)
 
 
+# Waiting at a tutorial lesson (main.tut_hold_point): at or past their spot.
+func tut_holding() -> bool:
+	return tut_hold_y > -INF and not homeward and global_position.y <= tut_hold_y + 10.0
+
+
 func _walk(delta: float) -> void:
 	# the tutorial's owner waits at a lesson (main.TUT_HOLD_BACK): stood still
 	# on the phone until it is done, shuffling over to the lesson's spot first
@@ -521,6 +529,9 @@ func _walk(delta: float) -> void:
 		var want := Vector2.ZERO
 		if tut_hold_x < INF and absf(global_position.x - tut_hold_x) > 6.0:
 			want = Vector2(signf(tut_hold_x - global_position.x) * WALK_SPEED * 0.6, 0.0)
+		# towed on past their spot: back they go, so the lesson stays in reach
+		if global_position.y < tut_hold_y - TUT_HOLD_SLACK:
+			want.y = WALK_SPEED * 0.6
 		velocity = velocity.move_toward(want, 400.0 * delta)
 		move_and_slide()
 		return
@@ -533,7 +544,7 @@ func _walk(delta: float) -> void:
 		waited += delta
 		if waited < WAIT_MAX:
 			if waited <= delta * 1.5 and telegraph_t <= 0.0 and correct_t <= 0.0:
-				notice("go on then", 1.4)
+				notice("go ahead", 1.4)
 			velocity = velocity.move_toward(Vector2.ZERO, 400.0 * delta)
 			move_and_slide()
 			return
@@ -550,14 +561,45 @@ func _walk(delta: float) -> void:
 	var cx: float = (here.x + here.y) * 0.5
 	var half: float = (here.y - here.x) * 0.5
 	# where the path splits round an island (El Parc's lake) the owner keeps
-	# to its side of it, and starts crossing over early enough to get there
+	# to its side of it, and starts crossing over early enough to get there.
+	# An island may set its own "lead". Where two are in range (El Mercat's
+	# stall blocks, each on the other side), the one beside them wins, then
+	# the nearest one ahead: the one behind is already passed.
+	var isl_pick: Dictionary = {}
+	var isl_rank := INF
+	var isl_beside := false
+	# how hard the owner may cut across the path for the weave; an island
+	# with a short cross aisle before it may allow more ("steer")
+	var lat_max := 0.8
+	var fwd_sign := 1.0 if homeward else -1.0
 	for isl: Dictionary in main.islands:
 		var ir: Rect2 = isl["rect"]
-		if global_position.y > ir.position.y - ISLAND_LEAD and global_position.y < ir.end.y + ISLAND_LEAD:
-			var lo: float = (ir.end.x + 30.0) if float(isl["side"]) > 0.0 else (here.x + 30.0)
-			var hi: float = (here.y - 30.0) if float(isl["side"]) > 0.0 else (ir.position.x - 30.0)
-			cx = (lo + hi) * 0.5
-			half = maxf((hi - lo) * 0.5 + 60.0, 70.0)
+		var lead: float = float(isl.get("lead", ISLAND_LEAD))
+		if global_position.y > ir.position.y - lead and global_position.y < ir.end.y + lead:
+			var rank := 0.0
+			var ahead_by: float = (ir.position.y - global_position.y) if fwd_sign > 0.0 else (global_position.y - ir.end.y)
+			var behind_by: float = (global_position.y - ir.end.y) if fwd_sign > 0.0 else (ir.position.y - global_position.y)
+			if ahead_by > 0.0:
+				rank = ahead_by
+			elif behind_by > 0.0:
+				rank = 100000.0 + behind_by
+			if rank <= isl_rank:
+				isl_rank = rank
+				isl_pick = isl
+				isl_beside = rank == 0.0
+	if not isl_pick.is_empty():
+		var pr: Rect2 = isl_pick["rect"]
+		var side: float = float(isl_pick["side"])
+		# level with it already, he keeps to the side he is on: the other side
+		# is through the island, and pressing into its flank pinned him there
+		# (a dog that pulled him into El Mercat's other aisle, #153)
+		if isl_beside:
+			side = 1.0 if global_position.x > pr.get_center().x else -1.0
+		var lo: float = (pr.end.x + 30.0) if side > 0.0 else (here.x + 30.0)
+		var hi: float = (here.y - 30.0) if side > 0.0 else (pr.position.x - 30.0)
+		cx = (lo + hi) * 0.5
+		half = maxf((hi - lo) * 0.5 + 60.0, 70.0)
+		lat_max = float(isl_pick.get("steer", lat_max))
 	# where the path narrows to a single line (a plank over a trench) the
 	# owner lines up for it early and keeps to it
 	# (only on the way up to it and across it: once past, the path is theirs
@@ -586,7 +628,7 @@ func _walk(delta: float) -> void:
 		tx = clampf(tx + clampf(felt_pull.x / GIVE_FULL, -1.0, 1.0) * GIVE_LAT, cx - half + 40.0, cx + half - 40.0)
 		var along := felt_pull.y * fwd_y / GIVE_FULL
 		speed *= 1.0 + GIVE_FWD * clampf(along, 0.0, 1.0) - GIVE_BACK * clampf(-along, 0.0, 1.0)
-	var dir := Vector2(clampf((tx - global_position.x) / 60.0, -1.0, 1.0) * 0.8, fwd_y).normalized()
+	var dir := Vector2(clampf((tx - global_position.x) / 60.0, -1.0, 1.0) * lat_max, fwd_y).normalized()
 	if state == HState.DASH:
 		var to_target := dash_target - global_position
 		if to_target.length() < 14.0:
@@ -728,7 +770,7 @@ func _fire_event() -> void:
 		HState.SIGNAL:
 			state = HState.SIGNAL
 			state_t = randf_range(2.6, 4.2)
-			_show_bubble("no signal...", "HE LOST SIGNAL! HE'LL BE AGES")
+			_show_bubble("no signal...", "HE LOST SIGNAL! HE'LL BE A WHILE")
 		HState.CALL:
 			# a proper natter: long enough to be a real opportunity
 			state = HState.CALL
@@ -951,7 +993,7 @@ func unpark() -> void:
 	parked = false
 	homeward = true
 	bubble.visible = false
-	_show_bubble("okay, home time")
+	_show_bubble("okay, time to head home")
 
 
 func is_on_call() -> bool:
@@ -994,7 +1036,7 @@ func resume_to_bin(bin: Vector2) -> void:
 	state = HState.GO_BIN
 	chain_target = bin
 	telegraph_t = 0.0
-	_show_bubble("where's a bin...")
+	_show_bubble("where's a trash can...")
 
 
 func bumped(dir: Vector2) -> void:

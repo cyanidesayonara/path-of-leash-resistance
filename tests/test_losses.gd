@@ -61,7 +61,7 @@ func _run() -> void:
 	# a later loss, after ticking goals: no comfort, the goals counted
 	m.run_goals_new = 2
 	var t: String = L.card(m, "THE HUMAN WENT DOWN THE MANHOLE\n\nThe walk does not.", "manhole")
-	_check(t.contains("Steer your human round open manholes"), "the manhole has its own hint")
+	_check(t.contains("Steer your human around open manholes"), "the manhole has its own hint")
 	_check(t.contains("This walk ticked 2 new goals. They stay ticked."), "the new goals are counted")
 	_check(not t.contains(L.COMFORT), "the comfort is for the first loss only")
 	m.run_goals_new = 1

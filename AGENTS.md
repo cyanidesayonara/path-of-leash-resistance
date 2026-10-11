@@ -139,7 +139,7 @@ explain every changed snapshot line; this does not relax the refactor rule.
   never weakened: the give changes where they mean to go, not how hard they
   walk. Hard hauling (over `PATIENCE_HARD`) drains `patience`; a slack leash
   refills it. Low patience shows (a glance at the dog, a temper cloud over
-  their head, "oi..."); empty, it is a telegraphed "HEY!" (`CORRECT_WARN`,
+  their head, "ugh..."); empty, it is a telegraphed "HEY!" (`CORRECT_WARN`,
   0.8 s like every owner event) and a correction: a step back and a shorter
   leash, then `CORRECT_GRACE` before patience drains again. A dog planted
   when it lands turns it into his stumble and a reward. They wait up to
@@ -179,6 +179,18 @@ real rendering context; run headless, they fail or hang for no reason in
 the code). A filter picks tests by path; TIMEOUT sets seconds per test:
 ```
 GODOT=godot/Godot_v4.7-stable_win64_console.exe bash tools/run_tests.sh [leash]
+```
+
+Playtest a walk as it is played: real input actions from a script of steps,
+screenshots along the way, and a log of what a player would notice (the dog
+or your human stuck, a walker inside something solid). Steps are actions
+joined with `+` and held for `:SECONDS` (`up`, `turbo+left`, `plant`),
+`wait:S`, `tap:ACTION` (`tap:share` skips a tutorial lesson), `shot` and
+`at:X,Y`. Play every player-facing change this way before handing it over;
+the browser pane is no substitute when the app window is hidden, because a
+hidden page barely renders and the game runs in fits:
+```
+godot\Godot_v4.7-stable_win64.exe --path . --rendering-method gl_compatibility --script res://tools/playtest.gd -- --level=market --steps="up:4;shot;turbo+up:3;shot" --out=C:/tmp/pt
 ```
 
 Release (both platforms, both itch channels):
@@ -349,13 +361,13 @@ applies to every change, whoever makes it.
 
 ## The game's voice (every player-facing string)
 
-Dry, fond, from the dog's side of the leash; British spelling; short.
+Dry, fond, from the dog's side of the leash; American English; short.
 Each kind of text has one form, and its look comes from where it is drawn:
 - **Goals**: sentence case, an instruction to the dog ("Mark 5 spots",
   "Get your human home less than half soaked"). `goals.quest_text`
   capitalises the first letter of every goal, wherever it was written.
 - **Shouts** (`feed.say`): capitals, a few words, what she just did or what
-  needs her now ("KERB RIDE!", "PICKPOCKET! WATCH HIS HANDS").
+  needs her now ("CURB RIDE!", "PICKPOCKET! WATCH HIS HANDS").
 - **The banner** (`hud_status`): capitals, what is true right now, as an
   instruction ("FULL TANK! GO MARK A SPOT").
 - **Speech** (`float_text(..., POP_SAY)`): lower case, as people talk.

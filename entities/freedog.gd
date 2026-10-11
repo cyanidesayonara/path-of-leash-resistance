@@ -24,7 +24,7 @@ const BOLT := 172.0
 const DODGE_SPEED := 210.0
 const ACCEL := 620.0
 const NAMES := [
-	"a spaniel", "a big grey lad", "someone small", "a very wet retriever",
+	"a spaniel", "a big gray boy", "someone small", "a very wet retriever",
 	"a whippet", "a terrier with opinions", "an enormous poodle",
 ]
 

@@ -336,7 +336,7 @@ func _dare_card(vs: Vector2, y: float) -> void:
 				var need := "You landed %d of %d tricks." % [int(ch.count), int(ch.target)]
 				lines = [need]
 				if is_instance_valid(main.challenge_giver) and main.challenge_giver.has_another_go():
-					lines.append("Stay near the kid for another go.")
+					lines.append("Stay near the kid for another try.")
 	# no wider than the room between the corner cards, the text wrapped to it
 	var w := Kit.text_w(Kit.display(), title, 18) + 36.0
 	if String(ch.phase) == "live":

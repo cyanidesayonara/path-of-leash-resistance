@@ -106,9 +106,9 @@ static func begin(m: Node2D) -> void:
 	if owner_flees:
 		m.human.panic = true
 	if m.chase_kind == "both":
-		m.float_text(m.human.global_position, "FIRE ENGINE!  GO GO GO!", Color(1, 0.55, 0.25))
+		m.float_text(m.human.global_position, "FIRE TRUCK!  GO GO GO!", Color(1, 0.55, 0.25))
 	elif m.chase_kind == "bolt":
-		m.float_text(m.human.global_position, "AAH!  the owner BOLTED!", Color(1, 0.6, 0.3))
+		m.float_text(m.human.global_position, "AAH!  YOUR HUMAN BOLTED!", Color(1, 0.6, 0.3))
 	else:
 		m.feed.say("STREET SWEEPER! RUN!", EventFeed.Tone.BAD)
 

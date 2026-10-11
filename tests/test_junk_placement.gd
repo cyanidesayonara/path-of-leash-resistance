@@ -47,9 +47,8 @@ func _run() -> void:
 					bad.append("%s at %s" % [k, c.position])
 		if lvl == "market":
 			for c: Node2D in m.get_tree().get_nodes_in_group("cones"):
-				for mh: Vector2 in m.manholes:
-					if String(c.kind) == "cone" and c.position.distance_to(mh) < 50.0:
-						road_cones += 1
+				if String(c.kind) == "cone" and c.position.distance_to(lb.MERCAT_DRAIN) < 50.0:
+					road_cones += 1
 			_check(wet >= 2 and road_cones == 0, "market: wet-floor signs at the drain, no road cones (%d, %d)" % [wet, road_cones])
 		_check(n > 0, "%s: there is some junk" % lvl)
 		_check(bad.is_empty(), "%s: no junk inside anything, in the road or off the path: %s" % [lvl, bad])
