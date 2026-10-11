@@ -190,8 +190,8 @@ func _run_coordinated_pass(
 			label + " owner lateral movement stays bounded"
 		)
 		_check(
-			dog_after.distance_to(dog_before) <= 90.0 * DT + 0.001,
-			label + " dog movement keeps the existing speed cap"
+			dog_after.distance_to(dog_before) <= float(pair.DOG_TROT) * DT + 0.001,
+			label + " dog movement stays under its catch-up trot"
 		)
 		for blocker in blockers:
 			_check(
@@ -347,7 +347,7 @@ func _test_exact_production_park_slalom(world: Dictionary) -> void:
 				label + " owner movement stays bounded"
 			)
 			_check(
-				dog_after.distance_to(dog_before) <= 90.0 * DT + 0.001,
+				dog_after.distance_to(dog_before) <= float(pair.DOG_TROT) * DT + 0.001,
 				label + " commanded dog transition stays bounded"
 			)
 			for blocker in blockers:
@@ -407,6 +407,7 @@ func _test_beach_clear_offset_is_route_bounded(world: Dictionary) -> void:
 	root.add_child(pair)
 	pair.set_physics_process(false)
 	pair.wander = Vector2(40, 0)
+	pair.dog_side = 1.0
 	world.dog.position = pair.npc_dog.global_position + Vector2(100, 0)
 	_check(
 		pair.has_method("_raw_clear_dog_offset"),
@@ -417,7 +418,7 @@ func _test_beach_clear_offset_is_route_bounded(world: Dictionary) -> void:
 	var raw_offset: Vector2 = pair.call("_raw_clear_dog_offset")
 	var bounded_offset: Vector2 = pair.call("_clear_dog_offset")
 	_check(
-		is_equal_approx(raw_offset.x, 104.0),
+		is_equal_approx(raw_offset.x, pair.DOG_SIDE + 40.0 * pair.WANDER_ACROSS + 34.0),
 		"beach clear offset includes maximum wander and curiosity"
 	)
 	_check(
@@ -456,7 +457,9 @@ func _test_spawn_selection_and_rejection(world: Dictionary) -> void:
 				"relocated dog clears every expanded spawn blocker"
 			)
 		_check(
-			relocated.leash.pts[0].is_equal_approx(relocated.npc_dog.global_position),
+			relocated.leash.pts[0].is_equal_approx(
+				relocated.npc_dog.global_position + relocated.leash.dog_offset
+			),
 			"spawn relocation resnaps the dog end of the leash"
 		)
 		_check(
@@ -473,6 +476,9 @@ func _test_spawn_selection_and_rejection(world: Dictionary) -> void:
 		_circle("cover_edge", Vector2(284, 30), 1.0),
 	]
 	var formation_rejected := _make_pair(world, Vector2(100, 0), Vector2.UP, [], false)
+	# the dog standing back and to the right of its owner: the spawn sweep
+	# must check where the dog actually is, not only the owner
+	formation_rejected.npc_dog.position = formation_rejected.npc_owner.position + Vector2(40, 30)
 	for blocker in formation_sealed:
 		_check(
 			not _inside_expanded(
@@ -596,8 +602,15 @@ func _test_normal_target_semantics(world: Dictionary) -> void:
 	world.dog.position = pair.npc_dog.global_position + Vector2(100, 0)
 	var owner_expected: Vector2 = pair.npc_owner.position + Vector2(0, pair.vel.y * DT)
 	var curious := Vector2(34.0, 0.0)
-	var target: Vector2 = owner_expected + Vector2(30, 24) + pair.wander + curious
-	var dog_expected: Vector2 = pair.npc_dog.position.move_toward(target, 90.0 * DT)
+	# a little ahead of the owner on its own side, the wander roll about that
+	var lead := Vector2(pair.dog_side * pair.DOG_SIDE, -pair.DOG_LEAD)
+	var roll := Vector2(pair.wander.x * pair.WANDER_ACROSS, -pair.wander.y * pair.WANDER_ALONG)
+	var target: Vector2 = owner_expected + lead + roll + curious
+	# further than DOG_TROT_GAP from its place, it picks up into a trot
+	var far: bool = pair.npc_dog.position.distance_to(target) > float(pair.DOG_TROT_GAP)
+	var pace := float(pair.DOG_TROT) if far else float(pair.DOG_SPEED)
+	var speed := move_toward(90.0, pace, float(pair.DOG_ACCEL) * DT)
+	var dog_expected: Vector2 = pair.npc_dog.position.move_toward(target, speed * DT)
 	pair._physics_process(DT)
 	_check(
 		pair.npc_owner.position.is_equal_approx(owner_expected),

@@ -99,6 +99,9 @@ jobs:
       - name: NPC pair obstacle avoidance regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_pond_avoidance.gd
 
+      - name: NPC pair walk and leash regression test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_walk.gd
+
       - name: NPC pair park lifecycle regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_park_lifecycle.gd
 
