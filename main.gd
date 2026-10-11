@@ -95,6 +95,8 @@ const WHIRL_ARM_EXCESS := 8.0
 const WHIRL_ARM_WIND := 0.55
 const WHIRL_ARM_END_WIND := 2.4
 const WHIRL_ARM_RANGE := 70.0
+# how much heavier a tutorial owner waiting at a lesson is in the tug of war
+const TUT_BRACE := 8.0
 # Round the pole, not into it: with the rope over a pole beside the owner, the
 # pull at their end points almost straight at the pole, and a body pulled into
 # a pole just pins there. Within POLE_STEP_R of it, the part of the pull aimed
@@ -7271,6 +7273,10 @@ func _leash_tug(delta: float) -> void:
 	elif dog.input_active:
 		dog_m *= 2.0
 	var human_m := HUMAN_MASS * (2.0 if human.is_fallen() else 1.0)
+	# a tutorial owner waiting at a lesson plants their feet, as she does:
+	# pulling ahead must not tow them past the lesson and out of the tutorial
+	if human.tut_holding():
+		human_m *= TUT_BRACE
 	var base_tension := minf(leash.tension_force(excess, LEASH_K), 1600.0)
 	# pulley: with the rope wound and the dog working its end, the pole
 	# redirects and amplifies the pull on the human continuously - not

@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-10-10 - the tutorial keeps you at the lesson
+
+- Santtu got lost in the tutorial's last section, and a playtest showed
+  why: at a lesson your human stands still, but the leash still towed them,
+  so a dog pulling ahead dragged them past the lamppost, the post and the
+  ledge and out into the dog park with the swing lesson still on the card.
+- Now, waiting at a lesson, your human plants their feet as she does (8x
+  heavier in the tug of war, `main.TUT_BRACE`), and if they have been towed
+  past their spot anyway they walk back to it. The lesson stays beside
+  them; once it is done or skipped they walk on as before.
+- `tests/test_tutorial_brace.gd` in CI.
 ## 2026-10-10 - your human steps round things instead of pinning on them
 
 - Pulled toward a pole the leash is over, your human used to press into it
