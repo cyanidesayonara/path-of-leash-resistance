@@ -114,6 +114,7 @@ CHANGELOG.md:
 - The kid's dare says what it wants, how long you have and what it pays before the clock starts, shows how you're doing, and after a miss offers another try (twice, for a little less).
 - Other walkers' dogs walk ahead of their people on a short leash, stop to sniff and trot back, instead of dragging a long loop of leash behind.
 - In tug-of-war Millie faces the other dog and backs away, paws braced, while she pulls.
+- Tourists and other walkers go around stalls, vans, the mosaic salamander, the parked train and the chestnut roaster instead of walking through them.
 - El Mercat: passers-by walk around the stalls instead of over the food, she can reach the hall's walls, your human no longer wedges between the displays and the columns or presses into a stall when you pull him into the other aisle, a fish counter, a floor drain where the manhole was, and the side aisles dressed with crates, trolleys and shoppers.
 - Passeig Marítim: palms in runs around the landmarks, showers, a volleyball court and a lifeguard tower on the walk, beach bars on decks, and the sea one color all the way to the dog beach.
 - El Gòtic: real washing on the lines, a roofscape beside the alley, Vespas, cast-iron bollards, and a tidier plaça.
