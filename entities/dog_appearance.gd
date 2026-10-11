@@ -458,6 +458,18 @@ static func validation_errors(profile: Dictionary) -> PackedStringArray:
 # wide lines, so a ShapeBatch standing in for `canvas` draws the whole dog in
 # one call. `bob` is the stride's sine (scaled to MAX_BOB), which also swings
 # the paws; `mouth` (0..1) opens the jaw for a bark.
+# how far ahead of the dog's center draw_dog puts the collar, for a leash
+# clipped to it
+static func collar_reach(profile: Dictionary) -> float:
+	var p := profile
+	if not validation_errors(p).is_empty():
+		p = get_profile(String(PROFILE_IDS[0]))
+	var s: float = p["size_scale"]
+	var bs: Vector2 = p["body_size"] * s
+	var hr: float = p["head_radius"] * s
+	return bs.x * 0.80 + hr * 0.45 - hr * 0.80
+
+
 static func draw_dog(
 	canvas: Object,
 	profile: Dictionary,

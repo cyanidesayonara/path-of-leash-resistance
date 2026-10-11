@@ -15,6 +15,138 @@ Append-only session history, newest first.
 - tests/test_rope_tug_backing.gd: while she pulls she faces the toy every
   frame, moves away from it every frame, her stride runs in reverse and she
   braces; when the tug ends the stick turns her again.
+## 2026-10-10 - Other walkers' dogs walk ahead on a short leash
+
+- Another walker's dog goes a little ahead of its owner and to one side of
+  the line, wanders about that spot, stops to sniff, gets towed on when the
+  owner walks past, and trots to catch up again. It used to walk level
+  with the owner, or behind them when the pair walked up the screen: its
+  place was a fixed offset down and to the right, whichever way they went.
+- Their leash runs from the owner's fist (beside the phone, on the dog's
+  side) to the dog's collar with a gentle droop, and goes taut when the dog
+  pulls out to the end of it or a sniff holds it back. It used to be a
+  150 px rope between two ends about 40 px apart, so 110 px of slack piled
+  up and dragged behind the pair. The owner now takes in what the dog is
+  not using (never while the leash is caught on anything) and lets out up
+  to 92 px.
+- Round an obstacle the dog keeps a little ahead on the detour's side
+  instead of falling in level with its owner, and when the way ahead is
+  shut it waits at its owner's side instead of standing on their feet.
+- The owner eases to three quarters of their pace while the dog has its nose
+  down; a dog towed off a sniff gives it up and trots back in front.
+- The pair's wander rolls on the pair's own dice, so how often it rolls
+  (which depends on the route) no longer moves the walk's shared random
+  sequence.
+- tests/test_pair_walk.gd: over 30 seconds of walking either way, the dog is
+  ahead of or level with its owner most of the time, the leash never carries
+  more than a hand's worth of slack or bulges off the fist-to-collar line,
+  and the dog stays on its leash.
+## 2026-10-10 - El Mercat: stall blocks, walls and a wedged owner (#153)
+
+- The other dog-walkers and the riders go round the stall blocks down the
+  middle of the hall. The blocks were solid but never in the list the
+  passers-by route round, so a pair spawned mid-hall walked straight over
+  the food.
+- She reaches the hall's walls. The straight wall every walk has at the
+  edge of its corridor stood 130 px inside each hall wall (the hall is far
+  wider than the corridor); the building line along the walls does that
+  job now, and the straight wall only closes the stretch past the far door.
+- Your human no longer wedges in the hall. The iron columns stood 26 px off
+  each block's corner, a slot just too narrow for him; they are set into
+  the corners now. And he starts across to the next block's side as soon
+  as he is past the last one, cutting across more steeply, so he is there
+  before its end face instead of walking into it.
+- `tests/test_mercat.gd` checks the blocks are blockers, a pair from any
+  lane keeps off them, she reaches every clear stretch of wall, and no two
+  solids leave a gap he could wedge in; `tests/test_mercat_owner_path.gd`
+  (CI) walks him up the hall on three seeds with nobody steering and
+  fails if he stands stuck while walking.
+
+## 2026-10-09 - El Mercat: audit fixes (#153)
+
+- The wall stalls stand with their backs against the hall's walls instead
+  of a gap's width off them, and the fish counter is a counter: steel, a
+  bed of crushed ice, whole fish heads to the customer, red mullet, a tray
+  of prawns, a tray of mussels, lemon, price cards and the scale. Its
+  meltwater lies on the floor past the customers, not over the counter.
+- The street manhole in the middle aisle is a floor drain: a steel grate,
+  the floor damp round it, the wet-floor signs still out. Nothing to fall
+  down indoors; the churro by it is "off the wet floor" now.
+- The side aisles have things in them: crate stacks, parked tartan
+  shopping trolleys, a porter's sack truck and shoppers stopped for a chat,
+  all along the walls and all solid, clear of the stalls and the crates
+  she marks.
+- The street before the arch has the shops' striped awnings, the
+  greengrocer's delivery van at the kerb with its back doors open, and
+  crate stacks by the doors.
+- `world/mercat.gd`; `tests/test_mercat.gd` checks the stalls, the drain,
+  the dressing and the van. The market autowalk still finishes (leg times
+  shift by a second or so round the new solids).
+## 2026-10-10 - playtest a walk through its real inputs
+
+- `tools/playtest.gd` plays a walk from a script of steps through the same
+  input actions a player's keys press, photographs it as it goes, and logs
+  what a player would notice: DOG STUCK (a direction held and no headway,
+  nothing to explain it), HUMAN STUCK (walking and going nowhere), NPC IN
+  SOLID (a walker, their dog or a tourist inside a solid). Its first run on
+  El Mercat found the pinches between the stall blocks and the bins that
+  Santtu hit by hand.
+- Driving the web build in the app's browser pane was tried first: with the
+  app window hidden the page barely renders, inputs go missing and the dog
+  hardly moves, so it cannot stand in for play. AGENTS.md says so.
+
+## 2026-10-10 - the tutorial keeps you at the lesson
+
+- Santtu got lost in the tutorial's last section, and a playtest showed
+  why: at a lesson your human stands still, but the leash still towed them,
+  so a dog pulling ahead dragged them past the lamppost, the post and the
+  ledge and out into the dog park with the swing lesson still on the card.
+- Now, waiting at a lesson, your human plants their feet as she does (8x
+  heavier in the tug of war, `main.TUT_BRACE`), and if they have been towed
+  past their spot anyway they walk back to it. The lesson stays beside
+  them; once it is done or skipped they walk on as before.
+- `tests/test_tutorial_brace.gd` in CI.
+## 2026-10-10 - your human steps round things instead of pinning on them
+
+- Pulled toward a pole the leash is over, your human used to press into it
+  and stick. The part of the pull aimed into the pole now becomes a step
+  round it, the way that unwinds the rope (the same probe the whirl uses),
+  within 48 px of it (`main.round_pole_dir`).
+- Walking into a bin, a stall or a post, they no longer press on for ever:
+  blocked for 0.3 s while meaning to walk, they sidestep along it, and keep
+  going while it still blocks them (up to 2 s), keeping to the side they
+  chose if blocked again soon after (`human._check_stuck`).
+- `tests/test_owner_unstick.gd` in CI.
+## 2026-10-10 - a slack leash lies in curves, not an accordion
+
+- The rope had no stiffness against bending, so spare length folded into a
+  regular zigzag. A bending constraint (`entities/leash.gd`, BEND_MIN): two
+  points one apart may come no closer than 1.55 segments, so a joint never
+  folds back on itself and slack lies in loose curves and loops on the
+  ground.
+- Run once, before the length passes, so it can never stretch the rope
+  into a false pull (the moving walkways caught that).
+- Only with no pole or obstacle within 120 px of the rope: wraps, the
+  whirl's winding measures and its unwinding all read the rope's shape near
+  a pole, so there the solver is exactly as it was (the pole and tangle
+  benchmark hashes are unchanged). Slack near trees still folds; that is
+  the next step.
+- `tests/test_leash_slack.gd` in CI.
+## 2026-10-10 - under the trees, not over them
+
+- Tree crowns draw above Millie, your human and the leash, on their own
+  layer (`world/canopylayer.gd`, z 13, under what hangs overhead): she and
+  the rope go round the trunk under the leaves instead of over them. The
+  ground pass keeps what lies on the ground: the crown's shadow, the pit or
+  grate, the roots, and the trunk itself.
+- A crown someone is under turns see-through, as one sheet (a CanvasGroup,
+  so the overlapping leaf clumps do not blotch), and its trunk stays solid.
+- Every kind: El Parc's and El Barri's trees, El Bosc's oaks and pines, the
+  palms, the street trees in their grates, El Gòtic's plaça tree, and the
+  groves in the off-leash spaces. One shared rule (`main.pole_tree`) says
+  which posts are trees, for both passes. The crowns are one batch.
+- Drawing only: the behavior snapshot is identical. `tests/test_canopy.gd`
+  in CI.
 
 ## 2026-10-10 - the kid's dare says what it wants, and you can try again
 
