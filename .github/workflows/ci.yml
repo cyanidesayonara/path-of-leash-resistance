@@ -190,6 +190,8 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_leash_slack.gd
       - name: Canopy test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_canopy.gd
+      - name: Draw order (overhead) test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_zorder_overhead.gd
       - name: Montjuic test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_montjuic.gd
       - name: Telefèric test
