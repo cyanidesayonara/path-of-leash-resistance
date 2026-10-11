@@ -17,6 +17,116 @@ Append-only session history, newest first.
   benchmark hashes are unchanged). Slack near trees still folds; that is
   the next step.
 - `tests/test_leash_slack.gd` in CI.
+## 2026-10-10 - under the trees, not over them
+
+- Tree crowns draw above Millie, your human and the leash, on their own
+  layer (`world/canopylayer.gd`, z 13, under what hangs overhead): she and
+  the rope go round the trunk under the leaves instead of over them. The
+  ground pass keeps what lies on the ground: the crown's shadow, the pit or
+  grate, the roots, and the trunk itself.
+- A crown someone is under turns see-through, as one sheet (a CanvasGroup,
+  so the overlapping leaf clumps do not blotch), and its trunk stays solid.
+- Every kind: El Parc's and El Barri's trees, El Bosc's oaks and pines, the
+  palms, the street trees in their grates, El Gòtic's plaça tree, and the
+  groves in the off-leash spaces. One shared rule (`main.pole_tree`) says
+  which posts are trees, for both passes. The crowns are one batch.
+- Drawing only: the behavior snapshot is identical. `tests/test_canopy.gd`
+  in CI.
+
+## 2026-10-10 - the kid's dare says what it wants, and you can try again
+
+- The dare is offered before its clock starts: the kid says "bet you can't
+  do 5 tricks in 12 seconds!" and a card under the banner spells it out for
+  2.6 seconds - what counts ("swing around a pole, grind a ledge, fling
+  your human", with the turbo button named for the device in hand), what it
+  pays, and a bar filling up to GO. Tricks landed while it is being read do
+  not count.
+- While it runs the card counts tricks and drains the clock ("2 / 5",
+  "11 seconds left") and the kid counts down ("3 more! go go go!").
+- It says how it ended, for a few seconds: DARE WON! +35, or DARE LOST with
+  how many of the 5 tricks she landed.
+- A lost dare can be tried again: stay near the bench for 5 seconds after
+  it ends, or walk off and come back, and the kid offers it again ("heh.
+  want another go?"). Two retries at most; a retry pays 25 instead of 35, so
+  the first go is still the one to land. A won dare is done. The autowalk
+  never gets a retry.
+- New strings are in American English. `tests/test_dare_retry.gd` in CI;
+  `tests/test_challenge.gd` covers the offer and the result card.
+
+## 2026-10-10 - a main menu, and one way back from everywhere
+
+- The title is a main menu now: PLAY, TUTORIAL, WARDROBE, YOUR WALKS,
+  SETTINGS and EXIT GAME, a list at the left under the name, picked with
+  up/down and the plant action. Quitting no longer means starting a walk
+  to reach the pause menu.
+- One rule on every screen: plant confirms, and bark or pause is BACK.
+  BACK closes the wardrobe, YOUR WALKS and settings to whichever screen
+  opened them, steps back from GET READY to the walk select and from there
+  to the main menu, cancels a question, resumes from the pause menu, and on
+  the main menu asks EXIT GAME (desktop only; on the web it does nothing).
+  The prompt bar shows it as one BACK key everywhere. Keys no longer mean
+  different things on different screens: bark used to open the wardrobe on
+  the walk select and pause opened settings; now the walk select opens the
+  wardrobe on pee and everything else is on the main menu.
+- PLAY's first-time question is a list of its two answers (learn the
+  ropes, straight to the walks), so bark can be BACK there too.
+- Plant on a switch in settings flips it; it no longer closes the screen.
+  Plant no longer closes YOUR WALKS or the pause menu's THIS WALK card.
+- Touch: the stick picks, DIG confirms, BARK is back; the MENU button is
+  only for pausing and resuming a walk.
+- `tests/test_menu_tree.gd` in CI walks the whole tree with real presses:
+  every screen from the main menu and back again with BACK alone, EXIT GAME
+  only on desktop and only after the yes. `--shot-menu=main` photographs the
+  main menu, and the shot sweep includes it. The behaviour snapshot is
+  unchanged.
+## 2026-10-09 - Passeig Marítim: audit fixes (#151)
+
+- The palms come in runs now, not one every 300px all the way: a tight
+  three by the volleyball court, four in a row past the lifeguard tower,
+  a pair flanking each chiringuito, and long gaps between.
+- On the walk itself: two showers at the top of the sand (columns on a
+  slatted footplate, a puddle beside), a volleyball court with its net
+  across the middle, and a lifeguard tower on stilts that she runs under
+  (its cabin is on the overhead layer). The shower columns and the net
+  posts are poles: solid, markable, and the rope wraps them. The dog
+  beach's shower and lifeguard chair use the same drawing.
+- Each chiringuito stands on a timber deck under a reed pergola, with
+  oleanders in planters along the back and its bar hut at the end of the
+  terrace (thatched at one, blue and white canvas at the other, stools at
+  the counter). The huts are solid.
+- Behind the terraces, where a sideways phone saw one flat grey, the
+  blocks' flat roofs: tiled terraces, stairwells, water tanks, a washing
+  line or an awning, a narrow street between.
+- The walk's sea and the dog beach's sea are one sea: the same colours,
+  the same width of shallows, and a strip of wet sand with foam down the
+  whole walk. The tinted box laid over the walk's sand (which stopped in a
+  hard line at the gate) is gone; the sand underfoot plays as before.
+- `tests/test_passeig.gd` in CI.
+## 2026-10-09 - El Gòtic audit fixes (#154)
+
+- The washing over the alley is washing: shirts with their sleeves out and
+  a collar, sheets folded over the line with their creases, jeans by the
+  waistband, socks in pairs and striped towels, every piece pegged to a
+  line that sags between the walls, batched and culled to the view (La
+  Neteja shares it).
+- Past the alley's own roofs the frame was bare masonry, flat grey over
+  two fifths of the view. Now the old town goes on from above: pantile
+  roofs with their ridges either way, terrats with stair huts, water tanks,
+  pots and washing, courtyards and light wells, the odd zinc roof, on a
+  grid fixed in the world and slid row by row so it never reads as a grid.
+  It runs on round the plaça at the top, where the plain rows of tiles were.
+  All of it in the edge layer's one batch.
+- The parked scooters are Vespas: rear cowls wider than the saddle, the
+  floorboard, the curved leg shield, the mudguard and the headlamp in the
+  handlebars. Red, cream and mint.
+- The posts down the alley were drawing as trees growing out of the
+  paving; they are the cast-iron bollards the level always called them.
+  The plaça's plane tree stands in a stone-kerbed pit with its grate.
+- The off-leash plaça turns away a prop that would land on another, a
+  tree's pit, the trough or the fountain, so pits no longer overlap and no
+  planter sits on a dig (all four plaça walks). The plaça's house fronts
+  have cornices, shuttered windows on iron balconies and doors in stone
+  surrounds.
 
 ## 2026-10-09 - every CI test, locally, the way CI runs it
 
