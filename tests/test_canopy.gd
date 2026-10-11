@@ -49,7 +49,12 @@ func _run() -> void:
 		"above the dog, the owner and the rope")
 	_check(layer.z_index < 14, "and under what hangs overhead")
 
-	# 2) the crowns in view
+	# 2) the crowns in view: the camera on the walk's first tree, since the
+	# layout varies by seed and the start may have none within reach
+	for i in range(m.deco_pole_count):
+		if m.pole_tree(i) != m.TREE_NONE:
+			m.cam.position = m.poles[i]
+			break
 	var trees: Array = m.canopy_trees()
 	_check(trees.size() > 0, "El Parc's trees in view are crowns (%d)" % trees.size())
 	var ok := true
@@ -57,6 +62,11 @@ func _run() -> void:
 		if float(t["r"]) <= 0.0 or m.pole_tree(int(t["i"])) == m.TREE_NONE and int(t["id"]) < 100000:
 			ok = false
 	_check(ok, "each a tree, with a radius")
+
+	if trees.is_empty():
+		m.free()
+		quit(1)
+		return
 
 	# 3) under one, it fades; away, it does not
 	var t0: Dictionary = trees[0]
