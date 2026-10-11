@@ -68,6 +68,30 @@ func _run() -> void:
 		print("seed %d: %.0f s to the gate" % [sd, t])
 		m.queue_free()
 		await process_frame
+	# Pulled into the other aisle: level with a block on the side its route
+	# does not take, he walks on up that aisle instead of pressing into the
+	# block's flank (seed 2 on Linux CI pinned him there, at x 530)
+	for start: Vector2 in [Vector2(515, -3020), Vector2(515, -3280), Vector2(515, -1350), Vector2(765, -2150)]:
+		seed(1)
+		var mb: Node2D = load("res://main.tscn").instantiate()
+		root.add_child(mb)
+		if not mb.is_node_ready():
+			await mb.ready
+		mb._skip_title()
+		mb.human.global_position = start
+		mb.dog.global_position = start + Vector2(0, -30)
+		mb.leash.resnap()
+		mb.human.event_timer = 999.0
+		for i in range(360):
+			# the dog at his heel, the leash slack, no call or selfie
+			mb.dog.global_position = mb.human.global_position + Vector2(0, -30)
+			mb.dog.velocity = Vector2.ZERO
+			mb.human.event_timer = 999.0
+			mb._physics_process(STEP)
+		var up: float = start.y - mb.human.global_position.y
+		_check(up > 300.0, "from %s, the wrong side of a block, he walks on up the aisle (%.0f px)" % [start, up])
+		mb.queue_free()
+		await process_frame
 	print("\n%d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():
 		print("test_mercat_owner_path: OK")

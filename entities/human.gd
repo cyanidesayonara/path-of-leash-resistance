@@ -567,6 +567,7 @@ func _walk(delta: float) -> void:
 	# the nearest one ahead: the one behind is already passed.
 	var isl_pick: Dictionary = {}
 	var isl_rank := INF
+	var isl_beside := false
 	# how hard the owner may cut across the path for the weave; an island
 	# with a short cross aisle before it may allow more ("steer")
 	var lat_max := 0.8
@@ -585,10 +586,17 @@ func _walk(delta: float) -> void:
 			if rank <= isl_rank:
 				isl_rank = rank
 				isl_pick = isl
+				isl_beside = rank == 0.0
 	if not isl_pick.is_empty():
 		var pr: Rect2 = isl_pick["rect"]
-		var lo: float = (pr.end.x + 30.0) if float(isl_pick["side"]) > 0.0 else (here.x + 30.0)
-		var hi: float = (here.y - 30.0) if float(isl_pick["side"]) > 0.0 else (pr.position.x - 30.0)
+		var side: float = float(isl_pick["side"])
+		# level with it already, he keeps to the side he is on: the other side
+		# is through the island, and pressing into its flank pinned him there
+		# (a dog that pulled him into El Mercat's other aisle, #153)
+		if isl_beside:
+			side = 1.0 if global_position.x > pr.get_center().x else -1.0
+		var lo: float = (pr.end.x + 30.0) if side > 0.0 else (here.x + 30.0)
+		var hi: float = (here.y - 30.0) if side > 0.0 else (pr.position.x - 30.0)
 		cx = (lo + hi) * 0.5
 		half = maxf((hi - lo) * 0.5 + 60.0, 70.0)
 		lat_max = float(isl_pick.get("steer", lat_max))
