@@ -79,6 +79,7 @@ static func end(m: Node2D) -> void:
 		m.games_ground.visible = false
 		m.games_cover.visible = false
 	m.dog.hop = 0.0
+	m.dog.face_lock = Vector2.ZERO
 
 
 # Every frame in the space, after the dog has moved.
@@ -148,6 +149,8 @@ static func _agility_finish(m: Node2D, secs: float, faults: int) -> void:
 static func _tick_tug(m: Node2D, delta: float) -> void:
 	var fd: Node2D = m.tug_dog
 	if not is_instance_valid(fd):
+		# no one at the other end: nothing holds her facing
+		m.dog.face_lock = Vector2.ZERO
 		return
 	var mouth: Vector2 = m.dog.global_position + m.dog.facing * 22.0
 	if m.tug == null:
@@ -172,6 +175,7 @@ static func _tick_tug(m: Node2D, delta: float) -> void:
 				and mouth.distance_to(fd.rope_end()) < GRAB_R:
 			m.tug = RopeTug.new(m.dog.global_position, fd.global_position)
 			m.tug_prev = m.dog.global_position
+			_face_the_toy(m, fd)
 			fd.state = fd.S.TUG
 			m.dog_carrying = true
 			m.feed.say("TUG OF WAR!", EventFeed.Tone.PLAIN)
@@ -187,13 +191,24 @@ static func _tick_tug(m: Node2D, delta: float) -> void:
 	m.dog.move_and_collide((out[0] as Vector2).clamp(r.position, r.end) - m.dog.global_position)
 	fd.global_position = (out[1] as Vector2).clamp(r.position, r.end)
 	m.tug_prev = m.dog.global_position
+	_face_the_toy(m, fd)
 	if String(out[2]) != "":
 		_end_tug(m, String(out[2]))
+
+
+# All through a tug she faces the other dog along the rope, so pushing away
+# from it backs her up, rump first, instead of turning her round to run.
+static func _face_the_toy(m: Node2D, fd: Node2D) -> void:
+	var to_toy: Vector2 = fd.global_position - m.dog.global_position
+	if to_toy.length() > 1.0:
+		m.dog.face_lock = to_toy.normalized()
+		m.dog.facing = m.dog.face_lock
 
 
 static func _end_tug(m: Node2D, result: String) -> void:
 	var fd: Node2D = m.tug_dog
 	m.tug = null
+	m.dog.face_lock = Vector2.ZERO
 	m.dog_carrying = false
 	if not is_instance_valid(fd):
 		return

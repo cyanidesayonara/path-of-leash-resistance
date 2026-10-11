@@ -24,6 +24,47 @@ func _check(ok: bool, what: String) -> void:
 		print("FAIL: " + what)
 
 
+# the clear distance between two solids: a Rect2, or a circle as
+# Vector3(x, y, radius); negative where they overlap
+func _gap(a: Variant, b: Variant) -> float:
+	if a is Vector3 and b is Vector3:
+		return Vector2(a.x, a.y).distance_to(Vector2(b.x, b.y)) - a.z - b.z
+	if a is Vector3:
+		return _gap(b, a)
+	var ra: Rect2 = a
+	if b is Vector3:
+		var p := Vector2(b.x, b.y)
+		var q := Vector2(clampf(p.x, ra.position.x, ra.end.x), clampf(p.y, ra.position.y, ra.end.y))
+		return p.distance_to(q) - b.z
+	var rb: Rect2 = b
+	var dx := maxf(0.0, maxf(ra.position.x - rb.end.x, rb.position.x - ra.end.x))
+	var dy := maxf(0.0, maxf(ra.position.y - rb.end.y, rb.position.y - ra.end.y))
+	if dx == 0.0 and dy == 0.0:
+		return -1.0
+	return Vector2(dx, dy).length()
+
+
+# something stands against the wall in this band, so it is no probe of the wall
+func _crowded(m: Node2D, band: Rect2) -> bool:
+	for st: Vector2 in m.stalls:
+		if band.intersects(Rect2(st - m.STALL_BODY_SIZE * 0.5, m.STALL_BODY_SIZE).grow(20.0)):
+			return true
+	for r: Rect2 in m.solid_rects:
+		if band.intersects(r.grow(20.0)):
+			return true
+	var pts: Array = []
+	for i in range(m.body_pole_count):
+		pts.append(m.poles[i])
+	for h: Dictionary in m.hydrants:
+		pts.append(h.pos)
+	pts.append_array(m.fountains)
+	pts.append_array(m.performers)
+	for p: Vector2 in pts:
+		if band.grow(36.0).has_point(p):
+			return true
+	return false
+
+
 func _initialize() -> void:
 	call_deferred("_run")
 
@@ -91,6 +132,77 @@ func _run() -> void:
 			_check(not r.grow(120.0).intersects(bk), "%s leaves the aisle by block %s open" % [r, bk])
 	# the delivery van stands on the street outside, not in the hall
 	_check(m.vans.size() == 1 and m.vans[0].y > LevelBuild.MERCAT_ARCH_Y, "the delivery van is outside the arch")
+	# the stall blocks are in the blockers every walker and rider routes round
+	for bi in range(LevelBuild.MERCAT_BLOCKS.size()):
+		var found := false
+		for bl: Dictionary in m.bypasser_blockers:
+			if bl.has("rect") and Rect2(bl["rect"]).encloses(LevelBuild.MERCAT_BLOCKS[bi]):
+				found = true
+		_check(found, "stall block %d is an NPC blocker" % bi)
+	# a passing pair, walking up the hall from either aisle or the middle,
+	# steers round every block rather than crossed the food
+	for sx: float in [450.0, 640.0, 830.0]:
+		for dir: float in [-1.0, 1.0]:
+			var route: RefCounted = load("res://systems/bypasser_route.gd").new(sx, m.walk_cx - m.walk_half + 30.0,
+				m.walk_cx + m.walk_half - 30.0, 48.0, 90.0, 240.0, 1.35)
+			route.configure_blockers(m.bypasser_blockers)
+			var rp := Vector2(sx, LevelBuild.MERCAT_ARCH_Y - 60.0 if dir < 0.0 else LevelBuild.MERCAT_DOOR_Y + 60.0)
+			var end_y: float = LevelBuild.MERCAT_DOOR_Y + 60.0 if dir < 0.0 else LevelBuild.MERCAT_ARCH_Y - 60.0
+			var crossed := ""
+			var steps := 0
+			while dir * (end_y - rp.y) > 0.0 and steps < 6000:
+				steps += 1
+				var res: Dictionary = route.step(rp, dir * 110.0, 1.0 / 60.0)
+				rp.x = float(res.x)
+				if not bool(res.blocked):
+					rp.y += dir * 110.0 / 60.0
+				for bk: Rect2 in LevelBuild.MERCAT_BLOCKS:
+					if crossed == "" and bk.grow(6.0).has_point(rp):
+						crossed = str(rp)
+			_check(crossed == "", "a pair from x=%.0f going %s keeps off the stall blocks (%s)" % [
+				sx, "up" if dir < 0.0 else "down", crossed])
+			_check(steps < 6000, "and gets through the hall from x=%.0f" % sx)
+	# no pinches in the hall: between any two solids there is either room for
+	# your human (a body 30 across, and some) or no gap at all
+	var shapes: Array = []
+	for bk: Rect2 in LevelBuild.MERCAT_BLOCKS:
+		shapes.append(bk)
+	for st: Vector2 in m.stalls:
+		shapes.append(Rect2(st - m.STALL_BODY_SIZE * 0.5, m.STALL_BODY_SIZE))
+	for r: Rect2 in Mercat.solids(m):
+		shapes.append(r)
+	for i in range(m.body_pole_count):
+		shapes.append(Vector3(m.poles[i].x, m.poles[i].y, m.POLE_RADIUS))
+	for f: Vector2 in m.fountains:
+		shapes.append(Vector3(f.x, f.y, m.FOUNTAIN_RADIUS))
+	for pf: Vector2 in m.performers:
+		shapes.append(Vector3(pf.x, pf.y, m.PERFORMER_RADIUS))
+	for i in range(shapes.size()):
+		for j in range(i + 1, shapes.size()):
+			var g := _gap(shapes[i], shapes[j])
+			_check(g <= 1.0 or g >= 40.0, "no pinch between %s and %s (%.0f px)" % [shapes[i], shapes[j], g])
+	# she can walk right up to the drawn walls, in the hall and on the street:
+	# nothing invisible stands inside them (#153's straight wall stood 130 px in)
+	var probes := 0
+	var py := 140.0
+	while py > LevelBuild.MERCAT_DOOR_Y + 120.0:
+		var pe: Vector2 = m.walk_edges(py)
+		for side: float in [-1.0, 1.0]:
+			var wall_x: float = pe.x if side < 0.0 else pe.y
+			var band := Rect2(minf(wall_x, wall_x - side * 200.0), py - 34.0, 200.0, 68.0)
+			if _crowded(m, band):
+				continue
+			probes += 1
+			dog.global_position = Vector2(wall_x - side * 180.0, py)
+			for k in range(80):
+				dog.velocity = Vector2(side * 400.0, 0.0)
+				dog.move_and_slide()
+			var gap: float = absf(wall_x - dog.global_position.x)
+			_check(gap <= 14.0 + 6.0 + 3.0, "she reaches the %s wall at y=%.0f (stops %.0f px short)" % [
+				"west" if side < 0.0 else "east", py, gap])
+			_check(side * (dog.global_position.x - wall_x) < 0.0, "and stays inside it at y=%.0f" % py)
+		py -= 50.0
+	_check(probes >= 30, "enough clear wall to probe (%d)" % probes)
 	m.queue_free()
 	await process_frame
 	print("\n%d checks, %d failures" % [checks, failures.size()])

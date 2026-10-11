@@ -45,7 +45,7 @@ Your human is glued to their phone and walking on autopilot. You are on the othe
 
 HOW IT PLAYS
 
-Your human is four times your weight and wins every straight tug. So you win the way a dog does: dig in at the right moment, wind the leash round a lamppost to hold them fast, and bark to stop them dead at the kerb. Wind them round a pole and keep pulling, and they whirl off it like a tetherball. Get the timing right as a bike whizzes past and it counts as a save.
+Your human is four times your weight and wins every straight tug. So you win the way a dog does: dig in at the right moment, wind the leash around a lamppost to hold them fast, and bark to stop them dead at the curb. Wind them around a pole and keep pulling, and they whirl off it like a tetherball. Get the timing right as a bike whizzes past and it counts as a save.
 
 The leash is real rope. The one you see is the one doing the physics: it wraps, cinches, slips off under a hard wrench, and tangles with other people's leashes.
 
@@ -53,27 +53,27 @@ Your human answers it like a person. A steady pull leads them where you want to 
 
 FOURTEEN WALKS THROUGH BARCELONA
 
-El Barri, the neighbourhood park
+El Barri, the neighborhood park
 La Rambla, the crowded promenade
 El Parc, the city park
-Passeig Marítim, the seafront
+Passeig Marítim, the beachfront
 El Diluvi, the downpour
 El Mercat, the market hall
 El Gòtic, the old town alleys
 El Bosc, the forest
-L'Estació, the railway station
-Les Obres, the roadworks
+L'Estació, the train station
+Les Obres, the work site
 La Castanyada, the chestnut festival
-La Ferralla, the scrapyard
+La Ferralla, the junkyard
 El Mosaic, the tiled terraces
-La Neteja, the dawn clean-up
+La Neteja, the dawn cleanup
 
 Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. One of them is a chase: a street sweeper careens down a back street at dawn, and you drag your oblivious human home ahead of it. There is a gentle first walk that teaches one trick at a time, and a daily walk that is the same for everyone that day.
 
 ALSO
 
 - Goals on every walk: sniff the good spots, mark your territory, fetch, greet other dogs, herd a runaway friend home.
-- Combo tricks: vaulting round a pole, grinding along a kerb, near misses.
+- Combo tricks: vaulting around a pole, grinding along a curb, near misses.
 - Stars unlock the next walk; bones buy collars, bandanas and coats.
 - Moods: a fright, a bark-off or a run off the leash leaves her jumpy, barky, full of zoomies or flat, and each changes how she moves.
 - Ground you can feel: grass and mud slow her but hold scent, sand drags at her paws, wet ground and snow make her skid.

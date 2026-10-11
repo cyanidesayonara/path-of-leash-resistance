@@ -24,6 +24,114 @@ Append-only session history, newest first.
   rope, the dog and your human: the leash drew under every can and crate
   it crossed.
 - `tests/test_zorder_overhead.gd` in CI.
+## 2026-10-11 - slack curls beside poles too
+
+- The leash's bending stiffness (slack in curves, not zigzags) switched off
+  for the whole rope whenever any pole or snag was within 120 px of it, so
+  near trees and lampposts the slack went back to an accordion. Now only
+  joints within 70 px of an obstacle (`BEND_NEAR`) keep the unbent shape;
+  the rest of the rope curls as it does on open ground.
+- 70 px, not less: the wrap and the whirl's winding probe read the rope's
+  shape as it comes round a pole, and at 45 px the probe's choice of which
+  way unwinds the rope disagreed with the rope (test_whirl_guided). The kink
+  right at a trunk stays for now.
+- test_leash_slack checks the new case (a pole by the hand, slack out by
+  the dog curves; the old whole-rope rule folds it to 0.36 segments).
+  Solver cost is unchanged within noise; the free bench hash is identical,
+  the pole and tangle hashes change because far joints now bend.
+
+## 2026-10-11 - the flaky fence test, explained
+
+- test_freedom_fixes "the bottom fence holds beside the gate" failed now and
+  then in CI (#203, #213). The fence was fine: a rope tug Millie had grabbed
+  on autopilot earlier in the test was still running, and a tug moves her only
+  part way from where it last had her, so it dragged her from the test's spot
+  back to the gate mouth and out through it. The test now ends any tug before
+  the fence check, and checks she starts where it put her (20 of 20 runs pass).
+
+## 2026-10-11 - the game speaks American English
+
+- Player-facing text is American English from now on; the voice section of
+  AGENTS.md says so (its example shout is "CURB RIDE!" now).
+- Spelling: neighborhood, gray, practice, around (for "round"), farther,
+  cleanup.
+- Words: a trash can, not a bin; a fire truck; the store side and a cellar
+  door; candy, not sweets; a wiener dog and a pit bull among the other
+  walkers' dogs; "a big gray boy" off the leash.
+- Idiom: "proper" sniffs and drinks are good long ones, "see off" is chase
+  off, "hoover up" is scarf down, "another go" is another try, "go on then"
+  is go ahead, "oi..." is "ugh...", "fancy a game?" is "wanna play?", "not
+  today, mate" is buddy, "the game's up" is the jig is up, "he'll be ages"
+  is a while, "home time" is time to head home, the MUCKY combo is MESSY.
+- Clarity: the home chase's bolt shout says YOUR HUMAN, not "the owner";
+  GET READY's button says "let's go"; the tutorial opens with "Walk time."
+  and ends with "That's everything... go play"; the dog-park lesson says
+  loose dirt rather than turned earth.
+- Walk glosses: the beachfront, the train station, the work site, the
+  junkyard, the dawn cleanup.
+- Catalan signs get their accents: BACALLÀ, ESPÈCIES, LA FÀBRICA.
+- The Store description and the itch page body follow (curb, sidewalk,
+  around, the new glosses). Save keys, goal ids and level ids are unchanged.
+## 2026-10-10 - Millie backs up to win a rope tug
+
+- In the off-leash rope tug Millie faces the other dog along the rope the
+  whole time. Pushing away from it backs her up, rump first, instead of
+  turning her round to run with the rope trailing over her back; the rope
+  now runs mouth to mouth. Scoring and controls are unchanged: pushing
+  away still pulls, digging in still holds.
+- She braces while she tugs: front paws planted out ahead, back paws
+  spread. Her stride runs the way she is actually going, so backing up
+  (here, or dragged backwards anywhere) steps backwards.
+- tests/test_rope_tug_backing.gd: while she pulls she faces the toy every
+  frame, moves away from it every frame, her stride runs in reverse and she
+  braces; when the tug ends the stick turns her again.
+## 2026-10-10 - Other walkers' dogs walk ahead on a short leash
+
+- Another walker's dog goes a little ahead of its owner and to one side of
+  the line, wanders about that spot, stops to sniff, gets towed on when the
+  owner walks past, and trots to catch up again. It used to walk level
+  with the owner, or behind them when the pair walked up the screen: its
+  place was a fixed offset down and to the right, whichever way they went.
+- Their leash runs from the owner's fist (beside the phone, on the dog's
+  side) to the dog's collar with a gentle droop, and goes taut when the dog
+  pulls out to the end of it or a sniff holds it back. It used to be a
+  150 px rope between two ends about 40 px apart, so 110 px of slack piled
+  up and dragged behind the pair. The owner now takes in what the dog is
+  not using (never while the leash is caught on anything) and lets out up
+  to 92 px.
+- Round an obstacle the dog keeps a little ahead on the detour's side
+  instead of falling in level with its owner, and when the way ahead is
+  shut it waits at its owner's side instead of standing on their feet.
+- The owner eases to three quarters of their pace while the dog has its nose
+  down; a dog towed off a sniff gives it up and trots back in front.
+- The pair's wander rolls on the pair's own dice, so how often it rolls
+  (which depends on the route) no longer moves the walk's shared random
+  sequence.
+- tests/test_pair_walk.gd: over 30 seconds of walking either way, the dog is
+  ahead of or level with its owner most of the time, the leash never carries
+  more than a hand's worth of slack or bulges off the fist-to-collar line,
+  and the dog stays on its leash.
+## 2026-10-10 - El Mercat: stall blocks, walls and a wedged owner (#153)
+
+- The other dog-walkers and the riders go round the stall blocks down the
+  middle of the hall. The blocks were solid but never in the list the
+  passers-by route round, so a pair spawned mid-hall walked straight over
+  the food.
+- She reaches the hall's walls. The straight wall every walk has at the
+  edge of its corridor stood 130 px inside each hall wall (the hall is far
+  wider than the corridor); the building line along the walls does that
+  job now, and the straight wall only closes the stretch past the far door.
+- Your human no longer wedges in the hall. The iron columns stood 26 px off
+  each block's corner, a slot just too narrow for him; they are set into
+  the corners now. And he starts across to the next block's side as soon
+  as he is past the last one, cutting across more steeply, so he is there
+  before its end face instead of walking into it.
+- `tests/test_mercat.gd` checks the blocks are blockers, a pair from any
+  lane keeps off them, she reaches every clear stretch of wall, and no two
+  solids leave a gap he could wedge in; `tests/test_mercat_owner_path.gd`
+  (CI) walks him up the hall on three seeds with nobody steering and
+  fails if he stands stuck while walking.
+
 ## 2026-10-09 - El Mercat: audit fixes (#153)
 
 - The wall stalls stand with their backs against the hall's walls instead
@@ -538,8 +646,6 @@ the worst frames as well as the summary), takes probe flags in PERF_ARGS,
 keeps Chrome's log with LOGDIR, and says in its header how background load
 wrecks a comparison.
 
-
-
 ## 2026-10-05 - First-time tips (#169, part 3)
 
 - The first time something non-obvious happens, the banner says what to do
@@ -1014,13 +1120,6 @@ certification notes prepared on 2026-10-02. The uploaded screenshot set
 contained ten 1920x1080 images in the documented order. El Parc's dog park
 replaced the planned square off the leash because the daytime El Gòtic square
 duplicated La Castanyada's night plaça too closely.
-
-
-
-
-
-
-
 
 ## 2026-10-02 - v1.57
 
@@ -1505,7 +1604,6 @@ Now each kind has a place:
   its ground sign says FIRST WALK.
 - Two banner lines rewritten: "FULL!" is "FULL TANK! GO MARK A SPOT", and
   "GO BACK DOWN TO HEAD HOME" is "BACK OUT THROUGH THE GATE, THEN HOME".
-
 
 ## 2026-09-29 - Each walk's name is made of the walk, and you can kick it about
 
