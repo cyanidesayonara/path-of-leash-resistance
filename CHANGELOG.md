@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-10-11 - the flaky fence test, explained
+
+- test_freedom_fixes "the bottom fence holds beside the gate" failed now and
+  then in CI (#203, #213). The fence was fine: a rope tug Millie had grabbed
+  on autopilot earlier in the test was still running, and a tug moves her only
+  part way from where it last had her, so it dragged her from the test's spot
+  back to the gate mouth and out through it. The test now ends any tug before
+  the fence check, and checks she starts where it put her (20 of 20 runs pass).
+
 ## 2026-10-10 - your human steps round things instead of pinning on them
 
 - Pulled toward a pole the leash is over, your human used to press into it
