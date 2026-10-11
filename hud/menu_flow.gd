@@ -91,7 +91,7 @@ static func prompts(m: Node2D, which := "") -> Array:
 			return [["left_right", "browse"], ["plant", "choose", open], ["pee", "wardrobe"],
 				["back", "main menu"]]
 		"details":
-			return [["up_down", "pick"], ["left_right", "change"], ["plant", "go walkies"],
+			return [["up_down", "pick"], ["left_right", "change"], ["plant", "start walk"],
 				["back", "back"]]
 		"shop":
 			var it: Dictionary = m.shop_items[m.shop_idx]
@@ -121,7 +121,7 @@ static func prompts(m: Node2D, which := "") -> Array:
 
 static func end_prompts(m: Node2D) -> Array:
 	if m.tutorial_mode:
-		return [["plant", "on to El Barri"], ["back", "walk select"], ["restart", "practise again"]]
+		return [["plant", "on to El Barri"], ["back", "walk select"], ["restart", "practice again"]]
 	if m.finished:
 		return [["restart", "walk it again"], ["back", "walk select"]]
 	return [["restart", "try again"], ["back", "walk select"]]

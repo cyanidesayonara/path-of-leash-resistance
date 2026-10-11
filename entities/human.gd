@@ -298,7 +298,7 @@ func tick(delta: float) -> void:
 				main.on_business_picked()
 				chain_target = main.nearest_bin(global_position)
 				state = HState.GO_BIN
-				_show_bubble("where's a bin...")
+				_show_bubble("where's a trash can...")
 		HState.GO_BIN:
 			var to_bin := chain_target - global_position
 			var before_x := global_position
@@ -427,7 +427,7 @@ func _converse(delta: float) -> void:
 		# glance at her every couple of seconds
 		if not grumbled and telegraph_t <= 0.0:
 			grumbled = true
-			notice("oi...", 1.0)
+			notice("hey...", 1.0)
 		if glance_t <= 0.0:
 			glance_t = 2.2
 	elif patience > PATIENCE_WARN + 0.15:
@@ -517,7 +517,7 @@ func _walk(delta: float) -> void:
 		waited += delta
 		if waited < WAIT_MAX:
 			if waited <= delta * 1.5 and telegraph_t <= 0.0 and correct_t <= 0.0:
-				notice("go on then", 1.4)
+				notice("go ahead", 1.4)
 			velocity = velocity.move_toward(Vector2.ZERO, 400.0 * delta)
 			move_and_slide()
 			return
@@ -672,7 +672,7 @@ func _fire_event() -> void:
 		HState.SIGNAL:
 			state = HState.SIGNAL
 			state_t = randf_range(2.6, 4.2)
-			_show_bubble("no signal...", "HE LOST SIGNAL! HE'LL BE AGES")
+			_show_bubble("no signal...", "HE LOST SIGNAL! HE'LL BE A WHILE")
 		HState.CALL:
 			# a proper natter: long enough to be a real opportunity
 			state = HState.CALL
@@ -895,7 +895,7 @@ func unpark() -> void:
 	parked = false
 	homeward = true
 	bubble.visible = false
-	_show_bubble("okay, home time")
+	_show_bubble("okay, time to head home")
 
 
 func is_on_call() -> bool:
@@ -938,7 +938,7 @@ func resume_to_bin(bin: Vector2) -> void:
 	state = HState.GO_BIN
 	chain_target = bin
 	telegraph_t = 0.0
-	_show_bubble("where's a bin...")
+	_show_bubble("where's a trash can...")
 
 
 func bumped(dir: Vector2) -> void:

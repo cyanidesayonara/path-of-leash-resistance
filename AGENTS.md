@@ -139,7 +139,7 @@ explain every changed snapshot line; this does not relax the refactor rule.
   never weakened: the give changes where they mean to go, not how hard they
   walk. Hard hauling (over `PATIENCE_HARD`) drains `patience`; a slack leash
   refills it. Low patience shows (a glance at the dog, a temper cloud over
-  their head, "oi..."); empty, it is a telegraphed "HEY!" (`CORRECT_WARN`,
+  their head, "hey..."); empty, it is a telegraphed "HEY!" (`CORRECT_WARN`,
   0.8 s like every owner event) and a correction: a step back and a shorter
   leash, then `CORRECT_GRACE` before patience drains again. A dog planted
   when it lands turns it into his stumble and a reward. They wait up to
@@ -349,13 +349,13 @@ applies to every change, whoever makes it.
 
 ## The game's voice (every player-facing string)
 
-Dry, fond, from the dog's side of the leash; British spelling; short.
+Dry, fond, from the dog's side of the leash; American English; short.
 Each kind of text has one form, and its look comes from where it is drawn:
 - **Goals**: sentence case, an instruction to the dog ("Mark 5 spots",
   "Get your human home less than half soaked"). `goals.quest_text`
   capitalises the first letter of every goal, wherever it was written.
 - **Shouts** (`feed.say`): capitals, a few words, what she just did or what
-  needs her now ("KERB RIDE!", "PICKPOCKET! WATCH HIS HANDS").
+  needs her now ("CURB RIDE!", "PICKPOCKET! WATCH HIS HANDS").
 - **The banner** (`hud_status`): capitals, what is true right now, as an
   instruction ("FULL TANK! GO MARK A SPOT").
 - **Speech** (`float_text(..., POP_SAY)`): lower case, as people talk.
