@@ -8,8 +8,8 @@ extends SceneTree
 #  3. every walk's overhead things are pieces of the canopy layer: parasols,
 #     the beach terraces' canopies, El Diluvi's awnings and arcade roof, the
 #     washing lines, the departures board, the bandstand roof, lamp heads,
-#     the ice cream umbrella, the performers' umbrellas in the rain and the
-#     dog beach's parasols
+#     the ice cream umbrella, the performers' umbrellas in the rain, the dog
+#     beach's parasols and El Mercat's shop awnings
 #  4. a piece fades while she is under it and is solid when she is not; a
 #     lamp head never fades
 #  5. nothing else on the walk draws above the canopy layer but the layers
@@ -148,6 +148,7 @@ func _run() -> void:
 		"oldtown": [ov.LAUNDRY, ov.WALL_LAMP],
 		"neteja": [ov.LAUNDRY],
 		"station": [ov.BOARD],
+		"market": [ov.SHOP_AWNING],
 		"park": [ov.BANDSTAND],
 		"scrap": [ov.LAMP],
 	}

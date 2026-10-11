@@ -2170,7 +2170,7 @@ func draw_tree_crown(b: ShapeBatch, t: Dictionary, faded := false) -> void:
 # r of p) or "rect" (under inside it); "solid" if it never fades: a lamp head
 # is too small to hide her, and she is always by a lamppost}
 enum Over { PARASOL, PERGOLA, AWNING, ARCADE, LAUNDRY, WALL_LAMP, BOARD, BANDSTAND, LAMP,
-	ICECREAM, BROLLY, BEACH_PARASOL }
+	ICECREAM, BROLLY, BEACH_PARASOL, SHOP_AWNING }
 # clear of the tree ids (pole index, and 100000 + grove index)
 const OVER_ID := 200000
 const PARASOL_R := 40.0
@@ -2216,6 +2216,10 @@ func _build_overhead() -> void:
 			_add_over(Over.LAUNDRY, i, Vector2(walk_cx, ly), 0.0, Rect2(le.x - 20.0, ly - 16.0, le.y - le.x + 40.0, 64.0))
 			var wy := ly + 380.0
 			_add_over(Over.WALL_LAMP, i, Vector2(walk_edges(wy).x + 6.0, wy), 10.0)
+	if lvl == "market":
+		for i in range(Mercat.AWNINGS.size()):
+			var ar := Mercat.awning_rect(self, i)
+			_add_over(Over.SHOP_AWNING, i, ar.get_center(), 0.0, ar)
 	if lvl == "station":
 		var bd: Vector2 = LevelBuild.ESTACIO_BOARD
 		_add_over(Over.BOARD, 0, bd, 0.0, Rect2(bd.x - 154.0, bd.y - 38.0, 308.0, 76.0))
@@ -2339,6 +2343,8 @@ func draw_overhead_piece(b: ShapeBatch, t: Dictionary, _faded := false) -> void:
 			b.draw_arc(pf + Vector2(0, -30), 26.0, PI, TAU, 20, BROLLY_COLS[i % BROLLY_COLS.size()], 7.0)
 		Over.BEACH_PARASOL:
 			_beach_parasol_canopy(b, p, i)
+		Over.SHOP_AWNING:
+			Mercat.draw_awning(self, b, i)
 
 
 func _draw_tree_pit(p: Vector2) -> void:
