@@ -181,6 +181,18 @@ the code). A filter picks tests by path; TIMEOUT sets seconds per test:
 GODOT=godot/Godot_v4.7-stable_win64_console.exe bash tools/run_tests.sh [leash]
 ```
 
+Playtest a walk as it is played: real input actions from a script of steps,
+screenshots along the way, and a log of what a player would notice (the dog
+or your human stuck, a walker inside something solid). Steps are actions
+joined with `+` and held for `:SECONDS` (`up`, `turbo+left`, `plant`),
+`wait:S`, `tap:ACTION` (`tap:share` skips a tutorial lesson), `shot` and
+`at:X,Y`. Play every player-facing change this way before handing it over;
+the browser pane is no substitute when the app window is hidden, because a
+hidden page barely renders and the game runs in fits:
+```
+godot\Godot_v4.7-stable_win64.exe --path . --rendering-method gl_compatibility --script res://tools/playtest.gd -- --level=market --steps="up:4;shot;turbo+up:3;shot" --out=C:/tmp/pt
+```
+
 Release (both platforms, both itch channels):
 ```
 git tag v1.53 && git push --tags

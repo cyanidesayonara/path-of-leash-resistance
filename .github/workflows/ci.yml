@@ -99,6 +99,9 @@ jobs:
       - name: NPC pair obstacle avoidance regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_pond_avoidance.gd
 
+      - name: NPC pair walk and leash regression test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_walk.gd
+
       - name: NPC pair park lifecycle regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_park_lifecycle.gd
 
@@ -162,6 +165,9 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_freedom_games.gd
       - name: Off-leash games test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_freedom_games_live.gd
+
+      - name: Rope tug backing-up regression test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_rope_tug_backing.gd
       - name: Soundtrack test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_music.gd
       - name: Tutorial checkpoint test
@@ -180,8 +186,16 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_litter.gd
       - name: Leash tricks test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_leash_tricks.gd
+      - name: Owner unstick test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_owner_unstick.gd
       - name: Saves test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_saves.gd
+      - name: Tutorial brace test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tutorial_brace.gd
+      - name: Leash slack test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_leash_slack.gd
+      - name: Canopy test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_canopy.gd
       - name: Montjuic test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_montjuic.gd
       - name: Telefèric test
@@ -262,6 +276,8 @@ jobs:
 
       - name: El Mercat market hall test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_mercat.gd
+      - name: El Mercat owner path test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_mercat_owner_path.gd
       - name: La Castanyada festival test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_castanyada.gd
       - name: La Neteja back street test
