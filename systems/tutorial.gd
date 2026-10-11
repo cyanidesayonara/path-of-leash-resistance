@@ -29,7 +29,7 @@ extends RefCounted
 const STEPS: Array[Dictionary] = [
 	{
 		"id": "walk", "at": 60.0, "hold": false,
-		"title": "Walkies.",
+		"title": "Walk time.",
 		"body": "Walk up the path with {move_with}. Your human follows - badly.",
 	},
 	{
@@ -50,12 +50,12 @@ const STEPS: Array[Dictionary] = [
 	{
 		"id": "sniff", "at": -1620.0, "hold": true,
 		"title": "A good sniff.",
-		"body": "Stand still by the next hydrant and have a proper read of it.",
+		"body": "Stand still by the next hydrant and give it a good long read.",
 	},
 	{
 		"id": "nose", "at": -2020.0, "hold": true, "stand": -1,
 		"title": "Your nose beats your eyes.",
-		"body": "A snack is somewhere on the grass. Go slowly: the slower you go, the further you smell.",
+		"body": "A snack is somewhere on the grass. Go slowly: the slower you go, the farther you smell.",
 	},
 	{
 		"id": "bark", "at": -2420.0, "hold": true,
@@ -75,12 +75,12 @@ const STEPS: Array[Dictionary] = [
 	{
 		"id": "vault", "at": -3620.0, "hold": true,
 		"title": "The rope is a pivot.",
-		"body": "Hold {turbo}, catch the leash on the lamppost and keep running - swing round it and fly out.",
+		"body": "Hold {turbo}, catch the leash on the lamppost and keep running - swing around it and fly out.",
 	},
 	{
 		"id": "fling", "at": -4020.0, "hold": true,
 		"title": "Tetherball.",
-		"body": "Your human is waiting by the post. Run round it twice to wind them up, then pull away.",
+		"body": "Your human is waiting by the post. Run around it twice to wind them up, then pull away.",
 	},
 	{
 		"id": "grind", "at": -4400.0, "hold": true,
@@ -95,12 +95,12 @@ const STEPS: Array[Dictionary] = [
 	{
 		"id": "dig", "at": -5200.0, "hold": false,
 		"title": "Off the leash.",
-		"body": "In the dog park: stand on the turned earth and stay put to dig something up.",
+		"body": "In the dog park: stand on the loose dirt and stay put to dig something up.",
 	},
 	{
 		"id": "done", "at": -5300.0, "hold": false,
 		"title": "Good dog.",
-		"body": "That is the lot. The park is yours: go and play.",
+		"body": "That's everything. The park is yours: go play.",
 	},
 ]
 

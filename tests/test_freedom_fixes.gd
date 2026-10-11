@@ -116,8 +116,16 @@ func _run() -> void:
 	_check(not String(m.hud_status).begins_with("LEAVING ALREADY"), "standing by the gate is not leaving")
 
 	# --- the bottom fence holds either side of the gate
+	# no rope tug left over from the romp (she wanders on autopilot and can
+	# grab the rope): a live tug moves her only part way from where it last
+	# had her, so it dragged her off the spot she is put on and back to the
+	# gate mouth, and out through it
+	m.tug = null
+	m.dog_carrying = false
 	m.dog.auto_move = Vector2.DOWN
 	m.dog.global_position = Vector2(200.0, m.GATE_Y - 120.0)
+	await physics_frame
+	_check(absf(m.dog.global_position.x - 200.0) < 20.0, "she starts beside the gate, not in its mouth (%d)" % int(m.dog.global_position.x))
 	for f in range(120):
 		await physics_frame
 	_check(m.dog.global_position.y < m.GATE_Y - 10.0, "the bottom fence holds beside the gate (%d)" % int(m.dog.global_position.y))

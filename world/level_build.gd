@@ -305,7 +305,10 @@ static func castanyada(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 # at every corner to wind the leash on, stalls along both walls - fruit, the
 # fish counter on its ice, jamon, olives, juices, sweets - meltwater and fish
 # scales in front of the fish, crates stacked behind the fruit, sawdust, and
-# a terrazzo floor. Out through the far door into the plaça.
+# a terrazzo floor, with a floor drain in the middle aisle. Crates, parked
+# shopping trolleys and shoppers along the walls between the stalls, and a
+# delivery van and shop awnings on the street outside (world/mercat.gd).
+# Out through the far door into the plaça.
 const MERCAT_ARCH_Y := -700.0
 const MERCAT_DOOR_Y := -4650.0
 const MERCAT_HALL_HALF := 400.0
@@ -321,12 +324,23 @@ const MERCAT_WALL_STALLS: Array = [
 	[-4450.0, true, "fish"],
 ]
 const MERCAT_DRAIN := Vector2(640.0, -1920.0)
+# how far each column stands out from its block's corner, diagonally: under
+# a pole's radius, so the corner is inside the column's body
+const MERCAT_COLUMN_SET := 6.0
+# how far past each stall block the owner already keeps to its side: the
+# whole cross aisle between two blocks (900 apart, 300 long, grown by 20)
+const MERCAT_ISLAND_LEAD := 560.0
+# and how steeply he cuts across to it: 1.4 sideways for each 1 forward
+# (0.8 elsewhere), so 560 forward carries him the 400-odd across
+const MERCAT_ISLAND_STEER := 1.4
 
 
 static func mercat_stall_pos(m: Node2D, i: int) -> Vector2:
 	var st: Array = MERCAT_WALL_STALLS[i]
 	var e: Vector2 = m.walk_edges(float(st[0]))
-	return Vector2(e.x + 62.0 if bool(st[1]) else e.y - 62.0, float(st[0]))
+	# its back against the hall wall: half the stall's width in from it
+	var half: float = m.STALL_BODY_SIZE.x * 0.5
+	return Vector2(e.x + half if bool(st[1]) else e.y - half, float(st[0]))
 
 
 # where a customer (or a dog with a delivery) stands at a wall stall
@@ -344,15 +358,23 @@ static func mercat(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 		m.stalls.append(mercat_stall_pos(m, i))
 		m.stall_kinds.append(String(MERCAT_WALL_STALLS[i][2]))
 	m.poles.clear()
-	# the hall's iron columns, one at each corner of every stall block
+	# the hall's iron columns, one at each corner of every stall block. Set
+	# into the corner, so the column and the block are one obstacle: 26 px out
+	# they left a 16 px slot that your human walked into and wedged in (#153)
 	for blk: Rect2 in MERCAT_BLOCKS:
-		for c: Vector2 in [blk.position + Vector2(-26.0, -26.0), Vector2(blk.end.x + 26.0, blk.position.y - 26.0),
-				Vector2(blk.position.x - 26.0, blk.end.y + 26.0), blk.end + Vector2(26.0, 26.0)]:
+		for c: Vector2 in [blk.position + Vector2(-MERCAT_COLUMN_SET, -MERCAT_COLUMN_SET),
+				Vector2(blk.end.x + MERCAT_COLUMN_SET, blk.position.y - MERCAT_COLUMN_SET),
+				Vector2(blk.position.x - MERCAT_COLUMN_SET, blk.end.y + MERCAT_COLUMN_SET),
+				blk.end + Vector2(MERCAT_COLUMN_SET, MERCAT_COLUMN_SET)]:
 			m.poles.append(c)
 	m.deco_pole_count = m.poles.size()
 	m.astands = Array([], TYPE_VECTOR2, &"", null)
 	m.benches = Array([], TYPE_VECTOR2, &"", null)
-	m.manholes = Array([MERCAT_DRAIN], TYPE_VECTOR2, &"", null)
+	# the floor drain is a grate in the floor (Mercat.draw_floor_drain), not
+	# an open manhole: nothing to fall down indoors
+	m.manholes = Array([], TYPE_VECTOR2, &"", null)
+	# the greengrocer's van, unloading at the kerb before the arch
+	m.vans = Array([Mercat.VAN], TYPE_VECTOR2, &"", null)
 	var ew: Vector2 = m.walk_edges(-2400.0)
 	m.bins = Array([Vector2(ew.x + 26.0, -2350.0), Vector2(ew.y - 26.0, -3450.0)], TYPE_VECTOR2, &"", null)
 	m.fountains = Array([Vector2(m.walk_edges(-900.0).x + 30.0, -900.0)], TYPE_VECTOR2, &"", null)
@@ -377,14 +399,21 @@ static func mercat(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 	for i in range(MERCAT_WALL_STALLS.size()):
 		if String(MERCAT_WALL_STALLS[i][2]) == "fish":
 			var f := mercat_stall_front(m, i)
+			# on the floor in front of the counter, past its customers
+			var out := 1.0 if bool(MERCAT_WALL_STALLS[i][1]) else -1.0
 			m.patches.append({"y": f.y, "at": 0.0, "rx": 58.0, "ry": 40.0, "seed": 2.2 + float(i),
-				"kind": "puddle", "pin": f + Vector2(0.0, 30.0)})
+				"kind": "puddle", "pin": f + Vector2(out * 50.0, 24.0)})
 			m.patches.append({"y": f.y, "at": 0.0, "rx": 34.0, "ry": 24.0, "seed": 3.1 + float(i),
-				"kind": "fish", "pin": f + Vector2(0.0, -20.0)})
+				"kind": "fish", "pin": f + Vector2(out * 22.0, -26.0)})
 	# the owner keeps to one aisle round each block, alternating
 	var isl: Array[Dictionary] = []
 	for i in range(MERCAT_BLOCKS.size()):
-		isl.append({"rect": MERCAT_BLOCKS[i].grow(20.0), "side": 1.0 if i % 2 == 0 else -1.0})
+		# the lead fills the cross aisle, so the owner starts over to the next
+		# block's side as soon as he is past the last one, and is there before
+		# its end face (#153: with the default 400 he met the face still
+		# crossing, and wedged against it)
+		isl.append({"rect": MERCAT_BLOCKS[i].grow(20.0), "side": 1.0 if i % 2 == 0 else -1.0,
+			"lead": MERCAT_ISLAND_LEAD, "steer": MERCAT_ISLAND_STEER})
 	m.islands = isl
 
 
@@ -1730,7 +1759,7 @@ static func build_level_data(m: Node2D) -> void:
 			m.prize_text = "swim out for the ball"
 		"market":
 			m.prize_pos = MERCAT_DRAIN + Vector2(0.0, -40.0)  # by the drain in the middle aisle
-			m.prize_text = "grab the churro by the open drain"
+			m.prize_text = "grab the churro off the wet floor"
 		"rain":
 			m.prize_pos = Vector2(640.0, -1500.0)  # right on a gaping storm drain
 			m.prize_text = "snatch the toy off the storm drain"
@@ -1748,7 +1777,7 @@ static func build_level_data(m: Node2D) -> void:
 			m.prize_text = "fish the trowel out of the wet cement"
 		"spook":
 			m.prize_pos = CAST_PLACA + Vector2(0.0, 96.0)  # a panellet off the roaster's tray, ringed by sweets
-			m.prize_text = "get the panellet without eating the sweets"
+			m.prize_text = "get the panellet without eating the candy"
 		"scrap":
 			m.prize_pos = m.guard_posts[1] + Vector2(-30.0, 22.0)  # right beside a sleeping guard dog
 			m.prize_text = "steal the bone from under the guard's nose"
@@ -2287,6 +2316,14 @@ static func build_bypasser_blockers(m: Node2D) -> void:
 			"center": m.manholes[i],
 			"radius": m.MANHOLE_RADIUS,
 		})
+	if m.lvl == "market":
+		# the stall blocks down the middle of the hall: solid, so walkers
+		# and riders go round them like round anything else
+		for i in range(MERCAT_BLOCKS.size()):
+			m.bypasser_blockers.append({"id": "mercat_block_%d" % i, "rect": MERCAT_BLOCKS[i]})
+		var ms: Array[Rect2] = Mercat.solids(m)
+		for i in range(ms.size()):
+			m.bypasser_blockers.append({"id": "mercat_%d" % i, "rect": ms[i]})
 	for i in range(m.cellars.size()):
 		m.bypasser_blockers.append({
 			"id": "cellar_%d" % i,
@@ -2484,14 +2521,23 @@ static func build_walls(m: Node2D) -> void:
 		"rain": wall_sides = []      # its frontage walls are the building line
 		"park", "trail", "beach", "barri": wall_sides = []
 		_: wall_sides = [-1.0, 1.0]
+	# the straight wall runs the whole walk at sw_l/sw_r, START_Y + 200 to
+	# GATE_Y - 200. El Mercat's hall is far wider than its sw_l..sw_r, so
+	# there the straight wall stood 130 px inside each hall wall (#153): its
+	# building line follows the walls, and the straight wall only closes the
+	# stretch past the far door where that line stops short of the gate.
+	var wall_lo := float(m.GATE_Y) - 200.0
+	var wall_hi := float(m.START_Y) + 200.0
+	if m.lvl == "market":
+		wall_hi = MERCAT_DOOR_Y - 160.0
 	for ws in wall_sides:
 		var bx: float = (m.sw_l - 60.0) if ws < 0.0 else (m.sw_r + 60.0)
 		var bb := StaticBody2D.new()
 		bb.collision_layer = 1
-		bb.position = Vector2(bx, (m.START_Y + m.GATE_Y) / 2.0)
+		bb.position = Vector2(bx, (wall_lo + wall_hi) / 2.0)
 		var bcs := CollisionShape2D.new()
 		var bsh := RectangleShape2D.new()
-		bsh.size = Vector2(120.0, absf(m.START_Y - m.GATE_Y) + 400.0)
+		bsh.size = Vector2(120.0, wall_hi - wall_lo)
 		bcs.shape = bsh
 		bb.add_child(bcs)
 		m.add_child(bb)
@@ -2541,6 +2587,9 @@ static func build_walls(m: Node2D) -> void:
 	if m.lvl == "market":
 		for blk: Rect2 in MERCAT_BLOCKS:
 			add_rect_body(m, blk.get_center(), blk.size)
+		# the crates, trolleys and shoppers by the walls, the crates outside
+		for r: Rect2 in Mercat.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
 	# La Rambla's statues are people on boxes: solid
 	for sp: Vector2 in m.statues:
 		var stb := StaticBody2D.new()
@@ -2660,12 +2709,11 @@ static func spawn_cones(m: Node2D) -> void:
 	var spots: Array = []
 	for cs: Vector2 in m.cone_spots:
 		spots.append([cs, "cone"])
+	# the market hall's floor drain, just hosed down: wet-floor signs
+	if m.lvl == "market":
+		spots.append([MERCAT_DRAIN + Vector2(34, -20), "wetfloor"])
+		spots.append([MERCAT_DRAIN + Vector2(-32, 22), "wetfloor"])
 	for m_local in m.manholes:
-		# a market hall's open drain gets the wet-floor signs, not road cones
-		if m.lvl == "market":
-			spots.append([m_local + Vector2(34, -20), "wetfloor"])
-			spots.append([m_local + Vector2(-32, 22), "wetfloor"])
-			continue
 		for off: Vector2 in [Vector2(32, -18), Vector2(-30, 22), Vector2(26, 28), Vector2(-26, -26)]:
 			spots.append([m_local + off, "cone"])
 	# a cone each end of a cellar hatch; Les Obres' trench sets its own, and

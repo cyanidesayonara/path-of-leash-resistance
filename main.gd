@@ -2920,7 +2920,7 @@ func _draw_mercat(vt: float, vb: float) -> void:
 			b.circle(sp, 1.6, Color(0.86, 0.74, 0.50, 0.7))
 	# the stall blocks down the middle: counters facing both aisles round a
 	# back wall, each side its own trade, with its sign in Catalan
-	var signs := ["VERDURES", "FORMATGES", "FRUITES", "OUS", "BACALLA", "ESPECIES", "XARCUTERIA", "BOLETS"]
+	var signs := ["VERDURES", "FORMATGES", "FRUITES", "OUS", "BACALLÀ", "ESPÈCIES", "XARCUTERIA", "BOLETS"]
 	for bi in range(LevelBuild.MERCAT_BLOCKS.size()):
 		var blk: Rect2 = LevelBuild.MERCAT_BLOCKS[bi]
 		if blk.end.y < vt - 80.0 or blk.position.y > vb + 80.0:
@@ -2955,10 +2955,13 @@ func _draw_mercat(vt: float, vb: float) -> void:
 			_wc.draw_rect(Rect2(sx - 38.0, blk.position.y - 4.0, 76.0, 16.0), Color(0.12, 0.26, 0.20))
 			_wc.draw_string(font, Vector2(sx - 38.0, blk.position.y + 8.0), String(signs[trade]),
 				HORIZONTAL_ALIGNMENT_CENTER, 76.0, 11, Color(0.96, 0.90, 0.72))
-	# the drain in the middle aisle, grated, a little wet round it
+	# the floor drain in the middle aisle
 	var dr: Vector2 = LevelBuild.MERCAT_DRAIN
 	if dr.y > vt - 60.0 and dr.y < vb + 60.0:
-		b.circle(dr, 22.0, Color(0.40, 0.44, 0.48, 0.25))
+		Mercat.draw_floor_drain(b, dr)
+	# what stands along the walls, and the street outside the arch
+	Mercat.draw_hall(self, b, vt, vb)
+	Mercat.draw_approach(self, b, vt, vb)
 	b.flush(_wc)
 
 
@@ -3478,7 +3481,7 @@ func _bust_shells(_why: String) -> void:
 	var sp: Vector2 = shell_game["pos"]
 	bones += 6
 	combo.add("RIGGED", 6)
-	float_text(sp + Vector2(0, -30), "THE GAME'S UP!", Color(1, 0.9, 0.5))
+	float_text(sp + Vector2(0, -30), "THE JIG IS UP!", Color(1, 0.9, 0.5))
 	feed.say("SHELL GAME BUSTED +6", EventFeed.Tone.GOOD)
 	for tw: Node2D in get_tree().get_nodes_in_group("tourists"):
 		if tw.global_position.distance_to(sp) < 240.0:
@@ -4114,19 +4117,7 @@ func _draw_rambla_stall(st: Vector2, kind: String, i: int) -> void:
 					b.circle(cr.position + Vector2(6.0 + float(f % 3) * 8.0, 7.0 + float(f / 3) * 9.0), 4.6, fc)
 				b.rect(Rect2(cr.position.x + 18.0, cr.end.y - 7.0, 9.0, 6.0), Color(0.97, 0.96, 0.92))
 		"fish":
-			# the fish counter: steel, a bed of crushed ice, the catch laid on
-			# it head to tail, lemon halves; the meltwater is on the floor
-			b.rect(r, Color(0.58, 0.60, 0.62))
-			b.rect(r.grow(-4.0), Color(0.88, 0.93, 0.96))
-			for k in range(14):
-				b.circle(r.position + Vector2(8.0 + float(k * 13 % 80), 8.0 + float(k * 7 % 40)), 2.5, Color(1, 1, 1, 0.8))
-			for k in range(5):
-				var fp := Vector2(r.position.x + 14.0 + float(k) * 17.0, st.y + (6.0 if k % 2 == 0 else -6.0))
-				var fcol: Color = [Color(0.66, 0.70, 0.74), Color(0.86, 0.56, 0.52), Color(0.56, 0.62, 0.70)][k % 3]
-				b.polygon(PackedVector2Array([fp + Vector2(0, -12), fp + Vector2(5, -2), fp + Vector2(0, 10),
-					fp + Vector2(-5, -2)]), fcol)
-				b.polygon(PackedVector2Array([fp + Vector2(0, 9), fp + Vector2(5, 15), fp + Vector2(-5, 15)]), fcol.darkened(0.2))
-			b.circle(Vector2(r.end.x - 10.0, r.position.y + 10.0), 5.0, Color(0.98, 0.88, 0.30))
+			Mercat.draw_fish_counter(b, r, r.get_center().x < 640.0, i)
 		"jamon":
 			# the ham counter: whole legs laid in a row, hoof to hip, sausages
 			# hanging off the front rail
@@ -5995,7 +5986,7 @@ func _draw_seafront_works(vt: float, vb: float) -> void:
 	_wc.draw_circle(Vector2(cx - 2.0, cy - 2.0), 8.0, Color(0.72, 0.50, 0.36))
 	_wc.draw_circle(Vector2(cx, cy), 5.0, Color(0.17, 0.14, 0.13))
 	# a painted sign on the seaward shed wall, facing the walk
-	_draw_world_text(Vector2(wx + 16.0, WORKS_Y + 176.0), "LA FABRICA", 17, "paint", 9.0)
+	_draw_world_text(Vector2(wx + 16.0, WORKS_Y + 176.0), "LA FÀBRICA", 17, "paint", 9.0)
 
 
 func _draw_park_props(c: Object, vt: float, vb: float) -> void:
@@ -6509,7 +6500,7 @@ func _praise_drink(at: Vector2) -> void:
 	drink_praised = true
 	bones += 2
 	combo.add("DRINK", 2)
-	float_text(at, "a proper long drink! +2", Color(0.8, 0.92, 1.0))
+	float_text(at, "a good long drink! +2", Color(0.8, 0.92, 1.0))
 	_update_hud()
 
 
@@ -6531,7 +6522,7 @@ func _freedom_hint() -> String:
 	if drunk_amount < DRINK_ENOUGH:
 		hints.append("HAVE A LONG DRINK AT THE WATER")
 	if sniffs_left:
-		hints.append("SNIFF OUT WHAT'S LYING ABOUT")
+		hints.append("SNIFF OUT WHAT'S LYING AROUND")
 	hints.append_array(FreedomGames.hints(self))
 	hints.append("BACK OUT THROUGH THE GATE, THEN HOME")
 	return hints[int(elapsed / 4.0) % hints.size()]
@@ -7719,8 +7710,8 @@ func _greetings() -> void:
 
 
 # what another walker's dog and its owner make of yours coming up to say hello
-const GREET_LINES := ["aw, hello", "say hello!", "he loves other dogs", "hi, pup", "go on then"]
-const GRUMPY_LINES := ["sorry, he's not keen", "leave it, Bruno", "sorry! he's grumpy", "not today, mate"]
+const GREET_LINES := ["aw, hello", "say hello!", "he loves other dogs", "hi, pup", "go ahead"]
+const GRUMPY_LINES := ["sorry, he's not friendly", "leave it, Bruno", "sorry! he's grumpy", "not today, buddy"]
 
 
 func _greet_pair(pair: Node2D) -> void:
@@ -8839,7 +8830,7 @@ func _offpath(delta: float) -> void:
 		smudges_left += 1
 		bones += 2
 		Sfx.play("snack", 0.8)
-		combo.add("MUCKY", 3)
+		combo.add("MESSY", 3)
 		float_text(human.global_position + Vector2(0, -34), String(sdd.quip) + " +2", Color(sdd.col).lightened(0.35))
 	smudge_cd = maxf(0.0, smudge_cd - delta)
 	var off: bool = dog.global_position.x < tut_l or dog.global_position.x > tut_r
@@ -10068,7 +10059,7 @@ func _neighbour_fetch() -> void:
 			add_child(npc_ball)
 			npc_ball.setup(self, dog, pair.npc_owner, freedom_lo, GATE_Y - 30.0)
 			npc_ball_pair = pair
-			float_text(pair.npc_owner.global_position + Vector2(0, -20), "fancy a game?", Color(0.85, 0.95, 1.0), POP_SAY)
+			float_text(pair.npc_owner.global_position + Vector2(0, -20), "wanna play?", Color(0.85, 0.95, 1.0), POP_SAY)
 			return
 
 
@@ -11151,6 +11142,9 @@ func _draw_world() -> void:
 			continue
 		if lvl == "station":
 			_draw_trolleys(v)
+			continue
+		if lvl == "market":
+			Mercat.draw_van(self, _wc, v)
 			continue
 		if lvl == "scrap":
 			_draw_wreck_stack(v)
