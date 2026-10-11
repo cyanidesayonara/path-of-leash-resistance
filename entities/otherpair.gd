@@ -85,8 +85,8 @@ const MARKS_MAX := 2
 # its owner waits that long; GRUMPY_P of dogs would rather not
 const GREET_HOLD := 1.4
 const GRUMPY_P := 0.2
-const NAMES := ["a terrier", "a beagle", "a whippet", "a poodle", "a sausage dog", "a labrador",
-	"a staffie", "a pug", "a greyhound", "a collie", "a spaniel", "a chihuahua"]
+const NAMES := ["a terrier", "a beagle", "a whippet", "a poodle", "a wiener dog", "a labrador",
+	"a pit bull", "a pug", "a greyhound", "a collie", "a spaniel", "a chihuahua"]
 const POSE_EASE := 0.25
 
 enum PairState {
@@ -798,7 +798,7 @@ func update_tangle_state(crossing: bool, delta: float) -> bool:
 			leash.free_slip_t = maxf(leash.free_slip_t, 0.35 + ramp_t * 0.4)
 			if not mercy_shown and is_instance_valid(main):
 				mercy_shown = true
-				main.float_text(npc_owner.position, "excuse me - go on", Color(1, 0.92, 0.78), main.POP_SAY)
+				main.float_text(npc_owner.position, "excuse me - go ahead", Color(1, 0.92, 0.78), main.POP_SAY)
 		if tangle_hold_t >= TANGLE_MERCY_S:
 			var need_line := not mercy_shown
 			tangled_t = 0.0
@@ -812,7 +812,7 @@ func update_tangle_state(crossing: bool, delta: float) -> bool:
 				leash.dynamic_obstacles.clear()
 				leash.free_slip_t = maxf(leash.free_slip_t, 1.0)
 			if need_line and is_instance_valid(main):
-				main.float_text(npc_owner.position, "excuse me - go on", Color(1, 0.92, 0.78), main.POP_SAY)
+				main.float_text(npc_owner.position, "excuse me - go ahead", Color(1, 0.92, 0.78), main.POP_SAY)
 			return false
 		if tangle_active:
 			return false

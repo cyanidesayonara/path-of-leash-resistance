@@ -1777,7 +1777,7 @@ static func build_level_data(m: Node2D) -> void:
 			m.prize_text = "fish the trowel out of the wet cement"
 		"spook":
 			m.prize_pos = CAST_PLACA + Vector2(0.0, 96.0)  # a panellet off the roaster's tray, ringed by sweets
-			m.prize_text = "get the panellet without eating the sweets"
+			m.prize_text = "get the panellet without eating the candy"
 		"scrap":
 			m.prize_pos = m.guard_posts[1] + Vector2(-30.0, 22.0)  # right beside a sleeping guard dog
 			m.prize_text = "steal the bone from under the guard's nose"

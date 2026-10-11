@@ -82,17 +82,17 @@ closely.
 ```
 Your human is glued to their phone and walking on autopilot. You are on the other end of the leash. Get them home in one piece, with the phone intact, while sneaking in as much dog business as you can get away with.
 
-The leash is real rope physics. Your human outweighs you four to one and wins every straight tug, so you win the way a dog does: dig in at the right moment, wind the leash round a lamppost to hold them fast, and bark to stop them dead at the kerb. Wind them round a pole and keep pulling, and they whirl off it like a tetherball. Get the timing right as a bike whizzes past and it counts as a save.
+The leash is real rope physics. Your human outweighs you four to one and wins every straight tug, so you win the way a dog does: dig in at the right moment, wind the leash around a lamppost to hold them fast, and bark to stop them dead at the curb. Wind them around a pole and keep pulling, and they whirl off it like a tetherball. Get the timing right as a bike whizzes past and it counts as a save.
 
 Your human answers the leash like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "HEY!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "ring ring", "selfie!", "ooh!". They are never smarter than that.
 
-Fourteen walks through a sunny, slightly chaotic Barcelona, each its own place: the little park at the end of your street, La Rambla with its crowds, street sellers and pickpockets, the city park and its lake, the seafront, a rainy shopping street, a covered market hall, the old town's narrow alleys, a wood with wild boar in it, the station and its train, roadworks with wet cement, a chestnut festival at night, a scrapyard with a guard dog you really should not wake, a hilltop park of tiled terraces and a mosaic salamander, and a narrow back street at dawn, just as the street sweeper comes through. Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
+Fourteen walks through a sunny, slightly chaotic Barcelona, each its own place: the little park at the end of your street, La Rambla with its crowds, street sellers and pickpockets, the city park and its lake, the beachfront, a rainy shopping street, a covered market hall, the old town's narrow alleys, a wood with wild boar in it, the station and its train, a work site with wet cement, a chestnut festival at night, a junkyard with a guard dog you really should not wake, a hilltop park of tiled terraces and a mosaic salamander, and a narrow back street at dawn, just as the street sweeper comes through. Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
 
-What happens on a walk changes how you feel, and how you feel changes how you move. A fright leaves you jumpy and half blind to smells, a good bark-off makes you barky, time off the leash brings on the zoomies, and running yourself empty leaves you flat. The ground matters too: grass and mud slow you down but hold far more scent than pavement, sand drags at your paws, and wet ground and snow make you skid.
+What happens on a walk changes how you feel, and how you feel changes how you move. A fright leaves you jumpy and half blind to smells, a good bark-off makes you barky, time off the leash brings on the zoomies, and running yourself empty leaves you flat. The ground matters too: grass and mud slow you down but hold far more scent than sidewalk, sand drags at your paws, and wet ground and snow make you skid.
 
 Other dogs have lives of their own. They sniff and mark the posts you pass, and you can read who was there; meet one nose to nose and it stops to sniff you back, unless it is the grumpy sort.
 
-Every walk has its own list of goals: sniff the good spots, mark your territory, fetch, greet other dogs, herd a runaway friend home, and land combo tricks like vaulting round a pole or grinding along a kerb. Earn stars to unlock new walks and bones to spend on collars, bandanas and coats.
+Every walk has its own list of goals: sniff the good spots, mark your territory, fetch, greet other dogs, herd a runaway friend home, and land combo tricks like vaulting around a pole or grinding along a curb. Earn stars to unlock new walks and bones to spend on collars, bandanas and coats.
 
 One walk is a chase: a street sweeper careens down a narrow back street after you, flinging junk as it comes, and you have to drag your oblivious human home ahead of it. Rain, wind, snow and night change how every walk plays, and everyone dresses for the weather. There's a daily walk too, the same for everyone that day, and a gentle first walk that teaches one trick at a time.
 
@@ -108,12 +108,12 @@ A dog walk as a physics comedy. Your human walks on autopilot, glued to their ph
 ### Product features
 
 ```
-The leash is real rope physics: wrap it round poles, dig in, win the tug of war
+The leash is real rope physics: wrap it around poles, dig in, win the tug of war
 A human who answers the leash: a steady pull leads them, constant hauling runs out their patience
 Fourteen hand-built walks through Barcelona, plus a daily walk
 Every walk ends off the leash: a dog park, a dog beach, a clearing, a plaça with a fountain
 Goal lists on every walk, with stars that unlock new walks
-Combo tricks: leash-vaults, kerb grinds, near misses
+Combo tricks: leash-vaults, curb grinds, near misses
 A chase walk: stay ahead of the street sweeper with your oblivious human in tow
 Dog moods: scared, barky, zoomies and flat, each changing how you move and what you notice
 Ground you can feel: grass and mud hold scent, sand drags, wet ground and snow skid
