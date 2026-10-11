@@ -73,8 +73,10 @@ func _layout() -> void:
 		{"action": "pee", "label": "PEE", "center": corner + Vector2(-128.0, 62.0), "r": 44.0, "id": -1, "when": "primary"},
 		# turbo is held, like the rest: in reach of the thumb on DIG
 		{"action": "turbo", "label": "RUN", "center": corner + Vector2(-130.0, -72.0), "r": 40.0, "id": -1, "when": "walking"},
-		# pause, and settings on the title: small, top left beside the vitals
-		# card, well away from the thumbs
+		# pause mid-walk, and resume from the pause menu: small, top left
+		# beside the vitals card, well away from the thumbs. The menus need
+		# no MENU button: BARK is back on every one of them
+		# (hud/menu_flow.gd), and the stick and DIG pick and confirm
 		{"action": "pause", "label": "MENU", "center": Vector2(MENU_X, 40.0), "r": 26.0, "id": -1, "when": "menu"},
 		# C / Y does two unrelated jobs. Name the touch button for the job it
 		# does now, and keep it clear of both the results card and the thumbs.
@@ -176,7 +178,7 @@ func _primary_controls() -> bool:
 func _menu_button() -> bool:
 	if main == null or bool(main.in_settings) or bool(main.in_shop) or bool(main.in_progress_view):
 		return false
-	return _walking() or bool(main.paused) or not bool(main.started)
+	return _walking() or bool(main.paused)
 
 
 func _shown(b: Dictionary) -> bool:
