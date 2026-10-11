@@ -49,7 +49,10 @@ func _run() -> void:
 			var hp: Vector2 = m.human.global_position
 			var walking: bool = m.human.state == m.human.HState.WALK or m.human.state == m.human.HState.DRIFT
 			# a dog squatting is waited for, on purpose
-			if not walking or m.dog.squat_t > 0.0 or m.dog.peeing or m.human.halt_t > 0.0:
+			# held by the leash is not wedged: nobody steers the dog here, so a
+			# rope caught round a stall can hold him, which a player would fix
+			var held: bool = m.leash.taut_amount(m.leash.used_length() / m.leash.rest_len) > 0.5
+			if not walking or held or m.dog.squat_t > 0.0 or m.dog.peeing or m.human.halt_t > 0.0:
 				walk_hist.clear()
 				continue
 			walk_hist.append([t, hp])
