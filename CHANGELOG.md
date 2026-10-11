@@ -13,8 +13,9 @@ Append-only session history, newest first.
   seafront), the seafront terraces' canopies, El Diluvi's awnings and
   arcade roof, the washing lines and wall lanterns over El Gòtic and La
   Neteja, L'Estació's departures board, the park bandstand's roof, the ice
-  cream cart's umbrella, the performers' umbrellas in the rain, and the dog
-  beach's parasols. Lamppost heads go overhead too (the rope wound on the
+  cream cart's umbrella, the performers' umbrellas in the rain, the dog
+  beach's parasols, and El Mercat's shop awnings on the approach street.
+  Lamppost heads go overhead too (the rope wound on the
   column runs under the arms) but never fade. Shadows, posts and plinths
   stay on the ground.
 - The dog beach's lifeguard cabin joins the seafront's on the overhead
