@@ -68,6 +68,10 @@ extends Control
 enum Tone { PLAIN, GOOD, BAD, LOUD }
 
 const Kit := preload("res://hud/ui_kit.gd")
+# what counts for the kid's dare, for a player who has not met the word yet
+# the dare card's width: it sits between the vitals and the goals card
+const DARE_W := 400.0
+const DARE_HOW := "Tricks: swing around a pole, grind a ledge, fling your human. Hold {turbo} for speed."
 const Icons := preload("res://hud/ui_icons.gd")
 
 const BANNER_Y := 42.0
@@ -303,16 +307,78 @@ func _draw_cards(vs: Vector2) -> void:
 			Kit.INK_SOFT)
 		y += 80.0
 	if main.challenge_l != null and main.challenge_l.visible and main.challenge != null:
-		var ch: Node = main.challenge
-		var col: Color = main.challenge_l.modulate
-		var title := "DARE: %d TRICKS" % int(ch.target)
-		var w := 300.0
-		var r := Rect2(vs.x * 0.5 - w * 0.5, y, w, 58.0)
-		Kit.card(self, r, col, 12)
-		Kit.heading(self, Vector2(r.position.x + 18.0, r.position.y + 28.0), title, 18, col)
-		draw_string(Kit.display(), Vector2(r.position.x, r.position.y + 28.0), "%d / %d" % [int(ch.count), int(ch.target)],
-			HORIZONTAL_ALIGNMENT_RIGHT, w - 18.0, 18, Kit.INK)
-		Icons.draw_meter(self, Vector2(r.position.x + 18.0, r.position.y + 40.0), w - 36.0, 7.0, float(ch.fraction()), col)
+		_dare_card(vs, y)
+
+
+# The kid's dare, in its three phases (systems/challenge.gd): the offer says
+# what to do, how long there is and what counts, and fills a bar until the
+# clock starts; the live card counts tricks and drains the clock; the end
+# card says how it went.
+func _dare_card(vs: Vector2, y: float) -> void:
+	var ch: Node = main.challenge
+	var col: Color = main.challenge_l.modulate
+	var secs := int(round(float(ch.duration)))
+	var title := ""
+	var lines: Array[String] = []
+	match String(ch.phase):
+		"offer":
+			title = "DARE%s: %d TRICKS IN %d SECONDS" % [" AGAIN" if bool(ch.retry) else "", int(ch.target), secs]
+			lines = [Prompts.fill(DARE_HOW), "Win %d bones. Get ready..." % int(ch.reward)]
+		"live":
+			title = "DARE: %d TRICKS" % int(ch.target)
+			lines = ["%d seconds left" % int(ceil(float(ch.timer)))]
+		_:
+			if bool(ch.succeeded):
+				title = "DARE WON! +%d" % int(ch.reward)
+				lines = ["%d tricks in %d seconds. Nice." % [int(ch.target), secs]]
+			else:
+				title = "DARE LOST"
+				var need := "You landed %d of %d tricks." % [int(ch.count), int(ch.target)]
+				lines = [need]
+				if is_instance_valid(main.challenge_giver) and main.challenge_giver.has_another_go():
+					lines.append("Stay near the kid for another go.")
+	# no wider than the room between the corner cards, the text wrapped to it
+	var w := Kit.text_w(Kit.display(), title, 18) + 36.0
+	if String(ch.phase) == "live":
+		w += 80.0
+	w = clampf(maxf(w, DARE_W), 300.0, vs.x - 80.0)
+	var wrapped: Array[String] = []
+	for l: String in lines:
+		wrapped.append_array(_wrap(l, w - 36.0, 15))
+	lines = wrapped
+	var bar := String(ch.phase) != "end"
+	var h := 40.0 + 20.0 * float(lines.size()) + (16.0 if bar else 6.0)
+	var r := Rect2(vs.x * 0.5 - w * 0.5, y, w, h)
+	Kit.card(self, r, col, 12)
+	Kit.heading(self, Vector2(r.position.x + 18.0, r.position.y + 28.0), title, 18, col)
+	if String(ch.phase) == "live":
+		draw_string(Kit.display(), Vector2(r.position.x, r.position.y + 28.0),
+			"%d / %d" % [int(ch.count), int(ch.target)], HORIZONTAL_ALIGNMENT_RIGHT, w - 18.0, 18, Kit.INK)
+	var ly := r.position.y + 50.0
+	for l: String in lines:
+		draw_string(Kit.body(), Vector2(r.position.x + 18.0, ly), l, HORIZONTAL_ALIGNMENT_LEFT, w - 36.0, 15,
+			Kit.INK_SOFT)
+		ly += 20.0
+	if bar:
+		# the offer fills up to GO; the live clock drains
+		var f: float = float(ch.offer_fraction()) if String(ch.phase) == "offer" else float(ch.fraction())
+		Icons.draw_meter(self, Vector2(r.position.x + 18.0, r.end.y - 14.0), w - 36.0, 7.0, f, col)
+
+
+# Words laid into lines no wider than w at px, in the body face.
+func _wrap(text: String, w: float, px: int) -> Array[String]:
+	var out: Array[String] = []
+	var cur := ""
+	for word: String in text.split(" "):
+		var next := word if cur == "" else cur + " " + word
+		if cur != "" and Kit.text_w(Kit.body(), next, px) > w:
+			out.append(cur)
+			cur = word
+		else:
+			cur = next
+	if cur != "":
+		out.append(cur)
+	return out
 
 
 # Where every visible line goes this frame, banner first: text, size, outline,

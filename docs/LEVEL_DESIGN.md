@@ -139,6 +139,12 @@ with pickpockets and shenanigans happening around."
 - Add: footprints in the sand, sand tracked onto the boardwalk; a lifeguard
   tower and beach showers (rinse the paws); a chiringuito bar with its
   tables; a volleyball net on the sand.
+- Built (2026-10-09, #151): palms in runs between landmarks
+  (`LevelBuild.BEACH_PALMS_*`); two showers and a volleyball court on the
+  sand, their columns and net posts solid poles; a lifeguard tower whose
+  cabin is overhead; each chiringuito on a deck under a reed pergola with
+  a solid bar hut; the blocks' roofs behind; one sea palette shared with
+  the dog beach.
 
 ### El Diluvi (rain) - the rainy shopping street
 - Is: a narrow shopping street in a downpour, not La Rambla wet.
