@@ -37,7 +37,7 @@ path-of-leash-resistance/
   systems/             # goals, home_chase, mood + mood_wiring, combo, challenge,
                        # teeter, grind, tutorial, swing/tangle geometry, routes
   hud/                 # hud_build (every HUD node, in draw order), menu_flow
-                       # (title, wardrobe, settings), panels, cards, event feed,
+                       # (main menu, wardrobe, settings), panels, cards, event feed,
                        # rotate prompt, touch controls, weather, grade shader
   world/               # level_build (corridor, level data, props, walls),
                        # edge/verge/freedom/sign layers, surfaces, level_check
@@ -228,12 +228,13 @@ give it 40 frames or so, a shot taken sooner can show the start line's ground).
 magnifies the shot, and `--shot-cam=X,Y` points the camera at a spot rather
 than the pair, to judge how a prop or a person is drawn
 (`--level=site --shot-y=-1200 --shot-zoom=2.5 --shot-cam=900,-1400` is the digger).
-`--shot-menu=walk|details|shop|progress|pause|walkcard|confirm|notice` opens
-that menu screen (`walkcard` is the pause menu's THIS WALK card, `confirm` its
-EXIT GAME question). `--ui-scale=K` forces the small-screen interface factor (`hud/ui_scale.gd`;
+`--shot-menu=main|walk|details|shop|progress|pause|walkcard|confirm|first|notice`
+opens that menu screen (`main` is the main menu, as `--shot-title` also
+leaves it; `walkcard` is the pause menu's THIS WALK card, `confirm` its
+EXIT GAME question, `first` PLAY's first-time question). `--ui-scale=K` forces the small-screen interface factor (`hud/ui_scale.gd`;
 below a 0.78 frame scale the HUD and menus grow and the camera compensates,
 so a sideways phone keeps the walk's framing). `--no-exit` shows the web menus on desktop: no EXIT GAME
-on the title or in pause, and a five-cell pause grid.
+on the main menu or in pause, and a five-cell pause grid.
 
 EXIT GAME is desktop only (`MenuFlow.can_exit()`: never on web or under
 `--no-exit`), always asks first, and leaves through `MenuFlow.quit_game`,
@@ -244,6 +245,23 @@ Every menu screen is drawn by `hud/menu_screen.gd` from the model in
 offers), in the shared look of `hud/ui_kit.gd`: a card with the screen's own
 accent, a heavy heading face, and the buttons as key caps in one bar along
 the bottom of the screen. A new screen is a new case in all three.
+
+The menus are a tree. The title screen is the MAIN MENU, a list picked with
+up/down: PLAY (the walk select, then GET READY, then the walk; a new player
+is asked the first-time question first), TUTORIAL, WARDROBE, YOUR WALKS,
+SETTINGS and EXIT GAME. The walk select also opens the wardrobe (pee).
+Mid-walk, the pause grid. One rule everywhere: **confirm is the plant
+action; BACK is the bark action or the pause action**, shown in the prompt
+bar as the one `back` token. BACK closes the screen on top (the wardrobe,
+YOUR WALKS and settings return to whichever screen opened them), steps back
+one screen (GET READY -> walk select -> main menu), cancels a question,
+resumes from the pause grid, leaves a stopped walk for the walk select, and
+on the main menu asks EXIT GAME (desktop only; on the web it does nothing).
+Nothing else closes a screen. On touch the stick picks, DIG confirms and
+BARK is back; the MENU button is only for pausing and resuming a walk.
+Menus that reload the scene go through `MenuFlow.reload`, so tests can swap
+in `reload_hook`; `tests/test_menu_tree.gd` walks the whole tree with real
+presses.
 
 Screenshot sweep (every walk, the title and each menu screen, settings,
 results, street at 844x390 and 390x844) into `shots/`, plus labelled contact sheets `shots/sheet-*.png`.

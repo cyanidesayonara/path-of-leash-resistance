@@ -5,6 +5,9 @@ extends SceneTree
 #  2. running out of time loses, reporting the partial count
 #  3. tricks after it resolves are ignored
 #  4. the window fraction drains from 1 to 0
+#  5. an offer is read before the clock starts: tricks during it do not
+#     count, the clock starts after OFFER_S, and the card stays up END_S
+#     after the result
 # Pure logic, driven by begin()/add_trick()/tick().
 
 const DT := 1.0 / 60.0
@@ -81,6 +84,33 @@ func _initialize() -> void:
 	_tick(c4, 5.0)
 	if absf(c4.fraction() - 0.5) > 0.02:
 		print("FAIL: fraction should be ~0.5 at half time, got %.3f" % c4.fraction())
+		failures += 1
+
+	# 5) the offer's telegraph, then the clock, then the result card
+	var m5 := StubMain.new()
+	var c5 = ChallengeScript.new()
+	c5.setup(m5)
+	c5.offer(2, 6.0, 35, false)
+	c5.add_trick()
+	if c5.phase != "offer" or c5.active or c5.count != 0 or not c5.showing():
+		print("FAIL: a trick during the offer must not count (phase %s, count %d)" % [c5.phase, c5.count])
+		failures += 1
+	_tick(c5, c5.OFFER_S * 0.5)
+	if c5.phase != "offer" or absf(c5.timer - 6.0) > 0.001:
+		print("FAIL: the clock must not run during the offer (timer %.2f)" % c5.timer)
+		failures += 1
+	_tick(c5, c5.OFFER_S * 0.5 + 0.05)
+	if c5.phase != "live" or not c5.active or c5.reward != 35:
+		print("FAIL: the clock starts after the offer, keeping its reward (%s, %d)" % [c5.phase, c5.reward])
+		failures += 1
+	c5.add_trick()
+	c5.add_trick()
+	if c5.phase != "end" or not c5.succeeded or not c5.showing():
+		print("FAIL: a win shows its result card")
+		failures += 1
+	_tick(c5, c5.END_S + 0.1)
+	if c5.showing():
+		print("FAIL: the result card goes after END_S")
 		failures += 1
 
 	if failures > 0:
