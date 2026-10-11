@@ -91,7 +91,7 @@ static func prompts(m: Node2D, which := "") -> Array:
 			return [["left_right", "browse"], ["plant", "choose", open], ["pee", "wardrobe"],
 				["back", "main menu"]]
 		"details":
-			return [["up_down", "pick"], ["left_right", "change"], ["plant", "start walk"],
+			return [["up_down", "pick"], ["left_right", "change"], ["plant", "let's go"],
 				["back", "back"]]
 		"shop":
 			var it: Dictionary = m.shop_items[m.shop_idx]

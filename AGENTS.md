@@ -139,7 +139,7 @@ explain every changed snapshot line; this does not relax the refactor rule.
   never weakened: the give changes where they mean to go, not how hard they
   walk. Hard hauling (over `PATIENCE_HARD`) drains `patience`; a slack leash
   refills it. Low patience shows (a glance at the dog, a temper cloud over
-  their head, "hey..."); empty, it is a telegraphed "HEY!" (`CORRECT_WARN`,
+  their head, "ugh..."); empty, it is a telegraphed "HEY!" (`CORRECT_WARN`,
   0.8 s like every owner event) and a correction: a step back and a shorter
   leash, then `CORRECT_GRACE` before patience drains again. A dog planted
   when it lands turns it into his stumble and a reward. They wait up to

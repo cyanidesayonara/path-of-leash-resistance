@@ -427,7 +427,7 @@ func _converse(delta: float) -> void:
 		# glance at her every couple of seconds
 		if not grumbled and telegraph_t <= 0.0:
 			grumbled = true
-			notice("hey...", 1.0)
+			notice("ugh...", 1.0)
 		if glance_t <= 0.0:
 			glance_t = 2.2
 	elif patience > PATIENCE_WARN + 0.15:

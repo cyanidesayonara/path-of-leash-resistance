@@ -13,11 +13,11 @@ Append-only session history, newest first.
   walkers' dogs; "a big gray boy" off the leash.
 - Idiom: "proper" sniffs and drinks are good long ones, "see off" is chase
   off, "hoover up" is scarf down, "another go" is another try, "go on then"
-  is go ahead, "oi..." is "hey...", "fancy a game?" is "wanna play?", "not
+  is go ahead, "oi..." is "ugh...", "fancy a game?" is "wanna play?", "not
   today, mate" is buddy, "the game's up" is the jig is up, "he'll be ages"
   is a while, "home time" is time to head home, the MUCKY combo is MESSY.
 - Clarity: the home chase's bolt shout says YOUR HUMAN, not "the owner";
-  GET READY's button says "start walk"; the tutorial opens with "Walk time."
+  GET READY's button says "let's go"; the tutorial opens with "Walk time."
   and ends with "That's everything... go play"; the dog-park lesson says
   loose dirt rather than turned earth.
 - Walk glosses: the beachfront, the train station, the work site, the
