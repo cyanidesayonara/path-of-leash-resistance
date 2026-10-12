@@ -3,7 +3,8 @@ extends CanvasLayer
 
 # Plays the intro ("Walkies?", intro/scene_walkies.gd) over the title screen
 # when the game is launched, once per session, then fades into the title.
-# Any key, click, tap or pad button skips it. It only plays on a plain launch:
+# Any key, click, tap or pad button skips it, except the volume keys, which
+# belong to the system. It only plays on a plain launch:
 # never headless, and never with command-line arguments (screenshots, the
 # autowalk, tests and every dev flag pass some), so nothing automated ever
 # waits on it. Scene units are 1280x720, fitted to the window; the scene's own
@@ -98,13 +99,28 @@ func _place() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	var press: bool = (event is InputEventKey and event.pressed and not event.echo) \
-		or (event is InputEventMouseButton and event.pressed) \
+	if not skips(event):
+		return
+	get_viewport().set_input_as_handled()
+	if done_t < 0.0 and t > 0.25:
+		skipped = true
+		cued = CUES.size()
+		done_t = t
+
+
+# a press that ends the film. Volume keys are the system's, so they pass through.
+static func skips(event: InputEvent) -> bool:
+	if event is InputEventKey:
+		var key := event as InputEventKey
+		if not key.pressed or key.echo:
+			return false
+		if _volume_key(key.keycode) or _volume_key(key.physical_keycode):
+			return false
+		return true
+	return (event is InputEventMouseButton and event.pressed) \
 		or (event is InputEventScreenTouch and event.pressed) \
 		or (event is InputEventJoypadButton and event.pressed)
-	if press:
-		get_viewport().set_input_as_handled()
-		if done_t < 0.0 and t > 0.25:
-			skipped = true
-			cued = CUES.size()
-			done_t = t
+
+
+static func _volume_key(code: Key) -> bool:
+	return code == KEY_VOLUMEUP or code == KEY_VOLUMEDOWN or code == KEY_VOLUMEMUTE

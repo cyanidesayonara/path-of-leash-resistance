@@ -27,6 +27,7 @@ func _run() -> void:
 	_cues()
 	_handoff()
 	_camera()
+	_volume_keys()
 	print("test_intro_polish: %s" % ("OK" if failures == 0 else "%d FAILED" % failures))
 	quit(1 if failures > 0 else 0)
 
@@ -94,3 +95,18 @@ func _camera() -> void:
 	var street: Array = SceneWalkiesScript.camera(10.1)
 	_check((street[0] as Vector2).is_equal_approx(Vector2(640, 360)), "the street is still a cut")
 	_check(is_equal_approx(float(street[1]), 1.0), "street zoom")
+
+
+func _volume_keys() -> void:
+	for code in [KEY_VOLUMEUP, KEY_VOLUMEDOWN, KEY_VOLUMEMUTE]:
+		var ev := InputEventKey.new()
+		ev.pressed = true
+		ev.keycode = code
+		_check(not IntroPlayerScript.skips(ev), "volume key %s does not skip" % code)
+		ev.keycode = KEY_NONE
+		ev.physical_keycode = code
+		_check(not IntroPlayerScript.skips(ev), "physical volume key %s does not skip" % code)
+	var space := InputEventKey.new()
+	space.pressed = true
+	space.keycode = KEY_SPACE
+	_check(IntroPlayerScript.skips(space), "a normal key still skips")

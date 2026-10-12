@@ -8,6 +8,7 @@ Append-only session history, newest first.
 - The cut into the yank is a short move that arrives on the bark. The white flash still cuts to the street.
 - The film plays the opening of the title theme, marimba and a soft shaker. As it fades, the rest of the band joins at that beat. A skip starts the theme from the top.
 - The hook, the landing, the loop, the nose, the sigh, the leash and the door have their own sounds. The title card has no sting.
+- The volume keys do not skip the film. They still change the system volume.
 
 ## 2026-10-12 - rope tug tests stand clear of the live park
 
