@@ -29,6 +29,7 @@ var t := 0.0
 var stage: Stage
 var done_t := -1.0
 var cued := 0
+var skipped := false
 
 
 class Stage:
@@ -63,6 +64,7 @@ func _ready() -> void:
 	stage.scene = SCENE
 	add_child(stage)
 	main.set("intro_playing", true)
+	Sfx.prepare_intro()
 
 
 func _process(delta: float) -> void:
@@ -73,9 +75,9 @@ func _process(delta: float) -> void:
 		cued += 1
 	if done_t < 0.0 and t >= END_AT:
 		done_t = t
-	# the title takes over as the film fades, so it is not frozen under it
-	if done_t >= 0.0:
+	if done_t >= 0.0 and bool(main.get("intro_playing")):
 		main.set("intro_playing", false)
+		Sfx.handoff(0.0 if skipped else END_AT, 0.45)
 	_place()
 	stage.t = minf(t, END_AT)
 	stage.queue_redraw()
@@ -103,4 +105,6 @@ func _input(event: InputEvent) -> void:
 	if press:
 		get_viewport().set_input_as_handled()
 		if done_t < 0.0 and t > 0.25:
+			skipped = true
+			cued = CUES.size()
 			done_t = t

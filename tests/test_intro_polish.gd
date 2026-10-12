@@ -23,6 +23,7 @@ func _initialize() -> void:
 func _run() -> void:
 	IntroPlayerScript = load("res://intro/intro_player.gd")
 	_cues()
+	_handoff()
 	print("test_intro_polish: %s" % ("OK" if failures == 0 else "%d FAILED" % failures))
 	quit(1 if failures > 0 else 0)
 
@@ -60,3 +61,19 @@ func _cues() -> void:
 			if String(row[1]) == old:
 				found = true
 		_check(not found, "%s is not an intro cue" % old)
+
+
+func _handoff() -> void:
+	# Sfx is an autoload name, not in scope while this --script file compiles
+	var sfx = root.get_node("Sfx")
+	sfx.prepare_intro()
+	_check(sfx._music_cache.has("intro"), "the phrase is rendered")
+	var stream: AudioStreamWAV = sfx._music_cache["intro"]
+	_check(stream.loop_mode == AudioStreamWAV.LOOP_DISABLED, "cached phrase does not loop")
+	sfx.handoff(14.4, 0.45)
+	_check(sfx._handoff_on, "a finished film waits to hand off")
+	_check(is_equal_approx(sfx._handoff_from, 14.4), "the title continues at 14.4")
+	_check(is_equal_approx(sfx._handoff_fade, 0.45), "the handoff fade is 0.45")
+	sfx.handoff(0.0, 0.45)
+	_check(is_equal_approx(sfx._handoff_from, 0.0), "a skip starts the title at the top")
+	sfx._handoff_on = false
