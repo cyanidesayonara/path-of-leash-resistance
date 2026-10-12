@@ -100,6 +100,27 @@ Single player. No ads, no purchases, no account. The download plays offline; the
 Made in Godot by Santtu Nykänen. The dog is Millie, a distinguished salt-and-pepper mutt who squats like a lady.
 ```
 
+## What's new in 1.60
+
+For a devlog post or the top of the body. Everything since v1.59, from
+CHANGELOG.md:
+
+```
+- Things overhead now hang overhead: tree crowns, parasols, awnings, washing lines, lamppost heads, the bandstand roof and the departures board draw over Millie, your human and the leash, and turn see-through while one of them is under it. Trunks and posts stay solid.
+- A slack leash lies on the ground in loose curves and loops instead of a zigzag, out in the open and beside poles too.
+- Your human steps around a pole the leash pulls them into, and sidesteps a bin, a stall or a post instead of walking into it forever.
+- A new main menu: PLAY, TUTORIAL, WARDROBE, YOUR WALKS, SETTINGS and, on desktop, EXIT GAME. Bark or pause goes back from any screen.
+- The tutorial keeps your human at each lesson, so pulling ahead can't tow the two of you past lessons you haven't done.
+- The kid's dare says what it wants, how long you have and what it pays before the clock starts, shows how you're doing, and after a miss offers another try (twice, for a little less).
+- Other walkers' dogs walk ahead of their people on a short leash, stop to sniff and trot back, instead of dragging a long loop of leash behind.
+- In tug-of-war Millie faces the other dog and backs away, paws braced, while she pulls.
+- Tourists and other walkers go around stalls, vans, the mosaic salamander, the parked train and the chestnut roaster instead of walking through them.
+- El Mercat: passers-by walk around the stalls instead of over the food, she can reach the hall's walls, your human no longer wedges between the displays and the columns or presses into a stall when you pull him into the other aisle, a fish counter, a floor drain where the manhole was, and the side aisles dressed with crates, trolleys and shoppers.
+- Passeig Marítim: palms in runs around the landmarks, showers, a volleyball court and a lifeguard tower on the walk, beach bars on decks, and the sea one color all the way to the dog beach.
+- El Gòtic: real washing on the lines, a roofscape beside the alley, Vespas, cast-iron bollards, and a tidier plaça.
+- All the game's text in American English, and clearer in places.
+```
+
 ## What's new in 1.59
 
 For a devlog post or the top of the body. Everything since v1.58, from

@@ -46,6 +46,27 @@ Append-only session history, newest first.
   west wall's fish and jamon stalls, and below the crates on the east wall,
   with the dog keeping near him by her own movement.
 
+## 2026-10-11 - nobody walks through the stalls
+
+- Tourists stepped aside for the dog and your human but not for anything
+  solid, so La Rambla's crowd walked through the stalls and vans and El
+  Mosaic's through the salamander. An ambling tourist now sees a solid
+  body (`main.solid_rects`) coming up to 120 px ahead and steps round its
+  nearer side that fits the walk, and no tourist is ever left inside
+  one: a crowd spawn that lands on a stall starts beside it, and the dog
+  or your human shoving one aside cannot push them in.
+- The other dog-walkers' routes (`bypasser_blockers`) did not know about
+  the solid bodies built in `build_walls`, so a pair walked through
+  L'Estació's train and La Castanyada's roaster. `LevelBuild.level_solid_rects`
+  now gives every one of them a blocker: the seafront bars, the train,
+  the park's mammoth, the salamander, La Neteja's dumpsters, and the
+  roaster and stage.
+- `tools/playtest.gd` logs HUMAN STUCK only while the leash is slack (a
+  human held by a dog pushing into something is not stuck), and each NPC
+  IN SOLID line names who it was and which rect.
+- `tests/test_npc_clear_of_solids.gd` in CI: every solid rect on every walk
+  has a blocker, and on La Rambla, El Mosaic, L'Estació, La Castanyada and
+  La Neteja no tourist, pair owner or pair dog is ever inside one.
 ## 2026-10-11 - she walks under what hangs overhead, and the leash over the junk
 
 - A draw-order sweep of every walk after the tree crowns (#208). Overhead
