@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-10-12 - the Store listing in one place, sent by the workflow
+
+- store/listing.md has a "Current listing" section: description, short
+  description, product features, keywords, What's new in this version and the
+  notes for certification, one fenced block each. The Store submit workflow
+  (mode update_draft) now writes all of them into the Partner Center draft,
+  not just What's new, through tools/store_listing.py (replaces
+  tools/store_whats_new.py). Its old What's new heading never matched the
+  per-version headings, so 1.60's update_draft would have failed.
+- CI checks the section against the Store's limits on every PR.
+- The listing text is brought up to 1.60: fifteen walks (Montjuïc), the
+  trick rework (no curb grinds), the off-leash games, the two-part tutorial,
+  and certification notes for the new main menu.
+- docs/MICROSOFT_STORE.md step 7 is the whole per-release procedure.
+
+
 ## 2026-10-12 - hand-stepped tests step inside a physics frame
 
 - A market walk stepped by hand reached the gate in 214 s the first time

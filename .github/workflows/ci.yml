@@ -18,6 +18,10 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # the text the Store submit workflow sends must fit the Store's limits
+      - name: Store listing check
+        run: python3 tools/store_listing.py --check store/listing.md
+
       - name: Download Godot
         run: |
           curl -sL -o godot.zip https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
