@@ -14,6 +14,7 @@ const LENGTH := 15.0
 const S := 1.6                 # character scale
 const MS := 1.52               # Millie's scale
 const FLOOR := 610.0
+const MARGIN := Rect2(-800, -1100, 3000, 2900) # (-800, -1100) to (2200, 1800)
 const DOOR := Rect2(1060, 250, 150, 360)
 const HOOK := Vector2(1010, 320)
 const SOFA_X := 380.0
@@ -43,32 +44,34 @@ static func camera(t: float) -> Array:
 
 
 static func _room(c: CanvasItem, t: float, door_open: float) -> void:
-	# the wall, warm, darker at the top
+	# the wall, warm, darker at the top, and the same colour above it out to the margin
+	var wall_top := Color(0.86, 0.78, 0.66)
+	var wall_bot := Color(0.95, 0.88, 0.76)
+	c.draw_rect(Rect2(MARGIN.position.x, MARGIN.position.y, MARGIN.size.x, -MARGIN.position.y), wall_top)
 	for i in range(8):
 		var f := float(i) / 7.0
-		c.draw_rect(Rect2(-200, f * FLOOR, 1680, FLOOR / 7.0 + 1.0), Color(0.86, 0.78, 0.66).lerp(Color(0.95, 0.88, 0.76), f))
-	# the window, morning outside, and its light on the floor
+		c.draw_rect(Rect2(MARGIN.position.x, f * FLOOR, MARGIN.size.x, FLOOR / 7.0 + 1.0), wall_top.lerp(wall_bot, f))
+	# the window, morning outside
 	var win := Rect2(150, 130, 210, 230)
 	c.draw_rect(win.grow(10.0), Color(0.56, 0.40, 0.28))
 	c.draw_rect(win, Color(0.74, 0.88, 0.96))
 	c.draw_rect(Rect2(win.position.x + 100, win.position.y, 10, win.size.y), Color(0.56, 0.40, 0.28))
 	c.draw_rect(Rect2(win.position.x, win.position.y + 110, win.size.x, 10), Color(0.56, 0.40, 0.28))
-	c.draw_colored_polygon(PackedVector2Array([Vector2(150, 360), Vector2(360, 360), Vector2(560, FLOOR + 60), Vector2(300, FLOOR + 60)]),
-		Color(1.0, 0.95, 0.75, 0.18))
 	# a picture on the wall: a dog, naturally
 	c.draw_rect(Rect2(560, 170, 120, 90).grow(6.0), Color(0.30, 0.22, 0.16))
 	c.draw_rect(Rect2(560, 170, 120, 90), Color(0.90, 0.84, 0.66))
 	c.draw_circle(Vector2(620, 222), 22.0, Color(0.15, 0.15, 0.17))
-	# skirting and floorboards
-	c.draw_rect(Rect2(-200, FLOOR - 18, 1680, 18), Color(0.96, 0.93, 0.86))
-	c.draw_rect(Rect2(-200, FLOOR, 1680, 820 - FLOOR), Color(0.62, 0.44, 0.29))
+	# skirting and floorboards, out to the margin
+	c.draw_rect(Rect2(MARGIN.position.x, FLOOR - 18, MARGIN.size.x, 18), Color(0.96, 0.93, 0.86))
+	c.draw_rect(Rect2(MARGIN.position.x, FLOOR, MARGIN.size.x, MARGIN.end.y - FLOOR), Color(0.62, 0.44, 0.29))
 	for k in range(8):
 		var y := FLOOR + 8.0 + float(k) * 20.0
-		c.draw_line(Vector2(-200, y), Vector2(1480, y), Color(0.52, 0.36, 0.23), 2.0)
+		c.draw_line(Vector2(MARGIN.position.x, y), Vector2(MARGIN.end.x, y), Color(0.52, 0.36, 0.23), 2.0)
 	# the door: its frame, the street blazing beyond it once open, and the door
 	# itself swinging on its left hinge toward us (narrower as it turns, its
 	# free edge taller as it comes nearer)
-	c.draw_rect(DOOR.grow(12.0), Color(0.52, 0.36, 0.24))
+	c.draw_rect(DOOR.grow(18.0), Color(0.52, 0.36, 0.24))
+	c.draw_rect(DOOR.grow(6.0), Color(0.44, 0.30, 0.20))
 	var ang := door_open * 1.9
 	if door_open > 0.02:
 		c.draw_rect(DOOR, Color(1.0, 0.95, 0.74))
@@ -105,6 +108,8 @@ static func _room(c: CanvasItem, t: float, door_open: float) -> void:
 static func _sofa(c: CanvasItem) -> void:
 	var body := Color(0.78, 0.36, 0.28)
 	var lit := body.lightened(0.16)
+	c.draw_colored_polygon(MillieSide.ellipse(Vector2(SOFA_X + 40.0, FLOOR - 2.0), Vector2(158, 9)),
+		Color(0.42, 0.28, 0.16, 0.35))
 	# legs, then the back, the arm and the seat as soft rounded forms
 	for fx: float in [SOFA_X - 98.0, SOFA_X + 176.0]:
 		IntroKit.box(c, Rect2(fx, FLOOR - 26, 14, 26), 3.0, Color(0.30, 0.22, 0.16), 2.0)
@@ -168,17 +173,19 @@ static func _dressing(c: CanvasItem) -> void:
 	c.draw_line(Vector2(1250, FLOOR - 50), Vector2(1350, FLOOR - 50), Color(0.56, 0.70, 0.86), 3.0)
 
 
-# the morning light from the window, a soft shaft across the room, and the
-# edges of the room falling into shade
+# the edges of the room falling into shade
 static func _light(c: CanvasItem) -> void:
-	for i in range(4):
-		var f := float(i) * 18.0
-		c.draw_colored_polygon(PackedVector2Array([Vector2(150 - f, 130), Vector2(360 + f, 130), Vector2(760 + f * 2.0, FLOOR + 80),
-			Vector2(300 - f, FLOOR + 80)]), Color(1.0, 0.95, 0.78, 0.05))
 	for i in range(6):
 		var w := 40.0 + float(i) * 40.0
-		c.draw_rect(Rect2(-200, -100, w, 900), Color(0.20, 0.12, 0.08, 0.035))
-		c.draw_rect(Rect2(1480 - w, -100, w, 900), Color(0.20, 0.12, 0.08, 0.035))
+		c.draw_rect(Rect2(-200, MARGIN.position.y, w, MARGIN.size.y), Color(0.20, 0.12, 0.08, 0.035))
+		c.draw_rect(Rect2(1480 - w, MARGIN.position.y, w, MARGIN.size.y), Color(0.20, 0.12, 0.08, 0.035))
+
+
+# one patch of morning from the window, on the sofa and the floor
+static func _window_light(c: CanvasItem) -> void:
+	c.draw_colored_polygon(PackedVector2Array([
+		Vector2(150, 360), Vector2(360, 360), Vector2(SOFA_X + 40, FLOOR + 70), Vector2(SOFA_X - 118, FLOOR),
+	]), Color(1.0, 0.95, 0.78, 0.22))
 
 
 static func draw(c: CanvasItem, t_real: float) -> void:
@@ -295,6 +302,7 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 	# ------------------------------------------------------------------ draw
 	_light(c)
 	_sofa(c)
+	_window_light(c)
 	var m_gone := mx >= 1058.0 and t > 9.5
 	var h_gone := hx >= 1056.0
 	var hand := Vector2(hx + 60.0, hy - 150.0)
@@ -366,34 +374,31 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 # what you look at: sky, a row of house fronts with shutters and balconies,
 # two plane trees, a lamppost, the pavement and the kerb
 static func _street(c: CanvasItem) -> void:
+	var sky_top := Color(0.62, 0.80, 0.92)
+	c.draw_rect(Rect2(MARGIN.position.x, MARGIN.position.y, MARGIN.size.x, -MARGIN.position.y), sky_top)
 	for i in range(10):
 		var f := float(i) / 9.0
-		c.draw_rect(Rect2(-200, f * 420.0, 1680, 420.0 / 9.0 + 1.0), Color(0.62, 0.80, 0.92).lerp(Color(0.94, 0.92, 0.84), f))
+		c.draw_rect(Rect2(MARGIN.position.x, f * 420.0, MARGIN.size.x, 420.0 / 9.0 + 1.0),
+			sky_top.lerp(Color(0.94, 0.92, 0.84), f))
 	var fronts := [Color(0.90, 0.78, 0.60), Color(0.86, 0.66, 0.52), Color(0.92, 0.86, 0.72), Color(0.84, 0.72, 0.60)]
+	var lx := -120.0
+	var lk := 0
+	while lx > MARGIN.position.x:
+		lk -= 1
+		var lw := 230.0 + float(posmod(lk * 37, 60))
+		lx -= lw
+		_house(c, lx, lk, fronts)
 	var x := -120.0
 	var k := 0
-	while x < 1400.0:
-		var w := 230.0 + float((k * 37) % 60)
-		var top := 150.0 + float((k * 53) % 70)
-		var col: Color = fronts[k % fronts.size()]
-		c.draw_rect(Rect2(x, top, w, 640.0 - top), col)
-		c.draw_rect(Rect2(x, top, w, 10), col.darkened(0.12))
-		var wy := top + 40.0
-		while wy < 560.0:
-			var wx := x + 30.0
-			while wx < x + w - 50.0:
-				c.draw_rect(Rect2(wx, wy, 34, 54), Color(0.46, 0.60, 0.54))
-				c.draw_line(Vector2(wx - 6, wy + 56), Vector2(wx + 40, wy + 56), col.darkened(0.35), 3.0)
-				wx += 66.0
-			wy += 96.0
-		x += w
+	while x < MARGIN.end.x:
+		x += _house(c, x, k, fronts)
 		k += 1
 	# a light haze over the fronts, so they sit back behind the title
-	c.draw_rect(Rect2(-200, 0, 1680, 640), Color(0.98, 0.95, 0.88, 0.25))
+	c.draw_rect(Rect2(MARGIN.position.x, 0, MARGIN.size.x, 640), Color(0.98, 0.95, 0.88, 0.25))
 	# a soft shade behind where the title hangs, so cream letters read
 	for i in range(5):
 		var hh := 200.0 - float(i) * 34.0
-		c.draw_rect(Rect2(-200, 330.0 - hh * 0.5, 1680, hh), Color(0.26, 0.16, 0.10, 0.03))
+		c.draw_rect(Rect2(MARGIN.position.x, 330.0 - hh * 0.5, MARGIN.size.x, hh), Color(0.26, 0.16, 0.10, 0.03))
 	for tx: float in [110.0, 1170.0]:
 		c.draw_rect(Rect2(tx - 6, 470, 12, 170), Color(0.42, 0.34, 0.26))
 		for blob: Vector2 in [Vector2(0, -20), Vector2(-46, 6), Vector2(46, 6), Vector2(-22, 34), Vector2(26, 34)]:
@@ -401,9 +406,31 @@ static func _street(c: CanvasItem) -> void:
 		c.draw_circle(Vector2(tx - 20, 440), 30.0, Color(0.58, 0.74, 0.44))
 	c.draw_line(Vector2(960, 640), Vector2(960, 430), Color(0.22, 0.24, 0.26), 6.0)
 	c.draw_circle(Vector2(960, 424), 12.0, Color(0.98, 0.94, 0.78))
-	c.draw_rect(Rect2(-200, 640, 1680, 100), Color(0.80, 0.76, 0.70))
-	c.draw_rect(Rect2(-200, 700, 1680, 40), Color(0.62, 0.60, 0.58))
-	c.draw_line(Vector2(-200, 640), Vector2(1480, 640), IntroKit.INK, 3.0)
+	c.draw_rect(Rect2(MARGIN.position.x, 640, MARGIN.size.x, MARGIN.end.y - 640), Color(0.80, 0.76, 0.70))
+	c.draw_rect(Rect2(MARGIN.position.x, 700, MARGIN.size.x, 40), Color(0.62, 0.60, 0.58))
+	c.draw_rect(Rect2(MARGIN.position.x, 640, MARGIN.size.x, 10), Color(0.45, 0.42, 0.38))
+	c.draw_line(Vector2(MARGIN.position.x, 640), Vector2(MARGIN.end.x, 640), IntroKit.INK, 3.0)
+
+
+static func _house(c: CanvasItem, x: float, k: int, fronts: Array) -> float:
+	var w := 230.0 + float(posmod(k * 37, 60))
+	var top := 150.0 + float(posmod(k * 53, 70))
+	var col: Color = fronts[posmod(k, fronts.size())]
+	c.draw_rect(Rect2(x, top, w, 640.0 - top), col)
+	c.draw_rect(Rect2(x, top, w, 10), col.darkened(0.12))
+	var wy := top + 40.0
+	var first := true
+	while wy < 560.0:
+		var wx := x + 30.0
+		while wx < x + w - 50.0:
+			c.draw_rect(Rect2(wx, wy, 34, 54), Color(0.46, 0.60, 0.54))
+			c.draw_line(Vector2(wx - 6, wy + 56), Vector2(wx + 40, wy + 56), col.darkened(0.35), 3.0)
+			wx += 66.0
+		if first:
+			c.draw_rect(Rect2(x + 16.0, wy + 62.0, w - 32.0, 8.0), col.darkened(0.28))
+			first = false
+		wy += 96.0
+	return w
 
 
 static func _title(c: CanvasItem, t: float) -> void:

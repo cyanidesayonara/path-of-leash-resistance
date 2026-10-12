@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-10-12 - the intro fills the window
+
+- The Walkies film keeps its frame fitted inside the window, and the flat and the street paint out to the edges, so a wide or tall window shows more of the room instead of beige. The window throws one patch of light, the sofa sits on a shadow, the door has a jamb, and the street has balconies and a kerb shadow.
+- The cut into the yank is a short move that arrives on the bark. The white flash still cuts to the street.
+- The film plays the opening of the title theme, marimba and a soft shaker. As it fades, the rest of the band joins at that beat. A skip starts the theme from the top.
+- The hook, the landing, the loop, the nose, the sigh, the leash and the door have their own sounds. The title card has no sting.
+
 ## 2026-10-12 - rope tug tests stand clear of the live park
 
 - `tests/test_rope_tug_backing.gd` and `tests/test_freedom_games_live.gd` failed on rerun ("moves away from it every frame (37/40)", "her mouth is full while she tugs") on pulls that did not touch the game. The park around the tug is still live. Trunks and logs are solid, and the grove is placed with the unseeded roll, so a backing run that clips one stops her for a few frames. A ball brought back clears `dog_carrying`. The agility pass teleports along the lane and grabs the rope if that dog spawned on it, and the tug check then continues that tug with an empty mouth.

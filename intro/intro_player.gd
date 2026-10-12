@@ -38,8 +38,8 @@ class Stage:
 	var scene: GDScript
 
 	func _draw() -> void:
-		# whatever the window's shape, warm ground beyond the scene's edges
-		draw_rect(Rect2(-4000, -4000, 9280, 8720), Color(0.98, 0.86, 0.62))
+		var col := Color(0.62, 0.80, 0.92) if t >= SCENE.TITLE_AT else Color(0.86, 0.78, 0.66)
+		draw_rect(Rect2(-4000, -4000, 9280, 8720), col)
 		scene.draw(self, t)
 
 
