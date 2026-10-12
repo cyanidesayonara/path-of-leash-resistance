@@ -125,6 +125,17 @@ Full controller support
 No ads, no purchases, no account, and it plays offline
 ```
 
+### What's new in 1.60 (not yet submitted)
+
+```
+- Trees, parasols, awnings and washing lines hang over the dog and the leash, and turn see-through when you are under them.
+- A slack leash lies in loose curves instead of zigzags, and your human steps around a pole or a stall instead of getting stuck on it.
+- A clearer main menu with an Exit button, one Back everywhere, and the tutorial keeps your human at each lesson.
+- The kid's dare says what it wants before the clock starts, and offers another try.
+- Other dogs walk ahead of their people on a short leash, passers-by go around stalls instead of through them, and Millie backs away when she plays tug.
+- Passeig Marítim, El Gòtic and El Mercat redrawn and fixed, the text in American English, and many smaller fixes.
+```
+
 ### What's new in 1.59 (live by 2026-10-09)
 
 ```

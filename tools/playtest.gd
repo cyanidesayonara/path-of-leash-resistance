@@ -21,7 +21,12 @@ extends SceneTree
 #   DOG STUCK      a direction held, she moved under 4 px in a second, and
 #                  nothing explains it (dug in, tumbling, at a brink, dragged)
 #   HUMAN STUCK    your human meant to walk and moved under 6 px in 1.5 s
+#                  while the leash was slack (taut_amount under 0.5): a
+#                  human held by a dog pushing into something is not stuck,
+#                  the same rule as tests/test_mercat_owner_path.gd
 #   NPC IN SOLID   a walker, their dog or a tourist inside a solid rect
+#                  (main.solid_rects, shrunk by 4 px); the line names which
+#                  and the rect's index
 # Headless it plays and logs but takes no photographs.
 
 const MOVE := {"up": "move_up", "down": "move_down", "left": "move_left", "right": "move_right"}
@@ -47,13 +52,15 @@ func _arg(name: String, def: String) -> String:
 	return def
 
 
-func _note(kind: String, at: Vector2) -> void:
+func _note(kind: String, at: Vector2, detail := "") -> void:
 	# once per kind per 60 px cell, so a jam is one line, not a thousand
 	var key := "%s:%d:%d" % [kind, int(at.x / 60.0), int(at.y / 60.0)]
 	if reported.has(key):
 		return
 	reported[key] = true
 	var line := "%s at (%d, %d) t=%.1f" % [kind, int(at.x), int(at.y), float(m.elapsed)]
+	if detail != "":
+		line += " " + detail
 	log_lines.append(line)
 	print("PLAYTEST " + line)
 
@@ -80,19 +87,27 @@ func _watch() -> void:
 		# the owner's own event, not being stuck
 		# nor while waiting at a tutorial lesson, which is standing still on purpose
 		var waiting: bool = float(m.human.get("tut_hold_y")) > -INF
-		if m.human.state == 0 and m.human.walk_intent.length() > 30.0 and float(m.human.get("halt_t")) <= 0.0 				and not waiting:
+		# nor while the leash holds him: a dog pushing into an obstacle
+		# pins her human, which is the dog's doing, not his being stuck
+		var held: bool = m.leash.taut_amount(m.leash.used_length() / m.leash.rest_len) >= 0.5
+		if m.human.state == 0 and m.human.walk_intent.length() > 30.0 and float(m.human.get("halt_t")) <= 0.0 \
+				and not waiting and not held:
 			_note("HUMAN STUCK", m.human.global_position)
 	for g in ["pairs", "tourists"]:
 		for n: Node in get_nodes_in_group(g):
 			var bodies: Array = [n]
+			var names: Array[String] = ["tourist"]
 			if g == "pairs":
 				bodies = [n.get("npc_owner"), n.get("npc_dog")]
-			for b in bodies:
+				names = ["pair owner", "pair dog"]
+			for i in range(bodies.size()):
+				var b = bodies[i]
 				if b is Node2D and is_instance_valid(b):
 					var p: Vector2 = (b as Node2D).global_position
-					for r: Rect2 in m.solid_rects:
+					for ri in range(m.solid_rects.size()):
+						var r: Rect2 = m.solid_rects[ri]
 						if r.grow(-4.0).has_point(p):
-							_note("NPC IN SOLID", p)
+							_note("NPC IN SOLID", p, "(%s in rect %d %s)" % [names[i], ri, str(r)])
 
 
 func _frames(seconds: float) -> void:
