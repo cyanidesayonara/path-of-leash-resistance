@@ -56,7 +56,9 @@ func _run() -> void:
 		var yard := Vector2(main.walk_cx - main.walk_half - 60.0, main.GATE_Y - 300.0)
 		_check(main.surface_at(yard) != main.Surfaces.S.PAVEMENT or lv == "station" or lv == "site" or lv == "scrap",
 			"%s: the off-leash area is not turned into sidewalk" % lv)
-		# a dog pushed at the building line stops at it
+		# a dog pushed at the building line stops at it (moved inside a physics
+		# step: outside one, move_and_slide uses the last frame's wall time)
+		await physics_frame
 		var dog: CharacterBody2D = main.dog
 		dog.collision_mask = 1
 		dog.global_position = Vector2(e.x - float(xs[1]) * 0.5 + 10.0, y)

@@ -105,7 +105,10 @@ func _run() -> void:
 	bo.queue_free()
 	await process_frame
 
-	# the fallen trunk: the dog cannot go through it, the owner steps over
+	# the fallen trunk: the dog cannot go through it, the owner steps over.
+	# move_and_slide by hand inside a physics step, so it moves by the
+	# physics step and not by the wall time of the last frame
+	await physics_frame
 	var lr: Rect2 = LevelBuild.trail_logs(m)[0]
 	var below := Vector2(lr.get_center().x - 20.0, lr.end.y + 30.0)
 	dog.global_position = below

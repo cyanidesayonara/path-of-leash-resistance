@@ -39,6 +39,9 @@ func _haul(ice: bool, slick: bool) -> float:
 	d.velocity = Vector2.ZERO
 	var start := d.global_position
 	var dt := 1.0 / 60.0
+	# step inside a physics step: outside one, move_and_slide moves your human
+	# by the wall time of the last frame, not dt, so the haul varied run to run
+	await physics_frame
 	for i in range(120):
 		d.planted = true
 		d.ice = ice

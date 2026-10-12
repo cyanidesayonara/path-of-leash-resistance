@@ -8,6 +8,10 @@ extends SceneTree
 # it still crossing over to its side.
 
 const STEP := 1.0 / 60.0
+# Stepping by hand must happen inside an engine physics step: outside one,
+# move_and_slide moves the dog and your human by the process delta (the wall
+# time of the last frame) instead of the physics step, so every walk after
+# the first `await process_frame` ran several times too fast.
 # a walking human who covers less than this in WINDOW seconds is stuck
 const WINDOW := 4.0
 const MIN_MOVE := 20.0
@@ -45,6 +49,8 @@ func _run() -> void:
 		root.add_child(m)
 		if not m.is_node_ready():
 			await m.ready
+		await physics_frame
+		_check(Engine.is_in_physics_frame(), "seed %d: stepped inside a physics step" % sd)
 		var t := 0.0
 		# (time, position) samples while he is walking; cleared by anything else
 		var walk_hist: Array = []
@@ -87,6 +93,7 @@ func _run() -> void:
 		mb.dog.global_position = start + Vector2(0, -30)
 		mb.leash.resnap()
 		mb.human.event_timer = 999.0
+		await physics_frame
 		for i in range(360):
 			# the dog at his heel, the leash slack, no call or selfie
 			mb.dog.global_position = mb.human.global_position + Vector2(0, -30)
