@@ -253,6 +253,13 @@ func _build_library() -> void:
 	# grass brushed through, and sand underfoot: short, soft noise
 	lib["rustle"] = _noiseburst(0.20, 12.0)
 	lib["grit"] = _noiseburst(0.07, 46.0)
+	lib["intro_hook"] = _intro_hook()
+	lib["intro_paws"] = _intro_paws()
+	lib["intro_loop"] = _intro_loop()
+	lib["intro_tap"] = _intro_tap()
+	lib["intro_sigh"] = _intro_sigh()
+	lib["intro_taut"] = _intro_taut()
+	lib["intro_door"] = _intro_door()
 
 
 func _pack(samples: PackedFloat32Array) -> AudioStreamWAV:
@@ -414,4 +421,96 @@ func _wobble(dur: float) -> AudioStreamWAV:
 		var t := float(i) / RATE
 		var f := 300.0 + sin(t * 40.0) * 120.0
 		out[i] = sin(TAU * f * t) * exp(-t * 8.0) * 0.5
+	return _pack(out)
+
+
+func _hash_noise(i: int, salt: float) -> float:
+	return fmod(sin((float(i) + salt) * 12.9898) * 43758.5453, 1.0) - 0.5
+
+
+func _intro_hook() -> AudioStreamWAV:
+	var dur := 0.12
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var ph := 0.0
+	for i in range(n):
+		var t := float(i) / RATE
+		var tick := sin(TAU * 1400.0 * t) * exp(-t * 80.0) * 0.4
+		ph += TAU * lerpf(420.0, 180.0, clampf(t / dur, 0.0, 1.0)) / RATE
+		out[i] = tick + sin(ph) * exp(-t * 14.0) * 0.25
+	return _pack(out)
+
+
+func _intro_paws() -> AudioStreamWAV:
+	var dur := 0.18
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		var env := exp(-t * 60.0)
+		if t >= 0.08:
+			env += exp(-(t - 0.08) * 60.0)
+		out[i] = _hash_noise(i, 3.0) * env * 0.45
+	return _pack(out)
+
+
+func _intro_loop() -> AudioStreamWAV:
+	var dur := 0.16
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		out[i] = (sin(TAU * 180.0 * t) * 0.3 + _hash_noise(i, 9.0) * 0.2) * exp(-t * 18.0)
+	return _pack(out)
+
+
+func _intro_tap() -> AudioStreamWAV:
+	var dur := 0.05
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		out[i] = _hash_noise(i, 1.0) * exp(-t * 90.0) * 0.5
+	return _pack(out)
+
+
+func _intro_sigh() -> AudioStreamWAV:
+	var dur := 0.45
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var prev := 0.0
+	for i in range(n):
+		var prog := float(i) / float(n)
+		prev = lerpf(prev, _hash_noise(i, 5.0), 0.08)
+		out[i] = prev * sin(PI * prog) * 0.35
+	return _pack(out)
+
+
+func _intro_taut() -> AudioStreamWAV:
+	var dur := 0.28
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		out[i] = (sin(TAU * 110.0 * t) * 0.45 + sin(TAU * 220.0 * t) * 0.15) * exp(-t * 10.0)
+	return _pack(out)
+
+
+func _intro_door() -> AudioStreamWAV:
+	var dur := 0.22
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var prev := 0.0
+	for i in range(n):
+		var t := float(i) / RATE
+		prev = lerpf(prev, _hash_noise(i, 7.0), 0.35)
+		var latch := sin(TAU * 900.0 * t) * exp(-t * 70.0) * 0.35
+		out[i] = latch + prev * exp(-t * 12.0) * 0.3
 	return _pack(out)

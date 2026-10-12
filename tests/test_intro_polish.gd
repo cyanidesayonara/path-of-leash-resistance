@@ -1,0 +1,53 @@
+extends SceneTree
+
+# Intro cues, the handoff into the title theme, and the yank camera.
+#   godot --headless --path . --script res://tests/test_intro_polish.gd
+
+var failures := 0
+
+
+func _check(ok: bool, what: String) -> void:
+	if not ok:
+		failures += 1
+		print("FAIL: ", what)
+
+
+func _initialize() -> void:
+	call_deferred("_run")
+
+
+func _run() -> void:
+	_cues()
+	print("test_intro_polish: %s" % ("OK" if failures == 0 else "%d FAILED" % failures))
+	quit(1 if failures > 0 else 0)
+
+
+func _cues() -> void:
+	var sfx = root.get_node("Sfx")
+	var want: Array = [
+		[3.12, "intro_hook", 1.0, -10.0],
+		[3.34, "intro_paws", 1.0, -12.0],
+		[5.30, "intro_loop", 1.0, -10.0],
+		[6.92, "intro_tap", 1.0, -12.0],
+		[7.65, "intro_sigh", 1.0, -14.0],
+		[9.22, "bark", 1.0, -3.0],
+		[9.30, "intro_taut", 1.0, -8.0],
+		[9.44, "intro_door", 1.0, -8.0],
+	]
+	_check(IntroPlayer.CUES == want, "intro cue list")
+	for row in IntroPlayer.CUES:
+		var t := float(row[0])
+		var name := String(row[1])
+		_check(t >= 0.0 and t <= IntroPlayer.END_AT, "cue time %s" % name)
+		_check(sfx.lib.has(name), "library has %s" % name)
+		if name == "bark":
+			continue
+		var dur := float(sfx.lib[name].data.size()) / 2.0 / float(Sfx.RATE)
+		var limit := 0.6 if name == "intro_sigh" else 0.4
+		_check(dur > 0.02 and dur < limit, "%s lasts %s s" % [name, dur])
+	for old in ["pickup", "ui", "tangle", "hiss", "fling", "crack", "star"]:
+		var found := false
+		for row in IntroPlayer.CUES:
+			if String(row[1]) == old:
+				found = true
+		_check(not found, "%s is not an intro cue" % old)

@@ -174,6 +174,8 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_rope_tug_backing.gd
       - name: Soundtrack test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_music.gd
+      - name: Intro polish test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_intro_polish.gd
       - name: Tutorial checkpoint test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tutorial_checkpoint.gd
       - name: Junk placement test
