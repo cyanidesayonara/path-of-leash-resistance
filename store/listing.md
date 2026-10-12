@@ -1,19 +1,107 @@
 # Microsoft Store listing
 
-What was entered in Partner Center. First submission 1.54.0.0, live
-2026-09-23 at https://apps.microsoft.com/detail/9p5d14v8rbqx; 1.55.0.0
-submitted 2026-09-24; 1.56.0.0 prepared 2026-09-27 but never submitted, so
-1.57.0.0 is the first update since 1.55 and its "What's new" covers both;
-1.57.0.0 submitted 2026-10-03 with the listing below (fourteen walks, every
-one rebuilt as its own place, the sweeper chase, the new icon and Store art).
-Copy from here for the next submission, and update this file whenever the
-live listing changes, so it stays the record of what the Store says.
+The record of what the Store says, and the source the Store submit workflow
+copies from. Live at https://apps.microsoft.com/detail/9p5d14v8rbqx (first
+submission 1.54.0.0, 2026-09-23). "Current listing" is the text for the next
+submission; the rest records how the product is set up in Partner Center.
+Each release, step by step: docs/MICROSOFT_STORE.md, step 7.
 
-The Description, Short description, Product features and Keywords below were
-refreshed on 2026-10-04 for the next submission (no tagline; the leash
-conversation, collars and coats in the shop, the off-leash yard). They are not
-live yet: the 1.57 text is in this file's git history until they are entered
-in Partner Center.
+## Current listing
+
+What the Store should say for the next submission. The Store submit workflow
+(`.github/workflows/store-submit.yml`, mode `update_draft`) writes every field
+below into the Partner Center draft, so Partner Center always matches this
+section; never edit these fields in Partner Center by hand. CI checks them
+against the Store's limits (`tools/store_listing.py --check`). Lists are one
+item per line. After a submission goes live, copy its What's new into "Past
+What's new" with the date.
+
+### Description
+
+```
+Your human is glued to their phone and walking on autopilot. You are on the other end of the leash. Get them home in one piece, with the phone intact, while sneaking in as much dog business as you can get away with.
+
+The leash is real rope physics. Your human outweighs you four to one and wins every straight tug, so you win the way a dog does: dig in at the right moment, wind the leash around a lamppost to hold them fast, and bark to stop them dead at the curb. Wind them around a pole and keep pulling, and they whirl off it like a tetherball. Get the timing right as a bike whizzes past and it counts as a save.
+
+Your human answers the leash like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "HEY!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "ring ring", "selfie!", "ooh!". They are never smarter than that.
+
+Fifteen walks through a sunny, slightly chaotic Barcelona, each its own place: the little park at the end of your street, La Rambla with its crowds, street sellers and pickpockets, the city park and its lake, the beachfront, a rainy shopping street, a covered market hall, the old town's narrow alleys, a wood with wild boar in it, the station and its train, a work site with wet cement, a chestnut festival at night, a junkyard with a guard dog you really should not wake, a hilltop park of tiled terraces and a mosaic salamander, the climb up Montjuïc with a hidden cable car, and a narrow back street at dawn, just as the street sweeper comes through. Every walk ends off the leash, with an agility course, tug-of-war and a frisbee: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
+
+What happens on a walk changes how you feel, and how you feel changes how you move. A fright leaves you jumpy and half blind to smells, a good bark-off makes you barky, time off the leash brings on the zoomies, and running yourself empty leaves you flat. The ground matters too: grass and mud slow you down but hold far more scent than sidewalk, sand drags at your paws, and wet ground and snow make you skid.
+
+Other dogs have lives of their own. They sniff and mark the posts you pass, and you can read who was there; meet one nose to nose and it stops to sniff you back, unless it is the grumpy sort.
+
+Every walk has its own list of goals: sniff the good spots, mark your territory, fetch, greet other dogs, herd a runaway friend home, and pull off tricks: swing around a pole on the leash, run a figure eight, thread the needle between two people, and ride ledges and handrails with the zoomies. Earn stars to unlock new walks and bones to spend on collars, bandanas and coats.
+
+One walk is a chase: a street sweeper careens down a narrow back street after you, flinging junk as it comes, and you have to drag your oblivious human home ahead of it. Rain, wind, snow and night change how every walk plays, and everyone dresses for the weather. There's a daily walk too, the same for everyone that day, and a two-part tutorial for anyone new.
+
+Single player. No ads, no purchases, no account, and it plays offline. Keyboard or controller.
+```
+
+### Short description
+
+```
+A dog walk as a physics comedy. Your human walks on autopilot, glued to their phone, and the leash is real rope. Dig in, wrap lampposts and bark your way through fifteen walks in Barcelona, and get them home with the phone intact.
+```
+
+### Product features
+
+```
+The leash is real rope physics: wrap it around poles, dig in, win the tug of war
+A human who answers the leash: a steady pull leads them, constant hauling runs out their patience
+Fifteen hand-built walks through Barcelona, plus a daily walk
+Every walk ends off the leash, with agility, tug-of-war and a frisbee
+Goal lists on every walk, with stars that unlock new walks
+Leash tricks: pole swings, figure eights, threading the needle, ledge and handrail rides
+A chase walk: stay ahead of the street sweeper with your oblivious human in tow
+Dog moods: scared, barky, zoomies and flat, each changing how you move and what you notice
+Ground you can feel: grass and mud hold scent, sand drags, wet ground and snow skid
+Other dogs and their people with lives of their own: they sniff, mark, greet and tangle
+Rain, wind, snow and night change how each walk plays
+Bones to spend on collars, bandanas and coats
+A two-part tutorial and first-time tips for new players
+Full controller support
+No ads, no purchases, no account, and it plays offline
+```
+
+### Keywords
+
+```
+dog
+leash
+physics comedy
+top-down
+rope physics
+Barcelona
+dog walking
+```
+
+### What's new in this version
+
+```
+- Trees, parasols, awnings and washing lines hang over the dog and the leash, and turn see-through when you are under them.
+- A slack leash lies in loose curves instead of zigzags, and your human steps around a pole or a stall instead of getting stuck on it.
+- A clearer main menu with an Exit button, one Back everywhere, and the tutorial keeps your human at each lesson.
+- The kid's dare says what it wants before the clock starts, and offers another try.
+- Other dogs walk ahead of their people on a short leash, passers-by go around stalls instead of through them, and Millie backs away when she plays tug.
+- Passeig Marítim, El Gòtic and El Mercat redrawn and fixed, the text in American English, and many smaller fixes.
+```
+
+### Notes for certification
+
+```
+Update 1.60: gameplay, drawing and text changes. No change to capabilities, network use, data handling or controls since 1.55.
+
+Path of Leash Resistance is a single-player Win32 desktop game built with the Godot engine (4.7), packaged as MSIX.
+
+runFullTrust: required to run the packaged Win32 game executable. The game uses no other restricted capabilities, no network access, no accounts and no in-app purchases.
+
+How to test: launch the game; any key skips the short intro. On the main menu choose PLAY with Space (or A on a controller), then pick a walk and press Space again. Move with WASD/arrows or the left stick; hold Space/A to dig in against the leash, E/B to bark, Q/X to mark a spot, Shift for the zoomies. A walk takes about two minutes. Esc/Back opens the pause menu and goes back from any menu.
+
+Graphics: the game renders with OpenGL 3.3, and falls back automatically to Direct3D 11 through ANGLE on machines without OpenGL 3.3 drivers.
+
+Saves and settings are stored locally in the app's own data folder. No sign-in or test account is needed.
+```
 
 ## Properties
 
@@ -77,64 +165,18 @@ ground. El Parc's dog park replaced the planned square off the leash because
 the daytime El Gòtic square duplicated La Castanyada's night plaça too
 closely.
 
-### Description
+### Other fields
 
-```
-Your human is glued to their phone and walking on autopilot. You are on the other end of the leash. Get them home in one piece, with the phone intact, while sneaking in as much dog business as you can get away with.
+| Field | Value |
+|---|---|
+| Short title | Leash Resistance |
+| Copyright and trademark info | © 2026 Santtu Nykänen |
+| Developed by | Santtu Nykänen |
+| Voice title, additional license terms | blank |
 
-The leash is real rope physics. Your human outweighs you four to one and wins every straight tug, so you win the way a dog does: dig in at the right moment, wind the leash around a lamppost to hold them fast, and bark to stop them dead at the curb. Wind them around a pole and keep pulling, and they whirl off it like a tetherball. Get the timing right as a bike whizzes past and it counts as a save.
+## Past What's new
 
-Your human answers the leash like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "HEY!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "ring ring", "selfie!", "ooh!". They are never smarter than that.
-
-Fourteen walks through a sunny, slightly chaotic Barcelona, each its own place: the little park at the end of your street, La Rambla with its crowds, street sellers and pickpockets, the city park and its lake, the beachfront, a rainy shopping street, a covered market hall, the old town's narrow alleys, a wood with wild boar in it, the station and its train, a work site with wet cement, a chestnut festival at night, a junkyard with a guard dog you really should not wake, a hilltop park of tiled terraces and a mosaic salamander, and a narrow back street at dawn, just as the street sweeper comes through. Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
-
-What happens on a walk changes how you feel, and how you feel changes how you move. A fright leaves you jumpy and half blind to smells, a good bark-off makes you barky, time off the leash brings on the zoomies, and running yourself empty leaves you flat. The ground matters too: grass and mud slow you down but hold far more scent than sidewalk, sand drags at your paws, and wet ground and snow make you skid.
-
-Other dogs have lives of their own. They sniff and mark the posts you pass, and you can read who was there; meet one nose to nose and it stops to sniff you back, unless it is the grumpy sort.
-
-Every walk has its own list of goals: sniff the good spots, mark your territory, fetch, greet other dogs, herd a runaway friend home, and land combo tricks like vaulting around a pole or grinding along a curb. Earn stars to unlock new walks and bones to spend on collars, bandanas and coats.
-
-One walk is a chase: a street sweeper careens down a narrow back street after you, flinging junk as it comes, and you have to drag your oblivious human home ahead of it. Rain, wind, snow and night change how every walk plays, and everyone dresses for the weather. There's a daily walk too, the same for everyone that day, and a gentle first walk that teaches one trick at a time.
-
-Single player. No ads, no purchases, no account, and it plays offline. Keyboard or controller.
-```
-
-### Short description
-
-```
-A dog walk as a physics comedy. Your human walks on autopilot, glued to their phone, and the leash is real rope. Dig in, wrap lampposts and bark your way through fourteen walks in Barcelona, and get them home with the phone intact.
-```
-
-### Product features
-
-```
-The leash is real rope physics: wrap it around poles, dig in, win the tug of war
-A human who answers the leash: a steady pull leads them, constant hauling runs out their patience
-Fourteen hand-built walks through Barcelona, plus a daily walk
-Every walk ends off the leash: a dog park, a dog beach, a clearing, a plaça with a fountain
-Goal lists on every walk, with stars that unlock new walks
-Combo tricks: leash-vaults, curb grinds, near misses
-A chase walk: stay ahead of the street sweeper with your oblivious human in tow
-Dog moods: scared, barky, zoomies and flat, each changing how you move and what you notice
-Ground you can feel: grass and mud hold scent, sand drags, wet ground and snow skid
-Other dogs and their people with lives of their own: they sniff, mark, greet and tangle
-Rain, wind, snow and night change how each walk plays
-Bones to spend on collars, bandanas and coats
-A gentle first walk that teaches the basics
-Full controller support
-No ads, no purchases, no account, and it plays offline
-```
-
-### What's new in 1.60 (not yet submitted)
-
-```
-- Trees, parasols, awnings and washing lines hang over the dog and the leash, and turn see-through when you are under them.
-- A slack leash lies in loose curves instead of zigzags, and your human steps around a pole or a stall instead of getting stuck on it.
-- A clearer main menu with an Exit button, one Back everywhere, and the tutorial keeps your human at each lesson.
-- The kid's dare says what it wants before the clock starts, and offers another try.
-- Other dogs walk ahead of their people on a short leash, passers-by go around stalls instead of through them, and Millie backs away when she plays tug.
-- Passeig Marítim, El Gòtic and El Mercat redrawn and fixed, the text in American English, and many smaller fixes.
-```
+As submitted, newest first. The current one is in "Current listing".
 
 ### What's new in 1.59 (live by 2026-10-09)
 
@@ -196,34 +238,11 @@ No ads, no purchases, no account, and it plays offline
 - Fixes: the walk status (NEED A WEE, LOOSE LEASH, FETCH and more) shows again, the mood badge no longer covers the phone, the results card is easier to read, and a dog standing still no longer gets knocked over for no reason.
 ```
 
-### Other fields
-
-| Field | Value |
-|---|---|
-| Short title | Leash Resistance |
-| Keywords | dog, leash, physics comedy, top-down, rope physics, Barcelona, dog walking |
-| Copyright and trademark info | © 2026 Santtu Nykänen |
-| Developed by | Santtu Nykänen |
-| Voice title, additional license terms | blank |
-
 ## Submission options
 
-Publishing hold: "Don't publish until I select Publish now". Notes for
-certification (Additional Testing Information page):
-
-```
-Update 1.57: two new levels, every level rebuilt, new menus and art. No change to capabilities, network use, data handling or controls since 1.55.
-
-Path of Leash Resistance is a single-player Win32 desktop game built with the Godot engine (4.7), packaged as MSIX.
-
-runFullTrust: required to run the packaged Win32 game executable. The game uses no other restricted capabilities, no network access, no accounts and no in-app purchases.
-
-How to test: launch the game, press Space (or A on a controller) on the title screen to start a walk. Move with WASD/arrows or the left stick; hold Space/A to dig in against the leash, E/B to bark, Q/X to mark a spot. A walk takes about two minutes. Esc/Back opens the pause and settings menus.
-
-Graphics: the game renders with OpenGL 3.3, and falls back automatically to Direct3D 11 through ANGLE on machines without OpenGL 3.3 drivers.
-
-Saves and settings are stored locally in the app's own data folder. No sign-in or test account is needed.
-```
+Publishing hold: "Don't publish until I select Publish now". The notes for
+certification are in "Current listing" above; the Store submit workflow sends
+them.
 
 ## Privacy policy
 

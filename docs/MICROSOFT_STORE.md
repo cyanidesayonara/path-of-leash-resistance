@@ -182,17 +182,15 @@ Start a submission on the product. Every section must be complete:
 
 ## 6. Each release after the first
 
-1. Tag the release. When `release.yml` finishes, download the `.msix` from
-   the GitHub release.
-2. Create a new submission in Partner Center (it copies the previous one),
-   replace the package, update "What's new", and submit.
+Use the Store submit workflow (step 7). Partner Center by hand is only for
+screenshots and logos, which are images the workflow does not send.
 
 ## 7. The Store submit workflow
 
 `.github/workflows/store-submit.yml` (Actions > Store submit (manual) > Run
-workflow) puts a release's MSIX and its "What's new" into a Partner Center
-**draft**, then commits it when asked. Ported from Stemma's workflow, which
-works with the same seller account (last run 2026-08-01).
+workflow) puts a release's MSIX and the whole listing text into a Partner
+Center **draft**, then commits it when asked. Ported from Stemma's workflow,
+which works with the same seller account.
 
 One-time setup, in this repo's Settings > Secrets and variables > Actions,
 with the same values as Stemma's secrets of the same names (GitHub never
@@ -207,22 +205,34 @@ repos):
 
 The Store ID is public and set in the workflow (`9P5D14V8RBQX`).
 
+What it sends: everything under "## Current listing" in `store/listing.md`
+(description, short description, product features, keywords, What's new in
+this version, notes for certification), read by `tools/store_listing.py`.
+CI runs `tools/store_listing.py --check store/listing.md` on every PR, so the
+text is always inside the Store's limits before a release. The workflow
+checks out main, so it always sends main's `store/listing.md`.
+
 Each release:
 
-1. Tag it. `release.yml` attaches `PathOfLeashResistance-<version>.msix`.
-2. Write the "What's new in this version" block in `store/listing.md`.
+1. Before tagging, the release-notes PR updates "## Current listing": the
+   What's new in this version block, the notes for certification's first
+   line, and any other field the release makes untrue.
+2. Tag it. `release.yml` attaches `PathOfLeashResistance-<version>.msix`.
 3. Run the workflow with the tag and mode `update_draft` (run `configure`
-   once first to check the credentials). It stages the package and the text;
-   the run's log ends with the staged submission (package names, What's new).
-   Partner Center's own page keeps saying "Unchanged" until commit: the Store
-   only ingests an API-uploaded package when the submission is committed.
+   once first if the credentials are new). It stages the package and the
+   text; the run's log ends with every field as staged. Partner Center's own
+   page keeps saying "Unchanged" until commit: the Store only ingests an
+   API-uploaded package when the submission is committed.
 4. Run it again with mode `submit`. That commits the draft: the package is
    ingested and certification starts. Do not click Partner Center's Submit
    button for an API-staged draft; it does not carry the staged package.
+5. When it is live, copy that What's new into "## Past What's new" in
+   `store/listing.md` with the date.
 
-The description, features, keywords and screenshots are not touched: change
-them by hand when they change. `msstore publish` is documented for free
-products only, which this game is.
+New screenshots, when a release changes how the game looks enough to need
+them: take them as step 5 describes and upload them in Partner Center before
+step 3. `msstore publish` is documented for free products only, which this
+game is.
 
 ## Fallback: GDK game
 

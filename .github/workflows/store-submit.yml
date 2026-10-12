@@ -1,4 +1,4 @@
-# Put a release's MSIX and its "What's new" into a Partner Center submission,
+# Put a release's MSIX and the listing text into a Partner Center submission,
 # from the GitHub release that release.yml made, in two runs:
 # - update_draft stages them. Partner Center's own page keeps showing the old
 #   package and text ("Unchanged") until the draft is committed: the Store
@@ -23,7 +23,7 @@ on:
         required: true
         type: string
       mode:
-        description: "configure = check credentials; update_draft = stage MSIX + What's new; get_draft = print the staged draft; submit = commit it (starts certification)"
+        description: "configure = check credentials; update_draft = stage MSIX + the listing text from store/listing.md; get_draft = print the staged draft; submit = commit it (starts certification)"
         type: choice
         options: [configure, update_draft, get_draft, submit]
         default: configure
@@ -76,12 +76,14 @@ jobs:
           set -euo pipefail
           msstore publish pkg/*.msix --appId "$PRODUCT_ID" --noCommit --verbose
 
-      - name: Set the draft's What's new from store/listing.md
+      - name: Set the draft's listing text from store/listing.md
         if: ${{ inputs.mode == 'update_draft' }}
         run: |
           set -euo pipefail
+          # description, short description, features, keywords, What's new and
+          # the notes for certification: everything under "## Current listing"
           NO_COLOR=1 msstore submission get "$PRODUCT_ID" --verbose > submission.json
-          python3 tools/store_whats_new.py submission.json store/listing.md metadata.json
+          python3 tools/store_listing.py submission.json store/listing.md metadata.json
           msstore submission updateMetadata "$PRODUCT_ID" "$(cat metadata.json)" --verbose
           echo "Staged. Partner Center's page shows it only after commit: check the JSON above, then run this workflow again with mode submit."
 
