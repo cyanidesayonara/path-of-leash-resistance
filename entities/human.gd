@@ -49,6 +49,16 @@ const PANIC_SPEED := 230.0
 
 # how far before and after an island the owner is already on its side
 const ISLAND_LEAD := 400.0
+# Island with "face": an island he must not walk into end on. Still across
+# its end within FACE_CLEAR of its rect, he only crosses; nearer than
+# FACE_BACK, he backs off as he crosses (the rect is grown past his radius)
+const FACE_CLEAR := 50.0
+const FACE_BACK := 15.0
+# main.owner_keepouts: from KEEPOUT_LEAD before one until KEEPOUT_TRAIL past
+# its far side, he aims at least KEEPOUT_GAP clear of its aisle-side face
+const KEEPOUT_LEAD := 200.0
+const KEEPOUT_TRAIL := 30.0
+const KEEPOUT_GAP := 40.0
 # ...and how far before a narrow the owner lines up for it
 const NARROW_LEAD := 480.0
 # how far short of a lesson's stop the owner starts drifting to its standing x
@@ -628,7 +638,29 @@ func _walk(delta: float) -> void:
 		tx = clampf(tx + clampf(felt_pull.x / GIVE_FULL, -1.0, 1.0) * GIVE_LAT, cx - half + 40.0, cx + half - 40.0)
 		var along := felt_pull.y * fwd_y / GIVE_FULL
 		speed *= 1.0 + GIVE_FWD * clampf(along, 0.0, 1.0) - GIVE_BACK * clampf(-along, 0.0, 1.0)
-	var dir := Vector2(clampf((tx - global_position.x) / 60.0, -1.0, 1.0) * lat_max, fwd_y).normalized()
+	# a solid thing against the path's edge just ahead (El Mercat's wall
+	# stalls): he aims wide of it before he meets it, not into its end
+	for ko: Rect2 in main.owner_keepouts:
+		var ko_ahead: float = (ko.position.y - global_position.y) if homeward else (global_position.y - ko.end.y)
+		var ko_behind: float = (global_position.y - ko.end.y) if homeward else (ko.position.y - global_position.y)
+		if ko_ahead < KEEPOUT_LEAD and ko_behind < KEEPOUT_TRAIL:
+			if ko.get_center().x < (here.x + here.y) * 0.5:
+				tx = maxf(tx, ko.end.x + KEEPOUT_GAP)
+			else:
+				tx = minf(tx, ko.position.x - KEEPOUT_GAP)
+	var fwd_amt := 1.0
+	# still across the end of the island he is making for: across first, then
+	# on. Walking on into its end face, he met its corner column sliding along
+	# it and wedged in the corner between the two (El Mercat, #153)
+	if not isl_pick.is_empty() and state != HState.DASH:
+		var fr: Rect2 = isl_pick["rect"]
+		var gap: float = (fr.position.y - global_position.y) if homeward else (global_position.y - fr.end.y)
+		if bool(isl_pick.get("face", false)) and global_position.x > fr.position.x and global_position.x < fr.end.x and gap > -FACE_CLEAR and gap < FACE_CLEAR:
+			fwd_amt = clampf((gap - FACE_BACK) / (FACE_CLEAR - FACE_BACK), -0.5, 1.0)
+	var lat := clampf((tx - global_position.x) / 60.0, -1.0, 1.0) * lat_max
+	if fwd_amt < 1.0:
+		lat = signf(tx - global_position.x + 0.001) * lat_max
+	var dir := Vector2(lat, fwd_y * fwd_amt).normalized()
 	if state == HState.DASH:
 		var to_target := dash_target - global_position
 		if to_target.length() < 14.0:

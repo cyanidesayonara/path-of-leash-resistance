@@ -413,8 +413,16 @@ static func mercat(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 		# its end face (#153: with the default 400 he met the face still
 		# crossing, and wedged against it)
 		isl.append({"rect": MERCAT_BLOCKS[i].grow(20.0), "side": 1.0 if i % 2 == 0 else -1.0,
-			"lead": MERCAT_ISLAND_LEAD, "steer": MERCAT_ISLAND_STEER})
+			"lead": MERCAT_ISLAND_LEAD, "steer": MERCAT_ISLAND_STEER, "face": true})
 	m.islands = isl
+	# the wall stalls and what stands between them stick out into the aisles:
+	# the fish and jamon stalls on the west wall sit right at the mouth of a
+	# block's west aisle, and he walked into their ends and wedged there
+	m.owner_keepouts.clear()
+	for st: Vector2 in m.stalls:
+		m.owner_keepouts.append(Rect2(st - m.STALL_BODY_SIZE * 0.5, m.STALL_BODY_SIZE))
+	for r: Rect2 in Mercat.solids(m):
+		m.owner_keepouts.append(r)
 
 
 # LA FERRALLA. Wreck stacks along both sides of the lane (authored in the
