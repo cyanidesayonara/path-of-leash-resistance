@@ -153,17 +153,41 @@ Screenshots and logos are regenerated, not stored here:
   box art (2160) and the 300/150/71 tiles into `build/store-art/`. No hero
   art, trailers or Xbox images.
 
-### Screenshots for 1.57
+### Screenshots for 1.60
 
-The uploaded set contained ten 1920x1080 images from a checkout of the v1.57
-tag (`tools/stamp_version.sh` first, so the corner reads the version), in this
-order: La Rambla's crowd and the Fur-Goneta, El Mercat's hall, La
-Castanyada's plaça at night, El Mosaic's salamander, El Parc's dog park, El
-Bosc's boars, the seafront in the sun, a rainy walk in raincoats, La Neteja's
-sweeper careening after you, and the walk select with a name laid out on the
-ground. El Parc's dog park replaced the planned square off the leash because
-the daytime El Gòtic square duplicated La Castanyada's night plaça too
-closely.
+Ten 1920x1080 images from a checkout of the v1.60 tag
+(`tools/stamp_version.sh` first, so the corner reads v1.60), uploaded in this
+order with these captions:
+
+1. La Rambla: crowds, cafe parasols and a kid with a dare
+   (`--level=street --autowalk --fixed-fps 60 --shot-at=900`)
+2. El Mercat: the market hall, its stalls and the fish counter
+   (`--level=market --shot-y=-2000 --shot-at=60`)
+3. Off the leash: an agility course, fetch and a frisbee
+   (`--level=park --at-freedom --autowalk --fixed-fps 60 --shot-at=300`)
+4. El Gòtic: washing lines over the old town's alleys
+   (`--level=oldtown --shot-y=-3420 --shot-at=300`)
+5. El Mosaic: the tiled terraces and the mosaic salamander
+   (`--level=guell --shot-y=-760 --shot-at=300`)
+6. Montjuïc: the climb up the hill, and a dare against the clock
+   (`--level=montjuic --autowalk --fixed-fps 60 --shot-at=2600`)
+7. El Parc: a slack leash and a tree to wind your human around
+   (`--level=park --shot-y=-300 --shot-at=300`)
+8. La Castanyada: the chestnut festival at night
+   (`--level=spook --autowalk --fixed-fps 60 --shot-at=1200`)
+9. Passeig Marítim: sand, sea and a dog beach at the end
+   (`--level=beach --shot-y=-2850 --shot-at=300`)
+10. L'Estació: the moving walkway and the station
+    (`--level=station --autowalk --fixed-fps 60 --shot-at=1500`)
+
+All with `--rendering-method gl_compatibility --resolution 1920x1080` and
+`-- --shot --shot-quit --shot-out=FILE`. A `--shot-y` shot needs
+`--shot-at=300` or so: sooner, the menu's prompt bar is still fading out. The
+sweeper chase is left out: no frame had the chase on and the walk not lost.
+
+The Store logos for 1.60 are the refreshed art from #230 (googly eyes),
+written by `tools/make_store_art.gd`: the 9:16 poster, the 1:1 box art and the
+300/150/71 tiles.
 
 ### Other fields
 
