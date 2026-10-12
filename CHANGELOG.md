@@ -23,6 +23,28 @@ Append-only session history, newest first.
   `move_and_slide` across the whole suite; no other test does it.
 - `tools/walk_carryover.gd` shows the two walks side by side; with
   `-- --in-physics` they agree to the pixel.
+## 2026-10-12 - your human stops wedging in El Mercat
+
+- A 25-seed sweep of `tests/test_mercat_owner_path.gd` found your human
+  still wedged in about one walk in five, two ways:
+  - Meeting a stall block's end face while still across it (late crossing
+    over to the next block's aisle), he slid along the face into its
+    corner column and stuck in the corner between the two. Islands may now
+    say `"face": true` (El Mercat's blocks do): within `human.FACE_CLEAR`
+    of the end of the island he is making for and still across it, he only
+    crosses, and nearer than `FACE_BACK` he backs off as he crosses.
+  - Nothing steered him round the wall stalls (the fish and jamon stalls
+    sit at the mouth of a block's west aisle) or what stands by the walls
+    between them: his weave or the dog drew him into their ends, and his
+    sidestep ran him into the corner with the wall. They are now
+    `main.owner_keepouts`; from `KEEPOUT_LEAD` before one until he is past
+    it, he aims at least `KEEPOUT_GAP` clear of it.
+- Other walks are unchanged: no other island has a face, and only El
+  Mercat has keep-outs.
+- The test walks seeds 1-10 (was 1-3) and adds six fixed cases, five of
+  which wedged before: below three block ends on the wrong side, below the
+  west wall's fish and jamon stalls, and below the crates on the east wall,
+  with the dog keeping near him by her own movement.
 
 ## 2026-10-11 - she walks under what hangs overhead, and the leash over the junk
 
