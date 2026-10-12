@@ -2,6 +2,29 @@
 
 Append-only session history, newest first.
 
+## 2026-10-12 - logo refresh: a readable Millie, and a set title
+
+- Millie's face read as a black smudge. The coat is now three values (ears
+  darkest, head a step lighter, shoulders between), with a lit crescent on
+  the upper left and a warm rim on the right, and the salt and pepper is
+  where it shows: a light grey muzzle with a blaze up the bridge, flecked
+  whisker pits, a chin beard and two grizzled brow tufts.
+- Floppy ears set on top of her head, folding over the crown and hanging
+  beside her face, so the silhouette at 16 px is still a dog.
+- Two eye styles, switched by `EYE_STYLE` in `tools/make_icon.gd` (or
+  `-- --eyes=dog|googly`): dog eyes (dark brown irises filling the eye, a
+  catchlight, a heavy upper lid and a sliver of white as she side-eyes the
+  leash) and refined googly eyes (outlined whites, pupils rolled toward the
+  leash). The googly eyes are the default: Santtu picked them for popping more
+  cartoonishly than realistic dog eyes.
+- The head tilts away from the pull, the collar wraps the neck with the ring
+  at the front, and the leash is the in-game taut-leash red.
+- The poster title is set as a logo: the game's heavy face, stacked and
+  fitted to one measure, PATH OF small and tracked out, LEASH the biggest
+  word in the leash's color, on a cream keyline with a hard shadow, tilted
+  up toward the pull. Still no subtitle or tagline.
+- Ellipses get more sides at large sizes, so the 2160 px box art and the
+  poster have no facets. icon.png, icon.ico and the MSIX tiles regenerated.
 ## 2026-10-12 - the Store listing in one place, sent by the workflow
 
 - store/listing.md has a "Current listing" section: description, short
