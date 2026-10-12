@@ -117,12 +117,39 @@ static func walk_style(level: String) -> String:
 static func job(name: String) -> Job:
 	var j := Job.new()
 	j.name = name
-	if JINGLES.has(name):
+	if name == "intro":
+		_intro(j)
+	elif JINGLES.has(name):
 		_jingle(j, JINGLES[name])
 	else:
 		_arrange(j, STYLES.get(name, STYLES["title"]))
 	j.events.sort_custom(func(a: Array, b: Array) -> bool: return int(a[0]) < int(b[0]))
 	return j
+
+
+# the film's opening: the title arrangement's marimba and a quieter shaker,
+# seven bars, ringing out without folding back onto the downbeat
+static func _intro(j: Job) -> void:
+	var full := Job.new()
+	_arrange(full, STYLES["title"])
+	var cut := int(7.0 * 4.0 * (60.0 / 104.0) * RATE)
+	for ev in full.events:
+		if int(ev[0]) >= cut:
+			continue
+		var kind := String(ev[1])
+		var params: Array = ev[2]
+		if kind == "bar" and String(params[2]) == "marimba":
+			j.add(int(ev[0]), kind, params.duplicate())
+		elif kind == "hit" and String(params[0]) == "shaker":
+			var p: Array = params.duplicate()
+			p[1] = float(p[1]) * 0.5
+			j.add(int(ev[0]), kind, p)
+	j.loop = false
+	j.loud_as_loop = true
+	j.verb_wet = float(STYLES["title"]["verb"])
+	j.n = cut + int(TAIL * RATE)
+	j.n += (4 - j.n % 4) % 4
+	j.total = j.n
 
 
 # the whole track in one call (tools, tests)
@@ -387,6 +414,7 @@ static func _jingle(j: Job, jg: Dictionary) -> void:
 class Job extends RefCounted:
 	var name := ""
 	var loop := true
+	var loud_as_loop := false
 	var seed := 1
 	var n := 0                 # samples in the loop
 	var total := 0             # samples rendered (the loop plus its ringing tail)
@@ -476,7 +504,7 @@ class Job extends RefCounted:
 					if _pos >= n:
 						var rms := sqrt(_sumsq / float(maxi(n, 1)))
 						# a jingle is short and sparse; match its peaks to a loop's
-						_gain = TARGET_RMS / maxf(rms, 0.0001) * (0.8 if loop else 1.25)
+						_gain = TARGET_RMS / maxf(rms, 0.0001) * (0.8 if loop or loud_as_loop else 1.25)
 						_bytes.resize(n * 2)
 						_pos = 0
 						_stage = 3
