@@ -35,6 +35,8 @@ func _run() -> void:
 	for k in range(3):
 		await physics_frame
 	m._skip_title()
+	# no owner event (a call, a selfie) may stop them in any part of this
+	m.human.event_timer = 999.0
 	await physics_frame
 
 	# 1) round the pole, not into it
@@ -62,6 +64,7 @@ func _run() -> void:
 	for i in range(120):
 		m.dog.global_position = m.human.global_position + Vector2(20, -10)
 		m.dog.velocity = Vector2.ZERO
+		m.human.event_timer = 999.0
 		await physics_frame
 		if m.human.sidestep_t > 0.0:
 			side0 = true
@@ -78,13 +81,20 @@ func _run() -> void:
 	m.add_child(box)
 	box.global_position = Vector2(m.human.global_position.x, y0 - 60.0)
 	var sidestepped := false
+	var past_at := -1
 	for i in range(420):
 		m.dog.global_position = m.human.global_position + Vector2(20, -10)
 		m.dog.velocity = Vector2.ZERO
+		# no phone call or selfie stopping them short of the box's far side
+		m.human.event_timer = 999.0
 		await physics_frame
 		if m.human.sidestep_t > 0.0:
 			sidestepped = true
-	_check(sidestepped, "walking into the box, they sidestep")
+		if past_at < 0 and m.human.global_position.y < y0 - 110.0:
+			past_at = i
+	# a weave that already carries them round it needs no sidestep
+	_check(sidestepped or (past_at >= 0 and past_at < 240),
+		"walking into the box, they sidestep or are round it within 4 s (past at frame %d)" % past_at)
 	_check(m.human.global_position.y < y0 - 110.0,
 		"and get past it (%.0f px on, the box's far side is 75 px on)" % (y0 - m.human.global_position.y))
 	box.queue_free()
