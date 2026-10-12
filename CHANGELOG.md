@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-10-12 - rope tug tests stand clear of the live park
+
+- `tests/test_rope_tug_backing.gd` and `tests/test_freedom_games_live.gd` failed on rerun ("moves away from it every frame (37/40)", "her mouth is full while she tugs") on pulls that did not touch the game. The park around the tug is still live. Trunks and logs are solid, and the grove is placed with the unseeded roll, so a backing run that clips one stops her for a few frames. A ball brought back clears `dog_carrying`. The agility pass teleports along the lane and grabs the rope if that dog spawned on it, and the tug check then continues that tug with an empty mouth.
+- Both tests now park the balls, the frisbee, the other free dogs and Brutus, and move solids out of the tug. The live test holds the rope dog off the lane until the tug it means to start. The ball stays in the tree: the frisbee check still reads it.
+
 ## 2026-10-12 - the playtest's HUMAN STUCK, checked over the whole window
 
 - The v1.60 release playtest flagged your human stuck on a slack leash in El

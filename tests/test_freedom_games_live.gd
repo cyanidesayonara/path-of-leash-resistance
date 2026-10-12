@@ -63,6 +63,12 @@ func _run() -> void:
 		await _close(m)
 
 	var m: Node2D = await _open("park")
+	# the rope dog spawns anywhere in the park. This run teleports along the
+	# lane, and grabbing her there starts a tug the later check then inherits,
+	# with nothing in Millie's mouth. Hold her off the lane until that tug.
+	_isolate_tug(m, m.tug_dog)
+	if m.tug_dog != null:
+		m.tug_dog.global_position = Vector2(140.0, m.freedom_lo + 40.0)
 	# --- a run along the lane, the dog steered by hand
 	var ag: AgilityCourse = m.agility
 	var bones0: int = m.bones
@@ -89,11 +95,11 @@ func _run() -> void:
 	var fd: Node2D = m.tug_dog
 	_check(fd != null and fd.rope, "one free dog has the rope")
 	if fd != null:
+		_isolate_tug(m, fd)
 		fd.global_position = Vector2(640.0, m.GATE_Y - 250.0)
 		fd.face = Vector2.RIGHT
 		m.dog.facing = Vector2.LEFT
 		m.dog.global_position = fd.rope_end() - m.dog.facing * 22.0
-		m.dog_carrying = false
 		m.freedom_games_tick(1.0 / 60.0)
 		_check(m.tug != null, "taking the rope's end starts a tug")
 		var fd0: Vector2 = fd.global_position
@@ -145,3 +151,43 @@ func _run() -> void:
 
 	print("test_freedom_games_live: %d checks, %s" % [checks, "OK" if failures.is_empty() else "%d FAILED" % failures.size()])
 	quit(1 if not failures.is_empty() else 0)
+
+
+# Same isolation as test_rope_tug_backing.gd. The ball stays in the tree: the
+# frisbee check below still reads it. It is only stopped and moved aside, so a
+# return cannot clear her mouth during the tug.
+func _isolate_tug(m: Node2D, fd: Node2D) -> void:
+	m.tug = null
+	m.dog_carrying = false
+	m.dog.face_lock = Vector2.ZERO
+	m.rope_carry_t = 0.0
+	_park_toy(m.ball)
+	_park_toy(m.npc_ball)
+	if is_instance_valid(m.frisbee):
+		m.frisbee.queue_free()
+		m.frisbee = null
+	var spot := Vector2(90.0, m.freedom_lo + 24.0)
+	for other in m.get_tree().get_nodes_in_group("freedogs"):
+		if other == fd:
+			continue
+		var od := other as Node2D
+		od.global_position = spot
+		od.set_physics_process(false)
+		spot.x += 36.0
+	if is_instance_valid(m.rival):
+		m.rival.set_physics_process(false)
+		m.rival.global_position = Vector2(90.0, m.GATE_Y - 36.0)
+	var box := Rect2(Vector2(120.0, m.GATE_Y - 520.0), Vector2(1080.0, 460.0)).grow(40.0)
+	for child in m.get_children():
+		if child is StaticBody2D and box.has_point((child as Node2D).global_position):
+			(child as Node2D).global_position = Vector2(-400.0, m.GATE_Y)
+
+
+func _park_toy(toy: Node) -> void:
+	if not is_instance_valid(toy):
+		return
+	var body := toy as Node2D
+	body.set_physics_process(false)
+	if body.get("state") != null:
+		body.state = body.State.RESTING
+	body.global_position = Vector2(-400.0, 0.0)
