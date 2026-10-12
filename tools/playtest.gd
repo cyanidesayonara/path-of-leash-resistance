@@ -20,10 +20,12 @@ extends SceneTree
 # The watch, every frame, each reported once per place:
 #   DOG STUCK      a direction held, she moved under 4 px in a second, and
 #                  nothing explains it (dug in, tumbling, at a brink, dragged)
-#   HUMAN STUCK    your human meant to walk and moved under 6 px in 1.5 s
-#                  while the leash was slack (taut_amount under 0.5): a
-#                  human held by a dog pushing into something is not stuck,
-#                  the same rule as tests/test_mercat_owner_path.gd
+#   HUMAN STUCK    your human moved under 6 px in 1.5 s while plainly walking
+#                  on a slack leash (taut_amount under 0.5) for every frame
+#                  of it: a human held by a dog pushing into something, or
+#                  one who stopped for an event or a squat in that time, is
+#                  not stuck, the same rule as tests/test_mercat_owner_path.gd.
+#                  The line says what he meant and what he is against
 #   NPC IN SOLID   a walker, their dog or a tourist inside a solid rect
 #                  (main.solid_rects, shrunk by 4 px); the line names which
 #                  and the rect's index
@@ -38,6 +40,9 @@ var log_lines: Array[String] = []
 var reported := {}
 var dog_hist: Array[Vector2] = []
 var human_hist: Array[Vector2] = []
+# per frame of human_hist: was he excused from walking (an event, a wait, a
+# leash holding him)
+var human_excused: Array[bool] = []
 var held: Array[String] = []
 
 
@@ -70,8 +75,10 @@ func _watch() -> void:
 	human_hist.append(m.human.global_position)
 	if dog_hist.size() > 60:
 		dog_hist.pop_front()
+	human_excused.append(_human_excused())
 	if human_hist.size() > 90:
 		human_hist.pop_front()
+		human_excused.pop_front()
 	if m.phase == "freedom" or m.finished or m.frozen:
 		return
 	var steering := false
@@ -82,17 +89,8 @@ func _watch() -> void:
 		var why: bool = m.dog.planted or m.dog.is_tumbling() or m.teeter.active or m.dog.dragged
 		if not why:
 			_note("DOG STUCK", m.dog.global_position)
-	if human_hist.size() == 90 and human_hist[0].distance_to(human_hist[89]) < 6.0:
-		# only while plainly walking: a stop for a selfie or lost signal is
-		# the owner's own event, not being stuck
-		# nor while waiting at a tutorial lesson, which is standing still on purpose
-		var waiting: bool = float(m.human.get("tut_hold_y")) > -INF
-		# nor while the leash holds him: a dog pushing into an obstacle
-		# pins her human, which is the dog's doing, not his being stuck
-		var held: bool = m.leash.taut_amount(m.leash.used_length() / m.leash.rest_len) >= 0.5
-		if m.human.state == 0 and m.human.walk_intent.length() > 30.0 and float(m.human.get("halt_t")) <= 0.0 \
-				and not waiting and not held:
-			_note("HUMAN STUCK", m.human.global_position)
+	if human_hist.size() == 90 and human_hist[0].distance_to(human_hist[89]) < 6.0 and not human_excused.has(true):
+		_note("HUMAN STUCK", m.human.global_position, _human_detail())
 	for g in ["pairs", "tourists"]:
 		for n: Node in get_nodes_in_group(g):
 			var bodies: Array = [n]
@@ -108,6 +106,41 @@ func _watch() -> void:
 						var r: Rect2 = m.solid_rects[ri]
 						if r.grow(-4.0).has_point(p):
 							_note("NPC IN SOLID", p, "(%s in rect %d %s)" % [names[i], ri, str(r)])
+
+
+# Not plainly walking this frame, so a stop is no wedge. Every frame of the
+# window counts: a leash that held him until a moment ago, a selfie he shuffled
+# back for and then walked off, or a dog he waited for left him where he
+# started without his being stuck.
+func _human_excused() -> bool:
+	var h: CharacterBody2D = m.human
+	if m.phase == "freedom" or m.finished or m.frozen:
+		return true
+	# an owner event, a telegraph or a HEY! winding up, a halt
+	var walking: bool = h.state == h.HState.WALK or h.state == h.HState.DRIFT
+	if not walking or float(h.get("halt_t")) > 0.0 or h.walk_intent.length() <= 30.0:
+		return true
+	# waiting at a tutorial lesson, standing still on purpose
+	if float(h.get("tut_hold_y")) > -INF:
+		return true
+	# waiting while she does her business
+	if m.dog.squat_t > 0.0 or m.dog.peeing:
+		return true
+	# held by the leash: a dog pushing into an obstacle pins her human, which
+	# is the dog's doing, not his being stuck
+	return m.leash.taut_amount(m.leash.used_length() / m.leash.rest_len) >= 0.5
+
+
+# what he meant and what he is against, so a stuck line says why
+func _human_detail() -> String:
+	var h: CharacterBody2D = m.human
+	var against := "nothing"
+	if h.get_slide_collision_count() > 0:
+		var c := h.get_slide_collision(0)
+		var who: Object = c.get_collider()
+		against = "%s normal (%.2f, %.2f)" % [who.name if who is Node else str(who), c.get_normal().x, c.get_normal().y]
+	return "(meant (%d, %d), against %s, dog at (%d, %d))" % [int(h.walk_intent.x), int(h.walk_intent.y),
+		against, int(m.dog.global_position.x), int(m.dog.global_position.y)]
 
 
 func _frames(seconds: float) -> void:
