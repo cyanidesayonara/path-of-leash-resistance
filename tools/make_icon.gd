@@ -23,7 +23,7 @@ const SS := 4          # supersample factor
 const SIZE := 256
 # "dog": dark brown irises filling the eye, a catchlight, a sliver of white
 # as she side-eyes the leash. "googly": the old cartoon whites, refined.
-const EYE_STYLE := "dog"
+const EYE_STYLE := "googly"
 
 
 # --eyes=dog|googly after a "--" on the command line, else EYE_STYLE

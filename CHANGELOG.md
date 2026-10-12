@@ -15,7 +15,8 @@ Append-only session history, newest first.
   `-- --eyes=dog|googly`): dog eyes (dark brown irises filling the eye, a
   catchlight, a heavy upper lid and a sliver of white as she side-eyes the
   leash) and refined googly eyes (outlined whites, pupils rolled toward the
-  leash). Dog eyes are the default.
+  leash). The googly eyes are the default: Santtu picked them for popping more
+  cartoonishly than realistic dog eyes.
 - The head tilts away from the pull, the collar wraps the neck with the ring
   at the front, and the leash is the in-game taut-leash red.
 - The poster title is set as a logo: the game's heavy face, stacked and
