@@ -2,6 +2,24 @@
 
 Append-only session history, newest first.
 
+## 2026-10-12 - the playtest's HUMAN STUCK, checked over the whole window
+
+- The v1.60 release playtest flagged your human stuck on a slack leash in El
+  Mercat (east aisle of the first stall block), La Ferralla (two spots in the
+  open lane) and El Gòtic. None was a wedge. The watch compared where he was
+  1.5 s apart but checked his state and the leash on the last frame only, so
+  it fired the moment a stop ended: right after a "ring ring" or a call, a
+  selfie, a fall, or a leash that had held him taut round a column while the
+  dog pressed into the block's south end and then went slack on a reel click.
+- `tools/playtest.gd` now reports HUMAN STUCK only when every frame of the
+  window was plain walking (or drifting) on a slack leash, with no squat being
+  waited for: the rule `tests/test_mercat_owner_path.gd` already uses. The
+  line says what he meant, what he is against and where the dog is.
+- 16 walks, 2 runs each: 6 HUMAN STUCK before, 0 after. A sweep of 100 walks
+  each straight into La Ferralla's floodlight mast and El Gòtic's first
+  bollard found no wedge: he bumps one dead on and sidesteps round in under
+  a second, which is the existing unstick.
+
 ## 2026-10-12 - logo refresh: a readable Millie, and a set title
 
 - Millie's face read as a black smudge. The coat is now three values (ears
