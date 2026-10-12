@@ -6,6 +6,7 @@ extends SceneTree
 # loaded in _run, not preloaded: intro_player.gd refers to Sfx and Game,
 # which are not registered yet while this test script is being compiled
 var IntroPlayerScript: GDScript
+var SceneWalkiesScript: GDScript
 
 var failures := 0
 
@@ -22,8 +23,10 @@ func _initialize() -> void:
 
 func _run() -> void:
 	IntroPlayerScript = load("res://intro/intro_player.gd")
+	SceneWalkiesScript = load("res://intro/scene_walkies.gd")
 	_cues()
 	_handoff()
+	_camera()
 	print("test_intro_polish: %s" % ("OK" if failures == 0 else "%d FAILED" % failures))
 	quit(1 if failures > 0 else 0)
 
@@ -77,3 +80,17 @@ func _handoff() -> void:
 	sfx.handoff(0.0, 0.45)
 	_check(is_equal_approx(sfx._handoff_from, 0.0), "a skip starts the title at the top")
 	sfx._handoff_on = false
+
+
+func _camera() -> void:
+	var close: Array = SceneWalkiesScript.camera(9.04)
+	_check((close[0] as Vector2).is_equal_approx(Vector2(570, 455)), "close on the crouch")
+	_check(is_equal_approx(float(close[1]), 1.75), "close zoom")
+	var wide: Array = SceneWalkiesScript.camera(9.22)
+	_check((wide[0] as Vector2).is_equal_approx(Vector2(800, 420)), "wide on the yank")
+	_check(is_equal_approx(float(wide[1]), 1.12), "wide zoom")
+	var held: Array = SceneWalkiesScript.camera(9.5)
+	_check((held[0] as Vector2).is_equal_approx(Vector2(800, 420)), "the wide frame holds")
+	var street: Array = SceneWalkiesScript.camera(10.1)
+	_check((street[0] as Vector2).is_equal_approx(Vector2(640, 360)), "the street is still a cut")
+	_check(is_equal_approx(float(street[1]), 1.0), "street zoom")

@@ -28,18 +28,17 @@ const PHONE := Vector2(466.0, 468.0)
 
 # the camera: [centre, zoom] in scene units. Wide enough at first to see who
 # she is looking at; close on her and the hook for the jump; with her across
-# the room; a push in on the crouch; then a hard cut wide for the yank.
+# the room; a push in on the crouch; an ease into the wide yank; then a cut
+# to the street at the title.
 static func camera(t: float) -> Array:
 	if t >= TITLE_AT:
 		return [Vector2(640, 360), 1.0]
-	if t >= 9.25:
-		return [Vector2(800, 420), 1.12]
 	var cx: float = Anim.k(t, [[0.0, 720.0], [2.2, 720.0], [2.7, 930.0, "io"], [3.45, 930.0], [4.9, 620.0, "io"],
-		[8.55, 620.0], [8.95, 570.0, "io"]])
+		[8.55, 620.0], [8.95, 570.0, "io"], [9.04, 570.0], [9.22, 800.0, "io"]])
 	var cy: float = Anim.k(t, [[0.0, 430.0], [2.2, 430.0], [2.7, 445.0, "io"], [4.9, 450.0, "io"], [8.55, 450.0],
-		[8.95, 455.0, "io"]])
+		[8.95, 455.0, "io"], [9.04, 455.0], [9.22, 420.0, "io"]])
 	var z: float = Anim.k(t, [[0.0, 1.2], [2.2, 1.2], [2.7, 1.6, "io"], [3.45, 1.6], [4.9, 1.45, "io"], [8.55, 1.45],
-		[8.95, 1.75, "io"]])
+		[8.95, 1.75, "io"], [9.04, 1.75], [9.22, 1.12, "io"]])
 	return [Vector2(cx, cy), z]
 
 
