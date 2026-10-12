@@ -8,7 +8,9 @@ const HumanLook := preload("res://entities/human_appearance.gd")
 # of any dog who comes up to drink). The crowd is what the pickpockets work,
 # and what the dog and her owner have to thread. Tourists are not bodies: they
 # step aside from the dog, the owner and each other rather than blocking, so a
-# crowd can be dense without ever wedging the walk shut.
+# crowd can be dense without ever wedging the walk shut. Solid bodies (stalls,
+# vans, the salamander: main.solid_rects) are another matter: an ambler sees
+# one coming and steps round it, and nobody ever stands inside one.
 #
 # Self-managing and order-independent, like the other critters and bikes.
 
@@ -16,6 +18,9 @@ const WALK_MIN := 34.0
 const WALK_MAX := 58.0
 const GIVE_WAY_R := 34.0       # step aside from anything this close
 const PHOTO_T := 2.2
+const BODY_R := 12.0           # kept this far outside any solid body
+const BODY_GAP := 8.0          # and an ambler aims this much further out
+const LOOK_AHEAD := 120.0      # how far ahead an ambler sees a body coming
 
 var main: Node2D
 var rng: RandomNumberGenerator
@@ -40,8 +45,10 @@ func setup(m: Node2D, r: RandomNumberGenerator, at: Vector2, d: float) -> void:
 	add_to_group("tourists")
 	main = m
 	rng = r
-	global_position = at
-	lane_x = at.x
+	# a spot picked at random across the walk can land on a stall: start
+	# beside it instead
+	global_position = _out_of_bodies(at)
+	lane_x = global_position.x
 	dir = d
 	speed = rng.randf_range(WALK_MIN, WALK_MAX)
 	next_photo = rng.randf_range(4.0, 12.0)
@@ -108,14 +115,69 @@ func _physics_process(delta: float) -> void:
 	var e: Vector2 = main.walk_edges(global_position.y)
 	lane_x = clampf(lane_x, e.x + 30.0, e.y - 30.0)
 	var step := Vector2(0.0, dir * speed)
-	# drift back to their line, and give way to whatever is in the road
-	step.x = (lane_x - global_position.x) * 1.5
+	# drift back to their line (or round the body in it), and give way to
+	# whatever is in the road
+	step.x = (_clear_x(lane_x) - global_position.x) * 1.5
 	for other: Node2D in [main.dog, main.human]:
 		var away: Vector2 = global_position - other.global_position
 		if away.length() < GIVE_WAY_R + 14.0:
 			step.x += signf(away.x + 0.01) * 90.0
 	global_position += step * delta
 	global_position.x = clampf(global_position.x, e.x + 16.0, e.y - 16.0)
+	global_position = _out_of_bodies(global_position)
+
+
+# where across to walk instead of `x`: the nearer side of the first solid body
+# ahead whose span covers `x`, if that side fits the walk, else `x`
+func _clear_x(x: float) -> float:
+	var y := global_position.y
+	var best_ahead := INF
+	var goal := x
+	for r: Rect2 in main.solid_rects:
+		var g := r.grow(BODY_R + BODY_GAP)
+		if x < g.position.x or x > g.end.x:
+			continue
+		var near := g.end.y if dir < 0.0 else g.position.y
+		var far := g.position.y if dir < 0.0 else g.end.y
+		if (far - y) * dir < 0.0:
+			continue
+		var ahead := maxf(0.0, (near - y) * dir)
+		if ahead > LOOK_AHEAD or ahead >= best_ahead:
+			continue
+		var e: Vector2 = main.walk_edges(r.get_center().y)
+		var west_ok := g.position.x >= e.x + 16.0
+		var east_ok := g.end.x <= e.y - 16.0
+		var west_nearer := absf(x - g.position.x) <= absf(g.end.x - x)
+		if west_ok and (west_nearer or not east_ok):
+			goal = g.position.x
+		elif east_ok:
+			goal = g.end.x
+		else:
+			continue
+		best_ahead = ahead
+	return goal
+
+
+# `p` moved the shortest way out of any solid body it is inside
+func _out_of_bodies(p: Vector2) -> Vector2:
+	for r: Rect2 in main.solid_rects:
+		var g := r.grow(BODY_R)
+		if not g.has_point(p):
+			continue
+		var to_w := p.x - g.position.x
+		var to_e := g.end.x - p.x
+		var to_n := p.y - g.position.y
+		var to_s := g.end.y - p.y
+		var least := minf(minf(to_w, to_e), minf(to_n, to_s))
+		if least == to_w:
+			p.x = g.position.x
+		elif least == to_e:
+			p.x = g.end.x
+		elif least == to_n:
+			p.y = g.position.y
+		else:
+			p.y = g.end.y
+	return p
 
 
 func _tick_standing(delta: float) -> void:
@@ -137,7 +199,7 @@ func _tick_standing(delta: float) -> void:
 		var away: Vector2 = global_position - other.global_position
 		if away.length() < GIVE_WAY_R + 14.0:
 			home += away.normalized() * (GIVE_WAY_R + 16.0 - away.length())
-	global_position = global_position.lerp(home, minf(1.0, delta * 6.0))
+	global_position = _out_of_bodies(global_position.lerp(home, minf(1.0, delta * 6.0)))
 
 
 const SKINS := [Color(0.92, 0.76, 0.62), Color(0.62, 0.44, 0.32), Color(0.82, 0.64, 0.50), Color(0.45, 0.30, 0.22)]

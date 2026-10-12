@@ -2258,6 +2258,34 @@ static func build_ground_detail(m: Node2D) -> void:
 		})
 
 
+# [id, Rect2] for every solid rect build_walls makes that is not a stall, a van
+# or an El Mercat block (those have blockers of their own): the beach bars, the
+# train, the mammoth, the salamander, the dumpsters, the roaster and the stage.
+# Keep in step with the add_rect_body calls in build_walls; the test
+# test_npc_clear_of_solids checks every solid rect has a blocker.
+static func level_solid_rects(m: Node2D) -> Array:
+	var out: Array = []
+	match String(m.lvl):
+		"beach":
+			for i in range(BEACH_BARS.size()):
+				out.append(["beach_bar_%d" % i, BEACH_BARS[i]])
+		"station":
+			out.append(["estacio_train", ESTACIO_TRAIN])
+		"park":
+			out.append(["park_mammoth", Rect2(PARK_MAMMOTH - MAMMOTH_BODY * 0.5, MAMMOTH_BODY)])
+		"guell":
+			out.append(["mosaic_salamander",
+				Rect2(MOSAIC_SALAMANDER - MOSAIC_SALAMANDER_SIZE * 0.5, MOSAIC_SALAMANDER_SIZE)])
+		"neteja":
+			var ds: Array[Vector2] = neteja_dumpsters(m)
+			for i in range(ds.size()):
+				out.append(["neteja_dumpster_%d" % i, Rect2(ds[i] - NETEJA_DUMPSTER * 0.5, NETEJA_DUMPSTER)])
+		"spook":
+			out.append(["cast_roaster", Rect2(CAST_PLACA - CAST_ROASTER * 0.5, CAST_ROASTER)])
+			out.append(["cast_stage", castanyada_stage(m)])
+	return out
+
+
 static func build_bypasser_blockers(m: Node2D) -> void:
 	m.bypasser_blockers.clear()
 	for i in range(m.body_pole_count):
@@ -2329,6 +2357,10 @@ static func build_bypasser_blockers(m: Node2D) -> void:
 			"id": "cellar_%d" % i,
 			"rect": m.cellars[i],
 		})
+	# the walks' other solid bodies (add_rect_body in build_walls), so every
+	# solid rect a walker could meet is also one their route steers round
+	for sr: Array in level_solid_rects(m):
+		m.bypasser_blockers.append({"id": String(sr[0]), "rect": Rect2(sr[1])})
 	if m.pond.size.x > 0.0 and m.pond.size.y > 0.0:
 		m.bypasser_blockers.append({
 			"id": "pond_0",
