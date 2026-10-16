@@ -147,7 +147,25 @@ class Tris:
 		for o in Geometry2D.intersect_polygons(p, mask):
 			poly(o, col)
 
+	var _mesh: ArrayMesh
+
+	# Every layer but the door is built once, so it goes up as a mesh once and
+	# each frame only references it: resubmitting a big triangle array copies
+	# every vertex, every frame (the street alone doubled the film's CPU cost).
 	func draw(ci: CanvasItem) -> void:
+		if pts.is_empty():
+			return
+		if _mesh == null:
+			var arrays := []
+			arrays.resize(Mesh.ARRAY_MAX)
+			arrays[Mesh.ARRAY_VERTEX] = pts
+			arrays[Mesh.ARRAY_COLOR] = cols
+			_mesh = ArrayMesh.new()
+			_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		ci.draw_mesh(_mesh, null)
+
+	# for the one layer rebuilt every frame (the door)
+	func draw_once(ci: CanvasItem) -> void:
 		if not pts.is_empty():
 			RenderingServer.canvas_item_add_triangle_array(ci.get_canvas_item(), PackedInt32Array(), pts, cols)
 
@@ -567,7 +585,7 @@ static func _door(c: CanvasItem, door_open: float) -> void:
 		q.call(0.882, 0.56, 0.898, 0.578, Color(0.10, 0.08, 0.08))
 		var spy: Vector2 = at.call(0.5, 0.25)
 		b.oval(spy, Vector2(3.0 * absf(fx - hinge_x) / DOOR.size.x + 0.5, 3.0), brass, 10)
-	b.draw(c)
+	b.draw_once(c)
 
 
 # what the open door shows: the street outside, bleached by the sun
