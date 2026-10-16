@@ -2,6 +2,10 @@
 
 Append-only session history, newest first.
 
+## 2026-10-16 - handover after the intro
+
+- The sitrep in `HANDOVER.md` matches main after v1.60. The intro polish is pull request 234, waiting on a play. The next job is the playtest's DOG STUCK spots.
+
 ## 2026-10-12 - the intro fills the window
 
 - The Walkies film keeps its frame fitted inside the window, and the flat and the street paint out to the edges, so a wide or tall window shows more of the room instead of beige. The window throws one patch of light, the sofa sits on a shadow, the door has a jamb, and the street has balconies and a kerb shadow.

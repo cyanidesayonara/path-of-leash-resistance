@@ -1,7 +1,7 @@
 # HANDOVER — Path of Leash Resistance
 
-Thin current sitrep for the next agent or human. Details live in the
-canonical docs; do not treat archived handover notes as current truth.
+Thin current sitrep for the next agent. Details live in the canonical docs.
+Do not treat archived handover notes as current truth.
 
 ## Read first
 
@@ -10,139 +10,144 @@ canonical docs; do not treat archived handover notes as current truth.
 3. `CHANGELOG.md` — newest-first session history
 4. `.github/workflows/ci.yml` + `release.yml` — what must stay green to ship
 
-Historical sitrep (NPC owner appearances / post-v1.5 lifecycle era,
-2026-07-17): `docs/handover/ARCHIVE-2026-07-17-npc-owner-appearances.md`.
+Historical sitrep (NPC owner appearances, 2026-07-17):
+`docs/handover/ARCHIVE-2026-07-17-npc-owner-appearances.md`.
 
 ## What this is
 
 Top-down physics comedy in Godot 4.7 / GDScript. You are the dog; the
 phone-distracted human walks on autopilot; the leash is real verlet-rope
-physics (visual and gameplay constraint — see AGENTS.md). Ships to itch
-(`html5` + `windows`) on a version tag after green CI.
+physics. Ships to itch (`html5` + `windows`) on a version tag after green CI.
 
-## Where things stand (2026-10-04)
+## Where things stand (2026-10-16)
 
-**Released: v1.57** on itch (web + Windows) and submitted to the Microsoft
-Store as 1.57.0.0 on 2026-10-03 (listing record: `store/listing.md`). Its
-Store submission uses the ten current screenshots in `store/screenshots/`.
+**Released: v1.60** at `00576db`. itch (web and Windows) and the GitHub
+release are published. The Microsoft Store submission went in on 2026-10-12.
+Certification was still pending at the last check. Do not copy 1.60 into
+"Past What's new" in `store/listing.md` until Santtu says it is live.
 
-**Accepted and on `main` since:** #127 (leash drawing), #128 (guided whirl),
-#129 (pause grid, desktop exit, tutorial reach) and #130 (the leash
-conversation: your human is led by a steady pull, worn down by a hard one,
-and answers with a telegraphed "HEY!" and a correction; see AGENTS.md and
-`tests/test_leash_conversation.gd`). Nothing is awaiting acceptance.
+**On `origin/main`:** `32e1855` (merge of #233). The local `main` checkout at
+`path-of-leash-resistance` is behind that, at `21fca92`. Branch new work
+from `origin/main`, not from that checkout.
 
-**In progress:** pass 2 of `docs/superpowers/specs/2026-10-03-menu-terrain-design.md`.
-Part 1 (the access audit, `tools/terrain_audit.gd`; grass, mud and stream
-detail; paw marks on grass, mud and water) is its own PR. Left for part 2:
-gait by surface, the remaining sounds (rustle, grit, claw tick), sand
-ripples and kicked grains, pavement repairs and drains. The spec's
-mosaic-tile item no longer applies (El Mosaic has had no tile floor since its
-rebuild).
+Since the tag: #230 icon and Store art, #231 the 1.60 listing record, #232
+HUMAN STUCK no longer misfires, #233 the rope-tug tests stay clear of the
+live park. #233 is a test-only change. It does not count against the WIP
+limit.
 
-The older acceptance backlog (#23) is closed with every entry ticked. The
-board and that issue are the source of truth for the WIP count.
+**Open, this session's work:** [PR 234](https://github.com/cyanidesayonara/path-of-leash-resistance/pull/234)
+`intro-polish` at `125c4d7`, worktree `~/projects/pol-intro`. CI on that SHA
+is green (smoke, idle soak, screenshot sweep). Do not merge it. Santtu
+approves, then `land.sh` merges and boards it as Awaiting acceptance. Leave
+the worktree in place until that happens.
 
-**Needs Santtu:**
-- #65 (S2, decision): the built-up walks' frontage has been hidden under
-  full-width grass since v1.51. Three options in the issue.
-- Play the terrain PR (part 1) once merged, from its feel card; the
-  real-phone check (#13) now includes the touch controls; #11, #12, #14.
+The film was watched maximized. Two things that looked like bugs were not
+picture bugs:
 
-**Level review (#21):** two automated passes done (every walk at five points;
-every walk in rain, wind, snow, night and at 844x390). Findings filed and
-mostly fixed; what is left needs play.
+- A volume key skipped the film, because every key was a skip. Volume up,
+  volume down and mute now pass through. Every other key, click, tap and
+  pad button still skips. That fix is `125c4d7`.
+- A later play was silent because Windows had the Godot window muted, after
+  those volume keys. The game's own volumes were the defaults (master 0.85,
+  effects 0.9, music 0.55). Headphones (EDIFIER) were the default device.
+  Unmute the app in the Windows volume mixer if a launch is silent.
 
-**Performance (#45):** see the CHANGELOG. Levers that are left change the
-picture (the full-screen grade costs 3-4 ms a frame on an integrated GPU in
-the browser) or the behaviour (walker ropes; tried and dropped 2026-09-26).
+The feel card on the PR is still unchecked. Santtu has not said the film is
+accepted.
 
-**Guided whirl overhaul (accepted, #128):** the owner now commits to
-one direction and the exact local human-end coil measured over the arming
-window. Normal release is the pure tangent; the bounded missed-tangent path
-leans dogward only when it can still preserve the orbit, otherwise it bails
-into a controlled stumble. Timeout, lost-pole and furniture cases bail too,
-with their exit frame still shielded from the tug. The anticipation rings,
-orbit ghosts, speed lines, grit and fling streaks are procedural and
-deterministic. `tests/test_whirl_guided.gd` is the exhaustive guard.
+**Next task: DOG STUCK in the playtest.** `tools/playtest.gd` logs it when a
+direction is held, she is not planted, tumbling, teetering or dragged, and
+she moved under 4 px in a second. The 1.60 runs hit it mostly where the
+scripted steps push her into solids:
 
-Hand-play only the final commit. At the shortest reel, measurable coils fall
-under the 0.6-turn minimum, so every short-reel orbit uses that floor. A coil
-still tightening through the 0.25-second arming window is slightly under-read
-by its mean. A safe refusal deliberately loses the old FLING reward. The
-dogward lean on the forced path remains a tuning point; do not retune any of
-these without play evidence and a failing regression where appropriate.
+- market, about (700, -1185)
+- oldtown (681, -884)
+- scrap, about (795, -2819)
+- guell, about (670, -815)
+- station, y -2982 and -3235
 
-## Tools and rules added since the freeze began
+Separate from those spots: when she walks dead on into a pole beside her
+human, she ends up on top of them, because the two bodies do not collide.
+Fix bugs before adding features. This is a player-facing change if the dog's
+movement changes, so it needs a feel card, a CHANGELOG entry, and a fresh
+worktree off `origin/main`. If #234 is still open, land them in sequence:
+both edit `CHANGELOG.md`.
 
-- Verification: `tools/shot_sweep.sh` (deterministic: fixed frame rate,
-  seed, `AnimClock`), `tools/shot_diff.py` (pixel diff of two sweeps),
-  `tools/behaviour_snapshot.sh` (59 fixed-seed runs over 14 walks;
-  byte-identical for a refactor, line-by-line explained for intentional
-  handling changes), `tools/idle_soak.sh`, `--perf` with
-  `--perf-hide=`, `--perf-no-grade`, per-spike `physics_top`,
-  `tools/perf_sweep.sh`, `tools/web_perf.sh`, `tools/bench_leash.gd`,
-  `tools/bench_leash_draw.gd`.
-  Flags for screenshots: `--night`, `--weather=`, `--prompts=pad|touch`,
-  `--touch`, `--shot-at=N`, `--shot-menu=walkcard|confirm`, and `--no-exit`
-  for the web menus on desktop.
-- Rendering: draw runs of filled shapes through `ShapeBatch`
-  (`systems/shape_batch.gd`, pixel-exact, test in CI). Cosmetic animation
-  reads `AnimClock.msec()`, never the wall clock.
-- UI text: button names through `Prompts` (`hud/prompts.gd`); a key name
-  written into a UI string fails `tests/test_prompts.gd`.
-- Determinism: gameplay runs on game time (`main.elapsed`); visual
-  randomness has its own RNG. Keep it that way (#6).
-- Layout: main.gd split into `systems/`, `hud/`, `world/` modules (static
-  functions over main's state, forwarders kept); scripts live in folders.
-- Change control: the WIP limit and feel cards (AGENTS.md).
+**After that, still open from the 1.60 list:**
 
-**Dog moods** (`systems/mood.gd`, backlog item 9). Four moods - SCARED, BARKY,
-ZOOMIES, TIRED - arriving from events and fading on their own. They are
-**weather, not a menu**: nothing picks a mood and nothing cancels one, so the
-bounds in the mood header are load-bearing rather than tuning. Never touch
-the camera. Limit perception only. A fifth of speed either way at most. Read
-that header before changing any number in it, and keep `tests/test_mood.gd`
-green - most of it guards the promise, not the feature.
+- Record 1.60 as live in `store/listing.md` once certification passes.
+- Market NPC pair through a block: a rare report, not reproduced.
+- Per-walk audit issues: #149, #151, #152, #155-#162.
+- Web perf re-measure on an idle machine (#45). 1.60 showed 13-18 more draw
+  calls on beach, rain, market and station. Frame times were too noisy to read.
+- Longer term: #170 chase walks, #169 onboarding, #147 platforms, #13 phone
+  check, #14 leash weight.
 
-Microsoft Store: live since 2026-09-23 (https://apps.microsoft.com/detail/9p5d14v8rbqx),
-Store ID 9P5D14V8RBQX. `store/msix/` plus `tools/pack_msix.ps1` build the
-package and `release.yml` attaches it to each tagged release; the Store
-submission itself is manual (`docs/MICROSOFT_STORE.md`).
+**Left on purpose, not this task:**
 
-## Known deferred gap
+- `tutorial-kerb` in `pol-kerb`: unmerged commit `a2f0a6e`, "Lay a kerb to
+  ride along the tutorial's grind station". Its remote is gone.
+- `mercat-beside`: local only, one commit about keeping your human in the
+  aisle beside a market block. Behind `origin/main`.
+- `polr2-living-districts`: two commits on a provisional POLR2 note. Far
+  behind `origin/main`.
+- `tug-flake` in `pol-tugflake`: already merged as #233. Safe to remove
+  when nobody is using that checkout.
+- `pol-tools` (landing scripts) lives outside the repo.
 
-**Mobile Web canvas scaling (fixed in v1.54, unconfirmed on a real device):**
-stretch aspect switched from "keep" (letterboxed hard on any non-16:9 window)
-to "expand" (fills the window, revealing more/less than the 1280x720
-reference on the short axis instead of blanking it). Everything that had
-anchored against the 1280x720 reference now anchors against the live
-viewport: the four panel scripts (touch_controls, goals_card, results_panel,
-settings_panel), the dim and weather overlays, the colour-grade rect and its
-world-space noise, and every element built by `hud/hud_build.gd` — sixteen
-centred lines, the bottom rule, the wardrobe cluster. In `HudBuild.build`, use
-`pin_wide` / `pin_box` rather than literal coordinates; each element names
-the rule it hangs off (top edge, middle, bottom edge).
+## Standing rules
 
-Guarded by `tests/test_hud_anchoring.gd`, which reshapes a real viewport to
-a landscape and a portrait phone and asserts the HUD follows (389 checks, in
-CI). Native 1280x720 is asserted unchanged, so desktop cannot regress.
+Commits are authored only by Santtu Nykänen. Never add `Co-authored-by`
+trailers or any AI acknowledgement. Never push to `main`. Every change is a
+PR. Santtu approves. Merge with `land.sh` once CI is green. Ask before
+tagging. Ask before downloading. Never handle secrets. Do not change system
+or security settings.
 
-Verified locally via `--resolution WxH` and before/after screenshots at
-844x390 — **not yet played on a real phone browser.** Touch acceptance
-testing can proceed once that happens; it is the only part still unverified.
+Board: https://github.com/users/cyanidesayonara/projects/4. A merged
+player-facing PR goes to Awaiting acceptance. Only Santtu moves a card to
+Done, after playing it. At most 5 player-facing changes awaiting acceptance.
+At the limit, only fixes, tests, refactors and tooling may land.
+
+Every PR has a `## Feel card` (3-5 numbered checks, with the flags that get
+there) and a `CHANGELOG.md` entry. A new script needs its `.gd.uid`.
+
+Player-facing text is American English. "leash", never "lead". they/them.
+Catalan place names keep their accents. No emoji. Key names only through
+`Prompts` tokens.
+
+Landing scripts, in `~/projects/pol-tools/`: `land.sh PR` waits for green
+checks, merges, and boards the PR. `land_after.sh PREV PR WORKTREE BRANCH`
+waits for the previous PR, merges `origin/main`, and resolves CHANGELOG and
+`ci.yml` conflicts by keeping both sides. `godot --import` dirties
+`assets/concept/*.svg.import` and `icon.png.import`. Restore those before
+landing.
+
+## Intro, if you touch the film
+
+Spec: `docs/superpowers/specs/2026-10-12-intro-polish-design.md`. Plan:
+`docs/superpowers/plans/2026-10-12-intro-polish.md`.
+
+The stage stays a contain fit (`min` of the two axes). Cover would crop a
+tall window to a strip. Wall, floor and sky paint from (-800, -1100) out
+past the 1280x720 frame. The yank eases and arrives at 9.22 on the bark.
+The street stays the white flash at `TITLE_AT` 10.1. The opening is seven
+bars of the title theme, marimba and a half-velocity shaker, at loop
+loudness. A skip starts the title theme from the top. Do not copy the music
+job's seed to make the shaker match. The hashed noise in the new cues is
+biased. Change it only if a cue sounds harsh.
+
+The film plays once per process, on a plain launch only. Any command-line
+user argument, including `--level`, skips it. Engine arguments
+(`--maximized`, `--rendering-method`) do not.
 
 ## Release ritual
 
 1. Green CI on the commit you intend to ship
-2. Update `CHANGELOG.md` (the in-game version label is stamped from the
-   tag by `release.yml`; there is nothing to bump by hand)
-3. `git tag vX.Y && git push --tags`
-4. CI runs again for the tag SHA; `release.yml` waits for that success,
-   then exports and publishes to itch. Missing `BUTLER_API_KEY` fails the
-   job (does not skip upload).
+2. Update `CHANGELOG.md` (the in-game version label is stamped from the tag)
+3. Ask Santtu, then `git tag vX.Y && git push --tags`
+4. `release.yml` waits for CI on that SHA, then exports and publishes.
+   Missing `BUTLER_API_KEY` fails the job.
 
-## Conventions
-
-No emoji. Imperative commits. Tuning constants named at script tops.
-Feel decisions from playtesting. Update CHANGELOG every session.
+Before a tag, update "What's new" in `store/listing.md` and `docs/itch-page.md`
+as their own PR. Santtu runs the Store submit workflow. When a submission
+goes live, copy its What's new into "Past What's new".
