@@ -20,6 +20,7 @@ static func millie(c: CanvasItem, pos: Vector2, s: float, face: float, sq: Vecto
 		Color(0.15, 0.12, 0.10, 0.28 * k))
 	pose = pose.duplicate()
 	pose["no_shadow"] = true
+	pose["_face"] = face
 	var xs := Vector2(face * s * sq.x, s * sq.y)
 	c.draw_set_transform(pos, 0.0, xs)
 	var ring_l: Vector2 = MillieSide.draw(c, Vector2.ZERO, 1.0, pose, "hybrid")
