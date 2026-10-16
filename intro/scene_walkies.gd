@@ -30,18 +30,22 @@ const PHONE := Vector2(466.0, 468.0)
 
 # the camera: [centre, zoom] in scene units. Wide enough at first to see who
 # she is looking at; close on her and the hook for the jump; with her across
-# the room; a push in on the crouch; a cut wide on the bark for the yank; then
-# a cut to the street at the title.
+# the room; a push in on the crouch; a cut wide on the bark for the yank, with
+# a short shake; then a cut to the street at the title. The opening creeps in
+# toward her so the held shot is never quite still.
 static func camera(t: float) -> Array:
 	if t >= TITLE_AT:
 		return [Vector2(640, 360), 1.0]
 	if t >= YANK_AT:
-		return [Vector2(800, 420), 1.12]
-	var cx: float = Anim.k(t, [[0.0, 645.0], [2.2, 645.0], [2.7, 930.0, "io"], [3.45, 930.0], [4.9, 620.0, "io"],
+		# the bark shakes the frame for a quarter second, settling to rest
+		var d := t - YANK_AT
+		var k := 1.0 - Anim.span(t, YANK_AT, YANK_AT + 0.28)
+		return [Vector2(800, 420) + Vector2(sin(d * 97.0), sin(d * 71.0)) * 7.0 * k * k, 1.12]
+	var cx: float = Anim.k(t, [[0.0, 645.0], [2.2, 668.0, "io"], [2.7, 930.0, "io"], [3.45, 930.0], [4.9, 620.0, "io"],
 		[8.55, 620.0], [8.95, 570.0, "io"]])
-	var cy: float = Anim.k(t, [[0.0, 425.0], [2.2, 425.0], [2.7, 445.0, "io"], [4.9, 450.0, "io"], [8.55, 450.0],
+	var cy: float = Anim.k(t, [[0.0, 425.0], [2.2, 430.0, "io"], [2.7, 445.0, "io"], [4.9, 450.0, "io"], [8.55, 450.0],
 		[8.95, 455.0, "io"]])
-	var z: float = Anim.k(t, [[0.0, 1.08], [2.2, 1.08], [2.7, 1.6, "io"], [3.45, 1.6], [4.9, 1.45, "io"], [8.55, 1.45],
+	var z: float = Anim.k(t, [[0.0, 1.08], [2.2, 1.14, "io"], [2.7, 1.6, "io"], [3.45, 1.6], [4.9, 1.45, "io"], [8.55, 1.45],
 		[8.95, 1.75, "io"]])
 	return [Vector2(cx, cy), z]
 
@@ -943,6 +947,7 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 		"ear": 0.35 * trot * sin(t * 15.0 + 1.0) + Anim.k(t, [[7.55, 0.0], [7.85, -0.4, "io"], [8.45, -0.4], [8.65, 0.0, "io"],
 			[9.0, -0.3, "io"], [9.25, -0.3], [9.33, 0.7, "snap"]]),
 		"tail": 0.45 * sin(t * 17.0) * Anim.span(t, 5.95, 6.1) * (1.0 - Anim.span(t, 6.4, 6.5))
+			+ 0.38 * sin(t * 14.0) * Anim.span(t, 0.5, 0.8) * (1.0 - Anim.span(t, 2.45, 2.6))
 			+ Anim.k(t, [[7.55, 0.0], [7.85, -0.6, "io"], [8.5, -0.6], [8.7, 0.25, "io"]]),
 		"mouth": Anim.k(t, [[3.1, 0.0], [3.13, 0.45, "hold"], [5.25, 0.45], [5.28, 0.0, "hold"], [9.25, 0.0], [9.28, 0.9, "hold"]]),
 		"brow": Anim.k(t, [[5.75, 0.0], [5.95, 1.0, "io"], [7.4, 1.0], [7.6, -0.6, "io"], [8.7, -0.6], [8.95, -1.0, "io"]]),
@@ -953,6 +958,8 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 		[3.3, 1.12, "in"], [3.36, 0.8, "snap"], [3.5, 1.0, "back"],
 		[7.6, 1.0], [7.75, 1.07, "out"], [8.0, 0.95, "io"], [8.2, 1.0, "io"],
 		[8.72, 1.0], [9.1, 0.68, "io"], [9.25, 0.68]])
+	if t < 9.25:
+		stretch += 0.022 * sin(t * 5.2) * sitting
 	var sq := Anim.squash(stretch)
 	if t >= 9.25:
 		sq = Vector2(1.38, 0.76)   # stretched along the dash
@@ -989,7 +996,8 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 	var reach: float = Anim.k(t, [[8.1, 0.0], [8.3, 0.35, "out"], [8.6, 0.8, "io"], [8.95, 0.3, "io"]])
 	var hpose := {
 		"sit": 1.0 - off_sofa,
-		"lean": lerpf(0.15 + 0.5 * tip, 1.3, off_sofa) + Anim.k(t, [[8.1, 0.0], [8.3, 0.25, "out"], [8.55, 0.0, "io"]]),
+		"lean": lerpf(0.15 + 0.5 * tip, 1.3, off_sofa) + Anim.k(t, [[8.1, 0.0], [8.3, 0.25, "out"], [8.55, 0.0, "io"]])
+			+ 0.02 * sin(t * 2.4) * (1.0 - off_sofa),
 		"scroll": t * 1.3 if t < 6.85 or t > 7.4 else 0.0,
 		"blink": 1.0 if fposmod(t, 3.1) < 0.12 and t < 9.2 else 0.0,
 		"phone": 1.0,
@@ -1057,6 +1065,8 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 		IntroKit.dots(c, Vector2(SOFA_X + 96, FLOOR - 352), t - 7.25)
 	# the sigh: a soft curl of breath, drifting up and away from them
 	IntroKit.breath(c, m["mouth"] + Vector2(signf(face) * 14.0, -8.0), Anim.span(t, 7.62, 8.4), face)
+	_sunbeam(c, t)
+	_woof(c, t)
 	# the dash: speed lines behind both, a puff of dust where she left
 	if t > 9.27 and not m_gone:
 		IntroKit.speed_lines(c, mpos + Vector2(-60, -60), Vector2.RIGHT, 80.0, 3, 0.7)
@@ -1075,6 +1085,55 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 	var flash: float = Anim.k(t, [[9.84, 0.0], [9.95, 1.0, "out"], [TITLE_AT, 1.0]])
 	IntroKit.fade(c, flash, Color(1.0, 0.98, 0.92))
 	IntroKit.fade(c, 1.0 - Anim.span(t, 0.0, 0.8))
+
+
+# The window's sun as a beam through the room, one hard-edged pale shape from
+# the panes to the patch on the floor, with dust drifting slowly down it. One
+# batch for the motes; their drift is a pure function of t.
+const MOTES := 18
+static var _motes: ShapeBatch
+
+
+static func _sunbeam(c: CanvasItem, t: float) -> void:
+	c.draw_colored_polygon(PackedVector2Array([Vector2(150, 130), Vector2(360, 130), Vector2(720, 682), Vector2(524, 682),
+		Vector2(392, 616), Vector2(150, 360)]), Color(1.0, 0.93, 0.70, 0.085))
+	if _motes == null:
+		_motes = ShapeBatch.new()
+	for i in range(MOTES):
+		var h := fposmod(float(i) * 0.6180339, 1.0)
+		var u := fposmod(h * 3.7 + t * (0.025 + 0.02 * h), 1.0)
+		var v := clampf(fposmod(h * 7.3, 1.0) + 0.05 * sin(t * 0.8 + float(i)), 0.0, 1.0)
+		var top := Vector2(150, 130).lerp(Vector2(360, 130), v)
+		var bot := Vector2(524, 682).lerp(Vector2(720, 682), v)
+		var p := top.lerp(bot, u) + Vector2(6.0 * sin(t * 0.6 + float(i) * 1.7), 0.0)
+		var a := sin(PI * u) * (0.45 + 0.35 * (0.5 + 0.5 * sin(t * 2.3 + float(i) * 2.1)))
+		_motes.circle(p, 2.0 + 1.4 * h, Color(1.0, 0.97, 0.86, a))
+	_motes.flush(c)
+
+
+# the bark: a comic burst where her head was, popping in and gone as she bolts
+static func _woof(c: CanvasItem, t: float) -> void:
+	var pop: float = Anim.k(t, [[YANK_AT, 0.0], [YANK_AT + 0.06, 1.18, "out"], [YANK_AT + 0.13, 1.0, "io"],
+		[YANK_AT + 0.22, 1.0], [YANK_AT + 0.29, 0.0, "in"]])
+	if pop <= 0.01:
+		return
+	var at := Vector2(818, 452)
+	var rot := -0.12
+	var star := PackedVector2Array()
+	var ink := PackedVector2Array()
+	for i in range(18):
+		var a := TAU * float(i) / 18.0 + rot
+		var r := (58.0 if i % 2 == 0 else 40.0) * (1.0 + 0.06 * sin(float(i) * 2.7))
+		star.append(at + Vector2(cos(a) * r * 1.25, sin(a) * r * 0.85) * pop)
+		ink.append(at + Vector2(cos(a) * (r + 5.0) * 1.25, sin(a) * (r + 5.0) * 0.85) * pop)
+	c.draw_colored_polygon(ink, LINE)
+	c.draw_colored_polygon(star, Color(1.0, 0.97, 0.86))
+	var f := IntroTitle._face(30, 0.04)
+	var w := IntroTitle._width("WOOF!", 30, 0.04)
+	c.draw_set_transform(at, rot, Vector2(pop, pop))
+	c.draw_string_outline(f, Vector2(-w * 0.5, 11), "WOOF!", HORIZONTAL_ALIGNMENT_LEFT, -1, 30, 6, IntroTitle.LOGO_CREAM)
+	c.draw_string(f, Vector2(-w * 0.5, 11), "WOOF!", HORIZONTAL_ALIGNMENT_LEFT, -1, 30, IntroTitle.LOGO_RED)
+	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 # the street they burst out into, in the Eixample morning: a sky, the Sagrada
