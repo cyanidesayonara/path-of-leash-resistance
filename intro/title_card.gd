@@ -12,7 +12,6 @@ const UI := preload("res://hud/ui_kit.gd")
 const CREAM := Color(0.99, 0.95, 0.84)
 const INK := Color(0.07, 0.05, 0.06)
 const SHADOW := Color(0.22, 0.12, 0.06, 0.5)
-const TOP_PX := 80
 const LEASH := Color(0.70, 0.16, 0.20)
 
 
@@ -28,75 +27,128 @@ static func word(c: CanvasItem, txt: String, centre: Vector2, px: int, rot := 0.
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
-# The title on its leash. The O of PATH OF is a dog's collar: a red band the
-# size and weight of the letter, outlined and shadowed like the letters round
-# it, buckled at the top, with the D-ring there that the leash clips to. The
-# leash hangs straight down from the top of the screen, and the whole title
-# hangs from it: drops in, overshoots, and swings to rest about that point.
-static func _hanging(c: CanvasItem, t: float, cx: float, y1: float, y2: float) -> void:
-	var f := UI.display()
-	var px := TOP_PX
-	var w_all := f.get_string_size("PATH OF", HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-	var x0 := cx - w_all * 0.5
-	var w_path := f.get_string_size("PATH", HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-	var w_pre := f.get_string_size("PATH ", HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-	var w_o := f.get_string_size("O", HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-	var w_f := f.get_string_size("F", HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-	var path_c := Vector2(x0 + w_path * 0.5, y1)
-	var o_c := Vector2(x0 + w_pre + w_o * 0.5, y1)
-	var f_c := Vector2(x0 + w_pre + w_o + w_f * 0.5, y1)
-	# a beat on the empty street, then it drops, overshoots and swings to rest
-	var fall: float = Anim.k(t, [[0.0, -620.0], [0.1, -620.0], [0.55, 24.0, "io"], [0.78, -8.0, "out"], [1.0, 0.0, "io"]])
-	var ts := maxf(t - 0.55, 0.0)
-	var ang: float = sin(ts * 5.2) * 0.11 * exp(-ts * 1.5)
-	var pivot := Vector2(o_c.x, -60.0)
-	var to_title := func(q: Vector2) -> Vector2:
-		return pivot + (q + Vector2(0, fall) - pivot).rotated(ang)
-	# the collar's size, from the letter it stands in for
-	var stroke := float(px) * 0.135
-	var rx := w_o * 0.5 - stroke * 0.15
-	var ry := float(px) * 0.37 - stroke * 0.5
-	var dring := Vector2(0, -ry - stroke * 0.5 - 10.0)
-	# the leash, straight down from the top of the screen to the D-ring
-	var ring_now: Vector2 = to_title.call(o_c + dring + Vector2(0, -6))
-	c.draw_line(pivot, ring_now, INK, 10.0)
-	c.draw_line(pivot, ring_now, LEASH, 6.0)
-	word(c, "PATH", to_title.call(path_c), px, ang)
-	word(c, "F", to_title.call(f_c), px, ang)
-	word(c, "LEASH RESISTANCE", to_title.call(Vector2(cx, y2)), 104, ang)
-	# the collar: shadow, outline, band, the light along its top, stitching
-	var oc: Vector2 = to_title.call(o_c)
-	c.draw_set_transform(oc, ang, Vector2.ONE)
-	var band := MillieSide.ellipse(Vector2.ZERO, Vector2(rx, ry), 0.0, 48)
+# The title on its leash, set as the Store logo is (tools/make_store_art.gd):
+# stacked, each line fitted to one measure, PATH OF small and spaced, LEASH the
+# biggest word and in the leash's colour, RESISTANCE under it, every line a
+# sticker (a stepped brown drop, a fat cream keyline, then the letters). The O
+# of PATH OF is Millie's pink collar, and the leash comes straight down from the
+# top of the screen to its D-ring: the title drops in on it, overshoots, swings
+# to rest about that point and keeps a slow sway, as a hung sign would.
+const LOGO_INK := Color(0.27, 0.15, 0.09)
+const LOGO_DROP := Color(0.45, 0.25, 0.14)
+const LOGO_CREAM := Color(1.0, 0.97, 0.88)
+const LOGO_RED := Color(0.75, 0.27, 0.20)
+const COLLAR := Color(0.93, 0.33, 0.55)
+const MEASURE := 540.0           # RESISTANCE spans this many scene units
+const SMALL_TRACK := 0.30
+const BIG_TRACK := 0.04
+static var _faces := {}
+
+
+static func _face(px: int, track: float) -> FontVariation:
+	var key := "%d/%.2f" % [px, track]
+	if not _faces.has(key):
+		var f := FontVariation.new()
+		f.base_font = ThemeDB.fallback_font
+		f.variation_embolden = 1.1
+		f.set_spacing(TextServer.SPACING_GLYPH, int(round(px * track)))
+		_faces[key] = f
+	return _faces[key]
+
+
+static func _width(text: String, px: int, track: float) -> float:
+	# glyph spacing also follows the last letter; take it back off
+	return _face(px, track).get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x - px * track
+
+
+static func _fit(text: String, measure: float, track: float) -> int:
+	return int(floor(200.0 * measure / _width(text, 200, track)))
+
+
+static func _sticker(c: CanvasItem, text: String, left: Vector2, px: int, track: float, fill: Color) -> void:
+	var f := _face(px, track)
+	var sh := Vector2(0.0, px * 0.07)
+	c.draw_string_outline(f, left + sh, text, HORIZONTAL_ALIGNMENT_LEFT, -1, px, int(px * 0.22), LOGO_DROP)
+	c.draw_string(f, left + sh, text, HORIZONTAL_ALIGNMENT_LEFT, -1, px, LOGO_DROP)
+	c.draw_string_outline(f, left, text, HORIZONTAL_ALIGNMENT_LEFT, -1, px, int(px * 0.20), LOGO_CREAM)
+	c.draw_string(f, left, text, HORIZONTAL_ALIGNMENT_LEFT, -1, px, fill)
+
+
+static func _hanging(c: CanvasItem, t: float, cx: float, top: float) -> void:
+	var fs_path := _fit("PATH OF", MEASURE * 0.62, SMALL_TRACK)
+	var fs_leash := mini(_fit("LEASH", MEASURE, BIG_TRACK), int(MEASURE * 0.30))
+	var fs_res := _fit("RESISTANCE", MEASURE, BIG_TRACK)
+	# PATH OF laid out round its O, which hangs under the leash at x = 0
+	var w_all := _width("PATH OF", fs_path, SMALL_TRACK)
+	var w_pre := _width("PATH ", fs_path, SMALL_TRACK) + fs_path * SMALL_TRACK
+	var w_o := _width("O", fs_path, SMALL_TRACK)
+	var o_x := -w_all * 0.5 + w_pre + w_o * 0.5
+	var shift := -o_x                 # puts the O under the pivot, the title centred about it
+	var base1 := float(fs_path) * 0.9
+	var base2 := base1 + fs_leash * 0.98
+	var base3 := base2 + fs_res * 1.12
+	var o_c := Vector2(0.0, base1 - fs_path * 0.36)
+	var ry := fs_path * 0.37
+	var rx := maxf(w_o * 0.5, fs_path * 0.36)
+	var stroke := fs_path * 0.105
+	# the D-ring stands on the buckle at the top of the band
+	var dring := o_c + Vector2(0, -(ry - stroke * 0.5) - stroke * 0.8 - 2.5)
+	# the drop: a beat on the empty street, a fall that overshoots and bounces,
+	# then a swing that dies into a slow sway
+	var fall: float = Anim.k(t, [[0.0, -760.0], [0.1, -760.0], [0.5, 22.0, "in"], [0.68, -9.0, "out"], [0.86, 3.0, "io"],
+		[1.0, 0.0, "io"]])
+	var ts := maxf(t - 0.5, 0.0)
+	var ang: float = sin(ts * 4.6) * 0.10 * exp(-ts * 1.4) + sin(t * 1.3) * 0.012
+	# a squash as it lands, the letters settling on the leash
+	var land := Anim.span(t, 0.5, 0.62) * (1.0 - Anim.span(t, 0.62, 0.9))
+	var sc := Vector2(1.0 + 0.05 * land, 1.0 - 0.06 * land)
+	var pivot := Vector2(cx, -80.0)
+	var hang := top + 80.0 - dring.y        # pivot to the D-ring, at rest
+	c.draw_set_transform(pivot, ang, Vector2.ONE)
+	var ring_at := Vector2(0.0, hang + fall + (dring.y - 30.0) * sc.y)
+	# the leash: a dark edge, the strap and the light along it
+	c.draw_line(Vector2.ZERO, ring_at, LOGO_INK, 12.0)
+	c.draw_line(Vector2.ZERO, ring_at, IntroKit.LEASH, 8.0)
+	c.draw_line(Vector2(-1.5, 0), ring_at + Vector2(-1.5, 0), IntroKit.LEASH.lightened(0.35), 2.0)
+	c.draw_set_transform(pivot + Vector2(0.0, hang + fall).rotated(ang), ang, sc)
+	var path_left := Vector2(-w_all * 0.5 + shift, base1)
+	_sticker(c, "PATH", path_left, fs_path, SMALL_TRACK, LOGO_INK)
+	var f_left := Vector2(o_x + shift + w_o * 0.5 + fs_path * SMALL_TRACK, base1)
+	_sticker(c, "F", f_left, fs_path, SMALL_TRACK, LOGO_INK)
+	_sticker(c, "LEASH", Vector2(-_width("LEASH", fs_leash, BIG_TRACK) * 0.5 + shift, base2), fs_leash, BIG_TRACK, LOGO_RED)
+	_sticker(c, "RESISTANCE", Vector2(-_width("RESISTANCE", fs_res, BIG_TRACK) * 0.5 + shift, base3), fs_res, BIG_TRACK,
+		LOGO_INK)
+	# the collar standing in for the O: drop, keyline, band, its light edge,
+	# a buckle on top and the D-ring on the buckle
+	var erx := rx - stroke * 0.5
+	var ery := ry - stroke * 0.5
+	var band := MillieSide.ellipse(o_c, Vector2(erx, ery), 0.0, 40)
 	band.append(band[0])
-	var sh := PackedVector2Array()
+	var drop := PackedVector2Array()
 	for q in band:
-		sh.append(q + Vector2(6, 8))
-	c.draw_polyline(sh, SHADOW, stroke + 8.0)
-	c.draw_polyline(band, INK, stroke + 7.0)
-	c.draw_polyline(band, LEASH, stroke)
+		drop.append(q + Vector2(0.0, fs_path * 0.07))
+	c.draw_polyline(drop, LOGO_DROP, stroke + fs_path * 0.20)
+	c.draw_polyline(band, LOGO_CREAM, stroke + fs_path * 0.18)
+	c.draw_polyline(band, COLLAR.darkened(0.3), stroke)
+	c.draw_polyline(band, COLLAR, stroke * 0.62)
 	var lit := PackedVector2Array()
-	for i in range(12):
-		var a := PI * 1.05 + float(i) / 11.0 * PI * 0.62
-		lit.append(Vector2(cos(a) * rx, sin(a) * ry) + Vector2(0, -stroke * 0.18))
-	c.draw_polyline(lit, LEASH.lightened(0.38), stroke * 0.22)
-	for i in range(18):
-		var a0 := TAU * float(i) / 18.0
-		var a1 := a0 + TAU / 36.0
-		var r0 := Vector2(cos(a0) * rx, sin(a0) * ry)
-		var r1 := Vector2(cos(a1) * rx, sin(a1) * ry)
-		c.draw_line(r0, r1, LEASH.darkened(0.35), 1.4)
-	# the buckle across the top of the band, and the D-ring above it
-	var brass := Color(0.92, 0.78, 0.40)
-	var bk := Rect2(Vector2(-stroke * 0.7, -ry - stroke * 0.75), Vector2(stroke * 1.4, stroke * 1.5))
-	c.draw_rect(bk.grow(2.5), INK)
-	c.draw_rect(bk, brass)
-	c.draw_rect(bk.grow(-stroke * 0.32), LEASH.darkened(0.1))
-	c.draw_line(Vector2(0, bk.position.y + 2.0), Vector2(0, bk.end.y - 2.0), INK, 2.0)
-	c.draw_arc(dring, 8.0, PI, TAU, 14, INK, 7.0)
-	c.draw_line(dring + Vector2(-8, 0), dring + Vector2(8, 0), INK, 7.0)
-	c.draw_arc(dring, 8.0, PI, TAU, 14, brass, 3.5)
-	c.draw_line(dring + Vector2(-8, 0), dring + Vector2(8, 0), brass, 3.5)
+	for i in range(10):
+		var a := PI * 1.08 + float(i) / 9.0 * PI * 0.6
+		lit.append(o_c + Vector2(cos(a) * erx, sin(a) * ery))
+	c.draw_polyline(lit, COLLAR.lightened(0.5), stroke * 0.22)
+	var silver := Color(0.90, 0.90, 0.94)
+	var top_y := o_c.y - ery
+	var bk := Rect2(Vector2(-stroke * 0.75, top_y - stroke * 0.8), Vector2(stroke * 1.5, stroke * 1.6))
+	c.draw_rect(bk.grow(2.5), LOGO_INK)
+	c.draw_rect(bk, silver)
+	c.draw_rect(bk.grow(-stroke * 0.38), COLLAR.darkened(0.2))
+	c.draw_arc(dring, 8.0, PI, TAU, 16, LOGO_INK, 7.0)
+	c.draw_arc(dring, 8.0, PI, TAU, 16, silver, 3.5)
+	# the leash's snap clip, hooked through the ring
+	var clip := Rect2(dring + Vector2(-4.0, -31.0), Vector2(8.0, 18.0))
+	c.draw_rect(clip.grow(2.0), LOGO_INK)
+	c.draw_rect(clip, Color(0.74, 0.74, 0.78))
+	c.draw_rect(Rect2(clip.position + Vector2(1.5, 2.0), Vector2(2.0, 11.0)), Color(1, 1, 1, 0.7))
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
@@ -109,7 +161,7 @@ static func draw(c: CanvasItem, t: float, drop := "swing", size := Vector2(1280,
 	var sc := Vector2.ONE
 	match drop:
 		"swing":
-			_hanging(c, t, cx, y1, y2)
+			_hanging(c, t, cx, size.y * 0.07)
 			return
 		"slam":
 			var sx: float = Anim.k(t, [[0.0, 1400.0], [0.28, -30.0, "in"], [0.45, 0.0, "back"]])
