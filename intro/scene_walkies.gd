@@ -14,6 +14,7 @@ const LENGTH := 15.0
 const S := 1.6                 # character scale
 const MS := 1.52               # Millie's scale
 const FLOOR := 610.0
+const YANK_AT := 9.22          # the bark, and the cut wide for the yank
 const MARGIN := Rect2(-800, -1100, 3000, 2900) # (-800, -1100) to (2200, 1800)
 const DOOR := Rect2(1060, 250, 150, 360)
 const HOOK := Vector2(1010, 320)
@@ -29,17 +30,19 @@ const PHONE := Vector2(466.0, 468.0)
 
 # the camera: [centre, zoom] in scene units. Wide enough at first to see who
 # she is looking at; close on her and the hook for the jump; with her across
-# the room; a push in on the crouch; an ease into the wide yank; then a cut
-# to the street at the title.
+# the room; a push in on the crouch; a cut wide on the bark for the yank; then
+# a cut to the street at the title.
 static func camera(t: float) -> Array:
 	if t >= TITLE_AT:
 		return [Vector2(640, 360), 1.0]
-	var cx: float = Anim.k(t, [[0.0, 720.0], [2.2, 720.0], [2.7, 930.0, "io"], [3.45, 930.0], [4.9, 620.0, "io"],
-		[8.55, 620.0], [8.95, 570.0, "io"], [9.04, 570.0], [9.22, 800.0, "io"]])
-	var cy: float = Anim.k(t, [[0.0, 430.0], [2.2, 430.0], [2.7, 445.0, "io"], [4.9, 450.0, "io"], [8.55, 450.0],
-		[8.95, 455.0, "io"], [9.04, 455.0], [9.22, 420.0, "io"]])
-	var z: float = Anim.k(t, [[0.0, 1.2], [2.2, 1.2], [2.7, 1.6, "io"], [3.45, 1.6], [4.9, 1.45, "io"], [8.55, 1.45],
-		[8.95, 1.75, "io"], [9.04, 1.75], [9.22, 1.12, "io"]])
+	if t >= YANK_AT:
+		return [Vector2(800, 420), 1.12]
+	var cx: float = Anim.k(t, [[0.0, 645.0], [2.2, 645.0], [2.7, 930.0, "io"], [3.45, 930.0], [4.9, 620.0, "io"],
+		[8.55, 620.0], [8.95, 570.0, "io"]])
+	var cy: float = Anim.k(t, [[0.0, 425.0], [2.2, 425.0], [2.7, 445.0, "io"], [4.9, 450.0, "io"], [8.55, 450.0],
+		[8.95, 455.0, "io"]])
+	var z: float = Anim.k(t, [[0.0, 1.08], [2.2, 1.08], [2.7, 1.6, "io"], [3.45, 1.6], [4.9, 1.45, "io"], [8.55, 1.45],
+		[8.95, 1.75, "io"]])
 	return [Vector2(cx, cy), z]
 
 
@@ -135,10 +138,10 @@ static func _dressing(c: CanvasItem) -> void:
 	c.draw_colored_polygon(MillieSide.ellipse(Vector2(560, FLOOR + 22), Vector2(296, 18)), Color(0.36, 0.48, 0.62))
 	c.draw_colored_polygon(MillieSide.ellipse(Vector2(560, FLOOR + 22), Vector2(250, 12)), Color(0.86, 0.70, 0.44))
 	# the floor lamp, lit
-	c.draw_line(Vector2(130, FLOOR), Vector2(130, FLOOR - 300), IntroKit.INK, 6.0)
-	IntroKit.box(c, Rect2(110, FLOOR - 8, 40, 8), 3.0, Color(0.20, 0.20, 0.22), 2.0)
-	c.draw_colored_polygon(MillieSide.ellipse(Vector2(130, FLOOR - 300), Vector2(90, 80)), Color(1.0, 0.92, 0.66, 0.16))
-	var shade := PackedVector2Array([Vector2(100, FLOOR - 340), Vector2(160, FLOOR - 340), Vector2(178, FLOOR - 288), Vector2(82, FLOOR - 288)])
+	c.draw_line(Vector2(115, FLOOR), Vector2(115, FLOOR - 300), IntroKit.INK, 6.0)
+	IntroKit.box(c, Rect2(95, FLOOR - 8, 40, 8), 3.0, Color(0.20, 0.20, 0.22), 2.0)
+	c.draw_colored_polygon(MillieSide.ellipse(Vector2(115, FLOOR - 310), Vector2(58, 52)), Color(1.0, 0.92, 0.66, 0.22))
+	var shade := PackedVector2Array([Vector2(85, FLOOR - 340), Vector2(145, FLOOR - 340), Vector2(163, FLOOR - 288), Vector2(67, FLOOR - 288)])
 	c.draw_colored_polygon(PackedVector2Array([shade[0] + Vector2(-3, -3), shade[1] + Vector2(3, -3), shade[2] + Vector2(4, 3), shade[3] + Vector2(-4, 3)]), IntroKit.INK)
 	c.draw_colored_polygon(shade, Color(0.98, 0.90, 0.68))
 	# the plant on the windowsill
@@ -177,15 +180,18 @@ static func _dressing(c: CanvasItem) -> void:
 static func _light(c: CanvasItem) -> void:
 	for i in range(6):
 		var w := 40.0 + float(i) * 40.0
-		c.draw_rect(Rect2(-200, MARGIN.position.y, w, MARGIN.size.y), Color(0.20, 0.12, 0.08, 0.035))
-		c.draw_rect(Rect2(1480 - w, MARGIN.position.y, w, MARGIN.size.y), Color(0.20, 0.12, 0.08, 0.035))
+		c.draw_rect(Rect2(MARGIN.position.x, MARGIN.position.y, -200.0 + w - MARGIN.position.x, MARGIN.size.y),
+			Color(0.20, 0.12, 0.08, 0.035))
+		c.draw_rect(Rect2(1480 - w, MARGIN.position.y, MARGIN.end.x - (1480 - w), MARGIN.size.y), Color(0.20, 0.12, 0.08, 0.035))
 
 
-# one patch of morning from the window, on the sofa and the floor
+# one patch of morning sun from the window, slanting onto the boards and the
+# rug in front of the sofa (drawn after the sofa, under everyone)
 static func _window_light(c: CanvasItem) -> void:
 	c.draw_colored_polygon(PackedVector2Array([
-		Vector2(150, 360), Vector2(360, 360), Vector2(SOFA_X + 40, FLOOR + 70), Vector2(SOFA_X - 118, FLOOR),
-	]), Color(1.0, 0.95, 0.78, 0.22))
+		Vector2(420, FLOOR + 6), Vector2(610, FLOOR + 6), Vector2(700, FLOOR + 58), Vector2(470, FLOOR + 58),
+	]), Color(1.0, 0.94, 0.72, 0.20))
+	c.draw_line(Vector2(515, FLOOR + 6), Vector2(585, FLOOR + 58), Color(0.62, 0.44, 0.29, 0.25), 7.0)
 
 
 static func draw(c: CanvasItem, t_real: float) -> void:

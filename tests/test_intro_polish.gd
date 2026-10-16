@@ -70,17 +70,43 @@ func _cues() -> void:
 func _handoff() -> void:
 	# Sfx is an autoload name, not in scope while this --script file compiles
 	var sfx = root.get_node("Sfx")
-	sfx.prepare_intro()
-	_check(sfx._music_cache.has("intro"), "the phrase is rendered")
-	var stream: AudioStreamWAV = sfx._music_cache["intro"]
-	_check(stream.loop_mode == AudioStreamWAV.LOOP_DISABLED, "cached phrase does not loop")
-	sfx.handoff(14.4, 0.45)
-	_check(sfx._handoff_on, "a finished film waits to hand off")
-	_check(is_equal_approx(sfx._handoff_from, 14.4), "the title continues at 14.4")
+	_check(not sfx.has_method("prepare_intro"), "the phrase is not rendered in one blocking call")
+	var music = load("res://audio/music.gd")
+	var phrase: AudioStreamWAV = music.render_stream("intro")
+	_check(phrase.loop_mode == AudioStreamWAV.LOOP_DISABLED, "the phrase does not loop")
+	sfx.handoff(false, 0.45)
+	_check(sfx._handoff_on and not sfx._handoff_skip, "a finished film hands the melody on")
 	_check(is_equal_approx(sfx._handoff_fade, 0.45), "the handoff fade is 0.45")
-	sfx.handoff(0.0, 0.45)
-	_check(is_equal_approx(sfx._handoff_from, 0.0), "a skip starts the title at the top")
-	sfx._handoff_on = false
+	sfx.handoff(true, 0.45)
+	_check(sfx._handoff_skip, "a skip starts the title at the top")
+	# a walk wanted before the title is ready: the handoff must not hold its
+	# music back. Headless Sfx has no players, so lend it some, and short
+	# placeholder tracks so the worker has nothing to render.
+	var players: Array = []
+	for i in range(3):
+		var pl := AudioStreamPlayer.new()
+		sfx.add_child(pl)
+		players.append(pl)
+	sfx.music_player = players[0]
+	sfx._music_out = players[1]
+	sfx._jingle = players[2]
+	var blip := AudioStreamWAV.new()
+	blip.data = PackedByteArray([0, 0, 0, 0])
+	for k in ["park", "won", "lost"]:
+		sfx._music_cache[k] = blip
+	sfx._music_next = ""
+	sfx._music_hold = 0.0
+	sfx._music_want = "park"
+	sfx._process(1.0 / 60.0)
+	_check(not sfx._handoff_on, "a handoff gives way to any other music")
+	_check(sfx._music_now == "park", "and that music starts")
+	sfx.music_player = null
+	for pl: AudioStreamPlayer in players:
+		pl.stop()
+		pl.queue_free()
+	sfx._music_want = ""
+	sfx._music_now = ""
+	sfx._music_cache.clear()
 
 
 func _camera() -> void:

@@ -65,11 +65,12 @@ func _ready() -> void:
 	stage.scene = SCENE
 	add_child(stage)
 	main.set("intro_playing", true)
-	Sfx.prepare_intro()
 
 
 func _process(delta: float) -> void:
-	t += delta
+	# a hitch (the first frame, a window drag) holds the film, never skips it
+	t += minf(delta, 0.1)
+	Sfx.film_clock(t)
 	while cued < CUES.size() and t >= float(CUES[cued][0]):
 		var c: Array = CUES[cued]
 		Sfx.play(String(c[1]), float(c[2]), float(c[3]))
@@ -78,7 +79,7 @@ func _process(delta: float) -> void:
 		done_t = t
 	if done_t >= 0.0 and bool(main.get("intro_playing")):
 		main.set("intro_playing", false)
-		Sfx.handoff(0.0 if skipped else END_AT, 0.45)
+		Sfx.handoff(skipped, FADE_OUT)
 	_place()
 	stage.t = minf(t, END_AT)
 	stage.queue_redraw()

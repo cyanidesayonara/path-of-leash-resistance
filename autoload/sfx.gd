@@ -45,8 +45,9 @@ var _fade_in := 1.0
 var _fade_out := 0.0
 var _fade_len := MUSIC_FADE
 var _handoff_on := false
-var _handoff_from := 0.0
+var _handoff_skip := false
 var _handoff_fade := MUSIC_FADE
+var _film_t := 0.0
 var _muffle_bus := -1
 var _muffled := false
 var _menu_budget := true
@@ -136,24 +137,22 @@ func music_tick(cue: String, next: String, paused: bool, playing: bool) -> void:
 		AudioServer.set_bus_effect_enabled(_muffle_bus, 0, paused)
 
 
-# the film's phrase, finished before the first frame so the marimba is already playing
-func prepare_intro() -> void:
-	if _music_cache.has("intro"):
-		return
-	var j := Music.job("intro")
-	j.run()
-	_music_cache["intro"] = j.stream
+# where the film is, so its phrase starts in step with the picture however
+# long it took to render (the music worker builds it like any loop)
+func film_clock(t: float) -> void:
+	_film_t = t
 
 
-# from_sec 0 is a skip: silence now, title from the top once it is ready.
-# any other value keeps the phrase going and seeks the title loop there.
-func handoff(from_sec: float, fade_sec: float) -> void:
+# the film is over. A skip goes silent now and starts the title from the top
+# once it is ready; a film that played out has the title take over from the
+# phrase where it has got to, so the melody carries on.
+func handoff(skipped: bool, fade_sec: float) -> void:
 	if not music_on:
 		return
 	_handoff_on = true
-	_handoff_from = from_sec
+	_handoff_skip = skipped
 	_handoff_fade = fade_sec
-	if from_sec <= 0.0 and music_player != null:
+	if skipped and music_player != null:
 		music_player.stop()
 		_music_out.stop()
 		_music_now = ""
@@ -178,16 +177,22 @@ func _process(delta: float) -> void:
 	if _music_hold > 0.0:
 		_music_hold -= delta
 	elif _music_want != _music_now and music_on:
+		# anything but the title after the film (a walk picked before the
+		# title finished rendering) is an ordinary change
 		if _handoff_on and _music_want != "title":
-			pass
-		elif _music_want == "" or _music_cache.has(_music_want):
+			_handoff_on = false
+		if _music_want == "" or _music_cache.has(_music_want):
 			var from := 0.0
 			var fade := -1.0
-			if _handoff_on and _music_want == "title":
-				from = _handoff_from
+			if _music_want == "intro":
+				from = _film_t
+			elif _handoff_on:
+				if not _handoff_skip and _music_now == "intro" and music_player.playing:
+					from = music_player.get_playback_position()
 				fade = _handoff_fade
 				_handoff_on = false
-			_crossfade(_music_want, from, fade)
+			var len := (_music_cache[_music_want] as AudioStream).get_length() if _music_want != "" else 0.0
+			_crossfade(_music_want, from if from < len else 0.0, fade)
 	_fade_in = minf(1.0, _fade_in + delta / _fade_len)
 	_fade_out = maxf(0.0, _fade_out - delta / _fade_len)
 	if _fade_out <= 0.0 and _music_out.playing:

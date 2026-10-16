@@ -13,6 +13,8 @@ Append-only session history, newest first.
 - The film plays the opening of the title theme, marimba and a soft shaker. As it fades, the rest of the band joins at that beat. A skip starts the theme from the top.
 - The hook, the landing, the loop, the nose, the sigh, the leash and the door have their own sounds. The title card has no sting.
 - The volume keys do not skip the film. They still change the system volume.
+- Review fixes before landing: the film's phrase renders on the music worker like any loop and starts in step with the picture, instead of a blocking render that stalled the first frame (0.6 s on desktop, longer on the web) and jumped the film past its fade-in. A frame hitch now holds the film instead of skipping it. The title takes over from wherever the phrase has got to. A walk picked before the title finished rendering no longer leaves the whole session silent.
+- The opening frames the lamp, the window and the door (no ghost of the lamp's glow, no sliver of her bed), the yank is a cut on the bark again (the 0.18 s zoom read as a lurch), the window's light is a patch of sun on the rug instead of a wedge through the sofa, the room's edge shade runs out to the margin with no step, and the airbrushed smudges on your human's shirt and Millie's haunch are gone.
 
 ## 2026-10-12 - rope tug tests stand clear of the live park
 

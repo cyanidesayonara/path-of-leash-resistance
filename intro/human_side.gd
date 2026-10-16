@@ -121,10 +121,9 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 		c.draw_colored_polygon(pr[0], pr[1])
 	for pr: Array in parts_front:
 		c.draw_colored_polygon(pr[0], pr[1])
-	# soft light down the back of the shirt
-	for i in range(4):
-		var f := 1.0 - float(i) * 0.2
-		c.draw_colored_polygon(_ell((hip + shoulder) * 0.5 + Vector2(-8, -6), Vector2(9, 26) * f, lean), Color(1, 1, 1, 0.05))
+	# one flat lit band down the back of the shirt, cut like the rest of the shading
+	c.draw_colored_polygon(_limb(hip + up * 10.0 + Vector2(-13, 0).rotated(lean), shoulder + Vector2(-11, 4).rotated(lean), 5.0, 6.0),
+		SHIRT.lightened(0.14))
 	# hair: a cap over the back and crown, well back off the eye, and a fringe
 	var hr := head_t * 0.6
 	var cap := head + Vector2(-9, -9).rotated(hr)
