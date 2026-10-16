@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-10-16 - El Mercat wedge scenarios stepped at the physics rate
+
+- `tests/test_mercat_owner_path.gd` failed once on Linux CI on a pull that touched no game code ("below block 2's end, west of its east aisle: he goes round and on up (193 px; wedged at (inf, inf))"). It was not a wedge. The six wedge scenarios stepped `_physics_process` straight after a `process_frame`, outside any physics step, so `move_and_slide` moved the dog and your human by the wall time of the last frame instead of 1/60 s. How far he got in 480 steps depended on how fast the machine ran frames: locally 344-382 px for that start, up to 2700 px for others, and 193 px on a CI runner with short frames.
+- The scenarios now await a physics frame (and check they are inside one) before stepping, as the seeded walks and the aisle checks already did, and hold patience full alongside the call and selfie timer. Every run now gives the same numbers: 412-557 px up, no wedge, against the same 300 px check.
+
 ## 2026-10-12 - rope tug tests stand clear of the live park
 
 - `tests/test_rope_tug_backing.gd` and `tests/test_freedom_games_live.gd` failed on rerun ("moves away from it every frame (37/40)", "her mouth is full while she tugs") on pulls that did not touch the game. The park around the tug is still live. Trunks and logs are solid, and the grove is placed with the unseeded roll, so a backing run that clips one stops her for a few frames. A ball brought back clears `dog_carrying`. The agility pass teleports along the lane and grabs the rope if that dog spawned on it, and the tug check then continues that tug with an empty mouth.
