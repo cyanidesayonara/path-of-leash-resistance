@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-10-16 - handover after the intro
+
+- The sitrep in `HANDOVER.md` matches main after v1.60. The intro polish is pull request 234, waiting on a play. The next job is the playtest's DOG STUCK spots.
+
+## 2026-10-12 - the intro fills the window
+
+- The Walkies film keeps its frame fitted inside the window, and the flat and the street paint out to the edges, so a wide or tall window shows more of the room instead of beige. The window throws one patch of light, the sofa sits on a shadow, the door has a jamb, and the street has balconies and a kerb shadow.
+- The cut into the yank is a short move that arrives on the bark. The white flash still cuts to the street.
+- The film plays the opening of the title theme, marimba and a soft shaker. As it fades, the rest of the band joins at that beat. A skip starts the theme from the top.
+- The hook, the landing, the loop, the nose, the sigh, the leash and the door have their own sounds. The title card has no sting.
+- The volume keys do not skip the film. They still change the system volume.
+- Review fixes before landing: the film's phrase renders on the music worker like any loop and starts in step with the picture, instead of a blocking render that stalled the first frame (0.6 s on desktop, longer on the web) and jumped the film past its fade-in. A frame hitch now holds the film instead of skipping it. The title takes over from wherever the phrase has got to. A walk picked before the title finished rendering no longer leaves the whole session silent.
+- The opening frames the lamp, the window and the door (no ghost of the lamp's glow, no sliver of her bed), the yank is a cut on the bark again (the 0.18 s zoom read as a lurch), the window's light is a patch of sun on the rug instead of a wedge through the sofa, the room's edge shade runs out to the margin with no step, and the airbrushed smudges on your human's shirt and Millie's haunch are gone.
+
 ## 2026-10-12 - rope tug tests stand clear of the live park
 
 - `tests/test_rope_tug_backing.gd` and `tests/test_freedom_games_live.gd` failed on rerun ("moves away from it every frame (37/40)", "her mouth is full while she tugs") on pulls that did not touch the game. The park around the tug is still live. Trunks and logs are solid, and the grove is placed with the unseeded roll, so a backing run that clips one stops her for a few frames. A ball brought back clears `dog_carrying`. The agility pass teleports along the lane and grabs the rope if that dog spawned on it, and the tug check then continues that tug with an empty mouth.

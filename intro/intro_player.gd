@@ -3,7 +3,8 @@ extends CanvasLayer
 
 # Plays the intro ("Walkies?", intro/scene_walkies.gd) over the title screen
 # when the game is launched, once per session, then fades into the title.
-# Any key, click, tap or pad button skips it. It only plays on a plain launch:
+# Any key, click, tap or pad button skips it, except the volume keys, which
+# belong to the system. It only plays on a plain launch:
 # never headless, and never with command-line arguments (screenshots, the
 # autowalk, tests and every dev flag pass some), so nothing automated ever
 # waits on it. Scene units are 1280x720, fitted to the window; the scene's own
@@ -14,14 +15,14 @@ const END_AT := 14.4          # after the tow has left the frame
 const FADE_OUT := 0.45
 # the sound cues: [time, sound, pitch, volume dB]
 const CUES := [
-	[3.12, "pickup", 0.8, -8.0],     # the leash off its hook
-	[5.3, "ui", 0.7, -6.0],          # the loop on their knee
-	[6.92, "tangle", 1.3, -10.0],    # the nose against the phone
-	[7.65, "hiss", 0.6, -15.0],      # the sigh
-	[9.22, "bark", 1.0, -3.0],       # the YANK
-	[9.3, "fling", 0.9, -4.0],
-	[9.44, "crack", 0.7, -6.0],      # the door
-	[10.65, "star", 1.0, -6.0],      # the title lands
+	[3.12, "intro_hook", 1.0, -10.0],
+	[3.34, "intro_paws", 1.0, -12.0],
+	[5.30, "intro_loop", 1.0, -10.0],
+	[6.92, "intro_tap", 1.0, -12.0],
+	[7.65, "intro_sigh", 1.0, -14.0],
+	[9.22, "bark", 1.0, -3.0],
+	[9.30, "intro_taut", 1.0, -8.0],
+	[9.44, "intro_door", 1.0, -8.0],
 ]
 
 var main: Node
@@ -29,6 +30,7 @@ var t := 0.0
 var stage: Stage
 var done_t := -1.0
 var cued := 0
+var skipped := false
 
 
 class Stage:
@@ -37,8 +39,8 @@ class Stage:
 	var scene: GDScript
 
 	func _draw() -> void:
-		# whatever the window's shape, warm ground beyond the scene's edges
-		draw_rect(Rect2(-4000, -4000, 9280, 8720), Color(0.98, 0.86, 0.62))
+		var col := Color(0.62, 0.80, 0.92) if t >= SCENE.TITLE_AT else Color(0.86, 0.78, 0.66)
+		draw_rect(Rect2(-4000, -4000, 9280, 8720), col)
 		scene.draw(self, t)
 
 
@@ -66,16 +68,18 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	t += delta
+	# a hitch (the first frame, a window drag) holds the film, never skips it
+	t += minf(delta, 0.1)
+	Sfx.film_clock(t)
 	while cued < CUES.size() and t >= float(CUES[cued][0]):
 		var c: Array = CUES[cued]
 		Sfx.play(String(c[1]), float(c[2]), float(c[3]))
 		cued += 1
 	if done_t < 0.0 and t >= END_AT:
 		done_t = t
-	# the title takes over as the film fades, so it is not frozen under it
-	if done_t >= 0.0:
+	if done_t >= 0.0 and bool(main.get("intro_playing")):
 		main.set("intro_playing", false)
+		Sfx.handoff(skipped, FADE_OUT)
 	_place()
 	stage.t = minf(t, END_AT)
 	stage.queue_redraw()
@@ -96,11 +100,28 @@ func _place() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	var press: bool = (event is InputEventKey and event.pressed and not event.echo) \
-		or (event is InputEventMouseButton and event.pressed) \
+	if not skips(event):
+		return
+	get_viewport().set_input_as_handled()
+	if done_t < 0.0 and t > 0.25:
+		skipped = true
+		cued = CUES.size()
+		done_t = t
+
+
+# a press that ends the film. Volume keys are the system's, so they pass through.
+static func skips(event: InputEvent) -> bool:
+	if event is InputEventKey:
+		var key := event as InputEventKey
+		if not key.pressed or key.echo:
+			return false
+		if _volume_key(key.keycode) or _volume_key(key.physical_keycode):
+			return false
+		return true
+	return (event is InputEventMouseButton and event.pressed) \
 		or (event is InputEventScreenTouch and event.pressed) \
 		or (event is InputEventJoypadButton and event.pressed)
-	if press:
-		get_viewport().set_input_as_handled()
-		if done_t < 0.0 and t > 0.25:
-			done_t = t
+
+
+static func _volume_key(code: Key) -> bool:
+	return code == KEY_VOLUMEUP or code == KEY_VOLUMEDOWN or code == KEY_VOLUMEMUTE

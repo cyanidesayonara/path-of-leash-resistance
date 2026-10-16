@@ -912,7 +912,7 @@ func _on_window_resized() -> void:
 # the soundtrack: the loop that belongs on screen now (see Sfx.music_tick)
 func _music_cue() -> String:
 	if intro_playing:
-		return ""
+		return "intro"
 	if not started:
 		return "title"
 	if finished:
@@ -927,7 +927,7 @@ func _music_cue() -> String:
 
 # ...and the one to have ready for when it changes
 func _music_next() -> String:
-	# the intro is silent and the title theme is next: built while it plays
+	# the phrase is playing and the full title theme is the one being built
 	if intro_playing:
 		return "title"
 	if not started:
