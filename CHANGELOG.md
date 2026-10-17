@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-10-17 - La Ferralla audit fixes
+
+- The wreck stacks are four kinds of car - a saloon, a hatchback, an estate van and a stack of crushed bales - in faded paint gone to rust, each car in a stack turned its own way and the top one changing kind and colour down the lane. The tops have rust patches, dents, a door missing or a wheel left lying on the roof, and the glassless windows show the seats. Same spots, same colliders.
+- The crane is a crawler crane: two tracks, the house slewed toward the jib with a striped counterweight, grille and exhaust, the glazed cab on its front corner, and a tapering lattice jib with pendant ropes out to the sheave and a striped hook block on its falls. The jib and hook are drawn overhead, above the dog and your human, and their shadows lie across the lane.
+- The strips along the fences are oily gravel: grit, oil soaked into it, a lost bolt, and only now and then a weed or a thistle. No lawn and no flowers. They play as before.
+- Rust streaks down the shed roofs from the ridge, every roof its own; some have a patch rusted through. No more grid of rust discs.
+- EL PATI is the scrapyard's back lot. Where a park has trees there are tyre stacks and groups of oil drums, on the same spots and as solid as the trunks were. Lengths of steel pipe lie where logs were, and a wheelless car on blocks sits in the north-west corner over its oil stain (solid, tucked into the corner so there is no gap to get stuck in). The behaviour snapshot for the walk is unchanged.
+
 ## 2026-10-16 - the intro, redrawn as a finished film
 
 - Santtu's verdict on the Walkies film was that the idea is solid but it looked like a prototype. Everything in it is redrawn to shipped-game quality, and it is cheaper to play than the prototype: fewer draw calls (a room frame about 140 instead of 185, the street about 165 instead of 480) and about half the CPU a frame. The static backgrounds go up once as meshes, and the characters cache their shapes per pose instead of clipping polygons every frame.
