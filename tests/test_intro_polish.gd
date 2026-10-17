@@ -28,6 +28,7 @@ func _run() -> void:
 	_handoff()
 	_camera()
 	_volume_keys()
+	_skip_hint()
 	print("test_intro_polish: %s" % ("OK" if failures == 0 else "%d FAILED" % failures))
 	quit(1 if failures > 0 else 0)
 
@@ -136,3 +137,16 @@ func _volume_keys() -> void:
 	space.pressed = true
 	space.keycode = KEY_SPACE
 	_check(IntroPlayerScript.skips(space), "a normal key still skips")
+
+
+func _skip_hint() -> void:
+	# the hint names a real button on every device, never an empty cap
+	var was: int = Prompts.device
+	for dev in [Prompts.KEYS, Prompts.PAD, Prompts.TOUCH]:
+		Prompts.device = dev
+		_check(Prompts.key("intro_skip") != "" and Prompts.key("intro_skip") != "intro_skip",
+			"the skip hint names a button on device %d" % dev)
+	Prompts.device = was
+	var hint = IntroPlayerScript.SkipHint.new()
+	_check(hint.SHOW_AT > 0.25, "the hint waits until a press can skip")
+	hint.free()

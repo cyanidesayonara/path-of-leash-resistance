@@ -39,6 +39,8 @@ const NAMES := {
 	"up_down": ["W / S", "stick", "stick"],
 	"left_right": ["A / D", "left/right", "stick"],
 	"back": ["ESC", "B", "BARK"],
+	# the intro's skip hint: any press skips, this is the one it names
+	"intro_skip": ["SPACE", "A", "TAP"],
 }
 # a stick has to be pushed this far to count as picking up the controller,
 # so a drifting stick on a pad nobody holds never takes the prompts over
