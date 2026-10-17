@@ -211,6 +211,7 @@ static func _room(c: CanvasItem, _t: float, door_open: float) -> void:
 		_bg_room = Tris.new()
 		_build_room(_bg_room)
 	_bg_room.draw(c)
+	_portrait(c)
 	_door(c, door_open)
 
 
@@ -478,88 +479,10 @@ static func _build_pictures(b: Tris) -> void:
 	b.rect(Rect2(559, 169, 122, 92), Color(0.96, 0.92, 0.82))
 	var art := Rect2(574, 182, 92, 66)
 	b.vgrad(art, Color(0.96, 0.70, 0.40), Color(0.88, 0.52, 0.34))
-	b.oval(Vector2(654, 194), Vector2(8, 8), Color(1.0, 0.88, 0.56), 16)
-	# her portrait, face on, from Santtu's photo of her looking up: a lean
-	# charcoal dog whose ears rise from the sides of the crown and fold over at
-	# the tips, wiry grey-brown brows and beard round a big black nose (a young
-	# dog with an old face), a white blaze under her red collar with its grey
-	# lining, and her yellow tag
-	var ink := Color(0.10, 0.08, 0.10)
-	var coat := Color(0.19, 0.19, 0.22)
-	var coat_lit := Color(0.29, 0.29, 0.33)
-	var grizzle := Color(0.40, 0.39, 0.42)
-	var grey := Color(0.64, 0.60, 0.56)
-	var grey_dk := Color(0.48, 0.44, 0.42)
-	var cx := 620.0
-	# shoulders and the white blaze
-	b.inked(_pts([Vector2(cx - 24, 248), Vector2(cx - 19, 238), Vector2(cx - 9, 234), Vector2(cx + 9, 234),
-		Vector2(cx + 19, 238), Vector2(cx + 24, 248)]), Color(0.16, 0.16, 0.19), 1.4, ink)
-	b.poly(_pts([Vector2(cx - 3, 239), Vector2(cx + 3.5, 239), Vector2(cx + 2, 244), Vector2(cx + 0.5, 248),
-		Vector2(cx - 1.5, 244.5)]), Color(0.95, 0.94, 0.91))
-	# the neck and the collar round it: red, its grey lining showing along the
-	# lower edge, dipping at the front
-	b.inked(_pts([Vector2(cx - 9, 222), Vector2(cx + 9, 222), Vector2(cx + 10.5, 238), Vector2(cx - 10.5, 238)]),
-		coat, 1.3, ink)
-	var top_e := PackedVector2Array()
-	var bot_e := PackedVector2Array()
-	for i in range(11):
-		var u := float(i) / 10.0
-		var x := lerpf(cx - 10.4, cx + 10.4, u)
-		var dip := 3.2 * sin(u * PI)
-		top_e.append(Vector2(x, 228.5 + dip))
-		bot_e.append(Vector2(x, 234.0 + dip))
-	var collar := top_e.duplicate()
-	for i in range(bot_e.size() - 1, -1, -1):
-		collar.append(bot_e[i])
-	b.inked(collar, Color(0.85, 0.15, 0.19), 1.1, ink)
-	var lining := PackedVector2Array()
-	for i in range(bot_e.size()):
-		lining.append(bot_e[i] + Vector2(0, -1.8))
-	for i in range(bot_e.size() - 1, -1, -1):
-		lining.append(bot_e[i])
-	b.poly(lining, Color(0.62, 0.64, 0.68))
-	b.oval(Vector2(cx, 237.4), Vector2(2.4, 2.4), ink, 10)
-	b.oval(Vector2(cx, 237.4), Vector2(1.6, 1.6), Color(0.88, 0.88, 0.92), 10)
-	b.oval(Vector2(cx + 0.5, 241.8), Vector2(3.3, 3.3), ink, 12)
-	b.oval(Vector2(cx + 0.5, 241.8), Vector2(2.5, 2.5), Color(0.98, 0.82, 0.18), 12)
-	for sd: float in [-1.0, 1.0]:
-		# an ear: rising up and out from the side of the crown, then folding
-		# over so its pointed flap hangs down and out
-		b.inked(_pts([Vector2(cx + sd * 8, 199), Vector2(cx + sd * 13, 189), Vector2(cx + sd * 20, 186),
-			Vector2(cx + sd * 21, 192), Vector2(cx + sd * 15, 200)]), coat, 1.3, ink)
-		b.inked(_pts([Vector2(cx + sd * 13, 189), Vector2(cx + sd * 20.5, 186), Vector2(cx + sd * 25, 193),
-			Vector2(cx + sd * 25.5, 203), Vector2(cx + sd * 20, 196)]), Color(0.24, 0.24, 0.28), 1.2, ink)
-	# the head: a long, smooth skull, the cheeks a little wiry at the edge
-	b.inked(_pts([Vector2(cx, 194), Vector2(cx + 10, 196), Vector2(cx + 14.5, 203), Vector2(cx + 14.5, 211),
-		Vector2(cx + 11, 216), Vector2(cx + 8, 221), Vector2(cx, 223), Vector2(cx - 8, 221), Vector2(cx - 11, 216),
-		Vector2(cx - 14.5, 211), Vector2(cx - 14.5, 203), Vector2(cx - 10, 196)]), coat, 1.4, ink)
-	b.poly(_pts([Vector2(cx - 9, 198), Vector2(cx + 1, 196.5), Vector2(cx + 6, 199), Vector2(cx - 4, 202)]), coat_lit)
-	for g: Array in [[Vector2(-6, 199.5), Vector2(-2, 198.5)], [Vector2(2, 198.5), Vector2(6, 199.5)],
-			[Vector2(-12.5, 209), Vector2(-10, 213)], [Vector2(12.5, 209), Vector2(10, 213)]]:
-		b.line(Vector2(cx, 0) + (g[0] as Vector2), Vector2(cx, 0) + (g[1] as Vector2), grizzle, 1.0)
-	# the grey of her face: the muzzle and the beard below it, ragged only a
-	# little at its lower edge
-	b.inked(_pts([Vector2(cx - 6, 210), Vector2(cx + 6, 210), Vector2(cx + 9, 217), Vector2(cx + 8.5, 224),
-		Vector2(cx + 5, 228), Vector2(cx + 2, 226.5), Vector2(cx, 229), Vector2(cx - 2, 226.5), Vector2(cx - 5, 228),
-		Vector2(cx - 8.5, 224), Vector2(cx - 9, 217)]), grey, 0.9, grey_dk)
-	b.poly(_pts([Vector2(cx - 2.5, 210.5), Vector2(cx + 2.5, 210.5), Vector2(cx + 3, 216), Vector2(cx - 3, 216)]),
-		Color(0.72, 0.69, 0.65))
-	for sd2: float in [-1.0, 1.0]:
-		# wiry brows, then googly eyes under them
-		for k in range(3):
-			var s0 := Vector2(cx + sd2 * (3.5 + float(k) * 2.6), 204.0 - float(k) * 0.4)
-			b.line(s0, s0 + Vector2(sd2 * 2.4, -2.2), Color(0.70, 0.67, 0.64), 1.3)
-		b.oval(Vector2(cx + sd2 * 6.8, 208.0), Vector2(4.2, 4.2), ink, 14)
-		b.oval(Vector2(cx + sd2 * 6.8, 208.0), Vector2(3.4, 3.4), Color(0.98, 0.96, 0.90), 14)
-		b.oval(Vector2(cx + sd2 * 6.8 + 0.5, 208.8), Vector2(1.9, 1.9), ink, 10)
-		b.oval(Vector2(cx + sd2 * 6.8 + 1.0, 208.0), Vector2(0.7, 0.7), Color(1, 1, 1), 6)
-	for f: Vector2 in [Vector2(-5, 219.5), Vector2(-3, 221.5), Vector2(3, 221.5), Vector2(5, 219.5)]:
-		b.oval(Vector2(cx, 0) + f, Vector2(0.65, 0.65), grey_dk, 6)
-	b.oval(Vector2(cx, 216.5), Vector2(4.4, 3.2), ink, 12)
-	b.oval(Vector2(cx - 1, 215.6), Vector2(1.5, 0.8), Color(0.60, 0.60, 0.64), 6)
-	b.line(Vector2(cx, 219.5), Vector2(cx, 222), ink, 0.9)
-	b.line(Vector2(cx - 3.5, 222.2), Vector2(cx, 223), ink, 0.9)
-	b.line(Vector2(cx, 223), Vector2(cx + 3.8, 222), ink, 0.9)
+	b.oval(Vector2(590, 197), Vector2(8, 8), Color(1.0, 0.88, 0.56), 16)
+	# the painted grass she sits on, and her soft shadow on it
+	b.quad(Vector2(574, 236), Vector2(666, 232), Vector2(666, 248), Vector2(574, 248), Color(0.56, 0.62, 0.36))
+	b.oval(Vector2(618, 245), Vector2(22, 2.4), Color(0.36, 0.40, 0.24), 16)
 	# the sea
 	b.line(Vector2(735, 103), Vector2(722, 190), cord, 1.2)
 	b.line(Vector2(735, 103), Vector2(748, 190), cord, 1.2)
@@ -1167,6 +1090,29 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 	var flash: float = Anim.k(t, [[9.84, 0.0], [9.95, 1.0, "out"], [TITLE_AT, 1.0]])
 	IntroKit.fade(c, flash, Color(1.0, 0.98, 0.92))
 	IntroKit.fade(c, 1.0 - Anim.span(t, 0.0, 0.8))
+
+
+# Her portrait over the sofa: the film's own Millie, drawn by the same puppet
+# so she has the same face and the same look, sitting up proudly against the
+# painted sunset. Built once into a mesh, so it is one call and no work a frame.
+const PORTRAIT_AT := Vector2(616, 244)
+const PORTRAIT_S := 0.45
+static var _portrait_mesh: ArrayMesh
+
+
+static func _portrait(c: CanvasItem) -> void:
+	if _portrait_mesh == null:
+		var pose := {"sit": 1.0, "head_up": 0.15, "tail": 0.25, "brow": 0.5}
+		var b := ShapeBatch.new()
+		var lt := MillieSide.LIGHT.normalized()
+		MillieSide._draw_dog(b, MillieSide.anchors(pose), pose, 1, lt)
+		var arrays := []
+		arrays.resize(Mesh.ARRAY_MAX)
+		arrays[Mesh.ARRAY_VERTEX] = Transform2D(Vector2(PORTRAIT_S, 0), Vector2(0, PORTRAIT_S), PORTRAIT_AT) * b._points
+		arrays[Mesh.ARRAY_COLOR] = b._colors
+		_portrait_mesh = ArrayMesh.new()
+		_portrait_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	c.draw_mesh(_portrait_mesh, null)
 
 
 # The wall, casing and dressing to the right of the doorway's opening, cut out
