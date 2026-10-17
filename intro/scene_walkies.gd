@@ -478,19 +478,43 @@ static func _build_pictures(b: Tris) -> void:
 	b.rect(Rect2(559, 169, 122, 92), Color(0.96, 0.92, 0.82))
 	var art := Rect2(574, 182, 92, 66)
 	b.vgrad(art, Color(0.96, 0.70, 0.40), Color(0.88, 0.52, 0.34))
-	b.oval(Vector2(646, 198), Vector2(10, 10), Color(1.0, 0.88, 0.56), 16)
-	var ink := Color(0.12, 0.11, 0.13)
-	b.poly(_pts([Vector2(594, 248), Vector2(600, 228), Vector2(640, 226), Vector2(650, 248)]), ink)
-	b.oval(Vector2(620, 212), Vector2(17, 15), ink, 20)
-	b.poly(_pts([Vector2(606, 200), Vector2(600, 226), Vector2(608, 224), Vector2(612, 204)]), Color(0.06, 0.05, 0.07))
-	b.poly(_pts([Vector2(634, 200), Vector2(640, 226), Vector2(632, 224), Vector2(628, 204)]), Color(0.06, 0.05, 0.07))
-	b.oval(Vector2(620, 220), Vector2(8, 6), Color(0.62, 0.62, 0.64), 14)
-	b.oval(Vector2(620, 216), Vector2(3, 2.4), ink, 10)
-	for ex: float in [613.0, 627.0]:
-		b.oval(Vector2(ex, 207), Vector2(3.4, 3.4), Color(1, 1, 1), 10)
-		b.oval(Vector2(ex, 207.5), Vector2(1.6, 1.6), ink, 8)
-	b.quad(Vector2(604, 226), Vector2(636, 226), Vector2(637, 231), Vector2(603, 231), Color(0.94, 0.46, 0.62))
-	b.oval(Vector2(620, 233), Vector2(2.2, 2.2), Color(0.86, 0.86, 0.90), 8)
+	b.oval(Vector2(654, 194), Vector2(8, 8), Color(1.0, 0.88, 0.56), 16)
+	# her portrait, face on as on the box art: shoulders and a pink collar, a
+	# round charcoal head, ears perked up and folding over at the tips, big
+	# googly eyes, grey brows and a light grey muzzle with a black nose
+	var ink := Color(0.10, 0.08, 0.10)
+	var coat := Color(0.22, 0.22, 0.26)
+	var ear := Color(0.10, 0.10, 0.12)
+	var grey := Color(0.72, 0.70, 0.68)
+	b.poly(_pts([Vector2(596, 248), Vector2(600, 236), Vector2(612, 230), Vector2(628, 230), Vector2(640, 236),
+		Vector2(644, 248)]), ink)
+	b.poly(_pts([Vector2(598.5, 248), Vector2(602, 237), Vector2(613, 232), Vector2(627, 232), Vector2(638, 237),
+		Vector2(641.5, 248)]), Color(0.16, 0.16, 0.19))
+	b.quad(Vector2(605, 232), Vector2(635, 232), Vector2(637, 237.5), Vector2(603, 237.5), Color(0.94, 0.36, 0.58))
+	b.oval(Vector2(631, 236), Vector2(2.6, 2.6), Color(0.90, 0.90, 0.94), 8)
+	for sd: float in [-1.0, 1.0]:
+		# an ear: up and out from the crown, the tip folded over and down
+		var e := _pts([Vector2(620 + sd * 9, 199), Vector2(620 + sd * 17, 189), Vector2(620 + sd * 27, 188),
+			Vector2(620 + sd * 31, 196), Vector2(620 + sd * 28, 207), Vector2(620 + sd * 22, 204), Vector2(620 + sd * 16, 205)])
+		b.inked(e, ear, 1.4, ink)
+		b.poly(_pts([Vector2(620 + sd * 19, 191), Vector2(620 + sd * 25, 190.5), Vector2(620 + sd * 22, 194)]),
+			Color(0.30, 0.30, 0.34))
+	b.oval(Vector2(620, 213), Vector2(19.5, 17.5), ink, 24)
+	b.oval(Vector2(620, 213), Vector2(18, 16), coat, 24)
+	b.oval(Vector2(615, 204), Vector2(9, 4), Color(0.32, 0.32, 0.37), 14)
+	for sd2: float in [-1.0, 1.0]:
+		b.oval(Vector2(620 + sd2 * 9, 203.5), Vector2(3.6, 1.6), grey, 10)
+		b.oval(Vector2(620 + sd2 * 7.5, 210), Vector2(5.6, 5.6), ink, 14)
+		b.oval(Vector2(620 + sd2 * 7.5, 210), Vector2(4.6, 4.6), Color(0.98, 0.96, 0.90), 14)
+		b.oval(Vector2(620 + sd2 * 7.5 + 0.8, 210.6), Vector2(2.4, 2.4), ink, 10)
+		b.oval(Vector2(620 + sd2 * 7.5 + 1.4, 209.6), Vector2(0.9, 0.9), Color(1, 1, 1), 6)
+	b.oval(Vector2(620, 222), Vector2(10, 7.5), Color(0.52, 0.50, 0.50), 18)
+	b.oval(Vector2(620, 222.5), Vector2(9, 6.5), grey, 18)
+	b.oval(Vector2(620, 219.5), Vector2(4.2, 3.0), ink, 12)
+	b.oval(Vector2(619, 218.6), Vector2(1.4, 0.8), Color(0.62, 0.62, 0.66), 6)
+	b.line(Vector2(620, 222), Vector2(620, 225), ink, 1.0)
+	b.line(Vector2(615, 225), Vector2(620, 226.4), ink, 1.0)
+	b.line(Vector2(620, 226.4), Vector2(625.5, 224.4), ink, 1.0)
 	# the sea
 	b.line(Vector2(735, 103), Vector2(722, 190), cord, 1.2)
 	b.line(Vector2(735, 103), Vector2(748, 190), cord, 1.2)
@@ -933,7 +957,7 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 	# where she stands, and which way she faces
 	var mx: float = Anim.k(t, [[0.0, 920.0], [3.45, 920.0], [3.6, 912.0, "out"], [4.95, 625.0, "io"],
 		[5.35, 625.0], [5.7, 690.0, "io"], [6.55, 690.0], [6.85, 572.0, "out"], [7.05, 572.0], [7.35, 690.0, "io"],
-		[9.25, 690.0], [9.55, 1060.0, "in"]])
+		[9.25, 690.0], [9.55, 1060.0, "in"], [9.72, 1480.0, "lin"]])
 	# turns are quick (two frames) and hidden in a little dip, so she never
 	# shows as a sliver
 	var face_raw: float = Anim.k(t, [[0.0, 1.0], [3.5, 1.0], [3.58, -1.0, "io"], [8.62, -1.0], [8.7, 1.0, "io"]])
@@ -997,10 +1021,7 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 		# up on her hind legs until her nose is on the phone
 		var probe2 := IntroKit.millie_points(Vector2.ZERO, MS, face, sq, pose)
 		mpos = mpos.lerp(PHONE + Vector2(-6, 22) - probe2["mouth"], Anim.curve("io", nudge))
-	# heading out through the door in the back wall is heading away from us:
-	# she gets smaller as she nears it, small enough to fit the doorway
-	var mdepth := lerpf(1.0, 0.5, Anim.curve("out", Anim.span(mx, 760.0, 1060.0))) if t > 9.25 else 1.0
-	var ms := MS * mdepth
+	var ms := MS
 	var mp := IntroKit.millie_points(mpos, ms, face, sq, pose)
 
 	# --------------------------------------------------------------- your human
@@ -1009,7 +1030,7 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 	var tip := Anim.span(t, 9.27, 9.42)
 	var off_sofa := Anim.span(t, 9.42, 9.54)
 	var fly := Anim.span(t, 9.42, 9.8)
-	var hx: float = lerpf(SOFA_X, 1060.0, Anim.curve("in", fly))
+	var hx: float = lerpf(SOFA_X, 1500.0, Anim.curve("in", fly))
 	var hy: float = FLOOR - sin(fly * PI) * 70.0 - 40.0 * off_sofa * (1.0 - fly)
 	var reach: float = Anim.k(t, [[8.1, 0.0], [8.3, 0.35, "out"], [8.6, 0.8, "io"], [8.95, 0.3, "io"]])
 	var hpose := {
@@ -1029,18 +1050,17 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 		"mouth": 1.0 if t > 9.42 else 0.0,
 	}
 	var hsq := Vector2.ONE if t < 9.42 else Vector2(1.2, 0.86)
-	# and so does your human, after her
-	var hdepth := lerpf(1.0, 0.45, Anim.curve("out", Anim.span(hx, 700.0, 1060.0)))
 
 	# ------------------------------------------------------------------ draw
 	_light(c)
 	_sofa(c)
 	_window_light(c)
-	var m_gone := mx >= 1058.0 and t > 9.5
-	var h_gone := hx >= 1056.0
+	# out of the door and past its right jamb (_door_front hides them there)
+	var m_gone := mx >= 1470.0
+	var h_gone := hx >= 1490.0
 	var hand := Vector2(hx + 60.0, hy - 150.0)
 	if not h_gone:
-		hand = IntroKit.human(c, Vector2(hx, lerpf(hy, FLOOR - 20.0, 1.0 - hdepth)), S * hdepth, 1.0, hsq, hpose, 0.0,
+		hand = IntroKit.human(c, Vector2(hx, hy), S, 1.0, hsq, hpose, 0.0,
 			FLOOR if t >= 9.42 else INF)
 	# for the first frames off the seat, the sofa's back is in front of the legs
 	if t > 9.42 and t < 9.58:
@@ -1069,8 +1089,8 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 			var take := Anim.curve("io", Anim.span(t, 8.3, 8.6))
 			IntroKit.rope(c, t, mp["ring"], KNEE.lerp(hand, take), true, LEASH_LEN, FLOOR - 4.0)
 	if m_gone:
-		# she is through: the leash runs from the hand into the doorway's light
-		mp["ring"] = Vector2(DOOR.end.x - 16.0, FLOOR - 60.0)
+		# she is out: the leash runs from the hand out past the jamb
+		mp["ring"] = Vector2(DOOR.end.x + 60.0, FLOOR - 60.0)
 	if not rope_front and not h_gone:
 		draw_rope.call()
 	var m := mp
@@ -1094,15 +1114,58 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 				1.0 - Anim.span(t, 9.3, 10.0))
 	if hx > 620.0 and not h_gone:
 		IntroKit.speed_lines(c, Vector2(hx, hy) + Vector2(-80, -140), Vector2.RIGHT, 80.0, 3, 0.6)
-	# through the door: the light swallows whoever is in the doorway
-	# the doorway's light, over whoever is stepping through it
-	var thru := maxf(Anim.span(mx, 960.0, 1058.0), Anim.span(hx, 950.0, 1056.0))
-	if door_open > 0.3 and thru > 0.0:
-		c.draw_rect(DOOR.grow(-4.0), Color(1.0, 0.96, 0.78, minf(thru * 1.2, 1.0)))
+	# out of the door: whoever runs through the doorway goes behind the wall
+	# beside it, as out of any door, instead of being swallowed by its light
+	if t > YANK_AT:
+		_door_front(c)
 	# a quick white flash once they are out, then the street
 	var flash: float = Anim.k(t, [[9.84, 0.0], [9.95, 1.0, "out"], [TITLE_AT, 1.0]])
 	IntroKit.fade(c, flash, Color(1.0, 0.98, 0.92))
 	IntroKit.fade(c, 1.0 - Anim.span(t, 0.0, 0.8))
+
+
+# The wall, casing and dressing to the right of the doorway's opening, cut out
+# of the static layers once and drawn over the characters during the exit, so
+# they run out through the doorway and pass behind its right jamb.
+static var _bg_front: Tris
+
+
+static func _door_front(c: CanvasItem) -> void:
+	if _bg_front == null:
+		_bg_front = Tris.new()
+		var r := Rect2(DOOR.end.x, MARGIN.position.y - 400.0, MARGIN.end.x + 400.0 - DOOR.end.x,
+			FLOOR + 3.0 - (MARGIN.position.y - 400.0))
+		for layer: Tris in [_bg_room, _bg_dressing, _bg_light]:
+			if layer != null:
+				_clip_into(layer, r, _bg_front)
+	_bg_front.draw(c)
+
+
+# every triangle of src cut to the rect r (Sutherland-Hodgman, colours carried
+# along the cut edges), fanned into dst
+static func _clip_into(src: Tris, r: Rect2, dst: Tris) -> void:
+	for i in range(0, src.pts.size() - 2, 3):
+		var poly: Array = [[src.pts[i], src.cols[i]], [src.pts[i + 1], src.cols[i + 1]], [src.pts[i + 2], src.cols[i + 2]]]
+		# the four edges of r as (axis, limit, keep greater)
+		for edge: Array in [[0, r.position.x, true], [0, r.end.x, false], [1, r.position.y, true], [1, r.end.y, false]]:
+			if poly.is_empty():
+				break
+			var out: Array = []
+			for j in range(poly.size()):
+				var a: Array = poly[j]
+				var b: Array = poly[(j + 1) % poly.size()]
+				var av: float = (a[0] as Vector2)[edge[0]]
+				var bv: float = (b[0] as Vector2)[edge[0]]
+				var a_in: bool = av >= edge[1] if edge[2] else av <= edge[1]
+				var b_in: bool = bv >= edge[1] if edge[2] else bv <= edge[1]
+				if a_in:
+					out.append(a)
+				if a_in != b_in:
+					var f := (float(edge[1]) - av) / (bv - av)
+					out.append([(a[0] as Vector2).lerp(b[0], f), (a[1] as Color).lerp(b[1], f)])
+			poly = out
+		for k in range(1, poly.size() - 1):
+			dst.tri(poly[0][0], poly[k][0], poly[k + 1][0], poly[0][1], poly[k][1], poly[k + 1][1])
 
 
 # The window's sun as a beam through the room, one hard-edged pale shape from
