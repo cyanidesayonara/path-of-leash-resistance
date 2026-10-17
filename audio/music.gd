@@ -22,6 +22,12 @@ const TAIL := 3.0            # seconds rendered past the loop, folded onto its s
 const TARGET_RMS := 0.15     # every track as loud as every other
 const HUMAN_T := 0.006       # timing looseness, seconds
 const HUMAN_V := 0.1         # velocity looseness
+const TITLE_BPM := 130
+# The intro film is scored to the picture: at TITLE_BPM a bar is 1.846 s, so
+# the build's last bar ends at 9.23 s, on the bark (intro/intro_player.gd),
+# where the title theme drops in. INTRO_LEAD_BARS of score come first.
+const INTRO_LEAD_BARS := 5
+const INTRO_TITLE_BARS := 4   # of the title theme after the drop, past the film's end
 
 # the tune, in D major. Notes are [start beat, length in beats, MIDI note];
 # chords are one per bar, as [root MIDI, quality].
@@ -52,8 +58,11 @@ const CHORDS_B := [[55, "maj"], [57, "maj"], [54, "min"], [59, "min"], [55, "maj
 # melody through the B section (instrument, octave). swing: how late the
 # off-beat quavers fall, as a fraction of a beat.
 const STYLES := {
-	"title": {"bpm": 104, "key": 0, "lead": "marimba", "lead2": ["glock", 12], "comp": "arp",
-		"bass": "walk", "drums": "shaker", "verb": 0.22},
+	# the main menu's theme: up-tempo and bright, a whistle lead with a glock
+	# over it all the way, pushed chord stabs, a bouncing octave bass and a
+	# groove with a fill at every fourth bar
+	"title": {"bpm": TITLE_BPM, "key": 2, "lead": "whistle", "lead2": ["glock", 12], "lead2_all": true,
+		"comp": "push", "bass": "octave", "drums": "groove", "verb": 0.16},
 	"barri": {"bpm": 100, "key": -2, "lead": "whistle", "lead2": ["marimba", 0], "comp": "arp",
 		"bass": "walk", "drums": "brush", "swing": 0.12, "verb": 0.2},
 	"street": {"bpm": 112, "key": 3, "lead": "marimba", "comp": "skank", "bass": "root",
@@ -127,26 +136,107 @@ static func job(name: String) -> Job:
 	return j
 
 
-# the film's opening: the title arrangement's marimba and a quieter shaker,
-# seven bars, ringing out without folding back onto the downbeat
+# where the title theme starts in the intro's score, in seconds
+static func intro_lead_sec() -> float:
+	return float(INTRO_LEAD_BARS) * 4.0 * 60.0 / float(TITLE_BPM)
+
+
+# The film's score, bar by bar against the picture (beat = 60 / TITLE_BPM):
+#   1-2  calm: a soft pad and the tune's first phrase on vibes while she
+#        stares at the leash; a glock sparkle as she grabs it (about 3.0 s)
+#   3    the trot across the room: a light groove comes in
+#   4    she sits and waits, nudges, sighs: it drops back to the pad
+#   5    the crouch: a kick on every beat, a clap roll and a rising bass
+#   6-   the bark (9.23 s): the title theme drops in, with a crash, and a
+#        stab as the title lands on its leash (about 10.6 s)
 static func _intro(j: Job) -> void:
+	var st: Dictionary = STYLES["title"]
+	var beat := 60.0 / float(TITLE_BPM)
+	var key: int = st["key"]
+	var at := func(pos: float) -> int:
+		return int(pos * beat * RATE)
+	var chord := func(i: int) -> Array:
+		var c: Array = CHORDS_A[i]
+		return _chord_notes(int(c[0]) + key, String(c[1]))
+	var pad := func(b0: float, notes: Array, vol: float, beats := 4.0) -> void:
+		for m: int in notes:
+			j.add(at.call(b0), "reed", [m - 12, beat * beats, vol, 0.5])
+	var bass := func(pos: float, m: int, dur: float, v: float) -> void:
+		var r := m
+		while r > 50:
+			r -= 12
+		j.add(at.call(pos), "pluck", [r - 12, beat * dur, v, 0.25, 0.9])
+	var hit := func(pos: float, what: String, v: float) -> void:
+		j.add(at.call(pos), "hit", [what, v])
+	# bars 1-2: the pad, the first phrase on vibes, the sparkle at the grab
+	pad.call(0.0, chord.call(0), 0.05)
+	pad.call(4.0, chord.call(1), 0.05)
+	for nt: Array in MELODY_A:
+		if float(nt[0]) < 6.0:
+			j.add(at.call(float(nt[0])), "bar", [int(nt[2]) + key, 0.1, "vibes"])
+	var k := 0
+	for m: int in [74, 78, 81, 86]:
+		j.add(at.call(6.25 + 0.25 * float(k)), "bar", [m + key, 0.09 + 0.015 * float(k), "glock"])
+		k += 1
+	# bar 3: the trot, a light groove under the tune's second phrase
+	var c3: Array = chord.call(2)
+	pad.call(8.0, c3, 0.03)
+	for i in range(8):
+		bass.call(8.0 + 0.5 * float(i), int(c3[0]) + (12 if i % 2 == 1 else 0), 0.4, 0.32 if i % 2 == 0 else 0.24)
+		hit.call(8.0 + 0.5 * float(i), "shaker", 0.2 if i % 2 == 1 else 0.12)
+	hit.call(9.0, "rim", 0.26)
+	hit.call(11.0, "rim", 0.26)
+	for nt: Array in MELODY_A:
+		if float(nt[0]) >= 8.0 and float(nt[0]) < 12.0:
+			j.add(at.call(float(nt[0])), "bar", [int(nt[2]) + key, 0.12, "marimba"])
+	# bar 4: she waits; just the pad, the bass held, the phrase's end on vibes
+	var c4: Array = chord.call(3)
+	pad.call(12.0, c4, 0.032)
+	bass.call(12.0, int(c4[0]), 3.6, 0.32)
+	for nt: Array in MELODY_A:
+		if float(nt[0]) >= 12.0 and float(nt[0]) < 16.0:
+			j.add(at.call(float(nt[0])), "bar", [int(nt[2]) + key, 0.06, "vibes"])
+	# bar 5: the build into the bark, on the dominant
+	var c5: Array = chord.call(3)
+	for i in range(4):
+		pad.call(16.0 + float(i), c5, 0.03 + 0.012 * float(i), 1.0)
+		hit.call(16.0 + float(i), "kick", 0.45 + 0.12 * float(i))
+	var steps := [0, 2, 4, 5, 7, 9, 11, 12]
+	for i in range(8):
+		bass.call(16.0 + 0.5 * float(i), int(c5[0]) + int(steps[i]), 0.42, 0.34 + 0.03 * float(i))
+	for i in range(4):
+		hit.call(16.0 + 0.5 * float(i), "clap", 0.14 + 0.03 * float(i))
+	for i in range(4):
+		hit.call(18.0 + 0.25 * float(i), "clap", 0.26 + 0.03 * float(i))
+	for i in range(8):
+		hit.call(19.0 + 0.125 * float(i), "clap", 0.34 + 0.03 * float(i))
+	for i in range(16):
+		hit.call(16.0 + 0.25 * float(i), "shaker", 0.08 + 0.016 * float(i))
+	# the drop: the title theme from its first bar, a crash and a stab on the
+	# bark, another stab with a glock as the title lands
+	var lead: int = at.call(float(INTRO_LEAD_BARS) * 4.0)
 	var full := Job.new()
-	_arrange(full, STYLES["title"])
-	var cut := int(7.0 * 4.0 * (60.0 / 104.0) * RATE)
+	_arrange(full, st)
+	var cut: int = lead + int(float(INTRO_TITLE_BARS) * 4.0 * beat * RATE)
 	for ev in full.events:
-		if int(ev[0]) >= cut:
-			continue
-		var kind := String(ev[1])
-		var params: Array = ev[2]
-		if kind == "bar" and String(params[2]) == "marimba":
-			j.add(int(ev[0]), kind, params.duplicate())
-		elif kind == "hit" and String(params[0]) == "shaker":
-			var p: Array = params.duplicate()
-			p[1] = float(p[1]) * 0.5
-			j.add(int(ev[0]), kind, p)
+		var s2: int = int(ev[0]) + lead
+		if s2 < cut:
+			j.add(s2, String(ev[1]), (ev[2] as Array).duplicate())
+	var drop := float(INTRO_LEAD_BARS) * 4.0
+	hit.call(drop, "kick", 1.0)
+	hit.call(drop, "brush", 0.9)
+	hit.call(drop, "clap", 0.55)
+	for pos: float in [drop, drop + 3.0]:
+		for m: int in chord.call(0):
+			j.add(at.call(pos), "pluck", [m, beat * 0.5, 0.2, 0.8, 0.3])
+	j.add(at.call(drop + 3.0), "bar", [86 + key, 0.14, "glock"])
 	j.loop = false
 	j.loud_as_loop = true
-	j.verb_wet = float(STYLES["title"]["verb"])
+	# as loud as the title theme it hands over to: its gain is set by the part
+	# after the drop, which is the theme itself
+	j.rms_from = lead
+	j.rms_to = cut
+	j.verb_wet = float(st["verb"])
 	j.n = cut + int(TAIL * RATE)
 	j.n += (4 - j.n % 4) % 4
 	j.total = j.n
@@ -232,7 +322,7 @@ static func _arrange(j: Job, st: Dictionary) -> void:
 		var s: int = at.call(nt[0])
 		var d: float = nt[1] * beat
 		_lead(j, lead, s, m, d, vel.call(1.0))
-		if not lead2.is_empty() and nt[0] >= 32.0:
+		if not lead2.is_empty() and (nt[0] >= 32.0 or st.get("lead2_all", false)):
 			_lead(j, lead2[0], s, m + int(lead2[1]), d, vel.call(0.55))
 	for b in range(bars):
 		var ch: Array = chords[b]
@@ -303,6 +393,14 @@ static func _comp(j: Job, kind: String, b0: float, root: int, q: String, notes: 
 		"pad":
 			for k in range(notes.size()):
 				j.add(at.call(b0, 0.0), "reed", [notes[k] - 12, beat * 4.0, 0.05, 0.6])
+		"push":
+			# short chord stabs pushed ahead of the beat: the and of one, the
+			# and of two, a hit on four and its push into the next bar
+			for pos: float in [0.0, 0.75, 1.5, 2.5, 3.0, 3.75]:
+				var s5: int = at.call(b0 + pos)
+				var acc := pos == 0.75 or pos == 2.5
+				for k in range(notes.size()):
+					j.add(s5 + k * 18, "pluck", [notes[k], beat * 0.2, vel.call(0.17 if acc else 0.12), 0.75, 0.25])
 
 
 static func _bass(j: Job, kind: String, b0: float, root: int, q: String, beat: float, at: Callable,
@@ -333,6 +431,13 @@ static func _bass(j: Job, kind: String, b0: float, root: int, q: String, beat: f
 		"eighths":
 			for k in range(8):
 				bs.call(float(k) * 0.5, r + (12 if k % 4 == 3 else 0), 0.45, 0.5 if k % 2 == 0 else 0.36)
+		"octave":
+			# bouncing octaves on the eighths, a fifth to lean into the next bar
+			for k in range(8):
+				var m: int = r if k % 2 == 0 else r + 12
+				if k == 7:
+					m = r + 7
+				bs.call(float(k) * 0.5, m, 0.4, 0.55 if k % 2 == 0 else 0.4)
 
 
 static func _drums(j: Job, kind: String, b: int, b0: float, at: Callable, vel: Callable) -> void:
@@ -377,6 +482,21 @@ static func _drums(j: Job, kind: String, b: int, b0: float, at: Callable, vel: C
 			hit.call(3.0, "clap", 0.5)
 			for pos: float in [0.0, 0.75, 1.5, 2.0, 2.75, 3.5]:
 				hit.call(pos, "bongo", 0.32 if pos == 0.0 or pos == 2.0 else 0.22)
+		"groove":
+			# kick on one, the and of two and three; claps on the backbeat;
+			# sixteenth shakers; every fourth bar a bongo fill into the next
+			hit.call(0.0, "kick", 0.85)
+			hit.call(1.5, "kick", 0.5)
+			hit.call(2.0, "kick", 0.75)
+			hit.call(1.0, "clap", 0.45)
+			hit.call(3.0, "clap", 0.45)
+			for k in range(16):
+				if b % 4 == 3 and k >= 12:
+					continue
+				hit.call(float(k) * 0.25, "shaker", 0.3 if k % 4 == 2 else (0.18 if k % 2 == 0 else 0.11))
+			if b % 4 == 3:
+				for k in range(4):
+					hit.call(3.0 + float(k) * 0.25, "bongo", 0.3 + 0.08 * float(k))
 		"drive":
 			for k in range(4):
 				hit.call(float(k), "kick", 0.75)
@@ -415,6 +535,9 @@ class Job extends RefCounted:
 	var name := ""
 	var loop := true
 	var loud_as_loop := false
+	# the stretch whose loudness sets the gain (default: the whole loop)
+	var rms_from := 0
+	var rms_to := -1
 	var seed := 1
 	var n := 0                 # samples in the loop
 	var total := 0             # samples rendered (the loop plus its ringing tail)
@@ -497,12 +620,15 @@ class Job extends RefCounted:
 				2:
 					var b2 := mini(_pos + CHUNK * 8, n)
 					var acc := 0.0
-					for i in range(_pos, b2):
+					var lo := maxi(_pos, rms_from)
+					var hi := mini(b2, n if rms_to < 0 else rms_to)
+					for i in range(lo, hi):
 						acc += _buf[i] * _buf[i]
 					_sumsq += acc
 					_pos = b2
 					if _pos >= n:
-						var rms := sqrt(_sumsq / float(maxi(n, 1)))
+						var span := (n if rms_to < 0 else rms_to) - rms_from
+						var rms := sqrt(_sumsq / float(maxi(span, 1)))
 						# a jingle is short and sparse; match its peaks to a loop's
 						_gain = TARGET_RMS / maxf(rms, 0.0001) * (0.8 if loop or loud_as_loop else 1.25)
 						_bytes.resize(n * 2)
