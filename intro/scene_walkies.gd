@@ -479,42 +479,81 @@ static func _build_pictures(b: Tris) -> void:
 	var art := Rect2(574, 182, 92, 66)
 	b.vgrad(art, Color(0.96, 0.70, 0.40), Color(0.88, 0.52, 0.34))
 	b.oval(Vector2(654, 194), Vector2(8, 8), Color(1.0, 0.88, 0.56), 16)
-	# her portrait, face on as on the box art: shoulders and a pink collar, a
-	# round charcoal head, ears perked up and folding over at the tips, big
-	# googly eyes, grey brows and a light grey muzzle with a black nose
+	# her portrait, face on: a scruffy terrier with high pointed ears whose tips
+	# tip forward, grizzled grey brows and beard, a white flash on her chest, and
+	# her collar curving round under the chin with its D-ring and yellow tag
 	var ink := Color(0.10, 0.08, 0.10)
-	var coat := Color(0.22, 0.22, 0.26)
-	var ear := Color(0.10, 0.10, 0.12)
-	var grey := Color(0.72, 0.70, 0.68)
-	b.poly(_pts([Vector2(596, 248), Vector2(600, 236), Vector2(612, 230), Vector2(628, 230), Vector2(640, 236),
-		Vector2(644, 248)]), ink)
-	b.poly(_pts([Vector2(598.5, 248), Vector2(602, 237), Vector2(613, 232), Vector2(627, 232), Vector2(638, 237),
-		Vector2(641.5, 248)]), Color(0.16, 0.16, 0.19))
-	b.quad(Vector2(605, 232), Vector2(635, 232), Vector2(637, 237.5), Vector2(603, 237.5), Color(0.94, 0.36, 0.58))
-	b.oval(Vector2(631, 236), Vector2(2.6, 2.6), Color(0.90, 0.90, 0.94), 8)
+	var coat := Color(0.20, 0.20, 0.23)
+	var coat_lit := Color(0.30, 0.30, 0.34)
+	var grey := Color(0.70, 0.69, 0.67)
+	var grey_dk := Color(0.50, 0.49, 0.48)
+	var cx := 620.0
+	# chest and shoulders, with the white flash
+	b.inked(_pts([Vector2(cx - 25, 248), Vector2(cx - 20, 234), Vector2(cx - 9, 227), Vector2(cx + 9, 227),
+		Vector2(cx + 20, 234), Vector2(cx + 25, 248)]), Color(0.16, 0.16, 0.19), 1.4, ink)
+	b.poly(_pts([Vector2(cx - 4, 238), Vector2(cx + 4, 238), Vector2(cx + 2, 247), Vector2(cx - 2, 247)]),
+		Color(0.94, 0.93, 0.90))
 	for sd: float in [-1.0, 1.0]:
-		# an ear: up and out from the crown, the tip folded over and down
-		var e := _pts([Vector2(620 + sd * 9, 199), Vector2(620 + sd * 17, 189), Vector2(620 + sd * 27, 188),
-			Vector2(620 + sd * 31, 196), Vector2(620 + sd * 28, 207), Vector2(620 + sd * 22, 204), Vector2(620 + sd * 16, 205)])
-		b.inked(e, ear, 1.4, ink)
-		b.poly(_pts([Vector2(620 + sd * 19, 191), Vector2(620 + sd * 25, 190.5), Vector2(620 + sd * 22, 194)]),
-			Color(0.30, 0.30, 0.34))
-	b.oval(Vector2(620, 213), Vector2(19.5, 17.5), ink, 24)
-	b.oval(Vector2(620, 213), Vector2(18, 16), coat, 24)
-	b.oval(Vector2(615, 204), Vector2(9, 4), Color(0.32, 0.32, 0.37), 14)
+		# an ear: tall and pointed, standing up and out from the crown, the
+		# top third tipped forward as a darker flap
+		var ear := _pts([Vector2(cx + sd * 6, 201), Vector2(cx + sd * 13, 188), Vector2(cx + sd * 21, 183.5),
+			Vector2(cx + sd * 24, 194), Vector2(cx + sd * 19, 203)])
+		b.inked(ear, coat, 1.4, ink)
+		b.poly(_pts([Vector2(cx + sd * 15, 186.5), Vector2(cx + sd * 21, 183.5), Vector2(cx + sd * 26, 190),
+			Vector2(cx + sd * 20, 191.5)]), Color(0.11, 0.11, 0.13))
+		b.line(Vector2(cx + sd * 15, 187), Vector2(cx + sd * 20, 191.5), ink, 1.0)
+	# the head: a rounded skull, scruffy at the cheeks
+	var head := _pts([Vector2(cx, 193), Vector2(cx + 11, 195), Vector2(cx + 17, 202), Vector2(cx + 19, 210),
+		Vector2(cx + 21, 213), Vector2(cx + 18, 216), Vector2(cx + 19, 220), Vector2(cx + 14, 226), Vector2(cx, 229),
+		Vector2(cx - 14, 226), Vector2(cx - 19, 220), Vector2(cx - 18, 216), Vector2(cx - 21, 213), Vector2(cx - 19, 210),
+		Vector2(cx - 17, 202), Vector2(cx - 11, 195)])
+	b.inked(head, coat, 1.5, ink)
+	b.poly(_pts([Vector2(cx - 10, 198), Vector2(cx + 2, 196), Vector2(cx + 8, 199), Vector2(cx - 4, 203)]), coat_lit)
+	# her collar: a band curving under the chin, its lower edge darker, the
+	# D-ring at the front and the yellow tag hanging from it
+	var band := PackedVector2Array()
+	var under := PackedVector2Array()
+	for i in range(9):
+		var u := float(i) / 8.0
+		var x := lerpf(cx - 19, cx + 19, u)
+		var sag := 5.0 * sin(u * PI)
+		band.append(Vector2(x, 228.0 + sag))
+		under.append(Vector2(x, 233.5 + sag))
+	var collar := band.duplicate()
+	for i in range(under.size() - 1, -1, -1):
+		collar.append(under[i])
+	b.inked(collar, Color(0.94, 0.36, 0.58), 1.2, ink)
+	var lower := PackedVector2Array()
+	for i in range(under.size()):
+		lower.append(under[i] + Vector2(0, -1.8))
+	for i in range(under.size() - 1, -1, -1):
+		lower.append(under[i])
+	b.poly(lower, Color(0.72, 0.22, 0.40))
+	b.oval(Vector2(cx, 236), Vector2(2.8, 2.8), ink, 10)
+	b.oval(Vector2(cx, 236), Vector2(1.9, 1.9), Color(0.88, 0.88, 0.92), 10)
+	b.oval(Vector2(cx, 241), Vector2(3.6, 3.6), ink, 12)
+	b.oval(Vector2(cx, 241), Vector2(2.8, 2.8), Color(0.98, 0.82, 0.22), 12)
+	# grizzled brows, tufted, over googly eyes
 	for sd2: float in [-1.0, 1.0]:
-		b.oval(Vector2(620 + sd2 * 9, 203.5), Vector2(3.6, 1.6), grey, 10)
-		b.oval(Vector2(620 + sd2 * 7.5, 210), Vector2(5.6, 5.6), ink, 14)
-		b.oval(Vector2(620 + sd2 * 7.5, 210), Vector2(4.6, 4.6), Color(0.98, 0.96, 0.90), 14)
-		b.oval(Vector2(620 + sd2 * 7.5 + 0.8, 210.6), Vector2(2.4, 2.4), ink, 10)
-		b.oval(Vector2(620 + sd2 * 7.5 + 1.4, 209.6), Vector2(0.9, 0.9), Color(1, 1, 1), 6)
-	b.oval(Vector2(620, 222), Vector2(10, 7.5), Color(0.52, 0.50, 0.50), 18)
-	b.oval(Vector2(620, 222.5), Vector2(9, 6.5), grey, 18)
-	b.oval(Vector2(620, 219.5), Vector2(4.2, 3.0), ink, 12)
-	b.oval(Vector2(619, 218.6), Vector2(1.4, 0.8), Color(0.62, 0.62, 0.66), 6)
-	b.line(Vector2(620, 222), Vector2(620, 225), ink, 1.0)
-	b.line(Vector2(615, 225), Vector2(620, 226.4), ink, 1.0)
-	b.line(Vector2(620, 226.4), Vector2(625.5, 224.4), ink, 1.0)
+		b.poly(_pts([Vector2(cx + sd2 * 3, 205), Vector2(cx + sd2 * 7, 201.5), Vector2(cx + sd2 * 10, 203),
+			Vector2(cx + sd2 * 13, 201), Vector2(cx + sd2 * 13, 205), Vector2(cx + sd2 * 8, 206.5)]), grey)
+		b.oval(Vector2(cx + sd2 * 7.5, 211), Vector2(4.8, 4.8), ink, 14)
+		b.oval(Vector2(cx + sd2 * 7.5, 211), Vector2(3.9, 3.9), Color(0.98, 0.96, 0.90), 14)
+		b.oval(Vector2(cx + sd2 * 7.5 + 0.7, 211.6), Vector2(2.1, 2.1), ink, 10)
+		b.oval(Vector2(cx + sd2 * 7.5 + 1.2, 210.7), Vector2(0.8, 0.8), Color(1, 1, 1), 6)
+	# the muzzle, light grey and grizzled, with a beard that goes ragged at
+	# its edge, and the nose on top
+	var beard := _pts([Vector2(cx - 9, 214), Vector2(cx + 9, 214), Vector2(cx + 12, 221), Vector2(cx + 10, 226),
+		Vector2(cx + 6, 224.5), Vector2(cx + 4, 229), Vector2(cx, 226), Vector2(cx - 4, 229), Vector2(cx - 6, 224.5),
+		Vector2(cx - 10, 226), Vector2(cx - 12, 221)])
+	b.inked(beard, grey, 1.0, grey_dk)
+	for f: Vector2 in [Vector2(-6, 220), Vector2(-3, 222), Vector2(3, 222), Vector2(6, 220), Vector2(-5, 223.5), Vector2(5, 223.5)]:
+		b.oval(Vector2(cx, 0) + f, Vector2(0.7, 0.7), grey_dk, 6)
+	b.oval(Vector2(cx, 216), Vector2(4.4, 3.2), ink, 12)
+	b.oval(Vector2(cx - 1, 215), Vector2(1.5, 0.8), Color(0.60, 0.60, 0.64), 6)
+	b.line(Vector2(cx, 218.5), Vector2(cx, 221), ink, 1.0)
+	b.line(Vector2(cx - 4, 221.5), Vector2(cx, 222.5), ink, 1.0)
+	b.line(Vector2(cx, 222.5), Vector2(cx + 4.5, 221), ink, 1.0)
 	# the sea
 	b.line(Vector2(735, 103), Vector2(722, 190), cord, 1.2)
 	b.line(Vector2(735, 103), Vector2(748, 190), cord, 1.2)
@@ -1424,13 +1463,6 @@ static func _house(b: Tris, x: float, k: int) -> float:
 	else:
 		b.rect(Rect2(x + 30, 532, w - 60, 14), frame)
 		b.rect(Rect2(x + 36, 537, w - 72, 4), Color(0.96, 0.90, 0.70))
-	if posmod(k, 5) == 1:
-		# a pharmacy's green cross
-		var pc := Vector2(x + w - 30, 506)
-		b.rect(Rect2(pc - Vector2(13, 5), Vector2(26, 10)).grow(2), Color(0.96, 0.98, 0.94))
-		b.rect(Rect2(pc - Vector2(5, 13), Vector2(10, 26)).grow(2), Color(0.96, 0.98, 0.94))
-		b.rect(Rect2(pc - Vector2(13, 5), Vector2(26, 10)), Color(0.16, 0.66, 0.32))
-		b.rect(Rect2(pc - Vector2(5, 13), Vector2(10, 26)), Color(0.16, 0.66, 0.32))
 	# the floors above, the first a principal floor with one long balcony
 	var nwin := maxi(2, int((w - 40.0) / 66.0))
 	var pitch := (w - 40.0) / float(nwin)
@@ -1454,6 +1486,17 @@ static func _house(b: Tris, x: float, k: int) -> float:
 				b.rect(Rect2(wx - 4, wb - 6, 12, 6), Color(0.78, 0.40, 0.26))
 		floor_y -= 92.0
 		fi += 1
+	if posmod(k, 5) == 1:
+		# a pharmacy's green cross, on its bracket out from the wall beside the
+		# shop, over the balconies so it is never hidden
+		var pc := Vector2(x + w - 24, 496)
+		b.rect(Rect2(x + w - 8, pc.y - 2, 8, 4), Color(0.22, 0.20, 0.20))
+		b.rect(Rect2(pc - Vector2(16, 6), Vector2(32, 12)).grow(2.5), Color(0.22, 0.20, 0.20))
+		b.rect(Rect2(pc - Vector2(6, 16), Vector2(12, 32)).grow(2.5), Color(0.22, 0.20, 0.20))
+		b.rect(Rect2(pc - Vector2(16, 6), Vector2(32, 12)), Color(0.18, 0.74, 0.36))
+		b.rect(Rect2(pc - Vector2(6, 16), Vector2(12, 32)), Color(0.18, 0.74, 0.36))
+		b.rect(Rect2(pc - Vector2(14, 4), Vector2(28, 3)), Color(0.60, 0.96, 0.66))
+		b.rect(Rect2(pc - Vector2(4, 14), Vector2(3, 28)), Color(0.60, 0.96, 0.66))
 	return w
 
 
