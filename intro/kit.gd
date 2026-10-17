@@ -25,7 +25,7 @@ static func millie(c: CanvasItem, pos: Vector2, s: float, face: float, sq: Vecto
 	c.draw_set_transform(pos, 0.0, xs)
 	var ring_l: Vector2 = MillieSide.draw(c, Vector2.ZERO, 1.0, pose, "hybrid")
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	var p := MillieSide.parts(pose)
+	var p := MillieSide.anchors(pose)
 	var mouth_l: Vector2 = p["_muzzle"] + Vector2(6, 6)
 	return {"ring": pos + ring_l * xs, "mouth": pos + mouth_l * xs}
 
@@ -34,7 +34,7 @@ static func millie(c: CanvasItem, pos: Vector2, s: float, face: float, sq: Vecto
 # her (so the leash can be drawn behind her)
 static func millie_points(pos: Vector2, s: float, face: float, sq: Vector2, pose: Dictionary) -> Dictionary:
 	var xs := Vector2(face * s * sq.x, s * sq.y)
-	var p := MillieSide.parts(pose)
+	var p := MillieSide.anchors(pose)
 	var ring_l: Vector2 = p["_neck"] + Vector2(-8, 6)
 	var mouth_l: Vector2 = p["_muzzle"] + Vector2(6, 6)
 	return {"ring": pos + ring_l * xs, "mouth": pos + mouth_l * xs}
