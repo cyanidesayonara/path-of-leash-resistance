@@ -6,7 +6,8 @@ extends RefCounted
 # handful of numbers, drawn as the Store box art's Millie: one bold warm-black
 # outline round the silhouette, a soft charcoal coat with one hard cel shadow
 # away from the light and one glossy highlight toward it, a light grey muzzle
-# with freckles, grey brow spots, big googly eyes, white paws, a pink collar.
+# with freckles, grey brow spots, big googly eyes, perked button ears, a
+# sturdy round body, white paws, a pink collar.
 # Units: she stands on y = 0 facing +x, about 130 wide and 95 tall at scale 1.
 # Pose keys (all optional, 0 is standing): lean (body tilt, + nose down),
 # crouch (0..1, lowers the body), reach (front legs forward), push (back legs
@@ -25,6 +26,7 @@ const COAT_GLOSS := Color(0.40, 0.39, 0.46)
 const COAT_FAR := Color(0.14, 0.12, 0.16)      # the far legs, in her shadow
 const EAR := Color(0.08, 0.075, 0.09)
 const EAR_GLOSS := Color(0.24, 0.23, 0.27)
+const EAR_FLAP := Color(0.14, 0.13, 0.16)      # the folded tip, turned to the light
 const MUZZLE := Color(0.71, 0.69, 0.67)
 const MUZZLE_SHADE := Color(0.54, 0.51, 0.52)
 const MUZZLE_RIM := Color(0.47, 0.45, 0.46)
@@ -241,9 +243,9 @@ static func _legs(a: Dictionary, grow := 0.0) -> Array:
 		var f: Vector2 = feet[i] - Vector2(0, 4)
 		if i % 2 == 0:
 			var hip := rump + (Vector2(4, 8) if i == 0 else Vector2(10, 10))
-			out.append([_limb(hip, f + hock, 8.0 + grow, 4.4 + grow), _limb(f + hock, f, 4.4 + grow, 3.8 + grow)])
+			out.append([_limb(hip, f + hock, 9.5 + grow, 5.2 + grow), _limb(f + hock, f, 5.2 + grow, 4.5 + grow)])
 		else:
-			out.append([_limb(chest + (Vector2(-2, 8) if i == 1 else Vector2(4, 10)), f, 6.5 + grow, 3.9 + grow)])
+			out.append([_limb(chest + (Vector2(-2, 8) if i == 1 else Vector2(4, 10)), f, 7.6 + grow, 4.6 + grow)])
 	return out
 
 
@@ -275,35 +277,49 @@ static func _parts(pose: Dictionary, legs: bool) -> Dictionary:
 		p["leg_fl"] = lg[1][0]
 		p["leg_br"] = _union(lg[2])
 		p["leg_fr"] = lg[3][0]
-	p["rump"] = ellipse(rump, Vector2(21, 20), lean)
+	p["rump"] = ellipse(rump, Vector2(22.5, 22.5), lean)
 	# the haunch: the folded back leg showing on her side when she sits
 	p["haunch"] = ellipse(rump + Vector2(8, 6), Vector2(17 * sit + 0.01, 14 * sit + 0.01), lean * 0.5)
 	# the barrel: deep at the chest, tucked up at the loin
 	var barrel := PackedVector2Array()
 	for i in range(32):
 		var an := TAU * float(i) / 32.0
-		var q := Vector2(cos(an) * 42.0, sin(an) * 19.0)
-		q.y *= lerpf(0.72, 1.1, (q.x + 42.0) / 84.0) if q.y > 0.0 else 0.96
+		var q := Vector2(cos(an) * 42.0, sin(an) * 22.0)
+		q.y *= lerpf(0.88, 1.1, (q.x + 42.0) / 84.0) if q.y > 0.0 else 0.96
 		barrel.append(body_c + q.rotated(lean))
 	p["body"] = barrel
-	p["chest"] = ellipse(chest, Vector2(20, 21.5), lean)
-	p["neck"] = limb(chest + Vector2(2, -6), a["_neck"], 13.0, 10.0)
+	p["chest"] = ellipse(chest, Vector2(22.5, 24.5), lean)
+	p["neck"] = limb(chest + Vector2(2, -6), a["_neck"], 15.5, 12.5)
 	p["head"] = ellipse(head + Vector2(-0.5, -0.5).rotated(hrot), Vector2(23.5, 20.5), hrot)
 	p["muzzle"] = _blunt(a["_muzzle"] + Vector2(-1, 0.5).rotated(hrot), Vector2(16, 10), hrot + 0.06)
-	# the ears hang from high on the skull; `ear` swings them back and up,
-	# the way an ear streams when she lunges
+	# button ears: they lift up and out from the top of the skull and fold
+	# over at the tip. `ear` above 0 streams them back and up (a lunge),
+	# below 0 flattens them back along the skull (a sulk)
 	var sw: float = a["_ear"]
-	var ear_root := head + Vector2(-9, -14).rotated(hrot)
-	var ear_mid := ear_root + Vector2(-5, 9).rotated(sw * 0.6)
-	var ear_tip := ear_root + Vector2(-5, 21).rotated(sw)
-	var ear_hull := Geometry2D.convex_hull(ellipse(ear_root, Vector2(5, 4), hrot, 10)
-		+ ellipse(ear_mid, Vector2(6.5, 6.5), 0.0, 12) + ellipse(ear_tip, Vector2(6, 5.5), sw, 12))
-	ear_hull.remove_at(ear_hull.size() - 1)
-	p["ear"] = ear_hull
+	var near_root := head + Vector2(-8, -16).rotated(hrot)
+	var e := _ear_crease(near_root, hrot, sw, 1.0)
+	p["_ear_rise"] = _limb(near_root, e[0], 7.0, 5.2)
+	p["_ear_flap"] = _limb(e[0], e[1], 5.2, 3.8)
+	p["ear"] = _union([p["_ear_rise"], p["_ear_flap"]])
 	# the far ear: only its top shows, above the crown
-	var fe_root := head + Vector2(3, -16).rotated(hrot)
-	p["ear_far"] = limb(fe_root, fe_root + Vector2(-5, 7).rotated(sw * 0.8), 5.5, 6.5)
+	p["ear_far"] = _button_ear(head + Vector2(7, -18).rotated(hrot), hrot, sw, 0.8)
 	return p
+
+
+# one button ear from its root on the skull: a flap rising to a crease,
+# then the tip folded over forward and down; `k` scales it
+static func _button_ear(root: Vector2, hrot: float, sw: float, k: float) -> PackedVector2Array:
+	var e := _ear_crease(root, hrot, sw, k)
+	return _union([_limb(root, e[0], 7.0 * k, 5.2 * k), _limb(e[0], e[1], 5.2 * k, 3.8 * k)])
+
+
+# [the crease, the folded tip] of a button ear
+static func _ear_crease(root: Vector2, hrot: float, sw: float, k: float) -> Array:
+	var pos := clampf(sw, 0.0, 0.7) / 0.7
+	var neg := clampf(-sw, 0.0, 0.6) / 0.4
+	var crease := root + Vector2(-1.5, -14.5).rotated(hrot - 0.8 * pos - 1.1 * neg) * k
+	var fold := deg_to_rad(52.0 - 225.0 * pos * pos + 25.0 * neg)
+	return [crease, crease + Vector2.from_angle(fold + hrot - 1.1 * neg) * 8.5 * k]
 
 
 const BACK := ["tail", "leg_bl", "leg_fl"]
@@ -442,15 +458,16 @@ static func _ear_mesh(a: Dictionary, fi: int, lt: Vector2) -> Array:
 	var far_ink := _mesh(sb, head)
 	_fill(sb, p["ear_far"], EAR)
 	var far_paint := _mesh(sb, head)
-	# the near ear, in front of the head, outlined again so it reads on it
+	# the near ear, in front of the head, outlined again so it reads on it;
+	# the folded tip is its own outlined flap lying over the rise
 	var ear_pts: PackedVector2Array = p["ear"]
 	_fill(sb, _grow(ear_pts, LINE, true), INK)
-	_fill(sb, ear_pts, EAR)
-	var ec := Vector2.ZERO
-	for q in ear_pts:
-		ec += q
-	ec /= float(ear_pts.size())
-	_gloss(sb, ear_pts, lt, 2.6, 1.8, ellipse(ec + Vector2(-2, -5), Vector2(7, 8), 0.0, 12), EAR_GLOSS)
+	_fill(sb, p["_ear_rise"], EAR)
+	_gloss(sb, p["_ear_rise"], lt, 2.6, 1.6, ellipse(p["_ear_rise"][0], Vector2(12, 12), 0.0, 12), EAR_GLOSS)
+	var flap: PackedVector2Array = p["_ear_flap"]
+	_fill(sb, _grow(flap, LINE * 0.8), INK)
+	_fill(sb, flap, EAR_FLAP)
+	_gloss(sb, flap, lt, 2.0, 1.4, ellipse(flap[0], Vector2(14, 14), 0.0, 12), EAR_GLOSS)
 	m = [qh, far_ink, far_paint, _mesh(sb, head)]
 	_ear_cache[key] = m
 	return m
@@ -478,7 +495,7 @@ static func _paw_mesh(fi: int, lt: Vector2) -> Array:
 	var m: Array = _paw_cache.get(fi, [])
 	if not m.is_empty():
 		return m
-	var pw := ellipse(Vector2.ZERO, Vector2(7.0, 3.9), 0.0, 16)
+	var pw := ellipse(Vector2.ZERO, Vector2(7.6, 4.2), 0.0, 16)
 	var sb := ShapeBatch.new()
 	_fill(sb, _grow(pw, LINE), INK)
 	var ink := _mesh(sb, Vector2.ZERO)
