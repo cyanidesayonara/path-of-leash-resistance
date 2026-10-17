@@ -163,10 +163,15 @@ static func _draw_clay(c: CanvasItem, p: Dictionary, o: Vector2, s: float, pose:
 		c.draw_colored_polygon(_xf(ellipse(p["_muzzle"] + Vector2(0, -5), Vector2(10, 3) * f, 0.1), o, s), Color(COAT_LIT, a))
 	# warm light bouncing up off the ground, along the belly and chest: the
 	# thing that makes a dark form look like a lump of clay in the sun
+	# Sitting, the body tips up and the belly light would cross the haunch as a
+	# brown smear, so it fades out as she sits.
+	var bounce := 0.10 * (1.0 - clampf(float(pose.get("sit", 0.0)) * 1.5, 0.0, 1.0))
 	for i in range(3):
+		if bounce <= 0.0:
+			break
 		var f3 := 1.0 - float(i) * 0.25
-		c.draw_colored_polygon(_xf(ellipse(body_c + Vector2(4, 12).rotated(ln), Vector2(30, 4.5) * f3, ln), o, s), Color(0.55, 0.40, 0.28, 0.10))
-		c.draw_colored_polygon(_xf(ellipse(p["_chest"] + Vector2(2, 13).rotated(ln), Vector2(10, 4.5) * f3, ln), o, s), Color(0.55, 0.40, 0.28, 0.10))
+		c.draw_colored_polygon(_xf(ellipse(body_c + Vector2(4, 12).rotated(ln), Vector2(30, 4.5) * f3, ln), o, s), Color(0.55, 0.40, 0.28, bounce))
+		c.draw_colored_polygon(_xf(ellipse(p["_chest"] + Vector2(2, 13).rotated(ln), Vector2(10, 4.5) * f3, ln), o, s), Color(0.55, 0.40, 0.28, bounce))
 	c.draw_colored_polygon(_xf(p["ear"], o + Vector2(1.0, 1.5) * s, s), COAT_DARK)
 	c.draw_colored_polygon(_xf(p["ear"], o, s), Color(0.16, 0.16, 0.18))
 	# white paws

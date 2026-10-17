@@ -43,6 +43,11 @@ var _music_next := ""                     # the loop to have ready next
 var _music_hold := 0.0                    # seconds a sting keeps the loop away
 var _fade_in := 1.0
 var _fade_out := 0.0
+var _fade_len := MUSIC_FADE
+var _handoff_on := false
+var _handoff_skip := false
+var _handoff_fade := MUSIC_FADE
+var _film_t := 0.0
 var _muffle_bus := -1
 var _muffled := false
 var _menu_budget := true
@@ -132,6 +137,29 @@ func music_tick(cue: String, next: String, paused: bool, playing: bool) -> void:
 		AudioServer.set_bus_effect_enabled(_muffle_bus, 0, paused)
 
 
+# where the film is, so its phrase starts in step with the picture however
+# long it took to render (the music worker builds it like any loop)
+func film_clock(t: float) -> void:
+	_film_t = t
+
+
+# the film is over. A skip goes silent now and starts the title from the top
+# once it is ready; a film that played out has the title take over from the
+# phrase where it has got to, so the melody carries on.
+func handoff(skipped: bool, fade_sec: float) -> void:
+	if not music_on:
+		return
+	_handoff_on = true
+	_handoff_skip = skipped
+	_handoff_fade = fade_sec
+	if skipped and music_player != null:
+		music_player.stop()
+		_music_out.stop()
+		_music_now = ""
+		_fade_in = 0.0
+		_fade_out = 0.0
+
+
 func _play_sting(sting: String) -> void:
 	# the walk's loop gets out of the way
 	_crossfade("")
@@ -149,10 +177,24 @@ func _process(delta: float) -> void:
 	if _music_hold > 0.0:
 		_music_hold -= delta
 	elif _music_want != _music_now and music_on:
+		# anything but the title after the film (a walk picked before the
+		# title finished rendering) is an ordinary change
+		if _handoff_on and _music_want != "title":
+			_handoff_on = false
 		if _music_want == "" or _music_cache.has(_music_want):
-			_crossfade(_music_want)
-	_fade_in = minf(1.0, _fade_in + delta / MUSIC_FADE)
-	_fade_out = maxf(0.0, _fade_out - delta / MUSIC_FADE)
+			var from := 0.0
+			var fade := -1.0
+			if _music_want == "intro":
+				from = _film_t
+			elif _handoff_on:
+				if not _handoff_skip and _music_now == "intro" and music_player.playing:
+					from = music_player.get_playback_position()
+				fade = _handoff_fade
+				_handoff_on = false
+			var len := (_music_cache[_music_want] as AudioStream).get_length() if _music_want != "" else 0.0
+			_crossfade(_music_want, from if from < len else 0.0, fade)
+	_fade_in = minf(1.0, _fade_in + delta / _fade_len)
+	_fade_out = maxf(0.0, _fade_out - delta / _fade_len)
 	if _fade_out <= 0.0 and _music_out.playing:
 		_music_out.stop()
 	apply_music_volume()
@@ -160,7 +202,7 @@ func _process(delta: float) -> void:
 
 # swap the players: the old loop fades out where it is, the new one fades in.
 # Mid-crossfade, the quieter of the two is the one cut.
-func _crossfade(loop_name: String) -> void:
+func _crossfade(loop_name: String, from_sec := 0.0, fade_sec := -1.0) -> void:
 	_music_now = loop_name
 	if music_player.playing and not (_music_out.playing and _fade_out > _fade_in):
 		var t := _music_out
@@ -169,9 +211,10 @@ func _crossfade(loop_name: String) -> void:
 		_fade_out = _fade_in
 	music_player.stop()
 	_fade_in = 0.0
+	_fade_len = fade_sec if fade_sec > 0.0 else MUSIC_FADE
 	if loop_name != "" and music_on:
 		music_player.stream = _music_cache[loop_name]
-		music_player.play()
+		music_player.play(from_sec)
 
 
 # Keep one track rendering: the loop wanted now, then the next one, then the
@@ -253,6 +296,13 @@ func _build_library() -> void:
 	# grass brushed through, and sand underfoot: short, soft noise
 	lib["rustle"] = _noiseburst(0.20, 12.0)
 	lib["grit"] = _noiseburst(0.07, 46.0)
+	lib["intro_hook"] = _intro_hook()
+	lib["intro_paws"] = _intro_paws()
+	lib["intro_loop"] = _intro_loop()
+	lib["intro_tap"] = _intro_tap()
+	lib["intro_sigh"] = _intro_sigh()
+	lib["intro_taut"] = _intro_taut()
+	lib["intro_door"] = _intro_door()
 
 
 func _pack(samples: PackedFloat32Array) -> AudioStreamWAV:
@@ -414,4 +464,96 @@ func _wobble(dur: float) -> AudioStreamWAV:
 		var t := float(i) / RATE
 		var f := 300.0 + sin(t * 40.0) * 120.0
 		out[i] = sin(TAU * f * t) * exp(-t * 8.0) * 0.5
+	return _pack(out)
+
+
+func _hash_noise(i: int, salt: float) -> float:
+	return fmod(sin((float(i) + salt) * 12.9898) * 43758.5453, 1.0) - 0.5
+
+
+func _intro_hook() -> AudioStreamWAV:
+	var dur := 0.12
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var ph := 0.0
+	for i in range(n):
+		var t := float(i) / RATE
+		var tick := sin(TAU * 1400.0 * t) * exp(-t * 80.0) * 0.4
+		ph += TAU * lerpf(420.0, 180.0, clampf(t / dur, 0.0, 1.0)) / RATE
+		out[i] = tick + sin(ph) * exp(-t * 14.0) * 0.25
+	return _pack(out)
+
+
+func _intro_paws() -> AudioStreamWAV:
+	var dur := 0.18
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		var env := exp(-t * 60.0)
+		if t >= 0.08:
+			env += exp(-(t - 0.08) * 60.0)
+		out[i] = _hash_noise(i, 3.0) * env * 0.45
+	return _pack(out)
+
+
+func _intro_loop() -> AudioStreamWAV:
+	var dur := 0.16
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		out[i] = (sin(TAU * 180.0 * t) * 0.3 + _hash_noise(i, 9.0) * 0.2) * exp(-t * 18.0)
+	return _pack(out)
+
+
+func _intro_tap() -> AudioStreamWAV:
+	var dur := 0.05
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		out[i] = _hash_noise(i, 1.0) * exp(-t * 90.0) * 0.5
+	return _pack(out)
+
+
+func _intro_sigh() -> AudioStreamWAV:
+	var dur := 0.45
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var prev := 0.0
+	for i in range(n):
+		var prog := float(i) / float(n)
+		prev = lerpf(prev, _hash_noise(i, 5.0), 0.08)
+		out[i] = prev * sin(PI * prog) * 0.35
+	return _pack(out)
+
+
+func _intro_taut() -> AudioStreamWAV:
+	var dur := 0.28
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		out[i] = (sin(TAU * 110.0 * t) * 0.45 + sin(TAU * 220.0 * t) * 0.15) * exp(-t * 10.0)
+	return _pack(out)
+
+
+func _intro_door() -> AudioStreamWAV:
+	var dur := 0.22
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var prev := 0.0
+	for i in range(n):
+		var t := float(i) / RATE
+		prev = lerpf(prev, _hash_noise(i, 7.0), 0.35)
+		var latch := sin(TAU * 900.0 * t) * exp(-t * 70.0) * 0.35
+		out[i] = latch + prev * exp(-t * 12.0) * 0.3
 	return _pack(out)
