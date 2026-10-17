@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-10-17 - El Barri audit fixes
+
+- El Barri's props are authored where they stand instead of being squeezed into the path, which had pushed the petanca players onto their pitch's edge, the ping-pong table off its prize and the trees into a ruled line on both edges at the same heights.
+- The plane trees stand in two rows that do not mirror, with uneven gaps, set in far enough that their shadows lie on the gravel instead of being cut by the lawn's edge.
+- The petanca pitch lies on the gravel, raked, in a timber edging. The three old men are on it: one throwing from his circle, one waiting with his boules, one bent over the jack with the boules gathered round it. No litter lands on the pitch.
+- The playground is on the lawn beside the path, not across it. Its swings are seen from above (the bar, the splayed legs, the seats swinging under it), and the spring rider is a blue horse, no longer a red post that read as a hydrant. El Parc's playground shares the drawing and gets the same swings and horse.
+- The drinking fountain is a green cast-iron column with its spout over a grate, a dog's bowl at its foot and wet gravel round it, at the west edge, instead of a small grey bowl in the middle of the path.
+- People picnic and shrubs grow on the lawns either side, where the walk had long empty stretches.
+- The pipicà is a pipicà: sauló with paw prints inside a green steel mesh fence on all four sides, the run along the walk's end drawn on the line its collider takes, an iron gate as wide as the path, plane trees, sniff posts, planters, a bag dispenser and a bin. No fallen logs. The city-block roof that showed as a grey slab inside the gate is gone (the edge layer draws nothing on this walk, which was hidden under the lawn everywhere else).
+- The autowalk reaches the pipicà a second sooner (27.7 s, was 28.7) and home at 34.7 s (was 36.1), from the moved trees and benches; its soaks and selftest are unchanged.
+
 ## 2026-10-16 - the intro, redrawn as a finished film
 
 - Santtu's verdict on the Walkies film was that the idea is solid but it looked like a prototype. Everything in it is redrawn to shipped-game quality, and it is cheaper to play than the prototype: fewer draw calls (a room frame about 140 instead of 185, the street about 165 instead of 480) and about half the CPU a frame. The static backgrounds go up once as meshes, and the characters cache their shapes per pose instead of clipping polygons every frame.

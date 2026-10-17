@@ -1063,6 +1063,10 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 	# the view, on both verges, facing inward.
 	if lvl == "beach":
 		return  # bespoke cross-section, dressed in its own block
+	if lvl == "barri":
+		# lawn to the frame's edge, drawn by the world over this layer; a city
+		# block here only ever showed as a grey slab inside the pipicà gate
+		return
 	if lvl == "montjuic":
 		Montjuic.draw_below(self, c, vt, vb)
 		return
@@ -2135,10 +2139,13 @@ func canopy_trees() -> Array[Dictionary]:
 		if t.y < vt or t.y > vb:
 			continue
 		var gk := TREE_PALM if freedom_kind == "beach" else TREE_FOREST
+		# El Barri's pipicà is shaded by the square's own plane trees
+		if lvl == "barri":
+			gk = TREE_OAK
 		# the grove's broadleaves are holm-oak sized: drawn as TREE_FOREST's
 		# oak (i % 3 == 1) so they keep the 0.85 they always had
-		_canopy.append({"p": t, "kind": gk, "i": 1 if gk == TREE_FOREST else gi, "r": 34.0 * 0.85,
-			"id": 100000 + gi})
+		_canopy.append({"p": t, "kind": gk, "i": 1 if gk == TREE_FOREST else gi,
+			"r": 34.0 if gk == TREE_OAK else 34.0 * 0.85, "id": 100000 + gi})
 	return _canopy
 
 
@@ -4479,17 +4486,72 @@ func _draw_barri(vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
 	var pp: Rect2 = LevelBuild.BARRI_PETANCA
 	if pp.end.y > vt - 40.0 and pp.position.y < vb + 40.0:
-		b.rect(pp.grow(5.0), Color(0.52, 0.40, 0.26))
-		b.rect(pp, Color(0.82, 0.74, 0.56))
-		for k in range(6):
-			var bp := pp.position + Vector2(20.0 + fmod(float(k) * 37.0, pp.size.x - 40.0), 30.0 + fmod(float(k) * 71.0, pp.size.y - 60.0))
-			b.circle(bp + Vector2(1, 2), 5.0, Color(0, 0, 0, 0.2))
-			b.circle(bp, 5.0, Color(0.62, 0.62, 0.64))
-			b.circle(bp + Vector2(-1.5, -1.5), 2.0, Color(0.85, 0.85, 0.88))
-		b.circle(pp.position + Vector2(pp.size.x * 0.5, 40.0), 3.0, Color(0.85, 0.30, 0.20))   # the jack
+		# raked sauló inside a timber edging, lying on the square's gravel
+		b.rect(Rect2(pp.position + LIGHT * 3.0, pp.size).grow(5.0), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.14))
+		b.rect(pp.grow(5.0), Color(0.44, 0.32, 0.20))
+		b.rect(Rect2(pp.position - Vector2(5.0, 5.0), Vector2(pp.size.x + 10.0, 2.0)), Color(0.60, 0.46, 0.30))
+		b.rect(Rect2(pp.position - Vector2(5.0, 5.0), Vector2(2.0, pp.size.y + 10.0)), Color(0.60, 0.46, 0.30))
+		b.rect(pp, Color(0.80, 0.71, 0.53))
+		var rake := Color(0.72, 0.63, 0.46, 0.55)
+		var ry := pp.position.y + 16.0
+		while ry < pp.end.y - 8.0:
+			b.line(Vector2(pp.position.x + 6.0, ry), Vector2(pp.end.x - 6.0, ry), rake, 1.2)
+			ry += 22.0
+		# the throwing circle scratched in at the south end, under the thrower
+		var tc := Vector2(pp.position.x + 52.0, pp.end.y - 30.0)
+		b.circle(tc, 19.0, Color(0.62, 0.52, 0.36))
+		b.circle(tc, 17.0, Color(0.78, 0.69, 0.51))
+		# the jack at the far end, and the boules gathered round it
+		var jack := pp.position + Vector2(58.0, 30.0)
+		for bo: Vector2 in [Vector2(16, 8), Vector2(-12, 14), Vector2(6, -13), Vector2(26, -4), Vector2(-20, -6), Vector2(38, 22)]:
+			_boule(b, jack + bo)
+		b.circle(jack + Vector2(0.6, 1.0), 3.4, Color(0, 0, 0, 0.22))
+		b.circle(jack, 3.0, Color(0.88, 0.32, 0.20))
+		# the next two, waiting at the feet of the man whose turn is next
+		_boule(b, pp.position + Vector2(112.0, pp.size.y - 30.0))
+		_boule(b, pp.position + Vector2(118.0, pp.size.y - 40.0))
 	var pg: Rect2 = LevelBuild.BARRI_PLAYGROUND
 	if pg.end.y > vt - 40.0 and pg.position.y < vb + 40.0:
 		_playground(b, pg)
+	b.flush(_wc)
+
+
+func _boule(b: ShapeBatch, p: Vector2) -> void:
+	b.circle(p + Vector2(1, 2), 5.0, Color(0, 0, 0, 0.2))
+	b.circle(p, 5.0, Color(0.58, 0.58, 0.60))
+	b.circle(p + Vector2(-1.5, -1.5), 2.0, Color(0.86, 0.86, 0.88))
+
+
+# El Barri's drinking fountain: a green cast-iron column with its push button,
+# the spout over a grate let into the gravel, a dog's bowl at its foot, and
+# the gravel darkened all round by the water that misses
+func _draw_barri_font(f: Vector2) -> void:
+	var b := ShapeBatch.new()
+	b.circle(f + Vector2(18, 4), 22.0, Color(0.50, 0.44, 0.34, 0.38))
+	# the grate under the spout
+	var g := Rect2(f + Vector2(9.0, -10.0), Vector2(20.0, 20.0))
+	b.rect(g, Color(0.20, 0.20, 0.21))
+	for k in range(4):
+		b.rect(Rect2(g.position.x + 2.0 + float(k) * 4.6, g.position.y + 2.0, 2.4, 16.0), Color(0.36, 0.36, 0.38))
+	# the dog's bowl: a little iron basin at the foot of the column
+	b.circle(f + Vector2(1.0, 17.0), 6.5, Color(0.12, 0.24, 0.18))
+	b.circle(f + Vector2(0.5, 16.5), 4.5, Color(0.36, 0.56, 0.66))
+	b.circle(f + Vector2(-1.0, 15.0), 1.4, Color(0.82, 0.92, 0.98, 0.8))
+	# the column's shadow, long, away from the light
+	var side := LIGHT.orthogonal()
+	var tip := f + LIGHT * 46.0
+	b.polygon(PackedVector2Array([f + side * 7.0, f - side * 7.0, tip - side * 4.0, tip + side * 4.0]),
+		Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.24))
+	# the column, its fluted cap and the knob on top
+	var iron := Color(0.15, 0.31, 0.23)
+	b.circle(f, 9.5, iron.darkened(0.25))
+	b.circle(f, 8.0, iron)
+	b.circle(f + Vector2(-2.0, -2.0), 5.0, iron.lightened(0.18))
+	b.circle(f, 2.6, Color(0.70, 0.62, 0.30))
+	# the spout, reaching out over the grate, and its drip
+	b.line(f + Vector2(7.0, 0.0), f + Vector2(18.0, 0.0), iron.darkened(0.15), 3.0)
+	b.circle(f + Vector2(19.0, 0.0), 2.2, Color(0.66, 0.58, 0.28))
+	b.circle(f + Vector2(19.0, 3.0), 1.6, Color(0.78, 0.90, 0.98, 0.9))
 	b.flush(_wc)
 
 
@@ -4705,13 +4767,19 @@ func _playground(b: ShapeBatch, pg: Rect2) -> void:
 			for fyy: float in [fr.position.y, fr.end.y]:
 				b.circle(Vector2(fx2, fyy), 3.0, fence.darkened(0.3))
 			fx2 += 20.0
-		# a spring rider: a little red horse on its coil
+		# a spring rider: a little blue horse on its coil, seen from above -
+		# its back and seat, the head and ears out front, the handle bar, the
+		# tail - in no colour a hydrant comes in
 		var sr := pg.position + Vector2(126.0, 248.0)
-		b.circle(sr + Vector2(2, 3), 9.0, Color(0, 0, 0, 0.16))
-		b.circle(sr, 4.0, Color(0.36, 0.36, 0.40))
-		b.rect(Rect2(sr.x - 6.0, sr.y - 12.0, 12.0, 22.0), Color(0.86, 0.26, 0.24))
-		b.circle(sr + Vector2(0, -14), 5.0, Color(0.90, 0.30, 0.26))
-		b.line(sr + Vector2(-7, -6), sr + Vector2(7, -6), Color(0.96, 0.84, 0.30), 2.0)
+		var hc := Color(0.30, 0.56, 0.86)
+		b.circle(sr + LIGHT * 9.0, 11.0, Color(0, 0, 0, 0.16))
+		b.line(sr + Vector2(0, 10), sr + Vector2(-3, 18), Color(0.96, 0.84, 0.30), 3.0)
+		_soft_rect(b, Rect2(sr.x - 6.0, sr.y - 10.0, 12.0, 22.0), 5.0, hc)
+		b.circle(sr + Vector2(0, -14), 6.0, hc.lightened(0.1))
+		b.circle(sr + Vector2(-3.5, -19), 2.2, hc.darkened(0.2))
+		b.circle(sr + Vector2(3.5, -19), 2.2, hc.darkened(0.2))
+		b.rect(Rect2(sr.x - 5.0, sr.y - 1.0, 10.0, 8.0), Color(0.96, 0.84, 0.30))
+		b.line(sr + Vector2(-8, -7), sr + Vector2(8, -7), Color(0.30, 0.30, 0.34), 2.0)
 		# the slide: ladder, platform, chute
 		var sl := pg.position + Vector2(40.0, 60.0)
 		# its shadow, falling long from the platform
@@ -4737,16 +4805,26 @@ func _playground(b: ShapeBatch, pg: Rect2) -> void:
 		b.line(sl + Vector2(-1, 16), sl + Vector2(-1, 80), Color(1, 0.96, 0.78), 2.0)
 		for rs: float in [-1.0, 1.0]:
 			b.line(sl + Vector2(8.5 * rs, 12), sl + Vector2(11.5 * rs, 84), Color(0.78, 0.56, 0.16), 2.0)
-		# swings, gently going
+		# swings, seen from above: the top bar, the A-frame legs splayed out
+		# at each end, and the seats hanging under the bar, swinging to and
+		# fro across it over the hollows their kicking feet have worn
 		var st := AnimClock.msec() / 1000.0
 		var sw := pg.position + Vector2(118.0, 70.0)
-		b.line(sw + Vector2(-30, 0), sw + Vector2(30, 0), Color(0.34, 0.36, 0.40), 5.0)
+		var frame := Color(0.34, 0.36, 0.40)
+		b.line(sw + Vector2(-34, 0) + LIGHT * 12.0, sw + Vector2(34, 0) + LIGHT * 12.0, Color(0, 0, 0, 0.14), 5.0)
 		for si: float in [-14.0, 14.0]:
-			var swing := sin(st * 2.2 + si) * 16.0
-			var seat := sw + Vector2(si, 22.0 + swing)
-			b.line(sw + Vector2(si - 6.0, 0), seat + Vector2(-6, 0), Color(0.55, 0.55, 0.58), 1.4)
-			b.line(sw + Vector2(si + 6.0, 0), seat + Vector2(6, 0), Color(0.55, 0.55, 0.58), 1.4)
-			b.rect(Rect2(seat.x - 8.0, seat.y - 3.0, 16.0, 6.0), Color(0.20, 0.22, 0.26))
+			b.circle(sw + Vector2(si, 0.0), 9.0, rub.darkened(0.14))
+		for ex: float in [-32.0, 32.0]:
+			for ey: float in [-16.0, 16.0]:
+				b.line(sw + Vector2(ex, 0), sw + Vector2(ex * 1.1, ey), frame.darkened(0.15), 3.0)
+				b.circle(sw + Vector2(ex * 1.1, ey), 2.4, frame.darkened(0.35))
+		for si: float in [-14.0, 14.0]:
+			var seat := sw + Vector2(si, sin(st * 2.2 + si) * 11.0)
+			b.line(sw + Vector2(si - 6.0, 0), seat + Vector2(-6, 0), Color(0.62, 0.62, 0.66), 1.4)
+			b.line(sw + Vector2(si + 6.0, 0), seat + Vector2(6, 0), Color(0.62, 0.62, 0.66), 1.4)
+			b.rect(Rect2(seat.x - 7.0, seat.y - 3.0, 14.0, 6.0), Color(0.20, 0.22, 0.26))
+		b.line(sw + Vector2(-34, 0), sw + Vector2(34, 0), frame, 5.0)
+		b.line(sw + Vector2(-34, -1.5), sw + Vector2(34, -1.5), frame.lightened(0.3), 1.2)
 		# the sandpit's timber edge, its corner seats, a bucket and spade
 		# left in it (the sand itself is a patch)
 		var sp: Vector2 = pg.get_center() + Vector2(-28.0, 40.0)
@@ -5175,7 +5253,11 @@ func draw_freedom_onto(c: Object) -> void:
 			"clearing": _draw_clearing(c)
 			"lot": _draw_yard(c, true)
 			"placa": _draw_placa(c)
-			_: _draw_yard(c, false)
+			_:
+				if lvl == "barri":
+					_draw_pipica(c)
+				else:
+					_draw_yard(c, false)
 	# the grove stands in the off-leash area, so it is static too. It used to be
 	# drawn every frame in the world, with its own near-duplicate tree
 	# renderer: 16 trees at ~20 draw calls each, measured at over a
@@ -5187,6 +5269,8 @@ func draw_freedom_onto(c: Object) -> void:
 	for t in trees:
 		if freedom_kind == "beach":
 			_draw_tree_ground(c, t, 0, TREE_PALM)
+		elif lvl == "barri":
+			_draw_tree_ground(c, t, 0, TREE_OAK)
 		else:
 			_draw_tree_ground(c, t, 1, TREE_FOREST)
 	_draw_park_props(c, -1e9, 1e9)
@@ -5302,7 +5386,7 @@ func _draw_freedom_beyond(c: Object) -> void:
 func _draw_gate() -> void:
 	var b := ShapeBatch.new()
 	var style := "iron"
-	if lvl in ["trail", "guell", "park", "barri", "beach"] and not tutorial_mode:
+	if lvl in ["trail", "guell", "park", "beach"] and not tutorial_mode:
 		style = "timber"
 	elif freedom_kind == "placa":
 		style = "stone"
@@ -5350,6 +5434,21 @@ func _draw_gate() -> void:
 					var q := hinge.lerp(tip, float(k) / 5.0)
 					b.line(q, q + Vector2(side * 6.0, 0.0), iron, 1.6)
 				b.circle(mid, 2.0, Color(0.50, 0.40, 0.20))
+	if lvl == "barri":
+		# the pipicà's fence along the walk's end, out to its corners, on the
+		# line its collider runs (LevelBuild.build_walls); the off-leash
+		# canvas stops under the walk's lawn, so this run is drawn here
+		var fr := _freedom_rect()
+		var fy := GATE_Y - 30.0
+		var sy := GATE_Y - 41.0
+		b.rect(Rect2(fr.position.x, sy, gate_l - 20.0 - fr.position.x, fy - sy), PIPICA_GROUND)
+		b.rect(Rect2(gate_r + 20.0, sy, fr.end.x - gate_r - 20.0, fy - sy), PIPICA_GROUND)
+		_pipica_fence(b, Vector2(fr.position.x, fy), Vector2(gate_l - 20.0, fy))
+		_pipica_fence(b, Vector2(gate_r + 20.0, fy), Vector2(fr.end.x, fy))
+		_pipica_fence(b, Vector2(gate_l - 20.0, fy), Vector2(gl - 10.0, gy))
+		_pipica_fence(b, Vector2(gate_r + 20.0, fy), Vector2(gr + 10.0, gy))
+		for fx: float in [fr.position.x, fr.end.x]:
+			_pipica_fence(b, Vector2(fx, GATE_Y - 44.0), Vector2(fx, fy))
 	b.flush(_wc)
 
 
@@ -5460,6 +5559,68 @@ func _draw_yard(c: Object, gravel: bool) -> void:
 	_draw_freedom_fence(c, r, gravel)
 	_draw_freedom_benches(c, r, Color(0.5, 0.38, 0.26))
 	_freedom_sign(c, r, gate_text, "the off-leash yard" if gravel else "the off-leash dog park")
+
+
+# EL BARRI's PIPICÀ: the fenced dog area every neighbourhood park has. Raked
+# sauló worn darker where the dogs run, a green steel mesh fence all round,
+# the bag dispenser and a bin inside the gate, the benches for the owners.
+const PIPICA_GROUND := Color(0.72, 0.64, 0.48)
+const PIPICA_FENCE := Color(0.20, 0.38, 0.27)
+
+func _draw_pipica(c: Object) -> void:
+	var r := _freedom_rect()
+	var b := ShapeBatch.new()
+	b.rect(r, PIPICA_GROUND)
+	b.circle(r.get_center() + Vector2(0.0, 40.0), 190.0, Color(0.62, 0.54, 0.40, 0.30))
+	b.circle(Vector2(640.0, r.end.y - 30.0), 110.0, Color(0.62, 0.54, 0.40, 0.40))
+	# grit and pebbles in the sauló
+	for gi in range(160):
+		var gp := Vector2(r.position.x + fmod(float(gi) * 197.0, r.size.x),
+			r.position.y + fmod(float(gi) * 331.0 + float(gi % 7) * 13.0, r.size.y))
+		b.circle(gp, 1.4 + float(gi % 3) * 0.5, Color(0.56, 0.49, 0.37, 0.7) if gi % 2 == 0 else Color(0.82, 0.76, 0.62, 0.7))
+	# paw prints, in runs, where somebody's dog went
+	for k in range(9):
+		var o := Vector2(r.position.x + 120.0 + fmod(float(k) * 263.0, r.size.x - 240.0),
+			r.position.y + 90.0 + fmod(float(k) * 157.0, r.size.y - 180.0))
+		var dir := Vector2.from_angle(float(k) * 1.7)
+		for st in range(4):
+			var pp := o + dir * float(st) * 16.0 + dir.orthogonal() * (4.0 if st % 2 == 0 else -4.0)
+			b.circle(pp, 2.6, Color(0.56, 0.48, 0.35, 0.55))
+	# the fence: across the top and down both sides (the run along the walk's
+	# end is drawn with the gate)
+	_pipica_fence(b, r.position, Vector2(r.end.x, r.position.y))
+	_pipica_fence(b, r.position, Vector2(r.position.x, r.end.y))
+	_pipica_fence(b, Vector2(r.end.x, r.position.y), r.end)
+	# inside the gate: the bag dispenser on its post, and a bin
+	var dp := Vector2(gate_r + 46.0, r.end.y - 34.0)
+	b.polygon(PackedVector2Array([dp + Vector2(-4, 0), dp + Vector2(4, 0), dp + LIGHT * 30.0 + Vector2(3, 0),
+		dp + LIGHT * 30.0 - Vector2(3, 0)]), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+	b.rect(Rect2(dp - Vector2(8.0, 10.0), Vector2(16.0, 14.0)), PIPICA_FENCE.darkened(0.2))
+	b.rect(Rect2(dp - Vector2(6.0, 8.0), Vector2(12.0, 10.0)), PIPICA_FENCE.lightened(0.15))
+	b.rect(Rect2(dp.x - 4.0, dp.y - 3.0, 8.0, 3.0), Color(0.30, 0.30, 0.32))
+	b.circle(dp + Vector2(0.0, 1.0), 2.0, Color(0.20, 0.60, 0.30))
+	var bn := Vector2(gate_r + 78.0, r.end.y - 30.0)
+	b.circle(bn + LIGHT * 6.0, 10.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+	b.circle(bn, 10.0, Color(0.28, 0.30, 0.32))
+	b.circle(bn, 7.5, Color(0.16, 0.17, 0.18))
+	b.flush(c)
+	_draw_freedom_benches(c, r, Color(0.42, 0.30, 0.20))
+	_freedom_sign(c, r, gate_text, "the off-leash dog park")
+
+
+# a run of the pipicà's fence, a to b: green steel posts and a welded mesh
+# panel between them, its shadow on the ground beside it
+func _pipica_fence(b: ShapeBatch, a: Vector2, z: Vector2) -> void:
+	if a.distance_to(z) < 2.0:
+		return
+	b.line(a + LIGHT * 5.0, z + LIGHT * 5.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18), 4.0)
+	b.line(a, z, Color(PIPICA_FENCE.r, PIPICA_FENCE.g, PIPICA_FENCE.b, 0.35), 7.0)
+	b.line(a, z, PIPICA_FENCE, 2.5)
+	var n := maxi(1, int(a.distance_to(z) / 46.0))
+	for k in range(n + 1):
+		var q := a.lerp(z, float(k) / float(n))
+		b.rect(Rect2(q - Vector2(3.0, 3.0), Vector2(6.0, 6.0)), PIPICA_FENCE.darkened(0.35))
+		b.rect(Rect2(q - Vector2(3.0, 3.0), Vector2(3.0, 3.0)), PIPICA_FENCE.lightened(0.25))
 
 
 func _draw_placa(c: Object) -> void:
@@ -11279,6 +11440,9 @@ func _draw_world() -> void:
 		if lvl == "oldtown":
 			continue      # the plaça's fountain draws with the plaça
 		if f.y < vt - 40.0 or f.y > vb + 40.0:
+			continue
+		if lvl == "barri":
+			_draw_barri_font(f)
 			continue
 		# a drinking fountain: a stone bowl on a post, water in it, the
 		# spout, and the wet patch it always leaves on the paving
