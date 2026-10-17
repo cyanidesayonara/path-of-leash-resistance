@@ -479,10 +479,7 @@ static func _build_pictures(b: Tris) -> void:
 	b.rect(Rect2(559, 169, 122, 92), Color(0.96, 0.92, 0.82))
 	var art := Rect2(574, 182, 92, 66)
 	b.vgrad(art, Color(0.96, 0.70, 0.40), Color(0.88, 0.52, 0.34))
-	b.oval(Vector2(590, 197), Vector2(8, 8), Color(1.0, 0.88, 0.56), 16)
-	# the painted grass she sits on, and her soft shadow on it
-	b.quad(Vector2(574, 236), Vector2(666, 232), Vector2(666, 248), Vector2(574, 248), Color(0.56, 0.62, 0.36))
-	b.oval(Vector2(618, 245), Vector2(22, 2.4), Color(0.36, 0.40, 0.24), 16)
+	b.oval(Vector2(652, 195), Vector2(8, 8), Color(1.0, 0.88, 0.56), 16)
 	# the sea
 	b.line(Vector2(735, 103), Vector2(722, 190), cord, 1.2)
 	b.line(Vector2(735, 103), Vector2(748, 190), cord, 1.2)
@@ -1092,27 +1089,114 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 	IntroKit.fade(c, 1.0 - Anim.span(t, 0.0, 0.8))
 
 
-# Her portrait over the sofa: the film's own Millie, drawn by the same puppet
-# so she has the same face and the same look, sitting up proudly against the
-# painted sunset. Built once into a mesh, so it is one call and no work a frame.
-const PORTRAIT_AT := Vector2(616, 244)
-const PORTRAIT_S := 0.45
-static var _portrait_mesh: ArrayMesh
+# Her portrait over the sofa: Millie face on, head and shoulders, drawn in the
+# film puppet's own design (intro/millie_side.gd: its palette, outline, cel
+# shade and gloss, googly eyes, folded ears, grey muzzle and beard, wiry brows,
+# red collar and yellow tag) so it is plainly her in another pose. Built once.
+static var _bg_portrait: Tris
 
 
 static func _portrait(c: CanvasItem) -> void:
-	if _portrait_mesh == null:
-		var pose := {"sit": 1.0, "head_up": 0.15, "tail": 0.25, "brow": 0.5}
-		var b := ShapeBatch.new()
-		var lt := MillieSide.LIGHT.normalized()
-		MillieSide._draw_dog(b, MillieSide.anchors(pose), pose, 1, lt)
-		var arrays := []
-		arrays.resize(Mesh.ARRAY_MAX)
-		arrays[Mesh.ARRAY_VERTEX] = Transform2D(Vector2(PORTRAIT_S, 0), Vector2(0, PORTRAIT_S), PORTRAIT_AT) * b._points
-		arrays[Mesh.ARRAY_COLOR] = b._colors
-		_portrait_mesh = ArrayMesh.new()
-		_portrait_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	c.draw_mesh(_portrait_mesh, null)
+	if _bg_portrait == null:
+		_bg_portrait = Tris.new()
+		_build_portrait(_bg_portrait, Vector2(620, 211))
+	_bg_portrait.draw(c)
+
+
+# one hard cel shadow: the shape less itself moved toward the light
+static func _portrait_shade(b: Tris, p: PackedVector2Array, toward: Vector2, col: Color) -> void:
+	for poly: PackedVector2Array in Geometry2D.clip_polygons(p, _shift(p, toward)):
+		b.poly(poly, col)
+
+
+static func _build_portrait(b: Tris, h: Vector2) -> void:
+	var M := MillieSide
+	var w := 1.2                                   # the puppet's outline, at portrait size
+	var at := func(x: float, y: float) -> Vector2:
+		return h + Vector2(x, y)
+	# shoulders and chest, shaded away from the light, the white blaze
+	var chest := _pts([at.call(-23, 37), at.call(-19, 26), at.call(-9, 21), at.call(9, 21), at.call(19, 26),
+		at.call(23, 37)])
+	b.inked(chest, M.COAT, w, M.INK)
+	_portrait_shade(b, chest, Vector2(-5, -2), M.COAT_SHADE)
+	b.poly(_pts([at.call(-3.5, 25), at.call(3.5, 25), at.call(2.2, 31), at.call(0, 37), at.call(-2.2, 31)]), M.PAW)
+	# the neck, and the collar round it: red, its grey lining along the
+	# lower edge, the silver D-ring and the yellow tag
+	b.inked(_pts([at.call(-9.5, 10), at.call(9.5, 10), at.call(11, 25), at.call(-11, 25)]), M.COAT, w, M.INK)
+	var top_e := PackedVector2Array()
+	var bot_e := PackedVector2Array()
+	for i in range(11):
+		var u := float(i) / 10.0
+		var x := lerpf(-10.8, 10.8, u)
+		var dip := 3.4 * sin(u * PI)
+		top_e.append(at.call(x, 16.0 + dip))
+		bot_e.append(at.call(x, 21.2 + dip))
+	var collar := top_e.duplicate()
+	for i in range(bot_e.size() - 1, -1, -1):
+		collar.append(bot_e[i])
+	b.inked(collar, M.COLLAR, w, M.INK)
+	var lining := PackedVector2Array()
+	for i in range(bot_e.size()):
+		lining.append(bot_e[i] + Vector2(0, -1.8))
+	for i in range(bot_e.size() - 1, -1, -1):
+		lining.append(bot_e[i])
+	b.poly(lining, M.COLLAR_SHADE)
+	b.oval(at.call(0, 25.2), Vector2(2.5, 2.5), M.INK, 12)
+	b.oval(at.call(0, 25.2), Vector2(1.7, 1.7), M.RING, 12)
+	b.oval(at.call(0.4, 29.6), Vector2(3.0, 3.0), M.INK, 12)
+	b.oval(at.call(0.4, 29.6), Vector2(2.3, 2.3), M.TAG, 12)
+	# the ears: lifted from the top of the skull, then folded over so the
+	# pointed flaps tip forward and out, as the puppet's do from the side
+	for sd: float in [-1.0, 1.0]:
+		var rise := _pts([at.call(sd * 7, -10), at.call(sd * 9.5, -18.5), at.call(sd * 16, -21.5), at.call(sd * 17, -14),
+			at.call(sd * 13, -7)])
+		b.inked(rise, M.EAR, w, M.INK)
+		# the flap, dropped from the fold along the top, its tip hanging down
+		var flap := _pts([at.call(sd * 9.5, -18.5), at.call(sd * 16, -21.5), at.call(sd * 19.5, -14), at.call(sd * 18.5, -4),
+			at.call(sd * 14, -11)])
+		b.inked(flap, M.EAR_FLAP, w, M.INK)
+		b.line(at.call(sd * 11.5, -19.0), at.call(sd * 15.5, -20.6), M.EAR_GLOSS, 1.0)
+	# the head: a rounded skull, shaded away from the light, a gloss on the crown
+	var skull := MillieSide.ellipse(h, Vector2(14.5, 15.5), 0.0, 32)
+	b.inked(skull, M.COAT, w, M.INK)
+	_portrait_shade(b, skull, Vector2(-4.5, -3.5), M.COAT_SHADE)
+	# one glossy sliver just inside the lit edge of the crown
+	var inner := MillieSide.ellipse(h + Vector2(0.4, 0.4), Vector2(12.6, 13.6), 0.0, 32)
+	for rim: PackedVector2Array in Geometry2D.clip_polygons(inner, _shift(inner, Vector2(1.8, 2.4))):
+		b.clip(rim, MillieSide.ellipse(h + Vector2(-6, -9), Vector2(8, 6), -0.6, 16), M.COAT_GLOSS)
+	for g: Array in [[Vector2(-12.5, 3), Vector2(-11.2, 6)], [Vector2(12.5, 3), Vector2(11.2, 6)]]:
+		b.line(h + (g[0] as Vector2), h + (g[1] as Vector2), M.GRIZZLE, 0.9)
+	# the grey face: the muzzle toward us, the beard under it, shaded on the
+	# side away from the light, rimmed where it meets the black
+	var muz := _pts([at.call(-5.5, 0.5), at.call(0, -0.5), at.call(5.5, 0.5), at.call(8.5, 4), at.call(10, 9),
+		at.call(9.2, 13.5), at.call(6.5, 16.5), at.call(3, 17), at.call(0, 18), at.call(-3, 17), at.call(-6.5, 16.5),
+		at.call(-9.2, 13.5), at.call(-10, 9), at.call(-8.5, 4)])
+	b.inked(muz, M.MUZZLE, 0.9, M.MUZZLE_RIM)
+	_portrait_shade(b, muz, Vector2(-3, -2), M.MUZZLE_SHADE)
+	for f: Vector2 in [Vector2(-5, 9.5), Vector2(-3, 11.5), Vector2(3, 11.5), Vector2(5, 9.5), Vector2(-6, 12.5), Vector2(6, 12.5)]:
+		b.oval(h + f, Vector2(0.55, 0.55), M.FRECKLE, 6)
+	# googly eyes, big as the puppet's, close-set over the muzzle, with the
+	# lower white in shade, a black pupil looking out and a catchlight
+	for sd2: float in [-1.0, 1.0]:
+		var e: Vector2 = at.call(sd2 * 6.0, -2.5)
+		b.oval(e, Vector2(6.0, 6.0), M.INK, 20)
+		b.oval(e, Vector2(5.0, 5.0), M.EYE, 20)
+		b.clip(MillieSide.ellipse(e, Vector2(5.0, 5.0), 0.0, 20), MillieSide.ellipse(e + Vector2(0, 4.4), Vector2(5.6, 2.6), 0.0, 14),
+			M.EYE_SHADE)
+		b.oval(e + Vector2(-sd2 * 0.6, 0.5), Vector2(2.8, 2.8), M.PUPIL, 14)
+		b.oval(e + Vector2(-sd2 * 0.6 + 1.0, -0.6), Vector2(1.0, 1.0), Color.WHITE, 8)
+		# the wiry brow tuft over each eye
+		for k in range(3):
+			var s0: Vector2 = at.call(sd2 * (3.0 + float(k) * 2.0), -8.6 - float(k) * 0.4)
+			b.line(s0, s0 + Vector2(sd2 * 1.6, -1.4), M.BROW, 1.0)
+	# the nose, a black bean with its shine, and her fond little smile
+	b.oval(at.call(0, 5.5), Vector2(4.0, 3.0), M.INK, 16)
+	b.oval(at.call(-1.1, 4.6), Vector2(1.5, 0.75), M.NOSE_SHINE, 8)
+	b.line(at.call(0, 8.3), at.call(0, 10.3), M.INK, 0.9)
+	b.line(at.call(-4.2, 10.0), at.call(-1.6, 11.4), M.INK, 0.9)
+	b.line(at.call(-1.6, 11.4), at.call(0, 10.3), M.INK, 0.9)
+	b.line(at.call(0, 10.3), at.call(1.6, 11.4), M.INK, 0.9)
+	b.line(at.call(1.6, 11.4), at.call(4.2, 10.0), M.INK, 0.9)
 
 
 # The wall, casing and dressing to the right of the doorway's opening, cut out
