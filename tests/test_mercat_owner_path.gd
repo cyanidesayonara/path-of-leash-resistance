@@ -135,6 +135,8 @@ func _run() -> void:
 		ms.dog.global_position = start + Vector2(0, 24)
 		ms.leash.resnap()
 		ms.dog.auto = true
+		await physics_frame
+		_check(Engine.is_in_physics_frame(), "%s: stepped inside a physics step" % sc[1])
 		# his weave held at one end throughout
 		ms.human.wobble_seed = PI * 0.5 * float(sc[2]) - ms.elapsed * 0.35
 		# where he was over the last two seconds: covering under 20 px in that
@@ -143,6 +145,7 @@ func _run() -> void:
 		var stuck_at := Vector2.INF
 		for i in range(480):
 			ms.human.event_timer = 999.0
+			ms.human.patience = 1.0
 			# drawing him to the wall only at the start: kept up, she snags the
 			# leash on a bin by the wall and holds him there
 			var off: Vector2 = heel_off if i < 40 else Vector2(0, -36)

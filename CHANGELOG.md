@@ -14,6 +14,11 @@ Append-only session history, newest first.
 - Millie as she really is, from Santtu's photos: ears set high and folded over so the pointed tips fall forward, a longer head with a soft wiry beard and brows, silver grizzle on the crown, a grey-brown face, long legs, dark feet with white toes, a white blaze, and her red collar with its grey lining and yellow tag. The portrait over the sofa is Millie face on, head and shoulders, drawn in the film puppet's own design (its googly eyes, folded ears, grey muzzle and beard, wiry brows, palette, outline and cel shading) so it is plainly her; an earlier face-on portrait from the photos read as an older relative keeping an eye on her. Your human walks forward on planted feet instead of moonwalking, leans back less, holds the phone up to his face, and sits flat on the sofa. The pharmacy cross hangs in front of the balconies instead of behind one.
 - More life in the animation: the opening creeps in toward her, she wags and breathes while she stares at the leash, your human breathes, dust drifts down a beam of sun, and the bark shakes the frame with a WOOF! burst as she bolts.
 
+## 2026-10-16 - El Mercat wedge scenarios stepped at the physics rate
+
+- `tests/test_mercat_owner_path.gd` failed once on Linux CI on a pull that touched no game code ("below block 2's end, west of its east aisle: he goes round and on up (193 px; wedged at (inf, inf))"). It was not a wedge. The six wedge scenarios stepped `_physics_process` straight after a `process_frame`, outside any physics step, so `move_and_slide` moved the dog and your human by the wall time of the last frame instead of 1/60 s. How far he got in 480 steps depended on how fast the machine ran frames: locally 344-382 px for that start, up to 2700 px for others, and 193 px on a CI runner with short frames.
+- The scenarios now await a physics frame (and check they are inside one) before stepping, as the seeded walks and the aisle checks already did, and hold patience full alongside the call and selfie timer. Every run now gives the same numbers: 412-557 px up, no wedge, against the same 300 px check.
+
 ## 2026-10-16 - handover after the intro
 
 - The sitrep in `HANDOVER.md` matches main after v1.60. The intro polish is pull request 234, waiting on a play. The next job is the playtest's DOG STUCK spots.
