@@ -25,7 +25,7 @@ const KNEE := Vector2(SOFA_X + 76.0, FLOOR - 104.0)   # where the loop lands
 const TITLE_AT := 10.1
 const TS := 1.2                # the two of them on the street
 # where the phone is in your human's hand on the sofa (for the nudge)
-const PHONE := Vector2(466.0, 468.0)
+const PHONE := Vector2(480.0, 428.0)
 
 
 # the camera: [centre, zoom] in scene units. Wide enough at first to see who
@@ -1568,10 +1568,12 @@ static func _title(c: CanvasItem, t: float) -> void:
 		var mphase := x * TAU / (56.0 * TS)
 		var mpose := {"gait": 1.0, "phase": mphase, "lean": 0.35, "crouch": 0.45, "push": 0.7, "head_up": 0.05,
 			"tail": sin(mphase) * 0.3, "brow": 0.8, "mouth": 0.6}
-		# towed: leaning back against it, short skidding steps, heels kicking dust
+		# towed: leaning back a little against it, long planted steps (half a
+		# stride turn per HumanSide.STEP of ground), still scrolling
 		var hp := Vector2(x - 300.0, 676.0)
 		var hand := IntroKit.human(c, hp, TS, 1.0, Vector2.ONE,
-			{"stride": x * 0.04, "stride_amp": 0.25, "phone": 1.0, "glow": 0.5, "reach": 1.0, "lean": -0.6}, 0.0, 676.0)
+			{"stride": x * PI / (HumanSide.STEP * TS), "stride_amp": 1.0, "phone": 1.0, "glow": 0.5, "reach": 1.0,
+			"lean": -0.22, "scroll": t * 1.3}, 0.0, 676.0)
 		for k in range(2):
 			var dp := hp + Vector2(-20.0 - float(k) * 16.0, -6.0 - float(k) * 6.0)
 			IntroKit.puff(c, dp, 7.0 - float(k) * 2.0 + sin(x * 0.2 + float(k)) * 1.5, 0.7)

@@ -7,7 +7,9 @@ extends RefCounted
 # Facing +x, feet on y = 0, about 200 tall at scale 1. Draw it under a
 # transform for position, flip and squash (c.draw_set_transform), at the origin.
 # Pose keys (all optional): sit (0..1), lean (torso tilt, + forward), stride
-# (walk phase, radians), stride_amp (0..1), phone (0..1, phone up at the face),
+# (walk phase, radians: each foot is planted for half a turn while the body
+# covers STEP * stride_amp, so advance it by PI per that distance and the
+# feet do not slide), stride_amp (0..1), phone (0..1, phone up at the face),
 # reach (0..1, the other arm out forward holding the leash), reach_down (0..1,
 # that arm down to the knee), lift (0..1, feet off the ground and trailing, for
 # being yanked), head (head tilt), mouth (0..1, open), glow (0..1, the phone
@@ -38,6 +40,7 @@ const OW := 2.0      # silhouette outline, in puppet units (about 3 px in the fi
 const IW := 1.6      # the outline of parts laid over the body (arms, hair)
 const SEGMENTS := 18 # of the unit circle every round part is made from
 const LIGHT_STEPS := 64
+const STEP := 80.0   # stride length at stride_amp 1: the ground covered per half cycle
 
 # the shirt's body in its own frame: u forward, v up from the hip; a slumped back
 const TORSO := [Vector2(-15, -9), Vector2(-19, 4), Vector2(-21, 20), Vector2(-21, 36), Vector2(-19, 50),
@@ -64,7 +67,7 @@ const SNEAKER := [Vector2(-6, -5), Vector2(-1, -6.5), Vector2(4, -5), Vector2(9,
 	Vector2(19, 1.4), Vector2(20.6, 3.6), Vector2(19.6, 6), Vector2(-6.4, 6), Vector2(-8, 3), Vector2(-7.6, -1)]
 const SNEAKER_SOLE := [Vector2(-7.9, 3.4), Vector2(20.4, 3.4), Vector2(20.5, 4), Vector2(19.6, 6), Vector2(-6.4, 6),
 	Vector2(-8, 3.4)]
-const SNEAKER_STRIPE := [Vector2(0.5, -3.8), Vector2(3.5, -4.2), Vector2(10, 2.6), Vector2(6.6, 2.8)]
+const SNEAKER_STRIPE := [Vector2(3.0, -0.4), Vector2(6.0, -0.8), Vector2(10, 2.6), Vector2(6.6, 2.8)]
 const OPEN_HAND := [Vector2(-2, -4.5), Vector2(4, -4.6), Vector2(9, -3.4), Vector2(11.5, -1), Vector2(11, 2),
 	Vector2(7, 3.8), Vector2(1, 4.2), Vector2(-2.5, 3)]
 const PHONE_BODY := [Vector2(-4, -11), Vector2(3.5, -11), Vector2(3.5, 11), Vector2(-4, 11)]
@@ -124,20 +127,26 @@ static func _ellipse(c: Vector2, r: Vector2, rot: float, col: Color) -> void:
 	_push(Transform2D(rot, r, 0.0, c) * _circle, col)
 
 
+# a band from a to b, square at both ends
+static func _band(a: Vector2, b: Vector2, ha: float, hb: float, col: Color) -> void:
+	var n := (b - a).normalized().orthogonal()
+	_quad(a + n * ha, b + n * hb, b - n * hb, a - n * ha, col)
+
+
 # the hull of two circles: both circles and the quad between their tangents
 static func _capsule(a: Vector2, b: Vector2, ra: float, rb: float, col: Color) -> void:
-	_push(Transform2D(0.0, Vector2(ra, ra), 0.0, a) * _circle, col)
-	_push(Transform2D(0.0, Vector2(rb, rb), 0.0, b) * _circle, col)
+	var t := Transform2D(0.0, Vector2(ra, ra), 0.0, a) * _circle
+	t.append_array(Transform2D(0.0, Vector2(rb, rb), 0.0, b) * _circle)
 	var l := a.distance_to(b)
-	if l <= absf(ra - rb) + 0.001:
-		return
-	var d := (b - a) / l
-	var s := (ra - rb) / l
-	var co := sqrt(1.0 - s * s)
-	var n := d.orthogonal()
-	var u1 := n * co + d * s
-	var u2 := -n * co + d * s
-	_quad(a + u1 * ra, b + u1 * rb, b + u2 * rb, a + u2 * ra, col)
+	if l > absf(ra - rb) + 0.001:
+		var d := (b - a) / l
+		var s := (ra - rb) / l
+		var co := sqrt(1.0 - s * s)
+		var n := d.orthogonal()
+		var u1 := n * co + d * s
+		var u2 := -n * co + d * s
+		t.append_array(PackedVector2Array([a + u1 * ra, b + u1 * rb, b + u2 * rb, a + u1 * ra, b + u2 * rb, a + u2 * ra]))
+	_push(t, col)
 
 
 # a triangle list for a simple polygon (only when building the cache)
@@ -200,6 +209,7 @@ static func _light_in(ax: Vector2, ay: Vector2) -> Vector2:
 
 
 # a part: ["c", a, b, ra, rb, colour, shadow, shine] a capsule;
+# ["q", a, b, half width at a, at b, colour, shadow] a band with square ends;
 # ["e", centre, radii, rotation, colour, shadow] an ellipse;
 # ["p", cached shape, frame, colour, shine] a drawn shape.
 # A group inks all its outlines first, then fills, so only its silhouette is
@@ -211,6 +221,9 @@ static func _group(parts: Array, w: float) -> void:
 				_capsule(pr[1], pr[2], pr[3] + w, pr[4] + w, OUT)
 			"e":
 				_ellipse(pr[1], pr[2] + Vector2(w, w), pr[3], OUT)
+			"q":
+				var d: Vector2 = (pr[2] - pr[1]).normalized() * w
+				_band(pr[1] - d, pr[2] + d, pr[3] + w, pr[4] + w, OUT)
 			"p":
 				_push((pr[2] as Transform2D) * (pr[1][w] as PackedVector2Array), OUT)
 	for pr: Array in parts:
@@ -222,6 +235,11 @@ static func _group(parts: Array, w: float) -> void:
 				_capsule(pr[1] + s, pr[2] + s, pr[3] - k * 0.5, pr[4] - k * 0.5, pr[5])
 				if pr[7] > 0.0:
 					_cap_shine(pr[1], pr[2], pr[3] - 1.3, pr[7], _hi(pr[5]))
+			"q":
+				var k: float = pr[6]
+				var s := LIGHT * (k * 0.5)
+				_band(pr[1], pr[2], pr[3], pr[4], _shade(pr[5]))
+				_band(pr[1] + s, pr[2] + s, pr[3] - k * 0.5, pr[4] - k * 0.5, pr[5])
 			"e":
 				var k: float = pr[5]
 				_ellipse(pr[1], pr[2], pr[3], _shade(pr[4]))
@@ -282,20 +300,24 @@ static func _leg(leg: Array, lift: float, far: bool) -> Array:
 	var sh := SHOE if not far else _far(SHOE)
 	var shoe_e := _shape(K_SNEAKER, 0, PackedVector2Array(SNEAKER), _light_in(foot, fy), 2.0, 1.6, Vector2(14, 0), 6.0)
 	var shoe := ["p", shoe_e, _frame(leg[2], foot, fy), sh, not far]
-	var shin := ["c", leg[1], leg[2] + shin_d * 1.5 * (1.0 - lift), 9.5, 8.0, tr, 2.4, 0.0]
+	# the trouser leg: rounded at the knee, cut straight across over the
+	# shoe's collar
+	var cuff: Vector2 = leg[2] - shin_d * 9.0
+	var shin := ["c", leg[1], cuff, 9.5, 7.8, tr, 2.4, 0.0]
+	var hem := ["q", cuff, leg[2] - shin_d * 1.0, 7.8, 8.0, tr, 2.4]
 	var thigh := ["c", leg[0], leg[1], 13.0, 9.5, tr, 2.6, 0.0]
 	# the hem covers the shoe's collar on the floor; a trailing shoe is laid
 	# over the hem so it is not lost inside the trouser leg
 	if lift > 0.5:
-		return [thigh, shin, shoe, thigh_d, shin_d, foot, far]
-	return [shoe, shin, thigh, thigh_d, shin_d, foot, far]
+		return [thigh, shin, hem, shoe, thigh_d, shin_d, foot, far]
+	return [shoe, hem, shin, thigh, thigh_d, shin_d, foot, far]
 
 
 static func _leg_detail(leg: Array, info: Array) -> void:
-	var thigh_d: Vector2 = info[3]
-	var shin_d: Vector2 = info[4]
-	var foot: Vector2 = info[5]
-	var far: bool = info[6]
+	var thigh_d: Vector2 = info[4]
+	var shin_d: Vector2 = info[5]
+	var foot: Vector2 = info[6]
+	var far: bool = info[7]
 	var tr := TROUSERS if not far else _far(TROUSERS)
 	var ink := _shade(_shade(tr))
 	var fy := foot.rotated(PI * 0.5)
@@ -306,8 +328,8 @@ static func _leg_detail(leg: Array, info: Array) -> void:
 	_line(leg[2] + foot * -7.6 + fy * 3.4, leg[2] + foot * 20.4 + fy * 3.4, OUT, 1.1)
 	# the trouser hem over the shoe, and the crease behind a bent knee
 	var across := shin_d.orthogonal()
-	var hem: Vector2 = leg[2] - shin_d * 1.5
-	_line(hem - across * 7.6, hem + across * 7.6, ink, 1.3)
+	var hem: Vector2 = leg[2] - shin_d * 2.6
+	_line(hem - across * 7.9, hem + across * 7.9, ink, 1.3)
 	var into := shin_d - thigh_d
 	if into.length() > 0.5:
 		into = into.normalized()
@@ -391,10 +413,15 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 			_circle.append(Vector2.from_angle(TAU * float(i + 1) / SEGMENTS))
 	_v.clear()
 	_col.clear()
-	# leaning back against a pull, standing, the feet go out ahead of the hips
-	# and dig in; the hips drop to keep the soles on the floor
-	var brace := maxf(0.0, -lean) * 0.4 * (1.0 - sit) * (1.0 - lift)
-	var hip := Vector2(0.0, lerpf(-100.0, -58.0, sit) + 98.0 * (1.0 - cos(brace)))
+	# the walk: each ankle is planted for half the cycle, sliding back under
+	# the hips by one step (STEP * stride_amp) while the body goes forward,
+	# then lifted and swung ahead. The planted leg stays straight, so the hips
+	# ride over it, lowest with the feet apart. A body leaning back has its
+	# feet ahead of it; leaning in, behind.
+	var stand := (1.0 - sit) * (1.0 - lift)
+	var step := STEP * amp
+	var plant_x := -lean * 12.0 + step * (0.5 - 2.0 * fposmod(phase / TAU, 0.5))
+	var hip := Vector2(0.0, lerpf(lerpf(-100.0, -58.0, sit), -6.0 - sqrt(97.0 * 97.0 - plant_x * plant_x), stand))
 	var up := Vector2.UP.rotated(lean)
 	var fwd := up.rotated(PI * 0.5)
 	var shoulder := hip + up * 62.0
@@ -409,19 +436,33 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 	var hxf := _frame(head, hx, hy)
 	var legs := []
 	for side in range(2):
-		var ph := phase + PI * float(side)
-		var swing := sin(ph) * 0.55 * amp
-		var thigh_dir := Vector2.DOWN.rotated(-swing - brace).lerp(Vector2.RIGHT, sit).normalized()
-		var bend := maxf(0.0, -cos(ph)) * 0.9 * amp + sit * 1.45
+		# each ankle on its cycle, the knee following it (two-bone IK)
+		var root := hip + Vector2(4.0 * float(side) - 2.0, 0)
+		var cyc := fposmod((phase + PI * float(side)) / TAU, 1.0)
+		var ankle := Vector2(-lean * 12.0, -6.0)
+		if cyc < 0.5:
+			ankle.x += step * (0.5 - cyc * 2.0)
+		else:
+			var sw := (cyc - 0.5) * 2.0
+			ankle += Vector2(step * (sw * sw * (3.0 - 2.0 * sw) - 0.5), -9.0 * amp * sin(sw * PI))
+		var to := ankle - root
+		var reach_l := clampf(to.length(), 4.0, 97.9)
+		var thigh_dir := to.normalized().rotated(-acos(clampf((48.0 * 48.0 + reach_l * reach_l - 50.0 * 50.0) /
+			(2.0 * 48.0 * reach_l), -1.0, 1.0)))
+		var bend := thigh_dir.angle_to(ankle - (root + thigh_dir * 48.0))
+		thigh_dir = thigh_dir.lerp(Vector2.RIGHT, sit).normalized()
+		bend = bend * (1.0 - sit) + sit * 1.45
 		if lift > 0.0:
 			# trailing out behind, the far leg further, whipping as they go
 			thigh_dir = thigh_dir.lerp(Vector2(-0.85, 0.5).normalized(), lift).normalized()
 			bend = lerpf(bend, 0.35 + 0.35 * float(side) + sin(phase * 2.0) * 0.25, lift)
-		legs.append(_two(hip + Vector2(4.0 * float(side) - 2.0, 0), thigh_dir, 48.0, 50.0, bend))
+		legs.append(_two(root, thigh_dir, 48.0, 50.0, bend))
 	# the phone held up near the chin, elbow down, the screen tipped to the face
-	var phone_at := (Vector2(40, 30) * phone + Vector2(14, 58) * (1.0 - phone)) + Vector2(14, -12) * jolt
+	# (up under the chin, below the eyes, the forearm raised from an elbow
+	# held out in front of the ribs)
+	var phone_at := (Vector2(43, 2) * phone + Vector2(14, 58) * (1.0 - phone)) + Vector2(8, -10) * jolt
 	var phone_hand := shoulder + phone_at.rotated(lean)
-	var elbow := shoulder + Vector2(10, 30).rotated(lean)
+	var elbow := shoulder + Vector2(24, 26).rotated(lean)
 	# the free arm: hanging, out ahead on the leash, or down to the floor
 	var free_dir := Vector2.DOWN.rotated(-0.2).lerp(Vector2.RIGHT.rotated(0.12), reach).normalized()
 	free_dir = free_dir.lerp(Vector2(0.55, 0.85).normalized(), reach_down).normalized()
@@ -434,7 +475,7 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 
 	# ---------------------------------------------------------- far side
 	var far_leg := _leg(legs[1], lift, true)
-	var back := [far_leg[0], far_leg[1], far_leg[2]]
+	var back := far_leg.slice(0, 4)
 	if reach <= 0.25:
 		back.append_array(arm_free[0])
 	_group(back, OW)
@@ -447,10 +488,10 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 	var torso := _shape(K_TORSO, 0, PackedVector2Array(TORSO), _light_in(fwd, up), 4.0, 3.0, Vector2(-14, 52), 13.0)
 	var jaw := Vector2(-1.5, 5.0) * mouth
 	# the seat of the trousers: low and round on the sofa, tucked in standing
-	var rump := ["c", hip + fwd * -3.0 - up * (2.0 + 9.0 * sit), hip + fwd * 6.0 - up * (2.0 + 7.0 * sit),
-		lerpf(12.0, 13.0, sit), lerpf(11.0, 12.0, sit), TROUSERS, 2.6, 0.0]
+	var rump := ["c", hip + fwd * -7.0 - up * sit, hip + fwd * 3.0, lerpf(12.0, 13.5, sit), lerpf(11.0, 13.0, sit),
+		TROUSERS, 2.6, 0.0]
 	var neck := ["c", shoulder + up * 3.0 + fwd * 2.5, head + hx * 1.0 + hy * 13.0, 8.6, 7.4, SKIN, 2.5, 0.0]
-	_group([near_leg[0], near_leg[1], near_leg[2], rump, neck, ["p", torso, _frame(hip, fwd, up), SHIRT, true]], OW)
+	_group(near_leg.slice(0, 4) + [rump, neck, ["p", torso, _frame(hip, fwd, up), SHIRT, true]], OW)
 	_leg_detail(legs[0], near_leg)
 	# the shirt: its hem over the trousers, a crew collar, folds at the belly
 	var sdk := _shade(_shade(SHIRT))
@@ -528,18 +569,19 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 	_group(arm_phone[0], IW)
 	_arm_detail(arm_phone)
 	if phone > 0.3:
-		_phone(phone_hand, jolt, pose.get("scroll", 0.0), glow)
+		_phone(phone_hand, jolt, pose.get("scroll", 0.0), glow, lean)
 	RenderingServer.canvas_item_add_triangle_array(c.get_canvas_item(), PackedInt32Array(), _v, _col)
 	return arm2[2]
 
 
 # the phone in the cupped hand, edge on, its screen facing the face; fingers
 # round the back edge, the thumb on the screen, scrolling
-static func _phone(hand: Vector2, jolt: float, sc: float, glow: float) -> void:
-	var ph := hand + Vector2(3, -6)
-	var tip := -0.5 + jolt * 0.9
+static func _phone(hand: Vector2, jolt: float, sc: float, glow: float, lean: float) -> void:
+	# the top tipped away, so the screen (on its -x side) looks up at the eyes
+	var tip := 0.8 + 0.5 * lean + jolt * 0.5
 	var px := Vector2.RIGHT.rotated(tip)
 	var py := Vector2.DOWN.rotated(tip)
+	var ph := hand - py * 6.0
 	var xf := _frame(ph, px, py)
 	var body := _shape(K_STATIC, 4, PackedVector2Array(PHONE_BODY), Vector2.RIGHT, 0.0)
 	_push(xf * (body[1.4] as PackedVector2Array), OUT)
