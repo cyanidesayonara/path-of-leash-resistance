@@ -6,8 +6,10 @@ extends RefCounted
 # handful of numbers, drawn as the Store box art's Millie: one bold warm-black
 # outline round the silhouette, a soft charcoal coat with one hard cel shadow
 # away from the light and one glossy highlight toward it, a light grey muzzle
-# with freckles, grey brow spots, big googly eyes, perked button ears, a
-# sturdy round body, white paws, a pink collar.
+# and grey round the eyes and brows (a young dog with an old face), big
+# googly eyes, tall pointed ears tipped forward, a lean, deep-chested,
+# long-legged body with a white chest flash, white toes, a long low tail
+# and a pink collar.
 # Units: she stands on y = 0 facing +x, about 130 wide and 95 tall at scale 1.
 # Pose keys (all optional, 0 is standing): lean (body tilt, + nose down),
 # crouch (0..1, lowers the body), reach (front legs forward), push (back legs
@@ -31,7 +33,7 @@ const MUZZLE := Color(0.71, 0.69, 0.67)
 const MUZZLE_SHADE := Color(0.54, 0.51, 0.52)
 const MUZZLE_RIM := Color(0.47, 0.45, 0.46)
 const FRECKLE := Color(0.33, 0.32, 0.34)
-const BROW := Color(0.68, 0.66, 0.64)
+const BROW := Color(0.82, 0.80, 0.78)
 const PAW := Color(0.93, 0.90, 0.85)
 const PAW_SHADE := Color(0.72, 0.68, 0.70)
 const EYE := Color(0.98, 0.96, 0.91)
@@ -208,7 +210,7 @@ static func _anchors(pose: Dictionary) -> Dictionary:
 	var g: float = pose.get("gait", 0.0)
 	var ph: float = pose.get("phase", 0.0)
 	var drop := 8.0 * crouch - absf(cos(ph)) * 2.5 * g
-	var body_c := Vector2(0.0, -40.0 + drop)
+	var body_c := Vector2(0.0, -44.0 + drop)
 	var fwd := Vector2.RIGHT.rotated(lean)
 	var chest := body_c + fwd * 30.0 + Vector2(0, -2)
 	var rump := body_c - fwd * 32.0
@@ -243,9 +245,9 @@ static func _legs(a: Dictionary, grow := 0.0) -> Array:
 		var f: Vector2 = feet[i] - Vector2(0, 4)
 		if i % 2 == 0:
 			var hip := rump + (Vector2(4, 8) if i == 0 else Vector2(10, 10))
-			out.append([_limb(hip, f + hock, 9.5 + grow, 5.2 + grow), _limb(f + hock, f, 5.2 + grow, 4.5 + grow)])
+			out.append([_limb(hip, f + hock, 8.6 + grow, 4.6 + grow), _limb(f + hock, f, 4.6 + grow, 4.0 + grow)])
 		else:
-			out.append([_limb(chest + (Vector2(-2, 8) if i == 1 else Vector2(4, 10)), f, 7.6 + grow, 4.6 + grow)])
+			out.append([_limb(chest + (Vector2(-2, 8) if i == 1 else Vector2(4, 10)), f, 6.9 + grow, 4.1 + grow)])
 	return out
 
 
@@ -267,59 +269,58 @@ static func _parts(pose: Dictionary, legs: bool) -> Dictionary:
 	var body_c: Vector2 = a["_body"]
 	var tail: float = a["_tail"]
 	# the tail: a curve that tapers to a fine round tip
-	var t_base := rump + Vector2(-14, -8)
-	var t_tip := rump + Vector2(-32, -27).rotated(tail)
-	var t_knee := t_base + Vector2(-15, -3).rotated(tail * 0.6)
-	p["tail"] = _strip(t_base, t_knee, t_tip, 5.2, 1.3)
+	var t_base := rump + Vector2(-15, -7)
+	var t_knee := t_base + Vector2(-22, 10).rotated(tail * 0.6)
+	var t_tip := rump + Vector2(-47, -17).rotated(tail)
+	p["tail"] = _strip(t_base, t_knee, t_tip, 5.8, 1.6)
 	if legs:
 		var lg := _legs(a)
 		p["leg_bl"] = _union(lg[0])
 		p["leg_fl"] = lg[1][0]
 		p["leg_br"] = _union(lg[2])
 		p["leg_fr"] = lg[3][0]
-	p["rump"] = ellipse(rump, Vector2(22.5, 22.5), lean)
+	p["rump"] = ellipse(rump, Vector2(21, 20), lean)
 	# the haunch: the folded back leg showing on her side when she sits
 	p["haunch"] = ellipse(rump + Vector2(8, 6), Vector2(17 * sit + 0.01, 14 * sit + 0.01), lean * 0.5)
 	# the barrel: deep at the chest, tucked up at the loin
 	var barrel := PackedVector2Array()
 	for i in range(32):
 		var an := TAU * float(i) / 32.0
-		var q := Vector2(cos(an) * 42.0, sin(an) * 22.0)
-		q.y *= lerpf(0.88, 1.1, (q.x + 42.0) / 84.0) if q.y > 0.0 else 0.96
+		var q := Vector2(cos(an) * 42.0, sin(an) * 19.5)
+		q.y *= lerpf(0.58, 1.16, (q.x + 42.0) / 84.0) if q.y > 0.0 else 0.94
 		barrel.append(body_c + q.rotated(lean))
 	p["body"] = barrel
-	p["chest"] = ellipse(chest, Vector2(22.5, 24.5), lean)
-	p["neck"] = limb(chest + Vector2(2, -6), a["_neck"], 15.5, 12.5)
+	p["chest"] = ellipse(chest, Vector2(20.5, 22.5), lean)
+	p["neck"] = limb(chest + Vector2(2, -6), a["_neck"], 13.5, 10.5)
 	p["head"] = ellipse(head + Vector2(-0.5, -0.5).rotated(hrot), Vector2(23.5, 20.5), hrot)
-	p["muzzle"] = _blunt(a["_muzzle"] + Vector2(-1, 0.5).rotated(hrot), Vector2(16, 10), hrot + 0.06)
-	# button ears: they lift up and out from the top of the skull and fold
-	# over at the tip. `ear` above 0 streams them back and up (a lunge),
+	p["muzzle"] = _blunt(a["_muzzle"] + Vector2(1.5, 0.5).rotated(hrot), Vector2(19, 8.5), hrot + 0.06)
+	# tall pointed ears, set high, whose tips tip forward. `ear` above 0 streams them back and up (a lunge),
 	# below 0 flattens them back along the skull (a sulk)
 	var sw: float = a["_ear"]
 	var near_root := head + Vector2(-8, -16).rotated(hrot)
 	var e := _ear_crease(near_root, hrot, sw, 1.0)
-	p["_ear_rise"] = _limb(near_root, e[0], 7.0, 5.2)
-	p["_ear_flap"] = _limb(e[0], e[1], 5.2, 3.8)
+	p["_ear_rise"] = _limb(near_root, e[0], 7.2, 3.0)
+	p["_ear_flap"] = _limb(e[0], e[1], 3.0, 1.3)
 	p["ear"] = _union([p["_ear_rise"], p["_ear_flap"]])
 	# the far ear: only its top shows, above the crown
 	p["ear_far"] = _button_ear(head + Vector2(7, -18).rotated(hrot), hrot, sw, 0.8)
 	return p
 
 
-# one button ear from its root on the skull: a flap rising to a crease,
-# then the tip folded over forward and down; `k` scales it
+# one ear from its root on the skull: a triangle rising to a crease, then
+# the narrow tip tipped forward; `k` scales it
 static func _button_ear(root: Vector2, hrot: float, sw: float, k: float) -> PackedVector2Array:
 	var e := _ear_crease(root, hrot, sw, k)
-	return _union([_limb(root, e[0], 7.0 * k, 5.2 * k), _limb(e[0], e[1], 5.2 * k, 3.8 * k)])
+	return _union([_limb(root, e[0], 7.2 * k, 3.0 * k), _limb(e[0], e[1], 3.0 * k, 1.3 * k)])
 
 
 # [the crease, the folded tip] of a button ear
 static func _ear_crease(root: Vector2, hrot: float, sw: float, k: float) -> Array:
 	var pos := clampf(sw, 0.0, 0.7) / 0.7
 	var neg := clampf(-sw, 0.0, 0.6) / 0.4
-	var crease := root + Vector2(-1.5, -14.5).rotated(hrot - 0.8 * pos - 1.1 * neg) * k
-	var fold := deg_to_rad(52.0 - 225.0 * pos * pos + 25.0 * neg)
-	return [crease, crease + Vector2.from_angle(fold + hrot - 1.1 * neg) * 8.5 * k]
+	var crease := root + Vector2(1.0, -18.0).rotated(hrot - 0.8 * pos - 1.1 * neg) * k
+	var fold := deg_to_rad(-25.0 - 150.0 * pos * pos + 25.0 * neg)
+	return [crease, crease + Vector2.from_angle(fold + hrot - 1.1 * neg) * 6.0 * k]
 
 
 const BACK := ["tail", "leg_bl", "leg_fl"]
@@ -386,7 +387,14 @@ static func _torso_mesh(a: Dictionary, fi: int, lt: Vector2) -> Array:
 	var ink := _mesh(sb, body_c)
 	# base, the shadow on the side away from the window, the gloss
 	_fill(sb, torso, COAT)
-	_shade(sb, torso, lt, 7.0, COAT_SHADE)
+	var tshade := _shade(sb, torso, lt, 7.0, COAT_SHADE)
+	# the white flash on her chest, shaded where the body is
+	var flash := _largest(Geometry2D.intersect_polygons(
+		ellipse(p["_chest"] + Vector2(11, 7).rotated(ql), Vector2(7, 12), ql - 0.35, 20), torso))
+	_fill(sb, flash, PAW)
+	for sh: PackedVector2Array in tshade:
+		for poly: PackedVector2Array in Geometry2D.intersect_polygons(flash, sh):
+			_fill(sb, poly, PAW_SHADE)
 	_gloss(sb, torso, lt, 4.5, 3.0, ellipse(body_c + Vector2(-2, -14).rotated(ql), Vector2(26, 10), ql, 16), COAT_GLOSS)
 	if qs > 0.3:
 		# the folded thigh's front edge, a thin inner line
@@ -423,8 +431,10 @@ static func _head_mesh(a: Dictionary, fi: int, lt: Vector2) -> Array:
 	# black) and the muzzle's own shadow, the gloss on the crown
 	_fill(sb, skull, COAT)
 	var hshade := _shade(sb, skull, lt, 6.0, COAT_SHADE)
-	var grey_shape := _union([_blunt(muz + Vector2(1, 1).rotated(hrot), Vector2(15, 9.5), hrot + 0.06),
-		ellipse(muz + Vector2(-11, 3).rotated(hrot), Vector2(8, 7), hrot)])
+	# the grey face: muzzle, cheek, and a soft ring round the eye and brow
+	var grey_shape := _union([_blunt(muz + Vector2(3, 1).rotated(hrot), Vector2(18, 8), hrot + 0.06),
+		ellipse(muz + Vector2(-11, 3).rotated(hrot), Vector2(8, 7), hrot),
+		ellipse(head + Vector2(9, -4.5).rotated(hrot), Vector2(10, 9.6), hrot)])
 	var grey := _largest(Geometry2D.intersect_polygons(grey_shape, skull))
 	_fill(sb, _largest(Geometry2D.intersect_polygons(_grow(grey_shape, 1.5), skull)), MUZZLE_RIM)
 	_fill(sb, grey, MUZZLE)
@@ -433,11 +443,11 @@ static func _head_mesh(a: Dictionary, fi: int, lt: Vector2) -> Array:
 			for poly: PackedVector2Array in Geometry2D.intersect_polygons(grey, sh):
 				_fill(sb, poly, MUZZLE_SHADE)
 	_gloss(sb, skull, lt, 3.0, 2.4, ellipse(head + Vector2(-4, -11).rotated(hrot), Vector2(15, 9), hrot, 14), COAT_GLOSS)
-	# freckles: a scatter of dark dots on the grey
-	for f: Vector2 in [Vector2(-2, 1), Vector2(3, 2.5), Vector2(-6, 4), Vector2(1, 5.5), Vector2(6, 0.5), Vector2(-3, 7)]:
+	# a few grizzle dots on the grey
+	for f: Vector2 in [Vector2(0, 1), Vector2(5, 2.5), Vector2(-4, 3.5), Vector2(3, 5), Vector2(9, 1)]:
 		sb.circle(muz + f.rotated(hrot), 0.85, FRECKLE)
 	# the nose: a black bean on the tip, with a grey shine
-	var nose := muz + Vector2(14.5, -3.5).rotated(hrot)
+	var nose := muz + Vector2(18.5, -2.5).rotated(hrot)
 	_fill(sb, ellipse(nose, Vector2(5.4, 4.4), hrot + 0.15, 16), INK)
 	_fill(sb, ellipse(nose + Vector2(-1.2, -1.6).rotated(hrot), Vector2(2.2, 1.1), hrot - 0.2, 10), NOSE_SHINE)
 	m = [qh, ink, _mesh(sb, head)]
@@ -612,7 +622,7 @@ static func _draw_face(b: ShapeBatch, a: Dictionary, pose: Dictionary) -> void:
 		_fill(b, ellipse(mp, jr, hrot - 0.1, 16), MOUTH)
 		_fill(b, ellipse(mp + Vector2(1.5, 1.8 * mouth).rotated(hrot), Vector2(4.8, 2.0 * mouth + 0.3), hrot, 12), TONGUE)
 	else:
-		var sm := [Vector2(-9, 6.5), Vector2(-4, 8.2), Vector2(1, 8.4), Vector2(6, 7.2)]
+		var sm := [Vector2(-9, 6.5), Vector2(-3, 8.0), Vector2(3, 8.0), Vector2(9, 6.6)]
 		for i in range(sm.size() - 1):
 			b.line(muz + (sm[i] as Vector2).rotated(hrot), muz + (sm[i + 1] as Vector2).rotated(hrot), INK, 1.3)
 	# the eyes: big googly whites with an ink rim, a black pupil and a
@@ -623,7 +633,7 @@ static func _draw_face(b: ShapeBatch, a: Dictionary, pose: Dictionary) -> void:
 	var brow_lift: float = pose.get("brow", 0.0)
 	if blink > 0.5:
 		b.circle(eye, 8.4, INK)
-		b.circle(eye, 7.0, COAT)
+		b.circle(eye, 7.0, MUZZLE)
 		var lid := [Vector2(-5.5, 0.5), Vector2(-2, 2.2), Vector2(2, 2.2), Vector2(5.5, 0.5)]
 		for i in range(lid.size() - 1):
 			b.line(eye + (lid[i] as Vector2).rotated(hrot), eye + (lid[i + 1] as Vector2).rotated(hrot), INK, 1.5)
