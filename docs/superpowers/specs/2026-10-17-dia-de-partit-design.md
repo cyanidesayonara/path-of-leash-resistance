@@ -1,7 +1,7 @@
 # Dia de Partit: the walk to the stadium on match day
 
-Draft for Santtu's approval, 2026-10-17. No code is written until this is
-approved. Release 1.61. The open questions are at the end.
+Approved by Santtu, 2026-10-17. Release 1.61. His decisions are at the end
+(Decisions) and are written into the sections below.
 
 Level id `partit`, name **Dia de Partit**, subtitle "match day". It is the
 sixteenth walk. It opens after Montjuïc, at 27 stars.
@@ -62,7 +62,7 @@ piece of art and text in the walk:
   Barcelona club uses as its crest.
 - **Kits are never vertical stripes.** Blue-and-claret vertical stripes
   are one club's trade dress. Home shirts are halves (left blue, right
-  claret) or plain claret with blue sleeves. Scarves are bars of the two
+  claret). Scarves are bars of the two
   colors, which every club in the world has.
 - **No chest rectangle.** No shirt has a sponsor-shaped panel, a name or a
   number on the back.
@@ -98,8 +98,7 @@ piece of art and text in the walk:
 The walk's name is written on the ground in **sunflower seed shells** (pipes).
 At a Spanish ground the shells cover the floor of the stands. They behave
 like El Barri's leaves: they scatter, spin and stay scattered. HOME at the
-start line is written the same way. The open questions include an
-alternative: crushed paper cups that roll.
+start line is written the same way.
 
 ## The layout
 
@@ -293,8 +292,8 @@ the stadium (loudest in the off-leash square). The one exception is a dog
 right beside her human (within 70 px) when they celebrate. She joins in
 and gets ZOOMIES instead. The player can see the swell coming and choose to
 be at her human's side, so the mood still arrives from what happened and is
-answered by what she did (mood.gd's rule). This exception is an open
-question for the playtest.
+answered by what she did (mood.gd's rule). Santtu kept this rule; its
+distance is a constant for the playtest.
 
 **Your human.** One second after the roar, because the phone stream lags,
 your human celebrates ("gooool!"): both arms up, two hops on the spot,
@@ -452,11 +451,10 @@ the staples plus the walk's own:
 12. Snatch the sausage from under the police horses (`prize`)
 
 `combo` ("Land an x3 trick combo") and `hi` ("Say hello to 3 dogs") are
-the candidates for a thirteenth if Santtu wants the trick line rewarded.
-The barrier grind feeds combo either way. **Tofu is left out.** The way
+not on the list: twelve goals, no thirteenth. The barrier grind still
+feeds the combo meter. **Tofu is left out.** The way
 home belongs to the final whistle, and herding a cat through a stadium's
-worth of fans is one thing too many. La Neteja set the precedent. This is
-an open question.
+worth of fans is one thing too many. La Neteja set the precedent.
 
 ## Pairing
 
@@ -725,7 +723,7 @@ least one draw call each. Today's crowd is 14 tourists. Match day wants
   stop short of the median so there is always a gap. `level_check` gets a
   rule that a keep-out path never ends inside a solid.
 - **Horses and the rope.** Horses are solid bodies but not poles. The rope
-  passes them without wrapping (open question). A moving wrappable body is
+  passes them without wrapping, for now. A moving wrappable body is
   the dynamic-snag work the AGENTS.md rope rules warn about, and it is out
   of scope here.
 
@@ -755,28 +753,27 @@ checked by eye in each PR's feel card.
 tight, the cut line is after PR 6. The corners (PR 7) can ship in 1.62 and
 the walk still has its three set pieces and its own goals, minus two.
 
-## Open questions for Santtu
+## Decisions (2026-10-17)
 
-1. **Kick-off timing:** a clock (210 s) or arrival at the gate, whichever
-   comes first, as proposed? Or arrival only, so every walk out is crowded?
-2. **Kits:** halves or plain claret with blue sleeves for the home shirts?
-   Is a plain white star on flags acceptable, or no mark at all? Are orange
-   and slate right for the away fans?
-3. **The roar beside your human gives ZOOMIES, away from them SCARED.**
-   Keep this for the playtest, or plain SCARED always?
-4. **Horses:** solid bodies the rope passes (proposed), or worth the
-   dynamic-snag work to make a standing horse wrappable later?
-5. **Tofu:** left out of this walk (proposed, as La Neteja), or herded
-   through the empty streets before the final whistle?
-6. **Thirteenth goal:** `combo` or `hi`, or keep twelve?
-7. **The result:** seeded win, draw or loss changing the full-time crowd,
-   with a loss making it the easy walk home. Keep, or always a win?
-8. **Writing on the ground:** sunflower seed shells (scatter) or crushed
-   paper cups (roll)?
-9. **Beer:** the drinks cart sells water and soda only (proposed, and its
-   sign says so). Is a beer sign in the bar window fine as scenery?
-10. **Naming the neighborhood:** is "Les Corts" and the Travessera fine in
-    docs and the walk's flavor, as long as the stadium and club are never
-    named?
-11. **Pairing:** El Diluvi (#152, proposed), or La Rambla or L'Estació?
-12. **Unlock:** 27 stars, after Montjuïc?
+Santtu approved the design with these answers:
+
+1. **Kick-off:** on the clock (210 s) or on reaching the gate, whichever
+   comes first.
+2. **Kits:** home shirts in blue and claret halves, no chest panel. Away
+   fans in orange and slate. Flags carry a plain white star.
+3. **The roar:** SCARED, or ZOOMIES when she is right beside her human.
+4. **The result:** seeded, and it changes the walk home. A win is a
+   jubilant surge, a loss a quiet, easy walk, a draw in between.
+
+Defaults taken on the rest:
+
+5. **Horses:** solid bodies the rope does not wrap, for now.
+6. **Tofu:** left out of this walk.
+7. **Goals:** twelve, no thirteenth.
+8. **Name on the ground:** sunflower seed shells.
+9. **Signage:** no beer signage anywhere. The bar is a generic bar terrace
+   and the cart sells water and soda.
+10. **Names:** naming Les Corts and the Travessera is fine; the stadium and
+    the club are never named.
+11. **Pairing:** El Diluvi (#152).
+12. **Unlock:** 27 stars, after Montjuïc.
