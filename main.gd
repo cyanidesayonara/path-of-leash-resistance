@@ -1095,6 +1095,10 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 			var fr := f.y
 			c.draw_rect(Rect2(fl - far, sy, far, slice), base)
 			c.draw_rect(Rect2(fr, sy, far, slice), base)
+			# Les Obres' line is a fence, not a building: no wall face, no cast
+			if lvl == "site":
+				sy += slice
+				continue
 			# Seen from directly overhead you do not see a facade at all - you
 			# see the ROOF. The roof is inset from its footprint and the gap
 			# becomes a visible WALL FACE, angled toward the viewer: dark at the
@@ -1152,7 +1156,7 @@ func _edge_base_color() -> Color:
 	match lvl:
 		"oldtown", "spook": return Color(0.36, 0.33, 0.30)   # old stone
 		"station": return Color(0.48, 0.48, 0.52)            # tiled interior
-		"site": return Color(0.52, 0.42, 0.27)               # plywood hoarding
+		"site": return Obres.YARD                            # the works compound
 		"scrap": return Color(0.26, 0.25, 0.24)              # yard beyond the fence
 		"market": return Color(0.44, 0.38, 0.34)
 		_: return Color(0.38, 0.35, 0.37)                    # city block
@@ -1280,22 +1284,8 @@ func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 			var spine_x := r.get_center().x
 			c.draw_line(Vector2(spine_x, r.position.y), Vector2(spine_x, r.end.y), Color(0.33, 0.35, 0.39), 6.0)
 		"site":
-			# scaffold decking and tarps over the works
-			c.draw_rect(r, Color(0.46, 0.44, 0.40).lightened(lit * 0.08))
-			# scaffold boards running across, with poles at the joints
-			var board := r.position.y
-			while board < r.end.y:
-				c.draw_line(Vector2(r.position.x, board), Vector2(r.end.x, board), Color(0.58, 0.48, 0.31), 7.0)
-				c.draw_line(Vector2(r.position.x, board + 4.0), Vector2(r.end.x, board + 4.0), Color(0.30, 0.25, 0.17), 1.5)
-				board += 26.0
-			# a blue tarp lashed over part of it, and hazard tape at the edge
-			if k % 2 == 0:
-				c.draw_rect(Rect2(inner_x + side * 58.0, r.position.y + 40.0, 58.0, 96.0), Color(0.20, 0.36, 0.52, 0.9))
-			var tape_x: float = inner_x + side * 5.0
-			for s in range(8):
-				var sy := r.position.y + s * 28.0
-				var sc := Color(0.92, 0.72, 0.15) if s % 2 == 0 else Color(0.15, 0.14, 0.13)
-				c.draw_line(Vector2(tape_x, sy), Vector2(tape_x, sy + 14.0), sc, 5.0)
+			# the works compound behind the Heras fence (world/obres.gd)
+			Obres.draw_yard_module(self, c, r, side, k)
 		"scrap":
 			# corrugated shed roofs, rusting, with junk heaps between them
 			var iron := Color(0.40, 0.38, 0.35).lightened(lit * 0.09)
@@ -1374,6 +1364,10 @@ func draw_verge_onto(c: Object, vt: float, vb: float) -> void:
 	# before it was moved off it (see edgelayer.gd) - putting picnics into the
 	# 30-times-a-second draw is exactly how a walk starts to stutter.
 	_draw_grass_detail(c, vt, vb)
+	# Les Obres' Heras fence stands on the building line, so it goes on this
+	# canvas, above the sidewalk its feet and shadow lie on
+	if lvl == "site":
+		Obres.draw_fence(self, c, vt, vb)
 	for it: Dictionary in verge_items:
 		var p: Vector2 = it["pos"]
 		if p.y < vt - 160.0 or p.y > vb + 160.0:
@@ -3323,17 +3317,14 @@ func _draw_digger(v: Vector2) -> void:
 # zebra, the trench with its plank and pipe, all drawn over the paving.
 func _draw_obres(vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
-	for cz: Rect2 in cement_zones:
+	# the footway's dirt: track marks, spray lines, bits lying about
+	Obres.draw_ground(self, b, vt, vb)
+	for zi in range(cement_zones.size()):
+		var cz: Rect2 = cement_zones[zi]
 		if cz.end.y < vt - 40.0 or cz.position.y > vb + 40.0:
 			continue
-		# the timber formwork, then the wet pour inside it, float marks on top
-		b.rect(cz.grow(7.0), Color(0.56, 0.42, 0.26))
-		b.rect(cz.grow(3.0), Color(0.44, 0.32, 0.20))
-		b.rect(cz, Color(0.60, 0.60, 0.58))
-		var fy := cz.position.y + 16.0
-		while fy < cz.end.y - 8.0:
-			b.line(Vector2(cz.position.x + 10.0, fy), Vector2(cz.end.x - 10.0, fy + 4.0), Color(0.68, 0.68, 0.66), 2.0)
-			fy += 22.0
+		# each pour at its own stage (world/obres.gd)
+		Obres.draw_pour(b, cz.get_center(), cz.size, zi % 2)
 		# tape round the cones at the corners, red and white
 		var corners: Array[Vector2] = []
 		for c: Vector2 in [cz.position, Vector2(cz.end.x, cz.position.y), cz.end, Vector2(cz.position.x, cz.end.y)]:
@@ -5784,7 +5775,7 @@ func build_signs() -> void:
 		var nm := WorldSign.build(name, Vector2(mid, START_Y - 190.0), 44.0, mat, 4.0, room - 120.0)
 		signs.append(nm)
 		if arrows:
-			var hw: float = WorldSign.Letters.width(name.to_upper(), float(nm.h)) * 0.5
+			var hw: float = WorldSign.Letters.width(name.to_upper(), float(nm.h), WorldSign.gap_for(mat)) * 0.5
 			signs.append(WorldSign.build("<", Vector2(mid - hw - 44.0, START_Y - 190.0), 44.0, mat, 6.0, 80.0))
 			signs.append(WorldSign.build(">", Vector2(mid + hw + 44.0, START_Y - 190.0), 44.0, mat, 7.0, 80.0))
 	var he := walk_edges(HOME_Y + 84.0)
@@ -5793,9 +5784,11 @@ func build_signs() -> void:
 	var gm := (gate_l + gate_r) * 0.5
 	var gw := maxf(160.0, gate_r - gate_l - 20.0)
 	# traffic cones are fat pieces: small words in them are a pile of cones
-	var gk := 1.4 if mat == "cones" else 1.0
+	var gk := 1.8 if mat == "cones" else 1.0
 	signs.append(WorldSign.build(gate_text, Vector2(gm, GATE_Y - 72.0 * gk), 36.0 * gk, mat, 11.0, gw))
-	signs.append(WorldSign.build("OFF LEASH", Vector2(gm, GATE_Y - 124.0 * gk - 4.0), 24.0 * gk, mat, 12.0, gw))
+	# and the small line no smaller than the cones can still spell
+	var ok := 30.0 * gk if mat == "cones" else 24.0
+	signs.append(WorldSign.build("OFF LEASH", Vector2(gm, GATE_Y - 124.0 * gk - 4.0), ok, mat, 12.0, gw))
 
 
 func _tick_signs(delta: float) -> void:
