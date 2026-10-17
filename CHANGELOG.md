@@ -9,6 +9,7 @@ Append-only session history, newest first.
 - The strips along the fences are oily gravel: grit, oil soaked into it, a lost bolt, and only now and then a weed or a thistle. No lawn and no flowers. They play as before.
 - Rust streaks down the shed roofs from the ridge, every roof its own; some have a patch rusted through. No more grid of rust discs.
 - EL PATI is the scrapyard's back lot. Where a park has trees there are tyre stacks and groups of oil drums, on the same spots and as solid as the trunks were. Lengths of steel pipe lie where logs were, and a wheelless car on blocks sits in the north-west corner over its oil stain (solid, tucked into the corner so there is no gap to get stuck in). The behaviour snapshot for the walk is unchanged.
+- The laser and the camera shouted "THE THE LASER SAW YOU!": the name already carries its "the".
 
 ## 2026-10-17 - a title theme with get-up-and-go, and the intro scored to the picture
 

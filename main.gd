@@ -10213,7 +10213,8 @@ func _caught(what: String) -> void:
 	bones = maxi(0, bones - 2)
 	shake_t = maxf(shake_t, 0.4)
 	Sfx.play("crack", 1.4)
-	feed.say("THE %s SAW YOU!  -2" % what.to_upper(), EventFeed.Tone.BAD)
+	# `what` already names it ("the laser"), so no second THE
+	feed.say("%s SAW YOU!  -2" % what.to_upper(), EventFeed.Tone.BAD)
 	# the racket wakes anyone dozing nearby
 	for g in get_tree().get_nodes_in_group("guards"):
 		g.hear_noise(dog.global_position, 200.0)
