@@ -1103,6 +1103,11 @@ static func _portrait(c: CanvasItem) -> void:
 	_bg_portrait.draw(c)
 
 
+static func _bez3(a: Vector2, b: Vector2, c: Vector2, d: Vector2, t: float) -> Vector2:
+	var u := 1.0 - t
+	return a * u * u * u + b * 3.0 * u * u * t + c * 3.0 * u * t * t + d * t * t * t
+
+
 # one hard cel shadow: the shape less itself moved toward the light
 static func _portrait_shade(b: Tris, p: PackedVector2Array, toward: Vector2, col: Color) -> void:
 	for poly: PackedVector2Array in Geometry2D.clip_polygons(p, _shift(p, toward)):
@@ -1114,37 +1119,54 @@ static func _build_portrait(b: Tris, h: Vector2) -> void:
 	var w := 1.2                                   # the puppet's outline, at portrait size
 	var at := func(x: float, y: float) -> Vector2:
 		return h + Vector2(x, y)
-	# shoulders and chest, shaded away from the light, the white blaze
-	var chest := _pts([at.call(-23, 37), at.call(-19, 26), at.call(-9, 21), at.call(9, 21), at.call(19, 26),
-		at.call(23, 37)])
-	b.inked(chest, M.COAT, w, M.INK)
-	_portrait_shade(b, chest, Vector2(-5, -2), M.COAT_SHADE)
-	b.poly(_pts([at.call(-3.5, 25), at.call(3.5, 25), at.call(2.2, 31), at.call(0, 37), at.call(-2.2, 31)]), M.PAW)
-	# the neck, and the collar round it: red, its grey lining along the
-	# lower edge, the silver D-ring and the yellow tag
-	b.inked(_pts([at.call(-9.5, 10), at.call(9.5, 10), at.call(11, 25), at.call(-11, 25)]), M.COAT, w, M.INK)
-	var top_e := PackedVector2Array()
-	var bot_e := PackedVector2Array()
-	for i in range(11):
-		var u := float(i) / 10.0
-		var x := lerpf(-10.8, 10.8, u)
-		var dip := 3.4 * sin(u * PI)
-		top_e.append(at.call(x, 16.0 + dip))
-		bot_e.append(at.call(x, 21.2 + dip))
-	var collar := top_e.duplicate()
-	for i in range(bot_e.size() - 1, -1, -1):
-		collar.append(bot_e[i])
-	b.inked(collar, M.COLLAR, w, M.INK)
-	var lining := PackedVector2Array()
-	for i in range(bot_e.size()):
-		lining.append(bot_e[i] + Vector2(0, -1.8))
-	for i in range(bot_e.size() - 1, -1, -1):
-		lining.append(bot_e[i])
+	# the neck flowing down into sloping shoulders, one soft silhouette (hard
+	# square shoulders and a separate neck read as a tuxedo), shaded away from
+	# the light, and a small soft white patch on her chest
+	var body := PackedVector2Array()
+	var left := [Vector2(-10, 8), Vector2(-9.5, 24), Vector2(-26, 18.5), Vector2(-25.5, 37)]
+	for i in range(9):
+		body.append(h + _bez3(left[0], left[1], left[2], left[3], float(i) / 8.0))
+	for i in range(8, -1, -1):
+		var q := _bez3(left[0], left[1], left[2], left[3], float(i) / 8.0)
+		body.append(h + Vector2(-q.x, q.y))
+	b.inked(body, M.COAT, w, M.INK)
+	_portrait_shade(b, body, Vector2(-5, -2), M.COAT_SHADE)
+	# a soft teardrop of white, its top tucked up under the collar
+	var blaze := PackedVector2Array()
+	for i in range(18):
+		var an := TAU * float(i) / 18.0
+		var r := Vector2(3.4, 4.6) * (1.0 - 0.45 * maxf(0.0, -sin(an)))
+		blaze.append(at.call(0.6 + cos(an) * r.x, 31.5 + sin(an) * r.y))
+	b.poly(blaze, M.PAW)
+	# the collar round the neck: red, its grey lining along the lower edge,
+	# the silver D-ring and the yellow tag
+	# the band is the near half of a ring round the neck: it dips at the
+	# front and its ends sweep up and back round the sides, so it plainly goes
+	# all the way round; the grey lining shows along its lower edge
+	var outer := PackedVector2Array()
+	var band_in := PackedVector2Array()
+	var lin := PackedVector2Array()
+	for i in range(17):
+		var an := PI * float(i) / 16.0
+		outer.append(at.call(cos(an) * 12.6, 15.0 + sin(an) * 7.6))
+		band_in.append(at.call(cos(an) * 11.0, 15.0 + sin(an) * 2.6))
+		lin.append(at.call(cos(an) * 12.45, 15.0 + sin(an) * 6.7))
+	var band := outer.duplicate()
+	for i in range(band_in.size() - 1, -1, -1):
+		band.append(band_in[i])
+	b.inked(band, M.COLLAR, w, M.INK)
+	var lining := outer.duplicate()
+	for i in range(lin.size() - 1, -1, -1):
+		lining.append(lin[i])
 	b.poly(lining, M.COLLAR_SHADE)
-	b.oval(at.call(0, 25.2), Vector2(2.5, 2.5), M.INK, 12)
-	b.oval(at.call(0, 25.2), Vector2(1.7, 1.7), M.RING, 12)
-	b.oval(at.call(0.4, 29.6), Vector2(3.0, 3.0), M.INK, 12)
-	b.oval(at.call(0.4, 29.6), Vector2(2.3, 2.3), M.TAG, 12)
+	# the back of the collar, behind her neck, showing past it at each side
+	for sd3: float in [-1.0, 1.0]:
+		b.poly(_pts([at.call(sd3 * 12.6, 15.0), at.call(sd3 * 11.0, 15.0), at.call(sd3 * 10.4, 12.6),
+			at.call(sd3 * 11.8, 12.2)]), M.COLLAR.darkened(0.3))
+	b.oval(at.call(0, 23.4), Vector2(2.5, 2.5), M.INK, 12)
+	b.oval(at.call(0, 23.4), Vector2(1.7, 1.7), M.RING, 12)
+	b.oval(at.call(0.4, 27.8), Vector2(3.0, 3.0), M.INK, 12)
+	b.oval(at.call(0.4, 27.8), Vector2(2.3, 2.3), M.TAG, 12)
 	# the ears: lifted from the top of the skull, then folded over so the
 	# pointed flaps tip forward and out, as the puppet's do from the side
 	for sd: float in [-1.0, 1.0]:
@@ -1168,12 +1190,18 @@ static func _build_portrait(b: Tris, h: Vector2) -> void:
 		b.line(h + (g[0] as Vector2), h + (g[1] as Vector2), M.GRIZZLE, 0.9)
 	# the grey face: the muzzle toward us, the beard under it, shaded on the
 	# side away from the light, rimmed where it meets the black
-	var muz := _pts([at.call(-5.5, 0.5), at.call(0, -0.5), at.call(5.5, 0.5), at.call(8.5, 4), at.call(10, 9),
-		at.call(9.2, 13.5), at.call(6.5, 16.5), at.call(3, 17), at.call(0, 18), at.call(-3, 17), at.call(-6.5, 16.5),
-		at.call(-9.2, 13.5), at.call(-10, 9), at.call(-8.5, 4)])
+	# one smooth shape: narrow at the bridge, full at the cheeks, a soft round
+	# chin (a ragged beard edge read as a mouthful of pebbles)
+	var muz := PackedVector2Array()
+	for i in range(28):
+		var an := TAU * float(i) / 28.0
+		var x := cos(an)
+		var y := sin(an)
+		var half := lerpf(6.5, 9.6, clampf((y + 0.4) / 1.0, 0.0, 1.0)) if y < 0.6 else 9.6 * sqrt(maxf(0.0, 1.0 - (y - 0.6) * 0.9))
+		muz.append(h + Vector2(x * half, 9.0 + y * 8.5))
 	b.inked(muz, M.MUZZLE, 0.9, M.MUZZLE_RIM)
-	_portrait_shade(b, muz, Vector2(-3, -2), M.MUZZLE_SHADE)
-	for f: Vector2 in [Vector2(-5, 9.5), Vector2(-3, 11.5), Vector2(3, 11.5), Vector2(5, 9.5), Vector2(-6, 12.5), Vector2(6, 12.5)]:
+	_portrait_shade(b, muz, Vector2(-2.5, -2.5), M.MUZZLE_SHADE)
+	for f: Vector2 in [Vector2(-4.5, 8.0), Vector2(-6.0, 9.6), Vector2(4.5, 8.0), Vector2(6.0, 9.6)]:
 		b.oval(h + f, Vector2(0.55, 0.55), M.FRECKLE, 6)
 	# googly eyes, big as the puppet's, close-set over the muzzle, with the
 	# lower white in shade, a black pupil looking out and a catchlight
