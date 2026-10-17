@@ -6,7 +6,8 @@ extends RefCounted
 # handful of numbers, drawn as the Store box art's Millie: one bold warm-black
 # outline round the silhouette, a soft charcoal coat with one hard cel shadow
 # away from the light and one glossy highlight toward it, a light grey muzzle
-# with freckles, grey brow spots, big googly eyes, white paws, a pink collar.
+# with freckles, grey brow spots, big googly eyes, perked button ears, a
+# sturdy round body, white paws, a pink collar.
 # Units: she stands on y = 0 facing +x, about 130 wide and 95 tall at scale 1.
 # Pose keys (all optional, 0 is standing): lean (body tilt, + nose down),
 # crouch (0..1, lowers the body), reach (front legs forward), push (back legs
@@ -25,6 +26,7 @@ const COAT_GLOSS := Color(0.40, 0.39, 0.46)
 const COAT_FAR := Color(0.14, 0.12, 0.16)      # the far legs, in her shadow
 const EAR := Color(0.08, 0.075, 0.09)
 const EAR_GLOSS := Color(0.24, 0.23, 0.27)
+const EAR_FLAP := Color(0.14, 0.13, 0.16)      # the folded tip, turned to the light
 const MUZZLE := Color(0.71, 0.69, 0.67)
 const MUZZLE_SHADE := Color(0.54, 0.51, 0.52)
 const MUZZLE_RIM := Color(0.47, 0.45, 0.46)
@@ -44,12 +46,21 @@ const TONGUE := Color(0.94, 0.47, 0.55)
 const GROUND_SHADOW := Color(0.15, 0.12, 0.10, 0.28)
 
 
+static var _units := {}
+
+
+static func _unit_circle(n: int) -> PackedVector2Array:
+	if not _units.has(n):
+		var pts := PackedVector2Array()
+		for i in range(n):
+			var a := TAU * float(i) / float(n)
+			pts.append(Vector2(cos(a), sin(a)))
+		_units[n] = pts
+	return _units[n]
+
+
 static func ellipse(c: Vector2, r: Vector2, rot := 0.0, n := 28) -> PackedVector2Array:
-	var pts := PackedVector2Array()
-	for i in range(n):
-		var a := TAU * float(i) / float(n)
-		pts.append(c + Vector2(cos(a) * r.x, sin(a) * r.y).rotated(rot))
-	return pts
+	return Transform2D(rot, r, 0.0, c) * _unit_circle(n)
 
 
 # a tapered limb from a to b, wide at a and narrow at b: the convex hull of
@@ -63,6 +74,23 @@ static func limb(a: Vector2, b: Vector2, wa: float, wb: float) -> PackedVector2A
 	var hull := Geometry2D.convex_hull(pts)
 	hull.remove_at(hull.size() - 1)
 	return hull
+
+
+# the same hull built straight from its two tangent arcs: no hull search, so
+# cheap enough for the legs every frame
+static func _limb(a: Vector2, b: Vector2, wa: float, wb: float) -> PackedVector2Array:
+	var dv := b - a
+	var l := dv.length()
+	if l <= absf(wa - wb) + 0.001:
+		return ellipse(a if wa >= wb else b, Vector2.ONE * maxf(wa, wb), 0.0, 16)
+	var ang := dv.angle()
+	var phi := acos((wa - wb) / l)
+	var pts := PackedVector2Array()
+	pts.resize(18)
+	for i in range(9):
+		pts[i] = b + Vector2.from_angle(ang - phi + 2.0 * phi * float(i) / 8.0) * wb
+		pts[9 + i] = a + Vector2.from_angle(ang + phi + (TAU - 2.0 * phi) * float(i) / 8.0) * wa
+	return pts
 
 
 static func _x(p: Vector2, o: Vector2, s: float) -> Vector2:
@@ -103,8 +131,11 @@ static func _union(list: Array) -> PackedVector2Array:
 	return u
 
 
-static func _grow(pts: PackedVector2Array, d: float) -> PackedVector2Array:
-	return _largest(Geometry2D.offset_polygon(pts, d, Geometry2D.JOIN_ROUND))
+# outward round joins on an already smooth, dense outline only add points:
+# `smooth` mitres them instead, the same curve to a fiftieth of a unit
+static func _grow(pts: PackedVector2Array, d: float, smooth := false) -> PackedVector2Array:
+	var join := Geometry2D.JOIN_MITER if smooth else Geometry2D.JOIN_ROUND
+	return _largest(Geometry2D.offset_polygon(pts, d, join))
 
 
 # a rounded box (a superellipse): the muzzle's blunt end
@@ -143,18 +174,36 @@ static func _strip(a: Vector2, k: Vector2, b: Vector2, wa: float, wb: float) -> 
 	return out
 
 
-# the shapes of her silhouette, in drawing order, for a pose
-static func parts(pose: Dictionary) -> Dictionary:
+# where her joints are for a pose: everything parts() hangs its shapes on,
+# and all a leash or a placement needs. The last few poses are remembered:
+# a frame asks for the same pose more than once.
+static var _memo_keys: Array[int] = []
+static var _memo_vals: Array[Dictionary] = []
+
+
+static func anchors(pose: Dictionary) -> Dictionary:
+	var key := pose.hash()
+	var at := _memo_keys.find(key)
+	if at >= 0:
+		return _memo_vals[at]
+	var a := _anchors(pose)
+	_memo_keys.push_front(key)
+	_memo_vals.push_front(a)
+	if _memo_keys.size() > 6:
+		_memo_keys.pop_back()
+		_memo_vals.pop_back()
+	return a
+
+
+static func _anchors(pose: Dictionary) -> Dictionary:
 	# `sit` (0..1): rump down on the floor, chest up, front legs straight
 	# under it, back paws tucked forward under the haunch
 	var sit: float = pose.get("sit", 0.0)
-	var lean: float = lerpf(pose.get("lean", 0.0), -0.62, sit)
+	var lean: float = pose["_lean_eff"] if pose.has("_lean_eff") else lerpf(pose.get("lean", 0.0), -0.62, sit)
 	var crouch: float = lerpf(pose.get("crouch", 0.0), 0.0, sit)
 	var reach: float = lerpf(pose.get("reach", 0.0), -0.45, sit)
 	var push: float = lerpf(pose.get("push", 0.0), -1.25, sit)
 	var head_up: float = pose.get("head_up", 0.0)
-	var ear: float = pose.get("ear", 0.0)
-	var tail: float = pose.get("tail", 0.0)
 	# `gait` (0..1) and `phase` (radians): a trot, the legs in diagonal pairs
 	var g: float = pose.get("gait", 0.0)
 	var ph: float = pose.get("phase", 0.0)
@@ -165,85 +214,316 @@ static func parts(pose: Dictionary) -> Dictionary:
 	var rump := body_c - fwd * 32.0
 	var neck_top := chest + Vector2(14.0, -26.0).rotated(-head_up * 0.6)
 	var head := neck_top + Vector2(10.0, -10.0).rotated(-head_up)
-	var muzzle := head + Vector2(22.0, 7.0).rotated(-head_up)
-	var hrot := -head_up * 0.5
-	var p := {}
-	# the tail: a curve that tapers to a fine round tip
-	var t_base := rump + Vector2(-14, -8)
-	var t_tip := rump + Vector2(-32, -27).rotated(tail)
-	var t_knee := t_base + Vector2(-15, -3).rotated(tail * 0.6)
-	p["tail"] = _strip(t_base, t_knee, t_tip, 5.2, 1.3)
 	var swing := 14.0 * g
 	var f_fl := Vector2(34.0 + reach * 18.0 + sin(ph + PI) * swing, -4.0 - maxf(0.0, cos(ph + PI)) * 7.0 * g)
 	var f_fr := Vector2(42.0 + reach * 12.0 + sin(ph) * swing, -4.0 - maxf(0.0, cos(ph)) * 7.0 * g)
 	var f_bl := Vector2(-30.0 - push * 16.0 + sin(ph) * swing, -4.0 - maxf(0.0, cos(ph)) * 7.0 * g)
 	var f_br := Vector2(-22.0 - push * 10.0 + sin(ph + PI) * swing, -4.0 - maxf(0.0, cos(ph + PI)) * 7.0 * g)
-	# hind legs bend at the hock: up and back from the paw standing, folded
-	# flat along the floor sitting
-	var hock := Vector2(-5.0, -15.0).lerp(Vector2(-13.0, -4.0), sit)
-	p["leg_bl"] = _union([limb(rump + Vector2(4, 8), f_bl + hock, 8.0, 4.4), limb(f_bl + hock, f_bl, 4.4, 3.8)])
-	p["leg_fl"] = limb(chest + Vector2(-2, 8), f_fl, 6.5, 3.9)
-	p["rump"] = ellipse(rump, Vector2(21, 20), lean)
+	return {
+		"_head": head, "_muzzle": head + Vector2(22.0, 7.0).rotated(-head_up), "_neck": neck_top,
+		"_chest": chest, "_rump": rump, "_body": body_c, "_lean": lean,
+		"_feet": [f_bl + Vector2(0, 4), f_fl + Vector2(0, 4), f_br + Vector2(0, 4), f_fr + Vector2(0, 4)],
+		# hind legs bend at the hock: up and back from the paw standing,
+		# folded flat along the floor sitting
+		"_hock": Vector2(-5.0, -15.0).lerp(Vector2(-13.0, -4.0), sit),
+		"_sit": sit, "_head_up": head_up, "_hrot": -head_up * 0.5,
+		"_ear": clampf(pose.get("ear", 0.0), -0.6, 0.7), "_tail": float(pose.get("tail", 0.0)),
+	}
+
+
+# the leg shapes, hip or shoulder to paw: [far back, far front, near back,
+# near front]; a hind leg is two pieces, thigh and shin
+static func _legs(a: Dictionary, grow := 0.0) -> Array:
+	var feet: Array = a["_feet"]
+	var hock: Vector2 = a["_hock"]
+	var rump: Vector2 = a["_rump"]
+	var chest: Vector2 = a["_chest"]
+	var out := []
+	for i in range(4):
+		var f: Vector2 = feet[i] - Vector2(0, 4)
+		if i % 2 == 0:
+			var hip := rump + (Vector2(4, 8) if i == 0 else Vector2(10, 10))
+			out.append([_limb(hip, f + hock, 9.5 + grow, 5.2 + grow), _limb(f + hock, f, 5.2 + grow, 4.5 + grow)])
+		else:
+			out.append([_limb(chest + (Vector2(-2, 8) if i == 1 else Vector2(4, 10)), f, 7.6 + grow, 4.6 + grow)])
+	return out
+
+
+# the shapes of her silhouette for a pose, with the anchors
+static func parts(pose: Dictionary) -> Dictionary:
+	return _parts(pose, true)
+
+
+# `legs` false skips the leg shapes, which the baked pieces never use
+static func _parts(pose: Dictionary, legs: bool) -> Dictionary:
+	var a := anchors(pose)
+	var p := a.duplicate()
+	var sit: float = a["_sit"]
+	var lean: float = a["_lean"]
+	var hrot: float = a["_hrot"]
+	var head: Vector2 = a["_head"]
+	var rump: Vector2 = a["_rump"]
+	var chest: Vector2 = a["_chest"]
+	var body_c: Vector2 = a["_body"]
+	var tail: float = a["_tail"]
+	# the tail: a curve that tapers to a fine round tip
+	var t_base := rump + Vector2(-14, -8)
+	var t_tip := rump + Vector2(-32, -27).rotated(tail)
+	var t_knee := t_base + Vector2(-15, -3).rotated(tail * 0.6)
+	p["tail"] = _strip(t_base, t_knee, t_tip, 5.2, 1.3)
+	if legs:
+		var lg := _legs(a)
+		p["leg_bl"] = _union(lg[0])
+		p["leg_fl"] = lg[1][0]
+		p["leg_br"] = _union(lg[2])
+		p["leg_fr"] = lg[3][0]
+	p["rump"] = ellipse(rump, Vector2(22.5, 22.5), lean)
 	# the haunch: the folded back leg showing on her side when she sits
 	p["haunch"] = ellipse(rump + Vector2(8, 6), Vector2(17 * sit + 0.01, 14 * sit + 0.01), lean * 0.5)
 	# the barrel: deep at the chest, tucked up at the loin
 	var barrel := PackedVector2Array()
 	for i in range(32):
-		var a := TAU * float(i) / 32.0
-		var q := Vector2(cos(a) * 42.0, sin(a) * 19.0)
-		q.y *= lerpf(0.72, 1.1, (q.x + 42.0) / 84.0) if q.y > 0.0 else 0.96
+		var an := TAU * float(i) / 32.0
+		var q := Vector2(cos(an) * 42.0, sin(an) * 22.0)
+		q.y *= lerpf(0.88, 1.1, (q.x + 42.0) / 84.0) if q.y > 0.0 else 0.96
 		barrel.append(body_c + q.rotated(lean))
 	p["body"] = barrel
-	p["chest"] = ellipse(chest, Vector2(20, 21.5), lean)
-	p["neck"] = limb(chest + Vector2(2, -6), neck_top, 13.0, 10.0)
+	p["chest"] = ellipse(chest, Vector2(22.5, 24.5), lean)
+	p["neck"] = limb(chest + Vector2(2, -6), a["_neck"], 15.5, 12.5)
 	p["head"] = ellipse(head + Vector2(-0.5, -0.5).rotated(hrot), Vector2(23.5, 20.5), hrot)
-	p["muzzle"] = _blunt(muzzle + Vector2(-1, 0.5).rotated(hrot), Vector2(16, 10), hrot + 0.06)
-	p["leg_br"] = _union([limb(rump + Vector2(10, 10), f_br + hock, 8.0, 4.4), limb(f_br + hock, f_br, 4.4, 3.8)])
-	p["leg_fr"] = limb(chest + Vector2(4, 10), f_fr, 6.5, 3.9)
-	# the ears hang from high on the skull; `ear` swings them back and up,
-	# the way an ear streams when she lunges
-	var sw := clampf(ear, -0.6, 0.7)
-	var ear_root := head + Vector2(-9, -14).rotated(hrot)
-	var ear_mid := ear_root + Vector2(-5, 9).rotated(sw * 0.6)
-	var ear_tip := ear_root + Vector2(-5, 21).rotated(sw)
-	var ear_hull := Geometry2D.convex_hull(ellipse(ear_root, Vector2(5, 4), hrot, 10)
-		+ ellipse(ear_mid, Vector2(6.5, 6.5), 0.0, 12) + ellipse(ear_tip, Vector2(6, 5.5), sw, 12))
-	ear_hull.remove_at(ear_hull.size() - 1)
-	p["ear"] = ear_hull
+	p["muzzle"] = _blunt(a["_muzzle"] + Vector2(-1, 0.5).rotated(hrot), Vector2(16, 10), hrot + 0.06)
+	# button ears: they lift up and out from the top of the skull and fold
+	# over at the tip. `ear` above 0 streams them back and up (a lunge),
+	# below 0 flattens them back along the skull (a sulk)
+	var sw: float = a["_ear"]
+	var near_root := head + Vector2(-8, -16).rotated(hrot)
+	var e := _ear_crease(near_root, hrot, sw, 1.0)
+	p["_ear_rise"] = _limb(near_root, e[0], 7.0, 5.2)
+	p["_ear_flap"] = _limb(e[0], e[1], 5.2, 3.8)
+	p["ear"] = _union([p["_ear_rise"], p["_ear_flap"]])
 	# the far ear: only its top shows, above the crown
-	var fe_root := head + Vector2(3, -16).rotated(hrot)
-	p["ear_far"] = limb(fe_root, fe_root + Vector2(-5, 7).rotated(sw * 0.8), 5.5, 6.5)
-	p["_head"] = head
-	p["_muzzle"] = muzzle
-	p["_neck"] = neck_top
-	p["_chest"] = chest
-	p["_rump"] = rump
-	p["_body"] = body_c
-	p["_lean"] = lean
-	p["_feet"] = [f_bl + Vector2(0, 4), f_fl + Vector2(0, 4), f_br + Vector2(0, 4), f_fr + Vector2(0, 4)]
+	p["ear_far"] = _button_ear(head + Vector2(7, -18).rotated(hrot), hrot, sw, 0.8)
 	return p
+
+
+# one button ear from its root on the skull: a flap rising to a crease,
+# then the tip folded over forward and down; `k` scales it
+static func _button_ear(root: Vector2, hrot: float, sw: float, k: float) -> PackedVector2Array:
+	var e := _ear_crease(root, hrot, sw, k)
+	return _union([_limb(root, e[0], 7.0 * k, 5.2 * k), _limb(e[0], e[1], 5.2 * k, 3.8 * k)])
+
+
+# [the crease, the folded tip] of a button ear
+static func _ear_crease(root: Vector2, hrot: float, sw: float, k: float) -> Array:
+	var pos := clampf(sw, 0.0, 0.7) / 0.7
+	var neg := clampf(-sw, 0.0, 0.6) / 0.4
+	var crease := root + Vector2(-1.5, -14.5).rotated(hrot - 0.8 * pos - 1.1 * neg) * k
+	var fold := deg_to_rad(52.0 - 225.0 * pos * pos + 25.0 * neg)
+	return [crease, crease + Vector2.from_angle(fold + hrot - 1.1 * neg) * 8.5 * k]
 
 
 const BACK := ["tail", "leg_bl", "leg_fl"]
 const MAIN := ["rump", "body", "chest", "neck", "head", "muzzle", "leg_br", "leg_fr", "haunch"]
 
+# Baked pieces: the rigid parts (body with collar, head, ears, tail, paws)
+# are drawn once per quantized pose into triangle meshes, then moved into
+# place with one native transform per frame. The transform turns the
+# quantized angle's remainder back in, so motion stays smooth. Only the legs
+# and the eyes, mouth and brow are built live.
+const Q_LEAN := 0.04
+const Q_SIT := 0.1
+const Q_HEAD := 0.06
+const Q_EAR := 0.05
+const Q_TAIL := 0.03
+const CACHE_MAX := 3000
+static var _torso_cache := {}
+static var _head_cache := {}
+static var _ear_cache := {}
+static var _tail_cache := {}
+static var _paw_cache := {}
+static var _eye_shade := []
+
+
+# a mesh: what a scratch batch collected, moved so `anchor` is the origin
+static func _mesh(sb: ShapeBatch, anchor: Vector2) -> Array:
+	var m := [Transform2D(0.0, -anchor) * sb._points, sb._colors]
+	sb._points = PackedVector2Array()
+	sb._colors = PackedColorArray()
+	return m
+
+
+static func _put(b: ShapeBatch, m: Array, xf: Transform2D) -> void:
+	b._points.append_array(xf * (m[0] as PackedVector2Array))
+	b._colors.append_array(m[1])
+
+
+static func _cached(cache: Dictionary, key: Vector4i) -> Array:
+	if cache.size() > CACHE_MAX:
+		cache.clear()
+	return cache.get(key, [])
+
+
+static func _q(v: float, step: float) -> int:
+	return roundi(v / step)
+
+
+static func _torso_mesh(a: Dictionary, fi: int, lt: Vector2) -> Array:
+	var key := Vector4i(_q(a["_lean"], Q_LEAN), _q(a["_sit"], Q_SIT), _q(a["_head_up"], Q_HEAD), fi)
+	var m := _cached(_torso_cache, key)
+	if not m.is_empty():
+		return m
+	var ql := float(key.x) * Q_LEAN
+	var qs := float(key.y) * Q_SIT
+	var p := _parts({"_lean_eff": ql, "sit": qs, "head_up": float(key.z) * Q_HEAD}, false)
+	var torso_list := [p["rump"], p["body"], p["chest"], p["neck"]]
+	if qs > 0.05:
+		torso_list.append(p["haunch"])
+	# closed (grown, then shrunk back) so the parts read as one smooth body
+	var torso := _grow(_grow(_union(torso_list), 5.0, true), -5.0)
+	var sb := ShapeBatch.new()
+	var body_c: Vector2 = p["_body"]
+	_fill(sb, _grow(torso, LINE, true), INK)
+	var ink := _mesh(sb, body_c)
+	# base, the shadow on the side away from the window, the gloss
+	_fill(sb, torso, COAT)
+	_shade(sb, torso, lt, 7.0, COAT_SHADE)
+	_gloss(sb, torso, lt, 4.5, 3.0, ellipse(body_c + Vector2(-2, -14).rotated(ql), Vector2(26, 10), ql, 16), COAT_GLOSS)
+	if qs > 0.3:
+		# the folded thigh's front edge, a thin inner line
+		var hc: Vector2 = p["_rump"] + Vector2(8, 6)
+		var hr := Vector2(17, 14) * qs
+		var prev := Vector2.ZERO
+		for i in range(7):
+			var an := -1.35 + float(i) * 0.36
+			var q := hc + Vector2(cos(an) * hr.x, sin(an) * hr.y).rotated(ql * 0.5)
+			if i > 0:
+				sb.line(prev, q, INK, 1.1)
+			prev = q
+	_draw_collar(sb, p, torso)
+	m = [ql, ink, _mesh(sb, body_c)]
+	_torso_cache[key] = m
+	return m
+
+
+static func _head_mesh(a: Dictionary, fi: int, lt: Vector2) -> Array:
+	var key := Vector4i(_q(a["_head_up"], Q_HEAD), 0, 0, fi)
+	var m := _cached(_head_cache, key)
+	if not m.is_empty():
+		return m
+	var qh := float(key.x) * Q_HEAD
+	var p := _parts({"head_up": qh}, false)
+	var hrot: float = p["_hrot"]
+	var head: Vector2 = p["_head"]
+	var muz: Vector2 = p["_muzzle"]
+	var skull := _union([p["head"], p["muzzle"]])
+	var sb := ShapeBatch.new()
+	_fill(sb, _grow(skull, LINE, true), INK)
+	var ink := _mesh(sb, head)
+	# coat, its shadow, the grey muzzle (a darker rim where it meets the
+	# black) and the muzzle's own shadow, the gloss on the crown
+	_fill(sb, skull, COAT)
+	var hshade := _shade(sb, skull, lt, 6.0, COAT_SHADE)
+	var grey_shape := _union([_blunt(muz + Vector2(1, 1).rotated(hrot), Vector2(15, 9.5), hrot + 0.06),
+		ellipse(muz + Vector2(-11, 3).rotated(hrot), Vector2(8, 7), hrot)])
+	var grey := _largest(Geometry2D.intersect_polygons(grey_shape, skull))
+	_fill(sb, _largest(Geometry2D.intersect_polygons(_grow(grey_shape, 1.5), skull)), MUZZLE_RIM)
+	_fill(sb, grey, MUZZLE)
+	if grey.size() >= 3:
+		for sh: PackedVector2Array in hshade:
+			for poly: PackedVector2Array in Geometry2D.intersect_polygons(grey, sh):
+				_fill(sb, poly, MUZZLE_SHADE)
+	_gloss(sb, skull, lt, 3.0, 2.4, ellipse(head + Vector2(-4, -11).rotated(hrot), Vector2(15, 9), hrot, 14), COAT_GLOSS)
+	# freckles: a scatter of dark dots on the grey
+	for f: Vector2 in [Vector2(-2, 1), Vector2(3, 2.5), Vector2(-6, 4), Vector2(1, 5.5), Vector2(6, 0.5), Vector2(-3, 7)]:
+		sb.circle(muz + f.rotated(hrot), 0.85, FRECKLE)
+	# the nose: a black bean on the tip, with a grey shine
+	var nose := muz + Vector2(14.5, -3.5).rotated(hrot)
+	_fill(sb, ellipse(nose, Vector2(5.4, 4.4), hrot + 0.15, 16), INK)
+	_fill(sb, ellipse(nose + Vector2(-1.2, -1.6).rotated(hrot), Vector2(2.2, 1.1), hrot - 0.2, 10), NOSE_SHINE)
+	m = [qh, ink, _mesh(sb, head)]
+	_head_cache[key] = m
+	return m
+
+
+static func _ear_mesh(a: Dictionary, fi: int, lt: Vector2) -> Array:
+	var key := Vector4i(_q(a["_ear"], Q_EAR), _q(a["_head_up"], Q_HEAD), 0, fi)
+	var m := _cached(_ear_cache, key)
+	if not m.is_empty():
+		return m
+	var qh := float(key.y) * Q_HEAD
+	var p := _parts({"head_up": qh, "ear": float(key.x) * Q_EAR}, false)
+	var head: Vector2 = p["_head"]
+	var sb := ShapeBatch.new()
+	_fill(sb, _grow(p["ear_far"], LINE), INK)
+	var far_ink := _mesh(sb, head)
+	_fill(sb, p["ear_far"], EAR)
+	var far_paint := _mesh(sb, head)
+	# the near ear, in front of the head, outlined again so it reads on it;
+	# the folded tip is its own outlined flap lying over the rise
+	var ear_pts: PackedVector2Array = p["ear"]
+	_fill(sb, _grow(ear_pts, LINE, true), INK)
+	_fill(sb, p["_ear_rise"], EAR)
+	_gloss(sb, p["_ear_rise"], lt, 2.6, 1.6, ellipse(p["_ear_rise"][0], Vector2(12, 12), 0.0, 12), EAR_GLOSS)
+	var flap: PackedVector2Array = p["_ear_flap"]
+	_fill(sb, _grow(flap, LINE * 0.8), INK)
+	_fill(sb, flap, EAR_FLAP)
+	_gloss(sb, flap, lt, 2.0, 1.4, ellipse(flap[0], Vector2(14, 14), 0.0, 12), EAR_GLOSS)
+	m = [qh, far_ink, far_paint, _mesh(sb, head)]
+	_ear_cache[key] = m
+	return m
+
+
+static func _tail_mesh(a: Dictionary, fi: int, lt: Vector2) -> Array:
+	var key := Vector4i(_q(a["_tail"], Q_TAIL), 0, 0, fi)
+	var m := _cached(_tail_cache, key)
+	if not m.is_empty():
+		return m
+	var p := _parts({"tail": float(key.x) * Q_TAIL}, false)
+	var rump: Vector2 = p["_rump"]
+	var sb := ShapeBatch.new()
+	_fill(sb, _grow(p["tail"], LINE), INK)
+	var ink := _mesh(sb, rump)
+	_fill(sb, p["tail"], COAT)
+	_shade(sb, p["tail"], lt, 2.5, COAT_SHADE)
+	m = [0.0, ink, _mesh(sb, rump)]
+	_tail_cache[key] = m
+	return m
+
+
+# a paw, white-ish, its centre at the origin: ink, near paint, far paint
+static func _paw_mesh(fi: int, lt: Vector2) -> Array:
+	var m: Array = _paw_cache.get(fi, [])
+	if not m.is_empty():
+		return m
+	var pw := ellipse(Vector2.ZERO, Vector2(7.6, 4.2), 0.0, 16)
+	var sb := ShapeBatch.new()
+	_fill(sb, _grow(pw, LINE), INK)
+	var ink := _mesh(sb, Vector2.ZERO)
+	_fill(sb, pw, PAW)
+	_shade(sb, pw, lt, 1.8, PAW_SHADE)
+	var near := _mesh(sb, Vector2.ZERO)
+	_fill(sb, pw, PAW_SHADE)
+	m = [ink, near, _mesh(sb, Vector2.ZERO)]
+	_paw_cache[fi] = m
+	return m
+
 
 # draws her; returns the collar ring's position, where a leash attaches.
 # `style` is kept for callers: every style draws the one box-art look.
 static func draw(c: CanvasItem, origin: Vector2, s: float, pose: Dictionary, _style: String) -> Vector2:
-	var p := parts(pose)
+	var a := anchors(pose)
 	var b := ShapeBatch.new(c)
 	# the ground shadow, squashed, under her feet
 	if not pose.get("no_shadow", false):
 		b.polygon(ellipse(Vector2(4.0, 2.0), Vector2(62, 7)), GROUND_SHADOW)
-	var face := signf(float(pose.get("_face", 1.0)))
-	var lt := Vector2(LIGHT.x * (face if face != 0.0 else 1.0), LIGHT.y).normalized()
-	_draw_dog(b, p, pose, lt)
+	var fi := -1 if float(pose.get("_face", 1.0)) < 0.0 else 1
+	var lt := Vector2(LIGHT.x * float(fi), LIGHT.y).normalized()
+	_draw_dog(b, a, pose, fi, lt)
 	if origin != Vector2.ZERO or s != 1.0:
 		# built in puppet units: place the queued points before they go out
 		b._points = Transform2D(Vector2(s, 0), Vector2(0, s), origin) * b._points
 	b.flush()
-	return _x(p["_neck"] + Vector2(-8, 6), origin, s)
+	return _x(a["_neck"] + Vector2(-8, 6), origin, s)
 
 
 static func _fill(b: ShapeBatch, pts: PackedVector2Array, col: Color) -> void:
@@ -270,108 +550,71 @@ static func _gloss(b: ShapeBatch, pts: PackedVector2Array, lt: Vector2, d: float
 			_fill(b, poly, col)
 
 
-static func _draw_dog(b: ShapeBatch, p: Dictionary, pose: Dictionary, lt: Vector2) -> void:
-	var sit: float = pose.get("sit", 0.0)
-	var ln: float = p["_lean"]
-	var head: Vector2 = p["_head"]
-	var hrot: float = -float(pose.get("head_up", 0.0)) * 0.5
-	var paws: Array[PackedVector2Array] = []
-	for f: Vector2 in p["_feet"]:
-		paws.append(ellipse(f + Vector2(1, -3.2), Vector2(7.0, 3.9), 0.0, 16))
-	var torso_list := [p["rump"], p["body"], p["chest"], p["neck"]]
-	if sit > 0.05:
-		torso_list.append(p["haunch"])
-	# closed (grown, then shrunk back) so the parts read as one smooth body
-	var torso := _grow(_grow(_union(torso_list), 5.0), -5.0)
-	var skull := _union([p["head"], p["muzzle"]])
+static func _draw_dog(b: ShapeBatch, a: Dictionary, pose: Dictionary, fi: int, lt: Vector2) -> void:
+	var head: Vector2 = a["_head"]
+	var head_up: float = a["_head_up"]
+	var tor := _torso_mesh(a, fi, lt)
+	var hd := _head_mesh(a, fi, lt)
+	var er := _ear_mesh(a, fi, lt)
+	var tl := _tail_mesh(a, fi, lt)
+	var pw := _paw_mesh(fi, lt)
+	var x_torso := Transform2D(float(a["_lean"]) - float(tor[0]), a["_body"])
+	var x_head := Transform2D(-(head_up - float(hd[0])) * 0.75, head)
+	var x_ear := Transform2D(-(head_up - float(er[0])) * 0.5, head)
+	var x_tail := Transform2D(0.0, a["_rump"])
+	var x_paw: Array[Transform2D] = []
+	for f: Vector2 in a["_feet"]:
+		x_paw.append(Transform2D(0.0, f + Vector2(1, -3.2)))
+	var legs := _legs(a)
 	# the silhouette: every part drawn fat in ink first, so the outline is one
-	for k in ["tail", "leg_bl", "leg_fl", "leg_br", "leg_fr", "ear_far"]:
-		_fill(b, _grow(p[k], LINE), INK)
-	_fill(b, _grow(torso, LINE), INK)
-	_fill(b, _grow(skull, LINE), INK)
-	for pw in paws:
-		_fill(b, _grow(pw, LINE), INK)
+	_put(b, tl[1], x_tail)
+	for leg: Array in _legs(a, LINE):
+		for piece: PackedVector2Array in leg:
+			_fill(b, piece, INK)
+	_put(b, er[1], x_ear)
+	_put(b, tor[1], x_torso)
+	_put(b, hd[1], x_head)
+	for xp in x_paw:
+		_put(b, pw[0], xp)
 	# the far side: tail, far legs and paws, the far ear, a shade down
-	_fill(b, p["tail"], COAT)
-	_shade(b, p["tail"], lt, 2.5, COAT_SHADE)
-	_fill(b, p["leg_bl"], COAT_FAR)
-	_fill(b, p["leg_fl"], COAT_FAR)
-	_fill(b, paws[0], PAW_SHADE)
-	_fill(b, paws[1], PAW_SHADE)
-	_fill(b, p["ear_far"], EAR)
-	# the body: base, the shadow on the side away from the window, the gloss
-	_fill(b, torso, COAT)
-	_shade(b, torso, lt, 7.0, COAT_SHADE)
-	var body_c: Vector2 = p["_body"]
-	_gloss(b, torso, lt, 4.5, 3.0, ellipse(body_c + Vector2(-2, -14).rotated(ln), Vector2(26, 10), ln, 16), COAT_GLOSS)
-	if sit > 0.3:
-		# the folded thigh's front edge, a thin inner line
-		var hc: Vector2 = p["_rump"] + Vector2(8, 6)
-		var hr := Vector2(17, 14) * sit
-		var prev := Vector2.ZERO
-		for i in range(7):
-			var a := -1.35 + float(i) * 0.36
-			var q := hc + Vector2(cos(a) * hr.x, sin(a) * hr.y).rotated(ln * 0.5)
-			if i > 0:
-				b.line(prev, q, INK, 1.1)
-			prev = q
+	_put(b, tl[2], x_tail)
+	for i in [0, 1]:
+		for piece: PackedVector2Array in legs[i]:
+			_fill(b, piece, COAT_FAR)
+	_put(b, pw[2], x_paw[0])
+	_put(b, pw[2], x_paw[1])
+	_put(b, er[2], x_ear)
+	# the body, with its collar
+	_put(b, tor[2], x_torso)
+	_draw_ring(b, a["_neck"])
 	# the near legs, each with its own shadow on the back edge
-	for k in ["leg_br", "leg_fr"]:
-		_fill(b, p[k], COAT)
-		_shade(b, p[k], lt, 3.0, COAT_SHADE)
 	for i in [2, 3]:
-		_fill(b, paws[i], PAW)
-		_shade(b, paws[i], lt, 1.8, PAW_SHADE)
-	_draw_collar(b, p, torso)
-	# the head: coat, its shadow, the grey muzzle (a darker rim where it meets
-	# the black) and the muzzle's own shadow, the gloss on the crown
-	var muz: Vector2 = p["_muzzle"]
-	_fill(b, skull, COAT)
-	var hshade := _shade(b, skull, lt, 6.0, COAT_SHADE)
-	var grey_shape := _union([_blunt(muz + Vector2(1, 1).rotated(hrot), Vector2(15, 9.5), hrot + 0.06),
-		ellipse(muz + Vector2(-11, 3).rotated(hrot), Vector2(8, 7), hrot)])
-	var grey := _largest(Geometry2D.intersect_polygons(grey_shape, skull))
-	_fill(b, _largest(Geometry2D.intersect_polygons(_grow(grey_shape, 1.5), skull)), MUZZLE_RIM)
-	_fill(b, grey, MUZZLE)
-	if grey.size() >= 3:
-		for sh: PackedVector2Array in hshade:
-			for poly: PackedVector2Array in Geometry2D.intersect_polygons(grey, sh):
-				_fill(b, poly, MUZZLE_SHADE)
-	_gloss(b, skull, lt, 3.0, 2.4, ellipse(head + Vector2(-4, -11).rotated(hrot), Vector2(15, 9), hrot, 14), COAT_GLOSS)
-	_draw_face(b, p, pose, hrot)
-	# the near ear, in front of the head, outlined again so it reads on it
-	var ear_pts: PackedVector2Array = p["ear"]
-	_fill(b, _grow(ear_pts, LINE), INK)
-	_fill(b, ear_pts, EAR)
-	var ec := Vector2.ZERO
-	for q in ear_pts:
-		ec += q
-	ec /= float(ear_pts.size())
-	_gloss(b, ear_pts, lt, 2.6, 1.8, ellipse(ec + Vector2(-2, -5), Vector2(7, 8), 0.0, 12), EAR_GLOSS)
+		var leg: PackedVector2Array = legs[i][0] if legs[i].size() == 1 else _union(legs[i])
+		_fill(b, leg, COAT)
+		_shade(b, leg, lt, 3.0, COAT_SHADE)
+	_put(b, pw[1], x_paw[2])
+	_put(b, pw[1], x_paw[3])
+	_put(b, hd[2], x_head)
+	_draw_face(b, a, pose)
+	_put(b, er[3], x_ear)
 
 
-static func _draw_face(b: ShapeBatch, p: Dictionary, pose: Dictionary, hrot: float) -> void:
-	var head: Vector2 = p["_head"]
-	var muz: Vector2 = p["_muzzle"]
-	# freckles: a scatter of dark dots on the grey
-	for f: Vector2 in [Vector2(-2, 1), Vector2(3, 2.5), Vector2(-6, 4), Vector2(1, 5.5), Vector2(6, 0.5), Vector2(-3, 7)]:
-		b.circle(muz + f.rotated(hrot), 0.85, FRECKLE)
+static func _draw_face(b: ShapeBatch, a: Dictionary, pose: Dictionary) -> void:
+	var head: Vector2 = a["_head"]
+	var muz: Vector2 = a["_muzzle"]
+	var hrot: float = a["_hrot"]
 	# the mouth: a fond little smile, or open with a tongue when she hauls
 	var mouth: float = pose.get("mouth", 0.0)
 	if mouth > 0.05:
 		var mp := muz + Vector2(3, 7.5).rotated(hrot)
-		var jaw := ellipse(mp, Vector2(8.5, 1.5 + 4.0 * mouth), hrot - 0.1, 16)
-		_fill(b, _grow(jaw, 1.2), INK)
-		_fill(b, jaw, MOUTH)
+		var jr := Vector2(8.5, 1.5 + 4.0 * mouth)
+		_fill(b, ellipse(mp, jr + Vector2(1.2, 1.2), hrot - 0.1, 16), INK)
+		_fill(b, ellipse(mp, jr, hrot - 0.1, 16), MOUTH)
 		_fill(b, ellipse(mp + Vector2(1.5, 1.8 * mouth).rotated(hrot), Vector2(4.8, 2.0 * mouth + 0.3), hrot, 12), TONGUE)
 	else:
 		var sm := [Vector2(-9, 6.5), Vector2(-4, 8.2), Vector2(1, 8.4), Vector2(6, 7.2)]
 		for i in range(sm.size() - 1):
 			b.line(muz + (sm[i] as Vector2).rotated(hrot), muz + (sm[i + 1] as Vector2).rotated(hrot), INK, 1.3)
-	# the nose: a black bean on the tip, with a grey shine
-	var nose := muz + Vector2(14.5, -3.5).rotated(hrot)
-	_fill(b, ellipse(nose, Vector2(5.4, 4.4), hrot + 0.15, 16), INK)
-	_fill(b, ellipse(nose + Vector2(-1.2, -1.6).rotated(hrot), Vector2(2.2, 1.1), hrot - 0.2, 10), NOSE_SHINE)
 	# the eyes: big googly whites with an ink rim, a black pupil and a
 	# catchlight; a hint of the far one peeks past the brow
 	var eye := head + Vector2(9, -4.5).rotated(hrot)
@@ -391,8 +634,12 @@ static func _draw_face(b: ShapeBatch, p: Dictionary, pose: Dictionary, hrot: flo
 		b.circle(far_eye + Vector2(1.0 - 2.6 * lb, 0.4).rotated(hrot), 2.3, PUPIL)
 		b.circle(eye, 8.4, INK)
 		b.circle(eye, 7.0, EYE)
-		_fill(b, _largest(Geometry2D.intersect_polygons(ellipse(eye, Vector2(7.0, 7.0), 0.0, 20),
-			ellipse(eye + Vector2(0, 6.0), Vector2(8.0, 3.8), 0.0, 16))), EYE_SHADE)
+		if _eye_shade.is_empty():
+			var sb := ShapeBatch.new()
+			_fill(sb, _largest(Geometry2D.intersect_polygons(ellipse(Vector2.ZERO, Vector2(7.0, 7.0), 0.0, 20),
+				ellipse(Vector2(0, 6.0), Vector2(8.0, 3.8), 0.0, 16))), EYE_SHADE)
+			_eye_shade = _mesh(sb, Vector2.ZERO)
+		_put(b, _eye_shade, Transform2D(0.0, eye))
 		# `look_back` (0..1) slides the pupil to the back of the eye: a glance
 		# over her shoulder without turning her whole body round
 		var pp := eye + Vector2(2.0 - 4.4 * lb, -0.4).rotated(hrot)
@@ -411,7 +658,7 @@ static func _draw_collar(b: ShapeBatch, p: Dictionary, torso: PackedVector2Array
 	var n := d.orthogonal()
 	# a band curving round the neck, its lower half in shade, the D-ring
 	# hanging off it; clipped so it stops just past the neck's outline
-	var neck := _grow(torso, 1.0)
+	var neck := _grow(torso, 1.0, true)
 	var arc := _strip(a - d * 4.0, (a + e) * 0.5 - n * 2.0, e + d * 4.0, 4.0, 4.0)
 	var band := _largest(Geometry2D.intersect_polygons(arc, neck))
 	if band.size() < 3:
@@ -420,6 +667,10 @@ static func _draw_collar(b: ShapeBatch, p: Dictionary, torso: PackedVector2Array
 	_fill(b, _grow(band, 1.4), INK)
 	_fill(b, band, COLLAR)
 	_fill(b, under, COLLAR_SHADE)
+
+
+# the D-ring, drawn live so it sits exactly where the leash clips on
+static func _draw_ring(b: ShapeBatch, nk: Vector2) -> void:
 	var ring := nk + Vector2(-8, 6)
 	b.circle(ring, 4.6, INK)
 	b.circle(ring, 3.5, RING)
