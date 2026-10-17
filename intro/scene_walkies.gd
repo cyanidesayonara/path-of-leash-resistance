@@ -1566,7 +1566,7 @@ static func _title(c: CanvasItem, t: float) -> void:
 		# feet matched to the ground: her trot and their stride advance with
 		# the distance covered, not the clock
 		var mphase := x * TAU / (56.0 * TS)
-		var mpose := {"gait": 1.0, "phase": mphase, "lean": 0.35, "crouch": 0.45, "push": 0.7, "head_up": 0.05,
+		var mpose := {"gait": 1.0, "phase": mphase, "lean": 0.08, "crouch": 0.2, "push": 0.6, "reach": 0.25, "head_up": 0.12,
 			"tail": sin(mphase) * 0.3, "brow": 0.8, "mouth": 0.6}
 		# towed: leaning back against it, short skidding steps, heels kicking dust
 		var hp := Vector2(x - 300.0, 676.0)
