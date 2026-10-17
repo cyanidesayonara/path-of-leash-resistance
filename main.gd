@@ -1305,10 +1305,8 @@ func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 				c.draw_line(Vector2(rib, r.position.y), Vector2(rib, r.end.y), iron.darkened(0.22), 2.0)
 				c.draw_line(Vector2(rib + 4.0, r.position.y), Vector2(rib + 4.0, r.end.y), iron.lightened(0.16), 1.5)
 				rib += 11.0
-			# rust blooms
-			for h in range(2):
-				var hy := r.position.y + 50.0 + h * 96.0
-				c.draw_circle(Vector2(inner_x + side * (34.0 + float(h) * 18.0), hy), 17.0, Color(0.48, 0.28, 0.17, 0.55))
+			# rust streaking down from the ridge, every roof its own
+			Ferralla.draw_roof_rust(c, r, inner_x, side, k)
 			# the fence line at the kerb, seen from above as posts and wire
 			var fx: float = inner_x + side * 5.0
 			c.draw_line(Vector2(fx, r.position.y), Vector2(fx, r.end.y), Color(0.55, 0.57, 0.58, 0.7), 2.0)
@@ -1452,6 +1450,11 @@ func _draw_grass_detail(c: Object, vt: float, vb: float) -> void:
 			var h := _cell01(x, y)
 			var p := Vector2(x + (h - 0.5) * GRASS_STEP * 0.9, y + (fmod(h * 7.13, 1.0) - 0.5) * GRASS_STEP * 0.9)
 			if p.y > GATE_Y and surface_at(p) == Surfaces.S.GRASS and not _grass_blocked(p):
+				if lvl == "scrap":
+					# oily gravel along the fences, the odd weed, never a lawn
+					Ferralla.draw_verge_cell(c, p, h)
+					x += GRASS_STEP
+					continue
 				var lean := (h - 0.5) * 0.8
 				for bl in range(3):
 					var a := -PI * 0.5 + lean + (float(bl) - 1.0) * 0.45
@@ -1903,20 +1906,9 @@ func _draw_fallen_log(r: Rect2) -> void:
 # A stack of wrecked cars from above: the top car's roof, rusted and dented,
 # the ones under it showing past its edges at a skew, glass long gone.
 func _draw_wreck_stack(v: Vector2) -> void:
+	# four kinds of car, each stack turned and tinted its own way (world/ferralla.gd)
 	var b := ShapeBatch.new()
-	var h := int(absf(v.y)) % 5
-	var cols := [Color(0.55, 0.22, 0.18), Color(0.30, 0.38, 0.46), Color(0.48, 0.46, 0.30), Color(0.62, 0.62, 0.60), Color(0.24, 0.34, 0.26)]
-	b.rect(Rect2(v.x - 32.0 + 30.0, v.y - 66.0 + 30.0, 68.0, 134.0), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.26))
-	for k in range(3):
-		var off := Vector2(float((h + k) % 3 - 1) * 6.0, float(k - 1) * 5.0)
-		var c: Color = (cols[(h + k) % cols.size()] as Color).darkened(0.18 * float(2 - k))
-		b.rect(Rect2(v.x - 30.0 + off.x, v.y - 62.0 + off.y, 60.0, 124.0), c)
-	var top: Color = cols[(h + 2) % cols.size()]
-	b.rect(Rect2(v.x - 22.0, v.y - 26.0, 44.0, 52.0), top.lightened(0.08))                # the roof
-	b.rect(Rect2(v.x - 22.0, v.y - 46.0, 44.0, 18.0), Color(0.12, 0.12, 0.13))             # no windscreen
-	b.rect(Rect2(v.x - 22.0, v.y + 28.0, 44.0, 12.0), Color(0.12, 0.12, 0.13))
-	for k in range(4):
-		b.circle(v + Vector2(-14.0 + float(k % 2) * 28.0, -8.0 + float(k / 2) * 20.0), 4.0 + float((h + k) % 3), Color(0.44, 0.28, 0.16, 0.8))  # rust
+	Ferralla.draw_wreck_stack(b, v, vans.find(v))
 	b.flush(_wc)
 
 
@@ -2134,6 +2126,8 @@ func canopy_trees() -> Array[Dictionary]:
 		var t: Vector2 = trees[gi]
 		if t.y < vt or t.y > vb:
 			continue
+		if lvl == "scrap":
+			continue        # the scrapyard's grove is tyre stacks and drums: no crowns
 		var gk := TREE_PALM if freedom_kind == "beach" else TREE_FOREST
 		# the grove's broadleaves are holm-oak sized: drawn as TREE_FOREST's
 		# oak (i % 3 == 1) so they keep the 0.85 they always had
@@ -3166,6 +3160,11 @@ func draw_overhead_onto(c: CanvasItem) -> void:
 		_draw_mercat_arch(c, LevelBuild.MERCAT_ARCH_Y, "MERCAT")
 		_draw_mercat_arch(c, LevelBuild.MERCAT_DOOR_Y, "PLAÇA")
 		return
+	if lvl == "scrap":
+		var cb := ShapeBatch.new(c)
+		Ferralla.draw_crane_overhead(cb, LevelBuild.FERRALLA_CRANE, LevelBuild.FERRALLA_BOOM_TO)
+		cb.flush()
+		return
 	if lvl != "oldtown":
 		return
 	var by: float = LevelBuild.GOTIC_BRIDGE_Y
@@ -3209,23 +3208,9 @@ func _draw_crane(vt: float, vb: float) -> void:
 	var tip: Vector2 = LevelBuild.FERRALLA_BOOM_TO
 	if maxf(cb.y, tip.y) < vt - 120.0 or minf(cb.y, tip.y) > vb + 120.0:
 		return
+	# the tracks, house and shadows here; the jib is overhead (draw_overhead_onto)
 	var b := ShapeBatch.new()
-	var sh := Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22)
-	b.line(cb + Vector2(20, 40), tip + Vector2(30, 60), sh, 18.0)
-	b.circle(tip + Vector2(30, 90), 26.0, sh)
-	b.rect(Rect2(cb.x - 40.0, cb.y - 50.0, 80.0, 100.0), Color(0.16, 0.16, 0.17))
-	b.rect(Rect2(cb.x - 30.0, cb.y - 30.0, 60.0, 60.0), Color(0.92, 0.70, 0.12))
-	b.rect(Rect2(cb.x - 26.0, cb.y - 26.0, 22.0, 22.0), Color(0.30, 0.38, 0.44))
-	# the boom itself, lattice, from the cab out over the lane
-	b.line(cb, tip, Color(0.90, 0.68, 0.10), 10.0)
-	var n := int(cb.distance_to(tip) / 24.0)
-	for k in range(n):
-		var p0: Vector2 = cb.lerp(tip, float(k) / float(n))
-		var p1: Vector2 = cb.lerp(tip, float(k + 1) / float(n))
-		b.line(p0 + Vector2(0, -5), p1 + Vector2(0, 5), Color(0.70, 0.52, 0.08), 2.0)
-	# the magnet, hanging
-	b.circle(tip, 20.0, Color(0.22, 0.22, 0.24))
-	b.circle(tip, 14.0, Color(0.36, 0.36, 0.40))
+	Ferralla.draw_crane_ground(b, cb, tip)
 	b.flush(_wc)
 
 
@@ -5184,8 +5169,11 @@ func draw_freedom_onto(c: Object) -> void:
 	# has to be drawn on every walk - but a broadleaf on a beach is nonsense,
 	# so it wears whatever that place grows.
 	# Its crowns are the canopy layer's (world/canopylayer.gd), above her.
-	for t in trees:
-		if freedom_kind == "beach":
+	for ti in range(trees.size()):
+		var t: Vector2 = trees[ti]
+		if lvl == "scrap":
+			Ferralla.draw_yard_pile(c, t, ti)
+		elif freedom_kind == "beach":
 			_draw_tree_ground(c, t, 0, TREE_PALM)
 		else:
 			_draw_tree_ground(c, t, 1, TREE_FOREST)
@@ -5457,6 +5445,8 @@ func _draw_yard(c: Object, gravel: bool) -> void:
 			var gyp := r.position.y + 40.0 + fmod(tf * 137.0, r.size.y - 80.0)
 			c.draw_line(Vector2(gxp, gyp), Vector2(gxp - 3.0, gyp - 8.0), Color(0.28, 0.44, 0.27), 2.0)
 			c.draw_line(Vector2(gxp, gyp), Vector2(gxp + 3.0, gyp - 7.0), Color(0.28, 0.44, 0.27), 2.0)
+	if lvl == "scrap":
+		Ferralla.draw_yard_wreck(c, r)
 	_draw_freedom_fence(c, r, gravel)
 	_draw_freedom_benches(c, r, Color(0.5, 0.38, 0.26))
 	_freedom_sign(c, r, gate_text, "the off-leash yard" if gravel else "the off-leash dog park")
@@ -6251,6 +6241,8 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 					c.draw_circle(p + Vector2(7.0, 0.0), 3.4, Color(0.92, 0.89, 0.80))
 				elif prog > 0.05:
 					c.draw_arc(p, 22.0, -PI / 2.0, -PI / 2.0 + TAU * prog / 1.1, 18, Color(1, 0.9, 0.5), 3.0)
+			"log" when lvl == "scrap":
+				Ferralla.draw_pipe(c, p)
 			"log":
 				# a fallen log: bark, end grain, and a couple of knots
 				var bark := Color(0.40, 0.30, 0.20)
@@ -10221,7 +10213,8 @@ func _caught(what: String) -> void:
 	bones = maxi(0, bones - 2)
 	shake_t = maxf(shake_t, 0.4)
 	Sfx.play("crack", 1.4)
-	feed.say("THE %s SAW YOU!  -2" % what.to_upper(), EventFeed.Tone.BAD)
+	# `what` already names it ("the laser"), so no second THE
+	feed.say("%s SAW YOU!  -2" % what.to_upper(), EventFeed.Tone.BAD)
 	# the racket wakes anyone dozing nearby
 	for g in get_tree().get_nodes_in_group("guards"):
 		g.hear_noise(dog.global_position, 200.0)
@@ -10778,7 +10771,7 @@ func _draw_world() -> void:
 		elif lvl == "park" or lvl == "barri":
 			walkway = Color(0.74, 0.67, 0.53)   # sandy gravel, as the city's parks are
 		elif lvl == "scrap":
-			grass = Color(0.36, 0.37, 0.25)     # dusty weeds up to the fence
+			grass = Ferralla.GRAVEL             # oily gravel up to the fence
 		elif lvl == "montjuic":
 			grass = Montjuic.HILL
 			walkway = Montjuic.SAULO
@@ -10794,6 +10787,8 @@ func _draw_world() -> void:
 			_wc.draw_rect(Rect2(-400, ctop, 2100, bottom - ctop), grass)
 		# leaf litter on the forest floor, grass tufts everywhere else
 		var tuft_cols: Array = TRAIL_LITTER if lvl == "trail" else [COL_GRASS_DARK]
+		if lvl == "scrap":
+			tuft_cols = [Color(0.16, 0.15, 0.14, 0.6)]    # oil dripped into the gravel
 		for ti in range(tufts.size()):
 			var t: Vector2 = tufts[ti]
 			if t.y > vt and t.y < vb and _on_grass_strip(t):
