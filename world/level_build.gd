@@ -184,7 +184,7 @@ static func neteja_dumpsters(m: Node2D) -> Array[Vector2]:
 	return out
 
 
-static func neteja(m: Node2D) -> void:
+static func neteja(m: Node2D, hyd_list: Array) -> void:
 	m.gate_text = "PLAÇA"
 	m.stalls = Array([], TYPE_VECTOR2, &"", null)
 	m.stall_kinds.clear()
@@ -209,7 +209,14 @@ static func neteja(m: Node2D) -> void:
 	for d: Vector2 in neteja_dumpsters(m):
 		m.poles.append(d + Vector2(0.0, -NETEJA_DUMPSTER.y * 0.5 + 8.0))
 		m.poles.append(d + Vector2(0.0, NETEJA_DUMPSTER.y * 0.5 - 8.0))
-	# delivery crates stacked by the dumpsters
+	# a hydrant a dumpster has been parked over is moved up the kerb
+	for hi in range(hyd_list.size()):
+		var hp: Vector2 = hyd_list[hi]
+		for d: Vector2 in neteja_dumpsters(m):
+			if absf(hp.y - d.y) < NETEJA_DUMPSTER.y * 0.5 + 40.0 and (hp.x > m.walk_cx) == (d.x > m.walk_cx):
+				hyd_list[hi] = Vector2(hp.x, d.y - 250.0)
+	# delivery crates stacked by the dumpsters (spawn_cones lays crates
+	# here, not cones)
 	m.cone_spots = Array([], TYPE_VECTOR2, &"", null)
 	for d: Vector2 in neteja_dumpsters(m):
 		m.cone_spots.append(d + Vector2(0.0, -NETEJA_DUMPSTER.y * 0.5 - 34.0))
@@ -1533,7 +1540,7 @@ static func build_level_data(m: Node2D) -> void:
 	elif m.lvl == "site":
 		obres(m)
 	elif m.lvl == "neteja":
-		neteja(m)
+		neteja(m, hyd_list)
 	elif m.lvl == "guell":
 		mosaic(m, hyd_list, keb_list)
 	elif m.lvl == "scrap":
@@ -2785,7 +2792,8 @@ static func spawn_cones(m: Node2D) -> void:
 	# [where, kind]: cones unless the place calls for something else
 	var spots: Array = []
 	for cs: Vector2 in m.cone_spots:
-		spots.append([cs, "cone"])
+		# La Neteja's are the delivery crates by its dumpsters
+		spots.append([cs, "crate" if m.lvl == "neteja" else "cone"])
 	# the market hall's floor drain, just hosed down: wet-floor signs
 	if m.lvl == "market":
 		spots.append([MERCAT_DRAIN + Vector2(34, -20), "wetfloor"])
