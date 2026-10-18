@@ -1102,7 +1102,7 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 		var slice := 55.0
 		# El Gòtic's slices end exactly at the plaça's edge, so the last one
 		# does not paint masonry over the square's bottom row of paving
-		var phase := fposmod(GATE_Y - 30.0, slice) if lvl == "oldtown" else 0.0
+		var phase := fposmod(GATE_Y - 30.0, slice) if lvl == "oldtown" or lvl == "neteja" else 0.0
 		var sy := floorf((vt - 320.0 - phase) / slice) * slice + phase
 		while sy < vb + 320.0:
 			# past the gate the off-leash space draws its own surroundings:
@@ -1175,6 +1175,7 @@ func draw_edges_onto(c: Object) -> void:
 func _edge_base_color() -> Color:
 	match lvl:
 		"oldtown", "spook": return Color(0.36, 0.33, 0.30)   # old stone
+		"neteja": return Color(0.40, 0.32, 0.28)             # warm stone, dawn
 		"station": return Color(0.48, 0.48, 0.52)            # tiled interior
 		"site": return Obres.YARD                            # the works compound
 		"scrap": return Color(0.26, 0.25, 0.24)              # yard beyond the fence
@@ -1215,12 +1216,22 @@ func _draw_doorway(c: Object, inner_x: float, side: float, y: float, wall: Color
 			Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.30 * (1.0 - f)))
 
 
+# La Neteja's shop modules are 220px tall. One bakery, on the west side near
+# the top of the street, is always open; the hash opens at most a couple more.
+func _neteja_open_shop(y: float, side: float) -> bool:
+	if int(y) == -660 and side < 0.0:
+		return true
+	var k := int(absf(y) / 220.0) + (0 if side < 0.0 else 7)
+	return roof_hash(k, int(y)) % 13 == 2
+
+
 # One of La Neteja's frontage modules. The old town's roofs, each module two
 # lots of its own (pantiles or a terrace, split where the hash says), so no
 # two neighbours match; along the kerb the shops' shutter boxes and their
 # shutters, still down at this hour - slatted, tagged, a padlocked bottom
-# rail - except the bakery's, half up with the light on inside, and the
-# low dawn catching the roofs' street edge.
+# rail - except a bakery's, half up with the light on inside, and the
+# low dawn catching the roofs' street edge. The light on the setts is drawn
+# with the street (_draw_neteja): this layer sits behind the paving.
 func _draw_neteja_module(c: Object, r: Rect2, side: float, k: int, inner_x: float) -> void:
 	var h := roof_hash(k, int(r.position.y))
 	var cut := r.size.y * (0.38 + float(h % 5) * 0.06)
@@ -1229,49 +1240,42 @@ func _draw_neteja_module(c: Object, r: Rect2, side: float, k: int, inner_x: floa
 		roof_hash(h, 7))
 	# the dawn on the roofs' street edge
 	var lx: float = inner_x - (6.0 if side < 0.0 else 0.0)
-	c.draw_rect(Rect2(lx, r.position.y, 6.0, r.size.y), Color(1.0, 0.74, 0.56, 0.22))
+	c.draw_rect(Rect2(lx, r.position.y, 6.0, r.size.y), Color(1.0, 0.74, 0.56, 0.28))
 	# the shop front along the kerb: its shutter box and shutter
 	var sx: float = inner_x if side < 0.0 else inner_x - 16.0
 	var s0 := r.position.y + 26.0 + float((h >> 3) % 3) * 8.0
 	var s1 := r.end.y - 46.0
-	var bakery := (h >> 5) % 5 == 0
+	var bakery := _neteja_open_shop(r.position.y, side)
 	c.draw_rect(Rect2(sx, s0 - 6.0, 16.0, 6.0), Color(0.40, 0.41, 0.43))
 	var steel := [Color(0.58, 0.59, 0.60), Color(0.52, 0.56, 0.58), Color(0.62, 0.58, 0.52)][(h >> 7) % 3] as Color
-	var down := s1 if not bakery else lerpf(s0, s1, 0.45)
+	var down := s1 if not bakery else lerpf(s0, s1, 0.42)
 	c.draw_rect(Rect2(sx, s0, 16.0, down - s0), steel)
-	var sl := s0 + 3.0
+	var sl := s0 + 4.0
 	while sl < down - 2.0:
-		c.draw_line(Vector2(sx, sl), Vector2(sx + 16.0, sl), steel.darkened(0.22), 1.2)
-		c.draw_line(Vector2(sx, sl + 1.5), Vector2(sx + 16.0, sl + 1.5), steel.lightened(0.12), 0.8)
-		sl += 5.0
-	# the bottom rail, its two padlocks
-	c.draw_rect(Rect2(sx, down - 4.0, 16.0, 4.0), steel.darkened(0.35))
-	for py: float in [s0 + (down - s0) * 0.25, s0 + (down - s0) * 0.75]:
-		c.draw_circle(Vector2(sx + 8.0, py), 2.2, Color(0.70, 0.62, 0.30))
+		c.draw_rect(Rect2(sx + 1.0, sl, 14.0, 1.6), steel.darkened(0.22))
+		sl += 5.5
+	# the bottom rail and the padlocks that hold it
+	c.draw_rect(Rect2(sx, down - 5.0, 16.0, 5.0), steel.darkened(0.35))
+	c.draw_circle(Vector2(sx + 5.0, down - 2.5), 1.8, Color(0.72, 0.62, 0.28))
+	c.draw_circle(Vector2(sx + 11.0, down - 2.5), 1.8, Color(0.72, 0.62, 0.28))
 	if bakery:
-		# the bakery's open: warm light out of the gap and across the pavement
-		c.draw_rect(Rect2(sx, down, 16.0, s1 - down), Color(0.30, 0.22, 0.16))
-		c.draw_rect(Rect2(sx + (10.0 if side < 0.0 else 0.0), down, 6.0, s1 - down), Color(0.96, 0.74, 0.44))
-		var gx: float = inner_x + side * 0.0
-		for i in range(4):
-			var f := float(i) / 3.0
-			var w := 70.0 * (1.0 - f * 0.6)
-			var x0: float = gx if side < 0.0 else gx - w
-			c.draw_rect(Rect2(x0, down - 10.0 * f, w, (s1 - down) + 20.0 * f), Color(1.0, 0.80, 0.50, 0.07))
-		# a rack of bread at the door
-		var bx: float = inner_x + 22.0 if side < 0.0 else inner_x - 34.0
-		c.draw_rect(Rect2(bx, s1 + 4.0, 12.0, 26.0), Color(0.42, 0.30, 0.20))
-		for b in range(3):
-			c.draw_circle(Vector2(bx + 6.0, s1 + 9.0 + float(b) * 8.0), 3.4, Color(0.86, 0.62, 0.30))
+		# the gap under the half-raised shutter: a lit shop, three rolls on the sill
+		c.draw_rect(Rect2(sx, down, 16.0, s1 - down), Color(0.62, 0.36, 0.16))
+		c.draw_rect(Rect2(sx + 3.0, down + 2.0, 10.0, maxf(s1 - down - 4.0, 4.0)), Color(1.0, 0.84, 0.50))
+		var rolls := mini(3, int((s1 - down) / 9.0))
+		for b in range(rolls):
+			var ry := down + 7.0 + float(b) * 9.0
+			c.draw_circle(Vector2(sx + 8.0, ry), 3.2, Color(0.90, 0.62, 0.28))
+			c.draw_circle(Vector2(sx + 6.6, ry - 1.0), 1.3, Color(1.0, 0.88, 0.64))
 	else:
-		# a tag across it, everyone's different
+		# a tag across it, everyone's different, kept on the shutter
 		var tag: Color = [Color(0.86, 0.26, 0.40), Color(0.30, 0.66, 0.86), Color(0.96, 0.80, 0.24),
 			Color(0.40, 0.80, 0.46), Color(0.94, 0.94, 0.96)][(h >> 9) % 5]
-		var ty := s0 + (down - s0) * (0.2 + float((h >> 11) % 4) * 0.1)
-		c.draw_line(Vector2(sx + 2.0, ty), Vector2(sx + 13.0, ty + 18.0), tag, 3.0)
-		c.draw_line(Vector2(sx + 13.0, ty + 18.0), Vector2(sx + 3.0, ty + 34.0), tag, 3.0)
-		if (h >> 13) % 2 == 0:
-			c.draw_line(Vector2(sx + 3.0, ty + 40.0), Vector2(sx + 12.0, ty + 44.0), tag.lightened(0.2), 2.0)
+		var span := down - s0
+		var ty := s0 + span * (0.18 + float((h >> 11) % 3) * 0.08)
+		var tend := minf(ty + span * 0.42, down - 10.0)
+		c.draw_line(Vector2(sx + 2.0, ty), Vector2(sx + 13.0, lerpf(ty, tend, 0.55)), tag, 2.6)
+		c.draw_line(Vector2(sx + 13.0, lerpf(ty, tend, 0.55)), Vector2(sx + 3.0, tend), tag, 2.6)
 	_draw_doorway(c, inner_x, side, r.end.y - 24.0, Color(0.46, 0.40, 0.36))
 
 
@@ -3324,8 +3328,22 @@ func _draw_neteja(vt: float, vb: float) -> void:
 			var hgt := 90.0 - f * 50.0
 			var q := PackedVector2Array([Vector2(e.x, sy + f * 25.0), Vector2(e.y, sy - 120.0 + f * 25.0),
 				Vector2(e.y, sy - 120.0 + f * 25.0 + hgt), Vector2(e.x, sy + f * 25.0 + hgt)])
-			b.polygon(q, Color(1.0, 0.78, 0.56, 0.06))
+			b.polygon(q, Color(1.0, 0.76, 0.52, 0.10))
 		sy += 520.0
+	# a shop with its shutter half up spills warm light across the setts
+	var my := floorf((vt - 280.0) / 220.0) * 220.0
+	while my < vb + 220.0:
+		if my + 110.0 >= GATE_Y:
+			for side in [-1.0, 1.0]:
+				if _neteja_open_shop(my, side):
+					var shop_e := walk_edges(my + 90.0)
+					var shop_x: float = shop_e.x if side < 0.0 else shop_e.y
+					for si in range(4):
+						var sf := float(si) / 3.0
+						var sw := 84.0 * (1.0 - sf * 0.5)
+						var sx0: float = shop_x if side < 0.0 else shop_x - sw
+						b.rect(Rect2(sx0, my + 64.0, sw, 78.0), Color(1.0, 0.70, 0.36, 0.14 - sf * 0.03))
+		my += 220.0
 	# the water truck's wet streaks down the street: a darker sheen that
 	# feathers out at its edges and wanders a little, the dawn on one edge
 	var y := floorf((vt - 40.0) / 220.0) * 220.0
@@ -3342,26 +3360,6 @@ func _draw_neteja(vt: float, vb: float) -> void:
 				b.rect(Rect2(x - 20.0, yy, 3.0, 20.0), Color(1.0, 0.82, 0.70, 0.08 * tf))
 				yy += 20.0
 		y += 220.0
-	# the washing's shadow, thrown down the street by the low sun
-	var wl: Array = laundry_lines
-	for i in range(wl.size()):
-		var ly: float = wl[i]
-		if ly < vt - 160.0 or ly > vb + 160.0:
-			continue
-		var le := walk_edges(ly)
-		var off := Vector2(26.0, 46.0)
-		b.line(Vector2(le.x, ly) + off, Vector2(le.y, ly - 8.0) + off, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.12), 2.0)
-		var x := le.x + 14.0
-		var j := 0
-		while true:
-			var kind: String = WASH_KINDS[(i * 3 + j) % WASH_KINDS.size()]
-			var w: float = WASH_W[kind]
-			if x + w > le.y - 14.0:
-				break
-			var hh := 30.0 if kind != "socks" else 14.0
-			b.rect(Rect2(Vector2(x, ly + 2.0) + off, Vector2(w, hh)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.10))
-			x += w + 4.0
-			j += 1
 	# the dumpsters: steel bins on castors, two hinged lids with their ribs
 	# and grab handles, the handlebar at each end, and a bag that did not fit
 	for d: Vector2 in LevelBuild.neteja_dumpsters(self):

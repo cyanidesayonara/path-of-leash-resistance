@@ -216,6 +216,9 @@ static func neteja(m: Node2D, hyd_list: Array) -> void:
 	m.performers = Array([], TYPE_VECTOR2, &"", null)
 	m.astands = Array([], TYPE_VECTOR2, &"", null)
 	m.benches = Array([], TYPE_VECTOR2, &"", null)
+	# the market skeleton's open manholes do not belong here: four warning
+	# cones round a hole in the middle of the chase
+	m.manholes = Array([], TYPE_VECTOR2, &"", null)
 	m.fountains = Array([Vector2(640, -3100)], TYPE_VECTOR2, &"", null)
 	m.laundry_lines = Array([-900.0, -1700.0, -2500.0, -3300.0, -4100.0], TYPE_FLOAT, &"", null)
 	m.poles.clear()
@@ -244,7 +247,12 @@ static func neteja(m: Node2D, hyd_list: Array) -> void:
 	# here, not cones)
 	m.cone_spots = Array([], TYPE_VECTOR2, &"", null)
 	for d: Vector2 in neteja_dumpsters(m):
-		m.cone_spots.append(d + Vector2(0.0, -NETEJA_DUMPSTER.y * 0.5 - 34.0))
+		# two crates at the street-side corner, so they read as a stack and
+		# stay off the hydrant and the bin
+		var into := 16.0 if d.x < m.walk_cx else -16.0
+		var past := NETEJA_DUMPSTER.y * 0.5
+		m.cone_spots.append(d + Vector2(into, past + 22.0))
+		m.cone_spots.append(d + Vector2(into, past + 48.0))
 	# where the kill line is when a broom reaches a jamming dumpster's end,
 	# and what is parked at the kerbs for the brooms to swing in round
 	m.chase_jams.clear()
@@ -1181,6 +1189,9 @@ static func fit_props_to_corridor(m: Node2D) -> void:
 		if m.lvl == "site" and arr == m.cone_spots:
 			continue
 		if m.lvl == "station" and arr == m.poles:
+			continue
+		# La Neteja's crates are already at the kerb, beside the dumpsters
+		if m.lvl == "neteja" and arr == m.cone_spots:
 			continue
 		for i in range(arr.size()):
 			var p: Vector2 = arr[i]

@@ -48,6 +48,30 @@ func _run() -> void:
 	_check(m.laundry_lines.size() >= 4, "washing overhead")
 	var tint: Color = m._weather_tint()
 	_check(tint.r > tint.b + 0.1, "a warm dawn light")
+	# the market skeleton used to leave an open manhole, and four warning
+	# cones round it, in the middle of the chase
+	_check(m.manholes.is_empty(), "no open manhole in the lane")
+	var road_cones := 0
+	var crates := 0
+	for c: Node2D in m.get_tree().get_nodes_in_group("cones"):
+		if String(c.kind) == "cone":
+			road_cones += 1
+		elif String(c.kind) == "crate":
+			crates += 1
+	_check(road_cones == 0, "no warning cones in the street (%d)" % road_cones)
+	_check(crates >= dumps.size() * 2, "delivery crates stacked by the dumpsters (%d)" % crates)
+	var lamps := true
+	for i in range(m.deco_pole_count):
+		lamps = lamps and m.pole_tree(i) == m.TREE_NONE
+	_check(lamps and m.deco_pole_count >= 4, "the slalom posts are lampposts, not trees")
+	var hydrant_clear := true
+	for hyd: Dictionary in m.hydrants:
+		var hp: Vector2 = hyd.pos
+		for d: Vector2 in dumps:
+			var body := Rect2(d - LevelBuild.NETEJA_DUMPSTER * 0.5, LevelBuild.NETEJA_DUMPSTER)
+			if body.grow(6.0).has_point(hp):
+				hydrant_clear = false
+	_check(hydrant_clear, "no hydrant parked inside a dumpster")
 	# a dumpster is solid
 	var dog: CharacterBody2D = m.dog
 	dog.collision_mask = 1
