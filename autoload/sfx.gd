@@ -137,6 +137,11 @@ func music_tick(cue: String, next: String, paused: bool, playing: bool) -> void:
 		AudioServer.set_bus_effect_enabled(_muffle_bus, 0, paused)
 
 
+# whether a track can play now: rendered, or there is no music to wait for
+func music_ready(track: String) -> bool:
+	return music_player == null or not music_on or _music_cache.has(track)
+
+
 # where the film is, so its phrase starts in step with the picture however
 # long it took to render (the music worker builds it like any loop)
 func film_clock(t: float) -> void:
@@ -188,7 +193,8 @@ func _process(delta: float) -> void:
 				from = _film_t
 			elif _handoff_on:
 				if not _handoff_skip and _music_now == "intro" and music_player.playing:
-					from = music_player.get_playback_position()
+					# the score's lead-in comes before the title theme starts in it
+					from = maxf(0.0, music_player.get_playback_position() - Music.intro_lead_sec())
 				fade = _handoff_fade
 				_handoff_on = false
 			var len := (_music_cache[_music_want] as AudioStream).get_length() if _music_want != "" else 0.0
