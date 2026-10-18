@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-10-17 - Les Obres audit fixes
+
+- The building line on Les Obres is a run of Heras fencing: mesh panels between concrete feet (the odd black rubber one), a coupler at each joint, a sandbag here and there, and now and then a contractor's banner. From straight above the mesh is the lattice of its shadow lying out beside it, solid under a banner. It is drawn on the verge canvas, above the sidewalk its shadow falls on.
+- Behind the fence is the works compound, not scaffolded roofs with flat blue rectangles: skips full of rubble, stacks under blue and green tarps with their creases, ridge and ropes and tyres on the corners, pallets of blocks, rebar bundles with orange caps, and spoil heaps with a shovel stuck in. Each is placed at its own y so a bend never pushes it through the fence.
+- The footway's dirt has the digger's track marks curving up to where it is parked, survey spray lines in yellow, blue and pink, and gravel, offcuts, a cement bag and planks lying about. All flat; nothing new is solid.
+- The two pours are at different stages. The first is just placed: timber shuttering on stakes, dark wet concrete with a sheen, fanned trowel marks and the bull float left on it. The second is screeded: steel forms pinned down, paler and broomed, a wetter band still being worked, starter bars along one edge, the screed bar across it and the barrow beside it.
+- Cone lettering no longer clots. Where two strokes meet, one cone stands for both; the cones are a little smaller, letters get more space between them (an optional letter gap in `world/sign_letters.gd`, used only by cones), the foot only peeks out round each cone, and the gate's words are bigger, so EL SOLAR and OFF LEASH read at a glance. The behaviour snapshot for the walk is unchanged.
+
 ## 2026-10-17 - a title theme with get-up-and-go, and the intro scored to the picture
 
 - Santtu found the title theme too tranquil ("doodly-doo"). It is the same tune, arranged with drive: 130 bpm and up a step to E, a whistle lead with a glockenspiel over it all the way, chord stabs pushed ahead of the beat, a bouncing octave bass, and a groove (kick, claps on the backbeat, sixteenth shakers) with a bongo fill every fourth bar.
