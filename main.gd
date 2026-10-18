@@ -319,6 +319,8 @@ var tut_flash := 0.0
 var tut_start_y := 0.0
 var tut_label: Label
 var tut_hint: Label
+# the lesson up can be skipped: event_feed draws its prompt bar
+var tut_skippable := false
 # counters the tutorial checks against
 var barks_done := 0
 var grinds_landed := 0
@@ -1430,6 +1432,9 @@ func _grass_blocked(p: Vector2) -> bool:
 	if lvl == "barri" or tutorial_mode:
 		if LevelBuild.BARRI_PETANCA.grow(8.0).has_point(p) or LevelBuild.BARRI_PLAYGROUND.grow(8.0).has_point(p):
 			return true
+	# the brink lesson's pond is water, banks included: no grass grows on it
+	if tutorial_mode and LevelBuild.tutorial_pond(self).grow(14.0).has_point(p):
+		return true
 	for it: Dictionary in verge_items:
 		if p.distance_to(it["pos"]) < 52.0:
 			return true
@@ -4453,6 +4458,28 @@ func _draw_tutorial_pond() -> void:
 	var bank := {"y": pc.y, "at": 0.5, "rx": r.size.x * 0.5, "ry": r.size.y * 0.5, "seed": 1.9}
 	_draw_pinned_patch(bank, pc, Color(0.40, 0.36, 0.28), 1.08)
 	_draw_pinned_patch(bank, pc, Color(0.31, 0.44, 0.52), 0.94)
+
+
+# The benches the owner waits on at the quiet lessons (LevelBuild.
+# tutorial_benches): slats across, cast-iron ends, the backrest on the south
+# side so whoever sits there faces the lesson.
+func _draw_tutorial_benches(vt: float, vb: float) -> void:
+	var b := ShapeBatch.new()
+	for r: Rect2 in LevelBuild.tutorial_benches(self):
+		if r.end.y < vt - 40.0 or r.position.y > vb + 40.0:
+			continue
+		b.rect(Rect2(r.position + LIGHT * 7.0, r.size + Vector2(0, 6)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+		for ex: float in [r.position.x + 3.0, r.end.x - 7.0]:
+			b.rect(Rect2(ex, r.position.y - 1.0, 4.0, r.size.y + 8.0), Color(0.16, 0.16, 0.17))
+		for si in range(3):
+			var sl := Rect2(r.position.x, r.position.y + float(si) * 5.0, r.size.x, 4.2)
+			var wc := Color(0.56, 0.41, 0.27).lightened(0.10 if si == 0 else 0.0)
+			b.rect(sl, wc.darkened(0.25))
+			b.rect(Rect2(sl.position, sl.size - Vector2(0.0, 1.2)), wc)
+		var back := Rect2(r.position.x, r.end.y + 2.0, r.size.x, 5.0)
+		b.rect(back, Color(0.46, 0.33, 0.21))
+		b.rect(Rect2(back.position, Vector2(back.size.x, 1.5)), Color(0.66, 0.50, 0.34))
+	b.flush(_wc)
 
 
 # The grind lesson's stone ledge: a long low wall beside the path, its coping
@@ -9243,7 +9270,8 @@ func tut_hold_point(i: int) -> Vector2:
 	var y := float(st["at"]) + TUT_HOLD_BACK
 	var side := int(st.get("stand", 0))
 	if side == 0:
-		return Vector2(INF, y)
+		# a lesson with a bench seats them on it, mid-path
+		return Vector2(walk_cx if bool(st.get("bench", false)) else INF, y)
 	var e := walk_edges(y)
 	return Vector2((e.x + TUT_STAND_IN) if side < 0 else (e.y - TUT_STAND_IN), y)
 
@@ -9307,10 +9335,10 @@ func _update_tut_card() -> void:
 	tut_label.visible = true
 	tut_hint.visible = true
 	tut_label.text = String(st.title)
-	var body := String(st.body)
-	if String(st.id) != "done":
-		body += "        ({skip} to move on)"
-	tut_hint.text = Prompts.fill(body)
+	# the skip button is offered in the card's own prompt bar (event_feed.gd),
+	# never written into the sentence
+	tut_skippable = String(st.id) != "done"
+	tut_hint.text = Prompts.fill(String(st.body))
 	# a green flash of acknowledgement as each lesson lands
 	var glow: float = clampf(tut_flash, 0.0, 1.0)
 	tut_label.modulate = Color(1, 1, 1).lerp(Color(0.6, 1.0, 0.65), glow)
@@ -10903,6 +10931,7 @@ func _draw_world() -> void:
 	if tutorial_mode:
 		_draw_tutorial_pond()
 		_draw_tutorial_ledge(wvt, vb)
+		_draw_tutorial_benches(wvt, vb)
 	if rambla():
 		_draw_rambla(vt, vb)
 	if lvl == "trail":

@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-10-18 - El Bosc and First Walk audit fixes
+
+- El Bosc's pinch at -2000 is crowded with trunks on both edges at once, about one every 80 px, staggered, so the trail narrows between them like a gateway and there is a trunk to wind the leash round at every step. Before, one tree stood on alternate sides every 80 to 100 px. The autowalk, soaks and selftest are unchanged, and a playtest through the pinch found no problems.
+- The First Walk's quiet lessons (the leash, marking, sniffing, the nose, barking, the zoomies, business and the vault) each have a park bench mid-path, and your human waits sat on it, on the phone, as the design brief says. The dog cannot walk through a bench. The tetherball, ledge and brink lessons keep your human standing where the lesson needs them.
+- No grass tufts grow on the brink lesson's pond.
+- "Move on" is a key cap in a prompt bar under the lesson card, for whichever device is in hand, instead of "(C to move on)" written into the lesson's sentence.
+- The grind lesson already had its stone ledge (the kerb the finding missed), so that finding no longer reproduces.
+
 ## 2026-10-16 - the intro, redrawn as a finished film
 
 - Santtu's verdict on the Walkies film was that the idea is solid but it looked like a prototype. Everything in it is redrawn to shipped-game quality, and it is cheaper to play than the prototype: fewer draw calls (a room frame about 140 instead of 185, the street about 165 instead of 480) and about half the CPU a frame. The static backgrounds go up once as meshes, and the characters cache their shapes per pose instead of clipping polygons every frame.

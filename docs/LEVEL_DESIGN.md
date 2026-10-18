@@ -127,6 +127,10 @@ with pickpockets and shenanigans happening around."
   its banks and in the ruts; fallen logs; roots; trees right up to the edge;
   a waymarker post as landmark; forest floor instead of lawn beside the path.
 - Off-leash: the clearing (as now), with a log pile and a stream pool.
+- Audit fixes (2026-10-18, #162): at the pinch (-2000) trunks crowd both
+  edges at once, about one every 80 px, so the trail narrows between them
+  and there is a trunk to wind the leash round at every step
+  (`LevelBuild.TRAIL_TREES`).
 - Wild boar: Collserola's boars. A sow and her striped piglets root along
   the path edge and cross it at their own pace; they steal nothing, but
   get between one and her piglets and she bumps the dog (and the owner)
@@ -341,6 +345,12 @@ distractions of normal levels."
   Then the pipicà: off the lead, fetch.
 - A lesson a player has done on a real walk can still be practised; the
   tutorial is replayable from the menu.
+- Audit fixes (2026-10-18, #162): the quiet lessons ("bench" in
+  `systems/tutorial.gd`) have a park bench mid-path where the owner waits,
+  sat on it on the phone; the dog cannot walk through it. The brink pond
+  grows no grass. Moving on is offered in a prompt bar under the card, not
+  written into the lesson. The grind station's stone ledge is the kerb
+  lesson 10 asks for.
 
 ## Writing on the ground (each walk's name, in its own stuff)
 
