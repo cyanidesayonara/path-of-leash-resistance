@@ -37,6 +37,34 @@ func _run() -> void:
 	_check(m.blankets.is_empty() and m.statues.is_empty(), "none of La Rambla's clutter")
 	_check(m.stall_kinds.size() == 1 and m.stall_kinds[0] == "pingpong", "the one table is the ping-pong table")
 	_check(m.freedom_kind == "yard", "the off-leash area is the fenced dog park")
+	# the audit fixes (#160): every piece where it belongs, in level space
+	var LB: GDScript = load("res://world/level_build.gd")
+	var pitch: Rect2 = LB.BARRI_PETANCA
+	var pe: Vector2 = m.walk_edges(pitch.get_center().y)
+	_check(pitch.position.x >= pe.x and pitch.end.x <= pe.y, "the petanca pitch lies on the gravel")
+	var on_pitch: bool = m.performers.size() == 3
+	for pf: Vector2 in m.performers:
+		on_pitch = on_pitch and pitch.has_point(pf)
+	_check(on_pitch, "the three petanca players stand on their pitch")
+	var pg: Rect2 = LB.BARRI_PLAYGROUND
+	_check(pg.grow(10.0).position.x > m.walk_edges(pg.get_center().y).y, "the playground is on the lawn, off the path")
+	_check(m.fountains.size() == 1 and m.fountains[0] == LB.BARRI_FONT, "the drinking fountain is there")
+	var left_ys: Array[float] = []
+	var right_ys: Array[float] = []
+	for i in range(m.deco_pole_count):
+		var tp: Vector2 = m.poles[i]
+		var te: Vector2 = m.walk_edges(tp.y)
+		_check(tp.x - 13.0 > te.x and tp.x + 60.0 < te.y, "plane tree at %s stands with its shadow on the gravel" % tp)
+		if tp.x < m.walk_cx:
+			left_ys.append(tp.y)
+		else:
+			right_ys.append(tp.y)
+	var mirrored := 0
+	for ly: float in left_ys:
+		for ry: float in right_ys:
+			if absf(ly - ry) < 60.0:
+				mirrored += 1
+	_check(mirrored == 0, "the two rows of plane trees do not mirror each other (%d pairs)" % mirrored)
 	for i in range(240):
 		await physics_frame
 	_check(m.get_tree().get_nodes_in_group("tourists").is_empty() and m.get_tree().get_nodes_in_group("pickpockets").is_empty(),

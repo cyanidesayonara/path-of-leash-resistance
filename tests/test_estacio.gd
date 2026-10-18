@@ -126,6 +126,12 @@ func _run() -> void:
 	for i in range(40):
 		await physics_frame
 	_check(absf(dog.global_position.y - y0) < 20.0, "beside the walkway, she stays put")
+	# indoors: polished terrazzo, so no drain grates or patched street repairs
+	var street_works := 0
+	for d: Dictionary in m.ground_detail:
+		if int(d.kind) == 4 or int(d.kind) == 5:
+			street_works += 1
+	_check(street_works == 0, "no drains or road repairs on the concourse floor (%d)" % street_works)
 	m.queue_free()
 	await process_frame
 	print("\n%d checks, %d failures" % [checks, failures.size()])

@@ -62,6 +62,20 @@ func _run() -> void:
 	_check(absf(fling_pole.y - hold_at) < 200.0, "the owner waits close enough to the fling post to be wound round it")
 	var pond: Rect2 = LevelBuild.tutorial_pond(m)
 	_check(m.water.has(pond), "the brink lesson has its pond")
+	_check(m._grass_blocked(pond.get_center()), "no grass grows on the brink lesson's pond")
+	# the quiet lessons seat the owner on a bench (#162), the lesson's words
+	# say nothing about the skip button
+	var benches: Array = LevelBuild.tutorial_benches(m)
+	var seated := benches.size() == 8
+	for i in range(TUT.STEPS.size()):
+		if bool(TUT.STEPS[i].get("bench", false)):
+			var hp: Vector2 = m.tut_hold_point(i)
+			var on := false
+			for r: Rect2 in benches:
+				on = on or r.grow(4.0).has_point(hp)
+			seated = seated and on
+		_check(String(TUT.STEPS[i]["body"]).find("{skip}") < 0, "lesson %d does not write the skip button into its text" % i)
+	_check(seated, "every bench lesson has a bench under the owner's spot")
 	_check(absf(m.urge_y - TUT.at("bag")) < 120.0 and m.bins.size() == 1, "the call of nature comes at the business station, a bin beside it")
 	_check(m.stalls.is_empty() and m.performers.is_empty() and m.benches.is_empty(), "none of El Barri's furniture")
 	# every held lesson's target is inside leash reach from where the owner
