@@ -1095,6 +1095,10 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 			var fr := f.y
 			c.draw_rect(Rect2(fl - far, sy, far, slice), base)
 			c.draw_rect(Rect2(fr, sy, far, slice), base)
+			# Les Obres' line is a fence, not a building: no wall face, no cast
+			if lvl == "site":
+				sy += slice
+				continue
 			# Seen from directly overhead you do not see a facade at all - you
 			# see the ROOF. The roof is inset from its footprint and the gap
 			# becomes a visible WALL FACE, angled toward the viewer: dark at the
@@ -1152,7 +1156,7 @@ func _edge_base_color() -> Color:
 	match lvl:
 		"oldtown", "spook": return Color(0.36, 0.33, 0.30)   # old stone
 		"station": return Color(0.48, 0.48, 0.52)            # tiled interior
-		"site": return Color(0.52, 0.42, 0.27)               # plywood hoarding
+		"site": return Obres.YARD                            # the works compound
 		"scrap": return Color(0.26, 0.25, 0.24)              # yard beyond the fence
 		"market": return Color(0.44, 0.38, 0.34)
 		_: return Color(0.38, 0.35, 0.37)                    # city block
@@ -1280,22 +1284,12 @@ func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 			var spine_x := r.get_center().x
 			c.draw_line(Vector2(spine_x, r.position.y), Vector2(spine_x, r.end.y), Color(0.33, 0.35, 0.39), 6.0)
 		"site":
-			# scaffold decking and tarps over the works
-			c.draw_rect(r, Color(0.46, 0.44, 0.40).lightened(lit * 0.08))
-			# scaffold boards running across, with poles at the joints
-			var board := r.position.y
-			while board < r.end.y:
-				c.draw_line(Vector2(r.position.x, board), Vector2(r.end.x, board), Color(0.58, 0.48, 0.31), 7.0)
-				c.draw_line(Vector2(r.position.x, board + 4.0), Vector2(r.end.x, board + 4.0), Color(0.30, 0.25, 0.17), 1.5)
-				board += 26.0
-			# a blue tarp lashed over part of it, and hazard tape at the edge
-			if k % 2 == 0:
-				c.draw_rect(Rect2(inner_x + side * 58.0, r.position.y + 40.0, 58.0, 96.0), Color(0.20, 0.36, 0.52, 0.9))
-			var tape_x: float = inner_x + side * 5.0
-			for s in range(8):
-				var sy := r.position.y + s * 28.0
-				var sc := Color(0.92, 0.72, 0.15) if s % 2 == 0 else Color(0.15, 0.14, 0.13)
-				c.draw_line(Vector2(tape_x, sy), Vector2(tape_x, sy + 14.0), sc, 5.0)
+			# the works compound behind the Heras fence (world/obres.gd)
+			Obres.draw_yard_module(self, c, r, side, k)
+		"rain":
+			_draw_diluvi_roofs(c, r, side, k, inner_x)
+			_draw_edge_awning(c, r, side, k, inner_x)
+			_draw_doorway(c, inner_x, side, r.position.y + 168.0, Color(0.48, 0.30, 0.22))
 		"scrap":
 			# corrugated shed roofs, rusting, with junk heaps between them
 			var iron := Color(0.40, 0.38, 0.35).lightened(lit * 0.09)
@@ -1305,10 +1299,8 @@ func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 				c.draw_line(Vector2(rib, r.position.y), Vector2(rib, r.end.y), iron.darkened(0.22), 2.0)
 				c.draw_line(Vector2(rib + 4.0, r.position.y), Vector2(rib + 4.0, r.end.y), iron.lightened(0.16), 1.5)
 				rib += 11.0
-			# rust blooms
-			for h in range(2):
-				var hy := r.position.y + 50.0 + h * 96.0
-				c.draw_circle(Vector2(inner_x + side * (34.0 + float(h) * 18.0), hy), 17.0, Color(0.48, 0.28, 0.17, 0.55))
+			# rust streaking down from the ridge, every roof its own
+			Ferralla.draw_roof_rust(c, r, inner_x, side, k)
 			# the fence line at the kerb, seen from above as posts and wire
 			var fx: float = inner_x + side * 5.0
 			c.draw_line(Vector2(fx, r.position.y), Vector2(fx, r.end.y), Color(0.55, 0.57, 0.58, 0.7), 2.0)
@@ -1351,17 +1343,137 @@ func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 				var tag: Color = [Color(0.86, 0.26, 0.40), Color(0.30, 0.66, 0.86), Color(0.96, 0.80, 0.24)][k % 3]
 				c.draw_line(Vector2(sx + 2.0, r.position.y + 70.0), Vector2(sx + 12.0, r.position.y + 96.0), tag, 3.0)
 				c.draw_line(Vector2(sx + 12.0, r.position.y + 96.0), Vector2(sx + 3.0, r.position.y + 118.0), tag, 3.0)
-			# the awning: projects over the pavement, so it reads correctly
-			# from overhead, and throws a shadow onto the paving below it
-			if k % 2 == 0 and lvl != "neteja":
-				var ac := Color(0.72, 0.3, 0.28) if k % 4 == 0 else Color(0.28, 0.42, 0.55)
-				var aw_x: float = inner_x if side < 0.0 else inner_x - 34.0
-				c.draw_rect(Rect2(aw_x, r.position.y + 44.0, 34.0, 76.0), Color(0.05, 0.04, 0.07, 0.16))
-				c.draw_rect(Rect2(aw_x, r.position.y + 40.0, 30.0, 72.0), ac)
-				for st in range(4):
-					c.draw_line(Vector2(aw_x + 7.0 * float(st), r.position.y + 40.0),
-						Vector2(aw_x + 7.0 * float(st), r.position.y + 112.0), ac.lightened(0.30), 3.0)
+			if lvl != "neteja":
+				_draw_edge_awning(c, r, side, k, inner_x)
 			_draw_doorway(c, inner_x, side, r.position.y + 168.0, felt)
+
+
+# the awning: projects over the pavement, so it reads correctly from
+# overhead, and throws a shadow onto the paving below it
+func _draw_edge_awning(c: Object, r: Rect2, side: float, k: int, inner_x: float) -> void:
+	if k % 2 != 0:
+		return
+	var ac := Color(0.72, 0.3, 0.28) if k % 4 == 0 else Color(0.28, 0.42, 0.55)
+	var aw_x: float = inner_x if side < 0.0 else inner_x - 34.0
+	c.draw_rect(Rect2(aw_x, r.position.y + 44.0, 34.0, 76.0), Color(0.05, 0.04, 0.07, 0.16))
+	c.draw_rect(Rect2(aw_x, r.position.y + 40.0, 30.0, 72.0), ac)
+	for st in range(4):
+		c.draw_line(Vector2(aw_x + 7.0 * float(st), r.position.y + 40.0),
+			Vector2(aw_x + 7.0 * float(st), r.position.y + 112.0), ac.lightened(0.30), 3.0)
+
+
+# EL DILUVI's roofs, wet: from the gutter at the street out to the edge of the
+# view, a pitched pantile roof or a flat terrat (tiled, parapeted, a water
+# tank or two on it, rain standing in the low corner), then the next block
+# behind it. The gutters along the eaves run with water; the downpipes come
+# down at the party walls.
+func _draw_diluvi_roofs(c: Object, r: Rect2, side: float, k: int, inner_x: float) -> void:
+	var out := side                  # away from the street
+	var lit := fmod(float(k) * 0.37, 1.0)
+	var y0 := r.position.y
+	var h := r.size.y
+	# the front block and the one behind it: alternate kinds, so a pantile
+	# roof never sits beside another of the same lot
+	var front_pitched := (k % 3) != 1
+	_diluvi_roof_lot(c, _diluvi_span(inner_x, out, 0.0, 150.0, y0, h), out, k, lit, front_pitched, true)
+	_diluvi_roof_lot(c, _diluvi_span(inner_x, out, 150.0, 420.0, y0, h), out, k + 5, lit * 0.7, not front_pitched, false)
+	# the party wall between this module and the next: a low brick coping
+	var pw := _diluvi_span(inner_x, out, 0.0, 420.0, y0, h)
+	c.draw_rect(Rect2(pw.position.x, y0 - 3.0, pw.size.x, 6.0), Color(0.46, 0.34, 0.28))
+	c.draw_rect(Rect2(pw.position.x, y0 - 3.0, pw.size.x, 2.0), Color(0.58, 0.46, 0.38))
+	c.draw_rect(Rect2(pw.position.x, y0 + 3.0, pw.size.x, 5.0), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+	# the street gutter along the eave, brimming, and its downpipe at the
+	# party wall
+	var gx := inner_x + out * 4.0
+	c.draw_rect(Rect2(gx - 4.0, y0, 8.0, h), Color(0.50, 0.53, 0.56))
+	c.draw_rect(Rect2(gx - 2.5, y0, 5.0, h), Color(0.40, 0.52, 0.64))
+	var wy := y0 + fmod(float(k) * 17.0, 30.0)
+	while wy < y0 + h - 12.0:
+		c.draw_line(Vector2(gx, wy), Vector2(gx, wy + 10.0), Color(0.78, 0.86, 0.94, 0.7), 1.5)
+		wy += 26.0
+	c.draw_circle(Vector2(gx, y0 + 8.0), 5.0, Color(0.56, 0.58, 0.60))
+	c.draw_circle(Vector2(gx, y0 + 8.0), 3.0, Color(0.22, 0.26, 0.30))
+
+
+# the strip of a roof module from d0 to d1 out from the street
+static func _diluvi_span(inner_x: float, out: float, d0: float, d1: float, y0: float, h: float) -> Rect2:
+	var a := inner_x + out * d0
+	var z := inner_x + out * d1
+	return Rect2(minf(a, z), y0, absf(z - a), h)
+
+
+# one roof lot of El Diluvi's blocks: `out` points away from the street
+func _diluvi_roof_lot(c: Object, lot: Rect2, out: float, k: int, lit: float, pitched: bool, front: bool) -> void:
+	if pitched:
+		# pantiles, wet and dark, the courses running down the slope to the
+		# eave each side of the ridge, a sheen where the rain sheets off
+		var tile: Color = [Color(0.50, 0.28, 0.20), Color(0.56, 0.32, 0.22), Color(0.46, 0.27, 0.21)][k % 3]
+		tile = tile.lightened(lit * 0.06)
+		c.draw_rect(lot, tile)
+		var ridge := lot.get_center().x
+		# the slope facing away from the light is the darker one
+		c.draw_rect(Rect2(ridge, lot.position.y, lot.end.x - ridge, lot.size.y), tile.darkened(0.12))
+		var ty := lot.position.y + 4.0
+		while ty < lot.end.y:
+			c.draw_line(Vector2(lot.position.x + 2.0, ty), Vector2(lot.end.x - 2.0, ty), tile.darkened(0.30), 2.0)
+			c.draw_line(Vector2(lot.position.x + 2.0, ty + 3.0), Vector2(lot.end.x - 2.0, ty + 3.0), tile.lightened(0.12), 1.0)
+			ty += 9.0
+		c.draw_rect(Rect2(ridge - 4.0, lot.position.y, 8.0, lot.size.y), tile.lightened(0.16))
+		c.draw_rect(Rect2(ridge - 1.0, lot.position.y, 2.0, lot.size.y), tile.darkened(0.20))
+		for si in range(3):
+			var sy := lot.position.y + 30.0 + float((k * 7 + si * 61) % int(maxf(lot.size.y - 60.0, 1.0)))
+			c.draw_rect(Rect2(lot.position.x + 6.0, sy, lot.size.x - 12.0, 3.0), Color(0.80, 0.86, 0.94, 0.12))
+		# a chimney, or a skylight let into the slope
+		if k % 2 == 0:
+			var cp := Vector2(ridge + out * 22.0, lot.position.y + 60.0 + float(k % 4) * 24.0)
+			c.draw_rect(Rect2(cp + Vector2(-9.0, -9.0) + LIGHT * 8.0, Vector2(18, 18)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.3))
+			c.draw_rect(Rect2(cp - Vector2(9, 9), Vector2(18, 18)), Color(0.58, 0.44, 0.36))
+			c.draw_rect(Rect2(cp - Vector2(9, 9), Vector2(18, 4)), Color(0.68, 0.56, 0.48))
+			c.draw_circle(cp, 4.0, Color(0.16, 0.14, 0.14))
+		elif front:
+			var sk := Rect2(ridge - out * 44.0 - 13.0, lot.position.y + 120.0, 26.0, 36.0)
+			c.draw_rect(sk.grow(3.0), tile.darkened(0.35))
+			c.draw_rect(sk, Color(0.88, 0.83, 0.52, 0.85) if Game.night else Color(0.46, 0.56, 0.64))
+			c.draw_rect(Rect2(sk.position.x + 3.0, sk.position.y + 3.0, 6.0, sk.size.y - 6.0), Color(1, 1, 1, 0.16))
+		return
+	# a terrat: pale tiles inside a parapet, puddled after the rain
+	var flag := Color(0.62, 0.56, 0.50).lightened(lit * 0.05)
+	c.draw_rect(lot, flag.darkened(0.35))
+	var floor_r := lot.grow(-6.0)
+	c.draw_rect(floor_r, flag)
+	var gx := floor_r.position.x + 18.0
+	while gx < floor_r.end.x:
+		c.draw_line(Vector2(gx, floor_r.position.y), Vector2(gx, floor_r.end.y), flag.darkened(0.12), 1.0)
+		gx += 18.0
+	var gy := floor_r.position.y + 18.0
+	while gy < floor_r.end.y:
+		c.draw_line(Vector2(floor_r.position.x, gy), Vector2(floor_r.end.x, gy), flag.darkened(0.12), 1.0)
+		gy += 18.0
+	# the parapet's shadow on the light side
+	c.draw_rect(Rect2(floor_r.position.x, floor_r.position.y, floor_r.size.x, 8.0), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
+	c.draw_rect(Rect2(floor_r.position.x, floor_r.position.y, 8.0, floor_r.size.y), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.14))
+	# rain standing round the roof drain in the low corner
+	var low := Vector2(floor_r.end.x - 34.0 if out > 0.0 else floor_r.position.x + 34.0, floor_r.end.y - 34.0)
+	c.draw_colored_polygon(ellipse_pts(low, 30.0, 18.0, 12), Color(0.40, 0.50, 0.60, 0.55))
+	c.draw_colored_polygon(ellipse_pts(low + Vector2(-6.0, -4.0), 12.0, 6.0, 8), Color(0.80, 0.88, 0.96, 0.25))
+	c.draw_circle(low, 3.0, Color(0.20, 0.20, 0.22))
+	# the water tanks: drums on a frame, lids on
+	var tanks := 2 if front else 1 + k % 2
+	for ti in range(tanks):
+		var tp := Vector2(lot.get_center().x + (float(ti) - float(tanks - 1) * 0.5) * 40.0,
+			lot.position.y + 46.0 + float((k * 29) % 50))
+		c.draw_circle(tp + LIGHT * 10.0, 16.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.30))
+		c.draw_rect(Rect2(tp - Vector2(17, 17), Vector2(34, 34)), Color(0.36, 0.34, 0.32))
+		c.draw_circle(tp, 15.0, Color(0.80, 0.80, 0.78))
+		c.draw_circle(tp - LIGHT * 3.0, 11.0, Color(0.90, 0.90, 0.88))
+		c.draw_circle(tp, 6.0, Color(0.56, 0.58, 0.60))
+		c.draw_circle(tp - LIGHT * 1.0, 4.0, Color(0.70, 0.72, 0.74))
+	# the stair head: a little hut with its door onto the roof
+	if front and k % 2 == 1:
+		var sh := Rect2(lot.get_center().x - 18.0, lot.end.y - 70.0, 36.0, 44.0)
+		c.draw_rect(Rect2(sh.position + LIGHT * 9.0, sh.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.28))
+		c.draw_rect(sh, Color(0.70, 0.64, 0.56))
+		c.draw_rect(Rect2(sh.position.x, sh.position.y, sh.size.x, 5.0), Color(0.80, 0.75, 0.68))
 
 
 func _build_verge() -> void:
@@ -1374,6 +1486,10 @@ func draw_verge_onto(c: Object, vt: float, vb: float) -> void:
 	# before it was moved off it (see edgelayer.gd) - putting picnics into the
 	# 30-times-a-second draw is exactly how a walk starts to stutter.
 	_draw_grass_detail(c, vt, vb)
+	# Les Obres' Heras fence stands on the building line, so it goes on this
+	# canvas, above the sidewalk its feet and shadow lie on
+	if lvl == "site":
+		Obres.draw_fence(self, c, vt, vb)
 	for it: Dictionary in verge_items:
 		var p: Vector2 = it["pos"]
 		if p.y < vt - 160.0 or p.y > vb + 160.0:
@@ -1452,6 +1568,11 @@ func _draw_grass_detail(c: Object, vt: float, vb: float) -> void:
 			var h := _cell01(x, y)
 			var p := Vector2(x + (h - 0.5) * GRASS_STEP * 0.9, y + (fmod(h * 7.13, 1.0) - 0.5) * GRASS_STEP * 0.9)
 			if p.y > GATE_Y and surface_at(p) == Surfaces.S.GRASS and not _grass_blocked(p):
+				if lvl == "scrap":
+					# oily gravel along the fences, the odd weed, never a lawn
+					Ferralla.draw_verge_cell(c, p, h)
+					x += GRASS_STEP
+					continue
 				var lean := (h - 0.5) * 0.8
 				for bl in range(3):
 					var a := -PI * 0.5 + lean + (float(bl) - 1.0) * 0.45
@@ -1903,20 +2024,9 @@ func _draw_fallen_log(r: Rect2) -> void:
 # A stack of wrecked cars from above: the top car's roof, rusted and dented,
 # the ones under it showing past its edges at a skew, glass long gone.
 func _draw_wreck_stack(v: Vector2) -> void:
+	# four kinds of car, each stack turned and tinted its own way (world/ferralla.gd)
 	var b := ShapeBatch.new()
-	var h := int(absf(v.y)) % 5
-	var cols := [Color(0.55, 0.22, 0.18), Color(0.30, 0.38, 0.46), Color(0.48, 0.46, 0.30), Color(0.62, 0.62, 0.60), Color(0.24, 0.34, 0.26)]
-	b.rect(Rect2(v.x - 32.0 + 30.0, v.y - 66.0 + 30.0, 68.0, 134.0), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.26))
-	for k in range(3):
-		var off := Vector2(float((h + k) % 3 - 1) * 6.0, float(k - 1) * 5.0)
-		var c: Color = (cols[(h + k) % cols.size()] as Color).darkened(0.18 * float(2 - k))
-		b.rect(Rect2(v.x - 30.0 + off.x, v.y - 62.0 + off.y, 60.0, 124.0), c)
-	var top: Color = cols[(h + 2) % cols.size()]
-	b.rect(Rect2(v.x - 22.0, v.y - 26.0, 44.0, 52.0), top.lightened(0.08))                # the roof
-	b.rect(Rect2(v.x - 22.0, v.y - 46.0, 44.0, 18.0), Color(0.12, 0.12, 0.13))             # no windscreen
-	b.rect(Rect2(v.x - 22.0, v.y + 28.0, 44.0, 12.0), Color(0.12, 0.12, 0.13))
-	for k in range(4):
-		b.circle(v + Vector2(-14.0 + float(k % 2) * 28.0, -8.0 + float(k / 2) * 20.0), 4.0 + float((h + k) % 3), Color(0.44, 0.28, 0.16, 0.8))  # rust
+	Ferralla.draw_wreck_stack(b, v, vans.find(v))
 	b.flush(_wc)
 
 
@@ -2134,6 +2244,8 @@ func canopy_trees() -> Array[Dictionary]:
 		var t: Vector2 = trees[gi]
 		if t.y < vt or t.y > vb:
 			continue
+		if lvl == "scrap":
+			continue        # the scrapyard's grove is tyre stacks and drums: no crowns
 		var gk := TREE_PALM if freedom_kind == "beach" else TREE_FOREST
 		# the grove's broadleaves are holm-oak sized: drawn as TREE_FOREST's
 		# oak (i % 3 == 1) so they keep the 0.85 they always had
@@ -2273,6 +2385,41 @@ func is_lamppost(i: int) -> bool:
 	return not (lvl == "rain" and poles[i].x < walk_cx)
 
 
+# An umbrella from above: a filled canopy of eight panels, every other one in
+# shade, the ribs running out to their tips, the ferrule in the middle and
+# the rain running off the rim. It covers the person under it.
+const BROLLY_R := 24.0
+
+
+func _brolly_canopy(b: ShapeBatch, c: Vector2, col: Color, seed_f: float) -> void:
+	var rot := seed_f * 0.37
+	var tips := PackedVector2Array()
+	for k in range(8):
+		tips.append(c + Vector2.from_angle(rot + TAU * float(k) / 8.0) * BROLLY_R)
+	b.circle(c + LIGHT * 7.0, BROLLY_R, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+	b.polygon(tips, col)
+	for k in range(8):
+		var a := tips[k]
+		var z := tips[(k + 1) % 8]
+		# the panels facing the light are lit, the far ones in shade
+		var facing := (a + z - c * 2.0).normalized().dot(-LIGHT)
+		if facing < 0.0:
+			b.polygon(PackedVector2Array([c, a, z]), col.darkened(0.22 * -facing))
+		else:
+			b.polygon(PackedVector2Array([c, a, z]), col.lightened(0.18 * facing))
+	for k in range(8):
+		b.line(c, tips[k], col.darkened(0.38), 1.4)
+		b.circle(tips[k], 1.6, Color(0.20, 0.18, 0.18))
+	b.circle(c, 3.0, Color(0.18, 0.16, 0.16))
+	b.circle(c - LIGHT * 1.0, 1.4, Color(0.75, 0.75, 0.78))
+	# drops running off two of the tips
+	var t := AnimClock.msec() / 1000.0
+	for k in range(2):
+		var tip := tips[(k * 4 + int(seed_f)) % 8]
+		var fall := fmod(t * 1.6 + seed_f * 0.3 + float(k) * 0.5, 1.0)
+		b.circle(tip + (tip - c).normalized() * (2.0 + fall * 5.0), 1.5 * (1.0 - fall * 0.5), Color(0.80, 0.88, 0.96, 0.8 * (1.0 - fall)))
+
+
 # the dog beach's lifeguard tower, on the sand above the sea
 func dog_beach_tower() -> Vector2:
 	return Vector2(BEACH_SEA_R + 240.0, _freedom_rect().get_center().y)
@@ -2341,10 +2488,7 @@ func draw_overhead_piece(b: ShapeBatch, t: Dictionary, _faded := false) -> void:
 		Over.ICECREAM:
 			_icecream_brolly(b, p)
 		Over.BROLLY:
-			# a performer's wide domed umbrella over the head, on its stick
-			var pf: Vector2 = performers[i]
-			b.line(pf + Vector2(0, -8), pf + Vector2(0, -30), Color(0.15, 0.14, 0.16), 2.0)
-			b.draw_arc(pf + Vector2(0, -30), 26.0, PI, TAU, 20, BROLLY_COLS[i % BROLLY_COLS.size()], 7.0)
+			_brolly_canopy(b, performers[i] + Vector2(0, -8), BROLLY_COLS[i % BROLLY_COLS.size()], float(i))
 		Over.BEACH_PARASOL:
 			_beach_parasol_canopy(b, p, i)
 		Over.SHOP_AWNING:
@@ -3166,6 +3310,11 @@ func draw_overhead_onto(c: CanvasItem) -> void:
 		_draw_mercat_arch(c, LevelBuild.MERCAT_ARCH_Y, "MERCAT")
 		_draw_mercat_arch(c, LevelBuild.MERCAT_DOOR_Y, "PLAÇA")
 		return
+	if lvl == "scrap":
+		var cb := ShapeBatch.new(c)
+		Ferralla.draw_crane_overhead(cb, LevelBuild.FERRALLA_CRANE, LevelBuild.FERRALLA_BOOM_TO)
+		cb.flush()
+		return
 	if lvl != "oldtown":
 		return
 	var by: float = LevelBuild.GOTIC_BRIDGE_Y
@@ -3209,23 +3358,9 @@ func _draw_crane(vt: float, vb: float) -> void:
 	var tip: Vector2 = LevelBuild.FERRALLA_BOOM_TO
 	if maxf(cb.y, tip.y) < vt - 120.0 or minf(cb.y, tip.y) > vb + 120.0:
 		return
+	# the tracks, house and shadows here; the jib is overhead (draw_overhead_onto)
 	var b := ShapeBatch.new()
-	var sh := Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22)
-	b.line(cb + Vector2(20, 40), tip + Vector2(30, 60), sh, 18.0)
-	b.circle(tip + Vector2(30, 90), 26.0, sh)
-	b.rect(Rect2(cb.x - 40.0, cb.y - 50.0, 80.0, 100.0), Color(0.16, 0.16, 0.17))
-	b.rect(Rect2(cb.x - 30.0, cb.y - 30.0, 60.0, 60.0), Color(0.92, 0.70, 0.12))
-	b.rect(Rect2(cb.x - 26.0, cb.y - 26.0, 22.0, 22.0), Color(0.30, 0.38, 0.44))
-	# the boom itself, lattice, from the cab out over the lane
-	b.line(cb, tip, Color(0.90, 0.68, 0.10), 10.0)
-	var n := int(cb.distance_to(tip) / 24.0)
-	for k in range(n):
-		var p0: Vector2 = cb.lerp(tip, float(k) / float(n))
-		var p1: Vector2 = cb.lerp(tip, float(k + 1) / float(n))
-		b.line(p0 + Vector2(0, -5), p1 + Vector2(0, 5), Color(0.70, 0.52, 0.08), 2.0)
-	# the magnet, hanging
-	b.circle(tip, 20.0, Color(0.22, 0.22, 0.24))
-	b.circle(tip, 14.0, Color(0.36, 0.36, 0.40))
+	Ferralla.draw_crane_ground(b, cb, tip)
 	b.flush(_wc)
 
 
@@ -3323,17 +3458,14 @@ func _draw_digger(v: Vector2) -> void:
 # zebra, the trench with its plank and pipe, all drawn over the paving.
 func _draw_obres(vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
-	for cz: Rect2 in cement_zones:
+	# the footway's dirt: track marks, spray lines, bits lying about
+	Obres.draw_ground(self, b, vt, vb)
+	for zi in range(cement_zones.size()):
+		var cz: Rect2 = cement_zones[zi]
 		if cz.end.y < vt - 40.0 or cz.position.y > vb + 40.0:
 			continue
-		# the timber formwork, then the wet pour inside it, float marks on top
-		b.rect(cz.grow(7.0), Color(0.56, 0.42, 0.26))
-		b.rect(cz.grow(3.0), Color(0.44, 0.32, 0.20))
-		b.rect(cz, Color(0.60, 0.60, 0.58))
-		var fy := cz.position.y + 16.0
-		while fy < cz.end.y - 8.0:
-			b.line(Vector2(cz.position.x + 10.0, fy), Vector2(cz.end.x - 10.0, fy + 4.0), Color(0.68, 0.68, 0.66), 2.0)
-			fy += 22.0
+		# each pour at its own stage (world/obres.gd)
+		Obres.draw_pour(b, cz.get_center(), cz.size, zi % 2)
 		# tape round the cones at the corners, red and white
 		var corners: Array[Vector2] = []
 		for c: Vector2 in [cz.position, Vector2(cz.end.x, cz.position.y), cz.end, Vector2(cz.position.x, cz.end.y)]:
@@ -3704,12 +3836,93 @@ func _draw_diluvi(vt: float, vb: float) -> void:
 			var y0 := maxf(ar.position.y, vt - 40.0)
 			var y1 := minf(ar.end.y, vb + 40.0)
 			b.rect(Rect2(ar.position.x, y0, ar.size.x, y1 - y0), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+	# the striped boards fenced along each side of an open storm drain (its
+	# cones, end on to the way the street walks, are real nodes: spawn_cones)
+	var bd: Vector2 = LevelBuild.DILUVI_DRAIN_BOARD
+	for mh: Vector2 in manholes:
+		if mh.y < vt - 80.0 or mh.y > vb + 80.0:
+			continue
+		for sx: float in [-1.0, 1.0]:
+			_diluvi_drain_board(b, mh + Vector2(sx * bd.y, 0.0), bd.x)
+	var tr: Rect2 = LevelBuild.diluvi_terrace(self)
+	if tr.end.y > vt - 60.0 and tr.position.y < vb + 60.0:
+		_diluvi_stacked_terrace(b, tr, t)
 	# how wet the owner is, a drip meter over their head once it shows
 	if human_soak > 0.08:
 		var hp: Vector2 = human.global_position + Vector2(-16.0, -40.0)
 		b.rect(Rect2(hp.x, hp.y, 32.0, 5.0), Color(0.08, 0.08, 0.10, 0.7))
 		b.rect(Rect2(hp.x, hp.y, 32.0 * human_soak, 5.0), Color(0.45, 0.65, 0.95) if human_soak < 0.5 else Color(0.30, 0.45, 0.85))
 	b.flush(_wc)
+
+
+# a street-works board beside an open drain: a red and white striped plank,
+# running along the street, on two black feet, wet
+func _diluvi_drain_board(b: ShapeBatch, c: Vector2, hh: float) -> void:
+	b.rect(Rect2(c.x - 1.0, c.y - hh + 4.0, 8.0, hh * 2.0), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+	for fy: float in [-hh + 4.0, hh - 4.0]:
+		b.rect(Rect2(c.x - 7.0, c.y + fy - 3.0, 14.0, 6.0), Color(0.14, 0.14, 0.15))
+	b.rect(Rect2(c.x - 3.5, c.y - hh, 7.0, hh * 2.0), Color(0.94, 0.92, 0.88))
+	var sy := c.y - hh
+	while sy < c.y + hh - 2.0:
+		b.polygon(PackedVector2Array([Vector2(c.x - 3.5, sy + 5.0), Vector2(c.x + 3.5, sy),
+			Vector2(c.x + 3.5, minf(sy + 5.0, c.y + hh)), Vector2(c.x - 3.5, minf(sy + 10.0, c.y + hh))]),
+			Color(0.86, 0.18, 0.16))
+		sy += 10.0
+	b.line(Vector2(c.x - 2.5, c.y - hh), Vector2(c.x - 2.5, c.y + hh), Color(1, 1, 1, 0.30), 1.0)
+
+
+# The cafe's terrace in the rain: two stacks of bistro chairs, the folded
+# tables leaned behind them, all of it chained to the lamp standard with a
+# padlock on the chain. Water stands on the top seats.
+func _diluvi_stacked_terrace(b: ShapeBatch, r: Rect2, t: float) -> void:
+	b.rect(Rect2(r.position + LIGHT * 7.0, r.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.26))
+	# the folded tables, on edge against the shopfront: round tops seen edge on
+	for k in range(2):
+		var tx := r.end.x - 7.0 + float(k) * 4.0
+		b.rect(Rect2(tx, r.position.y + 2.0 + float(k) * 3.0, 4.0, r.size.y - 6.0), Color(0.48, 0.50, 0.52))
+		b.rect(Rect2(tx, r.position.y + 2.0 + float(k) * 3.0, 1.5, r.size.y - 6.0), Color(0.70, 0.72, 0.74))
+	# two stacks of bistro chairs, rattan seats on bent cane frames, each one
+	# stepped off the one below so every back shows; splayed legs at the foot
+	var cane := Color(0.62, 0.44, 0.26)
+	var weave := Color(0.80, 0.66, 0.44)
+	for s in range(2):
+		var base := Vector2(r.position.x + 1.0, r.position.y + 6.0 + float(s) * (r.size.y * 0.5))
+		for lg: Vector2 in [Vector2(-1, -1), Vector2(17, -1), Vector2(-1, 17), Vector2(17, 17)]:
+			b.circle(base + lg, 1.8, cane.darkened(0.35))
+		for n in range(4):
+			var sr := Rect2(base + Vector2(float(n) * 2.5, float(n) * -2.5), Vector2(16.0, 16.0))
+			b.rect(Rect2(sr.position + Vector2(1.0, 1.5), sr.size), cane.darkened(0.55))
+			b.rect(sr, cane.darkened(0.08 * float(3 - n)))
+			b.rect(sr.grow(-2.5), weave.darkened(0.10 * float(3 - n)))
+			# the back: a bent cane rail on the shopfront side
+			b.rect(Rect2(sr.end.x - 1.0, sr.position.y - 1.0, 4.0, sr.size.y + 2.0), cane.darkened(0.25))
+			b.rect(Rect2(sr.end.x - 1.0, sr.position.y - 1.0, 1.5, sr.size.y + 2.0), cane.lightened(0.25))
+		var top := Rect2(base + Vector2(7.5, -7.5), Vector2(16.0, 16.0)).grow(-2.5)
+		var wy := top.position.y + 2.0
+		while wy < top.end.y:
+			b.line(Vector2(top.position.x, wy), Vector2(top.end.x, wy), cane.darkened(0.15), 1.0)
+			wy += 3.0
+		# rain standing on the top seat, ringed by the drops landing in it
+		var pud := top.get_center() + Vector2(-1.0, 1.0)
+		b.circle(pud, 3.6, Color(0.50, 0.60, 0.72, 0.75))
+		var ring := fmod(t * 1.3 + float(s) * 0.5, 1.0)
+		b.circle(pud, 1.0 + ring * 3.0, Color(0.85, 0.92, 1.0, 0.5 * (1.0 - ring)))
+	# the chain: round both stacks and up to the lamp standard, links in a row
+	var lamp := Vector2(r.end.x - 10.0, LevelBuild.DILUVI_TERRACE_Y - 45.0)   # the pole, 26 in from the edge
+	var path: Array[Vector2] = [lamp, Vector2(r.position.x + 1.0, r.position.y + 1.0),
+		Vector2(r.position.x + 1.0, r.end.y - 1.0), Vector2(r.end.x - 9.0, r.end.y - 1.0),
+		Vector2(r.end.x - 9.0, r.position.y + 6.0), lamp]
+	var steel := Color(0.30, 0.31, 0.33)
+	for k in range(path.size() - 1):
+		var a: Vector2 = path[k]
+		var z: Vector2 = path[k + 1]
+		var n := int(a.distance_to(z) / 4.0)
+		for li in range(n):
+			b.circle(a.lerp(z, (float(li) + 0.5) / float(n)), 1.6 if li % 2 == 0 else 1.2, steel if li % 2 == 0 else steel.lightened(0.25))
+	# the padlock where the ends meet
+	var pl := Vector2(r.position.x + 1.0, r.end.y - 4.0)
+	b.rect(Rect2(pl.x - 4.0, pl.y - 2.0, 8.0, 7.0), Color(0.74, 0.60, 0.24))
+	b.rect(Rect2(pl.x - 4.0, pl.y - 2.0, 8.0, 2.0), Color(0.90, 0.78, 0.40))
 
 
 # an El Diluvi awning: striped canvas over the pavement, dripping at the edge
@@ -3737,12 +3950,30 @@ func _diluvi_arcade_roof(b: ShapeBatch, ar: Rect2) -> void:
 	var y1 := minf(ar.end.y, vb + 40.0)
 	if y1 <= y0:
 		return
-	b.rect(Rect2(ar.position.x, y0, ar.size.x, y1 - y0), Color(0.46, 0.40, 0.36))
-	b.rect(Rect2(ar.end.x - 10.0, y0, 10.0, y1 - y0), Color(0.36, 0.31, 0.28))
+	# a lean-to of wet pantiles falling from the building to the pillars,
+	# the courses running down the slope, a stone cornice over each pillar bay
+	var tile := Color(0.50, 0.30, 0.22)
+	b.rect(Rect2(ar.position.x, y0, ar.size.x, y1 - y0), tile)
+	b.rect(Rect2(ar.position.x, y0, 8.0, y1 - y0), tile.lightened(0.14))
+	var ty := floorf(y0 / 9.0) * 9.0
+	while ty < y1:
+		if ty >= y0:
+			b.line(Vector2(ar.position.x + 8.0, ty), Vector2(ar.end.x - 10.0, ty), tile.darkened(0.30), 2.0)
+			b.line(Vector2(ar.position.x + 8.0, ty + 3.0), Vector2(ar.end.x - 10.0, ty + 3.0), tile.lightened(0.10), 1.0)
+		ty += 9.0
 	var vy := floorf(y0 / 120.0) * 120.0 + 20.0
 	while vy < y1:
-		b.line(Vector2(ar.position.x, vy), Vector2(ar.end.x, vy), Color(0.54, 0.48, 0.43), 3.0)
+		if vy >= y0:
+			b.rect(Rect2(ar.position.x, vy - 2.5, ar.size.x - 10.0, 5.0), Color(0.62, 0.56, 0.50))
 		vy += 120.0
+	# the gutter along the eave over the pillars, running full
+	b.rect(Rect2(ar.end.x - 10.0, y0, 10.0, y1 - y0), Color(0.50, 0.53, 0.56))
+	b.rect(Rect2(ar.end.x - 8.0, y0, 6.0, y1 - y0), Color(0.40, 0.52, 0.64))
+	var t := AnimClock.msec() / 1000.0
+	var fy := y0 + fmod(t * 70.0, 30.0)
+	while fy < y1 - 10.0:
+		b.line(Vector2(ar.end.x - 5.0, fy), Vector2(ar.end.x - 5.0, fy + 10.0), Color(0.80, 0.88, 0.95, 0.7), 1.5)
+		fy += 30.0
 
 
 # L'Estacio's moving walkway, a steel travelator: grooved treads moving the
@@ -5404,6 +5635,8 @@ func draw_freedom_onto(c: Object) -> void:
 		"clearing": surround = Color(0.20, 0.30, 0.19)
 		"lot": surround = Color(0.32, 0.31, 0.29)
 		"placa": surround = Color(0.36, 0.32, 0.30)
+	if lvl == "rain":
+		surround = Color(0.38, 0.35, 0.37)
 	if lvl == "montjuic":
 		surround = Montjuic.RAMPART.darkened(0.2)
 	# El Gòtic's roofscape runs on under the gate's last few feet, from the
@@ -5434,8 +5667,11 @@ func draw_freedom_onto(c: Object) -> void:
 	# has to be drawn on every walk - but a broadleaf on a beach is nonsense,
 	# so it wears whatever that place grows.
 	# Its crowns are the canopy layer's (world/canopylayer.gd), above her.
-	for t in trees:
-		if freedom_kind == "beach":
+	for ti in range(trees.size()):
+		var t: Vector2 = trees[ti]
+		if lvl == "scrap":
+			Ferralla.draw_yard_pile(c, t, ti)
+		elif freedom_kind == "beach":
 			_draw_tree_ground(c, t, 0, TREE_PALM)
 		else:
 			_draw_tree_ground(c, t, 1, TREE_FOREST)
@@ -5474,7 +5710,32 @@ func _draw_freedom_beyond(c: Object) -> void:
 	var r := _freedom_rect()
 	var top := r.position.y
 	var b := ShapeBatch.new()
-	match freedom_kind:
+	match "porxo" if lvl == "rain" else freedom_kind:
+		"porxo":
+			# El Porxo's porch roofs past its walls, wet pantile, and the
+			# block's terrats beyond
+			b.rect(Rect2(-400.0, top - 400.0, 2100.0, 390.0), Color(0.38, 0.35, 0.37))
+			var bays: Array[Rect2] = [Rect2(-400.0, top - 110.0, 2100.0, 100.0),
+				Rect2(-400.0, top - 10.0, 470.0, r.size.y + 40.0), Rect2(r.end.x + 10.0, top - 10.0, 520.0, r.size.y + 40.0)]
+			for k in range(bays.size()):
+				var bay: Rect2 = bays[k]
+				var tile := Color(0.50, 0.29, 0.21)
+				b.rect(bay, tile)
+				if k == 0:
+					var ty := bay.position.y + 4.0
+					while ty < bay.end.y:
+						b.line(Vector2(bay.position.x, ty), Vector2(bay.end.x, ty), tile.darkened(0.28), 2.0)
+						ty += 9.0
+				else:
+					var tx := bay.position.x + 4.0
+					while tx < bay.end.x:
+						b.line(Vector2(tx, bay.position.y), Vector2(tx, bay.end.y), tile.darkened(0.28), 2.0)
+						tx += 9.0
+			for k in range(9):
+				var tp := Vector2(-300.0 + float(k) * 240.0, top - 260.0 + fmod(float(k) * 53.0, 80.0))
+				b.circle(tp + LIGHT * 10.0, 16.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.3))
+				b.circle(tp, 15.0, Color(0.80, 0.80, 0.78))
+				b.circle(tp, 6.0, Color(0.56, 0.58, 0.60))
 		"yard":
 			# a clipped hedge along the fence, then a row of trees in grass
 			b.rect(Rect2(-400.0, top - 34.0, 2100.0, 30.0), Color(0.20, 0.34, 0.20))
@@ -5554,7 +5815,7 @@ func _draw_gate() -> void:
 	var style := "iron"
 	if lvl in ["trail", "guell", "park", "barri", "beach"] and not tutorial_mode:
 		style = "timber"
-	elif freedom_kind == "placa":
+	elif freedom_kind == "placa" or lvl == "rain":
 		style = "stone"
 	var gy := GATE_Y - 16.0
 	# the posts stand at the path's real edges here: gate_l and gate_r are the
@@ -5690,6 +5951,9 @@ func _freedom_sign(c: Object, r: Rect2, txt: String, gloss := "") -> void:
 func _draw_yard(c: Object, gravel: bool) -> void:
 	# the municipal dog park: grass (or a gravel compound on the industrial
 	# walks), a worn patch in the middle where every dog plays, and a fence
+	if lvl == "rain":
+		_draw_porxo(c)
+		return
 	var r := _freedom_rect()
 	c.draw_rect(r, Color(0.40, 0.38, 0.34) if gravel else Color(0.34, 0.5, 0.32))
 	c.draw_circle(r.get_center(), 150.0,
@@ -5707,9 +5971,102 @@ func _draw_yard(c: Object, gravel: bool) -> void:
 			var gyp := r.position.y + 40.0 + fmod(tf * 137.0, r.size.y - 80.0)
 			c.draw_line(Vector2(gxp, gyp), Vector2(gxp - 3.0, gyp - 8.0), Color(0.28, 0.44, 0.27), 2.0)
 			c.draw_line(Vector2(gxp, gyp), Vector2(gxp + 3.0, gyp - 7.0), Color(0.28, 0.44, 0.27), 2.0)
+	if lvl == "scrap":
+		Ferralla.draw_yard_wreck(c, r)
 	_draw_freedom_fence(c, r, gravel)
 	_draw_freedom_benches(c, r, Color(0.5, 0.38, 0.26))
 	_freedom_sign(c, r, gate_text, "the off-leash yard" if gravel else "the off-leash dog park")
+
+
+# EL PORXO, El Diluvi's off-leash yard: a courtyard with a covered porch
+# round three sides. The porch is dry terracotta tile in the shade of its
+# roof, stone columns along its open edge; the court in the middle is wet
+# sauló, puddled, the grove's trees growing out of it. Stone walls, not a
+# chain-link fence; the porch roofs' pantiles go on past the walls.
+const PORXO_W := 96.0              # the porch's depth, from the wall to the columns
+const PORXO_BAY := 111.0           # column spacing
+
+
+func _draw_porxo(c: Object) -> void:
+	var r := _freedom_rect()
+	# the freedom layer hands over a ShapeBatch already
+	var b: ShapeBatch = c if c is ShapeBatch else ShapeBatch.new(c)
+	# the court: wet sauló, darker where the rain pools
+	var court := Color(0.62, 0.53, 0.40)
+	b.rect(r, court)
+	for gi in range(120):
+		var gp := Vector2(r.position.x + fmod(float(gi) * 197.0, r.size.x), r.position.y + fmod(float(gi) * 331.0, r.size.y))
+		b.circle(gp, 1.5, court.darkened(0.20))
+	b.circle(r.get_center() + Vector2(30.0, 40.0), 160.0, Color(0.40, 0.36, 0.30, 0.35))
+	for pd: Array in [[Vector2(0.30, 0.55), 46.0, 24.0], [Vector2(0.58, 0.60), 60.0, 30.0], [Vector2(0.48, 0.80), 38.0, 20.0], [Vector2(0.78, 0.70), 50.0, 26.0]]:
+		var pc: Vector2 = r.position + r.size * (pd[0] as Vector2)
+		b.polygon(ellipse_pts(pc, float(pd[1]) + 5.0, float(pd[2]) + 4.0, 14), court.darkened(0.22))
+		b.polygon(ellipse_pts(pc, float(pd[1]), float(pd[2]), 14), Color(0.42, 0.50, 0.58, 0.85))
+		b.polygon(ellipse_pts(pc + Vector2(-float(pd[1]) * 0.3, -float(pd[2]) * 0.3), float(pd[1]) * 0.35, float(pd[2]) * 0.25, 10), Color(0.80, 0.86, 0.94, 0.22))
+	# the porch floors: west, north and east, terracotta tile in shade
+	var floor_col := Color(0.62, 0.40, 0.30)
+	var porches: Array[Rect2] = [
+		Rect2(r.position.x, r.position.y, PORXO_W, r.size.y),
+		Rect2(r.position.x, r.position.y, r.size.x, PORXO_W),
+		Rect2(r.end.x - PORXO_W, r.position.y, PORXO_W, r.size.y),
+	]
+	for pr: Rect2 in porches:
+		b.rect(pr, floor_col)
+	for pr: Rect2 in porches:
+		var tx := pr.position.x + 24.0
+		while tx < pr.end.x:
+			b.line(Vector2(tx, pr.position.y), Vector2(tx, pr.end.y), floor_col.darkened(0.16), 1.0)
+			tx += 24.0
+		var ty := pr.position.y + 24.0
+		while ty < pr.end.y:
+			b.line(Vector2(pr.position.x, ty), Vector2(pr.end.x, ty), floor_col.darkened(0.16), 1.0)
+			ty += 24.0
+	# the roof's shade over the porch, deepest against the wall
+	for pr: Rect2 in porches:
+		b.rect(pr, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+	b.rect(Rect2(r.position.x, r.position.y, r.size.x, 26.0), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+	b.rect(Rect2(r.position.x, r.position.y, 26.0, r.size.y), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+	b.rect(Rect2(r.end.x - 26.0, r.position.y, 26.0, r.size.y), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+	# the drip line: a dark wet edge where the eave sheds onto the court
+	var ix0 := r.position.x + PORXO_W
+	var ix1 := r.end.x - PORXO_W
+	var iy0 := r.position.y + PORXO_W
+	b.rect(Rect2(ix0, iy0, ix1 - ix0, 6.0), court.darkened(0.30))
+	b.rect(Rect2(ix0, iy0, 6.0, r.end.y - iy0), court.darkened(0.30))
+	b.rect(Rect2(ix1 - 6.0, iy0, 6.0, r.end.y - iy0), court.darkened(0.30))
+	# the columns along the porch's open edge, each on its square base
+	var cols: Array[Vector2] = []
+	var cx := ix0
+	while cx <= ix1 + 1.0:
+		cols.append(Vector2(cx, iy0))
+		cx += (ix1 - ix0) / roundf((ix1 - ix0) / PORXO_BAY)
+	var cy := iy0 + PORXO_BAY
+	while cy < r.end.y - 30.0:
+		cols.append(Vector2(ix0, cy))
+		cols.append(Vector2(ix1, cy))
+		cy += PORXO_BAY
+	for cp: Vector2 in cols:
+		b.circle(cp + LIGHT * 9.0, 12.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.30))
+		b.rect(Rect2(cp - Vector2(13, 13), Vector2(26, 26)), Color(0.64, 0.60, 0.54))
+		b.circle(cp, 10.0, Color(0.76, 0.72, 0.66))
+		b.circle(cp - LIGHT * 2.5, 6.5, Color(0.84, 0.81, 0.76))
+	# the walls round the yard, open at the gate
+	var wall := Color(0.60, 0.54, 0.46)
+	b.rect(Rect2(r.position.x - 10.0, r.position.y - 10.0, r.size.x + 20.0, 10.0), wall)
+	b.rect(Rect2(r.position.x - 10.0, r.position.y, 10.0, r.size.y + 10.0), wall)
+	b.rect(Rect2(r.end.x, r.position.y, 10.0, r.size.y + 10.0), wall)
+	b.rect(Rect2(r.position.x - 10.0, r.end.y, gate_l - 20.0 - r.position.x + 10.0, 10.0), wall)
+	b.rect(Rect2(gate_r + 20.0, r.end.y, r.end.x + 10.0 - gate_r - 20.0, 10.0), wall)
+	b.rect(Rect2(r.position.x - 10.0, r.position.y - 10.0, r.size.x + 20.0, 3.0), wall.lightened(0.18))
+	# a downpipe in each corner of the court, spouting onto a splash stone
+	for dp: Vector2 in [Vector2(ix0 + 10.0, iy0 + 10.0), Vector2(ix1 - 10.0, iy0 + 10.0)]:
+		b.rect(Rect2(dp - Vector2(10, 7), Vector2(20, 14)), Color(0.66, 0.62, 0.56))
+		b.circle(dp, 4.0, Color(0.48, 0.52, 0.56))
+		b.circle(dp + Vector2(0, 8), 7.0, Color(0.50, 0.60, 0.70, 0.6))
+	if b != c:
+		b.flush()
+	_draw_freedom_benches(c, r, Color(0.46, 0.34, 0.24))
+	_freedom_sign(c, r, gate_text, "the covered yard, off leash")
 
 
 func _draw_placa(c: Object) -> void:
@@ -6034,7 +6391,7 @@ func build_signs() -> void:
 		var nm := WorldSign.build(name, Vector2(mid, START_Y - 190.0), 44.0, mat, 4.0, room - 120.0)
 		signs.append(nm)
 		if arrows:
-			var hw: float = WorldSign.Letters.width(name.to_upper(), float(nm.h)) * 0.5
+			var hw: float = WorldSign.Letters.width(name.to_upper(), float(nm.h), WorldSign.gap_for(mat)) * 0.5
 			signs.append(WorldSign.build("<", Vector2(mid - hw - 44.0, START_Y - 190.0), 44.0, mat, 6.0, 80.0))
 			signs.append(WorldSign.build(">", Vector2(mid + hw + 44.0, START_Y - 190.0), 44.0, mat, 7.0, 80.0))
 	var he := walk_edges(HOME_Y + 84.0)
@@ -6043,9 +6400,11 @@ func build_signs() -> void:
 	var gm := (gate_l + gate_r) * 0.5
 	var gw := maxf(160.0, gate_r - gate_l - 20.0)
 	# traffic cones are fat pieces: small words in them are a pile of cones
-	var gk := 1.4 if mat == "cones" else 1.0
+	var gk := 1.8 if mat == "cones" else 1.0
 	signs.append(WorldSign.build(gate_text, Vector2(gm, GATE_Y - 72.0 * gk), 36.0 * gk, mat, 11.0, gw))
-	signs.append(WorldSign.build("OFF LEASH", Vector2(gm, GATE_Y - 124.0 * gk - 4.0), 24.0 * gk, mat, 12.0, gw))
+	# and the small line no smaller than the cones can still spell
+	var ok := 30.0 * gk if mat == "cones" else 24.0
+	signs.append(WorldSign.build("OFF LEASH", Vector2(gm, GATE_Y - 124.0 * gk - 4.0), ok, mat, 12.0, gw))
 
 
 func _tick_signs(delta: float) -> void:
@@ -6501,6 +6860,8 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 					c.draw_circle(p + Vector2(7.0, 0.0), 3.4, Color(0.92, 0.89, 0.80))
 				elif prog > 0.05:
 					c.draw_arc(p, 22.0, -PI / 2.0, -PI / 2.0 + TAU * prog / 1.1, 18, Color(1, 0.9, 0.5), 3.0)
+			"log" when lvl == "scrap":
+				Ferralla.draw_pipe(c, p)
 			"log":
 				# a fallen log: bark, end grain, and a couple of knots
 				var bark := Color(0.40, 0.30, 0.20)
@@ -10475,7 +10836,8 @@ func _caught(what: String) -> void:
 	bones = maxi(0, bones - 2)
 	shake_t = maxf(shake_t, 0.4)
 	Sfx.play("crack", 1.4)
-	feed.say("THE %s SAW YOU!  -2" % what.to_upper(), EventFeed.Tone.BAD)
+	# `what` already names it ("the laser"), so no second THE
+	feed.say("%s SAW YOU!  -2" % what.to_upper(), EventFeed.Tone.BAD)
 	# the racket wakes anyone dozing nearby
 	for g in get_tree().get_nodes_in_group("guards"):
 		g.hear_noise(dog.global_position, 200.0)
@@ -11034,7 +11396,7 @@ func _draw_world() -> void:
 		elif lvl == "park" or lvl == "barri":
 			walkway = Color(0.74, 0.67, 0.53)   # sandy gravel, as the city's parks are
 		elif lvl == "scrap":
-			grass = Color(0.36, 0.37, 0.25)     # dusty weeds up to the fence
+			grass = Ferralla.GRAVEL             # oily gravel up to the fence
 		elif lvl == "montjuic":
 			grass = Montjuic.HILL
 			walkway = Montjuic.SAULO
@@ -11050,6 +11412,8 @@ func _draw_world() -> void:
 			_wc.draw_rect(Rect2(-400, ctop, 2100, bottom - ctop), grass)
 		# leaf litter on the forest floor, grass tufts everywhere else
 		var tuft_cols: Array = TRAIL_LITTER if lvl == "trail" else [COL_GRASS_DARK]
+		if lvl == "scrap":
+			tuft_cols = [Color(0.16, 0.15, 0.14, 0.6)]    # oil dripped into the gravel
 		for ti in range(tufts.size()):
 			var t: Vector2 = tufts[ti]
 			if t.y > vt and t.y < vb and _on_grass_strip(t):

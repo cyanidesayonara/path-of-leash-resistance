@@ -154,6 +154,11 @@ with pickpockets and shenanigans happening around."
   the lawn.
 - Add: real puddles on the paving (splash, reflections), running gutters,
   shop awnings and an arcade as shelter, pedestrians with umbrellas.
+- Audit fixes (2026-10-17, #152): the storm drains are fenced with works
+  boards and two cones (four in a ring read as a cafe table); the terrace is
+  stacked and chained to a lamp standard by the east kerb; wet pantile roofs,
+  terrats with water tanks and running gutters either side; umbrellas are
+  filled canopies with ribs; EL PORXO is a porch yard round a wet court.
 
 ### El Mercat (market) - the market hall
 - Is: inside a covered market: stall rows as aisles, iron columns, the fish
