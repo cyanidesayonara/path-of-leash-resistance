@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-10-18 - La Castanyada audit fixes
+
+- The street between the festival points is never bare paving: three more stalls in the gaps (chestnuts near the start, sweets before the plaça, sweet potatoes after it), every stall lit with a warm pool off its counter and a string of bulbs along its front, and the fronts lamp-lit all the way along, with doorways and shop windows glowing out across the pavement and a wall lantern now and then. The lights are on the overhead layer, with their colour divided by the night's tint so they come out warm instead of grey under it.
+- The roaster is the plaça's landmark: a castanyera's cart half as big again, on two big wheels with its shafts out the front, the brazier drum glowing under its chestnuts, a stovepipe chimney pouring smoke, sacks and paper cones on the counter, a lamp at each corner, and its fire lighting the plaça. Six people queue for it off its south-west corner, facing the cart. It stands a little east of the middle, and the bench moved further off, so walkers keep their lane past it.
+- The off-leash plaça is the festival's own yard, not El Gòtic's square again: a timber dance floor laid on the paving, three lantern strings overhead from wall to wall, lit windows all round, chestnut shells, paper cones and confetti everywhere, and the planters are castanyeres' braziers with sacks of chestnuts by them. Its sign reads "the festival square, off leash".
+- No crate on the chestnut PLAÇA letters: the walk's background litter could step past the gate into the off-leash space, and on La Castanyada it no longer does.
+
 ## 2026-10-18 - El Mosaic audit fixes
 
 - The serpentine bench reads as a bench, not bunting: the seat is tiled edge to edge in two courses of broken tile over white, the mortar showing between, with a rolled white backrest along its outside and its shadow falling off it. The plaza has people in it: a pair or one in each of the bench's bays, photographing the view out over the city, on top of the crowd and the fan seller.

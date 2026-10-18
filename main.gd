@@ -3297,32 +3297,61 @@ func _draw_castanyada(vt: float, vb: float) -> void:
 				Vector2(st.position.x + 10.0, st.end.y - 10.0), st.end - Vector2(10, 10)]:
 			b.rect(Rect2(sp - Vector2(9, 9), Vector2(18, 18)), Color(0.10, 0.10, 0.12))
 			b.circle(sp, 5.0, Color(0.30, 0.30, 0.34))
-		# the roaster: a big castanyera's stand, the drum glowing, smoke going up
-		var rr := Rect2(pc - LevelBuild.CAST_ROASTER * 0.5, LevelBuild.CAST_ROASTER)
+		# the roaster: the castanyera's cart, the walk's landmark - a timber
+		# cart on two big wheels, the brazier drum glowing under its lid of
+		# chestnuts, a stovepipe chimney at the back with smoke pouring off
+		# it, sacks and paper cones on the counter, a lamp at each corner
+		var rc: Vector2 = LevelBuild.CAST_ROASTER_AT
+		var rr := Rect2(rc - LevelBuild.CAST_ROASTER * 0.5, LevelBuild.CAST_ROASTER)
 		# its light on the setts; the festival is always at night
 		for ring in range(8):
 			var f := float(ring) / 7.0
-			b.circle(pc, lerpf(190.0, 36.0, f), Color(1.0, 0.62, 0.26, 0.03 + f * f * 0.12))
-		b.rect(Rect2(rr.position + LIGHT * 10.0, rr.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
-		b.rect(rr, Color(0.40, 0.26, 0.16))
-		b.rect(Rect2(rr.position, Vector2(rr.size.x, 8.0)), Color(0.72, 0.20, 0.16))
-		var drum := pc + Vector2(-22.0, 4.0)
-		b.circle(drum, 26.0, Color(0.16, 0.14, 0.14))
+			b.circle(rc, lerpf(240.0, 50.0, f), Color(1.0, 0.62, 0.26, 0.03 + f * f * 0.12))
+		b.rect(Rect2(rr.position + LIGHT * 12.0, rr.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+		# the wheels, either end, and the shafts out the front
+		for wx: float in [rr.position.x - 4.0, rr.end.x - 8.0]:
+			b.rect(Rect2(wx, rc.y - 30.0, 12.0, 60.0), Color(0.16, 0.12, 0.10))
+			b.rect(Rect2(wx + 3.0, rc.y - 26.0, 6.0, 52.0), Color(0.36, 0.26, 0.18))
+		for sx: float in [rc.x - 30.0, rc.x + 30.0]:
+			b.line(Vector2(sx, rr.end.y), Vector2(sx, rr.end.y + 30.0), Color(0.36, 0.24, 0.14), 5.0)
+		b.rect(rr, Color(0.42, 0.27, 0.16))
+		var py := rr.position.y + 12.0
+		while py < rr.end.y:
+			b.line(Vector2(rr.position.x, py), Vector2(rr.end.x, py), Color(0.34, 0.21, 0.12), 2.0)
+			py += 14.0
+		b.rect(Rect2(rr.position, Vector2(rr.size.x, 10.0)), Color(0.74, 0.20, 0.16))
+		b.rect(Rect2(rr.position.x, rr.position.y + 10.0, rr.size.x, 3.0), Color(0.96, 0.82, 0.40))
+		var drum := rc + Vector2(-26.0, 6.0)
+		b.circle(drum, 36.0, Color(0.14, 0.12, 0.12))
 		var glow := 0.85 + 0.15 * sin(t * 9.0)
-		b.circle(drum, 20.0, Color(0.96, 0.44, 0.12, glow))
-		b.circle(drum, 13.0, Color(1.0, 0.78, 0.32, glow))
-		for k in range(9):
-			b.circle(drum + Vector2.from_angle(float(k) * 0.7) * 11.0, 3.4, Color(0.36, 0.18, 0.08))
+		b.circle(drum, 29.0, Color(0.96, 0.44, 0.12, glow))
+		b.circle(drum, 19.0, Color(1.0, 0.78, 0.32, glow))
+		for k in range(14):
+			b.circle(drum + Vector2.from_angle(float(k) * 0.9) * (8.0 + float(k % 3) * 6.0), 3.6, Color(0.36, 0.18, 0.08))
+		# the chimney, at the back corner: a stovepipe with its cap
+		var chim := Vector2(rr.end.x - 26.0, rr.position.y + 22.0)
+		b.circle(chim + LIGHT * 14.0, 11.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.3))
+		b.circle(chim, 11.0, Color(0.20, 0.20, 0.22))
+		b.circle(chim, 7.0, Color(0.08, 0.08, 0.09))
+		b.circle(chim, 4.0, Color(1.0, 0.56, 0.20, 0.6 * glow))
 		# sacks and cones on the counter
-		b.circle(pc + Vector2(26.0, -10.0), 12.0, Color(0.66, 0.54, 0.36))
-		for k in range(3):
-			var cp := pc + Vector2(22.0 + float(k) * 11.0, 16.0)
+		b.circle(rc + Vector2(30.0, 18.0), 13.0, Color(0.66, 0.54, 0.36))
+		b.circle(rc + Vector2(30.0, 18.0), 6.0, Color(0.38, 0.22, 0.12))
+		for k in range(4):
+			var cp := rc + Vector2(50.0 + float(k % 2) * 14.0, 4.0 + float(k / 2) * 20.0)
 			b.polygon(PackedVector2Array([cp + Vector2(-5, -7), cp + Vector2(5, -7), cp + Vector2(0, 8)]), Color(0.92, 0.88, 0.78))
-		# smoke drifting off the drum
-		for k in range(5):
-			var ph := fmod(t * 0.35 + float(k) * 0.2, 1.0)
-			b.circle(drum + Vector2(sin(t + float(k)) * 8.0 + ph * 30.0, -ph * 120.0), 10.0 + ph * 22.0,
-				Color(0.90, 0.88, 0.86, 0.42 * (1.0 - ph)))
+		# a lamp at each front corner
+		for lx: float in [rr.position.x + 8.0, rr.end.x - 8.0]:
+			b.circle(Vector2(lx, rr.end.y - 6.0), 14.0, Color(1.0, 0.82, 0.46, 0.25))
+			b.circle(Vector2(lx, rr.end.y - 6.0), 5.0, Color(1.0, 0.92, 0.66))
+		# smoke pouring off the chimney, and a little off the drum
+		for k in range(7):
+			var ph := fmod(t * 0.3 + float(k) / 7.0, 1.0)
+			b.circle(chim + Vector2(sin(t + float(k)) * 8.0 + ph * 40.0, -ph * 170.0), 9.0 + ph * 30.0,
+				Color(0.86, 0.84, 0.82, 0.46 * (1.0 - ph)))
+		for k in range(3):
+			var ph := fmod(t * 0.4 + float(k) / 3.0, 1.0)
+			b.circle(drum + Vector2(ph * 20.0, -ph * 70.0), 8.0 + ph * 14.0, Color(0.90, 0.88, 0.86, 0.28 * (1.0 - ph)))
 		# confetti thrown from the stage, thickest in front of it
 		for k in range(90):
 			var ang := float(k) * 2.39996
@@ -3356,13 +3385,61 @@ func _draw_castanyada(vt: float, vb: float) -> void:
 
 # La Castanyada's lantern strings, drawn over everyone: a wire from balcony to
 # balcony, sagging, with paper lanterns on it, lit
+# a pool of warm light on the overhead layer, fading out from the middle in
+# thin rings; its colour divided by the night's tint, so it comes out warm
+func _cast_glow(b: ShapeBatch, at: Vector2, r: float, peak: float) -> void:
+	for ring in range(7):
+		var f := float(ring) / 6.0
+		b.circle(at, lerpf(r, r * 0.2, f), Color(2.0, 1.36, 0.52, 0.008 + f * f * peak))
+
+
 func _draw_castanyada_lanterns(c: CanvasItem) -> void:
 	var b := ShapeBatch.new(c)
 	var t := AnimClock.msec() / 1000.0
 	var cols := [Color(0.96, 0.46, 0.20), Color(0.98, 0.80, 0.30), Color(0.90, 0.28, 0.30), Color(0.60, 0.80, 0.40)]
-	for i in range(LevelBuild.CAST_LANTERN_YS.size()):
-		var ly: float = LevelBuild.CAST_LANTERN_YS[i]
-		var e := walk_edges(ly)
+	# The festival's lights, here rather than on the ground so the night's
+	# blue grade does not drown them (their colours are divided by the
+	# night's tint, so they come out warm under it). Every stall lit: a warm pool spilling
+	# off its counter, and the bulbs strung along its front
+	for si in range(stalls.size()):
+		var sp: Vector2 = stalls[si]
+		var into := 1.0 if sp.x < walk_cx else -1.0
+		var pool := sp + Vector2(into * 50.0, 0.0)
+		_cast_glow(b, pool, 130.0, 0.11)
+		for k in range(5):
+			var bp := sp + Vector2(into * 50.0, -44.0 + float(k) * 22.0)
+			b.circle(bp, 6.0, Color(2.00, 1.56, 0.72, 0.22))
+			b.circle(bp, 2.4, Color(2.00, 1.75, 1.05, 0.9))
+	# the fronts along the street, lamp-lit: a wall lantern every so often,
+	# alternating sides, and the light from open doorways and shop windows
+	var fy := floorf((START_Y + 100.0) / 170.0) * 170.0
+	while fy > GATE_Y + 60.0:
+		var fe := walk_edges(fy)
+		var k := int(absf(fy) / 170.0)
+		var west := k % 2 == 0
+		var fx: float = fe.x if west else fe.y
+		var into := 1.0 if west else -1.0
+		if k % 3 != 2:
+			# a doorway's or a window's glow out across the pavement
+			_cast_glow(b, Vector2(fx, fy + 30.0), 90.0, 0.09)
+			b.rect(Rect2(fx - (10.0 if west else 0.0), fy + 12.0, 10.0, 36.0), Color(2.00, 1.45, 0.59, 0.55))
+		else:
+			# a wall lantern, a fanal on its bracket
+			_cast_glow(b, Vector2(fx + into * 10.0, fy), 110.0, 0.11)
+			b.line(Vector2(fx, fy), Vector2(fx + into * 10.0, fy), Color(0.12, 0.10, 0.10), 2.0)
+			b.circle(Vector2(fx + into * 10.0, fy), 5.0, Color(2.00, 1.71, 0.92))
+		fy -= 170.0
+	# the roaster's fire, the brightest light in the plaça
+	_cast_glow(b, LevelBuild.CAST_ROASTER_AT + Vector2(-26.0, 6.0), 230.0, 0.07)
+	var fr := _freedom_rect()
+	var ys: Array[float] = []
+	ys.append_array(LevelBuild.CAST_LANTERN_YS)
+	var n_walk := ys.size()
+	# and three more over the festival yard off the leash, wall to wall
+	ys.append_array(cast_yard_strings())
+	for i in range(ys.size()):
+		var ly: float = ys[i]
+		var e := walk_edges(ly) if i < n_walk else Vector2(fr.position.x - 10.0, fr.end.x + 10.0)
 		var a := Vector2(e.x - 10.0, ly - 20.0)
 		var z := Vector2(e.y + 10.0, ly + 20.0)
 		var prev := a
@@ -4361,6 +4438,27 @@ func _bust_shells(_why: String) -> void:
 	for tw: Node2D in get_tree().get_nodes_in_group("tourists"):
 		if tw.global_position.distance_to(sp) < 240.0:
 			tw.cheer()
+# La Castanyada's queue for the roaster, out once when the plaça comes near:
+# people waiting their turn for a paper cone, facing the cart
+var cast_queue_out := false
+
+
+func _tick_castanyada_queue() -> void:
+	if cast_queue_out or cam.position.y > LevelBuild.CAST_PLACA.y + 900.0:
+		return
+	cast_queue_out = true
+	var qr := RandomNumberGenerator.new()
+	qr.seed = 0xCA57
+	for off: Vector2 in LevelBuild.CAST_QUEUE:
+		var tw := Node2D.new()
+		tw.set_script(load("res://entities/tourist.gd"))
+		tw.z_index = 8
+		add_child(tw)
+		tw.setup(self, qr, LevelBuild.CAST_ROASTER_AT + off, -1.0)
+		tw.stand("wait", LevelBuild.CAST_ROASTER_AT + Vector2(-26.0, 0.0))
+		tw.look = "none"
+
+
 # the crowd: this many tourists kept walking around the camera (El Mosaic's
 # walkers are fewer; most of its tourists stand in the queue or at the
 # salamander)
@@ -6504,8 +6602,65 @@ func _draw_placa(c: Object) -> void:
 		c.draw_arc(fr.get_center(), 16.0 + float(i) * 14.0, 0.0, TAU, 24, Color(0.70, 0.86, 0.92, 0.35 - float(i) * 0.1), 1.5)
 	c.draw_circle(fr.get_center(), 9.0, Color(0.70, 0.66, 0.58))
 	c.draw_circle(fr.get_center(), 4.0, Color(0.84, 0.94, 0.98))
+	if lvl == "spook":
+		_draw_castanyada_yard(c, r)
 	_draw_freedom_benches(c, r, Color(0.36, 0.30, 0.24))
-	_freedom_sign(c, r, "PLAÇA DELS GOSSOS", "the dogs' square, off leash")
+	_freedom_sign(c, r, "PLAÇA DELS GOSSOS", "the festival square, off leash" if lvl == "spook" else "the dogs' square, off leash")
+
+
+# La Castanyada's off-leash plaça is the festival's own yard, not El Gòtic's
+# square again: a timber dance floor laid on the paving, the lantern strings'
+# light on the ground under them (the strings are the overhead layer's), lit
+# windows all round, chestnut shells, paper cones and confetti everywhere.
+# The planters are the castanyeres' braziers (park props).
+func cast_yard_strings() -> Array[float]:
+	return [GATE_Y - 170.0, GATE_Y - 330.0, GATE_Y - 490.0]
+
+
+func _draw_castanyada_yard(c: Object, r: Rect2) -> void:
+	var b := ShapeBatch.new()
+	# the dance floor: boards on the paving, a rope ring for the sardana
+	var df := Rect2(r.get_center().x - 170.0, GATE_Y - 420.0, 340.0, 220.0)
+	b.rect(Rect2(df.position + LIGHT * 6.0, df.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.2))
+	b.rect(df, Color(0.50, 0.36, 0.24))
+	var bx := df.position.x + 20.0
+	while bx < df.end.x:
+		b.line(Vector2(bx, df.position.y), Vector2(bx, df.end.y), Color(0.40, 0.28, 0.18), 2.0)
+		bx += 20.0
+	b.line(df.position, Vector2(df.end.x, df.position.y), Color(0.64, 0.48, 0.32), 3.0)
+	# the lanterns' light on the ground under each string
+	for ly: float in cast_yard_strings():
+		var lx := r.position.x + 60.0
+		while lx < r.end.x - 40.0:
+			b.circle(Vector2(lx, ly + 16.0), 56.0, Color(1.0, 0.72, 0.36, 0.08))
+			b.circle(Vector2(lx, ly + 16.0), 28.0, Color(1.0, 0.78, 0.44, 0.08))
+			lx += 92.0
+	# lit windows in the house fronts round three sides
+	var wx := r.position.x + 30.0
+	while wx < r.end.x - 20.0:
+		b.rect(Rect2(wx, r.position.y - 36.0, 16.0, 20.0), Color(1.0, 0.78, 0.42, 0.75))
+		b.circle(Vector2(wx + 8.0, r.position.y + 6.0), 40.0, Color(1.0, 0.72, 0.38, 0.06))
+		wx += 75.0
+	for sx: float in [r.position.x, r.end.x]:
+		var wy := r.position.y + 40.0
+		while wy < r.end.y - 80.0:
+			b.rect(Rect2(sx - (30.0 if sx < r.get_center().x else -14.0), wy, 16.0, 20.0), Color(1.0, 0.78, 0.42, 0.75))
+			b.circle(Vector2(sx, wy + 10.0), 40.0, Color(1.0, 0.72, 0.38, 0.06))
+			wy += 65.0
+	# chestnut shells, dropped paper cones and confetti
+	for k in range(140):
+		var h := fmod(float(k) * 0.6180339, 1.0)
+		var h2 := fmod(float(k) * 0.4142135 + 0.3, 1.0)
+		var at := Vector2(lerpf(r.position.x + 20.0, r.end.x - 20.0, h), lerpf(r.position.y + 20.0, r.end.y - 30.0, h2))
+		if k % 3 == 0:
+			b.circle(at, 2.6, Color(0.40, 0.22, 0.12, 0.85))
+		elif k % 11 == 1:
+			b.polygon(PackedVector2Array([at + Vector2(-5, -6), at + Vector2(5, -6), at + Vector2(0, 8)]), Color(0.90, 0.86, 0.76))
+		else:
+			var cc: Color = [Color(0.96, 0.30, 0.36), Color(0.98, 0.84, 0.28), Color(0.36, 0.64, 0.92),
+				Color(0.52, 0.80, 0.40), Color(0.94, 0.94, 0.96)][k % 5]
+			b.rect(Rect2(at, Vector2(4.0, 3.0)), cc)
+	b.flush(c)
 
 
 const HOUSE_COLS: Array[Color] = [Color(0.62, 0.44, 0.34), Color(0.70, 0.58, 0.42), Color(0.56, 0.48, 0.44)]
@@ -7332,6 +7487,19 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 				c.draw_circle(p + Vector2(-1.5, -1.5), 4.5, Color(0.28, 0.29, 0.31))
 				c.draw_circle(p + Vector2(-2.0, -2.0), 1.6, Color(0.50, 0.52, 0.54))
 			"planter":
+				if lvl == "spook":
+					# a castanyera's brazier: a steel drum on its legs, coals
+					# glowing through the grille, sacks of chestnuts by it
+					c.draw_circle(p, 48.0, Color(1.0, 0.60, 0.24, 0.10))
+					contact_shadow(c, p, 18.0, 8.0, 0.25)
+					c.draw_circle(p + Vector2(18, 14), 9.0, Color(0.62, 0.50, 0.34))
+					c.draw_circle(p + Vector2(-17, 15), 8.0, Color(0.58, 0.47, 0.32))
+					c.draw_circle(p, 17.0, Color(0.16, 0.15, 0.15))
+					c.draw_circle(p, 13.0, Color(0.96, 0.44, 0.12))
+					c.draw_circle(p, 8.0, Color(1.0, 0.78, 0.32))
+					for g in range(3):
+						c.draw_line(p + Vector2(-13.0, -6.0 + float(g) * 6.0), p + Vector2(13.0, -6.0 + float(g) * 6.0), Color(0.12, 0.10, 0.10), 1.5)
+					continue
 				# a stone planter with a clipped bush in it: solid, go round it
 				c.draw_rect(Rect2(p - Vector2(17, 17), Vector2(34, 34)), Color(0.74, 0.70, 0.62))
 				c.draw_rect(Rect2(p - Vector2(17, 17), Vector2(34, 34)), Color(0.56, 0.52, 0.46), false, 2.0)
@@ -8031,6 +8199,8 @@ func _physics_process(delta: float) -> void:
 		_tick_rambla(delta)
 	if crowded():
 		_tick_crowd(delta)
+	if lvl == "spook" and not tutorial_mode:
+		_tick_castanyada_queue()
 	_prof("critters")
 	_temptation(delta)
 	_prof("temptation")

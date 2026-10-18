@@ -47,11 +47,12 @@ func _run() -> void:
 	# the roaster is solid
 	var dog: CharacterBody2D = m.dog
 	dog.collision_mask = 1
-	dog.global_position = pc + Vector2(0.0, 90.0)
+	var rc: Vector2 = LevelBuild.CAST_ROASTER_AT
+	dog.global_position = rc + Vector2(0.0, 90.0)
 	for i in range(40):
 		dog.velocity = Vector2(0, -400)
 		dog.move_and_slide()
-	var rr := Rect2(pc - LevelBuild.CAST_ROASTER * 0.5, LevelBuild.CAST_ROASTER)
+	var rr := Rect2(rc - LevelBuild.CAST_ROASTER * 0.5, LevelBuild.CAST_ROASTER)
 	_check(not rr.grow(-4.0).has_point(dog.global_position), "the roaster stops the dog")
 	# so is the stage
 	var st: Rect2 = LevelBuild.castanyada_stage(m)
