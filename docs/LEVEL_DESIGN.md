@@ -195,6 +195,10 @@ with pickpockets and shenanigans happening around."
 - Cut: café terrace, bike crossings, manholes, lawn - it is indoors.
 - Add: pillars (wrap), barriers (a gap), bench rows, trolleys, the board as
   landmark.
+- Audit fixes (2026-10-18, #155): terrazzo floor with brass strips, no
+  drains; gate cabinets with readers and paddles; columns on plinths; a steel
+  travelator and a train that reads as a train; PIPICÀ is the old goods yard
+  with a siding and the running lines past its wall.
 
 ### Les Obres (site) - the roadworks
 - Is: a works detour: cement pours in formwork with cones and tape, fresh
