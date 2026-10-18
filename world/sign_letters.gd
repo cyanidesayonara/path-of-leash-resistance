@@ -107,26 +107,27 @@ static func glyph(ch: String) -> Array:
 	return []
 
 
-static func _advance(ch: String) -> float:
+static func _advance(ch: String, gap := GAP) -> float:
 	if ch == " ":
 		return SPACE
 	var g := glyph(ch)
-	return (float(g[0]) + GAP) if not g.is_empty() else SPACE
+	return (float(g[0]) + gap) if not g.is_empty() else SPACE
 
 
-# the width of a name at cap height `h`, before any fitting
-static func width(txt: String, h: float) -> float:
+# the width of a name at cap height `h`, before any fitting. `gap` is the
+# space between letters, in the glyphs' units (CAP high)
+static func width(txt: String, h: float, gap := GAP) -> float:
 	var u := 0.0
 	for i in range(txt.length()):
-		u += _advance(txt.substr(i, 1))
-	return maxf(0.0, u - GAP) * h / CAP
+		u += _advance(txt.substr(i, 1), gap)
+	return maxf(0.0, u - gap) * h / CAP
 
 
 # A name as world-space polylines, centred on `at`, at cap height `h`, shrunk
 # to fit `max_w` if it would run wider. Returns [polylines, height used].
-static func layout(txt: String, at: Vector2, h: float, max_w := INF) -> Array:
+static func layout(txt: String, at: Vector2, h: float, max_w := INF, gap := GAP) -> Array:
 	var up := txt.to_upper()
-	var w := width(up, h)
+	var w := width(up, h, gap)
 	if w > max_w and w > 0.0:
 		h *= max_w / w
 		w = max_w
@@ -143,7 +144,7 @@ static func layout(txt: String, at: Vector2, h: float, max_w := INF) -> Array:
 				for q in line:
 					pl.append(Vector2(x + q.x * k, top + q.y * k))
 				out.append(pl)
-		x += _advance(ch) * k
+		x += _advance(ch, gap) * k
 	return [out, h]
 
 

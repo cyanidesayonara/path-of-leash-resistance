@@ -1683,6 +1683,8 @@ static func build_level_data(m: Node2D) -> void:
 			var tree := Vector2(tx, m.GATE_Y - randf_range(120.0, 550.0))
 			tree = m.agility.push_out(tree, 34.0)
 			var clear := tree.distance_to(m.gate_bench) > 95.0
+			if m.lvl == "scrap":
+				clear = clear and not Ferralla.yard_wreck(m._freedom_rect()).grow(30.0).has_point(tree)
 			for w: Rect2 in m.water:
 				clear = clear and not w.grow(30.0).has_point(tree)
 			for si in range(m.PAIR_PARK_SPOTS.size()):
@@ -2303,6 +2305,8 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ds: Array[Vector2] = neteja_dumpsters(m)
 			for i in range(ds.size()):
 				out.append(["neteja_dumpster_%d" % i, Rect2(ds[i] - NETEJA_DUMPSTER * 0.5, NETEJA_DUMPSTER)])
+		"scrap":
+			out.append(["ferralla_yard_wreck", Ferralla.yard_wreck(m._freedom_rect())])
 		"spook":
 			out.append(["cast_roaster", Rect2(CAST_PLACA - CAST_ROASTER * 0.5, CAST_ROASTER)])
 			out.append(["cast_stage", castanyada_stage(m)])
@@ -2638,6 +2642,10 @@ static func build_walls(m: Node2D) -> void:
 	if m.lvl == "neteja":
 		for d: Vector2 in neteja_dumpsters(m):
 			add_rect_body(m, d, NETEJA_DUMPSTER)
+	# La Ferralla's wreck in the yard's corner
+	if m.lvl == "scrap":
+		var yw: Rect2 = Ferralla.yard_wreck(m._freedom_rect())
+		add_rect_body(m, yw.get_center(), yw.size)
 	# La Castanyada's roaster and stage
 	if m.lvl == "spook":
 		add_rect_body(m, CAST_PLACA, CAST_ROASTER)
@@ -2725,7 +2733,7 @@ static func build_entities(m: Node2D) -> void:
 	m.edge_layer.z_index = -5   # behind everything in the world
 	# what hangs over the walk, above everyone (El Gotic's bridge, El Mercat's
 	# arches, La Castanyada's lantern strings)
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "beach" or m.lvl == "partit":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "beach" or m.lvl == "scrap" or m.lvl == "partit":
 		var ov := Node2D.new()
 		ov.set_script(load("res://world/overheadlayer.gd"))
 		ov.z_index = 14

@@ -1099,6 +1099,10 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 			var fr := f.y
 			c.draw_rect(Rect2(fl - far, sy, far, slice), base)
 			c.draw_rect(Rect2(fr, sy, far, slice), base)
+			# Les Obres' line is a fence, not a building: no wall face, no cast
+			if lvl == "site":
+				sy += slice
+				continue
 			# Seen from directly overhead you do not see a facade at all - you
 			# see the ROOF. The roof is inset from its footprint and the gap
 			# becomes a visible WALL FACE, angled toward the viewer: dark at the
@@ -1156,7 +1160,7 @@ func _edge_base_color() -> Color:
 	match lvl:
 		"oldtown", "spook": return Color(0.36, 0.33, 0.30)   # old stone
 		"station": return Color(0.48, 0.48, 0.52)            # tiled interior
-		"site": return Color(0.52, 0.42, 0.27)               # plywood hoarding
+		"site": return Obres.YARD                            # the works compound
 		"scrap": return Color(0.26, 0.25, 0.24)              # yard beyond the fence
 		"market": return Color(0.44, 0.38, 0.34)
 		_: return Color(0.38, 0.35, 0.37)                    # city block
@@ -1284,22 +1288,8 @@ func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 			var spine_x := r.get_center().x
 			c.draw_line(Vector2(spine_x, r.position.y), Vector2(spine_x, r.end.y), Color(0.33, 0.35, 0.39), 6.0)
 		"site":
-			# scaffold decking and tarps over the works
-			c.draw_rect(r, Color(0.46, 0.44, 0.40).lightened(lit * 0.08))
-			# scaffold boards running across, with poles at the joints
-			var board := r.position.y
-			while board < r.end.y:
-				c.draw_line(Vector2(r.position.x, board), Vector2(r.end.x, board), Color(0.58, 0.48, 0.31), 7.0)
-				c.draw_line(Vector2(r.position.x, board + 4.0), Vector2(r.end.x, board + 4.0), Color(0.30, 0.25, 0.17), 1.5)
-				board += 26.0
-			# a blue tarp lashed over part of it, and hazard tape at the edge
-			if k % 2 == 0:
-				c.draw_rect(Rect2(inner_x + side * 58.0, r.position.y + 40.0, 58.0, 96.0), Color(0.20, 0.36, 0.52, 0.9))
-			var tape_x: float = inner_x + side * 5.0
-			for s in range(8):
-				var sy := r.position.y + s * 28.0
-				var sc := Color(0.92, 0.72, 0.15) if s % 2 == 0 else Color(0.15, 0.14, 0.13)
-				c.draw_line(Vector2(tape_x, sy), Vector2(tape_x, sy + 14.0), sc, 5.0)
+			# the works compound behind the Heras fence (world/obres.gd)
+			Obres.draw_yard_module(self, c, r, side, k)
 		"scrap":
 			# corrugated shed roofs, rusting, with junk heaps between them
 			var iron := Color(0.40, 0.38, 0.35).lightened(lit * 0.09)
@@ -1309,10 +1299,8 @@ func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 				c.draw_line(Vector2(rib, r.position.y), Vector2(rib, r.end.y), iron.darkened(0.22), 2.0)
 				c.draw_line(Vector2(rib + 4.0, r.position.y), Vector2(rib + 4.0, r.end.y), iron.lightened(0.16), 1.5)
 				rib += 11.0
-			# rust blooms
-			for h in range(2):
-				var hy := r.position.y + 50.0 + h * 96.0
-				c.draw_circle(Vector2(inner_x + side * (34.0 + float(h) * 18.0), hy), 17.0, Color(0.48, 0.28, 0.17, 0.55))
+			# rust streaking down from the ridge, every roof its own
+			Ferralla.draw_roof_rust(c, r, inner_x, side, k)
 			# the fence line at the kerb, seen from above as posts and wire
 			var fx: float = inner_x + side * 5.0
 			c.draw_line(Vector2(fx, r.position.y), Vector2(fx, r.end.y), Color(0.55, 0.57, 0.58, 0.7), 2.0)
@@ -1378,6 +1366,10 @@ func draw_verge_onto(c: Object, vt: float, vb: float) -> void:
 	# before it was moved off it (see edgelayer.gd) - putting picnics into the
 	# 30-times-a-second draw is exactly how a walk starts to stutter.
 	_draw_grass_detail(c, vt, vb)
+	# Les Obres' Heras fence stands on the building line, so it goes on this
+	# canvas, above the sidewalk its feet and shadow lie on
+	if lvl == "site":
+		Obres.draw_fence(self, c, vt, vb)
 	for it: Dictionary in verge_items:
 		var p: Vector2 = it["pos"]
 		if p.y < vt - 160.0 or p.y > vb + 160.0:
@@ -1456,6 +1448,11 @@ func _draw_grass_detail(c: Object, vt: float, vb: float) -> void:
 			var h := _cell01(x, y)
 			var p := Vector2(x + (h - 0.5) * GRASS_STEP * 0.9, y + (fmod(h * 7.13, 1.0) - 0.5) * GRASS_STEP * 0.9)
 			if p.y > GATE_Y and surface_at(p) == Surfaces.S.GRASS and not _grass_blocked(p):
+				if lvl == "scrap":
+					# oily gravel along the fences, the odd weed, never a lawn
+					Ferralla.draw_verge_cell(c, p, h)
+					x += GRASS_STEP
+					continue
 				var lean := (h - 0.5) * 0.8
 				for bl in range(3):
 					var a := -PI * 0.5 + lean + (float(bl) - 1.0) * 0.45
@@ -1907,20 +1904,9 @@ func _draw_fallen_log(r: Rect2) -> void:
 # A stack of wrecked cars from above: the top car's roof, rusted and dented,
 # the ones under it showing past its edges at a skew, glass long gone.
 func _draw_wreck_stack(v: Vector2) -> void:
+	# four kinds of car, each stack turned and tinted its own way (world/ferralla.gd)
 	var b := ShapeBatch.new()
-	var h := int(absf(v.y)) % 5
-	var cols := [Color(0.55, 0.22, 0.18), Color(0.30, 0.38, 0.46), Color(0.48, 0.46, 0.30), Color(0.62, 0.62, 0.60), Color(0.24, 0.34, 0.26)]
-	b.rect(Rect2(v.x - 32.0 + 30.0, v.y - 66.0 + 30.0, 68.0, 134.0), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.26))
-	for k in range(3):
-		var off := Vector2(float((h + k) % 3 - 1) * 6.0, float(k - 1) * 5.0)
-		var c: Color = (cols[(h + k) % cols.size()] as Color).darkened(0.18 * float(2 - k))
-		b.rect(Rect2(v.x - 30.0 + off.x, v.y - 62.0 + off.y, 60.0, 124.0), c)
-	var top: Color = cols[(h + 2) % cols.size()]
-	b.rect(Rect2(v.x - 22.0, v.y - 26.0, 44.0, 52.0), top.lightened(0.08))                # the roof
-	b.rect(Rect2(v.x - 22.0, v.y - 46.0, 44.0, 18.0), Color(0.12, 0.12, 0.13))             # no windscreen
-	b.rect(Rect2(v.x - 22.0, v.y + 28.0, 44.0, 12.0), Color(0.12, 0.12, 0.13))
-	for k in range(4):
-		b.circle(v + Vector2(-14.0 + float(k % 2) * 28.0, -8.0 + float(k / 2) * 20.0), 4.0 + float((h + k) % 3), Color(0.44, 0.28, 0.16, 0.8))  # rust
+	Ferralla.draw_wreck_stack(b, v, vans.find(v))
 	b.flush(_wc)
 
 
@@ -2140,6 +2126,8 @@ func canopy_trees() -> Array[Dictionary]:
 		var t: Vector2 = trees[gi]
 		if t.y < vt or t.y > vb:
 			continue
+		if lvl == "scrap":
+			continue        # the scrapyard's grove is tyre stacks and drums: no crowns
 		var gk := TREE_PALM if freedom_kind == "beach" else TREE_FOREST
 		# the grove's broadleaves are holm-oak sized: drawn as TREE_FOREST's
 		# oak (i % 3 == 1) so they keep the 0.85 they always had
@@ -3175,6 +3163,11 @@ func draw_overhead_onto(c: CanvasItem) -> void:
 		_draw_mercat_arch(c, LevelBuild.MERCAT_ARCH_Y, "MERCAT")
 		_draw_mercat_arch(c, LevelBuild.MERCAT_DOOR_Y, "PLAÇA")
 		return
+	if lvl == "scrap":
+		var cb := ShapeBatch.new(c)
+		Ferralla.draw_crane_overhead(cb, LevelBuild.FERRALLA_CRANE, LevelBuild.FERRALLA_BOOM_TO)
+		cb.flush()
+		return
 	if lvl != "oldtown":
 		return
 	var by: float = LevelBuild.GOTIC_BRIDGE_Y
@@ -3218,23 +3211,9 @@ func _draw_crane(vt: float, vb: float) -> void:
 	var tip: Vector2 = LevelBuild.FERRALLA_BOOM_TO
 	if maxf(cb.y, tip.y) < vt - 120.0 or minf(cb.y, tip.y) > vb + 120.0:
 		return
+	# the tracks, house and shadows here; the jib is overhead (draw_overhead_onto)
 	var b := ShapeBatch.new()
-	var sh := Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22)
-	b.line(cb + Vector2(20, 40), tip + Vector2(30, 60), sh, 18.0)
-	b.circle(tip + Vector2(30, 90), 26.0, sh)
-	b.rect(Rect2(cb.x - 40.0, cb.y - 50.0, 80.0, 100.0), Color(0.16, 0.16, 0.17))
-	b.rect(Rect2(cb.x - 30.0, cb.y - 30.0, 60.0, 60.0), Color(0.92, 0.70, 0.12))
-	b.rect(Rect2(cb.x - 26.0, cb.y - 26.0, 22.0, 22.0), Color(0.30, 0.38, 0.44))
-	# the boom itself, lattice, from the cab out over the lane
-	b.line(cb, tip, Color(0.90, 0.68, 0.10), 10.0)
-	var n := int(cb.distance_to(tip) / 24.0)
-	for k in range(n):
-		var p0: Vector2 = cb.lerp(tip, float(k) / float(n))
-		var p1: Vector2 = cb.lerp(tip, float(k + 1) / float(n))
-		b.line(p0 + Vector2(0, -5), p1 + Vector2(0, 5), Color(0.70, 0.52, 0.08), 2.0)
-	# the magnet, hanging
-	b.circle(tip, 20.0, Color(0.22, 0.22, 0.24))
-	b.circle(tip, 14.0, Color(0.36, 0.36, 0.40))
+	Ferralla.draw_crane_ground(b, cb, tip)
 	b.flush(_wc)
 
 
@@ -3332,17 +3311,14 @@ func _draw_digger(v: Vector2) -> void:
 # zebra, the trench with its plank and pipe, all drawn over the paving.
 func _draw_obres(vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
-	for cz: Rect2 in cement_zones:
+	# the footway's dirt: track marks, spray lines, bits lying about
+	Obres.draw_ground(self, b, vt, vb)
+	for zi in range(cement_zones.size()):
+		var cz: Rect2 = cement_zones[zi]
 		if cz.end.y < vt - 40.0 or cz.position.y > vb + 40.0:
 			continue
-		# the timber formwork, then the wet pour inside it, float marks on top
-		b.rect(cz.grow(7.0), Color(0.56, 0.42, 0.26))
-		b.rect(cz.grow(3.0), Color(0.44, 0.32, 0.20))
-		b.rect(cz, Color(0.60, 0.60, 0.58))
-		var fy := cz.position.y + 16.0
-		while fy < cz.end.y - 8.0:
-			b.line(Vector2(cz.position.x + 10.0, fy), Vector2(cz.end.x - 10.0, fy + 4.0), Color(0.68, 0.68, 0.66), 2.0)
-			fy += 22.0
+		# each pour at its own stage (world/obres.gd)
+		Obres.draw_pour(b, cz.get_center(), cz.size, zi % 2)
 		# tape round the cones at the corners, red and white
 		var corners: Array[Vector2] = []
 		for c: Vector2 in [cz.position, Vector2(cz.end.x, cz.position.y), cz.end, Vector2(cz.position.x, cz.end.y)]:
@@ -5196,8 +5172,11 @@ func draw_freedom_onto(c: Object) -> void:
 	# has to be drawn on every walk - but a broadleaf on a beach is nonsense,
 	# so it wears whatever that place grows.
 	# Its crowns are the canopy layer's (world/canopylayer.gd), above her.
-	for t in trees:
-		if freedom_kind == "beach":
+	for ti in range(trees.size()):
+		var t: Vector2 = trees[ti]
+		if lvl == "scrap":
+			Ferralla.draw_yard_pile(c, t, ti)
+		elif freedom_kind == "beach":
 			_draw_tree_ground(c, t, 0, TREE_PALM)
 		else:
 			_draw_tree_ground(c, t, 1, TREE_FOREST)
@@ -5469,6 +5448,8 @@ func _draw_yard(c: Object, gravel: bool) -> void:
 			var gyp := r.position.y + 40.0 + fmod(tf * 137.0, r.size.y - 80.0)
 			c.draw_line(Vector2(gxp, gyp), Vector2(gxp - 3.0, gyp - 8.0), Color(0.28, 0.44, 0.27), 2.0)
 			c.draw_line(Vector2(gxp, gyp), Vector2(gxp + 3.0, gyp - 7.0), Color(0.28, 0.44, 0.27), 2.0)
+	if lvl == "scrap":
+		Ferralla.draw_yard_wreck(c, r)
 	_draw_freedom_fence(c, r, gravel)
 	_draw_freedom_benches(c, r, Color(0.5, 0.38, 0.26))
 	_freedom_sign(c, r, gate_text, "the off-leash yard" if gravel else "the off-leash dog park")
@@ -5796,7 +5777,7 @@ func build_signs() -> void:
 		var nm := WorldSign.build(name, Vector2(mid, START_Y - 190.0), 44.0, mat, 4.0, room - 120.0)
 		signs.append(nm)
 		if arrows:
-			var hw: float = WorldSign.Letters.width(name.to_upper(), float(nm.h)) * 0.5
+			var hw: float = WorldSign.Letters.width(name.to_upper(), float(nm.h), WorldSign.gap_for(mat)) * 0.5
 			signs.append(WorldSign.build("<", Vector2(mid - hw - 44.0, START_Y - 190.0), 44.0, mat, 6.0, 80.0))
 			signs.append(WorldSign.build(">", Vector2(mid + hw + 44.0, START_Y - 190.0), 44.0, mat, 7.0, 80.0))
 	var he := walk_edges(HOME_Y + 84.0)
@@ -5805,9 +5786,11 @@ func build_signs() -> void:
 	var gm := (gate_l + gate_r) * 0.5
 	var gw := maxf(160.0, gate_r - gate_l - 20.0)
 	# traffic cones are fat pieces: small words in them are a pile of cones
-	var gk := 1.4 if mat == "cones" else 1.0
+	var gk := 1.8 if mat == "cones" else 1.0
 	signs.append(WorldSign.build(gate_text, Vector2(gm, GATE_Y - 72.0 * gk), 36.0 * gk, mat, 11.0, gw))
-	signs.append(WorldSign.build("OFF LEASH", Vector2(gm, GATE_Y - 124.0 * gk - 4.0), 24.0 * gk, mat, 12.0, gw))
+	# and the small line no smaller than the cones can still spell
+	var ok := 30.0 * gk if mat == "cones" else 24.0
+	signs.append(WorldSign.build("OFF LEASH", Vector2(gm, GATE_Y - 124.0 * gk - 4.0), ok, mat, 12.0, gw))
 
 
 func _tick_signs(delta: float) -> void:
@@ -6263,6 +6246,8 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 					c.draw_circle(p + Vector2(7.0, 0.0), 3.4, Color(0.92, 0.89, 0.80))
 				elif prog > 0.05:
 					c.draw_arc(p, 22.0, -PI / 2.0, -PI / 2.0 + TAU * prog / 1.1, 18, Color(1, 0.9, 0.5), 3.0)
+			"log" when lvl == "scrap":
+				Ferralla.draw_pipe(c, p)
 			"log":
 				# a fallen log: bark, end grain, and a couple of knots
 				var bark := Color(0.40, 0.30, 0.20)
@@ -10235,7 +10220,8 @@ func _caught(what: String) -> void:
 	bones = maxi(0, bones - 2)
 	shake_t = maxf(shake_t, 0.4)
 	Sfx.play("crack", 1.4)
-	feed.say("THE %s SAW YOU!  -2" % what.to_upper(), EventFeed.Tone.BAD)
+	# `what` already names it ("the laser"), so no second THE
+	feed.say("%s SAW YOU!  -2" % what.to_upper(), EventFeed.Tone.BAD)
 	# the racket wakes anyone dozing nearby
 	for g in get_tree().get_nodes_in_group("guards"):
 		g.hear_noise(dog.global_position, 200.0)
@@ -10792,7 +10778,7 @@ func _draw_world() -> void:
 		elif lvl == "park" or lvl == "barri":
 			walkway = Color(0.74, 0.67, 0.53)   # sandy gravel, as the city's parks are
 		elif lvl == "scrap":
-			grass = Color(0.36, 0.37, 0.25)     # dusty weeds up to the fence
+			grass = Ferralla.GRAVEL             # oily gravel up to the fence
 		elif lvl == "montjuic":
 			grass = Montjuic.HILL
 			walkway = Montjuic.SAULO
@@ -10808,6 +10794,8 @@ func _draw_world() -> void:
 			_wc.draw_rect(Rect2(-400, ctop, 2100, bottom - ctop), grass)
 		# leaf litter on the forest floor, grass tufts everywhere else
 		var tuft_cols: Array = TRAIL_LITTER if lvl == "trail" else [COL_GRASS_DARK]
+		if lvl == "scrap":
+			tuft_cols = [Color(0.16, 0.15, 0.14, 0.6)]    # oil dripped into the gravel
 		for ti in range(tufts.size()):
 			var t: Vector2 = tufts[ti]
 			if t.y > vt and t.y < vb and _on_grass_strip(t):

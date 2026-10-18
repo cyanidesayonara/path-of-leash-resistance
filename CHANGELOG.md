@@ -55,6 +55,29 @@ Append-only session history, newest first.
   and NPC placement tests). The stroke letters gain the figures 0 to 9 for
   the gate numbers.
 
+## 2026-10-17 - La Ferralla audit fixes
+
+- The wreck stacks are four kinds of car - a saloon, a hatchback, an estate van and a stack of crushed bales - in faded paint gone to rust, each car in a stack turned its own way and the top one changing kind and colour down the lane. The tops have rust patches, dents, a door missing or a wheel left lying on the roof, and the glassless windows show the seats. Same spots, same colliders.
+- The crane is a crawler crane: two tracks, the house slewed toward the jib with a striped counterweight, grille and exhaust, the glazed cab on its front corner, and a tapering lattice jib with pendant ropes out to the sheave and a striped hook block on its falls. The jib and hook are drawn overhead, above the dog and your human, and their shadows lie across the lane.
+- The strips along the fences are oily gravel: grit, oil soaked into it, a lost bolt, and only now and then a weed or a thistle. No lawn and no flowers. They play as before.
+- Rust streaks down the shed roofs from the ridge, every roof its own; some have a patch rusted through. No more grid of rust discs.
+- EL PATI is the scrapyard's back lot. Where a park has trees there are tyre stacks and groups of oil drums, on the same spots and as solid as the trunks were. Lengths of steel pipe lie where logs were, and a wheelless car on blocks sits in the north-west corner over its oil stain (solid, tucked into the corner so there is no gap to get stuck in). The behaviour snapshot for the walk is unchanged.
+- The laser and the camera shouted "THE THE LASER SAW YOU!": the name already carries its "the".
+
+## 2026-10-17 - Les Obres audit fixes
+
+- The building line on Les Obres is a run of Heras fencing: mesh panels between concrete feet (the odd black rubber one), a coupler at each joint, a sandbag here and there, and now and then a contractor's banner. From straight above the mesh is the lattice of its shadow lying out beside it, solid under a banner. It is drawn on the verge canvas, above the sidewalk its shadow falls on.
+- Behind the fence is the works compound, not scaffolded roofs with flat blue rectangles: skips full of rubble, stacks under blue and green tarps with their creases, ridge and ropes and tyres on the corners, pallets of blocks, rebar bundles with orange caps, and spoil heaps with a shovel stuck in. Each is placed at its own y so a bend never pushes it through the fence.
+- The footway's dirt has the digger's track marks curving up to where it is parked, survey spray lines in yellow, blue and pink, and gravel, offcuts, a cement bag and planks lying about. All flat; nothing new is solid.
+- The two pours are at different stages. The first is just placed: timber shuttering on stakes, dark wet concrete with a sheen, fanned trowel marks and the bull float left on it. The second is screeded: steel forms pinned down, paler and broomed, a wetter band still being worked, starter bars along one edge, the screed bar across it and the barrow beside it.
+- Cone lettering no longer clots. Where two strokes meet, one cone stands for both; the cones are a little smaller, letters get more space between them (an optional letter gap in `world/sign_letters.gd`, used only by cones), the foot only peeks out round each cone, and the gate's words are bigger, so EL SOLAR and OFF LEASH read at a glance. The behaviour snapshot for the walk is unchanged.
+
+## 2026-10-17 - a title theme with get-up-and-go, and the intro scored to the picture
+
+- Santtu found the title theme too tranquil ("doodly-doo"). It is the same tune, arranged with drive: 130 bpm and up a step to E, a whistle lead with a glockenspiel over it all the way, chord stabs pushed ahead of the beat, a bouncing octave bass, and a groove (kick, claps on the backbeat, sixteenth shakers) with a bongo fill every fourth bar.
+- The intro film has its own score, bar by bar against the picture: a calm pad and the tune's first phrase on vibes while Millie stares at the leash, a glockenspiel sparkle as she grabs it, a light groove for the trot, back to the pad while she waits and sighs, a kick on every beat, a clap roll and a rising bass through the crouch, and the full title theme dropping in on the bark (at 130 bpm the fifth bar ends at 9.23 s), with a stab as the title lands on its leash. When the film ends the title theme takes over from the same point in the music.
+- The score renders in about a second and a half, so the film now holds on black until it is ready (four seconds at most) and the two start together; before, the opening played silent while the music built. A press during the wait still skips. The intro is as loud as the title theme after the drop, so the handoff does not dip.
+
 ## 2026-10-16 - the intro, redrawn as a finished film
 
 - Santtu's verdict on the Walkies film was that the idea is solid but it looked like a prototype. Everything in it is redrawn to shipped-game quality, and it is cheaper to play than the prototype: fewer draw calls (a room frame about 140 instead of 185, the street about 165 instead of 480) and about half the CPU a frame. The static backgrounds go up once as meshes, and the characters cache their shapes per pose instead of clipping polygons every frame.
