@@ -12,7 +12,7 @@ extends SceneTree
 #     it, slowly
 #  4. walked dead on into a pole with your human coming up behind, she is
 #     pushed aside and does not end up inside them, and they step round her;
-#     apart, nothing moves them
+#     standing still she is not pushed at all; apart, nothing moves them
 
 var checks := 0
 var failures: Array[String] = []
@@ -170,9 +170,17 @@ func _run() -> void:
 	m._part_bodies()
 	_check(m.dog.global_position == dp and m.human.global_position == hp,
 		"40 px apart, neither is pushed")
-	# overlapping, both move, she the further
+	# overlapping while she stands: she stays where she is, they step off her
 	m.human.global_position = o + Vector2(10, 0)
 	hp = m.human.global_position
+	m.dog.input_active = false
+	m._part_bodies()
+	_check(m.dog.global_position == dp and m.human.global_position.distance_to(hp) > 0.0,
+		"10 px apart with her standing, only they move")
+	m.dog.global_position = o
+	m.human.global_position = hp
+	# overlapping on the move, both move, she the further
+	m.dog.input_active = true
 	m._part_bodies()
 	var dog_moved: float = m.dog.global_position.distance_to(dp)
 	var human_moved: float = m.human.global_position.distance_to(hp)
@@ -188,6 +196,7 @@ func _run() -> void:
 	m.human.global_position = o + Vector2(0, 12)
 	m.human.sidestep_t = 0.0
 	m.human.walk_intent = Vector2(0, -90)
+	m.dog.input_active = true
 	m._part_bodies()
 	_check(m.human.sidestep_t > 0.0, "walked into her where a wall holds her, they start a sidestep")
 	_clear()

@@ -138,8 +138,9 @@ const MANHOLE_RADIUS := 24.0
 # The dog and your human are on layers that do not collide, so the leash owns
 # every pull between them. _part_bodies keeps her from standing inside them:
 # each frame it removes this share of the overlap of their two bodies (14 and
-# 15 px), and she, the lighter, takes this share of the push. They take the rest
-# and what a wall stops her taking, as a step back and aside round her.
+# 15 px), and she, the lighter, takes this share of the push while she is on the
+# move. They take the rest and what a wall stops her taking, as a step back and
+# aside round her; a dog standing still or dug in is not pushed at all.
 const BODY_REACH := 29.0
 const BODY_PART_RATE := 0.5
 const BODY_PART_DOG := 0.75
@@ -8013,18 +8014,22 @@ func _part_bodies() -> void:
 	if n == Vector2.ZERO:
 		n = Vector2.RIGHT
 	var push := (BODY_REACH - dist) * BODY_PART_RATE
-	var held := _nudge(dog, n * push * BODY_PART_DOG)
+	# she gives way only while she is going somewhere: standing, or dug in,
+	# she is where she means to be, and they walk round her
+	var dog_share := BODY_PART_DOG if dog.input_active and not dog.planted else 0.0
+	var held := _nudge(dog, n * push * dog_share)
 	# their share, and whatever a wall refused her, goes back and to one side,
 	# so they step round her: the side they were heading for, unless it is shut
-	var give := push * (1.0 - BODY_PART_DOG) + held
+	var give := push * (1.0 - dog_share) + held
 	var side := n.orthogonal()
 	if side.dot(human.walk_intent) < 0.0:
 		side = -side
 	if human.test_move(human.global_transform, side * maxf(give, 2.0)):
 		side = -side
 	_nudge(human, (side - n) * give)
-	# walking into her where a wall holds her: they go round, not into her
-	if held > 0.01 and human.walk_intent.dot(n) > 0.0:
+	# walking into her where she will not give way (standing, dug in, or held
+	# by a wall): they go round, not into her
+	if (held > 0.01 or dog_share == 0.0) and human.walk_intent.dot(n) > 0.0:
 		human.sidestep_round(side)
 
 
