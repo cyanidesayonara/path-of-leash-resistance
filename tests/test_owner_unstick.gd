@@ -60,9 +60,12 @@ func _run() -> void:
 	m.leash.static_contacts = 0
 
 	# 3) nothing in the way: no sidestep (sampled first, before the box)
+	# The dog is held at his heel, beside and behind him and clear of his
+	# body: one held overlapping him every frame is pushed out and put back
+	# every frame, which shoves him about
 	var side0 := false
 	for i in range(120):
-		m.dog.global_position = m.human.global_position + Vector2(20, -10)
+		m.dog.global_position = m.human.global_position + Vector2(24, 30)
 		m.dog.velocity = Vector2.ZERO
 		m.human.event_timer = 999.0
 		await physics_frame
@@ -83,7 +86,7 @@ func _run() -> void:
 	var sidestepped := false
 	var past_at := -1
 	for i in range(420):
-		m.dog.global_position = m.human.global_position + Vector2(20, -10)
+		m.dog.global_position = m.human.global_position + Vector2(24, 30)
 		m.dog.velocity = Vector2.ZERO
 		# no phone call or selfie stopping them short of the box's far side
 		m.human.event_timer = 999.0
