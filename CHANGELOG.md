@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-10-18 - El Bosc and First Walk audit fixes
+
+- El Bosc's pinch at -2000 is crowded with trunks on both edges at once, about one every 80 px, staggered, so the trail narrows between them like a gateway and there is a trunk to wind the leash round at every step. Before, one tree stood on alternate sides every 80 to 100 px. The autowalk, soaks and selftest are unchanged, and a playtest through the pinch found no problems.
+- The First Walk's quiet lessons (the leash, marking, sniffing, the nose, barking, the zoomies, business and the vault) each have a park bench mid-path, and your human waits sat on it, on the phone, as the design brief says. The dog cannot walk through a bench. The tetherball, ledge and brink lessons keep your human standing where the lesson needs them.
+- No grass tufts grow on the brink lesson's pond.
+- "Move on" is a key cap in a prompt bar under the lesson card, for whichever device is in hand, instead of "(C to move on)" written into the lesson's sentence.
+- The grind lesson already had its stone ledge (the kerb the finding missed), so that finding no longer reproduces.
+
 ## 2026-10-17 - El Barri audit fixes
 
 - El Barri's props are authored where they stand instead of being squeezed into the path, which had pushed the petanca players onto their pitch's edge, the ping-pong table off its prize and the trees into a ruled line on both edges at the same heights.

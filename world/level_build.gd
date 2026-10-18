@@ -36,6 +36,20 @@ const CROSS_SECTIONS := {
 
 
 # the brink lesson's pond, on the grass just off the path's east edge
+# the benches the owner waits on at the quiet lessons ("bench" in
+# systems/tutorial.gd): a seat under where they stop, the backrest behind them
+static func tutorial_benches(m: Node2D) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	if not m.tutorial_mode:
+		return out
+	for i in range(TUT.step_count()):
+		if not bool(TUT.step(i).get("bench", false)):
+			continue
+		var hp: Vector2 = m.tut_hold_point(i)
+		out.append(Rect2(hp.x - 26.0, hp.y - 10.0, 52.0, 14.0))
+	return out
+
+
 static func tutorial_pond(m: Node2D) -> Rect2:
 	var y: float = TUT.at("teeter")
 	var e: Vector2 = m.walk_edges(y)
@@ -846,13 +860,17 @@ static func bandstand_posts() -> Array[Vector2]:
 
 # El Bosc: trunks along and in the trail, authored in the 300..980 space
 # that fit_props_to_corridor maps onto the path at each y (300 = hard
-# against the left edge). Closer together at the pinch (-2000), none on the
-# footbridge.
+# against the left edge). At the pinch (-2000) they crowd both edges at
+# once, a trunk every 80 or so, so the trail narrows between them like a
+# gateway and there is a trunk to wind the leash round at every step; none
+# on the footbridge.
 const TRAIL_TREES: Array[Vector2] = [
 	Vector2(300, -380), Vector2(980, -700), Vector2(300, -960),
 	Vector2(600, -1150), Vector2(700, -1300), Vector2(600, -1450),
 	Vector2(980, -1180), Vector2(300, -1640), Vector2(980, -1780),
-	Vector2(300, -1880), Vector2(980, -1960), Vector2(300, -2060), Vector2(980, -2140),
+	Vector2(300, -1860), Vector2(960, -1900), Vector2(318, -1945), Vector2(980, -1985),
+	Vector2(300, -2030), Vector2(966, -2070), Vector2(312, -2115), Vector2(980, -2160),
+	Vector2(300, -2210),
 	Vector2(300, -2760), Vector2(980, -2960), Vector2(640, -3360),
 	Vector2(300, -3160), Vector2(980, -3560), Vector2(300, -3720),
 	Vector2(980, -4060), Vector2(300, -4300), Vector2(560, -4460), Vector2(720, -4580),
@@ -2555,6 +2573,17 @@ static func build_walls(m: Node2D) -> void:
 			pcs.shape = psh
 			pb.add_child(pcs)
 			m.add_child(pb)
+	# the tutorial's benches stop the dog; the owner sits on theirs
+	for tb: Rect2 in tutorial_benches(m):
+		var bb := StaticBody2D.new()
+		bb.collision_layer = LOW_LAYER
+		bb.position = tb.get_center()
+		var bcs := CollisionShape2D.new()
+		var bsh := RectangleShape2D.new()
+		bsh.size = tb.size
+		bcs.shape = bsh
+		bb.add_child(bcs)
+		m.add_child(bb)
 	if m.lvl == "trail":
 		for lr: Rect2 in trail_logs(m):
 			var lb := StaticBody2D.new()
