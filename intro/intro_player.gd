@@ -13,6 +13,7 @@ extends CanvasLayer
 const SCENE := preload("res://intro/scene_walkies.gd")
 const END_AT := 14.4          # after the tow has left the frame
 const FADE_OUT := 0.45
+const SCORE_WAIT := 4.0       # the longest the film holds on black for its music
 # the sound cues: [time, sound, pitch, volume dB]
 const CUES := [
 	[3.12, "intro_hook", 1.0, -10.0],
@@ -32,6 +33,7 @@ var done_t := -1.0
 var cued := 0
 var skipped := false
 var hint: SkipHint
+var waited := 0.0
 
 
 class Stage:
@@ -124,6 +126,13 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	# the film waits on black for its score, so they start together; a slow
+	# machine waits at most SCORE_WAIT, and the score then joins in step
+	if t == 0.0 and done_t < 0.0 and waited < SCORE_WAIT and not Sfx.music_ready("intro"):
+		waited += delta
+		_place()
+		stage.queue_redraw()
+		return
 	# a hitch (the first frame, a window drag) holds the film, never skips it
 	t += minf(delta, 0.1)
 	Sfx.film_clock(t)
@@ -165,7 +174,7 @@ func _input(event: InputEvent) -> void:
 	if not skips(event):
 		return
 	get_viewport().set_input_as_handled()
-	if done_t < 0.0 and t > 0.25:
+	if done_t < 0.0 and (t > 0.25 or waited > 0.25):
 		skipped = true
 		cued = CUES.size()
 		done_t = t
