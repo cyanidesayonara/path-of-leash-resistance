@@ -12,6 +12,95 @@ Append-only session history, newest first.
 - `tests/test_mercat.gd` pushes her at each drawn wall to prove nothing invisible stands inside it. Floating, she now slides along the street's slanting walls toward the arch instead of stopping, so it measures the gap to the wall where she stops, not where she set off.
 - Playtest, market, oldtown, scrap, guell and station, three scripts each: 22 DOG STUCK before with the old check, 17 with the old check after the fix (all pressing into faces), 0 with the new check, before or after.
 
+## 2026-10-17 - Dia de Partit, part 1: the streets to the stadium (#238)
+
+- A new walk, DIA DE PARTIT ("match day"), opening at 27 stars after
+  Montjuïc: the walk through Les Corts to a stadium that is never named. This
+  first piece is the corridor and its set dressing; the crowd, the kick-off
+  clock, the three set pieces and the walk's own goals come next (the plan is
+  in docs/superpowers/specs/2026-10-17-dia-de-partit-design.md).
+- A calm side street to start: plane trees, parked cars, a drinking fountain,
+  a grandad out early in his scarf, SEMPRE AMB TU strung across the street,
+  home flags (blue and claret halves, a plain white star) on the balconies.
+- The corner where the police have closed the avenue: CARRER TALLAT on the
+  barriers, a navy van with its blue lights turning, two officers chatting,
+  a zebra crossing.
+- The avenue: four lanes closed to traffic, lampposts on islands down the
+  painted median (wind your human round them), blue-zone parking bays, plane
+  trees in grates on the sidewalks, bunting overhead, and steel crowd barriers
+  along both kerbs that grind with the zoomies (BARRIER RUN). Along it the
+  scarf stall (BUFANDES), the seed and water cart (PIPES I AIGUA) with seed
+  shells round it, BAR LA PENYA's terrace out on its deck in the parking lane,
+  and the sausage stand (ENTREPANS).
+- The stadium approach: the road ends at a kerb and the stadium's granite
+  paving begins, FINS AL FINAL strung across it; the ticket windows
+  (TAQUILLES) with their queue belts, the drummers on their stand, floodlight
+  standards, and down the east side the stadium itself: its wall, gates PORTA
+  9 to 11 with barrier lanes into them, stair towers, and L'ESTADI on the
+  roof.
+- Off the leash in PLAÇA DEL GOL, "goal square, off leash", with the bowl
+  past its top edge: the outer wall and stair towers, the roof and its ribs,
+  the stands, and the floodlights' glow at night. The same agility course,
+  rope tug and frisbee as everywhere.
+- The walk's name is written on the ground in sunflower seed shells, the
+  litter of every Spanish stand. The city's cast-iron bollards are what she
+  marks here.
+- A first arrangement of the soundtrack for it (claps and a driving bass
+  under the whistle), until the match-day mix.
+- Goals for now: the staples and the prize, a sausage fallen off the grill
+  (it moves under the police horses with the march). No Tofu on this walk.
+- The ground, the stalls and the blocks are drawn onto the cached edge layer
+  in one batch, and the walk's name is laid in seed shells drawn without a
+  transform per shell, so the whole name is one batch too. Over a 40-second
+  autowalk on Windows: 109 draw calls a frame at the median (228 at worst)
+  against La Rambla's 181 (258), world draw 1.2 ms against 6.9 ms. In headless
+  Chrome (tools/web_perf.sh, on a busy machine, so only the comparison
+  counts): 93 calls against 172, frame p50 27 ms against 62 ms.
+- Behaviour snapshot: every other walk is byte-identical; the new lines are
+  Dia de Partit's own (autowalk finishes at 120.0 s, both soaks clean,
+  selftest OK).
+- `systems/partit.gd`; `tests/test_partit.gd` in CI; in every level list (the
+  CI selftest and smoke sweeps, the soak matrix, the shot, perf and idle-soak
+  sweeps, the behaviour snapshot, the terrain and off-leash audits, the junk
+  and NPC placement tests). The stroke letters gain the figures 0 to 9 for
+  the gate numbers.
+
+## 2026-10-18 - La Castanyada audit fixes
+
+- The street between the festival points is never bare paving: three more stalls in the gaps (chestnuts near the start, sweets before the plaça, sweet potatoes after it), every stall lit with a warm pool off its counter and a string of bulbs along its front, and the fronts lamp-lit all the way along, with doorways and shop windows glowing out across the pavement and a wall lantern now and then. The lights are on the overhead layer, with their colour divided by the night's tint so they come out warm instead of grey under it.
+- The roaster is the plaça's landmark: a castanyera's cart half as big again, on two big wheels with its shafts out the front, the brazier drum glowing under its chestnuts, a stovepipe chimney pouring smoke, sacks and paper cones on the counter, a lamp at each corner, and its fire lighting the plaça. Six people queue for it off its south-west corner, facing the cart. It stands a little east of the middle, and the bench moved further off, so walkers keep their lane past it.
+- The off-leash plaça is the festival's own yard, not El Gòtic's square again: a timber dance floor laid on the paving, three lantern strings overhead from wall to wall, lit windows all round, chestnut shells, paper cones and confetti everywhere, and the planters are castanyeres' braziers with sacks of chestnuts by them. Its sign reads "the festival square, off leash".
+- No crate on the chestnut PLAÇA letters: the walk's background litter could step past the gate into the off-leash space, and on La Castanyada it no longer does.
+
+## 2026-10-18 - El Mosaic audit fixes
+
+- The serpentine bench reads as a bench, not bunting: the seat is tiled edge to edge in two courses of broken tile over white, the mortar showing between, with a rolled white backrest along its outside and its shadow falling off it. The plaza has people in it: a pair or one in each of the bench's bays, photographing the view out over the city, on top of the crowd and the fan seller.
+- The hypostyle hall is a forest: six columns across and nine deep (54, was 20), the owner's lane still clear down the middle. Its shade thins out gradually at each end instead of stopping at a hard line. The columns, with their shadows, no longer break the world batch (their contact shadow was a transform, which flushed it).
+- The viaduct is a covered walk: a colonnade of rubble columns like palm trunks down its east side, the outer row leaning into the hill and an inner row staggered behind it, the road's shade over the walk between them. The slope on its west is one smooth bank of dry grass with scrub, stones and a rubble kerb, tapering at both ends, instead of a row of green blobs.
+- The calvary is a heap of rubble stone with steps up its south face and three stone crosses on it, the middle one tallest, each throwing a long shadow. It sits inside the path now rather than half in the wall.
+- The salamander climbs out of the dragon stair's stepped grotto fountain, three ragged tiers with a trickle down each, into a basin with a trencadis rim, instead of sitting on a flat slab. The dragon stair has its steps all the way up.
+- The off-leash space past El Calvari is a dry hilltop, not a lawn: packed ochre earth worn pale in the middle, bleached grass, stones and scrub between the pines, and the wood beyond it in dusty olive. Its sign reads "the hilltop, off leash".
+- Gameplay: the extra columns in the hall and the viaduct are real poles. The behaviour snapshot's autowalk reaches freedom at 28.7 s instead of 30.1 s and the home leg at 44.8 s instead of 46.6 s; idle soaks and the self-test are unchanged.
+
+## 2026-10-18 - El Bosc and First Walk audit fixes
+
+- El Bosc's pinch at -2000 is crowded with trunks on both edges at once, about one every 80 px, staggered, so the trail narrows between them like a gateway and there is a trunk to wind the leash round at every step. Before, one tree stood on alternate sides every 80 to 100 px. The autowalk, soaks and selftest are unchanged, and a playtest through the pinch found no problems.
+- The First Walk's quiet lessons (the leash, marking, sniffing, the nose, barking, the zoomies, business and the vault) each have a park bench mid-path, and your human waits sat on it, on the phone, as the design brief says. The dog cannot walk through a bench. The tetherball, ledge and brink lessons keep your human standing where the lesson needs them.
+- No grass tufts grow on the brink lesson's pond.
+- "Move on" is a key cap in a prompt bar under the lesson card, for whichever device is in hand, instead of "(C to move on)" written into the lesson's sentence.
+- The grind lesson already had its stone ledge (the kerb the finding missed), so that finding no longer reproduces.
+
+## 2026-10-17 - El Barri audit fixes
+
+- El Barri's props are authored where they stand instead of being squeezed into the path, which had pushed the petanca players onto their pitch's edge, the ping-pong table off its prize and the trees into a ruled line on both edges at the same heights.
+- The plane trees stand in two rows that do not mirror, with uneven gaps, set in far enough that their shadows lie on the gravel instead of being cut by the lawn's edge.
+- The petanca pitch lies on the gravel, raked, in a timber edging. The three old men are on it: one throwing from his circle, one waiting with his boules, one bent over the jack with the boules gathered round it. No litter lands on the pitch.
+- The playground is on the lawn beside the path, not across it. Its swings are seen from above (the bar, the splayed legs, the seats swinging under it), and the spring rider is a blue horse, no longer a red post that read as a hydrant. El Parc's playground shares the drawing and gets the same swings and horse.
+- The drinking fountain is a green cast-iron column with its spout over a grate, a dog's bowl at its foot and wet gravel round it, at the west edge, instead of a small grey bowl in the middle of the path.
+- People picnic and shrubs grow on the lawns either side, where the walk had long empty stretches.
+- The pipicà is a pipicà: sauló with paw prints inside a green steel mesh fence on all four sides, the run along the walk's end drawn on the line its collider takes, an iron gate as wide as the path, plane trees, sniff posts, planters, a bag dispenser and a bin. No fallen logs. The city-block roof that showed as a grey slab inside the gate is gone (the edge layer draws nothing on this walk, which was hidden under the lawn everywhere else).
+- The autowalk reaches the pipicà a second sooner (27.7 s, was 28.7) and home at 34.7 s (was 36.1), from the moved trees and benches; its soaks and selftest are unchanged.
+
 ## 2026-10-18 - L'Estació audit fixes (#155)
 
 - The concourse floor is polished terrazzo instead of the street's tan paving: pale grey panels with brass divider strips, marble chips set in them, and the roof lights' reflections lying across the polish. No drain grates, road repairs, cracks or damp stains indoors.
@@ -141,7 +230,6 @@ Append-only session history, newest first.
   trick rework (no curb grinds), the off-leash games, the two-part tutorial,
   and certification notes for the new main menu.
 - docs/MICROSOFT_STORE.md step 7 is the whole per-release procedure.
-
 
 ## 2026-10-12 - hand-stepped tests step inside a physics frame
 

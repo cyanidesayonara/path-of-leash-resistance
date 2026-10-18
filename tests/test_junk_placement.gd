@@ -7,7 +7,7 @@ extends SceneTree
 # hall's drain gets wet-floor signs, not road cones.
 
 const LEVELS := ["street", "park", "beach", "rain", "market", "oldtown", "trail", "station",
-	"site", "spook", "scrap", "guell", "neteja", "barri", "montjuic"]
+	"site", "spook", "scrap", "guell", "neteja", "barri", "montjuic", "partit"]
 const JUNK := ["can", "bottle", "sack", "crate", "ball"]
 
 var checks := 0
