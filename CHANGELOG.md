@@ -12,6 +12,40 @@ Append-only session history, newest first.
 - The off-leash space past El Calvari is a dry hilltop, not a lawn: packed ochre earth worn pale in the middle, bleached grass, stones and scrub between the pines, and the wood beyond it in dusty olive. Its sign reads "the hilltop, off leash".
 - Gameplay: the extra columns in the hall and the viaduct are real poles. The behaviour snapshot's autowalk reaches freedom at 28.7 s instead of 30.1 s and the home leg at 44.8 s instead of 46.6 s; idle soaks and the self-test are unchanged.
 
+## 2026-10-18 - El Bosc and First Walk audit fixes
+
+- El Bosc's pinch at -2000 is crowded with trunks on both edges at once, about one every 80 px, staggered, so the trail narrows between them like a gateway and there is a trunk to wind the leash round at every step. Before, one tree stood on alternate sides every 80 to 100 px. The autowalk, soaks and selftest are unchanged, and a playtest through the pinch found no problems.
+- The First Walk's quiet lessons (the leash, marking, sniffing, the nose, barking, the zoomies, business and the vault) each have a park bench mid-path, and your human waits sat on it, on the phone, as the design brief says. The dog cannot walk through a bench. The tetherball, ledge and brink lessons keep your human standing where the lesson needs them.
+- No grass tufts grow on the brink lesson's pond.
+- "Move on" is a key cap in a prompt bar under the lesson card, for whichever device is in hand, instead of "(C to move on)" written into the lesson's sentence.
+- The grind lesson already had its stone ledge (the kerb the finding missed), so that finding no longer reproduces.
+
+## 2026-10-17 - El Barri audit fixes
+
+- El Barri's props are authored where they stand instead of being squeezed into the path, which had pushed the petanca players onto their pitch's edge, the ping-pong table off its prize and the trees into a ruled line on both edges at the same heights.
+- The plane trees stand in two rows that do not mirror, with uneven gaps, set in far enough that their shadows lie on the gravel instead of being cut by the lawn's edge.
+- The petanca pitch lies on the gravel, raked, in a timber edging. The three old men are on it: one throwing from his circle, one waiting with his boules, one bent over the jack with the boules gathered round it. No litter lands on the pitch.
+- The playground is on the lawn beside the path, not across it. Its swings are seen from above (the bar, the splayed legs, the seats swinging under it), and the spring rider is a blue horse, no longer a red post that read as a hydrant. El Parc's playground shares the drawing and gets the same swings and horse.
+- The drinking fountain is a green cast-iron column with its spout over a grate, a dog's bowl at its foot and wet gravel round it, at the west edge, instead of a small grey bowl in the middle of the path.
+- People picnic and shrubs grow on the lawns either side, where the walk had long empty stretches.
+- The pipicà is a pipicà: sauló with paw prints inside a green steel mesh fence on all four sides, the run along the walk's end drawn on the line its collider takes, an iron gate as wide as the path, plane trees, sniff posts, planters, a bag dispenser and a bin. No fallen logs. The city-block roof that showed as a grey slab inside the gate is gone (the edge layer draws nothing on this walk, which was hidden under the lawn everywhere else).
+- The autowalk reaches the pipicà a second sooner (27.7 s, was 28.7) and home at 34.7 s (was 36.1), from the moved trees and benches; its soaks and selftest are unchanged.
+
+## 2026-10-18 - L'Estació audit fixes (#155)
+
+- The concourse floor is polished terrazzo instead of the street's tan paving: pale grey panels with brass divider strips, marble chips set in them, and the roof lights' reflections lying across the polish. No drain grates, road repairs, cracks or damp stains indoors.
+- The ticket barriers are a row of steel gate cabinets, each with a black glass top, a card reader with a yellow ring and a green arrow light. At each gap the glass paddles are swung open, with a yellow line on the floor where you tap. The pillars are round iron columns standing on square granite plinths instead of plain squares.
+- The two strips that read as mismatched walkways are now plainly two things. The moving walkway is a steel travelator: grooved treads with joints moving the carry way, arrows in the tread, black handrails on glass balustrades, and comb plates with a yellow edge at each end. The white strip was the train, and now it looks like one from above: a dark grey roof with air-conditioning pods, a pantograph on every other car, black gangway bellows between the cars, the white and red Rodalies livery down its sides, and the cab's windscreen and headlamps at the front.
+- PIPICÀ is the station's old goods yard instead of a lawn: big concrete slabs with a rusted siding still set into them, running to a buffer stop, brick walls, and bike stands by the gate. Past the far wall are the running lines, with ballast, sleepers, two tracks and the catenary, and the station's sheds on either side.
+
+## 2026-10-17 - El Diluvi audit fixes (#152)
+
+- The open storm drains no longer read as a cafe table with its chairs out in the rain: four cones evenly round a dark disc did exactly that. Each drain now has a striped works board along each side and one cone ahead of it and one behind, the way the street walks.
+- The terrace the brief cuts is now on the walk the way a terrace is in a downpour: two stacks of rattan bistro chairs and the folded tables by the east kerb, chained to the lamp standard at y -2800 with a padlock, rain standing on the top seats, and the cafe's sandwich board out beside them. The stack is solid and your human aims wide of it.
+- The roofs either side were flat grey with the odd skylight. Now they are wet pantile roofs and tiled terrats with water tanks, parapets, chimneys, rain standing round the roof drains, brick party walls, and zinc gutters running full along the eaves. The arcade's roof is pantile too, with its gutter running over the columns.
+- Umbrellas are filled canopies from above, eight panels in light and shade, the ribs out to their tips, the ferrule in the middle and drops running off the rim, instead of an arc that read as a horseshoe magnet. Buskers on any walk in the rain carry the same one.
+- EL PORXO is a porch yard instead of the sunny dog park: a court of wet sauló with puddles and the grove's trees, a covered porch round three sides (terracotta tile in the roof's shade, stone columns along its open edge, a drip line where the eaves shed), stone walls and gateposts, downpipes into the court, and the porch roofs and the block's water tanks past the walls.
+
 ## 2026-10-17 - La Ferralla audit fixes
 
 - The wreck stacks are four kinds of car - a saloon, a hatchback, an estate van and a stack of crushed bales - in faded paint gone to rust, each car in a stack turned its own way and the top one changing kind and colour down the lane. The tops have rust patches, dents, a door missing or a wheel left lying on the roof, and the glassless windows show the seats. Same spots, same colliders.

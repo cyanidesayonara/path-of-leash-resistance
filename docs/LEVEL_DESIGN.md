@@ -127,6 +127,10 @@ with pickpockets and shenanigans happening around."
   its banks and in the ruts; fallen logs; roots; trees right up to the edge;
   a waymarker post as landmark; forest floor instead of lawn beside the path.
 - Off-leash: the clearing (as now), with a log pile and a stream pool.
+- Audit fixes (2026-10-18, #162): at the pinch (-2000) trunks crowd both
+  edges at once, about one every 80 px, so the trail narrows between them
+  and there is a trunk to wind the leash round at every step
+  (`LevelBuild.TRAIL_TREES`).
 - Wild boar: Collserola's boars. A sow and her striped piglets root along
   the path edge and cross it at their own pace; they steal nothing, but
   get between one and her piglets and she bumps the dog (and the owner)
@@ -154,6 +158,11 @@ with pickpockets and shenanigans happening around."
   the lawn.
 - Add: real puddles on the paving (splash, reflections), running gutters,
   shop awnings and an arcade as shelter, pedestrians with umbrellas.
+- Audit fixes (2026-10-17, #152): the storm drains are fenced with works
+  boards and two cones (four in a ring read as a cafe table); the terrace is
+  stacked and chained to a lamp standard by the east kerb; wet pantile roofs,
+  terrats with water tanks and running gutters either side; umbrellas are
+  filled canopies with ribs; EL PORXO is a porch yard round a wet court.
 
 ### El Mercat (market) - the market hall
 - Is: inside a covered market: stall rows as aisles, iron columns, the fish
@@ -195,6 +204,10 @@ with pickpockets and shenanigans happening around."
 - Cut: café terrace, bike crossings, manholes, lawn - it is indoors.
 - Add: pillars (wrap), barriers (a gap), bench rows, trolleys, the board as
   landmark.
+- Audit fixes (2026-10-18, #155): terrazzo floor with brass strips, no
+  drains; gate cabinets with readers and paddles; columns on plinths; a steel
+  travelator and a train that reads as a train; PIPICÀ is the old goods yard
+  with a siding and the running lines past its wall.
 
 ### Les Obres (site) - the roadworks
 - Is: a works detour: cement pours in formwork with cones and tape, fresh
@@ -312,6 +325,16 @@ park could be just a neighborhood park in bcn."
   every bench leg, sneak through the petanca game.
 - Built from El Parc's green layout (not the boulevard), kept small and
   calm: a short walk, few hazards, the off-leash area is the pipicà.
+- Audit fixes (2026-10-17, #160): everything authored in level space
+  (`LevelBuild.BARRI_*`), not fitted. Two rows of plane trees that do not
+  mirror, set in far enough that their shadows stay on the gravel; the
+  petanca pitch on the gravel with its players on it (thrower in his circle,
+  the next man waiting, one bent over the jack); the playground out on the
+  lawn, its swings seen from above; a green cast-iron drinking fountain with
+  a grate and a dog's bowl; people and shrubs on the lawns. The pipicà is
+  sauló inside a green steel mesh fence (the run along the walk's end
+  included, on its collider), an iron gate the path's width, plane trees,
+  sniff posts, planters and a bag dispenser, no fallen logs.
 
 ### First Walk (tutorial) - learn each trick in peace
 Santtu: "we should really upgrade the tutorial too, so that the user can
@@ -341,6 +364,12 @@ distractions of normal levels."
   Then the pipicà: off the lead, fetch.
 - A lesson a player has done on a real walk can still be practised; the
   tutorial is replayable from the menu.
+- Audit fixes (2026-10-18, #162): the quiet lessons ("bench" in
+  `systems/tutorial.gd`) have a park bench mid-path where the owner waits,
+  sat on it on the phone; the dog cannot walk through it. The brink pond
+  grows no grass. Moving on is offered in a prompt bar under the card, not
+  written into the lesson. The grind station's stone ledge is the kerb
+  lesson 10 asks for.
 
 ## Writing on the ground (each walk's name, in its own stuff)
 

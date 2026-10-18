@@ -3,7 +3,8 @@ extends SceneTree
 # El Diluvi is its own rainy shopping street (docs/LEVEL_DESIGN.md): the
 # arcade down one side and the awnings are dry (no slick paws there, and the
 # owner dries off under them), the owner soaks through out in the open, and
-# splashing through a puddle at speed is a trick. No terrace, no lawn.
+# splashing through a puddle at speed is a trick. No terrace out (it is
+# stacked and chained), no lawn.
 
 var checks := 0
 var failures: Array[String] = []
@@ -68,6 +69,21 @@ func _run() -> void:
 	for q: Dictionary in m.active_quests:
 		ids.append(q.id)
 	_check("dry" in ids and "splash" in ids, "El Diluvi has its dry and splash goals")
+	# the terrace is stacked and chained by the kerb, solid, out of the owner's line
+	var LevelBuild: GDScript = load("res://world/level_build.gd")
+	var tr: Rect2 = LevelBuild.diluvi_terrace(m)
+	_check(tr in m.solid_rects, "the stacked terrace is solid")
+	_check(tr in m.owner_keepouts, "the owner aims wide of the stacked terrace")
+	var e: Vector2 = m.walk_edges(tr.get_center().y)
+	_check(tr.position.x > e.x and tr.end.x < e.y, "the stacked terrace stands on the paving")
+	# a drain is fenced with boards above and below and a cone each open side:
+	# four cones evenly round it read as a cafe table and its chairs
+	var mh: Vector2 = m.manholes[0]
+	var near := 0
+	for cn: Node2D in m.get_tree().get_nodes_in_group("cones"):
+		if cn.position.distance_to(mh) < 60.0:
+			near += 1
+	_check(near == 2, "a storm drain has a cone at each open side (%d)" % near)
 	m.queue_free()
 	await process_frame
 	print("\n%d checks, %d failures" % [checks, failures.size()])

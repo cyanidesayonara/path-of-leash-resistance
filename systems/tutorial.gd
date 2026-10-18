@@ -25,7 +25,8 @@ extends RefCounted
 # is ever rushed; a lesson that needs the owner walking leaves it off.
 # "stand" (-1 west, 1 east) puts the waiting owner by that edge of the path,
 # for a lesson whose target is off to one side. "meter" names the HUD meter the
-# lesson uses (hud_panel.gd outlines it while the lesson is up).
+# lesson uses (hud_panel.gd outlines it while the lesson is up). "bench" sets
+# a park bench at the owner's spot, and they wait sat on it, on the phone.
 const STEPS: Array[Dictionary] = [
 	{
 		"id": "walk", "at": 60.0, "hold": false,
@@ -33,7 +34,7 @@ const STEPS: Array[Dictionary] = [
 		"body": "Walk up the path with {move_with}. Your human follows - badly.",
 	},
 	{
-		"id": "pull", "at": -420.0, "hold": true,
+		"id": "pull", "at": -420.0, "hold": true, "bench": true,
 		"title": "The leash is real rope.",
 		"body": "Your human has stopped. Walk on until the rope goes tight.",
 	},
@@ -43,37 +44,37 @@ const STEPS: Array[Dictionary] = [
 		"body": "Hold {plant} while the rope is tight. Your human cannot budge you.",
 	},
 	{
-		"id": "pee", "at": -1220.0, "hold": true, "meter": "tank",
+		"id": "pee", "at": -1220.0, "hold": true, "bench": true, "meter": "tank",
 		"title": "Business first.",
 		"body": "Hold {pee} at the hydrant to leave your mark. Your tank is the yellow bar.",
 	},
 	{
-		"id": "sniff", "at": -1620.0, "hold": true,
+		"id": "sniff", "at": -1620.0, "hold": true, "bench": true,
 		"title": "A good sniff.",
 		"body": "Stand still by the next hydrant and give it a good long read.",
 	},
 	{
-		"id": "nose", "at": -2020.0, "hold": true, "stand": -1,
+		"id": "nose", "at": -2020.0, "hold": true, "bench": true, "stand": -1,
 		"title": "Your nose beats your eyes.",
 		"body": "A snack is somewhere on the grass. Go slowly: the slower you go, the farther you smell.",
 	},
 	{
-		"id": "bark", "at": -2420.0, "hold": true,
+		"id": "bark", "at": -2420.0, "hold": true, "bench": true,
 		"title": "Use your voice.",
 		"body": "Press {bark} at the pigeons. It scatters them, and stops your human dead.",
 	},
 	{
-		"id": "turbo", "at": -2820.0, "hold": true, "meter": "zoomies",
+		"id": "turbo", "at": -2820.0, "hold": true, "bench": true, "meter": "zoomies",
 		"title": "The zoomies.",
 		"body": "Hold {turbo} to burn off the green bar. You are faster than they will ever be.",
 	},
 	{
-		"id": "bag", "at": -3220.0, "hold": true,
+		"id": "bag", "at": -3220.0, "hold": true, "bench": true,
 		"title": "Nature calls.",
 		"body": "Stand still and hold {plant} to squat. Your human bags it - eventually.",
 	},
 	{
-		"id": "vault", "at": -3620.0, "hold": true,
+		"id": "vault", "at": -3620.0, "hold": true, "bench": true,
 		"title": "The rope is a pivot.",
 		"body": "Hold {turbo}, catch the leash on the lamppost and keep running - swing around it and fly out.",
 	},
