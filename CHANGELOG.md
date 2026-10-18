@@ -12,6 +12,15 @@ Append-only session history, newest first.
 - The off-leash space past El Calvari is a dry hilltop, not a lawn: packed ochre earth worn pale in the middle, bleached grass, stones and scrub between the pines, and the wood beyond it in dusty olive. Its sign reads "the hilltop, off leash".
 - Gameplay: the extra columns in the hall and the viaduct are real poles. The behaviour snapshot's autowalk reaches freedom at 28.7 s instead of 30.1 s and the home leg at 44.8 s instead of 46.6 s; idle soaks and the self-test are unchanged.
 
+## 2026-10-17 - La Ferralla audit fixes
+
+- The wreck stacks are four kinds of car - a saloon, a hatchback, an estate van and a stack of crushed bales - in faded paint gone to rust, each car in a stack turned its own way and the top one changing kind and colour down the lane. The tops have rust patches, dents, a door missing or a wheel left lying on the roof, and the glassless windows show the seats. Same spots, same colliders.
+- The crane is a crawler crane: two tracks, the house slewed toward the jib with a striped counterweight, grille and exhaust, the glazed cab on its front corner, and a tapering lattice jib with pendant ropes out to the sheave and a striped hook block on its falls. The jib and hook are drawn overhead, above the dog and your human, and their shadows lie across the lane.
+- The strips along the fences are oily gravel: grit, oil soaked into it, a lost bolt, and only now and then a weed or a thistle. No lawn and no flowers. They play as before.
+- Rust streaks down the shed roofs from the ridge, every roof its own; some have a patch rusted through. No more grid of rust discs.
+- EL PATI is the scrapyard's back lot. Where a park has trees there are tyre stacks and groups of oil drums, on the same spots and as solid as the trunks were. Lengths of steel pipe lie where logs were, and a wheelless car on blocks sits in the north-west corner over its oil stain (solid, tucked into the corner so there is no gap to get stuck in). The behaviour snapshot for the walk is unchanged.
+- The laser and the camera shouted "THE THE LASER SAW YOU!": the name already carries its "the".
+
 ## 2026-10-17 - Les Obres audit fixes
 
 - The building line on Les Obres is a run of Heras fencing: mesh panels between concrete feet (the odd black rubber one), a coupler at each joint, a sandbag here and there, and now and then a contractor's banner. From straight above the mesh is the lattice of its shadow lying out beside it, solid under a banner. It is drawn on the verge canvas, above the sidewalk its shadow falls on.
@@ -117,7 +126,6 @@ Append-only session history, newest first.
   trick rework (no curb grinds), the off-leash games, the two-part tutorial,
   and certification notes for the new main menu.
 - docs/MICROSOFT_STORE.md step 7 is the whole per-release procedure.
-
 
 ## 2026-10-12 - hand-stepped tests step inside a physics frame
 
