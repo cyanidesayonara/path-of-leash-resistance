@@ -54,6 +54,10 @@ static func build(m: Node2D) -> void:
 					pts.append(Vector2(e.x if side == 0 else e.y, y))
 					y -= 40.0
 				m.rails.append(rail(pts, "BENCH GRIND"))
+		"partit":
+			# the steel crowd barriers along the avenue's kerbs
+			for run: Array in Partit.BARRIERS:
+				m.rails.append(line(Vector2(float(run[0]), float(run[1])), Vector2(float(run[0]), float(run[2])), "BARRIER RUN"))
 		"montjuic":
 			# the terrace walls, path to rim on either side, and the
 			# escalators' outer handrails

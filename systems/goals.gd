@@ -42,6 +42,10 @@ const LEVEL_GOAL_IDS := {
 		"combo", "prize", "outrun"],
 	# Montjuic: the climb, with the park staples
 	"montjuic": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "cable", "combo", "prize"],
+	# Dia de Partit, the corridor first (#238): the staples and its prize. The
+	# march, the scarf, the kickabout and the final whistle come with their set
+	# pieces. No Tofu: the way home belongs to the final whistle.
+	"partit": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "prize"],
 }
 
 

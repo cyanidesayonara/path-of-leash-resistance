@@ -1066,6 +1066,10 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 	if lvl == "montjuic":
 		Montjuic.draw_below(self, c, vt, vb)
 		return
+	if lvl == "partit":
+		# the avenue's own ground, sidewalks, stalls and blocks (systems/partit.gd)
+		Partit.draw_edge_layer(self, c, vt, vb)
+		return
 	var mod := 220.0                     # height of one facade module
 	var depth := 78.0                    # how far the detailed frontage juts
 	# Built-up walks fill everything past the building line with masonry, so
@@ -2059,6 +2063,8 @@ func pole_tree(i: int) -> int:
 		return TREE_OAK
 	if lvl == "trail":
 		return TREE_FOREST
+	if lvl == "partit":
+		return TREE_STREET if Partit.is_street_tree(p) else TREE_NONE
 	if lvl == "beach":
 		return TREE_PALM
 	if lvl == "oldtown":
@@ -3161,6 +3167,9 @@ func draw_overhead_onto(c: CanvasItem) -> void:
 		return
 	if lvl == "spook":
 		_draw_castanyada_lanterns(c)
+		return
+	if lvl == "partit":
+		Partit.draw_overhead(self, c)
 		return
 	if lvl == "market":
 		_draw_mercat_arch(c, LevelBuild.MERCAT_ARCH_Y, "MERCAT")
@@ -5164,6 +5173,9 @@ func draw_freedom_onto(c: Object) -> void:
 	if lvl == "montjuic":
 		Montjuic.draw_castle_beyond(self, c)
 		Montjuic.draw_esplanade(self, c)
+	elif lvl == "partit":
+		# the square beside the stadium, and the stadium past it
+		Partit.draw_freedom(self, c)
 	elif lvl == "oldtown":
 		# El Gòtic's plaça sits in the same roofscape as the alleys
 		_draw_gotic_roofs_round_placa(c)
@@ -9892,6 +9904,8 @@ const FREEDOM_KINDS := {
 	"market": "placa", "oldtown": "placa", "spook": "placa", "neteja": "placa",
 	# the castle's esplanade at the top of the hill
 	"montjuic": "placa",
+	# the square beside the stadium
+	"partit": "placa",
 }
 const BEACH_SEA_R := 430.0
 const BEACH_GATE_SHORE_X := 230.0
@@ -10808,7 +10822,8 @@ func _draw_world() -> void:
 			_draw_paving(maxf(vt, GATE_Y - 30.0), vb, walkway)
 			_wc.draw_line(Vector2(sw_l, bottom), Vector2(sw_l, GATE_Y), COL_SEAM, 3.0)
 			_wc.draw_line(Vector2(sw_r, bottom), Vector2(sw_r, GATE_Y), COL_SEAM, 3.0)
-		else:
+		elif lvl != "partit":
+			# (Dia de Partit's asphalt and sidewalks are on the cached edge layer)
 			_draw_walk_ribbon(vt, vb, bottom, walkway)
 	# (what lies beyond the gate is drawn by freedomlayer, which owns
 	# everything up there - drawing it here put a green field on top of the
@@ -10900,6 +10915,8 @@ func _draw_world() -> void:
 		_draw_neteja(wvt, vb)
 	if lvl == "guell":
 		_draw_mosaic(wvt, vb)
+	if lvl == "partit":
+		Partit.draw_live(self, _wc, wvt, vb)
 	if tutorial_mode:
 		_draw_tutorial_pond()
 		_draw_tutorial_ledge(wvt, vb)
@@ -10965,6 +10982,9 @@ func _draw_world() -> void:
 			continue
 		if lvl == "trail":
 			_draw_waymarker(_wc, h)
+			continue
+		if lvl == "partit":
+			Partit.draw_bollard(_wc, h)
 			continue
 		if lvl == "oldtown":
 			# a terracotta pot of geraniums by a door
@@ -11337,6 +11357,9 @@ func _draw_world() -> void:
 			continue
 		if lvl == "market":
 			Mercat.draw_van(self, _wc, v)
+			continue
+		if lvl == "partit":
+			Partit.draw_police_van(self, _wc, v)
 			continue
 		if lvl == "scrap":
 			_draw_wreck_stack(v)

@@ -84,6 +84,10 @@ const STYLES := {
 		"bass": "eighths", "drums": "drive", "verb": 0.16},
 	"montjuic": {"bpm": 92, "key": 2, "lead": "whistle", "lead2": ["vibes", 0], "comp": "arp",
 		"bass": "walk", "drums": "brush", "verb": 0.36},
+	# Dia de Partit: a first arrangement, claps and a driving bass under the
+	# whistle, until the match-day mix (the spec's last piece)
+	"partit": {"bpm": 116, "key": 3, "lead": "whistle", "lead2": ["marimba", -12], "comp": "stab",
+		"bass": "eighths", "drums": "claps", "verb": 0.24},
 	"freedom": {"bpm": 120, "key": 5, "lead": "whistle", "lead2": ["glock", 12], "comp": "arp",
 		"bass": "walk", "drums": "kickrim", "swing": 0.1, "verb": 0.22},
 }

@@ -32,6 +32,7 @@ const CROSS_SECTIONS := {
 	"scrap": ["grass", 70.0, "grass", 70.0],          # weeds up to the chain-link
 	"guell": ["none", 0.0, "none", 0.0],              # rubble-stone terrace walls
 	"neteja": ["none", 0.0, "none", 0.0],             # a back street
+	"partit": ["none", 0.0, "none", 0.0],             # sidewalks drawn inside the path (systems/partit.gd)
 }
 
 
@@ -893,6 +894,7 @@ static func apply_corridor(m: Node2D) -> void:
 		# corridor, so there is no getting round it - only ahead of it.
 		"neteja": half = 185.0
 		"montjuic": half = 175.0   # a hillside path, winding (Montjuic.edge_nodes)
+		"partit": half = 400.0     # the closed avenue, sidewalks included (Partit.edge_nodes)
 	m.walk_cx = 640.0
 	m.walk_half = half
 	m.sw_l = m.walk_cx - m.walk_half
@@ -1039,6 +1041,8 @@ static func apply_corridor(m: Node2D) -> void:
 		]
 	elif m.lvl == "montjuic":
 		m.edge_nodes = Montjuic.edge_nodes(m)
+	elif m.lvl == "partit":
+		m.edge_nodes = Partit.edge_nodes(m)
 	elif m.lvl == "trail":
 		# EL BOSC BENDS - the first walk in the game that is not a straight
 		# line. A woodland trail has no business being ruler-drawn: it wanders
@@ -1069,7 +1073,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit":
 		return
 	# Props were all authored for the old fixed 300..980 corridor, so a
 	# narrower walk would leave them stranded out on the verge. Pull every
@@ -1124,6 +1128,10 @@ static func build_level_data(m: Node2D) -> void:
 	match geo:
 		"montjuic":
 			hyd_list.assign(Montjuic.build(m))
+		"partit":
+			var pl: Array = Partit.build(m)
+			hyd_list.assign(pl[0])
+			keb_list.assign(pl[1])
 		"street":
 			m.lane_ys = Array([-1200.0, -2600.0, -4000.0], TYPE_FLOAT, &"", null)
 			m.gate_text = "PIPICÀ"
@@ -1744,6 +1752,10 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "montjuic":
 		for c: Vector2 in Montjuic.CACTI:
 			m.poles.append(c)
+	# Dia de Partit's stalls, cars and barrier stubs: their corners catch the
+	# rope; their bodies are the rects in Partit.solids
+	if m.lvl == "partit":
+		m.poles.append_array(Partit.wrap_points(m))
 	# the hazardous hard-to-reach collectible: one per level, in a spot
 	# that costs you something to reach (deliberately outside the corridor
 	# on some walks, so it is exempt from the corridor fit)
@@ -1789,6 +1801,9 @@ static func build_level_data(m: Node2D) -> void:
 		"scrap":
 			m.prize_pos = m.guard_posts[1] + Vector2(-30.0, 22.0)  # right beside a sleeping guard dog
 			m.prize_text = "steal the bone from under the guard's nose"
+		"partit":
+			m.prize_pos = Partit.PRIZE
+			m.prize_text = Partit.PRIZE_TEXT
 		_:
 			m.prize_pos = Vector2(m.SHOULDER_R - 12.0, -2400.0)
 			m.prize_text = "fetch the frisbee"
@@ -2291,6 +2306,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 		"spook":
 			out.append(["cast_roaster", Rect2(CAST_PLACA - CAST_ROASTER * 0.5, CAST_ROASTER)])
 			out.append(["cast_stage", castanyada_stage(m)])
+		"partit":
+			var ps: Array[Rect2] = Partit.solids(m)
+			for i in range(ps.size()):
+				out.append(["partit_%d" % i, ps[i]])
 	return out
 
 
@@ -2623,6 +2642,10 @@ static func build_walls(m: Node2D) -> void:
 	if m.lvl == "spook":
 		add_rect_body(m, CAST_PLACA, CAST_ROASTER)
 		add_rect_body(m, castanyada_stage(m).get_center(), castanyada_stage(m).size)
+	# Dia de Partit's stalls, parked cars, barrier stubs and the stadium's lanes
+	if m.lvl == "partit":
+		for r: Rect2 in Partit.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
 	# El Mercat's stall blocks down the middle of the hall
 	if m.lvl == "market":
 		for blk: Rect2 in MERCAT_BLOCKS:
@@ -2702,7 +2725,7 @@ static func build_entities(m: Node2D) -> void:
 	m.edge_layer.z_index = -5   # behind everything in the world
 	# what hangs over the walk, above everyone (El Gotic's bridge, El Mercat's
 	# arches, La Castanyada's lantern strings)
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "beach":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "beach" or m.lvl == "partit":
 		var ov := Node2D.new()
 		ov.set_script(load("res://world/overheadlayer.gd"))
 		ov.z_index = 14

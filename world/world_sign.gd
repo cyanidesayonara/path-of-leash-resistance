@@ -27,6 +27,7 @@ const MATERIALS := {
 	"barri": "leaves", "street": "carnations", "park": "flowerbed", "beach": "sand",
 	"rain": "puddle", "market": "fruit", "trail": "sticks", "site": "cones",
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
+	"partit": "pipes",
 }
 # the colour a material's gloss, the line under the name, is written in
 const GLOSS := {
@@ -37,6 +38,7 @@ const GLOSS := {
 	"chestnuts": Color(0.96, 0.84, 0.62, 0.85), "plate": Color(0.86, 0.78, 0.66, 0.8),
 	"trencadis": Color(0.14, 0.30, 0.62, 0.85), "suds": Color(0.94, 0.97, 1.0, 0.8),
 	"prints": Color(0.50, 0.56, 0.70, 0.8),
+	"pipes": Color(0.20, 0.18, 0.16, 0.85),
 }
 
 # How each material moves. spacing: piece pitch along a stroke, in cap
@@ -45,6 +47,7 @@ const GLOSS := {
 # where it was laid (planted things); fixed: laid in, does not move at all.
 const FEEL := {
 	"leaves": {"spacing": 0.12, "r": 0.085, "drag": 5.0, "take": 1.1, "spin": 5.0},
+	"pipes": {"spacing": 0.07, "r": 0.05, "drag": 6.0, "take": 1.3, "spin": 6.0},
 	"carnations": {"spacing": 0.15, "r": 0.09, "drag": 4.0, "take": 0.9, "spin": 3.0},
 	"flowerbed": {"spacing": 0.075, "r": 0.06, "drag": 7.0, "take": 0.8, "spring": 14.0},
 	"sand": {"spacing": 0.085, "r": 0.075, "drag": 9.0, "take": 0.35, "scuff": true},
@@ -287,6 +290,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 	match String(sign.mat):
 		"leaves":
 			_leaves(c, sign, h)
+		"pipes":
+			_pipes(c, sign, h)
 		"carnations":
 			_carnations(c, sign, h)
 		"flowerbed":
@@ -348,6 +353,36 @@ static func _leaves(c: Object, sign: Dictionary, h: float) -> void:
 		c.draw_circle(Vector2(r * 0.45, 0), r * 0.6, col.lightened(0.08))
 		c.draw_line(Vector2(-r * 1.2, 0), Vector2(r * 1.1, 0), col.darkened(0.35), 1.2)
 		c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+static func _pipes(c: Object, sign: Dictionary, h: float) -> void:
+	# sunflower seed shells, spat out the way a whole stand of fans does: little
+	# black teardrops striped grey, most split open, each lying its own way.
+	# Rotated by hand rather than with draw_set_transform, so the whole name
+	# stays one batch on the sign layer instead of a draw call a shell.
+	var cols := [Color(0.14, 0.13, 0.12), Color(0.22, 0.20, 0.18), Color(0.30, 0.28, 0.25)]
+	for pc: Dictionary in sign.pieces:
+		var col := _pick(cols, float(pc["var"]))
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var ax := Vector2.from_angle(float(pc.rot))
+		var ay := ax.orthogonal()
+		c.draw_colored_polygon(_shell(p + Vector2(0.6, 0.8), ax, ay, r), Color(0, 0, 0, 0.14))
+		c.draw_colored_polygon(_shell(p, ax, ay, r), col)
+		c.draw_line(p - ax * r * 0.8, p + ax * r * 1.1, Color(0.78, 0.76, 0.70, 0.85), 1.0)
+		if float(pc["var"]) > 0.4:
+			# split: the pale inside of the other half showing
+			c.draw_colored_polygon(_shell(p + ay * r * 0.5 - ax * r * 0.2, ax, ay, r * 0.6), Color(0.86, 0.82, 0.70))
+
+
+# a seed shell's outline: a teardrop, blunt at the back, pointed at the front
+static func _shell(p: Vector2, ax: Vector2, ay: Vector2, r: float) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for k in range(8):
+		var a := TAU * float(k) / 8.0
+		var along := cos(a) * r * (1.4 if cos(a) > 0.0 else 1.0)
+		pts.append(p + ax * along + ay * sin(a) * r * 0.5)
+	return pts
 
 
 static func _carnations(c: Object, sign: Dictionary, h: float) -> void:

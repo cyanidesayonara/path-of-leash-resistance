@@ -9,7 +9,7 @@ extends SceneTree
 
 const Surfaces := preload("res://world/surfaces.gd")
 const LEVELS := ["barri", "street", "park", "beach", "rain", "market", "oldtown", "trail",
-	"station", "site", "spook", "scrap", "guell", "neteja", "montjuic", "tutorial"]
+	"station", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "tutorial"]
 const STEP := Vector2(24.0, 40.0)
 
 
