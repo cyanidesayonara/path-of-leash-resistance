@@ -36,6 +36,20 @@ const CROSS_SECTIONS := {
 
 
 # the brink lesson's pond, on the grass just off the path's east edge
+# the benches the owner waits on at the quiet lessons ("bench" in
+# systems/tutorial.gd): a seat under where they stop, the backrest behind them
+static func tutorial_benches(m: Node2D) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	if not m.tutorial_mode:
+		return out
+	for i in range(TUT.step_count()):
+		if not bool(TUT.step(i).get("bench", false)):
+			continue
+		var hp: Vector2 = m.tut_hold_point(i)
+		out.append(Rect2(hp.x - 26.0, hp.y - 10.0, 52.0, 14.0))
+	return out
+
+
 static func tutorial_pond(m: Node2D) -> Rect2:
 	var y: float = TUT.at("teeter")
 	var e: Vector2 = m.walk_edges(y)
@@ -103,15 +117,21 @@ const MOSAIC_SALAMANDER := Vector2(640.0, -930.0)
 const MOSAIC_SALAMANDER_SIZE := Vector2(110.0, 200.0)
 const MOSAIC_HALL_Y0 := -1550.0       # the hypostyle hall
 const MOSAIC_HALL_Y1 := -2550.0
-const MOSAIC_HALL_COLS: Array[float] = [460.0, 575.0, 705.0, 820.0]
-const MOSAIC_HALL_ROWS: Array[float] = [-1660.0, -1860.0, -2060.0, -2260.0, -2460.0]
+# six columns across and nine deep, the owner's lane left down the middle
+const MOSAIC_HALL_COLS: Array[float] = [350.0, 460.0, 575.0, 705.0, 820.0, 930.0]
+const MOSAIC_HALL_ROWS: Array[float] = [-1660.0, -1760.0, -1860.0, -1960.0, -2060.0, -2160.0, -2260.0, -2360.0, -2460.0]
 const MOSAIC_PLAZA_Y0 := -2750.0      # the plaza and its serpentine bench
 const MOSAIC_PLAZA_Y1 := -3650.0
 const MOSAIC_BAY := 150.0
 const MOSAIC_VIADUCT_Y0 := -4100.0    # the viaduct
 const MOSAIC_VIADUCT_Y1 := -4650.0
 const MOSAIC_VIADUCT_CX := 590.0
-const MOSAIC_CALVARY := Vector2(860.0, -4760.0)
+# the viaduct's colonnade: the leaning outer row against the hill, the inner
+# row this far in from it, columns this far apart along each
+const MOSAIC_VIADUCT_OUTER := 30.0
+const MOSAIC_VIADUCT_INNER := 130.0
+const MOSAIC_VIADUCT_STEP := 80.0
+const MOSAIC_CALVARY := Vector2(790.0, -4790.0)
 
 
 static func mosaic(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
@@ -128,11 +148,15 @@ static func mosaic(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 	for y: float in MOSAIC_HALL_ROWS:
 		for x: float in MOSAIC_HALL_COLS:
 			m.poles.append(Vector2(x, y))
-	# the viaduct's leaning columns down its east side
+	# the viaduct's colonnade down its east side: the covered walk between
+	# the leaning outer row and the inner row, staggered
 	var vy := MOSAIC_VIADUCT_Y0 - 40.0
 	while vy > MOSAIC_VIADUCT_Y1 + 20.0:
-		m.poles.append(Vector2(m.walk_edges(vy).y - 30.0, vy))
-		vy -= 110.0
+		m.poles.append(Vector2(m.walk_edges(vy).y - MOSAIC_VIADUCT_OUTER, vy))
+		var iy := vy - MOSAIC_VIADUCT_STEP * 0.5
+		if iy > MOSAIC_VIADUCT_Y1 + 20.0:
+			m.poles.append(Vector2(m.walk_edges(iy).y - MOSAIC_VIADUCT_INNER, iy))
+		vy -= MOSAIC_VIADUCT_STEP
 	m.deco_pole_count = m.poles.size()
 	m.astands = Array([], TYPE_VECTOR2, &"", null)
 	m.manholes = Array([], TYPE_VECTOR2, &"", null)
@@ -648,10 +672,25 @@ static func diluvi(m: Node2D) -> void:
 	m.owner_keepouts.append(diluvi_terrace(m))
 
 
-# EL BARRI's pieces, in level space
-const BARRI_PETANCA := Rect2(360.0, -1980.0, 150.0, 260.0)
-const BARRI_PLAYGROUND := Rect2(790.0, -4000.0, 166.0, 300.0)
-const BARRI_PINGPONG := Vector2(760.0, -2560.0)
+# EL BARRI's pieces, in level space (the path is 400..880). Everything in the
+# walk is authored here rather than fitted: the petanca pitch lies on the
+# gravel, the playground on the lawn beside it, and the plane trees stand far
+# enough in from each edge that their shadows fall on the gravel.
+const BARRI_PETANCA := Rect2(412.0, -1985.0, 130.0, 250.0)
+const BARRI_PLAYGROUND := Rect2(906.0, -4010.0, 166.0, 300.0)
+const BARRI_PINGPONG := Vector2(706.0, -2560.0)
+# the drinking fountain: a cast-iron column at the gravel's west edge
+const BARRI_FONT := Vector2(448.0, -3150.0)
+# the plane trees, two rows that do not mirror: the west row hugs its edge,
+# the east row stands further in, and neither keeps an even step
+const BARRI_TREES: Array[Vector2] = [
+	Vector2(436.0, -300.0), Vector2(444.0, -690.0), Vector2(432.0, -1060.0), Vector2(440.0, -1420.0),
+	Vector2(438.0, -2250.0), Vector2(446.0, -2640.0), Vector2(434.0, -2930.0), Vector2(440.0, -3420.0),
+	Vector2(432.0, -3790.0), Vector2(444.0, -4150.0), Vector2(436.0, -4560.0),
+	Vector2(812.0, -470.0), Vector2(818.0, -880.0), Vector2(806.0, -1250.0), Vector2(816.0, -1620.0),
+	Vector2(810.0, -1960.0), Vector2(814.0, -2330.0), Vector2(808.0, -2790.0), Vector2(816.0, -3110.0),
+	Vector2(812.0, -3560.0), Vector2(806.0, -3930.0), Vector2(818.0, -4330.0), Vector2(810.0, -4700.0),
+]
 
 
 # LES OBRES. Wet cement poured in rectangular formwork, half the footway
@@ -847,13 +886,17 @@ static func bandstand_posts() -> Array[Vector2]:
 
 # El Bosc: trunks along and in the trail, authored in the 300..980 space
 # that fit_props_to_corridor maps onto the path at each y (300 = hard
-# against the left edge). Closer together at the pinch (-2000), none on the
-# footbridge.
+# against the left edge). At the pinch (-2000) they crowd both edges at
+# once, a trunk every 80 or so, so the trail narrows between them like a
+# gateway and there is a trunk to wind the leash round at every step; none
+# on the footbridge.
 const TRAIL_TREES: Array[Vector2] = [
 	Vector2(300, -380), Vector2(980, -700), Vector2(300, -960),
 	Vector2(600, -1150), Vector2(700, -1300), Vector2(600, -1450),
 	Vector2(980, -1180), Vector2(300, -1640), Vector2(980, -1780),
-	Vector2(300, -1880), Vector2(980, -1960), Vector2(300, -2060), Vector2(980, -2140),
+	Vector2(300, -1860), Vector2(960, -1900), Vector2(318, -1945), Vector2(980, -1985),
+	Vector2(300, -2030), Vector2(966, -2070), Vector2(312, -2115), Vector2(980, -2160),
+	Vector2(300, -2210),
 	Vector2(300, -2760), Vector2(980, -2960), Vector2(640, -3360),
 	Vector2(300, -3160), Vector2(980, -3560), Vector2(300, -3720),
 	Vector2(980, -4060), Vector2(300, -4300), Vector2(560, -4460), Vector2(720, -4580),
@@ -1104,6 +1147,9 @@ static func fit_props_to_corridor(m: Node2D) -> void:
 	# level space
 	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell":
 		return
+	# and so does El Barri; the First Walk, built on it, is still fitted
+	if m.lvl == "barri" and not m.tutorial_mode:
+		return
 	# Props were all authored for the old fixed 300..980 corridor, so a
 	# narrower walk would leave them stranded out on the verge. Pull every
 	# placed prop back inside whatever corridor this level declared, keeping
@@ -1306,36 +1352,38 @@ static func build_level_data(m: Node2D) -> void:
 			]
 			keb_list = [Vector2(760, -1800), Vector2(700, -3900)]
 		"barri":
-			# EL BARRI: the neighbourhood park. Plane trees in rows down both
-			# edges of a gravel square, benches facing each other, a
-			# ping-pong table, the petanca pitch, a playground, a fountain.
+			# EL BARRI: the neighbourhood park. Plane trees in two rows on a
+			# gravel square, benches between them, a ping-pong table, the
+			# petanca pitch, the drinking fountain, and the playground on the
+			# lawn beside it all. Level space throughout (fit_props_to_corridor
+			# leaves the walk alone, the First Walk excepted).
 			m.gate_text = "PIPICÀ"
-			var y := -320.0
-			var k := 0
-			while y > m.GATE_Y + 260.0:
-				for x: float in [300.0, 980.0]:
-					var tp := Vector2(x, y + (40.0 if (k + int(x)) % 2 == 0 else 0.0))
-					if not BARRI_PETANCA.grow(70.0).has_point(tp) and not BARRI_PLAYGROUND.grow(70.0).has_point(tp):
-						m.poles.append(tp)
-				y -= 380.0
-				k += 1
+			# the pipicà's gate is the path's width, so its fence can run
+			# right up to the gateposts on the line its collider takes
+			m.gate_l = 400.0
+			m.gate_r = 880.0
+			for tp: Vector2 in BARRI_TREES:
+				m.poles.append(tp)
 			m.deco_pole_count = m.poles.size()
-			m.benches = Array([Vector2(336, -900), Vector2(944, -900), Vector2(336, -2600),
-				Vector2(944, -3400), Vector2(336, -4300)], TYPE_VECTOR2, &"", null)
-			m.bins = Array([Vector2(m.sw_l + 30, -700), Vector2(m.sw_r - 30, -2200),
-				Vector2(m.sw_l + 30, -3700)], TYPE_VECTOR2, &"", null)
+			m.benches = Array([Vector2(452, -880), Vector2(828, -1080), Vector2(452, -2470),
+				Vector2(828, -2960), Vector2(828, -3280), Vector2(452, -4320), Vector2(828, -4520)], TYPE_VECTOR2, &"", null)
+			m.bins = Array([Vector2(470, -960), Vector2(800, -2200), Vector2(470, -3620),
+				Vector2(800, -4610)], TYPE_VECTOR2, &"", null)
 			m.stalls = Array([BARRI_PINGPONG], TYPE_VECTOR2, &"", null)
 			m.stall_kinds = Array(["pingpong"], TYPE_STRING, &"", null)
-			# the petanca players, stood round the pitch
-			var pc: Vector2 = BARRI_PETANCA.get_center()
-			m.performers = Array([pc + Vector2(-70, -40), pc + Vector2(-66, 50), pc + Vector2(70, 10)], TYPE_VECTOR2, &"", null)
-			m.fountains = Array([Vector2(640, -2950)], TYPE_VECTOR2, &"", null)
+			# the petanca players, on the pitch: one throwing from his circle at
+			# the south end, one waiting his turn beside him, one bent over the
+			# jack at the far end to see whose boule is nearer
+			var pp: Rect2 = BARRI_PETANCA
+			m.performers = Array([Vector2(pp.position.x + 52.0, pp.end.y - 30.0),
+				Vector2(pp.position.x + 100.0, pp.end.y - 44.0),
+				Vector2(pp.position.x + 76.0, pp.position.y + 58.0)], TYPE_VECTOR2, &"", null)
+			m.fountains = Array([BARRI_FONT], TYPE_VECTOR2, &"", null)
 			hyd_list = [
-				Vector2(m.sw_l + 45, -500), Vector2(m.sw_r - 45, -1500),
-				Vector2(m.sw_l + 45, -2300), Vector2(m.sw_r - 45, -3100),
-				Vector2(m.sw_l + 45, -4600),
+				Vector2(517, -500), Vector2(763, -1500), Vector2(517, -2300),
+				Vector2(763, -3700), Vector2(517, -4620),
 			]
-			keb_list = [Vector2(600, -1300), Vector2(700, -4000)]
+			keb_list = [Vector2(615, -1300), Vector2(678, -4000)]
 			# the playground's sandpit is sand
 			m.patches.append({"y": BARRI_PLAYGROUND.get_center().y + 40.0, "at": 0.0, "rx": 44.0, "ry": 34.0,
 				"seed": 3.1, "kind": "sand", "pin": BARRI_PLAYGROUND.get_center() + Vector2(-28.0, 40.0)})
@@ -1903,6 +1951,19 @@ static func build_verge(m: Node2D) -> void:
 				var tx: float = (te.x - 62.0) if float(spec[1]) < 0.0 else (te.y + 62.0)
 				tv.append({"pos": Vector2(tx, float(spec[0])), "kind": String(spec[2])})
 			m.verge_items = Array(tv, TYPE_DICTIONARY, &"", null)
+		"barri":
+			# the neighbourhood's lawns either side of the square: people
+			# sitting out, and clipped shrubs, clear of the playground
+			if not m.tutorial_mode:
+				m.verge_items = Array([
+					{"pos": Vector2(vl - 10.0, -620.0), "kind": "bush"},
+					{"pos": Vector2(vr + 10.0, -1240.0), "kind": "picnic"},
+					{"pos": Vector2(vl + 6.0, -2120.0), "kind": "bush"},
+					{"pos": Vector2(vr - 6.0, -2600.0), "kind": "bush"},
+					{"pos": Vector2(vl - 4.0, -3380.0), "kind": "picnic"},
+					{"pos": Vector2(vl + 8.0, -4060.0), "kind": "bush"},
+					{"pos": Vector2(vr + 4.0, -4420.0), "kind": "bush"},
+				], TYPE_DICTIONARY, &"", null)
 	# La Rambla has no lawn any more, so no picnics on it (the First Walk
 	# keeps its boulevard as it was)
 	if m.lvl == "street" and not m.tutorial_mode:
@@ -2112,10 +2173,16 @@ static func build_park_props(m: Node2D) -> void:
 		"beach": flavour = ["driftwood", "dig", "rock", "dig", "rock"]
 		"scrap", "site": flavour = ["tyre", "log", "dig", "tyre"]
 		"trail", "park": flavour = ["log", "dig", "shrub", "shrub", "post", "dig"]
+		# a pipicà has no fallen wood: sniff posts, shrubs and planters on the sauló
+		"barri": flavour = ["post", "dig", "planter", "shrub", "dig", "post"]
 	if m.freedom_kind == "placa":
 		flavour = ["post", "planter", "post", "dig"]
 		# two stone planters always, the square's solid things to run round
 		for pa: Vector2 in [Vector2(370.0, m.GATE_Y - 470.0), Vector2(1010.0, m.GATE_Y - 230.0)]:
+			m.park_props.append({"pos": m.agility.push_out(pa, 26.0), "kind": "planter", "done": false, "prog": 0.0})
+	if m.lvl == "barri":
+		# the pipicà's two planted beds, always: its solid things to run round
+		for pa: Vector2 in [Vector2(330.0, m.GATE_Y - 430.0), Vector2(960.0, m.GATE_Y - 250.0)]:
 			m.park_props.append({"pos": m.agility.push_out(pa, 26.0), "kind": "planter", "done": false, "prog": 0.0})
 	var lo = m.freedom_lo + 70.0
 	var hi = m.GATE_Y - 90.0
@@ -2532,6 +2599,17 @@ static func build_walls(m: Node2D) -> void:
 			pcs.shape = psh
 			pb.add_child(pcs)
 			m.add_child(pb)
+	# the tutorial's benches stop the dog; the owner sits on theirs
+	for tb: Rect2 in tutorial_benches(m):
+		var bb := StaticBody2D.new()
+		bb.collision_layer = LOW_LAYER
+		bb.position = tb.get_center()
+		var bcs := CollisionShape2D.new()
+		var bsh := RectangleShape2D.new()
+		bsh.size = tb.size
+		bcs.shape = bsh
+		bb.add_child(bcs)
+		m.add_child(bb)
 	if m.lvl == "trail":
 		for lr: Rect2 in trail_logs(m):
 			var lb := StaticBody2D.new()
@@ -2930,6 +3008,9 @@ static func junk_spot_clear(m: Node2D, p: Vector2) -> bool:
 	for r: Rect2 in m.solid_rects:
 		if r.grow(14.0).has_point(p):
 			return false
+	# nor on El Barri's petanca pitch, which the old men keep raked
+	if m.lvl == "barri" and not m.tutorial_mode and BARRI_PETANCA.grow(10.0).has_point(p):
+		return false
 	# nor on a street seller's blanket of goods
 	for bl: Dictionary in m.blankets:
 		if Rect2(bl["rect"]).grow(10.0).has_point(p):

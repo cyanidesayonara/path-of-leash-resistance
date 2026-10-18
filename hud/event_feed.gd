@@ -306,6 +306,10 @@ func _draw_cards(vs: Vector2) -> void:
 		draw_string(Kit.body(), Vector2(r.position.x, r.position.y + 56.0), hint, HORIZONTAL_ALIGNMENT_CENTER, w, 16,
 			Kit.INK_SOFT)
 		y += 80.0
+		# moving on is a button, so it goes in the prompt bar, as on every
+		# menu screen, and never into the lesson's sentence
+		if bool(main.get("tut_skippable")):
+			Kit.prompt_bar(self, vs, [["skip", "move on"]])
 	if main.challenge_l != null and main.challenge_l.visible and main.challenge != null:
 		_dare_card(vs, y)
 
