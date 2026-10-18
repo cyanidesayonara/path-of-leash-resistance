@@ -550,6 +550,20 @@ const DILUVI_ARCADE_W := 84.0          # from the building line to the pillars
 const DILUVI_AWNINGS: Array = [[-700.0, 110.0], [-1050.0, 90.0], [-1650.0, 120.0], [-2150.0, 100.0],
 	[-2650.0, 110.0], [-3150.0, 90.0], [-3650.0, 120.0], [-4150.0, 100.0], [-4550.0, 90.0]]
 const DILUVI_AWNING_D := 56.0
+# an open storm drain's cones, one ahead and one behind it the way the street
+# walks, and the striped boards along its sides: [half length, offset]
+const DILUVI_DRAIN_CONES: Array = [Vector2(3, -44), Vector2(-4, 46)]
+const DILUVI_DRAIN_BOARD := Vector2(32.0, 42.0)
+# the cafe's terrace in a downpour: its chairs stacked and its tables folded
+# by the east kerb, chained to the lamp standard at y -2800, its sandwich
+# board out beside them. Solid, like any furniture.
+const DILUVI_TERRACE_Y := -2755.0
+const DILUVI_TERRACE_SIZE := Vector2(36.0, 58.0)
+
+
+static func diluvi_terrace(m: Node2D) -> Rect2:
+	var e: Vector2 = m.walk_edges(DILUVI_TERRACE_Y)
+	return Rect2(Vector2(e.y - 52.0, DILUVI_TERRACE_Y - DILUVI_TERRACE_SIZE.y * 0.5), DILUVI_TERRACE_SIZE)
 
 
 # Where it is dry on El Diluvi: the arcade and under each awning.
@@ -578,7 +592,7 @@ static func diluvi(m: Node2D) -> void:
 	m.cellars.clear()
 	m.stalls.clear()
 	m.vans.clear()
-	m.astands = Array([Vector2(860, -2900)], TYPE_VECTOR2, &"", null)
+	m.astands = Array([Vector2(900, -2680)], TYPE_VECTOR2, &"", null)   # the cafe's board, by its stacked terrace
 	# lamp standards down the east side, the arcade's pillars down the west
 	m.poles.clear()
 	for i in range(8):
@@ -613,6 +627,9 @@ static func diluvi(m: Node2D) -> void:
 		{"y": -4700.0, "at": 0.35, "rx": 58.0, "ry": 32.0, "seed": 3.3, "kind": "puddle"},
 	], TYPE_DICTIONARY, &"", null)
 	m.shelters = diluvi_shelters(m)
+	# the stacked terrace by the east kerb: the owner aims wide of it
+	m.owner_keepouts.clear()
+	m.owner_keepouts.append(diluvi_terrace(m))
 
 
 # EL BARRI's pieces, in level space
@@ -2290,6 +2307,8 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ds: Array[Vector2] = neteja_dumpsters(m)
 			for i in range(ds.size()):
 				out.append(["neteja_dumpster_%d" % i, Rect2(ds[i] - NETEJA_DUMPSTER * 0.5, NETEJA_DUMPSTER)])
+		"rain":
+			out.append(["diluvi_terrace", diluvi_terrace(m)])
 		"scrap":
 			out.append(["ferralla_yard_wreck", Ferralla.yard_wreck(m._freedom_rect())])
 		"spook":
@@ -2623,6 +2642,10 @@ static func build_walls(m: Node2D) -> void:
 	if m.lvl == "neteja":
 		for d: Vector2 in neteja_dumpsters(m):
 			add_rect_body(m, d, NETEJA_DUMPSTER)
+	# El Diluvi's terrace, stacked and chained under the arcade
+	if m.lvl == "rain":
+		var dt := diluvi_terrace(m)
+		add_rect_body(m, dt.get_center(), dt.size)
 	# La Ferralla's wreck in the yard's corner
 	if m.lvl == "scrap":
 		var yw: Rect2 = Ferralla.yard_wreck(m._freedom_rect())
@@ -2768,7 +2791,13 @@ static func spawn_cones(m: Node2D) -> void:
 		spots.append([MERCAT_DRAIN + Vector2(34, -20), "wetfloor"])
 		spots.append([MERCAT_DRAIN + Vector2(-32, 22), "wetfloor"])
 	for m_local in m.manholes:
-		for off: Vector2 in [Vector2(32, -18), Vector2(-30, 22), Vector2(26, 28), Vector2(-26, -26)]:
+		# El Diluvi's storm drains are fenced with striped boards along their
+		# sides (main.gd draws them) and a cone at each open end: four cones
+		# evenly round a dark disc read as a cafe table and its chairs
+		var offs: Array = [Vector2(32, -18), Vector2(-30, 22), Vector2(26, 28), Vector2(-26, -26)]
+		if m.lvl == "rain":
+			offs = DILUVI_DRAIN_CONES
+		for off: Vector2 in offs:
 			spots.append([m_local + off, "cone"])
 	# a cone each end of a cellar hatch; Les Obres' trench sets its own, and
 	# two on its plank would be two cones in the owner's way

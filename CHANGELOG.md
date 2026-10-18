@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-10-17 - El Diluvi audit fixes (#152)
+
+- The open storm drains no longer read as a cafe table with its chairs out in the rain: four cones evenly round a dark disc did exactly that. Each drain now has a striped works board along each side and one cone ahead of it and one behind, the way the street walks.
+- The terrace the brief cuts is now on the walk the way a terrace is in a downpour: two stacks of rattan bistro chairs and the folded tables by the east kerb, chained to the lamp standard at y -2800 with a padlock, rain standing on the top seats, and the cafe's sandwich board out beside them. The stack is solid and your human aims wide of it.
+- The roofs either side were flat grey with the odd skylight. Now they are wet pantile roofs and tiled terrats with water tanks, parapets, chimneys, rain standing round the roof drains, brick party walls, and zinc gutters running full along the eaves. The arcade's roof is pantile too, with its gutter running over the columns.
+- Umbrellas are filled canopies from above, eight panels in light and shade, the ribs out to their tips, the ferrule in the middle and drops running off the rim, instead of an arc that read as a horseshoe magnet. Buskers on any walk in the rain carry the same one.
+- EL PORXO is a porch yard instead of the sunny dog park: a court of wet sauló with puddles and the grove's trees, a covered porch round three sides (terracotta tile in the roof's shade, stone columns along its open edge, a drip line where the eaves shed), stone walls and gateposts, downpipes into the court, and the porch roofs and the block's water tanks past the walls.
+
 ## 2026-10-17 - La Ferralla audit fixes
 
 - The wreck stacks are four kinds of car - a saloon, a hatchback, an estate van and a stack of crushed bales - in faded paint gone to rust, each car in a stack turned its own way and the top one changing kind and colour down the lane. The tops have rust patches, dents, a door missing or a wheel left lying on the roof, and the glassless windows show the seats. Same spots, same colliders.
