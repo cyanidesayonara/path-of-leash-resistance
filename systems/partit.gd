@@ -11,7 +11,7 @@ extends RefCounted
 # pieces come in later pieces.
 #
 # Branding (the spec's rules): no club, crest, sponsor, player or stadium
-# name anywhere. Home colours are blue and claret, in halves; flags carry a
+# name anywhere. Home colors are blue and claret, in halves; flags carry a
 # plain white star; the stadium is "L'ESTADI" and nothing else.
 #
 # Layout is in level space (the corridor fit leaves this walk alone). The
@@ -27,7 +27,7 @@ const HumanLook := preload("res://entities/human_appearance.gd")
 const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.05, 0.05, 0.08, 0.20)
 
-# --- colours ---------------------------------------------------------------
+# --- colors ---------------------------------------------------------------
 const ASPHALT := Color(0.31, 0.31, 0.33)
 const PAVING := Color(0.68, 0.66, 0.62)        # the sidewalks' hydraulic tiles
 const PAVING_JOINT := Color(0.58, 0.56, 0.52)
@@ -431,7 +431,7 @@ static func _draw_barriers(c: ShapeBatch, top: float, bot: float) -> void:
 		var y := ys
 		while y < ye:
 			var y2 := minf(y + SECTION, ye)
-			# the frame from above: two galvanised rails with the uprights
+			# the frame from above: two galvanized rails with the uprights
 			# between them, and the flat feet where two sections meet
 			for rx: float in [x - 3.5, x + 3.5]:
 				c.line(Vector2(rx, y + 2.0), Vector2(rx, y2 - 2.0), STEEL.darkened(0.25), 3.0)
@@ -657,7 +657,7 @@ static func _sausage_stand(c: ShapeBatch, r: Rect2) -> void:
 	while sy < grill.end.y - 4.0:
 		c.line(Vector2(grill.position.x + 2.0, sy), Vector2(grill.end.x - 2.0, sy), Color(0.58, 0.26, 0.16), 3.5)
 		sy += 7.0
-	# the stripe along the side, home colours
+	# the stripe along the side, home colors
 	c.rect(Rect2(r.end.x - 6.0, r.position.y + 4.0, 4.0, r.size.y - 8.0), HOME_CLARET)
 	c.rect(Rect2(r.end.x - 10.0, r.position.y + 4.0, 4.0, r.size.y - 8.0), HOME_BLUE)
 
