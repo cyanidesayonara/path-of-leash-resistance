@@ -695,6 +695,16 @@ func _walk(delta: float) -> void:
 	_check_stuck(delta, dir, cx)
 
 
+# The dog is in their way and cannot give it (main._part_bodies): the same
+# sidestep as walking into anything else, round her
+func sidestep_round(side: Vector2) -> void:
+	if sidestep_t > 0.0:
+		return
+	sidestep_dir = side
+	sidestep_t = SIDESTEP_T
+	sidestep_total = 0.0
+
+
 # Blocked while meaning to walk: after STUCK_T, a sidestep along whatever is in
 # the way (see STUCK_T). Reads the slide's own collisions, so it only ever
 # reacts to something they actually walked into.

@@ -197,6 +197,10 @@ func _run() -> void:
 			for k in range(80):
 				dog.velocity = Vector2(side * 400.0, 0.0)
 				dog.move_and_slide()
+			# she slides along a slanting wall (floating motion), so measure
+			# against the wall where she ended up, not where she set off
+			var end_e: Vector2 = m.walk_edges(dog.global_position.y)
+			wall_x = end_e.x if side < 0.0 else end_e.y
 			var gap: float = absf(wall_x - dog.global_position.x)
 			_check(gap <= 14.0 + 6.0 + 3.0, "she reaches the %s wall at y=%.0f (stops %.0f px short)" % [
 				"west" if side < 0.0 else "east", py, gap])

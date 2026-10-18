@@ -90,13 +90,15 @@ func _run() -> void:
 			await mb.ready
 		mb._skip_title()
 		mb.human.global_position = start
-		mb.dog.global_position = start + Vector2(0, -30)
+		mb.dog.global_position = start + Vector2(0, 30)
 		mb.leash.resnap()
 		mb.human.event_timer = 999.0
 		await physics_frame
 		for i in range(360):
-			# the dog at his heel, the leash slack, no call or selfie
-			mb.dog.global_position = mb.human.global_position + Vector2(0, -30)
+			# the dog at his heel, the leash slack, no call or selfie. Behind
+			# him, not ahead: a dog held in front of him every frame is one he
+			# walks round, not up the aisle past
+			mb.dog.global_position = mb.human.global_position + Vector2(0, 30)
 			mb.dog.velocity = Vector2.ZERO
 			mb.human.event_timer = 999.0
 			mb._physics_process(STEP)
