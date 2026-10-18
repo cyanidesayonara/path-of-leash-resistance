@@ -31,6 +31,9 @@ extends RefCounted
 # after a flush().
 
 const SEGMENTS := 64
+# a distance crowd mark: 8 sides, not the engine's circle. circle() stays the
+# 64-segment fan that matches draw_circle; this one is for hundreds of dots
+const COARSE := 8
 
 # One circle as the engine builds it, laid out as a plain triangle list (the
 # centre, then two neighbouring rim points, for each of the 64 segments):
@@ -39,6 +42,7 @@ const SEGMENTS := 64
 # a batched circle costs a few microseconds of script instead of a loop over
 # its 192 vertices.
 static var _unit_fan := PackedVector2Array()
+static var _coarse_fan := PackedVector2Array()
 static var _half_buf := PackedByteArray([0, 0])
 
 var canvas: CanvasItem
@@ -48,6 +52,7 @@ var _colors := PackedColorArray()
 var _fill := PackedColorArray()
 var _fan_fill := PackedColorArray()
 var _quad_fill := PackedColorArray()
+var _coarse_fill := PackedColorArray()
 
 # a rect as two triangles, (0,0) (1,0) (1,1) and (0,0) (1,1) (0,1); read only
 static var UNIT_QUAD := PackedVector2Array([Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 0), Vector2(1, 1), Vector2(0, 1)])
@@ -57,6 +62,7 @@ func _init(ci: CanvasItem = null) -> void:
 	canvas = ci
 	_fan_fill.resize(SEGMENTS * 3)
 	_quad_fill.resize(6)
+	_coarse_fill.resize(COARSE * 3)
 
 
 static func _build_unit() -> void:
@@ -100,6 +106,28 @@ func circle(pos: Vector2, radius: float, color: Color) -> void:
 	_points.append_array(Transform2D(Vector2(radius, 0.0), Vector2(0.0, radius), pos) * _unit_fan)
 	_fan_fill.fill(color)
 	_colors.append_array(_fan_fill)
+
+
+# Same placement as circle(), eight sides instead of 64. A crowd of these stays
+# one draw call and does not spend the frame building full circles.
+func coarse(pos: Vector2, radius: float, color: Color) -> void:
+	if _coarse_fan.is_empty():
+		_build_coarse()
+	_points.append_array(Transform2D(Vector2(radius, 0.0), Vector2(0.0, radius), pos) * _coarse_fan)
+	_coarse_fill.fill(color)
+	_colors.append_array(_coarse_fill)
+
+
+static func _build_coarse() -> void:
+	var step := TAU / float(COARSE)
+	var rim := PackedVector2Array()
+	for i in range(COARSE + 1):
+		var angle := float(i) * step
+		rim.append(Vector2(cos(angle), sin(angle)))
+	for i in range(COARSE):
+		_coarse_fan.append(Vector2.ZERO)
+		_coarse_fan.append(rim[i])
+		_coarse_fan.append(rim[i + 1])
 
 
 # draw_rect(r, color), filled. The engine's corners are position,

@@ -2889,6 +2889,16 @@ static func build_entities(m: Node2D) -> void:
 	m.cam.position = Vector2(640, m.START_Y - 120.0)
 	m.add_child(m.cam)
 	m.cam.make_current()
+	# under the leash (z 5) and the pair (z 10), above the verge
+	if m.lvl == "partit":
+		m.match_crowd = CrowdRiver.new()
+		m.match_crowd.setup(20261017, CrowdRiver.CAP)
+		var fans := Node2D.new()
+		fans.set_script(load("res://world/crowd_layer.gd"))
+		fans.z_index = 3
+		m.add_child(fans)
+		fans.setup(m)
+		m.match_crowd_layer = fans
 
 
 # Cones and loose junk lie on the ground: under the rope (z 5) that crosses

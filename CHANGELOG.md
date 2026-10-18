@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-10-18 - Dia de Partit, the crowd river
+
+- The avenue fills as you walk north. Fans are data, not people: up to 150 of them in one list, drawn together in one batch at 30 fps, darker and smaller than the pair so the two of you still read. A fan is a coarse dot, not a full circle, so the crowd stays under a millisecond on top of the street. The side street stays thin; the gates are the thickest. A few vendors walk back through them.
+- They step aside for the dog and your human, and they walk round stalls and barriers. They are not rope contacts, so the leash solver is unchanged. A slack leash gets a hop and a little "hup". A taut leash laid across the flow drags the pair along with it, and your dog can dig in against that. A taut leash that already runs with the flow does nothing.
+- Where the street is packed, your human is carried: the crowd shifts where they mean to go and adds to their pace on the way out (or takes a little off it on the way home). How hard they walk does not change, and they still get there.
+- New test `tests/test_crowd_river.gd` (in CI).
+
 ## 2026-10-18 - the dog slides along what she touches, and stays out of your human
 
 - The v1.60 playtest kept logging DOG STUCK at the same spots. Most were the scripted steps holding a direction straight into something: El Mercat's first stall block and its corner column, El Gòtic's bin by the east wall, a south face in La Ferralla's yard, the mosaic fountain block in El Mosaic, and L'Estació's ticket barrier and the train's end. A player pressing into a wall does not move, and that is right.

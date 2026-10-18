@@ -153,6 +153,12 @@ var panic := false
 # when it lands, it is them that stumbles. A slack leash builds patience back,
 # and a patient human lets the reel out longer. They wait while she does her
 # business. Tuning by playtest.
+# Dia de Partit's river. 1 and 0 on every other walk. Pace and aim only:
+# the accel in _walk is the motor, and the crowd never touches it.
+const CROWD_PACE_MIN := 0.92
+const CROWD_PACE_MAX := 1.18
+var crowd_pace := 1.0
+var crowd_shift := 0.0
 const GIVE_FULL := 520.0       # rope tension at which they give way fully
 const GIVE_LAT := 150.0        # px across the path a full pull leads them
 const GIVE_FWD := 0.35         # pulled their way: up to this much quicker
@@ -635,9 +641,10 @@ func _walk(delta: float) -> void:
 	# led by the leash: a steady pull draws them across the path and speeds or
 	# slows them along it (the conversation, above)
 	if state == HState.WALK or state == HState.DRIFT:
-		tx = clampf(tx + clampf(felt_pull.x / GIVE_FULL, -1.0, 1.0) * GIVE_LAT, cx - half + 40.0, cx + half - 40.0)
+		tx = clampf(tx + clampf(felt_pull.x / GIVE_FULL, -1.0, 1.0) * GIVE_LAT + crowd_shift, cx - half + 40.0, cx + half - 40.0)
 		var along := felt_pull.y * fwd_y / GIVE_FULL
 		speed *= 1.0 + GIVE_FWD * clampf(along, 0.0, 1.0) - GIVE_BACK * clampf(-along, 0.0, 1.0)
+		speed *= clampf(crowd_pace, CROWD_PACE_MIN, CROWD_PACE_MAX)
 	# a solid thing against the path's edge just ahead (El Mercat's wall
 	# stalls): he aims wide of it before he meets it, not into its end
 	for ko: Rect2 in main.owner_keepouts:

@@ -57,6 +57,11 @@ var edge_nodes: Array = []
 # every solid rectangle LevelBuild.add_rect_body made (stall blocks, the
 # salamander, dumpsters...), for placing loose things clear of them
 var solid_rects: Array[Rect2] = []
+# Dia de Partit's river (systems/crowd_river.gd). Null on every other walk.
+# The push is px/s along the flow from fans held on a taut cross-leash.
+var match_crowd: CrowdRiver
+var match_crowd_layer: Node2D
+var match_crowd_push := Vector2.ZERO
 # parallel bike lane along the right side, plus a narrow far shoulder
 # with temptations - crossing the lane is a voluntary risk
 # the hang-time beat on big moments: game speed, and how long it lasts in
@@ -8199,6 +8204,7 @@ func _physics_process(delta: float) -> void:
 	if auto_walk:
 		_auto_drive(delta)
 		_watch_stall(delta)
+	_tick_match_crowd(delta)
 	dog.tick(delta)
 	human.tick(delta)
 	_part_bodies()
@@ -8211,6 +8217,7 @@ func _physics_process(delta: float) -> void:
 	_refresh_pair_obstacles()
 	_prof("pair obstacles")
 	_apply_leash(delta)
+	_shove_match_crowd(delta)
 	_prof("leash solve")
 	if phase != "freedom":
 		_lanes(delta)
@@ -8654,6 +8661,42 @@ func _nudge(body: CharacterBody2D, by: Vector2) -> float:
 	var slide := rest.slide(hit.get_normal())
 	var hit2 := body.move_and_collide(slide)
 	return rest.length() - slide.length() + (hit2.get_remainder().length() if hit2 != null else 0.0)
+
+
+# The river reads the pair and the leash, then says how the pair should give.
+# It never touches the rope. Carry is aim and pace (human.gd); the shove is a
+# displacement along the flow, and only while the leash is taut across it.
+func _tick_match_crowd(delta: float) -> void:
+	if match_crowd == null:
+		return
+	if not started or paused or phase != "out":
+		human.crowd_pace = 1.0
+		human.crowd_shift = 0.0
+		match_crowd_push = Vector2.ZERO
+		return
+	var dog_p: Vector2 = dog.global_position
+	var human_p: Vector2 = human.global_position
+	var mid_y := (dog_p.y + human_p.y) * 0.5
+	var taut := 0.0
+	var path := PackedVector2Array()
+	if leash != null and leash.rest_len > 1.0:
+		taut = leash.taut_amount(leash.used_length() / leash.rest_len)
+		path = leash.visible_path()
+	match_crowd_push = match_crowd.step(delta, mid_y, dog_p, human_p, path, taut, solid_rects, Callable(self, "walk_edges"))
+	var give: Vector2 = match_crowd.carry(human_p.y, human.homeward)
+	human.crowd_shift = give.x
+	human.crowd_pace = give.y
+	if match_crowd.hup_fresh:
+		float_text(match_crowd.hup_at, "hup", Color(0.95, 0.93, 0.86))
+
+
+func _shove_match_crowd(delta: float) -> void:
+	if match_crowd_push.length_squared() < 1.0:
+		return
+	var shove := match_crowd_push * delta
+	if not dog.planted:
+		dog.move_and_collide(shove * 0.5)
+	human.move_and_collide(shove)
 
 
 func _apply_leash(delta: float) -> void:
