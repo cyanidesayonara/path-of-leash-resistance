@@ -154,6 +154,11 @@ with pickpockets and shenanigans happening around."
   the lawn.
 - Add: real puddles on the paving (splash, reflections), running gutters,
   shop awnings and an arcade as shelter, pedestrians with umbrellas.
+- Audit fixes (2026-10-17, #152): the storm drains are fenced with works
+  boards and two cones (four in a ring read as a cafe table); the terrace is
+  stacked and chained to a lamp standard by the east kerb; wet pantile roofs,
+  terrats with water tanks and running gutters either side; umbrellas are
+  filled canopies with ribs; EL PORXO is a porch yard round a wet court.
 
 ### El Mercat (market) - the market hall
 - Is: inside a covered market: stall rows as aisles, iron columns, the fish
@@ -195,6 +200,10 @@ with pickpockets and shenanigans happening around."
 - Cut: café terrace, bike crossings, manholes, lawn - it is indoors.
 - Add: pillars (wrap), barriers (a gap), bench rows, trolleys, the board as
   landmark.
+- Audit fixes (2026-10-18, #155): terrazzo floor with brass strips, no
+  drains; gate cabinets with readers and paddles; columns on plinths; a steel
+  travelator and a train that reads as a train; PIPICÀ is the old goods yard
+  with a siding and the running lines past its wall.
 
 ### Les Obres (site) - the roadworks
 - Is: a works detour: cement pours in formwork with cones and tape, fresh

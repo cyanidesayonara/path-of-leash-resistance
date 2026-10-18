@@ -12,6 +12,21 @@ Append-only session history, newest first.
 - `tests/test_mercat.gd` pushes her at each drawn wall to prove nothing invisible stands inside it. Floating, she now slides along the street's slanting walls toward the arch instead of stopping, so it measures the gap to the wall where she stops, not where she set off.
 - Playtest, market, oldtown, scrap, guell and station, three scripts each: 22 DOG STUCK before with the old check, 17 with the old check after the fix (all pressing into faces), 0 with the new check, before or after.
 
+## 2026-10-18 - L'Estació audit fixes (#155)
+
+- The concourse floor is polished terrazzo instead of the street's tan paving: pale grey panels with brass divider strips, marble chips set in them, and the roof lights' reflections lying across the polish. No drain grates, road repairs, cracks or damp stains indoors.
+- The ticket barriers are a row of steel gate cabinets, each with a black glass top, a card reader with a yellow ring and a green arrow light. At each gap the glass paddles are swung open, with a yellow line on the floor where you tap. The pillars are round iron columns standing on square granite plinths instead of plain squares.
+- The two strips that read as mismatched walkways are now plainly two things. The moving walkway is a steel travelator: grooved treads with joints moving the carry way, arrows in the tread, black handrails on glass balustrades, and comb plates with a yellow edge at each end. The white strip was the train, and now it looks like one from above: a dark grey roof with air-conditioning pods, a pantograph on every other car, black gangway bellows between the cars, the white and red Rodalies livery down its sides, and the cab's windscreen and headlamps at the front.
+- PIPICÀ is the station's old goods yard instead of a lawn: big concrete slabs with a rusted siding still set into them, running to a buffer stop, brick walls, and bike stands by the gate. Past the far wall are the running lines, with ballast, sleepers, two tracks and the catenary, and the station's sheds on either side.
+
+## 2026-10-17 - El Diluvi audit fixes (#152)
+
+- The open storm drains no longer read as a cafe table with its chairs out in the rain: four cones evenly round a dark disc did exactly that. Each drain now has a striped works board along each side and one cone ahead of it and one behind, the way the street walks.
+- The terrace the brief cuts is now on the walk the way a terrace is in a downpour: two stacks of rattan bistro chairs and the folded tables by the east kerb, chained to the lamp standard at y -2800 with a padlock, rain standing on the top seats, and the cafe's sandwich board out beside them. The stack is solid and your human aims wide of it.
+- The roofs either side were flat grey with the odd skylight. Now they are wet pantile roofs and tiled terrats with water tanks, parapets, chimneys, rain standing round the roof drains, brick party walls, and zinc gutters running full along the eaves. The arcade's roof is pantile too, with its gutter running over the columns.
+- Umbrellas are filled canopies from above, eight panels in light and shade, the ribs out to their tips, the ferrule in the middle and drops running off the rim, instead of an arc that read as a horseshoe magnet. Buskers on any walk in the rain carry the same one.
+- EL PORXO is a porch yard instead of the sunny dog park: a court of wet sauló with puddles and the grove's trees, a covered porch round three sides (terracotta tile in the roof's shade, stone columns along its open edge, a drip line where the eaves shed), stone walls and gateposts, downpipes into the court, and the porch roofs and the block's water tanks past the walls.
+
 ## 2026-10-17 - La Ferralla audit fixes
 
 - The wreck stacks are four kinds of car - a saloon, a hatchback, an estate van and a stack of crushed bales - in faded paint gone to rust, each car in a stack turned its own way and the top one changing kind and colour down the lane. The tops have rust patches, dents, a door missing or a wheel left lying on the roof, and the glassless windows show the seats. Same spots, same colliders.
