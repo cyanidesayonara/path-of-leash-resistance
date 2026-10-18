@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-10-18 - L'Estació audit fixes (#155)
+
+- The concourse floor is polished terrazzo instead of the street's tan paving: pale grey panels with brass divider strips, marble chips set in them, and the roof lights' reflections lying across the polish. No drain grates, road repairs, cracks or damp stains indoors.
+- The ticket barriers are a row of steel gate cabinets, each with a black glass top, a card reader with a yellow ring and a green arrow light. At each gap the glass paddles are swung open, with a yellow line on the floor where you tap. The pillars are round iron columns standing on square granite plinths instead of plain squares.
+- The two strips that read as mismatched walkways are now plainly two things. The moving walkway is a steel travelator: grooved treads with joints moving the carry way, arrows in the tread, black handrails on glass balustrades, and comb plates with a yellow edge at each end. The white strip was the train, and now it looks like one from above: a dark grey roof with air-conditioning pods, a pantograph on every other car, black gangway bellows between the cars, the white and red Rodalies livery down its sides, and the cab's windscreen and headlamps at the front.
+- PIPICÀ is the station's old goods yard instead of a lawn: big concrete slabs with a rusted siding still set into them, running to a buffer stop, brick walls, and bike stands by the gate. Past the far wall are the running lines, with ballast, sleepers, two tracks and the catenary, and the station's sheds on either side.
+
 ## 2026-10-17 - El Diluvi audit fixes (#152)
 
 - The open storm drains no longer read as a cafe table with its chairs out in the rain: four cones evenly round a dark disc did exactly that. Each drain now has a striped works board along each side and one cone ahead of it and one behind, the way the street walks.
