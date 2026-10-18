@@ -135,6 +135,14 @@ const HYDRANT_RADIUS := 9.0
 const FOUNTAIN_RADIUS := 12.0
 const PERFORMER_RADIUS := 12.0
 const MANHOLE_RADIUS := 24.0
+# The dog and your human are on layers that do not collide, so the leash owns
+# every pull between them. _part_bodies keeps her from standing inside them:
+# each frame it removes this share of the overlap of their two bodies (14 and
+# 15 px), and she, the lighter, takes this share of the push. They take the rest
+# and what a wall stops her taking, as a step back and aside round her.
+const BODY_REACH := 29.0
+const BODY_PART_RATE := 0.5
+const BODY_PART_DOG := 0.75
 const BENCH_BODY_SIZE := Vector2(16.0, 48.0)
 const VAN_BODY_SIZE := Vector2(64.0, 132.0)
 const STALL_BODY_SIZE := Vector2(96.0, 56.0)
@@ -6968,6 +6976,7 @@ func _physics_process(delta: float) -> void:
 		_watch_stall(delta)
 	dog.tick(delta)
 	human.tick(delta)
+	_part_bodies()
 	_prof("dog, owner, drive")
 	# the human owns the retractable leash: length changes on their whim
 	# ("click!" event), never the dog's
@@ -7373,6 +7382,47 @@ func owner_news(line: String) -> void:
 		return
 	owner_news_cd = 3.2
 	feed.flash(line)
+
+
+# A soft push apart, not a collision: no contact for the rope or the tug to
+# read, and no push at all while an orbit owns their motion or she is off leash.
+func _part_bodies() -> void:
+	if leash.detached or human.is_whirling() or human.whirl_bailed:
+		return
+	var gap: Vector2 = dog.global_position - human.global_position
+	var dist := gap.length()
+	if dist >= BODY_REACH:
+		return
+	# dead on top of each other: part them across their way, not along it
+	var n: Vector2 = gap / dist if dist > 0.01 else human.walk_intent.orthogonal().normalized()
+	if n == Vector2.ZERO:
+		n = Vector2.RIGHT
+	var push := (BODY_REACH - dist) * BODY_PART_RATE
+	var held := _nudge(dog, n * push * BODY_PART_DOG)
+	# their share, and whatever a wall refused her, goes back and to one side,
+	# so they step round her: the side they were heading for, unless it is shut
+	var give := push * (1.0 - BODY_PART_DOG) + held
+	var side := n.orthogonal()
+	if side.dot(human.walk_intent) < 0.0:
+		side = -side
+	if human.test_move(human.global_transform, side * maxf(give, 2.0)):
+		side = -side
+	_nudge(human, (side - n) * give)
+	# walking into her where a wall holds her: they go round, not into her
+	if held > 0.01 and human.walk_intent.dot(n) > 0.0:
+		human.sidestep_round(side)
+
+
+# moves a body by `by`, sliding once along whatever it meets; returns how much
+# of the move was refused
+func _nudge(body: CharacterBody2D, by: Vector2) -> float:
+	var hit := body.move_and_collide(by)
+	if hit == null:
+		return 0.0
+	var rest := hit.get_remainder()
+	var slide := rest.slide(hit.get_normal())
+	var hit2 := body.move_and_collide(slide)
+	return rest.length() - slide.length() + (hit2.get_remainder().length() if hit2 != null else 0.0)
 
 
 func _apply_leash(delta: float) -> void:
