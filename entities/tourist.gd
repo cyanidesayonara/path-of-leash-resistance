@@ -35,7 +35,7 @@ var has_wallet := true
 var robbed_t := 0.0            # the "!" after a lift
 var cheer_t := 0.0             # clapping for a dog who got a wallet back
 var look := "map"              # what they are holding: map, camera, stick
-var mode := "amble"            # amble | queue | pose
+var mode := "amble"            # amble | queue | pose | wait (stand facing `face`)
 var anchor := Vector2.ZERO     # where a queuer or poser stands
 var face := Vector2.ZERO       # what a poser photographs
 var shuffle_t := 0.0           # the queue edging forward
@@ -187,7 +187,7 @@ func _tick_standing(delta: float) -> void:
 		if next_photo <= 0.0:
 			photo_t = PHOTO_T * 0.6
 			next_photo = rng.randf_range(2.5, 6.0)
-	else:
+	elif mode == "queue":
 		# the queue edges forward a step, then the next person closes up
 		shuffle_t -= delta
 		if shuffle_t <= 0.0:

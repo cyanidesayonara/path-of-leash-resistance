@@ -119,6 +119,12 @@ func _ready() -> void:
 		# 1 is everything solid; 8 is what only she has to go round (El Bosc's
 		# fallen trunks, which the owner steps over)
 		collision_mask = 1 | 8
+		# Top down, nothing is a floor or a ceiling. Grounded mode took every
+		# south face for a ceiling and threw away her sideways speed while she
+		# touched one, so she crept along a block at 5 px/s; floating slides
+		# her along any face at any angle, as walls already did
+		motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
+		wall_min_slide_angle = 0.0
 		var cs := CollisionShape2D.new()
 		var sh := CircleShape2D.new()
 		sh.radius = 14.0
@@ -208,6 +214,12 @@ func tick(delta: float) -> void:
 		elif input_active:
 			facing = go.normalized()
 	move_and_slide()
+	# floating motion keeps the speed she had into a face; drop it, so what
+	# she is pressed against does not hold speed she cannot use
+	for i in range(get_slide_collision_count()):
+		var n := get_slide_collision(i).get_normal()
+		if velocity.dot(n) < 0.0:
+			velocity = velocity.slide(n)
 	brace = move_toward(brace, 1.0 if face_lock != Vector2.ZERO else 0.0, BRACE_RATE * delta)
 	# the hips trail the shoulders: the body hinges mid-turn
 	# how she steps on what she is on: quick short steps on sand (no purchase),
