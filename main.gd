@@ -267,6 +267,7 @@ var pp_spawned := 0
 # El Mosaic's standing groups, out once each walk, and the salamander's "aww"
 var mosaic_queue_out := false
 var mosaic_posers_out := false
+var mosaic_bays_out := false
 var mosaic_aww := false
 var thieves_stopped := 0
 var wallets_returned := 0
@@ -2920,18 +2921,85 @@ func _trencadis_disc(c: Object, at: Vector2, r: float, key: int) -> void:
 		c.draw_colored_polygon(poly, SHARDS[(k + key) % SHARDS.size()])
 
 
-# ...and as a band between two points, for the bench
+# ...and as a band between two points, for the bench: the seat tiled edge to
+# edge in two courses of broken tile, the mortar showing between, so it reads
+# as one solid bench rather than flags on a string
 func _trencadis_band(b: ShapeBatch, a: Vector2, z: Vector2, w: float, key: int) -> void:
-	b.line(a, z, Color(0.92, 0.90, 0.84), w)
-	var n := int(a.distance_to(z) / 9.0)
-	var side := (z - a).normalized().orthogonal()
-	for k in range(n):
-		var q := a.lerp(z, (float(k) + 0.5) / float(maxi(n, 1))) + side * (fmod(float(k * 7 + key), 5.0) - 2.0) * w * 0.12
-		var poly := PackedVector2Array()
-		for v in range(4):
-			var va := float(v) * 1.57 + float((k + key + v) % 5) * 0.35
-			poly.append(q + Vector2(cos(va), sin(va)) * w * (0.26 + 0.06 * float((k + v) % 3)))
-		b.polygon(poly, SHARDS[(k * 3 + key) % SHARDS.size()])
+	b.line(a, z, Color(0.93, 0.91, 0.85), w)
+	var ln := a.distance_to(z)
+	var n := maxi(2, int(ln / 8.0))
+	var along := (z - a) / ln
+	var side := along.orthogonal()
+	var tl := ln / float(n)
+	var hw := w * 0.2
+	for row in range(2):
+		var off := side * w * (-0.23 if row == 0 else 0.23)
+		var shift := 0.0 if row == 0 else 0.5
+		for k in range(n):
+			var h := (k * 7 + row * 3 + key * 5) % 11
+			var t0 := tl * (float(k) + shift)
+			var t1 := minf(t0 + tl, ln)
+			if t1 - t0 < 3.0:
+				continue
+			var c0 := a + along * t0 + off
+			var c1 := a + along * t1 + off
+			var j := float(h % 3) * 0.7
+			var poly := PackedVector2Array([c0 + along * 1.0 - side * (hw - j), c1 - along * 1.0 - side * hw,
+				c1 - along * (1.0 + j) + side * hw, c0 + along * 1.0 + side * (hw - float(h % 2))])
+			var colr: Color = SHARDS[(k * 3 + row * 5 + key) % SHARDS.size()]
+			if h < 3:
+				colr = Color(0.97, 0.96, 0.92)     # the white ground Gaudi set the colour in
+			b.polygon(poly, colr)
+
+
+# the serpentine bench's bays, where it bellies out: a spot just in front of
+# the seat in each, on both sides of the plaza
+func mosaic_bays() -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	var y: float = LevelBuild.MOSAIC_PLAZA_Y0 - LevelBuild.MOSAIC_BAY * 2.0
+	while y > LevelBuild.MOSAIC_PLAZA_Y1 + 10.0:
+		var e := walk_edges(y)
+		out.append(Vector2(e.x + 34.0, y))
+		out.append(Vector2(e.y - 34.0, y))
+		y -= LevelBuild.MOSAIC_BAY * 2.0
+	return out
+
+
+# one of El Mosaic's columns, from above, into a batch: a fat Doric column
+# of the hypostyle hall (round capital, its ring, a trencadis medallion on
+# top), or a viaduct column of rubble stone like a palm trunk, the outer row
+# leaning into the hill, read from its long shadow
+func _draw_mosaic_column(cb: ShapeBatch, p: Vector2) -> void:
+	if p.y > LevelBuild.MOSAIC_HALL_Y1 - 50.0 and p.y < LevelBuild.MOSAIC_HALL_Y0 + 50.0:
+		# cast_shadow's squashed contact patch needs a transform, which would
+		# break the batch: the same shadow, the patch as a polygon
+		var side := LIGHT.orthogonal()
+		var tip := p + LIGHT * 50.0
+		var sc := Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22)
+		cb.polygon(PackedVector2Array([p + side * 20.0, p - side * 20.0, tip - side * 12.4, tip + side * 12.4]), sc)
+		var patch := PackedVector2Array()
+		for k in range(16):
+			var a := float(k) * TAU / 16.0
+			patch.append(p + LIGHT * 10.0 + Vector2(cos(a) * 27.6, sin(a) * 12.65))
+		cb.polygon(patch, Color(sc.r, sc.g, sc.b, 0.2))
+		cb.circle(p, 24.0, Color(0.78, 0.74, 0.66))
+		cb.circle(p, 19.0, Color(0.86, 0.83, 0.76))
+		_trencadis_disc(cb, p, 11.0, int(absf(p.x + p.y)))
+		return
+	var outer := walk_edges(p.y).y - p.x < (LevelBuild.MOSAIC_VIADUCT_OUTER + LevelBuild.MOSAIC_VIADUCT_INNER) * 0.5
+	var sh := Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22)
+	if outer:
+		cb.polygon(PackedVector2Array([p + Vector2(-14, 10), p + Vector2(14, 10),
+			p + Vector2(40, 60), p + Vector2(18, 64)]), sh)
+	else:
+		cb.polygon(PackedVector2Array([p + Vector2(-12, 6), p + Vector2(12, 6),
+			p + Vector2(28, 40), p + Vector2(10, 44)]), sh)
+	var top := p + (Vector2(-6, -10) if outer else Vector2(-2, -4))
+	cb.circle(p, 17.0, Color(0.50, 0.42, 0.34))
+	cb.circle(top, 15.0, Color(0.60, 0.51, 0.40))
+	for k in range(6):
+		cb.circle(top + Vector2.from_angle(float(k) * 1.05 + p.y) * 9.0, 3.0, Color(0.44, 0.37, 0.30))
+	cb.circle(top, 4.0, Color(0.68, 0.60, 0.48))
 
 
 func _draw_mosaic(vt: float, vb: float) -> void:
@@ -2946,7 +3014,18 @@ func _draw_mosaic(vt: float, vb: float) -> void:
 			b.circle(Vector2(gx, gy), 1.3 + n * 0.3, Color(0.64, 0.56, 0.42, 0.55) if int(n) % 2 == 0 else Color(0.90, 0.84, 0.70, 0.5))
 			gx += 23.0 + n * 4.0
 		gy += 31.0
-	# the dragon stair: steps across the whole width at its foot and its head
+	# the dragon stair: a long flight of shallow steps all the way up, their
+	# nosings catching the light, heavier steps at its foot and its head
+	var s0: float = LevelBuild.MOSAIC_STAIR_Y0 - 78.0
+	var s1: float = LevelBuild.MOSAIC_STAIR_Y1
+	var sy0 := maxf(vt - 30.0, s1)
+	var sy1 := minf(vb + 30.0, s0)
+	var st := ceilf(sy0 / 26.0) * 26.0
+	while st < sy1:
+		var e := walk_edges(st)
+		b.rect(Rect2(e.x, st, e.y - e.x, 5.0), Color(0.40, 0.32, 0.22, 0.12))
+		b.line(Vector2(e.x, st), Vector2(e.y, st), Color(0.96, 0.90, 0.78, 0.35), 2.0)
+		st += 26.0
 	for sy: float in [LevelBuild.MOSAIC_STAIR_Y0, LevelBuild.MOSAIC_STAIR_Y1]:
 		if sy < vt - 80.0 or sy > vb + 80.0:
 			continue
@@ -2967,45 +3046,76 @@ func _draw_mosaic(vt: float, vb: float) -> void:
 			b.circle(Vector2(sx + into * 12.0, dy + 14.0), 5.0, Color(0.44, 0.38, 0.32))
 		dy += 40.0
 	b.flush(_wc)
-	# the salamander on the landing: the landmark, in trencadis
+	# the salamander on the landing: the landmark, in trencadis, climbing out
+	# of the stair's stepped grotto fountain
 	var sm: Vector2 = LevelBuild.MOSAIC_SALAMANDER
-	if sm.y > vt - 120.0 and sm.y < vb + 120.0:
+	if sm.y > vt - 160.0 and sm.y < vb + 160.0:
 		var sz: Vector2 = LevelBuild.MOSAIC_SALAMANDER_SIZE
-		var b2 := ShapeBatch.new()
-		b2.rect(Rect2(sm - sz * 0.5 + LIGHT * 12.0, sz), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
-		b2.rect(Rect2(sm - sz * 0.5, sz), Color(0.66, 0.60, 0.50))
-		b2.flush(_wc)
+		var b2 := _wc     # the world canvas is itself a batch
+		# the fountain's three tiers of dripping stone, each a step down the
+		# stair, ragged at the edges like the grotto walls
+		for tier in range(3):
+			var tw := sz.x * 0.5 + 6.0 - float(tier) * 8.0
+			var ty0 := sm.y - sz.y * 0.5 + float(tier) * 50.0
+			var ty1 := ty0 + 60.0
+			var tc := Color(0.62, 0.55, 0.44).lightened(0.10 * float(tier))
+			b2.circle(Vector2(sm.x, ty1) + LIGHT * 10.0, tw, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+			b2.rect(Rect2(sm.x - tw, ty0, tw * 2.0, ty1 - ty0), tc)
+			b2.circle(Vector2(sm.x, ty1), tw, tc)
+			var rk := ty0 + 6.0
+			while rk < ty1 + tw * 0.7:
+				var hh := fmod(absf(rk) * 0.37, 1.0)
+				var rx := tw if rk < ty1 else sqrt(maxf(0.0, tw * tw - (rk - ty1) * (rk - ty1)))
+				for sd: float in [-1.0, 1.0]:
+					b2.circle(Vector2(sm.x + sd * (rx - 3.0), rk), 6.0 + hh * 4.0, tc.darkened(0.18 + hh * 0.1))
+				rk += 13.0
+			# the trickle down its front
+			b2.line(Vector2(sm.x - 4.0, ty1 + tw - 10.0), Vector2(sm.x + 2.0, ty1 + tw + 2.0), Color(0.56, 0.70, 0.78, 0.6), 3.0)
+		# the basin the water falls into: a trencadis rim round still water
+		var bs := sm + Vector2(0, sz.y * 0.5 + 16.0)
+		b2.circle(bs, 26.0, Color(0.93, 0.91, 0.85))
+		for k in range(14):
+			b2.circle(bs + Vector2.from_angle(float(k) * TAU / 14.0) * 22.0, 3.6, SHARDS[(k * 3) % SHARDS.size()])
+		b2.circle(bs, 18.0, Color(0.30, 0.48, 0.60))
+		b2.circle(bs + Vector2(-5, -5), 8.0, Color(0.42, 0.60, 0.70))
 		# its body, head down the stair and tail curling up it: a chain of
-		# trencadis scales, fattest at the shoulders
+		# trencadis scales, fattest at the shoulders, its shadow under it
 		var spine := [sm + Vector2(0, 74), sm + Vector2(10, 46), sm + Vector2(-4, 16), sm + Vector2(10, -14),
 			sm + Vector2(-2, -44), sm + Vector2(-18, -66), sm + Vector2(-30, -80)]
 		var bw := [16.0, 24.0, 27.0, 24.0, 18.0, 12.0, 8.0]
-		for leg: Vector2 in [Vector2(-34, 40), Vector2(36, 34), Vector2(-30, -20), Vector2(32, -26)]:
-			_trencadis_disc(_wc, sm + leg, 11.0, int(leg.x + leg.y))
 		for k in range(spine.size()):
-			_trencadis_disc(_wc, spine[k], bw[k], k * 5 + 3)
+			b2.circle(spine[k] + LIGHT * 8.0, bw[k], Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+		for leg: Vector2 in [Vector2(-34, 40), Vector2(36, 34), Vector2(-30, -20), Vector2(32, -26)]:
+			_trencadis_disc(b2, sm + leg, 11.0, int(leg.x + leg.y))
+		for k in range(spine.size()):
+			_trencadis_disc(b2, spine[k], bw[k], k * 5 + 3)
 		# its head, with a blunt snout and two dark eyes
 		var hd: Vector2 = sm + Vector2(0, 86)
-		_wc.draw_colored_polygon(PackedVector2Array([hd + Vector2(-16, -10), hd + Vector2(16, -10), hd + Vector2(10, 16),
+		b2.draw_colored_polygon(PackedVector2Array([hd + Vector2(-16, -10), hd + Vector2(16, -10), hd + Vector2(10, 16),
 			hd + Vector2(-10, 16)]), Color(0.18, 0.62, 0.70))
-		_trencadis_disc(_wc, hd, 13.0, 21)
-		_wc.draw_circle(hd + Vector2(-7, 6), 3.0, Color(0.1, 0.1, 0.1))
-		_wc.draw_circle(hd + Vector2(7, 6), 3.0, Color(0.1, 0.1, 0.1))
-		# the water from its mouth
-		_wc.draw_circle(sm + Vector2(0, sz.y * 0.5 + 14.0), 12.0, Color(0.34, 0.50, 0.62))
-	# the hypostyle hall: in the shade under the plaza, its floor darker
+		_trencadis_disc(b2, hd, 13.0, 21)
+		b2.circle(hd + Vector2(-7, 6), 3.0, Color(0.1, 0.1, 0.1))
+		b2.circle(hd + Vector2(7, 6), 3.0, Color(0.1, 0.1, 0.1))
+		# the water from its mouth into the basin
+		b2.line(hd + Vector2(0, 14), bs + Vector2(0, -6), Color(0.62, 0.78, 0.86, 0.8), 4.0)
+	# the hypostyle hall: in the shade under the plaza, its floor darker,
+	# the shade thinning out at both ends rather than stopping at a line
 	var b3 := ShapeBatch.new()
 	var h0: float = LevelBuild.MOSAIC_HALL_Y0
 	var h1: float = LevelBuild.MOSAIC_HALL_Y1
-	if h1 < vb + 40.0 and h0 > vt - 40.0:
-		var y0 := maxf(vt - 40.0, h1)
-		var y1 := minf(vb + 40.0, h0)
-		var hy := floorf(y0 / 60.0) * 60.0
+	var fade := 220.0
+	if h1 - fade < vb + 40.0 and h0 + fade > vt - 40.0:
+		var y0 := maxf(vt - 40.0, h1 - fade)
+		var y1 := minf(vb + 40.0, h0 + fade)
+		var hy := floorf(y0 / 20.0) * 20.0
 		while hy < y1:
-			var e := walk_edges(hy)
-			b3.rect(Rect2(e.x, hy, e.y - e.x, 60.0), Color(0.10, 0.08, 0.06, 0.12))
-			hy += 60.0
-	# the serpentine bench: the plaza's edges, finished in trencadis
+			var e := walk_edges(hy + 10.0)
+			var f := smoothstep(0.0, 1.0, clampf(minf(hy - (h1 - fade), (h0 + fade) - hy) / (fade * 2.0), 0.0, 1.0))
+			if f > 0.01:
+				b3.rect(Rect2(e.x, hy, e.y - e.x, 20.0), Color(0.10, 0.08, 0.06, 0.16 * f))
+			hy += 20.0
+	# the serpentine bench: the plaza's edges, finished in trencadis, its
+	# backrest along the outside and its shadow falling off it
 	var p0: float = LevelBuild.MOSAIC_PLAZA_Y0 + 40.0
 	var p1: float = LevelBuild.MOSAIC_PLAZA_Y1 - 40.0
 	if p1 < vb + 40.0 and p0 > vt - 40.0:
@@ -3015,36 +3125,103 @@ func _draw_mosaic(vt: float, vb: float) -> void:
 		while by < y1:
 			var ea := walk_edges(by)
 			var ez := walk_edges(by + 24.0)
-			_trencadis_band(b3, Vector2(ea.x - 9.0, by), Vector2(ez.x - 9.0, by + 24.0), 18.0, int(absf(by)) % 11)
-			_trencadis_band(b3, Vector2(ea.y + 9.0, by), Vector2(ez.y + 9.0, by + 24.0), 18.0, int(absf(by)) % 13)
+			for sd: float in [-1.0, 1.0]:
+				var xa: float = ea.x if sd < 0.0 else ea.y
+				var xz: float = ez.x if sd < 0.0 else ez.y
+				b3.line(Vector2(xa + sd * 14.0, by) + LIGHT * 8.0, Vector2(xz + sd * 14.0, by + 24.0) + LIGHT * 8.0,
+					Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22), 30.0)
 			by += 24.0
-	# the viaduct: the covered walk, the slope on its west side
+		by = floorf(y0 / 24.0) * 24.0
+		while by < y1:
+			var ea := walk_edges(by)
+			var ez := walk_edges(by + 24.0)
+			for sd: float in [-1.0, 1.0]:
+				var xa: float = ea.x if sd < 0.0 else ea.y
+				var xz: float = ez.x if sd < 0.0 else ez.y
+				# the backrest's top, a rolled rim of white tile
+				b3.line(Vector2(xa + sd * 24.0, by), Vector2(xz + sd * 24.0, by + 24.0), Color(0.80, 0.76, 0.68), 9.0)
+				b3.line(Vector2(xa + sd * 22.0, by), Vector2(xz + sd * 22.0, by + 24.0), Color(0.97, 0.96, 0.92), 3.0)
+				_trencadis_band(b3, Vector2(xa + sd * 8.0, by), Vector2(xz + sd * 8.0, by + 24.0), 20.0,
+					int(absf(by)) % (11 if sd < 0.0 else 13))
+			by += 24.0
+	# the viaduct: the covered walk under the road, its colonnade down the
+	# east side, the planted slope of the hill on its west
 	var v0: float = LevelBuild.MOSAIC_VIADUCT_Y0
 	var v1: float = LevelBuild.MOSAIC_VIADUCT_Y1
 	if v1 < vb + 60.0 and v0 > vt - 60.0:
 		var y0 := maxf(vt - 60.0, v1)
 		var y1 := minf(vb + 60.0, v0)
+		# the slope: one smooth bank that tapers in and out at its ends (#21),
+		# dry grass with scrub and stones on it, a rubble kerb at its foot
+		var bank := PackedVector2Array()
+		var foot := PackedVector2Array()
 		var vy := floorf(y0 / 25.0) * 25.0
-		while vy < y1:
-			var e := walk_edges(vy)
-			# the slope tapers in and out at each end of the viaduct instead
-			# of stopping in a straight edge (#21)
-			var f := smoothstep(0.0, 1.0, clampf(minf(vy - v1, v0 - vy) / 160.0, 0.0, 1.0))
-			var w := 120.0 * f
-			if w > 2.0:
-				b3.rect(Rect2(e.x - w, vy, w, 25.0), Color(0.46, 0.52, 0.34))
-				b3.circle(Vector2(e.x - w, vy + 12.5), 12.5, Color(0.46, 0.52, 0.34))
-				if int(absf(vy) / 25.0) % 2 == 0 and f > 0.5:
-					b3.circle(Vector2(e.x - w * 0.5, vy + 12.5), 14.0 * f, Color(0.36, 0.44, 0.28))
+		while vy <= y1 + 25.0:
+			var yy := minf(vy, v0)
+			var e := walk_edges(yy)
+			var f := smoothstep(0.0, 1.0, clampf(minf(yy - v1, v0 - yy) / 180.0, 0.0, 1.0))
+			bank.append(Vector2(e.x - 4.0 - 130.0 * f, yy))
+			foot.append(Vector2(e.x, yy))
+			if yy >= v0:
+				break
 			vy += 25.0
-	# the calvary: three crosses on a heap of stones at the top
+		if bank.size() >= 2:
+			var poly := bank.duplicate()
+			for i in range(foot.size() - 1, -1, -1):
+				poly.append(foot[i])
+			b3.polygon(poly, Color(0.58, 0.56, 0.38))
+			for i in range(bank.size()):
+				var w: float = foot[i].x - bank[i].x
+				if w < 24.0:
+					continue
+				var hh := fmod(absf(bank[i].y) * 0.731, 1.0)
+				var sp := Vector2(bank[i].x + w * (0.25 + hh * 0.5), bank[i].y + hh * 10.0)
+				if int(absf(bank[i].y) / 25.0) % 2 == 0:
+					b3.circle(sp + LIGHT * 4.0, 9.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.2))
+					b3.circle(sp, 8.0 + hh * 4.0, Color(0.38, 0.44, 0.28))
+				else:
+					b3.circle(sp, 3.5, Color(0.66, 0.60, 0.50))
+				b3.circle(foot[i] + Vector2(-5.0, 12.0 * hh), 6.0, Color(0.52, 0.45, 0.36))
+		# the road over the covered walk: its shade over the colonnade
+		vy = floorf(y0 / 25.0) * 25.0
+		while vy < y1:
+			var e := walk_edges(vy + 12.5)
+			var f := smoothstep(0.0, 1.0, clampf(minf(vy - v1, v0 - vy) / 160.0, 0.0, 1.0))
+			if f > 0.01:
+				var x0: float = e.y - LevelBuild.MOSAIC_VIADUCT_INNER - 26.0
+				b3.rect(Rect2(x0, vy, e.y - x0, 25.0), Color(0.10, 0.08, 0.06, 0.16 * f))
+				b3.rect(Rect2(x0 - 14.0, vy, 14.0, 25.0), Color(0.10, 0.08, 0.06, 0.07 * f))
+			vy += 25.0
+	# the calvary: a heap of rubble stone at the top, steps up its south
+	# face, and the three crosses standing on it
 	var cv: Vector2 = LevelBuild.MOSAIC_CALVARY
-	if cv.y > vt - 80.0 and cv.y < vb + 80.0:
-		b3.circle(cv, 46.0, Color(0.54, 0.46, 0.36))
-		b3.circle(cv + Vector2(-8, -8), 32.0, Color(0.62, 0.54, 0.42))
-		for cx: Vector2 in [Vector2(0, -6), Vector2(-26, 14), Vector2(26, 14)]:
-			b3.rect(Rect2(cv + cx - Vector2(3, 14), Vector2(6, 28)), Color(0.86, 0.84, 0.80))
-			b3.rect(Rect2(cv + cx - Vector2(12, 3), Vector2(24, 6)), Color(0.86, 0.84, 0.80))
+	if cv.y > vt - 140.0 and cv.y < vb + 140.0:
+		b3.circle(cv + LIGHT * 18.0, 74.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+		b3.circle(cv, 72.0, Color(0.48, 0.41, 0.33))
+		b3.circle(cv - LIGHT * 10.0, 56.0, Color(0.56, 0.48, 0.38))
+		b3.circle(cv - LIGHT * 16.0, 36.0, Color(0.62, 0.54, 0.43))
+		for k in range(26):
+			var ang := float(k) * 2.39996
+			var rr := 14.0 + fmod(float(k) * 23.7, 54.0)
+			var q := cv + Vector2(cos(ang), sin(ang)) * rr
+			var lit := 0.5 + 0.5 * Vector2(cos(ang), sin(ang)).dot(-LIGHT)
+			b3.circle(q, 6.0 + fmod(float(k) * 3.1, 4.0), Color(0.44, 0.37, 0.30).lightened(0.18 * lit))
+		# the steps, up from the path
+		for k in range(5):
+			var sy := cv.y + 70.0 - float(k) * 10.0
+			b3.rect(Rect2(cv.x - 50.0, sy - 9.0, 36.0, 9.0), Color(0.66, 0.60, 0.50).darkened(0.05 * float(k)))
+			b3.line(Vector2(cv.x - 50.0, sy - 9.0), Vector2(cv.x - 14.0, sy - 9.0), Color(0.80, 0.74, 0.64), 1.5)
+		# three stone crosses, the middle one tallest, each throwing its shadow
+		for cx: Array in [[Vector2(-30, -6), 0.8], [Vector2(4, -18), 1.15], [Vector2(32, 4), 0.8]]:
+			var at: Vector2 = cv + (cx[0] as Vector2)
+			var s := float(cx[1])
+			var sh := Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.3)
+			b3.line(at, at + LIGHT * 46.0 * s, sh, 6.0 * s)
+			b3.line(at + LIGHT * 30.0 * s - LIGHT.orthogonal() * 12.0 * s, at + LIGHT * 30.0 * s + LIGHT.orthogonal() * 12.0 * s, sh, 5.0 * s)
+			b3.circle(at, 8.0 * s, Color(0.40, 0.34, 0.28))
+			b3.rect(Rect2(at - Vector2(3.5, 18.0) * s, Vector2(7.0, 30.0) * s), Color(0.90, 0.88, 0.84))
+			b3.rect(Rect2(at - Vector2(13.0, 10.0) * s, Vector2(26.0, 6.0) * s), Color(0.90, 0.88, 0.84))
+			b3.rect(Rect2(at - Vector2(3.5, 18.0) * s, Vector2(2.5, 30.0) * s), Color(0.98, 0.97, 0.94))
 	b3.flush(_wc)
 	# the gatehouses either side of the entrance: gingerbread walls, wavy
 	# roofs iced white with mosaic caps, one with the mushroom and its cross
@@ -3053,23 +3230,22 @@ func _draw_mosaic(vt: float, vb: float) -> void:
 		var gc := Vector2((e.x - 130.0) if gs < 0.0 else (e.y + 130.0), -60.0)
 		if gc.y < vt - 200.0 or gc.y > vb + 200.0:
 			continue
-		var b4 := ShapeBatch.new()
+		var b4 := _wc     # the world canvas is itself a batch
 		b4.rect(Rect2(gc - Vector2(90, 110) + LIGHT * 16.0, Vector2(180, 220)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
 		b4.rect(Rect2(gc - Vector2(90, 110), Vector2(180, 220)), Color(0.66, 0.46, 0.30))
 		for w in range(9):
 			b4.circle(gc + Vector2(-80.0 + float(w) * 20.0, -104.0), 12.0, Color(0.96, 0.94, 0.90))
 			b4.circle(gc + Vector2(-80.0 + float(w) * 20.0, 104.0), 12.0, Color(0.96, 0.94, 0.90))
 		b4.rect(Rect2(gc - Vector2(70, 80), Vector2(140, 160)), Color(0.56, 0.36, 0.22))
-		b4.flush(_wc)
-		_trencadis_disc(_wc, gc + Vector2(-34, -30), 22.0, 4 if gs < 0.0 else 9)
-		_trencadis_disc(_wc, gc + Vector2(36, 34), 18.0, 7 if gs < 0.0 else 2)
+		_trencadis_disc(b4, gc + Vector2(-34, -30), 22.0, 4 if gs < 0.0 else 9)
+		_trencadis_disc(b4, gc + Vector2(36, 34), 18.0, 7 if gs < 0.0 else 2)
 		if gs > 0.0:
 			# the mushroom spire and its cross, from above
-			_wc.draw_circle(gc + Vector2(30, -40), 26.0, Color(0.86, 0.24, 0.26))
+			b4.circle(gc + Vector2(30, -40), 26.0, Color(0.86, 0.24, 0.26))
 			for d in range(6):
-				_wc.draw_circle(gc + Vector2(30, -40) + Vector2.from_angle(float(d)) * 16.0, 5.0, Color(0.97, 0.96, 0.92))
-			_wc.draw_rect(Rect2(gc + Vector2(26, -56), Vector2(8, 32)), Color(0.90, 0.88, 0.84))
-			_wc.draw_rect(Rect2(gc + Vector2(14, -44), Vector2(32, 8)), Color(0.90, 0.88, 0.84))
+				b4.circle(gc + Vector2(30, -40) + Vector2.from_angle(float(d)) * 16.0, 5.0, Color(0.97, 0.96, 0.92))
+			b4.rect(Rect2(gc + Vector2(26, -56), Vector2(8, 32)), Color(0.90, 0.88, 0.84))
+			b4.rect(Rect2(gc + Vector2(14, -44), Vector2(32, 8)), Color(0.90, 0.88, 0.84))
 
 
 func _draw_neteja(vt: float, vb: float) -> void:
@@ -4239,6 +4415,17 @@ func _tick_mosaic_groups() -> void:
 		for off: Vector2 in MOSAIC_POSERS:
 			var tw := _spawn_tourist(sm + off, -1.0)
 			tw.stand("pose", sm)
+	# the plaza: people in the serpentine bench's bays, photographing the
+	# view out over the city from it, a pair in every other one
+	if not mosaic_bays_out and cy < LevelBuild.MOSAIC_PLAZA_Y0 + 900.0:
+		mosaic_bays_out = true
+		var bays := mosaic_bays()
+		for bi in range(bays.size()):
+			var bp: Vector2 = bays[bi]
+			var out := -1.0 if bp.x < walk_cx else 1.0
+			for k in range(2 if bi % 2 == 0 else 1):
+				var tw := _spawn_tourist(bp + Vector2(0.0, -16.0 + 32.0 * float(k)), -1.0)
+				tw.stand("pose", bp + Vector2(out * 400.0, -60.0 + 120.0 * float(k)))
 	# a dog drinking at the salamander is the photo everyone wanted
 	if not mosaic_aww and dog.global_position.distance_to(sm) < 130.0:
 		for tw: Node2D in get_tree().get_nodes_in_group("tourists"):
@@ -5744,6 +5931,8 @@ func draw_freedom_onto(c: Object) -> void:
 		surround = Color(0.38, 0.35, 0.37)
 	if lvl == "montjuic":
 		surround = Montjuic.RAMPART.darkened(0.2)
+	elif lvl == "guell":
+		surround = MOSAIC_HILL_SCRUB
 	# El Gòtic's roofscape runs on under the gate's last few feet, from the
 	# edge layer: stop short of it rather than paint a grey band over it
 	c.draw_rect(Rect2(-400.0, GATE_Y - 2400.0, 2100.0, 2370.0 if lvl == "oldtown" else 2400.0), surround)
@@ -5881,7 +6070,9 @@ func _draw_freedom_beyond(c: Object) -> void:
 				sx += w
 				k += 1
 		"clearing":
-			# the wood goes on: canopy over canopy, darker the deeper in
+			# the wood goes on: canopy over canopy, darker the deeper in (on
+			# El Mosaic's hilltop, the dusty olive of pine and holm oak)
+			var dry := lvl == "guell"
 			for row in range(4):
 				var cy := top - 40.0 - float(row) * 95.0
 				var cx := -380.0 + float(row % 2) * 60.0
@@ -5889,8 +6080,12 @@ func _draw_freedom_beyond(c: Object) -> void:
 					var rr := 54.0 + fmod(absf(cx) * 0.37 + float(row) * 13.0, 22.0)
 					var dk := 0.06 * float(row)
 					b.circle(Vector2(cx, cy) + LIGHT * 16.0, rr, Color(0.08, 0.12, 0.08, 0.3))
-					b.circle(Vector2(cx, cy), rr, Color(0.17 - dk, 0.30 - dk, 0.17 - dk))
-					b.circle(Vector2(cx, cy) - LIGHT * rr * 0.3, rr * 0.55, Color(0.23 - dk, 0.38 - dk, 0.21 - dk))
+					if dry:
+						b.circle(Vector2(cx, cy), rr, Color(0.30 - dk, 0.34 - dk, 0.20 - dk))
+						b.circle(Vector2(cx, cy) - LIGHT * rr * 0.3, rr * 0.55, Color(0.38 - dk, 0.42 - dk, 0.25 - dk))
+					else:
+						b.circle(Vector2(cx, cy), rr, Color(0.17 - dk, 0.30 - dk, 0.17 - dk))
+						b.circle(Vector2(cx, cy) - LIGHT * rr * 0.3, rr * 0.55, Color(0.23 - dk, 0.38 - dk, 0.21 - dk))
 					cx += 110.0
 		"placa":
 			# the houses' roofs behind their fronts: terracotta in ridged rows
@@ -6361,6 +6556,9 @@ func _draw_clearing(c: Object) -> void:
 	# The trees ARE the boundary, drawn with the same renderer as the ones on
 	# the trail so it reads as the same wood.
 	var r := _freedom_rect()
+	if lvl == "guell":
+		_draw_mosaic_hilltop(c, r)
+		return
 	c.draw_rect(r, Color(0.30, 0.42, 0.26))
 	c.draw_circle(r.get_center(), 170.0, Color(0.40, 0.36, 0.26, 0.55))   # trodden earth
 	# Sixteen, not forty. Forty of these cost 5.7ms of a 9ms frame, measured -
@@ -6371,6 +6569,47 @@ func _draw_clearing(c: Object) -> void:
 	# collision, the rope wraps them, and the grove draws them.
 	_draw_freedom_benches(c, r, Color(0.42, 0.33, 0.22))
 	_freedom_sign(c, r, gate_text, "the clearing, off leash")
+
+
+# El Mosaic's off-leash space is the top of the hill past the calvary: dry
+# ground, not a lawn - packed ochre earth worn pale where everyone walks,
+# sun-bleached grass in tufts, rubble stones, and rosemary and lentisk scrub
+# between the pines
+const MOSAIC_HILL_EARTH := Color(0.66, 0.56, 0.40)
+const MOSAIC_HILL_SCRUB := Color(0.40, 0.40, 0.26)
+
+
+func _draw_mosaic_hilltop(c: Object, r: Rect2) -> void:
+	var b := ShapeBatch.new()
+	b.rect(r, MOSAIC_HILL_EARTH)
+	b.circle(r.get_center(), 190.0, Color(0.80, 0.70, 0.52, 0.5))       # worn pale
+	b.circle(r.get_center() + Vector2(-60, 40), 120.0, Color(0.82, 0.73, 0.55, 0.4))
+	var k := 0
+	var y := r.position.y + 14.0
+	while y < r.end.y:
+		var x := r.position.x + fmod(y * 0.37, 41.0)
+		while x < r.end.x:
+			var h := fmod(absf(x * 12.9898 + y * 78.233), 1.0)
+			var at := Vector2(x, y + h * 20.0)
+			var mid := at.distance_to(r.get_center()) < 200.0
+			if k % 5 == 0 and not mid:
+				# a clump of scrub, darker green-grey, with its shadow
+				b.circle(at + LIGHT * 5.0, 13.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+				b.circle(at, 12.0 + h * 5.0, Color(0.36, 0.40, 0.26))
+				b.circle(at - LIGHT * 4.0, 6.0 + h * 3.0, Color(0.46, 0.50, 0.32))
+			elif k % 3 == 0:
+				b.circle(at, 2.5 + h * 3.0, Color(0.56, 0.50, 0.42))       # a stone
+			else:
+				# dry grass, bleached
+				for g in range(3):
+					var ga := -PI * 0.5 + (float(g) - 1.0) * 0.45
+					b.line(at, at + Vector2.from_angle(ga) * (6.0 + h * 5.0), Color(0.78, 0.70, 0.44, 0.9), 1.6)
+			k += 1
+			x += 46.0 + h * 30.0
+		y += 38.0
+	b.flush(c)
+	_draw_freedom_benches(c, r, Color(0.42, 0.33, 0.22))
+	_freedom_sign(c, r, gate_text, "the hilltop, off leash")
 
 
 func _draw_dog_beach(c: Object) -> void:
@@ -11977,22 +12216,7 @@ func _draw_world() -> void:
 			_wc.draw_rect(Rect2(p.x - 11.0, p.y - 11.0, 22.0, 22.0), Color(0.55, 0.50, 0.45))
 			_wc.draw_rect(Rect2(p.x - 11.0, p.y - 11.0, 8.0, 22.0), Color(0.64, 0.59, 0.53))
 		elif lvl == "guell":
-			if p.y > LevelBuild.MOSAIC_HALL_Y1 - 50.0 and p.y < LevelBuild.MOSAIC_HALL_Y0 + 50.0:
-				# a fat Doric column of the hypostyle hall, from above: the
-				# round capital, its ring, a trencadis medallion on top
-				cast_shadow(_wc, p, 20.0, 50.0, 0.22)
-				_wc.draw_circle(p, 24.0, Color(0.78, 0.74, 0.66))
-				_wc.draw_circle(p, 19.0, Color(0.86, 0.83, 0.76))
-				_trencadis_disc(_wc, p, 11.0, int(absf(p.x + p.y)))
-			else:
-				# a viaduct column: rubble stone, leaning into the hill like a
-				# palm trunk, its lean read from the long shadow
-				_wc.draw_colored_polygon(PackedVector2Array([p + Vector2(-14, 10), p + Vector2(14, 10),
-					p + Vector2(40, 60), p + Vector2(18, 64)]), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
-				_wc.draw_circle(p, 17.0, Color(0.50, 0.42, 0.34))
-				_wc.draw_circle(p + Vector2(-6, -10), 14.0, Color(0.58, 0.49, 0.39))
-				for k in range(5):
-					_wc.draw_circle(p + Vector2(-6, -10) + Vector2.from_angle(float(k) * 1.4) * 8.0, 3.0, Color(0.44, 0.37, 0.30))
+			_draw_mosaic_column(_wc, p)
 		elif lvl == "market":
 			# the hall's cast-iron columns, painted green, on a flared foot
 			cast_shadow(_wc, p, 10.0, 40.0, 0.2)

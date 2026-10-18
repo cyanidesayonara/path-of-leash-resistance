@@ -117,15 +117,21 @@ const MOSAIC_SALAMANDER := Vector2(640.0, -930.0)
 const MOSAIC_SALAMANDER_SIZE := Vector2(110.0, 200.0)
 const MOSAIC_HALL_Y0 := -1550.0       # the hypostyle hall
 const MOSAIC_HALL_Y1 := -2550.0
-const MOSAIC_HALL_COLS: Array[float] = [460.0, 575.0, 705.0, 820.0]
-const MOSAIC_HALL_ROWS: Array[float] = [-1660.0, -1860.0, -2060.0, -2260.0, -2460.0]
+# six columns across and nine deep, the owner's lane left down the middle
+const MOSAIC_HALL_COLS: Array[float] = [350.0, 460.0, 575.0, 705.0, 820.0, 930.0]
+const MOSAIC_HALL_ROWS: Array[float] = [-1660.0, -1760.0, -1860.0, -1960.0, -2060.0, -2160.0, -2260.0, -2360.0, -2460.0]
 const MOSAIC_PLAZA_Y0 := -2750.0      # the plaza and its serpentine bench
 const MOSAIC_PLAZA_Y1 := -3650.0
 const MOSAIC_BAY := 150.0
 const MOSAIC_VIADUCT_Y0 := -4100.0    # the viaduct
 const MOSAIC_VIADUCT_Y1 := -4650.0
 const MOSAIC_VIADUCT_CX := 590.0
-const MOSAIC_CALVARY := Vector2(860.0, -4760.0)
+# the viaduct's colonnade: the leaning outer row against the hill, the inner
+# row this far in from it, columns this far apart along each
+const MOSAIC_VIADUCT_OUTER := 30.0
+const MOSAIC_VIADUCT_INNER := 130.0
+const MOSAIC_VIADUCT_STEP := 80.0
+const MOSAIC_CALVARY := Vector2(790.0, -4790.0)
 
 
 static func mosaic(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
@@ -142,11 +148,15 @@ static func mosaic(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 	for y: float in MOSAIC_HALL_ROWS:
 		for x: float in MOSAIC_HALL_COLS:
 			m.poles.append(Vector2(x, y))
-	# the viaduct's leaning columns down its east side
+	# the viaduct's colonnade down its east side: the covered walk between
+	# the leaning outer row and the inner row, staggered
 	var vy := MOSAIC_VIADUCT_Y0 - 40.0
 	while vy > MOSAIC_VIADUCT_Y1 + 20.0:
-		m.poles.append(Vector2(m.walk_edges(vy).y - 30.0, vy))
-		vy -= 110.0
+		m.poles.append(Vector2(m.walk_edges(vy).y - MOSAIC_VIADUCT_OUTER, vy))
+		var iy := vy - MOSAIC_VIADUCT_STEP * 0.5
+		if iy > MOSAIC_VIADUCT_Y1 + 20.0:
+			m.poles.append(Vector2(m.walk_edges(iy).y - MOSAIC_VIADUCT_INNER, iy))
+		vy -= MOSAIC_VIADUCT_STEP
 	m.deco_pole_count = m.poles.size()
 	m.astands = Array([], TYPE_VECTOR2, &"", null)
 	m.manholes = Array([], TYPE_VECTOR2, &"", null)

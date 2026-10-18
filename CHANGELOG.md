@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-10-18 - El Mosaic audit fixes
+
+- The serpentine bench reads as a bench, not bunting: the seat is tiled edge to edge in two courses of broken tile over white, the mortar showing between, with a rolled white backrest along its outside and its shadow falling off it. The plaza has people in it: a pair or one in each of the bench's bays, photographing the view out over the city, on top of the crowd and the fan seller.
+- The hypostyle hall is a forest: six columns across and nine deep (54, was 20), the owner's lane still clear down the middle. Its shade thins out gradually at each end instead of stopping at a hard line. The columns, with their shadows, no longer break the world batch (their contact shadow was a transform, which flushed it).
+- The viaduct is a covered walk: a colonnade of rubble columns like palm trunks down its east side, the outer row leaning into the hill and an inner row staggered behind it, the road's shade over the walk between them. The slope on its west is one smooth bank of dry grass with scrub, stones and a rubble kerb, tapering at both ends, instead of a row of green blobs.
+- The calvary is a heap of rubble stone with steps up its south face and three stone crosses on it, the middle one tallest, each throwing a long shadow. It sits inside the path now rather than half in the wall.
+- The salamander climbs out of the dragon stair's stepped grotto fountain, three ragged tiers with a trickle down each, into a basin with a trencadis rim, instead of sitting on a flat slab. The dragon stair has its steps all the way up.
+- The off-leash space past El Calvari is a dry hilltop, not a lawn: packed ochre earth worn pale in the middle, bleached grass, stones and scrub between the pines, and the wood beyond it in dusty olive. Its sign reads "the hilltop, off leash".
+- Gameplay: the extra columns in the hall and the viaduct are real poles. The behaviour snapshot's autowalk reaches freedom at 28.7 s instead of 30.1 s and the home leg at 44.8 s instead of 46.6 s; idle soaks and the self-test are unchanged.
+
 ## 2026-10-18 - El Bosc and First Walk audit fixes
 
 - El Bosc's pinch at -2000 is crowded with trunks on both edges at once, about one every 80 px, staggered, so the trail narrows between them like a gateway and there is a trunk to wind the leash round at every step. Before, one tree stood on alternate sides every 80 to 100 px. The autowalk, soaks and selftest are unchanged, and a playtest through the pinch found no problems.
@@ -150,7 +160,6 @@ Append-only session history, newest first.
   trick rework (no curb grinds), the off-leash games, the two-part tutorial,
   and certification notes for the new main menu.
 - docs/MICROSOFT_STORE.md step 7 is the whole per-release procedure.
-
 
 ## 2026-10-12 - hand-stepped tests step inside a physics frame
 
