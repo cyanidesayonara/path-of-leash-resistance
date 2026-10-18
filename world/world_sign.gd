@@ -50,7 +50,7 @@ const FEEL := {
 	"sand": {"spacing": 0.085, "r": 0.075, "drag": 9.0, "take": 0.35, "scuff": true},
 	"fruit": {"spacing": 0.14, "r": 0.075, "drag": 0.9, "take": 1.2, "roll": true},
 	"sticks": {"spacing": 0.34, "r": 0.04, "drag": 6.0, "take": 0.7, "spin": 2.0, "segment": true},
-	"cones": {"spacing": 0.34, "r": 0.14, "drag": 3.2, "take": 0.9, "spin": 2.0, "topple": true},
+	"cones": {"spacing": 0.3, "r": 0.12, "gap": 2.4, "drag": 3.2, "take": 0.9, "spin": 2.0, "topple": true},
 	"chestnuts": {"spacing": 0.14, "r": 0.08, "drag": 1.3, "take": 1.1, "roll": true},
 	"plate": {"spacing": 0.5, "r": 0.09, "drag": 9.0, "take": 0.35, "spin": 1.0, "segment": true},
 	"suds": {"spacing": 0.055, "r": 0.05, "drag": 3.0, "take": 1.4, "pop": true},
@@ -67,6 +67,12 @@ const ROPE_TAKE := 0.3
 # how much of the push is turned sideways, away from the way it is going
 const KICK_ASIDE := 1.4
 const REST := 3.0            # below this speed a piece is lying still
+
+
+# the space between letters for a material: fat pieces want air between
+# letters, or two letters read as one
+static func gap_for(mat: String) -> float:
+	return float((FEEL.get(mat, {}) as Dictionary).get("gap", Letters.GAP))
 
 
 static func material_for(lvl: String, weather: String) -> String:
@@ -87,7 +93,7 @@ static func _j(i: int, key: float, salt: float, amp: float) -> Vector2:
 
 # A sign: `txt` centred on `at`, cap height `h`, fitted to `max_w`, in `mat`.
 static func build(txt: String, at: Vector2, h: float, mat: String, key: float, max_w: float) -> Dictionary:
-	var lay: Array = Letters.layout(txt, at, h, max_w)
+	var lay: Array = Letters.layout(txt, at, h, max_w, gap_for(mat))
 	var lines: Array = lay[0]
 	h = float(lay[1])
 	var feel: Dictionary = FEEL.get(mat, {"fixed": true})
@@ -111,7 +117,17 @@ static func build(txt: String, at: Vector2, h: float, mat: String, key: float, m
 					{"len": d.length() * 1.2, "rot": d.angle()}))
 				n += 1
 		return sign
+	var laid := PackedVector2Array()
 	for q in Letters.points(lines, sp):
+		# cones are fat: where two strokes meet, or a stroke's end lands just
+		# past its last cone, one cone stands for both, or the letter clots
+		if mat == "cones":
+			var near := false
+			for o in laid:
+				near = near or o.distance_to(q) < sp * 0.7
+			if near:
+				continue
+			laid.append(q)
 		var jit := 0.0 if mat == "cones" else h * 0.025
 		pieces.append(_piece(n, key, q + _j(n, key, 0.0, jit), float(feel.r) * h, {}))
 		n += 1
@@ -457,9 +473,11 @@ static func _cones(c: Object, sign: Dictionary, h: float, light: Vector2) -> voi
 		if bool(pc.up):
 			c.draw_circle(p + light * r * 0.9, r * 0.9, Color(0, 0, 0, 0.18))
 			c.draw_set_transform(p, float(pc.rot) * 0.1, Vector2.ONE)
-			c.draw_rect(Rect2(-r, -r, r * 2.0, r * 2.0), Color(0.16, 0.16, 0.17))
+			# the foot only peeks out round the cone: a full dark square per cone
+			# turned a word into a black smudge with orange spots in it
+			c.draw_rect(Rect2(-r * 0.86, -r * 0.86, r * 1.72, r * 1.72), Color(0.16, 0.16, 0.17))
 			c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-			c.draw_circle(p, r * 0.8, Color(0.96, 0.42, 0.10))
+			c.draw_circle(p, r * 0.84, Color(0.96, 0.42, 0.10))
 			c.draw_arc(p, r * 0.5, 0, TAU, 14, Color(0.96, 0.96, 0.94), r * 0.2)
 			c.draw_circle(p, r * 0.22, Color(0.98, 0.56, 0.20))
 		else:
