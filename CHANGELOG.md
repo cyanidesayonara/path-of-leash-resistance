@@ -2,6 +2,59 @@
 
 Append-only session history, newest first.
 
+## 2026-10-17 - Dia de Partit, part 1: the streets to the stadium (#238)
+
+- A new walk, DIA DE PARTIT ("match day"), opening at 27 stars after
+  Montjuïc: the walk through Les Corts to a stadium that is never named. This
+  first piece is the corridor and its set dressing; the crowd, the kick-off
+  clock, the three set pieces and the walk's own goals come next (the plan is
+  in docs/superpowers/specs/2026-10-17-dia-de-partit-design.md).
+- A calm side street to start: plane trees, parked cars, a drinking fountain,
+  a grandad out early in his scarf, SEMPRE AMB TU strung across the street,
+  home flags (blue and claret halves, a plain white star) on the balconies.
+- The corner where the police have closed the avenue: CARRER TALLAT on the
+  barriers, a navy van with its blue lights turning, two officers chatting,
+  a zebra crossing.
+- The avenue: four lanes closed to traffic, lampposts on islands down the
+  painted median (wind your human round them), blue-zone parking bays, plane
+  trees in grates on the sidewalks, bunting overhead, and steel crowd barriers
+  along both kerbs that grind with the zoomies (BARRIER RUN). Along it the
+  scarf stall (BUFANDES), the seed and water cart (PIPES I AIGUA) with seed
+  shells round it, BAR LA PENYA's terrace out on its deck in the parking lane,
+  and the sausage stand (ENTREPANS).
+- The stadium approach: the road ends at a kerb and the stadium's granite
+  paving begins, FINS AL FINAL strung across it; the ticket windows
+  (TAQUILLES) with their queue belts, the drummers on their stand, floodlight
+  standards, and down the east side the stadium itself: its wall, gates PORTA
+  9 to 11 with barrier lanes into them, stair towers, and L'ESTADI on the
+  roof.
+- Off the leash in PLAÇA DEL GOL, "goal square, off leash", with the bowl
+  past its top edge: the outer wall and stair towers, the roof and its ribs,
+  the stands, and the floodlights' glow at night. The same agility course,
+  rope tug and frisbee as everywhere.
+- The walk's name is written on the ground in sunflower seed shells, the
+  litter of every Spanish stand. The city's cast-iron bollards are what she
+  marks here.
+- A first arrangement of the soundtrack for it (claps and a driving bass
+  under the whistle), until the match-day mix.
+- Goals for now: the staples and the prize, a sausage fallen off the grill
+  (it moves under the police horses with the march). No Tofu on this walk.
+- The ground, the stalls and the blocks are drawn onto the cached edge layer
+  in one batch, and the walk's name is laid in seed shells drawn without a
+  transform per shell, so the whole name is one batch too. Over a 40-second
+  autowalk on Windows: 109 draw calls a frame at the median (228 at worst)
+  against La Rambla's 181 (258), world draw 1.2 ms against 6.9 ms. In headless
+  Chrome (tools/web_perf.sh, on a busy machine, so only the comparison
+  counts): 93 calls against 172, frame p50 27 ms against 62 ms.
+- Behaviour snapshot: every other walk is byte-identical; the new lines are
+  Dia de Partit's own (autowalk finishes at 120.0 s, both soaks clean,
+  selftest OK).
+- `systems/partit.gd`; `tests/test_partit.gd` in CI; in every level list (the
+  CI selftest and smoke sweeps, the soak matrix, the shot, perf and idle-soak
+  sweeps, the behaviour snapshot, the terrain and off-leash audits, the junk
+  and NPC placement tests). The stroke letters gain the figures 0 to 9 for
+  the gate numbers.
+
 ## 2026-10-18 - La Castanyada audit fixes
 
 - The street between the festival points is never bare paving: three more stalls in the gaps (chestnuts near the start, sweets before the plaça, sweet potatoes after it), every stall lit with a warm pool off its counter and a string of bulbs along its front, and the fronts lamp-lit all the way along, with doorways and shop windows glowing out across the pavement and a wall lantern now and then. The lights are on the overhead layer, with their colour divided by the night's tint so they come out warm instead of grey under it.
