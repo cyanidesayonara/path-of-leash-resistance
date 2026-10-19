@@ -191,6 +191,8 @@ const WAIT_MAX := 4.0          # s they wait while she does her business
 var felt_pull := Vector2.ZERO
 var _pull_now := Vector2.ZERO
 var patience := 1.0
+# the away column is carrying them south. Refreshed while they stand in it.
+var march_t := 0.0
 # on Montjuïc they wear a sunhat, until a gust takes it (montjuic.blow_hat)
 var hat_off := false
 var correct_t := 0.0
@@ -736,6 +738,11 @@ func _walk(delta: float) -> void:
 	if sidestep_t > 0.0:
 		sidestep_t -= delta
 		dir = (sidestep_dir + dir * 0.25).normalized()
+	if march_t > 0.0:
+		march_t = maxf(0.0, march_t - delta)
+		velocity = Vector2(0.0, March.SPEED)
+		move_and_slide()
+		return
 	walk_intent = dir * speed
 	velocity = velocity.move_toward(dir * speed, accel * delta)
 	move_and_slide()

@@ -102,9 +102,9 @@ const GATE_YS: Array[float] = [-3800.0, -4100.0, -4400.0]
 const GATE_NUMS: Array[String] = ["9", "10", "11"]
 const LANE := Vector2(70.0, 10.0)
 
-# the walk's hazardous prize (for now: PR 5 moves it under the police horses)
-const PRIZE := Vector2(950.0, -2300.0)
-const PRIZE_TEXT := "grab the sausage that fell off the grill"
+# under the police line on the way home (systems/march.gd HORSE_X[1])
+const PRIZE := Vector2(830.0, -3254.0)
+const PRIZE_TEXT := "snatch the sausage from under the police horses"
 
 
 static func is_on(m: Node2D) -> bool:

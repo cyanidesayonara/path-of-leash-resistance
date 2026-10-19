@@ -315,6 +315,9 @@ func _build_library() -> void:
 	lib["groan"] = _noiseburst(0.7, 3.5)
 	lib["hiss"] = _noiseburst(0.22, 9.0)
 	lib["cracker"] = _noiseburst(0.09, 1.5)
+	lib["whoop"] = _whoop()
+	lib["drum"] = _noiseburst(0.08, 2.2)
+	lib["snort"] = _noiseburst(0.18, 4.0)
 
 
 func _pack(samples: PackedFloat32Array) -> AudioStreamWAV:
@@ -340,6 +343,19 @@ func _ooooh() -> AudioStreamWAV:
 		var t := float(i) / RATE
 		var f := lerpf(140.0, 280.0, t / dur)
 		out[i] = sin(TAU * f * t) * sin(PI * t / dur) * 0.28
+	return _pack(out)
+
+
+func _whoop() -> AudioStreamWAV:
+	# a police siren, one rising whoop, heard before the motorbike is
+	var dur := 0.42
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		var f := lerpf(620.0, 980.0, t / dur)
+		out[i] = sin(TAU * f * t) * sin(PI * t / dur) * 0.22
 	return _pack(out)
 
 

@@ -66,6 +66,8 @@ var match_canopy_layer: Node2D
 var match_crowd_push := Vector2.ZERO
 # the kick-off clock (systems/match_day.gd). Null on every other walk.
 var match_day: MatchDay
+# the away column (systems/march.gd). Null on every other walk.
+var march: March
 var _match_roar := 0.0
 var _goal_in := -1.0
 var _match_flash := 0.0
@@ -8158,6 +8160,8 @@ func _update_hud() -> void:
 	if match_day != null and phase == "out" and poop_state == 0 and not call_active:
 		if match_day.phase == MatchDay.Ph.RUSH:
 			hud_status = "KICK-OFF SOON"
+	if march != null and march.banner != "":
+		hud_status = march.banner
 	if feed != null:
 		# a first-time tip takes the banner while it is up
 		if tip_t > 0.0 and tip_text != "":
@@ -8339,6 +8343,8 @@ func _physics_process(delta: float) -> void:
 		_auto_drive(delta)
 		_watch_stall(delta)
 	_tick_match_crowd(delta)
+	if march != null:
+		march.tick(self, delta)
 	dog.tick(delta)
 	human.tick(delta)
 	_part_bodies()
@@ -11604,7 +11610,11 @@ func _auto_drive(_delta: float) -> void:
 		weave = clampf((beside_x - dp.x) / 60.0, -1.0, 1.0)
 	match phase:
 		"out":
-			dog.auto_move = Vector2(weave, -1.0).normalized()
+			if march != null and march.holds_bot(dp):
+				var toward := clampf((620.0 - dp.x) / 80.0, -1.0, 1.0)
+				dog.auto_move = Vector2(toward, 0.0) if absf(dp.x - 620.0) > 24.0 else Vector2.ZERO
+			else:
+				dog.auto_move = Vector2(weave, -1.0).normalized()
 		"freedom":
 			if romp_done:
 				dog.auto_move = Vector2(weave, 1.0).normalized()  # head down to leave
@@ -12477,6 +12487,8 @@ func _draw_world() -> void:
 		_draw_mosaic(wvt, vb)
 	if lvl == "partit":
 		Partit.draw_live(self, _wc, wvt, vb)
+		if march != null:
+			march.draw(_wc)
 		if _match_flash > 0.0:
 			var haze := Color(1.0, 0.92, 0.72, 0.10 * clampf(_match_flash, 0.0, 1.0))
 			_wc.circle(Vector2(980.0, Partit.STADIUM_Y0 + 80.0), 70.0, haze)

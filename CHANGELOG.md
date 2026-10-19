@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-19 - Dia de Partit, La Marxa
+
+- An away column comes south down the east side of the avenue. A siren and a drum start at least four seconds before it arrives, the banner says AWAY FANS, and the crowd shifts west to let it through. Your human steps wide of it. Walking into it turns them around and carries them back; it costs patience and does not crack the phone.
+- Four mounted officers box the column in. A horse is a solid body, not a rope contact, and a shoulder is one crack, the way a bike is. On the way home they stand in a line and the sausage is under them. A snort and a tail swish come first, and a dog underneath gets bumped.
+- The horses leave droppings. They are a slow patch and the best sniff on the street. The unattended walk waits by the median until the column has gone by.
+
 ## 2026-10-19 - Dia de Partit, El Gol
 
 - Goals come on a seeded schedule once the match is on: the first no sooner than 25 seconds after kick-off, then at least 35 apart, and at most three. One of them can be the other side, and one can be waved off.

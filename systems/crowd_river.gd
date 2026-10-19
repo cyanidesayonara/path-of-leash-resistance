@@ -65,6 +65,8 @@ var on := PackedByteArray()
 var manage := true
 # shoppers on a shopping street: both directions, no stadium carry
 var shuffle := false
+# while the away column is on the east carriageway, the river keeps west of this x
+var clear_east := 0.0
 var anchored := false
 var anchor_y := 0.0
 var river_seed := 1
@@ -321,6 +323,8 @@ func _lane_x(y: float, lane_i: int, kind_i: int, edges: Callable) -> float:
 	var x := lo + (float(lane_i) + 0.5) / float(LANES) * (hi - lo)
 	if kind_i == 2:
 		x += 12.0 if lane_i % 2 == 0 else -12.0
+	if clear_east > 0.0:
+		x = minf(x, clear_east - 20.0)
 	return clampf(x, lo, hi)
 
 
