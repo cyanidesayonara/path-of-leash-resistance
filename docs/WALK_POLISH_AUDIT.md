@@ -9,14 +9,14 @@ and unchanged until Santtu plays them.
 - Inventory: El Barri, 480 wide, straight, gate PIPICÀ, off-leash yard. 155 poles, 14 trees, 7 benches, a fountain, 18 park props. One sand patch. Goals: mark, sniff, phone, paws, bag, fetch, tofu, hi, drink, combo, prize. No authored cross-section.
 - Shots: `C:/tmp/walk-audit-shots/walk-barri.png`. EL BARRI reads.
 - Play: pending
-- Findings: no opening-name defect
+- Findings: no opening-name defect. Yard and home shots are in `C:/tmp/walk-audit-shots/`.
 
 ## street
 
 - Inventory: La Rambla, 680 wide, bends, gate PIPICÀ, off-leash yard. 390 poles, 14 trees, 8 stalls, café tables and chairs, 3 crossings, 3 cellars. One ice-cream patch. Goals add thief, wallet, fling and carry.
 - Shots: `walk-street.png` reads LA RAMBLA. `street-844x390.png` has kicked a gap through the middle of the flowers.
 - Play: pending
-- Findings: see the shared opening-name finding
+- Findings: see the shared opening-name finding. Yard and home shots are in `C:/tmp/walk-audit-shots/`.
 
 ## park
 
@@ -105,9 +105,9 @@ and unchanged until Santtu plays them.
 ## montjuic
 
 - Inventory: Montjuïc, 350 wide, bends, gate EL CASTELL, off-leash plaça. 112 poles, 9 trees, 3 benches, a moving walkway. Goals add hi, drink and cable. No authored cross-section.
-- Shots: `walk-montjuic.png`. The painted MONTJUÏC sign reads.
+- Shots: `walk-montjuic.png`. The painted MONTJUÏC sign reads. `yard-montjuic.png` is the esplanade, signed L'ESPLANADA.
 - Play: pending
-- Findings: no opening-name defect
+- Findings: with the camera north of the gate, `Montjuic.draw_hill` asks for a polyline with fewer than two points (`systems/montjuic.gd` around line 700). The esplanade shot itself still reads. The error repeated through that shot.
 
 ## partit
 
@@ -118,6 +118,9 @@ and unchanged until Santtu plays them.
 
 ## Queue
 
-Opening shots are reviewed. Yard shots, home shots and scripted play are not, so this is not the final ranking.
+Opening, yard and home shots are reviewed. Scripted play is not, so this is not the final ranking.
 
 1. Clearly rough, open. The loose place-name is laid at `START_Y - 190`. By the default shot, frame 320, your human has walked through it at 92 px/s and the leash has kicked the middle out. Beach sand, market fruit, forest sticks, works cones, chestnut letters, scrap plates and match-day shells no longer spell the place. La Rambla's flowers do the same on the 844x390 frame. Flowerbeds, puddles, mosaic, suds and the painted signs still read. Evidence: `C:/tmp/walk-audit-shots/walk-*.png`.
+2. Open, smaller. On Montjuïc's esplanade, `draw_hill` builds an empty rim and the renderer reports `p_points.size() < 2`. No missing stroke was visible in `yard-montjuic.png`, because the hill is south of that view.
+
+`PLAÇA DELS GOSSOS` on the town squares is the name those yards were given. It is not the beach's `PLATJA DELS GOSSOS`.
