@@ -17,6 +17,7 @@ const HORSE_X: Array[float] = [760.0, 830.0, 900.0, 970.0]
 
 var on := false
 var passed := false
+var caught := false
 var warned := false
 var home_line := false
 var banner := ""
@@ -153,6 +154,7 @@ func _carry(m: Node2D, dt: float) -> void:
 	var h: CharacterBody2D = m.human
 	if not foot.has_point(h.global_position):
 		return
+	caught = true
 	if h.is_whirling() or h.is_fallen():
 		return
 	h.march_t = 0.2

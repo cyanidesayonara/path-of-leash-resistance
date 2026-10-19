@@ -93,10 +93,10 @@ const STYLES := {
 		"bass": "eighths", "drums": "drive", "verb": 0.16},
 	"montjuic": {"bpm": 92, "key": 2, "lead": "whistle", "lead2": ["vibes", 0], "comp": "arp",
 		"bass": "walk", "drums": "brush", "verb": 0.36},
-	# Dia de Partit: a first arrangement, claps and a driving bass under the
-	# whistle, until the match-day mix (the spec's last piece)
+	# Dia de Partit: the whistle over a call and its answer, claps answering
+	# the bongos. No words, so it cannot be a real chant.
 	"partit": {"bpm": 116, "key": 3, "lead": "whistle", "lead2": ["marimba", -12], "comp": "stab",
-		"bass": "eighths", "drums": "claps", "verb": 0.24},
+		"bass": "eighths", "drums": "terrace", "verb": 0.24},
 	"freedom": {"bpm": 120, "key": 5, "lead": "whistle", "lead2": ["glock", 12], "comp": "arp",
 		"bass": "walk", "drums": "kickrim", "swing": 0.1, "verb": 0.22},
 }
@@ -486,6 +486,18 @@ static func _drums(j: Job, kind: String, b: int, b0: float, at: Callable, vel: C
 			hit.call(3.0, "clap", 0.5)
 			for pos: float in [0.0, 0.75, 1.5, 2.0, 2.75, 3.5]:
 				hit.call(pos, "bongo", 0.32 if pos == 0.0 or pos == 2.0 else 0.22)
+		"terrace":
+			# one bar asks, the next answers. Invented rhythm, no chant.
+			hit.call(0.0, "kick", 0.6)
+			hit.call(2.0, "kick", 0.45)
+			if b % 2 == 0:
+				hit.call(0.5, "bongo", 0.36)
+				hit.call(1.0, "bongo", 0.28)
+				hit.call(1.5, "bongo", 0.32)
+			else:
+				hit.call(1.0, "clap", 0.55)
+				hit.call(2.5, "clap", 0.34)
+				hit.call(3.0, "clap", 0.48)
 		"groove":
 			# kick on one, the and of two and three; claps on the backbeat;
 			# sixteenth shakers; every fourth bar a bongo fill into the next
