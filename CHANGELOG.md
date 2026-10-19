@@ -2,6 +2,10 @@
 
 Append-only session history, newest first.
 
+## 2026-10-20 - Horse droppings are a real substance
+
+- The away march leaves something on the avenue, and the world draw looked that kind up every frame. `stinky` was not one of the substances, so Dia de Partit logged an error for as long as a dropping was there. It is one now: a dark patch, and stinky paws if she stands in it.
+
 ## 2026-10-19 - Dia de Partit, the goals and the words
 
 - The twelfth goal is to keep your human out of the away march. It completes once the column has gone by and they were never carried. The results card shows the score the phone was watching.

@@ -526,6 +526,7 @@ const SUBSTANCES := {
 	"oil":      {"col": Color(0.20, 0.19, 0.22), "life": 3.2, "quip": "OILY PAWS!"},
 	"puddle":   {"col": Color(0.42, 0.50, 0.58), "life": 1.4, "quip": "WET PAWS!"},
 	"icecream": {"col": Color(0.96, 0.72, 0.78), "life": 2.6, "quip": "STICKY PAWS!"},
+	"stinky":  {"col": Color(0.28, 0.22, 0.12), "life": 2.4, "quip": "STINKY PAWS!"},
 }
 var substance_zones: Array[Dictionary] = []
 var paw_prints: Array[Dictionary] = []
