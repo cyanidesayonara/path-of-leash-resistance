@@ -1791,6 +1791,7 @@ static func build_level_data(m: Node2D) -> void:
 				0: tp = Vector2(lerpf(fr.position.x + 40.0, fr.end.x - 40.0, f), fr.position.y + 34.0)
 				1: tp = Vector2(fr.position.x + 46.0, lerpf(fr.position.y + 60.0, fr.end.y - 60.0, f))
 				_: tp = Vector2(fr.end.x - 46.0, lerpf(fr.position.y + 60.0, fr.end.y - 60.0, f))
+			tp = push_below_freedom_sign(m, tp, 40.0)
 			m.trees.append(tp)
 	var grove := 14
 	# Where they can stand at all. Palms do not grow in the sea or halfway down
@@ -2245,6 +2246,23 @@ static func build_dunes(m: Node2D) -> void:
 				m.dune_spots.append(Vector2(dx, r.position.y + 40.0))
 
 
+# The two-line name painted beyond the far fence. Placement uses a
+# conservative width so crowns and long props cannot cover either line.
+static func freedom_sign_rect(m: Node2D) -> Rect2:
+	return Rect2(380.0, m.freedom_lo - 58.0, 520.0, 74.0)
+
+
+static func freedom_sign_clear(m: Node2D, at: Vector2, radius: float) -> bool:
+	return not freedom_sign_rect(m).grow(radius).has_point(at)
+
+
+static func push_below_freedom_sign(m: Node2D, at: Vector2, radius: float) -> Vector2:
+	var sign := freedom_sign_rect(m)
+	if sign.grow(radius).has_point(at):
+		at.y = sign.end.y + radius + 1.0
+	return at
+
+
 static func build_park_props(m: Node2D) -> void:
 	# Spread across the whole width, deliberately AWAY from the straight line
 	# between gate and meadow, so poking about off the direct route is what
@@ -2304,6 +2322,8 @@ static func build_park_props(m: Node2D) -> void:
 			x = r.randf_range(470.0, 820.0)
 		var at := Vector2(x, r.randf_range(lo, hi))
 		at = m.agility.push_out(at, 26.0)
+		if kind in ["log", "driftwood"] and not freedom_sign_clear(m, at, 28.0):
+			continue
 		# keep clear of the owner's bench and the park slots
 		if at.distance_to(m.gate_bench) < 110.0:
 			continue

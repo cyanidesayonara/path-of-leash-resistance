@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-10-19 - Keep the off-leash signs clear
+
+- Tree crowns and long sniffable props now keep out of the two-line place sign beyond every off-leash space's far fence. El Bosc and El Mosaic no longer put three trees through the words.
+- A regression checks every tree, log and piece of driftwood on all sixteen walks.
+
 ## 2026-10-19 - Dia de Partit, El Xiulet Final
 
 - Passing -3000 on the way home, once the match has been going a minute, is full time. Three whistles, then four seconds of noise from the stadium, and the banner says FULL TIME! THE CROWD IS COMING. Then the whole crowd pours south. A win is faster than your human walks, with confetti and a drum. A draw murmurs. A loss is a slow crowd, and the easy walk home. The score is on the phone.
