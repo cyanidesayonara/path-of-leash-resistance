@@ -183,6 +183,8 @@ func _live() -> void:
 	m.human.state = m.human.HState.WALK
 	m.human.global_position = Vector2(640.0, MatchDay.FULLTIME_Y + 30.0)
 	m.dog.global_position = Vector2(680.0, MatchDay.FULLTIME_Y + 10.0)
+	m.cam.position = Vector2(640.0, MatchDay.FULLTIME_Y + 20.0)
+	m.cam.reset_smoothing()
 	m.leash.resnap()
 	var pairs_before := m.get_tree().get_nodes_in_group("pairs").size()
 	for k in range(15):
