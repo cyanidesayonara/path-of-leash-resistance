@@ -51,7 +51,7 @@ func _colors() -> void:
 
 
 func _process(delta: float) -> void:
-	if main == null or river == null or main.phase != "out":
+	if main == null or river == null:
 		return
 	_acc += delta
 	if _acc < REDRAW:
@@ -61,7 +61,7 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
-	if river == null or main == null or main.phase != "out" or main.cam == null:
+	if river == null or main == null or main.cam == null:
 		return
 	var timed := bool(main.get("_draw_cost_on"))
 	var t0 := Time.get_ticks_usec() if timed else 0
@@ -96,6 +96,8 @@ func paint(b: ShapeBatch, cam_y: float) -> void:
 				_shopper(b, i)
 		else:
 			_fan(b, i)
+	if _terrace():
+		_terrace_fans(b, top, bot)
 
 
 func _fan(b: ShapeBatch, i: int) -> void:
@@ -146,3 +148,32 @@ func _shopper(b: ShapeBatch, i: int) -> void:
 func _canopy(b: ShapeBatch, i: int) -> void:
 	var c := Vector2(river.px[i], river.py[i] - 2.0)
 	main._brolly_canopy(b, c, CANOPIES[i % CANOPIES.size()], float(i) * 1.7)
+
+
+# the bar's terrace, once the match is on: a knot of shirts at the window,
+# not part of the river and not bodies
+const TERRACE: Array[Vector2] = [
+	Vector2(400.0, -1860.0), Vector2(438.0, -1910.0), Vector2(392.0, -1970.0),
+	Vector2(446.0, -2035.0), Vector2(404.0, -2088.0), Vector2(368.0, -1944.0),
+	Vector2(458.0, -1876.0),
+]
+
+
+func _terrace() -> bool:
+	return main.match_day != null and main.match_day.phase >= MatchDay.Ph.MATCH
+
+
+func _terrace_fans(b: ShapeBatch, top: float, bot: float) -> void:
+	var i := 0
+	for p in TERRACE:
+		i += 1
+		if p.y < top or p.y > bot:
+			continue
+		var bob := sin(float(i)) * 0.6
+		b.coarse(p + Vector2(2.0, 3.0), 6.4, Color(0, 0, 0, 0.16))
+		b.coarse(p + Vector2(-3.1, bob), 6.0, _blue)
+		b.coarse(p + Vector2(3.1, bob), 6.0, _claret)
+		var head := p + Vector2(0.0, bob - 3.6)
+		b.coarse(head, 3.9, _skin[i % _skin.size()])
+		b.coarse(head + Vector2(0.0, -1.3), 2.3, _hair[i % _hair.size()])
+		b.rect(Rect2(p.x - 6.0, p.y + bob - 2.2, 12.0, 2.4), _claret)

@@ -8,6 +8,12 @@ Append-only session history, newest first.
 - A taut leash across them is a small shove, not the stadium's carry, and your human's pace is unchanged. Their umbrellas are the filled canopies, drawn above the leash.
 - The four-person huddle is still there, clogging its two spots.
 
+## 2026-10-19 - Dia de Partit, the kick-off clock
+
+- The walk has a match clock. Kick-off is 210 seconds along, or the moment the pair reach the gate, whichever comes first. The last 25 seconds before the clock wins, the PA says "falten cinc minuts" with "five minutes left" under it, the banner says KICK-OFF SOON, and the crowd breaks into a jog.
+- The whistle comes from the stadium, then a roar, and over eight seconds the crowd peels off east into the gates. What they drop is left on the avenue. After that the street is a few late runners and the bar's terrace, and your human's phone is the match: a green screen, the score in the corner, a slower pace, and the odd "come on...". Passing BAR LA PENYA, they say "ooh, the replay..." and drift over to the window, unless the dog hauls them off.
+- New test `tests/test_match_day.gd` (in CI).
+
 ## 2026-10-18 - Dia de Partit, the crowd river
 
 - The avenue fills as you walk north. Fans are data, not people: up to 150 of them in one list, drawn together in one batch at 30 fps, darker and smaller than the pair so the two of you still read. A fan is a coarse dot, not a full circle, so the crowd stays under a millisecond on top of the street. The side street stays thin; the gates are the thickest. A few vendors walk back through them.
