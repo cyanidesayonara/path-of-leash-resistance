@@ -118,9 +118,8 @@ and unchanged until Santtu plays them.
 
 ## Queue
 
-Opening, yard and home shots are reviewed. Scripted play is not, so this is not the final ranking.
+Opening, yard and home shots are reviewed. Scripted play is still running.
 
-1. Clearly rough, open. The loose place-name is laid at `START_Y - 190`. By the default shot, frame 320, your human has walked through it at 92 px/s and the leash has kicked the middle out. Beach sand, market fruit, forest sticks, works cones, chestnut letters, scrap plates and match-day shells no longer spell the place. La Rambla's flowers do the same on the 844x390 frame. Flowerbeds, puddles, mosaic, suds and the painted signs still read. Evidence: `C:/tmp/walk-audit-shots/walk-*.png`.
-2. Open, smaller. On Montjuïc's esplanade, `draw_hill` builds an empty rim and the renderer reports `p_points.size() < 2`. No missing stroke was visible in `yard-montjuic.png`, because the hill is south of that view.
+1. Open. On Montjuïc's esplanade, `Montjuic.draw_hill` builds a rim with fewer than two points and the renderer reports `p_points.size() < 2`. The esplanade shot still reads, because the hill is south of that view. The climb's own rim is a separate draw and was not the one that failed.
 
-`PLAÇA DELS GOSSOS` on the town squares is the name those yards were given. It is not the beach's `PLATJA DELS GOSSOS`.
+The loose place-names are not a defect. At frame 45, PASSEIG MARÍTIM, EL MERCAT, EL BOSC and LA RAMBLA all read. The default sweep frame is 320, which is after your human has walked through the letters. Scattering them is what those pieces are for. `PLAÇA DELS GOSSOS` on the town squares is the name those yards were given, not the beach's `PLATJA DELS GOSSOS`.
