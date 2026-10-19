@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-19 - Dia de Partit, El Xiulet Final
+
+- Passing -3000 on the way home, once the match has been going a minute, is full time. Three whistles, then four seconds of noise from the stadium, and the banner says FULL TIME! THE CROWD IS COMING. Then the whole crowd pours south. A win is faster than your human walks, with confetti and a drum. A draw murmurs. A loss is a slow crowd, and the easy walk home. The score is on the phone.
+- A slack human against a median lamppost or the barriers is not carried. A taut leash across the flow still drags. Two fans' dogs come out with the crowd. Nothing about it is a chase.
+- Beat the crowd home if no fan of that outflow gets past the dog before home.
+
 ## 2026-10-19 - Dia de Partit, La Marxa
 
 - An away column comes south down the east side of the avenue. A siren and a drum start at least four seconds before it arrives, the banner says AWAY FANS, and the crowd shifts west to let it through. Your human steps wide of it. Walking into it turns them around and carries them back; it costs patience and does not crack the phone.

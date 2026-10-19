@@ -45,7 +45,7 @@ const LEVEL_GOAL_IDS := {
 	# Dia de Partit, the corridor first (#238): the staples and its prize. The
 	# march, the scarf, the kickabout and the final whistle come with their set
 	# pieces. No Tofu: the way home belongs to the final whistle.
-	"partit": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "prize"],
+	"partit": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "fulltime", "prize"],
 }
 
 
@@ -82,6 +82,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"thief": {"text": "Stop %d pickpockets", "target": 2, "fn": func() -> int: return m.thieves_stopped},
 		"wallet": {"text": "Keep your human's wallet safe", "target": 1, "fn": func() -> int: return 0 if (m.owner_wallet_taken or m.owner_wallet_lost) else 1},
 		"prize": {"text": m.prize_text, "target": 1, "fn": func() -> int: return 1 if m.prize_taken else 0},
+		"fulltime": {"text": "Beat the crowd home", "target": 1, "fn": func() -> int: return 1 if m.match_day != null and m.match_day.beat else 0},
 	}
 
 
