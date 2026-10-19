@@ -7,8 +7,8 @@ extends RefCounted
 # police have closed the avenue, the avenue itself with its vendors, the bar
 # terrace and the steel barriers along the kerbs, the stadium approach with
 # its ticket windows, drummers and gates, and the square beside the stadium
-# where she comes off the leash. The crowd, the kick-off clock and the set
-# pieces come in later pieces.
+# where she comes off the leash. The crowd walks in systems/crowd_river.gd.
+# The kick-off clock and the set pieces come in later pieces.
 #
 # Branding (the spec's rules): no club, crest, sponsor, player or stadium
 # name anywhere. Home colors are blue and claret, in halves; flags carry a
