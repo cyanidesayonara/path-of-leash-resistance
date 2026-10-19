@@ -8892,8 +8892,7 @@ func _on_match_roar(side: String) -> void:
 	if phase == "freedom":
 		for pup in get_tree().get_nodes_in_group("freedogs"):
 			pup.hear_roar()
-	if side != "no":
-		_terrace_erupts()
+	_terrace_erupts()
 
 
 func _terrace_erupts() -> void:
