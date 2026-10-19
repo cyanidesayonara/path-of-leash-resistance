@@ -1,18 +1,28 @@
 extends Node2D
 
-# Every visible fan of Dia de Partit's river, in one ShapeBatch, redrawn at
-# 30 fps like the NPC pairs. A distance fan is six shapes: shadow, two shirt
-# halves, head, hair, and a scarf bar (a vendor has a tray instead). Darker
-# and smaller than the pair. This layer sits under the leash (z 5), so the
-# rope always draws over the crowd. Fans are data on CrowdRiver; nothing
-# here is a body or a rope contact.
+# Every visible person in a CrowdRiver, in one ShapeBatch, redrawn at 30 fps
+# like the NPC pairs. A match fan is six shapes. A shopper is a coat and a
+# head; their umbrella is a second layer of this same script, above the leash,
+# because the canopy is overhead and the strap is at the waist. Darker and
+# smaller than the pair. Fans are data; nothing here is a body or a rope contact.
 
 const Partit := preload("res://systems/partit.gd")
 const REDRAW := 0.033
 const BAND := 520.0
 
+const COATS: Array[Color] = [
+	Color(0.18, 0.24, 0.36), Color(0.46, 0.22, 0.18),
+	Color(0.28, 0.34, 0.26), Color(0.24, 0.22, 0.24),
+]
+const CANOPIES: Array[Color] = [
+	Color(0.72, 0.16, 0.18), Color(0.16, 0.28, 0.48),
+	Color(0.78, 0.62, 0.18), Color(0.14, 0.14, 0.16), Color(0.52, 0.60, 0.46),
+]
+
 var main: Node2D
 var river: CrowdRiver
+# the overhead pass: canopies only, so the leash draws under them
+var draw_canopies := false
 var _acc := 0.0
 var flush_count := 0
 var _cost_us := 0
@@ -79,7 +89,13 @@ func paint(b: ShapeBatch, cam_y: float) -> void:
 		var y: float = river.py[i]
 		if y < top or y > bot:
 			continue
-		_fan(b, i)
+		if river.shuffle:
+			if draw_canopies:
+				_canopy(b, i)
+			else:
+				_shopper(b, i)
+		else:
+			_fan(b, i)
 
 
 func _fan(b: ShapeBatch, i: int) -> void:
@@ -112,3 +128,21 @@ func _fan(b: ShapeBatch, i: int) -> void:
 		b.rect(Rect2(x - 5.0, y + bob + 1.5, 10.0, 3.0), Color(0.42, 0.30, 0.16))
 	else:
 		b.rect(Rect2(x - 6.0, y + bob - 2.2, 12.0, 2.4), c1)
+
+
+func _shopper(b: ShapeBatch, i: int) -> void:
+	var x: float = river.px[i]
+	var y: float = river.py[i]
+	var bob := sin(river.phase[i]) * 0.6
+	var coat: Color = COATS[i % COATS.size()]
+	b.coarse(Vector2(x + 2.0, y + 3.0), 6.2, Color(0, 0, 0, 0.18))
+	b.coarse(Vector2(x, y + bob), 6.4, coat)
+	var head := Vector2(x, y + bob - 4.2)
+	var si := i % _skin.size()
+	b.coarse(head, 3.5, _skin[si])
+	b.coarse(head + Vector2(0.0, -1.1), 2.0, _hair[si])
+
+
+func _canopy(b: ShapeBatch, i: int) -> void:
+	var c := Vector2(river.px[i], river.py[i] - 2.0)
+	main._brolly_canopy(b, c, CANOPIES[i % CANOPIES.size()], float(i) * 1.7)

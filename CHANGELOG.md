@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-19 - El Diluvi's umbrella crowd walks
+
+- The shopping street is no longer four people standing in the rain. Twenty-eight shoppers stroll both ways along the covered edges, on the same crowd list as the match-day river, and they leave the middle of the street clear. They jostle past each other and step around the pair. They are not rope contacts.
+- A taut leash across them is a small shove, not the stadium's carry, and your human's pace is unchanged. Their umbrellas are the filled canopies, drawn above the leash.
+- The four-person huddle is still there, clogging its two spots.
+
 ## 2026-10-18 - Dia de Partit, the crowd river
 
 - The avenue fills as you walk north. Fans are data, not people: up to 150 of them in one list, drawn together in one batch at 30 fps, darker and smaller than the pair so the two of you still read. A fan is a coarse dot, not a full circle, so the crowd stays under a millisecond on top of the street. The side street stays thin; the gates are the thickest. A few vendors walk back through them.

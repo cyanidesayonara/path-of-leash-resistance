@@ -57,10 +57,12 @@ var edge_nodes: Array = []
 # every solid rectangle LevelBuild.add_rect_body made (stall blocks, the
 # salamander, dumpsters...), for placing loose things clear of them
 var solid_rects: Array[Rect2] = []
-# Dia de Partit's river (systems/crowd_river.gd). Null on every other walk.
-# The push is px/s along the flow from fans held on a taut cross-leash.
+# Dia de Partit's river, and El Diluvi's two-way stroll (systems/crowd_river.gd).
+# Null on every other walk. The push is px/s along the flow from people held
+# on a taut cross-leash. The canopy layer is the umbrellas, above the leash.
 var match_crowd: CrowdRiver
 var match_crowd_layer: Node2D
+var match_canopy_layer: Node2D
 var match_crowd_push := Vector2.ZERO
 # parallel bike lane along the right side, plus a narrow far shoulder
 # with temptations - crossing the lane is a voluntary risk
