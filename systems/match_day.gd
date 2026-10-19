@@ -13,6 +13,7 @@ const RUSH_LEAD := 25.0        # the last stretch before the clock wins
 const DRAIN_T := 8.0           # the streets empty over this long
 const FULLTIME_Y := -3000.0    # passed going south, on the way home
 const FULLTIME_WAIT := 60.0    # seconds of the match before the final whistle can come
+const OUT_LEAD := 4.0          # noise from behind before the crowd arrives
 const MATCH_PACE := 0.88       # how their pace gives once the phone shows the match
 # goals: the first no sooner than 25s after kick-off, then at least 35s
 # apart, and never more than three. The swell is the telegraph; the roar
@@ -48,6 +49,11 @@ var _flare := false
 var _flare_in := 22.0
 var force_in := -1.0
 var roar_side := ""
+# the final whistle: home, draw or away. Empty until full time.
+var result := ""
+var overtook := false
+var beat := false
+var _final := false
 
 
 # One step. homeward is the walk home. pair_y is the northmost of the pair
@@ -83,6 +89,7 @@ func advance(dt: float, pair_y: float, gate_y: float, homeward: bool) -> Diction
 		"roar": _roar,
 		"react": _react,
 		"flare": _flare,
+		"final": _final,
 	}
 	_pa = false
 	_whistle = false
@@ -90,6 +97,7 @@ func advance(dt: float, pair_y: float, gate_y: float, homeward: bool) -> Diction
 	_roar = false
 	_react = ""
 	_flare = false
+	_final = false
 	return cue
 
 
@@ -105,10 +113,41 @@ func _to(next: Ph) -> void:
 	elif next == Ph.MATCH:
 		match_t = 0.0
 		_plan(20261019)
+	elif next == Ph.FULLTIME:
+		_final = true
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 20261019
+		var roll := rng.randi() % 3
+		result = "home" if roll == 0 else ("draw" if roll == 1 else "away")
 
 
 func on_the_match() -> bool:
 	return phase >= Ph.KICKOFF
+
+
+# The crowd waits out the four seconds of noise. Then it pours.
+func outflow_due() -> bool:
+	return phase == Ph.FULLTIME and phase_t >= OUT_LEAD
+
+
+# home is 1-0, away is 0-1, a draw is 1-1. The phone shows this.
+static func score_line(which: String) -> String:
+	if which == "home":
+		return "1-0"
+	if which == "away":
+		return "0-1"
+	return "1-1"
+
+
+# A fan of the outflow getting south of the dog is the miss. Reaching home
+# without that is the goal.
+func watch_home(dog_y: float, home_y: float, fan_past: bool) -> void:
+	if not outflow_due():
+		return
+	if fan_past:
+		overtook = true
+	if dog_y >= home_y and not overtook:
+		beat = true
 
 
 func _plan(seed: int) -> void:

@@ -40,11 +40,18 @@ const MODE_WALK := 0
 const MODE_JOG := 1
 const MODE_DRAIN := 2
 const MODE_LATE := 3
+const MODE_OUT := 4          # full time: the whole river pours south
 const LATE_N := 6
+const OUT_WIN := 150.0       # px/s south, faster than your human walks
+const OUT_DRAW := 118.0
+const OUT_LOSS := 64.0       # a grumbling crowd, the easy walk home
 const DRAIN_SPEED := 170.0    # px/s east, off the street and into the gates
 const DRAIN_GATES: Array[float] = [-3800.0, -4100.0, -4400.0]
 var flow_mode := MODE_WALK
 var _flow_was := MODE_WALK
+var out_rate := OUT_DRAW
+# fans of the outflow spawn north of this y, so one south of the dog has passed her
+var out_wall := 0.0
 # the same y cuts as Partit.STREET_Y1, AVENUE_Y0 and ROAD_END_Y. Kept here so
 # this sim does not preload the level script (that script names the Game autoload).
 const STREET_Y1 := -600.0
@@ -134,6 +141,8 @@ func target_at(y: float) -> int:
 		return 0
 	if flow_mode == MODE_LATE:
 		return mini(LATE_N, count)
+	if flow_mode == MODE_OUT:
+		return count
 	var n := clampi(int(round(float(count) * density(y))), mini(8, count), count)
 	if flow_mode == MODE_JOG:
 		n = mini(count, n + maxi(int(round(float(n) * 0.2)), 4))
@@ -148,6 +157,9 @@ func carry(y: float, homeward: bool) -> Vector2:
 	var d := density(y)
 	if flow_mode == MODE_DRAIN or flow_mode == MODE_LATE:
 		return Vector2(0.0, 1.0)
+	if flow_mode == MODE_OUT:
+		var with := lerpf(1.0, PACE_WITH, d)
+		return Vector2(sin(y * 0.013) * SHIFT * d, with)
 	var pace := lerpf(1.0, PACE_AGAINST, d) if homeward else lerpf(1.0, PACE_WITH, d)
 	return Vector2(sin(y * 0.013) * SHIFT * d, pace)
 
@@ -175,7 +187,7 @@ func step(dt: float, view_y: float, dog_p: Vector2, human_p: Vector2, leash: Pac
 	if count <= 0:
 		return Vector2.ZERO
 	if manage and flow_mode != _flow_was:
-		if flow_mode == MODE_LATE:
+		if flow_mode == MODE_LATE or flow_mode == MODE_OUT:
 			anchored = false
 		_flow_was = flow_mode
 	if flow_mode == MODE_DRAIN:
@@ -199,6 +211,8 @@ func step(dt: float, view_y: float, dog_p: Vector2, human_p: Vector2, leash: Pac
 			rate = SHUFFLE_S if _southbound(i) else SHUFFLE_N
 		elif flow_mode == MODE_LATE:
 			rate = FLOW * 1.45
+		elif flow_mode == MODE_OUT:
+			rate = out_rate
 		elif kind[i] == 2:
 			rate = VENDOR_FLOW
 		var vy := rate * spd[i] * scale * dt
@@ -261,7 +275,11 @@ func _relocate(view_y: float, edges: Callable) -> void:
 		hop[i] = 0.0
 		if on[i] == 0:
 			continue
-		py[i] = view_y - VIEW_N + (float(i) + 0.5) / float(want) * span
+		if flow_mode == MODE_OUT:
+			var back := out_wall - 40.0
+			py[i] = back - (float(i) + 0.5) / float(want) * VIEW_N
+		else:
+			py[i] = view_y - VIEW_N + (float(i) + 0.5) / float(want) * span
 		px[i] = _lane_x(py[i], int(lane[i]), int(kind[i]), edges)
 
 
@@ -329,9 +347,26 @@ func _lane_x(y: float, lane_i: int, kind_i: int, edges: Callable) -> float:
 
 
 func _southbound(i: int) -> bool:
+	if flow_mode == MODE_OUT:
+		return true
 	if shuffle:
 		return kind[i] != 0
 	return kind[i] == 2
+
+
+func any_south_of(y: float) -> bool:
+	for i in count:
+		if on[i] != 0 and py[i] > y:
+			return true
+	return false
+
+
+static func outflow_rate(which: String) -> float:
+	if which == "home":
+		return OUT_WIN
+	if which == "away":
+		return OUT_LOSS
+	return OUT_DRAW
 
 
 func _space_lanes() -> void:

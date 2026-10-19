@@ -74,6 +74,12 @@ var _match_flash := 0.0
 var _flare_t := 0.0
 var _flare_at := Vector2.ZERO
 var terrace_kick := 0.0
+var _final_blasts := 0
+var _final_gap := 0.0
+var _fan_dogs := false
+var _out_noise := false
+var _out_arrived := false
+var _chant_in := 0.0
 # parallel bike lane along the right side, plus a narrow far shoulder
 # with temptations - crossing the lane is a voluntary risk
 # the hang-time beat on big moments: game speed, and how long it lasts in
@@ -8162,6 +8168,8 @@ func _update_hud() -> void:
 			hud_status = "KICK-OFF SOON"
 	if march != null and march.banner != "":
 		hud_status = march.banner
+	if match_day != null and match_day.phase == MatchDay.Ph.FULLTIME and not match_day.outflow_due():
+		hud_status = "FULL TIME! THE CROWD IS COMING"
 	if feed != null:
 		# a first-time tip takes the banner while it is up
 		if tip_t > 0.0 and tip_text != "":
@@ -8827,10 +8835,17 @@ func _tick_match_crowd(delta: float) -> void:
 	if leash != null and leash.rest_len > 1.0:
 		taut = leash.taut_amount(leash.used_length() / leash.rest_len)
 		path = leash.visible_path()
+	if match_crowd.flow_mode == CrowdRiver.MODE_OUT:
+		match_crowd.out_wall = minf(dog_p.y, human_p.y)
 	match_crowd_push = match_crowd.step(delta, mid_y, dog_p, human_p, path, taut, solid_rects, Callable(self, "walk_edges"))
 	var give: Vector2 = match_crowd.carry(human_p.y, human.homeward)
 	human.crowd_shift = give.x
 	human.crowd_pace = give.y
+	if match_crowd.flow_mode == CrowdRiver.MODE_OUT and _held_clear(human_p):
+		human.crowd_shift = 0.0
+		human.crowd_pace = 1.0
+	if match_day != null and match_day.outflow_due():
+		match_day.watch_home(dog_p.y, HOME_Y, match_crowd.any_south_of(dog_p.y))
 	if match_crowd.hup_fresh:
 		float_text(match_crowd.hup_at, "hup", Color(0.95, 0.93, 0.86))
 
@@ -8873,6 +8888,21 @@ func _tick_match_day(delta: float) -> void:
 		human.match_react(side)
 	if bool(cue["flare"]):
 		_arm_flare()
+	if bool(cue["final"]):
+		_final_blasts = 3
+		_final_gap = 0.0
+		_out_noise = false
+		_out_arrived = false
+		_fan_dogs = false
+	if _final_blasts > 0:
+		_final_gap -= delta
+		if _final_gap <= 0.0:
+			Sfx.play("whistle", 1.0, -6.0)
+			_final_blasts -= 1
+			_final_gap = 0.5
+	if match_day.phase == MatchDay.Ph.FULLTIME and not _out_noise and match_day.phase_t >= 1.5:
+		_out_noise = true
+		Sfx.play("roar", 0.55, -16.0)
 	_match_flash = maxf(0.0, _match_flash - delta)
 	terrace_kick = maxf(0.0, terrace_kick - delta)
 	if _flare_t > 0.0:
@@ -8885,6 +8915,8 @@ func _tick_match_day(delta: float) -> void:
 	human.match_pace = MatchDay.MATCH_PACE if watching else 1.0
 	if human.score_bug != null:
 		human.score_bug.visible = watching
+		if match_day.result != "":
+			human.score_bug.text = MatchDay.score_line(match_day.result)
 	if match_crowd == null:
 		return
 	match match_day.phase:
@@ -8892,10 +8924,47 @@ func _tick_match_day(delta: float) -> void:
 			match_crowd.flow_mode = CrowdRiver.MODE_JOG
 		MatchDay.Ph.KICKOFF:
 			match_crowd.flow_mode = CrowdRiver.MODE_DRAIN
-		MatchDay.Ph.MATCH, MatchDay.Ph.FULLTIME:
+		MatchDay.Ph.MATCH:
 			match_crowd.flow_mode = CrowdRiver.MODE_LATE
+		MatchDay.Ph.FULLTIME:
+			if match_day.outflow_due():
+				match_crowd.flow_mode = CrowdRiver.MODE_OUT
+				match_crowd.out_rate = CrowdRiver.outflow_rate(match_day.result)
+				if not _out_arrived:
+					_out_arrived = true
+					Sfx.play("roar", 0.8, -8.0)
+					if match_day.result == "draw":
+						Sfx.play("groan", 0.6, -10.0)
+					_release_fan_dogs()
+				if match_day.result == "home":
+					_chant_in -= delta
+					if _chant_in <= 0.0:
+						_chant_in = 1.4
+						Sfx.play("drum", 0.45, -12.0)
+			else:
+				match_crowd.flow_mode = CrowdRiver.MODE_LATE
 		_:
 			match_crowd.flow_mode = CrowdRiver.MODE_WALK
+
+
+# A lamppost or the kerb barriers: the river can pass a human who is against one.
+func _held_clear(at: Vector2) -> bool:
+	if absf(at.x - 330.0) < 42.0 or absf(at.x - 950.0) < 42.0:
+		return true
+	if absf(at.x - 640.0) < 36.0:
+		for y: float in Partit.MEDIAN_YS:
+			if absf(at.y - y) < 52.0:
+				return true
+	return false
+
+
+func _release_fan_dogs() -> void:
+	if _fan_dogs:
+		return
+	_fan_dogs = true
+	var y := minf(dog.global_position.y, human.global_position.y)
+	_make_pair(Vector2(520.0, y - 420.0), Vector2(0.0, 1.0))
+	_make_pair(Vector2(800.0, y - 560.0), Vector2(0.0, 1.0))
 
 
 func _on_match_roar(side: String) -> void:

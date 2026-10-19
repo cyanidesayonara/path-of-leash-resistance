@@ -129,7 +129,13 @@ func _fan(b: ShapeBatch, i: int) -> void:
 	if vendor:
 		b.rect(Rect2(x - 5.0, y + bob + 1.5, 10.0, 3.0), Color(0.42, 0.30, 0.16))
 	else:
-		b.rect(Rect2(x - 6.0, y + bob - 2.2, 12.0, 2.4), c1)
+		var scarf_y := y + bob - 2.2
+		if river.flow_mode == CrowdRiver.MODE_OUT and river.out_rate >= CrowdRiver.OUT_WIN - 1.0:
+			scarf_y += sin(river.phase[i] * 2.4) * 2.0
+			var spin := sin(river.phase[i] * 3.0) * 7.0
+			b.rect(Rect2(x + spin, y - 16.0, 3.0, 2.0), Color(0.95, 0.84, 0.28))
+			b.rect(Rect2(x - spin * 0.6, y - 20.0, 2.0, 3.0), Color(0.22, 0.46, 0.86))
+		b.rect(Rect2(x - 6.0, scarf_y, 12.0, 2.4), c1)
 
 
 func _shopper(b: ShapeBatch, i: int) -> void:

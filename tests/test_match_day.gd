@@ -26,6 +26,7 @@ func _initialize() -> void:
 func _run() -> void:
 	_clock()
 	_drain()
+	_outflow()
 	_goals()
 	await _live()
 	print("test_match_day: %d checks, %d failures" % [checks, failures.size()])
@@ -66,8 +67,23 @@ func _clock() -> void:
 	home.match_t = MatchDay.FULLTIME_WAIT
 	home.advance(0.1, MatchDay.FULLTIME_Y - 80.0, gate, true)
 	_check(home.phase == MatchDay.Ph.MATCH, "full time waits until they pass -3000 going home")
-	home.advance(0.1, MatchDay.FULLTIME_Y + 20.0, gate, true)
+	var cue_ft: Dictionary = home.advance(0.1, MatchDay.FULLTIME_Y + 20.0, gate, true)
 	_check(home.phase == MatchDay.Ph.FULLTIME, "passing -3000 on the way home is full time")
+	_check(bool(cue_ft["final"]), "full time starts the whistles")
+	_check(home.result == "home" or home.result == "draw" or home.result == "away", "the result is seeded")
+	_check(not home.outflow_due(), "the crowd waits four seconds")
+	home.advance(MatchDay.OUT_LEAD, MatchDay.FULLTIME_Y + 40.0, gate, true)
+	_check(home.outflow_due(), "then the crowd is due")
+	_check(CrowdRiver.outflow_rate("away") < 92.0 and CrowdRiver.outflow_rate("home") > 92.0,
+		"a loss is slower than a walk, a win is faster")
+	_check(MatchDay.score_line(home.result).contains("-"), "the phone can show the score")
+	home.watch_home(400.0, 320.0, false)
+	_check(home.beat and not home.overtook, "reaching home ahead of the crowd is the goal")
+	var missed := MatchDay.new()
+	missed.phase = MatchDay.Ph.FULLTIME
+	missed.phase_t = MatchDay.OUT_LEAD
+	missed.watch_home(400.0, 320.0, true)
+	_check(missed.overtook and not missed.beat, "a fan past the dog misses it")
 	_check(MatchDay.LITTER.size() == 6, "six bits of litter")
 
 
@@ -84,6 +100,29 @@ func _drain() -> void:
 	river.flow_mode = CrowdRiver.MODE_LATE
 	river.step(0.016, -2000.0, Vector2(640, -2000), Vector2(680, -1940), PackedVector2Array(), 0.0, [], edges)
 	_check(river.active_count() == CrowdRiver.LATE_N, "a few stragglers (%d)" % river.active_count())
+
+
+func _outflow() -> void:
+	var edges := Callable(self, "_edges")
+	var slow = _one_fan(CrowdRiver.OUT_LOSS)
+	var fast = _one_fan(CrowdRiver.OUT_WIN)
+	slow.step(1.0, -200.0, Vector2(400, -200), Vector2(420, -160), PackedVector2Array(), 0.0, [], edges)
+	fast.step(1.0, -200.0, Vector2(400, -200), Vector2(420, -160), PackedVector2Array(), 0.0, [], edges)
+	_check(slow.py[0] > -240.0 and fast.py[0] > slow.py[0], "the outflow runs south, and a win runs faster")
+	_check(fast.any_south_of(-200.0), "a fan who crosses the dog is south of her")
+
+
+func _one_fan(rate: float):
+	var river := CrowdRiver.new()
+	river.setup(4, 8)
+	river.manage = false
+	river.flow_mode = CrowdRiver.MODE_OUT
+	river.out_rate = rate
+	river.on[0] = 1
+	river.spd[0] = 1.0
+	river.px[0] = 400.0
+	river.py[0] = -240.0
+	return river
 
 
 func _live() -> void:
@@ -137,6 +176,27 @@ func _live() -> void:
 			break
 	_check(saw, "the replay is telegraphed before they move")
 	_check(m.human.state == m.human.HState.DRIFT, "then they drift to the window")
+
+	m.phase = "home"
+	m.match_day.phase = MatchDay.Ph.MATCH
+	m.match_day.match_t = MatchDay.FULLTIME_WAIT
+	m.human.state = m.human.HState.WALK
+	m.human.global_position = Vector2(640.0, MatchDay.FULLTIME_Y + 30.0)
+	m.dog.global_position = Vector2(680.0, MatchDay.FULLTIME_Y + 10.0)
+	m.leash.resnap()
+	var pairs_before := m.get_tree().get_nodes_in_group("pairs").size()
+	for k in range(15):
+		await physics_frame
+	m._update_hud()
+	_check(m.match_day.phase == MatchDay.Ph.FULLTIME, "the walk home reaches full time")
+	_check(m.hud_status == "FULL TIME! THE CROWD IS COMING", "the banner gives the four seconds")
+	_check(m.match_crowd.flow_mode == CrowdRiver.MODE_LATE, "the street is still thin during the noise")
+	m.match_day.phase_t = MatchDay.OUT_LEAD
+	for k in range(8):
+		await physics_frame
+	_check(m.match_crowd.flow_mode == CrowdRiver.MODE_OUT, "then the crowd pours south")
+	_check(m.get_tree().get_nodes_in_group("pairs").size() >= pairs_before + 2, "two fans' dogs come out")
+	_check(m.human.score_bug.text == MatchDay.score_line(m.match_day.result), "the phone shows the result")
 
 
 func _goals() -> void:
