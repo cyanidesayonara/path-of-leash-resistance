@@ -309,6 +309,8 @@ func _build_library() -> void:
 	lib["intro_sigh"] = _intro_sigh()
 	lib["intro_taut"] = _intro_taut()
 	lib["intro_door"] = _intro_door()
+	lib["whistle"] = _whistle()
+	lib["roar"] = _noiseburst(0.5, 5.0)
 
 
 func _pack(samples: PackedFloat32Array) -> AudioStreamWAV:
@@ -322,6 +324,19 @@ func _pack(samples: PackedFloat32Array) -> AudioStreamWAV:
 	s.stereo = false
 	s.data = bytes
 	return s
+
+
+func _whistle() -> AudioStreamWAV:
+	# a referee's pea: a high note with a fast wobble, from the stadium
+	var dur := 0.34
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		var f := 2100.0 + sin(t * 86.0) * 160.0
+		out[i] = sin(TAU * f * t) * exp(-t * 2.4) * 0.32
+	return _pack(out)
 
 
 func _tone(freq: float, dur: float, decay: float, amp := 0.5) -> AudioStreamWAV:

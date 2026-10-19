@@ -27,6 +27,18 @@ const PACE_WITH := 1.16       # packed crowd, walking their way
 const PACE_AGAINST := 0.94    # packed crowd, walking home against it
 const SHIFT := 22.0           # px of sideways drift at full density
 const JUMP := 320.0          # a camera leap (a shot) rebuilds the window
+# the clock (systems/match_day.gd) sets this. Walk is the river, jog is the
+# rush, drain is the eight seconds into the gates, late is a handful running
+# north after the streets have emptied.
+const MODE_WALK := 0
+const MODE_JOG := 1
+const MODE_DRAIN := 2
+const MODE_LATE := 3
+const LATE_N := 6
+const DRAIN_SPEED := 170.0    # px/s east, off the street and into the gates
+const DRAIN_GATES: Array[float] = [-3800.0, -4100.0, -4400.0]
+var flow_mode := MODE_WALK
+var _flow_was := MODE_WALK
 # the same y cuts as Partit.STREET_Y1, AVENUE_Y0 and ROAD_END_Y. Kept here so
 # this sim does not preload the level script (that script names the Game autoload).
 const STREET_Y1 := -600.0
@@ -95,15 +107,22 @@ func density(y: float) -> float:
 
 
 func target_at(y: float) -> int:
-	if count <= 0:
+	if count <= 0 or flow_mode == MODE_DRAIN:
 		return 0
-	return clampi(int(round(float(count) * density(y))), mini(8, count), count)
+	if flow_mode == MODE_LATE:
+		return mini(LATE_N, count)
+	var n := clampi(int(round(float(count) * density(y))), mini(8, count), count)
+	if flow_mode == MODE_JOG:
+		n = mini(count, n + maxi(int(round(float(n) * 0.2)), 4))
+	return n
 
 
 # (sideways shift added to where they mean to go, pace multiplier).
 # Pace only: the walk's acceleration is not this function's to change.
 func carry(y: float, homeward: bool) -> Vector2:
 	var d := density(y)
+	if flow_mode == MODE_DRAIN or flow_mode == MODE_LATE:
+		return Vector2(0.0, 1.0)
 	var pace := lerpf(1.0, PACE_AGAINST, d) if homeward else lerpf(1.0, PACE_WITH, d)
 	return Vector2(sin(y * 0.013) * SHIFT * d, pace)
 
@@ -130,6 +149,14 @@ func step(dt: float, view_y: float, dog_p: Vector2, human_p: Vector2, leash: Pac
 	hup_cd = maxf(0.0, hup_cd - dt)
 	if count <= 0:
 		return Vector2.ZERO
+	if manage and flow_mode != _flow_was:
+		if flow_mode == MODE_LATE:
+			anchored = false
+		_flow_was = flow_mode
+	if flow_mode == MODE_DRAIN:
+		_drain(dt, edges)
+		anchor_y = view_y
+		return Vector2.ZERO
 	if manage and (not anchored or absf(view_y - anchor_y) > JUMP):
 		_relocate(view_y, edges)
 		anchor_y = view_y
@@ -141,7 +168,12 @@ func step(dt: float, view_y: float, dog_p: Vector2, human_p: Vector2, leash: Pac
 	for i in count:
 		if on[i] == 0:
 			continue
-		var vy := (VENDOR_FLOW if kind[i] == 2 else FLOW) * spd[i] * dt
+		var scale := 1.7 if flow_mode == MODE_JOG else 1.0
+		var vy: float
+		if flow_mode == MODE_LATE:
+			vy = FLOW * 1.45 * spd[i] * dt
+		else:
+			vy = (VENDOR_FLOW if kind[i] == 2 else FLOW) * spd[i] * scale * dt
 		py[i] += vy
 		phase[i] += absf(vy) * 0.08
 		if hop[i] > 0.0:
@@ -170,6 +202,24 @@ func step(dt: float, view_y: float, dog_p: Vector2, human_p: Vector2, leash: Pac
 		if hi > lo:
 			px[i] = clampf(px[i], lo, hi)
 	return Vector2(0.0, clampf(push_y, -PUSH_CAP, PUSH_CAP))
+
+
+func _drain(dt: float, edges: Callable) -> void:
+	for i in count:
+		if on[i] == 0:
+			continue
+		var edge: Vector2 = edges.call(py[i])
+		px[i] += DRAIN_SPEED * dt
+		var gy := DRAIN_GATES[0]
+		var best := absf(py[i] - gy)
+		for g in DRAIN_GATES:
+			var d := absf(py[i] - g)
+			if d < best:
+				best = d
+				gy = g
+		py[i] += clampf(gy - py[i], -90.0, 90.0) * dt
+		if px[i] > edge.y + 24.0:
+			on[i] = 0
 
 
 func _relocate(view_y: float, edges: Callable) -> void:
