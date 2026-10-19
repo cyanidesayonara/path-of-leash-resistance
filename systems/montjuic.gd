@@ -695,8 +695,12 @@ static func draw_hill(m: Node2D, c: Object, vt: float, vb: float) -> void:
 		left.append(Vector2(cx - hh, y + 10.0))
 		right.append(Vector2(cx + hh, y + 10.0))
 		y += 20.0
-	# the rim: rock breaking out where the hill drops away
+	# the rim: rock breaking out where the hill drops away. A view that
+	# does not include the hill, such as the esplanade, leaves these empty,
+	# and a polyline needs two points.
 	for pts: PackedVector2Array in [left, right]:
+		if pts.size() < 2:
+			continue
 		c.draw_polyline(pts, Color(0.36, 0.33, 0.27), 7.0)
 		c.draw_polyline(pts, Color(0.58, 0.54, 0.44), 3.0)
 
