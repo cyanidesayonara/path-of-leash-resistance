@@ -95,6 +95,10 @@ var human_contact_is_pole := false
 var contact_dynamic := Vector2(INF, INF)
 var detached := false
 var near_poles: Array[Vector2] = []
+# Effective collision radius for each static entry in `poles`: the object's
+# waist-high section plus half the strap. An empty/misaligned array keeps the
+# old POLE_PAD for fixtures and old callers.
+var pole_radii := PackedFloat32Array()
 # authored furniture wrap centres (tables/chairs/parasols/bins). Same
 # collision as poles, but typed so slip and contact metadata can differ.
 var furniture_poles: Array[Vector2] = []
@@ -106,6 +110,8 @@ var _kinds_stamp := -1
 # scratch reused every tick, so a frame allocates nothing
 var _obs_pos := PackedVector2Array()
 var _obs_kind := PackedInt32Array()
+var _obs_rad := PackedFloat32Array()
+var _obs_custom_radius := false
 # obstacles within BEND_BERTH of the rope's box, which no bent joint may be
 # within BEND_NEAR of
 var _bend_obs := PackedVector2Array()
@@ -260,16 +266,22 @@ func tick(delta: float) -> void:
 	near_poles.clear()
 	_obs_pos.clear()
 	_obs_kind.clear()
+	_obs_rad.clear()
+	_obs_custom_radius = false
 	_ensure_pole_kinds()
 	_bend_obs.clear()
 	for pi in range(poles.size()):
 		var npl: Vector2 = poles[pi]
+		var nrad := pole_radii[pi] if pole_radii.size() == poles.size() else POLE_PAD
 		if npl.x > rl - BEND_BERTH and npl.x < rr + BEND_BERTH and npl.y > rt - BEND_BERTH and npl.y < rb + BEND_BERTH:
 			_bend_obs.append(npl)
-			if npl.x > rl - 40.0 and npl.x < rr + 40.0 and npl.y > rt - 40.0 and npl.y < rb + 40.0:
+			var berth := nrad + 27.0
+			if npl.x > rl - berth and npl.x < rr + berth and npl.y > rt - berth and npl.y < rb + berth:
 				near_poles.append(npl)
 				_obs_pos.append(npl)
 				_obs_kind.append(pole_kinds[pi])
+				_obs_rad.append(nrad)
+				_obs_custom_radius = _obs_custom_radius or not is_equal_approx(nrad, POLE_PAD)
 	for dob in dynamic_obstacles:
 		if dob.x > rl - BEND_BERTH and dob.x < rr + BEND_BERTH and dob.y > rt - BEND_BERTH and dob.y < rb + BEND_BERTH:
 			_bend_obs.append(dob)
@@ -277,6 +289,7 @@ func tick(delta: float) -> void:
 				near_poles.append(dob)
 				_obs_pos.append(dob)
 				_obs_kind.append(K_DYNAMIC)
+				_obs_rad.append(POLE_PAD)
 	var obs_n := _obs_pos.size()
 	# which obstacle each rope point ended up against: -1 for none. An int per
 	# point, allocated once, replaces a Dictionary of Dictionaries per frame.
@@ -291,7 +304,6 @@ func tick(delta: float) -> void:
 	# Obstacles further than this from a segment's bounding box cannot touch it.
 	# The margin is POLE_PAD plus slack, so the reject never skips a contact the
 	# exact test below would have found.
-	var reach := POLE_PAD + 1.0
 	for _iter in range(ITER):
 		pts[0] = dog_end
 		pts[N - 1] = hand_end
@@ -327,6 +339,8 @@ func tick(delta: float) -> void:
 			var sb: Vector2 = pts[i + 1]
 			for oi in range(obs_n):
 				var pl: Vector2 = _obs_pos[oi]
+				var radius := _obs_rad[oi] if _obs_custom_radius else POLE_PAD
+				var reach := radius + 1.0
 				if pl.x + reach < minf(sa.x, sb.x) or pl.x - reach > maxf(sa.x, sb.x) 						or pl.y + reach < minf(sa.y, sb.y) or pl.y - reach > maxf(sa.y, sb.y):
 					continue
 				# _closest_on_segment, inlined: this is the solver's innermost loop
@@ -337,8 +351,8 @@ func tick(delta: float) -> void:
 					cp = sa + ab * clampf((pl - sa).dot(ab) / l2, 0.0, 1.0)
 				var dp := cp - pl
 				var l := dp.length()
-				if l < POLE_PAD and l > 0.001:
-					var push := dp / l * (POLE_PAD - l)
+				if l < radius and l > 0.001:
+					var push := dp / l * (radius - l)
 					if i > 0:
 						sa += push
 						pts[i] = sa
@@ -630,7 +644,6 @@ func visible_path() -> PackedVector2Array:
 		_vis.resize(VIS_N)
 	var has_touch := _touch.size() == N
 	var obs_n := _obs_pos.size() if has_touch else 0
-	var reach := POLE_PAD + 1.0
 	for i in range(N - 1):
 		var a: Vector2 = pts[i]
 		var b: Vector2 = pts[i + 1]
@@ -645,11 +658,13 @@ func visible_path() -> PackedVector2Array:
 		var clear := true
 		for oi in range(obs_n):
 			var pl: Vector2 = _obs_pos[oi]
+			var radius := _obs_rad[oi] if _obs_custom_radius and _obs_rad.size() == obs_n else POLE_PAD
+			var reach := radius + 1.0
 			if pl.x + reach < minf(minf(a.x, b.x), mid.x) or pl.x - reach > maxf(maxf(a.x, b.x), mid.x) \
 					or pl.y + reach < minf(minf(a.y, b.y), mid.y) or pl.y - reach > maxf(maxf(a.y, b.y), mid.y):
 				continue
-			if _closest_on_segment(a, mid, pl).distance_to(pl) < POLE_PAD \
-					or _closest_on_segment(mid, b, pl).distance_to(pl) < POLE_PAD:
+			if _closest_on_segment(a, mid, pl).distance_to(pl) < radius \
+					or _closest_on_segment(mid, b, pl).distance_to(pl) < radius:
 				clear = false
 				break
 		if clear:

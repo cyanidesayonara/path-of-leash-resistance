@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-19 - Honest waist-high leash collisions
+
+- Cars, vans, stalls, benches, dumpsters, barriers and the train now catch the leash on a close outline of the body you can see, rather than a few oversized invisible points. Furniture still slips free under a sustained pull, standing in for the owner lifting the strap over it.
+- Low clutter stays out of the leash plane: hydrants, cones, manholes and A-stands do not become anchors. Parked scooters clatter over under a body or a taut strap instead of holding the pair fast. People and moving bikes remain non-anchors; other leashes remain the intentional tangle.
+- New regression coverage in `tests/test_leash_height_geometry.gd`.
+
 ## 2026-10-19 - El Diluvi's umbrella crowd walks
 
 - The shopping street is no longer four people standing in the rain. Twenty-eight shoppers stroll both ways along the covered edges, on the same crowd list as the match-day river, and they leave the middle of the street clear. They jostle past each other and step around the pair. They are not rope contacts.

@@ -75,6 +75,9 @@ jobs:
       - name: Furniture recovery regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_furniture_recovery.gd
 
+      - name: Waist-high leash geometry regression test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_leash_height_geometry.gd
+
       - name: Critter chase regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_critter_chase.gd
 
