@@ -164,6 +164,30 @@ func _run() -> void:
 		await physics_frame
 	_check(not m.has_meta("train"), "a train that has gone is let go of")
 
+	# the esplanade is north of the hill. Drawing the hill from there used to
+	# hand the renderer a polyline with no points.
+	var rim := _Rim.new()
+	M.draw_hill(m, rim, m.GATE_Y - 900.0, m.GATE_Y - 400.0)
+	_check(rim.short == 0, "the esplanade draws no empty hill rim")
+	rim.short = 0
+	rim.lines = 0
+	M.draw_hill(m, rim, -2500.0, -1800.0)
+	_check(rim.lines >= 2 and rim.short == 0, "on the climb, each rim has two points")
+
 	m.free()
 	print("test_montjuic: %d checks, %s" % [checks, "OK" if failures.is_empty() else "%d FAILED" % failures.size()])
 	quit(1 if not failures.is_empty() else 0)
+
+
+# Records hill strokes. A rim of fewer than two points is what the renderer rejects.
+class _Rim extends RefCounted:
+	var short := 0
+	var lines := 0
+
+	func draw_rect(_r: Rect2, _c: Color, _filled: bool = true, _width: float = -1.0) -> void:
+		pass
+
+	func draw_polyline(pts: PackedVector2Array, _c: Color, _w: float) -> void:
+		lines += 1
+		if pts.size() < 2:
+			short += 1
