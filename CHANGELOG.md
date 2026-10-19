@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-19 - El Diluvi's umbrella crowd walks
+
+- The shopping street is no longer four people standing in the rain. Twenty-eight shoppers stroll both ways along the covered edges, on the same crowd list as the match-day river, and they leave the middle of the street clear. They jostle past each other and step around the pair. They are not rope contacts.
+- A taut leash across them is a small shove, not the stadium's carry, and your human's pace is unchanged. Their umbrellas are the filled canopies, drawn above the leash.
+- The four-person huddle is still there, clogging its two spots.
+
 ## 2026-10-19 - Dia de Partit, the kick-off clock
 
 - The walk has a match clock. Kick-off is 210 seconds along, or the moment the pair reach the gate, whichever comes first. The last 25 seconds before the clock wins, the PA says "falten cinc minuts" with "five minutes left" under it, the banner says KICK-OFF SOON, and the crowd breaks into a jog.

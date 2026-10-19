@@ -2918,6 +2918,23 @@ static func build_entities(m: Node2D) -> void:
 		m.add_child(fans)
 		fans.setup(m)
 		m.match_crowd_layer = fans
+	# under the leash (z 5) and the pair (z 10); the canopies are overhead
+	if m.lvl == "rain":
+		m.match_crowd = CrowdRiver.new()
+		m.match_crowd.setup_shuffle(20261019, CrowdRiver.SHOPPERS)
+		var shoppers := Node2D.new()
+		shoppers.set_script(load("res://world/crowd_layer.gd"))
+		shoppers.z_index = 3
+		m.add_child(shoppers)
+		shoppers.setup(m)
+		m.match_crowd_layer = shoppers
+		var lids := Node2D.new()
+		lids.set_script(load("res://world/crowd_layer.gd"))
+		lids.z_index = 11
+		lids.draw_canopies = true
+		m.add_child(lids)
+		lids.setup(m)
+		m.match_canopy_layer = lids
 
 
 # Cones and loose junk lie on the ground: under the rope (z 5) that crosses
