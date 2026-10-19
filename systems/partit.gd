@@ -190,19 +190,13 @@ static func lane_rect(gy: float, side: float) -> Rect2:
 	return Rect2(890.0 - LANE.x, gy + side * 36.0 - LANE.y * 0.5, LANE.x, LANE.y)
 
 
-# The corners the rope catches on (the bodies are the rects above).
-static func wrap_points(m: Node2D) -> Array[Vector2]:
-	var out: Array[Vector2] = []
-	for r: Rect2 in [SCARF_STALL, CART, SAUSAGE, TAQUILLES, DRUM_STAND, CARS[0], CARS[1]]:
-		var g := r.grow(4.0)
-		for c: Vector2 in [g.position, Vector2(g.end.x, g.position.y), g.end, Vector2(g.position.x, g.end.y)]:
-			# only the corners out on the pavement: a corner inside the
-			# building line is one the rope can never reach
-			var e: Vector2 = m.walk_edges(c.y)
-			if c.x > e.x + 2.0 and c.x < e.y - 2.0:
-				out.append(c)
-	for s: Rect2 in STUBS:
-		out.append(Vector2(s.end.x + 3.0, s.get_center().y) if s.position.x < 640.0 else Vector2(s.position.x - 3.0, s.get_center().y))
+# Waist-high solids whose complete outline catches the strap. People are not
+# anchors; the officers, grandad and regulars therefore stay out of this list.
+static func wrap_rects() -> Array[Rect2]:
+	var out: Array[Rect2] = [
+		SCARF_STALL, CART, SAUSAGE, TAQUILLES, DRUM_STAND, CARS[0], CARS[1],
+	]
+	out.append_array(STUBS)
 	return out
 
 

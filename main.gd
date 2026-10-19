@@ -57,10 +57,12 @@ var edge_nodes: Array = []
 # every solid rectangle LevelBuild.add_rect_body made (stall blocks, the
 # salamander, dumpsters...), for placing loose things clear of them
 var solid_rects: Array[Rect2] = []
-# Dia de Partit's river (systems/crowd_river.gd). Null on every other walk.
-# The push is px/s along the flow from fans held on a taut cross-leash.
+# Dia de Partit's river, and El Diluvi's two-way stroll (systems/crowd_river.gd).
+# Null on every other walk. The push is px/s along the flow from people held
+# on a taut cross-leash. The canopy layer is the umbrellas, above the leash.
 var match_crowd: CrowdRiver
 var match_crowd_layer: Node2D
+var match_canopy_layer: Node2D
 var match_crowd_push := Vector2.ZERO
 # the kick-off clock (systems/match_day.gd). Null on every other walk.
 var match_day: MatchDay
@@ -183,6 +185,8 @@ var leash: Node2D
 var cam: Camera2D
 
 var poles: Array[Vector2] = []
+var rope_radii := PackedFloat32Array()
+var rope_soft: Array[Vector2] = []
 var manholes: Array[Vector2] = []
 var hydrants: Array = []
 var kebabs: Array = []
@@ -230,8 +234,9 @@ var narrows: Array[Dictionary] = []
 # stands between them) that the owner steers wide of before he meets them;
 # see human._walk
 var owner_keepouts: Array[Rect2] = []
-# El Gotic's parked scooters (they are also rope poles), drawn by their walk
+# El Gotic and La Neteja's parked scooters: light enough to topple
 var scooters: Array[Vector2] = []
+var scooter_falls: Dictionary = {}
 # where it is dry (El Diluvi's arcade and awnings), and how wet the owner is
 var shelters: Array[Rect2] = []
 var human_soak := 0.0          # 0 dry, 1 wet through
@@ -261,8 +266,8 @@ var parasols: Array[Vector2] = []
 # benches between them are placed from the same numbers (see the beach block)
 var palm_spots: Array[Vector2] = []
 var canopies: Array[Rect2] = []
-# street furniture: chairs and A-stands share pole physics, vans are
-# multi-circle colliders drawn as one vehicle, performers are pure life
+# street furniture: chair backs catch; A-stands and scooters topple; vans use
+# a close outline; performers are people, never rope anchors
 var chairs: Array[Vector2] = []
 var astands: Array[Vector2] = []
 var vans: Array[Vector2] = []
@@ -2177,6 +2182,10 @@ func _draw_scooters(b: ShapeBatch, vt: float, vb: float) -> void:
 	for sc: Vector2 in scooters:
 		if sc.y < vt - 60.0 or sc.y > vb + 60.0:
 			continue
+		var tipped: Vector2 = scooter_falls.get(sc, Vector2.ZERO)
+		if tipped != Vector2.ZERO:
+			var scale := Vector2(1.5, 0.88)
+			b.draw_set_transform(sc + tipped * 8.0 - sc * scale, 0.0, scale)
 		var c: Color = VESPA_COLS[int(absf(sc.y)) % 3]
 		var lo := c.darkened(0.24)
 		var hi := c.lightened(0.24)
@@ -2219,6 +2228,8 @@ func _draw_scooters(b: ShapeBatch, vt: float, vb: float) -> void:
 		b.circle(sc + Vector2(9.0, -21.0), 2.2, chrome)
 		b.polygon(round_rect_pts(Rect2(sc.x - 5.0, sc.y - 21.0, 10.0, 7.0), 3.0), c)
 		b.circle(sc + Vector2(0.0, -20.5), 2.6, Color(1.0, 0.95, 0.76))
+		if tipped != Vector2.ZERO:
+			b.draw_set_transform(Vector2.ZERO)
 
 
 # an ellipse as a polygon, for the batch
@@ -9530,13 +9541,22 @@ func _furniture_wrap_poles() -> Array[Vector2]:
 	for arr in [tables, chairs, parasols, bins]:
 		for p: Vector2 in arr:
 			furn.append(p)
+	furn.append_array(rope_soft)
 	return furn
+
+
+func add_rope_rect(r: Rect2, soft := true) -> void:
+	LevelBuild.add_rope_rect(self, r, soft)
+	if leash != null:
+		leash.pole_radii = rope_radii
+		leash.furniture_poles = _furniture_wrap_poles()
 
 
 func _make_pair(start: Vector2, direction: Vector2, activate := true) -> Node2D:
 	var pair := Node2D.new()
 	pair.set_script(load("res://entities/otherpair.gd"))
 	pair.setup(self, dog, poles, start, direction)
+	pair.leash.pole_radii = rope_radii
 	pair.leash.furniture_poles = _furniture_wrap_poles()
 	if not pair.configure_route(
 		start.x,

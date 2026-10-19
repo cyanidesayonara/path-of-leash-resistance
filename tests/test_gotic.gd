@@ -58,13 +58,13 @@ func _run() -> void:
 			human.global_position.y = y
 			round_it = round_it and human.global_position.distance_to(fp) > 40.0
 	_check(round_it, "the owner walks round the fountain, not through it")
-	# a scooter against the wall is solid
+	# a scooter against the wall is light furniture: it topples, never anchors
 	var sc: Vector2 = m.scooters[0]
-	dog.global_position = sc + Vector2(80, 0)
-	for i in range(40):
-		dog.velocity = Vector2(-400, 0)
-		dog.move_and_slide()
-	_check(dog.global_position.x > sc.x + 10.0, "a parked scooter stops the dog")
+	var has_scooter := false
+	for parked: Node2D in root.get_tree().get_nodes_in_group("parked_scooters"):
+		has_scooter = has_scooter or parked.global_position.distance_to(sc) < 1.0
+	_check(has_scooter, "a parked scooter is a toppleable object")
+	_check(not m.poles.has(sc), "a parked scooter is not a permanent rope anchor")
 	_check(m.wallcat_spots.size() == 6 and m.laundry_lines.size() >= 4, "cats on the ledges, laundry overhead")
 	m.queue_free()
 	await process_frame

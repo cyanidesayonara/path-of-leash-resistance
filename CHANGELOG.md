@@ -8,6 +8,18 @@ Append-only session history, newest first.
 - The stadium goes "ooooh" for a second and a half, the floodlights flicker, and then it roars. Beside your human, she gets the zoomies. Anywhere else it is a fright, louder near the bowl. A second later your human celebrates ("gooool!", two hops, planted) or slumps ("no...") or says "WHAT?" when it is disallowed. A whirl is never planted.
 - The bar's chairs jump and a few crisps land on the pavement. Now and then a flare climbs off the east side, hiss then bang, and the free dogs in the square flinch and run a lap. `--goal-in=S` forces the next one.
 
+## 2026-10-19 - Honest waist-high leash collisions
+
+- Cars, vans, stalls, benches, dumpsters, barriers and the train now catch the leash on a close outline of the body you can see, rather than a few oversized invisible points. Furniture still slips free under a sustained pull, standing in for the owner lifting the strap over it.
+- Low clutter stays out of the leash plane: hydrants, cones, manholes and A-stands do not become anchors. Parked scooters clatter over under a body or a taut strap instead of holding the pair fast. People and moving bikes remain non-anchors; other leashes remain the intentional tangle.
+- New regression coverage in `tests/test_leash_height_geometry.gd`.
+
+## 2026-10-19 - El Diluvi's umbrella crowd walks
+
+- The shopping street is no longer four people standing in the rain. Twenty-eight shoppers stroll both ways along the covered edges, on the same crowd list as the match-day river, and they leave the middle of the street clear. They jostle past each other and step around the pair. They are not rope contacts.
+- A taut leash across them is a small shove, not the stadium's carry, and your human's pace is unchanged. Their umbrellas are the filled canopies, drawn above the leash.
+- The four-person huddle is still there, clogging its two spots.
+
 ## 2026-10-19 - Dia de Partit, the kick-off clock
 
 - The walk has a match clock. Kick-off is 210 seconds along, or the moment the pair reach the gate, whichever comes first. The last 25 seconds before the clock wins, the PA says "falten cinc minuts" with "five minutes left" under it, the banner says KICK-OFF SOON, and the crowd breaks into a jog.
