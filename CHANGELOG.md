@@ -7,6 +7,12 @@ Append-only session history, newest first.
 - Tree crowns and long sniffable props now keep out of the two-line place sign beyond every off-leash space's far fence. El Bosc and El Mosaic no longer put three trees through the words.
 - A regression checks every tree, log and piece of driftwood on all sixteen walks.
 
+## 2026-10-19 - Dia de Partit, the corners
+
+- The side street east of the avenue has three kids and two jackets. A yell comes first, then the ball rolls across. Bring it back, or drop it between the jackets for gol! +5. At kick-off the kids go inside and the jackets stay.
+- Before kick-off a kid on her dad's shoulders loses her scarf. Wind takes it; a calm day it slips. It lands at the edge of the river, they wait by a lamppost, and bringing it back is good dog! +6.
+- Two pickpockets work the avenue before kick-off, and none after. The man by the gates looking shifty is selling tickets. Three fans' dogs walk down in home shirts. The bar leaves a water bowl by its door.
+
 ## 2026-10-19 - Dia de Partit, El Xiulet Final
 
 - Passing -3000 on the way home, once the match has been going a minute, is full time. Three whistles, then four seconds of noise from the stadium, and the banner says FULL TIME! THE CROWD IS COMING. Then the whole crowd pours south. A win is faster than your human walks, with confetti and a drum. A draw murmurs. A loss is a slow crowd, and the easy walk home. The score is on the phone.

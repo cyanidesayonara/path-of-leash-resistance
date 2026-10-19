@@ -42,10 +42,10 @@ const LEVEL_GOAL_IDS := {
 		"combo", "prize", "outrun"],
 	# Montjuic: the climb, with the park staples
 	"montjuic": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "cable", "combo", "prize"],
-	# Dia de Partit, the corridor first (#238): the staples and its prize. The
-	# march, the scarf, the kickabout and the final whistle come with their set
-	# pieces. No Tofu: the way home belongs to the final whistle.
-	"partit": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "fulltime", "prize"],
+	# Dia de Partit. The march goal is still with the words pass. No Tofu:
+	# the way home belongs to the final whistle. No hi: twelve goals, and
+	# the fans' dogs are a greeting, not a quest.
+	"partit": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "scarf", "kickabout", "fulltime", "prize"],
 }
 
 
@@ -83,6 +83,8 @@ static func defs(m: Node2D) -> Dictionary:
 		"wallet": {"text": "Keep your human's wallet safe", "target": 1, "fn": func() -> int: return 0 if (m.owner_wallet_taken or m.owner_wallet_lost) else 1},
 		"prize": {"text": m.prize_text, "target": 1, "fn": func() -> int: return 1 if m.prize_taken else 0},
 		"fulltime": {"text": "Beat the crowd home", "target": 1, "fn": func() -> int: return 1 if m.match_day != null and m.match_day.beat else 0},
+		"scarf": {"text": "Bring the lost scarf back", "target": 1, "fn": func() -> int: return 1 if m.lost_scarf != null and m.lost_scarf.back else 0},
+		"kickabout": {"text": "Score a goal in the kids' street game", "target": 1, "fn": func() -> int: return 1 if m.kickabout != null and m.kickabout.scored else 0},
 	}
 
 

@@ -183,19 +183,31 @@ func _live() -> void:
 	m.human.state = m.human.HState.WALK
 	m.human.global_position = Vector2(640.0, MatchDay.FULLTIME_Y + 30.0)
 	m.dog.global_position = Vector2(680.0, MatchDay.FULLTIME_Y + 10.0)
+	m.cam.position = Vector2(640.0, MatchDay.FULLTIME_Y + 20.0)
+	m.cam.reset_smoothing()
 	m.leash.resnap()
-	var pairs_before := m.get_tree().get_nodes_in_group("pairs").size()
 	for k in range(15):
 		await physics_frame
 	m._update_hud()
 	_check(m.match_day.phase == MatchDay.Ph.FULLTIME, "the walk home reaches full time")
 	_check(m.hud_status == "FULL TIME! THE CROWD IS COMING", "the banner gives the four seconds")
 	_check(m.match_crowd.flow_mode == CrowdRiver.MODE_LATE, "the street is still thin during the noise")
+	# Walkers who were beside the bar are past the cull once the camera is at
+	# full time. Count the pairs born with the outflow, not the ones it removes.
+	var already := {}
+	for p in m.get_tree().get_nodes_in_group("pairs"):
+		already[p.get_instance_id()] = true
 	m.match_day.phase_t = MatchDay.OUT_LEAD
 	for k in range(8):
 		await physics_frame
+	var born := 0
+	for p in m.get_tree().get_nodes_in_group("pairs"):
+		if already.has(p.get_instance_id()):
+			continue
+		if p.npc_owner.position.y < m.dog.global_position.y:
+			born += 1
 	_check(m.match_crowd.flow_mode == CrowdRiver.MODE_OUT, "then the crowd pours south")
-	_check(m.get_tree().get_nodes_in_group("pairs").size() >= pairs_before + 2, "two fans' dogs come out")
+	_check(born >= 2, "two fans' dogs come out")
 	_check(m.human.score_bug.text == MatchDay.score_line(m.match_day.result), "the phone shows the result")
 
 
