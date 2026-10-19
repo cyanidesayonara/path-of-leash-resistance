@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-10-19 - Steam depot upload, off until the app exists
+
+- A version tag still publishes itch first. The same Windows exe can then upload as a Steam depot. With no app id, depot id, account or saved login, that step logs and succeeds, so the release is not blocked. A half-set configuration fails instead of pretending it uploaded.
+- The procedure is `docs/STEAM.md`. The saved login never goes in git.
+
 ## 2026-10-19 - Dia de Partit, the goals and the words
 
 - The twelfth goal is to keep your human out of the away march. It completes once the column has gone by and they were never carried. The results card shows the score the phone was watching.

@@ -201,7 +201,9 @@ That is the whole procedure. Tagging runs CI on the tagged SHA;
 `.github/workflows/release.yml` waits for that CI to succeed, then exports
 web and Windows, pushes each to its own itch channel with butler (which
 uploads only changed blocks), and attaches zips to a GitHub release.
-Missing `BUTLER_API_KEY` fails the release (it does not skip itch).
+Missing `BUTLER_API_KEY` fails the release (it does not skip itch). The same
+tag uploads that Windows exe as a Steam depot when the settings in
+`docs/STEAM.md` are present. Until they are, that job logs and succeeds.
 
 Export the web build locally:
 ```

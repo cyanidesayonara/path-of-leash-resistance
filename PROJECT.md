@@ -182,7 +182,7 @@ Every feature must serve at least one. If it serves none, cut it.
   tightening coil looks under-read by the arming-window mean, whether losing
   the old FLING reward on a safe refusal feels fair, and how much dogward lean
   the forced release wants. Assess all four only on the final overhaul commit.
-- **v1.61 - in progress.** Dia de Partit, the third new walk, with El Diluvi's umbrella crowd now moving. Twelve goals, the match-day words and the call-and-answer arrangement are the last piece.
+- **v1.61 - in progress.** Dia de Partit is in, with El Diluvi's umbrella crowd. The tag still waits on the Steam app, and on the checks that need a controller, a phone, or a feel call.
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
 - Every release also ships: mechanics tuning from playtests, at least
@@ -356,9 +356,9 @@ memorable.
   the one-off set pieces (salamander, arches, train) as placeable pieces
   rather than editable ones. Santtu's idea of it as a paid add-on only
   matters once there are players.
-- New walks (October 2026). Montjuïc has shipped. Dia de Partit is the 1.61
-  walk: the avenue, the crowd, the three set pieces and the corners are in,
-  and the twelve goals are the last piece. Santtu's direction still holds: the
+- New walks (October 2026). Montjuïc has shipped. Dia de Partit has shipped
+  as the 1.61 walk: the avenue, the crowd, the three set pieces, the corners
+  and the twelve goals. Santtu's direction still holds: the
   less famous but good-looking parts of Barcelona and round it, and every
   new walk ships with an upgrade to an existing one so the standard keeps
   rising. Still pitched: El Veterinari (the walk in reverse: your human is

@@ -22,6 +22,17 @@ jobs:
       - name: Store listing check
         run: python3 tools/store_listing.py --check store/listing.md
 
+      # an unconfigured Steam upload must succeed; demanding it must fail
+      - name: Steam upload stays off until configured
+        run: |
+          set -euo pipefail
+          bash tools/steam_upload.sh
+          set +e
+          STEAM_REQUIRED=1 bash tools/steam_upload.sh
+          code=$?
+          set -e
+          test "${code}" -eq 1
+
       - name: Download Godot
         run: |
           curl -sL -o godot.zip https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip

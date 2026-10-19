@@ -221,3 +221,27 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload $env:GITHUB_REF_NAME (Get-ChildItem build/msix/*.msix).FullName --repo $env:GITHUB_REPOSITORY --clobber
+
+  # Steam depot of the same Windows exe. After itch, and only on a tag, so a
+  # missing Steam app cannot hold the release. Unconfigured, the script logs
+  # and succeeds. See docs/STEAM.md.
+  steam:
+    needs: publish
+    if: ${{ github.ref_type == 'tag' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-build
+          path: build/win
+
+      - name: Upload the Windows depot
+        env:
+          STEAM_USERNAME: ${{ secrets.STEAM_USERNAME }}
+          STEAM_CONFIG_VDF: ${{ secrets.STEAM_CONFIG_VDF }}
+          STEAM_APP_ID: ${{ vars.STEAM_APP_ID }}
+          STEAM_DEPOT_ID: ${{ vars.STEAM_DEPOT_ID }}
+        run: bash tools/steam_upload.sh build/win
