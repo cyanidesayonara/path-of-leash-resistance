@@ -80,6 +80,11 @@ var _fan_dogs := false
 var _out_noise := false
 var _out_arrived := false
 var _chant_in := 0.0
+var kickabout: Kickabout
+var lost_scarf: LostScarf
+var _tout_said := false
+var _fan_pairs := false
+var _partit_mark: Node2D
 # parallel bike lane along the right side, plus a narrow far shoulder
 # with temptations - crossing the lane is a voluntary risk
 # the hang-time beat on big moments: game speed, and how long it lasts in
@@ -4634,8 +4639,12 @@ const MOSAIC_POSERS: Array[Vector2] = [Vector2(-125, -60), Vector2(-120, 30), Ve
 	Vector2(-170, -5), Vector2(-135, -140)]
 
 
-# La Rambla and El Mosaic have a crowd, and pickpockets working it
+# La Rambla and El Mosaic have a crowd, and pickpockets working it. Dia de
+# Partit has two of them before kick-off, and none of the tourist flock:
+# the avenue is the river.
 func crowded() -> bool:
+	if lvl == "partit":
+		return match_day != null and match_day.phase == MatchDay.Ph.PREMATCH and not tutorial_mode
 	return (lvl == "street" or lvl == "guell") and not tutorial_mode
 
 
@@ -4715,6 +4724,9 @@ func _tick_crowd(delta: float) -> void:
 	var mosaic := lvl == "guell"
 	if mosaic:
 		_tick_mosaic_groups()
+	if lvl == "partit":
+		_spawn_partit_thief(delta, cy)
+		return
 	# the first fill puts people on screen too; after that they arrive from
 	# off screen, so nobody pops into view
 	var first_fill := n == 0
@@ -4765,6 +4777,44 @@ func _tick_crowd(delta: float) -> void:
 	add_child(pp)
 	pp.setup(self, from, target, is_owner, crowd_rng.randf() * 10.0)
 	feed.say("PICKPOCKET! WATCH HIS HANDS", EventFeed.Tone.LOUD)
+
+
+# Two thieves before kick-off. The second works a fan in the river, not the
+# tourist flock this walk does not have.
+func _spawn_partit_thief(delta: float, cy: float) -> void:
+	if get_tree().get_nodes_in_group("pickpockets").size() > 0 or pp_spawned >= 2:
+		return
+	if cy > START_Y - 500.0 or cy < GATE_Y + 900.0:
+		return
+	pp_spawn_t -= delta
+	if pp_spawn_t > 0.0:
+		return
+	pp_spawn_t = PP_EVERY
+	var target: Node2D = human
+	var is_owner := pp_spawned == 0
+	if not is_owner:
+		target = _fan_mark(cy)
+		if target == null:
+			return
+	pp_spawned += 1
+	var pe := walk_edges(cy - 260.0)
+	var from := Vector2(pe.x + 50.0 if target.global_position.x > walk_cx else pe.y - 50.0, cy - 260.0)
+	var pp := Node2D.new()
+	pp.set_script(load("res://entities/pickpocket.gd"))
+	pp.z_index = 9
+	add_child(pp)
+	pp.setup(self, from, target, is_owner, crowd_rng.randf() * 10.0)
+	feed.say("PICKPOCKET! WATCH HIS HANDS", EventFeed.Tone.LOUD)
+
+
+func _fan_mark(cy: float) -> Node2D:
+	if is_instance_valid(_partit_mark) and _partit_mark.has_wallet:
+		return _partit_mark
+	var e := walk_edges(cy)
+	_partit_mark = _spawn_tourist(Vector2(clampf(e.y - 120.0, e.x + 40.0, e.y - 40.0), cy + 80.0), -1.0)
+	_partit_mark.stand("pose", _partit_mark.global_position + Vector2(0.0, -40.0))
+	_partit_mark.col = Partit.HOME_BLUE
+	return _partit_mark
 
 
 func on_pickpocket_lift(at: Vector2, from_owner: bool) -> void:
@@ -5508,6 +5558,14 @@ func _draw_barri_font(f: Vector2) -> void:
 	b.circle(f + Vector2(19.0, 0.0), 2.2, Color(0.66, 0.58, 0.28))
 	b.circle(f + Vector2(19.0, 3.0), 1.6, Color(0.78, 0.90, 0.98, 0.9))
 	b.flush(_wc)
+
+
+# BAR LA PENYA leaves a bowl out by the door. Low, so the leash clears it.
+func _draw_water_bowl(f: Vector2) -> void:
+	contact_shadow(_wc, f, 9.0, 3.2, 0.22)
+	_wc.draw_circle(f, 8.2, Color(0.74, 0.76, 0.78))
+	_wc.draw_circle(f + Vector2(0.4, 0.6), 5.4, Color(0.28, 0.46, 0.60))
+	_wc.draw_circle(f + Vector2(-1.8, -1.6), 1.5, Color(0.84, 0.93, 0.98, 0.9))
 
 
 # the ping-pong table: concrete, a net across it, a white line round
@@ -8351,6 +8409,7 @@ func _physics_process(delta: float) -> void:
 		_auto_drive(delta)
 		_watch_stall(delta)
 	_tick_match_crowd(delta)
+	_tick_corners(delta)
 	if march != null:
 		march.tick(self, delta)
 	dog.tick(delta)
@@ -8809,6 +8868,58 @@ func _nudge(body: CharacterBody2D, by: Vector2) -> float:
 	var slide := rest.slide(hit.get_normal())
 	var hit2 := body.move_and_collide(slide)
 	return rest.length() - slide.length() + (hit2.get_remainder().length() if hit2 != null else 0.0)
+
+
+# The side street, the lost scarf and the tout. None of them touch the rope.
+func _tick_corners(delta: float) -> void:
+	if not started or paused:
+		return
+	if lvl != "partit" or kickabout == null or lost_scarf == null:
+		return
+	var kickoff := match_day != null and match_day.phase >= MatchDay.Ph.KICKOFF
+	var face: Vector2 = dog.facing
+	var tumbling: bool = dog.is_tumbling()
+	var kc: Dictionary = kickabout.tick(delta, dog.global_position, face, tumbling, kickoff)
+	if bool(kc["yell"]):
+		float_text(Kickabout.KIDS[1] + Vector2(0.0, -28.0), "ball!", Color(0.96, 0.94, 0.88), POP_SAY)
+	if bool(kc["gol"]):
+		bones += 5
+		Sfx.play("star", 1.1, -4.0)
+		float_text(Kickabout.MOUTH + Vector2(0.0, -30.0), "gol! +5", Color(1.0, 0.92, 0.45))
+		_update_hud()
+	if bool(kc["back"]):
+		float_text(Kickabout.KIDS[1] + Vector2(0.0, -28.0), "thanks!", Color(0.96, 0.94, 0.88), POP_SAY)
+	lost_scarf.wind = Game.weather == "wind"
+	var sc: Dictionary = lost_scarf.tick(delta, dog.global_position, face, tumbling, kickoff, Callable(self, "walk_edges"))
+	if bool(sc["scarf"]) and lost_scarf.waiting():
+		float_text(lost_scarf.at + Vector2(0.0, -36.0), "my scarf!", Color(0.96, 0.94, 0.88), POP_SAY)
+	if bool(sc["good"]):
+		bones += 6
+		Sfx.play("star", 0.95, -4.0)
+		float_text(lost_scarf.at + Vector2(0.0, -36.0), "good dog! +6", Color(0.85, 1.0, 0.85))
+		float_text(lost_scarf.at + Vector2(-28.0, -16.0), "yay!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if not _fan_pairs and dog.global_position.y < -1400.0:
+		_fan_pairs = true
+		_spawn_fan_pairs()
+	if not _tout_said and dog.global_position.distance_to(Partit.TOUT) < 130.0:
+		_tout_said = true
+		float_text(Partit.TOUT + Vector2(0.0, -28.0), "tickets?", Color(0.96, 0.94, 0.88), POP_SAY)
+
+
+# Fans on the way to the bar: home shirts, the other colour on the cap.
+func _spawn_fan_pairs() -> void:
+	var starts: Array[Vector2] = [Vector2(480.0, -2000.0), Vector2(760.0, -2120.0), Vector2(560.0, -1880.0)]
+	var shirts: Array[Color] = [Partit.HOME_BLUE, Partit.HOME_CLARET, Partit.HOME_BLUE]
+	var caps: Array[Color] = [Partit.HOME_CLARET, Partit.HOME_BLUE, Partit.HOME_CLARET]
+	for i in starts.size():
+		var pair := _make_pair(starts[i], Vector2(0.0, 1.0))
+		if pair == null:
+			continue
+		pair.owner_appearance_profile["shirt_color"] = shirts[i]
+		pair.owner_col = shirts[i]
+		pair.owner_appearance_profile["headwear_style"] = "cap"
+		pair.owner_appearance_profile["headwear_color"] = caps[i]
 
 
 # The river reads the pair and the leash, then says how the pair should give.
@@ -12938,6 +13049,9 @@ func _draw_world() -> void:
 			continue
 		if lvl == "barri":
 			_draw_barri_font(f)
+			continue
+		if lvl == "partit" and f.distance_to(Partit.BOWL) < 1.0:
+			_draw_water_bowl(f)
 			continue
 		# a drinking fountain: a stone bowl on a post, water in it, the
 		# spout, and the wet patch it always leaves on the paving

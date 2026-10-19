@@ -83,6 +83,8 @@ const SECTION := 46.0          # one barrier section
 const SCARF_STALL := Rect2(966.0, -1400.0, 70.0, 140.0)
 const CART := Rect2(250.0, -1700.0, 58.0, 88.0)
 const SAUSAGE := Rect2(964.0, -2360.0, 72.0, 120.0)
+const BOWL := Vector2(300.0, -1768.0)   # the bar's water bowl, by the door
+const TOUT := Vector2(820.0, -4120.0)    # by the gates, shifty, not a thief
 const BAR_Y0 := -2100.0        # BAR LA PENYA's frontage, west side
 const BAR_Y1 := -1800.0
 const DECK := Rect2(328.0, -2090.0, 66.0, 270.0)   # the terrace's deck in the parking lane
@@ -155,7 +157,7 @@ static func build(m: Node2D) -> Array:
 		TYPE_VECTOR2, &"", null)
 	m.benches = Array([Vector2(846.0, -560.0)], TYPE_VECTOR2, &"", null)
 	# a drinking fountain in the side street, as every street here has
-	m.fountains = Array([Vector2(444.0, -360.0)], TYPE_VECTOR2, &"", null)
+	m.fountains = Array([Vector2(444.0, -360.0), BOWL], TYPE_VECTOR2, &"", null)
 	# cones where the police closed the avenue
 	m.cone_spots = Array([Vector2(372.0, -1050.0), Vector2(906.0, -1050.0)], TYPE_VECTOR2, &"", null)
 	m.performers = Array([], TYPE_VECTOR2, &"", null)
@@ -931,6 +933,15 @@ static func _draw_stadium_side(m: Node2D, c: ShapeBatch, top: float, bot: float)
 
 static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 	var t := AnimClock.msec() / 1000.0
+	if m.kickabout != null:
+		m.kickabout.draw(wc, vt, vb)
+	if m.lost_scarf != null:
+		m.lost_scarf.draw(wc, vt, vb)
+	if TOUT.y > vt - 50.0 and TOUT.y < vb + 50.0:
+		var glance := sin(t * 2.2) * 4.0
+		wc.rect(Rect2(TOUT.x - 6.0, TOUT.y - 2.0, 12.0, 16.0), Color(0.28, 0.30, 0.34))
+		wc.circle(TOUT + Vector2(glance, -14.0), 4.6, Color(0.80, 0.64, 0.48))
+		wc.rect(Rect2(TOUT.x - 5.0 + glance, TOUT.y - 20.0, 10.0, 3.0), Color(0.12, 0.12, 0.14))
 	# smoke off the sausage grill, drifting up the street
 	if SAUSAGE.end.y > vt - 120.0 and SAUSAGE.position.y < vb + 60.0:
 		for i in range(5):
