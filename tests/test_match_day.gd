@@ -26,6 +26,7 @@ func _initialize() -> void:
 func _run() -> void:
 	_clock()
 	_drain()
+	_goals()
 	await _live()
 	print("test_match_day: %d checks, %d failures" % [checks, failures.size()])
 	quit(1 if failures.size() > 0 else 0)
@@ -136,3 +137,51 @@ func _live() -> void:
 			break
 	_check(saw, "the replay is telegraphed before they move")
 	_check(m.human.state == m.human.HState.DRIFT, "then they drift to the window")
+
+
+func _goals() -> void:
+	var day := MatchDay.new()
+	day.advance(0.1, -6000.0, -5000.0, false)
+	for i in range(20):
+		day.advance(0.5, -6000.0, -5000.0, false)
+	_check(day.phase == MatchDay.Ph.MATCH, "the goals wait until the match")
+	_check(day.goals.size() >= 2 and day.goals.size() <= MatchDay.GOAL_CAP, "two or three goals, no more")
+	_check(float(day.goals[0]["at"]) + 0.001 >= MatchDay.GOAL_FIRST, "the first goal waits 25 seconds")
+	var spaced := true
+	for i in range(1, day.goals.size()):
+		spaced = spaced and float(day.goals[i]["at"]) - float(day.goals[i - 1]["at"]) + 0.001 >= MatchDay.GOAL_GAP
+	_check(spaced, "goals stay 35 seconds apart")
+	var at: float = float(day.goals[0]["at"])
+	while day.match_t < at - 0.05:
+		day.advance(0.05, -2000.0, -5000.0, false)
+	var saw_ooooh := false
+	var saw_roar := false
+	var saw_react := false
+	var order := true
+	for i in range(90):
+		var cue: Dictionary = day.advance(0.05, -2000.0, -5000.0, false)
+		if bool(cue["roar"]) and not saw_ooooh:
+			order = false
+		if String(cue["react"]) != "" and not saw_roar:
+			order = false
+		saw_ooooh = saw_ooooh or bool(cue["ooooh"])
+		saw_roar = saw_roar or bool(cue["roar"])
+		saw_react = saw_react or String(cue["react"]) != ""
+	_check(order and saw_ooooh and saw_roar and saw_react, "ooooh, then the roar, then your human")
+	var near: Vector2 = MatchDay.roar_mood(false, 80.0)
+	var far: Vector2 = MatchDay.roar_mood(false, 4000.0)
+	var with: Vector2 = MatchDay.roar_mood(true, 80.0)
+	_check(near.x > far.x and near.x <= 1.0 and far.x >= 0.2, "the fright is louder by the bowl")
+	_check(is_equal_approx(with.x, 0.0) and with.y > 0.0 and with.y <= 1.0, "beside your human it is zoomies")
+	var human := CharacterBody2D.new()
+	human.set_script(load("res://entities/human.gd"))
+	human.state = human.HState.WHIRL
+	_check(not human.match_react("home"), "a whirl is not a celebration")
+	_check(human.state == human.HState.WHIRL, "the orbit keeps them")
+	human.free()
+	var forced := MatchDay.new()
+	forced.force_in = 2.0
+	forced.advance(0.1, -6000.0, -5000.0, false)
+	for i in range(20):
+		forced.advance(0.5, -6000.0, -5000.0, false)
+	_check(is_equal_approx(float(forced.goals[0]["at"]), 2.0), "--goal-in lands the goal on that second")

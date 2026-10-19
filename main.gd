@@ -65,6 +65,11 @@ var match_crowd_push := Vector2.ZERO
 # the kick-off clock (systems/match_day.gd). Null on every other walk.
 var match_day: MatchDay
 var _match_roar := 0.0
+var _goal_in := -1.0
+var _match_flash := 0.0
+var _flare_t := 0.0
+var _flare_at := Vector2.ZERO
+var terrace_kick := 0.0
 # parallel bike lane along the right side, plus a narrow far shoulder
 # with temptations - crossing the lane is a voluntary risk
 # the hang-time beat on big moments: game speed, and how long it lasts in
@@ -878,6 +883,11 @@ func _ready() -> void:
 		human.collision_mask = 0
 	# whether this walk gets a chase on the way home: systems/home_chase.gd
 	HomeChase.roll(self)
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--goal-in="):
+			_goal_in = maxf(0.0, float(a.trim_prefix("--goal-in=")))
+	if match_day != null and _goal_in >= 0.0:
+		match_day.force_in = _goal_in
 	_draw_cost_on = "--drawcost" in OS.get_cmdline_user_args()
 	for a in OS.get_cmdline_user_args():
 		if a == "--soak":
@@ -8831,6 +8841,28 @@ func _tick_match_day(delta: float) -> void:
 		_match_roar = 0.6
 		for spot in MatchDay.LITTER:
 			kebabs.append({"pos": spot, "eaten": false})
+	if bool(cue["ooooh"]):
+		Sfx.play("ooooh", 1.0, -8.0)
+		_match_flash = MatchDay.SWELL_T
+		float_text(human.global_position + Vector2(0.0, -78.0), "ooooh", Color(0.96, 0.94, 0.86), POP_SAY)
+	if bool(cue["roar"]):
+		Sfx.play("roar", 0.85, -6.0)
+		_match_flash = 0.45
+		_on_match_roar(String(match_day.roar_side))
+	if String(cue["react"]) != "":
+		var side := String(cue["react"])
+		if side == "no":
+			Sfx.play("groan", 1.0, -8.0)
+		human.match_react(side)
+	if bool(cue["flare"]):
+		_arm_flare()
+	_match_flash = maxf(0.0, _match_flash - delta)
+	terrace_kick = maxf(0.0, terrace_kick - delta)
+	if _flare_t > 0.0:
+		_flare_t -= delta
+		if _flare_t <= 0.0:
+			Sfx.play("cracker", 1.0, -4.0)
+			mood.bump(Mood.M.SCARED, 0.22)
 	var watching: bool = match_day.on_the_match()
 	human.match_on = watching
 	human.match_pace = MatchDay.MATCH_PACE if watching else 1.0
@@ -8847,6 +8879,38 @@ func _tick_match_day(delta: float) -> void:
 			match_crowd.flow_mode = CrowdRiver.MODE_LATE
 		_:
 			match_crowd.flow_mode = CrowdRiver.MODE_WALK
+
+
+func _on_match_roar(side: String) -> void:
+	var beside := dog.global_position.distance_to(human.global_position) <= MatchDay.BESIDE
+	var bowl := Vector2(980.0, Partit.STADIUM_Y0)
+	var hit := MatchDay.roar_mood(beside, dog.global_position.distance_to(bowl))
+	if hit.y > 0.0:
+		mood.bump(Mood.M.ZOOMIES, hit.y)
+	if hit.x > 0.0:
+		mood.bump(Mood.M.SCARED, hit.x)
+	if phase == "freedom":
+		for pup in get_tree().get_nodes_in_group("freedogs"):
+			pup.hear_roar()
+	if side != "no":
+		_terrace_erupts()
+
+
+func _terrace_erupts() -> void:
+	terrace_kick = 0.7
+	var c: Vector2 = Partit.DECK.get_center()
+	for i in 4:
+		kebabs.append({
+			"pos": c + Vector2(48.0 + float(i) * 16.0, -24.0 + float(i) * 14.0),
+			"eaten": false,
+		})
+
+
+func _arm_flare() -> void:
+	var edge: Vector2 = walk_edges(Partit.STADIUM_Y0 + 160.0)
+	_flare_at = Vector2(edge.y + 86.0, Partit.STADIUM_Y0 + 160.0)
+	_flare_t = 0.8
+	Sfx.play("hiss", 1.0, -10.0)
 
 
 func _shove_match_crowd(delta: float) -> void:
@@ -12394,6 +12458,15 @@ func _draw_world() -> void:
 		_draw_mosaic(wvt, vb)
 	if lvl == "partit":
 		Partit.draw_live(self, _wc, wvt, vb)
+		if _match_flash > 0.0:
+			var haze := Color(1.0, 0.92, 0.72, 0.10 * clampf(_match_flash, 0.0, 1.0))
+			_wc.circle(Vector2(980.0, Partit.STADIUM_Y0 + 80.0), 70.0, haze)
+			_wc.circle(Vector2(1040.0, Partit.STADIUM_Y0 - 40.0), 46.0, haze)
+		if _flare_t > 0.0:
+			var rise := (0.8 - _flare_t) / 0.8
+			var tip := _flare_at + Vector2(8.0, -36.0 - rise * 90.0)
+			_wc.line(_flare_at, tip, Color(1.0, 0.55, 0.22, 0.9), 2.2)
+			_wc.circle(tip, 3.4, Color(1.0, 0.82, 0.4))
 	if tutorial_mode:
 		_draw_tutorial_pond()
 		_draw_tutorial_ledge(wvt, vb)
@@ -12745,10 +12818,13 @@ func _draw_world() -> void:
 				_wc.draw_circle(Vector2(b.x + bx, b.y + ey), 0.9, Color(0.20, 0.18, 0.16))
 	# terrace chairs: round seats, four legs, a hint of backrest
 	for ch in chairs:
+		var seat: Vector2 = ch
+		if terrace_kick > 0.0 and lvl == "partit" and ch.distance_to(Partit.DECK.get_center()) < 220.0:
+			seat += Vector2(-8.0 * sin(terrace_kick * 14.0), 0.0)
 		for lg in [Vector2(-5, -5), Vector2(5, -5), Vector2(-5, 5), Vector2(5, 5)]:
-			_wc.draw_circle(ch + lg, 1.5, Color(0.35, 0.27, 0.18))
-		_wc.draw_circle(ch, 6.5, Color(0.58, 0.44, 0.3))
-		_wc.draw_arc(ch, 6.5, PI * 1.15, PI * 1.85, 8, Color(0.4, 0.3, 0.2), 3.0)
+			_wc.draw_circle(seat + lg, 1.5, Color(0.35, 0.27, 0.18))
+		_wc.draw_circle(seat, 6.5, Color(0.58, 0.44, 0.3))
+		_wc.draw_arc(seat, 6.5, PI * 1.15, PI * 1.85, 8, Color(0.4, 0.3, 0.2), 3.0)
 	# fountains: where the tank refills
 	for f in fountains:
 		if lvl == "trail":

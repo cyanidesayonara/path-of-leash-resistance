@@ -311,6 +311,10 @@ func _build_library() -> void:
 	lib["intro_door"] = _intro_door()
 	lib["whistle"] = _whistle()
 	lib["roar"] = _noiseburst(0.5, 5.0)
+	lib["ooooh"] = _ooooh()
+	lib["groan"] = _noiseburst(0.7, 3.5)
+	lib["hiss"] = _noiseburst(0.22, 9.0)
+	lib["cracker"] = _noiseburst(0.09, 1.5)
 
 
 func _pack(samples: PackedFloat32Array) -> AudioStreamWAV:
@@ -324,6 +328,19 @@ func _pack(samples: PackedFloat32Array) -> AudioStreamWAV:
 	s.stereo = false
 	s.data = bytes
 	return s
+
+
+func _ooooh() -> AudioStreamWAV:
+	# the stadium leaning in: a low rise, not a note
+	var dur := 0.7
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		var f := lerpf(140.0, 280.0, t / dur)
+		out[i] = sin(TAU * f * t) * sin(PI * t / dur) * 0.28
+	return _pack(out)
 
 
 func _whistle() -> AudioStreamWAV:

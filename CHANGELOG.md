@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-19 - Dia de Partit, El Gol
+
+- Goals come on a seeded schedule once the match is on: the first no sooner than 25 seconds after kick-off, then at least 35 apart, and at most three. One of them can be the other side, and one can be waved off.
+- The stadium goes "ooooh" for a second and a half, the floodlights flicker, and then it roars. Beside your human, she gets the zoomies. Anywhere else it is a fright, louder near the bowl. A second later your human celebrates ("gooool!", two hops, planted) or slumps ("no...") or says "WHAT?" when it is disallowed. A whirl is never planted.
+- The bar's chairs jump and a few crisps land on the pavement. Now and then a flare climbs off the east side, hiss then bang, and the free dogs in the square flinch and run a lap. `--goal-in=S` forces the next one.
+
 ## 2026-10-19 - Dia de Partit, the kick-off clock
 
 - The walk has a match clock. Kick-off is 210 seconds along, or the moment the pair reach the gate, whichever comes first. The last 25 seconds before the clock wins, the PA says "falten cinc minuts" with "five minutes left" under it, the banner says KICK-OFF SOON, and the crowd breaks into a jog.

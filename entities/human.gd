@@ -5,7 +5,7 @@ const HumanLook := preload("res://entities/human_appearance.gd")
 # The human. Dead weight with a phone. Walks north on autopilot,
 # occasionally does something stupid. Telegraphs it first, to be fair.
 
-enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, SIGNAL, CALL, WHIRL, GO_POOP, BAG, GO_BIN, TOSS, STUMBLE, FALLEN }
+enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, SIGNAL, CALL, WHIRL, GO_POOP, BAG, GO_BIN, TOSS, STUMBLE, FALLEN, GOAL }
 
 const WALK_SPEED := 92.0
 # the whirl's orbit radius, and how fast it tightens onto it from wherever
@@ -163,6 +163,9 @@ var crowd_shift := 0.0
 const MATCH_PACE_MIN := 0.88
 var match_on := false
 var match_pace := 1.0
+# the away goal: they walk it off, they do not plant
+var slump_t := 0.0
+const GOAL_HOLD := 1.6
 var score_bug: Label
 var bar_done := false
 var bar_armed := false
@@ -258,6 +261,7 @@ func tick(delta: float) -> void:
 	halt_t = maxf(0.0, halt_t - delta)
 	whirl_flung_t = maxf(0.0, whirl_flung_t - delta)
 	state_t -= delta
+	slump_t = maxf(0.0, slump_t - delta)
 	# parked at the off-leash area: shuffle to the bench, then play
 	# fetch - throwing the ball out for the dog to bring back
 	if parked:
@@ -315,6 +319,15 @@ func tick(delta: float) -> void:
 			move_and_slide()
 			if state_t <= 0.0:
 				state = HState.WALK
+				bubble.visible = false
+		HState.GOAL:
+			# rooted: two hops on the spot, then they remember the phone
+			var hop := sin((GOAL_HOLD - maxf(state_t, 0.0)) / 0.8 * TAU)
+			velocity = Vector2(0.0, -hop * 70.0)
+			move_and_slide()
+			if state_t <= 0.0:
+				state = HState.WALK
+				velocity = Vector2.ZERO
 				bubble.visible = false
 		HState.CALL:
 			# planted, one hand to the ear, shifting their weight. They are
@@ -670,6 +683,8 @@ func _walk(delta: float) -> void:
 		speed *= 1.0 + GIVE_FWD * clampf(along, 0.0, 1.0) - GIVE_BACK * clampf(-along, 0.0, 1.0)
 		speed *= clampf(crowd_pace, CROWD_PACE_MIN, CROWD_PACE_MAX)
 		speed *= clampf(match_pace, MATCH_PACE_MIN, 1.0)
+		if slump_t > 0.0:
+			speed *= 0.7
 	# a solid thing against the path's edge just ahead (El Mercat's wall
 	# stalls): he aims wide of it before he meets it, not into its end
 	for ko: Rect2 in main.owner_keepouts:
@@ -949,6 +964,23 @@ func _show_bubble(text: String, dog_news: String = "") -> void:
 
 func is_whirling() -> bool:
 	return state == HState.WHIRL
+
+
+# The stadium has already telegraphed this. A whirl is not interrupted:
+# the roar does not plant them mid-orbit.
+func match_react(side: String) -> bool:
+	if is_whirling() or is_fallen():
+		return false
+	if side == "home":
+		state = HState.GOAL
+		state_t = GOAL_HOLD
+		_show_bubble("gooool!")
+	elif side == "away":
+		slump_t = 3.0
+		_show_bubble("no...")
+	else:
+		_show_bubble("WHAT?")
+	return true
 
 
 func start_whirl(pole: Vector2, dir: float, turns: float) -> void:
@@ -1342,6 +1374,12 @@ func _draw_shapes() -> void:
 		# bent over the evidence, arm to the ground
 		_b.draw_line(fd * 10.0, fd * 26.0, skin, 4.0)
 		_b.draw_circle(fd * 26.0, 3.5, Color(0.9, 0.9, 0.92))
+	if state == HState.GOAL:
+		var up := head + Vector2(0.0, -16.0)
+		_b.draw_line(Vector2(-6.0, -2.0), up + Vector2(-8.0, 0.0), skin, 4.0)
+		_b.draw_line(Vector2(6.0, -2.0), up + Vector2(8.0, 0.0), skin, 4.0)
+		_b.draw_circle(up + Vector2(-8.0, -1.0), 3.2, skin)
+		_b.draw_circle(up + Vector2(8.0, -1.0), 3.2, skin)
 	if state == HState.SIGNAL:
 		# the phone thrust skyward, hunting for a bar that will not come
 		var up := head + Vector2(0, -22)
