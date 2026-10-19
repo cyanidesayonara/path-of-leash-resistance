@@ -297,8 +297,14 @@ func _run() -> void:
 			for a in held:
 				Input.action_release(a)
 			held.clear()
-	print("PLAYTEST done: %d problem(s), %d shot(s), dog at (%d, %d), human at (%d, %d), phase %s" % [
+	var clock := ""
+	if m.match_day != null:
+		var fans := -1
+		if m.match_crowd != null:
+			fans = m.match_crowd.active_count()
+		clock = " clock %s t=%.0f fans %d banner [%s]" % [MatchDay.Ph.keys()[m.match_day.phase], m.match_day.walk_t, fans, m.hud_status]
+	print("PLAYTEST done: %d problem(s), %d shot(s), dog at (%d, %d), human at (%d, %d), phase %s%s" % [
 		log_lines.size(), shots, int(m.dog.global_position.x), int(m.dog.global_position.y),
-		int(m.human.global_position.x), int(m.human.global_position.y), m.phase])
+		int(m.human.global_position.x), int(m.human.global_position.y), m.phase, clock])
 	m.free()
 	quit(0)

@@ -159,6 +159,17 @@ const CROWD_PACE_MIN := 0.92
 const CROWD_PACE_MAX := 1.18
 var crowd_pace := 1.0
 var crowd_shift := 0.0
+# the match, once kick-off has come (systems/match_day.gd). Pace only.
+const MATCH_PACE_MIN := 0.88
+var match_on := false
+var match_pace := 1.0
+var score_bug: Label
+var bar_done := false
+var bar_armed := false
+var bar_watching := false
+var mutter_t := 5.0
+var mutter_i := 0
+const MUTTERS: Array[String] = ["come on...", "ref!", "no no no"]
 const GIVE_FULL := 520.0       # rope tension at which they give way fully
 const GIVE_LAT := 150.0        # px across the path a full pull leads them
 const GIVE_FWD := 0.35         # pulled their way: up to this much quicker
@@ -226,6 +237,14 @@ func _ready() -> void:
 	bubble.add_theme_stylebox_override("normal", bsb)
 	bubble.visible = false
 	add_child(bubble)
+	# the score in the corner of the phone, once the match is on
+	score_bug = Label.new()
+	score_bug.text = "0-0"
+	score_bug.position = Vector2(14, -78)
+	score_bug.add_theme_font_size_override("font_size", 11)
+	score_bug.add_theme_color_override("font_color", Color(0.16, 0.38, 0.18))
+	score_bug.visible = false
+	add_child(score_bug)
 
 
 func is_fallen() -> bool:
@@ -632,10 +651,15 @@ func _walk(delta: float) -> void:
 	if tut_hold_x < INF and global_position.y < tut_hold_y + TUT_STAND_LEAD:
 		tx = tut_hold_x
 	if state == HState.DRIFT:
-		tx = cx + drift_dir * (half - 70.0)
-		speed = 72.0
-		if state_t <= 0.0:
+		if bar_watching and felt_pull.length() > 500.0:
 			state = HState.WALK
+			bar_watching = false
+		else:
+			tx = cx + drift_dir * (half - 70.0)
+			speed = 72.0
+			if state_t <= 0.0:
+				state = HState.WALK
+				bar_watching = false
 	# forward is up on the way out, down on the walk home
 	var fwd_y := 1.0 if homeward else -1.0
 	# led by the leash: a steady pull draws them across the path and speeds or
@@ -645,6 +669,7 @@ func _walk(delta: float) -> void:
 		var along := felt_pull.y * fwd_y / GIVE_FULL
 		speed *= 1.0 + GIVE_FWD * clampf(along, 0.0, 1.0) - GIVE_BACK * clampf(-along, 0.0, 1.0)
 		speed *= clampf(crowd_pace, CROWD_PACE_MIN, CROWD_PACE_MAX)
+		speed *= clampf(match_pace, MATCH_PACE_MIN, 1.0)
 	# a solid thing against the path's edge just ahead (El Mercat's wall
 	# stalls): he aims wide of it before he meets it, not into its end
 	for ko: Rect2 in main.owner_keepouts:
@@ -748,7 +773,44 @@ func _check_stuck(delta: float, dir: Vector2, path_cx: float) -> void:
 	sidestep_total = 0.0
 
 
+# the match is on: mutters, and one drift to the bar's window, telegraphed
+func _match_events(delta: float) -> void:
+	if state != HState.WALK or halt_t > 0.0 or correct_t > 0.0:
+		return
+	if telegraph_t > 0.0:
+		telegraph_t -= delta
+		if telegraph_t <= 0.0:
+			bubble.visible = false
+			_fire_bar()
+		return
+	mutter_t -= delta
+	if mutter_t <= 0.0 and not bar_armed:
+		mutter_t = randf_range(7.0, 12.0)
+		notice(MUTTERS[mutter_i % MUTTERS.size()], 1.3)
+		mutter_i += 1
+	# alongside BAR LA PENYA, once. The bubble is the 0.8 s warning.
+	if not bar_done and global_position.y < -1760.0 and global_position.y > -2140.0:
+		bar_done = true
+		bar_armed = true
+		_show_bubble("ooh, the replay...")
+		telegraph_t = 0.8
+
+
+func _fire_bar() -> void:
+	bar_armed = false
+	if felt_pull.length() > 500.0:
+		return
+	state = HState.DRIFT
+	state_t = WAIT_MAX
+	drift_dir = -1.0
+	bar_watching = true
+	_show_bubble("ooh, the replay...", "HE'S WATCHING THE BAR")
+
+
 func _events(delta: float) -> void:
+	if match_on:
+		_match_events(delta)
+		return
 	# a HEY! winding up owns the bubble: no new event starts over it
 	if state != HState.WALK or halt_t > 0.0 or correct_t > 0.0:
 		return
@@ -1257,7 +1319,8 @@ func _draw_shapes() -> void:
 	var glow := 0.55 + 0.2 * sin(t * 7.3)
 	_b.draw_set_transform(fd * 24.0, fd.angle() + PI / 2.0, Vector2.ONE)
 	_b.draw_rect(Rect2(-6, -9, 12, 18), Color(0.1, 0.1, 0.12))
-	_b.draw_rect(Rect2(-4.5, -7, 9, 14), Color(0.7, 0.85, 1.0, glow))
+	var screen := Color(0.42, 0.74, 0.34, glow) if match_on else Color(0.7, 0.85, 1.0, glow)
+	_b.draw_rect(Rect2(-4.5, -7, 9, 14), screen)
 	_b.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	if wading:
 		# waist-deep, phone held higher, ripples of shame around the middle
