@@ -1,9 +1,9 @@
 class_name CrowdRiver
 extends RefCounted
 
-# Dia de Partit's crowd, as data (docs/superpowers/specs/
-# 2026-10-17-dia-de-partit-design.md). Fans are not nodes and not rope
-# contacts: one packed-array step, binned by lane, drawn by world/crowd_layer.gd
+# A crowd as data. Dia de Partit's fans stream one way; El Diluvi's shoppers
+# (setup_shuffle) stroll both ways under the cover. Nobody is a node or a rope
+# contact: one packed-array step, binned by lane, drawn by world/crowd_layer.gd
 # in a single ShapeBatch. The rope solver is never asked to know they exist.
 # A taut leash laid across the flow shoves the pair along the flow through the
 # push this step returns. A slack leash is stepped over. A taut leash that
@@ -27,6 +27,12 @@ const PACE_WITH := 1.16       # packed crowd, walking their way
 const PACE_AGAINST := 0.94    # packed crowd, walking home against it
 const SHIFT := 22.0           # px of sideways drift at full density
 const JUMP := 320.0          # a camera leap (a shot) rebuilds the window
+# El Diluvi: a stroll, not a river. The shove is a jostle, not a carry.
+const SHOPPERS := 28
+const SHUFFLE_N := -42.0
+const SHUFFLE_S := 36.0
+const SHUFFLE_PUSH_EACH := 6.0
+const SHUFFLE_PUSH_CAP := 22.0
 # the clock (systems/match_day.gd) sets this. Walk is the river, jog is the
 # rush, drain is the eight seconds into the gates, late is a handful running
 # north after the streets have emptied.
@@ -57,6 +63,8 @@ var on := PackedByteArray()
 
 # false in tests that place fans by hand and want no window management
 var manage := true
+# shoppers on a shopping street: both directions, no stadium carry
+var shuffle := false
 var anchored := false
 var anchor_y := 0.0
 var river_seed := 1
@@ -93,8 +101,21 @@ func setup(s: int, n: int) -> void:
 		phase[i] = float(i) * 0.37
 
 
+# Both directions, every one of them in view, at a walking pace. The match
+# river's density curve does not apply.
+func setup_shuffle(s: int, n: int) -> void:
+	shuffle = true
+	setup(s, n)
+	for i in count:
+		kind[i] = 0 if i % 2 == 0 else 1
+		lane[i] = i % LANES
+		spd[i] = 0.82 + float((i * 5) % 7) * 0.05
+
+
 # 0.24 on the side street, rising through the corner, 1 at the gates.
 func density(y: float) -> float:
+	if shuffle:
+		return 1.0
 	if y > STREET_Y1:
 		return 0.24
 	if y > AVENUE_Y0:
@@ -120,6 +141,8 @@ func target_at(y: float) -> int:
 # (sideways shift added to where they mean to go, pace multiplier).
 # Pace only: the walk's acceleration is not this function's to change.
 func carry(y: float, homeward: bool) -> Vector2:
+	if shuffle:
+		return Vector2(0.0, 1.0)
 	var d := density(y)
 	if flow_mode == MODE_DRAIN or flow_mode == MODE_LATE:
 		return Vector2(0.0, 1.0)
@@ -168,12 +191,15 @@ func step(dt: float, view_y: float, dog_p: Vector2, human_p: Vector2, leash: Pac
 	for i in count:
 		if on[i] == 0:
 			continue
-		var scale := 1.7 if flow_mode == MODE_JOG else 1.0
-		var vy: float
-		if flow_mode == MODE_LATE:
-			vy = FLOW * 1.45 * spd[i] * dt
-		else:
-			vy = (VENDOR_FLOW if kind[i] == 2 else FLOW) * spd[i] * scale * dt
+		var scale := 1.0 if shuffle else (1.7 if flow_mode == MODE_JOG else 1.0)
+		var rate := FLOW
+		if shuffle:
+			rate = SHUFFLE_S if _southbound(i) else SHUFFLE_N
+		elif flow_mode == MODE_LATE:
+			rate = FLOW * 1.45
+		elif kind[i] == 2:
+			rate = VENDOR_FLOW
+		var vy := rate * spd[i] * scale * dt
 		py[i] += vy
 		phase[i] += absf(vy) * 0.08
 		if hop[i] > 0.0:
@@ -201,7 +227,10 @@ func step(dt: float, view_y: float, dog_p: Vector2, human_p: Vector2, leash: Pac
 		var hi := edge.y - 16.0
 		if hi > lo:
 			px[i] = clampf(px[i], lo, hi)
-	return Vector2(0.0, clampf(push_y, -PUSH_CAP, PUSH_CAP))
+	if shuffle:
+		push_y *= SHUFFLE_PUSH_EACH / PUSH_EACH
+	var cap := SHUFFLE_PUSH_CAP if shuffle else PUSH_CAP
+	return Vector2(0.0, clampf(push_y, -cap, cap))
 
 
 func _drain(dt: float, edges: Callable) -> void:
@@ -244,7 +273,7 @@ func _recycle(view_y: float, edges: Callable) -> void:
 			continue
 		var y := py[i]
 		var leaving := false
-		if kind[i] == 2:
+		if _southbound(i):
 			leaving = y > south + 8.0 or y < north - 80.0
 		else:
 			leaving = y < north - 8.0 or y > south + 80.0
@@ -265,7 +294,7 @@ func _recycle(view_y: float, edges: Callable) -> void:
 			continue
 		on[i] = 1
 		spawned += 1
-		if kind[i] == 2:
+		if _southbound(i):
 			py[i] = north + _rng.randf() * 36.0
 		else:
 			py[i] = south - _rng.randf() * 36.0
@@ -279,10 +308,26 @@ func _lane_x(y: float, lane_i: int, kind_i: int, edges: Callable) -> float:
 	var hi := edge.y - inset
 	if hi < lo + 30.0:
 		return (edge.x + edge.y) * 0.5
+	if shuffle:
+		# two bands under the cover, and a gap down the middle of the street
+		var mid := (lo + hi) * 0.5
+		var span := (hi - lo) * 0.5
+		var side := -1.0 if lane_i < 4 else 1.0
+		var along := float(lane_i % 4) / 3.0
+		var x := mid + side * lerpf(span * 0.42, span * 0.92, along)
+		if kind_i != 0:
+			x += 16.0 if lane_i % 2 == 0 else -16.0
+		return clampf(x, lo, hi)
 	var x := lo + (float(lane_i) + 0.5) / float(LANES) * (hi - lo)
 	if kind_i == 2:
 		x += 12.0 if lane_i % 2 == 0 else -12.0
 	return clampf(x, lo, hi)
+
+
+func _southbound(i: int) -> bool:
+	if shuffle:
+		return kind[i] != 0
+	return kind[i] == 2
 
 
 func _space_lanes() -> void:
@@ -292,7 +337,7 @@ func _space_lanes() -> void:
 	for i in count:
 		if on[i] == 0:
 			continue
-		var bin: Array = _bins_s[lane[i]] if kind[i] == 2 else _bins_n[lane[i]]
+		var bin: Array = _bins_s[lane[i]] if _southbound(i) else _bins_n[lane[i]]
 		_insert(bin, i)
 	for L in LANES:
 		var north: Array = _bins_n[L]
