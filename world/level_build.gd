@@ -2890,6 +2890,8 @@ static func add_rect_body(m: Node2D, at: Vector2, size: Vector2) -> void:
 	m.solid_rects.append(Rect2(at - size * 0.5, size))
 
 
+# The column the dog walks round. Routing already keeps people off it with a
+# circular blocker, so this does not add a square to solid_rects.
 static func add_circle_body(m: Node2D, at: Vector2, radius: float) -> void:
 	var sb := StaticBody2D.new()
 	sb.collision_layer = 1
@@ -2900,7 +2902,6 @@ static func add_circle_body(m: Node2D, at: Vector2, radius: float) -> void:
 	cs.shape = sh
 	sb.add_child(cs)
 	m.add_child(sb)
-	m.solid_rects.append(Rect2(at - Vector2.ONE * radius, Vector2.ONE * radius * 2.0))
 
 
 static func build_entities(m: Node2D) -> void:
