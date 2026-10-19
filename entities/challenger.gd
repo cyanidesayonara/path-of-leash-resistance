@@ -15,6 +15,7 @@ const NOTICE_R := 240.0
 const NEAR_R := 420.0
 const RETRY_WAIT := 5.0
 const RETRIES := 2
+const BENCH_SIZE := Vector2(28.0, 62.0)
 
 var main: Node2D
 var my_dog: Node2D
@@ -40,6 +41,16 @@ func setup(m: Node2D, mine: Node2D, target: int, seconds: float) -> void:
 	# derived from position, never the global RNG - spawning this must not
 	# desync the deterministic autowalk traversal
 	seed_o = fmod(absf(position.x) * 0.017, TAU)
+	var centre := -_facing() * 10.0
+	var body := StaticBody2D.new()
+	body.position = centre
+	var cs := CollisionShape2D.new()
+	var shape := RectangleShape2D.new()
+	shape.size = BENCH_SIZE
+	cs.shape = shape
+	body.add_child(cs)
+	add_child(body)
+	main.add_rope_rect(Rect2(global_position + centre - BENCH_SIZE * 0.5, BENCH_SIZE))
 
 
 func _physics_process(delta: float) -> void:

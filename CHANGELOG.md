@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-19 - Honest waist-high leash collisions
+
+- Cars, vans, stalls, benches, dumpsters, barriers and the train now catch the leash on a close outline of the body you can see, rather than a few oversized invisible points. Furniture still slips free under a sustained pull, standing in for the owner lifting the strap over it.
+- Low clutter stays out of the leash plane: hydrants, cones, manholes and A-stands do not become anchors. Parked scooters clatter over under a body or a taut strap instead of holding the pair fast. People and moving bikes remain non-anchors; other leashes remain the intentional tangle.
+- New regression coverage in `tests/test_leash_height_geometry.gd`.
+
 ## 2026-10-18 - Dia de Partit, the crowd river
 
 - The avenue fills as you walk north. Fans are data, not people: up to 150 of them in one list, drawn together in one batch at 30 fps, darker and smaller than the pair so the two of you still read. A fan is a coarse dot, not a full circle, so the crowd stays under a millisecond on top of the street. The side street stays thin; the gates are the thickest. A few vendors walk back through them.

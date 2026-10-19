@@ -20,6 +20,65 @@ extends RefCounted
 const TUT := preload("res://systems/tutorial.gd")
 # the tutorial's pond for the brink lesson, beside the path at its station
 const TUT_POND_W := 150.0
+const ROPE_CLEAR := 4.0
+const ROPE_SAMPLE_STEP := 12.0
+
+
+# Packed at build time as Vector3(x, y, radius). Circles sit just inside the
+# body, so their union follows its waist-high outline with four pixels of
+# strap clearance instead of making a ghost halo round convenient corners.
+static func rect_rope_samples(r: Rect2) -> Array:
+	var out: Array = []
+	var ix := minf(ROPE_CLEAR, r.size.x * 0.5 - 1.0)
+	var iy := minf(ROPE_CLEAR, r.size.y * 0.5 - 1.0)
+	var x0 := r.position.x + ix
+	var x1 := r.end.x - ix
+	var y0 := r.position.y + iy
+	var y1 := r.end.y - iy
+	var nx := maxi(1, int(ceil((x1 - x0) / ROPE_SAMPLE_STEP)))
+	var ny := maxi(1, int(ceil((y1 - y0) / ROPE_SAMPLE_STEP)))
+	for i in range(nx + 1):
+		var x := lerpf(x0, x1, float(i) / float(nx))
+		out.append(Vector3(x, y0, iy + ROPE_CLEAR))
+		out.append(Vector3(x, y1, iy + ROPE_CLEAR))
+	for i in range(1, ny):
+		var y := lerpf(y0, y1, float(i) / float(ny))
+		out.append(Vector3(x0, y, ix + ROPE_CLEAR))
+		out.append(Vector3(x1, y, ix + ROPE_CLEAR))
+	# A sparse spine fills the solid interior. It never reaches outside the
+	# body, but prevents a rope that starts across the body (teleport/resnap)
+	# from being stranded behind the perimeter samples.
+	var inner_r := minf(r.size.x, r.size.y) * 0.5 - ROPE_CLEAR
+	if inner_r > ROPE_CLEAR:
+		if r.size.y >= r.size.x:
+			var sy0 := r.position.y + inner_r + ROPE_CLEAR
+			var sy1 := r.end.y - inner_r - ROPE_CLEAR
+			var sny := maxi(1, int(ceil((sy1 - sy0) / (inner_r * 1.7))))
+			for i in range(sny + 1):
+				out.append(Vector3(r.get_center().x, lerpf(sy0, sy1, float(i) / float(sny)), inner_r))
+		else:
+			var sx0 := r.position.x + inner_r + ROPE_CLEAR
+			var sx1 := r.end.x - inner_r - ROPE_CLEAR
+			var snx := maxi(1, int(ceil((sx1 - sx0) / (inner_r * 1.7))))
+			for i in range(snx + 1):
+				out.append(Vector3(lerpf(sx0, sx1, float(i) / float(snx)), r.get_center().y, inner_r))
+	return out
+
+
+static func add_rope_rect(m: Node2D, r: Rect2, soft := true) -> void:
+	for sample: Vector3 in rect_rope_samples(r):
+		var p := Vector2(sample.x, sample.y)
+		m.poles.append(p)
+		m.rope_radii.append(sample.z)
+		if soft:
+			m.rope_soft.append(p)
+
+
+static func add_rope_point(m: Node2D, p: Vector2, radius: float, soft := true) -> void:
+	m.poles.append(p)
+	m.rope_radii.append(radius)
+	if soft:
+		m.rope_soft.append(p)
 
 const CROSS_SECTIONS := {
 	"street": ["road", 160.0, "sidewalk", 120.0],    # a traffic lane; the bike lane side
@@ -89,11 +148,9 @@ static func gotic(m: Node2D) -> void:
 	# the plaça's plane tree
 	m.poles.append(GOTIC_PLACA + Vector2(-150.0, -60.0))
 	m.deco_pole_count = m.poles.size()
-	# scooters parked against the walls: solid, and the rope catches them
+	# scooters parked against the walls: light props that bodies/the strap tip
 	m.scooters = Array([gotic_wall(m, -1300.0, false, 26.0), gotic_wall(m, -2100.0, true, 26.0),
 		gotic_wall(m, -3650.0, false, 26.0), gotic_wall(m, -4400.0, true, 26.0)], TYPE_VECTOR2, &"", null)
-	for sc: Vector2 in m.scooters:
-		m.poles.append(sc)
 	m.benches = Array([GOTIC_PLACA + Vector2(-250.0, 80.0), GOTIC_PLACA + Vector2(250.0, -80.0)], TYPE_VECTOR2, &"", null)
 	m.bins = Array([gotic_wall(m, -900.0, true, 26.0), gotic_wall(m, -3200.0, false, 26.0)], TYPE_VECTOR2, &"", null)
 	# the drink is at the basin's rim, where a dog can reach it
@@ -187,7 +244,7 @@ static func mosaic(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 # LA NETEJA: a narrow back street at dawn, on the morning the sweeper comes
 # through. The home leg is a run, so the street stays runnable: what narrows
 # it is what a back street has at that hour - dumpsters out at the kerbs
-# (solid), scooters parked up, delivery crates stacked by the dumpsters, the
+# scooters parked up, delivery crates stacked by the dumpsters, the
 # lampposts, washing overhead, the shops' shutters still down, and the wet
 # streaks and puddles the water truck left.
 const NETEJA_DUMPSTERS: Array = [[-1000.0, true], [-1900.0, false], [-2800.0, true], [-3600.0, false], [-4300.0, true]]
@@ -227,16 +284,11 @@ static func neteja(m: Node2D, hyd_list: Array) -> void:
 	for yy in [-1300.0, -2200.0, -3700.0, -4500.0]:
 		m.poles.append(Vector2(m.walk_cx + (55.0 if int(yy) % 200 == 0 else -55.0), yy))
 	m.deco_pole_count = m.poles.size()
-	# scooters parked at the kerbs: solid, and the rope catches them
+	# scooters parked at the kerbs: light props that bodies/the strap tip
 	m.scooters = Array([], TYPE_VECTOR2, &"", null)
 	for sc: Array in NETEJA_SCOOTERS:
 		var sp := neteja_kerb(m, float(sc[0]), bool(sc[1]), 22.0)
 		m.scooters.append(sp)
-		m.poles.append(sp)
-	# the dumpsters' corners catch the rope too
-	for d: Vector2 in neteja_dumpsters(m):
-		m.poles.append(d + Vector2(0.0, -NETEJA_DUMPSTER.y * 0.5 + 8.0))
-		m.poles.append(d + Vector2(0.0, NETEJA_DUMPSTER.y * 0.5 - 8.0))
 	# a hydrant a dumpster has been parked over is moved up the kerb
 	for hi in range(hyd_list.size()):
 		var hp: Vector2 = hyd_list[hi]
@@ -1669,14 +1721,6 @@ static func build_level_data(m: Node2D) -> void:
 	# everything past body_pole_count is rope-wrap geometry only: vans
 	# and stalls get one solid rectangular body each in _build_walls
 	m.body_pole_count = m.poles.size()
-	for v in m.vans:
-		for off in [-52.0, -26.0, 0.0, 26.0, 52.0]:
-			m.poles.append(v + Vector2(0, off))
-	# stall wrap circles at the ENDS only: a mid circle made the rope
-	# snake weirdly across the tabletop
-	for st in m.stalls:
-		m.poles.append(st + Vector2(-48, 0))
-		m.poles.append(st + Vector2(48, 0))
 	m.urge_y = randf_range(-3200.0, -1500.0)
 	# rare visitors: a cat some walks, a pigeon flock or two most walks
 	# (seagulls at the beach, obviously)
@@ -1806,21 +1850,6 @@ static func build_level_data(m: Node2D) -> void:
 	# after the fit, deliberately: the verge is the one place whose contents
 	# must NOT be pulled onto the pavement
 	build_verge(m)
-	if m.furgoneta.x < INF:
-		for off: float in [-52.0, -26.0, 0.0, 26.0, 52.0]:
-			m.poles.append(m.furgoneta + Vector2(0.0, off))
-	if m.lvl == "station":
-		# the train is the biggest thing on the walk: the rope wraps its ends
-		# and sides
-		var tr := ESTACIO_TRAIN
-		var ty := tr.position.y
-		while ty <= tr.end.y:
-			m.poles.append(Vector2(tr.position.x - 4.0, ty))
-			m.poles.append(Vector2(tr.end.x + 4.0, ty))
-			ty += 40.0
-		for tx: float in [tr.position.x + 40.0, tr.get_center().x, tr.end.x - 40.0]:
-			m.poles.append(Vector2(tx, tr.position.y - 4.0))
-			m.poles.append(Vector2(tx, tr.end.y + 4.0))
 	if m.lvl == "park":
 		# (the flowerbeds' edging is grindable: systems/rails.gd)
 		# the lake is the biggest pole on the walk: wrap points round its shore
@@ -1853,10 +1882,32 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "montjuic":
 		for c: Vector2 in Montjuic.CACTI:
 			m.poles.append(c)
-	# Dia de Partit's stalls, cars and barrier stubs: their corners catch the
-	# rope; their bodies are the rects in Partit.solids
+	# Everything above is a round post/trunk. Wide things use a sampled body
+	# outline at the leash plane, and all non-pole contacts use furniture slip
+	# so a sustained pull stands in for lifting the strap over them.
+	m.rope_radii.resize(m.poles.size())
+	m.rope_radii.fill(m.POLE_RADIUS + 2.0)
+	m.rope_soft.clear()
+	for v: Vector2 in m.vans:
+		add_rope_rect(m, Rect2(v - m.VAN_BODY_SIZE * 0.5, m.VAN_BODY_SIZE))
+	if m.furgoneta.x < INF:
+		add_rope_rect(m, Rect2(m.furgoneta - m.VAN_BODY_SIZE * 0.5, m.VAN_BODY_SIZE))
+	for st: Vector2 in m.stalls:
+		add_rope_rect(m, Rect2(st - m.STALL_BODY_SIZE * 0.5, m.STALL_BODY_SIZE))
+	for bn: Vector2 in m.benches:
+		add_rope_rect(m, Rect2(bn - m.BENCH_BODY_SIZE * 0.5, m.BENCH_BODY_SIZE))
+	for tb: Rect2 in tutorial_benches(m):
+		add_rope_rect(m, tb)
+	for f: Vector2 in m.fountains:
+		add_rope_point(m, f, m.FOUNTAIN_RADIUS + 2.0)
+	if m.lvl == "neteja":
+		for d: Vector2 in neteja_dumpsters(m):
+			add_rope_rect(m, Rect2(d - NETEJA_DUMPSTER * 0.5, NETEJA_DUMPSTER))
+	if m.lvl == "station":
+		add_rope_rect(m, ESTACIO_TRAIN)
 	if m.lvl == "partit":
-		m.poles.append_array(Partit.wrap_points(m))
+		for r: Rect2 in Partit.wrap_rects():
+			add_rope_rect(m, r)
 	# the hazardous hard-to-reach collectible: one per level, in a spot
 	# that costs you something to reach (deliberately outside the corridor
 	# on some walks, so it is exempt from the corridor fit)
@@ -2759,6 +2810,12 @@ static func build_walls(m: Node2D) -> void:
 			lcs.shape = rsh
 		lb.add_child(lcs)
 		m.add_child(lb)
+	# Bench backs reach the leash plane. Their body matches the same narrow
+	# top-down seat used by drawing, routing and rope geometry.
+	for bn: Vector2 in m.benches:
+		add_rect_body(m, bn, m.BENCH_BODY_SIZE)
+	for f: Vector2 in m.fountains:
+		add_circle_body(m, f, m.FOUNTAIN_RADIUS)
 	# vans and stalls are solid rectangles: no walking over the van roof
 	for v in m.vans:
 		add_rect_body(m, v, m.VAN_BODY_SIZE)
@@ -2833,6 +2890,19 @@ static func add_rect_body(m: Node2D, at: Vector2, size: Vector2) -> void:
 	m.solid_rects.append(Rect2(at - size * 0.5, size))
 
 
+static func add_circle_body(m: Node2D, at: Vector2, radius: float) -> void:
+	var sb := StaticBody2D.new()
+	sb.collision_layer = 1
+	sb.position = at
+	var cs := CollisionShape2D.new()
+	var sh := CircleShape2D.new()
+	sh.radius = radius
+	cs.shape = sh
+	sb.add_child(cs)
+	m.add_child(sb)
+	m.solid_rects.append(Rect2(at - Vector2.ONE * radius, Vector2.ONE * radius * 2.0))
+
+
 static func build_entities(m: Node2D) -> void:
 	# the signs' cached canvas: main's first child at main's own z, so it
 	# draws straight after the world pass and under everything else
@@ -2860,6 +2930,7 @@ static func build_entities(m: Node2D) -> void:
 	m.human.setup(m)
 
 	m.leash.setup(m.dog, m.human, m.poles, m.LEASH_LENGTH)
+	m.leash.pole_radii = m.rope_radii
 	m.leash.hero = true  # the player's rope draws every frame; NPC ropes at 30fps
 	m.leash.furniture_poles = m._furniture_wrap_poles()
 
@@ -3029,6 +3100,12 @@ static func spawn_cones(m: Node2D) -> void:
 		sa.z_index = 11
 		m.add_child(sa)
 		sa.setup(m, m.dog, m.human)
+	for sc: Vector2 in m.scooters:
+		var parked := Node2D.new()
+		parked.set_script(load("res://entities/parked_scooter.gd"))
+		parked.position = sc
+		m.add_child(parked)
+		parked.setup(m)
 
 
 # on one of the side streets that cross the walk (the traffic lanes)

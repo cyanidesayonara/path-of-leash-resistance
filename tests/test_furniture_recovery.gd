@@ -409,15 +409,13 @@ func _test_furgoneta_alignment() -> void:
 	_check(main.lvl == "street", "street level id sticks (got %s)" % main.lvl)
 	_check(main.furgoneta.x < INF, "La Rambla places the FUR-GONETA")
 	var body: Vector2 = main.furgoneta
-	var flank_xs: Array[float] = []
-	for p: Vector2 in main.poles:
-		if absf(p.y - body.y) <= 52.5 and absf(p.x - body.x) < 1.0:
-			flank_xs.append(p.x)
-	_check(flank_xs.size() >= 5,
-		"FUR-GONETA has five rope-contact flanks at the body (found %d)" % flank_xs.size())
-	for fx in flank_xs:
-		_check(is_equal_approx(fx, body.x),
-			"rope flank x=%.1f matches fitted body x=%.1f" % [fx, body.x])
+	var body_rect := Rect2(body - main.VAN_BODY_SIZE * 0.5, main.VAN_BODY_SIZE)
+	var outline := 0
+	for p: Vector2 in main.rope_soft:
+		if body_rect.has_point(p):
+			outline += 1
+	_check(outline >= 16,
+		"FUR-GONETA rope geometry follows the body outline (found %d samples)" % outline)
 	var found_blocker := false
 	for b in main.bypasser_blockers:
 		if String(b.get("id", "")) == "furgoneta":
