@@ -116,9 +116,49 @@ func _run() -> void:
 	_check(is_equal_approx(P.sidewalk(-2000.0), P.AVE_SW), "the avenue's sidewalks")
 	_check(P.sidewalk(-4000.0) == 0.0, "the stadium's paving has no kerb")
 
+	await _march(m, P)
+
 	# the walk's name is written in sunflower seed shells
 	var WS: GDScript = load("res://world/world_sign.gd")
 	_check(WS.material_for("partit", "clear") == "pipes", "the name is laid in seed shells")
 
 	print("test_partit: %d checks, %d failures" % [checks, failures.size()])
 	quit(1 if failures.size() > 0 else 0)
+
+
+func _march(m: Node2D, _p) -> void:
+	var day = load("res://systems/march.gd").new()
+	var pair := Vector2(800.0, -2800.0)
+	day.arm(pair)
+	var n := 0
+	while not day.warned and n < 200:
+		day.advance(0.05, pair)
+		n += 1
+	var gap: float = pair.y - float(day.foot.end.y)
+	_check(day.warned, "the siren starts")
+	_check(gap / 55.0 >= 3.9, "the column is still %.2f s out when the siren starts" % (gap / 55.0))
+	_check(day.holds_bot(pair), "the bot waits on the column's side")
+	_check(not day.holds_bot(Vector2(500.0, pair.y)), "west of the column the bot keeps walking")
+	m.march.on = true
+	m.march.warned = true
+	m.march.passed = false
+	m.march.foot = day.foot
+	m.march.horses = day.horses
+	m.human.global_position = day.foot.get_center()
+	m.dog.global_position = Vector2(560.0, day.foot.get_center().y)
+	var y0: float = m.human.global_position.y
+	var hp: int = m.phone_hp
+	for _i in 25:
+		await physics_frame
+	_check(m.human.global_position.y > y0 + 8.0, "a human inside the column is carried south")
+	_check(m.phone_hp == hp, "the column does not crack the phone")
+	var lx: float = m.match_crowd._lane_x(day.foot.get_center().y, 7, 0, m.walk_edges)
+	_check(lx < m.march.foot.position.x, "the river keeps west of the column")
+	m.human.state = 0
+	m.human.iframes = 0.0
+	m.human.global_position = m.march.horses[0]
+	var hp2: int = m.phone_hp
+	await physics_frame
+	_check(m.phone_hp == hp2 - 1, "a horse's shoulder is one crack")
+	await physics_frame
+	_check(m.phone_hp == hp2 - 1, "the same horse does not crack the phone twice")

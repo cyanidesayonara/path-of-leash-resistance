@@ -2984,6 +2984,7 @@ static func build_entities(m: Node2D) -> void:
 		m.match_crowd = CrowdRiver.new()
 		m.match_crowd.setup(20261017, CrowdRiver.CAP)
 		m.match_day = MatchDay.new()
+		m.march = March.new()
 		var fans := Node2D.new()
 		fans.set_script(load("res://world/crowd_layer.gd"))
 		fans.z_index = 3
