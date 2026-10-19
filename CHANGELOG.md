@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-10-19 - Keep the off-leash signs clear
+
+- Tree crowns and long sniffable props now keep out of the two-line place sign beyond every off-leash space's far fence. El Bosc and El Mosaic no longer put three trees through the words.
+- A regression checks every tree, log and piece of driftwood on all sixteen walks.
+
 ## 2026-10-19 - Dia de Partit, the corners
 
 - The side street east of the avenue has three kids and two jackets. A yell comes first, then the ball rolls across. Bring it back, or drop it between the jackets for gol! +5. At kick-off the kids go inside and the jackets stay.
