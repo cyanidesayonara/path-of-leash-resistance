@@ -2,6 +2,27 @@
 
 Append-only session history, newest first.
 
+## 2026-10-18 - La Neteja audit fixes (#161)
+
+- The dumpsters are steel bins: castors, two ribbed lids with grab handles,
+  a handlebar at each end, and the bag that did not fit. They are still
+  solid, and the street is still runnable past them.
+- The roofs no longer repeat one air-conditioning unit every module. Each
+  lot is its own pantiles or terrace, the way the old town's roofs are, and
+  the shutters along the kerb are slatted, tagged and padlocked. One bakery
+  near the top of the street is half open, with its light across the setts,
+  and the low sun lies in soft bands down the street.
+- The water truck's wet streaks feather out at the edges instead of ending
+  in a hard line. The washing overhead was already shirts, sheets and socks
+  on a sagging line; that finding did not need another pass.
+- The posts down the middle are the lamppost slalom. They had been drawing
+  as street trees, crown and grate, in the middle of the alley.
+- What sits by each dumpster is a stack of delivery crates. It had been a
+  warning cone on top of a crate. The market layout's open manholes, and
+  the four cones round each of them, are gone: one of them was in the lane,
+  and your human walked straight down it. A hydrant the east dumpster had
+  been parked over is up the kerb, clear of the bin.
+
 ## 2026-10-18 - the dog slides along what she touches, and stays out of your human
 
 - The v1.60 playtest kept logging DOG STUCK at the same spots. Most were the scripted steps holding a direction straight into something: El Mercat's first stall block and its corner column, El Gòtic's bin by the east wall, a south face in La Ferralla's yard, the mosaic fountain block in El Mosaic, and L'Estació's ticket barrier and the train's end. A player pressing into a wall does not move, and that is right.
