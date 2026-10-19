@@ -8899,7 +8899,7 @@ func _tick_corners(delta: float) -> void:
 		float_text(lost_scarf.at + Vector2(0.0, -36.0), "good dog! +6", Color(0.85, 1.0, 0.85))
 		float_text(lost_scarf.at + Vector2(-28.0, -16.0), "yay!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
-	if not _fan_pairs and dog.global_position.y < -1400.0:
+	if phase == "out" and not _fan_pairs and dog.global_position.y < -1400.0:
 		_fan_pairs = true
 		_spawn_fan_pairs()
 	if not _tout_said and dog.global_position.distance_to(Partit.TOUT) < 130.0:
