@@ -112,14 +112,15 @@ and unchanged until Santtu plays them.
 ## partit
 
 - Inventory: Dia de Partit, 800 wide, bends, gate PLAÇA DEL GOL, off-leash plaça. 393 poles, 9 trees, a terrace of tables, 2 fountains. Goals: mark, sniff, phone, paws, bag, fetch, snack, march, scarf, kickabout, fulltime, prize. No tofu, hi or combo.
-- Shots: `walk-partit.png`. DIA DE PARTIT's shells have a gap through the middle and do not read as the whole name.
-- Play: pending
-- Findings: see the shared opening-name finding
+- Shots: `walk-partit.png`. The shells read at the start and are kicked once your human walks through them.
+- Play: the scripted pass reached full time and home with no stuck actor. Every frame of the draw logged `Invalid access to property or key 'stinky'`.
+- Findings: the march drops horse leavings as substance `stinky`, and `SUBSTANCES` has no such kind, so the world draw fails while those leavings are on the ground.
 
 ## Queue
 
-Opening, yard and home shots are reviewed. Scripted play is still running.
+Scripted play of all sixteen walks reported no stuck dog, no stuck human, and no person inside a solid.
 
-1. Open. On Montjuïc's esplanade, `Montjuic.draw_hill` builds a rim with fewer than two points and the renderer reports `p_points.size() < 2`. The esplanade shot still reads, because the hill is south of that view. The climb's own rim is a separate draw and was not the one that failed.
+1. Open, in #264. Montjuïc's esplanade asks `draw_hill` for a rim with fewer than two points.
+2. Open. Dia de Partit's march droppings use `stinky`, which is not in `SUBSTANCES`. The draw errors on every frame they exist.
 
 The loose place-names are not a defect. At frame 45, PASSEIG MARÍTIM, EL MERCAT, EL BOSC and LA RAMBLA all read. The default sweep frame is 320, which is after your human has walked through the letters. Scattering them is what those pieces are for. `PLAÇA DELS GOSSOS` on the town squares is the name those yards were given, not the beach's `PLATJA DELS GOSSOS`.
