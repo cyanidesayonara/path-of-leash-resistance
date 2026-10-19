@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-19 - Dia de Partit, El Gol
+
+- Goals come on a seeded schedule once the match is on: the first no sooner than 25 seconds after kick-off, then at least 35 apart, and at most three. One of them can be the other side, and one can be waved off.
+- The stadium goes "ooooh" for a second and a half, the floodlights flicker, and then it roars. Beside your human, she gets the zoomies. Anywhere else it is a fright, louder near the bowl. A second later your human celebrates ("gooool!", two hops, planted) or slumps ("no...") or says "WHAT?" when it is disallowed. A whirl is never planted.
+- The bar's chairs jump and a few crisps land on the pavement. Now and then a flare climbs off the east side, hiss then bang, and the free dogs in the square flinch and run a lap. `--goal-in=S` forces the next one.
+
 ## 2026-10-19 - Honest waist-high leash collisions
 
 - Cars, vans, stalls, benches, dumpsters, barriers and the train now catch the leash on a close outline of the body you can see, rather than a few oversized invisible points. Furniture still slips free under a sustained pull, standing in for the owner lifting the strap over it.

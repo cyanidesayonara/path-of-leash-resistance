@@ -43,6 +43,8 @@ var state: S = S.WANDER
 var state_t := 0.0
 var target := Vector2(INF, INF)
 var mark_cd := 6.0
+# the roar: a flinch, then a lap. The agility clock is not this timer.
+var lap_t := 0.0
 var visited: Array[Vector2] = []
 var my_name := "a spaniel"
 var rng := RandomNumberGenerator.new()
@@ -88,6 +90,7 @@ func setup(m: Node2D, mine: Node2D, y_lo: float, y_hi: float) -> void:
 	my_name = NAMES[phase_bucket % NAMES.size()]
 	# stagger the first errand so a park full of dogs does not sniff in unison
 	mark_cd = rng.randf_range(1.5, 7.0)
+	lap_t = 0.0
 
 
 func _physics_process(delta: float) -> void:
@@ -95,6 +98,20 @@ func _physics_process(delta: float) -> void:
 		return
 	state_t -= delta
 	mark_cd -= delta
+	if lap_t > 0.0:
+		lap_t -= delta
+		if lap_t > 2.0:
+			vel = Vector2.ZERO
+		else:
+			vel = Vector2.from_angle(seed_o + (2.4 - lap_t) * 3.2) * BOLT
+		position += vel * delta
+		position.x = clampf(position.x, 90.0, 1190.0)
+		position.y = clampf(position.y, lo, hi)
+		if vel.length() > 14.0:
+			face = vel.normalized()
+		if Engine.get_physics_frames() % 2 == 0:
+			queue_redraw()
+		return
 	offer_cd -= delta
 	bow += delta
 	var to_mine: Vector2 = my_dog.global_position - global_position
@@ -212,6 +229,10 @@ func _physics_process(delta: float) -> void:
 
 
 # the free end of the rope she carries: what Millie grabs
+func hear_roar() -> void:
+	lap_t = 2.4
+
+
 func rope_end() -> Vector2:
 	var sway := face.orthogonal() * sin(bow * 6.0) * 4.0
 	return global_position + face * 38.0 + sway
