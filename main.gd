@@ -62,6 +62,9 @@ var solid_rects: Array[Rect2] = []
 var match_crowd: CrowdRiver
 var match_crowd_layer: Node2D
 var match_crowd_push := Vector2.ZERO
+# the kick-off clock (systems/match_day.gd). Null on every other walk.
+var match_day: MatchDay
+var _match_roar := 0.0
 # parallel bike lane along the right side, plus a narrow far shoulder
 # with temptations - crossing the lane is a voluntary risk
 # the hang-time beat on big moments: game speed, and how long it lasts in
@@ -8140,6 +8143,9 @@ func _update_hud() -> void:
 	# lines above reached the screen (#29).
 	# Only during a walk: on the title the status would sit over the chalked
 	# name (the scrapyard's "GO SLOW" is set before you have set off).
+	if match_day != null and phase == "out" and poop_state == 0 and not call_active:
+		if match_day.phase == MatchDay.Ph.RUSH:
+			hud_status = "KICK-OFF SOON"
 	if feed != null:
 		# a first-time tip takes the banner while it is up
 		if tip_t > 0.0 and tip_text != "":
@@ -8785,11 +8791,16 @@ func _nudge(body: CharacterBody2D, by: Vector2) -> float:
 func _tick_match_crowd(delta: float) -> void:
 	if match_crowd == null:
 		return
-	if not started or paused or phase != "out":
+	if not started or paused:
 		human.crowd_pace = 1.0
 		human.crowd_shift = 0.0
+		human.match_pace = 1.0
+		human.match_on = false
+		if human.score_bug != null:
+			human.score_bug.visible = false
 		match_crowd_push = Vector2.ZERO
 		return
+	_tick_match_day(delta)
 	var dog_p: Vector2 = dog.global_position
 	var human_p: Vector2 = human.global_position
 	var mid_y := (dog_p.y + human_p.y) * 0.5
@@ -8804,6 +8815,47 @@ func _tick_match_crowd(delta: float) -> void:
 	human.crowd_pace = give.y
 	if match_crowd.hup_fresh:
 		float_text(match_crowd.hup_at, "hup", Color(0.95, 0.93, 0.86))
+
+
+# The clock, then what it asks of the crowd and of your human. The river's
+# mode changes with the phase; the rope is not involved.
+func _tick_match_day(delta: float) -> void:
+	if match_day == null:
+		return
+	if _match_roar > 0.0:
+		_match_roar -= delta
+		if _match_roar <= 0.0:
+			Sfx.play("roar", 0.9, -10.0)
+	var pair_y := minf(dog.global_position.y, human.global_position.y)
+	var was: int = match_day.phase
+	var cue: Dictionary = match_day.advance(delta, pair_y, GATE_Y, phase == "home")
+	if match_day.phase == MatchDay.Ph.RUSH or match_day.phase != was:
+		_update_hud()
+	if bool(cue["pa"]):
+		var at := human.global_position + Vector2(0.0, -70.0)
+		float_text(at, "falten cinc minuts", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(at + Vector2(0.0, 22.0), "five minutes left", Color(0.85, 0.84, 0.78))
+	if bool(cue["whistle"]):
+		Sfx.play("whistle", 1.0, -2.0)
+		_match_roar = 0.6
+		for spot in MatchDay.LITTER:
+			kebabs.append({"pos": spot, "eaten": false})
+	var watching: bool = match_day.on_the_match()
+	human.match_on = watching
+	human.match_pace = MatchDay.MATCH_PACE if watching else 1.0
+	if human.score_bug != null:
+		human.score_bug.visible = watching
+	if match_crowd == null:
+		return
+	match match_day.phase:
+		MatchDay.Ph.RUSH:
+			match_crowd.flow_mode = CrowdRiver.MODE_JOG
+		MatchDay.Ph.KICKOFF:
+			match_crowd.flow_mode = CrowdRiver.MODE_DRAIN
+		MatchDay.Ph.MATCH, MatchDay.Ph.FULLTIME:
+			match_crowd.flow_mode = CrowdRiver.MODE_LATE
+		_:
+			match_crowd.flow_mode = CrowdRiver.MODE_WALK
 
 
 func _shove_match_crowd(delta: float) -> void:
