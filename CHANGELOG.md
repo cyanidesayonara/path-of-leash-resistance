@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-19 - Dia de Partit, the goals and the words
+
+- The twelfth goal is to keep your human out of the away march. It completes once the column has gone by and they were never carried. The results card shows the score the phone was watching.
+- The match-day arrangement answers itself: bongos one bar, claps the next, under the whistle. No chant has words.
+- A text test rejects a real club, stadium, sponsor, player or motto in the walk's scripts. The Store and itch listings count sixteen walks.
+
 ## 2026-10-19 - Keep the off-leash signs clear
 
 - Tree crowns and long sniffable props now keep out of the two-line place sign beyond every off-leash space's far fence. El Bosc and El Mosaic no longer put three trees through the words.

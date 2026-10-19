@@ -182,6 +182,7 @@ Every feature must serve at least one. If it serves none, cut it.
   tightening coil looks under-read by the arming-window mean, whether losing
   the old FLING reward on a safe refusal feels fair, and how much dogward lean
   the forced release wants. Assess all four only on the final overhaul commit.
+- **v1.61 - in progress.** Dia de Partit, the third new walk, with El Diluvi's umbrella crowd now moving. Twelve goals, the match-day words and the call-and-answer arrangement are the last piece.
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
 - Every release also ships: mechanics tuning from playtests, at least
@@ -355,15 +356,16 @@ memorable.
   the one-off set pieces (salamander, arches, train) as placeable pieces
   rather than editable ones. Santtu's idea of it as a paid add-on only
   matters once there are players.
-- New walks (October 2026 ideas, none started). Santtu's direction: the
+- New walks (October 2026). Montjuïc has shipped. Dia de Partit is the 1.61
+  walk: the avenue, the crowd, the three set pieces and the corners are in,
+  and the twelve goals are the last piece. Santtu's direction still holds: the
   less famous but good-looking parts of Barcelona and round it, and every
   new walk ships with an upgrade to an existing one so the standard keeps
-  rising. Pitched: El Veterinari (the walk in reverse: your human is
+  rising. Still pitched: El Veterinari (the walk in reverse: your human is
   dragging you to the vet, and you win by stalling), El Port (the swing
   bridge and fishermen's lines, a second rope to tangle), Els Búnquers del
-  Carmel at sunset, Les Escales Mecàniques (outdoor escalators), Dia de
-  Partit (a match-day crowd flowing one way; Santtu's favourite). Santtu's
-  own: the winding walk up Montjuïc, Plaça Catalunya, Plaça d'Espanya,
+  Carmel at sunset, Les Escales Mecàniques (outdoor escalators). Santtu's
+  own, still open: Plaça Catalunya, Plaça d'Espanya,
   Poble Espanyol, and neighbourhoods from Sarrià to Santa Coloma. Others:
   Poblenou's superilla, the Laberint d'Horta hedge maze, the Carretera de
   les Aigües, the Fòrum. Plenty is left over for a sequel.

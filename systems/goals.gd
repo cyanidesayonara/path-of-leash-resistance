@@ -42,10 +42,9 @@ const LEVEL_GOAL_IDS := {
 		"combo", "prize", "outrun"],
 	# Montjuic: the climb, with the park staples
 	"montjuic": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "cable", "combo", "prize"],
-	# Dia de Partit. The march goal is still with the words pass. No Tofu:
-	# the way home belongs to the final whistle. No hi: twelve goals, and
-	# the fans' dogs are a greeting, not a quest.
-	"partit": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "scarf", "kickabout", "fulltime", "prize"],
+	# Dia de Partit. No Tofu: the way home belongs to the final whistle.
+	# No hi and no combo: twelve goals, and the fans' dogs are a greeting.
+	"partit": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "march", "scarf", "kickabout", "fulltime", "prize"],
 }
 
 
@@ -83,6 +82,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"wallet": {"text": "Keep your human's wallet safe", "target": 1, "fn": func() -> int: return 0 if (m.owner_wallet_taken or m.owner_wallet_lost) else 1},
 		"prize": {"text": m.prize_text, "target": 1, "fn": func() -> int: return 1 if m.prize_taken else 0},
 		"fulltime": {"text": "Beat the crowd home", "target": 1, "fn": func() -> int: return 1 if m.match_day != null and m.match_day.beat else 0},
+		"march": {"text": "Keep your human out of the away march", "target": 1, "fn": func() -> int: return 1 if m.march != null and m.march.passed and not m.march.caught else 0},
 		"scarf": {"text": "Bring the lost scarf back", "target": 1, "fn": func() -> int: return 1 if m.lost_scarf != null and m.lost_scarf.back else 0},
 		"kickabout": {"text": "Score a goal in the kids' street game", "target": 1, "fn": func() -> int: return 1 if m.kickabout != null and m.kickabout.scored else 0},
 	}
@@ -235,6 +235,8 @@ static func finish_walk(m: Node2D) -> void:
 			lines.append(head.strip_edges())
 		lines.append("%d/%d goals here    %d stars in all    %d bones banked"
 			% [lifetime, total, Game.total_stars(), Game.total_bones])
+		if m.lvl == "partit" and m.match_day != null and m.match_day.result != "":
+			lines.append("the phone says %s" % MatchDay.score_line(m.match_day.result))
 		if m.combo.best_mult >= 2:
 			var best_style: bool = Game.record_style(m.lvl, int(m.combo.run_style)) if not Game.daily else false
 			lines.append("best combo x%d    style %d%s" % [m.combo.best_mult, m.combo.run_style,

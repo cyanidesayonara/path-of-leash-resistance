@@ -317,6 +317,17 @@ rubble stone, and the colour comes in where Gaudi put it.
   delivery crates stand by the dumpsters, and the market's open manholes
   are gone.
 
+### Dia de Partit (partit) - match day
+- Is: the walk to the stadium in Les Corts. Fans in blue and claret halves
+  stream the same way, with a side street, a supporters' bar and mounted
+  police. Kick-off empties the avenue. Colors, invented banners, and the
+  stadium signed L'ESTADI.
+- Signature line: thread the crowd, lead your human clear of the away march,
+  and on the way home beat the outflow to the door.
+- Built (2026-10-19): the avenue and its corners, the crowd river, the
+  kick-off clock, La Marxa, El Gol and El Xiulet Final. Twelve goals.
+- Off-leash: PLAÇA DEL GOL, with the same agility course, rope tug and frisbee.
+
 ### El Barri - the neighbourhood park (the first walk)
 Santtu: "la rambla shouldn't be the primary walk... that should be just a
 generic walk in the park, without anything distinctly barcelonian", and "the
@@ -397,6 +408,7 @@ start, made of whatever that place has to hand, as loose pieces
 | La Ferralla | torch-cut rusty plate | heavy; shift and turn a little |
 | El Mosaic | trencadis | set in; stays |
 | La Neteja | soap suds | pop |
+| Dia de Partit | sunflower seed shells | scatter, spin |
 | any walk in snow | her own paw prints | pressed in; stay |
 
 The dog, the human and the rope all move pieces (the rope only brushes);
@@ -467,6 +479,7 @@ door. The vocabulary grows in stages, each one a PR with its own test:
 | La Ferralla | A lane between scrap piles that shifts left and right, a crane's reach overhead. |
 | El Mosaic | The serpentine as now, the dragon stair splitting round the salamander (stage 2), the hypostyle grid, the viaduct's lean (see El Mosaic). |
 | La Neteja | Straight and narrow: the chase needs a straight. |
+| Dia de Partit | A quiet side street opens onto the closed avenue, wide and straight, then pinches through the stadium approach to the square. |
 
 ## Detours (art rooms off the main walks)
 

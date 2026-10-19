@@ -51,7 +51,7 @@ The leash is real rope. The one you see is the one doing the physics: it wraps, 
 
 Your human answers it like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "HEY!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "ring ring", "selfie!", "ooh!". They are never smarter than that.
 
-FOURTEEN WALKS THROUGH BARCELONA
+SIXTEEN WALKS THROUGH BARCELONA
 
 El Barri, the neighborhood park
 La Rambla, the crowded promenade
@@ -67,6 +67,8 @@ La Castanyada, the chestnut festival
 La Ferralla, the junkyard
 El Mosaic, the tiled terraces
 La Neteja, the dawn cleanup
+Montjuïc, the climb
+Dia de Partit, match day
 
 Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. One of them is a chase: a street sweeper careens down a back street at dawn, and you drag your oblivious human home ahead of it. There is a gentle first walk that teaches one trick at a time, and a daily walk that is the same for everyone that day.
 
