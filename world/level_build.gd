@@ -209,13 +209,16 @@ static func neteja_dumpsters(m: Node2D) -> Array[Vector2]:
 	return out
 
 
-static func neteja(m: Node2D) -> void:
+static func neteja(m: Node2D, hyd_list: Array) -> void:
 	m.gate_text = "PLAÇA"
 	m.stalls = Array([], TYPE_VECTOR2, &"", null)
 	m.stall_kinds.clear()
 	m.performers = Array([], TYPE_VECTOR2, &"", null)
 	m.astands = Array([], TYPE_VECTOR2, &"", null)
 	m.benches = Array([], TYPE_VECTOR2, &"", null)
+	# the market skeleton's open manholes do not belong here: four warning
+	# cones round a hole in the middle of the chase
+	m.manholes = Array([], TYPE_VECTOR2, &"", null)
 	m.fountains = Array([Vector2(640, -3100)], TYPE_VECTOR2, &"", null)
 	m.laundry_lines = Array([-900.0, -1700.0, -2500.0, -3300.0, -4100.0], TYPE_FLOAT, &"", null)
 	m.poles.clear()
@@ -234,10 +237,22 @@ static func neteja(m: Node2D) -> void:
 	for d: Vector2 in neteja_dumpsters(m):
 		m.poles.append(d + Vector2(0.0, -NETEJA_DUMPSTER.y * 0.5 + 8.0))
 		m.poles.append(d + Vector2(0.0, NETEJA_DUMPSTER.y * 0.5 - 8.0))
-	# delivery crates stacked by the dumpsters
+	# a hydrant a dumpster has been parked over is moved up the kerb
+	for hi in range(hyd_list.size()):
+		var hp: Vector2 = hyd_list[hi]
+		for d: Vector2 in neteja_dumpsters(m):
+			if absf(hp.y - d.y) < NETEJA_DUMPSTER.y * 0.5 + 40.0 and (hp.x > m.walk_cx) == (d.x > m.walk_cx):
+				hyd_list[hi] = Vector2(hp.x, d.y - 250.0)
+	# delivery crates stacked by the dumpsters (spawn_cones lays crates
+	# here, not cones)
 	m.cone_spots = Array([], TYPE_VECTOR2, &"", null)
 	for d: Vector2 in neteja_dumpsters(m):
-		m.cone_spots.append(d + Vector2(0.0, -NETEJA_DUMPSTER.y * 0.5 - 34.0))
+		# two crates at the street-side corner, so they read as a stack and
+		# stay off the hydrant and the bin
+		var into := 16.0 if d.x < m.walk_cx else -16.0
+		var past := NETEJA_DUMPSTER.y * 0.5
+		m.cone_spots.append(d + Vector2(into, past + 22.0))
+		m.cone_spots.append(d + Vector2(into, past + 48.0))
 	# where the kill line is when a broom reaches a jamming dumpster's end,
 	# and what is parked at the kerbs for the brooms to swing in round
 	m.chase_jams.clear()
@@ -1175,6 +1190,9 @@ static func fit_props_to_corridor(m: Node2D) -> void:
 			continue
 		if m.lvl == "station" and arr == m.poles:
 			continue
+		# La Neteja's crates are already at the kerb, beside the dumpsters
+		if m.lvl == "neteja" and arr == m.cone_spots:
+			continue
 		for i in range(arr.size()):
 			var p: Vector2 = arr[i]
 			var e = m.walk_edges(p.y)
@@ -1605,7 +1623,7 @@ static func build_level_data(m: Node2D) -> void:
 	elif m.lvl == "site":
 		obres(m)
 	elif m.lvl == "neteja":
-		neteja(m)
+		neteja(m, hyd_list)
 	elif m.lvl == "guell":
 		mosaic(m, hyd_list, keb_list)
 	elif m.lvl == "scrap":
@@ -2912,7 +2930,8 @@ static func spawn_cones(m: Node2D) -> void:
 	# [where, kind]: cones unless the place calls for something else
 	var spots: Array = []
 	for cs: Vector2 in m.cone_spots:
-		spots.append([cs, "cone"])
+		# La Neteja's are the delivery crates by its dumpsters
+		spots.append([cs, "crate" if m.lvl == "neteja" else "cone"])
 	# the market hall's floor drain, just hosed down: wet-floor signs
 	if m.lvl == "market":
 		spots.append([MERCAT_DRAIN + Vector2(34, -20), "wetfloor"])

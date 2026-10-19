@@ -310,6 +310,12 @@ rubble stone, and the colour comes in where Gaudi put it.
   parked up, the lamppost slalom, washing overhead, the water truck's wet
   streaks and puddles on grey setts, the shops' shutters down and tagged, and
   a low pink-gold dawn light. No market left in it.
+- Audit fixes (2026-10-18, #161): the dumpsters are steel bins on castors,
+  with lids, ribs and handles; the roofs vary the way the old town's do, and
+  the shutters are slatted, tagged and padlocked, one bakery half open; the
+  wet streaks feather out; the mid-street posts are the lamppost slalom;
+  delivery crates stand by the dumpsters, and the market's open manholes
+  are gone.
 
 ### El Barri - the neighbourhood park (the first walk)
 Santtu: "la rambla shouldn't be the primary walk... that should be just a
