@@ -8776,7 +8776,8 @@ func _process(_delta: float) -> void:
 		return
 	if not started and MenuFlow.tick_title(self):
 		return
-	var target_y := (dog.global_position.y + human.global_position.y) / 2.0 - 60.0
+	var target_y := (dog.global_position.y + human.global_position.y) / 2.0 \
+		+ HomeChase.CAMERA_PAIR_OFFSET_Y
 	if phase == "freedom":
 		target_y = dog.global_position.y  # owner is parked; follow the dog
 	elif phase == "home" and chase_sweeper != null:

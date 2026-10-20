@@ -49,12 +49,20 @@ const CATCH_BEAT := 0.75
 const CLOSE_SHAVE_GAP := 60.0
 const CLOSE_SHAVE_CLEAR := 200.0
 const CLOSE_SHAVE_BONES := 2
-# The camera leans back up the street, at most this far, to keep the machine
-# LEAN_SHOW deep in the top of the screen: the boulder is something you watch
-# coming. Never further, or there is no road left to see ahead of the dog.
-const LEAN_MAX := 90.0
-const LEAN_SHOW := 80.0
+# The camera leans back up the street, at most this far, to keep the threat's
+# leading boundary LEAN_SHOW deep in the top of the screen. Never further, or
+# there is no road left to see ahead of the dog.
+const LEAN_MAX := 186.0
+const LEAN_SHOW := 176.0
 const LEAN_RATE := 3.0
+const CAMERA_PAIR_OFFSET_Y := -60.0
+const CAMERA_RUNWAY_PX := 110.0
+# Camera2D smoothing trails a moving target by speed / smoothing speed.
+# Reserve that live amount plus the largest shake; at turbo speed the safe
+# chase_lean can become negative and briefly frame further down the road.
+const CAMERA_SHAKE_WORLD := 9.0
+const THREAT_VISIBLE_PX := 48.0
+const LEAN_APPROACH_PX := 64.0
 
 # the warning, the head start after it, and a midpoint continue's countdown
 const WARNING_SECS := 1.2
@@ -260,6 +268,53 @@ static func advancing(m: Node2D) -> bool:
 		and not sweeper.jammed()
 
 
+# The authored leading boundary that camera and fear share. A threat with a
+# recoverable outer zone, such as floodwater, exposes that shallow edge with
+# threat_boundary(); the sweeper's brushes remain its front_y.
+static func threat_boundary(threat: Node2D) -> float:
+	if threat.has_method("threat_boundary"):
+		return float(threat.call("threat_boundary"))
+	return float(threat.get("front_y"))
+
+
+# Whether an authored threat boundary has entered the rendered world view far
+# enough to read.
+static func threat_visible(m: Node2D, boundary_y: float) -> bool:
+	var zoom_y := maxf(float(m.cam.zoom.y), 0.01)
+	var viewport_h := float(m.get_viewport_rect().size.y)
+	var rendered_top := float(m.cam.get_screen_center_position().y) - viewport_h * 0.5 / zoom_y
+	return (boundary_y - rendered_top) * zoom_y >= THREAT_VISIBLE_PX - 0.001
+
+
+# The chase_lean target remains the one camera mechanism, capped by the
+# rendered runway below the southernmost body.
+static func camera_target(boundary_y: float, dog_y: float, human_y: float,
+		viewport_h: float, zoom_y: float) -> float:
+	zoom_y = maxf(zoom_y, 0.01)
+	var cam_y := (dog_y + human_y) * 0.5 + CAMERA_PAIR_OFFSET_Y
+	var view_half := viewport_h * 0.5 / zoom_y
+	var need: float = (cam_y - view_half) - (boundary_y - LEAN_SHOW)
+	var max_lean := camera_runway_cap(dog_y, human_y, viewport_h, zoom_y)
+	# Begin the lean one small screen band before it can reveal the boundary.
+	# The smooth ramp avoids pumping as the pair's separation changes the cap.
+	var visible_reach := max_lean + LEAN_SHOW - THREAT_VISIBLE_PX / zoom_y
+	var approach := clampf((visible_reach + LEAN_APPROACH_PX / zoom_y - need)
+		/ (LEAN_APPROACH_PX / zoom_y), 0.0, 1.0)
+	return clampf(need, 0.0, max_lean) * approach
+
+
+static func camera_runway_cap(dog_y: float, human_y: float,
+		viewport_h: float, zoom_y: float, follow_speed_y: float = 0.0,
+		smoothing_speed: float = 6.0) -> float:
+	zoom_y = maxf(zoom_y, 0.01)
+	var cam_y := (dog_y + human_y) * 0.5 + CAMERA_PAIR_OFFSET_Y
+	var view_half := viewport_h * 0.5 / zoom_y
+	var smoothing_lag := maxf(follow_speed_y, 0.0) / maxf(smoothing_speed, 0.01)
+	var runway_world := CAMERA_RUNWAY_PX / zoom_y + CAMERA_SHAKE_WORLD + smoothing_lag
+	var runway_cap := cam_y + view_half - maxf(dog_y, human_y) - runway_world
+	return minf(LEAN_MAX, runway_cap)
+
+
 # A held phase's frame: the clock runs down and the machine idles where it
 # is. Nothing advances, catches or pays.
 static func _hold(m: Node2D, sweeper: Node2D, delta: float) -> void:
@@ -346,7 +401,8 @@ static func continue_run(m: Node2D) -> void:
 		m.shake_t = 0.0
 	else:
 		_warn(m, _behavior(m, held_profile(m)))
-	m.cam.position = (m.dog.global_position + m.human.global_position) * 0.5 + Vector2(0.0, -60.0 - float(m.chase_lean))
+	m.cam.position = (m.dog.global_position + m.human.global_position) * 0.5 \
+		+ Vector2(0.0, CAMERA_PAIR_OFFSET_Y - float(m.chase_lean))
 	m.cam.reset_smoothing()
 	m._update_hud()
 
@@ -408,15 +464,20 @@ static func tick(m: Node2D, delta: float) -> void:
 		_catch(m, String(_behavior(m, held_profile(m)).get("caught_dog", "")))
 
 
-# How far the camera leans back up the street this frame: just enough to
-# bring the machine's front LEAN_SHOW into the top of the screen, eased.
+# How far the camera leans back up the street this frame: just enough to bring
+# the threat's authored boundary LEAN_SHOW into the top of the screen, eased.
 static func _lean(m: Node2D, sweeper: Node2D, delta: float) -> void:
-	var view_half: float = m.get_viewport_rect().size.y * 0.5 / maxf(float(m.cam.zoom.y), 0.01)
-	var cam_y: float = (m.dog.global_position.y + m.human.global_position.y) * 0.5 - 60.0
-	var need: float = (cam_y - view_half) - (float(sweeper.front_y) - LEAN_SHOW)
-	# past twice the most it can lean, leaning shows nothing but a dark road
-	var want := clampf(need, 0.0, LEAN_MAX) if need < LEAN_MAX * 2.0 else 0.0
-	m.chase_lean = lerpf(float(m.chase_lean), want, 1.0 - exp(-LEAN_RATE * delta))
+	var want := camera_target(threat_boundary(sweeper),
+		float(m.dog.global_position.y), float(m.human.global_position.y),
+		float(m.get_viewport_rect().size.y), float(m.cam.zoom.y))
+	var eased := lerpf(float(m.chase_lean), want, 1.0 - exp(-LEAN_RATE * delta))
+	# Easing may never carry an old, larger lean past this frame's safety cap
+	# when the leash opens and the southernmost body moves down-screen.
+	var cap := camera_runway_cap(float(m.dog.global_position.y),
+		float(m.human.global_position.y), float(m.get_viewport_rect().size.y),
+		float(m.cam.zoom.y), maxf(float(m.dog.velocity.y), float(m.human.velocity.y)),
+		float(m.cam.position_smoothing_speed))
+	m.chase_lean = minf(eased, cap)
 
 
 # Caught: bring the machine to the front so it visibly rolls over them, shout

@@ -335,6 +335,10 @@ func _test_destination_and_head_start() -> void:
 	sw.jams.clear()
 	m.dog.global_position = Vector2(m.walk_cx, sw.front_y + 120.0)
 	m.human.global_position = Vector2(m.walk_cx, sw.front_y + 160.0)
+	m.cam.position = (m.dog.global_position + m.human.global_position) * 0.5 \
+		+ Vector2(0.0, -60.0 - float(m.chase_lean))
+	m.cam.reset_smoothing()
+	m.cam.force_update_scroll()
 	m._tick_mood(0.2)
 	var near := _scared(m)
 	m.mood.reset()

@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-20 - Chase framing shows the danger before fear
+
+- Chase-only framing now leans toward an approaching threat earlier while preserving at least 110 rendered pixels of escape runway across desktop, landscape-phone and portrait framing. The cap accounts for leash separation, camera smoothing, shake and live southward speed, including turbo.
+- SCARED cannot begin building until the threat's authored leading edge is at least 48 rendered pixels into the view. The sweeper explicitly identifies its brush line; the same shared hook is ready for El Besòs's shallow flood edge.
+- Current, moderate and strong framing were compared in deterministic desktop, landscape-phone and portrait captures. The strong curve was selected, then bounded by the viewport-aware safety rule.
+
 ## 2026-10-20 - 1.61 notes include the chase, the dare and the browser sound
 
 - The itch and Store notes for 1.61 now mention La Neteja's warning, head start and continue, the dare kid clear of the trees, and the browser build having sound again.

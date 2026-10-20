@@ -157,6 +157,11 @@ func gap_to(p: Vector2) -> float:
 	return p.y - front_y
 
 
+# The brushes are both the first visible edge and the gameplay line.
+func threat_boundary() -> float:
+	return front_y
+
+
 # The brooms reach loose junk on the kill line: the first time, it is flung
 # down the street toward the pair; anything that comes back under them is
 # sucked into the hopper. Returns how many were flung.
