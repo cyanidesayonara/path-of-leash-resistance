@@ -201,6 +201,7 @@ static func roll(m: Node2D, args: PackedStringArray = OS.get_cmdline_user_args()
 static func begin(m: Node2D, profile: Dictionary = {}) -> void:
 	if profile.is_empty():
 		profile = active_profile(m)
+	clear_catch_pose(m)
 	# the one profile the rest of this chase (the catch copy, later the
 	# bands) is read from
 	m.chase_profile = profile
@@ -388,8 +389,7 @@ static func can_continue(m: Node2D) -> bool:
 static func continue_run(m: Node2D) -> void:
 	var snap: Dictionary = m.chase_checkpoint
 	ChaseCheckpoint.restore(m, snap)
-	m.chase_catch_t = 0.0
-	m.chase_catch_msg = ""
+	clear_catch_pose(m)
 	m.msg_label.visible = false
 	m.dim.visible = false
 	m.feed.clear()
@@ -411,6 +411,9 @@ static func continue_run(m: Node2D) -> void:
 static func tick(m: Node2D, delta: float) -> void:
 	var sweeper: Node2D = m.chase_sweeper
 	if sweeper == null:
+		return
+	if m.chase_catch_t > 0.0:
+		tick_catch(m, delta)
 		return
 	if String(m.chase_phase) != "chase" and m.chase_catch_t <= 0.0:
 		_hold(m, sweeper, delta)
@@ -441,13 +444,6 @@ static func tick(m: Node2D, delta: float) -> void:
 		ChaseCheckpoint.store(m, "midpoint")
 	m.chase_min_gap = minf(m.chase_min_gap, rear)
 	_lean(m, sweeper, delta)
-	if m.chase_catch_t > 0.0:
-		# the catch beat: the machine keeps rolling over them, then the card
-		m.chase_catch_t -= delta
-		m.shake_t = maxf(m.shake_t, 0.4)
-		if m.chase_catch_t <= 0.0:
-			m._death(m.chase_catch_msg, "chase")
-		return
 	if m.auto_walk:
 		return  # the attract/CI bot carries an unsweepable dog
 	if rear > 0.0 and rear < CLOSE_SHAVE_GAP:
@@ -459,9 +455,9 @@ static func tick(m: Node2D, delta: float) -> void:
 		Sfx.play("save", 1.3)
 		m.float_text(m.dog.global_position, "close shave! +%d" % CLOSE_SHAVE_BONES, Color(0.75, 0.9, 1.0))
 	if sweeper.caught(m.human.global_position):
-		_catch(m, String(_behavior(m, held_profile(m)).get("caught_human", "")))
+		_catch(m, String(_behavior(m, held_profile(m)).get("caught_human", "")), "human")
 	elif sweeper.caught(m.dog.global_position):
-		_catch(m, String(_behavior(m, held_profile(m)).get("caught_dog", "")))
+		_catch(m, String(_behavior(m, held_profile(m)).get("caught_dog", "")), "dog")
 
 
 # How far the camera leans back up the street this frame: just enough to bring
@@ -480,12 +476,80 @@ static func _lean(m: Node2D, sweeper: Node2D, delta: float) -> void:
 	m.chase_lean = minf(eased, cap)
 
 
-# Caught: bring the machine to the front so it visibly rolls over them, shout
-# it, and hold the card back for CATCH_BEAT.
-static func _catch(m: Node2D, msg: String) -> void:
+# Caught: gameplay is decided now. The remaining beat moves only draw
+# transforms; body positions, the rope solver and the walk clock stay frozen.
+static func _catch(m: Node2D, msg: String, first: String) -> void:
 	var sweeper: Node2D = m.chase_sweeper
+	clear_catch_pose(m)
 	sweeper.z_index = 8
+	# frozen stops every self-running entity (bikes too) and the walk's input
+	m.frozen = true
 	m.chase_catch_t = CATCH_BEAT
 	m.chase_catch_msg = msg
+	m.chase_catch_first = first
+	m.dog.velocity = Vector2.ZERO
+	m.human.velocity = Vector2.ZERO
 	m.shake_t = 1.0
 	m.feed.say("SWEPT!", EventFeed.Tone.BAD)
+
+
+static func tick_catch(m: Node2D, delta: float) -> void:
+	m.chase_catch_elapsed = minf(float(m.chase_catch_elapsed) + delta, CATCH_BEAT)
+	m.chase_catch_t = maxf(CATCH_BEAT - float(m.chase_catch_elapsed), 0.0)
+	m.shake_t = maxf(m.shake_t, 0.4)
+	_apply_catch_pose(m, float(m.chase_catch_elapsed) / CATCH_BEAT)
+	if m.chase_catch_t <= 0.0:
+		m._death(m.chase_catch_msg, "chase")
+
+
+static func clear_catch_pose(m: Node2D) -> void:
+	m.chase_catch_t = 0.0
+	m.chase_catch_msg = ""
+	m.chase_catch_first = ""
+	m.chase_catch_elapsed = 0.0
+	if m.dog != null:
+		m.dog.presentation_offset = Vector2.ZERO
+		m.dog.presentation_rotation = 0.0
+		m.dog.queue_redraw()
+	if m.human != null:
+		m.human.presentation_offset = Vector2.ZERO
+		m.human.presentation_rotation = 0.0
+		m.human.queue_redraw()
+	if m.leash != null:
+		m.leash.presentation_dog_offset = Vector2.ZERO
+		m.leash.presentation_human_offset = Vector2.ZERO
+		m.leash.queue_redraw()
+	if m.chase_sweeper != null:
+		m.chase_sweeper.z_index = 0
+
+
+static func _apply_catch_pose(m: Node2D, amount: float) -> void:
+	amount = clampf(amount, 0.0, 1.0)
+	var first_p := smoothstep(0.0, 0.68, amount)
+	var other_p := smoothstep(0.14, 1.0, amount)
+	var side := -1.0 if String(m.chase_catch_first) == "dog" else 1.0
+	var first_world := Vector2(side * sin(first_p * PI) * 28.0,
+		-first_p * 82.0 - sin(first_p * PI) * 14.0)
+	var other_world := Vector2(-side * sin(other_p * PI) * 34.0,
+		-other_p * 58.0 - sin(other_p * PI) * 8.0)
+	var dog_world := first_world if String(m.chase_catch_first) == "dog" else other_world
+	var human_world := first_world if String(m.chase_catch_first) == "human" else other_world
+	m.dog.presentation_offset = dog_world.rotated(-float(m.dog.global_rotation))
+	m.human.presentation_offset = human_world.rotated(-float(m.human.global_rotation))
+	m.dog.presentation_rotation = side * 1.45 * first_p \
+		if String(m.chase_catch_first) == "dog" else -side * 1.05 * other_p
+	m.human.presentation_rotation = side * 1.25 * first_p \
+		if String(m.chase_catch_first) == "human" else -side * 0.95 * other_p
+	# each end turns with its body about the body's centre, so the handle stays
+	# in the tossed fist and the clip on the tumbling collar
+	var leash: Node2D = m.leash
+	var pts: Array[Vector2] = leash.pts
+	var dog_arm: Vector2 = (pts[0] if not pts.is_empty() else m.dog.global_position) - m.dog.global_position
+	var hand_arm: Vector2 = leash._hand_pos() - m.human.global_position
+	leash.presentation_dog_offset = dog_world \
+		+ dog_arm.rotated(float(m.dog.presentation_rotation)) - dog_arm
+	leash.presentation_human_offset = human_world \
+		+ hand_arm.rotated(float(m.human.presentation_rotation)) - hand_arm
+	m.dog.queue_redraw()
+	m.human.queue_redraw()
+	m.leash.queue_redraw()

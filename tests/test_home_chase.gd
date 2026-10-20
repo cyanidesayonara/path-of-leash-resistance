@@ -68,14 +68,54 @@ func _catch(main: Node2D, catch_human: bool) -> String:
 	main.msg_label.text = ""
 	main.chase_catch_t = 0.0
 	sw.z_index = 0
+	var dog_at: Vector2 = main.dog.global_position
+	var human_at: Vector2 = main.human.global_position
+	var rope_before: Array = main.leash.pts.duplicate()
+	var elapsed_before: float = main.elapsed
 	HomeChase.tick(main, 0.0)
 	if main.auto_walk:
 		return main.msg_label.text if main.frozen else ""
 	# the catch beat: caught, but the card waits while the machine rolls over
-	_check(not main.frozen and main.chase_catch_t > 0.0, "a catch starts the beat, not the card")
+	_check(main.frozen and main.chase_catch_t > 0.0 and main.msg_label.text == "",
+		"a catch freezes the walk and starts the beat, not the card")
 	_check(int(sw.z_index) > 0, "the machine comes to the front to roll over them")
-	HomeChase.tick(main, HomeChase.CATCH_BEAT * 0.5)
-	_check(not main.frozen, "half way through the beat the card is still waiting")
+	_check(str(main.get("chase_catch_first")) == ("human" if catch_human else "dog"),
+		"the presentation remembers which body reached the brushes first")
+	_check(main.dog.velocity == Vector2.ZERO and main.human.velocity == Vector2.ZERO,
+		"the decided catch stops gameplay body velocity")
+	# real frames, with a real pause press: the beat runs, nothing else does
+	var was_started: bool = main.started
+	main.started = true
+	Input.action_press("pause")
+	for k in range(6):
+		await physics_frame
+		await process_frame
+	Input.action_release("pause")
+	main.started = was_started
+	_check(not main.paused, "pause does nothing during the catch beat")
+	_check(main.chase_catch_t > 0.0 and main.chase_catch_t < HomeChase.CATCH_BEAT,
+		"real frames advance the catch beat")
+	main._physics_process(HomeChase.CATCH_BEAT * 0.25)
+	_check(main.msg_label.text == "", "half way through the beat the card is still waiting")
+	_check(main.dog.global_position == dog_at and main.human.global_position == human_at,
+		"catch animation leaves gameplay body positions frozen")
+	_check(main.leash.pts == rope_before, "catch animation never moves solver rope points")
+	_check(is_equal_approx(float(main.elapsed), elapsed_before),
+		"the walk clock freezes when the catch is decided")
+	var dog_draw: Variant = main.dog.get("presentation_offset")
+	var human_draw: Variant = main.human.get("presentation_offset")
+	var leash_dog: Variant = main.leash.get("presentation_dog_offset")
+	var leash_human: Variant = main.leash.get("presentation_human_offset")
+	_check(dog_draw is Vector2 and human_draw is Vector2
+		and ((dog_draw as Vector2).length() > 1.0 or (human_draw as Vector2).length() > 1.0),
+		"the catch beat moves the drawn bodies")
+	var hand_arm: Vector2 = main.leash._hand_pos() - main.human.global_position
+	var want_hand: Vector2 = (human_draw as Vector2).rotated(main.human.global_rotation) \
+		+ hand_arm.rotated(float(main.human.presentation_rotation)) - hand_arm
+	_check(leash_dog is Vector2 and leash_human is Vector2
+		and (leash_dog as Vector2).length() > 1.0
+		and (leash_human as Vector2).distance_to(want_hand) < 0.01,
+		"the visible leash handle stays in the tossed fist")
 	HomeChase.tick(main, HomeChase.CATCH_BEAT)
 	return main.msg_label.text if main.frozen else ""
 

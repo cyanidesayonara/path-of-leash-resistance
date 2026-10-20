@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-10-21 - The sweeper scoops you up instead of parking on you
+
+- Caught by the sweeper, Millie and your human no longer stand on top of the machine until the card comes up. The one who reached the brooms first is lifted up into them and tumbles to the side; the other is dragged in after, a beat later, turning the other way. The leash follows both, the handle staying in his tossed fist.
+- The catch is decided at once and the walk freezes for the beat: bodies, rope, walk clock, bikes and every other walker stop, and pause and restart wait for the card. Only the drawing moves.
+- The machine itself has more to look at: tyre tracks and comb marks in its wake, bristle tips and hubs on the brooms, wheel hubs, a council fleet panel, a bigger windscreen with a divider and glint, a darker bumper and two headlamps. It is still one draw call.
+- Continue clears every part of the catch pose.
+- Tests: the catch is now also checked with real frames and a real pause press.
+
 ## 2026-10-20 - Chase framing shows the danger before fear
 
 - Chase-only framing now leans toward an approaching threat earlier while preserving at least 110 rendered pixels of escape runway across desktop, landscape-phone and portrait framing. The cap accounts for leash separation, camera smoothing, shake and live southward speed, including turbo.

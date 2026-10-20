@@ -462,6 +462,12 @@ func _test_midpoint_and_exact_restore() -> void:
 	_check(exact, "every captured value is restored exactly")
 	_check(m.chase_sweeper == sw and sw.z_index == 0, "the same machine is back behind the pair")
 	_check(m.chase_catch_t <= 0.0 and String(m.chase_catch_msg) == "", "the catch is cleared")
+	_check(String(m.chase_catch_first) == ""
+		and m.dog.presentation_offset == Vector2.ZERO
+		and m.human.presentation_offset == Vector2.ZERO
+		and m.leash.presentation_dog_offset == Vector2.ZERO
+		and m.leash.presentation_human_offset == Vector2.ZERO,
+		"continue clears every catch presentation transform")
 	_check(not m.teeter.active and not m.grind.active and m.grind_rail == -1
 		and m.vault_t == 0.0 and m.vault_arc == 0.0, "no teeter, grind or pole swing is carried into the continue")
 	_check(m.elapsed >= elapsed_before, "the walk's clock is not wound back (%.2f, %.2f)" % [m.elapsed, elapsed_before])
@@ -513,8 +519,10 @@ func _test_midpoint_guards() -> void:
 	m.human.global_position = Vector2(m.walk_cx, later.y + 550.0)
 	sw.front_y = later.y - 2.0
 	HomeChase.tick(m, 0.1)
-	_check(sw.jammed() and sw.jam_at == later, "the catch beat rolls onto the later jam")
-	_check(var_to_str(m.chase_checkpoint) == dest, "a jam during the catch beat takes no midpoint; the destination stands")
+	_check(not sw.jammed() and is_equal_approx(float(sw.front_y), later.y - 2.0),
+		"the decided catch freezes threat gameplay instead of rolling onto a jam")
+	_check(var_to_str(m.chase_checkpoint) == dest,
+		"the frozen catch beat takes no midpoint; the destination stands")
 	await _drop(m)
 
 	# your human, then the dog, at or behind the kill line as it jams
