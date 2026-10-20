@@ -127,6 +127,9 @@ jobs:
       - name: Bring-Tofu-home herding regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tofu_home.gd
 
+      - name: Tofu hides only where she can be reached, every walk
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tofu_spots.gd
+
       - name: Per-level goal/star progression regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_goals.gd
 

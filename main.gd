@@ -146,6 +146,7 @@ const TangleGeom := preload("res://systems/tangle_geom.gd")
 const MoodWiring := preload("res://systems/mood_wiring.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
 const Goals := preload("res://systems/goals.gd")
+const TofuRoute := preload("res://systems/tofu_route.gd")
 const HudBuild := preload("res://hud/hud_build.gd")
 const MenuFlow := preload("res://hud/menu_flow.gd")
 const Rails := preload("res://systems/rails.gd")
@@ -12175,20 +12176,14 @@ func _enter_home() -> void:
 	_prepare_pairs_for_home(get_tree().get_nodes_in_group("pairs"))
 	# the runaway: Tofu is loose on the way home, to be herded south from
 	# hiding spot to hiding spot until she reaches HOME
-	if tofu_quest_active and not tofu_home:
-		var spots: Array[Vector2] = []
-		var n := 7
-		for i in range(n):
-			var ty := lerpf(GATE_Y + 500.0, HOME_Y + 30.0, float(i) / float(n - 1))
-			var tx := walk_cx + (walk_half * 0.6) * (1.0 if i % 2 == 0 else -1.0)
-			if i == n - 1:
-				tx = walk_cx
-			spots.append(Vector2(tx, ty))
+	var route: Dictionary = TofuRoute.plan(self) if tofu_quest_active and not tofu_home else {}
+	var spots: Array[Vector2] = route.get("spots", [] as Array[Vector2])
+	if not spots.is_empty():
 		var tf := Node2D.new()
 		tf.set_script(load("res://entities/tofu.gd"))
 		tf.z_index = 9
 		add_child(tf)
-		tf.setup(self, dog, spots)
+		tf.setup(self, dog, spots, route["routes"])
 		float_text(spots[0], "Tofu!? she got out again - get her home!", Color(1, 0.85, 0.7), POP_SAY)
 	if chase_active:
 		HomeChase.begin(self)

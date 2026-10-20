@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-21 - Tofu only hides where Millie can reach her
+
+- "Bring Tofu the cat home" could not be finished on most walks. Her seven hiding spots were fixed offsets from the walk's centre line, so where a walk bends or has furniture they landed off the path, in El Parc's pond, or inside a solid prop. Her darts between them ran through stalls, benches and buildings, so she seemed to jump into the side of the street and vanish. Her last spot was past the home line, so the walk could end while she was still running to it.
+- She now hides only on open path at her own point down the walk. Each spot is checked against the walls, water and anything solid, and each dart is clear: straight where it can be, round the obstacle through one or two waypoints where it cannot. Where a wall runs down the middle of the path (L'Estació), she stays on one side of it. Her last spot is short of the home line.
+- New `tests/test_tofu_spots.gd`, in CI: on every walk with the goal, every spot and every dart is reachable, open ground. El Barri is herded with the real dog, and the goal banks to the record.
+
 ## 2026-10-21 - The sweeper scoops you up instead of parking on you
 
 - Caught by the sweeper, Millie and your human no longer stand on top of the machine until the card comes up. The one who reached the brooms first is lifted up into them and tumbles to the side; the other is dragged in after, a beat later, turning the other way. The leash follows both, the handle staying in his tossed fist.
