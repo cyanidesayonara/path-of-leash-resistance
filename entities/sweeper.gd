@@ -80,6 +80,9 @@ var heading := 0.0
 var jams: Array[Vector2] = []
 var jam_t := 0.0
 var jam_side := 0.0
+# the jam it last snagged on (INF before the first), for home_chase to tell
+# a respite from a checkpoint
+var jam_at := Vector2(INF, INF)
 # world-space rects parked at the kerbs, which the brooms swing in round
 # (except a dumpster still waiting to jam one)
 var kerb_blocks: Array[Rect2] = []
@@ -123,6 +126,7 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 	for i in range(jams.size()):
 		if front_y >= jams[i].y:
 			jam_side = signf(jams[i].x - cx)
+			jam_at = jams[i]
 			jams.remove_at(i)
 			jam_t = JAM_SECS
 			jammed_now = true

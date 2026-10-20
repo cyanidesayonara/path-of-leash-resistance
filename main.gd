@@ -470,6 +470,15 @@ var chase_catch_msg := ""
 var chase_lean := 0.0
 # the brooms have come within a whisker; getting clear again is a CLOSE SHAVE
 var chase_shave_armed := false
+# where the walk home is (systems/home_chase.gd): "" until it begins, then
+# "warning", "head_start", "chase", or "hold" after a midpoint continue; and
+# the seconds left of a held phase
+var chase_phase := ""
+var chase_phase_t := 0.0
+# the latest checkpoint's snapshot (systems/chase_checkpoint.gd), run-local
+# and never saved; and whether the walk was just lost to the chase
+var chase_checkpoint: Dictionary = {}
+var chase_lost := false
 # where this walk's sweeper snags a broom on a dumpster and stalls (level data)
 var chase_jams: Array[Vector2] = []
 var chase_kerb_blocks: Array[Rect2] = []
@@ -931,7 +940,9 @@ func _ready() -> void:
 	# --at-freedom drops her straight into the off-leash space. Walking there
 	# takes half a minute of real time per look, which is no way to iterate on
 	# how the dog beach or the clearing is drawn.
-	if "--at-freedom" in OS.get_cmdline_user_args():
+	if "--at-home" in OS.get_cmdline_user_args():
+		start_at_home()
+	elif "--at-freedom" in OS.get_cmdline_user_args():
 		started = true
 		frozen = false
 		dog.global_position = Vector2(640.0, GATE_Y - 260.0)
@@ -953,6 +964,23 @@ func _ready() -> void:
 		if problems.is_empty():
 			print("SELFTEST OK [%s]" % lvl)
 		get_tree().quit(1 if not problems.is_empty() else 0)
+
+
+# --at-home: the selected walk started already turned for home, south of the
+# gate, whatever the star gate says, so a locked walk's chase can be played.
+# Nothing from it reaches the save. On a chase walk the destination
+# checkpoint, the warning and the head start follow as they would anyway.
+func start_at_home() -> void:
+	Game.persist = false
+	MenuFlow.start_walk(self)
+	var hy := GATE_Y + 700.0
+	var he := walk_edges(hy)
+	var hx := (he.x + he.y) * 0.5
+	dog.global_position = Vector2(hx + 30.0, hy - 60.0)
+	human.global_position = Vector2(hx - 20.0, hy + 40.0)
+	cam.position = dog.global_position
+	leash.resnap()
+	_enter_home()
 
 
 # a small screen gets a bigger interface, the same walk (hud/ui_scale.gd)
@@ -8190,14 +8218,7 @@ func _update_hud() -> void:
 			hud_status = "FETCH! BRING IT BACK  %d/%d   %ds" % [romp_catches, romp_target, int(ceil(romp_timer))]
 	elif phase == "home":
 		if chase_active and chase_sweeper != null:
-			if chase_sweeper.jammed():
-				hud_status = "IT'S STUCK! CATCH YOUR BREATH"
-			elif chase_kind == "both":
-				hud_status = "RUN HOME TOGETHER!"
-			elif chase_kind == "bolt":
-				hud_status = "HE'S RUNNING! KEEP UP"
-			else:
-				hud_status = "RUN! DON'T LET IT CATCH YOU"
+			hud_status = HomeChase.banner(self)
 		elif tofu_quest_active and not tofu_home:
 			hud_status = "GET THE CAT HOME! FOLLOW HER"
 		else:

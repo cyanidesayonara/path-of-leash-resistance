@@ -26,6 +26,8 @@ extends RefCounted
 
 const TutorialSteps := preload("res://systems/tutorial.gd")
 const UiIcons := preload("res://hud/ui_icons.gd")
+const HomeChase := preload("res://systems/home_chase.gd")
+const ChaseCheckpoint := preload("res://systems/chase_checkpoint.gd")
 
 const MAIN_ITEMS := ["play", "tutorial", "shop", "progress", "settings", "exit"]
 const MAIN_LABELS := {"play": "PLAY", "tutorial": "TUTORIAL", "shop": "WARDROBE",
@@ -124,6 +126,9 @@ static func end_prompts(m: Node2D) -> Array:
 		return [["plant", "on to El Barri"], ["back", "walk select"], ["restart", "practice again"]]
 	if m.finished:
 		return [["restart", "walk it again"], ["back", "walk select"]]
+	# lost to the chase with a checkpoint held: retry picks up from it
+	if HomeChase.can_continue(m):
+		return [["restart", "continue"], ["back", "walk select"]]
 	return [["restart", "try again"], ["back", "walk select"]]
 
 
@@ -625,8 +630,9 @@ static func start_tutorial(m: Node2D) -> void:
 
 
 # Every menu that leaves for another walk or screen state reloads the scene
-# through here.
+# through here, and none of them keeps a chase checkpoint.
 static func reload(m: Node2D) -> void:
+	ChaseCheckpoint.clear(m)
 	if reload_hook.is_valid():
 		reload_hook.call()
 		return
@@ -661,7 +667,11 @@ static func tick_end(m: Node2D) -> bool:
 		to_first_walk(m)
 		return true
 	if Input.is_action_just_pressed("restart"):
-		restart_walk(m)
+		if HomeChase.can_continue(m):
+			Sfx.play("ui")
+			HomeChase.continue_run(m)
+		else:
+			restart_walk(m)
 		return true
 	if back_pressed():
 		to_walk_select(m)

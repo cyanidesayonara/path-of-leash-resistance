@@ -89,6 +89,8 @@ func _run() -> void:
 		main.chase_active = true
 		main.chase_kind = kind
 		HomeChase.begin(main)
+		# past the warning and the head start (tests/test_chase_checkpoint.gd)
+		HomeChase.release(main)
 		var sw: Node2D = main.chase_sweeper
 		_check(sw != null and sw.get_parent() == main, "%s: begin() adds the machine to the scene" % kind)
 		if sw == null:
@@ -136,6 +138,7 @@ func _run() -> void:
 		"warning": "PROBE", "caught_human": "PROBE HUMAN\n\nsecond line", "caught_dog": "PROBE DOG\n\nsecond line",
 		"bands": []}
 	HomeChase.begin(pf, custom)
+	HomeChase.release(pf)
 	_check(pf.get("chase_profile") is Dictionary and String(pf.get("chase_profile").get("id", "")) == "probe",
 		"begin() holds the profile it was given")
 	var probe_human := await _catch(pf, true)
@@ -163,6 +166,7 @@ func _run() -> void:
 	var dy: float = cm.dog.global_position.y
 	cm.chase_jams = [Vector2(800.0, dy - 2000.0), Vector2(800.0, dy + 400.0)] as Array[Vector2]
 	HomeChase.begin(cm)
+	HomeChase.release(cm)
 	var csw: Node2D = cm.chase_sweeper
 	_check(csw.jams.size() == 1 and csw.jams[0].y > csw.front_y,
 		"only the dumpsters still ahead of the machine can jam it (%d)" % csw.jams.size())

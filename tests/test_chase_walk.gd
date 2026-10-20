@@ -8,8 +8,8 @@ extends SceneTree
 # walk draws exactly the random numbers it always did; and La Neteja's lane
 # carries only content authored for it (no manholes, no market bins).
 #
-# Checkpoints and respites are the next layer (tests/test_chase_checkpoint.gd
-# once it exists); this test only pins the data boundary they will read.
+# Checkpoints, the warning and the head start are tests/test_chase_checkpoint.gd;
+# this test pins the profile and its bands, the data that layer reads.
 
 var HomeChase: GDScript
 var checks := 0
@@ -84,6 +84,23 @@ func _run() -> void:
 	for key: String in ["warning", "caught_human", "caught_dog"]:
 		_check(String(prof.get(key, "")).length() > 4, "its %s copy is written" % key)
 	_check(prof.get("bands") is Array, "it leaves an ordered-bands list for respites and checkpoints")
+	# the bands, in the order the way home meets them: the first dumpster jam
+	# a respite, the later one the respite that is also the midpoint checkpoint
+	var bands: Array = prof.get("bands", [])
+	var jam_ys: Array = []
+	for j: float in load("res://world/level_build.gd").NETEJA_JAMS:
+		jam_ys.append(j)
+	# the destination is the far (most negative) end, so ascending is the
+	# order the way home meets them
+	jam_ys.sort()
+	_check(bands.size() == 2, "La Neteja has two chase bands (%d)" % bands.size())
+	if bands.size() == 2:
+		_check(is_equal_approx(float(bands[0].get("jam_y", 0.0)), float(jam_ys[0]))
+			and is_equal_approx(float(bands[1].get("jam_y", 0.0)), float(jam_ys[1])),
+			"the bands are the authored jams, nearest the destination first (%s)" % str(jam_ys))
+		_check(not bool(bands[0].get("checkpoint", false)) and bool(bands[1].get("checkpoint", false)),
+			"only the later jam is a checkpoint")
+	_check(HomeChase.profile_for("street").get("bands", []).is_empty(), "an ordinary walk has no bands")
 
 	# --- ordinary play on La Neteja: always the sweeper, same draws ---
 	var nm := await _fresh_main("neteja")
@@ -201,7 +218,8 @@ func _run() -> void:
 	_check(bm.get("chase_profile") is Dictionary and String(bm.get("chase_profile").get("id", "")) == "neteja"
 		and String(bm.get("chase_profile").get("kind", "")) == "sweeper", "main holds the profile the chase began with")
 	_check(bm.chase_jams.size() == 2 and sw.jams.size() == 2, "both dumpster respites are still wired to the machine (%d)" % sw.jams.size())
-	# its catch copy is the profile's
+	# its catch copy is the profile's, once the head start is over
+	HomeChase.release(bm)
 	bm.frozen = false
 	bm.msg_label.text = ""
 	bm.chase_catch_t = 0.0

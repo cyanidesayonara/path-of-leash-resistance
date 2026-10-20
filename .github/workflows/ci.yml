@@ -155,6 +155,11 @@ jobs:
       - name: Chase walk profile and content test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_chase_walk.gd
 
+      # the warning and head start, the two checkpoints, and continuing a
+      # chase loss: exact restore, no reward twice, restarts clear it
+      - name: Chase checkpoint and continue test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_chase_checkpoint.gd
+
       # headless runs skip the title, so this is the only check on the menu
       # steps, the wardrobe and the settings screen
       - name: Title, wardrobe and settings flow test
