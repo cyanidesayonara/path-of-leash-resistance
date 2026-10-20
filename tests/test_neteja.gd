@@ -135,6 +135,59 @@ func _run() -> void:
 	_check(at_kerb, "each bin stands at a kerb, inside the walk (within 40 px of its edge)")
 	_check(blocked, "each bin's collision extents are a chase kerb block")
 	_check(runnable_bins, "a 250 px runnable gap past every bin")
+	# the copy of each bin in the body poles (what the rope wraps and the
+	# owner's chore reads) and its real physics collider agree with the bin
+	var statics: Array[StaticBody2D] = []
+	for ch: Node in m.get_children():
+		if ch is StaticBody2D:
+			statics.append(ch as StaticBody2D)
+	var pole_synced := true
+	var collider_synced := true
+	var real_gap := true
+	for b: Vector2 in m.bins:
+		var found_pole := false
+		for i in range(m.body_pole_count):
+			if (m.poles[i] as Vector2).distance_to(b) < 1.0:
+				found_pole = true
+		pole_synced = pole_synced and found_pole
+		var found_body := false
+		for sb: StaticBody2D in statics:
+			var cs := sb.get_child(0) as CollisionShape2D if sb.get_child_count() > 0 else null
+			if cs != null and cs.shape is CircleShape2D and sb.position.distance_to(b) < 1.0 \
+					and is_equal_approx((cs.shape as CircleShape2D).radius, pole_r):
+				found_body = true
+		collider_synced = collider_synced and found_body
+		# the widest free span at the bin's depth between the actual colliders
+		var e2: Vector2 = m.walk_edges(b.y)
+		var cover: Array[Vector2] = []
+		for sb: StaticBody2D in statics:
+			if sb.get_child_count() == 0 or not sb.get_child(0) is CollisionShape2D:
+				continue
+			var sh: Shape2D = (sb.get_child(0) as CollisionShape2D).shape
+			var half := Vector2.ZERO
+			if sh is CircleShape2D:
+				half = Vector2((sh as CircleShape2D).radius, (sh as CircleShape2D).radius)
+			elif sh is RectangleShape2D:
+				half = (sh as RectangleShape2D).size * 0.5
+			else:
+				continue
+			if absf(sb.position.y - b.y) < half.y + 60.0:
+				cover.append(Vector2(maxf(sb.position.x - half.x, e2.x), minf(sb.position.x + half.x, e2.y)))
+		cover.sort_custom(func(p: Vector2, q: Vector2) -> bool: return p.x < q.x)
+		var cur := e2.x
+		var wide := 0.0
+		for sp2: Vector2 in cover:
+			if sp2.y <= sp2.x:
+				continue
+			wide = maxf(wide, sp2.x - cur)
+			cur = maxf(cur, sp2.y)
+		wide = maxf(wide, e2.y - cur)
+		real_gap = real_gap and wide >= 250.0
+		if wide < 250.0:
+			print("collider gap at bin %s is %.0f" % [b, wide])
+	_check(pole_synced, "each bin has a body pole at its own position (within 1 px)")
+	_check(collider_synced, "each bin has a physics collider at its own position")
+	_check(real_gap, "the real colliders leave a 250 px runnable gap at every bin")
 	# the brooms react: with the bin in the blocks, the broom on its side
 	# swings in; without it, it stays out at the kerb
 	var swept := true

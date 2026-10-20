@@ -1290,6 +1290,16 @@ static func fit_props_to_corridor(m: Node2D) -> void:
 	# here. Its rope flanks are appended after this fit from that same centre.
 
 
+# The bins are copied into the body poles (solid, rope-wrapped, markable)
+# just before body_pole_count is set, so they are its last entries. The fit
+# pulls those copies in with every other pole; a walk that exempts its bins
+# from the fit (La Neteja) puts the copies back where the bins are.
+static func sync_bin_poles(m: Node2D) -> void:
+	var first: int = m.body_pole_count - m.bins.size()
+	for i in range(m.bins.size()):
+		m.poles[first + i] = m.bins[i]
+
+
 static func build_level_data(m: Node2D) -> void:
 	apply_corridor(m)
 	var hyd_list: Array[Vector2] = []
@@ -1876,6 +1886,8 @@ static func build_level_data(m: Node2D) -> void:
 		m.lane_state.append({"t": randf_range(1.0, 2.5), "phase": 0, "dir": 1})
 	build_substance_zones(m)
 	fit_props_to_corridor(m)
+	if m.lvl == "neteja":
+		sync_bin_poles(m)
 	# after the fit, deliberately: the verge is the one place whose contents
 	# must NOT be pulled onto the pavement
 	build_verge(m)
