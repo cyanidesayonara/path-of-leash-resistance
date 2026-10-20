@@ -253,7 +253,8 @@ const NETEJA_SCOOTERS: Array = [[-1450.0, false], [-2350.0, true], [-3200.0, fal
 # the dumpsters the sweeper snags a broom on, by y: the chase's two respites
 const NETEJA_JAMS: Array[float] = [-3600.0, -1900.0]
 # the street's own bins, by y and kerb: the bag chore needs somewhere to go.
-# They stand between the dumpsters, off every hydrant and lamppost.
+# Each is a solid kerb obstacle, set between the dumpsters and clear of every
+# hydrant, snack, crate stack and lamppost.
 const NETEJA_BINS: Array = [[-600.0, false], [-3000.0, true]]
 # the pee posts and the dropped snacks. Listed here so they are La Neteja's
 # own content, not whatever the market skeleton it was cut from leaves behind.
@@ -292,7 +293,8 @@ static func neteja(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 	# the market skeleton's open manholes do not belong here: four warning
 	# cones round a hole in the middle of the chase
 	m.manholes = Array([], TYPE_VECTOR2, &"", null)
-	# its own bins, not the market's four: those stood in the chase lane
+	# the market skeleton's four bins do not belong to this street. Two of
+	# its own, at the kerbs (the fit below leaves them where they are)
 	m.bins = Array([], TYPE_VECTOR2, &"", null)
 	for bn: Array in NETEJA_BINS:
 		m.bins.append(neteja_kerb(m, float(bn[0]), bool(bn[1]), 26.0))
@@ -335,6 +337,9 @@ static func neteja(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 			m.chase_jams.append(Vector2(d.x, d.y - NETEJA_DUMPSTER.y * 0.5 - 4.0))
 	for sp: Vector2 in m.scooters:
 		m.chase_kerb_blocks.append(Rect2(sp - Vector2(16.0, 28.0), Vector2(32.0, 56.0)))
+	# a bin is a pole-sized body at the kerb: the brooms swing in round it
+	for bn: Vector2 in m.bins:
+		m.chase_kerb_blocks.append(Rect2(bn - Vector2(m.POLE_RADIUS, m.POLE_RADIUS), Vector2(m.POLE_RADIUS, m.POLE_RADIUS) * 2.0))
 	# what the water truck left: puddles in the gutters and down the middle
 	for pz: Array in [[-800.0, 0.2], [-1650.0, 0.75], [-2550.0, 0.3], [-3400.0, 0.7], [-4150.0, 0.35]]:
 		m.patches.append({"y": float(pz[0]), "at": float(pz[1]), "rx": 60.0, "ry": 34.0,
@@ -1264,6 +1269,9 @@ static func fit_props_to_corridor(m: Node2D) -> void:
 			continue
 		# La Neteja's crates are already at the kerb, beside the dumpsters
 		if m.lvl == "neteja" and arr == m.cone_spots:
+			continue
+		# ...and so are its bins: refitting would pull them in off the kerb
+		if m.lvl == "neteja" and arr == m.bins:
 			continue
 		for i in range(arr.size()):
 			var p: Vector2 = arr[i]

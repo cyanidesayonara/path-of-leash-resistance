@@ -15,7 +15,7 @@ extends RefCounted
 # the ordered respites and checkpoints of the chase home, which is the data
 # boundary the checkpoint layer reads; nothing fills it yet.
 # The developer hooks --chase, --bolt and --rescue force a named behavior on
-# any walk, profile or not; their numbers and copy live in HOOK_KINDS.
+# any walk, profile or not; their numbers and copy come from kind_behavior.
 
 const CHASE_SPEED := 140.0
 const CHASE_SPEED_BOLT := 205.0
@@ -46,12 +46,13 @@ const SWEEPER_SCRIPT := "res://entities/sweeper.gd"
 const EventFeed := preload("res://hud/event_feed.gd")
 
 
-# What each behavior kind is, whoever asks for it: its speed, whether the
-# owner bolts, what is shouted when it starts and what a catch says. A
-# profile fixes one kind for its walk; the developer hooks pick any.
+# The numbers and copy of one behavior kind ("sweeper", "bolt" or "both";
+# anything else is the sweeper): its speed, whether the owner bolts, what is
+# shouted when it starts and what a catch says. A profile fixes one kind for
+# its walk; the developer hooks pick any.
 # "warning_color" present means the warning floats over the owner; absent, it
 # is a feed shout.
-static func hook_kind(kind: String) -> Dictionary:
+static func kind_behavior(kind: String) -> Dictionary:
 	match kind:
 		"bolt":
 			return {
@@ -83,7 +84,7 @@ static func hook_kind(kind: String) -> Dictionary:
 static func profile_for(level: String) -> Dictionary:
 	if level != CHASE_LEVEL:
 		return {}
-	var p := hook_kind("sweeper")
+	var p := kind_behavior("sweeper")
 	p["id"] = CHASE_LEVEL
 	p["script"] = SWEEPER_SCRIPT
 	p["bands"] = []
@@ -91,23 +92,31 @@ static func profile_for(level: String) -> Dictionary:
 
 
 # The profile a walk runs its chase by: its own, or for a chase forced onto a
-# walk that has none, the sweeper script with the hooks' numbers and copy.
+# walk that has none, the sweeper script with kind_behavior's numbers and copy.
 static func active_profile(m: Node2D) -> Dictionary:
 	var p := profile_for(m.lvl)
 	if p.is_empty():
-		p = hook_kind("sweeper")
+		p = kind_behavior("sweeper")
 		p["id"] = "hook"
 		p["script"] = SWEEPER_SCRIPT
 		p["bands"] = []
 	return p
 
 
+# The profile this chase began with (begin() holds it on main). A chase that
+# was set up without begin() falls back to the walk's active profile.
+static func held_profile(m: Node2D) -> Dictionary:
+	if m.chase_profile.is_empty():
+		return active_profile(m)
+	return m.chase_profile
+
+
 # The numbers and copy for this walk's chase kind: the profile's when it is
-# the profile's own kind, the developer hook's otherwise.
+# the profile's own kind, kind_behavior's (a developer hook's) otherwise.
 static func _behavior(m: Node2D, profile: Dictionary) -> Dictionary:
 	if String(profile.get("kind", "")) == String(m.chase_kind):
 		return profile
-	return hook_kind(String(m.chase_kind))
+	return kind_behavior(String(m.chase_kind))
 
 
 # At level start. La Neteja always gets one; any walk can be forced with
@@ -154,6 +163,9 @@ static func roll(m: Node2D, args: PackedStringArray = OS.get_cmdline_user_args()
 static func begin(m: Node2D, profile: Dictionary = {}) -> void:
 	if profile.is_empty():
 		profile = active_profile(m)
+	# the one profile the rest of this chase (the catch copy, later the
+	# bands) is read from
+	m.chase_profile = profile
 	var behavior := _behavior(m, profile)
 	var owner_flees: bool = behavior.get("flee", false)
 	var threat_script = profile["script"]
@@ -237,9 +249,9 @@ static func tick(m: Node2D, delta: float) -> void:
 		Sfx.play("save", 1.3)
 		m.float_text(m.dog.global_position, "close shave! +%d" % CLOSE_SHAVE_BONES, Color(0.75, 0.9, 1.0))
 	if sweeper.caught(m.human.global_position):
-		_catch(m, String(_behavior(m, active_profile(m))["caught_human"]))
+		_catch(m, String(_behavior(m, held_profile(m)).get("caught_human", "")))
 	elif sweeper.caught(m.dog.global_position):
-		_catch(m, String(_behavior(m, active_profile(m))["caught_dog"]))
+		_catch(m, String(_behavior(m, held_profile(m)).get("caught_dog", "")))
 
 
 # How far the camera leans back up the street this frame: just enough to

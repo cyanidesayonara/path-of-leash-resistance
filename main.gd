@@ -457,6 +457,8 @@ const HOME_Y := 320.0
 var chase_active := false
 var chase_sweeper: Node2D
 var chase_kind := "sweeper"  # "sweeper" (slow, drag the owner) or "bolt" (fast, owner drags you)
+# the profile HomeChase.begin started this chase with; empty until it begins
+var chase_profile: Dictionary = {}
 # the closest the machine has come to the dog or the human this chase (px);
 # INF until it starts. The "outrun" goal reads it.
 var chase_min_gap := INF

@@ -135,6 +135,47 @@ func _run() -> void:
 			HomeChase.roll(nm, PackedStringArray([pair[0]]))
 			_check(bool(nm.chase_active) and String(nm.chase_kind) == pair[1],
 				"%s forces %s on %s (got %s)" % [pair[0], pair[1], lv, nm.chase_kind])
+	# --- the draws on every path that changes them ---
+	# a hook forces the roll and names its kind: no draw at all. auto_walk and
+	# daily skip the old 25% roll, so only La Neteja's kind draw is left. The
+	# tutorial still draws the roll but never the kind.
+	var game: Node = root.get_node("Game")
+	var draw_cases := [
+		# label, level, args, auto_walk, daily, tutorial, draws, chases
+		["hook on street", "street", ["--bolt"], false, false, false, 0, true],
+		["hook on La Neteja", "neteja", ["--rescue"], false, false, false, 0, true],
+		["hook with auto_walk", "street", ["--chase"], true, false, false, 0, true],
+		["hook on a daily", "street", ["--bolt"], false, true, false, 0, true],
+		["hook in the tutorial", "street", ["--rescue"], false, false, true, 0, false],
+		["auto_walk on street", "street", [], true, false, false, 0, false],
+		["auto_walk on La Neteja", "neteja", [], true, false, false, 1, true],
+		["daily on street", "street", [], false, true, false, 0, false],
+		["daily on La Neteja", "neteja", [], false, true, false, 1, true],
+		["tutorial on street", "street", [], false, false, true, 1, false],
+		["tutorial on La Neteja", "neteja", [], false, false, true, 1, false],
+	]
+	for dc: Array in draw_cases:
+		var ok_draws := true
+		var ok_chase := true
+		for sd in range(40):
+			nm.lvl = dc[1]
+			nm.auto_walk = dc[3]
+			game.daily = dc[4]
+			nm.tutorial_mode = dc[5]
+			nm.chase_active = false
+			var want := _next_after(sd, int(dc[6]))
+			seed(sd)
+			HomeChase.roll(nm, PackedStringArray(dc[2]))
+			ok_draws = ok_draws and is_equal_approx(randf(), want)
+			# the ordinary street rolls nothing in these paths, so any chase
+			# came from the hook or the profile
+			ok_chase = ok_chase and bool(nm.chase_active) == bool(dc[7])
+		_check(ok_draws, "%s draws exactly %d numbers" % [dc[0], dc[6]])
+		_check(ok_chase, "%s %s a chase" % [dc[0], "starts" if dc[7] else "does not start"])
+	game.daily = false
+	nm.auto_walk = false
+	nm.tutorial_mode = false
+
 	nm.lvl = "neteja"
 	nm.auto_walk = false
 	nm.tutorial_mode = true
@@ -157,6 +198,8 @@ func _run() -> void:
 	_check(sw != null and String(sw.kind) == "sweeper" and is_equal_approx(float(sw.speed), HomeChase.CHASE_SPEED),
 		"La Neteja's machine is the slow sweeper")
 	_check(not bool(bm.human.panic), "your human stays oblivious")
+	_check(bm.get("chase_profile") is Dictionary and String(bm.get("chase_profile").get("id", "")) == "neteja"
+		and String(bm.get("chase_profile").get("kind", "")) == "sweeper", "main holds the profile the chase began with")
 	_check(bm.chase_jams.size() == 2 and sw.jams.size() == 2, "both dumpster respites are still wired to the machine (%d)" % sw.jams.size())
 	# its catch copy is the profile's
 	bm.frozen = false
@@ -183,6 +226,8 @@ func _run() -> void:
 	var psw: Node2D = pm.chase_sweeper
 	_check(psw != null and "probe_marker" in psw, "begin instantiates whatever threat script the profile names")
 	_check(psw != null and is_equal_approx(float(psw.speed), 77.0), "and takes the profile's speed")
+	_check(pm.get("chase_profile") is Dictionary and String(pm.get("chase_profile").get("id", "")) == "probe",
+		"and main holds that profile")
 	await _drop(pm)
 
 	# forced behaviour on La Neteja still runs the named machine

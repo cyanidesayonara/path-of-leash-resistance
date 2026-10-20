@@ -7,6 +7,7 @@ Append-only session history, newest first.
 - The chase now has a profile per walk (`systems/home_chase.gd`): threat script, fixed behavior and speed, warning and caught copy, and an empty list of bands for the checkpoint work to fill. La Neteja's is the street sweeper, every run, with an oblivious human; the kind draw is still made so seeded walks replay unchanged, and its result is ignored. `--chase`, `--bolt` and `--rescue` still force their named behavior.
 - La Neteja stops carrying the market skeleton's four bins; it has two of its own at the kerbs. Its pee posts and snacks are listed in its own builder, in the same places as before.
 - New `tests/test_chase_walk.gd`, registered in CI.
+- Review fixes: the chase holds the profile it began with (`main.chase_profile`) and reads its catch copy from it. The two bins really stand at the kerbs now (the corridor fit had pulled them in towards the middle of the street), and the sweeper's brooms swing in round them like the dumpsters and scooters. `hook_kind` is now `kind_behavior`.
 
 ## 2026-10-20 - The browser build has sound again
 
