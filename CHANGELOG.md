@@ -2,6 +2,10 @@
 
 Append-only session history, newest first.
 
+## 2026-10-20 - The browser build has sound again
+
+- Godot 4.7's web sample mixer inserts a bus added at runtime before Master, then disconnects Master from the speakers. The procedural soundtrack added its Music bus that way, silencing both music and effects in every browser. The bus now takes the web-safe append path. Native audio is unchanged.
+
 ## 2026-10-20 - What's new for 1.61
 
 - The Store and itch notes now describe everything since v1.60: Dia de Partit, the redrawn walks, the leash catching what you can see, and the finished intro. Nothing is tagged.
