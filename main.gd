@@ -11996,10 +11996,36 @@ func _spawn_challenger() -> void:
 		return
 	var giver := Node2D.new()
 	giver.set_script(load("res://entities/challenger.gd"))
-	giver.position = Vector2(walk_cx + 170.0, -1600.0)
+	var base := Vector2(walk_cx, -1600.0)
+	for offset: Vector2 in [
+		Vector2(170.0, 0.0), Vector2(-170.0, 0.0),
+		Vector2(170.0, -100.0), Vector2(-170.0, -100.0),
+		Vector2(170.0, 100.0), Vector2(-170.0, 100.0),
+	]:
+		giver.position = base + offset
+		if _challenger_clear_of_trees(giver.position):
+			break
 	giver.z_index = 6
 	add_child(giver)
 	giver.setup(self, dog, 5, 12.0)
+
+
+func _challenger_clear_of_trees(at: Vector2) -> bool:
+	const PERSON_R := 24.0
+	for i in range(deco_pole_count):
+		var kind := pole_tree(i)
+		if kind != TREE_NONE and at.distance_to(poles[i]) < _crown_r(kind, i) + PERSON_R:
+			return false
+	for i in range(trees.size()):
+		if lvl == "scrap":
+			break
+		var kind := TREE_PALM if freedom_kind == "beach" else TREE_FOREST
+		if lvl == "barri":
+			kind = TREE_OAK
+		var r := 34.0 if kind == TREE_OAK else 34.0 * 0.85
+		if at.distance_to(trees[i]) < r + PERSON_R:
+			return false
+	return true
 
 
 func _neighbour_fetch() -> void:
