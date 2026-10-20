@@ -11,6 +11,7 @@ extends RefCounted
 
 const Mood := preload("res://systems/mood.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
+const HomeChase := preload("res://systems/home_chase.gd")
 
 
 static func tick(m: Node2D, delta: float) -> void:
@@ -108,10 +109,12 @@ static func _ambient(m: Node2D, delta: float) -> void:
 	# hum at a corridor's distance and climbs hard over the last stretch.
 	# Suppressed under --shot-sweeper only, so the machine's paint can be
 	# reviewed in daylight rather than through a frightened dog's eyes.
-	# Only once the machine is on the road: chase_active is set at level start,
-	# and reading it alone kept the dog SCARED the whole way OUT, before there
-	# was anything behind her at all.
-	if m.chase_active and m.chase_sweeper != null and not "--shot-sweeper" in OS.get_cmdline_user_args():
+	# Only while the machine is on the road and moving on her: chase_active is
+	# set at level start, and reading it alone kept the dog SCARED the whole
+	# way OUT, before there was anything behind her at all. Held (the warning,
+	# the head start, a countdown) or stuck on a dumpster, it adds nothing,
+	# however close; what she already has fades on its own.
+	if HomeChase.advancing(m) and not "--shot-sweeper" in OS.get_cmdline_user_args():
 		var near := clampf(1.0 - m.chase_sweeper.gap_to(m.dog.global_position) / 900.0, 0.0, 1.0)
 		m.mood.bump(Mood.M.SCARED, delta * (0.16 + 0.90 * near * near))
 

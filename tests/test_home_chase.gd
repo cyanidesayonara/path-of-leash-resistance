@@ -89,6 +89,8 @@ func _run() -> void:
 		main.chase_active = true
 		main.chase_kind = kind
 		HomeChase.begin(main)
+		# past the warning and the head start (tests/test_chase_checkpoint.gd)
+		HomeChase.release(main)
 		var sw: Node2D = main.chase_sweeper
 		_check(sw != null and sw.get_parent() == main, "%s: begin() adds the machine to the scene" % kind)
 		if sw == null:
@@ -122,6 +124,39 @@ func _run() -> void:
 		_check(await _catch(main, true) == "", "%s: the autowalk bot is never swept" % kind)
 		await _drop(main)
 
+	# the profile begin() runs is held on main, and its copy is what a catch
+	# reads: a custom profile's text survives into tick, even on a walk whose
+	# own profile says something else
+	var pf := await _fresh_main()
+	pf.auto_walk = false
+	pf.lvl = "neteja"
+	pf.chase_active = true
+	pf.chase_kind = "sweeper"
+	_check(pf.get("chase_profile") is Dictionary and pf.get("chase_profile").is_empty(),
+		"no profile is held before the chase begins")
+	var custom := {"id": "probe", "script": "res://entities/sweeper.gd", "kind": "sweeper", "speed": 140.0,
+		"warning": "PROBE", "caught_human": "PROBE HUMAN\n\nsecond line", "caught_dog": "PROBE DOG\n\nsecond line",
+		"bands": []}
+	HomeChase.begin(pf, custom)
+	HomeChase.release(pf)
+	_check(pf.get("chase_profile") is Dictionary and String(pf.get("chase_profile").get("id", "")) == "probe",
+		"begin() holds the profile it was given")
+	var probe_human := await _catch(pf, true)
+	var probe_dog := await _catch(pf, false)
+	_check(probe_human.get_slice("\n", 0) == "PROBE HUMAN", "a caught human reads the held profile's copy (got '%s')" % probe_human.get_slice("\n", 0))
+	_check(probe_dog.get_slice("\n", 0) == "PROBE DOG", "a caught dog reads the held profile's copy (got '%s')" % probe_dog.get_slice("\n", 0))
+	await _drop(pf)
+	# with no profile handed in, the walk's own is held
+	var own := await _fresh_main()
+	own.auto_walk = false
+	own.lvl = "neteja"
+	own.chase_active = true
+	own.chase_kind = "sweeper"
+	HomeChase.begin(own)
+	_check(own.get("chase_profile") is Dictionary and String(own.get("chase_profile").get("id", "")) == "neteja",
+		"begin() holds La Neteja's own profile by default")
+	await _drop(own)
+
 	# the chase level's set pieces, on a sweeper chase
 	var cm := await _fresh_main()
 	cm.auto_walk = false
@@ -131,6 +166,7 @@ func _run() -> void:
 	var dy: float = cm.dog.global_position.y
 	cm.chase_jams = [Vector2(800.0, dy - 2000.0), Vector2(800.0, dy + 400.0)] as Array[Vector2]
 	HomeChase.begin(cm)
+	HomeChase.release(cm)
 	var csw: Node2D = cm.chase_sweeper
 	_check(csw.jams.size() == 1 and csw.jams[0].y > csw.front_y,
 		"only the dumpsters still ahead of the machine can jam it (%d)" % csw.jams.size())
@@ -195,8 +231,9 @@ func _run() -> void:
 		mm.tofu_quest_active = true
 		seed(sd)
 		HomeChase.roll(mm)
-		always = always and bool(mm.chase_active) and not bool(mm.tofu_quest_active) 			and String(mm.chase_kind) in ["sweeper", "bolt", "both"]
-	_check(always, "La Neteja always gets a chase, and it replaces Tofu")
+		always = always and bool(mm.chase_active) and not bool(mm.tofu_quest_active) \
+			and String(mm.chase_kind) == "sweeper"
+	_check(always, "La Neteja always gets the sweeper chase, and it replaces Tofu")
 	await _drop(mm)
 
 	# the way out of a chase walk is not the chase: no dread before the machine

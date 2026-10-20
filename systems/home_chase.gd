@@ -8,6 +8,29 @@ extends RefCounted
 #
 # Static functions over main's state (chase_active, chase_kind,
 # chase_sweeper), which the HUD, the mood wiring and the tests also read.
+#
+# A chase walk owns one PROFILE (profile_for): the threat script to
+# instantiate, its fixed behavior kind and speed, and the warning and caught
+# copy. La Neteja's is the sweeper, always. The profile also carries "bands",
+# the ordered respites of the chase home, nearest the destination first; a
+# band marked "checkpoint" is where the midpoint checkpoint is taken.
+# The developer hooks --chase, --bolt and --rescue force a named behavior on
+# any walk, profile or not; their numbers and copy come from kind_behavior.
+#
+# THE PHASES of the walk home (main.chase_phase; "" before it begins):
+#   "warning"    the destination checkpoint is taken, then the warning is
+#                given, for WARNING_SECS
+#   "head_start" HEAD_START_SECS to get going
+#   "chase"      the machine runs, and only now can it catch anyone
+#   "hold"       a midpoint continue: the machine held at its jam for HOLD_SECS,
+#                then free at once; the countdown is the whole respite
+# Outside "chase" the machine does not advance, catch, or pay a close shave,
+# and (mood_wiring.gd, through advancing()) adds no fear. The midpoint is
+# never taken during a catch beat or with either of the pair at the kill
+# line. Any loss on the home leg (the machine, the phone, a hazard) can be
+# continued from the latest checkpoint (systems/chase_checkpoint.gd holds the
+# snapshot): the destination repeats the warning and head start, the
+# midpoint counts down at its jam.
 
 const CHASE_SPEED := 140.0
 const CHASE_SPEED_BOLT := 205.0
@@ -33,7 +56,97 @@ const LEAN_MAX := 90.0
 const LEAN_SHOW := 80.0
 const LEAN_RATE := 3.0
 
+# the warning, the head start after it, and a midpoint continue's countdown
+const WARNING_SECS := 1.2
+const HEAD_START_SECS := 3.0
+const HOLD_SECS := 3.0
+# a band's jam_y is its dumpster's depth; the jam point the machine snags on
+# is a little short of it
+const BAND_JAM_REACH := 100.0
+
+const SWEEPER_SCRIPT := "res://entities/sweeper.gd"
+# La Neteja's dumpster jams, by depth (world/level_build.gd NETEJA_JAMS):
+# the first the way home meets, then the later one, the midpoint
+const NETEJA_BANDS := [
+	{"id": "first_jam", "kind": "respite", "jam_y": -3600.0},
+	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
+]
+
 const EventFeed := preload("res://hud/event_feed.gd")
+const ChaseCheckpoint := preload("res://systems/chase_checkpoint.gd")
+
+
+# The numbers and copy of one behavior kind ("sweeper", "bolt" or "both";
+# anything else is the sweeper): its speed, whether the owner bolts, what is
+# shouted when it starts and what a catch says. A profile fixes one kind for
+# its walk; the developer hooks pick any.
+# "warning_color" present means the warning floats over the owner; absent, it
+# is a feed shout.
+static func kind_behavior(kind: String) -> Dictionary:
+	match kind:
+		"bolt":
+			return {
+				"kind": "bolt", "speed": CHASE_SPEED_BOLT, "flee": true,
+				"warning": "AAH!  YOUR HUMAN BOLTED!", "warning_color": Color(1, 0.6, 0.3),
+				"caught_human": "THEY GOT YOUR HUMAN\n\nYou pulled. You barked. It was not enough.",
+				"caught_dog": "NOBODY WAITED FOR YOU\n\nYou snagged, the leash went tight, and\nthey kept walking. They always keep walking.",
+			}
+		"both":
+			return {
+				"kind": "both", "speed": CHASE_SPEED_BOTH, "flee": true,
+				"warning": "FIRE TRUCK!  GO GO GO!", "warning_color": Color(1, 0.55, 0.25),
+				"caught_human": "THEY GOT YOUR HUMAN\n\nYou pulled. You barked. It was not enough.",
+				"caught_dog": "NOBODY WAITED FOR YOU\n\nYou snagged, the leash went tight, and\nthey kept walking. They always keep walking.",
+			}
+	return {
+		"kind": "sweeper", "speed": CHASE_SPEED, "flee": false,
+		"warning": "STREET SWEEPER! RUN!",
+		"caught_human": "THE SWEEPER GOT YOUR HUMAN\n\nThey never once looked up from the phone.\nYou did try to tell them.",
+		"caught_dog": "YOU WENT INTO THE BRUSHES\n\nYou came out suspiciously clean.\nThe walk did not come out at all.",
+	}
+
+
+# The chase profile of a walk, or an empty dictionary when it has none (every
+# walk but La Neteja). A fresh copy each call. Keys: "id", "script" (the
+# threat script, a path or a Script), "kind", "speed", "flee", "warning",
+# "caught_human", "caught_dog", and "bands" (the ordered respites of the
+# chase home: "id", "kind", "jam_y", and "checkpoint" on the midpoint).
+static func profile_for(level: String) -> Dictionary:
+	if level != CHASE_LEVEL:
+		return {}
+	var p := kind_behavior("sweeper")
+	p["id"] = CHASE_LEVEL
+	p["script"] = SWEEPER_SCRIPT
+	p["bands"] = NETEJA_BANDS.duplicate(true)
+	return p
+
+
+# The profile a walk runs its chase by: its own, or for a chase forced onto a
+# walk that has none, the sweeper script with kind_behavior's numbers and copy.
+static func active_profile(m: Node2D) -> Dictionary:
+	var p := profile_for(m.lvl)
+	if p.is_empty():
+		p = kind_behavior("sweeper")
+		p["id"] = "hook"
+		p["script"] = SWEEPER_SCRIPT
+		p["bands"] = []
+	return p
+
+
+# The profile this chase began with (begin() holds it on main). A chase that
+# was set up without begin() falls back to the walk's active profile.
+static func held_profile(m: Node2D) -> Dictionary:
+	if m.chase_profile.is_empty():
+		return active_profile(m)
+	return m.chase_profile
+
+
+# The numbers and copy for this walk's chase kind: the profile's when it is
+# the profile's own kind, kind_behavior's (a developer hook's) otherwise.
+static func _behavior(m: Node2D, profile: Dictionary) -> Dictionary:
+	if String(profile.get("kind", "")) == String(m.chase_kind):
+		return profile
+	return kind_behavior(String(m.chase_kind))
 
 
 # At level start. La Neteja always gets one; any walk can be forced with
@@ -44,13 +157,15 @@ const EventFeed := preload("res://hud/event_feed.gd")
 # The chase used to roll on a quarter of every walk. It lives on its own walk
 # now (#20), but the roll is still made, and ignored elsewhere: the randf()
 # calls are part of each walk's seeded sequence (dailies, --seed replays, the
-# soak), and dropping one would reshuffle everything drawn after it.
-static func roll(m: Node2D) -> void:
-	var args := OS.get_cmdline_user_args()
+# soak), and dropping one would reshuffle everything drawn after it. The same
+# goes for the kind draw on La Neteja: it is made, and the profile's fixed
+# kind wins.
+static func roll(m: Node2D, args: PackedStringArray = OS.get_cmdline_user_args()) -> void:
 	var chase_forced := "--chase" in args
 	var bolt_forced := "--bolt" in args
 	var rescue_forced := "--rescue" in args
-	var chase_walk: bool = m.lvl == CHASE_LEVEL
+	var profile := profile_for(m.lvl)
+	var chase_walk: bool = not profile.is_empty()
 	var forced := chase_forced or bolt_forced or rescue_forced
 	# the old roll, drawn exactly when it always was
 	var rolled: bool = forced or (not m.auto_walk and not Game.daily and randf() < 0.25)
@@ -68,13 +183,25 @@ static func roll(m: Node2D) -> void:
 		else:
 			var r := randf()
 			m.chase_kind = "sweeper" if r < 0.4 else ("bolt" if r < 0.75 else "both")
+			# ordinary play on a profiled walk: drawn, then ignored
+			if chase_walk:
+				m.chase_kind = String(profile["kind"])
 
 
-# On entering the home leg, when this walk rolled a chase.
-static func begin(m: Node2D) -> void:
-	var owner_flees: bool = m.chase_kind == "bolt" or m.chase_kind == "both"
+# On entering the home leg, when this walk rolled a chase. `profile` is the
+# walk's own unless a caller hands one in.
+static func begin(m: Node2D, profile: Dictionary = {}) -> void:
+	if profile.is_empty():
+		profile = active_profile(m)
+	# the one profile the rest of this chase (the catch copy, later the
+	# bands) is read from
+	m.chase_profile = profile
+	var behavior := _behavior(m, profile)
+	var threat_script = profile["script"]
+	if not threat_script is Script:
+		threat_script = load(String(threat_script))
 	var sweeper := Node2D.new()
-	sweeper.set_script(load("res://entities/sweeper.gd"))
+	sweeper.set_script(threat_script)
 	sweeper.kind = m.chase_kind
 	m.chase_sweeper = sweeper
 	m.add_child(sweeper)
@@ -83,11 +210,7 @@ static func begin(m: Node2D) -> void:
 	# threat. Anyone it draws over is already caught - see the catch beat.
 	m.move_child(sweeper, mini(m.dog.get_index(), m.human.get_index()))
 	m.chase_min_gap = INF
-	var spd := CHASE_SPEED
-	if m.chase_kind == "bolt":
-		spd = CHASE_SPEED_BOLT
-	elif m.chase_kind == "both":
-		spd = CHASE_SPEED_BOTH
+	var spd: float = behavior.get("speed", CHASE_SPEED)
 	# --shot-sweeper starts it right on your heels instead of a corridor
 	# away, so the machine can be photographed and its art reviewed. It
 	# spends the rest of the chase behind the camera, which is exactly how
@@ -102,21 +225,139 @@ static func begin(m: Node2D) -> void:
 	sweeper.kerb_blocks = m.chase_kerb_blocks.duplicate()
 	m.chase_lean = 0.0
 	m.chase_shave_armed = false
+	# the destination checkpoint, before anything is said
+	ChaseCheckpoint.store(m, "destination")
+	_warn(m, behavior)
+
+
+# The warning, and the head start that follows it: the machine is held
+# until both are over.
+static func _warn(m: Node2D, behavior: Dictionary) -> void:
+	m.chase_phase = "warning"
+	m.chase_phase_t = WARNING_SECS
 	m.shake_t = 1.0
-	if owner_flees:
+	if behavior.get("flee", false):
 		m.human.panic = true
-	if m.chase_kind == "both":
-		m.float_text(m.human.global_position, "FIRE TRUCK!  GO GO GO!", Color(1, 0.55, 0.25))
-	elif m.chase_kind == "bolt":
-		m.float_text(m.human.global_position, "AAH!  YOUR HUMAN BOLTED!", Color(1, 0.6, 0.3))
+	if behavior.has("warning_color"):
+		m.float_text(m.human.global_position, String(behavior.get("warning", "")), behavior["warning_color"])
 	else:
-		m.feed.say("STREET SWEEPER! RUN!", EventFeed.Tone.BAD)
+		m.feed.say(String(behavior.get("warning", "")), EventFeed.Tone.BAD)
+
+
+# The head start is over: the machine runs and can catch. Tests call this to
+# skip straight to the chase.
+static func release(m: Node2D) -> void:
+	m.chase_phase = "chase"
+	m.chase_phase_t = 0.0
+
+
+# Moving on the pair right now: what SCARED is fed by (mood_wiring.gd). Not
+# before or after the chase, not held by a warning, a head start or a
+# countdown, and not stuck on a dumpster.
+static func advancing(m: Node2D) -> bool:
+	var sweeper: Node2D = m.chase_sweeper
+	return m.chase_active and sweeper != null and String(m.chase_phase) == "chase" \
+		and not sweeper.jammed()
+
+
+# A held phase's frame: the clock runs down and the machine idles where it
+# is. Nothing advances, catches or pays.
+static func _hold(m: Node2D, sweeper: Node2D, delta: float) -> void:
+	sweeper.jammed_now = false
+	sweeper.freed_now = false
+	sweeper.rumble += delta
+	sweeper.global_position = Vector2(m.walk_cx, sweeper.front_y)
+	sweeper.queue_redraw()
+	_lean(m, sweeper, delta)
+	m.chase_phase_t = float(m.chase_phase_t) - delta
+	if m.chase_phase_t > 0.0:
+		return
+	match String(m.chase_phase):
+		"warning":
+			m.chase_phase = "head_start"
+			m.chase_phase_t = HEAD_START_SECS
+		"hold":
+			# the countdown was the respite: whatever was left of the jam goes
+			sweeper.jam_t = 0.0
+			_say_freed(m, sweeper)
+			release(m)
+		_:
+			release(m)
+
+
+static func _say_freed(m: Node2D, sweeper: Node2D) -> void:
+	Sfx.play("hiss", 0.6, -6.0)
+	m.float_text(Vector2(m.walk_cx + sweeper.sway, sweeper.front_y - 60.0), "VRRROOM", Color(1.0, 0.7, 0.4))
+
+
+# Whether the jam the machine just snagged on is the profile's checkpoint.
+static func _checkpoint_jam(m: Node2D, at: Vector2) -> bool:
+	for band: Dictionary in held_profile(m).get("bands", []):
+		if bool(band.get("checkpoint", false)) and absf(float(band.get("jam_y", INF)) - at.y) < BAND_JAM_REACH:
+			return true
+	return false
+
+
+# What the banner says on the walk home ("" with no chase on the road).
+static func banner(m: Node2D) -> String:
+	var sweeper: Node2D = m.chase_sweeper
+	if not m.chase_active or sweeper == null:
+		return ""
+	var left := int(ceil(maxf(float(m.chase_phase_t), 0.0)))
+	match String(m.chase_phase):
+		"warning":
+			return "HERE IT COMES! HEAD FOR HOME"
+		"head_start":
+			return "HEAD START! GO  %d" % left
+		"hold":
+			return "IT'S STILL STUCK! GO  %d" % left
+	if sweeper.jammed():
+		return "IT'S STUCK! CATCH YOUR BREATH"
+	if m.chase_kind == "both":
+		return "RUN HOME TOGETHER!"
+	if m.chase_kind == "bolt":
+		return "HE'S RUNNING! KEEP UP"
+	return "RUN! DON'T LET IT CATCH YOU"
+
+
+# The end card's retry is "continue": the walk was lost on the home leg, to
+# anything, with a checkpoint held. A loss on the way out has none.
+static func can_continue(m: Node2D) -> bool:
+	return not (m.chase_checkpoint as Dictionary).is_empty() and String(m.phase) == "home" \
+		and m.started and m.frozen and not m.finished and not m.paused and m.msg_label.visible
+
+
+# Back to the latest checkpoint, in place: its values replace the walk's,
+# the card goes, and the destination repeats its warning and head start
+# while the midpoint holds the machine at its jam for a countdown.
+static func continue_run(m: Node2D) -> void:
+	var snap: Dictionary = m.chase_checkpoint
+	ChaseCheckpoint.restore(m, snap)
+	m.chase_catch_t = 0.0
+	m.chase_catch_msg = ""
+	m.msg_label.visible = false
+	m.dim.visible = false
+	m.feed.clear()
+	m.frozen = false
+	Engine.time_scale = 1.0
+	if String(snap.get("id", "")) == "midpoint":
+		m.chase_phase = "hold"
+		m.chase_phase_t = HOLD_SECS
+		m.shake_t = 0.0
+	else:
+		_warn(m, _behavior(m, held_profile(m)))
+	m.cam.position = (m.dog.global_position + m.human.global_position) * 0.5 + Vector2(0.0, -60.0 - float(m.chase_lean))
+	m.cam.reset_smoothing()
+	m._update_hud()
 
 
 # Every physics frame of the home leg.
 static func tick(m: Node2D, delta: float) -> void:
 	var sweeper: Node2D = m.chase_sweeper
 	if sweeper == null:
+		return
+	if String(m.chase_phase) != "chase" and m.chase_catch_t <= 0.0:
+		_hold(m, sweeper, delta)
 		return
 	var rear: float = minf(sweeper.gap_to(m.dog.global_position), sweeper.gap_to(m.human.global_position))
 	sweeper.advance(delta, rear, m.dog.global_position.x - m.walk_cx)
@@ -128,8 +369,7 @@ static func tick(m: Node2D, delta: float) -> void:
 		m.float_text(Vector2(m.walk_cx + sweeper.jam_side * (m.walk_half - 40.0), sweeper.front_y), "CLONK", Color(1.0, 0.85, 0.5))
 		m.feed.say("IT'S JAMMED!", EventFeed.Tone.GOOD)
 	elif sweeper.freed_now:
-		Sfx.play("hiss", 0.6, -6.0)
-		m.float_text(Vector2(m.walk_cx + sweeper.sway, sweeper.front_y - 60.0), "VRRROOM", Color(1.0, 0.7, 0.4))
+		_say_freed(m, sweeper)
 	if sweeper.sweep_junk(m.get_tree().get_nodes_in_group("cones")) > 0:
 		Sfx.play("tangle", 0.8, -10.0)
 	# a low rumble the closer it gets to the dog
@@ -137,6 +377,12 @@ static func tick(m: Node2D, delta: float) -> void:
 	if gap < 260.0:
 		m.shake_t = maxf(m.shake_t, 0.25)
 	rear = minf(gap, sweeper.gap_to(m.human.global_position))
+	# held at its jam: the midpoint checkpoint, if this is its jam, and only
+	# with both of them clear of the brooms and no catch already rolling. A
+	# jam that fails this keeps the checkpoint before it.
+	if sweeper.jammed_now and m.chase_catch_t <= 0.0 and rear > 0.0 \
+			and _checkpoint_jam(m, sweeper.jam_at):
+		ChaseCheckpoint.store(m, "midpoint")
 	m.chase_min_gap = minf(m.chase_min_gap, rear)
 	_lean(m, sweeper, delta)
 	if m.chase_catch_t > 0.0:
@@ -157,15 +403,9 @@ static func tick(m: Node2D, delta: float) -> void:
 		Sfx.play("save", 1.3)
 		m.float_text(m.dog.global_position, "close shave! +%d" % CLOSE_SHAVE_BONES, Color(0.75, 0.9, 1.0))
 	if sweeper.caught(m.human.global_position):
-		if m.chase_kind == "sweeper":
-			_catch(m, "THE SWEEPER GOT YOUR HUMAN\n\nThey never once looked up from the phone.\nYou did try to tell them.")
-		else:
-			_catch(m, "THEY GOT YOUR HUMAN\n\nYou pulled. You barked. It was not enough.")
+		_catch(m, String(_behavior(m, held_profile(m)).get("caught_human", "")))
 	elif sweeper.caught(m.dog.global_position):
-		if m.chase_kind == "sweeper":
-			_catch(m, "YOU WENT INTO THE BRUSHES\n\nYou came out suspiciously clean.\nThe walk did not come out at all.")
-		else:
-			_catch(m, "NOBODY WAITED FOR YOU\n\nYou snagged, the leash went tight, and\nthey kept walking. They always keep walking.")
+		_catch(m, String(_behavior(m, held_profile(m)).get("caught_dog", "")))
 
 
 # How far the camera leans back up the street this frame: just enough to

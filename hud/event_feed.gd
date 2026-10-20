@@ -173,6 +173,13 @@ func toast(side: String, title: String, text: String, col: Color) -> void:
 	queue_redraw()
 
 
+func clear() -> void:
+	lines.clear()
+	toasts.clear()
+	flash_t = 0.0
+	queue_redraw()
+
+
 func set_banner(text: String, col: Color = Color(1.0, 0.92, 0.72)) -> void:
 	if text == banner:
 		return

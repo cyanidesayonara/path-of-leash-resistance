@@ -252,6 +252,21 @@ const NETEJA_DUMPSTER := Vector2(46.0, 90.0)
 const NETEJA_SCOOTERS: Array = [[-1450.0, false], [-2350.0, true], [-3200.0, false], [-4000.0, true]]
 # the dumpsters the sweeper snags a broom on, by y: the chase's two respites
 const NETEJA_JAMS: Array[float] = [-3600.0, -1900.0]
+# the street's own bins, by y and kerb: the bag chore needs somewhere to go.
+# Each is a solid kerb obstacle, set between the dumpsters and clear of every
+# hydrant, snack, crate stack and lamppost.
+const NETEJA_BINS: Array = [[-600.0, false], [-3000.0, true]]
+# the pee posts and the dropped snacks. Listed here so they are La Neteja's
+# own content, not whatever the market skeleton it was cut from leaves behind.
+const NETEJA_HYDRANTS: Array[Vector2] = [
+	Vector2(345, -600), Vector2(935, -1900), Vector2(345, -3600),
+	Vector2(935, -2900), Vector2(345, -4400),
+]
+const NETEJA_SNACKS: Array[Vector2] = [
+	Vector2(500, -900), Vector2(780, -1250), Vector2(620, -1800),
+	Vector2(540, -2380), Vector2(760, -3000), Vector2(600, -3650),
+	Vector2(820, -4250), Vector2(480, -4550),
+]
 
 
 static func neteja_kerb(m: Node2D, y: float, west: bool, inset: float) -> Vector2:
@@ -266,8 +281,10 @@ static func neteja_dumpsters(m: Node2D) -> Array[Vector2]:
 	return out
 
 
-static func neteja(m: Node2D, hyd_list: Array) -> void:
+static func neteja(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 	m.gate_text = "PLAÇA"
+	hyd_list.assign(NETEJA_HYDRANTS)
+	keb_list.assign(NETEJA_SNACKS)
 	m.stalls = Array([], TYPE_VECTOR2, &"", null)
 	m.stall_kinds.clear()
 	m.performers = Array([], TYPE_VECTOR2, &"", null)
@@ -276,6 +293,11 @@ static func neteja(m: Node2D, hyd_list: Array) -> void:
 	# the market skeleton's open manholes do not belong here: four warning
 	# cones round a hole in the middle of the chase
 	m.manholes = Array([], TYPE_VECTOR2, &"", null)
+	# the market skeleton's four bins do not belong to this street. Two of
+	# its own, at the kerbs (the fit below leaves them where they are)
+	m.bins = Array([], TYPE_VECTOR2, &"", null)
+	for bn: Array in NETEJA_BINS:
+		m.bins.append(neteja_kerb(m, float(bn[0]), bool(bn[1]), 26.0))
 	m.fountains = Array([Vector2(640, -3100)], TYPE_VECTOR2, &"", null)
 	m.laundry_lines = Array([-900.0, -1700.0, -2500.0, -3300.0, -4100.0], TYPE_FLOAT, &"", null)
 	m.poles.clear()
@@ -315,6 +337,9 @@ static func neteja(m: Node2D, hyd_list: Array) -> void:
 			m.chase_jams.append(Vector2(d.x, d.y - NETEJA_DUMPSTER.y * 0.5 - 4.0))
 	for sp: Vector2 in m.scooters:
 		m.chase_kerb_blocks.append(Rect2(sp - Vector2(16.0, 28.0), Vector2(32.0, 56.0)))
+	# a bin is a pole-sized body at the kerb: the brooms swing in round it
+	for bn: Vector2 in m.bins:
+		m.chase_kerb_blocks.append(Rect2(bn - Vector2(m.POLE_RADIUS, m.POLE_RADIUS), Vector2(m.POLE_RADIUS, m.POLE_RADIUS) * 2.0))
 	# what the water truck left: puddles in the gutters and down the middle
 	for pz: Array in [[-800.0, 0.2], [-1650.0, 0.75], [-2550.0, 0.3], [-3400.0, 0.7], [-4150.0, 0.35]]:
 		m.patches.append({"y": float(pz[0]), "at": float(pz[1]), "rx": 60.0, "ry": 34.0,
@@ -1245,6 +1270,9 @@ static func fit_props_to_corridor(m: Node2D) -> void:
 		# La Neteja's crates are already at the kerb, beside the dumpsters
 		if m.lvl == "neteja" and arr == m.cone_spots:
 			continue
+		# ...and so are its bins: refitting would pull them in off the kerb
+		if m.lvl == "neteja" and arr == m.bins:
+			continue
 		for i in range(arr.size()):
 			var p: Vector2 = arr[i]
 			var e = m.walk_edges(p.y)
@@ -1260,6 +1288,16 @@ static func fit_props_to_corridor(m: Node2D) -> void:
 			d.pos = Vector2(fit_x(m, dp.x, de.x + pad, de.y - pad), dp.y)
 	# FUR-GONETA is authored against sw_l/sw_r already, so it is not remapped
 	# here. Its rope flanks are appended after this fit from that same centre.
+
+
+# The bins are copied into the body poles (solid, rope-wrapped, markable)
+# just before body_pole_count is set, so they are its last entries. The fit
+# pulls those copies in with every other pole; a walk that exempts its bins
+# from the fit (La Neteja) puts the copies back where the bins are.
+static func sync_bin_poles(m: Node2D) -> void:
+	var first: int = m.body_pole_count - m.bins.size()
+	for i in range(m.bins.size()):
+		m.poles[first + i] = m.bins[i]
 
 
 static func build_level_data(m: Node2D) -> void:
@@ -1675,7 +1713,7 @@ static func build_level_data(m: Node2D) -> void:
 	elif m.lvl == "site":
 		obres(m)
 	elif m.lvl == "neteja":
-		neteja(m, hyd_list)
+		neteja(m, hyd_list, keb_list)
 	elif m.lvl == "guell":
 		mosaic(m, hyd_list, keb_list)
 	elif m.lvl == "scrap":
@@ -1848,6 +1886,8 @@ static func build_level_data(m: Node2D) -> void:
 		m.lane_state.append({"t": randf_range(1.0, 2.5), "phase": 0, "dir": 1})
 	build_substance_zones(m)
 	fit_props_to_corridor(m)
+	if m.lvl == "neteja":
+		sync_bin_poles(m)
 	# after the fit, deliberately: the verge is the one place whose contents
 	# must NOT be pulled onto the pavement
 	build_verge(m)
