@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-10-21 - No more Daily Walk; a walk's own sky stays on that walk
+
+- The Daily Walk is gone. The walk select is the first walk, then the campaign walks. Every walk can be played in any weather, day or night, from GET READY. Its share card, the SHARE touch button and the daily best go with it. An old save's daily section is ignored and dropped on the next save.
+- Browsing the walk select past a walk with its own sky no longer leaves that sky on every walk after it. El Diluvi, La Castanyada and the first walk wrote their rain, their dark and their clear day over the player's GET READY choice, and so did the daily. Now `Game.apply_walk_sky` sets the walk's own sky for that walk only and gives the player's choice back on the next one. On GET READY the row the walk decides is fixed; the other row is still yours, and that choice carries on.
+- Store listing, privacy text, itch page, README and LEVEL_DESIGN no longer mention a daily walk.
+- New `tests/test_walk_sky.gd`, in CI.
+
 ## 2026-10-21 - Tofu only hides where Millie can reach her
 
 - "Bring Tofu the cat home" could not be finished on most walks. Her seven hiding spots were fixed offsets from the walk's centre line, so where a walk bends or has furniture they landed off the path, in El Parc's pond, or inside a solid prop. Her darts between them ran through stalls, benches and buildings, so she seemed to jump into the side of the street and vanish. Her last spot was past the home line, so the walk could end while she was still running to it.

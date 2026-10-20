@@ -337,7 +337,7 @@ park could be just a neighborhood park in bcn."
   playground, a ping-pong table, old men playing petanca. Nothing a tourist
   would photograph; the walk you do every day.
 - Where: open from the start and first in the list; La Rambla moves back and
-  needs a couple of stars. The Daily Walk still rotates through every walk.
+  needs a couple of stars.
 - Signature line: nothing fancy. Wind the owner round a plane tree, mark
   every bench leg, sneak through the petanca game.
 - Built from El Parc's green layout (not the boulevard), kept small and
@@ -415,7 +415,7 @@ The dog, the human and the rope all move pieces (the rope only brushes);
 nothing pushes back, so gameplay is unchanged. HOME at the start line is
 written the same way, so you come home past whatever you did to the name on
 the way out. The walks without a material (El Gotic's tile plaque, the
-station board, the chalked First Walk and daily) keep their drawn signs.
+station board, the chalked First Walk) keep their drawn signs.
 
 More writing on the path, sparingly, where a real place would have it: a
 message worth sending is one the place would carry anyway (HOME, an OFF

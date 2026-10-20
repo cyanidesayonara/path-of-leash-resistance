@@ -114,10 +114,7 @@ static func prompts(m: Node2D, which := "") -> Array:
 		"results":
 			return end_prompts(m)
 		"notice":
-			var out := end_prompts(m)
-			if m.finished and Game.daily and not m.daily_copied and m.daily_share != "":
-				out.insert(0, ["share", "copy result"])
-			return out
+			return end_prompts(m)
 	return []
 
 
@@ -221,16 +218,6 @@ static func walk_info(m: Node2D) -> Dictionary:
 	var sel: String = Game.level_id
 	var info := {"id": sel, "locked": not Game.is_unlocked(sel), "index": Game.CAROUSEL.find(sel),
 		"count": Game.CAROUSEL.size(), "lines": []}
-	if sel == "daily":
-		var today := "%s, %s%s" % [Game.LEVEL_NAMES[Game.daily_level()],
-			String(Game.WEATHER_NAMES[Game.daily_weather()]).to_lower(),
-			", at night" if Game.daily_night() else ""]
-		info.lines = ["Today: " + today]
-		if Game.records.has("daily") and int(Game.records["daily"].bones) > 0:
-			info.lines.append("Your best today: %d bones" % int(Game.records["daily"].bones))
-		else:
-			info.lines.append("The same walk for everyone, new every day.")
-		return info
 	if sel == "tutorial":
 		info.lines = ["One trick at a time, with nothing to get in the way."]
 		return info
@@ -256,13 +243,15 @@ static func clock(secs: float) -> String:
 	return "%d:%02d" % [s / 60, s % 60]
 
 
-# The getting-ready rows. `fixed` rows are set by the day on the daily walk.
+# The getting-ready rows. `fixed` rows are set by the walk itself (El Diluvi's
+# rain, La Castanyada's dark, the first walk's clear day).
 static func details_rows(m: Node2D) -> Array:
 	return [
 		{"id": "walker", "name": "YOUR HUMAN", "value": "HIM" if Game.owner_id == "him" else "HER", "fixed": false},
-		{"id": "time", "name": "TIME", "value": "NIGHT" if Game.night else "DAY", "fixed": Game.daily},
+		{"id": "time", "name": "TIME", "value": "NIGHT" if Game.night else "DAY",
+			"fixed": Game.walk_sets_night(Game.level_id)},
 		{"id": "weather", "name": "WEATHER", "value": String(Game.WEATHER_NAMES[Game.weather]),
-			"fixed": Game.daily},
+			"fixed": Game.walk_sets_weather(Game.level_id)},
 	]
 
 
@@ -275,7 +264,7 @@ static func details_change(m: Node2D, dir: int) -> void:
 			Game.toggle_owner()
 			m.human.queue_redraw()
 		"time":
-			Game.night = not Game.night
+			Game.toggle_night()
 			m.night_cm.color = m._weather_tint()
 		"weather":
 			Game.cycle_weather(dir)
@@ -493,7 +482,7 @@ static func walk_card(m: Node2D) -> Dictionary:
 	for q: Dictionary in m.active_quests:
 		var target := int(q.target)
 		var hit: bool = m.run_goals_hit.has(q.id)
-		var done: bool = hit or ((not Game.daily) and Game.goal_done(m.lvl, q.id))
+		var done: bool = hit or Game.goal_done(m.lvl, q.id)
 		var got := target if done else mini(int(q.fn.call()), target)
 		var state: int
 		if hit:
@@ -661,7 +650,7 @@ static func to_walk_select(m: Node2D) -> void:
 	reload(m)
 
 
-# Input on a stopped walk: a result, a game-over or the daily card.
+# Input on a stopped walk: a result or a game-over.
 static func tick_end(m: Node2D) -> bool:
 	if m.tutorial_mode and m.finished and Input.is_action_just_pressed("plant"):
 		to_first_walk(m)

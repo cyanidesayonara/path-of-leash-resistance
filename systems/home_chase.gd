@@ -176,7 +176,7 @@ static func roll(m: Node2D, args: PackedStringArray = OS.get_cmdline_user_args()
 	var chase_walk: bool = not profile.is_empty()
 	var forced := chase_forced or bolt_forced or rescue_forced
 	# the old roll, drawn exactly when it always was
-	var rolled: bool = forced or (not m.auto_walk and not Game.daily and randf() < 0.25)
+	var rolled: bool = forced or (not m.auto_walk and randf() < 0.25)
 	m.chase_active = (forced or chase_walk) and not m.tutorial_mode
 	# ...and so is the kind: whenever the old roll would have started a chase
 	if m.chase_active or (rolled and not m.tutorial_mode):

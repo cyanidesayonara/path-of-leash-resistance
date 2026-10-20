@@ -257,7 +257,9 @@ the phone; final level the battery is dead and the walk is just a walk.
   dense checkpoints); challenge lives in optional layers — star ratings,
   par times, save streaks, "perfect walk" (phone untouched). Bespoke
   puzzle-heavy "trial walks" as a separate late-game track if wanted.
-- Daily-walk hook: positive-only. A shared daily-seeded walk (same layout
+- (Removed in 1.62: the Daily Walk added nothing the walks with their own
+  weather and time do not, and its fixed sky leaked into the walk select.)
+  Daily-walk hook: positive-only. A shared daily-seeded walk (same layout
   for everyone that day, compare scores) fits the fiction perfectly and is
   the modern comeback pattern. Explicitly avoid guilt mechanics: the dog is
   never sad/anxious because the player was away — punishing absence reads

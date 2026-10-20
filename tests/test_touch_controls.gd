@@ -5,7 +5,7 @@ extends SceneTree
 # button sat on the goals card all walk (#62). This checks, on a real main
 # scene at three window shapes: which buttons show while walking, once the
 # walk has stopped and on the title; that SKIP appears during tutorial lessons
-# and SHARE on daily results; that no two buttons overlap and none sits on the
+# and nowhere else; that no two buttons overlap and none sits on the
 # vitals card or the goals card; and that tapping the goals card works.
 # Needs a rendering context, like test_rotate_prompt.gd.
 
@@ -107,15 +107,11 @@ func _run() -> void:
 	main.frozen = false
 	main.tutorial_mode = true
 	main.tut_step = 0
-	_check("SKIP" in _shown(t) and not "SHARE" in _shown(t), "tutorial lesson shows SKIP")
+	_check("SKIP" in _shown(t), "tutorial lesson shows SKIP")
 	main.tutorial_mode = false
 	main.finished = true
 	main.frozen = true
-	main.daily_share = "daily result"
-	main.daily_copied = false
-	var game: Node = root.get_node("Game")
-	game.daily = true
-	_check("SHARE" in _shown(t) and not "SKIP" in _shown(t), "daily result shows SHARE")
+	_check(not "SKIP" in _shown(t) and not "SHARE" in _shown(t), "a walk's result shows no SKIP or SHARE")
 	# At phone width the card is nearly the whole screen. Its controls must
 	# stay in the exposed margins, not cover the result they act on.
 	root.size = Vector2i(844, 390)
@@ -140,8 +136,7 @@ func _run() -> void:
 		if button_rect.intersects(result_rect):
 			clear = false
 			print("  %s overlaps the results card" % b.label)
-	_check(clear, "daily result buttons stay clear of the results card")
-	game.daily = false
+	_check(clear, "result buttons stay clear of the results card")
 	main.finished = false
 	# tapping the goals card presses "goals" while walking, and lets go after
 	main.started = true
