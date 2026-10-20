@@ -580,6 +580,10 @@ func _test_no_duplicates_and_destination_continue() -> void:
 	var save_lost := _save_state()
 	_press(m, "restart")
 	_check(_save_state() == save_lost, "continuing from the destination writes nothing to the save")
+	var stale := false
+	for l: Dictionary in m.feed.lines:
+		stale = stale or String(l.text) == "SWEPT!"
+	_check(not stale, "the catch's shout does not outlive the continue")
 	_check(m.bones == bones0, "the bones are the checkpoint's, not added to (%d, want %d)" % [m.bones, bones0])
 	_check(bool(m.kebabs[0].eaten) and not bool(m.kebabs[1].eaten) and m.kebabs_eaten == 1,
 		"the snack eaten before stays eaten; the one after is back")

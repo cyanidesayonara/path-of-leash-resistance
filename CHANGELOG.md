@@ -6,16 +6,15 @@ Append-only session history, newest first.
 
 - Leaving the destination now takes a checkpoint, then gives the warning (1.2 s) and a 3-second head start. The sweeper does not move, catch or scare the dog until both are over, and the banner counts the head start down. Held or jammed, the machine adds no fear; what the dog already has fades on its own.
 - The sweeper held at the later dumpster jam (near y -1900) takes the midpoint checkpoint. The first jam is a respite only.
-- Lost to the chase with a checkpoint held, the end card offers continue instead of try again. Continuing puts the walk back in place: business, leash, phone, bones, goal counters, pickups, combo, the kid's dare, both walkers and the machine come back as they were, so nothing is paid twice or lost. From the destination the warning and head start repeat; from the midpoint the machine sits at its jam for a 3-second countdown. The walk clock keeps running, and nothing reaches the save.
-- Pause START AGAIN, a fresh restart, the walk select and any other walk drop the checkpoint. A loss to anything but the chase is still try again.
+- Lost on the way home with a checkpoint held, to the sweeper, a smashed phone or a fall, the end card offers continue instead of try again. Continuing puts the walk back in place: business, leash, phone, bones, goal counters, pickups, combo, the kid's dare, both walkers and the machine come back as they were, so nothing is paid twice or lost. From the destination the warning and head start repeat; from the midpoint the machine sits at its jam for a 3-second countdown and rolls the moment it ends. The walk clock keeps running, and nothing reaches the save.
+- Pause START AGAIN, a fresh restart, the walk select and any other walk drop the checkpoint. A loss on the way out is still try again.
 - `--at-home` starts the selected walk already turned for home, past the star gate, and writes nothing to the save.
 - New `tests/test_chase_checkpoint.gd`, registered in CI.
 - Review fixes:
-  - Any loss on the walk home continues from the checkpoint, not just being swept: a smashed phone or a fall, too.
-  - The midpoint countdown is the whole respite. At zero the sweeper rolls at once, with no jam time left over.
   - The midpoint is never taken while a catch is rolling or with either of you at the brooms. Such a jam keeps the earlier checkpoint.
   - A continue ends any teeter, grind or pole swing in progress without paying or failing it, and keeps their cooldowns.
   - The test now plays real frames after each kind of continue.
+  - Continuing clears the catch's shouts, so "SWEPT!" does not hang over the new warning.
 
 ## 2026-10-20 - La Neteja gets a chase profile
 

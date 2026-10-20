@@ -337,6 +337,7 @@ static func continue_run(m: Node2D) -> void:
 	m.chase_catch_msg = ""
 	m.msg_label.visible = false
 	m.dim.visible = false
+	m.feed.clear()
 	m.frozen = false
 	Engine.time_scale = 1.0
 	if String(snap.get("id", "")) == "midpoint":
