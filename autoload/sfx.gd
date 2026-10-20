@@ -79,7 +79,9 @@ func _music_bus() -> String:
 	var bus_name := "Music"
 	_muffle_bus = AudioServer.get_bus_index(bus_name)
 	if _muffle_bus < 0:
-		AudioServer.add_bus()
+		# add_bus() appends in the engine but inserts before Master in Godot
+		# 4.7's web sample-bus mirror, disconnecting every sample from output.
+		AudioServer.bus_count = AudioServer.bus_count + 1
 		_muffle_bus = AudioServer.bus_count - 1
 		AudioServer.set_bus_name(_muffle_bus, bus_name)
 		AudioServer.set_bus_send(_muffle_bus, "Master")

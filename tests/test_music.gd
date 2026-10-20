@@ -16,6 +16,11 @@ func _check(ok: bool, what: String) -> void:
 
 
 func _initialize() -> void:
+	var sfx_source := FileAccess.get_file_as_string("res://autoload/sfx.gd")
+	_check("AudioServer.add_bus()" not in sfx_source,
+		"runtime buses append without corrupting the web sample-bus order")
+	_check("AudioServer.bus_count = AudioServer.bus_count + 1" in sfx_source,
+		"the Music bus uses the web-safe append path")
 	for lv in Game.LEVELS:
 		_check(Music.walk_style(lv) == lv, "walk %s has its own arrangement" % lv)
 	_check(Music.walk_style("tutorial") == "title", "an unknown level falls back to the title theme")
