@@ -162,3 +162,13 @@ func _march(m: Node2D, _p) -> void:
 	_check(m.phone_hp == hp2 - 1, "a horse's shoulder is one crack")
 	await physics_frame
 	_check(m.phone_hp == hp2 - 1, "the same horse does not crack the phone twice")
+	m.march._drop_in = 0.0
+	m.march._drop(m, 0.0)
+	var stinky := false
+	for sz: Dictionary in m.substance_zones:
+		if String(sz.kind) != "stinky":
+			continue
+		stinky = true
+		var drawn: Color = (m.SUBSTANCES[String(sz.kind)] as Dictionary).col
+		_check(drawn.a > 0.0, "a dropping has a colour the world can draw")
+	_check(stinky and m.march.droppings.size() == 1, "a horse leaves a dropping the world knows")
