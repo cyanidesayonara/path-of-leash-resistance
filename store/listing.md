@@ -79,18 +79,18 @@ dog walking
 ### What's new in this version
 
 ```
-- Trees, parasols, awnings and washing lines hang over the dog and the leash, and turn see-through when you are under them.
-- A slack leash lies in loose curves instead of zigzags, and your human steps around a pole or a stall instead of getting stuck on it.
-- A clearer main menu with an Exit button, one Back everywhere, and the tutorial keeps your human at each lesson.
-- The kid's dare says what it wants before the clock starts, and offers another try.
-- Other dogs walk ahead of their people on a short leash, passers-by go around stalls instead of through them, and Millie backs away when she plays tug.
-- Passeig Marítim, El Gòtic and El Mercat redrawn and fixed, the text in American English, and many smaller fixes.
+- A new walk, Dia de Partit: match day in Les Corts, opening at 27 stars. The avenue fills with fans. Kick-off is on the clock, or when you reach the gate.
+- Keep your human out of the away march. After the final whistle the crowd comes home the other way, fast after a win and slow after a loss. The score is on their phone.
+- Off the avenue, a lost scarf and a kickabout. Off the leash is PLAÇA DEL GOL, goal square.
+- The leash catches a car, a stall or a bench on the shape you see. She slides along a wall instead of sticking to it.
+- El Diluvi's shoppers stroll the covered street. El Barri, El Bosc, L'Estació, Les Obres, La Ferralla, El Mosaic, La Castanyada and La Neteja are redrawn.
+- The opening film is finished, and the title theme has some get-up-and-go.
 ```
 
 ### Notes for certification
 
 ```
-Update 1.60: gameplay, drawing and text changes. No change to capabilities, network use, data handling or controls since 1.55.
+Update 1.61: a sixteenth walk (Dia de Partit), redrawn places, and a finished intro. No change to capabilities, network use, data handling or controls since 1.55. Dia de Partit takes longer than the other walks.
 
 Path of Leash Resistance is a single-player Win32 desktop game built with the Godot engine (4.7), packaged as MSIX.
 

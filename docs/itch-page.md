@@ -102,6 +102,25 @@ Single player. No ads, no purchases, no account. The download plays offline; the
 Made in Godot by Santtu Nykänen. The dog is Millie, a distinguished salt-and-pepper mutt who squats like a lady.
 ```
 
+## What's new in 1.61
+
+For a devlog post or the top of the body. Everything since v1.60, from
+CHANGELOG.md:
+
+```
+- A new walk, DIA DE PARTIT, match day. It opens at 27 stars, after Montjuïc. A calm side street, then the avenue in Les Corts closed to traffic, bunting overhead, and the stadium at the end of it.
+- The avenue fills with fans as you walk north. They step around the two of you. A taut leash laid across them drags you along, and she can dig in against that.
+- Kick-off is about three and a half minutes along, or the moment you reach the gate. The phone becomes the match. A goal gives her the zoomies when she is right beside your human, and a fright when she is anywhere else. Your human hops, slumps, or says "WHAT?" when it is waved off.
+- An away column comes down the east side, horses and all, with a siren and a drum first. Keep your human out of it. That is one of the walk's goals. The horses leave the best sniff on the street.
+- Full time sends the whole crowd back south. A win is faster than your human walks, with confetti. A loss is a slow, easy walk home.
+- Off the avenue: a kid loses her scarf to the wind, and three kids kick a ball across the side street. Bring either one back. Off the leash is PLAÇA DEL GOL, goal square.
+- The leash catches cars, vans, stalls, benches and the train on the outline you can see. Hydrants, cones and manholes stay out of its way.
+- She slides along a wall or a post, and a soft push keeps her beside your human.
+- El Diluvi's umbrella crowd strolls both ways along the covered edges. The porch yard, the drains and the wet roofs are that street's own.
+- Redrawn from the audits: El Barri's pipicà and petanca court, El Bosc's pinch, L'Estació's terrazzo and its train, Les Obres' fencing and two concrete pours, La Ferralla's wrecks and crawler crane, El Mosaic's bench, hall and salamander, La Castanyada's roaster and festival yard, and La Neteja's bins and dawn light.
+- The opening film is redrawn as a finished cartoon, scored to the picture, and the title theme has some get-up-and-go.
+```
+
 ## What's new in 1.60
 
 For a devlog post or the top of the body. Everything since v1.59, from

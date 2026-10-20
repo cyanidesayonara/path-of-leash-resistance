@@ -2,6 +2,10 @@
 
 Append-only session history, newest first.
 
+## 2026-10-20 - What's new for 1.61
+
+- The Store and itch notes now describe everything since v1.60: Dia de Partit, the redrawn walks, the leash catching what you can see, and the finished intro. Nothing is tagged.
+
 ## 2026-10-20 - Horse droppings are a real substance
 
 - The away march leaves something on the avenue, and the world draw looked that kind up every frame. `stinky` was not one of the substances, so Dia de Partit logged an error for as long as a dropping was there. It is one now: a dark patch, and stinky paws if she stands in it.
