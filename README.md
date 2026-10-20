@@ -31,8 +31,8 @@ you want to go; constant hauling wears their patience down until they say
 - **A human with patience**, who telegraphs everything they are about to do
   ("ring ring", "selfie!", "ooh!") and is never smarter than that.
 - **Fourteen walks through Barcelona**, each built as its own place, plus a
-  first walk that teaches one trick at a time and a daily walk that is the
-  same for everyone that day.
+  first walk that teaches one trick at a time. Every walk can be played in
+  any weather, by day or at night.
 - **Off the leash at the end**: a dog park, a dog beach, a clearing in the
   woods, a yard, or a plaça with a fountain to jump in.
 - **Goals on every walk**, stars that unlock the next walk, and bones to

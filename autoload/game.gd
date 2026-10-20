@@ -4,12 +4,11 @@ extends Node
 
 const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit"]
 const LEVEL_NAMES := {
-	"daily": "Daily Walk",
 	"tutorial": "First Walk",
 	# One scheme: a Catalan article plus one everyday noun for the place you
 	# are walking through, ASCII only (the web font has no accents, and the HUD
-	# upper-cases everything). The two MODE entries stay English on purpose -
-	# they name game modes, not places.
+	# upper-cases everything). The tutorial stays English on purpose - it
+	# names a mode, not a place.
 	#
 	# "La Rambla" is a real street, and naming a level after the street it
 	# depicts is DESCRIPTIVE use, not trademark use - the same category as the
@@ -38,7 +37,6 @@ const LEVEL_NAMES := {
 # guess what a walk is - the name is the flavour, the gloss is the information.
 # Kept lower case and short: it sits under the name chalked on the pavement.
 const LEVEL_SUBTITLES := {
-	"daily": "the same walk for everyone today",
 	"tutorial": "one trick at a time",
 	"barri": "the neighborhood park",
 	"street": "the crowded promenade",
@@ -65,8 +63,15 @@ const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "rain": 4, "
 const WEATHERS: Array[String] = ["clear", "rain", "wind", "snow"]
 const WEATHER_NAMES := {"clear": "CLEAR", "rain": "RAIN", "wind": "WIND", "snow": "SNOW"}
 
-# the carousel on the title: the daily walk first, then the campaign walks
-const CAROUSEL: Array[String] = ["tutorial", "daily", "barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit"]
+# Some walks bring their own sky: El Diluvi is always a downpour, La
+# Castanyada always after dark, and the first walk a clear day. It holds for
+# that walk only (apply_walk_sky), so browsing past one never carries its rain
+# or its dark on to the walks after it.
+const WALK_WEATHER := {"rain": "rain", "tutorial": "clear"}
+const WALK_NIGHT := {"spook": true, "tutorial": false}
+
+# the walk select: the first walk, then the campaign walks in order
+const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit"]
 
 # Cosmetics keep their catalog keys when equipped, but ownership is namespaced
 # by category so identically named items remain separate purchases.
@@ -131,7 +136,9 @@ var level_id := "barri"
 var owner_id := "him"  # "him" | "her"; a proper character creator can come later
 var night := false
 var weather := "clear"
-var daily := false
+# [weather, night] as the player picked them, while a walk with its own sky
+# has replaced them; empty otherwise
+var _held_sky: Array = []
 # which title-menu step to land on (survives the level-cycle reload;
 # after a first run the splash is skipped straight to walk select)
 var menu_step := 0
@@ -170,21 +177,32 @@ var tutorial_done := false
 var walks_lost := 0
 
 
-func daily_seed() -> int:
-	var d := Time.get_date_dict_from_system()
-	return int(d.year) * 1000 + int(d.month) * 40 + int(d.day)
+func apply_walk_sky(lv: String) -> void:
+	var own_weather := WALK_WEATHER.has(lv)
+	var own_night := WALK_NIGHT.has(lv)
+	if own_weather or own_night:
+		if _held_sky.is_empty():
+			_held_sky = [weather, night]
+		weather = String(WALK_WEATHER[lv]) if own_weather else String(_held_sky[0])
+		night = bool(WALK_NIGHT[lv]) if own_night else bool(_held_sky[1])
+	elif not _held_sky.is_empty():
+		weather = String(_held_sky[0])
+		night = bool(_held_sky[1])
+		_held_sky = []
 
 
-func daily_level() -> String:
-	return LEVELS[daily_seed() % LEVELS.size()]
+func walk_sets_weather(lv: String) -> bool:
+	return WALK_WEATHER.has(lv)
 
 
-func daily_weather() -> String:
-	return WEATHERS[(daily_seed() / 3) % WEATHERS.size()]
+func walk_sets_night(lv: String) -> bool:
+	return WALK_NIGHT.has(lv)
 
 
-func daily_night() -> bool:
-	return (daily_seed() / 7) % 3 == 0
+func toggle_night() -> void:
+	night = not night
+	if not _held_sky.is_empty():
+		_held_sky[1] = night
 
 
 func collar_color() -> Color:
@@ -252,6 +270,8 @@ func toggle_owner() -> void:
 func cycle_weather(dir: int) -> void:
 	var i := WEATHERS.find(weather)
 	weather = WEATHERS[wrapi(i + dir, 0, WEATHERS.size())]
+	if not _held_sky.is_empty():
+		_held_sky[0] = weather
 
 
 func apply_settings() -> void:
@@ -267,16 +287,13 @@ func apply_settings() -> void:
 func _ready() -> void:
 	persist = not ("--autowalk" in OS.get_cmdline_user_args())
 	load_records()
-	# the daily best is per-day: wipe it when the date rolls over
-	if records.has("daily") and int(records["daily"].get("seed", 0)) != daily_seed():
-		records.erase("daily")
 	# lets CI and local smoke tests exercise any level/weather:
-	#   godot --headless --path . -- --level=park --weather=snow [--daily]
+	#   godot --headless --path . -- --level=park --weather=snow
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--level="):
 			var lv := arg.trim_prefix("--level=")
-			# the two modes too, so the tutorial can be shot and tested directly
-			if lv in LEVELS or lv == "tutorial" or lv == "daily":
+			# the tutorial too, so it can be shot and tested directly
+			if lv in LEVELS or lv == "tutorial":
 				level_id = lv
 		elif arg.begins_with("--weather="):
 			var w := arg.trim_prefix("--weather=")
@@ -286,8 +303,6 @@ func _ready() -> void:
 			# after dark, as the title's TIME toggle would set it - for
 			# screenshots and the level review (#21)
 			night = true
-		elif arg == "--daily":
-			level_id = "daily"
 		elif arg == "--tutorial":
 			level_id = "tutorial"
 	if DisplayServer.get_name() != "headless":
@@ -346,8 +361,6 @@ func load_records() -> void:
 		record.goals = gl
 		records[lv] = record
 	total_bones = int(cf.get_value("global", "total_bones", 0))
-	if cf.has_section("daily"):
-		records["daily"] = {"bones": int(cf.get_value("daily", "bones", 0)), "seed": int(cf.get_value("daily", "seed", 0))}
 	var ol: Array = cf.get_value("cosmetics", "owned", ["red", "none"])
 	owned = {}
 	for k in ol:
@@ -399,9 +412,6 @@ func save_records() -> void:
 		cf.set_value(lv, "style", records[lv].get("style", 0))
 		cf.set_value(lv, "stars", records[lv].get("stars", 0))
 		cf.set_value(lv, "goals", records[lv].get("goals", []))
-	if records.has("daily"):
-		cf.set_value("daily", "bones", records["daily"].bones)
-		cf.set_value("daily", "seed", records["daily"].get("seed", 0))
 	cf.set_value("global", "total_bones", total_bones)
 	cf.set_value("cosmetics", "owned", owned.keys())
 	cf.set_value("cosmetics", "collar", collar)
@@ -435,7 +445,7 @@ func goals_count(lv: String) -> int:
 
 
 func mark_goal(lv: String, id: String) -> bool:
-	if lv == "daily" or lv == "tutorial" or not lv in LEVELS:
+	if lv == "tutorial" or not lv in LEVELS:
 		return false
 	var record := _ensure_level_record(lv)
 	var gl: Array = record.get("goals", [])
@@ -471,8 +481,8 @@ func total_stars() -> int:
 
 
 func is_unlocked(lv: String) -> bool:
-	if lv == "daily" or lv == "tutorial":
-		return true  # the daily and the tutorial are always open
+	if lv == "tutorial":
+		return true  # the tutorial is always open
 	return total_stars() >= int(STAR_GATE.get(lv, 0))
 
 
@@ -495,16 +505,6 @@ func record_result(lv: String, bones: int, time: float, perfect: bool) -> Dictio
 	# only records the best-bones/time/perfect tallies and banks bones.
 	var out := {"bones_record": false, "time_record": false}
 	if lv == "tutorial":
-		return out
-	if lv == "daily":
-		var dr: Dictionary = records.get("daily", {"bones": 0, "seed": daily_seed()})
-		if bones > int(dr.bones):
-			dr.bones = bones
-			out.bones_record = true
-		dr.seed = daily_seed()
-		records["daily"] = dr
-		total_bones += bones
-		save_records()
 		return out
 	if not lv in LEVELS:
 		return out
@@ -529,11 +529,6 @@ func gate_crossed(prev_total: int, lv: String) -> bool:
 
 
 func best_line(lv: String) -> String:
-	if lv == "daily":
-		var todays := "%s, %s%s" % [LEVEL_NAMES[daily_level()], WEATHER_NAMES[daily_weather()].to_lower(), ", night" if daily_night() else ""]
-		if records.has("daily") and int(records["daily"].bones) > 0:
-			return "today: %s   -   your best: %d bones" % [todays, int(records["daily"].bones)]
-		return "today: %s   -   one shot, new each day" % todays
 	if not is_unlocked(lv):
 		return "locked - earn %d stars to unlock" % int(STAR_GATE.get(lv, 0))
 	if not records.has(lv) or int(records[lv].bones) <= 0:
@@ -547,16 +542,11 @@ func star_str(n: int) -> String:
 
 
 func cycle_level(dir: int) -> void:
-	# cycle the carousel (daily + campaign walks); locked ones show but
-	# cannot be started
+	# cycle the walk select; locked walks show but cannot be started
 	var i := CAROUSEL.find(level_id)
 	if i < 0:
 		i = 1
 	level_id = CAROUSEL[wrapi(i + dir, 0, CAROUSEL.size())]
-
-
-func is_daily(lv: String) -> bool:
-	return lv == "daily"
 
 
 func is_tutorial(lv: String) -> bool:

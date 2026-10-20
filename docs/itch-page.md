@@ -70,7 +70,7 @@ La Neteja, the dawn cleanup
 Montjuïc, the climb
 Dia de Partit, match day
 
-Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. One of them is a chase: a street sweeper careens down a back street at dawn, and you drag your oblivious human home ahead of it. There is a gentle first walk that teaches one trick at a time, and a daily walk that is the same for everyone that day.
+Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. One of them is a chase: a street sweeper careens down a back street at dawn, and you drag your oblivious human home ahead of it. There is a gentle first walk that teaches one trick at a time, and every walk can be played in clear weather, rain, wind or snow, by day or at night.
 
 ALSO
 

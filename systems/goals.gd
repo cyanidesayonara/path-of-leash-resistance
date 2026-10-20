@@ -2,7 +2,7 @@ extends RefCounted
 
 # Goals and scoring: each walk's fixed goal list (Tony Hawk style), crediting a
 # goal the moment it completes, the goal card's contents, and the end of the
-# walk (results card, records, unlocks, the daily card).
+# walk (results card, records, unlocks).
 #
 # Static functions over main's state. main.gd keeps same-name forwarders for
 # everything other scripts and tests call (_goal_defs, _credit_goal,
@@ -12,8 +12,6 @@ extends RefCounted
 const EventFeed := preload("res://hud/event_feed.gd")
 const UiIcons := preload("res://hud/ui_icons.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
-const MenuFlow := preload("res://hud/menu_flow.gd")
-
 const LEVEL_GOAL_IDS := {
 	# El Barri, the everyday walk: the staples and nothing exotic
 	"barri": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "combo", "prize"],
@@ -125,12 +123,12 @@ static func credit(m: Node2D, q: Dictionary) -> void:
 	m.run_goals_hit[id] = true
 	m._peek_goals()
 	m.bones += 5
-	var newly: bool = Game.mark_goal(m.lvl, id) if not Game.daily else false
+	var newly: bool = Game.mark_goal(m.lvl, id)
 	if newly:
 		m.run_goals_new += 1
 	# by the goal list, not in the middle of the screen: a first time is
 	# gold, one already done on an earlier walk is quieter
-	if newly or Game.daily:
+	if newly:
 		m.feed.toast("goal", "GOAL!  +5", quest_text(q), Color(0.98, 0.80, 0.38))
 	else:
 		m.feed.toast("goal", "DONE AGAIN  +5", quest_text(q), Color(0.58, 0.78, 0.62))
@@ -157,12 +155,11 @@ static func card_data(m: Node2D) -> Dictionary:
 	# rather than vanishing - which is what made the row count wobble between
 	# runs and the card jump about.
 	var total: int = m.active_quests.size()
-	var done_count: int = m.run_goals_hit.size() if Game.daily else Game.goals_count(m.lvl)
-	done_count = mini(done_count, total)
+	var done_count: int = mini(Game.goals_count(m.lvl), total)
 	var open_rows: Array = []
 	var done_rows: Array = []
 	for q in m.active_quests:
-		var persisted: bool = (not Game.daily) and Game.goal_done(m.lvl, q.id)
+		var persisted: bool = Game.goal_done(m.lvl, q.id)
 		var hit: bool = m.run_goals_hit.has(q.id)
 		var target := int(q.target)
 		if hit or persisted:
@@ -211,7 +208,7 @@ static func finish_walk(m: Node2D) -> void:
 		var run_done: int = m.run_goals_hit.size()
 		var total: int = m.active_quests.size()
 		var rows: Array = m._results_rows()
-		var lifetime: int = run_done if Game.daily else Game.goals_count(m.lvl)
+		var lifetime: int = Game.goals_count(m.lvl)
 		# total == 0 made this TRUE, which is how a walk with no goal list
 		# banked a PERFECT for The Boulevard. The tutorial no longer reaches
 		# this path at all, but the trap should not be left armed.
@@ -221,11 +218,11 @@ static func finish_walk(m: Node2D) -> void:
 			rating = "...well. A dog, anyway."
 		elif perfect:
 			rating = "PERFECT WALK - every goal in one go"
-		var rec: Dictionary = Game.record_result("daily" if Game.daily else m.lvl, m.bones, m.elapsed, perfect)
+		var rec: Dictionary = Game.record_result(m.lvl, m.bones, m.elapsed, perfect)
 		var lines: Array = []
 		var star_gain: int = Game.stars(m.lvl) - m.run_pre_level_stars
 		var head := ""
-		if star_gain > 0 and not Game.daily:
+		if star_gain > 0:
 			head += "+%d STAR%s   " % [star_gain, "" if star_gain == 1 else "S"]
 		if rec.bones_record:
 			head += "NEW BONES RECORD   "
@@ -238,30 +235,26 @@ static func finish_walk(m: Node2D) -> void:
 		if m.lvl == "partit" and m.match_day != null and m.match_day.result != "":
 			lines.append("the phone says %s" % MatchDay.score_line(m.match_day.result))
 		if m.combo.best_mult >= 2:
-			var best_style: bool = Game.record_style(m.lvl, int(m.combo.run_style)) if not Game.daily else false
+			var best_style: bool = Game.record_style(m.lvl, int(m.combo.run_style))
 			lines.append("best combo x%d    style %d%s" % [m.combo.best_mult, m.combo.run_style,
 				"    BEST STYLE" if best_style else ""])
 		if m.overmarks > 0:
 			lines.append("%d spot%s over-marked. They will know."
 				% [m.overmarks, "" if m.overmarks == 1 else "s"])
-		if not Game.daily:
-			for other in Game.LEVELS:
-				if Game.gate_crossed(m.run_pre_total_stars, other):
-					lines.append("NEW WALK UNLOCKED: %s" % Game.LEVEL_NAMES[other])
-		if Game.daily:
-			_build_daily_card(m, run_done, total, rec)
-		else:
-			m.results = {
-				"title": "VERY GOOD DOG." if perfect else "GOOD DOG.", "stars": Game.stars(m.lvl),
-				"rating": rating,
-				"rows": rows, "bones": m.bones, "phone": m.phone_hp, "time": int(m.elapsed),
-				"goal_bones": run_done * 5, "lines": lines,
-			}
-			m.msg_label.visible = false
-			m.results_card.visible = true
-			# the in-walk HUD would otherwise sit on top of the card
-			m.goals_card.visible = false
-			m.panel.visible = false
+		for other in Game.LEVELS:
+			if Game.gate_crossed(m.run_pre_total_stars, other):
+				lines.append("NEW WALK UNLOCKED: %s" % Game.LEVEL_NAMES[other])
+		m.results = {
+			"title": "VERY GOOD DOG." if perfect else "GOOD DOG.", "stars": Game.stars(m.lvl),
+			"rating": rating,
+			"rows": rows, "bones": m.bones, "phone": m.phone_hp, "time": int(m.elapsed),
+			"goal_bones": run_done * 5, "lines": lines,
+		}
+		m.msg_label.visible = false
+		m.results_card.visible = true
+		# the in-walk HUD would otherwise sit on top of the card
+		m.goals_card.visible = false
+		m.panel.visible = false
 
 
 # The first walk is done (at its end, or at the basics checkpoint): the title
@@ -308,7 +301,7 @@ static func results_rows(m: Node2D) -> Array:
 	var rows: Array = []
 	for q in m.active_quests:
 		var hit: bool = m.run_goals_hit.has(q.id)
-		var had: bool = (not Game.daily) and Game.goal_done(m.lvl, q.id) and not hit
+		var had: bool = Game.goal_done(m.lvl, q.id) and not hit
 		var target := int(q.target)
 		var got: int = mini(int(q.fn.call()), target)
 		var st: int = UiIcons.Check.OPEN
@@ -320,20 +313,3 @@ static func results_rows(m: Node2D) -> Array:
 			st = UiIcons.Check.PARTIAL
 		rows.append({"text": quest_text(q), "state": st, "got": got, "target": target})
 	return rows
-
-
-static func _build_daily_card(m: Node2D, run_done: int, total: int, rec: Dictionary) -> void:
-	# a compact, screenshot-friendly summary of today's shared walk, with a
-	# one-line share text the player can copy to the clipboard
-	var d := Time.get_date_dict_from_system()
-	var date_str := "%04d-%02d-%02d" % [d.year, d.month, d.day]
-	var stars_n: int = Game._milestone_stars(run_done)
-	var weather_bit: String = String(Game.WEATHER_NAMES[Game.weather]).to_lower()
-	var when_bit := "night" if Game.night else "day"
-	var combo_bit: String = "  combo x%d" % m.combo.best_mult if m.combo.best_mult >= 2 else ""
-	m.daily_share = "Path of Leash Resistance - Daily %s\n%s, %s, %s\n%s  %d/%d goals  %d bones  %ds%s" % [
-		date_str, Game.LEVEL_NAMES[m.lvl], weather_bit, when_bit,
-		Game.star_str(stars_n), run_done, total, m.bones, int(m.elapsed), combo_bit]
-	m.daily_copied = false
-	MenuFlow.show_notice(m, "%s\n\n%s" % ["NEW DAILY BEST" if rec.bones_record else "TODAY'S WALK",
-		m.daily_share])

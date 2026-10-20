@@ -814,8 +814,6 @@ var _redraw_acc := 0.0
 # return to them for a shared-fetch bonus
 var npc_ball: Node2D
 var npc_ball_pair: Node2D
-var daily_share := ""
-var daily_copied := false
 var combo_l: Label
 var combo_bar: ColorRect
 var combo_bar_bg: ColorRect
@@ -840,24 +838,13 @@ func _ready() -> void:
 	if "--no-exit" in OS.get_cmdline_user_args():
 		MenuFlow.exit_hidden = true
 	_shake_rng.seed = SHAKE_SEED
-	if Game.is_daily(Game.level_id):
-		# same layout, weather and time for everyone, all day
-		Game.daily = true
-		seed(Game.daily_seed())
-		lvl = Game.daily_level()
-		Game.weather = Game.daily_weather()
-		Game.night = Game.daily_night()
-	elif Game.is_tutorial(Game.level_id):
+	if Game.is_tutorial(Game.level_id):
 		# THE FIRST WALK: El Barri laid out as one station per lesson, calm and
 		# safe by construction - no traffic to dodge, no chase, no other
 		# walkers, and a bright clear day. Nothing here can end your walk.
-		Game.daily = false
 		tutorial_mode = true
 		lvl = "barri"
-		Game.weather = "clear"
-		Game.night = false
 	else:
-		Game.daily = false
 		if autowalk_requested:
 			seed(AUTOWALK_SEED)
 		# --seed=N pins every random layout and spawn, so a soak or a bug
@@ -866,12 +853,7 @@ func _ready() -> void:
 			if a.begins_with("--seed="):
 				seed(int(a.substr(7)))
 		lvl = Game.level_id
-	# El Aguacero is always a downpour, whatever the weather selection says
-	if lvl == "rain":
-		Game.weather = "rain"
-	# La Castanyada is always after dark
-	if lvl == "spook":
-		Game.night = true
+	Game.apply_walk_sky(Game.level_id)
 	_setup_input()
 	_build_level_data()
 	_build_bypasser_blockers()
@@ -8766,12 +8748,7 @@ func _process(_delta: float) -> void:
 	if started and frozen and chase_catch_t > 0.0:
 		pass  # the catch beat takes no input; the card that follows does
 	elif started and frozen:
-		# a result, a game-over or the daily card: the walk has stopped
-		if finished and Game.daily and not daily_copied and daily_share != "" and Input.is_action_just_pressed("share"):
-			DisplayServer.clipboard_set(daily_share)
-			daily_copied = true
-			msg_label.text += "\nCopied. Paste it anywhere."
-			return
+		# a result or a game-over: the walk has stopped
 		if MenuFlow.tick_end(self):
 			return
 	elif Input.is_action_just_pressed("restart"):

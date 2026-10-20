@@ -55,9 +55,9 @@ Peixauet. The destination sign is:
 The internal id is `besos`; its English gloss is "the floodable river park".
 It sits between L'Estació and Les Obres in the campaign carousel and unlocks
 at 14 stars. Every existing star gate remains unchanged, so an existing save
-never loses access to a walk. It joins `Game.LEVELS`, the daily rotation,
-inventory, screenshot, soak and behavior-snapshot lists. The changed daily
-sequence after 1.62 is intentional.
+never loses access to a walk. It joins `Game.LEVELS`, the walk select, and
+the inventory, screenshot, soak and behavior-snapshot lists. The Daily Walk is
+removed in 1.62 (Santtu, 2026-10-21), so there is no daily rotation to join.
 
 El Besòs and La Neteja are separated by Les Obres, La Castanyada, La Ferralla
 and El Mosaic. Future chase and boss walks target three or four ordinary walks
@@ -281,8 +281,8 @@ ball toward the footbridge. Intercepting and returning it is an optional
 positive event; missing it has no penalty. The event appears on 20% of rainy
 El Bosc runs. Main records the chosen run seed alongside the existing
 `seed()` setup without consuming a draw; a stable hash of that seed, the level
-id and the event id selects the event. It is deterministic under `--seed` and
-daily seeds. An ordinary run takes one startup seed from
+id and the event id selects the event. It is deterministic under `--seed`.
+An ordinary run takes one startup seed from
 `Time.get_ticks_usec()`, records it, and seeds the global sequence before any
 layout draw; ordinary runs remain random without consuming an extra draw.
 Current acts on
@@ -318,6 +318,26 @@ or pixel diff is listed in its PR.
 Before each player-facing group starts, both the project board's Awaiting
 acceptance column and unticked entries in backlog issue #23 are counted. Work
 does not start when that count is five.
+
+## Scope added 2026-10-21
+
+Santtu asked for three more things during the work:
+
+1. **No Daily Walk.** The walk select is the first walk, then the campaign
+   walks. A walk that brings its own sky (El Diluvi's rain, La Castanyada's
+   dark, the first walk's clear day) sets it for that walk only, and the
+   player's GET READY choice comes back on the next walk. Its row on GET
+   READY is fixed. The daily share card, the SHARE touch button and the daily
+   record go with it.
+2. **Bring Tofu home works on every walk.** Every hiding spot is reachable
+   open path, every dart between spots is clear (detouring through waypoints
+   when needed), and the last spot is short of the home line.
+3. **Weather, time of day and lighting facelift.** Rain, wind, snow, night
+   and dawn get a visible quality pass: better light (sky tint, ground
+   contrast, lamp and window glow after dark), and richer weather effects that
+   read clearly without hiding the dog, the leash or a telegraph. Draw calls
+   stay batched; every walk's day, night and each weather are captured before
+   and after on desktop and phone, and the web build is measured.
 
 ## Verification and acceptance
 

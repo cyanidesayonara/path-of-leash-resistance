@@ -387,7 +387,6 @@ func _load_level(level_id: String) -> Node2D:
 		_level = null
 	var game = root.get_node("Game")
 	game.level_id = level_id
-	game.daily = false
 	game.weather = "clear"
 	game.night = false
 	game.menu_step = 2

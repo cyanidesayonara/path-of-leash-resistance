@@ -153,23 +153,19 @@ func _run() -> void:
 			_check(bool(nm.chase_active) and String(nm.chase_kind) == pair[1],
 				"%s forces %s on %s (got %s)" % [pair[0], pair[1], lv, nm.chase_kind])
 	# --- the draws on every path that changes them ---
-	# a hook forces the roll and names its kind: no draw at all. auto_walk and
-	# daily skip the old 25% roll, so only La Neteja's kind draw is left. The
+	# a hook forces the roll and names its kind: no draw at all. auto_walk
+	# skips the old 25% roll, so only La Neteja's kind draw is left. The
 	# tutorial still draws the roll but never the kind.
-	var game: Node = root.get_node("Game")
 	var draw_cases := [
-		# label, level, args, auto_walk, daily, tutorial, draws, chases
-		["hook on street", "street", ["--bolt"], false, false, false, 0, true],
-		["hook on La Neteja", "neteja", ["--rescue"], false, false, false, 0, true],
-		["hook with auto_walk", "street", ["--chase"], true, false, false, 0, true],
-		["hook on a daily", "street", ["--bolt"], false, true, false, 0, true],
-		["hook in the tutorial", "street", ["--rescue"], false, false, true, 0, false],
-		["auto_walk on street", "street", [], true, false, false, 0, false],
-		["auto_walk on La Neteja", "neteja", [], true, false, false, 1, true],
-		["daily on street", "street", [], false, true, false, 0, false],
-		["daily on La Neteja", "neteja", [], false, true, false, 1, true],
-		["tutorial on street", "street", [], false, false, true, 1, false],
-		["tutorial on La Neteja", "neteja", [], false, false, true, 1, false],
+		# label, level, args, auto_walk, tutorial, draws, chases
+		["hook on street", "street", ["--bolt"], false, false, 0, true],
+		["hook on La Neteja", "neteja", ["--rescue"], false, false, 0, true],
+		["hook with auto_walk", "street", ["--chase"], true, false, 0, true],
+		["hook in the tutorial", "street", ["--rescue"], false, true, 0, false],
+		["auto_walk on street", "street", [], true, false, 0, false],
+		["auto_walk on La Neteja", "neteja", [], true, false, 1, true],
+		["tutorial on street", "street", [], false, true, 1, false],
+		["tutorial on La Neteja", "neteja", [], false, true, 1, false],
 	]
 	for dc: Array in draw_cases:
 		var ok_draws := true
@@ -177,19 +173,17 @@ func _run() -> void:
 		for sd in range(40):
 			nm.lvl = dc[1]
 			nm.auto_walk = dc[3]
-			game.daily = dc[4]
-			nm.tutorial_mode = dc[5]
+			nm.tutorial_mode = dc[4]
 			nm.chase_active = false
-			var want := _next_after(sd, int(dc[6]))
+			var want := _next_after(sd, int(dc[5]))
 			seed(sd)
 			HomeChase.roll(nm, PackedStringArray(dc[2]))
 			ok_draws = ok_draws and is_equal_approx(randf(), want)
 			# the ordinary street rolls nothing in these paths, so any chase
 			# came from the hook or the profile
-			ok_chase = ok_chase and bool(nm.chase_active) == bool(dc[7])
-		_check(ok_draws, "%s draws exactly %d numbers" % [dc[0], dc[6]])
-		_check(ok_chase, "%s %s a chase" % [dc[0], "starts" if dc[7] else "does not start"])
-	game.daily = false
+			ok_chase = ok_chase and bool(nm.chase_active) == bool(dc[6])
+		_check(ok_draws, "%s draws exactly %d numbers" % [dc[0], dc[5]])
+		_check(ok_chase, "%s %s a chase" % [dc[0], "starts" if dc[6] else "does not start"])
 	nm.auto_walk = false
 	nm.tutorial_mode = false
 
