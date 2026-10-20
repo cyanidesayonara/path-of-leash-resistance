@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-20 - La Neteja gets a chase profile
+
+- The chase now has a profile per walk (`systems/home_chase.gd`): threat script, fixed behavior and speed, warning and caught copy, and an empty list of bands for the checkpoint work to fill. La Neteja's is the street sweeper, every run, with an oblivious human; the kind draw is still made so seeded walks replay unchanged, and its result is ignored. `--chase`, `--bolt` and `--rescue` still force their named behavior.
+- La Neteja stops carrying the market skeleton's four bins; it has two of its own at the kerbs. Its pee posts and snacks are listed in its own builder, in the same places as before.
+- New `tests/test_chase_walk.gd`, registered in CI.
+
 ## 2026-10-20 - The browser build has sound again
 
 - Godot 4.7's web sample mixer inserts a bus added at runtime before Master, then disconnects Master from the speakers. The procedural soundtrack added its Music bus that way, silencing both music and effects in every browser. The bus now takes the web-safe append path. Native audio is unchanged.

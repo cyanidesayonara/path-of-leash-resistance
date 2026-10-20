@@ -252,6 +252,20 @@ const NETEJA_DUMPSTER := Vector2(46.0, 90.0)
 const NETEJA_SCOOTERS: Array = [[-1450.0, false], [-2350.0, true], [-3200.0, false], [-4000.0, true]]
 # the dumpsters the sweeper snags a broom on, by y: the chase's two respites
 const NETEJA_JAMS: Array[float] = [-3600.0, -1900.0]
+# the street's own bins, by y and kerb: the bag chore needs somewhere to go.
+# They stand between the dumpsters, off every hydrant and lamppost.
+const NETEJA_BINS: Array = [[-600.0, false], [-3000.0, true]]
+# the pee posts and the dropped snacks. Listed here so they are La Neteja's
+# own content, not whatever the market skeleton it was cut from leaves behind.
+const NETEJA_HYDRANTS: Array[Vector2] = [
+	Vector2(345, -600), Vector2(935, -1900), Vector2(345, -3600),
+	Vector2(935, -2900), Vector2(345, -4400),
+]
+const NETEJA_SNACKS: Array[Vector2] = [
+	Vector2(500, -900), Vector2(780, -1250), Vector2(620, -1800),
+	Vector2(540, -2380), Vector2(760, -3000), Vector2(600, -3650),
+	Vector2(820, -4250), Vector2(480, -4550),
+]
 
 
 static func neteja_kerb(m: Node2D, y: float, west: bool, inset: float) -> Vector2:
@@ -266,8 +280,10 @@ static func neteja_dumpsters(m: Node2D) -> Array[Vector2]:
 	return out
 
 
-static func neteja(m: Node2D, hyd_list: Array) -> void:
+static func neteja(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 	m.gate_text = "PLAÇA"
+	hyd_list.assign(NETEJA_HYDRANTS)
+	keb_list.assign(NETEJA_SNACKS)
 	m.stalls = Array([], TYPE_VECTOR2, &"", null)
 	m.stall_kinds.clear()
 	m.performers = Array([], TYPE_VECTOR2, &"", null)
@@ -276,6 +292,10 @@ static func neteja(m: Node2D, hyd_list: Array) -> void:
 	# the market skeleton's open manholes do not belong here: four warning
 	# cones round a hole in the middle of the chase
 	m.manholes = Array([], TYPE_VECTOR2, &"", null)
+	# its own bins, not the market's four: those stood in the chase lane
+	m.bins = Array([], TYPE_VECTOR2, &"", null)
+	for bn: Array in NETEJA_BINS:
+		m.bins.append(neteja_kerb(m, float(bn[0]), bool(bn[1]), 26.0))
 	m.fountains = Array([Vector2(640, -3100)], TYPE_VECTOR2, &"", null)
 	m.laundry_lines = Array([-900.0, -1700.0, -2500.0, -3300.0, -4100.0], TYPE_FLOAT, &"", null)
 	m.poles.clear()
@@ -1675,7 +1695,7 @@ static func build_level_data(m: Node2D) -> void:
 	elif m.lvl == "site":
 		obres(m)
 	elif m.lvl == "neteja":
-		neteja(m, hyd_list)
+		neteja(m, hyd_list, keb_list)
 	elif m.lvl == "guell":
 		mosaic(m, hyd_list, keb_list)
 	elif m.lvl == "scrap":

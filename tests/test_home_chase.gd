@@ -195,8 +195,9 @@ func _run() -> void:
 		mm.tofu_quest_active = true
 		seed(sd)
 		HomeChase.roll(mm)
-		always = always and bool(mm.chase_active) and not bool(mm.tofu_quest_active) 			and String(mm.chase_kind) in ["sweeper", "bolt", "both"]
-	_check(always, "La Neteja always gets a chase, and it replaces Tofu")
+		always = always and bool(mm.chase_active) and not bool(mm.tofu_quest_active) \
+			and String(mm.chase_kind) == "sweeper"
+	_check(always, "La Neteja always gets the sweeper chase, and it replaces Tofu")
 	await _drop(mm)
 
 	# the way out of a chase walk is not the chase: no dread before the machine
