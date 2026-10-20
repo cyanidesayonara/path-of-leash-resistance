@@ -6,6 +6,10 @@ Append-only session history, newest first.
 
 - Godot 4.7's web sample mixer inserts a bus added at runtime before Master, then disconnects Master from the speakers. The procedural soundtrack added its Music bus that way, silencing both music and effects in every browser. The bus now takes the web-safe append path. Native audio is unchanged.
 
+## 2026-10-20 - The dare kid sits out from under the trees
+
+- El Barri put the kid's bench directly under a plane-tree crown. The dare now tries the other side of the walk, then the nearby clear spots, whenever its usual place is under a tree. All sixteen walks check the clearance.
+
 ## 2026-10-20 - What's new for 1.61
 
 - The Store and itch notes now describe everything since v1.60: Dia de Partit, the redrawn walks, the leash catching what you can see, and the finished intro. Nothing is tagged.
