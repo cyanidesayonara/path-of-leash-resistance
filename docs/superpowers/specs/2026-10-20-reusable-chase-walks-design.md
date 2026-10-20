@@ -53,10 +53,12 @@ A chase walk proceeds through these phases:
 6. **Complete:** reaching home ends the walk through the existing results
    flow.
 
-SCARED remains proximity-driven. It rises only from the distance to a live,
-advancing threat and falls when that threat is held or distant. Entering a
-chase phase, restoring a checkpoint, or merely being on a chase walk does not
-grant fear.
+SCARED remains proximity-driven. Its added charge is determined only by
+distance while a live threat is actively advancing. A jammed or
+checkpoint-held threat adds no new charge, even when physically nearby.
+Existing charge is not forcibly cleared: it decays naturally through
+`mood.gd`. Entering a chase phase, restoring a checkpoint, or merely being on
+a chase walk does not grant fear.
 
 ## La Neteja reference profile
 
@@ -91,7 +93,8 @@ leg.
 A destination continue repeats the warning and full head start. It does not
 drop the player directly into motion. A midpoint continue restores the
 sweeper held at the later jam, shows a short safe countdown, and only then
-releases it. The countdown cannot advance catch physics or proximity fear.
+releases it. The countdown cannot advance catch physics or add SCARED charge,
+and it cannot instantly clear fear already present.
 
 Each checkpoint stores the transient run state needed to make continuation
 fair:
@@ -132,7 +135,10 @@ Focused automated coverage must prove:
   its fixed sweeper profile;
 - outbound and destination phases remain calm, warning precedes the head
   start, and catching is disabled until the chase begins;
-- SCARED follows live threat proximity rather than phase or level identity;
+- SCARED charge follows distance only while the threat actively advances; a
+  nearby jammed, checkpoint-held, or safe-countdown threat adds no charge,
+  while existing charge is left to decay naturally through `mood.gd` rather
+  than being cleared;
 - destination and midpoint checkpoints are captured at the specified events;
 - destination continue repeats warning and head start, while midpoint
   continue holds the later jam through its safe countdown;
