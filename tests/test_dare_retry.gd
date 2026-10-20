@@ -51,6 +51,26 @@ func _fresh() -> void:
 	g.set_physics_process(false)
 
 
+func _check_tree_clearance(game: Node) -> void:
+	m.queue_free()
+	await process_frame
+	for level: String in game.LEVELS:
+		game.level_id = level
+		await _fresh()
+		m.cam.position.y = g.position.y
+		var nearest := INF
+		var need := 0.0
+		for tree: Dictionary in m.canopy_trees():
+			var d: float = g.position.distance_to(tree.p)
+			if d < nearest:
+				nearest = d
+				need = float(tree.r) + 24.0
+		_check(nearest >= need, "%s dare giver stays out from under tree crowns (%.1f >= %.1f)" % [
+			level, nearest, need])
+		m.queue_free()
+		await process_frame
+
+
 func _lose() -> void:
 	_step(m.challenge.OFFER_S + 0.1)
 	m.challenge.timer = 0.01
@@ -131,6 +151,7 @@ func _run() -> void:
 	_step(g.RETRY_WAIT * 2.0)
 	_check(m.challenge.phase == "" and g.retries == 0, "the autowalk is never offered a retry")
 
+	await _check_tree_clearance(game)
 	print("\n%d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():
 		print("DARE RETRY OK")
