@@ -476,9 +476,8 @@ var chase_shave_armed := false
 var chase_phase := ""
 var chase_phase_t := 0.0
 # the latest checkpoint's snapshot (systems/chase_checkpoint.gd), run-local
-# and never saved; and whether the walk was just lost to the chase
+# and never saved
 var chase_checkpoint: Dictionary = {}
-var chase_lost := false
 # where this walk's sweeper snags a broom on a dumpster and stalls (level data)
 var chase_jams: Array[Vector2] = []
 var chase_kerb_blocks: Array[Rect2] = []

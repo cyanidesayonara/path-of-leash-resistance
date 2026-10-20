@@ -2,10 +2,10 @@ extends RefCounted
 
 # A chase checkpoint: a run-local snapshot of the walk home, taken where
 # systems/home_chase.gd says (leaving the destination, and the sweeper held
-# at the later dumpster jam), and put back in place when a chase loss is
-# continued. It lives on main (chase_checkpoint) and dies with the scene; it
-# is never written to the save, and capturing or restoring it touches
-# nothing in Game.
+# at the later dumpster jam), and put back in place when a loss on the walk
+# home is continued. It lives on main (chase_checkpoint) and dies with the
+# scene; it is never written to the save, and capturing or restoring it
+# touches nothing in Game.
 #
 # Restore REPLACES values, it never adds to them, so every reward in the
 # snapshot is kept and nothing earned after it can be paid twice: the
@@ -18,8 +18,9 @@ extends RefCounted
 #            leash's length, the phone, bones, run-goal progress and every
 #            counter a goal reads, the one-run pickups and rewards (hydrant
 #            sniffs, snacks, other dogs' marks, chocolate, the prize, the
-#            Fur-Goneta, the dare offer), and the chase's own one-shots (its
-#            closest approach, an armed close shave, the camera lean)
+#            Fur-Goneta, the dare offer), the chase's own one-shots (its
+#            closest approach, an armed close shave, the camera lean), and
+#            the teeter, grind and pole-swing cooldowns
 #   dog      where she is and how she is moving, her energy, a squat or
 #            tumble in progress
 #   human    where they are and how they are moving, the leash conversation
@@ -42,6 +43,9 @@ extends RefCounted
 #     re-earning it pays its run bones once and is not counted new twice
 #   - what an owner was in the middle of (a stop, a selfie, a whirl, the
 #     call): they come back walking, with the event timers the snapshot had
+#   - a stunt in progress (a teeter at a brink, a grind, a pole swing): it is
+#     ended without paying or failing, so she comes back on her feet; only
+#     the cooldowns are kept
 #   - the rope's points: laid fresh from dog to hand, as the gate does
 #   - other walkers and their dogs, bikes, critters, loose junk and crates,
 #     toppled scooters, paw prints and other cosmetics: none of them is a
@@ -70,6 +74,8 @@ const MAIN_FIELDS := [
 	"challenge_offered",
 	# the chase's one-shots
 	"chase_min_gap", "chase_shave_armed", "chase_lean",
+	# stunt cooldowns (the stunts themselves are ended by _settle)
+	"teeter_cd", "grind_cd", "vault_cd",
 ]
 const DOG_FIELDS := [
 	"global_position", "velocity", "facing", "energy", "squat_t", "squat_ui",
@@ -142,7 +148,6 @@ static func store(m: Node2D, id: String) -> void:
 
 static func clear(m: Node2D) -> void:
 	m.chase_checkpoint = {}
-	m.chase_lost = false
 
 
 # Put a snapshot back: its values replace the walk's, then whatever was
@@ -190,6 +195,16 @@ static func _settle(m: Node2D) -> void:
 	d.drag_amt = 0.0
 	d.dragged = false
 	d.peeing = false
+	# no stunt carries over: ended, not landed or failed, so nothing pays
+	m.teeter.cancel()
+	m.grind.active = false
+	m.grind.lean = 0.0
+	m.grind.vel = 0.0
+	m.grind_rail = -1
+	m.vault_t = 0.0
+	m.vault_arc = 0.0
+	m.vault_elapsed = 0.0
+	m.vault_speed_sum = 0.0
 	var h: CharacterBody2D = m.human
 	h.state = Human.HState.WALK
 	h.state_t = 0.0

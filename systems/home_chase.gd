@@ -22,9 +22,12 @@ extends RefCounted
 #                given, for WARNING_SECS
 #   "head_start" HEAD_START_SECS to get going
 #   "chase"      the machine runs, and only now can it catch anyone
-#   "hold"       a midpoint continue: the machine held at its jam for HOLD_SECS
+#   "hold"       a midpoint continue: the machine held at its jam for HOLD_SECS,
+#                then free at once; the countdown is the whole respite
 # Outside "chase" the machine does not advance, catch, or pay a close shave,
-# and (mood_wiring.gd, through advancing()) adds no fear. A chase loss can be
+# and (mood_wiring.gd, through advancing()) adds no fear. The midpoint is
+# never taken during a catch beat or with either of the pair at the kill
+# line. Any loss on the home leg (the machine, the phone, a hazard) can be
 # continued from the latest checkpoint (systems/chase_checkpoint.gd holds the
 # snapshot): the destination repeats the warning and head start, the
 # midpoint counts down at its jam.
@@ -222,7 +225,6 @@ static func begin(m: Node2D, profile: Dictionary = {}) -> void:
 	sweeper.kerb_blocks = m.chase_kerb_blocks.duplicate()
 	m.chase_lean = 0.0
 	m.chase_shave_armed = false
-	m.chase_lost = false
 	# the destination checkpoint, before anything is said
 	ChaseCheckpoint.store(m, "destination")
 	_warn(m, behavior)
@@ -270,11 +272,22 @@ static func _hold(m: Node2D, sweeper: Node2D, delta: float) -> void:
 	m.chase_phase_t = float(m.chase_phase_t) - delta
 	if m.chase_phase_t > 0.0:
 		return
-	if String(m.chase_phase) == "warning":
-		m.chase_phase = "head_start"
-		m.chase_phase_t = HEAD_START_SECS
-	else:
-		release(m)
+	match String(m.chase_phase):
+		"warning":
+			m.chase_phase = "head_start"
+			m.chase_phase_t = HEAD_START_SECS
+		"hold":
+			# the countdown was the respite: whatever was left of the jam goes
+			sweeper.jam_t = 0.0
+			_say_freed(m, sweeper)
+			release(m)
+		_:
+			release(m)
+
+
+static func _say_freed(m: Node2D, sweeper: Node2D) -> void:
+	Sfx.play("hiss", 0.6, -6.0)
+	m.float_text(Vector2(m.walk_cx + sweeper.sway, sweeper.front_y - 60.0), "VRRROOM", Color(1.0, 0.7, 0.4))
 
 
 # Whether the jam the machine just snagged on is the profile's checkpoint.
@@ -307,11 +320,11 @@ static func banner(m: Node2D) -> String:
 	return "RUN! DON'T LET IT CATCH YOU"
 
 
-# The end card's retry is "continue": the walk was lost to the chase and a
-# checkpoint is held.
+# The end card's retry is "continue": the walk was lost on the home leg, to
+# anything, with a checkpoint held. A loss on the way out has none.
 static func can_continue(m: Node2D) -> bool:
-	return bool(m.chase_lost) and not (m.chase_checkpoint as Dictionary).is_empty() \
-		and m.frozen and not m.finished
+	return not (m.chase_checkpoint as Dictionary).is_empty() and String(m.phase) == "home" \
+		and m.started and m.frozen and not m.finished and not m.paused and m.msg_label.visible
 
 
 # Back to the latest checkpoint, in place: its values replace the walk's,
@@ -320,7 +333,6 @@ static func can_continue(m: Node2D) -> bool:
 static func continue_run(m: Node2D) -> void:
 	var snap: Dictionary = m.chase_checkpoint
 	ChaseCheckpoint.restore(m, snap)
-	m.chase_lost = false
 	m.chase_catch_t = 0.0
 	m.chase_catch_msg = ""
 	m.msg_label.visible = false
@@ -355,12 +367,8 @@ static func tick(m: Node2D, delta: float) -> void:
 		Sfx.play("crack", 0.5, -4.0)
 		m.float_text(Vector2(m.walk_cx + sweeper.jam_side * (m.walk_half - 40.0), sweeper.front_y), "CLONK", Color(1.0, 0.85, 0.5))
 		m.feed.say("IT'S JAMMED!", EventFeed.Tone.GOOD)
-		# held there: the midpoint checkpoint, if this is its jam
-		if _checkpoint_jam(m, sweeper.jam_at):
-			ChaseCheckpoint.store(m, "midpoint")
 	elif sweeper.freed_now:
-		Sfx.play("hiss", 0.6, -6.0)
-		m.float_text(Vector2(m.walk_cx + sweeper.sway, sweeper.front_y - 60.0), "VRRROOM", Color(1.0, 0.7, 0.4))
+		_say_freed(m, sweeper)
 	if sweeper.sweep_junk(m.get_tree().get_nodes_in_group("cones")) > 0:
 		Sfx.play("tangle", 0.8, -10.0)
 	# a low rumble the closer it gets to the dog
@@ -368,6 +376,12 @@ static func tick(m: Node2D, delta: float) -> void:
 	if gap < 260.0:
 		m.shake_t = maxf(m.shake_t, 0.25)
 	rear = minf(gap, sweeper.gap_to(m.human.global_position))
+	# held at its jam: the midpoint checkpoint, if this is its jam, and only
+	# with both of them clear of the brooms and no catch already rolling. A
+	# jam that fails this keeps the checkpoint before it.
+	if sweeper.jammed_now and m.chase_catch_t <= 0.0 and rear > 0.0 \
+			and _checkpoint_jam(m, sweeper.jam_at):
+		ChaseCheckpoint.store(m, "midpoint")
 	m.chase_min_gap = minf(m.chase_min_gap, rear)
 	_lean(m, sweeper, delta)
 	if m.chase_catch_t > 0.0:
@@ -375,7 +389,6 @@ static func tick(m: Node2D, delta: float) -> void:
 		m.chase_catch_t -= delta
 		m.shake_t = maxf(m.shake_t, 0.4)
 		if m.chase_catch_t <= 0.0:
-			m.chase_lost = true
 			m._death(m.chase_catch_msg, "chase")
 		return
 	if m.auto_walk:

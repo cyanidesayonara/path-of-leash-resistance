@@ -126,7 +126,7 @@ static func end_prompts(m: Node2D) -> Array:
 		return [["plant", "on to El Barri"], ["back", "walk select"], ["restart", "practice again"]]
 	if m.finished:
 		return [["restart", "walk it again"], ["back", "walk select"]]
-	# lost to the chase with a checkpoint held: retry picks up from it
+	# lost on the walk home with a checkpoint held: retry picks up from it
 	if HomeChase.can_continue(m):
 		return [["restart", "continue"], ["back", "walk select"]]
 	return [["restart", "try again"], ["back", "walk select"]]

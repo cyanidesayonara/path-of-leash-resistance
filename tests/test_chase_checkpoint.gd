@@ -3,15 +3,18 @@ extends SceneTree
 # Fair chase continuation (systems/home_chase.gd, systems/chase_checkpoint.gd)
 # on real main scenes. Leaving the destination captures the destination
 # checkpoint before the warning; the warning and a fixed head start hold the
-# machine; the later dumpster jam, and only it, is the midpoint checkpoint.
-# A chase loss offers "continue" on the end card's restart action, which
-# restores the latest checkpoint's exact values in place: the destination
-# repeats the warning and head start, the midpoint holds the machine at its
-# jam through a safe countdown. Nothing is paid twice, nothing banked before
-# the checkpoint is lost, and capture or restore never touches the save.
+# machine; the later dumpster jam, and only it, is the midpoint checkpoint,
+# and never while a catch is under way or anyone is at the kill line.
+# Any loss on the home leg with a checkpoint held offers "continue" on the
+# end card's restart action, which restores the latest checkpoint's exact
+# values in place: the destination repeats the warning and head start, the
+# midpoint holds the machine at its jam through a safe countdown and then
+# lets it go at once. Nothing is paid twice, nothing banked before the
+# checkpoint is lost, and capture or restore never touches the save.
 # START AGAIN, the walk select and any reload clear the checkpoint; an
 # ordinary walk and the autowalk bot are unchanged; --at-home starts the
-# home leg through a callable seam.
+# home leg through a callable seam. The continue tests then run real frames
+# of main to show the walk goes on from there.
 
 var HomeChase: GDScript
 var Checkpoint: GDScript
@@ -115,6 +118,69 @@ func _has_verb(m: Node2D, action: String, verb: String) -> bool:
 	return false
 
 
+func _later_jam(sw: Node2D) -> Vector2:
+	var later := Vector2(0.0, -INF)
+	for j: Vector2 in sw.jams:
+		if j.y > later.y:
+			later = j
+	return later
+
+
+# Real frames of main after a continue: count the frames until the phase
+# leaves `held`, watching that the pair and the rope stay put together, that
+# nobody is caught, and (while held) that the machine does not move. Returns
+# the held seconds and what it saw.
+func _run_held(m: Node2D, held: Array, limit_secs: float) -> Dictionary:
+	var sw: Node2D = m.chase_sweeper
+	var dt := 1.0 / float(Engine.physics_ticks_per_second)
+	var out := {"secs": 0.0, "stable": true, "caught": false, "moved": false, "why": ""}
+	var fy: float = sw.front_y
+	var pd: Vector2 = m.dog.global_position
+	var ph: Vector2 = m.human.global_position
+	for i in range(int(limit_secs / dt)):
+		await physics_frame
+		if not held.has(String(m.chase_phase)):
+			break
+		out["secs"] = float(out["secs"]) + dt
+		_watch(m, pd, ph, out)
+		pd = m.dog.global_position
+		ph = m.human.global_position
+		if not is_equal_approx(float(sw.front_y), fy):
+			out["moved"] = true
+	return out
+
+
+# Then real frames of the chase itself: the machine should be moving and
+# nobody caught yet.
+func _run_chase(m: Node2D, frames: int) -> Dictionary:
+	var sw: Node2D = m.chase_sweeper
+	var out := {"stable": true, "caught": false, "start": float(sw.front_y), "end": 0.0, "why": ""}
+	var pd: Vector2 = m.dog.global_position
+	var ph: Vector2 = m.human.global_position
+	for i in range(frames):
+		await physics_frame
+		_watch(m, pd, ph, out)
+		pd = m.dog.global_position
+		ph = m.human.global_position
+	out["end"] = float(sw.front_y)
+	return out
+
+
+func _watch(m: Node2D, pd: Vector2, ph: Vector2, out: Dictionary) -> void:
+	var d: Vector2 = m.dog.global_position
+	var h: Vector2 = m.human.global_position
+	var rope: float = m.leash.used_length()
+	var ok: bool = is_finite(d.x) and is_finite(d.y) and is_finite(h.x) and is_finite(h.y) \
+		and d.distance_to(pd) < 30.0 and h.distance_to(ph) < 30.0 \
+		and d.distance_to(h) < float(m.leash_len) * 1.3 + 20.0 \
+		and is_finite(rope) and rope < float(m.leash_len) * 1.6 + 20.0
+	if not ok and bool(out["stable"]):
+		out["stable"] = false
+		out["why"] = "dog %s (was %s), human %s (was %s), rope %.0f of %.0f" % [d, pd, h, ph, rope, float(m.leash_len)]
+	if m.chase_catch_t > 0.0 or m.frozen:
+		out["caught"] = true
+
+
 func _scared(m: Node2D) -> float:
 	return float(m.mood.charge.get(Mood.M.SCARED, 0.0))
 
@@ -172,7 +238,10 @@ func _run() -> void:
 	await _test_ordinary_walk()
 	await _test_destination_and_head_start()
 	await _test_midpoint_and_exact_restore()
+	await _test_midpoint_guards()
 	await _test_no_duplicates_and_destination_continue()
+	await _test_real_frames_midpoint()
+	await _test_real_frames_destination()
 	await _test_restart_paths_clear()
 	await _test_autowalk()
 	await _test_at_home()
@@ -339,6 +408,7 @@ func _test_midpoint_and_exact_restore() -> void:
 		["main", "kebabs_eaten"], ["main", "dogs_greeted"], ["main", "sniffs_done"],
 		["main", "kebabs"], ["main", "hydrants"], ["main", "npc_marks"], ["main", "prize_taken"],
 		["main", "chase_min_gap"], ["main", "chase_shave_armed"],
+		["main", "teeter_cd"], ["main", "grind_cd"], ["main", "vault_cd"],
 		["sweeper", "front_y"], ["sweeper", "jams"], ["sweeper", "jam_t"],
 	]
 	for nk: Array in need:
@@ -358,6 +428,12 @@ func _test_midpoint_and_exact_restore() -> void:
 				print("  not changed by the probe: %s.%s" % [section, key])
 	_check(fields > 60 and changed == fields, "every captured value is changed before the loss (%d of %d)" % [changed, fields])
 	m.mood.charge[Mood.M.SCARED] = 0.8
+	# and a stunt in progress of every kind, which a continue must not carry
+	m.teeter.begin()
+	m.grind.begin()
+	m.grind_rail = 0
+	m.vault_t = 0.5
+	m.vault_arc = 1.0
 	var elapsed_before: float = m.elapsed
 	var new_before: int = m.run_goals_new
 	_get_caught(m)
@@ -381,7 +457,9 @@ func _test_midpoint_and_exact_restore() -> void:
 			exact = exact and ok
 	_check(exact, "every captured value is restored exactly")
 	_check(m.chase_sweeper == sw and sw.z_index == 0, "the same machine is back behind the pair")
-	_check(m.chase_catch_t <= 0.0 and not bool(m.chase_lost), "the catch is cleared")
+	_check(m.chase_catch_t <= 0.0 and String(m.chase_catch_msg) == "", "the catch is cleared")
+	_check(not m.teeter.active and not m.grind.active and m.grind_rail == -1
+		and m.vault_t == 0.0 and m.vault_arc == 0.0, "no teeter, grind or pole swing is carried into the continue")
 	_check(m.elapsed >= elapsed_before, "the walk's clock is not wound back (%.2f, %.2f)" % [m.elapsed, elapsed_before])
 	_check(m.run_goals_new == new_before, "goals ticked for good stay counted")
 	_check(absf(_scared(m) - 0.8) < 0.001, "continuing does not clear the fear she had")
@@ -397,15 +475,65 @@ func _test_midpoint_and_exact_restore() -> void:
 	_check(m.chase_catch_t <= 0.0 and not m.frozen, "no catch during the countdown")
 	_check(is_equal_approx(float(sw.front_y), fy) and is_equal_approx(float(sw.jam_t), jt),
 		"the machine stays held at its jam during the countdown")
+	_check(sw.jammed(), "and still reads as stuck on it")
 	m._tick_mood(0.3)
 	_check(_scared(m) < 0.8 and _scared(m) > 0.0, "the countdown adds no fear; it decays naturally (%.3f)" % _scared(m))
 	_safe(m)
 	var to_chase := _tick_until(m, "chase", 0.05)
 	_check(to_chase >= 0.0 and absf(to_chase + 0.5 - HomeChase.HOLD_SECS) < 0.11,
 		"the countdown lasts its fixed time (%.2f)" % (to_chase + 0.5))
+	# the countdown was the whole of the respite: no jam time is left over
+	_check(float(sw.jam_t) == 0.0 and not sw.jammed(), "at zero the machine is free at once (jam_t %.2f)" % sw.jam_t)
 	HomeChase.tick(m, 0.2)
-	_check(float(sw.jam_t) < jt, "then the machine works itself free of the jam")
+	_check(float(sw.front_y) > fy, "and the next frame it is rolling (%.1f, from %.1f)" % [sw.front_y, fy])
 	await _drop(m)
+
+
+# --- the midpoint is never taken from a catch, or with anyone swept --------
+func _test_midpoint_guards() -> void:
+	# a catch beat rolling on over the jam
+	var m := await _fresh_main("neteja")
+	_leave_destination(m)
+	_safe(m)
+	_tick_until(m, "chase")
+	var sw: Node2D = m.chase_sweeper
+	var later := _later_jam(sw)
+	var dest := var_to_str(m.chase_checkpoint)
+	var only: Array[Vector2] = [later]
+	sw.jams = only
+	sw.front_y = later.y - 40.0
+	m.human.global_position = Vector2(m.walk_cx, sw.front_y - 5.0)
+	m.dog.global_position = Vector2(m.walk_cx, later.y + 500.0)
+	HomeChase.tick(m, 0.0)
+	_check(m.chase_catch_t > 0.0, "guard setup: the catch beat has begun")
+	m.human.global_position = Vector2(m.walk_cx, later.y + 550.0)
+	sw.front_y = later.y - 2.0
+	HomeChase.tick(m, 0.1)
+	_check(sw.jammed() and sw.jam_at == later, "the catch beat rolls onto the later jam")
+	_check(var_to_str(m.chase_checkpoint) == dest, "a jam during the catch beat takes no midpoint; the destination stands")
+	await _drop(m)
+
+	# your human, then the dog, at or behind the kill line as it jams
+	for who: String in ["human", "dog"]:
+		m = await _fresh_main("neteja")
+		_leave_destination(m)
+		_safe(m)
+		_tick_until(m, "chase")
+		sw = m.chase_sweeper
+		later = _later_jam(sw)
+		dest = var_to_str(m.chase_checkpoint)
+		only = [later]
+		sw.jams = only
+		sw.front_y = later.y - 2.0
+		var behind := Vector2(m.walk_cx, later.y - 10.0)
+		var clear := Vector2(m.walk_cx, later.y + 500.0)
+		m.human.global_position = behind if who == "human" else clear
+		m.dog.global_position = behind if who == "dog" else clear + Vector2(0.0, 40.0)
+		HomeChase.tick(m, 0.1)
+		_check(sw.jammed() and sw.jam_at == later, "%s behind: the machine jams on the later dumpster" % who)
+		_check(var_to_str(m.chase_checkpoint) == dest,
+			"%s behind the kill line: no midpoint, the destination checkpoint stands" % who)
+		await _drop(m)
 
 
 # --- nothing paid twice, nothing banked lost; the destination continue -----
@@ -481,6 +609,71 @@ func _test_no_duplicates_and_destination_continue() -> void:
 	await _drop(m)
 
 
+# --- after a midpoint continue, real frames of main -------------------------
+func _test_real_frames_midpoint() -> void:
+	var m := await _fresh_main("neteja")
+	_leave_destination(m)
+	_safe(m)
+	_tick_until(m, "chase")
+	var sw: Node2D = m.chase_sweeper
+	var later := _later_jam(sw)
+	# set up the later jam directly, the pair well clear and the rope laid
+	var only: Array[Vector2] = [later]
+	sw.jams = only
+	sw.front_y = later.y - 2.0
+	m.dog.global_position = Vector2(m.walk_cx + 10.0, later.y + 520.0)
+	m.human.global_position = Vector2(m.walk_cx - 10.0, later.y + 600.0)
+	m.dog.velocity = Vector2.ZERO
+	m.human.velocity = Vector2.ZERO
+	m.leash.resnap()
+	HomeChase.tick(m, 0.05)
+	_check(String(m.chase_checkpoint.get("id", "")) == "midpoint", "frames: the midpoint is taken")
+	var d0: Vector2 = m.dog.global_position
+	var h0: Vector2 = m.human.global_position
+	var fy: float = sw.front_y
+	_get_caught(m)
+	_press(m, "restart")
+	_check(String(m.chase_phase) == "hold", "frames: the midpoint continue holds (%s)" % m.chase_phase)
+	var held := await _run_held(m, ["hold"], HomeChase.HOLD_SECS + 1.0)
+	_check(m.dog.global_position.y > fy and d0.distance_to(m.dog.global_position) < 400.0
+		and h0.distance_to(m.human.global_position) < 400.0, "frames: the pair carried on from where the checkpoint had them")
+	_check(bool(held["stable"]), "frames: pair and rope hold together through the countdown %s" % String(held["why"]))
+	_check(not bool(held["caught"]), "frames: nobody is caught in the countdown")
+	_check(not bool(held["moved"]), "frames: the machine does not move in the countdown")
+	_check(absf(float(held["secs"]) - HomeChase.HOLD_SECS) < 0.1,
+		"frames: the countdown runs its time and lets go (%.2f s)" % float(held["secs"]))
+	_check(String(m.chase_phase) == "chase" and float(sw.jam_t) == 0.0,
+		"frames: then the chase is on, the machine already free (jam_t %.2f)" % sw.jam_t)
+	var run := await _run_chase(m, 60)
+	_check(float(run["end"]) > float(run["start"]) + 20.0,
+		"frames: and it rolls straight away (%.0f to %.0f)" % [float(run["start"]), float(run["end"])])
+	_check(bool(run["stable"]) and not bool(run["caught"]), "frames: no catch right after the countdown %s" % String(run["why"]))
+	await _drop(m)
+
+
+# --- after a destination continue, real frames of main ----------------------
+func _test_real_frames_destination() -> void:
+	var m := await _fresh_main("neteja")
+	_leave_destination(m)
+	var sw: Node2D = m.chase_sweeper
+	var fy: float = sw.front_y
+	_safe(m)
+	_tick_until(m, "chase")
+	_get_caught(m)
+	_press(m, "restart")
+	_check(String(m.chase_phase) == "warning", "frames: the destination continue warns (%s)" % m.chase_phase)
+	var held := await _run_held(m, ["warning", "head_start"], HomeChase.WARNING_SECS + HomeChase.HEAD_START_SECS + 1.0)
+	_check(bool(held["stable"]), "frames: pair and rope hold together through the head start %s" % String(held["why"]))
+	_check(not bool(held["caught"]) and not bool(held["moved"]) and is_equal_approx(float(sw.front_y), fy),
+		"frames: no catch and no machine through the warning and head start")
+	_check(absf(float(held["secs"]) - HomeChase.WARNING_SECS - HomeChase.HEAD_START_SECS) < 0.1,
+		"frames: the warning and the full head start run their time (%.2f s)" % float(held["secs"]))
+	var run := await _run_chase(m, 60)
+	_check(float(run["end"]) > float(run["start"]) + 20.0, "frames: then the machine runs")
+	_check(bool(run["stable"]) and not bool(run["caught"]), "frames: and nobody is caught at once %s" % String(run["why"]))
+	await _drop(m)
+
+
 # --- explicit restarts and leaving the walk clear the checkpoint -----------
 func _test_restart_paths_clear() -> void:
 	# START AGAIN from the pause menu
@@ -510,19 +703,32 @@ func _test_restart_paths_clear() -> void:
 	game.menu_step = 0
 	await _drop(m)
 
-	# a loss that is not the chase restarts, even with a checkpoint held
-	m = await _fresh_main("neteja")
-	_leave_destination(m)
-	m._death("PHONE SMASHED\n\nThree cracks.", "phone")
-	_check(not HomeChase.can_continue(m), "a phone loss on the home leg does not continue")
-	_check(_has_verb(m, "restart", "try again"), "it offers try again (%s)" % str(_verbs(m)))
-	reloads = 0
-	game.quick_start = false
-	_press(m, "restart")
-	_check(reloads == 1 and game.quick_start and m.chase_checkpoint.is_empty(),
-		"try again starts from scratch and clears the checkpoint")
-	game.quick_start = false
-	await _drop(m)
+	# any loss on the home leg continues from the checkpoint, not just the
+	# machine's: the phone, and a hazard
+	for cause: String in ["phone", "manhole"]:
+		m = await _fresh_main("neteja")
+		_leave_destination(m)
+		var hp: int = m.phone_hp
+		var at: Vector2 = m.dog.global_position
+		m.phone_hp = 0 if cause == "phone" else hp
+		m.dog.global_position = at + Vector2(0.0, 300.0)
+		m._death("LOST\n\nIt went wrong.", cause)
+		_check(HomeChase.can_continue(m), "%s loss on the home leg can continue" % cause)
+		_check(_has_verb(m, "restart", "continue") and not _has_verb(m, "restart", "try again"),
+			"%s loss: the retry reads continue (%s)" % [cause, str(_verbs(m))])
+		reloads = 0
+		game.quick_start = false
+		_press(m, "restart")
+		_check(reloads == 0 and not game.quick_start and not m.frozen,
+			"%s loss: continue restores in place" % cause)
+		_check(m.phone_hp == hp and m.dog.global_position.distance_to(at) < 1.0,
+			"%s loss: the checkpoint's phone and place are back" % cause)
+		_check(String(m.chase_phase) == "warning" and String(m.chase_checkpoint.get("id", "")) == "destination",
+			"%s loss: from the destination, the warning again" % cause)
+		var run := await _run_held(m, ["warning", "head_start"], 1.0)
+		_check(bool(run["stable"]) and not bool(run["caught"]) and not m.frozen,
+			"%s loss: the walk goes on for real frames afterwards %s" % [cause, String(run["why"])])
+		await _drop(m)
 
 	# no checkpoint (a loss on the way out) is the old try again
 	m = await _fresh_main("neteja")
