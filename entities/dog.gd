@@ -50,6 +50,10 @@ var tempted := false
 var facing := Vector2.UP
 var hip_dir := Vector2.DOWN
 var gait := 0.0
+# Draw-only motion for terminal beats. Gameplay position and rotation stay
+# authoritative; the leash receives the same world offset separately.
+var presentation_offset := Vector2.ZERO
+var presentation_rotation := 0.0
 var flecks: Array[Vector2] = []
 var main: Node2D
 var preview_mode := false
@@ -298,9 +302,16 @@ func _draw() -> void:
 	# every draw call goes through a ShapeBatch standing in for the canvas: runs
 	# of shapes become one draw call, same pixels (systems/shape_batch.gd)
 	_b = ShapeBatch.new(self)
+	_draw_xf()
 	_draw_shapes()
 	_b.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	_b.flush()
+
+
+func _draw_xf(local_pos := Vector2.ZERO, local_rotation := 0.0,
+		local_scale := Vector2.ONE) -> void:
+	_b.draw_set_transform(presentation_offset + local_pos.rotated(presentation_rotation),
+		presentation_rotation + local_rotation, local_scale)
 
 
 # gait by surface (see tick): steps per distance, and how long each step is
@@ -354,7 +365,7 @@ func _draw_shapes() -> void:
 		var lift: float = 1.0 + clampf(velocity.length() / 700.0, 0.0, 0.35)
 		main.contact_shadow(_b, Vector2.ZERO, 12.0, 8.0 * lift, 0.26)
 	if hop > 0.0:
-		_b.draw_set_transform(Vector2(0.0, -hop), 0.0, Vector2.ONE * (1.0 + hop * 0.008))
+		_draw_xf(Vector2(0.0, -hop), 0.0, Vector2.ONE * (1.0 + hop * 0.008))
 	# the coat comes from data now (Game.COATS), not baked-in colours, so a
 	# dog creator later means adding a row of parameters rather than editing
 	# this renderer

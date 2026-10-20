@@ -466,6 +466,8 @@ var chase_min_gap := INF
 # before the card comes up (systems/home_chase.gd)
 var chase_catch_t := 0.0
 var chase_catch_msg := ""
+var chase_catch_first := ""
+var chase_catch_elapsed := 0.0
 # how far the camera leans back up the street to keep the machine in shot
 var chase_lean := 0.0
 # the brooms have come within a whisker; getting clear again is a CLOSE SHAVE
@@ -8385,6 +8387,9 @@ func tip(id: String) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if chase_catch_t > 0.0:
+		HomeChase.tick_catch(self, delta)
+		return
 	if frozen:
 		return
 	elapsed += delta
@@ -8492,6 +8497,8 @@ func _physics_process(delta: float) -> void:
 		freedom_games_tick(delta)
 	elif phase == "home" and chase_active:
 		_chase(delta)
+		if chase_catch_t > 0.0:
+			return
 	_prof("romp, chase")
 	_check_goals()
 	_prof("goals")
@@ -8755,7 +8762,9 @@ func _process(_delta: float) -> void:
 	if started and paused:
 		MenuFlow.tick_pause(self)
 		return
-	if started and frozen:
+	if started and frozen and chase_catch_t > 0.0:
+		pass  # the catch beat takes no input; the card that follows does
+	elif started and frozen:
 		# a result, a game-over or the daily card: the walk has stopped
 		if finished and Game.daily and not daily_copied and daily_share != "" and Input.is_action_just_pressed("share"):
 			DisplayServer.clipboard_set(daily_share)
