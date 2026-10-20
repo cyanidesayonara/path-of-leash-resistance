@@ -118,6 +118,9 @@ CHANGELOG.md:
 - She slides along a wall or a post, and a soft push keeps her beside your human.
 - El Diluvi's umbrella crowd strolls both ways along the covered edges. The porch yard, the drains and the wet roofs are that street's own.
 - Redrawn from the audits: El Barri's pipicà and petanca court, El Bosc's pinch, L'Estació's terrazzo and its train, Les Obres' fencing and two concrete pours, La Ferralla's wrecks and crawler crane, El Mosaic's bench, hall and salamander, La Castanyada's roaster and festival yard, and La Neteja's bins and dawn light.
+- La Neteja warns you at the far end, then gives a head start before the sweeper rolls. Lost on the way home, to the sweeper or anything else, you continue from the destination or from the halfway jam.
+- The dare kid sits out from under the trees.
+- The browser build has sound again.
 - The opening film is redrawn as a finished cartoon, scored to the picture, and the title theme has some get-up-and-go.
 ```
 

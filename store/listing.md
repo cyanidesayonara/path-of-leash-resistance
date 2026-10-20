@@ -84,6 +84,8 @@ dog walking
 - Off the avenue, a lost scarf and a kickabout. Off the leash is PLAÇA DEL GOL, goal square.
 - The leash catches a car, a stall or a bench on the shape you see. She slides along a wall instead of sticking to it.
 - El Diluvi's shoppers stroll the covered street. El Barri, El Bosc, L'Estació, Les Obres, La Ferralla, El Mosaic, La Castanyada and La Neteja are redrawn.
+- La Neteja gives a warning and a head start, then the sweeper. Lost on the way home, continue from the destination or the halfway point.
+- The dare kid sits clear of the trees, and the browser build has sound again.
 - The opening film is finished, and the title theme has some get-up-and-go.
 ```
 

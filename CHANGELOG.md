@@ -2,6 +2,10 @@
 
 Append-only session history, newest first.
 
+## 2026-10-20 - 1.61 notes include the chase, the dare and the browser sound
+
+- The itch and Store notes for 1.61 now mention La Neteja's warning, head start and continue, the dare kid clear of the trees, and the browser build having sound again.
+
 ## 2026-10-20 - La Neteja's chase gets a head start and checkpoints
 
 - Leaving the destination now takes a checkpoint, then gives the warning (1.2 s) and a 3-second head start. The sweeper does not move, catch or scare the dog until both are over, and the banner counts the head start down. Held or jammed, the machine adds no fear; what the dog already has fades on its own.
