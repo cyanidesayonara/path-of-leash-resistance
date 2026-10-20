@@ -14,18 +14,22 @@ const DART_SPEED := 330.0
 var main: Node2D
 var my_dog: Node2D
 var spots: Array[Vector2] = []  # ordered north -> south, home last
+# routes[k]: the waypoints of the dart from spots[k] to spots[k + 1]
+var routes: Array = []
 var idx := 0
+var way_i := 0
 var darting := false
 var home := false
 var seed_o := 0.0
 var alert_t := 0.0
 
 
-func setup(m: Node2D, mine: Node2D, hide_spots: Array[Vector2]) -> void:
+func setup(m: Node2D, mine: Node2D, hide_spots: Array[Vector2], dart_routes: Array = []) -> void:
 	add_to_group("tofu")
 	main = m
 	my_dog = mine
 	spots = hide_spots
+	routes = dart_routes
 	seed_o = randf() * 10.0
 	if spots.size() > 0:
 		global_position = spots[0]
@@ -36,25 +40,37 @@ func _physics_process(delta: float) -> void:
 		return
 	alert_t = maxf(0.0, alert_t - delta)
 	if darting:
-		var target: Vector2 = spots[idx]
+		var target := dart_target()
 		global_position = global_position.move_toward(target, DART_SPEED * delta)
 		if global_position.distance_to(target) < 4.0:
-			darting = false
-			if idx >= spots.size() - 1:
-				home = true
-				main.on_tofu_home(global_position)
+			if target != spots[idx]:
+				way_i += 1
+			else:
+				darting = false
+				if idx >= spots.size() - 1:
+					home = true
+					main.on_tofu_home(global_position)
 	else:
 		# hiding: bolt to the next spot south when the dog closes in
 		if my_dog.global_position.distance_to(global_position) < FLEE_R:
 			alert_t = 0.4
 			if idx < spots.size() - 1:
 				idx += 1
+				way_i = 0
 				darting = true
 			else:
 				home = true
 				main.on_tofu_home(global_position)
 	if Engine.get_physics_frames() % 2 == 0:
 		queue_redraw()
+
+
+func dart_target() -> Vector2:
+	if idx >= 1 and idx - 1 < routes.size():
+		var way: Array = routes[idx - 1]
+		if way_i < way.size():
+			return way[way_i]
+	return spots[idx]
 
 
 # Tofu's own coat: white, a brown tabby cap and saddle, a ringed brown tail
@@ -78,7 +94,7 @@ func _draw() -> void:
 	# she watches the dog from her hiding spot, and looks where she runs
 	var face := Vector2.DOWN
 	if darting and idx < spots.size():
-		var to: Vector2 = spots[idx] - global_position
+		var to: Vector2 = dart_target() - global_position
 		if to.length() > 0.5:
 			face = to.normalized()
 	elif not home and my_dog != null:
