@@ -114,7 +114,9 @@ static func _ambient(m: Node2D, delta: float) -> void:
 	# way OUT, before there was anything behind her at all. Held (the warning,
 	# the head start, a countdown) or stuck on a dumpster, it adds nothing,
 	# however close; what she already has fades on its own.
-	if HomeChase.advancing(m) and not "--shot-sweeper" in OS.get_cmdline_user_args():
+	if HomeChase.advancing(m) \
+			and HomeChase.threat_visible(m, HomeChase.threat_boundary(m.chase_sweeper)) \
+			and not "--shot-sweeper" in OS.get_cmdline_user_args():
 		var near := clampf(1.0 - m.chase_sweeper.gap_to(m.dog.global_position) / 900.0, 0.0, 1.0)
 		m.mood.bump(Mood.M.SCARED, delta * (0.16 + 0.90 * near * near))
 

@@ -1,7 +1,7 @@
 extends SceneTree
 
 # El Barri is the first walk (docs/LEVEL_DESIGN.md): open from the start and
-# first in the list after the tutorial and the Daily Walk, with La Rambla now
+# first in the list after the tutorial, with La Rambla now
 # behind a couple of stars. It is the everyday park at the end of the
 # street: no traffic, no riders, no crowd, no pickpockets, nothing that says where.
 
@@ -26,7 +26,8 @@ func _run() -> void:
 	_check(int(game.STAR_GATE["barri"]) == 0, "and open from the start")
 	_check(int(game.STAR_GATE["street"]) > 0, "La Rambla now needs stars")
 	var c: Array = game.CAROUSEL
-	_check(c.find("barri") == c.find("daily") + 1, "first in the list after the Daily Walk")
+	_check(c.find("barri") == c.find("tutorial") + 1, "first in the list after the tutorial")
+	_check(not "daily" in c, "the walk select has no Daily Walk")
 	game.level_id = "barri"
 	var m: Node2D = load("res://main.tscn").instantiate()
 	root.add_child(m)

@@ -50,7 +50,6 @@ func _write_populated_profile(game: Node) -> void:
 		"stars": 1,
 		"goals": ["mark", "sniff", "phone"],
 	}
-	game.records["daily"] = {"bones": 73, "seed": game.daily_seed()}
 	game.total_bones = 321
 	game.owned = {
 		"collar:red": true,
@@ -72,7 +71,7 @@ func _write_populated_profile(game: Node) -> void:
 
 
 func _check_clean_profile(game: Node) -> void:
-	_check(game.records.size() == game.LEVELS.size(), "missing save removes the daily record")
+	_check(game.records.size() == game.LEVELS.size(), "missing save keeps one record per walk")
 	for level in game.LEVELS:
 		_check(game.records[level] == _default_record(), "missing save resets " + level)
 	_check(game.total_bones == 0, "missing save resets the wallet")
@@ -153,7 +152,7 @@ func _run() -> void:
 	game.goals_expanded = false
 	game.load_records()
 	_check(game.total_bones == 321, "populated tutorial fixture loads its wallet")
-	_check(game.records.has("daily"), "populated tutorial fixture loads its daily record")
+	_check(int(game.records["street"].bones) == 88, "populated tutorial fixture loads its walk record")
 	_check(game.collar == "gold" and game.coat == "gold", "populated tutorial fixture loads equipment")
 	_check(game.fullscreen and game.goals_expanded, "populated tutorial fixture loads settings")
 
@@ -161,7 +160,6 @@ func _run() -> void:
 	game.owner_id = "her"
 	game.weather = "snow"
 	game.night = true
-	game.daily = false
 	game.menu_step = 2
 	game.set("save_path", MISSING_SAVE)
 	game.load_records()
@@ -171,7 +169,6 @@ func _run() -> void:
 		and game.owner_id == "her"
 		and game.weather == "snow"
 		and game.night
-		and not game.daily
 		and game.menu_step == 2,
 		"missing save reset preserves runtime-only menu and selection state"
 	)

@@ -93,7 +93,7 @@ func _check_record(
 
 
 func _check_canonical_profile(game: Node, label: String) -> void:
-	_check(game.records.size() == game.LEVELS.size(), label + " removes the daily record")
+	_check(game.records.size() == game.LEVELS.size(), label + " keeps one record per walk")
 	for level in game.LEVELS:
 		_check_record(game.records[level], 0, 0.0, 0, 0, [], label + " resets " + level)
 	_check(game.total_bones == 0, label + " resets the wallet")
@@ -190,7 +190,6 @@ func _initialize() -> void:
 	result_reopened.owner_id = "her"
 	result_reopened.weather = "snow"
 	result_reopened.night = true
-	result_reopened.daily = true
 	result_reopened.menu_step = 2
 	result_reopened.set("save_path", CORRUPT_SAVE)
 	result_reopened.load_records()
@@ -200,7 +199,6 @@ func _initialize() -> void:
 		and result_reopened.owner_id == "her"
 		and result_reopened.weather == "snow"
 		and result_reopened.night
-		and result_reopened.daily
 		and result_reopened.menu_step == 2,
 		"corrupt save reset preserves runtime-only selection state"
 	)

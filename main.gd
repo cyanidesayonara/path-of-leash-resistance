@@ -146,6 +146,7 @@ const TangleGeom := preload("res://systems/tangle_geom.gd")
 const MoodWiring := preload("res://systems/mood_wiring.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
 const Goals := preload("res://systems/goals.gd")
+const TofuRoute := preload("res://systems/tofu_route.gd")
 const HudBuild := preload("res://hud/hud_build.gd")
 const MenuFlow := preload("res://hud/menu_flow.gd")
 const Rails := preload("res://systems/rails.gd")
@@ -466,6 +467,8 @@ var chase_min_gap := INF
 # before the card comes up (systems/home_chase.gd)
 var chase_catch_t := 0.0
 var chase_catch_msg := ""
+var chase_catch_first := ""
+var chase_catch_elapsed := 0.0
 # how far the camera leans back up the street to keep the machine in shot
 var chase_lean := 0.0
 # the brooms have come within a whisker; getting clear again is a CLOSE SHAVE
@@ -811,8 +814,6 @@ var _redraw_acc := 0.0
 # return to them for a shared-fetch bonus
 var npc_ball: Node2D
 var npc_ball_pair: Node2D
-var daily_share := ""
-var daily_copied := false
 var combo_l: Label
 var combo_bar: ColorRect
 var combo_bar_bg: ColorRect
@@ -837,24 +838,13 @@ func _ready() -> void:
 	if "--no-exit" in OS.get_cmdline_user_args():
 		MenuFlow.exit_hidden = true
 	_shake_rng.seed = SHAKE_SEED
-	if Game.is_daily(Game.level_id):
-		# same layout, weather and time for everyone, all day
-		Game.daily = true
-		seed(Game.daily_seed())
-		lvl = Game.daily_level()
-		Game.weather = Game.daily_weather()
-		Game.night = Game.daily_night()
-	elif Game.is_tutorial(Game.level_id):
+	if Game.is_tutorial(Game.level_id):
 		# THE FIRST WALK: El Barri laid out as one station per lesson, calm and
 		# safe by construction - no traffic to dodge, no chase, no other
 		# walkers, and a bright clear day. Nothing here can end your walk.
-		Game.daily = false
 		tutorial_mode = true
 		lvl = "barri"
-		Game.weather = "clear"
-		Game.night = false
 	else:
-		Game.daily = false
 		if autowalk_requested:
 			seed(AUTOWALK_SEED)
 		# --seed=N pins every random layout and spawn, so a soak or a bug
@@ -863,12 +853,7 @@ func _ready() -> void:
 			if a.begins_with("--seed="):
 				seed(int(a.substr(7)))
 		lvl = Game.level_id
-	# El Aguacero is always a downpour, whatever the weather selection says
-	if lvl == "rain":
-		Game.weather = "rain"
-	# La Castanyada is always after dark
-	if lvl == "spook":
-		Game.night = true
+	Game.apply_walk_sky(Game.level_id)
 	_setup_input()
 	_build_level_data()
 	_build_bypasser_blockers()
@@ -8385,6 +8370,9 @@ func tip(id: String) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if chase_catch_t > 0.0:
+		HomeChase.tick_catch(self, delta)
+		return
 	if frozen:
 		return
 	elapsed += delta
@@ -8492,6 +8480,8 @@ func _physics_process(delta: float) -> void:
 		freedom_games_tick(delta)
 	elif phase == "home" and chase_active:
 		_chase(delta)
+		if chase_catch_t > 0.0:
+			return
 	_prof("romp, chase")
 	_check_goals()
 	_prof("goals")
@@ -8755,13 +8745,10 @@ func _process(_delta: float) -> void:
 	if started and paused:
 		MenuFlow.tick_pause(self)
 		return
-	if started and frozen:
-		# a result, a game-over or the daily card: the walk has stopped
-		if finished and Game.daily and not daily_copied and daily_share != "" and Input.is_action_just_pressed("share"):
-			DisplayServer.clipboard_set(daily_share)
-			daily_copied = true
-			msg_label.text += "\nCopied. Paste it anywhere."
-			return
+	if started and frozen and chase_catch_t > 0.0:
+		pass  # the catch beat takes no input; the card that follows does
+	elif started and frozen:
+		# a result or a game-over: the walk has stopped
 		if MenuFlow.tick_end(self):
 			return
 	elif Input.is_action_just_pressed("restart"):
@@ -8776,7 +8763,8 @@ func _process(_delta: float) -> void:
 		return
 	if not started and MenuFlow.tick_title(self):
 		return
-	var target_y := (dog.global_position.y + human.global_position.y) / 2.0 - 60.0
+	var target_y := (dog.global_position.y + human.global_position.y) / 2.0 \
+		+ HomeChase.CAMERA_PAIR_OFFSET_Y
 	if phase == "freedom":
 		target_y = dog.global_position.y  # owner is parked; follow the dog
 	elif phase == "home" and chase_sweeper != null:
@@ -12165,20 +12153,14 @@ func _enter_home() -> void:
 	_prepare_pairs_for_home(get_tree().get_nodes_in_group("pairs"))
 	# the runaway: Tofu is loose on the way home, to be herded south from
 	# hiding spot to hiding spot until she reaches HOME
-	if tofu_quest_active and not tofu_home:
-		var spots: Array[Vector2] = []
-		var n := 7
-		for i in range(n):
-			var ty := lerpf(GATE_Y + 500.0, HOME_Y + 30.0, float(i) / float(n - 1))
-			var tx := walk_cx + (walk_half * 0.6) * (1.0 if i % 2 == 0 else -1.0)
-			if i == n - 1:
-				tx = walk_cx
-			spots.append(Vector2(tx, ty))
+	var route: Dictionary = TofuRoute.plan(self) if tofu_quest_active and not tofu_home else {}
+	var spots: Array[Vector2] = route.get("spots", [] as Array[Vector2])
+	if not spots.is_empty():
 		var tf := Node2D.new()
 		tf.set_script(load("res://entities/tofu.gd"))
 		tf.z_index = 9
 		add_child(tf)
-		tf.setup(self, dog, spots)
+		tf.setup(self, dog, spots, route["routes"])
 		float_text(spots[0], "Tofu!? she got out again - get her home!", Color(1, 0.85, 0.7), POP_SAY)
 	if chase_active:
 		HomeChase.begin(self)

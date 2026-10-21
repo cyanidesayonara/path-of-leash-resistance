@@ -98,6 +98,10 @@ var whirl_flung_t := 0.0
 var whirl_bailed := false
 var face_dir := Vector2.UP
 var hgait := 0.0
+# Draw-only motion for terminal beats; gameplay state remains at the caught
+# transform until the loss card or a continue.
+var presentation_offset := Vector2.ZERO
+var presentation_rotation := 0.0
 var chain_target := Vector2.ZERO
 var carrying_bag := false
 var bin_stuck_t := 0.0
@@ -1269,8 +1273,16 @@ func _draw() -> void:
 	# every draw call goes through a ShapeBatch standing in for the canvas: runs
 	# of shapes become one draw call, same pixels (systems/shape_batch.gd)
 	_b = ShapeBatch.new(self)
+	_draw_xf()
 	_draw_shapes()
+	_b.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	_b.flush()
+
+
+func _draw_xf(local_pos := Vector2.ZERO, local_rotation := 0.0,
+		local_scale := Vector2.ONE) -> void:
+	_b.draw_set_transform(presentation_offset + local_pos.rotated(presentation_rotation),
+		presentation_rotation + local_rotation, local_scale)
 
 
 func _draw_shapes() -> void:
@@ -1287,9 +1299,9 @@ func _draw_shapes() -> void:
 	# owner's shadow spreads out under them.
 	if not wading:
 		var spread := 1.45 if state == HState.FALLEN else 1.0
-		_b.draw_set_transform(Vector2(5.0, 9.0), 0.0, Vector2(1.2 * spread, 0.52))
+		_draw_xf(Vector2(5.0, 9.0), 0.0, Vector2(1.2 * spread, 0.52))
 		_b.draw_circle(Vector2.ZERO, 16.0, Color(0.06, 0.05, 0.08, 0.28))
-		_b.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		_draw_xf()
 	var woman: bool = Game.owner_id == "her"
 	var shirt := Color(0.6, 0.38, 0.44) if woman else Color(0.35, 0.42, 0.55)
 	var skin := Color(0.85, 0.72, 0.58)
@@ -1356,11 +1368,11 @@ func _draw_shapes() -> void:
 		_b.draw_line(head + fd * 5.9 + side * 1.0, head + fd * 5.9 - side * 1.0, Color(0.08, 0.08, 0.10), 1.0)
 	# the phone, held out front, eternally glowing
 	var glow := 0.55 + 0.2 * sin(t * 7.3)
-	_b.draw_set_transform(fd * 24.0, fd.angle() + PI / 2.0, Vector2.ONE)
+	_draw_xf(fd * 24.0, fd.angle() + PI / 2.0)
 	_b.draw_rect(Rect2(-6, -9, 12, 18), Color(0.1, 0.1, 0.12))
 	var screen := Color(0.42, 0.74, 0.34, glow) if match_on else Color(0.7, 0.85, 1.0, glow)
 	_b.draw_rect(Rect2(-4.5, -7, 9, 14), screen)
-	_b.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	_draw_xf()
 	if wading:
 		# waist-deep, phone held higher, ripples of shame around the middle
 		_b.draw_circle(Vector2(0, 4), 17.0, Color(0.42, 0.56, 0.66, 0.55))

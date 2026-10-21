@@ -157,6 +157,11 @@ func gap_to(p: Vector2) -> float:
 	return p.y - front_y
 
 
+# The brushes are both the first visible edge and the gameplay line.
+func threat_boundary() -> float:
+	return front_y
+
+
 # The brooms reach loose junk on the kill line: the first time, it is flung
 # down the street toward the pair; anything that comes back under them is
 # sucked into the hopper. Returns how many were flung.
@@ -241,6 +246,14 @@ func _draw() -> void:
 	b.draw_rect(Rect2(-half, -1600.0, full, 1600.0), Color(0.09, 0.09, 0.11, 0.95))
 	# freshly scoured strip right behind the brooms, still wet
 	b.draw_rect(Rect2(-half, -74.0, full, 74.0), Color(0.15, 0.16, 0.19, 0.92))
+	# paired tyre tracks and watery comb marks make the wake belong to this
+	# machine instead of reading as a generic black fail zone.
+	for k in range(2):
+		var tx := (-1.0 if k == 0 else 1.0) * (BODY_HALF - 8.0) + sway
+		b.draw_rect(Rect2(tx - 7.0, -520.0, 14.0, 430.0), Color(0.05, 0.05, 0.06, 0.22))
+		for i in range(6):
+			var wy := -106.0 - float(i) * 66.0 - fmod(rumble * 18.0, 66.0)
+			b.draw_rect(Rect2(tx - 8.0, wy, 16.0, 4.0), Color(0.31, 0.35, 0.38, 0.18))
 	# swirl marks drifting back up the wake
 	for i in range(16):
 		var gx := -half + fmod(float(i) * 137.0 + rumble * 40.0, full)
@@ -289,9 +302,12 @@ func _draw() -> void:
 		var spin := 0.0 if snagged else -s * rumble * 9.0
 		for bi in range(14):
 			var a := spin + float(bi) * TAU / 14.0
-			b.draw_line(broom, broom + Vector2.from_angle(a) * BROOM_R, Color(0.80, 0.72, 0.34), 3.0)
+			var tip := broom + Vector2.from_angle(a) * BROOM_R
+			b.draw_line(broom, tip, Color(0.80, 0.72, 0.34), 3.0)
+			b.draw_circle(tip, 2.2, Color(0.93, 0.82, 0.38))
 		b.draw_circle(broom, 11.0, Color(0.30, 0.31, 0.34))
 		b.draw_circle(broom + Vector2(-3.0, -3.0), 6.0, Color(0.44, 0.45, 0.48))
+		b.draw_circle(broom, 3.0, pal.trim)
 		if snagged:
 			# sparks off the dumpster it is grinding against, spraying back
 			# and in off its end
@@ -357,6 +373,7 @@ func _waits_to_jam(r: Rect2) -> bool:
 func _draw_body(b: ShapeBatch, pal: Dictionary, stuck: bool) -> void:
 	var L := BODY_HALF_LEN
 	var sheen: Color = pal.lit
+	var steel_lit := Color(0.40, 0.41, 0.45)
 	var steer := clampf(-heading * 1.8, -0.5, 0.5)
 
 	# --- wheels, peeking out under the sides ------------------------------
@@ -365,6 +382,8 @@ func _draw_body(b: ShapeBatch, pal: Dictionary, stuck: bool) -> void:
 			var wc := Vector2(s * (BODY_HALF - 2.0), float(w[0]))
 			b.draw_colored_polygon(_box(wc, Vector2(20.0, 40.0), float(w[1])), Color(0.10, 0.10, 0.12))
 			b.draw_colored_polygon(_box(wc, Vector2(10.0, 30.0), float(w[1])), Color(0.22, 0.22, 0.25))
+			b.draw_circle(wc, 6.0, Color(0.08, 0.08, 0.10))
+			b.draw_circle(wc + Vector2(-1.5, -1.5), 3.2, steel_lit)
 
 	# --- the hopper -------------------------------------------------------
 	var hop := Rect2(-BODY_HALF, -L, BODY_HALF * 2.0, L * 2.0 - 104.0)
@@ -387,6 +406,13 @@ func _draw_body(b: ShapeBatch, pal: Dictionary, stuck: bool) -> void:
 	b.draw_circle(Vector2(-BODY_HALF * 0.45, -L + 90.0), 5.0, Color(0.44, 0.45, 0.48))
 	b.draw_circle(Vector2(BODY_HALF * 0.42, -L + 132.0), 15.0, Color(0.14, 0.30, 0.18))
 	b.draw_circle(Vector2(BODY_HALF * 0.42, -L + 132.0), 8.0, (pal.body as Color))
+	# municipal fleet panel and a small asset number, readable as purposeful
+	# livery even when the digits themselves are tiny.
+	b.draw_rect(Rect2(-BODY_HALF + 14.0, -L + 142.0, BODY_HALF * 2.0 - 28.0, 28.0),
+		Color(0.90, 0.91, 0.86, 0.88))
+	for i in range(4):
+		b.draw_rect(Rect2(-34.0 + float(i) * 18.0, -L + 149.0, 10.0, 14.0),
+			pal.trim if i % 2 == 0 else pal.dark)
 	# reflective chevrons on the tail, for the traffic behind it
 	for i in range(5):
 		var x0 := -BODY_HALF + 14.0 + float(i) * (BODY_HALF * 2.0 - 28.0) / 5.0
@@ -415,10 +441,14 @@ func _draw_body(b: ShapeBatch, pal: Dictionary, stuck: bool) -> void:
 		Color(1.0, 1.0, 1.0, 0.16))
 	# Windscreen, at the SOUTH end of the cab: it drives south, so the glass
 	# and the driver behind it face down the road at you.
-	var glass := Rect2(-CAB_HALF + 12.0, L - 46.0, CAB_HALF * 2.0 - 24.0, 32.0)
+	var glass := Rect2(-CAB_HALF + 10.0, L - 58.0, CAB_HALF * 2.0 - 20.0, 44.0)
 	b.draw_colored_polygon(_rr(glass, 8.0), Color(0.12, 0.16, 0.20))
 	b.draw_rect(Rect2(glass.position.x + 6.0, glass.position.y + 2.0, glass.size.x - 12.0, 7.0),
 		Color(0.42, 0.54, 0.62, 0.7))
+	b.draw_line(Vector2(0.0, glass.position.y + 3.0), Vector2(0.0, glass.end.y - 3.0),
+		Color(0.05, 0.07, 0.09, 0.8), 3.0)
+	b.draw_line(Vector2(glass.position.x + 16.0, glass.position.y + 8.0),
+		Vector2(glass.position.x + 7.5, glass.end.y - 7.0), Color(0.72, 0.88, 0.96, 0.18), 10.0)
 	# the driver, in hi-vis, seen through it: Spain drives on the right, so
 	# the seat is on the machine's left, which is east as it comes at you
 	b.draw_circle(Vector2(24.0, L - 30.0), 10.0, Color(0.96, 0.62, 0.12))
@@ -432,10 +462,16 @@ func _draw_body(b: ShapeBatch, pal: Dictionary, stuck: bool) -> void:
 		b.draw_colored_polygon(_box(Vector2(s * (CAB_HALF + 9.0), L - 40.0), Vector2(14.0, 9.0), 0.0),
 			Color(0.14, 0.14, 0.16))
 	# the spray bar on the front bumper, its nozzles feeding the mist
+	b.draw_rect(Rect2(-CAB_HALF - 5.0, L - 10.0, CAB_HALF * 2.0 + 10.0, 11.0),
+		Color(0.12, 0.13, 0.15))
 	b.draw_rect(Rect2(-CAB_HALF + 6.0, L - 6.0, CAB_HALF * 2.0 - 12.0, 7.0), Color(0.30, 0.31, 0.34))
 	for i in range(7):
 		b.draw_circle(Vector2(-CAB_HALF + 16.0 + float(i) * (CAB_HALF * 2.0 - 32.0) / 6.0, L + 1.0), 2.4,
 			Color(0.70, 0.84, 0.95))
+	for k in range(2):
+		var lamp := Vector2((-1.0 if k == 0 else 1.0) * (CAB_HALF - 17.0), L - 6.0)
+		b.draw_circle(lamp, 6.0, Color(0.12, 0.13, 0.14))
+		b.draw_circle(lamp + Vector2(-1.0, -1.0), 3.7, Color(1.0, 0.90, 0.58))
 
 	# --- beacons ----------------------------------------------------------
 	# a bar across the back of the cab roof: amber strobes for the sweeper,

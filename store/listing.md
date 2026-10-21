@@ -33,7 +33,7 @@ Other dogs have lives of their own. They sniff and mark the posts you pass, and 
 
 Every walk has its own list of goals: sniff the good spots, mark your territory, fetch, greet other dogs, herd a runaway friend home, and pull off tricks: swing around a pole on the leash, run a figure eight, thread the needle between two people, and ride ledges and handrails with the zoomies. Earn stars to unlock new walks and bones to spend on collars, bandanas and coats.
 
-One walk is a chase: a street sweeper careens down a narrow back street after you, flinging junk as it comes, and you have to drag your oblivious human home ahead of it. Rain, wind, snow and night change how every walk plays, and everyone dresses for the weather. There's a daily walk too, the same for everyone that day, and a two-part tutorial for anyone new.
+One walk is a chase: a street sweeper careens down a narrow back street after you, flinging junk as it comes, and you have to drag your oblivious human home ahead of it. Rain, wind, snow and night change how every walk plays, and everyone dresses for the weather. There is a two-part tutorial for anyone new.
 
 Single player. No ads, no purchases, no account, and it plays offline. Keyboard or controller.
 ```
@@ -49,7 +49,7 @@ A dog walk as a physics comedy. Your human walks on autopilot, glued to their ph
 ```
 The leash is real rope physics: wrap it around poles, dig in, win the tug of war
 A human who answers the leash: a steady pull leads them, constant hauling runs out their patience
-Sixteen hand-built walks through Barcelona, plus a daily walk
+Sixteen hand-built walks through Barcelona, in any weather, by day or at night
 Every walk ends off the leash, with agility, tug-of-war and a frisbee
 Goal lists on every walk, with stars that unlock new walks
 Leash tricks: pole swings, figure eights, threading the needle, ledge and handrail rides
@@ -298,8 +298,6 @@ We do not collect personal data.
 We do not use analytics, advertising or tracking of any kind.
 We do not sell or share personal data, because we do not have any.
 Nothing is uploaded to us or to any third party.
-
-The "share" button after a daily walk copies a short text summary of your result to your clipboard. It is not sent anywhere; what you do with it is up to you.
 
 Local Storage
 

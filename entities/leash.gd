@@ -631,6 +631,10 @@ var _vis := PackedVector2Array()
 var _loc := PackedVector2Array()
 var _shade := PackedVector2Array()
 var _hi := PackedVector2Array()
+# Endpoint offsets used only by terminal presentation. Solver points and
+# contact state remain untouched.
+var presentation_dog_offset := Vector2.ZERO
+var presentation_human_offset := Vector2.ZERO
 
 
 # The rope as drawn, in global coordinates: always VIS_N samples, every solver
@@ -689,7 +693,9 @@ func _draw_shapes() -> void:
 		_shade.resize(n)
 		_hi.resize(n)
 	for i in range(n):
-		var p := to_local(path[i])
+		var u := float(i) / maxf(float(n - 1), 1.0)
+		var p := to_local(path[i] + presentation_dog_offset.lerp(
+			presentation_human_offset, u))
 		_loc[i] = p
 		_shade[i] = p + Vector2(2.0, 3.0)
 		_hi[i] = p + Vector2(0.0, -0.9)
@@ -713,7 +719,7 @@ func _draw_shapes() -> void:
 		_b.draw_circle(cp, 4.6, Color(0.95, 0.55, 0.22, lerpf(0.65, 0.85, tight)))
 		_b.draw_circle(cp, 2.0, Color(1.0, 0.85, 0.55, 0.9))
 	# the handle loop in the owner's fist
-	var hp := to_local(_hand_pos())
+	var hp := to_local(_hand_pos() + presentation_human_offset)
 	_b.draw_circle(hp + Vector2(1.5, 2.0), 4.6, Color(0.05, 0.04, 0.06, 0.25))
 	_b.draw_circle(hp, 4.4, body.darkened(0.45))
 	_b.draw_circle(hp, 2.4, body.lightened(0.1))

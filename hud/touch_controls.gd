@@ -78,10 +78,9 @@ func _layout() -> void:
 		# no MENU button: BARK is back on every one of them
 		# (hud/menu_flow.gd), and the stick and DIG pick and confirm
 		{"action": "pause", "label": "MENU", "center": Vector2(MENU_X, 40.0), "r": 26.0, "id": -1, "when": "menu"},
-		# C / Y does two unrelated jobs. Name the touch button for the job it
-		# does now, and keep it clear of both the results card and the thumbs.
+		# C / Y skips a tutorial lesson; kept clear of the results card and
+		# the thumbs.
 		{"action": "share", "label": "SKIP", "center": Vector2(360.0, 40.0), "r": 30.0, "id": -1, "when": "tutorial"},
-		{"action": "share", "label": "SHARE", "center": Vector2(360.0, 40.0), "r": 30.0, "id": -1, "when": "daily_result"},
 		# R restarts at once, so it only appears when the walk has stopped.
 		# Big, and at the left edge: the results card, the death card and the
 		# pause text all sit in the middle, and nothing needs the stick then
@@ -164,11 +163,6 @@ func _tutorial_skip() -> bool:
 	return String(TutorialSteps.step(int(main.tut_step)).id) != "done"
 
 
-func _daily_share() -> bool:
-	return main != null and bool(main.finished) and bool(Game.daily) \
-		and not bool(main.daily_copied) and String(main.daily_share) != ""
-
-
 func _primary_controls() -> bool:
 	# These actions also drive the title, shop, progress and settings. Only
 	# death/results make all three dead; a paused walk still uses them.
@@ -189,8 +183,6 @@ func _shown(b: Dictionary) -> bool:
 			return _stopped()
 		"tutorial":
 			return _tutorial_skip()
-		"daily_result":
-			return _daily_share()
 		"menu":
 			return _menu_button()
 		"primary":
@@ -201,9 +193,9 @@ func _shown(b: Dictionary) -> bool:
 
 
 func _process(_delta: float) -> void:
-	# Every visibility predicate belongs in the signature. Tutorial progress,
-	# copying a daily result and opening a menu can change the set without
-	# changing walking/stopped state.
+	# Every visibility predicate belongs in the signature. Tutorial progress
+	# and opening a menu can change the set without changing walking/stopped
+	# state.
 	if not visible:
 		return
 	var state := ""
