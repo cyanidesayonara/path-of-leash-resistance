@@ -81,6 +81,10 @@ const STYLES := {
 		"bass": "root", "drums": "none", "verb": 0.4},
 	"station": {"bpm": 124, "key": 2, "lead": "vibes", "comp": "skank", "bass": "walk",
 		"drums": "train", "verb": 0.3},
+	# El Besòs: an easy river pace on the way out, with enough pulse under
+	# the brushes for the same tune to carry the flood home.
+	"besos": {"bpm": 96, "key": 0, "lead": "vibes", "lead2": ["whistle", 0], "comp": "arp",
+		"bass": "root", "drums": "brush", "swing": 0.08, "verb": 0.34},
 	"site": {"bpm": 116, "key": -2, "lead": "marimba", "comp": "stab", "bass": "oompah",
 		"drums": "kickrim", "verb": 0.16},
 	"spook": {"bpm": 80, "key": 0, "minor": true, "lead": "glock", "comp": "pad", "bass": "root",

@@ -8,6 +8,7 @@ Append-only session history, newest first.
 - A branch warns your human the way every other owner event does, a short beat and then the stumble. It does not knock them over on the frame it touches them.
 - Wading loosens her sideways pace once per step. It was being cut again every frame, until she could barely walk out of a swell.
 - Someone already heading upstream is still carried south at the flood's pace, and that shove is in before the leash so the rope holds it the same frame.
+- El Besòs has its own flowing river arrangement: vibes and whistle over a brushed pulse.
 
 ## 2026-10-21 - The leash goes round a stall
 

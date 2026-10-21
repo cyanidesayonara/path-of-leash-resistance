@@ -109,6 +109,13 @@ six sequential waits. The normal three-second head start follows.
 
 The flood cannot move, catch or create fear during the warning or head start.
 
+## Music
+
+El Besòs keeps one arrangement in both directions: a 96 BPM river groove,
+vibes and whistle over brushed drums. It is easy enough for the calm walk out,
+but carries enough pulse for the flood home without turning the whole place
+into a warning before the warning exists.
+
 ## The flood home
 
 The flood comes from upstream, behind the southbound pair.
