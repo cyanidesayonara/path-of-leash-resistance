@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-10-21 - The leash goes round a stall
+
+- A leash pulled across a stall, a van or a bench could settle inside the body. It drew straight over the counter, and the pull held your human on the face they could not walk through. The strap now runs round the outside, and that pull walks them round the end.
+- `tests/test_leash_height_geometry.gd` checks a strap laid across a body stays out of it.
+
 ## 2026-10-21 - El Besòs, the floodable river park
 
 - A new walk between L'Estació and Les Obres, open at 14 stars. Every older gate is unchanged. The way out is a warm afternoon: flood wall, paved path, grass, a margin you can wade, and a deep channel you cannot enter. The meadow at the far end is off the leash.

@@ -203,6 +203,8 @@ var cam: Camera2D
 var poles: Array[Vector2] = []
 var rope_radii := PackedFloat32Array()
 var rope_soft: Array[Vector2] = []
+# Solid outlines the strap must go around: stalls, vans, benches, the train.
+var rope_rects: Array[Rect2] = []
 var manholes: Array[Vector2] = []
 var hydrants: Array = []
 var kebabs: Array = []
@@ -9836,6 +9838,7 @@ func add_rope_rect(r: Rect2, soft := true) -> void:
 	if leash != null:
 		leash.pole_radii = rope_radii
 		leash.furniture_poles = _furniture_wrap_poles()
+		leash.rope_rects = rope_rects
 
 
 func _make_pair(start: Vector2, direction: Vector2, activate := true) -> Node2D:
@@ -9844,6 +9847,7 @@ func _make_pair(start: Vector2, direction: Vector2, activate := true) -> Node2D:
 	pair.setup(self, dog, poles, start, direction)
 	pair.leash.pole_radii = rope_radii
 	pair.leash.furniture_poles = _furniture_wrap_poles()
+	pair.leash.rope_rects = rope_rects
 	if not pair.configure_route(
 		start.x,
 		walk_cx - walk_half + 30.0,

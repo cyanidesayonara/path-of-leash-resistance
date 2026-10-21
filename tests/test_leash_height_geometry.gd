@@ -82,12 +82,37 @@ func _test_segment_meets_rect(samples: Array, r: Rect2) -> void:
 	leash.setup(dog, human, poles, 150.0)
 	leash.pole_radii = radii
 	leash.furniture_poles = poles
+	var rects: Array[Rect2] = [r]
+	leash.rope_rects = rects
 	for i in range(90):
 		leash.tick(1.0 / 60.0)
 	_check(leash.contacts > 0, "a strap laid through the car meets its outline")
+	_check(not _path_enters(leash, r.grow(-4.0)), "a strap laid across a body goes round it, not through it")
 	leash.free()
 	dog.free()
 	human.free()
+
+
+func _path_enters(leash: Node2D, rect: Rect2) -> bool:
+	var path: PackedVector2Array = leash.visible_path()
+	for i in range(path.size() - 1):
+		var a: Vector2 = path[i]
+		var b: Vector2 = path[i + 1]
+		if rect.has_point(a) or rect.has_point(b):
+			return true
+		var x0 := rect.position.x
+		var y0 := rect.position.y
+		var x1 := rect.end.x
+		var y1 := rect.end.y
+		if Geometry2D.segment_intersects_segment(a, b, Vector2(x0, y0), Vector2(x1, y0)) != null:
+			return true
+		if Geometry2D.segment_intersects_segment(a, b, Vector2(x1, y0), Vector2(x1, y1)) != null:
+			return true
+		if Geometry2D.segment_intersects_segment(a, b, Vector2(x1, y1), Vector2(x0, y1)) != null:
+			return true
+		if Geometry2D.segment_intersects_segment(a, b, Vector2(x0, y1), Vector2(x0, y0)) != null:
+			return true
+	return false
 
 
 func _make_level(id: String) -> Node2D:
