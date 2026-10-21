@@ -344,7 +344,8 @@ func tick(delta: float) -> void:
 		# The circle outline leaves a hollow. A segment that still meets a
 		# solid rect is put just outside it, so the strap cannot rest across
 		# a stall and haul a body into the face.
-		_expel_rects(false)
+		if not rope_rects.is_empty():
+			_expel_rects(false)
 	contacts = 0
 	static_contacts = 0
 	dynamic_contacts = 0
@@ -402,9 +403,10 @@ func tick(delta: float) -> void:
 	# Slip slides a contact toward the straight chord, which is through the
 	# body. Put back anything that re-entered, without turning the correction
 	# into a fling.
-	for _pass in range(6):
-		if not _expel_rects(true):
-			break
+	if not rope_rects.is_empty():
+		for _pass in range(6):
+			if not _expel_rects(true):
+				break
 	if hero or Engine.get_physics_frames() % 2 == 0:
 		queue_redraw()
 
@@ -812,7 +814,7 @@ func visible_path() -> PackedVector2Array:
 					or _closest_on_segment(mid, b, pl).distance_to(pl) < radius:
 				clear = false
 				break
-		if clear:
+		if clear and not rope_rects.is_empty():
 			for rect in rope_rects:
 				if _segment_hits_rect(a, mid, rect) or _segment_hits_rect(mid, b, rect):
 					clear = false
