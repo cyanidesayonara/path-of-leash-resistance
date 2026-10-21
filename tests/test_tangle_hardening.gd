@@ -184,11 +184,19 @@ func _test_cleanup_before_solve() -> void:
 	_check(phys >= 0, "main has _physics_process")
 	if phys < 0:
 		return
-	var window := src.substr(phys, 2800)
+	var process_end := src.find("\nfunc ", phys + 1)
+	var window := src.substr(phys, process_end - phys if process_end >= 0 else -1)
 	var refresh_i := window.find("_refresh_pair_obstacles")
 	var apply_i := window.find("_apply_leash")
 	_check(refresh_i >= 0 and apply_i >= 0, "physics process refreshes obstacles and applies leash")
 	_check(refresh_i < apply_i, "dynamic obstacles refresh before the player leash solve")
+	var dog_i := window.find("\tdog.tick(delta)")
+	var human_i := window.find("\thuman.tick(delta)")
+	var flood_i := window.find("chase_sweeper.push_bodies(self, delta)")
+	_check(dog_i >= 0 and human_i > dog_i and flood_i > human_i and apply_i > flood_i,
+		"body ticks, flood push and leash solve keep their exact order")
+	_check(window.count("chase_sweeper.push_bodies(self, delta)") == 1,
+		"the pre-leash flood push appears exactly once in the physics frame")
 	# Broad-phase uses rope bounds, not dog-to-owner distance alone.
 	_check(
 		src.contains("rope_bounds") or src.contains("TangleGeom") or src.contains("tangle_geom"),

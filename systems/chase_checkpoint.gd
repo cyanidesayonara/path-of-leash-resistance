@@ -235,6 +235,8 @@ static func _settle(m: Node2D) -> void:
 	m.leash.free_slip_t = 0.0
 	m.leash.resnap()
 	if m.chase_sweeper != null:
+		if m.chase_sweeper.has_method("cancel_branch_warning"):
+			m.chase_sweeper.cancel_branch_warning()
 		m.chase_sweeper.z_index = 0
 		m.chase_sweeper.jammed_now = false
 		m.chase_sweeper.freed_now = false

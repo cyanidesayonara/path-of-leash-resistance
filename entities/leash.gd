@@ -38,6 +38,9 @@ const TAUT_DAMP := 0.1
 # is exactly what it was without bending. A rope with nothing within
 # BEND_BERTH of its box bends everywhere without checking.
 const BEND_MIN := 1.55
+# Centreline clearance past a solid rect. The strap is about 4px wide, so this
+# keeps it on the outside of a stall, a van or a bench instead of across it.
+const RECT_CLEAR := 3.0
 const BEND_K := 0.6
 const BEND_BERTH := 120.0
 const BEND_NEAR := 70.0
@@ -102,6 +105,10 @@ var pole_radii := PackedFloat32Array()
 # authored furniture wrap centres (tables/chairs/parasols/bins). Same
 # collision as poles, but typed so slip and contact metadata can differ.
 var furniture_poles: Array[Vector2] = []
+# Solid rects the strap must not cross (stalls, vans, benches, the train).
+# The circle samples still provide the grip; these stop the strap resting in
+# the hollow those circles leave inside the body.
+var rope_rects: Array[Rect2] = []
 # poles typed once and cached, parallel to `poles`. Recovering a pole's kind by
 # scanning furniture_poles with a distance match EVERY frame cost more than the
 # collision it fed, and matching identity by proximity was fragile besides.
@@ -332,35 +339,13 @@ func tick(delta: float) -> void:
 			a = b
 		# segment-vs-circle collision: point-only checks tunnel when
 		# stretched segments straddle the pole between two points.
-		if obs_n == 0:
-			continue
-		for i in range(N - 1):
-			var sa: Vector2 = pts[i]
-			var sb: Vector2 = pts[i + 1]
-			for oi in range(obs_n):
-				var pl: Vector2 = _obs_pos[oi]
-				var radius := _obs_rad[oi] if _obs_custom_radius else POLE_PAD
-				var reach := radius + 1.0
-				if pl.x + reach < minf(sa.x, sb.x) or pl.x - reach > maxf(sa.x, sb.x) 						or pl.y + reach < minf(sa.y, sb.y) or pl.y - reach > maxf(sa.y, sb.y):
-					continue
-				# _closest_on_segment, inlined: this is the solver's innermost loop
-				var cp := sa
-				var ab := sb - sa
-				var l2 := ab.length_squared()
-				if l2 >= 0.0001:
-					cp = sa + ab * clampf((pl - sa).dot(ab) / l2, 0.0, 1.0)
-				var dp := cp - pl
-				var l := dp.length()
-				if l < radius and l > 0.001:
-					var push := dp / l * (radius - l)
-					if i > 0:
-						sa += push
-						pts[i] = sa
-						_touch[i] = oi
-					if i + 1 < N - 1:
-						sb += push
-						pts[i + 1] = sb
-						_touch[i + 1] = oi
+		if obs_n > 0:
+			_collide_circles(obs_n)
+		# The circle outline leaves a hollow. A segment that still meets a
+		# solid rect is put just outside it, so the strap cannot rest across
+		# a stall and haul a body into the face.
+		if not rope_rects.is_empty():
+			_expel_rects(false)
 	contacts = 0
 	static_contacts = 0
 	dynamic_contacts = 0
@@ -415,6 +400,13 @@ func tick(delta: float) -> void:
 	if damp > 0.0 and contacts == 0:
 		for i in range(1, N - 1):
 			prev[i] = prev[i].lerp(pts[i], damp)
+	# Slip slides a contact toward the straight chord, which is through the
+	# body. Put back anything that re-entered, without turning the correction
+	# into a fling.
+	if not rope_rects.is_empty():
+		for _pass in range(6):
+			if not _expel_rects(true):
+				break
 	if hero or Engine.get_physics_frames() % 2 == 0:
 		queue_redraw()
 
@@ -449,6 +441,157 @@ func _bend(seg: float) -> void:
 			pts[i] = a + corr
 		if i + 2 < N - 1:
 			pts[i + 2] = c - corr
+
+
+func _collide_circles(obs_n: int) -> void:
+	for i in range(N - 1):
+		var sa: Vector2 = pts[i]
+		var sb: Vector2 = pts[i + 1]
+		for oi in range(obs_n):
+			var pl: Vector2 = _obs_pos[oi]
+			var radius := _obs_rad[oi] if _obs_custom_radius else POLE_PAD
+			var reach := radius + 1.0
+			if pl.x + reach < minf(sa.x, sb.x) or pl.x - reach > maxf(sa.x, sb.x) \
+					or pl.y + reach < minf(sa.y, sb.y) or pl.y - reach > maxf(sa.y, sb.y):
+				continue
+			# _closest_on_segment, inlined: this is the solver's innermost loop
+			var cp := sa
+			var ab := sb - sa
+			var l2 := ab.length_squared()
+			if l2 >= 0.0001:
+				cp = sa + ab * clampf((pl - sa).dot(ab) / l2, 0.0, 1.0)
+			var dp := cp - pl
+			var l := dp.length()
+			if l < radius and l > 0.001:
+				var push := dp / l * (radius - l)
+				if i > 0:
+					sa += push
+					pts[i] = sa
+					_touch[i] = oi
+				if i + 1 < N - 1:
+					sb += push
+					pts[i + 1] = sb
+					_touch[i + 1] = oi
+
+
+# Move a free rope point onto the exit side of a rect. Endpoints stay pinned.
+# A point already outside is left where it is, so a later segment cannot pull
+# it back across the body.
+func _place_outside(end: int, horizontal: bool, positive: bool, edge: float, grown: Rect2, kill_velocity: bool) -> bool:
+	if end <= 0 or end >= N - 1:
+		return false
+	var p: Vector2 = pts[end]
+	if not grown.has_point(p):
+		return false
+	var v := p.x if horizontal else p.y
+	if positive:
+		if v >= edge:
+			return false
+	elif v <= edge:
+		return false
+	if horizontal:
+		p.x = edge
+	else:
+		p.y = edge
+	pts[end] = p
+	if kill_velocity:
+		prev[end] = p
+	return true
+
+
+func _segment_hits_rect(a: Vector2, b: Vector2, rect: Rect2) -> bool:
+	if rect.has_point(a) or rect.has_point(b):
+		return true
+	var x0 := rect.position.x
+	var y0 := rect.position.y
+	var x1 := rect.end.x
+	var y1 := rect.end.y
+	if Geometry2D.segment_intersects_segment(a, b, Vector2(x0, y0), Vector2(x1, y0)) != null:
+		return true
+	if Geometry2D.segment_intersects_segment(a, b, Vector2(x1, y0), Vector2(x1, y1)) != null:
+		return true
+	if Geometry2D.segment_intersects_segment(a, b, Vector2(x1, y1), Vector2(x0, y1)) != null:
+		return true
+	return Geometry2D.segment_intersects_segment(a, b, Vector2(x0, y1), Vector2(x0, y0)) != null
+
+
+# A corner clip: the axis shove left the segment across the rect, so the free
+# end steps out to the nearest corner the segment can reach without re-entering.
+func _corner_off(end: int, other: int, rect: Rect2, kill_velocity: bool) -> bool:
+	if end <= 0 or end >= N - 1:
+		return false
+	var grown := rect.grow(RECT_CLEAR)
+	var p: Vector2 = pts[end]
+	var o: Vector2 = pts[other]
+	var best := p
+	var best_d := INF
+	var x0 := grown.position.x
+	var y0 := grown.position.y
+	var x1 := grown.end.x
+	var y1 := grown.end.y
+	for k in range(4):
+		var corner := Vector2(x0 if k == 0 or k == 3 else x1, y0 if k < 2 else y1)
+		var d := p.distance_squared_to(corner)
+		if d < best_d and not _segment_hits_rect(o, corner, rect):
+			best_d = d
+			best = corner
+	if best == p:
+		return false
+	pts[end] = best
+	if kill_velocity:
+		prev[end] = best
+	return true
+
+
+# True if a segment was moved. `horizontal` exits left/right; otherwise up/down.
+func _expel_rects(kill_velocity: bool) -> bool:
+	var n := rope_rects.size()
+	if n == 0:
+		return false
+	var moved := false
+	for i in range(N - 1):
+		var a: Vector2 = pts[i]
+		var b: Vector2 = pts[i + 1]
+		for ri in range(n):
+			var rect: Rect2 = rope_rects[ri]
+			if rect.position.x > maxf(a.x, b.x) + RECT_CLEAR or rect.end.x < minf(a.x, b.x) - RECT_CLEAR:
+				continue
+			if rect.position.y > maxf(a.y, b.y) + RECT_CLEAR or rect.end.y < minf(a.y, b.y) - RECT_CLEAR:
+				continue
+			if not _segment_hits_rect(a, b, rect):
+				continue
+			var ab := b - a
+			var c := rect.get_center()
+			var grown := rect.grow(RECT_CLEAR)
+			var horizontal := absf(ab.y) >= absf(ab.x)
+			var positive := true
+			var edge := 0.0
+			if horizontal:
+				positive = a.x + b.x >= c.x * 2.0
+				edge = rect.end.x + RECT_CLEAR if positive else rect.position.x - RECT_CLEAR
+			else:
+				positive = a.y + b.y >= c.y * 2.0
+				edge = rect.end.y + RECT_CLEAR if positive else rect.position.y - RECT_CLEAR
+			if _place_outside(i, horizontal, positive, edge, grown, kill_velocity):
+				moved = true
+			if _place_outside(i + 1, horizontal, positive, edge, grown, kill_velocity):
+				moved = true
+			a = pts[i]
+			b = pts[i + 1]
+			if _segment_hits_rect(a, b, rect):
+				var end := i + 1
+				var other := i
+				if i > 0 and i + 1 < N - 1 and a.distance_squared_to(c) < b.distance_squared_to(c):
+					end = i
+					other = i + 1
+				elif i + 1 >= N - 1:
+					end = i
+					other = i + 1
+				if _corner_off(end, other, rect, kill_velocity):
+					moved = true
+				a = pts[i]
+				b = pts[i + 1]
+	return moved
 
 
 func _closest_on_segment(a: Vector2, b: Vector2, c: Vector2) -> Vector2:
@@ -671,6 +814,11 @@ func visible_path() -> PackedVector2Array:
 					or _closest_on_segment(mid, b, pl).distance_to(pl) < radius:
 				clear = false
 				break
+		if clear and not rope_rects.is_empty():
+			for rect in rope_rects:
+				if _segment_hits_rect(a, mid, rect) or _segment_hits_rect(mid, b, rect):
+					clear = false
+					break
 		if clear:
 			_vis[2 * i + 1] = mid
 	_vis[VIS_N - 1] = pts[N - 1]

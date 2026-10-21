@@ -203,6 +203,8 @@ var cam: Camera2D
 var poles: Array[Vector2] = []
 var rope_radii := PackedFloat32Array()
 var rope_soft: Array[Vector2] = []
+# Solid outlines the strap must go around: stalls, vans, benches, the train.
+var rope_rects: Array[Rect2] = []
 var manholes: Array[Vector2] = []
 var hydrants: Array = []
 var kebabs: Array = []
@@ -1244,6 +1246,7 @@ func _edge_base_color() -> Color:
 	match lvl:
 		"oldtown", "spook": return Color(0.36, 0.33, 0.30)   # old stone
 		"neteja": return Color(0.40, 0.32, 0.28)             # warm stone, dawn
+		"besos": return Color(0.58, 0.56, 0.52)              # the concrete flood wall
 		"station": return Color(0.48, 0.48, 0.52)            # tiled interior
 		"site": return Obres.YARD                            # the works compound
 		"scrap": return Color(0.26, 0.25, 0.24)              # yard beyond the fence
@@ -8465,6 +8468,12 @@ func _physics_process(delta: float) -> void:
 	# weather nudges: rain makes the pavement slick, wind shoves everyone
 	# gently downwind (the owner, dead weight, catches more of it)
 	dog.slick = Game.weather == "rain" and not sheltered(dog.global_position)
+	dog.flooded = false
+	if chase_sweeper != null and String(chase_phase) == "chase" and chase_sweeper.has_method("in_shallow"):
+		if chase_sweeper.in_shallow(dog.global_position):
+			# wet ground, and one sideways scale inside her tick
+			dog.slick = true
+			dog.flooded = true
 	if lvl == "rain":
 		_tick_wet(delta)
 	dog.ice = Game.weather == "snow"
@@ -8504,6 +8513,10 @@ func _physics_process(delta: float) -> void:
 	dog.tick(delta)
 	human.tick(delta)
 	_part_bodies()
+	# the flood's shove lands before the leash, so the rope holds it this frame
+	if phase == "home" and chase_active and String(chase_phase) == "chase" \
+			and chase_sweeper != null and chase_sweeper.has_method("push_bodies"):
+		chase_sweeper.push_bodies(self, delta)
 	_prof("dog, owner, drive")
 	# the human owns the retractable leash: length changes on their whim
 	# ("click!" event), never the dog's
@@ -9830,6 +9843,7 @@ func add_rope_rect(r: Rect2, soft := true) -> void:
 	if leash != null:
 		leash.pole_radii = rope_radii
 		leash.furniture_poles = _furniture_wrap_poles()
+		leash.rope_rects = rope_rects
 
 
 func _make_pair(start: Vector2, direction: Vector2, activate := true) -> Node2D:
@@ -9838,6 +9852,7 @@ func _make_pair(start: Vector2, direction: Vector2, activate := true) -> Node2D:
 	pair.setup(self, dog, poles, start, direction)
 	pair.leash.pole_radii = rope_radii
 	pair.leash.furniture_poles = _furniture_wrap_poles()
+	pair.leash.rope_rects = rope_rects
 	if not pair.configure_route(
 		start.x,
 		walk_cx - walk_half + 30.0,
@@ -11735,6 +11750,7 @@ func on_business_bagged(pos: Vector2) -> void:
 const FREEDOM_KINDS := {
 	"beach": "beach", "trail": "clearing", "site": "lot", "scrap": "lot",
 	"guell": "clearing",
+	"besos": "clearing",
 	# the town walks end in a square, the way their gates say
 	"market": "placa", "oldtown": "placa", "spook": "placa", "neteja": "placa",
 	# the castle's esplanade at the top of the hill
@@ -12537,6 +12553,46 @@ func _draw() -> void:
 			_draw_n = 0
 
 
+# The river beside the path: shallow margin, the deep channel, the apron the
+# flood holds on, and the gear that warns you. One batch, only while the
+# south end of it is the walk (the meadow past the gate stays grass).
+func _draw_besos(vt: float, vb: float) -> void:
+	var water := LevelBuild.besos_water_rect(self)
+	var channel := LevelBuild.besos_deep_rect(self)
+	if water.end.y < vt - 40.0 or water.position.y > vb + 40.0:
+		return
+	var b := ShapeBatch.new()
+	var y0 := maxf(water.position.y, vt - 20.0)
+	var y1 := minf(water.end.y, vb + 20.0)
+	b.rect(Rect2(water.position.x, y0, water.size.x, y1 - y0), Color(0.45, 0.68, 0.66, 0.85))
+	b.rect(Rect2(channel.position.x, y0, channel.size.x, y1 - y0), Color(0.12, 0.28, 0.36))
+	var apron := LevelBuild.BESOS_APRON
+	if apron.end.y > vt - 20.0 and apron.position.y < vb + 20.0:
+		b.rect(apron.grow(6.0), Color(0.62, 0.60, 0.56))
+		b.rect(apron, Color(0.78, 0.74, 0.66))
+	var wt := AnimClock.msec() / 1000.0
+	var wy := floorf(y0 / 90.0) * 90.0
+	while wy < y1:
+		var wobble := sin(wy * 0.02 + wt) * 4.0
+		b.line(Vector2(water.position.x + 8.0 + wobble, wy), Vector2(water.end.x - 10.0 + wobble, wy + 28.0), Color(1, 1, 1, 0.18), 2.0)
+		wy += 90.0
+	# gauges on the flood wall, a weir across the margin, the bridge shadow
+	var gy := floorf(maxf(y0, GATE_Y) / 800.0) * 800.0
+	while gy < y1:
+		b.rect(Rect2(sw_l - 8.0, gy, 10.0, 28.0), Color(0.75, 0.55, 0.18))
+		b.rect(Rect2(sw_l - 4.0, gy + 8.0, 4.0, 8.0), Color(0.9, 0.2, 0.15))
+		gy += 800.0
+	if absf(-3100.0 - (vt + vb) * 0.5) < 500.0:
+		b.rect(Rect2(water.position.x - 8.0, -3112.0, water.size.x + 16.0, 18.0), Color(0.25, 0.32, 0.34))
+	if vb > GATE_Y - 20.0 and vt < GATE_Y + 80.0:
+		b.rect(Rect2(sw_l, GATE_Y + 16.0, channel.end.x - sw_l, 22.0), Color(0.2, 0.2, 0.22, 0.35))
+	var board := Rect2(sw_l + 48.0, 40.0, 46.0, 28.0)
+	if board.end.y > vt and board.position.y < vb:
+		var open := String(chase_phase) == ""
+		b.rect(board, Color(0.2, 0.55, 0.28) if open else Color(0.7, 0.16, 0.14))
+	b.flush(_wc)
+
+
 func _draw_world() -> void:
 	var top := GATE_Y - 800.0
 	# The ground runs well past the start line: the south wall stops the dog
@@ -12662,6 +12718,8 @@ func _draw_world() -> void:
 		elif lvl == "montjuic":
 			grass = Montjuic.HILL
 			walkway = Montjuic.SAULO
+		elif lvl == "besos":
+			walkway = Color(0.72, 0.68, 0.60)   # the paved river path, warm concrete
 		if lvl == "montjuic":
 			# the hill only, between its rims: past them, the city below
 			Montjuic.draw_hill(self, _wc, vt, vb)
@@ -12693,6 +12751,8 @@ func _draw_world() -> void:
 		elif lvl != "partit":
 			# (Dia de Partit's asphalt and sidewalks are on the cached edge layer)
 			_draw_walk_ribbon(vt, vb, bottom, walkway)
+		if lvl == "besos":
+			_draw_besos(vt, vb)
 	# (what lies beyond the gate is drawn by freedomlayer, which owns
 	# everything up there - drawing it here put a green field on top of the
 	# cached canvas, which is how the dog beach briefly turned into a lawn)

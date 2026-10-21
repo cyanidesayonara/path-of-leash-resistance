@@ -69,6 +69,9 @@ var state_t := 0.0
 var event_timer := 4.0
 var telegraph_t := 0.0
 var pending_event: HState = HState.STOPPED
+# A hazard may reserve the bubble for its warning beat. Owner events and the
+# reel wait, so the promised warning cannot be overwritten before it lands.
+var external_warning_t := 0.0
 var drift_dir := 1.0
 var dash_target := Vector2.ZERO
 var pending_bench := false
@@ -473,6 +476,8 @@ func _converse(delta: float) -> void:
 	_pull_now = Vector2.ZERO
 	glance_t = maxf(0.0, glance_t - delta)
 	grace_t = maxf(0.0, grace_t - delta)
+	if external_warning_t > 0.0:
+		return
 	# only a walking owner minds: on a call, in an orbit, down or held for a
 	# lesson they are not keeping score
 	var minding := state in [HState.WALK, HState.DRIFT] and tut_hold_y == -INF
@@ -546,6 +551,8 @@ func is_correcting() -> bool:
 func _fiddle_with_reel(delta: float) -> void:
 	# constantly fiddles with the retractable leash, independent of the
 	# event system: new random length on every "click!"
+	if external_warning_t > 0.0:
+		return
 	if reel_pending_t > 0.0:
 		reel_pending_t -= delta
 		if reel_pending_t <= 0.0:
@@ -837,6 +844,8 @@ func _fire_bar() -> void:
 
 
 func _events(delta: float) -> void:
+	if external_warning_t > 0.0:
+		return
 	if match_on:
 		_match_events(delta)
 		return
@@ -960,6 +969,25 @@ func notice(text: String, secs: float) -> void:
 	tw.tween_callback(func() -> void:
 		if bubble.text == text:
 			bubble.visible = false)
+
+
+func can_warn_external() -> bool:
+	return state == HState.WALK and telegraph_t <= 0.0 and correct_t <= 0.0 \
+		and reel_pending_t <= 0.0 and external_warning_t <= 0.0 and not bubble.visible
+
+
+func warn_external(text: String, secs: float) -> bool:
+	if not can_warn_external():
+		return false
+	external_warning_t = secs
+	_show_bubble(text)
+	return true
+
+
+func clear_external_warning(text: String) -> void:
+	external_warning_t = 0.0
+	if bubble.text == text:
+		bubble.visible = false
 
 
 func _show_bubble(text: String, dog_news: String = "") -> void:
@@ -1203,6 +1231,7 @@ func bumped(dir: Vector2) -> void:
 	state = HState.STUMBLE
 	state_t = 0.45
 	velocity = dir * 190.0
+	external_warning_t = 0.0
 	telegraph_t = 0.0
 	bubble.visible = false
 
