@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-21 - Weather, hour and lamplight
+
+- Rain, wind, snow, night and La Neteja's dawn now each have their own light. The world tint, the grade over the mood, and the lamps agree: night is a deep blue with a closer vignette, and a lamp is drawn bright enough that the tint does not turn it grey. Rain darkens the mids and adds a wet sheen; snow is bright and cold; wind is a warm haze. A clear day is exactly the picture it was.
+- Lamps along the walk (the posts, and a lamp on the wall where a post is far) pool on the ground under the trees, and stay warm after dark. Rain breaks a little of that light on the wet. The phone does the same. A chalk stroke or a lit board stays the colour it was painted, and the line under a walk's name stays light on its dark chip.
+- New `tests/test_sky.gd`, in CI.
+
 ## 2026-10-21 - Loss titles keep their last letter; walk names read in plain type
 
 - A lost walk's title was drawn clipped to the card. "YOUR HUMAN WENT DOWN THE MANHOLE" lost the last stroke of its last letter, and any longer title would too. A heading now shrinks until the words and their outline sit inside the card, and the card itself stays on a narrow window. The body wraps instead of being cut.
