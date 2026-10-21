@@ -2,6 +2,33 @@
 
 Append-only session history, newest first.
 
+## 2026-10-21 - No more Daily Walk; a walk's own sky stays on that walk
+
+- The Daily Walk is gone. The walk select is the first walk, then the campaign walks. Every walk can be played in any weather, day or night, from GET READY. Its share card, the SHARE touch button and the daily best go with it. An old save's daily section is ignored and dropped on the next save.
+- Browsing the walk select past a walk with its own sky no longer leaves that sky on every walk after it. El Diluvi, La Castanyada and the first walk wrote their rain, their dark and their clear day over the player's GET READY choice, and so did the daily. Now `Game.apply_walk_sky` sets the walk's own sky for that walk only and gives the player's choice back on the next one. On GET READY the row the walk decides is fixed; the other row is still yours, and that choice carries on.
+- Store listing, privacy text, itch page, README and LEVEL_DESIGN no longer mention a daily walk.
+- New `tests/test_walk_sky.gd`, in CI.
+
+## 2026-10-21 - Tofu only hides where Millie can reach her
+
+- "Bring Tofu the cat home" could not be finished on most walks. Her seven hiding spots were fixed offsets from the walk's centre line, so where a walk bends or has furniture they landed off the path, in El Parc's pond, or inside a solid prop. Her darts between them ran through stalls, benches and buildings, so she seemed to jump into the side of the street and vanish. Her last spot was past the home line, so the walk could end while she was still running to it.
+- She now hides only on open path at her own point down the walk. Each spot is checked against the walls, water and anything solid, and each dart is clear: straight where it can be, round the obstacle through one or two waypoints where it cannot. Where a wall runs down the middle of the path (L'Estació), she stays on one side of it. Her last spot is short of the home line.
+- New `tests/test_tofu_spots.gd`, in CI: on every walk with the goal, every spot and every dart is reachable, open ground. El Barri is herded with the real dog, and the goal banks to the record.
+
+## 2026-10-21 - The sweeper scoops you up instead of parking on you
+
+- Caught by the sweeper, Millie and your human no longer stand on top of the machine until the card comes up. The one who reached the brooms first is lifted up into them and tumbles to the side; the other is dragged in after, a beat later, turning the other way. The leash follows both, the handle staying in his tossed fist.
+- The catch is decided at once and the walk freezes for the beat: bodies, rope, walk clock, bikes and every other walker stop, and pause and restart wait for the card. Only the drawing moves.
+- The machine itself has more to look at: tyre tracks and comb marks in its wake, bristle tips and hubs on the brooms, wheel hubs, a council fleet panel, a bigger windscreen with a divider and glint, a darker bumper and two headlamps. It is still one draw call.
+- Continue clears every part of the catch pose.
+- Tests: the catch is now also checked with real frames and a real pause press.
+
+## 2026-10-20 - Chase framing shows the danger before fear
+
+- Chase-only framing now leans toward an approaching threat earlier while preserving at least 110 rendered pixels of escape runway across desktop, landscape-phone and portrait framing. The cap accounts for leash separation, camera smoothing, shake and live southward speed, including turbo.
+- SCARED cannot begin building until the threat's authored leading edge is at least 48 rendered pixels into the view. The sweeper explicitly identifies its brush line; the same shared hook is ready for El Besòs's shallow flood edge.
+- Current, moderate and strong framing were compared in deterministic desktop, landscape-phone and portrait captures. The strong curve was selected, then bounded by the viewport-aware safety rule.
+
 ## 2026-10-20 - 1.61 notes include the chase, the dare and the browser sound
 
 - The itch and Store notes for 1.61 now mention La Neteja's warning, head start and continue, the dare kid clear of the trees, and the browser build having sound again.

@@ -878,7 +878,7 @@ func _test_main_blocker_catalog() -> void:
 		and ready_start < autowalk_request
 		and autowalk_request < autowalk_seed_call
 		and autowalk_seed_call < level_data_call,
-		"non-daily autowalk selects its named seed before level construction"
+		"autowalk selects its named seed before level construction"
 	)
 	var progress_start := source.find("func _progress(")
 	var finish_gate := source.find(

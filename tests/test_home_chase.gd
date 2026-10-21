@@ -19,6 +19,14 @@ var checks := 0
 var failures: Array[String] = []
 
 
+class BoundaryThreat extends Node2D:
+	var front_y := -20.0
+	var shallow_y := 35.0
+
+	func threat_boundary() -> float:
+		return shallow_y
+
+
 func _check(ok: bool, what: String) -> void:
 	checks += 1
 	if not ok:
@@ -60,14 +68,54 @@ func _catch(main: Node2D, catch_human: bool) -> String:
 	main.msg_label.text = ""
 	main.chase_catch_t = 0.0
 	sw.z_index = 0
+	var dog_at: Vector2 = main.dog.global_position
+	var human_at: Vector2 = main.human.global_position
+	var rope_before: Array = main.leash.pts.duplicate()
+	var elapsed_before: float = main.elapsed
 	HomeChase.tick(main, 0.0)
 	if main.auto_walk:
 		return main.msg_label.text if main.frozen else ""
 	# the catch beat: caught, but the card waits while the machine rolls over
-	_check(not main.frozen and main.chase_catch_t > 0.0, "a catch starts the beat, not the card")
+	_check(main.frozen and main.chase_catch_t > 0.0 and main.msg_label.text == "",
+		"a catch freezes the walk and starts the beat, not the card")
 	_check(int(sw.z_index) > 0, "the machine comes to the front to roll over them")
-	HomeChase.tick(main, HomeChase.CATCH_BEAT * 0.5)
-	_check(not main.frozen, "half way through the beat the card is still waiting")
+	_check(str(main.get("chase_catch_first")) == ("human" if catch_human else "dog"),
+		"the presentation remembers which body reached the brushes first")
+	_check(main.dog.velocity == Vector2.ZERO and main.human.velocity == Vector2.ZERO,
+		"the decided catch stops gameplay body velocity")
+	# real frames, with a real pause press: the beat runs, nothing else does
+	var was_started: bool = main.started
+	main.started = true
+	Input.action_press("pause")
+	for k in range(6):
+		await physics_frame
+		await process_frame
+	Input.action_release("pause")
+	main.started = was_started
+	_check(not main.paused, "pause does nothing during the catch beat")
+	_check(main.chase_catch_t > 0.0 and main.chase_catch_t < HomeChase.CATCH_BEAT,
+		"real frames advance the catch beat")
+	main._physics_process(HomeChase.CATCH_BEAT * 0.25)
+	_check(main.msg_label.text == "", "half way through the beat the card is still waiting")
+	_check(main.dog.global_position == dog_at and main.human.global_position == human_at,
+		"catch animation leaves gameplay body positions frozen")
+	_check(main.leash.pts == rope_before, "catch animation never moves solver rope points")
+	_check(is_equal_approx(float(main.elapsed), elapsed_before),
+		"the walk clock freezes when the catch is decided")
+	var dog_draw: Variant = main.dog.get("presentation_offset")
+	var human_draw: Variant = main.human.get("presentation_offset")
+	var leash_dog: Variant = main.leash.get("presentation_dog_offset")
+	var leash_human: Variant = main.leash.get("presentation_human_offset")
+	_check(dog_draw is Vector2 and human_draw is Vector2
+		and ((dog_draw as Vector2).length() > 1.0 or (human_draw as Vector2).length() > 1.0),
+		"the catch beat moves the drawn bodies")
+	var hand_arm: Vector2 = main.leash._hand_pos() - main.human.global_position
+	var want_hand: Vector2 = (human_draw as Vector2).rotated(main.human.global_rotation) \
+		+ hand_arm.rotated(float(main.human.presentation_rotation)) - hand_arm
+	_check(leash_dog is Vector2 and leash_human is Vector2
+		and (leash_dog as Vector2).length() > 1.0
+		and (leash_human as Vector2).distance_to(want_hand) < 0.01,
+		"the visible leash handle stays in the tossed fist")
 	HomeChase.tick(main, HomeChase.CATCH_BEAT)
 	return main.msg_label.text if main.frozen else ""
 
@@ -184,7 +232,8 @@ func _run() -> void:
 		"getting clear again is a close shave (+%d bones)" % (cm.bones - bones0))
 	# the camera leans back just far enough to get the machine in shot
 	var view_half: float = cm.get_viewport_rect().size.y * 0.5 / float(cm.cam.zoom.y)
-	var cam_y: float = (cm.dog.global_position.y + cm.human.global_position.y) * 0.5 - 60.0
+	var cam_y: float = (cm.dog.global_position.y + cm.human.global_position.y) * 0.5 \
+		+ HomeChase.CAMERA_PAIR_OFFSET_Y
 	csw.front_y = cam_y - view_half + HomeChase.LEAN_SHOW - 50.0
 	for i in range(60):
 		HomeChase.tick(cm, 0.1)
@@ -193,6 +242,82 @@ func _run() -> void:
 	for i in range(60):
 		HomeChase.tick(cm, 0.1)
 	_check(float(cm.chase_lean) < 1.0, "does not lean for a machine far out of reach (%.1f)" % float(cm.chase_lean))
+	# The selected camera curve is the production target. It is bounded by
+	# rendered runway, not a desktop world-unit guess.
+	var final_dog_y := 100.0
+	var final_human_y := 40.0
+	var final_cam_y: float = (final_dog_y + final_human_y) * 0.5 \
+		+ HomeChase.CAMERA_PAIR_OFFSET_Y
+	var front_y: float = final_cam_y - 360.0 + HomeChase.LEAN_SHOW - 50.0
+	var target: float = HomeChase.camera_target(
+		front_y, final_dog_y, final_human_y, 720.0, 1.0)
+	_check(absf(target - 50.0) < 0.01,
+		"the production curve leans enough to hold its deeper threat line (%.1f)" % target)
+	# Real canvas-height / camera-zoom pairs from desktop, a forced 844x390
+	# phone frame, and a forced 390x844 portrait frame. The first two fixtures
+	# deliberately request more lean than their cap permits.
+	for fixture: Array in [
+		[720.0, 1.28, true],
+		[500.0, 1.28 / 1.44, true],
+		[1910.0, 1.28 / 1.45, false],
+	]:
+		var viewport_h: float = fixture[0]
+		var zoom: float = fixture[1]
+		var should_cap: bool = fixture[2]
+		var dog_y := 100.0
+		var human_y := 40.0
+		var base_cam_y: float = (dog_y + human_y) * 0.5 + HomeChase.CAMERA_PAIR_OFFSET_Y
+		var fixture_half := viewport_h * 0.5 / zoom
+		var requested := 150.0
+		var boundary_y: float = base_cam_y - fixture_half + HomeChase.LEAN_SHOW - requested
+		target = HomeChase.camera_target(boundary_y, dog_y, human_y, viewport_h, zoom)
+		var target_cam_y: float = base_cam_y - target
+		var runway_px: float = (target_cam_y + fixture_half - maxf(dog_y, human_y)) * zoom
+		var reserved_px: float = HomeChase.CAMERA_RUNWAY_PX \
+			+ HomeChase.CAMERA_SHAKE_WORLD * zoom
+		_check(runway_px >= reserved_px - 0.01,
+			"the camera reserves moving runway at %.0fpx / %.3f zoom (%.1f)" % [viewport_h, zoom, runway_px])
+		_check((target < requested - 0.01) == should_cap,
+			"the runway cap engages only where needed at %.0fpx / %.3f zoom (%.1f)" % [viewport_h, zoom, target])
+	cm.chase_lean = 100.0
+	cm.dog.global_position.y = 100.0
+	cm.human.global_position.y = -100.0
+	csw.front_y = -50.0
+	HomeChase._lean(cm, csw, 0.01)
+	var live_cap: float = HomeChase.camera_runway_cap(
+		float(cm.dog.global_position.y), float(cm.human.global_position.y),
+		float(cm.get_viewport_rect().size.y), float(cm.cam.zoom.y))
+	_check(float(cm.chase_lean) <= live_cap + 0.01,
+		"an old eased lean is clamped immediately when the pair opens (%.1f <= %.1f)"
+			% [float(cm.chase_lean), live_cap])
+	var turbo_zoom: float = 1.28 / 1.44
+	var turbo_speed: float = 561.0
+	var turbo_cap: float = HomeChase.camera_runway_cap(
+		100.0, 40.0, 500.0, turbo_zoom, turbo_speed, 6.0)
+	var turbo_base_cam: float = 70.0 + HomeChase.CAMERA_PAIR_OFFSET_Y
+	var turbo_runway_px: float = (turbo_base_cam - turbo_cap
+		+ 250.0 / turbo_zoom - 100.0) * turbo_zoom
+	var turbo_reserve_px: float = HomeChase.CAMERA_RUNWAY_PX \
+		+ (HomeChase.CAMERA_SHAKE_WORLD + turbo_speed / 6.0) * turbo_zoom
+	_check(turbo_cap < 0.0 and turbo_runway_px >= turbo_reserve_px - 0.01,
+		"turbo framing leads the smoothed camera enough to retain 110px (cap %.1f, %.1fpx)"
+			% [turbo_cap, turbo_runway_px])
+	csw.front_y = -123.0
+	_check(is_equal_approx(csw.threat_boundary(), -123.0),
+		"the sweeper explicitly exposes its brushes as the authored boundary")
+	_check(is_equal_approx(HomeChase.threat_boundary(csw), -123.0),
+		"the chase reads the sweeper's authored boundary")
+	var flood_probe := BoundaryThreat.new()
+	_check(is_equal_approx(HomeChase.threat_boundary(flood_probe), flood_probe.shallow_y),
+		"a future threat can expose its own shallow visible boundary")
+	flood_probe.free()
+	var actual_h: float = cm.get_viewport_rect().size.y
+	var actual_zoom: float = float(cm.cam.zoom.y)
+	var rendered_top: float = cm.cam.get_screen_center_position().y - actual_h * 0.5 / actual_zoom
+	_check(not HomeChase.threat_visible(cm, rendered_top + 47.9 / actual_zoom),
+		"a threat boundary 47.9 rendered px below the top is not visible enough")
+	_check(HomeChase.threat_visible(cm, rendered_top + 48.0 / actual_zoom),
+		"a threat boundary 48 rendered px below the top is visible")
 	# junk the brooms flung knocks the dog over if it hits her
 	var junk: Node2D = Node2D.new()
 	junk.set_script(load("res://entities/cone.gd"))
@@ -247,6 +372,33 @@ func _run() -> void:
 	_check(float(calm.mood.charge.get(calm.mood.M.SCARED, 0.0)) <= 0.001,
 		"no dread on the way out, before the machine exists (charge %.2f)" % float(calm.mood.charge.get(calm.mood.M.SCARED, 0.0)))
 	await _drop(calm)
+
+	# Even on the live chase phase, fear waits until the brushes have entered
+	# far enough into the actual rendered viewport.
+	var fear := await _fresh_main()
+	fear.auto_walk = false
+	fear.started = true
+	fear.chase_active = true
+	fear.chase_kind = "sweeper"
+	HomeChase.begin(fear)
+	HomeChase.release(fear)
+	fear.mood.reset()
+	var fear_sw: Node2D = fear.chase_sweeper
+	fear_sw.speed = 0.0
+	var fear_h: float = fear.get_viewport_rect().size.y
+	var fear_zoom: float = float(fear.cam.zoom.y)
+	var fear_top: float = fear.cam.get_screen_center_position().y - fear_h * 0.5 / fear_zoom
+	fear_sw.front_y = fear_top + 47.0 / fear_zoom
+	fear._tick_mood(0.2)
+	var hidden_charge: float = float(fear.mood.charge.get(fear.mood.M.SCARED, 0.0))
+	fear_sw.front_y = fear_top + 49.0 / fear_zoom
+	fear._tick_mood(0.2)
+	var visible_charge: float = float(fear.mood.charge.get(fear.mood.M.SCARED, 0.0))
+	_check(hidden_charge <= 0.001,
+		"fear charge stays zero before the threat is visible enough (%.3f)" % hidden_charge)
+	_check(visible_charge > hidden_charge,
+		"fear charge increases once the threat is visible enough (%.3f)" % visible_charge)
+	await _drop(fear)
 
 	# the tutorial is calm by construction: no chase, whatever the dice say
 	var tut := await _fresh_main()
