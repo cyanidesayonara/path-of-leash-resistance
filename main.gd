@@ -147,6 +147,8 @@ const MoodWiring := preload("res://systems/mood_wiring.gd")
 const SkyLook := preload("res://systems/sky.gd")
 const Arrival := preload("res://systems/arrival.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
+const CurrentFlow := preload("res://systems/current_flow.gd")
+const RunEvents := preload("res://systems/run_events.gd")
 const Goals := preload("res://systems/goals.gd")
 const TofuRoute := preload("res://systems/tofu_route.gd")
 const HudBuild := preload("res://hud/hud_build.gd")
@@ -829,6 +831,9 @@ var _redraw_acc := 0.0
 # return to them for a shared-fetch bonus
 var npc_ball: Node2D
 var npc_ball_pair: Node2D
+var run_seed := 0
+var bosc_high_stream := false
+var stream_find: Node2D
 var combo_l: Label
 var combo_bar: ColorRect
 var combo_bar_bg: ColorRect
@@ -860,15 +865,16 @@ func _ready() -> void:
 		tutorial_mode = true
 		lvl = "barri"
 	else:
-		if autowalk_requested:
-			seed(AUTOWALK_SEED)
+		run_seed = AUTOWALK_SEED if autowalk_requested else int(Time.get_ticks_usec() & 0x7fffffff)
 		# --seed=N pins every random layout and spawn, so a soak or a bug
 		# report can be replayed exactly
 		for a in OS.get_cmdline_user_args():
 			if a.begins_with("--seed="):
-				seed(int(a.substr(7)))
+				run_seed = int(a.substr(7))
+		seed(run_seed)
 		lvl = Game.level_id
 	Game.apply_walk_sky(Game.level_id)
+	bosc_high_stream = RunEvents.chosen(run_seed, lvl, "high_stream", Game.weather, 20)
 	_setup_input()
 	_build_level_data()
 	_build_bypasser_blockers()
@@ -878,6 +884,7 @@ func _ready() -> void:
 	if lvl == "montjuic":
 		CableCar.build(self)
 	_spawn_cones()
+	_spawn_stream_find()
 	_build_quests()
 	UiScale.apply(self)
 	get_tree().root.size_changed.connect(_on_window_resized)
@@ -5941,7 +5948,7 @@ func _playground(b: ShapeBatch, pg: Rect2) -> void:
 # stream is drawn across under it so it reads as running beneath.
 func _draw_trail_stream(vt: float, vb: float) -> void:
 	var sy: float = LevelBuild.TRAIL_STREAM_Y
-	var half: float = LevelBuild.TRAIL_STREAM_HALF
+	var half: float = LevelBuild.TRAIL_HIGH_STREAM_HALF if bosc_high_stream else LevelBuild.TRAIL_STREAM_HALF
 	if sy < vt - 120.0 or sy > vb + 120.0:
 		return
 	var wt := AnimClock.msec() / 1000.0
@@ -5961,7 +5968,7 @@ func _draw_trail_stream(vt: float, vb: float) -> void:
 	for k in range(xs.size() - 1, -1, -1):
 		water.append(Vector2(xs[k], sy + half + sin(xs[k] * 0.017 + 1.0) * 4.0))
 	_wc.draw_colored_polygon(bank, Color(0.36, 0.30, 0.21))
-	_wc.draw_colored_polygon(water, Color(0.27, 0.42, 0.44))
+	_wc.draw_colored_polygon(water, Color(0.24, 0.40, 0.43) if bosc_high_stream else Color(0.27, 0.42, 0.44))
 	var wb := ShapeBatch.new()
 	# deeper down the middle: a darker band where the current runs
 	var deep := PackedVector2Array()
@@ -5981,6 +5988,8 @@ func _draw_trail_stream(vt: float, vb: float) -> void:
 	for k in range(18):
 		var lane := float(k % 3) - 1.0
 		var speed := 52.0 if lane == 0.0 else 34.0
+		if bosc_high_stream:
+			speed += 20.0
 		var rx := fmod(float(k) * 127.0 + wt * speed, 2100.0) - 400.0
 		var ry := sy + lane * half * 0.5 + sin(rx * 0.02) * 2.0
 		wb.line(Vector2(rx, ry), Vector2(rx + 26.0, ry + 1.0), Color(1, 1, 1, 0.18 if lane == 0.0 else 0.12), 2.0)
@@ -8129,6 +8138,48 @@ func _spawn_junk(at: Vector2, kind: String) -> void:
 	LevelBuild.spawn_junk(self, at, kind)
 
 
+func _spawn_stream_find() -> void:
+	if not bosc_high_stream:
+		return
+	var sy: float = LevelBuild.TRAIL_STREAM_Y
+	var e := walk_edges(sy)
+	var kind := "branch" if RunEvents.bucket(run_seed, lvl, "high_stream_kind") < 50 else "ball"
+	stream_find = Node2D.new()
+	stream_find.set_script(load("res://entities/stream_find.gd"))
+	stream_find.z_index = 4
+	add_child(stream_find)
+	stream_find.setup(self, kind, Vector2(e.x - 260.0, sy), e.x - 10.0, sy,
+		LevelBuild.TRAIL_HIGH_STREAM_HALF)
+
+
+func on_stream_find_returned(kind: String, at: Vector2) -> void:
+	bones += 5
+	Sfx.play("star")
+	combo.add("RESCUE", 3)
+	float_text(at, ("%s saved! +5" % kind) if kind == "ball" else "saved! +5",
+		Color(0.78, 0.94, 0.84))
+	_update_hud()
+
+
+func on_stream_find_grabbed(_at: Vector2) -> void:
+	if feed != null:
+		feed.say("TO THE BANK!", EventFeed.Tone.PLAIN)
+
+
+func _push_bosc_current(delta: float) -> void:
+	if not bosc_high_stream:
+		return
+	var stream: Array[Rect2] = LevelBuild.trail_stream(self)
+	for body: CharacterBody2D in [dog, human]:
+		var active := false
+		for r: Rect2 in stream:
+			if r.has_point(body.global_position):
+				active = true
+				break
+		CurrentFlow.shove_body(body, active, Vector2.RIGHT, 54.0, 8.0,
+			body == dog and bool(dog.planted), delta)
+
+
 func on_junk_kicked(pos: Vector2, kind: String) -> void:
 	# a light, kind-appropriate clatter; heavier things thud
 	match kind:
@@ -8526,6 +8577,9 @@ func _physics_process(delta: float) -> void:
 	dog.tick(delta)
 	human.tick(delta)
 	_part_bodies()
+	_push_bosc_current(delta)
+	if stream_find != null:
+		stream_find.tick(delta)
 	# the flood's shove lands before the leash, so the rope holds it this frame
 	if phase == "home" and chase_active and String(chase_phase) == "chase" \
 			and chase_sweeper != null and chase_sweeper.has_method("push_bodies"):
