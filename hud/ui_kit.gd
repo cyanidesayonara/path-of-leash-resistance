@@ -89,12 +89,46 @@ static func card(c: CanvasItem, r: Rect2, acc: Color, radius := 14) -> void:
 	c.draw_style_box(_card_box(acc, radius), r)
 
 
+# room kept clear of a fitted heading's box, for the 6px outline plus a little
+# air, so the last stroke is not cut off by the card edge
+const HEAD_PAD := 20.0
+
+
+# The size a heading is actually drawn at. A width passed to draw_string clips
+# any glyph that crosses it, which is how the last letter of a long loss
+# ("YOUR HUMAN WENT DOWN THE MANHOLE") lost its final stroke. Shrink until the
+# words, and the outline around them, sit inside the box.
+static func heading_px(s: String, px: int, w: float) -> int:
+	if w <= 0.0:
+		return px
+	var size := px
+	var room := w - HEAD_PAD
+	var f := display()
+	while size > 15 and text_w(f, s, size) > room:
+		size -= 1
+	return size
+
+
 # A heading with a dark outline, so it reads over the world as well as on a card.
 static func heading(c: CanvasItem, at: Vector2, s: String, px: int, col: Color,
 		align := HORIZONTAL_ALIGNMENT_LEFT, w := -1.0) -> void:
 	var f := display()
-	f.draw_string_outline(c.get_canvas_item(), at, s, align, w, px, 6, Color(0.04, 0.03, 0.06, col.a * 0.8))
-	f.draw_string(c.get_canvas_item(), at, s, align, w, px, col)
+	var size := heading_px(s, px, w)
+	var draw_at := at
+	var draw_align := align
+	var draw_w := w
+	if w > 0.0:
+		# placed by hand and drawn unclipped, so the outline is not cut either
+		var tw := text_w(f, s, size)
+		draw_align = HORIZONTAL_ALIGNMENT_LEFT
+		draw_w = -1.0
+		if align == HORIZONTAL_ALIGNMENT_CENTER:
+			draw_at = Vector2(at.x + (w - tw) * 0.5, at.y)
+		elif align == HORIZONTAL_ALIGNMENT_RIGHT:
+			draw_at = Vector2(at.x + w - tw - HEAD_PAD * 0.5, at.y)
+	var ci := c.get_canvas_item()
+	f.draw_string_outline(ci, draw_at, s, draw_align, draw_w, size, 6, Color(0.04, 0.03, 0.06, col.a * 0.8))
+	f.draw_string(ci, draw_at, s, draw_align, draw_w, size, col)
 
 
 static func keycap_w(label: String, px := BAR_PX) -> float:

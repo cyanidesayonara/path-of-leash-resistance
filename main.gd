@@ -7290,24 +7290,26 @@ func _draw_ground_title() -> void:
 			_draw_world_text(Vector2(mid + w * 0.5 + 44.0, y), ">", 46, style, 7.0)
 	# The name is Catalan for character; this says what it MEANS, because the
 	# game ships in English and nobody should have to guess what a walk is.
+	# On the walk select the plaque says it, in type. Here it is the line
+	# under the name as the walk begins, and it has to read on any ground.
 	var gloss := String(Game.LEVEL_SUBTITLES.get("tutorial" if tutorial_mode else lvl, ""))
-	if gloss != "":
-		_draw_gloss(Vector2(mid, y + 30.0), gloss, mat, style, 8.0)
+	if gloss != "" and (started or menu_step != 1):
+		_draw_gloss(Vector2(mid, y + 34.0), gloss, mat, style, 8.0)
 
 
-func _draw_gloss(at: Vector2, txt: String, mat: String, style: String, key: float) -> void:
+func _draw_gloss(at: Vector2, txt: String, _mat: String, _style: String, _key: float) -> void:
 	if gloss_a <= 0.01:
 		return
-	# the line under the walk's name is menu text, so it is set plainly in the
-	# menus' face (not hand-wobbled) and fades with the rest as the walk begins
-	var col: Color = WorldSign.GLOSS.get(mat, Color(0.97, 0.95, 0.88, 0.9))
+	# menu text, set plainly, on a dark chip, so the line reads on sand, snow
+	# and wet paving
 	var f: Font = load("res://hud/ui_kit.gd").body()
-	var px := 20
+	var px := 22
 	var w: float = f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-	var p := at - Vector2(w * 0.5, 0.0)
-	_wc.draw_string(f, p + Vector2(1.0, 1.5), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px,
-		Color(0, 0, 0, 0.30 * col.a * gloss_a))
-	_wc.draw_string(f, p, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px, Color(col.r, col.g, col.b, col.a * gloss_a))
+	var pad := 12.0
+	var chip := Rect2(at.x - w * 0.5 - pad, at.y - float(px) - 4.0, w + pad * 2.0, float(px) + 14.0)
+	_wc.draw_rect(chip, Color(0.06, 0.06, 0.08, 0.88 * gloss_a))
+	_wc.draw_string(f, Vector2(chip.position.x + pad, at.y), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px,
+		Color(0.98, 0.96, 0.90, gloss_a))
 
 
 # An outdoor shower from above: a steel column on a slatted timber footplate,
