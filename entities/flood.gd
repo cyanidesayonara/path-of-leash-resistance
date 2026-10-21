@@ -189,8 +189,12 @@ func _branch(dog: CharacterBody2D, human: CharacterBody2D, delta: float) -> void
 		# and it is not armed again until this one has finished.
 		if branch_who == "dog":
 			dog.stumble()
-		elif branch_who == "human" and int(human.state) != HumanScript.HState.STUMBLE:
-			human.bumped(Vector2(0.0, 1.0))
+		elif branch_who == "human":
+			# Release the reservation even if an orbit or fall refuses the
+			# stumble. Otherwise every later owner event stays suppressed.
+			human.clear_external_warning("watch it")
+			if int(human.state) != HumanScript.HState.STUMBLE:
+				human.bumped(Vector2(0.0, 1.0))
 		branch_who = ""
 		return
 	var who := ""
