@@ -282,6 +282,7 @@ static func controls() -> Array:
 
 static func start_walk(m: Node2D) -> void:
 	m.started = true
+	m.begin_departure()
 	# the very first real walk, for a player who skipped the tutorial: the
 	# two buttons nobody would guess
 	if not Game.tutorial_done:

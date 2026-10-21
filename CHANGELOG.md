@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-10-21 - Every walk ends at its own door
+
+- The loose HOME letters are gone. Crossing the home line with both of you starts a short arrival instead of the card: Millie pulls toward the way in, your human looks up and pockets the phone, she goes through, they follow, and the leash goes with them. The first half-second plays out; after that, confirm or back brings the card. The walk clock stops at the line. Nothing else moves: no input, no hazard, no phone damage, and a chase threat holds at the line.
+- Most walks come home to the green street door from the intro (tiles, shutters, geraniums, an intercom, a warm hall). It stands open behind you and shuts once the walk starts. L'Estació, Montjuïc and Dia de Partit come home down stairs under a canopy. El Bosc comes home through the trailhead gate, and El Besòs will come up the emergency ramp. Rain leaves wet pawprints, snow sits on the sill, and night lights the way in.
+- An autowalk still finishes on the frame it crosses, at the same time.
+- New `tests/test_arrival.gd`, in CI.
+
 ## 2026-10-21 - Weather, hour and lamplight
 
 - Rain, wind, snow, night and La Neteja's dawn now each have their own light. The world tint, the grade over the mood, and the lamps agree: night is a deep blue with a closer vignette, and a lamp is drawn bright enough that the tint does not turn it grey. Rain darkens the mids and adds a wet sheen; snow is bright and cold; wind is a warm haze. A clear day is exactly the picture it was.
