@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-10-21 - The flood keeps its promises
+
+- While the flood is held, the apron stays concrete. The shallow paint was covering the north half of it, so the dry ground read as water.
+- A branch warns your human the way every other owner event does, a short beat and then the stumble. It does not knock them over on the frame it touches them.
+- Wading loosens her sideways pace once per step. It was being cut again every frame, until she could barely walk out of a swell.
+- Someone already heading upstream is still carried south at the flood's pace, and that shove is in before the leash so the rope holds it the same frame.
+- El Besòs has its own flowing river arrangement: vibes and whistle over a brushed pulse.
+
+## 2026-10-21 - The leash goes round a stall
+
+- A leash pulled across a stall, a van or a bench could settle inside the body. It drew straight over the counter, and the pull held your human on the face they could not walk through. The strap now runs round the outside, and that pull walks them round the end.
+- `tests/test_leash_height_geometry.gd` checks a strap laid across a body stays out of it.
+
+## 2026-10-21 - El Besòs, the floodable river park
+
+- A new walk between L'Estació and Les Obres, open at 14 stars. Every older gate is unchanged. The way out is a warm afternoon: flood wall, paved path, grass, a margin you can wade, and a deep channel you cannot enter. The meadow at the far end is off the leash.
+- The way home is the river. Shallow water pushes you south, wets your human and loosens your steering; planting holds a spot and lets the deep front close. The deep front, and the swell reaching in from the river, is the loss. A raised apron stays dry while the water is held, then spills. No Tofu.
+- The flood uses the same chase as the sweeper: warning, head start, camera, checkpoint, continue. Your human hears the siren and decides it is not their problem.
+
 ## 2026-10-21 - Every walk ends at its own door
 
 - The loose HOME letters are gone. Crossing the home line with both of you starts a short arrival instead of the card: Millie pulls toward the way in, your human looks up and pockets the phone, she goes through, they follow, and the leash goes with them. The first half-second plays out; after that, confirm or back brings the card. The walk clock stops at the line. Nothing else moves: no input, no hazard, no phone damage, and a chase threat holds at the line.

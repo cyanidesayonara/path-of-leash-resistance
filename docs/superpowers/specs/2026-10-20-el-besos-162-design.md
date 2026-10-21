@@ -109,20 +109,35 @@ six sequential waits. The normal three-second head start follows.
 
 The flood cannot move, catch or create fear during the warning or head start.
 
+## Music
+
+El Besòs keeps one arrangement in both directions: a 96 BPM river groove,
+vibes and whistle over brushed drums. It is easy enough for the calm walk out,
+but carries enough pulse for the flood home without turning the whole place
+into a warning before the warning exists.
+
 ## The flood home
 
 The flood comes from upstream, behind the southbound pair.
 
 The leading shallow edge is pale, visibly directional and recoverable. It
-pushes both bodies south, reduces the dog's steering and wets them. For the
-human it is an external push only: their motor and intended pace are never
-reduced. Planting resists the current and moving with it helps. The leash
-remains the real constraint.
+pushes both bodies south, toward home and away from the deep water behind
+them, reduces the dog's steering and wets them. For the human it is an
+external push only: their motor and intended pace are never reduced. Running
+with the push is how the pair stays ahead of the front. Planting resists that
+same push, so the dog can hold a spot (the apron, a sniff, waiting for your
+human) instead of being carried past it. Holding on too long lets the deep
+front close. The leash remains the real constraint.
 
 The deep front follows a fixed distance behind the shallow edge. It is darker,
-louder, foam-edged and is the actual loss boundary. It also swells laterally
-from the river edge so the
-comfortable route narrows without invisible walls. Floating branches, balls
+louder, foam-edged and is the actual loss boundary, including where it swells
+sideways from the river: a body in that deep water loses the walk the same way
+as being overtaken. The swell narrows the comfortable route without invisible
+walls. The raised apron stays dry while the flood is held around it. When the
+continue countdown ends the water spills across the apron and it is no longer
+safe. A continue puts both bodies on the dry apron, ahead of the held front.
+
+Floating branches, balls
 and light park litter reveal direction before the water reaches the player.
 Large debris is sparse, telegraphed, and never seals the whole escape lane or
 spawns on either body. Light debris is visual or nudges a body. A branch uses
@@ -152,8 +167,11 @@ contract.
 
 ## Flood goals
 
-El Besòs has the familiar mark, sniff, phone, paws, bag, fetch, Tofu, combo and
-prize goals, plus:
+El Besòs has the familiar mark, sniff, phone, paws, bag, fetch, combo and
+prize goals, plus the two below. No Tofu. The way home is the flood, and a
+chase turns her herding off for that whole leg, which is why La Neteja and
+Dia de Partit leave her out too. Bringing her home stays a goal on every walk
+that is not a chase.
 
 - Keep the deep flood front a leash length away.
 - Get your human home less than half soaked.

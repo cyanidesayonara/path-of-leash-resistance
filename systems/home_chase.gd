@@ -35,6 +35,8 @@ extends RefCounted
 const CHASE_SPEED := 140.0
 const CHASE_SPEED_BOLT := 205.0
 const CHASE_SPEED_BOTH := 220.0
+# slower than a running dog (330), faster than your human (92)
+const FLOOD_SPEED := 128.0
 const CHASE_START_GAP := 650.0
 # the walk the chase lives on (#20): only here does the home leg roll one
 const CHASE_LEVEL := "neteja"
@@ -82,6 +84,7 @@ const NETEJA_BANDS := [
 
 const EventFeed := preload("res://hud/event_feed.gd")
 const ChaseCheckpoint := preload("res://systems/chase_checkpoint.gd")
+const LevelBuild := preload("res://world/level_build.gd")
 
 
 # The numbers and copy of one behavior kind ("sweeper", "bolt" or "both";
@@ -106,6 +109,13 @@ static func kind_behavior(kind: String) -> Dictionary:
 				"caught_human": "THEY GOT YOUR HUMAN\n\nYou pulled. You barked. It was not enough.",
 				"caught_dog": "NOBODY WAITED FOR YOU\n\nYou snagged, the leash went tight, and\nthey kept walking. They always keep walking.",
 			}
+		"flood":
+			return {
+				"kind": "flood", "speed": FLOOD_SPEED, "flee": false,
+				"warning": "THE RIVER'S UP! HEAD FOR HOME",
+				"caught_human": "THE FLOOD GOT YOUR HUMAN\n\nThey kept walking. The river did not.",
+				"caught_dog": "YOU WENT UNDER\n\nThe shallow would have carried you.\nThe deep did not give you back.",
+			}
 	return {
 		"kind": "sweeper", "speed": CHASE_SPEED, "flee": false,
 		"warning": "STREET SWEEPER! RUN!",
@@ -114,19 +124,26 @@ static func kind_behavior(kind: String) -> Dictionary:
 	}
 
 
-# The chase profile of a walk, or an empty dictionary when it has none (every
-# walk but La Neteja). A fresh copy each call. Keys: "id", "script" (the
-# threat script, a path or a Script), "kind", "speed", "flee", "warning",
-# "caught_human", "caught_dog", and "bands" (the ordered respites of the
-# chase home: "id", "kind", "jam_y", and "checkpoint" on the midpoint).
+# The chase profile of a walk, or an empty dictionary when it has none.
+# La Neteja's sweeper and El Besos's flood are the authored ones. A fresh
+# copy each call. Keys: "id", "script" (the threat script, a path or a
+# Script), "kind", "speed", "flee", "warning", "caught_human", "caught_dog",
+# and "bands" (the ordered respites of the chase home: "id", "kind", "jam_y",
+# and "checkpoint" on the midpoint).
 static func profile_for(level: String) -> Dictionary:
-	if level != CHASE_LEVEL:
-		return {}
-	var p := kind_behavior("sweeper")
-	p["id"] = CHASE_LEVEL
-	p["script"] = SWEEPER_SCRIPT
-	p["bands"] = NETEJA_BANDS.duplicate(true)
-	return p
+	if level == CHASE_LEVEL:
+		var p := kind_behavior("sweeper")
+		p["id"] = CHASE_LEVEL
+		p["script"] = SWEEPER_SCRIPT
+		p["bands"] = NETEJA_BANDS.duplicate(true)
+		return p
+	if level == "besos":
+		var f := kind_behavior("flood")
+		f["id"] = "besos"
+		f["script"] = "res://entities/flood.gd"
+		f["bands"] = [{"id": "midpoint", "kind": "respite", "jam_y": LevelBuild.BESOS_JAM_Y, "checkpoint": true}]
+		return f
+	return {}
 
 
 # The profile a walk runs its chase by: its own, or for a chase forced onto a
@@ -247,6 +264,9 @@ static func _warn(m: Node2D, behavior: Dictionary) -> void:
 	m.shake_t = 1.0
 	if behavior.get("flee", false):
 		m.human.panic = true
+	if String(behavior.get("kind", "")) == "flood":
+		Sfx.play("whistle", 0.8, -4.0)
+		m.human.notice("not our problem", 1.2)
 	if behavior.has("warning_color"):
 		m.float_text(m.human.global_position, String(behavior.get("warning", "")), behavior["warning_color"])
 	else:
@@ -322,6 +342,8 @@ static func _hold(m: Node2D, sweeper: Node2D, delta: float) -> void:
 	sweeper.jammed_now = false
 	sweeper.freed_now = false
 	sweeper.rumble += delta
+	if sweeper.has_method("touch"):
+		sweeper.touch(m, delta, false)
 	sweeper.global_position = Vector2(m.walk_cx, sweeper.front_y)
 	sweeper.queue_redraw()
 	_lean(m, sweeper, delta)
@@ -342,6 +364,10 @@ static func _hold(m: Node2D, sweeper: Node2D, delta: float) -> void:
 
 
 static func _say_freed(m: Node2D, sweeper: Node2D) -> void:
+	if String(m.chase_kind) == "flood":
+		Sfx.play("splash", 0.8, -6.0)
+		m.float_text(Vector2(m.walk_cx, sweeper.front_y - 40.0), "SPILL", Color(0.7, 0.88, 1.0))
+		return
 	Sfx.play("hiss", 0.6, -6.0)
 	m.float_text(Vector2(m.walk_cx + sweeper.sway, sweeper.front_y - 60.0), "VRRROOM", Color(1.0, 0.7, 0.4))
 
@@ -366,13 +392,19 @@ static func banner(m: Node2D) -> String:
 		"head_start":
 			return "HEAD START! GO  %d" % left
 		"hold":
+			if String(m.chase_kind) == "flood":
+				return "IT'S HOLDING! GO  %d" % left
 			return "IT'S STILL STUCK! GO  %d" % left
 	if sweeper.jammed():
+		if String(m.chase_kind) == "flood":
+			return "IT'S HOLDING! CROSS THE APRON"
 		return "IT'S STUCK! CATCH YOUR BREATH"
 	if m.chase_kind == "both":
 		return "RUN HOME TOGETHER!"
 	if m.chase_kind == "bolt":
 		return "HE'S RUNNING! KEEP UP"
+	if m.chase_kind == "flood":
+		return "RUN! STAY OUT OF THE DEEP"
 	return "RUN! DON'T LET IT CATCH YOU"
 
 
@@ -424,22 +456,32 @@ static func tick(m: Node2D, delta: float) -> void:
 	sweeper.queue_redraw()
 	if sweeper.jammed_now:
 		m.shake_t = maxf(m.shake_t, 0.6)
-		Sfx.play("crack", 0.5, -4.0)
-		m.float_text(Vector2(m.walk_cx + sweeper.jam_side * (m.walk_half - 40.0), sweeper.front_y), "CLONK", Color(1.0, 0.85, 0.5))
-		m.feed.say("IT'S JAMMED!", EventFeed.Tone.GOOD)
+		if String(m.chase_kind) == "flood":
+			Sfx.play("splash", 0.7, -8.0)
+			m.float_text(Vector2(m.walk_cx, sweeper.front_y), "HOLD", Color(0.75, 0.9, 1.0))
+			m.feed.say("IT'S HOLDING!", EventFeed.Tone.GOOD)
+		else:
+			Sfx.play("crack", 0.5, -4.0)
+			m.float_text(Vector2(m.walk_cx + sweeper.jam_side * (m.walk_half - 40.0), sweeper.front_y), "CLONK", Color(1.0, 0.85, 0.5))
+			m.feed.say("IT'S JAMMED!", EventFeed.Tone.GOOD)
 	elif sweeper.freed_now:
 		_say_freed(m, sweeper)
 	if sweeper.sweep_junk(m.get_tree().get_nodes_in_group("cones")) > 0:
 		Sfx.play("tangle", 0.8, -10.0)
+	if sweeper.has_method("touch"):
+		# soak only. The flood already shoved, before the leash.
+		sweeper.touch(m, delta, false)
 	# a low rumble the closer it gets to the dog
 	var gap: float = sweeper.gap_to(m.dog.global_position)
 	if gap < 260.0:
 		m.shake_t = maxf(m.shake_t, 0.25)
 	rear = minf(gap, sweeper.gap_to(m.human.global_position))
 	# held at its jam: the midpoint checkpoint, if this is its jam, and only
-	# with both of them clear of the brooms and no catch already rolling. A
-	# jam that fails this keeps the checkpoint before it.
-	if sweeper.jammed_now and m.chase_catch_t <= 0.0 and rear > 0.0 \
+	# with both of them clear of the leading edge and no catch already
+	# rolling. For the sweeper that edge is the brushes; for the flood it is
+	# the shallow water, so a body still in it keeps the checkpoint before.
+	var clear := minf(m.dog.global_position.y, m.human.global_position.y) - threat_boundary(sweeper)
+	if sweeper.jammed_now and m.chase_catch_t <= 0.0 and clear > 0.0 \
 			and _checkpoint_jam(m, sweeper.jam_at):
 		ChaseCheckpoint.store(m, "midpoint")
 	m.chase_min_gap = minf(m.chase_min_gap, rear)
@@ -490,7 +532,8 @@ static func _catch(m: Node2D, msg: String, first: String) -> void:
 	m.dog.velocity = Vector2.ZERO
 	m.human.velocity = Vector2.ZERO
 	m.shake_t = 1.0
-	m.feed.say("SWEPT!", EventFeed.Tone.BAD)
+	var shout := "SWEPT AWAY!" if String(m.chase_kind) == "flood" else "SWEPT!"
+	m.feed.say(shout, EventFeed.Tone.BAD)
 
 
 static func tick_catch(m: Node2D, delta: float) -> void:

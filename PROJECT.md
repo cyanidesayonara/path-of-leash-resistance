@@ -414,8 +414,9 @@ memorable.
     - both (SHIPPED v1.12... v1.18 as the "rescue": a fire engine): a
       brief cooperative sprint, the one time you and the owner want the
       same thing. The threat grid is now complete.
-  In-fiction devourers by setting: street sweeper (city), incoming tide
-  (beach), snowplough (winter), runaway parade float (festival). Own
+  In-fiction devourers by setting: street sweeper (city, La Neteja), the
+  river flood (El Besos, the authored water chase; the beach stays an
+  ordinary walk), snowplough (winter), runaway parade float (festival). Own
   failure mode (caught = eaten, soft slapstick), not the usual soft-fail.
 - Swimming (shipped v1.1 in the park pond, expandable): Millie loves
   water and paddles happily; the owner is dragged in to wade reluctantly
@@ -542,6 +543,9 @@ memorable.
            chase legs already dread harder as the gap closes.)
          - chase levels should feel notably DIFFERENT from normal ones, and
            sit one per every three or four of them in the run order.
+           El Besos (14 stars, between L'Estacio and Les Obres) is the second:
+           Les Obres, La Castanyada, La Ferralla and El Mosaic sit between it
+           and La Neteja. The older pitch of a tide on the beach is retired.
        Explicitly a take-our-time feature, not a sprint. Build order that
        keeps the tree green throughout: corridor width per level -> the
        calm/trigger/chase phase machine -> level content (dodges, food,
