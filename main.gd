@@ -144,6 +144,7 @@ const EventFeed := preload("res://hud/event_feed.gd")
 const EdgePath := preload("res://world/edge_path.gd")
 const TangleGeom := preload("res://systems/tangle_geom.gd")
 const MoodWiring := preload("res://systems/mood_wiring.gd")
+const SkyLook := preload("res://systems/sky.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
 const Goals := preload("res://systems/goals.gd")
 const TofuRoute := preload("res://systems/tofu_route.gd")
@@ -324,6 +325,8 @@ var drink_praised := false
 var lap_t := 0.0
 var swam := false
 var night_cm: CanvasModulate
+# the weather's and the hour's changes to the grade (systems/sky.gd)
+var sky_mod: Dictionary = SkyLook.NONE
 # the walk has three legs: out to the destination, an off-leash FREEDOM
 # romp there, then the walk HOME. Reaching the gate is halfway, not the end.
 var phase := "out"  # "out" | "freedom" | "home"
@@ -880,7 +883,7 @@ func _ready() -> void:
 	# unaffected
 	night_cm = CanvasModulate.new()
 	add_child(night_cm)
-	night_cm.color = _weather_tint()
+	apply_sky()
 	# title screen holds the world until the player goes walkies;
 	# headless runs (CI smoke test) start immediately
 	if DisplayServer.get_name() == "headless":
@@ -2521,6 +2524,42 @@ func is_lamppost(i: int) -> bool:
 	if lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "oldtown":
 		return false
 	return not (lvl == "rain" and poles[i].x < walk_cx)
+
+
+# What lights the walk at night, as (x, y, radius): every lamppost, and a lamp
+# on the wall wherever the walk would otherwise go dark for longer than
+# NIGHT_GAP. Built once; world/light_layer.gd draws the light.
+const NIGHT_LAMP_R := 190.0
+const NIGHT_WALL_R := 150.0
+const NIGHT_GAP := 300.0
+const NIGHT_WALL_STEP := 280.0
+var _night_lights: Array[Vector3] = []
+var _night_built := false
+
+
+func night_lights() -> Array[Vector3]:
+	if _night_built:
+		return _night_lights
+	_night_built = true
+	_night_lights.clear()
+	for i in range(deco_pole_count):
+		if is_lamppost(i):
+			_night_lights.append(Vector3(poles[i].x, poles[i].y + 16.0, NIGHT_LAMP_R))
+	var side := -1.0
+	var y := START_Y - 60.0
+	while y > GATE_Y + 120.0:
+		var e := walk_edges(y)
+		var at := Vector2(e.x + 8.0 if side < 0.0 else e.y - 8.0, y)
+		var near := false
+		for l: Vector3 in _night_lights:
+			if Vector2(l.x, l.y).distance_to(at) < NIGHT_GAP:
+				near = true
+				break
+		if not near:
+			_night_lights.append(Vector3(at.x, at.y, NIGHT_WALL_R))
+		side = -side
+		y -= NIGHT_WALL_STEP
+	return _night_lights
 
 
 # An umbrella from above: a filled canopy of eight panels, every other one in
@@ -5994,8 +6033,8 @@ func _draw_lamppost(p: Vector2) -> void:
 	# under the lantern, so the long shadow lying away from it is what tells
 	# you it is three metres tall and not a manhole cover.
 	cast_shadow(_wc, p, 6.0, 52.0, 0.18)
-	var halo_a := 0.32 if Game.night else 0.08
-	_wc.draw_circle(p, 62.0, Color(1.0, 0.9, 0.6, halo_a))
+	if not Game.night:
+		_wc.draw_circle(p, 62.0, Color(1.0, 0.9, 0.6, 0.08))
 	# the base plinth it is bolted to
 	_wc.draw_circle(p + Vector2(0, 2), POLE_RADIUS + 6.0, Color(0.24, 0.24, 0.27))
 	_wc.draw_circle(p + Vector2(0, 1), POLE_RADIUS + 3.5, Color(0.33, 0.33, 0.36))
@@ -6016,9 +6055,11 @@ func _lamp_head(b: ShapeBatch, p: Vector2) -> void:
 		b.line(p, p + bo, Color(0.46, 0.46, 0.5), 1.5)
 		var lp := p + bo * 1.4
 		b.circle(lp, 5.0, Color(0.26, 0.26, 0.29))
-		b.circle(lp, 3.6, Color(0.99, 0.95, 0.78) if Game.night else Color(0.86, 0.88, 0.9))
 		if Game.night:
-			b.circle(lp, 6.5, Color(1.0, 0.92, 0.66, 0.35))
+			b.circle(lp, 7.5, SkyLook.light(Color(1.0, 0.90, 0.62, 0.40), night_cm.color))
+			b.circle(lp, 3.6, SkyLook.light(Color(1.0, 0.97, 0.86), night_cm.color))
+		else:
+			b.circle(lp, 3.6, Color(0.86, 0.88, 0.9))
 
 
 # A rounded rectangle as one polygon: four corners of three steps each. One
@@ -7107,6 +7148,16 @@ const SIGN_STYLES := {
 }
 
 
+# Light sign colour, undone against the night tint, so a chalk stroke or a
+# lit board stays the colour it was painted. Dark strokes are left to the
+# tint, which keeps them sitting in the ground instead of floating on it.
+func _sign_ink(col: Color) -> Color:
+	var lum := col.r * 0.30 + col.g * 0.59 + col.b * 0.11
+	if lum < 0.55 or night_cm == null:
+		return col
+	return SkyLook.light(col, night_cm.color)
+
+
 func _hand_text(at: Vector2, txt: String, px: int, col: Color, jitter: float,
 		key: float) -> void:
 	# Each glyph placed by hand with its own wobble and tilt, so it reads as
@@ -7125,7 +7176,7 @@ func _hand_text(at: Vector2, txt: String, px: int, col: Color, jitter: float,
 		var wob2 := fmod(absf(n2), 1.0) * 2.0 - 1.0
 		_wc.draw_set_transform(Vector2(x + w * 0.5, at.y + wob * jitter),
 			wob2 * jitter * 0.02, Vector2.ONE)
-		_wc.draw_char(f, Vector2(-w * 0.5, 0.0), ch, px, col)
+		_wc.draw_char(f, Vector2(-w * 0.5, 0.0), ch, px, _sign_ink(col))
 		x += w
 	_wc.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
@@ -7159,7 +7210,7 @@ func _draw_world_text(at: Vector2, txt: String, px: int, style: String,
 			var pad := 16.0
 			var r := Rect2(at.x - w * 0.5 - pad, at.y - float(px) * 0.86,
 				w + pad * 2.0, float(px) * 1.2)
-			_wc.draw_rect(r, Color(0.90, 0.88, 0.82))
+			_wc.draw_rect(r, _sign_ink(Color(0.90, 0.88, 0.82)))
 			_wc.draw_rect(r, Color(0.30, 0.42, 0.62), false, 3.0)
 			var tx := r.position.x
 			while tx < r.end.x:
@@ -7173,7 +7224,7 @@ func _draw_world_text(at: Vector2, txt: String, px: int, style: String,
 			var br := Rect2(at.x - bw * 0.5 - 22.0, at.y - float(px) * 0.9,
 				bw + 44.0, float(px) * 1.3)
 			_wc.draw_rect(br, Color(0.14, 0.15, 0.16))
-			_wc.draw_rect(br, Color(0.40, 0.42, 0.44), false, 3.0)
+			_wc.draw_rect(br, _sign_ink(Color(0.40, 0.42, 0.44)), false, 3.0)
 			_wc.draw_rect(Rect2(br.position.x + 4.0, br.position.y + 4.0, br.size.x - 8.0, 3.0),
 				Color(1, 1, 1, 0.10))
 			_hand_text(at, txt, px, Color(0.98, 0.78, 0.28, 0.95), 0.0, key)
@@ -7300,16 +7351,18 @@ func _draw_ground_title() -> void:
 func _draw_gloss(at: Vector2, txt: String, _mat: String, _style: String, _key: float) -> void:
 	if gloss_a <= 0.01:
 		return
-	# menu text, set plainly, on a dark chip, so the line reads on sand, snow
-	# and wet paving
+	# menu text, set plainly, on a dark chip. The chip and the words are drawn
+	# so the night tint cannot grey them: light stays light, the chip stays
+	# dark, and the line reads on sand, snow, wet paving and a night street
 	var f: Font = load("res://hud/ui_kit.gd").body()
 	var px := 22
 	var w: float = f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
 	var pad := 12.0
 	var chip := Rect2(at.x - w * 0.5 - pad, at.y - float(px) - 4.0, w + pad * 2.0, float(px) + 14.0)
-	_wc.draw_rect(chip, Color(0.06, 0.06, 0.08, 0.88 * gloss_a))
+	var tint: Color = night_cm.color if night_cm != null else Color.WHITE
+	_wc.draw_rect(chip, SkyLook.light(Color(0.06, 0.06, 0.08, 0.88 * gloss_a), tint))
 	_wc.draw_string(f, Vector2(chip.position.x + pad, at.y), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px,
-		Color(0.98, 0.96, 0.90, gloss_a))
+		SkyLook.light(Color(0.98, 0.96, 0.90, gloss_a), tint))
 
 
 # An outdoor shower from above: a steel column on a slatted timber footplate,
@@ -8063,17 +8116,20 @@ func _build_hud() -> void:
 
 
 func _weather_tint() -> Color:
-	var c := Color(0.5, 0.55, 0.78) if Game.night else Color.WHITE
-	# La Neteja is at dawn: the light comes in low, pink and gold
-	if lvl == "neteja" and not Game.night:
-		c = Color(1.0, 0.86, 0.78)
-	if Game.weather == "rain":
-		c = c * Color(0.72, 0.76, 0.82)  # grey, overcast
-	elif Game.weather == "wind":
-		c = c * Color(0.92, 0.9, 0.82)  # dusty, warm-grey
-	elif Game.weather == "snow":
-		c = c * Color(0.9, 0.94, 1.02)  # cold, bright, blue-white
-	return c
+	return SkyLook.tint(lvl, Game.weather, Game.night)
+
+
+# the world's tint and the sky's grade, from the weather and the hour; again
+# whenever either changes
+func apply_sky() -> void:
+	night_cm.color = _weather_tint()
+	sky_mod = SkyLook.grade_mod(lvl, Game.weather, Game.night)
+	if grade_rect != null:
+		var g: Dictionary = mood.grade() if mood != null else {}
+		SkyLook.apply(grade_rect.material, SkyLook.compose(Mood.GRADE[Mood.M.HAPPY] if g.is_empty() else g, sky_mod))
+	if weather_fx != null:
+		weather_fx.mode = Game.weather
+		weather_fx.night = Game.night
 
 
 func _apply_menu_step() -> void:
@@ -12935,27 +12991,8 @@ func _draw_world() -> void:
 		var mp: Vector2 = dog.global_position + dog.facing * 20.0
 		_wc.draw_rect(Rect2(mp.x - 7.0, mp.y - 4.0, 14.0, 8.0), Color(0.7, 0.6, 0.4))
 	# lampposts downtown, trees in the park, palms by the sea
-	# (same physics, different soul)
-	# night lighting: warm pools spilling from the lampposts. Layered
-	# concentric alpha fakes a falloff gradient cheaply, and because the
-	# lamps never move the 30fps world redraw is plenty.
-	if Game.night:
-		var lamp_t := AnimClock.msec() / 1000.0
-		for i in range(deco_pole_count):
-			var lp := poles[i]
-			if lp.y < vt - 190.0 or lp.y > vb + 190.0:
-				continue
-			if lp.x < sw_l - 90.0 or lp.x > sw_r + 90.0:
-				continue
-			# a faint flicker keeps the light from looking like a decal
-			var flick := 0.94 + 0.06 * sin(lamp_t * 2.3 + lp.y * 0.01)
-			# many thin rings: a smooth falloff instead of visible banding
-			for ring in range(11):
-				var f := float(ring) / 10.0
-				var rr := lerpf(185.0, 26.0, f)
-				var aa := (0.012 + f * f * 0.055) * flick
-				_wc.draw_circle(lp + Vector2(0, 16), rr, Color(1.0, 0.86, 0.55, aa))
-			_wc.draw_circle(lp + Vector2(0, -22), 7.0, Color(1.0, 0.94, 0.72, 0.9 * flick))
+	# (same physics, different soul); at night their light is
+	# world/light_layer.gd's
 	for i in range(deco_pole_count):
 		var p := poles[i]
 		if p.y < vt - 60.0 or p.y > vb + 60.0:
