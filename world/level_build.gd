@@ -1058,6 +1058,7 @@ const TRAIL_TREES: Array[Vector2] = [
 const TRAIL_STREAM_Y := -2450.0
 const TRAIL_BRIDGE_HALF := 44.0
 const TRAIL_STREAM_HALF := 32.0
+const TRAIL_HIGH_STREAM_HALF := 52.0
 # the wood is solid this far out from the trail's edge: a strip of forest
 # floor to nose about in, then trunks and undergrowth you cannot walk into
 const TRAIL_WOOD_OUT := 130.0
@@ -1087,8 +1088,9 @@ static func trail_logs(m: Node2D) -> Array[Rect2]:
 # bank and swim, and the owner stays on the boards.
 static func trail_stream(m: Node2D) -> Array[Rect2]:
 	var e: Vector2 = m.walk_edges(TRAIL_STREAM_Y)
-	var y0 := TRAIL_STREAM_Y - TRAIL_STREAM_HALF
-	var h := TRAIL_STREAM_HALF * 2.0
+	var half := TRAIL_HIGH_STREAM_HALF if bool(m.bosc_high_stream) else TRAIL_STREAM_HALF
+	var y0 := TRAIL_STREAM_Y - half
+	var h := half * 2.0
 	return [Rect2(-400.0, y0, e.x - 12.0 + 400.0, h), Rect2(e.y + 12.0, y0, 1700.0 - e.y - 12.0, h)]
 
 

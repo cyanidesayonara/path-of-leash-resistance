@@ -192,9 +192,16 @@ func _test_cleanup_before_solve() -> void:
 	_check(refresh_i < apply_i, "dynamic obstacles refresh before the player leash solve")
 	var dog_i := window.find("\tdog.tick(delta)")
 	var human_i := window.find("\thuman.tick(delta)")
+	var stream_i := window.find("_push_bosc_current(delta)")
+	var find_i := window.find("stream_find.tick(delta)")
 	var flood_i := window.find("chase_sweeper.push_bodies(self, delta)")
-	_check(dog_i >= 0 and human_i > dog_i and flood_i > human_i and apply_i > flood_i,
-		"body ticks, flood push and leash solve keep their exact order")
+	_check(dog_i >= 0 and human_i > dog_i and stream_i > human_i and find_i > stream_i \
+			and flood_i > find_i and apply_i > flood_i,
+		"body ticks, stream/find/flood updates and leash solve keep their exact order")
+	_check(window.count("_push_bosc_current(delta)") == 1,
+		"the pre-leash forest current appears exactly once in the physics frame")
+	_check(window.count("stream_find.tick(delta)") == 1,
+		"the stream find advances exactly once through main's frame order")
 	_check(window.count("chase_sweeper.push_bodies(self, delta)") == 1,
 		"the pre-leash flood push appears exactly once in the physics frame")
 	# Broad-phase uses rope bounds, not dog-to-owner distance alone.
