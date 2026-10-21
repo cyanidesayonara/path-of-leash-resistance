@@ -185,6 +185,13 @@ func flush(ci: Object = null) -> void:
 	_colors = PackedColorArray()
 
 
+# Append retained geometry without consuming it. Static, expensive shape runs
+# can be built once and still join the caller's single draw call each frame.
+func append_to(target: ShapeBatch) -> void:
+	target._points.append_array(_points)
+	target._colors.append_array(_colors)
+
+
 # --- the stand-in canvas: CanvasItem's signatures -----------------------------
 
 func draw_circle(pos: Vector2, radius: float, color: Color, filled := true, width := -1.0, antialiased := false) -> void:
