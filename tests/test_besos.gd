@@ -158,6 +158,13 @@ func _run() -> void:
 	_check(flood.branch_who == "" and flood.branch_warn <= 0.0 \
 		and m.human.external_warning_t <= 0.0, "a checkpoint restore can cancel a pending branch")
 	flood._branch(m.dog, m.human, 0.05)
+	m.human.state = m.human.HState.WHIRL
+	flood._branch(m.dog, m.human, 0.8)
+	_check(m.human.state == m.human.HState.WHIRL and m.human.external_warning_t <= 0.0,
+		"an orbit can refuse the stumble without keeping the warning reserved")
+	m.human.state = m.human.HState.WALK
+	m.human.bubble.visible = false
+	flood._branch(m.dog, m.human, 0.05)
 	flood._branch(m.dog, m.human, 0.1)
 	_check(m.human.state != m.human.HState.STUMBLE, "the warning beat is not cut short")
 	flood._branch(m.dog, m.human, 0.8)
