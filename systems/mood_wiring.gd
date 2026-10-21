@@ -12,6 +12,7 @@ extends RefCounted
 const Mood := preload("res://systems/mood.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
+const SkyLook := preload("res://systems/sky.gd")
 
 
 static func tick(m: Node2D, delta: float) -> void:
@@ -37,17 +38,7 @@ static func tick(m: Node2D, delta: float) -> void:
 	m.dog.mood_accel = m.mood.accel_mult()
 	m.dog.mood_wobble = m.mood.wobble()
 	if m.grade_rect != null:
-		var gm: ShaderMaterial = m.grade_rect.material
-		var g: Dictionary = m.mood.grade()
-		gm.set_shader_parameter("saturation", g["sat"])
-		gm.set_shader_parameter("contrast", g["con"])
-		gm.set_shader_parameter("vignette", g["vig"])
-		gm.set_shader_parameter("vignette_tight", g["tight"])
-		gm.set_shader_parameter("exposure", g["exp"])
-		gm.set_shader_parameter("tint", g["tint"])
-		gm.set_shader_parameter("lift", g["lift"])
-		gm.set_shader_parameter("cool_shadows", g["cool"])
-		gm.set_shader_parameter("warm_light", g["warm"])
+		SkyLook.apply(m.grade_rect.material, SkyLook.compose(m.mood.grade(), m.sky_mod))
 	var line: String = m.mood.take_onset()
 	if line != "":
 		# about her, so it arrives by her vitals, in the mood's colour:

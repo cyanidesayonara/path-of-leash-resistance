@@ -265,11 +265,10 @@ static func details_change(m: Node2D, dir: int) -> void:
 			m.human.queue_redraw()
 		"time":
 			Game.toggle_night()
-			m.night_cm.color = m._weather_tint()
+			m.apply_sky()
 		"weather":
 			Game.cycle_weather(dir)
-			m.night_cm.color = m._weather_tint()
-			m.weather_fx.mode = Game.weather
+			m.apply_sky()
 			# snow writes the name in paw prints
 			m.build_signs()
 	Sfx.play("ui")
