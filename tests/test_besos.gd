@@ -106,6 +106,13 @@ func _run() -> void:
 	flood.touch(m, 0.1, true)
 	var held: float = m.dog.global_position.y - planted_y
 	_check(held > 0.5 and held < ran * 0.4, "planting resists the same push (%.1f vs %.1f)" % [held, ran])
+	m.dog.global_position = Vector2(m.walk_cx, 40.0)
+	m.dog.velocity = Vector2(0.0, -80.0)
+	m.dog.planted = false
+	var upstream_y: float = m.dog.global_position.y
+	flood.touch(m, 0.1, true)
+	var upstream: float = m.dog.global_position.y - upstream_y
+	_check(upstream > 28.0, "a dog heading upstream is still carried at the push (%.1f)" % upstream)
 	m.human.global_position = Vector2(m.walk_cx, 40.0)
 	m.human.velocity = Vector2(0.0, 92.0)
 	m.human_soak = 0.0
@@ -127,6 +134,36 @@ func _run() -> void:
 	_check(not flood.in_shallow(on_apron) and not flood.in_deep(on_apron), "the apron stays dry while the flood is held")
 	flood.jam_t = 0.0
 	_check(flood.in_shallow(on_apron), "when the hold ends, the water spills across it")
+
+	flood.front_y = 0.0
+	flood.heading = 100.0
+	flood.branch_who = ""
+	flood.branch_warn = 0.0
+	var at: Vector2 = flood._branch_pos()
+	m.dog.global_position = at + Vector2(400.0, 0.0)
+	m.human.global_position = at
+	m.human.state = m.human.HState.WALK
+	flood._branch(m.dog, m.human, 0.05)
+	_check(m.human.state != m.human.HState.STUMBLE, "a branch warns before it stumbles your human")
+	_check(m.human.bubble != null and m.human.bubble.visible, "the warning is a speech bubble")
+	flood._branch(m.dog, m.human, 0.1)
+	_check(m.human.state != m.human.HState.STUMBLE, "the warning beat is not cut short")
+	flood._branch(m.dog, m.human, 0.8)
+	_check(m.human.state == m.human.HState.STUMBLE, "the stumble lands when the warning ends")
+
+	m.dog.global_position = Vector2(m.walk_cx, -800.0)
+	m.dog.velocity = Vector2.ZERO
+	m.dog.flooded = true
+	m.dog.slick = true
+	m.dog.auto = true
+	m.dog.auto_move = Vector2.RIGHT
+	m.dog.energy = 1.0
+	for _i in 30:
+		m.dog.tick(1.0 / 60.0)
+	_check(m.dog.velocity.x > 80.0, "shallow water loosens steering without pinning her (%.1f)" % m.dog.velocity.x)
+	m.dog.auto = false
+	m.dog.flooded = false
+	m.dog.slick = false
 
 	print("\n%d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():

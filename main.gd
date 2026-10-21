@@ -8468,11 +8468,12 @@ func _physics_process(delta: float) -> void:
 	# weather nudges: rain makes the pavement slick, wind shoves everyone
 	# gently downwind (the owner, dead weight, catches more of it)
 	dog.slick = Game.weather == "rain" and not sheltered(dog.global_position)
+	dog.flooded = false
 	if chase_sweeper != null and String(chase_phase) == "chase" and chase_sweeper.has_method("in_shallow"):
 		if chase_sweeper.in_shallow(dog.global_position):
+			# wet ground, and one sideways scale inside her tick
 			dog.slick = true
-			if not dog.planted:
-				dog.velocity.x *= 0.35
+			dog.flooded = true
 	if lvl == "rain":
 		_tick_wet(delta)
 	dog.ice = Game.weather == "snow"
@@ -8512,6 +8513,10 @@ func _physics_process(delta: float) -> void:
 	dog.tick(delta)
 	human.tick(delta)
 	_part_bodies()
+	# the flood's shove lands before the leash, so the rope holds it this frame
+	if phase == "home" and chase_active and String(chase_phase) == "chase" \
+			and chase_sweeper != null and chase_sweeper.has_method("push_bodies"):
+		chase_sweeper.push_bodies(self, delta)
 	_prof("dog, owner, drive")
 	# the human owns the retractable leash: length changes on their whim
 	# ("click!" event), never the dog's

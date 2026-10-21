@@ -469,7 +469,8 @@ static func tick(m: Node2D, delta: float) -> void:
 	if sweeper.sweep_junk(m.get_tree().get_nodes_in_group("cones")) > 0:
 		Sfx.play("tangle", 0.8, -10.0)
 	if sweeper.has_method("touch"):
-		sweeper.touch(m, delta, true)
+		# soak only. The flood already shoved, before the leash.
+		sweeper.touch(m, delta, false)
 	# a low rumble the closer it gets to the dog
 	var gap: float = sweeper.gap_to(m.dog.global_position)
 	if gap < 260.0:

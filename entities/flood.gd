@@ -19,6 +19,9 @@ const SOAK_SECS := 36.0
 const SWELL_MAX := 90.0
 const JAM_SECS := 3.0
 const DEBRIS_SPAN := 560.0
+# the same beat as every other owner event: the bubble, then the stumble
+const BRANCH_WARN := 0.8
+const BRANCH_HIT := 22.0
 
 var main: Node2D
 var speed := 128.0
@@ -39,6 +42,9 @@ var kerb_blocks: Array[Rect2] = []
 var jammed_now := false
 var freed_now := false
 var apron := Rect2()
+# a branch already committed to a body. Empty until the warning beat ends.
+var branch_who := ""
+var branch_warn := 0.0
 
 
 func setup(m: Node2D, start_front_y: float, corridor_cx: float, corridor_half: float, flood_speed: float) -> void:
@@ -135,16 +141,28 @@ func touch(m: Node2D, delta: float, do_push: bool) -> void:
 	if in_shallow(human.global_position):
 		m.human_soak = minf(1.0, float(m.human_soak) + delta / SOAK_SECS)
 	if do_push:
-		_shove(dog, delta, bool(dog.planted))
-		_shove(human, delta, false)
-		_branch(dog, human)
+		push_bodies(m, delta)
+
+
+# The shove and the branch, without the soaking. Main calls this after the
+# bodies tick and before the leash, so the rope constrains the push the
+# same frame. touch() still soaks on the later chase pass.
+func push_bodies(m: Node2D, delta: float) -> void:
+	var dog: CharacterBody2D = m.dog
+	var human: CharacterBody2D = m.human
+	_shove(dog, delta, bool(dog.planted))
+	_shove(human, delta, false)
+	_branch(dog, human, delta)
 
 
 func _shove(body: CharacterBody2D, delta: float, planted: bool) -> void:
 	if not in_shallow(body.global_position):
 		return
 	var rate := PLANT_PUSH if planted else PUSH
-	var extra := maxf(rate - maxf(body.velocity.y, 0.0), 0.0)
+	# a southward floor: speed already going south counts, and speed going
+	# north has to be bought back before the floor is met. The body's own
+	# tick has already applied velocity, so this is only the difference.
+	var extra := maxf(rate - body.velocity.y, 0.0)
 	if extra > 0.0:
 		body.move_and_collide(Vector2(0.0, extra * delta))
 
@@ -161,12 +179,32 @@ func _branch_pos() -> Vector2:
 	return p
 
 
-func _branch(dog: CharacterBody2D, human: CharacterBody2D) -> void:
+func _branch(dog: CharacterBody2D, human: CharacterBody2D, delta: float) -> void:
 	var at := _branch_pos()
-	if dog.global_position.distance_to(at) < 22.0:
-		dog.stumble()
-	elif human.global_position.distance_to(at) < 22.0 and int(human.state) != HumanScript.HState.STUMBLE:
-		human.bumped(Vector2(0.0, 1.0))
+	if branch_warn > 0.0:
+		branch_warn = maxf(0.0, branch_warn - delta)
+		if branch_warn > 0.0:
+			return
+		# the beat was the warning. It lands once, the way a correction does,
+		# and it is not armed again until this one has finished.
+		if branch_who == "dog":
+			dog.stumble()
+		elif branch_who == "human" and int(human.state) != HumanScript.HState.STUMBLE:
+			human.bumped(Vector2(0.0, 1.0))
+		branch_who = ""
+		return
+	var who := ""
+	if dog.global_position.distance_to(at) < BRANCH_HIT:
+		who = "dog"
+	elif human.global_position.distance_to(at) < BRANCH_HIT \
+			and int(human.state) != HumanScript.HState.STUMBLE:
+		who = "human"
+	if who == "":
+		return
+	branch_who = who
+	branch_warn = BRANCH_WARN
+	if who == "human":
+		human.notice("watch it", BRANCH_WARN)
 
 
 func _draw() -> void:
@@ -183,6 +221,15 @@ func _draw() -> void:
 	if reach > 8.0:
 		var edge := half - reach
 		b.rect(Rect2(edge, 0.0, right - edge, SHALLOW_LEAD), Color(0.10, 0.22, 0.30, 0.90))
+	# the hold keeps the apron dry. This batch is drawn after the world's
+	# concrete, so paint that slab back over whatever water landed on it.
+	if jam_t > 0.0 and apron.size.x > 1.0:
+		var local := Rect2(apron.position - global_position, apron.size)
+		var painted := Rect2(left, -340.0, right - left, 340.0 + SHALLOW_LEAD)
+		var cover := local.intersection(painted)
+		if cover.size.x > 1.0 and cover.size.y > 1.0:
+			b.rect(cover.grow(6.0), Color(0.62, 0.60, 0.56))
+			b.rect(cover, Color(0.78, 0.74, 0.66))
 	for i in range(4):
 		var along := fmod(heading + float(i) * 140.0, DEBRIS_SPAN)
 		var dx := sin(heading * 0.02 + float(i) * 1.7) * half * 0.45
