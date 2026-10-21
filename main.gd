@@ -865,9 +865,13 @@ func _ready() -> void:
 		tutorial_mode = true
 		lvl = "barri"
 	else:
-		run_seed = AUTOWALK_SEED if autowalk_requested else int(Time.get_ticks_usec() & 0x7fffffff)
+		run_seed = int(Time.get_ticks_usec() & 0x7fffffff)
+		if autowalk_requested:
+			# The named call stays here: the route regression reads this source.
+			run_seed = AUTOWALK_SEED
+			seed(AUTOWALK_SEED)
 		# --seed=N pins every random layout and spawn, so a soak or a bug
-		# report can be replayed exactly
+		# report can be replayed exactly. It wins over the autowalk seed.
 		for a in OS.get_cmdline_user_args():
 			if a.begins_with("--seed="):
 				run_seed = int(a.substr(7))
