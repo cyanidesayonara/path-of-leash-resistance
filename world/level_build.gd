@@ -66,6 +66,7 @@ static func rect_rope_samples(r: Rect2) -> Array:
 
 
 static func add_rope_rect(m: Node2D, r: Rect2, soft := true) -> void:
+	m.rope_rects.append(r)
 	for sample: Vector3 in rect_rope_samples(r):
 		var p := Vector2(sample.x, sample.y)
 		m.poles.append(p)
@@ -1991,6 +1992,7 @@ static func build_level_data(m: Node2D) -> void:
 	m.rope_radii.resize(m.poles.size())
 	m.rope_radii.fill(m.POLE_RADIUS + 2.0)
 	m.rope_soft.clear()
+	m.rope_rects.clear()
 	for v: Vector2 in m.vans:
 		add_rope_rect(m, Rect2(v - m.VAN_BODY_SIZE * 0.5, m.VAN_BODY_SIZE))
 	if m.furgoneta.x < INF:
@@ -3068,6 +3070,7 @@ static func build_entities(m: Node2D) -> void:
 	m.leash.pole_radii = m.rope_radii
 	m.leash.hero = true  # the player's rope draws every frame; NPC ropes at 30fps
 	m.leash.furniture_poles = m._furniture_wrap_poles()
+	m.leash.rope_rects = m.rope_rects
 
 	m.edge_layer = Node2D.new()
 	m.edge_layer.set_script(load("res://world/edgelayer.gd"))
