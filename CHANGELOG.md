@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-10-21 - El Mosaic keeps its shape
+
+- El Mosaic keeps its static tile and stone geometry instead of rebuilding every circle and polygon on each world redraw. It still joins the live world batch in the same order and the same draw call, so its pixels and small world animations stay unchanged.
+- On the measured Guell walk, world-draw preparation fell from 10.97 to 8.29 ms at the median and from 16.36 to 10.12 ms at p95; frame p95 fell from 39.60 to 34.25 ms.
+
 ## 2026-10-21 - The flood keeps its promises
 
 - While the flood is held, the apron stays concrete. The shallow paint was covering the north half of it, so the dry ground read as water.
