@@ -184,7 +184,8 @@ func _test_cleanup_before_solve() -> void:
 	_check(phys >= 0, "main has _physics_process")
 	if phys < 0:
 		return
-	var window := src.substr(phys, 2800)
+	var process_end := src.find("\nfunc ", phys + 1)
+	var window := src.substr(phys, process_end - phys if process_end >= 0 else -1)
 	var refresh_i := window.find("_refresh_pair_obstacles")
 	var apply_i := window.find("_apply_leash")
 	_check(refresh_i >= 0 and apply_i >= 0, "physics process refreshes obstacles and applies leash")
