@@ -38,6 +38,8 @@ const LEVEL_GOAL_IDS := {
 	# surviving it, which finishing already proves.
 	"neteja": ["mark", "sniff", "phone", "paws", "bag", "fetch", "hi", "snack",
 		"combo", "prize", "outrun"],
+	# El Besos: the way home is the flood. No Tofu, same as the other chase.
+	"besos": ["mark", "sniff", "phone", "paws", "bag", "fetch", "combo", "prize", "floodgap", "dry"],
 	# Montjuic: the climb, with the park staples
 	"montjuic": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "cable", "combo", "prize"],
 	# Dia de Partit. No Tofu: the way home belongs to the final whistle.
@@ -72,6 +74,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"tummy": {"text": "Walk past every chocolate", "target": 1, "fn": func() -> int: return 1 if m.candy_eaten == 0 else 0},
 		"ghost": {"text": "Cross the yard without waking anyone", "target": 1, "fn": func() -> int: return 1 if m.guards_woken == 0 else 0},
 		"outrun": {"text": "Keep the sweeper a leash length away", "target": 1, "fn": func() -> int: return 1 if m.chase_min_gap >= HomeChase.OUTRUN_GAP else 0},
+		"floodgap": {"text": "Keep the deep flood front a leash length away", "target": 1, "fn": func() -> int: return 1 if m.chase_min_gap >= HomeChase.OUTRUN_GAP else 0},
 		"unseen": {"text": "Never get spotted", "target": 1, "fn": func() -> int: return 1 if m.times_spotted == 0 else 0},
 		"walkway": {"text": "Ride the moving walkway end to end", "target": 1, "fn": func() -> int: return m.walkway_rides},
 		"dry": {"text": "Get your human home less than half soaked", "target": 1, "fn": func() -> int: return 1 if m.human_soak < 0.5 else 0},
