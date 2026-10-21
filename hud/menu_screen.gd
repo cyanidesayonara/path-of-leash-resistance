@@ -32,7 +32,7 @@ const SHOP_H := 540.0
 const SHOP_ROW_H := 44.0
 const DETAILS_W := 400.0
 const PROGRESS_W := 900.0
-const PROGRESS_ROW_H := 30.0
+const PROGRESS_ROW_H := 32.0
 const PAUSE_W := 560.0
 const PAUSE_CELL_H := 58.0
 const PAUSE_GAP := 12.0
@@ -159,12 +159,27 @@ func _walk(vs: Vector2) -> void:
 	_top(vs, 0)
 	var info := Flow.walk_info(main)
 	var at := _name_at()
-	var w := 560.0
+	# the name in the world is made of the walk (leaves, sand, tiles). This
+	# plaque says the same name, and what it means, in plain type on a dark
+	# card: large, light on dark, so it stays readable in any weather and at
+	# night, and for anyone who cannot make the pieces out
+	var walk_name := String(main._walk_name())
+	var gloss := String(Game.LEVEL_SUBTITLES.get(String(info.id), ""))
+	var w := minf(640.0, vs.x - 48.0)
 	var shake: float = sin(float(main.locked_nudge) * 60.0) * 10.0 * (float(main.locked_nudge) / 0.35)
-	var r := Rect2(vs.x * 0.5 - w * 0.5 + shake, at.y + 52.0, w, 48.0)
+	var h := 112.0
+	var top := at.y + 36.0
+	var limit := vs.y - Kit.BAR_FROM_BOTTOM - 16.0
+	if top + h > limit:
+		top = maxf(8.0, limit - h)
+	var r := Rect2(vs.x * 0.5 - w * 0.5 + shake, top, w, h)
 	Kit.card(self, r, Kit.accent("walk"), 12)
+	Kit.heading(self, Vector2(r.position.x, r.position.y + 36.0), walk_name, 28, Kit.INK,
+		HORIZONTAL_ALIGNMENT_CENTER, w)
 	var body := Kit.body()
-	var row_y := r.position.y + 30.0
+	draw_string(body, Vector2(r.position.x, r.position.y + 62.0), gloss, HORIZONTAL_ALIGNMENT_CENTER,
+		w, 18, Kit.INK)
+	var row_y := r.position.y + 92.0
 	if bool(info.locked):
 		Kit.lock(self, Vector2(r.position.x + 34.0, row_y - 6.0), 16.0, Kit.INK_FAINT)
 		draw_string(body, Vector2(r.position.x + 58.0, row_y), String(info.lines[0]),
@@ -383,17 +398,18 @@ func _progress(vs: Vector2) -> void:
 		var by := y + float(i) * PROGRESS_ROW_H
 		if i % 2 == 0:
 			draw_rect(Rect2(r.position.x + 20.0, by, w - 40.0, PROGRESS_ROW_H), Color(1, 1, 1, 0.03))
-		var base := by + 21.0
+		var base := by + 22.0
 		var locked := bool(row.locked)
-		var ncol: Color = Kit.INK_FAINT if locked else Kit.INK
-		draw_string(f, Vector2(r.position.x + 36.0, base), String(row.name), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, ncol)
-		var nw := Kit.text_w(f, String(row.name), 16)
+		var ncol: Color = Kit.INK_SOFT if locked else Kit.INK
+		draw_string(f, Vector2(r.position.x + 36.0, base), String(row.name), HORIZONTAL_ALIGNMENT_LEFT, -1, 18, ncol)
+		var nw := Kit.text_w(f, String(row.name), 18)
+		var gloss_w := maxf(40.0, c_stars - (r.position.x + 54.0 + nw))
 		draw_string(body, Vector2(r.position.x + 46.0 + nw, base), String(row.gloss), HORIZONTAL_ALIGNMENT_LEFT,
-			-1, 13, Kit.INK_FAINT)
+			gloss_w, 16, Kit.INK_SOFT)
 		if locked:
 			Kit.lock(self, Vector2(c_stars + 8.0, base - 5.0), 11.0, Kit.INK_FAINT)
 			draw_string(body, Vector2(c_stars + 24.0, base), "opens at %d stars" % int(row.gate),
-				HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Kit.INK_FAINT)
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Kit.INK_SOFT)
 			continue
 		for s in range(3):
 			Icons.draw_star(self, Vector2(c_stars + 8.0 + float(s) * 20.0, base - 5.0), 7.5, s < int(row.stars))
@@ -416,8 +432,8 @@ func _pause(vs: Vector2) -> void:
 	Kit.heading(self, Vector2(r.position.x, r.position.y + 50.0), "PAUSED", 30, acc,
 		HORIZONTAL_ALIGNMENT_CENTER, PAUSE_W)
 	var sub := "%s    %s" % [String(main._walk_name()), Flow.clock(float(main.elapsed))]
-	draw_string(Kit.body(), Vector2(r.position.x, r.position.y + 78.0), sub, HORIZONTAL_ALIGNMENT_CENTER,
-		PAUSE_W, 15, Kit.INK_FAINT)
+	draw_string(Kit.body(), Vector2(r.position.x, r.position.y + 80.0), sub, HORIZONTAL_ALIGNMENT_CENTER,
+		PAUSE_W, 18, Kit.INK)
 	var f := Kit.display()
 	var cw := (PAUSE_W - 48.0 - PAUSE_GAP) * 0.5
 	for i in range(labels.size()):
@@ -444,8 +460,8 @@ func _walk_card(vs: Vector2) -> void:
 	Kit.card(self, r, acc)
 	Kit.heading(self, Vector2(r.position.x, r.position.y + 52.0), String(wc.name).to_upper(), 30, acc,
 		HORIZONTAL_ALIGNMENT_CENTER, WALKCARD_W)
-	draw_string(Kit.body(), Vector2(r.position.x, r.position.y + 80.0), "%s    %s" % [String(wc.gloss), String(wc.time)],
-		HORIZONTAL_ALIGNMENT_CENTER, WALKCARD_W, 15, Kit.INK_FAINT)
+	draw_string(Kit.body(), Vector2(r.position.x, r.position.y + 82.0), "%s    %s" % [String(wc.gloss), String(wc.time)],
+		HORIZONTAL_ALIGNMENT_CENTER, WALKCARD_W, 18, Kit.INK)
 	var y := r.position.y + 122.0
 	var body := Kit.body()
 	if String(wc.lesson) != "":
@@ -511,14 +527,38 @@ func _confirm(vs: Vector2) -> void:
 func _notice(vs: Vector2) -> void:
 	var n := Flow.notice(main)
 	var acc: Color = Kit.GOLD if main.finished else Kit.accent("notice")
-	var body: Array = n.body
+	var w := minf(NOTICE_W, vs.x - 48.0)
+	var body := _wrap_lines(n.body, Kit.body(), 18, w - 64.0)
 	var h := 92.0 + float(body.size()) * 26.0 + 24.0
-	var r := Rect2(vs.x * 0.5 - NOTICE_W * 0.5, vs.y * 0.5 - h * 0.5 - 30.0, NOTICE_W, h)
+	var r := Rect2(vs.x * 0.5 - w * 0.5, vs.y * 0.5 - h * 0.5 - 30.0, w, h)
 	Kit.card(self, r, acc, 16)
 	Kit.heading(self, Vector2(r.position.x, r.position.y + 56.0), String(n.title), 30, acc,
-		HORIZONTAL_ALIGNMENT_CENTER, NOTICE_W)
+		HORIZONTAL_ALIGNMENT_CENTER, w)
 	var y := r.position.y + 96.0
 	for line: String in body:
-		draw_string(Kit.body(), Vector2(r.position.x, y), line, HORIZONTAL_ALIGNMENT_CENTER, NOTICE_W, 18,
-			Kit.INK_SOFT)
+		draw_string(Kit.body(), Vector2(r.position.x, y), line, HORIZONTAL_ALIGNMENT_CENTER, w, 18,
+			Kit.INK)
 		y += 26.0
+
+
+# break lines that would run past the card, on spaces, so a narrow window
+# wraps a sentence instead of cutting its last word
+func _wrap_lines(lines: Array, f: Font, px: int, room: float) -> Array[String]:
+	var out: Array[String] = []
+	for raw in lines:
+		var s := String(raw)
+		if s == "" or f.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x <= room:
+			out.append(s)
+			continue
+		var cur := ""
+		for word in s.split(" "):
+			var nxt := word if cur == "" else cur + " " + word
+			if f.get_string_size(nxt, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x <= room:
+				cur = nxt
+			else:
+				if cur != "":
+					out.append(cur)
+				cur = word
+		if cur != "":
+			out.append(cur)
+	return out

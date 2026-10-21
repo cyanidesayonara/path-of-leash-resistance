@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-10-21 - Loss titles keep their last letter; walk names read in plain type
+
+- A lost walk's title was drawn clipped to the card. "YOUR HUMAN WENT DOWN THE MANHOLE" lost the last stroke of its last letter, and any longer title would too. A heading now shrinks until the words and their outline sit inside the card, and the card itself stays on a narrow window. The body wraps instead of being cut.
+- Choosing a walk no longer depends on reading the name out of leaves, sand or chalk. The plaque under it says the name and the English line in large light type on the dark card, and YOUR WALKS, pause and THIS WALK use the same. The line under the name as a walk begins sits on a dark chip that stays light-on-dark at night.
+
 ## 2026-10-21 - No more Daily Walk; a walk's own sky stays on that walk
 
 - The Daily Walk is gone. The walk select is the first walk, then the campaign walks. Every walk can be played in any weather, day or night, from GET READY. Its share card, the SHARE touch button and the daily best go with it. An old save's daily section is ignored and dropped on the next save.
