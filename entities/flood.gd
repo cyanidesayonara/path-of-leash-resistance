@@ -197,14 +197,20 @@ func _branch(dog: CharacterBody2D, human: CharacterBody2D, delta: float) -> void
 	if dog.global_position.distance_to(at) < BRANCH_HIT:
 		who = "dog"
 	elif human.global_position.distance_to(at) < BRANCH_HIT \
-			and int(human.state) != HumanScript.HState.STUMBLE:
+			and int(human.state) != HumanScript.HState.STUMBLE \
+			and human.warn_external("watch it", BRANCH_WARN):
 		who = "human"
 	if who == "":
 		return
 	branch_who = who
 	branch_warn = BRANCH_WARN
-	if who == "human":
-		human.notice("watch it", BRANCH_WARN)
+
+
+func cancel_branch_warning() -> void:
+	branch_who = ""
+	branch_warn = 0.0
+	if main != null:
+		main.human.clear_external_warning("watch it")
 
 
 func _draw() -> void:
