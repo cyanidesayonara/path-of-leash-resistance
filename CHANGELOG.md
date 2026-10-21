@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-21 - El Besòs, the floodable river park
+
+- A new walk between L'Estació and Les Obres, open at 14 stars. Every older gate is unchanged. The way out is a warm afternoon: flood wall, paved path, grass, a margin you can wade, and a deep channel you cannot enter. The meadow at the far end is off the leash.
+- The way home is the river. Shallow water pushes you south, wets your human and loosens your steering; planting holds a spot and lets the deep front close. The deep front, and the swell reaching in from the river, is the loss. A raised apron stays dry while the water is held, then spills. No Tofu.
+- The flood uses the same chase as the sweeper: warning, head start, camera, checkpoint, continue. Your human hears the siren and decides it is not their problem.
+
 ## 2026-10-21 - Every walk ends at its own door
 
 - The loose HOME letters are gone. Crossing the home line with both of you starts a short arrival instead of the card: Millie pulls toward the way in, your human looks up and pockets the phone, she goes through, they follow, and the leash goes with them. The first half-second plays out; after that, confirm or back brings the card. The walk clock stops at the line. Nothing else moves: no input, no hazard, no phone damage, and a chase threat holds at the line.

@@ -209,6 +209,21 @@ with pickpockets and shenanigans happening around."
   travelator and a train that reads as a train; PIPICÀ is the old goods yard
   with a siding and the running lines past its wall.
 
+### El Besos (besos) - the floodable river park
+- Is: a public park inside a river channel. Concrete flood wall, a paved
+  path, grass, a shallow margin you can wade, and a deep channel you cannot
+  enter. Calm and warm on the way out. The way home is the flood.
+- Signature line: use the shallow water, do not let the deep front catch
+  either of you, and get your human home less than half soaked.
+- Opens at 14 stars, between L'Estacio and Les Obres. No Tofu: the way home
+  belongs to the river. The beach stays an ordinary walk; this is the water
+  chase.
+- Built (2026-10-21): the asymmetric corridor, the margin and the solid
+  channel, the raised apron, and the flood on the shared chase (push, soak,
+  swell, one checkpoint). The warning is the lamps, the siren and your human
+  deciding it is not their problem, inside the same 1.2 seconds as every
+  other chase.
+
 ### Les Obres (site) - the roadworks
 - Is: a works detour: cement pours in formwork with cones and tape, fresh
   road markings, a trench with a plank bridge, Heras fencing, a parked
@@ -474,6 +489,7 @@ door. The vocabulary grows in stages, each one a PR with its own test:
 | El Mercat | The hall's aisles: two or three parallel aisles between stall rows, cross-aisles between them (stage 2, then 4). |
 | El Gotic | Narrow alleys with doglegs now (stage 1), tight plaça bulges, then real right-angle turns and an arch you pass under (stage 4). |
 | L'Estacio | Opens from the street into the wide concourse, then narrows to the platforms: pick one of two, the train between them (stage 2). |
+| El Besos | Straight, on purpose: flood wall, path, grass, river. The apron is the one wide step in it. |
 | Les Obres | The path diverted by the works: a chicane through barriers, a plank bridge over the trench (stages 1 and 3). |
 | La Castanyada | Round the square: the path circles the chestnut roaster's bonfire (stage 2). |
 | La Ferralla | A lane between scrap piles that shifts left and right, a crane's reach overhead. |

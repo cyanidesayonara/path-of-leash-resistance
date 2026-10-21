@@ -92,7 +92,21 @@ const CROSS_SECTIONS := {
 	"guell": ["none", 0.0, "none", 0.0],              # rubble-stone terrace walls
 	"neteja": ["none", 0.0, "none", 0.0],             # a back street
 	"partit": ["none", 0.0, "none", 0.0],             # sidewalks drawn inside the path (systems/partit.gd)
+	# flood wall on the left, grass then the river on the right
+	"besos": ["none", 0.0, "grass", 120.0],
 }
+
+# El Besos, the floodable river park. The path sits left of centre so the
+# grass, the shallow margin and the deep channel all fit in the frame.
+const BESOS_CX := 400.0
+const BESOS_HALF := 200.0
+const BESOS_SHALLOW_X := 720.0
+const BESOS_SHALLOW_W := 190.0
+const BESOS_DEEP_X := 910.0
+const BESOS_DEEP_W := 320.0
+# the raised apron. Its north edge is where the deep front holds.
+const BESOS_JAM_Y := -2050.0
+const BESOS_APRON := Rect2(260.0, BESOS_JAM_Y, 240.0, 220.0)
 
 
 # the brink lesson's pond, on the grass just off the path's east edge
@@ -267,6 +281,49 @@ const NETEJA_SNACKS: Array[Vector2] = [
 	Vector2(540, -2380), Vector2(760, -3000), Vector2(600, -3650),
 	Vector2(820, -4250), Vector2(480, -4550),
 ]
+
+
+static func besos_water_rect(m: Node2D) -> Rect2:
+	var y0 := float(m.GATE_Y) + 40.0
+	var y1 := float(m.START_Y) - 40.0
+	return Rect2(BESOS_SHALLOW_X, y0, BESOS_SHALLOW_W, y1 - y0)
+
+
+static func besos_deep_rect(m: Node2D) -> Rect2:
+	var y0 := float(m.GATE_Y) + 40.0
+	var y1 := float(m.START_Y) - 40.0
+	return Rect2(BESOS_DEEP_X, y0, BESOS_DEEP_W, y1 - y0)
+
+
+static func besos(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
+	# A paved path against the flood wall, grass toward the river, lamps
+	# where a street would have hydrants. No traffic: the lane is for people.
+	m.gate_text = "EL PRAT"
+	m.lane_ys = Array([], TYPE_FLOAT, &"", null)
+	m.stalls.clear()
+	m.stall_kinds.clear()
+	m.manholes = Array([], TYPE_VECTOR2, &"", null)
+	m.astands = Array([], TYPE_VECTOR2, &"", null)
+	m.poles.clear()
+	for yy: float in [-600.0, -1400.0, -2500.0, -3400.0, -4500.0]:
+		m.poles.append(Vector2(m.sw_l + 36.0, yy))
+	m.deco_pole_count = m.poles.size()
+	m.bins = Array([Vector2(m.sw_l + 120.0, -800.0), Vector2(m.sw_l + 140.0, -3200.0)], TYPE_VECTOR2, &"", null)
+	m.benches = Array([Vector2(m.sw_r - 36.0, -1200.0)], TYPE_VECTOR2, &"", null)
+	m.cone_spots = Array([
+		Vector2(m.walk_cx, -500.0), Vector2(m.walk_cx + 40.0, -1100.0),
+		Vector2(m.walk_cx - 30.0, -2300.0), Vector2(m.walk_cx + 20.0, -3000.0),
+		Vector2(m.walk_cx, -3700.0), Vector2(m.walk_cx - 40.0, -4400.0),
+	], TYPE_VECTOR2, &"", null)
+	m.chase_jams.clear()
+	m.chase_kerb_blocks.clear()
+	m.chase_jams.append(Vector2(BESOS_APRON.get_center().x, BESOS_JAM_Y))
+	hyd_list.assign([
+		Vector2(m.sw_l + 80.0, -1000.0), Vector2(m.sw_l + 90.0, -1700.0),
+		Vector2(m.sw_l + 70.0, -2900.0), Vector2(m.sw_l + 100.0, -3900.0),
+		Vector2(m.sw_l + 80.0, -4700.0),
+	])
+	keb_list.assign([Vector2(m.walk_cx + 50.0, -1600.0), Vector2(m.walk_cx - 20.0, -4100.0)])
 
 
 static func neteja_kerb(m: Node2D, y: float, west: bool, inset: float) -> Vector2:
@@ -1063,7 +1120,8 @@ static func apply_corridor(m: Node2D) -> void:
 		"neteja": half = 185.0
 		"montjuic": half = 175.0   # a hillside path, winding (Montjuic.edge_nodes)
 		"partit": half = 400.0     # the closed avenue, sidewalks included (Partit.edge_nodes)
-	m.walk_cx = 640.0
+		"besos": half = BESOS_HALF
+	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
 	m.walk_half = half
 	m.sw_l = m.walk_cx - m.walk_half
 	m.sw_r = m.walk_cx + m.walk_half
@@ -1714,6 +1772,8 @@ static func build_level_data(m: Node2D) -> void:
 		obres(m)
 	elif m.lvl == "neteja":
 		neteja(m, hyd_list, keb_list)
+	elif m.lvl == "besos":
+		besos(m, hyd_list, keb_list)
 	elif m.lvl == "guell":
 		mosaic(m, hyd_list, keb_list)
 	elif m.lvl == "scrap":
@@ -1793,6 +1853,8 @@ static func build_level_data(m: Node2D) -> void:
 		m.candy.append({"pos": cp, "eaten": false})
 	build_ground_detail(m)
 	build_freedom_area(m)
+	if m.lvl == "besos":
+		m.water.append(besos_water_rect(m))
 	# the agility course's lane, before anything is placed in the space
 	FreedomGames.plan(m)
 	lift_props_out_of_water(m)
@@ -1997,6 +2059,9 @@ static func build_level_data(m: Node2D) -> void:
 		"partit":
 			m.prize_pos = Partit.PRIZE
 			m.prize_text = Partit.PRIZE_TEXT
+		"besos":
+			m.prize_pos = Vector2(BESOS_CX + 40.0, -2700.0)
+			m.prize_text = "fetch the ball from beside the path"
 		_:
 			m.prize_pos = Vector2(m.SHOULDER_R - 12.0, -2400.0)
 			m.prize_text = "fetch the frisbee"
@@ -2545,6 +2610,8 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps: Array[Rect2] = Partit.solids(m)
 			for i in range(ps.size()):
 				out.append(["partit_%d" % i, ps[i]])
+		"besos":
+			out.append(["besos_channel", besos_deep_rect(m)])
 	return out
 
 
@@ -2693,6 +2760,9 @@ static func build_walls(m: Node2D) -> void:
 				var fa: Vector2 = m.frontage(y)
 				var fb: Vector2 = m.frontage(y2)
 				for pair in [[Vector2(fa.x - 6.0, y), Vector2(fb.x - 6.0, y2)], [Vector2(fa.y + 6.0, y), Vector2(fb.y + 6.0, y2)]]:
+					# the river side is grass and water, not a roof
+					if m.lvl == "besos" and pair[0].x > m.walk_cx:
+						continue
 					var seg := SegmentShape2D.new()
 					seg.a = pair[0]
 					seg.b = pair[1]
@@ -2825,6 +2895,7 @@ static func build_walls(m: Node2D) -> void:
 		"street": wall_sides = [-1.0]
 		"rain": wall_sides = []      # its frontage walls are the building line
 		"park", "trail", "beach", "barri": wall_sides = []
+		"besos": wall_sides = [-1.0]   # the concrete flood wall; the river side stays open
 		_: wall_sides = [-1.0, 1.0]
 	# the straight wall runs the whole walk at sw_l/sw_r, START_Y + 200 to
 	# GATE_Y - 200. El Mercat's hall is far wider than its sw_l..sw_r, so
@@ -2846,6 +2917,9 @@ static func build_walls(m: Node2D) -> void:
 		bcs.shape = bsh
 		bb.add_child(bcs)
 		m.add_child(bb)
+	if m.lvl == "besos":
+		var channel: Rect2 = besos_deep_rect(m)
+		add_rect_body(m, channel.get_center(), channel.size)
 	# the park's solid furniture: you go round a log, not through it. Digs,
 	# shrubs and troughs stay walkable so nosing about is never obstructed.
 	for pp in m.park_props:
@@ -3131,6 +3205,7 @@ static func spawn_cones(m: Node2D) -> void:
 		"scrap", "site": kinds = ["crate", "sack", "can", "bottle", "crate"]
 		"beach": kinds = ["bottle", "ball", "can"]
 		"park", "trail": kinds = ["bottle", "ball", "can"]
+		"besos": kinds = ["bottle", "ball", "can"]
 		"market", "spook": kinds = ["crate", "bottle", "can"]
 		"neteja": kinds = ["crate", "crate", "sack", "bottle"]
 		"station": kinds = ["can", "bottle", "bottle"]
