@@ -145,6 +145,7 @@ const EdgePath := preload("res://world/edge_path.gd")
 const TangleGeom := preload("res://systems/tangle_geom.gd")
 const MoodWiring := preload("res://systems/mood_wiring.gd")
 const SkyLook := preload("res://systems/sky.gd")
+const Arrival := preload("res://systems/arrival.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
 const Goals := preload("res://systems/goals.gd")
 const TofuRoute := preload("res://systems/tofu_route.gd")
@@ -474,6 +475,15 @@ var chase_catch_first := ""
 var chase_catch_elapsed := 0.0
 # how far the camera leans back up the street to keep the machine in shot
 var chase_lean := 0.0
+# the arrival home (systems/arrival.gd): the walk freezes at the threshold
+# and the pair is played into the door before the card
+var arriving := false
+var arrival_t := 0.0
+var depart_open := 0.0
+var depart_hold := 0.0
+var arrival_at := Vector2(INF, INF)
+var arrival_prints := PackedVector2Array()
+var arrival_print_n := 0
 # the brooms have come within a whisker; getting clear again is a CLOSE SHAVE
 var chase_shave_armed := false
 # where the walk home is (systems/home_chase.gd): "" until it begins, then
@@ -920,6 +930,9 @@ func _ready() -> void:
 	menu_step = Game.menu_step
 	_apply_menu_step()
 	build_signs()
+	# the apartment door is open behind them; headless runs are already in the
+	# walk, so it starts to shut on the next frames
+	begin_departure()
 	# "try again" and "start again" come straight back into the walk
 	if Game.quick_start:
 		Game.quick_start = false
@@ -967,6 +980,7 @@ func start_at_home() -> void:
 	human.global_position = Vector2(hx - 20.0, hy + 40.0)
 	cam.position = dog.global_position
 	leash.resnap()
+	depart_open = 0.0
 	_enter_home()
 
 
@@ -7239,9 +7253,10 @@ func _sign_mat() -> String:
 	return WorldSign.material_for(lvl, Game.weather)
 
 
-# The name, the browse arrows and HOME, as loose pieces for a walk with a
+# The name and the browse arrows, as loose pieces for a walk with a
 # material. Built from what the title step says; the same step twice keeps
-# the pieces where they are.
+# the pieces where they are. The way in is the arrival (systems/arrival.gd),
+# not a word on the ground.
 func build_signs() -> void:
 	var mat := _sign_mat()
 	var arrows := not started and menu_step == 1
@@ -7267,8 +7282,6 @@ func build_signs() -> void:
 			var hw: float = WorldSign.Letters.width(name.to_upper(), float(nm.h), WorldSign.gap_for(mat)) * 0.5
 			signs.append(WorldSign.build("<", Vector2(mid - hw - 44.0, START_Y - 190.0), 44.0, mat, 6.0, 80.0))
 			signs.append(WorldSign.build(">", Vector2(mid + hw + 44.0, START_Y - 190.0), 44.0, mat, 7.0, 80.0))
-	var he := walk_edges(HOME_Y + 84.0)
-	signs.append(WorldSign.build("HOME", Vector2((he.x + he.y) * 0.5, HOME_Y + 84.0), 26.0, mat, 9.0, 300.0))
 	# over the gate, what is through it and what that means, in the same stuff
 	var gm := (gate_l + gate_r) * 0.5
 	var gw := maxf(160.0, gate_r - gate_l - 20.0)
@@ -8428,12 +8441,19 @@ func tip(id: String) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if arrival_at.x >= INF:
+		arrival_at = Arrival.fit(self)
 	if chase_catch_t > 0.0:
 		HomeChase.tick_catch(self, delta)
+		return
+	if arriving:
+		Arrival.tick(self, delta)
 		return
 	if frozen:
 		return
 	elapsed += delta
+	if depart_open > 0.0:
+		Arrival.tick_depart(self, delta)
 	# the telefèric ride is a short cinematic: the walk holds still round it
 	if cable_riding:
 		CableCar.tick_ride(self, delta)
@@ -8800,12 +8820,17 @@ func _process(_delta: float) -> void:
 		goals_peek = 0.0
 	if Input.is_action_just_pressed("mute_music"):
 		Sfx.toggle_music()
-	if started and paused:
+	if started and arriving:
+		# confirm or back, once the opening beat has played
+		if Arrival.can_skip(self) and (Input.is_action_just_pressed("plant") \
+				or Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pause")):
+			Arrival.skip(self)
+	elif started and paused:
 		MenuFlow.tick_pause(self)
 		return
-	if started and frozen and chase_catch_t > 0.0:
+	elif started and frozen and chase_catch_t > 0.0:
 		pass  # the catch beat takes no input; the card that follows does
-	elif started and frozen:
+	elif started and frozen and not arriving:
 		# a result or a game-over: the walk has stopped
 		if MenuFlow.tick_end(self):
 			return
@@ -11895,7 +11920,7 @@ func _progress(_delta: float) -> void:
 				and human.global_position.y > HOME_Y
 				and (not auto_walk or elapsed >= AUTOWALK_MIN_FINISH_TIME)
 			):
-				_finish_walk()
+				Arrival.begin(self)
 
 
 func _enter_freedom() -> void:
@@ -12232,6 +12257,10 @@ func _chase(delta: float) -> void:
 
 func _finish_walk() -> void:
 	Goals.finish_walk(self)
+
+
+func begin_departure() -> void:
+	Arrival.note_start(self)
 
 
 func complete_tutorial() -> bool:
@@ -13490,12 +13519,9 @@ func _draw_world() -> void:
 		# the place in Catalan, and what it means under it
 		_wc.draw_string(font, Vector2(gate_l, GATE_Y - 46), "OFF LEASH", HORIZONTAL_ALIGNMENT_CENTER,
 			gate_r - gate_l, 14, Color(0.9, 0.88, 0.8, 0.75))
-	# HOME, at the bottom, where the walk both begins and ends
+	# the way in, at the bottom, where the walk both begins and ends
 	if vb > START_Y + 30.0:
-		_wc.draw_rect(Rect2(gate_l - 14, HOME_Y + 40.0, gate_r - gate_l + 28, 14), Color(0.4, 0.32, 0.3))
-		if signs.is_empty() and started:
-			_wc.draw_string(font, Vector2(gate_l, HOME_Y + 78.0), "HOME", HORIZONTAL_ALIGNMENT_CENTER,
-				gate_r - gate_l, 24, Color(0.9, 0.85, 0.7))
+		Arrival.draw(self, _wc)
 	# not under the settings panel, the wardrobe or the progress table: the
 	# dim only halves it, so the chalked name read straight through (#10)
 	var menu_over := in_settings or in_shop or in_progress_view

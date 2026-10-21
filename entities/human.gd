@@ -103,6 +103,8 @@ var hgait := 0.0
 # transform until the loss card or a continue.
 var presentation_offset := Vector2.ZERO
 var presentation_rotation := 0.0
+# 0 the phone is out in front, 1 it is in the pocket (the arrival home)
+var phone_away := 0.0
 var chain_target := Vector2.ZERO
 var carrying_bag := false
 var bin_stuck_t := 0.0
@@ -1289,7 +1291,7 @@ func _draw_xf(local_pos := Vector2.ZERO, local_rotation := 0.0,
 func _draw_shapes() -> void:
 	# at night the phone is a real light source: a cold blue-white pool on
 	# the pavement in front of them. The joke of the whole game, lit.
-	if Game.night:
+	if Game.night and phone_away <= 0.0:
 		var pt := AnimClock.msec() / 1000.0
 		var pulse := 0.9 + 0.1 * sin(pt * 6.1)
 		var lit := face_dir * 26.0
@@ -1368,9 +1370,12 @@ func _draw_shapes() -> void:
 		for sg2: float in [-1.0, 1.0]:
 			_b.draw_circle(head + fd * 5.9 + side * 3.2 * sg2, 2.4, Color(0.08, 0.08, 0.10))
 		_b.draw_line(head + fd * 5.9 + side * 1.0, head + fd * 5.9 - side * 1.0, Color(0.08, 0.08, 0.10), 1.0)
-	# the phone, held out front, eternally glowing
-	var glow := 0.55 + 0.2 * sin(t * 7.3)
-	_draw_xf(fd * 24.0, fd.angle() + PI / 2.0)
+	# the phone, held out front until an arrival puts it in the pocket
+	var away := clampf(phone_away, 0.0, 1.0)
+	var glow := (0.55 + 0.2 * sin(t * 7.3)) * (1.0 - away)
+	var phone_at := fd * lerpf(24.0, -4.0, away) + side * 16.0 * away
+	var phone_sc := lerpf(1.0, 0.42, away)
+	_draw_xf(phone_at, fd.angle() + PI / 2.0, Vector2(phone_sc, phone_sc))
 	_b.draw_rect(Rect2(-6, -9, 12, 18), Color(0.1, 0.1, 0.12))
 	var screen := Color(0.42, 0.74, 0.34, glow) if match_on else Color(0.7, 0.85, 1.0, glow)
 	_b.draw_rect(Rect2(-4.5, -7, 9, 14), screen)
