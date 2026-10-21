@@ -38,6 +38,9 @@ uniform vec3 tint = vec3(1.0, 1.0, 1.0);
 // darkness has to come off the light itself, not out of the black lift.
 uniform float exposure = 1.0;
 uniform float lift = 0.055;
+// rain on the ground, 0 to 1: soaked mid-tones go darker and richer, and
+// world-locked patches of sheen catch the sky like standing water
+uniform float wet = 0.0;
 uniform float grain_fine = 0.055;
 uniform float grain_blotch = 0.045;
 uniform float time_seed = 0.0;
@@ -76,6 +79,15 @@ void fragment() {
 	// surface, not as noise laid over silhouettes
 	float tex_mask = smoothstep(0.04, 0.30, lum) * (1.0 - smoothstep(0.72, 0.98, lum));
 	col += (fine * grain_fine + blotch * grain_blotch) * tex_mask;
+
+	if (wet > 0.0) {
+		float mid = smoothstep(0.08, 0.35, lum) * (1.0 - smoothstep(0.65, 0.92, lum));
+		col *= 1.0 - 0.12 * wet * mid;
+		// standing water: long soft patches, stretched along the walk
+		float pool = smoothstep(0.60, 0.78, vnoise(wp * vec2(1.0 / 70.0, 1.0 / 150.0)));
+		float ripple = 0.75 + 0.25 * vnoise(wp / 9.0);
+		col += vec3(0.55, 0.62, 0.72) * pool * ripple * mid * wet * 0.10;
+	}
 
 	// --- grade ---
 	col *= mix(cool_shadows, warm_light, smoothstep(0.15, 0.85, lum));

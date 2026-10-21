@@ -3006,6 +3006,12 @@ static func build_entities(m: Node2D) -> void:
 		ov.z_index = 14
 		m.add_child(ov)
 		ov.setup(m)
+	# the lamps' light at night: over everyone on the ground, under the crowns
+	var lights := Node2D.new()
+	lights.set_script(load("res://world/light_layer.gd"))
+	lights.z_index = 12
+	m.add_child(lights)
+	lights.setup(m)
 	# tree crowns, above everyone on the ground and under what hangs overhead
 	var canopy := Node2D.new()
 	canopy.set_script(load("res://world/canopylayer.gd"))

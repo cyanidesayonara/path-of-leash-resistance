@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
 const HumanLook := preload("res://entities/human_appearance.gd")
+const SkyLook := preload("res://systems/sky.gd")
 
 # The human. Dead weight with a phone. Walks north on autopilot,
 # occasionally does something stupid. Telegraphs it first, to be fair.
@@ -1292,9 +1293,10 @@ func _draw_shapes() -> void:
 		var pt := AnimClock.msec() / 1000.0
 		var pulse := 0.9 + 0.1 * sin(pt * 6.1)
 		var lit := face_dir * 26.0
-		for ring in range(4):
-			var rr := 96.0 - ring * 21.0
-			_b.draw_circle(lit, rr, Color(0.62, 0.78, 1.0, (0.028 + ring * 0.020) * pulse))
+		var sky := SkyLook.tint(Game.level_id, Game.weather, true)
+		for ring in range(5):
+			var rr := 104.0 - ring * 20.0
+			_b.draw_circle(lit, rr, SkyLook.light(Color(0.66, 0.80, 1.0, (0.020 + ring * 0.018) * pulse), sky))
 	# contact shadow first, matching the dog's light direction. A fallen
 	# owner's shadow spreads out under them.
 	if not wading:

@@ -130,8 +130,8 @@ jobs:
       - name: A walk's own weather or hour never carries on to the next walk
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_walk_sky.gd
 
-      - name: A walk's own weather or hour never carries on to the next walk
-        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_walk_sky.gd
+      - name: Sky tint, grade and lamp light
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_sky.gd
 
       - name: Tofu hides only where she can be reached, every walk
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tofu_spots.gd
