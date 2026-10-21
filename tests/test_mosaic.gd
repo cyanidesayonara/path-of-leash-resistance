@@ -31,6 +31,17 @@ func _run() -> void:
 	root.add_child(m)
 	if not m.is_node_ready():
 		await m.ready
+	_check(m.has_method("_draw_mosaic_cached"), "the dense mosaic geometry has a retained batch")
+	if m.has_method("_draw_mosaic_cached"):
+		m._wc = ShapeBatch.new()
+		m.call("_draw_mosaic_cached", -1440.0, -560.0)
+		var first_cache: RefCounted = m.get("_mosaic_cache")
+		m._wc = ShapeBatch.new()
+		m.call("_draw_mosaic_cached", -1340.0, -460.0)
+		_check(is_same(first_cache, m.get("_mosaic_cache")), "nearby camera movement reuses the mosaic geometry")
+		m._wc = ShapeBatch.new()
+		m.call("_draw_mosaic_cached", -1130.0, -250.0)
+		_check(not is_same(first_cache, m.get("_mosaic_cache")), "distant camera movement refreshes the mosaic geometry")
 	_check(m.pond.size.x <= 0.0, "none of the old park's pond")
 	var tiles := 0
 	for pt: Dictionary in m.patches:

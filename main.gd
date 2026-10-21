@@ -3183,6 +3183,18 @@ func _draw_mosaic_column(cb: ShapeBatch, p: Vector2) -> void:
 	cb.circle(top, 4.0, Color(0.68, 0.60, 0.48))
 
 
+func _draw_mosaic_cached(vt: float, vb: float) -> void:
+	var center := (vt + vb) * 0.5
+	if _mosaic_cache == null or absf(center - _mosaic_cache_y) > MOSAIC_CACHE_STEP:
+		var live := _wc
+		_mosaic_cache = ShapeBatch.new()
+		_wc = _mosaic_cache
+		_draw_mosaic(vt - MOSAIC_CACHE_MARGIN, vb + MOSAIC_CACHE_MARGIN)
+		_wc = live
+		_mosaic_cache_y = center
+	_mosaic_cache.append_to(_wc)
+
+
 func _draw_mosaic(vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
 	# gravel: the sandy ground, with its stones
@@ -12529,6 +12541,12 @@ func clear_of_feed(at: Vector2, size: Vector2) -> Vector2:
 
 # the stand-in canvas for main's own drawing, made fresh each _draw
 var _wc: ShapeBatch
+# El Mosaic's scenery is static but expensive to tessellate. Retain its
+# geometry while still appending it into the live world batch in exact order.
+const MOSAIC_CACHE_STEP := 150.0
+const MOSAIC_CACHE_MARGIN := 170.0
+var _mosaic_cache: ShapeBatch
+var _mosaic_cache_y := 1.0e20
 
 
 func _draw() -> void:
@@ -12842,7 +12860,7 @@ func _draw_world() -> void:
 	if lvl == "neteja":
 		_draw_neteja(wvt, vb)
 	if lvl == "guell":
-		_draw_mosaic(wvt, vb)
+		_draw_mosaic_cached(wvt, vb)
 	if lvl == "partit":
 		Partit.draw_live(self, _wc, wvt, vb)
 		if march != null:

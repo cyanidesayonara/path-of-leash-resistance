@@ -124,6 +124,22 @@ func _draw_standin(ci: Node2D) -> void:
 	b.flush()
 
 
+func _draw_repeated_plain(ci: Node2D) -> void:
+	for i in range(2):
+		ci.draw_circle(Vector2(80.5, 70.25), 21.0, Color(0.9, 0.2, 0.3, 0.55))
+		ci.draw_rect(Rect2(72.0, 62.0, 45.0, 31.0), Color(0.2, 0.8, 0.5, 0.45))
+
+
+func _draw_repeated_cached(ci: Node2D) -> void:
+	var cached := ShapeBatch.new()
+	cached.circle(Vector2(80.5, 70.25), 21.0, Color(0.9, 0.2, 0.3, 0.55))
+	cached.rect(Rect2(72.0, 62.0, 45.0, 31.0), Color(0.2, 0.8, 0.5, 0.45))
+	var out := ShapeBatch.new(ci)
+	cached.append_to(out)
+	cached.append_to(out)
+	out.flush()
+
+
 func _render(drawer: Callable) -> Image:
 	var vp := SubViewport.new()
 	vp.size = SIZE
@@ -149,6 +165,8 @@ func _run() -> void:
 	var batched: Image = await _render(_draw_batched)
 	var plain_extras: Image = await _render(_draw_plain_extras)
 	var standin: Image = await _render(_draw_standin)
+	var repeated_plain: Image = await _render(_draw_repeated_plain)
+	var repeated_cached: Image = await _render(_draw_repeated_cached)
 	_check(plain.get_size() == SIZE and batched.get_size() == SIZE, "both viewports rendered")
 	var lit := 0
 	for y in range(SIZE.y):
@@ -161,6 +179,8 @@ func _run() -> void:
 	var d2 := _differ(plain_extras, standin)
 	_check(d2 == 0, "the stand-in canvas matches too, fall-throughs included (%d px differ)" % d2)
 	_check(_differ(plain, plain_extras) > 0, "the fall-through shapes actually drew")
+	var d3 := _differ(repeated_plain, repeated_cached)
+	_check(d3 == 0, "cached geometry can be appended repeatedly without being consumed (%d px differ)" % d3)
 	_finish()
 
 
