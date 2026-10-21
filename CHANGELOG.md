@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-10-21 - The flood keeps its promises
+
+- While the flood is held, the apron stays concrete. The shallow paint was covering the north half of it, so the dry ground read as water.
+- A branch warns your human the way every other owner event does, a short beat and then the stumble. It does not knock them over on the frame it touches them.
+- Wading loosens her sideways pace once per step. It was being cut again every frame, until she could barely walk out of a swell.
+- Someone already heading upstream is still carried south at the flood's pace, and that shove is in before the leash so the rope holds it the same frame.
+
 ## 2026-10-21 - The leash goes round a stall
 
 - A leash pulled across a stall, a van or a bench could settle inside the body. It drew straight over the counter, and the pull held your human on the face they could not walk through. The strap now runs round the outside, and that pull walks them round the end.

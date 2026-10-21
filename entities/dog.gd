@@ -24,6 +24,10 @@ var swimming := false
 # each tick from surface_at(); the table in surfaces.gd says what it means.
 var surface := Surfaces.S.PAVEMENT
 var slick := false
+# set by main while she is wading in the flood. One sideways scale inside
+# the tick; a multiply on velocity every frame compounded into a crawl.
+var flooded := false
+const FLOOD_STEER := 0.55
 var ice := false
 var auto := false
 var auto_move := Vector2.ZERO
@@ -212,7 +216,10 @@ func tick(delta: float) -> void:
 		# the executed direction veers - input_dir keeps the player's actual
 		# intent, which is what the rest of the game reads
 		var go := iv if mood_wobble == 0.0 else iv.rotated(mood_wobble)
-		velocity = velocity.move_toward(go * top, accel * delta)
+		var wish := go * top
+		if flooded:
+			wish.x *= FLOOD_STEER
+		velocity = velocity.move_toward(wish, accel * delta)
 		if face_lock != Vector2.ZERO:
 			facing = face_lock
 		elif input_active:
