@@ -3184,14 +3184,15 @@ func _draw_mosaic_column(cb: ShapeBatch, p: Vector2) -> void:
 
 
 func _draw_mosaic_cached(vt: float, vb: float) -> void:
-	var center := (vt + vb) * 0.5
-	if _mosaic_cache == null or absf(center - _mosaic_cache_y) > MOSAIC_CACHE_STEP:
+	if _mosaic_cache == null or absf(vt - _mosaic_cache_vt) > MOSAIC_CACHE_STEP \
+			or absf(vb - _mosaic_cache_vb) > MOSAIC_CACHE_STEP:
 		var live := _wc
 		_mosaic_cache = ShapeBatch.new()
 		_wc = _mosaic_cache
 		_draw_mosaic(vt - MOSAIC_CACHE_MARGIN, vb + MOSAIC_CACHE_MARGIN)
 		_wc = live
-		_mosaic_cache_y = center
+		_mosaic_cache_vt = vt
+		_mosaic_cache_vb = vb
 	_mosaic_cache.append_to(_wc)
 
 
@@ -12546,7 +12547,8 @@ var _wc: ShapeBatch
 const MOSAIC_CACHE_STEP := 150.0
 const MOSAIC_CACHE_MARGIN := 170.0
 var _mosaic_cache: ShapeBatch
-var _mosaic_cache_y := 1.0e20
+var _mosaic_cache_vt := 1.0e20
+var _mosaic_cache_vb := 1.0e20
 
 
 func _draw() -> void:
