@@ -9,6 +9,69 @@ Append-only session history, newest first.
 - El Barri's cast-iron drinking fountain now carries Barcelona's relief city shield crest on the column, an expanding ripple in the dog's drinking basin, and an outlined drainage grate frame.
 - The square's London plane trees now feature cast-iron concentric radial tree grates (escocells de ferro colat) flush with the gravel square floor.
 
+## 2026-10-22 - Boardwalk ramps, lifeguard towers, showers and tide drift line for La Platja
+
+- La Platja's timber boardwalk (passarel·la de fusta) now carries alternating weathered cedar/teak tones and countersunk bolt pairs on plank ends.
+- Slatted timber access ramps now bridge from the boardwalk out across the sand toward the beach showers and lifeguard watchtowers.
+- Beach showers now feature authentic lower foot-wash taps (rentapeus), slotted stainless puddle drainage gratings, and duckboard brass screws.
+- Lifeguard towers now feature cross-braced leg shadows, hanging bright orange lifebuoys (salva-vides) with reflective straps, Salvament de Platges red cross roof emblems, and PA loudspeaker horns pointing seaward.
+- The volleyball court now features parallel raked sand ridges, corner anchor plates, and a referee tall chair.
+- Along the waterline and in the dog beach bay, the tide drift line now carries scattered Mediterranean cockle shells (petxines), water-worn sea pebbles (còdols), and stranded posidonia.
+- Promenade bins on the seafront now display Barcelona's tri-color selective recycling stations (yellow for envasos, blue for paper, grey for resta) on stainless steel mounting bars.
+
+## 2026-10-22 - El Diluvi storm drains, puddle ripple dynamics, and terrace tarp
+
+- Curbside running gutters along El Diluvi now carry cast-iron slot grates with animated swirling storm water whirlpool funnels.
+- Standing puddles across the paving now display animated expanding concentric raindrop impact ripples with watery reflections.
+- Stacked cafe terrace furniture is wrapped in a blue waterproof vinyl tarpaulin with corner grommets, while storefront awnings feature cascading water runoff and valance droplet drips.
+
+## 2026-10-22 - La Ferralla pipe bundles, battery pallets, and guard dog kennel
+
+- Industrial scrap pipe obstacles in La Ferralla are now detailed as bundled steel tubes bound with metallic wire straps and hollow bore bevels.
+- The scrapyard back lot features pallets of discarded automotive lead-acid batteries with red and metallic terminal caps alongside yellow caution labels.
+- The back lot corner now carries a corrugated metal guard dog kennel with an arched entry doorway and a stainless steel water bowl.
+
+## 2026-10-22 - El Parc mammoth plaque, bandstand railings, and lake water lilies
+
+- The famous Ciutadella stone mammoth now features a commemorative bronze plaque on the plinth face, stepped plinth moulding, and detailed carved ivory tusk tips.
+- The octagonal music bandstand now carries concentric radial timber flooring on its stone platform and ornate wrought-iron railings connecting the posts.
+- The lake jetty now carries a lifebuoy safety ring and floating water lily pads (*nenúfars*) with blossoms drifting near the reed beds.
+- The playground now includes scattered toy buckets and spades in the sandpit and a green frog spring rocker alongside the blue horse.
+
+## 2026-10-22 - El Bosc footbridge masonry, river pebbles, waymarkers and mushrooms
+
+- The timber footbridge across the stream in El Bosc now features stone abutments at each bank edge, shadow cast under the bridge span, batched plank grooves with iron bolt heads, and lit handrail post caps.
+- River shores along the stream now carry variegated rounded river pebbles and stones (granite, sandstone, river slate, quartz) with water lap foam rings.
+- Collserola Natural Park trail marker posts (*fites de sender*) with authentic PR white and green trail blazes now stand at regular intervals along the trail edge.
+- The trail margins through the pine woods feature wild saffron milk cap mushroom clusters (*pinetells / rovellons*) and stone pine cones nestled in the needle litter.
+
+## 2026-10-22 - La Castanyada autumn delicacies, pumpkins, and sardana ring
+
+- The castanyera's roaster cart in the plaça now carries an authentic baked sweet potato (*moniato*) warming tray with wisps of rising steam, a rustic platter of pine-nut encrusted *panellets de pinyons*, and a chalkboard slate menu (*la pissarra*) propped near the cart shaft.
+- Carved festival jack-o'-lantern pumpkins (*carbasses de Tots Sants*) with flickering warm candle glow now flank the band stage, the roaster cart, the off-leash yard gate, and residential doorsteps along the approach alley.
+- Crisp autumn fallen leaf drifts (*fulles seques*) in golden ochre, rust, and burnt sienna gather along the alley walls and gutters.
+- The wooden dance floor in the off-leash festival yard now features the concentric braided rope ring for the sardana circle dance, complete with dancers' coats and bags piled in the center.
+
+## 2026-10-22 - El Mercat canopy variety and produce crate differentiation
+
+- The approach street outside El Mercat now displays varied storefront canopies: corrugated galvanized zinc canopies with fluted ridges and rivets, dark green grocer canopies with gold trim, and classical striped canvas awnings with scalloped hems.
+- Market crate stacks across the hall and street now feature differentiated goods: crushed ice beds with silver-blue fish and lemon slices, artisanal pa de pagès bakery loaves with flour scoring, purple-green artichokes, alongside traditional orchard fruits.
+
+## 2026-10-22 - Les Obres trench shoring, hazard beacons, and scaffold grind
+
+- The open utility trench in Les Obres now features timber walers and yellow hydraulic screw shoring struts, red-and-white chevron reflective safety barricade boards, and utility conduits with corrugated ducting.
+- Four amber hazard beacon lamps on barricade posts now cast warm warning halos at the crossing approaches.
+- The timber bridge now has textured non-slip steel diamond-tread transition plates and heavy wooden baulks with coach bolts.
+- Tubular galvanized scaffolding pipe handrails now run the length of the trench bridge and are registered as grindable rails ("SCAFFOLD RUN"), letting Millie grind safely over the excavation gap.
+
+## 2026-10-22 - El Gòtic polish: Pont del Bisbe, Plaça de Sant Felip Neri, alley drainage
+
+- The Pont del Bisbe overhead bridge now has neo-Gothic pointed-arch windows with stone tracery and mullions, a crenellated parapet, carved stone corbel brackets, a skull-and-dagger detail, and a wrought-iron lantern casting warm amber light onto the alley below.
+- Plaça de Sant Felip Neri's fountain is rebuilt as an octagonal Baroque stone basin with directional lighting on each face, four bronze spouts with splash rings, and a carved baluster pedestal. Radial stone sett ribs and concentric cobblestone joints now radiate from the fountain across the square.
+- Terracotta pots of red geraniums flank doorways along the alleys and at the plaça corners.
+- The medieval alleys have a central stone drainage channel with iron grates at regular intervals.
+- The bridge's shadow on the ground now shows heavier corbel shadows at the springers, plus a warm lantern light pool under the arch.
+
 ## 2026-10-22 - L'Estació platform tactile paving and travelator handrail grinds
 
 - L'Estació's moving walkway now carries grindable handrails along both glass balustrades ("HANDRAIL"), allowing full-length travelator grinds end-to-end.
