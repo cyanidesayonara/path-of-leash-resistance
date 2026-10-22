@@ -541,16 +541,37 @@ static func draw_road(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 				Color(1.0, 0.25, 0.2) if on else Color(0.35, 0.12, 0.10))
 
 
-# The cactus garden's bed: pale gravel, a few stones, and a little sign.
+# The cactus garden's bed: pale gravel, raked ridges, terracotta curbs, botanical plaques, and a little sign.
 static func draw_cactus_bed(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	var r := CACTUS_BED
 	if r.end.y < vt - 40.0 or r.position.y > vb + 40.0:
 		return
+	b.rect(r.grow(8.0), STONE.darkened(0.20))
 	b.rect(r.grow(6.0), STONE.darkened(0.1))
 	b.rect(r, Color(0.86, 0.80, 0.66))
+
+	# raked gravel ridges across the bed
+	for gy in range(4):
+		var yline := r.position.y + 25.0 + float(gy) * 50.0
+		b.line(Vector2(r.position.x + 8.0, yline), Vector2(r.end.x - 8.0, yline), Color(0.80, 0.74, 0.60), 1.6)
+
 	for i in range(18):
 		var sp := r.position + Vector2(fmod(float(i) * 53.0, r.size.x - 10.0) + 5.0, fmod(float(i) * 37.0, r.size.y - 10.0) + 5.0)
 		b.circle(sp, 2.0 + float(i % 3), Color(0.70, 0.64, 0.54))
+
+	# terracotta border curb tiles
+	for side_x: float in [r.position.x, r.end.x - 3.0]:
+		b.rect(Rect2(side_x, r.position.y, 3.0, r.size.y), Color(0.72, 0.44, 0.30))
+	for side_y: float in [r.position.y, r.end.y - 3.0]:
+		b.rect(Rect2(r.position.x, side_y, r.size.x, 3.0), Color(0.72, 0.44, 0.30))
+
+	# botanical wooden stakes with identification plaques
+	for bi in range(2):
+		var bp := r.position + Vector2(30.0 + float(bi) * 110.0, 18.0 + float(bi) * 120.0)
+		b.rect(Rect2(bp.x - 1.0, bp.y, 2.0, 8.0), Color(0.40, 0.32, 0.22))
+		b.rect(Rect2(bp.x - 7.0, bp.y - 7.0, 14.0, 7.0), Color(0.94, 0.92, 0.84))
+		b.line(Vector2(bp.x - 5.0, bp.y - 3.5), Vector2(bp.x + 5.0, bp.y - 3.5), Color(0.28, 0.24, 0.20), 1.0)
+
 	b.draw_string(ThemeDB.fallback_font, r.position + Vector2(4, -10), "JARDÍ DE CACTUS",
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.30, 0.26, 0.20))
 
@@ -582,9 +603,9 @@ static func draw_cactus(c: Object, p: Vector2, big: bool) -> void:
 		var a2 := TAU * float(k) / 8.0
 		c.draw_line(p + Vector2.from_angle(a2) * 12.0, p + Vector2.from_angle(a2) * 16.0, spine, 1.0)
 
-# The Font Màgica: a stone rim and steps, the basin, and its jets - a ring of
-# small ones round a great central plume - rising and falling with the show,
-# in waves. By night the water is lit in slow-turning colours.
+# The Font Màgica: a stone rim and steps, the basin, submerged illumination rings,
+# and its jets - a ring of small ones round a great central plume - rising and falling
+# with the show, in waves. By night the water is lit in slow-turning colours.
 static func draw_font(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	if FONT.end.y < vt - 60.0 or FONT.position.y > vb + 60.0:
 		return
@@ -598,12 +619,27 @@ static func draw_font(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	var night: bool = Game.night
 	var deep := Color(0.20, 0.42, 0.58) if not night else Color(0.10, 0.18, 0.32)
 	b.rect(r, deep)
+
+	var c0 := r.get_center()
+
+	# Carles Buïgas concentric brass jet manifolds below water
+	for ring_frac: float in [0.20, 0.36]:
+		var rad_x := r.size.x * ring_frac
+		var rad_y := r.size.y * (ring_frac * 0.92)
+		b.polygon(_oval_pts(c0, rad_x + 1.8, rad_y + 1.8), Color(0.14, 0.28, 0.40, 0.45))
+		b.polygon(_oval_pts(c0, rad_x, rad_y), Color(0.74, 0.66, 0.36, 0.60))
+		b.polygon(_oval_pts(c0, rad_x - 1.8, rad_y - 1.8), deep)
+
+	# submerged illumination projector glow radiating through the water
+	var glow_tint := Color(0.30, 0.78, 0.92) if not night else Color.from_hsv(fmod(t * 0.05, 1.0), 0.6, 1.0)
+	b.circle(c0, r.size.x * 0.42, Color(glow_tint.r, glow_tint.g, glow_tint.b, 0.08 * (0.35 + lv)))
+	b.circle(c0, r.size.x * 0.24, Color(glow_tint.r, glow_tint.g, glow_tint.b, 0.14 * (0.35 + lv)))
+
 	# ripples, more of them in the show
 	for i in range(6):
 		var ry := r.position.y + 18.0 + float(i) * 26.0
 		var rx := r.position.x + 20.0 + fmod(t * (14.0 + 10.0 * lv) + float(i) * 37.0, r.size.x - 60.0)
 		b.rect(Rect2(rx, ry, 26.0, 2.0), Color(1, 1, 1, 0.18 + 0.2 * lv))
-	var c0 := r.get_center()
 	var tint := Color(1, 1, 1)
 	if night:
 		tint = Color.from_hsv(fmod(t * 0.05, 1.0), 0.55, 1.0)
@@ -735,15 +771,36 @@ static func draw_on_hill(m: Node2D, c: Object, vt: float, vb: float) -> void:
 			while jx < seg.y - 6.0:
 				b.line(Vector2(jx, wy + 1.0), Vector2(jx, wy + 13.0), STONE.darkened(0.42), 1.2)
 				jx += 26.0
+
+			# trailing ivy (heura) tendrils cascading over the wall face
+			var iv_x := seg.x + 14.0
+			while iv_x < seg.y - 14.0:
+				var iv_h := 8.0 + float(int(absf(iv_x * 7.0 + wy)) % 11)
+				b.line(Vector2(iv_x, wy + 1.0), Vector2(iv_x, wy + iv_h), Color(0.22, 0.40, 0.20), 2.0)
+				b.circle(Vector2(iv_x - 1.2, wy + iv_h * 0.5), 2.2, Color(0.28, 0.48, 0.24))
+				b.circle(Vector2(iv_x + 1.0, wy + iv_h), 2.0, Color(0.32, 0.54, 0.26))
+				iv_x += 48.0
+
 		# the flight of steps where the path cuts through it
 		for k in range(4):
 			var sy := wy - float(k) * (STEP_H / 4.0)
 			var se: Vector2 = m.walk_edges(sy)
 			b.rect(Rect2(se.x, sy - 3.0, se.y - se.x, 3.0), SAULO.darkened(0.22))
 			b.rect(Rect2(se.x, sy - 5.0, se.y - se.x, 2.0), SAULO.lightened(0.12))
-		# pier ends where the wall meets the path
+
+		# pier ends where the wall meets the path with terracotta flowerpots
 		for px: float in [e.x - 8.0, e.y + 2.0]:
 			b.rect(Rect2(px, wy - 8.0, 8.0, 24.0), STONE.darkened(0.12))
+			var pot_p := Vector2(px + 4.0, wy + 4.0)
+			b.circle(pot_p, 5.0, Color(0.70, 0.40, 0.26))
+			b.circle(pot_p, 3.8, Color(0.24, 0.45, 0.22))
+			b.circle(pot_p + Vector2(-1.0, -1.0), 1.6, Color(0.92, 0.18, 0.22))
+
+		# sentinel Italian cypress trees (xiprers) at the outer terrace edges
+		if int(absf(wy)) % 600 == 0:
+			_cypress(b, Vector2(cx - hh + 18.0, wy - 10.0))
+			_cypress(b, Vector2(cx + hh - 18.0, wy - 10.0))
+
 		# the height, cut in a stone post at every third wall
 		var k3 := int(roundf((m.START_Y - 260.0 - wy) / TERRACE_STEP))
 		if k3 % 3 == 1:
@@ -753,6 +810,23 @@ static func draw_on_hill(m: Node2D, c: Object, vt: float, vb: float) -> void:
 			var metres := int(roundf(climb(m, wy) * TOP_M / 5.0) * 5.0)
 			b.draw_string(ThemeDB.fallback_font, post + Vector2(-10, 5), "%dm" % metres,
 				HORIZONTAL_ALIGNMENT_LEFT, 24, 11, Color(0.22, 0.18, 0.14))
+
+	# scenic mirador viewpoint with balustrade and viewing telescope overlooking the city
+	var mirador_y := -1500.0
+	if mirador_y > vt - 60.0 and mirador_y < vb + 60.0:
+		var me: Vector2 = m.walk_edges(mirador_y)
+		var mp := Vector2(me.y + 18.0, mirador_y)
+		b.circle(mp, 22.0, STONE)
+		b.circle(mp, 18.0, SAULO)
+		for bi in range(6):
+			var ba := -0.95 + float(bi) * 0.38
+			var bp := mp + Vector2.from_angle(ba) * 20.0
+			b.circle(bp, 2.4, STONE.lightened(0.15))
+			b.circle(bp, 1.5, STONE.darkened(0.25))
+		b.circle(mp, 5.5, Color(0.22, 0.24, 0.26))
+		b.rect(Rect2(mp.x - 2.0, mp.y - 7.0, 4.0, 9.0), Color(0.60, 0.62, 0.66))
+		b.line(mp + Vector2(-3.0, -7.0), mp + Vector2(7.0, -13.0), Color(0.76, 0.80, 0.84), 4.0)
+		b.circle(mp + Vector2(7.0, -13.0), 2.8, Color(0.35, 0.72, 0.88, 0.85))
 	# agaves and prickly pears on the terraces, pines leaning out over the rim
 	var y := floorf((vt - 120.0) / 140.0) * 140.0
 	while y < vb + 120.0:
@@ -808,7 +882,27 @@ static func _prickly_pear(b: ShapeBatch, p: Vector2) -> void:
 	for q: Vector2 in [Vector2(0, 0), Vector2(-9, -8), Vector2(8, -9), Vector2(2, -17)]:
 		b.circle(p + q, 7.0, Color(0.34, 0.52, 0.30))
 		b.circle(p + q + Vector2(-1.5, -1.5), 3.5, Color(0.42, 0.60, 0.36))
-	b.circle(p + Vector2(8, -15), 2.2, Color(0.86, 0.36, 0.40))
+	# ripe cactus figs (figues de moro) on paddle rims
+	b.circle(p + Vector2(8, -15), 2.4, Color(0.86, 0.32, 0.38))
+	b.circle(p + Vector2(-11, -12), 2.2, Color(0.92, 0.36, 0.28))
+	b.circle(p + Vector2(3, -22), 2.2, Color(0.88, 0.28, 0.42))
+
+
+static func _cypress(b: ShapeBatch, p: Vector2) -> void:
+	# tall slender Italian cypress (xiprer): long shadow downhill, slender dark evergreen crown
+	b.polygon(PackedVector2Array([p + Vector2(2.0, 4.0), p + Vector2(9.0, 42.0), p + Vector2(-7.0, 42.0)]), Color(0, 0, 0, 0.18))
+	b.polygon(PackedVector2Array([p + Vector2(0.0, -26.0), p + Vector2(7.5, 6.0), p + Vector2(5.5, 18.0), p + Vector2(-5.5, 18.0), p + Vector2(-7.5, 6.0)]), Color(0.12, 0.24, 0.14))
+	b.polygon(PackedVector2Array([p + Vector2(0.0, -22.0), p + Vector2(5.5, 4.0), p + Vector2(-5.5, 4.0)]), Color(0.18, 0.34, 0.20))
+	b.polygon(PackedVector2Array([p + Vector2(0.0, -14.0), p + Vector2(3.5, 10.0), p + Vector2(-3.5, 10.0)]), Color(0.24, 0.44, 0.26))
+	b.circle(p + Vector2(0.0, 14.0), 5.5, Color(0.16, 0.28, 0.16))
+
+
+static func _oval_pts(center: Vector2, rx: float, ry: float, segs := 16) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in range(segs):
+		var a := TAU * float(i) / float(segs)
+		pts.append(center + Vector2(cos(a) * rx, sin(a) * ry))
+	return pts
 
 
 static func _pine(b: ShapeBatch, p: Vector2, s: float) -> void:

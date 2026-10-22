@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - Montjuïc botanical terraces, Font Màgica brass rings, and panoramic mirador
+
+- The Font Màgica's grand basin now features concentric brass nozzle manifolds beneath the surface, submerged aquatic illumination projectors radiating turquoise and amber underwater glow, and water ripple expansion rings.
+- The hillside retaining walls now display drystone block masonry, cascading ivy vines (heura), terracotta planter urns with red flowering geraniums on terrace steps, and stately Italian cypress trees (xiprers) framing scenic lookouts.
+- The Jardí de Cactus bed is enriched with raked gravel ridges, terracotta border curb tiles, botanical wooden species stakes, and prickly pear paddles with ripe red and magenta cactus figs (figues de moro).
+- A scenic semicircular mirador viewpoint now juts outward from the climb, complete with turned neoclassical stone balustrades and a coin-operated panoramic viewfinder telescope (telescopi de mirador) trained on the Barcelona city skyline and harbor.
+
 ## 2026-10-22 - El Gòtic polish: Pont del Bisbe, Plaça de Sant Felip Neri, alley drainage
 
 - The Pont del Bisbe overhead bridge now has neo-Gothic pointed-arch windows with stone tracery and mullions, a crenellated parapet, carved stone corbel brackets, a skull-and-dagger detail, and a wrought-iron lantern casting warm amber light onto the alley below.
