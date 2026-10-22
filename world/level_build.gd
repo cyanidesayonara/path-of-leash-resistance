@@ -193,6 +193,13 @@ const MOSAIC_HALL_Y1 := -2550.0
 # six columns across and nine deep, the owner's lane left down the middle
 const MOSAIC_HALL_COLS: Array[float] = [350.0, 460.0, 575.0, 705.0, 820.0, 930.0]
 const MOSAIC_HALL_ROWS: Array[float] = [-1660.0, -1760.0, -1860.0, -1960.0, -2060.0, -2160.0, -2260.0, -2360.0, -2460.0]
+# Jujol's large trencadis ceiling medallions in the vaults between the Doric columns
+const MOSAIC_JUJOL_MEDALLIONS: Array[Vector2] = [
+	Vector2(517.5, -1810.0),
+	Vector2(762.5, -1810.0),
+	Vector2(517.5, -2310.0),
+	Vector2(762.5, -2310.0),
+]
 const MOSAIC_PLAZA_Y0 := -2750.0      # the plaza and its serpentine bench
 const MOSAIC_PLAZA_Y1 := -3650.0
 const MOSAIC_BAY := 150.0

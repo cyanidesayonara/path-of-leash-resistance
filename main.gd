@@ -3177,9 +3177,20 @@ func _draw_mosaic_column(cb: ShapeBatch, p: Vector2) -> void:
 			var a := float(k) * TAU / 16.0
 			patch.append(p + LIGHT * 10.0 + Vector2(cos(a) * 27.6, sin(a) * 12.65))
 		cb.polygon(patch, Color(sc.r, sc.g, sc.b, 0.2))
-		cb.circle(p, 24.0, Color(0.78, 0.74, 0.66))
-		cb.circle(p, 19.0, Color(0.86, 0.83, 0.76))
-		_trencadis_disc(cb, p, 11.0, int(absf(p.x + p.y)))
+		# Doric column: base plinth, fluted stone capital with 20 flutes
+		# catching light/shadow, and concentric stone moldings - classical
+		# Park Guell temple architecture without mosaic wallpaper on the shafts
+		cb.circle(p, 25.0, Color(0.72, 0.68, 0.60))
+		cb.circle(p - LIGHT * 2.0, 23.0, Color(0.82, 0.78, 0.70))
+		for k in range(20):
+			var fa := float(k) * TAU / 20.0
+			var fdir := Vector2(cos(fa), sin(fa))
+			var lit := clampf(fdir.dot(-LIGHT) * 0.5 + 0.5, 0.0, 1.0)
+			var fcol := Color(0.66, 0.62, 0.54).lerp(Color(0.92, 0.89, 0.82), lit)
+			cb.circle(p + fdir * 18.0, 2.2, fcol)
+		cb.circle(p, 17.0, Color(0.80, 0.76, 0.68))
+		cb.circle(p - LIGHT * 1.5, 14.0, Color(0.87, 0.84, 0.77))
+		cb.circle(p, 6.0, Color(0.78, 0.74, 0.66))
 		return
 	var outer := walk_edges(p.y).y - p.x < (LevelBuild.MOSAIC_VIADUCT_OUTER + LevelBuild.MOSAIC_VIADUCT_INNER) * 0.5
 	var sh := Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22)
@@ -3320,8 +3331,17 @@ func _draw_mosaic(vt: float, vb: float) -> void:
 			var e := walk_edges(hy + 10.0)
 			var f := smoothstep(0.0, 1.0, clampf(minf(hy - (h1 - fade), (h0 + fade) - hy) / (fade * 2.0), 0.0, 1.0))
 			if f > 0.01:
-				b3.rect(Rect2(e.x, hy, e.y - e.x, 20.0), Color(0.10, 0.08, 0.06, 0.16 * f))
+				b3.rect(Rect2(e.x, hy, e.y - e.x, 20.0), Color(0.10, 0.08, 0.06, 0.20 * f))
 			hy += 20.0
+		# Jujol's ceiling vault medallions: the celebrated trencadis sunbursts
+		# set into the ceiling domes between the columns, where Gaudi omitted columns
+		for mj: Vector2 in LevelBuild.MOSAIC_JUJOL_MEDALLIONS:
+			if mj.y > vt - 60.0 and mj.y < vb + 60.0:
+				b3.circle(mj + LIGHT * 6.0, 27.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+				b3.circle(mj, 25.0, Color(0.92, 0.90, 0.84))
+				_trencadis_disc(b3, mj, 21.0, int(absf(mj.x * 3.0 + mj.y)))
+				b3.circle(mj, 8.0, Color(0.96, 0.94, 0.88))
+				b3.circle(mj, 5.0, Color(0.86, 0.76, 0.28))
 	# the serpentine bench: the plaza's edges, finished in trencadis, its
 	# backrest along the outside and its shadow falling off it
 	var p0: float = LevelBuild.MOSAIC_PLAZA_Y0 + 40.0

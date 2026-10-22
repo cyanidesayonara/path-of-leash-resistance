@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - Doric columns for El Mosaic
+
+- El Mosaic's Hypostyle Hall now carries authentic fluted Doric stone columns, with twenty flutes catching light and shade, an abacus plinth and concentric stone moldings. The field of trencadís discs is gone from the column tops, so the hall reads as architecture rather than mosaic wallpaper.
+- Four celebrated Jujol trencadís ceiling medallions are set into the vaulted ceiling domes between the column rows under the plaza terrace, where Gaudí omitted columns.
+- The covered hypostyle hall floor has a deeper shaded interior tone.
+
 ## 2026-10-22 - No co-authors in the history
 
 - Five commits from 2026-10-20 and 2026-10-21 carried a `Co-authored-by: Cursor` trailer the local hook never saw. `main` was rewritten to drop it, with the same trees, authors and dates, and v1.62 moved to the cleaned commit.

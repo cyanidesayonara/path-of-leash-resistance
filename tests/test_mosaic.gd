@@ -65,6 +65,7 @@ func _run() -> void:
 		if p.y < LevelBuild.MOSAIC_HALL_Y0 and p.y > LevelBuild.MOSAIC_HALL_Y1:
 			lane = lane and absf(p.x - 640.0) > 50.0
 	_check(lane, "a lane left through the hall for the owner")
+	_check(LevelBuild.MOSAIC_JUJOL_MEDALLIONS.size() == 4, "Jujol ceiling medallions in the hall vaults")
 	# the plaza: wider than the hall, and its edges wave (the bench)
 	var hall: Vector2 = m.walk_edges(-2000.0)
 	var halves: Array[float] = []
