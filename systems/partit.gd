@@ -46,6 +46,16 @@ const ROOF_COLS: Array[Color] = [Color(0.72, 0.52, 0.42), Color(0.62, 0.60, 0.57
 	Color(0.66, 0.46, 0.38), Color(0.56, 0.55, 0.53)]
 const SKINS: Array[Color] = [Color(0.92, 0.76, 0.62), Color(0.62, 0.44, 0.32), Color(0.82, 0.64, 0.50), Color(0.45, 0.30, 0.22)]
 const HAIRS: Array[Color] = [Color(0.16, 0.12, 0.10), Color(0.42, 0.28, 0.16), Color(0.80, 0.66, 0.40), Color(0.62, 0.60, 0.58)]
+const TICKET_WHITE := Color(0.96, 0.95, 0.92)
+const TICKET_BAR := Color(0.18, 0.18, 0.20)
+const CAN_RED := Color(0.85, 0.22, 0.20)
+const CAN_SILVER := Color(0.78, 0.80, 0.84)
+const CAN_GOLD := Color(0.88, 0.74, 0.26)
+const CUP_PLASTIC := Color(0.92, 0.94, 0.96, 0.55)
+const SCANNER_GREEN := Color(0.20, 0.95, 0.45)
+const LED_RED := Color(0.95, 0.15, 0.15)
+const HAZARD_RED := Color(0.85, 0.18, 0.18)
+const HAZARD_WHITE := Color(0.95, 0.95, 0.95)
 
 # --- the corridor ------------------------------------------------------------
 const STREET_Y1 := -600.0      # the side street ends...
@@ -411,10 +421,69 @@ static func _draw_markings(m: Node2D, c: ShapeBatch, top: float, bot: float) -> 
 		for i in range(26):
 			var sp := CART.get_center() + Vector2(fmod(float(i) * 37.0, 120.0) - 20.0, fmod(float(i) * 53.0, 150.0) - 75.0)
 			c.circle(sp, 1.6, Color(0.14, 0.13, 0.12, 0.8))
+	_draw_matchday_litter(m, c, top, bot)
+	# matchday pedestrian directional stencils
+	if -1050.0 > top - 30.0 and -1050.0 < bot + 30.0:
+		var es: Vector2 = m.walk_edges(-1050.0)
+		var st_pos := Vector2(es.x + 42.0, -1050.0)
+		c.rect(Rect2(st_pos - Vector2(36.0, 8.0), Vector2(72.0, 16.0)), Color(0, 0, 0, 0.08))
+		letters(c, "ACCES ESTADI", st_pos, 7.5, LINE_WHITE.darkened(0.08), 1.6, 68.0)
+		c.line(st_pos + Vector2(0, -12.0), st_pos + Vector2(0, -18.0), LINE_WHITE.darkened(0.08), 2.0)
+		c.line(st_pos + Vector2(-4.0, -15.0), st_pos + Vector2(0, -19.0), LINE_WHITE.darkened(0.08), 2.0)
+		c.line(st_pos + Vector2(4.0, -15.0), st_pos + Vector2(0, -19.0), LINE_WHITE.darkened(0.08), 2.0)
+	if -3380.0 > top - 30.0 and -3380.0 < bot + 30.0:
+		var ec: Vector2 = m.walk_edges(-3380.0)
+		var st_pos2 := Vector2(ec.y - 120.0, -3380.0)
+		c.rect(Rect2(st_pos2 - Vector2(42.0, 8.0), Vector2(84.0, 16.0)), Color(0, 0, 0, 0.08))
+		letters(c, "PORTES 7-12", st_pos2, 8.0, Color(0.88, 0.78, 0.22, 0.85), 1.8, 80.0)
+		c.line(st_pos2 + Vector2(46.0, 0.0), st_pos2 + Vector2(56.0, 0.0), Color(0.88, 0.78, 0.22, 0.85), 2.0)
+		c.line(st_pos2 + Vector2(52.0, -4.0), st_pos2 + Vector2(56.0, 0.0), Color(0.88, 0.78, 0.22, 0.85), 2.0)
+		c.line(st_pos2 + Vector2(52.0, 4.0), st_pos2 + Vector2(56.0, 0.0), Color(0.88, 0.78, 0.22, 0.85), 2.0)
 
 
 # the steel crowd barriers: a top rail, the joints between sections, a foot
 # either side of each joint; a supporters' flag zip-tied on here and there
+static func _draw_matchday_litter(m: Node2D, c: ShapeBatch, top: float, bot: float) -> void:
+	var step := 55.0
+	var y := floorf(top / step) * step
+	while y < bot + step:
+		if y >= top and y <= bot and y < STREET_Y1 + 100.0:
+			var h := _h(y * 0.73, 17.4)
+			var e: Vector2 = m.walk_edges(y)
+			var sw := sidewalk(y)
+			if int(h) % 3 == 0:
+				var side_x := (e.x + 12.0 + fmod(h * 3.1, maxf(sw - 24.0, 8.0))) if int(h) % 2 == 0 else (e.y - 12.0 - fmod(h * 3.1, maxf(sw - 24.0, 8.0)))
+				var tr := Rect2(side_x, y, 6.0, 3.5)
+				c.rect(tr, TICKET_WHITE)
+				c.rect(Rect2(tr.position.x, tr.position.y, 2.0, tr.size.y), HOME_CLARET)
+				c.line(Vector2(tr.position.x + 3.0, tr.position.y + 1.0), Vector2(tr.position.x + 5.0, tr.position.y + 1.0), TICKET_BAR, 1.0)
+			if int(h * 2.3) % 7 == 2 and sw > 30.0:
+				var prog_x := (e.x + sw * 0.5) if int(h) % 2 == 0 else (e.y - sw * 0.5)
+				var pr := Rect2(prog_x - 4.0, y - 5.0, 8.0, 10.0)
+				c.rect(Rect2(pr.position + Vector2(1, 1), pr.size), Color(0, 0, 0, 0.15))
+				c.rect(Rect2(pr.position.x, pr.position.y, 4.0, pr.size.y), HOME_BLUE)
+				c.rect(Rect2(pr.position.x + 4.0, pr.position.y, 4.0, pr.size.y), HOME_CLARET)
+				_star(c, pr.get_center(), 2.0, STAR_WHITE)
+			if int(h * 4.1) % 5 == 1:
+				var can_x := (e.x + sw + 16.0 + fmod(h * 5.7, 30.0)) if int(h) % 2 == 0 else (e.y - sw - 16.0 - fmod(h * 5.7, 30.0))
+				var can_col: Color = [CAN_RED, CAN_SILVER, CAN_GOLD, HOME_BLUE][int(h) % 4]
+				var cr := Rect2(can_x, y, 4.5, 8.0)
+				c.rect(Rect2(cr.position + Vector2(1, 1), cr.size), Color(0, 0, 0, 0.12))
+				c.polygon(_rr(cr, 1.5), can_col)
+				c.rect(Rect2(cr.position.x + 1.0, cr.position.y + 1.5, cr.size.x - 2.0, 2.0), Color(0.20, 0.20, 0.22))
+			if int(h * 1.9) % 6 == 3:
+				var cup_x := (e.x + sw * 0.7) if int(h) % 2 == 1 else (e.y - sw * 0.7)
+				c.circle(Vector2(cup_x + 1.0, y + 1.0), 3.5, Color(0, 0, 0, 0.10))
+				c.circle(Vector2(cup_x, y), 3.5, CUP_PLASTIC)
+				c.circle(Vector2(cup_x, y), 2.2, Color(0.98, 0.98, 1.0, 0.8))
+			if int(h) % 4 == 1 and sw > 20.0:
+				var kx := e.x + sw if int(h) % 2 == 0 else e.y - sw
+				for s in range(5):
+					var sp := Vector2(kx + (float(s) * 2.5 - 5.0), y + fmod(float(s) * 3.7, 8.0))
+					c.circle(sp, 1.4, Color(0.16, 0.14, 0.12, 0.75))
+		y += step
+
+
 static func _draw_barriers(c: ShapeBatch, top: float, bot: float) -> void:
 	for run: Array in BARRIERS:
 		var x := float(run[0])
@@ -436,7 +505,19 @@ static func _draw_barriers(c: ShapeBatch, top: float, bot: float) -> void:
 			while by < y2 - 4.0:
 				c.line(Vector2(x - 3.5, by), Vector2(x + 3.5, by), STEEL.darkened(0.15), 1.2)
 				by += 5.0
+			# retroreflective hazard warning bands on top rail
+			c.line(Vector2(x - 3.5, y + 14.0), Vector2(x + 3.5, y + 18.0), HAZARD_RED, 2.0)
+			c.line(Vector2(x - 3.5, y + 20.0), Vector2(x + 3.5, y + 24.0), HAZARD_WHITE, 2.0)
+			# flat feet with heavy rubber stabilizing bases on key joins
 			c.line(Vector2(x - 12.0, y), Vector2(x + 12.0, y), Color(0.28, 0.30, 0.32), 4.0)
+			if k % 3 == 0:
+				c.rect(Rect2(x - 13.0, y - 3.5, 26.0, 7.0), Color(0.14, 0.14, 0.16))
+				c.rect(Rect2(x - 11.0, y - 2.0, 22.0, 4.0), Color(0.22, 0.22, 0.24))
+			# supporter stickers on barrier uprights
+			if k % 4 == 1:
+				var st_col := HOME_CLARET if k % 8 == 1 else Color(0.88, 0.74, 0.22)
+				c.rect(Rect2(x - 3.0, y + SECTION * 0.7, 6.0, 7.0), st_col)
+				c.rect(Rect2(x - 1.5, y + SECTION * 0.7 + 1.5, 3.0, 4.0), STAR_WHITE)
 			if k % 5 == 2:
 				_flag(c, Vector2(x + (8.0 if x < 640.0 else -8.0), y + SECTION * 0.5), 9.0, x < 640.0)
 			y = y2
@@ -609,6 +690,26 @@ static func _scarf_stall(c: ShapeBatch, r: Rect2) -> void:
 		c.rect(Rect2(rack_x - 14.0, hy + 2.0, 14.0, 1.5), STAR_WHITE)
 		hy += 9.0
 		k += 1
+	# knitted beanies and cash box on the table ends
+	var bx_table := table.position.y + 4.0
+	c.circle(Vector2(table.position.x + 6.0, bx_table), 4.5, HOME_BLUE)
+	c.circle(Vector2(table.position.x + 6.0, bx_table), 2.0, STAR_WHITE)
+	c.circle(Vector2(table.position.x + 20.0, bx_table), 4.5, HOME_CLARET)
+	c.circle(Vector2(table.position.x + 20.0, bx_table), 2.0, STAR_WHITE)
+	var cash := Rect2(table.position.x + 5.0, table.end.y - 14.0, 18.0, 10.0)
+	c.rect(Rect2(cash.position + Vector2(1, 1), cash.size), Color(0, 0, 0, 0.15))
+	c.rect(cash, Color(0.24, 0.26, 0.28))
+	c.rect(cash.grow(-1.5), Color(0.34, 0.36, 0.38))
+	c.circle(cash.get_center() + Vector2(-4, 0), 1.5, CAN_GOLD)
+	c.circle(cash.get_center() + Vector2(4, 0), 1.5, CAN_SILVER)
+	# stadium horns hanging from the rack
+	var hy2 := r.position.y + 12.0
+	while hy2 < r.end.y - 16.0:
+		var horn_col := HOME_CLARET if int(hy2) % 2 == 0 else HOME_BLUE
+		var hp := Vector2(rack_x - 16.0, hy2)
+		c.polygon(PackedVector2Array([hp, hp + Vector2(-10.0, -3.0), hp + Vector2(-10.0, 3.0)]), horn_col)
+		c.polygon(PackedVector2Array([hp + Vector2(-10.0, -4.5), hp + Vector2(-13.0, -5.5), hp + Vector2(-13.0, 5.5), hp + Vector2(-10.0, 4.5)]), horn_col.lightened(0.15))
+		hy2 += 22.0
 	# flags on poles at the front corners
 	for fy: float in [r.position.y + 4.0, r.end.y - 4.0]:
 		c.circle(Vector2(r.position.x + 2.0, fy), 2.5, Color(0.30, 0.30, 0.32))
@@ -631,6 +732,13 @@ static func _cart(c: ShapeBatch, r: Rect2) -> void:
 	for i in range(6):
 		var bp := Vector2(r.position.x + 12.0 + float(i % 3) * 13.0, r.end.y - 34.0 + float(i / 3) * 14.0)
 		c.polygon(_rr(Rect2(bp, Vector2(11.0, 12.0)), 2.0), Color(0.94, 0.78, 0.22) if i % 2 == 0 else Color(0.90, 0.36, 0.20))
+	# carton of bottled water with blue screwcaps
+	var water_box := Rect2(r.position.x + 4.0, r.position.y + 48.0, r.size.x - 8.0, 18.0)
+	c.rect(water_box, Color(0.78, 0.68, 0.52))
+	for w in range(8):
+		var wp := Vector2(water_box.position.x + 4.0 + float(w % 4) * 12.0, water_box.position.y + 5.0 + float(w / 4) * 8.0)
+		c.circle(wp, 2.5, Color(0.85, 0.92, 0.98, 0.7))
+		c.circle(wp, 1.3, Color(0.20, 0.50, 0.88))
 	# its seller, on the road side
 	person(c, CART_SELLER.get_center(), Vector2(-1, -0.3).normalized(), 6, Color(0.84, 0.80, 0.70))
 
@@ -649,10 +757,28 @@ static func _sausage_stand(c: ShapeBatch, r: Rect2) -> void:
 	c.rect(counter, Color(0.52, 0.30, 0.20))
 	var grill := Rect2(counter.position.x + 3.0, counter.position.y + 10.0, 12.0, counter.size.y - 20.0)
 	c.rect(grill, Color(0.12, 0.12, 0.13))
+	# glowing charcoal embers underneath the grill
+	c.rect(grill.grow(-1.0), Color(0.85, 0.28, 0.10, 0.45))
 	var sy := grill.position.y + 4.0
 	while sy < grill.end.y - 4.0:
 		c.line(Vector2(grill.position.x + 2.0, sy), Vector2(grill.end.x - 2.0, sy), Color(0.58, 0.26, 0.16), 3.5)
+		c.line(Vector2(grill.position.x + 3.0, sy - 1.0), Vector2(grill.end.x - 3.0, sy - 1.0), Color(0.96, 0.58, 0.20), 1.2)
 		sy += 7.0
+	# condiment squeeze bottles (mustard & ketchup) on counter shelf
+	var bot_y := counter.position.y + 4.0
+	c.polygon(_rr(Rect2(counter.position.x + 3.0, bot_y, 4.5, 7.0), 1.5), Color(0.92, 0.78, 0.14))
+	c.rect(Rect2(counter.position.x + 4.0, bot_y - 2.0, 2.5, 2.0), Color(0.96, 0.96, 0.96))
+	c.polygon(_rr(Rect2(counter.position.x + 9.5, bot_y, 4.5, 7.0), 1.5), Color(0.86, 0.20, 0.16))
+	c.rect(Rect2(counter.position.x + 10.5, bot_y - 2.0, 2.5, 2.0), Color(0.96, 0.96, 0.96))
+	# slatted crate of crusty baguette bread
+	var bread := Rect2(r.position.x + 2.0, r.end.y - 28.0, 14.0, 24.0)
+	c.rect(Rect2(bread.position + Vector2(1, 1), bread.size), Color(0, 0, 0, 0.16))
+	c.rect(bread, Color(0.52, 0.38, 0.24))
+	c.rect(bread.grow(-1.5), Color(0.66, 0.50, 0.32))
+	for bi in range(3):
+		var by2 := bread.position.y + 4.0 + float(bi) * 6.5
+		c.polygon(_rr(Rect2(bread.position.x + 2.5, by2, 9.0, 4.5), 2.0), Color(0.88, 0.68, 0.36))
+		c.line(Vector2(bread.position.x + 4.0, by2 + 2.0), Vector2(bread.position.x + 10.0, by2 + 2.0), Color(0.62, 0.44, 0.22), 1.0)
 	# the stripe along the side, home colors
 	c.rect(Rect2(r.end.x - 6.0, r.position.y + 4.0, 4.0, r.size.y - 8.0), HOME_CLARET)
 	c.rect(Rect2(r.end.x - 10.0, r.position.y + 4.0, 4.0, r.size.y - 8.0), HOME_BLUE)
@@ -667,10 +793,50 @@ static func _deck(c: ShapeBatch, r: Rect2) -> void:
 		c.line(Vector2(r.position.x, y), Vector2(r.end.x, y), Color(0.46, 0.32, 0.20), 1.5)
 		y += 10.0
 	c.line(Vector2(r.end.x - 1.0, r.position.y), Vector2(r.end.x - 1.0, r.end.y), Color(0.24, 0.24, 0.26), 2.5)
+	c.line(Vector2(r.end.x - 2.0, r.position.y), Vector2(r.end.x - 2.0, r.end.y), Color(0.70, 0.58, 0.38), 1.2)
 	for py: float in [r.position.y, r.end.y - 22.0]:
 		c.rect(Rect2(r.position.x + 4.0, py, r.size.x - 8.0, 22.0), Color(0.44, 0.40, 0.36))
 		for k in range(4):
-			c.circle(Vector2(r.position.x + 12.0 + float(k) * 14.0, py + 11.0), 7.0, Color(0.30, 0.48, 0.26).lightened(float(k % 2) * 0.08))
+			var gp := Vector2(r.position.x + 12.0 + float(k) * 14.0, py + 11.0)
+			c.circle(gp, 7.0, Color(0.30, 0.48, 0.26).lightened(float(k % 2) * 0.08))
+			c.circle(gp + Vector2(-2.0, -1.0), 2.8, Color(0.88, 0.20, 0.24))
+			c.circle(gp + Vector2(2.5, 1.5), 2.2, Color(0.92, 0.28, 0.30))
+	# dropped peanut shells and swept paper napkins between deck planks
+	for i in range(12):
+		var dx := r.position.x + 8.0 + fmod(float(i) * 19.3, r.size.x - 16.0)
+		var dy := r.position.y + 14.0 + fmod(float(i) * 23.7, r.size.y - 28.0)
+		if i % 3 == 0:
+			c.rect(Rect2(dx, dy, 3.5, 3.0), Color(0.94, 0.94, 0.92))
+		else:
+			c.circle(Vector2(dx, dy), 1.4, Color(0.38, 0.26, 0.16))
+	# tableware dressing on deck tables: vermouth glasses, olive bowls, napkin holders
+	for tp: Vector2 in [Vector2(362.0, -1850.0), Vector2(362.0, -1960.0), Vector2(362.0, -2060.0)]:
+		c.circle(tp + Vector2(6.5, -3.0), 4.2, Color(0.66, 0.38, 0.22))
+		c.circle(tp + Vector2(6.5, -3.0), 3.2, Color(0.78, 0.48, 0.28))
+		c.circle(tp + Vector2(5.5, -3.5), 1.5, Color(0.35, 0.48, 0.20))
+		c.circle(tp + Vector2(7.5, -2.5), 1.5, Color(0.40, 0.52, 0.22))
+		c.circle(tp + Vector2(-6.0, -4.0), 3.2, Color(0.90, 0.90, 0.92, 0.5))
+		c.circle(tp + Vector2(-6.0, -4.0), 2.4, Color(0.65, 0.15, 0.15))
+		c.circle(tp + Vector2(-5.5, -4.5), 1.2, Color(0.95, 0.65, 0.10))
+		c.rect(Rect2(tp + Vector2(-3.0, 5.0), Vector2(6.0, 4.0)), Color(0.76, 0.78, 0.80))
+		c.rect(Rect2(tp + Vector2(-1.5, 4.0), Vector2(3.0, 2.0)), Color(0.96, 0.96, 0.96))
+	# propped chalkboard menu leaning outside the bar
+	var chalk_x := r.position.x - 8.0
+	var chalk_y := -1830.0
+	c.rect(Rect2(chalk_x - 1.0, chalk_y + 1.0, 8.0, 24.0), Color(0, 0, 0, 0.16))
+	c.rect(Rect2(chalk_x, chalk_y, 7.0, 22.0), Color(0.42, 0.30, 0.18))
+	c.rect(Rect2(chalk_x + 1.0, chalk_y + 1.5, 5.0, 19.0), Color(0.14, 0.16, 0.18))
+	c.line(Vector2(chalk_x + 2.0, chalk_y + 4.0), Vector2(chalk_x + 5.0, chalk_y + 4.0), Color(0.90, 0.90, 0.86), 1.0)
+	c.line(Vector2(chalk_x + 2.0, chalk_y + 8.0), Vector2(chalk_x + 5.0, chalk_y + 8.0), Color(0.90, 0.90, 0.86), 1.0)
+	c.line(Vector2(chalk_x + 2.0, chalk_y + 12.0), Vector2(chalk_x + 5.0, chalk_y + 12.0), Color(0.90, 0.90, 0.86), 1.0)
+	# plastic crate of empty soda bottles beside the service entrance
+	var crate_r := Rect2(r.position.x - 14.0, -2080.0, 12.0, 16.0)
+	c.rect(Rect2(crate_r.position + Vector2(1, 1), crate_r.size), Color(0, 0, 0, 0.14))
+	c.rect(crate_r, Color(0.85, 0.24, 0.20))
+	c.rect(crate_r.grow(-1.5), Color(0.68, 0.16, 0.14))
+	for bi in range(6):
+		var bp := Vector2(crate_r.position.x + 3.0 + float(bi % 2) * 5.5, crate_r.position.y + 3.0 + float(bi / 2) * 5.0)
+		c.circle(bp, 1.8, Color(0.24, 0.44, 0.30))
 
 
 static func _taquilles(c: ShapeBatch, r: Rect2) -> void:
@@ -683,11 +849,16 @@ static func _taquilles(c: ShapeBatch, r: Rect2) -> void:
 		var wy := r.position.y + 26.0 + float(k) * 50.0
 		c.rect(Rect2(r.end.x - 6.0, wy, 6.0, 26.0), Color(0.22, 0.30, 0.38))
 		c.circle(Vector2(r.end.x - 12.0, wy + 13.0), 5.0, SKINS[k % SKINS.size()])
+		c.circle(Vector2(r.end.x - 3.0, wy + 13.0), 1.8, Color(0.70, 0.72, 0.75))
+		c.line(Vector2(r.end.x - 5.0, wy + 4.0), Vector2(r.end.x - 1.0, wy + 10.0), Color(1.0, 1.0, 1.0, 0.45), 1.2)
 		var px := r.end.x + 26.0
 		c.circle(Vector2(px, wy - 4.0), 3.0, Color(0.20, 0.20, 0.22))
 		c.circle(Vector2(px, wy + 34.0), 3.0, Color(0.20, 0.20, 0.22))
 		c.line(Vector2(px, wy - 4.0), Vector2(px, wy + 34.0), HOME_CLARET, 2.0)
 	c.rect(Rect2(r.position.x, r.position.y, r.size.x, 4.0), Color(0.80, 0.78, 0.74))
+	var led_r := Rect2(r.end.x - 8.0, r.position.y + 6.0, 6.0, r.size.y - 12.0)
+	c.rect(led_r, Color(0.12, 0.12, 0.14))
+	letters(c, "ENTRADES EXHAURIDES", Vector2(led_r.get_center().x, led_r.get_center().y), 6.5, LED_RED, 1.4, r.size.y - 16.0)
 
 
 static func _drum_stand(c: ShapeBatch, r: Rect2) -> void:
@@ -912,17 +1083,36 @@ static func _draw_stadium_side(m: Node2D, c: ShapeBatch, top: float, bot: float)
 				var a := float(k) * TAU / 6.0
 				c.line(tc + Vector2.from_angle(a) * 12.0, tc + Vector2.from_angle(a + 0.6) * 27.0, Color(0.46, 0.44, 0.42), 2.5)
 		ty += 300.0
+	# reinforced concrete buttresses along the stadium wall between gates
+	var by3 := floorf(top / 90.0) * 90.0
+	while by3 < bot:
+		if by3 < STADIUM_Y0 - 40.0 and by3 > m.GATE_Y + 40.0:
+			var bex: float = m.walk_edges(by3).y
+			var buttress := Rect2(bex - 8.0, by3 - 12.0, 16.0, 24.0)
+			c.rect(Rect2(buttress.position + Vector2(2, 3), buttress.size), Color(0, 0, 0, 0.16))
+			c.polygon(_rr(buttress, 3.0), Color(0.66, 0.64, 0.62))
+			c.polygon(_rr(Rect2(buttress.position, Vector2(buttress.size.x - 2.0, buttress.size.y)), 3.0), Color(0.78, 0.76, 0.73))
+		by3 += 90.0
 	# the gates: an opening in the wall, the turnstiles' row, the number
 	for i in range(GATE_YS.size()):
 		var gy: float = GATE_YS[i]
 		if gy < top - 60.0 or gy > bot + 60.0:
 			continue
 		var ex3: float = m.walk_edges(gy).y
+		# yellow diagonal pedestrian queue guide hatchings between the lane rails
+		var qy := gy - 26.0
+		while qy < gy + 26.0:
+			c.line(Vector2(890.0 - LANE.x + 4.0, qy), Vector2(890.0 - 4.0, qy + 10.0), Color(0.88, 0.76, 0.22, 0.5), 1.8)
+			qy += 12.0
 		c.rect(Rect2(ex3, gy - 30.0, 20.0, 60.0), Color(0.14, 0.14, 0.16))
 		for k in range(4):
-			c.rect(Rect2(ex3 + 4.0, gy - 26.0 + float(k) * 14.0, 10.0, 4.0), STEEL)
+			var ty2 := gy - 26.0 + float(k) * 14.0
+			c.rect(Rect2(ex3 + 4.0, ty2, 10.0, 4.0), STEEL)
+			c.rect(Rect2(ex3 + 2.0, ty2 + 1.0, 3.0, 2.0), Color(0.12, 0.12, 0.14))
+			c.circle(Vector2(ex3 + 3.5, ty2 + 2.0), 1.2, SCANNER_GREEN)
 		c.rect(Rect2(ex3 + 30.0, gy - 14.0, 52.0, 28.0), HOME_CLARET)
 		letters(c, "PORTA " + GATE_NUMS[i], Vector2(ex3 + 56.0, gy + 6.0), 10.0, STAR_WHITE, 2.0, 48.0)
+		c.polygon(PackedVector2Array([Vector2(ex3 + 18.0, gy), Vector2(ex3 + 24.0, gy - 4.0), Vector2(ex3 + 24.0, gy + 4.0)]), SCANNER_GREEN)
 	var ly := -3960.0
 	if ly > top - 60.0 and ly < bot + 60.0:
 		var lx: float = m.walk_edges(ly).y + 180.0
@@ -1003,6 +1193,18 @@ static func draw_police_van(m: Node2D, wc: ShapeBatch, v: Vector2) -> void:
 # and the bar's name boards.
 static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 	var c := ShapeBatch.new(ci)
+	# floodlight pylon tower lattice gantries overhead
+	for f: Vector2 in FLOODS:
+		c.circle(f + LIGHT * 20.0, 22.0, Color(0, 0, 0, 0.18))
+		for s in range(4):
+			var a := float(s) * TAU / 4.0
+			c.line(f, f + Vector2.from_angle(a) * 20.0, Color(0.40, 0.42, 0.44), 2.5)
+			c.line(f + Vector2.from_angle(a) * 20.0, f + Vector2.from_angle(a + PI * 0.5) * 20.0, Color(0.48, 0.50, 0.52), 2.0)
+		c.rect(Rect2(f - Vector2(16, 8), Vector2(32, 16)), Color(0.30, 0.32, 0.34))
+		for row in range(2):
+			for col in range(4):
+				var lp := f + Vector2(-12.0 + float(col) * 8.0, -4.0 + float(row) * 8.0)
+				c.circle(lp, 2.8, Color(0.95, 0.96, 0.98))
 	# balconies along both fronts, from the start to the stadium
 	var y: float = m.START_Y - 40.0
 	var k := 0
@@ -1164,6 +1366,13 @@ static func _draw_stadium_bowl(_m: Node2D, c: ShapeBatch, r: Rect2) -> void:
 			var t1 := lerpf(a0, a1, float(i + 1) / float(steps))
 			c.polygon(PackedVector2Array([ctr + Vector2.from_angle(t0) * 940.0, ctr + Vector2.from_angle(t1) * 940.0,
 				ctr + Vector2.from_angle(t1) * 700.0, ctr + Vector2.from_angle(t0) * 700.0]), HOME_BLUE.darkened(0.2))
+	# concrete cantilever rib buttresses along the outer bowl perimeter
+	for i in range(steps + 1):
+		var t := lerpf(a0, a1, float(i) / float(steps))
+		var pt0 := ctr + Vector2.from_angle(t) * 1272.0
+		var pt1 := ctr + Vector2.from_angle(t) * 1330.0
+		c.line(pt0, pt1, Color(0.52, 0.50, 0.48), 4.0)
+		c.line(pt0 + LIGHT * 3.0, pt1 + LIGHT * 3.0, SHADOW, 2.5)
 	# the roof's ribs
 	for i in range(0, steps + 1, 2):
 		var t := lerpf(a0, a1, float(i) / float(steps))

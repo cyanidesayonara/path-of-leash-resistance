@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-10-23 - Dia de Partit matchday visual polish: detritus, bar terrace tableware, security barriers, and stadium concourse
+
+- Matchday ground detritus and directional stencils: scattered dropped ticket stubs with claret margins, folded match programmes with white stars, crushed beverage cans, plastic cups, and swept sunflower seed shell drifts along sidewalks and kerbs. White painted sidewalk stencils ("ACCES ESTADI ^") and concourse transition stencils ("PORTES 7-12 ->") direct fans toward the stadium gates.
+- Bar La Penya terrace dressing: timber deck features perimeter railings, lush flowering geraniums in planters, vermouth glasses with orange slices, terracotta dishes of green olives, metal napkin dispensers, swept peanut shells, a propped chalkboard menu ("MENU"), and empty soda bottle crates by the service entrance.
+- Street vendors and kiosks: the scarf stall gains knitted pom-pom beanies, an euro change cash box, and hanging stadium horns; the seeds and drinks cart features bottled water cartons with blue caps; the sausage kiosk carries condiment squeeze dispensers (mustard and ketchup), a slatted crate of crusty baguettes, and glowing charcoal embers underneath the grill grates.
+- Crowd security and barriers: mobile steel barriers carry alternating red/white retroreflective hazard stripes, vulcanized heavy rubber base stabilizers, and supporter penya stickers.
+- Stadium concourse and gates: gate turnstile entry lanes feature yellow diagonal pedestrian queue guide hatchings, optical barcode scanners with luminous green reader LEDs, overhead gate portals with green direction arrows, reinforced concrete wall buttresses, and an illuminated red LED sellout banner ("ENTRADES EXHAURIDES") over the ticket windows. Plaça del Gol freedom space and bowl perimeter feature concrete cantilever rib buttresses and towering floodlight pylon lattice gantries overhead.
+
 ## 2026-10-22 - Montjuïc botanical terraces, Font Màgica brass rings, and panoramic mirador
 
 - The Font Màgica's grand basin now features concentric brass nozzle manifolds beneath the surface, submerged aquatic illumination projectors radiating turquoise and amber underwater glow, and water ripple expansion rings.
