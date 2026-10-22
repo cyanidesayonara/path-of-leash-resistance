@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - El Bosc footbridge masonry, river pebbles, waymarkers and mushrooms
+
+- The timber footbridge across the stream in El Bosc now features stone abutments at each bank edge, shadow cast under the bridge span, batched plank grooves with iron bolt heads, and lit handrail post caps.
+- River shores along the stream now carry variegated rounded river pebbles and stones (granite, sandstone, river slate, quartz) with water lap foam rings.
+- Collserola Natural Park trail marker posts (*fites de sender*) with authentic PR white and green trail blazes now stand at regular intervals along the trail edge.
+- The trail margins through the pine woods feature wild saffron milk cap mushroom clusters (*pinetells / rovellons*) and stone pine cones nestled in the needle litter.
+
 ## 2026-10-22 - La Castanyada autumn delicacies, pumpkins, and sardana ring
 
 - The castanyera's roaster cart in the plaça now carries an authentic baked sweet potato (*moniato*) warming tray with wisps of rising steam, a rustic platter of pine-nut encrusted *panellets de pinyons*, and a chalkboard slate menu (*la pissarra*) propped near the cart shaft.
