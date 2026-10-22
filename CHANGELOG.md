@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - La Castanyada autumn delicacies, pumpkins, and sardana ring
+
+- The castanyera's roaster cart in the plaça now carries an authentic baked sweet potato (*moniato*) warming tray with wisps of rising steam, a rustic platter of pine-nut encrusted *panellets de pinyons*, and a chalkboard slate menu (*la pissarra*) propped near the cart shaft.
+- Carved festival jack-o'-lantern pumpkins (*carbasses de Tots Sants*) with flickering warm candle glow now flank the band stage, the roaster cart, the off-leash yard gate, and residential doorsteps along the approach alley.
+- Crisp autumn fallen leaf drifts (*fulles seques*) in golden ochre, rust, and burnt sienna gather along the alley walls and gutters.
+- The wooden dance floor in the off-leash festival yard now features the concentric braided rope ring for the sardana circle dance, complete with dancers' coats and bags piled in the center.
+
 ## 2026-10-22 - L'Estació platform tactile paving and travelator handrail grinds
 
 - L'Estació's moving walkway now carries grindable handrails along both glass balustrades ("HANDRAIL"), allowing full-length travelator grinds end-to-end.

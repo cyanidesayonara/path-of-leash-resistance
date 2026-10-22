@@ -3559,6 +3559,50 @@ func _draw_neteja(vt: float, vb: float) -> void:
 	b.flush(_wc)
 
 
+# One carved festival pumpkin (carbassa de Tots Sants) with candle glow
+static func _draw_cast_pumpkin(b: ShapeBatch, p: Vector2, seed: float, t: float) -> void:
+	var flk := 0.82 + 0.18 * sin(t * 11.0 + seed * 6.28)
+	# warm candle light pool on the flagstones
+	b.circle(p + Vector2(0.0, 3.0), 28.0, Color(1.0, 0.64, 0.18, 0.11 * flk))
+	b.circle(p + Vector2(0.0, 3.0), 14.0, Color(1.0, 0.78, 0.32, 0.12 * flk))
+	# drop shadow
+	b.circle(p + LIGHT * 3.5, 9.5, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.28))
+	# ribbed pumpkin body
+	var pcol := Color(0.92, 0.44, 0.10)
+	var pshd := Color(0.80, 0.34, 0.06)
+	b.circle(p + Vector2(-5.0, 0.0), 7.5, pshd)
+	b.circle(p + Vector2(5.0, 0.0), 7.5, pshd)
+	b.circle(p, 8.5, pcol)
+	b.circle(p + Vector2(-1.5, -2.0), 3.0, pcol.lightened(0.2))
+	# curled green stem
+	b.line(p + Vector2(0.0, -7.0), p + Vector2(1.5, -11.0), Color(0.32, 0.46, 0.20), 2.2)
+	# carved glowing face: triangular eyes and jagged grin
+	var eye_col := Color(1.0, 0.92, 0.48, flk)
+	b.polygon(PackedVector2Array([p + Vector2(-4.0, -1.0), p + Vector2(-2.0, -4.0), p + Vector2(-1.0, -1.0)]), eye_col)
+	b.polygon(PackedVector2Array([p + Vector2(1.0, -1.0), p + Vector2(2.0, -4.0), p + Vector2(4.0, -1.0)]), eye_col)
+	b.line(p + Vector2(-4.0, 2.5), p + Vector2(-1.0, 4.0), eye_col, 1.8)
+	b.line(p + Vector2(-1.0, 4.0), p + Vector2(1.0, 2.5), eye_col, 1.8)
+	b.line(p + Vector2(1.0, 2.5), p + Vector2(4.0, 4.0), eye_col, 1.8)
+
+
+# Drifts of crisp autumn leaves (fulles seques) gathered in corners and gutters
+static func _draw_autumn_leaves(b: ShapeBatch, at: Vector2, seed: float) -> void:
+	var leaf_cols: Array[Color] = [
+		Color(0.84, 0.58, 0.18, 0.85),
+		Color(0.72, 0.32, 0.12, 0.85),
+		Color(0.56, 0.24, 0.10, 0.85),
+		Color(0.68, 0.54, 0.22, 0.85),
+	]
+	for i: int in range(6):
+		var h := fmod(seed * 13.7 + float(i) * 0.41, 1.0)
+		var ang := h * TAU
+		var dist := 2.0 + fmod(seed * 7.3 + float(i) * 2.9, 8.0)
+		var lp := at + Vector2(cos(ang), sin(ang)) * dist
+		var col: Color = leaf_cols[(int(seed * 10.0) + i) % leaf_cols.size()]
+		b.line(lp, lp + Vector2(cos(ang + 0.8) * 4.5, sin(ang + 0.8) * 3.0), col, 2.2)
+		b.circle(lp, 1.0, col.darkened(0.2))
+
+
 func _draw_castanyada(vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
 	var t := AnimClock.msec() / 1000.0
@@ -3622,6 +3666,46 @@ func _draw_castanyada(vt: float, vb: float) -> void:
 		for k in range(4):
 			var cp := rc + Vector2(50.0 + float(k % 2) * 14.0, 4.0 + float(k / 2) * 20.0)
 			b.polygon(PackedVector2Array([cp + Vector2(-5, -7), cp + Vector2(5, -7), cp + Vector2(0, 8)]), Color(0.92, 0.88, 0.78))
+
+		# sweet potato (moniato) roaster pan: warm metal tray with baked sweet potatoes
+		var mbox := Rect2(rc.x + 8.0, rc.y - 28.0, 32.0, 20.0)
+		b.rect(Rect2(mbox.position + LIGHT * 3.0, mbox.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+		b.rect(mbox, Color(0.24, 0.22, 0.22))
+		b.rect(mbox.grow(-1.5), Color(0.78, 0.70, 0.54))
+		for mi: int in range(3):
+			var my := mbox.position.y + 4.0 + float(mi) * 5.5
+			var mx := mbox.position.x + 5.0 + float(mi % 2) * 2.0
+			b.line(Vector2(mx, my), Vector2(mx + 20.0, my), Color(0.84, 0.44, 0.16), 4.2)
+			b.line(Vector2(mx + 4.0, my), Vector2(mx + 16.0, my), Color(0.42, 0.18, 0.08), 2.0)
+			b.circle(Vector2(mx + 20.0, my), 2.1, Color(0.84, 0.44, 0.16))
+			b.circle(Vector2(mx, my), 2.1, Color(0.84, 0.44, 0.16))
+			var sph := fmod(t * 0.5 + float(mi) * 0.33, 1.0)
+			b.line(Vector2(mx + 10.0 + sin(t * 2.0 + float(mi)) * 2.0, my - 2.0 - sph * 12.0),
+				Vector2(mx + 11.0 + sin(t * 2.0 + float(mi)) * 3.0, my - 6.0 - sph * 16.0),
+				Color(0.94, 0.90, 0.85, 0.35 * (1.0 - sph)), 1.5)
+
+		# tray of panellets de pinyons (marzipan sweets rolled in roasted pine nuts)
+		var pbox := Rect2(rc.x + 44.0, rc.y - 28.0, 26.0, 20.0)
+		b.rect(Rect2(pbox.position + LIGHT * 3.0, pbox.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+		b.rect(pbox, Color(0.38, 0.26, 0.16))
+		b.rect(pbox.grow(-1.5), Color(0.86, 0.82, 0.74))
+		for pi: int in range(6):
+			var px := pbox.position.x + 5.0 + float(pi % 3) * 7.5
+			var py2 := pbox.position.y + 5.0 + float(pi / 3) * 8.5
+			b.circle(Vector2(px, py2), 3.2, Color(0.82, 0.64, 0.30))
+			b.circle(Vector2(px - 1.0, py2 - 1.0), 1.2, Color(0.96, 0.90, 0.68))
+			b.circle(Vector2(px + 1.2, py2 + 0.8), 1.0, Color(0.56, 0.36, 0.16))
+
+		# blackboard menu (la pissarra) propped near the cart shaft
+		var bb := Rect2(rc.x - 72.0, rr.end.y + 4.0, 28.0, 34.0)
+		b.rect(Rect2(bb.position + LIGHT * 4.0, bb.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.3))
+		b.rect(bb, Color(0.44, 0.28, 0.16))
+		b.rect(bb.grow(-2.0), Color(0.16, 0.18, 0.18))
+		b.line(Vector2(bb.position.x + 4.0, bb.position.y + 7.0), Vector2(bb.end.x - 4.0, bb.position.y + 7.0), Color(0.94, 0.94, 0.96, 0.8), 1.6)
+		b.line(Vector2(bb.position.x + 5.0, bb.position.y + 13.0), Vector2(bb.end.x - 7.0, bb.position.y + 13.0), Color(0.90, 0.90, 0.92, 0.65), 1.2)
+		b.line(Vector2(bb.position.x + 5.0, bb.position.y + 19.0), Vector2(bb.end.x - 6.0, bb.position.y + 19.0), Color(0.90, 0.90, 0.92, 0.65), 1.2)
+		b.line(Vector2(bb.position.x + 5.0, bb.position.y + 25.0), Vector2(bb.end.x - 9.0, bb.position.y + 25.0), Color(0.90, 0.90, 0.92, 0.65), 1.2)
+
 		# a lamp at each front corner
 		for lx: float in [rr.position.x + 8.0, rr.end.x - 8.0]:
 			b.circle(Vector2(lx, rr.end.y - 6.0), 14.0, Color(1.0, 0.82, 0.46, 0.25))
@@ -3642,7 +3726,12 @@ func _draw_castanyada(vt: float, vb: float) -> void:
 			var ccol: Color = [Color(0.96, 0.30, 0.36), Color(0.98, 0.84, 0.28), Color(0.36, 0.64, 0.92),
 				Color(0.52, 0.80, 0.40), Color(0.94, 0.94, 0.96)][k % 5]
 			b.rect(Rect2(cp2, Vector2(4.0, 3.0)), ccol)
-	# chestnut shells and confetti scattered all along the street
+		# carved festival pumpkins flanking the stage and the roaster cart
+		_draw_cast_pumpkin(b, Vector2(st.position.x + 18.0, st.end.y + 12.0), 3.1, t)
+		_draw_cast_pumpkin(b, Vector2(st.end.x - 18.0, st.end.y + 12.0), 4.2, t)
+		_draw_cast_pumpkin(b, Vector2(rc.x + 58.0, rr.end.y + 18.0), 5.3, t)
+		_draw_cast_pumpkin(b, Vector2(rc.x - 84.0, rr.end.y + 16.0), 6.4, t)
+	# chestnut shells, autumn fallen leaves and confetti scattered all along the street
 	var cy := floorf((vt - 20.0) / 90.0) * 90.0
 	while cy < vb + 20.0:
 		var e := walk_edges(cy)
@@ -3651,6 +3740,14 @@ func _draw_castanyada(vt: float, vb: float) -> void:
 		b.circle(Vector2(cx, cy), 2.4, Color(0.40, 0.22, 0.12, 0.8))
 		var cc: Color = [Color(0.96, 0.30, 0.36), Color(0.98, 0.84, 0.28), Color(0.36, 0.64, 0.92), Color(0.52, 0.80, 0.40)][int(absf(cy) / 90.0) % 4]
 		b.rect(Rect2(lerpf(e.x + 20.0, e.y - 20.0, fmod(n * 7.3, 1.0)), cy + 30.0, 4.0, 3.0), cc)
+		# fallen leaf drifts along walls
+		_draw_autumn_leaves(b, Vector2(e.x + 8.0, cy + 15.0), absf(cy) * 0.05)
+		_draw_autumn_leaves(b, Vector2(e.y - 8.0, cy + 55.0), absf(cy) * 0.07 + 3.0)
+		# doorstep jack-o'-lanterns along the street
+		if int(absf(cy) / 90.0) % 3 == 0:
+			var west_side: bool = (int(absf(cy) / 90.0) % 6 == 0)
+			var px: float = e.x - 12.0 if west_side else e.y + 12.0
+			_draw_cast_pumpkin(b, Vector2(px, cy + 45.0), absf(cy) * 0.03, t)
 		cy += 90.0
 	# the lanterns' glow on the ground under each string
 	for ly: float in LevelBuild.CAST_LANTERN_YS:
@@ -7015,6 +7112,19 @@ func _draw_castanyada_yard(c: Object, r: Rect2) -> void:
 		b.line(Vector2(bx, df.position.y), Vector2(bx, df.end.y), Color(0.40, 0.28, 0.18), 2.0)
 		bx += 20.0
 	b.line(df.position, Vector2(df.end.x, df.position.y), Color(0.64, 0.48, 0.32), 3.0)
+	# concentric sardana dance ring marked on the wood
+	var df_c := df.get_center()
+	b.circle(df_c, 58.0, Color(0.38, 0.26, 0.16))
+	b.circle(df_c, 56.0, Color(0.50, 0.36, 0.24))
+	b.circle(df_c, 54.0, Color(0.86, 0.78, 0.62, 0.7))
+	b.circle(df_c, 52.0, Color(0.50, 0.36, 0.24))
+	b.circle(df_c, 24.0, Color(0.86, 0.78, 0.62, 0.45))
+	# dancers' coats and bags piled in the center of the sardana circle
+	b.circle(df_c + Vector2(-4.0, 2.0), 7.0, Color(0.26, 0.34, 0.42))
+	b.circle(df_c + Vector2(3.0, -2.0), 6.0, Color(0.68, 0.24, 0.20))
+	b.circle(df_c + Vector2(1.0, 4.0), 5.5, Color(0.46, 0.38, 0.26))
+	_draw_cast_pumpkin(b, Vector2(r.position.x + 24.0, GATE_Y - 24.0), 1.0, AnimClock.msec() / 1000.0)
+	_draw_cast_pumpkin(b, Vector2(r.end.x - 24.0, GATE_Y - 24.0), 2.0, AnimClock.msec() / 1000.0)
 	# the lanterns' light on the ground under each string
 	for ly: float in cast_yard_strings():
 		var lx := r.position.x + 60.0
