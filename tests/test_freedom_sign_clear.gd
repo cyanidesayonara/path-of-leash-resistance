@@ -4,7 +4,7 @@ extends SceneTree
 # fence. Tree crowns and the long sniffable props must not cover those words.
 
 const LEVELS := ["street", "park", "beach", "rain", "market", "oldtown", "trail", "station",
-	"site", "spook", "scrap", "guell", "barri", "neteja", "montjuic", "partit"]
+	"besos", "site", "spook", "scrap", "guell", "barri", "neteja", "montjuic", "partit"]
 const SIGN_W := 520.0
 const SIGN_TOP := 58.0
 const SIGN_BOTTOM := 16.0
