@@ -6062,30 +6062,47 @@ func _draw_trail_stream(vt: float, vb: float) -> void:
 		var rx := fmod(float(k) * 127.0 + wt * speed, 2100.0) - 400.0
 		var ry := sy + lane * half * 0.5 + sin(rx * 0.02) * 2.0
 		wb.line(Vector2(rx, ry), Vector2(rx + 26.0, ry + 1.0), Color(1, 1, 1, 0.18 if lane == 0.0 else 0.12), 2.0)
-	wb.flush(_wc)
-	# stones along the banks
-	for k in range(10):
-		var stx := -200.0 + float(k) * 190.0 + float(k % 3) * 23.0
-		var sty := sy + (half + 4.0) * (1.0 if k % 2 == 0 else -1.0)
-		_wc.draw_circle(Vector2(stx, sty), 6.0 + float(k % 3) * 2.0, Color(0.52, 0.50, 0.46))
+	# variegated river pebbles and stones along both shores
+	var pebble_cols: Array[Color] = [
+		Color(0.55, 0.52, 0.48),
+		Color(0.66, 0.58, 0.46),
+		Color(0.38, 0.38, 0.40),
+		Color(0.80, 0.82, 0.82),
+	]
+	for k: int in range(16):
+		var stx := -200.0 + float(k) * 120.0 + float(k % 3) * 19.0
+		var sty := sy + (half + 4.0) * (1.0 if k % 2 == 0 else -1.0) + sin(float(k) * 1.8) * 3.0
+		var srad := 4.5 + float(k % 4) * 1.5
+		var scol: Color = pebble_cols[k % pebble_cols.size()]
+		wb.circle(Vector2(stx, sty), srad + 2.0, Color(0.90, 0.95, 0.96, 0.20))
+		wb.circle(Vector2(stx, sty), srad, scol)
+		wb.circle(Vector2(stx - 1.2, sty - 1.2), srad * 0.45, scol.lightened(0.25))
+
 	# the footbridge: planks across the trail's width, a rail each side
 	var e := walk_edges(sy)
 	var bh: float = LevelBuild.TRAIL_BRIDGE_HALF
 	var deck := Rect2(e.x - 18.0, sy - bh, e.y - e.x + 36.0, bh * 2.0)
-	_wc.draw_rect(Rect2(deck.position + LIGHT * 8.0, deck.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
-	_wc.draw_rect(deck, Color(0.55, 0.42, 0.28))
+	wb.rect(Rect2(deck.position + LIGHT * 8.0, deck.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+	wb.rect(Rect2(deck.position.x + 8.0, sy - half, deck.size.x - 16.0, half * 2.0), Color(0.12, 0.20, 0.22, 0.45))
+	wb.rect(Rect2(deck.position.x - 4.0, sy - bh - 2.0, 10.0, bh * 2.0 + 4.0), Color(0.42, 0.38, 0.32))
+	wb.rect(Rect2(deck.end.x - 6.0, sy - bh - 2.0, 10.0, bh * 2.0 + 4.0), Color(0.42, 0.38, 0.32))
+	wb.rect(deck, Color(0.55, 0.42, 0.28))
 	var px := deck.position.x
 	while px < deck.end.x:
-		_wc.draw_line(Vector2(px, deck.position.y), Vector2(px, deck.end.y), Color(0.40, 0.30, 0.20), 2.0)
+		wb.line(Vector2(px, deck.position.y), Vector2(px, deck.end.y), Color(0.40, 0.30, 0.20), 2.0)
+		wb.circle(Vector2(px + 8.0, deck.position.y + 7.0), 1.2, Color(0.25, 0.22, 0.18))
+		wb.circle(Vector2(px + 8.0, deck.end.y - 7.0), 1.2, Color(0.25, 0.22, 0.18))
 		px += 16.0
 	for ry: float in [deck.position.y + 3.0, deck.end.y - 3.0]:
-		_wc.draw_line(Vector2(deck.position.x, ry), Vector2(deck.end.x, ry), Color(0.36, 0.26, 0.16), 5.0)
-		_wc.draw_line(Vector2(deck.position.x, ry - 1.5), Vector2(deck.end.x, ry - 1.5), Color(0.62, 0.48, 0.32), 1.5)
+		wb.line(Vector2(deck.position.x, ry), Vector2(deck.end.x, ry), Color(0.36, 0.26, 0.16), 5.0)
+		wb.line(Vector2(deck.position.x, ry - 1.5), Vector2(deck.end.x, ry - 1.5), Color(0.68, 0.54, 0.36), 1.5)
 	# the four posts (they are poles: the rope wraps them)
 	for i in range(deco_pole_count, deco_pole_count + 4):
 		var bp := poles[i]
-		_wc.draw_circle(bp, 7.0, Color(0.34, 0.25, 0.16))
-		_wc.draw_circle(bp + Vector2(-1.5, -1.5), 4.5, Color(0.52, 0.40, 0.26))
+		wb.circle(bp, 7.0, Color(0.34, 0.25, 0.16))
+		wb.circle(bp + Vector2(-1.5, -1.5), 4.5, Color(0.58, 0.46, 0.30))
+		wb.circle(bp + Vector2(-1.0, -1.0), 2.0, Color(0.72, 0.60, 0.42))
+	wb.flush(_wc)
 
 func _draw_palm(c: Object, p: Vector2) -> void:
 	_palm_ground(c, p)
@@ -10740,6 +10757,17 @@ func _draw_walk_ribbon(vt: float, vb: float, bottom: float, col: Color) -> void:
 const TRAIL_FRAY_STEP := 48.0
 
 
+# One Collserola Natural Park trail marker post (fita de sender) with PR blazes
+static func _draw_trail_waymarker(b: ShapeBatch, p: Vector2, out: float) -> void:
+	b.rect(Rect2(p + LIGHT * 4.0 - Vector2(4.5, 4.5), Vector2(9.0, 9.0)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+	b.rect(Rect2(p - Vector2(4.5, 4.5), Vector2(9.0, 9.0)), Color(0.44, 0.32, 0.20))
+	b.rect(Rect2(p - Vector2(3.5, 3.5), Vector2(7.0, 7.0)), Color(0.56, 0.42, 0.26))
+	b.line(p - Vector2(3.5, 3.5), p + Vector2(3.5, -3.5), Color(0.72, 0.58, 0.38), 1.5)
+	var sx := p.x - out * 1.5
+	b.rect(Rect2(sx - 3.0, p.y - 1.5, 6.0, 2.0), Color(0.94, 0.94, 0.96))
+	b.rect(Rect2(sx - 3.0, p.y + 1.0, 6.0, 2.0), Color(0.24, 0.58, 0.28))
+
+
 func _draw_trail_edges(left: PackedVector2Array, right: PackedVector2Array, col: Color) -> void:
 	if left.size() < 2:
 		return
@@ -10773,6 +10801,26 @@ func _draw_trail_edges(left: PackedVector2Array, right: PackedVector2Array, col:
 				var rq := a.lerp(c, hr * 4.0)
 				b.line(rq + Vector2(out * 26.0, -4.0), rq + Vector2(-out * 18.0, 3.0), root, 3.0)
 				b.line(rq + Vector2(out * 6.0, -1.0), rq + Vector2(-out * 6.0, 9.0), root, 2.0)
+			elif hr > 0.72:
+				# wild saffron milk cap mushrooms (pinetells / rovellons) in pine needles
+				var mq := a.lerp(c, (hr - 0.72) * 3.5) + Vector2(out * 24.0, 0.0)
+				b.circle(mq + LIGHT * 1.5, 4.5, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.2))
+				b.circle(mq, 4.2, Color(0.86, 0.44, 0.16))
+				b.circle(mq, 3.0, Color(0.76, 0.36, 0.12))
+				b.circle(mq + Vector2(-0.8, -0.8), 1.2, Color(0.96, 0.65, 0.30))
+				var sq := mq + Vector2(-out * 4.5, 3.5)
+				b.circle(sq, 2.5, Color(0.84, 0.42, 0.16))
+				b.circle(sq + Vector2(-0.5, -0.5), 0.8, Color(0.95, 0.62, 0.28))
+			elif hr > 0.40 and hr < 0.52:
+				# a stone pine cone (pinya) lying on the forest margin
+				var pq := a.lerp(c, (hr - 0.40) * 8.0) + Vector2(out * 18.0, 0.0)
+				b.circle(pq + LIGHT * 1.5, 3.5, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.2))
+				b.circle(pq, 3.2, Color(0.36, 0.24, 0.14))
+				b.line(pq + Vector2(-2.0, 0.0), pq + Vector2(2.0, 0.0), Color(0.52, 0.38, 0.24), 1.4)
+				b.line(pq + Vector2(0.0, -2.0), pq + Vector2(0.0, 2.0), Color(0.52, 0.38, 0.24), 1.4)
+		if int(absf(y)) % 528 < int(TRAIL_FRAY_STEP):
+			var wp := Vector2(e0.y + 16.0, y)
+			_draw_trail_waymarker(b, wp, 1.0)
 		y += TRAIL_FRAY_STEP
 	b.flush(_wc)
 
