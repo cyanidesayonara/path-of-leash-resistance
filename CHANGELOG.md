@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - El Mercat canopy variety and produce crate differentiation
+
+- The approach street outside El Mercat now displays varied storefront canopies: corrugated galvanized zinc canopies with fluted ridges and rivets, dark green grocer canopies with gold trim, and classical striped canvas awnings with scalloped hems.
+- Market crate stacks across the hall and street now feature differentiated goods: crushed ice beds with silver-blue fish and lemon slices, artisanal pa de pagès bakery loaves with flour scoring, purple-green artichokes, alongside traditional orchard fruits.
+
 ## 2026-10-22 - Doric columns for El Mosaic
 
 - El Mosaic's Hypostyle Hall now carries authentic fluted Doric stone columns, with twenty flutes catching light and shade, an abacus plinth and concentric stone moldings. The field of trencadís discs is gone from the column tops, so the hall reads as architecture rather than mosaic wallpaper.
