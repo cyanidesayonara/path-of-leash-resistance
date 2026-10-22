@@ -211,6 +211,11 @@ with pickpockets and shenanigans happening around."
 - Audit fixes (2026-10-18, #155): terrazzo floor with brass strips, no
   drains; gate cabinets with readers and paddles; columns on plinths; a steel
   travelator and a train that reads as a train; PIPICÀ is the old goods yard
+- Polish pass (2026-10-22): the moving walkway's glass balustrades now have
+  grindable handrails on both sides (HANDRAIL); the train platform has concrete
+  coping slabs and yellow tactile blister warning bands along the drop; the
+  track bed pit between platforms shows dark ballast depth and running rails
+  under the train; and colourful rolling suitcases sit across the concourse.
   with a siding and the running lines past its wall.
 
 ### El Besos (besos) - the floodable river park
