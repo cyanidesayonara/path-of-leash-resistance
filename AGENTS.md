@@ -387,7 +387,10 @@ under it.
 - Plain comments that state constraints, not narration
 - Honest, incremental git history; imperative commit subjects
 - Commits are authored only by Santtu Nykänen. Never add `Co-authored-by`
-  trailers or AI/tool acknowledgements.
+ trailers or AI/tool acknowledgements. CI's `attribution` job fails any
+ push, pull request or tag whose history carries one, and release.yml will
+ not publish past it. Some tools add the trailer on their own: strip it
+ before committing (`git commit -e`), never with `--no-verify`.
 - Feel/tuning decisions are made by playtesting, not by argument. Tuning
   knobs live in named constants at the top of each script.
 - Update CHANGELOG.md at the end of every working session
