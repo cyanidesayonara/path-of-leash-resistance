@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - The docs match the untagged 1.62
+
+- The README now lists seventeen walks and both chases. The handover, the roadmap and the Store procedure say v1.61 is the last tag and v1.62 is prepared, not tagged. The October polish audit records that its two rough findings are fixed, and that El Besòs was checked later.
+- The board's missing merged pull requests from Dia de Partit and from this release are filed as done. Nothing is awaiting acceptance. Steam stays a later card, and it no longer says it is for 1.61.
+
 ## 2026-10-22 - Notes for 1.62, not tagged
 
 - The itch page and the Store listing now describe seventeen walks, El Besòs, and the two chases. The Store's current notes are the 1.62 set. v1.61's notes moved to the past list. Nothing is tagged.

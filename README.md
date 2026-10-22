@@ -14,7 +14,7 @@ it from the [Microsoft Store](https://apps.microsoft.com/detail/9p5d14v8rbqx).
 
 Your human is four times your weight and wins every straight tug. So you win
 the way a dog does: dig in at the right moment, wind the leash round a
-lamppost to hold them fast, and bark to stop them dead at the kerb. Wind
+lamppost to hold them fast, and bark to stop them dead at the curb. Wind
 them round a pole and keep pulling, and they whirl off the coil like a
 tetherball. In between there are posts to sniff, spots to mark, balls to
 fetch, other dogs to meet and squirrels you will never catch.
@@ -30,16 +30,18 @@ you want to go; constant hauling wears their patience down until they say
   tangles with other people's leashes.
 - **A human with patience**, who telegraphs everything they are about to do
   ("ring ring", "selfie!", "ooh!") and is never smarter than that.
-- **Fourteen walks through Barcelona**, each built as its own place, plus a
+- **Seventeen walks through Barcelona**, each built as its own place, plus a
   first walk that teaches one trick at a time. Every walk can be played in
   any weather, by day or at night.
 - **Off the leash at the end**: a dog park, a dog beach, a clearing in the
   woods, a yard, or a plaça with a fountain to jump in.
 - **Goals on every walk**, stars that unlock the next walk, and bones to
   spend on collars, bandanas and coats.
-- **Combo tricks**: vaulting round a pole, grinding along a kerb, near misses.
-- **One chase**: a street sweeper careens down a back street at dawn, and you
-  drag your oblivious human home ahead of it.
+- **Combo tricks**: swing around a pole, grind a ledge, fling your human,
+  near misses.
+- **Two chases.** A street sweeper careens down a back street at dawn, and
+  you drag your oblivious human home ahead of it. On El Besòs the river
+  comes home with you.
 - **Moods**: a fright, a bark-off or a run off the leash leaves her jumpy,
   barky, full of zoomies or flat, and each changes how she moves.
 - **Ground you can feel**: grass and mud slow her but hold scent, sand drags
@@ -54,20 +56,23 @@ you want to go; constant hauling wears their patience down until they say
 
 | Walk | |
 |---|---|
-| El Barri | the neighbourhood park |
+| El Barri | the neighborhood park |
 | La Rambla | the crowded promenade |
 | El Parc | the city park |
-| Passeig Marítim | the seafront |
+| Passeig Marítim | the beachfront |
 | El Diluvi | the downpour |
 | El Mercat | the market hall |
 | El Gòtic | the old town alleys |
 | El Bosc | the forest |
-| L'Estació | the railway station |
-| Les Obres | the roadworks |
+| L'Estació | the train station |
+| El Besòs | the river park |
+| Les Obres | the work site |
 | La Castanyada | the chestnut festival |
-| La Ferralla | the scrapyard |
+| La Ferralla | the junkyard |
 | El Mosaic | the tiled terraces |
-| La Neteja | the dawn clean-up |
+| La Neteja | the dawn cleanup |
+| Montjuïc | the climb |
+| Dia de Partit | match day |
 
 ## Controls
 
@@ -108,9 +113,9 @@ Web export (needs the web export templates, see AGENTS.md):
 godot\Godot_v4.7-stable_win64_console.exe --headless --path . --export-release "Web" build/web/index.html
 ```
 
-Releasing is a tag: `git tag v1.58 && git push --tags` builds web and Windows
-and pushes each to its own itch channel. AGENTS.md has the rest: tests,
-screenshots and benchmarks.
+Releasing is a tag. v1.61 is the last one. The next tag builds web and
+Windows and pushes each to its own itch channel. AGENTS.md has the rest:
+tests, screenshots and benchmarks.
 
 ## Documentation
 
