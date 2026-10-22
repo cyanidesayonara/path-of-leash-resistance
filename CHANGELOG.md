@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - El Parc mammoth plaque, bandstand railings, and lake water lilies
+
+- The famous Ciutadella stone mammoth now features a commemorative bronze plaque on the plinth face, stepped plinth moulding, and detailed carved ivory tusk tips.
+- The octagonal music bandstand now carries concentric radial timber flooring on its stone platform and ornate wrought-iron railings connecting the posts.
+- The lake jetty now carries a lifebuoy safety ring and floating water lily pads (*nenúfars*) with blossoms drifting near the reed beds.
+- The playground now includes scattered toy buckets and spades in the sandpit and a green frog spring rocker alongside the blue horse.
+
 ## 2026-10-22 - El Bosc footbridge masonry, river pebbles, waymarkers and mushrooms
 
 - The timber footbridge across the stream in El Bosc now features stone abutments at each bank edge, shadow cast under the bridge span, batched plank grooves with iron bolt heads, and lit handrail post caps.
