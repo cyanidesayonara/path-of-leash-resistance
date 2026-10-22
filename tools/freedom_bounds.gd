@@ -7,7 +7,7 @@ extends SceneTree
 #   godot --headless --path . --script res://tools/freedom_bounds.gd
 
 const LEVELS := ["street", "park", "beach", "rain", "market", "oldtown", "trail", "station",
-	"site", "spook", "scrap", "guell", "barri", "neteja", "montjuic", "partit"]
+	"besos", "site", "spook", "scrap", "guell", "barri", "neteja", "montjuic", "partit"]
 const RUN_FRAMES := 240
 const SLACK := 40.0
 

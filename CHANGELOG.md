@@ -6,6 +6,11 @@ Append-only session history, newest first.
 
 - The itch page and the Store listing now describe seventeen walks, El Besòs, and the two chases. The Store's current notes are the 1.62 set. v1.61's notes moved to the past list. Nothing is tagged.
 
+## 2026-10-22 - The roster audit includes El Besòs
+
+- The freedom-bounds, junk, freedom-sign and terrain checks now walk El Besòs with the other sixteen. Every campaign walk's autowalk finishes, and none of them stall. The level checks and the off-leash bounds are clean, including the new meadow.
+- The level-design brief's old note that five walks were still La Rambla, and three still El Mercat, is out of date. Those walks have their own props now. The build order no longer queues them. El Mosaic's decoration, and a hand-authored off-leash list, are what that brief still leaves open.
+
 ## 2026-10-21 - A rainy El Bosc runs high
 
 - El Besòs and El Bosc now share one directional-current rule. It gives moving bodies a floor with the flow, planting resists it, and loose floating things stop drifting while Millie carries them.
