@@ -83,6 +83,9 @@ func _run() -> void:
 			break
 	_check(human.global_position.x > float(nw["x0"]) - 10.0 and human.global_position.x < float(nw["x1"]) + 10.0,
 		"coming up from the side, the owner is on the plank by the trench (x %.0f)" % human.global_position.x)
+	# the trench bridge has grindable scaffolding pipe handrails
+	_check(m.rails.size() == 2 and String(m.rails[0]["name"]) == "SCAFFOLD RUN",
+		"the trench bridge has two grindable scaffold handrails")
 	m.queue_free()
 	await process_frame
 	print("\n%d checks, %d failures" % [checks, failures.size()])
