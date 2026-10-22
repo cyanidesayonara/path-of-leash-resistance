@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - Les Obres trench shoring, hazard beacons, and scaffold grind
+
+- The open utility trench in Les Obres now features timber walers and yellow hydraulic screw shoring struts, red-and-white chevron reflective safety barricade boards, and utility conduits with corrugated ducting.
+- Four amber hazard beacon lamps on barricade posts now cast warm warning halos at the crossing approaches.
+- The timber bridge now has textured non-slip steel diamond-tread transition plates and heavy wooden baulks with coach bolts.
+- Tubular galvanized scaffolding pipe handrails now run the length of the trench bridge and are registered as grindable rails ("SCAFFOLD RUN"), letting Millie grind safely over the excavation gap.
+
 ## 2026-10-22 - Doric columns for El Mosaic
 
 - El Mosaic's Hypostyle Hall now carries authentic fluted Doric stone columns, with twenty flutes catching light and shade, an abacus plinth and concentric stone moldings. The field of trencadís discs is gone from the column tops, so the hall reads as architecture rather than mosaic wallpaper.

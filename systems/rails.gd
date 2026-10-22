@@ -58,6 +58,15 @@ static func build(m: Node2D) -> void:
 			# the steel crowd barriers along the avenue's kerbs
 			for run: Array in Partit.BARRIERS:
 				m.rails.append(line(Vector2(float(run[0]), float(run[1])), Vector2(float(run[0]), float(run[2])), "BARRIER RUN"))
+		"site":
+			# the scaffolding pipe handrails on either side of the trench bridge
+			var ty: float = LevelBuild.OBRES_TRENCH_Y
+			var th: float = LevelBuild.OBRES_TRENCH_H
+			var te: Vector2 = m.walk_edges(ty)
+			var pc: float = (te.x + te.y) * 0.5
+			var half: float = LevelBuild.OBRES_PLANK * 0.5
+			for hx: float in [pc - half - 2.0, pc + half + 2.0]:
+				m.rails.append(line(Vector2(hx, ty + th + 18.0), Vector2(hx, ty - 18.0), "SCAFFOLD RUN"))
 		"montjuic":
 			# the terrace walls, path to rim on either side, and the
 			# escalators' outer handrails
