@@ -4223,24 +4223,85 @@ func _draw_obres(vt: float, vb: float) -> void:
 			b.rect(Rect2(zx, zy + 4.0, 26.0, LevelBuild.OBRES_ZEBRA_H - 8.0), Color(0.96, 0.95, 0.90))
 			b.rect(Rect2(zx + 3.0, zy + 6.0, 5.0, LevelBuild.OBRES_ZEBRA_H - 12.0), Color(1, 1, 1, 0.9))
 			zx += 46.0
-	# the trench: dug earth at the lips, dark inside, a pipe along the bottom,
-	# and the plank across it
+	# the trench: dug earth at the lips, dark inside, utility conduits,
+	# timber walers and hydraulic trench shoring struts, red/white safety barrier boards,
+	# amber warning beacons, steel approach transition plates, and the heavy timber bridge
+	# flanked by galvanized scaffolding pipe handrails (grindable!)
 	var ty: float = LevelBuild.OBRES_TRENCH_Y
 	var th: float = LevelBuild.OBRES_TRENCH_H
-	if ty > vt - 80.0 and ty < vb + 80.0:
-		for c: Rect2 in cellars:
-			b.rect(c.grow(6.0), Color(0.46, 0.36, 0.25))
-			b.rect(c, Color(0.16, 0.13, 0.11))
-			b.rect(Rect2(c.position.x, c.position.y + th * 0.5 - 5.0, c.size.x, 10.0), Color(0.72, 0.42, 0.20))
-			b.rect(Rect2(c.position.x, c.position.y + th * 0.5 - 5.0, c.size.x, 3.0), Color(0.84, 0.56, 0.30))
+	if ty > vt - 100.0 and ty < vb + 100.0:
 		var te := walk_edges(ty)
 		var pc := (te.x + te.y) * 0.5
-		var plank := Rect2(pc - LevelBuild.OBRES_PLANK * 0.5 - 6.0, ty - 10.0, LevelBuild.OBRES_PLANK + 12.0, th + 20.0)
-		b.rect(Rect2(plank.position + LIGHT * 6.0, plank.size), Color(0, 0, 0, 0.22))
-		b.rect(plank, Color(0.66, 0.50, 0.30))
-		for k in range(3):
-			var px := plank.position.x + 8.0 + float(k) * (plank.size.x - 16.0) / 2.0
-			b.line(Vector2(px, plank.position.y), Vector2(px, plank.end.y), Color(0.50, 0.37, 0.22), 2.0)
+		var half_w := LevelBuild.OBRES_PLANK * 0.5
+
+		# 1. Open excavation trenches on either side of the bridge
+		for c: Rect2 in cellars:
+			b.rect(c.grow(7.0), Color(0.48, 0.38, 0.26))
+			b.rect(c, Color(0.12, 0.10, 0.09))
+			b.rect(Rect2(c.position.x, c.position.y, c.size.x, 6.0), Color(0.50, 0.38, 0.24))
+			b.rect(Rect2(c.position.x, c.end.y - 6.0, c.size.x, 6.0), Color(0.38, 0.28, 0.18))
+			b.rect(Rect2(c.position.x, c.position.y + th * 0.5 - 6.0, c.size.x, 9.0), Color(0.74, 0.42, 0.18))
+			b.rect(Rect2(c.position.x, c.position.y + th * 0.5 - 6.0, c.size.x, 2.5), Color(0.86, 0.56, 0.28))
+			b.rect(Rect2(c.position.x, c.position.y + th * 0.5 + 4.0, c.size.x, 5.0), Color(0.20, 0.20, 0.22))
+			var strut_x := c.position.x + 35.0
+			while strut_x < c.end.x - 20.0:
+				b.line(Vector2(strut_x, c.position.y + 2.0), Vector2(strut_x, c.end.y - 2.0), Color(0.88, 0.68, 0.16), 4.5)
+				b.rect(Rect2(strut_x - 4.0, c.position.y + th * 0.5 - 3.0, 8.0, 6.0), Color(0.25, 0.25, 0.27))
+				b.circle(Vector2(strut_x, c.position.y + 3.0), 3.0, Color(0.35, 0.35, 0.38))
+				b.circle(Vector2(strut_x, c.end.y - 3.0), 3.0, Color(0.35, 0.35, 0.38))
+				strut_x += 76.0
+			for side_edge: float in [c.position.y - 4.0, c.end.y]:
+				b.rect(Rect2(c.position.x + 2.0, side_edge, c.size.x - 4.0, 4.0), Color(0.92, 0.92, 0.90))
+				var stripe_x := c.position.x + 6.0
+				while stripe_x < c.end.x - 8.0:
+					b.line(Vector2(stripe_x, side_edge), Vector2(stripe_x + 6.0, side_edge + 4.0), Color(0.86, 0.16, 0.16), 2.5)
+					stripe_x += 16.0
+
+		# 2. Heavy timber construction bridge
+		var plank := Rect2(pc - half_w - 6.0, ty - 12.0, LevelBuild.OBRES_PLANK + 12.0, th + 24.0)
+		b.rect(Rect2(plank.position + LIGHT * 6.0, plank.size), Color(0, 0, 0, 0.24))
+		b.rect(plank, Color(0.62, 0.48, 0.28))
+		var n_planks := 4
+		for k in range(n_planks):
+			var x0 := plank.position.x + float(k) * (plank.size.x / float(n_planks))
+			var pw := plank.size.x / float(n_planks) - 2.0
+			b.rect(Rect2(x0 + 1.0, plank.position.y, pw, plank.size.y), Color(0.66, 0.51, 0.31))
+			b.line(Vector2(x0 + pw * 0.5, plank.position.y), Vector2(x0 + pw * 0.5, plank.end.y), Color(0.54, 0.41, 0.24), 1.5)
+			b.circle(Vector2(x0 + pw * 0.5, plank.position.y + 4.0), 1.5, Color(0.30, 0.30, 0.32))
+			b.circle(Vector2(x0 + pw * 0.5, plank.end.y - 4.0), 1.5, Color(0.30, 0.30, 0.32))
+
+		# checkered steel transition plates at north and south approaches
+		for ramp_y: float in [plank.position.y - 3.0, plank.end.y - 3.0]:
+			var rr := Rect2(plank.position.x + 2.0, ramp_y, plank.size.x - 4.0, 6.0)
+			b.rect(rr, Color(0.70, 0.72, 0.74))
+			b.line(Vector2(rr.position.x, rr.position.y), Vector2(rr.end.x, rr.position.y), Color(0.85, 0.86, 0.88), 1.5)
+			for bx in range(6):
+				b.circle(Vector2(rr.position.x + 8.0 + float(bx) * (rr.size.x - 16.0) / 5.0, rr.position.y + 3.0), 1.2, Color(0.35, 0.35, 0.38))
+
+		# 3. Flashing amber hazard beacon lamps on barricade posts flanking the crossing
+		for lx: float in [pc - half_w - 18.0, pc + half_w + 18.0]:
+			for ly: float in [ty - 8.0, ty + th + 8.0]:
+				b.rect(Rect2(lx - 5.0, ly - 5.0, 10.0, 10.0), Color(0.86, 0.70, 0.14))
+				b.circle(Vector2(lx, ly), 16.0, Color(1.0, 0.75, 0.18, 0.10))
+				b.circle(Vector2(lx, ly), 5.5, Color(1.0, 0.78, 0.18))
+				b.circle(Vector2(lx, ly), 2.5, Color(1.0, 0.96, 0.65))
+
+		# 4. Galvanized scaffolding pipe handrails along both edges (grindable!)
+		for side: float in [-1.0, 1.0]:
+			var rx: float = pc + side * (half_w + 2.0)
+			var y0 := ty - 18.0
+			var y1 := ty + th + 18.0
+			b.line(Vector2(rx, y0) + LIGHT * 5.0, Vector2(rx, y1) + LIGHT * 5.0, Color(0, 0, 0, 0.22), 4.0)
+			for py: float in [y0 + 2.0, (y0 + y1) * 0.5, y1 - 2.0]:
+				b.circle(Vector2(rx, py) + LIGHT * 3.0, 4.0, Color(0, 0, 0, 0.20))
+				b.circle(Vector2(rx, py), 4.0, Color(0.48, 0.50, 0.52))
+				b.circle(Vector2(rx, py), 2.5, Color(0.76, 0.78, 0.80))
+			b.line(Vector2(rx, y0), Vector2(rx, y1), Color(0.78, 0.80, 0.82), 3.5)
+			b.line(Vector2(rx - side * 0.5, y0), Vector2(rx - side * 0.5, y1), Color(0.92, 0.94, 0.96), 1.5)
+			b.circle(Vector2(rx, y0), 2.8, Color(0.96, 0.52, 0.12))
+			b.circle(Vector2(rx, y1), 2.8, Color(0.96, 0.52, 0.12))
+			var mid_rx: float = rx - side * 3.0
+			b.line(Vector2(mid_rx, y0 + 6.0), Vector2(mid_rx, y1 - 6.0), Color(0.66, 0.68, 0.70), 2.0)
 	b.flush(_wc)
 
 

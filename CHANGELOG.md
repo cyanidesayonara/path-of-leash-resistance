@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - Les Obres trench shoring, hazard beacons, and scaffold grind
+
+- The open utility trench in Les Obres now features timber walers and yellow hydraulic screw shoring struts, red-and-white chevron reflective safety barricade boards, and utility conduits with corrugated ducting.
+- Four amber hazard beacon lamps on barricade posts now cast warm warning halos at the crossing approaches.
+- The timber bridge now has textured non-slip steel diamond-tread transition plates and heavy wooden baulks with coach bolts.
+- Tubular galvanized scaffolding pipe handrails now run the length of the trench bridge and are registered as grindable rails ("SCAFFOLD RUN"), letting Millie grind safely over the excavation gap.
+
 ## 2026-10-22 - El Gòtic polish: Pont del Bisbe, Plaça de Sant Felip Neri, alley drainage
 
 - The Pont del Bisbe overhead bridge now has neo-Gothic pointed-arch windows with stone tracery and mullions, a crenellated parapet, carved stone corbel brackets, a skull-and-dagger detail, and a wrought-iron lantern casting warm amber light onto the alley below.
