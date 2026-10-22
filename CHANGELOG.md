@@ -7,6 +7,21 @@ Append-only session history, newest first.
 - The approach street outside El Mercat now displays varied storefront canopies: corrugated galvanized zinc canopies with fluted ridges and rivets, dark green grocer canopies with gold trim, and classical striped canvas awnings with scalloped hems.
 - Market crate stacks across the hall and street now feature differentiated goods: crushed ice beds with silver-blue fish and lemon slices, artisanal pa de pagès bakery loaves with flour scoring, purple-green artichokes, alongside traditional orchard fruits.
 
+## 2026-10-22 - Les Obres trench shoring, hazard beacons, and scaffold grind
+
+- The open utility trench in Les Obres now features timber walers and yellow hydraulic screw shoring struts, red-and-white chevron reflective safety barricade boards, and utility conduits with corrugated ducting.
+- Four amber hazard beacon lamps on barricade posts now cast warm warning halos at the crossing approaches.
+- The timber bridge now has textured non-slip steel diamond-tread transition plates and heavy wooden baulks with coach bolts.
+- Tubular galvanized scaffolding pipe handrails now run the length of the trench bridge and are registered as grindable rails ("SCAFFOLD RUN"), letting Millie grind safely over the excavation gap.
+
+## 2026-10-22 - El Gòtic polish: Pont del Bisbe, Plaça de Sant Felip Neri, alley drainage
+
+- The Pont del Bisbe overhead bridge now has neo-Gothic pointed-arch windows with stone tracery and mullions, a crenellated parapet, carved stone corbel brackets, a skull-and-dagger detail, and a wrought-iron lantern casting warm amber light onto the alley below.
+- Plaça de Sant Felip Neri's fountain is rebuilt as an octagonal Baroque stone basin with directional lighting on each face, four bronze spouts with splash rings, and a carved baluster pedestal. Radial stone sett ribs and concentric cobblestone joints now radiate from the fountain across the square.
+- Terracotta pots of red geraniums flank doorways along the alleys and at the plaça corners.
+- The medieval alleys have a central stone drainage channel with iron grates at regular intervals.
+- The bridge's shadow on the ground now shows heavier corbel shadows at the springers, plus a warm lantern light pool under the arch.
+
 ## 2026-10-22 - L'Estació platform tactile paving and travelator handrail grinds
 
 - L'Estació's moving walkway now carries grindable handrails along both glass balustrades ("HANDRAIL"), allowing full-length travelator grinds end-to-end.
