@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - La Neteja selective recycling stations, curbside foam suds, and storefronts
+
+- Cuidem Barcelona dumpsters along the dawn street now feature authentic color-coded selective recycling lids (yellow for envasos, blue for paper i cartró, brown for fracció orgànica, grey for resta, and green for vidre), white municipal identification bands, and street-facing foot-pedal opening bars (pedals de peu).
+- Dumpster stations carry characteristic waste and recycling props: neat bundles of flattened cardboard boxes tied with twine beside the paper dumpster, and green glass bottle crates beside the glass dumpster.
+- Curbside storm drain grates (embornals de reixa) with cast-iron slotted frames now sit along both gutters to catch the runoff from the high-pressure water washing truck.
+- Frothy white and iridescent soap cleaning foam bubbles (bromera) cluster around the dumpster wheels, kerb gutters, and drain grate mouths.
+- Closed shopfronts now sport commercial fascia signage boards (rètols comercials) for authentic neighborhood shops (forn de pa, farmàcia with illuminated cross, ferreteria, bodega, and cafeteria), heavy ground anchor padlocks, and wrought-iron gooseneck lanterns casting warm twilight halos onto the sidewalk.
+
 ## 2026-10-22 - El Gòtic polish: Pont del Bisbe, Plaça de Sant Felip Neri, alley drainage
 
 - The Pont del Bisbe overhead bridge now has neo-Gothic pointed-arch windows with stone tracery and mullions, a crenellated parapet, carved stone corbel brackets, a skull-and-dagger detail, and a wrought-iron lantern casting warm amber light onto the alley below.
