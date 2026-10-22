@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - El Diluvi storm drains, puddle ripple dynamics, and terrace tarp
+
+- Curbside running gutters along El Diluvi now carry cast-iron slot grates with animated swirling storm water whirlpool funnels.
+- Standing puddles across the paving now display animated expanding concentric raindrop impact ripples with watery reflections.
+- Stacked cafe terrace furniture is wrapped in a blue waterproof vinyl tarpaulin with corner grommets, while storefront awnings feature cascading water runoff and valance droplet drips.
+
 ## 2026-10-22 - L'Estació platform tactile paving and travelator handrail grinds
 
 - L'Estació's moving walkway now carries grindable handrails along both glass balustrades ("HANDRAIL"), allowing full-length travelator grinds end-to-end.
