@@ -694,6 +694,12 @@ const ESTACIO_GAPS: Array[float] = [400.0, 640.0, 880.0]
 const ESTACIO_GAP_W := 72.0
 const ESTACIO_TRAIN := Rect2(560.0, -4700.0, 160.0, 1450.0)
 const ESTACIO_BOARD := Vector2(640.0, -1020.0)
+const ESTACIO_LUGGAGE: Array[Vector2] = [
+	Vector2(380.0, -1720.0),
+	Vector2(900.0, -2380.0),
+	Vector2(590.0, -1080.0),
+	Vector2(720.0, -2950.0),
+]
 
 
 static func estacio(m: Node2D) -> void:

@@ -4147,13 +4147,39 @@ func _draw_estacio(vt: float, vb: float) -> void:
 				var n := Vector2(sx * 3.0, 0.0)
 				b.polygon(PackedVector2Array([hinge, tip, tip + n, hinge + n]), Color(0.70, 0.84, 0.95, 0.65))
 				b.line(hinge, tip, Color(0.88, 0.94, 1.0, 0.9), 1.2)
-	# the train, and the yellow lines along both platform edges
+	# the train, the track pit between platforms, and tactile blister warning paving
 	var tr: Rect2 = LevelBuild.ESTACIO_TRAIN
 	if tr.end.y > vt - 40.0 and tr.position.y < vb + 40.0:
-		for ex: float in [tr.position.x - 22.0, tr.end.x + 14.0]:
-			b.rect(Rect2(ex, maxf(tr.position.y - 30.0, vt - 40.0), 8.0, minf(tr.end.y + 30.0, vb + 40.0) - maxf(tr.position.y - 30.0, vt - 40.0)), Color(0.95, 0.80, 0.20))
+		var py0 := maxf(tr.position.y - 40.0, vt - 40.0)
+		var py1 := minf(tr.end.y + 40.0, vb + 40.0)
+		# the track bed pit between the two platform copings
+		b.rect(Rect2(tr.position.x - 14.0, py0, tr.size.x + 28.0, py1 - py0), Color(0.18, 0.17, 0.16))
+		# running rails in the track pit under the train
+		for rx: float in [tr.position.x + 10.0, tr.end.x - 14.0]:
+			b.rect(Rect2(rx, py0, 4.0, py1 - py0), Color(0.44, 0.46, 0.50))
+			b.rect(Rect2(rx + 1.0, py0, 2.0, py1 - py0), Color(0.68, 0.70, 0.74))
+		# the concrete platform copings and yellow tactile warning bands
+		for ex: Array in [[tr.position.x - 14.0, -1.0], [tr.end.x + 14.0, 1.0]]:
+			var px: float = ex[0]
+			var side: float = ex[1]
+			var cx0: float = px - 6.0 if side < 0.0 else px
+			b.rect(Rect2(cx0, py0, 6.0, py1 - py0), Color(0.56, 0.58, 0.60))
+			b.line(Vector2(px, py0), Vector2(px, py1), Color(0.38, 0.40, 0.42), 1.5)
+			var bx0: float = cx0 - 10.0 if side < 0.0 else cx0 + 6.0
+			b.rect(Rect2(bx0, py0, 10.0, py1 - py0), Color(0.95, 0.80, 0.20))
+			var py_stud := floorf(py0 / 14.0) * 14.0
+			while py_stud < py1:
+				if py_stud >= py0:
+					b.circle(Vector2(bx0 + 5.0, py_stud + 7.0), 1.8, Color(1.0, 0.92, 0.45))
+				py_stud += 14.0
 		b.rect(Rect2(tr.position + Vector2(10, 14), tr.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
 		_estacio_train(b, tr, vt, vb)
+	# the concourse luggage: colourful hard-shell rolling suitcases
+	for i in range(LevelBuild.ESTACIO_LUGGAGE.size()):
+		var lp: Vector2 = LevelBuild.ESTACIO_LUGGAGE[i]
+		if lp.y > vt - 40.0 and lp.y < vb + 40.0:
+			var lcol: Color = ESTACIO_LUGGAGE_COLS[i % ESTACIO_LUGGAGE_COLS.size()]
+			_draw_station_suitcase(b, lp, lcol)
 	b.flush(_wc)
 
 
@@ -4162,6 +4188,22 @@ const ESTACIO_TERRAZZO := Color(0.72, 0.73, 0.74)
 const ESTACIO_BRASS := Color(0.70, 0.56, 0.30, 0.55)
 const ESTACIO_CHIPS: Array[Color] = [Color(0.42, 0.40, 0.38, 0.55), Color(0.62, 0.40, 0.32, 0.45),
 	Color(0.95, 0.94, 0.90, 0.6), Color(0.30, 0.34, 0.36, 0.45)]
+const ESTACIO_LUGGAGE_COLS: Array[Color] = [Color(0.20, 0.45, 0.82), Color(0.82, 0.22, 0.24),
+	Color(0.92, 0.70, 0.16), Color(0.18, 0.65, 0.45)]
+
+
+func _draw_station_suitcase(b: ShapeBatch, p: Vector2, col: Color) -> void:
+	b.rect(Rect2(p - Vector2(10, 14) + LIGHT * 4.0, Vector2(20, 28)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.20))
+	b.rect(Rect2(p - Vector2(10, 14), Vector2(20, 28)), col)
+	b.rect(Rect2(p - Vector2(10, 14), Vector2(3, 28)), col.lightened(0.25))
+	b.line(Vector2(p.x, p.y - 12), Vector2(p.x, p.y + 12), Color(0.12, 0.12, 0.14), 1.5)
+	# telescoping handle
+	b.line(Vector2(p.x - 4, p.y - 14), Vector2(p.x - 4, p.y - 20), Color(0.25, 0.25, 0.28), 1.5)
+	b.line(Vector2(p.x + 4, p.y - 14), Vector2(p.x + 4, p.y - 20), Color(0.25, 0.25, 0.28), 1.5)
+	b.line(Vector2(p.x - 5, p.y - 20), Vector2(p.x + 5, p.y - 20), Color(0.12, 0.12, 0.14), 2.2)
+	# wheels
+	b.circle(p + Vector2(-8, 14), 2.0, Color(0.15, 0.15, 0.18))
+	b.circle(p + Vector2(8, 14), 2.0, Color(0.15, 0.15, 0.18))
 
 
 # one ticket gate cabinet from above: the stainless body with a lit edge, the

@@ -132,6 +132,13 @@ func _run() -> void:
 		if int(d.kind) == 4 or int(d.kind) == 5:
 			street_works += 1
 	_check(street_works == 0, "no drains or road repairs on the concourse floor (%d)" % street_works)
+	# the moving walkway's glass balustrades are grindable handrails
+	var handrails := 0
+	for r: Dictionary in m.rails:
+		if String(r.get("name", "")) == "HANDRAIL":
+			handrails += 1
+	_check(handrails == 2, "the moving walkway balustrades have grindable handrails on both sides (%d)" % handrails)
+	_check(LevelBuild.ESTACIO_LUGGAGE.size() >= 3, "rolling suitcases placed on the concourse")
 	m.queue_free()
 	await process_frame
 	print("\n%d checks, %d failures" % [checks, failures.size()])
