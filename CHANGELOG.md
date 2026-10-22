@@ -7,6 +7,13 @@ Append-only session history, newest first.
 - The approach street outside El Mercat now displays varied storefront canopies: corrugated galvanized zinc canopies with fluted ridges and rivets, dark green grocer canopies with gold trim, and classical striped canvas awnings with scalloped hems.
 - Market crate stacks across the hall and street now feature differentiated goods: crushed ice beds with silver-blue fish and lemon slices, artisanal pa de pagès bakery loaves with flour scoring, purple-green artichokes, alongside traditional orchard fruits.
 
+## 2026-10-22 - L'Estació platform tactile paving and travelator handrail grinds
+
+- L'Estació's moving walkway now carries grindable handrails along both glass balustrades ("HANDRAIL"), allowing full-length travelator grinds end-to-end.
+- The train platform now features realistic concrete edge copings and yellow tactile blister warning bands with raised studs along the drop to the tracks.
+- The track bed between the platforms now carries a sunken ballast pit with steel running rails under the Rodalies train.
+- Colourful hard-shell rolling suitcases with telescoping handles now accent the station concourse.
+
 ## 2026-10-22 - Doric columns for El Mosaic
 
 - El Mosaic's Hypostyle Hall now carries authentic fluted Doric stone columns, with twenty flutes catching light and shade, an abacus plinth and concentric stone moldings. The field of trencadís discs is gone from the column tops, so the hall reads as architecture rather than mosaic wallpaper.
