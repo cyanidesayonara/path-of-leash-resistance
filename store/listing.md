@@ -25,7 +25,7 @@ The leash is real rope physics. Your human outweighs you four to one and wins ev
 
 Your human answers the leash like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "HEY!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "ring ring", "selfie!", "ooh!". They are never smarter than that.
 
-Sixteen walks through a sunny, slightly chaotic Barcelona, each its own place: the little park at the end of your street, La Rambla with its crowds, street sellers and pickpockets, the city park and its lake, the beachfront, a rainy shopping street, a covered market hall, the old town's narrow alleys, a wood with wild boar in it, the station and its train, a work site with wet cement, a chestnut festival at night, a junkyard with a guard dog you really should not wake, a hilltop park of tiled terraces and a mosaic salamander, the climb up Montjuïc with a hidden cable car, a narrow back street at dawn, just as the street sweeper comes through, and match day in Les Corts, the avenue full of fans heading one way. Every walk ends off the leash, with an agility course, tug-of-war and a frisbee: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
+Seventeen walks through a sunny, slightly chaotic Barcelona, each its own place: the little park at the end of your street, La Rambla with its crowds, street sellers and pickpockets, the city park and its lake, the beachfront, a rainy shopping street, a covered market hall, the old town's narrow alleys, a wood with wild boar in it, the station and its train, a river park on El Besòs where the way home is the flood, a work site with wet cement, a chestnut festival at night, a junkyard with a guard dog you really should not wake, a hilltop park of tiled terraces and a mosaic salamander, the climb up Montjuïc with a hidden cable car, a narrow back street at dawn, just as the street sweeper comes through, and match day in Les Corts, the avenue full of fans heading one way. Every walk ends off the leash, with an agility course, tug-of-war and a frisbee: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
 
 What happens on a walk changes how you feel, and how you feel changes how you move. A fright leaves you jumpy and half blind to smells, a good bark-off makes you barky, time off the leash brings on the zoomies, and running yourself empty leaves you flat. The ground matters too: grass and mud slow you down but hold far more scent than sidewalk, sand drags at your paws, and wet ground and snow make you skid.
 
@@ -33,7 +33,7 @@ Other dogs have lives of their own. They sniff and mark the posts you pass, and 
 
 Every walk has its own list of goals: sniff the good spots, mark your territory, fetch, greet other dogs, herd a runaway friend home, and pull off tricks: swing around a pole on the leash, run a figure eight, thread the needle between two people, and ride ledges and handrails with the zoomies. Earn stars to unlock new walks and bones to spend on collars, bandanas and coats.
 
-One walk is a chase: a street sweeper careens down a narrow back street after you, flinging junk as it comes, and you have to drag your oblivious human home ahead of it. Rain, wind, snow and night change how every walk plays, and everyone dresses for the weather. There is a two-part tutorial for anyone new.
+Two walks are chases. A street sweeper careens down a narrow back street after you, flinging junk as it comes, and you have to drag your oblivious human home ahead of it. On El Besòs the river comes home with you: shallow water pushes south, and the deep front is the loss. Rain, wind, snow and night change how every walk plays, and everyone dresses for the weather. There is a two-part tutorial for anyone new.
 
 Single player. No ads, no purchases, no account, and it plays offline. Keyboard or controller.
 ```
@@ -41,7 +41,7 @@ Single player. No ads, no purchases, no account, and it plays offline. Keyboard 
 ### Short description
 
 ```
-A dog walk as a physics comedy. Your human walks on autopilot, glued to their phone, and the leash is real rope. Dig in, wrap lampposts and bark your way through sixteen walks in Barcelona, and get them home with the phone intact.
+A dog walk as a physics comedy. Your human walks on autopilot, glued to their phone, and the leash is real rope. Dig in, wrap lampposts and bark your way through seventeen walks in Barcelona, and get them home with the phone intact.
 ```
 
 ### Product features
@@ -49,11 +49,11 @@ A dog walk as a physics comedy. Your human walks on autopilot, glued to their ph
 ```
 The leash is real rope physics: wrap it around poles, dig in, win the tug of war
 A human who answers the leash: a steady pull leads them, constant hauling runs out their patience
-Sixteen hand-built walks through Barcelona, in any weather, by day or at night
+Seventeen hand-built walks through Barcelona, in any weather, by day or at night
 Every walk ends off the leash, with agility, tug-of-war and a frisbee
 Goal lists on every walk, with stars that unlock new walks
 Leash tricks: pole swings, figure eights, threading the needle, ledge and handrail rides
-A chase walk: stay ahead of the street sweeper with your oblivious human in tow
+Two chase walks: the street sweeper, and the flood on the way home from El Besòs
 Dog moods: scared, barky, zoomies and flat, each changing how you move and what you notice
 Ground you can feel: grass and mud hold scent, sand drags, wet ground and snow skid
 Other dogs and their people with lives of their own: they sniff, mark, greet and tangle
@@ -79,20 +79,23 @@ dog walking
 ### What's new in this version
 
 ```
-- A new walk, Dia de Partit: match day in Les Corts, opening at 27 stars. The avenue fills with fans. Kick-off is on the clock, or when you reach the gate.
-- Keep your human out of the away march. After the final whistle the crowd comes home the other way, fast after a win and slow after a loss. The score is on their phone.
-- Off the avenue, a lost scarf and a kickabout. Off the leash is PLAÇA DEL GOL, goal square.
-- The leash catches a car, a stall or a bench on the shape you see. She slides along a wall instead of sticking to it.
-- El Diluvi's shoppers stroll the covered street. El Barri, El Bosc, L'Estació, Les Obres, La Ferralla, El Mosaic, La Castanyada and La Neteja are redrawn.
-- La Neteja gives a warning and a head start, then the sweeper. Lost on the way home, continue from the destination or the halfway point.
-- The dare kid sits clear of the trees, and the browser build has sound again.
-- The opening film is finished, and the title theme has some get-up-and-go.
+- A new walk, El Besòs: a river park between L'Estació and Les Obres, open at 14 stars. The way out is dry. The way home is the flood.
+- Shallow water pushes you south and wets your human. Plant to hold a spot. The deep channel, and the swell from the river, ends the walk. A raised apron stays dry until the water spills.
+- The flood warns you, then gives a head start, the same as the sweeper. Your human hears the siren and decides it is not their problem.
+- Every walk comes home to its own door. Your human looks up, pockets the phone, and follows you in.
+- Rain, wind, snow, night and dawn each have their own light. Lamps stay warm after dark.
+- Walk names sit in plain type, and a lost walk's title keeps its last letter.
+- The Daily Walk is gone. A walk's own weather stays on that walk.
+- Bring Tofu home works: she only hides where you can reach her.
+- The leash runs round a stall, a van or a bench instead of through it.
+- Caught by the sweeper, the two of you go up into the brooms. Fear waits until the threat is on screen.
+- On a rainy El Bosc, one run in five raises the stream. Carry the branch or the ball to the bank.
 ```
 
 ### Notes for certification
 
 ```
-Update 1.61: a sixteenth walk (Dia de Partit), redrawn places, and a finished intro. No change to capabilities, network use, data handling or controls since 1.55. Dia de Partit takes longer than the other walks.
+Update 1.62: a seventeenth walk (El Besòs, the river park), home arrivals, and no Daily Walk. No change to capabilities, network use, data handling or controls since 1.55. El Besòs takes about as long as the other walks; the way home is a chase.
 
 Path of Leash Resistance is a single-player Win32 desktop game built with the Godot engine (4.7), packaged as MSIX.
 
@@ -203,6 +206,19 @@ written by `tools/make_store_art.gd`: the 9:16 poster, the 1:1 box art and the
 ## Past What's new
 
 As submitted, newest first. The current one is in "Current listing".
+
+### What's new in 1.61 (tagged 2026-10-20)
+
+```
+- A new walk, Dia de Partit: match day in Les Corts, opening at 27 stars. The avenue fills with fans. Kick-off is on the clock, or when you reach the gate.
+- Keep your human out of the away march. After the final whistle the crowd comes home the other way, fast after a win and slow after a loss. The score is on their phone.
+- Off the avenue, a lost scarf and a kickabout. Off the leash is PLAÇA DEL GOL, goal square.
+- The leash catches a car, a stall or a bench on the shape you see. She slides along a wall instead of sticking to it.
+- El Diluvi's shoppers stroll the covered street. El Barri, El Bosc, L'Estació, Les Obres, La Ferralla, El Mosaic, La Castanyada and La Neteja are redrawn.
+- La Neteja gives a warning and a head start, then the sweeper. Lost on the way home, continue from the destination or the halfway point.
+- The dare kid sits clear of the trees, and the browser build has sound again.
+- The opening film is finished, and the title theme has some get-up-and-go.
+```
 
 ### What's new in 1.59 (live by 2026-10-09)
 
