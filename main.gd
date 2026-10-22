@@ -5649,6 +5649,16 @@ func _draw_tutorial_ledge(vt: float, vb: float) -> void:
 # here is anywhere in particular.
 func _draw_barri(vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
+	# cast-iron tree grates (escocells) under the square's London plane trees
+	for tp: Vector2 in LevelBuild.BARRI_TREES:
+		if tp.y > vt - 60.0 and tp.y < vb + 60.0:
+			b.circle(tp, 20.0, Color(0.32, 0.30, 0.28))
+			b.circle(tp, 17.0, Color(0.24, 0.20, 0.16))
+			b.circle(tp, 14.0, Color(0.38, 0.36, 0.34))
+			b.circle(tp, 12.6, Color(0.24, 0.20, 0.16))
+			for ri in range(8):
+				var ra := TAU * float(ri) / 8.0
+				b.line(tp + Vector2.from_angle(ra) * 9.0, tp + Vector2.from_angle(ra) * 19.0, Color(0.18, 0.18, 0.20), 1.0)
 	var pp: Rect2 = LevelBuild.BARRI_PETANCA
 	if pp.end.y > vt - 40.0 and pp.position.y < vb + 40.0:
 		# raked sauló inside a timber edging, lying on the square's gravel
@@ -5670,8 +5680,28 @@ func _draw_barri(vt: float, vb: float) -> void:
 		var jack := pp.position + Vector2(58.0, 30.0)
 		for bo: Vector2 in [Vector2(16, 8), Vector2(-12, 14), Vector2(6, -13), Vector2(26, -4), Vector2(-20, -6), Vector2(38, 22)]:
 			_boule(b, jack + bo)
+		# yellow measuring tape (cinta mètrica) measuring distance to closest boule
+		b.line(jack, jack + Vector2(6.0, -13.0), Color(0.96, 0.84, 0.18), 1.2)
+		b.circle(jack + Vector2(9.0, -17.0) + LIGHT * 1.5, 3.2, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.20))
+		b.circle(jack + Vector2(9.0, -17.0), 3.0, Color(0.94, 0.82, 0.16))
+		b.circle(jack + Vector2(9.0, -17.0), 1.6, Color(0.20, 0.20, 0.22))
 		b.circle(jack + Vector2(0.6, 1.0), 3.4, Color(0, 0, 0, 0.22))
 		b.circle(jack, 3.0, Color(0.88, 0.32, 0.20))
+		# scoreboard on the west timber rail
+		var sb_pos := Vector2(pp.position.x - 14.0, pp.position.y + 40.0)
+		b.rect(Rect2(sb_pos + LIGHT * 2.5, Vector2(6.0, 24.0)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
+		b.rect(Rect2(sb_pos, Vector2(6.0, 24.0)), Color(0.50, 0.38, 0.24))
+		b.rect(Rect2(sb_pos + Vector2(1.0, 2.0), Vector2(4.0, 20.0)), Color(0.18, 0.20, 0.18))
+		b.circle(sb_pos + Vector2(3.0, 6.0), 1.0, Color(0.92, 0.92, 0.90, 0.8))
+		b.circle(sb_pos + Vector2(3.0, 16.0), 1.0, Color(0.92, 0.92, 0.90, 0.8))
+		# leather boule carrying pouch on the south rail
+		var bag_pos := Vector2(pp.position.x + 24.0, pp.end.y + 1.0)
+		b.rect(Rect2(bag_pos + LIGHT * 2.0, Vector2(16.0, 9.0)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+		b.rect(Rect2(bag_pos, Vector2(16.0, 9.0)), Color(0.48, 0.30, 0.18))
+		b.circle(bag_pos + Vector2(3.0, 4.5), 3.0, Color(0.56, 0.36, 0.22))
+		b.circle(bag_pos + Vector2(8.0, 4.5), 3.0, Color(0.56, 0.36, 0.22))
+		b.circle(bag_pos + Vector2(13.0, 4.5), 3.0, Color(0.56, 0.36, 0.22))
+		b.line(bag_pos + Vector2(2.0, 0.0), bag_pos + Vector2(14.0, 0.0), Color(0.24, 0.14, 0.08), 1.5)
 		# the next two, waiting at the feet of the man whose turn is next
 		_boule(b, pp.position + Vector2(112.0, pp.size.y - 30.0))
 		_boule(b, pp.position + Vector2(118.0, pp.size.y - 40.0))
@@ -5684,7 +5714,12 @@ func _draw_barri(vt: float, vb: float) -> void:
 func _boule(b: ShapeBatch, p: Vector2) -> void:
 	b.circle(p + Vector2(1, 2), 5.0, Color(0, 0, 0, 0.2))
 	b.circle(p, 5.0, Color(0.58, 0.58, 0.60))
-	b.circle(p + Vector2(-1.5, -1.5), 2.0, Color(0.86, 0.86, 0.88))
+	# engraved identification grooves (estriat) on steel boules
+	b.circle(p, 3.4, Color(0.44, 0.44, 0.46))
+	b.circle(p, 2.8, Color(0.58, 0.58, 0.60))
+	b.circle(p, 1.8, Color(0.44, 0.44, 0.46))
+	b.circle(p, 1.3, Color(0.58, 0.58, 0.60))
+	b.circle(p + Vector2(-1.5, -1.5), 1.6, Color(0.88, 0.88, 0.90))
 
 
 # El Barri's drinking fountain: a green cast-iron column with its push button,
@@ -5695,12 +5730,16 @@ func _draw_barri_font(f: Vector2) -> void:
 	b.circle(f + Vector2(18, 4), 22.0, Color(0.50, 0.44, 0.34, 0.38))
 	# the grate under the spout
 	var g := Rect2(f + Vector2(9.0, -10.0), Vector2(20.0, 20.0))
+	b.rect(g.grow(1.2), Color(0.34, 0.34, 0.36))
 	b.rect(g, Color(0.20, 0.20, 0.21))
 	for k in range(4):
 		b.rect(Rect2(g.position.x + 2.0 + float(k) * 4.6, g.position.y + 2.0, 2.4, 16.0), Color(0.36, 0.36, 0.38))
 	# the dog's bowl: a little iron basin at the foot of the column
 	b.circle(f + Vector2(1.0, 17.0), 6.5, Color(0.12, 0.24, 0.18))
 	b.circle(f + Vector2(0.5, 16.5), 4.5, Color(0.36, 0.56, 0.66))
+	# expanding water ripple ring in bowl
+	b.circle(f + Vector2(0.5, 16.5), 3.0, Color(0.55, 0.76, 0.88, 0.5))
+	b.circle(f + Vector2(0.5, 16.5), 2.2, Color(0.36, 0.56, 0.66))
 	b.circle(f + Vector2(-1.0, 15.0), 1.4, Color(0.82, 0.92, 0.98, 0.8))
 	# the column's shadow, long, away from the light
 	var side := LIGHT.orthogonal()
@@ -5713,6 +5752,10 @@ func _draw_barri_font(f: Vector2) -> void:
 	b.circle(f, 8.0, iron)
 	b.circle(f + Vector2(-2.0, -2.0), 5.0, iron.lightened(0.18))
 	b.circle(f, 2.6, Color(0.70, 0.62, 0.30))
+	# Barcelona City crest (escut de Barcelona) embossed in relief on column
+	b.rect(Rect2(f.x - 2.5, f.y + 1.0, 5.0, 6.0), Color(0.72, 0.64, 0.34))
+	b.line(Vector2(f.x, f.y + 1.0), Vector2(f.x, f.y + 7.0), Color(0.38, 0.32, 0.16), 0.8)
+	b.line(Vector2(f.x - 2.5, f.y + 4.0), Vector2(f.x + 2.5, f.y + 4.0), Color(0.38, 0.32, 0.16), 0.8)
 	# the spout, reaching out over the grate, and its drip
 	b.line(f + Vector2(7.0, 0.0), f + Vector2(18.0, 0.0), iron.darkened(0.15), 3.0)
 	b.circle(f + Vector2(19.0, 0.0), 2.2, Color(0.66, 0.58, 0.28))
@@ -5732,10 +5775,32 @@ func _draw_water_bowl(f: Vector2) -> void:
 func _draw_pingpong(st: Vector2) -> void:
 	var r := Rect2(st.x - 44.0, st.y - 24.0, 88.0, 48.0)
 	contact_shadow(_wc, st, 44.0, 8.0, 0.22)
-	_wc.draw_rect(r, Color(0.36, 0.48, 0.44))
-	_wc.draw_rect(r.grow(-3.0), Color(0.42, 0.56, 0.50))
-	_wc.draw_rect(r.grow(-3.0), Color(0.92, 0.92, 0.88), false, 1.5)
-	_wc.draw_line(Vector2(st.x, r.position.y - 4.0), Vector2(st.x, r.end.y + 4.0), Color(0.18, 0.18, 0.20), 3.0)
+	var b := ShapeBatch.new()
+	b.rect(r, Color(0.36, 0.48, 0.44))
+	b.rect(r.grow(-1.5), Color(0.92, 0.92, 0.88))
+	b.rect(r.grow(-3.0), Color(0.42, 0.56, 0.50))
+	# white doubles centerline dividing service boxes
+	b.line(Vector2(r.position.x + 3.0, st.y), Vector2(r.end.x - 3.0, st.y), Color(0.94, 0.94, 0.90, 0.85), 1.2)
+	# perforated stainless steel net plate (xarxa metallica Benito)
+	b.line(Vector2(st.x, r.position.y - 4.0), Vector2(st.x, r.end.y + 4.0), Color(0.70, 0.72, 0.76), 3.2)
+	b.line(Vector2(st.x + 1.0, r.position.y - 4.0), Vector2(st.x + 1.0, r.end.y + 4.0), Color(0.42, 0.44, 0.46), 1.0)
+	for ny in range(7):
+		var py := r.position.y + 4.0 + float(ny) * 6.0
+		b.circle(Vector2(st.x, py), 1.0, Color(0.22, 0.24, 0.26))
+	b.circle(Vector2(st.x, r.position.y - 4.0), 2.2, Color(0.35, 0.35, 0.38))
+	b.circle(Vector2(st.x, r.end.y + 4.0), 2.2, Color(0.35, 0.35, 0.38))
+	# two ping-pong paddles (pales) left on table corner
+	# red paddle (face up)
+	b.line(st + Vector2(33.0, -11.0), st + Vector2(39.0, -8.0), Color(0.68, 0.52, 0.36), 2.2)
+	b.circle(st + Vector2(28.0, -14.0), 4.2, Color(0.85, 0.22, 0.18))
+	# black paddle (underneath)
+	b.line(st + Vector2(36.0, -19.0), st + Vector2(42.0, -21.0), Color(0.68, 0.52, 0.36), 2.0)
+	b.circle(st + Vector2(32.0, -18.0), 4.0, Color(0.18, 0.18, 0.20))
+	# white celluloid ball (pilota)
+	b.circle(st + Vector2(-16.0, 10.0) + LIGHT * 1.0, 2.0, Color(0, 0, 0, 0.15))
+	b.circle(st + Vector2(-16.0, 10.0), 2.0, Color(0.98, 0.98, 0.95))
+	b.circle(st + Vector2(-16.5, 9.5), 0.8, Color(1, 1, 1))
+	b.flush(_wc)
 
 
 # EL PARC's own furniture, on the lawns beside the path: box-hedged

@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - Petanca measuring tape, concrete ping-pong paddles, and tree grates for El Barri
+
+- El Barri's petanca pitch now features an elder's yellow measuring tape (cinta mètrica) and casing measuring the distance from the jack to the closest boule, a wooden scoreboard with chalk marks on the west rail, a brown leather three-boule carry pouch on the south border, and engraved identification stripes on the steel boules.
+- The concrete outdoor ping-pong table now carries a perforated stainless steel net plate with stamped circular holes, a white doubles centerline, red and black rubber paddles with wooden handles, and a white celluloid ball.
+- El Barri's cast-iron drinking fountain now carries Barcelona's relief city shield crest on the column, an expanding ripple in the dog's drinking basin, and an outlined drainage grate frame.
+- The square's London plane trees now feature cast-iron concentric radial tree grates (escocells de ferro colat) flush with the gravel square floor.
+
 ## 2026-10-22 - L'Estació platform tactile paving and travelator handrail grinds
 
 - L'Estació's moving walkway now carries grindable handrails along both glass balustrades ("HANDRAIL"), allowing full-length travelator grinds end-to-end.
