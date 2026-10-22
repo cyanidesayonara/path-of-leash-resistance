@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - Boardwalk ramps, lifeguard towers, showers and tide drift line for La Platja
+
+- La Platja's timber boardwalk (passarel·la de fusta) now carries alternating weathered cedar/teak tones and countersunk bolt pairs on plank ends.
+- Slatted timber access ramps now bridge from the boardwalk out across the sand toward the beach showers and lifeguard watchtowers.
+- Beach showers now feature authentic lower foot-wash taps (rentapeus), slotted stainless puddle drainage gratings, and duckboard brass screws.
+- Lifeguard towers now feature cross-braced leg shadows, hanging bright orange lifebuoys (salva-vides) with reflective straps, Salvament de Platges red cross roof emblems, and PA loudspeaker horns pointing seaward.
+- The volleyball court now features parallel raked sand ridges, corner anchor plates, and a referee tall chair.
+- Along the waterline and in the dog beach bay, the tide drift line now carries scattered Mediterranean cockle shells (petxines), water-worn sea pebbles (còdols), and stranded posidonia.
+- Promenade bins on the seafront now display Barcelona's tri-color selective recycling stations (yellow for envasos, blue for paper, grey for resta) on stainless steel mounting bars.
+
 ## 2026-10-22 - El Diluvi storm drains, puddle ripple dynamics, and terrace tarp
 
 - Curbside running gutters along El Diluvi now carry cast-iron slot grates with animated swirling storm water whirlpool funnels.
