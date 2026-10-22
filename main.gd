@@ -4750,7 +4750,7 @@ func _departures_board(b: ShapeBatch, bd: Vector2) -> void:
 func _draw_diluvi(vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
 	var t := AnimClock.msec() / 1000.0
-	# the gutters, running
+	# the gutters, running along curbs with storm drain grates and vortexes
 	var gy := floorf((vt - 60.0) / 46.0) * 46.0
 	while gy < vb + 60.0:
 		var ge := walk_edges(gy)
@@ -4758,7 +4758,28 @@ func _draw_diluvi(vt: float, vb: float) -> void:
 			b.rect(Rect2(gx - 4.0, gy, 8.0, 46.0), Color(0.30, 0.36, 0.42))
 			var fl := fmod(gy + t * 90.0, 46.0)
 			b.line(Vector2(gx, gy + fl), Vector2(gx, gy + fl + 12.0), Color(0.75, 0.84, 0.92, 0.6), 2.0)
+			if int(absf(gy)) % 184 < 46:
+				# curbside iron slot grate and whirlpool drain
+				b.rect(Rect2(gx - 5.0, gy + 10.0, 10.0, 26.0), Color(0.18, 0.20, 0.22))
+				for gi: int in range(4):
+					b.line(Vector2(gx - 3.5, gy + 14.0 + float(gi) * 5.0), Vector2(gx + 3.5, gy + 14.0 + float(gi) * 5.0), Color(0.10, 0.10, 0.12), 2.0)
+				var wph := fmod(t * 2.2 + absf(gy) * 0.1, 1.0)
+				b.circle(Vector2(gx, gy + 23.0), 2.5 + wph * 4.5, Color(0.72, 0.84, 0.94, 0.38 * (1.0 - wph)))
 		gy += 46.0
+
+	# expanding raindrop impact ripple rings across puddles
+	for pt: Dictionary in patches:
+		if String(pt.get("kind", "")) != "puddle":
+			continue
+		var pc := patch_centre(pt)
+		if pc.y < vt - 60.0 or pc.y > vb + 60.0:
+			continue
+		var prx: float = float(pt.get("rx", 30.0))
+		for ri: int in range(3):
+			var rph := fmod(t * 1.6 + float(ri) * 0.33 + pc.x * 0.05, 1.0)
+			var roff := Vector2(sin(float(ri) * 2.4 + pc.y) * prx * 0.4, cos(float(ri) * 2.1) * 8.0)
+			b.circle(pc + roff, 3.0 + rph * 14.0, Color(0.85, 0.92, 0.98, 0.35 * (1.0 - rph)))
+			b.circle(pc + roff, 1.5, Color(1.0, 1.0, 1.0, 0.55 * (1.0 - rph)))
 	# the awnings and the arcade's roof are overhead (draw_overhead_piece):
 	# here the shade each throws on the paving
 	for i in range(1, shelters.size()):
@@ -4812,11 +4833,15 @@ func _diluvi_drain_board(b: ShapeBatch, c: Vector2, hh: float) -> void:
 # padlock on the chain. Water stands on the top seats.
 func _diluvi_stacked_terrace(b: ShapeBatch, r: Rect2, t: float) -> void:
 	b.rect(Rect2(r.position + LIGHT * 7.0, r.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.26))
-	# the folded tables, on edge against the shopfront: round tops seen edge on
+	# the folded tables, wrapped in a blue waterproof vinyl tarpaulin
+	var tp := Rect2(r.end.x - 9.0, r.position.y + 2.0, 8.0, r.size.y - 4.0)
+	b.rect(tp, Color(0.18, 0.38, 0.65))
+	b.rect(Rect2(tp.position.x, tp.position.y, 2.5, tp.size.y), Color(0.28, 0.50, 0.80))
+	for ey: float in [tp.position.y + 4.0, tp.end.y - 4.0]:
+		b.circle(Vector2(tp.position.x + 3.0, ey), 1.2, Color(0.88, 0.78, 0.35))
 	for k in range(2):
-		var tx := r.end.x - 7.0 + float(k) * 4.0
-		b.rect(Rect2(tx, r.position.y + 2.0 + float(k) * 3.0, 4.0, r.size.y - 6.0), Color(0.48, 0.50, 0.52))
-		b.rect(Rect2(tx, r.position.y + 2.0 + float(k) * 3.0, 1.5, r.size.y - 6.0), Color(0.70, 0.72, 0.74))
+		var tx := r.end.x - 6.0 + float(k) * 3.0
+		b.rect(Rect2(tx, r.position.y + 4.0 + float(k) * 3.0, 2.5, r.size.y - 8.0), Color(0.48, 0.50, 0.52))
 	# two stacks of bistro chairs, rattan seats on bent cane frames, each one
 	# stepped off the one below so every back shows; splayed legs at the foot
 	var cane := Color(0.62, 0.44, 0.26)
@@ -4873,9 +4898,13 @@ func _diluvi_awning(b: ShapeBatch, r: Rect2, i: int) -> void:
 	while sx < r.end.x:
 		b.rect(Rect2(sx, r.position.y, 6.0, r.size.y), ac.lightened(0.25))
 		sx += 14.0
-	for k in range(3):
-		var dy := fmod(t * 60.0 + float(k) * 13.0 + r.position.y, 26.0)
-		b.circle(Vector2(r.position.x - 3.0, r.position.y + 12.0 + float(k) * r.size.y / 3.0 + dy * 0.3), 1.6, Color(0.8, 0.88, 0.95, 0.8))
+	# rainwater cascading off the scalloped awning hem
+	for k in range(5):
+		var dy := fmod(t * 70.0 + float(k) * 11.0 + r.position.y, 28.0)
+		var py := r.position.y + 8.0 + float(k) * (r.size.y - 16.0) / 4.0
+		b.line(Vector2(r.position.x - 2.0, py), Vector2(r.position.x - 2.0, py + 4.0), Color(0.82, 0.90, 0.98, 0.75), 1.5)
+		b.circle(Vector2(r.position.x - 3.0, py + dy * 0.25), 1.6, Color(0.85, 0.92, 0.98, 0.8))
+		b.circle(Vector2(r.position.x - 6.0, py + 12.0), 3.0, Color(0.80, 0.88, 0.96, 0.3))
 
 
 # the arcade's vaulted roof seen from above, only the stretch on screen
