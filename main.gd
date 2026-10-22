@@ -5753,33 +5753,53 @@ func _draw_parc(vt: float, vb: float) -> void:
 	if mp.y > vt - 120.0 and mp.y < vb + 120.0:
 		var stone := Color(0.42, 0.38, 0.35)
 		var mbs: Vector2 = LevelBuild.MAMMOTH_BODY
-		b.rect(Rect2(mp - mbs * 0.5 - Vector2(8, 22), mbs + Vector2(16, 44)), Color(0.70, 0.68, 0.63))   # the plinth
-		b.rect(Rect2(mp - mbs * 0.5 - Vector2(8, 22), mbs + Vector2(16, 44)).grow(-4.0), Color(0.64, 0.62, 0.57))
+		var plinth := Rect2(mp - mbs * 0.5 - Vector2(8, 22), mbs + Vector2(16, 44))
+		b.rect(Rect2(plinth.position + LIGHT * 10.0, plinth.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+		b.rect(plinth, Color(0.70, 0.68, 0.63))
+		b.rect(plinth.grow(-3.0), Color(0.64, 0.62, 0.57))
+		b.line(plinth.position + Vector2(4.0, 3.0), Vector2(plinth.end.x - 4.0, plinth.position.y + 3.0), Color(0.80, 0.78, 0.74), 1.5)
+		# commemorative bronze plaque on the plinth face
+		var pq := Rect2(mp.x - 14.0, plinth.end.y - 14.0, 28.0, 10.0)
+		b.rect(pq, Color(0.45, 0.34, 0.18))
+		b.rect(pq.grow(-1.2), Color(0.62, 0.48, 0.26))
+		b.line(Vector2(pq.position.x + 3.0, pq.position.y + 3.5), Vector2(pq.end.x - 3.0, pq.position.y + 3.5), Color(0.32, 0.22, 0.12), 1.0)
+		b.line(Vector2(pq.position.x + 4.0, pq.position.y + 6.5), Vector2(pq.end.x - 4.0, pq.position.y + 6.5), Color(0.32, 0.22, 0.12), 1.0)
 		b.circle(mp + LIGHT * 22.0, 44.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
 		for lg: Vector2 in [Vector2(-22, -30), Vector2(22, -30), Vector2(-22, 34), Vector2(22, 34)]:
 			b.circle(mp + lg, 10.0, stone.darkened(0.25))
 		b.circle(mp + Vector2(0, 16), 30.0, stone)
 		b.circle(mp + Vector2(0, -12), 28.0, stone)
-		b.circle(mp + Vector2(0, -44), 22.0, stone.lightened(0.06))      # the head
+		b.circle(mp + Vector2(0, -44), 22.0, stone.lightened(0.06))
 		b.circle(mp + Vector2(-6, -50), 10.0, stone.lightened(0.14))
-		b.circle(mp + Vector2(-20, -40), 11.0, stone.darkened(0.12))     # ears
+		b.circle(mp + Vector2(-20, -40), 11.0, stone.darkened(0.12))
 		b.circle(mp + Vector2(20, -40), 11.0, stone.darkened(0.12))
-		b.line(mp + Vector2(0, -60), mp + Vector2(0, -78), stone.darkened(0.1), 9.0)   # the trunk
+		b.line(mp + Vector2(0, -60), mp + Vector2(0, -78), stone.darkened(0.1), 9.0)
 		b.circle(mp + Vector2(4, -80), 5.0, stone.darkened(0.1))
 		for tx: float in [-1.0, 1.0]:
 			b.line(mp + Vector2(tx * 10.0, -60), mp + Vector2(tx * 22.0, -80), Color(0.88, 0.85, 0.76), 4.0)
-			b.line(mp + Vector2(tx * 22.0, -80), mp + Vector2(tx * 14.0, -92), Color(0.88, 0.85, 0.76), 3.5)
-		b.line(mp + Vector2(0, 46), mp + Vector2(4, 60), stone.darkened(0.2), 3.0)       # the tail
-	# the bandstand: its shadow, the stone platform and the iron posts; the
-	# roof over them is overhead (draw_overhead_piece)
+			b.line(mp + Vector2(tx * 22.0, -80), mp + Vector2(tx * 14.0, -92), Color(0.92, 0.89, 0.80), 3.5)
+			b.circle(mp + Vector2(tx * 14.0, -92), 1.6, Color(0.96, 0.94, 0.88))
+		b.line(mp + Vector2(0, 46), mp + Vector2(4, 60), stone.darkened(0.2), 3.0)
+	# the bandstand: stone podium with concentric radial planks, iron railings and posts
 	var bs: Vector2 = LevelBuild.PARK_BANDSTAND
 	if bs.y > vt - 120.0 and bs.y < vb + 120.0:
 		var r: float = LevelBuild.BANDSTAND_R
 		b.circle(bs + LIGHT * 18.0, r + 18.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
-		b.circle(bs, r + 8.0, Color(0.74, 0.70, 0.62))                 # the stone platform
+		b.circle(bs, r + 8.0, Color(0.74, 0.70, 0.62))
 		b.circle(bs, r - 6.0, Color(0.66, 0.62, 0.55))
+		b.circle(bs, r - 12.0, Color(0.58, 0.54, 0.47))
+		for ai: int in range(8):
+			var a := float(ai) * PI / 4.0 + PI / 8.0
+			b.line(bs, bs + Vector2.from_angle(a) * (r - 12.0), Color(0.50, 0.46, 0.40), 1.5)
+		if park_posts.size() >= 2:
+			for pi: int in range(park_posts.size()):
+				var p0: Vector2 = park_posts[pi]
+				var p1: Vector2 = park_posts[(pi + 1) % park_posts.size()]
+				b.line(p0, p1, Color(0.18, 0.19, 0.22), 2.5)
+				b.line(p0, p1, Color(0.36, 0.38, 0.42), 1.0)
 		for bp: Vector2 in park_posts:
-			b.circle(bp, 5.0, Color(0.16, 0.17, 0.19))
+			b.circle(bp, 6.0, Color(0.16, 0.17, 0.19))
+			b.circle(bp + Vector2(-1.0, -1.0), 2.2, Color(0.44, 0.46, 0.50))
 	# the playground: a soft red surface, a slide, a pair of swings
 	var pg: Rect2 = LevelBuild.PARK_PLAYGROUND
 	if pg.end.y > vt - 40.0 and pg.position.y < vb + 40.0:
@@ -5888,6 +5908,24 @@ func _lake_shore(b: ShapeBatch, lk: Rect2) -> void:
 			b.line(c + off, c + off + lean, Color(0.30, 0.48, 0.22) if s % 2 == 0 else Color(0.42, 0.58, 0.28), 2.0)
 			if (s + i) % 3 == 0:
 				b.line(c + off + lean * 0.7, c + off + lean * 0.95, Color(0.42, 0.26, 0.14), 3.2)
+	# water lily pads (nenúfars) floating near the reeds
+	for li: int in range(7):
+		var la := PI * 0.8 + float(li) * 0.22
+		var lp: Vector2 = at.call(la, 0.84 + 0.05 * float(li % 3))
+		b.circle(lp, 5.0, Color(0.20, 0.48, 0.24))
+		b.circle(lp + Vector2(1.2, -1.0), 1.8, Color(0.16, 0.36, 0.18))
+		if li % 2 == 0:
+			b.circle(lp + Vector2(-1.0, -1.5), 2.2, Color(0.96, 0.90, 0.94))
+			b.circle(lp + Vector2(-1.0, -1.5), 1.0, Color(0.96, 0.84, 0.32))
+
+	# lifebuoy ring on the jetty post
+	var lb_pos := Vector2(jet.position.x - 3.0, jet.position.y + 16.0)
+	b.circle(lb_pos + LIGHT * 2.0, 5.5, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.2))
+	b.circle(lb_pos, 5.0, Color(0.90, 0.22, 0.18))
+	b.circle(lb_pos, 2.8, Color(0.50, 0.36, 0.22))
+	for rk: int in range(4):
+		b.circle(lb_pos + Vector2.from_angle(float(rk) * PI * 0.5) * 3.8, 1.2, Color(0.96, 0.96, 0.98))
+
 	# ducks having a rest on the east bank, heads tucked or up
 	for d in range(3):
 		var dp: Vector2 = at.call(-0.25 + float(d) * 0.22, 1.05)
@@ -5940,14 +5978,27 @@ func _playground(b: ShapeBatch, pg: Rect2) -> void:
 			for fyy: float in [fr.position.y, fr.end.y]:
 				b.circle(Vector2(fx2, fyy), 3.0, fence.darkened(0.3))
 			fx2 += 20.0
-		# a spring rider: a little blue horse on its coil, seen from above -
-		# its back and seat, the head and ears out front, the handle bar, the
-		# tail - in no colour a hydrant comes in
+		# sandpit toys: red bucket and blue spade in the sand
+		var sp_toy := pg.position + Vector2(48.0, 180.0)
+		b.circle(sp_toy + LIGHT * 2.0, 5.0, Color(0, 0, 0, 0.15))
+		b.circle(sp_toy, 4.5, Color(0.88, 0.24, 0.20))
+		b.circle(sp_toy, 2.5, Color(0.72, 0.18, 0.16))
+		b.line(sp_toy + Vector2(7.0, -2.0), sp_toy + Vector2(16.0, 5.0), Color(0.24, 0.55, 0.85), 2.2)
+
+		# two spring riders: a blue horse and a green frog on heavy coils
 		var sr := pg.position + Vector2(126.0, 248.0)
 		var hc := Color(0.30, 0.56, 0.86)
 		b.circle(sr + LIGHT * 9.0, 11.0, Color(0, 0, 0, 0.16))
 		b.line(sr + Vector2(0, 10), sr + Vector2(-3, 18), Color(0.96, 0.84, 0.30), 3.0)
 		_soft_rect(b, Rect2(sr.x - 6.0, sr.y - 10.0, 12.0, 22.0), 5.0, hc)
+		# green frog spring rocker alongside
+		var sr2 := pg.position + Vector2(126.0, 196.0)
+		var fc := Color(0.28, 0.62, 0.32)
+		b.circle(sr2 + LIGHT * 9.0, 11.0, Color(0, 0, 0, 0.16))
+		b.line(sr2 + Vector2(0, 10), sr2 + Vector2(-3, 18), Color(0.96, 0.84, 0.30), 3.0)
+		_soft_rect(b, Rect2(sr2.x - 7.0, sr2.y - 8.0, 14.0, 18.0), 5.0, fc)
+		b.circle(sr2 + Vector2(-5.0, -9.0), 3.0, fc.lightened(0.15))
+		b.circle(sr2 + Vector2(5.0, -9.0), 3.0, fc.lightened(0.15))
 		b.circle(sr + Vector2(0, -14), 6.0, hc.lightened(0.1))
 		b.circle(sr + Vector2(-3.5, -19), 2.2, hc.darkened(0.2))
 		b.circle(sr + Vector2(3.5, -19), 2.2, hc.darkened(0.2))

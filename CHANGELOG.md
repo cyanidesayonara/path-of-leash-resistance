@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - El Parc mammoth plaque, bandstand railings, and lake water lilies
+
+- The famous Ciutadella stone mammoth now features a commemorative bronze plaque on the plinth face, stepped plinth moulding, and detailed carved ivory tusk tips.
+- The octagonal music bandstand now carries concentric radial timber flooring on its stone platform and ornate wrought-iron railings connecting the posts.
+- The lake jetty now carries a lifebuoy safety ring and floating water lily pads (*nenúfars*) with blossoms drifting near the reed beds.
+- The playground now includes scattered toy buckets and spades in the sandpit and a green frog spring rocker alongside the blue horse.
+
 ## 2026-10-22 - L'Estació platform tactile paving and travelator handrail grinds
 
 - L'Estació's moving walkway now carries grindable handrails along both glass balustrades ("HANDRAIL"), allowing full-length travelator grinds end-to-end.
