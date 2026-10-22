@@ -1,8 +1,14 @@
 # Walk polish audit
 
-Target: v1.62. Evidence for the sixteen campaign walks. A finding is
-blocking, clearly rough, or subjective. Subjective findings stay recorded
-and unchanged until Santtu plays them.
+Recorded 2026-10-19, before El Besòs. Evidence for the sixteen campaign
+walks that existed then. A finding is blocking, clearly rough, or
+subjective. Subjective findings stay recorded and unchanged until Santtu
+plays them.
+
+El Besòs was checked on 2026-10-22 (selftest, autowalk, freedom bounds,
+terrain, and a desktop mid-walk shot). That pass is in the changelog, not
+in these entries. The two rough findings below were fixed before the 1.62
+tag: #264 (Montjuïc hill rim) and #265 (march droppings).
 
 Scripted play is one turbo run out and back, about 75 seconds, logged by
 `tools/playtest.gd`. A walk that ends still on the way out ran out of
@@ -122,9 +128,9 @@ script, which is not a stuck actor.
 
 ## Queue
 
-Fourteen walks have no finding. Two are clearly rough. Nothing in this pass was blocking, and nothing was left as subjective.
+Fourteen walks had no finding. Two were clearly rough. Nothing in this pass was blocking, and nothing was left as subjective. Both rough findings are merged.
 
-1. Clearly rough. Montjuïc. The esplanade asks `draw_hill` for a rim with fewer than two points. #264.
-2. Clearly rough. Dia de Partit. The march droppings use `stinky`, which is not in `SUBSTANCES`. #265.
+1. Fixed, #264. Montjuïc. The esplanade asked `draw_hill` for a rim with fewer than two points.
+2. Fixed, #265. Dia de Partit. The march droppings used `stinky`, which was not in `SUBSTANCES`.
 
 The loose place-names are not a defect. At frame 45, PASSEIG MARÍTIM, EL MERCAT, EL BOSC and LA RAMBLA all read. The default sweep frame is 320, which is after your human has walked through the letters. Scattering them is what those pieces are for. `PLAÇA DELS GOSSOS` on the town squares is the name those yards were given, not the beach's `PLATJA DELS GOSSOS`.

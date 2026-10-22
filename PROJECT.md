@@ -171,7 +171,7 @@ Every feature must serve at least one. If it serves none, cut it.
   keep the first-segment direction. Spring force, separation damping and lost
   dog control ease in together over the first 5% of stretch. The rope still
   draws as four polylines plus batched circles.
-- **post-v1.57 guided whirl overhaul - built, awaiting hand play.** Arming
+- **post-v1.57 guided whirl overhaul - shipped.** Arming
   reads one signed mean of the local human-end coil, then commits its direction
   and exact turn budget for the whole orbit. Pull still controls spin-up.
   Ordinary launches are pure tangents; a missed tangent gets one bounded
@@ -183,7 +183,7 @@ Every feature must serve at least one. If it serves none, cut it.
   the old FLING reward on a safe refusal feels fair, and how much dogward lean
   the forced release wants. Assess all four only on the final overhaul commit.
 - **v1.61 - shipped.** Dia de Partit, tagged 2026-10-20.
-- **v1.62 - prepared, not tagged.** El Besòs, arrivals at each walk's own door, weather and lamplight, no Daily Walk, Tofu only where she can be reached, and a rainy high stream on El Bosc. The notes are written. Do not tag until they are on main and CI is green.
+- **v1.62 - prepared, not tagged.** The game and the notes are on main (notes merge `da57dd2`, with CI, the idle soak and the screenshot sweep green). El Besòs, arrivals at each walk's own door, weather and lamplight, no Daily Walk, Tofu only where she can be reached, and a rainy high stream on El Bosc. The itch page, the Store listing, the README and the handover match that. Tag only when Santtu says.
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
 - Every release also ships: mechanics tuning from playtests, at least
@@ -258,14 +258,10 @@ the phone; final level the battery is dead and the walk is just a walk.
   dense checkpoints); challenge lives in optional layers — star ratings,
   par times, save streaks, "perfect walk" (phone untouched). Bespoke
   puzzle-heavy "trial walks" as a separate late-game track if wanted.
-- (Removed in 1.62: the Daily Walk added nothing the walks with their own
-  weather and time do not, and its fixed sky leaked into the walk select.)
-  Daily-walk hook: positive-only. A shared daily-seeded walk (same layout
-  for everyone that day, compare scores) fits the fiction perfectly and is
-  the modern comeback pattern. Explicitly avoid guilt mechanics: the dog is
-  never sad/anxious because the player was away — punishing absence reads
-  as F2P manipulation and poisons the cozy audience. The dog is always
-  thrilled you came back. That IS the dog experience.
+- Daily Walk: tried, and removed in 1.62. It added nothing the walks with
+  their own weather and time do not, and its fixed sky leaked into the walk
+  select. A shared daily seed is not the plan. If it ever comes back, it
+  stays positive: the dog is never sad because the player was away.
 - Progression: mostly horizontal, not power. Bones buy cosmetics (collars,
   bandanas), new breeds (playstyle variants: pull strength / speed / size),
   leash types (retractable, bungee, chain), and a home/park hub that fills
@@ -359,9 +355,11 @@ memorable.
   the one-off set pieces (salamander, arches, train) as placeable pieces
   rather than editable ones. Santtu's idea of it as a paid add-on only
   matters once there are players.
-- New walks (October 2026). Montjuïc has shipped. Dia de Partit is the 1.61
-  walk: the avenue, the crowd, the three set pieces and the corners are in,
-  and the twelve goals are the last piece. Santtu's direction still holds: the
+- New walks (October 2026). Montjuïc has shipped. Dia de Partit shipped in
+  1.61: the avenue, the crowd, the three set pieces, the corners and the
+  twelve goals. El Besòs is in for 1.62, not tagged yet: the river park
+  between L'Estació and Les Obres, calm on the way out and a flood on the
+  way home. Santtu's direction still holds: the
   less famous but good-looking parts of Barcelona and round it, and every
   new walk ships with an upgrade to an existing one so the standard keeps
   rising. Still pitched: El Veterinari (the walk in reverse: your human is

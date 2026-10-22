@@ -19,81 +19,46 @@ Top-down physics comedy in Godot 4.7 / GDScript. You are the dog; the
 phone-distracted human walks on autopilot; the leash is real verlet-rope
 physics. Ships to itch (`html5` + `windows`) on a version tag after green CI.
 
-## Where things stand (2026-10-16)
+## Where things stand (2026-10-22)
 
-**Released: v1.60** at `00576db`. itch (web and Windows) and the GitHub
-release are published. The Microsoft Store submission went in on 2026-10-12.
-Certification was still pending at the last check. Do not copy 1.60 into
-"Past What's new" in `store/listing.md` until Santtu says it is live.
+**Released: v1.61** at `7cc8e73` (2026-10-20). itch and the GitHub release
+are that tag. The Store listing records those notes as tagged that day.
+Santtu submits the Store package. Do not treat a submission as live until
+he says so.
 
-**On `origin/main`:** `32e1855` (merge of #233). The local `main` checkout at
-`path-of-leash-resistance` is behind that, at `21fca92`. Branch new work
-from `origin/main`, not from that checkout.
+**On `origin/main`:** the 1.62 notes are merged (`da57dd2`; CI, the idle soak and
+the screenshot sweep passed on that commit). This documentation follows
+them. v1.62 is prepared and not tagged.
+The notes are in `docs/itch-page.md` and `store/listing.md`. The README,
+`PROJECT.md` and this file match them. Tag only when Santtu says to.
 
-Since the tag: #230 icon and Store art, #231 the 1.60 listing record, #232
-HUMAN STUCK no longer misfires, #233 the rope-tug tests stay clear of the
-live park. #233 is a test-only change. It does not count against the WIP
-limit.
+What 1.62 adds, already on main: El Besòs (14 stars, between L'Estació and
+Les Obres), the flood on the way home, each walk arriving at its own door,
+weather and lamplight, no Daily Walk, Tofu only where she can be reached,
+the leash around a stall, a van or a bench, and a rainy high stream on El
+Bosc (one run in five; `--seed=4` selects it, `--seed=0` does not).
 
-**Open, this session's work:** [PR 234](https://github.com/cyanidesayonara/path-of-leash-resistance/pull/234)
-`intro-polish` at `125c4d7`, worktree `~/projects/pol-intro`. CI on that SHA
-is green (smoke, idle soak, screenshot sweep). Do not merge it. Santtu
-approves, then `land.sh` merges and boards it as Awaiting acceptance. Leave
-the worktree in place until that happens.
+The 2026-10-22 roster check covered all seventeen campaign walks: selftest,
+autowalk, freedom bounds, and a desktop mid-walk look. Phone, pad and a
+fresh web-perf pass were not part of that check. El Mosaic's decoration,
+and a hand-authored off-leash list, stay open in `docs/LEVEL_DESIGN.md` on
+purpose.
 
-The film was watched maximized. Two things that looked like bugs were not
-picture bugs:
+**Board:** nothing is awaiting acceptance. The open cards are later work,
+not this tag: #260 Steam, #237 Montjuïc extras, #170 chase finales, #147
+platforms, #13 a real phone, #12 whether SCARED belongs in the sweeper
+chase, #11 mood readability. #271 (fear before the sweeper is visible) is
+fixed on main (`f187426`) and closed.
 
-- A volume key skipped the film, because every key was a skip. Volume up,
-  volume down and mute now pass through. Every other key, click, tap and
-  pad button still skips. That fix is `125c4d7`.
-- A later play was silent because Windows had the Godot window muted, after
-  those volume keys. The game's own volumes were the defaults (master 0.85,
-  effects 0.9, music 0.55). Headphones (EDIFIER) were the default device.
-  Unmute the app in the Windows volume mixer if a launch is silent.
+The local checkout at `path-of-leash-resistance` is behind, at `7f014a7`,
+and has uncommitted edits. Branch new work from `origin/main`, not from
+that checkout. Do not resume the 2026-10-16 sitrep: the intro film and the
+per-walk audit from that note have landed. Old worktrees from then are not
+the next task.
 
-The feel card on the PR is still unchecked. Santtu has not said the film is
-accepted.
-
-**Next task: DOG STUCK in the playtest.** `tools/playtest.gd` logs it when a
-direction is held, she is not planted, tumbling, teetering or dragged, and
-she moved under 4 px in a second. The 1.60 runs hit it mostly where the
-scripted steps push her into solids:
-
-- market, about (700, -1185)
-- oldtown (681, -884)
-- scrap, about (795, -2819)
-- guell, about (670, -815)
-- station, y -2982 and -3235
-
-Separate from those spots: when she walks dead on into a pole beside her
-human, she ends up on top of them, because the two bodies do not collide.
-Fix bugs before adding features. This is a player-facing change if the dog's
-movement changes, so it needs a feel card, a CHANGELOG entry, and a fresh
-worktree off `origin/main`. If #234 is still open, land them in sequence:
-both edit `CHANGELOG.md`.
-
-**After that, still open from the 1.60 list:**
-
-- Record 1.60 as live in `store/listing.md` once certification passes.
-- Market NPC pair through a block: a rare report, not reproduced.
-- Per-walk audit issues: #149, #151, #152, #155-#162.
-- Web perf re-measure on an idle machine (#45). 1.60 showed 13-18 more draw
-  calls on beach, rain, market and station. Frame times were too noisy to read.
-- Longer term: #170 chase walks, #169 onboarding, #147 platforms, #13 phone
-  check, #14 leash weight.
-
-**Left on purpose, not this task:**
-
-- `tutorial-kerb` in `pol-kerb`: unmerged commit `a2f0a6e`, "Lay a kerb to
-  ride along the tutorial's grind station". Its remote is gone.
-- `mercat-beside`: local only, one commit about keeping your human in the
-  aisle beside a market block. Behind `origin/main`.
-- `polr2-living-districts`: two commits on a provisional POLR2 note. Far
-  behind `origin/main`.
-- `tug-flake` in `pol-tugflake`: already merged as #233. Safe to remove
-  when nobody is using that checkout.
-- `pol-tools` (landing scripts) lives outside the repo.
+**Next, when Santtu asks:** tag v1.62. Not before. After the tag, he runs
+the Store submit. When that submission is live, move the 1.62 What's new
+into the past list.
 
 ## Standing rules
 
@@ -148,6 +113,7 @@ user argument, including `--level`, skips it. Engine arguments
 4. `release.yml` waits for CI on that SHA, then exports and publishes.
    Missing `BUTLER_API_KEY` fails the job.
 
-Before a tag, update "What's new" in `store/listing.md` and `docs/itch-page.md`
-as their own PR. Santtu runs the Store submit workflow. When a submission
-goes live, copy its What's new into "Past What's new".
+The 1.62 What's new is already in `store/listing.md` and `docs/itch-page.md`.
+Next time, update those as their own PR before the tag. Santtu runs the
+Store submit workflow. When a submission goes live, copy its What's new into
+"Past What's new".
