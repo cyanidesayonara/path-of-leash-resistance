@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - La Ferralla pipe bundles, battery pallets, and guard dog kennel
+
+- Industrial scrap pipe obstacles in La Ferralla are now detailed as bundled steel tubes bound with metallic wire straps and hollow bore bevels.
+- The scrapyard back lot features pallets of discarded automotive lead-acid batteries with red and metallic terminal caps alongside yellow caution labels.
+- The back lot corner now carries a corrugated metal guard dog kennel with an arched entry doorway and a stainless steel water bowl.
+
 ## 2026-10-22 - L'Estació platform tactile paving and travelator handrail grinds
 
 - L'Estació's moving walkway now carries grindable handrails along both glass balustrades ("HANDRAIL"), allowing full-length travelator grinds end-to-end.
