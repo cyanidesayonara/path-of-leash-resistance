@@ -1327,11 +1327,53 @@ func _draw_neteja_module(c: Object, r: Rect2, side: float, k: int, inner_x: floa
 	# the dawn on the roofs' street edge
 	var lx: float = inner_x - (6.0 if side < 0.0 else 0.0)
 	c.draw_rect(Rect2(lx, r.position.y, 6.0, r.size.y), Color(1.0, 0.74, 0.56, 0.28))
-	# the shop front along the kerb: its shutter box and shutter
+	# the shop front along the kerb: its fascia sign, shutter box and shutter
 	var sx: float = inner_x if side < 0.0 else inner_x - 16.0
 	var s0 := r.position.y + 26.0 + float((h >> 3) % 3) * 8.0
 	var s1 := r.end.y - 46.0
 	var bakery := _neteja_open_shop(r.position.y, side)
+
+	# commercial fascia signage (rètol de botiga) above the shutter housing
+	var sign_h := 11.0
+	var sign_y := s0 - 6.0 - sign_h
+	var sign_r := Rect2(sx, sign_y, 16.0, sign_h)
+	var fascia_col := Color(0.18, 0.20, 0.22)
+	var emblem_col := Color(0.85, 0.80, 0.65)
+	if bakery:
+		fascia_col = Color(0.48, 0.24, 0.10)
+		emblem_col = Color(1.0, 0.88, 0.52)
+	else:
+		match (h >> 5) % 4:
+			0:
+				fascia_col = Color(0.10, 0.28, 0.16)
+				emblem_col = Color(0.24, 0.88, 0.45)
+			1:
+				fascia_col = Color(0.14, 0.22, 0.36)
+				emblem_col = Color(0.88, 0.74, 0.32)
+			2:
+				fascia_col = Color(0.35, 0.12, 0.16)
+				emblem_col = Color(0.92, 0.76, 0.40)
+			3:
+				fascia_col = Color(0.26, 0.22, 0.20)
+				emblem_col = Color(0.96, 0.90, 0.78)
+	c.draw_rect(sign_r, fascia_col.darkened(0.25))
+	c.draw_rect(sign_r.grow(-1.0), fascia_col)
+	if not bakery and (h >> 5) % 4 == 0:
+		var cx: float = sign_r.get_center().x
+		var cy: float = sign_r.get_center().y
+		c.draw_line(Vector2(cx - 3.5, cy), Vector2(cx + 3.5, cy), emblem_col, 2.0)
+		c.draw_line(Vector2(cx, cy - 3.5), Vector2(cx, cy + 3.5), emblem_col, 2.0)
+	else:
+		c.draw_line(Vector2(sign_r.position.x + 2.5, sign_r.get_center().y),
+			Vector2(sign_r.end.x - 2.5, sign_r.get_center().y), emblem_col, 2.2)
+
+	# wrought-iron wall lantern bracket projecting onto street
+	var ly := s0 - 22.0
+	var lamp_x: float = inner_x + (side * -4.0)
+	c.draw_line(Vector2(sx + 8.0, ly), Vector2(lamp_x, ly - 2.0), Color(0.18, 0.18, 0.20), 2.0)
+	c.draw_line(Vector2(lamp_x, ly - 2.0), Vector2(lamp_x, ly + 3.0), Color(0.18, 0.18, 0.20), 2.0)
+	c.draw_circle(Vector2(lamp_x, ly + 2.0), 2.6, Color(1.0, 0.82, 0.46))
+
 	c.draw_rect(Rect2(sx, s0 - 6.0, 16.0, 6.0), Color(0.40, 0.41, 0.43))
 	var steel := [Color(0.58, 0.59, 0.60), Color(0.52, 0.56, 0.58), Color(0.62, 0.58, 0.52)][(h >> 7) % 3] as Color
 	var down := s1 if not bakery else lerpf(s0, s1, 0.42)
@@ -1342,15 +1384,17 @@ func _draw_neteja_module(c: Object, r: Rect2, side: float, k: int, inner_x: floa
 		sl += 5.5
 	# the bottom rail and the padlocks that hold it
 	c.draw_rect(Rect2(sx, down - 5.0, 16.0, 5.0), steel.darkened(0.35))
-	c.draw_circle(Vector2(sx + 5.0, down - 2.5), 1.8, Color(0.72, 0.62, 0.28))
-	c.draw_circle(Vector2(sx + 11.0, down - 2.5), 1.8, Color(0.72, 0.62, 0.28))
+	for px: float in [sx + 4.5, sx + 11.5]:
+		c.draw_rect(Rect2(px - 2.0, down + 0.5, 4.0, 2.5), Color(0.28, 0.28, 0.30))
+		c.draw_circle(Vector2(px, down - 2.5), 1.8, Color(0.72, 0.62, 0.28))
+		c.draw_circle(Vector2(px, down - 4.5), 1.0, Color(0.85, 0.85, 0.90))
 	if bakery:
 		# the gap under the half-raised shutter: a lit shop, three rolls on the sill
 		c.draw_rect(Rect2(sx, down, 16.0, s1 - down), Color(0.62, 0.36, 0.16))
 		c.draw_rect(Rect2(sx + 3.0, down + 2.0, 10.0, maxf(s1 - down - 4.0, 4.0)), Color(1.0, 0.84, 0.50))
 		var rolls := mini(3, int((s1 - down) / 9.0))
-		for b in range(rolls):
-			var ry := down + 7.0 + float(b) * 9.0
+		for b_roll in range(rolls):
+			var ry := down + 7.0 + float(b_roll) * 9.0
 			c.draw_circle(Vector2(sx + 8.0, ry), 3.2, Color(0.90, 0.62, 0.28))
 			c.draw_circle(Vector2(sx + 6.6, ry - 1.0), 1.3, Color(1.0, 0.88, 0.64))
 	else:
@@ -3586,6 +3630,18 @@ func _draw_neteja(vt: float, vb: float) -> void:
 				Vector2(e.y, sy - 120.0 + f * 25.0 + hgt), Vector2(e.x, sy + f * 25.0 + hgt)])
 			b.polygon(q, Color(1.0, 0.76, 0.52, 0.10))
 		sy += 520.0
+
+	# wall lantern warm halos spilling onto the sidewalks
+	var ly := floorf((vt - 160.0) / 160.0) * 160.0
+	while ly < vb + 160.0:
+		var le := walk_edges(ly)
+		for side in [-1.0, 1.0]:
+			var lx: float = le.x + 8.0 if side < 0.0 else le.y - 8.0
+			var lpos := Vector2(lx, ly)
+			b.circle(lpos, 36.0, Color(1.0, 0.78, 0.44, 0.04))
+			b.circle(lpos, 18.0, Color(1.0, 0.82, 0.50, 0.07))
+		ly += 160.0
+
 	# a shop with its shutter half up spills warm light across the setts
 	var my := floorf((vt - 280.0) / 220.0) * 220.0
 	while my < vb + 220.0:
@@ -3600,6 +3656,37 @@ func _draw_neteja(vt: float, vb: float) -> void:
 						var sx0: float = shop_x if side < 0.0 else shop_x - sw
 						b.rect(Rect2(sx0, my + 64.0, sw, 78.0), Color(1.0, 0.70, 0.36, 0.14 - sf * 0.03))
 		my += 220.0
+
+	# curbside storm drain grates (embornals) along the kerb line with runoff channels and soap suds
+	var gy := floorf((vt - 60.0) / 140.0) * 140.0
+	while gy < vb + 60.0:
+		var ge := walk_edges(gy)
+		for side in [-1.0, 1.0]:
+			var gx: float = ge.x + 6.0 if side < 0.0 else ge.y - 6.0
+			var gp := Vector2(gx, gy)
+			# cast iron frame & void
+			b.rect(Rect2(gp.x - 6.0, gp.y - 12.0, 12.0, 24.0), Color(0.18, 0.19, 0.22))
+			b.rect(Rect2(gp.x - 4.5, gp.y - 10.0, 9.0, 20.0), Color(0.06, 0.07, 0.09))
+			# slotted cast iron grate bars
+			for bi in range(5):
+				var bar_y := gp.y - 8.0 + float(bi) * 4.0
+				b.line(Vector2(gp.x - 4.5, bar_y), Vector2(gp.x + 4.5, bar_y), Color(0.28, 0.30, 0.34), 1.6)
+				b.line(Vector2(gp.x - 4.5, bar_y + 1.0), Vector2(gp.x + 4.5, bar_y + 1.0), Color(0.42, 0.44, 0.48, 0.45), 0.8)
+			# wet runoff channel leading to drain
+			var street_in: float = gx + (16.0 if side < 0.0 else -16.0)
+			b.line(Vector2(street_in, gy + 14.0), Vector2(gx, gy), Color(0.16, 0.20, 0.25, 0.22), 4.0)
+			# soap suds (bromera) trapped in grate corners
+			for sidx in range(4):
+				var hval := int(absf(gy * 13.0 + float(sidx) * 37.0 + side * 19.0))
+				var srad: float = 1.4 + float(hval % 3) * 0.8
+				var sox: float = float((hval % 7) - 3) * 1.5
+				var soy: float = (12.0 if sidx < 2 else -12.0) + float((hval % 5) - 2)
+				var sp := gp + Vector2(sox, soy)
+				b.circle(sp, srad + 0.8, Color(0.80, 0.90, 0.98, 0.55))
+				b.circle(sp, srad, Color(0.96, 0.98, 1.0, 0.85))
+				b.circle(sp + Vector2(-0.4, -0.4), srad * 0.4, Color(1.0, 1.0, 1.0, 0.95))
+		gy += 140.0
+
 	# the water truck's wet streaks down the street: a darker sheen that
 	# feathers out at its edges and wanders a little, the dawn on one edge
 	var y := floorf((vt - 40.0) / 220.0) * 220.0
@@ -3616,43 +3703,153 @@ func _draw_neteja(vt: float, vb: float) -> void:
 				b.rect(Rect2(x - 20.0, yy, 3.0, 20.0), Color(1.0, 0.82, 0.70, 0.08 * tf))
 				yy += 20.0
 		y += 220.0
-	# the dumpsters: steel bins on castors, two hinged lids with their ribs
-	# and grab handles, the handlebar at each end, and a bag that did not fit
-	for d: Vector2 in LevelBuild.neteja_dumpsters(self):
+
+	# the dumpsters: Cuidem Barcelona selective recycling stations (envasos, paper, orgànica, resta, vidre),
+	# foot-pedal mechanisms, municipal branding, flattened cardboard stacks and bottle crates, and curbside soap suds
+	var dump_list: Array[Vector2] = LevelBuild.neteja_dumpsters(self)
+	for d_idx in range(dump_list.size()):
+		var d: Vector2 = dump_list[d_idx]
 		if d.y < vt - 80.0 or d.y > vb + 80.0:
 			continue
 		var sz: Vector2 = LevelBuild.NETEJA_DUMPSTER
 		var r := Rect2(d - sz * 0.5, sz)
 		b.rect(Rect2(r.position + LIGHT * 12.0, r.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
-		var col := Color(0.24, 0.40, 0.30) if int(absf(d.y)) % 3 == 0 else Color(0.30, 0.32, 0.36)
-		# the castors, peeping out at the corners
+
+		# Cuidem Barcelona selective recycling category:
+		# 0: Envasos (Yellow), 1: Paper (Blue), 2: Orgànica (Brown), 3: Resta (Grey), 4: Vidre (Green)
+		var cat := d_idx % 5
+		var lid_col := Color(0.92, 0.76, 0.14)
+		match cat:
+			1: lid_col = Color(0.18, 0.46, 0.82)
+			2: lid_col = Color(0.55, 0.36, 0.22)
+			3: lid_col = Color(0.46, 0.48, 0.50)
+			4: lid_col = Color(0.20, 0.52, 0.32)
+		var body_col := Color(0.25, 0.27, 0.29)
+
+		# the castors with mounting brackets
 		for cx: float in [r.position.x + 5.0, r.end.x - 5.0]:
 			for cy: float in [r.position.y + 6.0, r.end.y - 6.0]:
+				b.rect(Rect2(cx - 3.5, cy, 7.0, 5.0), Color(0.16, 0.17, 0.18))
 				b.circle(Vector2(cx, cy) + Vector2(0.0, 3.0), 5.0, Color(0.08, 0.08, 0.09))
-		b.rect(r, col.darkened(0.25))
-		b.rect(r.grow(-2.0), col)
-		# the two lids, each with ribs across and a grab handle
+				b.circle(Vector2(cx, cy) + Vector2(0.0, 3.0), 1.8, Color(0.38, 0.40, 0.44))
+
+		# dumpster body & outer rim
+		b.rect(r, body_col.darkened(0.28))
+		b.rect(r.grow(-2.0), body_col)
+
+		# municipal identification stripe across the body
+		var stripe_y := d.y - 2.0
+		b.rect(Rect2(r.position.x + 3.0, stripe_y, sz.x - 6.0, 4.0), Color(0.90, 0.92, 0.94, 0.88))
+		b.rect(Rect2(d.x - 6.0, stripe_y + 0.5, 12.0, 3.0), Color(0.22, 0.24, 0.26))
+		b.rect(Rect2(d.x - 2.0, stripe_y + 1.0, 4.0, 2.0), lid_col)
+
+		# the two hinged lids, color-coded with ribs and grab handles
 		for half in range(2):
 			var lr := Rect2(r.position.x + 3.0, r.position.y + 3.0 + float(half) * (sz.y * 0.5 - 1.0), sz.x - 6.0, sz.y * 0.5 - 5.0)
-			var lc := col.lightened(0.12 if half == 0 else 0.06)
+			var lc := lid_col.lightened(0.10 if half == 0 else 0.04)
 			b.rect(lr, lc)
 			var ry := lr.position.y + 7.0
 			while ry < lr.end.y - 3.0:
-				b.line(Vector2(lr.position.x + 2.0, ry), Vector2(lr.end.x - 2.0, ry), lc.darkened(0.14), 1.5)
-				b.line(Vector2(lr.position.x + 2.0, ry + 1.5), Vector2(lr.end.x - 2.0, ry + 1.5), lc.lightened(0.12), 1.0)
+				b.line(Vector2(lr.position.x + 2.0, ry), Vector2(lr.end.x - 2.0, ry), lc.darkened(0.16), 1.5)
+				b.line(Vector2(lr.position.x + 2.0, ry + 1.5), Vector2(lr.end.x - 2.0, ry + 1.5), lc.lightened(0.14), 1.0)
 				ry += 9.0
 			var hx: float = lr.end.x - 5.0 if d.x < walk_cx else lr.position.x + 3.0
 			b.rect(Rect2(hx, lr.get_center().y - 6.0, 2.0, 12.0), Color(0.14, 0.14, 0.15))
-		b.line(Vector2(r.position.x, d.y), Vector2(r.end.x, d.y), col.darkened(0.35), 2.0)
+		b.line(Vector2(r.position.x, d.y), Vector2(r.end.x, d.y), body_col.darkened(0.35), 2.0)
+
 		# the handlebars at each end
 		for ey: float in [r.position.y - 3.0, r.end.y + 3.0]:
 			b.line(Vector2(r.position.x + 8.0, ey), Vector2(r.end.x - 8.0, ey), Color(0.20, 0.20, 0.22), 3.0)
+
+		# foot-pedal bar (pedal de peu) along the street-facing side
+		var is_west: bool = d.x < walk_cx
+		var pedal_x: float = r.end.x + 2.5 if is_west else r.position.x - 2.5
+		b.line(Vector2(pedal_x, d.y - 20.0), Vector2(pedal_x, d.y + 20.0), Color(0.20, 0.22, 0.24), 2.8)
+		b.line(Vector2(pedal_x, d.y - 14.0), Vector2(r.end.x if is_west else r.position.x, d.y - 14.0), Color(0.30, 0.32, 0.34), 2.0)
+		b.line(Vector2(pedal_x, d.y + 14.0), Vector2(r.end.x if is_west else r.position.x, d.y + 14.0), Color(0.30, 0.32, 0.34), 2.0)
+
 		# the lid at the end lifted on a full bag
 		b.circle(d + Vector2(0.0, sz.y * 0.5 + 14.0), 11.0, Color(0.10, 0.10, 0.12))
 		b.circle(d + Vector2(-3.0, sz.y * 0.5 + 11.0), 4.0, Color(0.30, 0.30, 0.34))
 		b.line(d + Vector2(-2.0, sz.y * 0.5 + 3.0), d + Vector2(3.0, sz.y * 0.5 + 6.0), Color(0.10, 0.10, 0.12), 3.0)
+
+		# category-specific props beside the dumpster
+		var prop_x: float = r.position.x - 8.0 if is_west else r.end.x + 8.0
+		match cat:
+			1:
+				var cb_w := 9.0
+				var cb_h := 32.0
+				var cb_r := Rect2(prop_x - cb_w * 0.5, d.y - cb_h * 0.5, cb_w, cb_h)
+				b.rect(cb_r, Color(0.72, 0.56, 0.38))
+				b.rect(Rect2(cb_r.position.x + 2.0, cb_r.position.y + 2.0, cb_w - 3.0, cb_h - 4.0), Color(0.80, 0.64, 0.44))
+				b.line(Vector2(cb_r.position.x, d.y - 7.0), Vector2(cb_r.end.x, d.y - 7.0), Color(0.90, 0.86, 0.72), 1.2)
+				b.line(Vector2(cb_r.position.x, d.y + 7.0), Vector2(cb_r.end.x, d.y + 7.0), Color(0.90, 0.86, 0.72), 1.2)
+			4:
+				var cr_r := Rect2(prop_x - 7.0, d.y - 9.0, 14.0, 18.0)
+				b.rect(cr_r, Color(0.16, 0.42, 0.24))
+				b.rect(cr_r.grow(-1.5), Color(0.12, 0.34, 0.18))
+				for bx in [-3.5, 3.5]:
+					for by in [-4.5, 0.0, 4.5]:
+						b.circle(cr_r.get_center() + Vector2(bx, by), 2.0, Color(0.20, 0.56, 0.32))
+						b.circle(cr_r.get_center() + Vector2(bx - 0.5, by - 0.5), 0.7, Color(0.85, 0.95, 0.88, 0.90))
+
+		# curbside soap suds / foam bubbles (bromera) pooled around dumpster wheels
+		for fx in [r.position.x + 2.0, r.end.x - 2.0]:
+			for fy in [r.position.y - 4.0, r.end.y + 4.0]:
+				for bi in range(3):
+					var boff := Vector2(float(bi * 3 - 3), float((bi * 5) % 4 - 2))
+					var brad: float = 2.2 + float((bi + d_idx) % 3) * 0.8
+					var bp := Vector2(fx, fy) + boff
+					b.circle(bp, brad + 0.6, Color(0.82, 0.92, 0.98, 0.50))
+					b.circle(bp, brad, Color(0.95, 0.98, 1.0, 0.85))
+					b.circle(bp + Vector2(-0.4, -0.4), brad * 0.4, Color(1.0, 1.0, 1.0, 0.95))
+
 	_draw_scooters(b, vt, vb)
 	b.flush(_wc)
+
+
+# One carved festival pumpkin (carbassa de Tots Sants) with candle glow
+static func _draw_cast_pumpkin(b: ShapeBatch, p: Vector2, seed: float, t: float) -> void:
+	var flk := 0.82 + 0.18 * sin(t * 11.0 + seed * 6.28)
+	# warm candle light pool on the flagstones
+	b.circle(p + Vector2(0.0, 3.0), 28.0, Color(1.0, 0.64, 0.18, 0.11 * flk))
+	b.circle(p + Vector2(0.0, 3.0), 14.0, Color(1.0, 0.78, 0.32, 0.12 * flk))
+	# drop shadow
+	b.circle(p + LIGHT * 3.5, 9.5, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.28))
+	# ribbed pumpkin body
+	var pcol := Color(0.92, 0.44, 0.10)
+	var pshd := Color(0.80, 0.34, 0.06)
+	b.circle(p + Vector2(-5.0, 0.0), 7.5, pshd)
+	b.circle(p + Vector2(5.0, 0.0), 7.5, pshd)
+	b.circle(p, 8.5, pcol)
+	b.circle(p + Vector2(-1.5, -2.0), 3.0, pcol.lightened(0.2))
+	# curled green stem
+	b.line(p + Vector2(0.0, -7.0), p + Vector2(1.5, -11.0), Color(0.32, 0.46, 0.20), 2.2)
+	# carved glowing face: triangular eyes and jagged grin
+	var eye_col := Color(1.0, 0.92, 0.48, flk)
+	b.polygon(PackedVector2Array([p + Vector2(-4.0, -1.0), p + Vector2(-2.0, -4.0), p + Vector2(-1.0, -1.0)]), eye_col)
+	b.polygon(PackedVector2Array([p + Vector2(1.0, -1.0), p + Vector2(2.0, -4.0), p + Vector2(4.0, -1.0)]), eye_col)
+	b.line(p + Vector2(-4.0, 2.5), p + Vector2(-1.0, 4.0), eye_col, 1.8)
+	b.line(p + Vector2(-1.0, 4.0), p + Vector2(1.0, 2.5), eye_col, 1.8)
+	b.line(p + Vector2(1.0, 2.5), p + Vector2(4.0, 4.0), eye_col, 1.8)
+
+
+# Drifts of crisp autumn leaves (fulles seques) gathered in corners and gutters
+static func _draw_autumn_leaves(b: ShapeBatch, at: Vector2, seed: float) -> void:
+	var leaf_cols: Array[Color] = [
+		Color(0.84, 0.58, 0.18, 0.85),
+		Color(0.72, 0.32, 0.12, 0.85),
+		Color(0.56, 0.24, 0.10, 0.85),
+		Color(0.68, 0.54, 0.22, 0.85),
+	]
+	for i: int in range(6):
+		var h := fmod(seed * 13.7 + float(i) * 0.41, 1.0)
+		var ang := h * TAU
+		var dist := 2.0 + fmod(seed * 7.3 + float(i) * 2.9, 8.0)
+		var lp := at + Vector2(cos(ang), sin(ang)) * dist
+		var col: Color = leaf_cols[(int(seed * 10.0) + i) % leaf_cols.size()]
+		b.line(lp, lp + Vector2(cos(ang + 0.8) * 4.5, sin(ang + 0.8) * 3.0), col, 2.2)
+		b.circle(lp, 1.0, col.darkened(0.2))
 
 
 func _draw_castanyada(vt: float, vb: float) -> void:
@@ -3718,6 +3915,46 @@ func _draw_castanyada(vt: float, vb: float) -> void:
 		for k in range(4):
 			var cp := rc + Vector2(50.0 + float(k % 2) * 14.0, 4.0 + float(k / 2) * 20.0)
 			b.polygon(PackedVector2Array([cp + Vector2(-5, -7), cp + Vector2(5, -7), cp + Vector2(0, 8)]), Color(0.92, 0.88, 0.78))
+
+		# sweet potato (moniato) roaster pan: warm metal tray with baked sweet potatoes
+		var mbox := Rect2(rc.x + 8.0, rc.y - 28.0, 32.0, 20.0)
+		b.rect(Rect2(mbox.position + LIGHT * 3.0, mbox.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+		b.rect(mbox, Color(0.24, 0.22, 0.22))
+		b.rect(mbox.grow(-1.5), Color(0.78, 0.70, 0.54))
+		for mi: int in range(3):
+			var my := mbox.position.y + 4.0 + float(mi) * 5.5
+			var mx := mbox.position.x + 5.0 + float(mi % 2) * 2.0
+			b.line(Vector2(mx, my), Vector2(mx + 20.0, my), Color(0.84, 0.44, 0.16), 4.2)
+			b.line(Vector2(mx + 4.0, my), Vector2(mx + 16.0, my), Color(0.42, 0.18, 0.08), 2.0)
+			b.circle(Vector2(mx + 20.0, my), 2.1, Color(0.84, 0.44, 0.16))
+			b.circle(Vector2(mx, my), 2.1, Color(0.84, 0.44, 0.16))
+			var sph := fmod(t * 0.5 + float(mi) * 0.33, 1.0)
+			b.line(Vector2(mx + 10.0 + sin(t * 2.0 + float(mi)) * 2.0, my - 2.0 - sph * 12.0),
+				Vector2(mx + 11.0 + sin(t * 2.0 + float(mi)) * 3.0, my - 6.0 - sph * 16.0),
+				Color(0.94, 0.90, 0.85, 0.35 * (1.0 - sph)), 1.5)
+
+		# tray of panellets de pinyons (marzipan sweets rolled in roasted pine nuts)
+		var pbox := Rect2(rc.x + 44.0, rc.y - 28.0, 26.0, 20.0)
+		b.rect(Rect2(pbox.position + LIGHT * 3.0, pbox.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+		b.rect(pbox, Color(0.38, 0.26, 0.16))
+		b.rect(pbox.grow(-1.5), Color(0.86, 0.82, 0.74))
+		for pi: int in range(6):
+			var px := pbox.position.x + 5.0 + float(pi % 3) * 7.5
+			var py2 := pbox.position.y + 5.0 + float(pi / 3) * 8.5
+			b.circle(Vector2(px, py2), 3.2, Color(0.82, 0.64, 0.30))
+			b.circle(Vector2(px - 1.0, py2 - 1.0), 1.2, Color(0.96, 0.90, 0.68))
+			b.circle(Vector2(px + 1.2, py2 + 0.8), 1.0, Color(0.56, 0.36, 0.16))
+
+		# blackboard menu (la pissarra) propped near the cart shaft
+		var bb := Rect2(rc.x - 72.0, rr.end.y + 4.0, 28.0, 34.0)
+		b.rect(Rect2(bb.position + LIGHT * 4.0, bb.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.3))
+		b.rect(bb, Color(0.44, 0.28, 0.16))
+		b.rect(bb.grow(-2.0), Color(0.16, 0.18, 0.18))
+		b.line(Vector2(bb.position.x + 4.0, bb.position.y + 7.0), Vector2(bb.end.x - 4.0, bb.position.y + 7.0), Color(0.94, 0.94, 0.96, 0.8), 1.6)
+		b.line(Vector2(bb.position.x + 5.0, bb.position.y + 13.0), Vector2(bb.end.x - 7.0, bb.position.y + 13.0), Color(0.90, 0.90, 0.92, 0.65), 1.2)
+		b.line(Vector2(bb.position.x + 5.0, bb.position.y + 19.0), Vector2(bb.end.x - 6.0, bb.position.y + 19.0), Color(0.90, 0.90, 0.92, 0.65), 1.2)
+		b.line(Vector2(bb.position.x + 5.0, bb.position.y + 25.0), Vector2(bb.end.x - 9.0, bb.position.y + 25.0), Color(0.90, 0.90, 0.92, 0.65), 1.2)
+
 		# a lamp at each front corner
 		for lx: float in [rr.position.x + 8.0, rr.end.x - 8.0]:
 			b.circle(Vector2(lx, rr.end.y - 6.0), 14.0, Color(1.0, 0.82, 0.46, 0.25))
@@ -3738,7 +3975,12 @@ func _draw_castanyada(vt: float, vb: float) -> void:
 			var ccol: Color = [Color(0.96, 0.30, 0.36), Color(0.98, 0.84, 0.28), Color(0.36, 0.64, 0.92),
 				Color(0.52, 0.80, 0.40), Color(0.94, 0.94, 0.96)][k % 5]
 			b.rect(Rect2(cp2, Vector2(4.0, 3.0)), ccol)
-	# chestnut shells and confetti scattered all along the street
+		# carved festival pumpkins flanking the stage and the roaster cart
+		_draw_cast_pumpkin(b, Vector2(st.position.x + 18.0, st.end.y + 12.0), 3.1, t)
+		_draw_cast_pumpkin(b, Vector2(st.end.x - 18.0, st.end.y + 12.0), 4.2, t)
+		_draw_cast_pumpkin(b, Vector2(rc.x + 58.0, rr.end.y + 18.0), 5.3, t)
+		_draw_cast_pumpkin(b, Vector2(rc.x - 84.0, rr.end.y + 16.0), 6.4, t)
+	# chestnut shells, autumn fallen leaves and confetti scattered all along the street
 	var cy := floorf((vt - 20.0) / 90.0) * 90.0
 	while cy < vb + 20.0:
 		var e := walk_edges(cy)
@@ -3747,6 +3989,14 @@ func _draw_castanyada(vt: float, vb: float) -> void:
 		b.circle(Vector2(cx, cy), 2.4, Color(0.40, 0.22, 0.12, 0.8))
 		var cc: Color = [Color(0.96, 0.30, 0.36), Color(0.98, 0.84, 0.28), Color(0.36, 0.64, 0.92), Color(0.52, 0.80, 0.40)][int(absf(cy) / 90.0) % 4]
 		b.rect(Rect2(lerpf(e.x + 20.0, e.y - 20.0, fmod(n * 7.3, 1.0)), cy + 30.0, 4.0, 3.0), cc)
+		# fallen leaf drifts along walls
+		_draw_autumn_leaves(b, Vector2(e.x + 8.0, cy + 15.0), absf(cy) * 0.05)
+		_draw_autumn_leaves(b, Vector2(e.y - 8.0, cy + 55.0), absf(cy) * 0.07 + 3.0)
+		# doorstep jack-o'-lanterns along the street
+		if int(absf(cy) / 90.0) % 3 == 0:
+			var west_side: bool = (int(absf(cy) / 90.0) % 6 == 0)
+			var px: float = e.x - 12.0 if west_side else e.y + 12.0
+			_draw_cast_pumpkin(b, Vector2(px, cy + 45.0), absf(cy) * 0.03, t)
 		cy += 90.0
 	# the lanterns' glow on the ground under each string
 	for ly: float in LevelBuild.CAST_LANTERN_YS:
@@ -4224,24 +4474,85 @@ func _draw_obres(vt: float, vb: float) -> void:
 			b.rect(Rect2(zx, zy + 4.0, 26.0, LevelBuild.OBRES_ZEBRA_H - 8.0), Color(0.96, 0.95, 0.90))
 			b.rect(Rect2(zx + 3.0, zy + 6.0, 5.0, LevelBuild.OBRES_ZEBRA_H - 12.0), Color(1, 1, 1, 0.9))
 			zx += 46.0
-	# the trench: dug earth at the lips, dark inside, a pipe along the bottom,
-	# and the plank across it
+	# the trench: dug earth at the lips, dark inside, utility conduits,
+	# timber walers and hydraulic trench shoring struts, red/white safety barrier boards,
+	# amber warning beacons, steel approach transition plates, and the heavy timber bridge
+	# flanked by galvanized scaffolding pipe handrails (grindable!)
 	var ty: float = LevelBuild.OBRES_TRENCH_Y
 	var th: float = LevelBuild.OBRES_TRENCH_H
-	if ty > vt - 80.0 and ty < vb + 80.0:
-		for c: Rect2 in cellars:
-			b.rect(c.grow(6.0), Color(0.46, 0.36, 0.25))
-			b.rect(c, Color(0.16, 0.13, 0.11))
-			b.rect(Rect2(c.position.x, c.position.y + th * 0.5 - 5.0, c.size.x, 10.0), Color(0.72, 0.42, 0.20))
-			b.rect(Rect2(c.position.x, c.position.y + th * 0.5 - 5.0, c.size.x, 3.0), Color(0.84, 0.56, 0.30))
+	if ty > vt - 100.0 and ty < vb + 100.0:
 		var te := walk_edges(ty)
 		var pc := (te.x + te.y) * 0.5
-		var plank := Rect2(pc - LevelBuild.OBRES_PLANK * 0.5 - 6.0, ty - 10.0, LevelBuild.OBRES_PLANK + 12.0, th + 20.0)
-		b.rect(Rect2(plank.position + LIGHT * 6.0, plank.size), Color(0, 0, 0, 0.22))
-		b.rect(plank, Color(0.66, 0.50, 0.30))
-		for k in range(3):
-			var px := plank.position.x + 8.0 + float(k) * (plank.size.x - 16.0) / 2.0
-			b.line(Vector2(px, plank.position.y), Vector2(px, plank.end.y), Color(0.50, 0.37, 0.22), 2.0)
+		var half_w := LevelBuild.OBRES_PLANK * 0.5
+
+		# 1. Open excavation trenches on either side of the bridge
+		for c: Rect2 in cellars:
+			b.rect(c.grow(7.0), Color(0.48, 0.38, 0.26))
+			b.rect(c, Color(0.12, 0.10, 0.09))
+			b.rect(Rect2(c.position.x, c.position.y, c.size.x, 6.0), Color(0.50, 0.38, 0.24))
+			b.rect(Rect2(c.position.x, c.end.y - 6.0, c.size.x, 6.0), Color(0.38, 0.28, 0.18))
+			b.rect(Rect2(c.position.x, c.position.y + th * 0.5 - 6.0, c.size.x, 9.0), Color(0.74, 0.42, 0.18))
+			b.rect(Rect2(c.position.x, c.position.y + th * 0.5 - 6.0, c.size.x, 2.5), Color(0.86, 0.56, 0.28))
+			b.rect(Rect2(c.position.x, c.position.y + th * 0.5 + 4.0, c.size.x, 5.0), Color(0.20, 0.20, 0.22))
+			var strut_x := c.position.x + 35.0
+			while strut_x < c.end.x - 20.0:
+				b.line(Vector2(strut_x, c.position.y + 2.0), Vector2(strut_x, c.end.y - 2.0), Color(0.88, 0.68, 0.16), 4.5)
+				b.rect(Rect2(strut_x - 4.0, c.position.y + th * 0.5 - 3.0, 8.0, 6.0), Color(0.25, 0.25, 0.27))
+				b.circle(Vector2(strut_x, c.position.y + 3.0), 3.0, Color(0.35, 0.35, 0.38))
+				b.circle(Vector2(strut_x, c.end.y - 3.0), 3.0, Color(0.35, 0.35, 0.38))
+				strut_x += 76.0
+			for side_edge: float in [c.position.y - 4.0, c.end.y]:
+				b.rect(Rect2(c.position.x + 2.0, side_edge, c.size.x - 4.0, 4.0), Color(0.92, 0.92, 0.90))
+				var stripe_x := c.position.x + 6.0
+				while stripe_x < c.end.x - 8.0:
+					b.line(Vector2(stripe_x, side_edge), Vector2(stripe_x + 6.0, side_edge + 4.0), Color(0.86, 0.16, 0.16), 2.5)
+					stripe_x += 16.0
+
+		# 2. Heavy timber construction bridge
+		var plank := Rect2(pc - half_w - 6.0, ty - 12.0, LevelBuild.OBRES_PLANK + 12.0, th + 24.0)
+		b.rect(Rect2(plank.position + LIGHT * 6.0, plank.size), Color(0, 0, 0, 0.24))
+		b.rect(plank, Color(0.62, 0.48, 0.28))
+		var n_planks := 4
+		for k in range(n_planks):
+			var x0 := plank.position.x + float(k) * (plank.size.x / float(n_planks))
+			var pw := plank.size.x / float(n_planks) - 2.0
+			b.rect(Rect2(x0 + 1.0, plank.position.y, pw, plank.size.y), Color(0.66, 0.51, 0.31))
+			b.line(Vector2(x0 + pw * 0.5, plank.position.y), Vector2(x0 + pw * 0.5, plank.end.y), Color(0.54, 0.41, 0.24), 1.5)
+			b.circle(Vector2(x0 + pw * 0.5, plank.position.y + 4.0), 1.5, Color(0.30, 0.30, 0.32))
+			b.circle(Vector2(x0 + pw * 0.5, plank.end.y - 4.0), 1.5, Color(0.30, 0.30, 0.32))
+
+		# checkered steel transition plates at north and south approaches
+		for ramp_y: float in [plank.position.y - 3.0, plank.end.y - 3.0]:
+			var rr := Rect2(plank.position.x + 2.0, ramp_y, plank.size.x - 4.0, 6.0)
+			b.rect(rr, Color(0.70, 0.72, 0.74))
+			b.line(Vector2(rr.position.x, rr.position.y), Vector2(rr.end.x, rr.position.y), Color(0.85, 0.86, 0.88), 1.5)
+			for bx in range(6):
+				b.circle(Vector2(rr.position.x + 8.0 + float(bx) * (rr.size.x - 16.0) / 5.0, rr.position.y + 3.0), 1.2, Color(0.35, 0.35, 0.38))
+
+		# 3. Flashing amber hazard beacon lamps on barricade posts flanking the crossing
+		for lx: float in [pc - half_w - 18.0, pc + half_w + 18.0]:
+			for ly: float in [ty - 8.0, ty + th + 8.0]:
+				b.rect(Rect2(lx - 5.0, ly - 5.0, 10.0, 10.0), Color(0.86, 0.70, 0.14))
+				b.circle(Vector2(lx, ly), 16.0, Color(1.0, 0.75, 0.18, 0.10))
+				b.circle(Vector2(lx, ly), 5.5, Color(1.0, 0.78, 0.18))
+				b.circle(Vector2(lx, ly), 2.5, Color(1.0, 0.96, 0.65))
+
+		# 4. Galvanized scaffolding pipe handrails along both edges (grindable!)
+		for side: float in [-1.0, 1.0]:
+			var rx: float = pc + side * (half_w + 2.0)
+			var y0 := ty - 18.0
+			var y1 := ty + th + 18.0
+			b.line(Vector2(rx, y0) + LIGHT * 5.0, Vector2(rx, y1) + LIGHT * 5.0, Color(0, 0, 0, 0.22), 4.0)
+			for py: float in [y0 + 2.0, (y0 + y1) * 0.5, y1 - 2.0]:
+				b.circle(Vector2(rx, py) + LIGHT * 3.0, 4.0, Color(0, 0, 0, 0.20))
+				b.circle(Vector2(rx, py), 4.0, Color(0.48, 0.50, 0.52))
+				b.circle(Vector2(rx, py), 2.5, Color(0.76, 0.78, 0.80))
+			b.line(Vector2(rx, y0), Vector2(rx, y1), Color(0.78, 0.80, 0.82), 3.5)
+			b.line(Vector2(rx - side * 0.5, y0), Vector2(rx - side * 0.5, y1), Color(0.92, 0.94, 0.96), 1.5)
+			b.circle(Vector2(rx, y0), 2.8, Color(0.96, 0.52, 0.12))
+			b.circle(Vector2(rx, y1), 2.8, Color(0.96, 0.52, 0.12))
+			var mid_rx: float = rx - side * 3.0
+			b.line(Vector2(mid_rx, y0 + 6.0), Vector2(mid_rx, y1 - 6.0), Color(0.66, 0.68, 0.70), 2.0)
 	b.flush(_wc)
 
 
@@ -4593,7 +4904,7 @@ func _departures_board(b: ShapeBatch, bd: Vector2) -> void:
 func _draw_diluvi(vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
 	var t := AnimClock.msec() / 1000.0
-	# the gutters, running
+	# the gutters, running along curbs with storm drain grates and vortexes
 	var gy := floorf((vt - 60.0) / 46.0) * 46.0
 	while gy < vb + 60.0:
 		var ge := walk_edges(gy)
@@ -4601,7 +4912,28 @@ func _draw_diluvi(vt: float, vb: float) -> void:
 			b.rect(Rect2(gx - 4.0, gy, 8.0, 46.0), Color(0.30, 0.36, 0.42))
 			var fl := fmod(gy + t * 90.0, 46.0)
 			b.line(Vector2(gx, gy + fl), Vector2(gx, gy + fl + 12.0), Color(0.75, 0.84, 0.92, 0.6), 2.0)
+			if int(absf(gy)) % 184 < 46:
+				# curbside iron slot grate and whirlpool drain
+				b.rect(Rect2(gx - 5.0, gy + 10.0, 10.0, 26.0), Color(0.18, 0.20, 0.22))
+				for gi: int in range(4):
+					b.line(Vector2(gx - 3.5, gy + 14.0 + float(gi) * 5.0), Vector2(gx + 3.5, gy + 14.0 + float(gi) * 5.0), Color(0.10, 0.10, 0.12), 2.0)
+				var wph := fmod(t * 2.2 + absf(gy) * 0.1, 1.0)
+				b.circle(Vector2(gx, gy + 23.0), 2.5 + wph * 4.5, Color(0.72, 0.84, 0.94, 0.38 * (1.0 - wph)))
 		gy += 46.0
+
+	# expanding raindrop impact ripple rings across puddles
+	for pt: Dictionary in patches:
+		if String(pt.get("kind", "")) != "puddle":
+			continue
+		var pc := patch_centre(pt)
+		if pc.y < vt - 60.0 or pc.y > vb + 60.0:
+			continue
+		var prx: float = float(pt.get("rx", 30.0))
+		for ri: int in range(3):
+			var rph := fmod(t * 1.6 + float(ri) * 0.33 + pc.x * 0.05, 1.0)
+			var roff := Vector2(sin(float(ri) * 2.4 + pc.y) * prx * 0.4, cos(float(ri) * 2.1) * 8.0)
+			b.circle(pc + roff, 3.0 + rph * 14.0, Color(0.85, 0.92, 0.98, 0.35 * (1.0 - rph)))
+			b.circle(pc + roff, 1.5, Color(1.0, 1.0, 1.0, 0.55 * (1.0 - rph)))
 	# the awnings and the arcade's roof are overhead (draw_overhead_piece):
 	# here the shade each throws on the paving
 	for i in range(1, shelters.size()):
@@ -4655,11 +4987,15 @@ func _diluvi_drain_board(b: ShapeBatch, c: Vector2, hh: float) -> void:
 # padlock on the chain. Water stands on the top seats.
 func _diluvi_stacked_terrace(b: ShapeBatch, r: Rect2, t: float) -> void:
 	b.rect(Rect2(r.position + LIGHT * 7.0, r.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.26))
-	# the folded tables, on edge against the shopfront: round tops seen edge on
+	# the folded tables, wrapped in a blue waterproof vinyl tarpaulin
+	var tp := Rect2(r.end.x - 9.0, r.position.y + 2.0, 8.0, r.size.y - 4.0)
+	b.rect(tp, Color(0.18, 0.38, 0.65))
+	b.rect(Rect2(tp.position.x, tp.position.y, 2.5, tp.size.y), Color(0.28, 0.50, 0.80))
+	for ey: float in [tp.position.y + 4.0, tp.end.y - 4.0]:
+		b.circle(Vector2(tp.position.x + 3.0, ey), 1.2, Color(0.88, 0.78, 0.35))
 	for k in range(2):
-		var tx := r.end.x - 7.0 + float(k) * 4.0
-		b.rect(Rect2(tx, r.position.y + 2.0 + float(k) * 3.0, 4.0, r.size.y - 6.0), Color(0.48, 0.50, 0.52))
-		b.rect(Rect2(tx, r.position.y + 2.0 + float(k) * 3.0, 1.5, r.size.y - 6.0), Color(0.70, 0.72, 0.74))
+		var tx := r.end.x - 6.0 + float(k) * 3.0
+		b.rect(Rect2(tx, r.position.y + 4.0 + float(k) * 3.0, 2.5, r.size.y - 8.0), Color(0.48, 0.50, 0.52))
 	# two stacks of bistro chairs, rattan seats on bent cane frames, each one
 	# stepped off the one below so every back shows; splayed legs at the foot
 	var cane := Color(0.62, 0.44, 0.26)
@@ -4716,9 +5052,13 @@ func _diluvi_awning(b: ShapeBatch, r: Rect2, i: int) -> void:
 	while sx < r.end.x:
 		b.rect(Rect2(sx, r.position.y, 6.0, r.size.y), ac.lightened(0.25))
 		sx += 14.0
-	for k in range(3):
-		var dy := fmod(t * 60.0 + float(k) * 13.0 + r.position.y, 26.0)
-		b.circle(Vector2(r.position.x - 3.0, r.position.y + 12.0 + float(k) * r.size.y / 3.0 + dy * 0.3), 1.6, Color(0.8, 0.88, 0.95, 0.8))
+	# rainwater cascading off the scalloped awning hem
+	for k in range(5):
+		var dy := fmod(t * 70.0 + float(k) * 11.0 + r.position.y, 28.0)
+		var py := r.position.y + 8.0 + float(k) * (r.size.y - 16.0) / 4.0
+		b.line(Vector2(r.position.x - 2.0, py), Vector2(r.position.x - 2.0, py + 4.0), Color(0.82, 0.90, 0.98, 0.75), 1.5)
+		b.circle(Vector2(r.position.x - 3.0, py + dy * 0.25), 1.6, Color(0.85, 0.92, 0.98, 0.8))
+		b.circle(Vector2(r.position.x - 6.0, py + 12.0), 3.0, Color(0.80, 0.88, 0.96, 0.3))
 
 
 # the arcade's vaulted roof seen from above, only the stretch on screen
@@ -5639,6 +5979,16 @@ func _draw_tutorial_ledge(vt: float, vb: float) -> void:
 # here is anywhere in particular.
 func _draw_barri(vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
+	# cast-iron tree grates (escocells) under the square's London plane trees
+	for tp: Vector2 in LevelBuild.BARRI_TREES:
+		if tp.y > vt - 60.0 and tp.y < vb + 60.0:
+			b.circle(tp, 20.0, Color(0.32, 0.30, 0.28))
+			b.circle(tp, 17.0, Color(0.24, 0.20, 0.16))
+			b.circle(tp, 14.0, Color(0.38, 0.36, 0.34))
+			b.circle(tp, 12.6, Color(0.24, 0.20, 0.16))
+			for ri in range(8):
+				var ra := TAU * float(ri) / 8.0
+				b.line(tp + Vector2.from_angle(ra) * 9.0, tp + Vector2.from_angle(ra) * 19.0, Color(0.18, 0.18, 0.20), 1.0)
 	var pp: Rect2 = LevelBuild.BARRI_PETANCA
 	if pp.end.y > vt - 40.0 and pp.position.y < vb + 40.0:
 		# raked sauló inside a timber edging, lying on the square's gravel
@@ -5660,8 +6010,28 @@ func _draw_barri(vt: float, vb: float) -> void:
 		var jack := pp.position + Vector2(58.0, 30.0)
 		for bo: Vector2 in [Vector2(16, 8), Vector2(-12, 14), Vector2(6, -13), Vector2(26, -4), Vector2(-20, -6), Vector2(38, 22)]:
 			_boule(b, jack + bo)
+		# yellow measuring tape (cinta mètrica) measuring distance to closest boule
+		b.line(jack, jack + Vector2(6.0, -13.0), Color(0.96, 0.84, 0.18), 1.2)
+		b.circle(jack + Vector2(9.0, -17.0) + LIGHT * 1.5, 3.2, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.20))
+		b.circle(jack + Vector2(9.0, -17.0), 3.0, Color(0.94, 0.82, 0.16))
+		b.circle(jack + Vector2(9.0, -17.0), 1.6, Color(0.20, 0.20, 0.22))
 		b.circle(jack + Vector2(0.6, 1.0), 3.4, Color(0, 0, 0, 0.22))
 		b.circle(jack, 3.0, Color(0.88, 0.32, 0.20))
+		# scoreboard on the west timber rail
+		var sb_pos := Vector2(pp.position.x - 14.0, pp.position.y + 40.0)
+		b.rect(Rect2(sb_pos + LIGHT * 2.5, Vector2(6.0, 24.0)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
+		b.rect(Rect2(sb_pos, Vector2(6.0, 24.0)), Color(0.50, 0.38, 0.24))
+		b.rect(Rect2(sb_pos + Vector2(1.0, 2.0), Vector2(4.0, 20.0)), Color(0.18, 0.20, 0.18))
+		b.circle(sb_pos + Vector2(3.0, 6.0), 1.0, Color(0.92, 0.92, 0.90, 0.8))
+		b.circle(sb_pos + Vector2(3.0, 16.0), 1.0, Color(0.92, 0.92, 0.90, 0.8))
+		# leather boule carrying pouch on the south rail
+		var bag_pos := Vector2(pp.position.x + 24.0, pp.end.y + 1.0)
+		b.rect(Rect2(bag_pos + LIGHT * 2.0, Vector2(16.0, 9.0)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+		b.rect(Rect2(bag_pos, Vector2(16.0, 9.0)), Color(0.48, 0.30, 0.18))
+		b.circle(bag_pos + Vector2(3.0, 4.5), 3.0, Color(0.56, 0.36, 0.22))
+		b.circle(bag_pos + Vector2(8.0, 4.5), 3.0, Color(0.56, 0.36, 0.22))
+		b.circle(bag_pos + Vector2(13.0, 4.5), 3.0, Color(0.56, 0.36, 0.22))
+		b.line(bag_pos + Vector2(2.0, 0.0), bag_pos + Vector2(14.0, 0.0), Color(0.24, 0.14, 0.08), 1.5)
 		# the next two, waiting at the feet of the man whose turn is next
 		_boule(b, pp.position + Vector2(112.0, pp.size.y - 30.0))
 		_boule(b, pp.position + Vector2(118.0, pp.size.y - 40.0))
@@ -5674,7 +6044,12 @@ func _draw_barri(vt: float, vb: float) -> void:
 func _boule(b: ShapeBatch, p: Vector2) -> void:
 	b.circle(p + Vector2(1, 2), 5.0, Color(0, 0, 0, 0.2))
 	b.circle(p, 5.0, Color(0.58, 0.58, 0.60))
-	b.circle(p + Vector2(-1.5, -1.5), 2.0, Color(0.86, 0.86, 0.88))
+	# engraved identification grooves (estriat) on steel boules
+	b.circle(p, 3.4, Color(0.44, 0.44, 0.46))
+	b.circle(p, 2.8, Color(0.58, 0.58, 0.60))
+	b.circle(p, 1.8, Color(0.44, 0.44, 0.46))
+	b.circle(p, 1.3, Color(0.58, 0.58, 0.60))
+	b.circle(p + Vector2(-1.5, -1.5), 1.6, Color(0.88, 0.88, 0.90))
 
 
 # El Barri's drinking fountain: a green cast-iron column with its push button,
@@ -5685,12 +6060,16 @@ func _draw_barri_font(f: Vector2) -> void:
 	b.circle(f + Vector2(18, 4), 22.0, Color(0.50, 0.44, 0.34, 0.38))
 	# the grate under the spout
 	var g := Rect2(f + Vector2(9.0, -10.0), Vector2(20.0, 20.0))
+	b.rect(g.grow(1.2), Color(0.34, 0.34, 0.36))
 	b.rect(g, Color(0.20, 0.20, 0.21))
 	for k in range(4):
 		b.rect(Rect2(g.position.x + 2.0 + float(k) * 4.6, g.position.y + 2.0, 2.4, 16.0), Color(0.36, 0.36, 0.38))
 	# the dog's bowl: a little iron basin at the foot of the column
 	b.circle(f + Vector2(1.0, 17.0), 6.5, Color(0.12, 0.24, 0.18))
 	b.circle(f + Vector2(0.5, 16.5), 4.5, Color(0.36, 0.56, 0.66))
+	# expanding water ripple ring in bowl
+	b.circle(f + Vector2(0.5, 16.5), 3.0, Color(0.55, 0.76, 0.88, 0.5))
+	b.circle(f + Vector2(0.5, 16.5), 2.2, Color(0.36, 0.56, 0.66))
 	b.circle(f + Vector2(-1.0, 15.0), 1.4, Color(0.82, 0.92, 0.98, 0.8))
 	# the column's shadow, long, away from the light
 	var side := LIGHT.orthogonal()
@@ -5703,6 +6082,10 @@ func _draw_barri_font(f: Vector2) -> void:
 	b.circle(f, 8.0, iron)
 	b.circle(f + Vector2(-2.0, -2.0), 5.0, iron.lightened(0.18))
 	b.circle(f, 2.6, Color(0.70, 0.62, 0.30))
+	# Barcelona City crest (escut de Barcelona) embossed in relief on column
+	b.rect(Rect2(f.x - 2.5, f.y + 1.0, 5.0, 6.0), Color(0.72, 0.64, 0.34))
+	b.line(Vector2(f.x, f.y + 1.0), Vector2(f.x, f.y + 7.0), Color(0.38, 0.32, 0.16), 0.8)
+	b.line(Vector2(f.x - 2.5, f.y + 4.0), Vector2(f.x + 2.5, f.y + 4.0), Color(0.38, 0.32, 0.16), 0.8)
 	# the spout, reaching out over the grate, and its drip
 	b.line(f + Vector2(7.0, 0.0), f + Vector2(18.0, 0.0), iron.darkened(0.15), 3.0)
 	b.circle(f + Vector2(19.0, 0.0), 2.2, Color(0.66, 0.58, 0.28))
@@ -5722,10 +6105,32 @@ func _draw_water_bowl(f: Vector2) -> void:
 func _draw_pingpong(st: Vector2) -> void:
 	var r := Rect2(st.x - 44.0, st.y - 24.0, 88.0, 48.0)
 	contact_shadow(_wc, st, 44.0, 8.0, 0.22)
-	_wc.draw_rect(r, Color(0.36, 0.48, 0.44))
-	_wc.draw_rect(r.grow(-3.0), Color(0.42, 0.56, 0.50))
-	_wc.draw_rect(r.grow(-3.0), Color(0.92, 0.92, 0.88), false, 1.5)
-	_wc.draw_line(Vector2(st.x, r.position.y - 4.0), Vector2(st.x, r.end.y + 4.0), Color(0.18, 0.18, 0.20), 3.0)
+	var b := ShapeBatch.new()
+	b.rect(r, Color(0.36, 0.48, 0.44))
+	b.rect(r.grow(-1.5), Color(0.92, 0.92, 0.88))
+	b.rect(r.grow(-3.0), Color(0.42, 0.56, 0.50))
+	# white doubles centerline dividing service boxes
+	b.line(Vector2(r.position.x + 3.0, st.y), Vector2(r.end.x - 3.0, st.y), Color(0.94, 0.94, 0.90, 0.85), 1.2)
+	# perforated stainless steel net plate (xarxa metallica Benito)
+	b.line(Vector2(st.x, r.position.y - 4.0), Vector2(st.x, r.end.y + 4.0), Color(0.70, 0.72, 0.76), 3.2)
+	b.line(Vector2(st.x + 1.0, r.position.y - 4.0), Vector2(st.x + 1.0, r.end.y + 4.0), Color(0.42, 0.44, 0.46), 1.0)
+	for ny in range(7):
+		var py := r.position.y + 4.0 + float(ny) * 6.0
+		b.circle(Vector2(st.x, py), 1.0, Color(0.22, 0.24, 0.26))
+	b.circle(Vector2(st.x, r.position.y - 4.0), 2.2, Color(0.35, 0.35, 0.38))
+	b.circle(Vector2(st.x, r.end.y + 4.0), 2.2, Color(0.35, 0.35, 0.38))
+	# two ping-pong paddles (pales) left on table corner
+	# red paddle (face up)
+	b.line(st + Vector2(33.0, -11.0), st + Vector2(39.0, -8.0), Color(0.68, 0.52, 0.36), 2.2)
+	b.circle(st + Vector2(28.0, -14.0), 4.2, Color(0.85, 0.22, 0.18))
+	# black paddle (underneath)
+	b.line(st + Vector2(36.0, -19.0), st + Vector2(42.0, -21.0), Color(0.68, 0.52, 0.36), 2.0)
+	b.circle(st + Vector2(32.0, -18.0), 4.0, Color(0.18, 0.18, 0.20))
+	# white celluloid ball (pilota)
+	b.circle(st + Vector2(-16.0, 10.0) + LIGHT * 1.0, 2.0, Color(0, 0, 0, 0.15))
+	b.circle(st + Vector2(-16.0, 10.0), 2.0, Color(0.98, 0.98, 0.95))
+	b.circle(st + Vector2(-16.5, 9.5), 0.8, Color(1, 1, 1))
+	b.flush(_wc)
 
 
 # EL PARC's own furniture, on the lawns beside the path: box-hedged
@@ -5743,33 +6148,53 @@ func _draw_parc(vt: float, vb: float) -> void:
 	if mp.y > vt - 120.0 and mp.y < vb + 120.0:
 		var stone := Color(0.42, 0.38, 0.35)
 		var mbs: Vector2 = LevelBuild.MAMMOTH_BODY
-		b.rect(Rect2(mp - mbs * 0.5 - Vector2(8, 22), mbs + Vector2(16, 44)), Color(0.70, 0.68, 0.63))   # the plinth
-		b.rect(Rect2(mp - mbs * 0.5 - Vector2(8, 22), mbs + Vector2(16, 44)).grow(-4.0), Color(0.64, 0.62, 0.57))
+		var plinth := Rect2(mp - mbs * 0.5 - Vector2(8, 22), mbs + Vector2(16, 44))
+		b.rect(Rect2(plinth.position + LIGHT * 10.0, plinth.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+		b.rect(plinth, Color(0.70, 0.68, 0.63))
+		b.rect(plinth.grow(-3.0), Color(0.64, 0.62, 0.57))
+		b.line(plinth.position + Vector2(4.0, 3.0), Vector2(plinth.end.x - 4.0, plinth.position.y + 3.0), Color(0.80, 0.78, 0.74), 1.5)
+		# commemorative bronze plaque on the plinth face
+		var pq := Rect2(mp.x - 14.0, plinth.end.y - 14.0, 28.0, 10.0)
+		b.rect(pq, Color(0.45, 0.34, 0.18))
+		b.rect(pq.grow(-1.2), Color(0.62, 0.48, 0.26))
+		b.line(Vector2(pq.position.x + 3.0, pq.position.y + 3.5), Vector2(pq.end.x - 3.0, pq.position.y + 3.5), Color(0.32, 0.22, 0.12), 1.0)
+		b.line(Vector2(pq.position.x + 4.0, pq.position.y + 6.5), Vector2(pq.end.x - 4.0, pq.position.y + 6.5), Color(0.32, 0.22, 0.12), 1.0)
 		b.circle(mp + LIGHT * 22.0, 44.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
 		for lg: Vector2 in [Vector2(-22, -30), Vector2(22, -30), Vector2(-22, 34), Vector2(22, 34)]:
 			b.circle(mp + lg, 10.0, stone.darkened(0.25))
 		b.circle(mp + Vector2(0, 16), 30.0, stone)
 		b.circle(mp + Vector2(0, -12), 28.0, stone)
-		b.circle(mp + Vector2(0, -44), 22.0, stone.lightened(0.06))      # the head
+		b.circle(mp + Vector2(0, -44), 22.0, stone.lightened(0.06))
 		b.circle(mp + Vector2(-6, -50), 10.0, stone.lightened(0.14))
-		b.circle(mp + Vector2(-20, -40), 11.0, stone.darkened(0.12))     # ears
+		b.circle(mp + Vector2(-20, -40), 11.0, stone.darkened(0.12))
 		b.circle(mp + Vector2(20, -40), 11.0, stone.darkened(0.12))
-		b.line(mp + Vector2(0, -60), mp + Vector2(0, -78), stone.darkened(0.1), 9.0)   # the trunk
+		b.line(mp + Vector2(0, -60), mp + Vector2(0, -78), stone.darkened(0.1), 9.0)
 		b.circle(mp + Vector2(4, -80), 5.0, stone.darkened(0.1))
 		for tx: float in [-1.0, 1.0]:
 			b.line(mp + Vector2(tx * 10.0, -60), mp + Vector2(tx * 22.0, -80), Color(0.88, 0.85, 0.76), 4.0)
-			b.line(mp + Vector2(tx * 22.0, -80), mp + Vector2(tx * 14.0, -92), Color(0.88, 0.85, 0.76), 3.5)
-		b.line(mp + Vector2(0, 46), mp + Vector2(4, 60), stone.darkened(0.2), 3.0)       # the tail
-	# the bandstand: its shadow, the stone platform and the iron posts; the
-	# roof over them is overhead (draw_overhead_piece)
+			b.line(mp + Vector2(tx * 22.0, -80), mp + Vector2(tx * 14.0, -92), Color(0.92, 0.89, 0.80), 3.5)
+			b.circle(mp + Vector2(tx * 14.0, -92), 1.6, Color(0.96, 0.94, 0.88))
+		b.line(mp + Vector2(0, 46), mp + Vector2(4, 60), stone.darkened(0.2), 3.0)
+	# the bandstand: stone podium with concentric radial planks, iron railings and posts
 	var bs: Vector2 = LevelBuild.PARK_BANDSTAND
 	if bs.y > vt - 120.0 and bs.y < vb + 120.0:
 		var r: float = LevelBuild.BANDSTAND_R
 		b.circle(bs + LIGHT * 18.0, r + 18.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
-		b.circle(bs, r + 8.0, Color(0.74, 0.70, 0.62))                 # the stone platform
+		b.circle(bs, r + 8.0, Color(0.74, 0.70, 0.62))
 		b.circle(bs, r - 6.0, Color(0.66, 0.62, 0.55))
+		b.circle(bs, r - 12.0, Color(0.58, 0.54, 0.47))
+		for ai: int in range(8):
+			var a := float(ai) * PI / 4.0 + PI / 8.0
+			b.line(bs, bs + Vector2.from_angle(a) * (r - 12.0), Color(0.50, 0.46, 0.40), 1.5)
+		if park_posts.size() >= 2:
+			for pi: int in range(park_posts.size()):
+				var p0: Vector2 = park_posts[pi]
+				var p1: Vector2 = park_posts[(pi + 1) % park_posts.size()]
+				b.line(p0, p1, Color(0.18, 0.19, 0.22), 2.5)
+				b.line(p0, p1, Color(0.36, 0.38, 0.42), 1.0)
 		for bp: Vector2 in park_posts:
-			b.circle(bp, 5.0, Color(0.16, 0.17, 0.19))
+			b.circle(bp, 6.0, Color(0.16, 0.17, 0.19))
+			b.circle(bp + Vector2(-1.0, -1.0), 2.2, Color(0.44, 0.46, 0.50))
 	# the playground: a soft red surface, a slide, a pair of swings
 	var pg: Rect2 = LevelBuild.PARK_PLAYGROUND
 	if pg.end.y > vt - 40.0 and pg.position.y < vb + 40.0:
@@ -5878,6 +6303,24 @@ func _lake_shore(b: ShapeBatch, lk: Rect2) -> void:
 			b.line(c + off, c + off + lean, Color(0.30, 0.48, 0.22) if s % 2 == 0 else Color(0.42, 0.58, 0.28), 2.0)
 			if (s + i) % 3 == 0:
 				b.line(c + off + lean * 0.7, c + off + lean * 0.95, Color(0.42, 0.26, 0.14), 3.2)
+	# water lily pads (nenúfars) floating near the reeds
+	for li: int in range(7):
+		var la := PI * 0.8 + float(li) * 0.22
+		var lp: Vector2 = at.call(la, 0.84 + 0.05 * float(li % 3))
+		b.circle(lp, 5.0, Color(0.20, 0.48, 0.24))
+		b.circle(lp + Vector2(1.2, -1.0), 1.8, Color(0.16, 0.36, 0.18))
+		if li % 2 == 0:
+			b.circle(lp + Vector2(-1.0, -1.5), 2.2, Color(0.96, 0.90, 0.94))
+			b.circle(lp + Vector2(-1.0, -1.5), 1.0, Color(0.96, 0.84, 0.32))
+
+	# lifebuoy ring on the jetty post
+	var lb_pos := Vector2(jet.position.x - 3.0, jet.position.y + 16.0)
+	b.circle(lb_pos + LIGHT * 2.0, 5.5, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.2))
+	b.circle(lb_pos, 5.0, Color(0.90, 0.22, 0.18))
+	b.circle(lb_pos, 2.8, Color(0.50, 0.36, 0.22))
+	for rk: int in range(4):
+		b.circle(lb_pos + Vector2.from_angle(float(rk) * PI * 0.5) * 3.8, 1.2, Color(0.96, 0.96, 0.98))
+
 	# ducks having a rest on the east bank, heads tucked or up
 	for d in range(3):
 		var dp: Vector2 = at.call(-0.25 + float(d) * 0.22, 1.05)
@@ -5930,14 +6373,27 @@ func _playground(b: ShapeBatch, pg: Rect2) -> void:
 			for fyy: float in [fr.position.y, fr.end.y]:
 				b.circle(Vector2(fx2, fyy), 3.0, fence.darkened(0.3))
 			fx2 += 20.0
-		# a spring rider: a little blue horse on its coil, seen from above -
-		# its back and seat, the head and ears out front, the handle bar, the
-		# tail - in no colour a hydrant comes in
+		# sandpit toys: red bucket and blue spade in the sand
+		var sp_toy := pg.position + Vector2(48.0, 180.0)
+		b.circle(sp_toy + LIGHT * 2.0, 5.0, Color(0, 0, 0, 0.15))
+		b.circle(sp_toy, 4.5, Color(0.88, 0.24, 0.20))
+		b.circle(sp_toy, 2.5, Color(0.72, 0.18, 0.16))
+		b.line(sp_toy + Vector2(7.0, -2.0), sp_toy + Vector2(16.0, 5.0), Color(0.24, 0.55, 0.85), 2.2)
+
+		# two spring riders: a blue horse and a green frog on heavy coils
 		var sr := pg.position + Vector2(126.0, 248.0)
 		var hc := Color(0.30, 0.56, 0.86)
 		b.circle(sr + LIGHT * 9.0, 11.0, Color(0, 0, 0, 0.16))
 		b.line(sr + Vector2(0, 10), sr + Vector2(-3, 18), Color(0.96, 0.84, 0.30), 3.0)
 		_soft_rect(b, Rect2(sr.x - 6.0, sr.y - 10.0, 12.0, 22.0), 5.0, hc)
+		# green frog spring rocker alongside
+		var sr2 := pg.position + Vector2(126.0, 196.0)
+		var fc := Color(0.28, 0.62, 0.32)
+		b.circle(sr2 + LIGHT * 9.0, 11.0, Color(0, 0, 0, 0.16))
+		b.line(sr2 + Vector2(0, 10), sr2 + Vector2(-3, 18), Color(0.96, 0.84, 0.30), 3.0)
+		_soft_rect(b, Rect2(sr2.x - 7.0, sr2.y - 8.0, 14.0, 18.0), 5.0, fc)
+		b.circle(sr2 + Vector2(-5.0, -9.0), 3.0, fc.lightened(0.15))
+		b.circle(sr2 + Vector2(5.0, -9.0), 3.0, fc.lightened(0.15))
 		b.circle(sr + Vector2(0, -14), 6.0, hc.lightened(0.1))
 		b.circle(sr + Vector2(-3.5, -19), 2.2, hc.darkened(0.2))
 		b.circle(sr + Vector2(3.5, -19), 2.2, hc.darkened(0.2))
@@ -6052,30 +6508,47 @@ func _draw_trail_stream(vt: float, vb: float) -> void:
 		var rx := fmod(float(k) * 127.0 + wt * speed, 2100.0) - 400.0
 		var ry := sy + lane * half * 0.5 + sin(rx * 0.02) * 2.0
 		wb.line(Vector2(rx, ry), Vector2(rx + 26.0, ry + 1.0), Color(1, 1, 1, 0.18 if lane == 0.0 else 0.12), 2.0)
-	wb.flush(_wc)
-	# stones along the banks
-	for k in range(10):
-		var stx := -200.0 + float(k) * 190.0 + float(k % 3) * 23.0
-		var sty := sy + (half + 4.0) * (1.0 if k % 2 == 0 else -1.0)
-		_wc.draw_circle(Vector2(stx, sty), 6.0 + float(k % 3) * 2.0, Color(0.52, 0.50, 0.46))
+	# variegated river pebbles and stones along both shores
+	var pebble_cols: Array[Color] = [
+		Color(0.55, 0.52, 0.48),
+		Color(0.66, 0.58, 0.46),
+		Color(0.38, 0.38, 0.40),
+		Color(0.80, 0.82, 0.82),
+	]
+	for k: int in range(16):
+		var stx := -200.0 + float(k) * 120.0 + float(k % 3) * 19.0
+		var sty := sy + (half + 4.0) * (1.0 if k % 2 == 0 else -1.0) + sin(float(k) * 1.8) * 3.0
+		var srad := 4.5 + float(k % 4) * 1.5
+		var scol: Color = pebble_cols[k % pebble_cols.size()]
+		wb.circle(Vector2(stx, sty), srad + 2.0, Color(0.90, 0.95, 0.96, 0.20))
+		wb.circle(Vector2(stx, sty), srad, scol)
+		wb.circle(Vector2(stx - 1.2, sty - 1.2), srad * 0.45, scol.lightened(0.25))
+
 	# the footbridge: planks across the trail's width, a rail each side
 	var e := walk_edges(sy)
 	var bh: float = LevelBuild.TRAIL_BRIDGE_HALF
 	var deck := Rect2(e.x - 18.0, sy - bh, e.y - e.x + 36.0, bh * 2.0)
-	_wc.draw_rect(Rect2(deck.position + LIGHT * 8.0, deck.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
-	_wc.draw_rect(deck, Color(0.55, 0.42, 0.28))
+	wb.rect(Rect2(deck.position + LIGHT * 8.0, deck.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+	wb.rect(Rect2(deck.position.x + 8.0, sy - half, deck.size.x - 16.0, half * 2.0), Color(0.12, 0.20, 0.22, 0.45))
+	wb.rect(Rect2(deck.position.x - 4.0, sy - bh - 2.0, 10.0, bh * 2.0 + 4.0), Color(0.42, 0.38, 0.32))
+	wb.rect(Rect2(deck.end.x - 6.0, sy - bh - 2.0, 10.0, bh * 2.0 + 4.0), Color(0.42, 0.38, 0.32))
+	wb.rect(deck, Color(0.55, 0.42, 0.28))
 	var px := deck.position.x
 	while px < deck.end.x:
-		_wc.draw_line(Vector2(px, deck.position.y), Vector2(px, deck.end.y), Color(0.40, 0.30, 0.20), 2.0)
+		wb.line(Vector2(px, deck.position.y), Vector2(px, deck.end.y), Color(0.40, 0.30, 0.20), 2.0)
+		wb.circle(Vector2(px + 8.0, deck.position.y + 7.0), 1.2, Color(0.25, 0.22, 0.18))
+		wb.circle(Vector2(px + 8.0, deck.end.y - 7.0), 1.2, Color(0.25, 0.22, 0.18))
 		px += 16.0
 	for ry: float in [deck.position.y + 3.0, deck.end.y - 3.0]:
-		_wc.draw_line(Vector2(deck.position.x, ry), Vector2(deck.end.x, ry), Color(0.36, 0.26, 0.16), 5.0)
-		_wc.draw_line(Vector2(deck.position.x, ry - 1.5), Vector2(deck.end.x, ry - 1.5), Color(0.62, 0.48, 0.32), 1.5)
+		wb.line(Vector2(deck.position.x, ry), Vector2(deck.end.x, ry), Color(0.36, 0.26, 0.16), 5.0)
+		wb.line(Vector2(deck.position.x, ry - 1.5), Vector2(deck.end.x, ry - 1.5), Color(0.68, 0.54, 0.36), 1.5)
 	# the four posts (they are poles: the rope wraps them)
 	for i in range(deco_pole_count, deco_pole_count + 4):
 		var bp := poles[i]
-		_wc.draw_circle(bp, 7.0, Color(0.34, 0.25, 0.16))
-		_wc.draw_circle(bp + Vector2(-1.5, -1.5), 4.5, Color(0.52, 0.40, 0.26))
+		wb.circle(bp, 7.0, Color(0.34, 0.25, 0.16))
+		wb.circle(bp + Vector2(-1.5, -1.5), 4.5, Color(0.58, 0.46, 0.30))
+		wb.circle(bp + Vector2(-1.0, -1.0), 2.0, Color(0.72, 0.60, 0.42))
+	wb.flush(_wc)
 
 func _draw_palm(c: Object, p: Vector2) -> void:
 	_palm_ground(c, p)
@@ -7005,6 +7478,19 @@ func _draw_castanyada_yard(c: Object, r: Rect2) -> void:
 		b.line(Vector2(bx, df.position.y), Vector2(bx, df.end.y), Color(0.40, 0.28, 0.18), 2.0)
 		bx += 20.0
 	b.line(df.position, Vector2(df.end.x, df.position.y), Color(0.64, 0.48, 0.32), 3.0)
+	# concentric sardana dance ring marked on the wood
+	var df_c := df.get_center()
+	b.circle(df_c, 58.0, Color(0.38, 0.26, 0.16))
+	b.circle(df_c, 56.0, Color(0.50, 0.36, 0.24))
+	b.circle(df_c, 54.0, Color(0.86, 0.78, 0.62, 0.7))
+	b.circle(df_c, 52.0, Color(0.50, 0.36, 0.24))
+	b.circle(df_c, 24.0, Color(0.86, 0.78, 0.62, 0.45))
+	# dancers' coats and bags piled in the center of the sardana circle
+	b.circle(df_c + Vector2(-4.0, 2.0), 7.0, Color(0.26, 0.34, 0.42))
+	b.circle(df_c + Vector2(3.0, -2.0), 6.0, Color(0.68, 0.24, 0.20))
+	b.circle(df_c + Vector2(1.0, 4.0), 5.5, Color(0.46, 0.38, 0.26))
+	_draw_cast_pumpkin(b, Vector2(r.position.x + 24.0, GATE_Y - 24.0), 1.0, AnimClock.msec() / 1000.0)
+	_draw_cast_pumpkin(b, Vector2(r.end.x - 24.0, GATE_Y - 24.0), 2.0, AnimClock.msec() / 1000.0)
 	# the lanterns' light on the ground under each string
 	for ly: float in cast_yard_strings():
 		var lx := r.position.x + 60.0
@@ -7180,6 +7666,26 @@ func _draw_dog_beach(c: Object) -> void:
 		Vector2(beach_shore_x(bot_y), bot_y), Vector2(beach_shore_x(bend_y), bend_y),
 	])
 	c.draw_colored_polygon(wet, BEACH_WET)
+	# driftwood and tide drift line along the dog beach waterline
+	var db := ShapeBatch.new()
+	var dby := top_y + 30.0
+	while dby < bot_y - 20.0:
+		var dsx := beach_shore_x(dby) + BEACH_WET_W * 0.8
+		var dpk := absi(int(dby * 0.17)) % 4
+		if dpk == 0:
+			db.circle(Vector2(dsx, dby) + LIGHT * 1.5, 2.5, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.20))
+			db.circle(Vector2(dsx, dby), 2.4, Color(0.50, 0.48, 0.44))
+			db.circle(Vector2(dsx - 0.7, dby - 0.7), 1.2, Color(0.68, 0.66, 0.62))
+		elif dpk == 1:
+			db.polygon(PackedVector2Array([
+				Vector2(dsx, dby - 2.0), Vector2(dsx + 4.0, dby),
+				Vector2(dsx, dby + 2.0)
+			]), Color(0.96, 0.93, 0.88))
+		elif dpk == 2:
+			# stranded smooth driftwood stick
+			db.line(Vector2(dsx, dby), Vector2(dsx + 8.0, dby + 2.0), Color(0.42, 0.32, 0.22), 2.0)
+		dby += 44.0
+	db.flush(c)
 	# dunes along the east and north instead of a fence: marram grass on pale
 	# mounds is a boundary you can see without chain-link
 	# Pale sand mounds on pale sand were invisible; a dune reads by its SHADED
@@ -7465,21 +7971,73 @@ func _draw_gloss(at: Vector2, txt: String, _mat: String, _style: String, _key: f
 # An outdoor shower from above: a steel column on a slatted timber footplate,
 # the rose over it and the drip below. The dog beach's (it refills the tank)
 # and the two at the top of the sand on the walk.
+# Barcelona seafront selective recycling station:
+# three color-coded cylindrical bins (yellow for envasos/plastics, grey for resta, blue for paper)
+# on a stainless steel mounting bar. The bin obstacle center remains at bn.
+func _draw_beach_recycling_station(c: Object, bn: Vector2) -> void:
+	cast_shadow(c, bn, 14.0, 22.0)
+	var b := ShapeBatch.new()
+	# horizontal brushed stainless mounting bar
+	b.line(bn + Vector2(-15.0, 0), bn + Vector2(15.0, 0), Color(0.70, 0.72, 0.74), 3.0)
+	# post footing
+	b.circle(bn, 3.5, Color(0.38, 0.40, 0.42))
+	# 1. Left bin: yellow (envasos / packaging)
+	var p0 := bn + Vector2(-12.0, 0)
+	b.circle(p0, 6.5, Color(0.22, 0.24, 0.22))
+	b.circle(p0, 5.5, Color(0.88, 0.74, 0.16))
+	b.circle(p0 + Vector2(-1.2, -1.2), 3.5, Color(0.96, 0.84, 0.26))
+	b.rect(Rect2(p0.x - 3.0, p0.y - 1.2, 6.0, 2.4), Color(0.12, 0.12, 0.14))
+	# 2. Center bin: grey (resta / general)
+	var p1 := bn + Vector2(0.0, 0)
+	b.circle(p1, 6.5, Color(0.22, 0.24, 0.22))
+	b.circle(p1, 5.5, Color(0.48, 0.48, 0.46))
+	b.circle(p1 + Vector2(-1.2, -1.2), 3.5, Color(0.60, 0.60, 0.58))
+	b.rect(Rect2(p1.x - 3.0, p1.y - 1.2, 6.0, 2.4), Color(0.12, 0.12, 0.14))
+	# 3. Right bin: blue (paper i cartro / paper)
+	var p2 := bn + Vector2(12.0, 0)
+	b.circle(p2, 6.5, Color(0.22, 0.24, 0.22))
+	b.circle(p2, 5.5, Color(0.18, 0.46, 0.75))
+	b.circle(p2 + Vector2(-1.2, -1.2), 3.5, Color(0.30, 0.58, 0.88))
+	b.line(p2 + Vector2(-3.5, 0), p2 + Vector2(3.5, 0), Color(0.12, 0.12, 0.14), 1.4)
+	# knotted dog waste bag on center bin handle
+	b.circle(p1 + Vector2(6.5, 3.5), 3.0, Color(0.78, 0.78, 0.74, 0.85))
+	b.line(p1 + Vector2(5.0, 1.5), p1 + Vector2(6.5, 3.5), Color(0.70, 0.70, 0.66), 1.4)
+	b.flush(c)
+
+
 func _draw_beach_shower(c: Object, sh: Vector2) -> void:
 	var b := ShapeBatch.new()
 	var plate := Rect2(sh.x - 15.0, sh.y - 13.0, 30.0, 30.0)
 	b.rect(Rect2(plate.position + LIGHT * 3.0, plate.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
 	b.rect(plate, Color(0.50, 0.38, 0.26))
 	for k in range(5):
-		b.rect(Rect2(plate.position.x + 1.0 + float(k) * 6.0, plate.position.y + 1.0, 4.0, plate.size.y - 2.0),
+		var sx := plate.position.x + 1.0 + float(k) * 6.0
+		b.rect(Rect2(sx, plate.position.y + 1.0, 4.0, plate.size.y - 2.0),
 			Color(0.64, 0.50, 0.34))
+		b.circle(Vector2(sx + 2.0, plate.position.y + 3.0), 0.8, Color(0.35, 0.25, 0.15))
+		b.circle(Vector2(sx + 2.0, plate.end.y - 3.0), 0.8, Color(0.35, 0.25, 0.15))
 	# the puddle it always leaves, darker sand round the plate
-	b.circle(sh + Vector2(10.0, 16.0), 9.0, Color(0.55, 0.50, 0.40, 0.35))
+	b.circle(sh + Vector2(10.0, 16.0), 10.0, Color(0.55, 0.50, 0.40, 0.35))
+	# stainless drainage grate set into the puddle
+	var drain := Rect2(sh.x + 5.0, sh.y + 11.0, 10.0, 10.0)
+	b.rect(drain, Color(0.60, 0.62, 0.64))
+	b.rect(drain.grow(-1.5), Color(0.42, 0.44, 0.46))
+	for dxi in range(3):
+		var gx := drain.position.x + 2.5 + float(dxi) * 2.5
+		b.line(Vector2(gx, drain.position.y + 2.0), Vector2(gx, drain.end.y - 2.0), Color(0.24, 0.25, 0.26), 1.0)
+	# wet duckboard sheen
+	b.circle(sh + Vector2(0.0, -8.0), 6.0, Color(0.40, 0.28, 0.18, 0.4))
 	b.flush(c)
 	cast_shadow(c, sh, 5.0, 34.0)
 	c.draw_circle(sh, 7.0, Color(0.68, 0.70, 0.72))
+	# upper shower column and rose
 	c.draw_line(sh, sh + Vector2(0, -16.0), Color(0.76, 0.78, 0.80), 4.0)
 	c.draw_circle(sh + Vector2(0, -18.0), 5.0, Color(0.82, 0.86, 0.88))
+	# lower foot-wash tap (rentapeus)
+	c.draw_line(sh, sh + Vector2(0.0, 8.0), Color(0.74, 0.76, 0.78), 3.0)
+	c.draw_circle(sh + Vector2(0.0, 8.0), 2.6, Color(0.85, 0.88, 0.90))
+	c.draw_line(sh + Vector2(-3.0, 7.5), sh + Vector2(3.0, 7.5), Color(0.60, 0.62, 0.65), 1.5)
+	c.draw_circle(sh + Vector2(0.0, 12.0), 1.4, Color(0.7, 0.86, 0.95, 0.6))
 	for di in range(4):
 		c.draw_line(sh + Vector2(-6.0 + float(di) * 4.0, -14.0),
 			sh + Vector2(-6.0 + float(di) * 4.0, -4.0), Color(0.7, 0.86, 0.95, 0.5), 1.5)
@@ -7499,6 +8057,21 @@ func _draw_lifeguard_tower(c: Object, lg: Vector2, legs: bool, cabin: bool) -> v
 			b.line(lg + lo, lg + lo + LIGHT * 44.0, shade, 3.0)
 			b.circle(lg + lo, 3.6, Color(0.30, 0.28, 0.24))
 			b.circle(lg + lo + Vector2(-0.8, -0.8), 2.2, Color(0.92, 0.92, 0.88))
+		# cross-bracing diagonal shadows on the sand
+		b.line(lg + Vector2(-20, -20) + LIGHT * 22.0, lg + Vector2(20, 20) + LIGHT * 22.0, shade, 1.2)
+		b.line(lg + Vector2(20, -20) + LIGHT * 22.0, lg + Vector2(-20, 20) + LIGHT * 22.0, shade, 1.2)
+		# structural perimeter tie-beams between leg footings
+		b.line(lg + Vector2(-20, -20), lg + Vector2(20, -20), Color(0.72, 0.70, 0.65), 1.5)
+		b.line(lg + Vector2(-20, 20), lg + Vector2(20, 20), Color(0.72, 0.70, 0.65), 1.5)
+		b.line(lg + Vector2(-20, -20), lg + Vector2(-20, 20), Color(0.72, 0.70, 0.65), 1.5)
+		# hanging lifebuoy ring (salva-vides) on the seaward stanchion
+		var bp := lg + Vector2(-19.0, 8.0)
+		b.circle(bp + LIGHT * 10.0, 4.5, shade)
+		b.circle(bp, 4.5, Color(0.96, 0.44, 0.14))
+		b.circle(bp, 2.2, Color(0.85, 0.80, 0.68))
+		b.rect(Rect2(bp.x - 1.0, bp.y - 4.5, 2.0, 9.0), Color(0.98, 0.98, 0.98))
+		b.rect(Rect2(bp.x - 4.5, bp.y - 1.0, 9.0, 2.0), Color(0.98, 0.98, 0.98))
+		b.circle(bp, 2.0, Color(0.85, 0.80, 0.68))
 		# the ladder up the landward side
 		var l0 := lg + Vector2(17.0, -6.0)
 		for side: float in [0.0, 12.0]:
@@ -7512,6 +8085,17 @@ func _draw_lifeguard_tower(c: Object, lg: Vector2, legs: bool, cabin: bool) -> v
 		b.rect(Rect2(lg.x - 15.0, lg.y - 15.0, 30.0, 30.0), Color(0.86, 0.80, 0.34))
 		b.rect(Rect2(lg.x - 9.0, lg.y - 9.0, 18.0, 18.0), Color(0.94, 0.90, 0.58))
 		b.rect(Rect2(lg.x - 15.0, lg.y - 15.0, 30.0, 4.0), Color(0.80, 0.26, 0.20))
+		# Salvament de Platges emblem: red cross on white square
+		b.rect(Rect2(lg.x - 4.0, lg.y - 4.0, 8.0, 8.0), Color(0.98, 0.98, 0.96))
+		b.rect(Rect2(lg.x - 1.0, lg.y - 3.0, 2.0, 6.0), Color(0.86, 0.18, 0.16))
+		b.rect(Rect2(lg.x - 3.0, lg.y - 1.0, 6.0, 2.0), Color(0.86, 0.18, 0.16))
+		# public announcement horn / speaker pointing seaward
+		b.circle(lg + Vector2(-15.0, 12.0), 2.0, Color(0.35, 0.35, 0.38))
+		b.polygon(PackedVector2Array([
+			lg + Vector2(-15.0, 10.5), lg + Vector2(-22.0, 7.5),
+			lg + Vector2(-22.0, 16.5), lg + Vector2(-15.0, 13.5)
+		]), Color(0.84, 0.84, 0.82))
+		b.line(lg + Vector2(-22.0, 7.5), lg + Vector2(-22.0, 16.5), Color(0.30, 0.30, 0.32), 1.5)
 		# the flag on its pole at the seaward corner: green, swim away
 		var fp := lg + Vector2(-17.0, -17.0)
 		b.circle(fp, 2.4, Color(0.36, 0.36, 0.38))
@@ -7526,6 +8110,14 @@ func _draw_lifeguard_tower(c: Object, lg: Vector2, legs: bool, cabin: bool) -> v
 func _draw_volley_court(court: Rect2) -> void:
 	var b := ShapeBatch.new()
 	b.rect(court, Color(0.92, 0.86, 0.70))
+	var cy := court.get_center().y
+	# parallel sand rake comb ridges across court
+	var ry := court.position.y + 14.0
+	while ry < court.end.y - 8.0:
+		if absf(ry - cy) > 12.0:
+			b.line(Vector2(court.position.x + 4.0, ry), Vector2(court.end.x - 4.0, ry), Color(0.85, 0.79, 0.63, 0.35), 1.0)
+			b.line(Vector2(court.position.x + 4.0, ry + 1.0), Vector2(court.end.x - 4.0, ry + 1.0), Color(0.96, 0.90, 0.75, 0.25), 1.0)
+		ry += 16.0
 	for k in range(9):
 		var sp := court.position + Vector2(fmod(float(k) * 47.0, court.size.x - 20.0) + 10.0,
 			fmod(float(k) * 83.0, court.size.y - 20.0) + 10.0)
@@ -7535,9 +8127,20 @@ func _draw_volley_court(court: Rect2) -> void:
 	b.line(Vector2(court.position.x, court.end.y), court.end, tape, 3.0)
 	b.line(court.position, Vector2(court.position.x, court.end.y), tape, 3.0)
 	b.line(Vector2(court.end.x, court.position.y), court.end, tape, 3.0)
+	# corner anchor plates
+	for cp: Vector2 in [court.position, Vector2(court.end.x, court.position.y), Vector2(court.position.x, court.end.y), court.end]:
+		b.circle(cp, 3.5, Color(0.18, 0.38, 0.68))
+		b.circle(cp, 1.8, Color(0.85, 0.85, 0.88))
 	var posts := LevelBuild.beach_net_posts()
 	var a: Vector2 = posts[0]
 	var e: Vector2 = posts[1]
+	# referee tall chair next to post e
+	var ref_p := Vector2(court.end.x + 18.0, cy)
+	b.rect(Rect2(ref_p + LIGHT * 16.0 - Vector2(6.0, 6.0), Vector2(12.0, 12.0)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+	for off: Vector2 in [Vector2(-5, -5), Vector2(5, -5), Vector2(-5, 5), Vector2(5, 5)]:
+		b.circle(ref_p + off, 1.8, Color(0.35, 0.35, 0.38))
+	b.rect(Rect2(ref_p.x - 4.0, ref_p.y - 5.0, 8.0, 10.0), Color(0.24, 0.52, 0.80))
+	b.line(Vector2(ref_p.x + 3.0, ref_p.y - 5.0), Vector2(ref_p.x + 3.0, ref_p.y + 5.0), Color(0.95, 0.95, 0.95), 2.5)
 	# guy ropes out to their pegs, then the net's shadow, the mesh and its tape
 	for p: Vector2 in [a, e]:
 		var out := -1.0 if p.x < court.get_center().x else 1.0
@@ -7562,13 +8165,35 @@ func _draw_volley_court(court: Rect2) -> void:
 # with oleanders in planters along the back, and the bar itself at the end:
 # a hut with a counter and stools facing the tables, thatched at one and
 # under striped canvas at the other.
+func _draw_beach_access_ramp(b: ShapeBatch, from_x: float, to_x: float, y: float, w: float = 32.0) -> void:
+	var rlen := from_x - to_x
+	var ramp := Rect2(to_x, y - w * 0.5, rlen, w)
+	b.rect(Rect2(ramp.position + LIGHT * 3.0, ramp.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
+	b.rect(ramp, Color(0.48, 0.28, 0.22))
+	var rx := to_x + 3.0
+	while rx < from_x:
+		b.line(Vector2(rx, ramp.position.y), Vector2(rx, ramp.end.y), Color(0.34, 0.19, 0.15), 1.5)
+		rx += 9.0
+	b.line(Vector2(to_x, ramp.position.y), Vector2(from_x, ramp.position.y), Color(0.38, 0.22, 0.17), 2.0)
+	b.line(Vector2(to_x, ramp.end.y), Vector2(from_x, ramp.end.y), Color(0.38, 0.22, 0.17), 2.0)
+	b.circle(Vector2(to_x + 2.0, y - w * 0.3), 3.0, Color(0.85, 0.78, 0.62, 0.40))
+	b.circle(Vector2(to_x + 2.0, y + w * 0.3), 3.0, Color(0.85, 0.78, 0.62, 0.40))
+
+
 func _draw_seafront_landmarks(vt: float, vb: float) -> void:
+	var rb := ShapeBatch.new()
+	for sp: Vector2 in LevelBuild.BEACH_SHOWERS:
+		if sp.y > vt - 60.0 and sp.y < vb + 60.0:
+			_draw_beach_access_ramp(rb, 380.0, 345.0, sp.y, 32.0)
+	var tw: Vector2 = LevelBuild.BEACH_TOWER
+	if tw.y > vt - 120.0 and tw.y < vb + 80.0:
+		_draw_beach_access_ramp(rb, 380.0, 320.0, tw.y, 32.0)
+	rb.flush(_wc)
 	if _drawn_window(LevelBuild.BEACH_COURT, vt, vb):
 		_draw_volley_court(LevelBuild.BEACH_COURT)
 	for sp: Vector2 in LevelBuild.BEACH_SHOWERS:
 		if sp.y > vt - 60.0 and sp.y < vb + 60.0:
 			_draw_beach_shower(_wc, sp)
-	var tw: Vector2 = LevelBuild.BEACH_TOWER
 	if tw.y > vt - 120.0 and tw.y < vb + 80.0:
 		_draw_lifeguard_tower(_wc, tw, true, false)
 	for i in range(LevelBuild.BEACH_BARS.size()):
@@ -10730,6 +11355,17 @@ func _draw_walk_ribbon(vt: float, vb: float, bottom: float, col: Color) -> void:
 const TRAIL_FRAY_STEP := 48.0
 
 
+# One Collserola Natural Park trail marker post (fita de sender) with PR blazes
+static func _draw_trail_waymarker(b: ShapeBatch, p: Vector2, out: float) -> void:
+	b.rect(Rect2(p + LIGHT * 4.0 - Vector2(4.5, 4.5), Vector2(9.0, 9.0)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+	b.rect(Rect2(p - Vector2(4.5, 4.5), Vector2(9.0, 9.0)), Color(0.44, 0.32, 0.20))
+	b.rect(Rect2(p - Vector2(3.5, 3.5), Vector2(7.0, 7.0)), Color(0.56, 0.42, 0.26))
+	b.line(p - Vector2(3.5, 3.5), p + Vector2(3.5, -3.5), Color(0.72, 0.58, 0.38), 1.5)
+	var sx := p.x - out * 1.5
+	b.rect(Rect2(sx - 3.0, p.y - 1.5, 6.0, 2.0), Color(0.94, 0.94, 0.96))
+	b.rect(Rect2(sx - 3.0, p.y + 1.0, 6.0, 2.0), Color(0.24, 0.58, 0.28))
+
+
 func _draw_trail_edges(left: PackedVector2Array, right: PackedVector2Array, col: Color) -> void:
 	if left.size() < 2:
 		return
@@ -10763,6 +11399,26 @@ func _draw_trail_edges(left: PackedVector2Array, right: PackedVector2Array, col:
 				var rq := a.lerp(c, hr * 4.0)
 				b.line(rq + Vector2(out * 26.0, -4.0), rq + Vector2(-out * 18.0, 3.0), root, 3.0)
 				b.line(rq + Vector2(out * 6.0, -1.0), rq + Vector2(-out * 6.0, 9.0), root, 2.0)
+			elif hr > 0.72:
+				# wild saffron milk cap mushrooms (pinetells / rovellons) in pine needles
+				var mq := a.lerp(c, (hr - 0.72) * 3.5) + Vector2(out * 24.0, 0.0)
+				b.circle(mq + LIGHT * 1.5, 4.5, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.2))
+				b.circle(mq, 4.2, Color(0.86, 0.44, 0.16))
+				b.circle(mq, 3.0, Color(0.76, 0.36, 0.12))
+				b.circle(mq + Vector2(-0.8, -0.8), 1.2, Color(0.96, 0.65, 0.30))
+				var sq := mq + Vector2(-out * 4.5, 3.5)
+				b.circle(sq, 2.5, Color(0.84, 0.42, 0.16))
+				b.circle(sq + Vector2(-0.5, -0.5), 0.8, Color(0.95, 0.62, 0.28))
+			elif hr > 0.40 and hr < 0.52:
+				# a stone pine cone (pinya) lying on the forest margin
+				var pq := a.lerp(c, (hr - 0.40) * 8.0) + Vector2(out * 18.0, 0.0)
+				b.circle(pq + LIGHT * 1.5, 3.5, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.2))
+				b.circle(pq, 3.2, Color(0.36, 0.24, 0.14))
+				b.line(pq + Vector2(-2.0, 0.0), pq + Vector2(2.0, 0.0), Color(0.52, 0.38, 0.24), 1.4)
+				b.line(pq + Vector2(0.0, -2.0), pq + Vector2(0.0, 2.0), Color(0.52, 0.38, 0.24), 1.4)
+		if int(absf(y)) % 528 < int(TRAIL_FRAY_STEP):
+			var wp := Vector2(e0.y + 16.0, y)
+			_draw_trail_waymarker(b, wp, 1.0)
 		y += TRAIL_FRAY_STEP
 	b.flush(_wc)
 
@@ -12768,20 +13424,49 @@ func _draw_world() -> void:
 			var fml := 30.0 + 14.0 * (0.5 + 0.5 * sin(fmy * 0.037))
 			foam.line(Vector2(fmx, fmy), Vector2(fmx - 2.0, fmy + fml), Color(1, 1, 1, 0.26), 3.0)
 			fmy += 52.0
+		# tide drift line: cockle shells (petxines), sea pebbles (codols), posidonia along waterline
+		var tdy := maxf(ctop, vt - fmod(vt, 32.0) - 32.0)
+		while tdy < minf(bottom, vb + 32.0):
+			var tdx := BEACH_GATE_SHORE_X + BEACH_WET_W + sin(tdy * 0.041) * 3.0
+			var pk := absi(int(tdy * 0.13)) % 4
+			if pk == 0:
+				# smooth rounded sea pebble
+				foam.circle(Vector2(tdx + 1.5, tdy) + LIGHT * 1.2, 2.2, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+				foam.circle(Vector2(tdx + 1.5, tdy), 2.0, Color(0.50, 0.48, 0.44))
+				foam.circle(Vector2(tdx + 0.8, tdy - 0.6), 1.0, Color(0.68, 0.66, 0.62))
+			elif pk == 1:
+				# Mediterranean cockle / tellin shell (petxina)
+				foam.polygon(PackedVector2Array([
+					Vector2(tdx + 2.0, tdy - 1.5), Vector2(tdx + 5.0, tdy),
+					Vector2(tdx + 2.0, tdy + 1.5)
+				]), Color(0.96, 0.93, 0.88))
+			elif pk == 2:
+				# smaller pinkish wedge shell
+				foam.circle(Vector2(tdx - 1.0, tdy), 1.6, Color(0.95, 0.84, 0.80))
+			else:
+				# tiny posidonia sea kelp fleck
+				foam.line(Vector2(tdx, tdy), Vector2(tdx + 3.0, tdy + 2.0), Color(0.28, 0.32, 0.20), 1.2)
+			tdy += 32.0
 		foam.flush(_wc)
-		# THE TIMBER DECK, nearest the sand. These two strips were the wrong way
-		# round: the game had pale planks against the beach and a dark red strip
-		# inland, where the promenade actually runs a dark reddish-brown WOODEN
-		# deck along the sand edge and a pale concrete path with a dashed line
-		# behind it. Swapped, so the boardwalk reads as boards.
+		# THE TIMBER DECK, nearest the sand. Planks laid across the walk with
+		# alternating tones, fastener bolt pairs, and access ramps out to the sand.
 		_wc.draw_rect(Rect2(380, ctop, 110, bottom - ctop), Color(0.46, 0.26, 0.21))
-		# start at the top of the visible window, not the top of the level
+		var bdeck := ShapeBatch.new()
 		var py := minf(START_Y + 200.0, vb + 22.0 - fmod(vb, 22.0))
 		while py > GATE_Y and py > vt - 22.0:
 			if py < vb and py > vt:
+				# plank fill tone variation
+				var pcol: Color = [Color(0.46, 0.26, 0.21), Color(0.43, 0.24, 0.19), Color(0.48, 0.28, 0.23)][absi(int(py / 22.0)) % 3]
+				bdeck.rect(Rect2(380.0, py - 20.0, 110.0, 20.0), pcol)
 				# plank ends, running across the walk the way decking is laid
-				_wc.draw_line(Vector2(380, py), Vector2(490, py), Color(0.34, 0.19, 0.15), 2.0)
+				bdeck.line(Vector2(380, py), Vector2(490, py), Color(0.32, 0.18, 0.14), 2.0)
+				# countersunk bolt pairs near plank edges
+				bdeck.circle(Vector2(385.0, py - 5.0), 1.0, Color(0.24, 0.12, 0.08))
+				bdeck.circle(Vector2(385.0, py - 15.0), 1.0, Color(0.24, 0.12, 0.08))
+				bdeck.circle(Vector2(485.0, py - 5.0), 1.0, Color(0.24, 0.12, 0.08))
+				bdeck.circle(Vector2(485.0, py - 15.0), 1.0, Color(0.24, 0.12, 0.08))
 			py -= 22.0
+		bdeck.flush(_wc)
 		# the pale concrete path, with the dashed line down the middle of it
 		_wc.draw_rect(Rect2(490, ctop, 80, bottom - ctop), Color(0.82, 0.79, 0.73))
 		var ddy := minf(START_Y + 200.0, vb + 64.0 - fmod(vb, 64.0))
@@ -13252,9 +13937,12 @@ func _draw_world() -> void:
 		else:
 			_draw_lamppost(p)
 	# trash bins: green, lidded, with a visible mouth - the ONLY thing
-	# the owner will throw a bag into
+	# the owner will throw a bag into (or Barcelona seaside selective recycling station)
 	for bn in bins:
 		if bn.y < vt - 40.0 or bn.y > vb + 40.0:
+			continue
+		if lvl == "beach":
+			_draw_beach_recycling_station(_wc, bn)
 			continue
 		cast_shadow(_wc, bn, 11.0, 24.0)
 		# the drum, on its post, with a lit rim and a genuinely dark mouth
