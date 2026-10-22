@@ -2,6 +2,10 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - Notes for 1.62, not tagged
+
+- The itch page and the Store listing now describe seventeen walks, El Besòs, and the two chases. The Store's current notes are the 1.62 set. v1.61's notes moved to the past list. Nothing is tagged.
+
 ## 2026-10-22 - The roster audit includes El Besòs
 
 - The freedom-bounds, junk, freedom-sign and terrain checks now walk El Besòs with the other sixteen. Every campaign walk's autowalk finishes, and none of them stall. The level checks and the off-leash bounds are clean, including the new meadow.

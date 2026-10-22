@@ -51,7 +51,7 @@ The leash is real rope. The one you see is the one doing the physics: it wraps, 
 
 Your human answers it like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "HEY!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "ring ring", "selfie!", "ooh!". They are never smarter than that.
 
-SIXTEEN WALKS THROUGH BARCELONA
+SEVENTEEN WALKS THROUGH BARCELONA
 
 El Barri, the neighborhood park
 La Rambla, the crowded promenade
@@ -62,6 +62,7 @@ El Mercat, the market hall
 El Gòtic, the old town alleys
 El Bosc, the forest
 L'Estació, the train station
+El Besòs, the river park
 Les Obres, the work site
 La Castanyada, the chestnut festival
 La Ferralla, the junkyard
@@ -70,7 +71,7 @@ La Neteja, the dawn cleanup
 Montjuïc, the climb
 Dia de Partit, match day
 
-Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. One of them is a chase: a street sweeper careens down a back street at dawn, and you drag your oblivious human home ahead of it. There is a gentle first walk that teaches one trick at a time, and every walk can be played in clear weather, rain, wind or snow, by day or at night.
+Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. Two of them are chases. A street sweeper careens down a back street at dawn, and you drag your oblivious human home ahead of it. On El Besòs the river comes home with you. There is a gentle first walk that teaches one trick at a time, and every walk can be played in clear weather, rain, wind or snow, by day or at night.
 
 ALSO
 
@@ -100,6 +101,25 @@ On a phone or tablet: a stick on the left, DIG, PEE, BARK and RUN on the right, 
 Single player. No ads, no purchases, no account. The download plays offline; the itch app keeps it up to date.
 
 Made in Godot by Santtu Nykänen. The dog is Millie, a distinguished salt-and-pepper mutt who squats like a lady.
+```
+
+## What's new in 1.62
+
+For a devlog post or the top of the body. Everything since v1.61, from
+CHANGELOG.md. Not tagged yet.
+
+```
+- A new walk, EL BESÒS, the river park. It opens at 14 stars, between L'Estació and Les Obres. The way out is a warm afternoon: flood wall, paved path, grass, a margin you can wade, and a deep channel you cannot enter. The meadow at the far end is off the leash.
+- The way home is the flood. Shallow water pushes you south, wets your human and loosens your steering. Plant to hold a spot. The deep front, and the swell from the river, ends the walk. A raised apron stays dry while the water is held, then spills. No Tofu: the river has the way home.
+- The flood warns you, gives a head start, and lets you continue from a checkpoint, the same as the sweeper. Your human hears the siren and decides it is not their problem.
+- Every walk comes home to its own door. Millie pulls toward the way in, your human looks up and pockets the phone, and they follow her through. Most walks use the green street door. L'Estació, Montjuïc and Dia de Partit come home down stairs. El Bosc uses the trailhead gate, and El Besòs the emergency ramp.
+- Rain, wind, snow, night and La Neteja's dawn each have their own light. Lamps stay warm after dark.
+- A walk's name sits in plain type on the card, and a lost walk's title keeps its last letter.
+- The Daily Walk is gone. Every walk can be played in any weather, day or night. A walk that brings its own sky keeps it for that walk only.
+- Bring Tofu home works on the walks that ask for it. She only hides where Millie can reach her, and her last spot is short of the home line.
+- The leash runs round a stall, a van or a bench instead of through it, and that pull walks your human round the end.
+- Caught by the sweeper, the two of you go up into the brooms. Fear waits until the threat is actually on screen.
+- On a rainy El Bosc, one run in five raises the stream. A branch or a ball comes toward the footbridge. Carry it to the bank. Let it pass under and nothing is lost.
 ```
 
 ## What's new in 1.61
