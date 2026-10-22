@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-10-23 - La Rambla polish: wave pavement, Joan Miró mosaic, Canaletes details, authentic stalls
+
+- La Rambla's iconic undulating wave pavement (*ones del paviment de la Rambla*) now ripples along the entire central pedestrian boulevard in alternating warm terrazzo bands.
+- Joan Miró's *Pla de l'Os* mosaic in Plaça de la Boqueria is enriched with authentic ultramarine, vermilion, lemon yellow, and emerald green shapes, dynamic calligraphic brushstrokes, concentric tile borders, and radiating joints.
+- Font de Canaletes is elevated with dark fluted cast-iron column modeling, four bronze spouts with cascading water jets and iron catch grates, Barcelona city crests on the facets, and an illuminated four-armed candelabra lantern.
+- Newsstand kiosks now feature postcard carousel spinner racks with souvenir picture cards and twined bundles of morning newspapers.
+- Rambla de les Flors flower stalls feature galvanized zinc buckets of red roses and sunflowers, potted Mediterranean plants, and drifts of loose flower petals.
+- Souvenir stalls feature straw sun hats, striped espadrilles, and colourful ceramic salamander lizards.
+- Caricaturist and portrait pitches feature three-legged timber easels, paint palettes, sketchboards, and clothesline displays of character portraits.
+- Human living statues stand on dressed stone plinths with propped coin collection dishes.
+- Fallen plane tree leaves drift naturally around tree trunk bases down the boulevard.
+
 ## 2026-10-23 - Dia de Partit matchday visual polish: detritus, bar terrace tableware, security barriers, and stadium concourse
 
 - Matchday ground detritus and directional stencils: scattered dropped ticket stubs with claret margins, folded match programmes with white stars, crushed beverage cans, plastic cups, and swept sunflower seed shell drifts along sidewalks and kerbs. White painted sidewalk stencils ("ACCES ESTADI ^") and concourse transition stencils ("PORTES 7-12 ->") direct fans toward the stadium gates.
