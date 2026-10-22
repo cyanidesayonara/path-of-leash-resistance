@@ -12,8 +12,8 @@ on:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    # a green run takes 8 to 9.5 minutes; at 10, half of them were cancelled
-    timeout-minutes: 20
+    # a green run takes about 17 minutes; 25 leaves a slow runner room
+    timeout-minutes: 25
 
     steps:
       - uses: actions/checkout@v5
@@ -282,6 +282,12 @@ jobs:
 
       - name: El Bosc is its own wood test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_bosc.gd
+
+      - name: Shared water current test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_current_flow.gd
+
+      - name: El Bosc rainy stream find test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_stream_find.gd
 
       - name: El Bosc boars and fallen trunks test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_boar.gd

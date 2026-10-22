@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-21 - A rainy El Bosc runs high
+
+- El Besòs and El Bosc now share one directional-current rule. It gives moving bodies a floor with the flow, planting resists it, and loose floating things stop drifting while Millie carries them.
+- One in five rainy El Bosc runs raises and quickens the stream. A branch or abandoned ball comes east toward the footbridge once Millie is close enough to see it. Catch it and carry it onto either bank for a small reward; let it pass under the bridge and nothing is lost.
+- The rare run is selected from a stable hash of the recorded run seed, walk and event without consuming the layout's random sequence. `--seed=4` selects it and `--seed=0` does not. A normal launch records that seed and leaves the layout RNG alone; only an autowalk or `--seed=` pins it.
+
 ## 2026-10-21 - El Mosaic keeps its shape
 
 - El Mosaic keeps its static tile and stone geometry instead of rebuilding every circle and polygon on each world redraw. It still joins the live world batch in the same order and the same draw call, so its pixels and small world animations stay unchanged.
