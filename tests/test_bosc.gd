@@ -37,6 +37,23 @@ func _run() -> void:
 	_check(m.surface_at(Vector2(e.x - 40.0, sy)) == W and m.surface_at(Vector2(e.y + 40.0, sy)) == W,
 		"the stream is water either side of the trail")
 	_check(m.surface_at(Vector2((e.x + e.y) * 0.5, sy)) != W, "the footbridge carries the trail over it dry")
+	var ordinary_stream: Array[Rect2] = LevelBuild.trail_stream(m)
+	m.bosc_high_stream = true
+	var high_stream: Array[Rect2] = LevelBuild.trail_stream(m)
+	_check(is_equal_approx(ordinary_stream[0].size.y, LevelBuild.TRAIL_STREAM_HALF * 2.0),
+		"the ordinary stream keeps its old depth")
+	_check(high_stream[0].size.y > ordinary_stream[0].size.y,
+		"the seeded rainy stream visibly rises")
+	var pushed_from := Vector2(e.x - 40.0, sy)
+	m.dog.global_position = pushed_from
+	m.dog.velocity = Vector2(-20.0, 0.0)
+	m.dog.planted = false
+	m.human.global_position = pushed_from + Vector2(-30.0, 0.0)
+	m.human.velocity = Vector2.ZERO
+	m.call("_push_bosc_current", 0.1)
+	_check(m.dog.global_position.x > pushed_from.x and m.human.global_position.x > pushed_from.x - 30.0,
+		"the gentle current acts on both bodies before the leash")
+	m.bosc_high_stream = false
 	# the drink is at the bank: every refill point is within reach of water
 	for f: Vector2 in m.fountains:
 		var near := false

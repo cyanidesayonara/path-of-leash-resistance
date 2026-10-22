@@ -10,6 +10,7 @@ extends Node2D
 
 const LevelBuild := preload("res://world/level_build.gd")
 const HumanScript := preload("res://entities/human.gd")
+const CurrentFlow := preload("res://systems/current_flow.gd")
 
 const SHALLOW_LEAD := 110.0
 const PUSH := 220.0
@@ -156,15 +157,8 @@ func push_bodies(m: Node2D, delta: float) -> void:
 
 
 func _shove(body: CharacterBody2D, delta: float, planted: bool) -> void:
-	if not in_shallow(body.global_position):
-		return
-	var rate := PLANT_PUSH if planted else PUSH
-	# a southward floor: speed already going south counts, and speed going
-	# north has to be bought back before the floor is met. The body's own
-	# tick has already applied velocity, so this is only the difference.
-	var extra := maxf(rate - body.velocity.y, 0.0)
-	if extra > 0.0:
-		body.move_and_collide(Vector2(0.0, extra * delta))
+	CurrentFlow.shove_body(body, in_shallow(body.global_position), Vector2.DOWN,
+		PUSH, PLANT_PUSH, planted, delta)
 
 
 func _branch_pos() -> Vector2:
