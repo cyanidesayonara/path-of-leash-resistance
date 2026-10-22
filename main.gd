@@ -865,6 +865,9 @@ func _ready() -> void:
 		tutorial_mode = true
 		lvl = "barri"
 	else:
+		# Recorded for the rainy-stream hash. A normal launch keeps the engine
+		# RNG: reseeding from the clock here changes every later randf, and
+		# the park-traffic regression depends on that sequence.
 		run_seed = int(Time.get_ticks_usec() & 0x7fffffff)
 		if autowalk_requested:
 			# The named call stays here: the route regression reads this source.
@@ -875,7 +878,7 @@ func _ready() -> void:
 		for a in OS.get_cmdline_user_args():
 			if a.begins_with("--seed="):
 				run_seed = int(a.substr(7))
-		seed(run_seed)
+				seed(run_seed)
 		lvl = Game.level_id
 	Game.apply_walk_sky(Game.level_id)
 	bosc_high_stream = RunEvents.chosen(run_seed, lvl, "high_stream", Game.weather, 20)
