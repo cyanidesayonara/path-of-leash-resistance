@@ -318,6 +318,11 @@ rubble stone, and the colour comes in where Gaudi put it.
   pickpocket stepping out of the queue, monk parakeets under the palms who
   go up over their wall, the fan seller on the plaza and the guitarist in
   the viaduct.
+- Round 3 built (2026-10-22, `_draw_mosaic_column`, `LevelBuild.MOSAIC_JUJOL_MEDALLIONS`): the
+  finish - Doric fluted stone columns throughout the Hypostyle Hall, 20 flutes
+  catching light and shade with concentric stone moldings, no mosaic wallpaper
+  on the column shafts; Jujol's celebrated trencadis ceiling medallions in the
+  vaulted bays between columns under the plaza terrace; and deeper covered shade.
 
 ### La Neteja (neteja) - the back street at dawn
 - Is: a narrow street at street-cleaning time: dumpsters, parked scooters,

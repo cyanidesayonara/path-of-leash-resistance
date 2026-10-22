@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - Doric columns for El Mosaic
+
+- El Mosaic's Hypostyle Hall now carries authentic fluted Doric stone columns, with twenty flutes catching light and shade, an abacus plinth and concentric stone moldings. The field of trencadís discs is gone from the column tops, so the hall reads as architecture rather than mosaic wallpaper.
+- Four celebrated Jujol trencadís ceiling medallions are set into the vaulted ceiling domes between the column rows under the plaza terrace, where Gaudí omitted columns.
+- The covered hypostyle hall floor has a deeper shaded interior tone.
+
 ## 2026-10-22 - The docs match the untagged 1.62
 
 - The README now lists seventeen walks and both chases. The handover, the roadmap and the Store procedure say v1.61 is the last tag and v1.62 is prepared, not tagged. The October polish audit records that its two rough findings are fixed, and that El Besòs was checked later.
