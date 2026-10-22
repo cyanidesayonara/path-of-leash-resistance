@@ -119,21 +119,47 @@ static func draw_awning(m: Node2D, b: ShapeBatch, i: int) -> void:
 	var y0 := float(aw[0])
 	var y1 := float(aw[1])
 	var west := bool(aw[2])
-	var col: Color = AWNING_COLS[int(aw[3])]
+	var aw_type := int(aw[3])
+	var col: Color = AWNING_COLS[aw_type % AWNING_COLS.size()]
 	var e: Vector2 = m.walk_edges((y0 + y1) * 0.5)
 	var wall: float = e.x if west else e.y
 	var out := 1.0 if west else -1.0
 	var front: float = wall + out * AWNING_DEPTH
 	var x0 := minf(wall, front)
-	var y := y0
-	var k := 0
-	while y < y1:
-		var h := minf(12.0, y1 - y)
-		b.rect(Rect2(x0, y, AWNING_DEPTH, h), col if k % 2 == 0 else AWNING_CANVAS)
-		# the scallop hanging off the front edge
-		b.circle(Vector2(front, y + h * 0.5), h * 0.5, (col if k % 2 == 0 else AWNING_CANVAS).darkened(0.08))
-		y += 12.0
-		k += 1
+
+	if aw_type == 1:
+		# corrugated zinc / galvanized sheet canopy
+		b.rect(Rect2(x0, y0, AWNING_DEPTH, y1 - y0), Color(0.68, 0.70, 0.72))
+		var fl: float = y0 + 3.0
+		while fl < y1 - 2.0:
+			b.line(Vector2(x0, fl), Vector2(x0 + AWNING_DEPTH, fl), Color(0.52, 0.54, 0.56), 1.5)
+			b.line(Vector2(x0, fl + 1.5), Vector2(x0 + AWNING_DEPTH, fl + 1.5), Color(0.82, 0.84, 0.86), 1.0)
+			fl += 6.0
+		b.rect(Rect2(minf(front - 2.0, front), y0, 3.0, y1 - y0), Color(0.48, 0.50, 0.52))
+		var rv: float = y0 + 6.0
+		while rv < y1 - 4.0:
+			b.circle(Vector2(front - out * 1.5, rv), 1.2, Color(0.88, 0.90, 0.92))
+			rv += 16.0
+	elif aw_type == 2:
+		# dark green grocer/bakery canvas canopy with gold trim
+		b.rect(Rect2(x0, y0, AWNING_DEPTH, y1 - y0), Color(0.18, 0.38, 0.24))
+		b.rect(Rect2(minf(front - 4.0, front), y0, 4.0, y1 - y0), Color(0.14, 0.30, 0.18))
+		b.line(Vector2(front, y0), Vector2(front, y1), Color(0.92, 0.82, 0.38), 2.0)
+		var y := y0
+		while y < y1:
+			b.line(Vector2(x0, y), Vector2(front, y), Color(0.14, 0.30, 0.18), 1.5)
+			y += 24.0
+	else:
+		# classical striped canvas awning with scalloped valance
+		var y := y0
+		var k := 0
+		while y < y1:
+			var h := minf(12.0, y1 - y)
+			b.rect(Rect2(x0, y, AWNING_DEPTH, h), col if k % 2 == 0 else AWNING_CANVAS)
+			b.circle(Vector2(front, y + h * 0.5), h * 0.5, (col if k % 2 == 0 else AWNING_CANVAS).darkened(0.08))
+			y += 12.0
+			k += 1
+
 	# the roller box along the wall, and the fold lit along the top
 	b.rect(Rect2(wall - (6.0 if west else 0.0), y0, 6.0, y1 - y0), Color(0.30, 0.28, 0.26))
 	b.line(Vector2(wall + out * 8.0, y0), Vector2(wall + out * 8.0, y1), Color(1, 1, 1, 0.18), 2.0)
@@ -164,15 +190,52 @@ static func _crate(b: ShapeBatch, cr: Rect2, col: Color, full: bool, seed: int) 
 	b.rect(cr, col.darkened(0.28))
 	b.rect(cr.grow(-2.5), col.darkened(0.12) if full else col.darkened(0.40))
 	if full:
-		var fc: Color = PRODUCE[seed % PRODUCE.size()]
-		var fx := cr.position.x + 7.0
-		while fx < cr.end.x - 4.0:
-			var fy := cr.position.y + 7.0
-			while fy < cr.end.y - 4.0:
-				b.circle(Vector2(fx, fy), 3.6, fc)
-				b.circle(Vector2(fx - 1.0, fy - 1.2), 1.2, fc.lightened(0.35))
-				fy += 8.0
-			fx += 8.0
+		var mode: int = seed % 4
+		if mode == 1:
+			# fresh catch on crushed ice bed: silver fish, prawns, lemon
+			b.rect(cr.grow(-3.0), Color(0.82, 0.90, 0.94))
+			var fx := cr.position.x + 8.0
+			while fx < cr.end.x - 6.0:
+				var fy := cr.position.y + 7.0
+				while fy < cr.end.y - 6.0:
+					b.line(Vector2(fx - 4.0, fy), Vector2(fx + 4.0, fy), Color(0.50, 0.64, 0.72), 2.5)
+					b.circle(Vector2(fx + 3.0, fy), 1.4, Color(0.78, 0.88, 0.94))
+					fy += 9.0
+				fx += 11.0
+			b.circle(Vector2(cr.end.x - 7.0, cr.end.y - 7.0), 3.0, Color(0.96, 0.86, 0.22))
+		elif mode == 2:
+			# bakery / pa de pagès: crusty loaves and baguettes
+			b.rect(cr.grow(-3.0), Color(0.48, 0.36, 0.24))
+			var bx := cr.position.x + 8.0
+			while bx < cr.end.x - 5.0:
+				var by := cr.position.y + 8.0
+				while by < cr.end.y - 5.0:
+					b.circle(Vector2(bx, by), 4.2, Color(0.76, 0.54, 0.30))
+					b.circle(Vector2(bx - 1.0, by - 1.0), 2.2, Color(0.92, 0.88, 0.80))
+					by += 10.0
+				bx += 11.0
+		elif mode == 3:
+			# verdures / vegetables: purple artichokes and calçots
+			b.rect(cr.grow(-3.0), Color(0.38, 0.28, 0.18))
+			var vx := cr.position.x + 7.0
+			while vx < cr.end.x - 5.0:
+				var vy := cr.position.y + 7.0
+				while vy < cr.end.y - 5.0:
+					b.circle(Vector2(vx, vy), 4.0, Color(0.38, 0.52, 0.30))
+					b.circle(Vector2(vx + 1.0, vy - 1.0), 2.2, Color(0.56, 0.32, 0.48))
+					vy += 9.0
+				vx += 10.0
+		else:
+			# classic orchard fruit: oranges, lemons, apples
+			var fc: Color = PRODUCE[seed % PRODUCE.size()]
+			var fx := cr.position.x + 7.0
+			while fx < cr.end.x - 4.0:
+				var fy := cr.position.y + 7.0
+				while fy < cr.end.y - 4.0:
+					b.circle(Vector2(fx, fy), 3.6, fc)
+					b.circle(Vector2(fx - 1.0, fy - 1.2), 1.2, fc.lightened(0.35))
+					fy += 8.0
+				fx += 8.0
 	else:
 		# an empty one: the slats of its floor
 		var sx := cr.position.x + 5.0
