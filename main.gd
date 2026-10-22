@@ -7190,6 +7190,26 @@ func _draw_dog_beach(c: Object) -> void:
 		Vector2(beach_shore_x(bot_y), bot_y), Vector2(beach_shore_x(bend_y), bend_y),
 	])
 	c.draw_colored_polygon(wet, BEACH_WET)
+	# driftwood and tide drift line along the dog beach waterline
+	var db := ShapeBatch.new()
+	var dby := top_y + 30.0
+	while dby < bot_y - 20.0:
+		var dsx := beach_shore_x(dby) + BEACH_WET_W * 0.8
+		var dpk := absi(int(dby * 0.17)) % 4
+		if dpk == 0:
+			db.circle(Vector2(dsx, dby) + LIGHT * 1.5, 2.5, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.20))
+			db.circle(Vector2(dsx, dby), 2.4, Color(0.50, 0.48, 0.44))
+			db.circle(Vector2(dsx - 0.7, dby - 0.7), 1.2, Color(0.68, 0.66, 0.62))
+		elif dpk == 1:
+			db.polygon(PackedVector2Array([
+				Vector2(dsx, dby - 2.0), Vector2(dsx + 4.0, dby),
+				Vector2(dsx, dby + 2.0)
+			]), Color(0.96, 0.93, 0.88))
+		elif dpk == 2:
+			# stranded smooth driftwood stick
+			db.line(Vector2(dsx, dby), Vector2(dsx + 8.0, dby + 2.0), Color(0.42, 0.32, 0.22), 2.0)
+		dby += 44.0
+	db.flush(c)
 	# dunes along the east and north instead of a fence: marram grass on pale
 	# mounds is a boundary you can see without chain-link
 	# Pale sand mounds on pale sand were invisible; a dune reads by its SHADED
@@ -7475,21 +7495,73 @@ func _draw_gloss(at: Vector2, txt: String, _mat: String, _style: String, _key: f
 # An outdoor shower from above: a steel column on a slatted timber footplate,
 # the rose over it and the drip below. The dog beach's (it refills the tank)
 # and the two at the top of the sand on the walk.
+# Barcelona seafront selective recycling station:
+# three color-coded cylindrical bins (yellow for envasos/plastics, grey for resta, blue for paper)
+# on a stainless steel mounting bar. The bin obstacle center remains at bn.
+func _draw_beach_recycling_station(c: Object, bn: Vector2) -> void:
+	cast_shadow(c, bn, 14.0, 22.0)
+	var b := ShapeBatch.new()
+	# horizontal brushed stainless mounting bar
+	b.line(bn + Vector2(-15.0, 0), bn + Vector2(15.0, 0), Color(0.70, 0.72, 0.74), 3.0)
+	# post footing
+	b.circle(bn, 3.5, Color(0.38, 0.40, 0.42))
+	# 1. Left bin: yellow (envasos / packaging)
+	var p0 := bn + Vector2(-12.0, 0)
+	b.circle(p0, 6.5, Color(0.22, 0.24, 0.22))
+	b.circle(p0, 5.5, Color(0.88, 0.74, 0.16))
+	b.circle(p0 + Vector2(-1.2, -1.2), 3.5, Color(0.96, 0.84, 0.26))
+	b.rect(Rect2(p0.x - 3.0, p0.y - 1.2, 6.0, 2.4), Color(0.12, 0.12, 0.14))
+	# 2. Center bin: grey (resta / general)
+	var p1 := bn + Vector2(0.0, 0)
+	b.circle(p1, 6.5, Color(0.22, 0.24, 0.22))
+	b.circle(p1, 5.5, Color(0.48, 0.48, 0.46))
+	b.circle(p1 + Vector2(-1.2, -1.2), 3.5, Color(0.60, 0.60, 0.58))
+	b.rect(Rect2(p1.x - 3.0, p1.y - 1.2, 6.0, 2.4), Color(0.12, 0.12, 0.14))
+	# 3. Right bin: blue (paper i cartro / paper)
+	var p2 := bn + Vector2(12.0, 0)
+	b.circle(p2, 6.5, Color(0.22, 0.24, 0.22))
+	b.circle(p2, 5.5, Color(0.18, 0.46, 0.75))
+	b.circle(p2 + Vector2(-1.2, -1.2), 3.5, Color(0.30, 0.58, 0.88))
+	b.line(p2 + Vector2(-3.5, 0), p2 + Vector2(3.5, 0), Color(0.12, 0.12, 0.14), 1.4)
+	# knotted dog waste bag on center bin handle
+	b.circle(p1 + Vector2(6.5, 3.5), 3.0, Color(0.78, 0.78, 0.74, 0.85))
+	b.line(p1 + Vector2(5.0, 1.5), p1 + Vector2(6.5, 3.5), Color(0.70, 0.70, 0.66), 1.4)
+	b.flush(c)
+
+
 func _draw_beach_shower(c: Object, sh: Vector2) -> void:
 	var b := ShapeBatch.new()
 	var plate := Rect2(sh.x - 15.0, sh.y - 13.0, 30.0, 30.0)
 	b.rect(Rect2(plate.position + LIGHT * 3.0, plate.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
 	b.rect(plate, Color(0.50, 0.38, 0.26))
 	for k in range(5):
-		b.rect(Rect2(plate.position.x + 1.0 + float(k) * 6.0, plate.position.y + 1.0, 4.0, plate.size.y - 2.0),
+		var sx := plate.position.x + 1.0 + float(k) * 6.0
+		b.rect(Rect2(sx, plate.position.y + 1.0, 4.0, plate.size.y - 2.0),
 			Color(0.64, 0.50, 0.34))
+		b.circle(Vector2(sx + 2.0, plate.position.y + 3.0), 0.8, Color(0.35, 0.25, 0.15))
+		b.circle(Vector2(sx + 2.0, plate.end.y - 3.0), 0.8, Color(0.35, 0.25, 0.15))
 	# the puddle it always leaves, darker sand round the plate
-	b.circle(sh + Vector2(10.0, 16.0), 9.0, Color(0.55, 0.50, 0.40, 0.35))
+	b.circle(sh + Vector2(10.0, 16.0), 10.0, Color(0.55, 0.50, 0.40, 0.35))
+	# stainless drainage grate set into the puddle
+	var drain := Rect2(sh.x + 5.0, sh.y + 11.0, 10.0, 10.0)
+	b.rect(drain, Color(0.60, 0.62, 0.64))
+	b.rect(drain.grow(-1.5), Color(0.42, 0.44, 0.46))
+	for dxi in range(3):
+		var gx := drain.position.x + 2.5 + float(dxi) * 2.5
+		b.line(Vector2(gx, drain.position.y + 2.0), Vector2(gx, drain.end.y - 2.0), Color(0.24, 0.25, 0.26), 1.0)
+	# wet duckboard sheen
+	b.circle(sh + Vector2(0.0, -8.0), 6.0, Color(0.40, 0.28, 0.18, 0.4))
 	b.flush(c)
 	cast_shadow(c, sh, 5.0, 34.0)
 	c.draw_circle(sh, 7.0, Color(0.68, 0.70, 0.72))
+	# upper shower column and rose
 	c.draw_line(sh, sh + Vector2(0, -16.0), Color(0.76, 0.78, 0.80), 4.0)
 	c.draw_circle(sh + Vector2(0, -18.0), 5.0, Color(0.82, 0.86, 0.88))
+	# lower foot-wash tap (rentapeus)
+	c.draw_line(sh, sh + Vector2(0.0, 8.0), Color(0.74, 0.76, 0.78), 3.0)
+	c.draw_circle(sh + Vector2(0.0, 8.0), 2.6, Color(0.85, 0.88, 0.90))
+	c.draw_line(sh + Vector2(-3.0, 7.5), sh + Vector2(3.0, 7.5), Color(0.60, 0.62, 0.65), 1.5)
+	c.draw_circle(sh + Vector2(0.0, 12.0), 1.4, Color(0.7, 0.86, 0.95, 0.6))
 	for di in range(4):
 		c.draw_line(sh + Vector2(-6.0 + float(di) * 4.0, -14.0),
 			sh + Vector2(-6.0 + float(di) * 4.0, -4.0), Color(0.7, 0.86, 0.95, 0.5), 1.5)
@@ -7509,6 +7581,21 @@ func _draw_lifeguard_tower(c: Object, lg: Vector2, legs: bool, cabin: bool) -> v
 			b.line(lg + lo, lg + lo + LIGHT * 44.0, shade, 3.0)
 			b.circle(lg + lo, 3.6, Color(0.30, 0.28, 0.24))
 			b.circle(lg + lo + Vector2(-0.8, -0.8), 2.2, Color(0.92, 0.92, 0.88))
+		# cross-bracing diagonal shadows on the sand
+		b.line(lg + Vector2(-20, -20) + LIGHT * 22.0, lg + Vector2(20, 20) + LIGHT * 22.0, shade, 1.2)
+		b.line(lg + Vector2(20, -20) + LIGHT * 22.0, lg + Vector2(-20, 20) + LIGHT * 22.0, shade, 1.2)
+		# structural perimeter tie-beams between leg footings
+		b.line(lg + Vector2(-20, -20), lg + Vector2(20, -20), Color(0.72, 0.70, 0.65), 1.5)
+		b.line(lg + Vector2(-20, 20), lg + Vector2(20, 20), Color(0.72, 0.70, 0.65), 1.5)
+		b.line(lg + Vector2(-20, -20), lg + Vector2(-20, 20), Color(0.72, 0.70, 0.65), 1.5)
+		# hanging lifebuoy ring (salva-vides) on the seaward stanchion
+		var bp := lg + Vector2(-19.0, 8.0)
+		b.circle(bp + LIGHT * 10.0, 4.5, shade)
+		b.circle(bp, 4.5, Color(0.96, 0.44, 0.14))
+		b.circle(bp, 2.2, Color(0.85, 0.80, 0.68))
+		b.rect(Rect2(bp.x - 1.0, bp.y - 4.5, 2.0, 9.0), Color(0.98, 0.98, 0.98))
+		b.rect(Rect2(bp.x - 4.5, bp.y - 1.0, 9.0, 2.0), Color(0.98, 0.98, 0.98))
+		b.circle(bp, 2.0, Color(0.85, 0.80, 0.68))
 		# the ladder up the landward side
 		var l0 := lg + Vector2(17.0, -6.0)
 		for side: float in [0.0, 12.0]:
@@ -7522,6 +7609,17 @@ func _draw_lifeguard_tower(c: Object, lg: Vector2, legs: bool, cabin: bool) -> v
 		b.rect(Rect2(lg.x - 15.0, lg.y - 15.0, 30.0, 30.0), Color(0.86, 0.80, 0.34))
 		b.rect(Rect2(lg.x - 9.0, lg.y - 9.0, 18.0, 18.0), Color(0.94, 0.90, 0.58))
 		b.rect(Rect2(lg.x - 15.0, lg.y - 15.0, 30.0, 4.0), Color(0.80, 0.26, 0.20))
+		# Salvament de Platges emblem: red cross on white square
+		b.rect(Rect2(lg.x - 4.0, lg.y - 4.0, 8.0, 8.0), Color(0.98, 0.98, 0.96))
+		b.rect(Rect2(lg.x - 1.0, lg.y - 3.0, 2.0, 6.0), Color(0.86, 0.18, 0.16))
+		b.rect(Rect2(lg.x - 3.0, lg.y - 1.0, 6.0, 2.0), Color(0.86, 0.18, 0.16))
+		# public announcement horn / speaker pointing seaward
+		b.circle(lg + Vector2(-15.0, 12.0), 2.0, Color(0.35, 0.35, 0.38))
+		b.polygon(PackedVector2Array([
+			lg + Vector2(-15.0, 10.5), lg + Vector2(-22.0, 7.5),
+			lg + Vector2(-22.0, 16.5), lg + Vector2(-15.0, 13.5)
+		]), Color(0.84, 0.84, 0.82))
+		b.line(lg + Vector2(-22.0, 7.5), lg + Vector2(-22.0, 16.5), Color(0.30, 0.30, 0.32), 1.5)
 		# the flag on its pole at the seaward corner: green, swim away
 		var fp := lg + Vector2(-17.0, -17.0)
 		b.circle(fp, 2.4, Color(0.36, 0.36, 0.38))
@@ -7536,6 +7634,14 @@ func _draw_lifeguard_tower(c: Object, lg: Vector2, legs: bool, cabin: bool) -> v
 func _draw_volley_court(court: Rect2) -> void:
 	var b := ShapeBatch.new()
 	b.rect(court, Color(0.92, 0.86, 0.70))
+	var cy := court.get_center().y
+	# parallel sand rake comb ridges across court
+	var ry := court.position.y + 14.0
+	while ry < court.end.y - 8.0:
+		if absf(ry - cy) > 12.0:
+			b.line(Vector2(court.position.x + 4.0, ry), Vector2(court.end.x - 4.0, ry), Color(0.85, 0.79, 0.63, 0.35), 1.0)
+			b.line(Vector2(court.position.x + 4.0, ry + 1.0), Vector2(court.end.x - 4.0, ry + 1.0), Color(0.96, 0.90, 0.75, 0.25), 1.0)
+		ry += 16.0
 	for k in range(9):
 		var sp := court.position + Vector2(fmod(float(k) * 47.0, court.size.x - 20.0) + 10.0,
 			fmod(float(k) * 83.0, court.size.y - 20.0) + 10.0)
@@ -7545,9 +7651,20 @@ func _draw_volley_court(court: Rect2) -> void:
 	b.line(Vector2(court.position.x, court.end.y), court.end, tape, 3.0)
 	b.line(court.position, Vector2(court.position.x, court.end.y), tape, 3.0)
 	b.line(Vector2(court.end.x, court.position.y), court.end, tape, 3.0)
+	# corner anchor plates
+	for cp: Vector2 in [court.position, Vector2(court.end.x, court.position.y), Vector2(court.position.x, court.end.y), court.end]:
+		b.circle(cp, 3.5, Color(0.18, 0.38, 0.68))
+		b.circle(cp, 1.8, Color(0.85, 0.85, 0.88))
 	var posts := LevelBuild.beach_net_posts()
 	var a: Vector2 = posts[0]
 	var e: Vector2 = posts[1]
+	# referee tall chair next to post e
+	var ref_p := Vector2(court.end.x + 18.0, cy)
+	b.rect(Rect2(ref_p + LIGHT * 16.0 - Vector2(6.0, 6.0), Vector2(12.0, 12.0)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+	for off: Vector2 in [Vector2(-5, -5), Vector2(5, -5), Vector2(-5, 5), Vector2(5, 5)]:
+		b.circle(ref_p + off, 1.8, Color(0.35, 0.35, 0.38))
+	b.rect(Rect2(ref_p.x - 4.0, ref_p.y - 5.0, 8.0, 10.0), Color(0.24, 0.52, 0.80))
+	b.line(Vector2(ref_p.x + 3.0, ref_p.y - 5.0), Vector2(ref_p.x + 3.0, ref_p.y + 5.0), Color(0.95, 0.95, 0.95), 2.5)
 	# guy ropes out to their pegs, then the net's shadow, the mesh and its tape
 	for p: Vector2 in [a, e]:
 		var out := -1.0 if p.x < court.get_center().x else 1.0
@@ -7572,13 +7689,35 @@ func _draw_volley_court(court: Rect2) -> void:
 # with oleanders in planters along the back, and the bar itself at the end:
 # a hut with a counter and stools facing the tables, thatched at one and
 # under striped canvas at the other.
+func _draw_beach_access_ramp(b: ShapeBatch, from_x: float, to_x: float, y: float, w: float = 32.0) -> void:
+	var rlen := from_x - to_x
+	var ramp := Rect2(to_x, y - w * 0.5, rlen, w)
+	b.rect(Rect2(ramp.position + LIGHT * 3.0, ramp.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
+	b.rect(ramp, Color(0.48, 0.28, 0.22))
+	var rx := to_x + 3.0
+	while rx < from_x:
+		b.line(Vector2(rx, ramp.position.y), Vector2(rx, ramp.end.y), Color(0.34, 0.19, 0.15), 1.5)
+		rx += 9.0
+	b.line(Vector2(to_x, ramp.position.y), Vector2(from_x, ramp.position.y), Color(0.38, 0.22, 0.17), 2.0)
+	b.line(Vector2(to_x, ramp.end.y), Vector2(from_x, ramp.end.y), Color(0.38, 0.22, 0.17), 2.0)
+	b.circle(Vector2(to_x + 2.0, y - w * 0.3), 3.0, Color(0.85, 0.78, 0.62, 0.40))
+	b.circle(Vector2(to_x + 2.0, y + w * 0.3), 3.0, Color(0.85, 0.78, 0.62, 0.40))
+
+
 func _draw_seafront_landmarks(vt: float, vb: float) -> void:
+	var rb := ShapeBatch.new()
+	for sp: Vector2 in LevelBuild.BEACH_SHOWERS:
+		if sp.y > vt - 60.0 and sp.y < vb + 60.0:
+			_draw_beach_access_ramp(rb, 380.0, 345.0, sp.y, 32.0)
+	var tw: Vector2 = LevelBuild.BEACH_TOWER
+	if tw.y > vt - 120.0 and tw.y < vb + 80.0:
+		_draw_beach_access_ramp(rb, 380.0, 320.0, tw.y, 32.0)
+	rb.flush(_wc)
 	if _drawn_window(LevelBuild.BEACH_COURT, vt, vb):
 		_draw_volley_court(LevelBuild.BEACH_COURT)
 	for sp: Vector2 in LevelBuild.BEACH_SHOWERS:
 		if sp.y > vt - 60.0 and sp.y < vb + 60.0:
 			_draw_beach_shower(_wc, sp)
-	var tw: Vector2 = LevelBuild.BEACH_TOWER
 	if tw.y > vt - 120.0 and tw.y < vb + 80.0:
 		_draw_lifeguard_tower(_wc, tw, true, false)
 	for i in range(LevelBuild.BEACH_BARS.size()):
@@ -12778,20 +12917,49 @@ func _draw_world() -> void:
 			var fml := 30.0 + 14.0 * (0.5 + 0.5 * sin(fmy * 0.037))
 			foam.line(Vector2(fmx, fmy), Vector2(fmx - 2.0, fmy + fml), Color(1, 1, 1, 0.26), 3.0)
 			fmy += 52.0
+		# tide drift line: cockle shells (petxines), sea pebbles (codols), posidonia along waterline
+		var tdy := maxf(ctop, vt - fmod(vt, 32.0) - 32.0)
+		while tdy < minf(bottom, vb + 32.0):
+			var tdx := BEACH_GATE_SHORE_X + BEACH_WET_W + sin(tdy * 0.041) * 3.0
+			var pk := absi(int(tdy * 0.13)) % 4
+			if pk == 0:
+				# smooth rounded sea pebble
+				foam.circle(Vector2(tdx + 1.5, tdy) + LIGHT * 1.2, 2.2, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
+				foam.circle(Vector2(tdx + 1.5, tdy), 2.0, Color(0.50, 0.48, 0.44))
+				foam.circle(Vector2(tdx + 0.8, tdy - 0.6), 1.0, Color(0.68, 0.66, 0.62))
+			elif pk == 1:
+				# Mediterranean cockle / tellin shell (petxina)
+				foam.polygon(PackedVector2Array([
+					Vector2(tdx + 2.0, tdy - 1.5), Vector2(tdx + 5.0, tdy),
+					Vector2(tdx + 2.0, tdy + 1.5)
+				]), Color(0.96, 0.93, 0.88))
+			elif pk == 2:
+				# smaller pinkish wedge shell
+				foam.circle(Vector2(tdx - 1.0, tdy), 1.6, Color(0.95, 0.84, 0.80))
+			else:
+				# tiny posidonia sea kelp fleck
+				foam.line(Vector2(tdx, tdy), Vector2(tdx + 3.0, tdy + 2.0), Color(0.28, 0.32, 0.20), 1.2)
+			tdy += 32.0
 		foam.flush(_wc)
-		# THE TIMBER DECK, nearest the sand. These two strips were the wrong way
-		# round: the game had pale planks against the beach and a dark red strip
-		# inland, where the promenade actually runs a dark reddish-brown WOODEN
-		# deck along the sand edge and a pale concrete path with a dashed line
-		# behind it. Swapped, so the boardwalk reads as boards.
+		# THE TIMBER DECK, nearest the sand. Planks laid across the walk with
+		# alternating tones, fastener bolt pairs, and access ramps out to the sand.
 		_wc.draw_rect(Rect2(380, ctop, 110, bottom - ctop), Color(0.46, 0.26, 0.21))
-		# start at the top of the visible window, not the top of the level
+		var bdeck := ShapeBatch.new()
 		var py := minf(START_Y + 200.0, vb + 22.0 - fmod(vb, 22.0))
 		while py > GATE_Y and py > vt - 22.0:
 			if py < vb and py > vt:
+				# plank fill tone variation
+				var pcol: Color = [Color(0.46, 0.26, 0.21), Color(0.43, 0.24, 0.19), Color(0.48, 0.28, 0.23)][absi(int(py / 22.0)) % 3]
+				bdeck.rect(Rect2(380.0, py - 20.0, 110.0, 20.0), pcol)
 				# plank ends, running across the walk the way decking is laid
-				_wc.draw_line(Vector2(380, py), Vector2(490, py), Color(0.34, 0.19, 0.15), 2.0)
+				bdeck.line(Vector2(380, py), Vector2(490, py), Color(0.32, 0.18, 0.14), 2.0)
+				# countersunk bolt pairs near plank edges
+				bdeck.circle(Vector2(385.0, py - 5.0), 1.0, Color(0.24, 0.12, 0.08))
+				bdeck.circle(Vector2(385.0, py - 15.0), 1.0, Color(0.24, 0.12, 0.08))
+				bdeck.circle(Vector2(485.0, py - 5.0), 1.0, Color(0.24, 0.12, 0.08))
+				bdeck.circle(Vector2(485.0, py - 15.0), 1.0, Color(0.24, 0.12, 0.08))
 			py -= 22.0
+		bdeck.flush(_wc)
 		# the pale concrete path, with the dashed line down the middle of it
 		_wc.draw_rect(Rect2(490, ctop, 80, bottom - ctop), Color(0.82, 0.79, 0.73))
 		var ddy := minf(START_Y + 200.0, vb + 64.0 - fmod(vb, 64.0))
@@ -13262,9 +13430,12 @@ func _draw_world() -> void:
 		else:
 			_draw_lamppost(p)
 	# trash bins: green, lidded, with a visible mouth - the ONLY thing
-	# the owner will throw a bag into
+	# the owner will throw a bag into (or Barcelona seaside selective recycling station)
 	for bn in bins:
 		if bn.y < vt - 40.0 or bn.y > vb + 40.0:
+			continue
+		if lvl == "beach":
+			_draw_beach_recycling_station(_wc, bn)
 			continue
 		cast_shadow(_wc, bn, 11.0, 24.0)
 		# the drum, on its post, with a lit rim and a genuinely dark mouth
