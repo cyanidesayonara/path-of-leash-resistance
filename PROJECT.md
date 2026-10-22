@@ -182,7 +182,8 @@ Every feature must serve at least one. If it serves none, cut it.
   tightening coil looks under-read by the arming-window mean, whether losing
   the old FLING reward on a safe refusal feels fair, and how much dogward lean
   the forced release wants. Assess all four only on the final overhaul commit.
-- **v1.61 - in progress.** Dia de Partit, the third new walk, with El Diluvi's umbrella crowd now moving. Twelve goals, the match-day words and the call-and-answer arrangement are the last piece.
+- **v1.61 - shipped.** Dia de Partit, tagged 2026-10-20.
+- **v1.62 - prepared, not tagged.** El Besòs, arrivals at each walk's own door, weather and lamplight, no Daily Walk, Tofu only where she can be reached, and a rainy high stream on El Bosc. The notes are written. Do not tag until they are on main and CI is green.
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
 - Every release also ships: mechanics tuning from playtests, at least

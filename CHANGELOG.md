@@ -2,6 +2,10 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - Notes for 1.62, not tagged
+
+- The itch page and the Store listing now describe seventeen walks, El Besòs, and the two chases. The Store's current notes are the 1.62 set. v1.61's notes moved to the past list. Nothing is tagged.
+
 ## 2026-10-21 - A rainy El Bosc runs high
 
 - El Besòs and El Bosc now share one directional-current rule. It gives moving bodies a floor with the flow, planting resists it, and loose floating things stop drifting while Millie carries them.
