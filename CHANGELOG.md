@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - No co-authors in the history
+
+- Five commits from 2026-10-20 and 2026-10-21 carried a `Co-authored-by: Cursor` trailer the local hook never saw. `main` was rewritten to drop it, with the same trees, authors and dates, and v1.62 moved to the cleaned commit.
+- CI now checks every commit message in the history and fails on an attribution trailer. A tag that fails it is not published.
+
 ## 2026-10-22 - The docs match the untagged 1.62
 
 - The README now lists seventeen walks and both chases. The handover, the roadmap and the Store procedure say v1.61 is the last tag and v1.62 is prepared, not tagged. The October polish audit records that its two rough findings are fixed, and that El Besòs was checked later.

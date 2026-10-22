@@ -10,6 +10,25 @@ on:
     branches: [main]
 
 jobs:
+  # Commits carry Santtu Nykänen's name only. A local commit-msg hook does not
+  # travel with a clone or a cloud agent, so the whole history is checked here,
+  # and release.yml will not publish a tag whose CI run fails this.
+  attribution:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: No co-author or tool attribution in any commit
+        run: |
+          found="$(git log --format='%H%n%B' HEAD | grep -niE '^(co-authored-by|generated-by|assisted-by|made-with):|cursoragent@|noreply@anthropic' || true)"
+          if [ -n "$found" ]; then
+            echo "Attribution trailers are not allowed in this repo:"
+            git log --format='%h %s' -i -E --grep='^(co-authored-by|generated-by|assisted-by|made-with):|cursoragent@|noreply@anthropic' HEAD
+            exit 1
+          fi
+
   smoke:
     runs-on: ubuntu-latest
     # a green run takes about 17 minutes; 25 leaves a slow runner room
