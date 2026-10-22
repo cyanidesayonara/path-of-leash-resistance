@@ -14,20 +14,22 @@ changes; it is the brief, not a record.
 
 ## Where things stand
 
-`tools/level_inventory.gd` prints every walk's contents. What it shows:
+`tools/level_inventory.gd` prints every walk's contents. The September note
+that five walks were still La Rambla, and three still El Mercat, is out of
+date. Re-run on 2026-10-22:
 
-- **Five walks are La Rambla's layout redressed.** El Diluvi, L'Estacio,
-  Les Obres, La Ferralla and the First Walk inherit its props wholesale, café
-  terrace included (four tables, six chairs, two parasols in a scrapyard, a
-  roadworks and a station concourse), plus its bins, hydrants, manholes,
-  cellars and three road crossings.
-- **Three walks are El Mercat's.** El Gotic and La Castanyada carry its eight
-  stalls; La Neteja its stall-free skeleton.
-- **El Bosc and El Mosaic are El Parc's.** Both carry the park's pond and
-  its 14-tree grove, which is why El Parc and El Bosc read as one walk with a
-  bent path.
-- **Every walk ends in the same off-leash yard** with the same 16 props,
-  except the beach, the clearings and the lots.
+- El Diluvi, L'Estacio, Les Obres, La Ferralla and the First Walk no longer
+  carry La Rambla's café terrace. The station is a concourse with a moving
+  walkway, the works has its cones and trench, the scrapyard has the wrecks,
+  the cameras and the oil.
+- El Gotic is the alley with the wall cats and the laundry, not El Mercat's
+  stalls. La Castanyada keeps festival stalls on purpose. La Neteja is the
+  narrow chase street.
+- El Bosc and El Mosaic each have their own path and their own gate. The
+  off-leash spaces are a yard, a plaça, a clearing, a lot or the dog beach,
+  not one shared prop list.
+- El Besos is the seventeenth walk: the flood wall, the margin and the deep
+  channel, open at 14 stars.
 
 ## The rules
 
