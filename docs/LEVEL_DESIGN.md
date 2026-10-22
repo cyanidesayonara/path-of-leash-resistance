@@ -25,9 +25,11 @@ date. Re-run on 2026-10-22:
 - El Gotic is the alley with the wall cats and the laundry, not El Mercat's
   stalls. La Castanyada keeps festival stalls on purpose. La Neteja is the
   narrow chase street.
-- El Bosc and El Mosaic each have their own path and their own gate. The
-  off-leash spaces are a yard, a plaça, a clearing, a lot or the dog beach,
-  not one shared prop list.
+- El Bosc and El Mosaic each have their own path and their own gate. El
+  Mosaic still enters through the park scaffold, then drops the pond and
+  places its own props. The off-leash spaces are a yard, a plaça, a
+  clearing, a lot or the dog beach. One generator places them, with a
+  flavour for each kind.
 - El Besos is the seventeenth walk: the flood wall, the margin and the deep
   channel, open at 14 stars.
 
@@ -588,21 +590,28 @@ slipping, all pretty slapstick of course, nothing too violent."
 
 ## Order
 
-1. Footprints and tracked sand/snow (shared by every walk).
-2. El Bosc and El Parc: make them two places.
-3. Pickpockets: the thief, his tell, the stops and the goal, first on
-   La Rambla, with La Rambla's stalls, blankets and crowd.
-4. The La Rambla clones: El Diluvi, L'Estacio, Les Obres, La Ferralla - cut
-   the borrowed terrace and crossings, give each its own furniture and its
-   substances in their real shapes.
-5. The market clones: El Gotic, La Castanyada, then El Mercat itself.
-6. El Mosaic, La Neteja, the beach additions; pickpockets and their
-   stand-ins on the other walks.
-7. The off-leash areas, each to its walk.
-8. El Barri as the first walk, then the tutorial rebuilt on it as stations.
+Done by the 2026-10-22 roster pass:
 
-Path shapes run alongside: stage 1 comes with each walk's own PR; stage 2
-(islands) before El Parc's pond split; stage 3 with Les Obres; stages 4 and
-5 are their own projects, El Gotic's turns first.
+1. Footprints and tracked sand/snow.
+2. El Bosc and El Parc are two places. El Bosc has its own trail.
+3. Pickpockets: the thief, the tell, the stops and the goal, on the crowded
+   walks.
+4. El Diluvi, L'Estacio, Les Obres and La Ferralla have their own furniture.
+   The borrowed café terrace is gone.
+5. El Gotic, La Castanyada and El Mercat have their own furniture. La
+   Castanyada and La Neteja still enter through the market scaffold, then
+   replace it.
+8. El Barri is the first walk. The tutorial is stations on it.
+
+Still open:
+
+6. El Mosaic's decoration, the rounds in its own section above. La Neteja's
+   chase and the beach's own shore are in.
+7. Each off-leash space has its kind. The props are still one generator
+   with a flavour, not a hand-authored list per walk.
+
+Path shapes: bends are in use. El Parc's lake is in, and Les Obres has its
+trench and plank. Stages 4 and 5 are still their own projects. El Gotic's
+right-angle turns come first.
 
 Detours come after the walks: one room to prove the door, then the rest.
