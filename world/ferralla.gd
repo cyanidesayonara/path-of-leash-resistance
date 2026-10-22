@@ -304,11 +304,25 @@ static func draw_roof_rust(b: Object, r: Rect2, inner_x: float, side: float, k: 
 		b.circle(pc, 4.0, Color(0.10, 0.09, 0.09, 0.8))
 
 
-# What stands in the yard where a park would have trees: a stack of tyres or
-# a group of oil drums, on the grove's spot and the size of its trunk, so the
-# rope still winds on it.
+# What stands in the yard where a park would have trees: a stack of tyres,
+# a group of oil drums, or a pallet of scrap car batteries, on the grove's
+# spot and the size of its trunk, so the rope still winds on it.
 static func draw_yard_pile(b: Object, p: Vector2, i: int) -> void:
-	if i % 2 == 0:
+	if i % 3 == 2:
+		# wooden pallet with discarded car batteries
+		b.rect(Rect2(p.x - 20.0 + LIGHT.x * 6.0, p.y - 16.0 + LIGHT.y * 6.0, 40.0, 32.0), SHADOW)
+		b.rect(Rect2(p.x - 20.0, p.y - 16.0, 40.0, 32.0), Color(0.48, 0.38, 0.26))
+		for si: int in range(4):
+			var sy: float = p.y - 14.0 + float(si) * 8.5
+			b.line(Vector2(p.x - 19.0, sy), Vector2(p.x + 19.0, sy), Color(0.36, 0.28, 0.18), 1.5)
+		for bi: int in range(3):
+			var bp: Vector2 = p + [Vector2(-9.0, -7.0), Vector2(9.0, -7.0), Vector2(0.0, 6.0)][bi]
+			b.rect(Rect2(bp.x - 7.5, bp.y - 5.5, 15.0, 11.0), Color(0.18, 0.18, 0.20))
+			b.rect(Rect2(bp.x - 6.5, bp.y - 4.5, 13.0, 9.0), Color(0.24, 0.24, 0.26))
+			b.circle(bp + Vector2(-4.5, -3.0), 1.5, Color(0.85, 0.22, 0.18))
+			b.circle(bp + Vector2(4.5, -3.0), 1.5, Color(0.55, 0.60, 0.66))
+			b.rect(Rect2(bp.x - 2.5, bp.y + 0.5, 5.0, 3.0), Color(0.90, 0.82, 0.25))
+	elif i % 2 == 0:
 		# tyres, stacked a little off true
 		b.circle(p + LIGHT * 10.0, 19.0, SHADOW)
 		for t in range(4):
@@ -344,15 +358,24 @@ static func draw_yard_pile(b: Object, p: Vector2, i: int) -> void:
 				lp + Vector2.from_angle(0.3) * e + Vector2.from_angle(0.3).orthogonal() * 10.0, Color(0, 0, 0, 0.3), 1.5)
 
 
-# A length of steel pipe lying in the yard, where a park would have a log:
-# the same footprint, rust on it, its bore dark at the end.
+# A bundle of rusted steel pipes bound with wire, where a park would have a log:
+# the same footprint, rust streaks, bore bevels at the ends.
 static func draw_pipe(b: Object, p: Vector2) -> void:
 	b.rect(Rect2(p.x - 30.0 + 3.0, p.y - 9.0 + 5.0, 60.0, 18.0), SHADOW)
-	b.rect(Rect2(p.x - 30.0, p.y - 9.0, 60.0, 18.0), Color(0.40, 0.30, 0.24))
-	b.rect(Rect2(p.x - 30.0, p.y - 9.0, 60.0, 5.0), Color(0.56, 0.44, 0.36))
-	b.rect(Rect2(p.x - 12.0, p.y - 9.0, 9.0, 18.0), RUST)
-	b.circle(Vector2(p.x + 30.0, p.y), 9.0, Color(0.46, 0.40, 0.36))
-	b.circle(Vector2(p.x + 30.0, p.y), 6.0, Color(0.08, 0.08, 0.09))
+	# lower main pipe
+	b.rect(Rect2(p.x - 30.0, p.y - 10.0, 60.0, 13.0), Color(0.40, 0.30, 0.24))
+	b.rect(Rect2(p.x - 30.0, p.y - 10.0, 60.0, 4.0), Color(0.58, 0.46, 0.38))
+	b.rect(Rect2(p.x - 12.0, p.y - 10.0, 8.0, 13.0), RUST)
+	b.circle(Vector2(p.x + 30.0, p.y - 3.5), 6.5, Color(0.46, 0.40, 0.36))
+	b.circle(Vector2(p.x + 30.0, p.y - 3.5), 4.2, Color(0.08, 0.08, 0.09))
+	# stacked secondary pipe
+	b.rect(Rect2(p.x - 26.0, p.y + 1.0, 50.0, 10.0), Color(0.36, 0.28, 0.22))
+	b.rect(Rect2(p.x - 26.0, p.y + 1.0, 50.0, 3.0), Color(0.52, 0.42, 0.34))
+	b.circle(Vector2(p.x + 24.0, p.y + 6.0), 5.0, Color(0.44, 0.38, 0.34))
+	b.circle(Vector2(p.x + 24.0, p.y + 6.0), 3.2, Color(0.08, 0.08, 0.09))
+	# binding steel wire straps
+	for wx: float in [p.x - 14.0, p.x + 12.0]:
+		b.line(Vector2(wx, p.y - 11.0), Vector2(wx, p.y + 12.0), Color(0.68, 0.70, 0.74), 1.5)
 
 
 # The yard's own wreck: one car left where it died, no wheels, on blocks.
@@ -369,3 +392,16 @@ static func draw_yard_wreck(b: Object, fr: Rect2) -> void:
 		for by: float in [-24.0, 24.0]:
 			b.rect(Rect2(c.x + bx - 7.0, c.y + by - 5.0, 14.0, 10.0), Color(0.56, 0.54, 0.50))
 	draw_car(b, c, -PI * 0.5 + 0.03, 0, Color(0.66, 0.60, 0.40).lerp(RUST, 0.3), 0.37, true)
+
+	# guard dog kennel and stainless steel water bowl in the yard corner
+	var kh := Vector2(fr.position.x + 18.0, fr.end.y - 62.0)
+	b.rect(Rect2(kh + LIGHT * 6.0, Vector2(34.0, 28.0)), SHADOW)
+	b.rect(Rect2(kh, Vector2(34.0, 28.0)), Color(0.42, 0.44, 0.46))
+	for ri: int in range(4):
+		b.line(Vector2(kh.x + 4.0 + float(ri) * 8.0, kh.y), Vector2(kh.x + 4.0 + float(ri) * 8.0, kh.y + 28.0), Color(0.58, 0.60, 0.62), 1.2)
+	b.circle(Vector2(kh.x + 17.0, kh.y + 28.0), 7.0, Color(0.12, 0.12, 0.14))
+	var bw := kh + Vector2(44.0, 18.0)
+	b.circle(bw + LIGHT * 2.0, 6.5, SHADOW)
+	b.circle(bw, 6.0, Color(0.72, 0.74, 0.78))
+	b.circle(bw, 4.2, Color(0.28, 0.45, 0.55))
+	b.circle(bw + Vector2(-1.2, -1.2), 1.2, Color(0.85, 0.94, 0.98))

@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-22 - La Ferralla pipe bundles, battery pallets, and guard dog kennel
+
+- Industrial scrap pipe obstacles in La Ferralla are now detailed as bundled steel tubes bound with metallic wire straps and hollow bore bevels.
+- The scrapyard back lot features pallets of discarded automotive lead-acid batteries with red and metallic terminal caps alongside yellow caution labels.
+- The back lot corner now carries a corrugated metal guard dog kennel with an arched entry doorway and a stainless steel water bowl.
+
 ## 2026-10-22 - El Parc mammoth plaque, bandstand railings, and lake water lilies
 
 - The famous Ciutadella stone mammoth now features a commemorative bronze plaque on the plinth face, stepped plinth moulding, and detailed carved ivory tusk tips.
