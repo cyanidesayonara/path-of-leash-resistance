@@ -66,6 +66,10 @@ func _run() -> void:
 	_check(has_scooter, "a parked scooter is a toppleable object")
 	_check(not m.poles.has(sc), "a parked scooter is not a permanent rope anchor")
 	_check(m.wallcat_spots.size() == 6 and m.laundry_lines.size() >= 4, "cats on the ledges, laundry overhead")
+	# the polished bridge overhead has a lantern and pointed-arch windows
+	_check(m.has_method("_draw_pont_del_bisbe_overhead"), "the bridge overhead has its own draw function")
+	# the polished plaça draws terracotta pots
+	_check(m.has_method("_draw_gotic_pots"), "the plaça has terracotta geranium pots")
 	m.queue_free()
 	await process_frame
 	print("\n%d checks, %d failures" % [checks, failures.size()])
