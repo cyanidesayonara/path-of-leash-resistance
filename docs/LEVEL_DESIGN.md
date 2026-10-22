@@ -347,7 +347,7 @@ rubble stone, and the colour comes in where Gaudi put it.
   kick-off clock, La Marxa, El Gol and El Xiulet Final. Twelve goals.
 - Off-leash: PLAÇA DEL GOL, with the same agility course, rope tug and frisbee.
 
-### El Barri - the neighbourhood park (the first walk)
+### El Barri - the neighborhood park (the first walk)
 Santtu: "la rambla shouldn't be the primary walk... that should be just a
 generic walk in the park, without anything distinctly barcelonian", and "the
 park could be just a neighborhood park in bcn."

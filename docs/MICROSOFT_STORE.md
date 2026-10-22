@@ -7,6 +7,10 @@ Store through Partner Center. Written 2026-09-23 against Partner Center's
 Everything entered in Partner Center for it is recorded in
 `store/listing.md`; this doc is the procedure, that file is the content.
 
+v1.61 is the last tag (2026-10-20). The current What's new on main is the
+1.62 set. Do not run the Store workflow for 1.62 until that tag exists, and
+do not move those notes into the past list until the submission is live.
+
 What already exists:
 
 - `release.yml` builds `build/win/PathOfLeashResistance.exe` (x86_64, PCK
