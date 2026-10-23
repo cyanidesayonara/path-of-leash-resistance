@@ -2385,91 +2385,133 @@ static func push_below_freedom_sign(m: Node2D, at: Vector2, radius: float) -> Ve
 	return at
 
 
+# Hand-authored off-leash furniture per walk (offset from GATE_Y). Every walk's
+# freedom space has its own layout and mix of dig patches, solid obstacles to
+# run round, and sniffable/markable furniture, clear of the agility lane, the
+# painted entrance sign, the owner's bench, the water trough, and parked pairs.
+const FREEDOM_PROPS := {
+	"barri": [
+		[Vector2(248.0, -528.0), "dig"], [Vector2(636.0, -278.0), "dig"], [Vector2(1038.0, -308.0), "dig"],
+		[Vector2(330.0, -524.0), "planter"], [Vector2(960.0, -250.0), "planter"],
+		[Vector2(158.0, -455.0), "post"], [Vector2(172.0, -275.0), "shrub"], [Vector2(305.0, -305.0), "post"],
+		[Vector2(510.0, -532.0), "shrub"], [Vector2(825.0, -528.0), "post"], [Vector2(835.0, -312.0), "shrub"],
+		[Vector2(1095.0, -445.0), "post"],
+	],
+	"street": [
+		[Vector2(236.0, -534.0), "dig"], [Vector2(654.0, -284.0), "dig"], [Vector2(1052.0, -296.0), "dig"],
+		[Vector2(162.0, -395.0), "log"], [Vector2(890.0, -530.0), "log"], [Vector2(1078.0, -460.0), "planter"],
+		[Vector2(174.0, -255.0), "shrub"], [Vector2(296.0, -320.0), "post"], [Vector2(455.0, -532.0), "shrub"],
+		[Vector2(775.0, -526.0), "post"], [Vector2(812.0, -295.0), "shrub"], [Vector2(945.0, -242.0), "post"],
+	],
+	"park": [
+		[Vector2(264.0, -526.0), "dig"], [Vector2(624.0, -274.0), "dig"], [Vector2(1026.0, -318.0), "dig"],
+		[Vector2(156.0, -480.0), "log"], [Vector2(345.0, -532.0), "log"], [Vector2(915.0, -248.0), "log"],
+		[Vector2(176.0, -305.0), "shrub"], [Vector2(290.0, -242.0), "post"], [Vector2(545.0, -534.0), "shrub"],
+		[Vector2(795.0, -528.0), "rock"], [Vector2(845.0, -322.0), "shrub"], [Vector2(1088.0, -430.0), "post"],
+	],
+	"beach": [
+		[Vector2(548.0, -518.0), "dig"], [Vector2(768.0, -268.0), "dig"], [Vector2(1042.0, -278.0), "dig"],
+		[Vector2(885.0, -516.0), "driftwood"], [Vector2(925.0, -235.0), "driftwood"], [Vector2(1055.0, -505.0), "driftwood"],
+		[Vector2(692.0, -522.0), "rock"], [Vector2(795.0, -512.0), "rock"], [Vector2(848.0, -296.0), "rock"],
+		[Vector2(980.0, -304.0), "rock"], [Vector2(536.0, -210.0), "post"], [Vector2(890.0, -198.0), "shrub"],
+	],
+	"rain": [
+		[Vector2(242.0, -530.0), "dig"], [Vector2(648.0, -280.0), "dig"], [Vector2(1044.0, -302.0), "dig"],
+		[Vector2(318.0, -526.0), "planter"], [Vector2(920.0, -246.0), "planter"], [Vector2(1082.0, -455.0), "planter"],
+		[Vector2(160.0, -430.0), "post"], [Vector2(178.0, -268.0), "shrub"], [Vector2(292.0, -318.0), "rock"],
+		[Vector2(525.0, -534.0), "shrub"], [Vector2(810.0, -528.0), "post"], [Vector2(832.0, -310.0), "shrub"],
+	],
+	"market": [
+		[Vector2(265.0, -465.0), "dig"], [Vector2(635.0, -430.0), "dig"], [Vector2(905.0, -218.0), "dig"],
+		[Vector2(370.0, -470.0), "planter"], [Vector2(1010.0, -230.0), "planter"], [Vector2(245.0, -365.0), "planter"],
+		[Vector2(505.0, -455.0), "post"], [Vector2(735.0, -445.0), "post"], [Vector2(1045.0, -482.0), "post"],
+		[Vector2(308.0, -252.0), "shrub"], [Vector2(548.0, -230.0), "post"], [Vector2(772.0, -222.0), "shrub"],
+	],
+	"oldtown": [
+		[Vector2(258.0, -458.0), "dig"], [Vector2(622.0, -436.0), "dig"], [Vector2(892.0, -214.0), "dig"],
+		[Vector2(366.0, -468.0), "planter"], [Vector2(1006.0, -228.0), "planter"],
+		[Vector2(238.0, -358.0), "rock"], [Vector2(498.0, -448.0), "post"], [Vector2(742.0, -438.0), "post"],
+		[Vector2(1042.0, -478.0), "rock"], [Vector2(312.0, -248.0), "post"], [Vector2(542.0, -228.0), "post"],
+		[Vector2(768.0, -218.0), "rock"],
+	],
+	"trail": [
+		[Vector2(228.0, -536.0), "dig"], [Vector2(618.0, -268.0), "dig"], [Vector2(1062.0, -288.0), "dig"],
+		[Vector2(154.0, -465.0), "log"], [Vector2(362.0, -528.0), "log"], [Vector2(882.0, -534.0), "log"],
+		[Vector2(1086.0, -415.0), "log"], [Vector2(174.0, -285.0), "rock"], [Vector2(298.0, -328.0), "shrub"],
+		[Vector2(548.0, -528.0), "shrub"], [Vector2(785.0, -316.0), "rock"], [Vector2(932.0, -244.0), "post"],
+	],
+	"station": [
+		[Vector2(256.0, -532.0), "dig"], [Vector2(662.0, -276.0), "dig"], [Vector2(1034.0, -314.0), "dig"],
+		[Vector2(164.0, -440.0), "log"], [Vector2(385.0, -526.0), "log"], [Vector2(905.0, -242.0), "log"],
+		[Vector2(1084.0, -465.0), "planter"], [Vector2(176.0, -262.0), "post"], [Vector2(304.0, -312.0), "shrub"],
+		[Vector2(562.0, -530.0), "post"], [Vector2(818.0, -532.0), "post"], [Vector2(828.0, -304.0), "shrub"],
+	],
+	"besos": [
+		[Vector2(238.0, -524.0), "dig"], [Vector2(630.0, -282.0), "dig"], [Vector2(1048.0, -294.0), "dig"],
+		[Vector2(158.0, -420.0), "driftwood"], [Vector2(348.0, -530.0), "driftwood"], [Vector2(912.0, -252.0), "driftwood"],
+		[Vector2(172.0, -258.0), "rock"], [Vector2(294.0, -316.0), "shrub"], [Vector2(518.0, -528.0), "rock"],
+		[Vector2(792.0, -532.0), "shrub"], [Vector2(842.0, -318.0), "post"], [Vector2(1092.0, -438.0), "rock"],
+	],
+	"site": [
+		[Vector2(246.0, -534.0), "dig"], [Vector2(644.0, -272.0), "dig"], [Vector2(1056.0, -306.0), "dig"],
+		[Vector2(162.0, -450.0), "tyre"], [Vector2(338.0, -524.0), "log"], [Vector2(876.0, -528.0), "tyre"],
+		[Vector2(928.0, -246.0), "log"], [Vector2(1080.0, -448.0), "tyre"], [Vector2(178.0, -272.0), "post"],
+		[Vector2(302.0, -324.0), "planter"], [Vector2(538.0, -532.0), "post"], [Vector2(816.0, -308.0), "post"],
+	],
+	"spook": [
+		[Vector2(272.0, -462.0), "dig"], [Vector2(642.0, -432.0), "dig"], [Vector2(898.0, -222.0), "dig"],
+		[Vector2(374.0, -472.0), "planter"], [Vector2(1012.0, -232.0), "planter"],
+		[Vector2(248.0, -362.0), "post"], [Vector2(512.0, -452.0), "rock"], [Vector2(746.0, -442.0), "post"],
+		[Vector2(1046.0, -484.0), "post"], [Vector2(304.0, -254.0), "shrub"], [Vector2(552.0, -232.0), "rock"],
+		[Vector2(776.0, -224.0), "post"],
+	],
+	"scrap": [
+		[Vector2(342.0, -528.0), "dig"], [Vector2(628.0, -284.0), "dig"], [Vector2(1040.0, -298.0), "dig"],
+		[Vector2(164.0, -410.0), "tyre"], [Vector2(458.0, -532.0), "tyre"], [Vector2(868.0, -526.0), "log"],
+		[Vector2(918.0, -244.0), "tyre"], [Vector2(1088.0, -452.0), "tyre"], [Vector2(176.0, -264.0), "rock"],
+		[Vector2(296.0, -314.0), "post"], [Vector2(692.0, -528.0), "rock"], [Vector2(822.0, -312.0), "post"],
+	],
+	"guell": [
+		[Vector2(234.0, -528.0), "dig"], [Vector2(652.0, -276.0), "dig"], [Vector2(1050.0, -310.0), "dig"],
+		[Vector2(158.0, -448.0), "log"], [Vector2(356.0, -532.0), "rock"], [Vector2(896.0, -528.0), "log"],
+		[Vector2(174.0, -278.0), "post"], [Vector2(306.0, -322.0), "shrub"], [Vector2(532.0, -530.0), "post"],
+		[Vector2(782.0, -526.0), "shrub"], [Vector2(838.0, -306.0), "rock"], [Vector2(936.0, -248.0), "post"],
+		[Vector2(1086.0, -432.0), "shrub"],
+	],
+	"neteja": [
+		[Vector2(262.0, -468.0), "dig"], [Vector2(628.0, -434.0), "dig"], [Vector2(912.0, -216.0), "dig"],
+		[Vector2(372.0, -466.0), "planter"], [Vector2(1008.0, -226.0), "planter"], [Vector2(242.0, -354.0), "planter"],
+		[Vector2(502.0, -456.0), "post"], [Vector2(738.0, -446.0), "post"], [Vector2(1044.0, -480.0), "post"],
+		[Vector2(306.0, -246.0), "shrub"], [Vector2(546.0, -226.0), "post"], [Vector2(764.0, -216.0), "shrub"],
+	],
+	"montjuic": [
+		[Vector2(268.0, -460.0), "dig"], [Vector2(638.0, -438.0), "dig"], [Vector2(896.0, -220.0), "dig"],
+		[Vector2(368.0, -474.0), "planter"], [Vector2(1014.0, -234.0), "planter"],
+		[Vector2(244.0, -366.0), "rock"], [Vector2(508.0, -450.0), "post"], [Vector2(744.0, -440.0), "rock"],
+		[Vector2(1048.0, -486.0), "post"], [Vector2(310.0, -250.0), "shrub"], [Vector2(550.0, -234.0), "post"],
+		[Vector2(774.0, -220.0), "rock"],
+	],
+	"partit": [
+		[Vector2(256.0, -464.0), "dig"], [Vector2(632.0, -428.0), "dig"], [Vector2(902.0, -212.0), "dig"],
+		[Vector2(374.0, -468.0), "planter"], [Vector2(1004.0, -228.0), "planter"], [Vector2(250.0, -360.0), "planter"],
+		[Vector2(496.0, -454.0), "post"], [Vector2(732.0, -444.0), "post"], [Vector2(1040.0, -476.0), "post"],
+		[Vector2(302.0, -248.0), "post"], [Vector2(544.0, -228.0), "shrub"], [Vector2(770.0, -218.0), "post"],
+	],
+}
+
+
 static func build_park_props(m: Node2D) -> void:
-	# Spread across the whole width, deliberately AWAY from the straight line
-	# between gate and meadow, so poking about off the direct route is what
-	# finds things. Local rng, so the deterministic autowalk is untouched.
 	m.park_props.clear()
-	var r := RandomNumberGenerator.new()
-	r.seed = 0xD06BA55
-	var flavour := ["log", "dig", "shrub", "post", "dig", "shrub"]
-	match m.lvl:
-		"beach": flavour = ["driftwood", "dig", "rock", "dig", "rock"]
-		"scrap", "site": flavour = ["tyre", "log", "dig", "tyre"]
-		"trail", "park": flavour = ["log", "dig", "shrub", "shrub", "post", "dig"]
-		# a pipicà has no fallen wood: sniff posts, shrubs and planters on the sauló
-		"barri": flavour = ["post", "dig", "planter", "shrub", "dig", "post"]
-	if m.freedom_kind == "placa":
-		flavour = ["post", "planter", "post", "dig"]
-		# two stone planters always, the square's solid things to run round
-		for pa: Vector2 in [Vector2(370.0, m.GATE_Y - 470.0), Vector2(1010.0, m.GATE_Y - 230.0)]:
-			m.park_props.append({"pos": m.agility.push_out(pa, 26.0), "kind": "planter", "done": false, "prog": 0.0})
-	if m.lvl == "barri":
-		# the pipicà's two planted beds, always: its solid things to run round
-		for pa: Vector2 in [Vector2(330.0, m.GATE_Y - 430.0), Vector2(960.0, m.GATE_Y - 250.0)]:
-			m.park_props.append({"pos": m.agility.push_out(pa, 26.0), "kind": "planter", "done": false, "prog": 0.0})
-	var lo = m.freedom_lo + 70.0
-	var hi = m.GATE_Y - 90.0
-	# Guarantee the essentials rather than hoping the dice provide them: on
-	# junk-flavoured walks a random draw left only one dig patch, which the
-	# sanity sweep rightly failed. Digs are the main reward for exploring, so
-	# they are placed first, spread across the width.
-	var dig_xs: Array[float] = [250.0, 640.0, 1030.0]
-	if m.freedom_kind == "beach":
-		dig_xs = [560.0, 820.0, 1060.0]   # digging in dry sand, not in the sea
-	var dig_fs: Array[float] = [0.22, 0.68, 0.42]
-	for i in range(3):
-		var gy := lerpf(lo + 60.0, hi - 60.0, dig_fs[i])
-		var dig_at: Vector2 = m.agility.push_out(Vector2(dig_xs[i], gy), 26.0)
-		m.park_props.append({"pos": dig_at, "kind": "dig", "done": false, "prog": 0.0})
-	# the plaça turns away whatever would land on something already there, so
-	# it keeps drawing until it has as many as the other walks get
-	var placa: bool = m.freedom_kind == "placa"
-	var placed := 0
-	for i in range(40 if placa else 14):
-		if placa and placed >= 10:
-			break
-		var kind: String = flavour[r.randi() % flavour.size()]
-		# bias to the flanks: the middle is the fetch runway
-		var side_pick := r.randf()
-		var x := 0.0
-		if m.freedom_kind == "beach":
-			# all of it on the dry sand, east of the tide line
-			x = r.randf_range(520.0, 780.0) if side_pick < 0.4 else r.randf_range(800.0, 1120.0)
-		elif side_pick < 0.42:
-			x = r.randf_range(140.0, 430.0)
-		elif side_pick < 0.84:
-			x = r.randf_range(860.0, 1150.0)
-		else:
-			x = r.randf_range(470.0, 820.0)
-		var at := Vector2(x, r.randf_range(lo, hi))
-		at = m.agility.push_out(at, 26.0)
-		if kind in ["log", "driftwood"] and not freedom_sign_clear(m, at, 28.0):
-			continue
-		# keep clear of the owner's bench and the park slots
-		if at.distance_to(m.gate_bench) < 110.0:
-			continue
-		# and out of the water: driftwood floating twenty metres out to sea is
-		# not a sniffable object, it is a bug
-		var in_water := false
-		for w: Rect2 in m.water:
-			if w.grow(24.0).has_point(at):
-				in_water = true
-		if in_water:
-			continue
-		var clear := true
-		for si in range(m.PAIR_PARK_SPOTS.size()):
-			if at.distance_to(m.pair_park_spot(si)) < 90.0:
-				clear = false
-		# in a plaça every pit and planter is a square in the paving: two
-		# laid over each other, or a planter on a dig, is a drawing error
-		if placa and not placa_clear(m, at):
-			clear = false
-		if not clear:
-			continue
+	var spec: Array = FREEDOM_PROPS.get(m.lvl, FREEDOM_PROPS["park"])
+	for item in spec:
+		var off: Vector2 = item[0]
+		var kind := String(item[1])
+		var at := Vector2(off.x, m.GATE_Y + off.y)
+		if m.agility != null:
+			at = m.agility.push_out(at, 26.0)
+		if kind in ["log", "driftwood"]:
+			at = push_below_freedom_sign(m, at, 28.0)
 		m.park_props.append({"pos": at, "kind": kind, "done": false, "prog": 0.0})
-		placed += 1
-	# one water trough near the gate, because a romp is thirsty work
 	# one water trough near the gate, because a romp is thirsty work - by the
 	# shower on the beach, where the tap actually is
 	var trough_at := Vector2(m.gate_bench.x - 150.0, m.gate_bench.y + 24.0)

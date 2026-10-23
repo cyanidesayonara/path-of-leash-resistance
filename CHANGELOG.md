@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-23 - Hand-authored off-leash props per walk (`FREEDOM_PROPS`)
+
+- Replaced the single `0xD06BA55` RNG generator in `LevelBuild.build_park_props` with `LevelBuild.FREEDOM_PROPS`: every walk in `Game.LEVELS` (`barri` through `partit`) now has its own distinct, hand-authored off-leash furniture layout clear of the agility lane, painted entrance sign, water, owner bench, and parked pairs.
+- Added walk-specific visual rendering in `main._draw_park_props`: stacked creosote railway sleepers (*travesses*) with iron rail chairs on L'Estació, strapped orange utility conduit and timber shoring bundles on Les Obres, flood-caught river driftwood and smooth limestone cobble boulders on El Besòs, stacked cast-iron cannonball pyramids on ashlar plinths on Montjuïc, wooden Boqueria fruit and vegetable crates on El Mercat, glazed terracotta olive tubs on El Diluvi, quarry-stone and *trencadís* cairn posts on El Mosaic, Blaugrana-banded bollards and planters on Dia de Partit, and soap-suds rings around Plaça bollards on La Neteja.
+- Added `tests/test_freedom_props.gd` to CI verifying that all 17 campaign walks have distinct hand-authored prop lists and satisfy all off-leash gameplay and clearance invariants.
+
 ## 2026-10-23 - El Besòs visual polish: riprap embankment, reed beds, flood wall, weir, and SAHBE gear
 
 - The west edge of El Besòs now renders the Parc Fluvial del Besòs concrete flood wall embankment with an upper riverside cycle promenade (*passeig superior*), galvanized safety railings, expansion joints, weep-hole drains, and recessed emergency evacuation stairways with yellow handrails; city building rooftops and awnings no longer render underneath the river on the east side.
