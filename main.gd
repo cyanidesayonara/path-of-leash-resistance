@@ -11577,7 +11577,8 @@ func surface_at(p: Vector2) -> int:
 	if lvl == "port":
 		if p.x > Port.WHARF_EDGE_X:
 			return Surfaces.S.WATER
-		return Surfaces.S.PAVEMENT
+		if p.y > GATE_Y:
+			return Surfaces.S.PAVEMENT
 	if lvl == "beach":
 		# THE SEAFRONT HAS NO GRASS. Its cross-section is sea, sand, boardwalk,
 		# bike path, promenade, then cafe paving - so once the sea and the sand
