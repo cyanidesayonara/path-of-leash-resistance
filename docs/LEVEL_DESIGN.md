@@ -623,8 +623,7 @@ walks list in PROJECT.md becomes these rooms.
   ("EL SOMNI", "LA LINIA"), not the artist. Cornella is alive and working;
   his style is the most distinctive and the easiest to cross the line
   with, so that room waits until the others show how close is too close.
-- **Order.** After the walks themselves: one room first, as a test of the
-  door, the scene change and the way back out, then the rest.
+- **Order.** One room first as a proven prototype of the door, the pocket room transition, and the seamless return to the walk: **«EL SOMNI»** on Carrer del Gòtic (Walk 7: El Gòtic) implemented 2026-10-23 (`systems/detour.gd` & `world/detour_layer.gd`), featuring melting lampposts with leash droop elasticity, long dream shadows, the Golden Dream Bone, and stilt-silhouette horizon.
 
 ## Pickpockets (a system for most walks)
 
