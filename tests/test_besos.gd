@@ -56,8 +56,11 @@ func _run() -> void:
 	_check(is_equal_approx(float(prof.get("speed", 0.0)), HomeChase.FLOOD_SPEED), "slower than a running dog, faster than your human")
 	_check(not bool(prof.get("flee", true)), "your human does not bolt")
 	var bands: Array = prof.get("bands", [])
-	_check(bands.size() == 1 and bool(bands[0].get("checkpoint", false)), "one checkpoint, on the apron")
-	_check(is_equal_approx(float(bands[0].get("jam_y", 0.0)), LevelBuild.BESOS_JAM_Y), "the band is the apron's north edge")
+	_check(bands.size() == 2, "El Besos has two respites (weir and apron)")
+	_check(String(bands[0].get("id", "")) == "weir" and not bool(bands[0].get("checkpoint", false)), "first respite is the inflatable weir")
+	_check(is_equal_approx(float(bands[0].get("jam_y", 0.0)), LevelBuild.BESOS_WEIR_JAM_Y), "weir jam is at BESOS_WEIR_JAM_Y")
+	_check(String(bands[1].get("id", "")) == "midpoint" and bool(bands[1].get("checkpoint", false)), "second respite is the apron checkpoint")
+	_check(is_equal_approx(float(bands[1].get("jam_y", 0.0)), LevelBuild.BESOS_JAM_Y), "apron jam is at BESOS_JAM_Y")
 	_check(String(HomeChase.profile_for("neteja").get("kind", "")) == "sweeper", "La Neteja is still the sweeper")
 	_check(HomeChase.profile_for("street").is_empty(), "an ordinary walk still has no chase profile")
 
@@ -127,11 +130,36 @@ func _run() -> void:
 	_check(is_equal_approx(flood.swell(), flood.SWELL_MAX), "the swell tops out at a lane's edge, not a wall")
 	_check(flood.in_deep(Vector2(m.walk_cx + m.walk_half - 10.0, 20.0)), "the swell from the river is deep water")
 	_check(not flood.in_deep(Vector2(m.walk_cx - m.walk_half + 30.0, 20.0)), "the wall side of the path stays open")
+	# Respite 1: Inflatable rubber weir hold
+	flood.front_y = LevelBuild.BESOS_WEIR_JAM_Y
+	flood.jam_t = 3.0
+	flood.jam_at = Vector2(m.walk_cx, LevelBuild.BESOS_WEIR_JAM_Y)
+	flood.queue_redraw()
+	_check(flood.jammed(), "flood is held at the inflatable weir")
+	_check(HomeChase.banner(m) == "WEIR HOLDING! RUN!", "banner warns weir is holding (got %s)" % HomeChase.banner(m))
+
+	# Respite 2: Maintenance apron hold and midpoint checkpoint
 	flood.front_y = LevelBuild.BESOS_JAM_Y
 	flood.jam_t = 3.0
+	flood.jam_at = Vector2(LevelBuild.BESOS_APRON.get_center().x, LevelBuild.BESOS_JAM_Y)
 	var on_apron := Vector2(LevelBuild.BESOS_APRON.position.x + 40.0, LevelBuild.BESOS_JAM_Y + 40.0)
 	_check(LevelBuild.BESOS_APRON.has_point(on_apron), "the sample stands on the apron")
 	_check(not flood.in_shallow(on_apron) and not flood.in_deep(on_apron), "the apron stays dry while the flood is held")
+	_check(HomeChase.banner(m) == "IT'S HOLDING! CROSS THE APRON", "banner guides crossing the apron")
+
+	# Standing on the northern portion of the apron safely captures the midpoint checkpoint
+	m.dog.global_position = on_apron
+	m.human.global_position = on_apron + Vector2(20.0, 10.0)
+	var apron_jam := Vector2(LevelBuild.BESOS_APRON.get_center().x, LevelBuild.BESOS_JAM_Y)
+	flood.jams.clear()
+	flood.jams.append(apron_jam)
+	flood.front_y = LevelBuild.BESOS_JAM_Y - 0.5
+	flood.jam_t = 0.0
+	HomeChase.tick(m, 0.016)
+	_check(flood.jammed(), "flood hit the apron jam")
+	_check(not (m.chase_checkpoint as Dictionary).is_empty(), "chase checkpoint is captured while standing on apron")
+	_check(String((m.chase_checkpoint as Dictionary).get("id", "")) == "midpoint", "checkpoint id is midpoint (got " + String((m.chase_checkpoint as Dictionary).get("id", "")) + ")")
+
 	flood.jam_t = 0.0
 	_check(flood.in_shallow(on_apron), "when the hold ends, the water spills across it")
 
