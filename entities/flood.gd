@@ -98,7 +98,8 @@ func threat_boundary() -> float:
 
 
 func _on_apron(p: Vector2) -> bool:
-	return jam_t > 0.0 and apron.has_point(p)
+	var is_held: bool = jam_t > 0.0 or (main != null and String(main.chase_phase) == "hold")
+	return is_held and apron.has_point(p)
 
 
 func in_deep(p: Vector2) -> bool:
@@ -227,13 +228,19 @@ func _draw() -> void:
 		b.rect(Rect2(edge, 0.0, right - edge, SHALLOW_LEAD), Color(0.10, 0.22, 0.30, 0.90))
 	# the hold keeps the apron dry. This batch is drawn after the world's
 	# concrete, so paint that slab back over whatever water landed on it.
-	if jam_t > 0.0 and apron.size.x > 1.0:
+	if (jam_t > 0.0 or (main != null and String(main.chase_phase) == "hold")) and apron.size.x > 1.0:
 		var local := Rect2(apron.position - global_position, apron.size)
 		var painted := Rect2(left, -340.0, right - left, 340.0 + SHALLOW_LEAD)
 		var cover := local.intersection(painted)
 		if cover.size.x > 1.0 and cover.size.y > 1.0:
 			b.rect(cover.grow(6.0), Color(0.62, 0.60, 0.56))
 			b.rect(cover, Color(0.78, 0.74, 0.66))
+	# while held at the inflatable weir, render churning foam and water pressure
+	if jam_t > 0.0 and absf(jam_at.y - LevelBuild.BESOS_WEIR_JAM_Y) < 60.0:
+		b.rect(Rect2(left, -14.0, right - left, 26.0), Color(0.94, 0.97, 0.98, 0.75))
+		for k in range(10):
+			var fx := left + float(k) * (right - left) / 9.0 + sin(rumble * 10.0 + float(k) * 1.5) * 12.0
+			b.circle(Vector2(fx, 2.0), 8.0 + sin(rumble * 7.0 + float(k)) * 3.0, Color(1.0, 1.0, 1.0, 0.85))
 	for i in range(4):
 		var along := fmod(heading + float(i) * 140.0, DEBRIS_SPAN)
 		var dx := sin(heading * 0.02 + float(i) * 1.7) * half * 0.45

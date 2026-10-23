@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-10-23 - El Besòs flood chase dual respites and midpoint checkpoint fix
+
+- Dual river flood respites (`world/level_build.gd`, `systems/home_chase.gd`, `entities/flood.gd`): the flood surge on the walk home down El Besòs now features two distinct respite moments rather than one.
+  1. The upstream inflatable rubber weir (*assut inflable*) at `BESOS_WEIR_JAM_Y = -3112.0` holds the flood for 3.0s (`"WEIR HOLDING! RUN!"`) with churning white foam and spray before spilling over.
+  2. The raised concrete maintenance apron at `BESOS_JAM_Y = -2050.0` holds the flood for 3.0s (`"IT'S HOLDING! CROSS THE APRON"`), giving players time to cross safely onto high ground.
+- Midpoint apron checkpoint capture fix (`systems/home_chase.gd`, `entities/flood.gd`): fixed an edge case where standing on the northern half of the dry refuge apron (`y = -2050..-1940`) failed the `clear > 0.0` check against `threat_boundary()`, preventing the midpoint checkpoint snapshot from being captured. In `HomeChase.tick()`, bodies standing safely on the apron (`sweeper._on_apron(pos)`) are recognized as clear. In `flood.gd`, `_on_apron` preserves dryness throughout both `jam_t > 0.0` and `main.chase_phase == "hold"`.
+- Updated `tests/test_besos.gd` verifying both respites, weir banner text, apron hold banner text, and northern apron midpoint checkpoint capture.
+
 ## 2026-10-23 - "Back on the Sofa" epilogue cutscene and intro animation polish
 
 - "Back on the Sofa" epilogue cutscene (`intro/scene_home.gd`, `hud/epilogue_stage.gd`): at the end of each successful walk, Millie and her owner return home in a warm, side-view animated cutscene. The front door opens, Millie trots in proudly carrying the leash in her mouth, hops up to hang the leash loop over the wall hook, and lands with dust puffs; the owner shuffles in and collapses onto the sofa with a contented sigh; Millie hops up onto the sofa cushion, curls up into a cozy loaf, and falls peacefully asleep with floating "z"s.

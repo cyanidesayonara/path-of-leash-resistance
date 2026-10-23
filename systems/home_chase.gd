@@ -81,6 +81,12 @@ const NETEJA_BANDS := [
 	{"id": "first_jam", "kind": "respite", "jam_y": -3600.0},
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
 ]
+# El Besos's weir and maintenance apron respites, by depth:
+# the weir holds the surge first, then the apron midpoint checkpoint
+const BESOS_BANDS := [
+	{"id": "weir", "kind": "respite", "jam_y": LevelBuild.BESOS_WEIR_JAM_Y},
+	{"id": "midpoint", "kind": "respite", "jam_y": LevelBuild.BESOS_JAM_Y, "checkpoint": true},
+]
 
 const EventFeed := preload("res://hud/event_feed.gd")
 const ChaseCheckpoint := preload("res://systems/chase_checkpoint.gd")
@@ -141,7 +147,7 @@ static func profile_for(level: String) -> Dictionary:
 		var f := kind_behavior("flood")
 		f["id"] = "besos"
 		f["script"] = "res://entities/flood.gd"
-		f["bands"] = [{"id": "midpoint", "kind": "respite", "jam_y": LevelBuild.BESOS_JAM_Y, "checkpoint": true}]
+		f["bands"] = BESOS_BANDS.duplicate(true)
 		return f
 	return {}
 
@@ -397,6 +403,8 @@ static func banner(m: Node2D) -> String:
 			return "IT'S STILL STUCK! GO  %d" % left
 	if sweeper.jammed():
 		if String(m.chase_kind) == "flood":
+			if sweeper.front_y < LevelBuild.BESOS_JAM_Y - 200.0:
+				return "WEIR HOLDING! RUN!"
 			return "IT'S HOLDING! CROSS THE APRON"
 		return "IT'S STUCK! CATCH YOUR BREATH"
 	if m.chase_kind == "both":
@@ -479,9 +487,13 @@ static func tick(m: Node2D, delta: float) -> void:
 	# held at its jam: the midpoint checkpoint, if this is its jam, and only
 	# with both of them clear of the leading edge and no catch already
 	# rolling. For the sweeper that edge is the brushes; for the flood it is
-	# the shallow water, so a body still in it keeps the checkpoint before.
-	var clear := minf(m.dog.global_position.y, m.human.global_position.y) - threat_boundary(sweeper)
-	if sweeper.jammed_now and m.chase_catch_t <= 0.0 and clear > 0.0 \
+	# the shallow water, or standing safely on the dry maintenance apron.
+	var dog_clear: bool = m.dog.global_position.y > threat_boundary(sweeper) \
+		or (sweeper.has_method("_on_apron") and bool(sweeper.call("_on_apron", m.dog.global_position)))
+	var human_clear: bool = m.human.global_position.y > threat_boundary(sweeper) \
+		or (sweeper.has_method("_on_apron") and bool(sweeper.call("_on_apron", m.human.global_position)))
+	var clear: bool = dog_clear and human_clear
+	if sweeper.jammed_now and m.chase_catch_t <= 0.0 and clear \
 			and _checkpoint_jam(m, sweeper.jam_at):
 		ChaseCheckpoint.store(m, "midpoint")
 	m.chase_min_gap = minf(m.chase_min_gap, rear)

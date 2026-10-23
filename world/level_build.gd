@@ -105,7 +105,9 @@ const BESOS_SHALLOW_X := 720.0
 const BESOS_SHALLOW_W := 190.0
 const BESOS_DEEP_X := 910.0
 const BESOS_DEEP_W := 320.0
-# the raised apron. Its north edge is where the deep front holds.
+# the inflatable rubber weir (assut inflable) and the raised maintenance apron.
+# The deep front holds first at the weir, then at the apron midpoint.
+const BESOS_WEIR_JAM_Y := -3112.0
 const BESOS_JAM_Y := -2050.0
 const BESOS_APRON := Rect2(260.0, BESOS_JAM_Y, 240.0, 220.0)
 
@@ -325,6 +327,7 @@ static func besos(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 	], TYPE_VECTOR2, &"", null)
 	m.chase_jams.clear()
 	m.chase_kerb_blocks.clear()
+	m.chase_jams.append(Vector2(m.walk_cx, BESOS_WEIR_JAM_Y))
 	m.chase_jams.append(Vector2(BESOS_APRON.get_center().x, BESOS_JAM_Y))
 	hyd_list.assign([
 		Vector2(m.sw_l + 80.0, -1000.0), Vector2(m.sw_l + 90.0, -1700.0),
