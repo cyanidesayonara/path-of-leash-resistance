@@ -403,7 +403,7 @@ static func progress_row_h(vs: Vector2, row_count: int) -> float:
 	var top_limit := 16.0
 	var bottom_limit := vs.y - Kit.BAR_FROM_BOTTOM - 16.0
 	var avail := maxf(120.0, bottom_limit - top_limit - 102.0)
-	return clampf(avail / float(maxi(row_count, 1)), 12.0, PROGRESS_ROW_H)
+	return clampf(avail / float(maxi(row_count, 1)), 6.0, PROGRESS_ROW_H)
 
 
 static func progress_rect(vs: Vector2, row_count: int) -> Rect2:
@@ -435,8 +435,12 @@ func _progress(vs: Vector2) -> void:
 	for col: Array in [[r.position.x + 36.0, "WALK"], [c_stars, "STARS"], [c_goals, "GOALS"], [c_best, "BEST"]]:
 		draw_string(f, Vector2(float(col[0]), hy), String(col[1]), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Kit.INK_FAINT)
 	var y := hy + 10.0
-	var font_px := 17 if rh >= 28.0 else 15
-	var sub_px := 15 if rh >= 28.0 else 14
+	var font_px := 17 if rh >= 28.0 else (15 if rh >= 16.0 else (13 if rh >= 11.0 else 10))
+	var sub_px := 15 if rh >= 28.0 else (14 if rh >= 16.0 else (11 if rh >= 11.0 else 9))
+	var star_r := 7.5 if rh >= 16.0 else (5.5 if rh >= 11.0 else 4.0)
+	var star_gap := 20.0 if rh >= 16.0 else (15.0 if rh >= 11.0 else 11.0)
+	var lock_sz := 11.0 if rh >= 16.0 else (8.5 if rh >= 11.0 else 6.5)
+	var meter_h := 6.0 if rh >= 16.0 else (4.5 if rh >= 11.0 else 3.5)
 	for i in range(rows.size()):
 		var row: Dictionary = rows[i]
 		var by := y + float(i) * rh
@@ -455,17 +459,17 @@ func _progress(vs: Vector2) -> void:
 		draw_string(body, Vector2(r.position.x + 46.0 + nw, base), String(row.gloss), HORIZONTAL_ALIGNMENT_LEFT,
 			gloss_w, sub_px, Kit.INK_SOFT)
 		if locked:
-			Kit.lock(self, Vector2(c_stars + 8.0, base - 5.0), 11.0, Kit.INK_FAINT)
+			Kit.lock(self, Vector2(c_stars + 8.0, base - 5.0), lock_sz, Kit.INK_FAINT)
 			draw_string(body, Vector2(c_stars + 24.0, base), "opens at %d stars" % int(row.gate),
 				HORIZONTAL_ALIGNMENT_LEFT, -1, sub_px, Kit.INK_SOFT)
 			continue
 		for s in range(3):
-			Icons.draw_star(self, Vector2(c_stars + 8.0 + float(s) * 20.0, base - 5.0), 7.5, s < int(row.stars))
+			Icons.draw_star(self, Vector2(c_stars + 8.0 + float(s) * star_gap, base - 5.0), star_r, s < int(row.stars))
 		var gt := maxi(1, int(row.goals_total))
 		var all_goals := int(row.goals) >= gt and gt > 0
 		draw_string(body, Vector2(c_goals, base), "%d / %d" % [int(row.goals), int(row.goals_total)],
 			HORIZONTAL_ALIGNMENT_LEFT, -1, sub_px, Kit.GOOD if all_goals else Kit.INK_SOFT)
-		Icons.draw_meter(self, Vector2(c_goals + 54.0, base - 9.0), 50.0, 6.0, float(row.goals) / float(gt),
+		Icons.draw_meter(self, Vector2(c_goals + 54.0, base - 9.0), 50.0, meter_h, float(row.goals) / float(gt),
 			Kit.GOLD if all_goals else Kit.accent("progress"))
 		draw_string(body, Vector2(c_best, base), String(row.best) if String(row.best) != "" else "-",
 			HORIZONTAL_ALIGNMENT_LEFT, -1, sub_px, Kit.INK_SOFT)
