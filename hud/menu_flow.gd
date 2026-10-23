@@ -231,6 +231,8 @@ static func walk_info(m: Node2D) -> Dictionary:
 	info["stars"] = Game.stars(sel)
 	info["goals"] = Game.goals_count(sel)
 	info["goals_total"] = (m.LEVEL_GOAL_IDS.get(sel, []) as Array).size()
+	if Game.free_play:
+		info["free_play"] = true
 	if Game.records.has(sel) and int(Game.records[sel].bones) > 0:
 		info["best"] = "Best: %d bones in %s" % [int(Game.records[sel].bones), clock(float(Game.records[sel].time))]
 	else:
@@ -856,8 +858,8 @@ static func settings_keys(m: Node2D) -> Array:
 	# the browser owns the window, so offering a fullscreen toggle there
 	# would be a button that lies
 	if OS.has_feature("web"):
-		return ["master", "sfx", "music", "goals"]
-	return ["master", "sfx", "music", "fullscreen", "goals"]
+		return ["master", "sfx", "music", "goals", "free_play"]
+	return ["master", "sfx", "music", "fullscreen", "goals", "free_play"]
 
 
 static func settings_rows(m: Node2D) -> Array:
@@ -876,6 +878,9 @@ static func settings_rows(m: Node2D) -> Array:
 			"goals":
 				v = 1.0 if Game.goals_expanded else 0.0
 				kind = "toggle"
+			"free_play":
+				v = 1.0 if Game.free_play else 0.0
+				kind = "toggle"
 		out.append({"name": m.SETTING_NAMES[k], "kind": kind, "v": v})
 	return out
 
@@ -890,25 +895,28 @@ static func check_settings_roundtrip(m: Node2D) -> Array:
 	# its default the next time you launch. So write odd values, read them
 	# back, and put the player's own settings back afterwards.
 	var p: Array = []
-	var keep := [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen]
+	var keep := [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen, Game.free_play]
 	Game.vol_master = 0.3
 	Game.vol_sfx = 0.1
 	Game.vol_music = 0.7
 	Game.fullscreen = true
+	Game.free_play = true
 	Game.save_records()
 	Game.vol_master = 0.0
 	Game.vol_sfx = 0.0
 	Game.vol_music = 0.0
 	Game.fullscreen = false
+	Game.free_play = false
 	Game.load_records()
 	if not (is_equal_approx(Game.vol_master, 0.3) and is_equal_approx(Game.vol_sfx, 0.1)
-			and is_equal_approx(Game.vol_music, 0.7) and Game.fullscreen):
+			and is_equal_approx(Game.vol_music, 0.7) and Game.fullscreen and Game.free_play):
 		p.append("settings did not survive a save/load round trip (%.2f %.2f %.2f %s)"
 			% [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen])
 	Game.vol_master = keep[0]
 	Game.vol_sfx = keep[1]
 	Game.vol_music = keep[2]
 	Game.fullscreen = keep[3]
+	Game.free_play = keep[4]
 	Game.save_records()
 	# and the slider steps must stay inside 0..1 however hard you lean on them
 	m.settings_idx = 0
@@ -974,6 +982,9 @@ static func settings_adjust(m: Node2D, dir: int) -> void:
 			Sfx.play("ui")
 		"goals":
 			Game.goals_expanded = not Game.goals_expanded
+			Sfx.play("ui")
+		"free_play":
+			Game.free_play = not Game.free_play
 			Sfx.play("ui")
 
 

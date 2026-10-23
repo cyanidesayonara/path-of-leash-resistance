@@ -370,6 +370,11 @@ memorable.
   Poble Espanyol, and neighbourhoods from Sarrià to Santa Coloma. Others:
   Poblenou's superilla, the Laberint d'Horta hedge maze, the Carretera de
   les Aigües, the Fòrum. Plenty is left over for a sequel.
+  The campaign roadmap towards completion (v1.7X) targets 26 walks total:
+  - Chases every 5th walk: 5 (La Neteja sweeper), 10 (El Besòs flood with dual respites), 15 (Festa de Gràcia multiple monster chase with turn respites), 20 (El Veterinari clinic escape with human drag resistance).
+  - Walk 25: Els Búnquers del Carmel (sunset overlook).
+  - Walk 26: Rambla del Raval (El Gat de Botero Boss Arena: Phase 1 paw-swipe counter, Phase 2 bull-charge clothesline / lamppost stumble, AT-AT 360° leash wrap topple, pedestal victory cutscene).
+  - Free Play / Demo mode toggle in Settings unlocks all walks for practice with career persistence paused.
 - Character creator: two preset owners exist (HIM/HER); creator later.
   October 2026: the facelift moved every person onto one renderer
   (human_appearance.gd: head, hair styles, headwear, torso, weather
