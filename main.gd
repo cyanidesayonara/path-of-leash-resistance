@@ -727,6 +727,7 @@ var goals_card: Control
 # a goal landing opens the card for a moment even when it is collapsed:
 # feedback without a permanent block of text in the corner
 var goals_peek := 0.0
+var epilogue_stage: Node2D
 var results_card: Control
 var results: Dictionary = {}
 var weather_fx: Control

@@ -955,6 +955,7 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 			[9.0, -0.3, "io"], [9.25, -0.3], [9.33, 0.7, "snap"]]),
 		"tail": 0.45 * sin(t * 17.0) * Anim.span(t, 5.95, 6.1) * (1.0 - Anim.span(t, 6.4, 6.5))
 			+ 0.38 * sin(t * 14.0) * Anim.span(t, 0.5, 0.8) * (1.0 - Anim.span(t, 2.45, 2.6))
+			+ 0.42 * sin(t * 16.0) * Anim.span(t, 3.6, 3.8) * (1.0 - Anim.span(t, 4.9, 5.1))
 			+ Anim.k(t, [[7.55, 0.0], [7.85, -0.6, "io"], [8.5, -0.6], [8.7, 0.25, "io"]]),
 		"mouth": Anim.k(t, [[3.1, 0.0], [3.13, 0.45, "hold"], [5.25, 0.45], [5.28, 0.0, "hold"], [9.25, 0.0], [9.28, 0.9, "hold"]]),
 		"brow": Anim.k(t, [[5.75, 0.0], [5.95, 1.0, "io"], [7.4, 1.0], [7.6, -0.6, "io"], [8.7, -0.6], [8.95, -1.0, "io"]]),
@@ -1068,6 +1069,9 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 		IntroKit.dots(c, Vector2(SOFA_X + 96, FLOOR - 352), t - 7.25)
 	# the sigh: a soft curl of breath, drifting up and away from them
 	IntroKit.breath(c, m["mouth"] + Vector2(signf(face) * 14.0, -8.0), Anim.span(t, 7.62, 8.4), face)
+	if t > 3.34 and t < 3.62:
+		IntroKit.puff(c, Vector2(938.0, FLOOR - 6.0), 8.0, 1.0 - Anim.span(t, 3.34, 3.62))
+		IntroKit.puff(c, Vector2(912.0, FLOOR - 6.0), 6.5, 1.0 - Anim.span(t, 3.34, 3.62))
 	_sunbeam(c, t)
 	_woof(c, t)
 	# the dash: speed lines behind both, a puff of dust where she left

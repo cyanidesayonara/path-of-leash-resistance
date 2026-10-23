@@ -160,9 +160,12 @@ static func build(m: Node2D) -> void:
 	m.dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	m.dim.visible = false
 	m.hud.add_child(m.dim)
-	# the results card is built earlier but is what the dim is FOR: it has to
-	# sit above it, or the whole card comes out 55% darker than drawn
-	m.hud.move_child(m.results_card, m.dim.get_index() + 1)
+	m.epilogue_stage = Node2D.new()
+	m.epilogue_stage.set_script(load("res://hud/epilogue_stage.gd"))
+	m.hud.add_child(m.epilogue_stage)
+	m.epilogue_stage.setup(m)
+	# the results card is built earlier but sits above dim and epilogue_stage
+	m.hud.move_child(m.results_card, m.epilogue_stage.get_index() + 1)
 	# The notice a walk can end on. The label holds its text (the soak tool
 	# reads it, and Prompts re-fills it when the device changes); the menu
 	# screen draws it as a card, so the label itself never shows.

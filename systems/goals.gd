@@ -202,7 +202,6 @@ static func finish_walk(m: Node2D) -> void:
 		if m.auto_walk:
 			print("AUTOWALK FINISHED the whole walk at t=%.1f" % m.elapsed)
 		m.frozen = true
-		m.dim.visible = true
 		# credit any goal still satisfied at the finish (catches the
 		# "maintain" goals like unscratched phone / clean paws)
 		for q in m.active_quests:
@@ -254,6 +253,9 @@ static func finish_walk(m: Node2D) -> void:
 			"goal_bones": run_done * 5, "lines": lines,
 		}
 		m.msg_label.visible = false
+		m.dim.visible = true
+		if m.epilogue_stage != null:
+			m.epilogue_stage.reset()
 		m.results_card.visible = true
 		# the in-walk HUD would otherwise sit on top of the card
 		m.goals_card.visible = false
@@ -277,8 +279,10 @@ static func finish_tutorial_walk(m: Node2D) -> void:
 	var banked := complete_tutorial(m)
 	m.finished = true
 	m.frozen = true
-	m.dim.visible = true
 	m.msg_label.visible = false
+	m.dim.visible = true
+	if m.epilogue_stage != null:
+		m.epilogue_stage.reset()
 	m.results = {
 		"title": "GOOD DOG.",
 		"stars": 0,
