@@ -26,7 +26,7 @@ const PRINTS := 8
 
 const APARTMENT: Array[String] = [
 	"tutorial", "barri", "street", "park", "beach", "rain", "market", "oldtown",
-	"site", "spook", "scrap", "guell", "neteja",
+	"site", "spook", "scrap", "guell", "neteja", "port",
 ]
 
 

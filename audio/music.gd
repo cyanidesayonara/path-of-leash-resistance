@@ -101,6 +101,9 @@ const STYLES := {
 	# the bongos. No words, so it cannot be a real chant.
 	"partit": {"bpm": 116, "key": 3, "lead": "whistle", "lead2": ["marimba", -12], "comp": "stab",
 		"bass": "eighths", "drums": "terrace", "verb": 0.24},
+	# El Port: breezy maritime harbor pace with accordion, whistle, and brush drums
+	"port": {"bpm": 100, "key": 5, "lead": "accordion", "lead2": ["whistle", 0], "comp": "oompah",
+		"bass": "walk", "drums": "brush", "swing": 0.08, "verb": 0.32},
 	"freedom": {"bpm": 120, "key": 5, "lead": "whistle", "lead2": ["glock", 12], "comp": "arp",
 		"bass": "walk", "drums": "kickrim", "swing": 0.1, "verb": 0.22},
 }

@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-10-23 - Walk 18: El Port (Port Vell & Barceloneta Wharf)
+
+- **Walk 18: El Port** (`systems/port.gd`, `autoload/game.gd`, `audio/music.gd`, `systems/goals.gd`, `main.gd`, `world/level_build.gd`):
+  - Added campaign Walk 18: **El Port** (Moll dels Pescadors and Moll de la Fusta fishing docks, unlocks at 29 career stars or freely selectable in Free Play mode).
+  - Authentic Mediterranean port atmosphere: weathered timber boardwalk decking running down the center, quayside granite flagstones, stone coping edge with yellow/black hazard chevrons, deep navy harbor water basin with shoreline depth gradient and wave ripples, and warehouse cargo doors with hanging orange lifebuoys.
+  - Cast-iron mooring bollards & horn cleats (`Port.BOLLARDS`) anchored along the quay edge, fully registered in `m.poles` for interactive leash wrapping and vault maneuvers.
+  - Moored wooden fishing boats & traditional Catalan llaguts (`Port.BOATS`) rocking in the slips with blue and red gunwale trim, wheelhouse cabins, and taut manila mooring lines secured to the quayside.
+  - Overhead sailboat masts and rigging halyards swaying in the sea breeze with masthead pennants.
+  - Flocking harbour seagulls (`GULL_SPOTS`) feeding on the boardwalk that startle and take flight with flapping wing animations when rushed or barked at.
+  - Fish market crate stacks with crushed ice, silver sardines, red mullets, and lemon wedges, leaving dropped fish scraps (`"FISHY PAWS!"` substance effect) to sniff or scrounge.
+  - The Llotja de Pescadors auction shed with a rare golden Mediterranean prize sea bass on the auction scale (`"snatch the prize catch from the auction stall"`).
+  - Plaça del Far off-leash freedom area at the pier end, overlooking the open Mediterranean horizon with an authentic green-beacon lighthouse, driftwood hurdles, and agility courses.
+  - Breezy maritime soundtrack (`audio/music.gd`): accordion lead with whistle countermelody, walking acoustic bass, and light maritime brush drums.
+  - 12 custom goals in `LEVEL_GOAL_IDS["port"]` including `gulls` (startling harbor seagulls) and `bollard` (wrapping leash around an iron mooring bollard).
+  - Added `tests/test_port.gd` (24 checks, 0 failures), integrated into CI smoke and soak matrices (`soak.yml`).
+
 ## 2026-10-23 - The First Artsy Detour: El Somni (Salvador Dalí homage gallery)
 
 - Artsy Detour system (`systems/detour.gd`, `world/detour_layer.gd`, `main.gd`, `systems/goals.gd`):

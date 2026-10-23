@@ -45,6 +45,8 @@ const LEVEL_GOAL_IDS := {
 	# Dia de Partit. No Tofu: the way home belongs to the final whistle.
 	# No hi and no combo: twelve goals, and the fans' dogs are a greeting.
 	"partit": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "march", "scarf", "kickabout", "fulltime", "prize"],
+	# El Port: harbor wharf, seagulls, fish scraps, iron bollards
+	"port": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "gulls", "bollard", "combo", "prize"],
 }
 
 
@@ -87,6 +89,8 @@ static func defs(m: Node2D) -> Dictionary:
 		"march": {"text": "Keep your human out of the away march", "target": 1, "fn": func() -> int: return 1 if m.march != null and m.march.passed and not m.march.caught else 0},
 		"scarf": {"text": "Bring the lost scarf back", "target": 1, "fn": func() -> int: return 1 if m.lost_scarf != null and m.lost_scarf.back else 0},
 		"kickabout": {"text": "Score a goal in the kids' street game", "target": 1, "fn": func() -> int: return 1 if m.kickabout != null and m.kickabout.scored else 0},
+		"gulls": {"text": "Startle %d harbor seagulls into flight", "target": 3, "fn": func() -> int: return m.port_gulls_startled},
+		"bollard": {"text": "Wrap the leash around an iron mooring bollard", "target": 1, "fn": func() -> int: return 1 if m.port_bollard_wrapped else 0},
 	}
 
 
