@@ -64,6 +64,8 @@ func scare() -> void:
 	if flying:
 		return
 	flying = true
+	if gull and main != null and "port_gulls_startled" in main:
+		main.port_gulls_startled += 1
 	fly_dir = (global_position - dog.global_position).normalized().rotated(randf_range(-0.5, 0.5))
 	if parakeet:
 		# up into the palms over the wall, all shouting about it

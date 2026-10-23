@@ -418,6 +418,8 @@ var needle_cd := 0.0
 var needle_prev := Vector2(INF, INF)
 var _needle_people: Array[Vector2] = []
 var _needle_owner: Array[int] = []
+var port_gulls_startled := 0
+var port_bollard_wrapped := false
 # the pole she last vaulted, and whether she has since cleared it. Without
 # this she can sit in one pole's orbit re-triggering forever: the autowalk
 # stall watchdog caught it, and it would also have been a score exploit
@@ -1184,6 +1186,9 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 	if lvl == "partit":
 		# the avenue's own ground, sidewalks, stalls and blocks (systems/partit.gd)
 		Partit.draw_edge_layer(self, c, vt, vb)
+		return
+	if lvl == "port":
+		Port.draw_edge_layer(self, c, vt, vb)
 		return
 	var mod := 220.0                     # height of one facade module
 	var depth := 78.0                    # how far the detailed frontage juts
@@ -4225,6 +4230,9 @@ func draw_overhead_onto(c: CanvasItem) -> void:
 	if lvl == "partit":
 		Partit.draw_overhead(self, c)
 		return
+	if lvl == "port":
+		Port.draw_overhead(self, c)
+		return
 	if lvl == "market":
 		_draw_mercat_arch(c, LevelBuild.MERCAT_ARCH_Y, "MERCAT")
 		_draw_mercat_arch(c, LevelBuild.MERCAT_DOOR_Y, "PLAÇA")
@@ -6912,6 +6920,8 @@ func draw_freedom_onto(c: Object) -> void:
 	elif lvl == "partit":
 		# the square beside the stadium, and the stadium past it
 		Partit.draw_freedom(self, c)
+	elif lvl == "port":
+		Port.draw_freedom(self, c)
 	elif lvl == "oldtown":
 		# El Gòtic's plaça sits in the same roofscape as the alleys
 		_draw_gotic_roofs_round_placa(c)
@@ -10432,7 +10442,7 @@ func _squirrels(delta: float) -> void:
 		cat_y = 0.0
 	while flock_ys.size() > 0 and cam.position.y < flock_ys[0] + 650.0:
 		var fy: float = flock_ys.pop_front()
-		var gulls := lvl == "beach"
+		var gulls := lvl == "beach" or lvl == "port"
 		var keets := lvl == "guell"
 		var fe := walk_edges(fy)
 		# only El Mosaic draws a side, so other walks keep their random sequence
@@ -10441,7 +10451,9 @@ func _squirrels(delta: float) -> void:
 			var p := Node2D.new()
 			p.set_script(load("res://entities/pigeon.gd"))
 			var fx := randf_range(480.0, 820.0)
-			if gulls:
+			if lvl == "port":
+				fx = randf_range(480.0, 880.0)
+			elif gulls:
 				fx = randf_range(120.0, 320.0) if randf() < 0.7 else randf_range(350.0, 470.0)
 			elif keets:
 				# parakeets feed along the foot of the terrace wall, under the palms
@@ -11562,6 +11574,11 @@ func surface_at(p: Vector2) -> int:
 				# a mess to carry around, not ground that slows you
 				"paint", "fish", "oil", "confetti", "icecream", "puddle": continue
 				_: return Surfaces.S.SAND
+	if lvl == "port":
+		if p.x > Port.WHARF_EDGE_X:
+			return Surfaces.S.WATER
+		if p.y > GATE_Y:
+			return Surfaces.S.PAVEMENT
 	if lvl == "beach":
 		# THE SEAFRONT HAS NO GRASS. Its cross-section is sea, sand, boardwalk,
 		# bike path, promenade, then cafe paving - so once the sea and the sand
@@ -11819,6 +11836,9 @@ func _tick_vault(delta: float) -> void:
 	_tick_needle(delta)
 	var pole: Vector2 = leash.contact_pole
 	var wrapped: bool = pole.x < INF and leash.static_contacts > 0 and leash.contact_static
+	if wrapped and lvl == "port" and not port_bollard_wrapped:
+		if pole in Port.BOLLARDS:
+			port_bollard_wrapped = true
 	if vault_t > 0.0:
 		# held zoomies keep the swing going, up to its cap
 		var held: bool = dog.turbo_active and vault_elapsed < VAULT_MAX_T
@@ -12668,6 +12688,8 @@ const FREEDOM_KINDS := {
 	"montjuic": "placa",
 	# the square beside the stadium
 	"partit": "placa",
+	# the pier plaza overlooking the Mediterranean
+	"port": "placa",
 }
 const BEACH_SEA_R := 430.0
 const BEACH_GATE_SHORE_X := 230.0
@@ -14033,7 +14055,7 @@ func _draw_world() -> void:
 			_draw_paving(maxf(vt, GATE_Y - 30.0), vb, walkway)
 			_wc.draw_line(Vector2(sw_l, bottom), Vector2(sw_l, GATE_Y), COL_SEAM, 3.0)
 			_wc.draw_line(Vector2(sw_r, bottom), Vector2(sw_r, GATE_Y), COL_SEAM, 3.0)
-		elif lvl != "partit":
+		elif lvl != "partit" and lvl != "port":
 			# (Dia de Partit's asphalt and sidewalks are on the cached edge layer)
 			_draw_walk_ribbon(vt, vb, bottom, walkway)
 		if lvl == "besos":
@@ -14130,6 +14152,8 @@ func _draw_world() -> void:
 		_draw_mosaic_cached(wvt, vb)
 	if lvl == "partit":
 		Partit.draw_live(self, _wc, wvt, vb)
+	if lvl == "port":
+		Port.draw_live(self, _wc, wvt, vb)
 		if march != null:
 			march.draw(_wc)
 		if _match_flash > 0.0:
@@ -14213,6 +14237,9 @@ func _draw_world() -> void:
 			continue
 		if lvl == "partit":
 			Partit.draw_bollard(_wc, h)
+			continue
+		if lvl == "port":
+			Port.draw_bollard(_wc, h)
 			continue
 		if lvl == "oldtown":
 			# a terracotta pot of geraniums by a door

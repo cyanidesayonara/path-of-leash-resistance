@@ -43,7 +43,7 @@ func _run() -> void:
 	var P: GDScript = load("res://systems/partit.gd")
 
 	# the walk in the game's lists, after Montjuic
-	_check(game.LEVELS[game.LEVELS.size() - 1] == "partit", "last in LEVELS")
+	_check(game.LEVELS.has("partit") and game.LEVELS.find("partit") > game.LEVELS.find("montjuic"), "after Montjuïc in LEVELS")
 	_check(int(game.STAR_GATE["partit"]) == 27, "opens at 27 stars")
 	_check(String(game.LEVEL_NAMES["partit"]) == "Dia de Partit", "named Dia de Partit")
 	_check(m.gate_text == "PLAÇA DEL GOL", "the gate is PLAÇA DEL GOL")

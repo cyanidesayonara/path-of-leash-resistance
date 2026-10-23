@@ -93,6 +93,7 @@ const CROSS_SECTIONS := {
 	"guell": ["none", 0.0, "none", 0.0],              # rubble-stone terrace walls
 	"neteja": ["none", 0.0, "none", 0.0],             # a back street
 	"partit": ["none", 0.0, "none", 0.0],             # sidewalks drawn inside the path (systems/partit.gd)
+	"port": ["none", 0.0, "none", 0.0],               # quayside and harbor drawn in systems/port.gd
 	# flood wall on the left, grass then the river on the right
 	"besos": ["none", 0.0, "grass", 120.0],
 }
@@ -1139,6 +1140,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"neteja": half = 185.0
 		"montjuic": half = 175.0   # a hillside path, winding (Montjuic.edge_nodes)
 		"partit": half = 400.0     # the closed avenue, sidewalks included (Partit.edge_nodes)
+		"port": half = 290.0       # quayside wharf (Port.edge_nodes)
 		"besos": half = BESOS_HALF
 	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
 	m.walk_half = half
@@ -1288,6 +1290,8 @@ static func apply_corridor(m: Node2D) -> void:
 		m.edge_nodes = Montjuic.edge_nodes(m)
 	elif m.lvl == "partit":
 		m.edge_nodes = Partit.edge_nodes(m)
+	elif m.lvl == "port":
+		m.edge_nodes = Port.edge_nodes(m)
 	elif m.lvl == "trail":
 		# EL BOSC BENDS - the first walk in the game that is not a straight
 		# line. A woodland trail has no business being ruler-drawn: it wanders
@@ -1318,7 +1322,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port":
 		return
 	# and so does El Barri; the First Walk, built on it, is still fitted
 	if m.lvl == "barri" and not m.tutorial_mode:
@@ -1396,6 +1400,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl: Array = Partit.build(m)
 			hyd_list.assign(pl[0])
 			keb_list.assign(pl[1])
+		"port":
+			var pl_port: Array = Port.build(m)
+			hyd_list.assign(pl_port[0])
+			keb_list.assign(pl_port[1])
 		"street":
 			m.lane_ys = Array([-1200.0, -2600.0, -4000.0], TYPE_FLOAT, &"", null)
 			m.gate_text = "PIPICÀ"
@@ -2031,6 +2039,9 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "partit":
 		for r: Rect2 in Partit.wrap_rects():
 			add_rope_rect(m, r)
+	if m.lvl == "port":
+		for r: Rect2 in Port.wrap_rects():
+			add_rope_rect(m, r)
 	# the hazardous hard-to-reach collectible: one per level, in a spot
 	# that costs you something to reach (deliberately outside the corridor
 	# on some walks, so it is exempt from the corridor fit)
@@ -2079,6 +2090,9 @@ static func build_level_data(m: Node2D) -> void:
 		"partit":
 			m.prize_pos = Partit.PRIZE
 			m.prize_text = Partit.PRIZE_TEXT
+		"port":
+			m.prize_pos = Port.PRIZE
+			m.prize_text = Port.PRIZE_TEXT
 		"besos":
 			m.prize_pos = Vector2(BESOS_CX + 40.0, -2700.0)
 			m.prize_text = "fetch the ball from beside the path"
@@ -2500,6 +2514,13 @@ const FREEDOM_PROPS := {
 		[Vector2(496.0, -454.0), "post"], [Vector2(732.0, -444.0), "post"], [Vector2(1040.0, -476.0), "post"],
 		[Vector2(302.0, -248.0), "post"], [Vector2(544.0, -228.0), "shrub"], [Vector2(770.0, -218.0), "post"],
 	],
+	"port": [
+		[Vector2(264.0, -460.0), "dig"], [Vector2(620.0, -432.0), "dig"], [Vector2(890.0, -216.0), "dig"],
+		[Vector2(366.0, -472.0), "planter"], [Vector2(1012.0, -232.0), "planter"],
+		[Vector2(246.0, -356.0), "post"], [Vector2(504.0, -450.0), "post"], [Vector2(740.0, -440.0), "post"],
+		[Vector2(1032.0, -472.0), "post"], [Vector2(296.0, -252.0), "post"], [Vector2(538.0, -232.0), "shrub"],
+		[Vector2(764.0, -222.0), "post"],
+	],
 }
 
 
@@ -2672,6 +2693,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps: Array[Rect2] = Partit.solids(m)
 			for i in range(ps.size()):
 				out.append(["partit_%d" % i, ps[i]])
+		"port":
+			var ps_port: Array[Rect2] = Port.solids(m)
+			for i in range(ps_port.size()):
+				out.append(["port_%d" % i, ps_port[i]])
 		"besos":
 			out.append(["besos_channel", besos_deep_rect(m)])
 	return out
@@ -3042,6 +3067,9 @@ static func build_walls(m: Node2D) -> void:
 	if m.lvl == "partit":
 		for r: Rect2 in Partit.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "port":
+		for r: Rect2 in Port.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
 	# El Mercat's stall blocks down the middle of the hall
 	if m.lvl == "market":
 		for blk: Rect2 in MERCAT_BLOCKS:
@@ -3137,7 +3165,7 @@ static func build_entities(m: Node2D) -> void:
 	m.edge_layer.z_index = -5   # behind everything in the world
 	# what hangs over the walk, above everyone (El Gotic's bridge, El Mercat's
 	# arches, La Castanyada's lantern strings)
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "beach" or m.lvl == "scrap" or m.lvl == "partit":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "beach" or m.lvl == "scrap" or m.lvl == "partit" or m.lvl == "port":
 		var ov := Node2D.new()
 		ov.set_script(load("res://world/overheadlayer.gd"))
 		ov.z_index = 14
