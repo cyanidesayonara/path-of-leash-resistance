@@ -70,6 +70,10 @@ var input_dir := Vector2.ZERO
 # a jump's height (the agility course's jumps): looks only, the body is drawn
 # that far up over a shadow that stays on the ground
 var hop := 0.0
+var prev_hop := 0.0
+var land_squash_t := 0.0
+var launch_stretch_dir := Vector2.ZERO
+var launch_stretch_t := 0.0
 # While set (not zero) she faces this way whatever the stick says: in the rope
 # tug she faces the toy, so pulling away from it is backing up, rump first.
 var face_lock := Vector2.ZERO
@@ -154,6 +158,11 @@ func _ready() -> void:
 func tick(delta: float) -> void:
 	bark_cd = maxf(0.0, bark_cd - delta)
 	skid = maxf(0.0, skid - delta * 4.0)
+	launch_stretch_t = maxf(0.0, launch_stretch_t - delta)
+	land_squash_t = maxf(0.0, land_squash_t - delta)
+	if prev_hop > 0.5 and hop <= 0.01:
+		land_squash_t = 0.16
+	prev_hop = hop
 	bark_anim = maxf(0.0, bark_anim - delta)
 	hole_cd = maxf(0.0, hole_cd - delta)
 	if squat_t > 0.0:
@@ -183,6 +192,9 @@ func tick(delta: float) -> void:
 	if turbo_active:
 		energy = maxf(0.0, energy - 0.28 * delta)
 	if planted:
+		if velocity.length() > SPEED * 0.6:
+			skid = 1.0
+			skid_dir = -velocity.normalized()
 		velocity = Vector2.ZERO
 	elif answering_nature:
 		# stopping to go; not braced though - a yank interrupts, as in life
@@ -223,11 +235,19 @@ func tick(delta: float) -> void:
 		var wish := go * top
 		if flooded:
 			wish.x *= FLOOD_STEER
+		var prev_vel := velocity
 		velocity = velocity.move_toward(wish, accel * delta)
 		if face_lock != Vector2.ZERO:
 			facing = face_lock
 		elif input_active:
 			facing = go.normalized()
+		var crouching := peeing or squat_t > 0.0 or squat_ui > 0.0
+		if not crouching and not planted:
+			var spd := prev_vel.length()
+			if spd > SPEED * 0.72:
+				if input_active and go.dot(prev_vel.normalized()) < 0.2:
+					skid = maxf(skid, clampf((spd - SPEED * 0.5) / SPEED, 0.35, 0.75))
+					skid_dir = -prev_vel.normalized()
 	move_and_slide()
 	# floating motion keeps the speed she had into a face; drop it, so what
 	# she is pressed against does not hold speed she cannot use
@@ -254,6 +274,11 @@ func tick(delta: float) -> void:
 		bark_cd = 1.2
 		bark_anim = 0.35
 		main.on_bark(global_position)
+
+
+func trigger_launch_stretch(dir: Vector2, duration: float = 0.28) -> void:
+	launch_stretch_dir = dir.normalized()
+	launch_stretch_t = duration
 
 
 func hit_by_rider(dir: Vector2) -> void:
@@ -376,7 +401,14 @@ func _draw_shapes() -> void:
 		var lift: float = 1.0 + clampf(velocity.length() / 700.0, 0.0, 0.35)
 		main.contact_shadow(_b, Vector2.ZERO, 12.0, 8.0 * lift, 0.26)
 	if hop > 0.0:
-		_draw_xf(Vector2(0.0, -hop), 0.0, Vector2.ONE * (1.0 + hop * 0.008))
+		var leap_s := clampf(hop * 0.016, 0.0, 0.22)
+		_draw_xf(Vector2(0.0, -hop), 0.0, Vector2(1.0 - leap_s * 0.4, 1.0 + leap_s * 0.6))
+	elif land_squash_t > 0.0:
+		var sq := land_squash_t / 0.16
+		_draw_xf(Vector2.ZERO, 0.0, Vector2(1.0 + sq * 0.16, 1.0 - sq * 0.12))
+	elif launch_stretch_t > 0.0:
+		var st := launch_stretch_t / 0.28
+		_draw_xf(Vector2.ZERO, 0.0, Vector2(1.0 + st * 0.25, 1.0 - st * 0.14))
 	# the coat comes from data now (Game.COATS), not baked-in colours, so a
 	# dog creator later means adding a row of parameters rather than editing
 	# this renderer
@@ -406,22 +438,37 @@ func _draw_shapes() -> void:
 	var wag_speed := 3.0 if crouching else 11.0
 	var wag_amp := 0.15 if crouching else 0.38
 	var tail_len_scale := 1.0
+	var tail_angle_bias := 0.0
 	if not crouching:
 		if turbo_active or mood_id == 3: # ZOOMIES
-			wag_speed = lerpf(wag_speed, 18.5, maxf(mood_int, 1.0 if turbo_active else 0.0))
-			wag_amp = lerpf(wag_amp, 0.50, maxf(mood_int, 1.0 if turbo_active else 0.0))
-		elif mood_id == 1: # SCARED: tucked low and tight
-			wag_speed = lerpf(wag_speed, 15.0, mood_int)
-			wag_amp = lerpf(wag_amp, 0.08, mood_int)
-			tail_len_scale = lerpf(1.0, 0.55, mood_int)
-		elif mood_id == 4: # TIRED: slow, low wag
-			wag_speed = lerpf(wag_speed, 5.5, mood_int)
+			wag_speed = lerpf(wag_speed, 22.0, maxf(mood_int, 1.0 if turbo_active else 0.0))
+			wag_amp = lerpf(wag_amp, 0.65, maxf(mood_int, 1.0 if turbo_active else 0.0))
+		elif mood_id == 0: # HAPPY: perky, cheerful wagging
+			wag_speed = lerpf(wag_speed, 16.0, mood_int)
+			wag_amp = lerpf(wag_amp, 0.48, mood_int)
+		elif mood_id == 2: # BARKY: alert, stiff high tail, fast small twitches
+			wag_speed = lerpf(wag_speed, 26.0, mood_int)
+			wag_amp = lerpf(wag_amp, 0.15, mood_int)
+			tail_len_scale = lerpf(1.0, 1.15, mood_int)
+		elif mood_id == 1: # SCARED: tucked under belly, trembling
+			wag_speed = lerpf(wag_speed, 18.0, mood_int)
+			wag_amp = lerpf(wag_amp, 0.04, mood_int)
+			tail_len_scale = lerpf(1.0, 0.45, mood_int)
+			tail_angle_bias = lerpf(0.0, PI * 0.85, mood_int)
+		elif mood_id == 4: # TIRED: slow, drooping, lazy wag
+			wag_speed = lerpf(wag_speed, 4.5, mood_int)
+
 			wag_amp = lerpf(wag_amp, 0.20, mood_int)
+			tail_len_scale = lerpf(1.0, 0.85, mood_int)
+		elif velocity.length() < 5.0 and not planted:
+			# Idle standing: gentle relaxed tail sway
+			wag_speed = 4.0
+			wag_amp = 0.22
 		elif sniff_u > 0.05 or dig_u > 0.05:
 			wag_speed = maxf(wag_speed, 15.5)
 			wag_amp = maxf(wag_amp, 0.44)
 	var tp := hip + hip_dir * (4.0 * tail_len_scale)
-	var tdir := hip_dir
+	var tdir := hip_dir.rotated(tail_angle_bias)
 	var widths: Array[float] = [3.2, 2.4, 1.7]
 	for s in range(3):
 		tdir = tdir.rotated(sin(t * wag_speed - s * 0.9) * wag_amp)
@@ -457,9 +504,12 @@ func _draw_shapes() -> void:
 	# shade darker on the side away from the light first, then the fur, then
 	# the light along her back: plasticine, not a flat cut-out
 	var hip_r := 10.5 if crouching else 9.0
+	var shoulder_r := 7.4
+	if velocity.length() < 5.0 and not crouching:
+		shoulder_r += sin(t * 3.2) * 0.45
 	var rim := Vector2(1.2, 1.6)
-	_b.draw_colored_polygon(_body_points(shoulder + rim, hip + rim, 7.4, hip_r), fur_dark.darkened(0.25))
-	_b.draw_colored_polygon(_body_points(shoulder, hip, 7.4, hip_r), fur)
+	_b.draw_colored_polygon(_body_points(shoulder + rim, hip + rim, shoulder_r, hip_r), fur_dark.darkened(0.25))
+	_b.draw_colored_polygon(_body_points(shoulder, hip, shoulder_r, hip_r), fur)
 	_b.draw_colored_polygon(_body_points(shoulder + LIGHT_DIR * 2.6, hip + LIGHT_DIR * 2.6, 4.2, 4.6),
 		fur.lightened(0.10))
 	# only a few subtle flecks on the body - the grey lives on the head
@@ -545,11 +595,22 @@ func _draw_shapes() -> void:
 			var a := t * 5.0 + i * 2.4
 			_b.draw_circle(hip + hip_dir * 10.0 + hside * sin(a) * 3.0, 1.6, Color(0.93, 0.85, 0.4, 0.5))
 	if skid > 0.0 and not crouching:
-		# dust kicked up off the braced front paws, thrown ahead along the haul
+		# dust kicked up off the braced front paws, tinted to the surface underfoot
+		var dust_col := Color(0.72, 0.66, 0.56)
+		if ice:
+			dust_col = Color(0.85, 0.92, 1.0)
+		elif surface == Surfaces.S.SAND:
+			dust_col = Color(0.82, 0.72, 0.50)
+		elif surface == Surfaces.S.MUD:
+			dust_col = Color(0.35, 0.26, 0.18)
+		elif surface == Surfaces.S.GRASS:
+			dust_col = Color(0.42, 0.48, 0.30)
+		elif surface == Surfaces.S.WATER:
+			dust_col = Color(0.85, 0.94, 1.0)
 		for i in range(3):
 			var kp := fmod(t * 5.0 + float(i) * 0.33, 1.0)
 			var dp := facing * (14.0 + kp * 16.0) + side * (float(i) - 1.0) * 8.0 * (1.0 + kp)
-			_b.draw_circle(dp, 3.0 + kp * 5.0, Color(0.72, 0.66, 0.56, 0.35 * skid * (1.0 - kp)))
+			_b.draw_circle(dp, 3.0 + kp * 5.0, Color(dust_col.r, dust_col.g, dust_col.b, 0.40 * skid * (1.0 - kp)))
 	if planted and not crouching:
 		for i in range(4):
 			var a2 := TAU * i / 4.0 + 0.4
