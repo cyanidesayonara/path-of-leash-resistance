@@ -120,6 +120,7 @@ CHANGELOG.md. Not tagged yet.
 - The leash runs round a stall, a van or a bench instead of through it, and that pull walks your human round the end.
 - Caught by the sweeper, the two of you go up into the brooms. Fear waits until the threat is actually on screen.
 - On a rainy El Bosc, one run in five raises the stream. A branch or a ball comes toward the footbridge. Carry it to the bank. Let it pass under and nothing is lost.
+- Visual polish across all seventeen walks: fluted Doric columns and Jujol ceiling medallions in El Mosaic, travelator handrail grinds and yellow tactile platform edging in L'Estació, Pont del Bisbe and Plaça de Sant Felip Neri in El Gòtic, wave paving and Miró's mosaic on La Rambla, riprap embankments, inflatable rubber weir and SAHBE flood gear on El Besòs, and bespoke Barcelona landmarks across the rest of the city.
 ```
 
 ## What's new in 1.61

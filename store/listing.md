@@ -90,6 +90,7 @@ dog walking
 - The leash runs round a stall, a van or a bench instead of through it.
 - Caught by the sweeper, the two of you go up into the brooms. Fear waits until the threat is on screen.
 - On a rainy El Bosc, one run in five raises the stream. Carry the branch or the ball to the bank.
+- Visual polish across all seventeen walks: Doric columns and Jujol medallions in El Mosaic, travelator handrail grinds in L'Estació, Pont del Bisbe in El Gòtic, wave paving and Miró's mosaic on La Rambla, riprap banks and inflatable weir on El Besòs, and new landmarks across the city.
 ```
 
 ### Notes for certification

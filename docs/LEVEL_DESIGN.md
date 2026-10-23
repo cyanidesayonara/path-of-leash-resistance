@@ -107,6 +107,12 @@ with pickpockets and shenanigans happening around."
   really are.
 - Add: the stalls, blankets, statues and crowd above; planter kerbs worth
   grinding; the Canaletes fountain as the drink stop.
+- Polish pass (2026-10-22): sinusoidal dark-and-cream wave paving down the
+  promenade, Miró's circular Pla de la Boqueria mosaic at y=-2480, ornate
+  four-globed Font de Canaletes with crest plaque, copper-cupola Modernista
+  kiosk, flower stalls with tiered buckets and misting cans, human statues
+  with coin tins and living idle micro-animations, and blanket vendors with
+  drawstring corner cords.
 
 ### El Parc (park) - the city park
 - Is: open lawns, flowerbeds, the pond with its bridge and ducks, a
@@ -119,6 +125,11 @@ with pickpockets and shenanigans happening around."
   statue as the landmark you can mark. The path opens out round the lake so
   it is an island with a shore either side (path shapes, stage 2).
 - Off-leash: the dog park (as now).
+- Polish pass (2026-10-22): Glorieta bandstand with music stands, decorative
+  arch spandrels and iron railing; Cascada Monumental fountain steps, gilded
+  wing-griffins, Venus shell niche and spout; lakeside boat dock with moored
+  rowboats and life ring; ornamental parterre rose gardens; and the Ciutadella
+  stone mammoth with trunk creases, ears and brass plaque.
 
 ### El Bosc (trail) - the forest
 - Is: woodland, not a park with a bent path: trees crowding the path, roots,
@@ -141,6 +152,11 @@ with pickpockets and shenanigans happening around."
   flat. Telegraphed: grunting and the piglets crossing first. A walk
   where the owner, phone up, walks into a boar is the forest's big
   slapstick moment.
+- Polish pass (2026-10-22): Collserola stone spring (Font de Budellera) with
+  carved arch, mossy trough, ceramic tile and bronze lion spout; GR-92 red/white
+  blazes on trunks and rocks; dry-stone agricultural retaining walls (marges de
+  pedra seca), broom/rosemary scrub and stone trail steps; and wooden Collserola
+  trailhead archway.
 
 ### Passeig Maritim (beach) - the seafront
 - Is: largely right already.
@@ -153,6 +169,10 @@ with pickpockets and shenanigans happening around."
   cabin is overhead; each chiringuito on a deck under a reed pergola with
   a solid bar hut; the blocks' roofs behind; one sea palette shared with
   the dog beach.
+- Polish pass (2026-10-22): painted concrete seawall separating sand from
+  promenade, striped rental loungers and parasols, wooden footbridges (passeres)
+  over the hot sand, stacked kayaks/pedalos and anchored lane buoys, plus the
+  two-way red painted coastal bike lane with bicycle stencils.
 
 ### El Diluvi (rain) - the rainy shopping street
 - Is: a narrow shopping street in a downpour, not La Rambla wet.
@@ -167,6 +187,10 @@ with pickpockets and shenanigans happening around."
   stacked and chained to a lamp standard by the east kerb; wet pantile roofs,
   terrats with water tanks and running gutters either side; umbrellas are
   filled canopies with ribs; EL PORXO is a porch yard round a wet court.
+- Polish pass (2026-10-22): warm golden shopfront window reflections stretched
+  across wet stones, overflowing zinc downspouts gushing white foam into the
+  gutters, sodden flattened cardboard boxes and wind-flipped broken umbrellas,
+  plus vaulted groin-ribbing and pendant lanterns inside the dry stone arcades.
 
 ### El Mercat (market) - the market hall
 - Is: inside a covered market: stall rows as aisles, iron columns, the fish
@@ -190,6 +214,11 @@ with pickpockets and shenanigans happening around."
   trolleys, a porter's sack truck and chatting shoppers along both walls,
   all solid; the approach street has shop awnings, the greengrocer's
   delivery van at the kerb and crate stacks by the doors.
+- Polish pass (2026-10-22): Modernista stained-glass rose lunettes at both ends
+  of the hall casting colored light pools onto the terrazzo, hanging stall
+  number plaques and chalkboard banners, espresso bar stools and tapas displays,
+  overhead cured legs of jamón ibérico with fat-drip cones, and dry-goods burlap
+  spice sacks.
 
 ### El Gotic (oldtown) - the medieval alleys
 - Is: alleys with walls at the paving (done in #76), laundry overhead,
@@ -199,6 +228,11 @@ with pickpockets and shenanigans happening around."
 - Cut: the market's stalls.
 - Add: an overhead bridge between buildings (a landmark you pass under),
   steps, doorway flowerpots, parked scooters.
+- Polish pass (2026-10-22): Neo-Gothic Pont del Bisbe overhead gallery bridge
+  with quatrefoil tracery and skull-and-dagger relief, Plaça de Sant Felip Neri
+  octagonal fountain and civil-war pockmarked stone masonry, carved stone coats
+  of arms and wrought-iron street-corner shrines, medieval timber double doors,
+  and ceramic carrer tile plaques.
 
 ### L'Estacio (station) - the concourse
 - Is: inside a station: departures board, ticket barriers, pillars, bench
@@ -211,12 +245,12 @@ with pickpockets and shenanigans happening around."
 - Audit fixes (2026-10-18, #155): terrazzo floor with brass strips, no
   drains; gate cabinets with readers and paddles; columns on plinths; a steel
   travelator and a train that reads as a train; PIPICÀ is the old goods yard
+  with a siding and the running lines past its wall.
 - Polish pass (2026-10-22): the moving walkway's glass balustrades now have
   grindable handrails on both sides (HANDRAIL); the train platform has concrete
   coping slabs and yellow tactile blister warning bands along the drop; the
   track bed pit between platforms shows dark ballast depth and running rails
   under the train; and colourful rolling suitcases sit across the concourse.
-  with a siding and the running lines past its wall.
 
 ### El Besos (besos) - the floodable river park
 - Is: a public park inside a river channel. Concrete flood wall, a paved
@@ -232,6 +266,13 @@ with pickpockets and shenanigans happening around."
   swell, one checkpoint). The warning is the lamps, the siren and your human
   deciding it is not their problem, inside the same 1.2 seconds as every
   other chase.
+- Polish pass (2026-10-23): Parc Fluvial west flood wall with upper embankment
+  promenade, galvanized safety railing and recessed yellow-railed emergency exit
+  stairs (suppressing city roofs under the river); two-way painted cycle lane;
+  riprap boulder embankment (escullera), cobble shoreline and swaying reed beds;
+  ribbed inflatable rubber weir (assut inflable), Pont de Can Peixauet cable-stay
+  shadows, SAHBE LED matrix entrance sign, metric flood staff gauges, and wooden
+  Parc Fluvial waymarker totems replacing street hydrants.
 
 ### Les Obres (site) - the roadworks
 - Is: a works detour: cement pours in formwork with cones and tape, fresh
@@ -243,6 +284,11 @@ with pickpockets and shenanigans happening around."
 - Add: cement slabs with formwork and cones, a freshly painted zebra
   crossing with cones, the trench and plank, fencing, the digger as
   landmark.
+- Polish pass (2026-10-22): stacked orange PVC conduit pipes, wooden cable drums
+  and rebar mesh bundles; blue portable chemical toilet cabin and corrugated site
+  foreman office container with blueprint table; flashing amber battery hazard
+  lamps along the Heras blocks; and red/blue utility pipes plus wooden shoring
+  struts inside the open trench.
 
 ### La Castanyada (spook) - the chestnut festival at night
 - Is: a plaça festival: the chestnut roaster's stall, lantern strings,
@@ -257,6 +303,11 @@ with pickpockets and shenanigans happening around."
   (chestnuts, panellets, roast sweet potatoes, sweets); paper-lantern strings
   over the street, lit; confetti thrown from the stage and chestnut shells
   underfoot; chocolate to steer past; hessian sacks of chestnuts to mark.
+- Polish pass (2026-10-22): newspaper cones (paperines) of hot chestnuts on warm
+  charcoal-brazier tables, wood-fired brick oven glowing behind the sweet potato
+  stall, tiered trays of pine-nut/almond/coconut panellets and porró wine jugs
+  for the Moscatell toast, plus cobla brass instruments, music stands and
+  Catalan senyera stage skirting.
 
 ### La Ferralla (scrap) - the scrapyard
 - Is: stacked wrecks, a crane, oil, the guard dog, cameras and lasers.
@@ -264,6 +315,10 @@ with pickpockets and shenanigans happening around."
 - Cut: café terrace, benches, the hydrant grid, road crossings.
 - Add: wreck stacks as the walls and poles of the route, oil stains behind
   them, the crane as landmark, the guard dog's kennel.
+- Polish pass (2026-10-22): corrugated steel truck weighbridge (bàscula) with
+  digital readout pillar at the yard entrance, hydraulic car-baler press with
+  cubed metal bales, rainbow-iridescent oil slicks, scattered alternator/radiator
+  and exhaust parts, and a corrugated guard-dog kennel with bone and bowl.
 
 ### El Mosaic (guell) - the terraces
 Santtu: "doesn't actually look much like it really should, it just seems
@@ -345,6 +400,11 @@ rubble stone, and the colour comes in where Gaudi put it.
   wet streaks feather out; the mid-street posts are the lamppost slalom;
   delivery crates stand by the dumpsters, and the market's open manholes
   are gone.
+- Polish pass (2026-10-22): cast-iron BCASA water-hydrant standpipes with brass
+  valves and snaking yellow flushing hoses, coiled green pressure-wash hoses,
+  swirling white soap-suds foam trails, municipal lime-green BCN NETA cleaning
+  handcarts with brooms and shovels, and tied black bin bags with flattened
+  cardboard by the containers.
 
 ### Dia de Partit (partit) - match day
 - Is: the walk to the stadium in Les Corts. Fans in blue and claret halves
@@ -356,6 +416,11 @@ rubble stone, and the colour comes in where Gaudi put it.
 - Built (2026-10-19): the avenue and its corners, the crowd river, the
   kick-off clock, La Marxa, El Gol and El Xiulet Final. Twelve goals.
 - Off-leash: PLAÇA DEL GOL, with the same agility course, rope tug and frisbee.
+- Polish pass (2026-10-22): match-day scarf and flag vendor carts with hanging
+  blaugrana/senyera scarves and air-horns, mobile frankfurter & xurros grill
+  carts with sizzling sausages and condiment bottles, Guàrdia Urbana crowd-control
+  steel barriers with match-day parking signs, and monumental stadium floodlight
+  pylons, entry turnstiles and red-glowing digital scoreboards at the north gate.
 
 ### El Barri - the neighborhood park (the first walk)
 Santtu: "la rambla shouldn't be the primary walk... that should be just a
@@ -381,6 +446,10 @@ park could be just a neighborhood park in bcn."
   sauló inside a green steel mesh fence (the run along the walk's end
   included, on its collider), an iron gate the path's width, plane trees,
   sniff posts, planters and a bag dispenser, no fallen logs.
+- Polish pass (2026-10-22): 9-tile Eixample flor de Barcelona panot pavement on
+  the approach, wooden pergola over the dominoes/cards table, hopscotch (xarranca)
+  chalk grid and wooden sandbox with bucket and spade, petanca scoreboard and
+  bench rack, and municipal green Ajuntament noticeboard at the entrance.
 
 ### First Walk (tutorial) - learn each trick in peace
 Santtu: "we should really upgrade the tutorial too, so that the user can
@@ -600,7 +669,7 @@ slipping, all pretty slapstick of course, nothing too violent."
 
 ## Order
 
-Done by the 2026-10-22 roster pass:
+Done by the 2026-10-23 roster & visual polish pass:
 
 1. Footprints and tracked sand/snow.
 2. El Bosc and El Parc are two places. El Bosc has its own trail.
@@ -611,12 +680,15 @@ Done by the 2026-10-22 roster pass:
 5. El Gotic, La Castanyada and El Mercat have their own furniture. La
    Castanyada and La Neteja still enter through the market scaffold, then
    replace it.
+6. El Mosaic's decoration (Doric fluted columns, Jujol ceiling medallions,
+   serpentine bench, dragon stair and life), plus the 17-walk visual polish
+   pass across every walk in the roster (including El Besos's riprap
+   embankment, inflatable weir, flood wall stairs and waymarker totems). La
+   Neteja's chase and the beach's own shore are in.
 8. El Barri is the first walk. The tutorial is stations on it.
 
 Still open:
 
-6. El Mosaic's decoration, the rounds in its own section above. La Neteja's
-   chase and the beach's own shore are in.
 7. Each off-leash space has its kind. The props are still one generator
    with a flavour, not a hand-authored list per walk.
 
