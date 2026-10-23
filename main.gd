@@ -8470,6 +8470,22 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 					c.draw_arc(p, 22.0, -PI / 2.0, -PI / 2.0 + TAU * prog / 1.1, 18, Color(1, 0.9, 0.5), 3.0)
 			"log" when lvl == "scrap":
 				Ferralla.draw_pipe(c, p)
+			"log" when lvl == "station":
+				# stacked creosote railway sleepers (travesses) with iron rail chairs
+				var tie := Color(0.25, 0.18, 0.13)
+				c.draw_rect(Rect2(p.x - 32.0, p.y - 10.0, 64.0, 9.0), tie.darkened(0.12))
+				c.draw_rect(Rect2(p.x - 29.0, p.y - 2.0, 60.0, 9.0), tie)
+				c.draw_rect(Rect2(p.x - 29.0, p.y - 2.0, 60.0, 3.0), tie.lightened(0.16))
+				for sx: float in [-18.0, 16.0]:
+					c.draw_rect(Rect2(p.x + sx - 4.0, p.y - 9.0, 8.0, 15.0), Color(0.36, 0.28, 0.22))
+					c.draw_circle(Vector2(p.x + sx, p.y - 1.0), 2.2, Color(0.52, 0.42, 0.34))
+			"log" when lvl == "site":
+				# strapped bundle of orange utility conduits and timber trench shoring
+				c.draw_rect(Rect2(p.x - 30.0, p.y - 9.0, 60.0, 9.0), Color(0.58, 0.44, 0.26))
+				c.draw_rect(Rect2(p.x - 30.0, p.y - 1.0, 60.0, 5.0), Color(0.88, 0.42, 0.14))
+				c.draw_rect(Rect2(p.x - 30.0, p.y + 4.0, 60.0, 5.0), Color(0.76, 0.34, 0.10))
+				for bx: float in [-16.0, 16.0]:
+					c.draw_rect(Rect2(p.x + bx - 1.5, p.y - 9.5, 3.0, 19.0), Color(0.22, 0.24, 0.26))
 			"log":
 				# a fallen log: bark, end grain, and a couple of knots
 				var bark := Color(0.40, 0.30, 0.20)
@@ -8479,35 +8495,60 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 				c.draw_arc(Vector2(p.x + 30.0, p.y), 5.0, 0, TAU, 10, Color(0.48, 0.38, 0.25), 1.5)
 				c.draw_circle(Vector2(p.x - 8.0, p.y - 1.0), 3.0, bark.darkened(0.30))
 			"driftwood":
-				var pale := Color(0.68, 0.63, 0.55)
+				var pale := Color(0.72, 0.67, 0.58) if lvl == "besos" else Color(0.68, 0.63, 0.55)
 				c.draw_rect(Rect2(p.x - 32.0, p.y - 6.0, 64.0, 12.0), pale)
 				c.draw_line(p + Vector2(-32, -1), p + Vector2(32, -1), pale.darkened(0.22), 2.0)
 				c.draw_line(p + Vector2(8, -6), p + Vector2(22, -16), pale, 5.0)
+				if lvl == "besos":
+					# flood-caught river reeds tangled against the upstream flank
+					c.draw_line(p + Vector2(-18, 5), p + Vector2(6, 7), Color(0.56, 0.52, 0.34), 2.2)
+					c.draw_circle(p + Vector2(-28, 0), 4.5, Color(0.46, 0.42, 0.34))
 			"tyre":
 				c.draw_circle(p, 17.0, Color(0.14, 0.14, 0.15))
 				c.draw_circle(p, 9.0, Color(0.26, 0.30, 0.24))
 				for i in range(10):
 					var a := TAU * float(i) / 10.0
 					c.draw_line(p + Vector2.from_angle(a) * 11.0, p + Vector2.from_angle(a) * 17.0, Color(0.24, 0.24, 0.26), 2.0)
+			"rock" when lvl == "montjuic":
+				# a pyramid of cast-iron fortress cannonballs on an ashlar plinth
+				c.draw_rect(Rect2(p - Vector2(15, 13), Vector2(30, 26)), Color(0.66, 0.62, 0.54))
+				c.draw_rect(Rect2(p - Vector2(15, 13), Vector2(30, 26)), Color(0.46, 0.43, 0.38), false, 1.5)
+				for off: Vector2 in [Vector2(-6, -4), Vector2(6, -4), Vector2(-6, 5), Vector2(6, 5), Vector2(0, -1)]:
+					c.draw_circle(p + off, 5.8, Color(0.16, 0.17, 0.19))
+					c.draw_circle(p + off + Vector2(-1.8, -1.8), 2.0, Color(0.38, 0.40, 0.44))
+			"rock" when lvl == "besos":
+				# water-smoothed pale limestone river cobbles
+				c.draw_circle(p + Vector2(-4, 1), 13.0, Color(0.68, 0.66, 0.60))
+				c.draw_circle(p + Vector2(-6, -2), 8.5, Color(0.78, 0.76, 0.70))
+				c.draw_circle(p + Vector2(9, 4), 8.0, Color(0.60, 0.58, 0.53))
+				c.draw_circle(p + Vector2(7, 2), 4.5, Color(0.72, 0.70, 0.64))
 			"rock":
 				# faceted rather than round: a boulder is flat planes, and the
 				# planes are what catch the light differently
+				var rcol := Color(0.62, 0.48, 0.34) if lvl == "guell" else Color(0.46, 0.44, 0.42)
+				var tcol := Color(0.76, 0.62, 0.46) if lvl == "guell" else Color(0.63, 0.61, 0.57)
 				var rp := PackedVector2Array()
 				for i in range(7):
 					var a := TAU * float(i) / 7.0 + p.y * 0.01
 					var rr := 13.0 + fmod(float(i) * 5.7 + p.x * 0.03, 4.0)
 					rp.append(p + Vector2(cos(a) * rr, sin(a) * rr * 0.88))
-				c.draw_colored_polygon(rp, Color(0.46, 0.44, 0.42))
+				c.draw_colored_polygon(rp, rcol)
 				var top := PackedVector2Array()
 				for i in range(5):
 					var a2 := TAU * float(i) / 5.0 + 0.4
 					top.append(p - LIGHT * 4.0 + Vector2(cos(a2), sin(a2) * 0.9) * 8.0)
-				c.draw_colored_polygon(top, Color(0.63, 0.61, 0.57))
-				c.draw_polyline(rp, Color(0.34, 0.33, 0.32, 0.8), 1.4)
+				c.draw_colored_polygon(top, tcol)
+				c.draw_polyline(rp, rcol.darkened(0.25), 1.4)
 			"post" when freedom_kind == "placa":
 				# a cast-iron bollard, the barri's lamp-post for dogs
 				c.draw_circle(p, 13.0, Color(0.52, 0.48, 0.42, 0.35))
+				if lvl == "neteja":
+					# a ring of white BCNeteja hose-down soap suds around the foot
+					c.draw_arc(p, 11.5, 0, TAU, 14, Color(0.92, 0.96, 1.0, 0.55), 2.2)
 				c.draw_circle(p, 7.0, Color(0.16, 0.17, 0.18))
+				if lvl == "partit":
+					c.draw_arc(p, 5.8, 0, PI, 8, Color(0.62, 0.12, 0.24), 2.0)
+					c.draw_arc(p, 5.8, PI, TAU, 8, Color(0.12, 0.26, 0.58), 2.0)
 				c.draw_circle(p + Vector2(-1.5, -1.5), 4.5, Color(0.28, 0.29, 0.31))
 				c.draw_circle(p + Vector2(-2.0, -2.0), 1.6, Color(0.50, 0.52, 0.54))
 			"planter":
@@ -8524,22 +8565,56 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 					for g in range(3):
 						c.draw_line(p + Vector2(-13.0, -6.0 + float(g) * 6.0), p + Vector2(13.0, -6.0 + float(g) * 6.0), Color(0.12, 0.10, 0.10), 1.5)
 					continue
+				if lvl == "market":
+					# stacked wooden Boqueria fruit & produce crates outside the hall
+					c.draw_rect(Rect2(p - Vector2(17, 15), Vector2(34, 30)), Color(0.68, 0.52, 0.32))
+					c.draw_rect(Rect2(p - Vector2(17, 15), Vector2(34, 30)), Color(0.46, 0.34, 0.20), false, 2.0)
+					c.draw_line(p + Vector2(-16, 0), p + Vector2(16, 0), Color(0.46, 0.34, 0.20), 2.0)
+					for fo: Vector2 in [Vector2(-9, -7), Vector2(-2, -8), Vector2(7, -6)]:
+						c.draw_circle(p + fo, 4.2, Color(0.92, 0.48, 0.14))
+					for vo: Vector2 in [Vector2(-8, 7), Vector2(1, 6), Vector2(9, 7)]:
+						c.draw_circle(p + vo, 4.2, Color(0.84, 0.22, 0.18))
+					continue
+				if lvl == "rain":
+					# glazed terracotta Eixample interior-courtyard olive tub
+					c.draw_circle(p, 17.0, Color(0.68, 0.36, 0.22))
+					c.draw_circle(p, 13.5, Color(0.30, 0.22, 0.16))
+					c.draw_circle(p, 11.5, Color(0.28, 0.42, 0.28))
+					c.draw_circle(p - LIGHT * 3.5, 6.5, Color(0.42, 0.56, 0.38))
+					continue
 				# a stone planter with a clipped bush in it: solid, go round it
 				c.draw_rect(Rect2(p - Vector2(17, 17), Vector2(34, 34)), Color(0.74, 0.70, 0.62))
 				c.draw_rect(Rect2(p - Vector2(17, 17), Vector2(34, 34)), Color(0.56, 0.52, 0.46), false, 2.0)
+				if lvl == "partit":
+					c.draw_rect(Rect2(p.x - 16.0, p.y + 11.0, 16.0, 4.0), Color(0.12, 0.26, 0.58))
+					c.draw_rect(Rect2(p.x, p.y + 11.0, 16.0, 4.0), Color(0.62, 0.12, 0.24))
 				c.draw_circle(p, 12.0, Color(0.26, 0.42, 0.24))
 				c.draw_circle(p - LIGHT * 4.0, 7.0, Color(0.34, 0.52, 0.30))
+			"post" when lvl == "guell":
+				# rough quarry-stone and trencadís mosaic cairn post
+				c.draw_circle(p, 14.0, Color(0.58, 0.44, 0.28, 0.35))
+				c.draw_circle(p, 9.5, Color(0.64, 0.50, 0.34))
+				c.draw_circle(p + Vector2(0, -14), 8.0, Color(0.72, 0.58, 0.40))
+				c.draw_circle(p + Vector2(-2, -23), 6.0, Color(0.18, 0.42, 0.76))
+				c.draw_circle(p + Vector2(2, -24), 3.2, Color(0.94, 0.92, 0.86))
 			"post":
 				# A sniff post: a round timber post with a chamfered top, the
 				# grain showing, and the bare patch every dog in the park has
 				# worn round its foot.
 				c.draw_circle(p, 15.0, Color(0.44, 0.40, 0.28, 0.40))
-				c.draw_rect(Rect2(p.x - 5.0, p.y - 26.0, 10.0, 30.0), Color(0.40, 0.29, 0.19))
-				c.draw_rect(Rect2(p.x - 5.0, p.y - 26.0, 4.0, 30.0), Color(0.50, 0.37, 0.24))
+				var pcol := Color(0.28, 0.42, 0.26) if lvl in ["trail", "besos"] else Color(0.40, 0.29, 0.19)
+				c.draw_rect(Rect2(p.x - 5.0, p.y - 26.0, 10.0, 30.0), pcol)
+				c.draw_rect(Rect2(p.x - 5.0, p.y - 26.0, 4.0, 30.0), pcol.lightened(0.22))
+				if lvl in ["trail", "besos"]:
+					# white-and-green Parc Natural / Parc Fluvial waymarker band
+					c.draw_rect(Rect2(p.x - 5.0, p.y - 18.0, 10.0, 3.0), Color(0.92, 0.92, 0.88))
+				elif lvl == "site":
+					# high-vis yellow/orange survey band near the top
+					c.draw_rect(Rect2(p.x - 5.0, p.y - 22.0, 10.0, 5.0), Color(0.96, 0.54, 0.14))
 				for gi in range(3):
 					c.draw_line(Vector2(p.x - 2.0 + float(gi) * 2.5, p.y - 24.0),
 						Vector2(p.x - 2.0 + float(gi) * 2.5, p.y + 2.0),
-						Color(0.34, 0.25, 0.16, 0.7), 1.0)
+						pcol.darkened(0.18), 1.0)
 				# the cut top, seen from above: end grain in rings
 				c.draw_circle(p + Vector2(0.0, -27.0), 7.0, Color(0.60, 0.47, 0.30))
 				c.draw_arc(p + Vector2(0.0, -27.0), 4.0, 0, TAU, 10, Color(0.48, 0.36, 0.23), 1.4)

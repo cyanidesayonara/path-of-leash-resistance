@@ -49,10 +49,11 @@ bespoke landmarks across the remaining walks).
 The 2026-10-22/23 roster check and visual polish pass covered all seventeen
 campaign walks: selftest, autowalk, freedom bounds, dedicated per-walk
 visual polish tests, and desktop mid-walk captures. Phone, pad and a fresh
-web-perf pass were not part of that check. A hand-authored off-leash prop
-list per walk stays open in `docs/LEVEL_DESIGN.md` on purpose.
+web-perf pass were not part of that check. Every walk in `Game.LEVELS` now
+also has its own hand-authored off-leash prop list (`LevelBuild.FREEDOM_PROPS`),
+completing all items in `docs/LEVEL_DESIGN.md` under `## Order`.
 
-**Board:** nothing is awaiting acceptance (all merged PRs through #298 are
+**Board:** nothing is awaiting acceptance (all merged PRs through #300 are
 marked `Done` on Project #4). The open cards are later work,
 not this tag: #260 Steam, #237 Montjuïc extras, #170 chase finales, #147
 platforms, #13 a real phone, #12 whether SCARED belongs in the sweeper

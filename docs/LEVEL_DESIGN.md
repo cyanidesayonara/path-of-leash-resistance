@@ -685,12 +685,10 @@ Done by the 2026-10-23 roster & visual polish pass:
    pass across every walk in the roster (including El Besos's riprap
    embankment, inflatable weir, flood wall stairs and waymarker totems). La
    Neteja's chase and the beach's own shore are in.
+7. Each off-leash space has its kind, and its own hand-authored prop list
+   (`LevelBuild.FREEDOM_PROPS`) and walk-specific furniture rendering rather
+   than a single seeded generator.
 8. El Barri is the first walk. The tutorial is stations on it.
-
-Still open:
-
-7. Each off-leash space has its kind. The props are still one generator
-   with a flavour, not a hand-authored list per walk.
 
 Path shapes: bends are in use. El Parc's lake is in, and Les Obres has its
 trench and plank. Stages 4 and 5 are still their own projects. El Gotic's
