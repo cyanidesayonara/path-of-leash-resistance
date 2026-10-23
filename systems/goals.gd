@@ -47,6 +47,8 @@ const LEVEL_GOAL_IDS := {
 	"partit": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "march", "scarf", "kickabout", "fulltime", "prize"],
 	# El Port: harbor wharf, seagulls, fish scraps, iron bollards
 	"port": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "gulls", "bollard", "combo", "prize"],
+	# Plaça Reial: palm trees, Gaudi lampposts, Three Graces fountain, guitar busker
+	"reial": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "gaudi", "fountain", "combo", "prize"],
 }
 
 
@@ -91,6 +93,8 @@ static func defs(m: Node2D) -> Dictionary:
 		"kickabout": {"text": "Score a goal in the kids' street game", "target": 1, "fn": func() -> int: return 1 if m.kickabout != null and m.kickabout.scored else 0},
 		"gulls": {"text": "Startle %d harbor seagulls into flight", "target": 3, "fn": func() -> int: return m.port_gulls_startled},
 		"bollard": {"text": "Wrap the leash around an iron mooring bollard", "target": 1, "fn": func() -> int: return 1 if m.port_bollard_wrapped else 0},
+		"gaudi": {"text": "Wrap the leash around a Gaudi dragon lamppost", "target": 1, "fn": func() -> int: return 1 if m.reial_gaudi_wrapped else 0},
+		"fountain": {"text": "Drink fresh water from the Three Graces fountain", "target": 1, "fn": func() -> int: return 1 if m.reial_fountain_drank else 0},
 	}
 
 

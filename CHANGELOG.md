@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-10-23 - Walk 19: Plaça Reial (The Arcaded Royal Square)
+
+- **Walk 19: Plaça Reial** (`systems/reial.gd`, `autoload/game.gd`, `audio/music.gd`, `systems/goals.gd`, `main.gd`, `world/level_build.gd`):
+  - Added campaign Walk 19: **Plaça Reial** (unlocks at 31 career stars or freely selectable in Free Play mode).
+  - Authentic 19th-century Gothic Quarter royal plaza architecture: neoclassical arcaded porticoes (*els porxos*) with terracotta tile flanking the square, polished granite flagstones with radial decorative cream bands, and overhead Washingtonia royal palm trees whose lush fronds sway in the breeze.
+  - Antoni Gaudí's historic six-armed dragon-helmet lampposts (*Fanals de Gaudí* - his first public commission in Barcelona, 1879) mounted on red marble and bronze plinths with 26.0 vault/swing radius, registered in `m.poles` for slingshot maneuvers (`GAUDÍ SLINGSHOT!`).
+  - *Font de les Tres Gràcies* central cast-iron fountain with drinking trough interaction (`FOUNTAIN DRINK! +3`) and circular island obstacle directing pedestrian traffic around the perimeter.
+  - Outdoor tapas terraces with marble bistro tables, chairs, and dropped snacks (hot churros and tapas crumbs).
+  - Spanish guitar busker performing under the west arcade with an open guitar case and tossed coins; barking near the busker triggers a musical duet interaction (`¡OLÉ! GUITAR DUET!`).
+  - Warm Spanish rumba flamenco music track (`audio/music.gd`): Spanish classical guitar lead with flute countermelody, rhythmic handclaps (*palmas*), and acoustic upright bass.
+  - 12 custom goals in `LEVEL_GOAL_IDS["reial"]` including `gaudi` (wrapping the leash on a Gaudí lamppost) and `fountain` (drinking fresh water from the Three Graces fountain).
+  - Added `tests/test_reial.gd` (29 checks, 0 failures), integrated into CI smoke and soak matrices (`soak.yml`).
+
 ## 2026-10-23 - HUD and In-Game Messaging System Polish
 
 - HUD Iconography & Visual Polish (`hud/ui_icons.gd`, `hud/hud_panel.gd`, `hud/goals_card.gd`, `hud/results_panel.gd`):
