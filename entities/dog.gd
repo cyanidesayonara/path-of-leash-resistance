@@ -77,6 +77,10 @@ var face_lock := Vector2.ZERO
 # planted out ahead, back paws spread
 var brace := 0.0
 const BRACE_RATE := 4.0
+# live dog actions (0..1), eased by main while she digs, sniffs, or drinks
+var digging := 0.0
+var sniffing := 0.0
+var drinking := 0.0
 
 
 func setup(m: Node2D) -> void:
@@ -381,8 +385,14 @@ func _draw_shapes() -> void:
 	var fur_dark: Color = cd.dark
 	var grizzle: Color = cd.mark
 	var crouching := peeing or squat_t > 0.0 or squat_ui > 0.0
+	var dig_u := clampf(digging, 0.0, 1.0)
+	var sniff_u := clampf(sniffing, 0.0, 1.0)
+	var drink_u := clampf(drinking, 0.0, 1.0)
+	var bk := sin(clampf(bark_anim / 0.35, 0.0, 1.0) * PI) if bark_anim > 0.0 else 0.0
+	var mood_id := int(main.mood.active) if (main != null and main.mood != null) else 0
+	var mood_int := clampf(float(main.mood.intensity), 0.0, 1.0) if (main != null and main.mood != null) else 0.0
 	var side := facing.orthogonal()
-	var shoulder := facing * 6.0
+	var shoulder := facing * (6.0 - 1.5 * dig_u)
 	var hside := hip_dir.orthogonal()
 	if swimming:
 		# expanding wake rings behind her happy paddling self
@@ -392,19 +402,37 @@ func _draw_shapes() -> void:
 	# THE WIGGLE: the rump swings with the gait
 	var wiggle := hside * sin(gait) * clampf(velocity.length() / SPEED, 0.0, 1.0) * 2.6
 	var hip := shoulder + hip_dir * 17.0 + wiggle
-	# whippy tail: three tapering segments with a traveling wave
+	# whippy tail: three tapering segments with a traveling wave, tuned by mood and action
 	var wag_speed := 3.0 if crouching else 11.0
-	var tp := hip + hip_dir * 4.0
+	var wag_amp := 0.15 if crouching else 0.38
+	var tail_len_scale := 1.0
+	if not crouching:
+		if turbo_active or mood_id == 3: # ZOOMIES
+			wag_speed = lerpf(wag_speed, 18.5, maxf(mood_int, 1.0 if turbo_active else 0.0))
+			wag_amp = lerpf(wag_amp, 0.50, maxf(mood_int, 1.0 if turbo_active else 0.0))
+		elif mood_id == 1: # SCARED: tucked low and tight
+			wag_speed = lerpf(wag_speed, 15.0, mood_int)
+			wag_amp = lerpf(wag_amp, 0.08, mood_int)
+			tail_len_scale = lerpf(1.0, 0.55, mood_int)
+		elif mood_id == 4: # TIRED: slow, low wag
+			wag_speed = lerpf(wag_speed, 5.5, mood_int)
+			wag_amp = lerpf(wag_amp, 0.20, mood_int)
+		elif sniff_u > 0.05 or dig_u > 0.05:
+			wag_speed = maxf(wag_speed, 15.5)
+			wag_amp = maxf(wag_amp, 0.44)
+	var tp := hip + hip_dir * (4.0 * tail_len_scale)
 	var tdir := hip_dir
 	var widths: Array[float] = [3.2, 2.4, 1.7]
 	for s in range(3):
-		tdir = tdir.rotated(sin(t * wag_speed - s * 0.9) * (0.15 if crouching else 0.38))
-		var nxt := tp + tdir * (9.0 - s * 1.5)
+		tdir = tdir.rotated(sin(t * wag_speed - s * 0.9) * wag_amp)
+		var nxt := tp + tdir * (9.0 - s * 1.5) * tail_len_scale
 		_b.draw_line(tp, nxt, fur_dark, widths[s])
 		tp = nxt
-	# four legs, trot gait: diagonal pairs move together, tucked when crouching
+	# four legs, trot gait: diagonal pairs move together, tucked when crouching,
+	# scrabbling rapidly in front when digging up a buried bone
 	var amp := 0.0 if crouching else clampf(velocity.length() / SPEED, 0.0, 1.0) * 5.5 * _stride()
 	var ph := sin(gait)
+	var dig_scrabble := sin(t * 28.0) * 4.8 * dig_u
 	# white-tipped paws, like she stepped in paint and regrets nothing
 	var paw := Color(0.78, 0.76, 0.73)
 	if surface == Surfaces.S.MUD:
@@ -412,9 +440,15 @@ func _draw_shapes() -> void:
 		paw = Color(0.36, 0.28, 0.20)
 	# braced (the rope tug), the front paws dig in out ahead and the back
 	# paws spread
-	var front_reach := 6.0 + brace * 3.5
-	_b.draw_circle(shoulder + side * 7.5 + facing * (front_reach + ph * amp), 3.0, paw)
-	_b.draw_circle(shoulder - side * 7.5 + facing * (front_reach - ph * amp), 3.0, paw)
+	var front_reach := 6.0 + brace * 3.5 + 2.5 * dig_u
+	_b.draw_circle(shoulder + side * 7.5 + facing * (front_reach + ph * amp + dig_scrabble), 3.0, paw)
+	_b.draw_circle(shoulder - side * 7.5 + facing * (front_reach - ph * amp - dig_scrabble), 3.0, paw)
+	if dig_u > 0.05:
+		# clods of earth kicked back behind her scrabbling front paws
+		for ci in range(3):
+			var cp := fmod(t * 7.5 + float(ci) * 0.33, 1.0)
+			var clod_at := shoulder - facing * (4.0 + cp * 15.0) + side * (float(ci - 1) * 6.5)
+			_b.draw_circle(clod_at, (2.6 - cp * 1.4) * dig_u, Color(0.38, 0.29, 0.20, 0.75 * (1.0 - cp) * dig_u))
 	var rear_reach := 1.0 if crouching else 4.0
 	var rear_spread := 7.0 + brace * 1.5
 	_b.draw_circle(hip + hside * rear_spread - hip_dir * (rear_reach - ph * amp * 0.8), 3.2, paw)
@@ -451,18 +485,36 @@ func _draw_shapes() -> void:
 	_b.draw_circle(shoulder, 2.2, Color(0.3, 0.3, 0.32))
 	var neck := shoulder + facing * 6.5
 	_b.draw_line(neck + side * 5.5, neck - side * 5.5, col, 3.0)
-	# head with a LONG street-dog nose; grey on the crown and the face
-	var head := shoulder + facing * 10.0
+	# head with a LONG street-dog nose; stretches forward and twitches when
+	# sniffing, dips when digging/drinking, surges forward on a bark
+	var sniff_twitch := side * (sin(t * 22.0) * 1.5 * sniff_u)
+	var head := shoulder + facing * (10.0 + 2.4 * sniff_u + 1.5 * drink_u - 1.6 * dig_u + 2.0 * bk) + sniff_twitch
 	var flop := sin(gait) * 1.6
+	var ear_perk := 2.2 * sniff_u + 1.8 * bk - (2.4 * mood_int if mood_id == 1 else 0.0)
+	var ear_flare := 1.8 * bk + (0.9 * mood_int if mood_id == 4 else 0.0)
 	# big floppy ears, under the skull, swinging slightly with the stride
 	for sg: float in [-1.0, 1.0]:
 		# hanging back along the sides of her head, the tips flapping
 		var root := head + side * 5.0 * sg + facing * 1.0
-		var tip := head + side * (7.6 + flop * 0.7 * sg) * sg - facing * 8.0
+		var tip := head + side * (7.6 + ear_flare + flop * 0.7 * sg) * sg - facing * (8.0 - ear_perk)
 		_b.draw_colored_polygon(PackedVector2Array([root + facing * 1.6 - side * sg * 1.0, root + side * sg * 1.6,
 			tip + side * sg * 1.8, tip - facing * 2.0, tip - side * sg * 1.6]), fur_dark)
 	_b.draw_circle(head + rim * 0.7, 7.0, fur_dark.darkened(0.25))
 	_b.draw_circle(head, 7.0, fur)
+	# open jaw and pink tongue during a bark or while lapping water
+	if bk > 0.05:
+		var jaw_at := head + facing * (9.5 + bk * 2.2)
+		_b.draw_circle(jaw_at, 3.2, Color(0.38, 0.10, 0.12))
+		_b.draw_circle(jaw_at + facing * 1.2, 2.1, Color(0.92, 0.48, 0.54))
+	elif drink_u > 0.05:
+		var lap := maxf(0.0, sin(t * 16.0)) * drink_u
+		if lap > 0.05:
+			_b.draw_circle(head + facing * (11.0 + lap * 3.8), 2.0, Color(0.94, 0.52, 0.58))
+		for di in range(2):
+			var dp := fmod(t * 3.4 + float(di) * 0.5, 1.0)
+			var drop_dir := side * (1.0 if di == 0 else -1.0)
+			_b.draw_circle(head + facing * 11.5 + drop_dir * (3.0 + dp * 6.0), 1.4 * (1.0 - dp) * drink_u,
+				Color(0.76, 0.90, 1.0, 0.65 * (1.0 - dp) * drink_u))
 	# the muzzle: tapering out to the nose, not a stick
 	var muzzle := PackedVector2Array([head + side * 4.6 + facing * 2.0, head + side * 2.2 + facing * 10.5,
 		head - side * 2.2 + facing * 10.5, head - side * 4.6 + facing * 2.0])
@@ -480,8 +532,14 @@ func _draw_shapes() -> void:
 		_b.draw_line(eye - facing * 1.8 + side * sg2 * 1.6, eye - facing * 2.3 - side * sg2 * 1.4,
 			Color(grizzle, 0.75), 1.2)
 	# the nose, with the shine on it
-	_b.draw_circle(head + facing * 11.0, 2.6, Color(0.05, 0.05, 0.06))
-	_b.draw_circle(head + facing * 11.0 + LIGHT_DIR * 0.9, 0.9, Color(0.55, 0.55, 0.58))
+	var nose_at := head + facing * 11.0 + side * (sin(t * 28.0) * 0.7 * sniff_u)
+	_b.draw_circle(nose_at, 2.6, Color(0.05, 0.05, 0.06))
+	_b.draw_circle(nose_at + LIGHT_DIR * 0.9, 0.9, Color(0.55, 0.55, 0.58))
+	if sniff_u > 0.05:
+		for si in range(2):
+			var sp := 1.0 - fmod(t * 2.4 + float(si) * 0.5, 1.0)
+			_b.draw_circle(nose_at + facing * (2.5 + sp * 7.0) + side * (float(si * 2 - 1) * 2.5 * sp),
+				(1.2 + sp * 1.0) * sniff_u, Color(0.88, 0.92, 0.76, 0.45 * (1.0 - sp) * sniff_u))
 	if peeing:
 		for i in range(2):
 			var a := t * 5.0 + i * 2.4

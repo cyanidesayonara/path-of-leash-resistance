@@ -58,8 +58,21 @@ func _process(delta: float) -> void:
 		return
 	main.locked_nudge = maxf(0.0, float(main.locked_nudge) - delta)
 	var s := Flow.screen(main)
+	if s != _drawn and s != "walking":
+		_open_t = 0.0
+		if s == "shop":
+			_shop_t = 0.45
+	_open_t = minf(1.0, _open_t + delta / OPEN_S)
 	if s == "shop":
+		_shop_t += delta
 		main.shop_preview.position = shop_rect().position + Vector2(218.0, 262.0)
+		var ang := -PI * 0.5 + sin(_shop_t * 0.85) * 0.68
+		main.shop_preview.facing = Vector2.from_angle(ang)
+		main.shop_preview.hip_dir = -main.shop_preview.facing.rotated(sin(_shop_t * 1.7) * 0.08)
+		main.shop_preview.gait = _shop_t * 2.2
+		main.shop_preview.hop = maxf(0.0, float(main.shop_preview.hop) - delta * 36.0)
+		main.shop_preview.bark_anim = maxf(0.0, float(main.shop_preview.bark_anim) - delta)
+		main.shop_preview.queue_redraw()
 	# setting off: the screen that was up fades as the walk begins, rather
 	# than blinking out. The name stays behind; it is part of the ground.
 	if s == "walking" and _drawn in ["title", "walk", "details"]:
@@ -76,9 +89,18 @@ func _process(delta: float) -> void:
 
 
 const FADE_S := 0.6
+const OPEN_S := 0.14
 var _drawn := ""
 var _fade := 0.0
 var _fade_from := ""
+var _open_t := 1.0
+var _shop_t := 0.45
+
+
+func _card_pop(center: Vector2) -> void:
+	var u := 1.0 - pow(1.0 - clampf(_open_t, 0.0, 1.0), 3.0)
+	var sc := lerpf(0.965, 1.0, u)
+	draw_set_transform(center - center * sc, 0.0, Vector2(sc, sc))
 
 
 func _draw() -> void:
@@ -375,51 +397,77 @@ func _swatch(at: Vector2, kind: String, key: String, d: Dictionary) -> void:
 			draw_circle(at + Vector2(3.0, 4.0), 5.0, d.mark)
 
 
+static func progress_row_h(vs: Vector2, row_count: int) -> float:
+	var top_limit := 16.0
+	var bottom_limit := vs.y - Kit.BAR_FROM_BOTTOM - 16.0
+	var avail := maxf(120.0, bottom_limit - top_limit - 102.0)
+	return clampf(avail / float(maxi(row_count, 1)), 12.0, PROGRESS_ROW_H)
+
+
+static func progress_rect(vs: Vector2, row_count: int) -> Rect2:
+	var w := minf(PROGRESS_W, vs.x - 80.0)
+	var rh := progress_row_h(vs, row_count)
+	var h := 88.0 + float(row_count) * rh + 14.0
+	var top_limit := 16.0
+	var bottom_limit := vs.y - Kit.BAR_FROM_BOTTOM - 16.0
+	var y0 := clampf((top_limit + bottom_limit - h) * 0.5, top_limit, maxf(top_limit, bottom_limit - h))
+	return Rect2(vs.x * 0.5 - w * 0.5, y0, w, h)
+
+
 func _progress(vs: Vector2) -> void:
 	var acc := Kit.accent("progress")
 	var rows := Flow.progress_rows(main)
-	var w := minf(PROGRESS_W, vs.x - 80.0)
-	var h := 120.0 + float(rows.size()) * PROGRESS_ROW_H + 18.0
-	var r := Rect2(vs.x * 0.5 - w * 0.5, maxf(20.0, vs.y * 0.5 - h * 0.5 - 24.0), w, h)
+	var rh := progress_row_h(vs, rows.size())
+	var r := progress_rect(vs, rows.size())
+	var w := r.size.x
+	_card_pop(r.get_center())
 	Kit.card(self, r, acc, 16)
-	Kit.heading(self, r.position + Vector2(36.0, 52.0), "YOUR WALKS", 28, acc)
-	Kit.purse(self, Vector2(r.end.x - 36.0, r.position.y + 50.0), Game.total_stars(), Game.total_bones)
+	Kit.heading(self, r.position + Vector2(36.0, 44.0), "YOUR WALKS", 26, acc)
+	Kit.purse(self, Vector2(r.end.x - 36.0, r.position.y + 42.0), Game.total_stars(), Game.total_bones)
 	var f := Kit.display()
 	var body := Kit.body()
 	var c_stars := r.position.x + w * 0.46
 	var c_goals := r.position.x + w * 0.60
 	var c_best := r.position.x + w * 0.76
-	var hy := r.position.y + 94.0
+	var hy := r.position.y + 78.0
 	for col: Array in [[r.position.x + 36.0, "WALK"], [c_stars, "STARS"], [c_goals, "GOALS"], [c_best, "BEST"]]:
 		draw_string(f, Vector2(float(col[0]), hy), String(col[1]), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Kit.INK_FAINT)
-	var y := hy + 12.0
+	var y := hy + 10.0
+	var font_px := 17 if rh >= 28.0 else 15
+	var sub_px := 15 if rh >= 28.0 else 14
 	for i in range(rows.size()):
 		var row: Dictionary = rows[i]
-		var by := y + float(i) * PROGRESS_ROW_H
-		if i % 2 == 0:
-			draw_rect(Rect2(r.position.x + 20.0, by, w - 40.0, PROGRESS_ROW_H), Color(1, 1, 1, 0.03))
-		var base := by + 22.0
+		var by := y + float(i) * rh
+		var current := String(row.id) == Game.level_id
+		if current:
+			draw_rect(Rect2(r.position.x + 20.0, by, w - 40.0, rh), Color(acc.r, acc.g, acc.b, 0.11))
+			draw_rect(Rect2(r.position.x + 20.0, by, 3.0, rh), acc)
+		elif i % 2 == 0:
+			draw_rect(Rect2(r.position.x + 20.0, by, w - 40.0, rh), Color(1, 1, 1, 0.03))
+		var base := by + rh * 0.70
 		var locked := bool(row.locked)
 		var ncol: Color = Kit.INK_SOFT if locked else Kit.INK
-		draw_string(f, Vector2(r.position.x + 36.0, base), String(row.name), HORIZONTAL_ALIGNMENT_LEFT, -1, 18, ncol)
-		var nw := Kit.text_w(f, String(row.name), 18)
+		draw_string(f, Vector2(r.position.x + 36.0, base), String(row.name), HORIZONTAL_ALIGNMENT_LEFT, -1, font_px, ncol)
+		var nw := Kit.text_w(f, String(row.name), font_px)
 		var gloss_w := maxf(40.0, c_stars - (r.position.x + 54.0 + nw))
 		draw_string(body, Vector2(r.position.x + 46.0 + nw, base), String(row.gloss), HORIZONTAL_ALIGNMENT_LEFT,
-			gloss_w, 16, Kit.INK_SOFT)
+			gloss_w, sub_px, Kit.INK_SOFT)
 		if locked:
 			Kit.lock(self, Vector2(c_stars + 8.0, base - 5.0), 11.0, Kit.INK_FAINT)
 			draw_string(body, Vector2(c_stars + 24.0, base), "opens at %d stars" % int(row.gate),
-				HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Kit.INK_SOFT)
+				HORIZONTAL_ALIGNMENT_LEFT, -1, sub_px, Kit.INK_SOFT)
 			continue
 		for s in range(3):
 			Icons.draw_star(self, Vector2(c_stars + 8.0 + float(s) * 20.0, base - 5.0), 7.5, s < int(row.stars))
 		var gt := maxi(1, int(row.goals_total))
+		var all_goals := int(row.goals) >= gt and gt > 0
 		draw_string(body, Vector2(c_goals, base), "%d / %d" % [int(row.goals), int(row.goals_total)],
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Kit.INK_SOFT)
+			HORIZONTAL_ALIGNMENT_LEFT, -1, sub_px, Kit.GOOD if all_goals else Kit.INK_SOFT)
 		Icons.draw_meter(self, Vector2(c_goals + 54.0, base - 9.0), 50.0, 6.0, float(row.goals) / float(gt),
-			Kit.accent("progress"))
+			Kit.GOLD if all_goals else Kit.accent("progress"))
 		draw_string(body, Vector2(c_best, base), String(row.best) if String(row.best) != "" else "-",
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Kit.INK_SOFT)
+			HORIZONTAL_ALIGNMENT_LEFT, -1, sub_px, Kit.INK_SOFT)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 func _pause(vs: Vector2) -> void:
@@ -428,6 +476,7 @@ func _pause(vs: Vector2) -> void:
 	var rows := (labels.size() + Flow.PAUSE_COLS - 1) / Flow.PAUSE_COLS
 	var h := 110.0 + float(rows) * (PAUSE_CELL_H + PAUSE_GAP) + 14.0
 	var r := Rect2(vs.x * 0.5 - PAUSE_W * 0.5, vs.y * 0.5 - h * 0.5 - 20.0, PAUSE_W, h)
+	_card_pop(r.get_center())
 	Kit.card(self, r, acc)
 	Kit.heading(self, Vector2(r.position.x, r.position.y + 50.0), "PAUSED", 30, acc,
 		HORIZONTAL_ALIGNMENT_CENTER, PAUSE_W)
@@ -448,39 +497,65 @@ func _pause(vs: Vector2) -> void:
 			Kit.chevron(self, Vector2(cell.position.x + 20.0, cell.get_center().y), 8.0, acc)
 		draw_string(f, Vector2(cell.position.x + 36.0, cell.get_center().y + 7.0), String(labels[i]),
 			HORIZONTAL_ALIGNMENT_LEFT, cw - 44.0, 19, Kit.INK if picked else Kit.INK_SOFT)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+const WALKCARD_COL_SPLIT := 6
+const WALKCARD_TWO_COL_W := 860.0
+
+
+static func walk_card_rect(vs: Vector2, goal_count: int, has_lesson := false) -> Rect2:
+	var two_col := not has_lesson and goal_count > WALKCARD_COL_SPLIT
+	var per_col := int(ceil(float(goal_count) / 2.0)) if two_col else (1 if has_lesson else maxi(goal_count, 1))
+	var w := minf(WALKCARD_TWO_COL_W if two_col else WALKCARD_W, vs.x - 48.0)
+	var h := 130.0 + float(per_col) * 28.0 + 20.0
+	var bottom_limit := vs.y - Kit.BAR_FROM_BOTTOM - 16.0
+	var y0 := clampf(vs.y * 0.5 - h * 0.5 - 20.0, 16.0, maxf(16.0, bottom_limit - h))
+	return Rect2(vs.x * 0.5 - w * 0.5, y0, w, h)
 
 
 func _walk_card(vs: Vector2) -> void:
 	var acc := Kit.accent("pause")
 	var wc := Flow.walk_card(main)
 	var goals: Array = wc.goals
-	var lines := goals.size() if String(wc.lesson) == "" else 1
-	var h := 130.0 + float(maxi(lines, 1)) * 30.0 + 20.0
-	var r := Rect2(vs.x * 0.5 - WALKCARD_W * 0.5, vs.y * 0.5 - h * 0.5 - 20.0, WALKCARD_W, h)
+	var has_lesson := String(wc.lesson) != ""
+	var two_col := not has_lesson and goals.size() > WALKCARD_COL_SPLIT
+	var per_col := int(ceil(float(goals.size()) / 2.0)) if two_col else maxi(goals.size(), 1)
+	var r := walk_card_rect(vs, goals.size(), has_lesson)
+	var w := r.size.x
+	_card_pop(r.get_center())
 	Kit.card(self, r, acc)
 	Kit.heading(self, Vector2(r.position.x, r.position.y + 52.0), String(wc.name).to_upper(), 30, acc,
-		HORIZONTAL_ALIGNMENT_CENTER, WALKCARD_W)
+		HORIZONTAL_ALIGNMENT_CENTER, w)
 	draw_string(Kit.body(), Vector2(r.position.x, r.position.y + 82.0), "%s    %s" % [String(wc.gloss), String(wc.time)],
-		HORIZONTAL_ALIGNMENT_CENTER, WALKCARD_W, 18, Kit.INK)
+		HORIZONTAL_ALIGNMENT_CENTER, w, 18, Kit.INK)
 	var y := r.position.y + 122.0
 	var body := Kit.body()
-	if String(wc.lesson) != "":
+	if has_lesson:
 		draw_string(body, Vector2(r.position.x, y), String(wc.lesson), HORIZONTAL_ALIGNMENT_CENTER,
-			WALKCARD_W, 17, Kit.INK_SOFT)
+			w, 17, Kit.INK_SOFT)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		return
 	if goals.is_empty():
 		draw_string(body, Vector2(r.position.x, y), "No goals on this walk.", HORIZONTAL_ALIGNMENT_CENTER,
-			WALKCARD_W, 17, Kit.INK_FAINT)
+			w, 17, Kit.INK_FAINT)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		return
-	for g: Dictionary in goals:
+	var col_w := (w - 48.0) / (2.0 if two_col else 1.0)
+	for i in range(goals.size()):
+		var g: Dictionary = goals[i]
+		var col := 0 if not two_col else (0 if i < per_col else 1)
+		var ry := y + float(i - col * per_col) * 28.0
+		var rx := r.position.x + 24.0 + float(col) * col_w
 		var done := bool(g.done)
-		Icons.draw_check(self, Vector2(r.position.x + 32.0, y - 11.0), 14.0, int(g.state))
-		draw_string(body, Vector2(r.position.x + 56.0, y), String(g.text), HORIZONTAL_ALIGNMENT_LEFT,
-			WALKCARD_W - 180.0, 17, Kit.INK_FAINT if done else Kit.INK)
+		Icons.draw_check(self, Vector2(rx + 6.0, ry - 11.0), 14.0, int(g.state))
+		var count_room := 64.0 if (int(g.target) > 1 and not done) else 12.0
+		draw_string(body, Vector2(rx + 28.0, ry), String(g.text), HORIZONTAL_ALIGNMENT_LEFT,
+			col_w - 28.0 - count_room, 16 if two_col else 17, Kit.INK_FAINT if done else Kit.INK)
 		if int(g.target) > 1 and not done:
-			draw_string(body, Vector2(r.end.x - 110.0, y), "%d / %d" % [int(g.got), int(g.target)],
-				HORIZONTAL_ALIGNMENT_RIGHT, 80.0, 15, Kit.INK_SOFT)
-		y += 30.0
+			draw_string(body, Vector2(rx + col_w - 68.0, ry), "%d / %d" % [int(g.got), int(g.target)],
+				HORIZONTAL_ALIGNMENT_RIGHT, 56.0, 14, Kit.INK_SOFT)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 func _confirm(vs: Vector2) -> void:
@@ -492,6 +567,7 @@ func _confirm(vs: Vector2) -> void:
 	var extra := 16.0 + FIRST_ROW_H * float(opts.size()) + 44.0 if first else 0.0
 	var h := 150.0 + extra + 26.0 * float(lines.size() - 1)
 	var r := Rect2(vs.x * 0.5 - CONFIRM_W * 0.5, vs.y * 0.5 - h * 0.5 - 20.0, CONFIRM_W, h)
+	_card_pop(r.get_center())
 	Kit.card(self, r, acc)
 	Kit.heading(self, Vector2(r.position.x, r.position.y + 56.0), String(c.title), 28, acc,
 		HORIZONTAL_ALIGNMENT_CENTER, CONFIRM_W)
@@ -522,6 +598,7 @@ func _confirm(vs: Vector2) -> void:
 			Icons.Check.DONE_NOW if not Game.ask_tutorial else Icons.Check.OPEN)
 		draw_string(Kit.body(), Vector2(x0 + box + 10.0, by + 13.0), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 16,
 			Kit.INK if not Game.ask_tutorial else Kit.INK_SOFT)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 func _notice(vs: Vector2) -> void:
@@ -531,6 +608,7 @@ func _notice(vs: Vector2) -> void:
 	var body := _wrap_lines(n.body, Kit.body(), 18, w - 64.0)
 	var h := 92.0 + float(body.size()) * 26.0 + 24.0
 	var r := Rect2(vs.x * 0.5 - w * 0.5, vs.y * 0.5 - h * 0.5 - 30.0, w, h)
+	_card_pop(r.get_center())
 	Kit.card(self, r, acc, 16)
 	Kit.heading(self, Vector2(r.position.x, r.position.y + 56.0), String(n.title), 30, acc,
 		HORIZONTAL_ALIGNMENT_CENTER, w)
@@ -539,6 +617,7 @@ func _notice(vs: Vector2) -> void:
 		draw_string(Kit.body(), Vector2(r.position.x, y), line, HORIZONTAL_ALIGNMENT_CENTER, w, 18,
 			Kit.INK)
 		y += 26.0
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 # break lines that would run past the card, on spaces, so a narrow window

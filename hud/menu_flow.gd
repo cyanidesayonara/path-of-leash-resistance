@@ -768,6 +768,9 @@ static func shop_select(m: Node2D) -> void:
 	if Game.is_owned(kind, key) or Game.buy(kind, key):
 		equip(m, kind, key)
 		Game.save_records()
+		if m.shop_preview != null:
+			m.shop_preview.hop = 9.0
+			m.shop_preview.bark_anim = 0.28
 		Sfx.play("ui")
 	else:
 		m.locked_nudge = 0.35

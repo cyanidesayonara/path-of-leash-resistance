@@ -12343,10 +12343,14 @@ func _pickups(delta: float) -> void:
 			float_text(carry_drop, "delivered! +10", Color(0.8, 1.0, 0.8))
 			_slowmo()
 			_update_hud()
+	var digging_now := false
+	var sniffing_now := false
+	var trough_drinking := false
 	for h in hydrants:
 		if h.done:
 			continue
 		if dog.global_position.distance_to(h.pos) < 55.0 and dog.velocity.length() < 60.0:
+			sniffing_now = true
 			h.progress += delta
 			if h.progress >= 0.8:
 				h.done = true
@@ -12363,6 +12367,7 @@ func _pickups(delta: float) -> void:
 			continue
 		if dog.global_position.distance_to(nm.pos) < 30.0 and dog.velocity.length() < 70.0:
 			nm.sniffed = true
+			dog.sniffing = maxf(dog.sniffing, 0.85)
 			sniffs_done += 1
 			bones += 2
 			Sfx.play("mark", 1.3)
@@ -12374,6 +12379,7 @@ func _pickups(delta: float) -> void:
 	if furgoneta.x < INF and not furgoneta_sniffed:
 		if dog.global_position.distance_to(furgoneta) < 82.0 and dog.velocity.length() < 90.0:
 			furgoneta_sniffed = true
+			dog.sniffing = 1.0
 			bones += 12
 			sniffs_done += 1
 			Sfx.play("star", 0.9)
@@ -12405,6 +12411,7 @@ func _pickups(delta: float) -> void:
 			match String(pp.kind):
 				"dig":
 					if d < 30.0 and dog.velocity.length() < 70.0:
+						digging_now = true
 						pp.prog = float(pp.prog) + delta
 						_freedom_dirty()
 						if float(pp.prog) >= 1.1:
@@ -12422,6 +12429,7 @@ func _pickups(delta: float) -> void:
 							_freedom_dirty()
 				"shrub", "post", "rock", "driftwood", "tyre", "planter", "log":
 					if d < 34.0 and dog.velocity.length() < 80.0:
+						sniffing_now = true
 						pp.prog = float(pp.prog) + delta
 						_freedom_dirty()
 						if float(pp.prog) >= 0.7:
@@ -12439,6 +12447,7 @@ func _pickups(delta: float) -> void:
 							_freedom_dirty()
 				"trough":
 					if d < 34.0:
+						trough_drinking = true
 						drunk_amount += 0.34 * delta
 						pee = minf(1.0, pee + 0.3 * delta)
 						# the sound of a dog drinking, and a word when she has
@@ -12448,6 +12457,10 @@ func _pickups(delta: float) -> void:
 							lap_t = 0.32
 							Sfx.play("squelch", 1.9, -18.0)
 						_praise_drink(pp.pos)
+	dog.digging = move_toward(dog.digging, 1.0 if digging_now else 0.0, delta * (9.0 if digging_now else 6.0))
+	dog.sniffing = move_toward(dog.sniffing, 1.0 if sniffing_now else 0.0, delta * (9.0 if sniffing_now else 5.0))
+	if trough_drinking:
+		dog.drinking = minf(1.0, dog.drinking + delta * 15.0)
 	# the candy you should not have: chocolate is poison to dogs, so
 	# wolfing it costs you (and your clean-tummy goal)
 	for c in candy:
@@ -12466,11 +12479,17 @@ func _bodily(delta: float) -> void:
 	# and once per walk nature calls for a longer stop.
 	# No free refills: the tank only refills at water - fountains,
 	# bowls, the beach shower - drunk standing still, like a lady.
+	var fountain_drinking := false
 	for f in fountains:
 		if dog.global_position.distance_to(f) < 34.0 and dog.velocity.length() < 40.0:
+			fountain_drinking = true
 			pee = minf(1.0, pee + 0.3 * delta)
 			drunk_amount += 0.3 * delta
 			_praise_drink(f)
+	if fountain_drinking:
+		dog.drinking = move_toward(dog.drinking, 1.0, delta * 9.0)
+	else:
+		dog.drinking = move_toward(dog.drinking, 0.0, delta * 6.0)
 	dog.bladder_slow = pee >= 0.999
 	# peeing has its own button now; a yank that gets you moving
 	# interrupts it (the tank is a per-walk budget, ~9 breaks)

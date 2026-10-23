@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-10-23 - Menu layout, wardrobe spotlight turntable, and Millie action/mood animation polish
+
+- `YOUR WALKS` progress table (`hud/menu_screen.gd`): dynamically scales row height (`progress_row_h`) and header padding so all 17 walks fit cleanly above the bottom prompt bar at `1280x720` and smaller viewports without overlapping; highlights the currently selected walk (`row.id == Game.level_id`) with a soft gold bar and tints completed goal meters gold/green.
+- `THIS WALK` pause card (`hud/menu_screen.gd`): splits walks with more than 6 goals into two columns (`WALKCARD_COL_SPLIT = 6`, `WALKCARD_TWO_COL_W = 860.0`), matching the end-of-walk results card and keeping 12- and 13-goal cards clear of the bottom prompt bar.
+- Modal card entrance & Wardrobe spotlight (`hud/menu_screen.gd`, `hud/menu_flow.gd`): added a `0.14s` ease-out scale pop (`_card_pop`) on modal menu cards, a live spotlight turntable rotation and gentle step cycle on `main.shop_preview` so collars, bandanas, and coats are visible from every angle, and a celebratory hop + bark when equipping or buying a cosmetic.
+- In-game Millie action & mood animations (`entities/dog.gd`, `main.gd`): added front-paw digging scrabble and flying earth clods (`dog.digging`), nose-stretch sniffing with nostril twitch, ear perk, and scent puffs (`dog.sniffing`), lapping pink tongue and water drops (`dog.drinking`), bark jaw/tongue/ear flare (`dog.bark_anim`), and mood-responsive tail wag speed/amplitude and ear carriage (`SCARED`, `TIRED`, `ZOOMIES`).
+- Added `tests/test_menu_anim_polish.gd` to CI covering 17-walk progress card bounds, two-column pause walk card bounds, wardrobe turntable/equip hop, and dog action/mood animations.
+
 ## 2026-10-23 - Hand-authored off-leash props per walk (`FREEDOM_PROPS`)
 
 - Replaced the single `0xD06BA55` RNG generator in `LevelBuild.build_park_props` with `LevelBuild.FREEDOM_PROPS`: every walk in `Game.LEVELS` (`barri` through `partit`) now has its own distinct, hand-authored off-leash furniture layout clear of the agility lane, painted entrance sign, water, owner bench, and parked pairs.
