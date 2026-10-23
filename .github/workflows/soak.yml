@@ -39,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        level: [barri, street, park, beach, rain, market, oldtown, trail, station, site, spook, scrap, guell, neteja, montjuic, partit, port]
+        level: [barri, street, park, beach, rain, market, oldtown, trail, station, site, spook, scrap, guell, neteja, montjuic, partit, port, reial]
 
     steps:
       - uses: actions/checkout@v5

@@ -104,6 +104,9 @@ const STYLES := {
 	# El Port: breezy maritime harbor pace with accordion, whistle, and brush drums
 	"port": {"bpm": 100, "key": 5, "lead": "accordion", "lead2": ["whistle", 0], "comp": "oompah",
 		"bass": "walk", "drums": "brush", "swing": 0.08, "verb": 0.32},
+	# Plaça Reial: lively Spanish guitar and flamenco palmas under the neoclassical arcades
+	"reial": {"bpm": 114, "key": 2, "lead": "guitar", "lead2": ["whistle", 0], "comp": "rumba",
+		"bass": "walk", "drums": "claps", "swing": 0.10, "verb": 0.28},
 	"freedom": {"bpm": 120, "key": 5, "lead": "whistle", "lead2": ["glock", 12], "comp": "arp",
 		"bass": "walk", "drums": "kickrim", "swing": 0.1, "verb": 0.22},
 }
