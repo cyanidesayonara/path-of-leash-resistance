@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-10-23 - "Back on the Sofa" epilogue cutscene and intro animation polish
+
+- "Back on the Sofa" epilogue cutscene (`intro/scene_home.gd`, `hud/epilogue_stage.gd`): at the end of each successful walk, Millie and her owner return home in a warm, side-view animated cutscene. The front door opens, Millie trots in proudly carrying the leash in her mouth, hops up to hang the leash loop over the wall hook, and lands with dust puffs; the owner shuffles in and collapses onto the sofa with a contented sigh; Millie hops up onto the sofa cushion, curls up into a cozy loaf, and falls peacefully asleep with floating "z"s.
+- End-of-walk stats integration (`hud/epilogue_stage.gd`, `hud/menu_flow.gd`, `systems/goals.gd`): the walk results card fades in smoothly over the room backdrop while the scene plays. The epilogue cutscene is instantly skippable with any key, tap, or gamepad button, fast-forwarding directly to Millie sleeping on the sofa with results fully revealed; subsequent inputs trigger normal results card navigation without accidental double-taps. Headless and automated runs skip immediately to preserve fast CI execution.
+- Intro animation polish (`intro/scene_walkies.gd`): added proud carry tail wagging while Millie brings the leash to her owner (`t = 3.6..4.95`), and landing dust puffs under her paws when landing from the wall hook jump (`t = 3.34..3.62`).
+- Added `tests/test_home_epilogue.gd` to CI verifying camera motion, draw pipelines, cutscene timestamps, skipping mechanics, and walk-finish integration.
+
 ## 2026-10-23 - Menu layout, wardrobe spotlight turntable, and Millie action/mood animation polish
 
 - `YOUR WALKS` progress table (`hud/menu_screen.gd`): dynamically scales row height (`progress_row_h`) and header padding so all 17 walks fit cleanly above the bottom prompt bar at `1280x720` and smaller viewports without overlapping; highlights the currently selected walk (`row.id == Game.level_id`) with a soft gold bar and tints completed goal meters gold/green.

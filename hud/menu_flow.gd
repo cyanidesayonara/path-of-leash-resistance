@@ -652,6 +652,12 @@ static func to_walk_select(m: Node2D) -> void:
 
 # Input on a stopped walk: a result or a game-over.
 static func tick_end(m: Node2D) -> bool:
+	if m.epilogue_stage != null and m.epilogue_stage.visible and not m.epilogue_stage.skipped:
+		if (Input.is_action_just_pressed("plant") or Input.is_action_just_pressed("restart") or
+				back_pressed() or Input.is_action_just_pressed("pee") or
+				Input.is_action_just_pressed("intro_skip")):
+			m.epilogue_stage.skip()
+			return true
 	if m.tutorial_mode and m.finished and Input.is_action_just_pressed("plant"):
 		to_first_walk(m)
 		return true

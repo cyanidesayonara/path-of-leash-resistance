@@ -42,8 +42,10 @@ func _process(_delta: float) -> void:
 func _draw() -> void:
 	if main == null:
 		return
-	var f := ThemeDB.fallback_font
 	var d: Dictionary = main.results_data()
+	if not d.has("rows"):
+		return
+	var f := ThemeDB.fallback_font
 	var rows: Array = d.rows
 	var two_col: bool = rows.size() > COL_SPLIT
 	var per_col: int = int(ceil(float(rows.size()) / 2.0)) if two_col else rows.size()
@@ -106,17 +108,21 @@ func _draw() -> void:
 	# the tally, with icons instead of labels
 	var tally_x := PAD + 6.0
 	Icons.draw_bone(self, Vector2(tally_x + 8.0, y - 5.0), 11.0)
-	draw_string(f, Vector2(tally_x + 26.0, y), str(int(d.bones)), HORIZONTAL_ALIGNMENT_LEFT,
+	var bones_cnt: int = int(d.bones) if d.has("bones") else 0
+	var phone_hp: int = int(d.phone) if d.has("phone") else 3
+	var time_sec: int = int(d.time) if d.has("time") else 0
+	var g_bones: int = int(d.goal_bones) if d.has("goal_bones") else 0
+	draw_string(f, Vector2(tally_x + 26.0, y), str(bones_cnt), HORIZONTAL_ALIGNMENT_LEFT,
 		-1, 19, Color(0.96, 0.94, 0.88))
 	var px := tally_x + 116.0
 	for i in range(3):
 		Icons.draw_phone_pip(self, Vector2(px + float(i) * 13.0, y - 13.0), 15.0,
-			i < int(d.phone))
+			i < phone_hp)
 	draw_string(f, Vector2(px + 48.0, y), "phone", HORIZONTAL_ALIGNMENT_LEFT, -1, 15,
 		Color(0.72, 0.74, 0.78))
-	draw_string(f, Vector2(0, y), "%ds" % int(d.time), HORIZONTAL_ALIGNMENT_CENTER, W, 19,
+	draw_string(f, Vector2(0, y), "%ds" % time_sec, HORIZONTAL_ALIGNMENT_CENTER, W, 19,
 		Color(0.90, 0.88, 0.82))
-	draw_string(f, Vector2(-PAD, y), "+%d bones from goals" % int(d.goal_bones),
+	draw_string(f, Vector2(-PAD, y), "+%d bones from goals" % g_bones,
 		HORIZONTAL_ALIGNMENT_RIGHT, W, 16, Color(0.82, 0.80, 0.70))
 	y += 28.0
 	for line: String in extras:
