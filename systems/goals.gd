@@ -22,7 +22,7 @@ const LEVEL_GOAL_IDS := {
 	# El Diluvi: keep your human out of the worst of it, splash the rest
 	"rain": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "dry", "splash", "combo", "prize"],
 	"market": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "zoom", "carry", "combo", "prize"],
-	"oldtown": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "cats", "snack", "combo", "prize"],
+	"oldtown": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "cats", "snack", "somni", "combo", "prize"],
 	"trail": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "chase", "drink", "combo", "prize"],
 	# L'Estacio: ride the walkway, squeeze through the barriers
 	"station": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "walkway", "snack", "combo", "prize"],
@@ -69,6 +69,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"tangle": {"text": "Tangle leashes with a stranger", "target": 1, "fn": func() -> int: return 1 if m.tangles >= 1 else 0},
 		"snack": {"text": "Scarf down %d dropped snacks", "target": 2, "fn": func() -> int: return m.kebabs_eaten},
 		"cats": {"text": "Chase off %d cats on the walls", "target": 3, "fn": func() -> int: return m.wall_cats_spooked},
+		"somni": {"text": "Visit El Somni gallery and claim the dream bone", "target": 1, "fn": func() -> int: return 1 if m.somni_bone_taken else 0},
 		"carry": {"text": m.carry_text, "target": 1, "fn": func() -> int: return 1 if m.carry_state >= 2 else 0},
 		"combo": {"text": "Land an x%d trick combo", "target": 3, "fn": func() -> int: return int(m.combo.best_mult) if m.combo != null else 0},
 		"tummy": {"text": "Walk past every chocolate", "target": 1, "fn": func() -> int: return 1 if m.candy_eaten == 0 else 0},

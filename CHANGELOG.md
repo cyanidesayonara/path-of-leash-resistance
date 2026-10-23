@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-10-23 - The First Artsy Detour: El Somni (Salvador Dalí homage gallery)
+
+- Artsy Detour system (`systems/detour.gd`, `world/detour_layer.gd`, `main.gd`, `systems/goals.gd`):
+  - Added the first secret-in-plain-sight side gallery: **«EL SOMNI»** (Homage to Salvador Dalí's surrealist dreamscapes) located off Carrer del Gòtic (Walk 7: El Gòtic).
+  - Prominent street entrance on the Gothic wall: carved stone archway spilling warm golden interior light, red carpet runner with gold trim leading onto the cobblestones, polished brass stanchions with red velvet rope, wrought-iron overhead banner (`EXPOSICIÓ - ENTRADA LLIURE` / `«EL SOMNI»`), sandwich board easel (`GALERIA ->`), and an exhibition greeter NPC.
+  - Pocket gallery room (`systems/detour.gd`, `world/detour_layer.gd`): warm desert sand floor with undulating dune contours (`Surfaces.S.SAND`), twilight horizon gradient, long raking deep-indigo dream shadows cast from every object, and distant stilt-legged silhouettes on the horizon.
+  - Melting lampposts with droop elasticity: 4 surreal bronze lampposts with draped melting clocks (Roman numerals XII, III, VI, IX) that elastically bend and droop under leash contact and tension, springing back when released.
+  - Secret Golden Dream Bone: floating and gently bobbing in a golden aura over an obsidian and velvet pedestal; awards bonus goal `Visit El Somni gallery and claim the dream bone` (`somni`).
+  - Luminous exit portal arch (`SORTIDA - A LA CIUTAT`) returning the pair smoothly back onto Carrer del Gòtic past the entrance with leash neatly aligned; walk timer and outside goals wait outside with zero penalty.
+  - Added `tests/test_detour_somni.gd` (21 checks, 0 failures) and integrated it into CI smoke.
+
 ## 2026-10-23 - In-game animation polish, dynamic mood tail wagging, and skid juice
 
 - Dynamic mood-driven tail wagging (`entities/dog.gd`): Millie's tail now expresses all 5 distinct emotional states with unique speed, amplitude, carriage, and posture:

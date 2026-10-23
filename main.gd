@@ -42,6 +42,14 @@ var cable_from := Vector2.ZERO
 var cable_to := Vector2.ZERO
 var cable_t := 0.0
 var cable_rides := 0
+# Artsy Detours (systems/detour.gd): hidden-in-plain-sight side rooms
+var detour_door_pos := Vector2.ZERO
+var detour_return_pos := Vector2.ZERO
+var detour_active := false
+var detour_kind := ""
+var detour_entered := false
+var somni_bone_taken := false
+var detour_layer: Node2D = null
 # where --shot-cam points the camera (INF: follow the pair as usual)
 var shot_cam := Vector2(INF, INF)
 var strip_l := 0.0
@@ -156,6 +164,7 @@ const MenuFlow := preload("res://hud/menu_flow.gd")
 const Rails := preload("res://systems/rails.gd")
 const Saves := preload("res://systems/saves.gd")
 const CableCar := preload("res://systems/cable_car.gd")
+const Detour := preload("res://systems/detour.gd")
 const UiScale := preload("res://hud/ui_scale.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const WorldSign := preload("res://world/world_sign.gd")
@@ -894,6 +903,8 @@ func _ready() -> void:
 	_build_entities()
 	if lvl == "montjuic":
 		CableCar.build(self)
+	elif lvl == "oldtown":
+		Detour.build(self)
 	_spawn_cones()
 	_spawn_stream_find()
 	_build_quests()
@@ -6946,6 +6957,8 @@ func draw_freedom_onto(c: Object) -> void:
 # either side, and on the beach swim out of sight. It follows her, clamped so
 # the view never shows past the space's walls.
 func _cam_x() -> float:
+	if detour_active:
+		return Detour.cam_x(self)
 	# off the leash, or on it again but still inside the space going home;
 	# never on the way out, where the path fits the view
 	var inside := dog.global_position.y < GATE_Y + 20.0
@@ -9290,7 +9303,8 @@ func _physics_process(delta: float) -> void:
 		return
 	if frozen:
 		return
-	elapsed += delta
+	if not detour_active:
+		elapsed += delta
 	if depart_open > 0.0:
 		Arrival.tick_depart(self, delta)
 	# the telefèric ride is a short cinematic: the walk holds still round it
@@ -9320,6 +9334,8 @@ func _physics_process(delta: float) -> void:
 	if lvl == "montjuic":
 		Montjuic.tick_wind(self, delta)
 		CableCar.tick(self, delta)
+	elif lvl == "oldtown":
+		Detour.tick(self, delta)
 	# the moving walkway (L'Estacio) and the escalators (Montjuic) move whoever
 	# stands on them outright: a push on velocity is eased away by a dog or
 	# human standing still
@@ -11519,6 +11535,8 @@ func frontage(y: float) -> Vector2:
 
 
 func walk_edges(y: float) -> Vector2:
+	if detour_active:
+		return Detour.walk_edges(self, y)
 	# (left_x, right_x) of the walkable path at this point down the level.
 	# The single source of truth for where the path IS - the pavement is drawn
 	# from it, the surface under her paws is decided by it, and props are
@@ -11527,6 +11545,8 @@ func walk_edges(y: float) -> Vector2:
 
 
 func surface_at(p: Vector2) -> int:
+	if detour_active:
+		return Surfaces.S.SAND
 	# The one place that decides what the ground is. Everything that cares -
 	# how fast she goes, how well she can turn, how far she can smell - asks
 	# this and then asks surfaces.gd, rather than each re-deriving it from a
