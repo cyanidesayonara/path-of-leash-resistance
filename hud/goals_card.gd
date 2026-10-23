@@ -54,14 +54,12 @@ func _draw() -> void:
 	var rows: Array = data.rows
 	var extra: int = int(data.extra)
 	var open: bool = bool(data.open)
-	# Collapsed, this is one line in the corner. The game's chaos is supposed
-	# to be in the level, not in a wall of text over the top of it, so the
-	# list is something you ASK for - and it opens itself for a moment
-	# whenever a goal actually lands, so you never miss the tick.
-	var w: float = W if open else 190.0
+	# Collapsed, this is a clean compact card in the corner showing goal count,
+	# a mini progress bar, and the prompt key.
+	var w: float = W if open else 200.0
 	var h := PAD + 22.0 + float(rows.size()) * ROW_H + (16.0 if extra > 0 else 0.0) + PAD * 0.6
 	if not open:
-		h = 40.0
+		h = 42.0
 	size = Vector2(w, h)
 	# right-aligned to the ACTUAL viewport edge (aspect "expand" reveals more
 	# or less than the 1280 reference width on most phone shapes), so
@@ -74,16 +72,34 @@ func _draw() -> void:
 	var head_col := Color(0.62, 0.90, 0.66) if all_done else Color(0.91, 0.86, 0.75)
 	if bool(data.peeking):
 		head_col = Color(1.0, 0.90, 0.55)
-	draw_string(f, Vector2(PAD, PAD + 12.0), "GOALS  %d/%d" % [int(data.done), int(data.total)],
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 16, head_col)
+	draw_string(f, Vector2(PAD, PAD + 10.0), "GOALS  %d/%d" % [int(data.done), int(data.total)],
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 15, head_col)
 	if all_done and open:
-		draw_string(f, Vector2(PAD + 108.0, PAD + 12.0), "ALL CLEAR",
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(0.62, 0.90, 0.66))
+		draw_string(f, Vector2(PAD + 108.0, PAD + 10.0), "ALL CLEAR",
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.62, 0.90, 0.66))
+
+	# key / button prompt pill
+	var key_str := String(data.key)
+	var kw := f.get_string_size(key_str, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x + 12.0
+	var krect := Rect2(w - PAD - kw, PAD - 1.0, kw, 16.0)
+	draw_rect(krect, Color(1, 1, 1, 0.10))
+	draw_rect(krect, Color(1, 1, 1, 0.22), false, 1.0)
+	draw_string(f, Vector2(krect.position.x + 6.0, krect.position.y + 12.0), key_str,
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.78, 0.76, 0.70))
+
 	if not open:
-		# the key that opens it, quietly, once
-		draw_string(f, Vector2(w - PAD - 42.0, PAD + 11.0), String(data.key),
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.62, 0.60, 0.56, 0.75))
+		# mini progress bar under the title
+		var total_cnt := maxi(1, int(data.total))
+		var done_cnt := int(data.done)
+		var frac := clampf(float(done_cnt) / float(total_cnt), 0.0, 1.0)
+		var bar_w := 98.0
+		var bar_r := Rect2(PAD, PAD + 17.0, bar_w, 3.5)
+		draw_rect(bar_r, Color(1, 1, 1, 0.12))
+		if frac > 0.0:
+			draw_rect(Rect2(PAD, PAD + 17.0, bar_w * frac, 3.5),
+				Color(0.62, 0.90, 0.66) if all_done else Color(0.94, 0.79, 0.35))
 		return
+
 	var y := PAD + 30.0
 	for row: Dictionary in rows:
 		var state := int(row.state)

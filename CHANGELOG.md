@@ -2,6 +2,24 @@
 
 Append-only session history, newest first.
 
+## 2026-10-23 - HUD and In-Game Messaging System Polish
+
+- HUD Iconography & Visual Polish (`hud/ui_icons.gd`, `hud/hud_panel.gd`, `hud/goals_card.gd`, `hud/results_panel.gd`):
+  - Upgraded Phone HP pips (`UiIcons.draw_phone_pip`): Replaced simple colored rectangles with detailed smartphone device silhouettes featuring speaker slits, luminous cyan capacitive glass screens when intact, and matte slate glass with hairline red fracture cracks when lost/damaged.
+  - Added vector droplet glyph (`UiIcons.draw_droplet`) and lightning bolt glyph (`UiIcons.draw_bolt`) rendered directly below the bladder and sprint tubes for instant readability.
+  - Upgraded Bladder (Pee) tube: Dark glass capsule backing with rounded feel, smooth golden fluid level, glowing amber warning pulse on full bladder (`pee >= 0.999`), and gold droplet indicator.
+  - Upgraded Sprint / Turbo tube: Dark glass capsule backing, vivid neon lime fluid level, animated shimmer during golden zoomies (`golden_t > 0.0`), turbo pulse, and neon bolt indicator.
+  - Upgraded Bone Count & Streak Badge: Bone count rendered in bold display typography (`Kit.display()`), and combo streak rendered as an arcade mint-green pill badge (`STREAK ×%d`).
+  - Upgraded Territory Mark Posts: Styled as concentric target rings with claimed posts glowing bright gold and unclaimed posts showing subtle center dots.
+  - Upgraded Goals Card (`hud/goals_card.gd`): Collapsed state features a 4-segment mini progress meter right beneath the header and a sleek button prompt pill (`[TAB]` / `(Y)`) indicating how to expand/collapse.
+- In-Game Messaging Logic & Event Feed Hierarchy (`hud/event_feed.gd`, `main.gd`):
+  - Standardized four distinct communication layers to eliminate overlap and clutter:
+    1. Top Banner: Standing state and walk objectives in high-contrast pill format.
+    2. Center Shouts (under Millie): Immediate action stunts and tricks (`VAULT!`, `GRIND!`, `FLING!`) with punchy scale animations.
+    3. Corner Toasts: Left-side toasts for arriving moods and right-side toasts for completed goals with progress updates.
+    4. World Pops: Spatial context numbers and speech bubbles anchored directly to their source in the world.
+- Added `tests/test_hud_polish.gd` (31 checks, 0 failures) and integrated it into CI smoke.
+
 ## 2026-10-23 - Walk 18: El Port (Port Vell & Barceloneta Wharf)
 
 - **Walk 18: El Port** (`systems/port.gd`, `autoload/game.gd`, `audio/music.gd`, `systems/goals.gd`, `main.gd`, `world/level_build.gd`):
