@@ -11877,6 +11877,8 @@ func _end_vault() -> void:
 		var s := SwingMath.sense(vault_pole, dog.global_position, dog.velocity)
 		var tan := SwingMath.vault_tangent(vault_pole, dog.global_position, dog.velocity)
 		dog.velocity = tan * VAULT_LAUNCH
+		if dog.has_method("trigger_launch_stretch"):
+			dog.trigger_launch_stretch(tan, 0.28)
 		# paid for the turns and for the pace she carried round them
 		var pace: float = vault_speed_sum / maxf(vault_elapsed, 0.01)
 		var pay: float = clampf(pace / VAULT_MIN_SPEED, 1.0, VAULT_SPEED_PAY)

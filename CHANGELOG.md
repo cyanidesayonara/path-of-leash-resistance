@@ -2,6 +2,23 @@
 
 Append-only session history, newest first.
 
+## 2026-10-23 - In-game animation polish, dynamic mood tail wagging, and skid juice
+
+- Dynamic mood-driven tail wagging (`entities/dog.gd`): Millie's tail now expresses all 5 distinct emotional states with unique speed, amplitude, carriage, and posture:
+  - `HAPPY` (0): Enthusiastic, perky rhythmic wagging (`wag_speed = 16.0`, `wag_amp = 0.48`).
+  - `SCARED` (1): Tucked tight and low between hind legs (`tail_len_scale = 0.45`, `tail_angle_bias = PI * 0.85`) with a subtle nervous tremor (`wag_amp = 0.04`, `wag_speed = 18.0`).
+  - `BARKY` (2): Alert, stiff, high-held arched tail with rapid small-arc warning vibration (`wag_speed = 26.0`, `wag_amp = 0.15`, `tail_len_scale = 1.15`).
+  - `ZOOMIES` (3): High-energy, broad sweeping flag wag (`wag_speed = 22.0`, `wag_amp = 0.65`).
+  - `TIRED` (4): Drooping, slow, lazy wag (`wag_speed = 4.5`, `wag_amp = 0.20`, `tail_len_scale = 0.85`).
+  - Idle standing (`velocity.length() < 5.0`): Soft, relaxed sway (`wag_speed = 4.0`, `wag_amp = 0.22`) synchronized with a subtle chest breathing cycle (`sin(t * 3.2) * 0.45`).
+- Squash & stretch action feel (`entities/dog.gd`, `main.gd`, `entities/human.gd`):
+  - Jumping / hopping: stretches vertically along the leap arc while airborne (`1.0 + leap_s * 0.6`), followed by a landing cushion squash (`1.0 - sq * 0.12`) upon touching down.
+  - Vault and fling launches: `trigger_launch_stretch()` provides elastic stretch along the slingshot tangent vector on vault releases and whirl flings.
+- Skid dust puffs & hard turn braking (`entities/dog.gd`):
+  - Sprinting and cutting a sharp turn (>70°) or braking now triggers physical paw skid marks and dust puffs (`skid_dir = -prev_vel.normalized()`).
+  - Skid dust particles adapt their tint dynamically to the surface underfoot (dry pavement grey, warm beach sand, dark mud clods, lush grass green, and frosty snow/ice white).
+- Added `tests/test_dog_anim_juice.gd` (13 checks, 0 failures) and integrated it into CI smoke.
+
 ## 2026-10-23 - Free Play demo mode toggle and Grand 26-Walk Campaign Roadmap
 
 - Free Play / Demo mode toggle (`autoload/game.gd`, `hud/menu_flow.gd`, `hud/menu_screen.gd`, `main.gd`, `systems/goals.gd`): added a `FREE PLAY (DEMO)` toggle in Settings (also accessible via `--free-play`). When enabled, all walks across the campaign are unlocked and selectable without star gate requirements; all career persistence (goals, stars, best bones, best time, style records, wallet earnings) is cleanly paused so players can practice any walk freely without modifying career records. Walk select card highlights `[FREE PLAY]`, goal completions display `FREE PLAY +5`, and results card shows `FREE PLAY (PRACTICE)`.

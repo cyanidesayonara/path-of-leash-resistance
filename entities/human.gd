@@ -1120,6 +1120,8 @@ func release_whirl(lean := 0.0) -> void:
 	whirl_flung_t = WHIRL_STRETCH_T
 	main.float_text(global_position, "AAAA", Color(1, 0.9, 0.6))
 	main.shake_t = maxf(float(main.shake_t), 0.35)
+	if main.dog != null and main.dog.has_method("trigger_launch_stretch"):
+		main.dog.trigger_launch_stretch(launch, 0.25)
 
 
 func bail_whirl() -> void:
