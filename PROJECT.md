@@ -183,7 +183,7 @@ Every feature must serve at least one. If it serves none, cut it.
   the old FLING reward on a safe refusal feels fair, and how much dogward lean
   the forced release wants. Assess all four only on the final overhaul commit.
 - **v1.61 - shipped.** Dia de Partit, tagged 2026-10-20.
-- **v1.62 - prepared, not tagged.** The game and the notes are on main (notes merge `da57dd2`, with CI, the idle soak and the screenshot sweep green). El Besòs, arrivals at each walk's own door, weather and lamplight, no Daily Walk, Tofu only where she can be reached, and a rainy high stream on El Bosc. The itch page, the Store listing, the README and the handover match that. Tag only when Santtu says.
+- **v1.62 - prepared, not tagged.** The game and the notes are on main (with CI, the idle soak and the screenshot sweep green). El Besòs, visual polish across all 17 walks, arrivals at each walk's own door, weather and lamplight, no Daily Walk, Tofu only where she can be reached, and a rainy high stream on El Bosc. The itch page, the Store listing, the README and the handover match that. Tag only when Santtu says.
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
 - Every release also ships: mechanics tuning from playtests, at least

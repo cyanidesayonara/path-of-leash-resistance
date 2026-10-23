@@ -19,42 +19,49 @@ Top-down physics comedy in Godot 4.7 / GDScript. You are the dog; the
 phone-distracted human walks on autopilot; the leash is real verlet-rope
 physics. Ships to itch (`html5` + `windows`) on a version tag after green CI.
 
-## Where things stand (2026-10-22)
+## Where things stand (2026-10-23)
 
 **Released: v1.61** at `7cc8e73` (2026-10-20). itch and the GitHub release
 are that tag. The Store listing records those notes as tagged that day.
 Santtu submits the Store package. Do not treat a submission as live until
 he says so.
 
-**On `origin/main`:** the 1.62 notes are merged (`da57dd2`; CI, the idle soak and
-the screenshot sweep passed on that commit). This documentation follows
-them. v1.62 is prepared and not tagged.
+**On `origin/main`:** the 1.62 content, notes, and the full 17-walk visual
+polish pass (#282–#298 plus El Besòs polish) are merged, with CI, the idle
+soak, and the screenshot sweep green. v1.62 is prepared and not tagged.
 The notes are in `docs/itch-page.md` and `store/listing.md`. The README,
-`PROJECT.md` and this file match them. Tag only when Santtu says to.
+`PROJECT.md`, `docs/LEVEL_DESIGN.md` and this file match them. Tag only
+when Santtu says to.
 
 What 1.62 adds, already on main: El Besòs (14 stars, between L'Estació and
 Les Obres), the flood on the way home, each walk arriving at its own door,
 weather and lamplight, no Daily Walk, Tofu only where she can be reached,
-the leash around a stall, a van or a bench, and a rainy high stream on El
-Bosc (one run in five; `--seed=4` selects it, `--seed=0` does not).
+the leash around a stall, a van or a bench, a rainy high stream on El Bosc
+(one run in five; `--seed=4` selects it, `--seed=0` does not), and a
+city-wide visual and architectural polish pass across all seventeen campaign
+walks (fluted Doric columns and Jujol ceiling medallions in El Mosaic,
+travelator handrail grinds and tactile platform coping in L'Estació, Pont del
+Bisbe Gothic tracery and Sant Felip Neri fountain in El Gòtic, trench shoring
+and scaffold handrail grinds in Les Obres, Miró mosaic and wave paving on La
+Rambla, riprap embankments and SAHBE hydrological gear on El Besòs, and
+bespoke landmarks across the remaining walks).
 
-The 2026-10-22 roster check covered all seventeen campaign walks: selftest,
-autowalk, freedom bounds, and a desktop mid-walk look. Phone, pad and a
-fresh web-perf pass were not part of that check. El Mosaic's decoration,
-and a hand-authored off-leash list, stay open in `docs/LEVEL_DESIGN.md` on
-purpose.
+The 2026-10-22/23 roster check and visual polish pass covered all seventeen
+campaign walks: selftest, autowalk, freedom bounds, dedicated per-walk
+visual polish tests, and desktop mid-walk captures. Phone, pad and a fresh
+web-perf pass were not part of that check. A hand-authored off-leash prop
+list per walk stays open in `docs/LEVEL_DESIGN.md` on purpose.
 
-**Board:** nothing is awaiting acceptance. The open cards are later work,
+**Board:** nothing is awaiting acceptance (all merged PRs through #298 are
+marked `Done` on Project #4). The open cards are later work,
 not this tag: #260 Steam, #237 Montjuïc extras, #170 chase finales, #147
 platforms, #13 a real phone, #12 whether SCARED belongs in the sweeper
 chase, #11 mood readability. #271 (fear before the sweeper is visible) is
 fixed on main (`f187426`) and closed.
 
-The local checkout at `path-of-leash-resistance` is behind, at `7f014a7`,
-and has uncommitted edits. Branch new work from `origin/main`, not from
-that checkout. Do not resume the 2026-10-16 sitrep: the intro film and the
-per-walk audit from that note have landed. Old worktrees from then are not
-the next task.
+The local checkout at `path-of-leash-resistance` is synced to `origin/main`
+and stale worktrees have been cleaned up. Always branch new work from
+`origin/main`.
 
 **Next, when Santtu asks:** tag v1.62. Not before. After the tag, he runs
 the Store submit. When that submission is live, move the 1.62 What's new

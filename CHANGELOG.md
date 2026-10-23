@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-10-23 - El Besòs visual polish: riprap embankment, reed beds, flood wall, weir, and SAHBE gear
+
+- The west edge of El Besòs now renders the Parc Fluvial del Besòs concrete flood wall embankment with an upper riverside cycle promenade (*passeig superior*), galvanized safety railings, expansion joints, weep-hole drains, and recessed emergency evacuation stairways with yellow handrails; city building rooftops and awnings no longer render underneath the river on the east side.
+- The river corridor now features a two-way painted riverside cycle/runner lane with bicycle stencils, a shingle cobble shoreline, a continuous quarry-stone riprap revetment (*escullera*) separating the wading margin from the deep thalweg channel, and swaying riverside reed and cattail beds (*canyissars* and *boga*), denser through the upstream reedy stretch.
+- The raised concrete maintenance apron (`BESOS_APRON`) now features bevelled skirts, slab expansion joints, an upstream yellow/black hazard cutwater kerb, corner cast-iron drainage scuppers, and a central high-water refuge chevron.
+- Hydrological equipment and bridges are enriched: enamelled metric staff gauges (*escales limnimètriques*) with blue/amber/red flood zones and SAHBE siren beacons along the flood wall, a ribbed EPDM elastomer inflatable weir (*assut inflable*) with concrete abutments and cascading white overflow foam, a mid-walk road bridge shadow, the cable-stayed Pont de Can Peixauet pylon and stay-cable shadows at the meadow gate, and a solar-powered SAHBE electronic LED matrix entrance board.
+- Markable posts on El Besòs now draw as Parc Fluvial wooden-and-steel waymarker totems with SAHBE hydrological badges instead of cast-iron street fire hydrants.
+
 ## 2026-10-23 - La Rambla polish: wave pavement, Joan Miró mosaic, Canaletes details, authentic stalls
 
 - La Rambla's iconic undulating wave pavement (*ones del paviment de la Rambla*) now ripples along the entire central pedestrian boulevard in alternating warm terrazzo bands.
