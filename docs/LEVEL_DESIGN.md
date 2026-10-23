@@ -695,3 +695,36 @@ trench and plank. Stages 4 and 5 are still their own projects. El Gotic's
 right-angle turns come first.
 
 Detours come after the walks: one room to prove the door, then the rest.
+
+## The Grand 26-Walk Campaign Roadmap (v1.63 → v1.7X)
+
+The complete structure to finish *Path of Leash Resistance*, structured symmetrically around 26 total walks with a high-stakes chase every 5th walk and concluding with the epic Boss Arena:
+
+### The Roster and Chases
+- **Walks 1–4**: *El Barri*, *La Rambla*, *El Parc*, *Passeig Marítim*.
+- **Walk 5: La Neteja (Chase 1 — The Street Sweeper)**: Narrow dawn alleyway, street sweeper devourer. Oblivious owner dawdles, Millie drags them south.
+- **Walks 6–9**: *El Diluvi*, *El Mercat*, *El Gòtic*, *El Bosc*.
+- **Walk 10: El Besòs (Chase 2 — The Flash Flood)**: River corridor flood surge with dual respites (upstream inflatable rubber weir at `y = -3112.0` and raised concrete maintenance apron at `y = -2050.0`).
+- **Walks 11–14**: *L'Estació*, *Les Obres*, *La Castanyada*, *La Ferralla*.
+- **Walk 15: Festa de Gràcia (Chase 3 — The Festival Monsters)**: Return leg through dense decorated paper-mâché streets where multiple festive monsters and runaway *gegants* / fire-dragons come to life and pursue in sequence, with street-turn respites between decorated blocks.
+- **Walks 16–19**: *El Mosaic*, *Montjuïc*, *Dia de Partit*, *Port Vell / Barceloneta Wharf* (seagulls, fish stalls, mooring bollards, yachts).
+- **Walk 20: El Veterinari (Chase 4 — The Clinic Escape)**: Millie reluctantly enters the vet clinic (an indoor waiting room off-leash area with other nervous pets on benches). Once she gets near the examination door and smells rubbing alcohol and rubber gloves, she panics and bolts out! Veterinary assistants with giant cones of shame and butterfly nets give chase. Her owner tries to drag her back toward the clinic ("Millie heel! It's just a checkup!"), adding leash resistance that Millie must overcome using zoomies, corner weaves, and obstacle slingshots.
+- **Walks 21–24**: *Plaça Reial* (arcaded square, Gaudi lampposts, terrace tables), *Tibidabo / Funicular* (funicular slopes, amusement park overlook), *Passeig de Gràcia* (Modernist facades, luxury pavement), *Carretera de les Aigþes* (panoramic dirt trail above the city).
+- **Walk 25: Els Búnquers del Carmel**: High atmospheric sunset overlook over the entire city, setting the emotional and scenic stage for the finale.
+- **Walk 26: Rambla del Raval (The Grand Finale — El Gat de Botero Boss Arena)**:
+  - **Arena**: The wide palm-lined central pedestrian promenade of Rambla del Raval, with outdoor terraces, iron lampposts, and stone benches.
+  - **Phase 1 (100% → 50% HP)**: El Gat strikes with sweeping heavy paw swipes. Millie dodges, loops the leash around the extended limb, and yanks/flings to damage and stagger the statue.
+  - **Phase 2 (50% → 0% HP)**: El Gat switches to high-speed Bull Charges down the promenade. Millie clotheslines the cat against lampposts, causes obstacle collisions, or flings her human to trip it, then performs the full **360° AT-AT leash wrap** to topple the giant cat onto its stone plinth.
+  - **Victory Cutscene**: The cat is restored to a motionless bronze statue; Millie trot-hops up, sniffs it, lifts a leg on the pedestal to claim victory, and trots home to the sofa.
+
+### Artsy Detours (Hidden in plain sight)
+- Museum and gallery side-rooms ("EXPOSICIÓ - ENTRADA LLIURE") off major walks:
+  - Dalí: melting clocks, drooping lampposts, long raking shadows.
+  - Miró: primary shapes, starry ladders, bold black outlines.
+  - Picasso: cubist wall art and angled perspectives.
+  - Gaudí: trencadís mosaic curves and chimney-pot roof garden exit.
+- Designed to be easily found: clear, inviting entrance doorways on the walk edges that players can pop into for a short, delightfully distinct minigame room before returning smoothly to the walk.
+
+### Free Play / Demo Mode
+- A toggle in Settings (`FREE PLAY (DEMO)`) that allows unconstrained exploration of all walks without career progression barriers or star gates.
+- While active, all career persistence (goals, stars, bone records, style records, wallet additions) is bypassed so practice runs never pollute legitimate campaign saves.

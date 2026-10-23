@@ -859,6 +859,8 @@ func _ready() -> void:
 	var autowalk_requested := "--autowalk" in OS.get_cmdline_user_args()
 	if "--no-exit" in OS.get_cmdline_user_args():
 		MenuFlow.exit_hidden = true
+	if "--free-play" in OS.get_cmdline_user_args():
+		Game.free_play = true
 	_shake_rng.seed = SHAKE_SEED
 	if Game.is_tutorial(Game.level_id):
 		# THE FIRST WALK: El Barri laid out as one station per lesson, calm and
@@ -9016,6 +9018,7 @@ func _refresh_shop() -> void:
 const SETTING_NAMES := {
 	"master": "MASTER VOLUME", "sfx": "SOUND EFFECTS",
 	"music": "MUSIC", "fullscreen": "FULLSCREEN", "goals": "GOAL LIST",
+	"free_play": "FREE PLAY (DEMO)",
 }
 
 

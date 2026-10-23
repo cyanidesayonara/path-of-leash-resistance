@@ -169,6 +169,9 @@ var agility_best := 0.0
 # point is the mess in the middle. Collapsed it is one line; the player
 # decides, and the choice sticks.
 var goals_expanded := false
+# Free play / demo mode: unlocks all walks freely for practice without
+# recording career stars, goals, best bones, or time tallies to the save.
+var free_play := false
 # The first walk (the tutorial): whether the title still offers it before the
 # walks, and whether it has been walked to the end.
 var ask_tutorial := true
@@ -394,6 +397,7 @@ func load_records() -> void:
 	vol_music = clampf(float(cf.get_value("settings", "vol_music", DEFAULT_VOL_MUSIC)), 0.0, 1.0)
 	fullscreen = bool(cf.get_value("settings", "fullscreen", false))
 	goals_expanded = bool(cf.get_value("settings", "goals_expanded", false))
+	free_play = bool(cf.get_value("settings", "free_play", false))
 	ask_tutorial = bool(cf.get_value("settings", "ask_tutorial", true))
 	tutorial_done = bool(cf.get_value("global", "tutorial_done", false))
 	walks_lost = int(cf.get_value("global", "walks_lost", 0))
@@ -424,6 +428,7 @@ func save_records() -> void:
 	cf.set_value("settings", "vol_music", vol_music)
 	cf.set_value("settings", "fullscreen", fullscreen)
 	cf.set_value("settings", "goals_expanded", goals_expanded)
+	cf.set_value("settings", "free_play", free_play)
 	cf.set_value("settings", "ask_tutorial", ask_tutorial)
 	cf.set_value("global", "tutorial_done", tutorial_done)
 	cf.set_value("global", "walks_lost", walks_lost)
@@ -447,7 +452,7 @@ func goals_count(lv: String) -> int:
 
 
 func mark_goal(lv: String, id: String) -> bool:
-	if lv == "tutorial" or not lv in LEVELS:
+	if free_play or lv == "tutorial" or not lv in LEVELS:
 		return false
 	var record := _ensure_level_record(lv)
 	var gl: Array = record.get("goals", [])
@@ -483,15 +488,15 @@ func total_stars() -> int:
 
 
 func is_unlocked(lv: String) -> bool:
-	if lv == "tutorial":
-		return true  # the tutorial is always open
+	if free_play or lv == "tutorial":
+		return true  # the tutorial is always open, and free play opens all walks
 	return total_stars() >= int(STAR_GATE.get(lv, 0))
 
 
 # A walk's style (its banked combos, summed): kept per walk as a record. True
 # when it beat the old one.
 func record_style(lv: String, style: int) -> bool:
-	if not lv in LEVELS or style <= 0:
+	if free_play or not lv in LEVELS or style <= 0:
 		return false
 	var r := _ensure_level_record(lv)
 	if style <= int(r.get("style", 0)):
@@ -506,9 +511,7 @@ func record_result(lv: String, bones: int, time: float, perfect: bool) -> Dictio
 	# stars/unlocks now come from goals (marked live during the run); this
 	# only records the best-bones/time/perfect tallies and banks bones.
 	var out := {"bones_record": false, "time_record": false}
-	if lv == "tutorial":
-		return out
-	if not lv in LEVELS:
+	if free_play or lv == "tutorial" or not lv in LEVELS:
 		return out
 	var r := _ensure_level_record(lv)
 	if bones > int(r.bones):

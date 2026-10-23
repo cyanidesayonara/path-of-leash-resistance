@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-23 - Free Play demo mode toggle and Grand 26-Walk Campaign Roadmap
+
+- Free Play / Demo mode toggle (`autoload/game.gd`, `hud/menu_flow.gd`, `hud/menu_screen.gd`, `main.gd`, `systems/goals.gd`): added a `FREE PLAY (DEMO)` toggle in Settings (also accessible via `--free-play`). When enabled, all walks across the campaign are unlocked and selectable without star gate requirements; all career persistence (goals, stars, best bones, best time, style records, wallet earnings) is cleanly paused so players can practice any walk freely without modifying career records. Walk select card highlights `[FREE PLAY]`, goal completions display `FREE PLAY +5`, and results card shows `FREE PLAY (PRACTICE)`.
+- Added `tests/test_free_play.gd` and CI integration covering free play unlocks, career non-persistence, settings toggle, and roundtrip config persistence.
+- Grand 26-Walk Campaign Roadmap & Boss Finale (`docs/LEVEL_DESIGN.md`, `PROJECT.md`, `HANDOVER.md`, Issue #170): officially documented the 26-walk campaign structure leading towards v1.7X, featuring dedicated chases every 5th walk (5: La Neteja sweeper, 10: El Besòs flood, 15: Festa de Gràcia multiple monster chase with turn respites, 20: El Veterinari clinic escape with human drag resistance), culminating on Walk 26 at Rambla del Raval (*El Gat de Botero* Boss Arena with paw-swipe counters, bull-charge clotheslines, and 360° AT-AT leash wrap topple). Cleaned up obsolete board items #11, #12, #147, and #237.
+
 ## 2026-10-23 - El Besòs flood chase dual respites and midpoint checkpoint fix
 
 - Dual river flood respites (`world/level_build.gd`, `systems/home_chase.gd`, `entities/flood.gd`): the flood surge on the walk home down El Besòs now features two distinct respite moments rather than one.

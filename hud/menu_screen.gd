@@ -187,6 +187,8 @@ func _walk(vs: Vector2) -> void:
 	# night, and for anyone who cannot make the pieces out
 	var walk_name := String(main._walk_name())
 	var gloss := String(Game.LEVEL_SUBTITLES.get(String(info.id), ""))
+	if Game.free_play:
+		gloss = "[FREE PLAY]  " + gloss
 	var w := minf(640.0, vs.x - 48.0)
 	var shake: float = sin(float(main.locked_nudge) * 60.0) * 10.0 * (float(main.locked_nudge) / 0.35)
 	var h := 112.0

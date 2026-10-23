@@ -60,6 +60,8 @@ platforms, #13 a real phone, #12 whether SCARED belongs in the sweeper
 chase, #11 mood readability. #271 (fear before the sweeper is visible) is
 fixed on main (`f187426`) and closed.
 
+**The Grand Campaign Roadmap (26 Walks to v1.7X):** Issue #170 has been updated into the master roadmap tracking the 26-walk campaign structure (chases every 5th walk: 5 La Neteja, 10 El Besòs, 15 Festa de Gràcia, 20 El Veterinari; Walk 25 Els Búnquers; Walk 26 Rambla del Raval El Gat de Botero boss finale). Obsolete issues #11, #12, #147, and #237 have been cleaned up and closed. PR #303 added dual respites and midpoint checkpoint fixes to El Besòs. Free Play / Demo mode toggle is implemented in Settings.
+
 The local checkout at `path-of-leash-resistance` is synced to `origin/main`
 and stale worktrees have been cleaned up. Always branch new work from
 `origin/main`.
