@@ -89,6 +89,7 @@ func _run() -> void:
 	# 7. Sniffable spots (hydrants) & snacks
 	_check(m.hydrants.size() >= 5, "at least 5 sniffable spots (%d)" % m.hydrants.size())
 	_check(m.kebabs.size() >= 4, "at least 4 dropped churros/tapas snacks (%d)" % m.kebabs.size())
+	_check(m.bins.size() >= 2, "at least 2 trash bins for bag chore (%d)" % m.bins.size())
 	_check(m.prize_pos.x < INF, "prize placed on terrace table")
 	_check(m.prize_text == R.PRIZE_TEXT, "prize text matches")
 	_check(not _inside_solid(m, m.prize_pos, 2.0), "prize is reachable without being inside solid")

@@ -148,6 +148,12 @@ static func build(m: Node2D) -> Array:
 	m.stall_kinds.clear()
 	m.astands = Array([], TYPE_VECTOR2, &"", null)
 	m.manholes = Array([], TYPE_VECTOR2, &"", null)
+	m.bins = Array([
+		Vector2(365.0, -1400.0),
+		Vector2(915.0, -1400.0),
+		Vector2(365.0, -3200.0),
+		Vector2(915.0, -3200.0),
+	], TYPE_VECTOR2, &"", null)
 
 	# The fountain island directs owner around the central fountain (east side)
 	m.islands = Array([{"rect": Rect2(FOUNTAIN_POS - Vector2(FOUNTAIN_RADIUS + 24.0, FOUNTAIN_RADIUS + 24.0), Vector2((FOUNTAIN_RADIUS + 24.0) * 2.0, (FOUNTAIN_RADIUS + 24.0) * 2.0)), "side": 1.0, "lead": 180.0}], TYPE_DICTIONARY, &"", null)

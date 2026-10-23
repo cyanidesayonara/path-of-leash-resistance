@@ -12666,6 +12666,8 @@ func _finish_business(voluntary: bool) -> void:
 
 
 func nearest_bin(pos: Vector2) -> Vector2:
+	if bins.is_empty():
+		return pos
 	var best := bins[0]
 	var best_d := 1e12
 	for b in bins:
