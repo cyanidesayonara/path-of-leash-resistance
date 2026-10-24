@@ -65,23 +65,23 @@ func _run() -> void:
 
 	# Pavement waves
 	R.draw_pavement_waves(m, sb, vt, vb)
-	_check(true, "draw_pavement_waves executed cleanly")
+	# (draw_pavement_waves executed cleanly: a draw error fails the run as a SCRIPT ERROR)
 
 	# Miró mosaic
 	var mosaic_c := Vector2(float(m.sw_l + m.sw_r) * 0.5, -1650.0)
 	var mosaic_r := float(m.sw_r - m.sw_l) * 0.38
 	R.draw_miro_mosaic(sb, mosaic_c, mosaic_r)
-	_check(true, "draw_miro_mosaic executed cleanly")
+	# (draw_miro_mosaic executed cleanly: a draw error fails the run as a SCRIPT ERROR)
 
 	# Tree leaf drifts
 	R.draw_tree_leaf_drifts(m, sb, vt, vb)
-	_check(true, "draw_tree_leaf_drifts executed cleanly")
+	# (draw_tree_leaf_drifts executed cleanly: a draw error fails the run as a SCRIPT ERROR)
 
 	# Canaletes drawing
 	var dummy = DummyCanvas.new()
 	if m.fountains.size() > 0:
 		R.draw_canaletes(m, dummy, m.fountains[0])
-		_check(true, "draw_canaletes executed cleanly on canvas")
+		# (draw_canaletes executed cleanly on canvas: a draw error fails the run as a SCRIPT ERROR)
 
 	# Stall variants drawing
 	var stall_kinds := ["kiosk", "flowers", "souvenir", "caricature", "painter", "icecream", "books"]
@@ -89,14 +89,14 @@ func _run() -> void:
 		var kind: String = stall_kinds[idx]
 		var st_pos := Vector2(640.0, -500.0 - float(idx) * 200.0)
 		R.draw_rambla_stall(m, sb, st_pos, kind, idx)
-	_check(true, "all rambla stall kinds drawn without error")
+	# (all rambla stall kinds drawn without error: a draw error fails the run as a SCRIPT ERROR)
 
 	# Statue dressing drawing
 	for s_idx in range(m.statues.size()):
 		var sp: Vector2 = m.statues[s_idx]
 		var paint: Color = Color(0.80, 0.66, 0.30) if s_idx % 2 == 0 else Color(0.72, 0.74, 0.76)
 		R.draw_statue_dressing(m, sb, sp, s_idx, paint, 0.0, 1.0)
-	_check(true, "statue dressing drawn cleanly")
+	# (statue dressing drawn cleanly: a draw error fails the run as a SCRIPT ERROR)
 
 	if failures.is_empty():
 		print("%d checks, 0 failures" % checks)

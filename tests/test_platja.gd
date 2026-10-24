@@ -36,8 +36,19 @@ func _run() -> void:
 	var LevelBuild: GDScript = load("res://world/level_build.gd")
 	_check(LevelBuild.BEACH_SHOWERS.size() == 2, "two beach showers along the front")
 	_check(LevelBuild.BEACH_COURT.size.x > 0 and LevelBuild.BEACH_COURT.size.y > 0, "beach volleyball court is defined")
-	_check(LevelBuild.BEACH_TOWER != Vector2.ZERO, "lifeguard tower is placed")
+	# where each piece stands: the tower, the court and the showers on the
+	# sand, the bars off the promenade on the town side, the showers' columns
+	# solid and wrappable like every post
+	_check(m.surface_at(LevelBuild.BEACH_TOWER) == m.Surfaces.S.SAND, "the lifeguard tower stands on the sand")
+	_check(m.surface_at(LevelBuild.BEACH_COURT.get_center()) == m.Surfaces.S.SAND, "the volleyball court is on the sand")
+	for sp: Vector2 in LevelBuild.BEACH_SHOWERS:
+		_check(sp.x > m.beach_shore_x(sp.y) and sp.x < m.walk_edges(sp.y).x,
+			"the shower at %s stands between the sea and the promenade" % sp)
+		_check(sp in m.poles, "the shower at %s is a rope pole" % sp)
 	_check(LevelBuild.BEACH_BARS.size() >= 2, "chiringuito beach bars line the front")
+	for bar: Rect2 in LevelBuild.BEACH_BARS:
+		var be: Vector2 = m.walk_edges(bar.get_center().y)
+		_check(bar.position.x >= be.y - 1.0, "the bar at %s stands off the promenade (edge %.0f)" % [bar.position, be.y])
 
 	# Surfaces
 	_check(m.surface_at(Vector2(300.0, -1500.0)) == m.Surfaces.S.SAND, "beach sand is sand surface")
@@ -50,13 +61,6 @@ func _run() -> void:
 
 	# Selective recycling stations along promenade
 	_check(m.bins.size() >= 3, "selective recycling stations placed along front")
-
-	# Method checks
-	_check(m.has_method("_draw_beach_shower"), "beach shower drawing function exists")
-	_check(m.has_method("_draw_lifeguard_tower"), "lifeguard tower drawing function exists")
-	_check(m.has_method("_draw_beach_recycling_station"), "beach recycling station drawing function exists")
-	_check(m.has_method("_draw_beach_access_ramp"), "beach access ramp drawing function exists")
-	_check(m.has_method("_draw_volley_court"), "volleyball court drawing function exists")
 
 	m.queue_free()
 	await process_frame

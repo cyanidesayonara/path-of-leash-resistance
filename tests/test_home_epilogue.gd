@@ -68,7 +68,7 @@ func _test_scene_home() -> void:
 	for t in [0.0, 1.0, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5]:
 		tester.callback = func(c: CanvasItem) -> void: SceneHomeScript.draw(c, t)
 		tester.notification(CanvasItem.NOTIFICATION_DRAW)
-	_check(true, "SceneHome.draw completes cleanly across all timestamps")
+	# (SceneHome.draw completes cleanly across all timestamps: a draw error fails the run as a SCRIPT ERROR)
 	tester.queue_free()
 
 
@@ -80,7 +80,7 @@ func _test_scene_walkies_polish() -> void:
 	for t in [3.2, 3.35, 3.5, 3.8, 4.2, 4.8, 5.0]:
 		tester.callback = func(c: CanvasItem) -> void: SceneWalkiesScript.draw(c, t)
 		tester.notification(CanvasItem.NOTIFICATION_DRAW)
-	_check(true, "SceneWalkies.draw with carry wag and landing puffs completes cleanly")
+	# (SceneWalkies.draw with carry wag and landing puffs completes cleanly: a draw error fails the run as a SCRIPT ERROR)
 	tester.queue_free()
 
 
@@ -126,7 +126,7 @@ func _test_epilogue_stage_and_game_flow() -> void:
 
 	# Test epilogue stage draw execution
 	main.epilogue_stage.notification(CanvasItem.NOTIFICATION_DRAW)
-	_check(true, "epilogue_stage._draw() completes cleanly")
+	# (epilogue_stage._draw() completes cleanly: a draw error fails the run as a SCRIPT ERROR)
 
 	# Test MenuFlow.tick_end input swallowing during cutscene
 	main.epilogue_stage.skipped = false

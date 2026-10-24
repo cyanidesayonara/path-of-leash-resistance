@@ -60,16 +60,16 @@ func _run() -> void:
 
 	# Edge layer pass (stalls, barriers, matchday litter, stencils, stadium concourse)
 	P.draw_edge_layer(m, sb, -4800.0, 300.0)
-	_check(true, "draw_edge_layer completes cleanly over full level range")
+	# (draw_edge_layer completes cleanly over full level range: a draw error fails the run as a SCRIPT ERROR)
 
 	# Freedom square pass stadium bowl cantilever ribs
 	var fr_rect: Rect2 = m._freedom_rect()
 	P._draw_stadium_bowl(m, sb, fr_rect)
-	_check(true, "draw_stadium_bowl completes cleanly")
+	# (draw_stadium_bowl completes cleanly: a draw error fails the run as a SCRIPT ERROR)
 
 	# Live world pass (smoke, tout, drummers)
 	P.draw_live(m, sb, -4500.0, -1000.0)
-	_check(true, "draw_live completes cleanly")
+	# (draw_live completes cleanly: a draw error fails the run as a SCRIPT ERROR)
 
 	# 4. Strict brand deny list check on all new text
 	var branding_test = load("res://tests/test_partit_branding.gd").new()

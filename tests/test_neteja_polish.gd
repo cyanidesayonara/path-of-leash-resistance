@@ -44,15 +44,16 @@ func _run() -> void:
 		var kerb_x: float = e.x if is_west else e.y
 		_check(absf(d.x - kerb_x) < 40.0, "dumpster %d sits neatly along the kerb" % i)
 
-	# Verify drawing methods exist on main
-	_check(m.has_method("_draw_neteja"), "La Neteja ground and prop drawing function exists")
-	_check(m.has_method("_draw_neteja_module"), "La Neteja building module and storefront drawing function exists")
-	_check(m.has_method("_neteja_open_shop"), "La Neteja bakery / shop state resolver exists")
-
-	# Allow a frame to render normally through Godot's pipeline
+	# the dumpsters stand at the kerb, clear of the middle of the street
+	for i in range(dumps.size()):
+		_check(absf(dumps[i].x - m.walk_cx) > 120.0, "dumpster %d leaves the middle of the street clear" % i)
+	# the bakery is open where the walk shows it open (y -660, west side), and
+	# the shop state is fixed per module, not random per frame
+	_check(m._neteja_open_shop(-660.0, -1.0), "the bakery at -660 on the west side is open")
+	_check(m._neteja_open_shop(-1100.0, 1.0) == m._neteja_open_shop(-1100.0, 1.0), "a shop's state is fixed")
+	# a couple of real frames: a draw error here fails the run (SCRIPT ERROR)
 	await process_frame
 	await process_frame
-	_check(true, "La Neteja frames rendered cleanly with batched shapes")
 
 	m.queue_free()
 	await process_frame
