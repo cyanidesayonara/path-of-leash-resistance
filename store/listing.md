@@ -79,18 +79,19 @@ dog walking
 ### What's new in this version
 
 ```
-- A new walk, El Veterinari: the 20th Barcelona campaign walk and 4th major chase sequence, open at 33 stars or in Free Play mode.
-- The Clinic Escape: Millie reluctantly enters the vet clinic, but when she reaches the examination door and smells rubbing alcohol, she panics and bolts south!
-- Veterinary assistants with giant cones of shame and butterfly nets give chase while your human dawdles on the leash; weave around support pillars and time your run through automatic sliding doors to get away.
-- Step onto the digital pet scale to weigh in, bark at nervous cats in waiting room carriers, and snatch the liver treat jar prize from the reception desk.
-- Quayside waste bins added along the boardwalk in El Port for the bag chore, and Three Graces fountain registered in Plaça Reial.
-- High-tempo clinic chamber groove with staccato marimba and upright bass.
+- Two new walks:
+  - El Veterinari, open at 33 stars: Millie is taken to the vet and bolts. Get out past the clinic assistants and their cones of shame, weigh in on the pet scale on the way, bark at the cats in their carriers, and snatch the liver treat jar from reception.
+  - El Tibidabo, open at 35 stars: a winding mountain road up to the Mirador, the funicular climbing beside it, Aleppo pines to wrap the leash round, and a plaça off leash at the top. The walk ends at the funicular's bottom station, with its own accordion tune.
+- Every walk now ends somewhere real: an apartment block of its own neighborhood, the station concourse, a metro stair, the funicular, a trail gate or the ramp up the flood wall. You walk the last stretch in, legs going, the leash pulled straight.
+- The agility course now stands in El Barri's dog park only. Tug-of-war and frisbee are still in every off-leash area.
+- Fixes: El Veterinari's chase no longer crashes, the cats hiss when barked at, El Somni and Plaça Reial's goals ask for what they say, the leash wraps the detour's lampposts properly, and the results screen stops filling the log with errors.
+- El Port has quayside bins for the bag chore.
 ```
 
 ### Notes for certification
 
 ```
-Update 1.64: a new walk (El Veterinari) with clinic escape chase mechanics, digital pet scale interaction, quayside bins on El Port, and level audit polish. No change to capabilities, network use, data handling or controls since 1.55.
+Update 1.64: two new walks (El Veterinari, El Tibidabo), a proper exit at the end of every walk, and fixes. No change to capabilities, network use, data handling or controls since 1.55.
 
 Path of Leash Resistance is a single-player Win32 desktop game built with the Godot engine (4.7), packaged as MSIX.
 

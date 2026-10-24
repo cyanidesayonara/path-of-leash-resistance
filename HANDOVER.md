@@ -21,47 +21,35 @@ physics. Ships to itch (`html5` + `windows`) on a version tag after green CI.
 
 ## Where things stand (2026-10-24)
 
-**Released: v1.63** tagged on `main` at `5c79395` (2026-10-24). itch export
-and GitHub release action triggered on the tag. The Store listing in
-`store/listing.md` and `docs/itch-page.md` records 1.63 notes. Santtu submits
-the Store package. Do not treat a submission as live until he says so.
+**Released: v1.63** (tag at `5c79395`). **v1.64 is ready on `main`,
+untagged.** Its What's new is in `docs/itch-page.md` and `store/listing.md`.
 
-**What v1.63 added:**
-- **Walk 18: El Port** (`systems/port.gd`): Moll dels Pescadors working wharf,
-  timber boardwalk, iron mooring bollards for leash wrapping, fishing boats with
-  swaying rigging, flocking seagulls, fish market stalls with crushed ice, and
-  Plaça del Far lighthouse.
-- **Walk 19: Plaça Reial** (`systems/reial.gd`): Royal arcaded square in the
-  Gothic Quarter with Antoni Gaudí's 6-armed dragon lampposts, Three Graces
-  fountain with drinking trough, dining terraces, and guitar busker duet barking.
-- **Free Play (Demo) Mode** (`autoload/game.gd`, `hud/menu_screen.gd`): Settings
-  toggle and `--free-play` flag allowing all walks to be played freely without
-  star gating; career save persistence is cleanly bypassed during practice.
-- **Artsy Detour «El Somni»** (`systems/detour.gd`): First secret-in-plain-sight
-  side gallery off Carrer del Gòtic paying homage to Salvador Dalí, with melting
-  bronze lampposts and the Golden Dream Bone.
-- **HUD Vitals & Messaging System Polish** (`hud/ui_icons.gd`, `hud/event_feed.gd`):
-  Smartphone HP pips with hairline cracked glass, liquid glass bladder and sprint
-  tubes with vector glyphs, concentric mark rings, and 4-tier event hierarchy.
-- **Responsive Mobile Navigation & Juice**: Progress card scales cleanly down
-  to 6px rows on all landscape mobile viewports, dynamic tail wags, kerb skids.
+**What v1.64 adds:**
+- Walk 20, El Veterinari (`systems/vet.gd`): the clinic escape chase.
+- Walk 21, El Tibidabo (`systems/tibidabo.gd`, `world/funicular_layer.gd`):
+  the mountain road with the funicular running beside it, ending at its
+  bottom station.
+- Every walk's exit is a real place (`systems/exit_portals.gd`): a home block
+  dressed for its walk, the station, a metro stair, the funicular, a trail
+  gate, the flood wall ramp. The arrival walks the pair in over the last
+  140 px with gait, facing and a straightened leash (`systems/arrival.gd`).
+- The agility course is in El Barri only (`FreedomGames.AGILITY_WALKS`).
+- Hardening after an audit of the 1.63 work (#315, #316, #320): the vet
+  chase crash, the vet cats, El Somni's and Plaça Reial's goal credit, the
+  detour's rope radii, the rails duplicate, an `intro_skip` input action
+  that did not exist (now caught by `tests/test_input_actions.gd`), and
+  tests that could not fail.
 
-The campaign roster stands at **19 walks** (out of 26 total in the Grand Campaign
-Roadmap). All 19 walks have dedicated tests, pass selftest, headless smoke, and
-full idle soak (21/21 matrix checks green).
+The roster is **21 walks**. The 26-walk campaign plan is issue #170.
 
-**Board:** nothing is awaiting acceptance (all merged PRs through #300 are
-marked `Done` on Project #4). The open cards are later work,
-not this tag: #260 Steam, #237 Montjuïc extras, #170 chase finales, #147
-platforms, #13 a real phone, #12 whether SCARED belongs in the sweeper
-chase, #11 mood readability. #271 (fear before the sweeper is visible) is
-fixed on main (`f187426`) and closed.
+**Board:** #317, #318 and #319 await acceptance (the voice fixes, the agility
+scope, the arrival and exits). Everything older is Done. Open cards are
+later work: #260 Steam, #13 a real phone.
 
-**The Grand Campaign Roadmap (26 Walks to v1.7X):** Issue #170 has been updated into the master roadmap tracking the 26-walk campaign structure (chases every 5th walk: 5 La Neteja, 10 El Besòs, 15 Festa de Gràcia, 20 El Veterinari; Walk 25 Els Búnquers; Walk 26 Rambla del Raval El Gat de Botero boss finale). Obsolete issues #11, #12, #147, and #237 have been cleaned up and closed. PR #303 added dual respites and midpoint checkpoint fixes to El Besòs. Free Play / Demo mode toggle is implemented in Settings.
-
-The local checkout at `path-of-leash-resistance` is synced to `origin/main`
-and stale worktrees have been cleaned up. Always branch new work from
-`origin/main`.
+**Known, not yet fixed:** El Port's gulls are drawn but do nothing. The
+detour autopilot and El Besòs's flood apron are suspect and unconfirmed.
+`main.gd` keeps gaining per-walk flags (`if m.lvl == ...`); move them into
+the walk modules before they spread further.
 
 **Next, when Santtu asks:** tag v1.64. Not before. After the tag, he runs
 the Store submit. When that submission is live, move the 1.64 What's new
@@ -120,7 +108,7 @@ user argument, including `--level`, skips it. Engine arguments
 4. `release.yml` waits for CI on that SHA, then exports and publishes.
    Missing `BUTLER_API_KEY` fails the job.
 
-The 1.62 What's new is already in `store/listing.md` and `docs/itch-page.md`.
+The 1.64 What's new is already in `store/listing.md` and `docs/itch-page.md`.
 Next time, update those as their own PR before the tag. Santtu runs the
 Store submit workflow. When a submission goes live, copy its What's new into
 "Past What's new".
