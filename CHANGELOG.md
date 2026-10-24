@@ -2,6 +2,26 @@
 
 Append-only session history, newest first.
 
+## 2026-10-24 - Release v1.63: El Port, Plaça Reial, Free Play Mode, and Artsy Detours
+
+- Released **v1.63** to stores, adding two complete Barcelona campaign walks, Free Play (Demo) mode, and artsy gallery detours:
+  - **Walk 18: El Port** (`systems/port.gd`):
+    - Barceloneta's working harbor along Moll dels Pescadors and Moll de la Fusta, open at 29 career stars or in Free Play mode.
+    - Weathered timber boardwalk, iron mooring bollards, moored fishing boats with swaying masts, flocking seagulls, fish market crates, and Plaça del Far lighthouse.
+    - Authentic maritime accordion soundtrack, and 12 custom goals.
+  - **Walk 19: Plaça Reial** (`systems/reial.gd`):
+    - Grand arcaded neoclassical square in the Gothic Quarter, open at 31 career stars or in Free Play mode.
+    - Antoni Gaudí's historic 6-armed dragon lampposts with slingshot vaults, Font de les Tres Gràcies fountain basin, outdoor tapas terraces, and Spanish guitar busker duet barking.
+    - Spanish flamenco rumba track, and 12 custom goals.
+  - **Free Play (Demo) Mode** (`autoload/game.gd`, `hud/menu_screen.gd`):
+    - Settings toggle and `--free-play` flag unlocking all campaign walks for practice while protecting career saves.
+  - **Artsy Detour: «El Somni»** (`systems/detour.gd`):
+    - Secret side gallery paying homage to Salvador Dalí on Carrer del Gòtic with melting lampposts and the Golden Dream Bone.
+  - **HUD Vitals & Messaging System Polish** (`hud/ui_icons.gd`, `hud/event_feed.gd`):
+    - Smartphone silhouettes with cracked glass, liquid glass bladder and sprint tubes, and standardized 4-tier communication hierarchy.
+  - **Responsive Mobile Navigation & Juice**:
+    - Scaled progress view down cleanly across all mobile landscape aspect ratios, mood-driven tail wags, and kerb skids.
+
 ## 2026-10-23 - Walk 19: Plaça Reial (The Arcaded Royal Square)
 
 - **Walk 19: Plaça Reial** (`systems/reial.gd`, `autoload/game.gd`, `audio/music.gd`, `systems/goals.gd`, `main.gd`, `world/level_build.gd`):

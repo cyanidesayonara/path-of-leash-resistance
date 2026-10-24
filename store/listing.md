@@ -79,24 +79,19 @@ dog walking
 ### What's new in this version
 
 ```
-- A new walk, El Besòs: a river park between L'Estació and Les Obres, open at 14 stars. The way out is dry. The way home is the flood.
-- Shallow water pushes you south and wets your human. Plant to hold a spot. The deep channel, and the swell from the river, ends the walk. A raised apron stays dry until the water spills.
-- The flood warns you, then gives a head start, the same as the sweeper. Your human hears the siren and decides it is not their problem.
-- Every walk comes home to its own door. Your human looks up, pockets the phone, and follows you in.
-- Rain, wind, snow, night and dawn each have their own light. Lamps stay warm after dark.
-- Walk names sit in plain type, and a lost walk's title keeps its last letter.
-- The Daily Walk is gone. A walk's own weather stays on that walk.
-- Bring Tofu home works: she only hides where you can reach her.
-- The leash runs round a stall, a van or a bench instead of through it.
-- Caught by the sweeper, the two of you go up into the brooms. Fear waits until the threat is on screen.
-- On a rainy El Bosc, one run in five raises the stream. Carry the branch or the ball to the bank.
-- Visual polish across all seventeen walks: Doric columns and Jujol medallions in El Mosaic, travelator handrail grinds in L'Estació, Pont del Bisbe in El Gòtic, wave paving and Miró's mosaic on La Rambla, riprap banks and inflatable weir on El Besòs, and new landmarks across the city.
+- Two new walks:
+  - El Port: Barceloneta's working wharf along Moll dels Pescadors, with wooden boardwalk timber, quayside mooring bollards, fish market crate stacks, flapping seagulls, and Plaça del Far lighthouse.
+  - Plaça Reial: Barcelona's grand neoclassical arcaded square in the Gothic Quarter, with Antoni Gaudí's six-armed dragon lampposts, the Three Graces central fountain, outdoor tapas terraces, and a Spanish guitar busker.
+- Free Play (Demo) mode in Settings: choose any walk in the game freely without star gates. Career saves and stats are safely bypassed during practice.
+- Artsy Detours: the first secret-in-plain-sight side gallery, «El Somni» (homage to Salvador Dalí) hidden along Carrer del Gòtic, featuring melting elastic lampposts and a floating golden dream bone.
+- HUD vitals & iconography polish: redesigned smartphone HP pips with hairline cracked glass, liquid bladder and sprint energy tubes with vector droplet and lightning glyphs, arcade combo streak badge, and concentric territory mark target rings.
+- Dynamic mood-driven tail wagging, crisp kerb skid juice, and smoother menu typography across all screen resolutions.
 ```
 
 ### Notes for certification
 
 ```
-Update 1.62: a seventeenth walk (El Besòs, the river park), home arrivals, and no Daily Walk. No change to capabilities, network use, data handling or controls since 1.55. El Besòs takes about as long as the other walks; the way home is a chase.
+Update 1.63: two new walks (El Port and Plaça Reial), Free Play mode, artsy gallery detours, and HUD vitals overhaul. No change to capabilities, network use, data handling or controls since 1.55.
 
 Path of Leash Resistance is a single-player Win32 desktop game built with the Godot engine (4.7), packaged as MSIX.
 
@@ -207,6 +202,23 @@ written by `tools/make_store_art.gd`: the 9:16 poster, the 1:1 box art and the
 ## Past What's new
 
 As submitted, newest first. The current one is in "Current listing".
+
+### What's new in 1.62 (tagged 2026-10-23)
+
+```
+- A new walk, El Besòs: a river park between L'Estació and Les Obres, open at 14 stars. The way out is dry. The way home is the flood.
+- Shallow water pushes you south and wets your human. Plant to hold a spot. The deep channel, and the swell from the river, ends the walk. A raised apron stays dry until the water spills.
+- The flood warns you, then gives a head start, the same as the sweeper. Your human hears the siren and decides it is not their problem.
+- Every walk comes home to its own door. Your human looks up, pockets the phone, and follows you in.
+- Rain, wind, snow, night and dawn each have their own light. Lamps stay warm after dark.
+- Walk names sit in plain type, and a lost walk's title keeps its last letter.
+- The Daily Walk is gone. A walk's own weather stays on that walk.
+- Bring Tofu home works: she only hides where you can reach her.
+- The leash runs round a stall, a van or a bench instead of through it.
+- Caught by the sweeper, the two of you go up into the brooms. Fear waits until the threat is on screen.
+- On a rainy El Bosc, one run in five raises the stream. Carry the branch or the ball to the bank.
+- Visual polish across all seventeen walks: Doric columns and Jujol medallions in El Mosaic, travelator handrail grinds in L'Estació, Pont del Bisbe in El Gòtic, wave paving and Miró's mosaic on La Rambla, riprap banks and inflatable weir on El Besòs, and new landmarks across the city.
+```
 
 ### What's new in 1.61 (tagged 2026-10-20)
 
