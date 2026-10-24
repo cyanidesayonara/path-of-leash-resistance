@@ -103,6 +103,21 @@ Single player. No ads, no purchases, no account. The download plays offline; the
 Made in Godot by Santtu Nykänen. The dog is Millie, a distinguished salt-and-pepper mutt who squats like a lady.
 ```
 
+## What's new in 1.63
+
+For a devlog post or the top of the body. Everything since v1.62, from
+CHANGELOG.md. Tagged 2026-10-24.
+
+```
+- Two new walks:
+  - El Port: Barceloneta's working wharf along Moll dels Pescadors, with wooden boardwalk timber, quayside mooring bollards, fish market crate stacks, flapping seagulls, and Plaça del Far lighthouse.
+  - Plaça Reial: Barcelona's grand neoclassical arcaded square in the Gothic Quarter, with Antoni Gaudí's six-armed dragon lampposts, the Three Graces central fountain, outdoor tapas terraces, and a Spanish guitar busker.
+- Free Play (Demo) mode in Settings: choose any walk in the game freely without star gates. Career saves and stats are safely bypassed during practice.
+- Artsy Detours: the first secret-in-plain-sight side gallery, «El Somni» (homage to Salvador Dalí) hidden along Carrer del Gòtic, featuring melting elastic lampposts and a floating golden dream bone.
+- HUD vitals & iconography polish: redesigned smartphone HP pips with hairline cracked glass, liquid bladder and sprint energy tubes with vector droplet and lightning glyphs, arcade combo streak badge, and concentric territory mark target rings.
+- Dynamic mood-driven tail wagging, crisp kerb skid juice, and smoother menu typography across all screen resolutions.
+```
+
 ## What's new in 1.62
 
 For a devlog post or the top of the body. Everything since v1.61, from

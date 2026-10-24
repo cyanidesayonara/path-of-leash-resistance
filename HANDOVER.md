@@ -19,39 +19,36 @@ Top-down physics comedy in Godot 4.7 / GDScript. You are the dog; the
 phone-distracted human walks on autopilot; the leash is real verlet-rope
 physics. Ships to itch (`html5` + `windows`) on a version tag after green CI.
 
-## Where things stand (2026-10-23)
+## Where things stand (2026-10-24)
 
-**Released: v1.61** at `7cc8e73` (2026-10-20). itch and the GitHub release
-are that tag. The Store listing records those notes as tagged that day.
-Santtu submits the Store package. Do not treat a submission as live until
-he says so.
+**Released: v1.63** tagged on `main` at `5c79395` (2026-10-24). itch export
+and GitHub release action triggered on the tag. The Store listing in
+`store/listing.md` and `docs/itch-page.md` records 1.63 notes. Santtu submits
+the Store package. Do not treat a submission as live until he says so.
 
-**On `origin/main`:** the 1.62 content, notes, and the full 17-walk visual
-polish pass (#282–#298 plus El Besòs polish) are merged, with CI, the idle
-soak, and the screenshot sweep green. v1.62 is prepared and not tagged.
-The notes are in `docs/itch-page.md` and `store/listing.md`. The README,
-`PROJECT.md`, `docs/LEVEL_DESIGN.md` and this file match them. Tag only
-when Santtu says to.
+**What v1.63 added:**
+- **Walk 18: El Port** (`systems/port.gd`): Moll dels Pescadors working wharf,
+  timber boardwalk, iron mooring bollards for leash wrapping, fishing boats with
+  swaying rigging, flocking seagulls, fish market stalls with crushed ice, and
+  Plaça del Far lighthouse.
+- **Walk 19: Plaça Reial** (`systems/reial.gd`): Royal arcaded square in the
+  Gothic Quarter with Antoni Gaudí's 6-armed dragon lampposts, Three Graces
+  fountain with drinking trough, dining terraces, and guitar busker duet barking.
+- **Free Play (Demo) Mode** (`autoload/game.gd`, `hud/menu_screen.gd`): Settings
+  toggle and `--free-play` flag allowing all walks to be played freely without
+  star gating; career save persistence is cleanly bypassed during practice.
+- **Artsy Detour «El Somni»** (`systems/detour.gd`): First secret-in-plain-sight
+  side gallery off Carrer del Gòtic paying homage to Salvador Dalí, with melting
+  bronze lampposts and the Golden Dream Bone.
+- **HUD Vitals & Messaging System Polish** (`hud/ui_icons.gd`, `hud/event_feed.gd`):
+  Smartphone HP pips with hairline cracked glass, liquid glass bladder and sprint
+  tubes with vector glyphs, concentric mark rings, and 4-tier event hierarchy.
+- **Responsive Mobile Navigation & Juice**: Progress card scales cleanly down
+  to 6px rows on all landscape mobile viewports, dynamic tail wags, kerb skids.
 
-What 1.62 adds, already on main: El Besòs (14 stars, between L'Estació and
-Les Obres), the flood on the way home, each walk arriving at its own door,
-weather and lamplight, no Daily Walk, Tofu only where she can be reached,
-the leash around a stall, a van or a bench, a rainy high stream on El Bosc
-(one run in five; `--seed=4` selects it, `--seed=0` does not), and a
-city-wide visual and architectural polish pass across all seventeen campaign
-walks (fluted Doric columns and Jujol ceiling medallions in El Mosaic,
-travelator handrail grinds and tactile platform coping in L'Estació, Pont del
-Bisbe Gothic tracery and Sant Felip Neri fountain in El Gòtic, trench shoring
-and scaffold handrail grinds in Les Obres, Miró mosaic and wave paving on La
-Rambla, riprap embankments and SAHBE hydrological gear on El Besòs, and
-bespoke landmarks across the remaining walks).
-
-The 2026-10-22/23 roster check and visual polish pass covered all seventeen
-campaign walks: selftest, autowalk, freedom bounds, dedicated per-walk
-visual polish tests, and desktop mid-walk captures. Phone, pad and a fresh
-web-perf pass were not part of that check. Every walk in `Game.LEVELS` now
-also has its own hand-authored off-leash prop list (`LevelBuild.FREEDOM_PROPS`),
-completing all items in `docs/LEVEL_DESIGN.md` under `## Order`.
+The campaign roster stands at **19 walks** (out of 26 total in the Grand Campaign
+Roadmap). All 19 walks have dedicated tests, pass selftest, headless smoke, and
+full idle soak (21/21 matrix checks green).
 
 **Board:** nothing is awaiting acceptance (all merged PRs through #300 are
 marked `Done` on Project #4). The open cards are later work,
