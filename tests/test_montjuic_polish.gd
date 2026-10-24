@@ -35,23 +35,26 @@ func _run() -> void:
 
 	var M: GDScript = load("res://systems/montjuic.gd")
 	_check(M != null, "Montjuic system loaded")
-	_check(M.has_method("draw_font"), "draw_font method exists")
-	_check(M.has_method("draw_cactus_bed"), "draw_cactus_bed method exists")
-	_check(M.has_method("draw_on_hill"), "draw_on_hill method exists")
-	_check(M.has_method("_cypress"), "_cypress helper exists")
-	_check(M.has_method("_oval_pts"), "_oval_pts helper exists")
+	# the botanical pieces stand off the path, in the garden beside it
+	for cp: Vector2 in M.CACTI:
+		var ce: Vector2 = m.walk_edges(cp.y)
+		_check(cp.x < ce.x - 13.0 or cp.x > ce.y + 13.0, "cactus at %s grows off the path (edges %s)" % [cp, ce])
+		_check(cp in m.poles, "cactus at %s catches the rope" % cp)
+	var fe: Vector2 = m.walk_edges(M.FONT.get_center().y)
+	_check(M.FONT.position.x >= fe.y - 1.0 or M.FONT.end.x <= fe.x + 1.0, "the Font Màgica basin is off the path")
 
 	# Verify terrace layout has walls
 	var tys: Array[float] = M.terrace_ys(m)
 	_check(tys.size() >= 10, "terraced retaining walls along the climb (%d)" % tys.size())
+	for i in range(1, tys.size()):
+		_check(tys[i] < tys[i - 1] - 100.0, "terrace %d is a full step above the one below" % i)
 
 	# Verify cactus bed is intact
 	_check(M.CACTI.size() == 5, "5 specimen cacti in botanical garden")
 
-	# Allow frames to render through engine
+	# a couple of real frames: a draw error here fails the run (SCRIPT ERROR)
 	await process_frame
 	await process_frame
-	_check(true, "Montjuic frames render cleanly with batched shapes")
 
 	m.queue_free()
 	await process_frame

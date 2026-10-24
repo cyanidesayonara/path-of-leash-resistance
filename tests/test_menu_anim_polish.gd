@@ -107,7 +107,7 @@ func _run() -> void:
 		main.mood.intensity = 1.0
 		dog.queue_redraw()
 		await process_frame
-	_check(true, "dog._draw() completes across all action and mood states")
+	# (dog._draw() completes across all action and mood states: a draw error fails the run as a SCRIPT ERROR)
 
 	print("MENU_ANIM_POLISH checks=%d failures=%d" % [checks, failures.size()])
 	quit(0 if failures.is_empty() else 1)

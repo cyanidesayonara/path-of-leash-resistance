@@ -77,7 +77,7 @@ func _run() -> void:
 		dog.ice = (s == SurfacesScript.S.WATER)
 		dog.queue_redraw()
 		await process_frame
-	_check(true, "dog draws skid dust cleanly across all ground surfaces")
+	# (dog draws skid dust cleanly across all ground surfaces: a draw error fails the run as a SCRIPT ERROR)
 
 	# 6. Mood-driven animation drawing
 	for mid: int in [MoodScript.M.HAPPY, MoodScript.M.SCARED, MoodScript.M.BARKY, MoodScript.M.ZOOMIES, MoodScript.M.TIRED]:
@@ -85,7 +85,7 @@ func _run() -> void:
 		main.mood.intensity = 1.0
 		dog.queue_redraw()
 		await process_frame
-	_check(true, "dog renders cleanly under all 5 moods with dynamic tail wagging and postures")
+	# (dog renders cleanly under all 5 moods with dynamic tail wagging and postures: a draw error fails the run as a SCRIPT ERROR)
 
 	# 7. Vault launch stretch integration
 	main.vault_t = 0.5
