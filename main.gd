@@ -423,6 +423,7 @@ var port_bollard_wrapped := false
 var reial_gaudi_wrapped := false
 var reial_fountain_drank := false
 var reial_busker_barked := false
+var vet_scale_weighed := false
 # the pole she last vaulted, and whether she has since cleared it. Without
 # this she can sit in one pole's orbit re-triggering forever: the autowalk
 # stall watchdog caught it, and it would also have been a score exploit
@@ -1195,6 +1196,9 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 		return
 	if lvl == "reial":
 		Reial.draw_edge_layer(self, c, vt, vb)
+		return
+	if lvl == "vet":
+		Vet.draw_edge_layer(self, c, vt, vb)
 		return
 	var mod := 220.0                     # height of one facade module
 	var depth := 78.0                    # how far the detailed frontage juts
@@ -4241,6 +4245,8 @@ func draw_overhead_onto(c: CanvasItem) -> void:
 		return
 	if lvl == "reial":
 		Reial.draw_overhead(self, c)
+		return
+	if lvl == "vet":
 		return
 	if lvl == "market":
 		_draw_mercat_arch(c, LevelBuild.MERCAT_ARCH_Y, "MERCAT")
@@ -9357,6 +9363,8 @@ func _physics_process(delta: float) -> void:
 		Detour.tick(self, delta)
 	if lvl == "reial":
 		Reial.update_reial(self, delta)
+	if lvl == "vet":
+		Vet.tick(self)
 	# the moving walkway (L'Estacio) and the escalators (Montjuic) move whoever
 	# stands on them outright: a push on velocity is eased away by a dog or
 	# human standing still
@@ -11593,6 +11601,9 @@ func surface_at(p: Vector2) -> int:
 	if lvl == "reial":
 		if p.y > GATE_Y:
 			return Surfaces.S.PAVEMENT
+	if lvl == "vet":
+		if p.y > GATE_Y:
+			return Surfaces.S.PAVEMENT
 	if lvl == "beach":
 		# THE SEAFRONT HAS NO GRASS. Its cross-section is sea, sand, boardwalk,
 		# bike path, promenade, then cafe paving - so once the sea and the sand
@@ -12712,6 +12723,8 @@ const FREEDOM_KINDS := {
 	"port": "placa",
 	# the arcaded royal square
 	"reial": "placa",
+	# the vet clinic recovery courtyard
+	"vet": "yard",
 }
 const BEACH_SEA_R := 430.0
 const BEACH_GATE_SHORE_X := 230.0
@@ -14077,7 +14090,7 @@ func _draw_world() -> void:
 			_draw_paving(maxf(vt, GATE_Y - 30.0), vb, walkway)
 			_wc.draw_line(Vector2(sw_l, bottom), Vector2(sw_l, GATE_Y), COL_SEAM, 3.0)
 			_wc.draw_line(Vector2(sw_r, bottom), Vector2(sw_r, GATE_Y), COL_SEAM, 3.0)
-		elif lvl != "partit" and lvl != "port" and lvl != "reial":
+		elif lvl != "partit" and lvl != "port" and lvl != "reial" and lvl != "vet":
 			# (Dia de Partit's asphalt and sidewalks are on the cached edge layer)
 			_draw_walk_ribbon(vt, vb, bottom, walkway)
 		if lvl == "besos":

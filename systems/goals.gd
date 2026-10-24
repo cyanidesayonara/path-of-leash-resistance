@@ -49,6 +49,8 @@ const LEVEL_GOAL_IDS := {
 	"port": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "gulls", "bollard", "combo", "prize"],
 	# Plaça Reial: palm trees, Gaudi lampposts, Three Graces fountain, guitar busker
 	"reial": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "gaudi", "fountain", "combo", "prize"],
+	# El Veterinari: clinic escape chase. No Tofu.
+	"vet": ["mark", "sniff", "phone", "paws", "bag", "fetch", "hi", "snack", "scale", "cone", "combo", "prize"],
 }
 
 
@@ -95,6 +97,8 @@ static func defs(m: Node2D) -> Dictionary:
 		"bollard": {"text": "Wrap the leash around an iron mooring bollard", "target": 1, "fn": func() -> int: return 1 if m.port_bollard_wrapped else 0},
 		"gaudi": {"text": "Wrap the leash around a Gaudi dragon lamppost", "target": 1, "fn": func() -> int: return 1 if m.reial_gaudi_wrapped else 0},
 		"fountain": {"text": "Drink fresh water from the Three Graces fountain", "target": 1, "fn": func() -> int: return 1 if m.reial_fountain_drank else 0},
+		"scale": {"text": "Weigh in on the digital pet scale", "target": 1, "fn": func() -> int: return 1 if bool(m.get("vet_scale_weighed")) else 0},
+		"cone": {"text": "Escape the vet without getting bumped", "target": 1, "fn": func() -> int: return 1 if bool(m.dog_hits == 0 and m.finished) else 0},
 	}
 
 

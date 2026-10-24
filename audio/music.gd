@@ -107,6 +107,9 @@ const STYLES := {
 	# Plaça Reial: lively Spanish guitar and flamenco palmas under the neoclassical arcades
 	"reial": {"bpm": 114, "key": 2, "lead": "guitar", "lead2": ["whistle", 0], "comp": "rumba",
 		"bass": "walk", "drums": "claps", "swing": 0.10, "verb": 0.28},
+	# El Veterinari: clinical stealth and frantic pet escape, pizzicato strings and marimba
+	"vet": {"bpm": 124, "key": 0, "minor": true, "lead": "marimba", "lead2": ["whistle", 0], "comp": "skank",
+		"bass": "walk", "drums": "kickrim", "swing": 0.06, "verb": 0.20},
 	"freedom": {"bpm": 120, "key": 5, "lead": "whistle", "lead2": ["glock", 12], "comp": "arp",
 		"bass": "walk", "drums": "kickrim", "swing": 0.1, "verb": 0.22},
 }
