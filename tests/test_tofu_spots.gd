@@ -139,12 +139,22 @@ func _run() -> void:
 						clear = false
 						break
 		_check(clear, "%s: every dart between spots is clear" % lv)
-		var home_y: float = m.HOME_Y
-		_check(float(spots[spots.size() - 1].y) <= home_y,
-			"%s: her last spot is at or before the home line" % lv)
+		# the arrival freezes the walk from its line on, so her last spot must
+		# come before it or the goal could never be finished
+		var was_auto: bool = m.auto_walk
+		m.auto_walk = false
+		var arrive_y: float = load("res://systems/arrival.gd").line_y(m)
+		m.auto_walk = was_auto
+		_check(float(spots[spots.size() - 1].y) < arrive_y,
+			"%s: her last spot is before the arrival starts (%.0f, line %.0f)" % [lv, float(spots[spots.size() - 1].y), arrive_y])
 
 	# the whole herd, played: Millie pressed onto each spot in turn banks the goal
 	var m := await _load_level("barri")
+	# turned for home down from the gate, as a walk comes home: standing at
+	# the start they would already be past the arrival line
+	m.dog.global_position = Vector2(m.walk_cx, m.GATE_Y + 700.0)
+	m.human.global_position = Vector2(m.walk_cx - 40.0, m.GATE_Y + 760.0)
+	m.leash.resnap()
 	m._enter_home()
 	await physics_frame
 	var tf := _tofu(m)
