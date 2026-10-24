@@ -178,6 +178,12 @@ static func check(m) -> Array:
 			"drink":
 				if m.fountains.is_empty():
 					p.append("wants a drink, has no fountain")
+			"fountain":
+				if m.fountains.is_empty():
+					p.append("wants fountain drink, has no fountain")
+			"bag":
+				if m.bins.is_empty():
+					p.append("wants bagging chore, has no bins")
 			"tummy":
 				if m.candy.is_empty():
 					p.append("wants candy resisted, has no candy")

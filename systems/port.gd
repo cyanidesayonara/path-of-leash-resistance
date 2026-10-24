@@ -156,6 +156,10 @@ static func build(m: Node2D) -> Array:
 	m.stall_kinds.clear()
 	m.astands = Array([], TYPE_VECTOR2, &"", null)
 	m.manholes = Array([], TYPE_VECTOR2, &"", null)
+	m.bins = Array([
+		Vector2(372.0, -1100.0), Vector2(372.0, -2050.0),
+		Vector2(372.0, -3050.0), Vector2(372.0, -3850.0),
+	], TYPE_VECTOR2, &"", null)
 
 	# register cast-iron bollards and palms in m.poles so leash wraps round them
 	for b: Vector2 in BOLLARDS:

@@ -88,6 +88,7 @@ func _run() -> void:
 	# 6. Sniffable spots (hydrants) & snacks
 	_check(m.hydrants.size() >= 5, "at least 5 sniffable spots (%d)" % m.hydrants.size())
 	_check(m.kebabs.size() >= 4, "at least 4 dropped fish snacks (%d)" % m.kebabs.size())
+	_check(m.bins.size() >= 3, "port has bins for the bag chore (%d)" % m.bins.size())
 	_check(m.prize_pos.x < INF, "prize catch placed on auction scale")
 	_check(m.prize_text == P.PRIZE_TEXT, "prize text matches")
 
