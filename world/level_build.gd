@@ -96,6 +96,7 @@ const CROSS_SECTIONS := {
 	"port": ["none", 0.0, "none", 0.0],
 	"reial": ["none", 0.0, "none", 0.0],               # quayside and harbor drawn in systems/port.gd
 	"vet": ["none", 0.0, "none", 0.0],
+	"tibidabo": ["none", 0.0, "none", 0.0],
 	# flood wall on the left, grass then the river on the right
 	"besos": ["none", 0.0, "grass", 120.0],
 }
@@ -1145,6 +1146,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"port": half = 290.0
 		"reial": half = 290.0       # quayside wharf (Port.edge_nodes)
 		"vet": half = 280.0
+		"tibidabo": half = 260.0
 		"besos": half = BESOS_HALF
 	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
 	m.walk_half = half
@@ -1300,6 +1302,8 @@ static func apply_corridor(m: Node2D) -> void:
 		m.edge_nodes = Reial.edge_nodes(m)
 	elif m.lvl == "vet":
 		m.edge_nodes = Vet.edge_nodes(m)
+	elif m.lvl == "tibidabo":
+		m.edge_nodes = Tibidabo.edge_nodes(m)
 	elif m.lvl == "trail":
 		# EL BOSC BENDS - the first walk in the game that is not a straight
 		# line. A woodland trail has no business being ruler-drawn: it wanders
@@ -1330,7 +1334,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo":
 		return
 	# and so does El Barri; the First Walk, built on it, is still fitted
 	if m.lvl == "barri" and not m.tutorial_mode:
@@ -1420,6 +1424,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_vet: Array = Vet.build(m)
 			hyd_list.assign(pl_vet[0])
 			keb_list.assign(pl_vet[1])
+		"tibidabo":
+			var pl_tibidabo: Array = Tibidabo.build(m)
+			hyd_list.assign(pl_tibidabo[0])
+			keb_list.assign(pl_tibidabo[1])
 		"street":
 			m.lane_ys = Array([-1200.0, -2600.0, -4000.0], TYPE_FLOAT, &"", null)
 			m.gate_text = "PIPICÀ"
@@ -2121,6 +2129,9 @@ static func build_level_data(m: Node2D) -> void:
 		"vet":
 			m.prize_pos = Vet.PRIZE
 			m.prize_text = Vet.PRIZE_TEXT
+		"tibidabo":
+			m.prize_pos = Tibidabo.PRIZE
+			m.prize_text = Tibidabo.PRIZE_TEXT
 		"besos":
 			m.prize_pos = Vector2(BESOS_CX + 40.0, -2700.0)
 			m.prize_text = "fetch the ball from beside the path"
@@ -2562,6 +2573,13 @@ const FREEDOM_PROPS := {
 		[Vector2(254.0, -358.0), "post"], [Vector2(516.0, -448.0), "post"], [Vector2(752.0, -438.0), "post"],
 		[Vector2(1040.0, -470.0), "post"], [Vector2(304.0, -248.0), "post"], [Vector2(546.0, -234.0), "shrub"],
 		[Vector2(772.0, -218.0), "post"],
+	],
+	"tibidabo": [
+		[Vector2(282.0, -446.0), "dig"], [Vector2(636.0, -426.0), "dig"], [Vector2(882.0, -224.0), "dig"],
+		[Vector2(382.0, -464.0), "planter"], [Vector2(1024.0, -244.0), "planter"],
+		[Vector2(258.0, -354.0), "post"], [Vector2(522.0, -444.0), "post"], [Vector2(758.0, -434.0), "post"],
+		[Vector2(1044.0, -466.0), "post"], [Vector2(308.0, -244.0), "shrub"], [Vector2(552.0, -238.0), "post"],
+		[Vector2(776.0, -214.0), "shrub"],
 	],
 }
 
@@ -3213,7 +3231,7 @@ static func build_entities(m: Node2D) -> void:
 	m.edge_layer.z_index = -5   # behind everything in the world
 	# what hangs over the walk, above everyone (El Gotic's bridge, El Mercat's
 	# arches, La Castanyada's lantern strings)
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "beach" or m.lvl == "scrap" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "beach" or m.lvl == "scrap" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "tibidabo":
 		var ov := Node2D.new()
 		ov.set_script(load("res://world/overheadlayer.gd"))
 		ov.z_index = 14

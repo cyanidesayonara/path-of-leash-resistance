@@ -46,7 +46,7 @@ static func place_for(id: String) -> String:
 	match id:
 		"station":
 			return "station"
-		"montjuic":
+		"montjuic", "tibidabo":
 			return "funicular"
 		"partit":
 			return "metro"

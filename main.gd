@@ -424,6 +424,8 @@ var reial_gaudi_wrapped := false
 var reial_fountain_drank := false
 var reial_busker_barked := false
 var vet_scale_weighed := false
+var tibidabo_viewfinder_gazed := false
+var tibidabo_funicular_seen := false
 # the pole she last vaulted, and whether she has since cleared it. Without
 # this she can sit in one pole's orbit re-triggering forever: the autowalk
 # stall watchdog caught it, and it would also have been a score exploit
@@ -1199,6 +1201,9 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 		return
 	if lvl == "vet":
 		Vet.draw_edge_layer(self, c, vt, vb)
+		return
+	if lvl == "tibidabo":
+		Tibidabo.draw_edge_layer(self, c, vt, vb)
 		return
 	var mod := 220.0                     # height of one facade module
 	var depth := 78.0                    # how far the detailed frontage juts
@@ -4247,6 +4252,9 @@ func draw_overhead_onto(c: CanvasItem) -> void:
 		Reial.draw_overhead(self, c)
 		return
 	if lvl == "vet":
+		return
+	if lvl == "tibidabo":
+		Tibidabo.draw_overhead(self, c)
 		return
 	if lvl == "market":
 		_draw_mercat_arch(c, LevelBuild.MERCAT_ARCH_Y, "MERCAT")
@@ -9365,6 +9373,8 @@ func _physics_process(delta: float) -> void:
 		Reial.update_reial(self, delta)
 	if lvl == "vet":
 		Vet.tick(self)
+	if lvl == "tibidabo":
+		Tibidabo.update_tibidabo(self, delta)
 	# the moving walkway (L'Estacio) and the escalators (Montjuic) move whoever
 	# stands on them outright: a push on velocity is eased away by a dog or
 	# human standing still
@@ -12726,6 +12736,8 @@ const FREEDOM_KINDS := {
 	"reial": "placa",
 	# the vet clinic recovery courtyard
 	"vet": "yard",
+	# the fairground summit plaza overlooking Barcelona
+	"tibidabo": "placa",
 }
 const BEACH_SEA_R := 430.0
 const BEACH_GATE_SHORE_X := 230.0
@@ -14277,7 +14289,7 @@ func _draw_world() -> void:
 		if lvl == "port":
 			Port.draw_bollard(_wc, h)
 			continue
-		if lvl == "reial" or lvl == "vet":
+		if lvl == "reial" or lvl == "vet" or lvl == "tibidabo":
 			if not h.done and h.progress > 0.0:
 				_wc.draw_arc(hp, 22.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
 			continue

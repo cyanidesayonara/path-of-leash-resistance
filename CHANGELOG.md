@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-10-24 - Walk 21: El Tibidabo (The Mountain Funicular & Panoramic Overlook)
+
+- **Walk 21: El Tibidabo** (`systems/tibidabo.gd`, `autoload/game.gd`, `world/level_build.gd`, `systems/goals.gd`, `systems/arrival.gd`, `main.gd`, `tests/test_tibidabo.gd`):
+  - Added campaign Walk 21: **El Tibidabo** (the scenic mountain road ascending Mount Tibidabo above Barcelona, unlocks at 35 career stars or freely selectable in Free Play mode).
+  - Authentic mountain highway corridor: asphalt road with yellow dividing center line and stone kerbs following the winding mountain contours, flanked on the west by a carved stone balustrade overlooking the Barcelona skyline and Mediterranean sea, and on the east by the historic Funicular de Tibidabo railway.
+  - Active Funicular (*Cuca de Llum*): authentic red-and-cream funicular carriage with panoramic glass windows climbing the mountain track alongside passing players; level crossing at `CROSSING_Y = -2400.0` with crossing ramp, warning crosshatching, and alternating red flashing crossing signal lights. Watching the carriage pass triggers `"CUCA DE LLUM! +3"` and satisfies the `funicular` goal.
+  - Panoramic Coin-Operated Viewfinders: twin brass-and-metal binocular viewfinders mounted on stone plinths along the cliffside balustrade; stepping up to any viewfinder triggers `"PANORAMA! +5"` and satisfies the `viewfinder` goal.
+  - Fairground summit at Mirador del Tibidabo: festive pennant bunting strung overhead, churro and cotton candy stalls, and fairground treat cart.
+  - Hazardous collectible prize: Spun sugar stick on the fairground cart (`"snatch the spun sugar stick from the fairground cart"`).
+  - 12 custom goals in `LEVEL_GOAL_IDS["tibidabo"]` including `funicular` and `viewfinder`.
+  - Added `tests/test_tibidabo.gd` (25 checks, 0 failures), integrated into CI selftest, smoke, and soak test suites (`.github/workflows/ci.yml`, `.github/workflows/soak.yml`).
+
 ## 2026-10-24 - Multi-Level Visual Polish: Trail Waymarkers and Landmark Sniff Progress
 
 - **Trail Waymarkers & Sniff Landmark Rendering** (`main.gd`):
