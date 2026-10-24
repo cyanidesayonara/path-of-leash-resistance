@@ -2,7 +2,7 @@
 
 Append-only session history, newest first.
 
-## 2026-10-24 - Walk them in through the door
+## 2026-10-24 - Walk them in through a real way home
 
 The arrival used to start at HOME_Y, 8 px from the door, so it was a short
 slide. Their legs did not move, because they only step from velocity and the
@@ -23,6 +23,23 @@ Her chase-catch pose had the same problem.
   after it.
 - `tools/arrival_frames.gd` photographs an arrival frame by frame, as a
   full-resolution crop of the door, for `tools/frames_to_gif.py`.
+- Every walk's exit is now a whole place across the south end of the walk,
+  not a door standing alone on the path (`systems/exit_portals.gd`):
+  - the homes are Barcelona apartment blocks, each walk with its own facade
+    and roof: shops with awnings and balconies along the front, a stone
+    portal with its door, the house number, an intercom and two pots, and
+    on the terrat a water tank, chimneys, a skylight and the washing;
+  - L'Estació has its concourse, with glass doors under a glass canopy,
+    ESTACIÓ, a clock and a bike rack;
+  - Montjuïc has its funicular station house, FUNICULAR on its canopy;
+  - Dia de Partit has a metro stair cut into the pavement, with railings
+    and the red M totem, a city block behind;
+  - El Bosc has a timber fence with an open gate, a trail map, a waymarker,
+    and the car park beyond;
+  - El Besòs has the flood wall and the ramp up through it to the river
+    path, with PARC FLUVIAL.
+  The fixed part is built once per walk and appended each frame as one
+  batch; only the door leaf and the lights are drawn live.
 
 ## 2026-10-24 - Harden the walks that shipped after 1.62
 

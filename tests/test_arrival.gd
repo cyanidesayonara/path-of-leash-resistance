@@ -10,6 +10,7 @@ extends SceneTree
 # stepping, facing the door, the leash pulled straight rather than balled up.
 
 const Arrival := preload("res://systems/arrival.gd")
+const ShapeBatch := preload("res://systems/shape_batch.gd")
 
 var checks := 0
 var failures: Array[String] = []
@@ -98,6 +99,12 @@ func _run() -> void:
 		_check(Arrival.rect_clear(m, mouth),
 			"%s opening is clear at (%.0f, %.0f)" % [id, mouth.get_center().x, mouth.get_center().y])
 		_check(mouth.end.y < float(m.START_Y) + 110.0, "%s opening is north of the south wall" % id)
+		# the exit is a whole place closing the walk's south end, not a door
+		# on the open path: its fixed part is built and cached once
+		var ex: ShapeBatch = Arrival.ExitPortals.static_geometry(m, mouth.get_center(), Arrival.place_of(m), String(game.weather))
+		_check(ex._points.size() > 600, "%s has a built exit (%d vertices)" % [id, ex._points.size()])
+		_check(Arrival.ExitPortals.static_geometry(m, mouth.get_center(), Arrival.place_of(m), String(game.weather)) == ex,
+			"%s builds its exit once" % id)
 
 	var barri: Node2D = await _load("barri")
 	_check(is_equal_approx(float(barri.depart_open), 1.0), "the apartment door stands open before the walk (%.2f)" % float(barri.depart_open))

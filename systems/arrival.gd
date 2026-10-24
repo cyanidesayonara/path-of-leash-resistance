@@ -10,6 +10,7 @@ extends RefCounted
 
 const SkyLook := preload("res://systems/sky.gd")
 const TofuRoute := preload("res://systems/tofu_route.gd")
+const ExitPortals := preload("res://systems/exit_portals.gd")
 
 const SKIP_LOCK := 0.5
 const PULL := 0.55
@@ -206,15 +207,8 @@ static func draw(m: Node2D, b: ShapeBatch) -> void:
 	var place := place_of(m)
 	var weather := _weather(m)
 	var night := _night(m)
-	match place:
-		"station", "funicular", "metro":
-			_transit(b, c, place)
-		"trailhead":
-			_gate(b, c)
-		"ramp":
-			_ramp(b, c)
-		_:
-			_apartment(b, c, open, m, weather, night)
+	ExitPortals.static_geometry(m, c, place, weather).append_to(b)
+	ExitPortals.draw_live(b, m, c, place, open, night)
 	if weather == "snow":
 		b.rect(Rect2(c.x - 36.0, r.end.y - 3.0, 72.0, 7.0), Color(0.94, 0.97, 1.0, 0.92))
 	if night:
@@ -235,76 +229,6 @@ static func _open_amount(m: Node2D) -> float:
 	if family_of(m) != "apartment":
 		return 0.0
 	return clampf(float(m.depart_open), 0.0, 1.0)
-
-
-static func _apartment(b: ShapeBatch, c: Vector2, open: float, m: Node2D, weather: String, night: bool) -> void:
-	var green := Color(0.30, 0.52, 0.41)
-	if weather == "rain":
-		green = green.darkened(0.16)
-	# tiles, then the frame, the shutters, the pots, the intercom, the leaf
-	for i in range(4):
-		var tone := 0.62 if i % 2 == 0 else 0.56
-		b.rect(Rect2(c.x - 30.0 + float(i) * 15.0, c.y - 4.0, 14.0, 22.0), Color(tone, tone * 0.92, tone * 0.84))
-	b.rect(Rect2(c.x - 34.0, c.y - 28.0, 8.0, 58.0), Color(0.34, 0.30, 0.26))
-	b.rect(Rect2(c.x + 26.0, c.y - 28.0, 8.0, 58.0), Color(0.34, 0.30, 0.26))
-	b.rect(Rect2(c.x - 52.0, c.y - 22.0, 16.0, 22.0), green.darkened(0.08))
-	b.rect(Rect2(c.x + 36.0, c.y - 22.0, 16.0, 22.0), green.darkened(0.08))
-	b.rect(Rect2(c.x - 58.0, c.y + 2.0, 12.0, 8.0), Color(0.45, 0.28, 0.18))
-	b.circle(Vector2(c.x - 52.0, c.y - 2.0), 5.0, Color(0.72, 0.22, 0.24))
-	b.rect(Rect2(c.x + 46.0, c.y + 2.0, 12.0, 8.0), Color(0.45, 0.28, 0.18))
-	b.circle(Vector2(c.x + 52.0, c.y - 2.0), 5.0, Color(0.72, 0.22, 0.24))
-	b.rect(Rect2(c.x + 28.0, c.y - 6.0, 5.0, 8.0), Color(0.16, 0.16, 0.18))
-	b.circle(Vector2(c.x + 30.5, c.y - 8.0), 1.6, Color(0.72, 0.62, 0.28))
-	if open > 0.05 or night:
-		var hall := Color(1.0, 0.86, 0.62, 0.35 * maxf(open, 0.45 if night else 0.0))
-		b.rect(Rect2(c.x - 24.0, c.y - 6.0, 48.0, 26.0), hall)
-	# shut along the threshold, swinging north into the street as it opens
-	var hinge := Vector2(c.x - 24.0, c.y + 8.0)
-	var ang := open * PI * 0.5
-	var tip := hinge + Vector2(cos(ang), -sin(ang)) * 48.0
-	b.line(hinge, tip, green, 7.0)
-	if open > 0.2 and not night:
-		var tint := SkyLook.tint(String(m.lvl), weather, false)
-		b.circle(c + Vector2(0.0, 14.0), 10.0, SkyLook.light(Color(1.0, 0.84, 0.55, 0.18 * open), tint))
-
-
-static func _transit(b: ShapeBatch, c: Vector2, place: String) -> void:
-	var top := c.y - 18.0
-	b.rect(Rect2(c.x - 50.0, top - 14.0, 100.0, 10.0), Color(0.30, 0.32, 0.36))
-	for i in range(5):
-		var y := top + float(i) * 9.0
-		var shade := 0.48 - float(i) * 0.045
-		b.rect(Rect2(c.x - 32.0, y, 64.0, 8.0), Color(shade, shade, shade + 0.02))
-	b.line(Vector2(c.x - 36.0, top), Vector2(c.x - 36.0, top + 46.0), Color(0.22, 0.24, 0.28), 3.0)
-	b.line(Vector2(c.x + 36.0, top), Vector2(c.x + 36.0, top + 46.0), Color(0.22, 0.24, 0.28), 3.0)
-	if place == "station":
-		b.circle(Vector2(c.x, top - 22.0), 8.0, Color(0.92, 0.90, 0.84))
-		b.circle(Vector2(c.x, top - 22.0), 6.0, Color(0.18, 0.20, 0.24))
-		b.line(Vector2(c.x, top - 22.0), Vector2(c.x, top - 27.0), Color(0.92, 0.90, 0.84), 1.5)
-	elif place == "funicular":
-		b.line(Vector2(c.x - 8.0, top + 4.0), Vector2(c.x - 8.0, top + 44.0), Color(0.55, 0.50, 0.42), 2.0)
-		b.line(Vector2(c.x + 8.0, top + 4.0), Vector2(c.x + 8.0, top + 44.0), Color(0.55, 0.50, 0.42), 2.0)
-		b.rect(Rect2(c.x - 14.0, top + 10.0, 28.0, 16.0), Color(0.70, 0.22, 0.18))
-	else:
-		b.circle(Vector2(c.x, top - 22.0), 9.0, Color(0.75, 0.16, 0.18))
-		b.rect(Rect2(c.x - 5.0, top - 24.0, 10.0, 3.0), Color(0.95, 0.95, 0.96))
-
-
-static func _gate(b: ShapeBatch, c: Vector2) -> void:
-	var wood := Color(0.45, 0.32, 0.18)
-	b.rect(Rect2(c.x - 40.0, c.y - 16.0, 8.0, 36.0), wood)
-	b.rect(Rect2(c.x + 32.0, c.y - 16.0, 8.0, 36.0), wood)
-	b.rect(Rect2(c.x - 40.0, c.y - 18.0, 80.0, 6.0), wood.lightened(0.08))
-	b.rect(Rect2(c.x - 16.0, c.y + 6.0, 32.0, 14.0), Color(0.55, 0.48, 0.32))
-
-
-static func _ramp(b: ShapeBatch, c: Vector2) -> void:
-	b.rect(Rect2(c.x - 28.0, c.y - 20.0, 56.0, 48.0), Color(0.62, 0.58, 0.40))
-	for i in range(4):
-		var y := c.y - 16.0 + float(i) * 10.0
-		b.rect(Rect2(c.x - 28.0, y, 56.0, 4.0), Color(0.12, 0.12, 0.12, 0.85))
-	b.line(Vector2(c.x - 32.0, c.y - 20.0), Vector2(c.x - 32.0, c.y + 28.0), Color(0.72, 0.62, 0.22), 3.0)
-	b.line(Vector2(c.x + 32.0, c.y - 20.0), Vector2(c.x + 32.0, c.y + 28.0), Color(0.72, 0.62, 0.22), 3.0)
 
 
 static func _hold_threat(m: Node2D) -> void:
