@@ -63,8 +63,8 @@ The local checkout at `path-of-leash-resistance` is synced to `origin/main`
 and stale worktrees have been cleaned up. Always branch new work from
 `origin/main`.
 
-**Next, when Santtu asks:** tag v1.62. Not before. After the tag, he runs
-the Store submit. When that submission is live, move the 1.62 What's new
+**Next, when Santtu asks:** tag v1.64. Not before. After the tag, he runs
+the Store submit. When that submission is live, move the 1.64 What's new
 into the past list.
 
 ## Standing rules

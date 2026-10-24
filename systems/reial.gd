@@ -148,6 +148,7 @@ static func build(m: Node2D) -> Array:
 	m.stall_kinds.clear()
 	m.astands = Array([], TYPE_VECTOR2, &"", null)
 	m.manholes = Array([], TYPE_VECTOR2, &"", null)
+	m.fountains = Array([FOUNTAIN_POS], TYPE_VECTOR2, &"", null)
 	m.bins = Array([
 		Vector2(365.0, -1400.0),
 		Vector2(915.0, -1400.0),

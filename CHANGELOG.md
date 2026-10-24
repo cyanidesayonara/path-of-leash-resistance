@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-10-24 - Campaign Audit: Quayside Bins, Fountain Structural Verification, and Level Checks
+
+- Level Design & Sanitation Infrastructure Audit (`systems/port.gd`, `systems/reial.gd`, `tests/test_port.gd`):
+  - Added 4 quayside waste bins along the west promenade of El Port (`systems/port.gd`), enabling Millie's owner to properly walk to a bin when bagging waste for the "bag" goal.
+  - Registered Font de les Tres Gràcies central fountain in `m.fountains` for Plaça Reial (`systems/reial.gd`).
+  - Added bin assertions to `tests/test_port.gd`.
+- Structural Level Verification Polish (`world/level_check.gd`):
+  - Added checks in `LevelCheck.check()` to ensure any level with a "bag" goal has bins and any level with a "fountain" goal has fountains registered.
+  - Verified 100% clean pass across all 20 levels in the game suite.
+- Cleaned up stale v1.62 version references in `HANDOVER.md`.
+
 ## 2026-10-24 - Release v1.63: El Port, Plaça Reial, Free Play Mode, and Artsy Detours
 
 - Released **v1.63** to stores, adding two complete Barcelona campaign walks, Free Play (Demo) mode, and artsy gallery detours:
