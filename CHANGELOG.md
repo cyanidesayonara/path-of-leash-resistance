@@ -2,6 +2,26 @@
 
 Append-only session history, newest first.
 
+## 2026-10-24 - Tests that can fail, for the 1.63 polish
+
+The 1.63 polish tests leaned on checks that could not fail: has_method,
+a constant that is not zero, and `_check(true, ...)` after a draw.
+- `test_platja`:
+  - the lifeguard tower and the volleyball court stand on the sand;
+  - the showers stand between the sea and the promenade and catch the rope;
+  - the bars stand off the promenade.
+- `test_montjuic_polish`:
+  - every cactus is off the path and catches the rope;
+  - the Font Màgica basin is off the path;
+  - each terrace is a full step above the one below.
+- `test_neteja_polish`:
+  - the dumpsters leave the middle of the street clear;
+  - the bakery is open where the walk shows it;
+  - a shop's state is fixed.
+- `test_gotic`: the has_method checks are gone.
+- In the rambla, partit, port, menu, dog animation and epilogue tests, the
+  `_check(true, ...)` lines after draws are now comments. The runner
+  already fails on any SCRIPT ERROR, so they only inflated the counts.
 ## 2026-10-24 - Walk them in through a real way home
 
 The arrival used to start at HOME_Y, 8 px from the door, so it was a short

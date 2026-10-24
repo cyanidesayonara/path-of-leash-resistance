@@ -110,7 +110,7 @@ func _run() -> void:
 	# 9. Simulation step sanity
 	for frame in range(15):
 		m._physics_process(1.0 / 60.0)
-	_check(true, "ran 15 physics frames cleanly without error")
+	# (ran 15 physics frames cleanly without error: a draw error fails the run as a SCRIPT ERROR)
 
 	print("\n--- TEST PORT RESULTS ---")
 	print("Checks: %d, Failures: %d" % [checks, failures.size()])
