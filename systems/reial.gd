@@ -11,6 +11,7 @@ extends RefCounted
 const Letters := preload("res://world/sign_letters.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+const EventFeed := preload("res://hud/event_feed.gd")
 
 const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.22)
@@ -316,4 +317,5 @@ static func update_reial(m: Node2D, _delta: float) -> void:
 		if m.dog.global_position.distance_to(BUSKER_POS) < 110.0:
 			if m.dog.bark_anim > 0.0:
 				m.set("reial_busker_barked", true)
-				m.float_text(m.dog.global_position + Vector2(0, -28), "¡OLÉ! GUITAR DUET!", Color(0.96, 0.88, 0.35))
+				m.float_text(m.dog.global_position + Vector2(0, -28), "olé!", Color(0.96, 0.88, 0.35))
+				m.feed.say("A DUET WITH THE BUSKER!", EventFeed.Tone.GOOD)
