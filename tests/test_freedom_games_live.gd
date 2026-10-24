@@ -48,8 +48,24 @@ func _close(m: Node2D) -> void:
 
 func _run() -> void:
 	var game = root.get_node("Game")
+	# the agility course stands only in El Barri; the other spaces have none,
+	# and say nothing about one
+	var FG: GDScript = load("res://systems/freedom_games.gd")
 	for lvl: String in ["park", "beach", "guell", "site", "market"]:
+		var mo: Node2D = await _open(lvl)
+		_check(mo.agility == null, "%s: no agility course" % lvl)
+		var said := false
+		for h: String in FG.hints(mo):
+			said = said or h.contains("AGILITY")
+		_check(not said, "%s: the hints do not mention agility" % lvl)
+		mo.freedom_games_tick(1.0 / 60.0)
+		await _close(mo)
+	for lvl: String in ["barri"]:
 		var m: Node2D = await _open(lvl)
+		_check(m.agility != null, "%s: the agility course is there" % lvl)
+		if m.agility == null:
+			await _close(m)
+			continue
 		var lane: Rect2 = m.agility.lane_rect()
 		var blocked := 0
 		for pp in m.park_props:
@@ -62,7 +78,7 @@ func _run() -> void:
 		_check(m.games_ground != null and m.games_ground.visible, "%s: the course is drawn" % lvl)
 		await _close(m)
 
-	var m: Node2D = await _open("park")
+	var m: Node2D = await _open("barri")
 	# the rope dog spawns anywhere in the park. This run teleports along the
 	# lane, and grabbing her there starts a tug the later check then inherits,
 	# with nothing in Millie's mouth. Hold her off the lane until that tug.
