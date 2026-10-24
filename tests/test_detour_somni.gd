@@ -67,6 +67,25 @@ func _run() -> void:
 	_check(not m.detour_active, "detour starts inactive on the street")
 	_check(not m.somni_bone_taken, "somni bone starts uncollected")
 
+	# the lampposts are ordinary rope poles, registered with the level's
+	# round posts. Added after the build, they once refilled every radius on
+	# El Gotic, flattening the furniture outlines to the post size.
+	_check(m.leash.pole_radii.size() == m.poles.size(),
+		"leash radii match the poles (%d radii, %d poles)" % [m.leash.pole_radii.size(), m.poles.size()])
+	var LB: GDScript = load("res://world/level_build.gd")
+	var samples := 0
+	var kept := 0
+	for rr: Rect2 in m.rope_rects:
+		for smp: Vector3 in LB.rect_rope_samples(rr):
+			samples += 1
+			var i: int = m.poles.find(Vector2(smp.x, smp.y))
+			if i >= 0 and is_equal_approx(m.leash.pole_radii[i], smp.z):
+				kept += 1
+	_check(samples > 0 and kept == samples,
+		"furniture outlines keep their own rope radii (%d of %d)" % [kept, samples])
+	for lp: Vector2 in Detour.lamp_points():
+		_check(m.poles.has(lp), "lamppost at %s is a rope pole" % lp)
+
 	# 2. Entering the Detour Gallery
 	_place(m, m.detour_door_pos)
 	await physics_frame
@@ -97,10 +116,19 @@ func _run() -> void:
 	var goal_def: Dictionary = G.defs(m)["somni"]
 	_check(int(goal_def.fn.call()) == 0, "somni goal initially evaluates to 0")
 
+	var in_play := false
+	for q: Dictionary in m.active_quests:
+		in_play = in_play or String(q.id) == "somni"
+	_check(in_play, "the somni goal is on the walk's list")
+	var bones_before: int = m.bones
 	var bone_p: Vector2 = Detour.DETOUR_ORIGIN + Detour.BONE_POS
 	_place(m, bone_p)
-	await physics_frame
-	await physics_frame
+	for _i in range(4):
+		await physics_frame
+	# credited through the goal system like every other goal: the toast,
+	# the bones and the saved star, not a bare flag
+	_check(m.run_goals_hit.has("somni"), "the somni goal is credited")
+	_check(m.bones >= bones_before + 5, "and pays its bones (%d -> %d)" % [bones_before, m.bones])
 
 	_check(m.somni_bone_taken, "touching plinth collects the Golden Dream Bone")
 	_check(int(goal_def.fn.call()) == 1, "somni goal evaluates to 1 after collecting the bone")
