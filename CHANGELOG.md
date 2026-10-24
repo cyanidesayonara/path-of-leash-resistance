@@ -12,6 +12,14 @@ areas are no longer nudged off a lane that is not there. The behaviour
 snapshot over all 20 walks is unchanged. `test_freedom_games_live` checks
 that the course is in El Barri and nowhere else, and runs its course test
 there.
+## 2026-10-24 - Stop the results screen logging a missing input action
+
+The home epilogue's skip check read `Input.is_action_just_pressed("intro_skip")`,
+but "intro_skip" is a prompt label (hud/prompts.gd), never a registered
+action, so the stats screen logged an InputMap error every frame. Keys and
+pad buttons already skip through plant, restart, back and pee, and a click or
+tap through the epilogue's own input handler. `tests/test_input_actions.gd`
+now checks every action name the code reads is registered.
 
 ## 2026-10-24 - Harden the walks that shipped after 1.62
 
