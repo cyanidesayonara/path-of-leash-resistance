@@ -88,6 +88,11 @@ const BESOS_BANDS := [
 	{"id": "midpoint", "kind": "respite", "jam_y": LevelBuild.BESOS_JAM_Y, "checkpoint": true},
 ]
 
+const VET_BANDS := [
+	{"id": "doors", "kind": "respite", "jam_y": -3300.0},
+	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
+]
+
 const EventFeed := preload("res://hud/event_feed.gd")
 const ChaseCheckpoint := preload("res://systems/chase_checkpoint.gd")
 const LevelBuild := preload("res://world/level_build.gd")
@@ -114,6 +119,13 @@ static func kind_behavior(kind: String) -> Dictionary:
 				"warning": "FIRE TRUCK!  GO GO GO!", "warning_color": Color(1, 0.55, 0.25),
 				"caught_human": "THEY GOT YOUR HUMAN\n\nYou pulled. You barked. It was not enough.",
 				"caught_dog": "NOBODY WAITED FOR YOU\n\nYou snagged, the leash went tight, and\nthey kept walking. They always keep walking.",
+			}
+		"vet":
+			return {
+				"kind": "vet", "speed": CHASE_SPEED, "flee": false,
+				"warning": "THE VET IS HERE! ESCAPE!",
+				"caught_human": "THE VET GOT YOUR HUMAN\n\nThey handed you over for your booster shot.\nYou will never trust them again.",
+				"caught_dog": "CONE OF SHAME!\n\nThe cone slipped over your head.\nThree weeks of bumping into doorways.",
 			}
 		"flood":
 			return {
@@ -149,6 +161,12 @@ static func profile_for(level: String) -> Dictionary:
 		f["script"] = "res://entities/flood.gd"
 		f["bands"] = BESOS_BANDS.duplicate(true)
 		return f
+	if level == "vet":
+		var v := kind_behavior("vet")
+		v["id"] = "vet"
+		v["script"] = "res://entities/vet_threat.gd"
+		v["bands"] = VET_BANDS.duplicate(true)
+		return v
 	return {}
 
 

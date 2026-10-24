@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-10-24 - Walk 20: El Veterinari (The Vet Clinic Escape Chase)
+
+- **Walk 20: El Veterinari** (`systems/vet.gd`, `entities/vet_threat.gd`, `systems/home_chase.gd`, `autoload/game.gd`, `audio/music.gd`, `systems/goals.gd`, `main.gd`, `world/level_build.gd`):
+  - Added campaign Walk 20: **El Veterinari** (Chase 4 in the Grand Campaign, unlocks at 33 career stars or freely selectable in Free Play mode).
+  - Authentic indoor veterinary clinic environment (*Clínica Veterinària*): clinical linoleum tile flooring with light sheen reflections, pastel wall tiles with glazed baseboards, wood consultation doors with brass handles and glass portholes (`CONSULTA 1`, `CONSULTA 2`, `CIRURGIA`, `RADIOGRAFIA`, `LABORATORI`).
+  - Interactive digital pet scale (`SCALE_POS = Vector2(490.0, -1600.0)`) with green digital LED readout; stepping onto the scale triggers weigh-in (`WEIGH-IN! 14.2 KG`) and completes the `scale` goal.
+  - Waiting area with tandem blue and orange molded clinic chairs, cat carriers housing nervous glowing-eyed cats (barking triggers feline hiss reaction `HISSS! grrr...`), medicine display cabinets with amber and blue pill bottles, and water dispenser.
+  - Hazardous collectible prize: Veterinary liver treat jar placed on the reception desk (`"snatch the liver treat jar from the reception desk"`).
+  - The Clinic Escape Chase (`entities/vet_threat.gd`, `systems/home_chase.gd`): On the return leg, reaching the consultation room threshold triggers frantic escape from clinic assistants (Dr. Marta and Dr. Jordi) wielding a corridor-spanning Elizabethan cone of shame and catch net, with dual respites at the sliding automatic doors (`y = -3300.0`) and reception desk barrier (`y = -1900.0`).
+  - Clinical chamber-groove music track (`audio/music.gd`): Staccato marimba lead, pizzicato upright bass walk, light rimshot percussion, and minor-key tension.
+  - 12 custom goals in `LEVEL_GOAL_IDS["vet"]` including `scale` and `cone`.
+  - Added `tests/test_vet.gd` (30 checks, 0 failures), integrated into CI smoke and soak matrices (`soak.yml`).
+
 ## 2026-10-24 - Campaign Audit: Quayside Bins, Fountain Structural Verification, and Level Checks
 
 - Level Design & Sanitation Infrastructure Audit (`systems/port.gd`, `systems/reial.gd`, `tests/test_port.gd`):
