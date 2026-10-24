@@ -52,6 +52,10 @@ const GAUDI_POSTS: Array[Vector2] = [
 # The central Font de les Tres Gràcies fountain
 const FOUNTAIN_POS := Vector2(640.0, -2500.0)
 const FOUNTAIN_RADIUS := 44.0
+# main._bodily's drinking reach on this walk, and how far into the drink
+# (dog.drinking eases 0 to 1) the goal counts it
+const FOUNTAIN_DRINK_R := 68.0
+const DRINK_CREDIT := 0.5
 
 # Washingtonia royal palm trees framing the central square
 const PALMS: Array[Vector2] = [
@@ -126,20 +130,18 @@ static func solids(_m: Node2D) -> Array[Rect2]:
 	return out
 
 
+# Round rope poles. Their radii are not set here: world/level_build.gd gives
+# every round post the same radius once the level's poles are all in.
 static func setup_poles(m: Node2D) -> void:
-	# Gaudi lampposts with generous stunt vault radii
 	for p: Vector2 in GAUDI_POSTS:
 		m.poles.append(p)
-		m.rope_radii.append(26.0)
 	# Fountain center ring poles
 	for i in range(8):
 		var a := float(i) * (TAU / 8.0)
 		m.poles.append(FOUNTAIN_POS + Vector2(cos(a), sin(a)) * FOUNTAIN_RADIUS)
-		m.rope_radii.append(10.0)
 	# Palm tree trunks
 	for p: Vector2 in PALMS:
 		m.poles.append(p)
-		m.rope_radii.append(14.0)
 
 
 static func build(m: Node2D) -> Array:
@@ -280,39 +282,34 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, _vt: float = 0.0, _vb: flo
 static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 	if m.lvl != "reial":
 		return
-	# Towering palm tree fronds swaying overhead
+	# Towering palm fronds overhead, one batch: forty lines a palm
+	var b := ShapeBatch.new(ci)
 	var t: float = AnimClock.msec() / 1000.0
 	for p: Vector2 in PALMS:
-		# Draw lush arching palm fronds radiating out
 		for i in range(10):
 			var a := float(i) * (TAU / 10.0) + sin(t * 1.5 + p.y * 0.01) * 0.05
 			var leaf_len := 55.0 + sin(float(i) * 2.4) * 8.0
-			var end_p := p + Vector2(cos(a), sin(a)) * leaf_len
-			ci.draw_line(p, end_p, PALM_LEAF, 4.0)
-			ci.draw_line(p, end_p * 0.7, PALM_LEAF_LIGHT, 2.5)
+			var dir := Vector2(cos(a), sin(a))
+			var end_p := p + dir * leaf_len
+			b.line(p, end_p, PALM_LEAF, 4.0)
+			# the lit midrib runs the inner seven tenths of the frond
+			b.line(p, p + dir * leaf_len * 0.7, PALM_LEAF_LIGHT, 2.5)
 			# Frond tip leaflet feathers
 			var norm := Vector2(-sin(a), cos(a)) * 5.0
-			ci.draw_line(end_p, end_p - norm, PALM_LEAF_LIGHT, 1.5)
-			ci.draw_line(end_p, end_p + norm, PALM_LEAF_LIGHT, 1.5)
+			b.line(end_p, end_p - norm, PALM_LEAF_LIGHT, 1.5)
+			b.line(end_p, end_p + norm, PALM_LEAF_LIGHT, 1.5)
+	b.flush()
 
 
 static func update_reial(m: Node2D, _delta: float) -> void:
 	if m.lvl != "reial":
 		return
-	# Check drinking at Three Graces fountain
-	if not bool(m.get("reial_fountain_drank")):
-		if m.dog.global_position.distance_to(FOUNTAIN_POS) < FOUNTAIN_RADIUS + 24.0:
-			if m.dog.drinking > 0.0 or m.dog.velocity.length() < 10.0:
-				m.set("reial_fountain_drank", true)
-				m.float_text(m.dog.global_position + Vector2(0, -28), "FOUNTAIN DRINK! +3", Color(0.35, 0.68, 0.84))
-
-	# Check wrapping Gaudi lamppost
-	if not bool(m.get("reial_gaudi_wrapped")):
-		for gp: Vector2 in GAUDI_POSTS:
-			if m.dog.global_position.distance_to(gp) < 60.0 and m.leash_stretched:
-				m.set("reial_gaudi_wrapped", true)
-				m.float_text(m.dog.global_position + Vector2(0, -30), "GAUDÍ SLINGSHOT!", Color(0.96, 0.86, 0.32))
-				break
+	# The fountain goal is a real drink: main._bodily sets dog.drinking at
+	# the rim (its 68 px reach on this walk), standing still. The Gaudi goal
+	# is a real wrap and is set by main._tick_vault on a static contact.
+	if not m.reial_fountain_drank and m.dog.drinking > DRINK_CREDIT:
+		if m.dog.global_position.distance_to(FOUNTAIN_POS) < FOUNTAIN_DRINK_R:
+			m.reial_fountain_drank = true
 
 	# Check barking at busker
 	if not bool(m.get("reial_busker_barked")):

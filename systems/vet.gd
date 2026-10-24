@@ -174,7 +174,6 @@ static func build(m: Node2D) -> Array:
 	# IV poles and support columns registered in m.poles for wrapping and slingshots
 	for p: Vector2 in IV_POLES:
 		m.poles.append(p)
-		m.rope_radii.append(18.0)
 
 	# Sniffable landmarks (hydrants):
 	# 1. Entrance registration bell
@@ -334,25 +333,28 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 
 
 # --- interactive checks (scale, cat hiss) -----------------------------------
+const EventFeed := preload("res://hud/event_feed.gd")
+const CAT_HISS_R := 85.0
+const HISS_COLOR := Color(0.95, 0.90, 0.20)
+const BEEP_COLOR := Color(0.25, 0.90, 0.40)
+
+
 static func tick(m: Node2D) -> void:
 	if m.lvl != "vet":
 		return
-
-	# Pet scale weigh-in interaction
-	if not bool(m.get("vet_scale_weighed")):
-		var dog_pos: Vector2 = m.dog.global_position
+	# the pet scale weighs her once a walk
+	if not m.vet_scale_weighed:
 		var sr := Rect2(SCALE_POS - SCALE_SIZE * 0.5, SCALE_SIZE)
-		if sr.has_point(dog_pos):
-			m.set("vet_scale_weighed", true)
-			if m.has_method("shout"):
-				m.shout("WEIGH-IN! 14.2 KG")
-			if m.has_method("float_text"):
-				m.float_text(SCALE_POS, "BEEP! 14.2 kg", 0)
+		if sr.has_point(m.dog.global_position):
+			m.vet_scale_weighed = true
+			m.feed.say("WEIGH-IN! 14.2 KG", EventFeed.Tone.GOOD)
+			m.float_text(SCALE_POS, "beep!", BEEP_COLOR)
 
-	# Cat carrier interaction (growl/hiss on barking near carrier)
+
+# main.on_bark: a bark beside a cat carrier gets a hiss back, every time
+static func on_bark(m: Node2D, pos: Vector2) -> void:
+	if m.lvl != "vet":
+		return
 	for ccp: Vector2 in CAT_CARRIERS:
-		if m.dog.global_position.distance_to(ccp) < 85.0 and m.dog.is_barking():
-			if not bool(m.get("vet_cat_hissed_%d" % int(ccp.y))):
-				m.set("vet_cat_hissed_%d" % int(ccp.y), true)
-				if m.has_method("float_text"):
-					m.float_text(ccp, "HISSS! grrr...", 0)
+		if pos.distance_to(ccp) < CAT_HISS_R:
+			m.float_text(ccp, "hisss!", HISS_COLOR)

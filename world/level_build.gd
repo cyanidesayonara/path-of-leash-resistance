@@ -18,6 +18,7 @@ extends RefCounted
 # Per walk: [left strip, width, right strip, width]. Walks not listed (the
 # park, the trail, the seafront) have no building line. See main.frontage.
 const TUT := preload("res://systems/tutorial.gd")
+const Detour := preload("res://systems/detour.gd")
 # the tutorial's pond for the brink lesson, beside the path at its station
 const TUT_POND_W := 150.0
 const ROPE_CLEAR := 4.0
@@ -2036,6 +2037,13 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "montjuic":
 		for c: Vector2 in Montjuic.CACTI:
 			m.poles.append(c)
+	# El Somni's melting lampposts stand in the gallery off El Gotic. They
+	# must be in place before the radii fill below: appended after the
+	# entities, they left the leash's radii one array short, and the rope
+	# fell back to its default pad for every obstacle on the walk.
+	if Detour.is_on(m):
+		for c: Vector2 in Detour.lamp_points():
+			m.poles.append(c)
 	# Everything above is a round post/trunk. Wide things use a sampled body
 	# outline at the leash plane, and all non-pole contacts use furniture slip
 	# so a sustained pull stands in for lifting the strap over them.
@@ -3010,6 +3018,17 @@ static func build_walls(m: Node2D) -> void:
 		dcs.shape = dsh
 		db.add_child(dcs)
 		m.add_child(db)
+	if Detour.is_on(m):
+		for c: Vector2 in Detour.lamp_points():
+			var lb := StaticBody2D.new()
+			lb.collision_layer = 1
+			lb.position = c
+			var lcs := CollisionShape2D.new()
+			var lsh := CircleShape2D.new()
+			lsh.radius = m.POLE_RADIUS
+			lcs.shape = lsh
+			lb.add_child(lcs)
+			m.add_child(lb)
 	if m.lvl == "montjuic":
 		for c: Vector2 in Montjuic.CACTI:
 			var kb := StaticBody2D.new()

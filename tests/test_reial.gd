@@ -70,7 +70,7 @@ func _run() -> void:
 	_check(not m.islands.is_empty(), "central fountain island is defined")
 	_check(m.islands[0].has("rect"), "fountain island has rect")
 
-	# 5. Gaudí lampposts registered as poles (wrap-capable) with 26.0 vault radius
+	# 5. Gaudí lampposts registered as poles (wrap-capable)
 	var all_posts_in_poles := true
 	for p: Vector2 in R.GAUDI_POSTS:
 		if not (p in m.poles):
@@ -109,6 +109,18 @@ func _run() -> void:
 	_check(m.surface_at(yard) != Surfaces.S.PAVEMENT, "freedom verge is not turned into sidewalk")
 
 	# 10. Mechanics tick: fountain drinking & gaudi wrap & busker duet
+	# standing still by the rim without drinking is not a drink, and
+	# standing by a lamppost is not a wrap (that check once read a field
+	# main does not have, a script error every frame near a post)
+	m.dog.global_position = R.FOUNTAIN_POS + Vector2(R.FOUNTAIN_RADIUS + 10.0, 0.0)
+	m.dog.velocity = Vector2.ZERO
+	m.dog.drinking = 0.0
+	R.update_reial(m, 0.1)
+	_check(not m.reial_fountain_drank, "standing still by the fountain is not a drink")
+	m.dog.global_position = R.GAUDI_POSTS[0] + Vector2(30.0, 0.0)
+	R.update_reial(m, 0.1)
+	_check(not m.reial_gaudi_wrapped, "standing by a lamppost is not a wrap")
+
 	m.pee = 0.2
 	m.dog.global_position = R.FOUNTAIN_POS + Vector2(R.FOUNTAIN_RADIUS + 10.0, 0.0)
 	m.dog.velocity = Vector2.ZERO
@@ -123,10 +135,6 @@ func _run() -> void:
 	R.update_reial(m, 0.1)
 	_check(bool(m.get("reial_busker_barked")), "barking at busker triggers reial_busker_barked")
 
-	# 11. Simulation step sanity
-	for frame in range(15):
-		m._physics_process(1.0 / 60.0)
-	_check(true, "ran 15 physics frames cleanly without error")
 
 	print("\n--- TEST REIAL RESULTS ---")
 	print("Checks: %d, Failures: %d" % [checks, failures.size()])

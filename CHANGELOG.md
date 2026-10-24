@@ -26,6 +26,38 @@ Mirador del Tibidabo, ending in a plaça off leash.
   surface, the track and pines off the road, the carriage's round trip, the
   layer redrawing every frame, and each goal with the case that must not
   count.
+## 2026-10-24 - Harden the walks that shipped after 1.62
+
+An audit of 1.63 and the walks merged since found features that could not
+work and claims the code did not back. Fixed here, each with a test that
+fails without the fix:
+- El Veterinari's chase home could never start: `entities/vet_threat.gd`
+  preloaded `res://hud/anim_clock.gd` (it lives in `systems/`), so the
+  script failed to parse and every vet walk hit a script error on the way
+  home. Its drawing also called an arc and a `target` ShapeBatch does not
+  have; the stethoscope is batched lines now. `test_vet` now starts the
+  chase and watches the assistants advance.
+- The vet's cats: the hiss read `dog.is_barking()`, which does not exist (a
+  script error every frame near a carrier). The hiss now hangs off
+  `main.on_bark` like every other bark reaction. The weigh-in shout went to
+  a `shout()` main does not have; it goes to the feed now.
+- El Somni's dream bone set `run_goals_hit` by hand, which skipped the
+  goal's bones, toast and saved star. The goal system credits it now.
+- El Somni's lampposts were appended after the level was built and refilled
+  every rope radius on El Gotic, so 20 of the 37 furniture outline samples
+  lost their size. They are registered with the level's other round posts
+  now, with collision bodies.
+- Plaça Reial: each palm drew a midrib about 300 px toward the world origin
+  (`end_p * 0.7`), in 480 separate draw calls; the fronds are one batch. The
+  fountain goal counted standing still and the Gaudi goal counted standing
+  near a post (reading a field main does not have, a script error near
+  every post); the fountain needs a real drink and the Gaudi post a real
+  wrap. The custom 26/10/14 px radii were overwritten by the level's radius
+  fill and never applied; removed rather than left implying otherwise.
+- `systems/rails.gd`: a duplicated `"station"` branch, left by a merge.
+- `tests/test_barri.gd`: the regression checks a polish commit replaced with
+  `has_method` checks are back (star gate, petanca players on the pitch,
+  the plane-tree rows, no riders, no crowd), and CI runs it once.
 
 ## 2026-10-24 - Multi-Level Visual Polish: Trail Waymarkers and Landmark Sniff Progress
 

@@ -12571,7 +12571,7 @@ func _bodily(delta: float) -> void:
 	# bowls, the beach shower - drunk standing still, like a lady.
 	var fountain_drinking := false
 	for f in fountains:
-		var reach := 68.0 if lvl == "reial" else 34.0
+		var reach := Reial.FOUNTAIN_DRINK_R if lvl == "reial" else 34.0
 		if dog.global_position.distance_to(f) < reach and dog.velocity.length() < 40.0:
 			fountain_drinking = true
 			pee = minf(1.0, pee + 0.3 * delta)
@@ -13314,6 +13314,7 @@ func on_bark(pos: Vector2) -> void:
 	# in the scrapyard, YOUR bark is noise too
 	for g in get_tree().get_nodes_in_group("guards"):
 		g.hear_noise(pos, 230.0)
+	Vet.on_bark(self, pos)
 
 
 # A retractable reel winds slack in briskly; against a taut rope its spring
