@@ -58,6 +58,8 @@ var gait := 0.0
 # authoritative; the leash receives the same world offset separately.
 var presentation_offset := Vector2.ZERO
 var presentation_rotation := 0.0
+# a cutscene's walking speed (systems/arrival.gd); velocity is zero then
+var presentation_speed := 0.0
 var flecks: Array[Vector2] = []
 var main: Node2D
 var preview_mode := false
@@ -344,6 +346,11 @@ func _draw() -> void:
 	_b.flush()
 
 
+# how fast she looks to be going: her velocity, or a cutscene's walk
+func _draw_speed() -> float:
+	return maxf(velocity.length(), presentation_speed)
+
+
 func _draw_xf(local_pos := Vector2.ZERO, local_rotation := 0.0,
 		local_scale := Vector2.ONE) -> void:
 	_b.draw_set_transform(presentation_offset + local_pos.rotated(presentation_rotation),
@@ -399,7 +406,10 @@ func _draw_shapes() -> void:
 	# (a preview built without a main, as in the tests, simply has no shadow)
 	if not swimming and main != null:
 		var lift: float = 1.0 + clampf(velocity.length() / 700.0, 0.0, 0.35)
-		main.contact_shadow(_b, Vector2.ZERO, 12.0, 8.0 * lift, 0.26)
+		# contact_shadow resets the canvas transform when it is done, so the
+		# shadow takes the cutscene offset itself and the body's transform is
+		# set again below; otherwise the body drew at her gameplay position
+		main.contact_shadow(_b, presentation_offset, 12.0, 8.0 * lift, 0.26)
 	if hop > 0.0:
 		var leap_s := clampf(hop * 0.016, 0.0, 0.22)
 		_draw_xf(Vector2(0.0, -hop), 0.0, Vector2(1.0 - leap_s * 0.4, 1.0 + leap_s * 0.6))
@@ -409,6 +419,8 @@ func _draw_shapes() -> void:
 	elif launch_stretch_t > 0.0:
 		var st := launch_stretch_t / 0.28
 		_draw_xf(Vector2.ZERO, 0.0, Vector2(1.0 + st * 0.25, 1.0 - st * 0.14))
+	else:
+		_draw_xf()
 	# the coat comes from data now (Game.COATS), not baked-in colours, so a
 	# dog creator later means adding a row of parameters rather than editing
 	# this renderer
@@ -432,7 +444,7 @@ func _draw_shapes() -> void:
 			var rr := fmod(t * 1.4 + i * 0.45, 1.35)
 			_b.draw_arc(-facing * 6.0, 12.0 + rr * 26.0, 0, TAU, 22, Color(0.82, 0.9, 1.0, 0.32 * (1.0 - rr / 1.35)), 2.0)
 	# THE WIGGLE: the rump swings with the gait
-	var wiggle := hside * sin(gait) * clampf(velocity.length() / SPEED, 0.0, 1.0) * 2.6
+	var wiggle := hside * sin(gait) * clampf(_draw_speed() / SPEED, 0.0, 1.0) * 2.6
 	var hip := shoulder + hip_dir * 17.0 + wiggle
 	# whippy tail: three tapering segments with a traveling wave, tuned by mood and action
 	var wag_speed := 3.0 if crouching else 11.0
@@ -460,7 +472,7 @@ func _draw_shapes() -> void:
 
 			wag_amp = lerpf(wag_amp, 0.20, mood_int)
 			tail_len_scale = lerpf(1.0, 0.85, mood_int)
-		elif velocity.length() < 5.0 and not planted:
+		elif _draw_speed() < 5.0 and not planted:
 			# Idle standing: gentle relaxed tail sway
 			wag_speed = 4.0
 			wag_amp = 0.22
@@ -477,7 +489,7 @@ func _draw_shapes() -> void:
 		tp = nxt
 	# four legs, trot gait: diagonal pairs move together, tucked when crouching,
 	# scrabbling rapidly in front when digging up a buried bone
-	var amp := 0.0 if crouching else clampf(velocity.length() / SPEED, 0.0, 1.0) * 5.5 * _stride()
+	var amp := 0.0 if crouching else clampf(_draw_speed() / SPEED, 0.0, 1.0) * 5.5 * _stride()
 	var ph := sin(gait)
 	var dig_scrabble := sin(t * 28.0) * 4.8 * dig_u
 	# white-tipped paws, like she stepped in paint and regrets nothing
@@ -505,7 +517,7 @@ func _draw_shapes() -> void:
 	# the light along her back: plasticine, not a flat cut-out
 	var hip_r := 10.5 if crouching else 9.0
 	var shoulder_r := 7.4
-	if velocity.length() < 5.0 and not crouching:
+	if _draw_speed() < 5.0 and not crouching:
 		shoulder_r += sin(t * 3.2) * 0.45
 	var rim := Vector2(1.2, 1.6)
 	_b.draw_colored_polygon(_body_points(shoulder + rim, hip + rim, shoulder_r, hip_r), fur_dark.darkened(0.25))

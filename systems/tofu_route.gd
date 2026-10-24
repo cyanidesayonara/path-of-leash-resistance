@@ -8,7 +8,10 @@ extends RefCounted
 
 const SPOTS := 7
 const FIRST_AFTER_GATE := 500.0
-const LAST_BEFORE_HOME := 70.0
+# her last spot is 70 px short of where the arrival starts, which is
+# Arrival.WALK_IN (140) north of HOME_Y: past it the walk freezes for the
+# walk in, and a spot south of it could never be reached
+const LAST_BEFORE_HOME := 210.0
 const EDGE_MARGIN := 40.0
 const BODY_R := 14.0
 const DART_STEP := 16.0

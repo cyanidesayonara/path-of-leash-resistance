@@ -778,6 +778,11 @@ var _hi := PackedVector2Array()
 # contact state remain untouched.
 var presentation_dog_offset := Vector2.ZERO
 var presentation_human_offset := Vector2.ZERO
+# 0 draws the frozen rope moved by the offsets; 1 draws it pulled straight
+# between its moved ends with a little sag. The arrival's pull straightens
+# it, so the slack never bunches into a ball as the two ends meet.
+var presentation_straighten := 0.0
+const PRESENT_SAG := 10.0
 
 
 # The rope as drawn, in global coordinates: always VIS_N samples, every solver
@@ -840,10 +845,15 @@ func _draw_shapes() -> void:
 		_loc.resize(n)
 		_shade.resize(n)
 		_hi.resize(n)
+	var end_a: Vector2 = path[0] + presentation_dog_offset if n > 0 else Vector2.ZERO
+	var end_z: Vector2 = path[n - 1] + presentation_human_offset if n > 0 else Vector2.ZERO
 	for i in range(n):
 		var u := float(i) / maxf(float(n - 1), 1.0)
 		var p := to_local(path[i] + presentation_dog_offset.lerp(
 			presentation_human_offset, u))
+		if presentation_straighten > 0.0:
+			var line := end_a.lerp(end_z, u) + Vector2(0.0, sin(PI * u) * PRESENT_SAG)
+			p = p.lerp(to_local(line), presentation_straighten)
 		_loc[i] = p
 		_shade[i] = p + Vector2(2.0, 3.0)
 		_hi[i] = p + Vector2(0.0, -0.9)

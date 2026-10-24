@@ -12918,8 +12918,8 @@ func _progress(_delta: float) -> void:
 				_enter_home()
 		"home":
 			if (
-				dog.global_position.y > HOME_Y
-				and human.global_position.y > HOME_Y
+				dog.global_position.y > Arrival.line_y(self)
+				and human.global_position.y > Arrival.line_y(self)
 				and (not auto_walk or elapsed >= AUTOWALK_MIN_FINISH_TIME)
 			):
 				Arrival.begin(self)
