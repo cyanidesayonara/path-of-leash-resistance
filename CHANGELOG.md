@@ -38,6 +38,11 @@ Her chase-catch pose had the same problem.
     and the car park beyond;
   - El Besòs has the flood wall and the ramp up through it to the river
     path, with PARC FLUVIAL.
+  Each home also carries something of its own walk: Plaça Reial's arcade of
+  stone pillars, the old town's oak door and iron lantern, the seafront's
+  blue shutters, beach towels and a roof parasol, Gràcia's trencadís band,
+  the market's fruit crates, scaffold and netting at the works, a tin roof
+  by the scrapyard, a pharmacy's green cross near the vet.
   The fixed part is built once per walk and appended each frame as one
   batch; only the door leaf and the lights are drawn live.
 

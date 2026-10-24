@@ -200,8 +200,11 @@ static func _apartment(b: ShapeBatch, m: Node2D, c: Vector2, weather: String) ->
 		roof = roof.darkened(0.18)
 	var front := c.y + FRONT
 	_block(b, m, front, wall, roof, c.x - PORTAL_HALF + 4.0, c.x + PORTAL_HALF - 4.0)
-	_terrat(b, m, front, roof, c)
-	_frontage(b, front, wall, c)
+	if String(m.lvl) != "scrap":
+		_terrat(b, m, front, roof, c)
+	if String(m.lvl) != "reial":
+		_frontage(b, front, wall, c)
+	_dress(b, m, c, front, wall, roof)
 	# the portal: stone jambs and a lintel, the step out onto the pavement
 	var stone := Color(0.74, 0.70, 0.62)
 	b.rect(Rect2(c.x - PORTAL_HALF, front - 2.0, 8.0, FACE + 4.0), stone)
@@ -220,6 +223,100 @@ static func _apartment(b: ShapeBatch, m: Node2D, c: Vector2, weather: String) ->
 		b.circle(pp, 5.0, Color(0.28, 0.50, 0.26))
 		b.circle(pp + Vector2(-1.5, -1.5), 2.0, Color(0.80, 0.24, 0.26))
 
+
+
+# What makes one walk's home its own, on top of its facade colours: the
+# arcade of Plaça Reial, the old town's studded door, the seafront's shutters
+# and towels, Gràcia's trencadís, the market's crates, the scaffold at the
+# works, the scrapyard's tin roof, the pharmacy near the vet.
+static func _dress(b: ShapeBatch, m: Node2D, c: Vector2, front: float, wall: Color, roof: Color) -> void:
+	match String(m.lvl):
+		"reial":
+			# the arcade: a porch of stone pillars along the front, its shade
+			b.rect(Rect2(LEFT, front - 26.0, RIGHT - LEFT, 26.0), Color(0.05, 0.04, 0.07, 0.16))
+			var x := c.x + PORTAL_HALF + 22.0
+			while x < RIGHT:
+				_pillar(b, Vector2(x, front - 22.0), wall)
+				x += 52.0
+			x = c.x - PORTAL_HALF - 22.0
+			while x > LEFT:
+				_pillar(b, Vector2(x, front - 22.0), wall)
+				x -= 52.0
+		"oldtown", "spook", "neteja":
+			# a lantern on its iron bracket over the portal
+			var lp := Vector2(c.x + PORTAL_HALF + 18.0, front - 12.0)
+			b.line(Vector2(lp.x, front), lp, RAIL, 2.0)
+			b.rect(Rect2(lp - Vector2(5.0, 6.0), Vector2(10.0, 12.0)), RAIL)
+			b.rect(Rect2(lp - Vector2(3.0, 4.0), Vector2(6.0, 8.0)), Color(1.0, 0.86, 0.52))
+		"beach", "port":
+			# blue shutters by every window, towels over the balconies, and a
+			# striped parasol up on the roof terrace
+			var x := LEFT + 30.0
+			while x < RIGHT:
+				if absf(x - c.x) > PORTAL_HALF + 30.0:
+					b.rect(Rect2(x - 12.0, front + 5.0, 6.0, 11.0), Color(0.22, 0.42, 0.66))
+					b.rect(Rect2(x + 6.0, front + 5.0, 6.0, 11.0), Color(0.22, 0.42, 0.66))
+				x += MODULE * 0.5
+			for k in range(-5, 6):
+				var tx := c.x + float(k) * MODULE * 3.0 + 120.0
+				b.rect(Rect2(tx, front - 13.0, 22.0, 6.0), AWNINGS[(k + 5) % AWNINGS.size()].lightened(0.2))
+			var pa := Vector2(c.x - 210.0, front + FACE + CAP + 70.0)
+			b.circle(pa - LIGHT * 10.0, 30.0, SHADOW)
+			for s in range(8):
+				var a0 := float(s) * TAU / 8.0
+				var pts := PackedVector2Array([pa, pa + Vector2.from_angle(a0) * 28.0, pa + Vector2.from_angle(a0 + TAU / 8.0) * 28.0])
+				b.polygon(pts, Color(0.92, 0.30, 0.26) if s % 2 == 0 else Color(0.97, 0.95, 0.90))
+		"guell":
+			# a band of trencadís along the top of the wall face
+			var x := LEFT
+			var k := 0
+			while x < RIGHT:
+				b.rect(Rect2(x, front + FACE - 6.0, 8.0, 5.0), WASHING[k % WASHING.size()].lightened(0.1))
+				x += 9.0
+				k += 1
+		"market":
+			# crates of fruit out in front of the shops
+			for k in range(-4, 5):
+				var cx := c.x + float(k) * MODULE * 1.5 + 70.0
+				if absf(cx - c.x) < PORTAL_HALF + 40.0:
+					continue
+				var cr := Rect2(cx, front - 30.0, 26.0, 18.0)
+				b.rect(Rect2(cr.position + Vector2(3.0, 4.0), cr.size), SHADOW)
+				b.rect(cr, TIMBER.lightened(0.15))
+				var fruit: Color = [Color(0.94, 0.56, 0.16), Color(0.86, 0.20, 0.18), Color(0.56, 0.74, 0.26)][abs(k) % 3]
+				for f in range(3):
+					b.circle(cr.position + Vector2(6.0 + float(f) * 7.0, 9.0), 4.0, fruit)
+		"site":
+			# scaffold up the front of the block across the road, its net
+			var x0 := c.x + PORTAL_HALF + 40.0
+			b.rect(Rect2(x0, front - 18.0, 420.0, FACE + 18.0), Color(0.30, 0.58, 0.36, 0.45))
+			var x := x0
+			while x <= x0 + 420.0:
+				b.line(Vector2(x, front - 18.0), Vector2(x, front + FACE), Color(0.72, 0.72, 0.74), 2.5)
+				x += 60.0
+			b.line(Vector2(x0, front - 16.0), Vector2(x0 + 420.0, front - 16.0), Color(0.72, 0.72, 0.74), 2.5)
+			b.line(Vector2(x0, front - 6.0), Vector2(x0 + 420.0, front - 6.0), TIMBER.lightened(0.2), 4.0)
+		"scrap":
+			# a tin roof, ridged, over the terrat's tiles
+			var top := front + FACE + CAP
+			b.rect(Rect2(LEFT, top, RIGHT - LEFT, 360.0), Color(0.52, 0.54, 0.55))
+			var y := top
+			while y < top + 360.0:
+				b.line(Vector2(LEFT, y), Vector2(RIGHT, y), Color(0.40, 0.42, 0.44), 2.0)
+				y += 9.0
+			b.rect(Rect2(c.x + 120.0, top + 60.0, 70.0, 40.0), Color(0.55, 0.32, 0.20, 0.8))
+		"vet":
+			# the pharmacy on the corner, its green cross lit
+			var px := c.x - PORTAL_HALF - 110.0
+			b.rect(Rect2(px - 14.0, front - 22.0, 28.0, 28.0), Color(0.12, 0.14, 0.12))
+			b.rect(Rect2(px - 4.0, front - 18.0, 8.0, 20.0), Color(0.30, 0.86, 0.40))
+			b.rect(Rect2(px - 10.0, front - 12.0, 20.0, 8.0), Color(0.30, 0.86, 0.40))
+
+
+static func _pillar(b: ShapeBatch, at: Vector2, wall: Color) -> void:
+	b.circle(at + Vector2(4.0, 5.0), 8.0, SHADOW)
+	b.circle(at, 8.0, wall.lightened(0.08))
+	b.circle(at, 5.0, wall.lightened(0.22))
 
 static func _station(b: ShapeBatch, m: Node2D, c: Vector2) -> void:
 	var wall := Color(0.66, 0.66, 0.68)
@@ -418,7 +515,8 @@ static func draw_live(b: ShapeBatch, m: Node2D, c: Vector2, place: String, open:
 	var front := c.y + FRONT
 	if place != "apartment":
 		return
-	var green := Color(0.30, 0.52, 0.41) if String(m.lvl) != "oldtown" else Color(0.42, 0.28, 0.18)
+	# the old town's doors are studded oak; everywhere else the usual green
+	var green := Color(0.42, 0.28, 0.18) if String(m.lvl) in ["oldtown", "spook", "neteja"] else Color(0.30, 0.52, 0.41)
 	if open > 0.05 or night:
 		b.rect(Rect2(c.x - PORTAL_HALF + 8.0, front, PORTAL_HALF * 2.0 - 16.0, FACE), Color(1.0, 0.86, 0.62, 0.55 * maxf(open, 0.5 if night else 0.0)))
 	var hinge := Vector2(c.x - PORTAL_HALF + 8.0, front + 2.0)
