@@ -51,7 +51,7 @@ The leash is real rope. The one you see is the one doing the physics: it wraps, 
 
 Your human answers it like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "HEY!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "ring ring", "selfie!", "ooh!". They are never smarter than that.
 
-SEVENTEEN WALKS THROUGH BARCELONA
+TWENTY WALKS THROUGH BARCELONA
 
 El Barri, the neighborhood park
 La Rambla, the crowded promenade
@@ -70,8 +70,11 @@ El Mosaic, the tiled terraces
 La Neteja, the dawn cleanup
 Montjuïc, the climb
 Dia de Partit, match day
+El Port, the fishing wharf
+Plaça Reial, the arcaded square
+El Veterinari, the clinic escape
 
-Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. Two of them are chases. A street sweeper careens down a back street at dawn, and you drag your oblivious human home ahead of it. On El Besòs the river comes home with you. There is a gentle first walk that teaches one trick at a time, and every walk can be played in clear weather, rain, wind or snow, by day or at night.
+Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. Three of them are chases: the street sweeper at dawn, the river flood on El Besòs, and the clinic escape in El Veterinari. There is a gentle first walk that teaches one trick at a time, and every walk can be played in clear weather, rain, wind or snow, by day or at night.
 
 ALSO
 
@@ -101,6 +104,20 @@ On a phone or tablet: a stick on the left, DIG, PEE, BARK and RUN on the right, 
 Single player. No ads, no purchases, no account. The download plays offline; the itch app keeps it up to date.
 
 Made in Godot by Santtu Nykänen. The dog is Millie, a distinguished salt-and-pepper mutt who squats like a lady.
+```
+
+## What's new in 1.64
+
+For a devlog post or the top of the body. Everything since v1.63, from
+CHANGELOG.md.
+
+```
+- A new walk, El Veterinari: the 20th Barcelona campaign walk and 4th major chase sequence, open at 33 stars or in Free Play mode.
+- The Clinic Escape: Millie reluctantly enters the vet clinic, but when she reaches the examination door and smells rubbing alcohol, she panics and bolts south!
+- Veterinary assistants with giant cones of shame and butterfly nets give chase while your human dawdles on the leash; weave around support pillars and time your run through automatic sliding doors to get away.
+- Step onto the digital pet scale to weigh in, bark at nervous cats in waiting room carriers, and snatch the liver treat jar prize from the reception desk.
+- Quayside waste bins added along the boardwalk in El Port for the bag chore, and Three Graces fountain registered in Plaça Reial.
+- High-tempo clinic chamber groove with staccato marimba and upright bass.
 ```
 
 ## What's new in 1.63

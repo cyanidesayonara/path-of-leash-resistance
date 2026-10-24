@@ -25,7 +25,7 @@ The leash is real rope physics. Your human outweighs you four to one and wins ev
 
 Your human answers the leash like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "HEY!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "ring ring", "selfie!", "ooh!". They are never smarter than that.
 
-Seventeen walks through a sunny, slightly chaotic Barcelona, each its own place: the little park at the end of your street, La Rambla with its crowds, street sellers and pickpockets, the city park and its lake, the beachfront, a rainy shopping street, a covered market hall, the old town's narrow alleys, a wood with wild boar in it, the station and its train, a river park on El Besòs where the way home is the flood, a work site with wet cement, a chestnut festival at night, a junkyard with a guard dog you really should not wake, a hilltop park of tiled terraces and a mosaic salamander, the climb up Montjuïc with a hidden cable car, a narrow back street at dawn, just as the street sweeper comes through, and match day in Les Corts, the avenue full of fans heading one way. Every walk ends off the leash, with an agility course, tug-of-war and a frisbee: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
+Twenty walks through a sunny, slightly chaotic Barcelona, each its own place: the neighborhood park, La Rambla with its crowds, the city park, the beachfront, a downpour, a covered market hall, old town alleys, a forest trail, the train station, a floodable river park, a work site, a chestnut festival, a junkyard, tiled terraces, the dawn cleanup sweeper, Montjuïc, match day in Les Corts, the fishing harbor at El Port, the arcaded Plaça Reial, and an indoor vet clinic escape in El Veterinari. Every walk ends off the leash, with an agility course, tug-of-war and a frisbee: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
 
 What happens on a walk changes how you feel, and how you feel changes how you move. A fright leaves you jumpy and half blind to smells, a good bark-off makes you barky, time off the leash brings on the zoomies, and running yourself empty leaves you flat. The ground matters too: grass and mud slow you down but hold far more scent than sidewalk, sand drags at your paws, and wet ground and snow make you skid.
 
@@ -33,7 +33,7 @@ Other dogs have lives of their own. They sniff and mark the posts you pass, and 
 
 Every walk has its own list of goals: sniff the good spots, mark your territory, fetch, greet other dogs, herd a runaway friend home, and pull off tricks: swing around a pole on the leash, run a figure eight, thread the needle between two people, and ride ledges and handrails with the zoomies. Earn stars to unlock new walks and bones to spend on collars, bandanas and coats.
 
-Two walks are chases. A street sweeper careens down a narrow back street after you, flinging junk as it comes, and you have to drag your oblivious human home ahead of it. On El Besòs the river comes home with you: shallow water pushes south, and the deep front is the loss. Rain, wind, snow and night change how every walk plays, and everyone dresses for the weather. There is a two-part tutorial for anyone new.
+Three walks are chases: dragging your human home ahead of the street sweeper, racing the river surge on El Besòs, and escaping the vet clinic in El Veterinari with clinic assistants giving chase with giant cones of shame. Rain, wind, snow and night change how every walk plays, and everyone dresses for the weather. There is a two-part tutorial for anyone new.
 
 Single player. No ads, no purchases, no account, and it plays offline. Keyboard or controller.
 ```
@@ -41,7 +41,7 @@ Single player. No ads, no purchases, no account, and it plays offline. Keyboard 
 ### Short description
 
 ```
-A dog walk as a physics comedy. Your human walks on autopilot, glued to their phone, and the leash is real rope. Dig in, wrap lampposts and bark your way through seventeen walks in Barcelona, and get them home with the phone intact.
+A dog walk as a physics comedy. Your human walks on autopilot, glued to their phone, and the leash is real rope. Dig in, wrap lampposts and bark your way through twenty walks in Barcelona, and get them home with the phone intact.
 ```
 
 ### Product features
@@ -49,11 +49,11 @@ A dog walk as a physics comedy. Your human walks on autopilot, glued to their ph
 ```
 The leash is real rope physics: wrap it around poles, dig in, win the tug of war
 A human who answers the leash: a steady pull leads them, constant hauling runs out their patience
-Seventeen hand-built walks through Barcelona, in any weather, by day or at night
+Twenty hand-built walks through Barcelona, in any weather, by day or at night
 Every walk ends off the leash, with agility, tug-of-war and a frisbee
 Goal lists on every walk, with stars that unlock new walks
 Leash tricks: pole swings, figure eights, threading the needle, ledge and handrail rides
-Two chase walks: the street sweeper, and the flood on the way home from El Besòs
+Three chase walks: the street sweeper, the river flood, and the clinic escape
 Dog moods: scared, barky, zoomies and flat, each changing how you move and what you notice
 Ground you can feel: grass and mud hold scent, sand drags, wet ground and snow skid
 Other dogs and their people with lives of their own: they sniff, mark, greet and tangle
@@ -79,19 +79,18 @@ dog walking
 ### What's new in this version
 
 ```
-- Two new walks:
-  - El Port: Barceloneta's working wharf along Moll dels Pescadors, with wooden boardwalk timber, quayside mooring bollards, fish market crate stacks, flapping seagulls, and Plaça del Far lighthouse.
-  - Plaça Reial: Barcelona's grand neoclassical arcaded square in the Gothic Quarter, with Antoni Gaudí's six-armed dragon lampposts, the Three Graces central fountain, outdoor tapas terraces, and a Spanish guitar busker.
-- Free Play (Demo) mode in Settings: choose any walk in the game freely without star gates. Career saves and stats are safely bypassed during practice.
-- Artsy Detours: the first secret-in-plain-sight side gallery, «El Somni» (homage to Salvador Dalí) hidden along Carrer del Gòtic, featuring melting elastic lampposts and a floating golden dream bone.
-- HUD vitals & iconography polish: redesigned smartphone HP pips with hairline cracked glass, liquid bladder and sprint energy tubes with vector droplet and lightning glyphs, arcade combo streak badge, and concentric territory mark target rings.
-- Dynamic mood-driven tail wagging, crisp kerb skid juice, and smoother menu typography across all screen resolutions.
+- A new walk, El Veterinari: the 20th Barcelona campaign walk and 4th major chase sequence, open at 33 stars or in Free Play mode.
+- The Clinic Escape: Millie reluctantly enters the vet clinic, but when she reaches the examination door and smells rubbing alcohol, she panics and bolts south!
+- Veterinary assistants with giant cones of shame and butterfly nets give chase while your human dawdles on the leash; weave around support pillars and time your run through automatic sliding doors to get away.
+- Step onto the digital pet scale to weigh in, bark at nervous cats in waiting room carriers, and snatch the liver treat jar prize from the reception desk.
+- Quayside waste bins added along the boardwalk in El Port for the bag chore, and Three Graces fountain registered in Plaça Reial.
+- High-tempo clinic chamber groove with staccato marimba and upright bass.
 ```
 
 ### Notes for certification
 
 ```
-Update 1.63: two new walks (El Port and Plaça Reial), Free Play mode, artsy gallery detours, and HUD vitals overhaul. No change to capabilities, network use, data handling or controls since 1.55.
+Update 1.64: a new walk (El Veterinari) with clinic escape chase mechanics, digital pet scale interaction, quayside bins on El Port, and level audit polish. No change to capabilities, network use, data handling or controls since 1.55.
 
 Path of Leash Resistance is a single-player Win32 desktop game built with the Godot engine (4.7), packaged as MSIX.
 
@@ -202,6 +201,18 @@ written by `tools/make_store_art.gd`: the 9:16 poster, the 1:1 box art and the
 ## Past What's new
 
 As submitted, newest first. The current one is in "Current listing".
+
+### What's new in 1.63 (live by 2026-10-24)
+
+```
+- Two new walks:
+  - El Port: Barceloneta's working wharf along Moll dels Pescadors, with wooden boardwalk timber, quayside mooring bollards, fish market crate stacks, flapping seagulls, and Plaça del Far lighthouse.
+  - Plaça Reial: Barcelona's grand neoclassical arcaded square in the Gothic Quarter, with Antoni Gaudí's six-armed dragon lampposts, the Three Graces central fountain, outdoor tapas terraces, and a Spanish guitar busker.
+- Free Play (Demo) mode in Settings: choose any walk in the game freely without star gates. Career saves and stats are safely bypassed during practice.
+- Artsy Detours: the first secret-in-plain-sight side gallery, «El Somni» (homage to Salvador Dalí) hidden along Carrer del Gòtic, featuring melting elastic lampposts and a floating golden dream bone.
+- HUD vitals & iconography polish: redesigned smartphone HP pips with hairline cracked glass, liquid bladder and sprint energy tubes with vector droplet and lightning glyphs, arcade combo streak badge, and concentric territory mark target rings.
+- Dynamic mood-driven tail wagging, crisp kerb skid juice, and smoother menu typography across all screen resolutions.
+```
 
 ### What's new in 1.62 (tagged 2026-10-23)
 
