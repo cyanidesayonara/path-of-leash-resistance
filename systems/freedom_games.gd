@@ -182,8 +182,9 @@ static func _tick_tug(m: Node2D, delta: float) -> void:
 			fd._go_wander(1.0)      # got it: no sniffing the spot it lay on
 			m.rope_loose = Vector2(INF, INF)
 			m.games_cover.refresh()
-		# grabbing the free end starts it
-		if fd.rope and not m.dog_carrying and m.agility != null and not m.agility.running \
+		# grabbing the free end starts it (not mid agility run; most walks have
+		# no course at all)
+		if fd.rope and not m.dog_carrying and (m.agility == null or not m.agility.running) \
 				and mouth.distance_to(fd.rope_end()) < GRAB_R:
 			m.tug = RopeTug.new(m.dog.global_position, fd.global_position)
 			m.tug_prev = m.dog.global_position
