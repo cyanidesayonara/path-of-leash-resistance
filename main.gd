@@ -11867,7 +11867,7 @@ func _tick_vault(delta: float) -> void:
 	if wrapped and lvl == "reial" and not reial_gaudi_wrapped:
 		if pole in Reial.GAUDI_POSTS:
 			reial_gaudi_wrapped = true
-			float_text(dog.global_position + Vector2(0, -30), "GAUDÍ SLINGSHOT!", Color(0.96, 0.86, 0.32))
+			feed.say("GAUDÍ SLINGSHOT!", EventFeed.Tone.GOOD)
 	if vault_t > 0.0:
 		# held zoomies keep the swing going, up to its cap
 		var held: bool = dog.turbo_active and vault_elapsed < VAULT_MAX_T

@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-10-24 - Put the 1.63 walks' lines in the game's voice
+
+Lines added in 1.63 and since broke the voice rules in AGENTS.md:
+- El Somni's shouts were Catalan only. They are now English, with the place
+  named in Catalan: "EL SOMNI: THE DREAM GALLERY", "THE DREAM BONE!
+  FINDERS KEEPERS", "BACK OUT ON EL GÒTIC". The welcome was speech in
+  capitals; it is now lower case ("welcome to el somni"), and the pickup
+  pop says "dream bone!".
+- Plaça Reial: the Gaudí wrap's "GAUDÍ SLINGSHOT!" was a pop; it is now a
+  shout in the feed. The busker's "¡OLÉ! GUITAR DUET!" pop is now an "olé!"
+  pop with the shout "A DUET WITH THE BUSKER!".
+- El Veterinari's gate reads CLÍNICA VETERINÀRIA, accents and all.
+
 ## 2026-10-24 - Stop the results screen logging a missing input action
 
 The home epilogue's skip check read `Input.is_action_just_pressed("intro_skip")`,
