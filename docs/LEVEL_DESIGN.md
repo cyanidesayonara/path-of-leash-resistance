@@ -415,7 +415,7 @@ rubble stone, and the colour comes in where Gaudi put it.
   and on the way home beat the outflow to the door.
 - Built (2026-10-19): the avenue and its corners, the crowd river, the
   kick-off clock, La Marxa, El Gol and El Xiulet Final. Twelve goals.
-- Off-leash: PLAÇA DEL GOL, with the same agility course, rope tug and frisbee.
+- Off-leash: PLAÇA DEL GOL, with the rope tug and frisbee (the agility course is El Barri only, since October 2026).
 - Polish pass (2026-10-22): match-day scarf and flag vendor carts with hanging
   blaugrana/senyera scarves and air-horns, mobile frankfurter & xurros grill
   carts with sizzling sausages and condiment bottles, Guàrdia Urbana crowd-control

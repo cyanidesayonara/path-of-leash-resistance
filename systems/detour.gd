@@ -146,8 +146,8 @@ static func tick(m: Node2D, delta: float) -> void:
 	if not m.somni_bone_taken and dp.distance_to(bp) < 34.0:
 		m.somni_bone_taken = true
 		_play_sfx(m, "pickup", 1.25)
-		m.float_text(bp + Vector2(0.0, -32.0), "OS D'OR!", Color(1.0, 0.88, 0.2))
-		m.feed.say("EL SOMNI: OS D'OR TROBAT!", EventFeed.Tone.GOOD)
+		m.float_text(bp + Vector2(0.0, -32.0), "dream bone!", Color(1.0, 0.88, 0.2))
+		m.feed.say("THE DREAM BONE! FINDERS KEEPERS", EventFeed.Tone.GOOD)
 
 	# 3. Check exit portal
 	var ep: Vector2 = DETOUR_ORIGIN + ROOM_EXIT
@@ -172,8 +172,8 @@ static func enter(m: Node2D) -> void:
 	m.cam.reset_smoothing()
 
 	_play_sfx(m, "ui", 0.95)
-	m.feed.say("EXPOSICIÓ: EL SOMNI", EventFeed.Tone.LOUD)
-	m.float_text(m.dog.global_position + Vector2(0.0, -36.0), "BENVINGUTS A «EL SOMNI»", Color(1.0, 0.92, 0.7), m.POP_SAY)
+	m.feed.say("EL SOMNI: THE DREAM GALLERY", EventFeed.Tone.LOUD)
+	m.float_text(m.dog.global_position + Vector2(0.0, -36.0), "welcome to el somni", Color(1.0, 0.92, 0.7), m.POP_SAY)
 
 
 static func exit(m: Node2D) -> void:
@@ -192,7 +192,7 @@ static func exit(m: Node2D) -> void:
 	m.cam.reset_smoothing()
 
 	_play_sfx(m, "ui", 1.05)
-	m.feed.say("DE TORNADA AL GÒTIC!", EventFeed.Tone.PLAIN)
+	m.feed.say("BACK OUT ON EL GÒTIC", EventFeed.Tone.PLAIN)
 
 
 static func cam_x(m: Node2D) -> float:

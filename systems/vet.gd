@@ -150,7 +150,7 @@ static func wrap_rects() -> Array[Rect2]:
 
 # --- build -------------------------------------------------------------------
 static func build(m: Node2D) -> Array:
-	m.gate_text = "CLINICA VETERINARIA"
+	m.gate_text = "CLÍNICA VETERINÀRIA"
 	m.patches.clear()
 	m.stalls.clear()
 	m.stall_kinds.clear()
