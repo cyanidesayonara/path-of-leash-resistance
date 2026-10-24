@@ -27,6 +27,25 @@ func _inside_solid(m: Node2D, p: Vector2, pad: float) -> bool:
 	return false
 
 
+func _fed(m: Node2D, text: String) -> bool:
+	for l: Dictionary in m.feed.lines:
+		if String(l.get("text", "")) == text:
+			return true
+	return false
+
+
+func _count_pops(m: Node2D, text: String) -> int:
+	var n := 0
+	for p: Dictionary in m.pops.pops:
+		if String(p.get("text", "")) == text:
+			n += 1
+	return n
+
+
+func _popped(m: Node2D, text: String) -> bool:
+	return m.pops != null and _count_pops(m, text) > 0
+
+
 func _run() -> void:
 	var game = root.get_node("Game")
 	game.persist = false
@@ -97,6 +116,17 @@ func _run() -> void:
 	m.dog.global_position = V.SCALE_POS
 	V.tick(m)
 	_check(bool(m.vet_scale_weighed), "stepping on scale triggers weigh-in")
+	_check(_fed(m, "WEIGH-IN! 14.2 KG"), "the weigh-in is shouted in the feed")
+	_check(_popped(m, "beep!"), "the scale beeps")
+
+	# 7b. A bark beside a cat carrier gets a hiss (main.on_bark), one away does not
+	var pops_before: int = m.pops.pops.size()
+	m.on_bark(V.CAT_CARRIERS[0] + Vector2(30.0, 0.0))
+	_check(_popped(m, "hisss!"), "a bark beside the carrier gets a hiss")
+	var hisses := _count_pops(m, "hisss!")
+	m.on_bark(V.CAT_CARRIERS[0] + Vector2(0.0, 400.0))
+	_check(_count_pops(m, "hisss!") == hisses, "a bark across the room gets none")
+	_check(m.pops.pops.size() > pops_before, "the hiss is a pop on screen")
 
 	# 8. Chase threat profile integration
 	var profile: Dictionary = HC.profile_for("vet")
@@ -117,10 +147,23 @@ func _run() -> void:
 	var S = load("res://world/surfaces.gd")
 	_check(m.surface_at(Vector2(640.0, -2000.0)) == S.S.PAVEMENT, "clinic floor surface is pavement")
 
-	# 11. Simulation step sanity
-	for frame in range(15):
-		m._physics_process(1.0 / 60.0)
-	_check(true, "ran 15 physics frames cleanly without error")
+	# 11. The chase home actually spawns the clinic assistants and they run.
+	# A broken preload once made this script fail to parse, so every vet
+	# walk crashed on the way home while every other check stayed green.
+	HC.begin(m)
+	HC.release(m)
+	var threat: Node2D = m.chase_sweeper
+	_check(threat != null and threat.get_script() != null
+		and (threat.get_script() as Script).resource_path == "res://entities/vet_threat.gd",
+		"the chase spawned the vet threat")
+	if threat != null and threat.get_script() != null:
+		var start_y: float = threat.front_y
+		m.chase_phase = "chase"
+		for frame in range(30):
+			HC.tick(m, 1.0 / 60.0)
+			await process_frame
+		_check(threat.front_y != start_y, "the assistants advance (%.0f -> %.0f)" % [start_y, threat.front_y])
+		_check(threat.has_method("caught") and threat.has_method("gap_to"), "the threat answers the chase interface")
 
 	print("\n--- TEST VET RESULTS ---")
 	print("Checks: %d, Failures: %d" % [checks, failures.size()])

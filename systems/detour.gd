@@ -51,6 +51,15 @@ static func _play_sfx(m: Node2D, sound: String, pitch := 1.0) -> void:
 		m.get_node("/root/Sfx").play(sound, pitch)
 
 
+# the melting lampposts in level space; world/level_build.gd registers them
+# as rope poles with bodies, with the rest of the level's round posts
+static func lamp_points() -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for off: Vector2 in LAMP_OFFSETS:
+		out.append(DETOUR_ORIGIN + off)
+	return out
+
+
 static func is_on(m: Node2D) -> bool:
 	return m.lvl == "oldtown"
 
@@ -90,13 +99,6 @@ static func build(m: Node2D) -> void:
 		cs.position = r.position + r.size * 0.5
 		walls.add_child(cs)
 	m.add_child(walls)
-
-	# Register the 4 melting lampposts in m.poles so leash can wrap around them
-	for off: Vector2 in LAMP_OFFSETS:
-		var lp: Vector2 = DETOUR_ORIGIN + off
-		m.poles.append(lp)
-	m.rope_radii.resize(m.poles.size())
-	m.rope_radii.fill(m.POLE_RADIUS + 2.0)
 
 	# Add visual DetourLayer
 	var layer := Node2D.new()
@@ -146,7 +148,6 @@ static func tick(m: Node2D, delta: float) -> void:
 		_play_sfx(m, "pickup", 1.25)
 		m.float_text(bp + Vector2(0.0, -32.0), "OS D'OR!", Color(1.0, 0.88, 0.2))
 		m.feed.say("EL SOMNI: OS D'OR TROBAT!", EventFeed.Tone.GOOD)
-		m.run_goals_hit["somni"] = true
 
 	# 3. Check exit portal
 	var ep: Vector2 = DETOUR_ORIGIN + ROOM_EXIT

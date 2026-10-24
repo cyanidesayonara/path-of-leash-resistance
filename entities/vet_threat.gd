@@ -7,7 +7,6 @@ extends Node2D
 # gap_to, threat_boundary, sweep_junk) so systems/home_chase drives it.
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
-const AnimClock := preload("res://hud/anim_clock.gd")
 
 const SCRUBS_TEAL := Color(0.20, 0.65, 0.60)
 const COAT_WHITE := Color(0.94, 0.96, 0.98)
@@ -21,6 +20,9 @@ const CONE_PLASTIC := Color(0.88, 0.94, 0.98, 0.60)
 const CONE_RIM := Color(0.25, 0.45, 0.75)
 const NET_MESH := Color(0.80, 0.82, 0.85, 0.50)
 const POLE_ALUMINUM := Color(0.70, 0.72, 0.75)
+const STETH_GREY := Color(0.2, 0.22, 0.25)
+# the stethoscope arc as batched lines: ShapeBatch has no arc
+const STETH_SEGS := 8
 
 const SURGE := 0.24
 const CATCH_UP := 1.35
@@ -117,8 +119,7 @@ func sweep_junk(_junk: Array) -> int:
 
 
 func _draw() -> void:
-	var b := ShapeBatch.new()
-	b.target = self
+	var b := ShapeBatch.new(self)
 
 	# Shadow on the linoleum floor
 	b.circle(Vector2(-60.0, -40.0), 28.0, Color(0.04, 0.05, 0.08, 0.22))
@@ -160,7 +161,11 @@ func _draw_assistant(b: ShapeBatch, pos: Vector2, hair_col: Color, is_left: bool
 	# Teal scrubs collar
 	b.circle(Vector2(pos.x, pos.y - 6.0), 8.0, SCRUBS_TEAL)
 	# Stethoscope around neck
-	b.arc(Vector2(pos.x, pos.y - 4.0), 9.0, PI * 0.1, PI * 0.9, 8, Color(0.2, 0.22, 0.25), 1.8)
+	var steth := Vector2(pos.x, pos.y - 4.0)
+	for i in range(STETH_SEGS):
+		var a0 := lerpf(PI * 0.1, PI * 0.9, float(i) / STETH_SEGS)
+		var a1 := lerpf(PI * 0.1, PI * 0.9, float(i + 1) / STETH_SEGS)
+		b.line(steth + Vector2.from_angle(a0) * 9.0, steth + Vector2.from_angle(a1) * 9.0, STETH_GREY, 1.8)
 	b.circle(Vector2(pos.x + 4.0, pos.y + 6.0), 2.5, Color(0.8, 0.82, 0.85))
 
 	# Head
