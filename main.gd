@@ -913,6 +913,8 @@ func _ready() -> void:
 		CableCar.build(self)
 	elif lvl == "oldtown":
 		Detour.build(self)
+	elif lvl == "tibidabo":
+		Tibidabo.build_layer(self)
 	_spawn_cones()
 	_spawn_stream_find()
 	_build_quests()
@@ -11614,6 +11616,9 @@ func surface_at(p: Vector2) -> int:
 	if lvl == "vet":
 		if p.y > GATE_Y:
 			return Surfaces.S.PAVEMENT
+	if lvl == "tibidabo":
+		if p.y > GATE_Y:
+			return Surfaces.S.PAVEMENT
 	if lvl == "beach":
 		# THE SEAFRONT HAS NO GRASS. Its cross-section is sea, sand, boardwalk,
 		# bike path, promenade, then cafe paving - so once the sea and the sand
@@ -14103,7 +14108,7 @@ func _draw_world() -> void:
 			_draw_paving(maxf(vt, GATE_Y - 30.0), vb, walkway)
 			_wc.draw_line(Vector2(sw_l, bottom), Vector2(sw_l, GATE_Y), COL_SEAM, 3.0)
 			_wc.draw_line(Vector2(sw_r, bottom), Vector2(sw_r, GATE_Y), COL_SEAM, 3.0)
-		elif lvl != "partit" and lvl != "port" and lvl != "reial" and lvl != "vet":
+		elif lvl != "partit" and lvl != "port" and lvl != "reial" and lvl != "vet" and lvl != "tibidabo":
 			# (Dia de Partit's asphalt and sidewalks are on the cached edge layer)
 			_draw_walk_ribbon(vt, vb, bottom, walkway)
 		if lvl == "besos":

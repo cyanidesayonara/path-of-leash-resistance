@@ -1,21 +1,15 @@
 class_name Tibidabo
 extends RefCounted
 
-# WALK 21: EL TIBIDABO (The Mountain Funicular & Fairground Overlook)
-# Winding scenic mountain highway ascending Mount Tibidabo high above Barcelona,
-# flanked by a stone cliffside balustrade overlooking the skyline and sea on the
-# west, and the historic Funicular tracks (Cuca de Llum) climbing alongside the
-# pine-covered hillside on the east.
-#
-# Features:
-# - Historic funicular railway track running along the eastern flank with passing
-#   vintage funicular train carriage (red/cream livery, panoramic glass).
-#   Level crossing with clanging bell and flashing crossing signals at CROSSING_Y.
-# - Vintage coin-operated panoramic binoculars (viewfinders) mounted on stone plinths
-#   along the cliffside balustrade ("PANORAMA! +5").
-# - Fairground summit with candy floss / churros stalls, festive pennant bunting,
-#   and fairground treats.
-# - Golden bone prize on the vintage carousel food cart.
+# WALK 21: EL TIBIDABO (the mountain funicular and the overlook)
+# A winding mountain road up Tibidabo: a stone balustrade on the west over the
+# drop to the city, and on the east, off the road among the pines, the
+# funicular track. The carriage runs up and down it on the walk clock
+# (carriage_y), drawn every frame by world/funicular_layer.gd; the funicular
+# goal reads the same position, so it fires on the carriage the player sees.
+# Three coin viewfinders stand on plinths along the balustrade, and a trackside
+# signal at the road's edge flashes while the carriage is near it. The summit
+# has pennant bunting and a cotton candy cart with the prize.
 
 const Letters := preload("res://world/sign_letters.gd")
 const Surfaces := preload("res://world/surfaces.gd")
@@ -51,11 +45,40 @@ const BUNTING_COLORS: Array[Color] = [
 	Color(0.92, 0.48, 0.20)
 ]
 
-# --- track and crossing layout ------------------------------------------------
-const TRACK_X := 880.0
+const HILLSIDE := Color(0.30, 0.36, 0.24)
+const CITY_HAZE := Color(0.50, 0.56, 0.62)
+const CITY_BLOCK := Color(0.42, 0.47, 0.54)
+
+# --- track layout ----------------------------------------------------------------
+# The track runs off the road on the east, past its widest edge (x 920), so
+# the carriage never passes over anyone. Nothing crosses it.
+const TRACK_X := 968.0
 const TRACK_W := 60.0
-const CROSSING_Y := -2400.0
-const CROSSING_H := 80.0
+# the trackside signal at the road's edge, a mark spot; it flashes while the
+# carriage is within SIGNAL_NEAR of it
+const SIGNAL_POS := Vector2(840.0, -2450.0)
+const SIGNAL_NEAR := 420.0
+# the carriage climbs from the bottom to the top station and back, a full
+# round trip every CAR_PERIOD seconds of walk time
+const CAR_BOTTOM_Y := 100.0
+const CAR_TOP_Y := -4700.0
+const CAR_PERIOD := 40.0
+const CAR_W := 38.0
+const CAR_L := 110.0
+# the funicular goal: the dog at the road's east side with the carriage
+# passing level with her
+const WATCH_X := 680.0
+const WATCH_DY := 120.0
+# Aleppo pines on the hillside beyond the track; they catch the rope
+const PINES: Array[Vector2] = [
+	Vector2(1040.0, -600.0), Vector2(1040.0, -1200.0), Vector2(1040.0, -1800.0),
+	Vector2(1040.0, -2600.0), Vector2(1040.0, -3200.0), Vector2(1040.0, -3800.0),
+	Vector2(1040.0, -4400.0),
+]
+const PINE_R := 26.0
+# a viewfinder counts once she stands still at it
+const VIEW_R := 36.0
+const VIEW_STILL := 20.0
 
 # Panoramic coin-operated viewfinders along the balustrade
 const VIEWFINDERS: Array[Vector2] = [
@@ -104,26 +127,23 @@ static func build(m: Node2D) -> Array:
 		Vector2(820.0, -4450.0),
 	], TYPE_VECTOR2, &"", null)
 
-	# Mountain Aleppo pines along the slopes and balustrade posts
-	for y: float in [-600.0, -1200.0, -1800.0, -2600.0, -3200.0, -3800.0, -4400.0]:
-		m.poles.append(Vector2(930.0, y))
-		m.rope_radii.append(16.0)
-
-	# Viewfinders (solid pedestals the leash can wrap)
+	# Round rope poles. Their radii come from world/level_build.gd, which
+	# gives every round post the same radius once the level's poles are in.
+	for pp: Vector2 in PINES:
+		m.poles.append(pp)
 	for vf: Vector2 in VIEWFINDERS:
 		m.poles.append(vf)
-		m.rope_radii.append(12.0)
 
-	# Sniffable landmarks (hiking waymarkers & mountain lookout posts)
+	# Mark spots: the viewfinders, the trackside signal, the cotton candy cart
 	var marks: Array[Vector2] = [
 		VIEWFINDERS[0],
 		VIEWFINDERS[1],
 		VIEWFINDERS[2],
-		Vector2(840.0, CROSSING_Y - 50.0), # Crossing bell post
-		Vector2(490.0, -4600.0),            # Fairground cart
+		SIGNAL_POS,
+		PRIZE,
 	]
 
-	# Snacks: dropped churros and cotton candy bites
+	# Snacks: dropped churro and cotton candy bites
 	var snacks: Array[Vector2] = [
 		Vector2(470.0, -1350.0),
 		Vector2(550.0, -2350.0),
@@ -134,54 +154,75 @@ static func build(m: Node2D) -> Array:
 	return [marks, snacks]
 
 
-static func draw_edge_layer(m: Node2D, b: ShapeBatch, _vt: float = 0.0, _vb: float = 0.0) -> void:
+# The carriage's y on the track at walk time t: up from the bottom station
+# and back down, eased in and out at each end.
+static func carriage_y(t: float) -> float:
+	var f := fmod(t, CAR_PERIOD) / CAR_PERIOD
+	var up := 1.0 - absf(2.0 * f - 1.0)
+	return lerpf(CAR_BOTTOM_Y, CAR_TOP_Y, smoothstep(0.0, 1.0, up))
+
+
+static func signal_lit(m: Node2D) -> bool:
+	return absf(carriage_y(m.elapsed) - SIGNAL_POS.y) < SIGNAL_NEAR
+
+
+static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float = 0.0) -> void:
 	if m.lvl != "tibidabo":
 		return
+	var top: float = maxf(vt, m.GATE_Y - 40.0)
+	var bot: float = minf(vb, m.START_Y + 400.0)
+	if bot <= top:
+		return
+	# the drop to the city on the west, the hillside on the east
+	b.rect(Rect2(-400.0, top, 760.0, bot - top), CITY_HAZE)
+	var cy := floorf(bot / 90.0) * 90.0
+	while cy > top - 90.0:
+		var k := int(absf(cy) / 90.0)
+		b.rect(Rect2(40.0 + float((k * 37) % 120), cy, 70.0 + float((k * 53) % 60), 46.0), CITY_BLOCK)
+		cy -= 90.0
+	b.rect(Rect2(900.0, top, 700.0, bot - top), HILLSIDE)
 
-	# Roadway asphalt base
-	b.rect(Rect2(360.0, -4850.0, 560.0, 5250.0), ROAD_ASPHALT)
-
-	# Funicular track bed ballast on the east flank
-	b.rect(Rect2(TRACK_X - TRACK_W * 0.5, -4850.0, TRACK_W, 5250.0), TRACK_BALLAST)
-
-	# Wooden track sleepers
-	var sy := -50.0
-	while sy > -4800.0:
-		b.rect(Rect2(TRACK_X - 26.0, sy - 3.0, 52.0, 6.0), TRACK_SLEEPER)
-		sy -= 22.0
-
-	# Steel track rails
-	b.line(Vector2(TRACK_X - 18.0, 200.0), Vector2(TRACK_X - 18.0, -4850.0), TRACK_RAIL, 4.0)
-	b.line(Vector2(TRACK_X + 18.0, 200.0), Vector2(TRACK_X + 18.0, -4850.0), TRACK_RAIL, 4.0)
-	# Central traction steel cable
-	b.line(Vector2(TRACK_X, 200.0), Vector2(TRACK_X, -4850.0), TRACK_CABLE, 2.0)
-
-	# Mountain road yellow dividing dashed center line
-	var ly := -20.0
-	while ly > -4800.0:
-		if absf(ly - CROSSING_Y) > 60.0:
-			var e_dash: Vector2 = m.walk_edges(ly)
-			var c_dash := (e_dash.x + e_dash.y) * 0.5
-			b.line(Vector2(c_dash, ly), Vector2(c_dash, ly - 32.0), Color(0.92, 0.78, 0.25), 3.0)
+	# the road surface, its dashed center line and curbs, following the bends
+	b.rect(Rect2(360.0, top, 560.0, bot - top), ROAD_ASPHALT)
+	var ly := floorf(bot / 64.0) * 64.0
+	while ly > top - 64.0:
+		var e_dash: Vector2 = m.walk_edges(ly)
+		var c_dash := (e_dash.x + e_dash.y) * 0.5
+		b.line(Vector2(c_dash, ly), Vector2(c_dash, ly - 32.0), Color(0.92, 0.78, 0.25), 3.0)
 		ly -= 64.0
-
-	# Road asphalt kerbs following the mountain corridor
-	var ky := 200.0
-	while ky > -4800.0:
+	var ky := floorf(bot / 38.0) * 38.0
+	while ky > top - 38.0:
 		var ke: Vector2 = m.walk_edges(ky)
 		b.line(Vector2(ke.x, ky), Vector2(ke.x, ky - 40.0), ROAD_KERB, 5.0)
 		b.line(Vector2(ke.y, ky), Vector2(ke.y, ky - 40.0), ROAD_KERB, 5.0)
 		ky -= 38.0
 
-	# Level crossing asphalt ramp and white warning crosshatching
-	b.rect(Rect2(TRACK_X - TRACK_W * 0.5, CROSSING_Y - CROSSING_H * 0.5, TRACK_W, CROSSING_H), ROAD_ASPHALT)
-	for i in range(4):
-		var cy := CROSSING_Y - 30.0 + float(i) * 20.0
-		b.line(Vector2(TRACK_X - 24.0, cy), Vector2(TRACK_X + 24.0, cy), Color(0.95, 0.95, 0.90), 3.5)
+	# the funicular track: ballast, sleepers, rails and the haulage cable
+	var t_top: float = maxf(top, CAR_TOP_Y - 80.0)
+	var t_bot: float = minf(bot, CAR_BOTTOM_Y + 80.0)
+	if t_bot > t_top:
+		b.rect(Rect2(TRACK_X - TRACK_W * 0.5, t_top, TRACK_W, t_bot - t_top), TRACK_BALLAST)
+		var sy := floorf(t_bot / 22.0) * 22.0
+		while sy > t_top:
+			b.rect(Rect2(TRACK_X - 26.0, sy - 3.0, 52.0, 6.0), TRACK_SLEEPER)
+			sy -= 22.0
+		b.line(Vector2(TRACK_X - 18.0, t_bot), Vector2(TRACK_X - 18.0, t_top), TRACK_RAIL, 4.0)
+		b.line(Vector2(TRACK_X + 18.0, t_bot), Vector2(TRACK_X + 18.0, t_top), TRACK_RAIL, 4.0)
+		b.line(Vector2(TRACK_X, t_bot), Vector2(TRACK_X, t_top), TRACK_CABLE, 2.0)
+
+	# Aleppo pines on the hillside
+	for pp: Vector2 in PINES:
+		if pp.y < top - PINE_R * 2.0 or pp.y > bot + PINE_R * 2.0:
+			continue
+		b.circle(pp + LIGHT * 10.0, PINE_R + 4.0, SHADOW)
+		b.circle(pp, 6.0, PINE_TRUNK)
+		b.circle(pp + Vector2(-8.0, -6.0), PINE_R * 0.7, PINE_NEEDLES)
+		b.circle(pp + Vector2(9.0, -2.0), PINE_R * 0.75, PINE_NEEDLES)
+		b.circle(pp + Vector2(0.0, 8.0), PINE_R * 0.65, PINE_NEEDLES.lightened(0.08))
 
 	# Stone cliffside balustrade on the west edge overlooking Barcelona
-	var by := -40.0
-	while by > -4800.0:
+	var by := floorf(bot / 70.0) * 70.0 - 40.0
+	while by > top - 70.0:
 		var we: Vector2 = m.walk_edges(by)
 		var bx: float = we.x - 8.0
 		b.rect(Rect2(bx - 8.0, by, 16.0, 60.0), BALUSTRADE_STONE)
@@ -189,100 +230,95 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, _vt: float = 0.0, _vb: flo
 		b.circle(Vector2(bx + LIGHT.x * 3.0, by + 30.0 + LIGHT.y * 3.0), 10.0, BALUSTRADE_SHADOW)
 		by -= 70.0
 
-	# Funicular carriage (Cuca de Llum) moving along the track
-	var t: float = AnimClock.msec() / 1000.0
-	# Cycle period 24 seconds: ascending from y = 100 down to y = -4700
-	var cycle := fmod(t, 24.0) / 24.0
-	var car_y := lerpf(100.0, -4700.0, cycle)
-	var car_w := 38.0
-	var car_l := 110.0
-	var car_pos := Vector2(TRACK_X, car_y)
-
-	# Carriage shadow and body
-	b.rect(Rect2(car_pos.x - car_w * 0.5 + LIGHT.x * 6.0, car_pos.y - car_l * 0.5 + LIGHT.y * 6.0, car_w, car_l), SHADOW)
-	b.rect(Rect2(car_pos.x - car_w * 0.5, car_pos.y - car_l * 0.5, car_w, car_l), FUNICULAR_RED)
-	b.rect(Rect2(car_pos.x - car_w * 0.5 + 4.0, car_pos.y - car_l * 0.5 + 8.0, car_w - 8.0, car_l - 16.0), FUNICULAR_CREAM)
-	# Panoramic glass windows
-	for wi in range(5):
-		var wy := car_pos.y - car_l * 0.5 + 14.0 + float(wi) * 18.0
-		b.rect(Rect2(car_pos.x - car_w * 0.5 + 6.0, wy, car_w - 12.0, 12.0), FUNICULAR_GLASS)
-
 	# Panoramic viewfinders (coin binoculars)
 	for vf: Vector2 in VIEWFINDERS:
-		# Stone circular pedestal
+		if vf.y < top - 20.0 or vf.y > bot + 20.0:
+			continue
 		b.circle(vf + LIGHT * 4.0, 14.0, SHADOW)
 		b.circle(vf, 12.0, BALUSTRADE_STONE)
-		# Twin binocular barrels and brass eye pieces
 		b.circle(vf, 6.0, VIEWFINDER_METAL)
 		b.line(vf + Vector2(-6.0, -4.0), vf + Vector2(-6.0, 6.0), VIEWFINDER_METAL, 4.0)
 		b.line(vf + Vector2(6.0, -4.0), vf + Vector2(6.0, 6.0), VIEWFINDER_METAL, 4.0)
 		b.circle(vf + Vector2(-6.0, -4.0), 3.0, VIEWFINDER_BRASS)
 		b.circle(vf + Vector2(6.0, -4.0), 3.0, VIEWFINDER_BRASS)
 
-	# Crossing warning signal lights at CROSSING_Y
-	var blink := fmod(t * 3.0, 2.0) < 1.0
-	var sig_pos := Vector2(TRACK_X - 35.0, CROSSING_Y - 45.0)
-	b.circle(sig_pos + LIGHT * 3.0, 8.0, SHADOW)
-	b.circle(sig_pos, 7.0, Color(0.18, 0.18, 0.20))
-	b.circle(sig_pos + Vector2(-4, 0), 3.0, Color(0.95, 0.2, 0.2) if blink else Color(0.35, 0.1, 0.1))
-	b.circle(sig_pos + Vector2(4, 0), 3.0, Color(0.35, 0.1, 0.1) if blink else Color(0.95, 0.2, 0.2))
+	# the cotton candy cart with the prize
+	if PRIZE.y > top - 30.0 and PRIZE.y < bot + 30.0:
+		b.rect(Rect2(PRIZE.x - 22.0 + LIGHT.x * 4.0, PRIZE.y - 14.0 + LIGHT.y * 4.0, 44.0, 28.0), SHADOW)
+		b.rect(Rect2(PRIZE.x - 20.0, PRIZE.y - 12.0, 40.0, 24.0), FUNICULAR_CREAM)
+		b.rect(Rect2(PRIZE.x - 22.0, PRIZE.y - 14.0, 44.0, 6.0), Color(0.88, 0.22, 0.20))
+		b.circle(PRIZE + Vector2(-6.0, -2.0), 8.0, COTTON_CANDY_PINK)
+		b.circle(PRIZE + Vector2(6.0, -2.0), 8.0, COTTON_CANDY_PINK.lightened(0.12))
 
-	# Fairground candy cart and prize (cotton candy stick)
-	b.rect(Rect2(PRIZE.x - 22.0 + LIGHT.x * 4.0, PRIZE.y - 14.0 + LIGHT.y * 4.0, 44.0, 28.0), SHADOW)
-	b.rect(Rect2(PRIZE.x - 20.0, PRIZE.y - 12.0, 40.0, 24.0), FUNICULAR_CREAM)
-	b.rect(Rect2(PRIZE.x - 22.0, PRIZE.y - 14.0, 44.0, 6.0), Color(0.88, 0.22, 0.20))
-	# Cotton candy clouds
-	b.circle(PRIZE + Vector2(-6.0, -2.0), 8.0, COTTON_CANDY_PINK)
-	b.circle(PRIZE + Vector2(6.0, -2.0), 8.0, COTTON_CANDY_PINK.lightened(0.12))
+
+# The moving parts, every frame (world/funicular_layer.gd): the carriage at
+# carriage_y and the trackside signal.
+static func draw_moving(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	var car_y := carriage_y(m.elapsed)
+	if car_y > vt - CAR_L and car_y < vb + CAR_L:
+		var body := Rect2(TRACK_X - CAR_W * 0.5, car_y - CAR_L * 0.5, CAR_W, CAR_L)
+		b.rect(Rect2(body.position + LIGHT * 6.0, body.size), SHADOW)
+		b.rect(body, FUNICULAR_RED)
+		b.rect(body.grow_individual(-4.0, -8.0, -4.0, -8.0), FUNICULAR_CREAM)
+		for wi in range(5):
+			var wy := body.position.y + 14.0 + float(wi) * 18.0
+			b.rect(Rect2(body.position.x + 6.0, wy, CAR_W - 12.0, 12.0), FUNICULAR_GLASS)
+	if SIGNAL_POS.y > vt - 40.0 and SIGNAL_POS.y < vb + 40.0:
+		var lit := signal_lit(m)
+		var alt := fmod(AnimClock.msec() / 1000.0 * 3.0, 2.0) < 1.0
+		var off := Color(0.35, 0.1, 0.1)
+		var on := Color(0.95, 0.2, 0.2)
+		b.circle(SIGNAL_POS + LIGHT * 3.0, 8.0, SHADOW)
+		b.circle(SIGNAL_POS, 7.0, Color(0.18, 0.18, 0.20))
+		b.circle(SIGNAL_POS + Vector2(-4, 0), 3.0, on if lit and alt else off)
+		b.circle(SIGNAL_POS + Vector2(4, 0), 3.0, on if lit and not alt else off)
+
+
+static func build_layer(m: Node2D) -> void:
+	var layer := Node2D.new()
+	layer.set_script(load("res://world/funicular_layer.gd"))
+	m.add_child(layer)
+	layer.setup(m)
 
 
 static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 	if m.lvl != "tibidabo":
 		return
-	# Festive pennant bunting strung between poles near the fairground summit
-	var t: float = AnimClock.msec() / 1000.0
+	# Pennant bunting strung across the road near the summit, one batch.
+	# The overhead layer is cached, so the pennants hang still.
+	var b := ShapeBatch.new(ci)
 	for y: float in [-4100.0, -4350.0, -4600.0]:
 		var p1 := Vector2(410.0, y)
 		var p2 := Vector2(850.0, y)
-		ci.draw_line(p1, p2, Color(0.30, 0.28, 0.26), 1.5)
+		b.line(p1, p2, Color(0.30, 0.28, 0.26), 1.5)
 		for i in range(12):
 			var frac := float(i) / 11.0
 			var bx := lerpf(p1.x, p2.x, frac)
-			var sag := sin(frac * PI) * 14.0 + sin(t * 2.0 + float(i)) * 2.0
-			var by := y + sag
+			var by := y + sin(frac * PI) * 14.0
 			var col: Color = BUNTING_COLORS[i % BUNTING_COLORS.size()]
-			var pts := PackedVector2Array([
-				Vector2(bx - 6.0, by),
-				Vector2(bx + 6.0, by),
-				Vector2(bx, by + 12.0)
-			])
-			ci.draw_colored_polygon(pts, col)
+			b.polygon(PackedVector2Array([Vector2(bx - 6.0, by), Vector2(bx + 6.0, by), Vector2(bx, by + 12.0)]), col)
+	b.flush()
 
 
 static func update_tibidabo(m: Node2D, _delta: float) -> void:
 	if m.lvl != "tibidabo":
 		return
-
-	# Viewfinder interaction: stepping up to any panoramic binoculars
+	var dp: Vector2 = m.dog.global_position
+	# a viewfinder: standing still at one
 	if not m.tibidabo_viewfinder_gazed:
 		for vf: Vector2 in VIEWFINDERS:
-			if m.dog.global_position.distance_to(vf) < 36.0:
-				if m.dog.velocity.length() < 20.0:
-					m.tibidabo_viewfinder_gazed = true
-					m.bones += 5
-					m.combo.add("PANORAMA", 4)
-					m.float_text(m.dog.global_position + Vector2(0, -30), "PANORAMA! +5", Color(0.96, 0.86, 0.32))
-					m.feed.say("BARCELONA PANORAMA!", EventFeed.Tone.GOOD)
-					Sfx.play("prize", 1.1)
-					break
-
-	# Funicular crossing check: watching the carriage pass near the crossing
+			if dp.distance_to(vf) < VIEW_R and m.dog.velocity.length() < VIEW_STILL:
+				m.tibidabo_viewfinder_gazed = true
+				m.bones += 5
+				m.combo.add("PANORAMA", 4)
+				m.float_text(dp + Vector2(0, -30), "panorama! +5", Color(0.96, 0.86, 0.32))
+				m.feed.say("BARCELONA, ALL OF IT!", EventFeed.Tone.GOOD)
+				Sfx.play("prize", 1.1)
+				break
+	# the funicular: at the road's east side as the carriage passes level
 	if not m.tibidabo_funicular_seen:
-		var t: float = AnimClock.msec() / 1000.0
-		var cycle := fmod(t, 24.0) / 24.0
-		var car_y := lerpf(100.0, -4700.0, cycle)
-		if absf(car_y - m.dog.global_position.y) < 120.0 and m.dog.global_position.x > 680.0:
+		if dp.x > WATCH_X and absf(carriage_y(m.elapsed) - dp.y) < WATCH_DY:
 			m.tibidabo_funicular_seen = true
 			m.bones += 3
-			m.float_text(m.dog.global_position + Vector2(0, -28), "CUCA DE LLUM! +3", Color(0.85, 0.35, 0.32))
-			m.feed.say("FUNICULAR DE TIBIDABO!", EventFeed.Tone.GOOD)
+			m.float_text(dp + Vector2(0, -28), "funicular! +3", Color(0.85, 0.35, 0.32))
+			m.feed.say("THE FUNICULAR GOES BY!", EventFeed.Tone.GOOD)

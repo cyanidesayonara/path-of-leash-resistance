@@ -2,17 +2,30 @@
 
 Append-only session history, newest first.
 
-## 2026-10-24 - Walk 21: El Tibidabo (The Mountain Funicular & Panoramic Overlook)
+## 2026-10-24 - Walk 21: El Tibidabo (the mountain funicular)
 
-- **Walk 21: El Tibidabo** (`systems/tibidabo.gd`, `autoload/game.gd`, `world/level_build.gd`, `systems/goals.gd`, `systems/arrival.gd`, `main.gd`, `tests/test_tibidabo.gd`):
-  - Added campaign Walk 21: **El Tibidabo** (the scenic mountain road ascending Mount Tibidabo above Barcelona, unlocks at 35 career stars or freely selectable in Free Play mode).
-  - Authentic mountain highway corridor: asphalt road with yellow dividing center line and stone kerbs following the winding mountain contours, flanked on the west by a carved stone balustrade overlooking the Barcelona skyline and Mediterranean sea, and on the east by the historic Funicular de Tibidabo railway.
-  - Active Funicular (*Cuca de Llum*): authentic red-and-cream funicular carriage with panoramic glass windows climbing the mountain track alongside passing players; level crossing at `CROSSING_Y = -2400.0` with crossing ramp, warning crosshatching, and alternating red flashing crossing signal lights. Watching the carriage pass triggers `"CUCA DE LLUM! +3"` and satisfies the `funicular` goal.
-  - Panoramic Coin-Operated Viewfinders: twin brass-and-metal binocular viewfinders mounted on stone plinths along the cliffside balustrade; stepping up to any viewfinder triggers `"PANORAMA! +5"` and satisfies the `viewfinder` goal.
-  - Fairground summit at Mirador del Tibidabo: festive pennant bunting strung overhead, churro and cotton candy stalls, and fairground treat cart.
-  - Hazardous collectible prize: Spun sugar stick on the fairground cart (`"snatch the spun sugar stick from the fairground cart"`).
-  - 12 custom goals in `LEVEL_GOAL_IDS["tibidabo"]` including `funicular` and `viewfinder`.
-  - Added `tests/test_tibidabo.gd` (25 checks, 0 failures), integrated into CI selftest, smoke, and soak test suites (`.github/workflows/ci.yml`, `.github/workflows/soak.yml`).
+The 21st walk, open at 35 stars: a winding mountain road up Tibidabo to the
+Mirador del Tibidabo, ending in a plaça off leash.
+- The road is asphalt with a dashed center line and curbs that follow the
+  bends. A stone balustrade runs along the west over the drop to the city,
+  and the hillside rises on the east with Aleppo pines that catch the leash.
+- The funicular track runs off the road on the east. The carriage climbs to
+  the top station and back every 40 seconds of walk time. It is drawn every
+  frame by `world/funicular_layer.gd`, and the `funicular` goal reads the
+  same position (`Tibidabo.carriage_y`): she has to be at the east side of
+  the road while the carriage is level with her. A trackside signal at the
+  road's edge flashes while the carriage is near, and it is a mark spot.
+- Three coin viewfinders stand along the balustrade. The `viewfinder` goal
+  counts standing still at one ("panorama! +5"), not trotting past.
+- The summit has pennant bunting and a cotton candy cart with the prize.
+- Its own music: accordion with a glockenspiel doubling it, over oompah, at
+  126 bpm.
+- Main's generic walkway is no longer drawn over the road, which had hidden
+  the asphalt, center line and curbs. The road is pavement underfoot.
+- `tests/test_tibidabo.gd` (41 checks) covers the level check, the road
+  surface, the track and pines off the road, the carriage's round trip, the
+  layer redrawing every frame, and each goal with the case that must not
+  count.
 
 ## 2026-10-24 - Multi-Level Visual Polish: Trail Waymarkers and Landmark Sniff Progress
 
