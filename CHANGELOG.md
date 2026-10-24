@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-10-24 - Ready v1.64's notes and handover
+
+The session started with an audit of what was built for v1.62, v1.63 and
+since. Its fixes are in the entries below (hardening, the results screen's
+missing action, the voice, tests that could not fail), alongside El
+Tibidabo, the agility scope and the arrival.
+- `docs/itch-page.md` and `store/listing.md`: the 1.64 What's new now covers
+  everything since 1.63, in plain words.
+- `HANDOVER.md`: where things stand for 1.64, and what is known and unfixed
+  (El Port's idle gulls, the detour autopilot and El Besòs's flood apron
+  unconfirmed, per-walk flags piling up in `main.gd`).
+- `AGENTS.md`: the release command names v1.64.
+
 ## 2026-10-24 - Walk them in through a real way home
 
 The arrival used to start at HOME_Y, 8 px from the door, so it was a short
