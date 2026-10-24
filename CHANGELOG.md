@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-10-24 - The agility course stays in El Barri only
+
+Santtu found the agility course out of place on most walks. It now stands
+only in El Barri's dog park (`FreedomGames.AGILITY_WALKS`), the one place to
+set a best time. Every other off-leash area keeps tug-of-war and frisbee,
+and its rotating hints no longer mention agility. Props and trees in those
+areas are no longer nudged off a lane that is not there. The behaviour
+snapshot over all 20 walks is unchanged. `test_freedom_games_live` checks
+that the course is in El Barri and nowhere else, and runs its course test
+there.
+
 ## 2026-10-24 - Harden the walks that shipped after 1.62
 
 An audit of 1.63 and the walks merged since found features that could not

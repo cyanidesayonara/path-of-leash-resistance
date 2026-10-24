@@ -1969,7 +1969,8 @@ static func build_level_data(m: Node2D) -> void:
 				# outer thirds only: the middle is where the fetching happens
 				tx = randf_range(150.0, 340.0) if randf() < 0.5 else randf_range(940.0, 1120.0)
 			var tree := Vector2(tx, m.GATE_Y - randf_range(120.0, 550.0))
-			tree = m.agility.push_out(tree, 34.0)
+			if m.agility != null:
+				tree = m.agility.push_out(tree, 34.0)
 			var clear := tree.distance_to(m.gate_bench) > 95.0
 			if m.lvl == "scrap":
 				clear = clear and not Ferralla.yard_wreck(m._freedom_rect()).grow(30.0).has_point(tree)
