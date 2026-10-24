@@ -12556,7 +12556,8 @@ func _bodily(delta: float) -> void:
 	# bowls, the beach shower - drunk standing still, like a lady.
 	var fountain_drinking := false
 	for f in fountains:
-		if dog.global_position.distance_to(f) < 34.0 and dog.velocity.length() < 40.0:
+		var reach := 68.0 if lvl == "reial" else 34.0
+		if dog.global_position.distance_to(f) < reach and dog.velocity.length() < 40.0:
 			fountain_drinking = true
 			pee = minf(1.0, pee + 0.3 * delta)
 			drunk_amount += 0.3 * delta
@@ -14557,6 +14558,8 @@ func _draw_world() -> void:
 			continue
 		if lvl == "oldtown":
 			continue      # the plaça's fountain draws with the plaça
+		if lvl == "reial":
+			continue      # the Three Graces fountain draws with Plaça Reial
 		if f.y < vt - 40.0 or f.y > vb + 40.0:
 			continue
 		if lvl == "barri":

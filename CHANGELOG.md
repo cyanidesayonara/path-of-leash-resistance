@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-10-24 - Plaça Reial Polish: Fountain Rim Drinking and Visual Cleanliness
+
+- **Plaça Reial Fountain Drinking & Rendering Polish** (`main.gd`, `tests/test_reial.gd`):
+  - Accounted for Font de les Tres Gràcies central fountain's large stone basin radius (44px) in `main.gd:_bodily`, providing an expanded 68px interaction reach on Plaça Reial so Millie can step up anywhere along the stone rim to drink and refill her bladder.
+  - Suppressed rendering of the default generic stone drinking fountain bowl on `reial`, preventing visual overlap with the neoclassical Three Graces fountain column already drawn on the plaza edge layer.
+  - Added assertions in `tests/test_reial.gd` asserting that stepping up to the fountain rim refills bladder pee and activates the drinking animation.
+
 ## 2026-10-24 - Walk 20: El Veterinari (The Vet Clinic Escape Chase)
 
 - **Walk 20: El Veterinari** (`systems/vet.gd`, `entities/vet_threat.gd`, `systems/home_chase.gd`, `autoload/game.gd`, `audio/music.gd`, `systems/goals.gd`, `main.gd`, `world/level_build.gd`):

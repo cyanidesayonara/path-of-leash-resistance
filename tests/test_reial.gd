@@ -109,8 +109,12 @@ func _run() -> void:
 	_check(m.surface_at(yard) != Surfaces.S.PAVEMENT, "freedom verge is not turned into sidewalk")
 
 	# 10. Mechanics tick: fountain drinking & gaudi wrap & busker duet
+	m.pee = 0.2
 	m.dog.global_position = R.FOUNTAIN_POS + Vector2(R.FOUNTAIN_RADIUS + 10.0, 0.0)
-	m.dog.drinking = 1.0
+	m.dog.velocity = Vector2.ZERO
+	m._bodily(0.2)
+	_check(m.pee > 0.2, "fountain refills bladder at fountain rim reach (pee=%.2f)" % m.pee)
+	_check(m.dog.drinking > 0.0, "drinking animation activates at fountain rim")
 	R.update_reial(m, 0.1)
 	_check(bool(m.get("reial_fountain_drank")), "drinking at fountain triggers reial_fountain_drank")
 
