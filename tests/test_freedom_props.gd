@@ -42,7 +42,8 @@ func _run() -> void:
 		var solids := 0
 		var markables := 0
 		var clear_ok := true
-		var lane: Rect2 = m.agility.lane_rect()
+		# only El Barri has an agility course; elsewhere there is no lane
+		var lane: Rect2 = m.agility.lane_rect() if m.agility != null else Rect2()
 		var sign_r: Rect2 = lb.freedom_sign_rect(m).grow(28.0)
 		for i in range(m.park_props.size()):
 			var pp: Dictionary = m.park_props[i]

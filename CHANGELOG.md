@@ -22,6 +22,71 @@ a constant that is not zero, and `_check(true, ...)` after a draw.
 - In the rambla, partit, port, menu, dog animation and epilogue tests, the
   `_check(true, ...)` lines after draws are now comments. The runner
   already fails on any SCRIPT ERROR, so they only inflated the counts.
+## 2026-10-24 - Walk them in through a real way home
+
+The arrival used to start at HOME_Y, 8 px from the door, so it was a short
+slide. Their legs did not move, because they only step from velocity and the
+cutscene moves them by a draw offset. The leash kept its frozen slack and
+bunched into a ball, and Millie's body ignored the offset entirely:
+`contact_shadow` reset the canvas transform, so she faded where she stood.
+Her chase-catch pose had the same problem.
+- The arrival starts 140 px short of the door (`Arrival.line_y`). They walk
+  the rest in, eased, facing the door, and fade only at the threshold.
+  `Arrival._complete` puts them at the door, past HOME_Y, before finishing.
+  The autowalk keeps HOME_Y, so its recorded times are unchanged.
+- `presentation_speed` on the dog and the human drives their legs and sway
+  while a cutscene moves them. The arrival advances their gait per pixel
+  moved, as their own ticks do.
+- `leash.presentation_straighten` draws the rope pulled straight between
+  its moved ends with a small sag. Millie's pull straightens it.
+- The dog's shadow takes the offset, and her body's transform is set again
+  after it.
+- `tools/arrival_frames.gd` photographs an arrival frame by frame, as a
+  full-resolution crop of the door, for `tools/frames_to_gif.py`.
+- Every walk's exit is now a whole place across the south end of the walk,
+  not a door standing alone on the path (`systems/exit_portals.gd`):
+  - the homes are Barcelona apartment blocks, each walk with its own facade
+    and roof: shops with awnings and balconies along the front, a stone
+    portal with its door, the house number, an intercom and two pots, and
+    on the terrat a water tank, chimneys, a skylight and the washing;
+  - L'Estació has its concourse, with glass doors under a glass canopy,
+    ESTACIÓ, a clock and a bike rack;
+  - Montjuïc has its funicular station house, FUNICULAR on its canopy;
+  - Dia de Partit has a metro stair cut into the pavement, with railings
+    and the red M totem, a city block behind;
+  - El Bosc has a timber fence with an open gate, a trail map, a waymarker,
+    and the car park beyond;
+  - El Besòs has the flood wall and the ramp up through it to the river
+    path, with PARC FLUVIAL.
+  Each home also carries something of its own walk: Plaça Reial's arcade of
+  stone pillars, the old town's oak door and iron lantern, the seafront's
+  blue shutters, beach towels and a roof parasol, Gràcia's trencadís band,
+  the market's fruit crates, scaffold and netting at the works, a tin roof
+  by the scrapyard, a pharmacy's green cross near the vet.
+  The fixed part is built once per walk and appended each frame as one
+  batch; only the door leaf and the lights are drawn live.
+## 2026-10-24 - The agility course stays in El Barri only
+
+Santtu found the agility course out of place on most walks. It now stands
+only in El Barri's dog park (`FreedomGames.AGILITY_WALKS`), the one place to
+set a best time. Every other off-leash area keeps tug-of-war and frisbee,
+and its rotating hints no longer mention agility. Props and trees in those
+areas are no longer nudged off a lane that is not there. The behaviour
+snapshot over all 20 walks is unchanged. `test_freedom_games_live` checks
+that the course is in El Barri and nowhere else, and runs its course test
+there.
+## 2026-10-24 - Put the 1.63 walks' lines in the game's voice
+
+Lines added in 1.63 and since broke the voice rules in AGENTS.md:
+- El Somni's shouts were Catalan only. They are now English, with the place
+  named in Catalan: "EL SOMNI: THE DREAM GALLERY", "THE DREAM BONE!
+  FINDERS KEEPERS", "BACK OUT ON EL GÒTIC". The welcome was speech in
+  capitals; it is now lower case ("welcome to el somni"), and the pickup
+  pop says "dream bone!".
+- Plaça Reial: the Gaudí wrap's "GAUDÍ SLINGSHOT!" was a pop; it is now a
+  shout in the feed. The busker's "¡OLÉ! GUITAR DUET!" pop is now an "olé!"
+  pop with the shout "A DUET WITH THE BUSKER!".
+- El Veterinari's gate reads CLÍNICA VETERINÀRIA, accents and all.
 
 ## 2026-10-24 - Walk 21: El Tibidabo (the mountain funicular)
 

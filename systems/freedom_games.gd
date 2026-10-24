@@ -2,9 +2,9 @@ class_name FreedomGames
 extends RefCounted
 
 # The off-leash space's games, the same in every space (yard, lot, clearing,
-# plaça, beach): the agility course (systems/agility.gd), tug-of-war over a
-# free dog's rope toy (systems/rope_tug.gd) and, after the fetch round, the
-# frisbee (entities/frisbee.gd). Static functions over main's state, like the
+# plaça, beach): tug-of-war over a free dog's rope toy (systems/rope_tug.gd)
+# and, after the fetch round, the frisbee (entities/frisbee.gd). The agility
+# course (systems/agility.gd) stands in El Barri only (AGILITY_WALKS). Static functions over main's state, like the
 # other split-out systems; main keeps the state and the forwarders.
 #
 # None of it runs under the autowalk: the rope is never offered, the frisbee
@@ -26,16 +26,26 @@ const ROPE_BACK_S := 10.0     # before the other dog goes to fetch it back
 const GRAB_R := 24.0          # her mouth to the rope's free end
 
 
+# The agility course stands only in El Barri's dog park, the one place to set
+# a best time; every other off-leash area is tug-of-war and frisbee.
+const AGILITY_WALKS: Array[String] = ["barri"]
+
+
+static func has_agility(m: Node2D) -> bool:
+	return m.lvl in AGILITY_WALKS
+
+
 # At level build, before the props: the course decides where they may stand.
 static func plan(m: Node2D) -> void:
-	m.agility = AgilityCourse.for_space(m.freedom_kind, m.GATE_Y)
+	m.agility = AgilityCourse.for_space(m.freedom_kind, m.GATE_Y) if has_agility(m) else null
 
 
 # On entering the space.
 static func begin(m: Node2D) -> void:
 	if m.agility == null:
 		plan(m)
-	m.agility.running = false
+	if m.agility != null:
+		m.agility.running = false
 	if m.games_ground == null:
 		m.games_ground = GamesLayer.new()
 		m.games_ground.setup(m, false)
@@ -94,6 +104,8 @@ static func tick(m: Node2D, delta: float) -> void:
 # --- agility ------------------------------------------------------------------
 
 static func _tick_agility(m: Node2D, delta: float) -> void:
+	if m.agility == null:
+		return
 	var a: Vector2 = m.agility_prev
 	var b: Vector2 = m.dog.global_position
 	m.agility_prev = b
@@ -170,8 +182,9 @@ static func _tick_tug(m: Node2D, delta: float) -> void:
 			fd._go_wander(1.0)      # got it: no sniffing the spot it lay on
 			m.rope_loose = Vector2(INF, INF)
 			m.games_cover.refresh()
-		# grabbing the free end starts it
-		if fd.rope and not m.dog_carrying and m.agility != null and not m.agility.running \
+		# grabbing the free end starts it (not mid agility run; most walks have
+		# no course at all)
+		if fd.rope and not m.dog_carrying and (m.agility == null or not m.agility.running) \
 				and mouth.distance_to(fd.rope_end()) < GRAB_R:
 			m.tug = RopeTug.new(m.dog.global_position, fd.global_position)
 			m.tug_prev = m.dog.global_position
@@ -312,10 +325,11 @@ static func _next_name(ag: AgilityCourse) -> String:
 # the rotating hints after fetch: what there still is to play
 static func hints(m: Node2D) -> Array[String]:
 	var out: Array[String] = []
-	if Game.agility_best > 0.0:
-		out.append("AGILITY BEST %.1fS. BEAT IT AT THE GREEN FLAGS" % Game.agility_best)
-	else:
-		out.append("RUN THE AGILITY COURSE FROM THE GREEN FLAGS")
+	if m.agility != null:
+		if Game.agility_best > 0.0:
+			out.append("AGILITY BEST %.1fS. BEAT IT AT THE GREEN FLAGS" % Game.agility_best)
+		else:
+			out.append("RUN THE AGILITY COURSE FROM THE GREEN FLAGS")
 	var fd: Node2D = m.tug_dog
 	if is_instance_valid(fd) and fd.rope:
 		out.append("SOMEONE HAS A ROPE. TUG OF WAR?")
