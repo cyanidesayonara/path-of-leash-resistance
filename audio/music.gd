@@ -110,6 +110,10 @@ const STYLES := {
 	# El Veterinari: clinical stealth and frantic pet escape, pizzicato strings and marimba
 	"vet": {"bpm": 124, "key": 0, "minor": true, "lead": "marimba", "lead2": ["whistle", 0], "comp": "skank",
 		"bass": "walk", "drums": "kickrim", "swing": 0.06, "verb": 0.20},
+	# El Tibidabo: the summit fairground's band organ heard from the mountain
+	# road: accordion with a glockenspiel doubling it all the way, over oompah
+	"tibidabo": {"bpm": 126, "key": -3, "lead": "accordion", "lead2": ["glock", 12], "lead2_all": true, "comp": "oompah",
+		"bass": "oompah", "drums": "kickrim", "verb": 0.26},
 	"freedom": {"bpm": 120, "key": 5, "lead": "whistle", "lead2": ["glock", 12], "comp": "arp",
 		"bass": "walk", "drums": "kickrim", "swing": 0.1, "verb": 0.22},
 }

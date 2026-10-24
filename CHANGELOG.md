@@ -45,6 +45,38 @@ Her chase-catch pose had the same problem.
   by the scrapyard, a pharmacy's green cross near the vet.
   The fixed part is built once per walk and appended each frame as one
   batch; only the door leaf and the lights are drawn live.
+## 2026-10-24 - Walk 21: El Tibidabo (the mountain funicular)
+
+The 21st walk, open at 35 stars: a winding mountain road up Tibidabo to the
+Mirador del Tibidabo, ending in a plaça off leash.
+- The road is asphalt with a dashed center line and curbs that follow the
+  bends. A stone balustrade runs along the west over the drop to the city,
+  and the hillside rises on the east with Aleppo pines that catch the leash.
+- The funicular track runs off the road on the east. The carriage climbs to
+  the top station and back every 40 seconds of walk time. It is drawn every
+  frame by `world/funicular_layer.gd`, and the `funicular` goal reads the
+  same position (`Tibidabo.carriage_y`): she has to be at the east side of
+  the road while the carriage is level with her. A trackside signal at the
+  road's edge flashes while the carriage is near, and it is a mark spot.
+- Three coin viewfinders stand along the balustrade. The `viewfinder` goal
+  counts standing still at one ("panorama! +5"), not trotting past.
+- The summit has pennant bunting and a cotton candy cart with the prize.
+- Its own music: accordion with a glockenspiel doubling it, over oompah, at
+  126 bpm.
+- Main's generic walkway is no longer drawn over the road, which had hidden
+  the asphalt, center line and curbs. The road is pavement underfoot.
+- `tests/test_tibidabo.gd` (41 checks) covers the level check, the road
+  surface, the track and pines off the road, the carriage's round trip, the
+  layer redrawing every frame, and each goal with the case that must not
+  count.
+## 2026-10-24 - Stop the results screen logging a missing input action
+
+The home epilogue's skip check read `Input.is_action_just_pressed("intro_skip")`,
+but "intro_skip" is a prompt label (hud/prompts.gd), never a registered
+action, so the stats screen logged an InputMap error every frame. Keys and
+pad buttons already skip through plant, restart, back and pee, and a click or
+tap through the epilogue's own input handler. `tests/test_input_actions.gd`
+now checks every action name the code reads is registered.
 
 ## 2026-10-24 - Harden the walks that shipped after 1.62
 

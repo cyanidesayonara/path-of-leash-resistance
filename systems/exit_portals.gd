@@ -76,7 +76,10 @@ static func static_geometry(m: Node2D, c: Vector2, place: String, weather: Strin
 		"station":
 			_station(b, m, c)
 		"funicular":
-			_funicular(b, m, c)
+			if String(m.lvl) == "tibidabo":
+				_tibidabo(b, m, c)
+			else:
+				_funicular(b, m, c)
 		"metro":
 			_metro(b, m, c)
 		"trailhead":
@@ -386,6 +389,18 @@ static func _funicular(b: ShapeBatch, m: Node2D, c: Vector2) -> void:
 	b.rect(Rect2(can.position.x, can.end.y - 4.0, can.size.x, 4.0), Color(0.52, 0.14, 0.12))
 	_sign(b, "FUNICULAR", Vector2(c.x, can.position.y + 22.0), 12.0, can.size.x - 16.0, Color(0, 0, 0, 0), Color(0.98, 0.94, 0.84))
 
+
+# El Tibidabo's bottom station: the platform out to the track on the road's
+# east edge (systems/tibidabo.gd), and the stone station building behind it
+# closing the road.
+static func _tibidabo(b: ShapeBatch, m: Node2D, c: Vector2) -> void:
+	var front := c.y + 30.0
+	var wall := Color(0.70, 0.64, 0.54)
+	var roof := Color(0.52, 0.38, 0.30)
+	_block(b, m, front, wall, roof)
+	_terrat(b, m, front, roof, Vector2(c.x - 240.0, c.y + 30.0 - FRONT))
+	_sign(b, "FUNICULAR DEL TIBIDABO", Vector2(c.x - 260.0, front + 17.0), 10.0, 260.0, Color(0.52, 0.14, 0.12), Color(0.98, 0.94, 0.84))
+	Tibidabo.draw_station(b, c)
 
 static func _metro(b: ShapeBatch, m: Node2D, c: Vector2) -> void:
 	# the stair is cut into the pavement, going down to the south; the city

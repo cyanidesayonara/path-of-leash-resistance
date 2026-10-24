@@ -62,7 +62,7 @@ static func place_for(id: String) -> String:
 	match id:
 		"station":
 			return "station"
-		"montjuic":
+		"montjuic", "tibidabo":
 			return "funicular"
 		"partit":
 			return "metro"
@@ -156,6 +156,15 @@ static func aperture(m: Node2D) -> Rect2:
 	return Rect2(c.x - MOUTH_W * 0.5, c.y - MOUTH_H * 0.5, MOUTH_W, MOUTH_H)
 
 
+# Where they walk to and fade: the door itself, except El Tibidabo's, which is
+# the near end of a platform; they cross it to the docked carriage's door.
+static func walk_to(m: Node2D) -> Vector2:
+	var c := aperture(m).get_center()
+	if m.lvl == "tibidabo":
+		return Vector2(Tibidabo.TRACK_X - Tibidabo.CAR_W * 0.5 - 6.0, c.y)
+	return c
+
+
 static func _fallback(m: Node2D) -> Vector2:
 	var top := float(m.HOME_Y) + 8.0
 	var e: Vector2 = m.walk_edges(top + MOUTH_H * 0.5)
@@ -169,7 +178,12 @@ static func fit(m: Node2D) -> Vector2:
 	var mid := (e.x + e.y) * 0.5
 	var half := (e.y - e.x) * 0.5
 	var best := Vector2(mid, top + MOUTH_H * 0.5)
-	for frac: float in [0.0, 0.2, -0.2, 0.4, -0.4, 0.55, -0.55]:
+	# El Tibidabo's door is the funicular's bottom station, on the road's east
+	# edge beside the track: as far east as is clear
+	var fracs: Array[float] = [0.0, 0.2, -0.2, 0.4, -0.4, 0.55, -0.55]
+	if m.lvl == "tibidabo":
+		fracs = [0.55, 0.45, 0.35, 0.2, 0.0]
+	for frac: float in fracs:
 		var c := Vector2(mid + half * frac, top + MOUTH_H * 0.5)
 		if rect_clear(m, Rect2(c.x - MOUTH_W * 0.5, c.y - MOUTH_H * 0.5, MOUTH_W, MOUTH_H)):
 			return c
@@ -244,7 +258,7 @@ static func _apply(m: Node2D, delta := 0.0) -> void:
 	var pull_u := clampf(t / PULL, 0.0, 1.0)
 	var dog_u := clampf((t - PULL) / DOG_IN, 0.0, 1.0)
 	var human_u := clampf((t - PULL - DOG_IN) / HUMAN_IN, 0.0, 1.0)
-	var mouth: Vector2 = aperture(m).get_center()
+	var mouth: Vector2 = walk_to(m)
 	var dog_from: Vector2 = m.dog.global_position
 	var human_from: Vector2 = m.human.global_position
 	# she leans in on the pull, then goes; he follows. Eased at both ends, so
