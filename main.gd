@@ -14265,7 +14265,7 @@ func _draw_world() -> void:
 		var hp: Vector2 = h.pos
 		if hp.y < vt - 40.0 or hp.y > vb + 40.0:
 			continue
-		if lvl == "trail":
+		if lvl == "trail" or lvl == "montjuic":
 			_draw_waymarker(_wc, h)
 			continue
 		if lvl == "besos":
@@ -14276,6 +14276,10 @@ func _draw_world() -> void:
 			continue
 		if lvl == "port":
 			Port.draw_bollard(_wc, h)
+			continue
+		if lvl == "reial" or lvl == "vet":
+			if not h.done and h.progress > 0.0:
+				_wc.draw_arc(hp, 22.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
 			continue
 		if lvl == "oldtown":
 			# a terracotta pot of geraniums by a door

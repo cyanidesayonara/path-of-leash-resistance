@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-10-24 - Multi-Level Visual Polish: Trail Waymarkers and Landmark Sniff Progress
+
+- **Trail Waymarkers & Sniff Landmark Rendering** (`main.gd`):
+  - Updated `main.gd:_draw_world` to render authentic Catalan trail timber waymarker posts with red-over-white bands along the Montjuïc hillside trail (`lvl == "montjuic"`), replacing urban cast-iron red fire hydrants that inadvertently fell through on this mountain path.
+  - Suppressed generic red fire hydrant overlays atop custom hand-drawn landmarks on Plaça Reial (`reial`) and El Veterinari (`vet`), preserving the detailed visuals of Gaudí lampposts, the Three Graces rim, the digital pet scale, medicine cabinets, and reception desk while drawing a clean yellow sniffing progress arc when Millie sniffs them.
+
 ## 2026-10-24 - Plaça Reial Polish: Fountain Rim Drinking and Visual Cleanliness
 
 - **Plaça Reial Fountain Drinking & Rendering Polish** (`main.gd`, `tests/test_reial.gd`):
