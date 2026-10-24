@@ -106,6 +106,9 @@ var hgait := 0.0
 # transform until the loss card or a continue.
 var presentation_offset := Vector2.ZERO
 var presentation_rotation := 0.0
+# a cutscene's walking speed (systems/arrival.gd): the body is frozen and
+# moved by presentation_offset, so velocity is zero, but the legs still step
+var presentation_speed := 0.0
 # 0 the phone is out in front, 1 it is in the pocket (the arrival home)
 var phone_away := 0.0
 var chain_target := Vector2.ZERO
@@ -1350,7 +1353,7 @@ func _draw_shapes() -> void:
 	var side := fd.orthogonal()
 	# feet step along the walking direction; dragged, they are braced wide
 	# and forward and slide instead
-	var stepping := velocity.length() > 5.0 and drag_amt < 0.5
+	var stepping := maxf(velocity.length(), presentation_speed) > 5.0 and drag_amt < 0.5
 	var sa := sin(hgait) * 6.0 if stepping else 0.0
 	var brace := side * (7.0 + 3.0 * drag_amt) + fd * 6.0 * drag_amt
 	var brace2 := -side * (7.0 + 3.0 * drag_amt) + fd * 6.0 * drag_amt

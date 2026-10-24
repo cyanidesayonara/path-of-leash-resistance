@@ -23,6 +23,21 @@ const DEPART_HOLD := 0.45
 const MOUTH_W := 52.0
 const MOUTH_H := 24.0
 const PRINTS := 8
+# the walk in: each one fades only over the last part of their way in, at the
+# threshold, and steps as they go (hgait and gait per pixel, as in their ticks)
+const FADE_FROM := 0.6
+const HUMAN_STEP := 0.06
+const DOG_STEP := 0.055
+const TURN := 12.0
+# The arrival starts this far north of HOME_Y, so they walk the last stretch
+# to the door in the cinematic. Started at HOME_Y itself, the door was 8 px
+# away and the walk in was a slide. The autowalk keeps HOME_Y: it finishes on
+# the frame it crosses, and its recorded times stay as they were.
+const WALK_IN := 140.0
+
+
+static func line_y(m: Node2D) -> float:
+	return float(m.HOME_Y) - (0.0 if m.auto_walk else WALK_IN)
 
 const APARTMENT: Array[String] = [
 	"tutorial", "barri", "street", "park", "beach", "rain", "market", "oldtown",
@@ -112,7 +127,7 @@ static func tick(m: Node2D, delta: float) -> void:
 		return
 	m.arrival_t = minf(float(m.arrival_t) + delta, DURATION)
 	_hold_threat(m)
-	_apply(m)
+	_apply(m, delta)
 	if float(m.arrival_t) >= SKIP_LOCK:
 		m.feed.set_banner("HEAD INSIDE")
 	m.dog.queue_redraw()
@@ -300,7 +315,7 @@ static func _hold_threat(m: Node2D) -> void:
 		s.global_position.y = float(m.HOME_Y)
 
 
-static func _apply(m: Node2D) -> void:
+static func _apply(m: Node2D, delta := 0.0) -> void:
 	var t := float(m.arrival_t)
 	var pull_u := clampf(t / PULL, 0.0, 1.0)
 	var dog_u := clampf((t - PULL) / DOG_IN, 0.0, 1.0)
@@ -308,17 +323,39 @@ static func _apply(m: Node2D) -> void:
 	var mouth: Vector2 = aperture(m).get_center()
 	var dog_from: Vector2 = m.dog.global_position
 	var human_from: Vector2 = m.human.global_position
-	var dog_aim := clampf(pull_u * 0.35 + dog_u * 0.65, 0.0, 1.0)
+	# she leans in on the pull, then goes; he follows. Eased at both ends, so
+	# nobody starts or stops dead.
+	var dog_aim := smoothstep(0.0, 1.0, clampf(pull_u * 0.35 + dog_u * 0.65, 0.0, 1.0))
+	var human_aim := smoothstep(0.0, 1.0, human_u)
 	var dog_world := dog_from.lerp(mouth, dog_aim) - dog_from
-	var human_world := human_from.lerp(mouth, human_u) - human_from
+	var human_world := human_from.lerp(mouth, human_aim) - human_from
+	# their steps: the legs swing at the speed they are actually moved at
+	if delta > 0.0:
+		var dog_step: float = (dog_world - m.leash.presentation_dog_offset).length()
+		var human_step: float = (human_world - m.leash.presentation_human_offset).length()
+		m.dog.presentation_speed = dog_step / delta
+		m.human.presentation_speed = human_step / delta
+		m.dog.gait += dog_step * DOG_STEP * m.dog._cadence()
+		m.human.hgait += human_step * HUMAN_STEP
+		# and they face where they are going
+		var k := minf(TURN * delta, 1.0)
+		var to_dog := mouth - (dog_from + dog_world)
+		if dog_step > 0.05 and to_dog.length() > 2.0:
+			m.dog.facing = m.dog.facing.slerp(to_dog.normalized(), k).normalized()
+		var to_human := mouth - (human_from + human_world)
+		var look := to_human if human_step > 0.05 and to_human.length() > 2.0 else (dog_from + dog_world) - (human_from + human_world)
+		if look.length() > 2.0:
+			m.human.face_dir = m.human.face_dir.slerp(look.normalized(), k).normalized()
 	m.dog.presentation_offset = dog_world.rotated(-float(m.dog.global_rotation))
 	m.human.presentation_offset = human_world.rotated(-float(m.human.global_rotation))
-	m.human.presentation_rotation = 0.45 * maxf(pull_u, human_u)
 	m.human.phone_away = pull_u
-	m.dog.modulate.a = 1.0 - dog_u
-	m.human.modulate.a = 1.0 - human_u
+	m.dog.modulate.a = 1.0 - smoothstep(FADE_FROM, 1.0, dog_u)
+	m.human.modulate.a = 1.0 - smoothstep(FADE_FROM, 1.0, human_u)
 	m.leash.presentation_dog_offset = dog_world
 	m.leash.presentation_human_offset = human_world
+	# she pulls the leash straight, and it follows him in
+	m.leash.presentation_straighten = pull_u
+	m.leash.modulate.a = 1.0 - smoothstep(FADE_FROM, 1.0, human_u)
 	if _weather(m) == "rain" and dog_u > 0.0:
 		_stamp(m, dog_from + dog_world)
 
@@ -341,6 +378,10 @@ static func _complete(m: Node2D) -> void:
 		return
 	m.arriving = false
 	_clear(m)
+	# they went in: they are at the door, past HOME_Y, which finishing needs
+	var mouth := aperture(m).get_center()
+	m.dog.global_position.y = maxf(m.dog.global_position.y, mouth.y)
+	m.human.global_position.y = maxf(m.human.global_position.y, mouth.y)
 	m.feed.set_banner("")
 	m._finish_walk()
 
@@ -348,13 +389,17 @@ static func _complete(m: Node2D) -> void:
 static func _clear(m: Node2D) -> void:
 	m.dog.presentation_offset = Vector2.ZERO
 	m.dog.presentation_rotation = 0.0
+	m.dog.presentation_speed = 0.0
 	m.dog.modulate.a = 1.0
 	m.human.presentation_offset = Vector2.ZERO
 	m.human.presentation_rotation = 0.0
+	m.human.presentation_speed = 0.0
 	m.human.phone_away = 0.0
 	m.human.modulate.a = 1.0
 	m.leash.presentation_dog_offset = Vector2.ZERO
 	m.leash.presentation_human_offset = Vector2.ZERO
+	m.leash.presentation_straighten = 0.0
+	m.leash.modulate.a = 1.0
 	m.dog.queue_redraw()
 	m.human.queue_redraw()
 	m.leash.queue_redraw()

@@ -2,6 +2,28 @@
 
 Append-only session history, newest first.
 
+## 2026-10-24 - Walk them in through the door
+
+The arrival used to start at HOME_Y, 8 px from the door, so it was a short
+slide. Their legs did not move, because they only step from velocity and the
+cutscene moves them by a draw offset. The leash kept its frozen slack and
+bunched into a ball, and Millie's body ignored the offset entirely:
+`contact_shadow` reset the canvas transform, so she faded where she stood.
+Her chase-catch pose had the same problem.
+- The arrival starts 140 px short of the door (`Arrival.line_y`). They walk
+  the rest in, eased, facing the door, and fade only at the threshold.
+  `Arrival._complete` puts them at the door, past HOME_Y, before finishing.
+  The autowalk keeps HOME_Y, so its recorded times are unchanged.
+- `presentation_speed` on the dog and the human drives their legs and sway
+  while a cutscene moves them. The arrival advances their gait per pixel
+  moved, as their own ticks do.
+- `leash.presentation_straighten` draws the rope pulled straight between
+  its moved ends with a small sag. Millie's pull straightens it.
+- The dog's shadow takes the offset, and her body's transform is set again
+  after it.
+- `tools/arrival_frames.gd` photographs an arrival frame by frame, as a
+  full-resolution crop of the door, for `tools/frames_to_gif.py`.
+
 ## 2026-10-24 - Harden the walks that shipped after 1.62
 
 An audit of 1.63 and the walks merged since found features that could not

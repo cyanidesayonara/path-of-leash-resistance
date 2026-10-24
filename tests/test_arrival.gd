@@ -6,6 +6,8 @@ extends SceneTree
 # on the line. Every walk's opening is clear of props and collision, and the
 # loose HOME letters are gone. An apartment door shuts as the walk starts;
 # a trailhead does not. An autowalk still finishes on the crossing frame.
+# The arrival starts a stretch short of the door, so they walk to it: legs
+# stepping, facing the door, the leash pulled straight rather than balled up.
 
 const Arrival := preload("res://systems/arrival.gd")
 
@@ -41,16 +43,16 @@ func _load(level_id: String) -> Node2D:
 	return m
 
 
-func _home(m: Node2D, dog_past: bool, human_past: bool) -> void:
+func _home(m: Node2D, dog_past: bool, human_past: bool, auto := false) -> void:
 	m.started = true
 	m.phase = "home"
 	m.frozen = false
 	m.finished = false
 	m.arriving = false
-	m.auto_walk = false
+	m.auto_walk = auto
 	m.dog.velocity = Vector2.ZERO
 	m.human.velocity = Vector2.ZERO
-	var y := float(m.HOME_Y)
+	var y := Arrival.line_y(m)
 	m.dog.global_position = Vector2(640.0, y + (6.0 if dog_past else -40.0))
 	m.human.global_position = Vector2(600.0, y + (4.0 if human_past else -50.0))
 
@@ -123,6 +125,22 @@ func _run() -> void:
 	_check(barri.human.phone_away > 0.5, "your human is pocketing the phone")
 	_check(barri.human.presentation_offset.length() < 1.0 and barri.dog.presentation_offset.length() > 4.0,
 		"Millie is through before your human moves")
+	# the walk in: a real distance to the door, stepped, facing it
+	var mouth: Vector2 = Arrival.aperture(barri).get_center()
+	_check(mouth.y - Arrival.line_y(barri) >= 100.0,
+		"the arrival starts a walk short of the door (%.0f px)" % (mouth.y - Arrival.line_y(barri)))
+	var hg: float = barri.human.hgait
+	var dg: float = barri.dog.gait
+	barri.arrival_t = Arrival.PULL + Arrival.DOG_IN
+	for _i in range(20):
+		Arrival.tick(barri, 1.0 / 60.0)
+	_check(barri.human.hgait > hg + 0.5 and barri.human.presentation_speed > 20.0,
+		"your human's legs step on the way in (gait %.2f -> %.2f)" % [hg, barri.human.hgait])
+	_check(barri.dog.gait != dg, "and Millie's")
+	var to_door: Vector2 = mouth - (barri.human.global_position + barri.human.presentation_offset)
+	_check(to_door.length() < 2.0 or barri.human.face_dir.dot(to_door.normalized()) > 0.7,
+		"your human faces the door going in")
+	_check(is_equal_approx(barri.leash.presentation_straighten, 1.0), "the leash is pulled straight, not balled up")
 	barri.arrival_t = 0.2
 	Arrival.skip(barri)
 	_check(barri.arriving and not barri.results_card.visible, "the first half-second cannot be skipped")
@@ -142,6 +160,8 @@ func _run() -> void:
 	await process_frame
 	_check(barri.finished and barri.results_card.visible and not barri.arriving,
 		"back, after the lock, brings the card")
+	_check(barri.dog.global_position.y > float(barri.HOME_Y) and barri.human.global_position.y > float(barri.HOME_Y),
+		"they end at the door, past the home line")
 	_check(is_equal_approx(float(barri.elapsed), clock), "the card's time is the time at the line")
 	_check(int(barri.phone_hp) == before, "the phone takes no damage on the way in")
 	_check(is_equal_approx(barri.dog.modulate.a, 1.0) and is_equal_approx(barri.human.phone_away, 0.0),
@@ -163,8 +183,7 @@ func _run() -> void:
 	_check(is_equal_approx(float(trail.depart_open), 0.0), "and it still has none after the start")
 
 	var bot: Node2D = await _load("street")
-	_home(bot, true, true)
-	bot.auto_walk = true
+	_home(bot, true, true, true)
 	bot.elapsed = 130.0
 	bot._progress(0.016)
 	_check(bot.finished and not bot.arriving and is_equal_approx(float(bot.elapsed), 130.0),
