@@ -153,7 +153,12 @@ static func fit(m: Node2D) -> Vector2:
 	var mid := (e.x + e.y) * 0.5
 	var half := (e.y - e.x) * 0.5
 	var best := Vector2(mid, top + MOUTH_H * 0.5)
-	for frac: float in [0.0, 0.2, -0.2, 0.4, -0.4, 0.55, -0.55]:
+	# El Tibidabo's door is the funicular's bottom station, on the road's east
+	# edge beside the track: as far east as is clear
+	var fracs: Array[float] = [0.0, 0.2, -0.2, 0.4, -0.4, 0.55, -0.55]
+	if m.lvl == "tibidabo":
+		fracs = [0.55, 0.45, 0.35, 0.2, 0.0]
+	for frac: float in fracs:
 		var c := Vector2(mid + half * frac, top + MOUTH_H * 0.5)
 		if rect_clear(m, Rect2(c.x - MOUTH_W * 0.5, c.y - MOUTH_H * 0.5, MOUTH_W, MOUTH_H)):
 			return c
@@ -193,7 +198,10 @@ static func draw(m: Node2D, b: ShapeBatch) -> void:
 	var night := _night(m)
 	match place:
 		"station", "funicular", "metro":
-			_transit(b, c, place)
+			if m.lvl == "tibidabo":
+				Tibidabo.draw_station(b, c)
+			else:
+				_transit(b, c, place)
 		"trailhead":
 			_gate(b, c)
 		"ramp":

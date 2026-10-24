@@ -15,6 +15,7 @@ const Letters := preload("res://world/sign_letters.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
+const Arrival := preload("res://systems/arrival.gd")
 
 const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.22)
@@ -58,9 +59,9 @@ const TRACK_W := 60.0
 # carriage is within SIGNAL_NEAR of it
 const SIGNAL_POS := Vector2(840.0, -2450.0)
 const SIGNAL_NEAR := 420.0
-# the carriage climbs from the bottom to the top station and back, a full
-# round trip every CAR_PERIOD seconds of walk time
-const CAR_BOTTOM_Y := 100.0
+# the carriage climbs from the bottom station, beside the walk's door, to the
+# top and back, a full round trip every CAR_PERIOD seconds of walk time
+const CAR_BOTTOM_Y := 340.0
 const CAR_TOP_Y := -4700.0
 const CAR_PERIOD := 40.0
 const CAR_W := 38.0
@@ -69,6 +70,8 @@ const CAR_L := 110.0
 # passing level with her
 const WATCH_X := 680.0
 const WATCH_DY := 120.0
+# and on its way: not parked at the bottom station, by the start line
+const WATCH_OFF_STATION := 300.0
 # Aleppo pines on the hillside beyond the track; they catch the rope
 const PINES: Array[Vector2] = [
 	Vector2(1040.0, -600.0), Vector2(1040.0, -1200.0), Vector2(1040.0, -1800.0),
@@ -251,10 +254,42 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 		b.circle(PRIZE + Vector2(6.0, -2.0), 8.0, COTTON_CANDY_PINK.lightened(0.12))
 
 
-# The moving parts, every frame (world/funicular_layer.gd): the carriage at
-# carriage_y and the trackside signal.
+# Where the carriage is drawn: on the walk clock, except that once the pair
+# are walking in to the bottom station (systems/arrival.gd) it comes down to
+# meet them, docked by the time Millie is through, and stays docked.
+static func shown_carriage_y(m: Node2D) -> float:
+	var running := carriage_y(m.elapsed)
+	if m.finished:
+		return CAR_BOTTOM_Y
+	if m.arriving:
+		var u := clampf(float(m.arrival_t) / (Arrival.PULL + Arrival.DOG_IN), 0.0, 1.0)
+		return lerpf(running, CAR_BOTTOM_Y, smoothstep(0.0, 1.0, u))
+	return running
+
+
+# The bottom station, drawn by systems/arrival.gd at the walk's door (c, on
+# the road's east edge): a platform out to the track under a canopy, with a
+# buffer stop at the foot of the rails.
+static func draw_station(b: ShapeBatch, c: Vector2) -> void:
+	var plat := Rect2(c.x - 30.0, c.y - 22.0, TRACK_X - TRACK_W * 0.5 - (c.x - 30.0), 44.0)
+	b.rect(Rect2(plat.position + LIGHT * 5.0, plat.size), SHADOW)
+	b.rect(plat, BALUSTRADE_STONE)
+	b.rect(Rect2(plat.position.x, plat.end.y - 5.0, plat.size.x, 5.0), BALUSTRADE_STONE.darkened(0.25))
+	# the yellow edge line along the track side
+	b.rect(Rect2(plat.end.x - 6.0, plat.position.y, 4.0, plat.size.y), Color(0.92, 0.78, 0.25))
+	# canopy posts and roof edge
+	for px: float in [plat.position.x + 8.0, plat.end.x - 14.0]:
+		b.circle(Vector2(px, plat.position.y + 4.0), 4.0, VIEWFINDER_METAL)
+	b.rect(Rect2(plat.position.x - 4.0, plat.position.y - 12.0, plat.size.x + 8.0, 8.0), FUNICULAR_RED.darkened(0.2))
+	# buffer stop at the foot of the rails
+	b.rect(Rect2(TRACK_X - 24.0, CAR_BOTTOM_Y + CAR_L * 0.5 + 6.0, 48.0, 8.0), FUNICULAR_RED)
+	b.rect(Rect2(TRACK_X - 24.0, CAR_BOTTOM_Y + CAR_L * 0.5 + 14.0, 48.0, 4.0), SHADOW)
+
+
+# The moving parts, every frame (world/funicular_layer.gd): the carriage and
+# the trackside signal.
 static func draw_moving(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
-	var car_y := carriage_y(m.elapsed)
+	var car_y := shown_carriage_y(m)
 	if car_y > vt - CAR_L and car_y < vb + CAR_L:
 		var body := Rect2(TRACK_X - CAR_W * 0.5, car_y - CAR_L * 0.5, CAR_W, CAR_L)
 		b.rect(Rect2(body.position + LIGHT * 6.0, body.size), SHADOW)
@@ -313,11 +348,12 @@ static func update_tibidabo(m: Node2D, _delta: float) -> void:
 				m.combo.add("PANORAMA", 4)
 				m.float_text(dp + Vector2(0, -30), "panorama! +5", Color(0.96, 0.86, 0.32))
 				m.feed.say("BARCELONA, ALL OF IT!", EventFeed.Tone.GOOD)
-				Sfx.play("prize", 1.1)
+				m.get_node("/root/Sfx").play("prize", 1.1)
 				break
 	# the funicular: at the road's east side as the carriage passes level
 	if not m.tibidabo_funicular_seen:
-		if dp.x > WATCH_X and absf(carriage_y(m.elapsed) - dp.y) < WATCH_DY:
+		var cy := carriage_y(m.elapsed)
+		if dp.x > WATCH_X and absf(cy - dp.y) < WATCH_DY and cy < CAR_BOTTOM_Y - WATCH_OFF_STATION:
 			m.tibidabo_funicular_seen = true
 			m.bones += 3
 			m.float_text(dp + Vector2(0, -28), "funicular! +3", Color(0.85, 0.35, 0.32))

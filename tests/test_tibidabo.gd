@@ -136,6 +136,24 @@ func _run() -> void:
 	m.dog.global_position = Vector2(820.0, car_y)
 	T.update_tibidabo(m, 0.016)
 	_check(m.tibidabo_funicular_seen, "the carriage level with her at the east side is")
+	# parked at the bottom station by the start line, it is not a sighting
+	m.tibidabo_funicular_seen = false
+	m.elapsed = 0.0
+	m.dog.global_position = Vector2(820.0, T.carriage_y(0.0))
+	T.update_tibidabo(m, 0.016)
+	_check(not m.tibidabo_funicular_seen, "the carriage parked at the bottom station is not a sighting")
+
+	# 11. The walk ends at the funicular's bottom station: the door on the
+	# road's east side, and the carriage docked there once they are in
+	var A: GDScript = load("res://systems/arrival.gd")
+	var door: Vector2 = A.fit(m)
+	_check(door.x > m.walk_cx + 80.0, "the door is on the road's east side, by the track (x %.0f)" % door.x)
+	_check(A.rect_clear(m, Rect2(door - Vector2(A.MOUTH_W, A.MOUTH_H) * 0.5, Vector2(A.MOUTH_W, A.MOUTH_H))), "and clear to walk into")
+	_check(absf(T.CAR_BOTTOM_Y - door.y) < T.CAR_L, "the bottom station is level with the door")
+	m.elapsed = T.CAR_PERIOD * 0.5
+	m.finished = true
+	_check(is_equal_approx(T.shown_carriage_y(m), T.CAR_BOTTOM_Y), "the carriage is docked when the walk is done")
+	m.finished = false
 
 	m.queue_free()
 	print("test_tibidabo: %d checks, %d failures" % [checks, failures.size()])
