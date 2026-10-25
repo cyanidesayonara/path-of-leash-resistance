@@ -923,13 +923,14 @@ func _ready() -> void:
 			# The named call stays here: the route regression reads this source.
 			run_seed = AUTOWALK_SEED
 			seed(AUTOWALK_SEED)
-		# --seed=N pins every random layout and spawn, so a soak or a bug
-		# report can be replayed exactly. It wins over the autowalk seed.
-		for a in OS.get_cmdline_user_args():
-			if a.begins_with("--seed="):
-				run_seed = int(a.substr(7))
-				seed(run_seed)
 		lvl = Game.level_id
+	# --seed=N pins every random layout and spawn, so a soak or a bug report
+	# can be replayed exactly, and a screenshot of any walk, the tutorial's
+	# too, comes out the same every time. It wins over the autowalk seed.
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--seed="):
+			run_seed = int(a.substr(7))
+			seed(run_seed)
 	Game.apply_walk_sky(Game.level_id)
 	bosc_high_stream = RunEvents.chosen(run_seed, lvl, "high_stream", Game.weather, 20)
 	_setup_input()

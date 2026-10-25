@@ -29,7 +29,8 @@ func _initialize() -> void:
 func _run() -> void:
 	var game = root.get_node("Game")
 	for path: String in TOOLS:
-		var text := FileAccess.get_file_as_string(path)
+		# a Windows checkout may have CRLF line ends
+		var text := FileAccess.get_file_as_string(path).replace("", "")
 		var head: String = TOOLS[path]
 		var at := text.find(head)
 		_check(at >= 0, "%s has its level list" % path)

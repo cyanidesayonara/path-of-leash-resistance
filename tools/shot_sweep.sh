@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Screenshot sweep: photographs every walk plus the menu screens and the
-# street at both phone shapes, one PNG each, then builds the contact sheet.
+# Screenshot sweep: photographs every walk and the tutorial, plus the menu
+# screens and the street at both phone shapes, one PNG each, then builds the
+# contact sheet.
 #
 #   tools/shot_sweep.sh [OUT_DIR]          (default: shots/)
 #
@@ -56,6 +57,8 @@ shot() {
 for lv in "${LEVELS[@]}"; do
   shot "walk-${lv}" 1280x720 --level="${lv}"
 done
+# the tutorial is not a walk in Game.LEVELS, but it is a level of its own
+shot walk-tutorial 1280x720 --level=tutorial
 shot title 1280x720 --shot-title
 for sc in main walk details shop progress pause walkcard confirm notice; do
   shot "menu-${sc}" 1280x720 --shot-menu="${sc}" --level=street --shot-at=90
