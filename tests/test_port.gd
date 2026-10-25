@@ -112,6 +112,38 @@ func _run() -> void:
 		m._physics_process(1.0 / 60.0)
 	# (ran 15 physics frames cleanly without error: a draw error fails the run as a SCRIPT ERROR)
 
+	# 10. The gulls perched along the pier take off like the live flocks and
+	# count for the gulls goal. They were painted on and never moved, beside
+	# a goal asking her to startle gulls.
+	var perched := true
+	for k in range(P.GULL_SPOTS.size()):
+		perched = perched and P.gull_took_off[k] < 0.0
+	_check(perched, "every pier gull starts perched")
+	var g1: Vector2 = P.GULL_SPOTS[1]
+	var before: int = m.port_gulls_startled
+	m.dog.global_position = g1 + Vector2(30.0, 0.0)
+	m.human.global_position = g1 + Vector2(30.0, 220.0)
+	m.leash.resnap()
+	for frame in range(3):
+		m._physics_process(1.0 / 60.0)
+	_check(P.gull_took_off[1] >= 0.0, "walking up to a pier gull sends it up")
+	_check(m.port_gulls_startled == before + 1, "and counts for the goal once (%d -> %d)" % [before, m.port_gulls_startled])
+	for frame in range(30):
+		m._physics_process(1.0 / 60.0)
+	_check(m.port_gulls_startled == before + 1, "a gull in the air is not counted again")
+	_check(P.gull_took_off[0] < 0.0 and P.gull_took_off[2] < 0.0, "the others stay perched")
+	var g2: Vector2 = P.GULL_SPOTS[2]
+	m.dog.global_position = g2 + Vector2(-150.0, 0.0)
+	m.human.global_position = g2 + Vector2(-150.0, 200.0)
+	m.leash.resnap()
+	m.on_bark(m.dog.global_position)
+	_check(P.gull_took_off[2] >= 0.0, "a bark in earshot sends a pier gull up")
+	_check(m.port_gulls_startled == before + 2, "and counts too")
+	# drawn in flight (a draw error fails the run as a SCRIPT ERROR)
+	m.cam.position = g2
+	for frame in range(4):
+		await process_frame
+
 	print("\n--- TEST PORT RESULTS ---")
 	print("Checks: %d, Failures: %d" % [checks, failures.size()])
 	for f: String in failures:
