@@ -431,7 +431,7 @@ static func _draw_net_reel(c: ShapeBatch, r: Rect2) -> void:
 		c.circle(Vector2(spool.position.x + 8.0 + float(n) * 8.0, ny), 2.0, BUOY_ORANGE)
 
 
-static func draw_bollard(wc: ShapeBatch, h: Dictionary) -> void:
+static func draw_bollard(_m: Node2D, wc: ShapeBatch, h: Dictionary) -> void:
 	var p: Vector2 = h.pos
 	var is_cleat: bool = String(h.get("kind", "")) == "cleat"
 	var done: bool = bool(h.get("done", false))

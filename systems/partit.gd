@@ -1151,7 +1151,7 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 
 
 # A cast-iron bollard: what a dog marks on a city corner.
-static func draw_bollard(wc: ShapeBatch, h: Dictionary) -> void:
+static func draw_bollard(_m: Node2D, wc: ShapeBatch, h: Dictionary) -> void:
 	var p: Vector2 = h.pos
 	var done: bool = h.done
 	wc.circle(p + LIGHT * 7.0, 8.0, SHADOW)
