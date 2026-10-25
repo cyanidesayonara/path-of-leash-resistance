@@ -1122,6 +1122,8 @@ static func _draw_stadium_side(m: Node2D, c: ShapeBatch, top: float, bot: float)
 # --- drawing: what moves (the world pass) ---------------------------------------
 
 static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	# the avenue stops at the gate: past it, the square is the freedom layer's
+	vt = maxf(vt, m.GATE_Y - 30.0)
 	var t := AnimClock.msec() / 1000.0
 	if m.kickabout != null:
 		m.kickabout.draw(wc, vt, vb)

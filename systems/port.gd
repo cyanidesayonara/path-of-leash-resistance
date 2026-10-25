@@ -468,6 +468,8 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 
 
 static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	# the wharf stops at the gate: past it, the plaça is the freedom layer's
+	vt = maxf(vt, m.GATE_Y - 30.0)
 	var t: float = float(m.elapsed) if m != null else 0.0
 
 	for i in 6:

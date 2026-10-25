@@ -64,7 +64,7 @@ static func is_on(m: Node2D) -> bool:
 	return m.lvl == "oldtown"
 
 
-static func build(m: Node2D) -> void:
+static func build_layer(m: Node2D) -> void:
 	if not is_on(m):
 		return
 	var e: Vector2 = m.walk_edges(STREET_DOOR_Y)

@@ -238,10 +238,13 @@ var lvl := "street":
 		walk_surface = walk_mod != null and walk_mod.has_method("surface")
 # The walks laid out in their own module (systems/*.gd). Main calls their
 # hooks through walk_mod by what the module defines, not by the walk's name:
-# draw_edge_layer, draw_overhead, draw_freedom, draw_live, draw_bollard,
-# tick, on_bark and surface. A module with no draw_overhead still owns its
-# overhead layer (it draws nothing there).
+# build_layer, draw_edge_layer, draw_ground, draw_overhead, draw_freedom,
+# draw_live (given the whole view: a module clamps to the gate itself),
+# draw_bollard, draw_conveyor, tick, on_bark, surface and grass_blocked.
+# El Gotic's own ground is still main's; its module is the El Somni detour.
 const WALK_MODULES := {
+	"montjuic": preload("res://systems/montjuic.gd"),
+	"oldtown": preload("res://systems/detour.gd"),
 	"partit": preload("res://systems/partit.gd"),
 	"port": preload("res://systems/port.gd"),
 	"reial": preload("res://systems/reial.gd"),
@@ -927,12 +930,8 @@ func _ready() -> void:
 	_build_walls()
 	Rails.build(self)
 	_build_entities()
-	if lvl == "montjuic":
-		CableCar.build(self)
-	elif lvl == "oldtown":
-		Detour.build(self)
-	elif lvl == "tibidabo":
-		Tibidabo.build_layer(self)
+	if walk_mod != null and walk_mod.has_method("build_layer"):
+		walk_mod.build_layer(self)
 	_spawn_cones()
 	_spawn_stream_find()
 	_build_quests()
@@ -1205,9 +1204,6 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 	if lvl == "barri":
 		# lawn to the frame's edge, drawn by the world over this layer; a city
 		# block here only ever showed as a grey slab inside the pipicà gate
-		return
-	if lvl == "montjuic":
-		Montjuic.draw_below(self, c, vt, vb)
 		return
 	if walk_mod != null and walk_mod.has_method("draw_edge_layer"):
 		# the walk's own ground, sidewalks and blocks, in its module
@@ -1780,14 +1776,10 @@ func _grass_blocked(p: Vector2) -> bool:
 		var e := walk_edges(p.y)
 		if p.x < e.x - LevelBuild.TRAIL_WOOD_OUT or p.x > e.y + LevelBuild.TRAIL_WOOD_OUT:
 			return true
-	if lvl == "montjuic" and (Montjuic.CACTUS_BED.grow(8.0).has_point(p) or Montjuic.FONT.grow(16.0).has_point(p)):
+	if walk_mod != null and walk_mod.has_method("grass_blocked") and walk_mod.grass_blocked(self, p):
 		return true
 	for r: Rect2 in solid_rects:
 		if r.grow(6.0).has_point(p):
-			return true
-	if lvl == "montjuic":
-		var me := walk_edges(p.y)
-		if absf(p.x - (me.x + me.y) * 0.5) > Montjuic.hill_half(self, p.y) - 16.0:
 			return true
 	if lvl == "park":
 		for r: Rect2 in LevelBuild.PARK_BEDS:
@@ -4254,9 +4246,8 @@ func draw_overhead_onto(c: CanvasItem) -> void:
 	if lvl == "spook":
 		_draw_castanyada_lanterns(c)
 		return
-	if walk_mod != null:
-		if walk_mod.has_method("draw_overhead"):
-			walk_mod.draw_overhead(self, c)
+	if walk_mod != null and walk_mod.has_method("draw_overhead"):
+		walk_mod.draw_overhead(self, c)
 		return
 	if lvl == "market":
 		_draw_mercat_arch(c, LevelBuild.MERCAT_ARCH_Y, "MERCAT")
@@ -6939,11 +6930,9 @@ func draw_freedom_onto(c: Object) -> void:
 	c.draw_rect(Rect2(-400.0, GATE_Y - 2400.0, 2100.0, 2370.0 if lvl == "oldtown" else 2400.0), surround)
 	# Montjuic's off-leash space is a plaça in everything but its look: the
 	# castle's esplanade
-	if lvl == "montjuic":
-		Montjuic.draw_castle_beyond(self, c)
-		Montjuic.draw_esplanade(self, c)
-	elif walk_mod != null and walk_mod.has_method("draw_freedom"):
-		# Dia de Partit's square beside the stadium, El Port's Plaça del Far
+	if walk_mod != null and walk_mod.has_method("draw_freedom"):
+		# Montjuic's castle esplanade, Dia de Partit's square beside the
+		# stadium, El Port's Plaça del Far
 		walk_mod.draw_freedom(self, c)
 	elif lvl == "oldtown":
 		# El Gòtic's plaça sits in the same roofscape as the alleys
@@ -9364,11 +9353,6 @@ func _physics_process(delta: float) -> void:
 	if Game.weather == "wind":
 		dog.velocity += Vector2(46.0, 0) * delta
 		human.velocity += Vector2(70.0, 0) * delta
-	if lvl == "montjuic":
-		Montjuic.tick_wind(self, delta)
-		CableCar.tick(self, delta)
-	elif lvl == "oldtown":
-		Detour.tick(self, delta)
 	if walk_mod != null and walk_mod.has_method("tick"):
 		walk_mod.tick(self, delta)
 	# the moving walkway (L'Estacio) and the escalators (Montjuic) move whoever
@@ -14066,9 +14050,9 @@ func _draw_world() -> void:
 			walkway = Montjuic.SAULO
 		elif lvl == "besos":
 			walkway = Color(0.72, 0.68, 0.60)   # the paved river path, warm concrete
-		if lvl == "montjuic":
-			# the hill only, between its rims: past them, the city below
-			Montjuic.draw_hill(self, _wc, vt, vb)
+		if walk_mod != null and walk_mod.has_method("draw_ground"):
+			# Montjuic: the hill only, between its rims; past them, the city below
+			walk_mod.draw_ground(self, _wc, vt, vb)
 		elif built:
 			# only the strips between the paving and the building line: beyond
 			# it the edge layer's buildings show (they sit behind the world, so
@@ -14167,9 +14151,6 @@ func _draw_world() -> void:
 	var wvt := maxf(vt, GATE_Y - 30.0)
 	if lvl == "park":
 		_draw_parc(wvt, vb)
-	if lvl == "montjuic":
-		Montjuic.draw_on_hill(self, _wc, wvt, vb)
-		Montjuic.draw_kites(self, _wc, vt, vb)
 	if lvl == "barri" and not tutorial_mode:
 		_draw_barri(wvt, vb)
 	if lvl == "rain":
@@ -14190,7 +14171,7 @@ func _draw_world() -> void:
 	if lvl == "guell":
 		_draw_mosaic_cached(wvt, vb)
 	if walk_mod != null and walk_mod.has_method("draw_live"):
-		walk_mod.draw_live(self, _wc, wvt, vb)
+		walk_mod.draw_live(self, _wc, vt, vb)
 	if lvl == "partit":
 		if march != null:
 			march.draw(_wc)
@@ -14641,9 +14622,9 @@ func _draw_world() -> void:
 
 	# L'Estacio: the moving walkway - a metal band with chevrons scrolling
 	# in the carry direction
-	if lvl == "montjuic":
+	if walk_mod != null and walk_mod.has_method("draw_conveyor"):
 		# Montjuic's conveyor is its escalators, drawn as such
-		Montjuic.draw_escalator(self, _wc, vt, vb)
+		walk_mod.draw_conveyor(self, _wc, vt, vb)
 	elif conveyor_zone.size.y > 0.0 and conveyor_zone.end.y > vt and conveyor_zone.position.y < vb:
 		_draw_travelator(vt, vb)
 	_draw_ground_detail(vt, vb)

@@ -167,11 +167,11 @@ func _run() -> void:
 	# the esplanade is north of the hill. Drawing the hill from there used to
 	# hand the renderer a polyline with no points.
 	var rim := _Rim.new()
-	M.draw_hill(m, rim, m.GATE_Y - 900.0, m.GATE_Y - 400.0)
+	M.draw_ground(m, rim, m.GATE_Y - 900.0, m.GATE_Y - 400.0)
 	_check(rim.short == 0, "the esplanade draws no empty hill rim")
 	rim.short = 0
 	rim.lines = 0
-	M.draw_hill(m, rim, -2500.0, -1800.0)
+	M.draw_ground(m, rim, -2500.0, -1800.0)
 	_check(rim.lines >= 2 and rim.short == 0, "on the climb, each rim has two points")
 
 	m.free()
