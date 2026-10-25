@@ -364,3 +364,8 @@ static func surface(m: Node2D, p: Vector2) -> int:
 	if p.y > m.GATE_Y:
 		return Surfaces.S.PAVEMENT
 	return -1
+
+
+# nothing overhead in the clinic's street; defined so main draws none of its own
+static func draw_overhead(_m: Node2D, _ci: CanvasItem) -> void:
+	pass

@@ -2,6 +2,27 @@
 
 Append-only session history, newest first.
 
+## 2026-10-25 - Montjuïc and El Gòtic's detour behind the walk hooks
+
+The second step of moving per-walk checks out of main.gd (#325 was the
+first). Montjuïc and the El Somni detour join `WALK_MODULES`, and main's
+`lvl == "montjuic"` and `"oldtown"` branches become hooks:
+- new hooks `build_layer` (the cable car, the gallery, Tibidabo's layer),
+  `draw_ground` (Montjuïc's hill), `draw_conveyor` (its escalators) and
+  `grass_blocked` (the cactus bed, the fountain, past the rims);
+- Montjuïc's `draw_below`, `draw_hill` and `draw_escalator` are now
+  `draw_edge_layer`, `draw_ground` and `draw_conveyor`; it gains `tick` (the
+  wind and the cable car), `draw_live` (the hill's things and the kites) and
+  `draw_freedom` (the castle and the esplanade). `Detour.build` is now
+  `build_layer`.
+- `draw_live` is given the whole view, and each module clamps to the gate
+  itself. Montjuïc's kites are culled against the unclamped view.
+- `draw_overhead` is called only where a module defines it; El Veterinari
+  defines an empty one, so El Gòtic keeps its bridge.
+`lvl == "..."` checks in main.gd: 177 down to 165. The behaviour snapshot
+over all 21 walks is byte-identical to main. Thirty-five screenshots (seven
+walks, four points down each walk and off leash) match pixel for pixel
+apart from the version label.
 ## 2026-10-25 - Sweep and snapshot all 21 walks
 
 `tools/shot_sweep.sh` and the default list in `tools/behaviour_snapshot.sh`

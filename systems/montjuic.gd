@@ -2,6 +2,7 @@ class_name Montjuic
 extends RefCounted
 
 const EventFeed := preload("res://hud/event_feed.gd")
+const CableCar := preload("res://systems/cable_car.gd")
 
 # MONTJUÏC, the climb (La Pujada). A top-down view has no up, so the climb is
 # sold by everything round it at once:
@@ -668,7 +669,7 @@ static func draw_font(m: Node2D, c: Object, vt: float, vb: float) -> void:
 # The escalators and the stairs beside them: two steel runs with black rubber
 # handrails, treads scrolling up, comb plates at either end, and stone steps
 # filling the rest of the path's width.
-static func draw_escalator(m: Node2D, c: Object, vt: float, vb: float) -> void:
+static func draw_conveyor(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	var z: Rect2 = m.conveyor_zone
 	if z.end.y < vt - 40.0 or z.position.y > vb + 40.0:
 		return
@@ -714,7 +715,7 @@ const SEA := Color(0.30, 0.50, 0.68)
 
 # The hillside, under the path: a polygon between its rims, which narrow as it
 # climbs. (Past the rims the edge layer shows the city below.)
-static func draw_hill(m: Node2D, c: Object, vt: float, vb: float) -> void:
+static func draw_ground(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	# in horizontal strips, rim to rim (a single long polygon with wavy sides
 	# does not always triangulate)
 	var left := PackedVector2Array()
@@ -918,7 +919,7 @@ static func _pine(b: ShapeBatch, p: Vector2, s: float) -> void:
 # the Eixample's grid of chamfered blocks round their courtyards, streets
 # between, shrinking and hazing with height; from halfway up, the port and
 # the sea open on the left.
-static func draw_below(m: Node2D, c: Object, vt: float, vb: float) -> void:
+static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
 	# up to the gate: past it the esplanade draws its own sea and haze
 	var y := floorf((maxf(vt, m.GATE_Y) - 300.0) / 60.0) * 60.0
@@ -972,3 +973,33 @@ static func _block(b: ShapeBatch, at: Vector2, step: float, haze: float) -> void
 	var yard := w * 0.42
 	b.rect(Rect2(o + Vector2((w - yard) * 0.5, (w - yard) * 0.5), Vector2(yard, yard)),
 		Color(0.40, 0.50, 0.34).lerp(HAZE, haze))
+
+
+# --- main's walk hooks (main.WALK_MODULES) ---------------------------------------
+
+static func build_layer(m: Node2D) -> void:
+	CableCar.build(m)
+
+
+static func tick(m: Node2D, delta: float) -> void:
+	tick_wind(m, delta)
+	CableCar.tick(m, delta)
+
+
+# the things on the hill, up to the gate; the kites fly over the esplanade too
+static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	draw_on_hill(m, wc, maxf(vt, m.GATE_Y - 30.0), vb)
+	draw_kites(m, wc, vt, vb)
+
+
+static func draw_freedom(m: Node2D, c: Object) -> void:
+	draw_castle_beyond(m, c)
+	draw_esplanade(m, c)
+
+
+# no grass on the cactus bed, round the fountain, or past the hill's rims
+static func grass_blocked(m: Node2D, p: Vector2) -> bool:
+	if CACTUS_BED.grow(8.0).has_point(p) or FONT.grow(16.0).has_point(p):
+		return true
+	var me: Vector2 = m.walk_edges(p.y)
+	return absf(p.x - (me.x + me.y) * 0.5) > hill_half(m, p.y) - 16.0
