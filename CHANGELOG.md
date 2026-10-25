@@ -2,6 +2,21 @@
 
 Append-only session history, newest first.
 
+## 2026-10-25 - The tutorial honours --seed, and the sweep shoots it
+
+`--seed=N` was read only on the walks, not in the tutorial, so two
+screenshots of the same tutorial build differed on every pixel (the
+lesson stations' random dressing and spawns came out differently each
+launch). The seed is now read after either branch of `_ready`, so the
+tutorial is pinned too. A plain launch passes no `--seed` and is unchanged.
+On the walks the seed is still read after the autowalk's, so it still wins.
+- `tools/shot_sweep.sh` now photographs the tutorial too (`walk-tutorial`,
+  on the walks' contact sheet).
+- `test_tool_levels` strips CR before reading the scripts' level lists: on a
+  Windows checkout `behaviour_snapshot.sh` has CRLF line ends, and the stray
+  CR read as a walk with no name.
+Two seeded runs of the tutorial now match pixel for pixel at four points
+and off leash. The behaviour snapshot over all 21 walks is byte-identical.
 ## 2026-10-25 - El Barri in its own module
 
 The seventh step of moving per-walk code out of main.gd. El Barri's drawing
