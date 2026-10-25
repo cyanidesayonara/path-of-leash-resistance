@@ -2718,6 +2718,10 @@ func overhead_pieces() -> Array[Dictionary]:
 	if not _over_built:
 		_build_overhead()
 	_over.clear()
+	# a detour gallery shares the street's y range, and the alley's washing
+	# hangs between walk_edges at draw time: it would be strung across the room
+	if detour_active:
+		return _over
 	var vt: float = cam.position.y - 500.0
 	var vb: float = cam.position.y + 500.0
 	var raining := Game.weather == "rain"

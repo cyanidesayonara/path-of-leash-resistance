@@ -104,7 +104,8 @@ static func build(m: Node2D) -> void:
 	var layer := Node2D.new()
 	layer.name = "DetourLayer"
 	layer.set_script(load("res://world/detour_layer.gd"))
-	layer.z_index = 11
+	# the gallery's floor and its props, under the pair (z 10) and the rope
+	layer.z_index = 9
 	m.add_child(layer)
 	layer.setup(m)
 	m.detour_layer = layer
