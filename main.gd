@@ -241,11 +241,13 @@ var lvl := "street":
 # build_layer, draw_edge_layer, draw_ground, draw_overhead, draw_freedom,
 # draw_live (given the whole view: a module clamps to the gate itself),
 # draw_bollard, draw_conveyor, draw_column, draw_clearing, tick, tick_crowd,
-# on_bark, surface and grass_blocked.
+# on_bark, surface and grass_blocked; and the scrapyard's draw_verge,
+# draw_grove, draw_yard, draw_log_prop, draw_van, draw_top and idle_status.
 # El Gotic's own ground is still main's; its module is the El Somni detour.
 const WALK_MODULES := {
 	"montjuic": preload("res://systems/montjuic.gd"),
 	"guell": preload("res://systems/mosaic.gd"),
+	"scrap": preload("res://world/ferralla.gd"),
 	"oldtown": preload("res://systems/detour.gd"),
 	"partit": preload("res://systems/partit.gd"),
 	"port": preload("res://systems/port.gd"),
@@ -1819,9 +1821,9 @@ func _draw_grass_detail(c: Object, vt: float, vb: float) -> void:
 			var h := _cell01(x, y)
 			var p := Vector2(x + (h - 0.5) * GRASS_STEP * 0.9, y + (fmod(h * 7.13, 1.0) - 0.5) * GRASS_STEP * 0.9)
 			if p.y > GATE_Y and surface_at(p) == Surfaces.S.GRASS and not _grass_blocked(p):
-				if lvl == "scrap":
-					# oily gravel along the fences, the odd weed, never a lawn
-					Ferralla.draw_verge_cell(c, p, h)
+				if walk_mod != null and walk_mod.has_method("draw_verge"):
+					# the scrapyard: oily gravel along the fences, the odd weed, never a lawn
+					walk_mod.draw_verge(self, c, p, h)
 					x += GRASS_STEP
 					continue
 				var lean := (h - 0.5) * 0.8
@@ -2269,15 +2271,6 @@ func _draw_fallen_log(r: Rect2) -> void:
 	for ex: float in [r.position.x, r.end.x]:
 		b.circle(Vector2(ex, r.get_center().y), r.size.y * 0.5, Color(0.66, 0.54, 0.38))
 		b.circle(Vector2(ex, r.get_center().y), r.size.y * 0.28, Color(0.55, 0.43, 0.29))
-	b.flush(_wc)
-
-
-# A stack of wrecked cars from above: the top car's roof, rusted and dented,
-# the ones under it showing past its edges at a skew, glass long gone.
-func _draw_wreck_stack(v: Vector2) -> void:
-	# four kinds of car, each stack turned and tinted its own way (world/ferralla.gd)
-	var b := ShapeBatch.new()
-	Ferralla.draw_wreck_stack(b, v, vans.find(v))
 	b.flush(_wc)
 
 
@@ -3884,11 +3877,6 @@ func draw_overhead_onto(c: CanvasItem) -> void:
 		_draw_mercat_arch(c, LevelBuild.MERCAT_ARCH_Y, "MERCAT")
 		_draw_mercat_arch(c, LevelBuild.MERCAT_DOOR_Y, "PLAÇA")
 		return
-	if lvl == "scrap":
-		var cb := ShapeBatch.new(c)
-		Ferralla.draw_crane_overhead(cb, LevelBuild.FERRALLA_CRANE, LevelBuild.FERRALLA_BOOM_TO)
-		cb.flush()
-		return
 	if lvl != "oldtown":
 		return
 	var by: float = LevelBuild.GOTIC_BRIDGE_Y
@@ -3995,38 +3983,6 @@ func _draw_pont_del_bisbe_overhead(b: ShapeBatch, by: float, e: Vector2) -> void
 	b.line(Vector2(cx - 7.5, lant_y + 17.0), Vector2(cx + 7.5, lant_y + 17.0), Color(0.14, 0.13, 0.15), 2.0)
 	# Bottom finial drop
 	b.circle(Vector2(cx, lant_y + 19.0), 1.8, Color(0.14, 0.13, 0.15))
-
-
-# a kennel beside each sleeping guard dog, its chain run out to the dog
-func _draw_kennels(vt: float, vb: float) -> void:
-	var b := ShapeBatch.new()
-	for gp: Vector2 in guard_posts:
-		if gp.y < vt - 80.0 or gp.y > vb + 80.0:
-			continue
-		var side := -1.0 if gp.x < walk_cx else 1.0
-		var kp := gp + Vector2(side * 46.0, -10.0)
-		b.rect(Rect2(kp.x - 22.0 + 6.0, kp.y - 18.0 + 8.0, 44.0, 36.0), Color(0, 0, 0, 0.2))
-		b.rect(Rect2(kp.x - 22.0, kp.y - 18.0, 44.0, 36.0), Color(0.44, 0.30, 0.18))
-		b.rect(Rect2(kp.x - 22.0, kp.y - 18.0, 44.0, 10.0), Color(0.34, 0.22, 0.14))
-		b.line(Vector2(kp.x, kp.y - 18.0), Vector2(kp.x, kp.y + 18.0), Color(0.30, 0.20, 0.12), 2.0)
-		b.rect(Rect2(kp.x - side * 22.0 - 5.0, kp.y - 6.0, 10.0, 14.0), Color(0.08, 0.06, 0.05))
-		var n := 5
-		for k in range(n):
-			b.circle(kp.lerp(gp, (float(k) + 0.5) / float(n)), 2.0, Color(0.62, 0.62, 0.64))
-	b.flush(_wc)
-
-
-# The crane over the yard: its tracks and cab off the lane's east side, and
-# the long shadow of its boom lying across the lane with the magnet's.
-func _draw_crane(vt: float, vb: float) -> void:
-	var cb: Vector2 = LevelBuild.FERRALLA_CRANE
-	var tip: Vector2 = LevelBuild.FERRALLA_BOOM_TO
-	if maxf(cb.y, tip.y) < vt - 120.0 or minf(cb.y, tip.y) > vb + 120.0:
-		return
-	# the tracks, house and shadows here; the jib is overhead (draw_overhead_onto)
-	var b := ShapeBatch.new()
-	Ferralla.draw_crane_ground(b, cb, tip)
-	b.flush(_wc)
 
 
 # A row of luggage trolleys nested into each other, the length of a van.
@@ -6553,8 +6509,8 @@ func draw_freedom_onto(c: Object) -> void:
 	# Its crowns are the canopy layer's (world/canopylayer.gd), above her.
 	for ti in range(trees.size()):
 		var t: Vector2 = trees[ti]
-		if lvl == "scrap":
-			Ferralla.draw_yard_pile(c, t, ti)
+		if walk_mod != null and walk_mod.has_method("draw_grove"):
+			walk_mod.draw_grove(self, c, t, ti)
 		elif freedom_kind == "beach":
 			_draw_tree_ground(c, t, 0, TREE_PALM)
 		elif lvl == "barri":
@@ -6880,8 +6836,8 @@ func _draw_yard(c: Object, gravel: bool) -> void:
 			var gyp := r.position.y + 40.0 + fmod(tf * 137.0, r.size.y - 80.0)
 			c.draw_line(Vector2(gxp, gyp), Vector2(gxp - 3.0, gyp - 8.0), Color(0.28, 0.44, 0.27), 2.0)
 			c.draw_line(Vector2(gxp, gyp), Vector2(gxp + 3.0, gyp - 7.0), Color(0.28, 0.44, 0.27), 2.0)
-	if lvl == "scrap":
-		Ferralla.draw_yard_wreck(c, r)
+	if walk_mod != null and walk_mod.has_method("draw_yard"):
+		walk_mod.draw_yard(self, c, r)
 	_draw_freedom_fence(c, r, gravel)
 	_draw_freedom_benches(c, r, Color(0.5, 0.38, 0.26))
 	_freedom_sign(c, r, gate_text, "the off-leash yard" if gravel else "the off-leash dog park")
@@ -8058,8 +8014,8 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 					c.draw_circle(p + Vector2(7.0, 0.0), 3.4, Color(0.92, 0.89, 0.80))
 				elif prog > 0.05:
 					c.draw_arc(p, 22.0, -PI / 2.0, -PI / 2.0 + TAU * prog / 1.1, 18, Color(1, 0.9, 0.5), 3.0)
-			"log" when lvl == "scrap":
-				Ferralla.draw_pipe(c, p)
+			"log" when walk_mod != null and walk_mod.has_method("draw_log_prop"):
+				walk_mod.draw_log_prop(self, c, p)
 			"log" when lvl == "station":
 				# stacked creosote railway sleepers (travesses) with iron rail chairs
 				var tie := Color(0.25, 0.18, 0.13)
@@ -8713,8 +8669,8 @@ func _update_hud() -> void:
 		# saying so is never news. What is news is that he has stopped MOVING,
 		# which is the part you can actually spend.
 		hud_status = "LOOSE LEASH! %ds LEFT" % int(ceil(human.call_left()))
-	elif lvl == "scrap":
-		hud_status = "GO SLOW! SLOW IS QUIET"
+	elif walk_mod != null and walk_mod.has_method("idle_status"):
+		hud_status = walk_mod.idle_status(self)
 	elif pee >= 0.999:
 		hud_status = "FULL TANK! GO MARK A SPOT"
 	elif pee <= 0.02:
@@ -13707,9 +13663,6 @@ func _draw_world() -> void:
 		_draw_diluvi(wvt, vb)
 	if lvl == "station":
 		_draw_estacio(wvt, vb)
-	if lvl == "scrap":
-		_draw_crane(wvt, vb)
-		_draw_kennels(wvt, vb)
 	if lvl == "oldtown":
 		_draw_gotic(wvt, vb)
 	if lvl == "market":
@@ -13841,16 +13794,6 @@ func _draw_world() -> void:
 			if not h.done and h.progress > 0.0:
 				_wc.draw_arc(hp, 19.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
 			continue
-		if lvl == "scrap":
-			# a stack of old tyres, the scrapyard's stand-in for a hydrant
-			contact_shadow(_wc, hp, 15.0, 6.0, 0.22)
-			for k in range(3):
-				var tp := hp + Vector2(float(k % 2) * 3.0 - 1.5, -float(k) * 4.0)
-				_wc.draw_circle(tp, 14.0, Color(0.10, 0.10, 0.11) if not h.done else Color(0.20, 0.19, 0.18))
-				_wc.draw_circle(tp, 6.0, Color(0.26, 0.24, 0.22))
-			if not h.done and h.progress > 0.0:
-				_wc.draw_arc(hp, 19.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
-			continue
 		if lvl == "station":
 			# a planter with a potted palm, the station's stand-in for a hydrant
 			contact_shadow(_wc, hp, 13.0, 5.0, 0.2)
@@ -13967,8 +13910,6 @@ func _draw_world() -> void:
 			continue
 		if tutorial_mode:
 			_draw_lamppost(p)       # the lesson posts are lampposts, as the cards say
-		elif lvl == "scrap":
-			_draw_lamppost(p)       # floodlight masts over the yard
 		elif lvl == "station":
 			if absf(p.y - LevelBuild.ESTACIO_BARRIER_Y) < 1.0:
 				continue      # a barrier cabinet, drawn with the barriers
@@ -14148,11 +14089,8 @@ func _draw_world() -> void:
 		if lvl == "market":
 			Mercat.draw_van(self, _wc, v)
 			continue
-		if lvl == "partit":
-			Partit.draw_police_van(self, _wc, v)
-			continue
-		if lvl == "scrap":
-			_draw_wreck_stack(v)
+		if walk_mod != null and walk_mod.has_method("draw_van"):
+			walk_mod.draw_van(self, _wc, v)
 			continue
 		_draw_service_van(v)
 	if furgoneta.x < INF and furgoneta.y > vt - 150.0 and furgoneta.y < vb + 150.0:
@@ -14275,33 +14213,8 @@ func _draw_world() -> void:
 		_wc.draw_line(tip, tip - away.rotated(0.5) * 7.0, Color(0.85, 1.0, 0.85, 0.95), 3.0)
 		_wc.draw_line(tip, tip - away.rotated(-0.5) * 7.0, Color(0.85, 1.0, 0.85, 0.95), 3.0)
 	# El Desguas: sweeping camera cones and laser tripwires
-	if lvl == "scrap":
-		var st := AnimClock.msec() / 1000.0
-		for c in cameras:
-			var cp: Vector2 = c.pos
-			if cp.y < vt - 220.0 or cp.y > vb + 220.0:
-				continue
-			var ang: float = float(c.base) + sin(st * float(c.speed)) * float(c.range)
-			# the vision cone, hot for a beat after a catch
-			var hot: bool = float(c.cd) > 2.5
-			var cone := Color(1.0, 0.35, 0.3, 0.28) if hot else Color(1.0, 0.9, 0.55, 0.16)
-			var pts := PackedVector2Array([cp])
-			for k in range(9):
-				var a := ang - 0.32 + 0.64 * float(k) / 8.0
-				pts.append(cp + Vector2.from_angle(a) * 190.0)
-			_wc.draw_colored_polygon(pts, cone)
-			# the unit itself: pole, housing, blinking eye
-			_wc.draw_rect(Rect2(cp.x - 2.0, cp.y, 4.0, 26.0), Color(0.35, 0.35, 0.38))
-			_wc.draw_rect(Rect2(cp.x - 9.0, cp.y - 10.0, 18.0, 12.0), Color(0.25, 0.26, 0.3))
-			_wc.draw_circle(cp + Vector2.from_angle(ang) * 8.0, 2.5, Color(1, 0.3, 0.25) if fmod(st, 1.0) < 0.5 else Color(0.5, 0.15, 0.12))
-		for lz in lasers:
-			var by := lerpf(float(lz.y_lo), float(lz.y_hi), 0.5 + 0.5 * sin(st * float(lz.speed)))
-			if by < vt - 20.0 or by > vb + 20.0:
-				continue
-			_wc.draw_line(Vector2(float(lz.x0), by), Vector2(float(lz.x1), by), Color(1.0, 0.2, 0.2, 0.75), 2.0)
-			_wc.draw_line(Vector2(float(lz.x0), by), Vector2(float(lz.x1), by), Color(1.0, 0.5, 0.4, 0.25), 6.0)
-			_wc.draw_rect(Rect2(float(lz.x0) - 8.0, by - 6.0, 8.0, 12.0), Color(0.3, 0.3, 0.34))
-			_wc.draw_rect(Rect2(float(lz.x1), by - 6.0, 8.0, 12.0), Color(0.3, 0.3, 0.34))
+	if walk_mod != null and walk_mod.has_method("draw_top"):
+		walk_mod.draw_top(self, _wc, vt, vb)
 	# Les Obres: wet cement patches, and the paw-print trail they take
 	if lvl == "site":
 		_draw_obres(vt, vb)

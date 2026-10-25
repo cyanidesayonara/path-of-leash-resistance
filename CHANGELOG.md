@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-10-25 - The scrapyard behind the walk hooks
+
+The fourth step of moving per-walk code out of main.gd. La Ferralla already
+had its dressing in `world/ferralla.gd`; it now joins `WALK_MODULES` as
+`scrap`, and main's scrapyard code moves into it as hooks. The crane's
+ground and kennels go to `draw_live`, the jib to `draw_overhead`, the tyre
+stacks to `draw_bollard` and the floodlight masts to `draw_column`. New hooks
+cover the rest: `draw_verge` (oily gravel, not a lawn), `draw_grove` (the
+yard's tyre and drum piles), `draw_yard` (the wreck in the yard),
+`draw_log_prop` (a pipe for a log), `draw_van` (the wreck stacks; Dia de
+Partit's police van, renamed from `draw_police_van`, uses it too),
+`draw_top` (the camera cones and laser tripwires, drawn late over the
+world) and `idle_status` ("GO SLOW! SLOW IS QUIET"). Colours, the grove's
+missing crowns and the guard dogs' behaviour stay in main.
+`lvl == "..."` checks in main.gd went from 160 to 148. The behaviour snapshot
+over all 21 walks is byte-identical to main. Sixteen screenshots (the
+scrapyard every 500 px and its yard, and Dia de Partit) match pixel for
+pixel apart from the version label.
+
 ## 2026-10-25 - El Mosaic in its own module
 
 The third step of moving per-walk code out of main.gd, and the first older
