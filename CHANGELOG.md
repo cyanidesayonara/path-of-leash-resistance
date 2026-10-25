@@ -23,6 +23,14 @@ first). Montjuïc and the El Somni detour join `WALK_MODULES`, and main's
 over all 21 walks is byte-identical to main. Thirty-five screenshots (seven
 walks, four points down each walk and off leash) match pixel for pixel
 apart from the version label.
+## 2026-10-25 - Sweep and snapshot all 21 walks
+
+`tools/shot_sweep.sh` and the default list in `tools/behaviour_snapshot.sh`
+stopped at Dia de Partit. So CI's screenshot sweep never photographed El
+Port, Plaça Reial, El Veterinari or El Tibidabo, and a snapshot run without
+LEVELS skipped them. Both lists now name all 21 walks, and
+`tests/test_tool_levels.gd` (in CI) checks each one against `Game.LEVELS`,
+so the next walk added cannot be left out of them.
 
 ## 2026-10-25 - Call the walk modules' hooks by what they define
 
