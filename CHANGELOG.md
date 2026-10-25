@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-10-25 - Sweep and snapshot all 21 walks
+
+`tools/shot_sweep.sh` and the default list in `tools/behaviour_snapshot.sh`
+stopped at Dia de Partit. So CI's screenshot sweep never photographed El
+Port, Plaça Reial, El Veterinari or El Tibidabo, and a snapshot run without
+LEVELS skipped them. Both lists now name all 21 walks, and
+`tests/test_tool_levels.gd` (in CI) checks each one against `Game.LEVELS`,
+so the next walk added cannot be left out of them.
+
 ## 2026-10-25 - Call the walk modules' hooks by what they define
 
 The walks laid out in their own module (Dia de Partit, El Port, Plaça Reial,
