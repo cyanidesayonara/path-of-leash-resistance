@@ -1003,3 +1003,8 @@ static func grass_blocked(m: Node2D, p: Vector2) -> bool:
 		return true
 	var me: Vector2 = m.walk_edges(p.y)
 	return absf(p.x - (me.x + me.y) * 0.5) > hill_half(m, p.y) - 16.0
+
+
+# a way marker post for a hydrant (main._draw_waymarker, shared with El Bosc)
+static func draw_bollard(m: Node2D, wc: ShapeBatch, h) -> void:
+	m._draw_waymarker(wc, h)
