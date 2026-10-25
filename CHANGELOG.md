@@ -13,6 +13,38 @@ and still cracking the phone. The two branches are back in order.
 `test_partit` puts a spy march on the walk and checks that the world draws
 it. It fails on 1.63 and 1.64. The rest of #307's, #311's and #314's
 main.gd hunks were checked for the same slip; there are no others.
+## 2026-10-25 - El Port's pier gulls take off
+
+The seven gulls perched along El Port's pier (`Port.GULL_SPOTS`) were
+painted on. They bobbed but never moved, though they look like the live
+flocks and the walk has a goal to startle gulls into flight. They now take
+off the way the flocks do: the dog or the owner within 70 px, or a bark
+within 200 px, sends one climbing away over the water, wings beating, its
+shadow left behind on the quay. Each one counts once for the gulls goal.
+There is no randomness in it, so El Port's behaviour snapshot is
+unchanged. `test_port` checks that they start perched, that walking up to
+one or barking near one sends it up, and that it counts once.
+## 2026-10-25 - Let her see herself in El Somni, and lead the visit
+
+Three things were wrong inside El Gòtic's gallery, the detour off Carrer
+del Gòtic:
+- The pair could not be seen. The gallery layer drew its sand floor at z 11,
+  over the dog and the owner at z 10. It is now at z 9: over the street's
+  props, under the pair and the rope.
+- El Gòtic's washing was strung across the room. The lines hang between
+  `walk_edges`, which the gallery overrides, and the overhead pieces are
+  culled only by y, which the gallery shares with the street.
+  `overhead_pieces()` is empty while a detour is on.
+- Your human kept walking the street's route. They marched north, out
+  through the SORTIDA gap into empty space, and towed her out of the gallery
+  in about ten seconds if she stood still. In a gallery they now browse
+  (`BROWSE_NEAR`, `BROWSE_PACE` in `entities/human.gd`): they amble after her
+  and stop near her, so she leads the visit and leaves when she chooses.
+  Their phone events still happen in there.
+`test_detour_somni` checks the draw order, the empty overhead, that 10 s of
+standing still keeps both of them in the gallery, and that your human
+follows her across it. The browse checks fail on the old code. The behaviour
+snapshot is unchanged (the autowalk never goes in).
 
 ## 2026-10-24 - Ready v1.64's notes and handover
 
