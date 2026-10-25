@@ -91,7 +91,13 @@ const BOATS: Array[Rect2] = [
 const PRIZE := Vector2(386.0, -2256.0)
 const PRIZE_TEXT := "snatch the prize catch from the auction stall"
 
-# gulls perched along the pier
+# gulls perched along the pier. They take off as the live flocks do (the dog
+# or the owner within GULL_SCARE_R, a bark within GULL_BARK_R) and count for
+# the "gulls" goal. No randomness: the walk's random sequence is untouched.
+const GULL_SCARE_R := 70.0
+const GULL_BARK_R := 200.0
+const GULL_FLY_SPEED := 300.0   # px/s, climbing away
+const GULL_FLY_SECS := 1.8      # then out of sight
 const GULL_SPOTS: Array[Vector2] = [
 	Vector2(880.0, -800.0),
 	Vector2(640.0, -1300.0),
@@ -101,6 +107,50 @@ const GULL_SPOTS: Array[Vector2] = [
 	Vector2(620.0, -3700.0),
 	Vector2(880.0, -4250.0),
 ]
+
+
+# per perched gull: the walk time it took off (-1 perched) and where it flew
+static var gull_took_off: PackedFloat32Array = PackedFloat32Array()
+static var gull_dir: PackedVector2Array = PackedVector2Array()
+
+
+static func reset_gulls() -> void:
+	gull_took_off.resize(GULL_SPOTS.size())
+	gull_took_off.fill(-1.0)
+	gull_dir.resize(GULL_SPOTS.size())
+	gull_dir.fill(Vector2.UP)
+
+
+static func tick(m: Node2D) -> void:
+	if gull_took_off.size() != GULL_SPOTS.size():
+		reset_gulls()
+	var dp: Vector2 = m.dog.global_position
+	var hp: Vector2 = m.human.global_position
+	for i in range(GULL_SPOTS.size()):
+		if gull_took_off[i] >= 0.0:
+			continue
+		var g: Vector2 = GULL_SPOTS[i]
+		if g.distance_to(dp) < GULL_SCARE_R:
+			startle_gull(m, i, dp)
+		elif g.distance_to(hp) < GULL_SCARE_R:
+			startle_gull(m, i, hp)
+
+
+# a bark sends up every perched gull in earshot, as it does the flocks
+static func on_bark(m: Node2D, pos: Vector2) -> void:
+	if gull_took_off.size() != GULL_SPOTS.size():
+		reset_gulls()
+	for i in range(GULL_SPOTS.size()):
+		if gull_took_off[i] < 0.0 and GULL_SPOTS[i].distance_to(pos) < GULL_BARK_R:
+			startle_gull(m, i, pos)
+
+
+static func startle_gull(m: Node2D, i: int, from: Vector2) -> void:
+	gull_took_off[i] = float(m.elapsed)
+	var away: Vector2 = GULL_SPOTS[i] - from
+	# out over the water, whichever side it was scared from
+	gull_dir[i] = (away.normalized() + Vector2(0.6, -0.4)).normalized() if away.length() > 1.0 else Vector2(0.8, -0.6)
+	m.port_gulls_startled += 1
 
 
 static func letters(c: ShapeBatch, txt: String, at: Vector2, h: float, col: Color, w: float = 1.6, max_w: float = INF) -> void:
@@ -151,6 +201,7 @@ static func wrap_rects() -> Array[Rect2]:
 
 # --- build -------------------------------------------------------------------
 static func build(m: Node2D) -> Array:
+	reset_gulls()
 	m.gate_text = "MOLL DE LA FUSTA"
 	m.stalls.clear()
 	m.stall_kinds.clear()
@@ -425,9 +476,19 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 		var spark_w := 14.0 + 8.0 * sin(t * 2.0 + float(i))
 		wc.line(Vector2(sx, sy), Vector2(sx + spark_w, sy), Color(0.65, 0.88, 1.0, 0.4), 1.4)
 
-	for spot: Vector2 in GULL_SPOTS:
-		if spot.y >= vt - 40.0 and spot.y <= vb + 40.0:
+	if gull_took_off.size() != GULL_SPOTS.size():
+		reset_gulls()
+	var anim: float = AnimClock.msec() / 1000.0
+	for i in range(GULL_SPOTS.size()):
+		var spot: Vector2 = GULL_SPOTS[i]
+		if spot.y < vt - 200.0 or spot.y > vb + 200.0:
+			continue
+		if gull_took_off[i] < 0.0:
 			_draw_gull(wc, spot, t)
+			continue
+		var up: float = t - gull_took_off[i]
+		if up < GULL_FLY_SECS:
+			_draw_gull_flying(wc, spot, gull_dir[i], up, anim + float(i))
 
 
 static func _draw_gull(wc: ShapeBatch, p: Vector2, t: float) -> void:
@@ -437,6 +498,25 @@ static func _draw_gull(wc: ShapeBatch, p: Vector2, t: float) -> void:
 	wc.circle(gp, 4.5, Color(0.95, 0.95, 0.95))
 	wc.line(gp + Vector2(-3.0, 1.0), gp + Vector2(3.0, 1.0), Color(0.60, 0.65, 0.70), 2.5)
 	wc.line(gp + Vector2(3.0, -1.0), gp + Vector2(7.0, -0.5), Color(0.96, 0.75, 0.15), 1.8)
+
+
+# wings spread from above and beating as in entities/pigeon.gd; the shadow
+# stays on the quay and falls behind as it climbs
+static func _draw_gull_flying(wc: ShapeBatch, spot: Vector2, dir: Vector2, up: float, anim: float) -> void:
+	var gp := spot + dir * GULL_FLY_SPEED * up
+	var lift := minf(1.0, up / GULL_FLY_SECS)
+	wc.circle(spot + dir * GULL_FLY_SPEED * up * 0.6 + LIGHT * (4.0 + 26.0 * lift), 4.0 * (1.0 - 0.5 * lift), SHADOW)
+	var side := dir.orthogonal()
+	var flap := sin(anim * 24.0)
+	var s := 1.55
+	for sd: float in [-1.0, 1.0]:
+		var root := gp + side * sd * 2.0 * s
+		var wtip := gp + side * sd * (9.0 + flap * 3.0) * s - dir * (2.0 + flap) * s
+		wc.polygon(PackedVector2Array([root + dir * 2.5 * s, wtip, root - dir * 3.0 * s]), Color(0.72, 0.75, 0.80))
+		wc.polygon(PackedVector2Array([wtip, wtip.lerp(root + dir * 2.5 * s, 0.3), wtip.lerp(root - dir * 3.0 * s, 0.3)]), Color(0.12, 0.12, 0.14))
+	wc.circle(gp, 4.5, Color(0.95, 0.95, 0.95))
+	wc.circle(gp + dir * 6.0, 3.0, Color(0.98, 0.98, 0.97))
+	wc.line(gp + dir * 8.5, gp + dir * 12.0, Color(0.96, 0.75, 0.15), 1.8)
 
 
 static func draw_freedom(m: Node2D, ci: Object) -> void:

@@ -9379,6 +9379,8 @@ func _physics_process(delta: float) -> void:
 		Reial.update_reial(self, delta)
 	if lvl == "vet":
 		Vet.tick(self)
+	if lvl == "port":
+		Port.tick(self)
 	if lvl == "tibidabo":
 		Tibidabo.update_tibidabo(self, delta)
 	# the moving walkway (L'Estacio) and the escalators (Montjuic) move whoever
@@ -13297,6 +13299,8 @@ func on_bark(pos: Vector2) -> void:
 	for p in get_tree().get_nodes_in_group("pigeons"):
 		if p.global_position.distance_to(pos) < 200.0:
 			p.scare()
+	if lvl == "port":
+		Port.on_bark(self, pos)
 	for rv in get_tree().get_nodes_in_group("rivals"):
 		if rv.global_position.distance_to(pos) < 132.0:
 			rv.scare()

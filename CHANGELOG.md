@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-10-25 - El Port's pier gulls take off
+
+The seven gulls perched along El Port's pier (`Port.GULL_SPOTS`) were
+painted on. They bobbed but never moved, though they look like the live
+flocks and the walk has a goal to startle gulls into flight. They now take
+off the way the flocks do: the dog or the owner within 70 px, or a bark
+within 200 px, sends one climbing away over the water, wings beating, its
+shadow left behind on the quay. Each one counts once for the gulls goal.
+There is no randomness in it, so El Port's behaviour snapshot is
+unchanged. `test_port` checks that they start perched, that walking up to
+one or barking near one sends it up, and that it counts once.
 ## 2026-10-25 - Let her see herself in El Somni, and lead the visit
 
 Three things were wrong inside El Gòtic's gallery, the detour off Carrer
