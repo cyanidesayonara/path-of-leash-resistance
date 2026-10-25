@@ -121,6 +121,12 @@ func _run() -> void:
 	# them north out through the SORTIDA gap into the void, dragging her out
 	# of the gallery within ten seconds of standing still.
 	var room: Rect2 = Detour.ROOM_RECT
+	# their phone events are random: a dash moves them, a call holds them
+	# still for up to 21 s, so they are kept off for these checks
+	m.human.state = m.human.HState.WALK
+	m.human.event_timer = 999.0
+	m.human.telegraph_t = 0.0
+	m.human.bubble.visible = false
 	var h_start: Vector2 = m.human.global_position
 	for _i in range(600):
 		await physics_frame
@@ -129,11 +135,6 @@ func _run() -> void:
 	_check(m.human.global_position.distance_to(h_start) < 40.0,
 		"your human browses where they are while she stands (moved %.0f px)" % m.human.global_position.distance_to(h_start))
 	_check(m.human.state != m.human.HState.DRIFT or m.human.state_t > 0.0, "a typing drift ends in the gallery")
-	# a phone event (a call holds them up to 21 s) would stand them still
-	m.human.state = m.human.HState.WALK
-	m.human.event_timer = 999.0
-	m.human.telegraph_t = 0.0
-	m.human.bubble.visible = false
 	Input.action_press("move_left")
 	for _i in range(150):
 		await physics_frame
