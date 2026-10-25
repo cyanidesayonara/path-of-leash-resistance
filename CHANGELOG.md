@@ -17,6 +17,24 @@ On the walks the seed is still read after the autowalk's, so it still wins.
   CR read as a walk with no name.
 Two seeded runs of the tutorial now match pixel for pixel at four points
 and off leash. The behaviour snapshot over all 21 walks is byte-identical.
+## 2026-10-25 - El Barri in its own module
+
+The seventh step of moving per-walk code out of main.gd. El Barri's drawing
+moves into `systems/barri.gd`: the square, the petanca pitch and its boules,
+the fountain, the pipicà and its fence. The tutorial is laid out on El Barri
+(`lvl` is "barri" there too), so every El Barri hook also runs in it; the
+square keeps its `tutorial_mode` guard in `draw_live`. Its hooks are
+`draw_edge_layer` (nothing: the lawn runs to the frame), `grass_blocked`
+(the petanca and the playground; main keeps a tutorial clause calling it,
+since tests turn the tutorial on over other walks), `draw_live`,
+`draw_freedom_ground` (the pipicà) and three new ones, `draw_gate_fence`,
+`draw_fountain` and `draw_performer` (the petanca players).
+`lvl == "..."` checks in main.gd: 135 down to 128. The behaviour snapshot over
+all 21 walks is byte-identical to main. Nine screenshots of El Barri (every
+500 px and the pipicà) match pixel for pixel apart from the version label.
+The tutorial ignores `--seed`, so its screenshots differ between two runs of
+the same build; with both trees seeded the same way for the comparison
+(a temporary change, not committed), its four shots match too.
 
 ## 2026-10-25 - L'Estació in its own module
 
