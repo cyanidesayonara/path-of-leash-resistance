@@ -144,14 +144,14 @@ static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
 		var live: ShapeBatch = m._wc
 		m._mosaic_cache = ShapeBatch.new()
 		m._wc = m._mosaic_cache
-		draw_scenery(m, vt - CACHE_MARGIN, vb + CACHE_MARGIN)
+		_draw_scenery(m, vt - CACHE_MARGIN, vb + CACHE_MARGIN)
 		m._wc = live
 		m._mosaic_cache_vt = vt
 		m._mosaic_cache_vb = vb
 	m._mosaic_cache.append_to(m._wc)
 
 
-static func draw_scenery(m: Node2D, vt: float, vb: float) -> void:
+static func _draw_scenery(m: Node2D, vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
 	# gravel: the sandy ground, with its stones
 	var gy := floorf((vt - 20.0) / 31.0) * 31.0

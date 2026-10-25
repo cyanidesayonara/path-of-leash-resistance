@@ -2,6 +2,32 @@
 
 Append-only session history, newest first.
 
+## 2026-10-25 - El Bosc in its own module, and a guard on the walk hooks
+
+The fifth step of moving per-walk code out of main.gd. El Bosc's drawing
+moves into `systems/bosc.gd`: the wood either side of the trail, the
+stream and its crossing, the fallen logs, the trail's ragged edges, the
+forest spring and the bocadillos. Its hooks are `grass_blocked` (the wood
+line), `draw_scenery` (wood, stream and logs, at their old spot after the
+Rambla), `draw_path_edges`, `draw_bollard` (its way markers; Montjuïc gets
+the same hook for its own) and two new ones, `draw_snack` and
+`draw_trough_prop`. The boar crossing, the litter on the forest floor and the
+stream's current stay in main for now: they draw from the shared random
+sequence, or are behaviour rather than drawing.
+
+Main finds a hook by name, so a module function that only shares a hook's
+name is called as the hook. El Mosaic's own scenery helper was named
+`draw_scenery`, the name of El Bosc's new hook, and El Mosaic's world draw
+failed on the argument count. It is now `_draw_scenery`. The new
+`tests/test_walk_hooks.gd`, in CI, reads every hook call in main.gd and
+checks that every module function of that name takes the arguments main
+passes.
+
+`lvl == "..."` checks in main.gd: 148 down to 142. The behaviour snapshot over
+all 21 walks is byte-identical to main. Sixteen screenshots (El Bosc every
+500 px and its clearing, and Montjuïc) match pixel for pixel apart from the
+version label.
+
 ## 2026-10-25 - The scrapyard behind the walk hooks
 
 The fourth step of moving per-walk code out of main.gd. La Ferralla already
