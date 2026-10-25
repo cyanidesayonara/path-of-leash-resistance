@@ -302,7 +302,7 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 	b.flush()
 
 
-static func update_reial(m: Node2D, _delta: float) -> void:
+static func tick(m: Node2D, _delta: float) -> void:
 	if m.lvl != "reial":
 		return
 	# The fountain goal is a real drink: main._bodily sets dog.drinking at
@@ -319,3 +319,9 @@ static func update_reial(m: Node2D, _delta: float) -> void:
 				m.set("reial_busker_barked", true)
 				m.float_text(m.dog.global_position + Vector2(0, -28), "olé!", Color(0.96, 0.88, 0.35))
 				m.feed.say("A DUET WITH THE BUSKER!", EventFeed.Tone.GOOD)
+
+# main.surface_at, through walk_mod: the ground here, or -1 for main's own
+static func surface(m: Node2D, p: Vector2) -> int:
+	if p.y > m.GATE_Y:
+		return Surfaces.S.PAVEMENT
+	return -1

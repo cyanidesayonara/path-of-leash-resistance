@@ -339,7 +339,7 @@ const HISS_COLOR := Color(0.95, 0.90, 0.20)
 const BEEP_COLOR := Color(0.25, 0.90, 0.40)
 
 
-static func tick(m: Node2D) -> void:
+static func tick(m: Node2D, _delta: float) -> void:
 	if m.lvl != "vet":
 		return
 	# the pet scale weighs her once a walk
@@ -358,3 +358,9 @@ static func on_bark(m: Node2D, pos: Vector2) -> void:
 	for ccp: Vector2 in CAT_CARRIERS:
 		if pos.distance_to(ccp) < CAT_HISS_R:
 			m.float_text(ccp, "hisss!", HISS_COLOR)
+
+# main.surface_at, through walk_mod: the ground here, or -1 for main's own
+static func surface(m: Node2D, p: Vector2) -> int:
+	if p.y > m.GATE_Y:
+		return Surfaces.S.PAVEMENT
+	return -1

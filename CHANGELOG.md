@@ -2,6 +2,24 @@
 
 Append-only session history, newest first.
 
+## 2026-10-25 - Call the walk modules' hooks by what they define
+
+The walks laid out in their own module (Dia de Partit, El Port, Plaça Reial,
+El Veterinari, El Tibidabo) were each wired into main.gd by name, one
+`if lvl == "..."` per walk at every hook. That is how El Port's branch came
+to split Dia de Partit's draw block (#324). Main now keeps one table,
+`WALK_MODULES`, and `walk_mod`, set with `lvl`. Each hook asks the module
+whether it defines the function: `draw_edge_layer`, `draw_overhead` (a
+module walk with none draws nothing there), `draw_freedom`, `draw_live`,
+`draw_bollard`, `tick`, `on_bark` and `surface` (-1 for main's own
+ground). `Reial.update_reial` and `Tibidabo.update_tibidabo` are now `tick`,
+and every module `tick` takes `(m, delta)`. A new module walk is wired in
+with one line in the table.
+- The behaviour snapshot over all 21 walks is byte-identical to main.
+- Screenshots of the five walks at four points along each walk and in their
+  off-leash spaces match main pixel for pixel, apart from the version label.
+- Montjuïc, the detour and the older walks keep their branches for now.
+
 ## 2026-10-25 - Draw Dia de Partit's march again
 
 When El Port came in (#307), its branch in `_draw_world` was inserted between

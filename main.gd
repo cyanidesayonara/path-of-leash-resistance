@@ -231,7 +231,25 @@ var vspawn_t := 2.5
 
 # level identity: "street" or "park" (branch-based for now; extract a
 # data-driven level system when the third setting arrives)
-var lvl := "street"
+var lvl := "street":
+	set(v):
+		lvl = v
+		walk_mod = WALK_MODULES.get(v)
+		walk_surface = walk_mod != null and walk_mod.has_method("surface")
+# The walks laid out in their own module (systems/*.gd). Main calls their
+# hooks through walk_mod by what the module defines, not by the walk's name:
+# draw_edge_layer, draw_overhead, draw_freedom, draw_live, draw_bollard,
+# tick, on_bark and surface. A module with no draw_overhead still owns its
+# overhead layer (it draws nothing there).
+const WALK_MODULES := {
+	"partit": preload("res://systems/partit.gd"),
+	"port": preload("res://systems/port.gd"),
+	"reial": preload("res://systems/reial.gd"),
+	"vet": preload("res://systems/vet.gd"),
+	"tibidabo": preload("res://systems/tibidabo.gd"),
+}
+var walk_mod: GDScript = null
+var walk_surface := false
 var lane_ys: Array[float] = []
 var pond := Rect2()
 # Every body of water she can get into. `pond` is still the park's, because
@@ -1191,21 +1209,9 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 	if lvl == "montjuic":
 		Montjuic.draw_below(self, c, vt, vb)
 		return
-	if lvl == "partit":
-		# the avenue's own ground, sidewalks, stalls and blocks (systems/partit.gd)
-		Partit.draw_edge_layer(self, c, vt, vb)
-		return
-	if lvl == "port":
-		Port.draw_edge_layer(self, c, vt, vb)
-		return
-	if lvl == "reial":
-		Reial.draw_edge_layer(self, c, vt, vb)
-		return
-	if lvl == "vet":
-		Vet.draw_edge_layer(self, c, vt, vb)
-		return
-	if lvl == "tibidabo":
-		Tibidabo.draw_edge_layer(self, c, vt, vb)
+	if walk_mod != null and walk_mod.has_method("draw_edge_layer"):
+		# the walk's own ground, sidewalks and blocks, in its module
+		walk_mod.draw_edge_layer(self, c, vt, vb)
 		return
 	var mod := 220.0                     # height of one facade module
 	var depth := 78.0                    # how far the detailed frontage juts
@@ -4248,19 +4254,9 @@ func draw_overhead_onto(c: CanvasItem) -> void:
 	if lvl == "spook":
 		_draw_castanyada_lanterns(c)
 		return
-	if lvl == "partit":
-		Partit.draw_overhead(self, c)
-		return
-	if lvl == "port":
-		Port.draw_overhead(self, c)
-		return
-	if lvl == "reial":
-		Reial.draw_overhead(self, c)
-		return
-	if lvl == "vet":
-		return
-	if lvl == "tibidabo":
-		Tibidabo.draw_overhead(self, c)
+	if walk_mod != null:
+		if walk_mod.has_method("draw_overhead"):
+			walk_mod.draw_overhead(self, c)
 		return
 	if lvl == "market":
 		_draw_mercat_arch(c, LevelBuild.MERCAT_ARCH_Y, "MERCAT")
@@ -6946,11 +6942,9 @@ func draw_freedom_onto(c: Object) -> void:
 	if lvl == "montjuic":
 		Montjuic.draw_castle_beyond(self, c)
 		Montjuic.draw_esplanade(self, c)
-	elif lvl == "partit":
-		# the square beside the stadium, and the stadium past it
-		Partit.draw_freedom(self, c)
-	elif lvl == "port":
-		Port.draw_freedom(self, c)
+	elif walk_mod != null and walk_mod.has_method("draw_freedom"):
+		# Dia de Partit's square beside the stadium, El Port's Plaça del Far
+		walk_mod.draw_freedom(self, c)
 	elif lvl == "oldtown":
 		# El Gòtic's plaça sits in the same roofscape as the alleys
 		_draw_gotic_roofs_round_placa(c)
@@ -9375,14 +9369,8 @@ func _physics_process(delta: float) -> void:
 		CableCar.tick(self, delta)
 	elif lvl == "oldtown":
 		Detour.tick(self, delta)
-	if lvl == "reial":
-		Reial.update_reial(self, delta)
-	if lvl == "vet":
-		Vet.tick(self)
-	if lvl == "port":
-		Port.tick(self)
-	if lvl == "tibidabo":
-		Tibidabo.update_tibidabo(self, delta)
+	if walk_mod != null and walk_mod.has_method("tick"):
+		walk_mod.tick(self, delta)
 	# the moving walkway (L'Estacio) and the escalators (Montjuic) move whoever
 	# stands on them outright: a push on velocity is eased away by a dog or
 	# human standing still
@@ -11611,20 +11599,10 @@ func surface_at(p: Vector2) -> int:
 				# a mess to carry around, not ground that slows you
 				"paint", "fish", "oil", "confetti", "icecream", "puddle": continue
 				_: return Surfaces.S.SAND
-	if lvl == "port":
-		if p.x > Port.WHARF_EDGE_X:
-			return Surfaces.S.WATER
-		if p.y > GATE_Y:
-			return Surfaces.S.PAVEMENT
-	if lvl == "reial":
-		if p.y > GATE_Y:
-			return Surfaces.S.PAVEMENT
-	if lvl == "vet":
-		if p.y > GATE_Y:
-			return Surfaces.S.PAVEMENT
-	if lvl == "tibidabo":
-		if p.y > GATE_Y:
-			return Surfaces.S.PAVEMENT
+	if walk_surface:
+		var ws: int = walk_mod.surface(self, p)
+		if ws >= 0:
+			return ws
 	if lvl == "beach":
 		# THE SEAFRONT HAS NO GRASS. Its cross-section is sea, sand, boardwalk,
 		# bike path, promenade, then cafe paving - so once the sea and the sand
@@ -13299,8 +13277,6 @@ func on_bark(pos: Vector2) -> void:
 	for p in get_tree().get_nodes_in_group("pigeons"):
 		if p.global_position.distance_to(pos) < 200.0:
 			p.scare()
-	if lvl == "port":
-		Port.on_bark(self, pos)
 	for rv in get_tree().get_nodes_in_group("rivals"):
 		if rv.global_position.distance_to(pos) < 132.0:
 			rv.scare()
@@ -13322,7 +13298,8 @@ func on_bark(pos: Vector2) -> void:
 	# in the scrapyard, YOUR bark is noise too
 	for g in get_tree().get_nodes_in_group("guards"):
 		g.hear_noise(pos, 230.0)
-	Vet.on_bark(self, pos)
+	if walk_mod != null and walk_mod.has_method("on_bark"):
+		walk_mod.on_bark(self, pos)
 
 
 # A retractable reel winds slack in briskly; against a taut rope its spring
@@ -14212,10 +14189,9 @@ func _draw_world() -> void:
 		_draw_neteja(wvt, vb)
 	if lvl == "guell":
 		_draw_mosaic_cached(wvt, vb)
-	if lvl == "port":
-		Port.draw_live(self, _wc, wvt, vb)
+	if walk_mod != null and walk_mod.has_method("draw_live"):
+		walk_mod.draw_live(self, _wc, wvt, vb)
 	if lvl == "partit":
-		Partit.draw_live(self, _wc, wvt, vb)
 		if march != null:
 			march.draw(_wc)
 		if _match_flash > 0.0:
@@ -14297,11 +14273,8 @@ func _draw_world() -> void:
 		if lvl == "besos":
 			_draw_besos_post(_wc, h)
 			continue
-		if lvl == "partit":
-			Partit.draw_bollard(_wc, h)
-			continue
-		if lvl == "port":
-			Port.draw_bollard(_wc, h)
+		if walk_mod != null and walk_mod.has_method("draw_bollard"):
+			walk_mod.draw_bollard(_wc, h)
 			continue
 		if lvl == "reial" or lvl == "vet" or lvl == "tibidabo":
 			if not h.done and h.progress > 0.0:
