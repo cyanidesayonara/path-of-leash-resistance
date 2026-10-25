@@ -44,7 +44,7 @@ func _run() -> void:
 	m.pp_spawn_t = 99.0
 	m._tick_crowd(0.016)
 	var queue := _tourists(m, "queue")
-	_check(queue.size() == m.MOSAIC_QUEUE, "the gate queue is out (%d)" % queue.size())
+	_check(queue.size() == (load("res://systems/mosaic.gd") as GDScript).QUEUE, "the gate queue is out (%d)" % queue.size())
 	var clear := true
 	for tw in queue:
 		var e: Vector2 = m.walk_edges(tw.global_position.y)
@@ -69,7 +69,7 @@ func _run() -> void:
 	m.cam.position.y = sm.y + 700.0
 	m._tick_crowd(0.016)
 	var posers := _tourists(m, "pose")
-	_check(posers.size() == m.MOSAIC_POSERS.size(), "tourists posing at the salamander (%d)" % posers.size())
+	_check(posers.size() == (load("res://systems/mosaic.gd") as GDScript).POSERS.size(), "tourists posing at the salamander (%d)" % posers.size())
 	var west := true
 	for tw in posers:
 		west = west and tw.global_position.x < sm.x - 80.0

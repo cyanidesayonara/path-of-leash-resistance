@@ -2,6 +2,24 @@
 
 Append-only session history, newest first.
 
+## 2026-10-25 - El Mosaic in its own module
+
+The third step of moving per-walk code out of main.gd, and the first older
+walk to leave it. El Mosaic's code moves into `systems/mosaic.gd` (about 400
+lines): the plaza, the serpentine bench and its trencadís, the stair and the
+salamander, the hypostyle hall and viaduct columns, the hilltop off-leash
+space, the agave planters, and the crowd's groups (the gate queue, the
+posers at the salamander, and the people in the bench's bays). Its state stays
+on main, and main keeps `on_mosaic_bench` and `mosaic_bays` as forwarders.
+- New walk hooks: `draw_column`, `draw_clearing` and `tick_crowd`.
+  `draw_bollard` now takes main as its first argument, as the planter needs
+  main's contact shadow.
+- `test_mosaic` and `test_mosaic_life` read the module.
+main.gd is about 500 lines shorter; `lvl == "..."` checks went from 165 to 160.
+The behaviour snapshot over all 21 walks is byte-identical to main. Twenty
+screenshots (El Mosaic every 500 px and its hilltop, Dia de Partit and El
+Port) match pixel for pixel apart from the version label.
+
 ## 2026-10-25 - Montjuïc and El Gòtic's detour behind the walk hooks
 
 The second step of moving per-walk checks out of main.gd (#325 was the
