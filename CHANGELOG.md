@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-10-25 - Draw Dia de Partit's march again
+
+When El Port came in (#307), its branch in `_draw_world` was inserted between
+Dia de Partit's `draw_live` call and the rest of its block. Since 1.63,
+La Marxa's column and horses, the haze over the stadium on a goal, and the
+flare have been drawn only on El Port, where none of them exist. On Dia de
+Partit the column has been walking through unseen, still carrying people
+and still cracking the phone. The two branches are back in order.
+`test_partit` puts a spy march on the walk and checks that the world draws
+it. It fails on 1.63 and 1.64. The rest of #307's, #311's and #314's
+main.gd hunks were checked for the same slip; there are no others.
 ## 2026-10-25 - El Port's pier gulls take off
 
 The seven gulls perched along El Port's pier (`Port.GULL_SPOTS`) were

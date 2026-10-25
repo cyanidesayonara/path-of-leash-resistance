@@ -14212,10 +14212,10 @@ func _draw_world() -> void:
 		_draw_neteja(wvt, vb)
 	if lvl == "guell":
 		_draw_mosaic_cached(wvt, vb)
-	if lvl == "partit":
-		Partit.draw_live(self, _wc, wvt, vb)
 	if lvl == "port":
 		Port.draw_live(self, _wc, wvt, vb)
+	if lvl == "partit":
+		Partit.draw_live(self, _wc, wvt, vb)
 		if march != null:
 			march.draw(_wc)
 		if _match_flash > 0.0:
