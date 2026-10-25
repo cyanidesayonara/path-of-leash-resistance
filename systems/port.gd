@@ -121,7 +121,7 @@ static func reset_gulls() -> void:
 	gull_dir.fill(Vector2.UP)
 
 
-static func tick(m: Node2D) -> void:
+static func tick(m: Node2D, _delta: float) -> void:
 	if gull_took_off.size() != GULL_SPOTS.size():
 		reset_gulls()
 	var dp: Vector2 = m.dog.global_position
@@ -547,3 +547,11 @@ static func draw_freedom(m: Node2D, ci: Object) -> void:
 	c.flush(ci)
 	m._draw_freedom_benches(ci, Rect2(160.0, top, 960.0, 600.0), Color(0.36, 0.30, 0.24))
 	m._freedom_sign(ci, Rect2(160.0, top, 960.0, 600.0), m.gate_text, "the lighthouse square, off leash")
+
+# main.surface_at, through walk_mod: the ground here, or -1 for main's own
+static func surface(m: Node2D, p: Vector2) -> int:
+	if p.x > WHARF_EDGE_X:
+		return Surfaces.S.WATER
+	if p.y > m.GATE_Y:
+		return Surfaces.S.PAVEMENT
+	return -1

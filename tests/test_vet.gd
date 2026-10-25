@@ -114,7 +114,7 @@ func _run() -> void:
 	# 7. Pet scale weigh-in interaction
 	_check(not bool(m.vet_scale_weighed), "scale unweighed initially")
 	m.dog.global_position = V.SCALE_POS
-	V.tick(m)
+	V.tick(m, 1.0 / 60.0)
 	_check(bool(m.vet_scale_weighed), "stepping on scale triggers weigh-in")
 	_check(_fed(m, "WEIGH-IN! 14.2 KG"), "the weigh-in is shouted in the feed")
 	_check(_popped(m, "beep!"), "the scale beeps")

@@ -115,10 +115,10 @@ func _run() -> void:
 	m.dog.global_position = R.FOUNTAIN_POS + Vector2(R.FOUNTAIN_RADIUS + 10.0, 0.0)
 	m.dog.velocity = Vector2.ZERO
 	m.dog.drinking = 0.0
-	R.update_reial(m, 0.1)
+	R.tick(m, 0.1)
 	_check(not m.reial_fountain_drank, "standing still by the fountain is not a drink")
 	m.dog.global_position = R.GAUDI_POSTS[0] + Vector2(30.0, 0.0)
-	R.update_reial(m, 0.1)
+	R.tick(m, 0.1)
 	_check(not m.reial_gaudi_wrapped, "standing by a lamppost is not a wrap")
 
 	m.pee = 0.2
@@ -127,12 +127,12 @@ func _run() -> void:
 	m._bodily(0.2)
 	_check(m.pee > 0.2, "fountain refills bladder at fountain rim reach (pee=%.2f)" % m.pee)
 	_check(m.dog.drinking > 0.0, "drinking animation activates at fountain rim")
-	R.update_reial(m, 0.1)
+	R.tick(m, 0.1)
 	_check(bool(m.get("reial_fountain_drank")), "drinking at fountain triggers reial_fountain_drank")
 
 	m.dog.global_position = R.BUSKER_POS + Vector2(20.0, 0.0)
 	m.dog.bark_anim = 0.3
-	R.update_reial(m, 0.1)
+	R.tick(m, 0.1)
 	_check(bool(m.get("reial_busker_barked")), "barking at busker triggers reial_busker_barked")
 
 

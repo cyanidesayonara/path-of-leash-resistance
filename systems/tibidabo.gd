@@ -335,7 +335,7 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 	b.flush()
 
 
-static func update_tibidabo(m: Node2D, _delta: float) -> void:
+static func tick(m: Node2D, _delta: float) -> void:
 	if m.lvl != "tibidabo":
 		return
 	var dp: Vector2 = m.dog.global_position
@@ -358,3 +358,9 @@ static func update_tibidabo(m: Node2D, _delta: float) -> void:
 			m.bones += 3
 			m.float_text(dp + Vector2(0, -28), "funicular! +3", Color(0.85, 0.35, 0.32))
 			m.feed.say("THE FUNICULAR GOES BY!", EventFeed.Tone.GOOD)
+
+# main.surface_at, through walk_mod: the ground here, or -1 for main's own
+static func surface(m: Node2D, p: Vector2) -> int:
+	if p.y > m.GATE_Y:
+		return Surfaces.S.PAVEMENT
+	return -1

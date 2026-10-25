@@ -120,10 +120,10 @@ func _run() -> void:
 	_check(not m.tibidabo_viewfinder_gazed, "viewfinder ungazed initially")
 	m.dog.global_position = T.VIEWFINDERS[0]
 	m.dog.velocity = Vector2(120.0, 0.0)
-	T.update_tibidabo(m, 0.016)
+	T.tick(m, 0.016)
 	_check(not m.tibidabo_viewfinder_gazed, "trotting past a viewfinder is not a look")
 	m.dog.velocity = Vector2.ZERO
-	T.update_tibidabo(m, 0.016)
+	T.tick(m, 0.016)
 	_check(m.tibidabo_viewfinder_gazed, "standing still at a viewfinder is")
 
 	# 10. Funicular: at the road's east side, only with the carriage level
@@ -131,16 +131,16 @@ func _run() -> void:
 	m.elapsed = T.CAR_PERIOD * 0.25
 	var car_y: float = T.carriage_y(m.elapsed)
 	m.dog.global_position = Vector2(820.0, car_y + 900.0)
-	T.update_tibidabo(m, 0.016)
+	T.tick(m, 0.016)
 	_check(not m.tibidabo_funicular_seen, "the carriage far up the track is not a sighting")
 	m.dog.global_position = Vector2(820.0, car_y)
-	T.update_tibidabo(m, 0.016)
+	T.tick(m, 0.016)
 	_check(m.tibidabo_funicular_seen, "the carriage level with her at the east side is")
 	# parked at the bottom station by the start line, it is not a sighting
 	m.tibidabo_funicular_seen = false
 	m.elapsed = 0.0
 	m.dog.global_position = Vector2(820.0, T.carriage_y(0.0))
-	T.update_tibidabo(m, 0.016)
+	T.tick(m, 0.016)
 	_check(not m.tibidabo_funicular_seen, "the carriage parked at the bottom station is not a sighting")
 
 	# 11. The walk ends at the funicular's bottom station: the door on the
