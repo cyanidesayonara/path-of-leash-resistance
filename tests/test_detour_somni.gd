@@ -8,6 +8,7 @@ extends SceneTree
 # 4. Golden Dream Bone collection and goal registration.
 # 5. Exit portal: smooth return to street outside gallery past entrance.
 # 6. Autowalk bot safety (leaves detour alone and follows the main walk).
+# 7. Your human browses inside, staying in the room and following her.
 
 var checks := 0
 var failures: Array[String] = []
@@ -97,6 +98,11 @@ func _run() -> void:
 	_check(m.dog.global_position.distance_to(expected_entry) < 10.0, "dog is placed at gallery entrance threshold")
 	_check(m.cam_x_now > Detour.DETOUR_ORIGIN.x, "camera x shifts to frame the gallery")
 	_check(m.surface_at(m.dog.global_position) == Surfaces.S.SAND, "ground underfoot shifts to desert sand")
+	# the gallery floor was drawn over the pair (z 11 over their 10), hiding both
+	_check(m.detour_layer.z_index < m.dog.z_index and m.detour_layer.z_index < m.human.z_index,
+		"the gallery is drawn under the pair (layer z %d, dog z %d)" % [m.detour_layer.z_index, m.dog.z_index])
+	# El Gotic's washing hangs between walk_edges, which the gallery overrides
+	_check(m.overhead_pieces().is_empty(), "no street washing strung across the gallery")
 
 	# 3. Melting Lampposts Droop Physics
 	var post_pos: Vector2 = Detour.DETOUR_ORIGIN + Detour.LAMP_OFFSETS[0]
@@ -110,6 +116,34 @@ func _run() -> void:
 	for _i in range(30):
 		await physics_frame
 	_check(Detour.droop_t[0] < 0.2, "melting lamppost relaxes when released (droop=%.2f)" % Detour.droop_t[0])
+
+	# 3b. In the gallery your human browses. The street's route used to march
+	# them north out through the SORTIDA gap into the void, dragging her out
+	# of the gallery within ten seconds of standing still.
+	var room: Rect2 = Detour.ROOM_RECT
+	var h_start: Vector2 = m.human.global_position
+	for _i in range(600):
+		await physics_frame
+	_check(m.detour_active, "standing still for 10 s, she is still in the gallery")
+	_check(room.has_point(m.human.global_position), "your human stays inside the gallery (%s)" % m.human.global_position.round())
+	_check(m.human.global_position.distance_to(h_start) < 40.0,
+		"your human browses where they are while she stands (moved %.0f px)" % m.human.global_position.distance_to(h_start))
+	_check(m.human.state != m.human.HState.DRIFT or m.human.state_t > 0.0, "a typing drift ends in the gallery")
+	# a phone event (a call holds them up to 21 s) would stand them still
+	m.human.state = m.human.HState.WALK
+	m.human.event_timer = 999.0
+	m.human.telegraph_t = 0.0
+	m.human.bubble.visible = false
+	Input.action_press("move_left")
+	for _i in range(150):
+		await physics_frame
+	Input.action_release("move_left")
+	for _i in range(240):
+		await physics_frame
+	var gap: float = m.human.global_position.distance_to(m.dog.global_position)
+	_check(m.human.global_position.x < h_start.x - 60.0, "your human follows her across the gallery (x %.0f -> %.0f)" % [h_start.x, m.human.global_position.x])
+	_check(gap < 200.0, "and ambles up close to her (%.0f px)" % gap)
+	_check(room.has_point(m.human.global_position) and m.detour_active, "still inside, still in the gallery")
 
 	# 4. Golden Dream Bone Collection & Goal
 	var G: GDScript = load("res://systems/goals.gd")

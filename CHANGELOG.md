@@ -2,6 +2,28 @@
 
 Append-only session history, newest first.
 
+## 2026-10-25 - Let her see herself in El Somni, and lead the visit
+
+Three things were wrong inside El Gòtic's gallery, the detour off Carrer
+del Gòtic:
+- The pair could not be seen. The gallery layer drew its sand floor at z 11,
+  over the dog and the owner at z 10. It is now at z 9: over the street's
+  props, under the pair and the rope.
+- El Gòtic's washing was strung across the room. The lines hang between
+  `walk_edges`, which the gallery overrides, and the overhead pieces are
+  culled only by y, which the gallery shares with the street.
+  `overhead_pieces()` is empty while a detour is on.
+- Your human kept walking the street's route. They marched north, out
+  through the SORTIDA gap into empty space, and towed her out of the gallery
+  in about ten seconds if she stood still. In a gallery they now browse
+  (`BROWSE_NEAR`, `BROWSE_PACE` in `entities/human.gd`): they amble after her
+  and stop near her, so she leads the visit and leaves when she chooses.
+  Their phone events still happen in there.
+`test_detour_somni` checks the draw order, the empty overhead, that 10 s of
+standing still keeps both of them in the gallery, and that your human
+follows her across it. The browse checks fail on the old code. The behaviour
+snapshot is unchanged (the autowalk never goes in).
+
 ## 2026-10-24 - Ready v1.64's notes and handover
 
 The session started with an audit of what was built for v1.62, v1.63 and

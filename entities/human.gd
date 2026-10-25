@@ -201,6 +201,8 @@ const CORRECT_REEL := 0.65     # the leash, cut to this much of its length
 const CORRECT_REST := 0.7      # patience after a correction
 const CORRECT_GRACE := 8.0     # s after a correction before patience drains again
 const WAIT_MAX := 4.0          # s they wait while she does her business
+const BROWSE_NEAR := 110.0     # px from the dog a detour gallery's browser stops
+const BROWSE_PACE := 0.55      # of WALK_SPEED, ambling after her in a gallery
 var felt_pull := Vector2.ZERO
 var _pull_now := Vector2.ZERO
 var patience := 1.0
@@ -604,6 +606,20 @@ func _walk(delta: float) -> void:
 		return
 	if halt_t > 0.0:
 		velocity = velocity.move_toward(Vector2.ZERO, 400.0 * delta)
+		move_and_slide()
+		return
+	# a detour gallery (systems/detour.gd) is off the street's route: they
+	# browse, ambling after her and stopping near her, so she leads the visit
+	# and leaves by the SORTIDA when she chooses, not when they walk her there
+	if main.detour_active:
+		if state == HState.DRIFT and state_t <= 0.0:
+			state = HState.WALK
+			bar_watching = false
+		var to_dog: Vector2 = main.dog.global_position - global_position
+		var browse := Vector2.ZERO
+		if to_dog.length() > BROWSE_NEAR:
+			browse = to_dog.normalized() * WALK_SPEED * BROWSE_PACE
+		velocity = velocity.move_toward(browse, 400.0 * delta)
 		move_and_slide()
 		return
 	# she is doing her business: a decent human waits, for a while
