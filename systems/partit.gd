@@ -1164,7 +1164,8 @@ static func draw_bollard(_m: Node2D, wc: ShapeBatch, h: Dictionary) -> void:
 
 # The police van at the corner: navy, a light bar on the cab roof and its
 # blue lights turning; no insignia.
-static func draw_police_van(m: Node2D, wc: ShapeBatch, v: Vector2) -> void:
+# main.WALK_MODULES draw_van: the police vans along the avenue
+static func draw_van(m: Node2D, wc: ShapeBatch, v: Vector2) -> void:
 	var body := Rect2(v.x - 32.0, v.y - 66.0, 64.0, 132.0)
 	_box_shadow(wc, body, 24.0)
 	for w: Vector2 in [Vector2(-35, -42), Vector2(29, -42), Vector2(-35, 28), Vector2(29, 28)]:

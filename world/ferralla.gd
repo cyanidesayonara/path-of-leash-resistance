@@ -10,6 +10,7 @@ extends RefCounted
 # Draw-only apart from the yard's wreck (yard_wreck), and every variation is a
 # hash of position, so a walk looks the same every run.
 
+const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.05, 0.05, 0.08, 0.24)
 
@@ -405,3 +406,129 @@ static func draw_yard_wreck(b: Object, fr: Rect2) -> void:
 	b.circle(bw, 6.0, Color(0.72, 0.74, 0.78))
 	b.circle(bw, 4.2, Color(0.28, 0.45, 0.55))
 	b.circle(bw + Vector2(-1.2, -1.2), 1.2, Color(0.85, 0.94, 0.98))
+
+# --- main's walk hooks (main.WALK_MODULES) ---------------------------------------
+
+# the crane and the kennels, up to the gate
+static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	vt = maxf(vt, m.GATE_Y - 30.0)
+	_draw_crane(m, wc, vt, vb)
+	_draw_kennels(m, wc, vt, vb)
+
+
+# The crane over the yard: its tracks and cab off the lane's east side, and
+# the long shadow of its boom lying across the lane with the magnet's.
+static func _draw_crane(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	var cb: Vector2 = m.LevelBuild.FERRALLA_CRANE
+	var tip: Vector2 = m.LevelBuild.FERRALLA_BOOM_TO
+	if maxf(cb.y, tip.y) < vt - 120.0 or minf(cb.y, tip.y) > vb + 120.0:
+		return
+	# the tracks, house and shadows here; the jib is overhead (draw_overhead_onto)
+	var b := ShapeBatch.new()
+	draw_crane_ground(b, cb, tip)
+	b.flush(wc)
+
+
+# a kennel beside each sleeping guard dog, its chain run out to the dog
+static func _draw_kennels(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	var b := ShapeBatch.new()
+	for gp: Vector2 in m.guard_posts:
+		if gp.y < vt - 80.0 or gp.y > vb + 80.0:
+			continue
+		var side := -1.0 if gp.x < m.walk_cx else 1.0
+		var kp := gp + Vector2(side * 46.0, -10.0)
+		b.rect(Rect2(kp.x - 22.0 + 6.0, kp.y - 18.0 + 8.0, 44.0, 36.0), Color(0, 0, 0, 0.2))
+		b.rect(Rect2(kp.x - 22.0, kp.y - 18.0, 44.0, 36.0), Color(0.44, 0.30, 0.18))
+		b.rect(Rect2(kp.x - 22.0, kp.y - 18.0, 44.0, 10.0), Color(0.34, 0.22, 0.14))
+		b.line(Vector2(kp.x, kp.y - 18.0), Vector2(kp.x, kp.y + 18.0), Color(0.30, 0.20, 0.12), 2.0)
+		b.rect(Rect2(kp.x - side * 22.0 - 5.0, kp.y - 6.0, 10.0, 14.0), Color(0.08, 0.06, 0.05))
+		var n := 5
+		for k in range(n):
+			b.circle(kp.lerp(gp, (float(k) + 0.5) / float(n)), 2.0, Color(0.62, 0.62, 0.64))
+	b.flush(wc)
+
+
+# the crane's jib and hook block, over everyone
+static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
+	var cb := ShapeBatch.new(c)
+	draw_crane_overhead(cb, m.LevelBuild.FERRALLA_CRANE, m.LevelBuild.FERRALLA_BOOM_TO)
+	cb.flush()
+
+
+# oily gravel along the fences, the odd weed, never a lawn
+static func draw_verge(_m: Node2D, c: Object, p: Vector2, h: float) -> void:
+	draw_verge_cell(c, p, h)
+
+
+# the yard's grove is tyre stacks and drums
+static func draw_grove(_m: Node2D, c: Object, p: Vector2, i: int) -> void:
+	draw_yard_pile(c, p, i)
+
+
+static func draw_yard(_m: Node2D, c: Object, fr: Rect2) -> void:
+	draw_yard_wreck(c, fr)
+
+
+# a fallen log, in the scrapyard, is a length of pipe
+static func draw_log_prop(_m: Node2D, c: Object, p: Vector2) -> void:
+	draw_pipe(c, p)
+
+
+static func idle_status(_m: Node2D) -> String:
+	return "GO SLOW! SLOW IS QUIET"
+
+
+# a stack of old tyres, the scrapyard's stand-in for a hydrant
+static func draw_bollard(m: Node2D, wc: ShapeBatch, h) -> void:
+	var hp: Vector2 = h.pos
+	m.contact_shadow(wc, hp, 15.0, 6.0, 0.22)
+	for k in range(3):
+		var tp := hp + Vector2(float(k % 2) * 3.0 - 1.5, -float(k) * 4.0)
+		wc.draw_circle(tp, 14.0, Color(0.10, 0.10, 0.11) if not h.done else Color(0.20, 0.19, 0.18))
+		wc.draw_circle(tp, 6.0, Color(0.26, 0.24, 0.22))
+	if not h.done and h.progress > 0.0:
+		wc.draw_arc(hp, 19.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
+
+
+# floodlight masts over the yard
+static func draw_column(m: Node2D, _wc: ShapeBatch, p: Vector2) -> void:
+	m._draw_lamppost(p)
+
+
+# A stack of wrecked cars from above: the top car's roof, rusted and dented,
+# the ones under it showing past its edges at a skew, glass long gone.
+static func draw_van(m: Node2D, wc: ShapeBatch, v: Vector2) -> void:
+	# four kinds of car, each stack turned and tinted its own way (world/ferralla.gd)
+	var b := ShapeBatch.new()
+	draw_wreck_stack(b, v, m.vans.find(v))
+	b.flush(wc)
+
+
+# El Desguas: sweeping camera cones and laser tripwires, over the world
+static func draw_top(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	var st := AnimClock.msec() / 1000.0
+	for c in m.cameras:
+		var cp: Vector2 = c.pos
+		if cp.y < vt - 220.0 or cp.y > vb + 220.0:
+			continue
+		var ang: float = float(c.base) + sin(st * float(c.speed)) * float(c.range)
+		# the vision cone, hot for a beat after a catch
+		var hot: bool = float(c.cd) > 2.5
+		var cone := Color(1.0, 0.35, 0.3, 0.28) if hot else Color(1.0, 0.9, 0.55, 0.16)
+		var pts := PackedVector2Array([cp])
+		for k in range(9):
+			var a := ang - 0.32 + 0.64 * float(k) / 8.0
+			pts.append(cp + Vector2.from_angle(a) * 190.0)
+		wc.draw_colored_polygon(pts, cone)
+		# the unit itself: pole, housing, blinking eye
+		wc.draw_rect(Rect2(cp.x - 2.0, cp.y, 4.0, 26.0), Color(0.35, 0.35, 0.38))
+		wc.draw_rect(Rect2(cp.x - 9.0, cp.y - 10.0, 18.0, 12.0), Color(0.25, 0.26, 0.3))
+		wc.draw_circle(cp + Vector2.from_angle(ang) * 8.0, 2.5, Color(1, 0.3, 0.25) if fmod(st, 1.0) < 0.5 else Color(0.5, 0.15, 0.12))
+	for lz in m.lasers:
+		var by := lerpf(float(lz.y_lo), float(lz.y_hi), 0.5 + 0.5 * sin(st * float(lz.speed)))
+		if by < vt - 20.0 or by > vb + 20.0:
+			continue
+		wc.draw_line(Vector2(float(lz.x0), by), Vector2(float(lz.x1), by), Color(1.0, 0.2, 0.2, 0.75), 2.0)
+		wc.draw_line(Vector2(float(lz.x0), by), Vector2(float(lz.x1), by), Color(1.0, 0.5, 0.4, 0.25), 6.0)
+		wc.draw_rect(Rect2(float(lz.x0) - 8.0, by - 6.0, 8.0, 12.0), Color(0.3, 0.3, 0.34))
+		wc.draw_rect(Rect2(float(lz.x1), by - 6.0, 8.0, 12.0), Color(0.3, 0.3, 0.34))
