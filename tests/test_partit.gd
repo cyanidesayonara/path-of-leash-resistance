@@ -117,6 +117,7 @@ func _run() -> void:
 	_check(P.sidewalk(-4000.0) == 0.0, "the stadium's paving has no kerb")
 
 	await _march(m, P)
+	await _march_drawn(m)
 
 	# the walk's name is written in sunflower seed shells
 	var WS: GDScript = load("res://world/world_sign.gd")
@@ -172,3 +173,31 @@ func _march(m: Node2D, _p) -> void:
 		var drawn: Color = (m.SUBSTANCES[String(sz.kind)] as Dictionary).col
 		_check(drawn.a > 0.0, "a dropping has a colour the world can draw")
 	_check(stinky and m.march.droppings.size() == 1, "a horse leaves a dropping the world knows")
+
+
+# The column is drawn by the world on Dia de Partit. El Port's draw branch
+# was once inserted above it, so it drew only on El Port, where there is
+# no march: on Dia de Partit the column walked unseen.
+func _march_drawn(m: Node2D) -> void:
+	var spy := GDScript.new()
+	spy.source_code = "extends \"res://systems/march.gd\"
+var drew := 0
+func draw(b: ShapeBatch) -> void:
+	drew += 1
+	super.draw(b)
+"
+	spy.reload()
+	var real = m.march
+	var seen = spy.new()
+	seen.on = real.on
+	seen.warned = real.warned
+	seen.passed = real.passed
+	seen.foot = real.foot
+	seen.horses = real.horses
+	m.march = seen
+	m.cam.position = seen.foot.get_center()
+	for _i in 6:
+		m.queue_redraw()
+		await process_frame
+	_check(seen.drew > 0, "the march column is drawn on Dia de Partit (%d draws)" % seen.drew)
+	m.march = real
