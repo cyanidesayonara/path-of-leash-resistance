@@ -2,6 +2,23 @@
 
 Append-only session history, newest first.
 
+## 2026-10-25 - L'Estació in its own module
+
+The sixth step of moving per-walk code out of main.gd. L'Estació's drawing
+moves into `systems/estacio.gd`: the concourse and its terrazzo, the ticket
+gates, the platforms and the train, the luggage, the departures board, the
+trolleys, the hall's pillars, the goods yard off leash and the running lines
+past its wall. Its hooks are `draw_live`, `draw_log_prop` (sleepers),
+`draw_bollard` (a potted palm), `draw_column` (a pillar, or nothing at the
+barrier line, where the gates are), `draw_van` (trolleys) and two new ones,
+`draw_freedom_beyond` and `draw_freedom_ground`. The overhead departures
+board and the walkway colour now read the module (`Estacio.departures_board`,
+`Estacio.TERRAZZO`).
+`lvl == "..."` checks in main.gd: 142 down to 135. The behaviour snapshot over
+all 21 walks is byte-identical to main. Sixteen screenshots (L'Estació every
+500 px and its goods yard, and Montjuïc) match pixel for pixel apart from
+the version label.
+
 ## 2026-10-25 - El Bosc in its own module, and a guard on the walk hooks
 
 The fifth step of moving per-walk code out of main.gd. El Bosc's drawing
