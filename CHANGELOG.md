@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-10-27 - El Gòtic drawn by its own module
+
+`world/gotic.gd` takes El Gòtic's picture out of main.gd: the alley's
+paving, doors and plant pots, the roofscape either side with its constants
+and hash, and the Pont del Bisbe. `systems/detour.gd`, the walk's module,
+forwards main's hooks to it: `draw_live`, `draw_overhead` (the bridge),
+`draw_freedom` (the plaça in its roofscape), `draw_column` (the bollards)
+and `draw_fountain` (nothing: the plaça draws its own). La Neteja shares
+the roofscape and now calls `Gotic.draw_roofs` and `Gotic.draw_block`.
+The laundry lines, the plaça's trees and the geranium pots stay in main.
+Behaviour snapshot byte-identical over every walk; El Gòtic (the bridge
+included) and La Neteja shots pixel-identical.
+
 ## 2026-10-26 - La Castanyada drawn by its own module
 
 `systems/castanyada.gd` takes the festival walk's drawing out of main.gd:

@@ -1,6 +1,9 @@
 extends RefCounted
 
 const EventFeed := preload("res://hud/event_feed.gd")
+const Gotic := preload("res://world/gotic.gd")
+const ShapeBatch := preload("res://systems/shape_batch.gd")
+const LevelBuild := preload("res://world/level_build.gd")
 
 # ARTSY DETOURS ("EXPOSICIÓ - ENTRADA LLIURE"):
 # Hidden-in-plain-sight side rooms off major Barcelona walks.
@@ -207,3 +210,35 @@ static func cam_x(m: Node2D) -> float:
 
 static func walk_edges(m: Node2D, y: float) -> Vector2:
 	return Vector2(DETOUR_ORIGIN.x + 60.0, DETOUR_ORIGIN.x + ROOM_W - 60.0)
+
+
+# --- main's walk hooks (main.WALK_MODULES): El Gòtic's picture, in world/gotic.gd
+
+# the alley, up to the gate
+static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
+	Gotic.draw_street(m, maxf(vt, m.GATE_Y - 30.0), vb)
+
+
+# the Pont del Bisbe over the alley, above everyone
+static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
+	var by: float = LevelBuild.GOTIC_BRIDGE_Y
+	var e: Vector2 = m.walk_edges(by)
+	var b := ShapeBatch.new(c)
+	Gotic.draw_bridge(b, by, e)
+	b.flush()
+
+
+# El Gòtic's plaça sits in the same roofscape as the alleys
+static func draw_freedom(m: Node2D, c: Object) -> void:
+	Gotic.draw_roofs_round_placa(m, c)
+	m._draw_placa(c)
+
+
+# the posts down the alley are the old town's cast-iron bollards
+static func draw_column(m: Node2D, _wc: ShapeBatch, p: Vector2) -> void:
+	m._draw_bollard(p)
+
+
+# the plaça's fountain draws with the plaça
+static func draw_fountain(_m: Node2D, _f: Vector2) -> void:
+	pass
