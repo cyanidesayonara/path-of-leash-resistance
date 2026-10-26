@@ -533,8 +533,12 @@ static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
 const SAND_TO_X := 380.0
 
 
-static func surface(_m: Node2D, p: Vector2) -> int:
+static func surface(m: Node2D, p: Vector2) -> int:
 	if p.x < SAND_TO_X:
+		return Surfaces.S.SAND
+	# past the gate the dog beach is sand from the fence to the water, where
+	# the deck and promenade stop (the sea is ruled out before this hook)
+	if p.y < m.GATE_Y - 30.0:
 		return Surfaces.S.SAND
 	return Surfaces.S.PAVEMENT
 

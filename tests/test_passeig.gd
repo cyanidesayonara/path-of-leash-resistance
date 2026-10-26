@@ -4,7 +4,8 @@ extends SceneTree
 # one spacing; the showers' columns and the volleyball net's posts are solid
 # poles the rope can wrap; the chiringuitos' bar huts are solid and clear of
 # their terraces; no towel is laid across a landmark; and the sand is the
-# ground itself, not a tinted box laid over it that stops at the gate.
+# ground itself, not a tinted box laid over it that stops at the gate; and the
+# dog beach past the gate handles as the sand it is drawn as.
 
 var checks := 0
 var failures: Array[String] = []
@@ -90,6 +91,24 @@ func _run() -> void:
 	_check(sand_ground, "the seafront's sand zone is the ground itself")
 	# and the dog beach's shore meets the walk's at the gate
 	_check(is_equal_approx(m.beach_shore_x(m.GATE_Y - 30.0), 230.0), "the shorelines meet at the gate")
+	# the dog beach handles as sand from the fence to the water, and its sea
+	# is still water; the deck below the gate stays firm
+	var S: Dictionary = (load("res://world/surfaces.gd") as GDScript).S
+	var fr: Rect2 = m._freedom_rect()
+	var not_sand := 0
+	var y := fr.position.y + 40.0
+	while y < fr.end.y - 10.0:
+		var x: float = m.beach_shore_x(y) + 20.0
+		while x < fr.end.x - 20.0:
+			if int(m.surface_at(Vector2(x, y))) != S.SAND:
+				not_sand += 1
+			x += 60.0
+		_check(int(m.surface_at(Vector2(m.beach_shore_x(y) - 80.0, y))) == S.WATER,
+			"the dog beach's sea is water at y=%d" % int(y))
+		y += 90.0
+	_check(not_sand == 0, "the dog beach is sand from the shore to the fence (%d points not)" % not_sand)
+	_check(int(m.surface_at(Vector2(700.0, m.GATE_Y + 120.0))) == S.PAVEMENT,
+		"the promenade below the gate stays pavement")
 
 	m.queue_free()
 	await process_frame
