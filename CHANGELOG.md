@@ -21,6 +21,14 @@ world draw went from 4.48-4.63 ms to 4.81 ms (p50) with the same draw calls.
   the espigó, and the wet sand and concrete stopped 10 px off the beach's
   edge. The land now stops where the dog beach starts, the deck ends on an
   end board, and the espigó's rocks are drawn over the walk's sea too.
+## 2026-10-26 - A surface map of every walk
+
+`tools/surface_map.sh` photographs each walk (five points and off leash)
+with what `surface_at()` returns dotted over the picture, one colour per
+surface, and a contact sheet per walk. A stretch drawn as sand that handles
+as pavement, or a lawn that reads as paving underfoot, shows at a glance
+instead of by walking every walk. `--surface-map` adds the dots to any
+`--shot` (`tools/surface_overlay.gd`). Tooling only.
 
 ## 2026-10-26 - Passeig Marítim in its own module
 
