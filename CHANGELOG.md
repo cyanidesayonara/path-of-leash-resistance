@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-10-26 - The dog beach handles as sand
+
+Platja dels Gossos, past Passeig Marítim's gate, is drawn as sand from the
+fence to the water but handled as pavement underfoot; only the footprints
+treated it as sand. It is sand now (`Passeig.surface`): slower and looser to
+turn on, as the seafront's own sand is, so fetch, frisbee and tug there are
+heavier work. The sea stays water and the deck below the gate stays firm.
+Test: `tests/test_passeig.gd`. The behaviour snapshot changes in one line:
+the autowalk bot reaches the home leg 0.7 s later (49.2 s to 49.9 s) for
+crossing the beach on sand; every other walk is unchanged.
+
 ## 2026-10-26 - The ground handles as it is drawn: El Parc's pond, the beach by the deck
 
 Found by holding every walk's `surface_at()` against what is drawn there
