@@ -50,8 +50,12 @@ uniform float surface = 1.0;
 // the world's animation clock in seconds (AnimClock, pinned in shot mode)
 uniform float world_t = 0.0;
 
+// arithmetic hash (no sin): software GL, which CI soaks under and some
+// players' browsers fall back to, pays dearly for transcendentals per pixel
 float hash(vec2 p) {
-	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+	vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+	p3 += dot(p3, p3.yzx + 33.33);
+	return fract((p3.x + p3.y) * p3.z);
 }
 
 // value noise, so the blotches have soft edges instead of hard cells
@@ -81,59 +85,77 @@ void fragment() {
 	float lum = dot(col, vec3(0.299, 0.587, 0.114));
 
 	// --- surface texture ---
-	// flat: how alike this pixel and its neighbours two pixels out are
-	vec2 px = SCREEN_PIXEL_SIZE * 2.0;
-	vec3 n1 = texture(screen_tex, uv + vec2(px.x, 0.0)).rgb;
-	vec3 n2 = texture(screen_tex, uv - vec2(px.x, 0.0)).rgb;
-	vec3 n3 = texture(screen_tex, uv + vec2(0.0, px.y)).rgb;
-	vec3 n4 = texture(screen_tex, uv - vec2(0.0, px.y)).rgb;
-	vec3 dmax = max(max(abs(n1 - col), abs(n2 - col)), max(abs(n3 - col), abs(n4 - col)));
-	float flat_fill = 1.0 - smoothstep(0.025, 0.09, max(max(dmax.r, dmax.g), dmax.b));
-	// hold texture off the darkest and brightest ends so it reads as
-	// surface, not as noise laid over silhouettes
+	// Everything here is skipped on pixels it would not change, and only the
+	// material a pixel is gets its noise: at 1080p on software GL the full
+	// set on every pixel cost several times the frame.
+	// how much texture this pixel takes: off the darkest and brightest ends,
+	// so it reads as surface, not as noise over silhouettes...
 	float tex_mask = smoothstep(0.04, 0.26, lum) * (1.0 - smoothstep(0.80, 0.98, lum)) * surface;
+	if (tex_mask > 0.01) {
+		// ...and only on flat fills: a pixel unlike its neighbours two pixels
+		// right and down is an edge, a person or a prop
+		vec2 px = SCREEN_PIXEL_SIZE * 2.0;
+		vec3 n1 = texture(screen_tex, uv + vec2(px.x, 0.0)).rgb;
+		vec3 n3 = texture(screen_tex, uv + vec2(0.0, px.y)).rgb;
+		vec3 dmax = max(abs(n1 - col), abs(n3 - col));
+		tex_mask *= 1.0 - smoothstep(0.025, 0.09, max(max(dmax.r, dmax.g), dmax.b));
+	}
+	if (tex_mask > 0.01) {
+		// what the ground is, from its colour; the weights overlap softly
+		float hi_c = max(max(col.r, col.g), col.b);
+		float lo_c = min(min(col.r, col.g), col.b);
+		float sat = (hi_c - lo_c) / max(hi_c, 0.001);
+		float w_water = smoothstep(0.06, 0.16, col.b - col.r) * smoothstep(-0.10, 0.02, col.g - col.r);
+		// olive and yellow-green lawns count: green need only edge out red
+		float w_grass = smoothstep(-0.02, 0.04, col.g - col.r) * smoothstep(0.04, 0.10, col.g - col.b) * (1.0 - w_water);
+		float warm = smoothstep(0.10, 0.22, col.r - col.b) * (1.0 - w_grass) * (1.0 - w_water);
+		float w_sand = warm * smoothstep(0.50, 0.66, lum);
+		float w_wood = warm * (1.0 - smoothstep(0.42, 0.58, lum));
+		float w_stone = (1.0 - smoothstep(0.08, 0.20, sat)) * (1.0 - w_water) * (1.0 - warm);
+		float w_other = clamp(1.0 - w_water - w_grass - w_sand - w_wood - w_stone, 0.0, 1.0);
 
-	// what the ground is, from its colour; the weights overlap softly
-	float hi_c = max(max(col.r, col.g), col.b);
-	float lo_c = min(min(col.r, col.g), col.b);
-	float sat = (hi_c - lo_c) / max(hi_c, 0.001);
-	float w_water = smoothstep(0.06, 0.16, col.b - col.r) * smoothstep(-0.10, 0.02, col.g - col.r);
-	// olive and yellow-green lawns count: green need only edge out red
-	float w_grass = smoothstep(-0.02, 0.04, col.g - col.r) * smoothstep(0.04, 0.10, col.g - col.b) * (1.0 - w_water);
-	float warm = smoothstep(0.10, 0.22, col.r - col.b) * (1.0 - w_grass) * (1.0 - w_water);
-	float w_sand = warm * smoothstep(0.50, 0.66, lum);
-	float w_wood = warm * (1.0 - smoothstep(0.42, 0.58, lum));
-	float w_stone = (1.0 - smoothstep(0.08, 0.20, sat)) * (1.0 - w_water) * (1.0 - warm);
-	float w_other = clamp(1.0 - w_water - w_grass - w_sand - w_wood - w_stone, 0.0, 1.0);
-
-	vec3 t = vec3(0.0);
-	// stone and paving: aggregate - sparse dark and light chips, not an even
-	// speckle - and broad stains of wear and weather
-	float chip = hash(floor(wp * 0.9));
-	float agg = (chip > 0.94 ? -0.06 : 0.0) + (chip < 0.035 ? 0.045 : 0.0);
-	t += w_stone * vec3(agg + fbm(wp / 95.0) * 0.075 + fbm(wp / 26.0) * 0.03 + fbm(wp / 7.0) * 0.022);
-	// grass: short blades (noise stretched one way), and clumps that lean
-	// yellow or blue-green
-	float blade = (vnoise(wp * vec2(1.1, 0.5)) - 0.5) * 0.7 + (hash(floor(wp * vec2(1.0, 0.5))) - 0.5) * 0.3;
-	float clump = fbm(wp / 42.0);
-	float patch = fbm(wp / 150.0);
-	t += w_grass * (vec3(blade * 0.05) + clump * vec3(0.06, 0.07, -0.015) + patch * vec3(0.05, 0.035, -0.02));
-	// sand and gravel: fine grains, a sparse scatter of darker and paler
-	// pebbles, and a slow drift in tone. (Wind ripples were tried: they put
-	// dunes on every gravel path and sidewalk of the same colour.)
-	float grain = hash(floor(wp * 1.3)) - 0.5;
-	float pebble = hash(floor(wp * 0.45) + 31.0);
-	float peb = (pebble > 0.95 ? -0.05 : 0.0) + (pebble < 0.03 ? 0.04 : 0.0);
-	t += w_sand * vec3(grain * 0.04 + peb + fbm(wp / 60.0) * 0.035);
-	// timber and dirt: a grain run one way, and darker knots of wear
-	float streak = vnoise(wp * vec2(0.07, 0.75)) - 0.5;
-	t += w_wood * vec3(streak * 0.05 + fbm(wp / 30.0) * 0.03);
-	// water: no tooth at all, a slow shimmer of light on it
-	float sh = vnoise(wp / 11.0 + vec2(world_t * 0.35, world_t * 0.12)) * vnoise(wp / 15.0 - vec2(world_t * 0.22, -world_t * 0.15));
-	t += w_water * vec3(0.7, 0.85, 1.0) * smoothstep(0.36, 0.6, sh) * 0.045;
-	// anything else: a soft tonal drift
-	t += w_other * vec3(fbm(wp / 50.0) * 0.035);
-	col += t * tex_mask * flat_fill;
+		vec3 t = vec3(0.0);
+		// stone and paving: aggregate - sparse dark and light chips, not an
+		// even speckle - and broad stains of wear and weather
+		if (w_stone > 0.01) {
+			float chip = hash(floor(wp * 0.9));
+			float agg = (chip > 0.94 ? -0.06 : 0.0) + (chip < 0.035 ? 0.045 : 0.0);
+			t += w_stone * vec3(agg + fbm(wp / 95.0) * 0.075 + (vnoise(wp / 26.0) - 0.5) * 0.03
+				+ (vnoise(wp / 7.0) - 0.5) * 0.022);
+		}
+		// grass: short blades (noise stretched one way), and clumps that lean
+		// yellow or blue-green
+		if (w_grass > 0.01) {
+			float blade = (vnoise(wp * vec2(1.1, 0.5)) - 0.5) * 0.7 + (hash(floor(wp * vec2(1.0, 0.5))) - 0.5) * 0.3;
+			float clump = vnoise(wp / 42.0) - 0.5;
+			float patch = vnoise(wp / 150.0) - 0.5;
+			t += w_grass * (vec3(blade * 0.05) + clump * vec3(0.06, 0.07, -0.015) + patch * vec3(0.05, 0.035, -0.02));
+		}
+		// sand and gravel: fine grains, a sparse scatter of darker and paler
+		// pebbles, and a slow drift in tone. (Wind ripples were tried: they
+		// put dunes on every gravel path and sidewalk of the same colour.)
+		if (w_sand > 0.01) {
+			float grain = hash(floor(wp * 1.3)) - 0.5;
+			float pebble = hash(floor(wp * 0.45) + 31.0);
+			float peb = (pebble > 0.95 ? -0.05 : 0.0) + (pebble < 0.03 ? 0.04 : 0.0);
+			t += w_sand * vec3(grain * 0.04 + peb + (vnoise(wp / 60.0) - 0.5) * 0.035);
+		}
+		// timber and dirt: a grain run one way, and darker knots of wear
+		if (w_wood > 0.01) {
+			float streak = vnoise(wp * vec2(0.07, 0.75)) - 0.5;
+			t += w_wood * vec3(streak * 0.05 + (vnoise(wp / 30.0) - 0.5) * 0.03);
+		}
+		// water: no tooth at all, a slow shimmer of light on it
+		if (w_water > 0.01) {
+			float sh = vnoise(wp / 11.0 + vec2(world_t * 0.35, world_t * 0.12)) * vnoise(wp / 15.0 - vec2(world_t * 0.22, -world_t * 0.15));
+			t += w_water * vec3(0.7, 0.85, 1.0) * smoothstep(0.36, 0.6, sh) * 0.045;
+		}
+		// anything else: a soft tonal drift
+		if (w_other > 0.01) {
+			t += w_other * vec3((vnoise(wp / 50.0) - 0.5) * 0.035);
+		}
+		col += t * tex_mask;
+	}
 
 	if (wet > 0.0) {
 		float mid = smoothstep(0.08, 0.35, lum) * (1.0 - smoothstep(0.65, 0.92, lum));

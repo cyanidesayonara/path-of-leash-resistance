@@ -19,7 +19,13 @@ film grain is gone.
   the shader the view in world units and the camera's real centre, so it
   stays put on the ground at any zoom.
 - The water's shimmer runs on `AnimClock`, so shot sweeps stay deterministic.
-All GPU work: the CPU-bound web build pays nothing for it.
+All GPU work, but GPU fill is not free (the browser pays it on weak
+GPUs, and CI soaks on software GL): the first version ran every
+material's noise on every pixel and timed out the 1920x1080 soaks. Now
+pixels it would not change (edges, near-black, near-white) are skipped,
+only the material a pixel is gets its noise, the hash has no `sin`, and
+the flatness test reads two neighbors instead of four: three or four
+noise lookups a pixel, near what the old speckle cost.
 ## 2026-10-26 - The ground handles as it is drawn: El Parc's pond, the beach by the deck
 
 Found by holding every walk's `surface_at()` against what is drawn there
