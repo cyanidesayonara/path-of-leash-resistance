@@ -26,6 +26,31 @@ pixels it would not change (edges, near-black, near-white) are skipped,
 only the material a pixel is gets its noise, the hash has no `sin`, and
 the flatness test reads two neighbors instead of four: three or four
 noise lookups a pixel, near what the old speckle cost.
+## 2026-10-26 - El Mercat's hall drawn by its own module
+
+The tenth step of moving per-walk code out of main.gd. El Mercat already
+had `world/mercat.gd` for its furniture, and it becomes the walk's module:
+the hall's terrazzo floor, sawdust, stall blocks and their signs
+(`draw_live`), the MERCAT and PLAÇA arches (`draw_overhead`), the green
+cast-iron columns (`draw_column`), and the greengrocer's van, which it
+already drew, now reached through the `draw_van` hook. The hall's edge
+style, its crates and marking spots, its walkway color and the awnings'
+overhead entries stay in main, in tables several walks share.
+`lvl` comparisons in main.gd: 127 down to 123. The behaviour snapshot over
+all 21 walks is byte-identical to main, and six screenshots of El Mercat
+(every 1000 px and the plaça) match pixel for pixel outside the version
+label.
+## 2026-10-26 - The dog beach handles as sand
+
+Platja dels Gossos, past Passeig Marítim's gate, is drawn as sand from the
+fence to the water but handled as pavement underfoot; only the footprints
+treated it as sand. It is sand now (`Passeig.surface`): slower and looser to
+turn on, as the seafront's own sand is, so fetch, frisbee and tug there are
+heavier work. The sea stays water and the deck below the gate stays firm.
+Test: `tests/test_passeig.gd`. The behaviour snapshot changes in one line:
+the autowalk bot reaches the home leg 0.7 s later (49.2 s to 49.9 s) for
+crossing the beach on sand; every other walk is unchanged.
+
 ## 2026-10-26 - The ground handles as it is drawn: El Parc's pond, the beach by the deck
 
 Found by holding every walk's `surface_at()` against what is drawn there
