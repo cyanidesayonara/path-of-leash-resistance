@@ -2,6 +2,30 @@
 
 Append-only session history, newest first.
 
+## 2026-10-26 - The ground's texture by what the ground is
+
+The grade's surface pass laid one texture over every pixel - a 2 px speckle
+and soft blotches - so water, lawn, timber and paving all had the same tooth,
+and the walks read as crayon on paper. `hud/grade.gdshader` now reads what
+each pixel's colour is and textures it as that: sparse aggregate chips and
+stains on stone, paving and asphalt; short blades and lush or worn patches on
+grass; fine grit and a scatter of pebbles on sand and gravel; a grain along
+timber and dirt; and no tooth at all on water, only a slow shimmer of light.
+It goes only on broad flat fills (a pixel unlike its neighbours is an edge,
+a person or a prop), so everything on the ground stays crisp. The animated
+film grain is gone.
+- The texture was keyed to screen pixels plus the camera's world position,
+  so it crept along at the zoom's excess as the camera moved. Main now gives
+  the shader the view in world units and the camera's real centre, so it
+  stays put on the ground at any zoom.
+- The water's shimmer runs on `AnimClock`, so shot sweeps stay deterministic.
+All GPU work, but GPU fill is not free (the browser pays it on weak
+GPUs, and CI soaks on software GL): the first version ran every
+material's noise on every pixel and timed out the 1920x1080 soaks. Now
+pixels it would not change (edges, near-black, near-white) are skipped,
+only the material a pixel is gets its noise, the hash has no `sin`, and
+the flatness test reads two neighbors instead of four: three or four
+noise lookups a pixel, near what the old speckle cost.
 ## 2026-10-26 - El Mercat's hall drawn by its own module
 
 The tenth step of moving per-walk code out of main.gd. El Mercat already

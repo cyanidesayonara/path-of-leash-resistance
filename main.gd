@@ -7834,17 +7834,18 @@ func _process(_delta: float) -> void:
 	if _redraw_acc >= 0.033 or shake_t > 0.0 or teeter.active or grind.active:
 		_redraw_acc = 0.0
 		queue_redraw()
-	# keep the grade's surface texture pinned to world space, and drift the
-	# film grain. Two uniform writes a frame - negligible next to a redraw.
+	# keep the grade's surface texture pinned to world space, and give the
+	# water's shimmer its clock. Three uniform writes a frame - negligible
+	# next to a redraw.
 	if grade_rect != null:
 		var gm: ShaderMaterial = grade_rect.material
-		# the screen's top-left in world space. Half of the ACTUAL viewport,
-		# since a wide window sees past the reference frame's edges - using
-		# half of 1280x720 would drag the ground texture along with the camera
-		var view_px := get_viewport_rect().size
-		gm.set_shader_parameter("view_px", view_px)
-		gm.set_shader_parameter("cam_off", cam.position - view_px * 0.5)
-		gm.set_shader_parameter("time_seed", fmod(elapsed * 7.0, 100.0))
+		# the view in world units: the ACTUAL viewport (a wide window sees past
+		# the reference frame's edges) over the zoom. In screen pixels the
+		# texture crept along at the zoom's excess as the camera moved.
+		var view_w: Vector2 = get_viewport_rect().size / cam.zoom
+		gm.set_shader_parameter("view_px", view_w)
+		gm.set_shader_parameter("cam_off", cam.get_screen_center_position() - view_w * 0.5)
+		gm.set_shader_parameter("world_t", AnimClock.msec() / 1000.0)
 
 
 func _tick_mood(delta: float) -> void:
