@@ -2,6 +2,23 @@
 
 Append-only session history, newest first.
 
+## 2026-10-26 - El Diluvi in its own module
+
+The ninth step of moving per-walk code out of main.gd. El Diluvi's drawing
+moves into `systems/diluvi.gd`: the street's gutters and drains, the cafe
+terrace stacked and chained in the rain, the arcade's square pillars
+(`draw_column`, lampposts down the other side), and El Porxo past the gate
+(`draw_freedom_ground`, and its pantile roofs and terrats as
+`draw_freedom_beyond`); the street itself is `draw_live`. The wet meter
+(`_tick_wet`) and the shelters stay in main - they are the walk's rules,
+and moving the tick would reorder it against the wind's push - as do the
+edge layer's roofs, the tree kinds, the night lamps and the gate's style,
+which sit in tables several walks share.
+`lvl` comparisons in main.gd: 134 down to 130. The behaviour snapshot over
+all 21 walks is byte-identical to main, and five screenshots of El Diluvi
+(every 1500 px and El Porxo) match pixel for pixel outside the version
+label.
+
 ## 2026-10-26 - Passeig Marítim in its own module
 
 The eighth step of moving per-walk code out of main.gd. The seafront's
