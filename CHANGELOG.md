@@ -14,6 +14,41 @@ swimming across its rect's dry corners and the strip of Passeig Marítim's
 beach by the deck handling as pavement (fixed separately); the rest it rings
 are tree crowns, clothes and night-blue paving. Tooling only.
 
+## 2026-10-26 - El Diluvi in its own module
+
+The ninth step of moving per-walk code out of main.gd. El Diluvi's drawing
+moves into `systems/diluvi.gd`: the street's gutters and drains, the cafe
+terrace stacked and chained in the rain, the arcade's square pillars
+(`draw_column`, lampposts down the other side), and El Porxo past the gate
+(`draw_freedom_ground`, and its pantile roofs and terrats as
+`draw_freedom_beyond`); the street itself is `draw_live`. The wet meter
+(`_tick_wet`) and the shelters stay in main - they are the walk's rules,
+and moving the tick would reorder it against the wind's push - as do the
+edge layer's roofs, the tree kinds, the night lamps and the gate's style,
+which sit in tables several walks share.
+`lvl` comparisons in main.gd: 134 down to 130. The behaviour snapshot over
+all 21 walks is byte-identical to main, and five screenshots of El Diluvi
+(every 1500 px and El Porxo) match pixel for pixel outside the version
+label.
+## 2026-10-26 - Passeig Marítim: sand swept up the walk, and a clean gate
+
+The seafront looked swept with a ruler: six sand drifts on bare paving, and
+nothing else from the beach anywhere on the walk. Now the whole promenade
+is lightly sand-swept, all drawing (`systems/passeig.gd`, `_sand_creep`): a
+ragged spill over the deck's seaward edge, sand lodged in some of the plank
+seams and the paving joints, thin wisps blowing inland and fading out, soft
+dustings on the concrete, a little banked against the palm kerbs and the
+benches, and trails of footprints up from each beach ramp. The six drifts
+that slow her are unchanged. In the rain it goes dark and wet with the rest.
+It never moves, so each 200 px stretch is built once, the first time it is
+in view, and copied into the world's batch after that: on this machine the
+world draw went from 4.48-4.63 ms to 4.81 ms (p50) with the same draw calls.
+- The edge between the walk and the dog beach: the walk's ground started
+  40 px past the gate, under the dog beach's, so the deck ran on as a plain
+  timber stub half over a palm's cut-out, the sea's straight edge cut across
+  the espigó, and the wet sand and concrete stopped 10 px off the beach's
+  edge. The land now stops where the dog beach starts, the deck ends on an
+  end board, and the espigó's rocks are drawn over the walk's sea too.
 ## 2026-10-26 - A surface map of every walk
 
 `tools/surface_map.sh` photographs each walk (five points and off leash)
