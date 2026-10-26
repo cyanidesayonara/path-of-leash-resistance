@@ -295,6 +295,19 @@ Draw calls are what the web build pays for, and every circle and polygon is
 one in the Compatibility renderer. Draw runs of filled shapes through
 `ShapeBatch` (`systems/shape_batch.gd`): the same pixels in one call.
 
+Surface map (what the ground under each walk handles as, dotted over its
+screenshots: grey pavement, green grass, yellow sand, brown mud, blue water,
+magenta tile), into `surface-map/` with a sheet per walk; ground drawn as one
+thing and handled as another shows at a glance. `--surface-map` adds the dots
+to any `--shot`. With `SURF_DUMP=1` it takes clean shots instead and
+`tools/surface_check.py` holds what is drawn under each point against what it
+handles as, ringing mismatches in `OUT/check-*.png` (colour is a guess at
+material: expect tree crowns, clothes and night-blue paving among them):
+```
+GODOT=godot/Godot_v4.7-stable_win64.exe bash tools/surface_map.sh [OUT] [LEVEL...]
+SURF_DUMP=1 GODOT=godot/Godot_v4.7-stable_win64.exe bash tools/surface_map.sh [OUT] [LEVEL...]
+```
+
 Level inventory (what each walk contains: props by kind, patches, hazards,
 goals) and the design brief every walk is being rebuilt to,
 `docs/LEVEL_DESIGN.md`:
