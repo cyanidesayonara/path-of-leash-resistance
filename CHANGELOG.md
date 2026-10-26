@@ -2,6 +2,23 @@
 
 Append-only session history, newest first.
 
+## 2026-10-26 - The ground handles as it is drawn: El Parc's pond, the beach by the deck
+
+Found by holding every walk's `surface_at()` against what is drawn there
+(`tools/surface_map.sh`):
+- El Parc's pond is drawn as a blob inside its Rect2, but swimming used the
+  rect, so at its corners she paddled across what is dry gravel on screen.
+  Swimming, the owner wading and the wobble at the water's edge now follow
+  the drawn outline out to the middle of its muddy bank
+  (`main.water_has_point`, `POND_SWIM_GROW`). The rect is kept for the props
+  kept out of the pond, the prize, and the owner's weave round it. Test:
+  `tests/test_pond_swim.gd`.
+- Passeig Marítim's beach handled as sand only to x 340, so the last 40 px
+  of drawn sand beside the deck handled as pavement. It runs to the deck
+  now (`Passeig.SAND_TO_X`).
+The behaviour snapshot over all 21 walks is unchanged: the autowalk never
+reaches either spot.
+
 ## 2026-10-26 - Passeig Marítim in its own module
 
 The eighth step of moving per-walk code out of main.gd. The seafront's
