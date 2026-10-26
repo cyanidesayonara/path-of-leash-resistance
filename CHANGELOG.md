@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-10-26 - La Castanyada drawn by its own module
+
+`systems/castanyada.gd` takes the festival walk's drawing out of main.gd:
+the plaça's paving, stage and stalls (`draw_live`), the lantern strings,
+stall bulbs and lamp-lit fronts on the overhead layer (`draw_overhead`),
+and the festival yard on the off-leash plaça (`draw_yard`, the hook the
+yards already call, now also called by the plaça). The candy, the
+roaster's queue, the braziers and the chestnut sacks stay in main: rules
+and shared prop loops, not the walk's picture. Behaviour snapshot
+byte-identical over every walk; La Castanyada and El Gòtic shots
+pixel-identical.
+
 ## 2026-10-26 - The ground's texture by what the ground is
 
 The grade's surface pass laid one texture over every pixel - a 2 px speckle
@@ -26,6 +38,7 @@ pixels it would not change (edges, near-black, near-white) are skipped,
 only the material a pixel is gets its noise, the hash has no `sin`, and
 the flatness test reads two neighbors instead of four: three or four
 noise lookups a pixel, near what the old speckle cost.
+
 ## 2026-10-26 - El Mercat's hall drawn by its own module
 
 The tenth step of moving per-walk code out of main.gd. El Mercat already
