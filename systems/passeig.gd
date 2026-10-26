@@ -791,9 +791,14 @@ static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
 # bike path, promenade, then cafe paving - so once the sea and the sand
 # are ruled out, everything left is firm ground. Falling through to the
 # generic verge test made the boardwalk and the cafe side read as lawn,
-# which is a third of the walk handling wrongly.
+# which is a third of the walk handling wrongly. The sand runs to the deck,
+# SAND_TO_X: it stopped 40 px short, so the strip of beach beside the deck
+# handled as pavement.
+const SAND_TO_X := 380.0
+
+
 static func surface(_m: Node2D, p: Vector2) -> int:
-	if p.x < 340.0:
+	if p.x < SAND_TO_X:
 		return Surfaces.S.SAND
 	return Surfaces.S.PAVEMENT
 

@@ -9685,7 +9685,7 @@ func surface_at(p: Vector2) -> int:
 	# this and then asks surfaces.gd, rather than each re-deriving it from a
 	# different bit of geometry the way the old bools did.
 	for w: Rect2 in water:
-		if w.has_point(p):
+		if water_has_point(w, p):
 			return Surfaces.S.WATER
 	for pt: Dictionary in patches:
 		if patch_has_point(pt, p):
@@ -10337,6 +10337,41 @@ func _tick_grind(delta: float) -> void:
 	feed.say("%s!" % String(rails[ri]["name"]), EventFeed.Tone.LOUD)
 
 
+# The park's pond is drawn as a blob inside its Rect2 (_draw_world: the bank at
+# 1.08 of this outline, the water at 0.94). Swimming follows the drawing out to
+# the middle of the bank: still generous, but not the rect's corners, which
+# are dry gravel on screen and had her paddling across them.
+const POND_SWIM_GROW := 1.0
+
+
+func pond_outline() -> Dictionary:
+	return {"y": pond.get_center().y, "at": 0.5, "rx": pond.size.x * 0.5,
+		"ry": pond.size.y * 0.5, "seed": 2.7}
+
+
+# whether p is in this piece of water, `inset` px in from its edge
+func water_has_point(w: Rect2, p: Vector2, inset := 0.0) -> bool:
+	if pond.size.x > 0.0 and w == pond:
+		var o := pond_outline()
+		var d := p - pond.get_center()
+		var nx := d.x / maxf(1.0, float(o["rx"]) - inset)
+		var ny := d.y / maxf(1.0, float(o["ry"]) - inset)
+		return sqrt(nx * nx + ny * ny) <= _patch_wobble(o, atan2(ny, nx)) * POND_SWIM_GROW
+	return w.grow(-inset).has_point(p)
+
+
+# distance from a point outside this water to its edge
+func _dist_to_water_edge(w: Rect2, p: Vector2) -> float:
+	if pond.size.x > 0.0 and w == pond:
+		var o := pond_outline()
+		var c := pond.get_center()
+		var d := p - c
+		var ang := atan2(d.y / float(o["ry"]), d.x / float(o["rx"]))
+		var r := _patch_wobble(o, ang) * POND_SWIM_GROW
+		return p.distance_to(c + Vector2(cos(ang) * float(o["rx"]) * r, sin(ang) * float(o["ry"]) * r))
+	return _dist_to_rect_edge(w, p)
+
+
 func _dist_to_rect_edge(r: Rect2, p: Vector2) -> float:
 	# distance from a point OUTSIDE the rect to its nearest edge
 	var cx := clampf(p.x, r.position.x, r.end.x)
@@ -10430,9 +10465,9 @@ func _hazards(delta: float) -> void:
 		var hum_wet := false
 		var bank_x: float = human.pond_bank_x
 		for w: Rect2 in water:
-			if w.grow(-4.0).has_point(dog.global_position):
+			if water_has_point(w, dog.global_position, 4.0):
 				dog_wet = true
-			if w.grow(-4.0).has_point(human.global_position):
+			if water_has_point(w, human.global_position, 4.0):
 				hum_wet = true
 				# out the side he came in by, whichever is nearer
 				bank_x = (w.position.x - 24.0
@@ -10443,7 +10478,7 @@ func _hazards(delta: float) -> void:
 			# getting in (she loves water) and losing it costs nothing but the
 			# combo, so this is pure comedy plus a chance to look graceful.
 			if not dog_wet and not auto_walk and dog.velocity.length() > 210.0:
-				if _dist_to_rect_edge(w, dog.global_position) < 26.0:
+				if _dist_to_water_edge(w, dog.global_position) < 26.0:
 					_start_teeter("water", w.get_center())
 		var was_swim: bool = dog.swimming
 		dog.swimming = dog_wet
@@ -12103,13 +12138,13 @@ func _draw_world() -> void:
 		# now: a muddy bank and the water inside it, both from the same
 		# primitive as the puddles and the wet cement.
 		#
-		# The Rect2 is kept for everything else that asks about the pond - the
-		# swim test, the keep-out margins that stop props being placed in it,
-		# the prize in the middle - because being slightly generous about where
-		# the water is, is the right way round for all of those.
+		# The Rect2 is kept for what asks about the pond in general - the
+		# keep-out margins that stop props being placed in it, the prize in
+		# the middle - because being generous about where the water is, is the
+		# right way round for those. Swimming follows this outline
+		# (water_has_point).
 		var pc := pond.get_center()
-		var bank := {"y": pc.y, "at": 0.5, "rx": pond.size.x * 0.5,
-			"ry": pond.size.y * 0.5, "seed": 2.7}
+		var bank := pond_outline()
 		# path-relative x would drag the pond sideways on a bend; the park does
 		# not bend and the pond is authored against the level, so pin it
 		# muddy bank, then the water inside it, from one outline
