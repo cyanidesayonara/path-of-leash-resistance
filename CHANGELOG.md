@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-10-26 - The surface map checks itself
+
+`SURF_DUMP=1 tools/surface_map.sh` takes clean shots and prints each
+point's `surface_at()` (`--surface-map=dump`), and `tools/surface_check.py`
+reads the colour drawn round each point as a material and rings every place
+the two disagree in a way a player would feel: water you cannot swim in, a
+lawn that handles as paving, paving or gravel that handles as grass, dry
+ground that handles as water. Run over all 21 walks it found El Parc's pond
+swimming across its rect's dry corners and the strip of Passeig Marítim's
+beach by the deck handling as pavement (fixed separately); the rest it rings
+are tree crowns, clothes and night-blue paving. Tooling only.
+
 ## 2026-10-26 - A surface map of every walk
 
 `tools/surface_map.sh` photographs each walk (five points and off leash)

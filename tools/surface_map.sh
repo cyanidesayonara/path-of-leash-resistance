@@ -8,6 +8,9 @@
 #
 # Writes OUT/LEVEL_Y.png (default OUT: surface-map/), all walks by default,
 # and OUT/sheet-LEVEL.png per walk when Pillow is there. Needs a real window.
+# SURF_DUMP=1 takes clean shots and writes each one's points to LEVEL_Y.txt
+# instead, then runs tools/surface_check.py over them: what is drawn held
+# against what it handles as, mismatches ringed in OUT/check-*.png.
 set -uo pipefail
 
 cd "$(dirname "$0")/.."
@@ -16,6 +19,8 @@ shift || true
 GODOT="${GODOT:-godot/Godot_v4.7-stable_win64.exe}"
 LEVELS="${*:-barri street park beach rain market oldtown trail station besos site spook scrap guell neteja montjuic partit port reial vet tibidabo}"
 YS="${YS:-0 -1250 -2500 -3750 -4800 free}"
+MAP=--surface-map
+[ -n "${SURF_DUMP:-}" ] && MAP=--surface-map=dump
 
 mkdir -p "${OUT}"
 for lv in ${LEVELS}; do
@@ -26,8 +31,12 @@ for lv in ${LEVELS}; do
       *) extra=("--shot-y=$y") ;;
     esac
     timeout 120 "${GODOT}" --fixed-fps 60 --resolution 1280x720 --path . --rendering-method gl_compatibility \
-      -- --shot --surface-map --seed=1 --level="${lv}" --shot-at=60 --shot-zoom=0.75 "${extra[@]}" \
-      --shot-out="${OUT}/${lv}_${y}.png" --shot-quit >/dev/null 2>&1 || echo "${lv} ${y}: no shot"
+      -- --shot "${MAP}" --seed=1 --level="${lv}" --shot-at=60 --shot-zoom=0.75 "${extra[@]}" \
+      --shot-out="${OUT}/${lv}_${y}.png" --shot-quit > "${OUT}/${lv}_${y}.log" 2>&1 || echo "${lv} ${y}: no shot"
+    if [ -n "${SURF_DUMP:-}" ]; then
+      grep '^SURF ' "${OUT}/${lv}_${y}.log" > "${OUT}/${lv}_${y}.txt"
+    fi
+    rm -f "${OUT}/${lv}_${y}.log"
   done
   python - "${OUT}" "${lv}" "${YS}" <<'EOF' 2>/dev/null || true
 import sys, os
@@ -43,4 +52,5 @@ if ims:
     sheet.save(os.path.join(out, 'sheet-%s.png' % lv))
 EOF
 done
+[ -n "${SURF_DUMP:-}" ] && python tools/surface_check.py "${OUT}"
 echo "surface maps in ${OUT}/"
