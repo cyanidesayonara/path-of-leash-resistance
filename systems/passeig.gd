@@ -21,6 +21,255 @@ const TOWEL_HAIR := [Color(0.20, 0.14, 0.10), Color(0.62, 0.42, 0.20), Color(0.8
 const TOWEL_SUITS := [Color(0.16, 0.30, 0.62), Color(0.86, 0.26, 0.30), Color(0.12, 0.52, 0.46), Color(0.96, 0.62, 0.20)]
 
 
+# SAND CREEP: what the wind and a thousand pairs of feet bring up off the
+# beach, all down the walk. Drawing only - the six drifts in the level data
+# are the sand that slows her; this is the dusting round them that makes a
+# seafront look lived on. It banks up along the deck's seaward edge, lodges in
+# the plank seams and the paving joints, blows inland in thin wisps that fade
+# the further they get, piles against the windward side of the palm kerbs and
+# the benches, and leaves the beach on people's feet up every ramp.
+# Hashed from position, never the RNG: the same walk every visit.
+const CREEP_COL := Color(0.87, 0.79, 0.59)        # dry sand, on the timber
+const CREEP_DUST := Color(0.86, 0.74, 0.48)       # warmer, to show on pale concrete
+const CREEP_DECK_X := 380.0                       # the sand's edge, where the deck starts
+const CREEP_INLAND := 980.0                       # the cafe strip, where it gives out
+const CREEP_FRINGE_MAX := 24.0                    # widest spill over the deck edge
+const CREEP_WISP_ROW := 38.0                      # one chance of a wisp per this many px
+const CREEP_WISP_CHANCE := 0.5
+const CREEP_GRAIN_ROW := 18.0
+const CREEP_DUSTING_ROW := 110.0
+const CREEP_DUSTING_CHANCE := 0.45
+const CREEP_CHUNK := 200.0                        # built and cached a stretch at a time
+const CREEP_REACH := 80.0                         # furthest a piece reaches from its anchor
+
+static var _creep_cache := {}
+
+
+static func _hash(i: float, s: float) -> float:
+	var v := sin(i * 12.9898 + s * 78.233) * 43758.5453
+	return v - floor(v)
+
+
+# slow, smooth 0..1 along the walk: where the wind has piled more
+static func _swell(y: float, s: float) -> float:
+	return clampf(0.5 + 0.32 * sin(y * 0.0123 + s) + 0.18 * sin(y * 0.0317 + s * 2.3), 0.0, 1.0)
+
+
+static func _fringe(y: float) -> float:
+	return 4.0 + CREEP_FRINGE_MAX * pow(_swell(y, 1.3), 2.4) + 5.0 * _swell(y * 3.1, 4.0)
+
+
+# a tongue of blown sand from `from`, `length` long inland, blunt at the
+# seaward end and thinning to nothing; its edge ragged by `s`
+static func _tongue(b: ShapeBatch, from: Vector2, length: float, width: float, slope: float, s: float, col: Color) -> void:
+	const STEPS := 7
+	var top := PackedVector2Array()
+	var bot := PackedVector2Array()
+	for j in range(STEPS + 1):
+		var t := float(j) / float(STEPS)
+		var hw := width * 0.5 * pow(1.0 - t, 0.8) * minf(1.0, 0.45 + t * 3.0)
+		var rag := 0.7 + 0.6 * _hash(float(j), s)
+		var rag2 := 0.7 + 0.6 * _hash(float(j) + 31.0, s)
+		var c := from + Vector2(t * length, t * length * slope)
+		top.append(c + Vector2(0.0, -hw * rag))
+		bot.append(c + Vector2(0.0, hw * rag2))
+	bot.reverse()
+	top.append_array(bot)
+	b.polygon(top, col)
+
+
+# a soft blot with a wobbling edge, `s` picking the wobble
+static func _smudge(b: ShapeBatch, at: Vector2, rx: float, ry: float, s: float, col: Color) -> void:
+	const N := 14
+	var poly := PackedVector2Array()
+	for j in range(N):
+		var ang := TAU * float(j) / float(N)
+		var r := 0.72 + 0.22 * sin(ang * 2.0 + s) + 0.16 * _hash(float(j), s)
+		poly.append(at + Vector2(cos(ang) * rx * r, sin(ang) * ry * r))
+	b.polygon(poly, col)
+
+
+# The sand never moves, so each CREEP_CHUNK of the walk is built once, as
+# triangles, the first time it comes into view, and every frame after that
+# only copies the visible chunks into the world's batch. Building it per
+# frame cost the world draw ~2.7 ms.
+static func _sand_creep(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	var lo := maxf(vt - CREEP_REACH, m.GATE_Y - 30.0)
+	var hi := minf(vb + CREEP_REACH, m.START_Y + 200.0)
+	if hi <= lo:
+		return
+	var wet := Game.weather == "rain"
+	var c := int(floorf(lo / CREEP_CHUNK))
+	while float(c) * CREEP_CHUNK < hi:
+		var key := Vector2i(c, 1 if wet else 0)
+		var chunk: ShapeBatch = _creep_cache.get(key)
+		if chunk == null:
+			chunk = _creep_chunk(m, float(c) * CREEP_CHUNK, float(c + 1) * CREEP_CHUNK, wet)
+			_creep_cache[key] = chunk
+		chunk.append_to(b)
+		c += 1
+
+
+# everything whose anchor lies in [y0, y1): the first multiple of each row's
+# step at or after y0, so a row is in exactly one chunk
+static func _row0(y0: float, step: float) -> float:
+	return ceilf(y0 / step) * step
+
+
+static func _creep_chunk(m: Node2D, y0: float, y1: float, wet: bool) -> ShapeBatch:
+	var b := ShapeBatch.new()
+	var sand := CREEP_COL.darkened(0.22) if wet else CREEP_COL
+	var dust := CREEP_DUST.darkened(0.22) if wet else CREEP_DUST
+	var top := maxf(y0, m.GATE_Y - 30.0)
+	var bot := minf(y1, m.START_Y + 200.0)
+	if bot <= top:
+		return b
+	# the spill over the deck edge: one ragged band, row by row, so it never
+	# shows a seam; a little denser hard against the sand
+	const ROW := 16.0
+	var y := _row0(top, ROW)
+	while y < bot:
+		var w0 := _fringe(y)
+		var w1 := _fringe(y + ROW)
+		var x := CREEP_DECK_X - 2.0
+		b.polygon(PackedVector2Array([Vector2(x, y), Vector2(x + w0, y), Vector2(x + w1, y + ROW), Vector2(x, y + ROW)]),
+			Color(sand.r, sand.g, sand.b, 0.24))
+		b.polygon(PackedVector2Array([Vector2(x, y), Vector2(x + w0 * 0.5, y), Vector2(x + w1 * 0.5, y + ROW), Vector2(x, y + ROW)]),
+			Color(sand.r, sand.g, sand.b, 0.18))
+		y += ROW
+	# sand lodged in the gaps between the planks, here and there, from the
+	# edge of the spill
+	const PLANK := 22.0
+	y = _row0(top, PLANK)
+	while y < bot:
+		var k := y / PLANK
+		var edge := CREEP_DECK_X + _fringe(y) * 0.8
+		var run := 6.0 + 34.0 * pow(_hash(k, 2.0), 2.0)
+		if _hash(k, 3.0) > 0.5 and edge + run > CREEP_DECK_X + 12.0:
+			var mid := minf(edge + run * 0.5, 486.0)
+			b.line(Vector2(edge - 4.0, y - 1.0), Vector2(mid, y - 1.0), Color(sand.r, sand.g, sand.b, 0.3), 1.5)
+			b.line(Vector2(mid, y - 1.0), Vector2(minf(edge + run, 488.0), y - 1.0), Color(sand.r, sand.g, sand.b, 0.14), 1.5)
+		if _hash(k, 5.0) > 0.86:
+			var px := 400.0 + 70.0 * _hash(k, 6.0)
+			b.line(Vector2(px, y - 1.0), Vector2(px + 6.0 + 12.0 * _hash(k, 7.0), y - 1.0),
+				Color(sand.r, sand.g, sand.b, 0.26), 1.5)
+		y += PLANK
+	# the wind's wisps: mostly starting on the deck or the bike path and
+	# reaching across the promenade, fainter the further inland
+	y = _row0(top, CREEP_WISP_ROW)
+	while y < bot:
+		var k := y / CREEP_WISP_ROW
+		if _hash(k, 7.0) < CREEP_WISP_CHANCE:
+			var x0 := 392.0 + 230.0 * pow(_hash(k, 8.0), 1.8)
+			var reach := 1.0 - (x0 - 392.0) / 300.0
+			var length := minf((36.0 + 170.0 * pow(_hash(k, 9.0), 1.6)) * (0.5 + 0.5 * reach), CREEP_INLAND - x0)
+			var width := 7.0 + 14.0 * _hash(k, 10.0)
+			var slope := 0.16 * sin(y * 0.0007) + 0.08 * (_hash(k, 11.0) - 0.5)
+			var at := Vector2(x0, y + CREEP_WISP_ROW * _hash(k, 12.0))
+			var col := sand if x0 < 490.0 else dust
+			var a := 0.07 + 0.06 * reach
+			for pass_i in range(2):
+				var g := 1.0 - float(pass_i) * 0.4
+				_tongue(b, at, length * g, width * (0.6 + 0.4 * g), slope, k + float(pass_i) * 17.0,
+					Color(col.r, col.g, col.b, a))
+		# a few faint ones well out on the promenade
+		if _hash(k, 13.0) < 0.18:
+			var at := Vector2(600.0 + 300.0 * _hash(k, 14.0), y + CREEP_WISP_ROW * _hash(k, 15.0))
+			_tongue(b, at, 22.0 + 60.0 * _hash(k, 16.0), 6.0 + 8.0 * _hash(k, 17.0), 0.05, k + 51.0,
+				Color(dust.r, dust.g, dust.b, 0.08))
+		y += CREEP_WISP_ROW
+	# thin dustings trodden out over the paving: soft, irregular, stretched
+	# along the wind, and far thinner than the drifts that slow her
+	y = _row0(top, CREEP_DUSTING_ROW)
+	while y < bot:
+		var k := y / CREEP_DUSTING_ROW
+		if _hash(k, 40.0) < CREEP_DUSTING_CHANCE:
+			var u := _hash(k, 41.0)
+			var at := Vector2(500.0 + 420.0 * pow(u, 1.5), y + CREEP_DUSTING_ROW * _hash(k, 42.0))
+			var size := (1.0 - 0.55 * u) * (0.5 + _hash(k, 43.0))
+			var rx := 26.0 + 50.0 * size
+			var ry := 12.0 + 18.0 * size * _hash(k, 44.0) + 6.0
+			_smudge(b, at, rx, ry, k, Color(dust.r, dust.g, dust.b, 0.08))
+			_smudge(b, at - Vector2(rx * 0.18, 0.0), rx * 0.6, ry * 0.65, k + 9.0, Color(dust.r, dust.g, dust.b, 0.06))
+		y += CREEP_DUSTING_ROW
+	# grit in the paving joints, from the seaward end
+	const JOINT := 150.0
+	y = _row0(top, JOINT)
+	while y < bot:
+		var k := y / JOINT
+		b.line(Vector2(572.0, y), Vector2(572.0 + 10.0 + 60.0 * pow(_hash(k, 18.0), 2.0), y),
+			Color(dust.r, dust.g, dust.b, 0.22), 1.5)
+		y += JOINT
+	# a little banked against the windward side of the seaward palms' kerbs,
+	# and less at the cafe side's
+	for ps: Vector2 in m.palm_spots:
+		if ps.y < top or ps.y >= bot:
+			continue
+		var seaward := ps.x < 700.0
+		var hs := _hash(ps.y, 19.0)
+		if not seaward and hs < 0.55:
+			continue
+		var col := sand if seaward else dust
+		var bank := PackedVector2Array()
+		var rx := (6.0 + 6.0 * hs) * (1.0 if seaward else 0.6)
+		var ry := 26.0 + 6.0 * _hash(ps.y, 20.0)
+		for j in range(9):
+			var ang := PI * 0.5 + PI * float(j) / 8.0
+			bank.append(Vector2(ps.x - 27.0, ps.y) + Vector2(cos(ang) * rx, sin(ang) * ry))
+		b.polygon(bank, Color(col.r, col.g, col.b, 0.26 if seaward else 0.16))
+	# the same against the benches' seaward side
+	for bn: Vector2 in m.benches:
+		if bn.y < top or bn.y >= bot:
+			continue
+		var hb := _hash(bn.y, 21.0)
+		var mound := PackedVector2Array()
+		for j in range(9):
+			var ang := PI * 0.5 + PI * float(j) / 8.0
+			mound.append(Vector2(bn.x - 8.0, bn.y) + Vector2(cos(ang) * (4.0 + 4.0 * hb), sin(ang) * 22.0))
+		b.polygon(mound, Color(dust.r, dust.g, dust.b, 0.2))
+	# carried up off the beach on feet: a light smear at the head of each
+	# ramp, then trails of prints fading out across the promenade
+	var heads: Array[float] = [LevelBuild.BEACH_TOWER.y]
+	for sp: Vector2 in LevelBuild.BEACH_SHOWERS:
+		heads.append(sp.y)
+	for ry0: float in heads:
+		if ry0 < top or ry0 >= bot:
+			continue
+		_tongue(b, Vector2(CREEP_DECK_X, ry0), 120.0, 34.0, 0.0, ry0, Color(sand.r, sand.g, sand.b, 0.16))
+		for tr in range(3):
+			var off := -14.0 + 13.0 * float(tr) + 4.0 * _hash(ry0, 22.0 + float(tr))
+			var span := 160.0 + 180.0 * _hash(ry0, 25.0 + float(tr))
+			var step := 0
+			var fx := 400.0 + 10.0 * float(tr)
+			while fx < 400.0 + span:
+				var fade := 1.0 - (fx - 400.0) / span
+				var side := 4.0 if step % 2 == 0 else -4.0
+				var fp := Vector2(fx, ry0 + off + side + 7.0 * sin(fx * 0.017 + float(tr)))
+				var col := sand if fx < 490.0 else dust
+				# heading inland: the ball of the foot ahead, the heel behind
+				var pc := Color(col.r, col.g, col.b, 0.26 * fade + 0.04)
+				b.coarse(fp + Vector2(2.2, 0.0), 2.4, pc)
+				b.coarse(fp + Vector2(-2.6, 0.0), 1.9, pc)
+				fx += 19.0 + 3.0 * _hash(fx, 28.0)
+				step += 1
+	# loose grains, thickest by the sand
+	y = _row0(top, CREEP_GRAIN_ROW)
+	while y < bot:
+		var k := y / CREEP_GRAIN_ROW
+		var n := 2 + int(4.0 * _hash(k, 30.0))
+		for gi in range(n):
+			var u := _hash(k * 7.0 + float(gi), 31.0)
+			var gx := CREEP_DECK_X + (CREEP_INLAND - CREEP_DECK_X) * pow(u, 2.6)
+			var gy := y + CREEP_GRAIN_ROW * _hash(k * 7.0 + float(gi), 32.0)
+			var fade := 1.0 - (gx - CREEP_DECK_X) / (CREEP_INLAND - CREEP_DECK_X)
+			var col := sand if gx < 490.0 else dust
+			# a grain is a pixel or two across: a square, two triangles
+			var gs := 1.4 + 1.6 * _hash(k * 7.0 + float(gi), 33.0)
+			b.rect(Rect2(gx, gy, gs, gs), Color(col.r, col.g, col.b, 0.14 + 0.3 * fade))
+		y += CREEP_GRAIN_ROW
+	return b
+
+
 # THE BLOCKS BEHIND THE SEAFRONT, from above: their flat roofs. Tiled
 # terraces inside a parapet, a stairwell hut and a water tank or two, a
 # sunshade or a washing line, with a narrow street between blocks. Hashed from
@@ -403,6 +652,10 @@ static func draw_edge_layer(_m: Node2D, _c: Object, _vt: float, _vb: float) -> v
 
 # the ground from the sea to the blocks, in place of main's lawn and walkway
 static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: float, ctop: float, vt: float, vb: float) -> void:
+	# where the dog beach's own ground stops: the land starts there, so its
+	# edge meets the beach's rather than lying 10 px over it. The sea starts at
+	# ctop, under the espigo, and so do the blocks, past the beach's side
+	var ftop: float = m.GATE_Y - 30.0
 	# Passeig Maritim, west to east: sea, sand, boardwalk, bike
 	# path, pavement, cafe strip, buildings
 	# The sea, and it is a Mediterranean one: turquoise, not the grey-blue
@@ -416,19 +669,19 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 		if fy > vt and fy < vb:
 			wc.draw_line(Vector2(72 + sin(fy * 0.011 + wt * 1.5) * 9.0, fy), Vector2(84 + sin(fy * 0.013 + wt * 1.5) * 9.0, fy + 70.0), Color(1, 1, 1, 0.25), 3.0)
 		fy += 150.0
-	wc.draw_rect(Rect2(230, ctop, 150, bottom - ctop), m.BEACH_SAND)
+	wc.draw_rect(Rect2(230, ftop, 150, bottom - ftop), m.BEACH_SAND)
 	# the wet sand at the waterline and the foam on it: the dog beach's
 	# shore has both, so here they carry its shore on down the walk
-	wc.draw_rect(Rect2(m.BEACH_GATE_SHORE_X, ctop, m.BEACH_WET_W, bottom - ctop), m.BEACH_WET)
+	wc.draw_rect(Rect2(m.BEACH_GATE_SHORE_X, ftop, m.BEACH_WET_W, bottom - ftop), m.BEACH_WET)
 	var foam := ShapeBatch.new()
-	var fmy := maxf(ctop, vt - fmod(vt, 52.0) - 52.0)
+	var fmy := maxf(ftop, vt - fmod(vt, 52.0) - 52.0)
 	while fmy < minf(bottom, vb + 52.0):
 		var fmx: float = m.BEACH_GATE_SHORE_X + 4.0 + sin(fmy * 0.02 + wt * 1.4) * 4.0
 		var fml := 30.0 + 14.0 * (0.5 + 0.5 * sin(fmy * 0.037))
 		foam.line(Vector2(fmx, fmy), Vector2(fmx - 2.0, fmy + fml), Color(1, 1, 1, 0.26), 3.0)
 		fmy += 52.0
 	# tide drift line: cockle shells (petxines), sea pebbles (codols), posidonia along waterline
-	var tdy := maxf(ctop, vt - fmod(vt, 32.0) - 32.0)
+	var tdy := maxf(ftop, vt - fmod(vt, 32.0) - 32.0)
 	while tdy < minf(bottom, vb + 32.0):
 		var tdx: float = m.BEACH_GATE_SHORE_X + m.BEACH_WET_W + sin(tdy * 0.041) * 3.0
 		var pk := absi(int(tdy * 0.13)) % 4
@@ -451,12 +704,19 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 			foam.line(Vector2(tdx, tdy), Vector2(tdx + 3.0, tdy + 2.0), Color(0.28, 0.32, 0.20), 1.2)
 		tdy += 32.0
 	foam.flush(wc)
+	# the espigo's rocks again, over the walk's own sea: this ground starts
+	# under the dog beach's (ctop) so no gap shows, and without them the sea's
+	# straight top edge cut across the breakwater
+	m._draw_espigo(wc)
 	# THE TIMBER DECK, nearest the sand. Planks laid across the walk with
 	# alternating tones, fastener bolt pairs, and access ramps out to the sand.
-	wc.draw_rect(Rect2(380, ctop, 110, bottom - ctop), Color(0.46, 0.26, 0.21))
+	# It stops where the dog beach's sand starts, on an end board, rather than
+	# running a plain stub of timber under the beach's palm.
+	var deck_top := ftop
+	wc.draw_rect(Rect2(380, deck_top, 110, bottom - deck_top), Color(0.46, 0.26, 0.21))
 	var bdeck := ShapeBatch.new()
 	var py := minf(m.START_Y + 200.0, vb + 22.0 - fmod(vb, 22.0))
-	while py > m.GATE_Y and py > vt - 22.0:
+	while py - 20.0 >= deck_top and py > vt - 22.0:
 		if py < vb and py > vt:
 			# plank fill tone variation
 			var pcol: Color = [Color(0.46, 0.26, 0.21), Color(0.43, 0.24, 0.19), Color(0.48, 0.28, 0.23)][absi(int(py / 22.0)) % 3]
@@ -469,21 +729,24 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 			bdeck.circle(Vector2(485.0, py - 5.0), 1.0, Color(0.24, 0.12, 0.08))
 			bdeck.circle(Vector2(485.0, py - 15.0), 1.0, Color(0.24, 0.12, 0.08))
 		py -= 22.0
+	if deck_top > vt - 10.0 and deck_top < vb:
+		bdeck.rect(Rect2(380.0, deck_top, 110.0, 5.0), Color(0.32, 0.18, 0.14))
+		bdeck.line(Vector2(380.0, deck_top + 5.5), Vector2(490.0, deck_top + 5.5), Color(0.58, 0.38, 0.30), 1.0)
 	bdeck.flush(wc)
 	# the pale concrete path, with the dashed line down the middle of it
-	wc.draw_rect(Rect2(490, ctop, 80, bottom - ctop), Color(0.82, 0.79, 0.73))
+	wc.draw_rect(Rect2(490, ftop, 80, bottom - ftop), Color(0.82, 0.79, 0.73))
 	var ddy := minf(m.START_Y + 200.0, vb + 64.0 - fmod(vb, 64.0))
 	while ddy > m.GATE_Y and ddy > vt - 64.0:
 		if ddy < vb and ddy > vt:
 			wc.draw_line(Vector2(530, ddy), Vector2(530, ddy - 26.0), Color(0.97, 0.96, 0.93, 0.8), 3.0)
 		ddy -= 64.0
-	wc.draw_rect(Rect2(570, ctop, 410, bottom - ctop), Color(0.79, 0.76, 0.7))
+	wc.draw_rect(Rect2(570, ftop, 410, bottom - ftop), Color(0.79, 0.76, 0.7))
 	var sy := minf(m.START_Y + 200.0, vb + 150.0 - fmod(vb, 150.0))
 	while sy > m.GATE_Y and sy > vt - 150.0:
 		if sy < vb and sy > vt:
 			wc.draw_line(Vector2(560, sy), Vector2(980, sy), Color(0.71, 0.68, 0.62), 2.0)
 		sy -= 150.0
-	wc.draw_rect(Rect2(980, ctop, 210, bottom - ctop), Color(0.76, 0.72, 0.65))
+	wc.draw_rect(Rect2(980, ftop, 210, bottom - ftop), Color(0.76, 0.72, 0.65))
 	# The building strip was at x>=1180, and the camera never sees past
 	# x=1140 (zoom 1.28 on a fixed x=640) - so the whole landward side of
 	# this walk was being drawn where nobody could look at it. Brought
@@ -504,10 +767,11 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 		wc.draw_rect(cut, Color(0.62, 0.58, 0.50))          # the kerb
 		wc.draw_rect(cut.grow(-5.0), Color(0.40, 0.34, 0.26))  # the soil in it
 		wc.draw_rect(cut, Color(0.34, 0.31, 0.27, 0.55), false, 2.0)
-	wc.draw_line(Vector2(380, bottom), Vector2(380, m.GATE_Y), Color(0.55, 0.45, 0.32), 3.0)
-	wc.draw_line(Vector2(490, bottom), Vector2(490, m.GATE_Y), m.COL_SEAM, 2.0)
-	wc.draw_line(Vector2(570, bottom), Vector2(570, m.GATE_Y), m.COL_SEAM, 2.0)
-	wc.draw_line(Vector2(980, bottom), Vector2(980, m.GATE_Y), m.COL_SEAM, 2.0)
+	wc.draw_line(Vector2(380, bottom), Vector2(380, ftop), Color(0.55, 0.45, 0.32), 3.0)
+	wc.draw_line(Vector2(490, bottom), Vector2(490, ftop), m.COL_SEAM, 2.0)
+	wc.draw_line(Vector2(570, bottom), Vector2(570, ftop), m.COL_SEAM, 2.0)
+	wc.draw_line(Vector2(980, bottom), Vector2(980, ftop), m.COL_SEAM, 2.0)
+	_sand_creep(m, wc, vt, vb)
 	for t in m.tufts:
 		if t.y > vt and t.y < vb and t.x > 110.0 and (t.x < 330.0 or t.x > 1000.0) and t.x < 1170.0:
 			wc.draw_circle(t, 4.0, Color(0.78, 0.7, 0.54))
@@ -527,9 +791,14 @@ static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
 # bike path, promenade, then cafe paving - so once the sea and the sand
 # are ruled out, everything left is firm ground. Falling through to the
 # generic verge test made the boardwalk and the cafe side read as lawn,
-# which is a third of the walk handling wrongly.
+# which is a third of the walk handling wrongly. The sand runs to the deck,
+# SAND_TO_X: it stopped 40 px short, so the strip of beach beside the deck
+# handled as pavement.
+const SAND_TO_X := 380.0
+
+
 static func surface(_m: Node2D, p: Vector2) -> int:
-	if p.x < 340.0:
+	if p.x < SAND_TO_X:
 		return Surfaces.S.SAND
 	return Surfaces.S.PAVEMENT
 
