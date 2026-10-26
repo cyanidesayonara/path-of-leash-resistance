@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-10-26 - A surface map of every walk
+
+`tools/surface_map.sh` photographs each walk (five points and off leash)
+with what `surface_at()` returns dotted over the picture, one colour per
+surface, and a contact sheet per walk. A stretch drawn as sand that handles
+as pavement, or a lawn that reads as paving underfoot, shows at a glance
+instead of by walking every walk. `--surface-map` adds the dots to any
+`--shot` (`tools/surface_overlay.gd`). Tooling only.
+
 ## 2026-10-26 - Passeig Marítim in its own module
 
 The eighth step of moving per-walk code out of main.gd. The seafront's

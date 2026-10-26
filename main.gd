@@ -8037,6 +8037,13 @@ func _process(_delta: float) -> void:
 					_shot_menu(a.substr(12))
 					return
 			_skip_title()
+			# --surface-map dots what surface_at() says over the shot
+			# (tools/surface_map.sh)
+			if "--surface-map" in OS.get_cmdline_user_args():
+				var ov: Node2D = load("res://tools/surface_overlay.gd").new()
+				ov.m = self
+				ov.z_index = 4000
+				add_child(ov)
 			# --shot-y=N starts the pair at that point down the walk, so one
 			# stretch of a level can be photographed without walking there
 			for a in OS.get_cmdline_user_args():
