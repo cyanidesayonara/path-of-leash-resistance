@@ -2,6 +2,27 @@
 
 Append-only session history, newest first.
 
+## 2026-10-26 - Passeig Marítim in its own module
+
+The eighth step of moving per-walk code out of main.gd. The seafront's
+drawing moves into `systems/passeig.gd`: the cross-section from the sea to
+the blocks behind the promenade (sea, wet sand and its drift line, the
+timber deck, the bike path, the promenade, the cafe strip, the roofs), the
+old works and its chimney, the access ramps, showers, lifeguard tower,
+volleyball court and chiringuitos, the towels and the recycling stations.
+The dog beach past the gate is the `beach` freedom kind, which other walks
+share, so it stays in main, as do the shower and lifeguard tower drawings
+it uses. Three new hooks: `draw_cross_section` (in place of main's lawn and
+walkway in `_draw_world`), `takes_prints` and `draw_bin`; the walk also uses
+`draw_edge_layer` (nothing), `draw_overhead` (the tower cabins) and
+`surface`. The leftover seafront checks (bikes, cats, rats, gulls, palms,
+the parked pairs' spots) stay put: moving them would reorder random rolls
+or split tables several walks share.
+`lvl` comparisons in main.gd: 140 down to 134. The behaviour snapshot over
+all 21 walks is byte-identical to main, and six screenshots of Passeig
+Marítim (every 1500 px, the top of the walk and the dog beach) match pixel
+for pixel apart from the version label.
+
 ## 2026-10-25 - The tutorial honours --seed, and the sweep shoots it
 
 `--seed=N` was read only on the walks, not in the tutorial, so two
