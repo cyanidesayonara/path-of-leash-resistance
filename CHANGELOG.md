@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-10-26 - El Mercat's hall drawn by its own module
+
+The tenth step of moving per-walk code out of main.gd. El Mercat already
+had `world/mercat.gd` for its furniture, and it becomes the walk's module:
+the hall's terrazzo floor, sawdust, stall blocks and their signs
+(`draw_live`), the MERCAT and PLAÇA arches (`draw_overhead`), the green
+cast-iron columns (`draw_column`), and the greengrocer's van, which it
+already drew, now reached through the `draw_van` hook. The hall's edge
+style, its crates and marking spots, its walkway color and the awnings'
+overhead entries stay in main, in tables several walks share.
+`lvl` comparisons in main.gd: 127 down to 123. The behaviour snapshot over
+all 21 walks is byte-identical to main, and six screenshots of El Mercat
+(every 1000 px and the plaça) match pixel for pixel outside the version
+label.
 ## 2026-10-26 - The dog beach handles as sand
 
 Platja dels Gossos, past Passeig Marítim's gate, is drawn as sand from the

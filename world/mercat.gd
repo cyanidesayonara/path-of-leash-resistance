@@ -8,6 +8,7 @@ extends RefCounted
 # Everything here is static; what is solid is listed by solids(), which
 # level_build turns into bodies and bypasser blockers.
 
+const LevelBuild := preload("res://world/level_build.gd")
 const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.05, 0.05, 0.08, 0.20)
 
@@ -444,3 +445,127 @@ static func draw_van(m: Node2D, c: Object, v: Vector2) -> void:
 	b.flush(c)
 	c.draw_string(m.font, Vector2(body.position.x + 3.0, v.y + 2.0), "FRUITES", HORIZONTAL_ALIGNMENT_CENTER, 58.0, 12,
 		Color(0.96, 0.92, 0.78))
+
+
+# --- main's walk hooks (main.WALK_MODULES) ---------------------------------------
+
+# the hall's arches over the walk: MERCAT at the street end, PLAÇA at the
+# square end
+static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
+	_arch(m, c, LevelBuild.MERCAT_ARCH_Y, "MERCAT")
+	_arch(m, c, LevelBuild.MERCAT_DOOR_Y, "PLAÇA")
+
+
+# the hall's floor, its stall blocks and what stands along its walls, up to
+# the gate
+static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
+	_draw_floor_and_stalls(m, maxf(vt, m.GATE_Y - 30.0), vb)
+
+
+static func draw_column(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
+	# the hall's cast-iron columns, painted green, on a flared foot
+	m.cast_shadow(wc, p, 10.0, 40.0, 0.2)
+	wc.draw_circle(p, 13.0, Color(0.16, 0.26, 0.22))
+	wc.draw_circle(p, 9.0, Color(0.22, 0.36, 0.30))
+	wc.draw_circle(p + Vector2(-2.5, -2.5), 4.0, Color(0.36, 0.52, 0.44))
+
+
+# El Mercat's arches, drawn over everyone: an iron span across the street
+# with a fan of stained glass in it and the name in iron letters
+static func _arch(m: Node2D, c: CanvasItem, y: float, sign: String) -> void:
+	var e: Vector2 = m.walk_edges(y)
+	var b := ShapeBatch.new(c)
+	var r := Rect2(e.x - 40.0, y - 26.0, e.y - e.x + 80.0, 52.0)
+	b.rect(Rect2(r.position + Vector2(0, 60.0), r.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.18))
+	b.rect(r, Color(0.46, 0.16, 0.13))
+	var glass := [Color(0.86, 0.30, 0.22), Color(0.96, 0.78, 0.26), Color(0.26, 0.52, 0.72), Color(0.34, 0.62, 0.32)]
+	var x := r.position.x + 10.0
+	var k := 0
+	while x < r.end.x - 14.0:
+		b.rect(Rect2(x, y - 18.0, 20.0, 36.0), glass[k % 4])
+		b.rect(Rect2(x, y - 18.0, 20.0, 5.0), Color(1, 1, 1, 0.2))
+		x += 24.0
+		k += 1
+	b.rect(Rect2(r.position.x, y - 26.0, r.size.x, 6.0), Color(0.34, 0.12, 0.10))
+	b.rect(Rect2(r.position.x, y + 20.0, r.size.x, 6.0), Color(0.34, 0.12, 0.10))
+	# the name board in the middle of the span
+	var nb := Rect2(r.get_center().x - 90.0, y - 16.0, 180.0, 32.0)
+	b.rect(nb, Color(0.12, 0.10, 0.10))
+	b.flush()
+	c.draw_string(m.font, Vector2(nb.position.x, y + 8.0), sign, HORIZONTAL_ALIGNMENT_CENTER, nb.size.x, 22,
+		Color(0.96, 0.86, 0.56))
+
+
+static func _draw_floor_and_stalls(m: Node2D, vt: float, vb: float) -> void:
+	var b := ShapeBatch.new()
+	var top: float = LevelBuild.MERCAT_ARCH_Y
+	var bot: float = LevelBuild.MERCAT_DOOR_Y
+	# terrazzo: the hall floor, chips of stone set in the pale slab
+	var y0 := maxf(vt - 20.0, bot)
+	var y1 := minf(vb + 20.0, top)
+	var yy := floorf(y0 / 37.0) * 37.0
+	while yy < y1:
+		var e: Vector2 = m.walk_edges(yy)
+		var xx := e.x + fmod(absf(yy) * 0.37, 29.0)
+		while xx < e.y:
+			var n := fmod(absf(xx * 12.9898 + yy * 78.233), 7.0)
+			b.circle(Vector2(xx, yy), 1.4 + n * 0.25, [Color(0.52, 0.48, 0.44, 0.5), Color(0.66, 0.42, 0.36, 0.45),
+				Color(0.40, 0.44, 0.40, 0.45)][int(n) % 3])
+			xx += 29.0 + n * 3.0
+		yy += 37.0
+	# sawdust in front of the fish and the ham, where the floor gets swept
+	for i in range(LevelBuild.MERCAT_WALL_STALLS.size()):
+		var kind := String(LevelBuild.MERCAT_WALL_STALLS[i][2])
+		if kind != "fish" and kind != "jamon":
+			continue
+		var f := LevelBuild.mercat_stall_front(m, i)
+		if f.y < vt - 80.0 or f.y > vb + 80.0:
+			continue
+		for k in range(22):
+			var sp := f + Vector2(fmod(float(k) * 37.3, 90.0) - 45.0, fmod(float(k) * 23.7, 70.0) - 35.0)
+			b.circle(sp, 1.6, Color(0.86, 0.74, 0.50, 0.7))
+	# the stall blocks down the middle: counters facing both aisles round a
+	# back wall, each side its own trade, with its sign in Catalan
+	var signs := ["VERDURES", "FORMATGES", "FRUITES", "OUS", "BACALLÀ", "ESPÈCIES", "XARCUTERIA", "BOLETS"]
+	for bi in range(LevelBuild.MERCAT_BLOCKS.size()):
+		var blk: Rect2 = LevelBuild.MERCAT_BLOCKS[bi]
+		if blk.end.y < vt - 80.0 or blk.position.y > vb + 80.0:
+			continue
+		b.rect(Rect2(blk.position + m.LIGHT * 14.0, blk.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
+		b.rect(blk, Color(0.40, 0.30, 0.22))
+		var mid := blk.get_center().x
+		b.rect(Rect2(mid - 6.0, blk.position.y + 6.0, 12.0, blk.size.y - 12.0), Color(0.30, 0.22, 0.16))
+		for side in [-1.0, 1.0]:
+			var cx: float = mid + side * 50.0
+			var trade := (bi * 2 + (0 if side < 0.0 else 1)) % 8
+			var pal: Array = [[Color(0.34, 0.60, 0.22), Color(0.56, 0.74, 0.30), Color(0.86, 0.40, 0.20)],
+				[Color(0.96, 0.84, 0.46), Color(0.92, 0.72, 0.36), Color(0.98, 0.92, 0.70)],
+				[Color(0.96, 0.56, 0.12), Color(0.78, 0.14, 0.12), Color(0.96, 0.86, 0.26)],
+				[Color(0.96, 0.92, 0.82), Color(0.84, 0.66, 0.46), Color(0.96, 0.92, 0.82)],
+				[Color(0.88, 0.86, 0.80), Color(0.76, 0.74, 0.68), Color(0.88, 0.86, 0.80)],
+				[Color(0.80, 0.36, 0.14), Color(0.92, 0.70, 0.20), Color(0.56, 0.30, 0.18)],
+				[Color(0.56, 0.22, 0.18), Color(0.82, 0.46, 0.40), Color(0.92, 0.84, 0.74)],
+				[Color(0.62, 0.46, 0.30), Color(0.84, 0.72, 0.52), Color(0.46, 0.34, 0.22)]][trade]
+			var ty := blk.position.y + 18.0
+			while ty < blk.end.y - 18.0:
+				b.rect(Rect2(cx - 36.0, ty - 12.0, 72.0, 26.0), Color(0.62, 0.50, 0.36))
+				for f in range(8):
+					b.circle(Vector2(cx - 30.0 + float(f % 4) * 20.0, ty - 5.0 + float(f / 4) * 12.0), 5.0,
+						pal[(f + int(ty)) % 3])
+				ty += 34.0
+		b.flush(m._wc)
+		b = ShapeBatch.new()
+		for side in [-1.0, 1.0]:
+			var trade := (bi * 2 + (0 if side < 0.0 else 1)) % 8
+			var sx: float = mid + side * 50.0
+			m._wc.draw_rect(Rect2(sx - 38.0, blk.position.y - 4.0, 76.0, 16.0), Color(0.12, 0.26, 0.20))
+			m._wc.draw_string(m.font, Vector2(sx - 38.0, blk.position.y + 8.0), String(signs[trade]),
+				HORIZONTAL_ALIGNMENT_CENTER, 76.0, 11, Color(0.96, 0.90, 0.72))
+	# the floor drain in the middle aisle
+	var dr: Vector2 = LevelBuild.MERCAT_DRAIN
+	if dr.y > vt - 60.0 and dr.y < vb + 60.0:
+		draw_floor_drain(b, dr)
+	# what stands along the walls, and the street outside the arch
+	draw_hall(m, b, vt, vb)
+	draw_approach(m, b, vt, vb)
+	b.flush(m._wc)
