@@ -114,6 +114,11 @@ with pickpockets and shenanigans happening around."
   with coin tins and living idle micro-animations, and blanket vendors with
   drawstring corner cords.
 
+- Neighbourhood pass (2026-10-27): the lawns end at the park's cast-iron
+  railing (solid, `Barri.solids`), with gates and worn desire paths; past it
+  the panot pavement, street trees, parked motorbikes, a Bicing dock and the
+  rooftop terraces. Not in the First Walk.
+
 ### El Parc (park) - the city park
 - Is: open lawns, flowerbeds, the pond with its bridge and ducks, a
   bandstand, a playground.

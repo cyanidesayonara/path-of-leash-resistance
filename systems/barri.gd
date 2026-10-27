@@ -15,8 +15,7 @@ const PIPICA_GROUND := Color(0.72, 0.64, 0.48)
 const PIPICA_FENCE := Color(0.20, 0.38, 0.27)
 
 
-# EL BARRI: the petanca pitch with its boules, and the playground. Nothing
-# here is anywhere in particular.
+# EL BARRI: the petanca pitch with its boules, and the playground.
 static func _draw_square(m: Node2D, vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
 	# cast-iron tree grates (escocells) under the square's London plane trees
@@ -202,11 +201,13 @@ static func grass_blocked(_m: Node2D, p: Vector2) -> bool:
 	return LevelBuild.BARRI_PETANCA.grow(8.0).has_point(p) or LevelBuild.BARRI_PLAYGROUND.grow(8.0).has_point(p)
 
 
-# the square, up to the gate; the tutorial lays its stations out instead
+# the square, up to the gate, and the neighbourhood round it; the tutorial
+# lays its stations out instead
 static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
 	if m.tutorial_mode:
 		return
 	_draw_square(m, maxf(vt, m.GATE_Y - 30.0), vb)
+	_draw_neighbourhood(m, maxf(vt, _rail_top(m)), minf(vb, _rail_bottom(m)))
 
 
 static func draw_freedom_ground(m: Node2D, c: Object) -> void:
@@ -242,3 +243,227 @@ static func draw_performer(m: Node2D, wc: ShapeBatch, pf: Vector2, idx: int) -> 
 	wc.draw_circle(pf + Vector2(0, -4), 6.5, Color(0.84, 0.68, 0.56))
 	wc.draw_circle(pf + Vector2(0, -5), 6.8, Color(0.30, 0.28, 0.26))
 	wc.draw_rect(Rect2(pf.x - 5.0, pf.y - 14.0, 10.0, 4.0), Color(0.26, 0.24, 0.22))
+
+
+# --- the neighbourhood round the square ---------------------------------------
+# The square's lawns used to run on out of the frame to the level's side
+# walls, so nothing in view said where the square was. Now the lawns end at
+# the park's cast-iron railing, solid (solids), with the street beyond it in
+# view: the pavement in its panots, the kerb, motorbikes parked along it, a
+# Bicing dock, and the blocks' rooftop terraces further out. All of it is past
+# the railing, where she cannot go; it is drawn in the world pass so the lawn
+# does not cover it. The railing runs from the pipica's fence to the street
+# the walk starts from; the First Walk has none of it.
+const RAIL_W := 240.0                    # the west railing, clear of the trees
+const RAIL_E := 1100.0                   # the east one, clear of the playground
+const OUTER_W := 90.0                    # the level walls' inner faces
+const OUTER_E := 1190.0
+const PAVE_W := 54.0                     # the pavement past the railing
+const STREET_W := 120.0                  # the one-way street past the kerb
+const RAILING := Color(0.18, 0.26, 0.21)
+const PANOT := Color(0.66, 0.64, 0.60)
+const PANOT_DOT := Color(0.58, 0.56, 0.52)
+const KERB := Color(0.78, 0.76, 0.72)
+const ASPHALT := Color(0.30, 0.30, 0.32)
+const TERRAT := Color(0.74, 0.50, 0.38)
+const PARAPET := Color(0.86, 0.80, 0.70)
+const BICING_RED := Color(0.84, 0.16, 0.14)
+# the gates in the railing, and the worn tracks across the lawn to them
+const RAIL_GATES: Array[Vector2] = [
+	Vector2(RAIL_W, -1420.0), Vector2(RAIL_E, -2160.0), Vector2(RAIL_W, -3380.0), Vector2(RAIL_E, -4260.0),
+]
+const BICING_Y := -2760.0
+const STREET_TREE_STEP := 300.0
+const WASHING: Array[Color] = [Color(0.92, 0.90, 0.86), Color(0.40, 0.56, 0.78), Color(0.86, 0.42, 0.40)]
+
+
+# the railing meets the pipica's fence at the top and the street the walk
+# starts from at the bottom (the level's bottom wall)
+static func _rail_top(m: Node2D) -> float:
+	return float(m.GATE_Y) - 30.0
+
+
+static func _rail_bottom(m: Node2D) -> float:
+	return float(m.START_Y) + 160.0
+
+
+# what is solid past the railings, out to the level walls; none in the
+# First Walk, which is laid out on El Barri without them
+static func solids(m: Node2D) -> Array[Rect2]:
+	if m.tutorial_mode:
+		return []
+	var top := _rail_top(m)
+	var h := _rail_bottom(m) - top
+	return [Rect2(OUTER_W, top, RAIL_W - OUTER_W, h), Rect2(RAIL_E, top, OUTER_E - RAIL_E, h)]
+
+
+static func _h1(k: int, salt: float) -> float:
+	return fmod(absf(sin(float(k) * 12.9898 + salt) * 43758.5453), 1.0)
+
+
+static func _draw_neighbourhood(m: Node2D, top: float, bot: float) -> void:
+	if bot <= top:
+		return
+	var b := ShapeBatch.new()
+	_desire_paths(m, b, top, bot)
+	for side: float in [-1.0, 1.0]:
+		var rail: float = RAIL_E if side > 0.0 else RAIL_W
+		var kerb_x: float = rail + side * PAVE_W
+		var far_x: float = kerb_x + side * STREET_W
+		# the pavement in panots, the four-pastille tile of every Barcelona
+		# pavement: a square, four raised dots
+		b.rect(Rect2(minf(rail, kerb_x), top, PAVE_W, bot - top), PANOT)
+		var cell := 18.0
+		var ty := floorf(top / cell) * cell
+		while ty < bot:
+			b.line(Vector2(rail, ty), Vector2(kerb_x, ty), PANOT_DOT, 1.0)
+			var tx := 0.0
+			while tx < PAVE_W - 6.0:
+				var x := rail + side * (tx + cell * 0.5)
+				for d: Vector2 in [Vector2(-4, -4), Vector2(4, -4), Vector2(-4, 4), Vector2(4, 4)]:
+					b.circle(Vector2(x, ty + cell * 0.5) + d, 1.6, PANOT_DOT)
+				tx += cell
+			ty += cell
+		# the kerb, and the street
+		b.rect(Rect2(kerb_x - (6.0 if side > 0.0 else 0.0), top, 6.0, bot - top), KERB)
+		b.rect(Rect2(minf(kerb_x, far_x), top, STREET_W, bot - top), ASPHALT)
+		# motorbikes parked nose to the kerb, a gap here and there
+		var my := floorf(top / 46.0) * 46.0
+		while my < bot:
+			var k := int(absf(my) / 46.0)
+			if _h1(k, side) > 0.35 and absf(my - BICING_Y) > 140.0:
+				_motorbike(b, Vector2(kerb_x + side * 26.0, my + 23.0), side, _h1(k, side + 3.0))
+			my += 46.0
+		# the blocks' rooftops past the street, out to the frame
+		_terrats(b, far_x, side, top, bot)
+		# the railing: its rail, a post every few feet
+		b.rect(Rect2(rail - 2.0, top, 4.0, bot - top), RAILING)
+		var py := floorf(top / 16.0) * 16.0
+		while py < bot:
+			b.circle(Vector2(rail, py), 2.6, RAILING)
+			py += 16.0
+	for g: Vector2 in RAIL_GATES:
+		if g.y > top - 30.0 and g.y < bot + 30.0:
+			var gside := 1.0 if g.x > 640.0 else -1.0
+			b.rect(Rect2(g.x - 4.0, g.y - 22.0, 8.0, 44.0), PANOT)
+			for gy: float in [g.y - 22.0, g.y + 22.0]:
+				b.circle(Vector2(g.x, gy), 4.5, RAILING)
+				b.circle(Vector2(g.x, gy), 2.0, RAILING.lightened(0.3))
+			b.line(Vector2(g.x, g.y - 20.0), Vector2(g.x + gside * 18.0, g.y - 6.0), RAILING, 2.0)
+	if BICING_Y > top - 140.0 and BICING_Y < bot + 140.0:
+		_bicing(b, Vector2(RAIL_E + PAVE_W + 22.0, BICING_Y))
+	# the street's plane trees on the pavement, crowns over the railing's foot
+	for side: float in [-1.0, 1.0]:
+		var rail2: float = RAIL_E if side > 0.0 else RAIL_W
+		var ty2 := floorf(top / STREET_TREE_STEP) * STREET_TREE_STEP
+		while ty2 < bot + 40.0:
+			var tp := Vector2(rail2 + side * 28.0, ty2 + (70.0 if side > 0.0 else 0.0))
+			if absf(tp.y - BICING_Y) > 150.0:
+				b.circle(tp + LIGHT * 14.0, 30.0, Color(0, 0, 0, 0.18))
+				b.circle(tp, 30.0, Color(0.24, 0.40, 0.22))
+				b.circle(tp - LIGHT * 8.0, 20.0, Color(0.32, 0.50, 0.28))
+				b.circle(tp - LIGHT * 13.0, 9.0, Color(0.42, 0.60, 0.34))
+			ty2 += STREET_TREE_STEP
+	b.flush(m._wc)
+
+
+# the worn tracks across the lawn from the path to the railing's gates: grass
+# rubbed down to earth where everyone cuts across
+static func _desire_paths(m: Node2D, b: ShapeBatch, top: float, bot: float) -> void:
+	for g: Vector2 in RAIL_GATES:
+		if g.y < top - 200.0 or g.y > bot + 200.0:
+			continue
+		var e: Vector2 = m.walk_edges(g.y + 120.0)
+		var from := Vector2(e.y if g.x > 640.0 else e.x, g.y + 120.0)
+		var n := 14
+		for i in range(n + 1):
+			var u := float(i) / float(n)
+			var p := from.lerp(g, u) + Vector2(0.0, sin(u * PI) * 26.0)
+			b.circle(p, 11.0 - u * 2.0, Color(0.50, 0.46, 0.32, 0.55))
+			b.circle(p + Vector2(2.0, 1.0), 6.0 - u * 1.5, Color(0.56, 0.50, 0.36, 0.5))
+
+
+static func _motorbike(b: ShapeBatch, p: Vector2, side: float, v: float) -> void:
+	var col := Color(0.16, 0.18, 0.22)
+	if v > 0.66:
+		col = Color(0.70, 0.18, 0.16)
+	elif v > 0.33:
+		col = Color(0.86, 0.84, 0.80)
+	var ax := Vector2(side, 0.0)
+	b.rect(Rect2(p.x - 18.0 + 3.0, p.y - 4.0 + 5.0, 36.0, 10.0), Color(0, 0, 0, 0.25))
+	b.circle(p - ax * 14.0, 5.0, Color(0.10, 0.10, 0.10))
+	b.circle(p + ax * 14.0, 5.0, Color(0.10, 0.10, 0.10))
+	b.rect(Rect2(p.x - 11.0, p.y - 5.0, 22.0, 10.0), col)
+	b.rect(Rect2(p.x - 4.0, p.y - 4.0, 9.0, 8.0), Color(0.12, 0.12, 0.12))
+	b.line(p - ax * 13.0 + Vector2(0, -8), p - ax * 13.0 + Vector2(0, 8), Color(0.60, 0.62, 0.64), 2.0)
+	# a helmet left on the seat now and then
+	if v < 0.2:
+		b.circle(p + ax * 3.0, 4.5, Color(0.92, 0.90, 0.30))
+
+
+# The Bicing dock on the east pavement: the red bikes in their stands
+static func _bicing(b: ShapeBatch, at: Vector2) -> void:
+	b.rect(Rect2(at.x - 6.0, at.y - 110.0, 12.0, 220.0), Color(0.40, 0.40, 0.42))
+	b.rect(Rect2(at.x - 10.0, at.y - 124.0, 20.0, 18.0), Color(0.22, 0.22, 0.24))
+	b.rect(Rect2(at.x - 7.0, at.y - 121.0, 14.0, 8.0), Color(0.50, 0.74, 0.86))
+	var y := at.y - 96.0
+	var k := 0
+	while y < at.y + 104.0:
+		b.circle(Vector2(at.x, y), 3.0, Color(0.24, 0.24, 0.26))
+		if k % 4 != 2:
+			b.line(Vector2(at.x - 18.0, y), Vector2(at.x + 18.0, y), BICING_RED, 4.0)
+			b.circle(Vector2(at.x - 16.0, y), 4.0, Color(0.12, 0.12, 0.12))
+			b.circle(Vector2(at.x + 16.0, y), 4.0, Color(0.12, 0.12, 0.12))
+			b.rect(Rect2(at.x + 6.0, y - 4.0, 6.0, 8.0), Color(0.94, 0.94, 0.92))
+		y += 24.0
+		k += 1
+
+
+# The rooftop terraces past the street: each building its own depth, a
+# parapet round its terrat of red tiles, a water tank, a skylight, and a
+# washing line or pots of geraniums along the street front
+static func _terrats(b: ShapeBatch, x0: float, side: float, top: float, bot: float) -> void:
+	var y := floorf(top / 600.0) * 600.0
+	var k := int(absf(y) / 600.0) * 7
+	while y < bot:
+		var depth := 70.0 + _h1(k, 1.0) * 60.0
+		var ny := y + depth
+		if ny > top:
+			var r := Rect2(x0 if side > 0.0 else x0 - 520.0, y, 520.0, depth)
+			var face: float = x0 + side * 6.0
+			b.rect(r, PARAPET)
+			var inner := r.grow(-6.0)
+			var tile := TERRAT.lerp(Color(0.66, 0.44, 0.34), _h1(k, 2.0))
+			b.rect(inner, tile)
+			var gx := inner.position.x + 14.0
+			while gx < inner.end.x:
+				b.line(Vector2(gx, inner.position.y), Vector2(gx, inner.end.y), tile.darkened(0.12), 1.0)
+				gx += 14.0
+			# the party wall to the next building
+			b.rect(Rect2(r.position.x, r.end.y - 3.0, r.size.x, 6.0), PARAPET.darkened(0.15))
+			# a water tank and a skylight, near the street front
+			var tx := face + side * (40.0 + _h1(k, 3.0) * 60.0)
+			b.circle(Vector2(tx, y + depth * 0.5) + Vector2(4, 6), 12.0, Color(0, 0, 0, 0.22))
+			b.circle(Vector2(tx, y + depth * 0.5), 12.0, Color(0.84, 0.84, 0.82))
+			b.circle(Vector2(tx, y + depth * 0.5), 5.0, Color(0.60, 0.62, 0.64))
+			var sx := face + side * (120.0 + _h1(k, 4.0) * 80.0)
+			b.rect(Rect2(sx - 14.0, y + 14.0, 28.0, 20.0), Color(0.46, 0.62, 0.70))
+			b.line(Vector2(sx - 14.0, y + 24.0), Vector2(sx + 14.0, y + 24.0), Color(0.86, 0.90, 0.92), 1.4)
+			if _h1(k, 5.0) > 0.5:
+				var lx := face + side * 30.0
+				b.line(Vector2(lx, y + 12.0), Vector2(lx, ny - 12.0), Color(0.82, 0.82, 0.80), 1.0)
+				var cy := y + 18.0
+				var ci := 0
+				while cy < ny - 18.0:
+					b.rect(Rect2(lx - 5.0, cy, 10.0, 8.0), WASHING[(k + ci) % WASHING.size()])
+					cy += 16.0
+					ci += 1
+			else:
+				for pk in range(3):
+					var pp := Vector2(face + side * 12.0, y + 14.0 + float(pk) * 16.0)
+					if pp.y < ny - 8.0:
+						b.circle(pp, 5.0, Color(0.62, 0.36, 0.24))
+						b.circle(pp, 3.6, Color(0.30, 0.52, 0.26))
+						b.circle(pp + Vector2(1, -1), 1.6, Color(0.90, 0.24, 0.30))
+		y = ny
+		k += 1

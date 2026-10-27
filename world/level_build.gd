@@ -2798,6 +2798,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 				out.append(["port_%d" % i, ps_port[i]])
 		"besos":
 			out.append(["besos_channel", besos_deep_rect(m)])
+		"barri":
+			var ps_barri: Array[Rect2] = Barri.solids(m)
+			for i in range(ps_barri.size()):
+				out.append(["barri_railing_%d" % i, ps_barri[i]])
 	return out
 
 
@@ -3179,6 +3183,10 @@ static func build_walls(m: Node2D) -> void:
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "port":
 		for r: Rect2 in Port.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+	# El Barri's railings, with the street past them
+	if m.lvl == "barri":
+		for r: Rect2 in Barri.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "reial":
 		for r: Rect2 in Reial.solids(m):
