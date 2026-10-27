@@ -193,10 +193,10 @@ hidden page barely renders and the game runs in fits:
 godot\Godot_v4.7-stable_win64.exe --path . --rendering-method gl_compatibility --script res://tools/playtest.gd -- --level=market --steps="up:4;shot;turbo+up:3;shot" --out=C:/tmp/pt
 ```
 
-Release (both platforms, both itch channels). v1.63 is the last tag.
-v1.64 is prepared on main and stays untagged until Santtu says to tag:
+Release (both platforms, both itch channels). v1.64 is the last tag.
+The next release is tagged only when Santtu says to tag:
 ```
-git tag v1.64 && git push --tags
+git tag v1.65 && git push --tags
 ```
 That is the whole procedure. Tagging runs CI on the tagged SHA;
 `.github/workflows/release.yml` waits for that CI to succeed, then exports
