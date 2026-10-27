@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-10-27 - El Parc drawn by its own module
+
+`systems/parc.gd` is El Parc's first walk module and takes its drawing out
+of main.gd: the box-hedged flowerbeds, the bandstand, the Ciutadella
+mammoth, the lake's shore and the playground (`draw_live`), and the beds,
+playground and bandstand ring that keep the grass off (`grass_blocked`).
+El Barri's square draws a playground too, so main keeps `_playground` as a
+forwarder. The bandstand's roof on the overhead layer and the walk's pace
+stay in main. Behaviour snapshot byte-identical over every walk; El Parc
+and El Barri shots pixel-identical.
+
 ## 2026-10-27 - La Neteja drawn by its own module
 
 `systems/neteja.gd` is La Neteja's first walk module and takes its drawing
