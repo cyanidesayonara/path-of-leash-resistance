@@ -10,6 +10,36 @@ flower pressed into it, laid square: the flowers' grooves dark with the
 rain and their crowns catching the light, the slabs' tone under them on the
 same grid, and the crossings left as asphalt. Drawing only.
 
+## 2026-10-27 - El Barri: the neighbourhood round the square
+
+El Barri's lawns used to run on out of the frame to walls nobody could see,
+so the square was nowhere in particular. They end now at the park's
+cast-iron railing, solid, with gates in it and the grass worn to earth on
+the tracks people take across to them. Past the railing is the
+neighbourhood: the pavement in its four-dot panots, plane trees along it,
+the kerb with motorbikes parked nose-in (a helmet left on a seat), a Bicing
+dock with its red bikes, and the blocks' rooftop terraces with their water
+tanks, skylights, washing lines and geraniums. The First Walk, laid out on
+El Barri, is unchanged. Behaviour snapshot unchanged.
+
+## 2026-10-27 - Walk 23: El Laberint d'Horta
+
+A new walk, open at 39 stars after La Carretera: the oldest garden in the
+city, at the foot of Collserola. In past the Desvalls palace, along the
+romantic garden's canal under the big trees (she can get in it), then into
+the clipped cypress maze. The path splits round one hedge block after
+another and your human keeps to one side and then the other, so the way
+through is a serpentine, and the leash goes round every hedge: drag them
+into the wrong aisle and round a hedge end. Eros stands on his plinth in
+the clearing at the heart, a pole as fat as the plinth to tetherball your
+human round; lead them once round him for the walk's own goal. The
+gardener clipping the clearing's wall has left his bocadillo on the
+wheelbarrow, and that is the prize. Then up the terraces' steps between
+the balustrades (the middle one grinds: BALUSTRADE RUN), the pavilion on
+one side and the nymph's pool on the other, and out the back gate into
+the wood. Its name is clipped in box hedging, and its music is a garden
+minuet on glockenspiel and whistle.
+
 ## 2026-10-27 - Every walk's name in its own stuff
 
 Each walk spells its name on the ground in something of its own, and none
@@ -20,7 +50,7 @@ Montjuïc, mooring rope on the wharf, palm fronds in Plaça Reial, dog
 biscuits at the vet, a chasing festoon of bulbs on Tibidabo. The tile
 plaque, the departures board and the plain type are gone.
 
-Names are bigger (58 px caps) and stay inside their path: a name too long
+Names are bigger (52 px caps) and stay inside their path: a name too long
 for it breaks onto two lines at a space, never leaving EL or LA on its own,
 or comes down in size. When a name is laid out the pieces drop into place
 left to right. Walks whose ground is near the pieces' brightness get a
