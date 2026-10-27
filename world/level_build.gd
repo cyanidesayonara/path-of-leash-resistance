@@ -1060,6 +1060,15 @@ const BANDSTAND_POSTS := 8
 const PARK_MAMMOTH := Vector2(240.0, -3480.0)
 const MAMMOTH_BODY := Vector2(58.0, 112.0)
 const PARK_PLAYGROUND := Rect2(958.0, -4460.0, 166.0, 300.0)
+# two big lawn trees on the west lawn with a slackline between them, at knee
+# height: she runs under it, the leash catches on it
+# (not poles: El Parc's poles are fitted to the corridor; these stand where
+# they stand, trunks solid in build_walls, rope points of their own)
+const PARK_SLACK_A := Vector2(262.0, -1560.0)
+const PARK_SLACK_B := Vector2(262.0, -1960.0)
+const PARK_SLACK_TRUNK := 13.0
+static func park_slackline() -> Rect2:
+	return Rect2(PARK_SLACK_A.x - 3.0, PARK_SLACK_B.y + 22.0, 6.0, PARK_SLACK_A.y - PARK_SLACK_B.y - 44.0)
 
 
 static func bandstand_posts() -> Array[Vector2]:
@@ -2089,6 +2098,10 @@ static func build_level_data(m: Node2D) -> void:
 			add_rope_rect(m, Rect2(d - NETEJA_DUMPSTER * 0.5, NETEJA_DUMPSTER))
 	if m.lvl == "station":
 		add_rope_rect(m, ESTACIO_TRAIN)
+	if m.lvl == "park":
+		add_rope_rect(m, park_slackline())
+		for st: Vector2 in [PARK_SLACK_A, PARK_SLACK_B]:
+			add_rope_point(m, st, PARK_SLACK_TRUNK + 2.0, false)
 	if m.lvl == "partit":
 		for r: Rect2 in Partit.wrap_rects():
 			add_rope_rect(m, r)
@@ -3180,6 +3193,10 @@ static func build_walls(m: Node2D) -> void:
 	if m.lvl == "port":
 		for r: Rect2 in Port.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
+	# El Parc's two slackline trees on the west lawn
+	if m.lvl == "park":
+		for st: Vector2 in [PARK_SLACK_A, PARK_SLACK_B]:
+			add_circle_body(m, st, PARK_SLACK_TRUNK)
 	if m.lvl == "reial":
 		for r: Rect2 in Reial.solids(m):
 			add_rect_body(m, r.get_center(), r.size)

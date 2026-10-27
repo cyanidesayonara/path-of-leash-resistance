@@ -80,7 +80,45 @@ static func _draw_lawns(m: Node2D, vt: float, vb: float) -> void:
 	var lk: Rect2 = LevelBuild.PARK_LAKE
 	if lk.end.y > vt - 80.0 and lk.position.y < vb + 80.0:
 		_lake_shore(m, b, lk)
+	if LevelBuild.PARK_SLACK_A.y > vt - 80.0 and LevelBuild.PARK_SLACK_B.y < vb + 80.0:
+		_slackline(m, b)
 	b.flush(m._wc)
+
+
+# The slackline between the two lawn trees: the webbing, the ratchet and its
+# tree protectors at each end, and the slackliner out on it, arms up, swaying
+# for balance. Their friend's rucksack and water bottle on the grass.
+static func _slackline(m: Node2D, b: ShapeBatch) -> void:
+	var a: Vector2 = LevelBuild.PARK_SLACK_A
+	var z: Vector2 = LevelBuild.PARK_SLACK_B
+	var t := AnimClock.msec() / 1000.0
+	b.line(a + Vector2(5, 6), z + Vector2(5, 6), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25), 3.0)
+	b.line(a, z, Color(0.96, 0.62, 0.16), 3.0)
+	b.line(a + Vector2(1, 0), z + Vector2(1, 0), Color(1.0, 0.82, 0.40), 1.0)
+	for e: Vector2 in [a, z]:
+		var inward := (Vector2(a.x, (a.y + z.y) * 0.5) - e).normalized()
+		b.rect(Rect2(e + inward * 22.0 - Vector2(5, 4), Vector2(10, 8)), Color(0.30, 0.30, 0.34))
+		# the plane tree: its shadow, trunk with the line's padded sling, crown
+		b.circle(e + m.LIGHT * 26.0, 40.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.20))
+		b.circle(e, LevelBuild.PARK_SLACK_TRUNK + 3.0, Color(0.20, 0.22, 0.36))
+		b.circle(e, LevelBuild.PARK_SLACK_TRUNK, Color(0.52, 0.46, 0.36))
+		for k in range(5):
+			var lobe := e + Vector2.from_angle(float(k) * TAU / 5.0 + 0.4) * 20.0
+			b.circle(lobe, 22.0, Color(0.26, 0.44, 0.24, 0.92))
+		b.circle(e - m.LIGHT * 10.0, 18.0, Color(0.36, 0.54, 0.30, 0.9))
+	# the slackliner, walking slowly along it and back
+	var u := 0.5 + 0.32 * sin(t * 0.25)
+	var p := a.lerp(z, u)
+	var sway := sin(t * 2.3) * 4.0
+	var arms := Vector2(1.0, 0.0).rotated(sin(t * 2.3) * 0.35)
+	b.circle(p + Vector2(6, 8), 10.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
+	b.line(p + Vector2(sway, 0) - arms * 18.0, p + Vector2(sway, 0) + arms * 18.0, Color(0.86, 0.66, 0.50), 3.0)
+	b.circle(p + Vector2(sway, 0), 8.0, Color(0.20, 0.56, 0.52))
+	b.circle(p + Vector2(sway, -1), 5.0, Color(0.36, 0.24, 0.16))
+	var kit := a.lerp(z, 0.2) + Vector2(46.0, 0.0)
+	b.rect(Rect2(kit.x - 9.0, kit.y - 12.0, 18.0, 24.0), Color(0.62, 0.20, 0.20))
+	b.rect(Rect2(kit.x - 6.0, kit.y - 9.0, 12.0, 8.0), Color(0.48, 0.14, 0.14))
+	b.circle(kit + Vector2(16, 10), 3.5, Color(0.40, 0.70, 0.86))
 
 
 # A flowerbed on the lawn: a low clipped box hedge round it, soft at the
