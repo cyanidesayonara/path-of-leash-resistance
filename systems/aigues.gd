@@ -74,6 +74,8 @@ const FENCE_IN := 6.0                   # inside the track's west edge
 # riders keep to the middle of the track, where every bend overlaps
 const RIDE_LO := 520.0
 const RIDE_HI := 760.0
+const RIDE_GIVE := 90.0                 # how wide a berth they give her
+const RIDE_MIN_BAND := 30.0
 const BELL_R := 300.0
 
 # far below in the grid: (x, y, kind) - 0 the basilica's spires, 1 the tower
@@ -199,12 +201,24 @@ static func tree_kind(m: Node2D, _p: Vector2) -> int:
 
 
 # riders keep to the middle of the track: mountain bikes fast, a kid now and
-# then wobbling along on a bike of their own
-static func rider_lane(_m: Node2D, _up: bool) -> Dictionary:
+# then wobbling along on a bike of their own. They pass a dog on the far side
+# of the track from her, as riders do, so one standing in the middle is not
+# run down (the idle soak: an idle dog is never knocked by a walk's own design)
+static func rider_lane(m: Node2D, _up: bool) -> Dictionary:
 	var kid := randf() < 0.22
 	var speed := randf_range(70.0, 115.0) if kid else randf_range(250.0, 360.0)
-	var x := randf_range(RIDE_LO, RIDE_HI)
-	return {"kid": kid, "speed": speed, "x": x, "lo": RIDE_LO, "hi": RIDE_HI}
+	var lo := RIDE_LO
+	var hi := RIDE_HI
+	var dx: float = m.dog.global_position.x
+	if dx < (RIDE_LO + RIDE_HI) * 0.5:
+		lo = clampf(dx + RIDE_GIVE, RIDE_LO, RIDE_HI)
+	else:
+		hi = clampf(dx - RIDE_GIVE, RIDE_LO, RIDE_HI)
+	if hi - lo < RIDE_MIN_BAND:
+		lo = RIDE_LO
+		hi = RIDE_HI
+	var x := randf_range(lo, hi)
+	return {"kid": kid, "speed": speed, "x": x, "lo": lo, "hi": hi}
 
 
 static func tick(m: Node2D, delta: float) -> void:
