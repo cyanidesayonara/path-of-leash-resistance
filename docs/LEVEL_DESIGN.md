@@ -480,6 +480,27 @@ park could be just a neighborhood park in bcn."
 - Opens at 37 stars, after El Tibidabo. The door is a trailhead. Built in
   `systems/aigues.gd`, drawn by its hooks; no new walk branches in main.gd.
 
+### El Laberint d'Horta (horta) - the cypress maze
+- Is: the oldest garden in the city, at the foot of Collserola in Horta:
+  an 18th-century neoclassical garden with a romantic one beside it, and
+  the clipped cypress maze between them with Eros at its heart. Raked
+  sauló paths, box edging, mown lawns, cypresses, sandstone.
+- Rhythm: the avenue past the Desvalls palace; the romantic garden's
+  bends along the canal under the big trees; the maze, dead straight
+  between its walls, where the path splits round one hedge block after
+  another and your human keeps to one side and then the other; the
+  clearing at its heart with Eros on his plinth and the gardener clipping
+  the wall; up the terraces' steps between the balustrades, the pavilion
+  on one side and the nymph's pool on the other; out at the back gate.
+- Signature line: on the zoomies, slingshot your human round a hedge end,
+  lap Eros (a real pole as fat as his plinth) and tetherball them round
+  him, then grind the middle terrace's balustrade (BALUSTRADE RUN).
+- Goals: the staples, a drink, three dogs, a fling, and leading your human
+  once round Eros. Prize: the gardener's bocadillo off his wheelbarrow.
+- Opens at 39 stars, after La Carretera. Arrives by metro. Built in
+  `systems/horta.gd`, drawn by its hooks; the hedges are islands like El
+  Mercat's stall blocks, solid with the leash going round them.
+
 ### First Walk (tutorial) - learn each trick in peace
 Santtu: "we should really upgrade the tutorial too, so that the user can
 learn each trick & mechanic individually and in peace, without all the
@@ -739,7 +760,7 @@ The complete structure to finish *Path of Leash Resistance*, structured symmetri
 - **Walk 18: El Port (Port Vell / Barceloneta Wharf)**: Working fishing wharf along Moll dels Pescadors and Moll de la Fusta with timber boardwalk decking, quayside bollards, fish market crates, flapping seagulls, and Plaça del Far lighthouse.
 - **Walk 19: Plaça Reial (The Arcaded Royal Square)**: Grand 19th-century neoclassical plaza in the Gothic Quarter framed by continuous portico colonnades, towering royal palms, Antoni Gaudí's 6-armed dragon-helmet lampposts (*Fanals de Gaudí*), Font de les Tres Gràcies central fountain, outdoor tapas terraces, and Spanish guitar busker.
 - **Walk 20: El Veterinari (Chase 4 — The Clinic Escape)**: Millie reluctantly enters the vet clinic (an indoor waiting room off-leash area with other nervous pets on benches). Once she gets near the examination door and smells rubbing alcohol and rubber gloves, she panics and bolts out! Veterinary assistants with giant cones of shame and butterfly nets give chase. Her owner tries to drag her back toward the clinic ("Millie heel! It's just a checkup!"), adding leash resistance that Millie must overcome using zoomies, corner weaves, and obstacle slingshots.
-- **Walks 21–24**: *Tibidabo / Funicular* (funicular slopes, amusement park overlook), *Passeig de Gràcia* (Modernist facades, luxury pavement), *Carretera de les Aigües* (panoramic dirt trail above the city), *Parc del Laberint d'Horta* (cypress hedge maze walk).
+- **Walks 21–24**: *Tibidabo / Funicular* (funicular slopes, amusement park overlook), *Passeig de Gràcia* (Modernist facades, luxury pavement), *Carretera de les Aigües* (panoramic dirt trail above the city; built as walk 22, `aigues`), *Parc del Laberint d'Horta* (cypress hedge maze walk).
 - **Walk 25: Els Búnquers del Carmel**: High atmospheric sunset overlook over the entire city, setting the emotional and scenic stage for the finale.
 - **Walk 26: Rambla del Raval (The Grand Finale — El Gat de Botero Boss Arena)**:
   - **Arena**: The wide palm-lined central pedestrian promenade of Rambla del Raval, with outdoor terraces, iron lampposts, and stone benches.

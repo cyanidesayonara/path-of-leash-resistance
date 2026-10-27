@@ -34,7 +34,7 @@ const MATERIALS := {
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
 	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
 	"montjuic": "cactus", "port": "rope", "reial": "fronds", "vet": "biscuits",
-	"tibidabo": "bulbs", "aigues": "pinecones", "tutorial": "balls",
+	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "tutorial": "balls",
 }
 # What lies under a walk's pieces so they read on its ground by brightness, not
 # colour alone: a soft bed of light under dark-on-dark, of shade under
@@ -94,6 +94,7 @@ const FEEL := {
 	"balls": {"spacing": 0.15, "r": 0.075, "drag": 0.9, "take": 1.2, "roll": true},
 	"bulbs": {"fixed": true},
 	"setts": {"fixed": true},
+	"topiary": {"fixed": true},
 	"studs": {"fixed": true, "lights": true},
 	"puddle": {"fixed": true, "splash": true},
 	"trencadis": {"fixed": true},
@@ -510,6 +511,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_pegs(c, sign, h)
 		"setts":
 			_setts(c, lines, h, key, light)
+		"topiary":
+			_topiary(c, lines, h, key, light)
 		"tickets":
 			_tickets(c, sign, h)
 		"pebbles":
@@ -1110,3 +1113,17 @@ static func _setts(c: Object, lines: Array, h: float, key: float, light: Vector2
 		c.draw_colored_polygon(_box(pts[i] + light * 1.2, rot, s, s * 0.9), Color(0, 0, 0, 0.30))
 		c.draw_colored_polygon(_box(pts[i], rot, s, s * 0.9), col)
 		c.draw_colored_polygon(_box(pts[i] - light * s * 0.25, rot, s * 0.55, s * 0.45), col.lightened(0.18))
+
+
+static func _topiary(c: Object, lines: Array, h: float, key: float, light: Vector2) -> void:
+	# the name clipped in box hedging, the way a parterre spells a monogram:
+	# its shadow on the gravel, the dark body of the hedge, the clipped top
+	# catching the light, and the clumps of the shears' work along it
+	var w := h * 0.20
+	_stroke(c, lines, w, Color(0.05, 0.08, 0.04, 0.34), light * w * 0.45)
+	_stroke(c, lines, w, Color(0.12, 0.25, 0.14))
+	_stroke(c, lines, w * 0.7, Color(0.22, 0.40, 0.22), -light * w * 0.08)
+	var pts := Letters.points(lines, h * 0.075)
+	for i in range(pts.size()):
+		var q := pts[i] - light * w * 0.12 + Vector2(_h(i, key, 61.0) - 0.5, _h(i, key, 62.0) - 0.5) * w * 0.2
+		c.draw_circle(q, w * (0.16 + _h(i, key, 63.0) * 0.06), Color(0.34, 0.54, 0.30).lerp(Color(0.42, 0.60, 0.32), _h(i, key, 64.0)))
