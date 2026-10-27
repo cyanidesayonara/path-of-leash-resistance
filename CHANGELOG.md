@@ -30,7 +30,7 @@ Montjuïc, mooring rope on the wharf, palm fronds in Plaça Reial, dog
 biscuits at the vet, a chasing festoon of bulbs on Tibidabo. The tile
 plaque, the departures board and the plain type are gone.
 
-Names are bigger (58 px caps) and stay inside their path: a name too long
+Names are bigger (52 px caps) and stay inside their path: a name too long
 for it breaks onto two lines at a space, never leaving EL or LA on its own,
 or comes down in size. When a name is laid out the pieces drop into place
 left to right. Walks whose ground is near the pieces' brightness get a
