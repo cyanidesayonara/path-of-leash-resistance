@@ -252,7 +252,7 @@ static func _draw_scenery(m: Node2D, vt: float, vb: float) -> void:
 	var b3 := ShapeBatch.new()
 	var h0: float = LevelBuild.MOSAIC_HALL_Y0
 	var h1: float = LevelBuild.MOSAIC_HALL_Y1
-	var fade := 220.0
+	var fade := 120.0
 	if h1 - fade < vb + 40.0 and h0 + fade > vt - 40.0:
 		var y0 := maxf(vt - 40.0, h1 - fade)
 		var y1 := minf(vb + 40.0, h0 + fade)
@@ -261,7 +261,7 @@ static func _draw_scenery(m: Node2D, vt: float, vb: float) -> void:
 			var e: Vector2 = m.walk_edges(hy + 10.0)
 			var f := smoothstep(0.0, 1.0, clampf(minf(hy - (h1 - fade), (h0 + fade) - hy) / (fade * 2.0), 0.0, 1.0))
 			if f > 0.01:
-				b3.rect(Rect2(e.x, hy, e.y - e.x, 20.0), Color(0.10, 0.08, 0.06, 0.20 * f))
+				b3.rect(Rect2(e.x, hy, e.y - e.x, 20.0), Color(0.10, 0.08, 0.06, 0.34 * f))
 			hy += 20.0
 		# Jujol's ceiling vault medallions: the celebrated trencadis sunbursts
 		# set into the ceiling domes between the columns, where Gaudi omitted columns
@@ -272,6 +272,22 @@ static func _draw_scenery(m: Node2D, vt: float, vb: float) -> void:
 				trencadis_disc(m, b3, mj, 21.0, int(absf(mj.x * 3.0 + mj.y)))
 				b3.circle(mj, 8.0, Color(0.96, 0.94, 0.88))
 				b3.circle(mj, 5.0, Color(0.86, 0.76, 0.28))
+	# the palms in their rubble-stone collars on the climb to the viaduct
+	for pp: Vector2 in LevelBuild.mosaic_palms(m):
+		if pp.y < vt - 80.0 or pp.y > vb + 80.0:
+			continue
+		b3.circle(pp + LIGHT * 30.0, 34.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.18))
+		b3.circle(pp + LIGHT * 3.0, 18.0, Color(0.40, 0.34, 0.27))
+		b3.circle(pp, 17.0, Color(0.58, 0.50, 0.40))
+		for si in range(7):
+			var sa := float(si) * TAU / 7.0 + pp.y
+			b3.circle(pp + Vector2.from_angle(sa) * 13.0, 4.5, Color(0.50, 0.43, 0.34) if si % 2 == 0 else Color(0.66, 0.58, 0.47))
+		b3.circle(pp, 11.0, Color(0.44, 0.34, 0.22))
+		for f in range(9):
+			var fd := Vector2.from_angle(float(f) * TAU / 9.0 + pp.x * 0.01)
+			b3.line(pp, pp + fd * 44.0, Color(0.24, 0.40, 0.20), 7.0)
+			b3.line(pp + fd * 6.0, pp + fd * 40.0, Color(0.36, 0.54, 0.28), 3.0)
+		b3.circle(pp, 7.0, Color(0.52, 0.40, 0.26))
 	# the serpentine bench: the plaza's edges, finished in trencadis, its
 	# backrest along the outside and its shadow falling off it
 	var p0: float = LevelBuild.MOSAIC_PLAZA_Y0 + 40.0

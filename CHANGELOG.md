@@ -26,6 +26,38 @@ Settings has a LANGUAGE row (English, Català, Español) for the glosses;
 trick at a time". On the walk select the card under the name no longer
 repeats it: the ground has the name and the gloss, and the card is one
 line of progress or what opens the walk.
+## 2026-10-27 - El Mosaic: the garden past the walls
+
+Past El Mosaic's rubble-stone terrace walls there was the slate of a city
+block, filling a third of every frame. It is the park's own garden now:
+dry hillside, stone pines and carobs, agaves, out to the frame. The
+hypostyle hall's shade is deeper and ends sooner, so the columns read as
+standing under the plaza, not on open sand. And the bare climb from the
+plaza to the viaduct has two palms in rubble-stone collars, rope poles to
+wind your human round on the way up. Behaviour snapshot unchanged.
+## 2026-10-27 - Walk 22: La Carretera de les Aigües
+
+A new walk, open at 37 stars after El Tibidabo: the old water main's
+service road along Collserola, a level track of pale sauló that bends into
+every gully and out round every spur. On the drop side a timber
+post-and-rail fence whose posts catch the leash, the scrub and broom below
+it, and the city far down in the afternoon haze to the sea; on the uphill
+side the dry-stone wall and the rock cut, pines on the margin, and the
+water main's stone inspection hut. Mountain bikes come both ways down the
+middle of the track and ring as they come up on your human. The gully is
+crossed on a stone culvert whose parapets are grindable (PARAPET RUN), with
+mud in the low spots either side; the mirador bulges out over the drop with
+two benches, and the trail runner's banana on one of them is the prize.
+Keep still at the mirador with your human close and they look up from the
+phone. It ends at the Font de la Budellera, a clearing in the wood.
+
+Goals: the staples, three dogs, a drink at the font, three bikes squeaking
+past your human, the view, a combo and the banana. Its own arrangement
+(guitar and whistle over a walking bass), a bike bell, and
+`tests/test_aigues.gd`. Everything is drawn and placed by
+`systems/aigues.gd` through main's hooks, with two new ones: `tree_kind`
+(what the walk's deco poles grow) and `rider_lane` (where its riders ride).
+Behaviour snapshot byte-identical over every other walk.
 
 ## 2026-10-27 - Walk hooks declared per walk
 
