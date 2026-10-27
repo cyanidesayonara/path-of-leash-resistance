@@ -383,6 +383,10 @@ rubble stone, and the colour comes in where Gaudi put it.
   catching light and shade with concentric stone moldings, no mosaic wallpaper
   on the column shafts; Jujol's celebrated trencadis ceiling medallions in the
   vaulted bays between columns under the plaza terrace; and deeper covered shade.
+- Round 4 built (2026-10-27): the garden past the terrace walls (pines,
+  carobs, agaves on dry ground) in place of the city-block slate; the hall's
+  shade deep enough to read as covered; two palms in rubble collars on the
+  bare climb from the plaza to the viaduct.
 
 ### La Neteja (neteja) - the back street at dawn
 - Is: a narrow street at street-cleaning time: dumpsters, parked scooters,
