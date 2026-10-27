@@ -8,7 +8,11 @@ extends RefCounted
 # pours, each at its own stage. Everything here is drawn, never solid: the
 # building line (main.frontage) is the collider the fence stands on.
 # Draw-only and hashed from position, so a walk dresses the same every run.
+# Also the walk's module (main.WALK_MODULES): the works over the paving,
+# the digger, the worker and the conduit bundles are its hooks, below.
 
+const ShapeBatch := preload("res://systems/shape_batch.gd")
+const LevelBuild := preload("res://world/level_build.gd")
 const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.05, 0.05, 0.08, 0.22)
 
@@ -310,7 +314,7 @@ static func draw_rebar(b: Object, c: Vector2, ang: float, length: float) -> void
 
 # The footway's own dirt: the digger's track marks, the survey crew's spray
 # lines, gravel, and bits lying about. All flat.
-static func draw_ground(m: Node2D, b: Object, vt: float, vb: float) -> void:
+static func draw_footway(m: Node2D, b: Object, vt: float, vb: float) -> void:
 	# the digger came in from the side street and backed into its spot:
 	# two bands of cleats curving up to where it stands
 	var dg: Vector2 = m.vans[0] if not (m.vans as Array).is_empty() else Vector2(900.0, -1400.0)
@@ -444,3 +448,229 @@ static func draw_barrow(b: Object, c: Vector2, ang: float) -> void:
 	b.polygon(_quad(c, Vector2(18.0, 13.0), ang), Color(0.20, 0.50, 0.36))
 	b.polygon(_quad(c, Vector2(13.0, 9.0), ang), Color(0.48, 0.48, 0.46))
 	b.circle(c + ax * 3.0, 4.0, Color(0.56, 0.56, 0.54))
+
+
+# LES OBRES: the pours in their formwork with tape round them, the fresh
+# zebra, the trench with its plank and pipe, all drawn over the paving.
+static func _draw_works(m: Node2D, vt: float, vb: float) -> void:
+	var b := ShapeBatch.new()
+	# the footway's dirt: track marks, spray lines, bits lying about
+	draw_footway(m, b, vt, vb)
+	for zi in range(m.cement_zones.size()):
+		var cz: Rect2 = m.cement_zones[zi]
+		if cz.end.y < vt - 40.0 or cz.position.y > vb + 40.0:
+			continue
+		# each pour at its own stage (world/obres.gd)
+		draw_pour(b, cz.get_center(), cz.size, zi % 2)
+		# tape round the cones at the corners, red and white
+		var corners: Array[Vector2] = []
+		for c: Vector2 in [cz.position, Vector2(cz.end.x, cz.position.y), cz.end, Vector2(cz.position.x, cz.end.y)]:
+			corners.append(c + (c - cz.get_center()).normalized() * 16.0)
+		for k in range(4):
+			var a: Vector2 = corners[k]
+			var c2: Vector2 = corners[(k + 1) % 4]
+			var n := int(a.distance_to(c2) / 12.0)
+			for j in range(n):
+				var p0 := a.lerp(c2, float(j) / float(n))
+				var p1 := a.lerp(c2, float(j + 1) / float(n))
+				b.line(p0, p1, Color(0.90, 0.20, 0.18) if j % 2 == 0 else Color(0.96, 0.96, 0.94), 2.0)
+	# the zebra, freshly painted: wet white bars with a sheen
+	var zy: float = LevelBuild.OBRES_ZEBRA_Y
+	if zy > vt - 80.0 and zy < vb + 80.0:
+		var ze: Vector2 = m.walk_edges(zy)
+		var zx := ze.x + 36.0
+		while zx < ze.y - 36.0:
+			b.rect(Rect2(zx, zy + 4.0, 26.0, LevelBuild.OBRES_ZEBRA_H - 8.0), Color(0.96, 0.95, 0.90))
+			b.rect(Rect2(zx + 3.0, zy + 6.0, 5.0, LevelBuild.OBRES_ZEBRA_H - 12.0), Color(1, 1, 1, 0.9))
+			zx += 46.0
+	# the trench: dug earth at the lips, dark inside, utility conduits,
+	# timber walers and hydraulic trench shoring struts, red/white safety barrier boards,
+	# amber warning beacons, steel approach transition plates, and the heavy timber bridge
+	# flanked by galvanized scaffolding pipe handrails (grindable!)
+	var ty: float = LevelBuild.OBRES_TRENCH_Y
+	var th: float = LevelBuild.OBRES_TRENCH_H
+	if ty > vt - 100.0 and ty < vb + 100.0:
+		var te: Vector2 = m.walk_edges(ty)
+		var pc := (te.x + te.y) * 0.5
+		var half_w := LevelBuild.OBRES_PLANK * 0.5
+
+		# 1. Open excavation trenches on either side of the bridge
+		for c: Rect2 in m.cellars:
+			b.rect(c.grow(7.0), Color(0.48, 0.38, 0.26))
+			b.rect(c, Color(0.12, 0.10, 0.09))
+			b.rect(Rect2(c.position.x, c.position.y, c.size.x, 6.0), Color(0.50, 0.38, 0.24))
+			b.rect(Rect2(c.position.x, c.end.y - 6.0, c.size.x, 6.0), Color(0.38, 0.28, 0.18))
+			b.rect(Rect2(c.position.x, c.position.y + th * 0.5 - 6.0, c.size.x, 9.0), Color(0.74, 0.42, 0.18))
+			b.rect(Rect2(c.position.x, c.position.y + th * 0.5 - 6.0, c.size.x, 2.5), Color(0.86, 0.56, 0.28))
+			b.rect(Rect2(c.position.x, c.position.y + th * 0.5 + 4.0, c.size.x, 5.0), Color(0.20, 0.20, 0.22))
+			var strut_x := c.position.x + 35.0
+			while strut_x < c.end.x - 20.0:
+				b.line(Vector2(strut_x, c.position.y + 2.0), Vector2(strut_x, c.end.y - 2.0), Color(0.88, 0.68, 0.16), 4.5)
+				b.rect(Rect2(strut_x - 4.0, c.position.y + th * 0.5 - 3.0, 8.0, 6.0), Color(0.25, 0.25, 0.27))
+				b.circle(Vector2(strut_x, c.position.y + 3.0), 3.0, Color(0.35, 0.35, 0.38))
+				b.circle(Vector2(strut_x, c.end.y - 3.0), 3.0, Color(0.35, 0.35, 0.38))
+				strut_x += 76.0
+			for side_edge: float in [c.position.y - 4.0, c.end.y]:
+				b.rect(Rect2(c.position.x + 2.0, side_edge, c.size.x - 4.0, 4.0), Color(0.92, 0.92, 0.90))
+				var stripe_x := c.position.x + 6.0
+				while stripe_x < c.end.x - 8.0:
+					b.line(Vector2(stripe_x, side_edge), Vector2(stripe_x + 6.0, side_edge + 4.0), Color(0.86, 0.16, 0.16), 2.5)
+					stripe_x += 16.0
+
+		# 2. Heavy timber construction bridge
+		var plank := Rect2(pc - half_w - 6.0, ty - 12.0, LevelBuild.OBRES_PLANK + 12.0, th + 24.0)
+		b.rect(Rect2(plank.position + LIGHT * 6.0, plank.size), Color(0, 0, 0, 0.24))
+		b.rect(plank, Color(0.62, 0.48, 0.28))
+		var n_planks := 4
+		for k in range(n_planks):
+			var x0 := plank.position.x + float(k) * (plank.size.x / float(n_planks))
+			var pw := plank.size.x / float(n_planks) - 2.0
+			b.rect(Rect2(x0 + 1.0, plank.position.y, pw, plank.size.y), Color(0.66, 0.51, 0.31))
+			b.line(Vector2(x0 + pw * 0.5, plank.position.y), Vector2(x0 + pw * 0.5, plank.end.y), Color(0.54, 0.41, 0.24), 1.5)
+			b.circle(Vector2(x0 + pw * 0.5, plank.position.y + 4.0), 1.5, Color(0.30, 0.30, 0.32))
+			b.circle(Vector2(x0 + pw * 0.5, plank.end.y - 4.0), 1.5, Color(0.30, 0.30, 0.32))
+
+		# checkered steel transition plates at north and south approaches
+		for ramp_y: float in [plank.position.y - 3.0, plank.end.y - 3.0]:
+			var rr := Rect2(plank.position.x + 2.0, ramp_y, plank.size.x - 4.0, 6.0)
+			b.rect(rr, Color(0.70, 0.72, 0.74))
+			b.line(Vector2(rr.position.x, rr.position.y), Vector2(rr.end.x, rr.position.y), Color(0.85, 0.86, 0.88), 1.5)
+			for bx in range(6):
+				b.circle(Vector2(rr.position.x + 8.0 + float(bx) * (rr.size.x - 16.0) / 5.0, rr.position.y + 3.0), 1.2, Color(0.35, 0.35, 0.38))
+
+		# 3. Flashing amber hazard beacon lamps on barricade posts flanking the crossing
+		for lx: float in [pc - half_w - 18.0, pc + half_w + 18.0]:
+			for ly: float in [ty - 8.0, ty + th + 8.0]:
+				b.rect(Rect2(lx - 5.0, ly - 5.0, 10.0, 10.0), Color(0.86, 0.70, 0.14))
+				b.circle(Vector2(lx, ly), 16.0, Color(1.0, 0.75, 0.18, 0.10))
+				b.circle(Vector2(lx, ly), 5.5, Color(1.0, 0.78, 0.18))
+				b.circle(Vector2(lx, ly), 2.5, Color(1.0, 0.96, 0.65))
+
+		# 4. Galvanized scaffolding pipe handrails along both edges (grindable!)
+		for side: float in [-1.0, 1.0]:
+			var rx: float = pc + side * (half_w + 2.0)
+			var y0 := ty - 18.0
+			var y1 := ty + th + 18.0
+			b.line(Vector2(rx, y0) + LIGHT * 5.0, Vector2(rx, y1) + LIGHT * 5.0, Color(0, 0, 0, 0.22), 4.0)
+			for py: float in [y0 + 2.0, (y0 + y1) * 0.5, y1 - 2.0]:
+				b.circle(Vector2(rx, py) + LIGHT * 3.0, 4.0, Color(0, 0, 0, 0.20))
+				b.circle(Vector2(rx, py), 4.0, Color(0.48, 0.50, 0.52))
+				b.circle(Vector2(rx, py), 2.5, Color(0.76, 0.78, 0.80))
+			b.line(Vector2(rx, y0), Vector2(rx, y1), Color(0.78, 0.80, 0.82), 3.5)
+			b.line(Vector2(rx - side * 0.5, y0), Vector2(rx - side * 0.5, y1), Color(0.92, 0.94, 0.96), 1.5)
+			b.circle(Vector2(rx, y0), 2.8, Color(0.96, 0.52, 0.12))
+			b.circle(Vector2(rx, y1), 2.8, Color(0.96, 0.52, 0.12))
+			var mid_rx: float = rx - side * 3.0
+			b.line(Vector2(mid_rx, y0 + 6.0), Vector2(mid_rx, y1 - 6.0), Color(0.66, 0.68, 0.70), 2.0)
+	b.flush(m._wc)
+
+
+# The parked digger, from above: two rubber tracks on their rollers, the
+# yellow house on top with its engine deck, exhaust and striped counterweight
+# at the back, the cab with its glass roof on the left, and the boom and dipper
+# folded forward on their rams, the bucket's teeth resting on a heap of spoil.
+# Same footprint as a van; one batch, one draw call.
+static func _draw_digger(m: Node2D, v: Vector2) -> void:
+	var b := ShapeBatch.new()
+	var yel := Color(0.93, 0.70, 0.12)
+	var yel_d := Color(0.72, 0.52, 0.08)
+	var yel_l := Color(1.0, 0.84, 0.36)
+	var steel := Color(0.70, 0.72, 0.74)
+	b.polygon(m.round_rect_pts(Rect2(v.x - 36.0 + 10.0, v.y - 50.0 + 14.0, 72.0, 100.0), 10.0),
+		Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.20))
+	# the tracks: rubber pads over a sprocket and an idler at each end
+	for tx: float in [-36.0, 20.0]:
+		var tr := Rect2(v.x + tx, v.y - 50.0, 16.0, 100.0)
+		b.polygon(m.round_rect_pts(tr, 7.0), Color(0.13, 0.13, 0.14))
+		b.polygon(m.round_rect_pts(tr.grow(-3.0), 5.0), Color(0.22, 0.22, 0.24))
+		var ty := v.y - 44.0
+		while ty < v.y + 44.0:
+			b.line(Vector2(tr.position.x + 2.0, ty), Vector2(tr.end.x - 2.0, ty), Color(0.10, 0.10, 0.11), 2.4)
+			ty += 7.0
+		for ey: float in [-41.0, 41.0]:
+			b.circle(Vector2(tr.get_center().x, v.y + ey), 4.0, Color(0.34, 0.34, 0.36))
+	# the house: rounded, its shaded rim, the lit upper-left of the deck
+	var house := Rect2(v.x - 28.0, v.y - 26.0, 56.0, 64.0)
+	b.polygon(m.round_rect_pts(house.grow(1.5), 12.0), yel_d)
+	b.polygon(m.round_rect_pts(house, 11.0), yel)
+	b.polygon(m.round_rect_pts(Rect2(house.position + Vector2(4, 4), Vector2(30, 22)), 8.0), yel_l)
+	# the counterweight at the back, hazard-striped
+	var cw := Rect2(v.x - 26.0, v.y + 30.0, 52.0, 12.0)
+	b.polygon(m.round_rect_pts(cw, 5.0), Color(0.16, 0.16, 0.17))
+	for k in range(6):
+		var sx := cw.position.x + 4.0 + float(k) * 8.0
+		b.line(Vector2(sx, cw.end.y - 2.0), Vector2(sx + 6.0, cw.position.y + 2.0), yel, 3.0)
+	# the engine deck: louvres, and the exhaust stack with soot round it
+	for k in range(4):
+		var gy := v.y + 12.0 + float(k) * 4.0
+		b.line(Vector2(v.x + 4.0, gy), Vector2(v.x + 22.0, gy), yel_d, 1.6)
+	b.circle(Vector2(v.x + 18.0, v.y + 4.0), 4.0, Color(0.20, 0.20, 0.20, 0.5))
+	b.circle(Vector2(v.x + 18.0, v.y + 4.0), 2.6, Color(0.16, 0.16, 0.17))
+	# the cab on the left: a dark frame, a glass roof with the sky in it
+	var cab := Rect2(v.x - 26.0, v.y - 22.0, 22.0, 30.0)
+	b.polygon(m.round_rect_pts(cab, 4.0), Color(0.18, 0.18, 0.20))
+	b.polygon(m.round_rect_pts(cab.grow(-2.5), 3.0), Color(0.36, 0.48, 0.56))
+	b.polygon(PackedVector2Array([cab.position + Vector2(4, 4), cab.position + Vector2(14, 4),
+		cab.position + Vector2(5, 15)]), Color(0.72, 0.84, 0.90, 0.7))
+	b.line(Vector2(cab.position.x + 2.5, cab.get_center().y + 2.0), Vector2(cab.end.x - 2.5, cab.get_center().y + 2.0),
+		Color(0.18, 0.18, 0.20), 1.6)
+	# the boom from its foot beside the cab, the dipper folded back down
+	var foot := v + Vector2(8.0, -22.0)
+	var knee := v + Vector2(10.0, -66.0)
+	var wrist := v + Vector2(2.0, -80.0)
+	b.line(foot + LIGHT * 4.0, knee + LIGHT * 4.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25), 12.0)
+	b.polygon(PackedVector2Array([foot + Vector2(-7, 0), foot + Vector2(7, 0), knee + Vector2(4, 0), knee + Vector2(-4, 0)]), yel_d)
+	b.polygon(PackedVector2Array([foot + Vector2(-5, 0), foot + Vector2(3, 0), knee + Vector2(1, 0), knee + Vector2(-3, 0)]), yel)
+	# the ram along the boom: a steel rod out of its yellow cylinder
+	b.line(foot + Vector2(-1, -4), foot.lerp(knee, 0.55) + Vector2(-1, 0), yel_d, 4.0)
+	b.line(foot.lerp(knee, 0.55) + Vector2(-1, 0), knee + Vector2(-1, 6), steel, 2.0)
+	b.line(knee, wrist, yel_d, 8.0)
+	b.line(knee, wrist, yel, 5.0)
+	b.circle(knee, 4.0, Color(0.28, 0.28, 0.30))
+	b.circle(knee, 1.6, steel)
+	# the spoil heap, and the bucket on it, teeth down
+	# (heaped on the road side: the kerb side has a hydrant by it)
+	b.circle(wrist + Vector2(10, -6), 12.0, Color(0.46, 0.36, 0.25))
+	b.circle(wrist + Vector2(0, -10), 9.0, Color(0.52, 0.41, 0.28))
+	b.circle(wrist + Vector2(16, -12), 6.0, Color(0.58, 0.47, 0.33))
+	var bk := Rect2(wrist.x - 13.0, wrist.y - 13.0, 26.0, 12.0)
+	b.polygon(m.round_rect_pts(bk, 3.0), Color(0.26, 0.26, 0.28))
+	b.polygon(m.round_rect_pts(Rect2(bk.position + Vector2(2, 2), bk.size - Vector2(4, 6)), 2.0), Color(0.40, 0.40, 0.42))
+	for k in range(5):
+		var tx2 := bk.position.x + 3.0 + float(k) * 5.0
+		b.polygon(PackedVector2Array([Vector2(tx2 - 1.6, bk.position.y), Vector2(tx2 + 1.6, bk.position.y),
+			Vector2(tx2, bk.position.y - 4.0)]), steel)
+	b.flush(m._wc)
+
+
+# --- main's walk hooks (main.WALK_MODULES) ---------------------------------------
+# (a function here named for a hook IS that hook: the footway's dirt is
+# draw_footway, not draw_ground, which would replace the ground pass)
+
+# the works over the paving, after the ground and its dressing
+static func draw_top(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
+	_draw_works(m, vt, vb)
+
+
+# the digger, where other walks park a van
+static func draw_van(m: Node2D, _wc: Object, v: Vector2) -> void:
+	_draw_digger(m, v)
+
+
+# a worker in hi-vis and a hard hat, leaning on a shovel
+static func draw_performer(m: Node2D, wc: Object, pf: Vector2, _idx: int) -> void:
+	m.contact_shadow(wc, pf, 12.0, 5.0, 0.2)
+	wc.draw_circle(pf, 12.0, Color(0.96, 0.62, 0.12))
+	wc.draw_line(pf + Vector2(-10, -2), pf + Vector2(10, -2), Color(0.85, 0.88, 0.80), 3.0)
+	wc.draw_circle(pf + Vector2(0, -4), 7.5, Color(0.98, 0.86, 0.20))
+	wc.draw_line(pf + Vector2(10, 2), pf + Vector2(22, 20), Color(0.40, 0.30, 0.20), 2.5)
+	wc.draw_rect(Rect2(pf.x + 19.0, pf.y + 18.0, 8.0, 8.0), Color(0.45, 0.46, 0.48))
+
+
+# a strapped bundle of orange utility conduits and timber trench shoring
+static func draw_log_prop(_m: Node2D, c: Object, p: Vector2) -> void:
+	c.draw_rect(Rect2(p.x - 30.0, p.y - 9.0, 60.0, 9.0), Color(0.58, 0.44, 0.26))
+	c.draw_rect(Rect2(p.x - 30.0, p.y - 1.0, 60.0, 5.0), Color(0.88, 0.42, 0.14))
+	c.draw_rect(Rect2(p.x - 30.0, p.y + 4.0, 60.0, 5.0), Color(0.76, 0.34, 0.10))
+	for bx: float in [-16.0, 16.0]:
+		c.draw_rect(Rect2(p.x + bx - 1.5, p.y - 9.5, 3.0, 19.0), Color(0.22, 0.24, 0.26))
