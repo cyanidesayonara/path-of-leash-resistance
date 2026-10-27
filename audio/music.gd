@@ -114,6 +114,10 @@ const STYLES := {
 	# road: accordion with a glockenspiel doubling it all the way, over oompah
 	"tibidabo": {"bpm": 126, "key": -3, "lead": "accordion", "lead2": ["glock", 12], "lead2_all": true, "comp": "oompah",
 		"bass": "oompah", "drums": "kickrim", "verb": 0.26},
+	# La Carretera de les Aigües: a long, level stroll with the city below:
+	# guitar and whistle in unison over a walking bass and brushes
+	"aigues": {"bpm": 98, "key": 2, "lead": "guitar", "lead2": ["whistle", 0], "comp": "arp",
+		"bass": "walk", "drums": "brush", "swing": 0.06, "verb": 0.36},
 	"freedom": {"bpm": 120, "key": 5, "lead": "whistle", "lead2": ["glock", 12], "comp": "arp",
 		"bass": "walk", "drums": "kickrim", "swing": 0.1, "verb": 0.22},
 }

@@ -2,6 +2,30 @@
 
 Append-only session history, newest first.
 
+## 2026-10-27 - Walk 22: La Carretera de les Aigües
+
+A new walk, open at 37 stars after El Tibidabo: the old water main's
+service road along Collserola, a level track of pale sauló that bends into
+every gully and out round every spur. On the drop side a timber
+post-and-rail fence whose posts catch the leash, the scrub and broom below
+it, and the city far down in the afternoon haze to the sea; on the uphill
+side the dry-stone wall and the rock cut, pines on the margin, and the
+water main's stone inspection hut. Mountain bikes come both ways down the
+middle of the track and ring as they come up on your human. The gully is
+crossed on a stone culvert whose parapets are grindable (PARAPET RUN), with
+mud in the low spots either side; the mirador bulges out over the drop with
+two benches, and the trail runner's banana on one of them is the prize.
+Keep still at the mirador with your human close and they look up from the
+phone. It ends at the Font de la Budellera, a clearing in the wood.
+
+Goals: the staples, three dogs, a drink at the font, three bikes squeaking
+past your human, the view, a combo and the banana. Its own arrangement
+(guitar and whistle over a walking bass), a bike bell, and
+`tests/test_aigues.gd`. Everything is drawn and placed by
+`systems/aigues.gd` through main's hooks, with two new ones: `tree_kind`
+(what the walk's deco poles grow) and `rider_lane` (where its riders ride).
+Behaviour snapshot byte-identical over every other walk.
+
 ## 2026-10-27 - Walk hooks declared per walk
 
 `tests/test_walk_hooks.gd` checked only that a module function named like a

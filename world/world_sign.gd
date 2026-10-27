@@ -27,7 +27,7 @@ const MATERIALS := {
 	"barri": "leaves", "street": "carnations", "park": "flowerbed", "beach": "sand",
 	"rain": "puddle", "market": "fruit", "trail": "sticks", "site": "cones",
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
-	"partit": "pipes",
+	"partit": "pipes", "aigues": "leaves",
 }
 # the colour a material's gloss, the line under the name, is written in
 const GLOSS := {
