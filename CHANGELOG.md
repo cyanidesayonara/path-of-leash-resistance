@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-10-27 - La Neteja drawn by its own module
+
+`systems/neteja.gd` is La Neteja's first walk module and takes its drawing
+out of main.gd: the low sun down the cross streets and the wet setts
+(`draw_live`), the shops' open-or-shut hash (`open_shop`; main keeps
+`_neteja_open_shop` as a forwarder for the tests) and the frontage modules,
+El Gòtic's roofs over shutters still down, which the edge layer calls as
+`Neteja.draw_module`. The sweeper, the chase home and the suds round the
+bollards stay in main. Behaviour snapshot byte-identical over every walk;
+La Neteja's shots, the chase home included, pixel-identical.
+
 ## 2026-10-27 - El Gòtic drawn by its own module
 
 `world/gotic.gd` takes El Gòtic's picture out of main.gd: the alley's
