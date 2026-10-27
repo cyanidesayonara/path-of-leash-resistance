@@ -98,6 +98,7 @@ const CROSS_SECTIONS := {
 	"reial": ["none", 0.0, "none", 0.0],               # quayside and harbor drawn in systems/port.gd
 	"vet": ["none", 0.0, "none", 0.0],
 	"tibidabo": ["none", 0.0, "none", 0.0],
+	"aigues": ["none", 0.0, "none", 0.0],          # the fence and the cut bank at the track
 	# flood wall on the left, grass then the river on the right
 	"besos": ["none", 0.0, "grass", 120.0],
 }
@@ -1148,6 +1149,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"reial": half = 290.0       # quayside wharf (Port.edge_nodes)
 		"vet": half = 280.0
 		"tibidabo": half = 260.0
+		"aigues": half = Aigues.HALF     # the envelope of its bends (Aigues.edge_nodes)
 		"besos": half = BESOS_HALF
 	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
 	m.walk_half = half
@@ -1305,6 +1307,8 @@ static func apply_corridor(m: Node2D) -> void:
 		m.edge_nodes = Vet.edge_nodes(m)
 	elif m.lvl == "tibidabo":
 		m.edge_nodes = Tibidabo.edge_nodes(m)
+	elif m.lvl == "aigues":
+		m.edge_nodes = Aigues.edge_nodes(m)
 	elif m.lvl == "trail":
 		# EL BOSC BENDS - the first walk in the game that is not a straight
 		# line. A woodland trail has no business being ruler-drawn: it wanders
@@ -1335,7 +1339,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues":
 		return
 	# and so does El Barri; the First Walk, built on it, is still fitted
 	if m.lvl == "barri" and not m.tutorial_mode:
@@ -1429,6 +1433,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_tibidabo: Array = Tibidabo.build(m)
 			hyd_list.assign(pl_tibidabo[0])
 			keb_list.assign(pl_tibidabo[1])
+		"aigues":
+			var pl_aigues: Array = Aigues.build(m)
+			hyd_list.assign(pl_aigues[0])
+			keb_list.assign(pl_aigues[1])
 		"street":
 			m.lane_ys = Array([-1200.0, -2600.0, -4000.0], TYPE_FLOAT, &"", null)
 			m.gate_text = "PIPICÀ"
@@ -2141,6 +2149,9 @@ static func build_level_data(m: Node2D) -> void:
 		"tibidabo":
 			m.prize_pos = Tibidabo.PRIZE
 			m.prize_text = Tibidabo.PRIZE_TEXT
+		"aigues":
+			m.prize_pos = Aigues.PRIZE
+			m.prize_text = Aigues.PRIZE_TEXT
 		"besos":
 			m.prize_pos = Vector2(BESOS_CX + 40.0, -2700.0)
 			m.prize_text = "fetch the ball from beside the path"
@@ -2499,6 +2510,13 @@ const FREEDOM_PROPS := {
 		[Vector2(1042.0, -478.0), "rock"], [Vector2(312.0, -248.0), "post"], [Vector2(542.0, -228.0), "post"],
 		[Vector2(768.0, -218.0), "rock"],
 	],
+	# the Font de la Budellera's clearing: holm oaks and rocks, a fallen pine
+	"aigues": [
+		[Vector2(246.0, -520.0), "dig"], [Vector2(640.0, -262.0), "dig"], [Vector2(1040.0, -300.0), "dig"],
+		[Vector2(172.0, -420.0), "rock"], [Vector2(398.0, -540.0), "log"], [Vector2(860.0, -520.0), "rock"],
+		[Vector2(1092.0, -440.0), "shrub"], [Vector2(190.0, -270.0), "shrub"], [Vector2(330.0, -320.0), "rock"],
+		[Vector2(560.0, -536.0), "shrub"], [Vector2(806.0, -300.0), "log"], [Vector2(950.0, -236.0), "post"],
+	],
 	"trail": [
 		[Vector2(228.0, -536.0), "dig"], [Vector2(618.0, -268.0), "dig"], [Vector2(1062.0, -288.0), "dig"],
 		[Vector2(154.0, -465.0), "log"], [Vector2(362.0, -528.0), "log"], [Vector2(882.0, -534.0), "log"],
@@ -2645,7 +2663,7 @@ static func placa_clear(m: Node2D, at: Vector2) -> bool:
 # paving. Not a park's gravel path, a forest trail, the scrapyard's dirt or
 # El Mosaic's terraces, and on the seafront only the promenade, not the brick
 # bike path beside it.
-const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell", "station"]
+const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell", "station", "aigues"]
 const BEACH_PROM_X := 560.0
 
 # PASSEIG MARÍTIM's landmarks, on the walk itself so its stretches differ
@@ -3383,6 +3401,7 @@ static func spawn_cones(m: Node2D) -> void:
 		"beach": kinds = ["bottle", "ball", "can"]
 		"park", "trail": kinds = ["bottle", "ball", "can"]
 		"besos": kinds = ["bottle", "ball", "can"]
+		"aigues": kinds = ["bottle", "can", "bottle"]   # what runners drop: no bin bags up here
 		"market", "spook": kinds = ["crate", "bottle", "can"]
 		"neteja": kinds = ["crate", "crate", "sack", "bottle"]
 		"station": kinds = ["can", "bottle", "bottle"]

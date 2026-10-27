@@ -451,6 +451,27 @@ park could be just a neighborhood park in bcn."
   chalk grid and wooden sandbox with bucket and spade, petanca scoreboard and
   bench rack, and municipal green Ajuntament noticeboard at the entrance.
 
+### La Carretera de les Aigües (aigues) - the hillside track
+- Is: the old water main's service road along Collserola, a level track of
+  packed sauló at about 400 m that follows the contour, so it bends into
+  every gully and out round every spur. Uphill, east: a rock cut and a
+  dry-stone retaining wall, pines, holm oaks and yellow broom. Downhill,
+  west: a timber post-and-rail fence over the scrub, and the whole city to
+  the sea. Late afternoon. Runners and mountain bikes both ways, ringing.
+- Rhythm: a calm spur from the trailhead; the busy stretch of bikes; the
+  gully, where the track pinches over a stone culvert with low parapets
+  and the mud lies in the low spot; the mirador, a bulge on the drop side
+  with benches; the water main's stone inspection hut; then into the wood
+  to the Font de la Budellera, the off-leash clearing.
+- Signature line: on the zoomies, grind the culvert's parapet (PARAPET RUN),
+  vault round the pine at the gully's mouth, and fling your human along the
+  fence posts.
+- Goals: the staples, a drink, three dogs, three bikes squeaking past your
+  human without a spill, and getting your human to look up at the view at
+  the mirador. Prize: the trail runner's banana on the mirador bench.
+- Opens at 37 stars, after El Tibidabo. The door is a trailhead. Built in
+  `systems/aigues.gd`, drawn by its hooks; no new walk branches in main.gd.
+
 ### First Walk (tutorial) - learn each trick in peace
 Santtu: "we should really upgrade the tutorial too, so that the user can
 learn each trick & mechanic individually and in peace, without all the

@@ -67,6 +67,13 @@ static func build(m: Node2D) -> void:
 			var half: float = LevelBuild.OBRES_PLANK * 0.5
 			for hx: float in [pc - half - 2.0, pc + half + 2.0]:
 				m.rails.append(line(Vector2(hx, ty + th + 18.0), Vector2(hx, ty - 18.0), "SCAFFOLD RUN"))
+		"aigues":
+			# the culvert's stone parapets, both sides of the gully crossing
+			var ce: Vector2 = m.walk_edges(Aigues.CULVERT_Y)
+			var y0: float = Aigues.CULVERT_Y + Aigues.CULVERT_HALF_SPAN
+			var y1: float = Aigues.CULVERT_Y - Aigues.CULVERT_HALF_SPAN
+			for px: float in [ce.x + 7.0, ce.y - 7.0]:
+				m.rails.append(line(Vector2(px, y0), Vector2(px, y1), "PARAPET RUN"))
 		"montjuic":
 			# the terrace walls, path to rim on either side, and the
 			# escalators' outer handrails

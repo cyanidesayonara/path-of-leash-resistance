@@ -298,6 +298,7 @@ func _build_library() -> void:
 	lib["tangle"] = _wobble(0.26)
 	lib["hiss"] = _noiseburst(0.16, 22.0)
 	lib["grunt"] = _grunt()
+	lib["bell"] = _bell()
 	lib["squawk"] = _squawk()
 	# a paw going into mud: a short, low, wet suck
 	lib["squelch"] = _squelch()
@@ -394,6 +395,19 @@ func _coin(f0: float, f1: float, dur: float) -> AudioStreamWAV:
 		var t := float(i) / RATE
 		var f := f0 if i < split else f1
 		out[i] = sin(TAU * f * t) * exp(-t * 12.0) * 0.5
+	return _pack(out)
+
+
+func _bell() -> AudioStreamWAV:
+	# a bike bell, rung twice: a bright strike with its clangy upper partial
+	var per := int(0.13 * RATE)
+	var out := PackedFloat32Array()
+	out.resize(per * 2 + int(0.25 * RATE))
+	for k in range(2):
+		for i in range(out.size() - k * per):
+			var t := float(i) / RATE
+			var v := (sin(TAU * 2350.0 * t) + 0.45 * sin(TAU * 2350.0 * 2.76 * t)) * exp(-t * 14.0) * 0.32
+			out[k * per + i] += v
 	return _pack(out)
 
 
