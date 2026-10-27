@@ -64,7 +64,7 @@ static func place_for(id: String) -> String:
 			return "station"
 		"montjuic", "tibidabo":
 			return "funicular"
-		"partit":
+		"partit", "horta":
 			return "metro"
 		"trail", "aigues":
 			return "trailhead"

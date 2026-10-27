@@ -2,6 +2,24 @@
 
 Append-only session history, newest first.
 
+## 2026-10-27 - Walk 23: El Laberint d'Horta
+
+A new walk, open at 39 stars after La Carretera: the oldest garden in the
+city, at the foot of Collserola. In past the Desvalls palace, along the
+romantic garden's canal under the big trees (she can get in it), then into
+the clipped cypress maze. The path splits round one hedge block after
+another and your human keeps to one side and then the other, so the way
+through is a serpentine, and the leash goes round every hedge: drag them
+into the wrong aisle and round a hedge end. Eros stands on his plinth in
+the clearing at the heart, a pole as fat as the plinth to tetherball your
+human round; lead them once round him for the walk's own goal. The
+gardener clipping the clearing's wall has left his bocadillo on the
+wheelbarrow, and that is the prize. Then up the terraces' steps between
+the balustrades (the middle one grinds: BALUSTRADE RUN), the pavilion on
+one side and the nymph's pool on the other, and out the back gate into
+the wood. Its name is clipped in box hedging, and its music is a garden
+minuet on glockenspiel and whistle.
+
 ## 2026-10-27 - Every walk's name in its own stuff
 
 Each walk spells its name on the ground in something of its own, and none

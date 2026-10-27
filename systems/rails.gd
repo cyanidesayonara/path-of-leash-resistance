@@ -67,6 +67,10 @@ static func build(m: Node2D) -> void:
 			var half: float = LevelBuild.OBRES_PLANK * 0.5
 			for hx: float in [pc - half - 2.0, pc + half + 2.0]:
 				m.rails.append(line(Vector2(hx, ty + th + 18.0), Vector2(hx, ty - 18.0), "SCAFFOLD RUN"))
+		"horta":
+			# the middle terrace's balustrade, along the east edge
+			var bx: float = m.walk_edges((Horta.BALUSTRADE_Y0 + Horta.BALUSTRADE_Y1) * 0.5).y - 8.0
+			m.rails.append(line(Vector2(bx, Horta.BALUSTRADE_Y0), Vector2(bx, Horta.BALUSTRADE_Y1), "BALUSTRADE RUN"))
 		"aigues":
 			# the culvert's stone parapets, both sides of the gully crossing
 			var ce: Vector2 = m.walk_edges(Aigues.CULVERT_Y)
