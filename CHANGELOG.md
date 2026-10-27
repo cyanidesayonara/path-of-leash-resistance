@@ -10,7 +10,7 @@ module too. Its `draw_ground` (the footway's dirt) is renamed
 `draw_ground` would have replaced the ground pass. Moved in from main.gd:
 the pours with their tape, the fresh zebra and the trench (`draw_top`,
 which runs in the slot the works drew in), the digger (`draw_van`), the
-worker on his shovel (`draw_performer`) and the conduit bundles
+worker on their shovel (`draw_performer`) and the conduit bundles
 (`draw_log_prop`). The Heras fence and the edge and yard modules were
 already called from main by name and stay so. Behaviour snapshot
 byte-identical over every walk; Les Obres' shots, the digger and the
