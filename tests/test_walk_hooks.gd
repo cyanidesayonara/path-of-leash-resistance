@@ -34,6 +34,7 @@ const HOOKS := {
 	"park": ["draw_live", "grass_blocked"],
 	"neteja": ["draw_live"],
 	"spook": ["draw_live", "draw_overhead", "draw_yard"],
+	"aigues": ["draw_bollard", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_live", "draw_snack", "rider_lane", "tick", "tree_kind"],
 }
 
 var checks := 0

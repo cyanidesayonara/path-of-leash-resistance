@@ -66,7 +66,7 @@ static func place_for(id: String) -> String:
 			return "funicular"
 		"partit":
 			return "metro"
-		"trail":
+		"trail", "aigues":
 			return "trailhead"
 		"besos":
 			return "ramp"

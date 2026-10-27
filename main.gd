@@ -260,7 +260,10 @@ var lvl := "street":
 # world/gotic.gd. La Neteja and El Parc are draw_live (El Parc's lawns also
 # grass_blocked); El Besòs's river is draw_over_walkway and its waymarkers
 # draw_bollard. Les Obres (world/obres.gd) is draw_top, draw_van,
-# draw_performer and draw_log_prop.
+# draw_performer and draw_log_prop. La Carretera de les Aigües draws its track
+# as draw_cross_section and the slope and city as draw_edge_layer, says its
+# margin pines are forest trees with tree_kind, and sends its mountain bikes
+# down the middle of the track with rider_lane.
 # The tutorial is laid out on El Barri (lvl "barri"), so El Barri's hooks run
 # in it too. tests/test_walk_hooks.gd holds each walk's declared hooks: a new
 # hook in a module, or a helper named like one, fails there until declared.
@@ -277,6 +280,7 @@ const WALK_MODULES := {
 	"reial": preload("res://systems/reial.gd"),
 	"vet": preload("res://systems/vet.gd"),
 	"tibidabo": preload("res://systems/tibidabo.gd"),
+	"aigues": preload("res://systems/aigues.gd"),
 	"beach": preload("res://systems/passeig.gd"),
 	"rain": preload("res://systems/diluvi.gd"),
 	"market": preload("res://world/mercat.gd"),
@@ -2231,6 +2235,8 @@ func pole_tree(i: int) -> int:
 	var p := poles[i]
 	if tutorial_mode or lvl == "scrap" or lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "neteja":
 		return TREE_NONE
+	if walk_mod != null and walk_mod.has_method("tree_kind"):
+		return walk_mod.tree_kind(self, p)
 	if lvl == "rain" and p.x < walk_cx:
 		return TREE_NONE
 	if lvl == "park" or lvl == "barri" or lvl == "spook":
@@ -6852,8 +6858,10 @@ func _vlane(delta: float) -> void:
 	# the parallel bike lane: fast commuters hold their line, kids on
 	# scooters weave - and sometimes ride on the sidewalk itself
 	# only walks with a rider lane: anywhere else the match below has no case
-	# and would spawn a motionless rider at x=0, off screen, every few seconds
-	if not lvl in VLANE_LEVELS:
+	# and would spawn a motionless rider at x=0, off screen, every few seconds.
+	# A walk module with rider_lane says where its own riders go.
+	var mod_lane: bool = walk_mod != null and walk_mod.has_method("rider_lane")
+	if not mod_lane and not lvl in VLANE_LEVELS:
 		return
 	vspawn_t -= delta
 	if vspawn_t > 0.0:
@@ -6908,6 +6916,13 @@ func _vlane(delta: float) -> void:
 			band_lo = 770.0 if east else 370.0
 			band_hi = 910.0 if east else 510.0
 			x = randf_range(band_lo, band_hi)
+		_:
+			var rl: Dictionary = walk_mod.rider_lane(self, up)
+			kid = bool(rl.kid)
+			speed = float(rl.speed)
+			x = float(rl.x)
+			band_lo = float(rl.lo)
+			band_hi = float(rl.hi)
 	var b := Node2D.new()
 	b.set_script(load("res://entities/bike.gd"))
 	b.position = Vector2(x, y)
@@ -9161,6 +9176,8 @@ const FREEDOM_KINDS := {
 	"vet": "yard",
 	# the fairground summit plaza overlooking Barcelona
 	"tibidabo": "placa",
+	# the Font de la Budellera, in the wood above the track
+	"aigues": "clearing",
 }
 const BEACH_SEA_R := 430.0
 const BEACH_GATE_SHORE_X := 230.0

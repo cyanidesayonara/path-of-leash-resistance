@@ -53,6 +53,8 @@ const LEVEL_GOAL_IDS := {
 	"vet": ["mark", "sniff", "phone", "paws", "bag", "fetch", "hi", "snack", "scale", "cone", "combo", "prize"],
 	# El Tibidabo: the mountain funicular & panoramic overlook
 	"tibidabo": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "funicular", "viewfinder", "combo", "prize"],
+	# La Carretera de les Aigües: the bikes coming both ways, and the view
+	"aigues": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "bikes", "view", "combo", "prize"],
 }
 
 
@@ -102,6 +104,8 @@ static func defs(m: Node2D) -> Dictionary:
 		"scale": {"text": "Weigh in on the digital pet scale", "target": 1, "fn": func() -> int: return 1 if bool(m.get("vet_scale_weighed")) else 0},
 		"cone": {"text": "Escape the vet without getting bumped", "target": 1, "fn": func() -> int: return 1 if bool(m.dog_hits == 0 and m.finished) else 0},
 		"funicular": {"text": "Watch the vintage funicular climb the mountain", "target": 1, "fn": func() -> int: return 1 if m.tibidabo_funicular_seen else 0},
+		"bikes": {"text": "Let %d mountain bikes squeak past your human", "target": 3, "fn": func() -> int: return m.close_calls},
+		"view": {"text": "Get your human to look up at the view", "target": 1, "fn": func() -> int: return 1 if Aigues.view_taken(m) else 0},
 		"viewfinder": {"text": "Gaze through the panoramic cliffside viewfinder", "target": 1, "fn": func() -> int: return 1 if m.tibidabo_viewfinder_gazed else 0},
 	}
 
