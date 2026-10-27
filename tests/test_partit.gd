@@ -119,9 +119,9 @@ func _run() -> void:
 	await _march(m, P)
 	await _march_drawn(m)
 
-	# the walk's name is written in sunflower seed shells
+	# the walk's name is laid out in a home fan's scarf
 	var WS: GDScript = load("res://world/world_sign.gd")
-	_check(WS.material_for("partit", "clear") == "pipes", "the name is laid in seed shells")
+	_check(WS.material_for("partit", "clear") == "scarf", "the name is laid in a fan's scarf")
 
 	print("test_partit: %d checks, %d failures" % [checks, failures.size()])
 	quit(1 if failures.size() > 0 else 0)
