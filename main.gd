@@ -260,7 +260,10 @@ var lvl := "street":
 # world/gotic.gd. La Neteja and El Parc are draw_live (El Parc's lawns also
 # grass_blocked); El Besòs's river is draw_over_walkway and its waymarkers
 # draw_bollard. Les Obres (world/obres.gd) is draw_top, draw_van,
-# draw_performer and draw_log_prop.
+# draw_performer and draw_log_prop. La Carretera de les Aigües draws its track
+# as draw_cross_section and the slope and city as draw_edge_layer, says its
+# margin pines are forest trees with tree_kind, and sends its mountain bikes
+# down the middle of the track with rider_lane.
 # The tutorial is laid out on El Barri (lvl "barri"), so El Barri's hooks run
 # in it too. tests/test_walk_hooks.gd holds each walk's declared hooks: a new
 # hook in a module, or a helper named like one, fails there until declared.
@@ -277,6 +280,7 @@ const WALK_MODULES := {
 	"reial": preload("res://systems/reial.gd"),
 	"vet": preload("res://systems/vet.gd"),
 	"tibidabo": preload("res://systems/tibidabo.gd"),
+	"aigues": preload("res://systems/aigues.gd"),
 	"beach": preload("res://systems/passeig.gd"),
 	"rain": preload("res://systems/diluvi.gd"),
 	"market": preload("res://world/mercat.gd"),
@@ -1402,6 +1406,21 @@ func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 		"neteja":
 			Neteja.draw_module(self, c, r, side, k, inner_x)
 		"guell":
+			# beyond the terrace wall, the park's garden on the hillside: dry
+			# ground, stone pines and carobs, agaves, all of it out to the frame
+			var gx: float = r.position.x - 440.0 if side < 0.0 else r.end.x
+			c.draw_rect(Rect2(gx, r.position.y, 440.0, r.size.y), Mosaic.HILL_SCRUB)
+			for gi in range(9):
+				var gh := fmod(absf(sin(float(k * 11 + gi) * 12.9898) * 43758.5453), 1.0)
+				var gp := Vector2(gx + 30.0 + fmod(float(gi) * 97.0 + gh * 60.0, 380.0), r.position.y + fmod(float(gi) * 61.0 + gh * 40.0, r.size.y))
+				if gi % 3 == 2:
+					for f in range(7):
+						c.draw_line(gp, gp + Vector2.from_angle(float(f) * TAU / 7.0 + gh) * 15.0, Color(0.44, 0.58, 0.54), 4.0)
+					continue
+				var gr := 26.0 + gh * 18.0
+				c.draw_circle(gp + LIGHT * 10.0, gr, Color(0.12, 0.14, 0.08, 0.45))
+				c.draw_circle(gp, gr, Color(0.22, 0.34, 0.18) if gi % 3 == 0 else Color(0.30, 0.40, 0.20))
+				c.draw_circle(gp - LIGHT * gr * 0.3, gr * 0.45, Color(0.34, 0.46, 0.24))
 			# rubble-stone terrace walls, the stones laid rough, and the
 			# planting along the top: palms and agaves
 			var stone := Color(0.56, 0.48, 0.38).lightened(lit * 0.08)
@@ -2216,6 +2235,8 @@ func pole_tree(i: int) -> int:
 	var p := poles[i]
 	if tutorial_mode or lvl == "scrap" or lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "neteja":
 		return TREE_NONE
+	if walk_mod != null and walk_mod.has_method("tree_kind"):
+		return walk_mod.tree_kind(self, p)
 	if lvl == "rain" and p.x < walk_cx:
 		return TREE_NONE
 	if lvl == "park" or lvl == "barri" or lvl == "spook":
@@ -6837,8 +6858,10 @@ func _vlane(delta: float) -> void:
 	# the parallel bike lane: fast commuters hold their line, kids on
 	# scooters weave - and sometimes ride on the sidewalk itself
 	# only walks with a rider lane: anywhere else the match below has no case
-	# and would spawn a motionless rider at x=0, off screen, every few seconds
-	if not lvl in VLANE_LEVELS:
+	# and would spawn a motionless rider at x=0, off screen, every few seconds.
+	# A walk module with rider_lane says where its own riders go.
+	var mod_lane: bool = walk_mod != null and walk_mod.has_method("rider_lane")
+	if not mod_lane and not lvl in VLANE_LEVELS:
 		return
 	vspawn_t -= delta
 	if vspawn_t > 0.0:
@@ -6893,6 +6916,13 @@ func _vlane(delta: float) -> void:
 			band_lo = 770.0 if east else 370.0
 			band_hi = 910.0 if east else 510.0
 			x = randf_range(band_lo, band_hi)
+		_:
+			var rl: Dictionary = walk_mod.rider_lane(self, up)
+			kid = bool(rl.kid)
+			speed = float(rl.speed)
+			x = float(rl.x)
+			band_lo = float(rl.lo)
+			band_hi = float(rl.hi)
 	var b := Node2D.new()
 	b.set_script(load("res://entities/bike.gd"))
 	b.position = Vector2(x, y)
@@ -9146,6 +9176,8 @@ const FREEDOM_KINDS := {
 	"vet": "yard",
 	# the fairground summit plaza overlooking Barcelona
 	"tibidabo": "placa",
+	# the Font de la Budellera, in the wood above the track
+	"aigues": "clearing",
 }
 const BEACH_SEA_R := 430.0
 const BEACH_GATE_SHORE_X := 230.0
