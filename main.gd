@@ -251,7 +251,8 @@ var lvl := "street":
 # L'Estacio's draw_freedom_beyond and draw_freedom_ground; and El Barri's
 # draw_gate_fence, draw_fountain and draw_performer; and Passeig Maritim's
 # draw_cross_section, takes_prints and draw_bin. El Diluvi's arcade pillars
-# are draw_column and El Porxo is draw_freedom_beyond and draw_freedom_ground.
+# are draw_column, its panots draw_over_walkway, and El Porxo is
+# draw_freedom_beyond and draw_freedom_ground.
 # El Mercat's hall is draw_live, its arches draw_overhead, its cast-iron
 # columns draw_column, and its greengrocer's van draw_van. La Castanyada's
 # street is draw_live, its lights draw_overhead and its festival yard on the
@@ -263,7 +264,9 @@ var lvl := "street":
 # draw_performer and draw_log_prop. La Carretera de les Aigües draws its track
 # as draw_cross_section and the slope and city as draw_edge_layer, says its
 # margin pines are forest trees with tree_kind, and sends its mountain bikes
-# down the middle of the track with rider_lane.
+# down the middle of the track with rider_lane. El Laberint d'Horta draws its
+# gravel, hedges and Eros as draw_cross_section, the gardens round the maze
+# as draw_edge_layer, and the gardener's barrow as draw_live.
 # The tutorial is laid out on El Barri (lvl "barri"), so El Barri's hooks run
 # in it too. tests/test_walk_hooks.gd holds each walk's declared hooks: a new
 # hook in a module, or a helper named like one, fails there until declared.
@@ -281,6 +284,7 @@ const WALK_MODULES := {
 	"vet": preload("res://systems/vet.gd"),
 	"tibidabo": preload("res://systems/tibidabo.gd"),
 	"aigues": preload("res://systems/aigues.gd"),
+	"horta": preload("res://systems/horta.gd"),
 	"beach": preload("res://systems/passeig.gd"),
 	"rain": preload("res://systems/diluvi.gd"),
 	"market": preload("res://world/mercat.gd"),
@@ -1214,6 +1218,12 @@ func _draw_paving(vt: float, vb: float, base: Color) -> void:
 			sw = 64.0
 			sh = 56.0
 			stagger = 0.5
+		"rain":
+			# laid square under El Diluvi's panots, two to a slab each way, so
+			# the slabs' tone and the tiles' joints agree (Diluvi.PANOT)
+			sw = 80.0
+			sh = 80.0
+			stagger = 0.0
 		"station":
 			sw = 132.0   # big polished tiles, laid square
 			sh = 132.0
@@ -9247,6 +9257,8 @@ const FREEDOM_KINDS := {
 	"tibidabo": "placa",
 	# the Font de la Budellera, in the wood above the track
 	"aigues": "clearing",
+	# the wood behind the garden's back gate
+	"horta": "clearing",
 }
 const BEACH_SEA_R := 430.0
 const BEACH_GATE_SHORE_X := 230.0

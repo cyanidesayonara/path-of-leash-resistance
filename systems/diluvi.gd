@@ -285,3 +285,49 @@ static func draw_column(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
 	m.cast_shadow(wc, p, 12.0, 30.0, 0.2)
 	wc.draw_rect(Rect2(p.x - 11.0, p.y - 11.0, 22.0, 22.0), Color(0.55, 0.50, 0.45))
 	wc.draw_rect(Rect2(p.x - 11.0, p.y - 11.0, 8.0, 22.0), Color(0.64, 0.59, 0.53))
+
+
+# The street is paved in panots de flor, the Barcelona pavement tile with a
+# four-petal flower pressed into it, laid square: drawn over the walkway's
+# slabs, the flowers' grooves dark with water and their crowns catching the
+# light. Off the crossings, which are asphalt.
+const PANOT := 40.0
+const PANOT_GROOVE := Color(0.0, 0.02, 0.06, 0.13)
+const PANOT_JOINT := Color(0.0, 0.02, 0.06, 0.09)
+const PANOT_SHINE := Color(0.90, 0.94, 1.0, 0.10)
+
+
+static func _on_crossing(m: Node2D, y: float) -> bool:
+	for ly: float in m.lane_ys:
+		if absf(y - ly) < float(m.LANE_HALF) + PANOT:
+			return true
+	return false
+
+
+static func draw_over_walkway(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	var top: float = maxf(vt - PANOT, float(m.GATE_Y) - 30.0)
+	var bot: float = vb + PANOT
+	var x0: float = m.sw_l
+	var x1: float = m.sw_r
+	var y := floorf(top / PANOT) * PANOT
+	while y < bot:
+		if not _on_crossing(m, y + PANOT * 0.5):
+			wc.line(Vector2(x0, y), Vector2(x1, y), PANOT_JOINT, 1.0)
+			var x := x0 + PANOT * 0.5
+			while x < x1 - PANOT * 0.25:
+				if x - PANOT * 0.5 > x0 + 1.0:
+					wc.line(Vector2(x - PANOT * 0.5, y), Vector2(x - PANOT * 0.5, y + PANOT), PANOT_JOINT, 1.0)
+				var c := Vector2(x, y + PANOT * 0.5)
+				wc.polygon(_flower(c, PANOT * 0.30), PANOT_GROOVE)
+				wc.circle(c - Vector2(1.0, 1.5), 2.2, PANOT_SHINE)
+				x += PANOT
+		y += PANOT
+
+
+# a four-petal flower: round petals on the tile's axes, pinched between them
+static func _flower(c: Vector2, r: float) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for k in range(16):
+		var a := TAU * float(k) / 16.0
+		pts.append(c + Vector2.from_angle(a) * r * (0.42 + 0.58 * absf(cos(2.0 * a))))
+	return pts

@@ -196,6 +196,9 @@ with pickpockets and shenanigans happening around."
   gutters, sodden flattened cardboard boxes and wind-flipped broken umbrellas,
   plus vaulted groin-ribbing and pendant lanterns inside the dry stone arcades.
 
+- Panot pass (2026-10-27): the street is paved in panots de flor laid
+  square (`Diluvi.draw_over_walkway`), the slabs on the same 80 px grid.
+
 ### El Mercat (market) - the market hall
 - Is: inside a covered market: stall rows as aisles, iron columns, the fish
   counter, fruit crates, sawdust.
@@ -458,6 +461,10 @@ park could be just a neighborhood park in bcn."
   the approach, wooden pergola over the dominoes/cards table, hopscotch (xarranca)
   chalk grid and wooden sandbox with bucket and spade, petanca scoreboard and
   bench rack, and municipal green Ajuntament noticeboard at the entrance.
+- Neighbourhood pass (2026-10-27): the lawns end at the park's cast-iron
+  railing (solid, `Barri.solids`), with gates and worn desire paths; past it
+  the panot pavement, street trees, parked motorbikes, a Bicing dock and the
+  rooftop terraces. Not in the First Walk.
 
 ### La Carretera de les Aigües (aigues) - the hillside track
 - Is: the old water main's service road along Collserola, a level track of
@@ -479,6 +486,27 @@ park could be just a neighborhood park in bcn."
   the mirador. Prize: the trail runner's banana on the mirador bench.
 - Opens at 37 stars, after El Tibidabo. The door is a trailhead. Built in
   `systems/aigues.gd`, drawn by its hooks; no new walk branches in main.gd.
+
+### El Laberint d'Horta (horta) - the cypress maze
+- Is: the oldest garden in the city, at the foot of Collserola in Horta:
+  an 18th-century neoclassical garden with a romantic one beside it, and
+  the clipped cypress maze between them with Eros at its heart. Raked
+  sauló paths, box edging, mown lawns, cypresses, sandstone.
+- Rhythm: the avenue past the Desvalls palace; the romantic garden's
+  bends along the canal under the big trees; the maze, dead straight
+  between its walls, where the path splits round one hedge block after
+  another and your human keeps to one side and then the other; the
+  clearing at its heart with Eros on his plinth and the gardener clipping
+  the wall; up the terraces' steps between the balustrades, the pavilion
+  on one side and the nymph's pool on the other; out at the back gate.
+- Signature line: on the zoomies, slingshot your human round a hedge end,
+  lap Eros (a real pole as fat as his plinth) and tetherball them round
+  him, then grind the middle terrace's balustrade (BALUSTRADE RUN).
+- Goals: the staples, a drink, three dogs, a fling, and leading your human
+  once round Eros. Prize: the gardener's bocadillo off his wheelbarrow.
+- Opens at 39 stars, after La Carretera. Arrives by metro. Built in
+  `systems/horta.gd`, drawn by its hooks; the hedges are islands like El
+  Mercat's stall blocks, solid with the leash going round them.
 
 ### First Walk (tutorial) - learn each trick in peace
 Santtu: "we should really upgrade the tutorial too, so that the user can
