@@ -379,6 +379,8 @@ static func _landmarks(m: Node2D, vt: float, vb: float) -> void:
 			m._draw_beach_shower(m._wc, sp)
 	if tw.y > vt - 120.0 and tw.y < vb + 80.0:
 		m._draw_lifeguard_tower(m._wc, tw, true, false)
+	if _drawn_window(LevelBuild.BEACH_STAR.grow(80.0), vt, vb):
+		_estel_ferit(m, LevelBuild.BEACH_STAR)
 	for i in range(LevelBuild.BEACH_BARS.size()):
 		var bar: Rect2 = LevelBuild.BEACH_BARS[i]
 		var cn: Rect2 = m.canopies[i] if i < m.canopies.size() else bar
@@ -418,6 +420,41 @@ static func _landmarks(m: Node2D, vt: float, vb: float) -> void:
 		b.flush(m._wc)
 		m._wc.draw_string(m.font, sign_at - Vector2(50.0, 0.0), "XIRINGUITO", HORIZONTAL_ALIGNMENT_CENTER, 100.0, 12,
 			Color(0.98, 0.96, 0.88) if i == 1 else Color(0.30, 0.18, 0.10))
+
+
+# L'Estel Ferit from above: four Corten cubes stacked off true, each a little
+# further out than the one below, so the tower leans; the long shadow it
+# throws across the sand, the rust's streaks, and the strips of window in
+# each cube's top.
+const CORTEN := Color(0.56, 0.30, 0.16)
+const CORTEN_LIT := Color(0.70, 0.40, 0.22)
+const CORTEN_DARK := Color(0.40, 0.20, 0.10)
+
+
+static func _estel_ferit(m: Node2D, foot: Rect2) -> void:
+	var b := ShapeBatch.new()
+	var c := foot.get_center()
+	var s := foot.size.x * 0.5
+	b.polygon(PackedVector2Array([c + Vector2(-s, -s), c + Vector2(s, -s), c + Vector2(s, s) + m.LIGHT * 120.0,
+		c + Vector2(-s, s) + m.LIGHT * 120.0]), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
+	for k in range(4):
+		var o := Vector2(float(k) * 9.0, -float(k) * 13.0) + Vector2(sin(float(k) * 1.7), 0.0) * 4.0
+		var rot := (float(k) - 1.5) * 0.06
+		var half := s * (0.92 - float(k) * 0.04)
+		var pts := PackedVector2Array()
+		for corner: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:
+			pts.append(c + o + (corner * half).rotated(rot))
+		# the cube's sides showing below its top, toward the light's far side
+		var side_pts := PackedVector2Array([pts[1], pts[2], pts[2] + Vector2(4, 6), pts[1] + Vector2(4, 6)])
+		b.polygon(side_pts, CORTEN_DARK)
+		b.polygon(pts, CORTEN if k % 2 == 0 else CORTEN.lerp(CORTEN_LIT, 0.35))
+		# the window strip across its top, and a run of rust down it
+		var a := pts[0].lerp(pts[3], 0.3)
+		var z := pts[1].lerp(pts[2], 0.3)
+		b.line(a + (z - a) * 0.12, a + (z - a) * 0.88, Color(0.30, 0.44, 0.50), 3.0)
+		b.line(pts[0].lerp(pts[1], 0.7), pts[3].lerp(pts[2], 0.7), CORTEN_DARK, 1.2)
+		b.line(pts[0], pts[1], CORTEN_LIT, 1.5)
+	b.flush(m._wc)
 
 
 static func _access_ramp(m: Node2D, b: ShapeBatch, from_x: float, to_x: float, y: float, w: float = 32.0) -> void:

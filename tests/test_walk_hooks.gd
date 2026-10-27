@@ -27,7 +27,7 @@ const HOOKS := {
 	"vet": ["draw_edge_layer", "draw_overhead", "on_bark", "surface", "tick"],
 	"tibidabo": ["build_layer", "draw_edge_layer", "draw_overhead", "surface", "tick"],
 	"beach": ["draw_bin", "draw_cross_section", "draw_edge_layer", "draw_overhead", "surface", "takes_prints"],
-	"rain": ["draw_column", "draw_freedom_beyond", "draw_freedom_ground", "draw_live"],
+	"rain": ["draw_column", "draw_freedom_beyond", "draw_freedom_ground", "draw_live", "draw_over_walkway"],
 	"market": ["draw_column", "draw_live", "draw_overhead", "draw_van"],
 	"site": ["draw_log_prop", "draw_performer", "draw_top", "draw_van"],
 	"besos": ["draw_bollard", "draw_over_walkway"],
@@ -35,6 +35,7 @@ const HOOKS := {
 	"neteja": ["draw_live"],
 	"spook": ["draw_live", "draw_overhead", "draw_yard"],
 	"aigues": ["draw_bollard", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_live", "draw_snack", "rider_lane", "tick", "tree_kind"],
+	"horta": ["draw_bollard", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_live", "draw_snack", "tick", "tree_kind"],
 }
 
 var checks := 0

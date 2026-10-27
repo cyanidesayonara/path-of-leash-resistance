@@ -99,6 +99,7 @@ const CROSS_SECTIONS := {
 	"vet": ["none", 0.0, "none", 0.0],
 	"tibidabo": ["none", 0.0, "none", 0.0],
 	"aigues": ["none", 0.0, "none", 0.0],          # the fence and the cut bank at the track
+	"horta": ["none", 0.0, "none", 0.0],           # lawns and the maze drawn in systems/horta.gd
 	# flood wall on the left, grass then the river on the right
 	"besos": ["none", 0.0, "grass", 120.0],
 }
@@ -1171,6 +1172,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"vet": half = 280.0
 		"tibidabo": half = 260.0
 		"aigues": half = Aigues.HALF     # the envelope of its bends (Aigues.edge_nodes)
+		"horta": half = Horta.HALF       # the maze, wall to wall (Horta.edge_nodes)
 		"besos": half = BESOS_HALF
 	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
 	m.walk_half = half
@@ -1330,6 +1332,8 @@ static func apply_corridor(m: Node2D) -> void:
 		m.edge_nodes = Tibidabo.edge_nodes(m)
 	elif m.lvl == "aigues":
 		m.edge_nodes = Aigues.edge_nodes(m)
+	elif m.lvl == "horta":
+		m.edge_nodes = Horta.edge_nodes(m)
 	elif m.lvl == "trail":
 		# EL BOSC BENDS - the first walk in the game that is not a straight
 		# line. A woodland trail has no business being ruler-drawn: it wanders
@@ -1360,7 +1364,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta":
 		return
 	# and so does El Barri; the First Walk, built on it, is still fitted
 	if m.lvl == "barri" and not m.tutorial_mode:
@@ -1458,6 +1462,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_aigues: Array = Aigues.build(m)
 			hyd_list.assign(pl_aigues[0])
 			keb_list.assign(pl_aigues[1])
+		"horta":
+			var pl_horta: Array = Horta.build(m)
+			hyd_list.assign(pl_horta[0])
+			keb_list.assign(pl_horta[1])
 		"street":
 			m.lane_ys = Array([-1200.0, -2600.0, -4000.0], TYPE_FLOAT, &"", null)
 			m.gate_text = "PIPICÀ"
@@ -2102,12 +2110,19 @@ static func build_level_data(m: Node2D) -> void:
 		add_rope_rect(m, park_slackline())
 		for st: Vector2 in [PARK_SLACK_A, PARK_SLACK_B]:
 			add_rope_point(m, st, PARK_SLACK_TRUNK + 2.0, false)
+	if m.lvl == "beach":
+		add_rope_rect(m, BEACH_STAR)
 	if m.lvl == "partit":
 		for r: Rect2 in Partit.wrap_rects():
 			add_rope_rect(m, r)
 	if m.lvl == "port":
 		for r: Rect2 in Port.wrap_rects():
 			add_rope_rect(m, r)
+	if m.lvl == "horta":
+		for r: Rect2 in Horta.wrap_rects():
+			add_rope_rect(m, r)
+		# Eros: a real pole as fat as his plinth, to wind your human round
+		m.rope_radii[m.poles.find(Horta.EROS)] = Horta.EROS_R + 4.0
 	if m.lvl == "reial":
 		for r: Rect2 in Reial.wrap_rects():
 			add_rope_rect(m, r)
@@ -2177,6 +2192,9 @@ static func build_level_data(m: Node2D) -> void:
 		"aigues":
 			m.prize_pos = Aigues.PRIZE
 			m.prize_text = Aigues.PRIZE_TEXT
+		"horta":
+			m.prize_pos = Horta.PRIZE
+			m.prize_text = Horta.PRIZE_TEXT
 		"besos":
 			m.prize_pos = Vector2(BESOS_CX + 40.0, -2700.0)
 			m.prize_text = "fetch the ball from beside the path"
@@ -2342,6 +2360,9 @@ static func build_freedom_area(m: Node2D) -> void:
 		m.water.append(placa_fountain(m))
 	if m.lvl == "montjuic":
 		m.water.append(Montjuic.FONT)
+	if m.lvl == "horta":
+		m.water.append(Horta.CANAL)
+		m.water.append(Horta.POOL)
 	if m.freedom_kind == "beach":
 		# The sea, in two pieces that meet at the gate: a band along the whole
 		# passeig (so she can go in ANYWHERE on the walk, which is the first
@@ -2542,6 +2563,14 @@ const FREEDOM_PROPS := {
 		[Vector2(1092.0, -440.0), "shrub"], [Vector2(190.0, -270.0), "shrub"], [Vector2(330.0, -320.0), "rock"],
 		[Vector2(560.0, -536.0), "shrub"], [Vector2(806.0, -300.0), "log"], [Vector2(950.0, -236.0), "post"],
 	],
+	# the wood behind the garden's back gate: pines and holm oaks, a fallen
+	# trunk, a stone bench someone carried up from the garden long ago
+	"horta": [
+		[Vector2(262.0, -500.0), "dig"], [Vector2(660.0, -280.0), "dig"], [Vector2(1020.0, -330.0), "dig"],
+		[Vector2(180.0, -300.0), "rock"], [Vector2(420.0, -530.0), "log"], [Vector2(880.0, -500.0), "shrub"],
+		[Vector2(1100.0, -460.0), "rock"], [Vector2(210.0, -440.0), "shrub"], [Vector2(560.0, -520.0), "shrub"],
+		[Vector2(790.0, -260.0), "log"], [Vector2(960.0, -230.0), "post"],
+	],
 	"trail": [
 		[Vector2(228.0, -536.0), "dig"], [Vector2(618.0, -268.0), "dig"], [Vector2(1062.0, -288.0), "dig"],
 		[Vector2(154.0, -465.0), "log"], [Vector2(362.0, -528.0), "log"], [Vector2(882.0, -534.0), "log"],
@@ -2688,7 +2717,7 @@ static func placa_clear(m: Node2D, at: Vector2) -> bool:
 # paving. Not a park's gravel path, a forest trail, the scrapyard's dirt or
 # El Mosaic's terraces, and on the seafront only the promenade, not the brick
 # bike path beside it.
-const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell", "station", "aigues"]
+const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell", "station", "aigues", "horta"]
 const BEACH_PROM_X := 560.0
 
 # PASSEIG MARÍTIM's landmarks, on the walk itself so its stretches differ
@@ -2704,6 +2733,9 @@ const BEACH_SHOWERS: Array[Vector2] = [Vector2(360.0, -1080.0), Vector2(360.0, -
 const BEACH_COURT := Rect2(246.0, -2120.0, 120.0, 240.0)
 const BEACH_TOWER := Vector2(300.0, -3050.0)
 const BEACH_BARS: Array[Rect2] = [Rect2(1004.0, -1786.0, 176.0, 66.0), Rect2(1004.0, -3262.0, 176.0, 60.0)]
+# L'Estel Ferit, Rebecca Horn's stack of four rusted steel cubes on the
+# Barceloneta sand: its footprint, solid, and the leash goes round it
+const BEACH_STAR := Rect2(268.0, -3450.0, 60.0, 60.0)
 
 
 # the net runs across the court's middle, its posts just outside the lines
@@ -2714,7 +2746,8 @@ static func beach_net_posts() -> Array[Vector2]:
 
 # the sand a towel keeps off: the court, the tower's footprint, the showers
 static func beach_sand_keepouts() -> Array[Rect2]:
-	var out: Array[Rect2] = [BEACH_COURT.grow(16.0), Rect2(BEACH_TOWER - Vector2(40.0, 40.0), Vector2(80.0, 90.0))]
+	var out: Array[Rect2] = [BEACH_COURT.grow(16.0), Rect2(BEACH_TOWER - Vector2(40.0, 40.0), Vector2(80.0, 90.0)),
+		BEACH_STAR.grow(24.0)]
 	for sp: Vector2 in BEACH_SHOWERS:
 		out.append(Rect2(sp - Vector2(36.0, 36.0), Vector2(72.0, 72.0)))
 	return out
@@ -2783,6 +2816,7 @@ static func level_solid_rects(m: Node2D) -> Array:
 		"beach":
 			for i in range(BEACH_BARS.size()):
 				out.append(["beach_bar_%d" % i, BEACH_BARS[i]])
+			out.append(["beach_star", BEACH_STAR])
 		"station":
 			out.append(["estacio_train", ESTACIO_TRAIN])
 		"park":
@@ -2805,12 +2839,20 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps: Array[Rect2] = Partit.solids(m)
 			for i in range(ps.size()):
 				out.append(["partit_%d" % i, ps[i]])
+		"horta":
+			var ps_horta: Array[Rect2] = Horta.solids(m)
+			for i in range(ps_horta.size()):
+				out.append(["horta_%d" % i, ps_horta[i]])
 		"port":
 			var ps_port: Array[Rect2] = Port.solids(m)
 			for i in range(ps_port.size()):
 				out.append(["port_%d" % i, ps_port[i]])
 		"besos":
 			out.append(["besos_channel", besos_deep_rect(m)])
+		"barri":
+			var ps_barri: Array[Rect2] = Barri.solids(m)
+			for i in range(ps_barri.size()):
+				out.append(["barri_railing_%d" % i, ps_barri[i]])
 	return out
 
 
@@ -2935,6 +2977,7 @@ static func build_walls(m: Node2D) -> void:
 	m.add_child(walls)
 	# the chiringuitos' bar huts are buildings, not decals
 	if m.lvl == "beach":
+		add_rect_body(m, BEACH_STAR.get_center(), BEACH_STAR.size)
 		for br: Rect2 in BEACH_BARS:
 			add_rect_body(m, br.get_center(), br.size)
 	# THE BUILDING LINE is solid (#65): she used to be able to walk out onto
@@ -3197,6 +3240,15 @@ static func build_walls(m: Node2D) -> void:
 	if m.lvl == "park":
 		for st: Vector2 in [PARK_SLACK_A, PARK_SLACK_B]:
 			add_circle_body(m, st, PARK_SLACK_TRUNK)
+	# El Barri's railings, with the street past them
+	if m.lvl == "barri":
+		for r: Rect2 in Barri.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+	# El Laberint d'Horta's hedges, the maze out to the walls, Eros's plinth
+	if m.lvl == "horta":
+		for r: Rect2 in Horta.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+		add_circle_body(m, Horta.EROS, Horta.EROS_R)
 	if m.lvl == "reial":
 		for r: Rect2 in Reial.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
@@ -3431,6 +3483,7 @@ static func spawn_cones(m: Node2D) -> void:
 		"park", "trail": kinds = ["bottle", "ball", "can"]
 		"besos": kinds = ["bottle", "ball", "can"]
 		"aigues": kinds = ["bottle", "can", "bottle"]   # what runners drop: no bin bags up here
+		"horta": kinds = ["can", "bottle", "ball"]      # picnics on the lawns
 		"market", "spook": kinds = ["crate", "bottle", "can"]
 		"neteja": kinds = ["crate", "crate", "sack", "bottle"]
 		"station": kinds = ["can", "bottle", "bottle"]

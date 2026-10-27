@@ -10,6 +10,52 @@ their rucksack and water bottle on the grass. The trunks are solid; she runs
 under the line, but the leash does not: it catches on the webbing and
 slips off under a hard pull. Behaviour snapshot unchanged.
 
+## 2026-10-27 - Passeig Marítim: L'Estel Ferit
+
+The Barceloneta's own landmark is on the sand now: Rebecca Horn's Wounded
+Star, four rusted Corten cubes stacked off true so the tower leans, a strip
+of window in each, its long shadow across the sand. It is solid, the leash
+goes round it like a pole, and nobody lays a towel at its foot.
+Behaviour snapshot unchanged.
+
+## 2026-10-27 - El Diluvi's panots
+
+El Diluvi's street was grey slabs that could have been any city's. It is
+paved now in panots de flor, the Barcelona pavement tile with a four-petal
+flower pressed into it, laid square: the flowers' grooves dark with the
+rain and their crowns catching the light, the slabs' tone under them on the
+same grid, and the crossings left as asphalt. Drawing only.
+
+## 2026-10-27 - El Barri: the neighbourhood round the square
+
+El Barri's lawns used to run on out of the frame to walls nobody could see,
+so the square was nowhere in particular. They end now at the park's
+cast-iron railing, solid, with gates in it and the grass worn to earth on
+the tracks people take across to them. Past the railing is the
+neighbourhood: the pavement in its four-dot panots, plane trees along it,
+the kerb with motorbikes parked nose-in (a helmet left on a seat), a Bicing
+dock with its red bikes, and the blocks' rooftop terraces with their water
+tanks, skylights, washing lines and geraniums. The First Walk, laid out on
+El Barri, is unchanged. Behaviour snapshot unchanged.
+
+## 2026-10-27 - Walk 23: El Laberint d'Horta
+
+A new walk, open at 39 stars after La Carretera: the oldest garden in the
+city, at the foot of Collserola. In past the Desvalls palace, along the
+romantic garden's canal under the big trees (she can get in it), then into
+the clipped cypress maze. The path splits round one hedge block after
+another and your human keeps to one side and then the other, so the way
+through is a serpentine, and the leash goes round every hedge: drag them
+into the wrong aisle and round a hedge end. Eros stands on his plinth in
+the clearing at the heart, a pole as fat as the plinth to tetherball your
+human round; lead them once round him for the walk's own goal. The
+gardener clipping the clearing's wall has left his bocadillo on the
+wheelbarrow, and that is the prize. Then up the terraces' steps between
+the balustrades (the middle one grinds: BALUSTRADE RUN), the pavilion on
+one side and the nymph's pool on the other, and out the back gate into
+the wood. Its name is clipped in box hedging, and its music is a garden
+minuet on glockenspiel and whistle.
+
 ## 2026-10-27 - Every walk's name in its own stuff
 
 Each walk spells its name on the ground in something of its own, and none

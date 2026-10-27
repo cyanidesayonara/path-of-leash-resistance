@@ -118,6 +118,10 @@ const STYLES := {
 	# guitar and whistle in unison over a walking bass and brushes
 	"aigues": {"bpm": 98, "key": 2, "lead": "guitar", "lead2": ["whistle", 0], "comp": "arp",
 		"bass": "walk", "drums": "brush", "swing": 0.06, "verb": 0.36},
+	# El Laberint d'Horta: a garden minuet, glockenspiel and whistle over
+	# broken chords, a plain bass, no drums: the gravel is the percussion
+	"horta": {"bpm": 92, "key": 7, "lead": "glock", "lead2": ["whistle", 0], "comp": "arp",
+		"bass": "root", "drums": "brushsoft", "verb": 0.38},
 	"freedom": {"bpm": 120, "key": 5, "lead": "whistle", "lead2": ["glock", 12], "comp": "arp",
 		"bass": "walk", "drums": "kickrim", "swing": 0.1, "verb": 0.22},
 }
