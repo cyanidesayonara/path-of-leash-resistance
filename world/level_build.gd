@@ -222,6 +222,14 @@ const MOSAIC_VIADUCT_STEP := 80.0
 const MOSAIC_CALVARY := Vector2(790.0, -4790.0)
 
 
+static func mosaic_palms(m: Node2D) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for pl: Vector2 in [Vector2(-130.0, -3810.0), Vector2(120.0, -3990.0)]:
+		var e: Vector2 = m.walk_edges(pl.y)
+		out.append(Vector2((e.x + e.y) * 0.5 + pl.x, pl.y))
+	return out
+
+
 static func mosaic(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 	m.gate_text = "EL CALVARI"
 	m.pond = Rect2()
@@ -246,6 +254,10 @@ static func mosaic(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 			m.poles.append(Vector2(m.walk_edges(iy).y - MOSAIC_VIADUCT_INNER, iy))
 		vy -= MOSAIC_VIADUCT_STEP
 	m.deco_pole_count = m.poles.size()
+	# two palms in rubble-stone collars where the path climbs from the plaza
+	# to the viaduct: something to wind your human round on the way up
+	for pp: Vector2 in mosaic_palms(m):
+		m.poles.append(pp)
 	m.astands = Array([], TYPE_VECTOR2, &"", null)
 	m.manholes = Array([], TYPE_VECTOR2, &"", null)
 	m.cone_spots = Array([], TYPE_VECTOR2, &"", null)

@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-10-27 - El Mosaic: the garden past the walls
+
+Past El Mosaic's rubble-stone terrace walls there was the slate of a city
+block, filling a third of every frame. It is the park's own garden now:
+dry hillside, stone pines and carobs, agaves, out to the frame. The
+hypostyle hall's shade is deeper and ends sooner, so the columns read as
+standing under the plaza, not on open sand. And the bare climb from the
+plaza to the viaduct has two palms in rubble-stone collars, rope poles to
+wind your human round on the way up. Behaviour snapshot unchanged.
 ## 2026-10-27 - Walk 22: La Carretera de les Aigües
 
 A new walk, open at 37 stars after El Tibidabo: the old water main's

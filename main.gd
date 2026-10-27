@@ -1406,6 +1406,21 @@ func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 		"neteja":
 			Neteja.draw_module(self, c, r, side, k, inner_x)
 		"guell":
+			# beyond the terrace wall, the park's garden on the hillside: dry
+			# ground, stone pines and carobs, agaves, all of it out to the frame
+			var gx: float = r.position.x - 440.0 if side < 0.0 else r.end.x
+			c.draw_rect(Rect2(gx, r.position.y, 440.0, r.size.y), Mosaic.HILL_SCRUB)
+			for gi in range(9):
+				var gh := fmod(absf(sin(float(k * 11 + gi) * 12.9898) * 43758.5453), 1.0)
+				var gp := Vector2(gx + 30.0 + fmod(float(gi) * 97.0 + gh * 60.0, 380.0), r.position.y + fmod(float(gi) * 61.0 + gh * 40.0, r.size.y))
+				if gi % 3 == 2:
+					for f in range(7):
+						c.draw_line(gp, gp + Vector2.from_angle(float(f) * TAU / 7.0 + gh) * 15.0, Color(0.44, 0.58, 0.54), 4.0)
+					continue
+				var gr := 26.0 + gh * 18.0
+				c.draw_circle(gp + LIGHT * 10.0, gr, Color(0.12, 0.14, 0.08, 0.45))
+				c.draw_circle(gp, gr, Color(0.22, 0.34, 0.18) if gi % 3 == 0 else Color(0.30, 0.40, 0.20))
+				c.draw_circle(gp - LIGHT * gr * 0.3, gr * 0.45, Color(0.34, 0.46, 0.24))
 			# rubble-stone terrace walls, the stones laid rough, and the
 			# planting along the top: palms and agaves
 			var stone := Color(0.56, 0.48, 0.38).lightened(lit * 0.08)
