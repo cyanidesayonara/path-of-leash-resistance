@@ -2,6 +2,31 @@
 
 Append-only session history, newest first.
 
+## 2026-10-27 - Every walk's name in its own stuff
+
+Each walk spells its name on the ground in something of its own, and none
+shares: tennis balls on the first walk, laundry pegs in El Gòtic, LED lights
+set into L'Estació's floor that go dark under whoever stands on them and come
+back with a flare, river pebbles by the Besòs, the cactus garden on
+Montjuïc, mooring rope on the wharf, palm fronds in Plaça Reial, dog
+biscuits at the vet, a chasing festoon of bulbs on Tibidabo. The tile
+plaque, the departures board and the plain type are gone.
+
+Names are bigger (58 px caps) and stay inside their path: a name too long
+for it breaks onto two lines at a space, never leaving EL or LA on its own,
+or comes down in size. When a name is laid out the pieces drop into place
+left to right. Walks whose ground is near the pieces' brightness get a
+faint light or dark bed under the letters, so every name reads in greyscale.
+
+The gloss under the name lost its black box: cream type with a dark outline,
+the same distance under every name, fading as the walk starts however it
+started (it never faded when a walk was launched from the command line).
+Settings has a LANGUAGE row (English, Català, Español) for the glosses;
+`--lang=` sets it for one run. The first walk's gloss says "practice one
+trick at a time". On the walk select the card under the name no longer
+repeats it: the ground has the name and the gloss, and the card is one
+line of progress or what opens the walk.
+
 ## 2026-10-27 - Walk hooks declared per walk
 
 `tests/test_walk_hooks.gd` checked only that a module function named like a

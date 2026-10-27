@@ -104,9 +104,11 @@ static func hill_half(m: Node2D, y: float) -> float:
 	return lerpf(HILL_BOTTOM, HILL_TOP, climb(m, y))
 
 
+# The first wall is one step up from the start, not at it: the walk's name is
+# laid out on the open path where the start's wall used to cross it.
 static func terrace_ys(m: Node2D) -> Array[float]:
 	var out: Array[float] = []
-	var y: float = m.START_Y - 260.0
+	var y: float = m.START_Y - 260.0 - TERRACE_STEP
 	while y > m.GATE_Y + 200.0:
 		out.append(y)
 		y -= TERRACE_STEP
@@ -114,7 +116,7 @@ static func terrace_ys(m: Node2D) -> Array[float]:
 
 
 static func on_steps(m: Node2D, y: float) -> bool:
-	var k := roundf((m.START_Y - 260.0 - y) / TERRACE_STEP)
+	var k := maxf(1.0, roundf((m.START_Y - 260.0 - y) / TERRACE_STEP))
 	var wy: float = m.START_Y - 260.0 - k * TERRACE_STEP
 	return y <= wy + 6.0 and y >= wy - STEP_H - 6.0
 

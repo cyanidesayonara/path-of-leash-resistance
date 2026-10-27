@@ -219,7 +219,8 @@ static func walk_info(m: Node2D) -> Dictionary:
 	var info := {"id": sel, "locked": not Game.is_unlocked(sel), "index": Game.CAROUSEL.find(sel),
 		"count": Game.CAROUSEL.size(), "lines": []}
 	if sel == "tutorial":
-		info.lines = ["One trick at a time, with nothing to get in the way."]
+		# the gloss on the ground already says what it is for
+		info.lines = ["About three minutes, nothing to get in the way. No stars, no score."]
 		return info
 	if info.locked:
 		var gate := int(Game.STAR_GATE.get(sel, 0))
@@ -297,8 +298,8 @@ static func start_walk(m: Node2D) -> void:
 	m.panel.visible = true
 	m.goals_card.visible = not m.tutorial_mode
 	m.dim.visible = false
-	# the name stays on the ground; the line under it is menu text
-	m.create_tween().tween_property(m, "gloss_a", 0.0, 1.2)
+	# the name stays on the ground; the line under it is menu text, and main
+	# fades it once the walk has started (main.GLOSS_FADE)
 	m.queue_redraw()
 
 
@@ -472,7 +473,7 @@ static func close_walk_card(m: Node2D) -> void:
 # then each goal with how far along it is, or the lesson in the tutorial.
 static func walk_card(m: Node2D) -> Dictionary:
 	var key := "tutorial" if m.tutorial_mode else String(m.lvl)
-	var out := {"name": m._walk_name(), "gloss": String(Game.LEVEL_SUBTITLES.get(key, "")),
+	var out := {"name": m._walk_name(), "gloss": Game.gloss(key),
 		"time": clock(float(m.elapsed)), "goals": [], "lesson": ""}
 	if m.tutorial_mode:
 		var st: Dictionary = TutorialSteps.step(m.tut_step)
@@ -817,7 +818,7 @@ static func close_progress(m: Node2D) -> void:
 static func progress_rows(m: Node2D) -> Array:
 	var out := []
 	for lv in Game.LEVELS:
-		var row := {"id": lv, "name": Game.LEVEL_NAMES[lv], "gloss": Game.LEVEL_SUBTITLES.get(lv, ""),
+		var row := {"id": lv, "name": Game.LEVEL_NAMES[lv], "gloss": Game.gloss(lv),
 			"locked": not Game.is_unlocked(lv), "gate": int(Game.STAR_GATE.get(lv, 0))}
 		row["stars"] = Game.stars(lv)
 		row["goals"] = Game.goals_count(lv)
@@ -860,8 +861,8 @@ static func settings_keys(m: Node2D) -> Array:
 	# the browser owns the window, so offering a fullscreen toggle there
 	# would be a button that lies
 	if OS.has_feature("web"):
-		return ["master", "sfx", "music", "goals", "free_play"]
-	return ["master", "sfx", "music", "fullscreen", "goals", "free_play"]
+		return ["master", "sfx", "music", "language", "goals", "free_play"]
+	return ["master", "sfx", "music", "language", "fullscreen", "goals", "free_play"]
 
 
 static func settings_rows(m: Node2D) -> Array:
@@ -883,7 +884,13 @@ static func settings_rows(m: Node2D) -> Array:
 			"free_play":
 				v = 1.0 if Game.free_play else 0.0
 				kind = "toggle"
-		out.append({"name": m.SETTING_NAMES[k], "kind": kind, "v": v})
+			"language":
+				v = float(Game.LANGUAGES.find(Game.language))
+				kind = "choice"
+		var row := {"name": m.SETTING_NAMES[k], "kind": kind, "v": v}
+		if k == "language":
+			row.text = String(Game.LANGUAGE_NAMES[Game.language])
+		out.append(row)
 	return out
 
 
@@ -988,6 +995,11 @@ static func settings_adjust(m: Node2D, dir: int) -> void:
 		"free_play":
 			Game.free_play = not Game.free_play
 			Sfx.play("ui")
+		"language":
+			var i := Game.LANGUAGES.find(Game.language)
+			Game.language = Game.LANGUAGES[wrapi(i + dir, 0, Game.LANGUAGES.size())]
+			Sfx.play("ui")
+			m.queue_redraw()
 
 
 static func tick_settings(m: Node2D) -> void:
@@ -1005,7 +1017,7 @@ static func tick_settings(m: Node2D) -> void:
 	elif Input.is_action_just_pressed("plant"):
 		# confirm flips a switch; a slider is stepped with left/right
 		var row: Dictionary = settings_rows(m)[m.settings_idx]
-		if String(row.kind) == "toggle":
+		if String(row.kind) == "toggle" or String(row.kind) == "choice":
 			settings_adjust(m, 1)
 	elif back_pressed():
 		close_settings(m)

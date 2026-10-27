@@ -817,8 +817,27 @@ var _signs_for := ""
 var signs_built := 0
 # the signs' own cached canvas (world/sign_layer.gd)
 var sign_layer: Node2D
-# the gloss under the name is menu text: it fades as the walk begins
+# the gloss under the name is menu text: it fades as the walk begins, however
+# it began (the menus, a command line, a test), over GLOSS_FADE seconds
 var gloss_a := 1.0
+const GLOSS_FADE := 1.2
+# a walk's name on the ground: its cap height, and the bottom of the name as
+# laid out (one line or two), which the gloss sits under
+const NAME_H := 52.0
+# its baseline: high enough that a full-width name clears the top of the GET
+# READY panel and the walk select's plaque, low enough to miss the header
+const NAME_Y := START_Y - 227.0
+const NAME_MARGIN := 60.0
+# and no wider than this, however wide the walk: a wide avenue's name breaks
+# onto two lines rather than spanning its sidewalks
+const NAME_MAX_W := 400.0
+# on GET READY the panel covers the screen's left: the gloss keeps this far
+# from the screen's left edge (screen px at zoom 1)
+const GLOSS_CLEAR_X := 476.0
+var _name_baseline := 0.0
+# the gloss's cap line sits this far under the name's last baseline, the same
+# on every walk whatever size the name came out
+const GLOSS_GAP := 34.0
 var details_idx := 0
 var pause_idx := 0
 # the main menu's cursor, and the first-time question's (hud/menu_flow.gd)
@@ -4761,7 +4780,7 @@ func _walk_name() -> String:
 
 
 func _sign_mat() -> String:
-	return WorldSign.material_for(lvl, Game.weather)
+	return WorldSign.material_for("tutorial" if tutorial_mode else lvl, Game.weather)
 
 
 # The name and the browse arrows, as loose pieces for a walk with a
@@ -4782,17 +4801,28 @@ func build_signs() -> void:
 	var e := walk_edges(START_Y - 190.0)
 	var room := maxf(300.0, e.y - e.x - 80.0)
 	var mid := (e.x + e.y) * 0.5
+	var born := AnimClock.msec() / 1000.0
+	var bed: Color = WorldSign.BEDS.get("tutorial" if tutorial_mode else lvl, Color(0, 0, 0, 0))
+	if Game.weather == "snow":
+		bed = Color(0, 0, 0, 0)
 	if menu_step == 0 and not started:
 		signs.append(WorldSign.build("PATH OF", Vector2(mid, START_Y - 232.0), 44.0, mat, 1.0, room))
 		signs.append(WorldSign.build("LEASH RESISTANCE", Vector2(mid, START_Y - 172.0), 44.0, mat, 2.0, room))
+		for sg: Dictionary in signs:
+			sg.born = born
+			sg.bed = bed
 	else:
 		var name := _walk_name()
-		var nm := WorldSign.build(name, Vector2(mid, START_Y - 190.0), 44.0, mat, 4.0, room - 120.0)
+		# the name stays on the path, inside its edges where the letters lie: a
+		# long one breaks onto two lines or, where it cannot, comes down in size
+		var span := name_span()
+		var nroom := minf(span.y - span.x - NAME_MARGIN, NAME_MAX_W)
+		var nm := WorldSign.build_name(name, Vector2((span.x + span.y) * 0.5, NAME_Y), NAME_H, mat, 4.0, nroom, bed)
+		nm.born = born
 		signs.append(nm)
-		if arrows:
-			var hw: float = WorldSign.Letters.width(name.to_upper(), float(nm.h), WorldSign.gap_for(mat)) * 0.5
-			signs.append(WorldSign.build("<", Vector2(mid - hw - 44.0, START_Y - 190.0), 44.0, mat, 6.0, 80.0))
-			signs.append(WorldSign.build(">", Vector2(mid + hw + 44.0, START_Y - 190.0), 44.0, mat, 7.0, 80.0))
+		_name_baseline = float(nm.baseline)
+		# (the walk select's browse arrows are on its card, hud/menu_screen.gd,
+		# so the name has its path to itself and one size on every screen)
 	# over the gate, what is through it and what that means, in the same stuff
 	var gm := (gate_l + gate_r) * 0.5
 	var gw := maxf(160.0, gate_r - gate_l - 20.0)
@@ -4849,6 +4879,9 @@ func _draw_ground_title() -> void:
 	var mat := _sign_mat()
 	var ge := walk_edges(START_Y - 190.0)
 	var mid := (ge.x + ge.y) * 0.5
+	if menu_step != 0 or started:
+		var ns := name_span()
+		mid = (ns.x + ns.y) * 0.5
 	if menu_step == 0 and not started:
 		if mat == "":
 			_draw_world_text(Vector2(mid, START_Y - 232.0), "PATH OF", 52, style, 1.0)
@@ -4867,26 +4900,60 @@ func _draw_ground_title() -> void:
 	# game ships in English and nobody should have to guess what a walk is.
 	# On the walk select the plaque says it, in type. Here it is the line
 	# under the name as the walk begins, and it has to read on any ground.
-	var gloss := String(Game.LEVEL_SUBTITLES.get("tutorial" if tutorial_mode else lvl, ""))
-	if gloss != "" and (started or menu_step != 1):
-		_draw_gloss(Vector2(mid, y + 34.0), gloss, mat, style, 8.0)
+	var gloss := Game.gloss("tutorial" if tutorial_mode else lvl)
+	if gloss != "":
+		_draw_gloss(Vector2(mid, gloss_baseline(y)), gloss)
 
 
-func _draw_gloss(at: Vector2, txt: String, _mat: String, _style: String, _key: float) -> void:
+# The stretch of path every row of a walk's name and its gloss lies on, as
+# (left, right): the narrowest the path gets between the name's top and the
+# gloss, so a name on a bend (Montjuïc) sits on the path, not the grass.
+func name_span() -> Vector2:
+	var lo := -INF
+	var hi := INF
+	var y := NAME_Y - NAME_H
+	while y <= NAME_Y + NAME_H * 1.6 + GLOSS_GAP:
+		var e := walk_edges(y)
+		lo = maxf(lo, e.x)
+		hi = minf(hi, e.y)
+		y += 8.0
+	return Vector2(lo, hi)
+
+
+# where the gloss's baseline is: its cap line GLOSS_GAP under the name's
+func gloss_baseline(fallback_y := START_Y - 190.0) -> float:
+	var base := _name_baseline if _sign_mat() != "" else fallback_y
+	return base + GLOSS_GAP + float(GLOSS_PX) * 0.72
+
+
+# The line under the name, in the player's language. No box: cream type with a
+# dark outline and a soft shadow, so it reads by brightness on sand, grass,
+# snow, wet paving and a night street, whatever colours the reader can tell
+# apart. Drawn so the night tint cannot grey it.
+const GLOSS_PX := 28
+func _draw_gloss(at: Vector2, txt: String) -> void:
 	if gloss_a <= 0.01:
 		return
-	# menu text, set plainly, on a dark chip. The chip and the words are drawn
-	# so the night tint cannot grey them: light stays light, the chip stays
-	# dark, and the line reads on sand, snow, wet paving and a night street
 	var f: Font = load("res://hud/ui_kit.gd").body()
-	var px := 22
+	# on the path too: a long gloss on a narrow walk comes down in size
+	var ge := walk_edges(at.y)
+	var px := GLOSS_PX
 	var w: float = f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-	var pad := 12.0
-	var chip := Rect2(at.x - w * 0.5 - pad, at.y - float(px) - 4.0, w + pad * 2.0, float(px) + 14.0)
+	if w > ge.y - ge.x - NAME_MARGIN:
+		px = maxi(18, int(float(GLOSS_PX) * (ge.y - ge.x - NAME_MARGIN) / w))
+		w = f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	var x0 := at.x - w * 0.5
+	if not started and menu_step == 2 and cam != null:
+		var vw: float = get_viewport_rect().size.x / cam.zoom.x
+		x0 = maxf(x0, cam.position.x - vw * 0.5 + GLOSS_CLEAR_X / cam.zoom.x)
+	var o := Vector2(x0, at.y)
 	var tint: Color = night_cm.color if night_cm != null else Color.WHITE
-	_wc.draw_rect(chip, SkyLook.light(Color(0.06, 0.06, 0.08, 0.88 * gloss_a), tint))
-	_wc.draw_string(f, Vector2(chip.position.x + pad, at.y), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px,
-		SkyLook.light(Color(0.98, 0.96, 0.90, gloss_a), tint))
+	_wc.draw_string_outline(f, o + Vector2(2.0, 3.0), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px, 10,
+		SkyLook.light(Color(0.02, 0.02, 0.04, 0.35 * gloss_a), tint))
+	_wc.draw_string_outline(f, o, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px, 7,
+		SkyLook.light(Color(0.08, 0.07, 0.10, 0.92 * gloss_a), tint))
+	_wc.draw_string(f, o, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px,
+		SkyLook.light(Color(0.99, 0.96, 0.88, gloss_a), tint))
 
 
 # An outdoor shower from above: a steel column on a slatted timber footplate,
@@ -5512,7 +5579,7 @@ func _refresh_shop() -> void:
 
 const SETTING_NAMES := {
 	"master": "MASTER VOLUME", "sfx": "SOUND EFFECTS",
-	"music": "MUSIC", "fullscreen": "FULLSCREEN", "goals": "GOAL LIST",
+	"music": "MUSIC", "fullscreen": "FULLSCREEN", "goals": "GOAL LIST", "language": "LANGUAGE",
 	"free_play": "FREE PLAY (DEMO)",
 }
 
@@ -6037,6 +6104,8 @@ func _tick_soak() -> void:
 
 func _process(_delta: float) -> void:
 	Sfx.music_tick(_music_cue(), _music_next(), started and paused, started and not frozen)
+	if started and gloss_a > 0.0:
+		gloss_a = maxf(0.0, gloss_a - _delta / GLOSS_FADE)
 	if _soak_secs > 0.0:
 		_tick_soak()
 	if not _shot_done and "--shot" in OS.get_cmdline_user_args():

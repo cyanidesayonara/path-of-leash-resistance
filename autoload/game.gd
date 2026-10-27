@@ -43,7 +43,7 @@ const LEVEL_NAMES := {
 # guess what a walk is - the name is the flavour, the gloss is the information.
 # Kept lower case and short: it sits under the name chalked on the pavement.
 const LEVEL_SUBTITLES := {
-	"tutorial": "one trick at a time",
+	"tutorial": "practice one trick at a time",
 	"barri": "the neighborhood park",
 	"street": "the crowded promenade",
 	"park": "the city park",
@@ -171,6 +171,61 @@ var vol_master := DEFAULT_VOL_MASTER
 var vol_sfx := DEFAULT_VOL_SFX
 var vol_music := DEFAULT_VOL_MUSIC
 var fullscreen := false
+# The language the walks' glosses are written in (the line under each name);
+# everything else is English for now.
+const LANGUAGES: Array[String] = ["en", "ca", "es"]
+const LANGUAGE_NAMES := {"en": "ENGLISH", "ca": "CATALÀ", "es": "ESPAÑOL"}
+var language := "en"
+const LEVEL_SUBTITLES_CA := {
+	"tutorial": "practica un truc cada vegada",
+	"barri": "el parc del barri",
+	"street": "el passeig ple de gent",
+	"park": "el parc de la ciutat",
+	"beach": "el front marítim",
+	"rain": "el xàfec",
+	"market": "el mercat cobert",
+	"oldtown": "els carrerons del barri vell",
+	"trail": "el camí del bosc",
+	"station": "l'estació de tren",
+	"besos": "el parc fluvial inundable",
+	"site": "el carrer en obres",
+	"spook": "la festa de les castanyes",
+	"scrap": "el desballestament",
+	"guell": "les terrasses de trencadís",
+	"neteja": "la neteja de matinada",
+	"montjuic": "la muntanya",
+	"partit": "el carrer cap a l'estadi",
+	"port": "el moll dels pescadors",
+	"reial": "la plaça porticada",
+	"vet": "la fugida de la clínica",
+	"tibidabo": "el funicular de la muntanya",
+	"aigues": "el camí del vessant",
+}
+const LEVEL_SUBTITLES_ES := {
+	"tutorial": "practica un truco cada vez",
+	"barri": "el parque del barrio",
+	"street": "el paseo abarrotado",
+	"park": "el parque de la ciudad",
+	"beach": "el paseo marítimo",
+	"rain": "el chaparrón",
+	"market": "el mercado cubierto",
+	"oldtown": "los callejones del casco antiguo",
+	"trail": "el bosque",
+	"station": "la estación de tren",
+	"besos": "el parque fluvial inundable",
+	"site": "la calle en obras",
+	"spook": "la fiesta de las castañas",
+	"scrap": "el desguace",
+	"guell": "las terrazas de trencadís",
+	"neteja": "la limpieza al amanecer",
+	"montjuic": "la montaña",
+	"partit": "día de partido",
+	"port": "el muelle de los pescadores",
+	"reial": "la plaza porticada",
+	"vet": "la huida de la clínica",
+	"tibidabo": "el funicular de la montaña",
+	"aigues": "el camino de la ladera",
+}
 # the off-leash agility course's best time in seconds (0: never run). One
 # record for all of them: it is the same course in every space.
 var agility_best := 0.0
@@ -304,6 +359,9 @@ func _ready() -> void:
 	# lets CI and local smoke tests exercise any level/weather:
 	#   godot --headless --path . -- --level=park --weather=snow
 	for arg in OS.get_cmdline_user_args():
+		# --lang=ca|es|en: the glosses in that language for this run, unsaved
+		if arg.begins_with("--lang=") and arg.substr(7) in LANGUAGES:
+			language = arg.substr(7)
 		if arg.begins_with("--level="):
 			var lv := arg.trim_prefix("--level=")
 			# the tutorial too, so it can be shot and tested directly
@@ -349,6 +407,7 @@ func _reset_persisted_state() -> void:
 	vol_sfx = DEFAULT_VOL_SFX
 	vol_music = DEFAULT_VOL_MUSIC
 	fullscreen = false
+	language = "en"
 	goals_expanded = false
 	ask_tutorial = true
 	tutorial_done = false
@@ -405,6 +464,9 @@ func load_records() -> void:
 	vol_sfx = clampf(float(cf.get_value("settings", "vol_sfx", DEFAULT_VOL_SFX)), 0.0, 1.0)
 	vol_music = clampf(float(cf.get_value("settings", "vol_music", DEFAULT_VOL_MUSIC)), 0.0, 1.0)
 	fullscreen = bool(cf.get_value("settings", "fullscreen", false))
+	language = String(cf.get_value("settings", "language", "en"))
+	if not language in LANGUAGES:
+		language = "en"
 	goals_expanded = bool(cf.get_value("settings", "goals_expanded", false))
 	free_play = bool(cf.get_value("settings", "free_play", false))
 	ask_tutorial = bool(cf.get_value("settings", "ask_tutorial", true))
@@ -436,6 +498,7 @@ func save_records() -> void:
 	cf.set_value("settings", "vol_sfx", vol_sfx)
 	cf.set_value("settings", "vol_music", vol_music)
 	cf.set_value("settings", "fullscreen", fullscreen)
+	cf.set_value("settings", "language", language)
 	cf.set_value("settings", "goals_expanded", goals_expanded)
 	cf.set_value("settings", "free_play", free_play)
 	cf.set_value("settings", "ask_tutorial", ask_tutorial)
@@ -565,3 +628,13 @@ func cycle_level(dir: int) -> void:
 
 func is_tutorial(lv: String) -> bool:
 	return lv == "tutorial"
+
+
+# The line under a walk's name, in the player's language; English where a
+# walk has no translation yet.
+func gloss(lv: String) -> String:
+	var en := String(LEVEL_SUBTITLES.get(lv, ""))
+	match language:
+		"ca": return String(LEVEL_SUBTITLES_CA.get(lv, en))
+		"es": return String(LEVEL_SUBTITLES_ES.get(lv, en))
+	return en

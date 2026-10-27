@@ -140,8 +140,50 @@ func _run() -> void:
 		WorldSign.tick(rope_sign, [[Vector2(640.0, float(rope_sign.bottom) + 20.0), Vector2.ZERO, 15.0]], rp, 1.0 / 60.0, 0.0)
 	_check(_moved(rope_sign) > 0, "a leash swept across the name drags pieces with it")
 
-	_check(WorldSign.material_for("park", "snow") == "prints" and WorldSign.material_for("oldtown", "clear") == "",
+	_check(WorldSign.material_for("park", "snow") == "prints" and WorldSign.material_for("nowhere", "clear") == "",
 		"snow writes in paw prints; a walk without a material keeps its drawn sign")
+	# every walk, and the first walk, spells its name in its own stuff
+	var seen := {}
+	var game = root.get_node("Game")
+	var walks: Array = ["tutorial"]
+	walks.append_array(game.LEVELS)
+	for wk: String in walks:
+		var mt := WorldSign.material_for(wk, "clear")
+		_check(mt != "", "%s has a material" % wk)
+		_check(not seen.has(mt), "%s's %s is its own (also %s)" % [wk, mt, seen.get(mt, "")])
+		seen[mt] = wk
+		var nm := WorldSign.build_name(String(game.LEVEL_NAMES[wk]), Vector2(640, 0), 58.0, mt, 4.0, 440.0)
+		_check(float(nm.h) >= 36.0, "%s's name stays at least 36 tall (%.1f)" % [wk, float(nm.h)])
+		_check(float(nm.w) <= 440.5, "%s's name fits its room (%.0f)" % [wk, float(nm.w)])
+	# L'Estació's floor lights: one under a body goes out, and comes back with a
+	# flare once the body has moved on
+	var lit := WorldSign.build_name("L'ESTACIO", Vector2(640, 0), 58.0, "studs", 4.0, 600.0)
+	var spts: PackedVector2Array = WorldSign.stud_points(lit)
+	var foot := spts[spts.size() / 2]
+	for i in range(20):
+		WorldSign.tick(lit, [[foot, Vector2.ZERO, 15.0]], [], 1.0 / 60.0, float(i) / 60.0)
+	var idx := spts.size() / 2
+	_check(float(lit.cover[idx]) > 0.9, "a light under a paw goes out")
+	_check(float(lit.cover[0]) < 0.01 or spts[0].distance_to(foot) < 30.0, "a light nobody is on stays lit")
+	for i in range(40):
+		WorldSign.tick(lit, [[foot + Vector2(0, 400), Vector2.ZERO, 15.0]], [], 1.0 / 60.0, 1.0 + float(i) / 60.0)
+	_check(float(lit.cover[idx]) < 0.01, "and comes back on once she has moved on")
+	_check(not (lit.rings as Array).is_empty(), "with a flare as it does")
+	# a long name goes onto two lines rather than shrinking
+	var two := WorldSign.build_name("PASSEIG MARITIM", Vector2(640, 0), 58.0, "sand", 4.0, 300.0)
+	_check(float(two.h) > 44.0 and float(two.bottom) - float(two.top) > 58.0 * 2.0, "a long name breaks onto two lines")
+	# the gloss follows the language, and falls back to English
+	var keep: String = game.language
+	game.language = "ca"
+	_check(game.gloss("market") == "el mercat cobert", "Catalan gloss")
+	game.language = "es"
+	_check(game.gloss("market") == "el mercado cubierto", "Spanish gloss")
+	_check(game.gloss("nowhere") == "", "no gloss for no walk")
+	game.language = "en"
+	_check(game.gloss("tutorial") == "practice one trick at a time", "English gloss")
+	for wk: String in walks:
+		_check(game.LEVEL_SUBTITLES_CA.has(wk) and game.LEVEL_SUBTITLES_ES.has(wk), "%s is glossed in Catalan and Spanish" % wk)
+	game.language = keep
 
 
 func _far(sg: Dictionary) -> float:
