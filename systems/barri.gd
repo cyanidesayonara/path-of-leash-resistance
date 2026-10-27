@@ -9,6 +9,7 @@ extends RefCounted
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
+const Surfaces := preload("res://world/surfaces.gd")
 const LIGHT := Vector2(0.5, 0.866)       # as main.LIGHT: the direction shadows fall
 
 const PIPICA_GROUND := Color(0.72, 0.64, 0.48)
@@ -295,6 +296,16 @@ static func solids(m: Node2D) -> Array[Rect2]:
 	var top := _rail_top(m)
 	var h := _rail_bottom(m) - top
 	return [Rect2(OUTER_W, top, RAIL_W - OUTER_W, h), Rect2(RAIL_E, top, OUTER_E - RAIL_E, h)]
+
+
+# main.surface_at, through walk_mod: past the railings is the street's
+# pavement, or -1 for main's own
+static func surface(m: Node2D, p: Vector2) -> int:
+	if m.tutorial_mode or p.y <= m.GATE_Y:
+		return -1
+	if p.x < RAIL_W or p.x > RAIL_E:
+		return Surfaces.S.PAVEMENT
+	return -1
 
 
 static func _h1(k: int, salt: float) -> float:
