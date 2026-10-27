@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-10-27 - El Diluvi's panots
+
+El Diluvi's street was grey slabs that could have been any city's. It is
+paved now in panots de flor, the Barcelona pavement tile with a four-petal
+flower pressed into it, laid square: the flowers' grooves dark with the
+rain and their crowns catching the light, the slabs' tone under them on the
+same grid, and the crossings left as asphalt. Drawing only.
+
 ## 2026-10-27 - Every walk's name in its own stuff
 
 Each walk spells its name on the ground in something of its own, and none
