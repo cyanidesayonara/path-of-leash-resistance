@@ -44,7 +44,7 @@ func refresh(vt: float, vb: float, show: bool) -> bool:
 				continue
 			key.append(i)
 			key.append(int(sg.get("rev", 0)))
-			live = live or WorldSign.animated(sg)
+			live = live or WorldSign.animated(sg, AnimClock.msec() / 1000.0)
 	key.append(1 if live else 0)
 	if not live and key == _key:
 		return false

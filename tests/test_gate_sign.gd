@@ -50,8 +50,9 @@ func _run() -> void:
 				for p: Vector2 in ln:
 					inside = inside and p.x > float(g.l) - 20.0 and p.x < float(g.r) + 20.0
 		_check(inside, "%s: within the gate's width" % lvl)
-	var none: Array = await _gate_signs("oldtown")
-	_check(none.is_empty(), "a walk without a material keeps the gate's painted name")
+	# every walk has its own material now: El Gòtic spells its gate in setts
+	var setts: Array = await _gate_signs("oldtown")
+	_check(setts.size() == 2, "El Gòtic spells its gate in its own stuff too")
 	print("\n%d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():
 		print("test_gate_sign: OK")

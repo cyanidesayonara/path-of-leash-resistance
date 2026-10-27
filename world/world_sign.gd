@@ -5,8 +5,13 @@ extends RefCounted
 # stalls, a flowerbed in El Parc, heaped sand on the passeig, puddles in El
 # Diluvi, fruit tipped out at El Mercat, sticks in the woods, traffic cones at
 # the works, chestnuts at the Castanyada, torch-cut plate at the scrapyard,
-# trencadis on the terraces, soap suds at the dawn clean-up - and in snow,
-# whatever the walk, her own paw prints.
+# trencadis on the terraces, soap suds at the dawn clean-up, sunflower seed
+# scarf along the letters on match day, dark setts laid into the alley's paving, lights set into the
+# concourse floor that go dark under whoever stands on them,
+# river pebbles by the Besòs, the cactus garden on Montjuïc, mooring rope on
+# the wharf, palm fronds in the square, dog biscuits at the vet, fairground
+# bulbs on Tibidabo, pine cones on the hillside track, tennis balls on the
+# first walk - and in snow, whatever the walk, her own paw prints.
 #
 # The pieces are physical, and the walk starts right on top of them: the dog,
 # the human and the rope shove, roll and scatter them, cones topple, suds
@@ -27,8 +32,28 @@ const MATERIALS := {
 	"barri": "leaves", "street": "carnations", "park": "flowerbed", "beach": "sand",
 	"rain": "puddle", "market": "fruit", "trail": "sticks", "site": "cones",
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
-	"partit": "pipes", "aigues": "leaves",
+	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
+	"montjuic": "cactus", "port": "rope", "reial": "fronds", "vet": "biscuits",
+	"tibidabo": "bulbs", "aigues": "pinecones", "tutorial": "balls",
 }
+# What lies under a walk's pieces so they read on its ground by brightness, not
+# colour alone: a soft bed of light under dark-on-dark, of shade under
+# light-on-light. Walks not listed need none.
+const BEDS := {
+	"spook": Color(0.98, 0.88, 0.66, 0.44), "partit": Color(0.96, 0.94, 0.88, 0.18),
+	"neteja": Color(0.10, 0.12, 0.16, 0.34), "rain": Color(0.06, 0.08, 0.12, 0.24),
+	"trail": Color(0.12, 0.08, 0.04, 0.18), "tibidabo": Color(0.04, 0.04, 0.08, 0.30),
+}
+# A name that will not fit on one line at least this tall is broken in two at
+# the space nearest its middle, rather than shrunk.
+const NAME_MIN_H := 50.0
+const LINE_PITCH := 1.5
+const SPLIT_MIN := 4             # letters either side of a break
+# The pieces fall into place when a sign is laid out: left to right over
+# REVEAL_SWEEP seconds, each landing in REVEAL_DROP from DROP_H cap heights up.
+const REVEAL_SWEEP := 0.55
+const REVEAL_DROP := 0.38
+const DROP_H := 0.9
 # the colour a material's gloss, the line under the name, is written in
 const GLOSS := {
 	"leaves": Color(0.40, 0.30, 0.18, 0.85), "carnations": Color(0.96, 0.93, 0.86, 0.8),
@@ -57,6 +82,19 @@ const FEEL := {
 	"chestnuts": {"spacing": 0.14, "r": 0.08, "drag": 1.3, "take": 1.1, "roll": true},
 	"plate": {"spacing": 0.5, "r": 0.09, "drag": 9.0, "take": 0.35, "spin": 1.0, "segment": true},
 	"suds": {"spacing": 0.055, "r": 0.05, "drag": 3.0, "take": 1.4, "pop": true},
+	"pegs": {"spacing": 0.13, "r": 0.065, "drag": 5.0, "take": 1.1, "spin": 5.0},
+	"tickets": {"spacing": 0.13, "r": 0.07, "drag": 4.0, "take": 1.3, "spin": 6.0},
+	"pebbles": {"spacing": 0.11, "r": 0.07, "drag": 1.8, "take": 1.0, "roll": true},
+	"cactus": {"spacing": 0.16, "r": 0.085, "drag": 7.0, "take": 0.6, "spring": 12.0},
+	"scarf": {"spacing": 0.24, "r": 0.06, "drag": 7.0, "take": 0.6, "spin": 1.2, "segment": true},
+	"rope": {"spacing": 0.2, "r": 0.05, "drag": 7.0, "take": 0.6, "spin": 1.5, "segment": true},
+	"fronds": {"spacing": 0.3, "r": 0.06, "drag": 6.0, "take": 0.8, "spin": 2.5, "segment": true},
+	"biscuits": {"spacing": 0.16, "r": 0.075, "drag": 4.0, "take": 1.1, "spin": 4.0},
+	"pinecones": {"spacing": 0.15, "r": 0.08, "drag": 2.2, "take": 1.0, "roll": true},
+	"balls": {"spacing": 0.15, "r": 0.075, "drag": 0.9, "take": 1.2, "roll": true},
+	"bulbs": {"fixed": true},
+	"setts": {"fixed": true},
+	"studs": {"fixed": true, "lights": true},
 	"puddle": {"fixed": true, "splash": true},
 	"trencadis": {"fixed": true},
 	"prints": {"fixed": true},
@@ -84,6 +122,49 @@ static func material_for(lvl: String, weather: String) -> String:
 	return String(MATERIALS.get(lvl, ""))
 
 
+# A walk's name: at full size on one line if it fits, else in two lines when
+# one line would have to shrink below NAME_MIN_H. The first line keeps the
+# top a one-line name of height `h` on baseline `at` would have, and a second
+# hangs below it; `w` is the widest line.
+static func build_name(txt: String, at: Vector2, h: float, mat: String, key: float, max_w: float, bed := Color(0, 0, 0, 0)) -> Dictionary:
+	var gap := gap_for(mat)
+	var up := txt.to_upper()
+	var w1 := Letters.width(up, h, gap)
+	var h1 := h if w1 <= max_w else h * max_w / w1
+	var best := -1
+	# never leave an article on a line of its own: EL / BOSC reads as two words
+	if h1 < NAME_MIN_H and " " in up:
+		var mid := float(up.length()) * 0.5
+		for i in range(up.length()):
+			if up.substr(i, 1) != " " or i < SPLIT_MIN or up.length() - i - 1 < SPLIT_MIN:
+				continue
+			if best < 0 or absf(float(i) - mid) < absf(float(best) - mid):
+				best = i
+	var top := at.y - h
+	var sign := {}
+	if best < 0:
+		sign = build(txt, Vector2(at.x, top + h1), h1, mat, key, max_w)
+		sign.w = Letters.width(up, float(sign.h), gap)
+		sign.baseline = top + h1
+	else:
+		var a := up.substr(0, best)
+		var b := up.substr(best + 1)
+		var wa := Letters.width(a, h, gap)
+		var wb := Letters.width(b, h, gap)
+		var h2 := minf(h, h * max_w / maxf(wa, wb))
+		var pitch := h2 * LINE_PITCH
+		var la: Array = Letters.layout(a, Vector2(at.x, top + h2), h2, INF, gap)
+		var lb: Array = Letters.layout(b, Vector2(at.x, top + h2 + pitch), h2, INF, gap)
+		var lines: Array = []
+		lines.append_array(la[0])
+		lines.append_array(lb[0])
+		sign = _from_lines(txt, mat, lines, h2, key, top - h2 * 0.3, top + h2 + pitch + h2 * 0.5)
+		sign.w = Letters.width(a if wa > wb else b, h2, gap)
+		sign.baseline = top + h2 + pitch
+	sign.bed = bed
+	return sign
+
+
 # deterministic noise in 0..1 for piece i of the name with this key
 static func _h(i: int, key: float, salt := 0.0) -> float:
 	var n := sin(float(i) * 12.9898 + key * 78.233 + salt * 37.719) * 43758.5453
@@ -97,11 +178,13 @@ static func _j(i: int, key: float, salt: float, amp: float) -> Vector2:
 # A sign: `txt` centred on `at`, cap height `h`, fitted to `max_w`, in `mat`.
 static func build(txt: String, at: Vector2, h: float, mat: String, key: float, max_w: float) -> Dictionary:
 	var lay: Array = Letters.layout(txt, at, h, max_w, gap_for(mat))
-	var lines: Array = lay[0]
-	h = float(lay[1])
+	return _from_lines(txt, mat, lay[0], float(lay[1]), key, at.y - float(lay[1]) * 1.3, at.y + float(lay[1]) * 0.5)
+
+
+static func _from_lines(txt: String, mat: String, lines: Array, h: float, key: float, top: float, bottom: float) -> Dictionary:
 	var feel: Dictionary = FEEL.get(mat, {"fixed": true})
 	var sign := {"txt": txt, "mat": mat, "lines": lines, "h": h, "key": key, "pieces": [], "rings": [],
-		"feel": feel, "top": at.y - h * 1.3, "bottom": at.y + h * 0.5, "moving": false}
+		"feel": feel, "top": top, "bottom": bottom, "moving": false, "born": -100.0}
 	if bool(feel.get("fixed", false)):
 		return sign
 	var pieces: Array = sign.pieces
@@ -117,7 +200,7 @@ static func build(txt: String, at: Vector2, h: float, mat: String, key: float, m
 				var b := pts[i] + _j(n, key, 13.0, h * 0.02)
 				var d := b - a
 				pieces.append(_piece(n, key, (a + b) * 0.5, float(feel.r) * h,
-					{"len": d.length() * 1.2, "rot": d.angle()}))
+					{"len": d.length() * 1.2, "rot": d.angle(), "first": i == 1, "last": i == pts.size() - 1}))
 				n += 1
 		return sign
 	var laid := PackedVector2Array()
@@ -150,6 +233,9 @@ static func _piece(n: int, key: float, p: Vector2, r: float, extra: Dictionary) 
 static func tick(sign: Dictionary, bodies: Array, rope: Array, dt: float, t: float) -> int:
 	var feel: Dictionary = sign.feel
 	var toppled := 0
+	if bool(feel.get("lights", false)):
+		_tick_lights(sign, bodies, rope, dt, t)
+		return 0
 	if bool(feel.get("splash", false)):
 		_tick_splash(sign, bodies, dt, t)
 		return 0
@@ -282,6 +368,55 @@ static func _tick_splash(sign: Dictionary, bodies: Array, dt: float, t: float) -
 	_age_rings(sign, t)
 
 
+# Lights in the floor: each one goes dark while anyone, or the leash, lies
+# over it, and comes back up when they move on, with a flare as it does.
+const STUD_PITCH := 0.12      # cap heights between lights
+const STUD_DIM := 14.0        # how fast a covered light goes out (per second)
+const STUD_GLOW := 5.0        # and comes back
+static func stud_points(sign: Dictionary) -> PackedVector2Array:
+	var pts: PackedVector2Array = sign.get("stud_pts", PackedVector2Array())
+	if pts.is_empty():
+		pts = Letters.points(sign.lines, float(sign.h) * STUD_PITCH)
+		sign.stud_pts = pts
+		var cover := PackedFloat32Array()
+		cover.resize(pts.size())
+		sign.cover = cover
+	return pts
+
+
+static func _tick_lights(sign: Dictionary, bodies: Array, rope: Array, dt: float, t: float) -> void:
+	var pts := stud_points(sign)
+	var cover: PackedFloat32Array = sign.cover
+	var near := false
+	for b: Array in bodies:
+		var bp: Vector2 = b[0]
+		near = near or (bp.y > float(sign.top) - 60.0 and bp.y < float(sign.bottom) + 60.0)
+	var changed := false
+	var hits: Array = []
+	if near:
+		hits.append_array(bodies)
+		for rp: Array in rope:
+			hits.append([rp[0], rp[1], 3.0])
+	for i in range(pts.size()):
+		var on := false
+		for b: Array in hits:
+			var reach := float(b[2]) + float(sign.h) * 0.04
+			if (b[0] as Vector2).distance_squared_to(pts[i]) < reach * reach:
+				on = true
+				break
+		var c0 := cover[i]
+		var c1 := minf(1.0, c0 + STUD_DIM * dt) if on else maxf(0.0, c0 - STUD_GLOW * dt)
+		if c0 > 0.5 and c1 <= 0.5:
+			sign.rings.append({"p": pts[i], "t": t, "big": false})
+		if c1 != c0:
+			cover[i] = c1
+			changed = true
+	sign.cover = cover
+	if changed:
+		sign.rev = int(sign.get("rev", 0)) + 1
+	_age_rings(sign, t)
+
+
 static func _age_rings(sign: Dictionary, t: float) -> void:
 	var keep: Array = []
 	for r: Dictionary in sign.rings:
@@ -293,16 +428,52 @@ static func _age_rings(sign: Dictionary, t: float) -> void:
 # --- drawing ------------------------------------------------------------------
 
 # Whether the sign's picture changes with time alone: puddles shimmer, suds
-# breathe, and rings fade. Anything else looks the same until a piece moves.
-static func animated(sign: Dictionary) -> bool:
+# breathe, bulbs chase, rings fade, and a sign just laid out is still falling
+# into place. Anything else looks the same until a piece moves.
+static func animated(sign: Dictionary, t: float) -> bool:
 	var mat := String(sign.mat)
-	return mat == "puddle" or mat == "suds" or not (sign.rings as Array).is_empty()
+	return mat == "puddle" or mat == "suds" or mat == "bulbs" or mat == "studs" or not (sign.rings as Array).is_empty() \
+		or revealing(sign, t)
+
+
+static func revealing(sign: Dictionary, t: float) -> bool:
+	return t - float(sign.get("born", -100.0)) < REVEAL_SWEEP + REVEAL_DROP + 0.1
+
+
+# overshoots a little and settles: a thing dropped onto the ground
+static func _ease_back(u: float) -> float:
+	var k := 1.6
+	var v := u - 1.0
+	return 1.0 + (k + 1.0) * v * v * v + k * v * v
 
 
 static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 	var h: float = sign.h
 	var key: float = sign.key
 	var lines: Array = sign.lines
+	var bed: Color = sign.get("bed", Color(0, 0, 0, 0))
+	if bed.a > 0.0:
+		_stroke(c, lines, h * 0.42, bed)
+	# falling into place: each piece drawn from above its spot, landing in turn
+	# left to right; where the pieces lie is not touched
+	var held: Array = []
+	if revealing(sign, t) and not (sign.pieces as Array).is_empty():
+		var age := t - float(sign.born)
+		var x0 := INF
+		var x1 := -INF
+		for pc: Dictionary in sign.pieces:
+			x0 = minf(x0, (pc.home as Vector2).x)
+			x1 = maxf(x1, (pc.home as Vector2).x)
+		for i in range(sign.pieces.size()):
+			var pc: Dictionary = sign.pieces[i]
+			held.append([pc.p, pc.r, pc.len])
+			var f := ((pc.home as Vector2).x - x0) / maxf(1.0, x1 - x0)
+			var u := clampf((age - f * REVEAL_SWEEP - _h(i, key, 41.0) * 0.06) / REVEAL_DROP, 0.0, 1.0)
+			var e := _ease_back(u)
+			pc.p = (pc.p as Vector2) + Vector2((_h(i, key, 42.0) - 0.5) * h * 0.3, -h * DROP_H) * (1.0 - e)
+			var grow := clampf(u * 1.8, 0.0, 1.0)
+			pc.r = float(pc.r) * maxf(0.01, grow)
+			pc.len = float(pc.len) * grow
 	match String(sign.mat):
 		"leaves":
 			_leaves(c, sign, h)
@@ -335,6 +506,37 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_suds(c, sign, h, t)
 		"prints":
 			_prints(c, lines, h, light)
+		"pegs":
+			_pegs(c, sign, h)
+		"setts":
+			_setts(c, lines, h, key, light)
+		"tickets":
+			_tickets(c, sign, h)
+		"pebbles":
+			_pebbles(c, sign, h, light)
+		"cactus":
+			_cactus(c, sign, h, light)
+		"rope":
+			_rope(c, sign, h)
+		"scarf":
+			_scarf(c, sign, h)
+		"fronds":
+			_fronds(c, sign, h)
+		"biscuits":
+			_biscuits(c, sign, h, light)
+		"pinecones":
+			_pinecones(c, sign, h, light)
+		"balls":
+			_balls(c, sign, h, light)
+		"bulbs":
+			_bulbs(c, lines, h, t)
+		"studs":
+			_studs(c, sign, h, t)
+	for k in range(held.size()):
+		var pc: Dictionary = sign.pieces[k]
+		pc.p = held[k][0]
+		pc.r = held[k][1]
+		pc.len = held[k][2]
 	for r: Dictionary in sign.rings:
 		var age: float = (t - float(r.t)) / 0.8
 		var rr: float = h * (0.05 + age * (0.3 if bool(r.big) else 0.12))
@@ -615,3 +817,296 @@ static func _paw(c: Object, at: Vector2, dir: Vector2, s: float, light: Vector2)
 		var off := dir * s * 0.75 + side * s * (float(k) - 1.5) * 0.42 - dir * absf(float(k) - 1.5) * s * 0.18
 		c.draw_circle(at + off + light * s * 0.12, s * 0.22, lip)
 		c.draw_circle(at + off, s * 0.19, hollow)
+
+
+# --- the walks' own things ------------------------------------------------------
+
+# a piece's outline turned to its own angle by hand: one batch, no transforms
+static func _oval(p: Vector2, rot: float, rx: float, ry: float, n := 10) -> PackedVector2Array:
+	var ax := Vector2.from_angle(rot)
+	var ay := ax.orthogonal()
+	var pts := PackedVector2Array()
+	for k in range(n):
+		var a := TAU * float(k) / float(n)
+		pts.append(p + ax * cos(a) * rx + ay * sin(a) * ry)
+	return pts
+
+
+static func _box(p: Vector2, rot: float, hx: float, hy: float) -> PackedVector2Array:
+	var ax := Vector2.from_angle(rot) * hx
+	var ay := Vector2.from_angle(rot).orthogonal() * hy
+	return PackedVector2Array([p - ax - ay, p + ax - ay, p + ax + ay, p - ax + ay])
+
+
+static func _pegs(c: Object, sign: Dictionary, h: float) -> void:
+	# clothes pegs dropped off El Gòtic's washing lines: two halves and the
+	# steel spring, in every colour a line of laundry has
+	var cols := [Color(0.90, 0.20, 0.20), Color(0.18, 0.46, 0.86), Color(0.98, 0.80, 0.16),
+		Color(0.22, 0.66, 0.36), Color(0.94, 0.94, 0.90)]
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		c.draw_colored_polygon(_box((pc.p as Vector2) + Vector2(1.5, 2.0), float(pc.rot), r * 1.5, r * 0.55), Color(0, 0, 0, 0.28))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var rot: float = pc.rot
+		var col := _pick(cols, float(pc["var"]))
+		var ay := Vector2.from_angle(rot).orthogonal()
+		c.draw_colored_polygon(_box(p, rot, r * 1.5, r * 0.55), col.darkened(0.45))
+		c.draw_colored_polygon(_box(p - ay * r * 0.16, rot, r * 1.4, r * 0.22), col)
+		c.draw_colored_polygon(_box(p + ay * r * 0.16, rot, r * 1.4, r * 0.22), col.lightened(0.15))
+		c.draw_circle(p - Vector2.from_angle(rot) * r * 0.2, r * 0.26, Color(0.78, 0.80, 0.82))
+
+
+static func _tickets(c: Object, sign: Dictionary, h: float) -> void:
+	# used tickets blown about the concourse: orange or magenta card, the black
+	# magnetic stripe across it, the odd one clipped
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		c.draw_colored_polygon(_box((pc.p as Vector2) + Vector2(1.5, 2.0), float(pc.rot), r * 1.25, r * 0.78), Color(0, 0, 0, 0.30))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var rot: float = pc.rot
+		var ax := Vector2.from_angle(rot)
+		var card := Color(0.96, 0.58, 0.16) if float(pc["var"]) > 0.3 else Color(0.84, 0.24, 0.50)
+		c.draw_colored_polygon(_box(p, rot, r * 1.3, r * 0.82), Color(0.22, 0.14, 0.10))
+		c.draw_colored_polygon(_box(p, rot, r * 1.2, r * 0.72), card)
+		c.draw_colored_polygon(_box(p + ax * r * 0.55, rot, r * 0.2, r * 0.72), Color(0.12, 0.10, 0.10))
+		if float(pc["var"]) > 0.6:
+			c.draw_circle(p - ax * r * 0.5, r * 0.18, Color(0.22, 0.14, 0.10))
+
+
+static func _pebbles(c: Object, sign: Dictionary, h: float, light: Vector2) -> void:
+	# river stones from the Besòs bed: worn smooth, grey and ochre and white
+	var cols := [Color(0.62, 0.60, 0.56), Color(0.76, 0.66, 0.48), Color(0.88, 0.86, 0.80),
+		Color(0.44, 0.44, 0.46), Color(0.70, 0.52, 0.40)]
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		c.draw_colored_polygon(_oval((pc.p as Vector2) + light * r * 0.45, float(pc.rot), r * 1.1, r * 0.8), Color(0, 0, 0, 0.30))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var col := _pick(cols, float(pc["var"]))
+		c.draw_colored_polygon(_oval(p, float(pc.rot), r * 1.1, r * 0.8), col.darkened(0.3))
+		c.draw_colored_polygon(_oval(p, float(pc.rot), r * 0.98, r * 0.68), col)
+		c.draw_circle(p - light * r * 0.35, r * 0.28, col.lightened(0.3))
+
+
+static func _cactus(c: Object, sign: Dictionary, h: float, light: Vector2) -> void:
+	# the Jardí de Cactus: barrel cacti planted in letters, ribbed, spined, and
+	# now and then one in flower. Shoved, they spring back upright.
+	for pc: Dictionary in sign.pieces:
+		c.draw_circle((pc.p as Vector2) + light * float(pc.r) * 0.5, float(pc.r) * 1.05, Color(0, 0, 0, 0.30))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var green := Color(0.22, 0.48, 0.30).lerp(Color(0.36, 0.56, 0.26), float(pc["var"]))
+		c.draw_circle(p, r, green.darkened(0.35))
+		c.draw_circle(p, r * 0.86, green)
+		for k in range(8):
+			var d := Vector2.from_angle(float(pc.rot) + TAU * float(k) / 8.0)
+			c.draw_line(p + d * r * 0.2, p + d * r * 0.84, green.darkened(0.22), 1.2)
+			c.draw_circle(p + d * r * 0.9, 0.9, Color(0.96, 0.94, 0.80))
+		if float(pc["var"]) > 0.72:
+			c.draw_circle(p, r * 0.32, Color(0.96, 0.36, 0.56))
+			c.draw_circle(p, r * 0.12, Color(0.98, 0.86, 0.30))
+		else:
+			c.draw_circle(p - light * r * 0.3, r * 0.22, green.lightened(0.25))
+
+
+static func _rope(c: Object, sign: Dictionary, h: float) -> void:
+	# a mooring line off the wharf laid along the letters: a fat hemp rope,
+	# its twist showing as slanted strands
+	for pc: Dictionary in sign.pieces:
+		var half := Vector2.from_angle(float(pc.rot)) * float(pc.len) * 0.5
+		var p: Vector2 = pc.p
+		c.draw_line(p - half + Vector2(2, 2.5), p + half + Vector2(2, 2.5), Color(0, 0, 0, 0.3), h * 0.13)
+		c.draw_line(p - half, p + half, Color(0.36, 0.26, 0.14), h * 0.13)
+	for pc: Dictionary in sign.pieces:
+		var dir := Vector2.from_angle(float(pc.rot))
+		var half := dir * float(pc.len) * 0.5
+		var p: Vector2 = pc.p
+		var side := dir.orthogonal() * h * 0.045
+		c.draw_line(p - half * 0.98, p + half * 0.98, Color(0.80, 0.66, 0.42), h * 0.095)
+		var n := maxi(2, int(float(pc.len) / (h * 0.07)))
+		for k in range(n):
+			var q := p - half + dir * float(pc.len) * (float(k) + 0.5) / float(n)
+			c.draw_line(q - side - dir * h * 0.02, q + side + dir * h * 0.02, Color(0.56, 0.42, 0.24), 1.6)
+
+
+static func _fronds(c: Object, sign: Dictionary, h: float) -> void:
+	# palm fronds fallen in the square: a pale midrib and the leaflets along it
+	for pc: Dictionary in sign.pieces:
+		var dir := Vector2.from_angle(float(pc.rot))
+		var half := dir * float(pc.len) * 0.5
+		var p: Vector2 = pc.p
+		var side := dir.orthogonal()
+		var green := Color(0.24, 0.48, 0.22).lerp(Color(0.48, 0.58, 0.22), float(pc["var"]) * 0.6)
+		var n := maxi(3, int(float(pc.len) / (h * 0.055)))
+		for k in range(n):
+			var q := p - half + dir * float(pc.len) * (float(k) + 0.5) / float(n)
+			for sd: float in [-1.0, 1.0]:
+				var tip := q + side * sd * h * 0.13 + dir * h * 0.06
+				c.draw_line(q + Vector2(1.5, 2), tip + Vector2(1.5, 2), Color(0, 0, 0, 0.22), h * 0.05)
+				c.draw_line(q, tip, green, h * 0.045)
+		c.draw_line(p - half, p + half, Color(0.78, 0.72, 0.46), h * 0.03)
+
+
+static func _biscuits(c: Object, sign: Dictionary, h: float, light: Vector2) -> void:
+	# bone-shaped dog biscuits from the treat jar on the vet's counter
+	for pc: Dictionary in sign.pieces:
+		_bone(c, (pc.p as Vector2) + light * float(pc.r) * 0.45, float(pc.rot), float(pc.r) * 0.92, Color(0, 0, 0, 0.28))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var col := Color(0.82, 0.58, 0.30).lerp(Color(0.64, 0.40, 0.22), float(pc["var"]))
+		_bone(c, p, float(pc.rot), r * 0.92, col.darkened(0.4))
+		_bone(c, p, float(pc.rot), r * 0.82, col)
+		c.draw_circle(p - light * r * 0.2, r * 0.16, col.lightened(0.25))
+
+
+static func _bone(c: Object, p: Vector2, rot: float, r: float, col: Color) -> void:
+	var ax := Vector2.from_angle(rot)
+	var ay := ax.orthogonal()
+	c.draw_colored_polygon(_box(p, rot, r * 0.8, r * 0.36), col)
+	for e: float in [-1.0, 1.0]:
+		for s2: float in [-1.0, 1.0]:
+			c.draw_circle(p + ax * e * r * 0.8 + ay * s2 * r * 0.32, r * 0.38, col)
+
+
+static func _pinecones(c: Object, sign: Dictionary, h: float, light: Vector2) -> void:
+	# Aleppo pine cones off the hillside: a tapered brown cone, its scales in
+	# rows, the tips catching the light
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		c.draw_colored_polygon(_oval((pc.p as Vector2) + light * r * 0.5, float(pc.rot), r * 1.35, r * 0.8), Color(0, 0, 0, 0.30))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var rot: float = pc.rot
+		var ax := Vector2.from_angle(rot)
+		var ay := ax.orthogonal()
+		var brown := Color(0.50, 0.30, 0.14).lerp(Color(0.62, 0.40, 0.18), float(pc["var"]))
+		c.draw_colored_polygon(_oval(p, rot, r * 1.35, r * 0.8), Color(0.26, 0.15, 0.07))
+		c.draw_colored_polygon(_oval(p, rot, r * 1.22, r * 0.68), brown)
+		for k in range(4):
+			var q := p + ax * r * (-0.8 + float(k) * 0.52)
+			var w := r * 0.62 * (1.0 - absf(float(k) - 1.4) * 0.22)
+			c.draw_line(q - ay * w, q + ax * r * 0.22, Color(0.30, 0.17, 0.08), 1.4)
+			c.draw_line(q + ay * w, q + ax * r * 0.22, Color(0.30, 0.17, 0.08), 1.4)
+			c.draw_circle(q + ax * r * 0.2, r * 0.1, brown.lightened(0.3))
+
+
+static func _balls(c: Object, sign: Dictionary, h: float, light: Vector2) -> void:
+	# her tennis balls, the whole collection, set out for the first walk: felt
+	# yellow, the white seam curling round
+	for pc: Dictionary in sign.pieces:
+		c.draw_circle((pc.p as Vector2) + light * float(pc.r) * 0.5, float(pc.r), Color(0, 0, 0, 0.32))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var felt := Color(0.82, 0.90, 0.20).lerp(Color(0.92, 0.86, 0.22), float(pc["var"]))
+		c.draw_circle(p, r, felt.darkened(0.42))
+		c.draw_circle(p, r * 0.88, felt)
+		var d := Vector2.from_angle(float(pc.rot))
+		var o := d.orthogonal()
+		var prev := p - d * r * 0.8 + o * r * 0.3
+		for k in range(1, 7):
+			var u := float(k) / 6.0
+			var q := p + d * r * (u * 1.6 - 0.8) + o * r * 0.3 * cos(u * PI)
+			c.draw_line(prev, q, Color(0.98, 0.98, 0.94), 1.4)
+			prev = q
+		c.draw_circle(p - light * r * 0.35, r * 0.24, felt.lightened(0.3))
+
+
+static func _bulbs(c: Object, lines: Array, h: float, t: float) -> void:
+	# the summit fairground's festoon: a black cable run along the letters and
+	# bulbs on it, warm white and coloured, the lights chasing along the name
+	_stroke(c, lines, h * 0.035, Color(0.08, 0.08, 0.10), Vector2(1.5, 2.0))
+	_stroke(c, lines, h * 0.03, Color(0.16, 0.16, 0.18))
+	var pts := Letters.points(lines, h * 0.16)
+	var cols := [Color(1.0, 0.86, 0.48), Color(0.98, 0.36, 0.30), Color(1.0, 0.86, 0.48), Color(0.40, 0.70, 1.0)]
+	var step := int(floor(t * 5.0))
+	for i in range(pts.size()):
+		var col: Color = cols[i % cols.size()]
+		var lit := (i + step) % 3 != 0
+		var glow := h * (0.12 if lit else 0.07)
+		c.draw_circle(pts[i], glow, Color(col.r, col.g, col.b, 0.28 if lit else 0.10))
+		c.draw_circle(pts[i], h * 0.055, col if lit else col.darkened(0.5))
+		c.draw_circle(pts[i] - Vector2(h * 0.015, h * 0.015), h * 0.02, Color(1, 1, 1, 0.9 if lit else 0.3))
+
+
+static func _studs(c: Object, sign: Dictionary, h: float, t: float) -> void:
+	# LED studs set flush in the concourse's terrazzo: a dark steel ring, a lens,
+	# and the light pooling round it on the floor. A slow wave of brightness runs
+	# along the name; a light someone is standing on is out.
+	var pts := stud_points(sign)
+	var cover: PackedFloat32Array = sign.cover
+	var lens := Color(0.66, 0.92, 1.0)
+	# the dark granite inlay the lights are set in, its polished edge catching
+	# the hall's light
+	_stroke(c, sign.lines, h * 0.19, Color(0.70, 0.72, 0.74), Vector2(-0.8, -0.8))
+	_stroke(c, sign.lines, h * 0.17, Color(0.10, 0.11, 0.13))
+	for i in range(pts.size()):
+		var lit := (1.0 - cover[i]) * (0.72 + 0.28 * (0.5 + 0.5 * sin(t * 2.4 - pts[i].x * 0.018)))
+		if lit > 0.02:
+			c.draw_circle(pts[i], h * 0.15, Color(lens.r, lens.g, lens.b, 0.12 * lit))
+			c.draw_circle(pts[i], h * 0.085, Color(lens.r, lens.g, lens.b, 0.32 * lit))
+	for i in range(pts.size()):
+		var lit := (1.0 - cover[i]) * (0.72 + 0.28 * (0.5 + 0.5 * sin(t * 2.4 - pts[i].x * 0.018)))
+		c.draw_circle(pts[i], h * 0.045, Color(0.30, 0.32, 0.35))
+		c.draw_circle(pts[i], h * 0.034, Color(0.06, 0.08, 0.10).lerp(lens, lit))
+		c.draw_circle(pts[i] - Vector2(h * 0.01, h * 0.012), h * 0.016, Color(1, 1, 1, 0.25 + 0.7 * lit))
+
+
+const SCARF_BLUE := Color(0.20, 0.36, 0.72)
+const SCARF_CLARET := Color(0.66, 0.16, 0.28)
+const SCARF_WHITE := Color(0.97, 0.96, 0.92)
+
+
+static func _scarf(c: Object, sign: Dictionary, h: float) -> void:
+	# a home fan's knitted scarf laid along the letters: blue and claret bars
+	# split by white, the knit's rows showing, a white fringe at each end
+	var w := h * 0.17
+	for pc: Dictionary in sign.pieces:
+		var half := Vector2.from_angle(float(pc.rot)) * float(pc.len) * 0.5
+		var p: Vector2 = pc.p
+		c.draw_line(p - half + Vector2(2, 2.5), p + half + Vector2(2, 2.5), Color(0, 0, 0, 0.32), w)
+	for pc: Dictionary in sign.pieces:
+		var dir := Vector2.from_angle(float(pc.rot))
+		var half := dir * float(pc.len) * 0.5
+		var p: Vector2 = pc.p
+		var side := dir.orthogonal() * w * 0.5
+		var col := SCARF_BLUE if int(float(pc["var"]) * 2.0) % 2 == 0 else SCARF_CLARET
+		c.draw_line(p - half, p + half, col, w)
+		for e: float in [-0.42, 0.42]:
+			var q := p + half * e * 2.0
+			c.draw_line(q - side, q + side, SCARF_WHITE, h * 0.035)
+		var n := maxi(2, int(float(pc.len) / (h * 0.045)))
+		for k in range(n):
+			var q := p - half + dir * float(pc.len) * (float(k) + 0.5) / float(n)
+			c.draw_line(q - side * 0.85, q + side * 0.85, col.darkened(0.18), 1.0)
+		for end: Array in [[bool(pc.get("first", false)), -1.0], [bool(pc.get("last", false)), 1.0]]:
+			if not bool(end[0]):
+				continue
+			var tip := p + half * float(end[1])
+			for f in range(5):
+				var fq := tip + side * (float(f) / 2.0 - 1.0) * 0.9
+				c.draw_line(fq, fq + dir * float(end[1]) * h * 0.09, SCARF_WHITE, 1.4)
+
+
+
+static func _setts(c: Object, lines: Array, h: float, key: float, light: Vector2) -> void:
+	# the name laid into the alley's paving in dark granite setts, the way old
+	# streets carry an inscription: pale mortar along the letters, and in it
+	# small squared stones, each a little turned, worn smooth on top
+	_stroke(c, lines, h * 0.22, Color(0.84, 0.80, 0.70))
+	var pts := Letters.points(lines, h * 0.1)
+	for i in range(pts.size()):
+		var rot := (_h(i, key, 51.0) - 0.5) * 0.5
+		var s := h * (0.042 + _h(i, key, 52.0) * 0.008)
+		var col := Color(0.26, 0.25, 0.27).lerp(Color(0.38, 0.35, 0.33), _h(i, key, 53.0))
+		c.draw_colored_polygon(_box(pts[i] + light * 1.2, rot, s, s * 0.9), Color(0, 0, 0, 0.30))
+		c.draw_colored_polygon(_box(pts[i], rot, s, s * 0.9), col)
+		c.draw_colored_polygon(_box(pts[i] - light * s * 0.25, rot, s * 0.55, s * 0.45), col.lightened(0.18))

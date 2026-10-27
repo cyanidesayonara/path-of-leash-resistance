@@ -180,30 +180,23 @@ func _main(vs: Vector2) -> void:
 func _walk(vs: Vector2) -> void:
 	_top(vs, 0)
 	var info := Flow.walk_info(main)
-	var at := _name_at()
-	# the name in the world is made of the walk (leaves, sand, tiles). This
-	# plaque says the same name, and what it means, in plain type on a dark
-	# card: large, light on dark, so it stays readable in any weather and at
-	# night, and for anyone who cannot make the pieces out
-	var walk_name := String(main._walk_name())
-	var gloss := String(Game.LEVEL_SUBTITLES.get(String(info.id), ""))
-	if Game.free_play:
-		gloss = "[FREE PLAY]  " + gloss
-	var w := minf(640.0, vs.x - 48.0)
+	# The walk's name and what it means are on the ground, in the walk's own
+	# stuff and the gloss under it (main._draw_ground_title). This strip under
+	# them says only what the ground cannot: how this walk has gone, or what
+	# opens it. One line, so it never repeats the name.
+	# It always sits in the same place, over the prompt bar at the foot of the
+	# screen, whichever walk is in view, with the walk dots above it.
+	var w := minf(560.0, vs.x - 48.0)
 	var shake: float = sin(float(main.locked_nudge) * 60.0) * 10.0 * (float(main.locked_nudge) / 0.35)
-	var h := 112.0
-	var top := at.y + 36.0
-	var limit := vs.y - Kit.BAR_FROM_BOTTOM - 16.0
-	if top + h > limit:
-		top = maxf(8.0, limit - h)
+	var h := 50.0
+	var top := vs.y - Kit.BAR_FROM_BOTTOM - 22.0 - h
 	var r := Rect2(vs.x * 0.5 - w * 0.5 + shake, top, w, h)
 	Kit.card(self, r, Kit.accent("walk"), 12)
-	Kit.heading(self, Vector2(r.position.x, r.position.y + 36.0), walk_name, 28, Kit.INK,
-		HORIZONTAL_ALIGNMENT_CENTER, w)
+	# browse arrows at its two ends: the name on the ground is left whole
+	Kit.chevron(self, Vector2(r.position.x - 22.0, r.get_center().y), 18.0, Kit.GOLD, true)
+	Kit.chevron(self, Vector2(r.end.x + 22.0, r.get_center().y), 18.0, Kit.GOLD)
 	var body := Kit.body()
-	draw_string(body, Vector2(r.position.x, r.position.y + 62.0), gloss, HORIZONTAL_ALIGNMENT_CENTER,
-		w, 18, Kit.INK)
-	var row_y := r.position.y + 92.0
+	var row_y := r.position.y + 32.0
 	if bool(info.locked):
 		Kit.lock(self, Vector2(r.position.x + 34.0, row_y - 6.0), 16.0, Kit.INK_FAINT)
 		draw_string(body, Vector2(r.position.x + 58.0, row_y), String(info.lines[0]),
@@ -219,8 +212,8 @@ func _walk(vs: Vector2) -> void:
 		var goals := "%d / %d goals" % [int(info.goals), int(info.goals_total)]
 		draw_string(body, Vector2(r.position.x + 126.0, row_y), goals, HORIZONTAL_ALIGNMENT_LEFT,
 			-1, 17, Kit.INK)
-		draw_string(body, Vector2(r.position.x, row_y), String(info.best), HORIZONTAL_ALIGNMENT_RIGHT,
-			w - 28.0, 17, Kit.INK_SOFT)
+		draw_string(body, Vector2(r.position.x, row_y), "free play" if Game.free_play else String(info.best),
+			HORIZONTAL_ALIGNMENT_RIGHT, w - 28.0, 17, Kit.GOLD if Game.free_play else Kit.INK_SOFT)
 	else:
 		draw_string(body, Vector2(r.position.x, row_y), "     ".join(info.lines),
 			HORIZONTAL_ALIGNMENT_CENTER, w, 16, Kit.INK_SOFT)
@@ -229,7 +222,7 @@ func _walk(vs: Vector2) -> void:
 	var dx := 14.0
 	var x0 := vs.x * 0.5 - dx * float(n - 1) * 0.5 + shake
 	for i in range(n):
-		var p := Vector2(x0 + dx * float(i), at.y - 78.0)
+		var p := Vector2(x0 + dx * float(i), r.position.y - 14.0)
 		var lv: String = Game.CAROUSEL[i]
 		if i == int(info.index):
 			draw_circle(p, 4.5, Kit.GOLD)
@@ -245,7 +238,9 @@ func _details(vs: Vector2) -> void:
 	var rows := Flow.details_rows(main)
 	var legend := Flow.controls()
 	var h := 70.0 + float(rows.size()) * 56.0 + 36.0 + ceilf(float(legend.size()) / 2.0) * 34.0 + 20.0
-	var r := Rect2(48.0, vs.y * 0.5 - h * 0.5, DETAILS_W, h)
+	# anchored over the prompt bar, like the walk select's card, so the walk's
+	# name and gloss on the ground above it are never under it
+	var r := Rect2(48.0, maxf(8.0, vs.y - Kit.BAR_FROM_BOTTOM - 22.0 - h), DETAILS_W, h)
 	Kit.card(self, r, acc)
 	Kit.heading(self, r.position + Vector2(28.0, 46.0), "GET READY", 26, acc)
 	var y := r.position.y + 72.0

@@ -89,6 +89,8 @@ func _draw() -> void:
 			-1, 18, name_col)
 		if String(row.kind) == "slider":
 			_slider(f, y, float(row.v), picked)
+		elif String(row.kind) == "choice":
+			_choice(f, y, String(row.text), picked)
 		else:
 			_toggle(f, y, bool(row.v), picked)
 	# the buttons are on the prompt bar along the bottom (menu_screen.gd)
@@ -110,6 +112,15 @@ func _slider(f: Font, y: float, v: float, picked: bool) -> void:
 	var txt := "%d%%" % int(round(v * 100.0))
 	draw_string(f, Vector2(BAR_X + BAR_W + 16.0, y + 6.0), txt, HORIZONTAL_ALIGNMENT_LEFT,
 		-1, 18, Color(0.95, 0.93, 0.88) if picked else Color(0.7, 0.7, 0.72))
+
+
+# one of a list, stepped with left/right: the value between two arrows
+func _choice(f: Font, y: float, txt: String, picked: bool) -> void:
+	var col := Color(0.95, 0.93, 0.88) if picked else Color(0.7, 0.7, 0.72)
+	var arrow := Kit.accent("settings") if picked else Color(1, 1, 1, 0.22)
+	draw_colored_polygon(PackedVector2Array([Vector2(BAR_X + 8.0, y - 7.0), Vector2(BAR_X, y), Vector2(BAR_X + 8.0, y + 7.0)]), arrow)
+	draw_string(f, Vector2(BAR_X + 18.0, y + 6.0), txt, HORIZONTAL_ALIGNMENT_CENTER, BAR_W - 36.0, 18, col)
+	draw_colored_polygon(PackedVector2Array([Vector2(BAR_X + BAR_W - 8.0, y - 7.0), Vector2(BAR_X + BAR_W, y), Vector2(BAR_X + BAR_W - 8.0, y + 7.0)]), arrow)
 
 
 func _toggle(f: Font, y: float, on: bool, picked: bool) -> void:

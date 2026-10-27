@@ -61,8 +61,8 @@ func _check_rev() -> void:
 	_check(int(sg.get("rev", 0)) == settled, "settled pieces stop moving the sign on (%d)" % settled)
 	# what animates on its own
 	var puddle := WorldSign.build("HOME", Vector2.ZERO, 26.0, "puddle", 9.0, 300.0)
-	_check(WorldSign.animated(puddle), "a puddle sign shimmers, so it is always redrawn")
-	_check(not WorldSign.animated(sg), "carnations without rings look the same until moved")
+	_check(WorldSign.animated(puddle, 0.0), "a puddle sign shimmers, so it is always redrawn")
+	_check(not WorldSign.animated(sg, 0.0), "carnations without rings look the same until moved")
 
 
 func _check_layer() -> void:
@@ -86,6 +86,10 @@ func _check_layer() -> void:
 	var sg: Dictionary = m.signs[0]
 	var vt := float(sg.top)
 	var vb := float(sg.bottom)
+	# a name just laid out is still falling into place: every pass redraws
+	_check(layer.refresh(vt, vb, true) and layer.refresh(vt, vb, true), "a sign falling into place redraws every pass")
+	for s2: Dictionary in m.signs:
+		s2.born = -100.0
 	# whatever the main pass already did, this settles the layer's key
 	layer.refresh(vt, vb, true)
 	_check(not layer.refresh(vt, vb, true), "an unchanged sign is not redrawn")

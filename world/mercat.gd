@@ -33,11 +33,12 @@ const DRESS_SIZE := {
 # west kerb (one of main's vans, so it is solid and wraps like the others),
 # crate stacks by the shop doors, and the shops' awnings
 const VAN := Vector2(438.0, -300.0)
-const APPROACH_CRATES: Array[Vector2] = [Vector2(426.0, -190.0), Vector2(856.0, 10.0), Vector2(858.0, -260.0)]
+# (kept clear of the walk's name on the ground by the start, main.NAME_Y)
+const APPROACH_CRATES: Array[Vector2] = [Vector2(426.0, -190.0), Vector2(856.0, -110.0), Vector2(858.0, -260.0)]
 const APPROACH_CRATE_SIZE := Vector2(44.0, 40.0)
 # [north y, south y, west side?, stripe colour]
 const AWNINGS: Array = [
-	[-60.0, 60.0, true, 0], [-510.0, -400.0, true, 1],
+	[-230.0, -110.0, true, 0], [-510.0, -400.0, true, 1],
 	[70.0, 180.0, false, 2], [-170.0, -50.0, false, 1], [-480.0, -360.0, false, 0],
 ]
 const AWNING_DEPTH := 34.0
