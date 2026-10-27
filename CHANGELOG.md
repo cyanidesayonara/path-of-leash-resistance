@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-10-27 - El Besòs drawn by its own module
+
+`systems/besos.gd` is El Besòs's first walk module and takes its drawing
+out of main.gd: the concrete flood wall's frontage modules (which the edge
+layer calls as `Besos.draw_wall_module`), the river beside the path, and
+the Parc Fluvial waymarkers (`draw_bollard`, where other walks have
+hydrants). The river draws after the walkway, partway through the
+cross-section, so it gets a new hook in that slot, `draw_over_walkway`.
+Main keeps `_draw_besos` and `_draw_besos_post` as forwarders for the
+tests. Behaviour snapshot byte-identical over every walk; El Besòs and
+street shots pixel-identical.
+
 ## 2026-10-27 - El Parc drawn by its own module
 
 `systems/parc.gd` is El Parc's first walk module and takes its drawing out
