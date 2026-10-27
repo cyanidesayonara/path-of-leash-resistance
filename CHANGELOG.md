@@ -26,6 +26,14 @@ Settings has a LANGUAGE row (English, Català, Español) for the glosses;
 trick at a time". On the walk select the card under the name no longer
 repeats it: the ground has the name and the gloss, and the card is one
 line of progress or what opens the walk.
+## 2026-10-27 - La Rambla's waves
+
+La Rambla's wave paving was a set of faint hairlines on grey. The waves are
+cream bands now, undulating across the promenade over the grey every other
+row, with a darker seam along each edge: the paving the real promenade is
+known by, readable at a glance and still quiet enough for the stalls,
+blankets and people on it. One polygon per band, in the same batch as
+before. Drawing only.
 ## 2026-10-27 - El Mosaic: the garden past the walls
 
 Past El Mosaic's rubble-stone terrace walls there was the slate of a city
