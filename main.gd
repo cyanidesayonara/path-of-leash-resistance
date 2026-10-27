@@ -262,7 +262,8 @@ var lvl := "street":
 # draw_bollard. Les Obres (world/obres.gd) is draw_top, draw_van,
 # draw_performer and draw_log_prop.
 # The tutorial is laid out on El Barri (lvl "barri"), so El Barri's hooks run
-# in it too.
+# in it too. tests/test_walk_hooks.gd holds each walk's declared hooks: a new
+# hook in a module, or a helper named like one, fails there until declared.
 const WALK_MODULES := {
 	"montjuic": preload("res://systems/montjuic.gd"),
 	"guell": preload("res://systems/mosaic.gd"),

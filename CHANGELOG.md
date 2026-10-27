@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-10-27 - Walk hooks declared per walk
+
+`tests/test_walk_hooks.gd` checked only that a module function named like a
+hook took the hook's argument count, so a helper that shared a hook's name
+and arity would silently replace main's own pass (Les Obres' old
+`draw_ground` would have replaced the ground). Each walk now declares the
+hooks its module answers, and the test fails on a hook-named function
+outside that list, or a declared hook the module does not define. AGENTS.md's
+release line now says v1.64 is the last tag.
+
 ## 2026-10-27 - Les Obres drawn by its own module
 
 `world/obres.gd` already held Les Obres' dressing; it is now the walk's
