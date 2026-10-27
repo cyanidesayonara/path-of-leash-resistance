@@ -58,29 +58,42 @@ static func _rr(r: Rect2, rad: float) -> PackedVector2Array:
 	return pts
 
 
+# The paving's waves: cream bands undulating across the promenade over the
+# grey, every other row, each band one polygon with a darker seam along both
+# edges. What the real promenade is known by, so it reads at a glance.
+const WAVE_ROW := 34.0
+const WAVE_AMP := 8.0
+const WAVE_K := 0.035
+const WAVE_CREAM := Color(0.80, 0.77, 0.70)
+const WAVE_SEAM := Color(0.56, 0.54, 0.50, 0.55)
+
+
 static func draw_pavement_waves(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	var top_w := maxf(vt - 60.0, m.GATE_Y)
 	var bot_w := minf(vb + 60.0, m.START_Y)
 	if bot_w <= top_w:
 		return
-	var wy := floorf(top_w / 34.0) * 34.0
-	while wy < bot_w + 34.0:
-		if wy >= top_w and wy <= bot_w:
+	var wy := floorf(top_w / WAVE_ROW) * WAVE_ROW
+	while wy < bot_w + WAVE_ROW:
+		if wy >= top_w and wy <= bot_w and int(absf(wy) / WAVE_ROW) % 2 == 0:
 			var we: Vector2 = m.walk_edges(wy)
 			var wx0 := we.x + 12.0
 			var wx1 := we.y - 12.0
 			if wx1 > wx0 + 60.0:
-				var wave_pts := PackedVector2Array()
+				var top := PackedVector2Array()
 				var x := wx0
-				while x <= wx1:
-					var wave_y := wy + sin(x * 0.035) * 8.0
-					wave_pts.append(Vector2(x, wave_y))
+				while x < wx1:
+					top.append(Vector2(x, wy + sin(x * WAVE_K) * WAVE_AMP))
 					x += 16.0
-				var is_alt := int(absf(wy) / 34.0) % 2 == 0
-				var wave_col := Color(0.56, 0.53, 0.48, 0.28) if is_alt else Color(0.72, 0.69, 0.63, 0.22)
-				for pi in range(wave_pts.size() - 1):
-					b.line(wave_pts[pi], wave_pts[pi + 1], wave_col, 3.2)
-		wy += 34.0
+				top.append(Vector2(wx1, wy + sin(wx1 * WAVE_K) * WAVE_AMP))
+				var band := top.duplicate()
+				for i in range(top.size() - 1, -1, -1):
+					band.append(top[i] + Vector2(0.0, WAVE_ROW))
+				b.polygon(band, WAVE_CREAM)
+				for i in range(top.size() - 1):
+					b.line(top[i], top[i + 1], WAVE_SEAM, 2.0)
+					b.line(top[i] + Vector2(0.0, WAVE_ROW), top[i + 1] + Vector2(0.0, WAVE_ROW), WAVE_SEAM, 2.0)
+		wy += WAVE_ROW
 
 
 static func draw_miro_mosaic(b: ShapeBatch, mc: Vector2, mr: float) -> void:

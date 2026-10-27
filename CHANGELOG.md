@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-10-27 - La Rambla's waves
+
+La Rambla's wave paving was a set of faint hairlines on grey. The waves are
+cream bands now, undulating across the promenade over the grey every other
+row, with a darker seam along each edge: the paving the real promenade is
+known by, readable at a glance and still quiet enough for the stalls,
+blankets and people on it. One polygon per band, in the same batch as
+before. Drawing only.
+
 ## 2026-10-27 - Walk hooks declared per walk
 
 `tests/test_walk_hooks.gd` checked only that a module function named like a
