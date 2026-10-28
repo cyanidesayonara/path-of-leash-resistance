@@ -1,6 +1,6 @@
 extends SceneTree
 
-# World labels ("FULL!", "hello? ...oh hi", "click!") spawn at the owner or
+# World labels ("FULL!", "Hello? ...Oh, hi!", "Click!") spawn at the owner or
 # the dog, near the middle of the screen, which is where the feed draws (#66).
 # main.clear_of_feed lifts a label that would cross a feed line at any point
 # of its rise. This spawns labels across the feed's band on a real main scene

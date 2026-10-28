@@ -50,7 +50,7 @@ func _physics_process(delta: float) -> void:
 	if not hit_done and body.grow(10.0).has_point(main.human.global_position):
 		if main.human.fall("train"):
 			hit_done = true
-			main.float_text(main.human.global_position + Vector2(0, -30), "ding! sorry!", Color(1, 1, 1, 0.9), main.POP_SAY)
+			main.float_text(main.human.global_position + Vector2(0, -30), "Ding! Sorry!", Color(1, 1, 1, 0.9), main.POP_SAY)
 	if body.grow(8.0).has_point(main.dog.global_position):
 		main.dog.knocked(Vector2(dir, 0.0), "train")
 	if (dir > 0.0 and body.position.x > 1600.0) or (dir < 0.0 and body.end.x < -320.0):

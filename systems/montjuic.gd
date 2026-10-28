@@ -357,7 +357,7 @@ static func blow_hat(m: Node2D) -> bool:
 	m.add_child(hat)
 	var dir: Vector2 = m.wind_dir if m.wind_dir.length() > 0.1 else Vector2(-1, 0.2).normalized()
 	hat.setup(m, m.human.global_position + Vector2(0, -6), dir * HAT_SPEED)
-	m.float_text(m.human.global_position + Vector2(0, -34), "my hat!", Color(1, 1, 1), m.POP_SAY)
+	m.float_text(m.human.global_position + Vector2(0, -34), "My hat! Come back!", Color(1, 1, 1), m.POP_SAY)
 	Sfx.play("hiss", 0.7, -6.0)
 	return true
 

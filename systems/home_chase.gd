@@ -290,7 +290,7 @@ static func _warn(m: Node2D, behavior: Dictionary) -> void:
 		m.human.panic = true
 	if String(behavior.get("kind", "")) == "flood":
 		Sfx.play("whistle", 0.8, -4.0)
-		m.human.notice("not our problem", 1.2)
+		m.human.notice("Not our problem.", 1.2)
 	if behavior.has("warning_color"):
 		m.float_text(m.human.global_position, String(behavior.get("warning", "")), behavior["warning_color"])
 	else:
