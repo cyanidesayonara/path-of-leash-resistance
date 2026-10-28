@@ -2,6 +2,21 @@
 
 Append-only session history, newest first.
 
+## 2026-10-28 - The goal list shows every goal when opened
+
+Opened, the goal list stopped at seven rows (four on a phone) and folded the
+rest into "+ 5 more", so on a twelve-goal walk some goals could never be
+seen. And on narrow screens the dare card was drawn over the list.
+- Opened on purpose, the list now shows every goal. When there are too many
+  for the screen, the rows tighten. Only if even that is too tall do
+  finished goals fold into "+ N done", so an open goal is never hidden.
+  The brief peek when a goal moves keeps the short list.
+- The dare card keeps clear of the list: it sits in the gap beside it, or
+  below it where the gap is too narrow.
+- A dare-giver's long line goes on two lines: the dare over "Bark if
+  you're in!".
+- `--shot-goals` opens the list for a screenshot.
+
 ## 2026-10-28 - Dares you take with a bark, from a dare-giver on every walk
 
 A dare used to start its clock on its own the moment she came near, from

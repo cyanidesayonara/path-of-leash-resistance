@@ -44,13 +44,21 @@ func _run() -> void:
 		"a headless run never scales the window")
 	_check(is_equal_approx(m.cam.zoom.x, m.CAM_ZOOM), "and keeps the camera's zoom")
 	var was: bool = game.goals_expanded
-	game.goals_expanded = true
 	var G: GDScript = load("res://systems/goals.gd")
+	# a peek keeps the list short, and shorter still on an enlarged interface
+	game.goals_expanded = false
+	m.goals_peek = 3.0
 	var full: int = (G.card_data(m).rows as Array).size()
 	m.ui_scale = 1.4
 	var small: int = (G.card_data(m).rows as Array).size()
 	_check(full > G.GOALS_ROWS_SMALL and small == G.GOALS_ROWS_SMALL,
-		"an enlarged interface opens a shorter goal list (%d, then %d)" % [full, small])
+		"an enlarged interface peeks a shorter goal list (%d, then %d)" % [full, small])
+	# opened on purpose, every goal is listed, whatever the scale
+	game.goals_expanded = true
+	m.goals_peek = 0.0
+	var opened: Dictionary = G.card_data(m)
+	_check((opened.rows as Array).size() == m.active_quests.size() and int(opened.extra) == 0,
+		"the opened list shows all %d goals (%d)" % [m.active_quests.size(), (opened.rows as Array).size()])
 	m.ui_scale = 1.0
 	game.goals_expanded = was
 

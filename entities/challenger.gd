@@ -54,6 +54,9 @@ const COUNT := "%d more! Keep going!"
 const LAST := "One more trick!"
 const TAKE := " Bark if you're in!"
 const GET_READY := "Get ready..."
+# the widest speech bubble on one line, and the step between its lines
+const BUBBLE_W := 220.0
+const BUBBLE_LINE_H := 16.0
 const LINES := {
 	"kid": {"idle": "Hey, dog! Want a dare?", "dare": "Bet you can't do %d tricks in %d seconds!",
 		"won": "No way! Come back for a harder one!", "lost": "Nope! Come back and try again.",
@@ -653,8 +656,13 @@ func _bar(at: Vector2, side: Vector2, length: float, depth: float) -> PackedVect
 
 func _bubble(at: Vector2, text: String, bg: Color, fg: Color) -> void:
 	var f := ThemeDB.fallback_font
-	var w: float = f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
-	var box := Rect2(at.x - w * 0.5 - 8.0, at.y - 13.0, w + 16.0, 22.0)
+	var lines := bubble_lines(text, f)
+	var w := 0.0
+	for l: String in lines:
+		w = maxf(w, f.get_string_size(l, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x)
+	# grows upward, so the tail stays at the speaker whatever the line count
+	var extra := BUBBLE_LINE_H * float(lines.size() - 1)
+	var box := Rect2(at.x - w * 0.5 - 8.0, at.y - 13.0 - extra, w + 16.0, 22.0 + extra)
 	# a tail down toward whoever is talking, drawn before the body so the
 	# join is hidden under it
 	draw_colored_polygon(
@@ -671,5 +679,24 @@ func _bubble(at: Vector2, text: String, bg: Color, fg: Color) -> void:
 		Vector2(box.end.x - 5.0, box.end.y - 5.0),
 	]:
 		draw_circle(c, 5.0, bg)
-	draw_string(f, Vector2(box.position.x + 8.0, at.y + 5.0), text,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 14, fg)
+	for i in lines.size():
+		var lw: float = f.get_string_size(lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
+		draw_string(f, Vector2(at.x - lw * 0.5, at.y + 5.0 - extra + BUBBLE_LINE_H * float(i)), lines[i],
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, fg)
+
+
+# A line wider than BUBBLE_W goes on two: the dare and its TAKE split where
+# they join, anything else at the space nearest the middle.
+static func bubble_lines(text: String, f: Font) -> Array[String]:
+	if f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x <= BUBBLE_W:
+		return [text]
+	if text.ends_with(TAKE) and text.length() > TAKE.length():
+		return [text.substr(0, text.length() - TAKE.length()), TAKE.strip_edges()]
+	var mid := text.length() / 2
+	var best := -1
+	for i in text.length():
+		if text[i] == " " and (best < 0 or absi(i - mid) < absi(best - mid)):
+			best = i
+	if best < 0:
+		return [text]
+	return [text.substr(0, best), text.substr(best + 1)]

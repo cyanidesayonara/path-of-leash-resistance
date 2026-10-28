@@ -174,8 +174,15 @@ static func check(m: Node2D) -> void:
 			m._credit_goal(q)
 
 
-# the goal list's open rows when the interface is enlarged for a small screen
+# the goal list's rows on a peek when the interface is enlarged for a small screen
 const GOALS_ROWS_SMALL := 4
+# the opened card's tallest share of the screen, the height of its heading and
+# padding, and its row heights (normal and tightened); hud/goals_card.gd draws
+# with the same two row heights
+const GOALS_MAX_H := 0.72
+const GOALS_CARD_CHROME := 60.0
+const GOALS_ROW_H := 21.0
+const GOALS_ROW_COMPACT := 16.0
 
 
 static func card_data(m: Node2D) -> Dictionary:
@@ -204,16 +211,32 @@ static func card_data(m: Node2D) -> Dictionary:
 				"state": UiIcons.Check.PARTIAL if got > 0 else UiIcons.Check.OPEN,
 			})
 	var rows: Array = open_rows + done_rows
-	# with a phone's enlarged interface (hud/ui_scale.gd) the open list would
-	# cover a third of the walk: fewer rows there, the rest as "+ N more"
-	var cap: int = m.GOALS_MAX_ROWS if float(m.ui_scale) <= 1.0 else GOALS_ROWS_SMALL
-	var shown: int = mini(rows.size(), cap)
 	var open: bool = Game.goals_expanded or m.goals_peek > 0.0
+	# A peek (a goal just moved) is brief, so it keeps the short list: with a
+	# phone's enlarged interface (hud/ui_scale.gd) a long one would cover a
+	# third of the walk. Opened on purpose, the card lists every goal; rows
+	# tighten to fit the screen and, only if even that is too tall, finished
+	# goals fold into "+ N done" so an open goal is never hidden.
+	var cap: int = m.GOALS_MAX_ROWS if float(m.ui_scale) <= 1.0 else GOALS_ROWS_SMALL
+	var compact := false
+	var folded_done := 0
+	if Game.goals_expanded:
+		var room: float = m.get_viewport().get_visible_rect().size.y * GOALS_MAX_H - GOALS_CARD_CHROME
+		cap = rows.size()
+		if float(rows.size()) * GOALS_ROW_H > room:
+			compact = true
+			var fit: int = maxi(open_rows.size(), int(room / GOALS_ROW_COMPACT))
+			if rows.size() > fit:
+				folded_done = rows.size() - fit
+				cap = fit
+	var shown: int = mini(rows.size(), cap)
 	return {
 		"done": done_count, "total": total,
 		"all_done": total > 0 and done_count >= total,
 		"rows": rows.slice(0, shown) if open else [],
-		"extra": (rows.size() - shown) if open else 0,
+		"extra": (rows.size() - shown) if open and folded_done == 0 else 0,
+		"folded_done": folded_done if open else 0,
+		"compact": compact and open,
 		"open": open, "peeking": m.goals_peek > 0.0 and not Game.goals_expanded,
 		"key": Prompts.key("goals"),
 	}
