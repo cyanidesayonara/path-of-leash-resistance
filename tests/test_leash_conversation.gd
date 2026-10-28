@@ -2,7 +2,7 @@ extends SceneTree
 
 # Your human answers the leash (human.gd, the leash conversation): a steady
 # pull leads them across the path and speeds or slows them along it; a hard
-# one wears their patience down until a telegraphed "HEY!" and a correction (a
+# one wears their patience down until a telegraphed "Hey!" and a correction (a
 # step back and a shorter leash), which a dug-in dog turns into his stumble;
 # a slack leash builds patience back; and they wait while she does her
 # business.
@@ -71,7 +71,7 @@ func _run() -> void:
 		h.strain = false
 		h._converse(dt)
 	_check(h.patience > low, "a slack leash builds it back")
-	# run it out: the "HEY!" is telegraphed first, then the correction
+	# run it out: the "Hey!" is telegraphed first, then the correction
 	h.patience = 0.01
 	h.felt_pull = Vector2(0.0, 1.0) * (h.PATIENCE_HARD * 1.6)
 	h._pull_now = h.felt_pull
@@ -79,7 +79,7 @@ func _run() -> void:
 	h._converse(dt)
 	h._pull_now = h.felt_pull
 	h._converse(dt)
-	_check(h.is_correcting() and h.bubble.text == "HEY!", "out of patience: a telegraphed HEY! first")
+	_check(h.is_correcting() and h.bubble.text == "Hey!", "out of patience: a telegraphed HEY! first")
 	m.leash_len = 400.0
 	m.leash_target = 400.0
 	m.dog.planted = false

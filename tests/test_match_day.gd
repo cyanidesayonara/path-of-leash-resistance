@@ -2,7 +2,7 @@ extends SceneTree
 
 # The match clock (systems/match_day.gd): phases in order, kick-off on the
 # clock or the gate whichever is first, the streets empty within the drain,
-# and the bar's "ooh, the replay..." is a telegraph before your human drifts.
+# and the bar's "Ooh, look at the replay..." is a telegraph before your human drifts.
 
 var checks := 0
 var failures: Array[String] = []

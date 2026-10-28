@@ -53,7 +53,7 @@ static func tick(m: Node2D, delta: float) -> void:
 		m.cable_ticket_taken = true
 		Sfx.play("pickup", 1.1)
 		m.feed.say("A TELEFÈRIC TICKET!", EventFeed.Tone.GOOD)
-		m.float_text(dp + Vector2(0, -34), "the cable car is up the path", Color(1, 0.92, 0.8), m.POP_SAY)
+		m.float_text(dp + Vector2(0, -34), "The cable car is up the path.", Color(1, 0.92, 0.8), m.POP_SAY)
 		return
 	if not m.cable_ticket:
 		return

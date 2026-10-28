@@ -317,7 +317,7 @@ static func tick(m: Node2D, _delta: float) -> void:
 		if m.dog.global_position.distance_to(BUSKER_POS) < 110.0:
 			if m.dog.bark_anim > 0.0:
 				m.set("reial_busker_barked", true)
-				m.float_text(m.dog.global_position + Vector2(0, -28), "olé!", Color(0.96, 0.88, 0.35))
+				m.float_text(m.dog.global_position + Vector2(0, -28), "¡Olé!", Color(0.96, 0.88, 0.35))
 				m.feed.say("A DUET WITH THE BUSKER!", EventFeed.Tone.GOOD)
 
 # main.surface_at, through walk_mod: the ground here, or -1 for main's own

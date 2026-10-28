@@ -187,7 +187,7 @@ func _branch(dog: CharacterBody2D, human: CharacterBody2D, delta: float) -> void
 		elif branch_who == "human":
 			# Release the reservation even if an orbit or fall refuses the
 			# stumble. Otherwise every later owner event stays suppressed.
-			human.clear_external_warning("watch it")
+			human.clear_external_warning("Watch out!")
 			if int(human.state) != HumanScript.HState.STUMBLE:
 				human.bumped(Vector2(0.0, 1.0))
 		branch_who = ""
@@ -197,7 +197,7 @@ func _branch(dog: CharacterBody2D, human: CharacterBody2D, delta: float) -> void
 		who = "dog"
 	elif human.global_position.distance_to(at) < BRANCH_HIT \
 			and int(human.state) != HumanScript.HState.STUMBLE \
-			and human.warn_external("watch it", BRANCH_WARN):
+			and human.warn_external("Watch out!", BRANCH_WARN):
 		who = "human"
 	if who == "":
 		return
@@ -209,7 +209,7 @@ func cancel_branch_warning() -> void:
 	branch_who = ""
 	branch_warn = 0.0
 	if main != null:
-		main.human.clear_external_warning("watch it")
+		main.human.clear_external_warning("Watch out!")
 
 
 func _draw() -> void:

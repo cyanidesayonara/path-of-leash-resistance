@@ -246,7 +246,7 @@ static func tick(m: Node2D, delta: float) -> void:
 		m.set_meta("aigues_view", true)
 		m.bones += 5
 		m.combo.add("THE VIEW", 4)
-		m.float_text(hp + Vector2(0, -34), "...oh. wow.", Color(1, 1, 1, 0.9), m.POP_SAY)
+		m.float_text(hp + Vector2(0, -34), "Oh, wow.", Color(1, 1, 1, 0.9), m.POP_SAY)
 		m.float_text(dp + Vector2(0, -30), "the view! +5", Color(0.96, 0.86, 0.32))
 		m.feed.say("YOUR HUMAN LOOKED UP!", EventFeed.Tone.GOOD)
 		m.get_node("/root/Sfx").play("prize", 1.05)
