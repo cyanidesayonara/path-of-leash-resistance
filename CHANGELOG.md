@@ -2,6 +2,31 @@
 
 Append-only session history, newest first.
 
+## 2026-10-28 - One speech bubble for everyone, above the world
+
+There were three speech bubbles, each drawn its own way:
+- your human's was a Label riding on them
+- a dare-giver's was drawn by the dare-giver
+- a passer-by's was drawn by the pops layer
+
+They looked different, and the first two sat at their speaker's depth, so a
+tree canopy could hide what your human was about to do.
+- **One bubble** (`world/speech_bubble.gd`): cream, rounded, a soft
+  shadow, a thin edge, a tail to the speaker's head, and a small pop as it
+  opens. A line wider than 220 px wraps to two lines, never more. A dare
+  and its "Bark if you're in!" split where they join.
+- **One layer** (`world/pops_layer.gd`) draws every bubble, above every
+  world layer and under the HUD. Your human and the dare-givers register as
+  speakers that hold a bubble while they have a line. Passing lines are
+  laid out with them every frame:
+  - A bubble that would cover another moves up, and its tail stretches
+    back down behind the lower one.
+  - No bubble leaves the screen sideways.
+- The Montjuïc train's "Ding ding!" starts with a capital, like every
+  other line.
+- `--shot-say` has your human and a passer-by talk at once, for
+  screenshots.
+
 ## 2026-10-28 - The goal list shows every goal when opened
 
 Opened, the goal list stopped at seven rows (four on a phone) and folded the

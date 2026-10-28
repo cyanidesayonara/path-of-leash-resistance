@@ -238,9 +238,12 @@ func _ready() -> void:
 	sh.radius = 15.0
 	cs.shape = sh
 	add_child(cs)
-	# a speech bubble, the same white bubble the world's other voices use
-	# (world/pops_layer.gd): what the owner is about to do, telegraphed
+	# what the owner is about to do, telegraphed: this Label holds the line and
+	# when it shows; main draws it, in the bubble every voice in the world uses
+	# (world/speech_bubble.gd, laid out by world/pops_layer.gd), so the Label
+	# itself is never seen
 	bubble = Label.new()
+	bubble.self_modulate = Color(1, 1, 1, 0)
 	bubble.position = Vector2(-60, -92)
 	bubble.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bubble.add_theme_font_size_override("font_size", 15)

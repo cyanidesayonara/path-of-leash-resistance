@@ -1001,6 +1001,7 @@ func _ready() -> void:
 	UiScale.apply(self)
 	get_tree().root.size_changed.connect(_on_window_resized)
 	_build_hud()
+	_pops_layer().add_speaker(human, _human_speech)
 	_spawn_challenger()
 	_spawn_wallcats()
 	_spawn_guards()
@@ -6231,6 +6232,11 @@ func _process(_delta: float) -> void:
 			# --shot-goals opens the goal list for the run (unsaved)
 			if "--shot-goals" in OS.get_cmdline_user_args():
 				Game.goals_expanded = true
+			# --shot-say has your human and someone beside them talk at once, to
+			# judge the speech bubbles and how two of them stack
+			if "--shot-say" in OS.get_cmdline_user_args():
+				human._show_bubble("Ugh, hold on.")
+				float_text(human.global_position + Vector2(40.0, -20.0), "Excuse me, go ahead.", Color.WHITE, POP_SAY)
 			for a in OS.get_cmdline_user_args():
 				if a.begins_with("--shot-zoom="):
 					cam.zoom *= float(a.substr(12))
@@ -9619,6 +9625,7 @@ func _spawn_challenger() -> void:
 		giver.z_index = 6
 		add_child(giver)
 		giver.setup(self, dog, who)
+		_pops_layer().add_speaker(giver, giver.speech)
 		return
 	var base := Vector2(walk_cx, -1600.0)
 	for offset: Vector2 in [
@@ -9632,6 +9639,7 @@ func _spawn_challenger() -> void:
 	giver.z_index = 6
 	add_child(giver)
 	giver.setup(self, dog, who)
+	_pops_layer().add_speaker(giver, giver.speech)
 
 
 func _challenger_clear_of_trees(at: Vector2) -> bool:
@@ -10012,13 +10020,30 @@ var pops: Node2D
 # is POP_SAY, a score chip when the text ends in +N or -N, otherwise a sound
 # (world/pops_layer.gd).
 func float_text(pos: Vector2, text: String, color: Color = Color.WHITE, kind := -1) -> void:
-	if pops == null:
-		pops = PopsLayer.new()
-		add_child(pops)
+	_pops_layer()
 	var k: int = kind if kind >= 0 else PopsLayer.classify(text)
 	var sz := Vector2(font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x + 30.0, 30.0)
 	var at := clear_of_feed(pos + Vector2(-sz.x * 0.5, -40.0), sz) + Vector2(sz.x * 0.5, 30.0)
 	pops.add(at, text, color, k)
+
+
+func _pops_layer() -> Node2D:
+	if pops == null:
+		pops = PopsLayer.new()
+		add_child(pops)
+	return pops
+
+
+# Your human's bubble (human.bubble holds the line and when it shows), drawn
+# by the speech layer with everyone else's; the tail points at their head.
+const HUMAN_SAY_Y := -30.0
+
+
+func _human_speech() -> Dictionary:
+	var b: Label = human.bubble
+	if b == null or not b.visible or b.text == "":
+		return {}
+	return {"tip": pops.to_local(human.global_position + Vector2(0.0, HUMAN_SAY_Y)), "text": b.text}
 
 
 # A world label at the owner or the dog sits near the middle of the screen,

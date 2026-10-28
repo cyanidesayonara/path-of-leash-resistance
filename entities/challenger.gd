@@ -1,6 +1,7 @@
 extends Node2D
 
 const HumanLook := preload("res://entities/human_appearance.gd")
+const SpeechBubble := preload("res://world/speech_bubble.gd")
 
 # The dare-giver (Combo Phase B): somebody on the walk who dares you into a
 # bounded trick window as you pass. Who it is depends on the walk (WHO): a
@@ -54,9 +55,6 @@ const COUNT := "%d more! Keep going!"
 const LAST := "One more trick!"
 const TAKE := " Bark if you're in!"
 const GET_READY := "Get ready..."
-# the widest speech bubble on one line, and the step between its lines
-const BUBBLE_W := 220.0
-const BUBBLE_LINE_H := 16.0
 const LINES := {
 	"kid": {"idle": "Hey, dog! Want a dare?", "dare": "Bet you can't do %d tricks in %d seconds!",
 		"won": "No way! Come back for a harder one!", "lost": "Nope! Come back and try again.",
@@ -267,11 +265,16 @@ func _draw() -> void:
 			_draw_commuter(fd)
 		_:
 			_draw_kid(fd)
-	var bg := Color(0.97, 0.95, 0.88, 0.95)
-	if result == "win":
-		bg = Color(0.86, 0.98, 0.86, 0.95)
-	var at := Vector2(0.0, -46.0) if who == "monkey" else fd * 26.0 + Vector2(0.0, -40.0)
-	_bubble(at, _line(), bg, Color(0.16, 0.15, 0.18))
+
+
+# What they are saying, for the world's speech layer (world/pops_layer.gd),
+# which draws it over everything in the world: the tail points at their head.
+func speech() -> Dictionary:
+	if main == null or main.pops == null:
+		return {}
+	var head := Vector2(0.0, -28.0) if who == "monkey" else _facing() * 26.0 + Vector2(0.0, -22.0)
+	return {"tip": main.pops.to_local(to_global(head)), "text": _line(), "split": TAKE,
+		"paper": SpeechBubble.PAPER_WIN if result == "win" else SpeechBubble.PAPER}
 
 
 func _person(at: Vector2, fd: Vector2, shirt: Color, skin: Color, hair: Color, hair_style: String,
@@ -653,50 +656,3 @@ func _bar(at: Vector2, side: Vector2, length: float, depth: float) -> PackedVect
 	var d := fwd * (depth * 0.5)
 	return PackedVector2Array([at - h - d, at + h - d, at + h + d, at - h + d])
 
-
-func _bubble(at: Vector2, text: String, bg: Color, fg: Color) -> void:
-	var f := ThemeDB.fallback_font
-	var lines := bubble_lines(text, f)
-	var w := 0.0
-	for l: String in lines:
-		w = maxf(w, f.get_string_size(l, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x)
-	# grows upward, so the tail stays at the speaker whatever the line count
-	var extra := BUBBLE_LINE_H * float(lines.size() - 1)
-	var box := Rect2(at.x - w * 0.5 - 8.0, at.y - 13.0 - extra, w + 16.0, 22.0 + extra)
-	# a tail down toward whoever is talking, drawn before the body so the
-	# join is hidden under it
-	draw_colored_polygon(
-		PackedVector2Array([
-			Vector2(at.x - 5.0, box.end.y - 2.0), Vector2(at.x + 6.0, box.end.y - 2.0),
-			Vector2(at.x - 2.0, box.end.y + 9.0),
-		]), bg)
-	draw_rect(Rect2(box.position.x + 5.0, box.position.y, box.size.x - 10.0, box.size.y), bg)
-	draw_rect(Rect2(box.position.x, box.position.y + 5.0, box.size.x, box.size.y - 10.0), bg)
-	for c: Vector2 in [
-		Vector2(box.position.x + 5.0, box.position.y + 5.0),
-		Vector2(box.end.x - 5.0, box.position.y + 5.0),
-		Vector2(box.position.x + 5.0, box.end.y - 5.0),
-		Vector2(box.end.x - 5.0, box.end.y - 5.0),
-	]:
-		draw_circle(c, 5.0, bg)
-	for i in lines.size():
-		var lw: float = f.get_string_size(lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
-		draw_string(f, Vector2(at.x - lw * 0.5, at.y + 5.0 - extra + BUBBLE_LINE_H * float(i)), lines[i],
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, fg)
-
-
-# A line wider than BUBBLE_W goes on two: the dare and its TAKE split where
-# they join, anything else at the space nearest the middle.
-static func bubble_lines(text: String, f: Font) -> Array[String]:
-	if f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x <= BUBBLE_W:
-		return [text]
-	if text.ends_with(TAKE) and text.length() > TAKE.length():
-		return [text.substr(0, text.length() - TAKE.length()), TAKE.strip_edges()]
-	var mid := text.length() / 2
-	var best := -1
-	for i in text.length():
-		if text[i] == " " and (best < 0 or absi(i - mid) < absi(best - mid)):
-			best = i
-	if best < 0:
-		return [text]
-	return [text.substr(0, best), text.substr(best + 1)]

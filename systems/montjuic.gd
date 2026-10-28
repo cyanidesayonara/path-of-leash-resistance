@@ -295,7 +295,7 @@ static func tick_train(m: Node2D, delta: float) -> void:
 		m.set_meta("train_warn", TRAIN_WARN + train.length() / RoadTrain.SPEED + (e.y - e.x) / RoadTrain.SPEED)
 		Sfx.play("pickup", 1.6, -4.0)
 		if near:
-			m.float_text(Vector2(edge, TRAIN_Y - 40.0), "ding ding!", Color(1, 0.95, 0.75), m.POP_SAY)
+			m.float_text(Vector2(edge, TRAIN_Y - 40.0), "Ding ding!", Color(1, 0.95, 0.75), m.POP_SAY)
 
 
 static func is_cactus(p: Vector2) -> bool:
