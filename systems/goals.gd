@@ -191,8 +191,18 @@ static func card_data(m: Node2D) -> Dictionary:
 	# rather than vanishing - which is what made the row count wobble between
 	# runs and the card jump about.
 	var total: int = m.active_quests.size()
-	var done_count: int = mini(Game.goals_count(m.lvl), total)
-	var open_rows: Array = []
+	# only goals still on this walk's list count (one dropped from it may be
+	# banked from before)
+	var done_count := 0
+	for q in m.active_quests:
+		if Game.goal_done(m.lvl, q.id) or m.run_goals_hit.has(q.id):
+			done_count += 1
+	# open goals in three groups, each in the walk's own order: the ones
+	# that count up (a meter and "0/5"), then the one-off finds and errands,
+	# then the ones she keeps true to the end (the phone unscratched)
+	var counting: Array = []
+	var once: Array = []
+	var keep: Array = []
 	var done_rows: Array = []
 	for q in m.active_quests:
 		var persisted: bool = Game.goal_done(m.lvl, q.id)
@@ -206,10 +216,12 @@ static func card_data(m: Node2D) -> Dictionary:
 			})
 		else:
 			var got: int = mini(int(q.fn.call()), target)
-			open_rows.append({
+			var group: Array = keep if bool(q.was_true) else (counting if target > 1 else once)
+			group.append({
 				"text": quest_text(q), "target": target, "got": got,
 				"state": UiIcons.Check.PARTIAL if got > 0 else UiIcons.Check.OPEN,
 			})
+	var open_rows: Array = counting + once + keep
 	var rows: Array = open_rows + done_rows
 	var open: bool = Game.goals_expanded or m.goals_peek > 0.0
 	# A peek (a goal just moved) is brief, so it keeps the short list: with a
