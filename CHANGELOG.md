@@ -111,6 +111,18 @@ Darwin's face, heavy brow and beard, one foot on the planks and the bottle
 held up; his block is solid and the leash goes round it. One boardwalk palm
 moved off the wedge. Behaviour snapshot: changed for the beach only (the
 pier's walls, rocks and block, and the moved palm).
+## 2026-10-28 - The soak's 1080p timeouts
+
+The idle soak failed three times today (spook, aigues, neteja), always on
+1920x1080 runs and always at exactly 240 seconds: the per-run timeout, not
+the game. On CI every frame is drawn by llvmpipe on the CPU, so a run costs
+wall time by pixel count; a 1080p soak took about 236s on a slow runner and
+120s on a quick one, against a flat 240s limit. The game itself sees the
+same 1280x720 canvas at 1080p (canvas_items stretch), and every 1080p run
+that finished matched its 720p twin line for line. The limit now scales
+with the window's pixel area (540s at 1080p, 240s floor), a run cut off by
+it reports TIMEOUT rather than ERROR, every run prints its wall time, and
+the job limit is 45 minutes so a hung run still reports. Tooling only.
 
 ## 2026-10-27 - El Parc: the slackline
 
