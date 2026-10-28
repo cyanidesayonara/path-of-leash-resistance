@@ -67,7 +67,8 @@ func _run() -> void:
 				mirrored += 1
 	_check(mirrored == 0, "the two rows of plane trees do not mirror each other (%d pairs)" % mirrored)
 	_check(m.surface_at(Vector2(640.0, -2000.0)) == m.Surfaces.S.PAVEMENT, "the square's walkway is pavement")
-	_check(m.surface_at(Vector2(200.0, -2000.0)) == m.Surfaces.S.GRASS, "the outer lawn is grass")
+	_check(m.surface_at(Vector2(270.0, -2000.0)) == m.Surfaces.S.GRASS, "the outer lawn is grass")
+	_check(m.surface_at(Vector2(200.0, -2000.0)) == m.Surfaces.S.PAVEMENT, "past the railing is the street's pavement")
 	for i in range(240):
 		await physics_frame
 	_check(m.get_tree().get_nodes_in_group("tourists").is_empty() and m.get_tree().get_nodes_in_group("pickpockets").is_empty(),
