@@ -23,6 +23,20 @@ seen. And on narrow screens the dare card was drawn over the list.
   you're in!".
 - `--shot-goals` opens the list for a screenshot.
 
+## 2026-10-28 - Text pass: subtitles and speech, as picked in the text review
+
+Santtu went through every walk subtitle and every line people say, one card
+at a time, in a review page with alternatives for each. This puts those
+picks in the game.
+- **Walk subtitles.** Each is a sentence-case line that says what and where
+  the walk is, not a two-word label: "The winding climb up to the castle"
+  for Montjuïc, "A hillside park of mosaics and stone columns" for Park
+  Güell, "The city's highest hill and its old fairground" for Tibidabo. The
+  Catalan and Spanish glosses were rewritten to match.
+- **Speech.** 84 lines across passers-by, cyclists, your human and the walks'
+  own characters now start with a capital and read as people talk ("Oh,
+  sorry!", "Hey!", "Watch out!"). The dare-givers' lines come with the
+  dare-giver change.
 ## 2026-10-28 - Dares you take with a bark, from a dare-giver on every walk
 
 A dare used to start its clock on its own the moment she came near, from

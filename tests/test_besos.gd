@@ -181,7 +181,7 @@ func _run() -> void:
 	_check(m.human.bubble != null and m.human.bubble.visible, "the warning is a speech bubble")
 	m.human.event_timer = -1.0
 	m.human._events(0.1)
-	_check(m.human.bubble.text == "watch it", "an owner event cannot overwrite the branch warning")
+	_check(m.human.bubble.text == "Watch out!", "an owner event cannot overwrite the branch warning")
 	flood.cancel_branch_warning()
 	_check(flood.branch_who == "" and flood.branch_warn <= 0.0 \
 		and m.human.external_warning_t <= 0.0, "a checkpoint restore can cancel a pending branch")

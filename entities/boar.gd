@@ -143,7 +143,7 @@ func _owner(delta: float) -> void:
 	if owner_warn_t < 0.0:
 		if d < OWNER_WARN_R and owner_cd <= 0.0:
 			owner_warn_t = 0.0
-			human.notice("...is that a pig?", 1.6)
+			human.notice("Is that... a wild boar?", 1.6)
 		return
 	owner_warn_t += delta
 	if owner_warn_t >= OWNER_WARN_T and d < OWNER_HIT_R and owner_cd <= 0.0:

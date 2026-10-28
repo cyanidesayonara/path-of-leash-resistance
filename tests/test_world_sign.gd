@@ -175,12 +175,12 @@ func _run() -> void:
 	# the gloss follows the language, and falls back to English
 	var keep: String = game.language
 	game.language = "ca"
-	_check(game.gloss("market") == "el mercat cobert", "Catalan gloss")
+	_check(game.gloss("market") == "El mercat cobert", "Catalan gloss")
 	game.language = "es"
-	_check(game.gloss("market") == "el mercado cubierto", "Spanish gloss")
+	_check(game.gloss("market") == "El mercado cubierto", "Spanish gloss")
 	_check(game.gloss("nowhere") == "", "no gloss for no walk")
 	game.language = "en"
-	_check(game.gloss("tutorial") == "practice one trick at a time", "English gloss")
+	_check(game.gloss("tutorial") == "Learn the leash, one trick at a time", "English gloss")
 	for wk: String in walks:
 		_check(game.LEVEL_SUBTITLES_CA.has(wk) and game.LEVEL_SUBTITLES_ES.has(wk), "%s is glossed in Catalan and Spanish" % wk)
 	game.language = keep
