@@ -2097,6 +2097,8 @@ static func build_level_data(m: Node2D) -> void:
 			add_rope_rect(m, Rect2(d - NETEJA_DUMPSTER * 0.5, NETEJA_DUMPSTER))
 	if m.lvl == "station":
 		add_rope_rect(m, ESTACIO_TRAIN)
+	if m.lvl == "beach":
+		add_rope_rect(m, BEACH_STAR)
 	if m.lvl == "partit":
 		for r: Rect2 in Partit.wrap_rects():
 			add_rope_rect(m, r)
@@ -2718,6 +2720,9 @@ const BEACH_SHOWERS: Array[Vector2] = [Vector2(360.0, -1080.0), Vector2(360.0, -
 const BEACH_COURT := Rect2(246.0, -2120.0, 120.0, 240.0)
 const BEACH_TOWER := Vector2(300.0, -3050.0)
 const BEACH_BARS: Array[Rect2] = [Rect2(1004.0, -1786.0, 176.0, 66.0), Rect2(1004.0, -3262.0, 176.0, 60.0)]
+# L'Estel Ferit, Rebecca Horn's stack of four rusted steel cubes on the
+# Barceloneta sand: its footprint, solid, and the leash goes round it
+const BEACH_STAR := Rect2(268.0, -3450.0, 60.0, 60.0)
 
 
 # the net runs across the court's middle, its posts just outside the lines
@@ -2728,7 +2733,8 @@ static func beach_net_posts() -> Array[Vector2]:
 
 # the sand a towel keeps off: the court, the tower's footprint, the showers
 static func beach_sand_keepouts() -> Array[Rect2]:
-	var out: Array[Rect2] = [BEACH_COURT.grow(16.0), Rect2(BEACH_TOWER - Vector2(40.0, 40.0), Vector2(80.0, 90.0))]
+	var out: Array[Rect2] = [BEACH_COURT.grow(16.0), Rect2(BEACH_TOWER - Vector2(40.0, 40.0), Vector2(80.0, 90.0)),
+		BEACH_STAR.grow(24.0)]
 	for sp: Vector2 in BEACH_SHOWERS:
 		out.append(Rect2(sp - Vector2(36.0, 36.0), Vector2(72.0, 72.0)))
 	return out
@@ -2797,6 +2803,7 @@ static func level_solid_rects(m: Node2D) -> Array:
 		"beach":
 			for i in range(BEACH_BARS.size()):
 				out.append(["beach_bar_%d" % i, BEACH_BARS[i]])
+			out.append(["beach_star", BEACH_STAR])
 		"station":
 			out.append(["estacio_train", ESTACIO_TRAIN])
 		"park":
@@ -2957,6 +2964,7 @@ static func build_walls(m: Node2D) -> void:
 	m.add_child(walls)
 	# the chiringuitos' bar huts are buildings, not decals
 	if m.lvl == "beach":
+		add_rect_body(m, BEACH_STAR.get_center(), BEACH_STAR.size)
 		for br: Rect2 in BEACH_BARS:
 			add_rect_body(m, br.get_center(), br.size)
 	# THE BUILDING LINE is solid (#65): she used to be able to walk out onto

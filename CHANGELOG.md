@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-10-27 - Passeig Marítim: L'Estel Ferit
+
+The Barceloneta's own landmark is on the sand now: Rebecca Horn's Wounded
+Star, four rusted Corten cubes stacked off true so the tower leans, a strip
+of window in each, its long shadow across the sand. It is solid, the leash
+goes round it like a pole, and nobody lays a towel at its foot.
+Behaviour snapshot unchanged.
+
 ## 2026-10-27 - El Diluvi's panots
 
 El Diluvi's street was grey slabs that could have been any city's. It is

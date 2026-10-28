@@ -174,6 +174,10 @@ with pickpockets and shenanigans happening around."
   over the hot sand, stacked kayaks/pedalos and anchored lane buoys, plus the
   two-way red painted coastal bike lane with bicycle stencils.
 
+- Landmark pass (2026-10-27): L'Estel Ferit on the sand
+  (`LevelBuild.BEACH_STAR`), solid with the leash going round it, kept clear
+  of towels.
+
 ### El Diluvi (rain) - the rainy shopping street
 - Is: a narrow shopping street in a downpour, not La Rambla wet.
 - Signature line: shop-awning to shop-awning in the dry, splash through the
