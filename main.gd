@@ -6227,7 +6227,10 @@ func _process(_delta: float) -> void:
 						_verge_drawn_y = cam.position.y
 			# --shot-zoom=Z magnifies the shot Z times, to judge how a prop or a
 			# person is drawn: the play zoom is too far out to tell; and
-			# --shot-cam=X,Y points the camera there instead of at the pair
+			# --shot-cam=X,Y points the camera there instead of at the pair;
+			# --shot-goals opens the goal list for the run (unsaved)
+			if "--shot-goals" in OS.get_cmdline_user_args():
+				Game.goals_expanded = true
 			for a in OS.get_cmdline_user_args():
 				if a.begins_with("--shot-zoom="):
 					cam.zoom *= float(a.substr(12))

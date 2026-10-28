@@ -258,6 +258,20 @@ func pill_x(r: Rect2, vs: Vector2) -> float:
 	return clampf(gap_mid - r.size.x * 0.5, left + 6.0, maxf(left + 6.0, card.position.x - 6.0 - r.size.x))
 
 
+# The goal list's rect while it is on screen, else an empty rect.
+func _goals_rect() -> Rect2:
+	if main == null or main.goals_card == null or not main.goals_card.visible:
+		return Rect2()
+	return main.goals_card.get_rect()
+
+
+# The free span between the vitals card and the goal list, as (left, right).
+func _corner_gap(vs: Vector2) -> Vector2:
+	var left: float = main.panel.position.x + main.panel.CARD_W if main != null and main.panel != null else 0.0
+	var goals := _goals_rect()
+	return Vector2(left, goals.position.x if goals.has_area() else vs.x)
+
+
 func _draw_toasts(vs: Vector2) -> void:
 	var by_side := {"goal": 0, "mood": 0}
 	for tst: Dictionary in toasts:
@@ -367,7 +381,8 @@ func _dare_card(vs: Vector2, y: float) -> void:
 	var w := Kit.text_w(Kit.display(), title, 18) + 36.0
 	if String(ch.phase) == "live":
 		w += 80.0
-	w = clampf(maxf(w, DARE_W), 300.0, vs.x - 80.0)
+	var gap := _corner_gap(vs)
+	w = clampf(maxf(w, DARE_W), 300.0, maxf(300.0, minf(vs.x - 80.0, gap.y - gap.x - 12.0)))
 	var wrapped: Array[String] = []
 	for l: String in lines:
 		wrapped.append_array(_wrap(l, w - 36.0, 15))
@@ -377,6 +392,14 @@ func _dare_card(vs: Vector2, y: float) -> void:
 	var bar := String(ch.phase) == "live" or (String(ch.phase) == "offer" and not bool(ch.waiting))
 	var h := 40.0 + 20.0 * float(lines.size()) + (16.0 if bar else 6.0)
 	var r := Rect2(vs.x * 0.5 - w * 0.5, y, w, h)
+	# never over the open goal list: into the gap beside it, or, where the gap
+	# is too narrow (a phone), below it
+	var goals: Rect2 = _goals_rect()
+	if goals.has_area() and goals.intersects(r.grow(6.0)):
+		if gap.y - gap.x >= w + 12.0:
+			r.position.x = (gap.x + gap.y) * 0.5 - w * 0.5
+		else:
+			r.position.y = goals.end.y + 8.0
 	Kit.card(self, r, col, 12)
 	Kit.heading(self, Vector2(r.position.x + 18.0, r.position.y + 28.0), title, 18, col)
 	if String(ch.phase) == "live":

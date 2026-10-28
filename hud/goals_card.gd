@@ -19,10 +19,14 @@ const W := 416.0
 const GOALS_X := 856.0
 const PAD := 14.0
 const ROW_H := 21.0
+# a long list opened on purpose tightens to fit the screen (systems/goals.gd
+# decides when, from the same two heights)
+const ROW_H_COMPACT := 16.0
 const BOX := 13.0
 const TEXT_X := 34.0
 const METER_W := 62.0
 const FONT_SIZE := 15
+const FONT_SIZE_COMPACT := 13
 
 var main: Node2D
 var sb: StyleBoxFlat
@@ -54,10 +58,14 @@ func _draw() -> void:
 	var rows: Array = data.rows
 	var extra: int = int(data.extra)
 	var open: bool = bool(data.open)
+	var folded: int = int(data.get("folded_done", 0))
+	var compact: bool = bool(data.get("compact", false))
+	var row_h := ROW_H_COMPACT if compact else ROW_H
+	var font_size := FONT_SIZE_COMPACT if compact else FONT_SIZE
 	# Collapsed, this is a clean compact card in the corner showing goal count,
 	# a mini progress bar, and the prompt key.
 	var w: float = W if open else 200.0
-	var h := PAD + 22.0 + float(rows.size()) * ROW_H + (16.0 if extra > 0 else 0.0) + PAD * 0.6
+	var h := PAD + 22.0 + float(rows.size()) * row_h + (16.0 if extra > 0 or folded > 0 else 0.0) + PAD * 0.6
 	if not open:
 		h = 42.0
 	size = Vector2(w, h)
@@ -103,7 +111,7 @@ func _draw() -> void:
 	var y := PAD + 30.0
 	for row: Dictionary in rows:
 		var state := int(row.state)
-		Icons.draw_check(self, Vector2(PAD + 2.0, y + 1.0), BOX, state)
+		Icons.draw_check(self, Vector2(PAD + 2.0, y + (0.0 if compact else 1.0)), BOX, state)
 		var txt_col := Color(0.95, 0.93, 0.88)
 		if state == Icons.Check.DONE_NOW:
 			txt_col = Color(0.73, 0.85, 0.74)
@@ -116,15 +124,18 @@ func _draw() -> void:
 		# one line only: the card is a glance, not a document. Anything longer
 		# than the card is the goal text's problem, not the layout's.
 		draw_multiline_string(f, Vector2(TEXT_X, y + 12.0), String(row.text),
-			HORIZONTAL_ALIGNMENT_LEFT, text_w, FONT_SIZE, 1, txt_col)
+			HORIZONTAL_ALIGNMENT_LEFT, text_w, font_size, 1, txt_col)
 		if show_meter:
 			var got: int = mini(int(row.got), target)
 			var mx := W - PAD - METER_W - 30.0
-			Icons.draw_meter(self, Vector2(mx, y + 5.0), METER_W, 7.0,
+			Icons.draw_meter(self, Vector2(mx, y + (4.0 if compact else 5.0)), METER_W, 7.0 if not compact else 6.0,
 				float(got) / float(target))
 			draw_string(f, Vector2(mx + METER_W + 5.0, y + 12.0), "%d/%d" % [got, target],
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.78, 0.73, 0.55))
-		y += ROW_H
-	if extra > 0:
+		y += row_h
+	if folded > 0:
+		draw_string(f, Vector2(TEXT_X, y + 11.0), "+ %d done" % folded,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.47, 0.53, 0.48))
+	elif extra > 0:
 		draw_string(f, Vector2(TEXT_X, y + 11.0), "+ %d more" % extra,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.56, 0.53, 0.48))
