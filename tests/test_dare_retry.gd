@@ -95,10 +95,10 @@ func _check_givers(game: Node) -> void:
 		var said: Dictionary = g.LINES[g.who]
 		for key: String in ["idle", "dare", "won", "lost", "done"]:
 			_check(said.has(key), "%s: %s has a line for %s" % [level, g.who, key])
-		# plain words, whoever says them: the numbers first, a harder one after
+		# plain words, whoever says them: the numbers in so many words, a harder one after
 		# a win, try again after a loss
-		_check(String(said["dare"]).begins_with("%d tricks in %d seconds") or String(said["dare"]).contains(
-			"! %d tricks in %d seconds"), "%s: %s says the numbers up front (%s)" % [level, g.who, said["dare"]])
+		_check(String(said["dare"]).contains("%d tricks in %d seconds"),
+			"%s: %s says the numbers plainly (%s)" % [level, g.who, said["dare"]])
 		_check(String(said["won"]).contains("harder") and String(said["lost"]).contains("try again"),
 			"%s: %s says what happens next" % [level, g.who])
 		for key: String in said:
@@ -138,8 +138,8 @@ func _run() -> void:
 	_check(m.challenge.reward == m.dare_reward(5) and m.dare_reward(5) == 35, "the first dare pays 35 (%d)" % m.challenge.reward)
 	m.challenge.add_trick()
 	_check(m.challenge.count == 0, "a trick while the dare is on offer does not count")
-	_check(g._line().ends_with(g.TAKE) and g._line().begins_with("5 tricks in 12 seconds"),
-		"the giver says the numbers first and that a bark takes it (%s)" % g._line())
+	_check(g._line().ends_with(g.TAKE) and g._line().contains("5 tricks in 12 seconds"),
+		"the giver says the numbers and that a bark takes it (%s)" % g._line())
 	_step(m.challenge.OFFER_S * 3.0)
 	_check(m.challenge.phase == "offer" and m.challenge.waiting, "the offer waits for her bark, however long")
 	# walking off without barking lets it lapse, and coming back makes it again
@@ -152,7 +152,7 @@ func _run() -> void:
 		"coming back makes the same offer again")
 	m.on_bark(m.dog.global_position)
 	_check(m.challenge.phase == "offer" and not m.challenge.waiting, "a bark takes the dare")
-	_check(g._line() == "Get set...", "taking it, the giver says get set")
+	_check(g._line() == "Get ready...", "taking it, the giver says get ready")
 	_step(m.challenge.READY_S + 0.1)
 	_check(m.challenge.phase == "live" and m.challenge.active, "the clock starts after a moment to get set")
 	m.challenge.timer = 0.01

@@ -8,9 +8,9 @@ A dare used to start its clock on its own the moment she came near, from
 the same kid on a bench on every walk. After a loss there were two more
 goes, for less, on rules nobody told you. Now:
 - **Taking a dare.** It waits for a bark. The giver says it in plain words,
-  numbers first ("5 tricks in 12 seconds, while i paint! bark if you
-  dare!"), and the card says "Bark (E) to take the dare." Bark and there is
-  a moment to get set before the clock starts. Walk on and the offer
+  numbers and all ("5 tricks in 12 seconds, while I paint! Bark if you're
+  in!"), and the card says "Bark (E) to take the dare." Bark and there is
+  a moment to get ready before the clock starts. Walk on and the offer
   lapses, and it is made again when she comes back.
 - **Who gives it.**
   - Passeig Marítim: the bronze monkey, from his block on the Pont del

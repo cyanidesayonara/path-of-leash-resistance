@@ -344,7 +344,7 @@ func _dare_card(vs: Vector2, y: float) -> void:
 			if bool(ch.waiting):
 				lines.append(Prompts.fill(DARE_TAKE))
 			else:
-				lines.append("Get set...")
+				lines.append("Get ready...")
 		"live":
 			title = "DARE: %d TRICKS" % int(ch.target)
 			lines = ["%d seconds left" % int(ceil(float(ch.timer)))]

@@ -45,51 +45,52 @@ const FOOTPRINT := {"kid": Vector2(28.0, 62.0), "statue": Vector2(30.0, 30.0), "
 	"busker": Vector2(24.0, 24.0), "avia": Vector2(22.0, 22.0), "runner": Vector2(18.0, 18.0),
 	"painter": Vector2(26.0, 26.0), "fan": Vector2(20.0, 20.0), "commuter": Vector2(28.0, 22.0)}
 
-# What each of them says, as people talk, each line starting with a capital. "dare" always leads with the
-# numbers (tricks, seconds), and the bubble adds TAKE while the dare waits
+# What each of them says, as people talk, each line starting with a capital. "dare" always names
+# the numbers as "N tricks in N seconds", and the bubble adds TAKE while the dare waits
 # for a bark; "won" says a harder one is coming and "lost" that she can try
 # again, in so many words. AGAIN, COUNT and LAST are the same for everyone.
-const AGAIN := "Again? %d tricks in %d seconds!"
-const COUNT := "%d more tricks!"
+const AGAIN := "Another go? %d tricks in %d seconds!"
+const COUNT := "%d more! Keep going!"
 const LAST := "One more trick!"
-const TAKE := " Bark if you dare!"
+const TAKE := " Bark if you're in!"
+const GET_READY := "Get ready..."
 const LINES := {
-	"kid": {"idle": "Hey, dog! Want a dare?", "dare": "%d tricks in %d seconds! Bet you can't!",
-		"won": "No way!! Come back for a harder one", "lost": "Ha! Come back and try again",
-		"done": "OK. You're unreal"},
+	"kid": {"idle": "Hey, dog! Want a dare?", "dare": "Bet you can't do %d tricks in %d seconds!",
+		"won": "No way! Come back for a harder one!", "lost": "Nope! Come back and try again.",
+		"done": "Okay, you're unreal."},
 	"monkey": {"idle": "Hey, dog! Want a dare?", "dare": "%d tricks in %d seconds! Show me you've evolved!",
-		"won": "Remarkable! Come back for a harder one", "lost": "Not yet! Come back and try again",
-		"done": "The fittest dog I've ever seen"},
-	"statue": {"idle": "Psst... dog... want a dare?", "dare": "Psst! %d tricks in %d seconds! I won't move!",
-		"won": "Bravo! Come back for a harder one", "lost": "Too slow! Come back and try again",
-		"done": "Even I would move for that"},
-	"fisher": {"idle": "Nothing's biting. Want a dare?", "dare": "%d tricks in %d seconds, before I land one!",
-		"won": "What a catch! Come back for a harder one", "lost": "Got away! Come back and try again",
-		"done": "Best catch all day"},
+		"won": "A remarkable specimen! Come back for a harder one.", "lost": "Not yet! Come back and try again.",
+		"done": "Survival of the fittest. That's you."},
+	"statue": {"idle": "Psst... Want a dare?", "dare": "Psst! %d tricks in %d seconds, while I stand here!",
+		"won": "Bravo! Come back for a harder one!", "lost": "Too slow! Come back and try again.",
+		"done": "Even I almost moved."},
+	"fisher": {"idle": "Nothing's biting. Want a dare?", "dare": "%d tricks in %d seconds, before I catch a fish!",
+		"won": "What a catch! Come back for a harder one.", "lost": "Slipped the hook! Come back and try again.",
+		"done": "Best catch all day."},
 	"builder": {"idle": "On my break. Want a dare?", "dare": "%d tricks in %d seconds, before my break's over!",
-		"won": "Solid work! Come back for a harder one", "lost": "Not up to code! Come back and try again",
-		"done": "You can build my next wall"},
-	"skater": {"idle": "Hey, dog! Want a dare?", "dare": "%d tricks in %d seconds! Keep up!",
-		"won": "Sick! Come back for a harder one", "lost": "Bailed! Come back and try again",
-		"done": "You skate better than me"},
-	"busker": {"idle": "A song for a dare?", "dare": "%d tricks in %d seconds, before my song ends!",
-		"won": "Encore! Come back for a harder one", "lost": "Off the beat! Come back and try again",
-		"done": "I'm writing a song about you"},
-	"avia": {"idle": "You, dog! Want a dare?", "dare": "%d tricks in %d seconds, and I'll believe it!",
-		"won": "Ai, mare! Come back for a harder one", "lost": "Too slow, maco! Come back and try again",
-		"done": "The best dog in the market"},
-	"runner": {"idle": "Hey, dog! Want a dare?", "dare": "%d tricks in %d seconds, while I stretch!",
-		"won": "Personal best! Come back for a harder one", "lost": "Out of breath? Come back and try again",
-		"done": "You should run the marathon"},
-	"painter": {"idle": "Hold still! ...no? A dare, then?", "dare": "%d tricks in %d seconds, while I paint!",
-		"won": "A masterpiece! Come back for a harder one", "lost": "Smudged it! Come back and try again",
-		"done": "I'm painting you next"},
-	"fan": {"idle": "Hey, dog! Want a dare?", "dare": "%d tricks in %d seconds, before kickoff!",
-		"won": "Golazo! Come back for a harder one", "lost": "Offside! Come back and try again",
-		"done": "Sign this dog!"},
-	"commuter": {"idle": "Train's late. Want a dare?", "dare": "%d tricks in %d seconds, before my train!",
-		"won": "On time! Come back for a harder one", "lost": "Missed it! Come back and try again",
-		"done": "Best thing on my commute"},
+		"won": "Solid work! Come back for a harder one.", "lost": "Not up to code! Come back and try again.",
+		"done": "You can work on my crew any day."},
+	"skater": {"idle": "Hey, dog! Want a dare?", "dare": "%d tricks in %d seconds! Can you keep up?",
+		"won": "Sick! Come back for a harder one!", "lost": "Bailed! Come back and try again.",
+		"done": "Teach me your ways."},
+	"busker": {"idle": "Fancy a dare, while I play?", "dare": "%d tricks in %d seconds, in time with the music!",
+		"won": "Encore! Come back for a harder one!", "lost": "Off the beat! Come back and try again.",
+		"done": "I'm writing a song about you."},
+	"avia": {"idle": "You, dog! Want a dare?", "dare": "%d tricks in %d seconds? I'll believe it when I see it!",
+		"won": "Mare meva! Come back for a harder one.", "lost": "Too slow, maco! Come back and try again.",
+		"done": "Wait till I tell the fishmonger."},
+	"runner": {"idle": "Hey, dog! Want a dare?", "dare": "%d tricks in %d seconds! I'll time you!",
+		"won": "New record! Come back for a harder one.", "lost": "Out of breath? Come back and try again.",
+		"done": "You should run the marathon."},
+	"painter": {"idle": "Will you sit for a portrait? ...No? A dare, then.", "dare": "%d tricks in %d seconds, while I paint!",
+		"won": "A masterpiece! Come back for a harder one.", "lost": "Smudged it! Come back and try again.",
+		"done": "I'm painting you next."},
+	"fan": {"idle": "Hey, dog! Want a dare?", "dare": "%d tricks in %d seconds, before the match starts!",
+		"won": "GOLAZO! Come back for a harder one!", "lost": "Offside! Come back and try again.",
+		"done": "Somebody sign this dog!"},
+	"commuter": {"idle": "Train's delayed again. Want a dare?", "dare": "%d tricks in %d seconds, before my train comes!",
+		"won": "Right on time! Come back for a harder one.", "lost": "Missed it! Come back and try again.",
+		"done": "Best part of my commute."},
 }
 
 # who they are, for the result card
@@ -631,7 +632,7 @@ func _line() -> String:
 	if mine and String(ch.phase) == "offer":
 		var dare: String = (AGAIN if bool(ch.retry) else String(said["dare"])) % [int(ch.target),
 			int(round(float(ch.duration)))]
-		return dare + TAKE if bool(ch.waiting) else "Get set..."
+		return dare + TAKE if bool(ch.waiting) else GET_READY
 	if mine and String(ch.phase) == "live":
 		var left := int(ch.target) - int(ch.count)
 		return COUNT % left if left > 1 else LAST
