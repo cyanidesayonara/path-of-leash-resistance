@@ -11,6 +11,12 @@ seen. And on narrow screens the dare card was drawn over the list.
   for the screen, the rows tighten. Only if even that is too tall do
   finished goals fold into "+ N done", so an open goal is never hidden.
   The brief peek when a goal moves keeps the short list.
+- Open goals are grouped: the ones that count up (with a meter and "0/5")
+  first, then one-off finds and errands, then the ones she keeps true to
+  the end (the phone unscratched). Finished goals follow, as before. The
+  count in the heading only counts goals on the walk's current list.
+- A walk's goal list may hold up to 15 goals (it was 14), leaving room for
+  new kinds of quest.
 - The dare card keeps clear of the list: it sits in the gap beside it, or
   below it where the gap is too narrow.
 - A dare-giver's long line goes on two lines: the dare over "Bark if

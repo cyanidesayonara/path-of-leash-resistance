@@ -59,6 +59,15 @@ func _run() -> void:
 	var opened: Dictionary = G.card_data(m)
 	_check((opened.rows as Array).size() == m.active_quests.size() and int(opened.extra) == 0,
 		"the opened list shows all %d goals (%d)" % [m.active_quests.size(), (opened.rows as Array).size()])
+	# the goals that count up come first, as a group
+	var seen_single := false
+	var grouped := true
+	for r: Dictionary in opened.rows:
+		if int(r.target) > 1 and seen_single:
+			grouped = false
+		elif int(r.target) <= 1:
+			seen_single = true
+	_check(grouped, "the counting goals are listed first")
 	m.ui_scale = 1.0
 	game.goals_expanded = was
 

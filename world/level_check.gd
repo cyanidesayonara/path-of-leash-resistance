@@ -10,6 +10,10 @@ extends RefCounted
 # props stranded off the pavement when a corridor width changes, a goal the
 # level cannot actually satisfy, a malformed goal list.
 
+# a walk's goal list never runs longer than this: room for a few new kinds
+# of quest (spell a word, the hidden find) on top of today's twelve or so
+const MAX_GOALS := 15
+
 static func check(m) -> Array:
 	var p: Array = []
 	var lv: String = m.lvl
@@ -148,7 +152,7 @@ static func check(m) -> Array:
 	var ids: Array = m.LEVEL_GOAL_IDS.get(lv, [])
 	if ids.is_empty():
 		p.append("no goal list")
-	elif ids.size() < 8 or ids.size() > 14:
+	elif ids.size() < 8 or ids.size() > MAX_GOALS:
 		p.append("goal list length %d out of range" % ids.size())
 	var seen := {}
 	for id in ids:
