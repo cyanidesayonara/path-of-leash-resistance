@@ -72,6 +72,8 @@ const Kit := preload("res://hud/ui_kit.gd")
 # the dare card's width: it sits between the vitals and the goals card
 const DARE_W := 400.0
 const DARE_HOW := "Tricks: swing around a pole, grind a ledge, fling your human. Hold {turbo} for speed."
+# how to take a dare on offer: it waits for her bark
+const DARE_TAKE := "Bark ({bark}) to take the dare. Walk on to leave it."
 const Icons := preload("res://hud/ui_icons.gd")
 
 const BANNER_Y := 42.0
@@ -321,33 +323,46 @@ func _draw_cards(vs: Vector2) -> void:
 		_dare_card(vs, y)
 
 
-# The kid's dare, in its three phases (systems/challenge.gd): the offer says
-# what to do, how long there is and what counts, and fills a bar until the
-# clock starts; the live card counts tricks and drains the clock; the end
-# card says how it went.
+# A dare, in its three phases (systems/challenge.gd): the offer says which
+# of the giver's dares it is, what to do, how long there is and what counts,
+# and fills a bar until the clock starts; the live card counts tricks and
+# drains the clock; the end card says how it went and how to get the next
+# one (entities/challenger.gd: win, a harder dare; lose, the same again).
 func _dare_card(vs: Vector2, y: float) -> void:
 	var ch: Node = main.challenge
+	var g: Node2D = main.challenge_giver if is_instance_valid(main.challenge_giver) else null
 	var col: Color = main.challenge_l.modulate
 	var secs := int(round(float(ch.duration)))
 	var title := ""
 	var lines: Array[String] = []
 	match String(ch.phase):
 		"offer":
-			title = "DARE%s: %d TRICKS IN %d SECONDS" % [" AGAIN" if bool(ch.retry) else "", int(ch.target), secs]
-			lines = [Prompts.fill(DARE_HOW), "Win %d bones. Get ready..." % int(ch.reward)]
+			var which := "DARE %d OF %d" % [g.dare_number(), g.dare_count()] if g != null else "DARE"
+			title = "%s: %d TRICKS IN %d SECONDS" % [which, int(ch.target), secs]
+			lines = [Prompts.fill(DARE_HOW), "%sWin %d bones." % ["Same dare, another go. " if bool(ch.retry) else "",
+				int(ch.reward)]]
+			if bool(ch.waiting):
+				lines.append(Prompts.fill(DARE_TAKE))
+			else:
+				lines.append("Get set...")
 		"live":
 			title = "DARE: %d TRICKS" % int(ch.target)
 			lines = ["%d seconds left" % int(ceil(float(ch.timer)))]
 		_:
+			var who: String = g.display_name() if g != null else "them"
+			var more: bool = g != null and g.has_another_go()
 			if bool(ch.succeeded):
 				title = "DARE WON! +%d" % int(ch.reward)
 				lines = ["%d tricks in %d seconds. Nice." % [int(ch.target), secs]]
+				if more:
+					lines.append("Stay near %s, or come back later, for a harder one." % who)
+				elif g != null:
+					lines.append("That was the last of %s's dares." % who)
 			else:
 				title = "DARE LOST"
-				var need := "You landed %d of %d tricks." % [int(ch.count), int(ch.target)]
-				lines = [need]
-				if is_instance_valid(main.challenge_giver) and main.challenge_giver.has_another_go():
-					lines.append("Stay near the kid for another try.")
+				lines = ["You landed %d of %d tricks." % [int(ch.count), int(ch.target)]]
+				if more:
+					lines.append("Stay near %s, or come back later, to try again." % who)
 	# no wider than the room between the corner cards, the text wrapped to it
 	var w := Kit.text_w(Kit.display(), title, 18) + 36.0
 	if String(ch.phase) == "live":
@@ -357,7 +372,9 @@ func _dare_card(vs: Vector2, y: float) -> void:
 	for l: String in lines:
 		wrapped.append_array(_wrap(l, w - 36.0, 15))
 	lines = wrapped
-	var bar := String(ch.phase) != "end"
+	# the bar fills while she gets set and drains while the clock runs; an
+	# offer still waiting for her bark has none
+	var bar := String(ch.phase) == "live" or (String(ch.phase) == "offer" and not bool(ch.waiting))
 	var h := 40.0 + 20.0 * float(lines.size()) + (16.0 if bar else 6.0)
 	var r := Rect2(vs.x * 0.5 - w * 0.5, y, w, h)
 	Kit.card(self, r, col, 12)
