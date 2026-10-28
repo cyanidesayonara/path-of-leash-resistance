@@ -25,6 +25,7 @@ var music_on := true
 # through music_tick(); nothing here knows about walks or menus.
 const MUSIC_DB := -17.0          # loops sit under the effects
 const MUSIC_FADE := 1.4          # seconds for a crossfade
+const DARE_FADE := 0.3           # into and out of a dare's tune: a dare starts on the beat
 const MUSIC_KEEP := 6            # loops kept in memory (about 1.6 MB each)
 const MUFFLE_HZ := 650.0         # the pause menu hears the music through a door
 const BUDGET_PLAY := 2000        # usec of synthesis a frame while walking (web)
@@ -139,6 +140,13 @@ func music_tick(cue: String, next: String, paused: bool, playing: bool) -> void:
 		AudioServer.set_bus_effect_enabled(_muffle_bus, 0, paused)
 
 
+# A dare's tune speeds up (pitch and tempo together) as its clock runs out;
+# every other loop plays as written.
+func music_tempo(k: float) -> void:
+	if music_player != null and _music_now.begins_with("dare_"):
+		music_player.pitch_scale = k
+
+
 # whether a track can play now: rendered, or there is no music to wait for
 func music_ready(track: String) -> bool:
 	return music_player == null or not music_on or _music_cache.has(track)
@@ -199,6 +207,8 @@ func _process(delta: float) -> void:
 					from = maxf(0.0, music_player.get_playback_position() - Music.intro_lead_sec())
 				fade = _handoff_fade
 				_handoff_on = false
+			if _music_want.begins_with("dare_") or _music_now.begins_with("dare_") or _music_want == "":
+				fade = DARE_FADE
 			var len := (_music_cache[_music_want] as AudioStream).get_length() if _music_want != "" else 0.0
 			_crossfade(_music_want, from if from < len else 0.0, fade)
 	_fade_in = minf(1.0, _fade_in + delta / _fade_len)
@@ -220,6 +230,7 @@ func _crossfade(loop_name: String, from_sec := 0.0, fade_sec := -1.0) -> void:
 	music_player.stop()
 	_fade_in = 0.0
 	_fade_len = fade_sec if fade_sec > 0.0 else MUSIC_FADE
+	music_player.pitch_scale = 1.0
 	if loop_name != "" and music_on:
 		music_player.stream = _music_cache[loop_name]
 		music_player.play(from_sec)
@@ -295,6 +306,11 @@ func _build_library() -> void:
 	lib["star"] = _arp([880.0, 1320.0, 1760.0], 0.11)
 	lib["save"] = _arp([1046.0, 1568.0], 0.10)
 	lib["ui"] = _tone(560.0, 0.05, 40.0, 0.35)
+	# a dare: the count-in tick, the start, and how it ended
+	lib["count"] = _tone(880.0, 0.09, 30.0, 0.45)
+	lib["go"] = _arp([880.0, 1320.0], 0.07)
+	lib["dare_won"] = _arp([784.0, 988.0, 1175.0, 1568.0], 0.08)
+	lib["dare_lost"] = _arp([622.0, 523.0, 440.0, 330.0], 0.12)
 	lib["tangle"] = _wobble(0.26)
 	lib["hiss"] = _noiseburst(0.16, 22.0)
 	lib["grunt"] = _grunt()

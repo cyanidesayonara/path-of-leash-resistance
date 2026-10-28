@@ -2,6 +2,39 @@
 
 Append-only session history, newest first.
 
+## 2026-10-28 - Every dare-giver has a tune, and dares run 20 seconds
+
+A dare now sounds like a little game of its own.
+- **A tune per giver** (`audio/music.gd` DARES): four bars of its own
+  melody, looped while the clock runs, faster than any walk, on the same
+  band as the walks:
+  - the kid: a playground taunt
+  - the monkey: a marimba hop
+  - the statue: a music box
+  - the fisherman: a shanty
+  - the builder: hammer blows
+  - the skater: scrappy guitar
+  - the busker: a rumba catalana
+  - the àvia: a market polka
+  - the runner: a workout beat
+  - the painter: a bossa
+  - the fan: a terrace call and answer
+  - the commuter: the station chime
+- **The shape of a dare:**
+  - Taking it silences the walk's music for a three-tick count-in, rising
+    in pitch.
+  - "Go" starts the giver's tune with the clock.
+  - In the last five seconds the tune speeds up, to 1.12x at the buzzer.
+  - It ends on a stinger, up for a win, down for a loss.
+  - The walk's music comes back quickly. Changes into and out of a dare
+    take 0.3 seconds, not 1.4.
+- **Longer dares:** 6, 8 and 10 tricks, each in 20 seconds (they were 5 in
+  12, 7 in 14 and 9 in 16). They pay 38, 44 and 50 bones.
+- **Room to trick:** the level check fails a walk whose dare-giver has
+  fewer than 3 poles or grindable runs within 420 px. Every walk has 7 or
+  more today.
+- Previews: `tools/render_music.gd OUTDIR dare_kid dare_monkey ...`.
+
 ## 2026-10-28 - One speech bubble for everyone, above the world
 
 There were three speech bubbles, each drawn its own way:

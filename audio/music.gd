@@ -139,6 +139,97 @@ const JINGLES := {
 }
 
 
+# A dare's own tune, one per dare-giver (entities/challenger.gd WHO): four
+# bars that loop while the clock runs, faster than any walk, with a melody of
+# its own so a dare sounds like a little game of its own. "mel" is
+# [beat, length, MIDI] over the four bars; "chords" one per bar; the rest as
+# in STYLES. The game plays them faster as the clock runs out.
+const DARES := {
+	# the kid: a playground taunt, nyah-nyah, on a glockenspiel over a bouncing beat
+	"kid": {"bpm": 140, "lead": "glock", "lead2": ["whistle", -12], "comp": "push", "bass": "octave",
+		"drums": "groove", "verb": 0.14, "chords": [[60, "maj"], [60, "maj"], [65, "maj"], [67, "maj"]],
+		"mel": [[0, 1, 79], [1, 0.5, 76], [1.5, 0.5, 81], [2, 1, 79], [3, 1, 76],
+			[4, 1, 79], [5, 0.5, 76], [5.5, 0.5, 81], [6, 1, 79], [7, 1, 76],
+			[8, 0.5, 77], [8.5, 0.5, 77], [9, 0.5, 76], [9.5, 0.5, 76], [10, 0.5, 74], [10.5, 0.5, 74], [11, 1, 72],
+			[12, 1, 79], [13, 1, 76], [14, 0.5, 81], [14.5, 0.5, 79], [15, 1, 74]]},
+	# the monkey: a cheeky marimba hop with grace notes, bongos and claps
+	"monkey": {"bpm": 132, "lead": "marimba", "lead2": ["glock", 12], "comp": "stab", "bass": "root",
+		"drums": "claps", "verb": 0.2, "chords": [[62, "maj"], [60, "maj"], [62, "maj"], [57, "maj"]],
+		"mel": [[0, 0.25, 73], [0.25, 0.75, 74], [1, 0.5, 78], [1.5, 0.5, 81], [2, 0.5, 78], [3, 1, 74],
+			[4, 0.25, 71], [4.25, 0.75, 72], [5, 0.5, 76], [5.5, 0.5, 79], [6, 0.5, 76], [7, 1, 72],
+			[8, 0.25, 73], [8.25, 0.75, 74], [9, 0.5, 78], [9.5, 0.5, 81], [10, 0.5, 86], [10.5, 0.5, 84], [11, 1, 81],
+			[12, 0.5, 79], [12.5, 0.5, 78], [13, 0.5, 76], [13.5, 0.5, 73], [14, 2, 74]]},
+	# the living statue: a music box that winds down between poses
+	"statue": {"bpm": 126, "lead": "glock", "lead2": ["vibes", -12], "comp": "arp", "bass": "root",
+		"drums": "none", "verb": 0.34, "chords": [[64, "min"], [57, "min"], [59, "maj"], [64, "min"]],
+		"mel": [[0, 1, 76], [1, 1, 79], [2, 1, 83], [3, 1, 88], [4, 1.5, 84], [5.5, 0.5, 83], [6, 2, 81],
+			[8, 1, 75], [9, 1, 78], [10, 1, 83], [11, 1, 87], [12, 1, 88], [13, 1, 83], [14, 2, 76]]},
+	# the fisherman: a sea shanty on the accordion, oom-pah under it
+	"fisher": {"bpm": 132, "lead": "accordion", "comp": "oompah", "bass": "oompah",
+		"drums": "brush", "verb": 0.26, "chords": [[62, "min"], [60, "maj"], [62, "min"], [57, "maj"]],
+		"mel": [[0, 0.5, 69], [0.5, 0.5, 69], [1, 1, 74], [2, 0.5, 74], [2.5, 0.5, 76], [3, 1, 77],
+			[4, 1, 76], [5, 0.5, 72], [5.5, 0.5, 72], [6, 2, 72],
+			[8, 0.5, 69], [8.5, 0.5, 69], [9, 1, 74], [10, 0.5, 74], [10.5, 0.5, 76], [11, 1, 77],
+			[12, 1, 76], [13, 1, 73], [14, 2, 74]]},
+	# the builder: hammer blows on the marimba, a kick on every beat
+	"builder": {"bpm": 136, "lead": "marimba", "comp": "stab", "bass": "eighths", "drums": "drive",
+		"verb": 0.12, "chords": [[57, "maj"], [57, "maj"], [62, "maj"], [64, "maj"]],
+		"mel": [[0, 0.5, 69], [0.5, 0.5, 69], [1, 0.5, 69], [2, 0.5, 76], [2.5, 0.5, 76], [3, 1, 73],
+			[4, 0.5, 69], [4.5, 0.5, 69], [5, 0.5, 69], [6, 0.5, 78], [6.5, 0.5, 78], [7, 1, 74],
+			[8, 0.5, 74], [8.5, 0.5, 74], [9, 0.5, 74], [10, 0.5, 81], [10.5, 0.5, 81], [11, 1, 78],
+			[12, 0.5, 76], [12.5, 0.5, 76], [13, 0.5, 76], [14, 0.5, 80], [14.5, 0.5, 83], [15, 1, 81]]},
+	# the skater: fast and scrappy, guitar over a driving beat
+	"skater": {"bpm": 152, "lead": "guitar", "comp": "stab", "bass": "eighths",
+		"drums": "drive", "verb": 0.14, "chords": [[64, "min"], [60, "maj"], [62, "maj"], [59, "maj"]],
+		"mel": [[0, 0.5, 76], [0.5, 0.5, 76], [1, 0.5, 79], [1.5, 0.5, 76], [2, 0.5, 81], [2.5, 0.5, 79], [3, 1, 76],
+			[4, 0.5, 72], [4.5, 0.5, 72], [5, 0.5, 76], [5.5, 0.5, 72], [6, 0.5, 79], [6.5, 0.5, 76], [7, 1, 72],
+			[8, 0.5, 74], [8.5, 0.5, 74], [9, 0.5, 78], [9.5, 0.5, 74], [10, 0.5, 81], [10.5, 0.5, 78], [11, 1, 74],
+			[12, 0.5, 75], [12.5, 0.5, 78], [13, 0.5, 81], [13.5, 0.5, 83], [14, 2, 83]]},
+	# the busker: a rumba catalana, guitar and palmas
+	"busker": {"bpm": 132, "lead": "guitar", "lead2": ["whistle", 0], "comp": "rumba",
+		"bass": "root", "drums": "claps", "swing": 0.06, "verb": 0.24,
+		"chords": [[64, "min"], [62, "maj"], [60, "maj"], [59, "maj"]],
+		"mel": [[0, 0.5, 76], [0.5, 0.5, 77], [1, 0.5, 79], [1.5, 0.5, 77], [2, 1, 76], [3, 1, 72],
+			[4, 0.5, 74], [4.5, 0.5, 76], [5, 0.5, 77], [5.5, 0.5, 76], [6, 1, 74], [7, 1, 71],
+			[8, 0.5, 72], [8.5, 0.5, 74], [9, 0.5, 76], [9.5, 0.5, 74], [10, 1, 72], [11, 1, 69],
+			[12, 0.5, 71], [12.5, 0.5, 72], [13, 0.5, 74], [13.5, 0.5, 72], [14, 2, 71]]},
+	# the grandmother: a market polka on the accordion, oom-pah and a shaker
+	"avia": {"bpm": 144, "lead": "accordion", "lead2": ["glock", 12], "comp": "oompah", "bass": "oompah",
+		"drums": "shaker", "verb": 0.18, "chords": [[65, "maj"], [60, "maj"], [60, "maj"], [65, "maj"]],
+		"mel": [[0, 0.5, 72], [0.5, 0.5, 77], [1, 0.5, 81], [1.5, 0.5, 77], [2, 1, 84], [3, 1, 81],
+			[4, 0.5, 79], [4.5, 0.5, 76], [5, 0.5, 72], [5.5, 0.5, 76], [6, 1, 79], [7, 1, 76],
+			[8, 0.5, 70], [8.5, 0.5, 72], [9, 0.5, 76], [9.5, 0.5, 79], [10, 1, 82], [11, 1, 79],
+			[12, 0.5, 77], [12.5, 0.5, 81], [13, 0.5, 79], [13.5, 0.5, 76], [14, 2, 77]]},
+	# the runner: a workout beat, the whistle counting reps
+	"runner": {"bpm": 150, "lead": "whistle", "lead2": ["marimba", -12], "comp": "push", "bass": "octave",
+		"drums": "drive", "verb": 0.14, "chords": [[62, "maj"], [59, "min"], [55, "maj"], [57, "maj"]],
+		"mel": [[0, 0.5, 74], [0.5, 0.5, 78], [1, 0.5, 81], [1.5, 0.5, 78], [2, 0.5, 74], [2.5, 0.5, 78], [3, 1, 81],
+			[4, 0.5, 71], [4.5, 0.5, 74], [5, 0.5, 78], [5.5, 0.5, 74], [6, 0.5, 71], [6.5, 0.5, 74], [7, 1, 78],
+			[8, 0.5, 71], [8.5, 0.5, 74], [9, 0.5, 79], [9.5, 0.5, 74], [10, 0.5, 71], [10.5, 0.5, 74], [11, 1, 79],
+			[12, 0.5, 73], [12.5, 0.5, 76], [13, 0.5, 79], [13.5, 0.5, 81], [14, 2, 85]]},
+	# the painter: a cool bossa on the vibes, brushed with a rim
+	"painter": {"bpm": 124, "lead": "vibes", "comp": "bossa", "bass": "bossa", "drums": "rim",
+		"verb": 0.3, "chords": [[60, "maj"], [62, "min"], [64, "min"], [65, "maj"]],
+		"mel": [[0, 1.5, 76], [1.5, 0.5, 79], [2, 1, 83], [3, 1, 81],
+			[4, 1.5, 77], [5.5, 0.5, 81], [6, 1, 84], [7, 1, 81],
+			[8, 1.5, 79], [9.5, 0.5, 83], [10, 1, 86], [11, 1, 83],
+			[12, 1, 81], [13, 1, 77], [14, 2, 76]]},
+	# the fan: a terrace call and answer, the whistle over bongos and claps
+	"fan": {"bpm": 132, "lead": "whistle", "lead2": ["marimba", -12], "comp": "stab", "bass": "eighths",
+		"drums": "terrace", "verb": 0.22, "chords": [[67, "maj"], [62, "maj"], [67, "maj"], [62, "maj"]],
+		"mel": [[0, 1, 79], [1, 1, 79], [2, 0.5, 81], [2.5, 0.5, 79], [3, 1, 76],
+			[4, 1, 78], [5, 1, 78], [6, 0.5, 79], [6.5, 0.5, 78], [7, 1, 74],
+			[8, 1, 79], [9, 1, 79], [10, 0.5, 81], [10.5, 0.5, 83], [11, 1, 86],
+			[12, 0.5, 83], [12.5, 0.5, 81], [13, 0.5, 79], [13.5, 0.5, 78], [14, 2, 79]]},
+	# the commuter: the station's four-note chime, wound up to a hurry
+	"commuter": {"bpm": 130, "lead": "vibes", "lead2": ["glock", 12], "comp": "skank", "bass": "walk",
+		"drums": "train", "verb": 0.26, "chords": [[60, "maj"], [67, "maj"], [60, "maj"], [67, "maj"]],
+		"mel": [[0, 1, 76], [1, 1, 72], [2, 1, 74], [3, 1, 67],
+			[4, 1, 67], [5, 1, 74], [6, 1, 76], [7, 1, 72],
+			[8, 0.5, 76], [8.5, 0.5, 72], [9, 0.5, 74], [9.5, 0.5, 67], [10, 0.5, 67], [10.5, 0.5, 74], [11, 1, 76],
+			[12, 0.5, 79], [12.5, 0.5, 76], [13, 0.5, 74], [13.5, 0.5, 72], [14, 2, 72]]},
+}
+
 # --- the score: what plays when ---------------------------------------------
 
 static func is_style(name: String) -> bool:
@@ -159,6 +250,8 @@ static func job(name: String) -> Job:
 		_intro(j)
 	elif JINGLES.has(name):
 		_jingle(j, JINGLES[name])
+	elif name.begins_with("dare_") and DARES.has(name.substr(5)):
+		_dare(j, DARES[name.substr(5)])
 	else:
 		_arrange(j, STYLES.get(name, STYLES["title"]))
 	j.events.sort_custom(func(a: Array, b: Array) -> bool: return int(a[0]) < int(b[0]))
@@ -545,6 +638,46 @@ static func _drums(j: Job, kind: String, b: int, b0: float, at: Callable, vel: C
 			hit.call(3.0, "clap", 0.35)
 			for k in range(8):
 				hit.call(float(k) * 0.5 + 0.0, "shaker", 0.3 if k % 2 == 1 else 0.18)
+
+
+# A dare tune: four bars of its own melody and chords, looped, played on
+# the same band as the walks.
+static func _dare(j: Job, d: Dictionary) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(str(d))
+	j.seed = rng.randi()
+	var beat := 60.0 / float(d["bpm"])
+	var bars := 4
+	j.n = int(beat * 4.0 * float(bars) * RATE)
+	j.n += j.n % 2
+	j.total = j.n + int(TAIL * RATE)
+	j.total += (4 - j.total % 4) % 4
+	j.verb_wet = float(d["verb"])
+	var swing: float = d.get("swing", 0.0)
+	var at := func(pos: float, loose := 1.0) -> int:
+		var whole := floorf(pos)
+		var frac := pos - whole
+		if is_equal_approx(frac, 0.5):
+			frac += swing
+		var t := (whole + frac) * beat + rng.randf_range(-HUMAN_T, HUMAN_T) * loose
+		return maxi(0, int(t * RATE))
+	var vel := func(v: float) -> float:
+		return v * rng.randf_range(1.0 - HUMAN_V, 1.0 + HUMAN_V)
+	var lead2: Array = d.get("lead2", [])
+	for nt: Array in d["mel"]:
+		var s: int = at.call(float(nt[0]))
+		var dur: float = float(nt[1]) * beat
+		_lead(j, String(d["lead"]), s, int(nt[2]), dur, vel.call(1.0))
+		if not lead2.is_empty():
+			_lead(j, String(lead2[0]), s, int(nt[2]) + int(lead2[1]), dur, vel.call(0.5))
+	for b in range(bars):
+		var ch: Array = d["chords"][b]
+		var root: int = ch[0]
+		var q: String = ch[1]
+		var b0 := float(b) * 4.0
+		_comp(j, String(d["comp"]), b0, root, q, _chord_notes(root, q), beat, at, vel)
+		_bass(j, String(d["bass"]), b0, root, q, beat, at, vel)
+		_drums(j, String(d["drums"]), b, b0, at, vel)
 
 
 static func _jingle(j: Job, jg: Dictionary) -> void:
