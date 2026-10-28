@@ -35,7 +35,9 @@ concurrency:
 jobs:
   soak:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # nine runs take 12-25 minutes depending on the runner; room on top for
+    # one run to hang to its own limit in idle_soak.sh and still be reported
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
