@@ -192,6 +192,9 @@ with pickpockets and shenanigans happening around."
   gutters, sodden flattened cardboard boxes and wind-flipped broken umbrellas,
   plus vaulted groin-ribbing and pendant lanterns inside the dry stone arcades.
 
+- Panot pass (2026-10-27): the street is paved in panots de flor laid
+  square (`Diluvi.draw_over_walkway`), the slabs on the same 80 px grid.
+
 ### El Mercat (market) - the market hall
 - Is: inside a covered market: stall rows as aisles, iron columns, the fish
   counter, fruit crates, sawdust.

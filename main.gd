@@ -251,7 +251,8 @@ var lvl := "street":
 # L'Estacio's draw_freedom_beyond and draw_freedom_ground; and El Barri's
 # draw_gate_fence, draw_fountain and draw_performer; and Passeig Maritim's
 # draw_cross_section, takes_prints and draw_bin. El Diluvi's arcade pillars
-# are draw_column and El Porxo is draw_freedom_beyond and draw_freedom_ground.
+# are draw_column, its panots draw_over_walkway, and El Porxo is
+# draw_freedom_beyond and draw_freedom_ground.
 # El Mercat's hall is draw_live, its arches draw_overhead, its cast-iron
 # columns draw_column, and its greengrocer's van draw_van. La Castanyada's
 # street is draw_live, its lights draw_overhead and its festival yard on the
@@ -1217,6 +1218,12 @@ func _draw_paving(vt: float, vb: float, base: Color) -> void:
 			sw = 64.0
 			sh = 56.0
 			stagger = 0.5
+		"rain":
+			# laid square under El Diluvi's panots, two to a slab each way, so
+			# the slabs' tone and the tiles' joints agree (Diluvi.PANOT)
+			sw = 80.0
+			sh = 80.0
+			stagger = 0.0
 		"station":
 			sw = 132.0   # big polished tiles, laid square
 			sh = 132.0
