@@ -2098,7 +2098,8 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "station":
 		add_rope_rect(m, ESTACIO_TRAIN)
 	if m.lvl == "beach":
-		add_rope_rect(m, BEACH_STAR)
+		for st: Vector2 in beach_block_stones():
+			add_rope_point(m, st, BEACH_BLOCK_W * 0.5 + 2.0)
 	if m.lvl == "partit":
 		for r: Rect2 in Partit.wrap_rects():
 			add_rope_rect(m, r)
@@ -2356,7 +2357,14 @@ static func build_freedom_area(m: Node2D) -> void:
 		# thing anyone tries on a seafront), and the wide bay in the dog beach
 		# at the top. The bay uses thin horizontal strips so the diagonal
 		# shoreline from beach_shore_x is wet in gameplay, not just on screen.
-		m.water.append(Rect2(-360.0, m.GATE_Y - 40.0, 590.0, absf(m.GATE_Y) + 500.0))
+		var sea := Rect2(-360.0, m.GATE_Y - 40.0, 590.0, absf(m.GATE_Y) + 500.0)
+		if m.lvl == "beach":
+			var py0 := BEACH_PIER_Y - BEACH_PIER_HALF
+			var py1 := BEACH_PIER_Y + BEACH_PIER_HALF
+			m.water.append(Rect2(sea.position.x, sea.position.y, sea.size.x, py0 - sea.position.y))
+			m.water.append(Rect2(sea.position.x, py1, sea.size.x, sea.end.y - py1))
+		else:
+			m.water.append(sea)
 		var strip_y = m.freedom_lo - 40.0
 		var strip_h := 36.0
 		var gate_y = m.GATE_Y - 30.0
@@ -2713,16 +2721,100 @@ const BEACH_PROM_X := 560.0
 # come in runs between them, seaward on the deck and landward on the cafe
 # strip, rather than at one spacing all the way.
 const BEACH_PALMS_SEA: Array[float] = [-260.0, -500.0, -760.0, -1620.0, -1790.0, -1960.0,
-	-2380.0, -2620.0, -3300.0, -3480.0, -3660.0, -3840.0, -4560.0, -4800.0, -5060.0]
+	-2380.0, -2620.0, -3290.0, -3570.0, -3700.0, -3840.0, -4560.0, -4800.0, -5060.0]
 const BEACH_PALMS_LAND: Array[float] = [-330.0, -560.0, -900.0, -1150.0, -1380.0, -1860.0,
 	-2120.0, -2700.0, -2960.0, -3120.0, -3680.0, -4300.0, -4700.0, -5140.0]
 const BEACH_SHOWERS: Array[Vector2] = [Vector2(360.0, -1080.0), Vector2(360.0, -4290.0)]
 const BEACH_COURT := Rect2(246.0, -2120.0, 120.0, 240.0)
 const BEACH_TOWER := Vector2(300.0, -3050.0)
 const BEACH_BARS: Array[Rect2] = [Rect2(1004.0, -1786.0, 176.0, 66.0), Rect2(1004.0, -3262.0, 176.0, 60.0)]
-# L'Estel Ferit, Rebecca Horn's stack of four rusted steel cubes on the
-# Barceloneta sand: its footprint, solid, and the leash goes round it
-const BEACH_STAR := Rect2(268.0, -3450.0, 60.0, 60.0)
+# El Pont del Petroli, Badalona's old oil pier: a wooden wedge of steps from
+# the boardwalk's seaward edge, out across the sand, narrowing and climbing
+# to the pier, which runs on out to sea. Both are planked and both are walkable.
+# Where the wedge stands above the sand its sides are banked with rocks, and
+# the pier's rails run down both edges past them; the sand lane ends at its
+# rocky foot, as it does there. The bronze monkey sits on a stone block on
+# the wedge's far edge, feet on the planks.
+const BEACH_PIER_Y := -3420.0
+const BEACH_PIER_HALF := 20.0                  # half the pier's width
+const BEACH_PIER_FAR_X := -400.0               # its far end, out at sea, where the drawing stops
+const BEACH_RAMP_BASE_X := 380.0               # its wide end, on the boardwalk's edge
+const BEACH_RAMP_RAISED_X := 380.0             # past here it stands above the sand
+const BEACH_RAMP_TIP_X := 290.0                # where the pier carries on
+const BEACH_PIER_SAND_END := 230.0             # the sea starts about here
+const BEACH_RAMP_BASE_HALF := 72.0
+const BEACH_ROCK_R := 8.0
+const BEACH_ROCK_STEP := 11.0
+const BEACH_RAIL_W := 5.0
+# the stone block the monkey sits on: along the wedge's south edge
+const BEACH_MONKEY_AT_X := 334.0
+const BEACH_MONKEY_INSET := 9.0
+const BEACH_BLOCK_LEN := 60.0
+const BEACH_BLOCK_W := 15.0
+
+
+# half the wedge's width at x: the pier's at the tip, widening to the base
+static func beach_ramp_half_at(x: float) -> float:
+	var t := clampf((x - BEACH_RAMP_TIP_X) / (BEACH_RAMP_BASE_X - BEACH_RAMP_TIP_X), 0.0, 1.0)
+	return lerpf(BEACH_PIER_HALF, BEACH_RAMP_BASE_HALF, t)
+
+
+# on the planks: the wedge or the pier
+static func beach_on_pier(p: Vector2) -> bool:
+	var dy := absf(p.y - BEACH_PIER_Y)
+	if p.x >= BEACH_RAMP_TIP_X and p.x <= BEACH_RAMP_BASE_X:
+		return dy <= beach_ramp_half_at(p.x)
+	return p.x < BEACH_RAMP_TIP_X and dy <= BEACH_PIER_HALF
+
+
+# along the wedge's south edge, base to tip, and the way in from it
+static func beach_ramp_edge_dir() -> Vector2:
+	return Vector2(BEACH_RAMP_BASE_X - BEACH_RAMP_TIP_X, BEACH_RAMP_BASE_HALF - BEACH_PIER_HALF).normalized()
+
+
+static func beach_ramp_inward() -> Vector2:
+	var e := beach_ramp_edge_dir()
+	return Vector2(e.y, -e.x)
+
+
+# where the monkey sits, and which way he faces: in, across the planks
+static func beach_monkey() -> Vector2:
+	var x := BEACH_MONKEY_AT_X
+	return Vector2(x, BEACH_PIER_Y + beach_ramp_half_at(x)) + beach_ramp_inward() * BEACH_MONKEY_INSET
+
+
+# his block as three round stones, solid, the leash going round
+static func beach_block_stones() -> Array[Vector2]:
+	var c := beach_monkey()
+	var e := beach_ramp_edge_dir()
+	var half := BEACH_BLOCK_LEN * 0.5 - BEACH_BLOCK_W * 0.5
+	return [c - e * half, c, c + e * half]
+
+
+# the rocks banked along the raised sides: just outside each slanted edge,
+# then either side of the pier over the sand to the water's edge
+static func beach_pier_rocks() -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	var x := BEACH_RAMP_RAISED_X
+	while x >= BEACH_RAMP_TIP_X:
+		var hh := beach_ramp_half_at(x) + BEACH_ROCK_R - 1.0
+		out.append(Vector2(x, BEACH_PIER_Y - hh))
+		out.append(Vector2(x, BEACH_PIER_Y + hh))
+		x -= BEACH_ROCK_STEP
+	x = BEACH_RAMP_TIP_X - BEACH_ROCK_STEP
+	while x >= BEACH_PIER_SAND_END:
+		for side: float in [-1.0, 1.0]:
+			out.append(Vector2(x, BEACH_PIER_Y + side * (BEACH_PIER_HALF + BEACH_RAIL_W + BEACH_ROCK_R - 2.0)))
+		x -= BEACH_ROCK_STEP
+	return out
+
+
+# the pier's rails, from the wedge's tip to its far end, and the rail across that
+static func beach_pier_rails() -> Array[Rect2]:
+	var w := BEACH_RAMP_TIP_X - BEACH_PIER_FAR_X
+	return [Rect2(BEACH_PIER_FAR_X, BEACH_PIER_Y - BEACH_PIER_HALF - BEACH_RAIL_W, w, BEACH_RAIL_W),
+		Rect2(BEACH_PIER_FAR_X, BEACH_PIER_Y + BEACH_PIER_HALF, w, BEACH_RAIL_W),
+		Rect2(BEACH_PIER_FAR_X - BEACH_RAIL_W, BEACH_PIER_Y - BEACH_PIER_HALF - BEACH_RAIL_W, BEACH_RAIL_W, (BEACH_PIER_HALF + BEACH_RAIL_W) * 2.0)]
 
 
 # the net runs across the court's middle, its posts just outside the lines
@@ -2734,7 +2826,7 @@ static func beach_net_posts() -> Array[Vector2]:
 # the sand a towel keeps off: the court, the tower's footprint, the showers
 static func beach_sand_keepouts() -> Array[Rect2]:
 	var out: Array[Rect2] = [BEACH_COURT.grow(16.0), Rect2(BEACH_TOWER - Vector2(40.0, 40.0), Vector2(80.0, 90.0)),
-		BEACH_STAR.grow(24.0)]
+		Rect2(150.0, BEACH_PIER_Y - BEACH_RAMP_BASE_HALF - 30.0, 240.0, BEACH_RAMP_BASE_HALF * 2.0 + 60.0)]
 	for sp: Vector2 in BEACH_SHOWERS:
 		out.append(Rect2(sp - Vector2(36.0, 36.0), Vector2(72.0, 72.0)))
 	return out
@@ -2803,7 +2895,9 @@ static func level_solid_rects(m: Node2D) -> Array:
 		"beach":
 			for i in range(BEACH_BARS.size()):
 				out.append(["beach_bar_%d" % i, BEACH_BARS[i]])
-			out.append(["beach_star", BEACH_STAR])
+			var rails := beach_pier_rails()
+			for i in range(rails.size()):
+				out.append(["beach_pier_rail_%d" % i, rails[i]])
 		"station":
 			out.append(["estacio_train", ESTACIO_TRAIN])
 		"park":
@@ -2964,7 +3058,12 @@ static func build_walls(m: Node2D) -> void:
 	m.add_child(walls)
 	# the chiringuitos' bar huts are buildings, not decals
 	if m.lvl == "beach":
-		add_rect_body(m, BEACH_STAR.get_center(), BEACH_STAR.size)
+		for r: Rect2 in beach_pier_rails():
+			add_rect_body(m, r.get_center(), r.size)
+		for rk: Vector2 in beach_pier_rocks():
+			add_circle_body(m, rk, BEACH_ROCK_R)
+		for st: Vector2 in beach_block_stones():
+			add_circle_body(m, st, BEACH_BLOCK_W * 0.5)
 		for br: Rect2 in BEACH_BARS:
 			add_rect_body(m, br.get_center(), br.size)
 	# THE BUILDING LINE is solid (#65): she used to be able to walk out onto

@@ -174,9 +174,13 @@ with pickpockets and shenanigans happening around."
   over the hot sand, stacked kayaks/pedalos and anchored lane buoys, plus the
   two-way red painted coastal bike lane with bicycle stencils.
 
-- Landmark pass (2026-10-27): L'Estel Ferit on the sand
-  (`LevelBuild.BEACH_STAR`), solid with the leash going round it, kept clear
-  of towels.
+- Landmark pass (2026-10-28): this is Badalona's seafront, not the
+  Barceloneta's. El Pont del Petroli: a walkable wedge of wooden steps from
+  the boardwalk's edge (`LevelBuild.beach_on_pier`), rock-banked, narrowing
+  to the walkable pier out over the sea (the sea rect is split round it);
+  the bronze Anís del Mono monkey on his marble block at the wedge's south
+  edge (`beach_block_stones`, solid, wraps the leash). Badalona landmarks
+  only on this walk.
 
 ### El Diluvi (rain) - the rainy shopping street
 - Is: a narrow shopping street in a downpour, not La Rambla wet.

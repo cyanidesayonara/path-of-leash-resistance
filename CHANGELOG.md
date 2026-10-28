@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-10-28 - Passeig Marítim is Badalona: El Pont del Petroli
+
+The seafront is Badalona's, not the Barceloneta's, so L'Estel Ferit is gone
+and Badalona's own landmark is in its place: El Pont del Petroli, drawn from
+photographs. A wedge of wooden steps in the boardwalk's timber climbs from
+the boardwalk's edge out over the sand, banked with pale granite rocks, to
+the old oil pier, which runs on out to sea in weathered grey planks between
+concrete curbs, with stainless rails and a gate between two rust-red posts.
+The wedge and the pier are walkable: she can take your human out over the
+water. The sand lane ends at the pier's rocky foot, as it does there. On a
+blue-grey marble block at the wedge's edge sits the bronze monkey with
+Darwin's face, spectacles and beard, one foot on the planks and the bottle
+held up; his block is solid and the leash goes round it. One boardwalk palm
+moved off the wedge. Behaviour snapshot: changed for the beach only (the
+pier's walls, rocks and block, and the moved palm).
+
 ## 2026-10-27 - Passeig Marítim: L'Estel Ferit
 
 The Barceloneta's own landmark is on the sand now: Rebecca Horn's Wounded
