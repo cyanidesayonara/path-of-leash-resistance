@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-10-27 - El Parc: the slackline
+
+Two big plane trees on El Parc's west lawn with a slackline strung between
+them at knee height, a slackliner out on it, arms up, swaying for balance,
+their rucksack and water bottle on the grass. The trunks are solid; she runs
+under the line, but the leash does not: it catches on the webbing and
+slips off under a hard pull. Behaviour snapshot unchanged.
+
 ## 2026-10-27 - Passeig Marítim: L'Estel Ferit
 
 The Barceloneta's own landmark is on the sand now: Rebecca Horn's Wounded
