@@ -7,15 +7,18 @@ extends Node
 #
 # A dare goes through three phases, and the card under the banner
 # (hud/event_feed.gd) shows each one:
-#   "offer"  the telegraph: what to do and how long there is, read BEFORE the
-#            clock starts (OFFER_S, like every other event in the game, only
-#            long enough to read a sentence)
+#   "offer"  what to do, how long there is and what it pays. It waits for
+#            her to take it with a bark (accept(), from main.on_bark); then
+#            READY_S to get set before the clock starts. Walking off lapses
+#            it (lapse(), from the giver). The autowalk bot takes it by
+#            itself after OFFER_S, the way it always has.
 #   "live"   the clock runs; the card shows tricks landed and time left
 #   "end"    how it went, for END_S: the payout, or what was needed
 # begin() skips the offer and starts the clock at once (tests, and anything
 # that has already said its piece).
 
 const OFFER_S := 2.6
+const READY_S := 1.2
 const END_S := 3.2
 
 var main: Node2D
@@ -32,6 +35,8 @@ var reward := 0
 var retry := false
 var offer_t := 0.0
 var end_t := 0.0
+# the offer is up and nobody has barked yet
+var waiting := false
 
 
 func setup(m: Node2D) -> void:
@@ -52,6 +57,22 @@ func offer(trick_target: int, seconds: float, pays: int, again := false) -> void
 	retry = again
 	offer_t = OFFER_S
 	end_t = 0.0
+	waiting = true
+
+
+# She barked: the dare is on. A moment to get set, then the clock.
+func accept() -> void:
+	if phase != "offer" or not waiting:
+		return
+	waiting = false
+	offer_t = READY_S
+
+
+# She walked off without taking it: the card goes, nothing is lost.
+func lapse() -> void:
+	if phase == "offer" and waiting:
+		phase = ""
+		waiting = false
 
 
 func begin(trick_target: int, seconds: float) -> void:
@@ -77,6 +98,10 @@ func add_trick() -> void:
 
 func tick(delta: float) -> void:
 	if phase == "offer":
+		if waiting:
+			if main == null or main.get("auto_walk") != true:
+				return
+			waiting = false
 		offer_t -= delta
 		if offer_t <= 0.0:
 			offer_t = 0.0
@@ -111,9 +136,11 @@ func fraction() -> float:
 	return clampf(timer / duration, 0.0, 1.0) if duration > 0.0 else 0.0
 
 
-# How far through the offer's telegraph, 0 to 1.
+# How far through getting set, 0 to 1 (nothing while it waits for a bark).
 func offer_fraction() -> float:
-	return clampf(1.0 - offer_t / OFFER_S, 0.0, 1.0)
+	if waiting:
+		return 0.0
+	return clampf(1.0 - offer_t / READY_S, 0.0, 1.0)
 
 
 func _finish(win: bool) -> void:
