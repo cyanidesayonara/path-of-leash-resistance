@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-10-27 - El Barri: the neighbourhood round the square
+
+El Barri's lawns used to run on out of the frame to walls nobody could see,
+so the square was nowhere in particular. They end now at the park's
+cast-iron railing, solid, with gates in it and the grass worn to earth on
+the tracks people take across to them. Past the railing is the
+neighbourhood: the pavement in its four-dot panots, plane trees along it,
+the kerb with motorbikes parked nose-in (a helmet left on a seat), a Bicing
+dock with its red bikes, and the blocks' rooftop terraces with their water
+tanks, skylights, washing lines and geraniums. The First Walk, laid out on
+El Barri, is unchanged. Behaviour snapshot unchanged.
+
 ## 2026-10-27 - Walk 23: El Laberint d'Horta
 
 A new walk, open at 39 stars after La Carretera: the oldest garden in the

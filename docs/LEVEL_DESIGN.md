@@ -454,6 +454,10 @@ park could be just a neighborhood park in bcn."
   the approach, wooden pergola over the dominoes/cards table, hopscotch (xarranca)
   chalk grid and wooden sandbox with bucket and spade, petanca scoreboard and
   bench rack, and municipal green Ajuntament noticeboard at the entrance.
+- Neighbourhood pass (2026-10-27): the lawns end at the park's cast-iron
+  railing (solid, `Barri.solids`), with gates and worn desire paths; past it
+  the panot pavement, street trees, parked motorbikes, a Bicing dock and the
+  rooftop terraces. Not in the First Walk.
 
 ### La Carretera de les Aigües (aigues) - the hillside track
 - Is: the old water main's service road along Collserola, a level track of
