@@ -140,7 +140,7 @@ func _run() -> void:
 	_check(m.challenge.count == 0, "a trick while the dare is on offer does not count")
 	_check(g._line().ends_with(g.TAKE) and g._line().contains("5 tricks in 12 seconds"),
 		"the giver says the numbers and that a bark takes it (%s)" % g._line())
-	var said: Array[String] = g.bubble_lines(g._line(), ThemeDB.fallback_font)
+	var said: Array[String] = load("res://world/speech_bubble.gd").lines(g._line(), g.TAKE)
 	_check(said.size() == 2 and said[1] == g.TAKE.strip_edges(),
 		"the offer's bubble is two lines, the dare over the bark (%s)" % [said])
 	_step(m.challenge.OFFER_S * 3.0)

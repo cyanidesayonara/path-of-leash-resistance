@@ -3,9 +3,11 @@ extends Node2D
 # Everything the world says out loud, at the thing that said it, in three
 # looks that cannot be mistaken for each other or for the HUD:
 #
-#   SAY    a speech bubble: somebody in the world talking ("excuse me - go
-#          on", "my wallet?!"). White, rounded, a tail down to the speaker,
-#          dark lower-case text. It holds still and is read, then goes.
+#   SAY    a speech bubble: somebody in the world talking ("Excuse me, go
+#          ahead.", "My wallet?!"), in world/speech_bubble.gd's look. A
+#          passing line holds still and is read, then goes; a speaker that
+#          keeps talking (your human, a dare-giver) registers with
+#          add_speaker and its bubble stays as long as it has a line.
 #   SFX    a sound: "plop", "THUMP", "SNORT!", "quack!". Heavy comic
 #          lettering, tilted, outlined, punching in and gone quickly.
 #   SCORE  something earned or lost right there: "snack +1", "marked! +3".
@@ -15,16 +17,19 @@ extends Node2D
 # These used to be one Label each in one style, so a stranger's apology, a
 # splash and a +3 all looked alike and piled on each other. They are drawn
 # here in one pass, newest on top, and a new pop that would land on a live
-# one moves up clear of it.
+# one moves up clear of it. Bubbles are laid out together every frame: one
+# that would cover another moves up, its tail stretching back to the
+# speaker, and none leaves the screen sideways. The layer sits above every
+# world layer (canopies are z 13), so nothing in the world hides a line.
 
 const Kit := preload("res://hud/ui_kit.gd")
 const Icons := preload("res://hud/ui_icons.gd")
+const Bubble := preload("res://world/speech_bubble.gd")
 
 enum Kind { SAY, SFX, SCORE }
 
 const LIFE := {Kind.SAY: 2.0, Kind.SFX: 0.85, Kind.SCORE: 1.1}
 const RISE := {Kind.SAY: 0.0, Kind.SFX: 14.0, Kind.SCORE: 34.0}
-const SAY_PX := 14
 const SFX_PX := 22
 const SCORE_PX := 15
 # pops closer than this to a live one stack above it
@@ -32,6 +37,13 @@ const STACK_GAP := 26.0
 const MAX_POPS := 14
 
 var pops: Array[Dictionary] = []
+# speakers that hold a bubble while they have something to say:
+# {"node": Node, "fn": Callable}. fn returns {} for nothing, or "tip" (the
+# speaker's head, in this layer's space), "text", and optionally "split" (a
+# suffix that takes the second line) and "paper" (the bubble's colour).
+var speakers: Array[Dictionary] = []
+# per speaker: the line it is showing and for how long
+var _held := {}
 var _t := 0.0
 
 
@@ -49,6 +61,10 @@ static func classify(text: String) -> int:
 	return Kind.SFX
 
 
+func add_speaker(node: Node, fn: Callable) -> void:
+	speakers.append({"node": node, "fn": fn})
+
+
 func add(pos: Vector2, text: String, col: Color, kind := -1) -> Dictionary:
 	if kind < 0:
 		kind = classify(text)
@@ -58,10 +74,13 @@ func add(pos: Vector2, text: String, col: Color, kind := -1) -> Dictionary:
 		var parts := text.strip_edges().rsplit(" ", true, 1)
 		p["word"] = parts[0] if parts.size() > 1 else ""
 		p["amount"] = parts[parts.size() - 1]
-	# stack clear of whatever is already there
-	for _pass in range(4):
+	# stack clear of whatever is already there (speech is laid out as it is
+	# drawn, in _draw)
+	for _pass in range(4 if kind != Kind.SAY else 0):
 		var moved := false
 		for q: Dictionary in pops:
+			if int(q.kind) == Kind.SAY:
+				continue
 			var qp: Vector2 = q.pos
 			if absf(qp.x - float(p.pos.x)) < 90.0 and absf(qp.y - float(p.pos.y)) < STACK_GAP:
 				p.pos = Vector2(float(p.pos.x), qp.y - STACK_GAP)
@@ -76,6 +95,31 @@ func add(pos: Vector2, text: String, col: Color, kind := -1) -> Dictionary:
 
 
 func _process(delta: float) -> void:
+	var i_s := speakers.size() - 1
+	while i_s >= 0:
+		var sp: Dictionary = speakers[i_s]
+		var n: Node = sp.node
+		if not is_instance_valid(n) or not n.is_inside_tree():
+			_held.erase(sp.get("id", 0))
+			speakers.remove_at(i_s)
+			i_s -= 1
+			continue
+		var id := n.get_instance_id()
+		sp["id"] = id
+		var d: Dictionary = (sp.fn as Callable).call()
+		if d.is_empty() or String(d.get("text", "")) == "":
+			_held.erase(id)
+		else:
+			var h: Dictionary = _held.get(id, {})
+			if String(h.get("text", "")) != String(d.text):
+				h = {"text": String(d.text), "t": 0.0}
+			h["t"] = float(h.get("t", 0.0)) + delta
+			h["d"] = d
+			_held[id] = h
+		i_s -= 1
+	if pops.is_empty() and _held.is_empty():
+		return
+	queue_redraw()
 	if pops.is_empty():
 		return
 	var i := pops.size() - 1
@@ -89,6 +133,7 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
+	_draw_speech()
 	for p: Dictionary in pops:
 		var life: float = LIFE[int(p.kind)]
 		var t: float = p.t
@@ -96,28 +141,55 @@ func _draw() -> void:
 		var at: Vector2 = (p.pos as Vector2) - Vector2(0, float(RISE[int(p.kind)]) * t / life)
 		match int(p.kind):
 			Kind.SAY:
-				_say(at, String(p.text), fade, t)
+				pass
 			Kind.SFX:
 				_sfx(at, String(p.text), p.col, fade, t, float(p.tilt))
 			Kind.SCORE:
 				_score(at, String(p.word), String(p.amount), p.col, fade, t)
 
 
-func _say(at: Vector2, text: String, a: float, t: float) -> void:
-	var f := Kit.body()
-	var w := Kit.text_w(f, text, SAY_PX) + 18.0
-	var h := 24.0
-	# the bubble pops open over the first tenth of a second
-	var s := minf(1.0, t / 0.1)
-	var r := Rect2(at.x - w * 0.5 * s, at.y - h - 10.0, w * s, h)
-	var ink := Color(0.12, 0.11, 0.12, a)
-	draw_rect(Rect2(r.position + Vector2(2, 2), r.size), Color(0, 0, 0, 0.18 * a))
-	draw_colored_polygon(PackedVector2Array([Vector2(at.x - 5.0, r.end.y - 1.0), Vector2(at.x + 5.0, r.end.y - 1.0),
-		Vector2(at.x - 1.0, at.y)]), Color(0.98, 0.97, 0.94, a))
-	draw_rect(r, Color(0.98, 0.97, 0.94, a))
-	draw_rect(r, Color(0.2, 0.18, 0.2, 0.35 * a), false, 1.0)
-	if s >= 1.0:
-		draw_string(f, Vector2(r.position.x + 9.0, r.position.y + 17.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, SAY_PX, ink)
+# Every bubble on screen, laid out together: speakers holding a line first
+# (they were there first), then passing lines oldest first. Each sits over
+# its speaker, inside the screen's sides; one that would cover a bubble
+# already placed moves up above it.
+func _draw_speech() -> void:
+	var items: Array[Dictionary] = []
+	for h: Dictionary in _held.values():
+		var d: Dictionary = h.d
+		items.append({"tip": d.tip, "text": h.text, "split": String(d.get("split", "")),
+			"paper": d.get("paper", Bubble.PAPER), "t": float(h.t), "a": 1.0})
+	for p: Dictionary in pops:
+		if int(p.kind) != Kind.SAY:
+			continue
+		var life: float = LIFE[Kind.SAY]
+		items.append({"tip": p.pos, "text": String(p.text), "split": "", "paper": Bubble.PAPER,
+			"t": float(p.t), "a": clampf((life - float(p.t)) / (life * 0.35), 0.0, 1.0)})
+	if items.is_empty():
+		return
+	var vis := get_global_transform_with_canvas().affine_inverse() * get_viewport_rect()
+	var placed: Array[Rect2] = []
+	for it: Dictionary in items:
+		var ls: Array[String] = Bubble.lines(String(it.text), String(it.split))
+		var sz := Bubble.size_of(ls)
+		var tip: Vector2 = it.tip
+		var box := Rect2(tip.x - sz.x * 0.5, tip.y - Bubble.TAIL_H - sz.y, sz.x, sz.y)
+		box.position.x = clampf(box.position.x, vis.position.x + 6.0, maxf(vis.position.x + 6.0, vis.end.x - 6.0 - sz.x))
+		for _pass in range(6):
+			var moved := false
+			for q: Rect2 in placed:
+				if q.grow(3.0).intersects(box):
+					box.position.y = q.position.y - 4.0 - sz.y
+					moved = true
+			if not moved:
+				break
+		placed.append(box)
+		it["box"] = box
+		it["ls"] = ls
+	# drawn last-placed first: a bubble lifted clear of another has a long
+	# tail down past it, and the lower bubble covers that tail
+	for i in range(items.size() - 1, -1, -1):
+		var it: Dictionary = items[i]
+		Bubble.draw(self, it.box, it.tip, it.ls, float(it.t), float(it.a), it.paper)
 
 
 func _sfx(at: Vector2, text: String, col: Color, a: float, t: float, tilt: float) -> void:

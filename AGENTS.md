@@ -238,7 +238,7 @@ photographs the chase), and `--shot-y=N`, which starts the pair at that
 point down the walk (`--shot-y=-2450 --shot-at=40` photographs El Bosc's stream;
 give it 40 frames or so, a shot taken sooner can show the start line's ground).
 `--lang=ca|es|en` writes the walks' glosses in that language for the run
-(the LANGUAGE setting, unsaved). `--shot-goals` opens the goal list. `--shot-x=N` puts the pair at that x instead of mid-walk, `--shot-zoom=Z`
+(the LANGUAGE setting, unsaved). `--shot-goals` opens the goal list. `--shot-say` has your human and a passer-by speak at once. `--shot-x=N` puts the pair at that x instead of mid-walk, `--shot-zoom=Z`
 magnifies the shot, and `--shot-cam=X,Y` points the camera at a spot rather
 than the pair, to judge how a prop or a person is drawn
 (`--level=site --shot-y=-1200 --shot-zoom=2.5 --shot-cam=900,-1400` is the digger).
