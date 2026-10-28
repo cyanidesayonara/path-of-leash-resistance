@@ -198,7 +198,12 @@ The next release is tagged only when Santtu says to tag:
 ```
 git tag v1.67 && git push --tags
 ```
-That is the whole procedure. Tagging runs CI on the tagged SHA;
+Before asking to tag, the release notes must already describe the release
+(1.65 and 1.66 went to the Store with 1.64's): "What's new in this version"
+in `store/listing.md` (everything since the last notes that went out,
+within the Store's 1500 characters), the walk count and list in its
+description, `docs/itch-page.md`'s notes, and README's walks. Tagging
+itself is the whole procedure. Tagging runs CI on the tagged SHA;
 `.github/workflows/release.yml` waits for that CI to succeed, then exports
 web and Windows, pushes each to its own itch channel with butler (which
 uploads only changed blocks), and attaches zips to a GitHub release.

@@ -183,7 +183,25 @@ Every feature must serve at least one. If it serves none, cut it.
   the old FLING reward on a safe refusal feels fair, and how much dogward lean
   the forced release wants. Assess all four only on the final overhaul commit.
 - **v1.61 - shipped.** Dia de Partit, tagged 2026-10-20.
-- **v1.62 - prepared, not tagged.** The game and the notes are on main (with CI, the idle soak and the screenshot sweep green). El Besòs, visual polish across all 17 walks, arrivals at each walk's own door, weather and lamplight, no Daily Walk, Tofu only where she can be reached, and a rainy high stream on El Bosc. The itch page, the Store listing, the README and the handover match that. Tag only when Santtu says.
+- **v1.62 - shipped 2026-10-22.** El Besòs, visual polish across all 17
+  walks, arrivals at each walk's own door, weather and lamplight, no Daily
+  Walk.
+- **v1.63 - shipped 2026-10-24.** El Port and Plaça Reial, Free Play, El
+  Somni.
+- **v1.64 - shipped 2026-10-24.** El Veterinari and El Tibidabo, a real
+  way home at the end of every walk.
+- **v1.65 - shipped 2026-10-27.** La Carretera de les Aigües (walk 22),
+  every walk's name in its own stuff, the LANGUAGE setting, El Mosaic's
+  garden, La Rambla's waves, every walk drawn from its own module.
+- **v1.66 - shipped 2026-10-28.** El Laberint d'Horta (walk 23), Passeig
+  Marítim moved to Badalona (the Pont del Petroli and its monkey), a
+  dare-giver on every walk taken with a bark, the text review's subtitles
+  and speech, the full goal list, one speech bubble for everyone. 1.65 and
+  1.66 went to the Store with 1.64's notes; the Store's notes for 1.67 cover
+  everything since.
+- **v1.67 - next.** A tune for every dare-giver, a count-in and a hurry,
+  20-second dares. Tag only when Santtu says, and only once the Store's
+  What's new and the itch notes describe it (docs/MICROSOFT_STORE.md).
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
 - Every release also ships: mechanics tuning from playtests, at least
@@ -242,6 +260,30 @@ production or stays a beloved demo. Both outcomes are fine.
 15-25 levels, escalating settings (suburb, market, construction site,
 festival, winter ice, night walk). The human's arc: gradually looks up from
 the phone; final level the battery is dead and the walk is just a walk.
+
+### Agreed next (October 2026, in order)
+
+1. The controls overhaul: poop on its own button apart from dig in, a
+   pick-up button, comfortable on keyboard and controller, rebinding in
+   Settings.
+2. The dog selector: five dogs, Millie the default, each changing one trait
+   at one cost. Pipa the galgo (fast, weak plant), Mochi the French bulldog
+   (plants hard, slow), Bruna the gos d'atura (herds the human, collects
+   muck), Tito the chihuahua (slips through gaps, easily reeled in). Picked
+   on the walk select, unlocked by stars, coats carry over. Start with Pipa
+   end to end.
+3. The Badalona rework of Passeig Marítim (see New walks).
+4. Tony Hawk quests: spell a word of at least five letters tied to the
+   place (G-O-O-O-L on match day), a hidden item per walk, an optional
+   beat-the-clock. No walk timer: the walk has its own clock already. Goal
+   lists may grow to 15 for these.
+5. Bones and stars for a 26-walk campaign: stars for mastery and unlocks,
+   bones as the currency.
+6. Story films on the chase walks, played just before the threat strikes,
+   as the telegraph to run: the sweeper, the flood, the vets, each of
+   Festa de Gràcia's two or three monsters after each respite, and the fat
+   cat boss. Full length every time, always skippable, the game frozen
+   under it and handed straight back.
 
 ## Open questions
 
@@ -370,7 +412,14 @@ memorable.
   Poble Espanyol, and neighbourhoods from Sarrià to Santa Coloma. Others:
   Poblenou's superilla, the Laberint d'Horta hedge maze, the Fòrum.
   La Carretera de les Aigües is in as walk 22 (October 2026), with El
-  Mosaic's garden and La Rambla's waves as its upgrades. Plenty is left over for a sequel.
+  Mosaic's garden and La Rambla's waves as its upgrades. El Laberint
+  d'Horta is walk 23 (1.66), with El Barri's neighborhood, El Diluvi's
+  panots and El Parc's slackline as its upgrades. Passeig Marítim is
+  Santtu's own Badalona seafront, not Barceloneta: its landmarks come from
+  there (the Pont del Petroli and the Anís del Mono monkey), and a fuller
+  Badalona rework is queued (station at the bottom, restaurants and surf
+  clubs, the hotel plaza with the BADALONA sign as the off-leash area, the
+  dog beach moved to a Platja de Llevant walk, rollerbladers). Plenty is left over for a sequel.
   The campaign roadmap towards completion (v1.7X) targets 26 walks total:
   - Chases every 5th walk: 5 (La Neteja sweeper), 10 (El Besòs flood with dual respites), 15 (Festa de Gràcia multiple monster chase with turn respites), 20 (El Veterinari clinic escape with human drag resistance).
   - Walk 25: Els Búnquers del Carmel (sunset overlook).
@@ -394,10 +443,17 @@ memorable.
   scored actions chain into a multiplier that banks style points + a
   bones bonus; taking a hit bails the chain. Phase B SHIPPED v1.11: a
   bystander dares you into a bounded trick window on the walk out; hit
-  the target for bones + slow-mo, miss for nothing. Follow-ups: vary the
-  dare per giver/level (a "tangle N walkers" variant, a squirrel dare),
-  and a "land a x8 combo" / "beat the challenge" per-level goal to tie
-  both into progression once playtested.
+  the target for bones + slow-mo, miss for nothing. 1.66: a dare-giver of its own on
+  every walk (the monkey, a living statue, a fisherman, a builder, a
+  skater, a busker, an àvia, a runner, a painter, a fan, a commuter; the
+  kid elsewhere), offered in plain words with the numbers, taken with a
+  bark, a ladder of three dares, a lost one offered again at full pay. 1.67:
+  a tune per giver, a count-in, a hurry in the last five seconds, 20-second
+  dares of 6, 8 and 10 tricks, and a level check that every giver has
+  somewhere to trick. Next: more givers (a lifeguard, a castanyera, a
+  scrap dealer, a vet nurse, a fairground barker), and a third dare with
+  the giver's own twist (curb rides for the skater, tricks on the beat for
+  the busker).
 - Chase / outrun mechanic (homage to Crash Bandicoot's boulder runs and
   Indiana Jones): something CONSUMES the path behind you and you have to
   keep ahead of it. First cut SHIPPED v1.9 as a short home-leg chase

@@ -29,8 +29,8 @@ you want to go; constant hauling wears their patience down until they say
   it wraps poles, cinches when taut, slips off under a hard wrench, and
   tangles with other people's leashes.
 - **A human with patience**, who telegraphs everything they are about to do
-  ("ring ring", "selfie!", "ooh!") and is never smarter than that.
-- **Seventeen walks through Barcelona**, each built as its own place, plus a
+  ("Ring ring!", "Ooh!") and is never smarter than that.
+- **Twenty-three walks in and around Barcelona**, each built as its own place, plus a
   first walk that teaches one trick at a time. Every walk can be played in
   any weather, by day or at night.
 - **Off the leash at the end**: a dog park, a dog beach, a clearing in the
@@ -39,9 +39,11 @@ you want to go; constant hauling wears their patience down until they say
   spend on collars, bandanas and coats.
 - **Combo tricks**: swing around a pole, grind a ledge, fling your human,
   near misses.
-- **Two chases.** A street sweeper careens down a back street at dawn, and
+- **Dares**: a dare-giver on every walk, each with their own tune. Bark to
+  take a dare, then land the tricks before the music runs out.
+- **Three chases.** A street sweeper careens down a back street at dawn, and
   you drag your oblivious human home ahead of it. On El Besòs the river
-  comes home with you.
+  comes home with you, and in El Veterinari you bolt from the vet's.
 - **Moods**: a fright, a bark-off or a run off the leash leaves her jumpy,
   barky, full of zoomies or flat, and each changes how she moves.
 - **Ground you can feel**: grass and mud slow her but hold scent, sand drags
@@ -59,7 +61,7 @@ you want to go; constant hauling wears their patience down until they say
 | El Barri | the neighborhood park |
 | La Rambla | the crowded promenade |
 | El Parc | the city park |
-| Passeig Marítim | the beachfront |
+| Passeig Marítim | Badalona's seafront |
 | El Diluvi | the downpour |
 | El Mercat | the market hall |
 | El Gòtic | the old town alleys |
@@ -73,6 +75,12 @@ you want to go; constant hauling wears their patience down until they say
 | La Neteja | the dawn cleanup |
 | Montjuïc | the climb |
 | Dia de Partit | match day |
+| El Port | the fishing wharf |
+| Plaça Reial | the arcaded square |
+| El Veterinari | the clinic escape |
+| El Tibidabo | the mountain road |
+| La Carretera de les Aigües | the hillside hike |
+| El Laberint d'Horta | the cypress maze |
 
 ## Controls
 
