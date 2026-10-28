@@ -6,6 +6,11 @@ submission 1.54.0.0, 2026-09-23). "Current listing" is the text for the next
 submission; the rest records how the product is set up in Partner Center.
 Each release, step by step: docs/MICROSOFT_STORE.md, step 7.
 
+Before a version is tagged, "What's new in this version" below must already
+describe that version (everything since the last notes that went out), and
+the walk counts and lists in the description must match the game. 1.65 and
+1.66 went out with 1.64's notes because this was skipped.
+
 ## Current listing
 
 What the Store should say for the next submission. The Store submit workflow
@@ -23,15 +28,15 @@ Your human is glued to their phone and walking on autopilot. You are on the othe
 
 The leash is real rope physics. Your human outweighs you four to one and wins every straight tug, so you win the way a dog does: dig in at the right moment, wind the leash around a lamppost to hold them fast, and bark to stop them dead at the curb. Wind them around a pole and keep pulling, and they whirl off it like a tetherball. Get the timing right as a bike whizzes past and it counts as a save.
 
-Your human answers the leash like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "HEY!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "ring ring", "selfie!", "ooh!". They are never smarter than that.
+Your human answers the leash like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-Twenty walks through a sunny, slightly chaotic Barcelona, each its own place: the neighborhood park, La Rambla with its crowds, the city park, the beachfront, a downpour, a covered market hall, old town alleys, a forest trail, the train station, a floodable river park, a work site, a chestnut festival, a junkyard, tiled terraces, the dawn cleanup sweeper, Montjuïc, match day in Les Corts, the fishing harbor at El Port, the arcaded Plaça Reial, and an indoor vet clinic escape in El Veterinari. Every walk ends off the leash, with an agility course, tug-of-war and a frisbee: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
+Twenty-three walks through a sunny, slightly chaotic Barcelona and its edges, each its own place: the neighborhood park, La Rambla with its crowds, the city park, Badalona's seafront and its pier, a downpour, a covered market hall, old town alleys, a forest trail, the train station, a floodable river park, a work site, a chestnut festival, a junkyard, tiled terraces, the dawn cleanup sweeper, Montjuïc, match day in Les Corts, the fishing harbor at El Port, the arcaded Plaça Reial, an indoor vet clinic escape in El Veterinari, Tibidabo's mountain road, the old water road along Collserola, and the cypress maze of Horta. Every walk ends off the leash, with an agility course, tug-of-war and a frisbee: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
 
 What happens on a walk changes how you feel, and how you feel changes how you move. A fright leaves you jumpy and half blind to smells, a good bark-off makes you barky, time off the leash brings on the zoomies, and running yourself empty leaves you flat. The ground matters too: grass and mud slow you down but hold far more scent than sidewalk, sand drags at your paws, and wet ground and snow make you skid.
 
 Other dogs have lives of their own. They sniff and mark the posts you pass, and you can read who was there; meet one nose to nose and it stops to sniff you back, unless it is the grumpy sort.
 
-Every walk has its own list of goals: sniff the good spots, mark your territory, fetch, greet other dogs, herd a runaway friend home, and pull off tricks: swing around a pole on the leash, run a figure eight, thread the needle between two people, and ride ledges and handrails with the zoomies. Earn stars to unlock new walks and bones to spend on collars, bandanas and coats.
+Every walk has its own list of goals: sniff the good spots, mark your territory, fetch, greet other dogs, herd a runaway friend home, take on dares from the characters you meet (each with their own tune), and pull off tricks: swing around a pole on the leash, run a figure eight, thread the needle between two people, and ride ledges and handrails with the zoomies. Earn stars to unlock new walks and bones to spend on collars, bandanas and coats.
 
 Three walks are chases: dragging your human home ahead of the street sweeper, racing the river surge on El Besòs, and escaping the vet clinic in El Veterinari with clinic assistants giving chase with giant cones of shame. Rain, wind, snow and night change how every walk plays, and everyone dresses for the weather. There is a two-part tutorial for anyone new.
 
@@ -41,7 +46,7 @@ Single player. No ads, no purchases, no account, and it plays offline. Keyboard 
 ### Short description
 
 ```
-A dog walk as a physics comedy. Your human walks on autopilot, glued to their phone, and the leash is real rope. Dig in, wrap lampposts and bark your way through twenty walks in Barcelona, and get them home with the phone intact.
+A dog walk as a physics comedy. Your human walks on autopilot, glued to their phone, and the leash is real rope. Dig in, wrap lampposts and bark your way through twenty-three walks in and around Barcelona, and get them home with the phone intact.
 ```
 
 ### Product features
@@ -49,9 +54,10 @@ A dog walk as a physics comedy. Your human walks on autopilot, glued to their ph
 ```
 The leash is real rope physics: wrap it around poles, dig in, win the tug of war
 A human who answers the leash: a steady pull leads them, constant hauling runs out their patience
-Twenty hand-built walks through Barcelona, in any weather, by day or at night
+Twenty-three hand-built walks through Barcelona, in any weather, by day or at night
 Every walk ends off the leash, with agility, tug-of-war and a frisbee
 Goal lists on every walk, with stars that unlock new walks
+A dare-giver on every walk, each with their own tune
 Leash tricks: pole swings, figure eights, threading the needle, ledge and handrail rides
 Three chase walks: the street sweeper, the river flood, and the clinic escape
 Dog moods: scared, barky, zoomies and flat, each changing how you move and what you notice
@@ -80,18 +86,20 @@ dog walking
 
 ```
 - Two new walks:
-  - El Veterinari, open at 33 stars: Millie is taken to the vet and bolts. Get out past the clinic assistants and their cones of shame, weigh in on the pet scale on the way, bark at the cats in their carriers, and snatch the liver treat jar from reception.
-  - El Tibidabo, open at 35 stars: a winding mountain road up to the Mirador, the funicular climbing beside it, Aleppo pines to wrap the leash round, and a plaça off leash at the top. The walk ends at the funicular's bottom station, with its own accordion tune.
-- Every walk now ends somewhere real: an apartment block of its own neighborhood, the station concourse, a metro stair, the funicular, a trail gate or the ramp up the flood wall. You walk the last stretch in, legs going, the leash pulled straight.
-- The agility course now stands in El Barri's dog park only. Tug-of-war and frisbee are still in every off-leash area.
-- Fixes: El Veterinari's chase no longer crashes, the cats hiss when barked at, El Somni and Plaça Reial's goals ask for what they say, the leash wraps the detour's lampposts properly, and the results screen stops filling the log with errors.
-- El Port has quayside bins for the bag chore.
+  - La Carretera de les Aigües, open at 37 stars: the old water road along Collserola, mountain bikes coming both ways, the city far below, and a mirador where your human finally looks up.
+  - El Laberint d'Horta, open at 39 stars: the oldest garden in the city. Drag your human through the cypress maze and swing them round Eros at its heart.
+- A dare-giver on every walk, each with their own tune: the bronze monkey on Badalona's Pont del Petroli, a living statue on La Rambla, a busker, a fisherman, an àvia in the market and more. Bark to take a dare, then land the tricks before the music runs out.
+- Passeig Marítim is Badalona's seafront now, with the Pont del Petroli and its monkey.
+- Every walk spells its name on the ground in its own stuff, with a line under it saying what the place is, in English, Català or Español (a new LANGUAGE setting).
+- New sights: a slackline in El Parc, El Barri's neighborhood past the railings, flower tiles in El Diluvi, La Rambla's wave paving, El Mosaic's garden.
+- The goal list shows every goal when opened, the ones that count up first.
+- One speech bubble for everyone, drawn above the trees, and every line starts with a capital.
 ```
 
 ### Notes for certification
 
 ```
-Update 1.64: two new walks (El Veterinari, El Tibidabo), a proper exit at the end of every walk, and fixes. No change to capabilities, network use, data handling or controls since 1.55.
+Update 1.67: two new walks since 1.64 (La Carretera de les Aigües, El Laberint d'Horta), dares with their own music on every walk, a language setting for the walks' place names, and visual polish. No change to capabilities, network use, data handling or controls since 1.55.
 
 Path of Leash Resistance is a single-player Win32 desktop game built with the Godot engine (4.7), packaged as MSIX.
 
@@ -202,6 +210,18 @@ written by `tools/make_store_art.gd`: the 9:16 poster, the 1:1 box art and the
 ## Past What's new
 
 As submitted, newest first. The current one is in "Current listing".
+
+### What's new in 1.64 (tagged 2026-10-24; 1.65 and 1.66 went out with it unchanged)
+
+```
+- Two new walks:
+  - El Veterinari, open at 33 stars: Millie is taken to the vet and bolts. Get out past the clinic assistants and their cones of shame, weigh in on the pet scale on the way, bark at the cats in their carriers, and snatch the liver treat jar from reception.
+  - El Tibidabo, open at 35 stars: a winding mountain road up to the Mirador, the funicular climbing beside it, Aleppo pines to wrap the leash round, and a plaça off leash at the top. The walk ends at the funicular's bottom station, with its own accordion tune.
+- Every walk now ends somewhere real: an apartment block of its own neighborhood, the station concourse, a metro stair, the funicular, a trail gate or the ramp up the flood wall. You walk the last stretch in, legs going, the leash pulled straight.
+- The agility course now stands in El Barri's dog park only. Tug-of-war and frisbee are still in every off-leash area.
+- Fixes: El Veterinari's chase no longer crashes, the cats hiss when barked at, El Somni and Plaça Reial's goals ask for what they say, the leash wraps the detour's lampposts properly, and the results screen stops filling the log with errors.
+- El Port has quayside bins for the bag chore.
+```
 
 ### What's new in 1.63 (live by 2026-10-24)
 

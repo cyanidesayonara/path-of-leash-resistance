@@ -49,14 +49,14 @@ Your human is four times your weight and wins every straight tug. So you win the
 
 The leash is real rope. The one you see is the one doing the physics: it wraps, cinches, slips off under a hard wrench, and tangles with other people's leashes.
 
-Your human answers it like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "HEY!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "ring ring", "selfie!", "ooh!". They are never smarter than that.
+Your human answers it like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-TWENTY WALKS THROUGH BARCELONA
+TWENTY-THREE WALKS IN AND AROUND BARCELONA
 
 El Barri, the neighborhood park
 La Rambla, the crowded promenade
 El Parc, the city park
-Passeig Marítim, the beachfront
+Passeig Marítim, Badalona's seafront
 El Diluvi, the downpour
 El Mercat, the market hall
 El Gòtic, the old town alleys
@@ -73,12 +73,16 @@ Dia de Partit, match day
 El Port, the fishing wharf
 Plaça Reial, the arcaded square
 El Veterinari, the clinic escape
+El Tibidabo, the mountain road
+La Carretera de les Aigües, the hillside hike
+El Laberint d'Horta, the cypress maze
 
 Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. Three of them are chases: the street sweeper at dawn, the river flood on El Besòs, and the clinic escape in El Veterinari. There is a gentle first walk that teaches one trick at a time, and every walk can be played in clear weather, rain, wind or snow, by day or at night.
 
 ALSO
 
 - Goals on every walk: sniff the good spots, mark your territory, fetch, greet other dogs, herd a runaway friend home.
+- A dare-giver on every walk, each with their own tune: bark to take a dare, then land the tricks before the music runs out.
 - Combo tricks: vaulting around a pole, grinding along a curb, near misses.
 - Stars unlock the next walk; bones buy collars, bandanas and coats.
 - Moods: a fright, a bark-off or a run off the leash leaves her jumpy, barky, full of zoomies or flat, and each changes how she moves.
@@ -104,6 +108,24 @@ On a phone or tablet: a stick on the left, DIG, PEE, BARK and RUN on the right, 
 Single player. No ads, no purchases, no account. The download plays offline; the itch app keeps it up to date.
 
 Made in Godot by Santtu Nykänen. The dog is Millie, a distinguished salt-and-pepper mutt who squats like a lady.
+```
+
+## What's new in 1.67
+
+For a devlog post or the top of the body. Everything since v1.64 (1.65 and
+1.66 had no devlog of their own), from CHANGELOG.md. The same text as the
+Store's What's new.
+
+```
+- Two new walks:
+  - La Carretera de les Aigües, open at 37 stars: the old water road along Collserola, mountain bikes coming both ways, the city far below, and a mirador where your human finally looks up.
+  - El Laberint d'Horta, open at 39 stars: the oldest garden in the city. Drag your human through the cypress maze and swing them round Eros at its heart.
+- A dare-giver on every walk, each with their own tune: the bronze monkey on Badalona's Pont del Petroli, a living statue on La Rambla, a busker, a fisherman, an àvia in the market and more. Bark to take a dare, then land the tricks before the music runs out.
+- Passeig Marítim is Badalona's seafront now, with the Pont del Petroli and its monkey.
+- Every walk spells its name on the ground in its own stuff, with a line under it saying what the place is, in English, Català or Español (a new LANGUAGE setting).
+- New sights: a slackline in El Parc, El Barri's neighborhood past the railings, flower tiles in El Diluvi, La Rambla's wave paving, El Mosaic's garden.
+- The goal list shows every goal when opened, the ones that count up first.
+- One speech bubble for everyone, drawn above the trees, and every line starts with a capital.
 ```
 
 ## What's new in 1.64

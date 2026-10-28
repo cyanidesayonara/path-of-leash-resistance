@@ -2,6 +2,32 @@
 
 Append-only session history, newest first.
 
+## 2026-10-28 - The release notes and docs catch up to 1.66
+
+1.65 and 1.66 went to the Microsoft Store with 1.64's What's new (El
+Veterinari and El Tibidabo as the new walks), because nobody updated
+`store/listing.md` before tagging. Now:
+- **Store listing**:
+  - "What's new" is written for 1.67 and covers everything since 1.64.
+  - The description, short description and product features count
+    twenty-three walks, name the three that were missing, place Passeig
+    Marítim in Badalona and mention the dares.
+  - Your human's lines are quoted as the game now writes them.
+  - 1.64's notes moved to the past list, with how far they went.
+- **itch page**: the same walk list, the dares, and a 1.67 What's new.
+- **README**: twenty-three walks and three chases (it said seventeen and
+  two).
+- **PROJECT.md**:
+  - The release plan runs from v1.62 to v1.66, and v1.67 is next.
+  - New walks records Horta and the Badalona move.
+  - The dare line records what 1.66 and 1.67 did.
+  - "Agreed next" lists the queue in order: controls, the dog selector,
+    the Badalona rework, Tony Hawk quests, bones and stars, story films on
+    the chase walks.
+- **The rule**: AGENTS.md and docs/MICROSOFT_STORE.md now say the release
+  notes, the walk lists and the itch notes are updated before anyone asks
+  to tag.
+
 ## 2026-10-28 - One speech bubble for everyone, above the world
 
 There were three speech bubbles, each drawn its own way:
