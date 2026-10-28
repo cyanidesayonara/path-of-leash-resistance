@@ -36,7 +36,7 @@ class FakeMain:
 	const POP_SAY := 0
 
 	func float_text(_pos: Vector2, text: String, _color: Color, _kind := -1) -> void:
-		if text == "oh - sorry!":
+		if text == "Oh, sorry!":
 			apologies += 1
 		elif text.to_lower().contains("go on") or text.to_lower().contains("excuse"):
 			mercy_lines += 1

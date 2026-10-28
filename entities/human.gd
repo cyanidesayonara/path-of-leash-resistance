@@ -80,7 +80,7 @@ var iframes := 0.0
 var halt_t := 0.0
 var pull_cd := 0.0
 var reel_timer := 5.0
-# The reel is telegraphed like every other owner event: "click!" first, and
+# The reel is telegraphed like every other owner event: "Click!" first, and
 # the new length only REEL_WARN later, so the change never lands unseen.
 const REEL_WARN := 0.8
 var reel_pending_t := 0.0
@@ -162,7 +162,7 @@ var panic := false
 # fridge: a steady, moderate pull leads them (sideways across the path, a bit
 # quicker if it is the way they are going, slower and waiting if it is back);
 # hard, constant hauling wears their patience down, and when it runs out it is
-# a telegraphed "HEY!" and a correction - a step back and a short leash. Dug in
+# a telegraphed "Hey!" and a correction - a step back and a short leash. Dug in
 # when it lands, it is them that stumbles. A slack leash builds patience back,
 # and a patient human lets the reel out longer. They wait while she does her
 # business. Tuning by playtest.
@@ -185,7 +185,7 @@ var bar_armed := false
 var bar_watching := false
 var mutter_t := 5.0
 var mutter_i := 0
-const MUTTERS: Array[String] = ["come on...", "ref!", "no no no"]
+const MUTTERS: Array[String] = ["Come on, come on...", "Come on, ref!", "No, no, no!"]
 const GIVE_FULL := 520.0       # rope tension at which they give way fully
 const GIVE_LAT := 150.0        # px across the path a full pull leads them
 const GIVE_FWD := 0.35         # pulled their way: up to this much quicker
@@ -195,7 +195,7 @@ const PATIENCE_HARD := 900.0   # tension above which patience drains
 const PATIENCE_DRAIN := 0.14   # per second at a hard pull
 const PATIENCE_REFILL := 0.18  # per second with the leash slack
 const PATIENCE_WARN := 0.45    # below this they glance up and grumble
-const CORRECT_WARN := 0.8      # the "HEY!" telegraph, as every owner event
+const CORRECT_WARN := 0.8      # the "Hey!" telegraph, as every owner event
 const CORRECT_HAUL := 240.0    # px/s they step back with
 const CORRECT_REEL := 0.65     # the leash, cut to this much of its length
 const CORRECT_REST := 0.7      # patience after a correction
@@ -301,7 +301,7 @@ func tick(delta: float) -> void:
 		face_dir = Vector2.DOWN
 		hgait += delta
 		if not bubble.visible:
-			_show_bubble("AAH!")
+			_show_bubble("Aah!")
 		return
 	# strain is cleared and re-set by main.gd/_apply_leash each frame
 	match state:
@@ -371,7 +371,7 @@ func tick(delta: float) -> void:
 				state = HState.BAG
 				state_t = 2.0
 				velocity = Vector2.ZERO
-				_show_bubble("bagging...")
+				_show_bubble("Bagging it...")
 			else:
 				velocity = velocity.move_toward(to_poop.normalized() * 120.0, 300.0 * delta)
 				move_and_slide()
@@ -382,7 +382,7 @@ func tick(delta: float) -> void:
 				main.on_business_picked()
 				chain_target = main.nearest_bin(global_position)
 				state = HState.GO_BIN
-				_show_bubble("where's a trash can...")
+				_show_bubble("Where's a trash can...")
 		HState.GO_BIN:
 			var to_bin := chain_target - global_position
 			var before_x := global_position
@@ -394,7 +394,7 @@ func tick(delta: float) -> void:
 				velocity = Vector2.ZERO
 				face_dir = to_bin.normalized()
 				bin_stuck_t = 0.0
-				_show_bubble("toss...")
+				_show_bubble("In it goes...")
 			else:
 				velocity = velocity.move_toward(to_bin.normalized() * 120.0, 300.0 * delta)
 				move_and_slide()
@@ -464,7 +464,7 @@ func tick(delta: float) -> void:
 		var ft := velocity.normalized()
 		if state == HState.FILM or state == HState.SELFIE:
 			ft = -ft
-		# looking up from the phone at her, and longer while a "HEY!" winds up
+		# looking up from the phone at her, and longer while a "Hey!" winds up
 		if (glance_t > 1.6 or correct_t > 0.0) and main != null:
 			var at: Vector2 = main.dog.global_position - global_position
 			if at.length() > 1.0:
@@ -492,7 +492,7 @@ func _converse(delta: float) -> void:
 		if not (state in [HState.WALK, HState.DRIFT]):
 			correct_t = 0.0
 			patience = maxf(patience, 0.2)
-			if bubble.text == "HEY!":
+			if bubble.text == "Hey!":
 				bubble.visible = false
 			return
 		correct_t -= delta
@@ -513,7 +513,7 @@ func _converse(delta: float) -> void:
 		# glance at her every couple of seconds
 		if not grumbled and telegraph_t <= 0.0:
 			grumbled = true
-			notice("ugh...", 1.0)
+			notice("Ugh...", 1.0)
 		if glance_t <= 0.0:
 			glance_t = 2.2
 	elif patience > PATIENCE_WARN + 0.15:
@@ -521,7 +521,7 @@ func _converse(delta: float) -> void:
 	if patience <= 0.0 and telegraph_t <= 0.0 and halt_t <= 0.0:
 		correct_t = CORRECT_WARN
 		planted_at_hey = bool(main.dog.planted)
-		_show_bubble("HEY!", "HE'S HAD ENOUGH! DIG IN")
+		_show_bubble("Hey!", "HE'S HAD ENOUGH! DIG IN")
 
 
 func _correct() -> void:
@@ -555,7 +555,7 @@ func is_correcting() -> bool:
 
 func _fiddle_with_reel(delta: float) -> void:
 	# constantly fiddles with the retractable leash, independent of the
-	# event system: new random length on every "click!"
+	# event system: new random length on every "Click!"
 	if external_warning_t > 0.0:
 		return
 	if reel_pending_t > 0.0:
@@ -578,7 +578,7 @@ func _fiddle_with_reel(delta: float) -> void:
 	# a patient human lets it out; a fed-up one keeps her close
 	reel_pending_len = 170.0 + (reel_pending_len - 170.0) * (0.55 + 0.45 * patience)
 	reel_pending_t = REEL_WARN
-	_show_bubble("click!")
+	_show_bubble("Click!")
 	var tw := create_tween()
 	tw.tween_interval(REEL_WARN + 0.3)
 	tw.tween_callback(func() -> void:
@@ -627,7 +627,7 @@ func _walk(delta: float) -> void:
 		waited += delta
 		if waited < WAIT_MAX:
 			if waited <= delta * 1.5 and telegraph_t <= 0.0 and correct_t <= 0.0:
-				notice("go ahead", 1.4)
+				notice("Go ahead.", 1.4)
 			velocity = velocity.move_toward(Vector2.ZERO, 400.0 * delta)
 			move_and_slide()
 			return
@@ -847,7 +847,7 @@ func _match_events(delta: float) -> void:
 	if not bar_done and global_position.y < -1760.0 and global_position.y > -2140.0:
 		bar_done = true
 		bar_armed = true
-		_show_bubble("ooh, the replay...")
+		_show_bubble("Ooh, look at the replay...")
 		telegraph_t = 0.8
 
 
@@ -859,7 +859,7 @@ func _fire_bar() -> void:
 	state_t = WAIT_MAX
 	drift_dir = -1.0
 	bar_watching = true
-	_show_bubble("ooh, the replay...", "HE'S WATCHING THE BAR")
+	_show_bubble("Ooh, look at the replay...", "HE'S WATCHING THE BAR")
 
 
 func _events(delta: float) -> void:
@@ -868,7 +868,7 @@ func _events(delta: float) -> void:
 	if match_on:
 		_match_events(delta)
 		return
-	# a HEY! winding up owns the bubble: no new event starts over it
+	# a "Hey!" winding up owns the bubble: no new event starts over it
 	if state != HState.WALK or halt_t > 0.0 or correct_t > 0.0:
 		return
 	if telegraph_t > 0.0:
@@ -885,34 +885,34 @@ func _events(delta: float) -> void:
 		if main.signal_prone and roll < 0.45:
 			# out in the woods there are no bars, ever
 			pending_event = HState.SIGNAL
-			_show_bubble("no bars out here")
+			_show_bubble("No bars out here.")
 		elif not call_used and roll < 0.08:
 			pending_event = HState.CALL
-			_show_bubble("ring ring...")
+			_show_bubble("Ring ring...")
 		elif roll < 0.18:
 			pending_event = HState.STOPPED
-			_show_bubble("ring ring")
+			_show_bubble("Ring ring!")
 			# a ringing phone is NOISE - in the scrapyard it wakes the guards
 			main.on_phone_noise(global_position)
 		elif roll < 0.36:
 			pending_event = HState.DRIFT
-			_show_bubble("typing...")
+			_show_bubble("Typing a reply...")
 		elif roll < 0.5:
 			pending_event = HState.DASH
-			_show_bubble("ooh!")
+			_show_bubble("Ooh!")
 		elif roll < 0.62:
 			pending_event = HState.SELFIE
-			_show_bubble("selfie!")
+			_show_bubble("Selfie time!")
 		elif roll < 0.72:
 			pending_event = HState.FILM
-			_show_bubble("filming...")
+			_show_bubble("Getting this on video...")
 		elif roll < 0.84:
 			pending_event = HState.SIGNAL
-			_show_bubble("signal?")
+			_show_bubble("Signal?")
 		else:
 			pending_event = HState.DASH
 			pending_bench = true
-			_show_bubble("tired...")
+			_show_bubble("So tired...")
 		telegraph_t = 0.8
 
 
@@ -921,31 +921,31 @@ func _fire_event() -> void:
 		HState.STOPPED:
 			state = HState.STOPPED
 			state_t = randf_range(1.5, 2.8)
-			_show_bubble("ring ring", "HE STOPPED TO ANSWER! GO")
+			_show_bubble("Ring ring!", "HE STOPPED TO ANSWER! GO")
 		HState.DRIFT:
 			state = HState.DRIFT
 			state_t = 1.8
-			_show_bubble("typing...", "HE'S TEXTING! HE'S NOT LOOKING")
+			_show_bubble("Typing a reply...", "HE'S TEXTING! HE'S NOT LOOKING")
 			drift_dir = 1.0 if randf() < 0.5 else -1.0
 		HState.SELFIE:
 			state = HState.SELFIE
 			state_t = 2.2
-			_show_bubble("selfie!", "HE'S TAKING A SELFIE")
+			_show_bubble("Selfie time!", "HE'S TAKING A SELFIE")
 		HState.FILM:
 			state = HState.FILM
 			state_t = randf_range(1.6, 2.4)
-			_show_bubble("filming...", "HE'S FILMING! HE'S STOPPED")
+			_show_bubble("Getting this on video...", "HE'S FILMING! HE'S STOPPED")
 		HState.SIGNAL:
 			state = HState.SIGNAL
 			state_t = randf_range(2.6, 4.2)
-			_show_bubble("no signal...", "HE LOST SIGNAL! HE'LL BE A WHILE")
+			_show_bubble("No signal...", "HE LOST SIGNAL! HE'LL BE A WHILE")
 		HState.CALL:
 			# a proper natter: long enough to be a real opportunity
 			state = HState.CALL
 			state_t = randf_range(16.0, 21.0)
 			call_total = state_t
 			call_used = true
-			_show_bubble("hello? ...oh HI", "HE STOPPED! LEASH IS LOOSE")
+			_show_bubble("Hello? ...Oh, hi!", "HE STOPPED! LEASH IS LOOSE")
 		HState.DASH:
 			var de: Vector2 = main.walk_edges(global_position.y)
 			var lo: float = de.x + 40.0
@@ -973,7 +973,7 @@ func _end_dash() -> void:
 		sit_after_dash = false
 		state = HState.STOPPED
 		state_t = 3.0
-		_show_bubble("just a sec")
+		_show_bubble("Hang on, one second.")
 	else:
 		state = HState.WALK
 
@@ -1035,12 +1035,12 @@ func match_react(side: String) -> bool:
 	if side == "home":
 		state = HState.GOAL
 		state_t = GOAL_HOLD
-		_show_bubble("gooool!")
+		_show_bubble("Gooool!")
 	elif side == "away":
 		slump_t = 3.0
-		_show_bubble("no...")
+		_show_bubble("No...")
 	else:
-		_show_bubble("WHAT?")
+		_show_bubble("What?!")
 	return true
 
 
@@ -1066,7 +1066,7 @@ func start_whirl(pole: Vector2, dir: float, turns: float) -> void:
 	whirl_r = global_position.distance_to(pole)
 	whirl_omega = clampf(velocity.length() / maxf(whirl_r, 30.0), 8.0, 14.0)
 	telegraph_t = 0.0
-	_show_bubble("wheee!")
+	_show_bubble("Wheee!")
 
 
 # the orbit is only honest while the pole is still somewhere she could be
@@ -1137,7 +1137,7 @@ func release_whirl(lean := 0.0) -> void:
 	velocity = launch * clampf(whirl_omega * WHIRL_FLING_PER_OMEGA, WHIRL_FLING_MIN, WHIRL_FLING_MAX)
 	just_flung = true
 	whirl_flung_t = WHIRL_STRETCH_T
-	main.float_text(global_position, "AAAA", Color(1, 0.9, 0.6))
+	main.float_text(global_position, "AAAAH!", Color(1, 0.9, 0.6))
 	main.shake_t = maxf(float(main.shake_t), 0.35)
 	if main.dog != null and main.dog.has_method("trigger_launch_stretch"):
 		main.dog.trigger_launch_stretch(launch, 0.25)
@@ -1158,7 +1158,7 @@ func bail_whirl() -> void:
 	whirl_pull = 0.0
 	velocity = away * clampf(whirl_omega * whirl_r, WHIRL_BAIL_MIN, WHIRL_BAIL_SPEED)
 	whirl_bailed = true
-	_show_bubble("ugh, dizzy")
+	_show_bubble("Ugh, I'm dizzy...")
 	var tw := create_tween()
 	tw.tween_interval(WHIRL_BAIL_STUMBLE + 0.3)
 	tw.tween_callback(func() -> void:
@@ -1179,7 +1179,7 @@ func say_line(text: String) -> void:
 
 func throw_pose() -> void:
 	park_throw_t = 0.5
-	_show_bubble("go get it!")
+	_show_bubble("Go get it!")
 	var tw := create_tween()
 	tw.tween_interval(0.9)
 	tw.tween_callback(func() -> void:
@@ -1199,7 +1199,7 @@ func unpark() -> void:
 	parked = false
 	homeward = true
 	bubble.visible = false
-	_show_bubble("okay, time to head home")
+	_show_bubble("Okay, time to head home.")
 
 
 func is_on_call() -> bool:
@@ -1220,14 +1220,14 @@ func fetch_poop(spot: Vector2) -> void:
 	state = HState.GO_POOP
 	chain_target = spot
 	telegraph_t = 0.0
-	_show_bubble("ugh, hold on")
+	_show_bubble("Ugh, hold on.")
 
 
 func show_nag() -> void:
 	# opinions about where dogs belong, delivered without looking up
 	if state != HState.WALK or telegraph_t > 0.0:
 		return
-	_show_bubble("come on!")
+	_show_bubble("Come on, let's go!")
 	var tw := create_tween()
 	tw.tween_interval(1.0)
 	tw.tween_callback(func() -> void:
@@ -1242,7 +1242,7 @@ func resume_to_bin(bin: Vector2) -> void:
 	state = HState.GO_BIN
 	chain_target = bin
 	telegraph_t = 0.0
-	_show_bubble("where's a trash can...")
+	_show_bubble("Where's a trash can...")
 
 
 func bumped(dir: Vector2) -> void:
@@ -1286,7 +1286,7 @@ func on_leash_yank(dir: Vector2, dog_planted: bool, yank_speed: float) -> void:
 		velocity = -dir * (yank_speed * 0.9 + 90.0)
 		telegraph_t = 0.0
 		bubble.visible = false
-		main.float_text(global_position, "whoa!", Color(1, 1, 1))
+		main.float_text(global_position, "Whoa there!", Color(1, 1, 1))
 		main.on_stumble_save(global_position)
 
 
@@ -1308,7 +1308,7 @@ func halt(duration: float) -> void:
 		halt_t = duration
 		state = HState.WALK
 		move_and_collide(Vector2(0, 16))
-		_show_bubble("huh?")
+		_show_bubble("Huh?")
 		var tw := create_tween()
 		tw.tween_interval(duration)
 		tw.tween_callback(func() -> void: bubble.visible = false)

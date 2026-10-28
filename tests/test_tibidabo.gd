@@ -43,7 +43,7 @@ func _run() -> void:
 	_check(game.CAROUSEL.has("tibidabo"), "tibidabo is in CAROUSEL")
 	_check(int(game.STAR_GATE["tibidabo"]) == 35, "opens at 35 stars")
 	_check(String(game.LEVEL_NAMES["tibidabo"]) == "El Tibidabo", "named El Tibidabo")
-	_check(String(game.LEVEL_SUBTITLES["tibidabo"]) == "the mountain funicular", "subtitled the mountain funicular")
+	_check(String(game.LEVEL_SUBTITLES["tibidabo"]) == "The city's highest hill and its old fairground", "subtitled the highest hill")
 	_check(m.gate_text == "MIRADOR DEL TIBIDABO", "gate text is MIRADOR DEL TIBIDABO")
 	_check(m.freedom_kind == "placa", "ends in fairground plaza")
 

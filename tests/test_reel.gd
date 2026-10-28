@@ -1,7 +1,7 @@
 extends SceneTree
 
 # The owner's retractable reel (entities/human.gd, main._tick_reel_length).
-# Like every owner event it is telegraphed: the "click!" comes first and the
+# Like every owner event it is telegraphed: the "Click!" comes first and the
 # new length REEL_WARN later, never on the same frame. And a reel winds in
 # slack only: a click that shortens the leash against a taut rope holds
 # gently rather than yanking the dog, while the owner's deliberate haul (the nag)
@@ -35,7 +35,7 @@ func _run() -> void:
 	h.reel_timer = 0.0
 	var before: float = m.leash_target
 	h._fiddle_with_reel(dt)
-	_check(h.bubble.visible and h.bubble.text == "click!", "the reel says click! first")
+	_check(h.bubble.visible and h.bubble.text == "Click!", "the reel says click! first")
 	_check(is_equal_approx(m.leash_target, before), "and the length does not change on that frame")
 	var t := 0.0
 	var changed_at := -1.0
