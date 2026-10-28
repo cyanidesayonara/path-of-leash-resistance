@@ -33,7 +33,7 @@ class FakeMain:
 	const POP_SAY := 0
 
 	func float_text(_position: Vector2, text: String, _color: Color, _kind := -1) -> void:
-		if text == "oh - sorry!":
+		if text == "Oh, sorry!":
 			apologies += 1
 
 

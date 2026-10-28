@@ -2861,7 +2861,7 @@ func _tick_wet(delta: float) -> void:
 	else:
 		human_soak = minf(1.0, human_soak + delta / SOAK_T)
 	if was < 0.5 and human_soak >= 0.5:
-		human.notice("I'm SOAKED", 1.6)
+		human.notice("I'm soaked!", 1.6)
 		feed.say("YOUR HUMAN IS HALF SOAKED", EventFeed.Tone.BAD)
 	splash_cd = maxf(0.0, splash_cd - delta)
 	if splash_cd <= 0.0 and dog.velocity.length() > SPLASH_SPEED:
@@ -3000,7 +3000,7 @@ func _tick_rambla(delta: float) -> void:
 		var r: Rect2 = bl["rect"]
 		if String(bl.get("state", "laid")) == "laid" and r.grow(4.0).has_point(dp) and float(bl["cd"]) <= 0.0:
 			bl["cd"] = 3.0
-			float_text(_seller_pos(r) + Vector2(0, -22), "eh! EH!", Color(1, 0.9, 0.75), POP_SAY)
+			float_text(_seller_pos(r) + Vector2(0, -22), "Hey! HEY!", Color(1, 0.9, 0.75), POP_SAY)
 	# a human statue holds still until she stands and watches, then bows
 	for i in range(statues.size()):
 		statue_bow[i] = maxf(0.0, float(statue_bow.get(i, 0.0)) - delta)
@@ -3286,7 +3286,7 @@ func _fan_mark(cy: float) -> Node2D:
 
 
 func on_pickpocket_lift(at: Vector2, from_owner: bool) -> void:
-	float_text(at + Vector2(0, -30), "my wallet?!" if not from_owner else "!", Color(1, 0.6, 0.5), POP_SAY)
+	float_text(at + Vector2(0, -30), "Hey! My wallet!" if not from_owner else "!", Color(1, 0.6, 0.5), POP_SAY)
 	feed.say("HE'S GOT %s WALLET! STOP HIM" % ("YOUR HUMAN'S" if from_owner else "A"), EventFeed.Tone.BAD)
 
 
@@ -6433,30 +6433,30 @@ func _tick_corners(delta: float) -> void:
 	var tumbling: bool = dog.is_tumbling()
 	var kc: Dictionary = kickabout.tick(delta, dog.global_position, face, tumbling, kickoff)
 	if bool(kc["yell"]):
-		float_text(Kickabout.KIDS[1] + Vector2(0.0, -28.0), "ball!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(Kickabout.KIDS[1] + Vector2(0.0, -28.0), "Kick it back!", Color(0.96, 0.94, 0.88), POP_SAY)
 	if bool(kc["gol"]):
 		bones += 5
 		Sfx.play("star", 1.1, -4.0)
 		float_text(Kickabout.MOUTH + Vector2(0.0, -30.0), "gol! +5", Color(1.0, 0.92, 0.45))
 		_update_hud()
 	if bool(kc["back"]):
-		float_text(Kickabout.KIDS[1] + Vector2(0.0, -28.0), "thanks!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(Kickabout.KIDS[1] + Vector2(0.0, -28.0), "Good dog!", Color(0.96, 0.94, 0.88), POP_SAY)
 	lost_scarf.wind = Game.weather == "wind"
 	var sc: Dictionary = lost_scarf.tick(delta, dog.global_position, face, tumbling, kickoff, Callable(self, "walk_edges"))
 	if bool(sc["scarf"]) and lost_scarf.waiting():
-		float_text(lost_scarf.at + Vector2(0.0, -36.0), "my scarf!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(lost_scarf.at + Vector2(0.0, -36.0), "Hey, my lucky scarf!", Color(0.96, 0.94, 0.88), POP_SAY)
 	if bool(sc["good"]):
 		bones += 6
 		Sfx.play("star", 0.95, -4.0)
 		float_text(lost_scarf.at + Vector2(0.0, -36.0), "good dog! +6", Color(0.85, 1.0, 0.85))
-		float_text(lost_scarf.at + Vector2(-28.0, -16.0), "yay!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(lost_scarf.at + Vector2(-28.0, -16.0), "Yay!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if phase == "out" and not _fan_pairs and dog.global_position.y < -1400.0:
 		_fan_pairs = true
 		_spawn_fan_pairs()
 	if not _tout_said and dog.global_position.distance_to(Partit.TOUT) < 130.0:
 		_tout_said = true
-		float_text(Partit.TOUT + Vector2(0.0, -28.0), "tickets?", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(Partit.TOUT + Vector2(0.0, -28.0), "Anyone selling tickets?", Color(0.96, 0.94, 0.88), POP_SAY)
 
 
 # Fans on the way to the bar: home shirts, the other colour on the cap.
@@ -6529,7 +6529,7 @@ func _tick_match_day(delta: float) -> void:
 		_update_hud()
 	if bool(cue["pa"]):
 		var at := human.global_position + Vector2(0.0, -70.0)
-		float_text(at, "falten cinc minuts", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(at, "Five minutes to kickoff!", Color(0.96, 0.94, 0.88), POP_SAY)
 		float_text(at + Vector2(0.0, 22.0), "five minutes left", Color(0.85, 0.84, 0.78))
 	if bool(cue["whistle"]):
 		Sfx.play("whistle", 1.0, -2.0)
@@ -6539,7 +6539,7 @@ func _tick_match_day(delta: float) -> void:
 	if bool(cue["ooooh"]):
 		Sfx.play("ooooh", 1.0, -8.0)
 		_match_flash = MatchDay.SWELL_T
-		float_text(human.global_position + Vector2(0.0, -78.0), "ooooh", Color(0.96, 0.94, 0.86), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -78.0), "Ooooh!", Color(0.96, 0.94, 0.86), POP_SAY)
 	if bool(cue["roar"]):
 		Sfx.play("roar", 0.85, -6.0)
 		_match_flash = 0.45
@@ -7221,8 +7221,8 @@ func _greetings() -> void:
 
 
 # what another walker's dog and its owner make of yours coming up to say hello
-const GREET_LINES := ["aw, hello", "say hello!", "he loves other dogs", "hi, pup", "go ahead"]
-const GRUMPY_LINES := ["sorry, he's not friendly", "leave it, Bruno", "sorry! he's grumpy", "not today, buddy"]
+const GREET_LINES := ["Aw, hello there!", "Say hello!", "Don't worry, he's friendly!", "Hi there, pup!", "Go ahead."]
+const GRUMPY_LINES := ["Sorry! He's not friendly.", "Bruno! Leave it.", "Sorry! He's grumpy.", "Not today, buddy."]
 
 
 func _greet_pair(pair: Node2D) -> void:
@@ -8629,7 +8629,7 @@ func on_rival_drop(at: Vector2, what: String, msg: String, earned: bool, prop: D
 	if what == "ball" and phase == "freedom" and not romp_done and not is_instance_valid(ball):
 		# whatever became of that one, your human has another
 		_spawn_romp_ball()
-		float_text(human.global_position + Vector2(0, -34), "here, another one!", Color(1, 0.92, 0.8), POP_SAY)
+		float_text(human.global_position + Vector2(0, -34), "Here, another one!", Color(1, 0.92, 0.8), POP_SAY)
 	if not earned:
 		# he wandered off with it. You get nothing, because you did nothing -
 		# and the bone stays gone, so a thief who is ignored actually costs
@@ -8866,7 +8866,7 @@ func _hazards(delta: float) -> void:
 		if tw.cd <= 0.0 and (tw.rect as Rect2).has_point(human.global_position):
 			tw.cd = 4.0
 			human.bumped((human.global_position - (tw.rect as Rect2).get_center()).normalized())
-			float_text(human.global_position, "hey! my towel!", Color(1, 0.85, 0.7), POP_SAY)
+			float_text(human.global_position, "Hey! That's my towel!", Color(1, 0.85, 0.7), POP_SAY)
 	# Millie LOVES the water. In she goes, paddling happily - and whatever is
 	# on the other end of the leash comes too. The owner wades in reluctantly,
 	# phone held high, and edges back to the bank. Nobody drowns; it is just
@@ -8901,7 +8901,7 @@ func _hazards(delta: float) -> void:
 		human.wading = hum_wet
 		human.pond_bank_x = bank_x
 		if hum_wet and not was_wade:
-			float_text(human.global_position, "no no no-", Color(0.7, 0.85, 1.0), POP_SAY)
+			float_text(human.global_position, "No no no-", Color(0.7, 0.85, 1.0), POP_SAY)
 	# open holes are the TOP tier of danger: falling in ends the walk,
 	# full stop. Bumps hurt a little; holes hurt completely.
 	# (auto_walk is a test/attract traversal - it is not allowed to die)
@@ -9479,7 +9479,7 @@ func _enter_freedom() -> void:
 		rv.z_index = 9
 		add_child(rv)
 		rv.setup(self, dog, rb)
-		float_text(rv.position, "...oh no. Brutus.", Color(1, 0.85, 0.75), POP_SAY)
+		float_text(rv.position, "...Oh no. Brutus.", Color(1, 0.85, 0.75), POP_SAY)
 	FreedomGames.begin(self)
 	feed.say("OFF THE LEASH! GO FETCH", EventFeed.Tone.LOUD)
 
@@ -9672,7 +9672,7 @@ func _neighbour_fetch() -> void:
 			add_child(npc_ball)
 			npc_ball.setup(self, dog, pair.npc_owner, freedom_lo, GATE_Y - 30.0)
 			npc_ball_pair = pair
-			float_text(pair.npc_owner.global_position + Vector2(0, -20), "wanna play?", Color(0.85, 0.95, 1.0), POP_SAY)
+			float_text(pair.npc_owner.global_position + Vector2(0, -20), "Wanna play?", Color(0.85, 0.95, 1.0), POP_SAY)
 			return
 
 
@@ -9772,7 +9772,7 @@ func _enter_home() -> void:
 		tf.z_index = 9
 		add_child(tf)
 		tf.setup(self, dog, spots, route["routes"])
-		float_text(spots[0], "Tofu!? she got out again - get her home!", Color(1, 0.85, 0.7), POP_SAY)
+		float_text(spots[0], "Tofu got out again! Can you bring her home?", Color(1, 0.85, 0.7), POP_SAY)
 	if chase_active:
 		HomeChase.begin(self)
 	else:
@@ -9898,7 +9898,7 @@ func nearest_bench(pos: Vector2):
 # leash (human.gd/_correct)
 func on_correction(pos: Vector2) -> void:
 	Sfx.play("tangle", 0.8, -8.0)
-	float_text(pos + Vector2(0, -30), "HEEL", Color(1, 0.85, 0.75))
+	float_text(pos + Vector2(0, -30), "Heel!", Color(1, 0.85, 0.75))
 
 
 # ...but she was dug in for it, and it is him that lurches
@@ -9948,7 +9948,7 @@ func on_hat_returned(_pos: Vector2) -> void:
 	bones += 6
 	combo.add("HAT", 5)
 	Sfx.play("fetch", 1.1)
-	float_text(human.global_position + Vector2(0, -34), "my hat! good girl", Color(1, 1, 1), POP_SAY)
+	float_text(human.global_position + Vector2(0, -34), "You found my hat! Good girl!", Color(1, 1, 1), POP_SAY)
 	feed.say("HAT RETURNED!", EventFeed.Tone.GOOD)
 	_update_hud()
 

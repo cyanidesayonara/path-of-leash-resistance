@@ -117,7 +117,7 @@ static func _tick_agility(m: Node2D, delta: float) -> void:
 			"start":
 				# a pop, not a shout: she may only have been passing (the
 				# banner's clock says the rest)
-				m.float_text(b, "go!", Color(0.8, 1.0, 0.8))
+				m.float_text(b, "Go!", Color(0.8, 1.0, 0.8))
 				Sfx.play("ui", 1.4)
 			"jump":
 				m.hop_t = HOP_S

@@ -161,7 +161,7 @@ func _carry(m: Node2D, dt: float) -> void:
 	h.patience = maxf(0.0, h.patience - dt * 0.12)
 	if _whoa_in <= 0.0:
 		_whoa_in = 1.4
-		m.float_text(h.global_position, "whoa whoa whoa", Color(1, 1, 1), m.POP_SAY)
+		m.float_text(h.global_position, "Whoa, whoa, whoa!", Color(1, 1, 1), m.POP_SAY)
 
 
 func _horses_hit(m: Node2D) -> void:

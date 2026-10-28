@@ -3,7 +3,7 @@ extends Node2D
 # A rider. Crossing bikes at intersections, bike-lane commuters, and
 # wobbly kids on scooters all share this script. Art faces +x and the
 # node rotates to the direction of travel.
-# Commuters knock the human flat (phone risk); kids just bump ("sorry!").
+# Commuters knock the human flat (phone risk); kids just bump ("Sorry!").
 
 const BypasserRouteScript := preload("res://systems/bypasser_route.gd")
 const RIDER_CLEARANCE := 18.0
@@ -127,7 +127,7 @@ func _physics_process(delta: float) -> void:
 		else:
 			hit_done = true
 			human.bumped((hp - global_position).normalized())
-			main.float_text(global_position, "sorry!", Color(1, 1, 1, 0.9), main.POP_SAY)
+			main.float_text(global_position, "Sorry!", Color(1, 1, 1, 0.9), main.POP_SAY)
 	if global_position.distance_to(dog.global_position) < 32.0:
 		dog.hit_by_rider(vel.normalized())
 	var gone_x := global_position.x < -320.0 or global_position.x > 1600.0

@@ -57,7 +57,7 @@ func _physics_process(delta: float) -> void:
 			if global_position.distance_to(dog.global_position) < PICK_R and not dog.is_tumbling():
 				state = State.CARRIED
 				Sfx.play("pickup", 1.2, -6.0)
-				main.float_text(global_position + Vector2(0, -24), "got it", Color(1, 0.95, 0.8), main.POP_SAY)
+				main.float_text(global_position + Vector2(0, -24), "Got it!", Color(1, 0.95, 0.8), main.POP_SAY)
 		State.CARRIED:
 			global_position = dog.global_position + dog.facing * 22.0
 			spin = dog.facing.angle()

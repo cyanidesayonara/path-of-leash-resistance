@@ -11,7 +11,7 @@ extends Node2D
 enum State { WAIT, FLYING, LANDED, CARRIED, DONE }
 
 const THROWS := 3
-const WAIT_S := 0.8           # the telegraph: "ready...?" before every throw
+const WAIT_S := 0.8           # the telegraph: "Ready...?" before every throw
 const SPEED := 230.0          # px/s along the ground: it floats
 const AIR_H := 34.0           # below this height she can take it out of the air
 const CATCH_R := 26.0
@@ -52,7 +52,7 @@ func _get_ready() -> void:
 	wait_t = WAIT_S
 	global_position = thrower.global_position + Vector2(10, -8)
 	if thrower == main.human:
-		main.human.say_line("ready...?")
+		main.human.say_line("Ready...?")
 
 
 func _throw() -> void:

@@ -177,7 +177,7 @@ static func enter(m: Node2D) -> void:
 
 	_play_sfx(m, "ui", 0.95)
 	m.feed.say("EL SOMNI: THE DREAM GALLERY", EventFeed.Tone.LOUD)
-	m.float_text(m.dog.global_position + Vector2(0.0, -36.0), "welcome to el somni", Color(1.0, 0.92, 0.7), m.POP_SAY)
+	m.float_text(m.dog.global_position + Vector2(0.0, -36.0), "Welcome to El Somni!", Color(1.0, 0.92, 0.7), m.POP_SAY)
 
 
 static func exit(m: Node2D) -> void:

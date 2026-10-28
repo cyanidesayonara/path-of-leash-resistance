@@ -453,7 +453,7 @@ static func tick_crowd(m: Node2D) -> void:
 		for tw: Node2D in m.get_tree().get_nodes_in_group("tourists"):
 			if tw.mode == "pose" and tw.global_position.distance_to(m.dog.global_position) < 200.0:
 				m.mosaic_aww = true
-				m.float_text(tw.global_position + Vector2(0, -26), "aww, look at her", Color(1, 0.9, 0.95), m.POP_SAY)
+				m.float_text(tw.global_position + Vector2(0, -26), "Aww! Who's a good girl?", Color(1, 0.9, 0.95), m.POP_SAY)
 				tw.photo_t = 1.2
 				break
 
