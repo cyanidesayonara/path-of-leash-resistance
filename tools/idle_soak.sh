@@ -26,6 +26,14 @@
 # so compare local runs with local runs.
 # A walk that ends early (the idle owner walks into a manhole, say) is
 # reported but is not a failure: an idle dog is allowed to lose.
+#
+# Run timeout. On CI every frame is drawn by llvmpipe on the CPU, so a run's
+# wall time grows with the window's pixel count, not with game time: measured
+# 2026-10-28 on slow ubuntu-latest runners, a 30s soak took about 100s at
+# 844x390, 155s at 1280x720 and 236s at 1920x1080 (about half that on a quick
+# runner). RUN_TIMEOUT is the limit for a 1280x720 window and scales with
+# pixel area, never below RUN_TIMEOUT itself, so 1920x1080 gets 540s. A run
+# cut off by it is reported as TIMEOUT, distinct from a crash.
 set -uo pipefail
 
 cd "$(dirname "$0")/.."
@@ -58,10 +66,21 @@ for lv in ${LEVELS}; do
   for size in ${SIZES}; do
     for sd in ${SEEDS}; do
       log="${OUT}/${lv}-${size}-s${sd}.log"
-      timeout "${RUN_TIMEOUT}" "${RUN[@]}" "${GODOT}" --rendering-method gl_compatibility \
+      limit=$(( RUN_TIMEOUT * ${size%x*} * ${size#*x} / (1280 * 720) ))
+      [ "${limit}" -ge "${RUN_TIMEOUT}" ] || limit="${RUN_TIMEOUT}"
+      t0=${SECONDS}
+      timeout "${limit}" "${RUN[@]}" "${GODOT}" --rendering-method gl_compatibility \
         --fixed-fps 60 --disable-vsync "${POS[@]}" --resolution "${size}" --path . \
         -- --level="${lv}" --soak="${SOAK_SECS}" --seed="${sd}" > "${log}" 2>&1
+      rc=$?
+      wall=$(( SECONDS - t0 ))
       line="$(grep -m1 '^SOAK level=' "${log}")"
+      if [ -z "${line}" ] && [ "${rc}" -eq 124 ]; then
+        echo "${lv},${size},${sd},,,,,,,,,TIMEOUT(${limit}s)" >> "${CSV}"
+        echo "TIMEOUT ${lv} ${size} seed ${sd} - no result in ${limit}s, see ${log}"
+        fails=$((fails + 1))
+        continue
+      fi
       if [ -z "${line}" ] || grep -qE "SCRIPT ERROR|Parse Error" "${log}"; then
         echo "${lv},${size},${sd},,,,,,,,,ERROR" >> "${CSV}"
         echo "ERROR  ${lv} ${size} seed ${sd} - see ${log}"
@@ -82,9 +101,9 @@ for lv in ${LEVELS}; do
         verdict="FAIL(${moods} moods)"
       fi
       echo "${lv},${size},${sd},${secs},${knocks},${first},${moods},${cracks},${ended},\"${by_cause//\"/\"\"}\",\"${by_mood//\"/\"\"}\",${verdict}" >> "${CSV}"
-      printf '%-6s %-9s %-9s seed %s  knocks %s%s  moods %s  cracks %s  ended %s\n' \
+      printf '%-6s %-9s %-9s seed %s  knocks %s%s  moods %s  cracks %s  ended %s  (%ss of %ss)\n' \
         "${verdict%%(*}" "${lv}" "${size}" "${sd}" "${knocks}" "${first:+ (first ${first}s)}" \
-        "${moods}" "${cracks}" "${ended}"
+        "${moods}" "${cracks}" "${ended}" "${wall}" "${limit}"
       [ "${verdict}" = "ok" ] || fails=$((fails + 1))
     done
   done
