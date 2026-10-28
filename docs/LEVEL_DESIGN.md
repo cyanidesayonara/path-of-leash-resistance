@@ -131,6 +131,10 @@ with pickpockets and shenanigans happening around."
   rowboats and life ring; ornamental parterre rose gardens; and the Ciutadella
   stone mammoth with trunk creases, ears and brass plaque.
 
+- Lawn pass (2026-10-27): a slackline between two plane trees on the west
+  lawn (`LevelBuild.PARK_SLACK_A/B`), trunks solid, the line a soft rope
+  rect the leash catches on.
+
 ### El Bosc (trail) - the forest
 - Is: woodland, not a park with a bent path: trees crowding the path, roots,
   fallen logs, a stream, leaf litter, no signal.

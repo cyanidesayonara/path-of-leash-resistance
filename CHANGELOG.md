@@ -18,6 +18,14 @@ held up; his block is solid and the leash goes round it. One boardwalk palm
 moved off the wedge. Behaviour snapshot: changed for the beach only (the
 pier's walls, rocks and block, and the moved palm).
 
+## 2026-10-27 - El Parc: the slackline
+
+Two big plane trees on El Parc's west lawn with a slackline strung between
+them at knee height, a slackliner out on it, arms up, swaying for balance,
+their rucksack and water bottle on the grass. The trunks are solid; she runs
+under the line, but the leash does not: it catches on the webbing and
+slips off under a hard pull. Behaviour snapshot unchanged.
+
 ## 2026-10-27 - Passeig Marítim: L'Estel Ferit
 
 The Barceloneta's own landmark is on the sand now: Rebecca Horn's Wounded
