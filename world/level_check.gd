@@ -13,6 +13,11 @@ extends RefCounted
 # a walk's goal list never runs longer than this: room for a few new kinds
 # of quest (spell a word, the hidden find) on top of today's twelve or so
 const MAX_GOALS := 15
+# a dare-giver has at least DARE_SPOTS things to trick on within DARE_SPOTS_R
+# (poles to swing round, rails and ledges to grind), so a dare is about the
+# tricks, not about finding somewhere to do them
+const DARE_SPOTS := 3
+const DARE_SPOTS_R := 420.0
 
 static func check(m) -> Array:
 	var p: Array = []
@@ -263,4 +268,27 @@ static func check(m) -> Array:
 		if String(row.kind) == "slider" and (float(row.v) < 0.0 or float(row.v) > 1.0):
 			p.append("settings: %s is %.2f, outside 0..1" % [row.name, row.v])
 
+	# --- a dare can be won where it is given ---
+	for g in m.get_children():
+		if g.has_method("dare_number") and g.get("who") != null:
+			var n := trick_spots(m, (g as Node2D).global_position)
+			if n < DARE_SPOTS:
+				p.append("only %d trick spots within %.0f of the %s's dares (want %d)" % [
+					n, DARE_SPOTS_R, String(g.who), DARE_SPOTS])
 	return p
+
+
+# Poles and grindable runs (counted once each) within DARE_SPOTS_R of `at`.
+static func trick_spots(m, at: Vector2) -> int:
+	var n := 0
+	for pole: Vector2 in m.poles:
+		if pole.distance_to(at) <= DARE_SPOTS_R:
+			n += 1
+	for r: Dictionary in m.rails:
+		var pts: PackedVector2Array = r.pts
+		for i in range(pts.size() - 1):
+			var q := Geometry2D.get_closest_point_to_segment(at, pts[i], pts[i + 1])
+			if q.distance_to(at) <= DARE_SPOTS_R:
+				n += 1
+				break
+	return n

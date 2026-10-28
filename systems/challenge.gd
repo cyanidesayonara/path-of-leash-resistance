@@ -19,6 +19,8 @@ extends Node
 
 const OFFER_S := 2.6
 const READY_S := 1.2
+# ticks in the count-in, spread evenly over READY_S
+const COUNT_IN := 3
 const END_S := 3.2
 
 var main: Node2D
@@ -102,7 +104,13 @@ func tick(delta: float) -> void:
 			if main == null or main.get("auto_walk") != true:
 				return
 			waiting = false
+		var was := offer_t
 		offer_t -= delta
+		# the count-in: a tick as getting ready starts and at each third of it
+		for k in range(COUNT_IN):
+			var mark := READY_S * float(COUNT_IN - k) / float(COUNT_IN)
+			if was >= mark and offer_t < mark and main != null and main.has_method("on_dare_count"):
+				main.on_dare_count(COUNT_IN - k)
 		if offer_t <= 0.0:
 			offer_t = 0.0
 			var pays := reward

@@ -32,7 +32,7 @@ const NOTICE_R := 240.0
 const NEAR_R := 420.0
 const RETRY_WAIT := 5.0
 # trick count and seconds, easiest first
-const LADDER := [[5, 12.0], [7, 14.0], [9, 16.0]]
+const LADDER := [[6, 20.0], [8, 20.0], [10, 20.0]]
 
 # who gives the dare on each walk; anywhere not listed, the kid
 const WHO := {"beach": "monkey", "street": "statue", "port": "fisher", "site": "builder", "besos": "skater",

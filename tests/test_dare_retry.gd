@@ -134,11 +134,11 @@ func _run() -> void:
 	_near(100.0)
 	_step(DT)
 	_check(m.challenge.phase == "offer" and not m.challenge.retry, "coming near offers the first dare")
-	_check(m.challenge.target == 5 and g.dare_number() == 1 and g.dare_count() == 3, "the first dare is 5 tricks, 1 of 3")
-	_check(m.challenge.reward == m.dare_reward(5) and m.dare_reward(5) == 35, "the first dare pays 35 (%d)" % m.challenge.reward)
+	_check(m.challenge.target == 6 and g.dare_number() == 1 and g.dare_count() == 3, "the first dare is 6 tricks, 1 of 3")
+	_check(m.challenge.reward == m.dare_reward(6) and m.dare_reward(6) == 38, "the first dare pays 38 (%d)" % m.challenge.reward)
 	m.challenge.add_trick()
 	_check(m.challenge.count == 0, "a trick while the dare is on offer does not count")
-	_check(g._line().ends_with(g.TAKE) and g._line().contains("5 tricks in 12 seconds"),
+	_check(g._line().ends_with(g.TAKE) and g._line().contains("6 tricks in 20 seconds"),
 		"the giver says the numbers and that a bark takes it (%s)" % g._line())
 	var said: Array[String] = load("res://world/speech_bubble.gd").lines(g._line(), g.TAKE)
 	_check(said.size() == 2 and said[1] == g.TAKE.strip_edges(),
@@ -151,13 +151,21 @@ func _run() -> void:
 	_check(m.challenge.phase == "" and g.result == "lapsed", "walking off lapses the offer")
 	_near(100.0)
 	_step(DT * 2.0)
-	_check(m.challenge.phase == "offer" and m.challenge.target == 5 and not m.challenge.retry,
+	_check(m.challenge.phase == "offer" and m.challenge.target == 6 and not m.challenge.retry,
 		"coming back makes the same offer again")
 	m.on_bark(m.dog.global_position)
 	_check(m.challenge.phase == "offer" and not m.challenge.waiting, "a bark takes the dare")
 	_check(g._line() == "Get ready...", "taking it, the giver says get ready")
+	_check(m._music_cue() == "" and m._music_next() == "dare_" + g.who,
+		"the walk's music stops for the count-in, the giver's tune ready")
+	var counted: int = m.dare_counts
 	_step(m.challenge.READY_S + 0.1)
+	_check(m.dare_counts - counted == m.challenge.COUNT_IN, "a three-tick count-in (%d)" % (m.dare_counts - counted))
 	_check(m.challenge.phase == "live" and m.challenge.active, "the clock starts after a moment to get set")
+	_check(m._music_cue() == "dare_" + g.who, "the giver's tune plays while the clock runs")
+	_check(is_equal_approx(m._dare_tempo(), 1.0), "at its own tempo at first")
+	m.challenge.timer = m.HURRY_S * 0.5
+	_check(m._dare_tempo() > 1.0 and m._dare_tempo() < m.DARE_HURRY, "faster as the clock runs out")
 	m.challenge.timer = 0.01
 	_step(DT * 2.0)
 	_check(m.challenge.phase == "end" and not m.challenge.succeeded and g.result == "lose", "running out of time loses")
@@ -170,9 +178,9 @@ func _run() -> void:
 	_step(g.RETRY_WAIT - 0.5)
 	_check(m.challenge.phase == "", "no second go before RETRY_WAIT")
 	_step(1.0)
-	_check(m.challenge.phase == "offer" and m.challenge.retry and m.challenge.target == 5,
+	_check(m.challenge.phase == "offer" and m.challenge.retry and m.challenge.target == 6,
 		"a lost dare is offered again while she is still close")
-	_check(m.challenge.reward == 35, "the same dare again pays the same (%d)" % m.challenge.reward)
+	_check(m.challenge.reward == 38, "the same dare again pays the same (%d)" % m.challenge.reward)
 	_lose()
 
 	# lost as often as she likes: away and back, the same dare every time
@@ -182,27 +190,27 @@ func _run() -> void:
 		_check(m.challenge.phase == "", "no dare while she is away (%d)" % i)
 		_near(100.0)
 		_step(DT * 2.0)
-		_check(m.challenge.phase == "offer" and m.challenge.target == 5, "back at the giver, the same dare again (%d)" % i)
+		_check(m.challenge.phase == "offer" and m.challenge.target == 6, "back at the giver, the same dare again (%d)" % i)
 		_lose()
 
 	# won: the next one is harder and pays more
 	_come_back()
-	_check(m.challenge.target == 5, "still the first dare until it is won")
+	_check(m.challenge.target == 6, "still the first dare until it is won")
 	var before: int = m.bones
 	_win()
-	_check(m.bones == before + 35 and g.rung == 1, "winning the first dare pays 35 and moves up the ladder")
+	_check(m.bones == before + 38 and g.rung == 1, "winning the first dare pays 38 and moves up the ladder")
 	_check(g._line().contains("harder"), "after a win the giver says there is a harder one")
 	_come_back()
-	_check(m.challenge.phase == "offer" and not m.challenge.retry and m.challenge.target == 7 and g.dare_number() == 2,
+	_check(m.challenge.phase == "offer" and not m.challenge.retry and m.challenge.target == 8 and g.dare_number() == 2,
 		"coming back after a win offers dare 2 of 3: 7 tricks")
-	_check(m.challenge.reward == m.dare_reward(7) and m.challenge.reward > 35, "a harder dare pays more (%d)" % m.challenge.reward)
+	_check(m.challenge.reward == m.dare_reward(8) and m.challenge.reward > 38, "a harder dare pays more (%d)" % m.challenge.reward)
 	_lose()
 	_come_back()
-	_check(m.challenge.target == 7 and m.challenge.retry, "losing dare 2 offers dare 2 again")
+	_check(m.challenge.target == 8 and m.challenge.retry, "losing dare 2 offers dare 2 again")
 	_win()
 	_step(g.RETRY_WAIT + 1.0)
-	_check(m.challenge.phase == "offer" and m.challenge.target == 9 and g.dare_number() == 3,
-		"staying close after a win offers dare 3 of 3: 9 tricks")
+	_check(m.challenge.phase == "offer" and m.challenge.target == 10 and g.dare_number() == 3,
+		"staying close after a win offers dare 3 of 3: 10 tricks")
 	_win()
 	_check(not g.has_another_go() and g._line() == String(g.LINES[g.who]["done"]), "the last dare won, the giver is done")
 	_come_back()
