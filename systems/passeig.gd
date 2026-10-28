@@ -551,7 +551,7 @@ static func _pier(m: Node2D) -> void:
 
 
 # THE MONKEY (Susana Ruiz's bronze for the old anís works, 2012): a monkey with
-# Darwin's face, spectacles and a long beard, sat on a pale stone block with
+# Darwin's face, a heavy brow and a long beard, sat on a pale stone block with
 # his feet on the planks and his tail hanging over the edge, holding out a
 # bottle with the diamond-cut glass. Bronze, gone green on his back and arms.
 # Drawn from above facing `rot`, life size, on his block.
@@ -643,7 +643,8 @@ static func _monkey(m: Node2D, c: Vector2, rot: float) -> void:
 	# shoulders, lit from the light's side
 	_ellipse(b, P.call(Vector2(-0.5, 0.0)) - m.LIGHT * 2.0, 4.0 * K, 5.2 * K, rot, BRONZE_MID.lerp(BRONZE_LIT, 0.35))
 	# the head: ears out either side, the crown going bald, Darwin's long
-	# beard down his chest, his muzzle and spectacles, looking at the bottle
+	# beard down his chest, his muzzle, and deep-set eyes under a heavy brow,
+	# looking at the bottle
 	var hrot := rot + 0.35
 	var H := func(v: Vector2) -> Vector2: return c + Vector2(1.5, 0.0).rotated(rot) * K + v.rotated(hrot) * K
 	_ellipse(b, H.call(Vector2(3.4, 0.0)), 3.6 * K, 3.0 * K, hrot, BRONZE.lerp(PATINA, 0.3))
@@ -653,10 +654,9 @@ static func _monkey(m: Node2D, c: Vector2, rot: float) -> void:
 	b.circle(H.call(Vector2(0.0, 0.0)), 4.4 * K, BRONZE_MID)
 	b.circle(H.call(Vector2(-0.4, -0.2)) - m.LIGHT * 1.6, 2.6 * K, BRONZE_LIT)
 	_ellipse(b, H.call(Vector2(3.6, 0.0)), 1.8 * K, 2.4 * K, hrot, BRONZE_MID.lerp(BRONZE_LIT, 0.5))
+	b.line(H.call(Vector2(2.4, -2.6)), H.call(Vector2(2.4, 2.6)), BRONZE_LIT.lightened(0.1), 1.3 * K)
 	for side: float in [-1.0, 1.0]:
-		var lens: Vector2 = H.call(Vector2(2.8, 1.6 * side))
-		b.circle(lens, 1.2 * K, Color(0.12, 0.08, 0.05))
-		b.circle(lens, 0.65 * K, BRONZE_LIT.lightened(0.12))
+		b.circle(H.call(Vector2(3.1, 1.5 * side)), 0.75 * K, Color(0.10, 0.06, 0.03))
 	b.circle(H.call(Vector2(5.0, 0.0)), 0.55 * K, Color(0.14, 0.09, 0.05))
 	b.flush(m._wc)
 

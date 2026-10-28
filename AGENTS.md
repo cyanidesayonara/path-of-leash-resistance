@@ -385,7 +385,8 @@ Each kind of text has one form, and its look comes from where it is drawn:
   needs her now ("CURB RIDE!", "PICKPOCKET! WATCH HIS HANDS").
 - **The banner** (`hud_status`): capitals, what is true right now, as an
   instruction ("FULL TANK! GO MARK A SPOT").
-- **Speech** (`float_text(..., POP_SAY)`): lower case, as people talk.
+- **Speech** (`float_text(..., POP_SAY)`, speech bubbles): as people talk, but every
+  line starts with a capital letter. No all-lower-case text anywhere a player reads it.
 - **Sounds**: whatever the noise is ("plop", "THUMP").
 - **Scores**: a lower-case word and the amount last ("marked! +3"), which
   world/pops_layer.gd puts on a chip.

@@ -886,11 +886,11 @@ var mood_forced := -1
 var owner_news_cd := 0.0
 var challenge: Node
 var challenge_l: Label
-# what the kid's dare pays (start_challenge): a base and a bit a trick, and
-# a retry pays DARE_RETRY_CUT less, so the first go is still the one to land
+# what a dare pays (start_challenge): a base and a bit a trick, so the
+# harder dares up the giver's ladder pay more, and a dare tried again pays
+# what it paid the first time
 const DARE_BASE := 20
 const DARE_PER_TRICK := 3
-const DARE_RETRY_CUT := 10
 var challenge_giver: Node2D
 var challenge_offered := false
 var dog_carrying := false
@@ -5830,21 +5830,22 @@ func _refill_zoomies(pts: int) -> void:
 		_update_hud()
 
 
-# What a dare pays: the first go, and a second go (less, but worth having).
-static func dare_reward(target: int, retry: bool) -> int:
-	return DARE_BASE + target * DARE_PER_TRICK - (DARE_RETRY_CUT if retry else 0)
+# What a dare pays.
+static func dare_reward(target: int) -> int:
+	return DARE_BASE + target * DARE_PER_TRICK
 
 
-# The kid has said the dare; the clock starts after the offer has been read
-# (systems/challenge.gd). A retry is the same dare again, once it is over.
-func start_challenge(giver: Node2D, target: int, seconds: float, retry := false) -> void:
+# The giver has said the dare; the clock starts after the offer has been read
+# (systems/challenge.gd). A follow-up is the giver's next dare once the last
+# is over (entities/challenger.gd); `again` is the same dare after a loss.
+func start_challenge(giver: Node2D, target: int, seconds: float, follow_up := false, again := false) -> void:
 	if challenge.showing():
 		return
-	if challenge_offered and not retry:
+	if challenge_offered and not follow_up:
 		return
 	challenge_offered = true
 	challenge_giver = giver
-	challenge.offer(target, seconds, dare_reward(target, retry), retry)
+	challenge.offer(target, seconds, dare_reward(target), again)
 	Sfx.play("ui")
 
 
@@ -5858,7 +5859,7 @@ func on_challenge_done(win: bool, target: int, count: int) -> void:
 	if is_instance_valid(challenge_giver):
 		challenge_giver.resolve(win)
 	if win:
-		var reward: int = challenge.reward if challenge.reward > 0 else dare_reward(target, false)
+		var reward: int = challenge.reward if challenge.reward > 0 else dare_reward(target)
 		bones += reward
 		feed.say("DARE WON! +%d" % reward, EventFeed.Tone.GOOD)
 		_slowmo()
@@ -9601,12 +9602,21 @@ func _caught(what: String) -> void:
 
 
 func _spawn_challenger() -> void:
-	# one combo-challenge giver per walk, lounging on the out leg where you
-	# still have room and energy to show off
+	# one dare-giver per walk, on the out leg where you still have room and
+	# energy to show off; who it is depends on the walk (challenger.gd WHO)
 	if tutorial_mode:
 		return
 	var giver := Node2D.new()
-	giver.set_script(load("res://entities/challenger.gd"))
+	var script: GDScript = load("res://entities/challenger.gd")
+	giver.set_script(script)
+	var who: String = script.giver_for(lvl)
+	if who == "monkey":
+		# the bronze monkey on the Pont del Petroli's steps gives this walk's dares
+		giver.position = LevelBuild.beach_monkey()
+		giver.z_index = 6
+		add_child(giver)
+		giver.setup(self, dog, who)
+		return
 	var base := Vector2(walk_cx, -1600.0)
 	for offset: Vector2 in [
 		Vector2(170.0, 0.0), Vector2(-170.0, 0.0),
@@ -9618,7 +9628,7 @@ func _spawn_challenger() -> void:
 			break
 	giver.z_index = 6
 	add_child(giver)
-	giver.setup(self, dog, 5, 12.0)
+	giver.setup(self, dog, who)
 
 
 func _challenger_clear_of_trees(at: Vector2) -> bool:
@@ -9799,6 +9809,10 @@ func results_data() -> Dictionary:
 
 func on_bark(pos: Vector2) -> void:
 	barks_done += 1
+	# a bark takes the dare on offer (systems/challenge.gd)
+	if challenge != null and challenge.phase == "offer" and challenge.waiting:
+		challenge.accept()
+		feed.say("DARE ON! GET SET", EventFeed.Tone.LOUD)
 	mood.bump(Mood.M.BARKY, 0.22)
 	Sfx.play("bark")
 	if human.global_position.distance_to(pos) < 170.0:

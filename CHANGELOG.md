@@ -16,6 +16,39 @@ picks in the game.
   own characters now start with a capital and read as people talk ("Oh,
   sorry!", "Hey!", "Watch out!"). The dare-givers' lines come with the
   dare-giver change.
+## 2026-10-28 - Dares you take with a bark, from a dare-giver on every walk
+
+A dare used to start its clock on its own the moment she came near, from
+the same kid on a bench on every walk. After a loss there were two more
+goes, for less, on rules nobody told you. Now:
+- **Taking a dare.** It waits for a bark. The giver says it in plain words,
+  numbers and all ("5 tricks in 12 seconds, while I paint! Bark if you're
+  in!"), and the card says "Bark (E) to take the dare." Bark and there is
+  a moment to get ready before the clock starts. Walk on and the offer
+  lapses, and it is made again when she comes back.
+- **Who gives it.**
+  - Passeig Marítim: the bronze monkey, from his block on the Pont del
+    Petroli's steps
+  - La Rambla: a gold living statue on a box
+  - El Port: a fisherman on a crate
+  - the construction site: a builder in hi-vis on an upturned bucket
+  - El Besòs: a rollerblader in a helmet
+  - the old town: a busker with a guitar and an open case
+  - El Mercat: an àvia with her tartan shopping trolley
+  - Montjuïc: a runner stretching in a lunge
+  - Park Güell: a painter at her easel in a beret
+  - Dia de Partit: a fan in the home colours waving a flag
+  - L'Estació: a commuter on his suitcase with his phone
+  - everywhere else: the kid
+- **The ladder.** Every giver has the same three dares: 5 tricks in 12
+  seconds, 7 in 14, 9 in 16, paying 35, 41 and 47 bones. Win and the next is
+  harder. Lose and it is the same dare again, as often as you like, for the
+  same pay. Stay close or come back later and they offer it. The giver says
+  so, the card repeats it, and the card's title says which dare it is
+  ("DARE 2 OF 3").
+- The autowalk takes the first dare by itself, as before, and no other.
+- The monkey has no spectacles: a heavy brow and deep-set eyes, as on the
+  real statue.
 
 ## 2026-10-28 - Passeig Marítim is Badalona: El Pont del Petroli
 
@@ -28,7 +61,7 @@ concrete curbs, with stainless rails and a gate between two rust-red posts.
 The wedge and the pier are walkable: she can take your human out over the
 water. The sand lane ends at the pier's rocky foot, as it does there. On a
 blue-grey marble block at the wedge's edge sits the bronze monkey with
-Darwin's face, spectacles and beard, one foot on the planks and the bottle
+Darwin's face, heavy brow and beard, one foot on the planks and the bottle
 held up; his block is solid and the leash goes round it. One boardwalk palm
 moved off the wedge. Behaviour snapshot: changed for the beach only (the
 pier's walls, rocks and block, and the moved palm).
