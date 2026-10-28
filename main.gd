@@ -1124,7 +1124,26 @@ func _music_cue() -> String:
 		return "lost"
 	if phase == "freedom":
 		return "freedom"
+	# a dare: quiet while she gets ready (the count-in), then the giver's own
+	# tune while the clock runs
+	if challenge != null and is_instance_valid(challenge_giver):
+		if challenge.phase == "offer" and not challenge.waiting:
+			return ""
+		if challenge.phase == "live":
+			return "dare_" + String(challenge_giver.who)
 	return Music.walk_style(lvl)
+
+
+# how much faster a dare's tune plays: 1 until its last HURRY_S, then up to
+# DARE_HURRY by the end of the clock
+const HURRY_S := 5.0
+const DARE_HURRY := 1.12
+
+
+func _dare_tempo() -> float:
+	if challenge == null or challenge.phase != "live":
+		return 1.0
+	return lerpf(1.0, DARE_HURRY, clampf(1.0 - float(challenge.timer) / HURRY_S, 0.0, 1.0))
 
 
 # ...and the one to have ready for when it changes
@@ -1136,6 +1155,9 @@ func _music_next() -> String:
 		return Music.walk_style(lvl)
 	if phase == "freedom":
 		return Music.walk_style(lvl)
+	# a dare on offer: its tune, ready for when she takes it
+	if challenge != null and challenge.phase == "offer" and is_instance_valid(challenge_giver):
+		return "dare_" + String(challenge_giver.who)
 	return "freedom" if phase != "home" else ""
 
 
@@ -5850,13 +5872,24 @@ func start_challenge(giver: Node2D, target: int, seconds: float, follow_up := fa
 	Sfx.play("ui")
 
 
+# the count-in while she gets ready: three, two, one, each a little higher
+func on_dare_count(n: int) -> void:
+	dare_counts += 1
+	Sfx.play("count", 1.0 + 0.12 * float(3 - n), -4.0)
+
+
+# count-in ticks heard this walk, for tests
+var dare_counts := 0
+
+
 func on_challenge_live() -> void:
+	Sfx.play("go", 1.0, -3.0)
 	shake_t = maxf(shake_t, 0.2)
 	feed.say("GO! %d TRICKS!" % challenge.target, EventFeed.Tone.LOUD)
 
 
 func on_challenge_done(win: bool, target: int, count: int) -> void:
-	Sfx.play("star" if win else "ui")
+	Sfx.play("dare_won" if win else "dare_lost", 1.0, -3.0)
 	if is_instance_valid(challenge_giver):
 		challenge_giver.resolve(win)
 	if win:
@@ -6137,6 +6170,7 @@ func _tick_soak() -> void:
 
 func _process(_delta: float) -> void:
 	Sfx.music_tick(_music_cue(), _music_next(), started and paused, started and not frozen)
+	Sfx.music_tempo(_dare_tempo())
 	if started and gloss_a > 0.0:
 		gloss_a = maxf(0.0, gloss_a - _delta / GLOSS_FADE)
 	if _soak_secs > 0.0:
