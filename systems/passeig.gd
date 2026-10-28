@@ -379,8 +379,10 @@ static func _landmarks(m: Node2D, vt: float, vb: float) -> void:
 			m._draw_beach_shower(m._wc, sp)
 	if tw.y > vt - 120.0 and tw.y < vb + 80.0:
 		m._draw_lifeguard_tower(m._wc, tw, true, false)
-	if _drawn_window(LevelBuild.BEACH_STAR.grow(80.0), vt, vb):
-		_estel_ferit(m, LevelBuild.BEACH_STAR)
+	if LevelBuild.BEACH_PIER_Y > vt - 120.0 and LevelBuild.BEACH_PIER_Y < vb + 120.0:
+		_pier(m)
+		var inward := LevelBuild.beach_ramp_inward()
+		_monkey(m, LevelBuild.beach_monkey(), atan2(inward.y, inward.x))
 	for i in range(LevelBuild.BEACH_BARS.size()):
 		var bar: Rect2 = LevelBuild.BEACH_BARS[i]
 		var cn: Rect2 = m.canopies[i] if i < m.canopies.size() else bar
@@ -422,38 +424,240 @@ static func _landmarks(m: Node2D, vt: float, vb: float) -> void:
 			Color(0.98, 0.96, 0.88) if i == 1 else Color(0.30, 0.18, 0.10))
 
 
-# L'Estel Ferit from above: four Corten cubes stacked off true, each a little
-# further out than the one below, so the tower leans; the long shadow it
-# throws across the sand, the rust's streaks, and the strips of window in
-# each cube's top.
-const CORTEN := Color(0.56, 0.30, 0.16)
-const CORTEN_LIT := Color(0.70, 0.40, 0.22)
-const CORTEN_DARK := Color(0.40, 0.20, 0.10)
+# EL PONT DEL PETROLI, from above. The wedge and the pier are planked across,
+# as a pier is, the boards weathered silver on the pier and browner on the
+# wedge, each board its own shade. Pale concrete curbs edge the pier, and its
+# rails are stainless: raked posts and cables. Where the wedge stands over
+# the sand it throws a shadow, and the rocks banked along its sides and the
+# pier's foot are pale riprap. The gate at the head of the pier, between two
+# rust-red posts with red bands, stands open.
+const PIER_PLANK := Color(0.64, 0.62, 0.58)
+const WEDGE_PLANK := Color(0.48, 0.28, 0.22)             # the boardwalk's own timber
+const STEP_RISER := Color(0.28, 0.15, 0.11)
+const STEP_NOSING := Color(0.62, 0.40, 0.31)
+const STEP_W := 11.0
+const PLANK_SEAM := Color(0.30, 0.26, 0.22, 0.55)
+const PIER_CURB := Color(0.84, 0.83, 0.79)
+const PIER_STEEL := Color(0.80, 0.82, 0.84)
+const PIER_STEEL_DARK := Color(0.46, 0.48, 0.50)
+const PIER_ROCK := Color(0.86, 0.85, 0.82)               # pale granite riprap
+const PIER_ROCK_DARK := Color(0.66, 0.65, 0.62)
+const GATE_RUST := Color(0.48, 0.26, 0.16)
+const PLANK_W := 6.0
 
 
-static func _estel_ferit(m: Node2D, foot: Rect2) -> void:
+static func _pier(m: Node2D) -> void:
+	var y := LevelBuild.BEACH_PIER_Y
+	var h := LevelBuild.BEACH_PIER_HALF
+	var tip := LevelBuild.BEACH_RAMP_TIP_X
+	var base := LevelBuild.BEACH_RAMP_BASE_X
+	var raised := LevelBuild.BEACH_RAMP_RAISED_X
+	var far := -400.0
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.26)
 	var b := ShapeBatch.new()
-	var c := foot.get_center()
-	var s := foot.size.x * 0.5
-	b.polygon(PackedVector2Array([c + Vector2(-s, -s), c + Vector2(s, -s), c + Vector2(s, s) + m.LIGHT * 120.0,
-		c + Vector2(-s, s) + m.LIGHT * 120.0]), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
-	for k in range(4):
-		var o := Vector2(float(k) * 9.0, -float(k) * 13.0) + Vector2(sin(float(k) * 1.7), 0.0) * 4.0
-		var rot := (float(k) - 1.5) * 0.06
-		var half := s * (0.92 - float(k) * 0.04)
+	# shadows: the pier's on the water and the sand, the wedge's where it is
+	# above the sand, deeper toward the tip
+	b.rect(Rect2(Vector2(far, y - h - 5.0) + m.LIGHT * 9.0, Vector2(tip - far, h * 2.0 + 10.0)), sh)
+	var hr := LevelBuild.beach_ramp_half_at(raised)
+	b.polygon(PackedVector2Array([Vector2(raised, y + hr), Vector2(tip, y + h),
+		Vector2(tip, y + h) + m.LIGHT * 9.0, Vector2(raised, y + hr) + m.LIGHT * 2.0]), sh)
+	# the rocks, under everything else
+	for rk: Vector2 in LevelBuild.beach_pier_rocks():
+		var k := rk.x * 0.37 + rk.y * 0.11
+		var r := LevelBuild.BEACH_ROCK_R * (0.85 + 0.35 * _hash(k, 3.0))
 		var pts := PackedVector2Array()
-		for corner: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:
-			pts.append(c + o + (corner * half).rotated(rot))
-		# the cube's sides showing below its top, toward the light's far side
-		var side_pts := PackedVector2Array([pts[1], pts[2], pts[2] + Vector2(4, 6), pts[1] + Vector2(4, 6)])
-		b.polygon(side_pts, CORTEN_DARK)
-		b.polygon(pts, CORTEN if k % 2 == 0 else CORTEN.lerp(CORTEN_LIT, 0.35))
-		# the window strip across its top, and a run of rust down it
-		var a := pts[0].lerp(pts[3], 0.3)
-		var z := pts[1].lerp(pts[2], 0.3)
-		b.line(a + (z - a) * 0.12, a + (z - a) * 0.88, Color(0.30, 0.44, 0.50), 3.0)
-		b.line(pts[0].lerp(pts[1], 0.7), pts[3].lerp(pts[2], 0.7), CORTEN_DARK, 1.2)
-		b.line(pts[0], pts[1], CORTEN_LIT, 1.5)
+		for i in range(7):
+			var a := TAU * (float(i) + 0.4 * _hash(k + float(i), 9.0)) / 7.0 + _hash(k, 7.0)
+			pts.append(rk + Vector2(cos(a) * 1.15, sin(a) * 0.9).rotated(_hash(k, 2.0) * PI) * r * (0.7 + 0.45 * _hash(k + float(i), 5.0)))
+		var shp := PackedVector2Array()
+		for q: Vector2 in pts:
+			shp.append(q + m.LIGHT * 3.0)
+		b.polygon(shp, sh)
+		b.polygon(pts, PIER_ROCK_DARK.lerp(PIER_ROCK, _hash(k, 11.0)))
+		b.circle(rk - m.LIGHT * r * 0.3, r * 0.45, PIER_ROCK.lightened(0.08))
+	# the pier: curbs, then the planks between them
+	b.rect(Rect2(far, y - h - 5.0, tip - far + 1.0, h * 2.0 + 10.0), PIER_CURB)
+	var x := tip
+	var n := 0
+	while x > far:
+		var tone := 0.9 + 0.18 * _hash(float(n), 13.0)
+		var col := Color(PIER_PLANK.r * tone, PIER_PLANK.g * tone, PIER_PLANK.b * tone)
+		b.rect(Rect2(x - PLANK_W, y - h, PLANK_W - 0.8, h * 2.0), col)
+		x -= PLANK_W
+		n += 1
+	# the wedge: in the boardwalk's own timber, a flight of long steps up from
+	# the boardwalk to the pier, each tread planked along its length and its
+	# riser a dark line on the landward side, out of the light
+	x = base
+	n = 0
+	while x > tip + 0.5:
+		var x0 := maxf(tip, x - STEP_W)
+		var ha := LevelBuild.beach_ramp_half_at(x)
+		var hb := LevelBuild.beach_ramp_half_at(x0)
+		var tone := 0.92 + 0.12 * _hash(float(n), 17.0)
+		var col := Color(WEDGE_PLANK.r * tone, WEDGE_PLANK.g * tone, WEDGE_PLANK.b * tone)
+		b.polygon(PackedVector2Array([Vector2(x, y - ha), Vector2(x, y + ha), Vector2(x0, y + hb), Vector2(x0, y - hb)]), col)
+		for k in range(1, 3):
+			var sx := lerpf(x, x0, float(k) / 3.0)
+			var sh2 := LevelBuild.beach_ramp_half_at(sx)
+			b.line(Vector2(sx, y - sh2), Vector2(sx, y + sh2), PLANK_SEAM, 0.8)
+		b.line(Vector2(x - 1.0, y - ha), Vector2(x - 1.0, y + ha), STEP_RISER, 2.0)
+		b.line(Vector2(x0 + 1.0, y - hb), Vector2(x0 + 1.0, y + hb), STEP_NOSING, 1.0)
+		x -= STEP_W
+		n += 1
+	# the wedge's edges: a hardwood trim, and up its top half the rails
+	for side: float in [-1.0, 1.0]:
+		b.line(Vector2(raised, y + side * hr), Vector2(tip, y + side * h), STEP_RISER, 2.5)
+		var top := Vector2(tip, y + side * (h + 1.0))
+		var mid := Vector2(lerpf(tip, raised, 0.55), y + side * (LevelBuild.beach_ramp_half_at(lerpf(tip, raised, 0.55)) - 2.0))
+		b.line(top, mid, PIER_STEEL, 2.0)
+		for k in range(1, 4):
+			var at := top.lerp(mid, float(k) / 3.0)
+			b.rect(Rect2(at - Vector2(1.5, 1.5), Vector2(3.0, 3.0)), PIER_STEEL_DARK)
+	# the pier's rails: a steel top rail on each curb, raked posts, two cables
+	for side: float in [-1.0, 1.0]:
+		var ry := y + side * (h + 3.0)
+		b.line(Vector2(far, ry + side * 1.5), Vector2(tip, ry + side * 1.5), Color(PIER_STEEL.r, PIER_STEEL.g, PIER_STEEL.b, 0.55), 0.8)
+		b.line(Vector2(far, ry - side * 1.5), Vector2(tip, ry - side * 1.5), Color(PIER_STEEL.r, PIER_STEEL.g, PIER_STEEL.b, 0.55), 0.8)
+		var px := tip - 14.0
+		while px > far:
+			b.line(Vector2(px, ry), Vector2(px + 3.0, ry + side * 3.0), PIER_STEEL_DARK, 2.0)
+			px -= 22.0
+		b.line(Vector2(far, ry), Vector2(tip, ry), PIER_STEEL, 2.0)
+	# the gate: two rust posts at the head of the pier with red bands, and its
+	# two leaves swung open against the rails
+	for side: float in [-1.0, 1.0]:
+		var post := Vector2(tip - 3.0, y + side * (h + 3.0))
+		b.rect(Rect2(post + Vector2(-3.5, -3.5) + m.LIGHT * 3.0, Vector2(7.0, 7.0)), sh)
+		b.rect(Rect2(post - Vector2(3.5, 3.5), Vector2(7.0, 7.0)), GATE_RUST)
+		b.line(post + Vector2(-3.5, 1.5), post + Vector2(1.5, -3.5), Color(0.80, 0.18, 0.16), 1.6)
+		b.line(post + Vector2(-1.5, 3.5), post + Vector2(3.5, -1.5), Color(0.80, 0.18, 0.16), 1.6)
+		var leaf_end := post + Vector2(-h + 2.0, -side * 2.0)
+		b.line(post + Vector2(-3.5, -side * 2.0), leaf_end, PIER_STEEL_DARK, 2.0)
+		var lx := post.x - 7.0
+		while lx > leaf_end.x:
+			b.line(Vector2(lx, leaf_end.y - 1.5), Vector2(lx, leaf_end.y + 1.5), PIER_STEEL_DARK, 1.0)
+			lx -= 4.0
+	# foam where the swell meets the pier's curbs out on the water
+	var t := AnimClock.msec() / 1000.0
+	var fx := LevelBuild.BEACH_PIER_SAND_END - 12.0
+	while fx > far:
+		var f := 0.5 + 0.5 * sin(t * 1.4 + fx * 0.07)
+		for side: float in [-1.0, 1.0]:
+			var fy := y + side * (h + 7.0 + 2.0 * f)
+			b.line(Vector2(fx, fy), Vector2(fx - 10.0, fy), Color(0.95, 0.98, 0.98, 0.35 + 0.3 * f), 1.5)
+		fx -= 18.0
+	b.flush(m._wc)
+
+
+# THE MONKEY (Susana Ruiz's bronze for the old anís works, 2012): a monkey with
+# Darwin's face, a heavy brow and a long beard, sat on a pale stone block with
+# his feet on the planks and his tail hanging over the edge, holding out a
+# bottle with the diamond-cut glass. Bronze, gone green on his back and arms.
+# Drawn from above facing `rot`, life size, on his block.
+const BRONZE := Color(0.27, 0.19, 0.12)
+const BRONZE_MID := Color(0.42, 0.29, 0.17)
+const BRONZE_LIT := Color(0.66, 0.48, 0.28)
+const PATINA := Color(0.30, 0.40, 0.34)
+const BLOCK_STONE := Color(0.66, 0.70, 0.74)            # blue-grey veined marble
+const BLOCK_SIDE := Color(0.46, 0.50, 0.55)
+const BLOCK_VEIN := Color(0.84, 0.87, 0.90, 0.7)
+
+
+static func _ellipse(b: ShapeBatch, c: Vector2, rx: float, ry: float, rot: float, col: Color) -> void:
+	var pts := PackedVector2Array()
+	for i in range(14):
+		var a := TAU * float(i) / 14.0
+		pts.append(c + Vector2(cos(a) * rx, sin(a) * ry).rotated(rot))
+	b.polygon(pts, col)
+
+
+static func _quad(b: ShapeBatch, c: Vector2, along: Vector2, half_l: float, half_w: float, col: Color) -> void:
+	var across := Vector2(-along.y, along.x)
+	b.polygon(PackedVector2Array([c - along * half_l - across * half_w, c + along * half_l - across * half_w,
+		c + along * half_l + across * half_w, c - along * half_l + across * half_w]), col)
+
+
+static func _monkey(m: Node2D, c: Vector2, rot: float) -> void:
+	const K := 1.6
+	var b := ShapeBatch.new()
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.3)
+	var fwd := Vector2.from_angle(rot)
+	var along := Vector2(-fwd.y, fwd.x)
+	var bl := LevelBuild.BEACH_BLOCK_LEN * 0.5
+	var bw := LevelBuild.BEACH_BLOCK_W * 0.5
+	# the block, a long dressed stone, its side showing toward the light's far side
+	_quad(b, c + m.LIGHT * 4.0, along, bl, bw, sh)
+	_quad(b, c + fwd * 1.5, along, bl, bw + 1.5, BLOCK_SIDE)
+	_quad(b, c, along, bl, bw, BLOCK_STONE)
+	_quad(b, c - m.LIGHT * 1.0, along, bl - 3.0, bw - 3.0, BLOCK_STONE.lightened(0.06))
+	# a little brass plaque on its face
+	b.rect(Rect2(c + along * 14.0 + fwd * (bw - 1.0) - Vector2(2.5, 1.5), Vector2(5.0, 3.0)), Color(0.74, 0.64, 0.36))
+	var P := func(v: Vector2) -> Vector2: return c + v.rotated(rot) * K
+	# veins in the marble, along the block
+	for k in range(3):
+		var off := (float(k) - 1.0) * bw * 0.5 + (_hash(float(k), 23.0) - 0.5) * 2.0
+		var a0 := c - along * (bl - 4.0) + fwd * off
+		var a1 := c + along * (bl - 4.0) + fwd * (off + (_hash(float(k), 29.0) - 0.5) * 4.0)
+		b.line(a0, a0.lerp(a1, 0.45) + fwd * 1.2, BLOCK_VEIN, 0.8)
+		b.line(a0.lerp(a1, 0.45) + fwd * 1.2, a1, BLOCK_VEIN, 0.8)
+	# his shadow, over the block's face and onto the planks
+	_ellipse(b, P.call(Vector2(2.0, 0.0)) + m.LIGHT * 6.0, 8.0 * K, 7.5 * K, rot, sh)
+	# the hanging leg: down off the block's front, the foot flat on the planks
+	b.line(P.call(Vector2(1.0, 3.6)), P.call(Vector2(5.0, 4.0)), BRONZE, 3.2 * K)
+	b.line(P.call(Vector2(5.0, 4.0)), P.call(Vector2(7.5, 4.4)), BRONZE, 2.6 * K)
+	_ellipse(b, P.call(Vector2(8.8, 4.6)), 2.2 * K, 1.6 * K, rot + 0.25, BRONZE_MID)
+	for t in range(3):
+		b.circle(P.call(Vector2(10.6, 3.8 + float(t) * 0.9)), 0.5 * K, BRONZE_MID)
+	# the other leg drawn up, knee high, foot on the block
+	_ellipse(b, P.call(Vector2(3.5, -5.5)), 2.6 * K, 1.8 * K, rot, BRONZE)
+	b.line(P.call(Vector2(0.5, -3.5)), P.call(Vector2(5.5, -4.5)), BRONZE, 3.4 * K)
+	b.circle(P.call(Vector2(5.8, -4.6)), 2.6 * K, BRONZE_MID)
+	# the body, sat upright: haunches, back, the green come out on it
+	_ellipse(b, P.call(Vector2(-1.5, 0.0)), 6.8 * K, 7.0 * K, rot, BRONZE)
+	_ellipse(b, P.call(Vector2(-2.5, 0.0)), 4.6 * K, 5.2 * K, rot, BRONZE.lerp(PATINA, 0.55))
+	# his tail, round over the hanging leg's thigh
+	var prev: Vector2 = P.call(Vector2(-5.5, 4.5))
+	for i in range(1, 16):
+		var t := float(i) / 15.0
+		var a := PI * 1.1 - t * PI * 1.9
+		var r := lerpf(5.0, 2.0, t)
+		var nxt: Vector2 = P.call(Vector2(1.5, 4.5) + Vector2(cos(a), sin(a)) * r)
+		b.line(prev, nxt, BRONZE_MID, (1.7 - t * 0.7) * K)
+		prev = nxt
+	# the near arm down to the raised knee, the hand over it
+	b.line(P.call(Vector2(0.0, -5.0)), P.call(Vector2(5.0, -6.0)), BRONZE_MID, 2.3 * K)
+	_ellipse(b, P.call(Vector2(6.4, -5.6)), 1.9 * K, 1.5 * K, rot, BRONZE_LIT.lerp(BRONZE_MID, 0.4))
+	# the far arm up at his side, holding the bottle up to look at: upright,
+	# so from above its shoulder and stopper, the diamond cut round it
+	b.line(P.call(Vector2(0.0, 5.0)), P.call(Vector2(3.0, 8.5)), BRONZE_MID, 2.3 * K)
+	var bt: Vector2 = P.call(Vector2(5.0, 9.0))
+	b.circle(bt + m.LIGHT * 4.0, 3.4 * K, sh)
+	b.circle(bt, 3.2 * K, BRONZE_MID)
+	for k in range(6):
+		var a := TAU * float(k) / 6.0 + 0.3
+		b.line(bt + Vector2(cos(a), sin(a)) * 1.6 * K, bt + Vector2(cos(a + 0.9), sin(a + 0.9)) * 3.1 * K, BRONZE, 0.7)
+	b.circle(bt - m.LIGHT * 1.5, 1.7 * K, BRONZE_LIT)
+	b.circle(bt, 1.0 * K, BRONZE)
+	_ellipse(b, P.call(Vector2(3.6, 8.2)), 1.8 * K, 2.2 * K, rot, BRONZE)
+	# shoulders, lit from the light's side
+	_ellipse(b, P.call(Vector2(-0.5, 0.0)) - m.LIGHT * 2.0, 4.0 * K, 5.2 * K, rot, BRONZE_MID.lerp(BRONZE_LIT, 0.35))
+	# the head: ears out either side, the crown going bald, Darwin's long
+	# beard down his chest, his muzzle, and deep-set eyes under a heavy brow,
+	# looking at the bottle
+	var hrot := rot + 0.35
+	var H := func(v: Vector2) -> Vector2: return c + Vector2(1.5, 0.0).rotated(rot) * K + v.rotated(hrot) * K
+	_ellipse(b, H.call(Vector2(3.4, 0.0)), 3.6 * K, 3.0 * K, hrot, BRONZE.lerp(PATINA, 0.3))
+	for side: float in [-1.0, 1.0]:
+		b.circle(H.call(Vector2(-0.5, 4.6 * side)), 2.0 * K, BRONZE)
+		b.circle(H.call(Vector2(-0.3, 4.6 * side)), 1.0 * K, BRONZE_MID)
+	b.circle(H.call(Vector2(0.0, 0.0)), 4.4 * K, BRONZE_MID)
+	b.circle(H.call(Vector2(-0.4, -0.2)) - m.LIGHT * 1.6, 2.6 * K, BRONZE_LIT)
+	_ellipse(b, H.call(Vector2(3.6, 0.0)), 1.8 * K, 2.4 * K, hrot, BRONZE_MID.lerp(BRONZE_LIT, 0.5))
+	b.line(H.call(Vector2(2.4, -2.6)), H.call(Vector2(2.4, 2.6)), BRONZE_LIT.lightened(0.1), 1.3 * K)
+	for side: float in [-1.0, 1.0]:
+		b.circle(H.call(Vector2(3.1, 1.5 * side)), 0.75 * K, Color(0.10, 0.06, 0.03))
+	b.circle(H.call(Vector2(5.0, 0.0)), 0.55 * K, Color(0.14, 0.09, 0.05))
 	b.flush(m._wc)
 
 
@@ -835,6 +1039,8 @@ const SAND_TO_X := 380.0
 
 
 static func surface(m: Node2D, p: Vector2) -> int:
+	if LevelBuild.beach_on_pier(p):
+		return Surfaces.S.PAVEMENT
 	if p.x < SAND_TO_X:
 		return Surfaces.S.SAND
 	# past the gate the dog beach is sand from the fence to the water, where
@@ -847,6 +1053,8 @@ static func surface(m: Node2D, p: Vector2) -> int:
 # the sand takes prints; past the gate is the dog beach, sand from the fence
 # to the water
 static func takes_prints(m: Node2D, p: Vector2) -> bool:
+	if LevelBuild.beach_on_pier(p):
+		return false
 	var s: int = m.surface_at(p)
 	if p.y < m.GATE_Y:
 		return s != Surfaces.S.WATER

@@ -1,7 +1,7 @@
 extends SceneTree
 
 # La Platja (docs/LEVEL_DESIGN.md): the Mediterranean beachfront walk along
-# Passeig Maritim and Bogatell. Sandy shores, wet sand waterline, wooden
+# Passeig Marítim in Badalona. Sandy shores, wet sand waterline, wooden
 # boardwalk (passarel·la de fusta), palm cutouts, beach showers with rentapeus
 # foot-wash taps, Salvament de Platges lifeguard watchtowers with lifebuoys,
 # raked volleyball courts, and selective recycling stations.
