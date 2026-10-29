@@ -8336,7 +8336,8 @@ func _offpath(delta: float) -> void:
 		if zone_has_point(sz, dog.global_position):
 			paw_kind = String(sz.kind)
 			var sd: Dictionary = SUBSTANCES[paw_kind]
-			wet_paws = float(sd.life)
+			var muck_mult: float = dog.muck_mult() if dog != null else 1.0
+			wet_paws = float(sd.life) * muck_mult
 			break
 	# ...and a swim takes it all straight back off. True of dogs, the only way
 	# to undo a substance, and the thing that makes water a trade rather than
@@ -8375,7 +8376,9 @@ func _offpath(delta: float) -> void:
 	_press_dents()
 	_ground_marks()
 	# ...and so does your human, the moment you lean on their nice trousers
-	if wet_paws > 0.0 and dog.global_position.distance_to(human.global_position) < 26.0 and smudge_cd <= 0.0:
+	var is_bruna: bool = dog != null and dog._dog_breed() == "gos d'atura"
+	var smudge_dist := 30.0 if is_bruna else 26.0
+	if wet_paws > 0.0 and dog.global_position.distance_to(human.global_position) < smudge_dist and smudge_cd <= 0.0:
 		smudge_cd = 1.1
 		var sdd: Dictionary = SUBSTANCES[paw_kind]
 		owner_smudges.append({
@@ -8385,10 +8388,11 @@ func _offpath(delta: float) -> void:
 		if owner_smudges.size() > 10:
 			owner_smudges.remove_at(0)
 		smudges_left += 1
-		bones += 2
+		var bonus_bones := 3 if is_bruna else 2
+		bones += bonus_bones
 		Sfx.play("snack", 0.8)
-		combo.add("MESSY", 3)
-		float_text(human.global_position + Vector2(0, -34), String(sdd.quip) + " +2", Color(sdd.col).lightened(0.35))
+		combo.add("MESSY", 4 if is_bruna else 3)
+		float_text(human.global_position + Vector2(0, -34), String(sdd.quip) + (" +%d" % bonus_bones), Color(sdd.col).lightened(0.35))
 	smudge_cd = maxf(0.0, smudge_cd - delta)
 	var off: bool = dog.global_position.x < tut_l or dog.global_position.x > tut_r
 	if off and human.is_available_for_chore() and not human.is_fallen():

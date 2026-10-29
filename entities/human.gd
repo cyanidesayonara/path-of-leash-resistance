@@ -716,9 +716,12 @@ func _walk(delta: float) -> void:
 	# led by the leash: a steady pull draws them across the path and speeds or
 	# slows them along it (the conversation, above)
 	if state == HState.WALK or state == HState.DRIFT:
-		tx = clampf(tx + clampf(felt_pull.x / GIVE_FULL, -1.0, 1.0) * GIVE_LAT + crowd_shift, cx - half + 40.0, cx + half - 40.0)
+		var hm: float = main.dog.herd_mult() if (main != null and main.dog != null) else 1.0
+		var give_lat: float = GIVE_LAT * hm
+		var give_fwd: float = GIVE_FWD * (1.0 + (hm - 1.0) * 0.4)
+		tx = clampf(tx + clampf(felt_pull.x / GIVE_FULL, -1.0, 1.0) * give_lat + crowd_shift, cx - half + 40.0, cx + half - 40.0)
 		var along := felt_pull.y * fwd_y / GIVE_FULL
-		speed *= 1.0 + GIVE_FWD * clampf(along, 0.0, 1.0) - GIVE_BACK * clampf(-along, 0.0, 1.0)
+		speed *= 1.0 + give_fwd * clampf(along, 0.0, 1.0) - GIVE_BACK * clampf(-along, 0.0, 1.0)
 		speed *= clampf(crowd_pace, CROWD_PACE_MIN, CROWD_PACE_MAX)
 		speed *= clampf(match_pace, MATCH_PACE_MIN, 1.0)
 		if slump_t > 0.0:
