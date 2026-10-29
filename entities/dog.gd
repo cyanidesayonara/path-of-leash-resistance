@@ -120,6 +120,34 @@ func _cosmetic_bandana_key() -> String:
 	return Game.bandana if Game.BANDANAS.has(Game.bandana) else "none"
 
 
+func get_ear_dynamics() -> Dictionary:
+	var t := AnimClock.msec() / 1000.0
+	var spd := _draw_speed()
+	var speed_ratio := clampf(spd / SPEED, 0.0, 1.8)
+	var turbo_f := 1.0 if turbo_active else 0.0
+	var wind_trail := speed_ratio * 3.2 + turbo_f * 2.6
+	var flutter := sin(t * 34.0) * (0.6 * speed_ratio + 1.4 * turbo_f)
+	var target_hip := -facing
+	var turn_lag := (-facing).cross(hip_dir)
+	var centrifugal_sway := clampf(turn_lag * 6.0, -2.8, 2.8)
+	var crouching := peeing or squat_t > 0.0 or squat_ui > 0.0
+	var twitch := 0.0
+	var twitch_side := 1.0
+	if spd < 5.0 and not crouching:
+		var idle_cycle := fmod(t + 0.4, 4.2)
+		if idle_cycle < 0.22:
+			twitch = sin(idle_cycle / 0.22 * TAU) * 1.8
+			twitch_side = -1.0 if fmod(t, 8.4) < 4.2 else 1.0
+	return {
+		"speed_ratio": speed_ratio,
+		"wind_trail": wind_trail,
+		"flutter": flutter,
+		"centrifugal_sway": centrifugal_sway,
+		"twitch": twitch,
+		"twitch_side": twitch_side,
+	}
+
+
 func _bandana_points(shoulder: Vector2, forward: Vector2) -> PackedVector2Array:
 	var side := forward.orthogonal()
 	var base := shoulder - forward
@@ -554,11 +582,21 @@ func _draw_shapes() -> void:
 	var flop := sin(gait) * 1.6
 	var ear_perk := 2.2 * sniff_u + 1.8 * bk - (2.4 * mood_int if mood_id == 1 else 0.0)
 	var ear_flare := 1.8 * bk + (0.9 * mood_int if mood_id == 4 else 0.0)
-	# big floppy ears, under the skull, swinging slightly with the stride
+	var ear_dyn: Dictionary = get_ear_dynamics()
+	var wind_trail: float = ear_dyn.wind_trail
+	var flutter: float = ear_dyn.flutter
+	var centrifugal_sway: float = ear_dyn.centrifugal_sway
+	var twitch: float = ear_dyn.twitch
+	var twitch_side: float = ear_dyn.twitch_side
+	# big floppy ears, under the skull, swinging slightly with the stride,
+	# trailing back in the slipstream at speed and swaying with turns
 	for sg: float in [-1.0, 1.0]:
 		# hanging back along the sides of her head, the tips flapping
+		var tw: float = twitch if sg == twitch_side else 0.0
 		var root := head + side * 5.0 * sg + facing * 1.0
-		var tip := head + side * (7.6 + ear_flare + flop * 0.7 * sg) * sg - facing * (8.0 - ear_perk)
+		var ear_side := (7.6 + ear_flare + flop * 0.7 * sg + centrifugal_sway * 0.85 + tw * 0.5) * sg
+		var ear_back := 8.0 + wind_trail + flutter * sg - ear_perk
+		var tip := head + side * ear_side - facing * ear_back
 		_b.draw_colored_polygon(PackedVector2Array([root + facing * 1.6 - side * sg * 1.0, root + side * sg * 1.6,
 			tip + side * sg * 1.8, tip - facing * 2.0, tip - side * sg * 1.6]), fur_dark)
 	_b.draw_circle(head + rim * 0.7, 7.0, fur_dark.darkened(0.25))
