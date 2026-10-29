@@ -2,6 +2,26 @@
 
 Append-only session history, newest first.
 
+## 2026-10-29 - Visual and animation polish: secondary dog motion, phone doomscrolling, and water wakes
+
+A visual fidelity and animation feel pass across Millie, your human, and world interactions:
+- **Dog ear secondary motion & wind flutter** (`entities/dog.gd`):
+  - Sprint slipstream: when sprinting at high speeds or burning turbo zoomies, Millie's floppy ears trail backward in the slipstream with dynamic wind flutter.
+  - Centrifugal ear banking: sharp turns and sudden steering inputs exert centrifugal lag and sway, tilting the ears outward against the hinge of the body.
+  - Idle listening twitches: when standing stationary, subtle involuntary ear twitches reflect an attentive mutt listening to the street.
+  - Maintained mood and action reactivity (perked on bark and sniff, drooped when scared/tired).
+- **Human phone doomscrolling & night-time reflection** (`entities/human.gd`):
+  - Live feed animation: the phone screen displays tiny social feed cards and micro-text lines scrolling upward smoothly on autopilot, with periodic thumb swipe flicks.
+  - Night reflection glow: at night or dusk, the phone screen casts a soft upward blue-white reflection under your human's chin and face, visually connecting the phone to their oblivious gaze.
+  - Match day screen: displays a miniature pitch with center line, center circle, and animated match ball during Dia de Partit.
+- **Continuous water wakes & stepping spray** (`main.gd`):
+  - Running continuously through water (`Surfaces.S.WATER`) generates expanding wake ripples at every step rather than only on entry.
+  - Speeds over 160 px/s kick up small spray droplets fading behind the paws.
+  - Wading humans emit gentle foot ripples in the water.
+  - All rendered through `ShapeBatch` with fixed mark budgets and zero draw call increases.
+- **Test coverage** (`tests/test_dog_anim_juice.gd`):
+  - Extended suite with 10 assertions covering ear dynamics, turbo stream flutter, turning centrifugal lag, doomscrolling screen redraws, night face glow, and water mark generation.
+
 ## 2026-10-29 - El Gòtic busker placement, Spanish guitar detail, and level check assertions
 
 Targeted placement, visual polish, and automated safety assertions for dare-givers:

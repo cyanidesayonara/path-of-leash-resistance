@@ -657,6 +657,7 @@ const MARKS_MAX := 24
 const FLAT_LIFE := 2.5
 const SPLAT_LIFE := 1.2
 const RING_LIFE := 1.0
+const SPRAY_LIFE := 0.6
 var dent_last_dog := Vector2(INF, INF)
 var dent_last_human := Vector2(INF, INF)
 var paw_last := Vector2(INF, INF)
@@ -8229,6 +8230,10 @@ func _ground_marks() -> void:
 		Surfaces.S.SAND:
 			if speed > 120.0:
 				_add_mark({"kind": "grains", "pos": dp, "t": elapsed, "ang": ang})
+		Surfaces.S.WATER:
+			_add_mark({"kind": "ring", "pos": dp, "t": elapsed})
+			if speed > 160.0:
+				_add_mark({"kind": "spray", "pos": dp, "t": elapsed, "ang": ang})
 
 
 func _add_mark(m: Dictionary) -> void:
@@ -8245,7 +8250,7 @@ func _draw_ground_marks(vt: float, vb: float) -> void:
 	while i < ground_marks.size():
 		var m: Dictionary = ground_marks[i]
 		var age := elapsed - float(m["t"])
-		var life: float = FLAT_LIFE if m["kind"] == "flat" else (RING_LIFE if m["kind"] == "ring" else SPLAT_LIFE)
+		var life: float = FLAT_LIFE if m["kind"] == "flat" else (RING_LIFE if m["kind"] == "ring" else (SPRAY_LIFE if m["kind"] == "spray" else SPLAT_LIFE))
 		if age > life:
 			ground_marks.remove_at(i)
 			continue
@@ -8285,6 +8290,14 @@ func _draw_ground_marks(vt: float, vb: float) -> void:
 					var q := p + Vector2.from_angle(TAU * float(k) / float(pts)) * r
 					b.line(prev, q, Color(0.90, 0.95, 1.0, 0.5 * f), 2.0)
 					prev = q
+			"spray":
+				# small water droplets kicked up sideways and behind at a run
+				var fwd4 := Vector2.from_angle(float(m["ang"]))
+				var sd4 := fwd4.orthogonal()
+				var spread4 := 6.0 + (1.0 - f) * 12.0
+				for k in range(3):
+					var o4 := sd4 * (float(k) - 1.0) * spread4 - fwd4 * (4.0 + float(k) * 2.0)
+					b.circle(p + o4, 1.8, Color(0.85, 0.94, 1.0, 0.65 * f))
 	b.flush(_wc)
 
 
@@ -8297,6 +8310,9 @@ func _press_dents() -> void:
 		dent_last_human = human.global_position
 		var hside: Vector2 = human.face_dir.orthogonal() * (7.0 if dents.size() % 2 == 0 else -7.0)
 		dents.append({"pos": human.global_position + hside, "t": elapsed, "ang": human.face_dir.angle(), "boot": true})
+	elif human.wading and maxf(human.velocity.length(), human.presentation_speed) > 15.0 and dent_last_human.distance_to(human.global_position) > 32.0:
+		dent_last_human = human.global_position
+		_add_mark({"kind": "ring", "pos": human.global_position + Vector2(0.0, 4.0), "t": elapsed})
 	while dents.size() > DENT_MAX or (not dents.is_empty() and elapsed - float(dents[0]["t"]) > DENT_LIFE):
 		dents.remove_at(0)
 

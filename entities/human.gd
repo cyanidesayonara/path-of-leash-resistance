@@ -1419,6 +1419,9 @@ func _draw_shapes() -> void:
 		_b.draw_circle(head - fd * 8.0, 2.4, Color(0.86, 0.30, 0.42))
 	HumanLook.draw_head(_b, head, fd, 9.0, skin, hair_col, "long" if woman else "short", String(dress["headwear"]),
 		dress["headwear_col"])
+	if Game.night and phone_away < 0.7:
+		var face_glow := Color(0.68, 0.84, 1.0, 0.20 * (0.55 + 0.2 * sin(t * 7.3)) * (1.0 - phone_away))
+		_b.draw_circle(head + fd * 4.6, 4.2, face_glow)
 	if String(dress["eyewear"]) == "sunglasses":
 		for sg2: float in [-1.0, 1.0]:
 			_b.draw_circle(head + fd * 5.9 + side * 3.2 * sg2, 2.4, Color(0.08, 0.08, 0.10))
@@ -1432,6 +1435,30 @@ func _draw_shapes() -> void:
 	_b.draw_rect(Rect2(-6, -9, 12, 18), Color(0.1, 0.1, 0.12))
 	var screen := Color(0.42, 0.74, 0.34, glow) if match_on else Color(0.7, 0.85, 1.0, glow)
 	_b.draw_rect(Rect2(-4.5, -7, 9, 14), screen)
+	if away < 0.7:
+		if match_on:
+			# match day: miniature football pitch markings on screen
+			var line_col := Color(1.0, 1.0, 1.0, 0.45 * glow)
+			_b.draw_line(Vector2(-4.0, 0.0), Vector2(4.0, 0.0), line_col, 0.8)
+			_b.draw_arc(Vector2.ZERO, 2.2, 0, TAU, 12, line_col, 0.8)
+			_b.draw_circle(Vector2(sin(t * 4.0) * 2.2, cos(t * 3.1) * 3.5), 0.9, Color(1, 1, 1, 0.8 * glow))
+		else:
+			# doomscrolling: micro-posts and card outlines scrolling up the feed
+			var post_col := screen.lightened(0.24)
+			post_col.a = 0.55 * glow
+			var bar_col := screen.darkened(0.22)
+			bar_col.a = 0.45 * glow
+			var scroll := fmod(t * 7.5, 5.5)
+			for pi in range(3):
+				var py := -5.5 + float(pi) * 5.5 - scroll
+				if py > -6.2 and py < 5.0:
+					_b.draw_rect(Rect2(-3.6, py, 7.2, 1.2), post_col)
+					if py + 2.2 < 5.4:
+						_b.draw_rect(Rect2(-3.6, py + 1.8, 4.5, 0.8), bar_col)
+		# periodic thumb swipe flick along the bottom-right corner
+		var swipe_ph := fmod(t * 0.45, 1.0)
+		var flick := sin(clampf(swipe_ph / 0.14, 0.0, 1.0) * PI) * 2.2 if swipe_ph < 0.14 else 0.0
+		_b.draw_circle(Vector2(2.8, 4.5 - flick), 1.3, skin)
 	_draw_xf()
 	if wading:
 		# waist-deep, phone held higher, ripples of shame around the middle
