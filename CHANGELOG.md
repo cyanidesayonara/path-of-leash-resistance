@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-10-29 - The Dog Selector: Mochi the French Bulldog, anchor plant, and bat-ear silhouette
+
+Adding Mochi the French bulldog to the playable dog lineup alongside Millie and Pipa:
+- **Playable Dog Lineup & Anchor Trait** (`autoload/game.gd`, `entities/dog.gd`, `main.gd`):
+  - Mochi the French Bulldog: unlocked at 25 stars. Built as an immovable little tank with a 1.70x plant grip multiplier (yielding 23.8x dry plant mass vs Millie's 14.0x and Pipa's 7.7x), stopping human yanks cold in their tracks. Balanced by a deliberate 0.84x top speed and 0.84x acceleration.
+  - Cycling wraps seamlessly between Millie (Mongrel), Pipa (Galgo), and Mochi (French Bulldog) in both GET READY and walk select menus.
+  - Gated at 25 total stars (or free play mode); attempting to start a walk with a locked dog triggers the alert nudge and refuses departure.
+  - Wardrobe text dynamically reflects the active dog ("Mochi is wearing this").
+- **Signature Frenchie Silhouette & Cobby Anatomy** (`entities/dog.gd`):
+  - Compact, cobby body with a short 12.5 px spine and a wide barrel chest (9.8 px radius).
+  - Prominent upright bat ears with warm visible inner ear leather and responsive alert twitches.
+  - Characteristic brachycephalic flat muzzle with a defined nose roll wrinkle and broad button nose.
+  - Wide-set bowed front leg stance (9.2 px spread) with rounder paws (3.4 px radius) and waddling trot gait (1.25x cadence, 0.80x stride).
+  - Short button screw/stub tail with a perky little wag on the rump.
+  - Immovable anchor plant: hunkers down into a sturdy bulldog pancake with 6 heavy ground gouge marks.
+  - Julius K9 harness and wide collar fitted to the thick neck and broad chest; equipped cosmetics and coats carry over cleanly.
+- **Automated Test Suite** (`tests/test_dog_selector.gd`):
+  - Expanded to 62 checks verifying catalog definitions, trait multipliers, 3-tier star gating (0, 15, 25 stars), 3-way cycling and persistence, live entity dynamics, anchor tug mass scaling (23.8x mass), menu gating, and rendering integrity across all three breeds.
+
 ## 2026-10-29 - The Dog Selector: Pipa the Galgo end-to-end, trait modifiers, and GET READY UI
 
 Introducing playable dog selection, starting with Pipa the Spanish galgo alongside Millie:

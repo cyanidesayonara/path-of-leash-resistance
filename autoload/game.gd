@@ -161,8 +161,18 @@ const DOGS := {
 		"accel_mult": 1.20,
 		"plant_mult": 0.55,
 	},
+	"mochi": {
+		"name": "Mochi",
+		"breed": "French bulldog",
+		"stars": 25,
+		"trait": "Plants hard, slow",
+		"desc": "A stubborn little tank who refuses to budge",
+		"speed_mult": 0.84,
+		"accel_mult": 0.84,
+		"plant_mult": 1.70,
+	},
 }
-const DOG_KEYS: Array[String] = ["millie", "pipa"]
+const DOG_KEYS: Array[String] = ["millie", "pipa", "mochi"]
 const DEFAULT_DOG := "millie"
 
 const SAVE_PATH := "user://records.cfg"
