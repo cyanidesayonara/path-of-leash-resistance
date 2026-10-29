@@ -183,8 +183,21 @@ const DOGS := {
 		"herd_mult": 1.45,
 		"muck_mult": 1.60,
 	},
+	"tito": {
+		"name": "Tito",
+		"breed": "Chihuahua",
+		"stars": 45,
+		"trait": "Slips through gaps, easily reeled in",
+		"desc": "A tiny chihuahua who slips between obstacles and reels in fast",
+		"speed_mult": 1.10,
+		"accel_mult": 1.25,
+		"plant_mult": 0.35,
+		"mass_mult": 0.45,
+		"reel_mult": 1.65,
+		"gap_mult": 0.57,
+	},
 }
-const DOG_KEYS: Array[String] = ["millie", "pipa", "mochi", "bruna"]
+const DOG_KEYS: Array[String] = ["millie", "pipa", "mochi", "bruna", "tito"]
 const DEFAULT_DOG := "millie"
 
 const SAVE_PATH := "user://records.cfg"
@@ -439,6 +452,17 @@ func dog_herd_mult(k := "") -> float:
 
 func dog_muck_mult(k := "") -> float:
 	return float(dog_data(k).get("muck_mult", 1.0))
+
+func dog_mass_mult(k := "") -> float:
+	return float(dog_data(k).get("mass_mult", 1.0))
+
+
+func dog_reel_mult(k := "") -> float:
+	return float(dog_data(k).get("reel_mult", 1.0))
+
+
+func dog_gap_mult(k := "") -> float:
+	return float(dog_data(k).get("gap_mult", 1.0))
 
 
 func is_dog_unlocked(k: String) -> bool:

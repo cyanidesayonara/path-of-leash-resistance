@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-10-29 - The Dog Selector: Tito the Chihuahua, gap slipping, and featherweight reel-in
+
+Completing the five-dog selector lineup with Tito the Chihuahua alongside Millie, Pipa, Mochi, and Bruna:
+- **Playable Dog Lineup, Gap Slipping & Reel Mechanics** (`autoload/game.gd`, `entities/dog.gd`, `main.gd`):
+  - Tito the Chihuahua: unlocked at 45 stars as the master-tier dog unlock. Trait: "Slips through gaps, easily reeled in".
+  - Slips through gaps: petite physical collision radius reduced from 14.0 px to 8.0 px (`gap_mult = 0.57`), allowing Tito to slip effortlessly through tight gaps between bollards, outdoor cafe chairs, tables, and narrow fence posts that completely block larger breeds.
+  - Easily reeled in: featherweight build (0.45x mass) and delicate plant grip (0.35x grip multiplier yielding only 4.9x dry plant mass) means Tito cannot anchor against human tugs, and reel winding speed is boosted 1.65x when the owner draws Tito in.
+  - Swift, darting scurry: 1.10x top speed, 1.25x instant twitch acceleration, high-cadence pitter-patter gait (1.35x cadence, 0.70x stride).
+  - 5-way dog selection cycling wraps smoothly through Millie, Pipa, Mochi, Bruna, and Tito in GET READY and wardrobe menus, persisted via `records.cfg`.
+- **Iconic Chihuahua Silhouette & Energetic Personality** (`entities/dog.gd`):
+  - Miniature micro-canine build with a 10.5 px spine, 5.2 px chest, and rounded apple dome head (`cap de poma`, 5.5 px radius).
+  - Signature Chihuahua nervous energy: high-frequency shivering vibration when standing idle or crouching.
+  - Giant erect satellite ears: tall flared triangular bat ears with warm inner-ear blush that perk and tilt alertly.
+  - High-carried sickle tail (`cua en falç`) arching jauntily over the rump with rapid, perky wagging.
+  - Delicate tapered muzzle with large, prominent glossy dark eyes and distinct specular shine.
+  - Scaled miniature collar and Julius K9 harness; all cosmetic coats, collars, and bandanas carry over.
+- **Automated Regression Suite** (`tests/test_dog_selector.gd`):
+  - Expanded to 114 checks verifying complete 5-dog catalog definitions, trait multipliers, 5-tier star gating (0, 15, 25, 35, 45 stars), 5-way cycling and persistence, live entity dynamics, collision radius scaling (8.0 px vs 14.0 px), reel rate mechanics, and rendering integrity across all five breeds.
+
 ## 2026-10-29 - The Dog Selector: Bruna the Gos d'Atura, herding response, and shaggy rustic silhouette
 
 Adding Bruna the Gos d'Atura Català (Catalan sheepdog) to the playable dog selector alongside Millie, Pipa, and Mochi:

@@ -6808,7 +6808,7 @@ func _leash_tug(delta: float) -> void:
 	# Only static wraps (poles/furniture) shield/anchor. Dynamic leash
 	# tangles must not borrow pole-vault semantics.
 	var shield := 1.0 / (1.0 + 0.3 * float(leash.static_contacts))
-	var dog_m := DOG_MASS
+	var dog_m: float = DOG_MASS * (dog.mass_mult() if (dog != null and dog.has_method("mass_mult")) else 1.0)
 	if dog.planted:
 		var base_grip: float = PLANT_GRIP_ICE if dog.ice else (PLANT_GRIP_WET if dog.slick else PLANT_GRIP)
 		dog_m *= base_grip * (dog.plant_grip_mult() if dog.has_method("plant_grip_mult") else 1.0)
@@ -9942,6 +9942,8 @@ func _tick_reel_length(delta: float) -> void:
 	var rate := REEL_RATE
 	if leash_target < leash_len and not leash_haul and leash.used_length() >= leash_len:
 		rate = REEL_TAUT_RATE
+	if leash_target < leash_len and dog != null and dog.has_method("reel_mult"):
+		rate *= dog.reel_mult()
 	leash_len = move_toward(leash_len, leash_target, rate * delta)
 	if is_equal_approx(leash_len, leash_target):
 		leash_haul = false
