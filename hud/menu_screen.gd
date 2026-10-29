@@ -237,48 +237,56 @@ func _details(vs: Vector2) -> void:
 	var acc := Kit.accent("details")
 	var rows := Flow.details_rows(main)
 	var legend := Flow.controls()
-	var h := 70.0 + float(rows.size()) * 56.0 + 36.0 + ceilf(float(legend.size()) / 2.0) * 34.0 + 20.0
+	var row_h := 46.0
+	var h := 68.0 + float(rows.size()) * row_h + 16.0 + ceilf(float(legend.size()) / 2.0) * 32.0 + 16.0
 	# anchored over the prompt bar, like the walk select's card, so the walk's
 	# name and gloss on the ground above it are never under it
 	var r := Rect2(48.0, maxf(8.0, vs.y - Kit.BAR_FROM_BOTTOM - 22.0 - h), DETAILS_W, h)
 	Kit.card(self, r, acc)
-	Kit.heading(self, r.position + Vector2(28.0, 46.0), "GET READY", 26, acc)
-	var y := r.position.y + 72.0
+	Kit.heading(self, r.position + Vector2(28.0, 44.0), "GET READY", 25, acc)
+	var y := r.position.y + 66.0
 	var f := Kit.display()
 	for i in range(rows.size()):
 		var row: Dictionary = rows[i]
 		var picked: bool = i == int(main.details_idx)
-		var rr := Rect2(r.position.x + 14.0, y, r.size.x - 28.0, 48.0)
+		var rr := Rect2(r.position.x + 14.0, y, r.size.x - 28.0, 40.0)
 		if picked:
 			draw_rect(rr, Color(acc.r, acc.g, acc.b, 0.14))
 			draw_rect(Rect2(rr.position, Vector2(4.0, rr.size.y)), acc)
-		draw_string(f, Vector2(rr.position.x + 16.0, y + 30.0), String(row.name), HORIZONTAL_ALIGNMENT_LEFT,
+		draw_string(f, Vector2(rr.position.x + 16.0, y + 26.0), String(row.name), HORIZONTAL_ALIGNMENT_LEFT,
 			-1, 15, Kit.INK_SOFT if picked else Kit.INK_FAINT)
 		var fixed := bool(row.fixed)
 		var val := String(row.value)
 		var vx := rr.end.x - 40.0
-		var vw := Kit.text_w(f, val, 21)
-		var vcol: Color = Kit.INK_FAINT if fixed else (Kit.INK if picked else Kit.INK_SOFT)
-		draw_string(f, Vector2(vx - vw, y + 32.0), val, HORIZONTAL_ALIGNMENT_LEFT, -1, 21, vcol)
+		var vw := Kit.text_w(f, val, 20)
+		var unlocked: bool = bool(row.get("unlocked", true))
+		var vcol: Color = Kit.INK_FAINT if (fixed or not unlocked) else (Kit.INK if picked else Kit.INK_SOFT)
+		draw_string(f, Vector2(vx - vw, y + 28.0), val, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, vcol)
 		if fixed:
-			draw_string(Kit.body(), Vector2(vx - vw - 110.0, y + 31.0), "set for today",
+			draw_string(Kit.body(), Vector2(vx - vw - 110.0, y + 27.0), "set for today",
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Kit.INK_FAINT)
+		elif not unlocked:
+			Kit.lock(self, Vector2(vx - vw - 18.0, y + 20.0), 12.0, Kit.INK_FAINT)
 		elif picked:
-			Kit.chevron(self, Vector2(vx - vw - 18.0, y + 24.0), 9.0, acc, true)
-			Kit.chevron(self, Vector2(vx + 16.0, y + 24.0), 9.0, acc)
-		y += 56.0
-	y += 8.0
+			Kit.chevron(self, Vector2(vx - vw - 18.0, y + 20.0), 9.0, acc, true)
+			Kit.chevron(self, Vector2(vx + 16.0, y + 20.0), 9.0, acc)
+			if row.has("trait"):
+				var tr := String(row.trait)
+				draw_string(Kit.body(), Vector2(vx - vw - 28.0 - Kit.text_w(Kit.body(), tr, 12), y + 26.0),
+					tr, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Kit.INK_SOFT)
+		y += row_h
+	y += 4.0
 	draw_line(Vector2(r.position.x + 28.0, y), Vector2(r.end.x - 28.0, y), Color(1, 1, 1, 0.1), 1.5)
-	y += 12.0
+	y += 8.0
 	# the controls, once, where the player is already looking before the
 	# walk starts, instead of a line of them across the bottom of the walk
 	for i in range(legend.size()):
 		var it: Array = legend[i]
 		var cx := r.position.x + 28.0 + float(i % 2) * 180.0
-		var cy := y + float(i / 2) * 34.0
-		var kw := Kit.keycap(self, Vector2(cx, cy), Prompts.key(String(it[0])), 13, 22.0)
-		draw_string(Kit.body(), Vector2(cx + kw + 8.0, cy + 16.0), String(it[1]), HORIZONTAL_ALIGNMENT_LEFT,
-			-1, 14, Kit.INK_SOFT)
+		var cy := y + float(i / 2) * 32.0
+		var kw := Kit.keycap(self, Vector2(cx, cy), Prompts.key(String(it[0])), 13, 20.0)
+		draw_string(Kit.body(), Vector2(cx + kw + 8.0, cy + 15.0), String(it[1]), HORIZONTAL_ALIGNMENT_LEFT,
+			-1, 13, Kit.INK_SOFT)
 
 
 func shop_rect() -> Rect2:

@@ -137,6 +137,34 @@ const COATS := {
 		"mark": Color(0.78, 0.80, 0.84), "grizzle": 1.4},
 }
 
+# The playable dogs: each changes one trait at one cost. Unlocked by stars,
+# coats carry over. Millie is the balanced default; Pipa the Spanish galgo
+# runs lightning fast but has a lightweight, fragile plant.
+const DOGS := {
+	"millie": {
+		"name": "Millie",
+		"breed": "Mongrel",
+		"stars": 0,
+		"trait": "Balanced",
+		"desc": "Jack of all trades, master of sniffs",
+		"speed_mult": 1.0,
+		"accel_mult": 1.0,
+		"plant_mult": 1.0,
+	},
+	"pipa": {
+		"name": "Pipa",
+		"breed": "Galgo",
+		"stars": 15,
+		"trait": "Fast, weak plant",
+		"desc": "A lightning sighthound who hates digging in",
+		"speed_mult": 1.20,
+		"accel_mult": 1.20,
+		"plant_mult": 0.55,
+	},
+}
+const DOG_KEYS: Array[String] = ["millie", "pipa"]
+const DEFAULT_DOG := "millie"
+
 const SAVE_PATH := "user://records.cfg"
 const DEFAULT_OWNED := {"collar:red": true, "bandana:none": true, "coat:millie": true}
 const DEFAULT_COLLAR := "red"
@@ -172,6 +200,7 @@ var owned := DEFAULT_OWNED.duplicate()
 var collar := DEFAULT_COLLAR
 var bandana := DEFAULT_BANDANA
 var coat := DEFAULT_COAT
+var dog := DEFAULT_DOG
 # Player settings. A downloadable build is expected to let you turn the
 # volume down and go fullscreen; muting the music with M was not enough.
 var vol_master := DEFAULT_VOL_MASTER
@@ -349,6 +378,56 @@ func _cost(kind: String, key: String) -> int:
 	return -1
 
 
+func dog_data(k := "") -> Dictionary:
+	var key := k if k != "" else dog
+	return DOGS[key] if DOGS.has(key) else DOGS[DEFAULT_DOG]
+
+
+func dog_name(k := "") -> String:
+	return String(dog_data(k).get("name", "Millie"))
+
+
+func dog_breed(k := "") -> String:
+	return String(dog_data(k).get("breed", "Mongrel")).to_lower()
+
+
+func dog_trait(k := "") -> String:
+	return String(dog_data(k).get("trait", "Balanced"))
+
+
+func dog_desc(k := "") -> String:
+	return String(dog_data(k).get("desc", ""))
+
+
+func dog_speed_mult(k := "") -> float:
+	return float(dog_data(k).get("speed_mult", 1.0))
+
+
+func dog_accel_mult(k := "") -> float:
+	return float(dog_data(k).get("accel_mult", 1.0))
+
+
+func dog_plant_mult(k := "") -> float:
+	return float(dog_data(k).get("plant_mult", 1.0))
+
+
+func is_dog_unlocked(k: String) -> bool:
+	if free_play or k == "millie":
+		return true
+	if not DOGS.has(k):
+		return false
+	return total_stars() >= int(DOGS[k].get("stars", 0))
+
+
+func cycle_dog(dir: int) -> void:
+	var cur_idx := DOG_KEYS.find(dog)
+	if cur_idx < 0:
+		cur_idx = 0
+	var next_idx := wrapi(cur_idx + dir, 0, DOG_KEYS.size())
+	dog = DOG_KEYS[next_idx]
+	save_records()
+
+
 func toggle_owner() -> void:
 	owner_id = "her" if owner_id == "him" else "him"
 
@@ -499,6 +578,10 @@ func _ready() -> void:
 			# after dark, as the title's TIME toggle would set it - for
 			# screenshots and the level review (#21)
 			night = true
+		elif arg.begins_with("--dog="):
+			var d := arg.trim_prefix("--dog=")
+			if DOGS.has(d):
+				dog = d
 		elif arg == "--tutorial":
 			level_id = "tutorial"
 	if DisplayServer.get_name() != "headless":
@@ -527,6 +610,7 @@ func _reset_persisted_state() -> void:
 	collar = DEFAULT_COLLAR
 	bandana = DEFAULT_BANDANA
 	coat = DEFAULT_COAT
+	dog = DEFAULT_DOG
 	vol_master = DEFAULT_VOL_MASTER
 	vol_sfx = DEFAULT_VOL_SFX
 	vol_music = DEFAULT_VOL_MUSIC
@@ -584,6 +668,9 @@ func load_records() -> void:
 	collar = cf.get_value("cosmetics", "collar", DEFAULT_COLLAR)
 	bandana = cf.get_value("cosmetics", "bandana", DEFAULT_BANDANA)
 	coat = cf.get_value("cosmetics", "coat", DEFAULT_COAT)
+	dog = String(cf.get_value("player", "dog", DEFAULT_DOG))
+	if not DOGS.has(dog):
+		dog = DEFAULT_DOG
 	vol_master = clampf(float(cf.get_value("settings", "vol_master", DEFAULT_VOL_MASTER)), 0.0, 1.0)
 	vol_sfx = clampf(float(cf.get_value("settings", "vol_sfx", DEFAULT_VOL_SFX)), 0.0, 1.0)
 	vol_music = clampf(float(cf.get_value("settings", "vol_music", DEFAULT_VOL_MUSIC)), 0.0, 1.0)
@@ -621,6 +708,7 @@ func save_records() -> void:
 	cf.set_value("cosmetics", "collar", collar)
 	cf.set_value("cosmetics", "bandana", bandana)
 	cf.set_value("cosmetics", "coat", coat)
+	cf.set_value("player", "dog", dog)
 	cf.set_value("settings", "vol_master", vol_master)
 	cf.set_value("settings", "vol_sfx", vol_sfx)
 	cf.set_value("settings", "vol_music", vol_music)
