@@ -9,9 +9,9 @@ extends Control
 # fallbacks for everything except the row names, which are plain ASCII.
 
 const W := 600.0
-const ROW_H := 52.0
-const ROWS_Y := 92.0
-const FOOTER_H := 14.0
+const ROW_H := 44.0
+const ROWS_Y := 84.0
+const FOOTER_H := 12.0
 const NAME_X := 42.0
 const BAR_X := 296.0
 const BAR_W := 208.0
@@ -54,7 +54,10 @@ func _ready() -> void:
 
 func _recentre() -> void:
 	var vs := get_viewport_rect().size
-	position = Vector2((vs.x - W) * 0.5, (vs.y - _panel_height()) * 0.5)
+	position = Vector2(
+		maxf(0.0, (vs.x - W) * 0.5),
+		maxf(0.0, (vs.y - _panel_height()) * 0.5)
+	)
 
 
 func _process(_delta: float) -> void:
@@ -77,12 +80,12 @@ func _draw() -> void:
 		var y := ROWS_Y + float(i) * ROW_H
 		var picked: bool = i == main.settings_idx
 		if picked:
-			draw_style_box(sel, Rect2(NAME_X - 14.0, y - 22.0, W - (NAME_X - 14.0) * 2.0, 40.0))
+			draw_style_box(sel, Rect2(NAME_X - 14.0, y - 18.0, W - (NAME_X - 14.0) * 2.0, 36.0))
 			# a small caret, and the arrows that say this row takes left/right
 			draw_colored_polygon(
 				PackedVector2Array([
-					Vector2(NAME_X - 24.0, y - 7.0), Vector2(NAME_X - 24.0, y + 5.0),
-					Vector2(NAME_X - 15.0, y - 1.0)
+					Vector2(NAME_X - 24.0, y - 6.0), Vector2(NAME_X - 24.0, y + 6.0),
+					Vector2(NAME_X - 15.0, y)
 				]), Kit.accent("settings"))
 		var name_col := Color(0.98, 0.95, 0.88) if picked else Color(0.72, 0.72, 0.75)
 		draw_string(Kit.display(), Vector2(NAME_X, y + 6.0), String(row.name), HORIZONTAL_ALIGNMENT_LEFT,

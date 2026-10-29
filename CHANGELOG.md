@@ -10,14 +10,15 @@ Separating plant and squatting actions, dedicated pickup interaction, and layout
   - Dedicated `poop` action (or `pee` when urge is active) triggers squatting and finishes business.
   - Banner updates to instruct "NATURE CALLS! STAND STILL, HOLD {poop}".
   - Tutorial lesson "bag" updated to teach holding `{poop}`.
-- **Dedicated pickup action** (`main.gd`, `entities/ball.gd`, `hud/prompts.gd`):
-  - Grabbing parcels and tennis balls requires pressing or holding `pickup` (mapped to SPACE / A / GRAB) instead of proximity auto-vacuuming.
+- **Dedicated pickup action** (`main.gd`, `entities/ball.gd`, `entities/frisbee.gd`, `hud/prompts.gd`):
+  - Grabbing parcels, tennis balls, and landed frisbees requires pressing or holding `pickup` (mapped to SPACE / A / GRAB) instead of proximity auto-vacuuming.
   - Autowalk bots remain compatible and continue uninterrupted.
   - Nearby parcels display prompt "{pickup} PICK UP THE PARCEL".
-- **Control layout presets in Settings** (`autoload/game.gd`, `hud/menu_flow.gd`, `hud/prompts.gd`):
+- **Control layout presets & settings panel scaling** (`autoload/game.gd`, `hud/menu_flow.gd`, `hud/settings_panel.gd`, `hud/prompts.gd`):
   - Added layout switcher in Settings with 4 selectable schemes: DEFAULT (WASD), ARROWS, COMPACT (IJKL), and SOUTHPAW (swapping sticks and bumpers).
   - Configures `InputMap` key and pad bindings on the fly and updates button prompts everywhere.
   - Persists cleanly across game sessions and roundtrips in save data.
+  - Tuned `settings_panel.gd` row height to 44 px (matching main menu and shop row heights) with non-negative vertical centering, keeping the 8-row card cleanly anchored within mobile landscape viewports without clipping.
 - **Dynamic touch controls** (`hud/touch_controls.gd`):
   - On touch devices, the PEE button dynamically relabels to POOP when nature calls strike, sending the `poop` action seamlessly.
 - **Automated test suite** (`tests/test_controls_overhaul.gd`):
