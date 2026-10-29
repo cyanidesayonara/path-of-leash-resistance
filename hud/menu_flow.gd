@@ -34,7 +34,7 @@ const MAIN_LABELS := {"play": "PLAY", "tutorial": "TUTORIAL", "shop": "WARDROBE"
 	"progress": "YOUR WALKS", "settings": "SETTINGS", "exit": "EXIT GAME"}
 # the first-time question's two answers, in list order
 const FIRST_OPTIONS := ["LEARN THE ROPES", "STRAIGHT TO THE WALKS"]
-const DETAIL_ROWS := ["walker", "time", "weather"]
+const DETAIL_ROWS := ["dog", "walker", "time", "weather"]
 const PAUSE_CELLS := ["resume", "walk", "restart", "settings", "select", "exit"]
 const PAUSE_LABELS := {"resume": "RESUME", "walk": "THIS WALK", "restart": "START AGAIN",
 	"settings": "SETTINGS", "select": "WALK SELECT", "exit": "EXIT GAME"}
@@ -249,7 +249,14 @@ static func clock(secs: float) -> String:
 # The getting-ready rows. `fixed` rows are set by the walk itself (El Diluvi's
 # rain, La Castanyada's dark, the first walk's clear day).
 static func details_rows(m: Node2D) -> Array:
+	var d_name: String = Game.dog_name().to_upper()
+	var d_unlocked: bool = Game.is_dog_unlocked(Game.dog)
+	if not d_unlocked:
+		var req := int(Game.dog_data().get("stars", 0))
+		d_name += " (%d*)" % req
 	return [
+		{"id": "dog", "name": "YOUR DOG", "value": d_name, "fixed": false,
+			"trait": Game.dog_trait().to_upper(), "unlocked": d_unlocked},
 		{"id": "walker", "name": "YOUR HUMAN", "value": "HIM" if Game.owner_id == "him" else "HER", "fixed": false},
 		{"id": "time", "name": "TIME", "value": "NIGHT" if Game.night else "DAY",
 			"fixed": Game.walk_sets_night(Game.level_id)},
@@ -263,6 +270,9 @@ static func details_change(m: Node2D, dir: int) -> void:
 	if bool(row.fixed):
 		return
 	match String(row.id):
+		"dog":
+			Game.cycle_dog(dir)
+			m.dog.queue_redraw()
 		"walker":
 			Game.toggle_owner()
 			m.human.queue_redraw()
@@ -284,6 +294,9 @@ static func controls() -> Array:
 
 
 static func start_walk(m: Node2D) -> void:
+	if not Game.is_dog_unlocked(Game.dog):
+		m.locked_nudge = 0.35
+		return
 	m.started = true
 	m.begin_departure()
 	# the very first real walk, for a player who skipped the tutorial: the
@@ -331,6 +344,11 @@ static func tick_title(m: Node2D) -> bool:
 				Game.menu_step = 1
 				reload(m)
 				return true
+			if Input.is_action_just_pressed("move_up") or Input.is_action_just_pressed("move_down"):
+				Game.cycle_dog(1 if Input.is_action_just_pressed("move_down") else -1)
+				m.dog.queue_redraw()
+				Sfx.play("ui")
+				return true
 			if Input.is_action_just_pressed("plant"):
 				if not Game.is_unlocked(Game.level_id):
 					# a locked walk shakes its plaque instead of opening
@@ -354,6 +372,9 @@ static func tick_title(m: Node2D) -> bool:
 				Sfx.play("ui")
 				_go_step(m, 1)
 			elif Input.is_action_just_pressed("plant"):
+				if not Game.is_dog_unlocked(Game.dog):
+					m.locked_nudge = 0.35
+					return false
 				Sfx.play("ui")
 				start_walk(m)
 	return false

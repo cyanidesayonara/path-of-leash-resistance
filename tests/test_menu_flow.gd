@@ -83,12 +83,13 @@ func _run() -> void:
 
 	# getting ready: rows, and left/right changes the picked one
 	var rows: Array = Flow.details_rows(main)
-	_check(rows.size() == 3 and String(rows[0].name) == "YOUR HUMAN", "getting ready: your human, time, weather")
-	main.details_idx = 0
+	_check(rows.size() == 4 and String(rows[0].name) == "YOUR DOG" and String(rows[1].name) == "YOUR HUMAN",
+		"getting ready: your dog, your human, time, weather")
+	main.details_idx = 1
 	var who: String = game.owner_id
 	Flow.details_change(main, 1)
 	_check(game.owner_id != who, "left/right on YOUR HUMAN swaps who walks")
-	main.details_idx = 2
+	main.details_idx = 3
 	var w: String = game.weather
 	Flow.details_change(main, 1)
 	_check(game.weather != w, "left/right on WEATHER changes the weather")

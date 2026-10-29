@@ -2,6 +2,30 @@
 
 Append-only session history, newest first.
 
+## 2026-10-29 - The Dog Selector: Pipa the Galgo end-to-end, trait modifiers, and GET READY UI
+
+Introducing playable dog selection, starting with Pipa the Spanish galgo alongside Millie:
+- **Playable Dog Catalog & Trait Modifiers** (`autoload/game.gd`, `entities/dog.gd`, `main.gd`):
+  - Millie the Mongrel: the balanced default (1.0x speed, 1.0x accel, 1.0x plant grip).
+  - Pipa the Galgo: unlocked at 15 stars. Built for speed and agility with 1.20x top speed and 1.20x acceleration, but handicapped by a fragile 0.55x plant grip multiplier (yielding 7.7x dry plant mass vs Millie's 14.0x mass, making tugs of war much more precarious).
+  - Gating: unlocked automatically once player reaches 15 total stars or in free play mode. Locked dogs trigger an alert nudge on attempt to start a walk.
+  - Persistence: selected dog is saved to `records.cfg` under `[player] dog` and survives session roundtrips.
+  - CLI flag `--dog=<name>` allows testing and photographing any breed directly from the terminal.
+- **Authentic Sighthound Silhouette & Breed Visuals** (`entities/dog.gd`):
+  - Elongated lumbar back and deep, aerodynamic chest tapering into a dramatic wasp-waist loin tuck-up.
+  - Folded rose ears trailing sleekly along the nape of the neck rather than heavy mutt drop ears.
+  - Elongated, slender tapering muzzle with narrow nose and focused sighthound eyes.
+  - Extended trot stride multiplier (1.25x) and lean hare-feet paws.
+  - Long whip tail terminating in an elegant upward saber hook.
+  - Wide Spanish martingale collar across the arched neck.
+  - All equipped coats and cosmetics (collars, bandanas) carry over cleanly to Pipa.
+- **GET READY Selection Row & Mobile Viewport Layout** (`hud/menu_flow.gd`, `hud/menu_screen.gd`):
+  - Added "YOUR DOG" as the first row in the GET READY preparation card, displaying dog name, trait summary ("FAST, WEAK PLANT"), and star lock indicators.
+  - Direct dog cycling on the walk select screen via `move_up` / `move_down`.
+  - Compact row height (46 px) with clean spacing keeps the 4-row preparation card within the 500 px viewport height budget on mobile landscape screens.
+- **Automated Test Suite** (`tests/test_dog_selector.gd`):
+  - 42 checks covering catalog definitions, trait multipliers, unlock thresholds, persistence, live entity dynamics, tug plant scaling, GET READY menu flow, lock gating, and render integrity for both breeds.
+
 ## 2026-10-29 - Controls overhaul: explicit nature calls, dedicated pickup, and layout presets
 
 Separating plant and squatting actions, dedicated pickup interaction, and layout selection in Settings:

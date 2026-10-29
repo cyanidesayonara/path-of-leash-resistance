@@ -6810,7 +6810,8 @@ func _leash_tug(delta: float) -> void:
 	var shield := 1.0 / (1.0 + 0.3 * float(leash.static_contacts))
 	var dog_m := DOG_MASS
 	if dog.planted:
-		dog_m *= PLANT_GRIP_ICE if dog.ice else (PLANT_GRIP_WET if dog.slick else PLANT_GRIP)
+		var base_grip: float = PLANT_GRIP_ICE if dog.ice else (PLANT_GRIP_WET if dog.slick else PLANT_GRIP)
+		dog_m *= base_grip * (dog.plant_grip_mult() if dog.has_method("plant_grip_mult") else 1.0)
 	elif dog.input_active:
 		dog_m *= 2.0
 	var human_m := HUMAN_MASS * (2.0 if human.is_fallen() else 1.0)
