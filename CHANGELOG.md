@@ -2,6 +2,27 @@
 
 Append-only session history, newest first.
 
+## 2026-10-29 - Controls overhaul: explicit nature calls, dedicated pickup, and layout presets
+
+Separating plant and squatting actions, dedicated pickup interaction, and layout selection in Settings:
+- **Separated poop from plant** (`main.gd`, `systems/tutorial.gd`):
+  - Nature calls no longer trigger squatting while holding `plant` (dig in / brace). Holding plant continues to plant paws for tug-of-war leverage and stopping without unintended squats.
+  - Dedicated `poop` action (or `pee` when urge is active) triggers squatting and finishes business.
+  - Banner updates to instruct "NATURE CALLS! STAND STILL, HOLD {poop}".
+  - Tutorial lesson "bag" updated to teach holding `{poop}`.
+- **Dedicated pickup action** (`main.gd`, `entities/ball.gd`, `hud/prompts.gd`):
+  - Grabbing parcels and tennis balls requires pressing or holding `pickup` (mapped to SPACE / A / GRAB) instead of proximity auto-vacuuming.
+  - Autowalk bots remain compatible and continue uninterrupted.
+  - Nearby parcels display prompt "{pickup} PICK UP THE PARCEL".
+- **Control layout presets in Settings** (`autoload/game.gd`, `hud/menu_flow.gd`, `hud/prompts.gd`):
+  - Added layout switcher in Settings with 4 selectable schemes: DEFAULT (WASD), ARROWS, COMPACT (IJKL), and SOUTHPAW (swapping sticks and bumpers).
+  - Configures `InputMap` key and pad bindings on the fly and updates button prompts everywhere.
+  - Persists cleanly across game sessions and roundtrips in save data.
+- **Dynamic touch controls** (`hud/touch_controls.gd`):
+  - On touch devices, the PEE button dynamically relabels to POOP when nature calls strike, sending the `poop` action seamlessly.
+- **Automated test suite** (`tests/test_controls_overhaul.gd`):
+  - 17 checks covering action separation (plant doesn't squat; poop squats), parcel and ball pickup actions, layout switching, prompt token updates, and settings save/load persistence.
+
 ## 2026-10-29 - Visual and animation polish: secondary dog motion, phone doomscrolling, and water wakes
 
 A visual fidelity and animation feel pass across Millie, your human, and world interactions:

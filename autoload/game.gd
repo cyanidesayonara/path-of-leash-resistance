@@ -183,6 +183,14 @@ var fullscreen := false
 const LANGUAGES: Array[String] = ["en", "ca", "es"]
 const LANGUAGE_NAMES := {"en": "ENGLISH", "ca": "CATALÀ", "es": "ESPAÑOL"}
 var language := "en"
+const CONTROL_LAYOUTS: Array[String] = ["default", "arrows", "compact", "southpaw"]
+const CONTROL_LAYOUT_NAMES := {
+	"default": "DEFAULT",
+	"arrows": "ARROWS",
+	"compact": "COMPACT",
+	"southpaw": "SOUTHPAW",
+}
+var control_layout := "default"
 const LEVEL_SUBTITLES_CA := {
 	"tutorial": "Aprèn la corretja, truc a truc",
 	"barri": "El parquet del final del teu carrer",
@@ -360,6 +368,113 @@ func apply_settings() -> void:
 	DisplayServer.window_set_mode(
 		DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
 	)
+	apply_control_layout()
+
+
+func apply_control_layout() -> void:
+	Prompts.update_layout(control_layout)
+	if not InputMap.has_action("plant"):
+		return
+	var configurable := ["move_left", "move_right", "move_up", "move_down", "plant", "bark", "pee", "poop", "pickup", "turbo"]
+	for act in configurable:
+		InputMap.action_erase_events(act)
+
+	var sticks: Dictionary = {
+		"move_left": [JOY_AXIS_RIGHT_X if control_layout == "southpaw" else JOY_AXIS_LEFT_X, -1.0],
+		"move_right": [JOY_AXIS_RIGHT_X if control_layout == "southpaw" else JOY_AXIS_LEFT_X, 1.0],
+		"move_up": [JOY_AXIS_RIGHT_Y if control_layout == "southpaw" else JOY_AXIS_LEFT_Y, -1.0],
+		"move_down": [JOY_AXIS_RIGHT_Y if control_layout == "southpaw" else JOY_AXIS_LEFT_Y, 1.0],
+	}
+	for act in sticks:
+		var ev := InputEventJoypadMotion.new()
+		ev.axis = sticks[act][0]
+		ev.axis_value = sticks[act][1]
+		InputMap.action_add_event(act, ev)
+
+	match control_layout:
+		"arrows":
+			_add_key_events("move_left", [KEY_LEFT, KEY_A])
+			_add_key_events("move_right", [KEY_RIGHT, KEY_D])
+			_add_key_events("move_up", [KEY_UP, KEY_W])
+			_add_key_events("move_down", [KEY_DOWN, KEY_S])
+			_add_key_events("plant", [KEY_SPACE, KEY_ENTER])
+			_add_key_events("bark", [KEY_CTRL, KEY_E])
+			_add_key_events("pee", [KEY_DELETE, KEY_Q])
+			_add_key_events("poop", [KEY_DELETE, KEY_Q])
+			_add_key_events("pickup", [KEY_SPACE, KEY_CTRL])
+			_add_key_events("turbo", [KEY_SHIFT, KEY_BRACKETRIGHT])
+			_add_pad_button("plant", JOY_BUTTON_A)
+			_add_pad_button("bark", JOY_BUTTON_B)
+			_add_pad_button("pee", JOY_BUTTON_X)
+			_add_pad_button("poop", JOY_BUTTON_X)
+			_add_pad_button("pickup", JOY_BUTTON_A)
+			_add_pad_button("turbo", JOY_BUTTON_RIGHT_SHOULDER)
+		"compact":
+			_add_key_events("move_left", [KEY_J, KEY_A])
+			_add_key_events("move_right", [KEY_L, KEY_D])
+			_add_key_events("move_up", [KEY_I, KEY_W])
+			_add_key_events("move_down", [KEY_K, KEY_S])
+			_add_key_events("plant", [KEY_SPACE])
+			_add_key_events("bark", [KEY_O, KEY_E])
+			_add_key_events("pee", [KEY_U, KEY_Q])
+			_add_key_events("poop", [KEY_U, KEY_Q])
+			_add_key_events("pickup", [KEY_SPACE, KEY_O])
+			_add_key_events("turbo", [KEY_SEMICOLON, KEY_SHIFT])
+			_add_pad_button("plant", JOY_BUTTON_A)
+			_add_pad_button("bark", JOY_BUTTON_B)
+			_add_pad_button("pee", JOY_BUTTON_X)
+			_add_pad_button("poop", JOY_BUTTON_X)
+			_add_pad_button("pickup", JOY_BUTTON_A)
+			_add_pad_button("turbo", JOY_BUTTON_RIGHT_SHOULDER)
+		"southpaw":
+			_add_key_events("move_left", [KEY_A, KEY_LEFT])
+			_add_key_events("move_right", [KEY_D, KEY_RIGHT])
+			_add_key_events("move_up", [KEY_W, KEY_UP])
+			_add_key_events("move_down", [KEY_S, KEY_DOWN])
+			_add_key_events("plant", [KEY_SPACE])
+			_add_key_events("bark", [KEY_E])
+			_add_key_events("pee", [KEY_Q])
+			_add_key_events("poop", [KEY_Q])
+			_add_key_events("pickup", [KEY_SPACE, KEY_E])
+			_add_key_events("turbo", [KEY_SHIFT])
+			_add_pad_button("plant", JOY_BUTTON_X)
+			_add_pad_button("bark", JOY_BUTTON_A)
+			_add_pad_button("pee", JOY_BUTTON_B)
+			_add_pad_button("poop", JOY_BUTTON_B)
+			_add_pad_button("pickup", JOY_BUTTON_X)
+			_add_pad_button("turbo", JOY_BUTTON_LEFT_SHOULDER)
+		_:
+			_add_key_events("move_left", [KEY_A, KEY_LEFT])
+			_add_key_events("move_right", [KEY_D, KEY_RIGHT])
+			_add_key_events("move_up", [KEY_W, KEY_UP])
+			_add_key_events("move_down", [KEY_S, KEY_DOWN])
+			_add_key_events("plant", [KEY_SPACE])
+			_add_key_events("bark", [KEY_E])
+			_add_key_events("pee", [KEY_Q])
+			_add_key_events("poop", [KEY_Q, KEY_F])
+			_add_key_events("pickup", [KEY_SPACE, KEY_E])
+			_add_key_events("turbo", [KEY_SHIFT])
+			_add_pad_button("plant", JOY_BUTTON_A)
+			_add_pad_button("bark", JOY_BUTTON_B)
+			_add_pad_button("pee", JOY_BUTTON_X)
+			_add_pad_button("poop", JOY_BUTTON_X)
+			_add_pad_button("pickup", JOY_BUTTON_A)
+			_add_pad_button("pickup", JOY_BUTTON_Y)
+			_add_pad_button("turbo", JOY_BUTTON_RIGHT_SHOULDER)
+	Prompts.update_layout(control_layout)
+
+
+func _add_key_events(action: String, keys: Array) -> void:
+	for k: int in keys:
+		var ev := InputEventKey.new()
+		ev.physical_keycode = k
+		InputMap.action_add_event(action, ev)
+
+
+func _add_pad_button(action: String, btn: int) -> void:
+	var ev := InputEventJoypadButton.new()
+	ev.button_index = btn
+	InputMap.action_add_event(action, ev)
 
 
 func _ready() -> void:
@@ -476,6 +591,9 @@ func load_records() -> void:
 	language = String(cf.get_value("settings", "language", "en"))
 	if not language in LANGUAGES:
 		language = "en"
+	control_layout = String(cf.get_value("settings", "control_layout", "default"))
+	if not control_layout in CONTROL_LAYOUTS:
+		control_layout = "default"
 	goals_expanded = bool(cf.get_value("settings", "goals_expanded", false))
 	free_play = bool(cf.get_value("settings", "free_play", false))
 	ask_tutorial = bool(cf.get_value("settings", "ask_tutorial", true))
@@ -508,6 +626,7 @@ func save_records() -> void:
 	cf.set_value("settings", "vol_music", vol_music)
 	cf.set_value("settings", "fullscreen", fullscreen)
 	cf.set_value("settings", "language", language)
+	cf.set_value("settings", "control_layout", control_layout)
 	cf.set_value("settings", "goals_expanded", goals_expanded)
 	cf.set_value("settings", "free_play", free_play)
 	cf.set_value("settings", "ask_tutorial", ask_tutorial)

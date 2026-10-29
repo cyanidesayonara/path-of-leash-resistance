@@ -110,6 +110,8 @@ func _input(event: InputEvent) -> void:
 				if e.position.distance_to(b.center) < float(b.r) + 16.0:
 					b.id = e.index
 					Input.action_press(b.action)
+					if b.action == "pee" and main != null and main.poop_state == 1:
+						Input.action_press("poop")
 					hit = true
 					break
 			if not hit and e.position.x < split_x:
@@ -125,6 +127,8 @@ func _input(event: InputEvent) -> void:
 				if int(b.id) == e.index:
 					b.id = -1
 					Input.action_release(b.action)
+					if b.action == "pee":
+						Input.action_release("poop")
 			if e.index == stick_id:
 				stick_id = -1
 				stick_vec = Vector2.ZERO
@@ -215,6 +219,8 @@ func _draw() -> void:
 		draw_circle(b.center, float(b.r), Color(0, 0, 0, 0.35 if active else 0.22))
 		draw_arc(b.center, float(b.r), 0, TAU, 24, Color(1, 1, 1, 0.55 if active else 0.3), 3.0)
 		var label: String = b.label
+		if b.action == "pee" and main != null and main.poop_state == 1:
+			label = "POOP"
 		draw_string(f, Vector2(b.center) + Vector2(-11.0 * label.length() / 2.0, 7.0), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(1, 1, 1, 0.7))
 	if stick_id != -1:
 		draw_circle(stick_origin, 74.0, Color(1, 1, 1, 0.07))

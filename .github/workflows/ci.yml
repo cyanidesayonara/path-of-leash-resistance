@@ -411,6 +411,8 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_prompts.gd
       - name: Every input action the code reads is registered test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_input_actions.gd
+      - name: Controls overhaul, actions separation and layouts test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_controls_overhaul.gd
       - name: The sweep and the snapshot name every walk test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tool_levels.gd
       - name: Walk modules' hooks take the arguments main passes test

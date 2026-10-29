@@ -71,7 +71,7 @@ const STEPS: Array[Dictionary] = [
 	{
 		"id": "bag", "at": -3220.0, "hold": true, "bench": true,
 		"title": "Nature calls.",
-		"body": "Stand still and hold {plant} to squat. Your human bags it - eventually.",
+		"body": "Stand still and hold {poop} to squat. Your human bags it - eventually.",
 	},
 	{
 		"id": "vault", "at": -3620.0, "hold": true, "bench": true,

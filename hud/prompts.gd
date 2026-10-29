@@ -25,6 +25,8 @@ const NAMES := {
 	"plant": ["SPACE", "A", "DIG"],
 	"bark": ["E", "B", "BARK"],
 	"pee": ["Q", "X", "PEE"],
+	"poop": ["Q", "X", "POOP"],
+	"pickup": ["SPACE", "A", "GRAB"],
 	"turbo": ["SHIFT", "RB", "RUN"],
 	"restart": ["R", "Start", "R"],
 	"share": ["C", "Y", "SHARE"],
@@ -51,6 +53,10 @@ static var device: int = _initial()
 static var _bound: Array = []
 
 
+static var _layout_key_overrides: Dictionary = {}
+static var _layout_pad_overrides: Dictionary = {}
+
+
 static func _initial() -> int:
 	# --prompts=pad or --prompts=touch starts on that device, for screenshots
 	for a in OS.get_cmdline_user_args():
@@ -68,6 +74,10 @@ static func _initial() -> int:
 
 
 static func key(action: String) -> String:
+	if device == KEYS and _layout_key_overrides.has(action):
+		return String(_layout_key_overrides[action])
+	if device == PAD and _layout_pad_overrides.has(action):
+		return String(_layout_pad_overrides[action])
 	var names: Array = NAMES.get(action, [action, action, ""])
 	var n := String(names[device])
 	return n if n != "" else String(names[KEYS])
@@ -127,3 +137,33 @@ static func note(event: InputEvent) -> bool:
 	elif event is InputEventScreenTouch and event.pressed:
 		device = TOUCH
 	return device != was
+
+
+static func update_layout(layout: String) -> void:
+	_layout_key_overrides.clear()
+	_layout_pad_overrides.clear()
+	match layout:
+		"arrows":
+			_layout_key_overrides["move"] = "ARROWS"
+			_layout_key_overrides["bark"] = "CTRL"
+			_layout_key_overrides["pee"] = "DEL"
+			_layout_key_overrides["poop"] = "DEL"
+			_layout_key_overrides["pickup"] = "SPACE"
+			_layout_key_overrides["turbo"] = "SHIFT"
+		"compact":
+			_layout_key_overrides["move"] = "IJKL"
+			_layout_key_overrides["plant"] = "SPACE"
+			_layout_key_overrides["bark"] = "O"
+			_layout_key_overrides["pee"] = "U"
+			_layout_key_overrides["poop"] = "U"
+			_layout_key_overrides["pickup"] = "SPACE"
+			_layout_key_overrides["turbo"] = ";"
+		"southpaw":
+			_layout_pad_overrides["move"] = "right stick"
+			_layout_pad_overrides["plant"] = "X"
+			_layout_pad_overrides["bark"] = "A"
+			_layout_pad_overrides["pee"] = "B"
+			_layout_pad_overrides["poop"] = "B"
+			_layout_pad_overrides["pickup"] = "X"
+			_layout_pad_overrides["turbo"] = "LB"
+	refresh()
