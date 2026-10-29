@@ -25,8 +25,8 @@ const NAMES := {
 	"plant": ["SPACE", "A", "DIG"],
 	"bark": ["E", "B", "BARK"],
 	"pee": ["Q", "X", "PEE"],
-	"poop": ["Q", "X", "POOP"],
-	"pickup": ["SPACE", "A", "GRAB"],
+	"poop": ["F", "Y", "POOP"],
+	"pickup": ["G", "LB", "GRAB"],
 	"turbo": ["SHIFT", "RB", "RUN"],
 	"restart": ["R", "Start", "R"],
 	"share": ["C", "Y", "SHARE"],
@@ -34,7 +34,7 @@ const NAMES := {
 	# the context-sensitive touch button does rather than call it SHARE
 	"skip": ["C", "Y", "SKIP"],
 	"pause": ["ESC", "Back", "MENU"],
-	"mute_music": ["M", "LB", ""],
+	"mute_music": ["M", "down", ""],
 	"goals": ["TAB", "up", "tap"],
 	"left": ["A", "<", "stick"],
 	"right": ["D", ">", "stick"],
@@ -139,31 +139,88 @@ static func note(event: InputEvent) -> bool:
 	return device != was
 
 
-static func update_layout(layout: String) -> void:
+static func key_label(code: int) -> String:
+	match code:
+		KEY_SPACE: return "SPACE"
+		KEY_SHIFT: return "SHIFT"
+		KEY_CTRL: return "CTRL"
+		KEY_ALT: return "ALT"
+		KEY_TAB: return "TAB"
+		KEY_ENTER: return "ENTER"
+		KEY_BACKSPACE: return "BKSP"
+		KEY_DELETE: return "DEL"
+		KEY_INSERT: return "INS"
+		KEY_HOME: return "HOME"
+		KEY_END: return "END"
+		KEY_PAGEUP: return "PGUP"
+		KEY_PAGEDOWN: return "PGDN"
+		KEY_UP: return "UP"
+		KEY_DOWN: return "DOWN"
+		KEY_LEFT: return "LEFT"
+		KEY_RIGHT: return "RIGHT"
+		KEY_SEMICOLON: return ";"
+		KEY_APOSTROPHE: return "'"
+		KEY_COMMA: return ","
+		KEY_PERIOD: return "."
+		KEY_SLASH: return "/"
+		KEY_BACKSLASH: return "\\"
+		KEY_BRACKETLEFT: return "["
+		KEY_BRACKETRIGHT: return "]"
+	var s := OS.get_keycode_string(code as Key).to_upper()
+	return s if s != "" else "?"
+
+
+static func pad_label(btn: int) -> String:
+	match btn:
+		JOY_BUTTON_A: return "A"
+		JOY_BUTTON_B: return "B"
+		JOY_BUTTON_X: return "X"
+		JOY_BUTTON_Y: return "Y"
+		JOY_BUTTON_LEFT_SHOULDER: return "LB"
+		JOY_BUTTON_RIGHT_SHOULDER: return "RB"
+		JOY_BUTTON_LEFT_STICK: return "L3"
+		JOY_BUTTON_RIGHT_STICK: return "R3"
+		JOY_BUTTON_DPAD_UP: return "up"
+		JOY_BUTTON_DPAD_DOWN: return "down"
+		JOY_BUTTON_DPAD_LEFT: return "left"
+		JOY_BUTTON_DPAD_RIGHT: return "right"
+		JOY_BUTTON_START: return "Start"
+		JOY_BUTTON_BACK: return "Back"
+	return "B%d" % btn
+
+
+static func update_layout(layout: String, custom_keys: Dictionary = {}, custom_pads: Dictionary = {}) -> void:
 	_layout_key_overrides.clear()
 	_layout_pad_overrides.clear()
 	match layout:
 		"arrows":
 			_layout_key_overrides["move"] = "ARROWS"
+			_layout_key_overrides["move_with"] = "the arrow keys"
 			_layout_key_overrides["bark"] = "CTRL"
 			_layout_key_overrides["pee"] = "DEL"
-			_layout_key_overrides["poop"] = "DEL"
-			_layout_key_overrides["pickup"] = "SPACE"
+			_layout_key_overrides["poop"] = "END"
+			_layout_key_overrides["pickup"] = "PGDN"
 			_layout_key_overrides["turbo"] = "SHIFT"
 		"compact":
 			_layout_key_overrides["move"] = "IJKL"
+			_layout_key_overrides["move_with"] = "IJKL"
 			_layout_key_overrides["plant"] = "SPACE"
 			_layout_key_overrides["bark"] = "O"
 			_layout_key_overrides["pee"] = "U"
-			_layout_key_overrides["poop"] = "U"
-			_layout_key_overrides["pickup"] = "SPACE"
+			_layout_key_overrides["poop"] = "H"
+			_layout_key_overrides["pickup"] = "N"
 			_layout_key_overrides["turbo"] = ";"
 		"southpaw":
 			_layout_pad_overrides["move"] = "right stick"
+			_layout_pad_overrides["move_with"] = "the right stick"
 			_layout_pad_overrides["plant"] = "X"
 			_layout_pad_overrides["bark"] = "A"
 			_layout_pad_overrides["pee"] = "B"
-			_layout_pad_overrides["poop"] = "B"
-			_layout_pad_overrides["pickup"] = "X"
+			_layout_pad_overrides["poop"] = "Y"
+			_layout_pad_overrides["pickup"] = "RB"
 			_layout_pad_overrides["turbo"] = "LB"
+	for act: String in custom_keys.keys():
+		_layout_key_overrides[act] = key_label(int(custom_keys[act]))
+	for act: String in custom_pads.keys():
+		_layout_pad_overrides[act] = pad_label(int(custom_pads[act]))
 	refresh()

@@ -2,141 +2,66 @@
 
 Append-only session history, newest first.
 
-## 2026-10-29 - The Dog Selector: Tito the Chihuahua, gap slipping, and featherweight reel-in
+## 2026-10-29 - The dog selector: five dogs, unlocked by stars
 
-Completing the five-dog selector lineup with Tito the Chihuahua alongside Millie, Pipa, Mochi, and Bruna:
-- **Playable Dog Lineup, Gap Slipping & Reel Mechanics** (`autoload/game.gd`, `entities/dog.gd`, `main.gd`):
-  - Tito the Chihuahua: unlocked at 45 stars as the master-tier dog unlock. Trait: "Slips through gaps, easily reeled in".
-  - Slips through gaps: petite physical collision radius reduced from 14.0 px to 8.0 px (`gap_mult = 0.57`), allowing Tito to slip effortlessly through tight gaps between bollards, outdoor cafe chairs, tables, and narrow fence posts that completely block larger breeds.
-  - Easily reeled in: featherweight build (0.45x mass) and delicate plant grip (0.35x grip multiplier yielding only 4.9x dry plant mass) means Tito cannot anchor against human tugs, and reel winding speed is boosted 1.65x when the owner draws Tito in.
-  - Swift, darting scurry: 1.10x top speed, 1.25x instant twitch acceleration, high-cadence pitter-patter gait (1.35x cadence, 0.70x stride).
-  - 5-way dog selection cycling wraps smoothly through Millie, Pipa, Mochi, Bruna, and Tito in GET READY and wardrobe menus, persisted via `records.cfg`.
-- **Iconic Chihuahua Silhouette & Energetic Personality** (`entities/dog.gd`):
-  - Miniature micro-canine build with a 10.5 px spine, 5.2 px chest, and rounded apple dome head (`cap de poma`, 5.5 px radius).
-  - Signature Chihuahua nervous energy: high-frequency shivering vibration when standing idle or crouching.
-  - Giant erect satellite ears: tall flared triangular bat ears with warm inner-ear blush that perk and tilt alertly.
-  - High-carried sickle tail (`cua en falç`) arching jauntily over the rump with rapid, perky wagging.
-  - Delicate tapered muzzle with large, prominent glossy dark eyes and distinct specular shine.
-  - Scaled miniature collar and Julius K9 harness; all cosmetic coats, collars, and bandanas carry over.
-- **Automated Regression Suite** (`tests/test_dog_selector.gd`):
-  - Expanded to 114 checks verifying complete 5-dog catalog definitions, trait multipliers, 5-tier star gating (0, 15, 25, 35, 45 stars), 5-way cycling and persistence, live entity dynamics, collision radius scaling (8.0 px vs 14.0 px), reel rate mechanics, and rendering integrity across all five breeds.
+Five dogs to pick from before a walk (`autoload/game.gd`, `entities/dog.gd`,
+`hud/menu_flow.gd`, `hud/menu_screen.gd`, `main.gd`), each changing one trait
+at one cost, with coats and collars carrying over to all five:
+- **Millie** (mongrel, default): balanced (1.0x speed, 1.0x plant).
+- **Pipa** (galgo, 15 stars): fast, weak plant (1.20x speed and acceleration,
+  0.55x plant grip; long sighthound back, rose ears, whip tail).
+- **Mochi** (French bulldog, 25 stars): plants hard, slow (1.70x plant grip
+  for 23.8x dry plant mass, 0.84x speed; wide chest, upright bat ears, short
+  screw tail).
+- **Bruna** (gos d'atura, 35 stars): herds your human, collects muck (1.45x
+  lateral give on the leash conversation, substances cling 1.60x longer on her
+  paws and pay +3 on a trouser smudge; shaggy locks, drop ears, feathered
+  tail).
+- **Tito** (chihuahua, 45 stars): slips through gaps, easily reeled in (8 px
+  collision radius vs 14 px, 0.45x unplanted mass, 0.35x plant grip, 1.65x
+  reel-in rate; apple head, flared bat ears, sickle tail).
+- Picked on GET READY (with trait line and star lock) or stepped on the walk
+  select; `--dog=<id>` sets the dog from the command line.
+- Tests: `tests/test_dog_selector.gd`.
 
-## 2026-10-29 - The Dog Selector: Bruna the Gos d'Atura, herding response, and shaggy rustic silhouette
+## 2026-10-29 - Controls overhaul: separate poop, pick-up button, layouts and rebinding
 
-Adding Bruna the Gos d'Atura Català (Catalan sheepdog) to the playable dog selector alongside Millie, Pipa, and Mochi:
-- **Playable Dog Lineup, Herding Trait & Muck Collection** (`autoload/game.gd`, `entities/human.gd`, `main.gd`):
-  - Bruna the Gos d'Atura: unlocked at 35 stars. A rustic Catalan sheepdog with natural herding instincts: herding trait grants a 1.45x lateral steering response multiplier (`give_lat` 217.5 px vs 150.0 px base) and boosted forward give, making leading and guiding your distracted human around obstacles fluid and effortless.
-  - Cost: collects muck! Shaggy coat collects grime and holds substances 1.60x longer (`muck_mult = 1.60`), leaving paw print trails for longer and allowing generous +3 bone smudges onto your human's trousers.
-  - Cycling wraps seamlessly between Millie (Mongrel), Pipa (Galgo), Mochi (French Bulldog), and Bruna (Gos d'Atura). Gated at 35 total stars (or free play).
-- **Rustic Catalan Sheepdog Silhouette & Visuals** (`entities/dog.gd`, `hud/menu_screen.gd`):
-  - Agile, sturdy sheepdog build with an 18.5 px spine, 8.8 px chest radius, and supple ground-covering trot (1.04x cadence, 1.05x stride).
-  - Shaggy rustic coat with dynamic flank fringes and breech tufts that wobble with the gait and visibly collect muck flecks when paws are muddy.
-  - Trademark facial furnishings: full beard (`barba`), forward-flaring moustache (`bigoti`), and shaggy forelock/eyebrows framing watchful dark eyes.
-  - Fringed triangular drop ears thatched with long hair that sway with movement and trail in the slipstream.
-  - Feathered plume sabre tail (`cua plomosa`) with an upward-curling hook carried proudly on the rump.
-  - GET READY UI layout overhaul: stacked row layout cleanly separates row title from trait badge, eliminating horizontal text collisions on longer descriptions.
-- **Automated Regression Suite** (`tests/test_dog_selector.gd`):
-  - Expanded to 85 checks verifying catalog definitions, trait multipliers (1.45x herd, 1.60x muck), 4-tier star gating (0, 15, 25, 35 stars), 4-way cycling and persistence, live entity dynamics, herding give compliance, and rendering integrity across all four breeds.
+Poop is no longer on the dig-in button, picking things up has its own button,
+and Settings can switch layouts or rebind individual actions (`autoload/game.gd`,
+`main.gd`, `hud/prompts.gd`, `hud/menu_flow.gd`, `hud/settings_panel.gd`,
+`hud/touch_controls.gd`, `entities/ball.gd`, `entities/frisbee.gd`):
+- **Poop** (`F` on keyboard, `Y` on controller, `POOP` on touch when nature
+  calls): holding `plant` (`SPACE` / `A`) only digs in; squatting takes
+  holding `{poop}`.
+- **Pick up** (`G` on keyboard, `LB` on controller, `GRAB` on touch): balls,
+  landed frisbees and carry-mission parcels wait for `{pickup}` instead of
+  auto-grabbing on contact (the autowalk still grabs automatically).
+- **Layouts and rebinding in Settings**: `CONTROLS` steps between `DEFAULT`
+  (WASD), `ARROWS`, `COMPACT` (IJKL) and `SOUTHPAW`, and pressing confirm on
+  the row rebinds each action in turn, saved to `records.cfg`.
+- Tests: `tests/test_controls_overhaul.gd`.
 
-## 2026-10-29 - The Dog Selector: Mochi the French Bulldog, anchor plant, and bat-ear silhouette
+## 2026-10-29 - Ear motion, phone feed and water wakes
 
-Adding Mochi the French bulldog to the playable dog lineup alongside Millie and Pipa:
-- **Playable Dog Lineup & Anchor Trait** (`autoload/game.gd`, `entities/dog.gd`, `main.gd`):
-  - Mochi the French Bulldog: unlocked at 25 stars. Built as an immovable little tank with a 1.70x plant grip multiplier (yielding 23.8x dry plant mass vs Millie's 14.0x and Pipa's 7.7x), stopping human yanks cold in their tracks. Balanced by a deliberate 0.84x top speed and 0.84x acceleration.
-  - Cycling wraps seamlessly between Millie (Mongrel), Pipa (Galgo), and Mochi (French Bulldog) in both GET READY and walk select menus.
-  - Gated at 25 total stars (or free play mode); attempting to start a walk with a locked dog triggers the alert nudge and refuses departure.
-  - Wardrobe text dynamically reflects the active dog ("Mochi is wearing this").
-- **Signature Frenchie Silhouette & Cobby Anatomy** (`entities/dog.gd`):
-  - Compact, cobby body with a short 12.5 px spine and a wide barrel chest (9.8 px radius).
-  - Prominent upright bat ears with warm visible inner ear leather and responsive alert twitches.
-  - Characteristic brachycephalic flat muzzle with a defined nose roll wrinkle and broad button nose.
-  - Wide-set bowed front leg stance (9.2 px spread) with rounder paws (3.4 px radius) and waddling trot gait (1.25x cadence, 0.80x stride).
-  - Short button screw/stub tail with a perky little wag on the rump.
-  - Immovable anchor plant: hunkers down into a sturdy bulldog pancake with 6 heavy ground gouge marks.
-  - Julius K9 harness and wide collar fitted to the thick neck and broad chest; equipped cosmetics and coats carry over cleanly.
-- **Automated Test Suite** (`tests/test_dog_selector.gd`):
-  - Expanded to 62 checks verifying catalog definitions, trait multipliers, 3-tier star gating (0, 15, 25 stars), 3-way cycling and persistence, live entity dynamics, anchor tug mass scaling (23.8x mass), menu gating, and rendering integrity across all three breeds.
+Small visual details across the dog, your human's phone and water (`entities/dog.gd`,
+`entities/human.gd`, `main.gd`, `tests/test_dog_anim_juice.gd`):
+- Ears trail back in the slipstream at a sprint, sway on sharp turns, and
+  twitch occasionally while standing still.
+- Your human's phone scrolls tiny feed posts with a periodic thumb flick (or
+  a miniature pitch on match day) and casts a soft glow on their face at
+  night.
+- Running through water leaves wake rings and spray droplets along the step
+  trail, batched through `ShapeBatch`.
 
-## 2026-10-29 - The Dog Selector: Pipa the Galgo end-to-end, trait modifiers, and GET READY UI
+## 2026-10-29 - El Gòtic busker placement and dare-giver pavement check
 
-Introducing playable dog selection, starting with Pipa the Spanish galgo alongside Millie:
-- **Playable Dog Catalog & Trait Modifiers** (`autoload/game.gd`, `entities/dog.gd`, `main.gd`):
-  - Millie the Mongrel: the balanced default (1.0x speed, 1.0x accel, 1.0x plant grip).
-  - Pipa the Galgo: unlocked at 15 stars. Built for speed and agility with 1.20x top speed and 1.20x acceleration, but handicapped by a fragile 0.55x plant grip multiplier (yielding 7.7x dry plant mass vs Millie's 14.0x mass, making tugs of war much more precarious).
-  - Gating: unlocked automatically once player reaches 15 total stars or in free play mode. Locked dogs trigger an alert nudge on attempt to start a walk.
-  - Persistence: selected dog is saved to `records.cfg` under `[player] dog` and survives session roundtrips.
-  - CLI flag `--dog=<name>` allows testing and photographing any breed directly from the terminal.
-- **Authentic Sighthound Silhouette & Breed Visuals** (`entities/dog.gd`):
-  - Elongated lumbar back and deep, aerodynamic chest tapering into a dramatic wasp-waist loin tuck-up.
-  - Folded rose ears trailing sleekly along the nape of the neck rather than heavy mutt drop ears.
-  - Elongated, slender tapering muzzle with narrow nose and focused sighthound eyes.
-  - Extended trot stride multiplier (1.25x) and lean hare-feet paws.
-  - Long whip tail terminating in an elegant upward saber hook.
-  - Wide Spanish martingale collar across the arched neck.
-  - All equipped coats and cosmetics (collars, bandanas) carry over cleanly to Pipa.
-- **GET READY Selection Row & Mobile Viewport Layout** (`hud/menu_flow.gd`, `hud/menu_screen.gd`):
-  - Added "YOUR DOG" as the first row in the GET READY preparation card, displaying dog name, trait summary ("FAST, WEAK PLANT"), and star lock indicators.
-  - Direct dog cycling on the walk select screen via `move_up` / `move_down`.
-  - Compact row height (46 px) with clean spacing keeps the 4-row preparation card within the 500 px viewport height budget on mobile landscape screens.
-- **Automated Test Suite** (`tests/test_dog_selector.gd`):
-  - 42 checks covering catalog definitions, trait multipliers, unlock thresholds, persistence, live entity dynamics, tug plant scaling, GET READY menu flow, lock gating, and render integrity for both breeds.
-
-## 2026-10-29 - Controls overhaul: explicit nature calls, dedicated pickup, and layout presets
-
-Separating plant and squatting actions, dedicated pickup interaction, and layout selection in Settings:
-- **Separated poop from plant** (`main.gd`, `systems/tutorial.gd`):
-  - Nature calls no longer trigger squatting while holding `plant` (dig in / brace). Holding plant continues to plant paws for tug-of-war leverage and stopping without unintended squats.
-  - Dedicated `poop` action (or `pee` when urge is active) triggers squatting and finishes business.
-  - Banner updates to instruct "NATURE CALLS! STAND STILL, HOLD {poop}".
-  - Tutorial lesson "bag" updated to teach holding `{poop}`.
-- **Dedicated pickup action** (`main.gd`, `entities/ball.gd`, `entities/frisbee.gd`, `hud/prompts.gd`):
-  - Grabbing parcels, tennis balls, and landed frisbees requires pressing or holding `pickup` (mapped to SPACE / A / GRAB) instead of proximity auto-vacuuming.
-  - Autowalk bots remain compatible and continue uninterrupted.
-  - Nearby parcels display prompt "{pickup} PICK UP THE PARCEL".
-- **Control layout presets & settings panel scaling** (`autoload/game.gd`, `hud/menu_flow.gd`, `hud/settings_panel.gd`, `hud/prompts.gd`):
-  - Added layout switcher in Settings with 4 selectable schemes: DEFAULT (WASD), ARROWS, COMPACT (IJKL), and SOUTHPAW (swapping sticks and bumpers).
-  - Configures `InputMap` key and pad bindings on the fly and updates button prompts everywhere.
-  - Persists cleanly across game sessions and roundtrips in save data.
-  - Tuned `settings_panel.gd` row height to 44 px (matching main menu and shop row heights) with non-negative vertical centering, keeping the 8-row card cleanly anchored within mobile landscape viewports without clipping.
-- **Dynamic touch controls** (`hud/touch_controls.gd`):
-  - On touch devices, the PEE button dynamically relabels to POOP when nature calls strike, sending the `poop` action seamlessly.
-- **Automated test suite** (`tests/test_controls_overhaul.gd`):
-  - 17 checks covering action separation (plant doesn't squat; poop squats), parcel and ball pickup actions, layout switching, prompt token updates, and settings save/load persistence.
-
-## 2026-10-29 - Visual and animation polish: secondary dog motion, phone doomscrolling, and water wakes
-
-A visual fidelity and animation feel pass across Millie, your human, and world interactions:
-- **Dog ear secondary motion & wind flutter** (`entities/dog.gd`):
-  - Sprint slipstream: when sprinting at high speeds or burning turbo zoomies, Millie's floppy ears trail backward in the slipstream with dynamic wind flutter.
-  - Centrifugal ear banking: sharp turns and sudden steering inputs exert centrifugal lag and sway, tilting the ears outward against the hinge of the body.
-  - Idle listening twitches: when standing stationary, subtle involuntary ear twitches reflect an attentive mutt listening to the street.
-  - Maintained mood and action reactivity (perked on bark and sniff, drooped when scared/tired).
-- **Human phone doomscrolling & night-time reflection** (`entities/human.gd`):
-  - Live feed animation: the phone screen displays tiny social feed cards and micro-text lines scrolling upward smoothly on autopilot, with periodic thumb swipe flicks.
-  - Night reflection glow: at night or dusk, the phone screen casts a soft upward blue-white reflection under your human's chin and face, visually connecting the phone to their oblivious gaze.
-  - Match day screen: displays a miniature pitch with center line, center circle, and animated match ball during Dia de Partit.
-- **Continuous water wakes & stepping spray** (`main.gd`):
-  - Running continuously through water (`Surfaces.S.WATER`) generates expanding wake ripples at every step rather than only on entry.
-  - Speeds over 160 px/s kick up small spray droplets fading behind the paws.
-  - Wading humans emit gentle foot ripples in the water.
-  - All rendered through `ShapeBatch` with fixed mark budgets and zero draw call increases.
-- **Test coverage** (`tests/test_dog_anim_juice.gd`):
-  - Extended suite with 10 assertions covering ear dynamics, turbo stream flutter, turning centrifugal lag, doomscrolling screen redraws, night face glow, and water mark generation.
-
-## 2026-10-29 - El Gòtic busker placement, Spanish guitar detail, and level check assertions
-
-Targeted placement, visual polish, and automated safety assertions for dare-givers:
-- **El Gòtic busker placement** (`main.gd`, `world/level_build.gd`):
-  - On Carrer del Gòtic at y = -1600, candidate placement clamps the busker to the pavement margin inside the east wall boundary (x = 768), keeping him comfortably seated on the street setts rather than clipped into the wall.
-  - Spawning on all 21 other walks remains byte-identical to previous releases at (810, -1600), preserving exact autowalk timing baselines.
-  - El Gòtic's markable potted geranium hydrant is spaced at y = -1550 on the east wall, giving a clean 50 px separation from the busker.
-- **Busker guitar & case polish** (`entities/challenger.gd`):
-  - Classical Spanish guitar details: headstock with tuning pegs, silver/nylon strings spanning the neck, and an ornate rosette ring around the sound hole.
-  - An occasional golden coin glint sparkles in his open red-lined guitar case.
-- **Dare-giver pavement assertions** (`world/level_check.gd`):
-  - `LevelCheck.check(m)` asserts that all dare-givers stand cleanly on the pavement (with monkey on the Badalona pier steps) and remain clear of solid obstacles.
-- **Dead code removal** (`world/world_sign.gd`):
-  - Removed unused legacy `GLOSS` dictionary superseded by `LEVEL_SUBTITLES` in `autoload/game.gd`.
+- Clamped El Gòtic's dare-giver at y = -1600 inside the east wall (`x = 768`),
+  moved the nearby flowerpot to y = -1550, and added headstock/string/rosette
+  detail to his guitar (`main.gd`, `world/level_build.gd`,
+  `entities/challenger.gd`).
+- `LevelCheck.check(m)` now verifies every dare-giver stands on the pavement
+  and outside solid obstacles (`world/level_check.gd`).
+- Removed unused `GLOSS` dictionary from `world/world_sign.gd`.
 
 ## 2026-10-28 - The release notes and docs catch up to 1.66
 
