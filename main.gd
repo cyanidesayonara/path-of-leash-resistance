@@ -9650,7 +9650,6 @@ func _spawn_challenger() -> void:
 	if tutorial_mode:
 		return
 	var giver := Node2D.new()
-	giver.name = "challenger"
 	var script: GDScript = load("res://entities/challenger.gd")
 	giver.set_script(script)
 	var who: String = script.giver_for(lvl)
@@ -9662,39 +9661,23 @@ func _spawn_challenger() -> void:
 		giver.setup(self, dog, who)
 		_pops_layer().add_speaker(giver, giver.speech)
 		return
-	if who == "busker":
-		# sitting in the arched Gothic stone doorway on Carrer del Gòtic
-		var e: Vector2 = walk_edges(-1600.0)
-		giver.position = Vector2(e.y + 8.0, -1600.0)
-		giver.z_index = 6
-		add_child(giver)
-		giver.setup(self, dog, who)
-		_pops_layer().add_speaker(giver, giver.speech)
-		return
-	var e: Vector2 = walk_edges(-1600.0)
-	var cx := (e.x + e.y) * 0.5
-	var half_w := (e.y - e.x) * 0.5
-	var max_off := maxf(30.0, half_w - 36.0)
-	var base := Vector2(cx, -1600.0)
+	var base := Vector2(walk_cx, -1600.0)
 	for offset: Vector2 in [
-		Vector2(max_off, 0.0), Vector2(-max_off, 0.0),
-		Vector2(max_off, -100.0), Vector2(-max_off, -100.0),
-		Vector2(max_off, 100.0), Vector2(-max_off, 100.0),
+		Vector2(170.0, 0.0), Vector2(-170.0, 0.0),
+		Vector2(170.0, -100.0), Vector2(-170.0, -100.0),
+		Vector2(170.0, 100.0), Vector2(-170.0, 100.0),
 	]:
-		giver.position = base + offset
-		if _challenger_clear_of_trees(giver.position) and not _is_inside_solid_rect(giver.position):
+		var p := base + offset
+		if lvl == "oldtown":
+			var e := walk_edges(p.y)
+			p.x = clampf(p.x, e.x + 22.0, e.y - 22.0)
+		giver.position = p
+		if _challenger_clear_of_trees(giver.position):
 			break
 	giver.z_index = 6
 	add_child(giver)
 	giver.setup(self, dog, who)
 	_pops_layer().add_speaker(giver, giver.speech)
-
-
-func _is_inside_solid_rect(p: Vector2) -> bool:
-	for r: Rect2 in solid_rects:
-		if r.grow(4.0).has_point(p):
-			return true
-	return false
 
 
 func _challenger_clear_of_trees(at: Vector2) -> bool:

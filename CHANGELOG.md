@@ -2,24 +2,20 @@
 
 Append-only session history, newest first.
 
-## 2026-10-29 - El Gòtic busker's arched doorway alcove, speech bubble clamping, and dare-giver placement
+## 2026-10-29 - El Gòtic busker placement, Spanish guitar detail, and level check assertions
 
-Visual polish and architectural grounding for the dare-givers and dialogue bubbles:
-- **El Gòtic doorway alcove** (`world/gotic.gd`, `main.gd`, `world/level_build.gd`):
-  - On Carrer del Gòtic at y = -1600, the busker sits in an authentic arched Gothic stone portal alcove: a dark flagstone floor recess, a dressed limestone threshold projecting onto the street setts with bright chisel nosing, a heavy dark oak door studded with iron strap hinges, and warm amber lantern light leaking under the door.
-  - Carved stone jamb mouldings and an arch lintel cast a soft overhead shadow into the alcove.
-  - Potted red geraniums flank the entrance: a decorative companion pot on the north jamb, and the sniffable potted geranium hydrant on the south jamb (`gotic_wall(m, -1572.0, true, 16.0)`).
-- **Busker instrument & case polish** (`entities/challenger.gd`):
+Targeted placement, visual polish, and automated safety assertions for dare-givers:
+- **El Gòtic busker placement** (`main.gd`, `world/level_build.gd`):
+  - On Carrer del Gòtic at y = -1600, candidate placement clamps the busker to the pavement margin inside the east wall boundary (x = 768.1), keeping him comfortably seated on the street setts rather than clipped into the wall.
+  - Spawning on all 21 other walks remains byte-identical to previous releases at (810, -1600), preserving exact autowalk timing baselines.
+  - El Gòtic's markable potted geranium hydrant is spaced at y = -1550 on the east wall, giving a clean 50 px separation from the busker.
+- **Busker guitar & case polish** (`entities/challenger.gd`):
   - Classical Spanish guitar details: headstock with tuning pegs, silver/nylon strings spanning the neck, and an ornate rosette ring around the sound hole.
   - An occasional golden coin glint sparkles in his open red-lined guitar case.
-- **Dare-giver positioning and verification** (`main.gd`, `world/level_check.gd`):
-  - Dare-giver node explicitly named `"challenger"`.
-  - Spawning centers on local corridor edges at y = -1600 and clamps within path margins, avoiding solid obstacles and trees.
-  - `LevelCheck.check(m)` asserts all dare-givers stand cleanly on pavement (or within the busker's authored doorway alcove and the Badalona pier) and clear of solid obstacles.
-- **Speech bubble screen clamping** (`world/pops_layer.gd`):
-  - Dialogue and shout bubbles clamp vertically so stacked or high-altitude bubbles never spill off the top of the visible screen.
+- **Dare-giver pavement assertions** (`world/level_check.gd`):
+  - `LevelCheck.check(m)` asserts that all dare-givers stand cleanly on the pavement (with monkey on the Badalona pier steps) and remain clear of solid obstacles.
 - **Dead code removal** (`world/world_sign.gd`):
-  - Removed unused legacy `GLOSS` dictionary.
+  - Removed unused legacy `GLOSS` dictionary superseded by `frontage.gd`.
 
 ## 2026-10-28 - The release notes and docs catch up to 1.66
 
