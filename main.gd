@@ -1193,7 +1193,9 @@ func _setup_input() -> void:
 		InputMap.action_add_event(action, ev)
 	var buttons := {
 		"plant": [KEY_SPACE, JOY_BUTTON_A], "bark": [KEY_E, JOY_BUTTON_B],
-		"pee": [KEY_Q, JOY_BUTTON_X], "turbo": [KEY_SHIFT, JOY_BUTTON_RIGHT_SHOULDER],
+		"pee": [KEY_Q, JOY_BUTTON_X], "poop": [KEY_Q, JOY_BUTTON_X],
+		"pickup": [KEY_SPACE, JOY_BUTTON_A],
+		"turbo": [KEY_SHIFT, JOY_BUTTON_RIGHT_SHOULDER],
 		"restart": [KEY_R, JOY_BUTTON_START], "share": [KEY_C, JOY_BUTTON_Y],
 		"pause": [KEY_ESCAPE, JOY_BUTTON_BACK], "mute_music": [KEY_M, JOY_BUTTON_LEFT_SHOULDER],
 		"goals": [KEY_TAB, JOY_BUTTON_DPAD_UP],
@@ -1206,6 +1208,7 @@ func _setup_input() -> void:
 		var evb := InputEventJoypadButton.new()
 		evb.button_index = buttons[action][1]
 		InputMap.action_add_event(action, evb)
+	Game.apply_control_layout()
 
 
 func _apply_corridor() -> void:
@@ -5635,6 +5638,7 @@ func _refresh_shop() -> void:
 const SETTING_NAMES := {
 	"master": "MASTER VOLUME", "sfx": "SOUND EFFECTS",
 	"music": "MUSIC", "fullscreen": "FULLSCREEN", "goals": "GOAL LIST", "language": "LANGUAGE",
+	"controls": "CONTROLS",
 	"free_play": "FREE PLAY (DEMO)",
 }
 
@@ -5735,9 +5739,11 @@ func _update_hud() -> void:
 		else:
 			hud_status = "HEAD HOME"
 	elif poop_state == 1:
-		hud_status = Prompts.fill("NATURE CALLS! STAND STILL, HOLD {plant}")
+		hud_status = Prompts.fill("NATURE CALLS! STAND STILL, HOLD {poop}")
 	elif poop_state >= 3:
 		hud_status = "UH OH..."
+	elif carry_state == 0 and carry_pickup.x < INF and dog.global_position.distance_to(carry_pickup) < 45.0:
+		hud_status = Prompts.fill("{pickup} PICK UP %s" % carry_item.to_upper())
 	elif call_active:
 		# NOT "they are on the phone": he is on the phone for the whole walk, so
 		# saying so is never news. What is news is that he has stopped MOVING,
@@ -8993,12 +8999,15 @@ func _pickups(delta: float) -> void:
 	# carry mission: grab it, then take it to the drop-off
 	if carry_pickup.x < INF:
 		if carry_state == 0 and dog.global_position.distance_to(carry_pickup) < 28.0:
-			carry_state = 1
-			Sfx.play("pickup", 0.9)
-			float_text(carry_pickup, "got %s!" % carry_item, Color(0.85, 1.0, 0.85))
-			_update_hud()
+			if auto_walk or Input.is_action_pressed("pickup") or Input.is_action_just_pressed("pickup") or Input.is_action_just_pressed("plant"):
+				carry_state = 1
+				dog_carrying = true
+				Sfx.play("pickup", 0.9)
+				float_text(carry_pickup, "got %s!" % carry_item, Color(0.85, 1.0, 0.85))
+				_update_hud()
 		elif carry_state == 1 and dog.global_position.distance_to(carry_drop) < 34.0:
 			carry_state = 2
+			dog_carrying = false
 			bones += 10
 			Sfx.play("star")
 			combo.add("DELIVER", 5)
@@ -9158,7 +9167,7 @@ func _bodily(delta: float) -> void:
 	# interrupts it (the tank is a per-walk budget, ~9 breaks)
 	# velocity gate is loose: being gently towed must not block the pee
 	# (a hard yank still interrupts it)
-	var going: bool = Input.is_action_pressed("pee") and pee > 0.02 \
+	var going: bool = Input.is_action_pressed("pee") and poop_state != 1 and pee > 0.02 \
 		and not dog.is_tumbling() and dog.velocity.length() < 80.0
 	dog.peeing = going
 	if going:
@@ -9215,7 +9224,9 @@ func _bodily(delta: float) -> void:
 				float_text(dog.global_position, "uh oh...", Color(1, 0.9, 0.6))
 		1:
 			urge_timer -= delta
-			if dog.planted and not dog.is_tumbling():
+			var squatting: bool = (Input.is_action_pressed("poop") or Input.is_action_pressed("pee")) \
+				and not dog.is_tumbling() and dog.velocity.length() < 90.0
+			if squatting:
 				squat_progress += delta
 				dog.squat_ui = squat_progress / 2.5
 				if squat_progress >= 2.5:

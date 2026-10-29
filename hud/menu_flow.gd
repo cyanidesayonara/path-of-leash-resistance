@@ -861,8 +861,8 @@ static func settings_keys(m: Node2D) -> Array:
 	# the browser owns the window, so offering a fullscreen toggle there
 	# would be a button that lies
 	if OS.has_feature("web"):
-		return ["master", "sfx", "music", "language", "goals", "free_play"]
-	return ["master", "sfx", "music", "language", "fullscreen", "goals", "free_play"]
+		return ["master", "sfx", "music", "language", "controls", "goals", "free_play"]
+	return ["master", "sfx", "music", "language", "controls", "fullscreen", "goals", "free_play"]
 
 
 static func settings_rows(m: Node2D) -> Array:
@@ -887,9 +887,14 @@ static func settings_rows(m: Node2D) -> Array:
 			"language":
 				v = float(Game.LANGUAGES.find(Game.language))
 				kind = "choice"
+			"controls":
+				v = float(Game.CONTROL_LAYOUTS.find(Game.control_layout))
+				kind = "choice"
 		var row := {"name": m.SETTING_NAMES[k], "kind": kind, "v": v}
 		if k == "language":
 			row.text = String(Game.LANGUAGE_NAMES[Game.language])
+		elif k == "controls":
+			row.text = String(Game.CONTROL_LAYOUT_NAMES[Game.control_layout])
 		out.append(row)
 	return out
 
@@ -904,28 +909,35 @@ static func check_settings_roundtrip(m: Node2D) -> Array:
 	# its default the next time you launch. So write odd values, read them
 	# back, and put the player's own settings back afterwards.
 	var p: Array = []
-	var keep := [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen, Game.free_play]
+	var was_persist := Game.persist
+	Game.persist = true
+	var keep := [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen, Game.free_play, Game.control_layout]
 	Game.vol_master = 0.3
 	Game.vol_sfx = 0.1
 	Game.vol_music = 0.7
 	Game.fullscreen = true
 	Game.free_play = true
+	Game.control_layout = "arrows"
 	Game.save_records()
 	Game.vol_master = 0.0
 	Game.vol_sfx = 0.0
 	Game.vol_music = 0.0
 	Game.fullscreen = false
 	Game.free_play = false
+	Game.control_layout = "default"
 	Game.load_records()
 	if not (is_equal_approx(Game.vol_master, 0.3) and is_equal_approx(Game.vol_sfx, 0.1)
-			and is_equal_approx(Game.vol_music, 0.7) and Game.fullscreen and Game.free_play):
-		p.append("settings did not survive a save/load round trip (%.2f %.2f %.2f %s)"
-			% [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen])
+			and is_equal_approx(Game.vol_music, 0.7) and Game.fullscreen and Game.free_play
+			and Game.control_layout == "arrows"):
+		p.append("settings did not survive a save/load round trip (%.2f %.2f %.2f %s %s)"
+			% [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen, Game.control_layout])
 	Game.vol_master = keep[0]
 	Game.vol_sfx = keep[1]
 	Game.vol_music = keep[2]
 	Game.fullscreen = keep[3]
 	Game.free_play = keep[4]
+	Game.control_layout = keep[5]
+	Game.apply_control_layout()
 	Game.save_records()
 	# and the slider steps must stay inside 0..1 however hard you lean on them
 	m.settings_idx = 0
@@ -940,6 +952,7 @@ static func check_settings_roundtrip(m: Node2D) -> Array:
 	Game.vol_master = keep[0]
 	Game.apply_settings()
 	Game.save_records()
+	Game.persist = was_persist
 	return p
 
 
@@ -998,6 +1011,12 @@ static func settings_adjust(m: Node2D, dir: int) -> void:
 		"language":
 			var i := Game.LANGUAGES.find(Game.language)
 			Game.language = Game.LANGUAGES[wrapi(i + dir, 0, Game.LANGUAGES.size())]
+			Sfx.play("ui")
+			m.queue_redraw()
+		"controls":
+			var ci := Game.CONTROL_LAYOUTS.find(Game.control_layout)
+			Game.control_layout = Game.CONTROL_LAYOUTS[wrapi(ci + dir, 0, Game.CONTROL_LAYOUTS.size())]
+			Game.apply_control_layout()
 			Sfx.play("ui")
 			m.queue_redraw()
 
