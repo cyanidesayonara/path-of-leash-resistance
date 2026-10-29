@@ -275,6 +275,22 @@ static func check(m) -> Array:
 			if n < DARE_SPOTS:
 				p.append("only %d trick spots within %.0f of the %s's dares (want %d)" % [
 					n, DARE_SPOTS_R, String(g.who), DARE_SPOTS])
+			var g_who := String(g.who)
+			var gp: Vector2 = (g as Node2D).global_position
+			var ge: Vector2 = m.walk_edges(gp.y)
+			# the monkey sits on the Pont del Petroli pier; the busker sits in the Gothic doorway alcove
+			if g_who != "monkey" and g_who != "busker":
+				if gp.x < ge.x - 2.0 or gp.x > ge.y + 2.0:
+					p.append("challenger (%s) at (%.0f, %.0f) is off pavement (%.0f..%.0f there)" % [
+						g_who, gp.x, gp.y, ge.x, ge.y])
+			elif g_who == "busker":
+				if gp.x < ge.y or gp.x > ge.y + 14.0:
+					p.append("busker at (%.0f, %.0f) is outside doorway alcove (wall at %.0f)" % [
+						gp.x, gp.y, ge.y])
+			for sr: Rect2 in m.solid_rects:
+				if sr.has_point(gp):
+					p.append("challenger (%s) at (%.0f, %.0f) is inside solid obstacle" % [
+						g_who, gp.x, gp.y])
 	return p
 
 

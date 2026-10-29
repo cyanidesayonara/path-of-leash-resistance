@@ -182,6 +182,8 @@ func _draw_speech() -> void:
 					moved = true
 			if not moved:
 				break
+		# keep inside the top edge of the visible screen
+		box.position.y = maxf(box.position.y, vis.position.y + 6.0)
 		placed.append(box)
 		it["box"] = box
 		it["ls"] = ls

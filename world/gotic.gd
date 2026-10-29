@@ -119,6 +119,7 @@ static func draw_street(m: Node2D, vt: float, vb: float) -> void:
 
 	# doorway and square terracotta flowerpots with geraniums
 	_draw_pots(m, b, vt, vb, fp)
+	_draw_busker_doorway(m, b, vt, vb)
 
 	var sy: float = LevelBuild.GOTIC_STEPS_Y
 	if sy > vt - 80.0 and sy < vb + 80.0:
@@ -169,6 +170,54 @@ static func _draw_pots(m: Node2D, b: ShapeBatch, vt: float, vb: float, fp: Vecto
 			b.circle(pp + Vector2.from_angle(float(lf) * TAU / 4.0 + 0.4) * 3.5, 3.2, Color(0.24, 0.44, 0.20))
 		for fl in range(3):
 			b.circle(pp + Vector2.from_angle(float(fl) * TAU / 3.0 + 0.8) * 3.0, 2.0, Color(0.92, 0.16, 0.24))
+
+
+# the arched stone doorway where the busker sits with his guitar
+static func _draw_busker_doorway(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	const DOOR_Y := -1600.0
+	if DOOR_Y < vt - 100.0 or DOOR_Y > vb + 100.0:
+		return
+	var e: Vector2 = m.walk_edges(DOOR_Y)
+	var ex := e.y  # east wall boundary (~790.0)
+	# 1. recessed alcove floor (dark worn flagstones)
+	b.rect(Rect2(ex - 2.0, DOOR_Y - 22.0, 26.0, 44.0), Color(0.42, 0.38, 0.35))
+	# 2. dressed stone threshold step projecting onto street setts
+	b.rect(Rect2(ex - 8.0, DOOR_Y - 24.0, 9.0, 48.0), Color(0.64, 0.60, 0.54))
+	b.line(Vector2(ex - 8.0, DOOR_Y - 24.0), Vector2(ex - 8.0, DOOR_Y + 24.0), Color(0.78, 0.74, 0.68), 2.0)
+	b.line(Vector2(ex - 9.5, DOOR_Y - 24.0), Vector2(ex - 9.5, DOOR_Y + 24.0), Color(0.12, 0.11, 0.12, 0.32), 2.0)
+	# 3. heavy Gothic studded oak door at the back
+	b.rect(Rect2(ex + 22.0, DOOR_Y - 20.0, 5.0, 40.0), Color(0.18, 0.13, 0.09))
+	b.line(Vector2(ex + 22.0, DOOR_Y - 7.0), Vector2(ex + 27.0, DOOR_Y - 7.0), Color(0.10, 0.08, 0.06), 1.0)
+	b.line(Vector2(ex + 22.0, DOOR_Y + 7.0), Vector2(ex + 27.0, DOOR_Y + 7.0), Color(0.10, 0.08, 0.06), 1.0)
+	# iron hinge plates & door studs
+	b.rect(Rect2(ex + 21.0, DOOR_Y - 14.0, 4.0, 3.0), Color(0.10, 0.10, 0.12))
+	b.rect(Rect2(ex + 21.0, DOOR_Y + 11.0, 4.0, 3.0), Color(0.10, 0.10, 0.12))
+	b.circle(Vector2(ex + 23.0, DOOR_Y - 12.0), 1.0, Color(0.28, 0.28, 0.30))
+	b.circle(Vector2(ex + 23.0, DOOR_Y + 13.0), 1.0, Color(0.28, 0.28, 0.30))
+	# 4. warm amber light leaking under the door
+	b.rect(Rect2(ex + 20.0, DOOR_Y - 18.0, 3.0, 36.0), Color(1.0, 0.88, 0.50, 0.24))
+	b.circle(Vector2(ex + 14.0, DOOR_Y), 18.0, Color(1.0, 0.85, 0.40, 0.10))
+	b.circle(Vector2(ex + 8.0, DOOR_Y), 28.0, Color(1.0, 0.85, 0.40, 0.05))
+	# 5. moulded stone jambs framing opening
+	b.rect(Rect2(ex - 6.0, DOOR_Y - 27.0, 30.0, 5.0), Color(0.52, 0.48, 0.42))
+	b.line(Vector2(ex - 6.0, DOOR_Y - 27.0), Vector2(ex + 24.0, DOOR_Y - 27.0), Color(0.72, 0.68, 0.62), 1.5)
+	b.rect(Rect2(ex - 6.0, DOOR_Y + 22.0, 30.0, 5.0), Color(0.46, 0.42, 0.36))
+	b.line(Vector2(ex - 6.0, DOOR_Y + 27.0), Vector2(ex + 24.0, DOOR_Y + 27.0), Color(0.36, 0.32, 0.28), 1.5)
+	# corbel tabs
+	b.polygon(PackedVector2Array([Vector2(ex - 6.0, DOOR_Y - 27.0), Vector2(ex - 2.0, DOOR_Y - 22.0), Vector2(ex - 6.0, DOOR_Y - 22.0)]), Color(0.60, 0.56, 0.50))
+	b.polygon(PackedVector2Array([Vector2(ex - 6.0, DOOR_Y + 27.0), Vector2(ex - 2.0, DOOR_Y + 22.0), Vector2(ex - 6.0, DOOR_Y + 22.0)]), Color(0.40, 0.36, 0.32))
+	# 6. lintel / arch shadow into upper alcove
+	b.rect(Rect2(ex - 2.0, DOOR_Y - 22.0, 26.0, 14.0), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.30))
+	b.rect(Rect2(ex - 4.0, DOOR_Y - 22.0, 28.0, 7.0), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.20))
+	# 7. companion terracotta geranium pot on north jamb
+	var np := Vector2(ex - 4.0, DOOR_Y - 29.0)
+	b.circle(np + m.LIGHT * 3.0, 7.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
+	b.circle(np, 6.5, Color(0.72, 0.38, 0.24))
+	b.circle(np, 4.5, Color(0.30, 0.20, 0.14))
+	b.circle(np + Vector2(-2.0, -1.0), 3.0, Color(0.24, 0.44, 0.20))
+	b.circle(np + Vector2(2.0, 1.0), 3.0, Color(0.24, 0.44, 0.20))
+	b.circle(np + Vector2(0.0, -1.0), 2.2, Color(0.92, 0.16, 0.24))
+	b.circle(np + Vector2(2.0, -2.0), 1.8, Color(0.95, 0.22, 0.28))
 
 
 static func draw_roofs(m: Node2D, c: Object, vt: float, vb: float) -> void:

@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-10-29 - El Gòtic busker's arched doorway alcove, speech bubble clamping, and dare-giver placement
+
+Visual polish and architectural grounding for the dare-givers and dialogue bubbles:
+- **El Gòtic doorway alcove** (`world/gotic.gd`, `main.gd`, `world/level_build.gd`):
+  - On Carrer del Gòtic at y = -1600, the busker sits in an authentic arched Gothic stone portal alcove: a dark flagstone floor recess, a dressed limestone threshold projecting onto the street setts with bright chisel nosing, a heavy dark oak door studded with iron strap hinges, and warm amber lantern light leaking under the door.
+  - Carved stone jamb mouldings and an arch lintel cast a soft overhead shadow into the alcove.
+  - Potted red geraniums flank the entrance: a decorative companion pot on the north jamb, and the sniffable potted geranium hydrant on the south jamb (`gotic_wall(m, -1572.0, true, 16.0)`).
+- **Busker instrument & case polish** (`entities/challenger.gd`):
+  - Classical Spanish guitar details: headstock with tuning pegs, silver/nylon strings spanning the neck, and an ornate rosette ring around the sound hole.
+  - An occasional golden coin glint sparkles in his open red-lined guitar case.
+- **Dare-giver positioning and verification** (`main.gd`, `world/level_check.gd`):
+  - Dare-giver node explicitly named `"challenger"`.
+  - Spawning centers on local corridor edges at y = -1600 and clamps within path margins, avoiding solid obstacles and trees.
+  - `LevelCheck.check(m)` asserts all dare-givers stand cleanly on pavement (or within the busker's authored doorway alcove and the Badalona pier) and clear of solid obstacles.
+- **Speech bubble screen clamping** (`world/pops_layer.gd`):
+  - Dialogue and shout bubbles clamp vertically so stacked or high-altitude bubbles never spill off the top of the visible screen.
+- **Dead code removal** (`world/world_sign.gd`):
+  - Removed unused legacy `GLOSS` dictionary.
+
 ## 2026-10-28 - The release notes and docs catch up to 1.66
 
 1.65 and 1.66 went to the Microsoft Store with 1.64's What's new (El
