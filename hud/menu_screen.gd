@@ -253,8 +253,15 @@ func _details(vs: Vector2) -> void:
 		if picked:
 			draw_rect(rr, Color(acc.r, acc.g, acc.b, 0.14))
 			draw_rect(Rect2(rr.position, Vector2(4.0, rr.size.y)), acc)
-		draw_string(f, Vector2(rr.position.x + 16.0, y + 26.0), String(row.name), HORIZONTAL_ALIGNMENT_LEFT,
-			-1, 15, Kit.INK_SOFT if picked else Kit.INK_FAINT)
+		var has_trait := row.has("trait")
+		if has_trait and picked:
+			draw_string(f, Vector2(rr.position.x + 16.0, y + 17.0), String(row.name), HORIZONTAL_ALIGNMENT_LEFT,
+				-1, 12, Kit.INK_SOFT)
+			draw_string(Kit.body(), Vector2(rr.position.x + 16.0, y + 32.0), String(row.trait), HORIZONTAL_ALIGNMENT_LEFT,
+				-1, 11, Color(acc.r, acc.g, acc.b, 0.95))
+		else:
+			draw_string(f, Vector2(rr.position.x + 16.0, y + 26.0), String(row.name), HORIZONTAL_ALIGNMENT_LEFT,
+				-1, 15, Kit.INK_SOFT if picked else Kit.INK_FAINT)
 		var fixed := bool(row.fixed)
 		var val := String(row.value)
 		var vx := rr.end.x - 40.0
@@ -270,10 +277,6 @@ func _details(vs: Vector2) -> void:
 		elif picked:
 			Kit.chevron(self, Vector2(vx - vw - 18.0, y + 20.0), 9.0, acc, true)
 			Kit.chevron(self, Vector2(vx + 16.0, y + 20.0), 9.0, acc)
-			if row.has("trait"):
-				var tr := String(row.trait)
-				draw_string(Kit.body(), Vector2(vx - vw - 28.0 - Kit.text_w(Kit.body(), tr, 12), y + 26.0),
-					tr, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Kit.INK_SOFT)
 		y += row_h
 	y += 4.0
 	draw_line(Vector2(r.position.x + 28.0, y), Vector2(r.end.x - 28.0, y), Color(1, 1, 1, 0.1), 1.5)

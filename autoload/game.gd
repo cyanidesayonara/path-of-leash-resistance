@@ -171,8 +171,20 @@ const DOGS := {
 		"accel_mult": 0.84,
 		"plant_mult": 1.70,
 	},
+	"bruna": {
+		"name": "Bruna",
+		"breed": "Gos d'atura",
+		"stars": 35,
+		"trait": "Herds human, collects muck",
+		"desc": "A shaggy sheepdog who steers the human with ease",
+		"speed_mult": 1.00,
+		"accel_mult": 1.05,
+		"plant_mult": 1.00,
+		"herd_mult": 1.45,
+		"muck_mult": 1.60,
+	},
 }
-const DOG_KEYS: Array[String] = ["millie", "pipa", "mochi"]
+const DOG_KEYS: Array[String] = ["millie", "pipa", "mochi", "bruna"]
 const DEFAULT_DOG := "millie"
 
 const SAVE_PATH := "user://records.cfg"
@@ -419,6 +431,14 @@ func dog_accel_mult(k := "") -> float:
 
 func dog_plant_mult(k := "") -> float:
 	return float(dog_data(k).get("plant_mult", 1.0))
+
+
+func dog_herd_mult(k := "") -> float:
+	return float(dog_data(k).get("herd_mult", 1.0))
+
+
+func dog_muck_mult(k := "") -> float:
+	return float(dog_data(k).get("muck_mult", 1.0))
 
 
 func is_dog_unlocked(k: String) -> bool:

@@ -50,6 +50,7 @@ func _test_catalog_and_traits(game: Node) -> void:
 	_check(game.DOGS.has("millie"), "catalog has millie")
 	_check(game.DOGS.has("pipa"), "catalog has pipa")
 	_check(game.DOGS.has("mochi"), "catalog has mochi")
+	_check(game.DOGS.has("bruna"), "catalog has bruna")
 	_check(game.DEFAULT_DOG == "millie", "default dog is millie")
 
 	# Millie balanced
@@ -73,36 +74,55 @@ func _test_catalog_and_traits(game: Node) -> void:
 	_check(is_equal_approx(game.dog_accel_mult("mochi"), 0.84), "mochi accel mult is 0.84")
 	_check(is_equal_approx(game.dog_plant_mult("mochi"), 1.70), "mochi plant mult is 1.70")
 
+	# Bruna herds human, collects muck
+	_check(game.dog_name("bruna") == "Bruna", "bruna name")
+	_check(game.dog_breed("bruna") == "gos d'atura", "bruna breed is gos d'atura")
+	_check(is_equal_approx(game.dog_speed_mult("bruna"), 1.00), "bruna speed mult is 1.00")
+	_check(is_equal_approx(game.dog_accel_mult("bruna"), 1.05), "bruna accel mult is 1.05")
+	_check(is_equal_approx(game.dog_plant_mult("bruna"), 1.00), "bruna plant mult is 1.00")
+	_check(is_equal_approx(game.dog_herd_mult("bruna"), 1.45), "bruna herd mult is 1.45")
+	_check(is_equal_approx(game.dog_muck_mult("bruna"), 1.60), "bruna muck mult is 1.60")
+
 
 func _test_unlocks(game: Node) -> void:
 	game.free_play = false
 	_check(game.is_dog_unlocked("millie"), "millie is always unlocked")
 
-	# Gating thresholds: Pipa 15 stars, Mochi 25 stars
+	# Gating thresholds: Pipa 15 stars, Mochi 25 stars, Bruna 35 stars
 	var saved_records: Dictionary = game.records.duplicate(true)
 	game.records.clear()
 	_check(game.total_stars() == 0, "total stars is 0")
 	_check(not game.is_dog_unlocked("pipa"), "pipa is locked at 0 stars")
 	_check(not game.is_dog_unlocked("mochi"), "mochi is locked at 0 stars")
+	_check(not game.is_dog_unlocked("bruna"), "bruna is locked at 0 stars")
 
 	# Free play unlocks all
 	game.free_play = true
 	_check(game.is_dog_unlocked("pipa"), "pipa unlocked under free_play")
 	_check(game.is_dog_unlocked("mochi"), "mochi unlocked under free_play")
+	_check(game.is_dog_unlocked("bruna"), "bruna unlocked under free_play")
 	game.free_play = false
 
-	# Grant 15 stars: pipa opens, mochi still locked
+	# Grant 15 stars: pipa opens, mochi and bruna still locked
 	for lv in game.LEVELS.slice(0, 5):
 		game.records[lv] = {"stars": 3}
 	_check(game.total_stars() == 15, "total stars is 15")
 	_check(game.is_dog_unlocked("pipa"), "pipa is unlocked at 15 stars")
 	_check(not game.is_dog_unlocked("mochi"), "mochi is still locked at 15 stars")
+	_check(not game.is_dog_unlocked("bruna"), "bruna is still locked at 15 stars")
 
-	# Grant 27 stars: mochi opens
+	# Grant 27 stars: mochi opens, bruna still locked
 	for lv in game.LEVELS.slice(5, 9):
 		game.records[lv] = {"stars": 3}
 	_check(game.total_stars() == 27, "total stars is 27")
 	_check(game.is_dog_unlocked("mochi"), "mochi is unlocked at 25+ stars")
+	_check(not game.is_dog_unlocked("bruna"), "bruna is still locked at 27 stars")
+
+	# Grant 36 stars: bruna opens
+	for lv in game.LEVELS.slice(9, 12):
+		game.records[lv] = {"stars": 3}
+	_check(game.total_stars() == 36, "total stars is 36")
+	_check(game.is_dog_unlocked("bruna"), "bruna is unlocked at 35+ stars")
 
 	# Restore records
 	game.records = saved_records
@@ -115,9 +135,13 @@ func _test_cycle_and_persistence(game: Node) -> void:
 	game.cycle_dog(1)
 	_check(game.dog == "mochi", "cycle +1 moves pipa to mochi")
 	game.cycle_dog(1)
-	_check(game.dog == "millie", "cycle +1 wraps mochi back to millie")
+	_check(game.dog == "bruna", "cycle +1 moves mochi to bruna")
+	game.cycle_dog(1)
+	_check(game.dog == "millie", "cycle +1 wraps bruna back to millie")
 	game.cycle_dog(-1)
-	_check(game.dog == "mochi", "cycle -1 wraps millie to mochi")
+	_check(game.dog == "bruna", "cycle -1 wraps millie to bruna")
+	game.cycle_dog(-1)
+	_check(game.dog == "mochi", "cycle -1 moves bruna to mochi")
 	game.cycle_dog(-1)
 	_check(game.dog == "pipa", "cycle -1 moves mochi to pipa")
 
@@ -175,6 +199,15 @@ func _test_live_entity_and_physics(game: Node) -> void:
 	_check(is_equal_approx(dog.plant_grip_mult(), 1.70), "dog plant_grip_mult with mochi")
 	_check(dog._dog_breed() == "french bulldog", "dog breed french bulldog")
 
+	# Bruna active
+	game.dog = "bruna"
+	_check(is_equal_approx(dog.base_speed(), dog.SPEED * 1.00), "dog base_speed with bruna")
+	_check(is_equal_approx(dog.base_accel(), dog.ACCEL * 1.05), "dog base_accel with bruna")
+	_check(is_equal_approx(dog.plant_grip_mult(), 1.00), "dog plant_grip_mult with bruna")
+	_check(is_equal_approx(dog.herd_mult(), 1.45), "dog herd_mult with bruna")
+	_check(is_equal_approx(dog.muck_mult(), 1.60), "dog muck_mult with bruna")
+	_check(dog._dog_breed() == "gos d'atura", "dog breed gos d'atura")
+
 	# Plant grip scaling check:
 	# In main.gd, dog_m starts at 1.0. With plant on dry pavement:
 	# dog_m *= PLANT_GRIP (14.0) * dog.plant_grip_mult()
@@ -186,7 +219,10 @@ func _test_live_entity_and_physics(game: Node) -> void:
 	_check(pipa_grip < millie_grip, "pipa plant grip is lower than millie")
 	_check(mochi_grip > millie_grip, "mochi plant grip is higher than millie")
 
-	# Test drawing runs without error for all three breeds
+	# Test drawing runs without error for all four breeds
+	dog.queue_redraw()
+	await process_frame
+	game.dog = "mochi"
 	dog.queue_redraw()
 	await process_frame
 	game.dog = "pipa"
@@ -219,12 +255,14 @@ func _test_menu_flow_and_gating(game: Node) -> void:
 	_check(game.dog == "pipa", "details_change cycles to pipa")
 	Flow.details_change(m, 1)
 	_check(game.dog == "mochi", "details_change cycles to mochi")
+	Flow.details_change(m, 1)
+	_check(game.dog == "bruna", "details_change cycles to bruna")
 
-	# Gating check: if Mochi is locked, start_walk nudges locked
+	# Gating check: if Bruna is locked, start_walk nudges locked
 	game.free_play = false
 	var saved_records: Dictionary = game.records.duplicate(true)
 	game.records.clear()
-	_check(not game.is_dog_unlocked("mochi"), "mochi is locked")
+	_check(not game.is_dog_unlocked("bruna"), "bruna is locked")
 
 	m.started = false
 	m.locked_nudge = 0.0

@@ -2,6 +2,23 @@
 
 Append-only session history, newest first.
 
+## 2026-10-29 - The Dog Selector: Bruna the Gos d'Atura, herding response, and shaggy rustic silhouette
+
+Adding Bruna the Gos d'Atura Català (Catalan sheepdog) to the playable dog selector alongside Millie, Pipa, and Mochi:
+- **Playable Dog Lineup, Herding Trait & Muck Collection** (`autoload/game.gd`, `entities/human.gd`, `main.gd`):
+  - Bruna the Gos d'Atura: unlocked at 35 stars. A rustic Catalan sheepdog with natural herding instincts: herding trait grants a 1.45x lateral steering response multiplier (`give_lat` 217.5 px vs 150.0 px base) and boosted forward give, making leading and guiding your distracted human around obstacles fluid and effortless.
+  - Cost: collects muck! Shaggy coat collects grime and holds substances 1.60x longer (`muck_mult = 1.60`), leaving paw print trails for longer and allowing generous +3 bone smudges onto your human's trousers.
+  - Cycling wraps seamlessly between Millie (Mongrel), Pipa (Galgo), Mochi (French Bulldog), and Bruna (Gos d'Atura). Gated at 35 total stars (or free play).
+- **Rustic Catalan Sheepdog Silhouette & Visuals** (`entities/dog.gd`, `hud/menu_screen.gd`):
+  - Agile, sturdy sheepdog build with an 18.5 px spine, 8.8 px chest radius, and supple ground-covering trot (1.04x cadence, 1.05x stride).
+  - Shaggy rustic coat with dynamic flank fringes and breech tufts that wobble with the gait and visibly collect muck flecks when paws are muddy.
+  - Trademark facial furnishings: full beard (`barba`), forward-flaring moustache (`bigoti`), and shaggy forelock/eyebrows framing watchful dark eyes.
+  - Fringed triangular drop ears thatched with long hair that sway with movement and trail in the slipstream.
+  - Feathered plume sabre tail (`cua plomosa`) with an upward-curling hook carried proudly on the rump.
+  - GET READY UI layout overhaul: stacked row layout cleanly separates row title from trait badge, eliminating horizontal text collisions on longer descriptions.
+- **Automated Regression Suite** (`tests/test_dog_selector.gd`):
+  - Expanded to 85 checks verifying catalog definitions, trait multipliers (1.45x herd, 1.60x muck), 4-tier star gating (0, 15, 25, 35 stars), 4-way cycling and persistence, live entity dynamics, herding give compliance, and rendering integrity across all four breeds.
+
 ## 2026-10-29 - The Dog Selector: Mochi the French Bulldog, anchor plant, and bat-ear silhouette
 
 Adding Mochi the French bulldog to the playable dog lineup alongside Millie and Pipa:
