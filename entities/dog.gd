@@ -409,25 +409,37 @@ func _draw_xf(local_pos := Vector2.ZERO, local_rotation := 0.0,
 
 # gait by surface (see tick): steps per distance, and how long each step is
 func _cadence() -> float:
+	var mult := 1.0
+	var breed := _dog_breed()
+	if breed == "french bulldog":
+		mult = 1.25
+	elif breed == "galgo":
+		mult = 0.95
 	match surface:
 		Surfaces.S.SAND:
-			return 1.35
+			return 1.35 * mult
 		Surfaces.S.MUD:
-			return 0.8
+			return 0.8 * mult
 		Surfaces.S.GRASS:
-			return 1.05
-	return 1.0
+			return 1.05 * mult
+	return 1.0 * mult
 
 
 func _stride() -> float:
+	var mult := 1.0
+	var breed := _dog_breed()
+	if breed == "french bulldog":
+		mult = 0.80
+	elif breed == "galgo":
+		mult = 1.20
 	match surface:
 		Surfaces.S.SAND:
-			return 0.7
+			return 0.7 * mult
 		Surfaces.S.MUD:
-			return 1.25
+			return 1.25 * mult
 		Surfaces.S.GRASS:
-			return 1.1
-	return 1.0
+			return 1.1 * mult
+	return 1.0 * mult
 
 
 # the light comes from the upper left, as everywhere in the game
@@ -486,8 +498,10 @@ func _draw_shapes() -> void:
 	var mood_id := int(main.mood.active) if (main != null and main.mood != null) else 0
 	var mood_int := clampf(float(main.mood.intensity), 0.0, 1.0) if (main != null and main.mood != null) else 0.0
 	var side := facing.orthogonal()
-	var is_galgo := _dog_breed() == "galgo"
-	var shoulder := facing * ((7.5 if is_galgo else 6.0) - 1.5 * dig_u)
+	var breed := _dog_breed()
+	var is_galgo := breed == "galgo"
+	var is_frenchie := breed == "french bulldog"
+	var shoulder := facing * ((4.6 if is_frenchie else (7.5 if is_galgo else 6.0)) - 1.5 * dig_u)
 	var hside := hip_dir.orthogonal()
 	if swimming:
 		# expanding wake rings behind her happy paddling self
@@ -496,8 +510,8 @@ func _draw_shapes() -> void:
 			_b.draw_arc(-facing * 6.0, 12.0 + rr * 26.0, 0, TAU, 22, Color(0.82, 0.9, 1.0, 0.32 * (1.0 - rr / 1.35)), 2.0)
 	# THE WIGGLE: the rump swings with the gait
 	var b_spd := base_speed()
-	var wiggle := hside * sin(gait) * clampf(_draw_speed() / b_spd, 0.0, 1.0) * 2.6
-	var hip := shoulder + hip_dir * (22.0 if is_galgo else 17.0) + wiggle
+	var wiggle := hside * sin(gait) * clampf(_draw_speed() / b_spd, 0.0, 1.0) * (3.5 if is_frenchie else 2.6)
+	var hip := shoulder + hip_dir * (12.5 if is_frenchie else (22.0 if is_galgo else 17.0)) + wiggle
 	# whippy tail: three tapering segments with a traveling wave, tuned by mood and action
 	var wag_speed := 3.0 if crouching else 11.0
 	var wag_amp := 0.15 if crouching else 0.38
@@ -530,21 +544,30 @@ func _draw_shapes() -> void:
 		elif sniff_u > 0.05 or dig_u > 0.05:
 			wag_speed = maxf(wag_speed, 15.5)
 			wag_amp = maxf(wag_amp, 0.44)
-	var tail_scale: float = tail_len_scale * (1.35 if is_galgo else 1.0)
-	var tp := hip + hip_dir * (4.0 * tail_scale)
-	var tdir := hip_dir.rotated(tail_angle_bias)
-	var widths: Array = [2.4, 1.8, 1.1] if is_galgo else [3.2, 2.4, 1.7]
-	for s in range(3):
-		tdir = tdir.rotated(sin(t * wag_speed - s * 0.9) * wag_amp)
-		if is_galgo and s == 2:
-			tdir = tdir.rotated(0.32 * (1.0 if tdir.x >= 0.0 else -1.0))
-		var seg_len: float = (11.0 - s * 1.8) if is_galgo else (9.0 - s * 1.5)
-		var nxt := tp + tdir * seg_len * tail_scale
-		_b.draw_line(tp, nxt, fur_dark, widths[s])
-		tp = nxt
+	if is_frenchie:
+		# French bulldog natural short screw / stub tail, wiggling merrily on the rump
+		var nub_wag := sin(t * wag_speed) * (wag_amp * 0.75)
+		var tdir := hip_dir.rotated(tail_angle_bias + nub_wag)
+		var tp := hip + hip_dir * 3.0
+		_b.draw_circle(tp, 2.9, fur_dark)
+		_b.draw_circle(tp + tdir * 2.6, 2.2, fur)
+		_b.draw_circle(tp + tdir * 4.2, 1.5, fur_dark.darkened(0.2))
+	else:
+		var tail_scale: float = tail_len_scale * (1.35 if is_galgo else 1.0)
+		var tp := hip + hip_dir * (4.0 * tail_scale)
+		var tdir := hip_dir.rotated(tail_angle_bias)
+		var widths: Array = [2.4, 1.8, 1.1] if is_galgo else [3.2, 2.4, 1.7]
+		for s in range(3):
+			tdir = tdir.rotated(sin(t * wag_speed - s * 0.9) * wag_amp)
+			if is_galgo and s == 2:
+				tdir = tdir.rotated(0.32 * (1.0 if tdir.x >= 0.0 else -1.0))
+			var seg_len: float = (11.0 - s * 1.8) if is_galgo else (9.0 - s * 1.5)
+			var nxt := tp + tdir * seg_len * tail_scale
+			_b.draw_line(tp, nxt, fur_dark, widths[s])
+			tp = nxt
 	# four legs, trot gait: diagonal pairs move together, tucked when crouching,
 	# scrabbling rapidly in front when digging up a buried bone
-	var stride_mult := 1.25 if is_galgo else 1.0
+	var stride_mult := 0.78 if is_frenchie else (1.25 if is_galgo else 1.0)
 	var amp := 0.0 if crouching else clampf(_draw_speed() / b_spd, 0.0, 1.0) * (5.5 * stride_mult) * _stride()
 	var ph := sin(gait)
 	var dig_scrabble := sin(t * 28.0) * 4.8 * dig_u
@@ -555,31 +578,35 @@ func _draw_shapes() -> void:
 		paw = Color(0.36, 0.28, 0.20)
 	# braced (the rope tug), the front paws dig in out ahead and the back
 	# paws spread
-	var front_reach := (8.0 if is_galgo else 6.0) + brace * 3.5 + 2.5 * dig_u
-	var paw_r := 2.5 if is_galgo else 3.0
-	_b.draw_circle(shoulder + side * (6.8 if is_galgo else 7.5) + facing * (front_reach + ph * amp + dig_scrabble), paw_r, paw)
-	_b.draw_circle(shoulder - side * (6.8 if is_galgo else 7.5) + facing * (front_reach - ph * amp - dig_scrabble), paw_r, paw)
+	var front_reach := (4.5 if is_frenchie else (8.0 if is_galgo else 6.0)) + brace * 3.5 + 2.5 * dig_u
+	var paw_r := 3.4 if is_frenchie else (2.5 if is_galgo else 3.0)
+	var front_spread := 9.2 if is_frenchie else (6.8 if is_galgo else 7.5)
+	_b.draw_circle(shoulder + side * front_spread + facing * (front_reach + ph * amp + dig_scrabble), paw_r, paw)
+	_b.draw_circle(shoulder - side * front_spread + facing * (front_reach - ph * amp - dig_scrabble), paw_r, paw)
 	if dig_u > 0.05:
 		# clods of earth kicked back behind her scrabbling front paws
 		for ci in range(3):
 			var cp := fmod(t * 7.5 + float(ci) * 0.33, 1.0)
 			var clod_at := shoulder - facing * (4.0 + cp * 15.0) + side * (float(ci - 1) * 6.5)
 			_b.draw_circle(clod_at, (2.6 - cp * 1.4) * dig_u, Color(0.38, 0.29, 0.20, 0.75 * (1.0 - cp) * dig_u))
-	var rear_reach := 1.0 if crouching else (5.5 if is_galgo else 4.0)
-	var rear_spread := (5.8 if is_galgo else 7.0) + brace * 1.5
-	_b.draw_circle(hip + hside * rear_spread - hip_dir * (rear_reach - ph * amp * 0.8), paw_r + 0.2, paw)
-	_b.draw_circle(hip - hside * rear_spread - hip_dir * (rear_reach + ph * amp * 0.8), paw_r + 0.2, paw)
+	var rear_reach := 1.0 if crouching else (3.2 if is_frenchie else (5.5 if is_galgo else 4.0))
+	var rear_spread := (8.4 if is_frenchie else (5.8 if is_galgo else 7.0)) + brace * 1.5
+	_b.draw_circle(hip + hside * rear_spread - hip_dir * (rear_reach - ph * amp * 0.8), paw_r + (0.1 if is_frenchie else 0.2), paw)
+	_b.draw_circle(hip - hside * rear_spread - hip_dir * (rear_reach + ph * amp * 0.8), paw_r + (0.1 if is_frenchie else 0.2), paw)
 	# lean street-dog torso, hinged; the rump drops into the squat. A rim a
 	# shade darker on the side away from the light first, then the fur, then
 	# the light along her back: plasticine, not a flat cut-out
-	var hip_r := (7.0 if is_galgo else 10.5) if crouching else (5.6 if is_galgo else 9.0)
-	var shoulder_r := 8.2 if is_galgo else 7.4
+	var hip_r := (8.8 if is_frenchie else (7.0 if is_galgo else 10.5)) if crouching else (7.6 if is_frenchie else (5.6 if is_galgo else 9.0))
+	var shoulder_r := 9.8 if is_frenchie else (8.2 if is_galgo else 7.4)
 	if _draw_speed() < 5.0 and not crouching:
-		shoulder_r += sin(t * 3.2) * 0.45
+		shoulder_r += sin(t * 3.2) * (0.60 if is_frenchie else 0.45)
+	if is_frenchie and planted and not crouching:
+		shoulder_r += 1.0
+		hip_r += 0.8
 	var rim := Vector2(1.2, 1.6)
 	_b.draw_colored_polygon(_body_points(shoulder + rim, hip + rim, shoulder_r, hip_r), fur_dark.darkened(0.25))
 	_b.draw_colored_polygon(_body_points(shoulder, hip, shoulder_r, hip_r), fur)
-	_b.draw_colored_polygon(_body_points(shoulder + LIGHT_DIR * 2.6, hip + LIGHT_DIR * 2.6, (4.6 if is_galgo else 4.2), (3.4 if is_galgo else 4.6)),
+	_b.draw_colored_polygon(_body_points(shoulder + LIGHT_DIR * 2.6, hip + LIGHT_DIR * 2.6, (5.6 if is_frenchie else (4.6 if is_galgo else 4.2)), (4.0 if is_frenchie else (3.4 if is_galgo else 4.6))),
 		fur.lightened(0.10))
 	# only a few subtle flecks on the body - the grey lives on the head
 	for i in range(6):
@@ -600,15 +627,19 @@ func _draw_shapes() -> void:
 		_b.draw_line(bandana[0], bandana[1], edge, 1.5)
 		_b.draw_line(bandana[1], bandana[2], edge, 1.5)
 		_b.draw_line(bandana[2], bandana[0], edge, 1.5)
-	_b.draw_line(shoulder + side * (7.5 if is_galgo else 8.0), shoulder - side * (7.5 if is_galgo else 8.0), col, 6.5 if is_galgo else 6.0)
-	_b.draw_circle(shoulder, 2.2, Color(0.3, 0.3, 0.32))
-	var neck := shoulder + facing * (9.0 if is_galgo else 6.5)
-	_b.draw_line(neck + side * (4.5 if is_galgo else 5.5), neck - side * (4.5 if is_galgo else 5.5), col, 4.0 if is_galgo else 3.0)
+	var strap_w := 9.6 if is_frenchie else (7.5 if is_galgo else 8.0)
+	var strap_thick := 7.0 if is_frenchie else (6.5 if is_galgo else 6.0)
+	_b.draw_line(shoulder + side * strap_w, shoulder - side * strap_w, col, strap_thick)
+	_b.draw_circle(shoulder, 2.4 if is_frenchie else 2.2, Color(0.3, 0.3, 0.32))
+	var neck := shoulder + facing * (5.5 if is_frenchie else (9.0 if is_galgo else 6.5))
+	var neck_w := 6.2 if is_frenchie else (4.5 if is_galgo else 5.5)
+	var neck_thick := 4.5 if is_frenchie else (4.0 if is_galgo else 3.0)
+	_b.draw_line(neck + side * neck_w, neck - side * neck_w, col, neck_thick)
 	# head with a LONG nose; stretches forward and twitches when sniffing,
 	# dips when digging/drinking, surges forward on a bark
 	var sniff_twitch := side * (sin(t * 22.0) * 1.5 * sniff_u)
-	var head_reach := 13.5 if is_galgo else 10.0
-	var head := shoulder + facing * (head_reach + 2.4 * sniff_u + 1.5 * drink_u - 1.6 * dig_u + 2.0 * bk) + sniff_twitch
+	var head_reach := 8.0 if is_frenchie else (13.5 if is_galgo else 10.0)
+	var head := shoulder + facing * (head_reach + 2.0 * sniff_u + 1.2 * drink_u - 1.4 * dig_u + 2.0 * bk) + sniff_twitch
 	var flop := sin(gait) * 1.6
 	var ear_perk := 2.2 * sniff_u + 1.8 * bk - (2.4 * mood_int if mood_id == 1 else 0.0)
 	var ear_flare := 1.8 * bk + (0.9 * mood_int if mood_id == 4 else 0.0)
@@ -618,7 +649,44 @@ func _draw_shapes() -> void:
 	var centrifugal_sway: float = ear_dyn.centrifugal_sway
 	var twitch: float = ear_dyn.twitch
 	var twitch_side: float = ear_dyn.twitch_side
-	if is_galgo:
+	if is_frenchie:
+		# Iconic Frenchie "bat ears": upright, tall, broad-based with rounded tops,
+		# facing forward/outward with warm inner ear leather visible
+		for sg: float in [-1.0, 1.0]:
+			var tw: float = twitch if sg == twitch_side else 0.0
+			var root := head + side * 4.6 * sg - facing * 0.5
+			var ear_angle := 0.22 * sg + tw * 0.08 - wind_trail * 0.04
+			var ear_up := facing.rotated(ear_angle)
+			var ear_out := side.rotated(ear_angle) * sg
+			var base_w := 3.6
+			var ear_h := 10.5 + ear_perk * 0.8
+			var ear_p0 := root - ear_out * 1.5 - ear_up * 1.0
+			var ear_p1 := root + ear_out * base_w
+			var ear_tip := root + ear_out * 4.2 + ear_up * ear_h
+			var ear_tip_inner := root + ear_out * 1.8 + ear_up * (ear_h + 1.2)
+			var ear_p3 := root - ear_out * 0.8 + ear_up * (ear_h * 0.75)
+			# Outer shell
+			_b.draw_colored_polygon(PackedVector2Array([
+				ear_p0,
+				ear_p1,
+				ear_tip,
+				ear_tip_inner,
+				ear_p3,
+			]), fur_dark)
+			# Inner ear leather: soft warm pinkish-fur interior
+			var inner_col := Color(
+				clampf(fur_dark.r * 1.4 + 0.18, 0.0, 1.0),
+				clampf(fur_dark.g * 1.1 + 0.12, 0.0, 1.0),
+				clampf(fur_dark.b * 1.1 + 0.12, 0.0, 1.0)
+			)
+			_b.draw_colored_polygon(PackedVector2Array([
+				root + ear_out * 0.2 + ear_up * 1.0,
+				root + ear_out * (base_w - 0.9) + ear_up * 1.5,
+				ear_tip - ear_out * 0.8 - ear_up * 1.8,
+				ear_tip_inner - ear_out * 0.5 - ear_up * 2.2,
+				ear_p3 + ear_out * 0.4 + ear_up * 0.5,
+			]), inner_col)
+	elif is_galgo:
 		# folded rose ears laying streamlined along the nape of the neck
 		for sg: float in [-1.0, 1.0]:
 			var root := head + side * 4.0 * sg - facing * 0.5
@@ -643,25 +711,38 @@ func _draw_shapes() -> void:
 			var tip := head + side * ear_side - facing * ear_back
 			_b.draw_colored_polygon(PackedVector2Array([root + facing * 1.6 - side * sg * 1.0, root + side * sg * 1.6,
 				tip + side * sg * 1.8, tip - facing * 2.0, tip - side * sg * 1.6]), fur_dark)
-	var head_r := 5.8 if is_galgo else 7.0
+	var head_r := 8.2 if is_frenchie else (5.8 if is_galgo else 7.0)
 	_b.draw_circle(head + rim * 0.7, head_r, fur_dark.darkened(0.25))
 	_b.draw_circle(head, head_r, fur)
 	# open jaw and pink tongue during a bark or while lapping water
 	if bk > 0.05:
-		var jaw_at := head + facing * (9.5 + bk * 2.2)
-		_b.draw_circle(jaw_at, 3.2, Color(0.38, 0.10, 0.12))
-		_b.draw_circle(jaw_at + facing * 1.2, 2.1, Color(0.92, 0.48, 0.54))
+		var jaw_at := head + facing * ((6.2 if is_frenchie else 9.5) + bk * 2.2)
+		var jaw_r := 4.0 if is_frenchie else 3.2
+		_b.draw_circle(jaw_at, jaw_r, Color(0.38, 0.10, 0.12))
+		_b.draw_circle(jaw_at + facing * 1.0, 2.5 if is_frenchie else 2.1, Color(0.92, 0.48, 0.54))
 	elif drink_u > 0.05:
 		var lap := maxf(0.0, sin(t * 16.0)) * drink_u
 		if lap > 0.05:
-			_b.draw_circle(head + facing * (11.0 + lap * 3.8), 2.0, Color(0.94, 0.52, 0.58))
+			_b.draw_circle(head + facing * ((8.0 if is_frenchie else 11.0) + lap * 3.8), 2.2 if is_frenchie else 2.0, Color(0.94, 0.52, 0.58))
 		for di in range(2):
 			var dp := fmod(t * 3.4 + float(di) * 0.5, 1.0)
 			var drop_dir := side * (1.0 if di == 0 else -1.0)
-			_b.draw_circle(head + facing * 11.5 + drop_dir * (3.0 + dp * 6.0), 1.4 * (1.0 - dp) * drink_u,
+			_b.draw_circle(head + facing * (8.5 if is_frenchie else 11.5) + drop_dir * (3.0 + dp * 6.0), 1.4 * (1.0 - dp) * drink_u,
 				Color(0.76, 0.90, 1.0, 0.65 * (1.0 - dp) * drink_u))
 	# the muzzle: tapering out to the nose, not a stick
-	if is_galgo:
+	if is_frenchie:
+		var muz_len := 5.2
+		var muzzle := PackedVector2Array([
+			head + side * 5.2 + facing * 1.5,
+			head + side * 4.0 + facing * muz_len,
+			head - side * 4.0 + facing * muz_len,
+			head - side * 5.2 + facing * 1.5
+		])
+		_b.draw_colored_polygon(muzzle, fur)
+		_b.draw_line(head + side * 3.6 + facing * 3.0, head - side * 3.6 + facing * 3.0, fur_dark.darkened(0.2), 2.2)
+		_b.draw_circle(head + facing * 1.5, 3.8, Color(grizzle, 0.45))
+		_b.draw_circle(head + LIGHT_DIR * 2.2, 2.2, fur.lightened(0.12))
+	elif is_galgo:
 		var muz_len := 13.5
 		var muzzle := PackedVector2Array([
 			head + side * 3.4 + facing * 2.0,
@@ -684,7 +765,14 @@ func _draw_shapes() -> void:
 		_b.draw_circle(head + LIGHT_DIR * 2.4, 2.4, fur.lightened(0.12))
 	# eyes, set back on the skull, with the brows that make her a dog with a
 	# plan (the icon's trick)
-	if is_galgo:
+	if is_frenchie:
+		for sg2: float in [-1.0, 1.0]:
+			var eye := head + facing * 1.8 + side * 4.5 * sg2
+			_b.draw_circle(eye, 2.2, Color(0.96, 0.94, 0.88))
+			_b.draw_circle(eye + facing * 0.4, 1.35, Color(0.06, 0.05, 0.06))
+			_b.draw_line(eye - facing * 2.0 + side * sg2 * 1.6, eye - facing * 2.4 - side * sg2 * 1.4,
+				Color(grizzle, 0.75), 1.4)
+	elif is_galgo:
 		for sg2: float in [-1.0, 1.0]:
 			var eye := head + facing * 2.6 + side * 2.8 * sg2
 			_b.draw_circle(eye, 1.6, Color(0.96, 0.94, 0.88))
@@ -699,12 +787,18 @@ func _draw_shapes() -> void:
 			_b.draw_line(eye - facing * 1.8 + side * sg2 * 1.6, eye - facing * 2.3 - side * sg2 * 1.4,
 				Color(grizzle, 0.75), 1.2)
 	# the nose, with the shine on it
-	var nose_len := 14.0 if is_galgo else 11.0
-	var nose_r := 2.0 if is_galgo else 2.6
-	var nose_shine := 0.7 if is_galgo else 0.9
+	var nose_len := 5.8 if is_frenchie else (14.0 if is_galgo else 11.0)
+	var nose_r := 3.0 if is_frenchie else (2.0 if is_galgo else 2.6)
+	var nose_shine := 0.9 if is_frenchie else (0.7 if is_galgo else 0.9)
 	var nose_at := head + facing * nose_len + side * (sin(t * 28.0) * 0.7 * sniff_u)
-	_b.draw_circle(nose_at, nose_r, Color(0.05, 0.05, 0.06))
-	_b.draw_circle(nose_at + LIGHT_DIR * nose_shine, nose_shine, Color(0.55, 0.55, 0.58))
+	if is_frenchie:
+		_b.draw_circle(nose_at + side * 0.9, nose_r * 0.85, Color(0.05, 0.05, 0.06))
+		_b.draw_circle(nose_at - side * 0.9, nose_r * 0.85, Color(0.05, 0.05, 0.06))
+		_b.draw_circle(nose_at, nose_r * 0.9, Color(0.05, 0.05, 0.06))
+		_b.draw_circle(nose_at + LIGHT_DIR * nose_shine, nose_shine * 0.75, Color(0.55, 0.55, 0.58))
+	else:
+		_b.draw_circle(nose_at, nose_r, Color(0.05, 0.05, 0.06))
+		_b.draw_circle(nose_at + LIGHT_DIR * nose_shine, nose_shine, Color(0.55, 0.55, 0.58))
 	if sniff_u > 0.05:
 		for si in range(2):
 			var sp := 1.0 - fmod(t * 2.4 + float(si) * 0.5, 1.0)
@@ -732,10 +826,14 @@ func _draw_shapes() -> void:
 			var dp := facing * (14.0 + kp * 16.0) + side * (float(i) - 1.0) * 8.0 * (1.0 + kp)
 			_b.draw_circle(dp, 3.0 + kp * 5.0, Color(dust_col.r, dust_col.g, dust_col.b, 0.40 * skid * (1.0 - kp)))
 	if planted and not crouching:
-		for i in range(4):
-			var a2 := TAU * i / 4.0 + 0.4
-			var p := Vector2.from_angle(a2) * 19.0
-			_b.draw_line(p, p + Vector2.from_angle(a2) * 6.0, Color(0.3, 0.25, 0.2), 3.0)
+		var mark_count := 6 if is_frenchie else 4
+		var mark_w := 4.0 if is_frenchie else 3.0
+		var mark_dist := 21.0 if is_frenchie else 19.0
+		var mark_len := 8.0 if is_frenchie else 6.0
+		for i in range(mark_count):
+			var a2 := TAU * float(i) / float(mark_count) + 0.4
+			var p := Vector2.from_angle(a2) * mark_dist
+			_b.draw_line(p, p + Vector2.from_angle(a2) * mark_len, Color(0.3, 0.25, 0.2), mark_w)
 	if tempted and tumble_t <= 0.0:
 		_b.draw_line(Vector2(15, -30), Vector2(15, -22), Color(0.95, 0.62, 0.55), 3.0)
 		_b.draw_circle(Vector2(15, -18), 2.0, Color(0.95, 0.62, 0.55))

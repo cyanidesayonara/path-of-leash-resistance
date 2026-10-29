@@ -1,14 +1,14 @@
 extends SceneTree
 
-# Tests for the Dog Selector (Pipa the Galgo):
-# 1. Dog catalog: default Millie (Mongrel), Pipa (Galgo) at 15 stars.
-# 2. Multipliers: Millie balanced (1.0x), Pipa fast (1.20x speed, 1.20x accel, 0.55x plant).
-# 3. Unlock gating: star thresholds and free_play override.
-# 4. Cycle and persistence: cycle_dog wraps, save/load records roundtrip.
+# Tests for the Dog Selector (Millie, Pipa the Galgo, Mochi the French Bulldog):
+# 1. Dog catalog: default Millie (Mongrel), Pipa (Galgo, 15*), Mochi (French Bulldog, 25*).
+# 2. Multipliers: Millie balanced (1.0x), Pipa fast (1.20x speed, 0.55x plant), Mochi anchor (0.84x speed, 1.70x plant).
+# 3. Unlock gating: star thresholds (0, 15, 25) and free_play override.
+# 4. Cycle and persistence: cycle_dog wraps through all 3 dogs, save/load records roundtrip.
 # 5. Live entity dynamics: dog.base_speed(), base_accel(), plant_grip_mult(), _dog_breed().
-# 6. Leash tug integration: dog plant grip scaling.
-# 7. Menu flow (GET READY): dog row, cycling, lock nudge on locked dog.
-# 8. Render integrity: _draw_shapes() runs cleanly for both Millie and Pipa.
+# 6. Leash tug integration: dog plant grip scaling (23.8x mass for Mochi vs 14.0x Millie vs 7.7x Pipa).
+# 7. Menu flow (GET READY): dog row, cycling, lock nudge on locked dogs.
+# 8. Render integrity: _draw_shapes() runs cleanly for Millie, Pipa, and Mochi.
 
 var Flow: GDScript
 var checks := 0
@@ -49,6 +49,7 @@ func _run() -> void:
 func _test_catalog_and_traits(game: Node) -> void:
 	_check(game.DOGS.has("millie"), "catalog has millie")
 	_check(game.DOGS.has("pipa"), "catalog has pipa")
+	_check(game.DOGS.has("mochi"), "catalog has mochi")
 	_check(game.DEFAULT_DOG == "millie", "default dog is millie")
 
 	# Millie balanced
@@ -65,28 +66,43 @@ func _test_catalog_and_traits(game: Node) -> void:
 	_check(is_equal_approx(game.dog_accel_mult("pipa"), 1.20), "pipa accel mult is 1.20")
 	_check(is_equal_approx(game.dog_plant_mult("pipa"), 0.55), "pipa plant mult is 0.55")
 
+	# Mochi plants hard, slow
+	_check(game.dog_name("mochi") == "Mochi", "mochi name")
+	_check(game.dog_breed("mochi") == "french bulldog", "mochi breed is french bulldog")
+	_check(is_equal_approx(game.dog_speed_mult("mochi"), 0.84), "mochi speed mult is 0.84")
+	_check(is_equal_approx(game.dog_accel_mult("mochi"), 0.84), "mochi accel mult is 0.84")
+	_check(is_equal_approx(game.dog_plant_mult("mochi"), 1.70), "mochi plant mult is 1.70")
+
 
 func _test_unlocks(game: Node) -> void:
 	game.free_play = false
 	_check(game.is_dog_unlocked("millie"), "millie is always unlocked")
 
-	# Pipa requires 15 stars
-	# Clear stars
+	# Gating thresholds: Pipa 15 stars, Mochi 25 stars
 	var saved_records: Dictionary = game.records.duplicate(true)
 	game.records.clear()
 	_check(game.total_stars() == 0, "total stars is 0")
 	_check(not game.is_dog_unlocked("pipa"), "pipa is locked at 0 stars")
+	_check(not game.is_dog_unlocked("mochi"), "mochi is locked at 0 stars")
 
 	# Free play unlocks all
 	game.free_play = true
 	_check(game.is_dog_unlocked("pipa"), "pipa unlocked under free_play")
+	_check(game.is_dog_unlocked("mochi"), "mochi unlocked under free_play")
 	game.free_play = false
 
-	# Grant 15 stars using actual level IDs in LEVELS
+	# Grant 15 stars: pipa opens, mochi still locked
 	for lv in game.LEVELS.slice(0, 5):
 		game.records[lv] = {"stars": 3}
 	_check(game.total_stars() == 15, "total stars is 15")
 	_check(game.is_dog_unlocked("pipa"), "pipa is unlocked at 15 stars")
+	_check(not game.is_dog_unlocked("mochi"), "mochi is still locked at 15 stars")
+
+	# Grant 27 stars: mochi opens
+	for lv in game.LEVELS.slice(5, 9):
+		game.records[lv] = {"stars": 3}
+	_check(game.total_stars() == 27, "total stars is 27")
+	_check(game.is_dog_unlocked("mochi"), "mochi is unlocked at 25+ stars")
 
 	# Restore records
 	game.records = saved_records
@@ -97,14 +113,18 @@ func _test_cycle_and_persistence(game: Node) -> void:
 	game.cycle_dog(1)
 	_check(game.dog == "pipa", "cycle +1 moves millie to pipa")
 	game.cycle_dog(1)
-	_check(game.dog == "millie", "cycle +1 wraps pipa back to millie")
+	_check(game.dog == "mochi", "cycle +1 moves pipa to mochi")
+	game.cycle_dog(1)
+	_check(game.dog == "millie", "cycle +1 wraps mochi back to millie")
 	game.cycle_dog(-1)
-	_check(game.dog == "pipa", "cycle -1 wraps millie to pipa")
+	_check(game.dog == "mochi", "cycle -1 wraps millie to mochi")
+	game.cycle_dog(-1)
+	_check(game.dog == "pipa", "cycle -1 moves mochi to pipa")
 
 	# Persistence
 	var test_path := "user://test_records_dog.cfg"
 	var cf := ConfigFile.new()
-	cf.set_value("player", "dog", "pipa")
+	cf.set_value("player", "dog", "mochi")
 	cf.save(test_path)
 
 	var orig_save: String = game.save_path
@@ -113,7 +133,7 @@ func _test_cycle_and_persistence(game: Node) -> void:
 	game.save_path = test_path
 	game.dog = "millie"
 	game.load_records()
-	_check(game.dog == "pipa", "load_records loads saved dog")
+	_check(game.dog == "mochi", "load_records loads saved mochi")
 
 	# Corrupted / unknown dog key resets to default
 	cf.set_value("player", "dog", "cerberus")
@@ -148,15 +168,28 @@ func _test_live_entity_and_physics(game: Node) -> void:
 	_check(is_equal_approx(dog.plant_grip_mult(), 0.55), "dog plant_grip_mult with pipa")
 	_check(dog._dog_breed() == "galgo", "dog breed galgo")
 
+	# Mochi active
+	game.dog = "mochi"
+	_check(is_equal_approx(dog.base_speed(), dog.SPEED * 0.84), "dog base_speed with mochi")
+	_check(is_equal_approx(dog.base_accel(), dog.ACCEL * 0.84), "dog base_accel with mochi")
+	_check(is_equal_approx(dog.plant_grip_mult(), 1.70), "dog plant_grip_mult with mochi")
+	_check(dog._dog_breed() == "french bulldog", "dog breed french bulldog")
+
 	# Plant grip scaling check:
 	# In main.gd, dog_m starts at 1.0. With plant on dry pavement:
 	# dog_m *= PLANT_GRIP (14.0) * dog.plant_grip_mult()
 	var millie_grip: float = 14.0 * 1.0
 	var pipa_grip: float = 14.0 * 0.55
+	var mochi_grip: float = 14.0 * 1.70
 	_check(is_equal_approx(pipa_grip, 7.7), "pipa plant grip is 7.7x mass")
-	_check(pipa_grip < millie_grip, "pipa plant grip is significantly lower than millie")
+	_check(is_equal_approx(mochi_grip, 23.8), "mochi plant grip is 23.8x mass")
+	_check(pipa_grip < millie_grip, "pipa plant grip is lower than millie")
+	_check(mochi_grip > millie_grip, "mochi plant grip is higher than millie")
 
-	# Test drawing runs without error for both breeds
+	# Test drawing runs without error for all three breeds
+	dog.queue_redraw()
+	await process_frame
+	game.dog = "pipa"
 	dog.queue_redraw()
 	await process_frame
 	game.dog = "millie"
@@ -184,12 +217,14 @@ func _test_menu_flow_and_gating(game: Node) -> void:
 	m.details_idx = 0 # YOUR DOG row
 	Flow.details_change(m, 1)
 	_check(game.dog == "pipa", "details_change cycles to pipa")
+	Flow.details_change(m, 1)
+	_check(game.dog == "mochi", "details_change cycles to mochi")
 
-	# Gating check: if Pipa is locked, start_walk nudges locked
+	# Gating check: if Mochi is locked, start_walk nudges locked
 	game.free_play = false
 	var saved_records: Dictionary = game.records.duplicate(true)
 	game.records.clear()
-	_check(not game.is_dog_unlocked("pipa"), "pipa is locked")
+	_check(not game.is_dog_unlocked("mochi"), "mochi is locked")
 
 	m.started = false
 	m.locked_nudge = 0.0

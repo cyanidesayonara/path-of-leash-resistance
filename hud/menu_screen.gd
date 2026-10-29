@@ -331,7 +331,7 @@ func _shop(vs: Vector2) -> void:
 	var ncol := Kit.INK_SOFT
 	match st:
 		"wearing":
-			note = "She is wearing this"
+			note = "%s is wearing this" % Game.dog_name()
 			ncol = Kit.GOOD
 		"owned":
 			note = "Yours already"
