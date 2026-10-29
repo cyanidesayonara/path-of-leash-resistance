@@ -9667,7 +9667,11 @@ func _spawn_challenger() -> void:
 		Vector2(170.0, -100.0), Vector2(-170.0, -100.0),
 		Vector2(170.0, 100.0), Vector2(-170.0, 100.0),
 	]:
-		giver.position = base + offset
+		var p := base + offset
+		if lvl == "oldtown":
+			var e := walk_edges(p.y)
+			p.x = clampf(p.x, e.x + 22.0, e.y - 22.0)
+		giver.position = p
 		if _challenger_clear_of_trees(giver.position):
 			break
 	giver.z_index = 6

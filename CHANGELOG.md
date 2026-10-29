@@ -2,6 +2,21 @@
 
 Append-only session history, newest first.
 
+## 2026-10-29 - El Gòtic busker placement, Spanish guitar detail, and level check assertions
+
+Targeted placement, visual polish, and automated safety assertions for dare-givers:
+- **El Gòtic busker placement** (`main.gd`, `world/level_build.gd`):
+  - On Carrer del Gòtic at y = -1600, candidate placement clamps the busker to the pavement margin inside the east wall boundary (x = 768), keeping him comfortably seated on the street setts rather than clipped into the wall.
+  - Spawning on all 21 other walks remains byte-identical to previous releases at (810, -1600), preserving exact autowalk timing baselines.
+  - El Gòtic's markable potted geranium hydrant is spaced at y = -1550 on the east wall, giving a clean 50 px separation from the busker.
+- **Busker guitar & case polish** (`entities/challenger.gd`):
+  - Classical Spanish guitar details: headstock with tuning pegs, silver/nylon strings spanning the neck, and an ornate rosette ring around the sound hole.
+  - An occasional golden coin glint sparkles in his open red-lined guitar case.
+- **Dare-giver pavement assertions** (`world/level_check.gd`):
+  - `LevelCheck.check(m)` asserts that all dare-givers stand cleanly on the pavement (with monkey on the Badalona pier steps) and remain clear of solid obstacles.
+- **Dead code removal** (`world/world_sign.gd`):
+  - Removed unused legacy `GLOSS` dictionary superseded by `LEVEL_SUBTITLES` in `autoload/game.gd`.
+
 ## 2026-10-28 - The release notes and docs catch up to 1.66
 
 1.65 and 1.66 went to the Microsoft Store with 1.64's What's new (El

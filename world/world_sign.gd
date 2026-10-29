@@ -54,17 +54,6 @@ const SPLIT_MIN := 4             # letters either side of a break
 const REVEAL_SWEEP := 0.55
 const REVEAL_DROP := 0.38
 const DROP_H := 0.9
-# the colour a material's gloss, the line under the name, is written in
-const GLOSS := {
-	"leaves": Color(0.40, 0.30, 0.18, 0.85), "carnations": Color(0.96, 0.93, 0.86, 0.8),
-	"flowerbed": Color(0.26, 0.34, 0.18, 0.85), "sand": Color(0.48, 0.42, 0.32, 0.85),
-	"puddle": Color(0.80, 0.86, 0.92, 0.75), "fruit": Color(0.96, 0.92, 0.84, 0.85),
-	"sticks": Color(0.36, 0.28, 0.18, 0.85), "cones": Color(0.96, 0.94, 0.88, 0.85),
-	"chestnuts": Color(0.96, 0.84, 0.62, 0.85), "plate": Color(0.86, 0.78, 0.66, 0.8),
-	"trencadis": Color(0.14, 0.30, 0.62, 0.85), "suds": Color(0.94, 0.97, 1.0, 0.8),
-	"prints": Color(0.50, 0.56, 0.70, 0.8),
-	"pipes": Color(0.20, 0.18, 0.16, 0.85),
-}
 
 # How each material moves. spacing: piece pitch along a stroke, in cap
 # heights; r: contact radius; drag: how fast a shove dies (per second);

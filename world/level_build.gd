@@ -1587,7 +1587,7 @@ static func build_level_data(m: Node2D) -> void:
 			keb_list = [Vector2(620, -1900), Vector2(700, -4200)]
 		"oldtown":
 			# flowerpots at the doors: geraniums in terracotta
-			hyd_list = [gotic_wall(m, -600.0, false, 16.0), gotic_wall(m, -1600.0, true, 16.0),
+			hyd_list = [gotic_wall(m, -600.0, false, 16.0), gotic_wall(m, -1550.0, true, 16.0),
 				gotic_wall(m, -2150.0, false, 16.0), gotic_wall(m, -3550.0, true, 16.0),
 				gotic_wall(m, -4450.0, false, 16.0)]
 			keb_list = [gotic_wall(m, -1250.0, true, 70.0), gotic_wall(m, -3900.0, false, 70.0)]

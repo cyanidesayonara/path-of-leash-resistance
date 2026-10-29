@@ -459,6 +459,9 @@ func _draw_busker(fd: Vector2) -> void:
 	for k in range(3):
 		draw_circle(case_at + side * (float(k) - 1.0) * 7.0 + fd * (float(k % 2) - 0.5) * 3.0, 1.5,
 			Color(0.92, 0.82, 0.40))
+	var glint := clampf(sin(t * 3.5 + seed_o), 0.0, 1.0)
+	if glint > 0.7:
+		draw_circle(case_at + side * 7.0, 2.0, Color(1.0, 0.98, 0.75, (glint - 0.7) / 0.3 * 0.75))
 	draw_rect(Rect2(at - Vector2(9.0, 9.0), Vector2(18.0, 18.0)), Color(0.30, 0.24, 0.18))
 	var tap := maxf(0.0, sin(t * 7.0 + seed_o)) * 2.0
 	for e: float in [-1.0, 1.0]:
@@ -472,7 +475,15 @@ func _draw_busker(fd: Vector2) -> void:
 	draw_circle(body + side * 3.0, 6.0, Color(0.78, 0.52, 0.24))
 	draw_circle(body - side * 3.5, 7.0, Color(0.78, 0.52, 0.24))
 	draw_circle(body - side * 1.0, 2.2, Color(0.20, 0.12, 0.06))
-	draw_line(body + side * 6.0, body + side * 22.0 - fd * 3.0, Color(0.36, 0.22, 0.12), 3.0)
+	# rosette ring around sound hole
+	draw_arc(body - side * 1.0, 3.4, 0.0, TAU, 10, Color(0.92, 0.74, 0.44, 0.7), 1.0)
+	var neck_end := body + side * 22.0 - fd * 3.0
+	draw_line(body + side * 6.0, neck_end, Color(0.36, 0.22, 0.12), 3.0)
+	# headstock, tuning pegs and classical strings
+	var head := neck_end + side * 2.5
+	draw_circle(head, 2.2, Color(0.36, 0.22, 0.12))
+	draw_circle(head + side * 1.5, 1.3, Color(0.86, 0.86, 0.88))
+	draw_line(body - side * 2.0, head, Color(0.95, 0.94, 0.90, 0.6), 1.0)
 	# the strumming hand
 	draw_circle(body - side * 1.0 + fd * (2.0 + sin(t * 9.0 + seed_o) * 1.5), 2.6, Color(0.80, 0.60, 0.46))
 
