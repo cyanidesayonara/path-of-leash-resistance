@@ -100,6 +100,7 @@ const CROSS_SECTIONS := {
 	"tibidabo": ["none", 0.0, "none", 0.0],
 	"aigues": ["none", 0.0, "none", 0.0],          # the fence and the cut bank at the track
 	"horta": ["none", 0.0, "none", 0.0],           # lawns and the maze drawn in systems/horta.gd
+	"raval": ["none", 0.0, "none", 0.0],           # promenade and plaza drawn in systems/boss_gat.gd
 	# flood wall on the left, grass then the river on the right
 	"besos": ["none", 0.0, "grass", 120.0],
 }
@@ -1173,6 +1174,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"tibidabo": half = 260.0
 		"aigues": half = Aigues.HALF     # the envelope of its bends (Aigues.edge_nodes)
 		"horta": half = Horta.HALF       # the maze, wall to wall (Horta.edge_nodes)
+		"raval": half = BossGat.HALF     # wide pedestrian rambla (BossGat.edge_nodes)
 		"besos": half = BESOS_HALF
 	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
 	m.walk_half = half
@@ -1334,6 +1336,8 @@ static func apply_corridor(m: Node2D) -> void:
 		m.edge_nodes = Aigues.edge_nodes(m)
 	elif m.lvl == "horta":
 		m.edge_nodes = Horta.edge_nodes(m)
+	elif m.lvl == "raval":
+		m.edge_nodes = BossGat.edge_nodes(m)
 	elif m.lvl == "trail":
 		# EL BOSC BENDS - the first walk in the game that is not a straight
 		# line. A woodland trail has no business being ruler-drawn: it wanders
@@ -1364,7 +1368,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval":
 		return
 	# and so does El Barri; the First Walk, built on it, is still fitted
 	if m.lvl == "barri" and not m.tutorial_mode:
@@ -1466,6 +1470,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_horta: Array = Horta.build(m)
 			hyd_list.assign(pl_horta[0])
 			keb_list.assign(pl_horta[1])
+		"raval":
+			var pl_raval: Array = BossGat.build(m)
+			hyd_list.assign(pl_raval[0])
+			keb_list.assign(pl_raval[1])
 		"street":
 			m.lane_ys = Array([-1200.0, -2600.0, -4000.0], TYPE_FLOAT, &"", null)
 			m.gate_text = "PIPICÀ"
@@ -2152,6 +2160,13 @@ static func build_level_data(m: Node2D) -> void:
 			add_rope_rect(m, r)
 		# Eros: a real pole as fat as his plinth, to wind your human round
 		m.rope_radii[m.poles.find(Horta.EROS)] = Horta.EROS_R + 4.0
+	if m.lvl == "raval":
+		for r: Rect2 in BossGat.wrap_rects():
+			add_rope_rect(m, r)
+		if m.boss_gat != null:
+			for idx in m.boss_gat.leg_indices:
+				if idx >= 0 and idx < m.rope_radii.size():
+					m.rope_radii[idx] = BossGat.LEG_RADIUS + 2.0
 	if m.lvl == "reial":
 		for r: Rect2 in Reial.wrap_rects():
 			add_rope_rect(m, r)
@@ -2224,6 +2239,9 @@ static func build_level_data(m: Node2D) -> void:
 		"horta":
 			m.prize_pos = Horta.PRIZE
 			m.prize_text = Horta.PRIZE_TEXT
+		"raval":
+			m.prize_pos = BossGat.PRIZE
+			m.prize_text = BossGat.PRIZE_TEXT
 		"besos":
 			m.prize_pos = Vector2(BESOS_CX + 40.0, -2700.0)
 			m.prize_text = "fetch the ball from beside the path"
@@ -2607,6 +2625,13 @@ const FREEDOM_PROPS := {
 	],
 	# the wood behind the garden's back gate: pines and holm oaks, a fallen
 	# trunk, a stone bench someone carried up from the garden long ago
+	"raval": [
+		[Vector2(270.0, -455.0), "dig"], [Vector2(624.0, -436.0), "dig"], [Vector2(894.0, -214.0), "dig"],
+		[Vector2(370.0, -470.0), "planter"], [Vector2(1016.0, -236.0), "planter"],
+		[Vector2(250.0, -362.0), "post"], [Vector2(510.0, -452.0), "post"], [Vector2(746.0, -442.0), "post"],
+		[Vector2(1036.0, -474.0), "post"], [Vector2(300.0, -250.0), "shrub"], [Vector2(542.0, -230.0), "post"],
+		[Vector2(768.0, -220.0), "shrub"],
+	],
 	"horta": [
 		[Vector2(262.0, -500.0), "dig"], [Vector2(660.0, -280.0), "dig"], [Vector2(1020.0, -330.0), "dig"],
 		[Vector2(180.0, -300.0), "rock"], [Vector2(420.0, -530.0), "log"], [Vector2(880.0, -500.0), "shrub"],
@@ -2981,6 +3006,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_horta: Array[Rect2] = Horta.solids(m)
 			for i in range(ps_horta.size()):
 				out.append(["horta_%d" % i, ps_horta[i]])
+		"raval":
+			var ps_raval: Array[Rect2] = BossGat.solids(m)
+			for i in range(ps_raval.size()):
+				out.append(["raval_%d" % i, ps_raval[i]])
 		"port":
 			var ps_port: Array[Rect2] = Port.solids(m)
 			for i in range(ps_port.size()):
@@ -3396,6 +3425,9 @@ static func build_walls(m: Node2D) -> void:
 		for r: Rect2 in Horta.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
 		add_circle_body(m, Horta.EROS, Horta.EROS_R)
+	if m.lvl == "raval":
+		for r: Rect2 in BossGat.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "reial":
 		for r: Rect2 in Reial.solids(m):
 			add_rect_body(m, r.get_center(), r.size)

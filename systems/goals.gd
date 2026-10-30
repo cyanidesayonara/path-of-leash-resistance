@@ -59,6 +59,8 @@ const LEVEL_GOAL_IDS := {
 	# El Laberint d'Horta: round Eros, and the hedges to tetherball your human round
 	"horta": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "drink", "fling", "eros", "combo", "prize", "spell", "jamon", "clock"],
 	"llevant": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "drink", "snack", "save", "combo", "prize", "spell", "jamon", "clock"],
+	# Rambla del Raval: The Grand Finale — El Gat de Botero Boss Arena
+	"raval": ["mark", "sniff", "phone", "paws", "bag", "snack", "pigeons", "swat", "combo", "prize", "spell", "jamon", "clock", "topple", "boop"],
 }
 
 
@@ -112,6 +114,10 @@ static func defs(m: Node2D) -> Dictionary:
 		"view": {"text": "Get your human to look up at the view", "target": 1, "fn": func() -> int: return 1 if Aigues.view_taken(m) else 0},
 		"eros": {"text": "Lead your human round Eros in the middle of the maze", "target": 1, "fn": func() -> int: return 1 if Horta.eros_lapped(m) else 0},
 		"viewfinder": {"text": "Gaze through the panoramic cliffside viewfinder", "target": 1, "fn": func() -> int: return 1 if m.tibidabo_viewfinder_gazed else 0},
+		"topple": {"text": "Topple El Gat with an AT-AT leash wrap", "target": 1, "fn": func() -> int: return 1 if bool(m.get("gat_toppled")) else 0},
+		"boop": {"text": "Super-boop El Gat's snout for the win", "target": 1, "fn": func() -> int: return 1 if bool(m.get("gat_booped")) else 0},
+		"pigeons": {"text": "Scatter %d plaza pigeon flocks", "target": 3, "fn": func() -> int: return int(m.get("raval_pigeons_scattered"))},
+		"swat": {"text": "Dodge %d paw swats", "target": 3, "fn": func() -> int: return int(m.get("gat_swats_dodged"))},
 		"spell": {"text": "Spell LEASH", "target": 5, "fn": func() -> int: return int(m.get("word_letters_collected"))},
 		"jamon": {"text": "Find the hidden pernil", "target": 1, "fn": func() -> int: return 1 if bool(m.get("jamon_found")) else 0},
 		"clock": {"text": "Beat the clock (under %ds)" % int(m.get("clock_target") if m.get("clock_target") != null else 180), "target": 1, "fn": func() -> int: return 1 if (bool(m.get("finished")) and float(m.get("elapsed")) <= float(m.get("clock_target") if m.get("clock_target") != null else 180)) else 0},
