@@ -88,7 +88,7 @@ func _physics_process(delta: float) -> void:
 			# one ball in the mouth at a time (the player's own and a
 			# neighbour's can both be out at once)
 			if not main.dog_carrying and global_position.distance_to(dog.global_position) < 28.0:
-				if main.auto_walk or Input.is_action_pressed("pickup") or Input.is_action_just_pressed("pickup") or Input.is_action_just_pressed("plant"):
+				if main.auto_walk or Input.is_action_pressed("pickup") or Input.is_action_just_pressed("pickup"):
 					state = State.CARRIED
 					main.dog_carrying = true
 					main.on_ball_grabbed()

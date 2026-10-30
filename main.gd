@@ -1167,6 +1167,8 @@ func _input(event: InputEvent) -> void:
 	# (the pause menu, a death card) is re-filled, and the title's is rebuilt
 	if Prompts.note(event):
 		Prompts.refresh()
+	if in_settings and Game.rebind_step >= 0:
+		MenuFlow.rebind_input(self, event)
 
 
 func _setup_input() -> void:
@@ -1193,11 +1195,11 @@ func _setup_input() -> void:
 		InputMap.action_add_event(action, ev)
 	var buttons := {
 		"plant": [KEY_SPACE, JOY_BUTTON_A], "bark": [KEY_E, JOY_BUTTON_B],
-		"pee": [KEY_Q, JOY_BUTTON_X], "poop": [KEY_Q, JOY_BUTTON_X],
-		"pickup": [KEY_SPACE, JOY_BUTTON_A],
+		"pee": [KEY_Q, JOY_BUTTON_X], "poop": [KEY_F, JOY_BUTTON_Y],
+		"pickup": [KEY_G, JOY_BUTTON_LEFT_SHOULDER],
 		"turbo": [KEY_SHIFT, JOY_BUTTON_RIGHT_SHOULDER],
 		"restart": [KEY_R, JOY_BUTTON_START], "share": [KEY_C, JOY_BUTTON_Y],
-		"pause": [KEY_ESCAPE, JOY_BUTTON_BACK], "mute_music": [KEY_M, JOY_BUTTON_LEFT_SHOULDER],
+		"pause": [KEY_ESCAPE, JOY_BUTTON_BACK], "mute_music": [KEY_M, JOY_BUTTON_DPAD_DOWN],
 		"goals": [KEY_TAB, JOY_BUTTON_DPAD_UP],
 	}
 	for action in buttons:
@@ -6808,12 +6810,14 @@ func _leash_tug(delta: float) -> void:
 	# Only static wraps (poles/furniture) shield/anchor. Dynamic leash
 	# tangles must not borrow pole-vault semantics.
 	var shield := 1.0 / (1.0 + 0.3 * float(leash.static_contacts))
-	var dog_m := DOG_MASS
+	var dog_m: float = DOG_MASS
 	if dog.planted:
 		var base_grip: float = PLANT_GRIP_ICE if dog.ice else (PLANT_GRIP_WET if dog.slick else PLANT_GRIP)
 		dog_m *= base_grip * (dog.plant_grip_mult() if dog.has_method("plant_grip_mult") else 1.0)
-	elif dog.input_active:
-		dog_m *= 2.0
+	else:
+		dog_m *= (dog.mass_mult() if (dog != null and dog.has_method("mass_mult")) else 1.0)
+		if dog.input_active:
+			dog_m *= 2.0
 	var human_m := HUMAN_MASS * (2.0 if human.is_fallen() else 1.0)
 	# a tutorial owner waiting at a lesson plants their feet, as she does:
 	# pulling ahead must not tow them past the lesson and out of the tutorial
@@ -9003,8 +9007,8 @@ func _pickups(delta: float) -> void:
 		float_text(prize_pos, "got it! +8", Color(1, 0.9, 0.5))
 	# carry mission: grab it, then take it to the drop-off
 	if carry_pickup.x < INF:
-		if carry_state == 0 and dog.global_position.distance_to(carry_pickup) < 28.0:
-			if auto_walk or Input.is_action_pressed("pickup") or Input.is_action_just_pressed("pickup") or Input.is_action_just_pressed("plant"):
+		if carry_state == 0 and not dog_carrying and dog.global_position.distance_to(carry_pickup) < 28.0:
+			if auto_walk or Input.is_action_pressed("pickup") or Input.is_action_just_pressed("pickup"):
 				carry_state = 1
 				dog_carrying = true
 				Sfx.play("pickup", 0.9)
@@ -9172,7 +9176,7 @@ func _bodily(delta: float) -> void:
 	# interrupts it (the tank is a per-walk budget, ~9 breaks)
 	# velocity gate is loose: being gently towed must not block the pee
 	# (a hard yank still interrupts it)
-	var going: bool = Input.is_action_pressed("pee") and poop_state != 1 and pee > 0.02 \
+	var going: bool = Input.is_action_pressed("pee") and pee > 0.02 \
 		and not dog.is_tumbling() and dog.velocity.length() < 80.0
 	dog.peeing = going
 	if going:
@@ -9229,7 +9233,7 @@ func _bodily(delta: float) -> void:
 				float_text(dog.global_position, "uh oh...", Color(1, 0.9, 0.6))
 		1:
 			urge_timer -= delta
-			var squatting: bool = (Input.is_action_pressed("poop") or Input.is_action_pressed("pee")) \
+			var squatting: bool = Input.is_action_pressed("poop") \
 				and not dog.is_tumbling() and dog.velocity.length() < 90.0
 			if squatting:
 				squat_progress += delta
@@ -9942,6 +9946,8 @@ func _tick_reel_length(delta: float) -> void:
 	var rate := REEL_RATE
 	if leash_target < leash_len and not leash_haul and leash.used_length() >= leash_len:
 		rate = REEL_TAUT_RATE
+	if leash_target < leash_len and dog != null and dog.has_method("reel_mult"):
+		rate *= dog.reel_mult()
 	leash_len = move_toward(leash_len, leash_target, rate * delta)
 	if is_equal_approx(leash_len, leash_target):
 		leash_haul = false

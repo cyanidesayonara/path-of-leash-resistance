@@ -108,6 +108,11 @@ static func prompts(m: Node2D, which := "") -> Array:
 		"progress":
 			return [["back", "back"]]
 		"settings":
+			if Game.rebind_step >= 0:
+				return [["back", "cancel"]]
+			var keys := settings_keys(m)
+			if m.settings_idx >= 0 and m.settings_idx < keys.size() and String(keys[m.settings_idx]) == "controls":
+				return [["up_down", "pick"], ["left_right", "layout"], ["plant", "rebind"], ["back", "back"]]
 			return [["up_down", "pick"], ["left_right", "change"], ["back", "back"]]
 		"pause":
 			return [["move", "pick"], ["plant", "select"], ["back", "resume"]]
@@ -289,8 +294,8 @@ static func details_change(m: Node2D, dir: int) -> void:
 
 # The controls, for the getting-ready card: [action, what it does].
 static func controls() -> Array:
-	return [["move", "move"], ["plant", "dig in / squat"], ["pee", "pee"], ["bark", "bark"],
-		["turbo", "zoomies"], ["pause", "pause"]]
+	return [["move", "move"], ["plant", "dig in"], ["pee", "pee"], ["poop", "poop"],
+		["bark", "bark"], ["pickup", "pick up"], ["turbo", "zoomies"], ["pause", "pause"]]
 
 
 static func start_walk(m: Node2D) -> void:
@@ -369,6 +374,9 @@ static func tick_title(m: Node2D) -> bool:
 			elif Input.is_action_just_pressed("move_left"):
 				details_change(m, -1)
 			elif back_pressed():
+				if not Game.is_dog_unlocked(Game.dog):
+					Game.dog = Game.DEFAULT_DOG
+					m.dog.queue_redraw()
 				Sfx.play("ui")
 				_go_step(m, 1)
 			elif Input.is_action_just_pressed("plant"):
@@ -915,7 +923,14 @@ static func settings_rows(m: Node2D) -> Array:
 		if k == "language":
 			row.text = String(Game.LANGUAGE_NAMES[Game.language])
 		elif k == "controls":
-			row.text = String(Game.CONTROL_LAYOUT_NAMES[Game.control_layout])
+			if Game.rebind_step >= 0 and Game.rebind_step < Game.REBIND_ACTIONS.size():
+				var act := String(Game.REBIND_ACTIONS[Game.rebind_step])
+				row.text = "PRESS FOR %s..." % String(Game.REBIND_NAMES.get(act, act.to_upper()))
+			else:
+				var base_txt := String(Game.CONTROL_LAYOUT_NAMES[Game.control_layout])
+				if not Game.key_binds.is_empty() or not Game.pad_binds.is_empty():
+					base_txt += " *"
+				row.text = base_txt
 		out.append(row)
 	return out
 
@@ -1037,12 +1052,54 @@ static func settings_adjust(m: Node2D, dir: int) -> void:
 		"controls":
 			var ci := Game.CONTROL_LAYOUTS.find(Game.control_layout)
 			Game.control_layout = Game.CONTROL_LAYOUTS[wrapi(ci + dir, 0, Game.CONTROL_LAYOUTS.size())]
-			Game.apply_control_layout()
+			Game.clear_rebinds()
 			Sfx.play("ui")
 			m.queue_redraw()
 
 
+static func rebind_input(m: Node2D, event: InputEvent) -> void:
+	if Game.rebind_step < 0 or Game.rebind_step >= Game.REBIND_ACTIONS.size():
+		return
+	if Game.rebind_wait_release:
+		if (event is InputEventKey and not event.pressed) or (event is InputEventJoypadButton and not event.pressed):
+			Game.rebind_wait_release = false
+		m.get_viewport().set_input_as_handled()
+		return
+	var act := String(Game.REBIND_ACTIONS[Game.rebind_step])
+	if event is InputEventKey and event.pressed and not event.echo:
+		var code: int = event.physical_keycode if event.physical_keycode != 0 else event.keycode
+		if code == KEY_ESCAPE:
+			Game.rebind_step = -1
+			Sfx.play("ui")
+			m.get_viewport().set_input_as_handled()
+			return
+		Game.bind_key(act, code)
+		Sfx.play("ui")
+		Game.rebind_step += 1
+		if Game.rebind_step >= Game.REBIND_ACTIONS.size():
+			Game.rebind_step = -1
+		m.get_viewport().set_input_as_handled()
+	elif event is InputEventJoypadButton and event.pressed:
+		var btn: int = event.button_index
+		if btn == JOY_BUTTON_BACK or btn == JOY_BUTTON_START:
+			Game.rebind_step = -1
+			Sfx.play("ui")
+			m.get_viewport().set_input_as_handled()
+			return
+		Game.bind_pad(act, btn)
+		Sfx.play("ui")
+		Game.rebind_step += 1
+		if Game.rebind_step >= Game.REBIND_ACTIONS.size():
+			Game.rebind_step = -1
+		m.get_viewport().set_input_as_handled()
+
+
 static func tick_settings(m: Node2D) -> void:
+	if Game.rebind_step >= 0:
+		if back_pressed():
+			Game.rebind_step = -1
+			Sfx.play("ui")
+		return
 	var n: int = settings_keys(m).size()
 	if Input.is_action_just_pressed("move_down"):
 		m.settings_idx = wrapi(m.settings_idx + 1, 0, n)
@@ -1055,7 +1112,13 @@ static func tick_settings(m: Node2D) -> void:
 	elif Input.is_action_just_pressed("move_left"):
 		settings_adjust(m, -1)
 	elif Input.is_action_just_pressed("plant"):
-		# confirm flips a switch; a slider is stepped with left/right
+		# confirm flips a switch; on controls it starts interactive rebinding
+		var keys := settings_keys(m)
+		if m.settings_idx >= 0 and m.settings_idx < keys.size() and String(keys[m.settings_idx]) == "controls":
+			Game.rebind_step = 0
+			Game.rebind_wait_release = true
+			Sfx.play("ui")
+			return
 		var row: Dictionary = settings_rows(m)[m.settings_idx]
 		if String(row.kind) == "toggle" or String(row.kind) == "choice":
 			settings_adjust(m, 1)

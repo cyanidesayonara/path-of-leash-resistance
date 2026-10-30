@@ -183,8 +183,21 @@ const DOGS := {
 		"herd_mult": 1.45,
 		"muck_mult": 1.60,
 	},
+	"tito": {
+		"name": "Tito",
+		"breed": "Chihuahua",
+		"stars": 45,
+		"trait": "Slips through gaps, easily reeled in",
+		"desc": "A tiny chihuahua who slips between obstacles and reels in fast",
+		"speed_mult": 1.10,
+		"accel_mult": 1.25,
+		"plant_mult": 0.35,
+		"mass_mult": 0.45,
+		"reel_mult": 1.65,
+		"gap_mult": 0.57,
+	},
 }
-const DOG_KEYS: Array[String] = ["millie", "pipa", "mochi", "bruna"]
+const DOG_KEYS: Array[String] = ["millie", "pipa", "mochi", "bruna", "tito"]
 const DEFAULT_DOG := "millie"
 
 const SAVE_PATH := "user://records.cfg"
@@ -242,6 +255,19 @@ const CONTROL_LAYOUT_NAMES := {
 	"southpaw": "SOUTHPAW",
 }
 var control_layout := "default"
+const REBIND_ACTIONS: Array[String] = ["plant", "pee", "poop", "bark", "pickup", "turbo"]
+const REBIND_NAMES := {
+	"plant": "DIG IN",
+	"pee": "PEE",
+	"poop": "POOP",
+	"bark": "BARK",
+	"pickup": "PICK UP",
+	"turbo": "ZOOMIES",
+}
+var key_binds: Dictionary = {}
+var pad_binds: Dictionary = {}
+var rebind_step := -1
+var rebind_wait_release := false
 const LEVEL_SUBTITLES_CA := {
 	"tutorial": "Aprèn la corretja, truc a truc",
 	"barri": "El parquet del final del teu carrer",
@@ -440,6 +466,17 @@ func dog_herd_mult(k := "") -> float:
 func dog_muck_mult(k := "") -> float:
 	return float(dog_data(k).get("muck_mult", 1.0))
 
+func dog_mass_mult(k := "") -> float:
+	return float(dog_data(k).get("mass_mult", 1.0))
+
+
+func dog_reel_mult(k := "") -> float:
+	return float(dog_data(k).get("reel_mult", 1.0))
+
+
+func dog_gap_mult(k := "") -> float:
+	return float(dog_data(k).get("gap_mult", 1.0))
+
 
 func is_dog_unlocked(k: String) -> bool:
 	if free_play or k == "millie":
@@ -455,7 +492,8 @@ func cycle_dog(dir: int) -> void:
 		cur_idx = 0
 	var next_idx := wrapi(cur_idx + dir, 0, DOG_KEYS.size())
 	dog = DOG_KEYS[next_idx]
-	save_records()
+	if is_dog_unlocked(dog):
+		save_records()
 
 
 func toggle_owner() -> void:
@@ -481,7 +519,7 @@ func apply_settings() -> void:
 
 
 func apply_control_layout() -> void:
-	Prompts.update_layout(control_layout)
+	Prompts.update_layout(control_layout, key_binds, pad_binds)
 	if not InputMap.has_action("plant"):
 		return
 	var configurable := ["move_left", "move_right", "move_up", "move_down", "plant", "bark", "pee", "poop", "pickup", "turbo"]
@@ -509,14 +547,14 @@ func apply_control_layout() -> void:
 			_add_key_events("plant", [KEY_SPACE, KEY_ENTER])
 			_add_key_events("bark", [KEY_CTRL, KEY_E])
 			_add_key_events("pee", [KEY_DELETE, KEY_Q])
-			_add_key_events("poop", [KEY_DELETE, KEY_Q])
-			_add_key_events("pickup", [KEY_SPACE, KEY_CTRL])
+			_add_key_events("poop", [KEY_END, KEY_F])
+			_add_key_events("pickup", [KEY_PAGEDOWN, KEY_G])
 			_add_key_events("turbo", [KEY_SHIFT, KEY_BRACKETRIGHT])
 			_add_pad_button("plant", JOY_BUTTON_A)
 			_add_pad_button("bark", JOY_BUTTON_B)
 			_add_pad_button("pee", JOY_BUTTON_X)
-			_add_pad_button("poop", JOY_BUTTON_X)
-			_add_pad_button("pickup", JOY_BUTTON_A)
+			_add_pad_button("poop", JOY_BUTTON_Y)
+			_add_pad_button("pickup", JOY_BUTTON_LEFT_SHOULDER)
 			_add_pad_button("turbo", JOY_BUTTON_RIGHT_SHOULDER)
 		"compact":
 			_add_key_events("move_left", [KEY_J, KEY_A])
@@ -526,14 +564,14 @@ func apply_control_layout() -> void:
 			_add_key_events("plant", [KEY_SPACE])
 			_add_key_events("bark", [KEY_O, KEY_E])
 			_add_key_events("pee", [KEY_U, KEY_Q])
-			_add_key_events("poop", [KEY_U, KEY_Q])
-			_add_key_events("pickup", [KEY_SPACE, KEY_O])
+			_add_key_events("poop", [KEY_H, KEY_F])
+			_add_key_events("pickup", [KEY_N, KEY_G])
 			_add_key_events("turbo", [KEY_SEMICOLON, KEY_SHIFT])
 			_add_pad_button("plant", JOY_BUTTON_A)
 			_add_pad_button("bark", JOY_BUTTON_B)
 			_add_pad_button("pee", JOY_BUTTON_X)
-			_add_pad_button("poop", JOY_BUTTON_X)
-			_add_pad_button("pickup", JOY_BUTTON_A)
+			_add_pad_button("poop", JOY_BUTTON_Y)
+			_add_pad_button("pickup", JOY_BUTTON_LEFT_SHOULDER)
 			_add_pad_button("turbo", JOY_BUTTON_RIGHT_SHOULDER)
 		"southpaw":
 			_add_key_events("move_left", [KEY_A, KEY_LEFT])
@@ -543,14 +581,14 @@ func apply_control_layout() -> void:
 			_add_key_events("plant", [KEY_SPACE])
 			_add_key_events("bark", [KEY_E])
 			_add_key_events("pee", [KEY_Q])
-			_add_key_events("poop", [KEY_Q])
-			_add_key_events("pickup", [KEY_SPACE, KEY_E])
+			_add_key_events("poop", [KEY_F])
+			_add_key_events("pickup", [KEY_G])
 			_add_key_events("turbo", [KEY_SHIFT])
 			_add_pad_button("plant", JOY_BUTTON_X)
 			_add_pad_button("bark", JOY_BUTTON_A)
 			_add_pad_button("pee", JOY_BUTTON_B)
-			_add_pad_button("poop", JOY_BUTTON_B)
-			_add_pad_button("pickup", JOY_BUTTON_X)
+			_add_pad_button("poop", JOY_BUTTON_Y)
+			_add_pad_button("pickup", JOY_BUTTON_RIGHT_SHOULDER)
 			_add_pad_button("turbo", JOY_BUTTON_LEFT_SHOULDER)
 		_:
 			_add_key_events("move_left", [KEY_A, KEY_LEFT])
@@ -560,17 +598,66 @@ func apply_control_layout() -> void:
 			_add_key_events("plant", [KEY_SPACE])
 			_add_key_events("bark", [KEY_E])
 			_add_key_events("pee", [KEY_Q])
-			_add_key_events("poop", [KEY_Q, KEY_F])
-			_add_key_events("pickup", [KEY_SPACE, KEY_E])
+			_add_key_events("poop", [KEY_F])
+			_add_key_events("pickup", [KEY_G])
 			_add_key_events("turbo", [KEY_SHIFT])
 			_add_pad_button("plant", JOY_BUTTON_A)
 			_add_pad_button("bark", JOY_BUTTON_B)
 			_add_pad_button("pee", JOY_BUTTON_X)
-			_add_pad_button("poop", JOY_BUTTON_X)
-			_add_pad_button("pickup", JOY_BUTTON_A)
-			_add_pad_button("pickup", JOY_BUTTON_Y)
+			_add_pad_button("poop", JOY_BUTTON_Y)
+			_add_pad_button("pickup", JOY_BUTTON_LEFT_SHOULDER)
 			_add_pad_button("turbo", JOY_BUTTON_RIGHT_SHOULDER)
-	Prompts.update_layout(control_layout)
+	for act: String in key_binds.keys():
+		if InputMap.has_action(act):
+			_replace_key_events(act, int(key_binds[act]))
+	for act: String in pad_binds.keys():
+		if InputMap.has_action(act):
+			_replace_pad_events(act, int(pad_binds[act]))
+	Prompts.update_layout(control_layout, key_binds, pad_binds)
+
+
+func _replace_key_events(action: String, code: int) -> void:
+	var keep: Array = []
+	for ev in InputMap.action_get_events(action):
+		if not (ev is InputEventKey):
+			keep.append(ev)
+	InputMap.action_erase_events(action)
+	for ev in keep:
+		InputMap.action_add_event(action, ev)
+	_add_key_events(action, [code])
+
+
+func _replace_pad_events(action: String, btn: int) -> void:
+	var keep: Array = []
+	for ev in InputMap.action_get_events(action):
+		if not (ev is InputEventJoypadButton):
+			keep.append(ev)
+	InputMap.action_erase_events(action)
+	for ev in keep:
+		InputMap.action_add_event(action, ev)
+	_add_pad_button(action, btn)
+
+
+func bind_key(action: String, code: int) -> void:
+	if not action in REBIND_ACTIONS:
+		return
+	key_binds[action] = code
+	apply_control_layout()
+	save_records()
+
+
+func bind_pad(action: String, btn: int) -> void:
+	if not action in REBIND_ACTIONS:
+		return
+	pad_binds[action] = btn
+	apply_control_layout()
+	save_records()
+
+
+func clear_rebinds() -> void:
+	key_binds.clear()
+	pad_binds.clear()
+	apply_control_layout()
 
 
 func _add_key_events(action: String, keys: Array) -> void:
@@ -646,6 +733,9 @@ func _reset_persisted_state() -> void:
 	vol_music = DEFAULT_VOL_MUSIC
 	fullscreen = false
 	language = "en"
+	control_layout = "default"
+	key_binds = {}
+	pad_binds = {}
 	goals_expanded = false
 	ask_tutorial = true
 	tutorial_done = false
@@ -711,6 +801,10 @@ func load_records() -> void:
 	control_layout = String(cf.get_value("settings", "control_layout", "default"))
 	if not control_layout in CONTROL_LAYOUTS:
 		control_layout = "default"
+	var kb: Variant = cf.get_value("settings", "key_binds", {})
+	key_binds = (kb as Dictionary).duplicate() if kb is Dictionary else {}
+	var pb: Variant = cf.get_value("settings", "pad_binds", {})
+	pad_binds = (pb as Dictionary).duplicate() if pb is Dictionary else {}
 	goals_expanded = bool(cf.get_value("settings", "goals_expanded", false))
 	free_play = bool(cf.get_value("settings", "free_play", false))
 	ask_tutorial = bool(cf.get_value("settings", "ask_tutorial", true))
@@ -745,6 +839,8 @@ func save_records() -> void:
 	cf.set_value("settings", "fullscreen", fullscreen)
 	cf.set_value("settings", "language", language)
 	cf.set_value("settings", "control_layout", control_layout)
+	cf.set_value("settings", "key_binds", key_binds)
+	cf.set_value("settings", "pad_binds", pad_binds)
 	cf.set_value("settings", "goals_expanded", goals_expanded)
 	cf.set_value("settings", "free_play", free_play)
 	cf.set_value("settings", "ask_tutorial", ask_tutorial)

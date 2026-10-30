@@ -105,7 +105,7 @@ func _physics_process(delta: float) -> void:
 				h = 0.0
 		State.LANDED:
 			if not main.dog_carrying and global_position.distance_to(dog.global_position) < PICK_R:
-				if main.auto_walk or Input.is_action_pressed("pickup") or Input.is_action_just_pressed("pickup") or Input.is_action_just_pressed("plant"):
+				if main.auto_walk or Input.is_action_pressed("pickup") or Input.is_action_just_pressed("pickup"):
 					_caught(false)
 		State.CARRIED:
 			h = 0.0
