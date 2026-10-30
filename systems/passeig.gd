@@ -11,6 +11,7 @@ extends RefCounted
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const Surfaces := preload("res://world/surfaces.gd")
+const Letters := preload("res://world/sign_letters.gd")
 
 # A BEACH TOWEL: striped across both ends, fringed, and either someone lying
 # on it in the sun or the things they left (flip-flops, a paperback, the sun
@@ -274,6 +275,18 @@ static func _creep_chunk(m: Node2D, y0: float, y1: float, wet: bool) -> ShapeBat
 # terraces inside a parapet, a stairwell hut and a water tank or two, a
 # sunshade or a washing line, with a narrow street between blocks. Hashed from
 # the block's index, so the same walk has the same skyline every visit.
+# Real Badalona seafront landmark order from south (station & bus stop) to north (hotel plaza):
+const BUS_STOP_RECT := Rect2(984.0, -340.0, 56.0, 128.0)
+const SURF_CLUB_RECT := Rect2(1004.0, -1420.0, 176.0, 220.0)
+const SURF_RACK_RECT := Rect2(266.0, -1360.0, 96.0, 140.0)
+const RESTAURANT_RECT := Rect2(1004.0, -2580.0, 176.0, 250.0)
+const GYM_RECT := Rect2(1004.0, -2980.0, 176.0, 210.0)
+const CALISTHENICS_RECT := Rect2(256.0, -2910.0, 88.0, 160.0)
+const WORKS_Y := -3780.0
+const HOTEL_SIGN_RECT := Rect2(540.0, -5415.0, 240.0, 34.0)
+const HOTEL_RECT := Rect2(452.0, -5620.0, 728.0, 145.0)
+
+
 static func _roofs(m: Node2D, vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
 	var roofs := [Color(0.76, 0.70, 0.62), Color(0.66, 0.44, 0.34), Color(0.62, 0.62, 0.60), Color(0.82, 0.78, 0.70)]
@@ -282,8 +295,8 @@ static func _roofs(m: Node2D, vt: float, vb: float) -> void:
 	while y > m.GATE_Y - 40.0:
 		var h := 170.0 + fmod(float(k) * 61.0, 110.0)
 		var top := y - h
-		# the old works stands on this stretch, and draws itself
-		var works := top < -2000.0 and y > -2700.0
+		# the old works stands on this stretch, opposite the Pont del Petroli, and draws itself
+		var works := top < WORKS_Y + 260.0 and y > WORKS_Y - 300.0
 		if y > vt - 40.0 and top < vb + 40.0 and not works:
 			var r := Rect2(1196.0, top + 8.0, 420.0, h - 16.0)
 			var col: Color = roofs[k % roofs.size()]
@@ -332,7 +345,6 @@ static func _works(m: Node2D, vt: float, vb: float) -> void:
 	# so nothing of it is borrowed but the architecture: an old seafront
 	# distillery is a shed with a chimney, and that is vernacular rather than
 	# anybody's property. The sign reads LA FABRICA - the factory.
-	const WORKS_Y := -2450.0
 	if WORKS_Y < vt - 900.0 or WORKS_Y > vb + 900.0:
 		return
 	var wx := 1190.0
@@ -358,12 +370,189 @@ static func _works(m: Node2D, vt: float, vb: float) -> void:
 	m._draw_world_text(Vector2(wx + 16.0, WORKS_Y + 176.0), "LA FÀBRICA", 17, "paint", 9.0)
 
 
-# THE CHIRINGUITOS. Each terrace was tables on the paving under a pale
-# sheet, against flat grey (#151). Now each stands on its own timber deck
-# with oleanders in planters along the back, and the bar itself at the end:
-# a hut with a counter and stools facing the tables, thatched at one and
-# under striped canvas at the other.
+static func _bus_stop(m: Node2D, vt: float, vb: float) -> void:
+	if not _drawn_window(BUS_STOP_RECT, vt, vb):
+		return
+	var b := ShapeBatch.new()
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22)
+	# yellow metropolitan bus bay markings along the eastern kerb
+	var bay := Rect2(BUS_STOP_RECT.position.x - 14.0, BUS_STOP_RECT.position.y - 16.0, 74.0, BUS_STOP_RECT.size.y + 32.0)
+	b.rect(bay, Color(0.70, 0.67, 0.60))
+	var yel := Color(0.94, 0.78, 0.16, 0.85)
+	b.line(bay.position, Vector2(bay.position.x, bay.end.y), yel, 3.0)
+	b.line(bay.position, Vector2(bay.end.x, bay.position.y), yel, 2.5)
+	b.line(Vector2(bay.position.x, bay.end.y), bay.end, yel, 2.5)
+	# glass-and-steel bus shelter canopy and wooden bench
+	b.rect(Rect2(BUS_STOP_RECT.position + m.LIGHT * 7.0, BUS_STOP_RECT.size), sh)
+	b.rect(BUS_STOP_RECT, Color(0.22, 0.26, 0.30))
+	b.rect(BUS_STOP_RECT.grow(-3.0), Color(0.68, 0.82, 0.88, 0.78))
+	for k in range(4):
+		var gy := BUS_STOP_RECT.position.y + float(k) * BUS_STOP_RECT.size.y / 3.0
+		b.line(Vector2(BUS_STOP_RECT.position.x, gy), Vector2(BUS_STOP_RECT.end.x, gy), Color(0.30, 0.34, 0.38), 1.8)
+	b.rect(Rect2(BUS_STOP_RECT.end.x - 16.0, BUS_STOP_RECT.position.y + 18.0, 10.0, BUS_STOP_RECT.size.y - 36.0), Color(0.56, 0.38, 0.24))
+	# yellow AMB metropolitan bus totem post at the head of the shelter
+	var totem := Rect2(BUS_STOP_RECT.position.x - 4.0, BUS_STOP_RECT.position.y - 26.0, 22.0, 14.0)
+	b.rect(Rect2(totem.position + m.LIGHT * 5.0, totem.size), sh)
+	b.rect(totem, Color(0.96, 0.78, 0.14))
+	b.rect(Rect2(totem.position.x, totem.position.y, 6.0, totem.size.y), Color(0.84, 0.18, 0.18))
+	b.flush(m._wc)
+	m._wc.draw_string(m.font, BUS_STOP_RECT.position + Vector2(-4.0, 14.0), "BUS", HORIZONTAL_ALIGNMENT_CENTER, 64.0, 12, Color(0.98, 0.86, 0.24))
+
+
+static func _surf_club(m: Node2D, vt: float, vb: float) -> void:
+	if not _drawn_window(SURF_CLUB_RECT, vt, vb) and not _drawn_window(SURF_RACK_RECT, vt, vb):
+		return
+	var b := ShapeBatch.new()
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22)
+	# landward surf & watersports club house (Club de Mar / Club Bétulo style)
+	if _drawn_window(SURF_CLUB_RECT, vt, vb):
+		var deck := Rect2(992.0, SURF_CLUB_RECT.position.y - 10.0, 198.0, SURF_CLUB_RECT.size.y + 20.0)
+		b.rect(deck, Color(0.54, 0.38, 0.26))
+		var dx := deck.position.x + 8.0
+		while dx < deck.end.x:
+			b.line(Vector2(dx, deck.position.y), Vector2(dx, deck.end.y), Color(0.42, 0.28, 0.18), 1.4)
+			dx += 11.0
+		var hall := Rect2(1036.0, SURF_CLUB_RECT.position.y + 8.0, 144.0, SURF_CLUB_RECT.size.y - 16.0)
+		b.rect(Rect2(hall.position + m.LIGHT * 9.0, hall.size), sh)
+		b.rect(hall, Color(0.94, 0.95, 0.96))
+		b.rect(Rect2(hall.position.x, hall.position.y, 10.0, hall.size.y), Color(0.16, 0.44, 0.72))
+		# blue nautical roof stripes and solar heater panels
+		var sy := hall.position.y + 18.0
+		while sy < hall.end.y - 14.0:
+			b.line(Vector2(hall.position.x + 16.0, sy), Vector2(hall.end.x - 10.0, sy), Color(0.82, 0.86, 0.90), 2.0)
+			sy += 24.0
+		# upright surfboards leaning in the club courtyard rack
+		var bcols := [Color(0.94, 0.36, 0.28), Color(0.20, 0.68, 0.78), Color(0.96, 0.78, 0.20), Color(0.30, 0.74, 0.48)]
+		for i in range(4):
+			var bp := Vector2(1012.0, hall.position.y + 26.0 + float(i) * 44.0)
+			_ellipse(b, bp + m.LIGHT * 2.5, 14.0, 4.5, 0.15, sh)
+			_ellipse(b, bp, 14.0, 4.5, 0.15, bcols[i])
+			b.line(bp - Vector2(11.0, -1.6), bp + Vector2(11.0, 1.6), Color(0.98, 0.98, 0.96), 1.4)
+		b.rect(Rect2(hall.position.x + 14.0, hall.end.y - 24.0, 114.0, 18.0), Color(0.14, 0.36, 0.64))
+	# seaward surfboard/SUP rack and beach catamarans on the sand
+	if _drawn_window(SURF_RACK_RECT, vt, vb):
+		_access_ramp(m, b, 380.0, 344.0, SURF_RACK_RECT.get_center().y, 28.0)
+		# timber board rack on the sand
+		var rk := Rect2(SURF_RACK_RECT.position.x + 28.0, SURF_RACK_RECT.position.y + 8.0, 56.0, 74.0)
+		b.rect(Rect2(rk.position + m.LIGHT * 4.0, rk.size), sh)
+		b.line(rk.position, Vector2(rk.position.x, rk.end.y), Color(0.46, 0.30, 0.18), 3.5)
+		b.line(Vector2(rk.end.x, rk.position.y), rk.end, Color(0.46, 0.30, 0.18), 3.5)
+		var scols := [Color(0.96, 0.44, 0.24), Color(0.22, 0.62, 0.86), Color(0.98, 0.84, 0.24), Color(0.92, 0.30, 0.48), Color(0.24, 0.76, 0.64)]
+		for i in range(5):
+			var sp := Vector2(rk.get_center().x, rk.position.y + 9.0 + float(i) * 14.0)
+			_ellipse(b, sp + m.LIGHT * 2.0, 24.0, 5.0, 0.0, sh)
+			_ellipse(b, sp, 24.0, 5.0, 0.0, scols[i])
+			b.line(sp - Vector2(20.0, 0.0), sp + Vector2(20.0, 0.0), Color(0.98, 0.97, 0.92), 1.4)
+		# twin-hull beach catamaran with a bright sail resting on the sand
+		var cat := Vector2(SURF_RACK_RECT.position.x + 48.0, SURF_RACK_RECT.end.y - 24.0)
+		for side: float in [-1.0, 1.0]:
+			_ellipse(b, cat + Vector2(0.0, side * 12.0) + m.LIGHT * 3.0, 28.0, 3.8, 0.0, sh)
+			_ellipse(b, cat + Vector2(0.0, side * 12.0), 28.0, 3.8, 0.0, Color(0.96, 0.96, 0.94))
+		b.rect(Rect2(cat.x - 14.0, cat.y - 10.0, 28.0, 20.0), Color(0.18, 0.34, 0.56))
+		b.polygon(PackedVector2Array([cat + Vector2(-18.0, -2.0), cat + Vector2(22.0, -16.0), cat + Vector2(18.0, 8.0)]), Color(0.96, 0.52, 0.18, 0.90))
+	b.flush(m._wc)
+	if _drawn_window(SURF_CLUB_RECT, vt, vb):
+		m._wc.draw_string(m.font, Vector2(1050.0, SURF_CLUB_RECT.end.y - 19.0), "CLUB DE MAR", HORIZONTAL_ALIGNMENT_CENTER, 114.0, 11, Color(0.98, 0.96, 0.90))
+
+
+static func _restaurant(m: Node2D, vt: float, vb: float) -> void:
+	if not _drawn_window(RESTAURANT_RECT, vt, vb):
+		return
+	var b := ShapeBatch.new()
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22)
+	# Seafront rationalist white nautical pavilion (La Donzella de la Costa style)
+	var ter := Rect2(990.0, RESTAURANT_RECT.position.y - 8.0, 198.0, RESTAURANT_RECT.size.y + 16.0)
+	b.rect(ter, Color(0.88, 0.85, 0.78))
+	b.rect(ter.grow(-4.0), Color(0.94, 0.92, 0.86))
+	b.line(ter.position, Vector2(ter.position.x, ter.end.y), Color(0.20, 0.42, 0.68), 3.0)
+	# white-tablecloth dining tables along the seaward terrace
+	for i in range(4):
+		var tp := Vector2(1014.0, RESTAURANT_RECT.position.y + 32.0 + float(i) * 58.0)
+		b.circle(tp + m.LIGHT * 4.0, 13.0, sh)
+		b.circle(tp, 13.0, Color(0.97, 0.97, 0.95))
+		b.circle(tp, 10.0, Color(0.90, 0.92, 0.95))
+		b.circle(tp + Vector2(-3.0, -2.0), 2.4, Color(0.98, 0.98, 0.96))
+		b.circle(tp + Vector2(3.5, 2.5), 2.4, Color(0.98, 0.98, 0.96))
+		b.circle(tp + Vector2(2.0, -3.0), 1.4, Color(0.76, 0.18, 0.22))
+	# white pavilion building with navy awning trim and porthole skylights
+	var pav := Rect2(1042.0, RESTAURANT_RECT.position.y + 6.0, 140.0, RESTAURANT_RECT.size.y - 12.0)
+	b.rect(Rect2(pav.position + m.LIGHT * 10.0, pav.size), sh)
+	b.rect(pav, Color(0.96, 0.95, 0.92))
+	b.rect(pav.grow(-6.0), Color(0.90, 0.88, 0.83))
+	# navy-and-white striped awning over the terrace front
+	var aw := Rect2(1030.0, pav.position.y + 4.0, 16.0, pav.size.y - 8.0)
+	var ay := aw.position.y
+	var ak := 0
+	while ay < aw.end.y:
+		b.rect(Rect2(aw.position.x, ay, aw.size.x, minf(12.0, aw.end.y - ay)),
+			Color(0.16, 0.34, 0.60) if ak % 2 == 0 else Color(0.97, 0.96, 0.93))
+		ay += 12.0
+		ak += 1
+	for i in range(3):
+		var sk := Vector2(1096.0, pav.position.y + 48.0 + float(i) * 68.0)
+		b.circle(sk, 11.0, Color(0.20, 0.38, 0.62))
+		b.circle(sk, 8.5, Color(0.66, 0.82, 0.90))
+	b.rect(Rect2(pav.position.x + 14.0, pav.end.y - 24.0, 112.0, 18.0), Color(0.16, 0.34, 0.60))
+	b.flush(m._wc)
+	m._wc.draw_string(m.font, Vector2(1056.0, pav.end.y - 19.0), "RESTAURANT", HORIZONTAL_ALIGNMENT_CENTER, 112.0, 11, Color(0.98, 0.96, 0.90))
+
+
+static func _gym(m: Node2D, vt: float, vb: float) -> void:
+	if not _drawn_window(GYM_RECT, vt, vb) and not _drawn_window(CALISTHENICS_RECT, vt, vb):
+		return
+	var b := ShapeBatch.new()
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22)
+	# Landward glass-fronted seafront fitness club (GIMNÀS)
+	if _drawn_window(GYM_RECT, vt, vb):
+		var gm := Rect2(1004.0, GYM_RECT.position.y, 176.0, GYM_RECT.size.y)
+		b.rect(Rect2(gm.position + m.LIGHT * 9.0, gm.size), sh)
+		b.rect(gm, Color(0.24, 0.26, 0.30))
+		b.rect(gm.grow(-5.0), Color(0.22, 0.40, 0.56))
+		# glazed seaward wall with row of treadmills & spin bikes facing the sea
+		b.rect(Rect2(gm.position.x, gm.position.y + 4.0, 8.0, gm.size.y - 8.0), Color(0.68, 0.86, 0.94, 0.85))
+		for i in range(5):
+			var ty := gm.position.y + 24.0 + float(i) * 34.0
+			b.rect(Rect2(gm.position.x + 16.0, ty - 7.0, 26.0, 14.0), Color(0.14, 0.15, 0.18))
+			b.rect(Rect2(gm.position.x + 19.0, ty - 5.0, 18.0, 10.0), Color(0.32, 0.34, 0.38))
+			b.rect(Rect2(gm.position.x + 16.0, ty - 6.0, 3.0, 12.0), Color(0.90, 0.34, 0.24))
+		# turf sprint track strip & weight rack inside
+		b.rect(Rect2(gm.position.x + 54.0, gm.position.y + 14.0, 24.0, gm.size.y - 38.0), Color(0.26, 0.58, 0.36))
+		b.rect(Rect2(gm.position.x + 28.0, gm.end.y - 24.0, 110.0, 18.0), Color(0.16, 0.18, 0.22))
+	# Seaward beach calisthenics bars on the sand
+	if _drawn_window(CALISTHENICS_RECT, vt, vb):
+		_access_ramp(m, b, 380.0, 340.0, CALISTHENICS_RECT.get_center().y, 28.0)
+		var cr := CALISTHENICS_RECT
+		b.rect(cr, Color(0.90, 0.83, 0.66))
+		var post_col := Color(0.94, 0.74, 0.16)
+		var bar_col := Color(0.32, 0.34, 0.38)
+		# monkey-bar ladder & pull-up rig with diagonal shadow on the sand
+		var r0 := Vector2(cr.position.x + 18.0, cr.position.y + 20.0)
+		var r1 := Vector2(cr.end.x - 18.0, cr.position.y + 20.0)
+		var r2 := Vector2(cr.position.x + 18.0, cr.end.y - 20.0)
+		var r3 := Vector2(cr.end.x - 18.0, cr.end.y - 20.0)
+		b.line(r0 + m.LIGHT * 14.0, r2 + m.LIGHT * 14.0, sh, 3.5)
+		b.line(r1 + m.LIGHT * 14.0, r3 + m.LIGHT * 14.0, sh, 3.5)
+		b.line(r0, r2, bar_col, 3.0)
+		b.line(r1, r3, bar_col, 3.0)
+		var ry := r0.y
+		while ry <= r2.y + 0.5:
+			b.line(Vector2(r0.x, ry) + m.LIGHT * 14.0, Vector2(r1.x, ry) + m.LIGHT * 14.0, sh, 2.2)
+			b.line(Vector2(r0.x, ry), Vector2(r1.x, ry), bar_col, 2.2)
+			ry += 20.0
+		for p: Vector2 in [r0, r1, r2, r3, Vector2(r0.x, (r0.y + r2.y) * 0.5), Vector2(r1.x, (r1.y + r3.y) * 0.5)]:
+			b.circle(p + m.LIGHT * 4.0, 4.5, sh)
+			b.circle(p, 4.2, post_col)
+	b.flush(m._wc)
+	if _drawn_window(GYM_RECT, vt, vb):
+		m._wc.draw_string(m.font, Vector2(1032.0, GYM_RECT.end.y - 19.0), "GIMNÀS", HORIZONTAL_ALIGNMENT_CENTER, 110.0, 11, Color(0.96, 0.82, 0.24))
+
+
+# THE CHIRINGUITOS AND BADALONA LANDMARKS.
 static func _landmarks(m: Node2D, vt: float, vb: float) -> void:
+	_bus_stop(m, vt, vb)
+	_surf_club(m, vt, vb)
+	_restaurant(m, vt, vb)
+	_gym(m, vt, vb)
 	var rb := ShapeBatch.new()
 	for sp: Vector2 in LevelBuild.BEACH_SHOWERS:
 		if sp.y > vt - 60.0 and sp.y < vb + 60.0:
@@ -1022,10 +1211,113 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 	_landmarks(m, vt, vb)
 
 
-# the cabins of both lifeguard towers stand over everyone
+# the cabin of the promenade's lifeguard tower stands over everyone
 static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
 	m._draw_lifeguard_tower(c, LevelBuild.BEACH_TOWER, false, true)
-	m._draw_lifeguard_tower(c, m.dog_beach_tower(), false, true)
+
+
+# THE HOTEL MARINA BADALONA PLAZA (off-leash space at the top of Passeig Marítim):
+# coastal limestone esplanade overlooking the sea and the port breakwater, with the
+# 3D BADALONA tourist letters sign on its plinth and the white terraced hotel behind.
+static func draw_freedom(m: Node2D, ci: Object) -> void:
+	var r: Rect2 = m._freedom_rect()
+	var top: float = r.position.y
+	var bot: float = r.end.y
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.24)
+	var b := ShapeBatch.new()
+	# 1. Sea, shallows, wet sand, and beach sand along the west side (x < 380)
+	b.rect(Rect2(-400.0, top - 320.0, 860.0, bot - (top - 320.0) + 20.0), m.BEACH_SAND)
+	var bend_y: float = float(m.GATE_Y) - 300.0
+	var top_y: float = top - 320.0
+	var bot_y: float = bot
+	b.polygon(PackedVector2Array([
+		Vector2(-330.0, top_y), Vector2(m.beach_shore_x(top_y), top_y),
+		Vector2(m.beach_shore_x(bend_y), bend_y), Vector2(m.beach_shore_x(bot_y), bot_y),
+		Vector2(-330.0, bot_y),
+	]), m.BEACH_SEA_DEEP)
+	b.polygon(PackedVector2Array([
+		Vector2(m.beach_shore_x(top_y) - m.BEACH_SHALLOW_W, top_y), Vector2(m.beach_shore_x(top_y), top_y),
+		Vector2(m.beach_shore_x(bend_y), bend_y), Vector2(m.beach_shore_x(bot_y), bot_y),
+		Vector2(m.beach_shore_x(bot_y) - m.BEACH_SHALLOW_W, bot_y),
+		Vector2(m.beach_shore_x(bend_y) - m.BEACH_SHALLOW_W, bend_y),
+	]), m.BEACH_SEA_SHALLOW)
+	b.polygon(PackedVector2Array([
+		Vector2(m.beach_shore_x(top_y), top_y), Vector2(m.beach_shore_x(top_y) + 70.0, top_y),
+		Vector2(m.beach_shore_x(bend_y) + 70.0, bend_y),
+		Vector2(m.beach_shore_x(bot_y) + m.BEACH_WET_W, bot_y),
+		Vector2(m.beach_shore_x(bot_y), bot_y), Vector2(m.beach_shore_x(bend_y), bend_y),
+	]), m.BEACH_WET)
+	# 2. Coastal limestone esplanade paving from the seawall (x = 380) to the east wall
+	var plaza := Rect2(452.0, top - 320.0, 748.0, bot - (top - 320.0))
+	b.rect(plaza, Color(0.85, 0.82, 0.76))
+	b.rect(Rect2(452.0, top, 728.0, bot - top), Color(0.88, 0.85, 0.79))
+	# Seaward timber promenade coping & balustrade along x = 380
+	b.rect(Rect2(452.0, top, 18.0, bot - top), Color(0.48, 0.28, 0.22))
+	b.line(Vector2(470.0, top), Vector2(470.0, bot), Color(0.72, 0.68, 0.62), 2.5)
+	# Ashlar limestone paving grid across the hotel esplanade
+	var gx := 500.0
+	while gx < 1180.0:
+		b.line(Vector2(gx, top), Vector2(gx, bot), Color(0.79, 0.76, 0.70), 1.4)
+		gx += 60.0
+	var gy := top + 40.0
+	while gy < bot:
+		b.line(Vector2(470.0, gy), Vector2(1180.0, gy), Color(0.79, 0.76, 0.70), 1.4)
+		gy += 60.0
+	# Decorative nautical compass inlay in the center of the plaza
+	var comp := Vector2(640.0, m.GATE_Y - 290.0)
+	b.circle(comp, 44.0, Color(0.76, 0.73, 0.67))
+	b.circle(comp, 38.0, Color(0.88, 0.85, 0.79))
+	b.circle(comp, 14.0, Color(0.24, 0.46, 0.68, 0.55))
+	# 3. Hotel Marina Badalona rising behind the north edge of the plaza:
+	# modern white curved ship-deck terraces, blue glass railings, and rooftop infinity pool
+	var hrect := HOTEL_RECT
+	b.rect(Rect2(hrect.position + m.LIGHT * 18.0, hrect.size), sh)
+	b.rect(hrect, Color(0.95, 0.96, 0.97))
+	b.rect(hrect.grow(-8.0), Color(0.89, 0.91, 0.93))
+	# Stepped white ship-deck balconies with blue glass railings along the south facade
+	for tier in range(3):
+		var inset := float(tier) * 14.0
+		var bal := Rect2(hrect.position.x + inset, hrect.end.y - 26.0 + float(tier) * 8.0, hrect.size.x - inset * 2.0, 10.0)
+		b.rect(bal, Color(0.98, 0.98, 0.99))
+		b.line(Vector2(bal.position.x, bal.end.y), Vector2(bal.end.x, bal.end.y), Color(0.32, 0.64, 0.84, 0.85), 2.5)
+	# Rooftop turquoise infinity pool & sun loungers
+	var pool := Rect2(hrect.position.x + 70.0, hrect.position.y + 34.0, 230.0, 82.0)
+	b.rect(pool.grow(5.0), Color(0.58, 0.40, 0.26))
+	b.rect(pool, Color(0.18, 0.68, 0.82))
+	b.rect(pool.grow(-8.0), Color(0.28, 0.78, 0.90))
+	for li in range(5):
+		var lx := pool.end.x + 28.0 + float(li) * 34.0
+		b.rect(Rect2(lx, pool.position.y + 14.0, 18.0, 32.0), Color(0.96, 0.95, 0.92))
+		b.rect(Rect2(lx + 2.0, pool.position.y + 16.0, 14.0, 10.0), Color(0.22, 0.48, 0.76))
+	# Hotel Marina rooftop sign band
+	var hband := Rect2(hrect.get_center().x + 20.0, hrect.end.y - 44.0, 220.0, 20.0)
+	b.rect(hband, Color(0.14, 0.28, 0.48))
+	var hlay: Array = Letters.layout("HOTEL MARINA", hband.get_center() + Vector2(0.0, 5.0), 11.0, 196.0)
+	for pl: PackedVector2Array in hlay[0]:
+		for i in range(pl.size() - 1):
+			b.line(pl[i], pl[i + 1], Color(0.98, 0.96, 0.90), 2.0)
+	# 4. The 3D BADALONA tourist letters sign on its plinth in the plaza
+	var plinth := HOTEL_SIGN_RECT.grow(6.0)
+	b.rect(Rect2(plinth.position + m.LIGHT * 12.0, plinth.size), sh)
+	b.rect(plinth, Color(0.32, 0.34, 0.38))
+	b.rect(HOTEL_SIGN_RECT, Color(0.46, 0.48, 0.52))
+	var word := "BADALONA"
+	var lw := (HOTEL_SIGN_RECT.size.x - 20.0) / float(word.length())
+	for i in range(word.length()):
+		var lx := HOTEL_SIGN_RECT.position.x + 10.0 + float(i) * lw
+		var lbox := Rect2(lx + 2.0, HOTEL_SIGN_RECT.position.y + 5.0, lw - 4.0, HOTEL_SIGN_RECT.size.y - 10.0)
+		# 3D extruded shadow & coral-red side bevel, bright white/coral letter face
+		b.rect(Rect2(lbox.position + m.LIGHT * 7.0, lbox.size), sh)
+		b.rect(Rect2(lbox.position + Vector2(2.5, 3.0), lbox.size), Color(0.76, 0.16, 0.18))
+		b.rect(lbox, Color(0.94, 0.24, 0.24))
+		var ch_lay: Array = Letters.layout(word.substr(i, 1), lbox.get_center() + Vector2(0.0, 6.0), 13.0, lw - 4.0)
+		for pl: PackedVector2Array in ch_lay[0]:
+			for pi in range(pl.size() - 1):
+				b.line(pl[pi], pl[pi + 1], Color(0.99, 0.98, 0.96), 2.4)
+	b.flush(ci)
+	m._draw_espigo(ci)
+	m._draw_freedom_benches(ci, r, Color(0.56, 0.38, 0.24))
+	m._freedom_sign(ci, r, m.gate_text, "the hotel plaza by the sea, off leash")
 
 
 # THE SEAFRONT HAS NO GRASS. Its cross-section is sea, sand, boardwalk,
@@ -1041,24 +1333,17 @@ const SAND_TO_X := 380.0
 static func surface(m: Node2D, p: Vector2) -> int:
 	if LevelBuild.beach_on_pier(p):
 		return Surfaces.S.PAVEMENT
-	if p.x < SAND_TO_X:
-		return Surfaces.S.SAND
-	# past the gate the dog beach is sand from the fence to the water, where
-	# the deck and promenade stop (the sea is ruled out before this hook)
-	if p.y < m.GATE_Y - 30.0:
+	var sand_x: float = 452.0 if p.y <= float(m.GATE_Y) else SAND_TO_X
+	if p.x < sand_x:
 		return Surfaces.S.SAND
 	return Surfaces.S.PAVEMENT
 
 
-# the sand takes prints; past the gate is the dog beach, sand from the fence
-# to the water
+# the sand along the beach takes prints; the promenade and hotel plaza are paved
 static func takes_prints(m: Node2D, p: Vector2) -> bool:
 	if LevelBuild.beach_on_pier(p):
 		return false
-	var s: int = m.surface_at(p)
-	if p.y < m.GATE_Y:
-		return s != Surfaces.S.WATER
-	return s == Surfaces.S.SAND
+	return m.surface_at(p) == Surfaces.S.SAND
 
 
 # the seafront's bins are recycling stations

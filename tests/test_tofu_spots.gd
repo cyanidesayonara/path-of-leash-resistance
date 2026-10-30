@@ -42,6 +42,7 @@ func _load_level(level_id: String) -> Node2D:
 		_level = null
 	var game = root.get_node("Game")
 	game.persist = false
+	game.free_play = false
 	game.level_id = level_id
 	game.weather = "clear"
 	game.night = false

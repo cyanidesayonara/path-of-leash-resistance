@@ -1,9 +1,9 @@
 extends Node2D
 
-# A rider. Crossing bikes at intersections, bike-lane commuters, and
-# wobbly kids on scooters all share this script. Art faces +x and the
+# A rider. Crossing bikes at intersections, bike-lane commuters, rollerbladers,
+# and wobbly kids on scooters all share this script. Art faces +x and the
 # node rotates to the direction of travel.
-# Commuters knock the human flat (phone risk); kids just bump ("Sorry!").
+# Commuters knock the human flat (phone risk); kids and rollerbladers bump ("Sorry!").
 
 const BypasserRouteScript := preload("res://systems/bypasser_route.gd")
 const RIDER_CLEARANCE := 18.0
@@ -12,7 +12,7 @@ const RIDER_MINIMUM_LOOKAHEAD := 220.0
 const RIDER_LOOKAHEAD_TIME := 1.35
 
 var vel := Vector2.ZERO
-var kind := "bike"  # "bike" | "kid"
+var kind := "bike"  # "bike" | "kid" | "roller"
 var main: Node2D
 var dog: Node2D
 var human: Node2D
@@ -40,6 +40,8 @@ func setup(m: Node2D, d: Node2D, h: Node2D, v: Vector2, k: String) -> void:
 	wob_seed = randf() * 10.0
 	if kind == "kid":
 		tint = [Color(0.75, 0.55, 0.3), Color(0.5, 0.62, 0.5), Color(0.65, 0.5, 0.62)][randi() % 3]
+	elif kind == "roller":
+		tint = [Color(0.20, 0.64, 0.76), Color(0.90, 0.42, 0.48), Color(0.94, 0.72, 0.24)][randi() % 3]
 	else:
 		tint = [Color(0.42, 0.5, 0.46), Color(0.55, 0.42, 0.4), Color(0.42, 0.44, 0.56)][randi() % 3]
 
@@ -86,7 +88,7 @@ func _physics_process(delta: float) -> void:
 		return
 	if main.frozen:
 		return
-	if kind == "kid" and band_hi > band_lo:
+	if (kind == "kid" or kind == "roller") and band_hi > band_lo:
 		swerve_t -= delta
 		if swerve_t <= 0.0:
 			swerve_t = randf_range(1.2, 2.8)
@@ -127,7 +129,7 @@ func _physics_process(delta: float) -> void:
 		else:
 			hit_done = true
 			human.bumped((hp - global_position).normalized())
-			main.float_text(global_position, "Sorry!", Color(1, 1, 1, 0.9), main.POP_SAY)
+			main.float_text(global_position, "Coming through!" if kind == "roller" else "Sorry!", Color(1, 1, 1, 0.9), main.POP_SAY)
 	if global_position.distance_to(dog.global_position) < 32.0:
 		dog.hit_by_rider(vel.normalized())
 	var gone_x := global_position.x < -320.0 or global_position.x > 1600.0
@@ -194,6 +196,44 @@ func _draw() -> void:
 		for i in range(3):
 			var x := -(30.0 + i * 11.0)
 			b.line(Vector2(x, -4 + i * 4), Vector2(x - 8.0, -4 + i * 4), Color(1, 1, 1, 0.25), 2.0)
+	elif kind == "roller":
+		var stride := sin(float(AnimClock.msec()) * 0.0085 + wob_seed)
+		b.polygon(_oval(sh * 4.5, 13.5, 8.5), Color(0.05, 0.05, 0.08, 0.20))
+		var pad_col := Color(0.16, 0.17, 0.21)
+		var wheel_col := Color(0.96, 0.44, 0.26)
+		# alternating inline-skate push-off stride: 4 urethane wheels on a rail under each boot
+		for sy: float in [-1.0, 1.0]:
+			var push := stride * sy
+			var foot := Vector2(-4.5 - push * 5.5, sy * (5.2 + maxf(0.0, push) * 3.8))
+			var dir := Vector2(1.0, sy * (0.18 + maxf(0.0, push) * 0.22)).normalized()
+			# inline frame and 4 wheels in a row
+			b.line(foot - dir * 6.8, foot + dir * 6.8, Color(0.24, 0.25, 0.28), 2.6)
+			for wi in range(4):
+				var wp := foot + dir * (-5.1 + float(wi) * 3.4)
+				b.circle(wp, 1.5, wheel_col)
+			# skate boot cuff and leg with knee pad
+			b.polygon(_oval(foot, 4.4, 2.5), Color(0.92, 0.93, 0.95))
+			b.circle(foot + dir * 1.4, 1.8, tint.darkened(0.15))
+			var knee := Vector2(1.5 - push * 2.0, sy * 4.2)
+			b.line(Vector2(-1.0, sy * 3.6), foot, SKIN, 3.2)
+			b.circle(knee, 2.2, pad_col)
+		# swinging arms with wrist guards
+		for sy: float in [-1.0, 1.0]:
+			var arm_f := -stride * sy
+			var hand := Vector2(3.5 + arm_f * 5.2, sy * (7.8 + absf(arm_f) * 1.4))
+			b.line(Vector2(0.5, sy * 5.8), hand, SKIN, 2.8)
+			b.circle(hand, 1.9, pad_col)
+		# athletic torso in coastal activewear with a stripe
+		b.polygon(_oval(Vector2(0.0, stride * 1.1) + sh * 0.6, 7.6, 7.2), tint.darkened(0.35))
+		b.polygon(_oval(Vector2(0.0, stride * 1.1), 7.0, 6.6), tint)
+		b.line(Vector2(-5.5, stride * 1.1), Vector2(5.0, stride * 1.1), Color(0.96, 0.96, 0.94, 0.85), 2.0)
+		b.polygon(_oval(Vector2(0.0, stride * 1.1) + hi * 2.6, 2.8, 2.4), tint.lightened(0.25))
+		# vented skate helmet and sunglasses visor
+		var head := Vector2(4.2, stride * 0.8)
+		b.circle(head + sh * 0.5, 5.5, helmet.darkened(0.40))
+		b.circle(head, 4.9, helmet)
+		b.line(head + Vector2(3.6, -2.8), head + Vector2(3.6, 2.8), Color(0.12, 0.14, 0.18), 1.8)
+		b.circle(head + hi * 2.0, 1.5, helmet.lightened(0.45))
 	else:
 		b.polygon(_oval(sh * 4.0, 15.0, 6.0), Color(0.05, 0.05, 0.08, 0.20))
 		# the deck, the little wheels at either end, the T-bar up front

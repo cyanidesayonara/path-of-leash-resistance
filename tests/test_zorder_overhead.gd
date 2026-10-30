@@ -143,7 +143,8 @@ func _run() -> void:
 
 	# 3) every other walk's overhead things
 	var want := {
-		"beach": [ov.PARASOL, ov.PERGOLA, ov.BEACH_PARASOL],
+		"beach": [ov.PARASOL, ov.PERGOLA],
+		"llevant": [ov.BEACH_PARASOL],
 		"rain": [ov.AWNING, ov.ARCADE, ov.LAMP, ov.BROLLY],
 		"oldtown": [ov.LAUNDRY, ov.WALL_LAMP],
 		"neteja": [ov.LAUNDRY],

@@ -1150,7 +1150,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"street": half = 340.0   # a proper boulevard
 		"park": half = 230.0     # a gravel path between lawns
 		"barri": half = 240.0    # the little park at the end of the street
-		"beach": half = 340.0    # bespoke cross-section, left alone
+		"beach", "llevant": half = 340.0    # bespoke cross-section, left alone
 		"rain": half = 230.0     # a narrow shopping street
 		"market": half = 270.0   # stalls crowd the aisle
 		"oldtown": half = 225.0  # the tightest: a medieval alley
@@ -1374,7 +1374,7 @@ static func fit_props_to_corridor(m: Node2D) -> void:
 	# placed prop back inside whatever corridor this level declared, keeping
 	# its side of the path. The beach is exempt: its sand/boardwalk/bike-path
 	# cross-section deliberately places things outside the walkway.
-	if m.lvl == "beach":
+	if m.lvl == "beach" or m.lvl == "llevant":
 		return
 	# Fitted at each prop's OWN y, so a bend in the path carries its lampposts
 	# and bins around with it. Against the straight sw_l/sw_r a curved street
@@ -1658,11 +1658,11 @@ static func build_level_data(m: Node2D) -> void:
 				Vector2(m.sw_l + 45, -4600),
 			]
 			keb_list = [Vector2(700, -2000), Vector2(560, -3900)]
-		"beach":
-			# Passeig Maritim: sea | sand | boardwalk | bike path |
+		"beach", "llevant":
+			# Passeig Maritim & Platja de Llevant: sea | sand | boardwalk | bike path |
 			# pavement | palms and cafe terraces. The human walks the
 			# pavement; the dog walks wherever a dog walks.
-			m.gate_text = "PLATJA DELS GOSSOS"
+			m.gate_text = "PLAÇA DE L'HOTEL" if m.lvl == "beach" else "PLATJA DELS GOSSOS"
 			m.walk_cx = 770.0
 			m.walk_half = 210.0
 			m.gate_l = 560.0
@@ -2001,12 +2001,17 @@ static func build_level_data(m: Node2D) -> void:
 			grove_lo = 150.0
 			grove_hi = 1120.0
 		"placa":
-			# plane trees in rows, as a square has them: along the top and
-			# down both sides, never in the middle
-			grove = 0
-			m.trees.append_array(placa_trees(m))
-			# and the pigeons that live in every square
-			m.flock_ys.append(m.GATE_Y - 330.0)
+			if m.lvl == "beach":
+				grove = 5
+				grove_lo = 800.0
+				grove_hi = 1060.0
+			else:
+				# plane trees in rows, as a square has them: along the top and
+				# down both sides, never in the middle
+				grove = 0
+				m.trees.append_array(placa_trees(m))
+				# and the pigeons that live in every square
+				m.flock_ys.append(m.GATE_Y - 330.0)
 	for i in range(grove):
 		for attempt in range(20):
 			var tx := randf_range(grove_lo, grove_hi)
@@ -2143,7 +2148,7 @@ static func build_level_data(m: Node2D) -> void:
 		"park":
 			m.prize_pos = m.pond.get_center() if m.pond.size.x > 0.0 else Vector2(640.0, -2700.0)
 			m.prize_text = "fetch the ball from the middle of the pond"
-		"beach":
+		"beach", "llevant":
 			# In the sea, so she swims for it - but x=20 was OUTSIDE THE FRAME.
 			# The camera is zoomed 1.28 and sits on x=640, so only world x
 			# 140..1140 is ever visible: the ball was a goal the player could
@@ -2331,7 +2336,7 @@ static func build_substance_zones(m: Node2D) -> void:
 		var ze: Vector2 = m.walk_edges(OBRES_ZEBRA_Y)
 		m.substance_zones.append({"rect": Rect2(ze.x, OBRES_ZEBRA_Y, ze.y - ze.x, OBRES_ZEBRA_H), "kind": "paint", "zebra": true})
 	match m.lvl:
-		"beach":
+		"beach", "llevant":
 			# the whole sand side, which is most of the beach. It is the beach's
 			# own ground, drawn with the cross-section ("ground"), so it is not
 			# washed over again as a tinted box: that box stopped at the gate
@@ -2357,14 +2362,14 @@ static func build_freedom_area(m: Node2D) -> void:
 			m.water.append(r)
 	if m.tutorial_mode:
 		m.water.append(tutorial_pond(m))
-	if m.freedom_kind == "placa":
+	if m.freedom_kind == "placa" and m.lvl != "beach":
 		m.water.append(placa_fountain(m))
 	if m.lvl == "montjuic":
 		m.water.append(Montjuic.FONT)
 	if m.lvl == "horta":
 		m.water.append(Horta.CANAL)
 		m.water.append(Horta.POOL)
-	if m.freedom_kind == "beach":
+	if m.freedom_kind == "beach" or m.lvl == "beach":
 		# The sea, in two pieces that meet at the gate: a band along the whole
 		# passeig (so she can go in ANYWHERE on the walk, which is the first
 		# thing anyone tries on a seafront), and the wide bay in the dog beach
@@ -2540,6 +2545,12 @@ const FREEDOM_PROPS := {
 		[Vector2(795.0, -528.0), "rock"], [Vector2(845.0, -322.0), "shrub"], [Vector2(1088.0, -430.0), "post"],
 	],
 	"beach": [
+		[Vector2(490.0, -415.0), "dig"], [Vector2(768.0, -268.0), "dig"], [Vector2(1042.0, -278.0), "dig"],
+		[Vector2(815.0, -210.0), "planter"], [Vector2(925.0, -210.0), "planter"], [Vector2(1055.0, -415.0), "planter"],
+		[Vector2(485.0, -335.0), "rock"], [Vector2(755.0, -360.0), "rock"], [Vector2(855.0, -285.0), "rock"],
+		[Vector2(955.0, -304.0), "rock"], [Vector2(510.0, -220.0), "post"], [Vector2(695.0, -285.0), "shrub"],
+	],
+	"llevant": [
 		[Vector2(548.0, -518.0), "dig"], [Vector2(768.0, -268.0), "dig"], [Vector2(1042.0, -278.0), "dig"],
 		[Vector2(885.0, -516.0), "driftwood"], [Vector2(925.0, -235.0), "driftwood"], [Vector2(1055.0, -505.0), "driftwood"],
 		[Vector2(692.0, -522.0), "rock"], [Vector2(795.0, -512.0), "rock"], [Vector2(848.0, -296.0), "rock"],
@@ -2688,8 +2699,9 @@ static func build_park_props(m: Node2D) -> void:
 	# one water trough near the gate, because a romp is thirsty work - by the
 	# shower on the beach, where the tap actually is
 	var trough_at := Vector2(m.gate_bench.x - 150.0, m.gate_bench.y + 24.0)
-	if m.freedom_kind == "beach":
-		trough_at = Vector2(m.BEACH_SEA_R + 172.0, m.freedom_lo + 148.0)
+	if m.freedom_kind == "beach" or m.lvl == "beach":
+		if m.freedom_kind == "beach":
+			trough_at = Vector2(m.BEACH_SEA_R + 172.0, m.freedom_lo + 148.0)
 	m.park_props.append({"pos": trough_at, "kind": "trough", "done": false, "prog": 0.0})
 
 
@@ -2848,7 +2860,7 @@ static func beach_sand_keepouts() -> Array[Rect2]:
 static func works_ground_at(m: Node2D, p: Vector2) -> bool:
 	if m.lvl in WORKS_FREE or m.tutorial_mode:
 		return false
-	if m.lvl == "beach" and p.x < BEACH_PROM_X:
+	if (m.lvl == "beach" or m.lvl == "llevant") and p.x < BEACH_PROM_X:
 		return false
 	return true
 
@@ -3044,7 +3056,7 @@ static func build_walls(m: Node2D) -> void:
 	# On the beach the west wall moves out into the water, so she can actually
 	# get in the sea - the whole point of walking a dog along the seafront.
 	# Everywhere else it stays at the level edge.
-	var west_x: float = m.FREEDOM_WALL_W if m.lvl == "beach" else 40.0
+	var west_x: float = m.FREEDOM_WALL_W if (m.lvl == "beach" or m.lvl == "llevant") else 40.0
 	var defs := [
 		[Vector2(west_x, mid_y), Vector2(100, span)],
 		[Vector2(1240.0, mid_y), Vector2(100, span)],
@@ -3246,7 +3258,7 @@ static func build_walls(m: Node2D) -> void:
 	match m.lvl:
 		"street": wall_sides = [-1.0]
 		"rain": wall_sides = []      # its frontage walls are the building line
-		"park", "trail", "beach", "barri": wall_sides = []
+		"park", "trail", "beach", "llevant", "barri": wall_sides = []
 		"besos": wall_sides = [-1.0]   # the concrete flood wall; the river side stays open
 		_: wall_sides = [-1.0, 1.0]
 	# the straight wall runs the whole walk at sw_l/sw_r, START_Y + 200 to
@@ -3449,7 +3461,7 @@ static func build_entities(m: Node2D) -> void:
 	m.edge_layer.z_index = -5   # behind everything in the world
 	# what hangs over the walk, above everyone (El Gotic's bridge, El Mercat's
 	# arches, La Castanyada's lantern strings)
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "beach" or m.lvl == "scrap" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "tibidabo":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "beach" or m.lvl == "llevant" or m.lvl == "scrap" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "tibidabo":
 		var ov := Node2D.new()
 		ov.set_script(load("res://world/overheadlayer.gd"))
 		ov.z_index = 14
@@ -3578,7 +3590,7 @@ static func spawn_cones(m: Node2D) -> void:
 	var kinds := ["can", "bottle", "sack", "can"]
 	match m.lvl:
 		"scrap", "site": kinds = ["crate", "sack", "can", "bottle", "crate"]
-		"beach": kinds = ["bottle", "ball", "can"]
+		"beach", "llevant": kinds = ["bottle", "ball", "can"]
 		"park", "trail": kinds = ["bottle", "ball", "can"]
 		"besos": kinds = ["bottle", "ball", "can"]
 		"aigues": kinds = ["bottle", "can", "bottle"]   # what runners drop: no bin bags up here

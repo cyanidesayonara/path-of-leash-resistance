@@ -2,6 +2,36 @@
 
 Append-only session history, newest first.
 
+## 2026-10-30 - Badalona rework of Passeig Marítim, Platja de Llevant and rollerbladers
+
+- **Passeig Marítim (`beach`) reworked as Badalona's seafront** (`systems/passeig.gd`,
+  `systems/arrival.gd`, `systems/exit_portals.gd`, `world/level_build.gd`,
+  `main.gd`):
+  - Starts and ends at **Estació de Badalona** (`"station"`) with a glass-and-steel
+    metropolitan **bus stop** (`BUS` shelter and yellow totem) beside the exit.
+  - Landmarks sit in their south-to-north Badalona order: first chiringuito,
+    **Club de Mar** surf club and beachfront surfboard rack, seafront
+    **restaurant**, **gym** (`GIMNÀS`) and beach calisthenics bars, second
+    chiringuito, **El Pont del Petroli** (`y = -3420`) with the **Anís del
+    Mono** works and brick chimney opposite (`y = -3780`).
+  - Off-leash area past the gate (`PLAÇA DE L'HOTEL`, `Passeig.draw_freedom`) is
+    the **Hotel Marina Badalona** plaza overlooking the sea and breakwater, with
+    the 3D **`BADALONA`** tourist letters sign on its plinth and the white
+    terraced hotel with its rooftop pool behind.
+- **Platja de Llevant (`llevant`, Walk 24, open at 41 stars)** (`systems/llevant.gd`,
+  `autoload/game.gd`, `systems/goals.gd`, `audio/music.gd`, `world/world_sign.gd`):
+  - The dog beach (`PLATJA DELS GOSSOS`, `freedom_kind == "beach"`) moves here
+    from Passeig Marítim.
+  - Arrives by metro (`"metro"`), with stone coastal groins (`GROIN_YS`) jutting
+    into the surf, the angled Fòrum photovoltaic solar pergola (`PERGOLA_RECT`),
+    and a dog rinse shower (`DOG_SHOWER_RECT`).
+- **Rollerbladers (`kind == "roller"` in `entities/bike.gd`)**:
+  - Top-down inline skaters with alternating 4-wheel skate push-off stride,
+    helmet, visor and wrist/knee pads, skating the bike lane and promenade on
+    `beach`, `llevant`, `street` and `park`.
+- Tests: `tests/test_passeig.gd`, `tests/test_platja.gd`, `tests/test_arrival.gd`,
+  `tests/test_walk_hooks.gd`.
+
 ## 2026-10-29 - The dog selector: five dogs, unlocked by stars
 
 Five dogs to pick from before a walk (`autoload/game.gd`, `entities/dog.gd`,

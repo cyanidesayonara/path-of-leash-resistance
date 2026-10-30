@@ -351,8 +351,10 @@ static func _station(b: ShapeBatch, m: Node2D, c: Vector2) -> void:
 	b.line(can.position, Vector2(can.end.x, can.position.y), RAIL, 3.0)
 	for px: float in [can.position.x + 6.0, can.end.x - 6.0]:
 		b.circle(Vector2(px, can.position.y + 4.0), 4.0, RAIL)
-	_sign(b, "ESTACIÓ", Vector2(c.x, can.position.y - 6.0), 16.0, 200.0, Color(0.16, 0.20, 0.30), Color(0.96, 0.92, 0.80))
-	# the station clock on its post, a bike rack
+	var st_title := "ESTACIÓ DE BADALONA" if String(m.lvl) == "beach" else "ESTACIÓ"
+	var st_w := 260.0 if String(m.lvl) == "beach" else 200.0
+	_sign(b, st_title, Vector2(c.x, can.position.y - 6.0), 16.0, st_w, Color(0.16, 0.20, 0.30), Color(0.96, 0.92, 0.80))
+	# the station clock on its post, a bike rack, and on Badalona's seafront the bus stop beside the station
 	var ck := Vector2(c.x + half + 70.0, front - 30.0)
 	b.line(ck, ck + Vector2(0.0, 24.0), RAIL, 3.0)
 	b.circle(ck, 11.0, Color(0.92, 0.90, 0.84))
@@ -362,6 +364,15 @@ static func _station(b: ShapeBatch, m: Node2D, c: Vector2) -> void:
 	for k in range(5):
 		var rx := c.x - half - 150.0 + float(k) * 16.0
 		b.line(Vector2(rx, front - 26.0), Vector2(rx, front - 6.0), RAIL, 2.5)
+	if String(m.lvl) == "beach":
+		var bs := Rect2(c.x + half + 112.0, front - 36.0, 104.0, 26.0)
+		b.rect(Rect2(bs.position + Vector2(5.0, 6.0), bs.size), SHADOW)
+		b.rect(bs, GLASS)
+		b.rect(Rect2(bs.position.x, bs.position.y, bs.size.x, 4.0), RAIL)
+		b.rect(Rect2(bs.position.x + 14.0, bs.position.y + 12.0, 76.0, 8.0), TIMBER)
+		var bt := Vector2(bs.end.x + 16.0, bs.position.y + 8.0)
+		b.rect(Rect2(bt - Vector2(9.0, 11.0), Vector2(18.0, 22.0)), Color(0.96, 0.78, 0.14))
+		_sign(b, "BUS", bt + Vector2(0.0, 4.0), 8.0, 16.0, Color(0, 0, 0, 0), Color(0.14, 0.16, 0.20))
 
 
 static func _funicular(b: ShapeBatch, m: Node2D, c: Vector2) -> void:

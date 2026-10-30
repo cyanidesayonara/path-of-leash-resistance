@@ -49,7 +49,7 @@ func _run() -> void:
 	_walk(beach, Vector2(760.0, -1500.0), 10)
 	_check(beach.dents.is_empty(), "none on the dry promenade")
 	beach.dents.clear()
-	_walk(beach, Vector2(beach.walk_cx, beach.GATE_Y - 200.0), 6)
+	_walk(beach, Vector2(440.0, beach.GATE_Y - 200.0), 6)
 	_check(beach.dents.size() >= 4, "the dog beach past the gate takes prints too (%d)" % beach.dents.size())
 	_check(float(beach.SUBSTANCES["sand"]["life"]) >= 3.0, "sandy paws last long enough to be seen on the boardwalk")
 	# they fade: a print older than DENT_LIFE is gone

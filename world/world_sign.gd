@@ -34,7 +34,7 @@ const MATERIALS := {
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
 	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
 	"montjuic": "cactus", "port": "rope", "reial": "fronds", "vet": "biscuits",
-	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "tutorial": "balls",
+	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "tutorial": "balls",
 }
 # What lies under a walk's pieces so they read on its ground by brightness, not
 # colour alone: a soft bed of light under dark-on-dark, of shade under
@@ -80,6 +80,7 @@ const FEEL := {
 	"fronds": {"spacing": 0.3, "r": 0.06, "drag": 6.0, "take": 0.8, "spin": 2.5, "segment": true},
 	"biscuits": {"spacing": 0.16, "r": 0.075, "drag": 4.0, "take": 1.1, "spin": 4.0},
 	"pinecones": {"spacing": 0.15, "r": 0.08, "drag": 2.2, "take": 1.0, "roll": true},
+	"shells": {"spacing": 0.14, "r": 0.075, "drag": 3.5, "take": 1.0, "spin": 3.0},
 	"balls": {"spacing": 0.15, "r": 0.075, "drag": 0.9, "take": 1.2, "roll": true},
 	"bulbs": {"fixed": true},
 	"setts": {"fixed": true},
@@ -518,6 +519,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_biscuits(c, sign, h, light)
 		"pinecones":
 			_pinecones(c, sign, h, light)
+		"shells":
+			_shells(c, sign, h, light)
 		"balls":
 			_balls(c, sign, h, light)
 		"bulbs":
@@ -1116,3 +1119,26 @@ static func _topiary(c: Object, lines: Array, h: float, key: float, light: Vecto
 	for i in range(pts.size()):
 		var q := pts[i] - light * w * 0.12 + Vector2(_h(i, key, 61.0) - 0.5, _h(i, key, 62.0) - 0.5) * w * 0.2
 		c.draw_circle(q, w * (0.16 + _h(i, key, 63.0) * 0.06), Color(0.34, 0.54, 0.30).lerp(Color(0.42, 0.60, 0.32), _h(i, key, 64.0)))
+
+static func _shells(c: Object, sign: Dictionary, h: float, light: Vector2) -> void:
+	# seashells washed up on Platja de Llevant: ribbed cockles and scallops in
+	# cream, coral and sand-gold, with radiated ridges from the hinge
+	var cols := [Color(0.95, 0.88, 0.78), Color(0.92, 0.72, 0.62), Color(0.88, 0.78, 0.62),
+		Color(0.96, 0.94, 0.90), Color(0.84, 0.66, 0.58)]
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		c.draw_colored_polygon(_oval((pc.p as Vector2) + light * r * 0.45, float(pc.rot), r * 1.15, r * 0.95), Color(0, 0, 0, 0.26))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var rot: float = pc.rot
+		var ax := Vector2.from_angle(rot)
+		var ay := ax.orthogonal()
+		var col := _pick(cols, float(pc["var"]))
+		c.draw_colored_polygon(_oval(p, rot, r * 1.15, r * 0.95), col.darkened(0.28))
+		c.draw_colored_polygon(_oval(p, rot, r * 1.02, r * 0.84), col)
+		var hinge := p - ax * r * 0.65
+		for k in range(-2, 3):
+			var tip := p + ax * r * 0.75 + ay * float(k) * r * 0.28
+			c.draw_line(hinge, tip, col.darkened(0.18), 1.1)
+		c.draw_circle(p - light * r * 0.28, r * 0.24, col.lightened(0.22))

@@ -185,6 +185,17 @@ with pickpockets and shenanigans happening around."
   the bronze Anís del Mono monkey on his marble block at the wedge's south
   edge (`beach_block_stones`, solid, wraps the leash). Badalona landmarks
   only on this walk.
+- Badalona rework (2026-10-30): starts at Estació de Badalona (`Arrival.place_for("beach") == "station"`)
+  with a metropolitan bus stop (`BUS_STOP_RECT`) beside the exit; runs north
+  past the first chiringuito (`BEACH_BARS[0]`), Club de Mar surf club and
+  board rack (`SURF_CLUB_RECT`, `SURF_RACK_RECT`), seafront restaurant
+  (`RESTAURANT_RECT`), gym and beach calisthenics bars (`GYM_RECT`,
+  `CALISTHENICS_RECT`), second chiringuito (`BEACH_BARS[1]`), El Pont del
+  Petroli (`BEACH_PIER_Y = -3420`) with the Anís del Mono works and chimney
+  opposite (`WORKS_Y = -3780`), and ends at the Hotel Marina Badalona plaza
+  (`PLAÇA DE L'HOTEL`, `Passeig.draw_freedom`) with the 3D `BADALONA` tourist
+  letters sign (`HOTEL_SIGN_RECT`) and the white terraced hotel (`HOTEL_RECT`).
+  Rollerbladers (`kind == "roller"` in `entities/bike.gd`) skate the bike lane.
 
 ### El Diluvi (rain) - the rainy shopping street
 - Is: a narrow shopping street in a downpour, not La Rambla wet.
@@ -515,6 +526,17 @@ park could be just a neighborhood park in bcn."
 - Opens at 39 stars, after La Carretera. Arrives by metro. Built in
   `systems/horta.gd`, drawn by its hooks; the hedges are islands like El
   Mercat's stall blocks, solid with the leash going round them.
+
+### Platja de Llevant (llevant) - the dog beach at the far end of the coast
+- Is: the easternmost beach of Barcelona by the Fòrum, home to the city's
+  fenced dog beach (`PLATJA DELS GOSSOS`). Stone coastal groins (`GROIN_YS`)
+  jutting into the surf, the giant angled Fòrum photovoltaic solar pergola
+  (`PERGOLA_RECT`), a dedicated dog rinse shower (`DOG_SHOWER_RECT`), timber
+  boardwalk, and rollerbladers along the coastal bike lane.
+- Off-leash: `PLATJA DELS GOSSOS` (`freedom_kind == "beach"`), moved here from
+  Passeig Marítim so Badalona's walk ends at the Hotel Marina Badalona plaza.
+- Opens at 41 stars, after El Laberint d'Horta. Arrives by metro (`"metro"`).
+  Built in `systems/llevant.gd`.
 
 ### First Walk (tutorial) - learn each trick in peace
 Santtu: "we should really upgrade the tutorial too, so that the user can

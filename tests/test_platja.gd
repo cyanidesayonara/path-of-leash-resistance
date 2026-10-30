@@ -1,10 +1,12 @@
 extends SceneTree
 
 # La Platja (docs/LEVEL_DESIGN.md): the Mediterranean beachfront walk along
-# Passeig Marítim in Badalona. Sandy shores, wet sand waterline, wooden
-# boardwalk (passarel·la de fusta), palm cutouts, beach showers with rentapeus
-# foot-wash taps, Salvament de Platges lifeguard watchtowers with lifebuoys,
-# raked volleyball courts, and selective recycling stations.
+# Passeig Marítim in Badalona (ending at the Hotel Marina Badalona plaza with
+# the BADALONA sign) and Platja de Llevant (ending at the Platja dels Gossos
+# dog beach). Sandy shores, wet sand waterline, wooden boardwalk (passarel·la
+# de fusta), palm cutouts, beach showers with rentapeus foot-wash taps,
+# Salvament de Platges lifeguard watchtowers with lifebuoys, raked volleyball
+# courts, and selective recycling stations.
 
 var checks := 0
 var failures: Array[String] = []
@@ -30,7 +32,8 @@ func _run() -> void:
 		await m.ready
 
 	_check(m.lvl == "beach", "level is beach")
-	_check(m.freedom_kind == "beach", "off-leash space is dog beach")
+	_check(m.freedom_kind == "placa", "Passeig Marítim off-leash space is Hotel Marina Badalona plaza")
+	_check(m.gate_text == "PLAÇA DE L'HOTEL", "Passeig Marítim gate text is PLAÇA DE L'HOTEL")
 
 	# Beach landmarks
 	var LevelBuild: GDScript = load("res://world/level_build.gd")
@@ -64,6 +67,22 @@ func _run() -> void:
 
 	m.queue_free()
 	await process_frame
+
+	# Platja de Llevant (Walk 24) carries the dog beach (PLATJA DELS GOSSOS)
+	game.level_id = "llevant"
+	var ml: Node2D = load("res://main.tscn").instantiate()
+	root.add_child(ml)
+	if not ml.is_node_ready():
+		await ml.ready
+	_check(ml.lvl == "llevant", "level is llevant")
+	_check(ml.freedom_kind == "beach", "Platja de Llevant off-leash space is dog beach")
+	_check(ml.gate_text == "PLATJA DELS GOSSOS", "Platja de Llevant gate text is PLATJA DELS GOSSOS")
+	_check(ml.surface_at(Vector2(300.0, -1500.0)) == ml.Surfaces.S.SAND, "llevant sand is sand surface")
+	_check(ml.surface_at(Vector2(100.0, -1500.0)) == ml.Surfaces.S.WATER, "llevant sea is water surface")
+	_check(ml.surface_at(Vector2(650.0, -1500.0)) == ml.Surfaces.S.PAVEMENT, "llevant promenade is pavement surface")
+	ml.queue_free()
+	await process_frame
+
 	print("\n%d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():
 		print("test_platja: OK")

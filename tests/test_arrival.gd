@@ -67,7 +67,7 @@ func _run() -> void:
 		"barri": ["apartment", "apartment"],
 		"street": ["apartment", "apartment"],
 		"park": ["apartment", "apartment"],
-		"beach": ["apartment", "apartment"],
+		"beach": ["transit", "station"],
 		"rain": ["apartment", "apartment"],
 		"market": ["apartment", "apartment"],
 		"oldtown": ["apartment", "apartment"],
@@ -79,6 +79,7 @@ func _run() -> void:
 		"station": ["transit", "station"],
 		"montjuic": ["transit", "funicular"],
 		"partit": ["transit", "metro"],
+		"llevant": ["transit", "metro"],
 		"trail": ["safe", "trailhead"],
 		"besos": ["safe", "ramp"],
 	}

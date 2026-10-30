@@ -2,7 +2,7 @@ extends Node
 
 # Autoload: session state that must survive scene reloads.
 
-const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta"]
+const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant"]
 const LEVEL_NAMES := {
 	"tutorial": "First Walk",
 	# One scheme: a Catalan article plus one everyday noun for the place you
@@ -41,6 +41,8 @@ const LEVEL_NAMES := {
 	"aigues": "La Carretera de les Aigües",
 	# the 18th-century garden at the foot of Collserola, and its cypress maze
 	"horta": "El Laberint d'Horta",
+	# Barcelona's northernmost beach by the Fòrum, and the dog beach at its end
+	"llevant": "Platja de Llevant",
 }
 # The Catalan name carries the character; this carries the meaning. The game
 # ships in English, so a player who does not speak Catalan should never have to
@@ -72,11 +74,12 @@ const LEVEL_SUBTITLES := {
 	"tibidabo": "The city's highest hill and its old fairground",
 	"aigues": "The hillside hike",
 	"horta": "The cypress maze",
+	"llevant": "The dog beach at the far end of the coast",
 }
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
 # The first few open quickly, so a new player is never stuck on one walk.
-const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "rain": 4, "market": 7, "oldtown": 9, "trail": 11, "station": 13, "besos": 14, "site": 15, "spook": 17, "scrap": 19, "guell": 21, "neteja": 23, "montjuic": 25, "partit": 27, "port": 29, "reial": 31, "vet": 33, "tibidabo": 35, "aigues": 37, "horta": 39}
+const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "rain": 4, "market": 7, "oldtown": 9, "trail": 11, "station": 13, "besos": 14, "site": 15, "spook": 17, "scrap": 19, "guell": 21, "neteja": 23, "montjuic": 25, "partit": 27, "port": 29, "reial": 31, "vet": 33, "tibidabo": 35, "aigues": 37, "horta": 39, "llevant": 41}
 
 const WEATHERS: Array[String] = ["clear", "rain", "wind", "snow"]
 const WEATHER_NAMES := {"clear": "CLEAR", "rain": "RAIN", "wind": "WIND", "snow": "SNOW"}
@@ -89,7 +92,7 @@ const WALK_WEATHER := {"rain": "rain", "tutorial": "clear"}
 const WALK_NIGHT := {"spook": true, "tutorial": false}
 
 # the walk select: the first walk, then the campaign walks in order
-const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta"]
+const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant"]
 
 # Cosmetics keep their catalog keys when equipped, but ownership is namespaced
 # by category so identically named items remain separate purchases.
@@ -293,6 +296,7 @@ const LEVEL_SUBTITLES_CA := {
 	"tibidabo": "El cim de la ciutat i les seves atraccions",
 	"aigues": "La caminada pel vessant",
 	"horta": "El laberint de xiprers",
+	"llevant": "La platja dels gossos a l'extrem de la costa",
 }
 const LEVEL_SUBTITLES_ES := {
 	"tutorial": "Aprende la correa, truco a truco",
@@ -319,6 +323,7 @@ const LEVEL_SUBTITLES_ES := {
 	"tibidabo": "La cima de la ciudad y sus atracciones",
 	"aigues": "La caminata por la ladera",
 	"horta": "El laberinto de cipreses",
+	"llevant": "La playa para perros al final de la costa",
 }
 # the off-leash agility course's best time in seconds (0: never run). One
 # record for all of them: it is the same course in every space.
@@ -737,6 +742,7 @@ func _reset_persisted_state() -> void:
 	key_binds = {}
 	pad_binds = {}
 	goals_expanded = false
+	free_play = false
 	ask_tutorial = true
 	tutorial_done = false
 	walks_lost = 0
