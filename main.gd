@@ -711,8 +711,8 @@ var prize_glow := 0.0
 var spell_word := ""
 var word_letters: Array = []
 var word_letters_collected := 0
-var secret_tape_pos := Vector2(INF, INF)
-var secret_tape_found := false
+var jamon_pos := Vector2(INF, INF)
+var jamon_found := false
 var clock_target := 75
 # carry / delivery mission: pick an item up in your mouth and take it to a
 # marked drop-off. 0 = not yet picked up, 1 = carrying, 2 = delivered.
@@ -1947,8 +1947,8 @@ func _build_scent_sources() -> Array:
 			out.append({"pos": c.pos, "col": Color(0.55, 0.85, 0.45)})
 	if not prize_taken and prize_pos.x < INF:
 		out.append({"pos": prize_pos, "col": Color(1.0, 0.86, 0.42)})
-	if not secret_tape_found and secret_tape_pos.x < INF:
-		out.append({"pos": secret_tape_pos, "col": Color(1.0, 0.85, 0.35)})
+	if not jamon_found and jamon_pos.x < INF:
+		out.append({"pos": jamon_pos, "col": Color(1.0, 0.78, 0.28)})
 	for l: Dictionary in word_letters:
 		if not bool(l.collected):
 			out.append({"pos": l.pos, "col": Color(1.0, 0.88, 0.28)})
