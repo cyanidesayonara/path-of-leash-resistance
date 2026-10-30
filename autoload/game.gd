@@ -742,6 +742,7 @@ func _reset_persisted_state() -> void:
 	key_binds = {}
 	pad_binds = {}
 	goals_expanded = false
+	free_play = false
 	ask_tutorial = true
 	tutorial_done = false
 	walks_lost = 0
