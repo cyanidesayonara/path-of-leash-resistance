@@ -124,6 +124,12 @@ const STYLES := {
 		"bass": "root", "drums": "brushsoft", "verb": 0.38},
 	"llevant": {"bpm": 102, "key": 5, "lead": "marimba", "lead2": ["whistle", 0], "comp": "bossa",
 		"bass": "bossa", "drums": "rim", "swing": 0.06, "verb": 0.28},
+	# Els Senglars: rustic hillside trail with marimba, whistle, walking bass, and brush drums
+	"boars": {"bpm": 118, "key": 2, "lead": "marimba", "lead2": ["whistle", 0], "comp": "arp",
+		"bass": "walk", "drums": "brush", "swing": 0.08, "verb": 0.26},
+	# Festa de Gràcia: festive neighborhood carnival rhythm with guitar, whistle, and festive claps
+	"gracia": {"bpm": 122, "key": 5, "lead": "guitar", "lead2": ["whistle", 0], "comp": "rumba",
+		"bass": "eighths", "drums": "claps", "swing": 0.06, "verb": 0.24},
 	# Rambla del Raval: dramatic comedic brass boss march with energetic syncopated beat
 	"raval": {"bpm": 128, "key": 0, "minor": true, "lead": "accordion", "lead2": ["whistle", 0], "comp": "stab",
 		"bass": "eighths", "drums": "kickrim", "swing": 0.05, "verb": 0.26},
