@@ -13,14 +13,20 @@ const LEASH := Color(0.70, 0.16, 0.20)
 # collar ring and her mouth are on screen. `ground` is the floor's y: her
 # shadow stays on it when she jumps, smaller and fainter the higher she is.
 static func millie(c: CanvasItem, pos: Vector2, s: float, face: float, sq: Vector2, pose: Dictionary, ground := INF) -> Dictionary:
+	pose = pose.duplicate()
+	pose["no_shadow"] = true
+	pose["_face"] = face
+	if not pose.has("breed"):
+		var g: Node = c.get_node_or_null("/root/Game")
+		if g != null and g.get("dog") != null:
+			pose["breed"] = str(g.dog)
+	var bid := MillieSide.breed_id_of(pose.get("breed", ""))
+	s *= MillieSide.breed_scale(bid)
 	var gy := pos.y if ground == INF else ground
 	var lift := maxf(0.0, gy - pos.y)
 	var k := clampf(1.0 - lift / 160.0, 0.35, 1.0)
 	c.draw_colored_polygon(MillieSide.ellipse(Vector2(pos.x + 4.0 * s, gy + 2.0 * s), Vector2(62, 7) * s * Vector2(k, 1.0)),
 		Color(0.15, 0.12, 0.10, 0.28 * k))
-	pose = pose.duplicate()
-	pose["no_shadow"] = true
-	pose["_face"] = face
 	var xs := Vector2(face * s * sq.x, s * sq.y)
 	c.draw_set_transform(pos, 0.0, xs)
 	var ring_l: Vector2 = MillieSide.draw(c, Vector2.ZERO, 1.0, pose, "hybrid")
@@ -33,6 +39,13 @@ static func millie(c: CanvasItem, pos: Vector2, s: float, face: float, sq: Vecto
 # where Millie's collar ring and mouth will be for this pose, without drawing
 # her (so the leash can be drawn behind her)
 static func millie_points(pos: Vector2, s: float, face: float, sq: Vector2, pose: Dictionary) -> Dictionary:
+	pose = pose.duplicate()
+	if not pose.has("breed"):
+		var g: Node = Engine.get_main_loop().root.get_node_or_null("Game") if Engine.get_main_loop() != null else null
+		if g != null and g.get("dog") != null:
+			pose["breed"] = str(g.dog)
+	var bid := MillieSide.breed_id_of(pose.get("breed", ""))
+	s *= MillieSide.breed_scale(bid)
 	var xs := Vector2(face * s * sq.x, s * sq.y)
 	var p := MillieSide.anchors(pose)
 	var ring_l: Vector2 = p["_neck"] + Vector2(-8, 6)

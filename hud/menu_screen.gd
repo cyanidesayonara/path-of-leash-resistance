@@ -201,10 +201,11 @@ func _walk(vs: Vector2) -> void:
 		Kit.lock(self, Vector2(r.position.x + 34.0, row_y - 6.0), 16.0, Kit.INK_FAINT)
 		draw_string(body, Vector2(r.position.x + 58.0, row_y), String(info.lines[0]),
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Kit.INK_SOFT)
-		var have := float(info.have)
-		var gate := maxf(1.0, float(info.gate))
-		Icons.draw_meter(self, Vector2(r.end.x - 150.0, row_y - 10.0), 110.0, 8.0, have / gate)
-		Icons.draw_star(self, Vector2(r.end.x - 24.0, row_y - 6.0), 8.0, true)
+		if not info.has("chase_gate"):
+			var have := float(info.have)
+			var gate := maxf(1.0, float(info.gate))
+			Icons.draw_meter(self, Vector2(r.end.x - 150.0, row_y - 10.0), 110.0, 8.0, have / gate)
+			Icons.draw_star(self, Vector2(r.end.x - 24.0, row_y - 6.0), 8.0, true)
 	elif info.has("stars"):
 		for i in range(3):
 			Icons.draw_star(self, Vector2(r.position.x + 34.0 + float(i) * 26.0, row_y - 6.0), 10.0,
@@ -466,7 +467,11 @@ func _progress(vs: Vector2) -> void:
 			gloss_w, sub_px, Kit.INK_SOFT)
 		if locked:
 			Kit.lock(self, Vector2(c_stars + 8.0, base - 5.0), lock_sz, Kit.INK_FAINT)
-			draw_string(body, Vector2(c_stars + 24.0, base), "opens at %d stars" % int(row.gate),
+			var lock_lbl := "opens at %d stars" % int(row.gate)
+			if String(row.get("chase_gate", "")) != "":
+				var ch_id: String = String(row.chase_gate)
+				lock_lbl = "complete %s to enter" % Game.LEVEL_NAMES.get(ch_id, ch_id)
+			draw_string(body, Vector2(c_stars + 24.0, base), lock_lbl,
 				HORIZONTAL_ALIGNMENT_LEFT, -1, sub_px, Kit.INK_SOFT)
 			continue
 		for s in range(3):

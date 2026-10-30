@@ -228,6 +228,14 @@ static func walk_info(m: Node2D) -> Dictionary:
 		info.lines = ["About three minutes, nothing to get in the way. No stars, no score."]
 		return info
 	if info.locked:
+		var ch := Game.chase_gate_needed(sel)
+		if ch != "":
+			info["chase_gate"] = ch
+			info["gate"] = int(Game.STAR_GATE.get(sel, 0))
+			info["have"] = Game.total_stars()
+			var ch_name: String = Game.LEVEL_NAMES.get(ch, ch)
+			info.lines = ["Complete %s to enter" % ch_name]
+			return info
 		var gate := int(Game.STAR_GATE.get(sel, 0))
 		info["gate"] = gate
 		info["have"] = Game.total_stars()
@@ -847,8 +855,10 @@ static func close_progress(m: Node2D) -> void:
 static func progress_rows(m: Node2D) -> Array:
 	var out := []
 	for lv in Game.LEVELS:
+		var ch := Game.chase_gate_needed(lv)
 		var row := {"id": lv, "name": Game.LEVEL_NAMES[lv], "gloss": Game.gloss(lv),
-			"locked": not Game.is_unlocked(lv), "gate": int(Game.STAR_GATE.get(lv, 0))}
+			"locked": not Game.is_unlocked(lv), "gate": int(Game.STAR_GATE.get(lv, 0)),
+			"chase_gate": ch}
 		row["stars"] = Game.stars(lv)
 		row["goals"] = Game.goals_count(lv)
 		row["goals_total"] = (m.LEVEL_GOAL_IDS.get(lv, []) as Array).size()

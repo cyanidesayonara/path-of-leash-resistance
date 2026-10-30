@@ -43,6 +43,9 @@ const LEVEL_NAMES := {
 	"horta": "El Laberint d'Horta",
 	# Barcelona's northernmost beach by the Fòrum, and the dog beach at its end
 	"llevant": "Platja de Llevant",
+	"boars": "Els Senglars",
+	"gracia": "Festa de Gràcia",
+	"raval": "Rambla del Raval",
 }
 # The Catalan name carries the character; this carries the meaning. The game
 # ships in English, so a player who does not speak Catalan should never have to
@@ -75,11 +78,39 @@ const LEVEL_SUBTITLES := {
 	"aigues": "The hillside hike",
 	"horta": "The cypress maze",
 	"llevant": "The dog beach at the far end of the coast",
+	"boars": "The wild Collserola downhill scramble",
+	"gracia": "The decorated festival street run",
+	"raval": "The Grand Finale — El Gat de Botero",
 }
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
 # The first few open quickly, so a new player is never stuck on one walk.
 const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "rain": 4, "market": 7, "oldtown": 9, "trail": 11, "station": 13, "besos": 14, "site": 15, "spook": 17, "scrap": 19, "guell": 21, "neteja": 23, "montjuic": 25, "partit": 27, "port": 29, "reial": 31, "vet": 33, "tibidabo": 35, "aigues": 37, "horta": 39, "llevant": 41}
+
+# Keystone Chase milestone gates: each tier requires surviving the previous
+# tier's chase level end-to-end to enter.
+const CHASE_GATE := {
+	# Tier 3 (Walks after El Besòs)
+	"site": "besos",
+	"spook": "besos",
+	"scrap": "besos",
+	"guell": "besos",
+	"boars": "besos",
+	# Tier 4 (Walks after La Neteja)
+	"montjuic": "neteja",
+	"partit": "neteja",
+	"port": "neteja",
+	"reial": "neteja",
+	"vet": "neteja",
+	# Tier 5 (Walks after El Veterinari)
+	"tibidabo": "vet",
+	"aigues": "vet",
+	"horta": "vet",
+	"llevant": "vet",
+	"gracia": "vet",
+	# The Grand Finale (Rambla del Raval - Boss Arena)
+	"raval": "gracia",
+}
 
 const WEATHERS: Array[String] = ["clear", "rain", "wind", "snow"]
 const WEATHER_NAMES := {"clear": "CLEAR", "rain": "RAIN", "wind": "WIND", "snow": "SNOW"}
@@ -297,6 +328,9 @@ const LEVEL_SUBTITLES_CA := {
 	"aigues": "La caminada pel vessant",
 	"horta": "El laberint de xiprers",
 	"llevant": "La platja dels gossos a l'extrem de la costa",
+	"boars": "La baixada salvatge per Collserola",
+	"gracia": "La festa dels carrers guarnits",
+	"raval": "La gran final — El Gat de Botero",
 }
 const LEVEL_SUBTITLES_ES := {
 	"tutorial": "Aprende la correa, truco a truco",
@@ -324,6 +358,9 @@ const LEVEL_SUBTITLES_ES := {
 	"aigues": "La caminata por la ladera",
 	"horta": "El laberinto de cipreses",
 	"llevant": "La playa para perros al final de la costa",
+	"boars": "El descenso salvaje por Collserola",
+	"gracia": "La fiesta de las calles adornadas",
+	"raval": "La gran final — El Gat de Botero",
 }
 # the off-leash agility course's best time in seconds (0: never run). One
 # record for all of them: it is the same course in every space.
@@ -907,9 +944,29 @@ func total_stars() -> int:
 	return s
 
 
+func has_completed(lv: String) -> bool:
+	if free_play:
+		return true
+	if not records.has(lv):
+		return false
+	var r: Dictionary = records[lv]
+	return int(r.get("bones", 0)) > 0 or float(r.get("time", 0.0)) > 0.0
+
+
+func chase_gate_needed(lv: String) -> String:
+	if free_play or lv == "tutorial" or not CHASE_GATE.has(lv):
+		return ""
+	var req: String = String(CHASE_GATE[lv])
+	return "" if has_completed(req) else req
+
+
 func is_unlocked(lv: String) -> bool:
 	if free_play or lv == "tutorial":
 		return true  # the tutorial is always open, and free play opens all walks
+	if lv == "raval":
+		return has_completed("gracia")
+	if chase_gate_needed(lv) != "":
+		return false
 	return total_stars() >= int(STAR_GATE.get(lv, 0))
 
 
@@ -954,6 +1011,9 @@ func gate_crossed(prev_total: int, lv: String) -> bool:
 
 
 func best_line(lv: String) -> String:
+	var ch := chase_gate_needed(lv)
+	if ch != "":
+		return "locked - complete %s to enter" % LEVEL_NAMES.get(ch, ch)
 	if not is_unlocked(lv):
 		return "locked - earn %d stars to unlock" % int(STAR_GATE.get(lv, 0))
 	if not records.has(lv) or int(records[lv].bones) <= 0:
