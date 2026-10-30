@@ -30,7 +30,7 @@ you want to go; constant hauling wears their patience down until they say
   tangles with other people's leashes.
 - **A human with patience**, who telegraphs everything they are about to do
   ("Ring ring!", "Ooh!") and is never smarter than that.
-- **Twenty-four walks in and around Barcelona**, each built as its own place, plus a
+- **Twenty-five walks in and around Barcelona**, each built as its own place, plus a
   first walk that teaches one trick at a time. Every walk can be played in
   any weather, by day or at night.
 - **Off the leash at the end**: a dog park, a dog beach, a clearing in the
@@ -82,6 +82,7 @@ you want to go; constant hauling wears their patience down until they say
 | La Carretera de les Aigües | the hillside hike |
 | El Laberint d'Horta | the cypress maze |
 | Platja de Llevant | the dog beach at the far end of the coast |
+| Rambla del Raval | the Botero cat boss arena |
 
 ## Controls
 
