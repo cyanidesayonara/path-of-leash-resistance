@@ -51,7 +51,7 @@ The leash is real rope. The one you see is the one doing the physics: it wraps, 
 
 Your human answers it like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-TWENTY-FIVE WALKS IN AND AROUND BARCELONA
+TWENTY-SIX WALKS IN AND AROUND BARCELONA
 
 El Barri, the neighborhood park
 La Rambla, the crowded promenade
@@ -77,6 +77,8 @@ El Tibidabo, the mountain road
 La Carretera de les Aigües, the hillside hike
 El Laberint d'Horta, the cypress maze
 Platja de Llevant, the dog beach at the far end of the coast
+Els Senglars, the wild boar trail
+Festa de Gràcia, the decorated festival street
 Rambla del Raval, the Botero cat boss arena
 
 Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. Three of them are chases: the street sweeper at dawn, the river flood on El Besòs, and the clinic escape in El Veterinari. There is a gentle first walk that teaches one trick at a time, and every walk can be played in clear weather, rain, wind or snow, by day or at night.

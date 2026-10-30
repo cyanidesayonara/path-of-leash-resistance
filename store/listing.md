@@ -30,7 +30,7 @@ The leash is real rope physics. Your human outweighs you four to one and wins ev
 
 Your human answers the leash like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-Twenty-five walks through a sunny, slightly chaotic Barcelona and its edges, each its own place: the neighborhood park, La Rambla with its crowds, the city park, Badalona's seafront and its pier, a downpour, a covered market hall, old town alleys, a forest trail, the train station, a floodable river park, a work site, a chestnut festival, a junkyard, tiled terraces, the dawn cleanup sweeper, Montjuïc, match day in Les Corts, the fishing harbor at El Port, the arcaded Plaça Reial, an indoor vet clinic escape in El Veterinari, Tibidabo's mountain road, the old water road along Collserola, the cypress maze of Horta, the dog beach at Platja de Llevant, and the climactic boss arena of Rambla del Raval with Fernando Botero's animated bronze cat sculpture. Every walk ends off the leash, with an agility course, tug-of-war and a frisbee: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
+Twenty-six walks through a sunny, slightly chaotic Barcelona and its edges, each its own place: the neighborhood park, La Rambla with its crowds, the city park, Badalona's seafront and its pier, a downpour, a covered market hall, old town alleys, a forest trail, the train station, a floodable river park, a work site, a chestnut festival, a junkyard, tiled terraces, the dawn cleanup sweeper, Montjuïc, match day in Les Corts, the fishing harbor at El Port, the arcaded Plaça Reial, an indoor vet clinic escape in El Veterinari, Tibidabo's mountain road, the old water road along Collserola, the cypress maze of Horta, the dog beach at Platja de Llevant, the wild boar trails of Els Senglars, the festival street run of Festa de Gràcia, and the climactic boss arena of Rambla del Raval with Fernando Botero's animated bronze cat sculpture. Every walk ends off the leash, with an agility course, tug-of-war and a frisbee: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
 
 What happens on a walk changes how you feel, and how you feel changes how you move. A fright leaves you jumpy and half blind to smells, a good bark-off makes you barky, time off the leash brings on the zoomies, and running yourself empty leaves you flat. The ground matters too: grass and mud slow you down but hold far more scent than sidewalk, sand drags at your paws, and wet ground and snow make you skid.
 
@@ -46,7 +46,7 @@ Single player. No ads, no purchases, no account, and it plays offline. Keyboard 
 ### Short description
 
 ```
-A dog walk as a physics comedy. Your human walks on autopilot, glued to their phone, and the leash is real rope. Dig in, wrap lampposts and bark your way through twenty-five walks in and around Barcelona, and get them home with the phone intact.
+A dog walk as a physics comedy. Your human walks on autopilot, glued to their phone, and the leash is real rope. Dig in, wrap lampposts and bark your way through twenty-six walks in and around Barcelona, and get them home with the phone intact.
 ```
 
 ### Product features
@@ -54,7 +54,7 @@ A dog walk as a physics comedy. Your human walks on autopilot, glued to their ph
 ```
 The leash is real rope physics: wrap it around poles, dig in, win the tug of war
 A human who answers the leash: a steady pull leads them, constant hauling runs out their patience
-Twenty-five hand-built walks through Barcelona, in any weather, by day or at night
+Twenty-six hand-built walks through Barcelona, in any weather, by day or at night
 Every walk ends off the leash, with agility, tug-of-war and a frisbee
 Goal lists on every walk, with stars that unlock new walks
 A dare-giver on every walk, each with their own tune
@@ -85,21 +85,19 @@ dog walking
 ### What's new in this version
 
 ```
-- Two new walks:
-  - La Carretera de les Aigües, open at 37 stars: the old water road along Collserola, mountain bikes coming both ways, the city far below, and a mirador where your human finally looks up.
-  - El Laberint d'Horta, open at 39 stars: the oldest garden in the city. Drag your human through the cypress maze and swing them round Eros at its heart.
-- A dare-giver on every walk, each with their own tune: the bronze monkey on Badalona's Pont del Petroli, a living statue on La Rambla, a busker, a fisherman, an àvia in the market and more. Bark to take a dare, then land the tricks before the music runs out.
-- Passeig Marítim is Badalona's seafront now, with the Pont del Petroli and its monkey.
-- Every walk spells its name on the ground in its own stuff, with a line under it saying what the place is, in English, Català or Español (a new LANGUAGE setting).
-- New sights: a slackline in El Parc, El Barri's neighborhood past the railings, flower tiles in El Diluvi, La Rambla's wave paving, El Mosaic's garden.
-- The goal list shows every goal when opened, the ones that count up first.
-- One speech bubble for everyone, drawn above the trees, and every line starts with a capital.
+- Grand finale boss encounter on Walk 26 (Rambla del Raval): Fernando Botero's animated bronze cat, El Gat de Botero, comes to life in a 3-phase physics showdown. Dodge paw swats, trip high-speed bull charges with a clothesline leash, bait crashes into palm trees, fling your human as a wrecking ball, wrap its legs like an AT-AT, and deliver the victory Super Boop!
+- Two new campaign walks:
+  - Els Senglars (Collserola): dodge wild boar stampedes along muddy mountain bike trails.
+  - Festa de Gràcia: navigate vibrant decorated street corridors dodging fire devil (correfoc) spark runners.
+- 15 Standardized Goals across all 26 walks, complete with par times, leash trick challenges, and hidden pernil (jamón) collectables.
+- Upgradable Dog Attributes: train Speed, Plant, Herd, and Agility in the Wardrobe shop using earned bones.
+- Audio Synthesis Upgrade: rich physical pickup harmonics, warm wooden UI resonance, canine vocal formants, and a Final Fantasy VII style boss battle theme.
 ```
 
 ### Notes for certification
 
 ```
-Update 1.67: two new walks since 1.64 (La Carretera de les Aigües, El Laberint d'Horta), dares with their own music on every walk, a language setting for the walks' place names, and visual polish. No change to capabilities, network use, data handling or controls since 1.55.
+Update 1.67: campaign finale boss encounter (Rambla del Raval), two new walks (Els Senglars, Festa de Gràcia), 15 goals per walk, dog attribute upgrades, and upgraded procedural audio. No change to capabilities, network use, data handling or controls since 1.55.
 
 Path of Leash Resistance is a single-player Win32 desktop game built with the Godot engine (4.7), packaged as MSIX.
 

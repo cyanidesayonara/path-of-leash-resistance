@@ -407,7 +407,7 @@ func transition_to(new_state: State) -> void:
 				main.prize_pos = PRIZE
 				main.prize_text = PRIZE_TEXT
 		State.PURR:
-			state_t = 3.5
+			state_t = 0.0
 			topple_angle = 0.0
 			pos = PEDESTAL_POS
 			update_leg_positions()
@@ -416,8 +416,9 @@ func transition_to(new_state: State) -> void:
 			if main != null:
 				main.set("gat_booped", true)
 				main.feed.say("THE RAMBLA IS SAVED!", EventFeed.Tone.GOOD)
+				main.feed.set_banner("RAMBLA SAVED! TAKE THE PRIZE AND HEAD NORTH")
 				if main.human != null:
-					main.human.notice("Nice kitty.", 3.2)
+					main.human.notice("Nice kitty.", 4.0)
 					main.human.say_line("Nice kitty.")
 				# Confetti burst
 				for i in range(50):
@@ -742,10 +743,11 @@ func tick_state(delta: float) -> void:
 			snout_pos = pos + Vector2(-54.0, -18.0)
 
 		State.PURR:
-			state_t -= delta
 			purr_vibe = sin(AnimClock.msec() * 0.035) * 1.5
-			if state_t <= 0.0:
-				Goals.finish_walk(main)
+			# Freedom roaming: only finish when pair crosses past the gate / finish line
+			if main != null:
+				if main.human != null and (main.human.global_position.y <= main.GATE_Y + 120.0 or main.dog.global_position.y <= main.GATE_Y + 80.0):
+					Goals.finish_walk(main)
 
 
 func on_bark_action(bark_pos: Vector2) -> bool:
