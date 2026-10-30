@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-10-30 - Hardening: Pernil, par times, item placement, and control fixes
+
+- **Pernil and voice integrity**: Renamed secret item to the Catalan **pernil** (*peülla negra*), aligning with the game's Catalan naming rules for Barcelona items. Fixed double bone payout and toast repetition so finding the pernil credits +5 bones and toasts once cleanly.
+- **Achievable par times and PERFECT WALK**: Recalibrated par times across all 24 campaign walks to realistic 165s–185s windows, making PERFECT WALK (completing all 15 goals in one walk) achievable through skilled pathing and pacing.
+- **Robust placement algorithm**: Enhanced `_resolve_clear_pos` with systematic offset search and explicit boundary / obstacle clearance checks against `walk_edges`, `solid_rects`, `poles`, and `water`. Authored coordinates on `barri`, `trail`, `besos`, `scrap`, `neteja`, `montjuic`, and `aigues` brought firmly onto the walkable path, and market stall collisions on El Mercat resolved.
+- **Tutorial controller conflict resolved**: Rebound `share` / `skip` on controller from `JOY_BUTTON_Y` to `JOY_BUTTON_DPAD_RIGHT` (`right`), preventing players from accidentally skipping the tutorial poop lesson when holding Y.
+- **Platja de Llevant visual & collision fixes**: Moved pergola pillars and shower column below `deco_pole_count` so they render as structural columns rather than palm trees. Added groins, pergola, and dog shower to `level_solid_rects` to prevent swimming through stone groins. Fixed landward building gap where the works had been skipped.
+- **Save-safe test suite**: Updated `tests/test_tony_hawk_quests.gd` to isolate game state (`Game.persist = false`, `Game.records = {}`) and exhaustively test all 24 campaign walks for letter clearance, pernil reachability, par times, and exact 15-goal lists. Added controller prompt distinction assertion in `tests/test_prompts.gd`.
+
 ## 2026-10-30 - Tony Hawk quests: spelling LEASH, hidden jamón, and par times
 
 - **Tony Hawk quests added to all 24 campaign walks** (`systems/tony_hawk.gd`, `systems/goals.gd`, `main.gd`):

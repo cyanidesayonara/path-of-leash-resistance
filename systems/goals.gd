@@ -44,7 +44,7 @@ const LEVEL_GOAL_IDS := {
 	# Montjuic: the climb, with the park staples
 	"montjuic": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "cable", "combo", "prize", "spell", "jamon", "clock"],
 	# Dia de Partit. No Tofu: the way home belongs to the final whistle.
-	# No hi and no combo: twelve goals, and the fans' dogs are a greeting.
+	# No hi and no combo: fifteen goals, and the fans' dogs are a greeting.
 	"partit": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "march", "scarf", "kickabout", "fulltime", "prize", "spell", "jamon", "clock"],
 	# El Port: harbor wharf, seagulls, fish scraps, iron bollards
 	"port": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "gulls", "bollard", "combo", "prize", "spell", "jamon", "clock"],
@@ -113,8 +113,8 @@ static func defs(m: Node2D) -> Dictionary:
 		"eros": {"text": "Lead your human round Eros in the middle of the maze", "target": 1, "fn": func() -> int: return 1 if Horta.eros_lapped(m) else 0},
 		"viewfinder": {"text": "Gaze through the panoramic cliffside viewfinder", "target": 1, "fn": func() -> int: return 1 if m.tibidabo_viewfinder_gazed else 0},
 		"spell": {"text": "Spell LEASH", "target": 5, "fn": func() -> int: return int(m.get("word_letters_collected"))},
-		"jamon": {"text": "Find the hidden jamón", "target": 1, "fn": func() -> int: return 1 if bool(m.get("jamon_found")) else 0},
-		"clock": {"text": "Beat the clock (under %ds)" % int(m.get("clock_target") if m.get("clock_target") != null else 75), "target": 1, "fn": func() -> int: return 1 if (bool(m.get("finished")) and float(m.get("elapsed")) <= float(m.get("clock_target") if m.get("clock_target") != null else 75)) else 0},
+		"jamon": {"text": "Find the hidden pernil", "target": 1, "fn": func() -> int: return 1 if bool(m.get("jamon_found")) else 0},
+		"clock": {"text": "Beat the clock (under %ds)" % int(m.get("clock_target") if m.get("clock_target") != null else 180), "target": 1, "fn": func() -> int: return 1 if (bool(m.get("finished")) and float(m.get("elapsed")) <= float(m.get("clock_target") if m.get("clock_target") != null else 180)) else 0},
 	}
 
 

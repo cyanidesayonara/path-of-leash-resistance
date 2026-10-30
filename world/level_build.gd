@@ -1714,10 +1714,6 @@ static func build_level_data(m: Node2D) -> void:
 				m.palm_spots.append(pp)
 			for ps: Vector2 in m.palm_spots:
 				m.poles.append(ps)
-			if m.lvl == "llevant":
-				for py: float in [Llevant.PERGOLA_RECT.position.y + 70.0, Llevant.PERGOLA_RECT.end.y - 70.0]:
-					m.poles.append(Vector2(Llevant.PERGOLA_RECT.position.x + 28.0, py))
-				m.poles.append(Llevant.DOG_SHOWER_RECT.get_center())
 			# long benches facing the sea, set between the seaward palms on the
 			# concrete - the promenade is lined with them
 			for i in range(16):
@@ -1729,6 +1725,10 @@ static func build_level_data(m: Node2D) -> void:
 				m.poles.append(sp)
 			for np: Vector2 in beach_net_posts():
 				m.poles.append(np)
+			if m.lvl == "llevant":
+				for py: float in [Llevant.PERGOLA_RECT.position.y + 70.0, Llevant.PERGOLA_RECT.end.y - 70.0]:
+					m.poles.append(Vector2(Llevant.PERGOLA_RECT.position.x + 28.0, py))
+				m.poles.append(Llevant.DOG_SHOWER_RECT.get_center())
 			# terrace tables under canopies, twice along the route
 			if m.lvl == "beach":
 				m.tables = Array([
@@ -2950,6 +2950,11 @@ static func level_solid_rects(m: Node2D) -> Array:
 			out.append(["gym", Passeig.GYM_RECT])
 			out.append(["hotel_marina", Passeig.HOTEL_RECT])
 			out.append(["badalona_sign", Passeig.HOTEL_SIGN_RECT])
+		"llevant":
+			out.append(["pergola", Llevant.PERGOLA_RECT])
+			out.append(["dog_shower", Llevant.DOG_SHOWER_RECT])
+			for i in range(Llevant.GROIN_YS.size()):
+				out.append(["groin_%d" % i, Rect2(-140.0, Llevant.GROIN_YS[i] - 18.0, 420.0, 36.0)])
 		"station":
 			out.append(["estacio_train", ESTACIO_TRAIN])
 		"park":

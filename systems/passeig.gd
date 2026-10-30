@@ -296,7 +296,7 @@ static func _roofs(m: Node2D, vt: float, vb: float) -> void:
 		var h := 170.0 + fmod(float(k) * 61.0, 110.0)
 		var top := y - h
 		# the old works stands on this stretch, opposite the Pont del Petroli, and draws itself
-		var works := top < WORKS_Y + 260.0 and y > WORKS_Y - 300.0
+		var works: bool = String(m.lvl) == "beach" and top < WORKS_Y + 260.0 and y > WORKS_Y - 300.0
 		if y > vt - 40.0 and top < vb + 40.0 and not works:
 			var r := Rect2(1196.0, top + 8.0, 420.0, h - 16.0)
 			var col: Color = roofs[k % roofs.size()]

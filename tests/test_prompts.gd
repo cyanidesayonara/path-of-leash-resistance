@@ -73,6 +73,7 @@ func _names_and_fill() -> void:
 	_check(Prompts.key("plant") == "SPACE" and Prompts.key("restart") == "R", "keyboard names")
 	Prompts.device = Prompts.PAD
 	_check(Prompts.key("plant") == "A" and Prompts.key("restart") == "Start" and Prompts.pad(), "controller names")
+	_check(Prompts.key("poop") != Prompts.key("share") and Prompts.key("poop") != Prompts.key("skip"), "poop and skip use distinct pad buttons")
 	Prompts.device = Prompts.TOUCH
 	_check(Prompts.key("plant") == "DIG" and Prompts.key("pee") == "PEE", "touch names are the touch buttons' labels")
 	_check(Prompts.key("turbo") == "RUN" and Prompts.key("pause") == "MENU", "the touch buttons for turbo and the menu (#62)")

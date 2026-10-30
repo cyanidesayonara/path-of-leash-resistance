@@ -1208,7 +1208,7 @@ func _setup_input() -> void:
 		"pee": [KEY_Q, JOY_BUTTON_X], "poop": [KEY_F, JOY_BUTTON_Y],
 		"pickup": [KEY_G, JOY_BUTTON_LEFT_SHOULDER],
 		"turbo": [KEY_SHIFT, JOY_BUTTON_RIGHT_SHOULDER],
-		"restart": [KEY_R, JOY_BUTTON_START], "share": [KEY_C, JOY_BUTTON_Y],
+		"restart": [KEY_R, JOY_BUTTON_START], "share": [KEY_C, JOY_BUTTON_DPAD_RIGHT],
 		"pause": [KEY_ESCAPE, JOY_BUTTON_BACK], "mute_music": [KEY_M, JOY_BUTTON_DPAD_DOWN],
 		"goals": [KEY_TAB, JOY_BUTTON_DPAD_UP],
 	}
