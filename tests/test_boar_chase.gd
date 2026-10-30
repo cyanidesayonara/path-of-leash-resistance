@@ -15,6 +15,10 @@ func _check(ok: bool, what: String) -> void:
 
 
 func _initialize() -> void:
+	create_timer(10.0).timeout.connect(func():
+		print("FAIL: test watchdog timeout")
+		quit(1)
+	)
 	call_deferred("_run")
 
 
