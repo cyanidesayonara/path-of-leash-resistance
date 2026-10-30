@@ -15,21 +15,21 @@ const HomeChase := preload("res://systems/home_chase.gd")
 const TonyHawk := preload("res://systems/tony_hawk.gd")
 const LEVEL_GOAL_IDS := {
 	# El Barri, the everyday walk: the staples and nothing exotic
-	"barri": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "combo", "prize", "spell", "jamon", "clock"],
+	"barri": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "snack", "combo", "prize", "spell", "jamon", "clock"],
 	# La Rambla trades the traffic near-misses for its pickpockets
 	"street": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "thief", "wallet", "carry", "combo", "prize", "spell", "jamon", "clock"],
-	"park": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "combo", "prize", "spell", "jamon", "clock"],
-	"beach": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "save", "combo", "prize", "spell", "jamon", "clock"],
+	"park": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "snack", "combo", "prize", "spell", "jamon", "clock"],
+	"beach": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "drink", "snack", "save", "combo", "prize", "spell", "jamon", "clock"],
 	# El Diluvi: keep your human out of the worst of it, splash the rest
-	"rain": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "dry", "splash", "combo", "prize", "spell", "jamon", "clock"],
+	"rain": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "dry", "splash", "snack", "combo", "prize", "spell", "jamon", "clock"],
 	"market": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "zoom", "carry", "combo", "prize", "spell", "jamon", "clock"],
 	"oldtown": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "cats", "snack", "somni", "combo", "prize", "spell", "jamon", "clock"],
-	"trail": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "chase", "drink", "combo", "prize", "spell", "jamon", "clock"],
+	"trail": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "chase", "drink", "snack", "combo", "prize", "spell", "jamon", "clock"],
 	# L'Estacio: ride the walkway, squeeze through the barriers
-	"station": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "walkway", "snack", "combo", "prize", "spell", "jamon", "clock"],
-	"site": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "snack", "combo", "prize", "spell", "jamon", "clock"],
-	"spook": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "tummy", "snack", "combo", "prize", "spell", "jamon", "clock"],
-	"scrap": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "ghost", "unseen", "combo", "prize", "spell", "jamon", "clock"],
+	"station": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "walkway", "drink", "snack", "combo", "prize", "spell", "jamon", "clock"],
+	"site": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "drink", "snack", "combo", "prize", "spell", "jamon", "clock"],
+	"spook": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "tummy", "drink", "snack", "combo", "prize", "spell", "jamon", "clock"],
+	"scrap": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "ghost", "unseen", "snack", "combo", "prize", "spell", "jamon", "clock"],
 	# El Parc leans on what the terraces are for: carving them (fling) and
 	# riding the serpentine bench (combo), plus the park staples.
 	"guell": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi",
@@ -37,10 +37,10 @@ const LEVEL_GOAL_IDS := {
 	# La Neteja: the chase is the walk home, so no Tofu (the two never share
 	# a home leg) and a goal for doing the chase WELL rather than just
 	# surviving it, which finishing already proves.
-	"neteja": ["mark", "sniff", "phone", "paws", "bag", "fetch", "hi", "snack",
+	"neteja": ["mark", "sniff", "phone", "paws", "bag", "fetch", "hi", "drink", "snack",
 		"combo", "prize", "outrun", "spell", "jamon", "clock"],
 	# El Besos: the way home is the flood. No Tofu, same as the other chase.
-	"besos": ["mark", "sniff", "phone", "paws", "bag", "fetch", "combo", "prize", "floodgap", "dry", "spell", "jamon", "clock"],
+	"besos": ["mark", "sniff", "phone", "paws", "bag", "fetch", "splash", "snack", "combo", "prize", "floodgap", "dry", "spell", "jamon", "clock"],
 	# Montjuic: the climb, with the park staples
 	"montjuic": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "cable", "combo", "prize", "spell", "jamon", "clock"],
 	# Dia de Partit. No Tofu: the way home belongs to the final whistle.

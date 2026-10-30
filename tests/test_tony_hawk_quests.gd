@@ -42,7 +42,7 @@ func _run() -> void:
 		_check(jamon_pos.x < INF and jamon_pos.y < -500.0, "walk '%s' secret jamon pos must be authored down the walk" % lvl)
 
 		var ids: Array = Goals.LEVEL_GOAL_IDS.get(lvl, [])
-		_check(ids.size() <= 15, "walk '%s' must not exceed 15 goals (has %d)" % [lvl, ids.size()])
+		_check(ids.size() == 15, "walk '%s' must have exactly 15 goals (has %d)" % [lvl, ids.size()])
 		_check("spell" in ids, "walk '%s' must include 'spell' goal" % lvl)
 		_check("jamon" in ids, "walk '%s' must include 'jamon' goal" % lvl)
 		_check("clock" in ids, "walk '%s' must include 'clock' goal" % lvl)
