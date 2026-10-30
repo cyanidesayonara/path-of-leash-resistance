@@ -9548,13 +9548,15 @@ func _enter_freedom() -> void:
 	_spawn_romp_ball()
 	# other dogs to romp and say hi to (on the sand or plaza, not out in the sea)
 	var fd_x0 := BEACH_SEA_R + 60.0 if (freedom_kind == "beach" or lvl == "beach") else 200.0
+	var fd_y0 := (Passeig.HOTEL_RECT.end.y + 40.0) if lvl == "beach" else (freedom_lo + 40.0)
 	for i in range(3):
 		var fd := Node2D.new()
 		fd.set_script(load("res://entities/freedog.gd"))
-		fd.position = Vector2(randf_range(fd_x0, 1080.0), randf_range(freedom_lo + 40.0, GATE_Y - 60.0))
+		fd.position = Vector2(randf_range(fd_x0, 1080.0), randf_range(fd_y0, GATE_Y - 60.0))
 		fd.z_index = 9
 		add_child(fd)
-		fd.setup(self, dog, freedom_lo, GATE_Y - 30.0)
+		var flo := (Passeig.HOTEL_RECT.end.y + 10.0) if lvl == "beach" else freedom_lo
+		fd.setup(self, dog, flo, GATE_Y - 30.0)
 	# BRUTUS, the park thief: he turns up on some walks to help himself to
 	# whatever you have just earned. Not in the tutorial - a first walk is no
 	# place to meet him.
@@ -9584,6 +9586,8 @@ func _spawn_romp_ball() -> void:
 	if freedom_kind == "beach" or lvl == "beach":
 		# into the surf or across the seafront plaza - window before the first throw
 		ball.setup(self, dog, human, freedom_lo, GATE_Y - 30.0, -90.0, BEACH_SEA_R + 240.0)
+		if lvl == "beach":
+			ball.lo = Passeig.HOTEL_RECT.end.y + 10.0
 	else:
 		ball.setup(self, dog, human, freedom_lo, GATE_Y - 30.0)
 

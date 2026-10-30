@@ -1316,7 +1316,19 @@ static func draw_freedom(m: Node2D, ci: Object) -> void:
 				b.line(pl[pi], pl[pi + 1], Color(0.99, 0.98, 0.96), 2.4)
 	b.flush(ci)
 	m._draw_espigo(ci)
-	m._draw_freedom_benches(ci, r, Color(0.56, 0.38, 0.24))
+	# Esplanade benches on the limestone plaza (clear of hotel building and sign)
+	var bcol := Color(0.56, 0.38, 0.24)
+	for bx: Vector2 in [
+		Vector2(495.0, -5320.0),
+		Vector2(1135.0, -5340.0),
+		Vector2(530.0, m.GATE_Y - 110.0),
+	]:
+		m.contact_shadow(ci, bx, 22.0, 8.0, 0.20)
+		ci.draw_rect(Rect2(bx.x - 22, bx.y - 5, 44, 10), bcol)
+		ci.draw_line(Vector2(bx.x - 20, bx.y - 5), Vector2(bx.x - 20, bx.y + 8), bcol.darkened(0.2), 2.0)
+		ci.draw_line(Vector2(bx.x + 20, bx.y - 5), Vector2(bx.x + 20, bx.y + 8), bcol.darkened(0.2), 2.0)
+	m.contact_shadow(ci, m.gate_bench, 20.0, 8.0, 0.20)
+	ci.draw_rect(Rect2(m.gate_bench.x - 18, m.gate_bench.y - 6, 36, 11), Color(0.54, 0.4, 0.27))
 	m._freedom_sign(ci, r, m.gate_text, "the hotel plaza by the sea, off leash")
 
 

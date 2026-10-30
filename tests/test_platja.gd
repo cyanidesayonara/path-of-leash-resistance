@@ -80,6 +80,11 @@ func _run() -> void:
 	_check(ml.surface_at(Vector2(300.0, -1500.0)) == ml.Surfaces.S.SAND, "llevant sand is sand surface")
 	_check(ml.surface_at(Vector2(100.0, -1500.0)) == ml.Surfaces.S.WATER, "llevant sea is water surface")
 	_check(ml.surface_at(Vector2(650.0, -1500.0)) == ml.Surfaces.S.PAVEMENT, "llevant promenade is pavement surface")
+	var Llevant_script = load("res://systems/llevant.gd")
+	for ps: Vector2 in ml.palm_spots:
+		_check(not Llevant_script.PERGOLA_RECT.grow(12.0).has_point(ps), "llevant palm is clear of Pergola")
+		_check(not Llevant_script.DOG_SHOWER_RECT.grow(12.0).has_point(ps), "llevant palm is clear of Dog Shower")
+	_check(ml.tables.is_empty(), "llevant has no stray chiringuito tables inside the solar pergola")
 	ml.queue_free()
 	await process_frame
 

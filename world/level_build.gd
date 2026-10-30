@@ -1702,9 +1702,22 @@ static func build_level_data(m: Node2D) -> void:
 			for py: float in BEACH_PALMS_SEA:
 				m.palm_spots.append(Vector2(462.0, py))
 			for py: float in BEACH_PALMS_LAND:
-				m.palm_spots.append(Vector2(1012.0, py))
+				var pp := Vector2(1012.0, py)
+				if m.lvl == "beach":
+					if Passeig.SURF_CLUB_RECT.grow(12.0).has_point(pp) or Passeig.GYM_RECT.grow(12.0).has_point(pp):
+						continue
+					if BEACH_BARS[0].grow(12.0).has_point(pp) or BEACH_BARS[1].grow(12.0).has_point(pp):
+						continue
+				elif m.lvl == "llevant":
+					if Llevant.PERGOLA_RECT.grow(12.0).has_point(pp) or Llevant.DOG_SHOWER_RECT.grow(12.0).has_point(pp):
+						continue
+				m.palm_spots.append(pp)
 			for ps: Vector2 in m.palm_spots:
 				m.poles.append(ps)
+			if m.lvl == "llevant":
+				for py: float in [Llevant.PERGOLA_RECT.position.y + 70.0, Llevant.PERGOLA_RECT.end.y - 70.0]:
+					m.poles.append(Vector2(Llevant.PERGOLA_RECT.position.x + 28.0, py))
+				m.poles.append(Llevant.DOG_SHOWER_RECT.get_center())
 			# long benches facing the sea, set between the seaward palms on the
 			# concrete - the promenade is lined with them
 			for i in range(16):
@@ -1717,15 +1730,20 @@ static func build_level_data(m: Node2D) -> void:
 			for np: Vector2 in beach_net_posts():
 				m.poles.append(np)
 			# terrace tables under canopies, twice along the route
-			m.tables = Array([
-				Vector2(1040, -1500), Vector2(1110, -1560), Vector2(1050, -1620), Vector2(1120, -1680),
-				Vector2(1040, -3300), Vector2(1110, -3360), Vector2(1050, -3420), Vector2(1120, -3480),
-			], TYPE_VECTOR2, &"", null)
-			m.canopies = Array([Rect2(1015, -1710, 135, 240), Rect2(1015, -3510, 135, 240)], TYPE_RECT2, &"", null)
-			m.chairs = Array([
-				Vector2(1075, -1470), Vector2(1020, -1560), Vector2(1090, -1640),
-				Vector2(1075, -3270), Vector2(1020, -3360), Vector2(1090, -3440),
-			], TYPE_VECTOR2, &"", null)
+			if m.lvl == "beach":
+				m.tables = Array([
+					Vector2(1040, -1500), Vector2(1110, -1560), Vector2(1050, -1620), Vector2(1120, -1680),
+					Vector2(1040, -3300), Vector2(1110, -3360), Vector2(1050, -3420), Vector2(1120, -3480),
+				], TYPE_VECTOR2, &"", null)
+				m.canopies = Array([Rect2(1015, -1710, 135, 240), Rect2(1015, -3510, 135, 240)], TYPE_RECT2, &"", null)
+				m.chairs = Array([
+					Vector2(1075, -1470), Vector2(1020, -1560), Vector2(1090, -1640),
+					Vector2(1075, -3270), Vector2(1020, -3360), Vector2(1090, -3440),
+				], TYPE_VECTOR2, &"", null)
+			else:
+				m.tables.clear()
+				m.canopies.clear()
+				m.chairs.clear()
 			m.astands = Array([Vector2(600, -1450), Vector2(966, -3250)], TYPE_VECTOR2, &"", null)
 			m.vans = Array([Vector2(930, -4050)], TYPE_VECTOR2, &"", null)
 			m.performers = Array([Vector2(410, -2200)], TYPE_VECTOR2, &"", null)
@@ -2018,12 +2036,17 @@ static func build_level_data(m: Node2D) -> void:
 			if m.freedom_kind == "clearing":
 				# outer thirds only: the middle is where the fetching happens
 				tx = randf_range(150.0, 340.0) if randf() < 0.5 else randf_range(940.0, 1120.0)
-			var tree := Vector2(tx, m.GATE_Y - randf_range(120.0, 550.0))
+			var tree := Vector2(tx, randf_range(Passeig.HOTEL_RECT.end.y + 40.0, m.GATE_Y - 70.0)) if m.lvl == "beach" else Vector2(tx, m.GATE_Y - randf_range(120.0, 550.0))
 			if m.agility != null:
 				tree = m.agility.push_out(tree, 34.0)
 			var clear := tree.distance_to(m.gate_bench) > 95.0
 			if m.lvl == "scrap":
 				clear = clear and not Ferralla.yard_wreck(m._freedom_rect()).grow(30.0).has_point(tree)
+			if m.lvl == "beach":
+				clear = clear and not Passeig.HOTEL_RECT.grow(35.0).has_point(tree)
+				clear = clear and not Passeig.HOTEL_SIGN_RECT.grow(35.0).has_point(tree)
+				for pp in m.park_props:
+					clear = clear and tree.distance_to(pp.pos) > 60.0
 			for w: Rect2 in m.water:
 				clear = clear and not w.grow(30.0).has_point(tree)
 			for si in range(m.PAIR_PARK_SPOTS.size()):
@@ -2923,6 +2946,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var rails := beach_pier_rails()
 			for i in range(rails.size()):
 				out.append(["beach_pier_rail_%d" % i, rails[i]])
+			out.append(["surf_club", Passeig.SURF_CLUB_RECT])
+			out.append(["gym", Passeig.GYM_RECT])
+			out.append(["hotel_marina", Passeig.HOTEL_RECT])
+			out.append(["badalona_sign", Passeig.HOTEL_SIGN_RECT])
 		"station":
 			out.append(["estacio_train", ESTACIO_TRAIN])
 		"park":
@@ -3091,6 +3118,10 @@ static func build_walls(m: Node2D) -> void:
 			add_circle_body(m, st, BEACH_BLOCK_W * 0.5)
 		for br: Rect2 in BEACH_BARS:
 			add_rect_body(m, br.get_center(), br.size)
+		add_rect_body(m, Passeig.SURF_CLUB_RECT.get_center(), Passeig.SURF_CLUB_RECT.size)
+		add_rect_body(m, Passeig.GYM_RECT.get_center(), Passeig.GYM_RECT.size)
+		add_rect_body(m, Passeig.HOTEL_RECT.get_center(), Passeig.HOTEL_RECT.size)
+		add_rect_body(m, Passeig.HOTEL_SIGN_RECT.get_center(), Passeig.HOTEL_SIGN_RECT.size)
 	# THE BUILDING LINE is solid (#65): she used to be able to walk out onto
 	# the roofs, because the only walls were at the level edges. Segments
 	# follow the path where it bends, with gaps where a road crosses, so a
