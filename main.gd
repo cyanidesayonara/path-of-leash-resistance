@@ -287,6 +287,8 @@ const WALK_MODULES := {
 	"aigues": preload("res://systems/aigues.gd"),
 	"horta": preload("res://systems/horta.gd"),
 	"llevant": preload("res://systems/llevant.gd"),
+	"boars": preload("res://systems/boars.gd"),
+	"gracia": preload("res://systems/gracia.gd"),
 	"raval": preload("res://systems/boss_gat.gd"),
 	"beach": preload("res://systems/passeig.gd"),
 	"rain": preload("res://systems/diluvi.gd"),

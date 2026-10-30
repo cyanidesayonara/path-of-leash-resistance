@@ -334,6 +334,9 @@ func _shop(vs: Vector2) -> void:
 	var note := ""
 	var ncol := Kit.INK_SOFT
 	match st:
+		"maxed":
+			note = "Maxed out (Level %d)" % Game.MAX_STAT_POINTS
+			ncol = Kit.GOOD
 		"wearing":
 			note = "%s is wearing this" % Game.dog_name()
 			ncol = Kit.GOOD
@@ -362,11 +365,19 @@ func _shop(vs: Vector2) -> void:
 			draw_rect(rr, Color(acc.r, acc.g, acc.b, 0.15))
 			draw_rect(Rect2(rr.position, Vector2(4.0, rr.size.y)), acc)
 		_swatch(Vector2(lx + 30.0, y + rr.size.y * 0.5), tab, key, d)
-		draw_string(Kit.body(), Vector2(lx + 56.0, y + 25.0), String(d.name), HORIZONTAL_ALIGNMENT_LEFT, -1,
-			18, Kit.INK if picked else Kit.INK_SOFT)
+		if tab == "stats":
+			var cur_stat := Game.get_dog_stat(Game.dog, key)
+			var stat_str := "Lv %d/%d" % [cur_stat, Game.MAX_STAT_POINTS]
+			draw_string(Kit.body(), Vector2(lx + 56.0, y + 25.0), "%s (%s)" % [String(d.name), stat_str], HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Kit.INK if picked else Kit.INK_SOFT)
+		else:
+			draw_string(Kit.body(), Vector2(lx + 56.0, y + 25.0), String(d.name), HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Kit.INK if picked else Kit.INK_SOFT)
 		var rs := Flow.shop_state(tab, key)
 		var right := rr.end.x - 16.0
 		match rs:
+			"maxed":
+				var mw := Kit.text_w(f, "MAXED", 13)
+				draw_rect(Rect2(right - mw - 16.0, y + 9.0, mw + 16.0, 20.0), Color(Kit.GOOD.r, Kit.GOOD.g, Kit.GOOD.b, 0.22))
+				draw_string(f, Vector2(right - mw - 8.0, y + 24.0), "MAXED", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Kit.GOOD)
 			"wearing":
 				var tw := Kit.text_w(f, "WEARING", 13)
 				draw_rect(Rect2(right - tw - 16.0, y + 9.0, tw + 16.0, 20.0), Color(Kit.GOOD.r, Kit.GOOD.g, Kit.GOOD.b, 0.22))
@@ -384,6 +395,10 @@ func _shop(vs: Vector2) -> void:
 
 func _swatch(at: Vector2, kind: String, key: String, d: Dictionary) -> void:
 	match kind:
+		"stats":
+			draw_circle(at, 10.0, Kit.GOLD)
+			draw_circle(at, 6.0, Kit.PANEL)
+			draw_circle(at, 3.0, Kit.GOLD)
 		"collar":
 			if key == "rainbow":
 				var cols := [Color(0.85, 0.25, 0.25), Color(0.95, 0.6, 0.2), Color(0.95, 0.85, 0.3),

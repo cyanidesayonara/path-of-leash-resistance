@@ -37,6 +37,8 @@ const HOOKS := {
 	"aigues": ["draw_bollard", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_live", "draw_snack", "rider_lane", "tick", "tree_kind"],
 	"horta": ["draw_bollard", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_live", "draw_snack", "tick", "tree_kind"],
 	"llevant": ["draw_bin", "draw_cross_section", "draw_edge_layer", "draw_overhead", "rider_lane", "surface", "takes_prints"],
+	"boars": ["draw_edge_layer", "draw_overhead", "surface", "tick"],
+	"gracia": ["draw_edge_layer", "draw_overhead", "surface", "tick"],
 	"raval": ["draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick"],
 }
 

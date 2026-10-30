@@ -19,6 +19,9 @@ extends RefCounted
 # park, the trail, the seafront) have no building line. See main.frontage.
 const TUT := preload("res://systems/tutorial.gd")
 const Detour := preload("res://systems/detour.gd")
+const Boars := preload("res://systems/boars.gd")
+const Gracia := preload("res://systems/gracia.gd")
+const BossGat := preload("res://systems/boss_gat.gd")
 # the tutorial's pond for the brink lesson, beside the path at its station
 const TUT_POND_W := 150.0
 const ROPE_CLEAR := 4.0
@@ -101,6 +104,8 @@ const CROSS_SECTIONS := {
 	"aigues": ["none", 0.0, "none", 0.0],          # the fence and the cut bank at the track
 	"horta": ["none", 0.0, "none", 0.0],           # lawns and the maze drawn in systems/horta.gd
 	"raval": ["none", 0.0, "none", 0.0],           # promenade and plaza drawn in systems/boss_gat.gd
+	"boars": ["none", 0.0, "none", 0.0],           # hillside trail drawn in systems/boars.gd
+	"gracia": ["none", 0.0, "none", 0.0],          # festival street drawn in systems/gracia.gd
 	# flood wall on the left, grass then the river on the right
 	"besos": ["none", 0.0, "grass", 120.0],
 }
@@ -1175,6 +1180,8 @@ static func apply_corridor(m: Node2D) -> void:
 		"aigues": half = Aigues.HALF     # the envelope of its bends (Aigues.edge_nodes)
 		"horta": half = Horta.HALF       # the maze, wall to wall (Horta.edge_nodes)
 		"raval": half = BossGat.HALF     # wide pedestrian rambla (BossGat.edge_nodes)
+		"boars": half = Boars.HALF
+		"gracia": half = Gracia.HALF
 		"besos": half = BESOS_HALF
 	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
 	m.walk_half = half
@@ -1368,7 +1375,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia":
 		return
 	# and so does El Barri; the First Walk, built on it, is still fitted
 	if m.lvl == "barri" and not m.tutorial_mode:
@@ -1474,6 +1481,14 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_raval: Array = BossGat.build(m)
 			hyd_list.assign(pl_raval[0])
 			keb_list.assign(pl_raval[1])
+		"boars":
+			var pl_boars: Array = Boars.build(m)
+			hyd_list.assign(pl_boars[0])
+			keb_list.assign(pl_boars[1])
+		"gracia":
+			var pl_gracia: Array = Gracia.build(m)
+			hyd_list.assign(pl_gracia[0])
+			keb_list.assign(pl_gracia[1])
 		"street":
 			m.lane_ys = Array([-1200.0, -2600.0, -4000.0], TYPE_FLOAT, &"", null)
 			m.gate_text = "PIPICÀ"
@@ -2167,6 +2182,12 @@ static func build_level_data(m: Node2D) -> void:
 			for idx in m.boss_gat.leg_indices:
 				if idx >= 0 and idx < m.rope_radii.size():
 					m.rope_radii[idx] = BossGat.LEG_RADIUS + 2.0
+	if m.lvl == "boars":
+		for r: Rect2 in Boars.wrap_rects():
+			add_rope_rect(m, r)
+	if m.lvl == "gracia":
+		for r: Rect2 in Gracia.wrap_rects():
+			add_rope_rect(m, r)
 	if m.lvl == "reial":
 		for r: Rect2 in Reial.wrap_rects():
 			add_rope_rect(m, r)
@@ -2242,6 +2263,12 @@ static func build_level_data(m: Node2D) -> void:
 		"raval":
 			m.prize_pos = BossGat.PRIZE
 			m.prize_text = BossGat.PRIZE_TEXT
+		"boars":
+			m.prize_pos = Boars.PRIZE
+			m.prize_text = Boars.PRIZE_TEXT
+		"gracia":
+			m.prize_pos = Gracia.PRIZE
+			m.prize_text = Gracia.PRIZE_TEXT
 		"besos":
 			m.prize_pos = Vector2(BESOS_CX + 40.0, -2700.0)
 			m.prize_text = "fetch the ball from beside the path"
@@ -2632,6 +2659,18 @@ const FREEDOM_PROPS := {
 		[Vector2(1036.0, -474.0), "post"], [Vector2(300.0, -250.0), "shrub"], [Vector2(542.0, -230.0), "post"],
 		[Vector2(768.0, -220.0), "shrub"],
 	],
+	"boars": [
+		[Vector2(320.0, -450.0), "dig"], [Vector2(640.0, -380.0), "dig"], [Vector2(920.0, -280.0), "dig"],
+		[Vector2(250.0, -320.0), "rock"], [Vector2(480.0, -520.0), "log"], [Vector2(850.0, -480.0), "shrub"],
+		[Vector2(380.0, -220.0), "rock"], [Vector2(720.0, -420.0), "log"], [Vector2(560.0, -490.0), "shrub"],
+		[Vector2(780.0, -240.0), "dig"],
+	],
+	"gracia": [
+		[Vector2(350.0, -400.0), "dig"], [Vector2(640.0, -360.0), "dig"], [Vector2(880.0, -250.0), "dig"],
+		[Vector2(380.0, -480.0), "planter"], [Vector2(920.0, -230.0), "planter"],
+		[Vector2(310.0, -360.0), "post"], [Vector2(530.0, -450.0), "post"], [Vector2(750.0, -440.0), "post"],
+		[Vector2(450.0, -240.0), "planter"], [Vector2(680.0, -220.0), "post"],
+	],
 	"horta": [
 		[Vector2(262.0, -500.0), "dig"], [Vector2(660.0, -280.0), "dig"], [Vector2(1020.0, -330.0), "dig"],
 		[Vector2(180.0, -300.0), "rock"], [Vector2(420.0, -530.0), "log"], [Vector2(880.0, -500.0), "shrub"],
@@ -3010,6 +3049,14 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_raval: Array[Rect2] = BossGat.solids(m)
 			for i in range(ps_raval.size()):
 				out.append(["raval_%d" % i, ps_raval[i]])
+		"boars":
+			var ps_boars: Array[Rect2] = Boars.solids(m)
+			for i in range(ps_boars.size()):
+				out.append(["boars_%d" % i, ps_boars[i]])
+		"gracia":
+			var ps_gracia: Array[Rect2] = Gracia.solids(m)
+			for i in range(ps_gracia.size()):
+				out.append(["gracia_%d" % i, ps_gracia[i]])
 		"port":
 			var ps_port: Array[Rect2] = Port.solids(m)
 			for i in range(ps_port.size()):
@@ -3427,6 +3474,12 @@ static func build_walls(m: Node2D) -> void:
 		add_circle_body(m, Horta.EROS, Horta.EROS_R)
 	if m.lvl == "raval":
 		for r: Rect2 in BossGat.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "boars":
+		for r: Rect2 in Boars.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "gracia":
+		for r: Rect2 in Gracia.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "reial":
 		for r: Rect2 in Reial.solids(m):
