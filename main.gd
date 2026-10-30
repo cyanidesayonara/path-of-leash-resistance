@@ -158,6 +158,7 @@ const HomeChase := preload("res://systems/home_chase.gd")
 const CurrentFlow := preload("res://systems/current_flow.gd")
 const RunEvents := preload("res://systems/run_events.gd")
 const Goals := preload("res://systems/goals.gd")
+const TonyHawk := preload("res://systems/tony_hawk.gd")
 const TofuRoute := preload("res://systems/tofu_route.gd")
 const HudBuild := preload("res://hud/hud_build.gd")
 const MenuFlow := preload("res://hud/menu_flow.gd")
@@ -706,6 +707,13 @@ var prize_pos := Vector2(INF, INF)
 var prize_text := "grab the prize"
 var prize_taken := false
 var prize_glow := 0.0
+# Tony Hawk quests: spell a word, secret tape, beat-the-clock
+var spell_word := ""
+var word_letters: Array = []
+var word_letters_collected := 0
+var jamon_pos := Vector2(INF, INF)
+var jamon_found := false
+var clock_target := 75
 # carry / delivery mission: pick an item up in your mouth and take it to a
 # marked drop-off. 0 = not yet picked up, 1 = carrying, 2 = delivered.
 var carry_pickup := Vector2(INF, INF)
@@ -999,6 +1007,7 @@ func _ready() -> void:
 		walk_mod.build_layer(self)
 	_spawn_cones()
 	_spawn_stream_find()
+	TonyHawk.setup_walk(self)
 	_build_quests()
 	UiScale.apply(self)
 	get_tree().root.size_changed.connect(_on_window_resized)
@@ -1938,6 +1947,11 @@ func _build_scent_sources() -> Array:
 			out.append({"pos": c.pos, "col": Color(0.55, 0.85, 0.45)})
 	if not prize_taken and prize_pos.x < INF:
 		out.append({"pos": prize_pos, "col": Color(1.0, 0.86, 0.42)})
+	if not jamon_found and jamon_pos.x < INF:
+		out.append({"pos": jamon_pos, "col": Color(1.0, 0.78, 0.28)})
+	for l: Dictionary in word_letters:
+		if not bool(l.collected):
+			out.append({"pos": l.pos, "col": Color(1.0, 0.88, 0.28)})
 	if carry_state == 0 and carry_pickup.x < INF:
 		out.append({"pos": carry_pickup, "col": Color(0.62, 0.82, 1.0)})
 	elif carry_state == 1 and carry_drop.x < INF:
@@ -9009,6 +9023,7 @@ func _hazards(delta: float) -> void:
 
 
 func _pickups(delta: float) -> void:
+	TonyHawk.tick(self, delta)
 	if not prize_taken and prize_pos.x < INF and dog.global_position.distance_to(prize_pos) < 28.0:
 		prize_taken = true
 		bones += 8
@@ -10536,6 +10551,7 @@ func _draw_world() -> void:
 		_wc.draw_circle(prize_pos, 7.0, Color(0.95, 0.8, 0.35))
 		_wc.draw_circle(prize_pos + Vector2(-2, -2), 2.5, Color(1, 0.97, 0.85))
 		_wc.draw_string(font, prize_pos + Vector2(-30, -22), "!", HORIZONTAL_ALIGNMENT_CENTER, 60, 18, Color(1, 0.9, 0.5))
+	TonyHawk.draw_world(self, _wc, font, vt, vb)
 	# carry mission: the parcel where it waits, the drop-off marker, and
 	# the parcel riding in Millie's mouth while she totes it
 	if carry_pickup.x < INF and carry_state < 2:

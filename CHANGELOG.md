@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-10-30 - Tony Hawk quests: spelling LEASH, hidden jamón, and par times
+
+- **Tony Hawk quests added to all 24 campaign walks** (`systems/tony_hawk.gd`, `systems/goals.gd`, `main.gd`):
+  - **Spell LEASH (S-K-A-T-E homage)**: Universal 5-letter word across every walk. Floating golden letter tokens bob along the corridor with contact drop shadows; picking them up shows real-time progress toasts (`LEASH: L _ _ _ _`) and completes the `spell` goal upon spelling the full word.
+  - **Find the hidden jamón**: Secret cured jamón leg hidden per walk with bone shank, dark hoof (*pezuña negra*), red-and-gold butcher ribbon, marbled ruby meat slice, and golden shimmer aura. Finding it yields +5 bones, a goal toast (`HIDDEN JAMÓN FOUND! +5`), and completes the `jamon` goal.
+  - **Beat the clock**: Par time goal for finishing the walk under par (60s–90s depending on route length). Evaluated upon arrival home with no interrupting failure countdown timer mid-walk.
+  - **Strict 15-goal cap**: Every walk has between 13 and 15 goals, fitting cleanly into the expanded HUD quests card on the right.
+  - **Regression test suite**: Added comprehensive `tests/test_tony_hawk_quests.gd` and updated existing goal assertions.
+
 ## 2026-10-30 - Badalona rework of Passeig Marítim, Platja de Llevant and rollerbladers
 
 - **Passeig Marítim (`beach`) reworked as Badalona's seafront** (`systems/passeig.gd`,

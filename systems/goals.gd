@@ -12,52 +12,53 @@ extends RefCounted
 const EventFeed := preload("res://hud/event_feed.gd")
 const UiIcons := preload("res://hud/ui_icons.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
+const TonyHawk := preload("res://systems/tony_hawk.gd")
 const LEVEL_GOAL_IDS := {
 	# El Barri, the everyday walk: the staples and nothing exotic
-	"barri": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "combo", "prize"],
+	"barri": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "snack", "combo", "prize", "spell", "jamon", "clock"],
 	# La Rambla trades the traffic near-misses for its pickpockets
-	"street": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "thief", "wallet", "fling", "carry", "combo", "prize"],
-	"park": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "combo", "prize"],
-	"beach": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "save", "combo", "prize"],
+	"street": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "thief", "wallet", "carry", "combo", "prize", "spell", "jamon", "clock"],
+	"park": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "snack", "combo", "prize", "spell", "jamon", "clock"],
+	"beach": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "drink", "snack", "save", "combo", "prize", "spell", "jamon", "clock"],
 	# El Diluvi: keep your human out of the worst of it, splash the rest
-	"rain": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "dry", "splash", "combo", "prize"],
-	"market": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "zoom", "carry", "combo", "prize"],
-	"oldtown": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "cats", "snack", "somni", "combo", "prize"],
-	"trail": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "chase", "drink", "combo", "prize"],
+	"rain": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "dry", "splash", "snack", "combo", "prize", "spell", "jamon", "clock"],
+	"market": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "zoom", "carry", "combo", "prize", "spell", "jamon", "clock"],
+	"oldtown": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "cats", "snack", "somni", "combo", "prize", "spell", "jamon", "clock"],
+	"trail": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "chase", "drink", "snack", "combo", "prize", "spell", "jamon", "clock"],
 	# L'Estacio: ride the walkway, squeeze through the barriers
-	"station": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "walkway", "snack", "combo", "prize"],
-	"site": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "snack", "combo", "prize"],
-	"spook": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "tummy", "snack", "combo", "prize"],
-	"scrap": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "ghost", "unseen", "combo", "prize"],
+	"station": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "walkway", "drink", "snack", "combo", "prize", "spell", "jamon", "clock"],
+	"site": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "close", "drink", "snack", "combo", "prize", "spell", "jamon", "clock"],
+	"spook": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "tummy", "drink", "snack", "combo", "prize", "spell", "jamon", "clock"],
+	"scrap": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "ghost", "unseen", "snack", "combo", "prize", "spell", "jamon", "clock"],
 	# El Parc leans on what the terraces are for: carving them (fling) and
 	# riding the serpentine bench (combo), plus the park staples.
 	"guell": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi",
-		"drink", "fling", "combo", "prize"],
+		"drink", "fling", "combo", "prize", "spell", "jamon", "clock"],
 	# La Neteja: the chase is the walk home, so no Tofu (the two never share
 	# a home leg) and a goal for doing the chase WELL rather than just
 	# surviving it, which finishing already proves.
-	"neteja": ["mark", "sniff", "phone", "paws", "bag", "fetch", "hi", "snack",
-		"combo", "prize", "outrun"],
+	"neteja": ["mark", "sniff", "phone", "paws", "bag", "fetch", "hi", "drink", "snack",
+		"combo", "prize", "outrun", "spell", "jamon", "clock"],
 	# El Besos: the way home is the flood. No Tofu, same as the other chase.
-	"besos": ["mark", "sniff", "phone", "paws", "bag", "fetch", "combo", "prize", "floodgap", "dry"],
+	"besos": ["mark", "sniff", "phone", "paws", "bag", "fetch", "splash", "snack", "combo", "prize", "floodgap", "dry", "spell", "jamon", "clock"],
 	# Montjuic: the climb, with the park staples
-	"montjuic": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "cable", "combo", "prize"],
+	"montjuic": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "cable", "combo", "prize", "spell", "jamon", "clock"],
 	# Dia de Partit. No Tofu: the way home belongs to the final whistle.
 	# No hi and no combo: twelve goals, and the fans' dogs are a greeting.
-	"partit": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "march", "scarf", "kickabout", "fulltime", "prize"],
+	"partit": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "march", "scarf", "kickabout", "fulltime", "prize", "spell", "jamon", "clock"],
 	# El Port: harbor wharf, seagulls, fish scraps, iron bollards
-	"port": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "gulls", "bollard", "combo", "prize"],
+	"port": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "gulls", "bollard", "combo", "prize", "spell", "jamon", "clock"],
 	# Plaça Reial: palm trees, Gaudi lampposts, Three Graces fountain, guitar busker
-	"reial": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "gaudi", "fountain", "combo", "prize"],
+	"reial": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "gaudi", "fountain", "combo", "prize", "spell", "jamon", "clock"],
 	# El Veterinari: clinic escape chase. No Tofu.
-	"vet": ["mark", "sniff", "phone", "paws", "bag", "fetch", "hi", "snack", "scale", "cone", "combo", "prize"],
+	"vet": ["mark", "sniff", "phone", "paws", "bag", "fetch", "hi", "snack", "scale", "cone", "combo", "prize", "spell", "jamon", "clock"],
 	# El Tibidabo: the mountain funicular & panoramic overlook
-	"tibidabo": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "funicular", "viewfinder", "combo", "prize"],
+	"tibidabo": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "funicular", "viewfinder", "combo", "prize", "spell", "jamon", "clock"],
 	# La Carretera de les Aigües: the bikes coming both ways, and the view
-	"aigues": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "bikes", "view", "combo", "prize"],
+	"aigues": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "drink", "bikes", "view", "combo", "prize", "spell", "jamon", "clock"],
 	# El Laberint d'Horta: round Eros, and the hedges to tetherball your human round
-	"horta": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "fling", "eros", "combo", "prize"],
-	"llevant": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "snack", "save", "combo", "prize"],
+	"horta": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "drink", "fling", "eros", "combo", "prize", "spell", "jamon", "clock"],
+	"llevant": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "drink", "snack", "save", "combo", "prize", "spell", "jamon", "clock"],
 }
 
 
@@ -111,6 +112,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"view": {"text": "Get your human to look up at the view", "target": 1, "fn": func() -> int: return 1 if Aigues.view_taken(m) else 0},
 		"eros": {"text": "Lead your human round Eros in the middle of the maze", "target": 1, "fn": func() -> int: return 1 if Horta.eros_lapped(m) else 0},
 		"viewfinder": {"text": "Gaze through the panoramic cliffside viewfinder", "target": 1, "fn": func() -> int: return 1 if m.tibidabo_viewfinder_gazed else 0},
+		"spell": {"text": "Spell LEASH", "target": 5, "fn": func() -> int: return int(m.get("word_letters_collected"))},
+		"jamon": {"text": "Find the hidden jamón", "target": 1, "fn": func() -> int: return 1 if bool(m.get("jamon_found")) else 0},
+		"clock": {"text": "Beat the clock (under %ds)" % int(m.get("clock_target") if m.get("clock_target") != null else 75), "target": 1, "fn": func() -> int: return 1 if (bool(m.get("finished")) and float(m.get("elapsed")) <= float(m.get("clock_target") if m.get("clock_target") != null else 75)) else 0},
 	}
 
 

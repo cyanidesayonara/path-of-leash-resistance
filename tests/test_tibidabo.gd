@@ -77,7 +77,7 @@ func _run() -> void:
 
 	# 6. Goals list well formed
 	var goal_ids: Array = G.LEVEL_GOAL_IDS["tibidabo"]
-	_check(goal_ids.size() == 12, "exactly 12 goals authored (%d)" % goal_ids.size())
+	_check(goal_ids.size() == 15, "exactly 15 goals authored (%d)" % goal_ids.size())
 	_check("funicular" in goal_ids, "funicular goal present")
 	_check("viewfinder" in goal_ids, "viewfinder goal present")
 
