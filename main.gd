@@ -499,6 +499,9 @@ var gat_toppled := false
 var gat_booped := false
 var gat_swats_dodged := 0
 var raval_pigeons_scattered := 0
+var gat_clotheslined := false
+var gat_human_pummeled := false
+var gat_tree_smashed := false
 var boss_gat: RefCounted = null
 # the pole she last vaulted, and whether she has since cleared it. Without
 # this she can sit in one pole's orbit re-triggering forever: the autowalk

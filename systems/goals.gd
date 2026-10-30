@@ -64,7 +64,7 @@ const LEVEL_GOAL_IDS := {
 	# Festa de Gràcia: decorated festival street run
 	"gracia": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "correfoc", "churros", "decor", "combo", "prize", "spell", "jamon", "clock"],
 	# Rambla del Raval: The Grand Finale — El Gat de Botero Boss Arena
-	"raval": ["mark", "sniff", "phone", "paws", "bag", "snack", "pigeons", "swat", "combo", "prize", "spell", "jamon", "clock", "topple", "boop"],
+	"raval": ["mark", "sniff", "phone", "paws", "bag", "clothesline", "pigeons", "swat", "combo", "prize", "spell", "jamon", "clock", "topple", "boop"],
 }
 
 
@@ -124,6 +124,8 @@ static func defs(m: Node2D) -> Dictionary:
 		"correfoc": {"text": "Keep the fire devils a leash length away", "target": 1, "fn": func() -> int: return 1 if m.chase_min_gap >= HomeChase.OUTRUN_GAP else 0},
 		"churros": {"text": "Scarf down %d hot churros", "target": 2, "fn": func() -> int: return int(m.get("churros_eaten") if m.get("churros_eaten") != null else m.kebabs_eaten)},
 		"decor": {"text": "Brush under %d hanging festival decorations", "target": 4, "fn": func() -> int: return int(m.get("gracia_decor_brushed") if m.get("gracia_decor_brushed") != null else 0)},
+		"clothesline": {"text": "Clothesline charging El Gat with a taut leash", "target": 1, "fn": func() -> int: return 1 if bool(m.get("gat_clotheslined")) else 0},
+		"pummel": {"text": "Fling your human to pummel charging El Gat", "target": 1, "fn": func() -> int: return 1 if bool(m.get("gat_human_pummeled")) else 0},
 		"topple": {"text": "Topple El Gat with an AT-AT leash wrap", "target": 1, "fn": func() -> int: return 1 if bool(m.get("gat_toppled")) else 0},
 		"boop": {"text": "Super-boop El Gat's snout for the win", "target": 1, "fn": func() -> int: return 1 if bool(m.get("gat_booped")) else 0},
 		"pigeons": {"text": "Scatter %d plaza pigeon flocks", "target": 3, "fn": func() -> int: return int(m.get("raval_pigeons_scattered"))},

@@ -7,20 +7,25 @@ extends RefCounted
 # date palms, panots paving, café terraces, and a central circular plaza where
 # Fernando Botero's colossal bronze cat sculpture ("El Gat de Botero") sits.
 #
-# A 3-phase boss encounter:
-# - Phase 1: The Prowl (Navigation & Dodging)
-#   El Gat stalks down the promenade, swatting massive bronze paws (radius 42px)
-#   with telegraphed dust rings. Pigeons scatter dynamically.
-# - Phase 2: The AT-AT Leash Tangle (Core Mechanics Climax)
-#   El Gat pauses in the circular plaza at y = -4600. Its four cylindrical bronze
-#   legs act as active verlet collision poles in the rope solver. The player dog
-#   orbits the legs while the human holds anchor. Completing 3 full wrap coils
-#   trips the giant statue onto its side with a colossal metallic CLANG!
-# - Phase 3: The Belly Boop & Victory
-#   El Gat is toppled on the plaza panots. A golden yarn prize rolls out. The player
-#   runs up its round belly to its snout and presses BARK for the "Super Boop".
-#   El Gat purrs contentedly, settles back onto its pedestal as a static bronze
-#   monument, patrons cheer, and the walk finishes with a 3-star milestone reward.
+# A 3-phase epic boss encounter matching docs/LEVEL_DESIGN.md:
+# - Phase 1: The Prowl & Heavy Swats (100% -> 50% HP)
+#   El Gat stalks down the promenade, sweeping massive bronze paws (radius 42px)
+#   with telegraphed dust rings. Dodging swats and counter-pulling staggers the
+#   statue and damages it down to 50% HP.
+# - Phase 2: Bull Charges & Triple Counters (50% -> 0% HP)
+#   El Gat turns and launches high-speed Bull Charges down the promenade.
+#   Millie can counter with 3 distinct physics mechanics:
+#   1. Clothesline: Stretching the leash taut across its charge lane trips El Gat!
+#   2. Trunk Smash: Baiting El Gat into palm tree trunks or dining terraces stuns it!
+#   3. Human Bowling: Tetherball-flinging the human into El Gat pummels it directly!
+# - Phase 3: The AT-AT Leash Tangle & Super Boop (0% HP)
+#   El Gat retreats to its central circular plaza pedestal at y = -4600. Its four
+#   cylindrical bronze legs act as active verlet rope poles. Millie orbits the
+#   legs while the human holds anchor. Completing 3 full wrap coils trips the
+#   giant statue onto its side with a colossal metallic CLANG!
+#   Millie runs up its round belly to its snout and presses BARK for the "Super Boop".
+#   El Gat purrs contentedly, settles back as a static bronze monument, confetti
+#   erupts, golden yarn prize is collected, and the campaign is won!
 
 const Clay := preload("res://entities/clay.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -37,6 +42,7 @@ const BRONZE_DARK := Color(0.15, 0.12, 0.10)
 const BRONZE_LIT := Color(0.38, 0.32, 0.26)
 const BRONZE_SPEC := Color(0.60, 0.50, 0.38, 0.40)
 const EYE_AMBER := Color(0.96, 0.78, 0.18)
+const EYE_CHARGE := Color(1.00, 0.25, 0.10)
 const EYE_PUPIL := Color(0.12, 0.08, 0.06)
 const NOSE_DARK := Color(0.20, 0.15, 0.14)
 const WHISKER_WIRE := Color(0.70, 0.64, 0.54)
@@ -54,6 +60,7 @@ const PALM_LEAF_LIGHT := Color(0.34, 0.64, 0.30)
 const DUST_COLOR := Color(0.85, 0.78, 0.65, 0.50)
 const YARN_GOLD := Color(0.98, 0.82, 0.28)
 const YARN_DARK := Color(0.75, 0.55, 0.15)
+const STAR_GOLD := Color(1.00, 0.90, 0.25)
 
 # --- Dimensions & Layout -----------------------------------------------------
 const HALF := 320.0
@@ -66,6 +73,7 @@ const LEG_OFFSET_X := 36.0
 const LEG_OFFSET_Y := 32.0
 const LEG_RADIUS := 18.0
 const SWAT_RADIUS := 42.0
+const HIT_BOX_RADIUS := 46.0
 
 const PRIZE := Vector2(730.0, -4520.0)
 const PRIZE_TEXT := "snatch the giant golden yarn from the overturned kiosk"
@@ -75,6 +83,9 @@ enum State {
 	IDLE,
 	PROWL,
 	SWAT,
+	CHARGE_WARN,
+	CHARGE,
+	STUNNED,
 	ROAR,
 	WRAPPED,
 	TOPPLED,
@@ -83,6 +94,10 @@ enum State {
 
 var state: State = State.IDLE
 var state_t: float = 0.0
+
+var hp: float = 100.0
+var max_hp: float = 100.0
+var phase: int = 1
 
 var main: Node2D = null
 var pos: Vector2 = Vector2(640.0, -450.0)
@@ -96,6 +111,10 @@ var swat_pos := Vector2.ZERO
 var swat_telegraph := 0.0
 var swat_cooldown := 3.2
 var swat_paw_active := 0 # 0 left, 1 right
+
+var charge_dir := Vector2.DOWN
+var charge_lane_end := Vector2.ZERO
+var charge_cooldown := 2.8
 
 var wrap_coils := 0.0
 var prev_coil_milestone := 0
@@ -224,6 +243,9 @@ static func build(m: Node2D) -> Array:
 	m.set("gat_booped", false)
 	m.set("gat_swats_dodged", 0)
 	m.set("raval_pigeons_scattered", 0)
+	m.set("gat_clotheslined", false)
+	m.set("gat_human_pummeled", false)
+	m.set("gat_tree_smashed", false)
 
 	# Hydrants / sniff landmarks
 	var marks: Array[Vector2] = [
@@ -250,6 +272,9 @@ static func build(m: Node2D) -> Array:
 func setup(m_ref: Node2D) -> void:
 	main = m_ref
 	state = State.IDLE
+	hp = 100.0
+	max_hp = 100.0
+	phase = 1
 	pos = Vector2(640.0, -480.0)
 	face_dir = Vector2.DOWN
 	wrap_coils = 0.0
@@ -290,6 +315,23 @@ func update_leg_positions() -> void:
 			main.poles[idx] = target
 
 
+func damage_boss(amt: float) -> void:
+	hp = maxf(0.0, hp - amt)
+	if hp <= 50.0 and phase == 1:
+		phase = 2
+		if main != null:
+			main.feed.say("PHASE 2: BULL CHARGES!", EventFeed.Tone.LOUD)
+			if main.human != null:
+				main.human.notice("Look out, he's charging!", 2.5)
+	if hp <= 0.0 and phase == 2:
+		phase = 3
+		# When HP reaches 0, El Gat retreats to circular plaza for the AT-AT finale
+		if pos.y > -4400.0:
+			pos.y = -4550.0
+			update_leg_positions()
+		transition_to(State.ROAR)
+
+
 func transition_to(new_state: State) -> void:
 	state = new_state
 	state_t = 0.0
@@ -297,18 +339,47 @@ func transition_to(new_state: State) -> void:
 		State.PROWL:
 			state_t = 0.0
 			cur_speed = 95.0
-			if main != null and main.human != null:
+			face_dir = Vector2.DOWN
+			if main != null and main.human != null and phase == 1:
 				main.human.notice("Huh, big cat today...", 2.2)
 		State.SWAT:
-			state_t = 0.8 # telegraph window
+			state_t = 0.85 # telegraph window
 			trigger_swat()
+		State.CHARGE_WARN:
+			state_t = 0.85
+			cur_speed = 0.0
+			Sfx.play("roar", 1.1, 2.0)
+			# Aim charge toward dog / human along promenade
+			var target_p: Vector2 = main.dog.global_position if (main != null and main.dog != null) else (pos + Vector2(0, 300.0))
+			charge_dir = (target_p - pos).normalized()
+			if charge_dir.y < 0.2:
+				charge_dir = Vector2(charge_dir.x, 0.6).normalized()
+			face_dir = charge_dir
+			charge_lane_end = pos + charge_dir * 380.0
+			dust_rings.append({"pos": pos, "r": 36.0, "life": 0.85, "max_life": 0.85})
+			if main != null:
+				main.shake_t = maxf(float(main.shake_t), 0.3)
+				main.feed.say("BULL CHARGE INCOMING!", EventFeed.Tone.LOUD)
+		State.CHARGE:
+			state_t = 1.8
+			cur_speed = 340.0
+			Sfx.play("intro_yank", 1.0, 1.5)
+		State.STUNNED:
+			state_t = 2.8
+			cur_speed = 0.0
+			Sfx.play("groan", 1.0, 2.5)
+			if main != null:
+				main.shake_t = maxf(float(main.shake_t), 0.6)
 		State.ROAR:
 			state_t = 2.4
+			phase = 3
 			pos = PEDESTAL_POS
 			update_leg_positions()
+			face_dir = Vector2.DOWN
 			Sfx.play("roar", 0.9, 3.0)
 			if main != null:
 				main.shake_t = maxf(float(main.shake_t), 0.6)
+				main.feed.say("PHASE 3: AT-AT TANGLE!", EventFeed.Tone.LOUD)
 				if main.human != null:
 					main.human.halt(999.0) # hold center anchor in plaza
 					main.human.notice("Is that... moving?!", 2.5)
@@ -359,8 +430,8 @@ func trigger_swat() -> void:
 	swat_paw_active = 0 if swat_paw_active == 1 else 1
 	var side_x := 46.0 if swat_paw_active == 1 else -46.0
 	swat_pos = pos + Vector2(side_x, 60.0)
-	swat_telegraph = 0.8
-	dust_rings.append({"pos": swat_pos, "r": SWAT_RADIUS, "life": 0.8, "max_life": 0.8})
+	swat_telegraph = 0.85
+	dust_rings.append({"pos": swat_pos, "r": SWAT_RADIUS, "life": 0.85, "max_life": 0.85})
 
 
 func execute_swat() -> void:
@@ -379,6 +450,10 @@ func execute_swat() -> void:
 		main.gat_swats_dodged += 1
 		main.combo.add("DODGE", 2)
 		main.float_text(swat_pos, "dodged! +2", Color(0.8, 1.0, 0.7))
+		# Dodging and counter-pulling staggers the bronze cat
+		damage_boss(15.0)
+		main.feed.say("SWAT DODGED! -15 HP", EventFeed.Tone.GOOD)
+		main.float_text(pos, "STAGGERED! -15 HP", Color(0.85, 1.0, 0.5))
 
 	# Check human impact
 	if main.human != null and main.human.global_position.distance_to(swat_pos) <= SWAT_RADIUS:
@@ -391,6 +466,54 @@ func execute_swat() -> void:
 			p.scare()
 			main.raval_pigeons_scattered += 1
 
+
+# --- Phase 2 Counter Checks --------------------------------------------------
+
+func check_clothesline() -> bool:
+	if main == null or main.leash == null:
+		return false
+	# Leash must be taut to clothesline a giant charging bronze cat
+	var rest: float = maxf(float(main.leash.rest_len), 1.0)
+	var ratio: float = main.leash.used_length() / rest
+	if main.leash.taut_amount(ratio) < 0.15:
+		return false
+	var pts: Array = main.leash.pts
+	if pts.size() < 2:
+		return false
+	var hit_sq := HIT_BOX_RADIUS * HIT_BOX_RADIUS
+	for i in range(pts.size() - 1):
+		var p1: Vector2 = pts[i]
+		var p2: Vector2 = pts[i + 1]
+		var cp: Vector2 = Geometry2D.get_closest_point_to_segment(pos, p1, p2)
+		if pos.distance_squared_to(cp) <= hit_sq:
+			return true
+	return false
+
+
+func check_obstacle_collision() -> bool:
+	# 1. Palm tree trunks
+	for palm: Vector2 in PALMS:
+		if pos.distance_squared_to(palm) < 42.0 * 42.0:
+			return true
+	# 2. Dining terraces
+	for tr: Rect2 in TERRACES:
+		var exp_rect := tr.grow(32.0)
+		if exp_rect.has_point(pos):
+			return true
+	return false
+
+
+func check_human_pummel() -> bool:
+	if main == null or main.human == null:
+		return false
+	var h_dist: float = main.human.global_position.distance_to(pos)
+	if h_dist > 68.0:
+		return false
+	var flung: bool = main.human.whirl_flung_t > 0.0 or main.human.velocity.length() > 180.0
+	return flung
+
+
+# --- Phase 3 AT-AT Leash Wrap ------------------------------------------------
 
 func update_cable_wrap(_delta: float) -> void:
 	if state != State.ROAR:
@@ -444,6 +567,8 @@ func update_cable_wrap(_delta: float) -> void:
 		transition_to(State.WRAPPED)
 
 
+# --- State Machine Tick ------------------------------------------------------
+
 func tick_state(delta: float) -> void:
 	if main == null or main.frozen:
 		return
@@ -472,6 +597,8 @@ func tick_state(delta: float) -> void:
 
 		State.PROWL:
 			swat_cooldown -= delta
+			charge_cooldown -= delta
+
 			# Stalk north toward the plaza at y = -4600
 			if main.human != null:
 				var lead_target_y := minf(pos.y, main.human.global_position.y - 220.0)
@@ -480,15 +607,21 @@ func tick_state(delta: float) -> void:
 
 			update_leg_positions()
 
-			# Scatter pigeons as El Gat prowls
+			# Scatter pigeons as El Gat stalks
 			for p in main.get_tree().get_nodes_in_group("pigeons"):
 				if p.global_position.distance_to(pos) < 140.0:
 					p.scare()
 
-			# Check swat trigger
-			if swat_cooldown <= 0.0 and pos.y > -4400.0:
-				swat_cooldown = 3.4
-				transition_to(State.SWAT)
+			# Phase 1: Swats
+			if phase == 1:
+				if swat_cooldown <= 0.0 and pos.y > -4400.0:
+					swat_cooldown = 3.4
+					transition_to(State.SWAT)
+			# Phase 2: Bull Charges
+			elif phase == 2:
+				if charge_cooldown <= 0.0 and pos.y > -4400.0:
+					charge_cooldown = 3.2
+					transition_to(State.CHARGE_WARN)
 
 			# Arrived at circular plaza arena
 			if pos.y <= -4550.0:
@@ -500,6 +633,100 @@ func tick_state(delta: float) -> void:
 			if state_t <= 0.0:
 				execute_swat()
 				transition_to(State.PROWL)
+
+		State.CHARGE_WARN:
+			state_t -= delta
+			if state_t <= 0.0:
+				transition_to(State.CHARGE)
+
+		State.CHARGE:
+			state_t -= delta
+			pos += charge_dir * cur_speed * delta
+			pos.x = clampf(pos.x, CORRIDOR_L + 60.0, CORRIDOR_R - 60.0)
+			update_leg_positions()
+
+			# Scatter pigeons in charge path
+			for p in main.get_tree().get_nodes_in_group("pigeons"):
+				if p.global_position.distance_to(pos) < 120.0:
+					p.scare()
+
+			# Counter 1: Clothesline with taut leash!
+			if check_clothesline():
+				main.set("gat_clotheslined", true)
+				damage_boss(25.0)
+				Sfx.play("intro_taut", 1.0, 3.0)
+				Sfx.play("crack", 0.7, 4.0)
+				main.shake_t = 1.1
+				main.feed.say("CLOTHESLINE! EL GAT TRIPPED!", EventFeed.Tone.LOUD)
+				main.combo.add("CLOTHESLINE", 8)
+				main.float_text(pos, "CLOTHESLINE! -25 HP", Color(1.0, 0.85, 0.2))
+				for d_rad in [35.0, 70.0]:
+					dust_rings.append({"pos": pos, "r": d_rad, "life": 0.6, "max_life": 0.6})
+				transition_to(State.STUNNED)
+				return
+
+			# Counter 2: Obstacle smash into palms or dining terrace!
+			if check_obstacle_collision():
+				main.set("gat_tree_smashed", true)
+				damage_boss(20.0)
+				Sfx.play("crack", 0.6, 5.0)
+				Sfx.play("bell", 0.6, 4.0)
+				main.shake_t = 1.2
+				main.feed.say("TRUNK SMASH! EL GAT STUNNED!", EventFeed.Tone.LOUD)
+				main.combo.add("TRUNK SMASH", 6)
+				main.float_text(pos, "TRUNK SMASH! -20 HP", Color(0.9, 0.4, 0.2))
+				for d_rad in [40.0, 80.0]:
+					dust_rings.append({"pos": pos, "r": d_rad, "life": 0.7, "max_life": 0.7})
+				transition_to(State.STUNNED)
+				return
+
+			# Counter 3: Tetherball human fling pummel!
+			if check_human_pummel():
+				main.set("gat_human_pummeled", true)
+				damage_boss(30.0)
+				Sfx.play("crack", 0.7, 4.0)
+				Sfx.play("thud", 1.0, 3.0)
+				main.shake_t = 1.3
+				main.human.bumped((main.human.global_position - pos).normalized() * 140.0)
+				main.feed.say("HUMAN BOWLING! DIRECT HIT!", EventFeed.Tone.LOUD)
+				main.combo.add("HUMAN PUMMEL", 12)
+				main.float_text(pos, "PUMMEL! -30 HP", Color(1.0, 0.4, 0.3))
+				main.human.notice("Ouch! That is solid bronze!", 2.2)
+				for d_rad in [45.0, 90.0]:
+					dust_rings.append({"pos": pos, "r": d_rad, "life": 0.7, "max_life": 0.7})
+				transition_to(State.STUNNED)
+				return
+
+			# Direct player hits if not countered
+			if main.dog != null and main.dog.global_position.distance_to(pos) < HIT_BOX_RADIUS:
+				main.dog.knocked(charge_dir * 250.0, "charge")
+				main.on_dog_hit("charge")
+			if main.human != null and main.human.global_position.distance_to(pos) < HIT_BOX_RADIUS:
+				main.human.bumped(charge_dir * 180.0)
+
+			if state_t <= 0.0:
+				# Charge expired without collision
+				transition_to(State.PROWL)
+
+		State.STUNNED:
+			state_t -= delta
+			# Even while stunned, player can fling human for bonus pummel damage
+			if check_human_pummel() and not bool(main.get("gat_human_pummeled")):
+				main.set("gat_human_pummeled", true)
+				damage_boss(30.0)
+				Sfx.play("crack", 0.7, 4.0)
+				Sfx.play("thud", 1.0, 3.0)
+				main.shake_t = 1.2
+				main.human.bumped((main.human.global_position - pos).normalized() * 140.0)
+				main.feed.say("HUMAN BOWLING! DIRECT HIT!", EventFeed.Tone.LOUD)
+				main.combo.add("HUMAN PUMMEL", 12)
+				main.float_text(pos, "PUMMEL! -30 HP", Color(1.0, 0.4, 0.3))
+
+			if state_t <= 0.0:
+				if hp <= 0.0 or pos.y <= -4550.0:
+					transition_to(State.ROAR)
+				else:
+					transition_to(State.PROWL)
 
 		State.ROAR:
 			update_cable_wrap(delta)
@@ -659,33 +886,61 @@ func draw_gat(c: Object) -> void:
 		c.draw_circle(dr.pos, r, col, false, 4.0)
 		c.draw_circle(dr.pos, r * 0.75, col, false, 2.5)
 
-	# 2. Draw AT-AT Cable wrap progress rings during Phase 2 (ROAR)
+	# 2. Draw Charge Lane Telegraph during CHARGE_WARN
+	if state == State.CHARGE_WARN:
+		var warn_pulse: float = 0.35 + sin(t * 14.0) * 0.15
+		var lane_col := Color(1.0, 0.25, 0.15, warn_pulse)
+		c.draw_line(pos, charge_lane_end, lane_col, 28.0)
+		c.draw_circle(charge_lane_end, 20.0, lane_col)
+
+	# 3. Draw AT-AT Cable wrap progress rings during Phase 3 (ROAR)
 	if state == State.ROAR:
 		var ring_col := Color(0.98, 0.85, 0.30, 0.35 + sin(t * 8.0) * 0.15)
 		c.draw_circle(cur_pos, 85.0, ring_col, false, 3.0)
-		# Arc showing current wrap coil progress
 		var coil_frac := clampf(wrap_coils / 3.0, 0.0, 1.0)
 		if coil_frac > 0.01:
 			c.draw_arc(cur_pos, 92.0, -PI * 0.5, -PI * 0.5 + TAU * coil_frac, 32, Color(1.0, 0.90, 0.20, 0.85), 5.0)
 
-	# 3. Draw Confetti during Phase 3 victory
+	# 4. Draw Confetti during Phase 3 victory
 	for cf in confetti:
 		c.draw_rect(Rect2(cf.pos.x - 3.0, cf.pos.y - 3.0, 6.0, 6.0), cf.col)
 
-	# 4. Draw Giant Golden Yarn Prize if toppled or purring
+	# 5. Draw Giant Golden Yarn Prize if toppled or purring
 	if state == State.TOPPLED or state == State.PURR:
 		c.draw_circle(PRIZE + LIGHT * 4.0, 18.0, SHADOW)
 		c.draw_circle(PRIZE, 16.0, YARN_DARK)
 		c.draw_circle(PRIZE - LIGHT * 2.0, 14.0, YARN_GOLD)
-		# Yarn winding strands
 		c.draw_arc(PRIZE, 10.0, 0.0, TAU * 0.8, 12, Color(1.0, 0.92, 0.5), 2.5)
 		c.draw_arc(PRIZE + Vector2(-2, 2), 6.0, 0.5, TAU * 0.9, 8, YARN_DARK, 2.0)
 
-	# 5. Draw El Gat de Botero procedural bronze vector geometry
+	# 6. Draw El Gat de Botero procedural bronze vector geometry
 	if state == State.TOPPLED:
 		draw_toppled_gat(c, cur_pos, t)
 	else:
 		draw_upright_gat(c, cur_pos, t)
+
+	# 7. Draw Floating Boss Health Bar
+	if state != State.IDLE and state != State.PURR and state != State.TOPPLED:
+		draw_boss_health_bar(c, cur_pos)
+
+
+func draw_boss_health_bar(c: Object, at: Vector2) -> void:
+	var bar_w := 130.0
+	var bar_h := 8.0
+	var bar_pos := at + Vector2(-bar_w * 0.5, -82.0)
+
+	# Shadow & Background frame
+	c.draw_rect(Rect2(bar_pos + LIGHT * 2.0, Vector2(bar_w, bar_h)), SHADOW)
+	c.draw_rect(Rect2(bar_pos, Vector2(bar_w, bar_h)), BRONZE_DARK)
+
+	# HP Fill
+	var hp_frac := clampf(hp / max_hp, 0.0, 1.0)
+	if hp_frac > 0.0:
+		var fill_col := Color(0.96, 0.32, 0.22) if phase == 2 else Color(0.96, 0.74, 0.18)
+		c.draw_rect(Rect2(bar_pos + Vector2(1, 1), Vector2((bar_w - 2.0) * hp_frac, bar_h - 2.0)), fill_col)
+
+	# Gold/bronze outline
+	c.draw_rect(Rect2(bar_pos, Vector2(bar_w, bar_h)), BRONZE_LIT, false, 1.5)
 
 
 func draw_upright_gat(c: Object, at: Vector2, t: float) -> void:
@@ -697,7 +952,6 @@ func draw_upright_gat(c: Object, at: Vector2, t: float) -> void:
 		Clay.ball(c, leg + LIGHT * 2.0, LEG_RADIUS + 2.0, BRONZE_DARK)
 		Clay.ball(c, leg, LEG_RADIUS, BRONZE_BASE)
 		c.draw_circle(leg - LIGHT * 3.0, LEG_RADIUS * 0.45, BRONZE_LIT)
-		# Toe indentations
 		for toe in [-4.0, 0.0, 4.0]:
 			c.draw_circle(leg + Vector2(toe, LEG_RADIUS - 3.0), 2.2, BRONZE_DARK)
 
@@ -727,25 +981,29 @@ func draw_upright_gat(c: Object, at: Vector2, t: float) -> void:
 	Clay.ball(c, head_c + Vector2(18.0, 8.0), 18.0, BRONZE_BASE)
 
 	# Tiny cute triangular bronze ears
+	var ear_droop: float = 6.0 if state == State.STUNNED else 0.0
 	for sd: float in [-1.0, 1.0]:
-		var ear_base1 := head_c + Vector2(sd * 10.0, -head_r + 4.0)
-		var ear_base2 := head_c + Vector2(sd * 24.0, -head_r + 10.0)
-		var ear_tip := head_c + Vector2(sd * 20.0, -head_r - 14.0)
+		var ear_base1 := head_c + Vector2(sd * 10.0, -head_r + 4.0 + ear_droop)
+		var ear_base2 := head_c + Vector2(sd * 24.0, -head_r + 10.0 + ear_droop)
+		var ear_tip := head_c + Vector2(sd * 20.0, -head_r - 14.0 + ear_droop)
 		c.draw_colored_polygon(PackedVector2Array([ear_base1, ear_tip, ear_base2]), BRONZE_DARK)
 		c.draw_colored_polygon(PackedVector2Array([ear_base1 + Vector2(sd, 1), ear_tip - Vector2(0, -2), ear_base2 - Vector2(sd, 0)]), BRONZE_LIT)
 
-	# Eyes (Amber slit eyes, blinking or happy)
-	var blink: bool = fmod(t + pos.x * 0.01, 4.5) < 0.18 and state != State.ROAR
+	# Eyes (Amber or Glowing Red Charge Eyes)
+	var blink: bool = fmod(t + pos.x * 0.01, 4.5) < 0.18 and state != State.ROAR and state != State.CHARGE_WARN and state != State.CHARGE
+	var eye_col: Color = EYE_CHARGE if (state == State.CHARGE_WARN or state == State.CHARGE) else EYE_AMBER
 	for sd: float in [-1.0, 1.0]:
 		var eye_c := head_c + Vector2(sd * 15.0, -4.0)
 		if state == State.PURR:
-			# Happy squinty eyes (^ . ^)
 			c.draw_arc(eye_c, 6.0, PI * 0.1, PI * 0.9, 10, Color(0.12, 0.08, 0.06), 2.5)
+		elif state == State.STUNNED:
+			# Dizzy X eyes
+			c.draw_line(eye_c - Vector2(4, 4), eye_c + Vector2(4, 4), Color(0.12, 0.08, 0.06), 2.2)
+			c.draw_line(eye_c - Vector2(-4, 4), eye_c + Vector2(-4, 4), Color(0.12, 0.08, 0.06), 2.2)
 		elif blink:
 			c.draw_line(eye_c - Vector2(6, 0), eye_c + Vector2(6, 0), Color(0.12, 0.08, 0.06), 2.0)
 		else:
-			c.draw_circle(eye_c, 6.5, EYE_AMBER)
-			# Vertical slit pupil
+			c.draw_circle(eye_c, 6.5, eye_col)
 			c.draw_line(eye_c - Vector2(0, 5), eye_c + Vector2(0, 5), EYE_PUPIL, 2.2)
 
 	# Snout & Nose
@@ -755,7 +1013,7 @@ func draw_upright_gat(c: Object, at: Vector2, t: float) -> void:
 	c.draw_arc(nose_c + Vector2(-5, 6), 5.0, 0.0, PI * 0.8, 8, NOSE_DARK, 2.0)
 	c.draw_arc(nose_c + Vector2(5, 6), 5.0, PI * 0.2, PI, 8, NOSE_DARK, 2.0)
 
-	# Twitching stiff bronze wire whiskers
+	# Whiskers
 	var w_tw := sin(t * 8.0) * 2.0
 	for sd: float in [-1.0, 1.0]:
 		var wp := head_c + Vector2(sd * 12.0, 10.0)
@@ -763,12 +1021,20 @@ func draw_upright_gat(c: Object, at: Vector2, t: float) -> void:
 		c.draw_line(wp, wp + Vector2(sd * 30.0, 2.0), WHISKER_WIRE, 1.5)
 		c.draw_line(wp, wp + Vector2(sd * 26.0, 8.0 - w_tw), WHISKER_WIRE, 1.5)
 
-	# Swat paw active during SWAT
+	# Active swat paw
 	if state == State.SWAT:
 		var p_from := head_c + Vector2(40.0 if swat_paw_active == 1 else -40.0, 15.0)
 		var p_to := swat_pos
 		c.draw_line(p_from, p_to, BRONZE_BASE, 16.0)
 		Clay.ball(c, p_to, 20.0, BRONZE_LIT)
+
+	# Stunned cartoon circling stars
+	if state == State.STUNNED:
+		for i in range(4):
+			var star_a := t * 4.5 + float(i) * (TAU / 4.0)
+			var star_p := head_c + Vector2(cos(star_a) * 34.0, sin(star_a) * 14.0 - 18.0)
+			c.draw_circle(star_p, 4.0, STAR_GOLD)
+			c.draw_circle(star_p, 2.0, Color.WHITE)
 
 
 func draw_toppled_gat(c: Object, at: Vector2, t: float) -> void:
@@ -778,7 +1044,6 @@ func draw_toppled_gat(c: Object, at: Vector2, t: float) -> void:
 	# Giant round belly exposed to the sky
 	var belly_half := Vector2(68.0, 48.0)
 	Clay.blob(c, at, belly_half, Vector2.RIGHT, BRONZE_BASE)
-	# Metallic sheen highlight on round belly
 	c.draw_colored_polygon(Clay.ellipse_pts(at - LIGHT * 10.0, belly_half * 0.50, Vector2.RIGHT), BRONZE_SPEC)
 
 	# Tangled legs splayed sideways
