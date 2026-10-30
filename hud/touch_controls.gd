@@ -31,6 +31,9 @@ var split_x := 620.0
 # the MENU button's centre: just right of the vitals card (hud_panel.gd,
 # 16 + 196 wide), clear of it
 const MENU_X := 264.0
+# GRAB appears this close to the carry item, a little before the 28 px the
+# grab itself needs, so the button is up before she arrives
+const GRAB_REACH := 90.0
 
 
 func _ready() -> void:
@@ -50,7 +53,7 @@ func _exit_tree() -> void:
 		goals_id = -1
 	for b: Dictionary in buttons:
 		if int(b.id) != -1:
-			Input.action_release(String(b.action))
+			Input.action_release(String(b.get("pressed", b.action)))
 			b.id = -1
 	if stick_id != -1:
 		stick_id = -1
@@ -73,6 +76,9 @@ func _layout() -> void:
 		{"action": "pee", "label": "PEE", "center": corner + Vector2(-128.0, 62.0), "r": 44.0, "id": -1, "when": "primary"},
 		# turbo is held, like the rest: in reach of the thumb on DIG
 		{"action": "turbo", "label": "RUN", "center": corner + Vector2(-130.0, -72.0), "r": 40.0, "id": -1, "when": "walking"},
+		# pickup has its own action since DIG stopped grabbing: shown only
+		# with something in reach to grab
+		{"action": "pickup", "label": "GRAB", "center": corner + Vector2(-240.0, 0.0), "r": 40.0, "id": -1, "when": "grab"},
 		# pause mid-walk, and resume from the pause menu: small, top left
 		# beside the vitals card, well away from the thumbs. The menus need
 		# no MENU button: BARK is back on every one of them
@@ -109,9 +115,10 @@ func _input(event: InputEvent) -> void:
 					continue
 				if e.position.distance_to(b.center) < float(b.r) + 16.0:
 					b.id = e.index
-					Input.action_press(b.action)
-					if b.action == "pee" and main != null and main.poop_state == 1:
-						Input.action_press("poop")
+					# during the urge PEE is labelled POOP and presses only poop
+					b.pressed = "poop" if b.action == "pee" and main != null and main.poop_state == 1 \
+						else String(b.action)
+					Input.action_press(b.pressed)
 					hit = true
 					break
 			if not hit and e.position.x < split_x:
@@ -126,9 +133,7 @@ func _input(event: InputEvent) -> void:
 			for b in buttons:
 				if int(b.id) == e.index:
 					b.id = -1
-					Input.action_release(b.action)
-					if b.action == "pee":
-						Input.action_release("poop")
+					Input.action_release(String(b.get("pressed", b.action)))
 			if e.index == stick_id:
 				stick_id = -1
 				stick_vec = Vector2.ZERO
@@ -193,7 +198,23 @@ func _shown(b: Dictionary) -> bool:
 			return _primary_controls()
 		"bark":
 			return _primary_controls() or _stopped()
+		"grab":
+			return _grab_in_reach()
 	return true
+
+
+func _grab_in_reach() -> bool:
+	if not _walking() or bool(main.dog_carrying) or main.dog == null:
+		return false
+	var at: Vector2 = main.dog.global_position
+	if main.carry_pickup.x < INF and int(main.carry_state) == 0 and at.distance_to(main.carry_pickup) < GRAB_REACH:
+		return true
+	# untyped: the walk home frees the balls without clearing main's fields
+	for b in [main.ball, main.npc_ball]:
+		if is_instance_valid(b) and b.state == b.State.RESTING and at.distance_to(b.global_position) < GRAB_REACH:
+			return true
+	var f = main.frisbee
+	return is_instance_valid(f) and f.state == f.State.LANDED and at.distance_to(f.global_position) < GRAB_REACH
 
 
 func _process(_delta: float) -> void:

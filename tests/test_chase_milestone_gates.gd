@@ -3,7 +3,8 @@ extends SceneTree
 # Tests for the Keystone Chase Milestone Gate system:
 # - Each tier requires completing the preceding tier's chase level end-to-end to enter
 # - When locked by an uncompleted chase level, walk_info and best_line report
-#   "Complete [Level Name] to enter"
+#   "Finish [Level Name] to open this walk."
+# - A save from before the gates keeps the walks it already had open
 # - Beating the chase level immediately clears the chase block for the next tier
 # - The Grand Finale (Rambla del Raval) unlocks directly upon beating Festa de Gràcia regardless of stars
 # - Free play mode bypasses all gates
@@ -35,6 +36,8 @@ func _run() -> void:
 	game.free_play = false
 	var saved_records: Dictionary = game.records.duplicate(true)
 	var saved_bones: int = game.total_bones
+	var saved_open: Array[String] = game.gate_open.duplicate()
+	game.gate_open.clear()
 
 	# 1. Fresh state: verify chase gate requirements
 	game.records = {}
@@ -51,11 +54,11 @@ func _run() -> void:
 
 	# 2. Check lock text formatting
 	var site_best: String = game.best_line("site")
-	_check(site_best == "locked - complete El Besòs to enter", "site best_line says complete El Besos: %s" % site_best)
+	_check(site_best == "locked - finish El Besòs first", "site best_line names El Besos: %s" % site_best)
 	var mont_best: String = game.best_line("montjuic")
-	_check(mont_best == "locked - complete La Neteja to enter", "montjuic best_line says complete La Neteja: %s" % mont_best)
+	_check(mont_best == "locked - finish La Neteja first", "montjuic best_line names La Neteja: %s" % mont_best)
 	var tib_best: String = game.best_line("tibidabo")
-	_check(tib_best == "locked - complete El Veterinari to enter", "tibidabo best_line says complete El Veterinari: %s" % tib_best)
+	_check(tib_best == "locked - finish El Veterinari first", "tibidabo best_line names El Veterinari: %s" % tib_best)
 
 	# 3. Even with ample stars, chase block prevents unlock
 	game.mark_goal("barri", "mark")
@@ -68,7 +71,7 @@ func _run() -> void:
 	_check(bool(info.get("locked", false)), "walk_info flags site as locked")
 	_check(String(info.get("chase_gate", "")) == "besos", "walk_info records chase_gate as besos")
 	var line0: String = (info.get("lines", [""])[0] as String)
-	_check(line0 == "Complete El Besòs to enter", "walk_info line says Complete El Besos to enter: %s" % line0)
+	_check(line0 == "Finish El Besòs to open this walk.", "walk_info line names El Besos: %s" % line0)
 
 	# 4. Completing besos clears the gate
 	_check(not game.has_completed("besos"), "besos is not completed yet")
@@ -89,7 +92,27 @@ func _run() -> void:
 	_check(game.has_completed("gracia"), "gracia completed")
 	_check(game.is_unlocked("raval"), "raval unlocks directly when gracia is beaten regardless of stars")
 
-	# 7. Free play mode opens all walks
+	# 7. A save from before the gates keeps the gated walks it had open by
+	# stars or had walked, but never one of the walks that came with the gates
+	game.records = {}
+	for lv in game.LEVELS:
+		game.records[lv] = game._default_level_record()
+	game.records["barri"].stars = 3
+	game.records["street"].stars = 3
+	game.records["park"].stars = 3
+	game.records["beach"].stars = 3
+	game.records["rain"].stars = 3
+	game.records["market"].stars = 2
+	game.records["montjuic"].bones = 12
+	game.gate_open.clear()
+	game._grandfather_chase_gates()
+	_check(game.is_unlocked("site") and game.is_unlocked("spook"), "an old save at 17 stars keeps site and spook open")
+	_check(game.chase_gate_needed("montjuic") == "", "an old save that walked montjuic keeps it")
+	_check(game.chase_gate_needed("tibidabo") == "vet", "an old save below tibidabo's stars is still gated there")
+	_check(not game.gate_open.has("gracia") and not game.gate_open.has("raval"), "new walks are never grandfathered")
+	game.gate_open.clear()
+
+	# 8. Free play mode opens all walks
 	game.records = {}
 	for lv in game.LEVELS:
 		game.records[lv] = game._default_level_record()
@@ -103,6 +126,7 @@ func _run() -> void:
 	game.free_play = false
 	game.records = saved_records
 	game.total_bones = saved_bones
+	game.gate_open.assign(saved_open)
 	dummy_main.queue_free()
 
 	if failures.is_empty():

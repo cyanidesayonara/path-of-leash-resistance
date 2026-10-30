@@ -16,13 +16,15 @@ func _initialize() -> void:
 	var failures := 0
 
 	g.records = {"street": {"goals": [], "stars": 0}}
+	var street_ids: Array = load("res://systems/goals.gd").LEVEL_GOAL_IDS["street"]
+	var park_ids: Array = load("res://systems/goals.gd").LEVEL_GOAL_IDS["park"]
 
 	# milestones: 0,1,2,3 stars at 0-2 / 3-5 / 6-8 / 9+ goals
 	var expect := {0: 0, 2: 0, 3: 1, 5: 1, 6: 2, 8: 2, 9: 3, 10: 3}
 	for n in expect:
 		g.records["street"]["goals"] = []
 		for i in range(int(n)):
-			g.records["street"]["goals"].append("g%d" % i)
+			g.records["street"]["goals"].append(street_ids[i])
 		var s: int = g.stars("street")
 		if s != int(expect[n]):
 			print("FAIL: %d goals should give %d stars, got %d" % [n, int(expect[n]), s])
@@ -45,13 +47,18 @@ func _initialize() -> void:
 	if g.goals_count("park") != 2:
 		print("FAIL: park should count 2 goals, got %d" % g.goals_count("park"))
 		failures += 1
+	# a goal a later version retired stays in the save but no longer counts
+	g.records["park"] = {"goals": ["mark", "tofu", "retired_goal"], "stars": 0}
+	if g.goals_count("park") != 2:
+		print("FAIL: a retired goal id should not count, got %d" % g.goals_count("park"))
+		failures += 1
 
 	# gate_crossed: beach unlocks at 4 total stars
 	# street 3 stars (9 goals) + park 1 star (3 goals) = 4 total
 	g.records["street"] = {"goals": [], "stars": 0}
 	for i in range(9):
-		g.records["street"]["goals"].append("s%d" % i)
-	g.records["park"] = {"goals": ["a", "b", "c"], "stars": 0}
+		g.records["street"]["goals"].append(street_ids[i])
+	g.records["park"] = {"goals": park_ids.slice(0, 3), "stars": 0}
 	g.records["beach"] = {"goals": [], "stars": 0}
 	g.records["market"] = {"goals": [], "stars": 0}
 	if g.total_stars() != 4:

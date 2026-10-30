@@ -1,16 +1,17 @@
 extends SceneTree
 
-# Walk 26: Rambla del Raval — The "El Gat de Botero" Boss Arena
-# Headless unit test verifying:
-# 1. Campaign registration (LEVELS, CAROUSEL, STAR_GATE, LEVEL_NAMES, gate_text, freedom_kind)
-# 2. LevelCheck.check(m) passes with zero issues
-# 3. 15 authored goals in LEVEL_GOAL_IDS["raval"] including clothesline, topple, boop, pigeons, swat
-# 4. BossGat state machine initialization and 4 leg pole registrations in m.poles
-# 5. Phase 1: Dodging swats and counter-pulling staggers the statue
-# 6. Phase 2: Bull Charges & Triple Counters (Clothesline, Palm smash, Human bowling)
-# 7. Phase 3: AT-AT cable wrap coil detection and topple trigger
-# 8. Belly Super Boop interaction via on_bark
-# 9. Save record schema safety (strict preservation of Game.records keys, Game.persist = false)
+# Rambla del Raval, El Gat de Botero (systems/boss_gat.gd), on a real walk:
+# - registration, a clean level check, and the fifteen goals the fight can earn
+# - the legs: rope points with furniture slip, kept out of the static bodies,
+#   that follow him in main.poles, main.rope_soft and the leash's own copy
+# - he wakes, prowls north only, and swats where the dust ring was: a hit
+#   knocks her, a near miss staggers him
+# - below half he charges; a taut leash across his path, a palm, or your
+#   human flung into him each stun him, and the rope's ends never count
+# - a bark on his nose while dazed is one boop per stun
+# - out of fight he walks back to his plinth; three legs within LEG_MEMORY
+#   tie him, he topples, and a bark on the snout settles him
+# - your human waits short of the plaça until then, and walks on after
 
 var checks := 0
 var failures: Array[String] = []
@@ -24,7 +25,7 @@ func _check(ok: bool, what: String) -> void:
 
 
 func _initialize() -> void:
-	create_timer(10.0).timeout.connect(func():
+	create_timer(20.0).timeout.connect(func():
 		print("FAIL: test watchdog timeout")
 		quit(1)
 	)
@@ -32,9 +33,9 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	var game = root.get_node("Game")
-	# Strictly enforce save record safety
+	var game: Node = root.get_node("Game")
 	game.persist = false
+	game._reset_persisted_state()
 	root.get_node("Sfx").muted = true
 	game.level_id = "raval"
 
@@ -45,204 +46,182 @@ func _run() -> void:
 	for k in range(3):
 		await physics_frame
 	m._skip_title()
+	m.auto_walk = false
 
 	var BG: GDScript = load("res://systems/boss_gat.gd")
 	var G: GDScript = load("res://systems/goals.gd")
 
-	# 1. Registration in campaign
-	_check(game.LEVELS.has("raval"), "raval is in LEVELS")
-	_check(game.CAROUSEL.has("raval"), "raval is in CAROUSEL")
-	_check(int(game.STAR_GATE.get("raval", 0)) == 43, "raval star gate is 43 stars")
-	_check(String(game.LEVEL_NAMES.get("raval", "")) == "Rambla del Raval", "level name is Rambla del Raval")
-	_check(m.gate_text == "RAMBLA DEL RAVAL", "gate text is RAMBLA DEL RAVAL")
-	_check(m.freedom_kind == "placa", "ends in placa freedom area")
-
-	# 2. Structural LevelCheck passes clean
+	# registration
+	_check(game.LEVELS.has("raval") and game.CAROUSEL.has("raval"), "raval is a walk")
+	_check(String(game.LEVEL_NAMES.get("raval", "")) == "Rambla del Raval", "named Rambla del Raval")
+	_check(m.gate_text == "RAMBLA DEL RAVAL", "gate text")
 	var problems: Array = load("res://world/level_check.gd").check(m)
 	_check(problems.is_empty(), "level check clean: %s" % str(problems))
 
-	# 3. 15 goals defined and valid
 	var goal_ids: Array = G.LEVEL_GOAL_IDS.get("raval", [])
-	_check(goal_ids.size() == 15, "raval has 15 goals (found %d)" % goal_ids.size())
-	_check("clothesline" in goal_ids, "'clothesline' goal exists")
-	_check("topple" in goal_ids, "'topple' goal exists")
-	_check("boop" in goal_ids, "'boop' goal exists")
-	_check("pigeons" in goal_ids, "'pigeons' goal exists")
-	_check("swat" in goal_ids, "'swat' goal exists")
+	_check(goal_ids.size() == 15, "fifteen goals (found %d)" % goal_ids.size())
+	for id: String in ["clothesline", "smash", "pummel", "pigeons", "swat"]:
+		_check(id in goal_ids, "'%s' goal on the list" % id)
+	var defs: Dictionary = m._goal_defs()
+	for id: String in goal_ids:
+		_check(defs.has(id), "goal '%s' has a definition" % id)
 
-	# 4. BossGat initialization & leg pole registration
-	var gat = m.get("boss_gat")
-	_check(gat != null, "boss_gat instance exists on main")
-	_check(gat.state == BG.State.IDLE, "starts in IDLE state")
-	_check(gat.hp == 100.0, "initial hp is 100")
-	_check(gat.phase == 1, "initial phase is 1")
-	_check(gat.leg_indices.size() == 4, "4 leg indices registered")
-	_check(gat.leg_poles.size() == 4, "4 leg positions stored")
-	for idx: int in gat.leg_indices:
-		_check(idx >= 0 and idx < m.poles.size(), "leg pole index %d in m.poles" % idx)
-
-	# Verify leg poles update with position
-	var init_leg_0: Vector2 = gat.leg_poles[0]
+	# the legs
+	var gat = m.boss_gat
+	_check(gat != null and gat.state == BG.State.IDLE, "starts asleep")
+	_check(gat.leg_indices.size() == 4, "four legs registered")
+	for k in range(gat.leg_indices.size()):
+		var idx: int = gat.leg_indices[k]
+		_check(idx >= int(m.body_pole_count), "leg %d has no static body" % k)
+		_check(gat.is_leg_index(idx), "leg %d is a leg index" % k)
+		_check(m.rope_soft.has(m.poles[idx]), "leg %d is a soft rope point" % k)
+		_check(m.leash.furniture_poles.has(m.poles[idx]), "leg %d slips like furniture" % k)
+	_check(not gat.is_leg_index(0), "the first palm is no leg")
 	gat.pos += Vector2(10.0, -20.0)
 	gat.update_leg_positions()
-	_check(gat.leg_poles[0] == init_leg_0 + Vector2(10.0, -20.0), "leg poles follow body position")
-	_check(m.poles[gat.leg_indices[0]] == gat.leg_poles[0], "m.poles updated with leg position")
-
-	# Reset position
-	gat.pos = Vector2(640.0, -480.0)
+	var leg0: Vector2 = gat.pos + BG.LEG_OFFSETS[0]
+	_check(m.poles[gat.leg_indices[0]] == leg0, "main.poles follows him")
+	_check(m.rope_soft[gat.leg_soft_indices[0]] == leg0, "rope_soft follows him")
+	_check(m.leash.furniture_poles.has(leg0), "the leash's furniture copy follows him")
+	gat.pos = BG.START_PLINTH
 	gat.update_leg_positions()
 
-	# 5. State transitions: IDLE -> PROWL
-	m.dog.global_position = Vector2(640.0, -280.0)
-	gat.tick_state(0.1)
-	_check(gat.state == BG.State.PROWL, "advancing dog triggers PROWL")
+	# wake and prowl
+	m.human.global_position = Vector2(640.0, -200.0)
+	m.dog.global_position = Vector2(640.0, BG.WAKE_Y - 40.0)
+	gat.tick_state(0.016)
+	_check(gat.state == BG.State.PROWL, "she walks past WAKE_Y: he climbs down")
+	m.dog.global_position = Vector2(640.0, 400.0)
+	var y0: float = gat.pos.y
+	m.human.global_position = Vector2(640.0, -1200.0)
+	for i in range(60):
+		gat.tick_state(0.016)
+	_check(gat.pos.y < y0, "he prowls ahead of your human")
+	var y1: float = gat.pos.y
+	m.human.global_position = Vector2(640.0, 200.0)
+	for i in range(60):
+		gat.tick_state(0.016)
+	_check(gat.pos.y <= y1, "he never walks back south")
 
-	# 6. State transitions: PROWL -> SWAT
+	# the swat: a hit, then a near miss
 	gat.swat_cooldown = 0.0
-	gat.tick_state(0.1)
-	_check(gat.state == BG.State.SWAT, "cooldown expiry triggers SWAT")
-	_check(gat.dust_rings.size() > 0, "swat spawns dust telegraph ring")
+	m.dog.global_position = gat.pos + Vector2(0.0, 90.0)
+	gat.tick_state(0.016)
+	_check(gat.state == BG.State.SWAT, "she comes close: he swats")
+	_check(not gat.dust_rings.is_empty(), "the dust ring telegraphs it")
+	var dodged0: int = m.gat_swats_dodged
+	var hp0: float = gat.hp
+	m.dog.global_position = gat.swat_pos
+	gat.tick_state(BG.SWAT_WARN + 0.01)
+	_check(gat.state == BG.State.PROWL, "the swat lands and he prowls on")
+	_check(m.gat_swats_dodged == dodged0 and gat.hp == hp0, "a hit is no dodge")
+	gat.swat_cooldown = 0.0
+	m.dog.global_position = gat.pos + Vector2(0.0, 90.0)
+	gat.tick_state(0.016)
+	m.dog.global_position = gat.swat_pos + Vector2(90.0, 0.0)
+	gat.tick_state(BG.SWAT_WARN + 0.01)
+	_check(m.gat_swats_dodged == dodged0 + 1, "a near miss is a dodge")
+	_check(is_equal_approx(gat.hp, hp0 - BG.DODGE_DAMAGE), "a dodge staggers him")
 
-	# Execute swat & dodge
-	var pre_dodges: int = m.gat_swats_dodged
-	var pre_hp: float = gat.hp
-	m.dog.global_position = gat.swat_pos + Vector2(60.0, 0.0)
-	gat.execute_swat()
-	_check(m.gat_swats_dodged > pre_dodges, "dog near swat telegraph earns dodge")
-	_check(gat.hp < pre_hp, "dodging swat inflicts stagger damage to boss")
+	# phase two
+	gat.damage_boss(gat.hp - BG.MAX_HP * 0.5)
+	_check(gat.phase == 2, "half his health gone: he charges")
 
-	# 7. Phase 2 Transition & Bull Charges
-	gat.damage_boss(40.0)
-	_check(gat.phase == 2, "reducing HP to <= 50 triggers Phase 2")
-	_check(gat.hp <= 50.0, "HP is now <= 50")
-
-	# Bull charge telegraph
-	gat.transition_to(BG.State.CHARGE_WARN)
-	_check(gat.state == BG.State.CHARGE_WARN, "transitions to CHARGE_WARN")
-	_check(gat.charge_dir.length() > 0.9, "charge_dir is normalized vector")
-
-	gat.tick_state(0.9)
-	_check(gat.state == BG.State.CHARGE, "warning expiry triggers CHARGE")
-
-	# Set HP for testing all 3 counters cleanly
-	gat.hp = 85.0
-
-	# 8. Counter 1: Clothesline Counter with taut leash
-	_check(not bool(m.get("gat_clotheslined")), "clotheslined initially false")
+	# the clothesline: a taut rope across his body, then only its ends
+	gat.hp = 90.0
 	gat.pos = Vector2(640.0, -1000.0)
 	gat.update_leg_positions()
-	for i in range(m.leash.pts.size()):
-		var t_frac := float(i) / float(m.leash.pts.size() - 1)
-		m.leash.pts[i] = Vector2(580.0 + t_frac * 120.0, -1000.0)
-	var orig_len := float(m.leash_len)
-	m.leash_len = 100.0
-	m.leash.rest_len = 100.0
-	var is_cl: bool = gat.check_clothesline()
-	_check(is_cl, "check_clothesline returns true when taut leash intersects cat")
-
-	# Process charge tick to trigger clothesline
-	var hp_before_cl: float = gat.hp
-	gat.tick_state(0.016)
-	_check(bool(m.get("gat_clotheslined")), "gat_clotheslined is true after collision")
-	_check(gat.hp <= hp_before_cl - 25.0, "clothesline deals 25 damage")
-	_check(gat.state == BG.State.STUNNED, "clothesline stuns El Gat")
-
-	# Move leash safely away for remaining tests
-	m.leash_len = orig_len
-	m.leash.rest_len = orig_len
-	for i in range(m.leash.pts.size()):
-		m.leash.pts[i] = Vector2(100.0 + float(i) * 5.0, 100.0)
-
-	# 9. Counter 2: Obstacle Collision (Palm tree crash)
+	m.dog.global_position = Vector2(500.0, -1000.0)
+	m.human.global_position = Vector2(780.0, -1000.0)
+	_lay_rope(m, Vector2(500.0, -1000.0), Vector2(780.0, -1000.0))
 	gat.transition_to(BG.State.CHARGE)
-	var palm_p: Vector2 = BG.PALMS[0]
-	gat.pos = palm_p + Vector2(10.0, 10.0)
-	_check(gat.check_obstacle_collision(), "check_obstacle_collision returns true near palm")
-	var hp_before_smash: float = gat.hp
+	gat.charge_dir = Vector2.ZERO
+	_check(gat.check_clothesline(), "a taut rope across him is a clothesline")
 	gat.tick_state(0.016)
-	_check(bool(m.get("gat_tree_smashed")), "gat_tree_smashed set to true")
-	_check(gat.hp <= hp_before_smash - 20.0, "trunk smash deals 20 damage")
-	_check(gat.state == BG.State.STUNNED, "obstacle smash stuns El Gat")
+	_check(bool(m.gat_clotheslined) and gat.state == BG.State.STUNNED, "the clothesline stuns him")
+	_check(is_equal_approx(gat.hp, 90.0 - BG.CLOTHESLINE_DAMAGE), "for CLOTHESLINE_DAMAGE")
+	gat.pos = m.leash.pts[0] + Vector2(-30.0, 0.0)
+	_check(not gat.check_clothesline(), "rope at her collar is no clothesline")
+	gat.pos = Vector2(640.0, -1000.0)
+	_lay_rope(m, Vector2(100.0, 100.0), Vector2(200.0, 100.0))
 
-	# 10. Counter 3: Human Fling Pummel
+	# one boop per stun
+	var nose: Vector2 = gat.pos + gat.face_dir * 48.0
+	var hp_b: float = gat.hp
+	_check(gat.on_bark_action(nose), "a bark on his nose while dazed is a boop")
+	_check(is_equal_approx(gat.hp, hp_b - BG.BOOP_DAMAGE), "the boop hurts his pride")
+	_check(not gat.on_bark_action(nose), "one boop per stun")
+
+	# the palm
+	gat.hp = 90.0
 	gat.transition_to(BG.State.CHARGE)
+	gat.charge_dir = Vector2.ZERO
+	gat.pos = BG.PALMS[4] + Vector2(10.0, 10.0)
+	gat.tick_state(0.016)
+	_check(bool(m.gat_tree_smashed) and gat.state == BG.State.STUNNED, "a palm in his path stuns him")
+
+	# your human, flung
+	gat.hp = 90.0
+	gat.transition_to(BG.State.CHARGE)
+	gat.charge_dir = Vector2.ZERO
 	gat.pos = Vector2(640.0, -1500.0)
 	m.human.global_position = gat.pos + Vector2(20.0, 20.0)
-	m.human.whirl_flung_t = 1.0 # Simulate tetherball launch
-	_check(gat.check_human_pummel(), "check_human_pummel returns true when flung human is close")
-	var hp_before_pummel: float = gat.hp
+	m.human.whirl_flung_t = 1.0
 	gat.tick_state(0.016)
-	_check(bool(m.get("gat_human_pummeled")), "gat_human_pummeled set to true")
-	_check(gat.hp <= hp_before_pummel - 30.0, "human fling deals 30 damage")
-	_check(gat.state == BG.State.STUNNED, "human pummel stuns El Gat")
+	_check(bool(m.gat_human_pummeled) and gat.state == BG.State.STUNNED, "your human flung into him stuns him")
+	m.human.whirl_flung_t = 0.0
 
-	# 11. State transitions: Arrival at plaza -> ROAR (Phase 3)
-	gat.pos.y = -4560.0
-	gat.transition_to(BG.State.ROAR)
-	_check(gat.state == BG.State.ROAR, "entering plaza triggers ROAR")
-	_check(gat.pos == BG.PEDESTAL_POS, "snaps to plaza pedestal")
+	# your human waits short of the plaça
+	m.human.global_position = Vector2(640.0, BG.HOLD_Y + 100.0)
+	gat.tick_state(0.016)
+	_check(m.human.tut_hold_y == BG.HOLD_Y, "your human holds at HOLD_Y while he is up")
+	_check(gat.status() == "" or gat.status() == gat.status().to_upper(), "the banner is in capitals")
 
-	# 12. AT-AT Leash Tangle / Coil detection
-	gat.wrap_coils = 0.0
-	gat.orbit_accum_angle = 0.0
-	_check(gat.wrap_coils < 1.0, "initially 0 coils")
+	# out of fight: home to the plinth
+	gat.hp = 0.0
+	gat.transition_to(BG.State.PROWL)
+	_check(gat.state == BG.State.RETREAT, "out of fight he retreats")
+	for i in range(1200):
+		gat.tick_state(0.05)
+		if gat.state != BG.State.RETREAT:
+			break
+	_check(gat.state == BG.State.ROAR and gat.pos == BG.PEDESTAL_POS, "he reaches his plinth and roars")
+	_check(gat.status().begins_with("WRAP THE LEASH"), "the banner asks for the tangle")
 
-	# Simulate 1 orbit
-	gat.orbit_accum_angle = TAU * 1.1
-	gat.update_cable_wrap(0.016)
-	_check(gat.wrap_coils >= 1.0, "1 orbit accumulates >= 1.0 coil")
-
-	# Simulate 2 orbits
-	gat.orbit_accum_angle = TAU * 2.1
-	gat.update_cable_wrap(0.016)
-	_check(gat.wrap_coils >= 2.0, "2 orbits accumulates >= 2.0 coils")
-
-	# Simulate 3 orbits -> triggers WRAPPED
-	gat.orbit_accum_angle = TAU * 3.1
-	gat.update_cable_wrap(0.016)
-	_check(gat.state == BG.State.WRAPPED, "3 coils triggers WRAPPED state")
-
-	# WRAPPED countdown -> triggers TOPPLED
+	# the tangle: two legs, a stale third, then three in time
+	m.elapsed = 100.0
+	gat.leg_touch_t.assign([100.0, 100.0, 100.0 - BG.LEG_MEMORY - 0.1, -INF])
+	gat.update_leg_tangle()
+	_check(gat.state == BG.State.ROAR and gat.legs_tied == 2, "a leg touched too long ago does not count")
+	gat.leg_touch_t[2] = 99.5
+	gat.update_leg_tangle()
+	_check(gat.state == BG.State.WRAPPED, "three legs in LEG_MEMORY tie him up")
 	gat.tick_state(1.0)
-	_check(gat.state == BG.State.TOPPLED, "WRAPPED transition leads to TOPPLED")
-	_check(bool(m.get("gat_toppled")), "m.gat_toppled set to true")
-	_check(m.prize_pos == BG.PRIZE, "golden yarn prize revealed at overturned kiosk")
-	_check(m.prize_text == BG.PRIZE_TEXT, "prize text set correctly")
+	_check(gat.state == BG.State.TOPPLED and bool(m.gat_toppled), "tied, he topples")
+	_check(not gat.on_bark_action(Vector2.ZERO) or gat.state != BG.State.PURR, "a bark far away does nothing")
+	m.dog.global_position = gat.snout_pos + Vector2(30.0, 0.0)
+	_check(gat.on_bark_action(gat.snout_pos), "a bark on the snout")
+	_check(gat.beaten() and bool(m.gat_booped), "settles him for good")
+	gat.tick_state(0.016)
+	_check(m.human.tut_hold_y != BG.HOLD_Y, "your human walks on into the plaça")
 
-	# 13. Super Boop interaction via on_bark
-	_check(not bool(m.get("gat_booped")), "m.gat_booped initially false")
-	var booped_far: bool = gat.on_bark_action(Vector2(0.0, 0.0))
-	_check(not booped_far, "barking far from snout does not trigger boop")
-
-	# Bark near snout triggers Super Boop
-	m.dog.global_position = gat.snout_pos + Vector2(5.0, 5.0)
-	var booped: bool = gat.on_bark_action(gat.snout_pos)
-	_check(booped, "barking near snout returns true")
-	_check(bool(m.get("gat_booped")), "m.gat_booped is now true")
-	_check(gat.state == BG.State.PURR, "boop transitions boss to PURR")
-	_check(gat.confetti.size() > 0, "victory confetti burst spawned")
-
-	# 14. Save Record Schema Safety
-	var test_rec: Dictionary = {
-		"bones": 5,
-		"time": 84.5,
-		"perfects": 1,
-		"stars": 3,
-		"goals": ["topple", "boop", "clothesline"],
-		"style": 240,
-	}
-	var required_keys := ["bones", "time", "perfects", "stars", "goals", "style"]
-	for rk: String in required_keys:
-		_check(test_rec.has(rk), "record schema has required key '%s'" % rk)
-	_check(test_rec.size() == 6, "record schema has strictly 6 canonical keys")
-	_check(game.persist == false, "game.persist remained false throughout test")
-
-	# Summary
-	print("test_boss_gat: %d checks, %d failures" % [checks, failures.size()])
-	if not failures.is_empty():
-		for f in failures:
-			printerr("  " + f)
-		quit(1)
-	else:
-		print("test_boss_gat: ALL CHECKS PASSED!")
+	_check(game.persist == false, "no save was written")
+	m.queue_free()
+	await process_frame
+	if failures.is_empty():
+		print("test_boss_gat: %d checks, OK" % checks)
 		quit(0)
+	else:
+		print("test_boss_gat: %d checks, %d FAILURES" % [checks, failures.size()])
+		quit(1)
+
+
+# Lay the rope straight from a to b, stretched well past its rest length.
+func _lay_rope(m: Node2D, a: Vector2, b: Vector2) -> void:
+	var n: int = m.leash.pts.size()
+	for i in range(n):
+		var p: Vector2 = a.lerp(b, float(i) / float(n - 1))
+		m.leash.pts[i] = p
+		if i < m.leash.prev.size():
+			m.leash.prev[i] = p
+	m.leash.rest_len = a.distance_to(b) * 0.8

@@ -1,6 +1,6 @@
 extends SceneTree
 
-# Comprehensive test suite verifying the 26-walk campaign expansion,
+# Comprehensive test suite verifying the 27-walk campaign expansion,
 # 15 Tony Hawk-style quests per walk, 5 Keystone Chase Milestone gates,
 # and THPS-style upgradable dog attributes.
 
@@ -34,8 +34,9 @@ func _run() -> void:
 	var level_check: GDScript = load("res://world/level_check.gd")
 	var main_scene: PackedScene = load("res://main.tscn")
 
+	# the autoload has already read this machine's save: start from none
 	game.persist = false
-	game.free_play = false
+	game._reset_persisted_state()
 
 	# 1. Campaign Registration & 15 Goals Per Walk
 	_check(game.LEVELS.size() == 27, "27 campaign walks registered in LEVELS: %d" % game.LEVELS.size())

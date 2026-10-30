@@ -420,20 +420,18 @@ memorable.
   Badalona rework is queued (station at the bottom, restaurants and surf
   clubs, the hotel plaza with the BADALONA sign as the off-leash area, the
   dog beach moved to a Platja de Llevant walk, rollerbladers). Plenty is left over for a sequel.
-  The campaign roadmap towards completion (v1.7X) targets 26 walks total:
-  - Chases every 5th walk: 5 (La Neteja sweeper), 10 (El Besòs flood with dual respites), 15 (Festa de Gràcia multiple monster chase with turn respites), 20 (El Veterinari clinic escape with human drag resistance).
-  - Walk 25: Els Búnquers del Carmel (sunset overlook).
-  - Walk 26: Rambla del Raval (El Gat de Botero Boss Arena: Phase 1 paw-swipe counter, Phase 2 bull-charge clothesline / lamppost stumble, AT-AT 360° leash wrap topple, pedestal victory cutscene).
+  The campaign as built for 1.67 is 27 walks:
+  - Five chases: La Neteja (the sweeper), El Besòs (the flood), El Veterinari (the clinic escape), Els Senglars (wild boars, walk 25) and Festa de Gràcia (the correfoc, walk 26). From El Besòs on, each chase walk gates the walks after it (`Game.CHASE_GATE`); a save from before the gates keeps every walk it had open.
+  - Walk 27, the finale: Rambla del Raval. El Gat de Botero prowls ahead and your human will not pass him into the plaça: dodge his telegraphed paw, then below half trip his charges with a taut leash, lure him into a palm or fling your human into him; out of fight he sits on his plinth and the rope round three of his legs topples him (systems/boss_gat.gd).
+  - Still on the list: Els Búnquers del Carmel (sunset overlook), and the victory scene on the plinth.
   - Free Play / Demo mode toggle in Settings unlocks all walks for practice with career persistence paused.
 - Character creator: two preset owners exist (HIM/HER); creator later.
   October 2026: the facelift moved every person onto one renderer
   (human_appearance.gd: head, hair styles, headwear, torso, weather
   outfits), so a creator is now picking values for that, not new drawing.
-- Dog roster (a later release, a major feature): a selector of dogs, each
-  with a name, a backstory, a size and their own handling (speed, pull,
-  nose, stamina), some locked until earned. Millie stays the first. Needs
-  the dog drawing split into data (coat, size, ears, muzzle, tail) the way
-  the people now are, and handling numbers per dog rather than constants.
+- Dog roster (shipped for 1.67): Millie, Pipa, Mochi, Bruna and Tito, each
+  with their own handling and a knack, the others opened by stars, and
+  bones to train any of them (`Game.DOGS`, the wardrobe's dog card).
 - "Bring Tofu home" quest (shipped v1.7, redesigned v1.7.1): an inside
   joke - the real Tofu is an escape artist. She turns up loose on the
   walk home and you herd her south from hiding spot to hiding spot (she

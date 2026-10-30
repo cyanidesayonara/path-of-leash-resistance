@@ -29,7 +29,9 @@ func _initialize() -> void:
 func _run() -> void:
 	Flow = load("res://hud/menu_flow.gd")
 	var game: Node = root.get_node("Game")
+	# the autoload has already read this machine's save: start from none
 	game.persist = false
+	game._reset_persisted_state()
 	root.get_node("Sfx").muted = true
 
 	_test_catalog_and_traits(game)

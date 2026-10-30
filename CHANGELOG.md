@@ -2,6 +2,76 @@
 
 Append-only session history, newest first.
 
+## 2026-10-30 - Review of #371-#380: the finale fights fair, the new walks draw, old saves keep their walks
+
+A review of the week's merged work, and the fixes for what it found.
+
+- **El Gat de Botero, rebuilt** (`systems/boss_gat.gd`). The fight before this
+  could not be won as described: the AT-AT orbit count never moved, a
+  teleport put him on the pedestal, a 999-second halt froze your human, and
+  most of the plaza drew on an overhead layer Raval never had. Now he
+  climbs off his plinth at the foot of the rambla and prowls ahead of your
+  human, who will not walk into the plaça past him (`HOLD_Y`, "Not past that
+  cat."). Every swat lands where its dust ring was, 0.85 s later; a near
+  miss staggers him. Below half he charges: a taut leash across his path
+  (not her collar end or your human's hand), a palm or a terrace, or your
+  human flung into him stuns him, and a bark on his nose while he is dazed
+  is one boop per stun. Out of fight he walks back to his plinth in the
+  plaça; the rope resting on three of his legs inside 1.5 s
+  (`Leash.touches`) ties him up, he topples, and a bark on his snout
+  settles him. His legs are rope points with furniture slip, so your human
+  never whirls round a walking cat, and they move in main's poles, the soft
+  rope points and the leash's own copy together. Banners say what to do
+  right now; sounds are at the game's levels; the trademark names are gone
+  from the code, the music and the docs.
+- **Raval drawn**: the palms have proper crowns, a ground shadow and their
+  grates; pigeons feed where the walk's flocks are; the overhead layer is
+  built for Raval and Gràcia.
+- **Els Senglars is a forest trail** (`systems/boars.gd`): it no longer gets
+  street paving and generic edges. El Bosc's woods, dirt and fallen log;
+  holm oaks to swing round (the "oaks" goal counts real pole swings);
+  boar wallows that splat as you charge through ("mud" counts each one);
+  and the boars stop at the dumpsters on the way home.
+- **Festa de Gràcia** (`systems/gracia.gd`): bunting the length of the
+  street and five papier-mâché arches (zoom under three for "decor"), a
+  castellers' stage, stalls, and a churro stand to sit pretty at for the
+  "churros" goal. The correfoc stops at the stage and the churro stand, and
+  is now a line of devils with spinning sparklers and a dragon breathing
+  sparks, drawn where it catches you.
+- **The chases**: the boars, the correfoc and the vet's assistants are drawn
+  where they are (their sway was hit-tested but never drawn); the correfoc's
+  respites hold once each, as the sweeper's do. Each chase shouts its own
+  words ("SNORT", "TRAMPLED!", "SINGED!") instead of the sweeper's.
+- **Goals that could not be earned**: the new walks' counters were never
+  declared, so they read zero. El Besòs's "splash" needed puddles it does
+  not have; it is "shallows" now, the flood's edge at speed on the run
+  home. Goals a later version retired no longer count toward totals.
+- **Saves**: a save from before the chase gates keeps every gated walk it
+  had already opened by stars or walked (`Game.gate_open`); the results
+  screen announces a walk only when it is really open; the star gates run
+  in walk order (Platja de Llevant 40, Els Senglars 41).
+- **Touch**: a GRAB button comes up when there is something to pick up,
+  since DIG no longer grabs; PEE during the urge presses POOP only.
+- **Llevant**: the groins, the solar pergola and the dog shower are solid.
+- Smaller: the intro's beret no longer shares the sneaker's mesh; "Uh oh..."
+  starts with a capital; the dog stat is "Quick Feet", not a second
+  "Agility"; Raval's subtitle is a place, like the others'; locked walks say
+  "Finish El Besòs to open this walk."
+- **Second pass** over these fixes: a charge into your human pummels once,
+  not on two frames; the hold below the plaça lets the leash out to full
+  length (the hold also stops the reel, and a short leash could not reach
+  round his legs); a charge begun beside a palm is not a smash; GRAB no
+  longer reads a ball freed on the way home; Els Senglars' trail verges
+  replace main's kerbs rather than drawing over them; Raval's palm shadows
+  are culled to the view; the shouts name El Gat.
+- **Tests**: `test_boss_gat.gd` exercises the real fight; `test_boar_chase`,
+  `test_campaign_mastery` and `test_chase_milestone_gates` run in CI; tests
+  that read Game start from an empty save rather than this machine's.
+- **Docs**: the Store listing and itch page say twenty-seven walks and five
+  chases, and What's new covers everything since 1.64 again (it had been
+  replaced by the last PR's notes); README, PROJECT.md and LEVEL_DESIGN.md
+  describe the finale as built.
+
 ## 2026-10-30 - Hardening: Pernil, par times, item placement, and control fixes
 
 - **Pernil and voice integrity**: Renamed secret item to the Catalan **pernil** (*peülla negra*), aligning with the game's Catalan naming rules for Barcelona items. Fixed double bone payout and toast repetition so finding the pernil credits +5 bones and toasts once cleanly.

@@ -1,6 +1,6 @@
 extends SceneTree
 
-# Test for Walk 20: Els Senglars chase threat (entities/boar_threat.gd)
+# Test for Walk 25: Els Senglars chase threat (entities/boar_threat.gd)
 # and systems/home_chase.gd integration.
 
 var checks := 0

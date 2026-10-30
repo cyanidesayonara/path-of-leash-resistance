@@ -343,6 +343,7 @@ var human_soak := 0.0          # 0 dry, 1 wet through
 var walkway_from := INF
 var walkway_rides := 0
 var splashes := 0
+var shallow_splashes := 0
 var splash_cd := 0.0
 # out in it, the owner soaks through in SOAK_T seconds; under cover, dries in DRY_T
 const SOAK_T := 150.0
@@ -503,6 +504,15 @@ var gat_clotheslined := false
 var gat_human_pummeled := false
 var gat_tree_smashed := false
 var boss_gat: RefCounted = null
+# Els Senglars (systems/boars.gd) and Festa de Gràcia (systems/gracia.gd)
+var boar_mud_splashes := 0
+var boar_mud_cd := 0.0
+var boar_swings := 0
+var boar_vaults_seen := 0
+var churros_eaten := 0
+var gracia_beg_t := 0.0
+var gracia_arches_zoomed := 0
+var gracia_arch_mask := 0
 # the pole she last vaulted, and whether she has since cleared it. Without
 # this she can sit in one pole's orbit re-triggering forever: the autowalk
 # stall watchdog caught it, and it would also have been a score exploit
@@ -713,6 +723,7 @@ var run_goals_hit := {}
 var run_goals_new := 0
 var run_pre_total_stars := 0
 var run_pre_level_stars := 0
+var run_pre_unlocked: Array[String] = []
 # the hazardous hard-to-reach collectible, one per level
 var prize_pos := Vector2(INF, INF)
 var prize_text := "grab the prize"
@@ -1284,7 +1295,7 @@ func _draw_paving(vt: float, vb: float, base: Color) -> void:
 			sh = 96.0
 		"site", "scrap":
 			return       # broken ground: no paving pattern at all
-		"park", "trail", "barri":
+		"park", "trail", "barri", "boars":
 			return       # dirt and gravel, not slabs
 	var row := int(floorf(vt / sh)) - 1
 	var y := float(row) * sh
@@ -1419,6 +1430,7 @@ func _edge_base_color() -> Color:
 	match lvl:
 		"oldtown", "spook": return Color(0.36, 0.33, 0.30)   # old stone
 		"neteja": return Color(0.40, 0.32, 0.28)             # warm stone, dawn
+		"gracia": return Color(0.42, 0.34, 0.29)             # the vila's warm render
 		"besos": return Color(0.58, 0.56, 0.52)              # the concrete flood wall
 		"station": return Color(0.48, 0.48, 0.52)            # tiled interior
 		"site": return Obres.YARD                            # the works compound
@@ -1475,6 +1487,10 @@ func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 	var style := lvl
 	if lvl == "guell":
 		style = "guell"
+	elif lvl == "boars":
+		style = "trail"      # the same Collserola wood as El Bosc
+	elif lvl == "gracia":
+		style = "oldtown"    # the vila's low tiled houses
 	if lvl == "market":
 		# inside the hall the edge is the hall's own roof; outside it, the city's
 		var in_hall: bool = r.position.y < LevelBuild.MERCAT_ARCH_Y and r.end.y > LevelBuild.MERCAT_DOOR_Y
@@ -1819,7 +1835,8 @@ func _draw_grass_detail(c: Object, vt: float, vb: float) -> void:
 	var dark := Color(0.16, 0.30, 0.16, 0.55)
 	var lite := Color(0.50, 0.66, 0.36, 0.55)
 	var seedc := Color(0.86, 0.82, 0.62, 0.7)
-	if lvl == "trail":
+	var forest := lvl == "trail" or lvl == "boars"
+	if forest:
 		# the forest floor: browner, and no meadow flowers under the trees
 		dark = Color(0.14, 0.22, 0.12, 0.6)
 		lite = Color(0.42, 0.50, 0.26, 0.5)
@@ -1843,7 +1860,7 @@ func _draw_grass_detail(c: Object, vt: float, vb: float) -> void:
 					var ln := 5.0 + fmod(h * 13.0 + float(bl), 1.0) * 3.5
 					c.draw_line(foot, foot + Vector2.from_angle(a) * ln, lite if bl == 1 else dark, 1.6)
 				var kind := int(h * 1000.0) % 29
-				if lvl == "trail" and kind < 12:
+				if forest and kind < 12:
 					# ferns, and leaves come down off the trees
 					if kind < 7:
 						for fr in range(5):
@@ -1852,7 +1869,7 @@ func _draw_grass_detail(c: Object, vt: float, vb: float) -> void:
 					else:
 						c.draw_circle(p + Vector2(4.0, 2.0), 2.4, Color(0.62, 0.42, 0.18, 0.8))
 						c.draw_circle(p + Vector2(-3.0, 4.0), 2.0, Color(0.52, 0.34, 0.14, 0.8))
-				elif kind == 0 and lvl != "trail":
+				elif kind == 0 and not forest:
 					var fc: Color = flowers[int(h * 97.0) % 3]
 					for pe in range(4):
 						c.draw_circle(p + Vector2(3.0, -7.0) + Vector2.from_angle(float(pe) * PI * 0.5) * 1.8, 1.4, fc)
@@ -2905,6 +2922,19 @@ func sheltered(p: Vector2) -> bool:
 		if r.has_point(p):
 			return true
 	return false
+
+
+# El Besòs: the flood's shallow edge, crossed at speed, is the same trick as
+# El Diluvi's puddles (she is in it this frame; the caller checked)
+func _tick_shallows(delta: float) -> void:
+	splash_cd = maxf(0.0, splash_cd - delta)
+	if splash_cd > 0.0 or dog.velocity.length() <= SPLASH_SPEED:
+		return
+	shallow_splashes += 1
+	splash_cd = 0.8
+	Sfx.play("splash", 1.1)
+	combo.add("SPLASH", 3)
+	float_text(dog.global_position + Vector2(0, -26), "SPLASH!", Color(0.75, 0.88, 1.0))
 
 
 # El Diluvi: the owner soaks in the open and dries under cover; the dog
@@ -5777,7 +5807,7 @@ func _update_hud() -> void:
 		# saying so is never news. What is news is that he has stopped MOVING,
 		# which is the part you can actually spend.
 		hud_status = "LOOSE LEASH! %ds LEFT" % int(ceil(human.call_left()))
-	elif walk_mod != null and walk_mod.has_method("idle_status"):
+	elif walk_mod != null and walk_mod.has_method("idle_status") and walk_mod.idle_status(self) != "":
 		hud_status = walk_mod.idle_status(self)
 	elif pee >= 0.999:
 		hud_status = "FULL TANK! GO MARK A SPOT"
@@ -5973,6 +6003,7 @@ func _physics_process(delta: float) -> void:
 			# wet ground, and one sideways scale inside her tick
 			dog.slick = true
 			dog.flooded = true
+			_tick_shallows(delta)
 	if lvl == "rain":
 		_tick_wet(delta)
 	dog.ice = Game.weather == "snow"
@@ -9265,7 +9296,7 @@ func _bodily(delta: float) -> void:
 			if dog.global_position.y < urge_y:
 				poop_state = 1
 				urge_timer = 35.0
-				float_text(dog.global_position, "uh oh...", Color(1, 0.9, 0.6))
+				float_text(dog.global_position, "Uh oh...", Color(1, 0.9, 0.6))
 		1:
 			urge_timer -= delta
 			var squatting: bool = Input.is_action_pressed("poop") \
@@ -9414,7 +9445,11 @@ func _nearest_markable(pos: Vector2) -> Vector2:
 			if d < best_d:
 				best_d = d
 				best = hp
-	for p in poles:
+	for pi in range(poles.size()):
+		var p: Vector2 = poles[pi]
+		# El Gat's legs walk off with a mark (marks are kept by position)
+		if boss_gat != null and boss_gat.is_leg_index(pi):
+			continue
 		if not marks.has(p):
 			var d := pos.distance_to(p)
 			if d < best_d:
@@ -10263,7 +10298,7 @@ func _draw_world() -> void:
 			walkway = Estacio.TERRAZZO          # the concourse's polished terrazzo
 		elif lvl == "guell":
 			walkway = Color(0.80, 0.72, 0.56)   # sandy gravel, the park's own ground
-		elif lvl == "trail":
+		elif lvl == "trail" or lvl == "boars":
 			grass = TRAIL_FLOOR
 			walkway = TRAIL_DIRT
 		elif lvl == "park" or lvl == "barri":
@@ -10286,7 +10321,7 @@ func _draw_world() -> void:
 		else:
 			_wc.draw_rect(Rect2(-400, ctop, 2100, bottom - ctop), grass)
 		# leaf litter on the forest floor, grass tufts everywhere else
-		var tuft_cols: Array = TRAIL_LITTER if lvl == "trail" else [COL_GRASS_DARK]
+		var tuft_cols: Array = TRAIL_LITTER if (lvl == "trail" or lvl == "boars") else [COL_GRASS_DARK]
 		if lvl == "scrap":
 			tuft_cols = [Color(0.16, 0.15, 0.14, 0.6)]    # oil dripped into the gravel
 		for ti in range(tufts.size()):

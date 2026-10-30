@@ -1,6 +1,6 @@
 extends Node2D
 
-# The Correfoc festival pursuers for Walk 25: Festa de Gràcia.
+# The Correfoc festival pursuers for Walk 26: Festa de Gràcia.
 # A troupe of festive fire devils (Colla de Diables de Gràcia) with sparklers,
 # pitchforks (maces de foc), and a paper-mâché fire dragon (Drac de Gràcia).
 # Implements the standard chase threat interface (setup, advance, caught,
@@ -18,6 +18,10 @@ const SPARK_YELLOW := Color(0.98, 0.94, 0.40)
 const SPARK_ORANGE := Color(0.96, 0.52, 0.12)
 const DRUM_WOOD := Color(0.55, 0.38, 0.22)
 const DRUM_HEAD := Color(0.92, 0.90, 0.85)
+const SMOKE := Color(0.62, 0.60, 0.62, 0.30)
+const SHADOW := Color(0.04, 0.05, 0.08, 0.22)
+# across the street, the middle ones left out for the dragon
+const DEVILS := 7
 
 const SURGE := 0.25
 const CATCH_UP := 1.35
@@ -76,12 +80,14 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 
 	front_y += cur_speed * delta
 
-	# Check jam waypoints
-	for jp in jams:
-		if absf(front_y - jp.y) < 18.0:
+	# a respite holds the troupe once, then it is behind them
+	for i in range(jams.size()):
+		if front_y >= jams[i].y:
+			jam_side = signf(jams[i].x - cx)
+			jam_at = jams[i]
+			jams.remove_at(i)
 			jam_t = JAM_SECS
 			jammed_now = true
-			jam_at = jp
 			break
 
 	# Gentle festive swaying
@@ -119,41 +125,76 @@ func set_kerb_blocks(blocks: Array[Rect2]) -> void:
 	kerb_blocks = blocks
 
 
-func sweep_junk(_junk: Array) -> void:
-	pass
+func sweep_junk(_junk: Array) -> int:
+	return 0
 
 
+# Seen from above, coming south: the smoke they leave, the dragon down the
+# middle breathing sparks at the street ahead, and a line of devils across the
+# street, each spinning a sparkler on a pole. Everything sits north of the
+# front (y <= 0), where caught() reaches.
 func _draw() -> void:
 	var b := ShapeBatch.new()
-	var center := Vector2(cx + sway, front_y)
+	# home_chase keeps the node at (walk_cx, front_y): only the sway is local
+	var c := Vector2(sway, 0.0)
+	var t := float(AnimClock.msec()) * 0.001
+	var reach := half * 0.82
 
-	# 1. Paper-mâché Fire Dragon (Drac de Gràcia) in front
-	# Dragon head snout & neck
-	b.circle(center + Vector2(0.0, -15.0), 32.0, DRAGON_GREEN)
-	b.circle(center + Vector2(0.0, -35.0), 24.0, DRAGON_GREEN)
-	b.circle(center + Vector2(0.0, -10.0), 16.0, DRAGON_BELLY)
-	# Red glowing eyes
-	b.circle(center + Vector2(-12.0, -32.0), 5.0, DRAGON_EYE)
-	b.circle(center + Vector2(12.0, -32.0), 5.0, DRAGON_EYE)
+	# smoke hanging behind the troupe
+	for i in range(7):
+		var sx := (float(i) / 6.0 - 0.5) * reach * 2.0
+		var drift := sin(t * 0.7 + float(i) * 1.9) * 10.0
+		b.circle(c + Vector2(sx + drift, -150.0 - float(i % 3) * 14.0), 46.0, SMOKE)
+	for i in range(5):
+		var sx := (float(i) / 4.0 - 0.5) * reach * 1.6
+		b.circle(c + Vector2(sx, -108.0 + sin(t + float(i)) * 6.0), 34.0, SMOKE.lightened(0.08))
 
-	# 2. Fire Devils (Colla de Diables) flanking the dragon
-	for side: float in [-1.0, 1.0]:
-		var devil_pos := center + Vector2(side * 55.0, -50.0)
-		# Robes
-		b.circle(devil_pos, 18.0, DEVIL_RED)
-		b.circle(devil_pos + Vector2(0.0, -6.0), 14.0, DEVIL_BLACK)
-		# Horned hoods
-		b.circle(devil_pos + Vector2(-6.0, -16.0), 4.0, DEVIL_HORN)
-		b.circle(devil_pos + Vector2(6.0, -16.0), 4.0, DEVIL_HORN)
-		# Pitchfork sparkler (maça de foc) tip
-		var mace_tip := devil_pos + Vector2(side * 22.0, 20.0)
-		b.circle(mace_tip, 8.0, SPARK_ORANGE)
-		b.circle(mace_tip, 5.0, SPARK_YELLOW)
-		b.circle(mace_tip + Vector2(side * 6.0, 6.0), 3.0, SPARK_YELLOW)
+	# the dragon: tail to head, scaled, its head low and its jaws open
+	for k in range(5):
+		var sy := -150.0 + float(k) * 22.0
+		var wob := sin(t * 3.0 - float(k) * 0.8) * 6.0
+		var r := 15.0 + float(k) * 2.6
+		b.circle(c + Vector2(wob + 4.0, sy + 6.0), r, SHADOW)
+		b.circle(c + Vector2(wob, sy), r, DRAGON_GREEN.darkened(0.12))
+		b.circle(c + Vector2(wob, sy - 2.0), r * 0.55, DRAGON_GREEN.lightened(0.12))
+		b.circle(c + Vector2(wob - r * 0.7, sy), 4.0, DRAGON_BELLY)
+		b.circle(c + Vector2(wob + r * 0.7, sy), 4.0, DRAGON_BELLY)
+	var head := c + Vector2(sin(t * 3.0 + 0.8) * 5.0, -34.0)
+	b.circle(head + Vector2(4.0, 6.0), 26.0, SHADOW)
+	b.circle(head, 26.0, DRAGON_GREEN)
+	b.circle(head + Vector2(0.0, 16.0), 16.0, DRAGON_BELLY)
+	b.circle(head + Vector2(-13.0, -8.0), 6.0, DRAGON_EYE)
+	b.circle(head + Vector2(13.0, -8.0), 6.0, DRAGON_EYE)
+	b.circle(head + Vector2(-13.0, -9.0), 2.5, SPARK_YELLOW)
+	b.circle(head + Vector2(13.0, -9.0), 2.5, SPARK_YELLOW)
+	# horns, and a fan of sparks out of the jaws toward the street ahead
+	b.circle(head + Vector2(-20.0, -20.0), 5.0, DEVIL_HORN)
+	b.circle(head + Vector2(20.0, -20.0), 5.0, DEVIL_HORN)
+	for k in range(9):
+		var f := fposmod(t * 1.6 + float(k) * 0.37, 1.0)
+		var ang := PI * 0.5 + sin(float(k) * 2.4) * 0.45
+		var p := head + Vector2(0.0, 26.0) + Vector2(cos(ang), sin(ang)) * f * 28.0
+		b.circle(p, 4.5 * (1.0 - f) + 1.0, SPARK_YELLOW if k % 2 == 0 else SPARK_ORANGE)
 
-	# 3. Festive spark clouds
-	b.circle(center + Vector2(-25.0, 5.0), 6.0, SPARK_YELLOW)
-	b.circle(center + Vector2(28.0, 8.0), 7.0, SPARK_ORANGE)
-	b.circle(center + Vector2(5.0, 18.0), 5.0, SPARK_YELLOW)
+	# the devils, in a line across the street
+	for i in range(DEVILS):
+		var u := float(i) / float(DEVILS - 1) * 2.0 - 1.0
+		if absf(u) < 0.3:
+			continue
+		var bob := sin(t * 5.0 + float(i) * 1.3) * 3.0
+		var dp := c + Vector2(u * reach, -62.0 + absf(u) * 14.0 + bob)
+		b.circle(dp + Vector2(4.0, 6.0), 17.0, SHADOW)
+		b.circle(dp, 17.0, DEVIL_RED)
+		b.circle(dp + Vector2(0.0, -4.0), 11.0, DEVIL_BLACK)
+		b.circle(dp + Vector2(-8.0, -13.0), 3.5, DEVIL_HORN)
+		b.circle(dp + Vector2(8.0, -13.0), 3.5, DEVIL_HORN)
+		# the sparkler on its pole, held out ahead and spinning
+		var mace := dp + Vector2(-signf(u) * 6.0, 26.0)
+		b.line(dp + Vector2(0.0, 6.0), mace, DRUM_WOOD, 3.0)
+		b.circle(mace, 6.0, SPARK_ORANGE)
+		b.circle(mace, 3.5, SPARK_YELLOW)
+		for k in range(6):
+			var a := t * 9.0 + float(k) * TAU / 6.0 + float(i)
+			b.circle(mace + Vector2(cos(a), sin(a)) * 13.0, 2.4, SPARK_YELLOW if k % 2 == 0 else SPARK_ORANGE)
 
 	b.flush(self)

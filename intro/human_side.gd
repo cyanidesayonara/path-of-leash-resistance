@@ -73,7 +73,7 @@ const OPEN_HAND := [Vector2(-2, -4.5), Vector2(4, -4.6), Vector2(9, -3.4), Vecto
 const PHONE_BODY := [Vector2(-4, -11), Vector2(3.5, -11), Vector2(3.5, 11), Vector2(-4, 11)]
 
 # cache keys: shape * 100000 + variant * 100 + light step
-enum { K_TORSO = 1, K_FACE, K_HAIR, K_SNEAKER, K_HAND, K_MOUTH, K_GLOW, K_STATIC }
+enum { K_TORSO = 1, K_FACE, K_HAIR, K_SNEAKER, K_HAND, K_MOUTH, K_GLOW, K_STATIC, K_HAT }
 
 static var _v := PackedVector2Array()    # the frame's triangle list
 static var _col := PackedColorArray()
@@ -549,7 +549,7 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 			Vector2(-20, -9), Vector2(-16, -26), Vector2(7, -27), Vector2(23, -17),
 			Vector2(25, -11), Vector2(15, -9), Vector2(-3, -11)
 		])
-		_group([["p", _shape(K_HAIR + 1, 0, cap_pts, _light_in(hx, hy), 2.2), hxf, hat_col, false]], IW)
+		_group([["p", _shape(K_HAT, 0, cap_pts, _light_in(hx, hy), 2.2), hxf, hat_col, false]], IW)
 		_line(hxf * Vector2(11, -9), hxf * Vector2(27, -7), OUT, 2.2)
 		_line(hxf * Vector2(11, -9), hxf * Vector2(27, -7), _shade(hat_col), 1.6)
 	# the eye under a lowered lid, looking down into the screen; wide on the jolt

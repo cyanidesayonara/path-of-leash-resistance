@@ -782,9 +782,9 @@ right-angle turns come first.
 
 Detours come after the walks: one room to prove the door, then the rest.
 
-## The Grand 26-Walk Campaign Roadmap (v1.63 → v1.7X)
+## The campaign roadmap (planned at v1.63)
 
-The complete structure to finish *Path of Leash Resistance*, structured symmetrically around 26 total walks with a high-stakes chase every 5th walk and concluding with the epic Boss Arena:
+The plan as written at v1.63, a chase every fifth walk and a boss to end on. What 1.67 built differs: 27 walks in `Game.LEVELS` order, with Festa de Gràcia (the correfoc) as walk 26 after Els Senglars (wild boars, walk 25), no Passeig de Gràcia or Búnquers walk yet, and the finale as described under Walk 26 below.
 
 ### The Roster and Chases
 - **Walks 1–4**: *El Barri*, *La Rambla*, *El Parc*, *Passeig Marítim*.
@@ -799,11 +799,12 @@ The complete structure to finish *Path of Leash Resistance*, structured symmetri
 - **Walk 20: El Veterinari (Chase 4 — The Clinic Escape)**: Millie reluctantly enters the vet clinic (an indoor waiting room off-leash area with other nervous pets on benches). Once she gets near the examination door and smells rubbing alcohol and rubber gloves, she panics and bolts out! Veterinary assistants with giant cones of shame and butterfly nets give chase. Her owner tries to drag her back toward the clinic ("Millie heel! It's just a checkup!"), adding leash resistance that Millie must overcome using zoomies, corner weaves, and obstacle slingshots.
 - **Walks 21–24**: *Tibidabo / Funicular* (funicular slopes, amusement park overlook), *Passeig de Gràcia* (Modernist facades, luxury pavement), *Carretera de les Aigües* (panoramic dirt trail above the city; built as walk 22, `aigues`), *Parc del Laberint d'Horta* (cypress hedge maze walk).
 - **Walk 25: Els Búnquers del Carmel**: High atmospheric sunset overlook over the entire city, setting the emotional and scenic stage for the finale.
-- **Walk 26: Rambla del Raval (The Grand Finale — El Gat de Botero Boss Arena)**:
-  - **Arena**: The wide palm-lined central pedestrian promenade of Rambla del Raval, with outdoor terraces, iron lampposts, and stone benches.
-  - **Phase 1 (100% → 50% HP)**: El Gat strikes with sweeping heavy paw swipes. Millie dodges, loops the leash around the extended limb, and yanks/flings to damage and stagger the statue.
-  - **Phase 2 (50% → 0% HP)**: El Gat switches to high-speed Bull Charges down the promenade. Millie clotheslines the cat against lampposts, causes obstacle collisions, or flings her human to trip it, then performs the full **360° AT-AT leash wrap** to topple the giant cat onto its stone plinth.
-  - **Victory Cutscene**: The cat is restored to a motionless bronze statue; Millie trot-hops up, sniffs it, lifts a leg on the pedestal to claim victory, and trots home to the sofa.
+- **Walk 26 as planned, built as walk 27: Rambla del Raval (the finale, El Gat de Botero)** (`systems/boss_gat.gd`):
+  - **Arena**: the wide palm-lined promenade of the Rambla del Raval, terraces down both sides, and the cat's empty plinth at the foot of it. The plaça at the top, with his second plinth, is where your human will not go until he is dealt with (`HOLD_Y`).
+  - **The prowl**: he climbs down as she sets off and keeps ahead of your human. Every swat is telegraphed by a dust ring where the paw will land (`SWAT_WARN`, 0.85 s); a near miss staggers him.
+  - **Below half**: he charges her down a red lane. A taut leash across his path trips him (clothesline), a palm or a terrace in the way stuns him (smash), and your human flung into him knocks him silly (pummel). Dazed, a bark on his nose is a boop.
+  - **The tangle**: out of fight he walks back to the plinth in the plaça and sits. The leash resting on three of his four legs within 1.5 s ties him up; he topples, and a bark on his snout settles him. Your human walks on into the plaça.
+  - **Not built yet**: a victory scene on the plinth.
 
 ### Artsy Detours (Hidden in plain sight)
 - Museum and gallery side-rooms ("EXPOSICIÓ - ENTRADA LLIURE") off major walks:

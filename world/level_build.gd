@@ -104,8 +104,7 @@ const CROSS_SECTIONS := {
 	"aigues": ["none", 0.0, "none", 0.0],          # the fence and the cut bank at the track
 	"horta": ["none", 0.0, "none", 0.0],           # lawns and the maze drawn in systems/horta.gd
 	"raval": ["none", 0.0, "none", 0.0],           # promenade and plaza drawn in systems/boss_gat.gd
-	"boars": ["none", 0.0, "none", 0.0],           # hillside trail drawn in systems/boars.gd
-	"gracia": ["none", 0.0, "none", 0.0],          # festival street drawn in systems/gracia.gd
+	"gracia": ["none", 0.0, "none", 0.0],          # a narrow street: the houses at the paving
 	# flood wall on the left, grass then the river on the right
 	"besos": ["none", 0.0, "grass", 120.0],
 }
@@ -1962,6 +1961,10 @@ static func build_level_data(m: Node2D) -> void:
 	m.flock_ys = Array([randf_range(-1800.0, -800.0), randf_range(-4400.0, -2600.0)], TYPE_FLOAT, &"", null)
 	if m.lvl != "street":
 		m.flock_ys.insert(1, randf_range(-2600.0, -1900.0))
+	if m.lvl == "raval":
+		m.flock_ys.clear()
+		for sp: Vector2 in BossGat.PIGEON_SPOTS:
+			m.flock_ys.append(sp.y)
 	for hp in hyd_list:
 		if m.pond.size.x > 0.0 and m.pond.grow(30.0).has_point(hp):
 			continue
@@ -2178,10 +2181,10 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "raval":
 		for r: Rect2 in BossGat.wrap_rects():
 			add_rope_rect(m, r)
+		# El Gat's legs walk, so they come after the bodies and the radii fill:
+		# rope contacts with furniture slip, and nothing solid under them
 		if m.boss_gat != null:
-			for idx in m.boss_gat.leg_indices:
-				if idx >= 0 and idx < m.rope_radii.size():
-					m.rope_radii[idx] = BossGat.LEG_RADIUS + 2.0
+			m.boss_gat.register_legs(m)
 	if m.lvl == "boars":
 		for r: Rect2 in Boars.wrap_rects():
 			add_rope_rect(m, r)
@@ -3205,6 +3208,11 @@ static func build_walls(m: Node2D) -> void:
 		add_rect_body(m, Passeig.GYM_RECT.get_center(), Passeig.GYM_RECT.size)
 		add_rect_body(m, Passeig.HOTEL_RECT.get_center(), Passeig.HOTEL_RECT.size)
 		add_rect_body(m, Passeig.HOTEL_SIGN_RECT.get_center(), Passeig.HOTEL_SIGN_RECT.size)
+	# the groins out into the surf, the solar pergola and the dog shower
+	if m.lvl == "llevant":
+		for sr: Array in level_solid_rects(m):
+			var r: Rect2 = sr[1]
+			add_rect_body(m, r.get_center(), r.size)
 	# THE BUILDING LINE is solid (#65): she used to be able to walk out onto
 	# the roofs, because the only walls were at the level edges. Segments
 	# follow the path where it bends, with gaps where a road crosses, so a
@@ -3584,7 +3592,7 @@ static func build_entities(m: Node2D) -> void:
 	m.edge_layer.z_index = -5   # behind everything in the world
 	# what hangs over the walk, above everyone (El Gotic's bridge, El Mercat's
 	# arches, La Castanyada's lantern strings)
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "beach" or m.lvl == "llevant" or m.lvl == "scrap" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "tibidabo":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "beach" or m.lvl == "llevant" or m.lvl == "scrap" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "tibidabo" or m.lvl == "raval" or m.lvl == "gracia":
 		var ov := Node2D.new()
 		ov.set_script(load("res://world/overheadlayer.gd"))
 		ov.z_index = 14

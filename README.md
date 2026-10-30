@@ -30,7 +30,7 @@ you want to go; constant hauling wears their patience down until they say
   tangles with other people's leashes.
 - **A human with patience**, who telegraphs everything they are about to do
   ("Ring ring!", "Ooh!") and is never smarter than that.
-- **Twenty-six walks in and around Barcelona**, each built as its own place, plus a
+- **Twenty-seven walks in and around Barcelona**, each built as its own place, plus a
   first walk that teaches one trick at a time. Every walk can be played in
   any weather, by day or at night.
 - **Off the leash at the end**: a dog park, a dog beach, a clearing in the
@@ -41,9 +41,15 @@ you want to go; constant hauling wears their patience down until they say
   near misses.
 - **Dares**: a dare-giver on every walk, each with their own tune. Bark to
   take a dare, then land the tricks before the music runs out.
-- **Three chases.** A street sweeper careens down a back street at dawn, and
+- **Five chases.** A street sweeper careens down a back street at dawn, and
   you drag your oblivious human home ahead of it. On El Besòs the river
-  comes home with you, and in El Veterinari you bolt from the vet's.
+  comes home with you, in El Veterinari you bolt from the vet's, wild boars
+  come down Els Senglars after you, and the correfoc's fire devils chase
+  you through Gràcia.
+- **Five dogs**, each with a knack of their own, opened with stars, and bones
+  to train them.
+- **A finale**: on the Rambla del Raval, Botero's fat bronze cat climbs off
+  his plinth, and your human will not pass him until you deal with him.
 - **Moods**: a fright, a bark-off or a run off the leash leaves her jumpy,
   barky, full of zoomies or flat, and each changes how she moves.
 - **Ground you can feel**: grass and mud slow her but hold scent, sand drags
@@ -82,7 +88,9 @@ you want to go; constant hauling wears their patience down until they say
 | La Carretera de les Aigües | the hillside hike |
 | El Laberint d'Horta | the cypress maze |
 | Platja de Llevant | the dog beach at the far end of the coast |
-| Rambla del Raval | the Botero cat boss arena |
+| Els Senglars | the wild boar trail |
+| Festa de Gràcia | the decorated festival street |
+| Rambla del Raval | the finale, with Botero's bronze cat |
 
 ## Controls
 
@@ -92,8 +100,10 @@ whatever you used last.
 | Action | Keyboard | Controller |
 |---|---|---|
 | Move | WASD or arrows | left stick |
-| Dig in (hold): brace against the leash, and squat when nature calls | Space | A |
+| Dig in (hold): brace against the leash | Space | A |
 | Mark a spot (hold) | Q | X |
+| Squat when nature calls (hold) | F | Y |
+| Pick up | G | LB |
 | Bark: stops your human for a beat, scares off squirrels | E | B |
 | Run | Shift | RB |
 | Goals | Tab | d-pad up |
@@ -101,7 +111,8 @@ whatever you used last.
 | Start again | R | Start |
 
 On a phone or tablet: a stick on the left, DIG, PEE, BARK and RUN on the
-right, and MENU at the top.
+right (PEE says POOP when nature calls, and GRAB comes up beside them when
+there is something to pick up), and MENU at the top.
 
 ## Building and running
 
@@ -123,7 +134,7 @@ Web export (needs the web export templates, see AGENTS.md):
 godot\Godot_v4.7-stable_win64_console.exe --headless --path . --export-release "Web" build/web/index.html
 ```
 
-Releasing is a tag. v1.61 is the last one. The next tag builds web and
+Releasing is a tag. v1.66 is the last one. The next tag builds web and
 Windows and pushes each to its own itch channel. AGENTS.md has the rest:
 tests, screenshots and benchmarks.
 

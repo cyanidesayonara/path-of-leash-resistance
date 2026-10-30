@@ -157,7 +157,7 @@ const STYLES := {
 	# Festa de Gràcia: festive neighborhood carnival rhythm with guitar, whistle, and festive claps
 	"gracia": {"bpm": 122, "key": 5, "lead": "guitar", "lead2": ["whistle", 0], "comp": "rumba",
 		"bass": "eighths", "drums": "claps", "swing": 0.06, "verb": 0.24},
-	# Rambla del Raval: thrilling high-energy Final Fantasy VII style boss battle coup de grâce
+	# Rambla del Raval: the finale's fight, fast and minor, its own chords and melody
 	"raval": {"bpm": 148, "key": 0, "minor": true, "lead": "guitar", "lead2": ["accordion", 0], "lead2_all": true,
 		"comp": "push", "bass": "eighths", "drums": "drive", "verb": 0.20, "chords": RAVAL_BOSS_CHORDS, "mel": RAVAL_BOSS_MELODY},
 	"freedom": {"bpm": 120, "key": 5, "lead": "whistle", "lead2": ["glock", 12], "comp": "arp",

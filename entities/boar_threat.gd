@@ -118,6 +118,8 @@ func sweep_junk(_junk: Array) -> int:
 
 
 func _draw() -> void:
+	# home_chase keeps the node at (walk_cx, front_y); caught() reads the sway
+	draw_set_transform(Vector2(sway, 0.0))
 	var b := ShapeBatch.new(self)
 
 	# 1. Ground contact shadows
