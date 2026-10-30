@@ -147,9 +147,9 @@ func _live() -> void:
 	m.match_day.phase = MatchDay.Ph.KICKOFF
 	_check(not m.crowded(), "kick-off sends the thieves off")
 	var ids: Array = load("res://systems/goals.gd").LEVEL_GOAL_IDS["partit"]
-	_check(ids.size() == 12 and "march" in ids and "scarf" in ids and "kickabout" in ids
+	_check(ids.size() == 15 and "march" in ids and "scarf" in ids and "kickabout" in ids
 		and not ("hi" in ids) and not ("combo" in ids) and not ("tofu" in ids),
-		"twelve goals, and not a thirteenth")
+		"fifteen goals with the Tony Hawk quests")
 	var march_goal: Dictionary = load("res://systems/goals.gd").defs(m)["march"]
 	m.march.passed = false
 	m.march.caught = false

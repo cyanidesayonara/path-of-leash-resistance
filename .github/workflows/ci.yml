@@ -161,6 +161,9 @@ jobs:
       - name: Per-level goal/star progression regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_goals.gd
 
+      - name: Tony Hawk quests regression test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tony_hawk_quests.gd
+
       - name: Fresh-save progression persistence regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_fresh_save_progression.gd
 

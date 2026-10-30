@@ -94,7 +94,7 @@ func _run() -> void:
 
 	# 7. Goal definitions
 	var goal_ids: Array = G.LEVEL_GOAL_IDS["port"]
-	_check(goal_ids.size() == 12, "port has 12 goals (found %d)" % goal_ids.size())
+	_check(goal_ids.size() == 15, "port has 15 goals (found %d)" % goal_ids.size())
 	_check("gulls" in goal_ids, "gulls goal in port")
 	_check("bollard" in goal_ids, "bollard goal in port")
 	_check("snack" in goal_ids, "snack goal in port")

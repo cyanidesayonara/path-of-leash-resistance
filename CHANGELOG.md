@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-10-30 - Tony Hawk quests: spelling words, secret tapes, and par times
+
+- **Tony Hawk quests added to all 24 campaign walks** (systems/tony_hawk.gd, systems/goals.gd, main.gd):
+  - **Spell word (S-K-A-T-E style)**: Author-defined words of at least 5 letters tied to each location (e.g. GOOOL on match day, RAMBLA on street, BARRI on everyday walk). Floating golden letter tokens bob along the corridor with contact drop shadows and golden rims; picking them up shows real-time progress toasts (G _ _ _ _) and completes the spell goal upon spelling the full word.
+  - **Secret cassette tape**: Hidden retro cassette tape hidden per walk with cream label, red stripe, tape spools, drop shadow, and subtle golden aura. Finding it yields +5 bones, a goal toast, and completes the 	ape goal.
+  - **Beat the clock**: Par time goal for finishing the walk under par (60s–90s depending on route length). Evaluated upon arrival home with no interrupting failure countdown timer mid-walk.
+  - **Expanded goal roster**: Goal lists now grow up to 15 goals per walk.
+  - **Regression test suite**: Added comprehensive 	ests/test_tony_hawk_quests.gd and updated existing goal-count assertions.
+
 ## 2026-10-30 - Badalona rework of Passeig Marítim, Platja de Llevant and rollerbladers
 
 - **Passeig Marítim (`beach`) reworked as Badalona's seafront** (`systems/passeig.gd`,
