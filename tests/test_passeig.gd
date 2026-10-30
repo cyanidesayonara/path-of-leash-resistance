@@ -72,8 +72,10 @@ func _run() -> void:
 			_check(ps.distance_to(mk) > 70.0, "palm (%.0f, %.0f) is clear of the landmark at (%.0f, %.0f)" % [ps.x, ps.y, mk.x, mk.y])
 		for br: Rect2 in LevelBuild.BEACH_BARS:
 			_check(not br.grow(30.0).has_point(ps), "palm (%.0f, %.0f) is clear of a bar hut" % [ps.x, ps.y])
+		_check(not Passeig.SURF_CLUB_RECT.grow(12.0).has_point(ps), "palm (%.0f, %.0f) is clear of Surf Club" % [ps.x, ps.y])
+		_check(not Passeig.GYM_RECT.grow(12.0).has_point(ps), "palm (%.0f, %.0f) is clear of Gym" % [ps.x, ps.y])
 
-	# the bar huts: solid, and no table or chair inside one
+	# solid landmarks: bar huts, surf club, gym, hotel and tourist letters sign
 	for br: Rect2 in LevelBuild.BEACH_BARS:
 		_check(_stops_dog(dog, br.get_center(), Vector2(-1.0, 0.0), br.size.x * 0.5 + 30.0),
 			"the bar hut at y=%.0f stops the dog" % br.position.y)
@@ -81,6 +83,13 @@ func _run() -> void:
 			_check(not br.has_point(t), "a table stands outside the bar hut")
 		for c: Vector2 in m.chairs:
 			_check(not br.has_point(c), "a chair stands outside the bar hut")
+	_check(_stops_dog(dog, Passeig.HOTEL_RECT.get_center(), Vector2(0.0, 1.0), Passeig.HOTEL_RECT.size.y * 0.5 + 30.0),
+		"Hotel Marina Badalona stops the dog")
+	_check(_stops_dog(dog, Passeig.HOTEL_SIGN_RECT.get_center(), Vector2(0.0, 1.0), Passeig.HOTEL_SIGN_RECT.size.y * 0.5 + 20.0),
+		"the BADALONA letters sign stops the dog")
+	for t: Vector2 in m.trees:
+		_check(not Passeig.HOTEL_RECT.grow(20.0).has_point(t), "plaza tree at (%.0f, %.0f) is clear of Hotel Marina" % [t.x, t.y])
+		_check(not Passeig.HOTEL_SIGN_RECT.grow(20.0).has_point(t), "plaza tree at (%.0f, %.0f) is clear of BADALONA sign" % [t.x, t.y])
 
 	# no towel across the court, under the tower or in a shower's puddle
 	for tw: Dictionary in m.towels:
