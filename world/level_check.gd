@@ -28,7 +28,7 @@ static func check(m) -> Array:
 		p.append("implausible corridor half-width %.0f" % m.walk_half)
 	# the beach's walkable strip sits off-centre by design (sea on one side,
 	# cafe terraces on the other), so only the symmetric walks are checked
-	if lv != "beach" and absf((m.sw_l + m.sw_r) / 2.0 - m.walk_cx) > 0.5:
+	if lv != "beach" and lv != "llevant" and absf((m.sw_l + m.sw_r) / 2.0 - m.walk_cx) > 0.5:
 		p.append("pavement not centred on walk_cx")
 	if m.sw_l < 0.0 or m.sw_r > 1280.0:
 		p.append("corridor %.0f..%.0f leaves the viewport" % [m.sw_l, m.sw_r])
@@ -91,7 +91,7 @@ static func check(m) -> Array:
 	# --- every prop on its own pavement ---
 	# the beach is exempt: its sand / boardwalk / bike-path cross-section
 	# deliberately places things outside the walkway
-	if lv != "beach":
+	if lv != "beach" and lv != "llevant":
 		var groups := {
 			"stall": m.stalls, "bin": m.bins, "bench": m.benches,
 			"a-stand": m.astands, "van": m.vans, "performer": m.performers,

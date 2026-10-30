@@ -122,6 +122,8 @@ const STYLES := {
 	# broken chords, a plain bass, no drums: the gravel is the percussion
 	"horta": {"bpm": 92, "key": 7, "lead": "glock", "lead2": ["whistle", 0], "comp": "arp",
 		"bass": "root", "drums": "brushsoft", "verb": 0.38},
+	"llevant": {"bpm": 102, "key": 5, "lead": "marimba", "lead2": ["whistle", 0], "comp": "bossa",
+		"bass": "bossa", "drums": "rim", "swing": 0.06, "verb": 0.28},
 	"freedom": {"bpm": 120, "key": 5, "lead": "whistle", "lead2": ["glock", 12], "comp": "arp",
 		"bass": "walk", "drums": "kickrim", "swing": 0.1, "verb": 0.22},
 }

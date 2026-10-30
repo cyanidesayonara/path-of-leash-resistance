@@ -57,6 +57,7 @@ const LEVEL_GOAL_IDS := {
 	"aigues": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "bikes", "view", "combo", "prize"],
 	# El Laberint d'Horta: round Eros, and the hedges to tetherball your human round
 	"horta": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "fling", "eros", "combo", "prize"],
+	"llevant": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "snack", "save", "combo", "prize"],
 }
 
 

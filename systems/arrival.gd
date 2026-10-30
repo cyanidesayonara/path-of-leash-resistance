@@ -41,7 +41,7 @@ static func line_y(m: Node2D) -> float:
 	return float(m.HOME_Y) - (0.0 if m.auto_walk else WALK_IN)
 
 const APARTMENT: Array[String] = [
-	"tutorial", "barri", "street", "park", "beach", "rain", "market", "oldtown",
+	"tutorial", "barri", "street", "park", "rain", "market", "oldtown",
 	"site", "spook", "scrap", "guell", "neteja", "port",
 ]
 
@@ -60,11 +60,11 @@ static func place_for(id: String) -> String:
 	if id in APARTMENT:
 		return "apartment"
 	match id:
-		"station":
+		"station", "beach":
 			return "station"
 		"montjuic", "tibidabo":
 			return "funicular"
-		"partit", "horta":
+		"partit", "horta", "llevant":
 			return "metro"
 		"trail", "aigues":
 			return "trailhead"

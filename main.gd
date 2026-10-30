@@ -285,6 +285,7 @@ const WALK_MODULES := {
 	"tibidabo": preload("res://systems/tibidabo.gd"),
 	"aigues": preload("res://systems/aigues.gd"),
 	"horta": preload("res://systems/horta.gd"),
+	"llevant": preload("res://systems/llevant.gd"),
 	"beach": preload("res://systems/passeig.gd"),
 	"rain": preload("res://systems/diluvi.gd"),
 	"market": preload("res://world/mercat.gd"),
@@ -2303,7 +2304,7 @@ func pole_tree(i: int) -> int:
 		return TREE_FOREST
 	if lvl == "partit":
 		return TREE_STREET if Partit.is_street_tree(p) else TREE_NONE
-	if lvl == "beach":
+	if lvl == "beach" or lvl == "llevant":
 		return TREE_PALM
 	if lvl == "oldtown":
 		return TREE_PIT if p.distance_to(LevelBuild.GOTIC_PLACA) < 260.0 else TREE_NONE
@@ -2380,7 +2381,7 @@ func canopy_trees() -> Array[Dictionary]:
 			continue
 		if lvl == "scrap":
 			continue        # the scrapyard's grove is tyre stacks and drums: no crowns
-		var gk := TREE_PALM if freedom_kind == "beach" else TREE_FOREST
+		var gk := TREE_PALM if (freedom_kind == "beach" or lvl == "beach") else TREE_FOREST
 		# El Barri's pipicà is shaded by the square's own plane trees
 		if lvl == "barri":
 			gk = TREE_OAK
@@ -4206,7 +4207,7 @@ func draw_freedom_onto(c: Object) -> void:
 		var t: Vector2 = trees[ti]
 		if walk_mod != null and walk_mod.has_method("draw_grove"):
 			walk_mod.draw_grove(self, c, t, ti)
-		elif freedom_kind == "beach":
+		elif freedom_kind == "beach" or lvl == "beach":
 			_draw_tree_ground(c, t, 0, TREE_PALM)
 		elif lvl == "barri":
 			_draw_tree_ground(c, t, 0, TREE_OAK)
@@ -4229,7 +4230,7 @@ func _cam_x() -> float:
 	if not (phase == "freedom" or (phase == "home" and inside)):
 		return 640.0
 	var hw := get_viewport_rect().size.x / (2.0 * cam.zoom.x)
-	var lo := FREEDOM_WALL_W + 50.0 if freedom_kind == "beach" else _freedom_rect().position.x - 20.0
+	var lo := FREEDOM_WALL_W + 50.0 if (freedom_kind == "beach" or lvl == "beach") else _freedom_rect().position.x - 20.0
 	var hi := _freedom_rect().end.x + 20.0
 	if hi - lo <= hw * 2.0:
 		return (lo + hi) * 0.5
@@ -4333,7 +4334,7 @@ func _draw_freedom_beyond(c: Object) -> void:
 func _draw_gate() -> void:
 	var b := ShapeBatch.new()
 	var style := "iron"
-	if lvl in ["trail", "guell", "park", "beach"] and not tutorial_mode:
+	if lvl in ["trail", "guell", "park", "llevant"] and not tutorial_mode:
 		style = "timber"
 	elif freedom_kind == "placa" or lvl == "rain":
 		style = "stone"
@@ -4705,7 +4706,7 @@ func _draw_dog_beach(c: Object) -> void:
 	_draw_beach_shower(c, Vector2(BEACH_SEA_R + 150.0, r.position.y + 120.0))
 	# the tower's legs and ladder; on the seafront walk its cabin is over
 	# everyone (the overhead layer, draw_overhead_onto)
-	_draw_lifeguard_tower(c, dog_beach_tower(), true, lvl != "beach")
+	_draw_lifeguard_tower(c, dog_beach_tower(), true, lvl != "beach" and lvl != "llevant")
 	# the parasols, spaced round the agility lane (which runs between the
 	# first two): here the shade each casts falling clear of it, and their
 	# canopies overhead (draw_overhead_piece)
@@ -4746,7 +4747,7 @@ func _draw_espigo(c: Object) -> void:
 
 const SIGN_STYLES := {
 	"street": "chalk", "market": "chalk", "spook": "chalk",
-	"beach": "sand", "park": "dirt", "trail": "dirt", "barri": "dirt",
+	"beach": "sand", "llevant": "sand", "park": "dirt", "trail": "dirt", "barri": "dirt",
 	"station": "board", "site": "board", "scrap": "board",
 	"rain": "wet", "oldtown": "tile", "tutorial": "chalk",
 }
@@ -7058,11 +7059,19 @@ func _vlane(delta: float) -> void:
 			x = float(rl.x)
 			band_lo = float(rl.lo)
 			band_hi = float(rl.hi)
+	var r_kind := "bike"
+	if kid:
+		if lvl in ["beach", "llevant"] and fmod(absf(x * 13.7 + y * 0.31), 1.0) < 0.72:
+			r_kind = "roller"
+		elif lvl in ["street", "park"] and fmod(absf(x * 13.7 + y * 0.31), 1.0) < 0.45:
+			r_kind = "roller"
+		else:
+			r_kind = "kid"
 	var b := Node2D.new()
 	b.set_script(load("res://entities/bike.gd"))
 	b.position = Vector2(x, y)
 	b.z_index = 12
-	b.setup(self, dog, human, Vector2(0.0, -speed if up else speed), "kid" if kid else "bike")
+	b.setup(self, dog, human, Vector2(0.0, -speed if up else speed), r_kind)
 	if kid:
 		b.lane_keep(band_lo, band_hi)
 	if not b.configure_route(x, band_lo, band_hi, bypasser_blockers):
@@ -7077,7 +7086,7 @@ func _squirrels(delta: float) -> void:
 		var c := Node2D.new()
 		c.set_script(load("res://entities/squirrel.gd"))
 		var cat_x := 336.0 if randf() < 0.5 else 944.0
-		if lvl == "beach":
+		if lvl == "beach" or lvl == "llevant":
 			cat_x = 1010.0 if randf() < 0.5 else 462.0
 		c.position = Vector2(cat_x, cat_y)
 		c.z_index = 9
@@ -7086,7 +7095,7 @@ func _squirrels(delta: float) -> void:
 		cat_y = 0.0
 	while flock_ys.size() > 0 and cam.position.y < flock_ys[0] + 650.0:
 		var fy: float = flock_ys.pop_front()
-		var gulls := lvl == "beach" or lvl == "port"
+		var gulls := lvl == "beach" or lvl == "llevant" or lvl == "port"
 		var keets := lvl == "guell"
 		var fe := walk_edges(fy)
 		# only El Mosaic draws a side, so other walks keep their random sequence
@@ -7144,7 +7153,7 @@ func _squirrels(delta: float) -> void:
 		return
 	var roll := randf()
 	var x := 0.0
-	if lvl == "beach":
+	if lvl == "beach" or lvl == "llevant":
 		x = randf_range(1000.0, 1150.0) if roll < 0.6 else randf_range(320.0, 480.0)
 	elif lvl == "trail":
 		# in the strip of forest floor either side, inside the wood line
@@ -7165,7 +7174,7 @@ func _squirrels(delta: float) -> void:
 	s.z_index = 9
 	add_child(s)
 	# the passeig has no squirrels; it has rats, and Millie is not picky
-	s.setup(self, dog, "rat" if lvl == "beach" else "squirrel")
+	s.setup(self, dog, "rat" if (lvl == "beach" or lvl == "llevant") else "squirrel")
 
 
 func _temptation(delta: float) -> void:
@@ -9318,7 +9327,7 @@ func on_business_bagged(pos: Vector2) -> void:
 # like one walk redressed - you always finished in the same field. The beach
 # gets a DOG BEACH instead: sand, and a sea you can actually swim in.
 const FREEDOM_KINDS := {
-	"beach": "beach", "trail": "clearing", "site": "lot", "scrap": "lot",
+	"beach": "placa", "llevant": "beach", "trail": "clearing", "site": "lot", "scrap": "lot",
 	"guell": "clearing",
 	"besos": "clearing",
 	# the town walks end in a square, the way their gates say
@@ -9537,8 +9546,8 @@ func _enter_freedom() -> void:
 	romp_done = false
 	freedom_at = elapsed
 	_spawn_romp_ball()
-	# other dogs to romp and say hi to (on the sand, not out in the sea)
-	var fd_x0 := BEACH_SEA_R + 60.0 if freedom_kind == "beach" else 200.0
+	# other dogs to romp and say hi to (on the sand or plaza, not out in the sea)
+	var fd_x0 := BEACH_SEA_R + 60.0 if (freedom_kind == "beach" or lvl == "beach") else 200.0
 	for i in range(3):
 		var fd := Node2D.new()
 		fd.set_script(load("res://entities/freedog.gd"))
@@ -9572,8 +9581,8 @@ func _spawn_romp_ball() -> void:
 	ball.z_index = 10
 	ball.position = human.global_position
 	add_child(ball)
-	if freedom_kind == "beach":
-		# into the surf, not across a field - window before the first throw
+	if freedom_kind == "beach" or lvl == "beach":
+		# into the surf or across the seafront plaza - window before the first throw
 		ball.setup(self, dog, human, freedom_lo, GATE_Y - 30.0, -90.0, BEACH_SEA_R + 240.0)
 	else:
 		ball.setup(self, dog, human, freedom_lo, GATE_Y - 30.0)
@@ -9582,13 +9591,13 @@ func _spawn_romp_ball() -> void:
 # where dry ground starts across the off-leash space: on the dog beach the
 # west of it is sea, and nobody parks, sits or spawns in that
 func _dry_x0() -> float:
-	return BEACH_SEA_R + 60.0 if freedom_kind == "beach" else 0.0
+	return BEACH_SEA_R + 60.0 if (freedom_kind == "beach" or lvl == "beach") else 0.0
 
 
 # a parked pair's spot, moved onto the sand on the dog beach (two of the three
 # stood in the sea there)
 func pair_park_spot(i: int) -> Vector2:
-	if lvl == "beach":
+	if lvl == "beach" or lvl == "llevant":
 		return BEACH_PAIR_SPOTS[i]
 	return PAIR_PARK_SPOTS[i].position
 
@@ -9725,7 +9734,7 @@ func _challenger_clear_of_trees(at: Vector2) -> bool:
 	for i in range(trees.size()):
 		if lvl == "scrap":
 			break
-		var kind := TREE_PALM if freedom_kind == "beach" else TREE_FOREST
+		var kind := TREE_PALM if (freedom_kind == "beach" or lvl == "beach") else TREE_FOREST
 		if lvl == "barri":
 			kind = TREE_OAK
 		var r := 34.0 if kind == TREE_OAK else 34.0 * 0.85
@@ -10951,7 +10960,7 @@ func _draw_world() -> void:
 	# the off-leash freedom yard beyond the gate: a proper fenced dog
 	# park - grass, chain-link fence with posts, human benches, and a
 	# labelled entrance gate
-	if vt < GATE_Y + 60.0 and freedom_kind == "beach":
+	if vt < GATE_Y + 60.0 and (freedom_kind == "beach" or lvl == "beach"):
 		# only the water moves; the sand and everything on it is on the layer
 		_draw_beach_water()
 	# the gate between the walk and the off-leash space, when it is in view

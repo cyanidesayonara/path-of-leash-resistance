@@ -34,7 +34,7 @@ const MATERIALS := {
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
 	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
 	"montjuic": "cactus", "port": "rope", "reial": "fronds", "vet": "biscuits",
-	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "tutorial": "balls",
+	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "sand", "tutorial": "balls",
 }
 # What lies under a walk's pieces so they read on its ground by brightness, not
 # colour alone: a soft bed of light under dark-on-dark, of shade under

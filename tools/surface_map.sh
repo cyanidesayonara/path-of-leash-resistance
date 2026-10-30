@@ -17,7 +17,7 @@ cd "$(dirname "$0")/.."
 OUT="${1:-surface-map}"
 shift || true
 GODOT="${GODOT:-godot/Godot_v4.7-stable_win64.exe}"
-LEVELS="${*:-barri street park beach rain market oldtown trail station besos site spook scrap guell neteja montjuic partit port reial vet tibidabo aigues horta}"
+LEVELS="${*:-barri street park beach rain market oldtown trail station besos site spook scrap guell neteja montjuic partit port reial vet tibidabo aigues horta llevant}"
 YS="${YS:-0 -1250 -2500 -3750 -4800 free}"
 MAP=--surface-map
 [ -n "${SURF_DUMP:-}" ] && MAP=--surface-map=dump

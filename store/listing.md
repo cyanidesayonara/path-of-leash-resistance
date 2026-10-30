@@ -30,7 +30,7 @@ The leash is real rope physics. Your human outweighs you four to one and wins ev
 
 Your human answers the leash like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-Twenty-three walks through a sunny, slightly chaotic Barcelona and its edges, each its own place: the neighborhood park, La Rambla with its crowds, the city park, Badalona's seafront and its pier, a downpour, a covered market hall, old town alleys, a forest trail, the train station, a floodable river park, a work site, a chestnut festival, a junkyard, tiled terraces, the dawn cleanup sweeper, Montjuïc, match day in Les Corts, the fishing harbor at El Port, the arcaded Plaça Reial, an indoor vet clinic escape in El Veterinari, Tibidabo's mountain road, the old water road along Collserola, and the cypress maze of Horta. Every walk ends off the leash, with an agility course, tug-of-war and a frisbee: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
+Twenty-four walks through a sunny, slightly chaotic Barcelona and its edges, each its own place: the neighborhood park, La Rambla with its crowds, the city park, Badalona's seafront and its pier, a downpour, a covered market hall, old town alleys, a forest trail, the train station, a floodable river park, a work site, a chestnut festival, a junkyard, tiled terraces, the dawn cleanup sweeper, Montjuïc, match day in Les Corts, the fishing harbor at El Port, the arcaded Plaça Reial, an indoor vet clinic escape in El Veterinari, Tibidabo's mountain road, the old water road along Collserola, the cypress maze of Horta, and the dog beach at Platja de Llevant. Every walk ends off the leash, with an agility course, tug-of-war and a frisbee: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
 
 What happens on a walk changes how you feel, and how you feel changes how you move. A fright leaves you jumpy and half blind to smells, a good bark-off makes you barky, time off the leash brings on the zoomies, and running yourself empty leaves you flat. The ground matters too: grass and mud slow you down but hold far more scent than sidewalk, sand drags at your paws, and wet ground and snow make you skid.
 
@@ -46,7 +46,7 @@ Single player. No ads, no purchases, no account, and it plays offline. Keyboard 
 ### Short description
 
 ```
-A dog walk as a physics comedy. Your human walks on autopilot, glued to their phone, and the leash is real rope. Dig in, wrap lampposts and bark your way through twenty-three walks in and around Barcelona, and get them home with the phone intact.
+A dog walk as a physics comedy. Your human walks on autopilot, glued to their phone, and the leash is real rope. Dig in, wrap lampposts and bark your way through twenty-four walks in and around Barcelona, and get them home with the phone intact.
 ```
 
 ### Product features
@@ -54,7 +54,7 @@ A dog walk as a physics comedy. Your human walks on autopilot, glued to their ph
 ```
 The leash is real rope physics: wrap it around poles, dig in, win the tug of war
 A human who answers the leash: a steady pull leads them, constant hauling runs out their patience
-Twenty-three hand-built walks through Barcelona, in any weather, by day or at night
+Twenty-four hand-built walks through Barcelona, in any weather, by day or at night
 Every walk ends off the leash, with agility, tug-of-war and a frisbee
 Goal lists on every walk, with stars that unlock new walks
 A dare-giver on every walk, each with their own tune
