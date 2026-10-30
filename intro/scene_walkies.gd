@@ -940,6 +940,7 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 	var paws_up := Anim.span(t, 4.95, 5.12) * (1.0 - Anim.span(t, 5.3, 5.45))
 	var nudge := Anim.span(t, 6.75, 6.92) * (1.0 - Anim.span(t, 7.0, 7.15))
 	var pose := {
+		"breed": "millie",
 		"sit": sitting,
 		"gait": trot, "phase": -mx * TAU / (56.0 * MS),
 		"crouch": maxf(maxf(windup, crouch), 0.25 * turn_dip),
@@ -1669,6 +1670,72 @@ static func _lamppost(b: Tris, lx: float) -> void:
 
 static func _title(c: CanvasItem, t: float) -> void:
 	_street(c)
+
+	# Background neighbourhood dog walkers on the sidewalk (ground y = 652.0, z ~ 45..55)
+	var by := 652.0
+	var bs := 0.68  # proper mid-ground perspective depth scale
+
+	# 1. Left: Older Catalan neighbour (avi) in cardigan and beret waiting while Bruna (Gos d'Atura) sniffs the plane tree
+	if t >= 10.15 and t <= 14.5:
+		var brx := 80.0
+		var bruna_pose := {"breed": "bruna", "crouch": 0.25, "head_up": -0.32,
+			"tail": 0.2 + sin(t * 6.0) * 0.25, "ear": 0.1}
+		var hp := Vector2(138.0, by - 1.0)
+		var avi_pose := {
+			"reach_down": 0.45, "head": 0.22, "lean": 0.04, "phone": 0.0,
+			"hat": "beret", "hat_color": Color(0.25, 0.23, 0.22),
+			"hair": Color(0.72, 0.72, 0.75), "skin": Color(0.82, 0.68, 0.54),
+			"shirt": Color(0.78, 0.60, 0.28), "trousers": Color(0.32, 0.35, 0.28),
+			"shoe": Color(0.36, 0.24, 0.16)
+		}
+		var hand := IntroKit.human(c, hp, bs, -1.0, Vector2.ONE, avi_pose, 0.0, by)
+		var bpt := IntroKit.millie_points(Vector2(brx, by), bs, -1.0, Vector2.ONE, bruna_pose)
+		IntroKit.leash(c, bpt["ring"], hand, 7.5 + sin(t * 2.0) * 1.5)
+		IntroKit.millie(c, Vector2(brx, by), bs, -1.0, Vector2.ONE, bruna_pose, by)
+
+	# 2. Centre: Walker in coral hoodie walking Mochi (Frenchie) and tiny Tito strolling eastward
+	if t >= 10.3 and t <= 14.5:
+		var mx := lerpf(400.0, 810.0, (t - 10.3) / 4.0)
+		var mphase := mx * TAU / (36.0 * bs)
+		var mochi_pose := {"breed": "mochi", "gait": 0.85, "phase": mphase, "lean": 0.05,
+			"tail": 0.0, "crouch": 0.15}
+		var tito_pose := {"breed": "tito", "gait": 1.35, "phase": mphase * 1.5, "lean": 0.04,
+			"tail": 0.7 + sin(mphase * 3.0) * 0.2, "ear": 0.5}
+		var hp := Vector2(mx - 88.0 * bs, by)
+		var centre_pose := {
+			"stride": mx * PI / (HumanSide.STEP * bs), "stride_amp": 0.75, "reach": 0.65,
+			"lean": -0.04, "phone": 0.0,
+			"hair": Color(0.12, 0.10, 0.09), "skin": Color(0.55, 0.38, 0.28),
+			"shirt": Color(0.88, 0.36, 0.26), "trousers": Color(0.18, 0.20, 0.28),
+			"shoe": Color(0.95, 0.95, 0.92)
+		}
+		var hand := IntroKit.human(c, hp, bs, 1.0, Vector2.ONE, centre_pose, 0.0, by)
+		var mopt := IntroKit.millie_points(Vector2(mx, by), bs, 1.0, Vector2.ONE, mochi_pose)
+		var tipt := IntroKit.millie_points(Vector2(mx + 36.0 * bs, by), bs, 1.0, Vector2.ONE, tito_pose)
+		IntroKit.leash(c, mopt["ring"], hand, 4.0 + 2.0 * sin(mphase))
+		IntroKit.leash(c, tipt["ring"], hand, 5.5 + 2.0 * sin(mphase * 1.5))
+		IntroKit.millie(c, Vector2(mx, by), bs, 1.0, Vector2.ONE, mochi_pose, by)
+		IntroKit.millie(c, Vector2(mx + 36.0 * bs, by), bs, 1.0, Vector2.ONE, tito_pose, by)
+
+	# 3. Right: Stylish neighbour in sage trench coat walking Pipa (Galgo) trotting westward
+	if t >= 10.2 and t <= 14.5:
+		var px := lerpf(1220.0, 930.0, (t - 10.2) / 4.1)
+		var pphase := px * TAU / (44.0 * bs)
+		var pipa_pose := {"breed": "pipa", "gait": 0.95, "phase": pphase, "lean": 0.04,
+			"tail": -0.25 + sin(pphase) * 0.15, "ear": -0.3}
+		var hp := Vector2(px + 102.0 * bs, by + 1.0)
+		var trench_pose := {
+			"stride": px * PI / (HumanSide.STEP * bs), "stride_amp": 0.75, "reach": 0.65,
+			"lean": 0.05, "phone": 0.0,
+			"hair": Color(0.48, 0.22, 0.14), "skin": Color(0.94, 0.80, 0.68),
+			"shirt": Color(0.28, 0.48, 0.46), "trousers": Color(0.20, 0.20, 0.22),
+			"shoe": Color(0.14, 0.13, 0.15)
+		}
+		var hand := IntroKit.human(c, hp, bs, -1.0, Vector2.ONE, trench_pose, 0.0, by + 1.0)
+		var ppt := IntroKit.millie_points(Vector2(px, by + 1.0), bs, -1.0, Vector2.ONE, pipa_pose)
+		IntroKit.leash(c, ppt["ring"], hand, 4.0 + 2.5 * sin(pphase * 2.0))
+		IntroKit.millie(c, Vector2(px, by + 1.0), bs, -1.0, Vector2.ONE, pipa_pose, by + 1.0)
+
 	IntroTitle.draw(c, t - TITLE_AT, "swing")
 	# and there they go along the bottom: Millie trotting ahead, the leash
 	# taut, your human towed after her, leaning in, still on the phone
@@ -1677,7 +1744,7 @@ static func _title(c: CanvasItem, t: float) -> void:
 		# feet matched to the ground: her trot and their stride advance with
 		# the distance covered, not the clock
 		var mphase := x * TAU / (56.0 * TS)
-		var mpose := {"gait": 1.0, "phase": mphase, "lean": 0.08, "crouch": 0.2, "push": 0.6, "reach": 0.25, "head_up": 0.12,
+		var mpose := {"breed": "millie", "gait": 1.0, "phase": mphase, "lean": 0.08, "crouch": 0.2, "push": 0.6, "reach": 0.25, "head_up": 0.12,
 			"tail": sin(mphase) * 0.3, "brow": 0.8, "mouth": 0.6}
 		# towed: leaning back a little against it, long planted steps (half a
 		# stride turn per HumanSide.STEP of ground), still scrolling

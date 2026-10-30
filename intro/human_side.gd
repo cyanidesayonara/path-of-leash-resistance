@@ -289,15 +289,15 @@ static func _static(kind: int, pts: Array) -> PackedVector2Array:
 # ------------------------------------------------------------------ the parts
 
 # a leg's parts (sneaker, shin, thigh) and what its details need
-static func _leg(leg: Array, lift: float, far: bool) -> Array:
+static func _leg(leg: Array, lift: float, far: bool, tr_col: Color = TROUSERS, sh_col: Color = SHOE) -> Array:
 	var thigh_d: Vector2 = (leg[1] - leg[0]).normalized()
 	var shin_d: Vector2 = (leg[2] - leg[1]).normalized()
 	# flat on the floor, or hanging slack off the ankle, toes down and back,
 	# when the feet trail behind
 	var foot := Vector2.from_angle(lerp_angle(0.0, shin_d.rotated(-1.3).angle(), lift))
 	var fy := foot.rotated(PI * 0.5)
-	var tr := TROUSERS if not far else _far(TROUSERS)
-	var sh := SHOE if not far else _far(SHOE)
+	var tr := tr_col if not far else _far(tr_col)
+	var sh := sh_col if not far else _far(sh_col)
 	var shoe_e := _shape(K_SNEAKER, 0, PackedVector2Array(SNEAKER), _light_in(foot, fy), 2.0, 1.6, Vector2(14, 0), 6.0)
 	var shoe := ["p", shoe_e, _frame(leg[2], foot, fy), sh, not far]
 	# the trouser leg: rounded at the knee, cut straight across over the
@@ -313,12 +313,12 @@ static func _leg(leg: Array, lift: float, far: bool) -> Array:
 	return [shoe, hem, shin, thigh, thigh_d, shin_d, foot, far]
 
 
-static func _leg_detail(leg: Array, info: Array) -> void:
+static func _leg_detail(leg: Array, info: Array, tr_col: Color = TROUSERS) -> void:
 	var thigh_d: Vector2 = info[4]
 	var shin_d: Vector2 = info[5]
 	var foot: Vector2 = info[6]
 	var far: bool = info[7]
-	var tr := TROUSERS if not far else _far(TROUSERS)
+	var tr := tr_col if not far else _far(tr_col)
 	var ink := _shade(_shade(tr))
 	var fy := foot.rotated(PI * 0.5)
 	var xf := _frame(leg[2], foot, fy)
@@ -340,9 +340,9 @@ static func _leg_detail(leg: Array, info: Array) -> void:
 
 # an arm: bare skin, a T-shirt sleeve over its top with a hem, and a hand
 # (grip 1: a fist; 0: a relaxed open hand; -1: a palm cupping the phone)
-static func _arm(sj: Vector2, elbow: Vector2, hand: Vector2, grip: float, far: bool) -> Array:
-	var sk := SKIN if not far else _far(SKIN)
-	var st := SHIRT if not far else _far(SHIRT)
+static func _arm(sj: Vector2, elbow: Vector2, hand: Vector2, grip: float, far: bool, sk_col: Color = SKIN, st_col: Color = SHIRT) -> Array:
+	var sk := sk_col if not far else _far(sk_col)
+	var st := st_col if not far else _far(st_col)
 	var d := (hand - elbow).normalized()
 	var n := d.rotated(PI * 0.5)
 	var hem := sj.lerp(elbow, 0.55)
@@ -360,7 +360,7 @@ static func _arm(sj: Vector2, elbow: Vector2, hand: Vector2, grip: float, far: b
 		hand_part,
 		["c", sj, hem, 9.6, 7.6, st, 2.6, 0.0 if far else 2.2],
 	]
-	return [parts, hem, (elbow - sj).normalized(), d, n, grip, hand, sk]
+	return [parts, hem, (elbow - sj).normalized(), d, n, grip, hand, sk, st]
 
 
 # a small inked capsule laid over others (a thumb, a finger)
@@ -369,7 +369,7 @@ static func _inked_cap(a: Vector2, b: Vector2, ra: float, rb: float, col: Color)
 	_capsule(a, b, ra, rb, col)
 
 
-static func _arm_detail(info: Array) -> void:
+static func _arm_detail(info: Array, st_col: Color = SHIRT) -> void:
 	var hem: Vector2 = info[1]
 	var ud: Vector2 = info[2]
 	var d: Vector2 = info[3]
@@ -377,8 +377,9 @@ static func _arm_detail(info: Array) -> void:
 	var grip: float = info[5]
 	var hand: Vector2 = info[6]
 	var sk: Color = info[7]
+	var st: Color = info[8] if info.size() > 8 else st_col
 	var across := ud.orthogonal()
-	_line(hem - across * 7.6 - ud * 1.0, hem + across * 7.6 - ud * 1.0, _shade(_shade(SHIRT)), 1.6)
+	_line(hem - across * 7.6 - ud * 1.0, hem + across * 7.6 - ud * 1.0, _shade(_shade(st)), 1.6)
 	if grip > 0.5:
 		# knuckles, and the thumb wrapped over the fingers
 		var kc := hand + d * 5.2
@@ -406,6 +407,11 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 	# the jaw opens in eighths, so each opening is one cached face
 	var mouth_q := clampi(roundi(float(pose.get("mouth", 0.0)) * 8.0), 0, 8)
 	var mouth := float(mouth_q) / 8.0
+	var sk: Color = pose.get("skin", SKIN)
+	var st: Color = pose.get("shirt", SHIRT)
+	var tr: Color = pose.get("trousers", TROUSERS)
+	var hr_col: Color = pose.get("hair", HAIR)
+	var sh_col: Color = pose.get("shoe", SHOE)
 	if _circle.is_empty():
 		for i in range(SEGMENTS):
 			_circle.append(Vector2.ZERO)
@@ -470,50 +476,50 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 	# both arms hang from one shoulder joint, just under the top of the shirt
 	var sj := hip + up * 57.0 - fwd * 1.0
 	var grip := 1.0 if reach >= 0.45 or (reach > 0.2 and reach_down < 0.3) else 0.0
-	var arm_free := _arm(sj, arm2[1], arm2[2], grip, reach <= 0.25)
-	var arm_phone := _arm(sj, elbow, phone_hand, -1.0 if phone > 0.3 else 0.0, false)
+	var arm_free := _arm(sj, arm2[1], arm2[2], grip, reach <= 0.25, sk, st)
+	var arm_phone := _arm(sj, elbow, phone_hand, -1.0 if phone > 0.3 else 0.0, false, sk, st)
 
 	# ---------------------------------------------------------- far side
-	var far_leg := _leg(legs[1], lift, true)
+	var far_leg := _leg(legs[1], lift, true, tr, sh_col)
 	var back := far_leg.slice(0, 4)
 	if reach <= 0.25:
 		back.append_array(arm_free[0])
 	_group(back, OW)
-	_leg_detail(legs[1], far_leg)
+	_leg_detail(legs[1], far_leg, tr)
 	if reach <= 0.25:
-		_arm_detail(arm_free)
+		_arm_detail(arm_free, st)
 
 	# ---------------------------------------------------------- the body
-	var near_leg := _leg(legs[0], lift, false)
+	var near_leg := _leg(legs[0], lift, false, tr, sh_col)
 	var torso := _shape(K_TORSO, 0, PackedVector2Array(TORSO), _light_in(fwd, up), 4.0, 3.0, Vector2(-14, 52), 13.0)
 	var jaw := Vector2(-1.5, 5.0) * mouth
 	# the seat of the trousers: low and round on the sofa, tucked in standing
 	var rump := ["c", hip + fwd * -7.0 - up * sit, hip + fwd * 3.0, lerpf(12.0, 13.5, sit), lerpf(11.0, 13.0, sit),
-		TROUSERS, 2.6, 0.0]
-	var neck := ["c", shoulder + up * 3.0 + fwd * 2.5, head + hx * 1.0 + hy * 13.0, 8.6, 7.4, SKIN, 2.5, 0.0]
-	_group(near_leg.slice(0, 4) + [rump, neck, ["p", torso, _frame(hip, fwd, up), SHIRT, true]], OW)
-	_leg_detail(legs[0], near_leg)
+		tr, 2.6, 0.0]
+	var neck := ["c", shoulder + up * 3.0 + fwd * 2.5, head + hx * 1.0 + hy * 13.0, 8.6, 7.4, sk, 2.5, 0.0]
+	_group(near_leg.slice(0, 4) + [rump, neck, ["p", torso, _frame(hip, fwd, up), st, true]], OW)
+	_leg_detail(legs[0], near_leg, tr)
 	# the shirt: its hem over the trousers, a crew collar, folds at the belly
-	var sdk := _shade(_shade(SHIRT))
+	var sdk := _shade(_shade(st))
 	var txf := _frame(hip, fwd, up)
 	_line(txf * Vector2(-15.0, -6.5), txf * Vector2(16.5, -5.5), sdk, 1.4)
 	_line(txf * Vector2(-6.5, 69.0), txf * Vector2(1.5, 71.0), sdk, 3.0)
 	_line(txf * Vector2(1.5, 71.0), txf * Vector2(8.0, 69.0), sdk, 3.0)
 	_line(txf * Vector2(8.0, 69.0), txf * Vector2(12.0, 64.0), sdk, 3.0)
-	_line(txf * Vector2(11.0, 22.0), txf * Vector2(17.0, 18.0), _shade(SHIRT), 1.4)
-	_line(txf * Vector2(9.0, 12.0), txf * Vector2(16.0, 9.5), _shade(SHIRT), 1.4)
+	_line(txf * Vector2(11.0, 22.0), txf * Vector2(17.0, 18.0), _shade(st), 1.4)
+	_line(txf * Vector2(9.0, 12.0), txf * Vector2(16.0, 9.5), _shade(st), 1.4)
 	# the leash arm, out ahead, passes in front of the body and behind the
 	# head, so a face bowed over it (or yelling) stays in view
 	if reach > 0.25:
 		_group(arm_free[0], IW)
-		_arm_detail(arm_free)
+		_arm_detail(arm_free, st)
 	var face_pts := PackedVector2Array(FACE)
 	for i in range(13, 18):
 		face_pts[i] += jaw * (0.6 if i == 17 else 1.0)
 	# the open mouth is a notch in the profile, filled by the mouth below
 	face_pts[12] = face_pts[12].lerp(Vector2(14.2, 15.4), mouth)
 	var face := _shape(K_FACE, mouth_q, face_pts, _light_in(hx, hy), 2.2)
-	_group([["p", face, hxf, SKIN, false]], OW)
+	_group([["p", face, hxf, sk, false]], OW)
 	# the screen's cold light on the face: a crisp band down the brow, nose
 	# and lips, on the side that faces it
 	# (gone once they are hauled over and the screen no longer faces them)
@@ -525,18 +531,27 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 			for q: PackedVector2Array in Geometry2D.clip_polygons(face_pts, Transform2D(0.0, Vector2(-2.4, 0)) * face_pts):
 				band.append_array(_tris_all(Geometry2D.intersect_polygons(q, _ell_pts(Vector2(17, 3), Vector2(9, 12.5)))))
 			_cache[gk] = band
-		_push(hxf * (_cache[gk] as PackedVector2Array), SKIN.lerp(Color(0.74, 0.88, 1.0), 0.6 * glow))
+		_push(hxf * (_cache[gk] as PackedVector2Array), sk.lerp(Color(0.74, 0.88, 1.0), 0.6 * glow))
 	# the ear, the cheek, the nostril
 	_ellipse(head + hx * -4.5 + hy * 3.0, Vector2(5.6, 7.2), hr, OUT)
-	_ellipse(head + hx * -4.5 + hy * 3.0, Vector2(4.4, 6.0), hr, SKIN)
-	_line(head + hx * -3.4 + hy * 0.4, head + hx * -4.6 + hy * 5.4, _shade(SKIN), 1.6)
-	_ellipse(head + hx * 9.0 + hy * 8.0, Vector2(3.6, 2.4), hr, SKIN.lerp(Color(0.96, 0.52, 0.48), 0.45))
-	_line(head + hx * 19.2 + hy * 9.0, head + hx * 20.4 + hy * 10.4, _shade(_shade(SKIN)), 1.1)
+	_ellipse(head + hx * -4.5 + hy * 3.0, Vector2(4.4, 6.0), hr, sk)
+	_line(head + hx * -3.4 + hy * 0.4, head + hx * -4.6 + hy * 5.4, _shade(sk), 1.6)
+	_ellipse(head + hx * 9.0 + hy * 8.0, Vector2(3.6, 2.4), hr, sk.lerp(Color(0.96, 0.52, 0.48), 0.45))
+	_line(head + hx * 19.2 + hy * 9.0, head + hx * 20.4 + hy * 10.4, _shade(_shade(sk)), 1.1)
 	# hair over the crown, a crisp shine along its top, the parting
 	var hair := _shape(K_HAIR, 0, PackedVector2Array(HAIRDO), _light_in(hx, hy), 2.2)
-	_group([["p", hair, hxf, HAIR, false]], IW)
-	_push(hxf * _static(3, HAIR_SHINE), _hi(HAIR))
-	_line(head + hx * 3.0 + hy * -24.0, head + hx * 15.0 + hy * -15.0, _shade(HAIR), 1.2)
+	_group([["p", hair, hxf, hr_col, false]], IW)
+	_push(hxf * _static(3, HAIR_SHINE), _hi(hr_col))
+	_line(head + hx * 3.0 + hy * -24.0, head + hx * 15.0 + hy * -15.0, _shade(hr_col), 1.2)
+	if pose.has("hat"):
+		var hat_col: Color = pose.get("hat_color", Color(0.24, 0.22, 0.22))
+		var cap_pts := PackedVector2Array([
+			Vector2(-20, -9), Vector2(-16, -26), Vector2(7, -27), Vector2(23, -17),
+			Vector2(25, -11), Vector2(15, -9), Vector2(-3, -11)
+		])
+		_group([["p", _shape(K_HAIR + 1, 0, cap_pts, _light_in(hx, hy), 2.2), hxf, hat_col, false]], IW)
+		_line(hxf * Vector2(11, -9), hxf * Vector2(27, -7), OUT, 2.2)
+		_line(hxf * Vector2(11, -9), hxf * Vector2(27, -7), _shade(hat_col), 1.6)
 	# the eye under a lowered lid, looking down into the screen; wide on the jolt
 	var lid_y := -0.6 - 1.6 * jolt
 	if pose.get("blink", 0.0) > 0.5:
@@ -551,8 +566,8 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 		_line(hxf * Vector2(10.4, lid_y - 2.2), hxf * Vector2(15.0, lid_y - 2.6), _shade(SKIN), 1.1)
 	# the eyebrow, low and level while absorbed, shot up on the jolt
 	var by := -6.4 - 2.6 * jolt
-	_line(hxf * Vector2(9.6, by + 0.4), hxf * Vector2(13.2, by - 0.4 - jolt), _shade(HAIR), 2.4)
-	_line(hxf * Vector2(13.2, by - 0.4 - jolt), hxf * Vector2(16.6, by + 0.2), _shade(HAIR), 2.4)
+	_line(hxf * Vector2(9.6, by + 0.4), hxf * Vector2(13.2, by - 0.4 - jolt), _shade(hr_col), 2.4)
+	_line(hxf * Vector2(13.2, by - 0.4 - jolt), hxf * Vector2(16.6, by + 0.2), _shade(hr_col), 2.4)
 	# the mouth: a small flat line, absorbed, or open
 	if mouth > 0.05:
 		var m := _shape(K_MOUTH, mouth_q, PackedVector2Array([Vector2(19.0, 13.0), Vector2(14.0, 15.0),

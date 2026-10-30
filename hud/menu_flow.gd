@@ -39,8 +39,8 @@ const PAUSE_CELLS := ["resume", "walk", "restart", "settings", "select", "exit"]
 const PAUSE_LABELS := {"resume": "RESUME", "walk": "THIS WALK", "restart": "START AGAIN",
 	"settings": "SETTINGS", "select": "WALK SELECT", "exit": "EXIT GAME"}
 const PAUSE_COLS := 2
-const SHOP_TABS := ["collar", "bandana", "coat"]
-const SHOP_TAB_NAMES := {"collar": "COLLARS", "bandana": "BANDANAS", "coat": "COATS"}
+const SHOP_TABS := ["collar", "bandana", "coat", "stats"]
+const SHOP_TAB_NAMES := {"collar": "COLLARS", "bandana": "BANDANAS", "coat": "COATS", "stats": "TRAINING"}
 const STEP_NAMES := ["CHOOSE A WALK", "GET READY"]
 
 # Leaving the application is a desktop thing: a browser tab is closed by
@@ -228,6 +228,14 @@ static func walk_info(m: Node2D) -> Dictionary:
 		info.lines = ["About three minutes, nothing to get in the way. No stars, no score."]
 		return info
 	if info.locked:
+		var ch := Game.chase_gate_needed(sel)
+		if ch != "":
+			info["chase_gate"] = ch
+			info["gate"] = int(Game.STAR_GATE.get(sel, 0))
+			info["have"] = Game.total_stars()
+			var ch_name: String = Game.LEVEL_NAMES.get(ch, ch)
+			info.lines = ["Complete %s to enter" % ch_name]
+			return info
 		var gate := int(Game.STAR_GATE.get(sel, 0))
 		info["gate"] = gate
 		info["have"] = Game.total_stars()
@@ -744,6 +752,13 @@ static func shop_data(m: Node2D, kind: String, key: String) -> Dictionary:
 	match kind:
 		"collar": return Game.COLLARS[key]
 		"coat": return Game.COATS[key]
+		"stats":
+			match key:
+				"speed": return {"name": "Sprint Speed", "cost": Game.STAT_UPGRADE_COST}
+				"plant": return {"name": "Plant Grip", "cost": Game.STAT_UPGRADE_COST}
+				"herd": return {"name": "Human Influence", "cost": Game.STAT_UPGRADE_COST}
+				"agility": return {"name": "Agility & Recovery", "cost": Game.STAT_UPGRADE_COST}
+				_: return {"name": key.capitalize(), "cost": Game.STAT_UPGRADE_COST}
 		_: return Game.BANDANAS[key]
 
 
@@ -758,6 +773,10 @@ static func wearing(kind: String, key: String) -> bool:
 
 # "wearing", "owned", "afford" (not owned, enough bones) or "short"
 static func shop_state(kind: String, key: String) -> String:
+	if kind == "stats":
+		if Game.get_dog_stat(Game.dog, key) >= Game.MAX_STAT_POINTS:
+			return "maxed"
+		return "afford" if Game.total_bones >= Game.STAT_UPGRADE_COST else "short"
 	if wearing(kind, key):
 		return "wearing"
 	if Game.is_owned(kind, key):
@@ -805,6 +824,16 @@ static func shop_select(m: Node2D) -> void:
 	var it: Dictionary = m.shop_items[m.shop_idx]
 	var kind: String = it.kind
 	var key: String = it.key
+	if kind == "stats":
+		if Game.upgrade_dog_stat(Game.dog, key):
+			if m.shop_preview != null:
+				m.shop_preview.hop = 9.0
+				m.shop_preview.bark_anim = 0.28
+			Sfx.play("ui")
+		else:
+			m.locked_nudge = 0.35
+		refresh_shop(m)
+		return
 	if Game.is_owned(kind, key) or Game.buy(kind, key):
 		equip(m, kind, key)
 		Game.save_records()
@@ -847,8 +876,10 @@ static func close_progress(m: Node2D) -> void:
 static func progress_rows(m: Node2D) -> Array:
 	var out := []
 	for lv in Game.LEVELS:
+		var ch := Game.chase_gate_needed(lv)
 		var row := {"id": lv, "name": Game.LEVEL_NAMES[lv], "gloss": Game.gloss(lv),
-			"locked": not Game.is_unlocked(lv), "gate": int(Game.STAR_GATE.get(lv, 0))}
+			"locked": not Game.is_unlocked(lv), "gate": int(Game.STAR_GATE.get(lv, 0)),
+			"chase_gate": ch}
 		row["stars"] = Game.stars(lv)
 		row["goals"] = Game.goals_count(lv)
 		row["goals_total"] = (m.LEVEL_GOAL_IDS.get(lv, []) as Array).size()

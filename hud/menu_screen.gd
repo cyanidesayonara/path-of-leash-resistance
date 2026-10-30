@@ -201,10 +201,11 @@ func _walk(vs: Vector2) -> void:
 		Kit.lock(self, Vector2(r.position.x + 34.0, row_y - 6.0), 16.0, Kit.INK_FAINT)
 		draw_string(body, Vector2(r.position.x + 58.0, row_y), String(info.lines[0]),
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Kit.INK_SOFT)
-		var have := float(info.have)
-		var gate := maxf(1.0, float(info.gate))
-		Icons.draw_meter(self, Vector2(r.end.x - 150.0, row_y - 10.0), 110.0, 8.0, have / gate)
-		Icons.draw_star(self, Vector2(r.end.x - 24.0, row_y - 6.0), 8.0, true)
+		if not info.has("chase_gate"):
+			var have := float(info.have)
+			var gate := maxf(1.0, float(info.gate))
+			Icons.draw_meter(self, Vector2(r.end.x - 150.0, row_y - 10.0), 110.0, 8.0, have / gate)
+			Icons.draw_star(self, Vector2(r.end.x - 24.0, row_y - 6.0), 8.0, true)
 	elif info.has("stars"):
 		for i in range(3):
 			Icons.draw_star(self, Vector2(r.position.x + 34.0 + float(i) * 26.0, row_y - 6.0), 10.0,
@@ -333,6 +334,9 @@ func _shop(vs: Vector2) -> void:
 	var note := ""
 	var ncol := Kit.INK_SOFT
 	match st:
+		"maxed":
+			note = "Maxed out (Level %d)" % Game.MAX_STAT_POINTS
+			ncol = Kit.GOOD
 		"wearing":
 			note = "%s is wearing this" % Game.dog_name()
 			ncol = Kit.GOOD
@@ -361,11 +365,19 @@ func _shop(vs: Vector2) -> void:
 			draw_rect(rr, Color(acc.r, acc.g, acc.b, 0.15))
 			draw_rect(Rect2(rr.position, Vector2(4.0, rr.size.y)), acc)
 		_swatch(Vector2(lx + 30.0, y + rr.size.y * 0.5), tab, key, d)
-		draw_string(Kit.body(), Vector2(lx + 56.0, y + 25.0), String(d.name), HORIZONTAL_ALIGNMENT_LEFT, -1,
-			18, Kit.INK if picked else Kit.INK_SOFT)
+		if tab == "stats":
+			var cur_stat := Game.get_dog_stat(Game.dog, key)
+			var stat_str := "Lv %d/%d" % [cur_stat, Game.MAX_STAT_POINTS]
+			draw_string(Kit.body(), Vector2(lx + 56.0, y + 25.0), "%s (%s)" % [String(d.name), stat_str], HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Kit.INK if picked else Kit.INK_SOFT)
+		else:
+			draw_string(Kit.body(), Vector2(lx + 56.0, y + 25.0), String(d.name), HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Kit.INK if picked else Kit.INK_SOFT)
 		var rs := Flow.shop_state(tab, key)
 		var right := rr.end.x - 16.0
 		match rs:
+			"maxed":
+				var mw := Kit.text_w(f, "MAXED", 13)
+				draw_rect(Rect2(right - mw - 16.0, y + 9.0, mw + 16.0, 20.0), Color(Kit.GOOD.r, Kit.GOOD.g, Kit.GOOD.b, 0.22))
+				draw_string(f, Vector2(right - mw - 8.0, y + 24.0), "MAXED", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Kit.GOOD)
 			"wearing":
 				var tw := Kit.text_w(f, "WEARING", 13)
 				draw_rect(Rect2(right - tw - 16.0, y + 9.0, tw + 16.0, 20.0), Color(Kit.GOOD.r, Kit.GOOD.g, Kit.GOOD.b, 0.22))
@@ -383,6 +395,10 @@ func _shop(vs: Vector2) -> void:
 
 func _swatch(at: Vector2, kind: String, key: String, d: Dictionary) -> void:
 	match kind:
+		"stats":
+			draw_circle(at, 10.0, Kit.GOLD)
+			draw_circle(at, 6.0, Kit.PANEL)
+			draw_circle(at, 3.0, Kit.GOLD)
 		"collar":
 			if key == "rainbow":
 				var cols := [Color(0.85, 0.25, 0.25), Color(0.95, 0.6, 0.2), Color(0.95, 0.85, 0.3),
@@ -466,7 +482,11 @@ func _progress(vs: Vector2) -> void:
 			gloss_w, sub_px, Kit.INK_SOFT)
 		if locked:
 			Kit.lock(self, Vector2(c_stars + 8.0, base - 5.0), lock_sz, Kit.INK_FAINT)
-			draw_string(body, Vector2(c_stars + 24.0, base), "opens at %d stars" % int(row.gate),
+			var lock_lbl := "opens at %d stars" % int(row.gate)
+			if String(row.get("chase_gate", "")) != "":
+				var ch_id: String = String(row.chase_gate)
+				lock_lbl = "complete %s to enter" % Game.LEVEL_NAMES.get(ch_id, ch_id)
+			draw_string(body, Vector2(c_stars + 24.0, base), lock_lbl,
 				HORIZONTAL_ALIGNMENT_LEFT, -1, sub_px, Kit.INK_SOFT)
 			continue
 		for s in range(3):

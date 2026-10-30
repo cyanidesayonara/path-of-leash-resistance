@@ -35,6 +35,9 @@ const CLOCK_TARGETS := {
 	"aigues": 180,
 	"horta": 180,
 	"llevant": 180,
+	"boars": 170,
+	"gracia": 175,
+	"raval": 180,
 }
 
 const JAMON_POS := {
@@ -62,6 +65,9 @@ const JAMON_POS := {
 	"aigues": Vector2(650.0, -2200.0),
 	"horta": Vector2(430.0, -2400.0),
 	"llevant": Vector2(860.0, -2200.0),
+	"boars": Vector2(680.0, -2200.0),
+	"gracia": Vector2(640.0, -2100.0),
+	"raval": Vector2(640.0, -2200.0),
 }
 
 

@@ -121,8 +121,8 @@ func _run() -> void:
 	_check(Flow.shop_tab_of(main) == tab, "browsing up and down stays on one tab")
 	Flow.shop_tab(main, 1)
 	_check(Flow.shop_tab_of(main) != tab, "left/right moves to the next tab")
-	Flow.shop_tab(main, 1)
-	Flow.shop_tab(main, 1)
+	for k in range(Flow.SHOP_TABS.size() - 1):
+		Flow.shop_tab(main, 1)
 	_check(Flow.shop_tab_of(main) == tab, "and round to the first again")
 	_check(_verbs(main).has("back"), "the wardrobe always shows the way out")
 	Flow.close_shop(main)

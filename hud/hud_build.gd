@@ -93,6 +93,8 @@ static func build(m: Node2D) -> void:
 	# working piece of the dog creator
 	for k in Game.COATS:
 		m.shop_items.append({"kind": "coat", "key": k})
+	for stat in Game.STAT_NAMES:
+		m.shop_items.append({"kind": "stats", "key": stat})
 	var touch := Control.new()
 	touch.set_script(load("res://hud/touch_controls.gd"))
 	touch.main = m

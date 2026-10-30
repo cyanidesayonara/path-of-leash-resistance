@@ -2,7 +2,7 @@ extends Node
 
 # Autoload: session state that must survive scene reloads.
 
-const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant"]
+const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant", "boars", "gracia", "raval"]
 const LEVEL_NAMES := {
 	"tutorial": "First Walk",
 	# One scheme: a Catalan article plus one everyday noun for the place you
@@ -43,6 +43,9 @@ const LEVEL_NAMES := {
 	"horta": "El Laberint d'Horta",
 	# Barcelona's northernmost beach by the Fòrum, and the dog beach at its end
 	"llevant": "Platja de Llevant",
+	"boars": "Els Senglars",
+	"gracia": "Festa de Gràcia",
+	"raval": "Rambla del Raval",
 }
 # The Catalan name carries the character; this carries the meaning. The game
 # ships in English, so a player who does not speak Catalan should never have to
@@ -75,11 +78,39 @@ const LEVEL_SUBTITLES := {
 	"aigues": "The hillside hike",
 	"horta": "The cypress maze",
 	"llevant": "The dog beach at the far end of the coast",
+	"boars": "The wild Collserola downhill scramble",
+	"gracia": "The decorated festival street run",
+	"raval": "The Grand Finale — El Gat de Botero",
 }
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
 # The first few open quickly, so a new player is never stuck on one walk.
-const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "rain": 4, "market": 7, "oldtown": 9, "trail": 11, "station": 13, "besos": 14, "site": 15, "spook": 17, "scrap": 19, "guell": 21, "neteja": 23, "montjuic": 25, "partit": 27, "port": 29, "reial": 31, "vet": 33, "tibidabo": 35, "aigues": 37, "horta": 39, "llevant": 41}
+const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "rain": 4, "market": 7, "oldtown": 9, "trail": 11, "station": 13, "besos": 14, "site": 15, "spook": 17, "scrap": 19, "guell": 21, "neteja": 23, "montjuic": 25, "partit": 27, "port": 29, "reial": 31, "vet": 33, "tibidabo": 35, "aigues": 37, "horta": 39, "llevant": 41, "boars": 40, "gracia": 42, "raval": 43}
+
+# Keystone Chase milestone gates: each tier requires surviving the previous
+# tier's chase level end-to-end to enter.
+const CHASE_GATE := {
+	# Tier 3 (Walks after El Besòs)
+	"site": "besos",
+	"spook": "besos",
+	"scrap": "besos",
+	"guell": "besos",
+	"boars": "besos",
+	# Tier 4 (Walks after La Neteja)
+	"montjuic": "neteja",
+	"partit": "neteja",
+	"port": "neteja",
+	"reial": "neteja",
+	"vet": "neteja",
+	# Tier 5 (Walks after El Veterinari)
+	"tibidabo": "vet",
+	"aigues": "vet",
+	"horta": "vet",
+	"llevant": "vet",
+	"gracia": "vet",
+	# The Grand Finale (Rambla del Raval - Boss Arena)
+	"raval": "gracia",
+}
 
 const WEATHERS: Array[String] = ["clear", "rain", "wind", "snow"]
 const WEATHER_NAMES := {"clear": "CLEAR", "rain": "RAIN", "wind": "WIND", "snow": "SNOW"}
@@ -92,7 +123,7 @@ const WALK_WEATHER := {"rain": "rain", "tutorial": "clear"}
 const WALK_NIGHT := {"spook": true, "tutorial": false}
 
 # the walk select: the first walk, then the campaign walks in order
-const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant"]
+const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant", "boars", "gracia", "raval"]
 
 # Cosmetics keep their catalog keys when equipped, but ownership is namespaced
 # by category so identically named items remain separate purchases.
@@ -297,6 +328,9 @@ const LEVEL_SUBTITLES_CA := {
 	"aigues": "La caminada pel vessant",
 	"horta": "El laberint de xiprers",
 	"llevant": "La platja dels gossos a l'extrem de la costa",
+	"boars": "La baixada salvatge per Collserola",
+	"gracia": "La festa dels carrers guarnits",
+	"raval": "La gran final — El Gat de Botero",
 }
 const LEVEL_SUBTITLES_ES := {
 	"tutorial": "Aprende la correa, truco a truco",
@@ -324,6 +358,9 @@ const LEVEL_SUBTITLES_ES := {
 	"aigues": "La caminata por la ladera",
 	"horta": "El laberinto de cipreses",
 	"llevant": "La playa para perros al final de la costa",
+	"boars": "El descenso salvaje por Collserola",
+	"gracia": "La fiesta de las calles adornadas",
+	"raval": "La gran final — El Gat de Botero",
 }
 # the off-leash agility course's best time in seconds (0: never run). One
 # record for all of them: it is the same course in every space.
@@ -452,20 +489,61 @@ func dog_desc(k := "") -> String:
 	return String(dog_data(k).get("desc", ""))
 
 
+const MAX_STAT_POINTS := 5
+const STAT_UPGRADE_COST := 40
+const STAT_NAMES: Array[String] = ["speed", "plant", "herd", "agility"]
+
+var dog_upgrades: Dictionary = {}
+
+
+func get_dog_stat(d: String, stat: String) -> int:
+	var du: Dictionary = dog_upgrades.get(d, {})
+	return int(du.get(stat, 0))
+
+
+func can_upgrade_stat(d: String, stat: String) -> bool:
+	if not is_dog_unlocked(d):
+		return false
+	return get_dog_stat(d, stat) < MAX_STAT_POINTS and total_bones >= STAT_UPGRADE_COST
+
+
+func upgrade_dog_stat(d: String, stat: String) -> bool:
+	if not can_upgrade_stat(d, stat):
+		return false
+	total_bones -= STAT_UPGRADE_COST
+	if not dog_upgrades.has(d):
+		dog_upgrades[d] = {}
+	dog_upgrades[d][stat] = get_dog_stat(d, stat) + 1
+	save_records()
+	return true
+
+
 func dog_speed_mult(k := "") -> float:
-	return float(dog_data(k).get("speed_mult", 1.0))
+	var key := k if k != "" else dog
+	var base := float(dog_data(key).get("speed_mult", 1.0))
+	var bonus := float(get_dog_stat(key, "speed")) * 0.05
+	return base + bonus
 
 
 func dog_accel_mult(k := "") -> float:
-	return float(dog_data(k).get("accel_mult", 1.0))
+	var key := k if k != "" else dog
+	var base := float(dog_data(key).get("accel_mult", 1.0))
+	var bonus := float(get_dog_stat(key, "agility")) * 0.06
+	return base + bonus
 
 
 func dog_plant_mult(k := "") -> float:
-	return float(dog_data(k).get("plant_mult", 1.0))
+	var key := k if k != "" else dog
+	var base := float(dog_data(key).get("plant_mult", 1.0))
+	var bonus := float(get_dog_stat(key, "plant")) * 0.10
+	return base + bonus
 
 
 func dog_herd_mult(k := "") -> float:
-	return float(dog_data(k).get("herd_mult", 1.0))
+	var key := k if k != "" else dog
+	var base := float(dog_data(key).get("herd_mult", 1.0))
+	var bonus := float(get_dog_stat(key, "herd")) * 0.08
+	return base + bonus
 
 
 func dog_muck_mult(k := "") -> float:
@@ -797,6 +875,7 @@ func load_records() -> void:
 	dog = String(cf.get_value("player", "dog", DEFAULT_DOG))
 	if not DOGS.has(dog):
 		dog = DEFAULT_DOG
+	dog_upgrades = Dictionary(cf.get_value("player", "dog_upgrades", {}))
 	vol_master = clampf(float(cf.get_value("settings", "vol_master", DEFAULT_VOL_MASTER)), 0.0, 1.0)
 	vol_sfx = clampf(float(cf.get_value("settings", "vol_sfx", DEFAULT_VOL_SFX)), 0.0, 1.0)
 	vol_music = clampf(float(cf.get_value("settings", "vol_music", DEFAULT_VOL_MUSIC)), 0.0, 1.0)
@@ -839,6 +918,7 @@ func save_records() -> void:
 	cf.set_value("cosmetics", "bandana", bandana)
 	cf.set_value("cosmetics", "coat", coat)
 	cf.set_value("player", "dog", dog)
+	cf.set_value("player", "dog_upgrades", dog_upgrades)
 	cf.set_value("settings", "vol_master", vol_master)
 	cf.set_value("settings", "vol_sfx", vol_sfx)
 	cf.set_value("settings", "vol_music", vol_music)
@@ -907,9 +987,29 @@ func total_stars() -> int:
 	return s
 
 
+func has_completed(lv: String) -> bool:
+	if free_play:
+		return true
+	if not records.has(lv):
+		return false
+	var r: Dictionary = records[lv]
+	return int(r.get("bones", 0)) > 0 or float(r.get("time", 0.0)) > 0.0
+
+
+func chase_gate_needed(lv: String) -> String:
+	if free_play or lv == "tutorial" or not CHASE_GATE.has(lv):
+		return ""
+	var req: String = String(CHASE_GATE[lv])
+	return "" if has_completed(req) else req
+
+
 func is_unlocked(lv: String) -> bool:
 	if free_play or lv == "tutorial":
 		return true  # the tutorial is always open, and free play opens all walks
+	if lv == "raval":
+		return has_completed("gracia")
+	if chase_gate_needed(lv) != "":
+		return false
 	return total_stars() >= int(STAR_GATE.get(lv, 0))
 
 
@@ -954,6 +1054,9 @@ func gate_crossed(prev_total: int, lv: String) -> bool:
 
 
 func best_line(lv: String) -> String:
+	var ch := chase_gate_needed(lv)
+	if ch != "":
+		return "locked - complete %s to enter" % LEVEL_NAMES.get(ch, ch)
 	if not is_unlocked(lv):
 		return "locked - earn %d stars to unlock" % int(STAR_GATE.get(lv, 0))
 	if not records.has(lv) or int(records[lv].bones) <= 0:

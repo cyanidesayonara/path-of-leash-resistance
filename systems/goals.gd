@@ -59,6 +59,12 @@ const LEVEL_GOAL_IDS := {
 	# El Laberint d'Horta: round Eros, and the hedges to tetherball your human round
 	"horta": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "drink", "fling", "eros", "combo", "prize", "spell", "jamon", "clock"],
 	"llevant": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "drink", "snack", "save", "combo", "prize", "spell", "jamon", "clock"],
+	# Els Senglars: Collserola wild boar trail chase
+	"boars": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "boar", "mud", "log", "combo", "prize", "spell", "jamon", "clock"],
+	# Festa de Gràcia: decorated festival street run
+	"gracia": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "correfoc", "churros", "decor", "combo", "prize", "spell", "jamon", "clock"],
+	# Rambla del Raval: The Grand Finale — El Gat de Botero Boss Arena
+	"raval": ["mark", "sniff", "phone", "paws", "bag", "clothesline", "pigeons", "swat", "combo", "prize", "spell", "jamon", "clock", "topple", "boop"],
 }
 
 
@@ -112,6 +118,18 @@ static func defs(m: Node2D) -> Dictionary:
 		"view": {"text": "Get your human to look up at the view", "target": 1, "fn": func() -> int: return 1 if Aigues.view_taken(m) else 0},
 		"eros": {"text": "Lead your human round Eros in the middle of the maze", "target": 1, "fn": func() -> int: return 1 if Horta.eros_lapped(m) else 0},
 		"viewfinder": {"text": "Gaze through the panoramic cliffside viewfinder", "target": 1, "fn": func() -> int: return 1 if m.tibidabo_viewfinder_gazed else 0},
+		"boar": {"text": "Keep the wild boars a leash length away", "target": 1, "fn": func() -> int: return 1 if m.chase_min_gap >= HomeChase.OUTRUN_GAP else 0},
+		"mud": {"text": "Splash through %d mud ruts at speed", "target": 3, "fn": func() -> int: return int(m.get("boar_mud_splashes") if m.get("boar_mud_splashes") != null else m.splashes)},
+		"log": {"text": "Leash-vault over %d fallen logs", "target": 2, "fn": func() -> int: return int(m.get("boar_logs_vaulted") if m.get("boar_logs_vaulted") != null else m.flings_done)},
+		"correfoc": {"text": "Keep the fire devils a leash length away", "target": 1, "fn": func() -> int: return 1 if m.chase_min_gap >= HomeChase.OUTRUN_GAP else 0},
+		"churros": {"text": "Scarf down %d hot churros", "target": 2, "fn": func() -> int: return int(m.get("churros_eaten") if m.get("churros_eaten") != null else m.kebabs_eaten)},
+		"decor": {"text": "Brush under %d hanging festival decorations", "target": 4, "fn": func() -> int: return int(m.get("gracia_decor_brushed") if m.get("gracia_decor_brushed") != null else 0)},
+		"clothesline": {"text": "Clothesline charging El Gat with a taut leash", "target": 1, "fn": func() -> int: return 1 if bool(m.get("gat_clotheslined")) else 0},
+		"pummel": {"text": "Fling your human to pummel charging El Gat", "target": 1, "fn": func() -> int: return 1 if bool(m.get("gat_human_pummeled")) else 0},
+		"topple": {"text": "Topple El Gat with an AT-AT leash wrap", "target": 1, "fn": func() -> int: return 1 if bool(m.get("gat_toppled")) else 0},
+		"boop": {"text": "Super-boop El Gat's snout for the win", "target": 1, "fn": func() -> int: return 1 if bool(m.get("gat_booped")) else 0},
+		"pigeons": {"text": "Scatter %d plaza pigeon flocks", "target": 3, "fn": func() -> int: return int(m.get("raval_pigeons_scattered"))},
+		"swat": {"text": "Dodge %d paw swats", "target": 3, "fn": func() -> int: return int(m.get("gat_swats_dodged"))},
 		"spell": {"text": "Spell LEASH", "target": 5, "fn": func() -> int: return int(m.get("word_letters_collected"))},
 		"jamon": {"text": "Find the hidden pernil", "target": 1, "fn": func() -> int: return 1 if bool(m.get("jamon_found")) else 0},
 		"clock": {"text": "Beat the clock (under %ds)" % int(m.get("clock_target") if m.get("clock_target") != null else 180), "target": 1, "fn": func() -> int: return 1 if (bool(m.get("finished")) and float(m.get("elapsed")) <= float(m.get("clock_target") if m.get("clock_target") != null else 180)) else 0},

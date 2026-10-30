@@ -54,6 +54,33 @@ const MELODY_B := [
 const CHORDS_A := [[62, "maj"], [59, "min"], [55, "maj"], [57, "maj"], [62, "maj"], [59, "min"], [64, "min"], [62, "maj"]]
 const CHORDS_B := [[55, "maj"], [57, "maj"], [54, "min"], [59, "min"], [55, "maj"], [57, "maj"], [59, "min"], [57, "maj"]]
 
+const RAVAL_BOSS_CHORDS := [
+	[62, "min"], [62, "min"], [58, "maj"], [60, "maj"],
+	[62, "min"], [65, "maj"], [67, "min"], [69, "maj"],
+	[58, "maj"], [60, "maj"], [62, "min"], [62, "min"],
+	[67, "min"], [58, "maj"], [69, "maj"], [69, "maj"],
+]
+
+const RAVAL_BOSS_MELODY := [
+	[0.0, 0.75, 74], [0.75, 0.75, 77], [1.5, 0.5, 79], [2.0, 1.0, 81], [3.0, 1.0, 77],
+	[4.0, 0.75, 79], [4.75, 0.75, 77], [5.5, 0.5, 76], [6.0, 0.75, 74], [6.75, 0.5, 73], [7.25, 0.75, 74],
+	[8.0, 0.75, 70], [8.75, 0.75, 74], [9.5, 0.5, 77], [10.0, 1.0, 79], [11.0, 1.0, 81],
+	[12.0, 0.5, 81], [12.5, 0.5, 79], [13.0, 0.5, 77], [13.5, 0.5, 76], [14.0, 2.0, 74],
+	[16.0, 0.5, 74], [16.5, 0.5, 81], [17.0, 1.0, 86], [18.0, 1.0, 84], [19.0, 1.0, 81],
+	[20.0, 1.0, 84], [21.0, 1.0, 81], [22.0, 1.0, 77], [23.0, 1.0, 81],
+	[24.0, 0.75, 79], [24.75, 0.75, 82], [25.5, 0.5, 86], [26.0, 1.0, 89], [27.0, 1.0, 88],
+	[28.0, 1.0, 85], [29.0, 1.0, 81], [30.0, 2.0, 81],
+	[32.0, 1.5, 89], [33.5, 0.5, 88], [34.0, 1.0, 86], [35.0, 1.0, 84],
+	[36.0, 1.5, 86], [37.5, 0.5, 84], [38.0, 1.0, 82], [39.0, 1.0, 81],
+	[40.0, 0.5, 79], [40.5, 0.5, 81], [41.0, 0.5, 82], [41.5, 0.5, 84], [42.0, 1.0, 86], [43.0, 1.0, 81],
+	[44.0, 0.75, 77], [44.75, 0.75, 79], [45.5, 0.5, 81], [46.0, 2.0, 86],
+	[48.0, 1.0, 82], [49.0, 0.5, 79], [49.5, 0.5, 74], [50.0, 1.0, 79], [51.0, 1.0, 82],
+	[52.0, 1.0, 86], [53.0, 1.0, 84], [54.0, 1.0, 82], [55.0, 1.0, 86],
+	[56.0, 0.75, 85], [56.75, 0.75, 86], [57.5, 0.5, 88], [58.0, 1.0, 89], [59.0, 1.0, 88],
+	[60.0, 1.5, 86], [61.5, 0.5, 85], [62.0, 2.0, 86],
+]
+
+
 # how each walk wears the tune. key: semitones from D. lead2 doubles the
 # melody through the B section (instrument, octave). swing: how late the
 # off-beat quavers fall, as a fraction of a beat.
@@ -124,6 +151,15 @@ const STYLES := {
 		"bass": "root", "drums": "brushsoft", "verb": 0.38},
 	"llevant": {"bpm": 102, "key": 5, "lead": "marimba", "lead2": ["whistle", 0], "comp": "bossa",
 		"bass": "bossa", "drums": "rim", "swing": 0.06, "verb": 0.28},
+	# Els Senglars: rustic hillside trail with marimba, whistle, walking bass, and brush drums
+	"boars": {"bpm": 118, "key": 2, "lead": "marimba", "lead2": ["whistle", 0], "comp": "arp",
+		"bass": "walk", "drums": "brush", "swing": 0.08, "verb": 0.26},
+	# Festa de Gràcia: festive neighborhood carnival rhythm with guitar, whistle, and festive claps
+	"gracia": {"bpm": 122, "key": 5, "lead": "guitar", "lead2": ["whistle", 0], "comp": "rumba",
+		"bass": "eighths", "drums": "claps", "swing": 0.06, "verb": 0.24},
+	# Rambla del Raval: thrilling high-energy Final Fantasy VII style boss battle coup de grâce
+	"raval": {"bpm": 148, "key": 0, "minor": true, "lead": "guitar", "lead2": ["accordion", 0], "lead2_all": true,
+		"comp": "push", "bass": "eighths", "drums": "drive", "verb": 0.20, "chords": RAVAL_BOSS_CHORDS, "mel": RAVAL_BOSS_MELODY},
 	"freedom": {"bpm": 120, "key": 5, "lead": "whistle", "lead2": ["glock", 12], "comp": "arp",
 		"bass": "walk", "drums": "kickrim", "swing": 0.1, "verb": 0.22},
 }
@@ -420,9 +456,13 @@ static func _arrange(j: Job, st: Dictionary) -> void:
 	var minor: bool = st.get("minor", false)
 	var swing: float = st.get("swing", 0.0)
 	var chords: Array = []
-	for ch in CHORDS_A + CHORDS_B:
-		var c2: Array = _minor_chord(ch) if minor else ch
-		chords.append([int(c2[0]) + key, c2[1]])
+	if st.has("chords"):
+		for ch in st["chords"]:
+			chords.append([int(ch[0]) + key, ch[1]])
+	else:
+		for ch in CHORDS_A + CHORDS_B:
+			var c2: Array = _minor_chord(ch) if minor else ch
+			chords.append([int(c2[0]) + key, c2[1]])
 	# a beat position to a sample, swung and loosened
 	var at := func(pos: float, loose := 1.0) -> int:
 		var whole := floorf(pos)
@@ -437,12 +477,16 @@ static func _arrange(j: Job, st: Dictionary) -> void:
 	var lead: String = st["lead"]
 	var lead2: Array = st.get("lead2", [])
 	var mel: Array = []
-	for nt in MELODY_A:
-		mel.append([float(nt[0]), float(nt[1]), int(nt[2])])
-	for nt in MELODY_B:
-		mel.append([float(nt[0]) + 32.0, float(nt[1]), int(nt[2])])
+	if st.has("mel"):
+		for nt in st["mel"]:
+			mel.append([float(nt[0]), float(nt[1]), int(nt[2])])
+	else:
+		for nt in MELODY_A:
+			mel.append([float(nt[0]), float(nt[1]), int(nt[2])])
+		for nt in MELODY_B:
+			mel.append([float(nt[0]) + 32.0, float(nt[1]), int(nt[2])])
 	for nt: Array in mel:
-		var m: int = (_minor_note(nt[2]) if minor else int(nt[2])) + key
+		var m: int = (_minor_note(nt[2]) if (minor and not st.has("mel")) else int(nt[2])) + key
 		var s: int = at.call(nt[0])
 		var d: float = nt[1] * beat
 		_lead(j, lead, s, m, d, vel.call(1.0))

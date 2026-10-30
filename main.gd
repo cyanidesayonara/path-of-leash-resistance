@@ -287,6 +287,9 @@ const WALK_MODULES := {
 	"aigues": preload("res://systems/aigues.gd"),
 	"horta": preload("res://systems/horta.gd"),
 	"llevant": preload("res://systems/llevant.gd"),
+	"boars": preload("res://systems/boars.gd"),
+	"gracia": preload("res://systems/gracia.gd"),
+	"raval": preload("res://systems/boss_gat.gd"),
 	"beach": preload("res://systems/passeig.gd"),
 	"rain": preload("res://systems/diluvi.gd"),
 	"market": preload("res://world/mercat.gd"),
@@ -492,6 +495,14 @@ var reial_busker_barked := false
 var vet_scale_weighed := false
 var tibidabo_viewfinder_gazed := false
 var tibidabo_funicular_seen := false
+var gat_toppled := false
+var gat_booped := false
+var gat_swats_dodged := 0
+var raval_pigeons_scattered := 0
+var gat_clotheslined := false
+var gat_human_pummeled := false
+var gat_tree_smashed := false
+var boss_gat: RefCounted = null
 # the pole she last vaulted, and whether she has since cleared it. Without
 # this she can sit in one pole's orbit re-triggering forever: the autowalk
 # stall watchdog caught it, and it would also have been a score exploit
@@ -9363,6 +9374,7 @@ const FREEDOM_KINDS := {
 	"aigues": "clearing",
 	# the wood behind the garden's back gate
 	"horta": "clearing",
+	"raval": "placa",
 }
 const BEACH_SEA_R := 430.0
 const BEACH_GATE_SHORE_X := 230.0
@@ -10291,7 +10303,7 @@ func _draw_world() -> void:
 			_draw_paving(maxf(vt, GATE_Y - 30.0), vb, walkway)
 			_wc.draw_line(Vector2(sw_l, bottom), Vector2(sw_l, GATE_Y), COL_SEAM, 3.0)
 			_wc.draw_line(Vector2(sw_r, bottom), Vector2(sw_r, GATE_Y), COL_SEAM, 3.0)
-		elif lvl != "partit" and lvl != "port" and lvl != "reial" and lvl != "vet" and lvl != "tibidabo":
+		elif lvl != "partit" and lvl != "port" and lvl != "reial" and lvl != "vet" and lvl != "tibidabo" and lvl != "raval":
 			# (Dia de Partit's asphalt and sidewalks are on the cached edge layer)
 			_draw_walk_ribbon(vt, vb, bottom, walkway)
 		if walk_mod != null and walk_mod.has_method("draw_over_walkway"):

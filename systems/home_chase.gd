@@ -93,6 +93,16 @@ const VET_BANDS := [
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
 ]
 
+const BOAR_BANDS := [
+	{"id": "picnic", "kind": "respite", "jam_y": -3400.0},
+	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
+]
+
+const GRACIA_BANDS := [
+	{"id": "castell", "kind": "respite", "jam_y": -3300.0},
+	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
+]
+
 const EventFeed := preload("res://hud/event_feed.gd")
 const ChaseCheckpoint := preload("res://systems/chase_checkpoint.gd")
 const LevelBuild := preload("res://world/level_build.gd")
@@ -119,6 +129,20 @@ static func kind_behavior(kind: String) -> Dictionary:
 				"warning": "FIRE TRUCK!  GO GO GO!", "warning_color": Color(1, 0.55, 0.25),
 				"caught_human": "THEY GOT YOUR HUMAN\n\nYou pulled. You barked. It was not enough.",
 				"caught_dog": "NOBODY WAITED FOR YOU\n\nYou snagged, the leash went tight, and\nthey kept walking. They always keep walking.",
+			}
+		"boars":
+			return {
+				"kind": "boars", "speed": 142.0, "flee": false,
+				"warning": "WILD BOARS! WATCH OUT!",
+				"caught_human": "THE BOARS GOT YOUR HUMAN\n\nThey stood between mama and the picnic basket.\nBig mistake.",
+				"caught_dog": "ROOTED IN THE DIRT!\n\nYou got bowled over into the acorns.\nMama boar claimed your snacks.",
+			}
+		"correfoc":
+			return {
+				"kind": "correfoc", "speed": 140.0, "flee": false,
+				"warning": "CORREFOC! RUN FROM THE FIRE DEVILS!",
+				"caught_human": "SPARKED OUT!\n\nYour human caught firecrackers in their hood.\nThey dropped the phone in panic.",
+				"caught_dog": "TAIL SINGED!\n\nA fire devil's sparkler popped right behind you.\nYou bolted into the nearest doorway.",
 			}
 		"vet":
 			return {
@@ -167,6 +191,18 @@ static func profile_for(level: String) -> Dictionary:
 		v["script"] = "res://entities/vet_threat.gd"
 		v["bands"] = VET_BANDS.duplicate(true)
 		return v
+	if level == "boars":
+		var b := kind_behavior("boars")
+		b["id"] = "boars"
+		b["script"] = "res://entities/boar_threat.gd"
+		b["bands"] = BOAR_BANDS.duplicate(true)
+		return b
+	if level == "gracia":
+		var g := kind_behavior("correfoc")
+		g["id"] = "gracia"
+		g["script"] = "res://entities/correfoc_threat.gd"
+		g["bands"] = GRACIA_BANDS.duplicate(true)
+		return g
 	return {}
 
 
