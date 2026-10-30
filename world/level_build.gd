@@ -2653,23 +2653,25 @@ const FREEDOM_PROPS := {
 	# the wood behind the garden's back gate: pines and holm oaks, a fallen
 	# trunk, a stone bench someone carried up from the garden long ago
 	"raval": [
-		[Vector2(270.0, -455.0), "dig"], [Vector2(624.0, -436.0), "dig"], [Vector2(894.0, -214.0), "dig"],
-		[Vector2(370.0, -470.0), "planter"], [Vector2(1016.0, -236.0), "planter"],
-		[Vector2(250.0, -362.0), "post"], [Vector2(510.0, -452.0), "post"], [Vector2(746.0, -442.0), "post"],
-		[Vector2(1036.0, -474.0), "post"], [Vector2(300.0, -250.0), "shrub"], [Vector2(542.0, -230.0), "post"],
-		[Vector2(768.0, -220.0), "shrub"],
+		[Vector2(288.0, -442.0), "dig"], [Vector2(642.0, -422.0), "dig"], [Vector2(876.0, -228.0), "dig"],
+		[Vector2(388.0, -460.0), "planter"], [Vector2(1028.0, -248.0), "planter"],
+		[Vector2(262.0, -350.0), "post"], [Vector2(528.0, -440.0), "post"], [Vector2(762.0, -430.0), "post"],
+		[Vector2(1048.0, -462.0), "post"], [Vector2(312.0, -240.0), "shrub"], [Vector2(558.0, -242.0), "post"],
+		[Vector2(780.0, -210.0), "shrub"],
 	],
 	"boars": [
-		[Vector2(320.0, -450.0), "dig"], [Vector2(640.0, -380.0), "dig"], [Vector2(920.0, -280.0), "dig"],
-		[Vector2(250.0, -320.0), "rock"], [Vector2(480.0, -520.0), "log"], [Vector2(850.0, -480.0), "shrub"],
-		[Vector2(380.0, -220.0), "rock"], [Vector2(720.0, -420.0), "log"], [Vector2(560.0, -490.0), "shrub"],
-		[Vector2(780.0, -240.0), "dig"],
+		[Vector2(294.0, -438.0), "dig"], [Vector2(648.0, -418.0), "dig"], [Vector2(870.0, -232.0), "dig"],
+		[Vector2(394.0, -456.0), "planter"], [Vector2(1032.0, -252.0), "planter"],
+		[Vector2(266.0, -346.0), "rock"], [Vector2(534.0, -436.0), "post"], [Vector2(766.0, -426.0), "rock"],
+		[Vector2(1052.0, -458.0), "post"], [Vector2(316.0, -236.0), "shrub"], [Vector2(564.0, -246.0), "post"],
+		[Vector2(784.0, -206.0), "shrub"],
 	],
 	"gracia": [
-		[Vector2(350.0, -400.0), "dig"], [Vector2(640.0, -360.0), "dig"], [Vector2(880.0, -250.0), "dig"],
-		[Vector2(380.0, -480.0), "planter"], [Vector2(920.0, -230.0), "planter"],
-		[Vector2(310.0, -360.0), "post"], [Vector2(530.0, -450.0), "post"], [Vector2(750.0, -440.0), "post"],
-		[Vector2(450.0, -240.0), "planter"], [Vector2(680.0, -220.0), "post"],
+		[Vector2(300.0, -434.0), "dig"], [Vector2(654.0, -414.0), "dig"], [Vector2(864.0, -236.0), "dig"],
+		[Vector2(400.0, -452.0), "planter"], [Vector2(1036.0, -256.0), "planter"],
+		[Vector2(270.0, -342.0), "post"], [Vector2(540.0, -432.0), "post"], [Vector2(770.0, -422.0), "post"],
+		[Vector2(1056.0, -454.0), "post"], [Vector2(320.0, -232.0), "planter"], [Vector2(570.0, -250.0), "post"],
+		[Vector2(788.0, -202.0), "shrub"],
 	],
 	"horta": [
 		[Vector2(262.0, -500.0), "dig"], [Vector2(660.0, -280.0), "dig"], [Vector2(1020.0, -330.0), "dig"],
