@@ -29,10 +29,10 @@ const NAMES := {
 	"pickup": ["G", "LB", "GRAB"],
 	"turbo": ["SHIFT", "RB", "RUN"],
 	"restart": ["R", "Start", "R"],
-	"share": ["C", "Y", "SHARE"],
+	"share": ["C", "right", "SHARE"],
 	# same physical action as share, but the tutorial needs to describe what
 	# the context-sensitive touch button does rather than call it SHARE
-	"skip": ["C", "Y", "SKIP"],
+	"skip": ["C", "right", "SKIP"],
 	"pause": ["ESC", "Back", "MENU"],
 	"mute_music": ["M", "down", ""],
 	"goals": ["TAB", "up", "tap"],
