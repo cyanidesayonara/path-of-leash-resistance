@@ -348,7 +348,7 @@ func transition_to(new_state: State) -> void:
 		State.CHARGE_WARN:
 			state_t = 0.85
 			cur_speed = 0.0
-			Sfx.play("roar", 1.1, 2.0)
+			Sfx.play("gat_roar", 1.1, 3.0)
 			# Aim charge toward dog / human along promenade
 			var target_p: Vector2 = main.dog.global_position if (main != null and main.dog != null) else (pos + Vector2(0, 300.0))
 			charge_dir = (target_p - pos).normalized()
@@ -376,7 +376,7 @@ func transition_to(new_state: State) -> void:
 			pos = PEDESTAL_POS
 			update_leg_positions()
 			face_dir = Vector2.DOWN
-			Sfx.play("roar", 0.9, 3.0)
+			Sfx.play("gat_roar", 0.95, 3.5)
 			if main != null:
 				main.shake_t = maxf(float(main.shake_t), 0.6)
 				main.feed.say("PHASE 3: AT-AT TANGLE!", EventFeed.Tone.LOUD)
@@ -395,7 +395,7 @@ func transition_to(new_state: State) -> void:
 			topple_angle = PI * 0.5
 			snout_pos = pos + Vector2(-54.0, -18.0)
 			Sfx.play("crack", 0.6, 4.0)
-			Sfx.play("bell", 0.5, 6.0)
+			Sfx.play("gat_clang", 0.8, 6.0)
 			if main != null:
 				main.set("gat_toppled", true)
 				main.shake_t = 1.4
@@ -411,6 +411,7 @@ func transition_to(new_state: State) -> void:
 			topple_angle = 0.0
 			pos = PEDESTAL_POS
 			update_leg_positions()
+			Sfx.play("gat_purr", 1.0, 3.0)
 			Sfx.play("star", 1.1)
 			if main != null:
 				main.set("gat_booped", true)
@@ -655,7 +656,7 @@ func tick_state(delta: float) -> void:
 				main.set("gat_clotheslined", true)
 				damage_boss(25.0)
 				Sfx.play("intro_taut", 1.0, 3.0)
-				Sfx.play("crack", 0.7, 4.0)
+				Sfx.play("gat_clang", 1.1, 4.0)
 				main.shake_t = 1.1
 				main.feed.say("CLOTHESLINE! EL GAT TRIPPED!", EventFeed.Tone.LOUD)
 				main.combo.add("CLOTHESLINE", 8)
@@ -670,7 +671,7 @@ func tick_state(delta: float) -> void:
 				main.set("gat_tree_smashed", true)
 				damage_boss(20.0)
 				Sfx.play("crack", 0.6, 5.0)
-				Sfx.play("bell", 0.6, 4.0)
+				Sfx.play("gat_clang", 0.95, 4.0)
 				main.shake_t = 1.2
 				main.feed.say("TRUNK SMASH! EL GAT STUNNED!", EventFeed.Tone.LOUD)
 				main.combo.add("TRUNK SMASH", 6)

@@ -337,6 +337,9 @@ func _build_library() -> void:
 	lib["whoop"] = _whoop()
 	lib["drum"] = _noiseburst(0.08, 2.2)
 	lib["snort"] = _noiseburst(0.18, 4.0)
+	lib["gat_roar"] = _gat_roar()
+	lib["gat_clang"] = _gat_clang()
+	lib["gat_purr"] = _gat_purr()
 
 
 func _pack(samples: PackedFloat32Array) -> AudioStreamWAV:
@@ -397,12 +400,14 @@ func _tone(freq: float, dur: float, decay: float, amp := 0.5) -> AudioStreamWAV:
 	out.resize(n)
 	for i in range(n):
 		var t := float(i) / RATE
-		out[i] = sin(TAU * freq * t) * exp(-t * decay) * amp
+		var tone := sin(TAU * freq * t) * 0.78 + sin(TAU * freq * 2.0 * t) * 0.16 + sin(TAU * freq * 1.5 * t) * 0.06
+		var atk := minf(1.0, float(i) / (0.002 * RATE))
+		out[i] = tone * exp(-t * decay) * atk * amp
 	return _pack(out)
 
 
 func _coin(f0: float, f1: float, dur: float) -> AudioStreamWAV:
-	# a two-note blip: the classic pickup ding
+	# a two-note chime: tactile physical pickup with warm overtones
 	var n := int(dur * RATE)
 	var out := PackedFloat32Array()
 	out.resize(n)
@@ -410,7 +415,9 @@ func _coin(f0: float, f1: float, dur: float) -> AudioStreamWAV:
 	for i in range(n):
 		var t := float(i) / RATE
 		var f := f0 if i < split else f1
-		out[i] = sin(TAU * f * t) * exp(-t * 12.0) * 0.5
+		var tone := sin(TAU * f * t) * 0.68 + sin(TAU * f * 2.0 * t) * 0.22 + sin(TAU * f * 2.76 * t) * 0.10
+		var atk := minf(1.0, float(i) / (0.003 * RATE))
+		out[i] = tone * exp(-t * 11.0) * atk * 0.52
 	return _pack(out)
 
 
@@ -428,7 +435,7 @@ func _bell() -> AudioStreamWAV:
 
 
 func _arp(freqs: Array, note: float) -> AudioStreamWAV:
-	# an ascending arpeggio - success / combo
+	# an ascending arpeggio - musical chime combo with harmonic body
 	var per := int(note * RATE)
 	var out := PackedFloat32Array()
 	out.resize(per * freqs.size())
@@ -436,7 +443,9 @@ func _arp(freqs: Array, note: float) -> AudioStreamWAV:
 		var f: float = freqs[k]
 		for i in range(per):
 			var t := float(i) / RATE
-			out[k * per + i] = sin(TAU * f * t) * exp(-t * 9.0) * 0.5
+			var tone := sin(TAU * f * t) * 0.72 + sin(TAU * f * 2.0 * t) * 0.20 + sin(TAU * f * 3.0 * t) * 0.08
+			var atk := minf(1.0, float(i) / (0.003 * RATE))
+			out[k * per + i] = tone * exp(-t * 8.5) * atk * 0.52
 	return _pack(out)
 
 
@@ -471,18 +480,21 @@ func _squawk() -> AudioStreamWAV:
 
 
 func _bark() -> AudioStreamWAV:
-	# a short woof: a fast downward pitch with a little grit
-	var dur := 0.16
+	# a natural woof: chest resonance, vocal throat formants and breath grit
+	var dur := 0.18
 	var n := int(dur * RATE)
 	var out := PackedFloat32Array()
 	out.resize(n)
 	for i in range(n):
 		var t := float(i) / RATE
 		var prog := t / dur
-		var f := lerpf(420.0, 180.0, prog)
+		var f := lerpf(380.0, 160.0, prog)
 		var env := sin(PI * prog)  # swell in and out
-		var grit := rng.randf_range(-0.15, 0.15)
-		out[i] = (sin(TAU * f * t) * 0.7 + grit) * env * 0.6
+		var chest := sin(TAU * (f * 0.5) * t) * 0.35
+		var body := sin(TAU * f * t) * 0.55
+		var bite := sin(TAU * f * 2.15 * t) * 0.18
+		var grit := rng.randf_range(-0.12, 0.12) * (1.0 - prog * 0.5)
+		out[i] = (body + chest + bite + grit) * env * 0.65
 	return _pack(out)
 
 
@@ -642,4 +654,52 @@ func _intro_door() -> AudioStreamWAV:
 		prev = lerpf(prev, _hash_noise(i, 7.0), 0.35)
 		var latch := sin(TAU * 900.0 * t) * exp(-t * 70.0) * 0.35
 		out[i] = latch + prev * exp(-t * 12.0) * 0.3
+	return _pack(out)
+
+
+func _gat_roar() -> AudioStreamWAV:
+	# El Gat de Botero: a colossal bronze feline roar
+	var dur := 0.95
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var prev := 0.0
+	for i in range(n):
+		var t := float(i) / RATE
+		var prog := t / dur
+		var env := sin(PI * minf(1.0, prog * 1.5)) * (1.0 - prog * 0.4)
+		var f_growl := lerpf(95.0, 55.0, prog)
+		var growl := (sin(TAU * f_growl * t) + 0.4 * sin(TAU * f_growl * 2.02 * t))
+		var nz := rng.randf_range(-0.6, 0.6) * (0.6 + 0.4 * sin(TAU * 45.0 * t))
+		prev = lerpf(prev, nz, 0.22)
+		out[i] = (growl * 0.55 + prev * 0.45) * env * 0.70
+	return _pack(out)
+
+
+func _gat_clang() -> AudioStreamWAV:
+	# massive bronze statue impact / clothesline trip
+	var dur := 0.85
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		var v := sin(TAU * 180.0 * t) * 0.50 + sin(TAU * 432.0 * t) * 0.32 + sin(TAU * 875.0 * t) * 0.18 + sin(TAU * 1420.0 * t) * 0.10
+		var atk := minf(1.0, float(i) / (0.002 * RATE))
+		out[i] = v * exp(-t * 6.5) * atk * 0.68
+	return _pack(out)
+
+
+func _gat_purr() -> AudioStreamWAV:
+	# deep satisfied bronze statue purr engine
+	var dur := 1.2
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		var mod := sin(TAU * 26.0 * t) * 0.5 + 0.5
+		var rumble := sin(TAU * 52.0 * t) * 0.5 + sin(TAU * 104.0 * t) * 0.3
+		var breath := rng.randf_range(-0.15, 0.15)
+		out[i] = (rumble + breath) * mod * 0.45
 	return _pack(out)

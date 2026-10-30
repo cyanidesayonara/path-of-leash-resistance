@@ -117,8 +117,10 @@ static func wrap_rects() -> Array[Rect2]:
 	]
 
 
-static func surface(_m: Node2D, _p: Vector2) -> int:
-	return Surfaces.S.PAVEMENT
+static func surface(m: Node2D, p: Vector2) -> int:
+	if p.y > m.GATE_Y:
+		return Surfaces.S.PAVEMENT
+	return -1
 
 
 static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
