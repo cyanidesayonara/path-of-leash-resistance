@@ -7,10 +7,11 @@ Store through Partner Center. Written 2026-09-23 against Partner Center's
 Everything entered in Partner Center for it is recorded in
 `store/listing.md`; this doc is the procedure, that file is the content.
 
-v1.66 is the last tag (2026-10-28), live in the Store. It and 1.65 went out
-with 1.64's What's new, because the notes were not updated before tagging.
-The current What's new on main is written for 1.67 and covers everything
-since 1.64. Before any tag: the What's new in `store/listing.md` describes
+v1.67 is the last tag (2026-10-31), on itch and submitted to the Store. Its
+What's new covers everything since 1.64 (1.65 and 1.66 went out with 1.64's
+notes, because the notes were not updated before tagging). Once 1.67 is live
+in the Store, move its What's new into the past list and start the next
+version's. Before any tag: the What's new in `store/listing.md` describes
 that version, the description's walk count and list match the game, and
 `docs/itch-page.md` has the same notes. Do not move the notes into the past
 list until the submission is live.

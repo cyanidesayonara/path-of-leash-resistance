@@ -134,7 +134,7 @@ Web export (needs the web export templates, see AGENTS.md):
 godot\Godot_v4.7-stable_win64_console.exe --headless --path . --export-release "Web" build/web/index.html
 ```
 
-Releasing is a tag. v1.66 is the last one. The next tag builds web and
+Releasing is a tag. v1.67 is the last one. The next tag builds web and
 Windows and pushes each to its own itch channel. AGENTS.md has the rest:
 tests, screenshots and benchmarks.
 

@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-10-31 - 1.67 released; docs caught up
+
+v1.67 is tagged (`a0ad9cf`), on both itch channels and submitted to the
+Store. Santtu accepted everything through #380; #376-#379, which never
+reached the board, are on it as Done. AGENTS.md, README, the Store
+procedure and HANDOVER.md name 1.67 as the last tag and 1.68 as the next;
+PROJECT.md marks "Agreed next" items 1-5 shipped.
+
 ## 2026-10-31 - El Gat de Botero becomes a set piece; second review of the week's work
 
 The finale was winnable but plain: a bronze blob that swatted, then sat on
