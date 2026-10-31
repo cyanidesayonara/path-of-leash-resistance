@@ -11,7 +11,7 @@ fixes from a second review of #371-#380.
 - **The wake** (`systems/boss_gat.gd`, `AWAKEN`): a statue's eyes are shut.
   Past `WAKE_Y` they open, glowing; his plinth cracks and chips fly; he rears
   and roars (a shockwave, every pigeon up); he hops down off the front of the
-  plinth with a thud. A title card slides across the lower screen, "EL GAT DE
+  plinth with a thud. A title card slides across the screen, "EL GAT DE
   BOTERO" with its gloss, and the camera leans his way (`cam_lean`, a new walk
   hook main's camera reads). The cracked plinth stays cracked.
 - **The crowd**: a diner at every terrace table and onlookers lining the
@@ -98,6 +98,31 @@ The leftovers from that review:
   after.
 - **The beach hotel is the Hotel L'Onada** ("the wave"), our own name, in
   place of a real hotel's on its rooftop sign, as the works are LA FÀBRICA.
+
+Then a third review before 1.67 (Cursor's, and a fresh read of the whole PR):
+
+- **The title card runs across the top of the screen**, scaled to its height,
+  and clears the banner while it is up (`hush_banner`, a walk hook): at the
+  bottom it covered your human, and on a sideways phone a third of the walk.
+- **El Gat's fight banners outrank the walk's own** (`urgent_status`, a walk
+  hook): "WRAP THE LEASH AROUND HIS LEGS" lost to a full bladder or the reel.
+- **The last stand's swats pay nothing**: out of fight, a near miss no longer
+  adds a dodge, combo or damage, so the swat goal cannot be farmed by the plinth.
+- **The crowd, the paving cracks and the sparks draw in three batched calls**,
+  not hundreds of separate circles; their randomness has its own generator, so
+  the show leaves the walk's shared random sequence alone.
+- **His roars leave the first and last flocks to her**: the wake and the
+  landing scatter only pigeons close to him, and the pigeon goal counts out to
+  her bark's reach (200, was 150).
+- **He never shoves you into a palm trunk**, as he never did into a bench.
+- **A passing pair's dog follows its strap past a bench**: the bench check ran
+  after the strap's tow and undid it, holding the dog behind the bench past its
+  leash and then snapping it across. A towed dog now skips that check
+  (`test_pair_walk.gd` puts a dog behind a bench to prove it).
+- **The tie-up is tested with the real rope** (`test_boss_tie_rope.gd`): the dog
+  circling his plinth winds the leash onto three legs at three speeds, both ways
+  round; a probe of 18 such runs tied him every time, in 1.1 to 3.8 seconds.
+- "Pole-swing around 2 holm oaks", in American English.
 
 ## 2026-10-30 - Review of #371-#380: the finale fights fair, the new walks draw, old saves keep their walks
 

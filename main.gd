@@ -248,6 +248,8 @@ var lvl := "street":
 # draw_bollard, draw_conveyor, draw_column, draw_clearing, tick, tick_crowd,
 # on_bark, surface and grass_blocked; and the scrapyard's draw_verge,
 # draw_grove, draw_yard, draw_log_prop, draw_van, draw_top and idle_status;
+# El Gat's urgent_status (outranks the walk's own banners), hush_banner
+# (clears it under his title card) and cam_lean;
 # El Bosc's draw_scenery, draw_path_edges, draw_snack and draw_trough_prop;
 # L'Estacio's draw_freedom_beyond and draw_freedom_ground; and El Barri's
 # draw_gate_fence, draw_fountain and draw_performer; and Passeig Maritim's
@@ -5813,6 +5815,12 @@ func _update_hud() -> void:
 		hud_status = "FULL TANK! GO MARK A SPOT"
 	elif pee <= 0.02:
 		hud_status = "THIRSTY! FIND A FOUNTAIN"
+	if phase == "out" and walk_mod != null and walk_mod.has_method("urgent_status"):
+		var urgent: String = walk_mod.urgent_status(self)
+		if urgent != "":
+			hud_status = urgent
+	if walk_mod != null and walk_mod.has_method("hush_banner") and walk_mod.hush_banner(self):
+		hud_status = ""
 	# The one-line answer to "what is going on" lives in the feed banner,
 	# centre screen near the dog, instead of as small text tucked under the
 	# vitals card where it was never read. This call used to sit after a

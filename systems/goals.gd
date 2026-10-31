@@ -122,7 +122,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"viewfinder": {"text": "Gaze through the panoramic cliffside viewfinder", "target": 1, "fn": func() -> int: return 1 if m.tibidabo_viewfinder_gazed else 0},
 		"boar": {"text": "Keep the wild boars a leash length away", "target": 1, "fn": func() -> int: return 1 if m.chase_min_gap >= HomeChase.OUTRUN_GAP else 0},
 		"mud": {"text": "Charge through %d boar wallows", "target": 3, "fn": func() -> int: return m.boar_mud_splashes},
-		"oaks": {"text": "Pole-swing round %d holm oaks", "target": 2, "fn": func() -> int: return m.boar_swings},
+		"oaks": {"text": "Pole-swing around %d holm oaks", "target": 2, "fn": func() -> int: return m.boar_swings},
 		"correfoc": {"text": "Keep the fire devils a leash length away", "target": 1, "fn": func() -> int: return 1 if m.chase_min_gap >= HomeChase.OUTRUN_GAP else 0},
 		"churros": {"text": "Sit pretty at the churro stand", "target": 1, "fn": func() -> int: return m.churros_eaten},
 		"decor": {"text": "Zoom under %d festival arches", "target": 3, "fn": func() -> int: return m.gracia_arches_zoomed},

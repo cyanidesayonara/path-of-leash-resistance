@@ -217,6 +217,9 @@ var ghosts: Array[Dictionary] = []
 var bits: Array[Dictionary] = []
 var cracks: Array[Dictionary] = []
 var crowd: Array[Dictionary] = []
+# sparks, crowd shouts and fireworks draw from their own generator, so the
+# show never shifts the walk's shared random sequence
+var fx := RandomNumberGenerator.new()
 
 const SHIRTS: Array[Color] = [
 	Color(0.85, 0.30, 0.28), Color(0.25, 0.45, 0.75), Color(0.95, 0.78, 0.30),
@@ -427,6 +430,7 @@ func setup(m_ref: Node2D) -> void:
 	leg_poles.clear()
 	for off: Vector2 in LEG_OFFSETS:
 		leg_poles.append(pos + off)
+	fx.seed = 1907
 	_build_crowd()
 
 
@@ -583,7 +587,7 @@ func transition_to(new_state: State) -> void:
 			for d_rad in [70.0, 130.0]:
 				dust_rings.append({"pos": pos, "r": d_rad, "life": 0.7, "max_life": 0.7})
 			_burst(pos, 16, STONE_DARK, 90.0, 260.0, 3.5, 0.6, false, 260.0)
-			_scatter_pigeons(pos, 420.0)
+			_scatter_pigeons(pos, 240.0)
 		State.WRAPPED:
 			state_t = WOBBLE_TIME
 			ls_swat_t = 0.0
@@ -629,7 +633,7 @@ func transition_to(new_state: State) -> void:
 			var cols: Array[Color] = [Color(0.96, 0.35, 0.30), Color(0.95, 0.80, 0.25), Color(0.25, 0.65, 0.95), Color(0.35, 0.85, 0.40)]
 			for i in range(48):
 				var ang := TAU * float(i) / 48.0
-				var spd := randf_range(80.0, 240.0)
+				var spd := fx.randf_range(80.0, 240.0)
 				confetti.append({"pos": pos, "vel": Vector2(cos(ang), sin(ang)) * spd, "col": cols[i % 4], "life": 3.0})
 
 
@@ -641,7 +645,8 @@ func execute_swat() -> void:
 	if d_dist <= SWAT_RADIUS:
 		var dir: Vector2 = (dog_p - swat_pos).normalized() if d_dist > 1.0 else Vector2.DOWN
 		main.dog.knocked(dir, "paw")
-	elif d_dist < SWAT_REACH:
+	elif d_dist < SWAT_REACH and hp > 0.0:
+		# the last stand's swats are only to dodge: out of fight they pay nothing
 		main.gat_swats_dodged += 1
 		main.combo.add("DODGE", 2)
 		main.float_text(swat_pos, "dodged! +2", Color(0.8, 1.0, 0.7))
@@ -650,7 +655,7 @@ func execute_swat() -> void:
 		main.human.bumped((main.human.global_position - swat_pos).normalized())
 	_scatter_pigeons(swat_pos, 180.0)
 	# the paw leaves the paving cracked
-	cracks.append({"p": swat_pos, "a": randf() * TAU, "life": CRACK_LIFE})
+	cracks.append({"p": swat_pos, "a": fx.randf() * TAU, "life": CRACK_LIFE})
 	if cracks.size() > CRACKS_MAX:
 		cracks.remove_at(0)
 	dust_rings.append({"pos": swat_pos, "r": SWAT_RADIUS * 1.6, "life": 0.45, "max_life": 0.45})
@@ -668,12 +673,12 @@ func _to_dog_dir() -> Vector2:
 func _burst(at: Vector2, n: int, col: Color, spd_lo: float, spd_hi: float,
 		r: float, life: float, spark := false, lob := 0.0) -> void:
 	for i in range(n):
-		var ang := randf() * TAU
-		var spd := randf_range(spd_lo, spd_hi)
+		var ang := fx.randf() * TAU
+		var spd := fx.randf_range(spd_lo, spd_hi)
 		bits.append({
 			"p": at, "v": Vector2(cos(ang), sin(ang)) * spd * (0.55 if lob > 0.0 else 1.0),
-			"z": 0.0, "vz": randf_range(0.5, 1.0) * lob,
-			"life": life * randf_range(0.7, 1.0), "max": life,
+			"z": 0.0, "vz": fx.randf_range(0.5, 1.0) * lob,
+			"life": life * fx.randf_range(0.7, 1.0), "max": life,
 			"col": col, "r": r, "spark": spark,
 		})
 
@@ -689,7 +694,7 @@ func _big_hit() -> void:
 func _cheer_up() -> void:
 	cheer = 1.0
 	gasp = 0.0
-	Sfx.play("whoop", randf_range(0.9, 1.15), -12.0)
+	Sfx.play("whoop", fx.randf_range(0.9, 1.15), -12.0)
 	_crowd_shout(CHEERS)
 
 
@@ -700,7 +705,7 @@ func _crowd_shout(lines: Array[String]) -> void:
 	var dog_p: Vector2 = main.dog.global_position
 	var best := -1
 	var best_d := 560.0
-	var start := randi() % crowd.size()
+	var start := fx.randi() % crowd.size()
 	for k in range(crowd.size()):
 		var i := (start + k) % crowd.size()
 		var d: float = (crowd[i].p as Vector2).distance_to(dog_p)
@@ -712,7 +717,7 @@ func _crowd_shout(lines: Array[String]) -> void:
 	if best < 0:
 		return
 	shout_cd = SHOUT_GAP
-	main.float_text(crowd[best].p + Vector2(0.0, -14.0), lines[randi() % lines.size()],
+	main.float_text(crowd[best].p + Vector2(0.0, -14.0), lines[fx.randi() % lines.size()],
 			Color(1.0, 1.0, 1.0), main.POP_SAY)
 
 
@@ -724,9 +729,12 @@ func _shove_out(body: Node2D) -> void:
 		return
 	var n: Vector2 = d / l if l > 0.5 else Vector2.DOWN
 	var to: Vector2 = pos + n * BODY_R
-	# never into a bench or a terrace: pinned there, she would be stuck
+	# never into a bench, a terrace or a palm trunk: pinned there, she would be stuck
 	for r: Rect2 in main.solid_rects:
 		if r.grow(14.0).has_point(to):
+			return
+	for palm: Vector2 in PALMS:
+		if to.distance_squared_to(palm) < (main.POLE_RADIUS + 14.0) * (main.POLE_RADIUS + 14.0):
 			return
 	body.global_position = to
 
@@ -865,7 +873,7 @@ func tick_state(delta: float) -> void:
 				main.shake_t = maxf(float(main.shake_t), 0.9)
 				for d_rad in [90.0, 180.0, 300.0]:
 					dust_rings.append({"pos": pos, "r": d_rad, "life": 0.9, "max_life": 0.9})
-				_scatter_pigeons(pos, 700.0)
+				_scatter_pigeons(pos, 260.0)
 				main.human.notice("Huh, big cat today...", 2.2)
 			# rears up, then hops down off the front of his plinth
 			var from := START_PLINTH
@@ -1037,8 +1045,8 @@ func tick_state(delta: float) -> void:
 			heart_t -= delta
 			if heart_t <= 0.0 and act_t < 5.0:
 				heart_t = 0.45
-				bits.append({"p": pos + Vector2(randf_range(-30.0, 30.0), -40.0),
-					"v": Vector2(randf_range(-15.0, 15.0), -55.0), "z": 0.0, "vz": 0.0,
+				bits.append({"p": pos + Vector2(fx.randf_range(-30.0, 30.0), -40.0),
+					"v": Vector2(fx.randf_range(-15.0, 15.0), -55.0), "z": 0.0, "vz": 0.0,
 					"life": 1.6, "max": 1.6, "col": Color(1.0, 0.45, 0.55), "r": 7.0,
 					"spark": false, "heart": true})
 
@@ -1071,13 +1079,13 @@ func _tick_last_stand(delta: float, dog_p: Vector2) -> void:
 
 func _firework() -> void:
 	# over the plaça, in the part of it the camera holds
-	var at := PEDESTAL_POS + Vector2(randf_range(-260.0, 260.0), randf_range(-200.0, 60.0))
-	var col: Color = FIRE_COLS[randi() % FIRE_COLS.size()]
-	var col2: Color = FIRE_COLS[randi() % FIRE_COLS.size()].lightened(0.4)
-	Sfx.play("cracker", randf_range(0.85, 1.2), -6.0)
+	var at := PEDESTAL_POS + Vector2(fx.randf_range(-260.0, 260.0), fx.randf_range(-200.0, 60.0))
+	var col: Color = FIRE_COLS[fx.randi() % FIRE_COLS.size()]
+	var col2: Color = FIRE_COLS[fx.randi() % FIRE_COLS.size()].lightened(0.4)
+	Sfx.play("cracker", fx.randf_range(0.85, 1.2), -6.0)
 	for i in range(40):
 		var ang := TAU * float(i) / 40.0
-		var spd := randf_range(240.0, 330.0) if i % 2 == 0 else randf_range(120.0, 180.0)
+		var spd := fx.randf_range(240.0, 330.0) if i % 2 == 0 else fx.randf_range(120.0, 180.0)
 		bits.append({"p": at, "v": Vector2(cos(ang), sin(ang)) * spd, "z": 0.0, "vz": 0.0,
 			"life": 1.2, "max": 1.2, "col": col if i % 2 == 0 else col2, "r": 4.0,
 			"spark": true, "drag": 1.8})
@@ -1169,6 +1177,17 @@ func on_bark_action(bark_pos: Vector2) -> bool:
 # The banner while he is about: what to do about him right now. Empty lets the
 # walk's ordinary banner through.
 func status() -> String:
+	var fight := fight_status()
+	if fight != "":
+		return fight
+	if not beaten() and main.human.tut_hold_y == HOLD_Y and main.human.global_position.y < HOLD_Y + 40.0:
+		return "YOUR HUMAN WON'T PASS HIM. DEAL WITH EL GAT"
+	return ""
+
+
+# The beat of the fight that needs the dog now: it outranks the bladder and
+# the reel's banners, which return once the beat is over.
+func fight_status() -> String:
 	var near: bool = main.dog.global_position.distance_to(pos) < 600.0
 	match state:
 		State.SWAT:
@@ -1182,11 +1201,9 @@ func status() -> String:
 		State.ENRAGE:
 			return "EL GAT IS FURIOUS! GET CLEAR" if near else ""
 		State.ROAR:
-			return "WRAP THE LEASH ROUND HIS LEGS  %d/%d" % [legs_tied, LEGS_TO_TIE]
+			return "WRAP THE LEASH AROUND HIS LEGS  %d/%d" % [legs_tied, LEGS_TO_TIE]
 		State.TOPPLED:
 			return Prompts.fill("HE'S DOWN! {bark} ON HIS SNOUT")
-	if not beaten() and main.human.tut_hold_y == HOLD_Y and main.human.global_position.y < HOLD_Y + 40.0:
-		return "YOUR HUMAN WON'T PASS HIM. DEAL WITH EL GAT"
 	return ""
 
 
@@ -1208,6 +1225,20 @@ static func idle_status(m: Node2D) -> String:
 	if m.lvl != "raval" or m.boss_gat == null:
 		return ""
 	return m.boss_gat.status()
+
+
+static func urgent_status(m: Node2D) -> String:
+	if m.lvl != "raval" or m.boss_gat == null:
+		return ""
+	return m.boss_gat.fight_status()
+
+
+# his title card runs across the top of the screen, where the banner sits
+static func hush_banner(m: Node2D) -> bool:
+	if m.lvl != "raval" or m.boss_gat == null:
+		return false
+	var k: float = m.boss_gat.card_t
+	return k >= CARD_FROM and k <= CARD_TIME + CARD_FROM
 
 
 static func cam_lean(m: Node2D) -> float:
@@ -1244,19 +1275,23 @@ func _draw_card() -> void:
 		slide = -(1.0 - ease(k / 0.35, 0.4)) * vs.x
 	elif k > CARD_TIME - 0.35:
 		slide = ease((k - CARD_TIME + 0.35) / 0.35, 2.5) * vs.x
-	var cy := vs.y * 0.80
-	var band := Rect2(Vector2(slide, cy - 58.0), Vector2(vs.x, 116.0))
+	# across the top, where the banner sits: the pair stands low on screen and
+	# El Gat mid-screen, and a sideways phone gets a slimmer band
+	var u := clampf(vs.y / 720.0, 0.5, 1.0)
+	var cy := 64.0 * u
+	var band := Rect2(Vector2(slide, cy - 58.0 * u), Vector2(vs.x, 116.0 * u))
 	card.draw_rect(band, Color(0.06, 0.05, 0.05, 0.82))
-	card.draw_rect(Rect2(band.position, Vector2(vs.x, 5.0)), BRONZE_LIT)
-	card.draw_rect(Rect2(band.position + Vector2(0.0, band.size.y - 5.0), Vector2(vs.x, 5.0)), BRONZE_LIT)
-	Kit.heading(card, Vector2(slide, cy - 34.0), "RAMBLA DEL RAVAL", 18, Color(0.86, 0.72, 0.52),
+	card.draw_rect(Rect2(band.position, Vector2(vs.x, 5.0 * u)), BRONZE_LIT)
+	card.draw_rect(Rect2(band.position + Vector2(0.0, band.size.y - 5.0 * u), Vector2(vs.x, 5.0 * u)), BRONZE_LIT)
+	Kit.heading(card, Vector2(slide, cy - 34.0 * u), "RAMBLA DEL RAVAL", int(18.0 * u), Color(0.86, 0.72, 0.52),
 		HORIZONTAL_ALIGNMENT_CENTER, vs.x)
-	Kit.heading(card, Vector2(slide, cy + 18.0), "EL GAT DE BOTERO", 52, EYE_AMBER,
+	Kit.heading(card, Vector2(slide, cy + 18.0 * u), "EL GAT DE BOTERO", int(52.0 * u), EYE_AMBER,
 		HORIZONTAL_ALIGNMENT_CENTER, vs.x)
 	var gloss := "Botero's cat, and he is awake"
-	var gw: float = Kit.text_w(Kit.body(), gloss, 20)
-	card.draw_string(Kit.body(), Vector2(slide + (vs.x - gw) * 0.5, cy + 46.0), gloss,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color(0.92, 0.88, 0.80))
+	var gs := int(20.0 * u)
+	var gw: float = Kit.text_w(Kit.body(), gloss, gs)
+	card.draw_string(Kit.body(), Vector2(slide + (vs.x - gw) * 0.5, cy + 46.0 * u), gloss,
+		HORIZONTAL_ALIGNMENT_LEFT, -1, gs, Color(0.92, 0.88, 0.80))
 
 
 static func surface(m: Node2D, p: Vector2) -> int:
@@ -1390,15 +1425,16 @@ static func draw_live(m: Node2D, c: Object, vt: float, vb: float) -> void:
 
 # The cracked plinth he left and the paving his paws cracked.
 func draw_ground_marks(c: Object, vt: float, vb: float) -> void:
+	var sb := ShapeBatch.new()
 	var crack_col := Color(0.22, 0.20, 0.18, 0.75)
 	if plinth_cracked and START_PLINTH.y > vt - 100.0 and START_PLINTH.y < vb + 100.0:
 		var p := START_PLINTH
-		c.draw_line(p + Vector2(-40, -30), p + Vector2(-8, -4), crack_col, 2.5)
-		c.draw_line(p + Vector2(-8, -4), p + Vector2(14, -22), crack_col, 2.0)
-		c.draw_line(p + Vector2(-8, -4), p + Vector2(4, 26), crack_col, 2.0)
-		c.draw_line(p + Vector2(4, 26), p + Vector2(34, 18), crack_col, 1.5)
-		c.draw_line(p + Vector2(14, -22), p + Vector2(42, -34), crack_col, 1.5)
-		c.draw_rect(Rect2(p + Vector2(30, -40), Vector2(22, 14)), Color(0.48, 0.46, 0.43))
+		sb.line(p + Vector2(-40, -30), p + Vector2(-8, -4), crack_col, 2.5)
+		sb.line(p + Vector2(-8, -4), p + Vector2(14, -22), crack_col, 2.0)
+		sb.line(p + Vector2(-8, -4), p + Vector2(4, 26), crack_col, 2.0)
+		sb.line(p + Vector2(4, 26), p + Vector2(34, 18), crack_col, 1.5)
+		sb.line(p + Vector2(14, -22), p + Vector2(42, -34), crack_col, 1.5)
+		sb.rect(Rect2(p + Vector2(30, -40), Vector2(22, 14)), Color(0.48, 0.46, 0.43))
 	for cr: Dictionary in cracks:
 		var cp: Vector2 = cr.p
 		if cp.y < vt - 60.0 or cp.y > vb + 60.0:
@@ -1408,14 +1444,16 @@ func draw_ground_marks(c: Object, vt: float, vb: float) -> void:
 		for i in range(5):
 			var d := Vector2.from_angle(a + float(i) * (TAU / 5.0) + sin(float(i) * 3.1) * 0.4)
 			var mid := cp + d * (12.0 + float(i % 2) * 8.0)
-			c.draw_line(cp, mid, col, 2.5)
-			c.draw_line(mid, mid + d.rotated(0.6 - float(i % 3) * 0.5) * 14.0, col, 1.5)
-		c.draw_circle(cp, 7.0, Color(col.r, col.g, col.b, col.a * 0.6))
+			sb.line(cp, mid, col, 2.5)
+			sb.line(mid, mid + d.rotated(0.6 - float(i % 3) * 0.5) * 14.0, col, 1.5)
+		sb.circle(cp, 7.0, Color(col.r, col.g, col.b, col.a * 0.6))
+	sb.flush(c)
 
 
 # The onlookers: they lean away when he swats or charges, and jump with their
 # arms up when she lands one on him.
 func draw_crowd(c: Object, vt: float, vb: float, t: float) -> void:
+	var sb := ShapeBatch.new()
 	for pp: Dictionary in crowd:
 		var p: Vector2 = pp.p
 		if p.y < vt - 40.0 or p.y > vb + 40.0:
@@ -1424,7 +1462,7 @@ func draw_crowd(c: Object, vt: float, vb: float, t: float) -> void:
 		var away := Vector2(signf(p.x - pos.x), 0.0)
 		var jump := absf(sin(t * 9.0 + ph)) * 7.0 * cheer
 		var at := p + away * gasp * 4.0 + Vector2(0.0, -jump + sin(t * 1.3 + ph) * 0.6)
-		c.draw_circle(p + LIGHT * 3.0, 9.0, SHADOW)
+		sb.circle(p + LIGHT * 3.0, 9.0, SHADOW)
 		var shirt: Color = pp.shirt
 		var skin: Color = pp.skin
 		if cheer > 0.3 or gasp > 0.5:
@@ -1432,17 +1470,19 @@ func draw_crowd(c: Object, vt: float, vb: float, t: float) -> void:
 			var up := 14.0 if cheer > 0.3 else 9.0
 			for sd: float in [-1.0, 1.0]:
 				var hand := at + Vector2(sd * (9.0 + sin(t * 12.0 + ph) * 2.0 * cheer), -up)
-				c.draw_line(at + Vector2(sd * 6.0, -2.0), hand, shirt, 4.0)
-				c.draw_circle(hand, 2.6, skin)
-		c.draw_circle(at, 9.0 if not pp.seated else 8.0, shirt.darkened(0.25))
-		c.draw_circle(at - LIGHT * 1.2, 7.6 if not pp.seated else 6.6, shirt)
-		c.draw_circle(at + Vector2(0.0, -2.0), 5.4, skin)
-		c.draw_circle(at + Vector2(0.0, -3.4), 4.6, pp.hair)
+				sb.line(at + Vector2(sd * 6.0, -2.0), hand, shirt, 4.0)
+				sb.circle(hand, 2.6, skin)
+		sb.circle(at, 9.0 if not pp.seated else 8.0, shirt.darkened(0.25))
+		sb.circle(at - LIGHT * 1.2, 7.6 if not pp.seated else 6.6, shirt)
+		sb.circle(at + Vector2(0.0, -2.0), 5.4, skin)
+		sb.circle(at + Vector2(0.0, -3.4), 4.6, pp.hair)
+	sb.flush(c)
 
 
 func draw_bits(c: Object, vt: float, vb: float) -> void:
+	var sb := ShapeBatch.new()
 	for cf in confetti:
-		c.draw_rect(Rect2(cf.pos.x - 3.0, cf.pos.y - 3.0, 6.0, 6.0), cf.col)
+		sb.rect(Rect2(cf.pos.x - 3.0, cf.pos.y - 3.0, 6.0, 6.0), cf.col)
 	for b: Dictionary in bits:
 		var p: Vector2 = b.p
 		if p.y < vt - 80.0 or p.y > vb + 80.0:
@@ -1452,17 +1492,18 @@ func draw_bits(c: Object, vt: float, vb: float) -> void:
 		col.a *= minf(f * 2.0, 1.0)
 		var at := p - Vector2(0.0, float(b.z))
 		if b.spark:
-			c.draw_line(at, at - (b.v as Vector2) * 0.035, col, float(b.r))
+			sb.line(at, at - (b.v as Vector2) * 0.035, col, float(b.r))
 		elif b.has("heart"):
 			var r: float = b.r
-			c.draw_circle(at + Vector2(-r * 0.5, 0.0), r * 0.6, col)
-			c.draw_circle(at + Vector2(r * 0.5, 0.0), r * 0.6, col)
-			c.draw_circle(at + Vector2(0.0, r * 0.5), r * 0.55, col)
+			sb.circle(at + Vector2(-r * 0.5, 0.0), r * 0.6, col)
+			sb.circle(at + Vector2(r * 0.5, 0.0), r * 0.6, col)
+			sb.circle(at + Vector2(0.0, r * 0.5), r * 0.55, col)
 		else:
 			if b.z > 0.0:
-				c.draw_circle(p + LIGHT * 2.0, float(b.r) * 0.8, SHADOW)
+				sb.circle(p + LIGHT * 2.0, float(b.r) * 0.8, SHADOW)
 			var r: float = float(b.r) * ((2.2 - f * 1.2) if b.has("grow") else (0.5 + f * 0.5))
-			c.draw_circle(at, r, col)
+			sb.circle(at, r, col)
+	sb.flush(c)
 
 
 func draw_gat(c: Object, t: float) -> void:

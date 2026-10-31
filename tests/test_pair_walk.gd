@@ -64,6 +64,8 @@ func _run() -> void:
 	for direction in [-1.0, 1.0]:
 		for walk_seed in [3, 11, 29, 47]:
 			_walk(main, player_dog, direction, walk_seed)
+	for walk_seed in [3, 11, 29, 47]:
+		_walk_past_bench(main, player_dog, walk_seed)
 	main.queue_free()
 	player_dog.queue_free()
 	await process_frame
@@ -120,6 +122,38 @@ func _walk(main: Node2D, player_dog: Node2D, direction: float, walk_seed: int) -
 	_check(worst_slack <= SLACK_MAX, label + " never carries a heap of slack")
 	_check(worst_bulge <= BULGE_MAX, label + " never lets the leash trail off the fist-to-collar line")
 	_check(worst_span <= float(pair.LEASH_CAP) + 0.5, label + " keeps the dog on its leash")
+	pair.queue_free()
+
+
+# The dog trailing behind a bench while its owner walks on: the bench stops
+# it short, but never past its strap, and it never leaps the bench once the
+# owner has towed it clear.
+func _walk_past_bench(main: Node2D, player_dog: Node2D, walk_seed: int) -> void:
+	var label := "dog behind a bench (seed %d)" % walk_seed
+	seed(walk_seed)
+	var pair := Node2D.new()
+	pair.set_script(load(PAIR_SCRIPT))
+	pair.visible = false
+	var no_poles: Array[Vector2] = []
+	pair.setup(main, player_dog, no_poles, Vector2(300, 0), Vector2(0, -1.0))
+	var blockers: Array[Dictionary] = [{"id": "bench", "rect": Rect2(286.0, 72.0, 28.0, 14.0)}]
+	_check(bool(pair.configure_route(300.0, 0.0, 600.0, blockers)), label + " route configures")
+	root.add_child(pair)
+	pair.set_physics_process(false)
+	pair.npc_dog.position = pair.npc_owner.position + Vector2(0.0, 112.0)
+	var worst_span := 0.0
+	var worst_jump := 0.0
+	for frame in range(int(4.0 / DT)):
+		main.cam.position = pair.npc_owner.position
+		var was: Vector2 = pair.npc_dog.position
+		pair._physics_process(DT)
+		worst_span = maxf(worst_span, pair.npc_owner.position.distance_to(pair.npc_dog.position))
+		# the first frame hauls it in from where the test put it
+		if frame > 0:
+			worst_jump = maxf(worst_jump, was.distance_to(pair.npc_dog.position))
+	print("%s: widest span %.1f px, biggest step %.1f px" % [label, worst_span, worst_jump])
+	_check(worst_span <= float(pair.LEASH_CAP) + 0.5, label + " keeps the dog on its leash")
+	_check(worst_jump <= 12.0, label + " never jumps the dog across the bench")
 	pair.queue_free()
 
 

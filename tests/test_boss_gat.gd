@@ -207,6 +207,14 @@ func _run() -> void:
 			break
 	_check(gat.state == BG.State.ROAR and gat.pos == BG.PEDESTAL_POS, "he reaches his plinth and roars")
 	_check(gat.status().begins_with("WRAP THE LEASH"), "the banner asks for the tangle")
+	var phase_was: String = m.phase
+	var poop_was: int = m.poop_state
+	m.phase = "out"
+	m.poop_state = 1
+	m._update_hud()
+	_check(m.hud_status.begins_with("WRAP THE LEASH"), "the last stand outranks the bladder's banner: %s" % m.hud_status)
+	m.phase = phase_was
+	m.poop_state = poop_was
 
 	# the last stand: he swats at her, telegraphed, while she ties him
 	m.dog.global_position = gat.pos + Vector2(110.0, 30.0)

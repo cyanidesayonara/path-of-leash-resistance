@@ -66,8 +66,9 @@ func scare() -> void:
 	flying = true
 	if gull and main != null and "port_gulls_startled" in main:
 		main.port_gulls_startled += 1
-	# El Raval's goal counts the ones she put up, not the ones El Gat did
-	if main != null and main.lvl == "raval" and global_position.distance_to(dog.global_position) < 150.0:
+	# El Raval's goal counts the ones she put up, not the ones El Gat did: out
+	# to her bark's reach, and his roars leave the flocks short of him alone
+	if main != null and main.lvl == "raval" and global_position.distance_to(dog.global_position) < 200.0:
 		main.raval_pigeons_scattered += 1
 	fly_dir = (global_position - dog.global_position).normalized().rotated(randf_range(-0.5, 0.5))
 	if parakeet:
