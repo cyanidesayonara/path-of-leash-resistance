@@ -234,7 +234,7 @@ static func walk_info(m: Node2D) -> Dictionary:
 			info["gate"] = int(Game.STAR_GATE.get(sel, 0))
 			info["have"] = Game.total_stars()
 			var ch_name: String = Game.LEVEL_NAMES.get(ch, ch)
-			info.lines = ["Complete %s to enter" % ch_name]
+			info.lines = ["Finish %s to open this walk." % ch_name]
 			return info
 		var gate := int(Game.STAR_GATE.get(sel, 0))
 		info["gate"] = gate
@@ -307,9 +307,13 @@ static func controls() -> Array:
 
 
 static func start_walk(m: Node2D) -> void:
+	# GET READY refuses a locked dog itself; any other way in (the tutorial,
+	# a quick start, a command line) walks with the default dog rather than
+	# leaving a frozen title behind
 	if not Game.is_dog_unlocked(Game.dog):
-		m.locked_nudge = 0.35
-		return
+		Game.dog = Game.DEFAULT_DOG
+		m.dog.apply_breed_shape()
+		m.dog.queue_redraw()
 	m.started = true
 	m.begin_departure()
 	# the very first real walk, for a player who skipped the tutorial: the
@@ -320,6 +324,10 @@ static func start_walk(m: Node2D) -> void:
 	# snapshot progress so the results can report stars and unlocks
 	m.run_pre_total_stars = Game.total_stars()
 	m.run_pre_level_stars = Game.stars(m.lvl)
+	m.run_pre_unlocked.clear()
+	for lv: String in Game.LEVELS:
+		if Game.is_unlocked(lv):
+			m.run_pre_unlocked.append(lv)
 	Game.menu_step = 1
 	m.panel.visible = true
 	m.goals_card.visible = not m.tutorial_mode
@@ -356,11 +364,6 @@ static func tick_title(m: Node2D) -> bool:
 				Game.cycle_level(1 if Input.is_action_just_pressed("move_right") else -1)
 				Game.menu_step = 1
 				reload(m)
-				return true
-			if Input.is_action_just_pressed("move_up") or Input.is_action_just_pressed("move_down"):
-				Game.cycle_dog(1 if Input.is_action_just_pressed("move_down") else -1)
-				m.dog.queue_redraw()
-				Sfx.play("ui")
 				return true
 			if Input.is_action_just_pressed("plant"):
 				if not Game.is_unlocked(Game.level_id):
@@ -757,7 +760,7 @@ static func shop_data(m: Node2D, kind: String, key: String) -> Dictionary:
 				"speed": return {"name": "Sprint Speed", "cost": Game.STAT_UPGRADE_COST}
 				"plant": return {"name": "Plant Grip", "cost": Game.STAT_UPGRADE_COST}
 				"herd": return {"name": "Human Influence", "cost": Game.STAT_UPGRADE_COST}
-				"agility": return {"name": "Agility & Recovery", "cost": Game.STAT_UPGRADE_COST}
+				"agility": return {"name": "Quick Feet", "cost": Game.STAT_UPGRADE_COST}
 				_: return {"name": key.capitalize(), "cost": Game.STAT_UPGRADE_COST}
 		_: return Game.BANDANAS[key]
 

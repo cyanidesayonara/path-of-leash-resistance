@@ -6,7 +6,7 @@ extends SceneTree
 # bar huts are solid and clear of their terraces; no towel is laid across a
 # landmark; the sand is the ground itself; Badalona's landmarks sit in their
 # real south-to-north order from Estació de Badalona and the bus stop up to
-# Pont del Petroli and the Hotel Marina Badalona plaza with the BADALONA sign;
+# Pont del Petroli and the Hotel L'Onada plaza with the BADALONA sign;
 # rollerbladers skate the bike lane; and Platja de Llevant owns the dog beach
 # (PLATJA DELS GOSSOS) past the gate.
 
@@ -84,11 +84,11 @@ func _run() -> void:
 		for c: Vector2 in m.chairs:
 			_check(not br.has_point(c), "a chair stands outside the bar hut")
 	_check(_stops_dog(dog, Passeig.HOTEL_RECT.get_center(), Vector2(0.0, 1.0), Passeig.HOTEL_RECT.size.y * 0.5 + 30.0),
-		"Hotel Marina Badalona stops the dog")
+		"Hotel L'Onada stops the dog")
 	_check(_stops_dog(dog, Passeig.HOTEL_SIGN_RECT.get_center(), Vector2(0.0, 1.0), Passeig.HOTEL_SIGN_RECT.size.y * 0.5 + 20.0),
 		"the BADALONA letters sign stops the dog")
 	for t: Vector2 in m.trees:
-		_check(not Passeig.HOTEL_RECT.grow(20.0).has_point(t), "plaza tree at (%.0f, %.0f) is clear of Hotel Marina" % [t.x, t.y])
+		_check(not Passeig.HOTEL_RECT.grow(20.0).has_point(t), "plaza tree at (%.0f, %.0f) is clear of Hotel L'Onada" % [t.x, t.y])
 		_check(not Passeig.HOTEL_SIGN_RECT.grow(20.0).has_point(t), "plaza tree at (%.0f, %.0f) is clear of BADALONA sign" % [t.x, t.y])
 
 	# no towel across the court, under the tower or in a shower's puddle
@@ -106,14 +106,14 @@ func _run() -> void:
 	_check(is_equal_approx(m.beach_shore_x(m.GATE_Y - 30.0), 230.0), "the shorelines meet at the gate")
 
 	# Badalona landmark order (south to north): station/bus stop -> chiringuitos/surf club ->
-	# restaurant -> gym/calisthenics -> Pont del Petroli & Anís del Mono works -> Hotel Marina Badalona plaza
+	# restaurant -> gym/calisthenics -> Pont del Petroli & Anís del Mono works -> Hotel L'Onada plaza
 	_check(Passeig.BUS_STOP_RECT.position.y > Passeig.SURF_CLUB_RECT.position.y, "bus stop is south of surf club")
 	_check(Passeig.SURF_CLUB_RECT.position.y > Passeig.RESTAURANT_RECT.position.y, "surf club is south of restaurant")
 	_check(Passeig.RESTAURANT_RECT.position.y > Passeig.GYM_RECT.position.y, "restaurant is south of gym")
 	_check(Passeig.GYM_RECT.position.y > LevelBuild.BEACH_PIER_Y, "gym is south of Pont del Petroli")
 	_check(absf(Passeig.WORKS_Y - LevelBuild.BEACH_PIER_Y) < 420.0, "Anís del Mono works sit opposite Pont del Petroli")
 	_check(Passeig.HOTEL_SIGN_RECT.position.y < float(m.GATE_Y), "BADALONA sign stands in the hotel plaza past the gate")
-	_check(Passeig.HOTEL_RECT.position.y < Passeig.HOTEL_SIGN_RECT.position.y, "Hotel Marina Badalona stands north of the BADALONA sign")
+	_check(Passeig.HOTEL_RECT.position.y < Passeig.HOTEL_SIGN_RECT.position.y, "Hotel L'Onada stands north of the BADALONA sign")
 
 	# Rollerbladers (kind == "roller") spawn on the seafront bike lane
 	m.cam.position.y = -2000.0
@@ -127,7 +127,7 @@ func _run() -> void:
 			n.remove_from_group("bikes")
 	_check(rollers >= 1, "rollerbladers skate along Passeig Marítim (%d spawned)" % rollers)
 
-	# Hotel Marina Badalona plaza past the gate handles as pavement east of x=452, sea west of shore
+	# Hotel L'Onada plaza past the gate handles as pavement east of x=452, sea west of shore
 	var S: Dictionary = (load("res://world/surfaces.gd") as GDScript).S
 	var fr: Rect2 = m._freedom_rect()
 	var not_pave := 0
@@ -141,7 +141,7 @@ func _run() -> void:
 		_check(int(m.surface_at(Vector2(m.beach_shore_x(y) - 80.0, y))) == S.WATER,
 			"the plaza's sea is water at y=%d" % int(y))
 		y += 90.0
-	_check(not_pave == 0, "the Hotel Marina Badalona plaza is pavement from x=452 to the east wall (%d points not)" % not_pave)
+	_check(not_pave == 0, "the Hotel L'Onada plaza is pavement from x=452 to the east wall (%d points not)" % not_pave)
 	_check(int(m.surface_at(Vector2(700.0, m.GATE_Y + 120.0))) == S.PAVEMENT,
 		"the promenade below the gate stays pavement")
 

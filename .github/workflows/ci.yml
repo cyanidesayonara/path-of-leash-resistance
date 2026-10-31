@@ -286,6 +286,14 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_horta.gd
       - name: Boss Gat (Rambla del Raval) test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_boss_gat.gd
+      - name: Boss Gat tied with the real rope test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_boss_tie_rope.gd
+      - name: Els Senglars and Festa de Gracia chases test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_boar_chase.gd
+      - name: Campaign mastery test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_campaign_mastery.gd
+      - name: Chase milestone gates test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_chase_milestone_gates.gd
       - name: Match-day corners test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_corners.gd
       - name: Match-day branding test

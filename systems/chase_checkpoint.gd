@@ -65,10 +65,12 @@ const MAIN_FIELDS := [
 	# bones and run-goal progress: every counter a goal reads
 	"bones", "run_goals_hit", "sniffs_done", "dog_hits", "squirrels_chased",
 	"close_calls", "kebabs_eaten", "saves_done", "flings_done", "tangles",
-	"dogs_greeted", "greeted", "romp_catches", "tofu_home", "splashes", "human_soak",
+	"dogs_greeted", "greeted", "romp_catches", "tofu_home", "splashes", "shallow_splashes", "human_soak",
 	"wall_cats_spooked", "candy_eaten", "guards_woken", "times_spotted",
 	"walkway_rides", "thieves_stopped", "wallets_returned", "owner_wallet_taken",
 	"owner_wallet_lost", "carry_state", "cable_rides",
+	# Els Senglars' and Festa de Gràcia's own goals
+	"boar_mud_splashes", "boar_swings", "churros_eaten", "gracia_arches_zoomed", "gracia_arch_mask",
 	# one-run pickups and rewards
 	"hydrants", "kebabs", "npc_marks", "candy", "prize_taken", "furgoneta_sniffed",
 	"challenge_offered",

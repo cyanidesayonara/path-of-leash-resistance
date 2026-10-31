@@ -740,6 +740,20 @@ func is_real_pole(p: Vector2) -> bool:
 	return false
 
 
+# Did any rope point end the last tick resting against the obstacle centred
+# within `tol` of p? Read-only: a moving obstacle (El Gat's legs) asks after
+# its own contact without the solver keeping any record for it.
+func touches(p: Vector2, tol := 6.0) -> bool:
+	if _touch.size() != N:
+		return false
+	var tol_sq := tol * tol
+	for i in range(N):
+		var k := _touch[i]
+		if k >= 0 and k < _obs_pos.size() and _obs_pos[k].distance_squared_to(p) < tol_sq:
+			return true
+	return false
+
+
 func dog_pull_dir() -> Vector2:
 	return _end_tangent(0, 1)
 

@@ -51,7 +51,7 @@ The leash is real rope. The one you see is the one doing the physics: it wraps, 
 
 Your human answers it like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-TWENTY-FIVE WALKS IN AND AROUND BARCELONA
+TWENTY-SEVEN WALKS IN AND AROUND BARCELONA
 
 El Barri, the neighborhood park
 La Rambla, the crowded promenade
@@ -77,9 +77,11 @@ El Tibidabo, the mountain road
 La Carretera de les Aigües, the hillside hike
 El Laberint d'Horta, the cypress maze
 Platja de Llevant, the dog beach at the far end of the coast
-Rambla del Raval, the Botero cat boss arena
+Els Senglars, the wild boar trail
+Festa de Gràcia, the decorated festival street
+Rambla del Raval, the finale, with Botero's bronze cat
 
-Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. Three of them are chases: the street sweeper at dawn, the river flood on El Besòs, and the clinic escape in El Veterinari. There is a gentle first walk that teaches one trick at a time, and every walk can be played in clear weather, rain, wind or snow, by day or at night.
+Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. Five of them are chases: the street sweeper at dawn, the river flood on El Besòs, the clinic escape in El Veterinari, the wild boars of Els Senglars and the correfoc through Gràcia. On the last, the Rambla del Raval, Botero's fat bronze cat climbs off his plinth, and your human will not pass him until you deal with him. There is a gentle first walk that teaches one trick at a time, and every walk can be played in clear weather, rain, wind or snow, by day or at night.
 
 ALSO
 
@@ -87,6 +89,7 @@ ALSO
 - A dare-giver on every walk, each with their own tune: bark to take a dare, then land the tricks before the music runs out.
 - Combo tricks: vaulting around a pole, grinding along a curb, near misses.
 - Stars unlock the next walk; bones buy collars, bandanas and coats.
+- Five dogs to walk, each with a knack of their own, and bones to train them.
 - Moods: a fright, a bark-off or a run off the leash leaves her jumpy, barky, full of zoomies or flat, and each changes how she moves.
 - Ground you can feel: grass and mud slow her but hold scent, sand drags at her paws, wet ground and snow make her skid.
 - Rain, wind, snow and night on any walk, with everyone dressed for the weather.
@@ -99,13 +102,15 @@ Keyboard, controller or touch. The prompts on screen always show the buttons of 
 Move: WASD or arrows / left stick
 Dig in (hold): Space / A
 Mark a spot (hold): Q / X
+Squat when nature calls (hold): F / Y
+Pick up: G / LB
 Bark: E / B
 Run: Shift / RB
 Goals: Tab / d-pad up
 Pause: Esc / Back
 Start again: R / Start
 
-On a phone or tablet: a stick on the left, DIG, PEE, BARK and RUN on the right, and MENU at the top. Turn the phone sideways.
+On a phone or tablet: a stick on the left, DIG, PEE, BARK and RUN on the right (PEE says POOP when nature calls, and GRAB comes up when there is something to pick up), and MENU at the top. Turn the phone sideways.
 
 Single player. No ads, no purchases, no account. The download plays offline; the itch app keeps it up to date.
 
@@ -115,14 +120,20 @@ Made in Godot by Santtu Nykänen. The dog is Millie, a distinguished salt-and-pe
 ## What's new in 1.67
 
 For a devlog post or the top of the body. Everything since v1.64 (1.65 and
-1.66 had no devlog of their own), from CHANGELOG.md. The same text as the
-Store's What's new.
+1.66 had no devlog of their own), from CHANGELOG.md. The Store's What's new
+is the short form of this, inside its 1500 characters.
 
 ```
-- Two new walks:
-  - La Carretera de les Aigües, open at 37 stars: the old water road along Collserola, mountain bikes coming both ways, the city far below, and a mirador where your human finally looks up.
-  - El Laberint d'Horta, open at 39 stars: the oldest garden in the city. Drag your human through the cypress maze and swing them round Eros at its heart.
+- Six new walks:
+  - La Carretera de les Aigües, open at 37 stars once El Veterinari is beaten: the old water road along Collserola, mountain bikes coming both ways, the city far below, and a mirador where your human finally looks up.
+  - El Laberint d'Horta, open at 39 stars once El Veterinari is beaten: the oldest garden in the city. Drag your human through the cypress maze and swing them round Eros at its heart.
+  - Platja de Llevant, the dog beach at the far end of the coast.
+  - Els Senglars, a forest trail with wild boars to outrun on the way home, and Festa de Gràcia, a festival street with the correfoc after you.
+  - The finale, Rambla del Raval: Botero's fat bronze cat climbs off his plinth and your human will not pass him. Dodge his paw, trip his charges with the leash, then tie his legs up.
+- Five dogs to walk, each with a knack of their own, opened with stars, and bones to train them.
 - A dare-giver on every walk, each with their own tune: the bronze monkey on Badalona's Pont del Petroli, a living statue on La Rambla, a busker, a fisherman, an àvia in the market and more. Bark to take a dare, then land the tricks before the music runs out.
+- Fifteen goals on every walk, among them spelling LEASH, a hidden pernil and a par time.
+- Pooping and picking up have buttons of their own, there are four key layouts, and every key and button can be rebound.
 - Passeig Marítim is Badalona's seafront now, with the Pont del Petroli and its monkey.
 - Every walk spells its name on the ground in its own stuff, with a line under it saying what the place is, in English, Català or Español (a new LANGUAGE setting).
 - New sights: a slackline in El Parc, El Barri's neighborhood past the railings, flower tiles in El Diluvi, La Rambla's wave paving, El Mosaic's garden.

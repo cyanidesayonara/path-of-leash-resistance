@@ -111,6 +111,8 @@ var wander_t := 0.0
 var wander := Vector2.ZERO
 var seed_o := 0.0
 var tangled_t := 0.0
+# the strap had to haul the dog this frame: no bench may then hold it back
+var towed_now := false
 var tangle_active := false
 var tangle_clear_t := 0.0
 var tangle_touching := false
@@ -317,6 +319,7 @@ func _physics_process(delta: float) -> void:
 		return
 	var owner_was: Vector2 = npc_owner.position
 	var dog_was: Vector2 = npc_dog.position
+	towed_now = false
 	tangled_t = maxf(0.0, tangled_t - delta)
 	if main.phase == "home" and (
 		pair_state == PairState.PARKED or pair_state == PairState.ARRIVING
@@ -336,10 +339,18 @@ func _physics_process(delta: float) -> void:
 	if pair_state == PairState.WALKING:
 		if absf(npc_owner.position.y - float(main.cam.position.y)) > 1200.0:
 			queue_free()
+	if pair_state == PairState.WALKING and not towed_now and _in_solid(npc_dog.position) and not _in_solid(dog_was):
+		# its wander and its detour lead ignore benches: it stops short instead,
+		# but a towed dog follows the strap, or it would leap the bench once freed
+		npc_dog.position = dog_was
 	_update_pose(owner_was, dog_was, delta)
 	# owner/dog move via transform every frame; redraw the pose at ~30fps
 	if Engine.get_physics_frames() % 2 == 0:
 		queue_redraw()
+
+
+func _in_solid(p: Vector2) -> bool:
+	return route != null and bool(route.call("in_body", p))
 
 
 # your dog has come up nose to nose: stop, sniff back, the owner waits
@@ -666,6 +677,7 @@ func _cap_dog_to_owner() -> bool:
 	if span.length() > LEASH_CAP:
 		npc_dog.position = npc_owner.position + span.normalized() * LEASH_CAP
 		towed = true
+	towed_now = towed_now or towed
 	return towed
 
 

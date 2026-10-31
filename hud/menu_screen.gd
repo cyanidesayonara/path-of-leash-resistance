@@ -482,10 +482,10 @@ func _progress(vs: Vector2) -> void:
 			gloss_w, sub_px, Kit.INK_SOFT)
 		if locked:
 			Kit.lock(self, Vector2(c_stars + 8.0, base - 5.0), lock_sz, Kit.INK_FAINT)
-			var lock_lbl := "opens at %d stars" % int(row.gate)
+			var lock_lbl := "Opens at %d stars" % int(row.gate)
 			if String(row.get("chase_gate", "")) != "":
 				var ch_id: String = String(row.chase_gate)
-				lock_lbl = "complete %s to enter" % Game.LEVEL_NAMES.get(ch_id, ch_id)
+				lock_lbl = "Finish %s first" % Game.LEVEL_NAMES.get(ch_id, ch_id)
 			draw_string(body, Vector2(c_stars + 24.0, base), lock_lbl,
 				HORIZONTAL_ALIGNMENT_LEFT, -1, sub_px, Kit.INK_SOFT)
 			continue

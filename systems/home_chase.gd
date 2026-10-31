@@ -134,6 +134,9 @@ static func kind_behavior(kind: String) -> Dictionary:
 			return {
 				"kind": "boars", "speed": 142.0, "flee": false,
 				"warning": "WILD BOARS! WATCH OUT!",
+				"freed": "SNORT", "freed_sfx": "snort", "caught_shout": "TRAMPLED!",
+			"jammed": "CRASH", "jammed_sfx": "grunt", "jammed_shout": "THEY'RE IN THE BINS!",
+				"jammed_banner": "THEY'RE IN THE BINS! CATCH YOUR BREATH", "run_banner": "RUN! DON'T LET THEM CATCH YOU",
 				"caught_human": "THE BOARS GOT YOUR HUMAN\n\nThey stood between mama and the picnic basket.\nBig mistake.",
 				"caught_dog": "ROOTED IN THE DIRT!\n\nYou got bowled over into the acorns.\nMama boar claimed your snacks.",
 			}
@@ -141,6 +144,9 @@ static func kind_behavior(kind: String) -> Dictionary:
 			return {
 				"kind": "correfoc", "speed": 140.0, "flee": false,
 				"warning": "CORREFOC! RUN FROM THE FIRE DEVILS!",
+				"freed": "BOOM", "freed_sfx": "cracker", "caught_shout": "SINGED!",
+			"jammed": "DRUMS", "jammed_sfx": "drum", "jammed_shout": "THEY STOPPED TO DANCE!",
+				"jammed_banner": "THEY'VE STOPPED TO DANCE! CATCH YOUR BREATH", "run_banner": "RUN! DON'T LET THEM CATCH YOU",
 				"caught_human": "SPARKED OUT!\n\nYour human caught firecrackers in their hood.\nThey dropped the phone in panic.",
 				"caught_dog": "TAIL SINGED!\n\nA fire devil's sparkler popped right behind you.\nYou bolted into the nearest doorway.",
 			}
@@ -428,8 +434,9 @@ static func _say_freed(m: Node2D, sweeper: Node2D) -> void:
 		Sfx.play("splash", 0.8, -6.0)
 		m.float_text(Vector2(m.walk_cx, sweeper.front_y - 40.0), "SPILL", Color(0.7, 0.88, 1.0))
 		return
-	Sfx.play("hiss", 0.6, -6.0)
-	m.float_text(Vector2(m.walk_cx + sweeper.sway, sweeper.front_y - 60.0), "VRRROOM", Color(1.0, 0.7, 0.4))
+	var behavior := _behavior(m, held_profile(m))
+	Sfx.play(String(behavior.get("freed_sfx", "hiss")), 0.6, -6.0)
+	m.float_text(Vector2(m.walk_cx + sweeper.sway, sweeper.front_y - 60.0), String(behavior.get("freed", "VRRROOM")), Color(1.0, 0.7, 0.4))
 
 
 # Whether the jam the machine just snagged on is the profile's checkpoint.
@@ -460,14 +467,14 @@ static func banner(m: Node2D) -> String:
 			if sweeper.front_y < LevelBuild.BESOS_JAM_Y - 200.0:
 				return "WEIR HOLDING! RUN!"
 			return "IT'S HOLDING! CROSS THE APRON"
-		return "IT'S STUCK! CATCH YOUR BREATH"
+		return String(_behavior(m, held_profile(m)).get("jammed_banner", "IT'S STUCK! CATCH YOUR BREATH"))
 	if m.chase_kind == "both":
 		return "RUN HOME TOGETHER!"
 	if m.chase_kind == "bolt":
 		return "HE'S RUNNING! KEEP UP"
 	if m.chase_kind == "flood":
 		return "RUN! STAY OUT OF THE DEEP"
-	return "RUN! DON'T LET IT CATCH YOU"
+	return String(_behavior(m, held_profile(m)).get("run_banner", "RUN! DON'T LET IT CATCH YOU"))
 
 
 # The end card's retry is "continue": the walk was lost on the home leg, to
@@ -523,9 +530,11 @@ static func tick(m: Node2D, delta: float) -> void:
 			m.float_text(Vector2(m.walk_cx, sweeper.front_y), "HOLD", Color(0.75, 0.9, 1.0))
 			m.feed.say("IT'S HOLDING!", EventFeed.Tone.GOOD)
 		else:
-			Sfx.play("crack", 0.5, -4.0)
-			m.float_text(Vector2(m.walk_cx + sweeper.jam_side * (m.walk_half - 40.0), sweeper.front_y), "CLONK", Color(1.0, 0.85, 0.5))
-			m.feed.say("IT'S JAMMED!", EventFeed.Tone.GOOD)
+			var jb := _behavior(m, held_profile(m))
+			Sfx.play(String(jb.get("jammed_sfx", "crack")), 0.5, -4.0)
+			m.float_text(Vector2(m.walk_cx + sweeper.jam_side * (m.walk_half - 40.0), sweeper.front_y),
+				String(jb.get("jammed", "CLONK")), Color(1.0, 0.85, 0.5))
+			m.feed.say(String(jb.get("jammed_shout", "IT'S JAMMED!")), EventFeed.Tone.GOOD)
 	elif sweeper.freed_now:
 		_say_freed(m, sweeper)
 	if sweeper.sweep_junk(m.get_tree().get_nodes_in_group("cones")) > 0:
@@ -598,7 +607,8 @@ static func _catch(m: Node2D, msg: String, first: String) -> void:
 	m.dog.velocity = Vector2.ZERO
 	m.human.velocity = Vector2.ZERO
 	m.shake_t = 1.0
-	var shout := "SWEPT AWAY!" if String(m.chase_kind) == "flood" else "SWEPT!"
+	var shout := "SWEPT AWAY!" if String(m.chase_kind) == "flood" \
+		else String(_behavior(m, held_profile(m)).get("caught_shout", "SWEPT!"))
 	m.feed.say(shout, EventFeed.Tone.BAD)
 
 

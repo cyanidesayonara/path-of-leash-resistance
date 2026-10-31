@@ -1,7 +1,7 @@
 extends SceneTree
 
 # La Platja (docs/LEVEL_DESIGN.md): the Mediterranean beachfront walk along
-# Passeig Marítim in Badalona (ending at the Hotel Marina Badalona plaza with
+# Passeig Marítim in Badalona (ending at the Hotel L'Onada plaza with
 # the BADALONA sign) and Platja de Llevant (ending at the Platja dels Gossos
 # dog beach). Sandy shores, wet sand waterline, wooden boardwalk (passarel·la
 # de fusta), palm cutouts, beach showers with rentapeus foot-wash taps,
@@ -32,7 +32,7 @@ func _run() -> void:
 		await m.ready
 
 	_check(m.lvl == "beach", "level is beach")
-	_check(m.freedom_kind == "placa", "Passeig Marítim off-leash space is Hotel Marina Badalona plaza")
+	_check(m.freedom_kind == "placa", "Passeig Marítim off-leash space is Hotel L'Onada plaza")
 	_check(m.gate_text == "PLAÇA DE L'HOTEL", "Passeig Marítim gate text is PLAÇA DE L'HOTEL")
 
 	# Beach landmarks

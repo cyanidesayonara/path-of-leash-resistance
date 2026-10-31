@@ -43,6 +43,10 @@ var mood_accel := 1.0
 var mood_wobble := 0.0
 var turbo_active := false
 const TURBO_MULT := 1.7
+# zoomies grip: Millie's, scaled by each breed's acceleration
+const TURBO_ACCEL := 3200.0
+# the collision circle every walk is built round; a breed's gap_mult scales it
+const BODY_RADIUS := 14.0
 var tumble_t := 0.0
 var hole_cd := 0.0
 var squat_t := 0.0
@@ -124,9 +128,7 @@ func gap_mult() -> float:
 
 
 func collision_radius() -> float:
-	if _dog_breed() == "chihuahua":
-		return 8.0
-	return 14.0
+	return BODY_RADIUS * gap_mult()
 
 
 func apply_breed_shape() -> void:
@@ -313,7 +315,7 @@ func tick(delta: float) -> void:
 			top *= main.dog_slope_mult(global_position.y, velocity.y)
 		if turbo_active:
 			top *= TURBO_MULT
-			accel = maxf(accel, b_acc * 1.33)
+			accel = maxf(accel, TURBO_ACCEL * b_acc / ACCEL)
 		# the mood goes on last, over the terrain and the turbo, so being
 		# scared on sand is both of those things at once
 		top *= mood_speed
@@ -647,8 +649,8 @@ func _draw_shapes() -> void:
 			tp = nxt
 	# four legs, trot gait: diagonal pairs move together, tucked when crouching,
 	# scrabbling rapidly in front when digging up a buried bone
-	var stride_mult := 0.70 if is_tito else (1.05 if is_gos else (0.78 if is_frenchie else (1.25 if is_galgo else 1.0)))
-	var amp := 0.0 if crouching else clampf(_draw_speed() / b_spd, 0.0, 1.0) * (5.5 * stride_mult) * _stride()
+	# _stride() already carries the breed's stride
+	var amp := 0.0 if crouching else clampf(_draw_speed() / b_spd, 0.0, 1.0) * 5.5 * _stride()
 	var ph := sin(gait)
 	var dig_scrabble := sin(t * 28.0) * 4.8 * dig_u
 	# white-tipped paws, like she stepped in paint and regrets nothing

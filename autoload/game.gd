@@ -80,12 +80,12 @@ const LEVEL_SUBTITLES := {
 	"llevant": "The dog beach at the far end of the coast",
 	"boars": "The wild Collserola downhill scramble",
 	"gracia": "The decorated festival street run",
-	"raval": "The Grand Finale — El Gat de Botero",
+	"raval": "The rambla where the big bronze cat sits",
 }
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
 # The first few open quickly, so a new player is never stuck on one walk.
-const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "rain": 4, "market": 7, "oldtown": 9, "trail": 11, "station": 13, "besos": 14, "site": 15, "spook": 17, "scrap": 19, "guell": 21, "neteja": 23, "montjuic": 25, "partit": 27, "port": 29, "reial": 31, "vet": 33, "tibidabo": 35, "aigues": 37, "horta": 39, "llevant": 41, "boars": 40, "gracia": 42, "raval": 43}
+const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "rain": 4, "market": 7, "oldtown": 9, "trail": 11, "station": 13, "besos": 14, "site": 15, "spook": 17, "scrap": 19, "guell": 21, "neteja": 23, "montjuic": 25, "partit": 27, "port": 29, "reial": 31, "vet": 33, "tibidabo": 35, "aigues": 37, "horta": 39, "llevant": 40, "boars": 41, "gracia": 42, "raval": 43}
 
 # Keystone Chase milestone gates: each tier requires surviving the previous
 # tier's chase level end-to-end to enter.
@@ -330,7 +330,7 @@ const LEVEL_SUBTITLES_CA := {
 	"llevant": "La platja dels gossos a l'extrem de la costa",
 	"boars": "La baixada salvatge per Collserola",
 	"gracia": "La festa dels carrers guarnits",
-	"raval": "La gran final — El Gat de Botero",
+	"raval": "La rambla on seu el gat gros de bronze",
 }
 const LEVEL_SUBTITLES_ES := {
 	"tutorial": "Aprende la correa, truco a truco",
@@ -360,11 +360,17 @@ const LEVEL_SUBTITLES_ES := {
 	"llevant": "La playa para perros al final de la costa",
 	"boars": "El descenso salvaje por Collserola",
 	"gracia": "La fiesta de las calles adornadas",
-	"raval": "La gran final — El Gat de Botero",
+	"raval": "La rambla donde se sienta el gato gordo de bronce",
 }
 # the off-leash agility course's best time in seconds (0: never run). One
 # record for all of them: it is the same course in every space.
 var agility_best := 0.0
+# gated walks this save keeps open whatever CHASE_GATE says (see
+# _grandfather_chase_gates)
+var gate_open: Array[String] = []
+# the walks that arrived with the chase gates: no save predates them, so
+# none is grandfathered past its gate
+const WALKS_SINCE_GATES: Array[String] = ["llevant", "boars", "gracia", "raval"]
 # The goal card is a big block of text in the corner of a game whose whole
 # point is the mess in the middle. Collapsed it is one line; the player
 # decides, and the choice sticks.
@@ -826,6 +832,8 @@ func _reset_persisted_state() -> void:
 	walks_lost = 0
 	tips_seen = []
 	agility_best = 0.0
+	gate_open = []
+	dog_upgrades = {}
 
 
 func load_records() -> void:
@@ -897,6 +905,34 @@ func load_records() -> void:
 	walks_lost = int(cf.get_value("global", "walks_lost", 0))
 	tips_seen.assign(Array(cf.get_value("tips", "seen", PackedStringArray())))
 	agility_best = maxf(0.0, float(cf.get_value("freedom", "agility_best", 0.0)))
+	if cf.has_section_key("global", "gate_open"):
+		gate_open.assign(Array(cf.get_value("global", "gate_open", PackedStringArray())))
+	else:
+		_grandfather_chase_gates()
+	# a dog saved while only browsed (locked) is not the player's dog; checked
+	# last, once the stars that unlock dogs are loaded
+	if not is_dog_unlocked(dog):
+		dog = DEFAULT_DOG
+	for dk in dog_upgrades.keys():
+		var ups = dog_upgrades[dk]
+		if not ups is Dictionary:
+			dog_upgrades.erase(dk)
+			continue
+		for st in (ups as Dictionary).keys():
+			ups[st] = clampi(int(ups[st]), 0, MAX_STAT_POINTS)
+
+
+# A save from before the chase gates keeps every gated walk it had already
+# opened by stars or already walked: an update must never lock a walk away.
+func _grandfather_chase_gates() -> void:
+	var stars_now := total_stars()
+	for lv: String in CHASE_GATE:
+		if lv in WALKS_SINCE_GATES:
+			continue
+		var r: Dictionary = records.get(lv, {})
+		var walked := int(r.get("bones", 0)) > 0 or float(r.get("time", 0.0)) > 0.0
+		if walked or stars_now >= int(STAR_GATE.get(lv, 0)):
+			gate_open.append(lv)
 
 
 func save_records() -> void:
@@ -934,6 +970,7 @@ func save_records() -> void:
 	cf.set_value("global", "walks_lost", walks_lost)
 	cf.set_value("tips", "seen", PackedStringArray(tips_seen))
 	cf.set_value("freedom", "agility_best", agility_best)
+	cf.set_value("global", "gate_open", PackedStringArray(gate_open))
 	cf.save(save_path)
 
 
@@ -947,8 +984,23 @@ func goal_done(lv: String, id: String) -> bool:
 	return records.has(lv) and (records[lv].get("goals", []) as Array).has(id)
 
 
+# Only goals the walk still has count: a save keeps the ids of goals a later
+# version retired (El Barri's "hi" and the like), and those must not inflate
+# the totals. Stars already banked from them stay banked (stars()).
 func goals_count(lv: String) -> int:
-	return (records[lv].get("goals", []) as Array).size() if records.has(lv) else 0
+	if not records.has(lv):
+		return 0
+	if _goal_ids.is_empty():
+		_goal_ids = load("res://systems/goals.gd").LEVEL_GOAL_IDS
+	var current: Array = _goal_ids.get(lv, [])
+	var n := 0
+	for id in records[lv].get("goals", []):
+		if current.is_empty() or current.has(String(id)):
+			n += 1
+	return n
+
+
+var _goal_ids: Dictionary = {}
 
 
 func mark_goal(lv: String, id: String) -> bool:
@@ -961,7 +1013,7 @@ func mark_goal(lv: String, id: String) -> bool:
 	gl.append(id)
 	record["goals"] = gl
 	# keep the stored star floor in step with the milestones reached
-	record["stars"] = maxi(int(record.get("stars", 0)), _milestone_stars(gl.size()))
+	record["stars"] = maxi(int(record.get("stars", 0)), _milestone_stars(goals_count(lv)))
 	save_records()
 	return true
 
@@ -997,7 +1049,7 @@ func has_completed(lv: String) -> bool:
 
 
 func chase_gate_needed(lv: String) -> String:
-	if free_play or lv == "tutorial" or not CHASE_GATE.has(lv):
+	if free_play or lv == "tutorial" or not CHASE_GATE.has(lv) or gate_open.has(lv):
 		return ""
 	var req: String = String(CHASE_GATE[lv])
 	return "" if has_completed(req) else req
@@ -1050,13 +1102,13 @@ func record_result(lv: String, bones: int, time: float, perfect: bool) -> Dictio
 
 func gate_crossed(prev_total: int, lv: String) -> bool:
 	var gate := int(STAR_GATE.get(lv, 0))
-	return gate > prev_total and gate <= total_stars()
+	return gate > prev_total and gate <= total_stars() and is_unlocked(lv)
 
 
 func best_line(lv: String) -> String:
 	var ch := chase_gate_needed(lv)
 	if ch != "":
-		return "locked - complete %s to enter" % LEVEL_NAMES.get(ch, ch)
+		return "locked - finish %s first" % LEVEL_NAMES.get(ch, ch)
 	if not is_unlocked(lv):
 		return "locked - earn %d stars to unlock" % int(STAR_GATE.get(lv, 0))
 	if not records.has(lv) or int(records[lv].bones) <= 0:
