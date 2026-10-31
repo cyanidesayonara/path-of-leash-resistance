@@ -193,10 +193,10 @@ hidden page barely renders and the game runs in fits:
 godot\Godot_v4.7-stable_win64.exe --path . --rendering-method gl_compatibility --script res://tools/playtest.gd -- --level=market --steps="up:4;shot;turbo+up:3;shot" --out=C:/tmp/pt
 ```
 
-Release (both platforms, both itch channels). v1.66 is the last tag.
+Release (both platforms, both itch channels). v1.67 is the last tag.
 The next release is tagged only when Santtu says to tag:
 ```
-git tag v1.67 && git push --tags
+git tag v1.68 && git push --tags
 ```
 Before asking to tag, the release notes must already describe the release
 (1.65 and 1.66 went to the Store with 1.64's): "What's new in this version"
