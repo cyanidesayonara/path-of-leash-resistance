@@ -909,6 +909,17 @@ func load_records() -> void:
 		gate_open.assign(Array(cf.get_value("global", "gate_open", PackedStringArray())))
 	else:
 		_grandfather_chase_gates()
+	# a dog saved while only browsed (locked) is not the player's dog; checked
+	# last, once the stars that unlock dogs are loaded
+	if not is_dog_unlocked(dog):
+		dog = DEFAULT_DOG
+	for dk in dog_upgrades.keys():
+		var ups = dog_upgrades[dk]
+		if not ups is Dictionary:
+			dog_upgrades.erase(dk)
+			continue
+		for st in (ups as Dictionary).keys():
+			ups[st] = clampi(int(ups[st]), 0, MAX_STAT_POINTS)
 
 
 # A save from before the chase gates keeps every gated walk it had already

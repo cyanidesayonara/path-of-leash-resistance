@@ -280,6 +280,8 @@ const BUS_STOP_RECT := Rect2(984.0, -340.0, 56.0, 128.0)
 const SURF_CLUB_RECT := Rect2(1004.0, -1420.0, 176.0, 220.0)
 const SURF_RACK_RECT := Rect2(266.0, -1360.0, 96.0, 140.0)
 const RESTAURANT_RECT := Rect2(1004.0, -2580.0, 176.0, 250.0)
+# its glass pavilion is a building; the terrace in front of it is open
+const RESTAURANT_HALL := Rect2(1042.0, RESTAURANT_RECT.position.y + 6.0, 140.0, RESTAURANT_RECT.size.y - 12.0)
 const GYM_RECT := Rect2(1004.0, -2980.0, 176.0, 210.0)
 const CALISTHENICS_RECT := Rect2(256.0, -2910.0, 88.0, 160.0)
 const WORKS_Y := -3780.0

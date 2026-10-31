@@ -2,6 +2,79 @@
 
 Append-only session history, newest first.
 
+## 2026-10-31 - El Gat de Botero becomes a set piece; second review of the week's work
+
+The finale was winnable but plain: a bronze blob that swatted, then sat on
+his plinth and waited to be tied. Now it plays like the last level. Also the
+fixes from a second review of #371-#380.
+
+- **The wake** (`systems/boss_gat.gd`, `AWAKEN`): a statue's eyes are shut.
+  Past `WAKE_Y` they open, glowing; his plinth cracks and chips fly; he rears
+  and roars (a shockwave, every pigeon up); he hops down off the front of the
+  plinth with a thud. A title card slides across the lower screen, "EL GAT DE
+  BOTERO" with its gloss, and the camera leans his way (`cam_lean`, a new walk
+  hook main's camera reads). The cracked plinth stays cracked.
+- **The crowd**: a diner at every terrace table and onlookers lining the
+  rambla by both plinths. They lean away from a swat or a charge, jump with
+  their arms up when she lands one on him, and now and then one calls out
+  ("Olé!", "Look out!", "Good dog!"). Drawn only, in the batch.
+- **Reading the paw**: a swat's ring now holds still and fills to the moment
+  the paw lands, instead of fading out as it landed. The paw comes down claws
+  out, cracks the paving (the cracks stay a while) and throws chips and sparks.
+- **The enrage** (`ENRAGE`): the first time he is back on his feet below half,
+  he rears up and roars, a shockwave of hot sparks, before the first charge.
+  From then on his eyes are red under a heavy brow, his tail lashes, the
+  bronze runs hot and steam puffs from his nose.
+- **The charge**: he hunkers back before he goes; the lane has chevrons
+  running the way he will come; afterimages and dust trail behind him. A
+  smash shakes leaves out of the palm, a stun spins him round with sparks,
+  and a hit lights his bronze white. Clothesline, smash, pummel and the topple
+  get a beat of slow motion and a flash.
+- **Solid**: off his plinths his body (`BODY_R`) keeps both of you out; your
+  human no longer walks through him. He stops walking into her when she is
+  against him, and never shoves her into a bench or a terrace.
+- **The last stand**: back on his plinth in the plaça he lands with a thump
+  and keeps swatting at her (telegraphed, `LAST_SWAT_EVERY`) while she ties
+  his legs, turning to face her. Tied, he teeters harder and harder
+  (`WOBBLE_TIME`) before he goes over with a crash the whole plaça feels.
+- **The finale**: the boop sets off fireworks over the plaça, hearts rise off
+  him as he purrs, and the crowd cheers.
+- **`tools/boss_shots.gd`** photographs every beat (wake, enrage, charge lane,
+  charge, stun, last stand, teeter, topple, fireworks) without playing up to
+  it. `test_boss_gat` covers the wake, the enrage (once), solidity, the last
+  stand's swat and the teeter.
+
+Second review fixes:
+
+- **Montjuïc's straight building walls cut through its winding path** in five
+  places (a 120 px solid bar across the walk), which also buried every LEASH
+  letter there. The hillside has no buildings; its sides are open like the
+  other green walks. `test_tony_hawk_quests` now checks all 27 walks, and
+  checks letters and the pernil with real physics queries rather than the
+  `solid_rects` list the placement itself reads. That caught El Gòtic's pernil
+  half in the wall; it moved in.
+- **Dogs**: a locked dog browsed with up/down on the walk select stayed
+  selected and stopped the tutorial starting. The walk select no longer
+  changes the dog (GET READY does); `start_walk` falls back to Millie for any
+  other way in; a locked dog in a save loads as Millie; saved upgrade points
+  are clamped. Tito's gap now comes from his `gap_mult` (`BODY_RADIUS` times
+  it) instead of a hard-coded 8. Leg swing no longer applies the breed's
+  stride twice. Millie's zoomies grip is 3200 again (`TURBO_ACCEL`, scaled by
+  each breed's acceleration).
+- **Passeig Marítim**: the restaurant's glass pavilion is solid (its terrace
+  stays open), and no palm grows inside the bus shelter.
+- **Chases**: the boars and the correfoc pause with their own shouts ("THEY'RE
+  IN THE BINS!", "THEY STOPPED TO DANCE!") rather than the sweeper's "IT'S
+  JAMMED!".
+- **Menus**: the walk list's lock labels start with a capital ("Opens at %d
+  stars", "Finish %s first").
+- `test_chase_milestone_gates`: the "ample stars" check now has the stars.
+
+Left as found: a playtest of Raval saw passing pairs' walkers inside a bench
+and the start plinth (the same steps show it on the commit before this
+session too; straight walks of street and La Rambla showed none). Not yet
+traced through `systems/bypasser_route.gd`.
+
 ## 2026-10-30 - Review of #371-#380: the finale fights fair, the new walks draw, old saves keep their walks
 
 A review of the week's merged work, and the fixes for what it found.

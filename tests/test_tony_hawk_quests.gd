@@ -30,13 +30,9 @@ func _run() -> void:
 	var Goals: GDScript = load("res://systems/goals.gd")
 	var TonyHawk: GDScript = load("res://systems/tony_hawk.gd")
 
-	# 1. Verify words and goals for all 24 campaign walks
-	var all_walks: Array = [
-		"barri", "street", "park", "beach", "rain", "market",
-		"oldtown", "trail", "station", "besos", "site", "spook",
-		"scrap", "guell", "neteja", "montjuic", "partit", "port",
-		"reial", "vet", "tibidabo", "aigues", "horta", "llevant",
-	]
+	# 1. Verify words and goals for every campaign walk
+	var all_walks: Array = Array(game.LEVELS)
+	_check(all_walks.size() >= 27, "every walk is checked (%d)" % all_walks.size())
 
 	var main_scene: PackedScene = load("res://main.tscn")
 
@@ -62,6 +58,11 @@ func _run() -> void:
 		root.add_child(inst)
 		if not inst.is_node_ready():
 			await inst.ready
+		# the walls and bodies are real physics: ask the space, not
+		# solid_rects, which is what the placement itself reads
+		await physics_frame
+		await physics_frame
+		var space: PhysicsDirectSpaceState2D = inst.get_world_2d().direct_space_state
 
 		# Check all letters on this walk
 		_check(inst.word_letters.size() == 5, "%s spawns 5 letters" % lvl)
@@ -73,6 +74,8 @@ func _run() -> void:
 			for r: Rect2 in inst.solid_rects:
 				_check(not r.grow(4.0).has_point(lp),
 					"%s letter '%s' at %s must not intersect solid rect %s" % [lvl, String(l.letter), lp, r])
+			_check(_clear_of_bodies(space, lp),
+				"%s letter '%s' at %s must not sit inside a solid body" % [lvl, String(l.letter), lp])
 
 		# Check pernil on this walk
 		var jp: Vector2 = inst.jamon_pos
@@ -82,6 +85,8 @@ func _run() -> void:
 		for r: Rect2 in inst.solid_rects:
 			_check(not r.grow(4.0).has_point(jp),
 				"%s pernil at %s must not intersect solid rect %s" % [lvl, jp, r])
+		_check(_clear_of_bodies(space, jp),
+			"%s pernil at %s must not sit inside a solid body" % [lvl, jp])
 
 		inst.queue_free()
 
@@ -152,3 +157,14 @@ func _run() -> void:
 	else:
 		print("test_tony_hawk_quests: %d FAILURES" % _failures)
 		quit(1)
+
+
+# A dog-sized circle at p overlaps no static body on the dog's layer.
+func _clear_of_bodies(space: PhysicsDirectSpaceState2D, p: Vector2) -> bool:
+	var q := PhysicsShapeQueryParameters2D.new()
+	var c := CircleShape2D.new()
+	c.radius = 8.0
+	q.shape = c
+	q.transform = Transform2D(0.0, p)
+	q.collision_mask = 1
+	return space.intersect_shape(q, 1).is_empty()

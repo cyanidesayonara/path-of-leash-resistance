@@ -1728,6 +1728,8 @@ static func build_level_data(m: Node2D) -> void:
 				if m.lvl == "beach":
 					if Passeig.SURF_CLUB_RECT.grow(12.0).has_point(pp) or Passeig.GYM_RECT.grow(12.0).has_point(pp):
 						continue
+					if Passeig.BUS_STOP_RECT.grow(12.0).has_point(pp) or Passeig.RESTAURANT_RECT.grow(12.0).has_point(pp):
+						continue
 					if BEACH_BARS[0].grow(12.0).has_point(pp) or BEACH_BARS[1].grow(12.0).has_point(pp):
 						continue
 				elif m.lvl == "llevant":
@@ -3017,6 +3019,7 @@ static func level_solid_rects(m: Node2D) -> Array:
 				out.append(["beach_pier_rail_%d" % i, rails[i]])
 			out.append(["surf_club", Passeig.SURF_CLUB_RECT])
 			out.append(["gym", Passeig.GYM_RECT])
+			out.append(["restaurant", Passeig.RESTAURANT_HALL])
 			out.append(["hotel_marina", Passeig.HOTEL_RECT])
 			out.append(["badalona_sign", Passeig.HOTEL_SIGN_RECT])
 		"llevant":
@@ -3206,6 +3209,7 @@ static func build_walls(m: Node2D) -> void:
 			add_rect_body(m, br.get_center(), br.size)
 		add_rect_body(m, Passeig.SURF_CLUB_RECT.get_center(), Passeig.SURF_CLUB_RECT.size)
 		add_rect_body(m, Passeig.GYM_RECT.get_center(), Passeig.GYM_RECT.size)
+		add_rect_body(m, Passeig.RESTAURANT_HALL.get_center(), Passeig.RESTAURANT_HALL.size)
 		add_rect_body(m, Passeig.HOTEL_RECT.get_center(), Passeig.HOTEL_RECT.size)
 		add_rect_body(m, Passeig.HOTEL_SIGN_RECT.get_center(), Passeig.HOTEL_SIGN_RECT.size)
 	# the groins out into the surf, the solar pergola and the dog shower
@@ -3381,6 +3385,9 @@ static func build_walls(m: Node2D) -> void:
 		"street": wall_sides = [-1.0]
 		"rain": wall_sides = []      # its frontage walls are the building line
 		"park", "trail", "beach", "llevant", "barri": wall_sides = []
+		# a hillside with no buildings, and its path winds right across where
+		# the straight building line would stand
+		"montjuic": wall_sides = []
 		"besos": wall_sides = [-1.0]   # the concrete flood wall; the river side stays open
 		_: wall_sides = [-1.0, 1.0]
 	# the straight wall runs the whole walk at sw_l/sw_r, START_Y + 200 to

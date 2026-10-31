@@ -6418,6 +6418,9 @@ func _process(_delta: float) -> void:
 		target_y = dog.global_position.y  # owner is parked; follow the dog
 	elif phase == "home" and chase_sweeper != null:
 		target_y -= chase_lean
+	# a walk's set piece can lean the camera toward itself (El Gat's wake)
+	if walk_mod != null and walk_mod.has_method("cam_lean"):
+		target_y += walk_mod.cam_lean(self)
 	var cx_want := _cam_x()
 	if cam_x_now > 1e8:
 		cam_x_now = cx_want

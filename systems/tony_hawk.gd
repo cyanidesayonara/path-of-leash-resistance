@@ -47,7 +47,7 @@ const JAMON_POS := {
 	"beach": Vector2(980.0, -2250.0),
 	"rain": Vector2(430.0, -2100.0),
 	"market": Vector2(420.0, -2500.0),
-	"oldtown": Vector2(860.0, -2300.0),
+	"oldtown": Vector2(820.0, -2300.0),
 	"trail": Vector2(680.0, -2100.0),
 	"station": Vector2(400.0, -2300.0),
 	"besos": Vector2(400.0, -2200.0),

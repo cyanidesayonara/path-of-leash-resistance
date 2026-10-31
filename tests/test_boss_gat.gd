@@ -90,7 +90,13 @@ func _run() -> void:
 	m.human.global_position = Vector2(640.0, -200.0)
 	m.dog.global_position = Vector2(640.0, BG.WAKE_Y - 40.0)
 	gat.tick_state(0.016)
-	_check(gat.state == BG.State.PROWL, "she walks past WAKE_Y: he climbs down")
+	_check(gat.state == BG.State.AWAKEN, "she walks past WAKE_Y: he wakes")
+	_check(gat.card != null and gat.card_t >= 0.0, "the title card comes up")
+	for i in range(int(BG.AWAKEN_TIME / 0.05) + 2):
+		gat.tick_state(0.05)
+	_check(gat.state == BG.State.PROWL, "the wake played, he climbs down")
+	_check(gat.plinth_cracked, "his plinth cracked on the way")
+	_check(gat.pos.y < BG.START_PLINTH.y - BG.PLINTH_HALF.y, "he lands off the front of his plinth")
 	m.dog.global_position = Vector2(640.0, 400.0)
 	var y0: float = gat.pos.y
 	m.human.global_position = Vector2(640.0, -1200.0)
@@ -126,6 +132,20 @@ func _run() -> void:
 	# phase two
 	gat.damage_boss(gat.hp - BG.MAX_HP * 0.5)
 	_check(gat.phase == 2, "half his health gone: he charges")
+	gat.transition_to(BG.State.PROWL)
+	_check(gat.state == BG.State.ENRAGE, "back on his feet below half, he rears up first")
+	for i in range(int(BG.ENRAGE_TIME / 0.05) + 2):
+		gat.tick_state(0.05)
+	_check(gat.state != BG.State.ENRAGE and gat.enraged, "and only once")
+	gat.transition_to(BG.State.PROWL)
+	_check(gat.state == BG.State.PROWL, "the next time he just prowls")
+
+	# solid: she is kept out of his body
+	m.dog.global_position = gat.pos + Vector2(10.0, 5.0)
+	gat.swat_cooldown = 99.0
+	gat.charge_cooldown = 99.0
+	gat.tick_state(0.016)
+	_check(m.dog.global_position.distance_to(gat.pos) >= BG.BODY_R - 0.5, "she cannot stand inside him")
 
 	# the clothesline: a taut rope across his body, then only its ends
 	gat.hp = 90.0
@@ -188,6 +208,16 @@ func _run() -> void:
 	_check(gat.state == BG.State.ROAR and gat.pos == BG.PEDESTAL_POS, "he reaches his plinth and roars")
 	_check(gat.status().begins_with("WRAP THE LEASH"), "the banner asks for the tangle")
 
+	# the last stand: he swats at her, telegraphed, while she ties him
+	m.dog.global_position = gat.pos + Vector2(110.0, 30.0)
+	gat.ls_swat_cd = 0.0
+	gat.tick_state(0.016)
+	_check(gat.ls_swat_t > 0.0 and not gat.dust_rings.is_empty(), "on his plinth he still swats, with a ring first")
+	var cracks0: int = gat.cracks.size()
+	gat.tick_state(BG.SWAT_WARN + 0.01)
+	_check(gat.cracks.size() == cracks0 + 1 and gat.state == BG.State.ROAR, "the paw lands and he fights on")
+	m.dog.global_position = Vector2(640.0, BG.HOLD_Y + 200.0)
+
 	# the tangle: two legs, a stale third, then three in time
 	m.elapsed = 100.0
 	gat.leg_touch_t.assign([100.0, 100.0, 100.0 - BG.LEG_MEMORY - 0.1, -INF])
@@ -196,12 +226,17 @@ func _run() -> void:
 	gat.leg_touch_t[2] = 99.5
 	gat.update_leg_tangle()
 	_check(gat.state == BG.State.WRAPPED, "three legs in LEG_MEMORY tie him up")
-	gat.tick_state(1.0)
+	gat.tick_state(BG.WOBBLE_TIME * 0.5)
+	_check(gat.state == BG.State.WRAPPED, "tied, he teeters first")
+	gat.tick_state(BG.WOBBLE_TIME * 0.5 + 0.01)
 	_check(gat.state == BG.State.TOPPLED and bool(m.gat_toppled), "tied, he topples")
 	_check(not gat.on_bark_action(Vector2.ZERO) or gat.state != BG.State.PURR, "a bark far away does nothing")
 	m.dog.global_position = gat.snout_pos + Vector2(30.0, 0.0)
 	_check(gat.on_bark_action(gat.snout_pos), "a bark on the snout")
 	_check(gat.beaten() and bool(m.gat_booped), "settles him for good")
+	for i in range(50):
+		gat.tick_state(0.1)
+	_check(gat.fireworks_left == 0, "fireworks over the plaça")
 	gat.tick_state(0.016)
 	_check(m.human.tut_hold_y != BG.HOLD_Y, "your human walks on into the plaça")
 

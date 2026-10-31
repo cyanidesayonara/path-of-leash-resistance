@@ -135,6 +135,7 @@ static func kind_behavior(kind: String) -> Dictionary:
 				"kind": "boars", "speed": 142.0, "flee": false,
 				"warning": "WILD BOARS! WATCH OUT!",
 				"freed": "SNORT", "freed_sfx": "snort", "caught_shout": "TRAMPLED!",
+			"jammed": "CRASH", "jammed_sfx": "grunt", "jammed_shout": "THEY'RE IN THE BINS!",
 				"jammed_banner": "THEY'RE IN THE BINS! CATCH YOUR BREATH", "run_banner": "RUN! DON'T LET THEM CATCH YOU",
 				"caught_human": "THE BOARS GOT YOUR HUMAN\n\nThey stood between mama and the picnic basket.\nBig mistake.",
 				"caught_dog": "ROOTED IN THE DIRT!\n\nYou got bowled over into the acorns.\nMama boar claimed your snacks.",
@@ -144,6 +145,7 @@ static func kind_behavior(kind: String) -> Dictionary:
 				"kind": "correfoc", "speed": 140.0, "flee": false,
 				"warning": "CORREFOC! RUN FROM THE FIRE DEVILS!",
 				"freed": "BOOM", "freed_sfx": "cracker", "caught_shout": "SINGED!",
+			"jammed": "DRUMS", "jammed_sfx": "drum", "jammed_shout": "THEY STOPPED TO DANCE!",
 				"jammed_banner": "THEY'VE STOPPED TO DANCE! CATCH YOUR BREATH", "run_banner": "RUN! DON'T LET THEM CATCH YOU",
 				"caught_human": "SPARKED OUT!\n\nYour human caught firecrackers in their hood.\nThey dropped the phone in panic.",
 				"caught_dog": "TAIL SINGED!\n\nA fire devil's sparkler popped right behind you.\nYou bolted into the nearest doorway.",
@@ -528,9 +530,11 @@ static func tick(m: Node2D, delta: float) -> void:
 			m.float_text(Vector2(m.walk_cx, sweeper.front_y), "HOLD", Color(0.75, 0.9, 1.0))
 			m.feed.say("IT'S HOLDING!", EventFeed.Tone.GOOD)
 		else:
-			Sfx.play("crack", 0.5, -4.0)
-			m.float_text(Vector2(m.walk_cx + sweeper.jam_side * (m.walk_half - 40.0), sweeper.front_y), "CLONK", Color(1.0, 0.85, 0.5))
-			m.feed.say("IT'S JAMMED!", EventFeed.Tone.GOOD)
+			var jb := _behavior(m, held_profile(m))
+			Sfx.play(String(jb.get("jammed_sfx", "crack")), 0.5, -4.0)
+			m.float_text(Vector2(m.walk_cx + sweeper.jam_side * (m.walk_half - 40.0), sweeper.front_y),
+				String(jb.get("jammed", "CLONK")), Color(1.0, 0.85, 0.5))
+			m.feed.say(String(jb.get("jammed_shout", "IT'S JAMMED!")), EventFeed.Tone.GOOD)
 	elif sweeper.freed_now:
 		_say_freed(m, sweeper)
 	if sweeper.sweep_junk(m.get_tree().get_nodes_in_group("cones")) > 0:

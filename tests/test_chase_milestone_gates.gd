@@ -62,6 +62,12 @@ func _run() -> void:
 
 	# 3. Even with ample stars, chase block prevents unlock
 	game.mark_goal("barri", "mark")
+	for lv: String in ["street", "park", "beach", "rain", "market"]:
+		if not game.records.has(lv):
+			game.records[lv] = game._default_level_record()
+		game.records[lv]["stars"] = 3
+	_check(game.total_stars() >= int(game.STAR_GATE.get("site", 0)),
+		"stars enough for site's star gate (%d)" % game.total_stars())
 	_check(not game.is_unlocked("site"), "site is locked when besos is uncompleted even with stars")
 
 	# Check walk_info plaque text
@@ -78,6 +84,7 @@ func _run() -> void:
 	game.record_result("besos", 15, 80.0, false)
 	_check(game.has_completed("besos"), "besos is now completed")
 	_check(game.chase_gate_needed("site") == "", "site no longer needs chase gate")
+	_check(game.is_unlocked("site"), "with the stars and El Besòs walked, site opens")
 
 	# 5. Completing neteja clears montjuic
 	_check(game.chase_gate_needed("montjuic") == "neteja", "montjuic still needs neteja")

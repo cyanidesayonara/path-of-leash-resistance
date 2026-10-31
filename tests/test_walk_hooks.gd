@@ -39,7 +39,7 @@ const HOOKS := {
 	"llevant": ["draw_bin", "draw_cross_section", "draw_edge_layer", "draw_overhead", "rider_lane", "surface", "takes_prints"],
 	"boars": ["draw_bollard", "draw_path_edges", "draw_scenery", "draw_snack", "grass_blocked", "tick", "tree_kind"],
 	"gracia": ["draw_overhead", "draw_scenery", "tick"],
-	"raval": ["draw_edge_layer", "draw_live", "draw_overhead", "idle_status", "on_bark", "surface", "tick"],
+	"raval": ["cam_lean", "draw_edge_layer", "draw_live", "draw_overhead", "idle_status", "on_bark", "surface", "tick"],
 }
 
 var checks := 0

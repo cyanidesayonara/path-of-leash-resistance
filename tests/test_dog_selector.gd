@@ -177,6 +177,7 @@ func _test_cycle_and_persistence(game: Node) -> void:
 	var test_path := "user://test_records_dog.cfg"
 	var cf := ConfigFile.new()
 	cf.set_value("player", "dog", "mochi")
+	cf.set_value("settings", "free_play", true)
 	cf.save(test_path)
 
 	var orig_save: String = game.save_path
@@ -186,6 +187,12 @@ func _test_cycle_and_persistence(game: Node) -> void:
 	game.dog = "millie"
 	game.load_records()
 	_check(game.dog == "mochi", "load_records loads saved mochi")
+
+	# a dog saved while only browsed, still locked, loads as the default
+	cf.set_value("settings", "free_play", false)
+	cf.save(test_path)
+	game.load_records()
+	_check(game.dog == "millie", "a locked saved dog loads as millie")
 
 	# Corrupted / unknown dog key resets to default
 	cf.set_value("player", "dog", "cerberus")
@@ -244,7 +251,7 @@ func _test_live_entity_and_physics(game: Node) -> void:
 	_check(is_equal_approx(dog.mass_mult(), 0.45), "dog mass_mult with tito")
 	_check(is_equal_approx(dog.reel_mult(), 1.65), "dog reel_mult with tito")
 	_check(is_equal_approx(dog.gap_mult(), 0.57), "dog gap_mult with tito")
-	_check(is_equal_approx(dog.collision_radius(), 8.0), "dog collision_radius with tito")
+	_check(is_equal_approx(dog.collision_radius(), dog.BODY_RADIUS * 0.57), "dog collision_radius follows gap_mult with tito")
 	_check(dog._dog_breed() == "chihuahua", "dog breed chihuahua")
 
 	# Plant grip scaling check:
@@ -311,11 +318,14 @@ func _test_menu_flow_and_gating(game: Node) -> void:
 	game.records.clear()
 	_check(not game.is_dog_unlocked("tito"), "tito is locked")
 
+	# GET READY refuses a locked dog itself; any other way into a walk (the
+	# tutorial, a quick start) walks with the default dog
+	game.dog = "tito"
 	m.started = false
-	m.locked_nudge = 0.0
 	Flow.start_walk(m)
-	_check(m.locked_nudge > 0.0, "starting walk with locked dog triggers locked_nudge")
-	_check(not m.started, "locked dog prevents starting walk")
+	_check(m.started and game.dog == "millie", "a locked dog starting a walk falls back to millie")
+	m.started = false
+	game.dog = "tito"
 
 	# Now unlock and try start_walk
 	game.free_play = true

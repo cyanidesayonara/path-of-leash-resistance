@@ -307,9 +307,13 @@ static func controls() -> Array:
 
 
 static func start_walk(m: Node2D) -> void:
+	# GET READY refuses a locked dog itself; any other way in (the tutorial,
+	# a quick start, a command line) walks with the default dog rather than
+	# leaving a frozen title behind
 	if not Game.is_dog_unlocked(Game.dog):
-		m.locked_nudge = 0.35
-		return
+		Game.dog = Game.DEFAULT_DOG
+		m.dog.apply_breed_shape()
+		m.dog.queue_redraw()
 	m.started = true
 	m.begin_departure()
 	# the very first real walk, for a player who skipped the tutorial: the
@@ -360,11 +364,6 @@ static func tick_title(m: Node2D) -> bool:
 				Game.cycle_level(1 if Input.is_action_just_pressed("move_right") else -1)
 				Game.menu_step = 1
 				reload(m)
-				return true
-			if Input.is_action_just_pressed("move_up") or Input.is_action_just_pressed("move_down"):
-				Game.cycle_dog(1 if Input.is_action_just_pressed("move_down") else -1)
-				m.dog.queue_redraw()
-				Sfx.play("ui")
 				return true
 			if Input.is_action_just_pressed("plant"):
 				if not Game.is_unlocked(Game.level_id):
