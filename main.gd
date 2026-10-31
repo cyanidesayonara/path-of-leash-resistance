@@ -20,6 +20,8 @@ var sw_r := 980.0
 var built := false
 # the intro is playing over the title (intro/intro_player.gd)
 var intro_playing := false
+# a chase walk's story film is playing over the frozen walk (intro/film_player.gd)
+var film_playing := false
 # Montjuic's wind (systems/montjuic.gd): its own RNG, the next gust, the
 # telegraph and the gust itself
 var wind_rng := RandomNumberGenerator.new()
@@ -6381,8 +6383,9 @@ func _process(_delta: float) -> void:
 			if "--shot-quit" in OS.get_cmdline_user_args():
 				get_tree().quit(0 if err == OK else 1)
 	# while the intro plays the title screen waits: the key that skips the
-	# intro must not also start a walk, restart, or toggle the music
-	if intro_playing:
+	# intro must not also start a walk, restart, or toggle the music; a chase
+	# film likewise keeps its skip from pausing the walk
+	if intro_playing or film_playing:
 		return
 	if in_settings:
 		_tick_settings()

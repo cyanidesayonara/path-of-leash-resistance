@@ -263,7 +263,10 @@ the phone; final level the battery is dead and the walk is just a walk.
 
 ### Agreed next (October 2026, in order)
 
-Items 1-5 shipped in 1.67 (2026-10-31); item 6 is next.
+Items 1-5 shipped in 1.67 (2026-10-31). Item 6 is under way: La Neteja's
+sweeper film and El Besòs's flood film are done; El Veterinari, Els
+Senglars, Festa de Gràcia and the Rambla del Raval follow, one walk at a
+time.
 
 1. The controls overhaul: poop on its own button apart from dig in, a
    pick-up button, comfortable on keyboard and controller, rebinding in
