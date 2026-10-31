@@ -3020,7 +3020,7 @@ static func level_solid_rects(m: Node2D) -> Array:
 			out.append(["surf_club", Passeig.SURF_CLUB_RECT])
 			out.append(["gym", Passeig.GYM_RECT])
 			out.append(["restaurant", Passeig.RESTAURANT_HALL])
-			out.append(["hotel_marina", Passeig.HOTEL_RECT])
+			out.append(["hotel_onada", Passeig.HOTEL_RECT])
 			out.append(["badalona_sign", Passeig.HOTEL_SIGN_RECT])
 		"llevant":
 			out.append(["pergola", Llevant.PERGOLA_RECT])

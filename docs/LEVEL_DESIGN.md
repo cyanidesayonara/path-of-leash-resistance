@@ -192,7 +192,7 @@ with pickpockets and shenanigans happening around."
   (`RESTAURANT_RECT`), gym and beach calisthenics bars (`GYM_RECT`,
   `CALISTHENICS_RECT`), second chiringuito (`BEACH_BARS[1]`), El Pont del
   Petroli (`BEACH_PIER_Y = -3420`) with the Anís del Mono works and chimney
-  opposite (`WORKS_Y = -3780`), and ends at the Hotel Marina Badalona plaza
+  opposite (`WORKS_Y = -3780`), and ends at the Hotel L'Onada plaza
   (`PLAÇA DE L'HOTEL`, `Passeig.draw_freedom`) with the 3D `BADALONA` tourist
   letters sign (`HOTEL_SIGN_RECT`) and the white terraced hotel (`HOTEL_RECT`).
   Rollerbladers (`kind == "roller"` in `entities/bike.gd`) skate the bike lane.
@@ -534,7 +534,7 @@ park could be just a neighborhood park in bcn."
   (`PERGOLA_RECT`), a dedicated dog rinse shower (`DOG_SHOWER_RECT`), timber
   boardwalk, and rollerbladers along the coastal bike lane.
 - Off-leash: `PLATJA DELS GOSSOS` (`freedom_kind == "beach"`), moved here from
-  Passeig Marítim so Badalona's walk ends at the Hotel Marina Badalona plaza.
+  Passeig Marítim so Badalona's walk ends at the Hotel L'Onada plaza.
 - Opens at 41 stars, after El Laberint d'Horta. Arrives by metro (`"metro"`).
   Built in `systems/llevant.gd`.
 

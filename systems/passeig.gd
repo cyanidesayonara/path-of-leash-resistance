@@ -1219,7 +1219,7 @@ static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
 	m._draw_lifeguard_tower(c, LevelBuild.BEACH_TOWER, false, true)
 
 
-# THE HOTEL MARINA BADALONA PLAZA (off-leash space at the top of Passeig Marítim):
+# THE HOTEL L'ONADA PLAZA (off-leash space at the top of Passeig Marítim):
 # coastal limestone esplanade overlooking the sea and the port breakwater, with the
 # 3D BADALONA tourist letters sign on its plinth and the white terraced hotel behind.
 static func draw_freedom(m: Node2D, ci: Object) -> void:
@@ -1271,7 +1271,7 @@ static func draw_freedom(m: Node2D, ci: Object) -> void:
 	b.circle(comp, 44.0, Color(0.76, 0.73, 0.67))
 	b.circle(comp, 38.0, Color(0.88, 0.85, 0.79))
 	b.circle(comp, 14.0, Color(0.24, 0.46, 0.68, 0.55))
-	# 3. Hotel Marina Badalona rising behind the north edge of the plaza:
+	# 3. Hotel L'Onada (our own name, not a real hotel's) rising behind the north edge of the plaza:
 	# modern white curved ship-deck terraces, blue glass railings, and rooftop infinity pool
 	var hrect := HOTEL_RECT
 	b.rect(Rect2(hrect.position + m.LIGHT * 18.0, hrect.size), sh)
@@ -1292,10 +1292,10 @@ static func draw_freedom(m: Node2D, ci: Object) -> void:
 		var lx := pool.end.x + 28.0 + float(li) * 34.0
 		b.rect(Rect2(lx, pool.position.y + 14.0, 18.0, 32.0), Color(0.96, 0.95, 0.92))
 		b.rect(Rect2(lx + 2.0, pool.position.y + 16.0, 14.0, 10.0), Color(0.22, 0.48, 0.76))
-	# Hotel Marina rooftop sign band
+	# Hotel L'Onada rooftop sign band
 	var hband := Rect2(hrect.get_center().x + 20.0, hrect.end.y - 44.0, 220.0, 20.0)
 	b.rect(hband, Color(0.14, 0.28, 0.48))
-	var hlay: Array = Letters.layout("HOTEL MARINA", hband.get_center() + Vector2(0.0, 5.0), 11.0, 196.0)
+	var hlay: Array = Letters.layout("HOTEL L'ONADA", hband.get_center() + Vector2(0.0, 5.0), 11.0, 196.0)
 	for pl: PackedVector2Array in hlay[0]:
 		for i in range(pl.size() - 1):
 			b.line(pl[i], pl[i + 1], Color(0.98, 0.96, 0.90), 2.0)

@@ -96,6 +96,8 @@ The leftovers from that review:
   breakwater is culled; Els Senglars' logs and dumpsters are constants rather
   than arrays built every frame; the LEASH coins batch together, their letters
   after.
+- **The beach hotel is the Hotel L'Onada** ("the wave"), our own name, in
+  place of a real hotel's on its rooftop sign, as the works are LA FÀBRICA.
 
 ## 2026-10-30 - Review of #371-#380: the finale fights fair, the new walks draw, old saves keep their walks
 
