@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-10-31 - El Besòs's chase film, and the films' shared kit
+
+- **`intro/film_kit.gd`**: what every chase film shares, so each reads as
+  the same telegraph: the pair's whole performance (`pair`: the stroll, the
+  startle at `HEAR_AT`, the look back, the stare, the crouch and the bolt
+  with the leash snapping taut), the card's slam and shake, and the fades.
+  The sweeper film now draws through it; its 66 rendered frames are
+  pixel-identical to before.
+- **`intro/film_flood.gd`, "The river's up"**: the river park at Sant Adrià
+  under a heavy sky, its three chimneys on the skyline. The first drops; the
+  warning light on its pole flashes and the siren sounds, and she looks back
+  upstream. Down the channel comes the surge, a grey-green wall with a
+  curling white lip, spilling over the plain, carrying a branch, a traffic
+  cone and an unbothered duck. She bolts; RUN! with the wave breaking over
+  the card. Its water is the in-game flood's.
+- El Besòs's chase profile names it (`HomeChase.FLOOD_FILM`).
+  `tests/test_chase_film.gd` now checks every filmed walk: its profile, the
+  shared beats, and that each cue is a sound inside the film.
+
 ## 2026-10-31 - The first chase film: La Neteja's sweeper
 
 PROJECT.md "Agreed next" item 6, one walk end to end: a story film plays as

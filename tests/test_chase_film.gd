@@ -4,7 +4,8 @@ extends SceneTree
 # the film and is handed back when it ends or is skipped, the chase's warning
 # runs once after it, a pause held over the film keeps the walk frozen, and
 # a film never plays headless, for the autowalk or in a screenshot run.
-# La Neteja's chase profile carries its film; the films' sound cues exist.
+# Each chase walk with a film carries it in its profile; every film keeps the
+# shared beats and its sound cues exist.
 
 const DT := 1.0 / 60.0
 
@@ -50,12 +51,16 @@ func _run() -> void:
 	_check(not FP.should_play(m, PackedStringArray()), "never for the autowalk")
 	m.auto_walk = false
 	_check(not FP.should_play(m, PackedStringArray(["--no-films"])), "--no-films stops it")
-	_check(HomeChase.profile_for("neteja").get("film", "") == HomeChase.SWEEPER_FILM, "La Neteja's chase has its film")
-
-	# the cues name sounds that exist
 	var lib: Dictionary = root.get_node("Sfx").lib
-	for cue: Array in film.CUES:
-		_check(lib.has(String(cue[1])), "the film's cue %s is a sound" % cue[1])
+	var Kit: GDScript = load("res://intro/film_kit.gd")
+	for walk: Array in [["neteja", HomeChase.SWEEPER_FILM], ["besos", HomeChase.FLOOD_FILM]]:
+		_check(HomeChase.profile_for(walk[0]).get("film", "") == walk[1], "%s's chase has its film" % walk[0])
+		var f: GDScript = load(walk[1])
+		_check(float(f.LENGTH) == float(Kit.LENGTH) and float(f.TITLE_AT) == float(Kit.TITLE_AT),
+			"%s's film keeps the shared beats" % walk[0])
+		for cue: Array in f.CUES:
+			_check(lib.has(String(cue[1])), "%s's cue %s is a sound" % [walk[0], cue[1]])
+			_check(float(cue[0]) < float(f.LENGTH), "%s's cue %s plays inside the film" % [walk[0], cue[1]])
 
 	# played to the end: frozen under it, handed back once, then gone
 	var calls := [0]

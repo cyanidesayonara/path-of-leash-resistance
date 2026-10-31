@@ -3,7 +3,7 @@ extends SceneTree
 # Renders an intro scene to numbered PNG frames, stepping time exactly (not in
 # real time), at 2x and scaled down so edges are smooth:
 #   godot --rendering-method gl_compatibility --path . --script res://tools/intro_render.gd -- walkies OUTDIR [fps] [width]
-# Scenes: walkies, rooftops, titlefight, and the chase films (sweeper). Join the frames into a clip with
+# Scenes: walkies, rooftops, titlefight, and the chase films (sweeper, flood). Join the frames into a clip with
 # tools/frames_to_gif.py.
 
 const SS := 2
@@ -12,6 +12,7 @@ const SCENES := {
 	"rooftops": "res://intro/scene_rooftops.gd",
 	"titlefight": "res://intro/scene_titlefight.gd",
 	"sweeper": "res://intro/film_sweeper.gd",
+	"flood": "res://intro/film_flood.gd",
 }
 
 
