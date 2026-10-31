@@ -106,7 +106,9 @@ func caught(p: Vector2) -> bool:
 	# Inside the mama boar and piglets front line
 	if p.y <= front_y and p.y >= front_y - 120.0:
 		return absf(p.x - (cx + sway)) <= half * 0.72
-	return false
+	# the herd has run right past them: whoever slipped by at the side went
+	# under it, rather than the boars running on home without them
+	return p.y < front_y - 120.0
 
 
 func gap_to(p: Vector2) -> float:

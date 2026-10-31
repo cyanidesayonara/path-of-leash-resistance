@@ -44,7 +44,9 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 		foam.line(Vector2(fmx, fmy), Vector2(fmx - 2.0, fmy + fml), Color(1, 1, 1, 0.26), 3.0)
 		fmy += 52.0
 	foam.flush(wc)
-	m._draw_espigo(wc)
+	# the breakwater across the water, at the gate line only
+	if m.GATE_Y - 30.0 > vt - 60.0 and m.GATE_Y - 30.0 < vb + 60.0:
+		m._draw_espigo(wc)
 	# Stone coastal groins (espigons) jutting into the surf along Llevant
 	var bg := ShapeBatch.new()
 	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22)
@@ -91,9 +93,10 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 		if ps.y < vt - 60.0 or ps.y > vb + 60.0:
 			continue
 		var cut := Rect2(ps.x - 27.0, ps.y - 27.0, 54.0, 54.0)
-		wc.draw_rect(cut, Color(0.62, 0.58, 0.50))
+		# the dark rim as a filled rect under the kerb: an outline would flush the batch
+		wc.draw_rect(cut, Color(0.43, 0.40, 0.35))
+		wc.draw_rect(cut.grow(-2.0), Color(0.62, 0.58, 0.50))
 		wc.draw_rect(cut.grow(-5.0), Color(0.40, 0.34, 0.26))
-		wc.draw_rect(cut, Color(0.34, 0.31, 0.27, 0.55), false, 2.0)
 	wc.draw_line(Vector2(380.0, bottom), Vector2(380.0, ftop), Color(0.55, 0.45, 0.32), 3.0)
 	wc.draw_line(Vector2(490.0, bottom), Vector2(490.0, ftop), m.COL_SEAM, 2.0)
 	wc.draw_line(Vector2(570.0, bottom), Vector2(570.0, ftop), m.COL_SEAM, 2.0)

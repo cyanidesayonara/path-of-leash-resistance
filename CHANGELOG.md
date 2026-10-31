@@ -70,10 +70,32 @@ Second review fixes:
   stars", "Finish %s first").
 - `test_chase_milestone_gates`: the "ample stars" check now has the stars.
 
-Left as found: a playtest of Raval saw passing pairs' walkers inside a bench
-and the start plinth (the same steps show it on the commit before this
-session too; straight walks of street and La Rambla showed none). Not yet
-traced through `systems/bypasser_route.gd`.
+The leftovers from that review:
+
+- **Passing pairs walked through benches** (seen on Raval, and on the commit
+  before this session too). The route plans its detour against what is ahead
+  and then stepped sideways without looking beside it, straight into a bench
+  the walker was level with. `BypasserRoute.step` now holds a sideways step
+  that would take the walker into a blocker's bare body, and they walk on
+  until it is clear; the pair's dog, whose wander ignores benches, stops
+  short of one instead (`BypasserRoute.in_body`). Three Raval playtests and
+  park and El Gòtic now report no walker in a solid.
+- **El Gat is a ghost to the autowalk bot.** Solid, he stood in the plaça in
+  the way of a bot that cannot fight him and is not held, and the Raval
+  autowalk stalled short of the gate; it finishes again.
+- **The boars and the correfoc can no longer be slipped at the side.** Their
+  reach did not cover the whole street, so a pair hugging one edge could let
+  the front pass them and never be caught, while the herd ran on home.
+  Whoever the front has run more than 120 px past is caught.
+- **Raval's par time is 210 s** (from 180): the walk plus the whole fight.
+- **Props apart**: Els Senglars' hydrant and bench moved off the oaks, and the
+  Passeig plaza's rock and shrub off the bench and the compass. The Gràcia and
+  Els Senglars prizes no longer name a place they are not at.
+- **Draw cost**: the beach and Llevant palm pits draw their rim filled rather
+  than as an outline (which flushed the batch, twice per palm); Llevant's
+  breakwater is culled; Els Senglars' logs and dumpsters are constants rather
+  than arrays built every frame; the LEASH coins batch together, their letters
+  after.
 
 ## 2026-10-30 - Review of #371-#380: the finale fights fair, the new walks draw, old saves keep their walks
 

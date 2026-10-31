@@ -38,7 +38,7 @@ func _run() -> void:
 	# 2. Threat instantiation & setup
 	var threat: Node2D = BoarThreat.new()
 	root.add_child(threat)
-	threat.setup(null, -4000.0, 640.0, 280.0, 142.0)
+	threat.setup(null, -4000.0, 640.0, 260.0, 142.0)
 	_check(threat.front_y == -4000.0, "initial front_y set")
 	_check(threat.speed == 142.0, "speed set")
 	_check(threat.cx == 640.0, "corridor cx set")
@@ -58,6 +58,8 @@ func _run() -> void:
 	_check(not threat.caught(far_ahead), "not caught when safely ahead")
 	var far_wide := Vector2(640.0 + 350.0, threat.front_y - 40.0)
 	_check(not threat.caught(far_wide), "not caught when outside corridor width")
+	var slipped_by := Vector2(640.0 + 350.0, threat.front_y - 200.0)
+	_check(threat.caught(slipped_by), "slipping past the herd at the side is no escape")
 
 	# 5. Jams handling
 	threat.jams = Array([Vector2(640.0, threat.front_y + 5.0)], TYPE_VECTOR2, "", null)

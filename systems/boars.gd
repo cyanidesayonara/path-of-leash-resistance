@@ -16,7 +16,7 @@ const WALL_L := 380.0
 const WALL_R := 900.0
 
 const PRIZE := Vector2(640.0, -4420.0)
-const PRIZE_TEXT := "claim the golden acorn from the summit lookout"
+const PRIZE_TEXT := "find the golden acorn on the trail"
 
 const DIRT_DARK := Color(0.28, 0.20, 0.12)
 const MUD_BROWN := Color(0.22, 0.16, 0.10)
@@ -86,7 +86,7 @@ static func build(m: Node2D) -> Array:
 
 	m.benches = Array([
 		Vector2(420.0, -1800.0),
-		Vector2(860.0, -3350.0),
+		Vector2(860.0, -3440.0),  # clear of the oak at -3320
 		Vector2(640.0, -4300.0),
 	], TYPE_VECTOR2, &"", null)
 	m.bins = Array([
@@ -112,7 +112,7 @@ static func build(m: Node2D) -> Array:
 	# way marker posts for hydrants
 	var hyd_list: Array[Vector2] = [
 		Vector2(WALL_L + 30.0, -500.0),
-		Vector2(WALL_R - 30.0, -1500.0),
+		Vector2(WALL_R - 30.0, -1600.0),  # clear of the oak at -1500
 		Vector2(WALL_L + 30.0, -2500.0),
 		Vector2(WALL_R - 30.0, -3500.0),
 		Vector2(WALL_L + 30.0, -4300.0),
@@ -130,11 +130,15 @@ static func build(m: Node2D) -> Array:
 	return [hyd_list, keb_list]
 
 
+const DUMPSTERS: Array[Rect2] = [
+	Rect2(DUMPSTER_JAM_1 - DUMPSTER_SIZE * 0.5, DUMPSTER_SIZE),
+	Rect2(DUMPSTER_JAM_2 - DUMPSTER_SIZE * 0.5, DUMPSTER_SIZE),
+]
+const LOGS: Array[Rect2] = [LOG_1, LOG_2]
+
+
 static func dumpsters() -> Array[Rect2]:
-	return [
-		Rect2(DUMPSTER_JAM_1 - DUMPSTER_SIZE * 0.5, DUMPSTER_SIZE),
-		Rect2(DUMPSTER_JAM_2 - DUMPSTER_SIZE * 0.5, DUMPSTER_SIZE),
-	]
+	return DUMPSTERS
 
 
 static func solids(_m: Node2D) -> Array[Rect2]:
@@ -164,14 +168,14 @@ static func draw_path_edges(m: Node2D, left: PackedVector2Array, right: PackedVe
 
 static func draw_scenery(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
 	Bosc._draw_wood(m, vt, vb)
-	for lr: Rect2 in [LOG_1, LOG_2]:
+	for lr: Rect2 in LOGS:
 		if lr.end.y > vt - 60.0 and lr.position.y < vb + 60.0:
 			Bosc._draw_fallen_log(m, lr)
 	var b := ShapeBatch.new()
 	if PICNIC_TABLE.end.y > vt - 80.0 and PICNIC_TABLE.position.y < vb + 80.0:
 		_draw_picnic(m, b)
 	for i in range(2):
-		var d: Rect2 = dumpsters()[i]
+		var d: Rect2 = DUMPSTERS[i]
 		if d.end.y > vt - 80.0 and d.position.y < vb + 80.0:
 			_draw_dumpster(m, b, d, i)
 	for mp: Vector2 in MUD_SPOTS:

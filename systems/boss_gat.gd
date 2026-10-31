@@ -1042,8 +1042,10 @@ func tick_state(delta: float) -> void:
 					"life": 1.6, "max": 1.6, "col": Color(1.0, 0.45, 0.55), "r": 7.0,
 					"spark": false, "heart": true})
 
-	# solid off his plinths, where the plinth itself keeps walkers off
-	if state in [State.PROWL, State.SWAT, State.CHARGE_WARN, State.CHARGE,
+	# solid off his plinths, where the plinth itself keeps walkers off. The
+	# autowalk bot cannot fight him and is not held, so he would stand in
+	# its way in the plaça for ever: to the bot he is a ghost.
+	if not main.auto_walk and state in [State.PROWL, State.SWAT, State.CHARGE_WARN, State.CHARGE,
 			State.STUNNED, State.RETREAT, State.ENRAGE]:
 		_shove_out(main.dog)
 		if not main.human.is_whirling():

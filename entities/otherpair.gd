@@ -336,10 +336,17 @@ func _physics_process(delta: float) -> void:
 	if pair_state == PairState.WALKING:
 		if absf(npc_owner.position.y - float(main.cam.position.y)) > 1200.0:
 			queue_free()
+	if pair_state == PairState.WALKING and _in_solid(npc_dog.position) and not _in_solid(dog_was):
+		# its wander and its detour lead ignore benches: it stops short instead
+		npc_dog.position = dog_was
 	_update_pose(owner_was, dog_was, delta)
 	# owner/dog move via transform every frame; redraw the pose at ~30fps
 	if Engine.get_physics_frames() % 2 == 0:
 		queue_redraw()
+
+
+func _in_solid(p: Vector2) -> bool:
+	return route != null and bool(route.call("in_body", p))
 
 
 # your dog has come up nose to nose: stop, sniff back, the owner waits

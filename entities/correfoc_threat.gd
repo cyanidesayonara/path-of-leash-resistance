@@ -103,6 +103,10 @@ func threat_boundary() -> float:
 
 
 func caught(pos: Vector2) -> bool:
+	# the procession has run right past them: whoever slipped by at the side
+	# was in the sparks, rather than the devils dancing on home without them
+	if pos.y < front_y - 120.0:
+		return true
 	if absf(pos.x - (cx + sway)) > (half + 20.0):
 		return false
 	# Caught when player falls within sparker reach behind threat front

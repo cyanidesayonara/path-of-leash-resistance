@@ -37,7 +37,7 @@ const CLOCK_TARGETS := {
 	"llevant": 180,
 	"boars": 170,
 	"gracia": 175,
-	"raval": 180,
+	"raval": 210,  # the walk plus the whole fight with El Gat
 }
 
 const JAMON_POS := {
@@ -228,6 +228,15 @@ static func draw_world(m: Node2D, wc: Object, font: Font, vt: float, vb: float) 
 		wc.draw_circle(p, 12.0, Color(0.85, 0.68, 0.15))
 		wc.draw_circle(p, 10.5, Color(1.0, 0.88, 0.28))
 		wc.draw_circle(p + Vector2(-2.5, -2.5), 3.0, Color(1.0, 0.98, 0.65))
+	# the letters themselves after every coin: a string flushes the batch
+	for l: Dictionary in m.word_letters:
+		if bool(l.collected):
+			continue
+		var lpos: Vector2 = l.pos
+		if lpos.y < vt - 40.0 or lpos.y > vb + 40.0:
+			continue
+		var bob: float = sin(AnimClock.msec() * 0.005 + float(l.index) * 1.5) * 4.0
+		var p: Vector2 = lpos + Vector2(0.0, bob)
 		wc.draw_string(font, p + Vector2(-20.0, 5.0), String(l.letter), HORIZONTAL_ALIGNMENT_CENTER, 40, 15, Color(0.24, 0.16, 0.05))
 
 	# Draw secret pernil leg

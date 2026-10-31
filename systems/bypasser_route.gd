@@ -171,6 +171,12 @@ func step(
 			detour_target_x,
 			max_lateral_speed * maxf(delta, 0.0)
 		)
+		# the detour plans against what is ahead; a sideways step must not
+		# take the walker into something beside them (a bench they are level
+		# with). They hold their line and walk on until it is clear.
+		if next_x != position.x and _step_enters_blocker(position, next_x):
+			next_x = position.x
+			formation_transitioning = false
 	return {
 		"x": next_x,
 		"target_x": detour_target_x,
@@ -180,6 +186,36 @@ func step(
 		"formation_transitioning": formation_transitioning,
 		"return_transition_guarded": return_transition_guarded,
 	}
+
+
+# Whether moving the walker from position to next_x puts their body into a
+# blocker their body is not already touching.
+# Blockers are stored grown by the clearance; this tests the bare bodies.
+func _step_enters_blocker(position: Vector2, next_x: float) -> bool:
+	var to := Vector2(next_x, position.y)
+	for blocker: Dictionary in _blockers:
+		if _body_touches(blocker, to) and not _body_touches(blocker, position):
+			return true
+	return false
+
+
+# Whether a point is inside any blocker's bare body.
+func in_body(p: Vector2) -> bool:
+	for blocker: Dictionary in _blockers:
+		if _body_touches(blocker, p, 0.0):
+			return true
+	return false
+
+
+func _body_touches(blocker: Dictionary, p: Vector2, body_r := WALKER_BODY_R) -> bool:
+	if blocker.kind == "circle":
+		var reach := float(blocker.radius) - clearance + body_r
+		return (blocker.center as Vector2).distance_squared_to(p) < reach * reach
+	var body: Rect2 = (blocker.rect as Rect2).grow(body_r - clearance)
+	return body.has_point(p)
+
+
+const WALKER_BODY_R := 6.0
 
 
 func find_clear_spawn_x(

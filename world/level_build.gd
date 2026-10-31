@@ -2620,8 +2620,8 @@ const FREEDOM_PROPS := {
 	"beach": [
 		[Vector2(490.0, -415.0), "dig"], [Vector2(768.0, -268.0), "dig"], [Vector2(1042.0, -278.0), "dig"],
 		[Vector2(815.0, -210.0), "planter"], [Vector2(925.0, -210.0), "planter"], [Vector2(1055.0, -415.0), "planter"],
-		[Vector2(485.0, -335.0), "rock"], [Vector2(755.0, -360.0), "rock"], [Vector2(855.0, -285.0), "rock"],
-		[Vector2(955.0, -304.0), "rock"], [Vector2(510.0, -220.0), "post"], [Vector2(695.0, -285.0), "shrub"],
+		[Vector2(1100.0, -200.0), "rock"], [Vector2(755.0, -360.0), "rock"], [Vector2(855.0, -285.0), "rock"],
+		[Vector2(955.0, -304.0), "rock"], [Vector2(510.0, -220.0), "post"], [Vector2(900.0, -130.0), "shrub"],
 	],
 	"llevant": [
 		[Vector2(548.0, -518.0), "dig"], [Vector2(768.0, -268.0), "dig"], [Vector2(1042.0, -278.0), "dig"],

@@ -15,7 +15,7 @@ const WALL_L := 420.0
 const WALL_R := 860.0
 
 const PRIZE := Vector2(640.0, -4420.0)
-const PRIZE_TEXT := "claim the festival award banner from Plaça de la Virreina"
+const PRIZE_TEXT := "claim the festival award banner before the plaça"
 
 const BANNER_BLUE := Color(0.20, 0.48, 0.78)
 const BANNER_GOLD := Color(0.92, 0.75, 0.22)
