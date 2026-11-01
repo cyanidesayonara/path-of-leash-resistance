@@ -2,6 +2,21 @@
 
 Append-only session history, newest first.
 
+## 2026-11-01 - Every chase threat speaks for itself
+
+The vet's staff borrowed the sweeper's every line: VRRROOM as they set off,
+CLONK and IT'S JAMMED! at a respite, IT'S STILL STUCK!, and SWEPT! when they
+caught you. Each threat now has its own words (`kind_behavior`):
+
+- **El Veterinari:** NEXT! as they set off, DING and A PATIENT NEEDS THEM! at
+  a respite (the counter bell), THEY'RE STILL BUSY!, and BOOSTER TIME! when
+  they catch you.
+- **The warning banner** names the threat: THE VET'S COMING!, BOARS!, FIRE
+  DEVILS!, THE RIVER'S RISING! (the sweeper keeps HERE IT COMES!).
+- **The hold banner** too: THEY'RE STILL IN THE BINS!, THEY'RE STILL DANCING!.
+- `tests/test_chase_voice.gd` (CI) holds every non-machine threat to its own
+  lines, in capitals.
+
 ## 2026-11-01 - La Neteja's sweeper gets a face, in the film and the walk
 
 - **The film** (`intro/film_sweeper.gd`) is scarier from a dog's height:

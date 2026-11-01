@@ -141,6 +141,7 @@ static func kind_behavior(kind: String) -> Dictionary:
 				"freed": "SNORT", "freed_sfx": "snort", "caught_shout": "TRAMPLED!",
 			"jammed": "CRASH", "jammed_sfx": "grunt", "jammed_shout": "THEY'RE IN THE BINS!",
 				"jammed_banner": "THEY'RE IN THE BINS! CATCH YOUR BREATH", "run_banner": "RUN! DON'T LET THEM CATCH YOU",
+				"warning_banner": "BOARS! HEAD FOR HOME", "hold_banner": "THEY'RE STILL IN THE BINS! GO  %d",
 				"caught_human": "THE BOARS GOT YOUR HUMAN\n\nThey stood between mama and the picnic basket.\nBig mistake.",
 				"caught_dog": "ROOTED IN THE DIRT!\n\nYou got bowled over into the acorns.\nMama boar claimed your snacks.",
 			}
@@ -151,6 +152,7 @@ static func kind_behavior(kind: String) -> Dictionary:
 				"freed": "BOOM", "freed_sfx": "cracker", "caught_shout": "SINGED!",
 			"jammed": "DRUMS", "jammed_sfx": "drum", "jammed_shout": "THEY STOPPED TO DANCE!",
 				"jammed_banner": "THEY'VE STOPPED TO DANCE! CATCH YOUR BREATH", "run_banner": "RUN! DON'T LET THEM CATCH YOU",
+				"warning_banner": "FIRE DEVILS! HEAD FOR HOME", "hold_banner": "THEY'RE STILL DANCING! GO  %d",
 				"caught_human": "SPARKED OUT!\n\nYour human caught firecrackers in their hood.\nThey dropped the phone in panic.",
 				"caught_dog": "TAIL SINGED!\n\nA fire devil's sparkler popped right behind you.\nYou bolted into the nearest doorway.",
 			}
@@ -158,6 +160,10 @@ static func kind_behavior(kind: String) -> Dictionary:
 			return {
 				"kind": "vet", "speed": CHASE_SPEED, "flee": false,
 				"warning": "THE VET IS HERE! ESCAPE!",
+				"freed": "NEXT!", "freed_sfx": "bell", "caught_shout": "BOOSTER TIME!",
+				"jammed": "DING", "jammed_sfx": "bell", "jammed_shout": "A PATIENT NEEDS THEM!",
+				"jammed_banner": "A PATIENT NEEDS THEM! CATCH YOUR BREATH", "run_banner": "RUN! DON'T LET THEM CATCH YOU",
+				"warning_banner": "THE VET'S COMING! HEAD FOR HOME", "hold_banner": "THEY'RE STILL BUSY! GO  %d",
 				"caught_human": "THE VET GOT YOUR HUMAN\n\nThey handed you over for your booster shot.\nYou will never trust them again.",
 				"caught_dog": "CONE OF SHAME!\n\nThe cone slipped over your head.\nThree weeks of bumping into doorways.",
 			}
@@ -165,6 +171,7 @@ static func kind_behavior(kind: String) -> Dictionary:
 			return {
 				"kind": "flood", "speed": FLOOD_SPEED, "flee": false,
 				"warning": "THE RIVER'S UP! HEAD FOR HOME",
+				"warning_banner": "THE RIVER'S RISING! HEAD FOR HOME",
 				"caught_human": "THE FLOOD GOT YOUR HUMAN\n\nThey kept walking. The river did not.",
 				"caught_dog": "YOU WENT UNDER\n\nThe shallow would have carried you.\nThe deep did not give you back.",
 			}
@@ -469,13 +476,13 @@ static func banner(m: Node2D) -> String:
 	var left := int(ceil(maxf(float(m.chase_phase_t), 0.0)))
 	match String(m.chase_phase):
 		"warning":
-			return "HERE IT COMES! HEAD FOR HOME"
+			return String(_behavior(m, held_profile(m)).get("warning_banner", "HERE IT COMES! HEAD FOR HOME"))
 		"head_start":
 			return "HEAD START! GO  %d" % left
 		"hold":
 			if String(m.chase_kind) == "flood":
 				return "IT'S HOLDING! GO  %d" % left
-			return "IT'S STILL STUCK! GO  %d" % left
+			return String(_behavior(m, held_profile(m)).get("hold_banner", "IT'S STILL STUCK! GO  %d")) % left
 	if sweeper.jammed():
 		if String(m.chase_kind) == "flood":
 			if sweeper.front_y < LevelBuild.BESOS_JAM_Y - 200.0:
