@@ -23,6 +23,23 @@ const DEBRIS_SPAN := 560.0
 # the same beat as every other owner event: the bubble, then the stumble
 const BRANCH_WARN := 0.8
 const BRANCH_HIT := 22.0
+# the look, as in the film (intro/film_flood.gd): the front is a wall of
+# water WALL_H tall seen from above, its lit face toward you and a curling
+# foam lip along the top. It is drawn back over the deep; the loss line is
+# its foot, front_y.
+const WALL_H := 100.0
+const DEEP := Color(0.08, 0.20, 0.28, 0.96)
+const FACE := Color(0.16, 0.34, 0.40)
+const PALE := Color(0.62, 0.80, 0.78)
+const PALE_DEEP := Color(0.62, 0.80, 0.78, 0.35)
+const SHALLOW := Color(0.62, 0.80, 0.78, 0.55)
+const FOAM := Color(0.93, 0.97, 0.96)
+const CONE_ORANGE := Color(0.98, 0.50, 0.10)
+const DUCK_BODY := Color(0.50, 0.40, 0.30)
+const DUCK_HEAD := Color(0.16, 0.36, 0.22)
+const DUCK_BILL := Color(0.96, 0.74, 0.20)
+const BRANCH_BROWN := Color(0.32, 0.22, 0.12)
+const LEAF := Color(0.36, 0.50, 0.24)
 
 var main: Node2D
 var speed := 128.0
@@ -216,16 +233,29 @@ func _draw() -> void:
 	var b := ShapeBatch.new(self)
 	var left := -half
 	var right := LevelBuild.BESOS_DEEP_X + LevelBuild.BESOS_DEEP_W - cx
-	var deep := Color(0.08, 0.20, 0.28, 0.94)
-	var pale := Color(0.62, 0.80, 0.78, 0.50)
-	var foam := Color(0.92, 0.96, 0.94, 0.75)
-	b.rect(Rect2(left, -340.0, right - left, 340.0), deep)
-	b.rect(Rect2(left, 0.0, right - left, SHALLOW_LEAD), pale)
-	b.rect(Rect2(left, SHALLOW_LEAD - 7.0, right - left, 8.0), foam)
+	var w := right - left
+	b.rect(Rect2(left, -340.0, w, 340.0), DEEP)
+	# rollers on the deep behind the wall, coming on with it
+	for r in range(4):
+		var ry := -WALL_H - 40.0 - fposmod(heading * 0.6 + float(r) * 60.0, 220.0)
+		_wavy(b, left, right, ry, 5.0, PALE_DEEP, 3.0)
+	b.rect(Rect2(left, 0.0, w, SHALLOW_LEAD), SHALLOW)
+	# the wash out ahead of the wall: a scalloped foam edge that runs and draws back
+	var run := sin(rumble * 3.0) * 6.0
+	b.rect(Rect2(left, SHALLOW_LEAD - 8.0 + run, w, 6.0), FOAM)
+	var n_sc := int(w / 26.0) + 1
+	for i in range(n_sc):
+		var fx := left + float(i) * 26.0
+		b.circle(Vector2(fx, SHALLOW_LEAD - 4.0 + run + sin(rumble * 5.0 + float(i) * 1.3) * 3.0), 9.0, FOAM)
+	for r in range(2):
+		_wavy(b, left, right, SHALLOW_LEAD * (0.3 + 0.35 * float(r)) + run * 0.5, 4.0, Color(1, 1, 1, 0.35), 2.0)
 	var reach := swell()
 	if reach > 8.0:
 		var edge := half - reach
-		b.rect(Rect2(edge, 0.0, right - edge, SHALLOW_LEAD), Color(0.10, 0.22, 0.30, 0.90))
+		b.rect(Rect2(edge, 0.0, right - edge, SHALLOW_LEAD), DEEP)
+		for k in range(int(SHALLOW_LEAD / 18.0) + 1):
+			b.circle(Vector2(edge + sin(rumble * 6.0 + float(k)) * 3.0, float(k) * 18.0), 8.0, FOAM)
+	_wall(b, left, right)
 	# the hold keeps the apron dry. This batch is drawn after the world's
 	# concrete, so paint that slab back over whatever water landed on it.
 	if (jam_t > 0.0 or (main != null and String(main.chase_phase) == "hold")) and apron.size.x > 1.0:
@@ -241,12 +271,28 @@ func _draw() -> void:
 		for k in range(10):
 			var fx := left + float(k) * (right - left) / 9.0 + sin(rumble * 10.0 + float(k) * 1.5) * 12.0
 			b.circle(Vector2(fx, 2.0), 8.0 + sin(rumble * 7.0 + float(k)) * 3.0, Color(1.0, 1.0, 1.0, 0.85))
+	# what the river carries, as in the film: a traffic cone, a duck, sticks
 	for i in range(4):
 		var along := fmod(heading + float(i) * 140.0, DEBRIS_SPAN)
 		var dx := sin(heading * 0.02 + float(i) * 1.7) * half * 0.45
-		b.rect(Rect2(dx, SHALLOW_LEAD * 0.2 + along * 0.55, 16.0, 5.0), Color(0.40, 0.30, 0.16, 0.9))
+		var at := Vector2(dx, SHALLOW_LEAD * 0.2 + along * 0.55)
+		match i % 4:
+			0:
+				b.polygon(PackedVector2Array([at + Vector2(-12, -6), at + Vector2(12, 0), at + Vector2(-12, 6)]), CONE_ORANGE)
+				b.rect(Rect2(at.x - 5.0, at.y - 4.0, 3.0, 8.0), FOAM)
+			1:
+				b.circle(at, 7.0, DUCK_BODY)
+				b.circle(at - Vector2(5, 0), 5.5, DUCK_BODY)
+				b.circle(at + Vector2(7, -3), 4.5, DUCK_HEAD)
+				b.polygon(PackedVector2Array([at + Vector2(10, -4), at + Vector2(15, -3), at + Vector2(10, -1)]), DUCK_BILL)
+			_:
+				b.line(at - Vector2(9, 2), at + Vector2(9, 2), BRANCH_BROWN, 4.0)
+	# the branch that can trip either of them, leaves and all
 	var branch := _branch_pos() - global_position
-	b.rect(Rect2(branch.x - 14.0, branch.y - 3.0, 28.0, 6.0), Color(0.32, 0.22, 0.12))
+	b.line(branch + Vector2(-16, 4), branch + Vector2(16, -4), BRANCH_BROWN, 6.0)
+	b.line(branch + Vector2(2, -1), branch + Vector2(10, -12), BRANCH_BROWN, 3.0)
+	b.circle(branch + Vector2(11, -14), 6.0, LEAF)
+	b.circle(branch + Vector2(-12, 0), 4.0, LEAF)
 	if main != null and String(main.chase_phase) in ["warning", "head_start"]:
 		var pulse := 0.35 + 0.65 * absf(sin(rumble * 10.0))
 		var n: int = mini(main.poles.size(), int(main.deco_pole_count))
@@ -258,3 +304,56 @@ func _draw() -> void:
 		var ride := clampf(1.0 - float(main.chase_phase_t) / 1.2, 0.0, 1.0)
 		b.rect(Rect2(-18.0, 220.0 - ride * 180.0, 22.0, 10.0), Color(0.95, 0.78, 0.15))
 	b.flush()
+
+
+# the wall: its face from the foot up to a lumpy, rolling crest, streaked as
+# it falls, the dark barrel under the curl, and the lip itself a row of foam
+# heaps rolling over toward you, spray thrown off ahead
+func _wall(b: ShapeBatch, left: float, right: float) -> void:
+	var face := PackedVector2Array([Vector2(right, 0.0), Vector2(left, 0.0)])
+	var x := left
+	while x <= right + 0.1:
+		face.append(Vector2(x, _crest(x)))
+		x += 20.0
+	b.polygon(face, FACE)
+	var n := int((right - left) / 34.0) + 1
+	for i in range(n):
+		var sx := left + float(i) * 34.0 + fposmod(heading * 0.3, 34.0)
+		var top := _crest(sx) + 22.0
+		var drop := fposmod(rumble * 1.6 + float(i) * 0.37, 1.0)
+		b.line(Vector2(sx, top), Vector2(sx - 6.0, top + (-top) * (0.4 + 0.6 * drop)), Color(PALE, 0.55), 2.5)
+	x = left
+	while x < right:
+		var x2 := minf(x + 20.0, right)
+		b.polygon(PackedVector2Array([Vector2(x, _crest(x) + 10.0), Vector2(x2, _crest(x2) + 10.0),
+			Vector2(x2, _crest(x2) + 26.0), Vector2(x, _crest(x) + 26.0)]), Color(0.04, 0.10, 0.14, 0.85))
+		x = x2
+	for i in range(n * 2):
+		var fx := left + float(i) * 17.0
+		var bob := sin(rumble * 7.0 + float(i) * 0.9) * 3.0
+		b.circle(Vector2(fx, _crest(fx) + 6.0 + bob), 13.0 + 4.0 * sin(float(i) * 2.3), FOAM)
+		b.circle(Vector2(fx + 6.0, _crest(fx) - 4.0 + bob), 8.0, FOAM)
+	for p in range(n):
+		var f := fposmod(rumble * 1.4 + float(p) * 0.29, 1.0)
+		var px := left + float(p) * 34.0 + sin(float(p) * 2.7) * 10.0
+		var at := Vector2(px, _crest(px) + 12.0 + f * (-_crest(px) + 30.0))
+		b.circle(at, 4.0 * (1.0 - f) + 1.5, Color(FOAM, 1.0 - f))
+	# foam boiling at the foot, where it meets the wash
+	for i in range(n):
+		var fx := left + float(i) * 34.0 + 17.0
+		b.circle(Vector2(fx, sin(rumble * 6.0 + float(i)) * 3.0), 11.0, Color(FOAM, 0.85))
+
+
+# the crest's height over the foot at x: lumps that roll along as it comes
+func _crest(x: float) -> float:
+	return -WALL_H + sin(x * 0.011 + rumble * 0.9) * 18.0 + sin(x * 0.033 - rumble * 1.7) * 7.0
+
+
+# a wavy stroke across the water at y
+func _wavy(b: ShapeBatch, left: float, right: float, y: float, amp: float, col: Color, width: float) -> void:
+	var x := left
+	while x < right:
+		var x2 := minf(x + 24.0, right)
+		b.line(Vector2(x, y + sin(x * 0.05 + rumble * 2.0) * amp), Vector2(x2, y + sin(x2 * 0.05 + rumble * 2.0) * amp),
+			col, width)
+		x = x2
