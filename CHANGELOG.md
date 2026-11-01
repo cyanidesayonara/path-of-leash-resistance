@@ -2,6 +2,28 @@
 
 Append-only session history, newest first.
 
+## 2026-11-01 - The soundtrack is baked before an export
+
+- `tools/bake_music.gd` renders all 44 tracks of `audio/music.gd` once (in
+  about 30 s on worker threads) and saves each QOA-compressed with its loop
+  points in the gitignored `music/baked/` (9.8 MB, a fifth of the raw size).
+  `release.yml` bakes before exporting, and so does `tools/web_perf.sh`.
+- `autoload/sfx.gd`: an exported build loads a baked track in one step
+  instead of synthesizing it; a missing one is still synthesized. The editor
+  synthesizes every track live, so a music change is heard at once and a
+  stale bake is never played (`--baked-music` plays the bake there,
+  `--no-music` none). The cache trim runs for both paths.
+- Why: the web build has no threads, so synthesis took a slice of every
+  frame for the first stretch of each walk. Web perf, quiet machine, two
+  alternating pairs: La Neteja 42-43 fps (20.9 ms median, 75% of frames over
+  16 ms) live against 60 fps (14.3 ms, 33%) baked; La Rambla's worst frames
+  up to 563 ms live, 62-76 ms baked. The desktop freezes measured earlier in
+  the day were another game running on the machine: on a quiet machine the
+  desktop build runs about 260 fps live or baked.
+- `tests/test_baked_music.gd` (in CI): every track the game asks for is
+  baked, a baked track keeps its length and loop points, a sting does not
+  loop, an export loads from disk and the editor synthesizes.
+
 ## 2026-11-01 - Smooth light: no more rings and steps in lights and skies
 
 - `ShapeBatch.glow`: a round light as ring strips whose vertex colours the
