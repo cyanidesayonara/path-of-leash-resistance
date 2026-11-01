@@ -14,6 +14,35 @@ Append-only session history, newest first.
 - **The walk's sweeper** (`entities/sweeper.gd`) has the same face from
   above: its headlamps glaring eyes looking down the road at you under
   scowling brows, a grimace of teeth in the grille between them.
+## 2026-11-01 - El Veterinari's chase film, and a line of clinic staff
+
+- **`intro/film_vet.gd`, "Booster day"**: the clinic corridor side on, tiled
+  walls, the waiting chairs and a cat in a carrier. The counter bell rings;
+  she looks back. The consulting room door bangs open and the staff pour
+  out in scrubs and masks, each holding out what a dog dreads: a giant
+  syringe held like a lance, the cone of shame, the nail clippers snipping,
+  a catch net. The cat hisses, a glove snaps. She bolts; RUN! with the
+  syringe driving in and the clippers over it. On FilmKit, like the others;
+  El Veterinari's chase profile names it (`HomeChase.VET_FILM`).
+- **The walk's pursuers** (`entities/vet_threat.gd`) are the same line seen
+  from above: five staff shoulder to shoulder across the corridor in caps
+  and masks, holding out clippers, syringes, the cone and the net. It spans
+  what catches you (`caught()`): the old drawing was a cone half that width
+  between two small figures. The catch itself is unchanged.
+## 2026-11-01 - El Besòs's flood, twice the wave, in the film and the walk
+
+- **The film's surge** stands twice as tall (`CREST` 170 -> 360), well over
+  your human's head: the curl, its foam, spray and barrel all scale with the
+  crest (`LIP` is the crest the curl's shape is drawn for), and water pours
+  off the lip. The card's wave sits clear of RUN!.
+- **The walk's flood** (`entities/flood.gd`) is drawn as the film's wave
+  seen from above: the front is a wall of water `WALL_H` tall facing you,
+  its face streaked as it falls, the dark barrel under a lumpy, rolling
+  crest of foam heaps, spray off the lip and foam boiling at its foot. The
+  shallow wash ahead runs and draws back under a scalloped foam edge,
+  rollers come on across the deep behind, and the river carries the film's
+  traffic cone, duck and sticks; the branch that trips has its leaves. The
+  loss line, the shallows and every rule are unchanged: only the drawing.
 
 ## 2026-10-31 - El Besòs's chase film, and the films' shared kit
 
