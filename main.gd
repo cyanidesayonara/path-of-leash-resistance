@@ -10078,10 +10078,16 @@ func nearest_bench(pos: Vector2):
 
 
 # your human ran out of patience and hauled her in: a step back and a short
-# leash (human.gd/_correct)
+# leash (human.gd/_correct). What people actually shout at a pulling dog, in
+# turn so it never sounds canned (a trainer's "Heel!" is not one of them)
+const CORRECTION_CALLS := ["Stop!", "Easy!", "Slow down!"]
+var _correction_n := 0
+
+
 func on_correction(pos: Vector2) -> void:
 	Sfx.play("tangle", 0.8, -8.0)
-	float_text(pos + Vector2(0, -30), "Heel!", Color(1, 0.85, 0.75))
+	float_text(pos + Vector2(0, -30), CORRECTION_CALLS[_correction_n % CORRECTION_CALLS.size()], Color(1, 0.85, 0.75))
+	_correction_n += 1
 
 
 # ...but she was dug in for it, and it is him that lurches

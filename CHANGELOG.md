@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-01 - Your human says what people say
+
+- When your human runs out of patience and hauls her in, they no longer
+  say "Heel!", a trainer's word nobody shouts on a real street. They say
+  "Stop!", "Easy!" or "Slow down!", in turn (`CORRECTION_CALLS`). For the
+  coming translation: Spanish "Para!", "Quieta!", "Poco a poco!"; Catalan
+  "Para!", "Quieta!", "A poc a poc!" (to check with a local).
+
 ## 2026-11-01 - La Rambla draws half as much
 
 - La Rambla's stalls (and the ping-pong table) were drawn the whole length
