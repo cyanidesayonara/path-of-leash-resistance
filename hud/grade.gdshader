@@ -185,5 +185,10 @@ void fragment() {
 	vec2 d = uv - 0.5;
 	col *= max(0.0, 1.0 - vignette * dot(d, d) * vignette_tight);
 
+	// dither: half an 8-bit step of screen-fixed noise, so a slow gradient
+	// (a lamp's pool, the vignette, a dusk sky) comes out smooth instead of
+	// in visible steps of one level each
+	col += (hash(FRAGCOORD.xy) - 0.5) / 255.0;
+
 	COLOR = vec4(clamp(col, vec3(0.0), vec3(1.0)), 1.0);
 }

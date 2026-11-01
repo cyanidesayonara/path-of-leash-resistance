@@ -74,9 +74,8 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 # dawn: the sky going from night blue to peach over a row of flats, street
 # lamps still lit, every shutter down
 static func _street(c: CanvasItem, t: float) -> void:
-	for i in range(10):
-		var f := float(i) / 9.0
-		c.draw_rect(Rect2(-1600, -900.0 + f * 900.0, 4600, 92.0), Color(0.26, 0.30, 0.52).lerp(Color(0.98, 0.74, 0.56), f))
+	# one smooth gradient: flat bands showed their steps
+	IntroKit.vgrad(c, Rect2(-1600, -900.0, 4600, 900.0 + 92.0), Color(0.26, 0.30, 0.52), Color(0.98, 0.74, 0.56))
 	var wall := Color(0.80, 0.62, 0.46)
 	c.draw_rect(Rect2(-1600, -180, 4600, WALL_FOOT + 180.0), wall)
 	c.draw_rect(Rect2(-1600, -196, 4600, 22), wall.lightened(0.12))
@@ -225,9 +224,8 @@ static func _sweeper(c: CanvasItem, x: float, t: float) -> void:
 # the card: the street gone white-hot behind RUN!, the brushes looming in
 # from the left of the frame
 static func _title(c: CanvasItem, t: float) -> void:
-	for i in range(8):
-		var f := float(i) / 7.0
-		c.draw_rect(Rect2(-200, f * 720.0, 1680, 104.0), Color(0.99, 0.80, 0.56).lerp(Color(0.86, 0.50, 0.26), f))
+	# one smooth gradient: flat bands showed their steps
+	IntroKit.vgrad(c, Rect2(-200, 0.0, 1680, 720.0 + 104.0), Color(0.99, 0.80, 0.56), Color(0.86, 0.50, 0.26))
 	var d := t - TITLE_AT
 	# its cab and brush, huge, nosing in from the bottom left
 	var bob := sin(t * 18.0) * 3.0

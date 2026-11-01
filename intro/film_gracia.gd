@@ -92,9 +92,8 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 # lit windows, bunting and paper lanterns across the street, the glow of the
 # correfoc coming up the street before it shows
 static func _street(c: CanvasItem, t: float) -> void:
-	for i in range(8):
-		var f := float(i) / 7.0
-		c.draw_rect(Rect2(-1600, -900.0 + f * 1000.0, 4600, 130.0), Color(0.08, 0.08, 0.20).lerp(Color(0.22, 0.14, 0.28), f))
+	# one smooth gradient: flat bands showed their steps
+	IntroKit.vgrad(c, Rect2(-1600, -900.0, 4600, 1000.0 + 130.0), Color(0.08, 0.08, 0.20), Color(0.22, 0.14, 0.28))
 	var wall := Color(0.66, 0.50, 0.40)
 	c.draw_rect(Rect2(-1600, -60, 4600, FEET - 40.0 + 60.0), wall.darkened(0.35))
 	var x := -1500.0
@@ -277,9 +276,8 @@ static func drac(c: CanvasItem, at: Vector2, k: float, t: float) -> void:
 # the card: the street gone white-hot behind RUN!, the Drac's head in from
 # the left, jaws wide, spraying its sparks across the frame
 static func _title(c: CanvasItem, t: float) -> void:
-	for i in range(8):
-		var f := float(i) / 7.0
-		c.draw_rect(Rect2(-200, f * 720.0, 1680, 104.0), Color(1.0, 0.86, 0.50).lerp(Color(0.80, 0.30, 0.14), f))
+	# one smooth gradient: flat bands showed their steps
+	IntroKit.vgrad(c, Rect2(-200, 0.0, 1680, 720.0 + 104.0), Color(1.0, 0.86, 0.50), Color(0.80, 0.30, 0.14))
 	var d := t - TITLE_AT
 	drac(c, Vector2(-520.0 + d * 120.0, 1140.0), 2.6, t)
 	FilmKit.slam(c, t, "RUN!", Vector2(900, 210))

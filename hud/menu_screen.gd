@@ -304,11 +304,7 @@ func _portrait(r: Rect2, acc: Color) -> void:
 	var feet := r.end.y - 30.0
 	# a lit backdrop, so a dark coat or a dark shirt still reads on the card
 	var lit := Rect2(r.position.x + 12.0, r.position.y + 12.0, r.size.x - 24.0, feet - r.position.y - 4.0)
-	var steps := 24
-	for i in range(steps):
-		var f := float(i) / float(steps - 1)
-		draw_rect(Rect2(lit.position.x, lit.position.y + lit.size.y * float(i) / float(steps), lit.size.x,
-			lit.size.y / float(steps) + 0.5), Color(acc.r, acc.g, acc.b, 0.03 + 0.09 * f))
+	IntroKit.vgrad(self, lit, Color(acc.r, acc.g, acc.b, 0.03), Color(acc.r, acc.g, acc.b, 0.12))
 	draw_rect(Rect2(r.position.x + 12.0, feet - 2.0, r.size.x - 24.0, 18.0), Color(1, 1, 1, 0.10))
 	var k := clampf((r.size.y - 90.0) / 300.0, 0.5, 0.95)
 	var hand := IntroKit.human(self, Vector2(r.position.x + 66.0, feet), k, 1.0, Vector2.ONE, {

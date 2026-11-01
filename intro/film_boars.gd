@@ -97,9 +97,8 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 # slope in shadow, the dirt trail with its ruts and fallen leaves, and the
 # tipped bin by the scrub
 static func _wood(c: CanvasItem, t: float) -> void:
-	for i in range(9):
-		var f := float(i) / 8.0
-		c.draw_rect(Rect2(-1600, -900.0 + f * 1100.0, 4600, 130.0), Color(0.95, 0.62, 0.34).lerp(Color(0.30, 0.22, 0.30), f))
+	# one smooth gradient: flat bands showed their steps
+	IntroKit.vgrad(c, Rect2(-1600, -900.0, 4600, 1100.0 + 130.0), Color(0.95, 0.62, 0.34), Color(0.30, 0.22, 0.30))
 	# the far slope, and the oaks on it
 	c.draw_rect(Rect2(-1600, 300, 4600, FEET), Color(0.14, 0.20, 0.14))
 	for k in range(26):
@@ -259,9 +258,8 @@ static func boar(c: CanvasItem, at: Vector2, k: float, t: float, piglet: bool) -
 # the card: the wood gone white-hot behind RUN!, the mama charging in from
 # the left of the frame, tusks first, dust boiling round her
 static func _title(c: CanvasItem, t: float) -> void:
-	for i in range(8):
-		var f := float(i) / 7.0
-		c.draw_rect(Rect2(-200, f * 720.0, 1680, 104.0), Color(0.99, 0.82, 0.56).lerp(Color(0.62, 0.38, 0.22), f))
+	# one smooth gradient: flat bands showed their steps
+	IntroKit.vgrad(c, Rect2(-200, 0.0, 1680, 720.0 + 104.0), Color(0.99, 0.82, 0.56), Color(0.62, 0.38, 0.22))
 	var d := t - TITLE_AT
 	for p in range(8):
 		var f := fposmod(t * 1.6 + float(p) * 0.125, 1.0)

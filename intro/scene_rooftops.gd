@@ -26,9 +26,8 @@ static func camera(t: float) -> Array:
 
 
 static func _sky(c: CanvasItem) -> void:
-	for i in range(14):
-		var f := float(i) / 13.0
-		c.draw_rect(Rect2(-600, -1200.0 + f * 900.0, 3800, 900.0 / 13.0 + 1.0), Color(0.36, 0.42, 0.66).lerp(Color(0.99, 0.78, 0.58), f))
+	# one smooth gradient: flat bands showed their steps
+	IntroKit.vgrad(c, Rect2(-600, -1200.0, 3800, 900.0 + 900.0 / 13.0 + 1.0), Color(0.36, 0.42, 0.66), Color(0.99, 0.78, 0.58))
 	c.draw_rect(Rect2(-600, -300, 3800, 1200), Color(0.99, 0.80, 0.60))
 	c.draw_circle(Vector2(1020, -470), 120.0, Color(1.0, 0.92, 0.70, 0.35))
 	c.draw_circle(Vector2(1020, -470), 60.0, Color(1.0, 0.95, 0.80, 0.8))
@@ -206,9 +205,8 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 
 static func _title(c: CanvasItem, t: float) -> void:
 	# the sunny street the lunge took them into, behind the title
-	for i in range(8):
-		var f := float(i) / 7.0
-		c.draw_rect(Rect2(0, f * 720.0, 1280, 720.0 / 7.0 + 1.0), Color(0.99, 0.84, 0.62).lerp(Color(0.88, 0.70, 0.48), f))
+	# one smooth gradient: flat bands showed their steps
+	IntroKit.vgrad(c, Rect2(0, 0.0, 1280, 720.0 + 720.0 / 7.0 + 1.0), Color(0.99, 0.84, 0.62), Color(0.88, 0.70, 0.48))
 	c.draw_rect(Rect2(0, 560, 1280, 160), Color(0.74, 0.70, 0.64))
 	IntroTitle.draw(c, t - TITLE_AT, "slam")
 	# the thump: dust from where it hit

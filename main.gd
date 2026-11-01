@@ -3957,7 +3957,7 @@ func _draw_lamppost(p: Vector2) -> void:
 	# you it is three metres tall and not a manhole cover.
 	cast_shadow(_wc, p, 6.0, 52.0, 0.18)
 	if not Game.night:
-		_wc.draw_circle(p, 62.0, Color(1.0, 0.9, 0.6, 0.08))
+		_wc.glow(p, 66.0, Color(1.0, 0.9, 0.6, 0.12))
 	# the base plinth it is bolted to
 	_wc.draw_circle(p + Vector2(0, 2), POLE_RADIUS + 6.0, Color(0.24, 0.24, 0.27))
 	_wc.draw_circle(p + Vector2(0, 1), POLE_RADIUS + 3.5, Color(0.33, 0.33, 0.36))
@@ -3979,7 +3979,7 @@ func _lamp_head(b: ShapeBatch, p: Vector2) -> void:
 		var lp := p + bo * 1.4
 		b.circle(lp, 5.0, Color(0.26, 0.26, 0.29))
 		if Game.night:
-			b.circle(lp, 7.5, SkyLook.light(Color(1.0, 0.90, 0.62, 0.40), night_cm.color))
+			b.glow(lp, 12.0, SkyLook.light(Color(1.0, 0.90, 0.62, 0.55), night_cm.color), 0.3)
 			b.circle(lp, 3.6, SkyLook.light(Color(1.0, 0.97, 0.86), night_cm.color))
 		else:
 			b.circle(lp, 3.6, Color(0.86, 0.88, 0.9))
