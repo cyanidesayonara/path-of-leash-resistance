@@ -89,7 +89,7 @@ static func camera(t: float) -> Array:
 
 # where the lead assistant's feet are (the cone's mouth is ahead of them)
 static func assistant_x(t: float) -> float:
-	return Anim.k(t, [[OUT_AT, DOOR_X], [3.9, 70.0, "out"], [BOLT_AT, 130.0], [TITLE_AT, 800.0, "in"]])
+	return Anim.k(t, [[OUT_AT, DOOR_X], [3.9, 70.0, "out"], [BOLT_AT, 200.0], [TITLE_AT, 1350.0, "in"]])
 
 
 static func draw(c: CanvasItem, t_real: float) -> void:

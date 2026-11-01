@@ -6176,6 +6176,10 @@ func _shot_menu(which: String) -> void:
 			menu_step = 2 if which == "details" else 1
 			Game.menu_step = menu_step
 			_apply_menu_step()
+			# --shot-row=N picks GET READY's row (1 is YOUR HUMAN)
+			for a in OS.get_cmdline_user_args():
+				if a.begins_with("--shot-row="):
+					details_idx = clampi(int(a.substr(11)), 0, MenuFlow.DETAIL_ROWS.size() - 1)
 			if which == "shop":
 				MenuFlow.open_shop(self)
 			elif which == "progress":

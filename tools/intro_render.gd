@@ -2,7 +2,9 @@ extends SceneTree
 
 # Renders an intro scene to numbered PNG frames, stepping time exactly (not in
 # real time), at 2x and scaled down so edges are smooth:
-#   godot --rendering-method gl_compatibility --path . --script res://tools/intro_render.gd -- walkies OUTDIR [fps] [width]
+#   godot --rendering-method gl_compatibility --path . --script res://tools/intro_render.gd -- walkies OUTDIR [fps] [width] [dog]
+# `dog` draws that dog (millie, pipa, mochi, bruna, tito) instead of the saved one;
+# a sixth argument draws your human as `him`, `her`, or the NEW LOOK a number seeds.
 # Scenes: walkies, rooftops, titlefight, and the chase films (sweeper, flood, vet). Join the frames into a clip with
 # tools/frames_to_gif.py.
 
@@ -39,6 +41,16 @@ func _run() -> void:
 	var out_dir: String = args[1] if args.size() > 1 else "user://intro_frames"
 	var fps := float(args[2]) if args.size() > 2 else 15.0
 	var width := int(args[3]) if args.size() > 3 else 640
+	var game := root.get_node("/root/Game")
+	if args.size() > 4:
+		game.set("dog", args[4])
+	if args.size() > 5:
+		if args[5] == "him" or args[5] == "her":
+			game.set("human_look", game.default_human(args[5]))
+		else:
+			var rng := RandomNumberGenerator.new()
+			rng.seed = int(args[5])
+			game.randomize_human(rng)
 	DirAccess.make_dir_recursive_absolute(out_dir)
 	var vp := SubViewport.new()
 	vp.size = Vector2i(1280 * SS, 720 * SS)

@@ -1362,11 +1362,14 @@ func _draw_shapes() -> void:
 		_draw_xf(Vector2(5.0, 9.0), 0.0, Vector2(1.2 * spread, 0.52))
 		_b.draw_circle(Vector2.ZERO, 16.0, Color(0.06, 0.05, 0.08, 0.28))
 		_draw_xf()
-	var woman: bool = Game.owner_id == "her"
-	var shirt := Color(0.6, 0.38, 0.44) if woman else Color(0.35, 0.42, 0.55)
-	var skin := Color(0.85, 0.72, 0.58)
-	var pants := Color(0.3, 0.28, 0.34) if woman else Color(0.25, 0.27, 0.32)
-	var hair_col := Color(0.42, 0.3, 0.18) if woman else Color(0.3, 0.22, 0.15)
+	# your human's look (Game.human_look), the same person the films draw
+	var look: Dictionary = Game.human_look
+	var woman: bool = bool(look.get("her", false))
+	var shirt: Color = look.get("shirt", HumanSide.SHIRT)
+	var skin: Color = look.get("skin", HumanSide.SKIN)
+	var pants: Color = look.get("trousers", HumanSide.TROUSERS)
+	var hair_col: Color = look.get("hair", HumanSide.HAIR)
+	var hair_style := String(look.get("hair_style", "short"))
 	var t := AnimClock.msec() / 1000.0
 	var fd := face_dir
 	# dragged: turned to face the pull
@@ -1395,7 +1398,7 @@ func _draw_shapes() -> void:
 		dress["headwear"] = "sunhat"
 		dress["headwear_col"] = Color(0.92, 0.84, 0.62)
 	# shoes, toes out in front
-	var shoe := pants.darkened(0.4)
+	var shoe: Color = look.get("shoe", pants.darkened(0.4))
 	for fp: Vector2 in [brace + fd * sa, brace2 - fd * sa]:
 		_b.draw_colored_polygon(HumanLook._disc_points(fp + fd * 1.5, Vector2(6.2, 4.4), fd), shoe)
 	# body with a slight walking sway; dragged, leaning back against the pull
@@ -1414,13 +1417,16 @@ func _draw_shapes() -> void:
 		_b.draw_line(side * 10.0 * sg, side * 7.0 * sg + fd * 9.0, sleeve, 6.0)
 		_b.draw_line(side * 7.0 * sg + fd * 9.0, side * 4.0 * sg + fd * 17.0, skin, 4.6)
 		_b.draw_circle(side * 4.0 * sg + fd * 17.5, 3.0, skin)
-	# head: seen from above, a proper head of hair; she has a ponytail
+	# head: seen from above, a proper head of hair in their style
 	var head := fd * 5.0 - fd * 6.0 * drag_amt
 	var hood: bool = String(dress["headwear"]) == "hood"
-	if woman and not hood:
+	if hair_style == "ponytail" and not hood:
 		_b.draw_colored_polygon(HumanLook._disc_points(head - fd * 12.0, Vector2(6.5, 3.8), fd), hair_col.darkened(0.12))
 		_b.draw_circle(head - fd * 8.0, 2.4, Color(0.86, 0.30, 0.42))
-	HumanLook.draw_head(_b, head, fd, 9.0, skin, hair_col, "long" if woman else "short", String(dress["headwear"]),
+	elif hair_style == "long" and not hood:
+		_b.draw_colored_polygon(HumanLook._disc_points(head - fd * 8.0, Vector2(8.0, 9.5), fd), hair_col.darkened(0.1))
+	var top_style: String = {"ponytail": "long", "bob": "long", "long": "long"}.get(hair_style, hair_style)
+	HumanLook.draw_head(_b, head, fd, 9.0, skin, hair_col, top_style, String(dress["headwear"]),
 		dress["headwear_col"])
 	if Game.night and phone_away < 0.7:
 		var face_glow := Color(0.68, 0.84, 1.0, 0.20 * (0.55 + 0.2 * sin(t * 7.3)) * (1.0 - phone_away))

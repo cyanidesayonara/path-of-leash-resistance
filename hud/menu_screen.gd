@@ -31,6 +31,7 @@ const SHOP_W := 1040.0
 const SHOP_H := 540.0
 const SHOP_ROW_H := 44.0
 const DETAILS_W := 400.0
+const PORTRAIT_W := 240.0
 const PROGRESS_W := 900.0
 const PROGRESS_ROW_H := 32.0
 const PAUSE_W := 560.0
@@ -291,6 +292,32 @@ func _details(vs: Vector2) -> void:
 		var kw := Kit.keycap(self, Vector2(cx, cy), Prompts.key(String(it[0])), 12, 19.0)
 		draw_string(Kit.body(), Vector2(cx + kw + 8.0, cy + 14.0), String(it[1]), HORIZONTAL_ALIGNMENT_LEFT,
 			-1, 13, Kit.INK_SOFT)
+	if r.end.x + 14.0 + PORTRAIT_W <= vs.x - 16.0:
+		_portrait(Rect2(r.end.x + 14.0, r.position.y, PORTRAIT_W, r.size.y), acc)
+
+
+# the two of you, side on as the films draw you, beside GET READY: a new
+# dog or a NEW LOOK shows here at once, not only as a dot on the ground
+func _portrait(r: Rect2, acc: Color) -> void:
+	Kit.card(self, r, acc)
+	var t := AnimClock.msec() / 1000.0
+	var feet := r.end.y - 30.0
+	# a lit backdrop, so a dark coat or a dark shirt still reads on the card
+	var lit := Rect2(r.position.x + 12.0, r.position.y + 12.0, r.size.x - 24.0, feet - r.position.y - 4.0)
+	var steps := 24
+	for i in range(steps):
+		var f := float(i) / float(steps - 1)
+		draw_rect(Rect2(lit.position.x, lit.position.y + lit.size.y * float(i) / float(steps), lit.size.x,
+			lit.size.y / float(steps) + 0.5), Color(acc.r, acc.g, acc.b, 0.03 + 0.09 * f))
+	draw_rect(Rect2(r.position.x + 12.0, feet - 2.0, r.size.x - 24.0, 18.0), Color(1, 1, 1, 0.10))
+	var k := clampf((r.size.y - 90.0) / 300.0, 0.5, 0.95)
+	var hand := IntroKit.human(self, Vector2(r.position.x + 66.0, feet), k, 1.0, Vector2.ONE, {
+		"phone": 1.0, "glow": 0.5, "reach": 0.35, "scroll": t * 1.5, "blink": 1.0 if fposmod(t, 3.7) < 0.12 else 0.0,
+	}, 0.0, feet)
+	var m := IntroKit.millie(self, Vector2(r.position.x + 168.0, feet), k * 0.72, -1.0, Vector2.ONE, {
+		"head_up": 0.45, "tail": sin(t * 7.0) * 0.6, "ear": 0.2,
+	}, feet)
+	IntroKit.leash(self, m["ring"], hand, 30.0)
 
 
 func shop_rect() -> Rect2:

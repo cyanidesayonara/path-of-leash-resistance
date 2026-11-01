@@ -243,12 +243,14 @@ photographs the chase), and `--shot-y=N`, which starts the pair at that
 point down the walk (`--shot-y=-2450 --shot-at=40` photographs El Bosc's stream;
 give it 40 frames or so, a shot taken sooner can show the start line's ground).
 `--lang=ca|es|en` writes the walks' glosses in that language for the run
-(the LANGUAGE setting, unsaved). `--shot-goals` opens the goal list. `--shot-say` has your human and a passer-by speak at once. `--shot-x=N` puts the pair at that x instead of mid-walk, `--shot-zoom=Z`
+(the LANGUAGE setting, unsaved). `--look=him|her|N` draws your human as the
+default him or her, or the NEW LOOK that number seeds, for the run (unsaved). `--shot-goals` opens the goal list. `--shot-say` has your human and a passer-by speak at once. `--shot-x=N` puts the pair at that x instead of mid-walk, `--shot-zoom=Z`
 magnifies the shot, and `--shot-cam=X,Y` points the camera at a spot rather
 than the pair, to judge how a prop or a person is drawn
 (`--level=site --shot-y=-1200 --shot-zoom=2.5 --shot-cam=900,-1400` is the digger).
 `--shot-menu=main|walk|details|shop|progress|pause|walkcard|confirm|first|notice`
-opens that menu screen (`main` is the main menu, as `--shot-title` also
+opens that menu screen (`--shot-row=N` picks GET READY's row; 1 is YOUR
+HUMAN) (`main` is the main menu, as `--shot-title` also
 leaves it; `walkcard` is the pause menu's THIS WALK card, `confirm` its
 EXIT GAME question, `first` PLAY's first-time question). `--ui-scale=K` forces the small-screen interface factor (`hud/ui_scale.gd`;
 below a 0.78 frame scale the HUD and menus grow and the camera compensates,
@@ -355,8 +357,18 @@ headless, for the autowalk, or in a `--shot` run; `--no-films` stops them and
 `--films` forces them. Every film shares one grammar and timing
 (`intro/film_kit.gd`: walking, she hears it, looks back, stares, bolts, the
 card) and draws its own place and threat around `FilmKit.pair`. Render one
-like an intro scene (`sweeper` is La Neteja's, `flood` El Besòs's):
-`--script res://tools/intro_render.gd -- flood OUTDIR 24 640`.
+like an intro scene (`sweeper` is La Neteja's, `flood` El Besòs's, `vet`
+El Veterinari's): `--script res://tools/intro_render.gd -- flood OUTDIR 24 640`.
+Two more arguments pick the dog (`millie`, `pipa`, `mochi`, `bruna`, `tito`)
+and your human (`him`, `her`, or a number for a NEW LOOK), so a film can be
+checked with every pair: `-- vet OUTDIR 10 480 tito 7`.
+
+Your human's look (`Game.human_look`: who, skin, hair colour and style,
+shirt, trousers, shoes) is one for the walk (`entities/human.gd`, from above)
+and every film (`intro/human_side.gd`, side on). `IntroKit.dressed` gives a
+pose without its own colours that look; passers-by bring their own. NEW LOOK
+(pee on GET READY's YOUR HUMAN row) rolls one from the palettes in
+`autoload/game.gd`; it is saved with the records.
 
 The title's version label is not in the source: `tools/stamp_version.sh`
 writes the tag and short commit (`v1.55 (a1b2c3d)`) to the gitignored
