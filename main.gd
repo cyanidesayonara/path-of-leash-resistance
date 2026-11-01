@@ -867,11 +867,11 @@ var gloss_a := 1.0
 const GLOSS_FADE := 1.2
 # a walk's name on the ground: its cap height, and the bottom of the name as
 # laid out (one line or two), which the gloss sits under
-const NAME_H := 52.0
+const NAME_H := 44.0
 # its baseline: high enough that a full-width name clears the top of the GET
 # READY panel and the walk select's plaque, low enough to miss the header
 const NAME_Y := START_Y - 227.0
-const NAME_MARGIN := 60.0
+const NAME_MARGIN := 100.0
 # and no wider than this, however wide the walk: a wide avenue's name breaks
 # onto two lines rather than spanning its sidewalks
 const NAME_MAX_W := 400.0
@@ -4922,22 +4922,18 @@ func build_signs() -> void:
 	var room := maxf(300.0, e.y - e.x - 80.0)
 	var mid := (e.x + e.y) * 0.5
 	var born := AnimClock.msec() / 1000.0
-	var bed: Color = WorldSign.BEDS.get("tutorial" if tutorial_mode else lvl, Color(0, 0, 0, 0))
-	if Game.weather == "snow":
-		bed = Color(0, 0, 0, 0)
 	if menu_step == 0 and not started:
 		signs.append(WorldSign.build("PATH OF", Vector2(mid, START_Y - 232.0), 44.0, mat, 1.0, room))
 		signs.append(WorldSign.build("LEASH RESISTANCE", Vector2(mid, START_Y - 172.0), 44.0, mat, 2.0, room))
 		for sg: Dictionary in signs:
 			sg.born = born
-			sg.bed = bed
 	else:
 		var name := _walk_name()
 		# the name stays on the path, inside its edges where the letters lie: a
 		# long one breaks onto two lines or, where it cannot, comes down in size
 		var span := name_span()
 		var nroom := minf(span.y - span.x - NAME_MARGIN, NAME_MAX_W)
-		var nm := WorldSign.build_name(name, Vector2((span.x + span.y) * 0.5, NAME_Y), NAME_H, mat, 4.0, nroom, bed)
+		var nm := WorldSign.build_name(name, Vector2((span.x + span.y) * 0.5, NAME_Y), NAME_H, mat, 4.0, nroom)
 		nm.born = born
 		signs.append(nm)
 		_name_baseline = float(nm.baseline)
@@ -5050,7 +5046,8 @@ func gloss_baseline(fallback_y := START_Y - 190.0) -> float:
 # dark outline and a soft shadow, so it reads by brightness on sand, grass,
 # snow, wet paving and a night street, whatever colours the reader can tell
 # apart. Drawn so the night tint cannot grey it.
-const GLOSS_PX := 28
+const GLOSS_PX := 24
+const GLOSS_EDGE := 4
 func _draw_gloss(at: Vector2, txt: String) -> void:
 	if gloss_a <= 0.01:
 		return
@@ -5068,10 +5065,11 @@ func _draw_gloss(at: Vector2, txt: String) -> void:
 		x0 = maxf(x0, cam.position.x - vw * 0.5 + GLOSS_CLEAR_X / cam.zoom.x)
 	var o := Vector2(x0, at.y)
 	var tint: Color = night_cm.color if night_cm != null else Color.WHITE
-	_wc.draw_string_outline(f, o + Vector2(2.0, 3.0), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px, 10,
-		SkyLook.light(Color(0.02, 0.02, 0.04, 0.35 * gloss_a), tint))
-	_wc.draw_string_outline(f, o, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px, 7,
-		SkyLook.light(Color(0.08, 0.07, 0.10, 0.92 * gloss_a), tint))
+	# a thin edge and a close shadow: a fat outline turned the letters to blobs
+	_wc.draw_string_outline(f, o + Vector2(0.0, 2.0), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px, GLOSS_EDGE + 2,
+		SkyLook.light(Color(0.02, 0.02, 0.04, 0.28 * gloss_a), tint))
+	_wc.draw_string_outline(f, o, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px, GLOSS_EDGE,
+		SkyLook.light(Color(0.08, 0.07, 0.10, 0.85 * gloss_a), tint))
 	_wc.draw_string(f, o, txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px,
 		SkyLook.light(Color(0.99, 0.96, 0.88, gloss_a), tint))
 

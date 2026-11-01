@@ -362,8 +362,9 @@ static func draw_river(m: Node2D, vt: float, vb: float) -> void:
 			b.line(pylon + Vector2(0.0, -12.0), Vector2(target_x, m.GATE_Y + 38.0),
 				Color(0.12, 0.13, 0.16, 0.24), 1.8)
 
-	# 10. SAHBE electronic entrance information sign (OBERT / ALERTA RIU)
-	var board := Rect2(m.sw_l + 48.0, 40.0, 46.0, 28.0)
+	# 10. SAHBE electronic entrance information sign (OBERT / ALERTA RIU),
+	# below the gloss: the walk's name lies on the path above it
+	var board := Rect2(m.sw_l + 48.0, 118.0, 46.0, 28.0)
 	if board.end.y > vt - 20.0 and board.position.y < vb + 20.0:
 		var open := String(m.chase_phase) == ""
 		# Support posts, solar panel, and dark steel display cabinet
