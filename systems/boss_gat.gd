@@ -84,6 +84,9 @@ const PRIZE_TEXT := "snatch the yarn from the overturned kiosk"
 # --- Tuning ------------------------------------------------------------------
 const MAX_HP := 100.0
 const WAKE_Y := -250.0          # the dog past this, he climbs down
+# the finale's film (intro/film_gat.gd), played the first time she passes
+# WAKE_Y; the walk's own wake follows it
+const FILM := "res://intro/film_gat.gd"
 const LEAD := 260.0             # how far ahead of your human he prowls
 const PROWL_SPEED := 110.0
 const CATCH_SPEED := 220.0      # the pair got past him: he hurries ahead again
@@ -206,6 +209,7 @@ var ghost_t := 0.0
 var steam_t := 0.0
 var lean := 0.0
 var card_t := -1.0
+var film_shown := false
 var card: Control = null
 var cheer := 0.0
 var gasp := 0.0
@@ -858,8 +862,13 @@ func tick_state(delta: float) -> void:
 
 	match state:
 		State.IDLE:
-			if dog_p.y < WAKE_Y:
-				transition_to(State.AWAKEN)
+			# the film first, once; the wake when it has handed the walk back
+			if dog_p.y < WAKE_Y and not bool(main.get("film_playing")):
+				if not film_shown and FilmPlayer.should_play(main):
+					film_shown = true
+					FilmPlayer.play(main, load(FILM))
+				else:
+					transition_to(State.AWAKEN)
 
 		State.AWAKEN:
 			var was := act_t - delta

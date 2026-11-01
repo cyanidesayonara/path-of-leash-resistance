@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-11-01 - The finale's film: El Gat wakes, and she stands her ground
+
+- **`intro/film_gat.gd`, "El Gat"**: night on the Rambla del Raval, the
+  palms, the terraces and their onlookers, and Botero's fat bronze cat on
+  his plinth. A crack; she looks back. His amber eyes open, he stretches,
+  the plinth splits, and he drops to the paving with a thump that shakes the
+  frame and makes the crowd jump, then comes on down the rambla, tail
+  swishing. She does not run: she dashes back past your human and plants
+  herself between him and the cat, hackles up, barking, while he is jerked
+  to a stop still on the phone, and the cat lifts a paw. EL GAT! slams in
+  with his face filling the card.
+- It plays the first time she passes his plinth (`BossGat.FILM`), and the
+  walk's own wake follows it: the cracked plinth, the hop down, the title
+  card, the fight.
+- `FilmKit.pair` takes `stand`: the finale's stand-off instead of the bolt.
+
 ## 2026-11-01 - Festa de Gràcia's chase film, and the correfoc in the walk
 
 - **`intro/film_gracia.gd`, "Correfoc"**: night in a narrow street of the

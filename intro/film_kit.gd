@@ -9,6 +9,9 @@ extends RefCounted
 # crouches and at BOLT_AT digs in and goes, the leash snapping taut and your
 # human yanked off after her; at TITLE_AT the card slams in. Each film draws
 # its own place and threat around pair(), and its own camera on these beats.
+# The finale's film stands instead of bolting (pair's `stand`): at BOLT_AT she
+# dashes back past your human and plants herself between him and it, barking,
+# and he is jerked to a stop, still on the phone.
 
 const HEAR_AT := 1.3
 const LOOK_AT := 1.6
@@ -23,7 +26,7 @@ const INK := IntroKit.INK
 
 # Your human and her, their feet at `feet`, walking right; returns her
 # position (for the threat to aim at and the card to follow).
-static func pair(c: CanvasItem, t_real: float, feet: float) -> Vector2:
+static func pair(c: CanvasItem, t_real: float, feet: float, stand := false) -> Vector2:
 	var t := Anim.twos(t_real)
 	var go := Anim.span(t, BOLT_AT, BOLT_AT + 0.1)
 	# your human: an oblivious stroll, phone up, then yanked off after her. She
@@ -36,12 +39,22 @@ static func pair(c: CanvasItem, t_real: float, feet: float) -> Vector2:
 		"phone": 1.0, "glow": 0.5, "reach": 0.4 + 0.6 * go,
 		"lean": 0.85 * go, "lift": 0.5 * go, "head": 0.3 * go, "mouth": go,
 	}
-	var hand := IntroKit.human(c, Vector2(hx, feet), S, 1.0, Vector2(1.2, 0.88) if go > 0.0 else Vector2.ONE, hpose,
-		0.0, feet)
+	var hsq := Vector2(1.2, 0.88) if go > 0.0 else Vector2.ONE
+	if stand:
+		hx = Anim.k(t, [[0.0, 380.0], [BOLT_AT, 560.0], [BOLT_AT + 0.16, 600.0, "snap"], [TITLE_AT, 600.0]])
+		hpose = {
+			"stride": t_real * 8.0, "stride_amp": 0.6 * (1.0 - go), "phone": 1.0, "glow": 0.5,
+			"reach": 0.4 + 0.3 * go, "lean": -0.25 * go, "phone_jolt": go,
+		}
+		hsq = Vector2.ONE
+	var hand := IntroKit.human(c, Vector2(hx, feet), S, 1.0, hsq, hpose, 0.0, feet)
 	# her: trotting ahead, stopped by the sound, looking back at it, the
 	# stare, and the spin and dig into the bolt
 	var mx: float = Anim.k(t, [[0.0, 600.0], [1.35, 720.0, "out"], [BOLT_AT, 720.0], [BOLT_AT + 0.14, 900.0, "out"],
 		[TITLE_AT, 2000.0, "in"]])
+	if stand:
+		mx = Anim.k(t, [[0.0, 600.0], [1.35, 720.0, "out"], [BOLT_AT, 720.0], [BOLT_AT + 0.22, 400.0, "out"],
+			[TITLE_AT, 390.0]])
 	var trot := 1.0 - Anim.span(t, 1.2, 1.4)
 	var look := Anim.span(t, LOOK_AT, LOOK_AT + 0.15) * (1.0 - Anim.span(t, CROUCH_AT - 0.1, CROUCH_AT))
 	var crouch := Anim.span(t, CROUCH_AT, CROUCH_AT + 0.35) * (1.0 - go)
@@ -59,10 +72,23 @@ static func pair(c: CanvasItem, t_real: float, feet: float) -> Vector2:
 		"brow": 1.0 * stare - 1.0 * crouch,
 	}
 	var face := -1.0 if look > 0.5 else 1.0
+	var barking := stand and t > BOLT_AT
+	if barking:
+		# planted between him and it, low, hackles and tail up, barking
+		face = -1.0
+		var yap := absf(sin(t_real * 12.0))
+		pose["crouch"] = 0.6
+		pose["lean"] = 0.25
+		pose["reach"] = 0.3
+		pose["push"] = 0.5
+		pose["ear"] = 1.2
+		pose["brow"] = 1.0
+		pose["tail"] = 0.7
+		pose["mouth"] = 0.4 + 0.5 * yap
 	var sq := Anim.squash(Anim.k(t, [[HEAR_AT, 1.0], [HEAR_AT + 0.15, 1.15, "snap"], [LOOK_AT, 1.0, "io"],
 		[CROUCH_AT, 1.0], [CROUCH_AT + 0.35, 0.8, "io"], [BOLT_AT, 0.8], [BOLT_AT + 0.08, 1.35, "snap"]]))
 	if t > BOLT_AT + 0.05:
-		sq = Vector2(1.35, 0.8)
+		sq = Vector2(1.1, 0.92) if stand else Vector2(1.35, 0.8)
 	var mpos := Vector2(mx, feet) + Anim.boil(t_real, 2.0, 0.5)
 	var m := IntroKit.millie(c, mpos, S * 0.95, face, sq, pose, feet)
 	IntroKit.leash(c, m["ring"], hand, Anim.k(t, [[0.0, 46.0], [BOLT_AT, 40.0], [BOLT_AT + 0.08, 0.0, "snap"]]))
@@ -70,7 +96,14 @@ static func pair(c: CanvasItem, t_real: float, feet: float) -> Vector2:
 	var jolt := Anim.span(t, HEAR_AT, HEAR_AT + 0.3)
 	if jolt > 0.0 and jolt < 1.0:
 		_jolt(c, mpos + Vector2(10.0 * face, -120.0), jolt)
-	if t > BOLT_AT:
+	if barking:
+		# the barks, thrown at it in bursts
+		var f := fposmod(t_real * 2.0, 1.0)
+		for k in range(3):
+			var d := Vector2.from_angle(PI + (float(k) - 1.0) * 0.4)
+			var o := mpos + Vector2(-150.0, -110.0)
+			c.draw_line(o + d * (10.0 + f * 40.0), o + d * (36.0 + f * 50.0), Color(INK, 1.0 - f), 5.0)
+	elif t > BOLT_AT:
 		IntroKit.speed_lines(c, mpos + Vector2(-60, -60), Vector2.RIGHT, 170.0)
 		IntroKit.speed_lines(c, Vector2(hx, feet - 150.0), Vector2.RIGHT, 120.0, 3)
 	return mpos
