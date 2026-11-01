@@ -17,7 +17,8 @@ const BG := Color(0.08, 0.10, 0.12)
 const FEET := 640.0              # the grass path along the flood plain
 const BANK := 700.0              # where the plain drops into the channel
 const WALL_TOP := 400.0          # the embankment, low enough to show the skyline
-const CREST := 170.0             # how far the surge's crest stands over the plain
+const CREST := 360.0             # how far the surge's crest stands over the plain: over your human's head
+const LIP := 170.0               # the crest the curl's shape is drawn for; it scales with the crest
 const BOLT_AT := FilmKit.BOLT_AT
 const TITLE_AT := FilmKit.TITLE_AT
 const RAIN_AT := 0.7
@@ -149,6 +150,7 @@ static func _surge(c: CanvasItem, x: float, t: float, level: float, crest := CRE
 	if x < -1400.0:
 		return
 	var top := level - crest
+	var l := crest / LIP
 	var pts := PackedVector2Array()
 	var left := x - 2600.0
 	pts.append(Vector2(left, BANK + 600.0))
@@ -157,31 +159,40 @@ static func _surge(c: CanvasItem, x: float, t: float, level: float, crest := CRE
 		var px := left + (x - left) * float(i) / float(n)
 		pts.append(Vector2(px, _surface(px, x, t, level, crest)))
 	# the lip curls over and hangs; the face falls away under it
-	pts.append_array(PackedVector2Array([Vector2(x + 34.0, top - 16.0), Vector2(x + 84.0, top + 4.0),
-		Vector2(x + 104.0, top + 46.0), Vector2(x + 84.0, top + 52.0), Vector2(x + 56.0, top + 34.0),
-		Vector2(x + 52.0, top + crest * 0.45), Vector2(x + 86.0, level + 16.0), Vector2(x + 140.0, BANK + 600.0)]))
+	var lip := PackedVector2Array([Vector2(34.0, -16.0), Vector2(84.0, 4.0), Vector2(104.0, 46.0), Vector2(84.0, 52.0),
+		Vector2(56.0, 34.0), Vector2(52.0, LIP * 0.45)])
+	for q in lip:
+		pts.append(Vector2(x, top) + q * l)
+	pts.append_array(PackedVector2Array([Vector2(x + 86.0 * l, level + 16.0), Vector2(x + 140.0 * l, BANK + 600.0)]))
 	c.draw_colored_polygon(pts, DEEP)
-	# the paler, lit face under the lip
-	c.draw_colored_polygon(PackedVector2Array([Vector2(x - 200.0, level - crest * 0.25), Vector2(x - 10.0, top + 24.0),
-		Vector2(x + 50.0, top + 40.0), Vector2(x + 48.0, top + crest * 0.5), Vector2(x + 78.0, level + 14.0),
-		Vector2(x - 200.0, level + 24.0)]), WATER)
-	for k in range(4):
-		var sx := x - 150.0 + float(k) * 50.0
-		c.draw_line(Vector2(sx, level - crest * 0.1 - float(k) * 24.0), Vector2(sx + 40.0, level + 10.0), PALE.darkened(0.1), 3.0)
+	# the paler, lit face under the lip, and the dark barrel in its curl
+	c.draw_colored_polygon(PackedVector2Array([Vector2(x - 200.0 * l, level - crest * 0.25), Vector2(x - 10.0 * l, top + 24.0 * l),
+		Vector2(x + 50.0 * l, top + 40.0 * l), Vector2(x + 48.0 * l, top + crest * 0.5), Vector2(x + 78.0 * l, level + 14.0),
+		Vector2(x - 200.0 * l, level + 24.0)]), WATER)
+	c.draw_colored_polygon(MillieSide.ellipse(Vector2(x + 40.0 * l, top + 46.0 * l), Vector2(16.0, 22.0) * l), DEEP.darkened(0.35))
+	for k in range(6):
+		var sx := x - 150.0 * l + float(k) * 34.0 * l
+		c.draw_line(Vector2(sx, level - crest * 0.1 - float(k) * 24.0 * l), Vector2(sx + 40.0 * l, level + 10.0), PALE.darkened(0.1), 3.0)
 	# foam along the crest and a heap of it round the lip
 	for i in range(24):
-		var fx := x - 520.0 + float(i) / 23.0 * 560.0
-		var near := clampf(1.0 - (x - fx) / 320.0, 0.0, 1.0)
+		var fx := x - 520.0 * sqrt(l) + float(i) / 23.0 * 560.0 * sqrt(l)
+		var near := clampf(1.0 - (x - fx) / (320.0 * sqrt(l)), 0.0, 1.0)
 		c.draw_circle(Vector2(fx, _surface(fx, x, t, level, crest)), 7.0 + 10.0 * near + sin(t * 9.0 + float(i)) * 2.0,
 			Color(FOAM, 0.5 + 0.45 * near))
-	for k in range(9):
-		var a := -2.0 + float(k) * 0.42
-		c.draw_circle(Vector2(x + 62.0, top + 18.0) + Vector2.from_angle(a) * 42.0, 13.0 + sin(t * 11.0 + float(k)) * 3.0, FOAM)
-	# spray thrown off the lip
-	for p in range(12):
-		var f := fposmod(t * 2.2 + float(p) / 12.0, 1.0)
-		c.draw_circle(Vector2(x + 90.0 + f * 150.0, top + 10.0 - f * 70.0 + f * f * 200.0 + sin(float(p) * 2.7) * 16.0),
-			6.0 * (1.0 - f) + 1.0, Color(FOAM, 1.0 - f))
+	for k in range(11):
+		var a := -2.0 + float(k) * 0.36
+		c.draw_circle(Vector2(x + 62.0 * l, top + 18.0 * l) + Vector2.from_angle(a) * 42.0 * l,
+			(13.0 + sin(t * 11.0 + float(k)) * 3.0) * sqrt(l), FOAM)
+	# spray thrown off the lip, and the water pouring off it
+	for p in range(16):
+		var f := fposmod(t * 2.2 + float(p) / 16.0, 1.0)
+		c.draw_circle(Vector2(x + (90.0 + f * 150.0) * l, top + (10.0 - f * 70.0 + f * f * 200.0) * l + sin(float(p) * 2.7) * 16.0),
+			(6.0 * (1.0 - f) + 1.0) * sqrt(l), Color(FOAM, 1.0 - f))
+	for p in range(5):
+		var f := fposmod(t * 3.0 + float(p) / 5.0, 1.0)
+		var dx := x + (88.0 + float(p) * 6.0) * l
+		c.draw_line(Vector2(dx, top + 50.0 * l + f * (crest - 50.0 * l)), Vector2(dx + 4.0, top + 50.0 * l + f * (crest - 50.0 * l) + 40.0),
+			Color(PALE, 0.8 * (1.0 - f)), 4.0)
 	# riding it: a branch, a traffic cone on its side, and a duck, unbothered
 	var bob := sin(t * 5.0) * 5.0
 	var bx := x - 330.0
@@ -206,7 +217,7 @@ static func _surge(c: CanvasItem, x: float, t: float, level: float, crest := CRE
 # the surge's surface at px: the body's level, rising in the last stretch to
 # its crest
 static func _surface(px: float, x: float, t: float, level: float, crest: float) -> float:
-	var near := clampf(1.0 - (x - px) / 320.0, 0.0, 1.0)
+	var near := clampf(1.0 - (x - px) / (320.0 * sqrt(crest / LIP)), 0.0, 1.0)
 	return level - crest * near * near - sin(px * 0.02 + t * 6.0) * 6.0
 
 
@@ -229,8 +240,8 @@ static func _title(c: CanvasItem, t: float) -> void:
 		var f := float(i) / 7.0
 		c.draw_rect(Rect2(-200, f * 720.0, 1680, 104.0), Color(0.56, 0.62, 0.66).lerp(Color(0.30, 0.38, 0.44), f))
 	var d := t - TITLE_AT
-	c.draw_set_transform(Vector2(-160.0 + d * 120.0, -560.0 + sin(t * 9.0) * 4.0), 0.0, Vector2(1.6, 1.6))
-	_surge(c, 300.0, t, 700.0, 230.0)
+	c.draw_set_transform(Vector2(-300.0 + d * 120.0, -420.0 + sin(t * 9.0) * 4.0), 0.0, Vector2(1.6, 1.6))
+	_surge(c, 300.0, t, 700.0, 420.0)
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	_rain(c, t, 1.0)
 	FilmKit.slam(c, t, "RUN!", Vector2(880, 210))
