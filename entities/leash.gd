@@ -133,6 +133,9 @@ var free_slip_t := 0.0
 # the player's leash draws every frame (hero element); NPC-pair leashes
 # only need ~30fps, halving their line-heavy rope draw on the web build
 var hero := false
+# set by an NPC pair whose walkers and rope are out of view: the rope keeps
+# its last picture until they come back (never set on the player's leash)
+var out_of_view := false
 # where the hand end sits relative to the human, in the human's own frame.
 # The player's human keeps the default; an NPC owner moves it to the fist
 # that actually holds the strap (entities/otherpair.gd).
@@ -407,7 +410,7 @@ func tick(delta: float) -> void:
 		for _pass in range(6):
 			if not _expel_rects(true):
 				break
-	if hero or Engine.get_physics_frames() % 2 == 0:
+	if hero or (Engine.get_physics_frames() % 2 == 0 and not out_of_view):
 		queue_redraw()
 
 

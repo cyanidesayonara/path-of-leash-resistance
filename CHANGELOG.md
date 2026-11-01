@@ -2,6 +2,21 @@
 
 Append-only session history, newest first.
 
+## 2026-11-01 - Riders, walkers and pigeons rest out of view
+
+- Bikes redrew every physics step wherever they were, pairs and their
+  leashes and pigeons every other step. Each now skips its redraw while
+  out of the camera's view and keeps its last picture, redrawing the frame
+  it comes back (`Clay.in_view`; margins 60 px for riders, 100 for a pair
+  around its owner and dog, 40 for a bird). The player's leash always draws.
+- Pixel-identical: deterministic autowalk shots of La Rambla, El Mercat, El
+  Parc, El Gòtic, Dia de Partit and L'Estació at three moments each (riders,
+  birds and passers-by on screen) compare equal before and after.
+- La Rambla, alternating builds. Desktop: draw pass 4.9 to 4.3 ms, median
+  frame 7.1 to 6.2 ms. Web (headless Chrome, a noisy machine): bike redraws
+  per frame 7.6-9.9 to 1.0-3.7 (those on screen), pair redraws to none; the
+  quieter run went from 42.6 ms median (22.5 fps) to 25.3 ms (38 fps).
+
 ## 2026-11-01 - Where a browser frame goes
 
 - `--perf-scripts` on the perf probe times each frame's physics steps,

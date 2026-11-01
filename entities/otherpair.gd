@@ -6,6 +6,7 @@ extends Node2D
 # flagship dog-park mayhem, emergent from the shared rope physics.
 
 const BypasserRouteScript := preload("res://systems/bypasser_route.gd")
+const Clay := preload("res://entities/clay.gd")
 const DogAppearanceScript := preload("res://entities/dog_appearance.gd")
 const HumanAppearanceScript := preload("res://entities/human_appearance.gd")
 const TANGLE_REARM_S := 0.5
@@ -311,6 +312,11 @@ func is_parked() -> bool:
 	return pair_state == PairState.PARKED
 
 
+# how far past the view a pair still redraws: past the box around owner and
+# dog, the owner's body and phone, both shadows, the rope's sag and a step
+const VIEW_MARGIN := 100.0
+
+
 func _physics_process(delta: float) -> void:
 	if main.phase == "freedom" and not park_area_configured:
 		queue_free()
@@ -319,6 +325,9 @@ func _physics_process(delta: float) -> void:
 		return
 	var owner_was: Vector2 = npc_owner.position
 	var dog_was: Vector2 = npc_dog.position
+	var seen := Clay.in_view(self, main,
+		Rect2(npc_owner.global_position, Vector2.ZERO).expand(npc_dog.global_position), VIEW_MARGIN)
+	leash.out_of_view = not seen
 	towed_now = false
 	tangled_t = maxf(0.0, tangled_t - delta)
 	if main.phase == "home" and (
@@ -345,7 +354,7 @@ func _physics_process(delta: float) -> void:
 		npc_dog.position = dog_was
 	_update_pose(owner_was, dog_was, delta)
 	# owner/dog move via transform every frame; redraw the pose at ~30fps
-	if Engine.get_physics_frames() % 2 == 0:
+	if Engine.get_physics_frames() % 2 == 0 and seen:
 		queue_redraw()
 
 
