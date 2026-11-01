@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-11-01 - La Neteja's sweeper gets a face, in the film and the walk
+
+- **The film** (`intro/film_sweeper.gd`) is scarier from a dog's height:
+  the pavement is barely a dog's length wide (`WALL_FOOT`), the machine
+  towers over them (`SW_K` 1.4 -> 1.8), and it has a face: the headlamp a
+  glaring eye under a scowling brow, the grille a grimace of steel teeth,
+  dark smoke out of its stack. Its roof carries the walk's twin amber
+  strobes, alternating, and its spray bar mists the road ahead, as in the
+  walk.
+- **The walk's sweeper** (`entities/sweeper.gd`) has the same face from
+  above: its headlamps glaring eyes looking down the road at you under
+  scowling brows, a grimace of teeth in the grille between them.
 ## 2026-11-01 - El Veterinari's chase film, and a line of clinic staff
 
 - **`intro/film_vet.gd`, "Booster day"**: the clinic corridor side on, tiled
