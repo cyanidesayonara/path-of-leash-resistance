@@ -2,6 +2,21 @@
 
 Append-only session history, newest first.
 
+## 2026-11-01 - El Besòs's flood, twice the wave, in the film and the walk
+
+- **The film's surge** stands twice as tall (`CREST` 170 -> 360), well over
+  your human's head: the curl, its foam, spray and barrel all scale with the
+  crest (`LIP` is the crest the curl's shape is drawn for), and water pours
+  off the lip. The card's wave sits clear of RUN!.
+- **The walk's flood** (`entities/flood.gd`) is drawn as the film's wave
+  seen from above: the front is a wall of water `WALL_H` tall facing you,
+  its face streaked as it falls, the dark barrel under a lumpy, rolling
+  crest of foam heaps, spray off the lip and foam boiling at its foot. The
+  shallow wash ahead runs and draws back under a scalloped foam edge,
+  rollers come on across the deep behind, and the river carries the film's
+  traffic cone, duck and sticks; the branch that trips has its leaves. The
+  loss line, the shallows and every rule are unchanged: only the drawing.
+
 ## 2026-10-31 - El Besòs's chase film, and the films' shared kit
 
 - **`intro/film_kit.gd`**: what every chase film shares, so each reads as
