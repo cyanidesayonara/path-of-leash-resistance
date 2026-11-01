@@ -39,6 +39,10 @@ var mode := "amble"            # amble | queue | pose | wait (stand facing `face
 var anchor := Vector2.ZERO     # where a queuer or poser stands
 var face := Vector2.ZERO       # what a poser photographs
 var shuffle_t := 0.0           # the queue edging forward
+# the outfit worked out for the key and weather it was last drawn with: the
+# same every frame, and rebuilding it each draw cost the crowd milliseconds
+var _dress_key := []
+var _dress := {}
 
 
 func setup(m: Node2D, r: RandomNumberGenerator, at: Vector2, d: float) -> void:
@@ -205,7 +209,20 @@ func _tick_standing(delta: float) -> void:
 const SKINS := [Color(0.92, 0.76, 0.62), Color(0.62, 0.44, 0.32), Color(0.82, 0.64, 0.50), Color(0.45, 0.30, 0.22)]
 
 
+# how far past the view a tourist still redraws: their shadow and a selfie
+# stick reach this far
+const VIEW_MARGIN := 60.0
+
+
 func _process(_delta: float) -> void:
+	# the crowd is kept well past both ends of the view; one out of sight
+	# keeps its last picture and redraws the frame it comes back into view
+	var cam: Camera2D = main.cam if main != null else null
+	if cam != null:
+		var half := get_viewport_rect().size * 0.5 / cam.zoom + Vector2(VIEW_MARGIN, VIEW_MARGIN)
+		var d := global_position - cam.get_screen_center_position()
+		if absf(d.x) > half.x or absf(d.y) > half.y:
+			return
 	queue_redraw()
 
 
@@ -220,8 +237,12 @@ func _draw() -> void:
 	var k := int(absf(lane_x) * 7.0) + int(col.r * 100.0)
 	var own_hat: String = ["none", "cap", "none", "sunhat"][k % 4]
 	var env: Array = HumanLook.env(self)
-	var dress: Dictionary = HumanLook.outfit(String(env[0]), String(env[1]), bool(env[2]), k, col, own_hat,
-		[Color(0.92, 0.84, 0.62), Color(0.86, 0.30, 0.28), Color(0.25, 0.45, 0.70)][k % 3], "none")
+	var dkey := [k, env]
+	if dkey != _dress_key:
+		_dress_key = dkey
+		_dress = HumanLook.outfit(String(env[0]), String(env[1]), bool(env[2]), k, col, own_hat,
+			[Color(0.92, 0.84, 0.62), Color(0.86, 0.30, 0.28), Color(0.25, 0.45, 0.70)][k % 3], "none")
+	var dress: Dictionary = _dress
 	var skin: Color = SKINS[k % SKINS.size()]
 	var c0 := Vector2(0, bob)
 	for sg: float in [-1.0, 1.0]:

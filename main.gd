@@ -3777,6 +3777,11 @@ func _draw_blanket_good(b: ShapeBatch, goods: String, p: Vector2, tilt: float, k
 					b.circle(p - ay * 2.4, 0.8, Color(0.1, 0.1, 0.1))
 
 
+# how far past the view a stall is still drawn: its awning, the browsers at
+# its side and their shadows reach this far from its centre
+const STALL_CULL := 120.0
+
+
 func _draw_rambla_stall(st: Vector2, kind: String, i: int) -> void:
 	var b := ShapeBatch.new()
 	var r := Rect2(st.x - 48.0, st.y - 28.0, 96.0, 56.0)
@@ -10761,13 +10766,16 @@ func _draw_world() -> void:
 	# market stalls: awnings, crates, produce
 	for i in range(stalls.size()):
 		var st := stalls[i]
-		if i < stall_kinds.size() and stall_kinds[i] == "pingpong":
+		var kind: String = stall_kinds[i] if i < stall_kinds.size() else ""
+		# culled first, whatever the kind: a Rambla stall with its browsers
+		# round it was drawn the whole length of the walk, every frame
+		if st.y < vt - STALL_CULL or st.y > vb + STALL_CULL:
+			continue
+		if kind == "pingpong":
 			_draw_pingpong(st)
 			continue
-		if i < stall_kinds.size() and stall_kinds[i] != "":
-			_draw_rambla_stall(st, stall_kinds[i], i)
-			continue
-		if st.y < vt - 90.0 or st.y > vb + 90.0:
+		if kind != "":
+			_draw_rambla_stall(st, kind, i)
 			continue
 		var sr := Rect2(st.x - 48, st.y - 28, 96, 56)
 		box_shadow(_wc, sr, 5.0, 12.0)

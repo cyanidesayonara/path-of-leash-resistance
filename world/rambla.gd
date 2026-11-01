@@ -76,24 +76,43 @@ static func draw_pavement_waves(m: Node2D, b: ShapeBatch, vt: float, vb: float) 
 	var wy := floorf(top_w / WAVE_ROW) * WAVE_ROW
 	while wy < bot_w + WAVE_ROW:
 		if wy >= top_w and wy <= bot_w and int(absf(wy) / WAVE_ROW) % 2 == 0:
-			var we: Vector2 = m.walk_edges(wy)
-			var wx0 := we.x + 12.0
-			var wx1 := we.y - 12.0
-			if wx1 > wx0 + 60.0:
-				var top := PackedVector2Array()
-				var x := wx0
-				while x < wx1:
-					top.append(Vector2(x, wy + sin(x * WAVE_K) * WAVE_AMP))
-					x += 16.0
-				top.append(Vector2(wx1, wy + sin(wx1 * WAVE_K) * WAVE_AMP))
-				var band := top.duplicate()
-				for i in range(top.size() - 1, -1, -1):
-					band.append(top[i] + Vector2(0.0, WAVE_ROW))
-				b.polygon(band, WAVE_CREAM)
-				for i in range(top.size() - 1):
-					b.line(top[i], top[i + 1], WAVE_SEAM, 2.0)
-					b.line(top[i] + Vector2(0.0, WAVE_ROW), top[i + 1] + Vector2(0.0, WAVE_ROW), WAVE_SEAM, 2.0)
+			_wave_row(m, wy).append_to(b)
 		wy += WAVE_ROW
+
+
+# One band of the wavy paving, built once: it never moves, and triangulating
+# every visible band each frame was the walk's dearest drawing. Keyed by the
+# walk and the row.
+static var _wave_cache := {}
+
+
+static func _wave_row(m: Node2D, wy: float) -> ShapeBatch:
+	var key := Vector2(float(m.get_instance_id() % 1000003), wy)
+	var row: ShapeBatch = _wave_cache.get(key)
+	if row != null:
+		return row
+	if _wave_cache.size() > 64:
+		_wave_cache.clear()
+	row = ShapeBatch.new()
+	var we: Vector2 = m.walk_edges(wy)
+	var wx0 := we.x + 12.0
+	var wx1 := we.y - 12.0
+	if wx1 > wx0 + 60.0:
+		var top := PackedVector2Array()
+		var x := wx0
+		while x < wx1:
+			top.append(Vector2(x, wy + sin(x * WAVE_K) * WAVE_AMP))
+			x += 16.0
+		top.append(Vector2(wx1, wy + sin(wx1 * WAVE_K) * WAVE_AMP))
+		var band := top.duplicate()
+		for i in range(top.size() - 1, -1, -1):
+			band.append(top[i] + Vector2(0.0, WAVE_ROW))
+		row.polygon(band, WAVE_CREAM)
+		for i in range(top.size() - 1):
+			row.line(top[i], top[i + 1], WAVE_SEAM, 2.0)
+			row.line(top[i] + Vector2(0.0, WAVE_ROW), top[i + 1] + Vector2(0.0, WAVE_ROW), WAVE_SEAM, 2.0)
+	_wave_cache[key] = row
+	return row
 
 
 static func draw_miro_mosaic(b: ShapeBatch, mc: Vector2, mr: float) -> void:
