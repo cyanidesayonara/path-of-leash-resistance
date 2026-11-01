@@ -174,6 +174,22 @@ const COATS := {
 # The playable dogs: each changes one trait at one cost. Unlocked by stars,
 # coats carry over. Millie is the balanced default; Pipa the Spanish galgo
 # runs lightning fast but has a lightweight, fragile plant.
+# your human's palettes (human_look): skin tones light to deep, hair colours,
+# and clothes that read against every walk's ground
+const HUMAN_SKINS := [Color(0.98, 0.84, 0.72), Color(0.95, 0.77, 0.62), Color(0.86, 0.66, 0.50),
+	Color(0.72, 0.52, 0.36), Color(0.55, 0.38, 0.26), Color(0.40, 0.27, 0.19)]
+const HUMAN_HAIRS := [Color(0.12, 0.10, 0.09), Color(0.28, 0.18, 0.11), Color(0.42, 0.25, 0.15),
+	Color(0.62, 0.30, 0.14), Color(0.86, 0.70, 0.40), Color(0.70, 0.70, 0.72)]
+const HIS_HAIR := ["short", "curly", "bald", "bun"]
+const HER_HAIR := ["ponytail", "curly", "bob", "long"]
+const HUMAN_SHIRTS := [Color(0.24, 0.45, 0.78), Color(0.80, 0.30, 0.26), Color(0.26, 0.56, 0.44),
+	Color(0.92, 0.70, 0.22), Color(0.52, 0.34, 0.66), Color(0.90, 0.88, 0.84), Color(0.20, 0.22, 0.26),
+	Color(0.94, 0.50, 0.32)]
+const HUMAN_TROUSERS := [Color(0.25, 0.27, 0.36), Color(0.30, 0.28, 0.34), Color(0.18, 0.26, 0.44),
+	Color(0.44, 0.38, 0.28), Color(0.15, 0.15, 0.17)]
+const HUMAN_SHOES := [Color(0.95, 0.93, 0.88), Color(0.16, 0.16, 0.18), Color(0.72, 0.30, 0.24),
+	Color(0.48, 0.34, 0.22)]
+
 const DOGS := {
 	"millie": {
 		"name": "Millie",
@@ -248,7 +264,17 @@ var save_path := SAVE_PATH
 # so its walk does not depend on (or change) whoever last played here
 var persist := true
 var level_id := "barri"
-var owner_id := "him"  # "him" | "her"; a proper character creator can come later
+# Your human's look, one for the walk (entities/human.gd, from above) and for
+# every film (intro/human_side.gd, side on): who, skin, hair colour and
+# style, shirt, trousers and shoes. NEW LOOK on GET READY rolls a fresh one;
+# it is saved with the records. owner_id ("him" | "her") reads and sets who.
+var human_look := default_human("him")
+var owner_id: String:
+	get:
+		return "her" if bool(human_look.get("her", false)) else "him"
+	set(v):
+		if v != owner_id:
+			toggle_owner()
 var night := false
 var weather := "clear"
 # [weather, night] as the player picked them, while a walk with its own sky
@@ -586,7 +612,64 @@ func cycle_dog(dir: int) -> void:
 
 
 func toggle_owner() -> void:
-	owner_id = "her" if owner_id == "him" else "him"
+	# the same person, the other way round: the colours stay, the hair style
+	# swaps for the matching one on the other side
+	var her := not bool(human_look.get("her", false))
+	var from: Array = HIS_HAIR if her else HER_HAIR
+	var to: Array = HER_HAIR if her else HIS_HAIR
+	var i := maxi(0, from.find(String(human_look.get("hair_style", ""))))
+	human_look["her"] = her
+	human_look["hair_style"] = to[i % to.size()]
+
+
+# The look a new player starts with: him as the films first drew him, her in
+# the walk's original colours.
+static func default_human(who: String) -> Dictionary:
+	if who == "her":
+		return {"her": true, "skin": HUMAN_SKINS[1], "hair": HUMAN_HAIRS[2], "hair_style": "ponytail",
+			"shirt": Color(0.72, 0.36, 0.44), "trousers": HUMAN_TROUSERS[1], "shoe": HUMAN_SHOES[0]}
+	return {"her": false, "skin": HUMAN_SKINS[1], "hair": HUMAN_HAIRS[2], "hair_style": "short",
+		"shirt": HUMAN_SHIRTS[0], "trousers": HUMAN_TROUSERS[0], "shoe": HUMAN_SHOES[0]}
+
+
+# NEW LOOK: a different-looking person each time (never the same twice in a
+# row), him or her
+func randomize_human(rng: RandomNumberGenerator = null) -> void:
+	if rng == null:
+		rng = RandomNumberGenerator.new()
+		rng.randomize()
+	var was := human_look.duplicate()
+	for _try in range(8):
+		var her := rng.randf() < 0.5
+		var styles: Array = HER_HAIR if her else HIS_HAIR
+		human_look = {
+			"her": her,
+			"skin": HUMAN_SKINS[rng.randi() % HUMAN_SKINS.size()],
+			"hair": HUMAN_HAIRS[rng.randi() % HUMAN_HAIRS.size()],
+			"hair_style": styles[rng.randi() % styles.size()],
+			"shirt": HUMAN_SHIRTS[rng.randi() % HUMAN_SHIRTS.size()],
+			"trousers": HUMAN_TROUSERS[rng.randi() % HUMAN_TROUSERS.size()],
+			"shoe": HUMAN_SHOES[rng.randi() % HUMAN_SHOES.size()],
+		}
+		if human_look != was:
+			break
+
+
+# a saved look, checked key by key: anything missing or malformed falls back
+# to the default for that person
+static func valid_human(v: Variant) -> Dictionary:
+	if not (v is Dictionary):
+		return default_human("him")
+	var d: Dictionary = v
+	var her := bool(d.get("her", false))
+	var out := default_human("her" if her else "him")
+	for k in ["skin", "hair", "shirt", "trousers", "shoe"]:
+		if d.get(k) is Color:
+			out[k] = d[k]
+	var styles: Array = HER_HAIR if her else HIS_HAIR
+	if String(d.get("hair_style", "")) in styles:
+		out["hair_style"] = String(d["hair_style"])
+	return out
 
 
 func cycle_weather(dir: int) -> void:
@@ -771,6 +854,16 @@ func _ready() -> void:
 		# --lang=ca|es|en: the glosses in that language for this run, unsaved
 		if arg.begins_with("--lang=") and arg.substr(7) in LANGUAGES:
 			language = arg.substr(7)
+		# --look=him|her|N: your human as the default him or her, or the NEW
+		# LOOK the number seeds, for this run, unsaved (screenshots)
+		if arg.begins_with("--look="):
+			var lk := arg.substr(7)
+			if lk == "him" or lk == "her":
+				human_look = default_human(lk)
+			elif lk.is_valid_int():
+				var rng := RandomNumberGenerator.new()
+				rng.seed = int(lk)
+				randomize_human(rng)
 		if arg.begins_with("--level="):
 			var lv := arg.trim_prefix("--level=")
 			# the tutorial too, so it can be shot and tested directly
@@ -884,6 +977,7 @@ func load_records() -> void:
 	if not DOGS.has(dog):
 		dog = DEFAULT_DOG
 	dog_upgrades = Dictionary(cf.get_value("player", "dog_upgrades", {}))
+	human_look = valid_human(cf.get_value("player", "human", default_human("him")))
 	vol_master = clampf(float(cf.get_value("settings", "vol_master", DEFAULT_VOL_MASTER)), 0.0, 1.0)
 	vol_sfx = clampf(float(cf.get_value("settings", "vol_sfx", DEFAULT_VOL_SFX)), 0.0, 1.0)
 	vol_music = clampf(float(cf.get_value("settings", "vol_music", DEFAULT_VOL_MUSIC)), 0.0, 1.0)
@@ -955,6 +1049,7 @@ func save_records() -> void:
 	cf.set_value("cosmetics", "coat", coat)
 	cf.set_value("player", "dog", dog)
 	cf.set_value("player", "dog_upgrades", dog_upgrades)
+	cf.set_value("player", "human", human_look)
 	cf.set_value("settings", "vol_master", vol_master)
 	cf.set_value("settings", "vol_sfx", vol_sfx)
 	cf.set_value("settings", "vol_music", vol_music)

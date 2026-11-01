@@ -93,8 +93,11 @@ static func prompts(m: Node2D, which := "") -> Array:
 			return [["left_right", "browse"], ["plant", "choose", open], ["pee", "wardrobe"],
 				["back", "main menu"]]
 		"details":
-			return [["up_down", "pick"], ["left_right", "change"], ["plant", "let's go"],
-				["back", "back"]]
+			var out := [["up_down", "pick"], ["left_right", "change"]]
+			if DETAIL_ROWS[clampi(int(m.details_idx), 0, DETAIL_ROWS.size() - 1)] == "walker":
+				out.append(["pee", "new look"])
+			out.append_array([["plant", "let's go"], ["back", "back"]])
+			return out
 		"shop":
 			var it: Dictionary = m.shop_items[m.shop_idx]
 			var st := shop_state(String(it.kind), String(it.key))
@@ -288,6 +291,7 @@ static func details_change(m: Node2D, dir: int) -> void:
 			m.dog.queue_redraw()
 		"walker":
 			Game.toggle_owner()
+			Game.save_records()
 			m.human.queue_redraw()
 		"time":
 			Game.toggle_night()
@@ -297,6 +301,14 @@ static func details_change(m: Node2D, dir: int) -> void:
 			m.apply_sky()
 			# snow writes the name in paw prints
 			m.build_signs()
+	Sfx.play("ui")
+
+
+# NEW LOOK: a different-looking human, him or her, in the walk and the films
+static func new_look(m: Node2D) -> void:
+	Game.randomize_human()
+	Game.save_records()
+	m.human.queue_redraw()
 	Sfx.play("ui")
 
 
@@ -384,6 +396,8 @@ static func tick_title(m: Node2D) -> bool:
 				details_change(m, 1)
 			elif Input.is_action_just_pressed("move_left"):
 				details_change(m, -1)
+			elif Input.is_action_just_pressed("pee") and DETAIL_ROWS[m.details_idx] == "walker":
+				new_look(m)
 			elif back_pressed():
 				if not Game.is_dog_unlocked(Game.dog):
 					Game.dog = Game.DEFAULT_DOG
