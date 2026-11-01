@@ -167,6 +167,95 @@ func polygon(points: PackedVector2Array, color: Color) -> void:
 	_add_colors(color, tri.size())
 
 
+# A soft band across a strip: rows of points (left to right, the same count in
+# each row) with a colour per row, blended between rows by the GPU. Rows
+# fading to an alpha of zero at the strip's edges give a light or a sheen with
+# no hard edge and no steps. `row_alpha` scales each row's colour; each row is
+# `pts[r * n .. r * n + n)`. A column's alpha may also fade: `col_alpha`
+# multiplies each column (empty means all ones).
+func band(pts: PackedVector2Array, n: int, color: Color, row_alpha: PackedFloat32Array, col_alpha := PackedFloat32Array()) -> void:
+	var rows := pts.size() / n
+	for r in range(rows - 1):
+		for i in range(n - 1):
+			var a := r * n + i
+			var q := [a, a + 1, a + n + 1, a, a + n + 1, a + n]
+			for v: int in q:
+				_points.append(pts[v])
+				var ca := 1.0 if col_alpha.is_empty() else col_alpha[v % n]
+				_colors.append(Color(color.r, color.g, color.b, color.a * row_alpha[v / n] * ca))
+
+
+# A soft round light: `color` at the centre fading smoothly to nothing at
+# `radius`. Stacked flat discs show their edges as rings; this is a few ring
+# strips whose vertex colours the GPU blends, so the falloff has no steps, and
+# it joins the batch's one draw call like any other shape. The falloff is
+# 1 - smoothstep: flat at the centre, easing out to nothing at the rim. `core`
+# (0..1) holds full strength out to that fraction of the radius first.
+# Two meshes: a pool of light wants its full circle, a lamp's small halo
+# a few pixels across does not, and a dozen of them are drawn every frame.
+const GLOW_SMALL_R := 48.0
+const GLOW_MESHES := [[32, 6], [16, 4]]   # [segments, rings]
+# each mesh's unit glow as a triangle list (a centre fan, then a quad strip
+# per ring), and the ring each vertex lies on, built once
+static var _glow_unit: Array[PackedVector2Array] = []
+static var _glow_ring: Array[PackedInt32Array] = []
+# the vertex colours of a glow, by mesh, colour and core: lamps share one,
+# and a pulsing glow comes back to the same few
+static var _glow_cols := {}
+const GLOW_CACHE := 96
+
+
+static func _build_glow() -> void:
+	for mesh: Array in GLOW_MESHES:
+		var segs: int = mesh[0]
+		var rings: int = mesh[1]
+		var unit := PackedVector2Array()
+		var ring := PackedInt32Array()
+		var rim := PackedVector2Array()
+		for i in range(segs + 1):
+			rim.append(Vector2.from_angle(TAU * float(i) / float(segs)))
+		for k in range(1, rings + 1):
+			var r0 := float(k - 1) / float(rings)
+			var r1 := float(k) / float(rings)
+			for i in range(segs):
+				if k == 1:
+					unit.append_array([Vector2.ZERO, rim[i] * r1, rim[i + 1] * r1])
+					ring.append_array([0, 1, 1])
+				else:
+					unit.append_array([rim[i] * r0, rim[i] * r1, rim[i + 1] * r1,
+						rim[i] * r0, rim[i + 1] * r1, rim[i + 1] * r0])
+					ring.append_array([k - 1, k, k, k - 1, k, k - 1])
+		_glow_unit.append(unit)
+		_glow_ring.append(ring)
+
+
+func glow(pos: Vector2, radius: float, color: Color, core := 0.0) -> void:
+	if _glow_unit.is_empty():
+		_build_glow()
+	var mi := 1 if radius < GLOW_SMALL_R else 0
+	var rings: int = GLOW_MESHES[mi][1]
+	# alpha to 1/256: what 8-bit output shows, and it keeps the cache small
+	var c := Color(color.r, color.g, color.b, roundf(color.a * 256.0) / 256.0)
+	var cr := snappedf(core, 0.05)
+	var key := [mi, c, cr]
+	var cols: PackedColorArray = _glow_cols.get(key, PackedColorArray())
+	if cols.is_empty():
+		var ring_col: Array[Color] = []
+		for k in range(rings + 1):
+			var t := float(k) / float(rings)
+			var u := clampf((t - cr) / maxf(0.001, 1.0 - cr), 0.0, 1.0)
+			ring_col.append(Color(c.r, c.g, c.b, 0.0 if k == rings else c.a * (1.0 - smoothstep(0.0, 1.0, u))))
+		var ring: PackedInt32Array = _glow_ring[mi]
+		cols.resize(ring.size())
+		for i in range(ring.size()):
+			cols[i] = ring_col[ring[i]]
+		if _glow_cols.size() >= GLOW_CACHE:
+			_glow_cols.clear()
+		_glow_cols[key] = cols
+	_points.append_array(Transform2D(Vector2(radius, 0.0), Vector2(0.0, radius), pos) * _glow_unit[mi])
+	_colors.append_array(cols)
+
+
 # Draws what is queued onto ci (the batch's own canvas by default). ci may be
 # another ShapeBatch standing in for a canvas: the shapes then join its queue,
 # still in order, and go out in its draw call.

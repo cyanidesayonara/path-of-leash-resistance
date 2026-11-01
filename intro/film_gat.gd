@@ -107,9 +107,8 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 # shopfronts, the palms down the middle, the onlookers at the terraces who
 # jump at the thump, the panot paving
 static func _rambla(c: CanvasItem, t: float) -> void:
-	for i in range(8):
-		var f := float(i) / 7.0
-		c.draw_rect(Rect2(-1600, -900.0 + f * 1000.0, 4600, 130.0), Color(0.06, 0.06, 0.16).lerp(Color(0.20, 0.14, 0.24), f))
+	# one smooth gradient: flat bands showed their steps
+	IntroKit.vgrad(c, Rect2(-1600, -900.0, 4600, 1000.0 + 130.0), Color(0.06, 0.06, 0.16), Color(0.20, 0.14, 0.24))
 	var x := -1500.0
 	var k := 0
 	while x < 2800.0:
@@ -230,9 +229,8 @@ static func cat(c: CanvasItem, at: Vector2, k: float, t: float, awake: float, wa
 # the card: the rambla gone white-hot behind EL GAT!, his face filling the
 # frame from the left, eye blazing, a paw up
 static func _title(c: CanvasItem, t: float) -> void:
-	for i in range(8):
-		var f := float(i) / 7.0
-		c.draw_rect(Rect2(-200, f * 720.0, 1680, 104.0), Color(1.0, 0.88, 0.58).lerp(Color(0.62, 0.40, 0.26), f))
+	# one smooth gradient: flat bands showed their steps
+	IntroKit.vgrad(c, Rect2(-200, 0.0, 1680, 720.0 + 104.0), Color(1.0, 0.88, 0.58), Color(0.62, 0.40, 0.26))
 	var d := t - TITLE_AT
 	cat(c, Vector2(-330.0 + d * 90.0, 1180.0), 2.7, t, 1.0, false, 0.0, 1.0)
 	FilmKit.slam(c, t, "EL GAT!", Vector2(800, 210))

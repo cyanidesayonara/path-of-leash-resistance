@@ -12,7 +12,9 @@ extends Node2D
 const SkyLook := preload("res://systems/sky.gd")
 const REDRAW_STEP := 160.0
 const MARGIN := 420.0
-const RINGS := 9
+# a pool's strength under the lamp, falling smoothly to nothing at its radius
+const POOL_A := 0.36
+const POOL_CORE := 0.06
 const REFLECT_BITS := 7
 const WARM := Color(1.0, 0.84, 0.56)
 const BULB := Color(1.0, 0.96, 0.84)
@@ -49,10 +51,8 @@ func _draw() -> void:
 			continue
 		var at := Vector2(l.x, l.y)
 		var r := l.z
-		# many thin rings: a smooth falloff instead of visible banding
-		for ring in range(RINGS):
-			var f := float(ring) / float(RINGS - 1)
-			b.circle(at, lerpf(r, r * 0.14, f), SkyLook.light(Color(WARM.r, WARM.g, WARM.b, 0.014 + f * f * 0.095), tint))
+		# one smooth falloff: stacked discs showed their edges as rings
+		b.glow(at, r, SkyLook.light(Color(WARM.r, WARM.g, WARM.b, POOL_A), tint), POOL_CORE)
 		if wet:
 			# the lamp in the wet paving: a long soft streak toward the viewer
 			# that breaks up and fades as it comes away from the lamp
@@ -66,5 +66,5 @@ func _draw() -> void:
 			# a wall lamp: the bracket and the lit glass
 			b.circle(at, 5.0, Color(0.16, 0.15, 0.17))
 			b.circle(at, 3.4, SkyLook.light(BULB, tint))
-			b.circle(at, 8.0, SkyLook.light(Color(BULB.r, BULB.g, BULB.b, 0.30), tint))
+			b.glow(at, 14.0, SkyLook.light(Color(BULB.r, BULB.g, BULB.b, 0.45), tint), 0.3)
 	b.flush()

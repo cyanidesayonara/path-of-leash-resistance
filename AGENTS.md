@@ -302,6 +302,11 @@ Never read `Time.get_ticks_msec()` in a `_draw`; use `AnimClock.msec()`.
 Draw calls are what the web build pays for, and every circle and polygon is
 one in the Compatibility renderer. Draw runs of filled shapes through
 `ShapeBatch` (`systems/shape_batch.gd`): the same pixels in one call.
+A light, a sheen or a sky is a gradient, never a stack of flat discs or
+bands (their edges read as rings and steps): `ShapeBatch.glow` for a round
+pool, `ShapeBatch.band` for a strip that feathers out, `IntroKit.vgrad` for a
+film's sky or backdrop. The world's grade shader dithers its output, so a
+slow gradient does not step either (`tests/test_soft_light.gd`).
 
 Surface map (what the ground under each walk handles as, dotted over its
 screenshots: grey pavement, green grass, yellow sand, brown mud, blue water,

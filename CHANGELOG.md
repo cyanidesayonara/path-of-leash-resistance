@@ -2,6 +2,32 @@
 
 Append-only session history, newest first.
 
+## 2026-11-01 - Smooth light: no more rings and steps in lights and skies
+
+- `ShapeBatch.glow`: a round light as ring strips whose vertex colours the
+  GPU blends, full at the centre and easing out to nothing at the rim, in
+  the same one draw call. Two meshes (a small halo takes the coarse one),
+  geometry built once and colours cached, so a dozen lantern halos a frame
+  cost less than the stacked discs did.
+- `ShapeBatch.band`: a strip whose rows and columns feather to nothing.
+- Every lamp's pool at night, the wall lamps' and lampposts' halos, the
+  phone's blue pool in front of your human, the daytime warm spot under a
+  lamppost, La Castanyada's roaster glow and festival lamps, and La
+  Neteja's lantern halos are glows now: the visible rings are gone.
+- La Neteja's dawn: the sun bands across the street fade at both edges
+  instead of three stacked strips, and the water truck's wet streaks are
+  feathered sheens instead of stacked rectangles; built once per stretch,
+  so the walk's world draw is a little cheaper than before (3.75 ms median
+  against 4.03 on the perf sweep).
+- `IntroKit.vgrad`: every film's sky and title-card backdrop, the rooftop
+  intro's sky and El Besòs's park sky are one smooth gradient instead of
+  7 to 13 flat bands. GET READY's portrait backdrop too.
+- The grade shader dithers its output by half an 8-bit step, so a slow
+  gradient (a pool, the vignette) does not show steps of one level.
+- `tests/test_soft_light.gd` (in CI): a glow is full at its centre, clear at
+  its rim, never brighter further out and without a band-sized step; a
+  small glow takes the coarse mesh; colours are cached; a band feathers.
+
 ## 2026-11-01 - Release notes for 1.68
 
 - `store/listing.md`: What's new in this version describes 1.68 (the story

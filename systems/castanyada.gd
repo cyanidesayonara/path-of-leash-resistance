@@ -38,9 +38,7 @@ static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 		var rc: Vector2 = LevelBuild.CAST_ROASTER_AT
 		var rr := Rect2(rc - LevelBuild.CAST_ROASTER * 0.5, LevelBuild.CAST_ROASTER)
 		# its light on the setts; the festival is always at night
-		for ring in range(8):
-			var f := float(ring) / 7.0
-			b.circle(rc, lerpf(240.0, 50.0, f), Color(1.0, 0.62, 0.26, 0.03 + f * f * 0.12))
+		b.glow(rc, 240.0, Color(1.0, 0.62, 0.26, 0.42), 0.2)
 		b.rect(Rect2(rr.position + m.LIGHT * 12.0, rr.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
 		# the wheels, either end, and the shafts out the front
 		for wx: float in [rr.position.x - 4.0, rr.end.x - 8.0]:
@@ -170,12 +168,10 @@ static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 	b.flush(m._wc)
 
 
-# a pool of warm light on the overhead layer, fading out from the middle in
-# thin rings; its colour divided by the night's tint, so it comes out warm
+# a pool of warm light on the overhead layer, fading smoothly out from the
+# middle; its colour divided by the night's tint, so it comes out warm
 static func _glow(b: ShapeBatch, at: Vector2, r: float, peak: float) -> void:
-	for ring in range(7):
-		var f := float(ring) / 6.0
-		b.circle(at, lerpf(r, r * 0.2, f), Color(2.0, 1.36, 0.52, 0.008 + f * f * peak))
+	b.glow(at, r, Color(2.0, 1.36, 0.52, minf(1.0, 0.05 + peak * 2.2)), 0.1)
 
 
 # La Castanyada's lantern strings, drawn over everyone: a wire from balcony to

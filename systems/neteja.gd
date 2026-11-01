@@ -11,19 +11,29 @@ const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const Gotic := preload("res://world/gotic.gd")
 
+# a sun band's cross-section: four rows down its width (as fractions of
+# SUN_W), clear at both edges and brightest a little above the middle
+const SUN_W := 90.0
+const SUN_ROWS := [0.0, 0.38, 0.6, 1.0]
+static var SUN_ALPHA := PackedFloat32Array([0.0, 1.0, 0.8, 0.0])
+# a wet streak's columns: clear, the middle, clear
+static var WET_COLS := PackedFloat32Array([0.0, 1.0, 0.0])
+
+
 static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
 	# the low sun down the cross streets: long warm bands lying across the
-	# setts, softer at their edges
+	# setts, brightest along the middle and fading to nothing at both edges
 	var sy := floorf((vt - 400.0) / 520.0) * 520.0
+	var sun := PackedVector2Array()
+	sun.resize(8)
 	while sy < vb + 400.0:
 		var e: Vector2 = m.walk_edges(sy)
-		for i in range(3):
-			var f := float(i) / 2.0
-			var hgt := 90.0 - f * 50.0
-			var q := PackedVector2Array([Vector2(e.x, sy + f * 25.0), Vector2(e.y, sy - 120.0 + f * 25.0),
-				Vector2(e.y, sy - 120.0 + f * 25.0 + hgt), Vector2(e.x, sy + f * 25.0 + hgt)])
-			b.polygon(q, Color(1.0, 0.76, 0.52, 0.10))
+		for r in range(4):
+			var off: float = SUN_ROWS[r] * SUN_W
+			sun[r * 2] = Vector2(e.x, sy + off)
+			sun[r * 2 + 1] = Vector2(e.y, sy - 120.0 + off)
+		b.band(sun, 2, Color(1.0, 0.76, 0.52, 0.24), SUN_ALPHA)
 		sy += 520.0
 
 	# wall lantern warm halos spilling onto the sidewalks
@@ -33,8 +43,7 @@ static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 		for side in [-1.0, 1.0]:
 			var lx: float = le.x + 8.0 if side < 0.0 else le.y - 8.0
 			var lpos := Vector2(lx, ly)
-			b.circle(lpos, 36.0, Color(1.0, 0.78, 0.44, 0.04))
-			b.circle(lpos, 18.0, Color(1.0, 0.82, 0.50, 0.07))
+			b.glow(lpos, 40.0, Color(1.0, 0.80, 0.48, 0.12))
 		ly += 160.0
 
 	# a shop with its shutter half up spills warm light across the setts
@@ -86,17 +95,7 @@ static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 	# feathers out at its edges and wanders a little, the dawn on one edge
 	var y := floorf((vt - 40.0) / 220.0) * 220.0
 	while y < vb + 40.0:
-		for lane: float in [0.3, 0.68]:
-			var yy := y
-			while yy < y + 200.0:
-				var e: Vector2 = m.walk_edges(yy)
-				var x := lerpf(e.x, e.y, lane) + sin(yy * 0.01) * 12.0 + sin(yy * 0.047 + lane * 9.0) * 4.0
-				var tf := clampf(minf(yy - y, y + 200.0 - yy) / 40.0, 0.0, 1.0)
-				for wi in range(3):
-					var w := 44.0 - float(wi) * 12.0
-					b.rect(Rect2(x - w * 0.5, yy, w, 20.0), Color(0.16, 0.18, 0.22, 0.06 * tf))
-				b.rect(Rect2(x - 20.0, yy, 3.0, 20.0), Color(1.0, 0.82, 0.70, 0.08 * tf))
-				yy += 20.0
+		_wet_block(m, y).append_to(b)
 		y += 220.0
 
 	# the dumpsters: Cuidem Barcelona selective recycling stations (envasos, paper, orgànica, resta, vidre),
@@ -315,3 +314,40 @@ static func draw_module(m: Node2D, c: Object, r: Rect2, side: float, k: int, inn
 # the street, up to the gate
 static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
 	_draw_street(m, maxf(vt, m.GATE_Y - 30.0), vb)
+
+
+# The wet streaks in one 220-unit stretch of street, built once: they never
+# move, and building their feathered sheens every frame cost the walk about
+# 2 ms of each world redraw. Keyed by the walk and the stretch.
+static var _wet_cache := {}
+
+
+static func _wet_block(m: Node2D, y: float) -> ShapeBatch:
+	var key := Vector2(float(m.get_instance_id() % 1000003), y)
+	var blk: ShapeBatch = _wet_cache.get(key)
+	if blk != null:
+		return blk
+	if _wet_cache.size() > 48:
+		_wet_cache.clear()
+	blk = ShapeBatch.new()
+	for lane: float in [0.3, 0.68]:
+		var yy := y
+		while yy < y + 200.0:
+			var e: Vector2 = m.walk_edges(yy)
+			var x := lerpf(e.x, e.y, lane) + sin(yy * 0.01) * 12.0 + sin(yy * 0.047 + lane * 9.0) * 4.0
+			var tf := clampf(minf(yy - y, y + 200.0 - yy) / 40.0, 0.0, 1.0)
+			var y2 := yy + 20.0
+			var e2: Vector2 = m.walk_edges(y2)
+			var x2 := lerpf(e2.x, e2.y, lane) + sin(y2 * 0.01) * 12.0 + sin(y2 * 0.047 + lane * 9.0) * 4.0
+			var tf2 := clampf(minf(y2 - y, y + 200.0 - y2) / 40.0, 0.0, 1.0)
+			# the sheen: dark along the middle, feathered to nothing at its
+			# sides, and the dawn caught along its left edge
+			var wet := PackedVector2Array([Vector2(x - 22.0, yy), Vector2(x, yy), Vector2(x + 22.0, yy),
+				Vector2(x2 - 22.0, y2), Vector2(x2, y2), Vector2(x2 + 22.0, y2)])
+			blk.band(wet, 3, Color(0.16, 0.18, 0.22, 0.16), PackedFloat32Array([tf, tf2]), WET_COLS)
+			var gleam := PackedVector2Array([Vector2(x - 22.0, yy), Vector2(x - 19.0, yy), Vector2(x - 16.0, yy),
+				Vector2(x2 - 22.0, y2), Vector2(x2 - 19.0, y2), Vector2(x2 - 16.0, y2)])
+			blk.band(gleam, 3, Color(1.0, 0.82, 0.70, 0.10), PackedFloat32Array([tf, tf2]), WET_COLS)
+			yy += 20.0
+	_wet_cache[key] = blk
+	return blk

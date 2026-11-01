@@ -361,9 +361,8 @@ static func _net(c: CanvasItem, hand: Vector2, t: float, k: float) -> void:
 # in from the left of the frame, its drop trembling on the needle, and the
 # clippers snipping in over it
 static func _title(c: CanvasItem, t: float) -> void:
-	for i in range(8):
-		var f := float(i) / 7.0
-		c.draw_rect(Rect2(-200, f * 720.0, 1680, 104.0), Color(0.92, 0.98, 0.96).lerp(Color(0.40, 0.72, 0.68), f))
+	# one smooth gradient: flat bands showed their steps
+	IntroKit.vgrad(c, Rect2(-200, 0.0, 1680, 720.0 + 104.0), Color(0.92, 0.98, 0.96), Color(0.40, 0.72, 0.68))
 	var d := t - TITLE_AT
 	var bob := sin(t * 18.0) * 4.0
 	_clippers(c, Vector2(40.0 + d * 60.0, 330.0 - bob), 3.6, t)

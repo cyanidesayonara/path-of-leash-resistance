@@ -80,10 +80,9 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 # a heavy sky, Sant Adrià's three chimneys on the skyline, the embankment
 # wall at the back of the park, and the warning light on its pole
 static func _park(c: CanvasItem, t: float, rain: float) -> void:
-	for i in range(9):
-		var f := float(i) / 8.0
-		c.draw_rect(Rect2(-1800, -900.0 + f * 1340.0, 4800, 170.0),
-			Color(0.46, 0.52, 0.58).lerp(Color(0.70, 0.72, 0.72), f).darkened(0.18 * rain))
+	# one smooth gradient: flat bands showed their steps
+	IntroKit.vgrad(c, Rect2(-1800, -900.0, 4800, 1340.0 + 170.0),
+		Color(0.46, 0.52, 0.58).darkened(0.18 * rain), Color(0.70, 0.72, 0.72).darkened(0.18 * rain))
 	# the far shore: low blocks and the three chimneys
 	var far := Color(0.52, 0.56, 0.60).darkened(0.1 * rain)
 	var x := -1700.0
@@ -238,9 +237,8 @@ static func _rain(c: CanvasItem, t: float, rain: float) -> void:
 # the card: the wave breaking in from the left, its foam across the bottom,
 # the duck still riding it
 static func _title(c: CanvasItem, t: float) -> void:
-	for i in range(8):
-		var f := float(i) / 7.0
-		c.draw_rect(Rect2(-200, f * 720.0, 1680, 104.0), Color(0.56, 0.62, 0.66).lerp(Color(0.30, 0.38, 0.44), f))
+	# one smooth gradient: flat bands showed their steps
+	IntroKit.vgrad(c, Rect2(-200, 0.0, 1680, 720.0 + 104.0), Color(0.56, 0.62, 0.66), Color(0.30, 0.38, 0.44))
 	var d := t - TITLE_AT
 	c.draw_set_transform(Vector2(-300.0 + d * 120.0, -420.0 + sin(t * 9.0) * 4.0), 0.0, Vector2(1.6, 1.6))
 	_surge(c, 300.0, t, 700.0, 420.0)

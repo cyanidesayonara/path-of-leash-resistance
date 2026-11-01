@@ -226,6 +226,14 @@ static func puff(c: CanvasItem, at: Vector2, r: float, a := 1.0) -> void:
 
 
 # a rounded rectangle as a polygon
+# A vertical gradient filling r, `top` at its top edge to `bottom` at its
+# bottom: one quad whose corner colours the GPU blends, so a sky or a backdrop
+# has no steps.
+static func vgrad(c: CanvasItem, r: Rect2, top: Color, bottom: Color) -> void:
+	c.draw_polygon(PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]),
+		PackedColorArray([top, top, bottom, bottom]))
+
+
 static func rrect(r: Rect2, rad: float) -> PackedVector2Array:
 	var pts := PackedVector2Array()
 	var cs := [Vector2(r.end.x - rad, r.position.y + rad), Vector2(r.end.x - rad, r.end.y - rad),
