@@ -21,6 +21,11 @@ extends Node
 # --perf-hide=... hides those scripts' nodes, so the drop in draw calls (a
 # windowed run; headless draws nothing) shows what they cost to render.
 # --perf-no-grade switches off the full-screen grade pass (GPU fill).
+# --perf-scripts times where each frame goes: the physics steps, the process
+# pass and the draw pass by wall clock, and each script's _draw from the gaps
+# between the nodes' draw signals (Godot emits a node's draw signal just
+# before calling its _draw, and redraws run back to back). It changes no
+# gameplay; the signal hooks cost a little, so compare it only with itself.
 #
 # To compare CPU cost between builds, run headless with --fixed-fps 60 and
 # read frame_p50. For real frame times (rendering included) run windowed with
@@ -44,6 +49,25 @@ var _disable_proc: PackedStringArray = []
 var _hide: PackedStringArray = []
 # main.prof_us as of the previous frame, so each frame's own split is known
 var _prof_last := {}
+# --perf-scripts: phase totals and each script's _draw, in usec over the run
+var _scripts := false
+var _phase_us := {"physics": 0, "process": 0, "draw": 0}
+var _draw_us := {}
+var _draw_n := {}
+var _phys_t := 0
+var _proc_t := 0
+var _draw_t0 := 0
+var _mark_t := 0
+var _mark_key := ""
+
+
+# starts the clock on a phase: runs before every other node in it
+class PhaseMark extends Node:
+	var probe: Node
+	func _process(_d: float) -> void:
+		probe._proc_t = Time.get_ticks_usec()
+	func _physics_process(_d: float) -> void:
+		probe._phys_t = Time.get_ticks_usec()
 
 
 func setup(m: Node2D, seconds: float) -> void:
@@ -67,6 +91,9 @@ func setup(m: Node2D, seconds: float) -> void:
 			if main.grade_rect != null:
 				main.grade_rect.visible = false
 			print("PERF diagnostic: grade pass off")
+		elif arg == "--perf-scripts":
+			_scripts = true
+			print("PERF diagnostic: timing phases and each script's _draw")
 		elif arg.begins_with("--perf-hide="):
 			_hide = arg.substr(12).split(",")
 			print("PERF diagnostic: hidden %s" % ", ".join(_hide))
@@ -83,11 +110,65 @@ func _ready() -> void:
 	# throttles a background window, so draw-call work can be compared in any
 	# windowed run. Both read 0 headless.
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
+	if _scripts:
+		var mark := PhaseMark.new()
+		mark.probe = self
+		mark.process_mode = Node.PROCESS_MODE_ALWAYS
+		mark.process_priority = -1000
+		mark.process_physics_priority = -1000
+		add_child(mark)
+		process_physics_priority = 1000
+		set_physics_process(true)
+		get_tree().node_added.connect(_watch_draw)
+		_watch_tree(get_tree().root)
+		RenderingServer.frame_pre_draw.connect(_end_draw)
+	else:
+		set_physics_process(false)
+
+
+func _physics_process(_delta: float) -> void:
+	if _phys_t > 0:
+		_phase_us.physics += Time.get_ticks_usec() - _phys_t
+
+
+func _watch_tree(n: Node) -> void:
+	_watch_draw(n)
+	for c in n.get_children():
+		_watch_tree(c)
+
+
+func _watch_draw(n: Node) -> void:
+	var sc: Script = n.get_script()
+	if n is CanvasItem and sc != null and n.has_method("_draw"):
+		n.draw.connect(_on_draw.bind(sc.resource_path.get_file()))
+
+
+func _on_draw(key: String) -> void:
+	var now := Time.get_ticks_usec()
+	if _mark_key != "":
+		_draw_us[_mark_key] = int(_draw_us.get(_mark_key, 0)) + now - _mark_t
+	else:
+		_draw_t0 = now
+	_draw_n[key] = int(_draw_n.get(key, 0)) + 1
+	_mark_t = now
+	_mark_key = key
+
+
+# the last redraw ends where rendering starts
+func _end_draw() -> void:
+	if _mark_key == "":
+		return
+	var now := Time.get_ticks_usec()
+	_draw_us[_mark_key] = int(_draw_us.get(_mark_key, 0)) + now - _mark_t
+	_phase_us.draw += now - _draw_t0
+	_mark_key = ""
 
 
 func _process(_delta: float) -> void:
 	_frames += 1
 	var now := Time.get_ticks_usec()
+	if _scripts and _proc_t > 0:
+		_phase_us.process += now - _proc_t
 	if _frames == 2:
 		main._skip_title()
 		_t_start = now
@@ -192,6 +273,8 @@ func _report() -> void:
 	print("PERF physics-step total=%.2fms per frame (the engine's physics monitor also counts the entities' own physics)" % (total / frames / 1000.0))
 	for k: String in keys:
 		print("PERF physics-step %-20s %.3fms" % [k, float(main.prof_us[k]) / frames / 1000.0])
+	if _scripts:
+		_report_scripts(frames, total_s * 1000.0 / maxf(1.0, ft.size()))
 	var worst := _rows.duplicate()
 	worst.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a.frame_ms) > float(b.frame_ms))
 	for i in range(mini(TOP_SPIKES, worst.size())):
@@ -199,6 +282,19 @@ func _report() -> void:
 		print("PERF spike t=%.2f frame=%.2fms mon_proc=%.2f mon_phys=%.2f draw=%.2f nodes=%d calls=%d edge_redraw=%s slowmo=%s riders=%d walkers=%d physics_top=%s" % [
 			r.t, r.frame_ms, r.proc_ms, r.phys_ms, r.draw_ms, r.nodes, r.calls,
 			r.edge_redraw, r.slowmo, r.riders, r.walkers, r.phys_top])
+
+
+func _report_scripts(frames: float, frame_ms: float) -> void:
+	var ph := []
+	for k: String in ["physics", "process", "draw"]:
+		ph.append("%s=%.2f" % [k, float(_phase_us[k]) / frames / 1000.0])
+	print("PERF phases per frame (ms): frame=%.2f %s (the rest is rendering, audio and the engine)" % [frame_ms, " ".join(ph)])
+	var keys: Array = _draw_us.keys()
+	keys.sort_custom(func(a: String, b: String) -> bool: return int(_draw_us[a]) > int(_draw_us[b]))
+	for k: String in keys:
+		print("PERF draw %-22s %.3fms per frame  %.1f redraws per frame  %.3fms each" % [k,
+			float(_draw_us[k]) / frames / 1000.0, float(_draw_n[k]) / frames,
+			float(_draw_us[k]) / maxf(1.0, float(_draw_n[k])) / 1000.0])
 
 
 func _apply_disable(n: Node) -> void:
