@@ -358,7 +358,7 @@ headless, for the autowalk, or in a `--shot` run; `--no-films` stops them and
 (`intro/film_kit.gd`: walking, she hears it, looks back, stares, bolts, the
 card) and draws its own place and threat around `FilmKit.pair`. Render one
 like an intro scene (`sweeper` is La Neteja's, `flood` El Besòs's, `vet`
-El Veterinari's): `--script res://tools/intro_render.gd -- flood OUTDIR 24 640`.
+El Veterinari's, `boars` Els Senglars'): `--script res://tools/intro_render.gd -- flood OUTDIR 24 640`.
 Two more arguments pick the dog (`millie`, `pipa`, `mochi`, `bruna`, `tito`)
 and your human (`him`, `her`, or a number for a NEW LOOK), so a film can be
 checked with every pair: `-- vet OUTDIR 10 480 tito 7`.

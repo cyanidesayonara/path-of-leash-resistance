@@ -79,6 +79,7 @@ const SWEEPER_SCRIPT := "res://entities/sweeper.gd"
 const SWEEPER_FILM := "res://intro/film_sweeper.gd"
 const FLOOD_FILM := "res://intro/film_flood.gd"
 const VET_FILM := "res://intro/film_vet.gd"
+const BOARS_FILM := "res://intro/film_boars.gd"
 const GRACIA_FILM := "res://intro/film_gracia.gd"
 # La Neteja's dumpster jams, by depth (world/level_build.gd NETEJA_JAMS):
 # the first the way home meets, then the later one, the midpoint
@@ -217,6 +218,7 @@ static func profile_for(level: String) -> Dictionary:
 		b["id"] = "boars"
 		b["script"] = "res://entities/boar_threat.gd"
 		b["bands"] = BOAR_BANDS.duplicate(true)
+		b["film"] = BOARS_FILM
 		return b
 	if level == "gracia":
 		var g := kind_behavior("correfoc")
