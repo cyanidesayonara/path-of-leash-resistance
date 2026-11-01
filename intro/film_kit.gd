@@ -26,8 +26,11 @@ const INK := IntroKit.INK
 static func pair(c: CanvasItem, t_real: float, feet: float) -> Vector2:
 	var t := Anim.twos(t_real)
 	var go := Anim.span(t, BOLT_AT, BOLT_AT + 0.1)
-	# your human: an oblivious stroll, phone up, then yanked off after her
-	var hx: float = Anim.k(t, [[0.0, 380.0], [BOLT_AT, 560.0], [TITLE_AT, 1700.0, "in"]])
+	# your human: an oblivious stroll, phone up, then yanked off after her. She
+	# goes first and he stays planted until the leash snaps taut, then he is
+	# hauled after her a full leash length behind, the leash long and low
+	# between them: being dragged, not walking at her heel
+	var hx: float = Anim.k(t, [[0.0, 380.0], [BOLT_AT, 560.0], [BOLT_AT + 0.14, 572.0], [TITLE_AT, 1480.0, "in"]])
 	var hpose := {
 		"stride": t_real * 8.0, "stride_amp": 0.6 * (1.0 - go) + go,
 		"phone": 1.0, "glow": 0.5, "reach": 0.4 + 0.6 * go,
@@ -37,7 +40,8 @@ static func pair(c: CanvasItem, t_real: float, feet: float) -> Vector2:
 		0.0, feet)
 	# her: trotting ahead, stopped by the sound, looking back at it, the
 	# stare, and the spin and dig into the bolt
-	var mx: float = Anim.k(t, [[0.0, 600.0], [1.35, 720.0, "out"], [BOLT_AT, 720.0], [TITLE_AT, 1950.0, "in"]])
+	var mx: float = Anim.k(t, [[0.0, 600.0], [1.35, 720.0, "out"], [BOLT_AT, 720.0], [BOLT_AT + 0.14, 900.0, "out"],
+		[TITLE_AT, 2000.0, "in"]])
 	var trot := 1.0 - Anim.span(t, 1.2, 1.4)
 	var look := Anim.span(t, LOOK_AT, LOOK_AT + 0.15) * (1.0 - Anim.span(t, CROUCH_AT - 0.1, CROUCH_AT))
 	var crouch := Anim.span(t, CROUCH_AT, CROUCH_AT + 0.35) * (1.0 - go)
