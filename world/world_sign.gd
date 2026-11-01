@@ -36,17 +36,11 @@ const MATERIALS := {
 	"montjuic": "cactus", "port": "rope", "reial": "fronds", "vet": "biscuits",
 	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "boars": "pipes", "gracia": "tickets", "raval": "pegs", "tutorial": "balls",
 }
-# What lies under a walk's pieces so they read on its ground by brightness, not
-# colour alone: a soft bed of light under dark-on-dark, of shade under
-# light-on-light. Walks not listed need none.
-const BEDS := {
-	"spook": Color(0.98, 0.88, 0.66, 0.44), "partit": Color(0.96, 0.94, 0.88, 0.18),
-	"neteja": Color(0.10, 0.12, 0.16, 0.34), "rain": Color(0.06, 0.08, 0.12, 0.24),
-	"trail": Color(0.12, 0.08, 0.04, 0.18), "tibidabo": Color(0.04, 0.04, 0.08, 0.30),
-}
+# No glow or bed under the pieces: a name reads on its ground by each piece's
+# own dark edge and contact shadow, the way a real thing lying there would.
 # A name that will not fit on one line at least this tall is broken in two at
 # the space nearest its middle, rather than shrunk.
-const NAME_MIN_H := 50.0
+const NAME_MIN_H := 42.0
 const LINE_PITCH := 1.5
 const SPLIT_MIN := 4             # letters either side of a break
 # The pieces fall into place when a sign is laid out: left to right over
@@ -71,15 +65,15 @@ const FEEL := {
 	"chestnuts": {"spacing": 0.14, "r": 0.08, "drag": 1.3, "take": 1.1, "roll": true},
 	"plate": {"spacing": 0.5, "r": 0.09, "drag": 9.0, "take": 0.35, "spin": 1.0, "segment": true},
 	"suds": {"spacing": 0.055, "r": 0.05, "drag": 3.0, "take": 1.4, "pop": true},
-	"pegs": {"spacing": 0.13, "r": 0.065, "drag": 5.0, "take": 1.1, "spin": 5.0},
-	"tickets": {"spacing": 0.13, "r": 0.07, "drag": 4.0, "take": 1.3, "spin": 6.0},
+	"pegs": {"spacing": 0.15, "r": 0.06, "drag": 5.0, "take": 1.1, "spin": 5.0, "align": true},
+	"tickets": {"spacing": 0.15, "r": 0.065, "drag": 4.0, "take": 1.3, "spin": 6.0, "align": true},
 	"pebbles": {"spacing": 0.11, "r": 0.07, "drag": 1.8, "take": 1.0, "roll": true},
 	"cactus": {"spacing": 0.16, "r": 0.085, "drag": 7.0, "take": 0.6, "spring": 12.0},
 	"scarf": {"spacing": 0.24, "r": 0.06, "drag": 7.0, "take": 0.6, "spin": 1.2, "segment": true},
 	"rope": {"spacing": 0.2, "r": 0.05, "drag": 7.0, "take": 0.6, "spin": 1.5, "segment": true},
 	"fronds": {"spacing": 0.3, "r": 0.06, "drag": 6.0, "take": 0.8, "spin": 2.5, "segment": true},
-	"biscuits": {"spacing": 0.16, "r": 0.075, "drag": 4.0, "take": 1.1, "spin": 4.0},
-	"pinecones": {"spacing": 0.15, "r": 0.08, "drag": 2.2, "take": 1.0, "roll": true},
+	"biscuits": {"spacing": 0.15, "r": 0.075, "drag": 4.0, "take": 1.1, "spin": 4.0, "align": true},
+	"pinecones": {"spacing": 0.15, "r": 0.08, "drag": 2.2, "take": 1.0, "roll": true, "align": true},
 	"shells": {"spacing": 0.14, "r": 0.075, "drag": 3.5, "take": 1.0, "spin": 3.0},
 	"balls": {"spacing": 0.15, "r": 0.075, "drag": 0.9, "take": 1.2, "roll": true},
 	"bulbs": {"fixed": true},
@@ -99,6 +93,8 @@ const ROPE_TAKE := 0.3
 # how much of the push is turned sideways, away from the way it is going
 const KICK_ASIDE := 1.4
 const REST := 3.0            # below this speed a piece is lying still
+# how far off the stroke a piece laid along it may turn (radians, full spread)
+const ALIGN_JITTER := 0.7
 
 
 # the space between letters for a material: fat pieces want air between
@@ -117,7 +113,7 @@ static func material_for(lvl: String, weather: String) -> String:
 # one line would have to shrink below NAME_MIN_H. The first line keeps the
 # top a one-line name of height `h` on baseline `at` would have, and a second
 # hangs below it; `w` is the widest line.
-static func build_name(txt: String, at: Vector2, h: float, mat: String, key: float, max_w: float, bed := Color(0, 0, 0, 0)) -> Dictionary:
+static func build_name(txt: String, at: Vector2, h: float, mat: String, key: float, max_w: float) -> Dictionary:
 	var gap := gap_for(mat)
 	var up := txt.to_upper()
 	var w1 := Letters.width(up, h, gap)
@@ -152,7 +148,6 @@ static func build_name(txt: String, at: Vector2, h: float, mat: String, key: flo
 		sign = _from_lines(txt, mat, lines, h2, key, top - h2 * 0.3, top + h2 + pitch + h2 * 0.5)
 		sign.w = Letters.width(a if wa > wb else b, h2, gap)
 		sign.baseline = top + h2 + pitch
-	sign.bed = bed
 	return sign
 
 
@@ -192,6 +187,18 @@ static func _from_lines(txt: String, mat: String, lines: Array, h: float, key: f
 				var d := b - a
 				pieces.append(_piece(n, key, (a + b) * 0.5, float(feel.r) * h,
 					{"len": d.length() * 1.2, "rot": d.angle(), "first": i == 1, "last": i == pts.size() - 1}))
+				n += 1
+		return sign
+	if bool(feel.get("align", false)):
+		# long things laid along the stroke, each a little off true: turned
+		# every which way, a word of them reads as a heap
+		for pl: PackedVector2Array in lines:
+			var pts := Letters.points([pl], sp)
+			for i in range(pts.size()):
+				var d := pts[mini(i + 1, pts.size() - 1)] - pts[maxi(i - 1, 0)]
+				var rot := d.angle() if d.length() > 0.1 else PI * 0.5
+				rot += (_h(n, key, 3.0) - 0.5) * ALIGN_JITTER
+				pieces.append(_piece(n, key, pts[i] + _j(n, key, 0.0, h * 0.015), float(feel.r) * h, {"rot": rot}))
 				n += 1
 		return sign
 	var laid := PackedVector2Array()
@@ -442,9 +449,6 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 	var h: float = sign.h
 	var key: float = sign.key
 	var lines: Array = sign.lines
-	var bed: Color = sign.get("bed", Color(0, 0, 0, 0))
-	if bed.a > 0.0:
-		_stroke(c, lines, h * 0.42, bed)
 	# falling into place: each piece drawn from above its spot, landing in turn
 	# left to right; where the pieces lie is not touched
 	var held: Array = []
@@ -473,8 +477,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 		"carnations":
 			_carnations(c, sign, h)
 		"flowerbed":
-			_stroke(c, lines, h * 0.28, Color(0.36, 0.26, 0.17))
-			_stroke(c, lines, h * 0.19, Color(0.25, 0.42, 0.20))
+			_stroke(c, lines, h * 0.22, Color(0.36, 0.26, 0.17))
+			_stroke(c, lines, h * 0.15, Color(0.25, 0.42, 0.20))
 			_flowerbed(c, sign, h)
 		"sand":
 			_sand(c, sign, h, light)
@@ -493,7 +497,7 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 		"trencadis":
 			_trencadis(c, lines, h, key)
 		"suds":
-			_stroke(c, lines, h * 0.26, Color(0.22, 0.26, 0.30, 0.3))
+			_stroke(c, lines, h * 0.16, Color(0.22, 0.26, 0.30, 0.22))
 			_suds(c, sign, h, t)
 		"prints":
 			_prints(c, lines, h, light)
@@ -638,7 +642,7 @@ static func _sand(c: Object, sign: Dictionary, h: float, light: Vector2) -> void
 	# the letters heaped up in sand dug from beside them: the damp dark of
 	# the trench, then each heap a mound shaded away from the light. A paw
 	# spreads a heap flat.
-	_stroke(c, sign.lines, h * 0.34, Color(0.60, 0.50, 0.34, 0.55))
+	_stroke(c, sign.lines, h * 0.24, Color(0.60, 0.50, 0.34, 0.45))
 	for pc: Dictionary in sign.pieces:
 		var r: float = float(pc.r) * (1.4 - 0.4 * float(pc.size))
 		c.draw_circle((pc.p as Vector2) + light * r * 0.4 * float(pc.size), r, Color(0.50, 0.40, 0.26, 0.7))
@@ -652,8 +656,8 @@ static func _sand(c: Object, sign: Dictionary, h: float, light: Vector2) -> void
 static func _puddle(c: Object, lines: Array, h: float, key: float, t: float, light: Vector2) -> void:
 	# the rain has pooled in the letters: dark water, the sky along one edge,
 	# and drops landing in it
-	_stroke(c, lines, h * 0.23, Color(0.18, 0.21, 0.26, 0.5), Vector2(0, 1.5))
-	_stroke(c, lines, h * 0.19, Color(0.34, 0.40, 0.48, 0.88))
+	_stroke(c, lines, h * 0.19, Color(0.18, 0.21, 0.26, 0.5), Vector2(0, 1.5))
+	_stroke(c, lines, h * 0.16, Color(0.34, 0.40, 0.48, 0.88))
 	_stroke(c, lines, h * 0.06, Color(0.74, 0.82, 0.90, 0.45), -light * h * 0.04)
 	var pts := Letters.points(lines, h * 0.5)
 	for i in range(pts.size()):
@@ -732,16 +736,20 @@ static func _chestnuts(c: Object, sign: Dictionary, h: float, light: Vector2) ->
 	# roast chestnuts from the stall, set out in letters
 	for pc: Dictionary in sign.pieces:
 		c.draw_circle((pc.p as Vector2) + Vector2(1.5, 2.0), float(pc.r), Color(0, 0, 0, 0.22))
+	# a thin warm rim under every nut first, so no nut covers its neighbour's
+	# and a dark shell still has an edge on a festival night
+	for pc: Dictionary in sign.pieces:
+		c.draw_circle(pc.p, float(pc.r) * 1.12, Color(0.96, 0.78, 0.48))
 	for pc: Dictionary in sign.pieces:
 		var p: Vector2 = pc.p
 		var r: float = pc.r
-		# a pale paper-cone rim, so a dark nut still reads on the dark ground
-		# of a festival night
-		c.draw_circle(p, r * 1.28, Color(0.98, 0.88, 0.66, 0.95))
-		c.draw_circle(p, r, Color(0.46, 0.24, 0.12))
-		# the pale base turns with the nut as it rolls
-		c.draw_circle(p + Vector2.from_angle(float(pc.rot)) * r * 0.5, r * 0.55, Color(0.78, 0.64, 0.44))
-		c.draw_circle(p - light * r * 0.4, r * 0.3, Color(0.78, 0.52, 0.30))
+		var ax := Vector2.from_angle(float(pc.rot))
+		c.draw_circle(p, r, Color(0.56, 0.28, 0.12))
+		# roasted: the scored cross split open on the golden flesh, turning
+		# with the nut as it rolls
+		c.draw_line(p - ax * r * 0.55, p + ax * r * 0.55, Color(0.98, 0.82, 0.42), r * 0.42)
+		c.draw_line(p - ax.orthogonal() * r * 0.4, p + ax.orthogonal() * r * 0.4, Color(0.98, 0.82, 0.42), r * 0.3)
+		c.draw_circle(p - light * r * 0.5, r * 0.2, Color(0.86, 0.60, 0.36))
 
 
 static func _plate(c: Object, sign: Dictionary, h: float) -> void:
@@ -750,9 +758,9 @@ static func _plate(c: Object, sign: Dictionary, h: float) -> void:
 	for pc: Dictionary in sign.pieces:
 		var half := Vector2.from_angle(float(pc.rot)) * float(pc.len) * 0.5
 		var p: Vector2 = pc.p
-		c.draw_line(p - half + Vector2(2, 2), p + half + Vector2(2, 2), Color(0, 0, 0, 0.25), h * 0.2)
-		c.draw_line(p - half, p + half, Color(0.20, 0.12, 0.08), h * 0.2)
-		c.draw_line(p - half * 0.97, p + half * 0.97, Color(0.54, 0.29, 0.15), h * 0.15)
+		c.draw_line(p - half + Vector2(2, 2), p + half + Vector2(2, 2), Color(0, 0, 0, 0.25), h * 0.16)
+		c.draw_line(p - half, p + half, Color(0.20, 0.12, 0.08), h * 0.16)
+		c.draw_line(p - half * 0.97, p + half * 0.97, Color(0.54, 0.29, 0.15), h * 0.12)
 		c.draw_circle(p + half * 0.3, h * 0.025, Color(0.70, 0.40, 0.18) if float(pc["var"]) > 0.5 else Color(0.38, 0.20, 0.11))
 		for e in [-0.8, 0.8]:
 			c.draw_circle(p + half * e, h * 0.03, Color(0.62, 0.62, 0.60))
@@ -761,8 +769,8 @@ static func _plate(c: Object, sign: Dictionary, h: float) -> void:
 static func _trencadis(c: Object, lines: Array, h: float, key: float) -> void:
 	# trencadis: broken tile set in white mortar, cobalt and turquoise and
 	# yellow, every shard its own odd shape. Set in, so it stays.
-	_stroke(c, lines, h * 0.24, Color(0.90, 0.88, 0.82))
-	var pts := Letters.points(lines, h * 0.075)
+	_stroke(c, lines, h * 0.19, Color(0.90, 0.88, 0.82))
+	var pts := Letters.points(lines, h * 0.065)
 	var cols := [Color(0.12, 0.30, 0.70), Color(0.18, 0.62, 0.70), Color(0.34, 0.62, 0.30),
 		Color(0.96, 0.80, 0.24), Color(0.92, 0.50, 0.18), Color(0.97, 0.96, 0.92)]
 	for i in range(pts.size()):
@@ -771,7 +779,7 @@ static func _trencadis(c: Object, lines: Array, h: float, key: float) -> void:
 		var rot := _h(i, key, 28.0) * TAU
 		for k in range(sides):
 			var a := rot + TAU * float(k) / float(sides)
-			poly.append(pts[i] + Vector2(cos(a), sin(a)) * h * (0.045 + _h(i * 7 + k, key, 29.0) * 0.035))
+			poly.append(pts[i] + Vector2(cos(a), sin(a)) * h * (0.036 + _h(i * 7 + k, key, 29.0) * 0.028))
 		c.draw_colored_polygon(poly, _pick(cols, _h(i, key, 26.0)))
 
 
@@ -916,14 +924,14 @@ static func _rope(c: Object, sign: Dictionary, h: float) -> void:
 	for pc: Dictionary in sign.pieces:
 		var half := Vector2.from_angle(float(pc.rot)) * float(pc.len) * 0.5
 		var p: Vector2 = pc.p
-		c.draw_line(p - half + Vector2(2, 2.5), p + half + Vector2(2, 2.5), Color(0, 0, 0, 0.3), h * 0.13)
-		c.draw_line(p - half, p + half, Color(0.36, 0.26, 0.14), h * 0.13)
+		c.draw_line(p - half + Vector2(2, 2.5), p + half + Vector2(2, 2.5), Color(0, 0, 0, 0.3), h * 0.11)
+		c.draw_line(p - half, p + half, Color(0.36, 0.26, 0.14), h * 0.11)
 	for pc: Dictionary in sign.pieces:
 		var dir := Vector2.from_angle(float(pc.rot))
 		var half := dir * float(pc.len) * 0.5
 		var p: Vector2 = pc.p
 		var side := dir.orthogonal() * h * 0.045
-		c.draw_line(p - half * 0.98, p + half * 0.98, Color(0.80, 0.66, 0.42), h * 0.095)
+		c.draw_line(p - half * 0.98, p + half * 0.98, Color(0.80, 0.66, 0.42), h * 0.08)
 		var n := maxi(2, int(float(pc.len) / (h * 0.07)))
 		for k in range(n):
 			var q := p - half + dir * float(pc.len) * (float(k) + 0.5) / float(n)
@@ -942,9 +950,9 @@ static func _fronds(c: Object, sign: Dictionary, h: float) -> void:
 		for k in range(n):
 			var q := p - half + dir * float(pc.len) * (float(k) + 0.5) / float(n)
 			for sd: float in [-1.0, 1.0]:
-				var tip := q + side * sd * h * 0.13 + dir * h * 0.06
-				c.draw_line(q + Vector2(1.5, 2), tip + Vector2(1.5, 2), Color(0, 0, 0, 0.22), h * 0.05)
-				c.draw_line(q, tip, green, h * 0.045)
+				var tip := q + side * sd * h * 0.10 + dir * h * 0.05
+				c.draw_line(q + Vector2(1.5, 2), tip + Vector2(1.5, 2), Color(0, 0, 0, 0.22), h * 0.04)
+				c.draw_line(q, tip, green, h * 0.036)
 		c.draw_line(p - half, p + half, Color(0.78, 0.72, 0.46), h * 0.03)
 
 
@@ -1026,8 +1034,8 @@ static func _bulbs(c: Object, lines: Array, h: float, t: float) -> void:
 	for i in range(pts.size()):
 		var col: Color = cols[i % cols.size()]
 		var lit := (i + step) % 3 != 0
-		var glow := h * (0.12 if lit else 0.07)
-		c.draw_circle(pts[i], glow, Color(col.r, col.g, col.b, 0.28 if lit else 0.10))
+		var glow := h * (0.085 if lit else 0.06)
+		c.draw_circle(pts[i], glow, Color(col.r, col.g, col.b, 0.22 if lit else 0.0))
 		c.draw_circle(pts[i], h * 0.055, col if lit else col.darkened(0.5))
 		c.draw_circle(pts[i] - Vector2(h * 0.015, h * 0.015), h * 0.02, Color(1, 1, 1, 0.9 if lit else 0.3))
 
@@ -1041,12 +1049,12 @@ static func _studs(c: Object, sign: Dictionary, h: float, t: float) -> void:
 	var lens := Color(0.66, 0.92, 1.0)
 	# the dark granite inlay the lights are set in, its polished edge catching
 	# the hall's light
-	_stroke(c, sign.lines, h * 0.19, Color(0.70, 0.72, 0.74), Vector2(-0.8, -0.8))
-	_stroke(c, sign.lines, h * 0.17, Color(0.10, 0.11, 0.13))
+	_stroke(c, sign.lines, h * 0.15, Color(0.70, 0.72, 0.74), Vector2(-0.8, -0.8))
+	_stroke(c, sign.lines, h * 0.135, Color(0.10, 0.11, 0.13))
 	for i in range(pts.size()):
 		var lit := (1.0 - cover[i]) * (0.72 + 0.28 * (0.5 + 0.5 * sin(t * 2.4 - pts[i].x * 0.018)))
 		if lit > 0.02:
-			c.draw_circle(pts[i], h * 0.15, Color(lens.r, lens.g, lens.b, 0.12 * lit))
+			c.draw_circle(pts[i], h * 0.11, Color(lens.r, lens.g, lens.b, 0.10 * lit))
 			c.draw_circle(pts[i], h * 0.085, Color(lens.r, lens.g, lens.b, 0.32 * lit))
 	for i in range(pts.size()):
 		var lit := (1.0 - cover[i]) * (0.72 + 0.28 * (0.5 + 0.5 * sin(t * 2.4 - pts[i].x * 0.018)))
@@ -1063,7 +1071,7 @@ const SCARF_WHITE := Color(0.97, 0.96, 0.92)
 static func _scarf(c: Object, sign: Dictionary, h: float) -> void:
 	# a home fan's knitted scarf laid along the letters: blue and claret bars
 	# split by white, the knit's rows showing, a white fringe at each end
-	var w := h * 0.17
+	var w := h * 0.14
 	for pc: Dictionary in sign.pieces:
 		var half := Vector2.from_angle(float(pc.rot)) * float(pc.len) * 0.5
 		var p: Vector2 = pc.p
@@ -1096,11 +1104,11 @@ static func _setts(c: Object, lines: Array, h: float, key: float, light: Vector2
 	# the name laid into the alley's paving in dark granite setts, the way old
 	# streets carry an inscription: pale mortar along the letters, and in it
 	# small squared stones, each a little turned, worn smooth on top
-	_stroke(c, lines, h * 0.22, Color(0.84, 0.80, 0.70))
-	var pts := Letters.points(lines, h * 0.1)
+	_stroke(c, lines, h * 0.18, Color(0.84, 0.80, 0.70))
+	var pts := Letters.points(lines, h * 0.085)
 	for i in range(pts.size()):
 		var rot := (_h(i, key, 51.0) - 0.5) * 0.5
-		var s := h * (0.042 + _h(i, key, 52.0) * 0.008)
+		var s := h * (0.036 + _h(i, key, 52.0) * 0.007)
 		var col := Color(0.26, 0.25, 0.27).lerp(Color(0.38, 0.35, 0.33), _h(i, key, 53.0))
 		c.draw_colored_polygon(_box(pts[i] + light * 1.2, rot, s, s * 0.9), Color(0, 0, 0, 0.30))
 		c.draw_colored_polygon(_box(pts[i], rot, s, s * 0.9), col)
@@ -1111,8 +1119,8 @@ static func _topiary(c: Object, lines: Array, h: float, key: float, light: Vecto
 	# the name clipped in box hedging, the way a parterre spells a monogram:
 	# its shadow on the gravel, the dark body of the hedge, the clipped top
 	# catching the light, and the clumps of the shears' work along it
-	var w := h * 0.20
-	_stroke(c, lines, w, Color(0.05, 0.08, 0.04, 0.34), light * w * 0.45)
+	var w := h * 0.16
+	_stroke(c, lines, w, Color(0.05, 0.08, 0.04, 0.30), light * w * 0.35)
 	_stroke(c, lines, w, Color(0.12, 0.25, 0.14))
 	_stroke(c, lines, w * 0.7, Color(0.22, 0.40, 0.22), -light * w * 0.08)
 	var pts := Letters.points(lines, h * 0.075)

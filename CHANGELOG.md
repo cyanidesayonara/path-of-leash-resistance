@@ -27,6 +27,25 @@ Append-only session history, newest first.
 - `tests/test_soft_light.gd` (in CI): a glow is full at its centre, clear at
   its rim, never brighter further out and without a band-sized step; a
   small glow takes the coarse mesh; colours are cached; a band feathers.
+## 2026-11-01 - Every walk's name lies on its ground in one finish
+
+- No glow under any name: the soft beds under La Castanyada, Dia de Partit,
+  La Neteja, El Diluvi, El Bosc and El Tibidabo are gone. A name reads by
+  each piece's own edge and contact shadow, like a real thing lying there.
+- One size and one weight: names are drawn 44 high (were 52) with more
+  room each side (`NAME_MARGIN` 100), and the heaviest materials are slimmed
+  to match the rest: the flowerbed, the sand trench, the puddles, the
+  plate, the trencadis, the setts, the hedging, the scarf, the studs, the
+  rope and the festoon's glow.
+- Pegs, tickets, biscuits and pine cones are laid along the letters, each a
+  little off true, instead of every which way: Gràcia, the Raval, the vet
+  and the hillside track read as words, not heaps.
+- Plaça Reial's fronds are lighter; La Castanyada's chestnuts are roasted
+  ones, split open on the golden flesh over a thin warm rim, legible on the
+  night street without a halo.
+- The gloss under the name is a size smaller (24) with a thin edge and a
+  close shadow instead of a fat outline.
+- El Besòs's entrance board stood on the name; it is below the gloss now.
 
 ## 2026-11-01 - Release notes for 1.68
 
