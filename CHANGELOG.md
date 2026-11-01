@@ -2,6 +2,32 @@
 
 Append-only session history, newest first.
 
+## 2026-11-01 - Festa de Gràcia's chase film, and the correfoc in the walk
+
+- **`intro/film_gracia.gd`, "Correfoc"**: night in a narrow street of the
+  vila in festival week, balconies hung with flags, bunting and paper
+  lanterns across. A drum booms, a banger cracks, a glow comes up the
+  street, and round the corner come the fire devils in red and black with
+  horned hoods, each holding up a fork of fireworks spraying a fountain of
+  sparks; behind them rears the Drac de Gràcia on its bearers' legs, wings
+  beating, a red eye under a scowl, its jaws breathing sparks. She bolts;
+  RUN! with the Drac's jaws spraying fire across the card. On FilmKit;
+  Gràcia's chase profile names it (`HomeChase.GRACIA_FILM`).
+- **The walk's correfoc** (`entities/correfoc_threat.gd`) matches it from
+  above: the devils with horned hoods over red capes, their forks spraying
+  fountains of sparks, and the Drac with wings beating, its bearers' feet
+  under the skirt, a ridge down its scaled back, horns, red eyes under a
+  scowl and open jaws full of teeth spraying sparks down the street. The
+  catch is unchanged.
+- The respites' own monsters (one film after each) are still to come.
+
+## 2026-11-01 - Films: a leash long enough to drag your human by
+
+On every chase film's bolt (`FilmKit.pair`) she now goes first and your
+human stays planted until the leash snaps taut, then is hauled after her a
+full leash length behind, the leash long and low between them. Before, she
+ran almost under his hand and the leash hung nearly vertical, so nothing
+read as pulling.
 ## 2026-11-01 - Els Senglars' chase film, and the sounder in the walk
 
 - **`intro/film_boars.gd`, "The sounder"**: dusk on the dirt trail through
