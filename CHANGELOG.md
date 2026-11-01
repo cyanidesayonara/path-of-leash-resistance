@@ -2,6 +2,32 @@
 
 Append-only session history, newest first.
 
+## 2026-10-31 - The first chase film: La Neteja's sweeper
+
+PROJECT.md "Agreed next" item 6, one walk end to end: a story film plays as
+a chase walk's threat strikes, the telegraph to run.
+
+- **`intro/film_player.gd`** plays a film over the walk: frozen under it,
+  handed straight back when it ends or is skipped (any key, click, tap or
+  pad button, with the intro's skip hint), then the chase's own warning and
+  head start. A pause still up when it ends keeps the walk frozen; a walk
+  already frozen stays frozen. `main.film_playing` keeps the skip press from
+  pausing the walk. Never headless, for the autowalk or in a `--shot` run;
+  `--no-films` and `--films` for testing.
+- **`intro/film_sweeper.gd`, "Here it comes"** (6.6 s, side on, at dawn):
+  the pair heading home, your human on the phone; a rumble, her ears up,
+  and she looks back; the street sweeper rolls in looming over them, beacon
+  turning, brush whirring, grit flying, its driver nodding off; a push in on
+  her stare; she digs in and bolts, the leash snaps taut, your human is
+  yanked after her, and RUN! slams in with the cab and brush filling the
+  frame. Drawn with the intro's kit, so it is whichever dog you chose.
+- **`HomeChase`**: a profile names its film (`SWEEPER_FILM` on La Neteja's);
+  `begin` plays it with `chase_phase` "film", and a continue from the
+  checkpoint repeats only the warning, not the film.
+- `tools/intro_render.gd` renders the films too (`sweeper`).
+  `tests/test_chase_film.gd` covers when a film plays, the freeze and hand
+  back, skipping, a pause over the film, and the cues.
+
 ## 2026-10-31 - 1.67 released; docs caught up
 
 v1.67 is tagged (`a0ad9cf`), on both itch channels and submitted to the

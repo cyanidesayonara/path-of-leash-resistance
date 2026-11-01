@@ -75,6 +75,8 @@ const HOLD_SECS := 3.0
 const BAND_JAM_REACH := 100.0
 
 const SWEEPER_SCRIPT := "res://entities/sweeper.gd"
+# the story film each chase walk plays as the threat strikes (intro/film_player.gd)
+const SWEEPER_FILM := "res://intro/film_sweeper.gd"
 # La Neteja's dumpster jams, by depth (world/level_build.gd NETEJA_JAMS):
 # the first the way home meets, then the later one, the midpoint
 const NETEJA_BANDS := [
@@ -184,6 +186,7 @@ static func profile_for(level: String) -> Dictionary:
 		p["id"] = CHASE_LEVEL
 		p["script"] = SWEEPER_SCRIPT
 		p["bands"] = NETEJA_BANDS.duplicate(true)
+		p["film"] = SWEEPER_FILM
 		return p
 	if level == "besos":
 		var f := kind_behavior("flood")
@@ -319,7 +322,14 @@ static func begin(m: Node2D, profile: Dictionary = {}) -> void:
 	m.chase_shave_armed = false
 	# the destination checkpoint, before anything is said
 	ChaseCheckpoint.store(m, "destination")
-	_warn(m, behavior)
+	# the walk's film is the telegraph: the warning follows it. A continue
+	# from the checkpoint repeats only the warning (continue_run).
+	var film := String(profile.get("film", ""))
+	if film != "" and FilmPlayer.should_play(m):
+		m.chase_phase = "film"
+		FilmPlayer.play(m, load(film), func() -> void: _warn(m, behavior))
+	else:
+		_warn(m, behavior)
 
 
 # The warning, and the head start that follows it: the machine is held
