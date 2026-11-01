@@ -465,13 +465,29 @@ func _draw_body(b: ShapeBatch, pal: Dictionary, stuck: bool) -> void:
 	b.draw_rect(Rect2(-CAB_HALF - 5.0, L - 10.0, CAB_HALF * 2.0 + 10.0, 11.0),
 		Color(0.12, 0.13, 0.15))
 	b.draw_rect(Rect2(-CAB_HALF + 6.0, L - 6.0, CAB_HALF * 2.0 - 12.0, 7.0), Color(0.30, 0.31, 0.34))
+	# the grille between the lamps, a grimace of steel teeth, as in the film
+	# (intro/film_sweeper.gd): to a dog, the machine has a face
+	b.draw_rect(Rect2(-30.0, L - 12.0, 60.0, 14.0), Color(0.16, 0.05, 0.05))
+	for i in range(6):
+		var tx := -28.0 + float(i) * 9.6
+		b.draw_colored_polygon(PackedVector2Array([Vector2(tx, L - 12.0), Vector2(tx + 8.0, L - 12.0),
+			Vector2(tx + 4.0, L - 4.0)]), pal.trim)
+		b.draw_colored_polygon(PackedVector2Array([Vector2(tx, L + 2.0), Vector2(tx + 8.0, L + 2.0),
+			Vector2(tx + 4.0, L - 5.0)]), pal.trim)
 	for i in range(7):
 		b.draw_circle(Vector2(-CAB_HALF + 16.0 + float(i) * (CAB_HALF * 2.0 - 32.0) / 6.0, L + 1.0), 2.4,
 			Color(0.70, 0.84, 0.95))
+	# the headlamps as glaring eyes, looking down the road at you, under
+	# brows scowling in toward the grille
 	for k in range(2):
-		var lamp := Vector2((-1.0 if k == 0 else 1.0) * (CAB_HALF - 17.0), L - 6.0)
-		b.draw_circle(lamp, 6.0, Color(0.12, 0.13, 0.14))
-		b.draw_circle(lamp + Vector2(-1.0, -1.0), 3.7, Color(1.0, 0.90, 0.58))
+		var s := -1.0 if k == 0 else 1.0
+		var lamp := Vector2(s * (CAB_HALF - 18.0), L - 8.0)
+		b.draw_circle(lamp, 15.0, Color(1.0, 0.92, 0.60, 0.25))
+		b.draw_circle(lamp, 10.0, Color(0.10, 0.10, 0.12))
+		b.draw_circle(lamp, 8.0, Color(1.0, 0.97, 0.84))
+		b.draw_circle(lamp + Vector2(-s * 1.5, 3.0), 3.6, Color(0.08, 0.08, 0.10))
+		b.draw_colored_polygon(PackedVector2Array([lamp + Vector2(s * 14.0, -16.0), lamp + Vector2(-s * 12.0, -8.0),
+			lamp + Vector2(-s * 12.0, -3.0), lamp + Vector2(s * 14.0, -10.0)]), pal.dark)
 
 	# --- beacons ----------------------------------------------------------
 	# a bar across the back of the cab roof: amber strobes for the sweeper,

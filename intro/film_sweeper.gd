@@ -13,10 +13,11 @@ extends RefCounted
 const LENGTH := FilmKit.LENGTH
 const BG := Color(0.10, 0.09, 0.12)
 const FEET := 650.0              # the pavement the pair walks on
-const ROAD := 760.0              # the road in front, where the machine runs
+const ROAD := 720.0              # the road in front, where the machine runs
+const WALL_FOOT := FEET - 40.0   # the pavement is barely a dog's length wide
 const BOLT_AT := FilmKit.BOLT_AT
 const TITLE_AT := FilmKit.TITLE_AT
-const SW_K := 1.4               # the machine's scale: it should loom over them
+const SW_K := 1.8               # the machine's scale: it towers over them
 const ORANGE := Color(0.86, 0.47, 0.09)
 const ORANGE_LIT := Color(0.98, 0.63, 0.18)
 const ORANGE_DARK := Color(0.52, 0.26, 0.05)
@@ -77,7 +78,7 @@ static func _street(c: CanvasItem, t: float) -> void:
 		var f := float(i) / 9.0
 		c.draw_rect(Rect2(-1600, -900.0 + f * 900.0, 4600, 92.0), Color(0.26, 0.30, 0.52).lerp(Color(0.98, 0.74, 0.56), f))
 	var wall := Color(0.80, 0.62, 0.46)
-	c.draw_rect(Rect2(-1600, -180, 4600, FEET - 70.0 + 180.0), wall)
+	c.draw_rect(Rect2(-1600, -180, 4600, WALL_FOOT + 180.0), wall)
 	c.draw_rect(Rect2(-1600, -196, 4600, 22), wall.lightened(0.12))
 	var shut := Color(0.30, 0.48, 0.38)
 	var x := -1500.0
@@ -94,7 +95,7 @@ static func _street(c: CanvasItem, t: float) -> void:
 			c.draw_rect(Rect2(x + 22.0, wy + 130.0, 122, 9), wall.darkened(0.3))
 			c.draw_line(Vector2(x + 24.0, wy + 98.0), Vector2(x + 142.0, wy + 98.0), INK, 3.0)
 		# the shop shutter at street level
-		c.draw_rect(Rect2(x + 20.0, 400.0, 150.0, FEET - 70.0 - 400.0), Color(0.56, 0.58, 0.60))
+		c.draw_rect(Rect2(x + 20.0, 400.0, 150.0, WALL_FOOT - 400.0), Color(0.56, 0.58, 0.60))
 		for sl in range(9):
 			c.draw_line(Vector2(x + 20.0, 408.0 + float(sl) * 18.0), Vector2(x + 170.0, 408.0 + float(sl) * 18.0),
 				Color(0.44, 0.46, 0.48), 2.0)
@@ -102,14 +103,14 @@ static func _street(c: CanvasItem, t: float) -> void:
 		k += 1
 	# street lamps, still burning
 	for lx: float in [-700.0, 260.0, 1220.0, 2180.0]:
-		c.draw_rect(Rect2(lx - 5.0, 140.0, 10.0, FEET - 60.0 - 140.0), INK)
+		c.draw_rect(Rect2(lx - 5.0, 140.0, 10.0, WALL_FOOT + 10.0 - 140.0), INK)
 		c.draw_line(Vector2(lx, 146.0), Vector2(lx + 50.0, 130.0), INK, 6.0)
 		c.draw_circle(Vector2(lx + 56.0, 140.0), 34.0, Color(1.0, 0.85, 0.50, 0.25 + 0.04 * sin(t * 3.0)))
 		c.draw_circle(Vector2(lx + 56.0, 140.0), 12.0, Color(1.0, 0.93, 0.70))
 	# the pavement and the kerb
-	c.draw_rect(Rect2(-1600, FEET - 70.0, 4600, ROAD - FEET + 40.0), Color(0.72, 0.68, 0.62))
+	c.draw_rect(Rect2(-1600, WALL_FOOT, 4600, ROAD - WALL_FOOT), Color(0.72, 0.68, 0.62))
 	for px in range(-15, 30):
-		c.draw_line(Vector2(float(px) * 110.0, FEET - 70.0), Vector2(float(px) * 110.0 - 30.0, ROAD - 40.0),
+		c.draw_line(Vector2(float(px) * 110.0, WALL_FOOT), Vector2(float(px) * 110.0 - 30.0, ROAD - 40.0),
 			Color(0.65, 0.61, 0.55), 2.0)
 
 
@@ -157,15 +158,42 @@ static func _sweeper(c: CanvasItem, x: float, t: float) -> void:
 	c.draw_rect(Rect2(x - 108.0, g - 236.0 + nod, 46.0, 12.0), Color(0.20, 0.36, 0.30))
 	c.draw_line(Vector2(x - 76.0, g - 206.0 + nod), Vector2(x - 66.0, g - 206.0 + nod), INK, 2.5)
 	c.draw_rect(Rect2(x - 160.0, g - 150.0, 150.0, 22.0), TRIM)
-	var spin := fposmod(t * 2.6, 1.0)
-	var flash := 0.5 + 0.5 * cos(spin * TAU)
-	c.draw_circle(Vector2(x - 86.0, g - 300.0), 40.0 * flash + 12.0, Color(1.0, 0.62, 0.15, 0.35 * flash))
-	c.draw_rect(Rect2(x - 104.0, g - 306.0, 36.0, 24.0), Color(1.0, 0.55, 0.12).lerp(Color(1.0, 0.85, 0.45), flash))
-	c.draw_rect(Rect2(x - 108.0, g - 284.0, 44.0, 6.0), INK)
-	# headlight and bumper
-	c.draw_circle(hl, 16.0, Color(1.0, 0.95, 0.70, 0.5))
-	c.draw_circle(hl, 9.0, Color(1.0, 0.98, 0.88))
-	c.draw_rect(Rect2(x - 20.0, g - 82.0, 30.0, 26.0), STEEL)
+	# the strobe bar on the roof, its two ambers alternating, as in the walk
+	c.draw_rect(Rect2(x - 128.0, g - 288.0, 92.0, 10.0), INK)
+	var on := fposmod(t, 0.5) < 0.25
+	for k in range(2):
+		var lit := on if k == 0 else not on
+		var sp := Vector2(x - 112.0 + float(k) * 60.0, g - 298.0)
+		if lit:
+			c.draw_circle(sp, 46.0, Color(1.0, 0.70, 0.18, 0.30))
+		c.draw_rect(Rect2(sp.x - 14.0, sp.y - 10.0, 28.0, 20.0), Color(1.0, 0.80, 0.20) if lit else Color(0.42, 0.30, 0.08))
+	# the headlamp, glaring down the pavement under a scowling brow: to a
+	# dog, the machine has a face
+	c.draw_circle(hl, 30.0, Color(1.0, 0.95, 0.70, 0.35))
+	c.draw_circle(hl, 21.0, INK)
+	c.draw_circle(hl, 17.0, Color(1.0, 0.98, 0.86))
+	c.draw_circle(hl + Vector2(6.0, 2.0), 7.0, INK)
+	c.draw_colored_polygon(PackedVector2Array([hl + Vector2(-34.0, -34.0), hl + Vector2(22.0, -14.0),
+		hl + Vector2(22.0, -2.0), hl + Vector2(-34.0, -20.0)]), ORANGE_DARK)
+	# the grille, a grimace of steel teeth, and the spray bar under it
+	var mouth := Rect2(x - 48.0, g - 92.0, 62.0, 34.0)
+	c.draw_colored_polygon(IntroKit.rrect(mouth, 8.0), Color(0.16, 0.05, 0.05))
+	for k in range(5):
+		var tx := mouth.position.x + 4.0 + float(k) * 11.5
+		c.draw_colored_polygon(PackedVector2Array([Vector2(tx, mouth.position.y + 2.0), Vector2(tx + 10.0, mouth.position.y + 2.0),
+			Vector2(tx + 5.0, mouth.position.y + 14.0)]), TRIM)
+		c.draw_colored_polygon(PackedVector2Array([Vector2(tx, mouth.end.y - 2.0), Vector2(tx + 10.0, mouth.end.y - 2.0),
+			Vector2(tx + 5.0, mouth.end.y - 13.0)]), TRIM)
+	c.draw_rect(Rect2(x - 52.0, g - 58.0, 70.0, 10.0), STEEL)
+	for p in range(8):
+		var f := fposmod(t * 2.6 + float(p) * 0.125, 1.0)
+		c.draw_circle(Vector2(x + 20.0 + f * 90.0, g - 52.0 + f * 30.0 + sin(float(p) * 2.3) * 6.0), 3.0 + f * 4.0,
+			Color(0.80, 0.90, 1.0, 0.6 * (1.0 - f)))
+	# dark smoke out of the stack, harder as it comes on
+	c.draw_rect(Rect2(x - 196.0, g - 340.0, 16.0, 44.0), STEEL)
+	for p in range(5):
+		var f := fposmod(t * 1.3 + float(p) * 0.2, 1.0)
+		c.draw_circle(Vector2(x - 188.0 - f * 60.0, g - 350.0 - f * 120.0), 12.0 + f * 26.0, Color(0.20, 0.19, 0.20, 0.55 * (1.0 - f)))
 	# wheels, turning
 	for wx: float in [x - 360.0, x - 210.0, x - 90.0]:
 		c.draw_circle(Vector2(wx, g - 36.0), 40.0, INK)
