@@ -2,6 +2,24 @@
 
 Append-only session history, newest first.
 
+## 2026-11-01 - La Rambla draws half as much
+
+- La Rambla's stalls (and the ping-pong table) were drawn the whole length
+  of the walk every frame, browsers and all: the on-screen check came after
+  their branch. Every stall is now culled first (`STALL_CULL`, 120 px).
+- The wavy paving was re-triangulated every frame though it never moves;
+  each band is built once and re-appended (`Rambla._wave_row`).
+- Tourists redrew every frame even off screen, where the crowd is kept
+  (680 px either way of a 440 px view), and rebuilt their outfit on every
+  draw. One out of view keeps its last picture and redraws the frame it comes
+  back (`VIEW_MARGIN`); the outfit is cached per key and weather.
+- Pixel-identical: deterministic shots of La Rambla, El Mercat, El Mosaic
+  and Dia de Partit, before and after, compare equal.
+- Desktop, alternating pairs: La Rambla's median frame about 22 ms to 12 ms,
+  world draw 11.5 ms to 5.7 ms. Web (headless Chrome): 20.5 fps (47 ms
+  median) to 25-32 fps (32-37 ms). The web is still short of 60: La Rambla
+  makes about 200 draw calls a frame, twice La Neteja's, which is next.
+
 ## 2026-11-01 - The soundtrack is baked before an export
 
 - `tools/bake_music.gd` renders all 44 tracks of `audio/music.gd` once (in
