@@ -13,7 +13,10 @@ extends RefCounted
 # reach (0..1, the other arm out forward holding the leash), reach_down (0..1,
 # that arm down to the knee), lift (0..1, feet off the ground and trailing, for
 # being yanked), head (head tilt), mouth (0..1, open), glow (0..1, the phone
-# lighting the face), phone_jolt (0..1), scroll (thumb phase), blink.
+# lighting the face), phone_jolt (0..1), scroll (thumb phase), blink,
+# hair_style (short, curly, bald, bun, ponytail, bob, long) and lashes; the
+# colours skin, shirt, trousers, hair and shoe. Your human's come from
+# Game.human_look (intro/kit.gd fills them in).
 #
 # The whole figure is one triangle list and one draw call. It is drawn every
 # frame, on the web too, so the per-frame work is kept to native transforms:
@@ -60,6 +63,15 @@ const HAIRDO := [Vector2(19.5, -12.5), Vector2(16, -10.8), Vector2(11, -10.6), V
 	Vector2(-10.5, 9), Vector2(-13.5, 11), Vector2(-17.5, 6), Vector2(-20.5, -4), Vector2(-19.5, -13.5),
 	Vector2(-14.5, -21.5), Vector2(-5, -26), Vector2(5, -25.5), Vector2(13, -21.5), Vector2(18.5, -17.5),
 	Vector2(21, -14.5)]
+# hair hanging behind the head, in the head's frame, drawn under the face:
+# a bob to the jaw, long hair to the shoulders, a ponytail swinging off the crown
+const BOB_BACK := [Vector2(-6, -24), Vector2(-18, -16), Vector2(-22.5, -4), Vector2(-22.5, 10), Vector2(-19, 18),
+	Vector2(-10, 20), Vector2(-5, 14), Vector2(-3, 0)]
+const LONG_BACK := [Vector2(-6, -24), Vector2(-18, -16), Vector2(-23.5, -2), Vector2(-24.5, 18), Vector2(-22, 36),
+	Vector2(-15, 44), Vector2(-6, 40), Vector2(-4, 20), Vector2(-2, 0)]
+const PONYTAIL := [Vector2(-15, -19), Vector2(-24, -15), Vector2(-31, -2), Vector2(-33, 12), Vector2(-30, 26),
+	Vector2(-26, 15), Vector2(-24, 3), Vector2(-18, -7)]
+const PONY_PIVOT := Vector2(-18, -14)
 const HAIR_SHINE := [Vector2(-15, -17.5), Vector2(-6, -22.6), Vector2(4, -22.6), Vector2(11, -19.6),
 	Vector2(3, -20.4), Vector2(-6, -20.2)]
 # a sneaker about the ankle: x along the foot, y down to the sole
@@ -513,6 +525,17 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 	if reach > 0.25:
 		_group(arm_free[0], IW)
 		_arm_detail(arm_free, st)
+	var style := String(pose.get("hair_style", "short"))
+	match style:
+		"bob":
+			_group([["p", _shape(K_HAIR, 1, PackedVector2Array(BOB_BACK), _light_in(hx, hy), 2.2), hxf, hr_col, false]], IW)
+		"long":
+			_group([["p", _shape(K_HAIR, 2, PackedVector2Array(LONG_BACK), _light_in(hx, hy), 2.2), hxf, hr_col, false]], IW)
+		"ponytail":
+			# it swings with the stride and flies out behind on a yank
+			var swing := sin(phase) * 0.18 * amp - 0.5 * lift
+			var pxf := hxf * Transform2D(swing, PONY_PIVOT) * Transform2D(0.0, -PONY_PIVOT)
+			_group([["p", _shape(K_HAIR, 3, PackedVector2Array(PONYTAIL), _light_in(hx, hy), 2.2), pxf, hr_col, false]], IW)
 	var face_pts := PackedVector2Array(FACE)
 	for i in range(13, 18):
 		face_pts[i] += jaw * (0.6 if i == 17 else 1.0)
@@ -538,11 +561,27 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 	_line(head + hx * -3.4 + hy * 0.4, head + hx * -4.6 + hy * 5.4, _shade(sk), 1.6)
 	_ellipse(head + hx * 9.0 + hy * 8.0, Vector2(3.6, 2.4), hr, sk.lerp(Color(0.96, 0.52, 0.48), 0.45))
 	_line(head + hx * 19.2 + hy * 9.0, head + hx * 20.4 + hy * 10.4, _shade(_shade(sk)), 1.1)
-	# hair over the crown, a crisp shine along its top, the parting
-	var hair := _shape(K_HAIR, 0, PackedVector2Array(HAIRDO), _light_in(hx, hy), 2.2)
-	_group([["p", hair, hxf, hr_col, false]], IW)
-	_push(hxf * _static(3, HAIR_SHINE), _hi(hr_col))
-	_line(head + hx * 3.0 + hy * -24.0, head + hx * 15.0 + hy * -15.0, _shade(hr_col), 1.2)
+	# hair over the crown, a crisp shine along its top, the parting; curls in
+	# a ring of bobbles, a bun on the crown, or nothing but a shine
+	if style == "bald":
+		_ellipse(hxf * Vector2(-4.0, -16.0), Vector2(6.0, 3.0), hr - 0.3, _hi(sk))
+	else:
+		var hair := _shape(K_HAIR, 0, PackedVector2Array(HAIRDO), _light_in(hx, hy), 2.2)
+		_group([["p", hair, hxf, hr_col, false]], IW)
+		if style == "curly":
+			for pass_i in range(2):
+				for k in range(7):
+					var a := lerpf(-2.95, -0.55, float(k) / 6.0)
+					var at := hxf * (Vector2(cos(a), sin(a)) * 19.0 + Vector2(-2.0, -5.0))
+					_ellipse(at, Vector2(7.6, 7.6) if pass_i == 0 else Vector2(6.2, 6.2), hr, OUT if pass_i == 0 else hr_col)
+		elif style == "bun":
+			_ellipse(hxf * Vector2(-15.0, -23.0), Vector2(9.2, 8.6), hr, OUT)
+			_ellipse(hxf * Vector2(-15.0, -23.0), Vector2(7.8, 7.2), hr, hr_col)
+			_ellipse(hxf * Vector2(-17.0, -25.5), Vector2(3.0, 2.0), hr, _hi(hr_col))
+		_push(hxf * _static(3, HAIR_SHINE), _hi(hr_col))
+		_line(head + hx * 3.0 + hy * -24.0, head + hx * 15.0 + hy * -15.0, _shade(hr_col), 1.2)
+		if style == "ponytail":
+			_ellipse(hxf * Vector2(-18.0, -13.0), Vector2(2.6, 3.2), hr, Color(0.86, 0.30, 0.42))
 	if pose.has("hat"):
 		var hat_col: Color = pose.get("hat_color", Color(0.24, 0.22, 0.22))
 		var cap_pts := PackedVector2Array([
@@ -563,7 +602,10 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 		_ellipse(hxf * Vector2(13.6 - jolt * 0.6, 0.4 - jolt * 0.4), Vector2(1.5, 1.7) * (1.0 + 0.2 * jolt), hr, OUT)
 		_line(hxf * Vector2(9.6, lid_y), hxf * Vector2(12.6, lid_y - 0.5), OUT, 1.8)
 		_line(hxf * Vector2(12.6, lid_y - 0.5), hxf * Vector2(16.2, lid_y + 0.1), OUT, 1.8)
-		_line(hxf * Vector2(10.4, lid_y - 2.2), hxf * Vector2(15.0, lid_y - 2.6), _shade(SKIN), 1.1)
+		if pose.get("lashes", false):
+			_line(hxf * Vector2(15.8, lid_y + 0.1), hxf * Vector2(18.0, lid_y - 1.6), OUT, 1.3)
+			_line(hxf * Vector2(14.6, lid_y - 0.2), hxf * Vector2(16.2, lid_y - 2.2), OUT, 1.1)
+		_line(hxf * Vector2(10.4, lid_y - 2.2), hxf * Vector2(15.0, lid_y - 2.6), _shade(sk), 1.1)
 	# the eyebrow, low and level while absorbed, shot up on the jolt
 	var by := -6.4 - 2.6 * jolt
 	_line(hxf * Vector2(9.6, by + 0.4), hxf * Vector2(13.2, by - 0.4 - jolt), _shade(hr_col), 2.4)
@@ -578,7 +620,7 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 			hxf * Vector2(17.2 + jaw.x, 16.2 + jaw.y), hxf * Vector2(15.8 + jaw.x * 0.8, 14.8 + jaw.y * 0.7)]),
 			Color(0.88, 0.42, 0.44))
 	else:
-		_line(hxf * Vector2(14.4, 14.4), hxf * Vector2(18.0, 14.6), _shade(_shade(SKIN)), 1.4)
+		_line(hxf * Vector2(14.4, 14.4), hxf * Vector2(18.0, 14.6), _shade(_shade(sk)), 1.4)
 
 	# ---------------------------------------------------------- the arms in front
 	_group(arm_phone[0], IW)

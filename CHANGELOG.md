@@ -2,6 +2,31 @@
 
 Append-only session history, newest first.
 
+## 2026-11-01 - Your human: NEW LOOK, one look for the walk and the films
+
+- **NEW LOOK** on GET READY: with YOUR HUMAN picked, pee rolls a
+  different-looking person each time, him or her: six skin tones, six hair
+  colours, hair styles (his short, curly, bald or a bun; her ponytail,
+  curls, a bob or long hair), eight shirts, five trousers and four pairs of
+  shoes. Left and right still switch HIM and HER, keeping the colours and
+  swapping the hair for the matching style. The look is saved with the
+  records; before, HIM or HER reset every launch.
+- **One look everywhere** (`Game.human_look`): the walk draws your human in
+  it from above (`entities/human.gd`), and every film and the intro draw the
+  same person side on (`IntroKit.dressed` fills a pose that brings no
+  colours of its own; passers-by keep theirs). The side-on human has the new
+  styles (a ponytail that swings with the stride, a bob, long hair, curls, a
+  bun, a bald crown with its shine) and lashes for her; the skin tone now
+  reaches every shade line on the face. Before, the films always drew HIM in
+  the blue shirt, and the walk's HIM wore other colours.
+- **A portrait of the pair** beside the GET READY card, side on as the films
+  draw them, so a new dog or a new look shows at once rather than as a dot
+  on the ground.
+- Tooling: `--look=him|her|N` for any run, `--shot-row=N` for GET READY's
+  row, and `tools/intro_render.gd` takes the dog and the human.
+  `tests/test_human_look.gd` (CI) checks the palettes, NEW LOOK, HIM/HER,
+  saving, the films' fill-in and the prompt.
+
 ## 2026-11-01 - Film polish: near misses that read, for every dog
 
 Every chase film rendered with each of the five dogs; all of them draw and

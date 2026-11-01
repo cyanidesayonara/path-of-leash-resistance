@@ -54,9 +54,12 @@ static func millie_points(pos: Vector2, s: float, face: float, sq: Vector2, pose
 
 
 # your human at pos (their feet). Returns the leash hand on screen. `ground`
-# puts their shadow on the floor (none if not given).
+# puts their shadow on the floor (none if not given). A pose without its own
+# colours is your human: drawn in the player's look (Game.human_look), as
+# the walk draws them; passers-by bring their own.
 static func human(c: CanvasItem, pos: Vector2, s: float, face: float, sq: Vector2, pose: Dictionary, rot := 0.0,
 		ground := INF) -> Vector2:
+	pose = dressed(c, pose)
 	if ground != INF:
 		var lift := maxf(0.0, ground - pos.y)
 		var k := clampf(1.0 - lift / 220.0, 0.3, 1.0)
@@ -68,6 +71,23 @@ static func human(c: CanvasItem, pos: Vector2, s: float, face: float, sq: Vector
 	var hand_l: Vector2 = HumanSide.draw(c, pose)
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	return pos + (hand_l * xs).rotated(rot)
+
+
+# the pose as drawn: one without its own colours gets your human's look
+# (Game.human_look); one with them (a passer-by) is left as it is
+static func dressed(c: CanvasItem, pose: Dictionary) -> Dictionary:
+	if pose.has("shirt"):
+		return pose
+	var g: Node = c.get_node_or_null("/root/Game")
+	if g == null or g.get("human_look") == null:
+		return pose
+	var out := pose.duplicate()
+	var look: Dictionary = g.human_look
+	for k in ["skin", "shirt", "trousers", "hair", "shoe", "hair_style"]:
+		if look.has(k):
+			out[k] = look[k]
+	out["lashes"] = bool(look.get("her", false))
+	return out
 
 
 # THE LEASH AS ROPE: a little verlet rope, so it swings, drags and drapes
