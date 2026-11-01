@@ -57,9 +57,11 @@ static func camera(t: float) -> Array:
 	return [Vector2(x, y), z]
 
 
-# where the surge's leading lip is
+# where the surge's leading lip is. The curl and its spray reach a long way
+# ahead of x, so it holds well back of your human until the bolt: a near
+# miss with daylight under the lip, never a wave breaking over his head.
 static func surge_x(t: float) -> float:
-	return Anim.k(t, [[0.0, -1500.0], [2.2, -900.0], [3.9, 180.0, "out"], [BOLT_AT, 380.0], [TITLE_AT, 1100.0, "in"]])
+	return Anim.k(t, [[0.0, -1500.0], [2.2, -900.0], [3.9, -40.0, "out"], [BOLT_AT, 90.0], [TITLE_AT, 1000.0, "in"]])
 
 
 static func draw(c: CanvasItem, t_real: float) -> void:

@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-11-01 - Film polish: near misses that read, for every dog
+
+Every chase film rendered with each of the five dogs; all of them draw and
+act right. What the pass fixed:
+
+- **El Besòs:** the surge holds well back of your human until the bolt
+  (`surge_x`), so it is a near miss with daylight under the lip, not a wave
+  breaking over his head without him noticing.
+- **La Neteja:** the grit thrown off the brush stays low and short, so the
+  cloud boils at the brush and no longer hides the pair's legs or the dog.
+- **El Veterinari:** the staff keep coming through the bolt and into the
+  run (`assistant_x`), so the chase keeps its threat once the camera cuts
+  wide.
+- `tools/intro_render.gd` takes an optional fifth argument, the dog to draw
+  (`millie`, `pipa`, `mochi`, `bruna`, `tito`), to check a film with each.
+
 ## 2026-11-01 - La Neteja's sweeper gets a face, in the film and the walk
 
 - **The film** (`intro/film_sweeper.gd`) is scarier from a dog's height:
