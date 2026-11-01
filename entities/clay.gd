@@ -26,6 +26,21 @@ static func offscreen(node: Node2D, main: Object) -> bool:
 	return node.global_position.distance_squared_to((cam as Node2D).global_position) > DRAW_RANGE * DRAW_RANGE
 
 
+# true when a global rect, grown by `margin`, overlaps main's camera view. A
+# node out of view can skip queue_redraw: its last picture is out of sight,
+# and the check passes again the frame it comes back. `margin` must cover
+# what it draws past the rect and how far it and the camera move in a step.
+static func in_view(node: CanvasItem, main: Object, r: Rect2, margin: float) -> bool:
+	if main == null:
+		return true
+	var cam: Variant = main.get("cam")
+	if cam == null or not (cam is Camera2D):
+		return true
+	var c := cam as Camera2D
+	var half := node.get_viewport_rect().size * 0.5 / c.zoom
+	return Rect2(c.get_screen_center_position() - half, half * 2.0).grow(margin).intersects(r, true)
+
+
 # an ellipse with half extents `half`, its x axis along `fwd`
 static func ellipse_pts(center: Vector2, half: Vector2, fwd: Vector2, steps := ELLIPSE_STEPS) -> PackedVector2Array:
 	var side := fwd.orthogonal()

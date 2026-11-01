@@ -33,6 +33,11 @@ func make_parakeet(side: float) -> void:
 	wall_side = side
 
 
+# how far past the view a bird still redraws: its spread wings, shadow and a
+# step of flight
+const VIEW_MARGIN := 40.0
+
+
 func _physics_process(delta: float) -> void:
 	if main.frozen:
 		return
@@ -56,7 +61,7 @@ func _physics_process(delta: float) -> void:
 				if global_position.distance_to(b.global_position) < 90.0:
 					scare()
 					break
-	if Engine.get_physics_frames() % 2 == 0:
+	if Engine.get_physics_frames() % 2 == 0 and Clay.in_view(self, main, Rect2(global_position, Vector2.ZERO), VIEW_MARGIN):
 		queue_redraw()
 
 

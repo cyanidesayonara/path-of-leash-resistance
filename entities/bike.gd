@@ -5,6 +5,8 @@ extends Node2D
 # node rotates to the direction of travel.
 # Commuters knock the human flat (phone risk); kids and rollerbladers bump ("Sorry!").
 
+const Clay := preload("res://entities/clay.gd")
+
 const BypasserRouteScript := preload("res://systems/bypasser_route.gd")
 const RIDER_CLEARANCE := 18.0
 const RIDER_MAX_LATERAL_SPEED := 220.0
@@ -82,6 +84,11 @@ func configure_route(
 	return true
 
 
+# how far past the view a rider still redraws: half a bike, its shadow, and
+# a step of its travel and the camera's
+const VIEW_MARGIN := 60.0
+
+
 func _physics_process(delta: float) -> void:
 	if main.phase == "freedom":
 		queue_free()
@@ -138,7 +145,8 @@ func _physics_process(delta: float) -> void:
 		if not hit_done and kind == "bike" and min_dist < 80.0:
 			main.close_call(human.global_position)
 		queue_free()
-	queue_redraw()
+	if Clay.in_view(self, main, Rect2(global_position, Vector2.ZERO), VIEW_MARGIN):
+		queue_redraw()
 
 
 # the direction shadows fall (main.LIGHT), repeated here so a rider drawn
