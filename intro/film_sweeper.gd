@@ -211,10 +211,11 @@ static func _sweeper(c: CanvasItem, x: float, t: float) -> void:
 		c.draw_line(bc, tip, BRISTLE, 3.0)
 	c.draw_colored_polygon(MillieSide.ellipse(bc, Vector2(18, 7)), STEEL)
 	# grit and dust thrown up ahead of the brush
+	# kept low and short, so the cloud boils at the brush and never hides the pair
 	for p in range(7):
 		var f := fposmod(t * 1.8 + float(p) * 0.143, 1.0)
-		var at := bc + Vector2(40.0 + f * 150.0, -f * 70.0 + sin(float(p) * 2.1) * 20.0)
-		IntroKit.puff(c, at, 14.0 + f * 22.0, 1.0 - f)
+		var at := bc + Vector2(30.0 + f * 80.0, -f * 36.0 + sin(float(p) * 2.1) * 12.0)
+		IntroKit.puff(c, at, 10.0 + f * 14.0, 0.75 * (1.0 - f))
 	for p in range(10):
 		var f := fposmod(t * 3.1 + float(p) * 0.1, 1.0)
 		c.draw_circle(bc + Vector2(30.0 + f * 120.0, -f * 90.0 + f * f * 120.0) + Vector2(0, sin(float(p) * 3.3) * 8.0),
