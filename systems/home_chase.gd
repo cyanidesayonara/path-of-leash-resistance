@@ -78,6 +78,7 @@ const SWEEPER_SCRIPT := "res://entities/sweeper.gd"
 # the story film each chase walk plays as the threat strikes (intro/film_player.gd)
 const SWEEPER_FILM := "res://intro/film_sweeper.gd"
 const FLOOD_FILM := "res://intro/film_flood.gd"
+const VET_FILM := "res://intro/film_vet.gd"
 # La Neteja's dumpster jams, by depth (world/level_build.gd NETEJA_JAMS):
 # the first the way home meets, then the later one, the midpoint
 const NETEJA_BANDS := [
@@ -201,6 +202,7 @@ static func profile_for(level: String) -> Dictionary:
 		v["id"] = "vet"
 		v["script"] = "res://entities/vet_threat.gd"
 		v["bands"] = VET_BANDS.duplicate(true)
+		v["film"] = VET_FILM
 		return v
 	if level == "boars":
 		var b := kind_behavior("boars")
