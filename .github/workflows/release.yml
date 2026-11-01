@@ -105,6 +105,14 @@ jobs:
           set -euo pipefail
           ./Godot_v4.7-stable_linux.x86_64 --headless --path . --import
 
+      # the soundtrack rendered once, here, from this commit's audio/music.gd:
+      # the exports play these tracks instead of synthesizing them mid-walk
+      - name: Bake the soundtrack
+        run: |
+          set -euo pipefail
+          ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tools/bake_music.gd
+          test "$(ls music/baked/*.res | wc -l)" -gt 40
+
       # the title's version label: this tag plus the short commit hash
       - name: Stamp the build label
         run: bash tools/stamp_version.sh

@@ -21,6 +21,10 @@ before proposing features.
 - Renderer: GL Compatibility (required for the web export)
 - All art is vectors drawn in `_draw()`. The one file asset is `icon.png`,
   and even that is generated - see `tools/make_icon.gd`
+- All music and sound is synthesized in code (`audio/music.gd`,
+  `autoload/sfx.gd`). An export plays the soundtrack pre-rendered by
+  `tools/bake_music.gd` from that same code (gitignored `music/baked/`,
+  baked by `release.yml` before it exports); the editor synthesizes live
 - Two itch channels, both pushed by CI on a version tag: `html5` (played in
   the browser) and `windows` (the download the itch app installs)
 
@@ -217,6 +221,16 @@ Requires export templates in `%APPDATA%\Godot\export_templates\4.7.stable\`
 (web_*.zip + version.txt from the official tpz). The **Windows** preset needs
 the full ~1GB template pack, which is why that export lives in CI only - a
 local attempt fails with "No export template found" and nothing else.
+
+Bake the soundtrack (every track rendered once and QOA-compressed into
+`music/baked/`, about 10 MB; an exported build plays these instead of
+synthesizing a walk's tracks while it is played, which in the browser took a
+slice of every frame). `release.yml` and `tools/web_perf.sh` run it before
+exporting; a local export without it synthesizes live, as the editor always
+does (`--baked-music` plays the bake in the editor, `--no-music` plays none):
+```
+godot\Godot_v4.7-stable_win64_console.exe --headless --path . --script res://tools/bake_music.gd
+```
 
 Measure the web build (frame times and draw calls per level, in headless
 Chrome on the real GPU; needs the web templates above):

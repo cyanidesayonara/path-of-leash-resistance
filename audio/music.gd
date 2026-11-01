@@ -281,6 +281,20 @@ static func walk_style(level: String) -> String:
 	return level
 
 
+# Every track the game can ask for by name (Sfx's music cue and stings),
+# which tools/bake_music.gd renders ahead of time for exported builds.
+static func all_tracks() -> PackedStringArray:
+	var out := PackedStringArray(["intro", "freedom"])
+	for k: String in STYLES.keys():
+		if not k in out:
+			out.append(k)
+	for k: String in JINGLES.keys():
+		out.append(k)
+	for k: String in DARES.keys():
+		out.append("dare_" + k)
+	return out
+
+
 static func job(name: String) -> Job:
 	var j := Job.new()
 	j.name = name

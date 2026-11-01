@@ -41,6 +41,11 @@ OUT="$(mktemp -d)"
 PROFILE="$(mktemp -d)"
 winpath() { command -v cygpath >/dev/null && cygpath -m "$1" || echo "$1"; }
 "$GODOT" --headless --path . --import >/dev/null 2>&1
+# the soundtrack baked from this checkout, as release.yml does, so the build
+# measured plays the tracks a released one plays (NO_BAKE=1 keeps the last bake)
+if [ -z "${NO_BAKE:-}" ]; then
+  "$GODOT" --headless --path . --script res://tools/bake_music.gd || { echo "music bake failed"; exit 1; }
+fi
 if ! "$GODOT" --headless --path . --export-release "Web" "$(winpath "${OUT}")/index.html" >/dev/null 2>&1 \
     || [ ! -s "${OUT}/index.wasm" ]; then
   echo "web export failed (are the web export templates installed?)"
