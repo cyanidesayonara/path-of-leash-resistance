@@ -117,6 +117,25 @@ Single player. No ads, no purchases, no account. The download plays offline; the
 Made in Godot by Santtu Nykänen. The dog is Millie, a distinguished salt-and-pepper mutt who squats like a lady.
 ```
 
+## What's new in 1.68
+
+For a devlog post or the top of the body. Everything since v1.67, from
+CHANGELOG.md. The Store's What's new is the short form of this.
+
+```
+- Story films on the chase walks. Every walk with something to run from now opens its way home with a short animated scene: the two of you heading home, your human on the phone, then she hears it, looks back, and bolts, dragging your human after her. RUN!
+  - La Neteja: dawn on a narrow street and a street sweeper with a glaring headlamp and a grille full of teeth.
+  - El Besòs: rain, the warning siren and a wave twice your human's height coming down the river, a duck riding the crest.
+  - El Veterinari: a bell, a door banging open and the clinic staff pouring out with syringes, clippers, a cone of shame and a catch net.
+  - Els Senglars: a rustle in the scrub, a bin going over and the whole sounder charging out of Collserola's oaks.
+  - Festa de Gràcia: drums, bangers, the fire devils with their spark fountains and the Drac de Gràcia breathing sparks.
+  - The finale, Rambla del Raval: Botero's cat opens his eyes, splits his plinth and drops to the paving, and this time she does not run. She stands her ground. EL GAT!
+  - Any button skips a film.
+- The threats look the part on the walk too, drawn as the films draw them: the sweeper glares down the street, the flood is a rolling wall of water, the vet's staff come shoulder to shoulder, the boars charge as a herd, the devils wear horned hoods and the Drac beats its wings. Each one now fills exactly what can catch you.
+- NEW LOOK: on GET READY, pick YOUR HUMAN and press pee for a different-looking person every time, him or her, six skin tones, eight hairstyles, all the clothes. A portrait of the two of you shows the new look straight away, the films draw the same person, and your choice is remembered between sessions.
+- Each threat speaks for itself: the vet's staff shout BOOSTER TIME!, the banners name the boars, the fire devils and the river.
+```
+
 ## What's new in 1.67
 
 For a devlog post or the top of the body. Everything since v1.64 (1.65 and

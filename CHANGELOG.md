@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-01 - Release notes for 1.68
+
+- `store/listing.md`: What's new in this version describes 1.68 (the story
+  films, the threats drawn as the films draw them, NEW LOOK, each threat's
+  own words); 1.67's notes, submitted on 2026-10-31, move to Past What's new.
+  No new walks, so the walk counts and lists stand.
+- `docs/itch-page.md`: What's new in 1.68, the long form for a devlog.
+
 ## 2026-11-01 - The finale's film: El Gat wakes, and she stands her ground
 
 - **`intro/film_gat.gd`, "El Gat"**: night on the Rambla del Raval, the

@@ -86,17 +86,10 @@ dog walking
 ### What's new in this version
 
 ```
-- Six new walks:
-  - La Carretera de les Aigües, the old water road along Collserola, and El Laberint d'Horta, the cypress maze.
-  - Platja de Llevant, the dog beach at the far end of the coast.
-  - Els Senglars, a forest trail with wild boars to outrun on the way home, and Festa de Gràcia, a festival street with the correfoc after you.
-  - The finale, Rambla del Raval: Botero's fat bronze cat climbs off his plinth and your human will not pass him. Dodge his paw, trip his charges with the leash, then tie his legs up.
-- Five dogs to walk, each with a knack of their own, opened with stars, and bones to train them.
-- A dare-giver on every walk, each with their own tune. Bark to take a dare, then land the tricks before the music runs out.
-- Fifteen goals on every walk, among them spelling LEASH, a hidden pernil and a par time.
-- Pooping and picking up have buttons of their own, there are four key layouts, and every key and button can be rebound.
-- Passeig Marítim is Badalona's seafront now, with the Pont del Petroli and its monkey.
-- Every walk spells its name on the ground in its own stuff, with a line under it in English, Català or Español (a new LANGUAGE setting).
+- Story films: a short scene before the threat strikes on every chase walk (La Neteja's sweeper, El Besòs's flood, El Veterinari, Els Senglars, Festa de Gràcia's correfoc), and before El Gat wakes on the Rambla del Raval, where she stands her ground. Any button skips.
+- The threats look the part, the same in the films and on the walk: the street sweeper glares down the road, the flood comes as a wave over your human's head, the vet's staff come at you with syringes, clippers, a cone and a net, the boars charge as a herd, and the correfoc brings the Drac de Gràcia.
+- NEW LOOK: on GET READY, give your human a different look, him or her, any skin tone and hairstyle. The films show the same person, and your choice is remembered.
+- Each threat has its own words when it sets off, stops and catches you.
 ```
 
 ### Notes for certification
@@ -213,6 +206,22 @@ written by `tools/make_store_art.gd`: the 9:16 poster, the 1:1 box art and the
 ## Past What's new
 
 As submitted, newest first. The current one is in "Current listing".
+
+### What's new in 1.67 (tagged 2026-10-31, submitted the same day)
+
+```
+- Six new walks:
+  - La Carretera de les Aigües, the old water road along Collserola, and El Laberint d'Horta, the cypress maze.
+  - Platja de Llevant, the dog beach at the far end of the coast.
+  - Els Senglars, a forest trail with wild boars to outrun on the way home, and Festa de Gràcia, a festival street with the correfoc after you.
+  - The finale, Rambla del Raval: Botero's fat bronze cat climbs off his plinth and your human will not pass him. Dodge his paw, trip his charges with the leash, then tie his legs up.
+- Five dogs to walk, each with a knack of their own, opened with stars, and bones to train them.
+- A dare-giver on every walk, each with their own tune. Bark to take a dare, then land the tricks before the music runs out.
+- Fifteen goals on every walk, among them spelling LEASH, a hidden pernil and a par time.
+- Pooping and picking up have buttons of their own, there are four key layouts, and every key and button can be rebound.
+- Passeig Marítim is Badalona's seafront now, with the Pont del Petroli and its monkey.
+- Every walk spells its name on the ground in its own stuff, with a line under it in English, Català or Español (a new LANGUAGE setting).
+```
 
 ### What's new in 1.64 (tagged 2026-10-24; 1.65 and 1.66 went out with it unchanged)
 
