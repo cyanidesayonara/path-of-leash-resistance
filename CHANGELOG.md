@@ -2,6 +2,24 @@
 
 Append-only session history, newest first.
 
+## 2026-11-01 - Els Senglars' chase film, and the sounder in the walk
+
+- **`intro/film_boars.gd`, "The sounder"**: dusk on the dirt trail through
+  Collserola's holm oaks. The scrub behind them rustles and she looks back;
+  a snort, the bushes thrash, a bin goes over with a crash, and out comes
+  the sounder: the mama huge and bristling with her shoulders high, a tusk
+  curling up, a red eye under a scowl and steam snorting off her snout, two
+  big boars behind her and the striped piglets scampering in front, dust
+  and leaves flying. She bolts; RUN! with the mama charging into the card.
+  On FilmKit; Els Senglars' chase profile names it (`HomeChase.BOARS_FILM`).
+- **The walk's boars** (`entities/boar_threat.gd`) are the same sounder
+  from above: five abreast across the trail, the mama in the middle, a big
+  boar on each flank, piglets between, each with high shoulders and a mane,
+  legs at a gallop, the adults tusked and scowling, dust raised behind the
+  line. It spans what catches you (`caught()`); the old drawing was a small
+  mama and two piglets dragging a bin, half that width. The catch itself is
+  unchanged.
+
 ## 2026-11-01 - Every chase threat speaks for itself
 
 The vet's staff borrowed the sweeper's every line: VRRROOM as they set off,
