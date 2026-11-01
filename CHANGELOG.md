@@ -2,6 +2,30 @@
 
 Append-only session history, newest first.
 
+## 2026-11-02 - No more hitches from the ground
+
+- The verge (the grass and what sits on it) redrew every 150 px of walking,
+  and each time it re-asked every grass cell on screen, some 1,750 of them,
+  what ground it stood on and whether anything covered it: 7 ms on La
+  Rambla, 12 on El Mercat, 24 on El Parc, a stutter every few steps. Each
+  row's answer is now kept until the ground changes mid-walk (a detour, or a
+  zone, patch, solid or verge item added, as the horses' droppings add), and
+  each row's tufts are kept as triangles (`main.grass_row`, `_grass_geo`).
+- The off-leash layer redrew the whole space every 110 px of camera travel
+  near the gate and all through the off-leash area, though none of it depends
+  on the view: 4-9 ms of the same picture. It now redraws only when its
+  furniture changes. A water bowl's ripple holds still between redraws; it
+  only ever moved on those.
+- Circles in batches can opt into fewer sides when small (`ShapeBatch.lod`,
+  the rim within 0.15 px of round): 8 sides for a 2 px dot instead of the
+  engine's 64. The name signs (up to 131,000 triangles for one sign) and the
+  verge use it, five to eight times fewer triangles. A few hundred edge
+  pixels move on a sign, invisible at 3x zoom; everything else is unchanged
+  (shots of ten walks at three moments compared).
+- Desktop, per redraw, alternating with main: El Parc's verge 39 to 8-11 ms,
+  El Passeig's 55 to 13; La Rambla's sign 25-34 to 10-15 ms, El Passeig's
+  28 to 9. Tests: `test_grass_cache.gd`, `test_circle_lod.gd`.
+
 ## 2026-11-01 - Riders, walkers and pigeons rest out of view
 
 - Bikes redrew every physics step wherever they were, pairs and their

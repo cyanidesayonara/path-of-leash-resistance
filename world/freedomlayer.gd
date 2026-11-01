@@ -14,11 +14,14 @@ extends Node2D
 # the sea's crests, the marks the other dogs leave - stay in the main draw,
 # because those genuinely change every frame.
 #
-# It redraws when the camera has moved far enough to reveal new ground, or when
-# main says the furniture changed (a hole being dug, a post sniffed clean).
+# It redraws only when main says the furniture changed (a hole being dug, a
+# post sniffed clean). It used to redraw every 110 px of camera travel too,
+# but the whole space is drawn every time and none of it depends on the view:
+# that was 4-9 ms of the same picture, a hitch every few steps near the gate
+# and all through the off-leash space. (A water bowl's ripple, read from the
+# clock, now holds still between redraws; it only ever moved on those.)
 
 var main: Node2D
-var last_cam := Vector2(1e9, 1e9)
 var dirty := true
 
 
@@ -30,14 +33,9 @@ func mark_dirty() -> void:
 	dirty = true
 
 
-func tick(cam_pos: Vector2) -> void:
-	# far down the walk none of this is on screen, and the canvas keeps what it
-	# drew: moving the camera there is no reason to redraw the whole space
-	if not dirty and cam_pos.y > main.GATE_Y + 900.0:
-		return
-	if dirty or cam_pos.distance_to(last_cam) > 110.0:
+func tick(_cam_pos: Vector2) -> void:
+	if dirty:
 		dirty = false
-		last_cam = cam_pos
 		queue_redraw()
 
 

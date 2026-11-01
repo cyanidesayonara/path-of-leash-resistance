@@ -61,5 +61,7 @@ func _draw() -> void:
 		return
 	# the same batching as the world pass: runs of shapes become one call
 	var b := ShapeBatch.new(self)
+	# a sign is a few hundred small discs: sides they can show, not 64 each
+	b.lod = true
 	main.draw_signs_onto(b, _vt, _vb)
 	b.flush()
