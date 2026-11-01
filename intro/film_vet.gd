@@ -6,9 +6,10 @@ extends RefCounted
 # intro/film_player.gd). The clinic corridor, side on: tiled walls, the
 # waiting chairs, a cat in a carrier. The two of them heading for the doors,
 # your human on the phone. The counter bell: her ears go up and she looks
-# back. The consulting room door bangs open and out come two assistants in
-# scrubs and masks, one carrying a giant cone of shame mouth first, the
-# other a catch net held high; the cat hisses, a glove snaps. A push in on
+# back. The consulting room door bangs open and out pours the clinic staff
+# in scrubs and masks, each holding out something a dog dreads: a cone of
+# shame, a giant syringe, the nail clippers, a catch net. The cat hisses, a
+# glove snaps. A push in on
 # her face. She spins, digs in and bolts; the leash snaps taut, your human is
 # yanked off after her, and RUN! slams in with the cone's mouth filling the
 # frame.
@@ -21,7 +22,18 @@ const DOOR_X := -60.0            # the consulting room door's centre
 const OUT_AT := 2.3              # the door bangs open
 const BOLT_AT := FilmKit.BOLT_AT
 const TITLE_AT := FilmKit.TITLE_AT
-const AS_K := 1.6                # the assistants' scale: a head taller than your human
+const AS_K := 1.5                # the staff's scale: a head taller than your human
+const DOSE := Color(0.45, 0.85, 0.40)
+const CLIPPER_RED := Color(0.85, 0.20, 0.22)
+# the line, as the walk's: [what they hold, x behind the lead, far rank,
+# cap or hair, order out of the door]
+const STAFF := [
+	["net", -280.0, true, Color(0.16, 0.24, 0.42), 3],
+	["syringe", -100.0, true, Color(0.13, 0.46, 0.43), 1],
+	["clippers", -370.0, false, Color(0.62, 0.30, 0.16), 4],
+	["syringe", -190.0, false, Color(0.85, 0.72, 0.35), 2],
+	["cone", 0.0, false, Color(0.35, 0.22, 0.15), 0],
+]
 # the clinic's colours, as the walk's (systems/vet.gd, entities/vet_threat.gd)
 const WALL_TILE := Color(0.90, 0.94, 0.93)
 const WALL_LINE := Color(0.80, 0.86, 0.85)
@@ -33,12 +45,10 @@ const DOOR_WOOD := Color(0.58, 0.42, 0.30)
 const DOOR_FRAME := Color(0.35, 0.28, 0.22)
 const PORTHOLE := Color(0.70, 0.88, 0.92)
 const SCRUBS := Color(0.20, 0.65, 0.60)
-const SCRUBS_DARK := Color(0.13, 0.46, 0.43)
 const GLOVE := Color(0.30, 0.55, 0.90)
 const MASK := Color(0.60, 0.85, 0.90)
 const CLOG := Color(0.94, 0.96, 0.98)
 const SKIN := Color(0.92, 0.76, 0.65)
-const BLONDE := Color(0.85, 0.72, 0.35)
 const CONE := Color(0.80, 0.90, 0.97, 0.85)
 const CONE_RIM := Color(0.25, 0.45, 0.75)
 const NET := Color(0.80, 0.82, 0.85, 0.55)
@@ -211,32 +221,79 @@ static func _carrier(c: CanvasItem, at: Vector2, t: float) -> void:
 			c.draw_line(o + d * 14.0, o + d * (30.0 + 8.0 * sin(t * 30.0 + float(k))), Color(INK, hiss), 4.0)
 
 
-# the two assistants coming out of the door and down the corridor at a run:
-# the lead one carrying the cone mouth first, the other the net held high.
-# They come out of the doorway a step smaller, as from inside the room.
+# the staff pouring out of the door and down the corridor at a run, the
+# walk's line (entities/vet_threat.gd) seen side on: two ranks, the far one
+# a step smaller and higher, each holding out what a dog dreads. They come
+# out one after another, a step smaller in the doorway, as from inside.
 static func _assistants(c: CanvasItem, t: float, t_real: float) -> void:
 	var ax := assistant_x(t)
-	var out := Anim.span(t, OUT_AT, OUT_AT + 0.35)
-	var k := AS_K * lerpf(0.8, 1.0, out)
-	var feet := lerpf(WALL_FOOT + 4.0, FEET, out)
-	# the second one, a step behind, with the net
-	var bx := ax - 230.0 * out - 20.0
-	var b_pose := _pose(t_real + 0.3, BLONDE)
-	b_pose["reach"] = 0.6
-	var b_hand := IntroKit.human(c, Vector2(bx, feet), k, 1.0, Vector2.ONE, b_pose, 0.0, feet)
-	_mask(c, Vector2(bx, feet), k)
-	_net(c, b_hand, t_real, k)
-	# the lead one, the cone held out in front in both gloved hands
-	var a_pose := _pose(t_real, SCRUBS_DARK)
-	a_pose["reach"] = 1.0
-	var a_hand := IntroKit.human(c, Vector2(ax, feet), k, 1.0, Vector2.ONE, a_pose, 0.0, feet)
-	_mask(c, Vector2(ax, feet), k)
-	_cone(c, a_hand + Vector2(110.0, -10.0) * k, 120.0 * k, 150.0 * k, t_real)
-	c.draw_circle(a_hand, 7.0 * k, GLOVE)
-	# the glove snapped at the cone's rim
+	# the bodies first, then what they hold over all of them, so no tool is
+	# lost behind the next one along
+	var held := []
+	for i in range(STAFF.size()):
+		var st: Array = STAFF[i]
+		var out := Anim.span(t, OUT_AT + float(st[4]) * 0.12, OUT_AT + float(st[4]) * 0.12 + 0.3)
+		if out <= 0.0:
+			continue
+		var far: bool = st[2]
+		var k := AS_K * (0.88 if far else 1.0) * lerpf(0.8, 1.0, out)
+		var feet := lerpf(WALL_FOOT + 4.0, FEET - (18.0 if far else 0.0), out)
+		var x := lerpf(DOOR_X, ax + float(st[1]), out)
+		var pose := _pose(t_real + float(i) * 0.37, st[3])
+		pose["reach"] = 1.0
+		var hand := IntroKit.human(c, Vector2(x, feet), k, 1.0, Vector2.ONE, pose, 0.0, feet)
+		_mask(c, Vector2(x, feet), k)
+		held.append([String(st[0]), hand, t_real + float(i), k])
+	for h: Array in held:
+		_item(c, h[0], h[1], h[2], h[3])
+	# a glove snapped on, over the ranks
 	var snap := Anim.span(t, 3.4, 3.6)
 	if snap > 0.0 and snap < 1.0:
-		FilmKit._jolt(c, a_hand + Vector2(110.0, -140.0) * k, snap)
+		FilmKit._jolt(c, Vector2(ax - 40.0, FEET - 290.0), snap)
+
+
+# what one of them holds out, from their hand, side on, facing right
+static func _item(c: CanvasItem, item: String, hand: Vector2, t: float, k: float) -> void:
+	match item:
+		"cone":
+			_cone(c, hand + Vector2(62.0, -4.0) * k, 52.0 * k, 64.0 * k, t)
+		"syringe":
+			_syringe(c, hand, k, t)
+		"clippers":
+			_clippers(c, hand, k, t)
+		"net":
+			_net(c, hand, t, k)
+	c.draw_circle(hand, 6.5 * k, GLOVE)
+
+
+# a giant syringe held like a lance: the plunger behind the hand, the barrel
+# full of green, the needle out ahead with a drop on its tip
+static func _syringe(c: CanvasItem, hand: Vector2, k: float, t: float) -> void:
+	var back := hand - Vector2(34.0, 0.0) * k
+	c.draw_rect(Rect2(back - Vector2(16.0, 3.0) * k, Vector2(16.0, 6.0) * k), POLE)
+	c.draw_rect(Rect2(back - Vector2(20.0, 14.0) * k, Vector2(6.0, 28.0) * k), POLE)
+	var barrel := Rect2(back + Vector2(0.0, -13.0) * k, Vector2(96.0, 26.0) * k)
+	c.draw_colored_polygon(IntroKit.rrect(barrel, 5.0 * k), Color(0.92, 0.96, 1.0, 0.9))
+	c.draw_rect(Rect2(barrel.position + Vector2(30.0, 4.0) * k, Vector2(62.0, 18.0) * k), DOSE)
+	for m in range(5):
+		var mx := barrel.position.x + (18.0 + float(m) * 15.0) * k
+		c.draw_line(Vector2(mx, barrel.position.y), Vector2(mx, barrel.position.y + 9.0 * k), INK, 1.5 * k)
+	c.draw_rect(barrel, INK, false, 2.0 * k)
+	var tip := Vector2(barrel.end.x + 54.0 * k, barrel.get_center().y)
+	c.draw_line(Vector2(barrel.end.x, tip.y), tip, Color(0.80, 0.82, 0.86), 3.0 * k)
+	var drip := fposmod(t * 0.9, 1.0)
+	c.draw_circle(tip + Vector2(2.0, 4.0 + drip * 12.0) * k, 4.0 * k * (1.0 - drip * 0.5), Color(DOSE, 1.0 - drip))
+	c.draw_circle(tip, 3.0 * k, Color(1, 1, 1, 0.6 + 0.4 * sin(t * 9.0)))
+
+
+# the nail clippers, raised and snipping at the air
+static func _clippers(c: CanvasItem, hand: Vector2, k: float, t: float) -> void:
+	var pivot := hand + Vector2(30.0, -40.0) * k
+	var snip := absf(sin(t * 9.0)) * 0.45
+	for s in [-1.0, 1.0]:
+		c.draw_line(hand + Vector2(-4.0, s * 6.0) * k, pivot, CLIPPER_RED, 9.0 * k)
+		c.draw_line(pivot, pivot + Vector2.from_angle(-0.7 + s * snip) * 64.0 * k, Color(0.80, 0.82, 0.86), 8.0 * k)
+	c.draw_circle(pivot, 5.0 * k, INK)
 
 
 # an assistant at a run in scrubs and clogs; `cap` is the cap or the hair
@@ -300,17 +357,18 @@ static func _net(c: CanvasItem, hand: Vector2, t: float, k: float) -> void:
 	_ring(c, hoop, Vector2(14.0, 42.0) * k, Color(0.3, 0.35, 0.40), 4.0 * k)
 
 
-# the card: the clinic gone white-hot behind RUN!, the cone's mouth nosing
-# in from the left of the frame, a blue glove on its rim
+# the card: the clinic gone white-hot behind RUN!, the giant syringe driving
+# in from the left of the frame, its drop trembling on the needle, and the
+# clippers snipping in over it
 static func _title(c: CanvasItem, t: float) -> void:
 	for i in range(8):
 		var f := float(i) / 7.0
 		c.draw_rect(Rect2(-200, f * 720.0, 1680, 104.0), Color(0.92, 0.98, 0.96).lerp(Color(0.40, 0.72, 0.68), f))
 	var d := t - TITLE_AT
 	var bob := sin(t * 18.0) * 4.0
-	var mouth := Vector2(230.0 + d * 110.0, 430.0 + bob)
-	_cone(c, mouth, 380.0, 520.0, t, 0.5)
-	c.draw_circle(mouth + Vector2(-30.0, -350.0), 34.0, GLOVE)
-	c.draw_circle(mouth + Vector2(-2.0, -340.0), 16.0, GLOVE.lightened(0.15))
+	_clippers(c, Vector2(40.0 + d * 60.0, 330.0 - bob), 3.6, t)
+	var hand := Vector2(-60.0 + d * 160.0, 540.0 + bob)
+	_syringe(c, hand, 5.5, t)
+	c.draw_circle(hand, 40.0, GLOVE)
 	FilmKit.slam(c, t, "RUN!", Vector2(880, 210))
 	IntroKit.fade(c, 1.0 - Anim.span(t, TITLE_AT, TITLE_AT + 0.2), Color(1.0, 0.95, 0.85))

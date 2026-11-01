@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-11-01 - El Veterinari's chase film, and a line of clinic staff
+
+- **`intro/film_vet.gd`, "Booster day"**: the clinic corridor side on, tiled
+  walls, the waiting chairs and a cat in a carrier. The counter bell rings;
+  she looks back. The consulting room door bangs open and the staff pour
+  out in scrubs and masks, each holding out what a dog dreads: a giant
+  syringe held like a lance, the cone of shame, the nail clippers snipping,
+  a catch net. The cat hisses, a glove snaps. She bolts; RUN! with the
+  syringe driving in and the clippers over it. On FilmKit, like the others;
+  El Veterinari's chase profile names it (`HomeChase.VET_FILM`).
+- **The walk's pursuers** (`entities/vet_threat.gd`) are the same line seen
+  from above: five staff shoulder to shoulder across the corridor in caps
+  and masks, holding out clippers, syringes, the cone and the net. It spans
+  what catches you (`caught()`): the old drawing was a cone half that width
+  between two small figures. The catch itself is unchanged.
+
 ## 2026-10-31 - El Besòs's chase film, and the films' shared kit
 
 - **`intro/film_kit.gd`**: what every chase film shares, so each reads as
