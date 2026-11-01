@@ -352,8 +352,11 @@ chase walk's profile in `systems/home_chase.gd` names its film, and
 `HomeChase.begin` plays it as the home leg starts, the walk frozen under it,
 then gives the warning. A continue repeats only the warning. Films never play
 headless, for the autowalk, or in a `--shot` run; `--no-films` stops them and
-`--films` forces them. Render one like an intro scene (`sweeper` is La
-Neteja's): `--script res://tools/intro_render.gd -- sweeper OUTDIR 24 640`.
+`--films` forces them. Every film shares one grammar and timing
+(`intro/film_kit.gd`: walking, she hears it, looks back, stares, bolts, the
+card) and draws its own place and threat around `FilmKit.pair`. Render one
+like an intro scene (`sweeper` is La Neteja's, `flood` El Besòs's):
+`--script res://tools/intro_render.gd -- flood OUTDIR 24 640`.
 
 The title's version label is not in the source: `tools/stamp_version.sh`
 writes the tag and short commit (`v1.55 (a1b2c3d)`) to the gitignored

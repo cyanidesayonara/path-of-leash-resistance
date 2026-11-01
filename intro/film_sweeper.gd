@@ -10,13 +10,12 @@ extends RefCounted
 # face. She spins, digs in and bolts; the leash snaps taut, your human is
 # yanked off after her, and RUN! slams in with the brushes filling the frame.
 
-const LENGTH := 6.6
+const LENGTH := FilmKit.LENGTH
 const BG := Color(0.10, 0.09, 0.12)
-const S := 1.45                  # the pair's scale
 const FEET := 650.0              # the pavement the pair walks on
 const ROAD := 760.0              # the road in front, where the machine runs
-const BOLT_AT := 4.85            # she digs in and goes
-const TITLE_AT := 5.55
+const BOLT_AT := FilmKit.BOLT_AT
+const TITLE_AT := FilmKit.TITLE_AT
 const SW_K := 1.4               # the machine's scale: it should loom over them
 const ORANGE := Color(0.86, 0.47, 0.09)
 const ORANGE_LIT := Color(0.98, 0.63, 0.18)
@@ -43,8 +42,7 @@ const CUES := [
 # a cut wide on the bolt that runs right with them; the title card square on.
 static func camera(t: float) -> Array:
 	if t >= TITLE_AT:
-		var k := 1.0 - Anim.span(t, TITLE_AT, TITLE_AT + 0.3)
-		return [Vector2(640, 360) + Vector2(sin(t * 91.0), sin(t * 67.0)) * 9.0 * k * k, 1.0]
+		return FilmKit.card_camera(t)
 	if t >= BOLT_AT:
 		var cx: float = Anim.k(t, [[BOLT_AT, 900.0], [TITLE_AT, 1500.0, "in"]])
 		return [Vector2(cx, 470.0), 1.0]
@@ -61,68 +59,15 @@ static func sweeper_x(t: float) -> float:
 
 
 static func draw(c: CanvasItem, t_real: float) -> void:
-	var t := Anim.twos(t_real)
 	if t_real >= TITLE_AT:
 		_title(c, t_real)
 		return
 	_street(c, t_real)
-	var go := Anim.span(t, BOLT_AT, BOLT_AT + 0.1)
-	# your human: an oblivious stroll, phone up, then yanked off after her
-	var hx: float = Anim.k(t, [[0.0, 380.0], [BOLT_AT, 560.0], [TITLE_AT, 1700.0, "in"]])
-	var hpose := {
-		"stride": t_real * 8.0, "stride_amp": 0.6 * (1.0 - go) + go,
-		"phone": 1.0, "glow": 0.5, "reach": 0.4 + 0.6 * go,
-		"lean": 0.85 * go, "lift": 0.5 * go, "head": 0.3 * go, "mouth": go,
-	}
-	var hand := IntroKit.human(c, Vector2(hx, FEET), S, 1.0, Vector2(1.2, 0.88) if go > 0.0 else Vector2.ONE, hpose,
-		0.0, FEET)
-	# her: trotting ahead, stopped by the rumble, looking back at it, the
-	# stare, and the spin and dig into the bolt
-	var mx: float = Anim.k(t, [[0.0, 600.0], [1.35, 720.0, "out"], [BOLT_AT, 720.0], [TITLE_AT, 1950.0, "in"]])
-	var trot := 1.0 - Anim.span(t, 1.2, 1.4)
-	var look := Anim.span(t, 1.6, 1.75) * (1.0 - Anim.span(t, 4.3, 4.4))
-	var crouch := Anim.span(t, 4.4, 4.75) * (1.0 - go)
-	var stare := Anim.span(t, 3.9, 4.1) * (1.0 - Anim.span(t, 4.3, 4.4))
-	var pose := {
-		"lean": 0.22 * crouch + 0.12 * go,
-		"crouch": crouch,
-		"head_up": Anim.k(t, [[1.3, 0.0], [1.5, 0.7, "out"], [3.9, 0.5], [4.1, 0.2, "io"]]),
-		"reach": sin(t_real * 14.0) * 0.6 * trot + go,
-		"push": -sin(t_real * 14.0) * 0.6 * trot + 0.4 * crouch + 0.9 * go,
-		"ear": Anim.k(t, [[1.3, 0.0], [1.45, 1.1, "snap"], [3.9, 0.9], [4.0, 1.3, "snap"], [4.4, -0.4, "out"],
-			[BOLT_AT, -0.4], [BOLT_AT + 0.1, 1.2, "snap"]]),
-		"tail": sin(t_real * 14.0) * 0.4 * (1.0 - Anim.span(t, 1.3, 1.5)) - 0.5 * stare,
-		"mouth": 0.6 * stare + 0.8 * go,
-		"brow": 1.0 * stare - 1.0 * crouch,
-	}
-	var face := -1.0 if look > 0.5 else 1.0
-	var sq := Anim.squash(Anim.k(t, [[1.3, 1.0], [1.45, 1.15, "snap"], [1.6, 1.0, "io"], [4.4, 1.0], [4.75, 0.8, "io"],
-		[BOLT_AT, 0.8], [BOLT_AT + 0.08, 1.35, "snap"]]))
-	if t > BOLT_AT + 0.05:
-		sq = Vector2(1.35, 0.8)
-	var mpos := Vector2(mx, FEET) + Anim.boil(t_real, 2.0, 0.5)
-	var m := IntroKit.millie(c, mpos, S * 0.95, face, sq, pose, FEET)
-	IntroKit.leash(c, m["ring"], hand, Anim.k(t, [[0.0, 46.0], [BOLT_AT, 40.0], [BOLT_AT + 0.08, 0.0, "snap"]]))
-	# the startle: a jolt of lines over her head
-	var jolt := Anim.span(t, 1.3, 1.6)
-	if jolt > 0.0 and jolt < 1.0:
-		_jolt(c, mpos + Vector2(10.0 * face, -120.0), jolt)
-	if t > BOLT_AT:
-		IntroKit.speed_lines(c, mpos + Vector2(-60, -60), Vector2.RIGHT, 170.0)
-		IntroKit.speed_lines(c, Vector2(hx, FEET - 150.0), Vector2.RIGHT, 120.0, 3)
+	FilmKit.pair(c, t_real, FEET)
 	# the road and the machine, in front of the pavement
 	_road(c)
 	_sweeper_at(c, sweeper_x(t_real), t_real, SW_K)
-	IntroKit.fade(c, 1.0 - Anim.span(t_real, 0.0, 0.35))
-	IntroKit.fade(c, Anim.span(t_real, TITLE_AT - 0.15, TITLE_AT), Color(1.0, 0.95, 0.85))
-
-
-# a startle: three short strokes fanned over her head
-static func _jolt(c: CanvasItem, at: Vector2, f: float) -> void:
-	var a := 1.0 - f
-	for k in range(3):
-		var d := Vector2.from_angle(-PI * 0.5 + (float(k) - 1.0) * 0.55)
-		c.draw_line(at + d * (14.0 + f * 10.0), at + d * (34.0 + f * 16.0), Color(INK, a), 4.0)
+	FilmKit.fades(c, t_real)
 
 
 # dawn: the sky going from night blue to peach over a row of flats, street
@@ -260,11 +205,5 @@ static func _title(c: CanvasItem, t: float) -> void:
 	c.draw_set_transform(Vector2(-130.0 + d * 90.0, -980.0 + bob), 0.0, Vector2(2.1, 2.1))
 	_sweeper(c, 300.0, t)
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	var px := int(190.0 * (1.0 + 0.4 * (1.0 - Anim.span(t, TITLE_AT, TITLE_AT + 0.18))))
-	IntroTitle.word(c, "RUN!", Vector2(880, 210), px, -0.06)
-	for k in range(6):
-		var a := float(k) / 5.0 * PI
-		var f := Anim.span(t, TITLE_AT + 0.1, TITLE_AT + 0.7)
-		if f > 0.0 and f < 1.0:
-			IntroKit.puff(c, Vector2(880, 290) + Vector2(cos(a) * (280.0 + f * 120.0), sin(a) * 26.0 + 40.0), 18.0 * (1.0 - f), 1.0 - f)
+	FilmKit.slam(c, t, "RUN!", Vector2(880, 210))
 	IntroKit.fade(c, 1.0 - Anim.span(t, TITLE_AT, TITLE_AT + 0.2), Color(1.0, 0.95, 0.85))
