@@ -14,7 +14,7 @@ Append-only session history, newest first.
   ms) are the frame. The biggest steady costs are the bikes (0.7-0.9 ms each,
   redrawn every physics step on screen or off), the world (about 6 ms per
   redraw) and the leashes; the ground layers cost 7-9 ms per redraw (El
-  Barri's off-leash layer 78 ms once), which shows as hitches.
+  off-leash area's layer 78 ms once), which shows as hitches.
 
 ## 2026-11-01 - La Rambla draws half as much
 
