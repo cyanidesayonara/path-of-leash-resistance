@@ -53,7 +53,15 @@ var _muffle_bus := -1
 var _muffled := false
 var _menu_budget := true
 # no synthesis headless (CI, tests, tools) or while photographing
-var music_enabled := DisplayServer.get_name() != "headless" and not "--shot" in OS.get_cmdline_user_args()
+# --no-music: no soundtrack for the run, to tell its cost apart in a perf run
+var music_enabled := (DisplayServer.get_name() != "headless" and not "--shot" in OS.get_cmdline_user_args()
+	and not "--no-music" in OS.get_cmdline_user_args())
+# An exported build plays the tracks tools/bake_music.gd rendered before the
+# export, and synthesizes only one that is missing; the editor synthesizes
+# every track live, so a change to the music is heard at once and a stale
+# bake is never played. --baked-music uses the bake in the editor too.
+const BAKED_DIR := "res://music/baked"
+var music_baked := OS.has_feature("template") or "--baked-music" in OS.get_cmdline_user_args()
 
 
 func _ready() -> void:
@@ -254,6 +262,13 @@ func _music_work(delta: float) -> void:
 		return
 	for track: String in [_music_want, _music_next, "won", "lost"]:
 		if track != "" and not _music_cache.has(track):
+			var baked := "%s/%s.res" % [BAKED_DIR, track]
+			if music_baked and ResourceLoader.exists(baked):
+				# a few hundred kilobytes, already compressed: one frame's load
+				# instead of seconds of synthesis
+				_music_cache[track] = load(baked)
+				_trim_cache()
+				return
 			_music_job = Music.job(track)
 			if not OS.has_feature("web"):
 				_music_thread = Thread.new()
@@ -264,6 +279,10 @@ func _music_work(delta: float) -> void:
 func _music_finish() -> void:
 	_music_cache[_music_job.name] = _music_job.stream
 	_music_job = null
+	_trim_cache()
+
+
+func _trim_cache() -> void:
 	if _music_cache.size() > MUSIC_KEEP:
 		for k: String in _music_cache.keys():
 			if not k in [_music_want, _music_now, _music_next, "won", "lost"]:

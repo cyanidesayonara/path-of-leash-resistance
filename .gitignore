@@ -15,3 +15,6 @@ shots/
 __pycache__/
 # the engine binary CI downloads into the checkout
 Godot_v*-stable_linux.x86_64
+
+# tools/bake_music.gd output, made before an export
+music/baked/
