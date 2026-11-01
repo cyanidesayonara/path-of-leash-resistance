@@ -17,6 +17,20 @@ Append-only session history, newest first.
   per frame 7.6-9.9 to 1.0-3.7 (those on screen), pair redraws to none; the
   quieter run went from 42.6 ms median (22.5 fps) to 25.3 ms (38 fps).
 
+## 2026-11-01 - Where a browser frame goes
+
+- `--perf-scripts` on the perf probe times each frame's physics steps,
+  process pass and draw pass, and each script's `_draw` (from the gaps
+  between the nodes' draw signals, which Godot emits just before each
+  `_draw`). `PERF_ARGS="--perf-scripts" tools/web_perf.sh street` prints it
+  for the browser.
+- What it found on La Rambla in the browser: draw calls cost the renderer
+  under 1 ms a frame. The draw pass (15-26 ms) and the physics steps (6-12
+  ms) are the frame. The biggest steady costs are the bikes (0.7-0.9 ms each,
+  redrawn every physics step on screen or off), the world (about 6 ms per
+  redraw) and the leashes; the ground layers cost 7-9 ms per redraw (the
+  off-leash area's layer 78 ms once), which shows as hitches.
+
 ## 2026-11-01 - Your human says what people say
 
 - When your human runs out of patience and hauls her in, they no longer
