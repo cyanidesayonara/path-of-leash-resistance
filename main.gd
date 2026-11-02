@@ -6157,6 +6157,22 @@ func _physics_process(delta: float) -> void:
 		_prof("rest")
 
 
+# the same for the world pass, by section: on with the perf probe's
+# --perf-scripts, so each section's share of a world redraw is known
+var _dprof_on := false
+var _dprof_t := 0
+var dprof_us := {}
+
+
+func _dprof(tag: String) -> void:
+	if not _dprof_on:
+		return
+	var now := Time.get_ticks_usec()
+	if tag != "":
+		dprof_us[tag] = int(dprof_us.get(tag, 0)) + (now - _dprof_t)
+	_dprof_t = now
+
+
 func _prof(tag: String) -> void:
 	if not _prof_on:
 		return
@@ -10293,6 +10309,7 @@ func _draw_besos(vt: float, vb: float) -> void:
 
 
 func _draw_world() -> void:
+	_dprof("")
 	var top := GATE_Y - 800.0
 	# The ground runs well past the start line: the south wall stops the dog
 	# at about START_Y + 110, and the camera on her there sees 280 px further
@@ -10370,6 +10387,7 @@ func _draw_world() -> void:
 			_draw_walk_ribbon(vt, vb, bottom, walkway)
 		if walk_mod != null and walk_mod.has_method("draw_over_walkway"):
 			walk_mod.draw_over_walkway(self, _wc, vt, vb)
+	_dprof("cross section")
 	# (what lies beyond the gate is drawn by freedomlayer, which owns
 	# everything up there - drawing it here put a green field on top of the
 	# cached canvas, which is how the dog beach briefly turned into a lawn)
@@ -10397,6 +10415,7 @@ func _draw_world() -> void:
 		_wc.draw_line(Vector2(BLANE_L, bottom), Vector2(BLANE_L, GATE_Y), COL_SEAM, 3.0)
 		_wc.draw_line(Vector2(BLANE_R, bottom), Vector2(BLANE_R, GATE_Y), COL_SEAM, 2.0)
 		_wc.draw_line(Vector2(SHOULDER_R, bottom), Vector2(SHOULDER_R, GATE_Y), COL_SEAM, 3.0)
+	_dprof("street ground")
 	if pond.size.x > 0.0:
 		# THE POND. It was a rectangle with a grey rim, which read as a
 		# municipal swimming pool rather than as water in a park - a hard
@@ -10433,6 +10452,7 @@ func _draw_world() -> void:
 		_wc.draw_circle(Vector2(0, 4), 5.0, Color(0.30, 0.42, 0.62))
 		_wc.draw_circle(Vector2(0, 3), 3.2, Color(0.80, 0.62, 0.48))
 		_wc.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	_dprof("pond")
 	# each walk's own ground stops at the gate: past it is the off-leash
 	# space, which freedomlayer draws
 	var wvt := maxf(vt, GATE_Y - 30.0)
@@ -10458,6 +10478,7 @@ func _draw_world() -> void:
 		_draw_rambla(vt, vb)
 	if walk_mod != null and walk_mod.has_method("draw_scenery"):
 		walk_mod.draw_scenery(self, _wc, vt, vb)
+	_dprof("live, scenery")
 	# bike lanes crossing the sidewalk
 	for i in range(lane_ys.size()):
 		var ly: float = lane_ys[i]
@@ -10640,6 +10661,7 @@ func _draw_world() -> void:
 	if carry_state == 1:
 		var mp: Vector2 = dog.global_position + dog.facing * 20.0
 		_wc.draw_rect(Rect2(mp.x - 7.0, mp.y - 4.0, 14.0, 8.0), Color(0.7, 0.6, 0.4))
+	_dprof("lanes to pickups")
 	# lampposts downtown, trees in the park, palms by the sea
 	# (same physics, different soul); at night their light is
 	# world/light_layer.gd's
@@ -10822,8 +10844,11 @@ func _draw_world() -> void:
 		walk_mod.draw_conveyor(self, _wc, vt, vb)
 	elif conveyor_zone.size.y > 0.0 and conveyor_zone.end.y > vt and conveyor_zone.position.y < vb:
 		_draw_travelator(vt, vb)
+	_dprof("furniture")
 	_draw_ground_detail(vt, vb)
+	_dprof("ground detail")
 	_draw_ground_marks(vt, vb)
+	_dprof("ground marks")
 	# the paw trail, in whatever she stood in
 	# footprints pressed into sand or snow: a shadowed hollow with a lit lip on
 	# the far side (the one light is up-left), fading as it fills back in
@@ -10891,7 +10916,9 @@ func _draw_world() -> void:
 			continue
 		_wc.draw_rect(zr, Color(zc.r, zc.g, zc.b, 0.55))
 		_wc.draw_rect(zr, Color(zc.r, zc.g, zc.b, 0.85), false, 2.0)
+	_dprof("dents, prints, zones")
 	_draw_scents()
+	_dprof("scents")
 	# the grind: the rail lights up under her and a CENTRED balance bar shows
 	# which way she is tipping, with the running score beside it
 	# with the zoomies on, the grindables near her show themselves faintly
@@ -10931,9 +10958,11 @@ func _draw_world() -> void:
 		_wc.draw_line(ap, tip, Color(0.85, 1.0, 0.85, 0.95), 3.0)
 		_wc.draw_line(tip, tip - away.rotated(0.5) * 7.0, Color(0.85, 1.0, 0.85, 0.95), 3.0)
 		_wc.draw_line(tip, tip - away.rotated(-0.5) * 7.0, Color(0.85, 1.0, 0.85, 0.95), 3.0)
+	_dprof("tricks")
 	# El Desguas: sweeping camera cones and laser tripwires; Les Obres' works
 	if walk_mod != null and walk_mod.has_method("draw_top"):
 		walk_mod.draw_top(self, _wc, vt, vb)
+	_dprof("walk top")
 	# El Bosc: muddy patches across the trail (slow going)
 	# whatever this walk has lying underfoot, drawn as the shape it would
 	# actually be. Colour comes from SUBSTANCES so a new kind needs no new
@@ -10966,6 +10995,7 @@ func _draw_world() -> void:
 			_wc.draw_circle(mid + Vector2(cos(a) * float(pt["rx"]) * rr,
 				sin(a) * float(pt["ry"]) * rr), 5.0,
 				Color(base.r * 0.7, base.g * 0.7, base.b * 0.7, 0.6))
+	_dprof("patches")
 	# (El Gotic's and La Neteja's laundry strung across the alley, and the
 	# lanterns down one wall, are overhead: draw_overhead_piece)
 	# street performers: a hat, some coins, music in the air. In the rain
@@ -11009,6 +11039,7 @@ func _draw_world() -> void:
 		for r in range(2):
 			var rx := fmod(pt * 120.0 + idx * 30.0 + r * 60.0, 120.0)
 			_wc.draw_line(pf + Vector2(-24 + rx * 0.4, -28), pf + Vector2(-24 + rx * 0.4, 12), Color(0.6, 0.7, 0.85, 0.4), 1.0)
+	_dprof("performers")
 	# cellar doors, propped open for a delivery: a stone kerb round the
 	# hatch, the two steel leaves folded back flat either side (tread plate,
 	# hinges), the stair going down into the dark, and the crates waiting on
@@ -11054,6 +11085,7 @@ func _draw_world() -> void:
 		_wc.draw_circle(bp, 4.0 + sin(e * PI) * 2.0, Color(0.92, 0.92, 0.95))
 	if mark_target.x < INF and mark_progress > 0.0:
 		_wc.draw_arc(mark_target, 17.0, -PI / 2.0, -PI / 2.0 + TAU * mark_progress / 0.7, 20, Color(1, 0.95, 0.6), 3.0)
+	_dprof("skids, marks, puddles")
 	# the off-leash freedom yard beyond the gate: a proper fenced dog
 	# park - grass, chain-link fence with posts, human benches, and a
 	# labelled entrance gate
@@ -11086,3 +11118,4 @@ func _draw_world() -> void:
 		sign_layer.refresh(vt, vb, show_signs)
 	elif show_signs:
 		_draw_signs(vt, vb)
+	_dprof("gate, signs, title")
