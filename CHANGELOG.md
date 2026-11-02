@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-11-02 - Other dogs have manners, good and bad
+
+- Another walker's dog now reacts to yours coming by (`meet` in
+  entities/otherpair.gd). A friendly one spots her from 150 px and pulls over
+  to say hello, tail going, stopping nose to nose; its owner slows to let it,
+  and it is over once they have sniffed.
+- A grumpy one (one in five, as before) goes stiff and growls for 0.8 s, the
+  telegraph every hazard gets, then lunges to the end of its leash barking
+  ("WOOF!", a burst at its muzzle) while its owner stops, reels it in short
+  and apologises ("Bruno! Leave it."). Too near it, she gets a fright. After
+  a few seconds its owner hauls it off and walks on. Once a walk each.
+- Test: `test_pair_meet.gd`.
+
 ## 2026-11-02 - Dia de Partit in the city's colours
 
 - The home colours are a deep garnet and a strong royal blue instead of a

@@ -95,6 +95,8 @@ func _make_pair(
 	pair.visible = false
 	pair.set_physics_process(false)
 	pair.setup(world.main, world.dog, poles, start, direction)
+	# routing and wander only: meeting your dog is test_pair_meet.gd's
+	pair.meet = "done"
 	if activate:
 		root.add_child(pair)
 		pair.set_physics_process(false)
