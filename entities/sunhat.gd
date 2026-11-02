@@ -68,7 +68,7 @@ func _physics_process(delta: float) -> void:
 	if state != State.CARRIED and global_position.y - human.global_position.y > LOST_BEHIND:
 		queue_free()
 		return
-	queue_redraw()
+	Redraw.later(self)
 
 
 func _keep_on_path() -> void:

@@ -36,7 +36,7 @@ func mark_dirty() -> void:
 func tick(_cam_pos: Vector2) -> void:
 	if dirty:
 		dirty = false
-		queue_redraw()
+		Redraw.later(self)
 
 
 func _draw() -> void:

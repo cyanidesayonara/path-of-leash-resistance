@@ -355,7 +355,7 @@ func _physics_process(delta: float) -> void:
 	_update_pose(owner_was, dog_was, delta)
 	# owner/dog move via transform every frame; redraw the pose at ~30fps
 	if Engine.get_physics_frames() % 2 == 0 and seen:
-		queue_redraw()
+		Redraw.later(self)
 
 
 func _in_solid(p: Vector2) -> bool:

@@ -62,7 +62,7 @@ func _physics_process(delta: float) -> void:
 					scare()
 					break
 	if Engine.get_physics_frames() % 2 == 0 and Clay.in_view(self, main, Rect2(global_position, Vector2.ZERO), VIEW_MARGIN):
-		queue_redraw()
+		Redraw.later(self)
 
 
 func scare() -> void:

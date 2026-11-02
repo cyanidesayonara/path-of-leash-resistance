@@ -845,7 +845,14 @@ func _add_pad_button(action: String, btn: int) -> void:
 	InputMap.action_add_event(action, ev)
 
 
+# the redraws entities asked for during this frame's physics steps, made
+# once (systems/redraw.gd); always, so a node that runs while paused draws too
+func _process(_delta: float) -> void:
+	Redraw.flush()
+
+
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	persist = not ("--autowalk" in OS.get_cmdline_user_args())
 	load_records()
 	# lets CI and local smoke tests exercise any level/weather:

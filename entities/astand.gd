@@ -38,7 +38,7 @@ func _physics_process(delta: float) -> void:
 	elif tip < 1.0:
 		tip = minf(tip + delta * 4.0, 1.0)
 		position += fall_dir * 34.0 * delta * (1.0 - tip)
-		queue_redraw()
+		Redraw.later(self)
 		if tip >= 1.0:
 			# flat is forever; stop thinking about it
 			set_physics_process(false)

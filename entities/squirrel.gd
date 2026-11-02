@@ -77,7 +77,7 @@ func _physics_process(delta: float) -> void:
 		main.on_critter_chase(global_position, kind)
 		scare()
 	if Engine.get_physics_frames() % 2 == 0:
-		queue_redraw()
+		Redraw.later(self)
 
 
 func scare() -> void:

@@ -67,7 +67,7 @@ func tick(delta: float) -> void:
 			main.dog_carrying = false
 			main.on_stream_find_returned(kind, global_position)
 			visible = false
-	queue_redraw()
+	Redraw.later(self)
 
 
 func _draw() -> void:

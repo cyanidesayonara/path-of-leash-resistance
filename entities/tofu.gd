@@ -62,7 +62,7 @@ func _physics_process(delta: float) -> void:
 				home = true
 				main.on_tofu_home(global_position)
 	if Engine.get_physics_frames() % 2 == 0:
-		queue_redraw()
+		Redraw.later(self)
 
 
 func dart_target() -> Vector2:
