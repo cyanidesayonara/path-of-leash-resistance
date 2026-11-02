@@ -73,7 +73,14 @@ const Kit := preload("res://hud/ui_kit.gd")
 const DARE_W := 400.0
 const DARE_HOW := "Tricks: swing around a pole, grind a ledge, fling your human. Hold {turbo} for speed."
 # how to take a dare on offer: it waits for her bark
-const DARE_TAKE := "Bark ({bark}) to take the dare. Walk on to leave it."
+# the offer's prompt: the bark button itself, glowing, then these words; a
+# line under it says how to turn it down
+const DARE_TAKE := "to take the dare"
+const DARE_LEAVE := "Walk on to leave it."
+# how long the card shows the button pressed and DARE ON! once she barks
+const TOOK_S := 0.9
+const TAKE_PX := 16
+const TAKE_CAP := 26.0
 const Icons := preload("res://hud/ui_icons.gd")
 
 const BANNER_Y := 42.0
@@ -124,6 +131,9 @@ var flash_text := ""
 var flash_t := 0.0
 # {"side": "goal"|"mood", "title", "text", "col", "t"}
 var toasts: Array[Dictionary] = []
+# the dare's offer was waiting for her bark last frame; she took it TOOK_S ago
+var _dare_waiting := false
+var _took_t := 0.0
 
 
 func setup(m: Node2D) -> void:
@@ -192,6 +202,12 @@ func set_banner(text: String, col: Color = Color(1.0, 0.92, 0.72)) -> void:
 
 func _process(delta: float) -> void:
 	flash_t = maxf(0.0, flash_t - delta)
+	_took_t = maxf(0.0, _took_t - delta)
+	var ch: Node = main.challenge if main != null else null
+	var waiting_now: bool = ch != null and String(ch.phase) == "offer" and bool(ch.waiting)
+	if _dare_waiting and not waiting_now and ch != null and String(ch.phase) == "offer":
+		_took_t = TOOK_S
+	_dare_waiting = waiting_now
 	for i in range(toasts.size() - 1, -1, -1):
 		toasts[i].t = float(toasts[i].t) + delta
 		if float(toasts[i].t) > TOAST_S:
@@ -356,8 +372,8 @@ func _dare_card(vs: Vector2, y: float) -> void:
 			lines = [Prompts.fill(DARE_HOW), "%sWin %d bones." % ["Same dare, another go. " if bool(ch.retry) else "",
 				int(ch.reward)]]
 			if bool(ch.waiting):
-				lines.append(Prompts.fill(DARE_TAKE))
-			else:
+				lines.append(DARE_LEAVE)
+			elif _took_t <= 0.0:
 				lines.append("Get ready...")
 		"live":
 			title = "DARE: %d TRICKS" % int(ch.target)
@@ -390,7 +406,9 @@ func _dare_card(vs: Vector2, y: float) -> void:
 	# the bar fills while she gets set and drains while the clock runs; an
 	# offer still waiting for her bark has none
 	var bar := String(ch.phase) == "live" or (String(ch.phase) == "offer" and not bool(ch.waiting))
-	var h := 40.0 + 20.0 * float(lines.size()) + (16.0 if bar else 6.0)
+	# the offer's button row: glowing while it waits, pressed once she barks
+	var take_row := String(ch.phase) == "offer" and (bool(ch.waiting) or _took_t > 0.0)
+	var h := 40.0 + 20.0 * float(lines.size()) + (16.0 if bar else 6.0) + (TAKE_CAP + 12.0 if take_row else 0.0)
 	var r := Rect2(vs.x * 0.5 - w * 0.5, y, w, h)
 	# never over the open goal list: into the gap beside it, or, where the gap
 	# is too narrow (a phone), below it
@@ -406,14 +424,52 @@ func _dare_card(vs: Vector2, y: float) -> void:
 		draw_string(Kit.display(), Vector2(r.position.x, r.position.y + 28.0),
 			"%d / %d" % [int(ch.count), int(ch.target)], HORIZONTAL_ALIGNMENT_RIGHT, w - 18.0, 18, Kit.INK)
 	var ly := r.position.y + 50.0
-	for l: String in lines:
-		draw_string(Kit.body(), Vector2(r.position.x + 18.0, ly), l, HORIZONTAL_ALIGNMENT_LEFT, w - 36.0, 15,
+	var n := lines.size()
+	for i in range(n):
+		# the button row goes before the last line, how to leave it
+		if take_row and bool(ch.waiting) and i == n - 1:
+			ly = _take_row(Vector2(r.position.x + 18.0, ly - 14.0), col, true) + 14.0
+		draw_string(Kit.body(), Vector2(r.position.x + 18.0, ly), lines[i], HORIZONTAL_ALIGNMENT_LEFT, w - 36.0, 15,
 			Kit.INK_SOFT)
 		ly += 20.0
+	if take_row and not bool(ch.waiting):
+		_take_row(Vector2(r.position.x + 18.0, ly - 14.0), col, false)
 	if bar:
 		# the offer fills up to GO; the live clock drains
 		var f: float = float(ch.offer_fraction()) if String(ch.phase) == "offer" else float(ch.fraction())
 		Icons.draw_meter(self, Vector2(r.position.x + 18.0, r.end.y - 14.0), w - 36.0, 7.0, f, col)
+
+
+# The bark button on the offer card, for whichever device is in hand: glowing
+# and pulsing while the dare waits ("to take the dare"), then pressed in, with
+# DARE ON! beside it, for TOOK_S once she barks. `at` is the row's top-left;
+# returns the y under the row.
+func _take_row(at: Vector2, col: Color, waiting: bool) -> float:
+	var label := Prompts.key("bark")
+	var w := Kit.keycap_w(label, TAKE_PX)
+	var cap := Rect2(at, Vector2(w, TAKE_CAP))
+	if waiting:
+		var pulse := 0.5 + 0.5 * sin(AnimClock.msec() / 1000.0 * 5.0)
+		# a soft halo, then a solid rim in the card's colour, both breathing
+		for k in range(3):
+			var grow := 5.0 + float(k) * 3.0 + pulse * 2.0
+			draw_rect(cap.grow(grow), Color(col.r, col.g, col.b, (0.22 - float(k) * 0.06) * (0.5 + 0.5 * pulse)))
+		draw_rect(cap.grow(2.5 + pulse * 1.0), col.lerp(Color.WHITE, 0.15 + 0.35 * pulse))
+		Kit.keycap(self, at, label, TAKE_PX, TAKE_CAP)
+		draw_string(Kit.body(), Vector2(cap.end.x + 12.0, at.y + TAKE_CAP * 0.5 + 6.0), DARE_TAKE,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Kit.INK)
+	else:
+		# pressed: the face sits down on its side, lit by the accent
+		var k := _took_t / TOOK_S
+		draw_rect(cap.grow(4.0 + 8.0 * (1.0 - k)), Color(col.r, col.g, col.b, 0.45 * k))
+		var face := Rect2(at + Vector2(0, 3), cap.size)
+		draw_rect(face, col.lightened(0.55))
+		var f := Kit.display()
+		var tw := Kit.text_w(f, label, TAKE_PX)
+		draw_string(f, Vector2(face.position.x + (w - tw) * 0.5, face.position.y + TAKE_CAP * 0.5 + float(TAKE_PX) * 0.36),
+			label, HORIZONTAL_ALIGNMENT_LEFT, -1, TAKE_PX, Color(0.12, 0.11, 0.12))
+		Kit.heading(self, Vector2(cap.end.x + 12.0, at.y + TAKE_CAP * 0.5 + 7.0), "DARE ON!", 18, col)
+	return at.y + TAKE_CAP + 12.0
 
 
 # Words laid into lines no wider than w at px, in the body face.
