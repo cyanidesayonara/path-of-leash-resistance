@@ -18,6 +18,21 @@ Append-only session history, newest first.
   by `gates_version` in the save). README, the itch page and the Store
   description list the walks in the new order.
 
+## 2026-11-02 - LEASH spells itself out, and the clock shows its time
+
+- A letter she picks up flies from where it lay into a row of round gold
+  coins under the banner (hud/word_strip.gd), landing with a pop; the rest of
+  the word waits faint in its coins, and the row fades a couple of seconds
+  after. It replaces the "LEASH: _ E _ _ _" shout, which read as hangman.
+- The letters on the ground are bigger coins with the heavy face.
+- The open goal list shows the word's letters on the spelling goal, the
+  found ones lit (`Goals.row_extras`), instead of 1/5; the clock goal shows
+  the walk's time beside it, red once it is over, and writes its limit as a
+  time ("Beat the clock (under 2:50)"); "Get your human home less than half
+  soaked" shows how wet they are.
+- While the clock goal is open, the folded goal card shows the walk's time
+  against it ("1:23 / 2:50"): before, the time was nowhere on screen.
+
 ## 2026-11-02 - Release notes for 1.68
 
 - The Store's What's new, the itch page's notes and the certification note
