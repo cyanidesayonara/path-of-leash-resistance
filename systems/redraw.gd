@@ -12,17 +12,21 @@ extends RefCounted
 # redraw in the frame's process pass, which comes after the physics steps, so
 # the picture is the one the last step left.
 
+# by instance id, never the node: a node can be freed while it waits here (a
+# walk unloaded mid-frame), and a dictionary keyed by freed objects hung the
+# next flush
 static var _due := {}
 
 
 static func later(ci: CanvasItem) -> void:
-	_due[ci] = true
+	_due[ci.get_instance_id()] = true
 
 
 static func flush() -> void:
 	if _due.is_empty():
 		return
-	for ci: Variant in _due:
-		if is_instance_valid(ci):
-			(ci as CanvasItem).queue_redraw()
+	for id: int in _due:
+		var ci := instance_from_id(id) as CanvasItem
+		if ci != null:
+			ci.queue_redraw()
 	_due.clear()

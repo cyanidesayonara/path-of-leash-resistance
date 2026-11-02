@@ -2,7 +2,7 @@ extends SceneTree
 
 # A redraw asked for from physics is made once a frame (systems/redraw.gd):
 # a node marked any number of times is redrawn once, a freed one is passed
-# over, and no entity, layer or main itself calls queue_redraw() from
+# over (many freed at once included), and no entity, layer or main itself calls queue_redraw() from
 # _physics_process or tick, where the engine would draw it after every
 # physics step of a slow frame.
 
@@ -50,6 +50,21 @@ func _run() -> void:
 	Redraw.flush()
 	_check(Redraw._due.is_empty(), "a flush clears what was due, a freed node included")
 	a.queue_free()
+	# many marked, half freed, then a flush. Keyed by the nodes themselves,
+	# the flush hung when whole walks were unloaded one after another;
+	# test_tony_hawk_quests.gd, which does that, is the regression test
+	var many: Array[Node2D] = []
+	for i in range(60):
+		var n := Node2D.new()
+		root.add_child(n)
+		many.append(n)
+		Redraw.later(n)
+	for i in range(0, 60, 2):
+		many[i].free()
+	Redraw.flush()
+	_check(Redraw._due.is_empty(), "a flush with freed nodes among the due finishes")
+	for i in range(1, 60, 2):
+		many[i].queue_free()
 
 	var found := PackedStringArray()
 	for dir: String in ["res://", "res://entities", "res://world", "res://systems", "res://hud"]:
