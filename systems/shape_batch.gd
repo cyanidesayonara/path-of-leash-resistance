@@ -55,6 +55,10 @@ var canvas: CanvasItem
 # fewer sides for small circles (LOD_SAG). Off by default: circle() then
 # matches draw_circle pixel for pixel, which tests/test_shape_batch.gd checks
 var lod := false
+# A batch with no canvas records shapes to replay later (append_to). Anything
+# it cannot hold - text, arcs, outlines, a transform - sets `missed` instead
+# of drawing, so the caller can draw that run live.
+var missed := false
 # unit fans by side count, built as needed
 static var _lod_fans := {}
 # a triangle list: every three points are a triangle, drawn in order
@@ -301,6 +305,9 @@ func flush(ci: Object = null) -> void:
 	if _points.is_empty():
 		return
 	var target: Object = ci if ci != null else canvas
+	if target == null:
+		# recording: the shapes stay queued, in order, for append_to
+		return
 	if target is ShapeBatch:
 		var outer: ShapeBatch = target
 		outer._points.append_array(_points)
@@ -321,11 +328,21 @@ func append_to(target: ShapeBatch) -> void:
 
 # --- the stand-in canvas: CanvasItem's signatures -----------------------------
 
+# flushes ahead of a call only the canvas can make; false when recording
+func _live() -> bool:
+	if canvas == null:
+		missed = true
+		return false
+	flush()
+	return true
+
+
 func draw_circle(pos: Vector2, radius: float, color: Color, filled := true, width := -1.0, antialiased := false) -> void:
 	if filled and not antialiased:
 		circle(pos, radius, color)
 		return
-	flush()
+	if not _live():
+		return
 	canvas.draw_circle(pos, radius, color, filled, width, antialiased)
 
 
@@ -333,7 +350,8 @@ func draw_rect(r: Rect2, color: Color, filled := true, width := -1.0, antialiase
 	if filled and not antialiased:
 		rect(r, color)
 		return
-	flush()
+	if not _live():
+		return
 	canvas.draw_rect(r, color, filled, width, antialiased)
 
 
@@ -341,7 +359,8 @@ func draw_line(from: Vector2, to: Vector2, color: Color, width := -1.0, antialia
 	if width >= 0.0 and not antialiased:
 		line(from, to, color, width)
 		return
-	flush()
+	if not _live():
+		return
 	canvas.draw_line(from, to, color, width, antialiased)
 
 
@@ -349,47 +368,56 @@ func draw_colored_polygon(points: PackedVector2Array, color: Color, uvs := Packe
 	if uvs.is_empty() and texture == null:
 		polygon(points, color)
 		return
-	flush()
+	if not _live():
+		return
 	canvas.draw_colored_polygon(points, color, uvs, texture)
 
 
 func draw_set_transform(pos: Vector2, rotation := 0.0, scale := Vector2.ONE) -> void:
-	flush()
+	if not _live():
+		return
 	canvas.draw_set_transform(pos, rotation, scale)
 
 
 # Everything else a stand-in's caller may draw: queued shapes go first, so the
 # order on the canvas is the order of the calls.
 func draw_arc(...args: Array) -> void:
-	flush()
+	if not _live():
+		return
 	canvas.callv("draw_arc", args)
 
 
 func draw_polyline(...args: Array) -> void:
-	flush()
+	if not _live():
+		return
 	canvas.callv("draw_polyline", args)
 
 
 func draw_string(...args: Array) -> void:
-	flush()
+	if not _live():
+		return
 	canvas.callv("draw_string", args)
 
 
 func draw_string_outline(...args: Array) -> void:
-	flush()
+	if not _live():
+		return
 	canvas.callv("draw_string_outline", args)
 
 
 func draw_multiline_string(...args: Array) -> void:
-	flush()
+	if not _live():
+		return
 	canvas.callv("draw_multiline_string", args)
 
 
 func draw_char(...args: Array) -> void:
-	flush()
+	if not _live():
+		return
 	canvas.callv("draw_char", args)
 
 
 func draw_style_box(...args: Array) -> void:
-	flush()
+	if not _live():
+		return
 	canvas.callv("draw_style_box", args)
