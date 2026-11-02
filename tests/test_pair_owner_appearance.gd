@@ -298,6 +298,9 @@ func _test_parent_rendering(pair: Node2D, player: Node2D) -> void:
 	pair.npc_dog.position = Vector2(170.0, 150.0)
 	player.position = pair.npc_dog.global_position
 	pair.vel = Vector2.ZERO
+	# both hands on the phone: the owner this test photographs
+	pair.habit = "held"
+	pair.type_t = 0.0
 	seed(98765)
 	var expected_next := randf()
 	seed(98765)

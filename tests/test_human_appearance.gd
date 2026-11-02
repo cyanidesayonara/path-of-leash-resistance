@@ -423,6 +423,8 @@ func _test_exact_api() -> bool:
 			"level",
 			"night",
 			"key",
+			"look",
+			"hand",
 		]),
 		PackedInt32Array([
 			TYPE_OBJECT,
@@ -437,6 +439,8 @@ func _test_exact_api() -> bool:
 			TYPE_STRING,
 			TYPE_BOOL,
 			TYPE_INT,
+			TYPE_VECTOR2,
+			TYPE_VECTOR2,
 		]),
 		TYPE_NIL
 	)
@@ -641,7 +645,7 @@ func _test_renderer() -> void:
 	for profile_id: String in EXPECTED_IDS:
 		var profile: Dictionary = appearance_script.call("get_profile", profile_id)
 		var snapshot := profile.duplicate(true)
-		for state in ["held", "raised"]:
+		for state in ["held", "raised", "call", "free", "cup"]:
 			var image: Image = await _render_owner(profile, Vector2.RIGHT, 0.4, 1.0, 1.0, state)
 			_check(_opaque_pixels(image) > 0, profile_id + " draws in " + state)
 		_check(profile == snapshot, profile_id + " render does not mutate profile")
