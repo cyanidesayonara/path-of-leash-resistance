@@ -40,16 +40,10 @@ func _run() -> void:
 	LevelBuild = load("res://world/level_build.gd")
 	var game: Node = root.get_node("Game")
 	_check(int(game.STAR_GATE["besos"]) == 14, "El Besos opens at 14 stars")
-	_check(int(game.STAR_GATE["station"]) == 13, "L'Estacio stays at 13")
-	_check(int(game.STAR_GATE["site"]) == 15, "Les Obres stays at 15")
-	_check(int(game.STAR_GATE["neteja"]) == 23, "La Neteja stays at 23")
 	var carousel: Array = game.CAROUSEL
-	_check(carousel.find("besos") == carousel.find("station") + 1, "it sits after L'Estacio")
-	_check(carousel.find("site") == carousel.find("besos") + 1, "and before Les Obres")
-	var kept := {"barri": 0, "street": 1, "park": 2, "beach": 3, "rain": 4, "market": 7,
-		"oldtown": 9, "trail": 11, "spook": 17, "scrap": 19, "guell": 21, "montjuic": 25, "partit": 27}
-	for id: String in kept:
-		_check(int(game.STAR_GATE[id]) == int(kept[id]), "%s keeps its star gate" % id)
+	# the second chase: the tenth campaign walk (the tutorial comes first)
+	_check(carousel.find("besos") == 10, "it is the tenth walk")
+	_check(String(game.CHASE_GATE.get("besos", "")) == "neteja", "after the first chase, La Neteja")
 
 	var prof: Dictionary = HomeChase.profile_for("besos")
 	_check(String(prof.get("kind", "")) == "flood", "the home leg is the flood")

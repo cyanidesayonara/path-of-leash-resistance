@@ -10,6 +10,22 @@ Append-only session history, newest first.
   on their feet. The pose now wears off as the arrival starts (`UNBRACE` in
   systems/arrival.gd) and they walk in. Test: `test_arrival.gd`.
 
+## 2026-11-02 - The walks in Santtu's order
+
+- The walk select and the star gates follow the order saved in the walk
+  planner: La Neteja is the first chase, fifth walk, at 4 stars; El Besòs is
+  tenth; then Platja de Llevant, El Tibidabo and El Veterinari; Els Senglars
+  sixteenth; Festa de Gràcia and the Raval still close it. Hills and flats
+  alternate instead of running together. The star gates keep their values
+  by position (0, 1, 2, 3, 4, 7, 9 ... 43).
+- Every chase now opens the stretch after it (`CHASE_GATE`): La Neteja the
+  next five walks, El Besòs the three after, El Veterinari three more, Els
+  Senglars the rest up to Gràcia.
+- A save made before keeps every walk it had open under the old order and
+  gates, by stars or by walking it (`_grandfather_reorder`, run once, marked
+  by `gates_version` in the save). README, the itch page and the Store
+  description list the walks in the new order.
+
 ## 2026-11-02 - LEASH spells itself out, and the clock shows its time
 
 - A letter she picks up flies from where it lay into a row of round gold
