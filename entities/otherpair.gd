@@ -784,7 +784,9 @@ func _tick_habit(delta: float) -> void:
 	type_t = maxf(0.0, type_t - delta)
 	var calm := (meet == "" or meet == "done") and tangled_t <= 0.0
 	if habit == "held" and calm:
-		type_gap -= delta
+		# the wait for the next pause starts once this one is over
+		if type_t <= 0.0:
+			type_gap -= delta
 		if type_gap <= 0.0:
 			type_t = TYPE_T
 			type_gap = _habit_rng.randf_range(TYPE_GAP_MIN, TYPE_GAP_MAX)
