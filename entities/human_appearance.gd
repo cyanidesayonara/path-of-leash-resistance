@@ -5,6 +5,13 @@ const MAX_LOCAL_RADIUS := 48.0
 const MAX_SWAY := 1.5
 const PHONE_HELD_FORWARD := 24.0
 const PHONE_RAISED_FORWARD := 30.0
+# how far a head turns from the shoulders to look at something
+const HEAD_TURN_MAX := 1.1
+# the free arm's swing, forward and back, at a full walk
+const ARM_SWING := 6.0
+# what an owner's hands are busy with: both on the phone (held, raised), the
+# phone at one ear (call), nothing but the leash (free), or a coffee (cup)
+const HABITS := ["held", "raised", "call", "free", "cup"]
 const DRAW_MARGIN := 3.0
 const PROFILE_IDS := [
 	"compact_short_cap",
@@ -591,7 +598,9 @@ static func draw_owner(
 	weather := "clear",
 	level := "",
 	night := false,
-	key := 0
+	key := 0,
+	look := Vector2.ZERO,
+	hand := Vector2(INF, INF)
 ) -> void:
 	if (
 		not _is_finite_vector(origin)
@@ -644,7 +653,13 @@ static func draw_owner(
 	var body_center := Vector2(0.0, sway)
 	var left_foot := Vector2(step, -foot_spread)
 	var right_foot := Vector2(-step, foot_spread)
-	var resolved_phone_state := phone_state if phone_state in ["held", "raised"] else "held"
+	var resolved_phone_state := phone_state if phone_state in HABITS else "held"
+	var two_hands := resolved_phone_state == "held" or resolved_phone_state == "raised"
+	# the head turns toward what they are looking at, as far as a neck goes
+	var head_facing := facing
+	if _is_finite_vector(look) and not look.is_zero_approx():
+		head_facing = facing.rotated(clampf(facing.angle_to(look), -HEAD_TURN_MAX, HEAD_TURN_MAX))
+	var head_side := head_facing.orthogonal()
 	var phone_forward := (
 		PHONE_RAISED_FORWARD if resolved_phone_state == "raised" else PHONE_HELD_FORWARD
 	)
@@ -659,29 +674,35 @@ static func draw_owner(
 		draw_hair_fall(canvas, _to_canvas(head_center, origin, facing, side), facing, head_radius, hair_color)
 	draw_torso(canvas, _to_canvas(body_center, origin, facing, side), facing,
 		Vector2(body_size.x * 0.88, body_size.y * 1.12), shirt_color, bool(dress["coat"]), dress["scarf"])
-	draw_head(canvas, _to_canvas(head_center, origin, facing, side), facing, head_radius, skin_color,
+	var head_at := _to_canvas(head_center, origin, facing, side)
+	draw_head(canvas, head_at, head_facing, head_radius, skin_color,
 		hair_color, String(active_profile["hair_style"]), String(dress["headwear"]), headwear_color)
 
 	match String(dress["eyewear"]):
 		"glasses":
 			for eye_side in [-1.0, 1.0]:
 				canvas.draw_arc(
-					_to_canvas(head_center + Vector2(head_radius * 0.66, head_radius * 0.36 * eye_side), origin, facing, side),
+					_to_canvas(Vector2(head_radius * 0.66, head_radius * 0.36 * eye_side), head_at, head_facing, head_side),
 					head_radius * 0.24, 0.0, TAU, 10, eyewear_color, maxf(1.0, scale), true)
 			canvas.draw_line(
-				_to_canvas(head_center + Vector2(head_radius * 0.66, -head_radius * 0.12), origin, facing, side),
-				_to_canvas(head_center + Vector2(head_radius * 0.66, head_radius * 0.12), origin, facing, side),
+				_to_canvas(Vector2(head_radius * 0.66, -head_radius * 0.12), head_at, head_facing, head_side),
+				_to_canvas(Vector2(head_radius * 0.66, head_radius * 0.12), head_at, head_facing, head_side),
 				eyewear_color, maxf(1.0, scale), true)
 		"sunglasses":
 			for eye_side in [-1.0, 1.0]:
 				canvas.draw_circle(
-					_to_canvas(head_center + Vector2(head_radius * 0.66, head_radius * 0.36 * eye_side), origin, facing, side),
+					_to_canvas(Vector2(head_radius * 0.66, head_radius * 0.36 * eye_side), head_at, head_facing, head_side),
 					head_radius * 0.26, eyewear_color)
 			canvas.draw_line(
-				_to_canvas(head_center + Vector2(head_radius * 0.66, -head_radius * 0.12), origin, facing, side),
-				_to_canvas(head_center + Vector2(head_radius * 0.66, head_radius * 0.12), origin, facing, side),
+				_to_canvas(Vector2(head_radius * 0.66, -head_radius * 0.12), head_at, head_facing, head_side),
+				_to_canvas(Vector2(head_radius * 0.66, head_radius * 0.12), head_at, head_facing, head_side),
 				eyewear_color, maxf(1.0, scale), true)
 
+	if not two_hands:
+		_draw_busy_hands(canvas, resolved_phone_state, origin, facing, side, hand, body_center, body_size,
+			head_center, head_radius, scale, arm_width, skin_color, phone_body_color, phone_screen_color,
+			gait_phase, amount)
+		return
 	for arm_side in [-1.0, 1.0]:
 		var arm_start := body_center + Vector2(body_size.x * 0.45, body_size.y * 0.72 * arm_side)
 		var arm_end := phone_center + Vector2(-phone_size.y * 0.45, phone_size.x * 0.36 * arm_side)
@@ -727,3 +748,48 @@ static func draw_owner(
 			maxf(1.0, phone_size.x * 0.12),
 			phone_accent_color
 		)
+
+
+# One hand on the leash, the other on the phone at their ear, swinging free,
+# or holding a coffee. hand is the leash hand's offset from origin on the
+# canvas; without one it is out front on their right.
+static func _draw_busy_hands(canvas: Object, habit: String, origin: Vector2, facing: Vector2, side: Vector2,
+		hand: Vector2, body_center: Vector2, body_size: Vector2, head_center: Vector2, head_radius: float,
+		scale: float, arm_width: float, skin: Color, phone_body: Color, phone_screen: Color,
+		gait_phase: float, amount: float) -> void:
+	var grip := Vector2(16.0 * scale, 7.0 * scale)
+	if _is_finite_vector(hand):
+		grip = Vector2(hand.dot(facing), hand.dot(side))
+	var reach := 22.0 * scale
+	if grip.length() > reach:
+		grip = grip.normalized() * reach
+	var ls := 1.0 if grip.y >= 0.0 else -1.0
+	var other_end: Vector2
+	match habit:
+		"call":
+			other_end = head_center + Vector2(-head_radius * 0.1, -ls * head_radius * 0.95)
+		"cup":
+			other_end = Vector2(13.0 * scale, -ls * body_size.y * 0.5)
+		_:
+			other_end = body_center + Vector2(2.0 * scale + sin(gait_phase) * ARM_SWING * scale * amount,
+				-ls * body_size.y * 0.92)
+	for arm in [[ls, grip], [-ls, other_end]]:
+		var start := body_center + Vector2(body_size.x * 0.45, body_size.y * 0.72 * float(arm[0]))
+		var end_at: Vector2 = arm[1]
+		canvas.draw_line(_to_canvas(start, origin, facing, side), _to_canvas(end_at, origin, facing, side),
+			skin, arm_width, true)
+		canvas.draw_circle(_to_canvas(end_at, origin, facing, side), arm_width * 0.75, skin)
+	match habit:
+		"call":
+			# the phone pressed to the ear, the screen dark against the cheek
+			var at := other_end + Vector2(head_radius * 0.15, -ls * head_radius * 0.12)
+			canvas.draw_colored_polygon(_rect_points(at, Vector2(4.2, 2.2) * scale, origin, facing, side), phone_body)
+			canvas.draw_colored_polygon(_rect_points(at, Vector2(3.0, 1.3) * scale, origin, facing, side),
+				Color(phone_screen.r, phone_screen.g, phone_screen.b, phone_screen.a * 0.4))
+		"cup":
+			# a takeaway coffee from above: the lid, its sip hole, a sleeve
+			var cup := _to_canvas(other_end + Vector2(2.5 * scale, 0.0), origin, facing, side)
+			canvas.draw_circle(cup + Vector2(0.6, 0.8), 3.6 * scale, Color(0.05, 0.04, 0.06, 0.25))
+			canvas.draw_circle(cup, 3.6 * scale, Color(0.72, 0.55, 0.36))
+			canvas.draw_circle(cup, 2.9 * scale, Color(0.95, 0.94, 0.9))
+			canvas.draw_circle(cup + facing * 1.4 * scale, 0.7 * scale, Color(0.3, 0.26, 0.24))
