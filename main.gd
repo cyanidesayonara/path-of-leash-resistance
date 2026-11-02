@@ -8168,7 +8168,8 @@ func _draw_strips(vt: float, vb: float, grass: Color) -> void:
 			outer.append(Vector2(f.x if side < 0.0 else f.y, yy))
 			if yy >= y1:
 				break
-			y += 40.0
+			# on a grid fixed in the world, as the walk ribbon's samples
+			y = (floorf(y / 40.0) + 1.0) * 40.0
 		var poly := PackedVector2Array(inner)
 		for i in range(outer.size() - 1, -1, -1):
 			poly.append(outer[i])
@@ -8245,7 +8246,10 @@ func _draw_walk_ribbon(vt: float, vb: float, bottom: float, col: Color) -> void:
 		right.append(Vector2(e.y, yy))
 		if yy >= bot:
 			break
-		y += STEP
+		# every sample after the first on a grid fixed in the world: sampled
+		# from the camera, the chords across a bend moved with every pixel of
+		# scrolling, and the edge shimmered (the first and last are off view)
+		y = (floorf(y / STEP) + 1.0) * STEP
 	# one polygon: down the left edge and back up the right
 	var poly := PackedVector2Array(left)
 	for i in range(right.size() - 1, -1, -1):
@@ -10361,24 +10365,45 @@ func _draw_besos(vt: float, vb: float) -> void:
 	Besos.draw_river(self, vt, vb)
 
 
-func _draw_world() -> void:
-	_dprof("")
-	var top := GATE_Y - 800.0
-	# The ground runs well past the start line: the south wall stops the dog
-	# at about START_Y + 110, and the camera on her there sees 280 px further
-	# down at 1280x720 (375 at 1280x960). Stopping at START_Y + 320 left a
-	# strip of bare background along the bottom of the finish (#67).
-	var bottom := START_Y + 560.0
-	# The corridor's cross-section stops at the gate. It used to be painted all
-	# the way to the top of the level, which was invisible while the off-leash
-	# space was drawn afterwards in the same pass - but that space lives on its
-	# own cached canvas now, so anything painted here covers it. (This is how
-	# the dog beach turned green, and then sand-coloured.)
-	var ctop := GATE_Y - 40.0
-	# cull to the camera: redrawing 5500px of detail lines every frame
-	# was the browser stutter
-	var vt: float = cam.position.y - 440.0
-	var vb: float = cam.position.y + 440.0
+# The cross-section - the ground, the strips, the walkway and its paving -
+# does not move, but the world pass redraws at about 30 fps for what does.
+# It is recorded once per stretch of camera travel, reaching XS_BAND past the
+# view, and replayed in its place in the pass: the same shapes in the same
+# order. A walk whose cross-section reads the animation clock, or draws
+# anything a batch cannot hold (text, arcs, a transform), is drawn live as
+# before, found out the first time it is recorded.
+const XS_BAND := 240.0
+var _xs_rec: ShapeBatch
+var _xs_cam := 1.0e20
+var _xs_key := []
+var _xs_live := false
+
+
+func _draw_cross_section_cached(top: float, bottom: float, ctop: float, vt: float, vb: float) -> void:
+	if _xs_live:
+		_draw_cross_section(top, bottom, ctop, vt, vb)
+		return
+	var key := [Game.weather, Game.night, detour_active, tutorial_mode]
+	var cy: float = cam.position.y
+	if _xs_rec == null or key != _xs_key or absf(cy - _xs_cam) > XS_BAND:
+		var rec := ShapeBatch.new()
+		var keep := _wc
+		_wc = rec
+		var reads := AnimClock.reads
+		_draw_cross_section(top, bottom, ctop, vt - XS_BAND, vb + XS_BAND)
+		_wc = keep
+		if rec.missed or AnimClock.reads != reads:
+			_xs_live = true
+			_xs_rec = null
+			_draw_cross_section(top, bottom, ctop, vt, vb)
+			return
+		_xs_rec = rec
+		_xs_cam = cy
+		_xs_key = key
+	_xs_rec.append_to(_wc)
+
+
+func _draw_cross_section(top: float, bottom: float, ctop: float, vt: float, vb: float) -> void:
 	if walk_mod != null and walk_mod.has_method("draw_cross_section"):
 		walk_mod.draw_cross_section(self, _wc, top, bottom, ctop, vt, vb)
 	else:
@@ -10440,6 +10465,27 @@ func _draw_world() -> void:
 			_draw_walk_ribbon(vt, vb, bottom, walkway)
 		if walk_mod != null and walk_mod.has_method("draw_over_walkway"):
 			walk_mod.draw_over_walkway(self, _wc, vt, vb)
+
+
+func _draw_world() -> void:
+	_dprof("")
+	var top := GATE_Y - 800.0
+	# The ground runs well past the start line: the south wall stops the dog
+	# at about START_Y + 110, and the camera on her there sees 280 px further
+	# down at 1280x720 (375 at 1280x960). Stopping at START_Y + 320 left a
+	# strip of bare background along the bottom of the finish (#67).
+	var bottom := START_Y + 560.0
+	# The corridor's cross-section stops at the gate. It used to be painted all
+	# the way to the top of the level, which was invisible while the off-leash
+	# space was drawn afterwards in the same pass - but that space lives on its
+	# own cached canvas now, so anything painted here covers it. (This is how
+	# the dog beach turned green, and then sand-coloured.)
+	var ctop := GATE_Y - 40.0
+	# cull to the camera: redrawing 5500px of detail lines every frame
+	# was the browser stutter
+	var vt: float = cam.position.y - 440.0
+	var vb: float = cam.position.y + 440.0
+	_draw_cross_section_cached(top, bottom, ctop, vt, vb)
 	_dprof("cross section")
 	# (what lies beyond the gate is drawn by freedomlayer, which owns
 	# everything up there - drawing it here put a green field on top of the

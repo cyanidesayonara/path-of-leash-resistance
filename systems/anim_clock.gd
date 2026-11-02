@@ -10,9 +10,13 @@ extends RefCounted
 # loaded by a --script test cannot see autoloads.
 
 static var frame_clock := "--shot" in OS.get_cmdline_user_args()
+# every read, counted: a drawing recorded to be replayed later can tell
+# whether it animates (main's cached cross-section)
+static var reads := 0
 
 
 static func msec() -> int:
+	reads += 1
 	if frame_clock:
 		return Engine.get_process_frames() * 1000 / 60
 	return Time.get_ticks_msec()

@@ -2,6 +2,26 @@
 
 Append-only session history, newest first.
 
+## 2026-11-02 - The ground is drawn once per stretch
+
+- The world pass redraws at about 30 fps for what moves, and redrew the
+  cross-section with it: the ground, the strips, the walkway and its paving,
+  none of which move. It is now recorded once per 240 px of camera travel,
+  reaching that far past the view, and replayed in its place in the pass
+  (`main._draw_cross_section_cached`). Cross-section per world redraw: La
+  Rambla 1.8 ms to 0.12, El Parc 0.45 to 0.07, El Gòtic 0.5 to 0.04; La
+  Rambla's whole world redraw about 9.7 ms to 7.
+- A walk whose cross-section animates is found out the first time it is
+  recorded and drawn live as before: the animation clock counts its reads
+  (`AnimClock.reads`), and a batch with no canvas records, noting anything
+  it cannot hold (`ShapeBatch.missed`). El Passeig, El Besòs, Montjuïc and
+  Llevant stay live; the other 23 walks are cached. The cache is
+  pixel-identical to drawing live (23 walks, two moments each).
+- The walkway's edges on a bend and the strips beside it were sampled from
+  the camera, so their chords moved with every pixel of scrolling and the
+  curve shimmered. Their samples now sit on a grid fixed in the world.
+- Test: `test_world_cache.gd`.
+
 ## 2026-11-02 - No more hitches from the ground
 
 - The verge (the grass and what sits on it) redrew every 150 px of walking,
