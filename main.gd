@@ -10365,42 +10365,219 @@ func _draw_besos(vt: float, vb: float) -> void:
 	Besos.draw_river(self, vt, vb)
 
 
-# The cross-section - the ground, the strips, the walkway and its paving -
-# does not move, but the world pass redraws at about 30 fps for what does.
-# It is recorded once per stretch of camera travel, reaching XS_BAND past the
-# view, and replayed in its place in the pass: the same shapes in the same
-# order. A walk whose cross-section reads the animation clock, or draws
-# anything a batch cannot hold (text, arcs, a transform), is drawn live as
-# before, found out the first time it is recorded.
-const XS_BAND := 240.0
-var _xs_rec: ShapeBatch
-var _xs_cam := 1.0e20
-var _xs_key := []
-var _xs_live := false
+# Sections of the world pass that do not move - the cross-section (ground,
+# strips, walkway, paving), the furniture - are redrawn with it at about 30 fps
+# for what does. Each is recorded once per stretch of camera travel, reaching
+# SECTION_BAND past the view, and replayed in its place in the pass: the same
+# shapes and the same canvas calls in the same order (ShapeBatch.append_to).
+# It is recorded again when the camera has gone SECTION_BAND or its key
+# changes (the weather, night, a detour, plus whatever state the section
+# shows). A section on a walk where it reads the animation clock is drawn live,
+# found out the first time it is recorded.
+const SECTION_BAND := 240.0
 
 
-func _draw_cross_section_cached(top: float, bottom: float, ctop: float, vt: float, vb: float) -> void:
-	if _xs_live:
-		_draw_cross_section(top, bottom, ctop, vt, vb)
+class SectionCache:
+	var rec: ShapeBatch
+	var cam := 1.0e20
+	var key := []
+	var live := false
+
+
+var _sections := {}
+
+
+# draw.call(vt, vb) draws the section onto _wc
+func _draw_section(sec: String, key: Array, vt: float, vb: float, draw: Callable) -> void:
+	var sc: SectionCache = _sections.get(sec)
+	if sc == null:
+		sc = SectionCache.new()
+		_sections[sec] = sc
+	if sc.live:
+		draw.call(vt, vb)
 		return
-	var key := [Game.weather, Game.night, detour_active, tutorial_mode]
+	var full := [Game.weather, Game.night, detour_active, tutorial_mode] + key
 	var cy: float = cam.position.y
-	if _xs_rec == null or key != _xs_key or absf(cy - _xs_cam) > XS_BAND:
+	if sc.rec == null or full != sc.key or absf(cy - sc.cam) > SECTION_BAND:
 		var rec := ShapeBatch.new()
 		var keep := _wc
 		_wc = rec
 		var reads := AnimClock.reads
-		_draw_cross_section(top, bottom, ctop, vt - XS_BAND, vb + XS_BAND)
+		draw.call(vt - SECTION_BAND, vb + SECTION_BAND)
 		_wc = keep
-		if rec.missed or AnimClock.reads != reads:
-			_xs_live = true
-			_xs_rec = null
-			_draw_cross_section(top, bottom, ctop, vt, vb)
+		if AnimClock.reads != reads:
+			sc.live = true
+			sc.rec = null
+			draw.call(vt, vb)
 			return
-		_xs_rec = rec
-		_xs_cam = cy
-		_xs_key = key
-	_xs_rec.append_to(_wc)
+		sc.rec = rec
+		sc.cam = cy
+		sc.key = full
+	sc.rec.append_to(_wc)
+
+
+# the furniture: posts and trees' ground, bins, tables, benches, chairs,
+# fountains and stalls (the world pass, through _draw_section)
+func _draw_furniture(vt: float, vb: float) -> void:
+	# lampposts downtown, trees in the park, palms by the sea
+	# (same physics, different soul); at night their light is
+	# world/light_layer.gd's
+	for i in range(deco_pole_count):
+		var p := poles[i]
+		if p.y < vt - 60.0 or p.y > vb + 60.0:
+			continue
+		# a tree's crown is the canopy layer's (world/canopylayer.gd); here
+		# only what lies on the ground
+		var tk := pole_tree(i)
+		if tk != TREE_NONE:
+			_draw_tree_ground(_wc, p, i, tk)
+			continue
+		if tutorial_mode:
+			_draw_lamppost(p)       # the lesson posts are lampposts, as the cards say
+		elif walk_mod != null and walk_mod.has_method("draw_column"):
+			walk_mod.draw_column(self, _wc, p)
+		else:
+			_draw_lamppost(p)
+	# trash bins: green, lidded, with a visible mouth - the ONLY thing
+	# the owner will throw a bag into (or Barcelona seaside selective recycling station)
+	for bn in bins:
+		if bn.y < vt - 40.0 or bn.y > vb + 40.0:
+			continue
+		if walk_mod != null and walk_mod.has_method("draw_bin"):
+			walk_mod.draw_bin(self, _wc, bn)
+			continue
+		cast_shadow(_wc, bn, 11.0, 24.0)
+		# the drum, on its post, with a lit rim and a genuinely dark mouth
+		_wc.draw_circle(bn, 13.0, Color(0.18, 0.25, 0.20))
+		_wc.draw_circle(bn, 11.0, Color(0.26, 0.36, 0.28))
+		_wc.draw_circle(bn + Vector2(-3, -3), 7.0, Color(0.32, 0.44, 0.33))
+		_wc.draw_arc(bn, 11.0, PI * 1.05, PI * 1.95, 14, Color(0.42, 0.55, 0.42), 2.0)
+		# the hinged lid, tipped open toward the light
+		_wc.draw_circle(bn + Vector2(1, 2), 8.6, Color(0.10, 0.14, 0.11))
+		_wc.draw_arc(bn + Vector2(1, 2), 8.6, PI * 0.1, PI * 0.9, 12, Color(0.20, 0.28, 0.22), 3.0)
+		# a bag someone has knotted round the handle, as always
+		_wc.draw_circle(bn + Vector2(12, 6), 4.0, Color(0.78, 0.78, 0.74, 0.85))
+		_wc.draw_line(bn + Vector2(10, 2), bn + Vector2(12, 5), Color(0.7, 0.7, 0.66), 1.5)
+	# cafe tables with a little service on them
+	for tb in tables:
+		if tb.y < vt - 40.0 or tb.y > vb + 40.0:
+			continue
+		contact_shadow(_wc, tb, 14.0, 9.0, 0.20)
+		# a bistro table: a pale marble top in a dark metal rim, its lit edge on
+		# the upper-left. (A grey top the colour of the paving, with a round
+		# cup and a highlight disc on it, read as a face looking up at you.)
+		_wc.draw_circle(tb + Vector2(0.6, 0.8), 14.0, Color(0.20, 0.20, 0.22))
+		_wc.draw_circle(tb + Vector2(-0.3, -0.3), 12.4, Color(0.90, 0.88, 0.84))
+		_wc.draw_arc(tb + Vector2(-0.3, -0.3), 12.4, PI * 0.1, PI * 0.9, 8, Color(0.74, 0.72, 0.68), 2.0)
+		_wc.draw_line(tb + Vector2(-6, -2), tb + Vector2(2, 5), Color(0.78, 0.76, 0.74, 0.7), 1.0)
+		# a coffee in a small cup on its saucer, the handle out to the side
+		var cup := tb + Vector2(4.5, -4)
+		_wc.draw_circle(cup, 3.6, Color(0.76, 0.74, 0.70))
+		_wc.draw_circle(cup, 2.3, Color(0.36, 0.22, 0.12))
+		_wc.draw_line(cup + Vector2(2.4, 0.8), cup + Vector2(4.6, 1.8), Color(0.76, 0.74, 0.70), 1.6)
+		# then whatever else they ordered: a croissant, or a glass of water
+		if int(absf(tb.x * 0.13 + tb.y * 0.07)) % 2 == 0:
+			var cr := tb + Vector2(-4.0, 4.0)
+			_wc.draw_arc(cr, 3.2, PI * 0.1, PI * 1.1, 7, Color(0.70, 0.44, 0.16), 3.6)
+			_wc.draw_arc(cr, 3.2, PI * 0.3, PI * 0.9, 5, Color(0.90, 0.66, 0.30), 1.6)
+		else:
+			var gl := tb + Vector2(-4.0, 4.5)
+			_wc.draw_circle(gl, 2.8, Color(0.60, 0.76, 0.84, 0.8))
+			_wc.draw_arc(gl, 2.8, PI * 1.1, PI * 1.6, 5, Color(1, 1, 1, 0.9), 1.0)
+		_wc.draw_rect(Rect2(tb.x - 8.0, tb.y - 6.0, 5.0, 3.0), Color(0.92, 0.82, 0.56))
+	# the beach terraces' canopies and the parasols over the tables are
+	# overhead (draw_overhead_piece); here only the shade a parasol casts
+	if not Game.night:
+		for pa in parasols:
+			_wc.circle(pa + LIGHT * 16.0, PARASOL_R * 0.92, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
+	# benches
+	# benches: three slats on cast-iron ends, each slat a soft plank lit on
+	# its upper-left, and the shadow of something knee high
+	for b in benches:
+		if b.y < vt - 60.0 or b.y > vb + 60.0:
+			continue
+		var bseat := Rect2(b.x - 8.0, b.y - 24.0, 16.0, 48.0)
+		box_shadow(_wc, bseat, 4.0, 7.0)
+		for ey: float in [-21.0, 17.0]:
+			_wc.draw_colored_polygon(round_rect_pts(Rect2(b.x - 10.0, b.y + ey, 20.0, 4.0), 2.0), Color(0.16, 0.16, 0.17))
+		for si in range(3):
+			var sl := Rect2(b.x - 8.0 + float(si) * 5.5, b.y - 24.0, 5.0, 48.0)
+			var wc := Color(0.56, 0.41, 0.27).lightened(0.10 if si == 0 else 0.0).darkened(0.12 if si == 2 else 0.0)
+			_wc.draw_colored_polygon(round_rect_pts(sl, 2.2), wc.darkened(0.30))
+			_wc.draw_colored_polygon(round_rect_pts(Rect2(sl.position, sl.size - Vector2(1.2, 1.2)), 2.0), wc)
+			_wc.draw_line(sl.position + Vector2(1.2, 3.0), sl.position + Vector2(1.2, 20.0), wc.lightened(0.25), 1.2)
+		for ey: float in [-19.0, 19.0]:
+			for bx: float in [-5.5, 0.0, 5.5]:
+				_wc.draw_circle(Vector2(b.x + bx, b.y + ey), 0.9, Color(0.20, 0.18, 0.16))
+	# terrace chairs: round seats, four legs, a hint of backrest
+	for ch in chairs:
+		var seat: Vector2 = ch
+		if terrace_kick > 0.0 and lvl == "partit" and ch.distance_to(Partit.DECK.get_center()) < 220.0:
+			seat += Vector2(-8.0 * sin(terrace_kick * 14.0), 0.0)
+		for lg in [Vector2(-5, -5), Vector2(5, -5), Vector2(-5, 5), Vector2(5, 5)]:
+			_wc.draw_circle(seat + lg, 1.5, Color(0.35, 0.27, 0.18))
+		_wc.draw_circle(seat, 6.5, Color(0.58, 0.44, 0.3))
+		_wc.draw_arc(seat, 6.5, PI * 1.15, PI * 1.85, 8, Color(0.4, 0.3, 0.2), 3.0)
+	# fountains: where the tank refills
+	for f in fountains:
+		if lvl == "trail":
+			break     # El Bosc drinks from the stream, which draws itself
+		if rambla():
+			_draw_canaletes(f)
+			continue
+		if lvl == "reial":
+			continue      # the Three Graces fountain draws with Plaça Reial
+		if f.y < vt - 40.0 or f.y > vb + 40.0:
+			continue
+		if walk_mod != null and walk_mod.has_method("draw_fountain"):
+			walk_mod.draw_fountain(self, f)
+			continue
+		if lvl == "partit" and f.distance_to(Partit.BOWL) < 1.0:
+			_draw_water_bowl(f)
+			continue
+		# a drinking fountain: a stone bowl on a post, water in it, the
+		# spout, and the wet patch it always leaves on the paving
+		_wc.draw_circle(f + Vector2(14, 8), 6.0, Color(0.45, 0.6, 0.7, 0.45))
+		_wc.draw_circle(f + Vector2(19, 12), 3.5, Color(0.45, 0.6, 0.7, 0.35))
+		contact_shadow(_wc, f, 12.0, 8.0, 0.22)
+		_wc.draw_circle(f + Vector2(0.8, 1.0), 12.5, Color(0.40, 0.44, 0.46))
+		_wc.draw_circle(f + Vector2(-0.4, -0.4), 11.4, Color(0.60, 0.64, 0.66))
+		_wc.draw_circle(f + Vector2(-3.5, -3.5), 5.0, Color(0.72, 0.76, 0.78))
+		_wc.draw_circle(f + Vector2(0.6, 0.6), 7.8, Color(0.26, 0.40, 0.50))
+		_wc.draw_circle(f, 7.0, Color(0.38, 0.58, 0.70))
+		_wc.draw_circle(f + Vector2(-2.4, -2.0), 2.4, Color(0.80, 0.92, 0.98, 0.85))
+		_wc.draw_line(f + Vector2(0, -12), f + Vector2(0, -5), Color(0.30, 0.32, 0.34), 3.0)
+		_wc.draw_circle(f + Vector2(0, -4.5), 1.6, Color(0.75, 0.88, 0.95))
+	# market stalls: awnings, crates, produce
+	for i in range(stalls.size()):
+		var st := stalls[i]
+		var kind: String = stall_kinds[i] if i < stall_kinds.size() else ""
+		# culled first, whatever the kind: a Rambla stall with its browsers
+		# round it was drawn the whole length of the walk, every frame
+		if st.y < vt - STALL_CULL or st.y > vb + STALL_CULL:
+			continue
+		if kind == "pingpong":
+			_draw_pingpong(st)
+			continue
+		if kind != "":
+			_draw_rambla_stall(st, kind, i)
+			continue
+		var sr := Rect2(st.x - 48, st.y - 28, 96, 56)
+		box_shadow(_wc, sr, 5.0, 12.0)
+		clay_slab(_wc, sr, 5.0, Color(0.55, 0.42, 0.3), 3.0)
+		# the striped awning along the back, each stripe rounded at its hem
+		var acol := Color(0.75, 0.3, 0.28) if i % 2 == 0 else Color(0.32, 0.5, 0.42)
+		_wc.draw_rect(Rect2(st.x - 48, st.y - 37, 96, 4), acol.darkened(0.3))
+		for s2 in range(6):
+			_wc.draw_colored_polygon(round_rect_pts(Rect2(st.x - 48 + s2 * 16.0, st.y - 37, 8, 11), 3.0), acol)
+			_wc.draw_colored_polygon(round_rect_pts(Rect2(st.x - 40 + s2 * 16.0, st.y - 37, 8, 11), 3.0), Color(0.94, 0.92, 0.86))
+		clay_slab(_wc, Rect2(st.x - 40, st.y - 18, 24, 16), 3.0, Color(0.7, 0.55, 0.35), 2.0)
+		for fr: Array in [[Vector2(18, -2), 5.0, Color(0.85, 0.45, 0.3)], [Vector2(30, 6), 5.0, Color(0.9, 0.7, 0.3)],
+				[Vector2(6, 10), 4.0, Color(0.5, 0.65, 0.35)]]:
+			var fc: Color = fr[2]
+			_wc.draw_circle(st + (fr[0] as Vector2) + Vector2(0.6, 0.6), float(fr[1]), fc.darkened(0.3))
+			_wc.draw_circle(st + (fr[0] as Vector2), float(fr[1]) - 0.6, fc)
+			_wc.draw_circle(st + (fr[0] as Vector2) + Vector2(-1.5, -1.5), float(fr[1]) * 0.35, fc.lightened(0.35))
 
 
 func _draw_cross_section(top: float, bottom: float, ctop: float, vt: float, vb: float) -> void:
@@ -10485,7 +10662,7 @@ func _draw_world() -> void:
 	# was the browser stutter
 	var vt: float = cam.position.y - 440.0
 	var vb: float = cam.position.y + 440.0
-	_draw_cross_section_cached(top, bottom, ctop, vt, vb)
+	_draw_section("cross", [], vt, vb, func(t: float, b: float) -> void: _draw_cross_section(top, bottom, ctop, t, b))
 	_dprof("cross section")
 	# (what lies beyond the gate is drawn by freedomlayer, which owns
 	# everything up there - drawing it here put a green field on top of the
@@ -10761,165 +10938,9 @@ func _draw_world() -> void:
 		var mp: Vector2 = dog.global_position + dog.facing * 20.0
 		_wc.draw_rect(Rect2(mp.x - 7.0, mp.y - 4.0, 14.0, 8.0), Color(0.7, 0.6, 0.4))
 	_dprof("lanes to pickups")
-	# lampposts downtown, trees in the park, palms by the sea
-	# (same physics, different soul); at night their light is
-	# world/light_layer.gd's
-	for i in range(deco_pole_count):
-		var p := poles[i]
-		if p.y < vt - 60.0 or p.y > vb + 60.0:
-			continue
-		# a tree's crown is the canopy layer's (world/canopylayer.gd); here
-		# only what lies on the ground
-		var tk := pole_tree(i)
-		if tk != TREE_NONE:
-			_draw_tree_ground(_wc, p, i, tk)
-			continue
-		if tutorial_mode:
-			_draw_lamppost(p)       # the lesson posts are lampposts, as the cards say
-		elif walk_mod != null and walk_mod.has_method("draw_column"):
-			walk_mod.draw_column(self, _wc, p)
-		else:
-			_draw_lamppost(p)
-	# trash bins: green, lidded, with a visible mouth - the ONLY thing
-	# the owner will throw a bag into (or Barcelona seaside selective recycling station)
-	for bn in bins:
-		if bn.y < vt - 40.0 or bn.y > vb + 40.0:
-			continue
-		if walk_mod != null and walk_mod.has_method("draw_bin"):
-			walk_mod.draw_bin(self, _wc, bn)
-			continue
-		cast_shadow(_wc, bn, 11.0, 24.0)
-		# the drum, on its post, with a lit rim and a genuinely dark mouth
-		_wc.draw_circle(bn, 13.0, Color(0.18, 0.25, 0.20))
-		_wc.draw_circle(bn, 11.0, Color(0.26, 0.36, 0.28))
-		_wc.draw_circle(bn + Vector2(-3, -3), 7.0, Color(0.32, 0.44, 0.33))
-		_wc.draw_arc(bn, 11.0, PI * 1.05, PI * 1.95, 14, Color(0.42, 0.55, 0.42), 2.0)
-		# the hinged lid, tipped open toward the light
-		_wc.draw_circle(bn + Vector2(1, 2), 8.6, Color(0.10, 0.14, 0.11))
-		_wc.draw_arc(bn + Vector2(1, 2), 8.6, PI * 0.1, PI * 0.9, 12, Color(0.20, 0.28, 0.22), 3.0)
-		# a bag someone has knotted round the handle, as always
-		_wc.draw_circle(bn + Vector2(12, 6), 4.0, Color(0.78, 0.78, 0.74, 0.85))
-		_wc.draw_line(bn + Vector2(10, 2), bn + Vector2(12, 5), Color(0.7, 0.7, 0.66), 1.5)
-	# cafe tables with a little service on them
-	for tb in tables:
-		if tb.y < vt - 40.0 or tb.y > vb + 40.0:
-			continue
-		contact_shadow(_wc, tb, 14.0, 9.0, 0.20)
-		# a bistro table: a pale marble top in a dark metal rim, its lit edge on
-		# the upper-left. (A grey top the colour of the paving, with a round
-		# cup and a highlight disc on it, read as a face looking up at you.)
-		_wc.draw_circle(tb + Vector2(0.6, 0.8), 14.0, Color(0.20, 0.20, 0.22))
-		_wc.draw_circle(tb + Vector2(-0.3, -0.3), 12.4, Color(0.90, 0.88, 0.84))
-		_wc.draw_arc(tb + Vector2(-0.3, -0.3), 12.4, PI * 0.1, PI * 0.9, 8, Color(0.74, 0.72, 0.68), 2.0)
-		_wc.draw_line(tb + Vector2(-6, -2), tb + Vector2(2, 5), Color(0.78, 0.76, 0.74, 0.7), 1.0)
-		# a coffee in a small cup on its saucer, the handle out to the side
-		var cup := tb + Vector2(4.5, -4)
-		_wc.draw_circle(cup, 3.6, Color(0.76, 0.74, 0.70))
-		_wc.draw_circle(cup, 2.3, Color(0.36, 0.22, 0.12))
-		_wc.draw_line(cup + Vector2(2.4, 0.8), cup + Vector2(4.6, 1.8), Color(0.76, 0.74, 0.70), 1.6)
-		# then whatever else they ordered: a croissant, or a glass of water
-		if int(absf(tb.x * 0.13 + tb.y * 0.07)) % 2 == 0:
-			var cr := tb + Vector2(-4.0, 4.0)
-			_wc.draw_arc(cr, 3.2, PI * 0.1, PI * 1.1, 7, Color(0.70, 0.44, 0.16), 3.6)
-			_wc.draw_arc(cr, 3.2, PI * 0.3, PI * 0.9, 5, Color(0.90, 0.66, 0.30), 1.6)
-		else:
-			var gl := tb + Vector2(-4.0, 4.5)
-			_wc.draw_circle(gl, 2.8, Color(0.60, 0.76, 0.84, 0.8))
-			_wc.draw_arc(gl, 2.8, PI * 1.1, PI * 1.6, 5, Color(1, 1, 1, 0.9), 1.0)
-		_wc.draw_rect(Rect2(tb.x - 8.0, tb.y - 6.0, 5.0, 3.0), Color(0.92, 0.82, 0.56))
-	# the beach terraces' canopies and the parasols over the tables are
-	# overhead (draw_overhead_piece); here only the shade a parasol casts
-	if not Game.night:
-		for pa in parasols:
-			_wc.circle(pa + LIGHT * 16.0, PARASOL_R * 0.92, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
-	# benches
-	# benches: three slats on cast-iron ends, each slat a soft plank lit on
-	# its upper-left, and the shadow of something knee high
-	for b in benches:
-		if b.y < vt - 60.0 or b.y > vb + 60.0:
-			continue
-		var bseat := Rect2(b.x - 8.0, b.y - 24.0, 16.0, 48.0)
-		box_shadow(_wc, bseat, 4.0, 7.0)
-		for ey: float in [-21.0, 17.0]:
-			_wc.draw_colored_polygon(round_rect_pts(Rect2(b.x - 10.0, b.y + ey, 20.0, 4.0), 2.0), Color(0.16, 0.16, 0.17))
-		for si in range(3):
-			var sl := Rect2(b.x - 8.0 + float(si) * 5.5, b.y - 24.0, 5.0, 48.0)
-			var wc := Color(0.56, 0.41, 0.27).lightened(0.10 if si == 0 else 0.0).darkened(0.12 if si == 2 else 0.0)
-			_wc.draw_colored_polygon(round_rect_pts(sl, 2.2), wc.darkened(0.30))
-			_wc.draw_colored_polygon(round_rect_pts(Rect2(sl.position, sl.size - Vector2(1.2, 1.2)), 2.0), wc)
-			_wc.draw_line(sl.position + Vector2(1.2, 3.0), sl.position + Vector2(1.2, 20.0), wc.lightened(0.25), 1.2)
-		for ey: float in [-19.0, 19.0]:
-			for bx: float in [-5.5, 0.0, 5.5]:
-				_wc.draw_circle(Vector2(b.x + bx, b.y + ey), 0.9, Color(0.20, 0.18, 0.16))
-	# terrace chairs: round seats, four legs, a hint of backrest
-	for ch in chairs:
-		var seat: Vector2 = ch
-		if terrace_kick > 0.0 and lvl == "partit" and ch.distance_to(Partit.DECK.get_center()) < 220.0:
-			seat += Vector2(-8.0 * sin(terrace_kick * 14.0), 0.0)
-		for lg in [Vector2(-5, -5), Vector2(5, -5), Vector2(-5, 5), Vector2(5, 5)]:
-			_wc.draw_circle(seat + lg, 1.5, Color(0.35, 0.27, 0.18))
-		_wc.draw_circle(seat, 6.5, Color(0.58, 0.44, 0.3))
-		_wc.draw_arc(seat, 6.5, PI * 1.15, PI * 1.85, 8, Color(0.4, 0.3, 0.2), 3.0)
-	# fountains: where the tank refills
-	for f in fountains:
-		if lvl == "trail":
-			break     # El Bosc drinks from the stream, which draws itself
-		if rambla():
-			_draw_canaletes(f)
-			continue
-		if lvl == "reial":
-			continue      # the Three Graces fountain draws with Plaça Reial
-		if f.y < vt - 40.0 or f.y > vb + 40.0:
-			continue
-		if walk_mod != null and walk_mod.has_method("draw_fountain"):
-			walk_mod.draw_fountain(self, f)
-			continue
-		if lvl == "partit" and f.distance_to(Partit.BOWL) < 1.0:
-			_draw_water_bowl(f)
-			continue
-		# a drinking fountain: a stone bowl on a post, water in it, the
-		# spout, and the wet patch it always leaves on the paving
-		_wc.draw_circle(f + Vector2(14, 8), 6.0, Color(0.45, 0.6, 0.7, 0.45))
-		_wc.draw_circle(f + Vector2(19, 12), 3.5, Color(0.45, 0.6, 0.7, 0.35))
-		contact_shadow(_wc, f, 12.0, 8.0, 0.22)
-		_wc.draw_circle(f + Vector2(0.8, 1.0), 12.5, Color(0.40, 0.44, 0.46))
-		_wc.draw_circle(f + Vector2(-0.4, -0.4), 11.4, Color(0.60, 0.64, 0.66))
-		_wc.draw_circle(f + Vector2(-3.5, -3.5), 5.0, Color(0.72, 0.76, 0.78))
-		_wc.draw_circle(f + Vector2(0.6, 0.6), 7.8, Color(0.26, 0.40, 0.50))
-		_wc.draw_circle(f, 7.0, Color(0.38, 0.58, 0.70))
-		_wc.draw_circle(f + Vector2(-2.4, -2.0), 2.4, Color(0.80, 0.92, 0.98, 0.85))
-		_wc.draw_line(f + Vector2(0, -12), f + Vector2(0, -5), Color(0.30, 0.32, 0.34), 3.0)
-		_wc.draw_circle(f + Vector2(0, -4.5), 1.6, Color(0.75, 0.88, 0.95))
-	# market stalls: awnings, crates, produce
-	for i in range(stalls.size()):
-		var st := stalls[i]
-		var kind: String = stall_kinds[i] if i < stall_kinds.size() else ""
-		# culled first, whatever the kind: a Rambla stall with its browsers
-		# round it was drawn the whole length of the walk, every frame
-		if st.y < vt - STALL_CULL or st.y > vb + STALL_CULL:
-			continue
-		if kind == "pingpong":
-			_draw_pingpong(st)
-			continue
-		if kind != "":
-			_draw_rambla_stall(st, kind, i)
-			continue
-		var sr := Rect2(st.x - 48, st.y - 28, 96, 56)
-		box_shadow(_wc, sr, 5.0, 12.0)
-		clay_slab(_wc, sr, 5.0, Color(0.55, 0.42, 0.3), 3.0)
-		# the striped awning along the back, each stripe rounded at its hem
-		var acol := Color(0.75, 0.3, 0.28) if i % 2 == 0 else Color(0.32, 0.5, 0.42)
-		_wc.draw_rect(Rect2(st.x - 48, st.y - 37, 96, 4), acol.darkened(0.3))
-		for s2 in range(6):
-			_wc.draw_colored_polygon(round_rect_pts(Rect2(st.x - 48 + s2 * 16.0, st.y - 37, 8, 11), 3.0), acol)
-			_wc.draw_colored_polygon(round_rect_pts(Rect2(st.x - 40 + s2 * 16.0, st.y - 37, 8, 11), 3.0), Color(0.94, 0.92, 0.86))
-		clay_slab(_wc, Rect2(st.x - 40, st.y - 18, 24, 16), 3.0, Color(0.7, 0.55, 0.35), 2.0)
-		for fr: Array in [[Vector2(18, -2), 5.0, Color(0.85, 0.45, 0.3)], [Vector2(30, 6), 5.0, Color(0.9, 0.7, 0.3)],
-				[Vector2(6, 10), 4.0, Color(0.5, 0.65, 0.35)]]:
-			var fc: Color = fr[2]
-			_wc.draw_circle(st + (fr[0] as Vector2) + Vector2(0.6, 0.6), float(fr[1]), fc.darkened(0.3))
-			_wc.draw_circle(st + (fr[0] as Vector2), float(fr[1]) - 0.6, fc)
-			_wc.draw_circle(st + (fr[0] as Vector2) + Vector2(-1.5, -1.5), float(fr[1]) * 0.35, fc.lightened(0.35))
+	# the chairs by Dia de Partit's terrace jump when it is kicked
+	var kick := terrace_kick if lvl == "partit" else 0.0
+	_draw_section("furniture", [kick], vt, vb, _draw_furniture)
 	# parked service vans, half on the walkway, hazards blinking in spirit
 	# The service van: the biggest object in the game and, until now, a white
 	# rectangle with four black tabs. A van seen from above is a roof - so it
