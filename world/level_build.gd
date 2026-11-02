@@ -3571,6 +3571,12 @@ static func build_entities(m: Node2D) -> void:
 	m.move_child(m.sign_layer, 0)
 	m.sign_layer.setup(m)
 
+	# the cross-section's own canvas, behind main's (world/ground_layer.gd)
+	m.ground_layer = Node2D.new()
+	m.ground_layer.set_script(load("res://world/ground_layer.gd"))
+	m.add_child(m.ground_layer)
+	m.ground_layer.setup(m)
+
 	m.leash = Node2D.new()
 	m.leash.set_script(load("res://entities/leash.gd"))
 	m.leash.z_index = 5

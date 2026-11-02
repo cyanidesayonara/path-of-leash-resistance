@@ -10421,6 +10421,52 @@ class SectionCache:
 
 
 var _sections := {}
+# the cross-section's own canvas (world/ground_layer.gd), and what it was last
+# drawn for; _ground_live once a walk's cross-section is found to animate
+var ground_layer: Node2D
+var _ground_cam := 1.0e20
+var _ground_key := []
+var _ground_live := false
+var _ground_args := []
+
+
+# The cross-section, on its own canvas behind main's when it does not animate:
+# the canvas is redrawn when the camera has gone SECTION_BAND or the key
+# changes, and the world pass draws nothing for it. The first time, it is
+# recorded once to see whether it reads the animation clock; if it does, it
+# is drawn in the world pass every time instead.
+func _draw_ground(top: float, bottom: float, ctop: float, vt: float, vb: float) -> void:
+	if not _ground_live and ground_layer != null and _ground_key.is_empty():
+		var rec := ShapeBatch.new()
+		var keep := _wc
+		_wc = rec
+		var reads := AnimClock.reads
+		_draw_cross_section(top, bottom, ctop, vt, vb)
+		_wc = keep
+		_ground_live = AnimClock.reads != reads
+	if _ground_live or ground_layer == null:
+		_draw_cross_section(top, bottom, ctop, vt, vb)
+		return
+	var key := [Game.weather, Game.night, detour_active, tutorial_mode]
+	var cy: float = cam.position.y
+	if key != _ground_key or absf(cy - _ground_cam) > SECTION_BAND:
+		_ground_key = key
+		_ground_cam = cy
+		_ground_args = [top, bottom, ctop]
+		ground_layer.vt = vt - SECTION_BAND
+		ground_layer.vb = vb + SECTION_BAND
+		ground_layer.on = true
+		ground_layer.queue_redraw()
+
+
+# the ground canvas's picture (world/ground_layer.gd draws it through this)
+func draw_ground_onto(b: ShapeBatch, vt: float, vb: float) -> void:
+	if _ground_args.is_empty():
+		return
+	var keep := _wc
+	_wc = b
+	_draw_cross_section(float(_ground_args[0]), float(_ground_args[1]), float(_ground_args[2]), vt, vb)
+	_wc = keep
 
 
 # draw.call(vt, vb) draws the section onto _wc
@@ -10698,7 +10744,7 @@ func _draw_world() -> void:
 	# was the browser stutter
 	var vt: float = cam.position.y - 440.0
 	var vb: float = cam.position.y + 440.0
-	_draw_section("cross", [], vt, vb, func(t: float, b: float) -> void: _draw_cross_section(top, bottom, ctop, t, b))
+	_draw_ground(top, bottom, ctop, vt, vb)
 	_dprof("cross section")
 	# (what lies beyond the gate is drawn by freedomlayer, which owns
 	# everything up there - drawing it here put a green field on top of the
