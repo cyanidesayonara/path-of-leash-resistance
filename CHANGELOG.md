@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-11-02 - The dare asks with the button itself
+
+- A dare on offer no longer says "Bark (E) to take the dare" in a line of
+  text. The card shows the bark button itself, for whichever device is in
+  hand (E, B, BARK), with a rim in the card's colour that breathes, and "to
+  take the dare" beside it; "Walk on to leave it." goes under it.
+- Barking takes it visibly: the button is drawn pressed in, the card's
+  colour flaring round it, and DARE ON! beside it for a moment, before the
+  get-set bar.
+
 ## 2026-11-02 - Other dogs have manners, good and bad
 
 - Another walker's dog now reacts to yours coming by (`meet` in
