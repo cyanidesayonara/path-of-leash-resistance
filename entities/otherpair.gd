@@ -100,6 +100,19 @@ const HELLO_PACE := 0.3
 const LUNGE_LEASH := 0.7
 # nearer than this to a lunging dog, she gets a fright
 const LUNGE_SCARE_R := 46.0
+# What the owner's hands are busy with (HumanAppearance.HABITS), by share of
+# owners: most are on their phone, some on a call, some just walking the dog,
+# some carrying a coffee.
+const HABIT_SHARES := {"held": 0.45, "call": 0.15, "free": 0.25, "cup": 0.15}
+# a phone owner stops dead now and then to type something
+const TYPE_GAP_MIN := 9.0
+const TYPE_GAP_MAX := 18.0
+const TYPE_T := 1.4
+# an owner without a phone in their face looks at your dog this near
+const LOOK_R := 220.0
+const LOOK_EASE := 6.0
+# someone on a call says one line of it as they pass this near
+const CALL_SAY_R := 240.0
 # the longest a hello or a lunge goes on: then the owner walks on regardless
 const HELLO_MAX := 4.0
 # a friendly dog coming over stops this close, nose to nose
@@ -180,6 +193,13 @@ var bark_t := 0.0
 # a bark just went off: the burst at its mouth, for the drawing
 var bark_flash := 0.0
 var _scared := false
+var habit := "held"
+var type_t := 0.0
+var type_gap := 0.0
+# where the owner's head points, on the canvas
+var look_dir := Vector2.DOWN
+var _said := false
+var _habit_rng := RandomNumberGenerator.new()
 # your dog has sniffed noses with this one: a hello is over when that sniff is
 var _greeted := false
 # which side of the line this dog walks on: +1 right, -1 left (in x)
@@ -203,8 +223,13 @@ func setup(m: Node2D, mine: Node2D, poles: Array[Vector2], start: Vector2, direc
 	sniff_gap = life_rng.randf_range(1.0, SNIFF_GAP_MAX)
 	dog_name = NAMES[life_rng.randi() % NAMES.size()]
 	grumpy = life_rng.randf() < GRUMPY_P
+	# its own dice, so the dog's sniffing keeps the rolls it had
+	_habit_rng.seed = int(seed_o * 100000.0) + 31
+	habit = _roll_habit(_habit_rng.randf())
+	type_gap = _habit_rng.randf_range(TYPE_GAP_MIN * 0.4, TYPE_GAP_MAX)
 	owner_face = direction.normalized() if direction.length() > 0.1 else Vector2.DOWN
 	dog_face = owner_face
+	look_dir = owner_face
 	var owner_appearance_key := randi()
 	owner_appearance_profile = HumanAppearanceScript.profile_for_key(owner_appearance_key)
 	owner_col = owner_appearance_profile["shirt_color"]
@@ -403,6 +428,7 @@ func greet() -> void:
 func _tick_walking(delta: float, _allow_arrival: bool) -> void:
 	greet_t = maxf(0.0, greet_t - delta)
 	_tick_meet(delta)
+	_tick_habit(delta)
 	var route_was_clear := (
 		route != null
 		and int(route.get("detour_side")) == 0
@@ -737,7 +763,51 @@ func _owner_pace() -> float:
 		return 0.0
 	if meet == "hello":
 		return HELLO_PACE
+	if type_t > 0.0:
+		return 0.0
 	return SNIFF_PACE if (sniff_t > 0.0 or mark_t > 0.0) and greet_t <= 0.0 else 1.0
+
+
+static func _roll_habit(r: float) -> String:
+	for h: String in HABIT_SHARES:
+		r -= float(HABIT_SHARES[h])
+		if r < 0.0:
+			return h
+	return "held"
+
+
+# The owner as a person: a phone owner stops to type now and then; anyone
+# whose eyes are free looks at your dog going by; everyone looks down at
+# their own when it stops, says hello or kicks off; someone on a call says a
+# line of it as they pass.
+func _tick_habit(delta: float) -> void:
+	type_t = maxf(0.0, type_t - delta)
+	var calm := (meet == "" or meet == "done") and tangled_t <= 0.0
+	if habit == "held" and calm:
+		type_gap -= delta
+		if type_gap <= 0.0:
+			type_t = TYPE_T
+			type_gap = _habit_rng.randf_range(TYPE_GAP_MIN, TYPE_GAP_MAX)
+	elif not calm:
+		type_t = 0.0
+	var want := owner_face
+	var to_mine: Vector2 = npc_dog.position - npc_owner.position
+	var to_yours: Vector2 = (my_dog.global_position - global_position - npc_owner.position) if my_dog != null else Vector2.ZERO
+	if meet == "lunge" or meet == "warn":
+		want = to_mine
+	elif habit != "held" and meet == "hello":
+		want = to_yours if int(AnimClock.msec() / 900.0) % 2 == 0 else to_mine
+	elif habit != "held" and (sniff_t > 0.0 or mark_t > 0.0):
+		want = to_mine
+	elif habit != "held" and my_dog != null and to_yours.length() < LOOK_R:
+		want = to_yours
+	if want.length() > 0.01:
+		# turned, not blended: a blend through the middle never turns round
+		look_dir = look_dir.rotated(look_dir.angle_to(want) * (1.0 - exp(-LOOK_EASE * delta)))
+	if habit == "call" and not _said and my_dog != null and to_yours.length() < CALL_SAY_R:
+		_said = true
+		if main != null and main.has_method("on_pair_call"):
+			main.on_pair_call(self)
 
 
 # Meeting your dog: starts when she comes within MEET_R of this dog, walking
@@ -986,11 +1056,13 @@ func _draw_shapes() -> void:
 		owner_stride * 0.075 + seed_o,
 		owner_gait_amount,
 		owner_phone_glow,
-		"held",
+		"raised" if type_t > 0.0 else habit,
 		String(env[0]),
 		String(env[1]),
 		bool(env[2]),
-		int(seed_o * 1000.0)
+		int(seed_o * 1000.0),
+		look_dir,
+		leash.hand_offset
 	)
 	# NPC dog remains drawn by the pair parent; npc_dog stays the real endpoint.
 	var dp: Vector2 = npc_dog.position
