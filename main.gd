@@ -7468,6 +7468,16 @@ func on_pair_bark(pair: Node2D) -> void:
 	float_text(pair.npc_dog.position + Vector2(0, -20), "WOOF!", Color(1.0, 0.86, 0.72))
 
 
+const CALL_LINES := ["Yeah, I'm walking the dog.", "No, go on, I'm listening.", "Sí, sí... vale.",
+	"Can I call you back?", "He's sniffing everything.", "Hold on, the dog's busy."]
+
+
+# another walker on the phone, one line of the call as they pass
+func on_pair_call(pair: Node2D) -> void:
+	float_text(pair.npc_owner.position + Vector2(0, -30), String(CALL_LINES[int(pair.seed_o * 1000.0) % CALL_LINES.size()]),
+		Color(1, 0.92, 0.85), POP_SAY)
+
+
 # she got too near a dog lunging at her
 func on_pair_scare(_pair: Node2D) -> void:
 	mood.bump(Mood.M.SCARED, 0.35)
