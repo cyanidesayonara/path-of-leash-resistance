@@ -15,6 +15,17 @@ Append-only session history, newest first.
   a few seconds its owner hauls it off and walks on. Once a walk each.
 - Test: `test_pair_meet.gd`.
 
+## 2026-11-02 - Dia de Partit in the city's colours
+
+- The home colours are a deep garnet and a strong royal blue instead of a
+  dull claret and slate: the fans' kits and scarves, the stalls, the
+  bunting, the barriers' flags and the banners. A step off any club's exact
+  values; no club, crest, sponsor, player or stadium name, as before.
+- The flags lost their white star: a star on stripes reads as the estelada,
+  which the game keeps out. A home flag is plain blue and garnet halves; a
+  third of the balcony flags are the senyera, four red stripes on gold, and
+  the bunting nearer the stadium is the senyera's gold and red.
+
 ## 2026-11-02 - The furniture is drawn once per stretch too
 
 - A recording batch now keeps every call only a canvas can make (a transform,

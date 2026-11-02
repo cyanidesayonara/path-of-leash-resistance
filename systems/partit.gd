@@ -11,8 +11,10 @@ extends RefCounted
 # The kick-off clock and the set pieces come in later pieces.
 #
 # Branding (the spec's rules): no club, crest, sponsor, player or stadium
-# name anywhere. Home colors are blue and claret, in halves; flags carry a
-# plain white star; the stadium is "L'ESTADI" and nothing else.
+# name anywhere; the stadium is "L'ESTADI" and nothing else. The home colors
+# are the city's blue and garnet, in halves, a step off any club's exact
+# values; the other flag on the balconies is the senyera, Catalonia's own
+# (never the estelada, and no star on any flag: a star on stripes reads as one).
 #
 # Layout is in level space (the corridor fit leaves this walk alone). The
 # path IS the street: sidewalks are drawn inside walk_edges, so every stall
@@ -35,8 +37,11 @@ const KERB := Color(0.78, 0.76, 0.71)
 const CONCOURSE := Color(0.74, 0.72, 0.67)
 const LINE_WHITE := Color(0.90, 0.89, 0.84)
 const BLUE_ZONE := Color(0.26, 0.46, 0.80)
-const HOME_BLUE := Color(0.16, 0.30, 0.62)
-const HOME_CLARET := Color(0.56, 0.12, 0.24)
+const HOME_BLUE := Color(0.10, 0.29, 0.66)
+const HOME_CLARET := Color(0.64, 0.07, 0.27)
+# the senyera: four red stripes on gold
+const SENYERA_GOLD := Color(0.98, 0.80, 0.16)
+const SENYERA_RED := Color(0.82, 0.12, 0.14)
 const AWAY_ORANGE := Color(0.92, 0.50, 0.16)
 const AWAY_SLATE := Color(0.36, 0.40, 0.46)
 const STAR_WHITE := Color(0.97, 0.96, 0.92)
@@ -463,7 +468,7 @@ static func _draw_matchday_litter(m: Node2D, c: ShapeBatch, top: float, bot: flo
 				c.rect(Rect2(pr.position + Vector2(1, 1), pr.size), Color(0, 0, 0, 0.15))
 				c.rect(Rect2(pr.position.x, pr.position.y, 4.0, pr.size.y), HOME_BLUE)
 				c.rect(Rect2(pr.position.x + 4.0, pr.position.y, 4.0, pr.size.y), HOME_CLARET)
-				_star(c, pr.get_center(), 2.0, STAR_WHITE)
+				c.rect(Rect2(pr.position.x + 1.0, pr.position.y + 2.0, 6.0, 1.5), STAR_WHITE)
 			if int(h * 4.1) % 5 == 1:
 				var can_x := (e.x + sw + 16.0 + fmod(h * 5.7, 30.0)) if int(h) % 2 == 0 else (e.y - sw - 16.0 - fmod(h * 5.7, 30.0))
 				var can_col: Color = [CAN_RED, CAN_SILVER, CAN_GOLD, HOME_BLUE][int(h) % 4]
@@ -525,15 +530,21 @@ static func _draw_barriers(c: ShapeBatch, top: float, bot: float) -> void:
 		c.line(Vector2(x - 11.0, ye), Vector2(x + 11.0, ye), Color(0.30, 0.32, 0.34), 4.0)
 
 
-# a home flag, blue and claret halves with a plain white star, lying out from
-# whatever it is tied to (`east` = it hangs out to the east)
-static func _flag(c: ShapeBatch, at: Vector2, h: float, east: bool) -> void:
+# a home flag, blue and garnet halves, or (`senyera`) Catalonia's four red
+# stripes on gold, lying out from whatever it is tied to (`east` = it hangs
+# out to the east)
+static func _flag(c: ShapeBatch, at: Vector2, h: float, east: bool, senyera := false) -> void:
 	var w := h * 1.5
 	var x0 := at.x if east else at.x - w
-	c.rect(Rect2(x0 + 2.0, at.y - h * 0.5 + 2.0, w, h), Color(0, 0, 0, 0.16))
-	c.rect(Rect2(x0, at.y - h * 0.5, w * 0.5, h), HOME_BLUE)
-	c.rect(Rect2(x0 + w * 0.5, at.y - h * 0.5, w * 0.5, h), HOME_CLARET)
-	_star(c, Vector2(x0 + w * 0.5, at.y), h * 0.32, STAR_WHITE)
+	var top := at.y - h * 0.5
+	c.rect(Rect2(x0 + 2.0, top + 2.0, w, h), Color(0, 0, 0, 0.16))
+	if senyera:
+		c.rect(Rect2(x0, top, w, h), SENYERA_GOLD)
+		for k in range(4):
+			c.rect(Rect2(x0, top + h * (1.0 + 2.0 * float(k)) / 9.0, w, h / 9.0), SENYERA_RED)
+		return
+	c.rect(Rect2(x0, top, w * 0.5, h), HOME_BLUE)
+	c.rect(Rect2(x0 + w * 0.5, top, w * 0.5, h), HOME_CLARET)
 
 
 static func _star(c: ShapeBatch, at: Vector2, r: float, col: Color) -> void:
@@ -1229,7 +1240,8 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 				c.circle(Vector2(rail_x, slab.position.y + 4.0 + float(ry) * 9.0), 1.2, Color(0.14, 0.14, 0.16))
 			var pick := int(_h(float(kk), 4.0)) % 5
 			if pick <= 1:
-				_flag(c, Vector2(rail_x, y + 4.0), 14.0, side < 0.0)
+				# a third of the flags out are the senyera
+				_flag(c, Vector2(rail_x, y + 4.0), 14.0, side < 0.0, int(_h(float(kk), 13.0)) % 3 == 0)
 			elif pick == 2:
 				# a pot of geraniums, as every balcony in the city has
 				c.circle(Vector2(slab.get_center().x, y - 10.0), 4.5, Color(0.70, 0.38, 0.24))
@@ -1238,8 +1250,11 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 		k += 1
 	# SEMPRE AMB TU, strung across the side street
 	_banner(c, m, -260.0, "SEMPRE AMB TU", HOME_BLUE, STAR_WHITE)
-	# bunting across the avenue
+	# bunting across the avenue: the home colors, then the senyera's
 	for by: float in [-1480.0, -2620.0]:
+		var cols: Array[Color] = [HOME_BLUE, HOME_CLARET]
+		if by < -2000.0:
+			cols = [SENYERA_GOLD, SENYERA_RED]
 		var e2: Vector2 = m.walk_edges(by)
 		c.line(Vector2(e2.x, by), Vector2(e2.y, by + 10.0), Color(0.24, 0.24, 0.24), 1.5)
 		var bx := e2.x + 14.0
@@ -1248,7 +1263,7 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 			var f := (bx - e2.x) / (e2.y - e2.x)
 			var q := Vector2(bx, by + 10.0 * f + sin(f * PI) * 14.0)
 			c.polygon(PackedVector2Array([q + Vector2(-8, 0), q + Vector2(8, 0), q + Vector2(0, 16)]),
-				HOME_BLUE if j % 2 == 0 else HOME_CLARET)
+				cols[j % 2])
 			bx += 26.0
 			j += 1
 	# FINS AL FINAL, across the stadium's paving from the blocks to its wall
