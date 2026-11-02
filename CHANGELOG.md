@@ -2,6 +2,21 @@
 
 Append-only session history, newest first.
 
+## 2026-11-02 - Other walkers are people too
+
+- Not every other owner is glued to their phone (`habit` in
+  entities/otherpair.gd, drawn by `HumanAppearance.draw_owner`): about half
+  hold it in both hands, some are on a call with it at one ear, some just
+  walk the dog with a free arm swinging, and some carry a takeaway coffee.
+  Anyone not on a phone holds the leash in one hand.
+- A phone owner stops dead now and then to type something, their dog
+  waiting on its leash.
+- Heads turn on their own (`look`): an owner whose eyes are free watches
+  your dog go by, and looks down at their own when it sniffs, marks or says
+  hello; even a phone owner looks up when theirs kicks off at yours.
+- Someone on a call says one line of it as they pass ("Can I call you
+  back?").
+
 ## 2026-11-02 - Other dogs have manners, good and bad
 
 - Another walker's dog now reacts to yours coming by (`meet` in
