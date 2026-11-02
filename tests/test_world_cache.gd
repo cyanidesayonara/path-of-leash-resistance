@@ -1,12 +1,15 @@
 extends SceneTree
 
-# The world pass's cached sections (main._draw_section) and what they lean
-# on: a batch with no canvas records its shapes and, in their place, the
-# calls only a canvas can make, and a replay makes them again in order; the
+# The world pass's cached sections (main._draw_section), the ground's own
+# canvas (main._draw_ground, world/ground_layer.gd), and what they lean on:
+# a batch with no canvas records its shapes and, in their place, the calls
+# only a canvas can make, and a replay makes them again in order; the
 # animation clock counts its reads; a cached section replays exactly what a
-# live draw of the same band makes, is recorded again once the camera has
-# travelled SECTION_BAND or the weather or its own key changes, and a walk
-# whose cross-section reads the clock draws it live.
+# live draw of the same band makes, and is recorded again once the camera
+# has travelled SECTION_BAND or the weather or its own key changes; the
+# ground canvas holds the cross-section of its band, redrawn past
+# SECTION_BAND; a walk whose cross-section reads the clock draws it in the
+# world pass.
 
 var checks := 0
 var failures: Array[String] = []
@@ -40,17 +43,22 @@ func _load(lvl: String) -> Node2D:
 	return m
 
 
-# the cached path, run outside a draw: everything goes to a recording batch
-func _cached(m: Node2D) -> ShapeBatch:
+# the world pass's sections, run outside a draw: everything goes to a
+# recording batch
+func _furniture(m: Node2D, key: float) -> ShapeBatch:
 	var out := ShapeBatch.new()
 	m._wc = out
 	var y: float = m.cam.position.y
-	var top: float = m.GATE_Y - 800.0
-	var bottom: float = m.START_Y + 560.0
-	var ctop: float = m.GATE_Y - 40.0
-	m._draw_section("cross", [], y - 440.0, y + 440.0, func(t: float, b: float) -> void: m._draw_cross_section(top, bottom, ctop, t, b))
+	m._draw_section("furniture", [key], y - 440.0, y + 440.0, m._draw_furniture)
 	return out
 
+
+func _ground(m: Node2D) -> ShapeBatch:
+	var out := ShapeBatch.new()
+	m._wc = out
+	var y: float = m.cam.position.y
+	m._draw_ground(m.GATE_Y - 800.0, m.START_Y + 560.0, m.GATE_Y - 40.0, y - 440.0, y + 440.0)
+	return out
 
 
 func _run() -> void:
@@ -78,44 +86,60 @@ func _run() -> void:
 	AnimClock.msec()
 	_check(AnimClock.reads == r0 + 1, "the clock counts a read")
 
-	# a cached walk
+	# a cached section: furniture
 	var m := await _load("park")
-	var first := _cached(m)
-	var sc = m._sections["cross"]
-	_check(not sc.live and sc.rec != null, "park's cross-section is cached")
+	var first := _furniture(m, 0.0)
+	var sc = m._sections["furniture"]
+	_check(not sc.live and sc.rec != null, "park's furniture is cached")
 	var live := ShapeBatch.new()
 	m._wc = live
 	var y: float = sc.cam
-	m._draw_cross_section(m.GATE_Y - 800.0, m.START_Y + 560.0, m.GATE_Y - 40.0, y - 440.0 - m.SECTION_BAND, y + 440.0 + m.SECTION_BAND)
-	_check(first._points == live._points and first._colors == live._colors, "the replay is exactly a live draw of the recorded band")
+	m._draw_furniture(y - 440.0 - m.SECTION_BAND, y + 440.0 + m.SECTION_BAND)
+	_check(first._points == live._points and first._colors == live._colors and first._ops.size() == live._ops.size(),
+		"the replay is exactly a live draw of the recorded band")
 	var kept: ShapeBatch = sc.rec
 	m.cam.position.y -= m.SECTION_BAND * 0.5
-	_cached(m)
+	_furniture(m, 0.0)
 	_check(sc.rec == kept, "a short scroll replays the recording")
 	m.cam.position.y -= m.SECTION_BAND
-	_cached(m)
-	_check(sc.rec != kept, "past XS_BAND it records again")
+	_furniture(m, 0.0)
+	_check(sc.rec != kept, "past SECTION_BAND it records again")
 	kept = sc.rec
 	var w: String = game.weather
 	game.weather = "snow" if w != "snow" else "clear"
-	_cached(m)
+	_furniture(m, 0.0)
 	_check(sc.rec != kept, "a change of weather records again")
 	game.weather = w
-	# a section's own key: furniture records again when it changes
-	var fsc = m._sections.get("furniture")
-	m._wc = ShapeBatch.new()
-	m._draw_section("furniture", [0.0], m.cam.position.y - 440.0, m.cam.position.y + 440.0, m._draw_furniture)
-	fsc = m._sections["furniture"]
-	kept = fsc.rec
-	m._draw_section("furniture", [0.5], m.cam.position.y - 440.0, m.cam.position.y + 440.0, m._draw_furniture)
-	_check(fsc.rec != kept and not fsc.live, "furniture records again when its key changes")
+	kept = sc.rec
+	_furniture(m, 0.5)
+	_check(sc.rec != kept and not sc.live, "a section records again when its own key changes")
+
+	# the ground canvas
+	var gl: Node2D = m.ground_layer
+	var drawn := _ground(m)
+	_check(not m._ground_live and gl.on, "park's ground goes on its own canvas")
+	_check(drawn._points.is_empty() and drawn._ops.is_empty(), "and the world pass draws nothing for it")
+	_check(gl.show_behind_parent and gl.z_index == 0, "the ground canvas sits behind main's, at main's z")
+	var pic := ShapeBatch.new()
+	m.draw_ground_onto(pic, gl.vt, gl.vb)
+	var direct := ShapeBatch.new()
+	m._wc = direct
+	m._draw_cross_section(m.GATE_Y - 800.0, m.START_Y + 560.0, m.GATE_Y - 40.0, gl.vt, gl.vb)
+	_check(pic._points == direct._points and pic._colors == direct._colors, "its picture is the cross-section of its band")
+	var band: float = gl.vt
+	m.cam.position.y -= m.SECTION_BAND * 0.5
+	_ground(m)
+	_check(gl.vt == band, "a short scroll keeps the picture")
+	m.cam.position.y -= m.SECTION_BAND
+	_ground(m)
+	_check(gl.vt != band, "past SECTION_BAND the canvas is redrawn for the new band")
 	m.queue_free()
 	await process_frame
 
 	# a walk whose cross-section animates
 	m = await _load("llevant")
-	_cached(m)
-	_check(m._sections["cross"].live and m._sections["cross"].rec == null, "Llevant's cross-section reads the clock, so it is drawn live")
+	var on_main := _ground(m)
+	_check(m._ground_live and not on_main._points.is_empty(), "Llevant's cross-section reads the clock, so the world pass draws it")
 	m.queue_free()
 	await process_frame
 
