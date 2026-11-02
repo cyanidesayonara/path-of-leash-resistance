@@ -26,6 +26,7 @@ extends Node
 # between the nodes' draw signals (Godot emits a node's draw signal just
 # before calling its _draw, and redraws run back to back). It changes no
 # gameplay; the signal hooks cost a little, so compare it only with itself.
+# It also splits main's world pass by section (main._dprof).
 #
 # To compare CPU cost between builds, run headless with --fixed-fps 60 and
 # read frame_p50. For real frame times (rendering included) run windowed with
@@ -111,6 +112,7 @@ func _ready() -> void:
 	# windowed run. Both read 0 headless.
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	if _scripts:
+		main._dprof_on = true
 		var mark := PhaseMark.new()
 		mark.probe = self
 		mark.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -291,6 +293,12 @@ func _report_scripts(frames: float, frame_ms: float) -> void:
 	print("PERF phases per frame (ms): frame=%.2f %s (the rest is rendering, audio and the engine)" % [frame_ms, " ".join(ph)])
 	var keys: Array = _draw_us.keys()
 	keys.sort_custom(func(a: String, b: String) -> bool: return int(_draw_us[a]) > int(_draw_us[b]))
+	# main's world pass by section, per redraw (it redraws at about 30 fps)
+	var wn := maxf(1.0, float(_draw_n.get("main.gd", 0)))
+	var wk: Array = main.dprof_us.keys()
+	wk.sort_custom(func(a: String, b: String) -> bool: return int(main.dprof_us[a]) > int(main.dprof_us[b]))
+	for k: String in wk:
+		print("PERF world %-22s %.3fms per redraw" % [k, float(main.dprof_us[k]) / wn / 1000.0])
 	for k: String in keys:
 		print("PERF draw %-22s %.3fms per frame  %.1f redraws per frame  %.3fms each" % [k,
 			float(_draw_us[k]) / frames / 1000.0, float(_draw_n[k]) / frames,
