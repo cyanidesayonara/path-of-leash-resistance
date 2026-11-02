@@ -21,6 +21,17 @@ Append-only session history, newest first.
 - `test_redraw_once.gd` fails any `queue_redraw()` in a `_physics_process` or
   `tick` from now on.
 
+## 2026-11-02 - A slow frame no longer makes the next one slower
+
+- A frame may run at most 4 physics steps to catch up (`Game.MAX_PHYSICS_STEPS`;
+  the engine's default is 8). Each step costs time, so a slow frame that ran
+  eight made the next one slower still, and a browser that dipped stayed
+  down. Full speed holds to 15 fps; below that the walk runs a little slow
+  instead of stalling. At 60 fps and in `--fixed-fps` runs nothing changes.
+- Desktop held at 10 fps, La Rambla: physics 15.5-16.2 to 10.0-10.1 ms a
+  frame, the draw pass 28 to 20 (fewer steps, fewer redraws), the worst frame
+  260 to 227-237 ms.
+
 ## 2026-11-02 - The ground is drawn once per stretch
 
 - The world pass redraws at about 30 fps for what moves, and redrew the

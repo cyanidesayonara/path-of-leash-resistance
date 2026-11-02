@@ -851,8 +851,17 @@ func _process(_delta: float) -> void:
 	Redraw.flush()
 
 
+# How many physics steps one frame may run to catch up (the engine's default
+# is 8). Each step costs time, so a slow frame that runs eight makes the next
+# frame slower still, and a browser that dips never climbs back out. Four
+# keeps full speed down to 15 fps; below that the walk runs a little slow
+# rather than stalling. At 60 fps and in --fixed-fps runs it is one step.
+const MAX_PHYSICS_STEPS := 4
+
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	Engine.max_physics_steps_per_frame = MAX_PHYSICS_STEPS
 	persist = not ("--autowalk" in OS.get_cmdline_user_args())
 	load_records()
 	# lets CI and local smoke tests exercise any level/weather:
