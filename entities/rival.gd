@@ -114,7 +114,7 @@ func _physics_process(delta: float) -> void:
 	position.x = clampf(position.x, bounds.position.x, bounds.end.x)
 	position.y = clampf(position.y, bounds.position.y, bounds.end.y)
 	if Engine.get_physics_frames() % 2 == 0:
-		queue_redraw()
+		Redraw.later(self)
 
 
 func _move_toward(to: Vector2, speed: float, delta: float) -> void:

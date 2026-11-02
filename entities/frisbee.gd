@@ -119,7 +119,7 @@ func _physics_process(delta: float) -> void:
 				else:
 					state = State.DONE
 					queue_free()
-	queue_redraw()
+	Redraw.later(self)
 
 
 func _caught(air: bool) -> void:

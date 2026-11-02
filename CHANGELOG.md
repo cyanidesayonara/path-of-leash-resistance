@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-11-02 - One redraw a frame, however slow the frame
+
+- Godot runs queued redraws after every physics step, not once a frame. A
+  slow frame catches up with several steps (two at 30 fps, up to eight in a
+  struggling browser), so every bike, leash, squirrel, cone, pigeon and the
+  rest that asked for a redraw from `_physics_process` drew that many times,
+  all but the last picture thrown away: the browser profile showed the
+  player's leash drawn 8 times a frame. They now mark themselves
+  (`Redraw.later`, systems/redraw.gd) and the Game autoload asks each for one
+  redraw in the frame's process pass, after the physics steps (26 calls in
+  22 scripts).
+- Desktop capped at 20 fps to stand in for a slow browser, La Rambla: the
+  draw pass 22.0 to 11.2 ms a frame; bikes 6.0 to 0.4, leashes 3.1 to 0.8,
+  squirrels 1.8 to 0.2, cones 1.1 to 0.1.
+- Pixel-identical on 53 of 54 shots of every walk; El Diluvi's gutter is one
+  level of 255 different in one, drawn from the state after the process pass.
+- `test_redraw_once.gd` fails any `queue_redraw()` in a `_physics_process` or
+  `tick` from now on.
+
 ## 2026-11-02 - A slow frame no longer makes the next one slower
 
 - A frame may run at most 4 physics steps to catch up (`Game.MAX_PHYSICS_STEPS`;

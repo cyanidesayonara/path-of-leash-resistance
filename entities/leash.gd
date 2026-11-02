@@ -411,7 +411,7 @@ func tick(delta: float) -> void:
 			if not _expel_rects(true):
 				break
 	if hero or (Engine.get_physics_frames() % 2 == 0 and not out_of_view):
-		queue_redraw()
+		Redraw.later(self)
 
 
 # One pass of the bending constraint (see BEND_MIN), before the solve: it only

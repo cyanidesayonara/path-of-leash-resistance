@@ -99,7 +99,7 @@ func _physics_process(delta: float) -> void:
 				main.dog_carrying = false
 				main.on_ball_returned(thrower)
 				_throw()
-	queue_redraw()
+	Redraw.later(self)
 
 
 func _draw() -> void:

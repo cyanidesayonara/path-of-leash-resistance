@@ -88,7 +88,7 @@ func _physics_process(delta: float) -> void:
 			main.float_text(global_position, "ploosh", Color(0.6, 0.8, 1.0))
 			queue_free()
 			return
-		queue_redraw()
+		Redraw.later(self)
 
 
 func _kick_by(p: Vector2, v: Vector2, r: float) -> void:

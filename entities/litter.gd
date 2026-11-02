@@ -63,7 +63,7 @@ func _physics_process(delta: float) -> void:
 	if dy > GONE_BEHIND or dy < -GONE_AHEAD:
 		queue_free()
 		return
-	queue_redraw()
+	Redraw.later(self)
 
 
 func _keep_on_path() -> void:

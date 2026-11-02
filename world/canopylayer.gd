@@ -47,7 +47,7 @@ func _physics_process(_delta: float) -> void:
 		key += "%d," % int(t["id"])
 	if key != _fade_key or Engine.get_physics_frames() % 2 == 0:
 		_fade_key = key
-		queue_redraw()
+		Redraw.later(self)
 		_faded_node.queue_redraw()
 
 

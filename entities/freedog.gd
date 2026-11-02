@@ -110,7 +110,7 @@ func _physics_process(delta: float) -> void:
 		if vel.length() > 14.0:
 			face = vel.normalized()
 		if Engine.get_physics_frames() % 2 == 0:
-			queue_redraw()
+			Redraw.later(self)
 		return
 	offer_cd -= delta
 	bow += delta
@@ -121,7 +121,7 @@ func _physics_process(delta: float) -> void:
 			face = to_mine / d_mine
 		lean = minf(lean + delta * 4.0, 1.0)
 		if Engine.get_physics_frames() % 2 == 0:
-			queue_redraw()
+			Redraw.later(self)
 		return
 
 	# Getting barged into by a strange dog at speed is worth reacting to,
@@ -225,7 +225,7 @@ func _physics_process(delta: float) -> void:
 	# the node moves via its transform every frame; the drawn pose only
 	# needs ~30fps, halving this entity's draw cost (web-build budget)
 	if Engine.get_physics_frames() % 2 == 0:
-		queue_redraw()
+		Redraw.later(self)
 
 
 # the free end of the rope she carries: what Millie grabs

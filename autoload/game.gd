@@ -845,6 +845,12 @@ func _add_pad_button(action: String, btn: int) -> void:
 	InputMap.action_add_event(action, ev)
 
 
+# the redraws entities asked for during this frame's physics steps, made
+# once (systems/redraw.gd); always, so a node that runs while paused draws too
+func _process(_delta: float) -> void:
+	Redraw.flush()
+
+
 # How many physics steps one frame may run to catch up (the engine's default
 # is 8). Each step costs time, so a slow frame that runs eight makes the next
 # frame slower still, and a browser that dips never climbs back out. Four
@@ -854,6 +860,7 @@ const MAX_PHYSICS_STEPS := 4
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	Engine.max_physics_steps_per_frame = MAX_PHYSICS_STEPS
 	persist = not ("--autowalk" in OS.get_cmdline_user_args())
 	load_records()

@@ -54,7 +54,7 @@ func _physics_process(delta: float) -> void:
 	if position.x < 240.0 or position.x > 1040.0:
 		queue_free()
 	if Engine.get_physics_frames() % 2 == 0:
-		queue_redraw()
+		Redraw.later(self)
 
 
 func _draw() -> void:

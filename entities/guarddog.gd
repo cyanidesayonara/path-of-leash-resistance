@@ -41,7 +41,7 @@ func _physics_process(delta: float) -> void:
 		alert_t -= delta
 		if alert_t <= 0.0:
 			asleep = true
-	queue_redraw()
+	Redraw.later(self)
 
 
 func hear_noise(pos: Vector2, radius: float) -> void:

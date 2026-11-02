@@ -155,7 +155,7 @@ func _physics_process(delta: float) -> void:
 	var said := _line()
 	if said != _said:
 		_said = said
-		queue_redraw()
+		Redraw.later(self)
 	# only offer while walking out - not mid off-leash romp or the way home
 	if main.phase != "out":
 		return
@@ -169,7 +169,7 @@ func _physics_process(delta: float) -> void:
 		result = "lapsed"
 		since_end = 0.0
 		left_since = true
-		queue_redraw()
+		Redraw.later(self)
 		return
 	if not fired:
 		if d < notice_r():

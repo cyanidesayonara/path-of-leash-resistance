@@ -55,7 +55,7 @@ func _physics_process(delta: float) -> void:
 		main.dog.knocked(Vector2(dir, 0.0), "train")
 	if (dir > 0.0 and body.position.x > 1600.0) or (dir < 0.0 and body.end.x < -320.0):
 		queue_free()
-	queue_redraw()
+	Redraw.later(self)
 
 
 func _draw() -> void:

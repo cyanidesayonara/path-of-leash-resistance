@@ -42,11 +42,11 @@ func _physics_process(delta: float) -> void:
 		return
 	if spooked:
 		leap = minf(1.0, leap + delta * 2.2)
-		queue_redraw()
+		Redraw.later(self)
 		return
 	var near := my_dog.global_position.distance_to(global_position) < NOTICE_R
 	arch = move_toward(arch, 1.0 if near else 0.0, delta * 4.0)
-	queue_redraw()
+	Redraw.later(self)
 
 
 func scare() -> void:

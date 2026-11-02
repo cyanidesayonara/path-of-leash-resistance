@@ -146,7 +146,7 @@ func _physics_process(delta: float) -> void:
 			main.close_call(human.global_position)
 		queue_free()
 	if Clay.in_view(self, main, Rect2(global_position, Vector2.ZERO), VIEW_MARGIN):
-		queue_redraw()
+		Redraw.later(self)
 
 
 # the direction shadows fall (main.LIGHT), repeated here so a rider drawn
