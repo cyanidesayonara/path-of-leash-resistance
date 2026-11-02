@@ -7441,10 +7441,35 @@ func _greet_pair(pair: Node2D) -> void:
 	var op: Vector2 = pair.npc_owner.position
 	if bool(pair.grumpy):
 		float_text(dp + Vector2(0, -18), "grrr", Color(1.0, 0.7, 0.55))
-		float_text(op + Vector2(0, -30), String(GRUMPY_LINES[int(pair.seed_o * 1000.0) % GRUMPY_LINES.size()]), Color(1, 0.92, 0.85), POP_SAY)
+		# its owner already said sorry when it lunged
+		if String(pair.meet) != "lunge" and String(pair.meet) != "done":
+			float_text(op + Vector2(0, -30), String(GRUMPY_LINES[int(pair.seed_o * 1000.0) % GRUMPY_LINES.size()]), Color(1, 0.92, 0.85), POP_SAY)
 	else:
 		float_text(dp + Vector2(0, -18), "sniff! hi", Color(0.8, 1.0, 0.85))
 		float_text(op + Vector2(0, -30), String(GREET_LINES[int(pair.seed_o * 1000.0) % GREET_LINES.size()]), Color(1, 0.95, 0.9), POP_SAY)
+
+
+# Another walker's dog meeting yours on the way past (entities/otherpair.gd):
+# a grumpy one stiffens and growls, then lunges barking while its owner says
+# sorry; a friendly one just comes over, wagging, and needs no words.
+func on_pair_meet(pair: Node2D, kind: String) -> void:
+	var dp: Vector2 = pair.npc_dog.position
+	var op: Vector2 = pair.npc_owner.position
+	match kind:
+		"warn":
+			float_text(dp + Vector2(0, -18), "grrr", Color(1.0, 0.7, 0.55))
+		"lunge":
+			float_text(op + Vector2(0, -30), String(GRUMPY_LINES[int(pair.seed_o * 1000.0) % GRUMPY_LINES.size()]), Color(1, 0.92, 0.85), POP_SAY)
+
+
+func on_pair_bark(pair: Node2D) -> void:
+	Sfx.play("bark", 0.72, -9.0)
+	float_text(pair.npc_dog.position + Vector2(0, -20), "WOOF!", Color(1.0, 0.86, 0.72))
+
+
+# she got too near a dog lunging at her
+func on_pair_scare(_pair: Node2D) -> void:
+	mood.bump(Mood.M.SCARED, 0.35)
 
 
 func _pair_spawn_distance(camera_y: float) -> float:
