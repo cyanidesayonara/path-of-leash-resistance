@@ -12,6 +12,30 @@ Append-only session history, newest first.
   colour flaring round it, and DARE ON! beside it for a moment, before the
   get-set bar.
 
+## 2026-11-02 - Other dogs have manners, good and bad
+
+- Another walker's dog now reacts to yours coming by (`meet` in
+  entities/otherpair.gd). A friendly one spots her from 150 px and pulls over
+  to say hello, tail going, stopping nose to nose; its owner slows to let it,
+  and it is over once they have sniffed.
+- A grumpy one (one in five, as before) goes stiff and growls for 0.8 s, the
+  telegraph every hazard gets, then lunges to the end of its leash barking
+  ("WOOF!", a burst at its muzzle) while its owner stops, reels it in short
+  and apologises ("Bruno! Leave it."). Too near it, she gets a fright. After
+  a few seconds its owner hauls it off and walks on. Once a walk each.
+- Test: `test_pair_meet.gd`.
+
+## 2026-11-02 - Dia de Partit in the city's colours
+
+- The home colours are a deep garnet and a strong royal blue instead of a
+  dull claret and slate: the fans' kits and scarves, the stalls, the
+  bunting, the barriers' flags and the banners. A step off any club's exact
+  values; no club, crest, sponsor, player or stadium name, as before.
+- The flags lost their white star: a star on stripes reads as the estelada,
+  which the game keeps out. A home flag is plain blue and garnet halves; a
+  third of the balcony flags are the senyera, four red stripes on gold, and
+  the bunting nearer the stadium is the senyera's gold and red.
+
 ## 2026-11-02 - The furniture is drawn once per stretch too
 
 - A recording batch now keeps every call only a canvas can make (a transform,

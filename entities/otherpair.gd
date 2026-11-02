@@ -86,6 +86,25 @@ const MARKS_MAX := 2
 # its owner waits that long; GRUMPY_P of dogs would rather not
 const GREET_HOLD := 1.4
 const GRUMPY_P := 0.2
+# Meeting your dog on the way past. A friendly dog spots her from MEET_R and
+# pulls over to say hello, its owner slowing to let it; a grumpy one goes
+# stiff and stares for MEET_WARN (the telegraph every hazard gets), then
+# lunges to the end of its leash barking every BARK_GAP while its owner stops
+# and reels it in short. It is over once she is MEET_END away, once a walk.
+const MEET_R := 150.0
+const MEET_END := 230.0
+const MEET_WARN := 0.8
+const BARK_GAP := 0.55
+const HELLO_PACE := 0.3
+# how short a grumpy dog's owner holds it while it lunges
+const LUNGE_LEASH := 0.7
+# nearer than this to a lunging dog, she gets a fright
+const LUNGE_SCARE_R := 46.0
+# the longest a hello or a lunge goes on: then the owner walks on regardless
+const HELLO_MAX := 4.0
+# a friendly dog coming over stops this close, nose to nose
+const NOSE_R := 24.0
+const LUNGE_MAX := 4.5
 const NAMES := ["a terrier", "a beagle", "a whippet", "a poodle", "a wiener dog", "a labrador",
 	"a pit bull", "a pug", "a greyhound", "a collie", "a spaniel", "a chihuahua"]
 const POSE_EASE := 0.25
@@ -154,6 +173,15 @@ var marks_left := MARKS_MAX
 var dog_name := "a dog"
 var greet_t := 0.0
 var grumpy := false
+# meeting your dog: "" not yet, "hello", "warn", "lunge", then "done"
+var meet := ""
+var meet_t := 0.0
+var bark_t := 0.0
+# a bark just went off: the burst at its mouth, for the drawing
+var bark_flash := 0.0
+var _scared := false
+# your dog has sniffed noses with this one: a hello is over when that sniff is
+var _greeted := false
 # which side of the line this dog walks on: +1 right, -1 left (in x)
 var dog_side := 1.0
 # how far ahead of the dog's center its collar is drawn
@@ -365,6 +393,7 @@ func _in_solid(p: Vector2) -> bool:
 # your dog has come up nose to nose: stop, sniff back, the owner waits
 func greet() -> void:
 	greet_t = GREET_HOLD
+	_greeted = true
 	sniff_t = maxf(sniff_t, GREET_HOLD)
 	sniff_spot = Vector2(INF, INF)
 	at_spot = false
@@ -373,6 +402,7 @@ func greet() -> void:
 
 func _tick_walking(delta: float, _allow_arrival: bool) -> void:
 	greet_t = maxf(0.0, greet_t - delta)
+	_tick_meet(delta)
 	var route_was_clear := (
 		route != null
 		and int(route.get("detour_side")) == 0
@@ -453,7 +483,17 @@ func _tick_walking(delta: float, _allow_arrival: bool) -> void:
 				float(route.get("min_x")),
 				float(route.get("max_x"))
 			)
-		if mark_t > 0.0:
+		if meet == "hello" and (greet_t > 0.0 or npc_dog.position.distance_to(my_dog.global_position - global_position) < NOSE_R):
+			# nose to nose: it stays put for the sniff
+			dog_speed_now = 0.0
+		elif meet == "hello" or meet == "lunge":
+			# straight for your dog, as far as the leash lets it
+			var to: Vector2 = my_dog.global_position - global_position
+			dog_speed_now = move_toward(dog_speed_now, DOG_TROT * (1.25 if meet == "lunge" else 1.0), DOG_ACCEL * 2.0 * delta)
+			npc_dog.position = npc_dog.position.move_toward(to, dog_speed_now * delta)
+		elif meet == "warn":
+			dog_speed_now = 0.0
+		elif mark_t > 0.0:
 			mark_t -= delta
 			dog_speed_now = 0.0
 			if mark_t <= 0.0:
@@ -690,9 +730,66 @@ func _cap_dog_to_owner() -> bool:
 	return towed
 
 
-# A dog with its nose down slows its owner; they do not stop for it.
+# A dog with its nose down slows its owner; they do not stop for it. A dog
+# saying hello slows them more; a grumpy one barking at yours stops them.
 func _owner_pace() -> float:
+	if meet == "warn" or meet == "lunge":
+		return 0.0
+	if meet == "hello":
+		return HELLO_PACE
 	return SNIFF_PACE if (sniff_t > 0.0 or mark_t > 0.0) and greet_t <= 0.0 else 1.0
+
+
+# Meeting your dog: starts when she comes within MEET_R of this dog, walking
+# and untangled; ends when she is MEET_END away. Once a walk.
+func _tick_meet(delta: float) -> void:
+	bark_flash = maxf(0.0, bark_flash - delta)
+	if my_dog == null or main == null:
+		return
+	var d: float = my_dog.global_position.distance_to(global_position + npc_dog.position)
+	if meet == "":
+		if d < MEET_R and tangled_t <= 0.0 and not tangle_active:
+			meet = "warn" if grumpy else "hello"
+			meet_t = MEET_WARN if grumpy else HELLO_MAX
+			sniff_spot = Vector2(INF, INF)
+			at_spot = false
+			sniff_t = 0.0
+			mark_t = 0.0
+			if main.has_method("on_pair_meet"):
+				main.on_pair_meet(self, meet)
+		return
+	if meet == "done":
+		return
+	if d > MEET_END or tangled_t > 0.0:
+		meet = "done"
+		return
+	if meet == "hello":
+		meet_t -= delta
+		if meet_t <= 0.0 or (_greeted and greet_t <= 0.0):
+			meet = "done"
+	elif meet == "warn":
+		meet_t -= delta
+		if meet_t <= 0.0:
+			meet = "lunge"
+			meet_t = LUNGE_MAX
+			bark_t = 0.0
+			if main.has_method("on_pair_meet"):
+				main.on_pair_meet(self, "lunge")
+	elif meet == "lunge":
+		meet_t -= delta
+		if meet_t <= 0.0:
+			# the owner hauls it off and walks on
+			meet = "done"
+			return
+		bark_t -= delta
+		if bark_t <= 0.0:
+			bark_t = BARK_GAP
+			bark_flash = 0.22
+			if main.has_method("on_pair_bark"):
+				main.on_pair_bark(self)
+		if not _scared and d < LUNGE_SCARE_R and main.has_method("on_pair_scare"):
+			_scared = true
+			main.on_pair_scare(self)
 
 
 # the dog's place on the walk for a pair heading `way`: DOG_LEAD ahead, on its
@@ -718,7 +815,8 @@ func _place_hand() -> void:
 # the strap the owner lets out for where the dog is now
 func _leash_want() -> float:
 	var collar: Vector2 = npc_dog.position + leash.dog_offset
-	return clampf(_hand_local().distance_to(collar) * LEASH_SLACK, LEASH_MIN, LEASH_LEN)
+	var most := LEASH_LEN * (LUNGE_LEASH if meet == "lunge" else 1.0)
+	return clampf(_hand_local().distance_to(collar) * LEASH_SLACK, LEASH_MIN, most)
 
 
 # The owner takes in or lets out strap toward _leash_want(), then the rope
@@ -903,9 +1001,12 @@ func _draw_shapes() -> void:
 	# dog is right there
 	var near := my_dog.global_position.distance_to(npc_dog.global_position) < CURIOUS_R
 	var wag_rate := 16.0 if near else (4.0 if sniff_t > 0.0 else 8.0)
-	# a grumpy dog meeting yours holds its tail still
-	if grumpy and greet_t > 0.0:
+	# a grumpy dog meeting yours holds its tail still; a friendly one coming
+	# over can't keep it still
+	if grumpy and (greet_t > 0.0 or meet == "warn" or meet == "lunge"):
 		wag_rate = 0.0
+	elif meet == "hello":
+		wag_rate = 22.0
 	var wag := t * wag_rate + seed_o
 	DogAppearanceScript.draw_dog(
 		_b,
@@ -915,3 +1016,11 @@ func _draw_shapes() -> void:
 		bob,
 		wag
 	)
+	# a bark: three short strokes thrown out ahead of its muzzle
+	if bark_flash > 0.0:
+		var mouth := dp + facing * 15.0
+		var side := facing.orthogonal()
+		var k := bark_flash / 0.22
+		for s: float in [-1.0, 0.0, 1.0]:
+			var dir := (facing + side * s * 0.55).normalized()
+			_b.draw_line(mouth + dir * (5.0 + 4.0 * (1.0 - k)), mouth + dir * (11.0 + 4.0 * (1.0 - k)), Color(1.0, 0.96, 0.86, 0.9 * k), 2.0)
