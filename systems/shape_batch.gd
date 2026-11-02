@@ -55,10 +55,12 @@ var canvas: CanvasItem
 # fewer sides for small circles (LOD_SAG). Off by default: circle() then
 # matches draw_circle pixel for pixel, which tests/test_shape_batch.gd checks
 var lod := false
-# A batch with no canvas records shapes to replay later (append_to). Anything
-# it cannot hold - text, arcs, outlines, a transform - sets `missed` instead
-# of drawing, so the caller can draw that run live.
-var missed := false
+# A batch with no canvas records, to be replayed later (append_to): its shapes,
+# and in their place among them every call only a canvas can make (text,
+# arcs, outlines, a transform), with its arguments. A replay makes the same
+# calls in the same order, so it draws what drawing live would have.
+# Each entry: [shapes queued before it, method, arguments].
+var _ops: Array = []
 # unit fans by side count, built as needed
 static var _lod_fans := {}
 # a triangle list: every three points are a triangle, drawn in order
@@ -321,17 +323,36 @@ func flush(ci: Object = null) -> void:
 
 # Append retained geometry without consuming it. Static, expensive shape runs
 # can be built once and still join the caller's single draw call each frame.
+# A recording's canvas calls are made on the target in their place.
 func append_to(target: ShapeBatch) -> void:
-	target._points.append_array(_points)
-	target._colors.append_array(_colors)
+	if _ops.is_empty():
+		target._points.append_array(_points)
+		target._colors.append_array(_colors)
+		return
+	var at := 0
+	for op: Array in _ops:
+		var upto: int = op[0]
+		if upto > at:
+			target._points.append_array(_points.slice(at, upto))
+			target._colors.append_array(_colors.slice(at, upto))
+			at = upto
+		target.callv(op[1], op[2])
+	if at < _points.size():
+		target._points.append_array(_points.slice(at))
+		target._colors.append_array(_colors.slice(at))
 
 
 # --- the stand-in canvas: CanvasItem's signatures -----------------------------
 
-# flushes ahead of a call only the canvas can make; false when recording
-func _live() -> bool:
+# Ahead of a call only the canvas can make: flushes the queue and says go on,
+# or, recording, notes the call in its place (packed arrays and arrays copied:
+# a caller may refill its buffer once the call returns) and says stop.
+func _live(method: String, args: Array) -> bool:
 	if canvas == null:
-		missed = true
+		var kept := []
+		for a: Variant in args:
+			kept.append(a.duplicate() if a is Array or (typeof(a) >= TYPE_PACKED_BYTE_ARRAY and typeof(a) <= TYPE_PACKED_VECTOR4_ARRAY) else a)
+		_ops.append([_points.size(), method, kept])
 		return false
 	flush()
 	return true
@@ -341,7 +362,7 @@ func draw_circle(pos: Vector2, radius: float, color: Color, filled := true, widt
 	if filled and not antialiased:
 		circle(pos, radius, color)
 		return
-	if not _live():
+	if not _live("draw_circle", [pos, radius, color, filled, width, antialiased]):
 		return
 	canvas.draw_circle(pos, radius, color, filled, width, antialiased)
 
@@ -350,7 +371,7 @@ func draw_rect(r: Rect2, color: Color, filled := true, width := -1.0, antialiase
 	if filled and not antialiased:
 		rect(r, color)
 		return
-	if not _live():
+	if not _live("draw_rect", [r, color, filled, width, antialiased]):
 		return
 	canvas.draw_rect(r, color, filled, width, antialiased)
 
@@ -359,7 +380,7 @@ func draw_line(from: Vector2, to: Vector2, color: Color, width := -1.0, antialia
 	if width >= 0.0 and not antialiased:
 		line(from, to, color, width)
 		return
-	if not _live():
+	if not _live("draw_line", [from, to, color, width, antialiased]):
 		return
 	canvas.draw_line(from, to, color, width, antialiased)
 
@@ -368,13 +389,13 @@ func draw_colored_polygon(points: PackedVector2Array, color: Color, uvs := Packe
 	if uvs.is_empty() and texture == null:
 		polygon(points, color)
 		return
-	if not _live():
+	if not _live("draw_colored_polygon", [points, color, uvs, texture]):
 		return
 	canvas.draw_colored_polygon(points, color, uvs, texture)
 
 
 func draw_set_transform(pos: Vector2, rotation := 0.0, scale := Vector2.ONE) -> void:
-	if not _live():
+	if not _live("draw_set_transform", [pos, rotation, scale]):
 		return
 	canvas.draw_set_transform(pos, rotation, scale)
 
@@ -382,42 +403,42 @@ func draw_set_transform(pos: Vector2, rotation := 0.0, scale := Vector2.ONE) -> 
 # Everything else a stand-in's caller may draw: queued shapes go first, so the
 # order on the canvas is the order of the calls.
 func draw_arc(...args: Array) -> void:
-	if not _live():
+	if not _live("draw_arc", args):
 		return
 	canvas.callv("draw_arc", args)
 
 
 func draw_polyline(...args: Array) -> void:
-	if not _live():
+	if not _live("draw_polyline", args):
 		return
 	canvas.callv("draw_polyline", args)
 
 
 func draw_string(...args: Array) -> void:
-	if not _live():
+	if not _live("draw_string", args):
 		return
 	canvas.callv("draw_string", args)
 
 
 func draw_string_outline(...args: Array) -> void:
-	if not _live():
+	if not _live("draw_string_outline", args):
 		return
 	canvas.callv("draw_string_outline", args)
 
 
 func draw_multiline_string(...args: Array) -> void:
-	if not _live():
+	if not _live("draw_multiline_string", args):
 		return
 	canvas.callv("draw_multiline_string", args)
 
 
 func draw_char(...args: Array) -> void:
-	if not _live():
+	if not _live("draw_char", args):
 		return
 	canvas.callv("draw_char", args)
 
 
 func draw_style_box(...args: Array) -> void:
-	if not _live():
+	if not _live("draw_style_box", args):
 		return
 	canvas.callv("draw_style_box", args)

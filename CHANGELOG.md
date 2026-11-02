@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-11-02 - The furniture is drawn once per stretch too
+
+- A recording batch now keeps every call only a canvas can make (a transform,
+  an arc, text, an outline) in its place among the shapes, with its
+  arguments, and a replay makes the same calls in the same order
+  (`ShapeBatch._ops`, `append_to`). Nothing falls back to drawing live for
+  want of a batchable shape any more: Montjuïc's cross-section is cached now.
+- The cross-section cache became one for any named section of the world pass
+  (`main._draw_section`, a key of state per section). The furniture - posts
+  and the ground under trees, bins, cafe tables, benches, terrace chairs,
+  fountains and stalls - is the second, cached on all 27 walks; its key is
+  the Dia de Partit terrace's kick, which makes the chairs jump. The vans,
+  the grooming van and the travelator read the animation clock and stay live.
+- Pixel-identical, both ways, on all 27 walks at two moments: cached against
+  live on this build, and this build against main.
+- Desktop per world redraw: El Mercat's furniture 0.75-0.9 to 0.36 ms, La
+  Rambla's 1.9 to 1.15 (what remains is handing its 5,400 triangles to the
+  renderer, which drawing live pays too; the script work is gone).
+
 ## 2026-11-02 - One redraw a frame, however slow the frame
 
 - Godot runs queued redraws after every physics step, not once a frame. A
