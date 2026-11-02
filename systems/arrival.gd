@@ -35,6 +35,9 @@ const TURN := 12.0
 # away and the walk in was a slide. The autowalk keeps HOME_Y: it finishes on
 # the frame it crosses, and its recorded times stay as they were.
 const WALK_IN := 140.0
+# how fast your human straightens up from being hauled once the walk freezes:
+# the hauled pose has no steps, so held over the walk in, they slid on their feet
+const UNBRACE := 6.0
 
 
 static func line_y(m: Node2D) -> float:
@@ -287,6 +290,7 @@ static func _apply(m: Node2D, delta := 0.0) -> void:
 	m.dog.presentation_offset = dog_world.rotated(-float(m.dog.global_rotation))
 	m.human.presentation_offset = human_world.rotated(-float(m.human.global_rotation))
 	m.human.phone_away = pull_u
+	m.human.drag_amt = move_toward(float(m.human.drag_amt), 0.0, UNBRACE * delta)
 	m.dog.modulate.a = 1.0 - smoothstep(FADE_FROM, 1.0, dog_u)
 	m.human.modulate.a = 1.0 - smoothstep(FADE_FROM, 1.0, human_u)
 	m.leash.presentation_dog_offset = dog_world
