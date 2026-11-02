@@ -93,7 +93,7 @@ ALSO
 - Moods: a fright, a bark-off or a run off the leash leaves her jumpy, barky, full of zoomies or flat, and each changes how she moves.
 - Ground you can feel: grass and mud slow her but hold scent, sand drags at her paws, wet ground and snow make her skid.
 - Rain, wind, snow and night on any walk, with everyone dressed for the weather.
-- Other dogs with lives of their own: they sniff and mark the posts you pass, and stop to sniff you back, unless they are the grumpy sort.
+- Other dogs with lives of their own: they sniff and mark the posts you pass and come over to say hello, unless they are the grumpy sort, who lunge and bark at the end of the leash. Their owners are people too: on a call, carrying a coffee, stopping to type, watching your dog go by.
 
 CONTROLS
 
@@ -134,6 +134,16 @@ CHANGELOG.md. The Store's What's new is the short form of this.
 - The threats look the part on the walk too, drawn as the films draw them: the sweeper glares down the street, the flood is a rolling wall of water, the vet's staff come shoulder to shoulder, the boars charge as a herd, the devils wear horned hoods and the Drac beats its wings. Each one now fills exactly what can catch you.
 - NEW LOOK: on GET READY, pick YOUR HUMAN and press pee for a different-looking person every time, him or her, six skin tones, eight hairstyles, all the clothes. A portrait of the two of you shows the new look straight away, the films draw the same person, and your choice is remembered between sessions.
 - Each threat speaks for itself: the vet's staff shout BOOSTER TIME!, the banners name the boars, the fire devils and the river.
+- The walks in a new order, mixing the city, the coast and the hills, with La Neteja as the first chase at walk five and every chase opening the stretch after it. A save from before keeps every walk it had open.
+- Other dogs come over to say hello, tail going, while their owner slows to let them. The grumpy ones go stiff, growl, then lunge and bark at the end of the leash while their owner reels them in and apologizes; get too close and she gets a fright.
+- Their owners are people too: about half are glued to their phone and stop now and then to type, some are on a call and say a line of it as you pass, some carry a coffee, some just walk the dog and watch yours go by.
+- LEASH spells itself out: each letter you pick up flies into its gold coin under the banner. The goal list shows which letters you have, your time against the clock (the folded card shows it too), and how wet your human is on El Diluvi.
+- Dares are clearer: the offer shows the bark button glowing, for keyboard, controller or touch, and it presses in with DARE ON! when you take it.
+- Dia de Partit in deeper blue and garnet, with the senyera on the balconies and in the bunting.
+- At the end of a walk your human walks in the door instead of sliding there on their feet.
+- Your human says Stop, Easy or Slow down when you pull, not Heel.
+- Every walk's name is laid in one finish at the start, and lights, sheens and skies are smooth gradients rather than rings and bands.
+- Smoother in the browser: La Rambla draws half as much, nothing off screen is redrawn, the world's furniture and cross-sections are drawn once per stretch, and the soundtrack is baked in the build instead of synthesized while you play. La Rambla runs about twice as fast, with far fewer hitches.
 ```
 
 ## What's new in 1.67
