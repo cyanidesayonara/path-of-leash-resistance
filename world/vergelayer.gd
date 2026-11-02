@@ -25,5 +25,7 @@ func _draw() -> void:
 	# through a ShapeBatch: the same pixels in a fraction of the draw calls
 	# (systems/shape_batch.gd)
 	var b := ShapeBatch.new(self)
+	# tufts, flowers and picnickers are small discs: sides they can show
+	b.lod = true
 	main.draw_verge_onto(b, vt, vb)
 	b.flush()

@@ -31,6 +31,12 @@ extends RefCounted
 # after a flush().
 
 const SEGMENTS := 64
+# With `lod` on, a circle gets only as many sides as keep its rim within this
+# many pixels of the true circle: 8 for a 2 px dot, 19 at 10 px, all 64 from
+# about 110 px. A sign or a lawn of small discs is most of a million vertices
+# a redraw at 64 sides each, for detail no screen can show.
+const LOD_SAG := 0.15
+const LOD_MIN := 8
 # a distance crowd mark: 8 sides, not the engine's circle. circle() stays the
 # 64-segment fan that matches draw_circle; this one is for hundreds of dots
 const COARSE := 8
@@ -46,6 +52,11 @@ static var _coarse_fan := PackedVector2Array()
 static var _half_buf := PackedByteArray([0, 0])
 
 var canvas: CanvasItem
+# fewer sides for small circles (LOD_SAG). Off by default: circle() then
+# matches draw_circle pixel for pixel, which tests/test_shape_batch.gd checks
+var lod := false
+# unit fans by side count, built as needed
+static var _lod_fans := {}
 # a triangle list: every three points are a triangle, drawn in order
 var _points := PackedVector2Array()
 var _colors := PackedColorArray()
@@ -98,6 +109,16 @@ func _add_colors(color: Color, n: int) -> void:
 
 # draw_circle(pos, radius, color), filled
 func circle(pos: Vector2, radius: float, color: Color) -> void:
+	if lod:
+		var n := lod_sides(radius)
+		if n < SEGMENTS:
+			var fan: PackedVector2Array = _lod_fans.get(n, PackedVector2Array())
+			if fan.is_empty():
+				fan = _build_fan(n)
+				_lod_fans[n] = fan
+			_points.append_array(Transform2D(Vector2(radius, 0.0), Vector2(0.0, radius), pos) * fan)
+			_add_colors(color, n * 3)
+			return
 	if _unit_fan.is_empty():
 		_build_unit()
 	# The engine computes cos * radius, then adds the centre, in 32-bit floats.
@@ -116,6 +137,23 @@ func coarse(pos: Vector2, radius: float, color: Color) -> void:
 	_points.append_array(Transform2D(Vector2(radius, 0.0), Vector2(0.0, radius), pos) * _coarse_fan)
 	_coarse_fill.fill(color)
 	_colors.append_array(_coarse_fill)
+
+
+# how many sides keep a circle of this radius within LOD_SAG of round
+static func lod_sides(radius: float) -> int:
+	if radius <= LOD_SAG * 2.0:
+		return LOD_MIN
+	return clampi(ceili(PI / acos(1.0 - LOD_SAG / radius)), LOD_MIN, SEGMENTS)
+
+
+static func _build_fan(n: int) -> PackedVector2Array:
+	var step := TAU / float(n)
+	var fan := PackedVector2Array()
+	for i in range(n):
+		fan.append(Vector2.ZERO)
+		fan.append(Vector2(cos(float(i) * step), sin(float(i) * step)))
+		fan.append(Vector2(cos(float(i + 1) * step), sin(float(i + 1) * step)))
+	return fan
 
 
 static func _build_coarse() -> void:

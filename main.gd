@@ -1835,7 +1835,71 @@ func _grass_blocked(p: Vector2) -> bool:
 	return false
 
 
+# The cells of a grass row that grow, by the row's y: which cells pass
+# surface_at and _grass_blocked was 7-24 ms of every verge redraw (the drawing
+# itself a fraction of that), for an answer that only changes with the ground.
+# Kept until the ground's runtime parts change (_grass_ground_key): a detour,
+# or a zone, patch, solid or verge item added mid-walk (the horses' droppings).
+var _grass_rows := {}
+var _grass_key := []
+# each row's tufts as triangles, built once and re-appended to the verge batch
+var _grass_geo := {}
+
+
+func _grass_ground_key() -> Array:
+	return [detour_active, tutorial_mode, water.size(), patches.size(),
+		substance_zones.size(), solid_rects.size(), verge_items.size()]
+
+
+func grass_row(y: float) -> PackedFloat32Array:
+	var key := _grass_ground_key()
+	if key != _grass_key:
+		_grass_key = key
+		_grass_rows.clear()
+		_grass_geo.clear()
+	var xs: Variant = _grass_rows.get(y)
+	if xs != null:
+		return xs
+	var row := PackedFloat32Array()
+	var x := -200.0
+	while x < 1480.0:
+		var p := _grass_spot(x, y, _cell01(x, y))
+		if p.y > GATE_Y and surface_at(p) == Surfaces.S.GRASS and not _grass_blocked(p):
+			row.append(x)
+		x += GRASS_STEP
+	_grass_rows[y] = row
+	return row
+
+
 func _draw_grass_detail(c: Object, vt: float, vb: float) -> void:
+	var y := floorf((vt - 40.0) / GRASS_STEP) * GRASS_STEP
+	var own_verge := walk_mod != null and walk_mod.has_method("draw_verge")
+	while y < vb + 40.0:
+		var xs := grass_row(y)
+		if own_verge:
+			for x: float in xs:
+				var h := _cell01(x, y)
+				# the scrapyard: oily gravel along the fences, the odd weed, never a lawn
+				var p := _grass_spot(x, y, h)
+				walk_mod.draw_verge(self, c, p, h)
+		elif c is ShapeBatch:
+			var geo: ShapeBatch = _grass_geo.get(y)
+			if geo == null:
+				geo = ShapeBatch.new()
+				geo.lod = (c as ShapeBatch).lod
+				_draw_grass_tufts(geo, y, xs)
+				_grass_geo[y] = geo
+			geo.append_to(c)
+		else:
+			_draw_grass_tufts(c, y, xs)
+		y += GRASS_STEP
+
+
+func _grass_spot(x: float, y: float, h: float) -> Vector2:
+	return Vector2(x + (h - 0.5) * GRASS_STEP * 0.9, y + (fmod(h * 7.13, 1.0) - 0.5) * GRASS_STEP * 0.9)
+
+
+func _draw_grass_tufts(c: Object, y: float, xs: PackedFloat32Array) -> void:
 	var dark := Color(0.16, 0.30, 0.16, 0.55)
 	var lite := Color(0.50, 0.66, 0.36, 0.55)
 	var seedc := Color(0.86, 0.82, 0.62, 0.7)
@@ -1845,44 +1909,33 @@ func _draw_grass_detail(c: Object, vt: float, vb: float) -> void:
 		dark = Color(0.14, 0.22, 0.12, 0.6)
 		lite = Color(0.42, 0.50, 0.26, 0.5)
 	var flowers := [Color(0.97, 0.96, 0.92), Color(0.98, 0.84, 0.30), Color(0.86, 0.48, 0.70)]
-	var y := floorf((vt - 40.0) / GRASS_STEP) * GRASS_STEP
-	while y < vb + 40.0:
-		var x := -200.0
-		while x < 1480.0:
-			var h := _cell01(x, y)
-			var p := Vector2(x + (h - 0.5) * GRASS_STEP * 0.9, y + (fmod(h * 7.13, 1.0) - 0.5) * GRASS_STEP * 0.9)
-			if p.y > GATE_Y and surface_at(p) == Surfaces.S.GRASS and not _grass_blocked(p):
-				if walk_mod != null and walk_mod.has_method("draw_verge"):
-					# the scrapyard: oily gravel along the fences, the odd weed, never a lawn
-					walk_mod.draw_verge(self, c, p, h)
-					x += GRASS_STEP
-					continue
-				var lean := (h - 0.5) * 0.8
-				for bl in range(3):
-					var a := -PI * 0.5 + lean + (float(bl) - 1.0) * 0.45
-					var foot := p + Vector2((float(bl) - 1.0) * 1.6, 0.0)
-					var ln := 5.0 + fmod(h * 13.0 + float(bl), 1.0) * 3.5
-					c.draw_line(foot, foot + Vector2.from_angle(a) * ln, lite if bl == 1 else dark, 1.6)
-				var kind := int(h * 1000.0) % 29
-				if forest and kind < 12:
-					# ferns, and leaves come down off the trees
-					if kind < 7:
-						for fr in range(5):
-							var fa := -PI * 0.5 + (float(fr) - 2.0) * 0.55 + lean
-							c.draw_line(p, p + Vector2.from_angle(fa) * (9.0 + float(fr % 2) * 3.0), Color(0.26, 0.42, 0.20, 0.8), 2.0)
-					else:
-						c.draw_circle(p + Vector2(4.0, 2.0), 2.4, Color(0.62, 0.42, 0.18, 0.8))
-						c.draw_circle(p + Vector2(-3.0, 4.0), 2.0, Color(0.52, 0.34, 0.14, 0.8))
-				elif kind == 0 and not forest:
-					var fc: Color = flowers[int(h * 97.0) % 3]
-					for pe in range(4):
-						c.draw_circle(p + Vector2(3.0, -7.0) + Vector2.from_angle(float(pe) * PI * 0.5) * 1.8, 1.4, fc)
-					c.draw_circle(p + Vector2(3.0, -7.0), 1.0, Color(0.95, 0.72, 0.20))
-				elif kind < 4:
-					c.draw_line(p, p + Vector2(lean * 4.0, -11.0), dark, 1.0)
-					c.draw_circle(p + Vector2(lean * 4.0, -11.5), 1.6, seedc)
-			x += GRASS_STEP
-		y += GRASS_STEP
+	for x: float in xs:
+		var h := _cell01(x, y)
+		var p := _grass_spot(x, y, h)
+		var lean := (h - 0.5) * 0.8
+		for bl in range(3):
+			var a := -PI * 0.5 + lean + (float(bl) - 1.0) * 0.45
+			var foot := p + Vector2((float(bl) - 1.0) * 1.6, 0.0)
+			var ln := 5.0 + fmod(h * 13.0 + float(bl), 1.0) * 3.5
+			c.draw_line(foot, foot + Vector2.from_angle(a) * ln, lite if bl == 1 else dark, 1.6)
+		var kind := int(h * 1000.0) % 29
+		if forest and kind < 12:
+			# ferns, and leaves come down off the trees
+			if kind < 7:
+				for fr in range(5):
+					var fa := -PI * 0.5 + (float(fr) - 2.0) * 0.55 + lean
+					c.draw_line(p, p + Vector2.from_angle(fa) * (9.0 + float(fr % 2) * 3.0), Color(0.26, 0.42, 0.20, 0.8), 2.0)
+			else:
+				c.draw_circle(p + Vector2(4.0, 2.0), 2.4, Color(0.62, 0.42, 0.18, 0.8))
+				c.draw_circle(p + Vector2(-3.0, 4.0), 2.0, Color(0.52, 0.34, 0.14, 0.8))
+		elif kind == 0 and not forest:
+			var fc: Color = flowers[int(h * 97.0) % 3]
+			for pe in range(4):
+				c.draw_circle(p + Vector2(3.0, -7.0) + Vector2.from_angle(float(pe) * PI * 0.5) * 1.8, 1.4, fc)
+			c.draw_circle(p + Vector2(3.0, -7.0), 1.0, Color(0.95, 0.72, 0.20))
+		elif kind < 4:
+			c.draw_line(p, p + Vector2(lean * 4.0, -11.0), dark, 1.0)
+			c.draw_circle(p + Vector2(lean * 4.0, -11.5), 1.6, seedc)
 
 
 func _draw_picnic(c: Object, at: Vector2) -> void:
