@@ -26,6 +26,14 @@ Append-only session history, newest first.
   El Passeig's 55 to 13; La Rambla's sign 25-34 to 10-15 ms, El Passeig's
   28 to 9. Tests: `test_grass_cache.gd`, `test_circle_lod.gd`.
 
+## 2026-11-02 - The world pass by section
+
+- `--perf-scripts` also splits main's world pass by section (`main._dprof`,
+  like the physics step's `_prof`): the cross-section, live scenery, lanes
+  to pickups, furniture, ground detail and the rest, per redraw. On La Rambla
+  (8 ms a redraw on desktop) furniture is 2.6 ms, the cross-section 1.4, the
+  live scenery 1.4, lanes to pickups 1.3; almost all of it does not move.
+
 ## 2026-11-01 - Riders, walkers and pigeons rest out of view
 
 - Bikes redrew every physics step wherever they were, pairs and their
