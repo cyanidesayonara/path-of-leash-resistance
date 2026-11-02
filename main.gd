@@ -913,6 +913,7 @@ var combo: Node
 var mood: Node
 # the one channel for announcements about the state of the walk
 var feed: Control
+var word_strip: Control
 # latch for the run-yourself-empty trigger, so hitting empty is a moment
 # rather than a condition (see systems/mood_wiring.gd)
 var mood_worn := false
