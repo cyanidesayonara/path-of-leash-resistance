@@ -37,6 +37,10 @@ func _run() -> void:
 	pair.set_physics_process(false)
 	var no_blockers: Array[Dictionary] = []
 	pair.configure_route(640.0, 340.0, 940.0, no_blockers)
+	# a friendly dog that has had its meeting (test_pair_meet.gd covers that):
+	# a grumpy roll would lunge and hold its owner
+	pair.grumpy = false
+	pair.meet = "done"
 	var dt := 1.0 / 60.0
 	for i in range(30):
 		pair._tick_walking(dt, false)
