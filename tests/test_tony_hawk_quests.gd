@@ -110,6 +110,28 @@ func _run() -> void:
 	TonyHawk.tick(m, 0.016)
 	_check(first_letter.collected == true, "dog at letter pos collects the letter")
 	_check(m.word_letters_collected == 1, "collected count increments to 1")
+	_check(m.word_strip.showing() and m.word_strip.fly_i == 0, "the letter flies up into the word strip")
+
+	# the open goal list shows which letters are found, and the walk's time
+	m.elapsed = 200.0
+	var rows: Array = Goals.card_data(m).rows
+	var spell_row := {}
+	var clock_row := {}
+	for row: Dictionary in rows:
+		if String(row.text) == "Spell LEASH":
+			spell_row = row
+		elif String(row.text).begins_with("Beat the clock"):
+			clock_row = row
+	var lit: Array = []
+	for l: Dictionary in spell_row.get("letters", []):
+		lit.append(bool(l.got))
+	_check(lit == [true, false, false, false, false], "the spelling row lights the letters found: %s" % [lit])
+	_check(String(clock_row.get("text", "")) == "Beat the clock (under 2:45)", "the clock goal writes its time: %s" % clock_row.get("text", ""))
+	_check(String(clock_row.get("readout", "")) == "3:20" and bool(clock_row.get("bad", false)),
+		"the clock row shows the walk's time, marked when over: %s" % clock_row.get("readout", ""))
+	var folded: Dictionary = Goals.card_data(m).clock
+	_check(String(folded.get("text", "")) == "3:20 / 2:45", "the folded card shows the time too: %s" % folded.get("text", ""))
+	m.elapsed = 0.0
 
 	# Collect remaining letters
 	for i in range(1, m.word_letters.size()):

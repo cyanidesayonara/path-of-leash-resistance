@@ -9,6 +9,10 @@ const UiIcons := preload("res://hud/ui_icons.gd")
 const AnimClock := preload("res://systems/anim_clock.gd")
 
 const WORD := "LEASH"
+const Kit := preload("res://hud/ui_kit.gd")
+# a letter on the ground: the coin's radius and the letter's size on it
+const LETTER_R := 15.0
+const LETTER_PX := 20
 
 const CLOCK_TARGETS := {
 	"barri": 165,
@@ -187,17 +191,13 @@ static func tick(m: Node2D, _delta: float) -> void:
 		if not bool(l.collected) and dog_pos.distance_to(l.pos) < 24.0:
 			l.collected = true
 			m.word_letters_collected += 1
-			m.float_text(l.pos, String(l.letter), Color(1.0, 0.88, 0.2))
 			Sfx.play("pickup")
-			var progress: String = ""
-			for item: Dictionary in m.word_letters:
-				progress += (String(item.letter) if bool(item.collected) else "_") + " "
-			progress = progress.strip_edges()
+			# the letter flies up into the word (hud/word_strip.gd)
+			if m.word_strip != null:
+				m.word_strip.collect(i, l.pos)
 			if m.word_letters_collected >= m.word_letters.size():
 				m.feed.say("SPELLED LEASH!")
 				Sfx.play("dare_won")
-			else:
-				m.feed.say("LEASH: %s" % progress)
 			m._check_goals()
 			m._peek_goals()
 
@@ -224,10 +224,10 @@ static func draw_world(m: Node2D, wc: Object, font: Font, vt: float, vb: float) 
 			continue
 		var bob: float = sin(AnimClock.msec() * 0.005 + float(l.index) * 1.5) * 4.0
 		var p: Vector2 = lpos + Vector2(0.0, bob)
-		m.contact_shadow(wc, lpos, 10.0, 4.0, 0.22)
-		wc.draw_circle(p, 12.0, Color(0.85, 0.68, 0.15))
-		wc.draw_circle(p, 10.5, Color(1.0, 0.88, 0.28))
-		wc.draw_circle(p + Vector2(-2.5, -2.5), 3.0, Color(1.0, 0.98, 0.65))
+		m.contact_shadow(wc, lpos, 13.0, 5.0, 0.22)
+		wc.draw_circle(p, LETTER_R, Color(0.62, 0.44, 0.08))
+		wc.draw_circle(p, LETTER_R - 1.8, Color(1.0, 0.86, 0.26))
+		wc.draw_circle(p + Vector2(-4.0, -4.5), 3.2, Color(1.0, 0.98, 0.72))
 	# the letters themselves after every coin: a string flushes the batch
 	for l: Dictionary in m.word_letters:
 		if bool(l.collected):
@@ -237,7 +237,8 @@ static func draw_world(m: Node2D, wc: Object, font: Font, vt: float, vb: float) 
 			continue
 		var bob: float = sin(AnimClock.msec() * 0.005 + float(l.index) * 1.5) * 4.0
 		var p: Vector2 = lpos + Vector2(0.0, bob)
-		wc.draw_string(font, p + Vector2(-20.0, 5.0), String(l.letter), HORIZONTAL_ALIGNMENT_CENTER, 40, 15, Color(0.24, 0.16, 0.05))
+		wc.draw_string(Kit.display(), p + Vector2(-20.0, LETTER_PX * 0.36), String(l.letter), HORIZONTAL_ALIGNMENT_CENTER, 40,
+			LETTER_PX, Color(0.22, 0.13, 0.03))
 
 	# Draw secret pernil leg
 	if not m.jamon_found and m.jamon_pos.x < INF:

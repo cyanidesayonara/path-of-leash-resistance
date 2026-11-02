@@ -192,6 +192,11 @@ static func build(m: Node2D) -> void:
 	m.tut_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	m.tut_hint.visible = false
 	m.tut_hint.self_modulate.a = 0.0
+	# the word she is spelling, its letters flying in as she finds them
+	m.word_strip = Control.new()
+	m.word_strip.set_script(load("res://hud/word_strip.gd"))
+	m.hud.add_child(m.word_strip)
+	m.word_strip.setup(m)
 	# The single announcement channel. Added late so it draws over the other
 	# HUD cards, and anchored to the live viewport like everything else.
 	m.feed = Control.new()
