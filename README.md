@@ -68,27 +68,27 @@ you want to go; constant hauling wears their patience down until they say
 | La Rambla | the crowded promenade |
 | El Parc | the city park |
 | Passeig Marítim | Badalona's seafront |
-| El Diluvi | the downpour |
-| El Mercat | the market hall |
-| El Gòtic | the old town alleys |
-| El Bosc | the forest |
-| L'Estació | the train station |
-| El Besòs | the river park |
-| Les Obres | the work site |
-| La Castanyada | the chestnut festival |
-| La Ferralla | the junkyard |
-| El Mosaic | the tiled terraces |
 | La Neteja | the dawn cleanup |
+| El Gòtic | the old town alleys |
 | Montjuïc | the climb |
-| Dia de Partit | match day |
-| El Port | the fishing wharf |
-| Plaça Reial | the arcaded square |
-| El Veterinari | the clinic escape |
+| El Mercat | the market hall |
+| El Diluvi | the downpour |
+| El Besòs | the river park |
+| Platja de Llevant | the dog beach at the far end of the coast |
 | El Tibidabo | the mountain road |
+| El Veterinari | the clinic escape |
+| El Bosc | the forest |
+| La Castanyada | the chestnut festival |
+| Els Senglars | the wild boar trail |
+| El Mosaic | the tiled terraces |
+| L'Estació | the train station |
+| Plaça Reial | the arcaded square |
 | La Carretera de les Aigües | the hillside hike |
 | El Laberint d'Horta | the cypress maze |
-| Platja de Llevant | the dog beach at the far end of the coast |
-| Els Senglars | the wild boar trail |
+| El Port | the fishing wharf |
+| Les Obres | the work site |
+| Dia de Partit | match day |
+| La Ferralla | the junkyard |
 | Festa de Gràcia | the decorated festival street |
 | Rambla del Raval | the finale, with Botero's bronze cat |
 
