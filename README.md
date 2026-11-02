@@ -57,7 +57,9 @@ you want to go; constant hauling wears their patience down until they say
 - **Weather and night**: rain, wind and snow on any walk, with everyone
   dressed for it.
 - **Other dogs with lives of their own**: they sniff and mark the posts you
-  pass, and stop to sniff you back, unless they are the grumpy sort.
+  pass and come over to say hello, unless they are the grumpy sort, who
+  lunge and bark at the end of the leash. Their owners are people too: on a
+  call, carrying a coffee, stopping to type, watching your dog go by.
 - No ads, no purchases, no account. Plays offline.
 
 ## The walks

@@ -34,7 +34,7 @@ Twenty-seven walks through a sunny, slightly chaotic Barcelona and its edges, ea
 
 What happens on a walk changes how you feel, and how you feel changes how you move. A fright leaves you jumpy and half blind to smells, a good bark-off makes you barky, time off the leash brings on the zoomies, and running yourself empty leaves you flat. The ground matters too: grass and mud slow you down but hold far more scent than sidewalk, sand drags at your paws, and wet ground and snow make you skid.
 
-Other dogs have lives of their own. They sniff and mark the posts you pass, and you can read who was there; meet one nose to nose and it stops to sniff you back, unless it is the grumpy sort.
+Other dogs have lives of their own. They sniff and mark the posts you pass, and you can read who was there; meet one and it comes over to say hello, unless it is the grumpy sort, who lunges and barks at the end of its leash. Their owners are people too: on a call, carrying a coffee, stopping to type.
 
 Every walk has its own list of goals: sniff the good spots, mark your territory, fetch, greet other dogs, herd a runaway friend home, take on dares from the characters you meet (each with their own tune), and pull off tricks: swing around a pole on the leash, run a figure eight, thread the needle between two people, and ride ledges and handrails with the zoomies. Earn stars to unlock new walks and bones to spend on collars, bandanas and coats.
 
@@ -90,12 +90,19 @@ dog walking
 - The threats look the part, the same in the films and on the walk: the street sweeper glares down the road, the flood comes as a wave over your human's head, the vet's staff come at you with syringes, clippers, a cone and a net, the boars charge as a herd, and the correfoc brings the Drac de Gràcia.
 - NEW LOOK: on GET READY, give your human a different look, him or her, any skin tone and hairstyle. The films show the same person, and your choice is remembered.
 - Each threat has its own words when it sets off, stops and catches you.
+- The walks in a new order, La Neteja the first chase. Your save keeps every walk it had open.
+- Other dogs come over to say hello, or lunge and bark if grumpy. Their owners take calls, carry coffee and stop to type.
+- LEASH letters fly into their coins, and the goal list shows them, your time against the clock and more.
+- Dares show the bark button glowing, and it presses when you take one.
+- Dia de Partit in deeper blue and garnet, with the senyera.
+- Your human walks in the door at the end instead of sliding.
+- Smoother in the browser: La Rambla runs about twice as fast.
 ```
 
 ### Notes for certification
 
 ```
-Update 1.67: six new walks since 1.64 (La Carretera de les Aigües, El Laberint d'Horta, Platja de Llevant, Els Senglars, Festa de Gràcia and the Rambla del Raval finale), five dogs to choose from, dares with their own music on every walk, fifteen goals a walk, separate poop and pick-up buttons with key layouts and rebinding, and a language setting for the walks' place names. No change to capabilities, network use or data handling since 1.55.
+Update 1.68: story films on the chase walks, a new look for your human, livelier other dogs and owners, the walks in a new order, and smoother performance. Update 1.67: six new walks since 1.64 (La Carretera de les Aigües, El Laberint d'Horta, Platja de Llevant, Els Senglars, Festa de Gràcia and the Rambla del Raval finale), five dogs to choose from, dares with their own music on every walk, fifteen goals a walk, separate poop and pick-up buttons with key layouts and rebinding, and a language setting for the walks' place names. No change to capabilities, network use or data handling since 1.55.
 
 Path of Leash Resistance is a single-player Win32 desktop game built with the Godot engine (4.7), packaged as MSIX.
 
