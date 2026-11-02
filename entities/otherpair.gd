@@ -229,6 +229,7 @@ func setup(m: Node2D, mine: Node2D, poles: Array[Vector2], start: Vector2, direc
 	type_gap = _habit_rng.randf_range(TYPE_GAP_MIN * 0.4, TYPE_GAP_MAX)
 	owner_face = direction.normalized() if direction.length() > 0.1 else Vector2.DOWN
 	dog_face = owner_face
+	look_dir = owner_face
 	var owner_appearance_key := randi()
 	owner_appearance_profile = HumanAppearanceScript.profile_for_key(owner_appearance_key)
 	owner_col = owner_appearance_profile["shirt_color"]
@@ -801,7 +802,8 @@ func _tick_habit(delta: float) -> void:
 	elif habit != "held" and my_dog != null and to_yours.length() < LOOK_R:
 		want = to_yours
 	if want.length() > 0.01:
-		look_dir = look_dir.lerp(want.normalized(), 1.0 - exp(-LOOK_EASE * delta)).normalized()
+		# turned, not blended: a blend through the middle never turns round
+		look_dir = look_dir.rotated(look_dir.angle_to(want) * (1.0 - exp(-LOOK_EASE * delta)))
 	if habit == "call" and not _said and my_dog != null and to_yours.length() < CALL_SAY_R:
 		_said = true
 		if main != null and main.has_method("on_pair_call"):
