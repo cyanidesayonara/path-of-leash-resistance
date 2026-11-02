@@ -53,9 +53,9 @@ func _run() -> void:
 		_check(th_mod.JAMON_POS.has(lv), "JAMON_POS has %s" % lv)
 
 	# 2. Keystone Chase Milestone Gating
-	_check(game.chase_gate_needed("site") == "besos", "site gated by besos")
+	_check(game.chase_gate_needed("vet") == "besos", "vet gated by besos")
 	_check(game.chase_gate_needed("montjuic") == "neteja", "montjuic gated by neteja")
-	_check(game.chase_gate_needed("tibidabo") == "vet", "tibidabo gated by vet")
+	_check(game.chase_gate_needed("spook") == "vet", "spook gated by vet")
 	_check(game.chase_gate_needed("raval") == "gracia", "raval gated by gracia")
 
 	# 3. THPS Upgradable Dog Attributes System

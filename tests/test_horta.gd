@@ -40,7 +40,7 @@ func _run() -> void:
 
 	# 1. Registration
 	_check(game.LEVELS.has("horta") and game.CAROUSEL.has("horta"), "in LEVELS and CAROUSEL")
-	_check(int(game.STAR_GATE["horta"]) == 39, "opens at 39 stars")
+	_check(int(game.STAR_GATE["horta"]) == 35, "opens at 35 stars")
 	_check(String(game.LEVEL_NAMES["horta"]) == "El Laberint d'Horta", "named El Laberint d'Horta")
 	_check(String(game.LEVEL_SUBTITLES["horta"]) == "The cypress maze", "subtitled the cypress maze")
 	_check(game.LEVEL_SUBTITLES_CA.has("horta") and game.LEVEL_SUBTITLES_ES.has("horta"), "glossed in Catalan and Spanish")
