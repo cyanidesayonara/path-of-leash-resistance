@@ -99,7 +99,8 @@ static func defs(m: Node2D) -> Dictionary:
 		"floodgap": {"text": "Keep the deep flood front a leash length away", "target": 1, "fn": func() -> int: return 1 if m.chase_min_gap >= HomeChase.OUTRUN_GAP else 0},
 		"unseen": {"text": "Never get spotted", "target": 1, "fn": func() -> int: return 1 if m.times_spotted == 0 else 0},
 		"walkway": {"text": "Ride the moving walkway end to end", "target": 1, "fn": func() -> int: return m.walkway_rides},
-		"dry": {"text": "Get your human home less than half soaked", "target": 1, "fn": func() -> int: return 1 if m.human_soak < 0.5 else 0},
+		"dry": {"text": "Get your human home less than half soaked", "target": 1, "fn": func() -> int: return 1 if m.human_soak < 0.5 else 0,
+			"readout": func() -> Dictionary: return {"text": "%d%% wet" % int(round(m.human_soak * 100.0)), "bad": m.human_soak >= 0.5}},
 		"splash": {"text": "Splash through %d puddles at speed", "target": 4, "fn": func() -> int: return m.splashes},
 		"shallows": {"text": "Splash through the flood's shallows %d times", "target": 4, "fn": func() -> int: return m.shallow_splashes},
 		"thief": {"text": "Stop %d pickpockets", "target": 2, "fn": func() -> int: return m.thieves_stopped},
@@ -133,7 +134,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"swat": {"text": "Dodge %d paw swats", "target": 3, "fn": func() -> int: return m.gat_swats_dodged},
 		"spell": {"text": "Spell LEASH", "target": 5, "fn": func() -> int: return int(m.get("word_letters_collected"))},
 		"jamon": {"text": "Find the hidden pernil", "target": 1, "fn": func() -> int: return 1 if bool(m.get("jamon_found")) else 0},
-		"clock": {"text": "Beat the clock (under %ds)" % int(m.get("clock_target") if m.get("clock_target") != null else 180), "target": 1, "fn": func() -> int: return 1 if (bool(m.get("finished")) and float(m.get("elapsed")) <= float(m.get("clock_target") if m.get("clock_target") != null else 180)) else 0},
+		"clock": {"text": "Beat the clock (under %s)" % clock(float(m.clock_target)), "target": 1,
+			"fn": func() -> int: return 1 if (bool(m.finished) and float(m.elapsed) <= float(m.clock_target)) else 0,
+			"readout": func() -> Dictionary: return {"text": clock(float(m.elapsed)), "bad": float(m.elapsed) > float(m.clock_target)}},
 	}
 
 
@@ -150,10 +153,33 @@ static func build_quests(m: Node2D) -> void:
 	for id in ids:
 		var d: Dictionary = all[id]
 		m.active_quests.append({
-			"id": id, "text": d.text, "target": int(d.target), "fn": d.fn,
+			"id": id, "text": d.text, "target": int(d.target), "fn": d.fn, "readout": d.get("readout"),
 			"was_true": int(d.fn.call()) >= int(d.target),
 		})
 	m.tofu_quest_active = ("tofu" in ids) and not Game.goal_done(m.lvl, "tofu")
+
+
+# minutes and seconds, as the results card and the clock goal write a time
+static func clock(secs: float) -> String:
+	var s := int(round(secs))
+	return "%d:%02d" % [s / 60, s % 60]
+
+
+# What a goal's row shows beside its text while it is open: its live readout
+# (the walk's time, how wet your human is), and for the spelling goal the
+# word's letters, the ones found lit.
+static func row_extras(m: Node2D, q: Dictionary, row: Dictionary) -> Dictionary:
+	var rd = q.get("readout")
+	if rd is Callable:
+		var out: Dictionary = (rd as Callable).call()
+		row["readout"] = String(out.get("text", ""))
+		row["bad"] = bool(out.get("bad", false))
+	if String(q.id) == "spell":
+		var letters: Array = []
+		for l: Dictionary in m.word_letters:
+			letters.append({"ch": String(l.letter), "got": bool(l.collected)})
+		row["letters"] = letters
+	return row
 
 
 static func quest_text(q: Dictionary) -> String:
@@ -241,10 +267,10 @@ static func card_data(m: Node2D) -> Dictionary:
 		else:
 			var got: int = mini(int(q.fn.call()), target)
 			var group: Array = keep if bool(q.was_true) else (counting if target > 1 else once)
-			group.append({
+			group.append(row_extras(m, q, {
 				"text": quest_text(q), "target": target, "got": got,
 				"state": UiIcons.Check.PARTIAL if got > 0 else UiIcons.Check.OPEN,
-			})
+			}))
 	var open_rows: Array = counting + once + keep
 	var rows: Array = open_rows + done_rows
 	var open: bool = Game.goals_expanded or m.goals_peek > 0.0
@@ -275,7 +301,21 @@ static func card_data(m: Node2D) -> Dictionary:
 		"compact": compact and open,
 		"open": open, "peeking": m.goals_peek > 0.0 and not Game.goals_expanded,
 		"key": Prompts.key("goals"),
+		"clock": _clock_line(m),
 	}
+
+
+# The walk's time against the clock goal, for the folded card, while that goal
+# is still open on this walk ({} when it is not).
+static func _clock_line(m: Node2D) -> Dictionary:
+	for q in m.active_quests:
+		if String(q.id) != "clock":
+			continue
+		if Game.goal_done(m.lvl, "clock") or m.run_goals_hit.has("clock"):
+			return {}
+		return {"text": "%s / %s" % [clock(float(m.elapsed)), clock(float(m.clock_target))],
+			"bad": float(m.elapsed) > float(m.clock_target)}
+	return {}
 
 
 static func finish_walk(m: Node2D) -> void:
