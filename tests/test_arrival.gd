@@ -140,10 +140,13 @@ func _run() -> void:
 	var hg: float = barri.human.hgait
 	var dg: float = barri.dog.gait
 	barri.arrival_t = Arrival.PULL + Arrival.DOG_IN
+	# hauled over the line: the hauled pose, which has no steps, wears off
+	barri.human.drag_amt = 1.0
 	for _i in range(20):
 		Arrival.tick(barri, 1.0 / 60.0)
 	_check(barri.human.hgait > hg + 0.5 and barri.human.presentation_speed > 20.0,
 		"your human's legs step on the way in (gait %.2f -> %.2f)" % [hg, barri.human.hgait])
+	_check(barri.human.drag_amt < 0.5, "dragged home, they straighten up and walk in, not slide (%.2f)" % barri.human.drag_amt)
 	_check(barri.dog.gait != dg, "and Millie's")
 	var to_door: Vector2 = mouth - (barri.human.global_position + barri.human.presentation_offset)
 	_check(to_door.length() < 2.0 or barri.human.face_dir.dot(to_door.normalized()) > 0.7,
