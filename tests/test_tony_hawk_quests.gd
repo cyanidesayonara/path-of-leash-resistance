@@ -114,7 +114,13 @@ func _run() -> void:
 
 	# the open goal list shows which letters are found, and the walk's time
 	m.elapsed = 200.0
+	# the whole list, opened on purpose, whatever the saved setting
+	var was_expanded: bool = game.goals_expanded
+	game.goals_expanded = false
+	_check(Goals.card_data(m).rows.size() < 15, "folded, the card does not list every goal")
+	game.goals_expanded = true
 	var rows: Array = Goals.card_data(m).rows
+	game.goals_expanded = was_expanded
 	var spell_row := {}
 	var clock_row := {}
 	for row: Dictionary in rows:
