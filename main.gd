@@ -1880,7 +1880,8 @@ func _draw_grass_detail(c: Object, vt: float, vb: float) -> void:
 			for x: float in xs:
 				var h := _cell01(x, y)
 				# the scrapyard: oily gravel along the fences, the odd weed, never a lawn
-				walk_mod.draw_verge(self, c, _grass_spot(x, y, h), h)
+				var p := _grass_spot(x, y, h)
+				walk_mod.draw_verge(self, c, p, h)
 		elif c is ShapeBatch:
 			var geo: ShapeBatch = _grass_geo.get(y)
 			if geo == null:
