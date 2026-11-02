@@ -10,6 +10,16 @@ Append-only session history, newest first.
   on their feet. The pose now wears off as the arrival starts (`UNBRACE` in
   systems/arrival.gd) and they walk in. Test: `test_arrival.gd`.
 
+## 2026-11-02 - Release notes for 1.68
+
+- The Store's What's new, the itch page's notes and the certification note
+  cover everything since 1.67's notes went out: the new walk order, other
+  dogs' manners and owners' habits, the LEASH coins and goal readouts, the
+  dare prompt, Dia de Partit's colours, the arrival fix and the browser
+  speed-ups. README, the itch page and the Store description describe the
+  other dogs and owners as they now are. AGENTS.md names v1.68 as the last
+  tag.
+
 ## 2026-11-02 - Other walkers are people too
 
 - Not every other owner is glued to their phone (`habit` in
