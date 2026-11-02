@@ -2,6 +2,21 @@
 
 Append-only session history, newest first.
 
+## 2026-11-02 - The ground on a canvas of its own
+
+- The cross-section (ground, strips, walkway, paving) moved off the world
+  pass onto its own canvas behind main's (world/ground_layer.gd), at main's
+  z, so it lands exactly where it was drawn before: over the edge layer,
+  under everything else in the world. The canvas keeps its picture and is
+  redrawn only once the camera has gone 240 px or the weather, night or a
+  detour changes it, so the renderer is no longer handed the same paving on
+  every world redraw. A walk whose cross-section animates (El Passeig, El
+  Besòs, Llevant), found out on the first draw, keeps drawing it in the
+  world pass.
+- La Rambla: the cross-section's share of a world redraw 0.07-0.2 ms to
+  0.01; the canvas costs 1.4 ms when it redraws, every few seconds of
+  walking. Pixel-identical against main on all 27 walks at two moments.
+
 ## 2026-11-02 - The furniture is drawn once per stretch too
 
 - A recording batch now keeps every call only a canvas can make (a transform,
