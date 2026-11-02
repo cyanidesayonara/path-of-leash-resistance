@@ -85,32 +85,44 @@ const LEVEL_SUBTITLES := {
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
 # The first few open quickly, so a new player is never stuck on one walk.
-const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "rain": 4, "market": 7, "oldtown": 9, "trail": 11, "station": 13, "besos": 14, "site": 15, "spook": 17, "scrap": 19, "guell": 21, "neteja": 23, "montjuic": 25, "partit": 27, "port": 29, "reial": 31, "vet": 33, "tibidabo": 35, "aigues": 37, "horta": 39, "llevant": 40, "boars": 41, "gracia": 42, "raval": 43}
+const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "llevant": 15, "tibidabo": 17, "vet": 19, "trail": 21, "spook": 23, "boars": 25, "guell": 27, "station": 29, "reial": 31, "aigues": 33, "horta": 35, "port": 37, "site": 39, "partit": 40, "scrap": 41, "gracia": 42, "raval": 43}
 
 # Keystone Chase milestone gates: each tier requires surviving the previous
 # tier's chase level end-to-end to enter.
 const CHASE_GATE := {
-	# Tier 3 (Walks after El Besòs)
-	"site": "besos",
-	"spook": "besos",
-	"scrap": "besos",
-	"guell": "besos",
-	"boars": "besos",
-	# Tier 4 (Walks after La Neteja)
+	# Tier 2 (Walks after La Neteja, the first chase)
+	"oldtown": "neteja",
 	"montjuic": "neteja",
-	"partit": "neteja",
-	"port": "neteja",
-	"reial": "neteja",
-	"vet": "neteja",
-	# Tier 5 (Walks after El Veterinari)
-	"tibidabo": "vet",
-	"aigues": "vet",
-	"horta": "vet",
-	"llevant": "vet",
-	"gracia": "vet",
+	"market": "neteja",
+	"rain": "neteja",
+	"besos": "neteja",
+	# Tier 3 (Walks after El Besòs)
+	"llevant": "besos",
+	"tibidabo": "besos",
+	"vet": "besos",
+	# Tier 4 (Walks after El Veterinari)
+	"trail": "vet",
+	"spook": "vet",
+	"boars": "vet",
+	# Tier 5 (Walks after Els Senglars)
+	"guell": "boars",
+	"station": "boars",
+	"reial": "boars",
+	"aigues": "boars",
+	"horta": "boars",
+	"port": "boars",
+	"site": "boars",
+	"partit": "boars",
+	"scrap": "boars",
+	"gracia": "boars",
 	# The Grand Finale (Rambla del Raval - Boss Arena)
 	"raval": "gracia",
 }
+# The order and gates before the November 2026 reshuffle: a save made under
+# them keeps every walk they had opened (_grandfather_reorder).
+const GATES_VERSION := 2
+const OLD_STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "rain": 4, "market": 7, "oldtown": 9, "trail": 11, "station": 13, "besos": 14, "site": 15, "spook": 17, "scrap": 19, "guell": 21, "neteja": 23, "montjuic": 25, "partit": 27, "port": 29, "reial": 31, "vet": 33, "tibidabo": 35, "aigues": 37, "horta": 39, "llevant": 40, "boars": 41, "gracia": 42, "raval": 43}
+const OLD_CHASE_GATE := {"site": "besos", "spook": "besos", "scrap": "besos", "guell": "besos", "boars": "besos", "montjuic": "neteja", "partit": "neteja", "port": "neteja", "reial": "neteja", "vet": "neteja", "tibidabo": "vet", "aigues": "vet", "horta": "vet", "llevant": "vet", "gracia": "vet"}
 
 const WEATHERS: Array[String] = ["clear", "rain", "wind", "snow"]
 const WEATHER_NAMES := {"clear": "CLEAR", "rain": "RAIN", "wind": "WIND", "snow": "SNOW"}
@@ -123,7 +135,7 @@ const WALK_WEATHER := {"rain": "rain", "tutorial": "clear"}
 const WALK_NIGHT := {"spook": true, "tutorial": false}
 
 # the walk select: the first walk, then the campaign walks in order
-const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant", "boars", "gracia", "raval"]
+const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "llevant", "tibidabo", "vet", "trail", "spook", "boars", "guell", "station", "reial", "aigues", "horta", "port", "site", "partit", "scrap", "gracia", "raval"]
 
 # Cosmetics keep their catalog keys when equipped, but ownership is namespaced
 # by category so identically named items remain separate purchases.
@@ -1017,6 +1029,8 @@ func load_records() -> void:
 	agility_best = maxf(0.0, float(cf.get_value("freedom", "agility_best", 0.0)))
 	if cf.has_section_key("global", "gate_open"):
 		gate_open.assign(Array(cf.get_value("global", "gate_open", PackedStringArray())))
+		if int(cf.get_value("global", "gates_version", 1)) < GATES_VERSION:
+			_grandfather_reorder()
 	else:
 		_grandfather_chase_gates()
 	# a dog saved while only browsed (locked) is not the player's dog; checked
@@ -1042,6 +1056,19 @@ func _grandfather_chase_gates() -> void:
 		var r: Dictionary = records.get(lv, {})
 		var walked := int(r.get("bones", 0)) > 0 or float(r.get("time", 0.0)) > 0.0
 		if walked or stars_now >= int(STAR_GATE.get(lv, 0)):
+			gate_open.append(lv)
+
+
+# A save from before the reshuffle keeps every walk that was open under the
+# old order and gates, so no walk it could play is locked away.
+func _grandfather_reorder() -> void:
+	var stars_now := total_stars()
+	for lv: String in CHASE_GATE:
+		if gate_open.has(lv) or lv == "raval":
+			continue
+		var old_req: String = String(OLD_CHASE_GATE.get(lv, ""))
+		var chased := old_req == "" or has_completed(old_req) or gate_open.has(lv)
+		if has_completed(lv) or (chased and stars_now >= int(OLD_STAR_GATE.get(lv, 0))):
 			gate_open.append(lv)
 
 
@@ -1082,6 +1109,7 @@ func save_records() -> void:
 	cf.set_value("tips", "seen", PackedStringArray(tips_seen))
 	cf.set_value("freedom", "agility_best", agility_best)
 	cf.set_value("global", "gate_open", PackedStringArray(gate_open))
+	cf.set_value("global", "gates_version", GATES_VERSION)
 	cf.save(save_path)
 
 
@@ -1171,6 +1199,9 @@ func is_unlocked(lv: String) -> bool:
 		return true  # the tutorial is always open, and free play opens all walks
 	if lv == "raval":
 		return has_completed("gracia")
+	# kept open by an older save: it was open by stars then
+	if gate_open.has(lv):
+		return true
 	if chase_gate_needed(lv) != "":
 		return false
 	return total_stars() >= int(STAR_GATE.get(lv, 0))

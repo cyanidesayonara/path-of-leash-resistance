@@ -45,52 +45,53 @@ func _run() -> void:
 		game.records[lv] = game._default_level_record()
 
 	_check(game.chase_gate_needed("barri") == "", "barri has no chase gate")
-	_check(game.chase_gate_needed("besos") == "", "besos has no chase gate")
-	_check(game.chase_gate_needed("site") == "besos", "site requires besos completed")
-	_check(game.chase_gate_needed("spook") == "besos", "spook requires besos completed")
-	_check(game.chase_gate_needed("montjuic") == "neteja", "montjuic requires neteja completed")
-	_check(game.chase_gate_needed("tibidabo") == "vet", "tibidabo requires vet completed")
+	_check(game.chase_gate_needed("neteja") == "", "neteja, the first chase, has no chase gate")
+	_check(game.chase_gate_needed("besos") == "neteja", "besos requires neteja completed")
+	_check(game.chase_gate_needed("market") == "neteja", "market requires neteja completed")
+	_check(game.chase_gate_needed("vet") == "besos", "vet requires besos completed")
+	_check(game.chase_gate_needed("spook") == "vet", "spook requires vet completed")
+	_check(game.chase_gate_needed("site") == "boars", "site requires boars completed")
 	_check(game.chase_gate_needed("raval") == "gracia", "raval requires gracia completed")
 
 	# 2. Check lock text formatting
-	var site_best: String = game.best_line("site")
-	_check(site_best == "locked - finish El Besòs first", "site best_line names El Besos: %s" % site_best)
-	var mont_best: String = game.best_line("montjuic")
-	_check(mont_best == "locked - finish La Neteja first", "montjuic best_line names La Neteja: %s" % mont_best)
-	var tib_best: String = game.best_line("tibidabo")
-	_check(tib_best == "locked - finish El Veterinari first", "tibidabo best_line names El Veterinari: %s" % tib_best)
+	var market_best: String = game.best_line("market")
+	_check(market_best == "locked - finish La Neteja first", "market best_line names La Neteja: %s" % market_best)
+	var vet_best: String = game.best_line("vet")
+	_check(vet_best == "locked - finish El Besòs first", "vet best_line names El Besos: %s" % vet_best)
+	var spook_best: String = game.best_line("spook")
+	_check(spook_best == "locked - finish El Veterinari first", "spook best_line names El Veterinari: %s" % spook_best)
 
 	# 3. Even with ample stars, chase block prevents unlock
 	game.mark_goal("barri", "mark")
-	for lv: String in ["street", "park", "beach", "rain", "market"]:
+	for lv: String in ["street", "park", "beach", "neteja"]:
 		if not game.records.has(lv):
 			game.records[lv] = game._default_level_record()
 		game.records[lv]["stars"] = 3
-	_check(game.total_stars() >= int(game.STAR_GATE.get("site", 0)),
-		"stars enough for site's star gate (%d)" % game.total_stars())
-	_check(not game.is_unlocked("site"), "site is locked when besos is uncompleted even with stars")
+	_check(game.total_stars() >= int(game.STAR_GATE.get("market", 0)),
+		"stars enough for market's star gate (%d)" % game.total_stars())
+	_check(not game.is_unlocked("market"), "market is locked when neteja is uncompleted even with stars")
 
 	# Check walk_info plaque text
-	game.level_id = "site"
+	game.level_id = "market"
 	var dummy_main := Node2D.new()
 	var info: Dictionary = MenuFlow.walk_info(dummy_main)
-	_check(bool(info.get("locked", false)), "walk_info flags site as locked")
-	_check(String(info.get("chase_gate", "")) == "besos", "walk_info records chase_gate as besos")
+	_check(bool(info.get("locked", false)), "walk_info flags market as locked")
+	_check(String(info.get("chase_gate", "")) == "neteja", "walk_info records chase_gate as neteja")
 	var line0: String = (info.get("lines", [""])[0] as String)
-	_check(line0 == "Finish El Besòs to open this walk.", "walk_info line names El Besos: %s" % line0)
+	_check(line0 == "Finish La Neteja to open this walk.", "walk_info line names La Neteja: %s" % line0)
 
-	# 4. Completing besos clears the gate
-	_check(not game.has_completed("besos"), "besos is not completed yet")
-	game.record_result("besos", 15, 80.0, false)
-	_check(game.has_completed("besos"), "besos is now completed")
-	_check(game.chase_gate_needed("site") == "", "site no longer needs chase gate")
-	_check(game.is_unlocked("site"), "with the stars and El Besòs walked, site opens")
-
-	# 5. Completing neteja clears montjuic
-	_check(game.chase_gate_needed("montjuic") == "neteja", "montjuic still needs neteja")
-	game.record_result("neteja", 20, 95.0, false)
+	# 4. Completing neteja clears the gate
+	_check(not game.has_completed("neteja"), "neteja is not completed yet")
+	game.record_result("neteja", 15, 80.0, false)
 	_check(game.has_completed("neteja"), "neteja is now completed")
-	_check(game.chase_gate_needed("montjuic") == "", "montjuic chase gate cleared")
+	_check(game.chase_gate_needed("market") == "", "market no longer needs chase gate")
+	_check(game.is_unlocked("market"), "with the stars and La Neteja walked, market opens")
+
+	# 5. Completing besos clears vet
+	_check(game.chase_gate_needed("vet") == "besos", "vet still needs besos")
+	game.record_result("besos", 20, 95.0, false)
+	_check(game.has_completed("besos"), "besos is now completed")
+	_check(game.chase_gate_needed("vet") == "", "vet chase gate cleared")
 
 	# 6. Finale: Raval Boss Arena opens upon completing gracia regardless of star count
 	_check(not game.is_unlocked("raval"), "raval locked before gracia")
@@ -113,13 +114,31 @@ func _run() -> void:
 	game.records["montjuic"].bones = 12
 	game.gate_open.clear()
 	game._grandfather_chase_gates()
-	_check(game.is_unlocked("site") and game.is_unlocked("spook"), "an old save at 17 stars keeps site and spook open")
+	_check(game.is_unlocked("market") and game.is_unlocked("rain"), "an old save at 17 stars keeps market and rain open")
 	_check(game.chase_gate_needed("montjuic") == "", "an old save that walked montjuic keeps it")
-	_check(game.chase_gate_needed("tibidabo") == "vet", "an old save below tibidabo's stars is still gated there")
+	_check(game.chase_gate_needed("vet") == "besos", "an old save below the vet's stars is still gated there")
 	_check(not game.gate_open.has("gracia") and not game.gate_open.has("raval"), "new walks are never grandfathered")
+
+	# 8. A save from before the reshuffle keeps every walk the old order had
+	# open, stars and all, and nothing the old order still had shut
+	game.gate_open.clear()
+	game.records = {}
+	for lv in game.LEVELS:
+		game.records[lv] = game._default_level_record()
+	for lv: String in ["barri", "street", "park", "beach", "rain", "market"]:
+		game.records[lv].stars = 3
+	game.records["oldtown"].stars = 1
+	game.records["besos"].bones = 9
+	game._grandfather_reorder()
+	_check(game.is_unlocked("rain") and game.is_unlocked("market") and game.is_unlocked("oldtown"),
+		"rain, market and El Gotic stay open at 19 stars though they now follow La Neteja")
+	_check(game.is_unlocked("trail") and game.is_unlocked("station"), "the trail and L'Estacio stay open by their old stars")
+	_check(game.is_unlocked("besos"), "a walked El Besos stays open")
+	_check(not game.is_unlocked("montjuic"), "montjuic needed La Neteja before too: still shut")
+	_check(not game.is_unlocked("horta"), "horta was shut before and is shut now")
 	game.gate_open.clear()
 
-	# 8. Free play mode opens all walks
+	# 9. Free play mode opens all walks
 	game.records = {}
 	for lv in game.LEVELS:
 		game.records[lv] = game._default_level_record()

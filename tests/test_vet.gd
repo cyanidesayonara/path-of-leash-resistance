@@ -67,7 +67,7 @@ func _run() -> void:
 	# 1. Registration in campaign lists
 	_check(game.LEVELS.has("vet"), "vet is in LEVELS")
 	_check(game.CAROUSEL.has("vet"), "vet is in CAROUSEL")
-	_check(int(game.STAR_GATE["vet"]) == 33, "opens at 33 stars")
+	_check(int(game.STAR_GATE["vet"]) == 19, "opens at 19 stars")
 	_check(String(game.LEVEL_NAMES["vet"]) == "El Veterinari", "named El Veterinari")
 	_check(m.gate_text == "CLÍNICA VETERINÀRIA", "gate text is CLÍNICA VETERINÀRIA, accents and all")
 	_check(m.freedom_kind == "yard", "ends in recovery yard")
