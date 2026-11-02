@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-02 - Your human walks in the door instead of sliding
+
+- The arrival freezes the walk, which froze your human in whatever pose they
+  crossed the home line in. Hauled over it by a pulling dog (as most walks
+  end), they kept the hauled pose, which has no steps, and slid to the door
+  on their feet. The pose now wears off as the arrival starts (`UNBRACE` in
+  systems/arrival.gd) and they walk in. Test: `test_arrival.gd`.
+
 ## 2026-11-02 - The walks in Santtu's order
 
 - The walk select and the star gates follow the order saved in the walk
