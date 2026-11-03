@@ -2,6 +2,29 @@
 
 Append-only session history, newest first.
 
+## 2026-11-03 - L'Estació runaway station luggage trolley live event
+
+- A signature live event for L'Estació (`systems/luggage_trolley.gd`, `systems/estacio.gd`, `world/level_build.gd`, `main.gd`):
+  an overloaded station luggage trolley (carretó d'equipatges) slips away on the polished terrazzo concourse floor
+  at y = -1210.0, rolling rapidly eastward across the concourse with a panicked traveler running frantically after it.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -1040.0): the traveler loses grip
+  at x = 330.0, the trolley trembles on its casters, and the traveler waves their arms frantically calling out
+  "Atenció, el carretó!" with a speech bubble.
+- The crossing roll and hazard: the trolley careens east across the concourse at 260 px/s with vibrating caster
+  wheels, clattering audibly as it crosses each brass terrazzo floor divider seam, carrying a stack of vibrant
+  hard-shell suitcases (navy blue with corner bumpers, yellow, coral) bound by a black luggage strap and golden buckle.
+  A distracted human wandering into the crossing trajectory gets bumped ("Whoa! Watch the cart!", patience drop).
+- Concourse dodge save: steering your human onto the moving walkway entrance (x in [570, 710]) or safely maneuvering
+  clear past the crossing earns a rewarded dodge save ("concourse dodge! +2", "Whew, close one!", +2 bones, +2 combo,
+  increments saves_done).
+- Dog tricks: booping or pouncing on the rolling cart / luggage awards "trolley boop! +2" (+2 bones, +2 combo,
+  chaser reacts with "Cuidado!"). Barking near the runaway cart alerts the station and awards "trolley bark! +2"
+  (+2 bones, +2 combo, chaser shouts "Atura'l!").
+- Autowalk clearance: timing naturally clears the central concourse path before the autowalk pair arrives, ensuring
+  100% reliable automated traversal and test stability.
+- Zero added draw calls: batched with L'Estació concourse geometry via `ShapeBatch`.
+- Tests: `tests/test_estacio_trolley.gd`.
+
 ## 2026-11-03 - El Port quayside fisherman reel-in and sea bass catch live event
 
 - A signature live event for El Port (`systems/fisherman.gd`, `systems/port.gd`, `world/level_build.gd`, `main.gd`):

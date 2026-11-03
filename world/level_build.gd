@@ -766,6 +766,8 @@ static func estacio(m: Node2D) -> void:
 	m.vans = Array([Vector2(360, -1320), Vector2(920, -2750)], TYPE_VECTOR2, &"", null)
 	m.performers = Array([Vector2(880, -1150)], TYPE_VECTOR2, &"", null)   # a busker by the pillars
 	m.fountains = Array([Vector2(930, -3300)], TYPE_VECTOR2, &"", null)
+	if not m.tutorial_mode:
+		m.luggage_trolley = LuggageTrolley.new()
 	# the owner goes through the middle gate, and keeps to the east platform
 	m.narrows = Array([{"y0": ESTACIO_BARRIER_Y - 12.0, "y1": ESTACIO_BARRIER_Y + 12.0,
 		"x0": ESTACIO_GAPS[1] - ESTACIO_GAP_W * 0.5 + 16.0, "x1": ESTACIO_GAPS[1] + ESTACIO_GAP_W * 0.5 - 16.0}], TYPE_DICTIONARY, &"", null)
@@ -2164,6 +2166,8 @@ static func build_level_data(m: Node2D) -> void:
 			add_rope_rect(m, Rect2(d - NETEJA_DUMPSTER * 0.5, NETEJA_DUMPSTER))
 	if m.lvl == "station":
 		add_rope_rect(m, ESTACIO_TRAIN)
+		if not m.tutorial_mode:
+			m.luggage_trolley = LuggageTrolley.new()
 	if m.lvl == "park":
 		add_rope_rect(m, park_slackline())
 		for st: Vector2 in [PARK_SLACK_A, PARK_SLACK_B]:
