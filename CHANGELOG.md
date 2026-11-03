@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-11-03 - La Platja gets a beach volleyball spike live event
+
+- A casual beach volleyball match on the sand court of La Platja (`systems/volleyball.gd`, `systems/passeig.gd`)
+  comes to life with four players playing over the net at y = -2000.0.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk ("Pilota fora!",
+  accompanied by the spiker's wind-up) before the ball is spiked eastward across
+  the sand toward the boardwalk.
+- The volleyball travels in a parabolic arc with height-dependent shadow and
+  ground bounces. Millie can intercept or headbutt the ball in flight or on
+  the bounce for a trick reward ("volley! +2", +2 bones, +2 combo; "Bona rematada!").
+  An oblivious human walking into the ball's path gets bonked ("Watch the game!",
+  patience loss), while guiding them along the promenade earns a rewarded dodge
+  ("Whew, nice save!", "good dodge! +2"). The central autowalk line on the
+  promenade (x = 770.0) remains safe and unblocked.
+- Tests: `tests/test_beach_volley.gd`.
+
 ## 2026-11-03 - El Mercat's fruit handcart
 
 - A market vendor pushing a two-wheeled wooden fruit handcart across the aisle
