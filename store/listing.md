@@ -86,23 +86,18 @@ dog walking
 ### What's new in this version
 
 ```
-- Story films: a short scene before the threat strikes on every chase walk (La Neteja's sweeper, El Besòs's flood, El Veterinari, Els Senglars, Festa de Gràcia's correfoc), and before El Gat wakes on the Rambla del Raval, where she stands her ground. Any button skips.
-- The threats look the part, the same in the films and on the walk: the street sweeper glares down the road, the flood comes as a wave over your human's head, the vet's staff come at you with syringes, clippers, a cone and a net, the boars charge as a herd, and the correfoc brings the Drac de Gràcia.
-- NEW LOOK: on GET READY, give your human a different look, him or her, any skin tone and hairstyle. The films show the same person, and your choice is remembered.
-- Each threat has its own words when it sets off, stops and catches you.
-- The walks in a new order, La Neteja the first chase. Your save keeps every walk it had open.
-- Other dogs come over to say hello, or lunge and bark if grumpy. Their owners take calls, carry coffee and stop to type.
-- LEASH letters fly into their coins, and the goal list shows them, your time against the clock and more.
-- Dares show the bark button glowing, and it presses when you take one.
-- Dia de Partit in deeper blue and garnet, with the senyera.
-- Your human walks in the door at the end instead of sliding.
-- Smoother in the browser: La Rambla runs about twice as fast.
+- Signature live events across the city: every walk now has its own unique local incident. Look out for the quayside fisherman at El Port, the bistro waiter on Plaça Reial, a cone-of-shame dog outside El Veterinari, a unicyclist on Tibidabo, a trail runner on Carretera de les Aigües, a lost tourist in the Horta maze, a surfer crossing at Platja de Llevant, a wild boar family on Els Senglars, and a towering Gegant rehearsing festival twirls in Festa de Gràcia.
+- True near-miss saves: dodging a hazard now requires a real near miss. Steer your human into trouble's reach and haul them clear in time to earn a dodge save. Taking the ordinary line or walking past clear of danger pays nothing.
+- Unique dog tricks on every live encounter: snatch dropped snacks (fresh catch, a fallen croqueta, energy gel, a carquinyoli cookie, an unearthed wild truffle, or a festive ribbon rosette), boop snouts and hemlines, and bark for surprising reactions.
+- Every hazard telegraphed: speech bubbles and local audio give you 0.8 seconds of clear warning before any mover steps into the path.
+- Smooth live rendering: all animated actors render directly on the live pass with zero added draw calls, keeping performance silky smooth on desktop and browser.
+- Authentic Catalan voices and street calls: "Compte!", "Epa!", "Visca la Festa!", "Atenció, el martell!".
 ```
 
 ### Notes for certification
 
 ```
-Update 1.68: story films on the chase walks, a new look for your human, livelier other dogs and owners, the walks in a new order, and smoother performance. Update 1.67: six new walks since 1.64 (La Carretera de les Aigües, El Laberint d'Horta, Platja de Llevant, Els Senglars, Festa de Gràcia and the Rambla del Raval finale), five dogs to choose from, dares with their own music on every walk, fifteen goals a walk, separate poop and pick-up buttons with key layouts and rebinding, and a language setting for the walks' place names. No change to capabilities, network use or data handling since 1.55.
+Update 1.69: signature live events across all walks (fishermen, waiters, cone dogs, unicyclists, trail runners, tourists, surfers, wild boars, and festive giants), true near-miss saves, and dropped snack snatching. Update 1.68: story films on the chase walks, a new look for your human, livelier other dogs and owners, the walks in a new order, and smoother performance. Update 1.67: six new walks since 1.64 (La Carretera de les Aigües, El Laberint d'Horta, Platja de Llevant, Els Senglars, Festa de Gràcia and the Rambla del Raval finale), five dogs to choose from, dares with their own music on every walk, fifteen goals a walk, separate poop and pick-up buttons with key layouts and rebinding, and a language setting for the walks' place names. No change to capabilities, network use or data handling since 1.55.
 
 Path of Leash Resistance is a single-player Win32 desktop game built with the Godot engine (4.7), packaged as MSIX.
 
@@ -213,6 +208,22 @@ written by `tools/make_store_art.gd`: the 9:16 poster, the 1:1 box art and the
 ## Past What's new
 
 As submitted, newest first. The current one is in "Current listing".
+
+### What's new in 1.68 (tagged 2026-11-01, submitted the same day)
+
+```
+- Story films: a short scene before the threat strikes on every chase walk (La Neteja's sweeper, El Besòs's flood, El Veterinari, Els Senglars, Festa de Gràcia's correfoc), and before El Gat wakes on the Rambla del Raval, where she stands her ground. Any button skips.
+- The threats look the part, the same in the films and on the walk: the street sweeper glares down the road, the flood comes as a wave over your human's head, the vet's staff come at you with syringes, clippers, a cone and a net, the boars charge as a herd, and the correfoc brings the Drac de Gràcia.
+- NEW LOOK: on GET READY, give your human a different look, him or her, any skin tone and hairstyle. The films show the same person, and your choice is remembered.
+- Each threat has its own words when it sets off, stops and catches you.
+- The walks in a new order, La Neteja the first chase. Your save keeps every walk it had open.
+- Other dogs come over to say hello, or lunge and bark if grumpy. Their owners take calls, carry coffee and stop to type.
+- LEASH letters fly into their coins, and the goal list shows them, your time against the clock and more.
+- Dares show the bark button glowing, and it presses when you take one.
+- Dia de Partit in deeper blue and garnet, with the senyera.
+- Your human walks in the door at the end instead of sliding.
+- Smoother in the browser: La Rambla runs about twice as fast.
+```
 
 ### What's new in 1.67 (tagged 2026-10-31, submitted the same day)
 

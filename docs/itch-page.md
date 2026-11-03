@@ -117,6 +117,29 @@ Single player. No ads, no purchases, no account. The download plays offline; the
 Made in Godot by Santtu Nykänen. The dog is Millie, a distinguished salt-and-pepper mutt who squats like a lady.
 ```
 
+## What's new in 1.69
+
+For a devlog post or the top of the body. Everything since v1.68, from
+CHANGELOG.md. The Store's What's new is the short form of this.
+
+```
+- Signature live events across the city: every walk now has its own unique local incident to encounter and navigate.
+  - El Port: a quayside fisherman landing harbour catches and tossing fresh fish.
+  - Plaça Reial: a bistro waiter stepping out with a loaded drink tray across the portico crossing.
+  - El Veterinari: a cone-of-shame dog trying to navigate the sidewalk without knocking into poles.
+  - El Tibidabo: a daring unicyclist practicing balance rolls along the panoramic road.
+  - Carretera de les Aigües: an energetic trail runner charging along the mountain trail.
+  - El Laberint d'Horta: a bewildered tourist clutching a map seeking the maze exit.
+  - Platja de Llevant: a beach surfer carrying a board toward the waves.
+  - Els Senglars: a wild sow and her striped piglets rooting across the trail and unearthing wild black truffles.
+  - Festa de Gràcia: a towering papier-mâché Gegant rehearsing festive twirls across the narrow decorated street.
+- Real near-miss saves: dodging a hazard now requires a true near miss. Steer your human into trouble's reach and haul them clear in time to earn a dodge save. Taking the ordinary line or walking past clear of danger pays nothing.
+- Unique dog tricks on every live encounter: snatch dropped snacks (fresh caught fish, fallen tapas croquetas, energy gels, carquinyoli cookies, unearthed wild truffles, and festive ribbon rosettes), boop snouts and hemlines, and bark to trigger surprising reactions and celebratory pirouettes.
+- Every hazard telegraphed: speech bubbles and local audio give you 0.8 seconds of clear warning before any mover steps into the path.
+- Smooth live rendering: all animated actors render directly on the live pass with zero added draw calls, keeping performance silky smooth on desktop and browser.
+- Authentic Catalan voices and street calls: "Compte!", "Epa!", "Visca la Festa!", "Atenció, el martell!".
+```
+
 ## What's new in 1.68
 
 For a devlog post or the top of the body. Everything since v1.67, from
