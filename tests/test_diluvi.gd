@@ -86,6 +86,7 @@ func _run() -> void:
 	_check(near == 2, "a storm drain has a cone at each open side (%d)" % near)
 	m.queue_free()
 	await process_frame
+	await process_frame
 	print("\n%d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():
 		print("test_diluvi: OK")

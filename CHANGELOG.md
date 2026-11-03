@@ -2,6 +2,24 @@
 
 Append-only session history, newest first.
 
+## 2026-11-03 - El Diluvi gets an awning rain dump live event ("Aigua va!")
+
+- A signature live event for El Diluvi (`systems/awning_dump.gd`, `systems/diluvi.gd`):
+  a shopkeeper under a water-logged sagging awning at y = -1650.0 steps to the door
+  with a broom handle during the downpour.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk ("Aigua va!",
+  accompanied by trembling canvas and dripping water) before the broom pushes up the
+  bulge and dumps a torrent of trapped rainwater onto the street edge.
+- The water cascades off the awning hem into the street gutter with foamy splash rings.
+  A distracted human walking under the dump gets drenched (+0.35 soak, "Aah! I'm soaked!",
+  patience drop, frantic phone wipe). Dashing through the falling cascade at speed awards
+  an "awning splash! +2" trick (+2 bones, +2 combo; "Quin gos més valent!"), and barking
+  near the cascade awards "rain bark! +2". Guiding your human into the dry stone arcade on
+  the west side earns a rewarded dodge ("dry passage! +2", "Whew, nice save!").
+- Autowalk clearance: the central corridor at x = 640.0 is over 130 px clear of the
+  dump splash zone.
+- Tests: `tests/test_diluvi_awning_dump.gd`.
+
 ## 2026-11-03 - La Platja gets a beach volleyball spike live event
 
 - A casual beach volleyball match on the sand court of La Platja (`systems/volleyball.gd`, `systems/passeig.gd`)
