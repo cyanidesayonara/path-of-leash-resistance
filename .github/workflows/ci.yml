@@ -412,6 +412,9 @@ jobs:
       - name: Tutorial stations test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tutorial_stations.gd
 
+      - name: El Diluvi awning rain dump live event test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_diluvi_awning_dump.gd
+
       - name: El Diluvi is its own rainy street test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_diluvi.gd
 

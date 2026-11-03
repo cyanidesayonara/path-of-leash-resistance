@@ -75,6 +75,8 @@ static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 		var hp: Vector2 = m.human.global_position + Vector2(-16.0, -40.0)
 		b.rect(Rect2(hp.x, hp.y, 32.0, 5.0), Color(0.08, 0.08, 0.10, 0.7))
 		b.rect(Rect2(hp.x, hp.y, 32.0 * m.human_soak, 5.0), Color(0.45, 0.65, 0.95) if m.human_soak < 0.5 else Color(0.30, 0.45, 0.85))
+	if m.awning_dump != null:
+		m.awning_dump.draw(b, vt, vb)
 	b.flush(m._wc)
 
 

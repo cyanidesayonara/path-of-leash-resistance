@@ -861,6 +861,7 @@ static func diluvi(m: Node2D) -> void:
 	# the stacked terrace by the east kerb: the owner aims wide of it
 	m.owner_keepouts.clear()
 	m.owner_keepouts.append(diluvi_terrace(m))
+	m.awning_dump = AwningDump.new()
 
 
 # EL BARRI's pieces, in level space (the path is 400..880). Everything in the

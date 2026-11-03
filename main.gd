@@ -96,6 +96,7 @@ var petanca: Petanca
 var sprinkler: Sprinkler
 var mercat_cart: MercatCart
 var volleyball: Volleyball
+var awning_dump: AwningDump
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -6112,6 +6113,7 @@ func _physics_process(delta: float) -> void:
 	_tick_sprinkler(delta)
 	_tick_mercat_cart(delta)
 	_tick_volleyball(delta)
+	_tick_awning_dump(delta)
 	if march != null:
 		march.tick(self, delta)
 	dog.tick(delta)
@@ -6718,6 +6720,38 @@ func _tick_volleyball(delta: float) -> void:
 		Sfx.play("star", 1.1, -6.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "good dodge! +2", Color(1.0, 0.92, 0.45))
+		_update_hud()
+
+
+# El Diluvi's awning rain dump: shopkeeper pokes water-logged awning with broom.
+func _tick_awning_dump(delta: float) -> void:
+	if not started or paused or lvl != "rain" or awning_dump == null:
+		return
+	var dc: Dictionary = awning_dump.tick(delta, dog.global_position, dog.velocity, human.global_position)
+	if bool(dc["warn"]):
+		float_text(AwningDump.SHOPKEEPER_POS + Vector2(0.0, -32.0), "Aigua va!", Color(0.96, 0.94, 0.88), POP_SAY)
+		Sfx.play("intro_tap", 1.8, -4.0)
+	if bool(dc["dump"]):
+		Sfx.play("splash", 1.3, -2.0)
+	if bool(dc["soak"]):
+		human_soak = minf(1.0, human_soak + 0.35)
+		human.patience = maxf(0.0, human.patience - 8.0)
+		Sfx.play("splash", 0.9, -2.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Aah! I'm soaked!", Color(1.0, 0.72, 0.72), POP_SAY)
+	if bool(dc["dog_splash"]):
+		bones += 2
+		splashes += 1
+		combo.add("SPLASH", 2)
+		Sfx.play("splash", 1.1, -4.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "awning splash! +2", Color(0.70, 0.90, 1.0))
+		_update_hud()
+	if bool(dc["dodge"]):
+		saves_done += 1
+		bones += 2
+		combo.add("DODGE", 2)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "dry passage! +2", Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -10252,6 +10286,12 @@ func on_bark(pos: Vector2) -> void:
 	# in the scrapyard, YOUR bark is noise too
 	for g in get_tree().get_nodes_in_group("guards"):
 		g.hear_noise(pos, 230.0)
+	if awning_dump != null and awning_dump.on_bark(pos):
+		bones += 2
+		combo.add("BARK", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(pos + Vector2(0.0, -20.0), "rain bark! +2", Color(1.0, 0.92, 0.45))
+		_update_hud()
 	if walk_mod != null and walk_mod.has_method("on_bark"):
 		walk_mod.on_bark(self, pos)
 
