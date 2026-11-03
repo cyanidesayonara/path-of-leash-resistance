@@ -323,6 +323,9 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_boar_chase.gd
       - name: Els Senglars wild boar family crossing test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_boars_wild_boar.gd
+
+      - name: Festa de Gracia Gegant rehearsal twirl test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_gracia_gegant.gd
       - name: Campaign mastery test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_campaign_mastery.gd
       - name: Chase milestone gates test

@@ -114,6 +114,7 @@ static func build(m: Node2D) -> Array:
 
 	m.prize_pos = PRIZE
 	m.prize_text = PRIZE_TEXT
+	m.gegant = Gegant.new()
 	return [hyd_list, keb_list]
 
 
@@ -292,3 +293,8 @@ static func tick(m: Node2D, delta: float) -> void:
 				m.float_text(dp + Vector2(0, -26), "churro! +3", CHURRO_GOLD)
 		else:
 			m.gracia_beg_t = 0.0
+
+
+static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	if m.gegant != null:
+		m.gegant.draw(m, wc, vt, vb)

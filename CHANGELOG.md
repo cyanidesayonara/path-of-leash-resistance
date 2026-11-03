@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-11-03 - Festa de Gràcia Gegant rehearsal twirl live event
+
+- A signature live event for Festa de Gràcia (`systems/gegant.gd`, `systems/gracia.gd`, `main.gd`):
+  a towering papier-mâché festival giant (el Gegant de Gràcia) carried by a bearer inside rehearses festive twirls ("ball de gegants") across the decorated narrow street at y = -2080.0, between the churro stand (y = -1940.0) and Arch 3 (y = -2350.0).
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -1720.0): the bearer hoists the giant and calls out from the western sidewalk at x = 445.0, y = -2080.0 ("Visca la Festa!") with a festive chime as the towering figure prepares to twirl.
+- The crossing twirl and hazard: the bearer twirls the giant eastbound across the street at 160 px/s with billowing velvet pleats. A distracted human wandering into the giant's spinning skirt gets bumped ("Whoa! Watch the giant!", -8 patience drop).
+- Dropped festival ribbon rosette & dog trick: as the giant twirls across the center street (x >= 610.0), a decorative festival rosette slips loose onto the street paving. Pouncing or booping it awards "rosette snatch! +2" (+2 bones, +2 combo, "Gràcies!").
+- Giant boop trick: booping the giant's hem directly awards "giant boop! +2" (+2 bones, +2 combo, "Opa!").
+- Giant dance bark trick: barking near the twirling giant (within 150 px) prompts an enthusiastic celebratory pirouette spin, awarding "giant dance! +2" (+2 bones, +2 combo, "Visca!").
+- Giant dodge save: steering your human safely clear after entering threat radius (68 px) awards "giant dodge! +2" ("Whew, close one!", +2 bones, +2 combo, increments saves_done) using `NearMiss.consider`. Walking past clear of threat awards nothing.
+- Autowalk clearance: timing clears the central corridor well before the autowalk pair arrives, ensuring 100% reliable automated traversal and test stability.
+- Zero added draw calls: batched directly into Festa de Gràcia's existing `ShapeBatch` live pass (`draw_live`).
+- Tests: `tests/test_gracia_gegant.gd`.
+
 ## 2026-11-03 - Els Senglars wild boar family crossing live event
 
 - A signature live event for Els Senglars (`systems/wild_boar.gd`, `systems/boars.gd`, `main.gd`):
