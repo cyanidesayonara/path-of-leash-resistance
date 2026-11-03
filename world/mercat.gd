@@ -85,6 +85,8 @@ static func draw_hall(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 			"trolleys": _draw_trolleys(b, r, west, i)
 			"shoppers": _draw_shoppers(m, b, r, west, i)
 			"porter": _draw_porter(b, r, west, i)
+	if m.mercat_cart != null:
+		_draw_handcart(m, b, vt, vb)
 
 
 static func draw_approach(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
@@ -570,3 +572,49 @@ static func _draw_floor_and_stalls(m: Node2D, vt: float, vb: float) -> void:
 	draw_hall(m, b, vt, vb)
 	draw_approach(m, b, vt, vb)
 	b.flush(m._wc)
+
+
+# The fruit handcart crossing the aisle: wooden bed, wheels, fruit crates, porter, and dropped orange
+static func _draw_handcart(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	var cart: MercatCart = m.mercat_cart
+	var cp := cart.pos
+	if cp.y < vt - 60.0 or cp.y > vb + 60.0:
+		return
+	# cart shadow
+	b.rect(Rect2(cp.x - 24.0 + LIGHT.x * 6.0, cp.y - 15.0 + LIGHT.y * 6.0, 48.0, 30.0), SHADOW)
+	# two iron-rimmed wooden wheels
+	b.rect(Rect2(cp.x - 12.0, cp.y - 18.0, 24.0, 4.0), Color(0.18, 0.19, 0.22))
+	b.rect(Rect2(cp.x - 12.0, cp.y + 14.0, 24.0, 4.0), Color(0.18, 0.19, 0.22))
+	b.rect(Rect2(cp.x - 10.0, cp.y - 17.0, 20.0, 2.0), Color(0.55, 0.42, 0.28))
+	b.rect(Rect2(cp.x - 10.0, cp.y + 15.0, 20.0, 2.0), Color(0.55, 0.42, 0.28))
+	# timber cart frame and deck
+	b.rect(Rect2(cp.x - 22.0, cp.y - 13.0, 44.0, 26.0), Color(0.66, 0.50, 0.32))
+	b.line(Vector2(cp.x - 22.0, cp.y - 4.0), Vector2(cp.x + 22.0, cp.y - 4.0), Color(0.52, 0.38, 0.22), 1.2)
+	b.line(Vector2(cp.x - 22.0, cp.y + 5.0), Vector2(cp.x + 22.0, cp.y + 5.0), Color(0.52, 0.38, 0.22), 1.2)
+	# cart handles
+	b.line(Vector2(cp.x - 22.0, cp.y - 9.0), Vector2(cp.x - 34.0, cp.y - 9.0), Color(0.48, 0.34, 0.20), 2.5)
+	b.line(Vector2(cp.x - 22.0, cp.y + 9.0), Vector2(cp.x - 34.0, cp.y + 9.0), Color(0.48, 0.34, 0.20), 2.5)
+	# fruit crates
+	_crate(b, Rect2(cp.x - 18.0, cp.y - 11.0, 18.0, 22.0), CRATE_WOOD, true, 2)
+	_crate(b, Rect2(cp.x + 1.0, cp.y - 11.0, 18.0, 22.0), CRATE_WOOD, true, 4)
+	# bright oranges in top layer
+	for ox in [-12.0, -5.0, 6.0, 13.0]:
+		for oy in [-5.0, 5.0]:
+			b.circle(cp + Vector2(ox, oy), 3.0, Color(0.96, 0.56, 0.12))
+	# the porter pushing the cart
+	var pp := Vector2(cp.x - 34.0, cp.y)
+	b.circle(pp + LIGHT * 5.0, 7.5, SHADOW)
+	b.circle(pp, 7.5, Color(0.24, 0.44, 0.68))
+	b.circle(pp + Vector2(2.0, 0.0), 5.5, Color(0.85, 0.72, 0.58))
+	b.circle(pp + Vector2(2.5, -1.0), 4.5, Color(0.18, 0.26, 0.38))
+	b.line(pp + Vector2(5.0, -1.5), pp + Vector2(7.5, 0.5), Color(0.12, 0.16, 0.24), 2.0)
+	b.circle(Vector2(cp.x - 33.0, cp.y - 9.0), 2.2, Color(0.85, 0.72, 0.58))
+	b.circle(Vector2(cp.x - 33.0, cp.y + 9.0), 2.2, Color(0.85, 0.72, 0.58))
+
+	# dropped orange on the floor
+	if cart.orange_dropped and not cart.orange_eaten:
+		var op := cart.orange_pos
+		b.circle(op + LIGHT * 2.0, 3.5, SHADOW)
+		b.circle(op, 3.8, Color(0.96, 0.56, 0.12))
+		b.circle(op + Vector2(-1.2, -2.0), 1.4, Color(0.32, 0.60, 0.24))
+		b.circle(op + Vector2(1.0, -1.0), 1.0, Color(1.0, 0.80, 0.40))

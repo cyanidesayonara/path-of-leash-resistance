@@ -94,6 +94,7 @@ var kickabout: Kickabout
 var lost_scarf: LostScarf
 var petanca: Petanca
 var sprinkler: Sprinkler
+var mercat_cart: MercatCart
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -6108,6 +6109,7 @@ func _physics_process(delta: float) -> void:
 	_tick_corners(delta)
 	_tick_petanca(delta)
 	_tick_sprinkler(delta)
+	_tick_mercat_cart(delta)
 	if march != null:
 		march.tick(self, delta)
 	dog.tick(delta)
@@ -6655,6 +6657,33 @@ func _tick_sprinkler(delta: float) -> void:
 		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "good dodge! +2", Color(1.0, 0.92, 0.45))
 		_update_hud()
+
+
+# El Mercat's fruit handcart: crossing the cross aisle between stalls.
+func _tick_mercat_cart(delta: float) -> void:
+	if not started or paused or lvl != "market" or mercat_cart == null:
+		return
+	var mc: Dictionary = mercat_cart.tick(delta, dog.global_position, human.global_position)
+	if bool(mc["warn"]):
+		float_text(mercat_cart.pos + Vector2(0.0, -32.0), "Passo! Coming through!", Color(0.96, 0.94, 0.88), POP_SAY)
+		Sfx.play("intro_tap", 1.8, -4.0)
+	if bool(mc["creak"]):
+		Sfx.play("creak", 1.2, -6.0)
+	if bool(mc["drop_orange"]):
+		Sfx.play("pop", 1.4, -6.0)
+	if bool(mc["snack"]):
+		bones += 2
+		kebabs_eaten += 1
+		combo.add("SNACK", 2)
+		Sfx.play("kebab", 1.2, -4.0)
+		float_text(mercat_cart.orange_pos + Vector2(0.0, -18.0), "orange! +2", Color(1.0, 0.78, 0.32))
+		_update_hud()
+	if bool(mc["bump"]):
+		human.patience = maxf(0.0, human.patience - 8.0)
+		Sfx.play("bump", 1.0, -4.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Watch out!", Color(1.0, 0.75, 0.75), POP_SAY)
+	if bool(mc["yield"]):
+		float_text(mercat_cart.pos + Vector2(0.0, -32.0), "Passeu!", Color(0.96, 0.94, 0.88), POP_SAY)
 
 
 # The side street, the lost scarf and the tout. None of them touch the rope.
