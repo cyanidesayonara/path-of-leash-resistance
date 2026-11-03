@@ -71,7 +71,14 @@ func _run() -> void:
 	P.draw_live(m, sb, -4500.0, -1000.0)
 	# (draw_live completes cleanly: a draw error fails the run as a SCRIPT ERROR)
 
-	# 4. Strict brand deny list check on all new text
+	# 4. Stadium grandstand tifo, pitch markings, and facade banners
+	_check(P.SENYERA_GOLD.r > 0.9 and P.SENYERA_RED.r > 0.7, "senyera tifo colors defined")
+	_check(P.HOME_BLUE.b > 0.6 and P.HOME_CLARET.r > 0.6, "home colors defined for lateral tifo wings")
+
+	# Approach edge pass with distant stadium skyline silhouette
+	P.draw_edge_layer(m, sb, -3200.0, -2200.0)
+
+	# 5. Strict brand deny list check on all new text
 	var branding_test = load("res://tests/test_partit_branding.gd").new()
 	var code_text: String = FileAccess.get_file_as_string("res://systems/partit.gd").to_lower()
 	var hit: String = branding_test._hit(code_text)
@@ -79,4 +86,6 @@ func _run() -> void:
 
 	print("test_partit_polish: %d checks, %d failures" % [checks, failures.size()])
 	m.queue_free()
+	await process_frame
+	await process_frame
 	quit(1 if failures.size() > 0 else 0)
