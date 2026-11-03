@@ -106,6 +106,7 @@ var unicyclist: Unicyclist
 var trail_runner: TrailRunner
 var lost_tourist: LostTourist
 var surfer: Surfer
+var wild_boar: WildBoar
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -6132,6 +6133,7 @@ func _physics_process(delta: float) -> void:
 	_tick_trail_runner(delta)
 	_tick_lost_tourist(delta)
 	_tick_surfer(delta)
+	_tick_wild_boar(delta)
 	if march != null:
 		march.tick(self, delta)
 	dog.tick(delta)
@@ -6904,6 +6906,43 @@ func _tick_surfer(delta: float) -> void:
 		Sfx.play("star", 1.1, -6.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, close one!", Color(0.96, 0.94, 0.88), POP_SAY)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "surf dodge! +2", Color(1.0, 0.92, 0.45))
+		_update_hud()
+
+
+# Els Senglars's wild boar family crossing.
+func _tick_wild_boar(delta: float) -> void:
+	if not started or paused or lvl != "boars" or wild_boar == null:
+		return
+	var bc: Dictionary = wild_boar.tick(delta, dog.global_position, dog.velocity, human.global_position)
+	if bool(bc["warn"]):
+		float_text(wild_boar.pos + Vector2(0.0, -32.0), "Gronf!", Color(0.96, 0.94, 0.88), POP_SAY)
+		Sfx.play("grunt", 0.95, -4.0)
+	if bool(bc["bump"]):
+		human.patience = maxf(0.0, human.patience - 8.0)
+		Sfx.play("bump", 1.1, -3.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whoa! Watch the boar!", Color(1.0, 0.72, 0.72), POP_SAY)
+	if bool(bc["boop"]):
+		bones += 2
+		combo.add("BOOP", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "boar boop! +2", Color(1.0, 0.92, 0.45))
+		float_text(wild_boar.pos + Vector2(0.0, -32.0), "Gronf!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if bool(bc["snatch"]):
+		bones += 2
+		combo.add("SNATCH", 2)
+		Sfx.play("crack", 2.2, -4.0)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "truffle snatch! +2", Color(1.0, 0.78, 0.32))
+		float_text(wild_boar.pos + Vector2(0.0, -32.0), "Gronf!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if bool(bc["dodge"]):
+		saves_done += 1
+		bones += 2
+		combo.add("DODGE", 2)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, close one!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "boar dodge! +2", Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -10690,6 +10729,13 @@ func on_bark(pos: Vector2) -> void:
 		Sfx.play("star", 1.2, -4.0)
 		float_text(pos + Vector2(0.0, -20.0), "surfer bark! +2", Color(1.0, 0.92, 0.45))
 		float_text(surfer.pos + Vector2(0.0, -32.0), "Bona onada!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if wild_boar != null and wild_boar.on_bark(pos):
+		bones += 2
+		combo.add("BARK", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(pos + Vector2(0.0, -20.0), "boar bark! +2", Color(1.0, 0.92, 0.45))
+		float_text(wild_boar.pos + Vector2(0.0, -32.0), "Gronf!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if walk_mod != null and walk_mod.has_method("on_bark"):
 		walk_mod.on_bark(self, pos)

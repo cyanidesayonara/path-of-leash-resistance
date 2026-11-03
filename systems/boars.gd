@@ -127,6 +127,8 @@ static func build(m: Node2D) -> Array:
 
 	m.prize_pos = PRIZE
 	m.prize_text = PRIZE_TEXT
+	if not m.tutorial_mode:
+		m.wild_boar = WildBoar.new()
 	return [hyd_list, keb_list]
 
 
@@ -190,6 +192,12 @@ static func draw_bollard(m: Node2D, wc: ShapeBatch, h) -> void:
 
 static func draw_snack(m: Node2D, wc: ShapeBatch, kp: Vector2) -> void:
 	Bosc.draw_bocadillo(m, wc, kp)
+
+
+# The wild sow and her piglets move across the path, so they draw on the live pass.
+static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	if m.wild_boar != null:
+		m.wild_boar.draw(m, wc, vt, vb)
 
 
 # the picnic table, raided: benches either side, a cloth half off, a basket
