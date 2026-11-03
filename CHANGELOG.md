@@ -16,6 +16,40 @@ Append-only session history, newest first.
   ("Passeu!").
 - Tests: `tests/test_mercat_cart.gd`.
 
+## 2026-11-03 - El Parc's rotary lawn sprinklers
+
+- A brass rotary impact lawn sprinkler installed on the west lawn verge of
+  El Parc beside the box-hedged flowerbed (`systems/sprinkler.gd`), watering the
+  turf and sweeping an oscillating fan of sparkling water droplets across the
+  western edge of the walkway.
+- A 0.8 s warning telegraph as the pair approaches ("Watch the sprinkler!",
+  with rhythmic mechanical clicking of the arming rocker arm) before the spray
+  sweeps the walkway.
+- Running through the water spray soaks the dog ("splish! +2", +2 bones, +2
+  combo) and satisfies drinking. A phone-distracted human stepping into the jet
+  threatens their phone ("Whoa! My phone!", temporary patience loss), while
+  steering them along the dry eastern half earns a rewarded dodge ("Whew, nice
+  save!", "good dodge! +2"). The autowalk line stays completely dry.
+- Tests: `tests/test_parc_sprinkler.gd`.
+
+## 2026-11-03 - El Barri gets a live petanca boule throw
+
+- The old men's petanca game on El Barri's gravel square (systems/barri.gd)
+  comes to life: as your dog approaches the pitch on the outward walk, the
+  thrower calls a telegraphed "Watch the boule!" (0.8 s warning) and bowls
+  a steel boule across the court. It rolls along the sauló with a soft rumble
+  and clinks into the cluster by the jack; Millie can run in and boop the rolling
+  boule ("boop! +2") to scatter it, drawing an indignant "Ei, el gos!" from the
+  old man. Tests: `test_petanca.gd`, `test_barri.gd`.
+
+## 2026-11-03 - Free test nodes in combo challenge regression
+
+- The combo challenge regression test (tests/test_challenge.gd) created
+  stub main instances (Node2D) and challenge script nodes (Node) across
+  its cases without freeing them, leaking five CanvasItem RIDs and fifteen
+  ObjectDB instances at process exit. Each node is now explicitly freed
+  before exit, leaving shutdown clean.
+
 ## 2026-11-02 - The ground on a canvas of its own
 
 - The cross-section (ground, strips, walkway, paving) moved off the world

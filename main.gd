@@ -92,6 +92,8 @@ var _out_arrived := false
 var _chant_in := 0.0
 var kickabout: Kickabout
 var lost_scarf: LostScarf
+var petanca: Petanca
+var sprinkler: Sprinkler
 var mercat_cart: MercatCart
 var _tout_said := false
 var _fan_pairs := false
@@ -6105,6 +6107,8 @@ func _physics_process(delta: float) -> void:
 		_watch_stall(delta)
 	_tick_match_crowd(delta)
 	_tick_corners(delta)
+	_tick_petanca(delta)
+	_tick_sprinkler(delta)
 	_tick_mercat_cart(delta)
 	if march != null:
 		march.tick(self, delta)
@@ -6624,6 +6628,37 @@ func _nudge(body: CharacterBody2D, by: Vector2) -> float:
 	return rest.length() - slide.length() + (hit2.get_remainder().length() if hit2 != null else 0.0)
 
 
+# El Parc's rotary lawn sprinkler: watering the lawn and edging the path.
+func _tick_sprinkler(delta: float) -> void:
+	if not started or paused or lvl != "park" or sprinkler == null:
+		return
+	var sc: Dictionary = sprinkler.tick(delta, dog.global_position, human.global_position)
+	if bool(sc["warn"]):
+		float_text(human.global_position + Vector2(0.0, -32.0), "Watch the sprinkler!", Color(0.96, 0.94, 0.88), POP_SAY)
+		Sfx.play("intro_tap", 1.8, -4.0)
+	if bool(sc["click"]):
+		Sfx.play("intro_tap", 2.2, -12.0)
+	if bool(sc["dog_splash"]):
+		bones += 2
+		drunk_amount += 0.25
+		combo.add("SPLASH", 2)
+		Sfx.play("splash", 1.2, -4.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "splish! +2", Color(0.70, 0.90, 1.0))
+		_update_hud()
+	if bool(sc["human_soaked"]):
+		human.patience = maxf(0.0, human.patience - 10.0)
+		Sfx.play("splash", 0.9, -2.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whoa! My phone!", Color(1.0, 0.72, 0.72), POP_SAY)
+	if bool(sc["dodge"]):
+		saves_done += 1
+		bones += 2
+		combo.add("DODGE", 2)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "good dodge! +2", Color(1.0, 0.92, 0.45))
+		_update_hud()
+
+
 # El Mercat's fruit handcart: crossing the cross aisle between stalls.
 func _tick_mercat_cart(delta: float) -> void:
 	if not started or paused or lvl != "market" or mercat_cart == null:
@@ -6652,6 +6687,25 @@ func _tick_mercat_cart(delta: float) -> void:
 
 
 # The side street, the lost scarf and the tout. None of them touch the rope.
+# El Barri's petanca game: the old man bowls, dog can boop it.
+func _tick_petanca(delta: float) -> void:
+	if not started or paused or lvl != "barri" or petanca == null:
+		return
+	var pc: Dictionary = petanca.tick(delta, dog.global_position, dog.facing, human.global_position)
+	if bool(pc["warn"]):
+		float_text(Petanca.THROWER + Vector2(0.0, -28.0), "Watch the boule!", Color(0.96, 0.94, 0.88), POP_SAY)
+	if bool(pc["clink"]):
+		Sfx.play("crack", 1.8, -6.0)
+	if bool(pc["boop"]):
+		bones += 2
+		Sfx.play("crack", 2.2, -4.0)
+		Sfx.play("star", 1.1, -8.0)
+		combo.add("BOOP", 2)
+		float_text(petanca.pos + Vector2(0.0, -20.0), "boop! +2", Color(1.0, 0.92, 0.45))
+		float_text(Petanca.THROWER + Vector2(0.0, -28.0), "Ei, el gos!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+
+
 func _tick_corners(delta: float) -> void:
 	if not started or paused:
 		return

@@ -2166,9 +2166,13 @@ static func build_level_data(m: Node2D) -> void:
 		add_rope_rect(m, park_slackline())
 		for st: Vector2 in [PARK_SLACK_A, PARK_SLACK_B]:
 			add_rope_point(m, st, PARK_SLACK_TRUNK + 2.0, false)
+		if not m.tutorial_mode:
+			m.sprinkler = Sprinkler.new()
 	if m.lvl == "beach":
 		for st: Vector2 in beach_block_stones():
 			add_rope_point(m, st, BEACH_BLOCK_W * 0.5 + 2.0)
+	if m.lvl == "barri" and not m.tutorial_mode:
+		m.petanca = Petanca.new()
 	if m.lvl == "market" and not m.tutorial_mode:
 		m.mercat_cart = MercatCart.new()
 	if m.lvl == "partit":
