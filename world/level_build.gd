@@ -2222,6 +2222,9 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "tibidabo":
 		if not m.tutorial_mode:
 			m.unicyclist = Unicyclist.new()
+	if m.lvl == "aigues":
+		if not m.tutorial_mode:
+			m.trail_runner = TrailRunner.new()
 	# the hazardous hard-to-reach collectible: one per level, in a spot
 	# that costs you something to reach (deliberately outside the corridor
 	# on some walks, so it is exempt from the corridor fit)
