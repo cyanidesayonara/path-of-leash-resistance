@@ -947,6 +947,11 @@ static func _parcel(m: Node2D, c: ShapeBatch, k: int, side: float, y0: float, y1
 	var roof: Color = ROOF_COLS[int(_h(float(k), side)) % ROOF_COLS.size()]
 	# the next street's roofs, the block's inner garden, then this roof
 	_band(m, c, side, y0, y1, 560.0, 900.0, roof.darkened(0.12))
+	# on the avenue's northern approach (east side), distant stadium skyline arches loom over the rooftops
+	if side > 0.0 and y0 < -2100.0 and y1 > -3400.0:
+		_band(m, c, side, y0, y1, 580.0, 680.0, Color(0.68, 0.70, 0.74))
+		_band(m, c, side, y0, y1, 680.0, 710.0, HOME_CLARET.lightened(0.15))
+		_band(m, c, side, y0, y1, 710.0, 780.0, Color(0.58, 0.60, 0.64))
 	_band(m, c, side, y0, y1, 230.0, 560.0, Color(0.40, 0.48, 0.32))
 	_band(m, c, side, y0, y1, 0.0, 230.0, roof)
 	# the wall face down to the street, darkest at its foot, and the parapet
@@ -1075,12 +1080,19 @@ static func _draw_stadium_side(m: Node2D, c: ShapeBatch, top: float, bot: float)
 	_band(m, c, 1.0, t0, bot, 26.0, 86.0, Color(0.62, 0.60, 0.57))
 	_band(m, c, 1.0, t0, bot, 0.0, 26.0, Color(0.46, 0.44, 0.43))
 	_band(m, c, 1.0, t0, bot, 0.0, 6.0, Color(0.32, 0.31, 0.30))
-	# roof ribs, and the stair towers spiralling up the outside
+	# roof ribs, heavy cantilever steel truss arches, and stair towers
 	var ry := floorf(top / 44.0) * 44.0
 	while ry < bot:
 		var ex2: float = m.walk_edges(ry).y
 		c.line(Vector2(ex2 + 104.0, ry), Vector2(ex2 + 700.0, ry), Color(0.62, 0.62, 0.62), 3.0)
 		c.line(Vector2(ex2 + 104.0, ry + 3.0), Vector2(ex2 + 700.0, ry + 3.0), Color(0.84, 0.84, 0.83), 1.5)
+		# major structural truss box-girders with cross-braces every 176 px
+		if int(absf(ry)) % 176 < 44:
+			c.line(Vector2(ex2 + 104.0, ry - 6.0), Vector2(ex2 + 690.0, ry - 6.0), Color(0.88, 0.88, 0.90), 3.5)
+			var sx := ex2 + 120.0
+			while sx < ex2 + 670.0:
+				c.line(Vector2(sx, ry), Vector2(sx + 30.0, ry - 6.0), Color(0.72, 0.74, 0.76), 1.8)
+				sx += 50.0
 		ry += 44.0
 	var ty := floorf(top / 300.0) * 300.0 + 150.0
 	while ty < bot:
@@ -1103,6 +1115,21 @@ static func _draw_stadium_side(m: Node2D, c: ShapeBatch, top: float, bot: float)
 			c.rect(Rect2(buttress.position + Vector2(2, 3), buttress.size), Color(0, 0, 0, 0.16))
 			c.polygon(_rr(buttress, 3.0), Color(0.66, 0.64, 0.62))
 			c.polygon(_rr(Rect2(buttress.position, Vector2(buttress.size.x - 2.0, buttress.size.y)), 3.0), Color(0.78, 0.76, 0.73))
+			# hanging vertical supporter pennants on the facade between buttresses
+			var pennant_y := by3 + 45.0
+			if pennant_y < STADIUM_Y0 - 50.0 and pennant_y > m.GATE_Y + 50.0:
+				var pex: float = m.walk_edges(pennant_y).y
+				var pen_rect := Rect2(pex + 32.0, pennant_y - 22.0, 18.0, 44.0)
+				c.rect(Rect2(pen_rect.position + LIGHT * 5.0, pen_rect.size), Color(0, 0, 0, 0.14))
+				var is_senyera: bool = int(absf(by3) / 90.0) % 2 == 1
+				if is_senyera:
+					c.rect(pen_rect, SENYERA_GOLD)
+					for s in range(4):
+						c.rect(Rect2(pen_rect.position.x + 2.0 + float(s) * 4.0, pen_rect.position.y, 2.0, pen_rect.size.y), SENYERA_RED)
+				else:
+					c.rect(Rect2(pen_rect.position.x, pen_rect.position.y, pen_rect.size.x * 0.5, pen_rect.size.y), HOME_BLUE)
+					c.rect(Rect2(pen_rect.position.x + pen_rect.size.x * 0.5, pen_rect.position.y, pen_rect.size.x * 0.5, pen_rect.size.y), HOME_CLARET)
+				c.line(Vector2(pen_rect.position.x - 2.0, pen_rect.position.y), Vector2(pen_rect.end.x + 2.0, pen_rect.position.y), STEEL, 2.0)
 		by3 += 90.0
 	# the gates: an opening in the wall, the turnstiles' row, the number
 	for i in range(GATE_YS.size()):
@@ -1124,6 +1151,16 @@ static func _draw_stadium_side(m: Node2D, c: ShapeBatch, top: float, bot: float)
 		c.rect(Rect2(ex3 + 30.0, gy - 14.0, 52.0, 28.0), HOME_CLARET)
 		letters(c, "PORTA " + GATE_NUMS[i], Vector2(ex3 + 56.0, gy + 6.0), 10.0, STAR_WHITE, 2.0, 48.0)
 		c.polygon(PackedVector2Array([Vector2(ex3 + 18.0, gy), Vector2(ex3 + 24.0, gy - 4.0), Vector2(ex3 + 24.0, gy + 4.0)]), SCANNER_GREEN)
+		# electronic matchday LED board above Gate 10
+		if GATE_NUMS[i] == "10":
+			var disp := Rect2(ex3 + 88.0, gy - 20.0, 80.0, 40.0)
+			c.rect(Rect2(disp.position + LIGHT * 6.0, disp.size), Color(0, 0, 0, 0.20))
+			c.polygon(_rr(disp, 4.0), Color(0.14, 0.14, 0.16))
+			c.polygon(_rr(disp.grow(-2.5), 2.5), Color(0.06, 0.06, 0.08))
+			letters(c, "PARTIT", disp.position + Vector2(12.0, 14.0), 10.0, Color(0.98, 0.72, 0.18), 2.0, 56.0)
+			letters(c, "LLIGA", disp.position + Vector2(16.0, 28.0), 10.0, Color(0.98, 0.50, 0.16), 2.0, 48.0)
+			c.circle(disp.position + Vector2(6.0, 6.0), 1.8, SCANNER_GREEN)
+			c.circle(disp.end - Vector2(6.0, 6.0), 1.8, LED_RED)
 	var ly := -3960.0
 	if ly > top - 60.0 and ly < bot + 60.0:
 		var lx: float = m.walk_edges(ly).y + 180.0
@@ -1358,7 +1395,7 @@ static func draw_freedom(m: Node2D, ci: Object) -> void:
 
 # The bowl past the square's top edge: its apron, the outer wall curving away,
 # the stair towers, the great roof with its ribs and L'ESTADI on it, the
-# stands' tiers inside and the floodlights' glow at night.
+# grandstand tifo card mosaic, the pitch markings and goalmouth, and floodlights.
 static func _draw_stadium_bowl(_m: Node2D, c: ShapeBatch, r: Rect2) -> void:
 	var top := r.position.y
 	c.rect(Rect2(-400.0, top - 900.0, 2100.0, 900.0), CONCOURSE.darkened(0.06))
@@ -1375,15 +1412,71 @@ static func _draw_stadium_bowl(_m: Node2D, c: ShapeBatch, r: Rect2) -> void:
 		for i in range(steps):
 			var t0 := lerpf(a0, a1, float(i) / float(steps))
 			var t1 := lerpf(a0, a1, float(i + 1) / float(steps))
+			# manicured pitch lawn stripes inside radius 700
+			var col: Color = ring[2]
+			if ro <= 700.0:
+				col = Color(0.28, 0.50, 0.26) if i % 2 == 0 else Color(0.33, 0.54, 0.30)
 			c.polygon(PackedVector2Array([ctr + Vector2.from_angle(t0) * ro, ctr + Vector2.from_angle(t1) * ro,
-				ctr + Vector2.from_angle(t1) * ri, ctr + Vector2.from_angle(t0) * ri]), ring[2])
-	# the stands: blue sections between the claret, and the rows
+				ctr + Vector2.from_angle(t1) * ri, ctr + Vector2.from_angle(t0) * ri]), col)
+
+	# the grandstand tifo card mosaic: senyera center, deep blue & claret wings
 	for i in range(steps):
-		if i % 4 == 1:
-			var t0 := lerpf(a0, a1, float(i) / float(steps))
-			var t1 := lerpf(a0, a1, float(i + 1) / float(steps))
-			c.polygon(PackedVector2Array([ctr + Vector2.from_angle(t0) * 940.0, ctr + Vector2.from_angle(t1) * 940.0,
-				ctr + Vector2.from_angle(t1) * 700.0, ctr + Vector2.from_angle(t0) * 700.0]), HOME_BLUE.darkened(0.2))
+		var t0 := lerpf(a0, a1, float(i) / float(steps))
+		var t1 := lerpf(a0, a1, float(i + 1) / float(steps))
+		var mcol: Color = HOME_BLUE.darkened(0.14) if (i % 4 < 2) else HOME_CLARET.darkened(0.20)
+		if i >= 19 and i <= 28:
+			# senyera flag: four red stripes across ten central sections
+			mcol = SENYERA_RED if (i == 20 or i == 22 or i == 24 or i == 26) else SENYERA_GOLD
+		c.polygon(PackedVector2Array([ctr + Vector2.from_angle(t0) * 940.0, ctr + Vector2.from_angle(t1) * 940.0,
+			ctr + Vector2.from_angle(t1) * 700.0, ctr + Vector2.from_angle(t0) * 700.0]), mcol)
+		# concentric tier row shadow lines
+		for tier in range(1, 6):
+			var tr := 700.0 + float(tier) * 40.0
+			c.line(ctr + Vector2.from_angle(t0) * tr, ctr + Vector2.from_angle(t1) * tr, Color(0, 0, 0, 0.22), 1.6)
+		# card specular highlight sparkles held aloft by supporters
+		for tier in range(5):
+			var hr := 720.0 + float(tier) * 44.0
+			var hp := ctr + Vector2.from_angle((t0 + t1) * 0.5) * hr
+			c.rect(Rect2(hp - Vector2(1.5, 1.5), Vector2(3.0, 3.0)), mcol.lightened(0.22))
+
+	# pitch touchline arc and corner flag quadrant
+	for i in range(steps):
+		var t0 := lerpf(a0, a1, float(i) / float(steps))
+		var t1 := lerpf(a0, a1, float(i + 1) / float(steps))
+		c.line(ctr + Vector2.from_angle(t0) * 694.0, ctr + Vector2.from_angle(t1) * 694.0, Color(0.95, 0.95, 0.95, 0.9), 2.8)
+
+	# the goalmouth and net in Plaça del Gol (at the pitch opening, angle 90 deg)
+	var g_left := ctr + Vector2(-32.0, 694.0)
+	var g_right := ctr + Vector2(32.0, 694.0)
+	var g_back_l := ctr + Vector2(-30.0, 672.0)
+	var g_back_r := ctr + Vector2(30.0, 672.0)
+	# goal net mesh polygon and frame
+	c.polygon(PackedVector2Array([g_left, g_right, g_back_r, g_back_l]), Color(0.92, 0.94, 0.96, 0.38))
+	c.line(g_left, g_back_l, Color(0.88, 0.90, 0.92), 2.0)
+	c.line(g_right, g_back_r, Color(0.88, 0.90, 0.92), 2.0)
+	c.line(g_back_l, g_back_r, Color(0.88, 0.90, 0.92), 2.0)
+	for nk in range(1, 6):
+		var nf := float(nk) / 6.0
+		c.line(g_left.lerp(g_right, nf), g_back_l.lerp(g_back_r, nf), Color(0.90, 0.92, 0.94, 0.45), 1.2)
+	# white goal line, posts and crossbar
+	c.line(g_left, g_right, Color(0.98, 0.98, 0.98), 3.0)
+	c.circle(g_left, 3.4, Color(0.98, 0.98, 0.98))
+	c.circle(g_right, 3.4, Color(0.98, 0.98, 0.98))
+	c.line(g_left, g_right, Color(0.98, 0.98, 0.98), 2.6)
+	# penalty box markings and penalty spot
+	c.line(ctr + Vector2(-96.0, 694.0), ctr + Vector2(-96.0, 625.0), Color(0.94, 0.94, 0.94, 0.8), 2.0)
+	c.line(ctr + Vector2(96.0, 694.0), ctr + Vector2(96.0, 625.0), Color(0.94, 0.94, 0.94, 0.8), 2.0)
+	c.line(ctr + Vector2(-96.0, 625.0), ctr + Vector2(96.0, 625.0), Color(0.94, 0.94, 0.94, 0.8), 2.0)
+	c.circle(ctr + Vector2(0.0, 645.0), 2.2, Color(0.96, 0.96, 0.96))
+
+	# lower tier pitch-side rail banners: FINS AL FINAL across center, LES CORTS CANTA on wing
+	for i in range(19, 29):
+		var t0 := lerpf(a0, a1, float(i) / float(steps))
+		var t1 := lerpf(a0, a1, float(i + 1) / float(steps))
+		c.polygon(PackedVector2Array([ctr + Vector2.from_angle(t0) * 718.0, ctr + Vector2.from_angle(t1) * 718.0,
+			ctr + Vector2.from_angle(t1) * 702.0, ctr + Vector2.from_angle(t0) * 702.0]), HOME_CLARET.darkened(0.1))
+	letters(c, "FINS AL FINAL", ctr + Vector2(0.0, 712.0), 12.0, STAR_WHITE, 2.2, 130.0)
+
 	# concrete cantilever rib buttresses along the outer bowl perimeter
 	for i in range(steps + 1):
 		var t := lerpf(a0, a1, float(i) / float(steps))

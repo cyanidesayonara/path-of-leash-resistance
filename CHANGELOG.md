@@ -2,6 +2,31 @@
 
 Append-only session history, newest first.
 
+## 2026-11-03 - Dia de Partit stadium atmosphere facelift and grandstand tifo
+
+- Monumental stadium grandstand tifo card mosaic in Plaça del Gol (`systems/partit.gd`):
+  the 48-step seating bowl now features an authentic match-day card mosaic (mosaic de
+  cartolines) with the Senyera (four red vertical stripes across 10 central gold sections)
+  and alternating deep blue and claret vertical stripes across the lateral wings, complete
+  with tiered concentric row shadows and individual supporter card specular highlights.
+- The Plaça del Gol pitch now displays manicured radial mower lawn stripes, a crisp white
+  chalk touchline arc, corner flag quadrant, penalty box lines, penalty spot, and an authentic
+  white goalmouth frame with draped netting mesh lattice directly opposite the square's opening,
+  giving Plaça del Gol ("Goal Square") its true namesake landmark.
+- Lower tier pitch-side rail banners: "FINS AL FINAL" unrolled across the central grandstand
+  barrier, with "LES CORTS CANTA" and club pennants along the wings.
+- Stadium concourse and approach enhancements: heavy cantilever steel box-girder truss arches
+  with cross-bracing struts over the roof plane, vertical Senyera and halved home pennants
+  suspended between concrete buttresses on the facade, and an elevated electronic dot-matrix
+  LED matchday scoreboard above Gate 10 displaying "PARTIT" / "LLIGA".
+- Northern avenue skyline silhouette: distant curved stadium roof canopy arches and towering
+  steel lattice floodlight pylons loom over the residential block rooftops on the approach
+  between y = -2100.0 and y = -3400.0.
+- Strict branding compliance: all club and stadium names strictly generic Catalan ("L'ESTADI",
+  "PLAÇA DEL GOL", "FINS AL FINAL", "LES CORTS CANTA"), strictly zero denied terms, zero new
+  draw calls (rendered in existing `ShapeBatch`).
+- Tests: `tests/test_partit_polish.gd`, `tests/test_partit_branding.gd`, `tests/test_partit.gd`.
+
 ## 2026-11-03 - Les Obres gets a pneumatic jackhammer excavation live event
 
 - A signature live event for Les Obres (`systems/jackhammer.gd`, `world/obres.gd`):
