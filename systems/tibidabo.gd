@@ -119,6 +119,8 @@ static func build(m: Node2D) -> Array:
 		Vector2(520.0, -1800.0),
 		Vector2(700.0, -3400.0),
 	], TYPE_VECTOR2, &"", null)
+	if not m.tutorial_mode:
+		m.unicyclist = Unicyclist.new()
 	m.fountains = Array([
 		Vector2(450.0, -2100.0),
 		Vector2(800.0, -4350.0),
@@ -252,6 +254,9 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 		b.rect(Rect2(PRIZE.x - 22.0, PRIZE.y - 14.0, 44.0, 6.0), Color(0.88, 0.22, 0.20))
 		b.circle(PRIZE + Vector2(-6.0, -2.0), 8.0, COTTON_CANDY_PINK)
 		b.circle(PRIZE + Vector2(6.0, -2.0), 8.0, COTTON_CANDY_PINK.lightened(0.12))
+
+	if m.unicyclist != null:
+		m.unicyclist.draw(m, b, vt, vb)
 
 
 # Where the carriage is drawn: on the walk clock, except that once the pair
