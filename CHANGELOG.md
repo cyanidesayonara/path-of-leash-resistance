@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-11-03 - Les Obres gets a pneumatic jackhammer excavation live event
+
+- A signature live event for Les Obres (`systems/jackhammer.gd`, `world/obres.gd`):
+  a construction worker operating a pneumatic pavement breaker / jackhammer connected
+  to a mobile air compressor along the roadworks footway at y = -2550.0.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk ("Atenció, piconadora!",
+  accompanied by a raised hand and compressor air hiss) before the chisel hammers into
+  the asphalt.
+- The jackhammer chatters with vertical oscillation, billowing dust clouds, flying
+  sparks and pavement vibration waves. A distracted human entering the rattle radius
+  startles and covers their ears ("Aah! Too loud!", patience drop). Dashing Millie
+  through the detour lane beside the cones awards a "smooth detour! +2" trick (+2 bones,
+  +2 combo), and barking at the noisy drill awards "jackhammer bark! +2". Guiding your
+  human along the quiet west side of the footway earns a rewarded dodge ("quiet detour! +2",
+  "Whew, nice save!").
+- Autowalk clearance: the central path at x = 690.0 is over 80 px clear of the rattle radius
+  and 140 px clear of the excavation pit.
+- Tests: `tests/test_obres_jackhammer.gd`.
+
 ## 2026-11-03 - El Diluvi gets an awning rain dump live event ("Aigua va!")
 
 - A signature live event for El Diluvi (`systems/awning_dump.gd`, `systems/diluvi.gd`):

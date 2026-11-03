@@ -403,6 +403,9 @@ jobs:
       - name: Les Obres is its own roadworks test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_obres.gd
 
+      - name: Les Obres jackhammer live event test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_obres_jackhammer.gd
+
       - name: El Barri is the first walk test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_barri.gd
 
