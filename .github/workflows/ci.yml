@@ -309,6 +309,8 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tibidabo_unicyclist.gd
       - name: La Carretera de les Aigues test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_aigues.gd
+      - name: La Carretera de les Aigues trail runner live event test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_aigues_trail_runner.gd
       - name: El Laberint d'Horta test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_horta.gd
       - name: Boss Gat (Rambla del Raval) test

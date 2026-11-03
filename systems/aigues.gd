@@ -153,6 +153,8 @@ static func build(m: Node2D) -> Array:
 	m.deco_pole_count = m.poles.size()
 	for fp: Vector2 in fence_posts(m):
 		m.poles.append(fp)
+	if not m.tutorial_mode:
+		m.trail_runner = TrailRunner.new()
 	# a runner's bottle and a gel wrapper, where people stop to look
 	m.cone_spots = Array([
 		_west(m, -1560.0, 60.0), _east(m, -3420.0, 70.0),
@@ -534,6 +536,8 @@ static func draw_fountain(m: Node2D, f: Vector2) -> void:
 
 # the trail runner's banana on the mirador bench, until she has it
 static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	if m.trail_runner != null:
+		m.trail_runner.draw(m, wc, vt, vb)
 	if m.prize_taken or PRIZE.y < vt - 30.0 or PRIZE.y > vb + 30.0:
 		return
 	var pts := PackedVector2Array()

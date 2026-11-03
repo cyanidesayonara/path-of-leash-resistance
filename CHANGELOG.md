@@ -2,6 +2,31 @@
 
 Append-only session history, newest first.
 
+## 2026-11-03 - La Carretera de les Aigües Collserola trail runner live event
+
+- A signature live event for La Carretera de les Aigües (`systems/trail_runner.gd`, `systems/aigues.gd`, `world/level_build.gd`, `main.gd`):
+  an enthusiastic Collserola mountain trail runner (el corredor de muntanya) wearing a neon technical shirt, hydration vest,
+  and pumping trekking poles bursts down from the eastern hillside rock spur at y = -1700.0, sprinting westbound across the sauló
+  trail towards the valley overlook fence.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -1520.0): the trail runner steps onto the rock spur
+  threshold at x = 810.0, y = -1700.0, trekking poles clicking sharply against the gravel ("tac, tac, tac") as they call out
+  "Pista, pista!" with a telegraphed speech bubble.
+- The crossing sprint and hazard: the runner sprints west across the sauló trail at 175 px/s with rhythmic pumping poles and
+  neon-orange tech shirt. A distracted human wandering into the runner's path gets bumped by the hydration pack and poles
+  ("Whoa! Watch the trail runner!", -8 patience drop).
+- Dropped electrolyte gel & dog trick: as the runner crosses past the center of the trail (x <= 600.0), a foil electrolyte energy
+  gel pouch drops from their hydration pocket onto the gravel. Pouncing or booping it awards "gel snatch! +2" (+2 bones, +2 combo,
+  runner shouts "Bona energia!").
+- Runner boop trick: booping the trail runner directly awards "runner boop! +2" (+2 bones, +2 combo, "¡Opa!").
+- Runner bark trick: barking near the passing runner startles them into an agile high-knee stride recovery, awarding
+  "runner bark! +2" (+2 bones, +2 combo, "Més ràpid que jo!").
+- Trail dodge save: steering your human safely clear of the crossing trajectory awards "trail dodge! +2" ("Whew, close one!",
+  +2 bones, +2 combo, increments saves_done).
+- Autowalk clearance: timing clears the central trail (x = 585.0) well before the autowalk pair arrives, ensuring
+  100% reliable automated traversal and test stability.
+- Zero added draw calls: batched directly into La Carretera de les Aigües's `ShapeBatch` edge/live layer.
+- Tests: `tests/test_aigues_trail_runner.gd`.
+
 ## 2026-11-03 - El Tibidabo summit fairground juggling unicyclist live event
 
 - A signature live event for El Tibidabo (`systems/unicyclist.gd`, `systems/tibidabo.gd`, `world/level_build.gd`, `main.gd`):
