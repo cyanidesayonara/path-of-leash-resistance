@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-03 - Free test nodes in combo challenge regression
+
+- The combo challenge regression test (tests/test_challenge.gd) created
+  stub main instances (Node2D) and challenge script nodes (Node) across
+  its cases without freeing them, leaking five CanvasItem RIDs and fifteen
+  ObjectDB instances at process exit. Each node is now explicitly freed
+  before exit, leaving shutdown clean.
+
 ## 2026-11-02 - The ground on a canvas of its own
 
 - The cross-section (ground, strips, walkway, paving) moved off the world
