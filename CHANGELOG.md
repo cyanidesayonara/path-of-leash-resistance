@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-11-03 - El Mercat's fruit handcart
+
+- A market vendor pushing a two-wheeled wooden fruit handcart across the aisle
+  between stall blocks in El Mercat (`systems/mercat_cart.gd`, `world/mercat.gd`).
+- A 0.8 s warning telegraph as the pair approaches ("Passo! Coming through!",
+  accompanied by wooden cart creaks) before the cart crosses from the west
+  wall stalls to the east wall.
+- A ripe orange bounces off the crates over the terrazzo tile seams, which
+  Millie can snatch for a snack ("orange! +2", +2 bones, +2 combo, advances the
+  kebab/snack goal). Walking into the cart bumps your human ("Watch out!",
+  patience loss), while the polite vendor pauses when walkers are directly ahead
+  ("Passeu!").
+- Tests: `tests/test_mercat_cart.gd`.
+
 ## 2026-11-02 - The ground on a canvas of its own
 
 - The cross-section (ground, strips, walkway, paving) moved off the world
