@@ -157,6 +157,8 @@ static func build(m: Node2D) -> Array:
 	m.astands = Array([], TYPE_VECTOR2, &"", null)
 	m.manholes = Array([], TYPE_VECTOR2, &"", null)
 	m.fountains = Array([Vector2(880.0, -2250.0)], TYPE_VECTOR2, &"", null)  # water cooler dispenser
+	if not m.tutorial_mode:
+		m.cone_dog = ConeDog.new()
 
 	# Clinical waste bins (sanitary pedal bins with yellow/grey lids)
 	m.bins = Array([
@@ -330,6 +332,9 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 		# nervous glowing cat eyes behind grill
 		b.circle(Vector2(cr.position.x + 5.0, ccp.y - 2.0), 1.2, Color(0.95, 0.90, 0.20))
 		b.circle(Vector2(cr.position.x + 5.0, ccp.y + 2.0), 1.2, Color(0.95, 0.90, 0.20))
+
+	if m.cone_dog != null:
+		m.cone_dog.draw(m, b, vt, vb)
 
 
 # --- interactive checks (scale, cat hiss) -----------------------------------

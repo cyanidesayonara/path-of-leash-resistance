@@ -2,6 +2,30 @@
 
 Append-only session history, newest first.
 
+## 2026-11-03 - El Veterinari runaway cone-of-shame dog live event
+
+- A signature live event for El Veterinari (`systems/cone_dog.gd`, `systems/vet.gd`, `world/level_build.gd`, `main.gd`):
+  a panicked little dog wearing an oversized translucent white Elizabethan collar (el gos amb con de vergonya / campana d'Elisabet)
+  bursts out of Radiografia at y = -2180.0, scrambling frantically across the slippery linoleum corridor towards the east waiting chairs.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -2000.0): Radiografia door rattles ajar at
+  x = 360.0, y = -2200.0, and a vet nurse in clinical teal scrubs pops out with a clipboard, waving frantically and shouting
+  "Atenció, s'escapa el con!" with a telegraphed speech bubble.
+- The crossing scramble and hazard: the cone dog dashes east across the polished linoleum corridor at 185 px/s with comic
+  scrambling paws, slippery floor skid streaks, bobbing head, and an oversized wobbling lampshade collar. A distracted
+  human wandering into the cone trajectory gets bumped ("Whoa! Watch the cone!", -8 patience drop).
+- Dropped clinic treat & dog trick: as the pup scrambles past the center of the corridor (x >= 530.0), a savory clinic treat
+  (bacon pill pocket) drops from its jowls onto the floor. Snatching or booping it awards "treat snatch! +2" (+2 bones, +2 combo,
+  nurse shouts "Bona noia!").
+- Cone boop trick: booping the cone directly awards "cone boop! +2" (+2 bones, +2 combo, muffled "¡Yip!").
+- Cone bark trick: barking near the crossing cone dog startles it into an acrobatic skid and pirouette, awarding "cone bark! +2"
+  (+2 bones, +2 combo).
+- Clinic dodge save: steering your human safely clear of the crossing trajectory awards "clinic dodge! +2" ("Whew, nice dodge!",
+  +2 bones, +2 combo, increments saves_done).
+- Autowalk clearance: timing clears the central corridor (x = 640.0) well before the autowalk pair arrives, ensuring
+  100% reliable automated traversal and test stability.
+- Zero added draw calls: batched directly into El Veterinari's `ShapeBatch` edge layer.
+- Tests: `tests/test_vet_cone_dog.gd`.
+
 ## 2026-11-03 - Plaça Reial bistro waiter tapas tray live event
 
 - A signature live event for Plaça Reial (`systems/waiter.gd`, `systems/reial.gd`, `world/level_build.gd`, `main.gd`):
