@@ -2,6 +2,29 @@
 
 Append-only session history, newest first.
 
+## 2026-11-03 - Plaça Reial bistro waiter tapas tray live event
+
+- A signature live event for Plaça Reial (`systems/waiter.gd`, `systems/reial.gd`, `world/level_build.gd`, `main.gd`):
+  a brisk bistro waiter (cambrer) balancing a loaded round silver tapas tray emerges from the bustling west arcade
+  terrace at y = -1280.0, x = 350.0, crossing eastward across the palm-lined plaza towards the outdoor bistro tables.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -1100.0): the waiter steps out onto the
+  terrace threshold at x = 350.0, steadies the trembling tray with one hand, and calls out "Compte amb la safata!"
+  with a telegraphed speech bubble.
+- The crossing walk and hazard: the waiter crosses east across the promenade at 160 px/s dressed in crisp bistro attire
+  (tailored black vest, white collared shirt, black bowtie, long white apron) balancing a loaded silver tray with an
+  effervescent beer caña with golden foam, sparkling mineral water in glass, and hot tapas croquetes. A distracted
+  human crossing into the waiter's path gets bumped ("Whoa! Watch the tray!", -8 patience drop).
+- Tapas croqueta drop & dog trick: as the waiter nears the central promenade (x >= 520.0), a golden croqueta slips and
+  tumbles onto the paving with paprika flecks. Pouncing or booping it awards "croqueta snatch! +2" (+2 bones, +2 combo).
+- Waiter balance trick: barking near the crossing waiter startles him into an acrobatic balancing recovery, awarding
+  "¡Opa! +2" (+2 bones, +2 combo, "¡Ai, quina feina!").
+- Plaza dodge save: steering your human safely clear of the crossing trajectory awards "plaza dodge! +2" ("Whew, nice save!",
+  +2 bones, +2 combo, increments saves_done).
+- Autowalk clearance: timing clears the central path (x = 640.0) well before the autowalk pair arrives, ensuring
+  100% reliable automated traversal and test stability.
+- Zero added draw calls: batched directly into Plaça Reial's `ShapeBatch` edge layer.
+- Tests: `tests/test_reial_waiter.gd`.
+
 ## 2026-11-03 - L'Estació runaway station luggage trolley live event
 
 - A signature live event for L'Estació (`systems/luggage_trolley.gd`, `systems/estacio.gd`, `world/level_build.gd`, `main.gd`):

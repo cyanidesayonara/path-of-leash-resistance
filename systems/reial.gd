@@ -152,6 +152,8 @@ static func build(m: Node2D) -> Array:
 	m.astands = Array([], TYPE_VECTOR2, &"", null)
 	m.manholes = Array([], TYPE_VECTOR2, &"", null)
 	m.fountains = Array([FOUNTAIN_POS], TYPE_VECTOR2, &"", null)
+	if not m.tutorial_mode:
+		m.waiter = Waiter.new()
 	m.bins = Array([
 		Vector2(365.0, -1400.0),
 		Vector2(915.0, -1400.0),
@@ -198,6 +200,9 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, _vt: float = 0.0, _vb: flo
 	for y: float in [-1300.0, -2100.0, -2900.0, -3700.0]:
 		b.rect(Rect2(CORRIDOR_L, y, CORRIDOR_R - CORRIDOR_L, 8.0), BAND_CREAM)
 		b.rect(Rect2(CORRIDOR_L, y + 2.0, CORRIDOR_R - CORRIDOR_L, 4.0), STONE_DARK)
+
+	if m.waiter != null:
+		m.waiter.draw(m, b, _vt, _vb)
 
 	# Radial starburst paving around the central Three Graces fountain
 	for i in range(12):
