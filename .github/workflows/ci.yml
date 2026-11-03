@@ -292,6 +292,9 @@ jobs:
 
       - name: El Port test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_port.gd
+
+      - name: El Port quayside fishing live event test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_port_fishing.gd
       - name: Plaça Reial test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_reial.gd
       - name: El Veterinari test

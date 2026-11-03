@@ -202,6 +202,8 @@ static func wrap_rects() -> Array[Rect2]:
 # --- build -------------------------------------------------------------------
 static func build(m: Node2D) -> Array:
 	reset_gulls()
+	if not m.tutorial_mode:
+		m.fisherman = Fisherman.new()
 	m.gate_text = "MOLL DE LA FUSTA"
 	m.stalls.clear()
 	m.stall_kinds.clear()
@@ -491,6 +493,8 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 		var up: float = t - gull_took_off[i]
 		if up < GULL_FLY_SECS:
 			_draw_gull_flying(wc, spot, gull_dir[i], up, anim + float(i))
+	if m.fisherman != null:
+		m.fisherman.draw(wc, vt, vb)
 
 
 static func _draw_gull(wc: ShapeBatch, p: Vector2, t: float) -> void:
