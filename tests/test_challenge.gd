@@ -127,6 +127,9 @@ func _initialize() -> void:
 		print("FAIL: the result card goes after END_S")
 		failures += 1
 
+	for obj in [m, m2, m3, m4, m5, c, c2, c3, c4, c5, c6]:
+		obj.free()
+
 	if failures > 0:
 		print("test_challenge: %d FAILURES" % failures)
 		quit(1)
