@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-11-03 - Els Senglars wild boar family crossing live event
+
+- A signature live event for Els Senglars (`systems/wild_boar.gd`, `systems/boars.gd`, `main.gd`):
+  a protective wild sow (la truja senglara) and her two striped piglets root along the Collserola dirt trail and cross the path westbound-to-eastbound at y = -2150.0, heading toward the oak hollows and mud wallow.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -1920.0): the sow grunts deeply from the western thicket at x = 340.0, y = -2150.0 ("Gronf!") with a telegraphed speech bubble and rustling brush sound as two striped piglets peek out first.
+- The crossing trot and hazard: the sow and piglets trot eastbound across the trail at 175 px/s. A distracted human wandering into her crossing path gets bumped flat by the protective sow ("Whoa! Watch the boar!", -8 patience drop).
+- Dropped wild truffle & dog trick: as the sow roots across the center trail (x >= 590.0), an unearthed wild black truffle drops onto the dirt. Pouncing or booping it awards "truffle snatch! +2" (+2 bones, +2 combo, sow snorts "Gronf!").
+- Boar boop trick: booping the sow directly on the snout awards "boar boop! +2" (+2 bones, +2 combo).
+- Boar bark trick: barking near the crossing sow startles her into a bluff-charge huff, awarding "boar bark! +2" (+2 bones, +2 combo, "Gronf!").
+- Boar dodge save: steering your human safely clear of the crossing trajectory awards "boar dodge! +2" ("Whew, close one!", +2 bones, +2 combo, increments saves_done) using `NearMiss.consider`.
+- Autowalk clearance: timing clears the central corridor well before the autowalk pair arrives, ensuring 100% reliable automated traversal and test stability.
+- Zero added draw calls: batched directly into Els Senglars's existing `ShapeBatch` live pass (`draw_live`).
+- Tests: `tests/test_boars_wild_boar.gd`.
+
 ## 2026-11-03 - Live events only reward a real near miss, and the movers stay live
 
 - A dodge is a near miss. Walking the ordinary line, the promenade, the dry side, the arcade, the boardwalk, or past a crossing while the actor is still at the door no longer awards a save or counts toward "Haul your human out of trouble". Coming inside the hazard's reach and then getting clear, without being hit, still does.
