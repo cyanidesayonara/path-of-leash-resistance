@@ -2,6 +2,30 @@
 
 Append-only session history, newest first.
 
+## 2026-11-03 - El Port quayside fisherman reel-in and sea bass catch live event
+
+- A signature live event for El Port (`systems/fisherman.gd`, `systems/port.gd`, `world/level_build.gd`, `main.gd`):
+  an old Mediterranean fisherman sitting on a wooden tackle crate on the quayside stone coping
+  at y = -1980.0, x = 912.0 with a tackle box and sardine bait bucket, fishing the harbor basin.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -1780.0): the angler
+  feels a heavy strike, strains back with a deeply bowed rod vibrating against water tension,
+  and calls out "Pica el peix!" with a speech bubble.
+- The catch and quayside hazard: the angler heaves back and rapidly reels in an animated
+  Mediterranean sea bass (llobarro) erupting from the harbor in an arching parabolic leap with
+  foaming water spray and trailing droplets. A distracted human walking along the quayside edge
+  (x > 840.0) gets snagged by the flying tackle or whipped by the swinging line ("Whoa! Watch the hook!",
+  patience drop).
+- Central boardwalk dodge save: guiding your human safely along the central wooden boardwalk
+  (x < 780.0) while passing the fishing spot earns a rewarded dodge save ("boardwalk dodge! +2",
+  "Whew, nice save!", +2 bones, +2 combo, increments saves_done).
+- Dog tricks: barking near the reeling fisherman scares wheeling harbor gulls and awards
+  "gull bark! +2" (+2 bones, +2 combo, increments port_gulls_startled). Pouncing or dashing onto
+  the flapping sea bass on the flagstones awards "fish snatch! +2" (+2 bones, +2 combo, fisherman
+  reacts with "Ei, el meu peix!").
+- Autowalk clearance: the central path at x = 640.0 is over 200 px clear of the quayside hazard.
+- Zero added draw calls: batched via `ShapeBatch`.
+- Tests: `tests/test_port_fishing.gd`.
+
 ## 2026-11-03 - Dia de Partit stadium atmosphere facelift and grandstand tifo
 
 - Monumental stadium grandstand tifo card mosaic in Plaça del Gol (`systems/partit.gd`):

@@ -2183,6 +2183,8 @@ static func build_level_data(m: Node2D) -> void:
 		for r: Rect2 in Partit.wrap_rects():
 			add_rope_rect(m, r)
 	if m.lvl == "port":
+		if not m.tutorial_mode:
+			m.fisherman = Fisherman.new()
 		for r: Rect2 in Port.wrap_rects():
 			add_rope_rect(m, r)
 	if m.lvl == "horta":
