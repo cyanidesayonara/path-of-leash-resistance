@@ -496,6 +496,8 @@ jobs:
 
       - name: Combo challenge regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_challenge.gd
+      - name: Live event dodge, draw and creak fixes
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_live_event_fixes.gd
       - name: Dare offer and retry test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_dare_retry.gd
 

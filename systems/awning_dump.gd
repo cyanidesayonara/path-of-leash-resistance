@@ -36,6 +36,7 @@ var human_hit: bool = false
 var dog_splashed: bool = false
 var dog_barked: bool = false
 var dodged: bool = false
+var threatened: bool = false
 var triggered: bool = false
 
 # Drawing colors
@@ -57,6 +58,7 @@ func reset() -> void:
 	dog_splashed = false
 	dog_barked = false
 	dodged = false
+	threatened = false
 	triggered = false
 
 
@@ -99,19 +101,19 @@ func tick(delta: float, dog_pos: Vector2, dog_vel: Vector2, human_pos: Vector2) 
 				dog_splashed = true
 				out["dog_splash"] = true
 
-			# Check safe dodge: guiding human through the covered arcade (x < 560.0)
-			# or along the dry central street while passing the dump
-			if not dodged and not human_hit:
-				if human_pos.y < DUMP_Y + 20.0 and human_pos.y > DUMP_Y - 50.0:
-					if human_pos.x < 620.0:
-						dodged = true
-						out["dodge"] = true
-
 			if timer <= 0.0:
 				state = State.DRAINED
 
 		State.DRAINED:
 			pass
+
+	if state == State.DUMPING or state == State.DRAINED:
+		var close := state == State.DUMPING and SPLASH_RECT.grow(28.0).has_point(human_pos)
+		var step := NearMiss.consider(close, human_hit, threatened, dodged)
+		threatened = bool(step["threatened"])
+		if bool(step["dodge"]):
+			dodged = true
+			out["dodge"] = true
 
 	return out
 

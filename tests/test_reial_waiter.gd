@@ -114,11 +114,11 @@ func _run() -> void:
 	wt.tick(Waiter.WARN_DURATION + 0.05, near_dog, Vector2.ZERO, near_human)
 	_check(wt.state == Waiter.State.WALKING, "re-entered WALKING after reset")
 
-	# Steer human safely across the crossing zone without getting bumped
+	# The walk's line, while the waiter is still at the door, is not a save.
 	var human_dodged := Vector2(640.0, Waiter.CROSSING_Y - 30.0)
 	var out7: Dictionary = wt.tick(0.05, near_dog, Vector2.ZERO, human_dodged)
-	_check(bool(out7["dodge"]), "steering human safely past crossing earns plaza dodge save")
-	_check(wt.dodged, "dodged flag set")
+	_check(not bool(out7["dodge"]), "walking the crossing line is not a save")
+	_check(not wt.dodged, "dodged stays clear")
 
 	# 11. Run until settled at outdoor tables
 	for i in range(80):

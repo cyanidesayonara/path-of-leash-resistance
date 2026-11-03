@@ -18,7 +18,7 @@ extends RefCounted
 #   (bacon pill pocket) drops from its mouth; pouncing or booping it awards
 #   "treat snatch! +2".
 # - Bark trick: barking near the crossing cone dog startles it into a comic skid
-#   and pirouette, awarding "cone bark! +2" (muffled "¡Yip!").
+#   and pirouette, awarding "cone bark! +2" (muffled "Yip!").
 # - Boop trick: booping the cone directly awards "cone boop! +2".
 # - Dodge: steering your human safely clear past the crossing trajectory
 #   awards "clinic dodge! +2" / "Whew, nice dodge!".
@@ -36,6 +36,8 @@ const TRIGGER_Y := -2000.0
 const WARN_DURATION := 0.8
 const RUN_SPEED := 185.0
 const BUMP_RADIUS := 32.0
+const THREAT := 64.0
+const DOOR := Vector2(360.0, -2200.0)
 const SNATCH_RADIUS := 28.0
 const BOOP_RADIUS := 26.0
 const BARK_RADIUS := 140.0
@@ -55,7 +57,9 @@ var treat_pos: Vector2 = Vector2.ZERO
 var treat_vel: Vector2 = Vector2.ZERO
 var barked: bool = false
 var dodged: bool = false
+var threatened: bool = false
 var anim_time: float = 0.0
+var _toss := RandomNumberGenerator.new()
 
 # Visual colors
 const LIGHT := Vector2(0.5, 0.866)
@@ -86,6 +90,11 @@ const TREAT_BROWN := Color(0.62, 0.32, 0.22)
 const TREAT_TAN := Color(0.88, 0.78, 0.58)
 
 
+func _init() -> void:
+	# its own sequence: a treat's scatter must not shift the walk's rng
+	_toss.seed = 0xC0E1D06
+
+
 func reset() -> void:
 	state = State.IDLE
 	timer = 0.0
@@ -99,6 +108,7 @@ func reset() -> void:
 	treat_vel = Vector2.ZERO
 	barked = false
 	dodged = false
+	threatened = false
 	anim_time = 0.0
 
 
@@ -145,7 +155,7 @@ func tick(delta: float, dog_pos: Vector2, _dog_vel: Vector2, human_pos: Vector2)
 			if not treat_dropped and pos.x >= TREAT_DROP_X:
 				treat_dropped = true
 				treat_pos = pos + Vector2(2.0, 4.0)
-				treat_vel = Vector2(50.0, randf_range(-15.0, 15.0))
+				treat_vel = Vector2(50.0, _toss.randf_range(-15.0, 15.0))
 				out["drop_treat"] = true
 
 			# Soft bump on distracted human
@@ -163,13 +173,16 @@ func tick(delta: float, dog_pos: Vector2, _dog_vel: Vector2, human_pos: Vector2)
 				pos = END_POS
 				state = State.SETTLED
 
-				# Dodge rewarded if human navigated the crossing safely
-				if not human_hit and not dodged and human_pos.y < -2080.0 and human_pos.y > -2280.0:
-					dodged = true
-					out["dodge"] = true
-
 		State.SETTLED:
 			pass
+
+	if state == State.RUNNING or state == State.SETTLED:
+		var close := state == State.RUNNING and pos.distance_to(human_pos) <= THREAT
+		var step := NearMiss.consider(close, human_hit, threatened, dodged)
+		threatened = bool(step["threatened"])
+		if bool(step["dodge"]):
+			dodged = true
+			out["dodge"] = true
 
 	return out
 
@@ -192,7 +205,7 @@ func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 
 	# 1. Radiografia door swung open when triggered
 	if state != State.IDLE:
-		var dp := Vector2(360.0, -2200.0)
+		var dp := DOOR
 		# Open door opening (interior dark hallway)
 		b.rect(Rect2(dp.x - 30.0, dp.y - 35.0, 28.0, 70.0), Color(0.15, 0.18, 0.20))
 		# Door panel angled open into hallway

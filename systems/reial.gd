@@ -201,9 +201,6 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, _vt: float = 0.0, _vb: flo
 		b.rect(Rect2(CORRIDOR_L, y, CORRIDOR_R - CORRIDOR_L, 8.0), BAND_CREAM)
 		b.rect(Rect2(CORRIDOR_L, y + 2.0, CORRIDOR_R - CORRIDOR_L, 4.0), STONE_DARK)
 
-	if m.waiter != null:
-		m.waiter.draw(m, b, _vt, _vb)
-
 	# Radial starburst paving around the central Three Graces fountain
 	for i in range(12):
 		var a := float(i) * (TAU / 12.0)
@@ -305,6 +302,13 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 			b.line(end_p, end_p - norm, PALM_LEAF_LIGHT, 1.5)
 			b.line(end_p, end_p + norm, PALM_LEAF_LIGHT, 1.5)
 	b.flush()
+
+
+# The waiter moves, so he is drawn on the world pass. The edge canvas redraws
+# only after the camera has scrolled, and a figure drawn there stays put.
+static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	if m.waiter != null:
+		m.waiter.draw(m, wc, vt, vb)
 
 
 static func tick(m: Node2D, _delta: float) -> void:

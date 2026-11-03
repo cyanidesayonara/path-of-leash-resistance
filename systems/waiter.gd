@@ -32,6 +32,7 @@ const TRIGGER_Y := -1100.0
 const WARN_DURATION := 0.8
 const WALK_SPEED := 160.0
 const BUMP_RADIUS := 30.0
+const THREAT := 64.0
 const SNATCH_RADIUS := 28.0
 const BARK_RADIUS := 150.0
 const CROQUETA_DROP_X := 520.0
@@ -49,6 +50,7 @@ var croqueta_pos: Vector2 = Vector2.ZERO
 var croqueta_vel: Vector2 = Vector2.ZERO
 var barked: bool = false
 var dodged: bool = false
+var threatened: bool = false
 
 # Visual colors
 const LIGHT := Vector2(0.5, 0.866)
@@ -87,6 +89,7 @@ func reset() -> void:
 	croqueta_vel = Vector2.ZERO
 	barked = false
 	dodged = false
+	threatened = false
 
 
 func tick(delta: float, dog_pos: Vector2, _dog_vel: Vector2, human_pos: Vector2) -> Dictionary:
@@ -141,25 +144,25 @@ func tick(delta: float, dog_pos: Vector2, _dog_vel: Vector2, human_pos: Vector2)
 				human_hit = true
 				out["bump"] = true
 
-			# Check safe dodge
-			if not dodged and not human_hit:
-				if human_pos.y < CROSSING_Y - 20.0 and human_pos.y > CROSSING_Y - 80.0:
-					dodged = true
-					out["dodge"] = true
-
 			if pos.x >= END_POS.x:
 				state = State.SETTLED
 				timer = 0.0
 
 		State.SETTLED:
 			timer += delta
-			# Check safe dodge if human passed during settled
-			if not dodged and not human_hit:
-				if human_pos.y < CROSSING_Y - 20.0 and human_pos.y > CROSSING_Y - 80.0:
-					dodged = true
-					out["dodge"] = true
-
+	_dodge(human_pos, out)
 	return out
+
+
+func _dodge(human_pos: Vector2, out: Dictionary) -> void:
+	if state != State.WALKING and state != State.SETTLED:
+		return
+	var close := state == State.WALKING and pos.distance_to(human_pos) <= THREAT
+	var step := NearMiss.consider(close, human_hit, threatened, dodged)
+	threatened = bool(step["threatened"])
+	if bool(step["dodge"]):
+		dodged = true
+		out["dodge"] = true
 
 
 func on_bark(dog_pos: Vector2) -> bool:

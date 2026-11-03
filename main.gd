@@ -6779,7 +6779,7 @@ func _tick_jackhammer(delta: float) -> void:
 		return
 	var jc: Dictionary = jackhammer.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(jc["warn"]):
-		float_text(Jackhammer.WORKER_POS + Vector2(0.0, -32.0), "Atenció, piconadora!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(Jackhammer.WORKER_POS + Vector2(0.0, -32.0), "Atenció, el martell!", Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("intro_tap", 1.8, -4.0)
 	if bool(jc["drill"]):
 		Sfx.play("crack", 1.8, -4.0)
@@ -6858,7 +6858,7 @@ func _tick_luggage_trolley(delta: float) -> void:
 		Sfx.play("crack", 2.2, -4.0)
 		Sfx.play("star", 1.1, -6.0)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "trolley boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(luggage_trolley.chaser_pos + Vector2(0.0, -32.0), "Cuidado!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(luggage_trolley.chaser_pos + Vector2(0.0, -32.0), "Compte!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(tc["dodge"]):
 		saves_done += 1
@@ -6887,7 +6887,7 @@ func _tick_surfer(delta: float) -> void:
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "surfer boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(surfer.pos + Vector2(0.0, -32.0), "¡Opa!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(surfer.pos + Vector2(0.0, -32.0), "Epa!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(sf["snatch"]):
 		bones += 2
@@ -6963,7 +6963,7 @@ func _tick_trail_runner(delta: float) -> void:
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "runner boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(trail_runner.pos + Vector2(0.0, -32.0), "¡Opa!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(trail_runner.pos + Vector2(0.0, -32.0), "Epa!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(tc["snatch"]):
 		bones += 2
@@ -7002,7 +7002,7 @@ func _tick_unicyclist(delta: float) -> void:
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "unicycle boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(unicyclist.pos + Vector2(0.0, -32.0), "¡Opa!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(unicyclist.pos + Vector2(0.0, -32.0), "Epa!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(uc["snatch"]):
 		bones += 2
@@ -7041,7 +7041,7 @@ func _tick_cone_dog(delta: float) -> void:
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "cone boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(cone_dog.pos + Vector2(0.0, -32.0), "¡Yip!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(cone_dog.pos + Vector2(0.0, -32.0), "Yip!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(cc["snatch"]):
 		bones += 2
@@ -7049,7 +7049,7 @@ func _tick_cone_dog(delta: float) -> void:
 		Sfx.play("crack", 2.2, -4.0)
 		Sfx.play("star", 1.1, -6.0)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "treat snatch! +2", Color(1.0, 0.78, 0.32))
-		float_text(Vector2(360.0, -2200.0) + Vector2(0.0, -32.0), "Bona noia!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(ConeDog.DOOR + Vector2(0.0, -32.0), "Bona noia!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(cc["dodge"]):
 		saves_done += 1
@@ -7093,7 +7093,6 @@ func _tick_waiter(delta: float) -> void:
 		_update_hud()
 
 
-# The side street, the lost scarf and the tout. None of them touch the rope.
 # El Barri's petanca game: the old man bowls, dog can boop it.
 func _tick_petanca(delta: float) -> void:
 	if not started or paused or lvl != "barri" or petanca == null:
@@ -7113,6 +7112,7 @@ func _tick_petanca(delta: float) -> void:
 		_update_hud()
 
 
+# The side street, the lost scarf and the tout. None of them touch the rope.
 func _tick_corners(delta: float) -> void:
 	if not started or paused:
 		return
@@ -10639,7 +10639,6 @@ func on_bark(pos: Vector2) -> void:
 	if fisherman != null and fisherman.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
-		port_gulls_startled += 1
 		Sfx.play("star", 1.2, -4.0)
 		float_text(pos + Vector2(0.0, -20.0), "gull bark! +2", Color(1.0, 0.92, 0.45))
 		_update_hud()
@@ -10655,14 +10654,14 @@ func on_bark(pos: Vector2) -> void:
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
 		float_text(pos + Vector2(0.0, -20.0), "waiter bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(waiter.pos + Vector2(0.0, -32.0), "¡Opa!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(waiter.pos + Vector2(0.0, -32.0), "Epa!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if cone_dog != null and cone_dog.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
 		float_text(pos + Vector2(0.0, -20.0), "cone bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(cone_dog.pos + Vector2(0.0, -32.0), "¡Yip!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(cone_dog.pos + Vector2(0.0, -32.0), "Yip!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if unicyclist != null and unicyclist.on_bark(pos):
 		bones += 2

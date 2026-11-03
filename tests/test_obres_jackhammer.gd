@@ -3,7 +3,7 @@ extends SceneTree
 const Jackhammer := preload("res://systems/jackhammer.gd")
 
 # Regression test for Les Obres pneumatic jackhammer live event (Walk 11).
-# Tests the 0.8s warning telegraph ("Atenció, piconadora!"), drilling state,
+# Tests the 0.8s warning telegraph ("Atenció, el martell!"), drilling state,
 # human rattle hazard, dog detour and bark tricks, quiet passage dodge save,
 # autowalk clearance, and clean exit.
 
@@ -97,11 +97,11 @@ func _run() -> void:
 	jh.tick(0.016, near_dog, Vector2.ZERO, near_human)
 	jh.tick(Jackhammer.WARN_DURATION + 0.05, near_dog, Vector2.ZERO, near_human)
 	_check(jh.state == Jackhammer.State.DRILLING, "re-entered DRILLING after reset")
-	# Human walking on quiet west side (x < 670.0) while passing pit
+	# The ordinary line past the pit is not a save.
 	var human_quiet := Vector2(640.0, Jackhammer.PIT_POS.y - 10.0)
 	var out7: Dictionary = jh.tick(0.05, near_dog, Vector2.ZERO, human_quiet)
-	_check(bool(out7["dodge"]), "human walking through quiet side earns dodge save")
-	_check(jh.dodged, "dodged flag set")
+	_check(not bool(out7["dodge"]), "walking past the pit is not a save")
+	_check(not jh.dodged, "dodged stays clear")
 
 	# 11. Expiry transitions to FINISHED
 	jh.tick(Jackhammer.DRILL_DURATION + 0.1, near_dog, Vector2.ZERO, human_quiet)

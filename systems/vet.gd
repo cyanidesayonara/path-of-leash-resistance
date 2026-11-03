@@ -333,15 +333,17 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 		b.circle(Vector2(cr.position.x + 5.0, ccp.y - 2.0), 1.2, Color(0.95, 0.90, 0.20))
 		b.circle(Vector2(cr.position.x + 5.0, ccp.y + 2.0), 1.2, Color(0.95, 0.90, 0.20))
 
-	if m.cone_dog != null:
-		m.cone_dog.draw(m, b, vt, vb)
-
-
 # --- interactive checks (scale, cat hiss) -----------------------------------
 const EventFeed := preload("res://hud/event_feed.gd")
 const CAT_HISS_R := 85.0
 const HISS_COLOR := Color(0.95, 0.90, 0.20)
 const BEEP_COLOR := Color(0.25, 0.90, 0.40)
+
+
+# The cone dog moves, so she is drawn on the world pass, not the cached edge.
+static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	if m.cone_dog != null:
+		m.cone_dog.draw(m, wc, vt, vb)
 
 
 static func tick(m: Node2D, _delta: float) -> void:

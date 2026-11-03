@@ -117,17 +117,18 @@ func _run() -> void:
 	_check(bool(out_hit["bump"]), "distracted human collision triggers bump hazard")
 	_check(hazard_lt.human_hit, "human_hit flag set")
 
-	# 12. Safe dodge past crossing awards save
+	# 12. A near miss is a save; walking the aisle while they are still at the hedge is not
 	var dodge_lt := LostTourist.new()
 	dodge_lt.triggered = true
 	dodge_lt.state = LostTourist.State.RUNNING
 	dodge_lt.pos = Vector2(850.0, -1740.0)
-	var dodge_human := Vector2(640.0, -1700.0)
-	var out_dodge_pre: Dictionary = dodge_lt.tick(0.016, Vector2.ZERO, Vector2.ZERO, dodge_human)
-	_check(not bool(out_dodge_pre["dodge"]), "dodge not awarded while human is south of crossing")
-	var safe_human := Vector2(640.0, -1770.0)
-	var out_dodge: Dictionary = dodge_lt.tick(0.016, Vector2.ZERO, Vector2.ZERO, safe_human)
-	_check(bool(out_dodge["dodge"]), "safely navigating crossing awards maze dodge save")
+	var beside := dodge_lt.pos + Vector2(50.0, 0.0)
+	var out_beside: Dictionary = dodge_lt.tick(0.0, Vector2.ZERO, Vector2.ZERO, beside)
+	_check(not bool(out_beside["dodge"]), "standing beside the tourist is not yet a save")
+	_check(not bool(out_beside["bump"]), "beside is outside the bump")
+	var clear := dodge_lt.pos + Vector2(0.0, 140.0)
+	var out_dodge: Dictionary = dodge_lt.tick(0.0, Vector2.ZERO, Vector2.ZERO, clear)
+	_check(bool(out_dodge["dodge"]), "stepping clear of a near miss is a save")
 	_check(dodge_lt.dodge_awarded, "dodge_awarded set")
 
 	# 13. Runs to END_POS and settles
@@ -161,7 +162,8 @@ func _run() -> void:
 			break
 	_check(not auto_hit, "autowalk completes crossing without tourist bump hazard")
 	_check(sim_lt.triggered, "autowalk triggered tourist crossing")
-	_check(sim_lt.dodge_awarded, "autowalk earned maze dodge save cleanly")
+	# The autowalk passes within the tourist's reach, so the miss is a real save.
+	_check(sim_lt.dodge_awarded, "autowalk near miss earns the maze dodge")
 
 	# 16. Integration with main.gd
 	_check(m.has_method("_tick_lost_tourist"), "main has _tick_lost_tourist method")

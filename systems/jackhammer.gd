@@ -7,7 +7,7 @@ extends RefCounted
 #
 # Gameplay contract:
 # - 0.8 s warning telegraph: as the pair approaches outward bound (y ≈ -2320.0),
-#   the worker revs the compressor, raises a hand and shouts "Atenció, piconadora!".
+#   the worker revs the compressor, raises a hand and shouts "Atenció, el martell!".
 # - Hazard: walking into the noisy vibration rattle zone startles the human
 #   (covers ears, stumbles, patience loss, "Too loud!").
 # - Dog tricks: barking at the drill awards "jackhammer bark! +2".
@@ -36,6 +36,7 @@ var human_hit: bool = false
 var dog_splashed: bool = false
 var dog_barked: bool = false
 var dodged: bool = false
+var threatened: bool = false
 var triggered: bool = false
 
 # Colors
@@ -61,6 +62,7 @@ func reset() -> void:
 	dog_splashed = false
 	dog_barked = false
 	dodged = false
+	threatened = false
 	triggered = false
 
 
@@ -103,18 +105,19 @@ func tick(delta: float, dog_pos: Vector2, dog_vel: Vector2, human_pos: Vector2) 
 					dog_splashed = true
 					out["dog_detour"] = true
 
-			# Check quiet detour: human guided safely past along quiet side (x < 660.0)
-			if not dodged and not human_hit:
-				if human_pos.y < PIT_POS.y + 20.0 and human_pos.y > PIT_POS.y - 50.0:
-					if human_pos.x < 670.0:
-						dodged = true
-						out["dodge"] = true
-
 			if timer <= 0.0:
 				state = State.FINISHED
 
 		State.FINISHED:
 			pass
+
+	if state == State.DRILLING or state == State.FINISHED:
+		var close := state == State.DRILLING and human_pos.distance_to(PIT_POS) <= RATTLE_RADIUS + 28.0
+		var step := NearMiss.consider(close, human_hit, threatened, dodged)
+		threatened = bool(step["threatened"])
+		if bool(step["dodge"]):
+			dodged = true
+			out["dodge"] = true
 
 	return out
 

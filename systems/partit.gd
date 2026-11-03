@@ -1462,7 +1462,6 @@ static func _draw_stadium_bowl(_m: Node2D, c: ShapeBatch, r: Rect2) -> void:
 	c.line(g_left, g_right, Color(0.98, 0.98, 0.98), 3.0)
 	c.circle(g_left, 3.4, Color(0.98, 0.98, 0.98))
 	c.circle(g_right, 3.4, Color(0.98, 0.98, 0.98))
-	c.line(g_left, g_right, Color(0.98, 0.98, 0.98), 2.6)
 	# penalty box markings and penalty spot
 	c.line(ctr + Vector2(-96.0, 694.0), ctr + Vector2(-96.0, 625.0), Color(0.94, 0.94, 0.94, 0.8), 2.0)
 	c.line(ctr + Vector2(96.0, 694.0), ctr + Vector2(96.0, 625.0), Color(0.94, 0.94, 0.94, 0.8), 2.0)

@@ -79,13 +79,12 @@ func _run() -> void:
 	_check(bool(cue_soaked["human_soaked"]), "human gets soaked when walking into water jet")
 	_check(sp.human_soaked, "human_soaked flag is true")
 
-	# 6. Dodge / save reward on dry side
+	# 6. The path past the sprinkler is not a save
 	var sp_dodge = SprinklerClass.new()
 	sp_dodge.tick(0.016, Vector2(430.0, -650.0), Vector2(580.0, -850.0))
 	sp_dodge.tick(0.85, Vector2(430.0, -650.0), Vector2(580.0, -950.0))
-	# Human walks past at x = 580 (dry side) to y = -1150
 	var cue_dodge: Dictionary = sp_dodge.tick(0.016, Vector2(580.0, -1180.0), Vector2(580.0, -1150.0))
-	_check(bool(cue_dodge["dodge"]), "dodge cue fires when human guided safely along dry side")
+	_check(not bool(cue_dodge["dodge"]), "walking the path is not a save")
 
 	# 7. Integration test with main scene
 	var game: Node = root.get_node("Game")

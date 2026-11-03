@@ -98,11 +98,11 @@ func _run() -> void:
 	ad.tick(0.016, near_dog, Vector2.ZERO, near_human)
 	ad.tick(AwningDump.WARN_DURATION + 0.05, near_dog, Vector2.ZERO, near_human)
 	_check(ad.state == AwningDump.State.DUMPING, "re-entered DUMPING after reset")
-	# Human walking through west arcade (x < 600.0) while passing dump
+	# The arcade, clear of the splash, is not a save.
 	var human_in_arcade := Vector2(480.0, AwningDump.DUMP_Y - 10.0)
 	var out7: Dictionary = ad.tick(0.05, near_dog, Vector2.ZERO, human_in_arcade)
-	_check(bool(out7["dodge"]), "human walking through dry arcade earns dodge save")
-	_check(ad.dodged, "dodged flag set")
+	_check(not bool(out7["dodge"]), "walking the arcade is not a save")
+	_check(not ad.dodged, "dodged stays clear")
 
 	# 11. Expiry transitions to DRAINED
 	ad.tick(AwningDump.DUMP_DURATION + 0.1, near_dog, Vector2.ZERO, human_in_arcade)

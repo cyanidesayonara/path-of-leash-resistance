@@ -18,7 +18,7 @@ extends RefCounted
 #   electrolyte energy gel pouch drops from their hydration pocket; pouncing or
 #   booping it awards "gel snatch! +2".
 # - Bark trick: barking near the passing runner startles them into an agile
-#   high-knee stride recovery, awarding "runner bark! +2" ("¡Opa!", "Més ràpid que jo!").
+#   high-knee stride recovery, awarding "runner bark! +2" ("Epa!", "Més ràpid que jo!").
 # - Boop trick: booping the trail runner directly awards "runner boop! +2".
 # - Dodge: steering your human safely clear past the crossing trajectory
 #   awards "trail dodge! +2" / "Whew, close one!".
@@ -36,6 +36,7 @@ const TRIGGER_Y := -1520.0
 const WARN_DURATION := 0.8
 const RUN_SPEED := 175.0
 const BUMP_RADIUS := 30.0
+const THREAT := 64.0
 const SNATCH_RADIUS := 28.0
 const BOOP_RADIUS := 26.0
 const BARK_RADIUS := 140.0
@@ -55,6 +56,8 @@ var gel_pos: Vector2 = Vector2.ZERO
 var gel_vel: Vector2 = Vector2.ZERO
 var barked: bool = false
 var dodged: bool = false
+var threatened: bool = false
+var _toss := RandomNumberGenerator.new()
 var anim_time: float = 0.0
 
 # Visual colors
@@ -77,6 +80,10 @@ const GEL_BLUE := Color(0.20, 0.60, 0.85)
 const GEL_ORANGE := Color(0.96, 0.50, 0.15)
 
 
+func _init() -> void:
+	_toss.seed = 0x71A11
+
+
 func reset() -> void:
 	state = State.IDLE
 	timer = 0.0
@@ -90,6 +97,7 @@ func reset() -> void:
 	gel_vel = Vector2.ZERO
 	barked = false
 	dodged = false
+	threatened = false
 	anim_time = 0.0
 
 
@@ -137,7 +145,7 @@ func tick(delta: float, dog_pos: Vector2, _dog_vel: Vector2, human_pos: Vector2)
 			if not gel_dropped and pos.x <= GEL_DROP_X:
 				gel_dropped = true
 				gel_pos = pos + Vector2(-2.0, 4.0)
-				gel_vel = Vector2(-45.0, randf_range(-15.0, 15.0))
+				gel_vel = Vector2(-45.0, _toss.randf_range(-15.0, 15.0))
 				out["drop_gel"] = true
 
 			# Soft bump on distracted human
@@ -155,13 +163,16 @@ func tick(delta: float, dog_pos: Vector2, _dog_vel: Vector2, human_pos: Vector2)
 				pos = END_POS
 				state = State.SETTLED
 
-				# Dodge rewarded if human navigated the crossing safely
-				if not human_hit and not dodged and human_pos.y < -1600.0 and human_pos.y > -1800.0:
-					dodged = true
-					out["dodge"] = true
-
 		State.SETTLED:
 			pass
+
+	if state == State.RUNNING or state == State.SETTLED:
+		var close := state == State.RUNNING and pos.distance_to(human_pos) <= THREAT
+		var step := NearMiss.consider(close, human_hit, threatened, dodged)
+		threatened = bool(step["threatened"])
+		if bool(step["dodge"]):
+			dodged = true
+			out["dodge"] = true
 
 	return out
 

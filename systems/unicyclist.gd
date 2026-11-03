@@ -18,7 +18,7 @@ extends RefCounted
 #   juggling pin slips from the juggle and clatters onto the asphalt; pouncing or
 #   booping it awards "pin snatch! +2".
 # - Bark trick: barking near the teetering performer startles them into an acrobatic
-#   balancing pirouette, awarding "unicycle bark! +2" ("¡Opa!", "Uix, per poc!").
+#   balancing pirouette, awarding "unicycle bark! +2" ("Epa!", "Uix, per poc!").
 # - Boop trick: booping the unicyclist directly awards "unicycle boop! +2".
 # - Dodge: steering your human safely clear past the crossing trajectory
 #   awards "summit dodge! +2" / "Whew, nice save!".
@@ -36,6 +36,7 @@ const TRIGGER_Y := -1920.0
 const WARN_DURATION := 0.8
 const RIDE_SPEED := 155.0
 const BUMP_RADIUS := 30.0
+const THREAT := 64.0
 const SNATCH_RADIUS := 28.0
 const BOOP_RADIUS := 26.0
 const BARK_RADIUS := 140.0
@@ -55,7 +56,9 @@ var pin_pos: Vector2 = Vector2.ZERO
 var pin_vel: Vector2 = Vector2.ZERO
 var barked: bool = false
 var dodged: bool = false
+var threatened: bool = false
 var anim_time: float = 0.0
+var _toss := RandomNumberGenerator.new()
 
 # Visual colors
 const LIGHT := Vector2(0.5, 0.866)
@@ -84,6 +87,10 @@ const PIN_MAGENTA := Color(0.90, 0.22, 0.60)
 const PIN_YELLOW := Color(0.95, 0.82, 0.20)
 
 
+func _init() -> void:
+	_toss.seed = 0x71C1C1E
+
+
 func reset() -> void:
 	state = State.IDLE
 	timer = 0.0
@@ -97,6 +104,7 @@ func reset() -> void:
 	pin_vel = Vector2.ZERO
 	barked = false
 	dodged = false
+	threatened = false
 	anim_time = 0.0
 
 
@@ -143,7 +151,7 @@ func tick(delta: float, dog_pos: Vector2, _dog_vel: Vector2, human_pos: Vector2)
 			if not pin_dropped and pos.x >= PIN_DROP_X:
 				pin_dropped = true
 				pin_pos = pos + Vector2(2.0, 4.0)
-				pin_vel = Vector2(45.0, randf_range(-16.0, 16.0))
+				pin_vel = Vector2(45.0, _toss.randf_range(-16.0, 16.0))
 				out["drop_pin"] = true
 
 			# Soft bump on distracted human
@@ -161,13 +169,16 @@ func tick(delta: float, dog_pos: Vector2, _dog_vel: Vector2, human_pos: Vector2)
 				pos = END_POS
 				state = State.SETTLED
 
-				# Dodge rewarded if human navigated the crossing safely
-				if not human_hit and not dodged and human_pos.y < -2000.0 and human_pos.y > -2200.0:
-					dodged = true
-					out["dodge"] = true
-
 		State.SETTLED:
 			pass
+
+	if state == State.RIDING or state == State.SETTLED:
+		var close := state == State.RIDING and pos.distance_to(human_pos) <= THREAT
+		var step := NearMiss.consider(close, human_hit, threatened, dodged)
+		threatened = bool(step["threatened"])
+		if bool(step["dodge"]):
+			dodged = true
+			out["dodge"] = true
 
 	return out
 

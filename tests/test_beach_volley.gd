@@ -108,13 +108,12 @@ func _run() -> void:
 	_check(bool(cue_hit["human_hit"]), "human gets hit when walking into volleyball path")
 	_check(vb_human.human_hit, "human_hit flag set")
 
-	# 6. Promenade dodge save reward
+	# 6. The promenade, clear of the ball, is not a save
 	var vb_dodge = VolleyballClass.new()
 	vb_dodge.tick(0.016, dog_pos, facing, Vector2(770.0, -1950.0))
 	vb_dodge.tick(0.85, dog_pos, facing, Vector2(770.0, -1980.0))
-	# Human walks along promenade (x = 770) past net to y = -2150
 	var cue_dodge: Dictionary = vb_dodge.tick(0.016, dog_pos, facing, Vector2(770.0, -2150.0))
-	_check(bool(cue_dodge["dodge"]), "dodge cue fires when human guided safely along promenade")
+	_check(not bool(cue_dodge["dodge"]), "walking the promenade is not a save")
 
 	# 7. Integration test with main scene
 	var game: Node = root.get_node("Game")

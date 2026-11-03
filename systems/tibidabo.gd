@@ -255,10 +255,6 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 		b.circle(PRIZE + Vector2(-6.0, -2.0), 8.0, COTTON_CANDY_PINK)
 		b.circle(PRIZE + Vector2(6.0, -2.0), 8.0, COTTON_CANDY_PINK.lightened(0.12))
 
-	if m.unicyclist != null:
-		m.unicyclist.draw(m, b, vt, vb)
-
-
 # Where the carriage is drawn: on the walk clock, except that once the pair
 # are walking in to the bottom station (systems/arrival.gd) it comes down to
 # meet them, docked by the time Millie is through, and stays docked.
@@ -338,6 +334,12 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 			var col: Color = BUNTING_COLORS[i % BUNTING_COLORS.size()]
 			b.polygon(PackedVector2Array([Vector2(bx - 6.0, by), Vector2(bx + 6.0, by), Vector2(bx, by + 12.0)]), col)
 	b.flush()
+
+
+# The unicyclist moves, so he is drawn on the world pass, not the cached edge.
+static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	if m.unicyclist != null:
+		m.unicyclist.draw(m, wc, vt, vb)
 
 
 static func tick(m: Node2D, _delta: float) -> void:
