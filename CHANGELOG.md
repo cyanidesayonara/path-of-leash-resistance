@@ -2,6 +2,31 @@
 
 Append-only session history, newest first.
 
+## 2026-11-03 - El Laberint d'Horta lost maze tourist live event
+
+- A signature live event for El Laberint d'Horta (`systems/lost_tourist.gd`, `systems/horta.gd`, `world/level_build.gd`, `main.gd`):
+  a bewildered maze tourist (el turista desorientat) wearing a safari bucket hat, tropical floral shirt, and binoculars
+  rushes frantically across the maze cross aisle at y = -1740.0, eyes buried in a giant flapping paper map of the labyrinth
+  while trying to find Eros.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -1500.0): the tourist appears at the west cypress
+  hedge archway at x = 350.0, y = -1740.0, waving their fold-out labyrinth map and calling out "On és la sortida?!" with
+  a telegraphed speech bubble.
+- The crossing sprint and hazard: the tourist sprints eastbound across the sauló path at 200 px/s with flapping map and
+  animated legs. A distracted human wandering into the tourist's path gets bumped by the tourist and paper map
+  ("Whoa! Watch the map!", -8 patience drop).
+- Dropped carquinyoli & dog trick: as the tourist crosses past the middle aisle (x >= 620.0), a wrapped traditional
+  Catalan carquinyoli (crunchy almond biscuit) drops onto the gravel. Pouncing or booping it awards "carquinyoli snatch! +2"
+  (+2 bones, +2 combo, tourist gasps "El meu carquinyoli!").
+- Tourist boop trick: booping the tourist directly awards "tourist boop! +2" (+2 bones, +2 combo, "Perdó!").
+- Tourist bark trick: barking near the passing tourist startles them into panic, flipping their map upside down,
+  awarding "tourist bark! +2" (+2 bones, +2 combo, "Per aquí no!").
+- Maze dodge save: steering your human safely clear of the crossing trajectory awards "maze dodge! +2" ("Whew, close one!",
+  +2 bones, +2 combo, increments saves_done).
+- Autowalk clearance: timing clears the central corridor well before the autowalk pair arrives, ensuring
+  100% reliable automated traversal and test stability.
+- Zero added draw calls: batched directly into El Laberint d'Horta's `ShapeBatch` live layer.
+- Tests: `tests/test_horta_tourist.gd`.
+
 ## 2026-11-03 - La Carretera de les Aigües Collserola trail runner live event
 
 - A signature live event for La Carretera de les Aigües (`systems/trail_runner.gd`, `systems/aigues.gd`, `world/level_build.gd`, `main.gd`):
