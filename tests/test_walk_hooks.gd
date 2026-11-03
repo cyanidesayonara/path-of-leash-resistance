@@ -38,7 +38,7 @@ const HOOKS := {
 	"horta": ["draw_bollard", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_live", "draw_snack", "tick", "tree_kind"],
 	"llevant": ["draw_bin", "draw_cross_section", "draw_edge_layer", "draw_overhead", "rider_lane", "surface", "takes_prints"],
 	"boars": ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "grass_blocked", "tick", "tree_kind"],
-	"gracia": ["draw_overhead", "draw_scenery", "tick"],
+	"gracia": ["draw_live", "draw_overhead", "draw_scenery", "tick"],
 	"raval": ["cam_lean", "draw_edge_layer", "draw_live", "draw_overhead", "hush_banner", "idle_status", "on_bark", "surface", "tick", "urgent_status"],
 }
 
