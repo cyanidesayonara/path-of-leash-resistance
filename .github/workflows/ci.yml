@@ -301,6 +301,8 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_reial_waiter.gd
       - name: El Veterinari test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_vet.gd
+      - name: El Veterinari cone dog live event test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_vet_cone_dog.gd
       - name: El Tibidabo test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tibidabo.gd
       - name: La Carretera de les Aigues test

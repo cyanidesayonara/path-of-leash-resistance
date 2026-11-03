@@ -2215,6 +2215,8 @@ static func build_level_data(m: Node2D) -> void:
 		for r: Rect2 in Reial.wrap_rects():
 			add_rope_rect(m, r)
 	if m.lvl == "vet":
+		if not m.tutorial_mode:
+			m.cone_dog = ConeDog.new()
 		for r: Rect2 in Vet.wrap_rects():
 			add_rope_rect(m, r)
 	# the hazardous hard-to-reach collectible: one per level, in a spot
