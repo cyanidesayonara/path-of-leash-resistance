@@ -111,6 +111,8 @@ static func _draw_concourse(m: Node2D, vt: float, vb: float) -> void:
 		if lp.y > vt - 40.0 and lp.y < vb + 40.0:
 			var lcol: Color = LUGGAGE_COLS[i % LUGGAGE_COLS.size()]
 			_suitcase(m, b, lp, lcol)
+	if m.luggage_trolley != null:
+		m.luggage_trolley.draw(m, b, vt, vb)
 	b.flush(m._wc)
 
 

@@ -427,6 +427,9 @@ jobs:
       - name: L'Estacio is its own station test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_estacio.gd
 
+      - name: L'Estacio runaway luggage trolley live event test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_estacio_trolley.gd
+
       - name: La Ferralla is its own scrapyard test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_ferralla.gd
 

@@ -99,6 +99,7 @@ var volleyball: Volleyball
 var awning_dump: AwningDump
 var jackhammer: Jackhammer
 var fisherman: Fisherman
+var luggage_trolley: LuggageTrolley
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -6118,6 +6119,7 @@ func _physics_process(delta: float) -> void:
 	_tick_awning_dump(delta)
 	_tick_jackhammer(delta)
 	_tick_fisherman(delta)
+	_tick_luggage_trolley(delta)
 	if march != null:
 		march.tick(self, delta)
 	dog.tick(delta)
@@ -6819,6 +6821,40 @@ func _tick_fisherman(delta: float) -> void:
 		Sfx.play("star", 1.1, -6.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "boardwalk dodge! +2", Color(1.0, 0.92, 0.45))
+		_update_hud()
+
+
+# L'Estació's runaway luggage trolley: overloaded cart careens across concourse.
+func _tick_luggage_trolley(delta: float) -> void:
+	if not started or paused or lvl != "station" or luggage_trolley == null:
+		return
+	var tc: Dictionary = luggage_trolley.tick(delta, dog.global_position, dog.velocity, human.global_position)
+	if bool(tc["warn"]):
+		float_text(luggage_trolley.chaser_pos + Vector2(0.0, -32.0), "Atenció, el carretó!", Color(0.96, 0.94, 0.88), POP_SAY)
+		Sfx.play("intro_tap", 1.8, -4.0)
+	if bool(tc["roll"]):
+		Sfx.play("crack", 1.4, -4.0)
+	if bool(tc["clatter"]):
+		Sfx.play("crack", 2.0, -8.0)
+	if bool(tc["bump"]):
+		human.patience = maxf(0.0, human.patience - 8.0)
+		Sfx.play("bump", 1.1, -3.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whoa! Watch the cart!", Color(1.0, 0.72, 0.72), POP_SAY)
+	if bool(tc["boop"]):
+		bones += 2
+		combo.add("BOOP", 2)
+		Sfx.play("crack", 2.2, -4.0)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "trolley boop! +2", Color(1.0, 0.92, 0.45))
+		float_text(luggage_trolley.chaser_pos + Vector2(0.0, -32.0), "Cuidado!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if bool(tc["dodge"]):
+		saves_done += 1
+		bones += 2
+		combo.add("DODGE", 2)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, close one!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "concourse dodge! +2", Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -10371,6 +10407,13 @@ func on_bark(pos: Vector2) -> void:
 		port_gulls_startled += 1
 		Sfx.play("star", 1.2, -4.0)
 		float_text(pos + Vector2(0.0, -20.0), "gull bark! +2", Color(1.0, 0.92, 0.45))
+		_update_hud()
+	if luggage_trolley != null and luggage_trolley.on_bark(pos):
+		bones += 2
+		combo.add("BARK", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(pos + Vector2(0.0, -20.0), "trolley bark! +2", Color(1.0, 0.92, 0.45))
+		float_text(luggage_trolley.chaser_pos + Vector2(0.0, -32.0), "Atura'l!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if walk_mod != null and walk_mod.has_method("on_bark"):
 		walk_mod.on_bark(self, pos)
