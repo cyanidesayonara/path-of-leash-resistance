@@ -41,7 +41,7 @@ var triggered := false
 var booped := false
 var human_hit := false
 var dodge_done := false
-var was_near := false
+var threatened := false
 
 # Four players on the court: 2 south of net, 2 north of net
 const PLAYERS: Array = [
@@ -61,16 +61,6 @@ func tick(dt: float, dog: Vector2, facing: Vector2, human: Vector2) -> Dictionar
 		"human_hit": false,
 		"dodge": false,
 	}
-
-	# Track when human enters the volleyball latitude zone
-	if absf(human.y - NET_Y) < 140.0:
-		was_near = true
-
-	# Dodge reward: if human passed safely on the promenade without getting hit
-	if was_near and not human_hit and not dodge_done and human.y < NET_Y - 110.0:
-		if human.x > 680.0:
-			dodge_done = true
-			cue["dodge"] = true
 
 	match state:
 		St.WAITING:
@@ -159,5 +149,14 @@ func tick(dt: float, dog: Vector2, facing: Vector2, human: Vector2) -> Dictionar
 				cue["boop"] = true
 				vel = (facing.normalized() if facing.length() > 0.1 else Vector2.RIGHT) * 100.0
 				state = St.INTERCEPTED
+
+	if state != St.WAITING and state != St.WARN:
+		var airborne := state == St.FLYING or state == St.BOUNCING
+		var close := airborne and human.distance_to(pos) <= 72.0 and z < 36.0
+		var step := NearMiss.consider(close, human_hit, threatened, dodge_done)
+		threatened = bool(step["threatened"])
+		if bool(step["dodge"]):
+			dodge_done = true
+			cue["dodge"] = true
 
 	return cue

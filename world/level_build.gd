@@ -2166,8 +2166,6 @@ static func build_level_data(m: Node2D) -> void:
 			add_rope_rect(m, Rect2(d - NETEJA_DUMPSTER * 0.5, NETEJA_DUMPSTER))
 	if m.lvl == "station":
 		add_rope_rect(m, ESTACIO_TRAIN)
-		if not m.tutorial_mode:
-			m.luggage_trolley = LuggageTrolley.new()
 	if m.lvl == "park":
 		add_rope_rect(m, park_slackline())
 		for st: Vector2 in [PARK_SLACK_A, PARK_SLACK_B]:
@@ -2187,8 +2185,6 @@ static func build_level_data(m: Node2D) -> void:
 		for r: Rect2 in Partit.wrap_rects():
 			add_rope_rect(m, r)
 	if m.lvl == "port":
-		if not m.tutorial_mode:
-			m.fisherman = Fisherman.new()
 		for r: Rect2 in Port.wrap_rects():
 			add_rope_rect(m, r)
 	if m.lvl == "horta":
@@ -2210,21 +2206,11 @@ static func build_level_data(m: Node2D) -> void:
 		for r: Rect2 in Gracia.wrap_rects():
 			add_rope_rect(m, r)
 	if m.lvl == "reial":
-		if not m.tutorial_mode:
-			m.waiter = Waiter.new()
 		for r: Rect2 in Reial.wrap_rects():
 			add_rope_rect(m, r)
 	if m.lvl == "vet":
-		if not m.tutorial_mode:
-			m.cone_dog = ConeDog.new()
 		for r: Rect2 in Vet.wrap_rects():
 			add_rope_rect(m, r)
-	if m.lvl == "tibidabo":
-		if not m.tutorial_mode:
-			m.unicyclist = Unicyclist.new()
-	if m.lvl == "aigues":
-		if not m.tutorial_mode:
-			m.trail_runner = TrailRunner.new()
 	if m.lvl == "horta":
 		if not m.tutorial_mode:
 			m.lost_tourist = LostTourist.new()

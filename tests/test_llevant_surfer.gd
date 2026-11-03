@@ -117,17 +117,18 @@ func _run() -> void:
 	_check(bool(out_hit["bump"]), "distracted human collision triggers bump hazard")
 	_check(hazard_sf.human_hit, "human_hit flag set")
 
-	# 12. Safe dodge past crossing awards save
+	# 12. A near miss is a save; walking the esplanade while they are still at the groin is not
 	var dodge_sf := Surfer.new()
 	dodge_sf.triggered = true
 	dodge_sf.state = Surfer.State.RUNNING
 	dodge_sf.pos = Vector2(450.0, -2140.0)
-	var dodge_human := Vector2(670.0, -2100.0)
-	var out_dodge_pre: Dictionary = dodge_sf.tick(0.016, Vector2.ZERO, Vector2.ZERO, dodge_human)
-	_check(not bool(out_dodge_pre["dodge"]), "dodge not awarded while human is south of crossing")
-	var safe_human := Vector2(670.0, -2170.0)
-	var out_dodge: Dictionary = dodge_sf.tick(0.016, Vector2.ZERO, Vector2.ZERO, safe_human)
-	_check(bool(out_dodge["dodge"]), "safely navigating crossing awards surf dodge save")
+	var beside := dodge_sf.pos + Vector2(50.0, 0.0)
+	var out_beside: Dictionary = dodge_sf.tick(0.0, Vector2.ZERO, Vector2.ZERO, beside)
+	_check(not bool(out_beside["dodge"]), "standing beside the surfer is not yet a save")
+	_check(not bool(out_beside["bump"]), "beside is outside the bump")
+	var clear := dodge_sf.pos + Vector2(0.0, 140.0)
+	var out_dodge: Dictionary = dodge_sf.tick(0.0, Vector2.ZERO, Vector2.ZERO, clear)
+	_check(bool(out_dodge["dodge"]), "stepping clear of a near miss is a save")
 	_check(dodge_sf.dodge_awarded, "dodge_awarded set")
 
 	# 13. Runs to END_POS and settles
@@ -161,7 +162,7 @@ func _run() -> void:
 			break
 	_check(not auto_hit, "autowalk completes crossing without surfer bump hazard")
 	_check(sim_sf.triggered, "autowalk triggered surfer crossing")
-	_check(sim_sf.dodge_awarded, "autowalk earned surf dodge save cleanly")
+	_check(not sim_sf.dodge_awarded, "walking clear is not a save")
 
 	# 16. Integration with main.gd
 	_check(m.has_method("_tick_surfer"), "main has _tick_surfer method")

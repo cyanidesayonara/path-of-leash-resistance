@@ -113,11 +113,11 @@ func _run() -> void:
 	lt.tick(LuggageTrolley.WARN_DURATION + 0.05, near_dog, Vector2.ZERO, near_human)
 	_check(lt.state == LuggageTrolley.State.ROLLING, "re-entered ROLLING after reset")
 
-	# Steer human safely across the crossing zone without getting bumped
+	# The walk's line, while the trolley is still at the door, is not a save.
 	var human_dodged := Vector2(640.0, LuggageTrolley.CROSSING_Y - 30.0)
 	var out7: Dictionary = lt.tick(0.05, near_dog, Vector2.ZERO, human_dodged)
-	_check(bool(out7["dodge"]), "steering human safely past crossing earns concourse dodge save")
-	_check(lt.dodged, "dodged flag set")
+	_check(not bool(out7["dodge"]), "walking the crossing line is not a save")
+	_check(not lt.dodged, "dodged stays clear")
 
 	# 11. Run until settled at concourse edge
 	for i in range(100):

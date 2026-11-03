@@ -109,11 +109,11 @@ func _run() -> void:
 	fm.tick(Fisherman.WARN_DURATION + 0.05, near_dog, Vector2.ZERO, near_human)
 	_check(fm.state == Fisherman.State.REELING, "re-entered REELING after reset")
 
-	# Guiding human safely along central boardwalk (x = 640.0) past fisherman
+	# The boardwalk, while the line is still out, is not a save.
 	var human_on_boardwalk := Vector2(640.0, Fisherman.FISHERMAN_POS.y - 10.0)
 	var out7: Dictionary = fm.tick(0.05, near_dog, Vector2.ZERO, human_on_boardwalk)
-	_check(bool(out7["dodge"]), "guiding human along boardwalk earns dodge save")
-	_check(fm.dodged, "dodged flag set")
+	_check(not bool(out7["dodge"]), "walking the boardwalk is not a save")
+	_check(not fm.dodged, "dodged stays clear")
 
 	# 12. Landed expiry transitions to FINISHED
 	fm.tick(Fisherman.REEL_DURATION + 0.1, near_dog, Vector2.ZERO, human_on_boardwalk)

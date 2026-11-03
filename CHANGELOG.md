@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-03 - Live events only reward a real near miss, and the movers stay live
+
+- A dodge is a near miss. Walking the ordinary line, the promenade, the dry side, the arcade, the boardwalk, or past a crossing while the actor is still at the door no longer awards a save or counts toward "Haul your human out of trouble". Coming inside the hazard's reach and then getting clear, without being hit, still does.
+- The waiter, the cone dog and the unicyclist are drawn on the live pass. The edge canvas redraws only after the camera scrolls, so a figure drawn there stayed put while the bump and the speech moved on.
+- The mercat cart creaks once per floor seam, not on every frame inside one. The cone dog, the unicyclist and the trail runner toss from their own random sequences. Barking at the fisherman no longer counts as startling a harbour seagull. Plaça de la Concòrdia's goal crossbar is drawn once. La Platja's volleyball players stay on La Platja; Llevant shares the court and does not inherit them.
+- The station, the port, Plaça Reial, the vet, Tibidabo and the stream each built their actor twice. One of each remains.
+- Speech that had slipped into Spanish is Catalan or the noise it is: "Compte!", "Epa!", "Yip!", "Atenció, el martell!".
+
 ## 2026-11-03 - Platja de Llevant beach surfer live event
 
 - A signature live event for Platja de Llevant (`systems/surfer.gd`, `systems/llevant.gd`, `world/level_build.gd`, `main.gd`):
@@ -17,7 +25,7 @@ Append-only session history, newest first.
 - Dropped lemon polo & dog trick: as the surfer crosses past the middle esplanade (x <= 610.0), a chilled wrapped lemon
   ice pop (polo de llimona) drops from their beach tote onto the pavement. Pouncing or booping it awards
   "polo snatch! +2" (+2 bones, +2 combo, surfer gasps "El meu polo!").
-- Surfer boop trick: booping the surfer directly awards "surfer boop! +2" (+2 bones, +2 combo, "¡Opa!").
+- Surfer boop trick: booping the surfer directly awards "surfer boop! +2" (+2 bones, +2 combo, "Epa!").
 - Surfer bark trick: barking near the passing surfer startles them into an acrobatic overhead board balance recovery,
   awarding "surfer bark! +2" (+2 bones, +2 combo, "Bona onada!").
 - Surf dodge save: steering your human safely clear of the crossing trajectory awards "surf dodge! +2" ("Whew, close one!",

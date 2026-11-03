@@ -45,6 +45,7 @@ var human_hit: bool = false
 var fish_snatched: bool = false
 var dog_barked: bool = false
 var dodged: bool = false
+var threatened: bool = false
 var triggered: bool = false
 
 # Drawing colors matching Port & marine palette
@@ -84,6 +85,7 @@ func reset() -> void:
 	fish_snatched = false
 	dog_barked = false
 	dodged = false
+	threatened = false
 	triggered = false
 
 
@@ -121,13 +123,6 @@ func tick(delta: float, dog_pos: Vector2, _dog_vel: Vector2, human_pos: Vector2)
 				human_hit = true
 				out["line_snag"] = true
 
-			# Check safe dodge along central wooden boardwalk (x < 780.0)
-			if not dodged and not human_hit:
-				if human_pos.y < FISHERMAN_POS.y + 20.0 and human_pos.y > FISHERMAN_POS.y - 50.0:
-					if human_pos.x < 780.0:
-						dodged = true
-						out["dodge"] = true
-
 			if timer <= 0.0:
 				state = State.LANDED
 				timer = LANDED_DURATION
@@ -140,18 +135,19 @@ func tick(delta: float, dog_pos: Vector2, _dog_vel: Vector2, human_pos: Vector2)
 				fish_snatched = true
 				out["fish_snatch"] = true
 
-			# Check safe dodge in case human passed during landed state
-			if not dodged and not human_hit:
-				if human_pos.y < FISHERMAN_POS.y + 20.0 and human_pos.y > FISHERMAN_POS.y - 50.0:
-					if human_pos.x < 780.0:
-						dodged = true
-						out["dodge"] = true
-
 			if timer <= 0.0:
 				state = State.FINISHED
 
 		State.FINISHED:
 			pass
+
+	if state == State.REELING or state == State.LANDED or state == State.FINISHED:
+		var close := state == State.REELING and human_pos.distance_to(FISHERMAN_POS) <= 110.0
+		var step := NearMiss.consider(close, human_hit, threatened, dodged)
+		threatened = bool(step["threatened"])
+		if bool(step["dodge"]):
+			dodged = true
+			out["dodge"] = true
 
 	return out
 

@@ -37,6 +37,7 @@ const TRIGGER_Y := -1500.0
 const WARN_DURATION := 0.8
 const RUN_SPEED := 200.0
 const BUMP_RADIUS := 30.0
+const THREAT := 64.0
 const SNATCH_RADIUS := 28.0
 const BOOP_RADIUS := 26.0
 const BARK_RADIUS := 140.0
@@ -56,6 +57,7 @@ var carquinyoli_pos: Vector2 = Vector2.ZERO
 var carquinyoli_vel: Vector2 = Vector2.ZERO
 var bark_reacted: bool = false
 var dodge_awarded: bool = false
+var threatened: bool = false
 
 
 func tick(delta: float, dog_pos: Vector2, dog_vel: Vector2, human_pos: Vector2) -> Dictionary:
@@ -123,9 +125,11 @@ func tick(delta: float, dog_pos: Vector2, dog_vel: Vector2, human_pos: Vector2) 
 			booped = true
 			out["boop"] = true
 
-	# Dodge check: human safely navigated past crossing
-	if triggered and not human_hit and not dodge_awarded:
-		if human_pos.y < CROSSING_Y - 24.0:
+	if state == State.RUNNING or state == State.SETTLED:
+		var close := state == State.RUNNING and pos.distance_to(human_pos) <= THREAT
+		var step := NearMiss.consider(close, human_hit, threatened, dodge_awarded)
+		threatened = bool(step["threatened"])
+		if bool(step["dodge"]):
 			dodge_awarded = true
 			out["dodge"] = true
 

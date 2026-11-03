@@ -38,6 +38,7 @@ var orange_vel := Vector2.ZERO
 var human_bumped := false
 var paused_for_walker := false
 var yield_cooldown := 0.0
+var seam := -999
 
 
 func tick(dt: float, dog_pos: Vector2, human_pos: Vector2) -> Dictionary:
@@ -94,7 +95,9 @@ func tick(dt: float, dog_pos: Vector2, human_pos: Vector2) -> Dictionary:
 			else:
 				paused_for_walker = false
 				pos.x += SPEED * dt
-				if int(pos.x) % 180 < 10:
+				var crossed := int(pos.x / 180.0)
+				if crossed != seam:
+					seam = crossed
 					cue["creak"] = true
 
 			# Drop orange near middle terrazzo seam

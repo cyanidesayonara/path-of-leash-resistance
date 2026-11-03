@@ -34,6 +34,7 @@ const WARN_DURATION := 0.8
 const ROLL_SPEED := 260.0
 const CHASER_SPEED := 180.0
 const BUMP_RADIUS := 34.0
+const THREAT := 68.0
 const BOOP_RADIUS := 32.0
 const BARK_RADIUS := 160.0
 
@@ -48,6 +49,7 @@ var human_hit: bool = false
 var booped: bool = false
 var barked: bool = false
 var dodged: bool = false
+var threatened: bool = false
 var last_joint_idx: int = -1
 
 # Visual colors
@@ -85,6 +87,7 @@ func reset() -> void:
 	booped = false
 	barked = false
 	dodged = false
+	threatened = false
 	last_joint_idx = -1
 
 
@@ -134,12 +137,6 @@ func tick(delta: float, dog_pos: Vector2, _dog_vel: Vector2, human_pos: Vector2)
 				booped = true
 				out["boop"] = true
 
-			# Check safe dodge
-			if not dodged and not human_hit:
-				if human_pos.y < CROSSING_Y - 20.0 and human_pos.y > CROSSING_Y - 80.0:
-					dodged = true
-					out["dodge"] = true
-
 			if pos.x >= END_POS.x:
 				state = State.SETTLED
 				timer = 0.0
@@ -154,13 +151,19 @@ func tick(delta: float, dog_pos: Vector2, _dog_vel: Vector2, human_pos: Vector2)
 				booped = true
 				out["boop"] = true
 
-			# Check safe dodge if human passed during settled
-			if not dodged and not human_hit:
-				if human_pos.y < CROSSING_Y - 20.0 and human_pos.y > CROSSING_Y - 80.0:
-					dodged = true
-					out["dodge"] = true
-
+	_dodge(human_pos, out)
 	return out
+
+
+func _dodge(human_pos: Vector2, out: Dictionary) -> void:
+	if state != State.ROLLING and state != State.SETTLED:
+		return
+	var close := state == State.ROLLING and pos.distance_to(human_pos) <= THREAT
+	var step := NearMiss.consider(close, human_hit, threatened, dodged)
+	threatened = bool(step["threatened"])
+	if bool(step["dodge"]):
+		dodged = true
+		out["dodge"] = true
 
 
 func on_bark(dog_pos: Vector2) -> bool:

@@ -37,7 +37,7 @@ var dog_cooldown: float = 0.0
 var human_cooldown: float = 0.0
 var human_soaked: bool = false
 var dodge_done: bool = false
-var was_near: bool = false
+var threatened: bool = false
 
 
 func tick(dt: float, dog_pos: Vector2, human_pos: Vector2) -> Dictionary:
@@ -53,16 +53,6 @@ func tick(dt: float, dog_pos: Vector2, human_pos: Vector2) -> Dictionary:
 		dog_cooldown = maxf(0.0, dog_cooldown - dt)
 	if human_cooldown > 0.0:
 		human_cooldown = maxf(0.0, human_cooldown - dt)
-
-	# Track if human passes through the sprinkler's latitude zone
-	if absf(human_pos.y - HEAD_POS.y) < 160.0:
-		was_near = true
-
-	# Dodge check: when human moves past to the north on the dry side
-	if was_near and not human_soaked and not dodge_done and human_pos.y < HEAD_POS.y - 120.0:
-		if human_pos.x > 500.0:
-			dodge_done = true
-			cue["dodge"] = true
 
 	match state:
 		St.IDLE:
@@ -119,5 +109,13 @@ func tick(dt: float, dog_pos: Vector2, human_pos: Vector2) -> Dictionary:
 					human_cooldown = 3.5
 					human_soaked = true
 					cue["human_soaked"] = true
+
+	if state == St.SPRAYING:
+		var close := human_pos.distance_to(HEAD_POS) <= SPRAY_RADIUS
+		var step := NearMiss.consider(close, human_soaked, threatened, dodge_done)
+		threatened = bool(step["threatened"])
+		if bool(step["dodge"]):
+			dodge_done = true
+			cue["dodge"] = true
 
 	return cue
