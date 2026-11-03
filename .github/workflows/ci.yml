@@ -403,6 +403,8 @@ jobs:
 
       - name: Passeig Maritim landmarks test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_passeig.gd
+      - name: Platja de Llevant beach surfer test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_llevant_surfer.gd
 
       - name: La Rambla layout test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_rambla.gd

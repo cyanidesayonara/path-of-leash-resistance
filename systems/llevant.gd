@@ -150,6 +150,8 @@ static func _landmarks(m: Node2D, vt: float, vb: float) -> void:
 			m._draw_beach_shower(m._wc, sp)
 	if tw.y > vt - 120.0 and tw.y < vb + 80.0:
 		m._draw_lifeguard_tower(m._wc, tw, true, false)
+	if m.surfer != null:
+		m.surfer.draw(m, m._wc, vt, vb)
 
 
 static func draw_overhead(m: Node2D, c: CanvasItem) -> void:

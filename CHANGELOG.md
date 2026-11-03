@@ -2,6 +2,31 @@
 
 Append-only session history, newest first.
 
+## 2026-11-03 - Platja de Llevant beach surfer live event
+
+- A signature live event for Platja de Llevant (`systems/surfer.gd`, `systems/llevant.gd`, `world/level_build.gd`, `main.gd`):
+  an energetic local surfer (el surfista de Llevant) wearing vibrant turquoise boardshorts and white zinc sunscreen
+  carries a colorful 9-foot longboard under their arm, rushing westbound from the esplanade towards the stone coastal
+  groin at y = -2140.0 to paddle out into the Mediterranean surf.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -1900.0): the surfer steps out from the
+  promenade pergola edge at x = 880.0, y = -2140.0, balancing the surfboard and calling out "Agafo l'onada!" with
+  a telegraphed speech bubble.
+- The crossing sprint and hazard: the surfer strides westbound across the esplanade at 185 px/s carrying the longboard
+  horizontally. A distracted human wandering into their path gets bumped by the surfboard nose
+  ("Whoa! Watch the surfboard!", -8 patience drop).
+- Dropped lemon polo & dog trick: as the surfer crosses past the middle esplanade (x <= 610.0), a chilled wrapped lemon
+  ice pop (polo de llimona) drops from their beach tote onto the pavement. Pouncing or booping it awards
+  "polo snatch! +2" (+2 bones, +2 combo, surfer gasps "El meu polo!").
+- Surfer boop trick: booping the surfer directly awards "surfer boop! +2" (+2 bones, +2 combo, "¡Opa!").
+- Surfer bark trick: barking near the passing surfer startles them into an acrobatic overhead board balance recovery,
+  awarding "surfer bark! +2" (+2 bones, +2 combo, "Bona onada!").
+- Surf dodge save: steering your human safely clear of the crossing trajectory awards "surf dodge! +2" ("Whew, close one!",
+  +2 bones, +2 combo, increments saves_done).
+- Autowalk clearance: timing clears the central corridor well before the autowalk pair arrives, ensuring
+  100% reliable automated traversal and test stability.
+- Zero added draw calls: batched directly into Platja de Llevant's `ShapeBatch` cross-section layer.
+- Tests: `tests/test_llevant_surfer.gd`.
+
 ## 2026-11-03 - El Laberint d'Horta lost maze tourist live event
 
 - A signature live event for El Laberint d'Horta (`systems/lost_tourist.gd`, `systems/horta.gd`, `world/level_build.gd`, `main.gd`):
