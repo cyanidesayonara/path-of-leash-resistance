@@ -92,6 +92,7 @@ var _out_arrived := false
 var _chant_in := 0.0
 var kickabout: Kickabout
 var lost_scarf: LostScarf
+var petanca: Petanca
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -6104,6 +6105,7 @@ func _physics_process(delta: float) -> void:
 		_watch_stall(delta)
 	_tick_match_crowd(delta)
 	_tick_corners(delta)
+	_tick_petanca(delta)
 	if march != null:
 		march.tick(self, delta)
 	dog.tick(delta)
@@ -6623,6 +6625,25 @@ func _nudge(body: CharacterBody2D, by: Vector2) -> float:
 
 
 # The side street, the lost scarf and the tout. None of them touch the rope.
+# El Barri's petanca game: the old man bowls, dog can boop it.
+func _tick_petanca(delta: float) -> void:
+	if not started or paused or lvl != "barri" or petanca == null:
+		return
+	var pc: Dictionary = petanca.tick(delta, dog.global_position, dog.facing, human.global_position)
+	if bool(pc["warn"]):
+		float_text(Petanca.THROWER + Vector2(0.0, -28.0), "Watch the boule!", Color(0.96, 0.94, 0.88), POP_SAY)
+	if bool(pc["clink"]):
+		Sfx.play("crack", 1.8, -6.0)
+	if bool(pc["boop"]):
+		bones += 2
+		Sfx.play("crack", 2.2, -4.0)
+		Sfx.play("star", 1.1, -8.0)
+		combo.add("BOOP", 2)
+		float_text(petanca.pos + Vector2(0.0, -20.0), "boop! +2", Color(1.0, 0.92, 0.45))
+		float_text(Petanca.THROWER + Vector2(0.0, -28.0), "Ei, el gos!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+
+
 func _tick_corners(delta: float) -> void:
 	if not started or paused:
 		return
