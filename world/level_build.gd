@@ -2171,6 +2171,8 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "beach":
 		for st: Vector2 in beach_block_stones():
 			add_rope_point(m, st, BEACH_BLOCK_W * 0.5 + 2.0)
+	if m.lvl == "barri" and not m.tutorial_mode:
+		m.petanca = Petanca.new()
 	if m.lvl == "partit":
 		for r: Rect2 in Partit.wrap_rects():
 			add_rope_rect(m, r)
