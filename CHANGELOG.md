@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-11-03 - El Barri gets a live petanca boule throw
+
+- The old men's petanca game on El Barri's gravel square (systems/barri.gd)
+  comes to life: as your dog approaches the pitch on the outward walk, the
+  thrower calls a telegraphed "Watch the boule!" (0.8 s warning) and bowls
+  a steel boule across the court. It rolls along the sauló with a soft rumble
+  and clinks into the cluster by the jack; Millie can run in and boop the rolling
+  boule ("boop! +2") to scatter it, drawing an indignant "Ei, el gos!" from the
+  old man. Tests: `test_petanca.gd`, `test_barri.gd`.
+
 ## 2026-11-03 - Free test nodes in combo challenge regression
 
 - The combo challenge regression test (tests/test_challenge.gd) created
@@ -9,6 +19,7 @@ Append-only session history, newest first.
   its cases without freeing them, leaking five CanvasItem RIDs and fifteen
   ObjectDB instances at process exit. Each node is now explicitly freed
   before exit, leaving shutdown clean.
+
 
 ## 2026-11-02 - The ground on a canvas of its own
 

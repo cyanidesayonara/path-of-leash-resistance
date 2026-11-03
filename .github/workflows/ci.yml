@@ -402,6 +402,9 @@ jobs:
       - name: El Barri is the first walk test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_barri.gd
 
+      - name: El Barri petanca live event test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_petanca.gd
+
       - name: Tutorial stations test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tutorial_stations.gd
 

@@ -48,8 +48,12 @@ static func _draw_square(m: Node2D, vt: float, vb: float) -> void:
 		b.circle(tc, 17.0, Color(0.78, 0.69, 0.51))
 		# the jack at the far end, and the boules gathered round it
 		var jack := pp.position + Vector2(58.0, 30.0)
-		for bo: Vector2 in [Vector2(16, 8), Vector2(-12, 14), Vector2(6, -13), Vector2(26, -4), Vector2(-20, -6), Vector2(38, 22)]:
+		for bo: Vector2 in [Vector2(16, 8), Vector2(-12, 14), Vector2(26, -4), Vector2(-20, -6), Vector2(38, 22)]:
 			_boule(m, b, jack + bo)
+		if m.petanca != null:
+			_boule(m, b, m.petanca.pos)
+		else:
+			_boule(m, b, jack + Vector2(6.0, -13.0))
 		# yellow measuring tape (cinta mètrica) measuring distance to closest boule
 		b.line(jack, jack + Vector2(6.0, -13.0), Color(0.96, 0.84, 0.18), 1.2)
 		b.circle(jack + Vector2(9.0, -17.0) + LIGHT * 1.5, 3.2, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.20))
@@ -244,6 +248,8 @@ static func draw_performer(m: Node2D, wc: ShapeBatch, pf: Vector2, idx: int) -> 
 	wc.draw_circle(pf + Vector2(0, -4), 6.5, Color(0.84, 0.68, 0.56))
 	wc.draw_circle(pf + Vector2(0, -5), 6.8, Color(0.30, 0.28, 0.26))
 	wc.draw_rect(Rect2(pf.x - 5.0, pf.y - 14.0, 10.0, 4.0), Color(0.26, 0.24, 0.22))
+	if idx == 0 and m.petanca != null and m.petanca.state == Petanca.St.WARN:
+		wc.draw_circle(pf + Vector2(6.0, -6.0), 3.4, Color(0.58, 0.58, 0.60))
 
 
 # --- the neighbourhood round the square ---------------------------------------
