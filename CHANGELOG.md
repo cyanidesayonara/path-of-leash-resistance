@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-11-03 - El Parc's rotary lawn sprinklers
+
+- A brass rotary impact lawn sprinkler installed on the west lawn verge of
+  El Parc beside the box-hedged flowerbed (`systems/sprinkler.gd`), watering the
+  turf and sweeping an oscillating fan of sparkling water droplets across the
+  western edge of the walkway.
+- A 0.8 s warning telegraph as the pair approaches ("Watch the sprinkler!",
+  with rhythmic mechanical clicking of the arming rocker arm) before the spray
+  sweeps the walkway.
+- Running through the water spray soaks the dog ("splish! +2", +2 bones, +2
+  combo) and satisfies drinking. A phone-distracted human stepping into the jet
+  threatens their phone ("Whoa! My phone!", temporary patience loss), while
+  steering them along the dry eastern half earns a rewarded dodge ("Whew, nice
+  save!", "good dodge! +2"). The autowalk line stays completely dry.
+- Tests: `tests/test_parc_sprinkler.gd`.
+
 ## 2026-11-02 - The ground on a canvas of its own
 
 - The cross-section (ground, strips, walkway, paving) moved off the world

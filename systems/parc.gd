@@ -82,8 +82,65 @@ static func _draw_lawns(m: Node2D, vt: float, vb: float) -> void:
 		_lake_shore(m, b, lk)
 	if LevelBuild.PARK_SLACK_A.y > vt - 80.0 and LevelBuild.PARK_SLACK_B.y < vb + 80.0:
 		_slackline(m, b)
+	if m.sprinkler != null and Sprinkler.HEAD_POS.y > vt - 180.0 and Sprinkler.HEAD_POS.y < vb + 180.0:
+		_draw_sprinkler(m, b)
 	b.flush(m._wc)
 
+
+
+# The rotary lawn sprinkler on the west lawn verge: turf cup, brass rotating
+# nozzle, rocker arm, and sparkling fan of water droplets across the path.
+static func _draw_sprinkler(m: Node2D, b: ShapeBatch) -> void:
+	var sp: Sprinkler = m.sprinkler
+	var hp := Sprinkler.HEAD_POS
+	var t := AnimClock.msec() / 1000.0
+	# moist soil and green grass ring around the sprinkler
+	b.circle(hp, 22.0, Color(0.18, 0.34, 0.17, 0.65))
+	b.circle(hp, 13.0, Color(0.15, 0.28, 0.14, 0.85))
+	# shadow
+	b.circle(hp + m.LIGHT * 3.0, 6.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
+	# ground cup and brass body
+	b.circle(hp, 6.0, Color(0.22, 0.24, 0.22))
+	b.circle(hp, 4.2, Color(0.82, 0.68, 0.28))
+	b.circle(hp, 2.2, Color(0.95, 0.84, 0.44))
+	# rocker arm
+	var arm_dir := Vector2.from_angle(sp.angle)
+	var arm_tip := hp + arm_dir * 8.0
+	b.line(hp, arm_tip, Color(0.76, 0.60, 0.20), 2.2)
+	b.circle(arm_tip, 2.0, Color(0.88, 0.74, 0.32))
+	var counter := arm_dir.rotated(PI * 0.75)
+	b.line(hp, hp + counter * 5.0, Color(0.68, 0.52, 0.18), 1.6)
+
+	if not sp.active:
+		if sp.state == Sprinkler.St.WARN:
+			var mist_f := fmod(t * 3.0, 1.0)
+			b.circle(hp + arm_dir * (mist_f * 18.0), 4.0 + mist_f * 6.0, Color(0.90, 0.95, 1.0, 0.25 * (1.0 - mist_f)))
+		return
+
+	# active water spray: arc of flying droplets
+	var jet_dir := arm_dir
+	var perp := jet_dir.orthogonal()
+	var spray_len := Sprinkler.SPRAY_RADIUS
+
+	# fine mist near nozzle
+	for mi in range(3):
+		var mf := 0.15 + float(mi) * 0.12
+		var mp := hp + jet_dir * (mf * spray_len * 0.3) + perp * sin(t * 12.0 + float(mi)) * 3.0
+		b.circle(mp, 5.0 + float(mi) * 2.5, Color(0.88, 0.94, 1.0, 0.22))
+
+	# flying droplets along the jet
+	for i in range(16):
+		var fi := float(i) / 15.0
+		var dist := 14.0 + fi * (spray_len - 14.0)
+		var spread := (fi * fi) * 12.0 * sin(float(i * 7) + t * 8.0)
+		var dp := hp + jet_dir * dist + perp * spread
+		var col := Color(0.88, 0.95, 1.0, 0.85 - fi * 0.35)
+		b.circle(dp, maxf(1.4, 2.8 - fi * 1.0), col)
+
+	# glistening wet ground patches where the water lands
+	var landing := hp + jet_dir * spray_len
+	b.circle(landing, 14.0, Color(0.55, 0.80, 0.98, 0.16))
+	b.circle(landing + perp * 8.0, 10.0, Color(0.55, 0.80, 0.98, 0.12))
 
 # The slackline between the two lawn trees: the webbing, the ratchet and its
 # tree protectors at each end, and the slackliner out on it, arms up, swaying

@@ -92,6 +92,7 @@ var _out_arrived := false
 var _chant_in := 0.0
 var kickabout: Kickabout
 var lost_scarf: LostScarf
+var sprinkler: Sprinkler
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -6104,6 +6105,7 @@ func _physics_process(delta: float) -> void:
 		_watch_stall(delta)
 	_tick_match_crowd(delta)
 	_tick_corners(delta)
+	_tick_sprinkler(delta)
 	if march != null:
 		march.tick(self, delta)
 	dog.tick(delta)
@@ -6620,6 +6622,37 @@ func _nudge(body: CharacterBody2D, by: Vector2) -> float:
 	var slide := rest.slide(hit.get_normal())
 	var hit2 := body.move_and_collide(slide)
 	return rest.length() - slide.length() + (hit2.get_remainder().length() if hit2 != null else 0.0)
+
+
+# El Parc's rotary lawn sprinkler: watering the lawn and edging the path.
+func _tick_sprinkler(delta: float) -> void:
+	if not started or paused or lvl != "park" or sprinkler == null:
+		return
+	var sc: Dictionary = sprinkler.tick(delta, dog.global_position, human.global_position)
+	if bool(sc["warn"]):
+		float_text(human.global_position + Vector2(0.0, -32.0), "Watch the sprinkler!", Color(0.96, 0.94, 0.88), POP_SAY)
+		Sfx.play("intro_tap", 1.8, -4.0)
+	if bool(sc["click"]):
+		Sfx.play("intro_tap", 2.2, -12.0)
+	if bool(sc["dog_splash"]):
+		bones += 2
+		drunk_amount += 0.25
+		combo.add("SPLASH", 2)
+		Sfx.play("splash", 1.2, -4.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "splish! +2", Color(0.70, 0.90, 1.0))
+		_update_hud()
+	if bool(sc["human_soaked"]):
+		human.patience = maxf(0.0, human.patience - 10.0)
+		Sfx.play("splash", 0.9, -2.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whoa! My phone!", Color(1.0, 0.72, 0.72), POP_SAY)
+	if bool(sc["dodge"]):
+		saves_done += 1
+		bones += 2
+		combo.add("DODGE", 2)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "good dodge! +2", Color(1.0, 0.92, 0.45))
+		_update_hud()
 
 
 # The side street, the lost scarf and the tout. None of them touch the rope.
