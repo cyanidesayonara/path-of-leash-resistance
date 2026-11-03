@@ -2171,6 +2171,8 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "beach":
 		for st: Vector2 in beach_block_stones():
 			add_rope_point(m, st, BEACH_BLOCK_W * 0.5 + 2.0)
+		if not m.tutorial_mode:
+			m.volleyball = Volleyball.new()
 	if m.lvl == "barri" and not m.tutorial_mode:
 		m.petanca = Petanca.new()
 	if m.lvl == "market" and not m.tutorial_mode:

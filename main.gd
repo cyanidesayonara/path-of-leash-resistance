@@ -95,6 +95,7 @@ var lost_scarf: LostScarf
 var petanca: Petanca
 var sprinkler: Sprinkler
 var mercat_cart: MercatCart
+var volleyball: Volleyball
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -6110,6 +6111,7 @@ func _physics_process(delta: float) -> void:
 	_tick_petanca(delta)
 	_tick_sprinkler(delta)
 	_tick_mercat_cart(delta)
+	_tick_volleyball(delta)
 	if march != null:
 		march.tick(self, delta)
 	dog.tick(delta)
@@ -6684,6 +6686,39 @@ func _tick_mercat_cart(delta: float) -> void:
 		float_text(human.global_position + Vector2(0.0, -32.0), "Watch out!", Color(1.0, 0.75, 0.75), POP_SAY)
 	if bool(mc["yield"]):
 		float_text(mercat_cart.pos + Vector2(0.0, -32.0), "Passeu!", Color(0.96, 0.94, 0.88), POP_SAY)
+
+
+# La Platja's beach volleyball: casual game by the boardwalk, rogue spiked ball.
+func _tick_volleyball(delta: float) -> void:
+	if not started or paused or lvl != "beach" or volleyball == null:
+		return
+	var vc: Dictionary = volleyball.tick(delta, dog.global_position, dog.facing, human.global_position)
+	if bool(vc["warn"]):
+		float_text(Volleyball.SPIKER_POS + Vector2(0.0, -32.0), "Pilota fora!", Color(0.96, 0.94, 0.88), POP_SAY)
+		Sfx.play("intro_tap", 1.8, -4.0)
+	if bool(vc["spike"]):
+		Sfx.play("crack", 1.5, -4.0)
+	if bool(vc["bounce"]):
+		Sfx.play("grit", 1.2, -6.0)
+	if bool(vc["boop"]):
+		bones += 2
+		combo.add("VOLLEY", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(volleyball.pos + Vector2(0.0, -20.0), "volley! +2", Color(1.0, 0.92, 0.45))
+		float_text(Volleyball.SPIKER_POS + Vector2(0.0, -32.0), "Bona rematada!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if bool(vc["human_hit"]):
+		human.patience = maxf(0.0, human.patience - 8.0)
+		Sfx.play("bump", 1.0, -4.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Watch the game!", Color(1.0, 0.75, 0.75), POP_SAY)
+	if bool(vc["dodge"]):
+		saves_done += 1
+		bones += 2
+		combo.add("DODGE", 2)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "good dodge! +2", Color(1.0, 0.92, 0.45))
+		_update_hud()
 
 
 # The side street, the lost scarf and the tout. None of them touch the rope.
