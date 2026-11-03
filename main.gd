@@ -104,6 +104,7 @@ var waiter: Waiter
 var cone_dog: ConeDog
 var unicyclist: Unicyclist
 var trail_runner: TrailRunner
+var lost_tourist: LostTourist
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -6128,6 +6129,7 @@ func _physics_process(delta: float) -> void:
 	_tick_cone_dog(delta)
 	_tick_unicyclist(delta)
 	_tick_trail_runner(delta)
+	_tick_lost_tourist(delta)
 	if march != null:
 		march.tick(self, delta)
 	dog.tick(delta)
@@ -6863,6 +6865,43 @@ func _tick_luggage_trolley(delta: float) -> void:
 		Sfx.play("star", 1.1, -6.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, close one!", Color(0.96, 0.94, 0.88), POP_SAY)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "concourse dodge! +2", Color(1.0, 0.92, 0.45))
+		_update_hud()
+
+
+# El Laberint d'Horta's lost maze tourist.
+func _tick_lost_tourist(delta: float) -> void:
+	if not started or paused or lvl != "horta" or lost_tourist == null:
+		return
+	var lt: Dictionary = lost_tourist.tick(delta, dog.global_position, dog.velocity, human.global_position)
+	if bool(lt["warn"]):
+		float_text(lost_tourist.pos + Vector2(0.0, -32.0), "On és la sortida?!", Color(0.96, 0.94, 0.88), POP_SAY)
+		Sfx.play("intro_tap", 1.8, -4.0)
+	if bool(lt["bump"]):
+		human.patience = maxf(0.0, human.patience - 8.0)
+		Sfx.play("bump", 1.1, -3.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whoa! Watch the map!", Color(1.0, 0.72, 0.72), POP_SAY)
+	if bool(lt["boop"]):
+		bones += 2
+		combo.add("BOOP", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "tourist boop! +2", Color(1.0, 0.92, 0.45))
+		float_text(lost_tourist.pos + Vector2(0.0, -32.0), "Perdó!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if bool(lt["snatch"]):
+		bones += 2
+		combo.add("SNATCH", 2)
+		Sfx.play("crack", 2.2, -4.0)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "carquinyoli snatch! +2", Color(1.0, 0.78, 0.32))
+		float_text(lost_tourist.pos + Vector2(0.0, -32.0), "El meu carquinyoli!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if bool(lt["dodge"]):
+		saves_done += 1
+		bones += 2
+		combo.add("DODGE", 2)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, close one!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "maze dodge! +2", Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -10599,6 +10638,13 @@ func on_bark(pos: Vector2) -> void:
 		Sfx.play("star", 1.2, -4.0)
 		float_text(pos + Vector2(0.0, -20.0), "runner bark! +2", Color(1.0, 0.92, 0.45))
 		float_text(trail_runner.pos + Vector2(0.0, -32.0), "Més ràpid que jo!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if lost_tourist != null and lost_tourist.on_bark(pos):
+		bones += 2
+		combo.add("BARK", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(pos + Vector2(0.0, -20.0), "tourist bark! +2", Color(1.0, 0.92, 0.45))
+		float_text(lost_tourist.pos + Vector2(0.0, -32.0), "Per aquí no!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if walk_mod != null and walk_mod.has_method("on_bark"):
 		walk_mod.on_bark(self, pos)

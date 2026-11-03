@@ -627,6 +627,8 @@ static func draw_fountain(m: Node2D, f: Vector2) -> void:
 # The gardener at the clearing's east wall with his shears, and his barrow of
 # clippings with the bocadillo on it until she has it.
 static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	if m.lost_tourist != null:
+		m.lost_tourist.draw(m, wc, vt, vb)
 	if GARDENER.y < vt - 60.0 or GARDENER.y > vb + 60.0:
 		return
 	var t: float = AnimClock.msec() / 1000.0
