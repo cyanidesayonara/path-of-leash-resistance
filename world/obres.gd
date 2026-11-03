@@ -562,6 +562,8 @@ static func _draw_works(m: Node2D, vt: float, vb: float) -> void:
 			b.circle(Vector2(rx, y1), 2.8, Color(0.96, 0.52, 0.12))
 			var mid_rx: float = rx - side * 3.0
 			b.line(Vector2(mid_rx, y0 + 6.0), Vector2(mid_rx, y1 - 6.0), Color(0.66, 0.68, 0.70), 2.0)
+	if m.jackhammer != null:
+		m.jackhammer.draw(b, vt, vb)
 	b.flush(m._wc)
 
 

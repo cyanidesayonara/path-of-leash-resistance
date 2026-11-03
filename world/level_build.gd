@@ -958,6 +958,7 @@ static func obres(m: Node2D) -> void:
 	# the owner keeps to the plank (human._walk)
 	m.narrows = Array([{"y0": OBRES_TRENCH_Y, "y1": OBRES_TRENCH_Y + OBRES_TRENCH_H,
 		"x0": pc - OBRES_PLANK * 0.5 + 12.0, "x1": pc + OBRES_PLANK * 0.5 - 12.0}], TYPE_DICTIONARY, &"", null)
+	m.jackhammer = Jackhammer.new()
 
 
 # LA RAMBLA. The square with the round pavement mosaic, halfway down.

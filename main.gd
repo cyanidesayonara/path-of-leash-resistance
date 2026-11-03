@@ -97,6 +97,7 @@ var sprinkler: Sprinkler
 var mercat_cart: MercatCart
 var volleyball: Volleyball
 var awning_dump: AwningDump
+var jackhammer: Jackhammer
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -6114,6 +6115,7 @@ func _physics_process(delta: float) -> void:
 	_tick_mercat_cart(delta)
 	_tick_volleyball(delta)
 	_tick_awning_dump(delta)
+	_tick_jackhammer(delta)
 	if march != null:
 		march.tick(self, delta)
 	dog.tick(delta)
@@ -6752,6 +6754,37 @@ func _tick_awning_dump(delta: float) -> void:
 		Sfx.play("star", 1.1, -6.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "dry passage! +2", Color(1.0, 0.92, 0.45))
+		_update_hud()
+
+
+# Les Obres' pneumatic jackhammer: roadworks pavement excavation crew.
+func _tick_jackhammer(delta: float) -> void:
+	if not started or paused or lvl != "site" or jackhammer == null:
+		return
+	var jc: Dictionary = jackhammer.tick(delta, dog.global_position, dog.velocity, human.global_position)
+	if bool(jc["warn"]):
+		float_text(Jackhammer.WORKER_POS + Vector2(0.0, -32.0), "Atenció, piconadora!", Color(0.96, 0.94, 0.88), POP_SAY)
+		Sfx.play("intro_tap", 1.8, -4.0)
+	if bool(jc["drill"]):
+		Sfx.play("crack", 1.8, -4.0)
+		Sfx.play("grit", 1.4, -6.0)
+	if bool(jc["rattle"]):
+		human.patience = maxf(0.0, human.patience - 8.0)
+		Sfx.play("bump", 1.0, -4.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Aah! Too loud!", Color(1.0, 0.72, 0.72), POP_SAY)
+	if bool(jc["dog_detour"]):
+		bones += 2
+		combo.add("DETOUR", 2)
+		Sfx.play("star", 1.1, -4.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "smooth detour! +2", Color(0.70, 0.90, 1.0))
+		_update_hud()
+	if bool(jc["dodge"]):
+		saves_done += 1
+		bones += 2
+		combo.add("DODGE", 2)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "quiet detour! +2", Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -10286,6 +10319,12 @@ func on_bark(pos: Vector2) -> void:
 	# in the scrapyard, YOUR bark is noise too
 	for g in get_tree().get_nodes_in_group("guards"):
 		g.hear_noise(pos, 230.0)
+	if jackhammer != null and jackhammer.on_bark(pos):
+		bones += 2
+		combo.add("BARK", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(pos + Vector2(0.0, -20.0), "jackhammer bark! +2", Color(1.0, 0.92, 0.45))
+		_update_hud()
 	if awning_dump != null and awning_dump.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
