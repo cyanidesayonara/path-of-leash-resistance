@@ -2219,6 +2219,9 @@ static func build_level_data(m: Node2D) -> void:
 			m.cone_dog = ConeDog.new()
 		for r: Rect2 in Vet.wrap_rects():
 			add_rope_rect(m, r)
+	if m.lvl == "tibidabo":
+		if not m.tutorial_mode:
+			m.unicyclist = Unicyclist.new()
 	# the hazardous hard-to-reach collectible: one per level, in a spot
 	# that costs you something to reach (deliberately outside the corridor
 	# on some walks, so it is exempt from the corridor fit)

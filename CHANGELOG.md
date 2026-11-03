@@ -2,6 +2,31 @@
 
 Append-only session history, newest first.
 
+## 2026-11-03 - El Tibidabo summit fairground juggling unicyclist live event
+
+- A signature live event for El Tibidabo (`systems/unicyclist.gd`, `systems/tibidabo.gd`, `world/level_build.gd`, `main.gd`):
+  an acrobatic fairground street performer on a tall chrome unicycle (l'equilibrista del Tibidabo) emerges from the
+  scenic balustrade terrace at y = -2100.0, teetering and juggling colourful pins as they pedal across the mountain road.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -1920.0): the unicyclist teeters on the stone
+  road kerb at x = 390.0, y = -2100.0, steadying their balance with outstretched arms and calling out "Compte amb l'equilibri!"
+  with a telegraphed speech bubble.
+- The crossing ride and hazard: the unicyclist pedals east across the mountain road at 155 px/s dressed in festive fairground
+  attire (striped red-and-white shirt, blue trousers, leather suspenders, jaunty beret with yellow pompom) balancing on a tall
+  spinning chrome unicycle while juggling three pins (cyan, magenta, yellow). A distracted human wandering into the unicycle's
+  path gets bumped by the wheel ("Whoa! Watch the unicycle!", -8 patience drop).
+- Dropped juggling pin & dog trick: as the performer pedals past the central road (x >= 550.0), a spinning pin slips from the
+  juggle and clatters onto the asphalt. Pouncing or booping it awards "pin snatch! +2" (+2 bones, +2 combo, performer shouts
+  "Molt ben vist!").
+- Unicycle boop trick: booping the unicyclist directly awards "unicycle boop! +2" (+2 bones, +2 combo, "¡Opa!").
+- Unicycle bark trick: barking near the teetering performer startles them into an acrobatic balancing recovery pirouette,
+  awarding "unicycle bark! +2" (+2 bones, +2 combo, "Uix, per poc!").
+- Summit dodge save: steering your human safely clear of the crossing trajectory awards "summit dodge! +2" ("Whew, nice save!",
+  +2 bones, +2 combo, increments saves_done).
+- Autowalk clearance: timing clears the central road (x = 640.0) well before the autowalk pair arrives, ensuring
+  100% reliable automated traversal and test stability.
+- Zero added draw calls: batched directly into El Tibidabo's `ShapeBatch` edge layer.
+- Tests: `tests/test_tibidabo_unicyclist.gd`.
+
 ## 2026-11-03 - El Veterinari runaway cone-of-shame dog live event
 
 - A signature live event for El Veterinari (`systems/cone_dog.gd`, `systems/vet.gd`, `world/level_build.gd`, `main.gd`):
