@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-11-04 - El Gòtic vintage courier scooter live event
+
+- A signature live event for El Gòtic (`systems/scooter.gd`, `systems/detour.gd`, `world/level_build.gd`, `main.gd`):
+  a classic seafoam-turquoise delivery scooter ("la Vespa del Gòtic") driven by a courier wearing an open-face helmet and windbreaker buzzes across the cobbled alleyway at y = -1720.0, cutting between two side passages with a leather mail satchel strapped to the rear rack.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -1400.0): the courier calls out from the side archway at x = 400.0, y = -1720.0 ("Pas a la Vespa!") with a two-tone horn chirp as the headlight illuminates the cobblestones.
+- The crossing drive and hazard: the scooter drives eastbound across the alley at 230 px/s. A distracted human wandering into the scooter gets bumped (-8 patience drop, "Whoa! Watch the scooter!", rider: "Atenció, que el carreró és estret!").
+- Dropped airmail letter & dog trick: as the scooter crosses the center alley (x >= 660.0), a stamped airmail letter slips loose from the mail satchel and flutters onto the setts. Snatching or booping it awards "letter snatch! +2" (+2 bones, +2 combo, rider: "Gràcies pel correu!").
+- Scooter boop trick: booping the scooter directly awards "scooter boop! +2" (+2 bones, +2 combo, "Hola, gosset!").
+- Scooter bark trick: barking near the scooter (within 130 px) causes the rider to brake with a sharp tyre screech, awarding "scooter bark! +2" (+2 bones, +2 combo, "Ui, quin fre!").
+- Gòtic dodge save: steering your human safely clear of the crossing trajectory after entering threat radius (64 px) awards "gòtic dodge! +2" ("Whew, nice save!", +2 bones, +2 combo, increments saves_done) using `NearMiss.consider`. Walking past clear of threat awards nothing.
+- Autowalk clearance: timing clears the central corridor well before the autowalk pair arrives, ensuring 100% reliable automated traversal and test stability.
+- Zero added draw calls: batched directly into El Gòtic's existing `ShapeBatch` live pass (`draw_live`).
+- Tests: `tests/test_gotic_scooter.gd`.
+
 ## 2026-11-04 - La Ferralla scrapyard forklift live event
 
 - A signature live event for La Ferralla (`systems/forklift.gd`, `world/ferralla.gd`, `world/level_build.gd`, `main.gd`):

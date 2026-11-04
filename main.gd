@@ -111,6 +111,7 @@ var gegant: Gegant
 var castanyera: Castanyera
 var gardener: Gardener
 var forklift: Forklift
+var scooter: Scooter
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -6142,6 +6143,7 @@ func _physics_process(delta: float) -> void:
 	_tick_castanyera(delta)
 	_tick_gardener(delta)
 	_tick_forklift(delta)
+	_tick_scooter(delta)
 	if march != null:
 		march.tick(self, delta)
 	dog.tick(delta)
@@ -7065,6 +7067,44 @@ func _tick_forklift(delta: float) -> void:
 		Sfx.play("star", 1.1, -6.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "scrap dodge! +2", Color(1.0, 0.92, 0.45))
+		_update_hud()
+
+
+# El Gòtic's vintage courier scooter live event.
+func _tick_scooter(delta: float) -> void:
+	if not started or paused or lvl != "oldtown" or scooter == null:
+		return
+	var sc: Dictionary = scooter.tick(delta, dog.global_position, dog.velocity, human.global_position)
+	if bool(sc["warn"]):
+		float_text(scooter.pos + Vector2(0.0, -32.0), "Pas a la Vespa!", Color(0.96, 0.94, 0.88), POP_SAY)
+		Sfx.play("whistle", 1.8, -3.0)
+	if bool(sc["bump"]):
+		human.patience = maxf(0.0, human.patience - 8.0)
+		Sfx.play("grunt", 0.9, -2.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whoa! Watch the scooter!", Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(scooter.pos + Vector2(0.0, -32.0), "Atenció, que el carreró és estret!", Color(0.96, 0.94, 0.88), POP_SAY)
+	if bool(sc["boop"]):
+		bones += 2
+		combo.add("BOOP", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "scooter boop! +2", Color(1.0, 0.92, 0.45))
+		float_text(scooter.pos + Vector2(0.0, -32.0), "Hola, gosset!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if bool(sc["snatch"]):
+		bones += 2
+		combo.add("SNATCH", 2)
+		Sfx.play("pickup", 1.2, -3.0)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "letter snatch! +2", Color(1.0, 0.82, 0.35))
+		float_text(scooter.pos + Vector2(0.0, -32.0), "Gràcies pel correu!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if bool(sc["dodge"]):
+		saves_done += 1
+		bones += 2
+		combo.add("DODGE", 2)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "gòtic dodge! +2", Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -10923,6 +10963,13 @@ func on_bark(pos: Vector2) -> void:
 		Sfx.play("star", 1.2, -4.0)
 		float_text(pos + Vector2(0.0, -20.0), "forklift bark! +2", Color(1.0, 0.92, 0.45))
 		float_text(forklift.pos + Vector2(0.0, -32.0), "Ui, quin fre!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if scooter != null and scooter.on_bark(pos):
+		bones += 2
+		combo.add("BARK", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(pos + Vector2(0.0, -20.0), "scooter bark! +2", Color(1.0, 0.92, 0.45))
+		float_text(scooter.pos + Vector2(0.0, -32.0), "Ui, quin fre!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if walk_mod != null and walk_mod.has_method("on_bark"):
 		walk_mod.on_bark(self, pos)

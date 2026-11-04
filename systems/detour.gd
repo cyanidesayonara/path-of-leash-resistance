@@ -215,7 +215,9 @@ static func walk_edges(m: Node2D, y: float) -> Vector2:
 # --- main's walk hooks (main.WALK_MODULES): El Gòtic's picture, in world/gotic.gd
 
 # the alley, up to the gate
-static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
+static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	if m.scooter:
+		m.scooter.draw(m, wc, vt, vb)
 	Gotic.draw_street(m, maxf(vt, m.GATE_Y - 30.0), vb)
 
 
