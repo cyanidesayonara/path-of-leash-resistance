@@ -1464,6 +1464,8 @@ static func build_level_data(m: Node2D) -> void:
 	match geo:
 		"montjuic":
 			hyd_list.assign(Montjuic.build(m))
+			if not m.tutorial_mode:
+				m.botanic = Botanic.new()
 		"partit":
 			var pl: Array = Partit.build(m)
 			hyd_list.assign(pl[0])
