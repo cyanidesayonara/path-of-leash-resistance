@@ -238,6 +238,8 @@ static func mosaic_palms(m: Node2D) -> Array[Vector2]:
 
 static func mosaic(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 	m.gate_text = "EL CALVARI"
+	if not m.tutorial_mode:
+		m.gardener = Gardener.new()
 	m.pond = Rect2()
 	# no pond, so no duck family off it (El Parc's set them before this)
 	m.duck_ys.clear()

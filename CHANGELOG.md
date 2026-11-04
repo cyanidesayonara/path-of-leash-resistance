@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-11-04 - Park Güell municipal gardener flower wheelbarrow live event
+
+- A signature live event for Park Güell (`systems/gardener.gd`, `systems/mosaic.gd`, `world/level_build.gd`, `main.gd`):
+  a municipal park gardener in straw hat and dark green apron pushes a wooden garden wheelbarrow loaded with potted red geraniums across the vast sandy terrace of Plaça de la Natura at y = -3200.0, heading from the west bay toward the east colonnade.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -2820.0): the gardener calls out from the west terrace edge at x = 250.0, y = -3200.0 ("Pas al carretó!") with a wooden wheel trundle sound as the barrow begins moving.
+- The crossing walk and hazard: the gardener pushes the wheelbarrow eastbound across the terrace at 220 px/s. A distracted human wandering into the wheelbarrow gets bumped (-8 patience drop, "Whoa! Watch the wheelbarrow!", gardener: "Atenció a les plantes!").
+- Dropped potted geranium & dog trick: as the wheelbarrow crosses center plaza (x >= 610.0), a terracotta clay pot with blooming red geraniums slips loose onto the sand. Snatching or booping it awards "geranium snatch! +2" (+2 bones, +2 combo, gardener: "Ei, les meves flors!").
+- Gardener boop trick: booping the gardener directly awards "gardener boop! +2" (+2 bones, +2 combo, "Hola, trapella!").
+- Gardener bark trick: barking near the gardener (within 130 px) startles him into a momentary wheelbarrow wobble, awarding "gardener bark! +2" (+2 bones, +2 combo, "Ui, quin trontoll!").
+- Mosaic dodge save: steering your human safely clear of the crossing trajectory after entering threat radius (70 px) awards "mosaic dodge! +2" ("Whew, nice save!", +2 bones, +2 combo, increments saves_done) using `NearMiss.consider`. Walking past clear of threat awards nothing.
+- Autowalk clearance: timing clears the central corridor well before the autowalk pair arrives, ensuring 100% reliable automated traversal and test stability.
+- Zero added draw calls: batched directly into Park Güell's existing `ShapeBatch` live pass (`draw_live`).
+- Tests: `tests/test_mosaic_gardener.gd`.
+
 ## 2026-11-04 - La Castanyada hurrying castanyera live event
 
 - A signature live event for La Castanyada (`systems/castanyera.gd`, `systems/castanyada.gd`, `world/level_build.gd`, `main.gd`):

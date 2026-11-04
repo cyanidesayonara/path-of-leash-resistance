@@ -109,6 +109,7 @@ var surfer: Surfer
 var wild_boar: WildBoar
 var gegant: Gegant
 var castanyera: Castanyera
+var gardener: Gardener
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -6138,6 +6139,7 @@ func _physics_process(delta: float) -> void:
 	_tick_wild_boar(delta)
 	_tick_gegant(delta)
 	_tick_castanyera(delta)
+	_tick_gardener(delta)
 	if march != null:
 		march.tick(self, delta)
 	dog.tick(delta)
@@ -6985,6 +6987,44 @@ func _tick_castanyera(delta: float) -> void:
 		Sfx.play("star", 1.1, -6.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, close one!", Color(0.96, 0.94, 0.88), POP_SAY)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "chestnut dodge! +2", Color(1.0, 0.92, 0.45))
+		_update_hud()
+
+
+# Park Güell's municipal gardener pushing geranium wheelbarrow across Plaça de la Natura.
+func _tick_gardener(delta: float) -> void:
+	if not started or paused or lvl != "guell" or gardener == null:
+		return
+	var gc: Dictionary = gardener.tick(delta, dog.global_position, dog.velocity, human.global_position)
+	if bool(gc["warn"]):
+		float_text(gardener.pos + Vector2(0.0, -32.0), "Pas al carretó!", Color(0.96, 0.94, 0.88), POP_SAY)
+		Sfx.play("intro_tap", 1.8, -4.0)
+	if bool(gc["bump"]):
+		human.patience = maxf(0.0, human.patience - 8.0)
+		Sfx.play("bump", 1.1, -3.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whoa! Watch the wheelbarrow!", Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(gardener.pos + Vector2(0.0, -32.0), "Atenció a les plantes!", Color(0.96, 0.94, 0.88), POP_SAY)
+	if bool(gc["boop"]):
+		bones += 2
+		combo.add("BOOP", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "gardener boop! +2", Color(1.0, 0.92, 0.45))
+		float_text(gardener.pos + Vector2(0.0, -32.0), "Hola, trapella!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if bool(gc["snatch"]):
+		bones += 2
+		combo.add("SNATCH", 2)
+		Sfx.play("crack", 2.2, -4.0)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "geranium snatch! +2", Color(1.0, 0.78, 0.32))
+		float_text(gardener.pos + Vector2(0.0, -32.0), "Ei, les meves flors!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if bool(gc["dodge"]):
+		saves_done += 1
+		bones += 2
+		combo.add("DODGE", 2)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "mosaic dodge! +2", Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -10829,6 +10869,13 @@ func on_bark(pos: Vector2) -> void:
 		Sfx.play("star", 1.2, -4.0)
 		float_text(pos + Vector2(0.0, -20.0), "castanyera bark! +2", Color(1.0, 0.92, 0.45))
 		float_text(castanyera.pos + Vector2(0.0, -32.0), "Ai, quin gosset!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if gardener != null and gardener.on_bark(pos):
+		bones += 2
+		combo.add("BARK", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(pos + Vector2(0.0, -20.0), "gardener bark! +2", Color(1.0, 0.92, 0.45))
+		float_text(gardener.pos + Vector2(0.0, -32.0), "Ui, quin trontoll!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if walk_mod != null and walk_mod.has_method("on_bark"):
 		walk_mod.on_bark(self, pos)
