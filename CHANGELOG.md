@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-11-04 - La Castanyada hurrying castanyera live event
+
+- A signature live event for La Castanyada (`systems/castanyera.gd`, `systems/castanyada.gd`, `world/level_build.gd`, `main.gd`):
+  a traditional Catalan castanyera wearing a black headscarf, warm woollen shawl, and dark floral apron carries a steaming woven wicker basket of freshly roasted chestnuts ("paperines de castanyes calentes") across the lantern-lit festival street at y = -1780.0, hurrying eastbound from the alleyway threshold toward a waiting plaza stall.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -1460.0): the castanyera steps out at x = 405.0, y = -1780.0 calling out "Castanyes calentes!" with a festive chime as fragrant steam rises from her basket.
+- The crossing walk and hazard: the castanyera strides eastbound across the street at 180 px/s with her steaming basket. A distracted human wandering into her crossing path gets bumped (-8 patience drop, "Whoa! Watch the chestnuts!").
+- Dropped roasted chestnuts & dog trick: as the castanyera crosses past the center street (x >= 620.0), a paper cone of hot roasted chestnuts ("paperina de castanyes") slips loose and flutters onto the cobblestones. Pouncing or booping it awards "chestnut snatch! +2" (+2 bones, +2 combo, Castanyera shouts "Vigila que crema!").
+- Castanyera boop trick: booping her apron directly awards "castanyera boop! +2" (+2 bones, +2 combo, "Bona castanyada!").
+- Castanyera bark trick: barking near the castanyera (within 140 px) startles her into a surprised hop and apron ruffle, awarding "castanyera bark! +2" (+2 bones, +2 combo, "Ai, quin gosset!").
+- Chestnut dodge save: steering your human safely clear past the crossing trajectory after entering threat radius (64 px) awards "chestnut dodge! +2" ("Whew, close one!", +2 bones, +2 combo, increments saves_done) using `NearMiss.consider`. Walking past clear of threat awards nothing.
+- Autowalk clearance: timing clears the central corridor well before the autowalk pair arrives, ensuring 100% reliable automated traversal and test stability.
+- Zero added draw calls: batched directly into La Castanyada's existing `ShapeBatch` live pass (`draw_live`).
+- Tests: `tests/test_castanyada_live_event.gd`.
+
 ## 2026-11-03 - Festa de Gràcia Gegant rehearsal twirl live event
 
 - A signature live event for Festa de Gràcia (`systems/gegant.gd`, `systems/gracia.gd`, `main.gd`):

@@ -108,6 +108,7 @@ var lost_tourist: LostTourist
 var surfer: Surfer
 var wild_boar: WildBoar
 var gegant: Gegant
+var castanyera: Castanyera
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -6136,6 +6137,7 @@ func _physics_process(delta: float) -> void:
 	_tick_surfer(delta)
 	_tick_wild_boar(delta)
 	_tick_gegant(delta)
+	_tick_castanyera(delta)
 	if march != null:
 		march.tick(self, delta)
 	dog.tick(delta)
@@ -6945,6 +6947,44 @@ func _tick_gegant(delta: float) -> void:
 		Sfx.play("star", 1.1, -6.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, close one!", Color(0.96, 0.94, 0.88), POP_SAY)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "giant dodge! +2", Color(1.0, 0.92, 0.45))
+		_update_hud()
+
+
+
+# La Castanyada's hurrying castanyera with steaming chestnuts.
+func _tick_castanyera(delta: float) -> void:
+	if not started or paused or lvl != "spook" or castanyera == null:
+		return
+	var cc: Dictionary = castanyera.tick(delta, dog.global_position, dog.velocity, human.global_position)
+	if bool(cc["warn"]):
+		float_text(castanyera.pos + Vector2(0.0, -32.0), "Castanyes calentes!", Color(0.96, 0.94, 0.88), POP_SAY)
+		Sfx.play("bell", 1.15, -4.0)
+	if bool(cc["bump"]):
+		human.patience = maxf(0.0, human.patience - 8.0)
+		Sfx.play("bump", 1.1, -3.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whoa! Watch the chestnuts!", Color(1.0, 0.72, 0.72), POP_SAY)
+	if bool(cc["boop"]):
+		bones += 2
+		combo.add("BOOP", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "castanyera boop! +2", Color(1.0, 0.92, 0.45))
+		float_text(castanyera.pos + Vector2(0.0, -32.0), "Bona castanyada!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if bool(cc["snatch"]):
+		bones += 2
+		combo.add("SNATCH", 2)
+		Sfx.play("crack", 2.2, -4.0)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "chestnut snatch! +2", Color(1.0, 0.78, 0.32))
+		float_text(castanyera.pos + Vector2(0.0, -32.0), "Vigila que crema!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if bool(cc["dodge"]):
+		saves_done += 1
+		bones += 2
+		combo.add("DODGE", 2)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, close one!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "chestnut dodge! +2", Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -10782,6 +10822,13 @@ func on_bark(pos: Vector2) -> void:
 		Sfx.play("star", 1.2, -4.0)
 		float_text(pos + Vector2(0.0, -20.0), "giant dance! +2", Color(1.0, 0.92, 0.45))
 		float_text(gegant.pos + Vector2(0.0, -32.0), "Visca!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if castanyera != null and castanyera.on_bark(pos):
+		bones += 2
+		combo.add("BARK", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(pos + Vector2(0.0, -20.0), "castanyera bark! +2", Color(1.0, 0.92, 0.45))
+		float_text(castanyera.pos + Vector2(0.0, -32.0), "Ai, quin gosset!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if walk_mod != null and walk_mod.has_method("on_bark"):
 		walk_mod.on_bark(self, pos)

@@ -314,8 +314,10 @@ static func _draw_yard(m: Node2D, c: Object, r: Rect2) -> void:
 # --- main's walk hooks (main.WALK_MODULES) ---------------------------------------
 
 # the street and the plaça, up to the gate
-static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
+static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 	_draw_street(m, maxf(vt, m.GATE_Y - 30.0), vb)
+	if m.castanyera != null:
+		m.castanyera.draw(m, wc, vt, vb)
 
 
 # the lantern strings and every light, over everyone
