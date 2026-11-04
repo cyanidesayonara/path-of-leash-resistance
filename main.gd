@@ -110,6 +110,7 @@ var wild_boar: WildBoar
 var gegant: Gegant
 var castanyera: Castanyera
 var gardener: Gardener
+var forklift: Forklift
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -6140,6 +6141,7 @@ func _physics_process(delta: float) -> void:
 	_tick_gegant(delta)
 	_tick_castanyera(delta)
 	_tick_gardener(delta)
+	_tick_forklift(delta)
 	if march != null:
 		march.tick(self, delta)
 	dog.tick(delta)
@@ -7025,6 +7027,44 @@ func _tick_gardener(delta: float) -> void:
 		Sfx.play("star", 1.1, -6.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "mosaic dodge! +2", Color(1.0, 0.92, 0.45))
+		_update_hud()
+
+
+# La Ferralla's industrial forklift live event.
+func _tick_forklift(delta: float) -> void:
+	if not started or paused or lvl != "scrap" or forklift == null:
+		return
+	var fc: Dictionary = forklift.tick(delta, dog.global_position, dog.velocity, human.global_position)
+	if bool(fc["warn"]):
+		float_text(forklift.pos + Vector2(0.0, -32.0), "Compte amb el torito!", Color(0.96, 0.94, 0.88), POP_SAY)
+		Sfx.play("ui", 1.8, -2.0)
+	if bool(fc["bump"]):
+		human.patience = maxf(0.0, human.patience - 8.0)
+		Sfx.play("grunt", 0.9, -2.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whoa! Watch the forklift!", Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(forklift.pos + Vector2(0.0, -32.0), "Al tanto, que porto ferralla!", Color(0.96, 0.94, 0.88), POP_SAY)
+	if bool(fc["boop"]):
+		bones += 2
+		combo.add("BOOP", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "forklift boop! +2", Color(1.0, 0.92, 0.45))
+		float_text(forklift.pos + Vector2(0.0, -32.0), "Hola, gosset del ferro!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if bool(fc["snatch"]):
+		bones += 2
+		combo.add("SNATCH", 2)
+		Sfx.play("crack", 2.0, -4.0)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "hubcap snatch! +2", Color(1.0, 0.82, 0.35))
+		float_text(forklift.pos + Vector2(0.0, -32.0), "Ei, el meu ferro!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if bool(fc["dodge"]):
+		saves_done += 1
+		bones += 2
+		combo.add("DODGE", 2)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "scrap dodge! +2", Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -10876,6 +10916,13 @@ func on_bark(pos: Vector2) -> void:
 		Sfx.play("star", 1.2, -4.0)
 		float_text(pos + Vector2(0.0, -20.0), "gardener bark! +2", Color(1.0, 0.92, 0.45))
 		float_text(gardener.pos + Vector2(0.0, -32.0), "Ui, quin trontoll!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if forklift != null and forklift.on_bark(pos):
+		bones += 2
+		combo.add("BARK", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(pos + Vector2(0.0, -20.0), "forklift bark! +2", Color(1.0, 0.92, 0.45))
+		float_text(forklift.pos + Vector2(0.0, -32.0), "Ui, quin fre!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if walk_mod != null and walk_mod.has_method("on_bark"):
 		walk_mod.on_bark(self, pos)
