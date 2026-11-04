@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-11-04 - La Ferralla scrapyard forklift live event
+
+- A signature live event for La Ferralla (`systems/forklift.gd`, `world/ferralla.gd`, `world/level_build.gd`, `main.gd`):
+  a yellow industrial forklift ("el torito" / carretó elevador) driven by an operator in blue overalls and an orange safety helmet crosses the open yard lane at y = -1150.0, carrying a load of rusty scrap pipes and iron across the path from the west dismantling bay toward the east scrap stacks.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -820.0): the operator calls out from the west yard threshold at x = 240.0, y = -1150.0 ("Compte amb el torito!") with a reverse beeper chirp as the amber roof beacon flashes.
+- The crossing drive and hazard: the forklift drives eastbound across the lane at 240 px/s with its load of scrap. A distracted human wandering into the forklift gets bumped (-8 patience drop, "Whoa! Watch the forklift!", driver: "Al tanto, que porto ferralla!").
+- Dropped chrome hubcap & dog trick: as the forklift crosses the center lane (x >= 550.0), a vintage chrome hubcap ("tapacubs") slips loose and clatters onto the gravel. Snatching or booping it awards "hubcap snatch! +2" (+2 bones, +2 combo, driver: "Ei, el meu ferro!").
+- Forklift boop trick: booping the forklift directly awards "forklift boop! +2" (+2 bones, +2 combo, "Hola, gosset del ferro!").
+- Forklift bark trick: barking near the forklift (within 130 px) causes the driver to brake with a sharp tyre screech, awarding "forklift bark! +2" (+2 bones, +2 combo, "Ui, quin fre!").
+- Scrap dodge save: steering your human safely clear of the crossing trajectory after entering threat radius (70 px) awards "scrap dodge! +2" ("Whew, nice save!", +2 bones, +2 combo, increments saves_done) using `NearMiss.consider`. Walking past clear of threat awards nothing.
+- Autowalk clearance: timing clears the central corridor well before the autowalk pair arrives, ensuring 100% reliable automated traversal and test stability.
+- Zero added draw calls: batched directly into La Ferralla's existing `ShapeBatch` live pass (`draw_live`).
+- Tests: `tests/test_ferralla_forklift.gd`.
+
 ## 2026-11-04 - Park Güell municipal gardener flower wheelbarrow live event
 
 - A signature live event for Park Güell (`systems/gardener.gd`, `systems/mosaic.gd`, `world/level_build.gd`, `main.gd`):
