@@ -477,6 +477,8 @@ static func castanyada_stage(m: Node2D) -> Rect2:
 
 static func castanyada(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 	m.gate_text = "PLAÇA"
+	if not m.tutorial_mode:
+		m.castanyera = Castanyera.new()
 	m.stalls.clear()
 	m.stall_kinds.clear()
 	for st: Array in CAST_STALLS + CAST_STALLS_MORE:
