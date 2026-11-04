@@ -1598,6 +1598,8 @@ static func build_level_data(m: Node2D) -> void:
 			# closer together where the trail pinches, a few standing in it,
 			# and the stream crossing under a footbridge (build_freedom_area).
 			m.gate_text = "LA CLARIANA"
+			if not m.tutorial_mode:
+				m.boletaire = Boletaire.new()
 			for tp: Vector2 in TRAIL_TREES:
 				m.poles.append(tp)
 			m.deco_pole_count = m.poles.size()

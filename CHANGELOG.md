@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-11-04 - El Bosc mushroom forager live event
+
+- A signature live event for El Bosc (`systems/boletaire.gd`, `systems/bosc.gd`, `world/level_build.gd`, `main.gd`):
+  a Catalan mushroom hunter ("el boletaire") wearing a traditional beret (boina), plaid flannel shirt, and carrying a woven wicker basket steps across the forest clearing trail at y = -1650.0, searching for wild saffron milk caps (rovellons) under the pine trees.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -1320.0): the boletaire calls out from the western pine grove at x = 320.0, y = -1650.0 ("Mireu quins rovellons!") with a gentle wicker basket creak and pine twig rustle.
+- The crossing walk and hazard: the boletaire walks eastbound across the trail clearing at 200 px/s with his wicker mushroom basket. A distracted human wandering into the boletaire gets bumped (-8 patience drop, "Whoa! Watch the basket!", boletaire: "Al tanto amb el cistell!").
+- Dropped rovelló mushroom & dog trick: as the boletaire crosses the central pine trail (x >= 620.0), a prime orange wild rovelló mushroom slips loose and rolls onto the pine needles. Snatching or booping it awards "rovelló snatch! +2" (+2 bones, +2 combo, boletaire: "Ei, el meu bolet!").
+- Boletaire boop trick: booping the boletaire directly awards "boletaire boop! +2" (+2 bones, +2 combo, "Hola, boletaire de quatre potes!").
+- Boletaire bark trick: barking near the boletaire (within 130 px) startles him into pausing with a basket wobble, awarding "boletaire bark! +2" (+2 bones, +2 combo, "Ui, quin ensurt!").
+- Bosc dodge save: steering your human safely clear of the crossing trajectory after entering threat radius (65 px) awards "bosc dodge! +2" ("Whew, nice save!", +2 bones, +2 combo, increments saves_done) using `NearMiss.consider`. Walking past clear of threat awards nothing.
+- Autowalk clearance: timing clears the central corridor well before the autowalk pair arrives, ensuring 100% reliable automated traversal and test stability.
+- Zero added draw calls: batched directly into El Bosc's existing `ShapeBatch` live pass (`draw_live`).
+- Tests: `tests/test_bosc_boletaire.gd`.
+
 ## 2026-11-04 - El Gòtic vintage courier scooter live event
 
 - A signature live event for El Gòtic (`systems/scooter.gd`, `systems/detour.gd`, `world/level_build.gd`, `main.gd`):
