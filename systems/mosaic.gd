@@ -149,6 +149,8 @@ static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
 		m._mosaic_cache_vt = vt
 		m._mosaic_cache_vb = vb
 	m._mosaic_cache.append_to(m._wc)
+	if m.gardener:
+		m.gardener.draw(m, m._wc, vt, vb)
 
 
 static func _draw_scenery(m: Node2D, vt: float, vb: float) -> void:
