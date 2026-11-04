@@ -29,7 +29,7 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 50
     # the default token is read-only, so creating a GitHub release 403s
     # without contents:write; actions:read is required to query CI runs
     permissions:
@@ -47,7 +47,7 @@ jobs:
           # Tag push starts CI in parallel; poll until that SHA is green.
           # A prior successful CI run on the same SHA (e.g. main push) also
           # satisfies the gate - we only care about the exact commit.
-          deadline=$((SECONDS + 1200))
+          deadline=$((SECONDS + 2400))
           while (( SECONDS < deadline )); do
             json="$(gh run list \
               --repo "${GITHUB_REPOSITORY}" \
