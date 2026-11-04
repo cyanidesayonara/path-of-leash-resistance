@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-11-04 - La Neteja street cleaner live event
+
+- A signature live event for La Neteja (`systems/escombriaire.gd`, `systems/neteja.gd`, `world/level_build.gd`, `main.gd`):
+  a Barcelona municipal street cleaner ("l'escombriaire de carrer") in high-visibility fluorescent yellow overalls with silver reflective safety bands and an orange work cap pushes a lime-green BCN NETA wheeled bin cart across the dawn alleyway from the east kerb to the west kerb at y = -1600.0, sweeping the wet setts with a stiff push-broom.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -1300.0): the street cleaner calls out from an east doorway at x = 810.0, y = -1600.0 ("Aigua va, carrer net!") with a soapy splash and broom scuff sound.
+- The crossing walk and hazard: the cleaner walks westbound across the street at 190 px/s pushing his wheeled bin cart. A distracted human wandering into the cleaner gets bumped (-8 patience drop, "Whoa! Watch the broom!", escombriaire: "Al tanto amb l'escombra!").
+- Dropped rubber duck & dog trick: as the cleaner sweeps across center street (x <= 640.0), a bright yellow rubber bath duck ("l'ànec de goma", washed from a drain) rolls onto the wet paving. Snatching or booping it awards "duck snatch! +2" (+2 bones, +2 combo, escombriaire: "Ei, l'ànec!").
+- Escombriaire boop trick: booping the cleaner directly awards "escombriaire boop! +2" (+2 bones, +2 combo, "Hola, bon dia gosset!").
+- Escombriaire bark trick: barking near the cleaner (within 130 px) startles him into a broom wobble, awarding "escombriaire bark! +2" (+2 bones, +2 combo, "Ui, quin ensurt!").
+- Neteja dodge save: steering your human safely clear of the crossing trajectory after entering threat radius (64 px) awards "neteja dodge! +2" ("Whew, nice save!", +2 bones, +2 combo, increments saves_done) using `NearMiss.consider`. Walking past clear of threat awards nothing.
+- Autowalk clearance: timing clears the central corridor well before the autowalk pair arrives, ensuring 100% reliable automated traversal and test stability.
+- Zero added draw calls: batched directly into La Neteja's existing `ShapeBatch` live pass in `_draw_street`.
+- Tests: `tests/test_neteja_escombriaire.gd`.
+
 ## 2026-11-04 - El Besòs birdwatcher live event
 
 - A signature live event for El Besòs (`systems/ornitoleg.gd`, `systems/besos.gd`, `world/level_build.gd`, `main.gd`):

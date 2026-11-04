@@ -199,6 +199,8 @@ static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 					b.circle(bp + Vector2(-0.4, -0.4), brad * 0.4, Color(1.0, 1.0, 1.0, 0.95))
 
 	m._draw_scooters(b, vt, vb)
+	if m.escombriaire != null:
+		m.escombriaire.draw(m, b, vt, vb)
 	b.flush(m._wc)
 
 

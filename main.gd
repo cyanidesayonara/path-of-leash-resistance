@@ -115,6 +115,7 @@ var scooter: Scooter
 var boletaire: Boletaire
 var florista: Florista
 var ornitoleg: Ornitoleg
+var escombriaire: Escombriaire
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -6152,6 +6153,7 @@ func _physics_process(delta: float) -> void:
 	_tick_boletaire(delta)
 	_tick_florista(delta)
 	_tick_ornitoleg(delta)
+	_tick_escombriaire(delta)
 	if march != null:
 		march.tick(self, delta)
 	dog.tick(delta)
@@ -7113,6 +7115,44 @@ func _tick_scooter(delta: float) -> void:
 		Sfx.play("star", 1.1, -6.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "gòtic dodge! +2", Color(1.0, 0.92, 0.45))
+		_update_hud()
+
+
+# La Neteja's street cleaner live event.
+func _tick_escombriaire(delta: float) -> void:
+	if not started or paused or lvl != "neteja" or escombriaire == null:
+		return
+	var ec: Dictionary = escombriaire.tick(delta, dog.global_position, dog.velocity, human.global_position)
+	if bool(ec["warn"]):
+		float_text(escombriaire.pos + Vector2(0.0, -32.0), "Aigua va, carrer net!", Color(0.96, 0.94, 0.88), POP_SAY)
+		Sfx.play("rustle", 1.1, -3.0)
+	if bool(ec["bump"]):
+		human.patience = maxf(0.0, human.patience - 8.0)
+		Sfx.play("grunt", 0.9, -2.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whoa! Watch the broom!", Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(escombriaire.pos + Vector2(0.0, -32.0), "Al tanto amb l'escombra!", Color(0.96, 0.94, 0.88), POP_SAY)
+	if bool(ec["boop"]):
+		bones += 2
+		combo.add("BOOP", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "escombriaire boop! +2", Color(1.0, 0.92, 0.45))
+		float_text(escombriaire.pos + Vector2(0.0, -32.0), "Hola, bon dia gosset!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if bool(ec["snatch"]):
+		bones += 2
+		combo.add("SNATCH", 2)
+		Sfx.play("pickup", 1.2, -3.0)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "duck snatch! +2", Color(1.0, 0.72, 0.32))
+		float_text(escombriaire.pos + Vector2(0.0, -32.0), "Ei, l'ànec!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if bool(ec["dodge"]):
+		saves_done += 1
+		bones += 2
+		combo.add("DODGE", 2)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "neteja dodge! +2", Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -11113,6 +11153,13 @@ func on_bark(pos: Vector2) -> void:
 		Sfx.play("star", 1.2, -4.0)
 		float_text(pos + Vector2(0.0, -20.0), "ornitòleg bark! +2", Color(1.0, 0.92, 0.45))
 		float_text(ornitoleg.pos + Vector2(0.0, -32.0), "Ui, quin esglai!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if escombriaire != null and escombriaire.on_bark(pos):
+		bones += 2
+		combo.add("BARK", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(pos + Vector2(0.0, -20.0), "escombriaire bark! +2", Color(1.0, 0.92, 0.45))
+		float_text(escombriaire.pos + Vector2(0.0, -32.0), "Ui, quin ensurt!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if walk_mod != null and walk_mod.has_method("on_bark"):
 		walk_mod.on_bark(self, pos)
