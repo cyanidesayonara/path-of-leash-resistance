@@ -673,6 +673,8 @@ static func ferralla(m: Node2D) -> void:
 	# embarrassing, not fatal. No terrace, no benches, no hydrant grid, no
 	# road crossings.
 	m.gate_text = "EL PATI"
+	if not m.tutorial_mode:
+		m.forklift = Forklift.new()
 	m.lane_ys = Array([], TYPE_FLOAT, &"", null)
 	m.tables.clear()
 	m.chairs.clear()

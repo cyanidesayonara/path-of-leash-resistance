@@ -412,6 +412,8 @@ static func draw_yard_wreck(b: Object, fr: Rect2) -> void:
 # the crane and the kennels, up to the gate
 static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 	vt = maxf(vt, m.GATE_Y - 30.0)
+	if m.forklift:
+		m.forklift.draw(m, wc, vt, vb)
 	_draw_crane(m, wc, vt, vb)
 	_draw_kennels(m, wc, vt, vb)
 
