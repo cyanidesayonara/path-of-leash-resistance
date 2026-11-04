@@ -336,6 +336,8 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_gotic_scooter.gd
       - name: El Bosc mushroom forager test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_bosc_boletaire.gd
+      - name: La Rambla flower seller test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_rambla_florista.gd
       - name: Campaign mastery test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_campaign_mastery.gd
       - name: Chase milestone gates test

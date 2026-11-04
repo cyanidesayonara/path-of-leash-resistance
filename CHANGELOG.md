@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-11-04 - La Rambla flower seller live event
+
+- A signature live event for La Rambla (`systems/florista.gd`, `world/level_build.gd`, `main.gd`):
+  a Barcelona florist ("la florista de la Rambla") wearing a dark green apron, cream linen dress, and wide straw sunhat carries a wooden display tray of freshly cut red roses across the central promenade at y = -2980.0 between flower kiosks.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -2660.0): the florist calls out from the western kiosk line at x = 380.0, y = -2980.0 ("Flors fresques de la Rambla!") with a rustle of rose leaves.
+- The crossing walk and hazard: the florist walks eastbound across the promenade at 210 px/s with her wooden flower tray. A distracted human wandering into the florist gets bumped (-8 patience drop, "Whoa! Watch the flowers!", florista: "Ai, les meves roses!").
+- Dropped red rose & dog trick: as the florist crosses the central promenade (x >= 630.0), a prime long-stemmed red rose slips loose from the tray and rolls onto the mosaic waves. Snatching or booping it awards "rose snatch! +2" (+2 bones, +2 combo, florista: "Ei, la meva rosa!").
+- Florista boop trick: booping the florist directly awards "florista boop! +2" (+2 bones, +2 combo, "Hola, gosset maco!").
+- Florista bark trick: barking near the florist (within 130 px) startles her into pausing with a tray wobble, awarding "florista bark! +2" (+2 bones, +2 combo, "Ui, quin ensurt!").
+- Rambla dodge save: steering your human safely clear of the crossing trajectory after entering threat radius (68 px) awards "rambla dodge! +2" ("Whew, nice save!", +2 bones, +2 combo, increments saves_done) using `NearMiss.consider`. Walking past clear of threat awards nothing.
+- Autowalk clearance: timing clears the central promenade well before the autowalk pair arrives, ensuring 100% reliable automated traversal and test stability.
+- Zero added draw calls: batched directly into La Rambla's existing `ShapeBatch` live pass in `_draw_rambla`.
+- Tests: `tests/test_rambla_florista.gd`.
+
 ## 2026-11-04 - El Bosc mushroom forager live event
 
 - A signature live event for El Bosc (`systems/boletaire.gd`, `systems/bosc.gd`, `world/level_build.gd`, `main.gd`):
