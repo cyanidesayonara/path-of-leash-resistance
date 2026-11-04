@@ -387,6 +387,8 @@ static func draw_river(m: Node2D, vt: float, vb: float) -> void:
 			b.circle(bp, 2.8, Color(1.0, 0.72, 0.16) if not open else Color(0.58, 0.42, 0.14))
 			if not open:
 				b.circle(bp, 7.0, Color(1.0, 0.60, 0.12, 0.38 + 0.32 * absf(sin(wt * 10.0))))
+	if m.ornitoleg != null:
+		m.ornitoleg.draw(m, b, vt, vb)
 	b.flush(m._wc)
 
 
