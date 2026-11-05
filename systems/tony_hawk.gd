@@ -41,6 +41,7 @@ const CLOCK_TARGETS := {
 	"llevant": 180,
 	"boars": 170,
 	"gracia": 175,
+	"carmel": 190,
 	"raval": 210,  # the walk plus the whole fight with El Gat
 }
 
@@ -71,6 +72,7 @@ const JAMON_POS := {
 	"llevant": Vector2(860.0, -2200.0),
 	"boars": Vector2(680.0, -2200.0),
 	"gracia": Vector2(640.0, -2100.0),
+	"carmel": Vector2(510.0, -4280.0),
 	"raval": Vector2(640.0, -2200.0),
 }
 

@@ -118,6 +118,7 @@ var ornitoleg: Ornitoleg
 var escombriaire: Escombriaire
 var botanic: Botanic
 var banderer: Banderer
+var guitarrista: Guitarrista
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -203,6 +204,8 @@ const LevelBuild := preload("res://world/level_build.gd")
 const WorldSign := preload("res://world/world_sign.gd")
 const PopsLayer := preload("res://world/pops_layer.gd")
 const Rambla := preload("res://world/rambla.gd")
+const Guitarrista := preload("res://systems/guitarrista.gd")
+const Carmel := preload("res://systems/carmel.gd")
 # float_text(..., POP_SAY) draws a speech bubble rather than a sound or a score
 const POP_SAY := 0
 const POLE_RADIUS := 10.0
@@ -319,6 +322,7 @@ const WALK_MODULES := {
 	"llevant": preload("res://systems/llevant.gd"),
 	"boars": preload("res://systems/boars.gd"),
 	"gracia": preload("res://systems/gracia.gd"),
+	"carmel": preload("res://systems/carmel.gd"),
 	"raval": preload("res://systems/boss_gat.gd"),
 	"beach": preload("res://systems/passeig.gd"),
 	"rain": preload("res://systems/diluvi.gd"),
@@ -521,6 +525,7 @@ var _needle_owner: Array[int] = []
 var port_gulls_startled := 0
 var port_bollard_wrapped := false
 var reial_gaudi_wrapped := false
+var carmel_cannon_wrapped := false
 var reial_fountain_drank := false
 var reial_busker_barked := false
 var vet_scale_weighed := false
@@ -9600,6 +9605,10 @@ func _tick_vault(delta: float) -> void:
 		if pole in Reial.GAUDI_POSTS:
 			reial_gaudi_wrapped = true
 			feed.say("GAUDÍ SLINGSHOT!", EventFeed.Tone.GOOD)
+	if wrapped and lvl == "carmel" and not carmel_cannon_wrapped:
+		if pole in [Carmel.CANNON_1, Carmel.CANNON_2, Carmel.CANNON_3]:
+			carmel_cannon_wrapped = true
+			feed.say("CANNON BATTERY SLINGSHOT!", EventFeed.Tone.GOOD)
 	if vault_t > 0.0:
 		# held zoomies keep the swing going, up to its cap
 		var held: bool = dog.turbo_active and vault_elapsed < VAULT_MAX_T

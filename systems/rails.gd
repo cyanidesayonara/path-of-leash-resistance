@@ -99,6 +99,12 @@ static func build(m: Node2D) -> void:
 			if z.size.y > 0.0:
 				for hx: float in [z.position.x + 8.0, z.end.x - 8.0]:
 					m.rails.append(line(Vector2(hx, z.end.y), Vector2(hx, z.position.y), "HANDRAIL"))
+		"carmel":
+			# the outdoor escalators' balustrade handrails
+			var z: Rect2 = m.conveyor_zone
+			if z.size.y > 0.0:
+				for hx: float in [z.position.x + 3.0, z.end.x - 3.0]:
+					m.rails.append(line(Vector2(hx, z.end.y), Vector2(hx, z.position.y), "HANDRAIL"))
 
 
 # The nearest point of a rail to p: {"q": point, "dir": unit direction of that

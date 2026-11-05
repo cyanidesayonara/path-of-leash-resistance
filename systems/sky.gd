@@ -10,6 +10,7 @@ extends RefCounted
 # drawn through light() and stay warm.
 const NIGHT := Color(0.42, 0.47, 0.66)
 const DAWN := Color(1.0, 0.86, 0.78)
+const SUNSET := Color(1.0, 0.84, 0.72)
 const RAIN := Color(0.74, 0.78, 0.84)
 const WIND := Color(0.95, 0.91, 0.82)
 const SNOW := Color(0.93, 0.97, 1.04)
@@ -42,6 +43,12 @@ const GRADE_NIGHT := {
 	"k_sat": 0.78, "k_con": 1.08, "k_exp": 1.0, "add_vig": 0.22, "add_lift": 0.015,
 	"k_tint": Vector3.ONE, "k_cool": Vector3(0.95, 0.98, 1.05), "k_warm": Vector3(1.08, 1.0, 0.90), "wet": 0.0,
 }
+# Els Búnquers del Carmel: golden hour sunset above Barcelona
+const GRADE_SUNSET := {
+	"k_sat": 1.08, "k_con": 1.04, "k_exp": 1.0, "add_vig": 0.08, "add_lift": 0.0,
+	"k_tint": Vector3(1.04, 0.98, 0.94), "k_cool": Vector3(1.05, 0.92, 1.05), "k_warm": Vector3(1.12, 1.02, 0.86), "wet": 0.0,
+}
+
 # La Neteja's dawn: low gold light and long pink shadows
 const GRADE_DAWN := {
 	"k_sat": 1.04, "k_con": 1.02, "k_exp": 1.0, "add_vig": 0.06, "add_lift": 0.0,
@@ -53,6 +60,8 @@ static func tint(lvl: String, weather: String, night: bool) -> Color:
 	var c := NIGHT if night else Color.WHITE
 	if lvl == "neteja" and not night:
 		c = DAWN
+	elif lvl == "carmel" and not night:
+		c = SUNSET
 	match weather:
 		"rain": c = c * RAIN
 		"wind": c = c * WIND
@@ -62,6 +71,10 @@ static func tint(lvl: String, weather: String, night: bool) -> Color:
 
 static func is_dawn(lvl: String, night: bool) -> bool:
 	return lvl == "neteja" and not night
+
+
+static func is_sunset(lvl: String, night: bool) -> bool:
+	return lvl == "carmel" and not night
 
 
 # the weather's and the hour's changes to the grade, combined
@@ -75,6 +88,8 @@ static func grade_mod(lvl: String, weather: String, night: bool) -> Dictionary:
 		out = _stack(out, GRADE_NIGHT)
 	elif is_dawn(lvl, night):
 		out = _stack(out, GRADE_DAWN)
+	elif is_sunset(lvl, night):
+		out = _stack(out, GRADE_SUNSET)
 	return out
 
 
