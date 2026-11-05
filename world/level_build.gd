@@ -164,6 +164,8 @@ static func gotic(m: Node2D) -> void:
 	# parked against the walls, and the plaça with its fountain. None of the
 	# market's stalls.
 	m.gate_text = "PLAÇA"
+	if not m.tutorial_mode:
+		m.scooter = Scooter.new()
 	m.stalls.clear()
 	m.stall_kinds.clear()
 	m.astands = Array([], TYPE_VECTOR2, &"", null)
