@@ -804,7 +804,7 @@ The plan as written at v1.63, a chase every fifth walk and a boss to end on. Wha
   - **The prowl**: he climbs down as she sets off and keeps ahead of your human. Every swat is telegraphed by a dust ring where the paw will land (`SWAT_WARN`, 0.85 s); a near miss staggers him.
   - **Below half**: he charges her down a red lane. A taut leash across his path trips him (clothesline), a palm or a terrace in the way stuns him (smash), and your human flung into him knocks him silly (pummel). Dazed, a bark on his nose is a boop.
   - **The tangle**: out of fight he walks back to the plinth in the plaça and sits. The leash resting on three of his four legs within 1.5 s ties him up; he topples, and a bark on his snout settles him. Your human walks on into the plaça.
-  - **Not built yet**: a victory scene on the plinth.
+  - **Victory scene on the plinth**: side-on cinematic ("El Rei del Raval", `intro/film_plinth.gd`) where the cat purrs contentedly on the plinth, the dog leaps up triumphantly, your human snaps a victory photo with their phone flash, and the plaça erupts in confetti and fireworks before handing the walk back to reach the fountain.
 
 ### Artsy Detours (Hidden in plain sight)
 - Museum and gallery side-rooms ("EXPOSICIÓ - ENTRADA LLIURE") off major walks:

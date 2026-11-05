@@ -19,6 +19,7 @@ const SCENES := {
 	"boars": "res://intro/film_boars.gd",
 	"gracia": "res://intro/film_gracia.gd",
 	"gat": "res://intro/film_gat.gd",
+	"plinth": "res://intro/film_plinth.gd",
 }
 
 

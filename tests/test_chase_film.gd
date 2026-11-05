@@ -54,8 +54,8 @@ func _run() -> void:
 	var lib: Dictionary = root.get_node("Sfx").lib
 	var Kit: GDScript = load("res://intro/film_kit.gd")
 	var boss: GDScript = load("res://systems/boss_gat.gd")
-	for walk: Array in [["neteja", HomeChase.SWEEPER_FILM], ["besos", HomeChase.FLOOD_FILM], ["vet", HomeChase.VET_FILM], ["boars", HomeChase.BOARS_FILM], ["gracia", HomeChase.GRACIA_FILM], ["raval", boss.FILM]]:
-		if walk[0] != "raval":
+	for walk: Array in [["neteja", HomeChase.SWEEPER_FILM], ["besos", HomeChase.FLOOD_FILM], ["vet", HomeChase.VET_FILM], ["boars", HomeChase.BOARS_FILM], ["gracia", HomeChase.GRACIA_FILM], ["raval", boss.FILM], ["plinth", boss.FILM_PLINTH]]:
+		if walk[0] != "raval" and walk[0] != "plinth":
 			_check(HomeChase.profile_for(walk[0]).get("film", "") == walk[1], "%s's chase has its film" % walk[0])
 		var f: GDScript = load(walk[1])
 		_check(float(f.LENGTH) == float(Kit.LENGTH) and float(f.TITLE_AT) == float(Kit.TITLE_AT),

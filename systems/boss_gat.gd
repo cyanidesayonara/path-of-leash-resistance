@@ -87,6 +87,8 @@ const WAKE_Y := -250.0          # the dog past this, he climbs down
 # the finale's film (intro/film_gat.gd), played the first time she passes
 # WAKE_Y; the walk's own wake follows it
 const FILM := "res://intro/film_gat.gd"
+# the victory scene on the plinth (intro/film_plinth.gd), played when El Gat is settled
+const FILM_PLINTH := "res://intro/film_plinth.gd"
 const LEAD := 260.0             # how far ahead of your human he prowls
 const PROWL_SPEED := 110.0
 const CATCH_SPEED := 220.0      # the pair got past him: he hurries ahead again
@@ -210,6 +212,7 @@ var steam_t := 0.0
 var lean := 0.0
 var card_t := -1.0
 var film_shown := false
+var plinth_film_shown := false
 var card: Control = null
 var cheer := 0.0
 var gasp := 0.0
@@ -639,6 +642,9 @@ func transition_to(new_state: State) -> void:
 				var ang := TAU * float(i) / 48.0
 				var spd := fx.randf_range(80.0, 240.0)
 				confetti.append({"pos": pos, "vel": Vector2(cos(ang), sin(ang)) * spd, "col": cols[i % 4], "life": 3.0})
+			if not plinth_film_shown and FilmPlayer.should_play(main):
+				plinth_film_shown = true
+				FilmPlayer.play(main, load(FILM_PLINTH))
 
 
 func execute_swat() -> void:
