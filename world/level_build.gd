@@ -1503,6 +1503,8 @@ static func build_level_data(m: Node2D) -> void:
 		"street":
 			m.lane_ys = Array([-1200.0, -2600.0, -4000.0], TYPE_FLOAT, &"", null)
 			m.gate_text = "PIPICÀ"
+			if not m.tutorial_mode:
+				m.florista = Florista.new()
 			for i in range(7):
 				var x = m.sw_l + 30.0 if i % 2 == 0 else m.sw_r - 30.0
 				var y := -350.0 - i * 640.0

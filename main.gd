@@ -113,6 +113,7 @@ var gardener: Gardener
 var forklift: Forklift
 var scooter: Scooter
 var boletaire: Boletaire
+var florista: Florista
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -3646,6 +3647,8 @@ func _draw_rambla(vt: float, vb: float) -> void:
 			for ex: float in [-2.6, 2.6]:
 				b.circle(hp + Vector2(ex, 3.6), 1.4, Color(0.98, 0.96, 0.92))
 				b.circle(hp + Vector2(ex + 0.6 * sin(t * 3.0), 3.9), 0.8, Color(0.1, 0.1, 0.1))
+	if florista != null:
+		florista.draw(self, b, vt, vb)
 	b.flush(_wc)
 
 
@@ -6146,6 +6149,7 @@ func _physics_process(delta: float) -> void:
 	_tick_forklift(delta)
 	_tick_scooter(delta)
 	_tick_boletaire(delta)
+	_tick_florista(delta)
 	if march != null:
 		march.tick(self, delta)
 	dog.tick(delta)
@@ -7107,6 +7111,44 @@ func _tick_scooter(delta: float) -> void:
 		Sfx.play("star", 1.1, -6.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "gòtic dodge! +2", Color(1.0, 0.92, 0.45))
+		_update_hud()
+
+
+# La Rambla's flower seller live event.
+func _tick_florista(delta: float) -> void:
+	if not started or paused or lvl != "street" or florista == null:
+		return
+	var fc: Dictionary = florista.tick(delta, dog.global_position, dog.velocity, human.global_position)
+	if bool(fc["warn"]):
+		float_text(florista.pos + Vector2(0.0, -32.0), "Flors fresques de la Rambla!", Color(0.96, 0.94, 0.88), POP_SAY)
+		Sfx.play("rustle", 1.1, -3.0)
+	if bool(fc["bump"]):
+		human.patience = maxf(0.0, human.patience - 8.0)
+		Sfx.play("grunt", 0.9, -2.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whoa! Watch the flowers!", Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(florista.pos + Vector2(0.0, -32.0), "Ai, les meves roses!", Color(0.96, 0.94, 0.88), POP_SAY)
+	if bool(fc["boop"]):
+		bones += 2
+		combo.add("BOOP", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "florista boop! +2", Color(1.0, 0.92, 0.45))
+		float_text(florista.pos + Vector2(0.0, -32.0), "Hola, gosset maco!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if bool(fc["snatch"]):
+		bones += 2
+		combo.add("SNATCH", 2)
+		Sfx.play("pickup", 1.2, -3.0)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "rose snatch! +2", Color(1.0, 0.72, 0.32))
+		float_text(florista.pos + Vector2(0.0, -32.0), "Ei, la meva rosa!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if bool(fc["dodge"]):
+		saves_done += 1
+		bones += 2
+		combo.add("DODGE", 2)
+		Sfx.play("star", 1.1, -6.0)
+		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), "rambla dodge! +2", Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -11017,6 +11059,13 @@ func on_bark(pos: Vector2) -> void:
 		Sfx.play("star", 1.2, -4.0)
 		float_text(pos + Vector2(0.0, -20.0), "boletaire bark! +2", Color(1.0, 0.92, 0.45))
 		float_text(boletaire.pos + Vector2(0.0, -32.0), "Ui, quin ensurt!", Color(0.96, 0.94, 0.88), POP_SAY)
+		_update_hud()
+	if florista != null and florista.on_bark(pos):
+		bones += 2
+		combo.add("BARK", 2)
+		Sfx.play("star", 1.2, -4.0)
+		float_text(pos + Vector2(0.0, -20.0), "florista bark! +2", Color(1.0, 0.92, 0.45))
+		float_text(florista.pos + Vector2(0.0, -32.0), "Ui, quin ensurt!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if walk_mod != null and walk_mod.has_method("on_bark"):
 		walk_mod.on_bark(self, pos)
