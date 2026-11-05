@@ -1173,6 +1173,8 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 	# the avenue stops at the gate: past it, the square is the freedom layer's
 	vt = maxf(vt, m.GATE_Y - 30.0)
 	var t := AnimClock.msec() / 1000.0
+	if m.banderer != null:
+		m.banderer.draw(m, wc, vt, vb)
 	if m.kickabout != null:
 		m.kickabout.draw(wc, vt, vb)
 	if m.lost_scarf != null:

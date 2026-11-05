@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-11-05 - Dia de Partit match-day flag bearer live event
+
+- A signature live event for Dia de Partit (`systems/banderer.gd`, `systems/partit.gd`, `world/level_build.gd`, `main.gd`):
+  an enthusiastic match-day fan and flag bearer ("el banderer del Barça") in a striped Blaugrana jersey (#10), blue match shorts, and Catalan barretina hurries across the stadium avenue from the scarf stall (east kerb, x = 950.0) toward the stadium gates and west barricades (x = 350.0) at y = -1380.0, waving a large striped Blaugrana club flag on a wooden staff and carrying a bundle of supporter scarves.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -1020.0): the flag bearer calls out from the scarf stall at x = 950.0, y = -1380.0 ("Força Barça, que comença el partit!") with a stadium horn toot and crowd cheer sound.
+- The crossing walk and hazard: the flag bearer walks westbound across the avenue at 230 px/s waving his match flag. A distracted human wandering into the flag bearer gets bumped (-8 patience drop, "Whoa! Watch the flag!", banderer: "Al tanto amb la bandera!").
+- Dropped match scarf & dog trick: as the flag bearer crosses center avenue (x <= 640.0), a supporter scarf slips loose and flutters onto the asphalt. Snatching or booping it awards "bufanda snatch! +2" (+2 bones, +2 combo, banderer: "Ei, la meva bufanda!").
+- Banderer boop trick: booping the flag bearer directly awards "banderer boop! +2" (+2 bones, +2 combo, "Hola, gosset culer!").
+- Banderer bark trick: barking near the flag bearer (within 130 px) excites him into an enthusiastic flag flourish, awarding "banderer bark! +2" (+2 bones, +2 combo, "Visca el Barça!").
+- Partit dodge save: steering your human safely clear of the crossing trajectory after entering threat radius (66 px) awards "partit dodge! +2" ("Whew, nice save!", +2 bones, +2 combo, increments saves_done) using `NearMiss.consider`. Walking past clear of threat awards nothing.
+- Autowalk clearance: timing clears the central avenue well before the autowalk pair arrives, ensuring 100% reliable automated traversal and test stability.
+- Zero added draw calls: batched directly into Dia de Partit's existing `ShapeBatch` live pass in `draw_live`.
+- Tests: `tests/test_partit_banderer.gd`.
+
 ## 2026-11-04 - Montjuïc botanist live event
 
 - A signature live event for Montjuïc (`systems/botanic.gd`, `systems/montjuic.gd`, `world/level_build.gd`, `main.gd`):
