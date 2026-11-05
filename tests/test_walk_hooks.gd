@@ -17,7 +17,7 @@ const HOOKS := {
 	"montjuic": ["build_layer", "draw_bollard", "draw_conveyor", "draw_edge_layer", "draw_freedom", "draw_ground", "draw_live", "grass_blocked", "tick"],
 	"guell": ["draw_bollard", "draw_clearing", "draw_column", "draw_live", "tick_crowd"],
 	"scrap": ["draw_bollard", "draw_column", "draw_grove", "draw_live", "draw_log_prop", "draw_overhead", "draw_top", "draw_van", "draw_verge", "draw_yard", "idle_status"],
-	"trail": ["draw_bollard", "draw_path_edges", "draw_scenery", "draw_snack", "draw_trough_prop", "grass_blocked"],
+	"trail": ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "draw_trough_prop", "grass_blocked"],
 	"station": ["draw_bollard", "draw_column", "draw_freedom_beyond", "draw_freedom_ground", "draw_live", "draw_log_prop", "draw_van"],
 	"barri": ["draw_edge_layer", "draw_fountain", "draw_freedom_ground", "draw_gate_fence", "draw_live", "draw_performer", "grass_blocked", "surface"],
 	"oldtown": ["build_layer", "draw_column", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "tick"],

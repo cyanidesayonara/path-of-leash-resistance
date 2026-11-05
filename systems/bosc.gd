@@ -226,6 +226,12 @@ static func _draw_edges(m: Node2D, left: PackedVector2Array, right: PackedVector
 
 
 # a forest spring, a font: the props match draws it for a trough on El Bosc
+# the mushroom forager crossing the trail
+static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	if m.boletaire:
+		m.boletaire.draw(m, wc, vt, vb)
+
+
 static func draw_trough_prop(m: Node2D, c: Object, p: Vector2) -> void:
 	# a forest spring, a font: a stone back with a pipe, the water
 	# falling from it into a round stone basin, moss on the stones
