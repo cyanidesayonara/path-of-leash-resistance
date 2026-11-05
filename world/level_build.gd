@@ -381,6 +381,8 @@ static func neteja_dumpsters(m: Node2D) -> Array[Vector2]:
 
 static func neteja(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 	m.gate_text = "PLAÇA"
+	if not m.tutorial_mode:
+		m.escombriaire = Escombriaire.new()
 	hyd_list.assign(NETEJA_HYDRANTS)
 	keb_list.assign(NETEJA_SNACKS)
 	m.stalls = Array([], TYPE_VECTOR2, &"", null)
