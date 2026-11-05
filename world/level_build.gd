@@ -337,6 +337,8 @@ static func besos(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 	# A paved path against the flood wall, grass toward the river, lamps
 	# where a street would have hydrants. No traffic: the lane is for people.
 	m.gate_text = "EL PRAT"
+	if not m.tutorial_mode:
+		m.ornitoleg = Ornitoleg.new()
 	m.lane_ys = Array([], TYPE_FLOAT, &"", null)
 	m.stalls.clear()
 	m.stall_kinds.clear()

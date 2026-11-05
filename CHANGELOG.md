@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-11-04 - El Besòs birdwatcher live event
+
+- A signature live event for El Besòs (`systems/ornitoleg.gd`, `systems/besos.gd`, `world/level_build.gd`, `main.gd`):
+  a Catalan wildlife birdwatcher ("l'ornitòleg del Besòs") in a khaki safari bush hat and multi-pocket field vest crosses the riverside promenade from the eastern reed bank toward the concrete flood wall at y = -2680.0, observing grey herons and egrets with a pair of field binoculars.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -2340.0): the ornithologist calls out from the reed bed edge at x = 680.0, y = -2680.0 ("Mireu, un bernat pescaire!") with a bird chirp and field rustle sound.
+- The crossing walk and hazard: the ornithologist walks westbound across the promenade at 210 px/s with his binoculars held up. A distracted human wandering into the ornithologist gets bumped (-8 patience drop, "Whoa! Watch the binoculars!", ornitòleg: "Compte amb el telescopi!").
+- Dropped binoculars & dog trick: as the ornithologist crosses the center path (x <= 420.0), a pair of field binoculars slips from around his neck and tumbles onto the path. Snatching or booping them awards "prismàtics snatch! +2" (+2 bones, +2 combo, ornitòleg: "Ei, els meus prismàtics!").
+- Ornitòleg boop trick: booping the ornithologist directly awards "ornitòleg boop! +2" (+2 bones, +2 combo, "Hola, ocellet maco!").
+- Ornitòleg bark trick: barking near the ornithologist (within 130 px) startles him into a spotting wobble, awarding "ornitòleg bark! +2" (+2 bones, +2 combo, "Ui, quin esglai!").
+- Besòs dodge save: steering your human safely clear of the crossing trajectory after entering threat radius (66 px) awards "besòs dodge! +2" ("Whew, nice save!", +2 bones, +2 combo, increments saves_done) using `NearMiss.consider`. Walking past clear of threat awards nothing.
+- Autowalk clearance: timing clears the central corridor well before the autowalk pair arrives, ensuring 100% reliable automated traversal and test stability.
+- Zero added draw calls: batched directly into El Besòs's existing `ShapeBatch` live pass in `draw_river`.
+- Tests: `tests/test_besos_ornitoleg.gd`.
+
 ## 2026-11-04 - La Rambla flower seller live event
 
 - A signature live event for La Rambla (`systems/florista.gd`, `world/level_build.gd`, `main.gd`):
