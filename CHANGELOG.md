@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-11-06 - Two tests CI never ran
+
+- `test_film_plinth.gd` (the Raval victory film, #448) and
+  `test_freedom_sign_clear.gd` were in tests/ but not in ci.yml, so CI never
+  ran them. Both pass (53 and 233 checks) and now run in CI.
+
 ## 2026-11-06 - Draw Els Búnquers as the real place
 
 - Rebuilt Walk 28's visual layers (`systems/carmel.gd`, `world/level_build.gd`,
