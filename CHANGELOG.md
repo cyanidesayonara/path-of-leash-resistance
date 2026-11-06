@@ -8,6 +8,7 @@ Append-only session history, newest first.
 - Before, the fountain basin and cascade pools were drawn under the avenue's paving and never showed, and the columns and flag masts were drawn as street trees and lampposts. The ground is now the walk's cross-section (`draw_cross_section`), and two hooks say what its poles are: `tree_kind` (none) and the new `is_lamp` (main.gd `is_lamppost`; declared in `tests/test_walk_hooks.gd`).
 - Fixed: "Wrap the leash around the Four Columns" could never be completed in play. The walk fits every pole's x to the corridor after build, so the exact match against the authored positions never held; a column is now any pole on the columns' row. `tests/test_espanya.gd` checks the fitted position and that a flag mast does not count.
 - Text: the goal is "Wrap the leash around the Four Columns" (it was cut off in the goal list), the prize "snatch the crystal finial off the cascade", and the bubble performer's warning "Bubbles coming!" (was Catalan).
+- Fixed: a walk module's `draw_overhead` was only ever drawn for a hard-coded list of walks (`LevelBuild`, the overhead layer), so Plaça d'Espanya's tower roofs and flags, and Els Búnquers' pine canopies and string lights, never showed. The layer is now made for any module that draws overhead. Plaça d'Espanya's overhead read `m.camera`, which main does not have (it is `m.cam`); it never ran, so it never failed.
 - Gameplay, positions, timings and gates are unchanged.
 
 ## 2026-11-06 - Speak English in every live event

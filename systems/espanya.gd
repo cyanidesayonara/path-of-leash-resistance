@@ -750,7 +750,7 @@ static func draw_live(m: Node2D, wc: Object, vt: float, vb: float) -> void:
 
 static func draw_overhead(m: Node2D, wc: Object) -> void:
 	var b := ShapeBatch.new()
-	var cam_y: float = m.camera.position.y if m.camera != null else -1500.0
+	var cam_y: float = m.cam.position.y if m.cam != null else -1500.0
 
 	# 1. the towers' pyramid roofs, lit side and shaded side, and a finial
 	if cam_y > -1100.0:

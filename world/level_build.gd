@@ -3739,8 +3739,10 @@ static func build_entities(m: Node2D) -> void:
 	m.edge_layer.set_script(load("res://world/edgelayer.gd"))
 	m.edge_layer.z_index = -5   # behind everything in the world
 	# what hangs over the walk, above everyone (El Gotic's bridge, El Mercat's
-	# arches, La Castanyada's lantern strings)
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "beach" or m.lvl == "llevant" or m.lvl == "scrap" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "tibidabo" or m.lvl == "raval" or m.lvl == "gracia":
+	# arches, La Castanyada's lantern strings), and whatever a walk module
+	# draws overhead: a module with draw_overhead and no layer drew nothing
+	var has_over: bool = m.walk_mod != null and m.walk_mod.has_method("draw_overhead")
+	if has_over or m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "beach" or m.lvl == "llevant" or m.lvl == "scrap" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "tibidabo" or m.lvl == "raval" or m.lvl == "gracia":
 		var ov := Node2D.new()
 		ov.set_script(load("res://world/overheadlayer.gd"))
 		ov.z_index = 14
