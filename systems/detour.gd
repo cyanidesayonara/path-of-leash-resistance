@@ -33,16 +33,19 @@ const LevelBuild := preload("res://world/level_build.gd")
 const DETOUR_ORIGIN := Vector2(3600.0, -2200.0)
 const ESTEL_ORIGIN := Vector2(5400.0, -3400.0)
 const COLOM_ORIGIN := Vector2(7200.0, -2000.0)
+const DRAC_ORIGIN := Vector2(9000.0, -2200.0)
 const ROOM_W := 760.0
 const ROOM_H := 660.0
 const ROOM_RECT := Rect2(DETOUR_ORIGIN, Vector2(ROOM_W, ROOM_H))
 const ESTEL_RECT := Rect2(ESTEL_ORIGIN, Vector2(ROOM_W, ROOM_H))
 const COLOM_RECT := Rect2(COLOM_ORIGIN, Vector2(ROOM_W, ROOM_H))
+const DRAC_RECT := Rect2(DRAC_ORIGIN, Vector2(ROOM_W, ROOM_H))
 
 # Street entrances
 const STREET_DOOR_Y := -2150.0
 const ESTEL_DOOR_Y := -3350.0
 const COLOM_DOOR_Y := -2050.0
+const DRAC_DOOR_Y := -1850.0
 const DOOR_TRIGGER_R := 46.0
 const EXIT_TRIGGER_R := 44.0
 
@@ -89,9 +92,21 @@ const COLOM_DOVE_OFFSETS: Array[Vector2] = [
 	Vector2(380.0, 180.0),
 ]
 
+# 4 Fantastical Chimney-Pot Sculpture offsets inside El Drac gallery (rope poles)
+const DRAC_SCULPTURE_OFFSETS: Array[Vector2] = [
+	Vector2(240.0, 420.0), # Spiral Helix Chimney with glazed emerald mosaic
+	Vector2(520.0, 410.0), # Mushroom-Cap Chimney with sunflower yellow & cobalt mosaic
+	Vector2(260.0, 240.0), # Conical Pyramid Chimney with terracotta & cream mosaic
+	Vector2(500.0, 220.0), # Dragon-Spine Totem Chimney with crimson & gold crest
+]
+
+# The Mosaic Dragon / Salamander ("El Drac") resting on curved trencadís bench
+const DRAC_SALAMANDER_POS := Vector2(380.0, 180.0)
+
 static var droop_t: Array[float] = [0.0, 0.0, 0.0, 0.0]
 static var ladder_cooldown: Array[float] = [0.0, 0.0, 0.0]
 static var dove_cooldown: Array[float] = [0.0, 0.0, 0.0]
+static var drac_cooldown := 0.0
 
 
 static func _play_sfx(m: Node2D, sound: String, pitch := 1.0) -> void:
@@ -101,6 +116,8 @@ static func _play_sfx(m: Node2D, sound: String, pitch := 1.0) -> void:
 
 static func origin_for(m: Node2D) -> Vector2:
 	if m != null:
+		if m.detour_kind == "drac" or m.lvl == "street":
+			return DRAC_ORIGIN
 		if m.detour_kind == "colom" or m.lvl == "reial":
 			return COLOM_ORIGIN
 		if m.detour_kind == "estel" or m.lvl == "montjuic":
@@ -117,6 +134,10 @@ static func room_rect_for(m: Node2D) -> Rect2:
 static func lamp_points(m: Node2D = null) -> Array[Vector2]:
 	var out: Array[Vector2] = []
 	if m != null:
+		if m.lvl == "street":
+			for off: Vector2 in DRAC_SCULPTURE_OFFSETS:
+				out.append(DRAC_ORIGIN + off)
+			return out
 		if m.lvl == "reial":
 			for off: Vector2 in COLOM_SCULPTURE_OFFSETS:
 				out.append(COLOM_ORIGIN + off)
@@ -131,24 +152,29 @@ static func lamp_points(m: Node2D = null) -> Array[Vector2]:
 
 
 static func is_on(m: Node2D) -> bool:
-	return m.lvl == "oldtown" or m.lvl == "montjuic" or m.lvl == "reial"
+	return m.lvl == "oldtown" or m.lvl == "montjuic" or m.lvl == "reial" or m.lvl == "street"
 
 
 static func build_layer(m: Node2D) -> void:
 	if not is_on(m):
 		return
+	var is_drac: bool = m.lvl == "street"
 	var is_colom: bool = m.lvl == "reial"
 	var is_estel: bool = m.lvl == "montjuic"
-	var door_y: float = COLOM_DOOR_Y if is_colom else (ESTEL_DOOR_Y if is_estel else STREET_DOOR_Y)
-	var o: Vector2 = COLOM_ORIGIN if is_colom else (ESTEL_ORIGIN if is_estel else DETOUR_ORIGIN)
+	var door_y: float = DRAC_DOOR_Y if is_drac else (COLOM_DOOR_Y if is_colom else (ESTEL_DOOR_Y if is_estel else STREET_DOOR_Y))
+	var o: Vector2 = DRAC_ORIGIN if is_drac else (COLOM_ORIGIN if is_colom else (ESTEL_ORIGIN if is_estel else DETOUR_ORIGIN))
 	var e: Vector2 = m.walk_edges(door_y)
 
 	m.detour_door_pos = Vector2(e.x - 14.0, door_y)
 	m.detour_return_pos = Vector2(e.x + 45.0, door_y - 70.0)
 	m.detour_active = false
-	m.detour_kind = "colom" if is_colom else ("estel" if is_estel else "somni")
+	m.detour_kind = "drac" if is_drac else ("colom" if is_colom else ("estel" if is_estel else "somni"))
 	m.detour_entered = false
-	if is_colom:
+	if is_drac:
+		m.drac_bone_taken = false
+		m.drac_dragon_greeted = 0
+		drac_cooldown = 0.0
+	elif is_colom:
 		m.colom_bone_taken = false
 		m.colom_doves_greeted = 0
 		dove_cooldown = [0.0, 0.0, 0.0]
@@ -199,6 +225,7 @@ static func tick(m: Node2D, delta: float) -> void:
 	if not is_on(m) or m.frozen or m.auto_walk:
 		return
 	var dp: Vector2 = m.dog.global_position
+	var is_drac: bool = m.detour_kind == "drac" or (not m.detour_active and m.lvl == "street")
 	var is_colom: bool = m.detour_kind == "colom" or (not m.detour_active and m.lvl == "reial")
 	var is_estel: bool = m.detour_kind == "estel" or (not m.detour_active and m.lvl == "montjuic")
 
@@ -210,7 +237,31 @@ static func tick(m: Node2D, delta: float) -> void:
 
 	var o: Vector2 = origin_for(m)
 
-	if is_colom:
+	if is_drac:
+		# El Drac gallery tick
+		# 1. Update The Mosaic Dragon ("El Drac")
+		if drac_cooldown > 0.0:
+			drac_cooldown = maxf(0.0, drac_cooldown - delta)
+		var drac_p: Vector2 = o + DRAC_SALAMANDER_POS
+		if dp.distance_to(drac_p) < 42.0 and drac_cooldown <= 0.0:
+			drac_cooldown = 1.0
+			m.drac_dragon_greeted += 1
+			_play_sfx(m, "star", 1.35)
+			m.float_text(dp + Vector2(0.0, -22.0), "visca el drac!", Color(0.95, 0.82, 0.3))
+
+		# 2. Check secret Golden Dragon Bone collection
+		var bp: Vector2 = o + BONE_POS
+		if not m.drac_bone_taken and dp.distance_to(bp) < 34.0:
+			m.drac_bone_taken = true
+			_play_sfx(m, "pickup", 1.25)
+			m.float_text(bp + Vector2(0.0, -32.0), "dragon bone!", Color(1.0, 0.88, 0.2))
+			m.feed.say("EL DRAC: THE DRAGON BONE! MASTERPIECE CLAIMED", EventFeed.Tone.GOOD)
+
+		# 3. Check exit portal
+		var ep: Vector2 = o + ROOM_EXIT
+		if dp.distance_to(ep) < EXIT_TRIGGER_R:
+			exit(m)
+	elif is_colom:
 		# El Colom gallery tick
 		# 1. Update Peace Doves ("Els Coloms")
 		for i in range(COLOM_DOVE_OFFSETS.size()):
@@ -315,7 +366,10 @@ static func enter(m: Node2D) -> void:
 	m.cam.reset_smoothing()
 
 	_play_sfx(m, "ui", 0.95)
-	if m.detour_kind == "colom":
+	if m.detour_kind == "drac":
+		m.feed.say("EL DRAC: THE MODERNISME GALLERY", EventFeed.Tone.LOUD)
+		m.float_text(m.dog.global_position + Vector2(0.0, -36.0), "Welcome to El Drac!", Color(1.0, 0.92, 0.7), m.POP_SAY)
+	elif m.detour_kind == "colom":
 		m.feed.say("EL COLOM: THE CUBIST GALLERY", EventFeed.Tone.LOUD)
 		m.float_text(m.dog.global_position + Vector2(0.0, -36.0), "Welcome to El Colom!", Color(1.0, 0.92, 0.7), m.POP_SAY)
 	elif is_estel:
@@ -342,7 +396,9 @@ static func exit(m: Node2D) -> void:
 	m.cam.reset_smoothing()
 
 	_play_sfx(m, "ui", 1.05)
-	if m.detour_kind == "colom":
+	if m.detour_kind == "drac":
+		m.feed.say("BACK OUT ON LA RAMBLA", EventFeed.Tone.PLAIN)
+	elif m.detour_kind == "colom":
 		m.feed.say("BACK OUT ON PLAÇA REIAL", EventFeed.Tone.PLAIN)
 	elif m.detour_kind == "estel":
 		m.feed.say("BACK OUT ON MONTJUÏC", EventFeed.Tone.PLAIN)

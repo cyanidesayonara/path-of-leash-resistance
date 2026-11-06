@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-11-06 - Artsy detour «El Drac» (Antoni Gaudí modernisme homage) off La Rambla
+
+- The fourth Artsy Detour: «El Drac» (`systems/detour.gd`, `world/detour_layer.gd`, `world/rambla.gd`, `world/level_build.gd`, `main.gd`):
+  a modernisme rooftop gallery & courtyard off the west sidewalk of La Rambla (gateway at y = -1850.0 recessed into the building line with parabolic catenary stone archway, wrought iron serpentine gate, warm amber lantern glow, trencadís mosaic runner, brass stanchions, easel displaying dragon mosaic study, and gallery host in newsboy cap and modernisme vest).
+- Gallery space at isolated level coordinates (9000, -2200): sandstone paved flagstones with curving trencadís mosaic ribbons, parabolic catenary stone wall arches, 4 fantastical chimney-pot rope poles (Spiral Helix, Mushroom-Cap, Conical Pyramid, Dragon-Spine Totem) wrapped as rope poles by the verlet leash, serpentine undulating trencadís bench hosting El Drac (the glistening mosaic salamander with breathing animation and interactive greeting), and the secret Golden Dragon Bone on an octagonal trencadís plinth.
+- Tony Hawk quest "drac": "Visit El Drac gallery and claim the dragon bone" on La Rambla, maintaining the exact 15-goal invariant per walk.
+- Exit portal balustrade arch ("SORTIDA - A LA RAMBLA") returning the pair smoothly back to La Rambla sidewalk outside the gallery.
+- Autowalk safety: autowalk bot ignores detour doorways and completes the walk uninterrupted.
+- Tests: `tests/test_detour_drac.gd`.
+
 ## 2026-11-06 - Artsy detour «El Colom» (Pablo Picasso homage) off Plaça Reial
 
 - The third Artsy Detour: «El Colom» (`systems/detour.gd`, `world/detour_layer.gd`, `world/level_build.gd`, `main.gd`):

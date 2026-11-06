@@ -55,6 +55,8 @@ var estel_bone_taken := false
 var estel_ladders_climbed := 0
 var colom_bone_taken := false
 var colom_doves_greeted := 0
+var drac_bone_taken := false
+var drac_dragon_greeted := 0
 var detour_layer: Node2D = null
 # where --shot-cam points the camera (INF: follow the pair as usual)
 var shot_cam := Vector2(INF, INF)
@@ -309,6 +311,7 @@ var lvl := "street":
 # in it too. tests/test_walk_hooks.gd holds each walk's declared hooks: a new
 # hook in a module, or a helper named like one, fails there until declared.
 const WALK_MODULES := {
+	"street": preload("res://world/rambla.gd"),
 	"montjuic": preload("res://systems/montjuic.gd"),
 	"guell": preload("res://systems/mosaic.gd"),
 	"scrap": preload("res://world/ferralla.gd"),
@@ -9319,7 +9322,7 @@ func walk_edges(y: float) -> Vector2:
 
 func surface_at(p: Vector2) -> int:
 	if detour_active:
-		return Surfaces.S.TILE if (detour_kind == "estel" or detour_kind == "colom") else Surfaces.S.SAND
+		return Surfaces.S.SAND if detour_kind == "somni" else Surfaces.S.TILE
 	# The one place that decides what the ground is. Everything that cares -
 	# how fast she goes, how well she can turn, how far she can smell - asks
 	# this and then asks surfaces.gd, rather than each re-deriving it from a

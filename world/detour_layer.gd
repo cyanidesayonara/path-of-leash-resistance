@@ -35,6 +35,17 @@ const C_UMBER := Color(0.38, 0.26, 0.18)
 const C_CREAM := Color(0.92, 0.88, 0.80)
 const C_CHARCOAL := Color(0.18, 0.18, 0.20)
 
+# Gaudí ("El Drac") Modernisme & Trencadís palette
+const C_TRENCADIS_WHITE := Color(0.96, 0.95, 0.92)
+const C_TRENCADIS_BLUE := Color(0.12, 0.32, 0.72)
+const C_TRENCADIS_GREEN := Color(0.24, 0.58, 0.32)
+const C_TRENCADIS_GOLD := Color(0.95, 0.78, 0.22)
+const C_TRENCADIS_ORANGE := Color(0.92, 0.48, 0.18)
+const C_TRENCADIS_RED := Color(0.82, 0.20, 0.22)
+const C_WROUGHT_IRON := Color(0.16, 0.18, 0.18)
+const C_SANDSTONE := Color(0.84, 0.78, 0.68)
+const C_ROOF_TILE := Color(0.68, 0.42, 0.32)
+
 
 func setup(m: Node2D) -> void:
 	main = m
@@ -64,7 +75,9 @@ func _draw() -> void:
 	# 2. INSIDE THE DETOUR GALLERY
 	var o: Vector2 = DetourScript.origin_for(main)
 	if main.detour_active or absf(main.cam.position.y - (o.y + DetourScript.ROOM_H * 0.5)) < 700.0:
-		if main.detour_kind == "colom":
+		if main.detour_kind == "drac":
+			_draw_drac_gallery(b, t)
+		elif main.detour_kind == "colom":
 			_draw_colom_gallery(b, t)
 		elif main.detour_kind == "estel":
 			_draw_estel_gallery(b, t)
@@ -80,10 +93,74 @@ func _draw_street_doorway(b: ShapeBatch, _t: float) -> void:
 	if dp == Vector2.ZERO:
 		return
 
+	var is_drac: bool = main.detour_kind == "drac" or main.lvl == "street"
 	var is_colom: bool = main.detour_kind == "colom" or main.lvl == "reial"
 	var is_estel: bool = main.detour_kind == "estel" or main.lvl == "montjuic"
 
-	if is_colom:
+	if is_drac:
+		# Parabolic catenary stone archway on La Rambla building wall
+		var door_rect := Rect2(dp.x - 34.0, dp.y - 48.0, 48.0, 96.0)
+		b.rect(door_rect, C_SANDSTONE)
+		# Modernisme undulating curved sandstone trim
+		b.rect(Rect2(dp.x - 34.0, dp.y - 48.0, 6.0, 96.0), C_TRENCADIS_GOLD)
+		b.rect(Rect2(dp.x - 28.0, dp.y - 48.0, 4.0, 96.0), C_TRENCADIS_GREEN)
+		b.rect(Rect2(dp.x - 24.0, dp.y - 48.0, 4.0, 96.0), C_TRENCADIS_BLUE)
+		b.rect(Rect2(dp.x - 20.0, dp.y - 46.0, 32.0, 92.0), Color(0.12, 0.12, 0.14))
+
+		# Wrought-iron serpentine gate scrolls
+		for gy: float in [-32.0, -12.0, 8.0, 28.0]:
+			b.line(dp + Vector2(-18.0, gy), dp + Vector2(10.0, gy + 4.0), C_WROUGHT_IRON, 1.8)
+			b.circle(dp + Vector2(-4.0, gy + 2.0), 3.0, C_WROUGHT_IRON)
+
+		# Warm amber lantern light spill
+		var glow := PackedVector2Array([
+			dp + Vector2(10.0, -44.0),
+			dp + Vector2(62.0, -32.0),
+			dp + Vector2(62.0, 32.0),
+			dp + Vector2(10.0, 44.0),
+		])
+		b.polygon(glow, Color(1.0, 0.90, 0.65, 0.28))
+
+		# Trencadís mosaic tiled carpet runner with diamond mosaic shards
+		var carpet_rect := Rect2(dp.x + 8.0, dp.y - 18.0, 48.0, 36.0)
+		b.rect(carpet_rect, C_SANDSTONE)
+		b.line(carpet_rect.position, carpet_rect.position + Vector2(carpet_rect.size.x, 0.0), C_TRENCADIS_BLUE, 2.2)
+		b.line(carpet_rect.position + Vector2(0.0, carpet_rect.size.y), carpet_rect.end, C_TRENCADIS_BLUE, 2.2)
+		for mx in range(3):
+			var cx := carpet_rect.position.x + 10.0 + float(mx) * 14.0
+			b.circle(Vector2(cx, carpet_rect.position.y + 10.0), 3.2, C_TRENCADIS_GOLD)
+			b.circle(Vector2(cx, carpet_rect.position.y + 26.0), 3.2, C_TRENCADIS_GREEN)
+
+		# Brass stanchions and emerald/gold cord
+		for sy: float in [-24.0, 24.0]:
+			var sp := dp + Vector2(50.0, sy)
+			b.rect(Rect2(sp + Vector2(-3.0, -1.0), Vector2(7.0, 4.0)), Color(0.0, 0.0, 0.0, 0.25))
+			b.circle(sp + Vector2(0.0, -12.0), 3.5, C_BRASS)
+			b.line(sp + Vector2(0.0, -12.0), sp + Vector2(0.0, 2.0), C_BRASS, 2.4)
+		b.line(dp + Vector2(50.0, -22.0), dp + Vector2(54.0, 0.0), C_TRENCADIS_GREEN, 2.4)
+		b.line(dp + Vector2(54.0, 0.0), dp + Vector2(50.0, 22.0), C_TRENCADIS_GREEN, 2.4)
+
+		# Easel displaying mosaic dragon study artwork
+		var easel_p := dp + Vector2(64.0, 38.0)
+		b.rect(Rect2(easel_p + Vector2(-8.0, -12.0), Vector2(16.0, 24.0)), C_SANDSTONE)
+		b.rect(Rect2(easel_p + Vector2(-7.0, -11.0), Vector2(14.0, 22.0)), C_TRENCADIS_BLUE)
+		_draw_dragon_icon(b, easel_p + Vector2(0.0, 1.0), 5.5)
+
+		# Gallery host in 1900s newsboy cap & brown modernisme vest
+		var gp := dp + Vector2(40.0, -38.0)
+		b.circle(gp + Vector2(1.0, 2.0), 7.0, Color(0.0, 0.0, 0.0, 0.20))
+		b.rect(Rect2(gp + Vector2(-5.0, -10.0), Vector2(10.0, 16.0)), C_CREAM)
+		b.rect(Rect2(gp + Vector2(-4.0, -9.0), Vector2(8.0, 14.0)), Color(0.38, 0.26, 0.18)) # Brown vest
+		b.circle(gp + Vector2(0.0, -16.0), 5.5, Color(0.92, 0.78, 0.65)) # Face
+		b.circle(gp + Vector2(0.0, -19.0), 6.5, Color(0.24, 0.22, 0.20)) # Newsboy cap
+		b.rect(Rect2(gp + Vector2(4.0, -6.0), Vector2(6.0, 8.0)), C_TRENCADIS_GOLD) # Exhibition brochure
+
+		# Overhead modernisme curved banner
+		var bp := dp + Vector2(26.0, -56.0)
+		b.rect(Rect2(bp + Vector2(-44.0, -14.0), Vector2(88.0, 28.0)), C_SANDSTONE)
+		b.rect(Rect2(bp + Vector2(-46.0, -15.0), Vector2(92.0, 2.2)), C_TRENCADIS_GOLD)
+		b.rect(Rect2(bp + Vector2(-46.0, 13.0), Vector2(92.0, 2.2)), C_WROUGHT_IRON)
+	elif is_colom:
 		# Neoclassical portico archway in Plaça Reial arcade
 		var door_rect := Rect2(dp.x - 34.0, dp.y - 48.0, 48.0, 96.0)
 		b.rect(door_rect, C_CREAM)
@@ -600,6 +677,180 @@ func _draw_melting_lamppost(b: ShapeBatch, p: Vector2, droop: float, t: float) -
 
 
 
+func _draw_dragon_icon(b: ShapeBatch, p: Vector2, s: float) -> void:
+	# Stylized trencadís mosaic dragon silhouette
+	b.circle(p + Vector2(-s * 0.4, 0.0), s * 0.6, C_TRENCADIS_GREEN)
+	b.circle(p + Vector2(s * 0.2, -s * 0.2), s * 0.5, C_TRENCADIS_BLUE)
+	b.circle(p + Vector2(s * 0.7, s * 0.3), s * 0.4, C_TRENCADIS_GOLD)
+	b.circle(p + Vector2(-s * 0.8, -s * 0.3), s * 0.35, C_TRENCADIS_GREEN)
+	b.circle(p + Vector2(-s * 0.7, -s * 0.4), s * 0.15, C_TRENCADIS_GOLD)
+
+
+func _draw_drac_gallery(b: ShapeBatch, t: float) -> void:
+	var o: Vector2 = DetourScript.origin_for(main)
+	var rw: float = DetourScript.ROOM_W
+	var rh: float = DetourScript.ROOM_H
+
+	# 1. Gallery Room Backdrop (warm Catalan sandstone rooftop courtyard)
+	b.rect(Rect2(o, Vector2(rw, rh)), Color(0.18, 0.16, 0.15))
+
+	# 2. Sandstone Paved Floor with undulating mosaic ribbons
+	var cols := 6
+	var rows := 5
+	var tw := rw / float(cols)
+	var th := rh / float(rows)
+	for cy in range(rows):
+		for cx in range(cols):
+			var tr := Rect2(o.x + float(cx) * tw, o.y + float(cy) * th, tw - 1.5, th - 1.5)
+			var base_c := C_SANDSTONE.lerp(C_CREAM, float((cx + cy) % 2) * 0.15)
+			b.rect(tr, base_c)
+
+	# Serpentine trencadís mosaic ribbon across floor
+	for mi in range(12):
+		var mf := float(mi) / 11.0
+		var mx := o.x + 80.0 + mf * (rw - 160.0)
+		var my := o.y + 360.0 + sin(mf * 4.2 + t * 0.5) * 45.0
+		var col_idx := mi % 4
+		var mcol: Color = [C_TRENCADIS_BLUE, C_TRENCADIS_GREEN, C_TRENCADIS_GOLD, C_TRENCADIS_RED][col_idx]
+		b.circle(Vector2(mx, my), 14.0, mcol)
+		b.circle(Vector2(mx + 6.0, my - 4.0), 9.0, C_TRENCADIS_WHITE)
+
+	# 3. Parabolic Catenary Stone Arches along Walls
+	for ax in range(5):
+		var arch_x := o.x + 70.0 + float(ax) * 155.0
+		b.rect(Rect2(arch_x - 14.0, o.y + 4.0, 28.0, 32.0), C_SANDSTONE)
+		b.line(Vector2(arch_x - 12.0, o.y + 36.0), Vector2(arch_x + 12.0, o.y + 36.0), C_TRENCADIS_GOLD, 2.4)
+		b.rect(Rect2(arch_x - 14.0, o.y + rh - 36.0, 28.0, 32.0), C_SANDSTONE)
+		b.line(Vector2(arch_x - 12.0, o.y + rh - 36.0), Vector2(arch_x + 12.0, o.y + rh - 36.0), C_TRENCADIS_GOLD, 2.4)
+
+	# 4. 4 Fantastical Chimney-Pot Sculptures (Rope Poles)
+	for i in range(DetourScript.DRAC_SCULPTURE_OFFSETS.size()):
+		var sp: Vector2 = o + DetourScript.DRAC_SCULPTURE_OFFSETS[i]
+		# Soft ground shadow
+		b.circle(sp + Vector2(6.0, 8.0), 22.0, Color(0.0, 0.0, 0.0, 0.28))
+		# Main cylindrical chimney shaft with fluted terracotta ribs
+		b.circle(sp, 16.0, C_ROOF_TILE)
+		b.circle(sp, 13.5, C_SANDSTONE)
+
+		if i == 0:
+			# Spiral Helix Chimney with glazed emerald mosaic cap
+			b.circle(sp, 11.0, C_TRENCADIS_GREEN)
+			for sa in range(4):
+				var ang := float(sa) * 1.57 + t * 0.8
+				b.line(sp, sp + Vector2(cos(ang), sin(ang)) * 14.0, C_TRENCADIS_GOLD, 2.0)
+			b.circle(sp, 4.5, C_TRENCADIS_WHITE)
+		elif i == 1:
+			# Mushroom-Cap Chimney with sunflower yellow & cobalt mosaic
+			b.circle(sp, 12.0, C_TRENCADIS_GOLD)
+			b.circle(sp, 8.5, C_TRENCADIS_BLUE)
+			b.circle(sp, 5.0, C_TRENCADIS_WHITE)
+		elif i == 2:
+			# Conical Pyramid Chimney with terracotta & cream mosaic
+			b.circle(sp, 11.5, C_TERRACOTTA)
+			var poly := PackedVector2Array([
+				sp + Vector2(0.0, -14.0),
+				sp + Vector2(12.0, 10.0),
+				sp + Vector2(-12.0, 10.0),
+			])
+			b.polygon(poly, C_CREAM)
+			b.circle(sp, 4.0, C_TRENCADIS_RED)
+		else:
+			# Dragon-Spine Totem Chimney with crimson & gold crest
+			b.circle(sp, 12.0, C_TRENCADIS_RED)
+			b.circle(sp, 8.0, C_TRENCADIS_GOLD)
+			for da in range(5):
+				var dang := float(da) * 1.256
+				b.circle(sp + Vector2(cos(dang), sin(dang)) * 13.0, 3.2, C_TRENCADIS_GOLD)
+			b.circle(sp, 4.0, C_WROUGHT_IRON)
+
+	# 5. Serpentine Trencadís Bench & El Drac (The Mosaic Dragon / Salamander)
+	var drac_center: Vector2 = o + DetourScript.DRAC_SALAMANDER_POS
+	var bench_poly := PackedVector2Array([
+		drac_center + Vector2(-80.0, 24.0),
+		drac_center + Vector2(-30.0, -18.0),
+		drac_center + Vector2(30.0, -18.0),
+		drac_center + Vector2(80.0, 24.0),
+		drac_center + Vector2(74.0, 42.0),
+		drac_center + Vector2(24.0, 6.0),
+		drac_center + Vector2(-24.0, 6.0),
+		drac_center + Vector2(-74.0, 42.0),
+	])
+	b.polygon(bench_poly, C_SANDSTONE)
+	for bi in range(6):
+		var bf := float(bi) / 5.0
+		var bx := drac_center.x - 60.0 + bf * 120.0
+		var by := drac_center.y + sin(bf * 3.14) * -12.0 + 10.0
+		var bcol: Color = [C_TRENCADIS_BLUE, C_TRENCADIS_GOLD, C_TRENCADIS_GREEN, C_TRENCADIS_RED][bi % 4]
+		b.circle(Vector2(bx, by), 6.5, bcol)
+
+	# El Drac: The iconic mosaic salamander basking on the bench
+	var drac_breath := sin(t * 3.2) * 1.8
+	var dp := drac_center + Vector2(0.0, -2.0)
+	b.circle(dp + Vector2(4.0, 6.0), 18.0, Color(0.0, 0.0, 0.0, 0.22))
+	b.circle(dp + Vector2(-22.0, 4.0), 8.5 + drac_breath * 0.3, C_TRENCADIS_GREEN)
+	b.circle(dp + Vector2(-10.0, 0.0), 10.5 + drac_breath * 0.5, C_TRENCADIS_BLUE)
+	b.circle(dp + Vector2(4.0, -2.0), 11.5 + drac_breath * 0.5, C_TRENCADIS_GREEN)
+	b.circle(dp + Vector2(18.0, 2.0), 9.5 + drac_breath * 0.3, C_TRENCADIS_GOLD)
+	b.circle(dp + Vector2(-32.0, 6.0), 7.5, C_TRENCADIS_GREEN)
+	b.circle(dp + Vector2(-38.0, 8.0), 5.0, C_TRENCADIS_GOLD)
+	b.circle(dp + Vector2(-31.0, 3.0), 2.8, C_TRENCADIS_WHITE)
+	b.circle(dp + Vector2(-31.0, 3.0), 1.6, C_WROUGHT_IRON)
+	b.circle(dp + Vector2(28.0, 8.0), 6.5, C_TRENCADIS_BLUE)
+	b.circle(dp + Vector2(34.0, 16.0), 4.5, C_TRENCADIS_GOLD)
+	b.circle(dp + Vector2(32.0, 23.0), 3.0, C_TRENCADIS_GREEN)
+	for si in range(4):
+		var sx := dp.x - 18.0 + float(si) * 10.0
+		var sy := dp.y - 7.0 + float(si % 2) * 2.0
+		b.circle(Vector2(sx, sy), 2.8, C_TRENCADIS_RED)
+
+	# 6. Central Plinth & Golden Dragon Bone
+	var bp: Vector2 = o + DetourScript.BONE_POS
+	b.circle(bp + Vector2(4.0, 6.0), 24.0, Color(0.0, 0.0, 0.0, 0.28))
+	b.circle(bp, 20.0, C_SANDSTONE)
+	for pi in range(8):
+		var pang := float(pi) * 0.785
+		var pcol: Color = [C_TRENCADIS_BLUE, C_TRENCADIS_GOLD, C_TRENCADIS_GREEN][pi % 3]
+		b.circle(bp + Vector2(cos(pang), sin(pang)) * 14.0, 5.0, pcol)
+	b.circle(bp, 10.0, C_TRENCADIS_WHITE)
+
+	# Secret Golden Dragon Bone (floating & shimmering)
+	if not main.drac_bone_taken:
+		var bone_bob: float = sin(t * 3.4) * 4.5
+		var bone_y: float = bp.y - 20.0 + bone_bob
+		b.circle(Vector2(bp.x, bone_y), 16.0 + sin(t * 5.0) * 3.0, Color(1.0, 0.88, 0.25, 0.24))
+		var bc := Vector2(bp.x, bone_y)
+		b.line(bc + Vector2(-10.0, 0.0), bc + Vector2(10.0, 0.0), C_GOLD, 5.5)
+		b.circle(bc + Vector2(-10.0, -3.5), 3.8, C_GOLD)
+		b.circle(bc + Vector2(-10.0, 3.5), 3.8, C_GOLD)
+		b.circle(bc + Vector2(10.0, -3.5), 3.8, C_GOLD)
+		b.circle(bc + Vector2(10.0, 3.5), 3.8, C_GOLD)
+		var spark_a := fmod(t * 2.8, 1.0) * 3.14159
+		b.line(bc + Vector2(cos(spark_a), sin(spark_a)) * 7.0, bc - Vector2(cos(spark_a), sin(spark_a)) * 7.0, Color.WHITE, 1.8)
+
+	# 7. Exit Portal (North Wall - Rooftop Balustrade Exit)
+	var ep: Vector2 = o + DetourScript.ROOM_EXIT
+	var arch_poly := PackedVector2Array([
+		ep + Vector2(-38.0, 22.0),
+		ep + Vector2(-38.0, -18.0),
+		ep + Vector2(-22.0, -32.0),
+		ep + Vector2(22.0, -32.0),
+		ep + Vector2(38.0, -18.0),
+		ep + Vector2(38.0, 22.0),
+	])
+	b.polygon(arch_poly, C_SANDSTONE)
+	b.rect(Rect2(ep.x - 28.0, ep.y - 14.0, 56.0, 36.0), Color(0.12, 0.12, 0.14))
+	for bi in range(5):
+		var bx := ep.x - 22.0 + float(bi) * 11.0
+		b.line(Vector2(bx, ep.y + 12.0), Vector2(bx, ep.y + 22.0), C_TRENCADIS_GOLD, 2.0)
+	var exit_glow := PackedVector2Array([
+		ep + Vector2(-26.0, 20.0),
+		ep + Vector2(-42.0, 55.0),
+		ep + Vector2(42.0, 55.0),
+		ep + Vector2(26.0, 20.0),
+	])
+	b.polygon(exit_glow, Color(1.0, 0.95, 0.85, 0.22))
+
+
 func _draw_dove_icon(b: ShapeBatch, p: Vector2, s: float) -> void:
 	# Stylized white peace dove silhouette
 	var wing := PackedVector2Array([
@@ -856,14 +1107,20 @@ func _draw_colom_sculpture(b: ShapeBatch, p: Vector2, idx: int, _t: float) -> vo
 
 func _draw_labels() -> void:
 	var f := ThemeDB.fallback_font
+	var is_drac: bool = main.detour_kind == "drac" or main.lvl == "street"
 	var is_estel: bool = main.detour_kind == "estel" or main.lvl == "montjuic"
+	var is_colom: bool = main.detour_kind == "colom" or main.lvl == "reial"
 
 	# Street entrance banner labels
 	var dp: Vector2 = main.detour_door_pos
-	var is_colom: bool = main.detour_kind == "colom" or main.lvl == "reial"
 	if dp != Vector2.ZERO:
 		var bp := dp + Vector2(26.0, -56.0)
-		if is_colom:
+		if is_drac:
+			draw_string(f, bp + Vector2(-40.0, -1.0), "EXPOSICIÓ - ENTRADA LLIURE", HORIZONTAL_ALIGNMENT_CENTER, 80, 8, C_WROUGHT_IRON)
+			draw_string(f, bp + Vector2(-40.0, 9.0), "«EL DRAC»", HORIZONTAL_ALIGNMENT_CENTER, 80, 9, C_TRENCADIS_GOLD)
+			var easel_p := dp + Vector2(64.0, 38.0)
+			draw_string(f, easel_p + Vector2(-8.0, 0.0), "«EL DRAC»", HORIZONTAL_ALIGNMENT_CENTER, 16, 7, C_WHITE)
+		elif is_colom:
 			draw_string(f, bp + Vector2(-40.0, -1.0), "EXPOSICIÓ - ENTRADA LLIURE", HORIZONTAL_ALIGNMENT_CENTER, 80, 8, C_CHARCOAL)
 			draw_string(f, bp + Vector2(-40.0, 9.0), "«EL COLOM»", HORIZONTAL_ALIGNMENT_CENTER, 80, 9, C_TERRACOTTA)
 			var easel_p := dp + Vector2(64.0, 38.0)
@@ -884,7 +1141,11 @@ func _draw_labels() -> void:
 	if main.detour_active or absf(main.cam.position.y - (o.y + DetourScript.ROOM_H * 0.5)) < 700.0:
 		var ep: Vector2 = o + DetourScript.ROOM_EXIT
 		var bp: Vector2 = o + DetourScript.BONE_POS
-		if is_colom:
+		if is_drac:
+			draw_string(f, ep + Vector2(-40.0, -26.0), "SORTIDA - A LA RAMBLA", HORIZONTAL_ALIGNMENT_CENTER, 80, 9, C_WROUGHT_IRON)
+			if main.drac_bone_taken:
+				draw_string(f, bp + Vector2(-30.0, 2.0), "COL·LECCIONAT", HORIZONTAL_ALIGNMENT_CENTER, 60, 8, C_TRENCADIS_GOLD)
+		elif is_colom:
 			draw_string(f, ep + Vector2(-40.0, -26.0), "SORTIDA - A PLAÇA REIAL", HORIZONTAL_ALIGNMENT_CENTER, 80, 9, C_CHARCOAL)
 			if main.colom_bone_taken:
 				draw_string(f, bp + Vector2(-30.0, 2.0), "COL·LECCIONAT", HORIZONTAL_ALIGNMENT_CENTER, 60, 8, C_TERRACOTTA)

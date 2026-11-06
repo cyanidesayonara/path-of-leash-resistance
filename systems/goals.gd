@@ -19,7 +19,7 @@ const LEVEL_GOAL_IDS := {
 	# El Barri, the everyday walk: the staples and nothing exotic
 	"barri": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "snack", "combo", "prize", "spell", "jamon", "clock"],
 	# La Rambla trades the traffic near-misses for its pickpockets
-	"street": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "thief", "wallet", "carry", "combo", "prize", "spell", "jamon", "clock"],
+	"street": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "thief", "wallet", "drac", "combo", "prize", "spell", "jamon", "clock"],
 	"park": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "snack", "combo", "prize", "spell", "jamon", "clock"],
 	"beach": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "drink", "snack", "save", "combo", "prize", "spell", "jamon", "clock"],
 	# El Diluvi: keep your human out of the worst of it, splash the rest
@@ -97,6 +97,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"somni": {"text": "Visit El Somni gallery and claim the dream bone", "target": 1, "fn": func() -> int: return 1 if m.somni_bone_taken else 0},
 		"estel": {"text": "Visit L'Estel gallery and claim the star bone", "target": 1, "fn": func() -> int: return 1 if m.estel_bone_taken else 0},
 		"colom": {"text": "Visit El Colom gallery and claim the cubist bone", "target": 1, "fn": func() -> int: return 1 if m.colom_bone_taken else 0},
+		"drac": {"text": "Visit El Drac gallery and claim the dragon bone", "target": 1, "fn": func() -> int: return 1 if m.drac_bone_taken else 0},
 		"carry": {"text": m.carry_text, "target": 1, "fn": func() -> int: return 1 if m.carry_state >= 2 else 0},
 		"combo": {"text": "Land an x%d trick combo", "target": 3, "fn": func() -> int: return int(m.combo.best_mult) if m.combo != null else 0},
 		"tummy": {"text": "Walk past every chocolate", "target": 1, "fn": func() -> int: return 1 if m.candy_eaten == 0 else 0},

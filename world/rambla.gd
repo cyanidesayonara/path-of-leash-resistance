@@ -13,6 +13,7 @@ extends RefCounted
 
 const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.05, 0.05, 0.08, 0.20)
+const Detour := preload("res://systems/detour.gd")
 
 # Colors
 const CANALETES_IRON := Color(0.12, 0.13, 0.14)
@@ -355,3 +356,11 @@ static func draw_tree_leaf_drifts(m: Node2D, b: ShapeBatch, vt: float, vb: float
 			var la := float(lf) * 1.7 + p.x
 			var lp := p + Vector2.from_angle(la) * (20.0 + fmod(float(lf) * 4.3, 12.0))
 			b.polygon(PackedVector2Array([lp, lp + Vector2(3, -2), lp + Vector2(5, 1), lp + Vector2(2, 3)]), Color(0.72, 0.50, 0.24))
+
+
+static func build_layer(m: Node2D) -> void:
+	Detour.build_layer(m)
+
+
+static func tick(m: Node2D, delta: float) -> void:
+	Detour.tick(m, delta)

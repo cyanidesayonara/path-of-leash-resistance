@@ -14,6 +14,7 @@ extends SceneTree
 # function outside that list fails. A new hook in a module is a new entry
 # here, made on purpose.
 const HOOKS := {
+	"street": ["build_layer", "tick"],
 	"montjuic": ["build_layer", "draw_bollard", "draw_conveyor", "draw_edge_layer", "draw_freedom", "draw_ground", "draw_live", "grass_blocked", "tick"],
 	"guell": ["draw_bollard", "draw_clearing", "draw_column", "draw_live", "tick_crowd"],
 	"scrap": ["draw_bollard", "draw_column", "draw_grove", "draw_live", "draw_log_prop", "draw_overhead", "draw_top", "draw_van", "draw_verge", "draw_yard", "idle_status"],
