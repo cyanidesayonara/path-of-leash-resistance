@@ -7375,7 +7375,7 @@ func _tick_wild_boar(delta: float) -> void:
 		return
 	var bc: Dictionary = wild_boar.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(bc["warn"]):
-		float_text(wild_boar.pos + Vector2(0.0, -32.0), "Boars crossing!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(wild_boar.pos + Vector2(0.0, -32.0), "SNORT! SNORT!", Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("grunt", 0.95, -4.0)
 	if bool(bc["bump"]):
 		human.patience = maxf(0.0, human.patience - 8.0)
@@ -7394,7 +7394,7 @@ func _tick_wild_boar(delta: float) -> void:
 		Sfx.play("crack", 2.2, -4.0)
 		Sfx.play("star", 1.1, -6.0)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "truffle snatch! +2", Color(1.0, 0.78, 0.32))
-		float_text(wild_boar.pos + Vector2(0.0, -32.0), "Hey, my truffle!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(wild_boar.pos + Vector2(0.0, -32.0), "Snort!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(bc["dodge"]):
 		saves_done += 1
