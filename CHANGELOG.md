@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-11-06 - L'Estel and El Colom: original art, no copies of specific works
+
+- Rule (as for every gallery): an artist's general style is fine, a recognizable copy of a specific in-copyright work is not, and Miró's and Picasso's names stay out of player-facing text (comments may name them). Gaudí (d. 1926) is public domain and stays.
+- `world/detour_layer.gd`, `systems/detour.gd`, `tests/test_detour_*.gd`:
+  - El Colom's white peace dove with an olive sprig (and its easel icon) is now a faceted Barcelona plaza pigeon in slate, ochre and terracotta, no olive branch.
+  - El Colom's horned Minotaur head pole is now an original Cubist Hound: one face seen from two sides.
+  - L'Estel's three star-studded ladders, which used the title and motif of a specific Miró work, are now Hop Trails: a wavy line of stepping blobs in primary colours.
+  - L'Estel's black eight-arm asterisk with a coloured hub (too near a foundation logo) is now a lopsided filled five-point star.
+  - Text: "coo! peace dove!" is "coo! pigeon!", "ladder to the stars!" is "hop hop hop!". No Miró or Picasso name was in any goal, sign, shout or gloss; a header comment and test comments now say so.
+- Positions, pole radii, trigger distances and the goals are unchanged; the doves and ladders keep their chime role.
+- Not touched, flagged for Santtu: the Pla de l'Os mosaic on La Rambla (`world/rambla.gd`, `draw_miro_mosaic`) copies one specific Miró work.
+
 ## 2026-11-06 - Speak English in every live event
 
 - The live events added in PRs #417-#447 spoke mostly Catalan, so a player who cannot read it could not read the 0.8 s warning. Every player-facing string they show is now American English (`main.gd`, `systems/guitarrista.gd`, `systems/superilla_cargo.gd`). Strings only: no gameplay, timing, position or drawing change.
