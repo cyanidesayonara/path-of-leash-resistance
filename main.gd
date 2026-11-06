@@ -7147,7 +7147,7 @@ func _tick_banderer(delta: float) -> void:
 		return
 	var bc: Dictionary = banderer.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(bc["warn"]):
-		float_text(banderer.pos + Vector2(0.0, -32.0), "Força Barça, que comença el partit!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(banderer.pos + Vector2(0.0, -32.0), "Big flag coming through! Kickoff soon!", Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("bark", 1.2, -4.0)
 	if bool(bc["bump"]):
 		human.patience = maxf(0.0, human.patience - 8.0)
@@ -11276,7 +11276,7 @@ func on_bark(pos: Vector2) -> void:
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
 		float_text(pos + Vector2(0.0, -20.0), "banderer bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(banderer.pos + Vector2(0.0, -32.0), "Visca el Barça!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(banderer.pos + Vector2(0.0, -32.0), "Come on, team!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if walk_mod != null and walk_mod.has_method("on_bark"):
 		walk_mod.on_bark(self, pos)
