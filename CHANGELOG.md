@@ -13,7 +13,6 @@ Append-only session history, newest first.
   - Text: "coo! peace dove!" is "coo! pigeon!", "ladder to the stars!" is "hop hop hop!". No Miró or Picasso name was in any goal, sign, shout or gloss; a header comment and test comments now say so.
 - Positions, pole radii, trigger distances and the goals are unchanged; the doves and ladders keep their chime role.
 - Not touched, flagged for Santtu: the Pla de l'Os mosaic on La Rambla (`world/rambla.gd`, `draw_miro_mosaic`) copies one specific Miró work.
-- Shots: `docs/shots/gallery-originals/`.
 
 ## 2026-11-06 - Walk 29: «La Superilla» (The Poblenou Superblock)
 
