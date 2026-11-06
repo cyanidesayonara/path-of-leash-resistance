@@ -104,6 +104,20 @@ func _run() -> void:
 	var th_mod: GDScript = load("res://systems/tony_hawk.gd")
 	var carmel: GDScript = load("res://systems/carmel.gd")
 
+	# The gate check reads the player's save (completed walks, free play, the
+	# gates an older save kept open): pin a fresh one, put the real one back
+	# before the report.
+	var saved_persist: bool = game.persist
+	var saved_free_play: bool = game.free_play
+	var saved_records: Dictionary = game.records.duplicate(true)
+	var saved_open: Array[String] = game.gate_open.duplicate()
+	game.persist = false
+	game.free_play = false
+	game.gate_open.clear()
+	game.records = {}
+	for lv: String in game.LEVELS:
+		game.records[lv] = game._default_level_record()
+
 	# 1. Registration checks
 	_check(game.LEVELS.has("carmel"), "carmel in Game.LEVELS")
 	_check(game.CAROUSEL.has("carmel"), "carmel in Game.CAROUSEL")
@@ -200,6 +214,11 @@ func _run() -> void:
 	g2.tick(m, 0.05)
 	_check(g2.dodged, "steering human away triggers near-miss dodge")
 	_check(m.saves_done >= 1, "dodge save increments saves_done")
+
+	game.records = saved_records
+	game.gate_open = saved_open
+	game.free_play = saved_free_play
+	game.persist = saved_persist
 
 	if failures.is_empty():
 		print("test_carmel: %d checks, OK" % checks)

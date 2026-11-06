@@ -21,6 +21,9 @@ func _initialize() -> void:
 func _run() -> void:
 	print("--- Running test_tony_hawk_quests ---")
 	var game = root.get_node("Game")
+	var keep_persist: bool = game.persist
+	var keep_records: Dictionary = game.records.duplicate(true)
+	var keep_level: String = game.level_id
 	game.persist = false
 	game.records = {}
 	var sfx = root.get_node_or_null("Sfx")
@@ -178,6 +181,10 @@ func _run() -> void:
 	Goals.finish_walk(m2)
 	_check(not m2.run_goals_hit.has("clock"), "clock goal NOT credited when finishing over par time")
 	m2.queue_free()
+
+	game.records = keep_records
+	game.level_id = keep_level
+	game.persist = keep_persist
 
 	if _failures == 0:
 		print("test_tony_hawk_quests: OK")

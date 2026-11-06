@@ -95,6 +95,13 @@ func _tofu(m: Node2D) -> Node2D:
 
 func _run() -> void:
 	var game = root.get_node("Game")
+	var keep_persist: bool = game.persist
+	var keep_free_play: bool = game.free_play
+	var keep_records: Dictionary = game.records.duplicate(true)
+	var keep_weather: String = game.weather
+	var keep_night: bool = game.night
+	var keep_menu_step: int = game.menu_step
+	var keep_level: String = game.level_id
 	var Goals: GDScript = load("res://systems/goals.gd")
 	for lv: String in game.LEVELS:
 		if not "tofu" in (Goals.LEVEL_GOAL_IDS.get(lv, []) as Array):
@@ -175,6 +182,13 @@ func _run() -> void:
 
 	_free_node(_level)
 	_level = null
+	game.records = keep_records
+	game.menu_step = keep_menu_step
+	game.night = keep_night
+	game.weather = keep_weather
+	game.level_id = keep_level
+	game.free_play = keep_free_play
+	game.persist = keep_persist
 	if _failures > 0:
 		print("test_tofu_spots: %d FAILURES" % _failures)
 		quit(1)

@@ -25,11 +25,23 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var game: Node = root.get_node("Game")
+	var keep_persist: bool = game.persist
+	var keep_level: String = game.level_id
+	var keep_layout: String = game.control_layout
+	var keep_key_binds: Dictionary = game.key_binds.duplicate(true)
+	var keep_pad_binds: Dictionary = game.pad_binds.duplicate(true)
 	game.persist = false
 	root.get_node("Sfx").muted = true
 
 	_test_prompts_and_layouts(game)
 	_test_gameplay_actions(game)
+
+	game.key_binds = keep_key_binds
+	game.pad_binds = keep_pad_binds
+	game.control_layout = keep_layout
+	game.apply_control_layout()
+	game.level_id = keep_level
+	game.persist = keep_persist
 
 	print("\n%d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():
@@ -89,7 +101,12 @@ func _test_gameplay_actions(game: Node) -> void:
 	root.add_child(m)
 
 	# 1. Verify settings roundtrip
+	var orig_path: String = game.save_path
+	var scratch := "user://test_controls_scratch.cfg"
+	game.save_path = scratch
 	var roundtrip_problems: Array = m._check_settings_roundtrip()
+	game.save_path = orig_path
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(scratch))
 	_check(roundtrip_problems.is_empty(), "settings roundtrip with control_layout succeeded: %s" % str(roundtrip_problems))
 
 	# 2. Verify plant vs poop separation

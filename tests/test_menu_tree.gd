@@ -72,6 +72,9 @@ func _run() -> void:
 	Flow = load("res://hud/menu_flow.gd")
 	var game = root.get_node("Game")
 	var keep := [game.menu_step, game.level_id, game.ask_tutorial, game.tutorial_done, game.quick_start]
+	# the menus save on every change: keep it off the player's own file
+	var keep_persist: bool = game.persist
+	game.persist = false
 	main = load("res://main.tscn").instantiate()
 	root.add_child(main)
 	if not main.is_node_ready():
@@ -226,6 +229,7 @@ func _run() -> void:
 	game.tutorial_done = keep[3]
 	game.quick_start = keep[4]
 	game.save_records()
+	game.persist = keep_persist
 
 	print("\n%d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():

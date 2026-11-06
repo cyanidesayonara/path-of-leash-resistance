@@ -22,6 +22,9 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var game = root.get_node("Game")
+	var keep_persist: bool = game.persist
+	var keep_tips: Array[String] = game.tips_seen.duplicate()
+	var keep_level: String = game.level_id
 	game.persist = false
 	game.tips_seen.clear()
 	root.get_node("Sfx").muted = true
@@ -69,5 +72,8 @@ func _run() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 
 	m.free()
+	game.tips_seen = keep_tips
+	game.level_id = keep_level
+	game.persist = keep_persist
 	print("test_tips: %d checks, %s" % [checks, "OK" if failures.is_empty() else "%d FAILED" % failures.size()])
 	quit(1 if not failures.is_empty() else 0)

@@ -107,6 +107,20 @@ func _run() -> void:
 	var goals_mod: GDScript = load("res://systems/goals.gd")
 	var th_mod: GDScript = load("res://systems/tony_hawk.gd")
 
+	# The gate check reads the player's save (completed walks, free play, the
+	# gates an older save kept open): pin a fresh one, put the real one back
+	# before the report.
+	var saved_persist: bool = game.persist
+	var saved_free_play: bool = game.free_play
+	var saved_records: Dictionary = game.records.duplicate(true)
+	var saved_open: Array[String] = game.gate_open.duplicate()
+	game.persist = false
+	game.free_play = false
+	game.gate_open.clear()
+	game.records = {}
+	for lv: String in game.LEVELS:
+		game.records[lv] = game._default_level_record()
+
 	# 1. Registration checks
 	_check(game.LEVELS.has("superilla"), "superilla in Game.LEVELS")
 	_check(game.CAROUSEL.has("superilla"), "superilla in Game.CAROUSEL")
@@ -217,6 +231,11 @@ func _run() -> void:
 	Superilla.draw_live(m, batch, -3000.0, -1000.0)
 	Superilla.draw_overhead(m, batch)
 	_check(true, "Superilla draw methods executed successfully")
+
+	game.records = saved_records
+	game.gate_open = saved_open
+	game.free_play = saved_free_play
+	game.persist = saved_persist
 
 	# Report
 	if failures.is_empty():

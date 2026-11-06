@@ -33,6 +33,9 @@ func _run() -> void:
 	Kit = load("res://hud/ui_kit.gd")
 	Mood = load("res://systems/mood.gd")
 	var game = root.get_node("Game")
+	# the scene saves as the menus are driven: keep it off the player's own file
+	var keep_persist: bool = game.persist
+	game.persist = false
 	var row_count: int = game.LEVELS.size()
 	_check(row_count >= 17, "roster has at least 17 walks (%d)" % row_count)
 
@@ -109,5 +112,6 @@ func _run() -> void:
 		await process_frame
 	# (dog._draw() completes across all action and mood states: a draw error fails the run as a SCRIPT ERROR)
 
+	game.persist = keep_persist
 	print("MENU_ANIM_POLISH checks=%d failures=%d" % [checks, failures.size()])
 	quit(0 if failures.is_empty() else 1)

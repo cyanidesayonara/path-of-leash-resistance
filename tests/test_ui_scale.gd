@@ -31,6 +31,8 @@ func _run() -> void:
 	_check(mid > 1.0 and mid < phone, "the smaller the screen, the bigger the factor (%.2f)" % mid)
 
 	var game = root.get_node("Game")
+	var was_persist: bool = game.persist
+	var was_level: String = game.level_id
 	var was_records: Dictionary = game.records.duplicate(true)
 	game.persist = false
 	game.records = {}
@@ -73,6 +75,8 @@ func _run() -> void:
 	m.ui_scale = 1.0
 	game.goals_expanded = was
 	game.records = was_records
+	game.level_id = was_level
+	game.persist = was_persist
 
 	m.free()
 	print("test_ui_scale: %d checks, %s" % [checks, "OK" if failures.is_empty() else "%d FAILED" % failures.size()])

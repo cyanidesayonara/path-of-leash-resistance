@@ -22,6 +22,9 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var game = root.get_node("Game")
+	var keep_persist: bool = game.persist
+	var keep_losses: int = game.walks_lost
+	var keep_level: String = game.level_id
 	game.persist = false
 	root.get_node("Sfx").muted = true
 	game.level_id = "street"
@@ -93,5 +96,8 @@ func _run() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE))
 
 	m.free()
+	game.walks_lost = keep_losses
+	game.level_id = keep_level
+	game.persist = keep_persist
 	print("test_losses: %d checks, %s" % [checks, "OK" if failures.is_empty() else "%d FAILED" % failures.size()])
 	quit(1 if not failures.is_empty() else 0)

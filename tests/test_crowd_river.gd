@@ -27,10 +27,16 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	var game: Node = root.get_node("Game")
+	var keep_persist: bool = game.persist
+	var keep_level: String = game.level_id
+	game.persist = false
 	var R: GDScript = load("res://systems/crowd_river.gd")
 	_sim(R)
 	await _live()
 	await _live_rain()
+	game.level_id = keep_level
+	game.persist = keep_persist
 	print("test_crowd_river: %d checks, %d failures" % [checks, failures.size()])
 	quit(1 if failures.size() > 0 else 0)
 
