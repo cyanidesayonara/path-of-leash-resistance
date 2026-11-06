@@ -125,6 +125,7 @@ var escombriaire: Escombriaire
 var botanic: Botanic
 var banderer: Banderer
 var guitarrista: Guitarrista
+var cargo: SuperillaCargo
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -212,6 +213,8 @@ const PopsLayer := preload("res://world/pops_layer.gd")
 const Rambla := preload("res://world/rambla.gd")
 const Guitarrista := preload("res://systems/guitarrista.gd")
 const Carmel := preload("res://systems/carmel.gd")
+const Superilla := preload("res://systems/superilla.gd")
+const SuperillaCargo := preload("res://systems/superilla_cargo.gd")
 # float_text(..., POP_SAY) draws a speech bubble rather than a sound or a score
 const POP_SAY := 0
 const POLE_RADIUS := 10.0
@@ -330,6 +333,7 @@ const WALK_MODULES := {
 	"boars": preload("res://systems/boars.gd"),
 	"gracia": preload("res://systems/gracia.gd"),
 	"carmel": preload("res://systems/carmel.gd"),
+	"superilla": preload("res://systems/superilla.gd"),
 	"raval": preload("res://systems/boss_gat.gd"),
 	"beach": preload("res://systems/passeig.gd"),
 	"rain": preload("res://systems/diluvi.gd"),
@@ -533,6 +537,9 @@ var port_gulls_startled := 0
 var port_bollard_wrapped := false
 var reial_gaudi_wrapped := false
 var carmel_cannon_wrapped := false
+var superilla_circles_sprinted := 0
+var superilla_pingpong_slid := false
+var superilla_circles_visited: Dictionary = {}
 var reial_fountain_drank := false
 var reial_busker_barked := false
 var vet_scale_weighed := false

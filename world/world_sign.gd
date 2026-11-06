@@ -34,7 +34,7 @@ const MATERIALS := {
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
 	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
 	"montjuic": "cactus", "port": "rope", "reial": "fronds", "vet": "biscuits",
-	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "raval": "pegs", "tutorial": "balls",
+	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "superilla": "pingpong", "raval": "pegs", "tutorial": "balls",
 }
 # No glow or bed under the pieces: a name reads on its ground by each piece's
 # own dark edge and contact shadow, the way a real thing lying there would.
@@ -77,6 +77,7 @@ const FEEL := {
 	"shells": {"spacing": 0.14, "r": 0.075, "drag": 3.5, "take": 1.0, "spin": 3.0},
 	"rubble": {"spacing": 0.16, "r": 0.08, "drag": 3.0, "take": 1.0, "spin": 3.0},
 	"balls": {"spacing": 0.15, "r": 0.075, "drag": 0.9, "take": 1.2, "roll": true},
+	"pingpong": {"spacing": 0.14, "r": 0.07, "drag": 0.8, "take": 1.3, "roll": true},
 	"bulbs": {"fixed": true},
 	"setts": {"fixed": true},
 	"topiary": {"fixed": true},
@@ -530,6 +531,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_rubble(c, sign, h, light)
 		"balls":
 			_balls(c, sign, h, light)
+		"pingpong":
+			_pingpong(c, sign, h, light)
 		"bulbs":
 			_bulbs(c, lines, h, t)
 		"studs":
@@ -1178,3 +1181,19 @@ static func _rubble(c: Object, sign: Dictionary, h: float, light: Vector2) -> vo
 		c.draw_colored_polygon(_chunk(p - light * r * 0.15, float(pc.rot), r * 0.88), col)
 		c.draw_circle(p - light * r * 0.35, r * 0.25, Color(0.92, 0.84, 0.74, 0.4))
 
+
+
+static func _pingpong(c: Object, sign: Dictionary, h: float, light: Vector2) -> void:
+	# ping-pong balls from the superblock's concrete tables: matte white and tournament orange celluloid
+	for pc: Dictionary in sign.pieces:
+		c.draw_circle((pc.p as Vector2) + light * float(pc.r) * 0.45, float(pc.r), Color(0, 0, 0, 0.28))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var is_orange: bool = float(pc["var"]) > 0.45
+		var col := Color(0.96, 0.54, 0.18) if is_orange else Color(0.94, 0.94, 0.92)
+		c.draw_circle(p, r, col.darkened(0.35))
+		c.draw_circle(p, r * 0.88, col)
+		var d := Vector2.from_angle(float(pc.rot))
+		c.draw_line(p - d * r * 0.7, p + d * r * 0.7, col.darkened(0.12), 1.0)
+		c.draw_circle(p - light * r * 0.35, r * 0.26, Color(1, 1, 1, 0.45) if is_orange else Color(1, 1, 1, 0.75))

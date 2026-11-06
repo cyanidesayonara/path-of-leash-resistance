@@ -2,6 +2,29 @@
 
 Append-only session history, newest first.
 
+## 2026-11-06 - Walk 29: «La Superilla» (The Poblenou Superblock)
+
+- Walk 29 added to the campaign (`systems/superilla.gd`, `systems/superilla_cargo.gd`, `autoload/game.gd`, `world/level_build.gd`, `main.gd`):
+  Barcelona's innovative Poblenou Superblock (Carrer de Sancho d'Àvila / Carrer de la Ciutat de Granada), where vehicular intersections have been reclaimed into a green, pedestrian-first urban oasis.
+- Tactical urbanism ground art: wide dark asphalt court painted with circular graphics in turquoise, sunflower yellow, terracotta, and lime green. Fast sprinting through 3 painted circles awards "tactical runner! +2".
+- Concrete ping-pong tables: solid recreational tables where stray ping-pong balls bounce and dogs can slide underneath for "table slide! +2".
+- Timber tree planter boxes: 8 large square planter boxes with olive trees, fragrant rosemary, and lavender flowers forming natural leash wrapping obstacles and solid boundaries.
+- Signature live event: El Patí de Càrrega (`systems/superilla_cargo.gd`): a front-loading family cargo trike cruising across the superblock along the cycle lane at y = -2200.0.
+  - 0.8 s warning telegraph: brass bell chime ("Ding-ding! Passeu, si us plau!").
+  - Distracted human bump hazard: -8 patience drop.
+  - Dropped baguette snatch trick: fresh crusty baguette slips from the cargo crate at center path; dog can snatch it for "baguette snatch! +2".
+  - Cargo boop: booping the trike directly awards "cargo boop! +2".
+  - Cargo cheer: barking within 140 px prompts an enthusiastic double-chime bell ring for "cargo cheer! +2".
+  - Near-miss dodge save: `NearMiss.consider` awards "superilla dodge! +2" and increments `saves_done`.
+  - Zero added draw calls: batched directly into Superilla's live `ShapeBatch`.
+- Tony Hawk progression:
+  - 15 goals roster: mark, sniff, phone, paws, bag, fetch, snack, cargo, pingpong, circles, combo, prize, spell, jamon, clock.
+  - Secret Jamón tucked beside the ping-pong court.
+  - Beat the clock par time: 180 s.
+- Soundtrack: sunny Mediterranean afternoon bossa with acoustic guitar lead, warm whistle, bossa bass, and light rim percussion (`audio/music.gd`).
+- Entrance sign: ping-pong / tennis balls material (`world/world_sign.gd`).
+- Tests: `tests/test_superilla.gd`.
+
 ## 2026-11-06 - Artsy detour «El Drac» (Antoni Gaudí modernisme homage) off La Rambla
 
 - The fourth Artsy Detour: «El Drac» (`systems/detour.gd`, `world/detour_layer.gd`, `world/rambla.gd`, `world/level_build.gd`, `main.gd`):

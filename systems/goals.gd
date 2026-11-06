@@ -67,6 +67,8 @@ const LEVEL_GOAL_IDS := {
 	"gracia": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "correfoc", "churros", "decor", "combo", "prize", "spell", "jamon", "clock"],
 	# Els Búnquers del Carmel: the summit battery, escalators, and sunset overlook
 	"carmel": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "escalator", "view", "bunker", "prize", "spell", "jamon", "clock"],
+	# La Superilla: Poblenou superblock tactical circles, ping-pong tables, and cargo trike
+	"superilla": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "cargo", "pingpong", "circles", "combo", "prize", "spell", "jamon", "clock"],
 	# Rambla del Raval: the finale, El Gat de Botero. Tying him up is how the
 	# walk ends, so it is not a goal; the ways of wearing him down are.
 	"raval": ["mark", "sniff", "phone", "paws", "bag", "clothesline", "pigeons", "swat", "smash", "pummel", "combo", "prize", "spell", "jamon", "clock"],
@@ -141,6 +143,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"smash": {"text": "Lure charging El Gat into a palm", "target": 1, "fn": func() -> int: return 1 if m.gat_tree_smashed else 0},
 		"pigeons": {"text": "Scatter %d pigeons", "target": 10, "fn": func() -> int: return m.raval_pigeons_scattered},
 		"swat": {"text": "Dodge %d paw swats", "target": 3, "fn": func() -> int: return m.gat_swats_dodged},
+		"cargo": {"text": "Dodge the family cargo trike safely", "target": 1, "fn": func() -> int: return 1 if (m.cargo != null and (m.cargo.dodged or (m.cargo.state == m.cargo.State.SETTLED and not m.cargo.human_hit))) else 0},
+		"pingpong": {"text": "Slide under a concrete ping-pong table", "target": 1, "fn": func() -> int: return 1 if m.superilla_pingpong_slid else 0},
+		"circles": {"text": "Sprint through %d painted asphalt circles", "target": 3, "fn": func() -> int: return m.superilla_circles_sprinted},
 		"spell": {"text": "Spell LEASH", "target": 5, "fn": func() -> int: return int(m.get("word_letters_collected"))},
 		"jamon": {"text": "Find the hidden pernil", "target": 1, "fn": func() -> int: return 1 if bool(m.get("jamon_found")) else 0},
 		"clock": {"text": "Beat the clock (under %s)" % clock(float(m.clock_target)), "target": 1,
