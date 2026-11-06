@@ -33,6 +33,7 @@ class FakeMain:
 	var marks: Array[Vector2] = []
 	var bins: Array[Vector2] = []
 	var benches: Array[Vector2] = []
+	var fountains: Array[Vector2] = []
 	var poles: Array[Vector2] = []
 	var deco_pole_count := 0
 	var gate_text := ""
@@ -42,8 +43,10 @@ class FakeMain:
 	var sw_r := 940.0
 	var gate_l := 440.0
 	var gate_r := 840.0
+	var freedom_rect := Rect2(140.0, -5420.0, 1000.0, 620.0)
 	var prize_pos := Vector2.ZERO
 	var prize_text := ""
+	var prize_taken := false
 	var finished := false
 	var superilla_circles_sprinted := 0
 	var superilla_pingpong_slid := false
@@ -104,6 +107,10 @@ func _initialize() -> void:
 func _run() -> void:
 	root.get_node("Sfx").muted = true
 	var game: Node = root.get_node("Game")
+	game.persist = false
+	game.free_play = false
+	game.gate_open.clear()
+	game.records = {}
 	var goals_mod: GDScript = load("res://systems/goals.gd")
 	var th_mod: GDScript = load("res://systems/tony_hawk.gd")
 
@@ -144,6 +151,9 @@ func _run() -> void:
 
 	# 4. Surface detection
 	_check(Superilla.surface(m, Vector2(640.0, -2000.0)) == Surfaces.S.PAVEMENT, "asphalt court is pavement")
+	_check(Superilla.surface(m, Vector2(640.0, -5100.0)) == Surfaces.S.PAVEMENT, "Passatge del Vapor central court is pavement")
+	_check(Superilla.surface(m, Vector2(200.0, -5100.0)) == Surfaces.S.GRASS, "Passatge del Vapor west rain-garden is grass")
+	_check(Superilla.surface(m, Vector2(1060.0, -5100.0)) == Surfaces.S.GRASS, "Passatge del Vapor east rain-garden is grass")
 
 	# 5. Tactical circles sprint combo
 	m.dog.set("velocity", Vector2(0.0, -250.0))
