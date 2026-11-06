@@ -12,6 +12,7 @@ const Letters := preload("res://world/sign_letters.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
+const Detour := preload("res://systems/detour.gd")
 
 const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.22)
@@ -311,7 +312,11 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 		m.waiter.draw(m, wc, vt, vb)
 
 
-static func tick(m: Node2D, _delta: float) -> void:
+static func build_layer(m: Node2D) -> void:
+	Detour.build_layer(m)
+
+
+static func tick(m: Node2D, delta: float) -> void:
 	if m.lvl != "reial":
 		return
 	# The fountain goal is a real drink: main._bodily sets dog.drinking at
@@ -328,6 +333,7 @@ static func tick(m: Node2D, _delta: float) -> void:
 				m.set("reial_busker_barked", true)
 				m.float_text(m.dog.global_position + Vector2(0, -28), "¡Olé!", Color(0.96, 0.88, 0.35))
 				m.feed.say("A DUET WITH THE BUSKER!", EventFeed.Tone.GOOD)
+	Detour.tick(m, delta)
 
 # main.surface_at, through walk_mod: the ground here, or -1 for main's own
 static func surface(m: Node2D, p: Vector2) -> int:
