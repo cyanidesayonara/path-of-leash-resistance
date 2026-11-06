@@ -9,9 +9,11 @@ const LevelBuild := preload("res://world/level_build.gd")
 # Hidden-in-plain-sight side rooms off major Barcelona walks.
 # 1. "EL SOMNI" (Homage to Salvador Dalí's surrealist dreamscapes)
 #    located off Carrer del Gòtic (Walk 7: El Gòtic / "oldtown").
-# 2. "L'ESTEL" (Homage to Joan Miró's primary shapes, constellations and starry ladders)
+# 2. "L'ESTEL" (after Joan Miró's general style: primary colours, biomorphic shapes, stars and eyes.
+#    No specific work, title or logo of his is copied; his name never appears in player-facing text)
 #    located off Montjuïc (Walk 16: Montjuïc / "montjuic").
-# 3. "EL COLOM" (Homage to Pablo Picasso's analytical cubism, guitars, and peace doves)
+# 3. "EL COLOM" (after Pablo Picasso's general style: cubist faceting. No specific work is copied
+#    (no peace dove, no bull, nothing from Guernica); his name never appears in player-facing text)
 #    located off Plaça Reial (Walk 19: Plaça Reial / "reial").
 #
 # Features:
@@ -25,7 +27,7 @@ const LevelBuild := preload("res://world/level_build.gd")
 #     4 surreal melting lampposts with droop elasticity and melting clocks, and Golden Dream Bone.
 #   - L'Estel (ESTEL_ORIGIN): white modernist floor with primary yellow/blue/red field insets,
 #     thick black calligraphic wall murals (asterisks, crescent moons, eyes), 4 biomorphic
-#     primary-shape sculptures wrapped by the leash, 3 Starry Ladders ("L'Escala de l'Evasió"),
+#     primary-shape sculptures wrapped by the leash, 3 Hop Trails (original stepping-blob chimes),
 #     and the secret Golden Star Bone ("L'Os de l'Estel") on a modernist cube pedestal.
 # - Exit portal arch marked "SORTIDA" returning pair smoothly back to the walk.
 # - The walk's timer and outside goals wait outside while inside the gallery.
@@ -70,7 +72,7 @@ const SCULPTURE_OFFSETS: Array[Vector2] = [
 	Vector2(500.0, 220.0), # Calligraphic Totem: Deep black totem with eye motif
 ]
 
-# 3 Starry Ladders ("L'Escala de l'Evasió") inside L'Estel gallery
+# 3 Hop Trails (original stepping-blob chimes) inside L'Estel gallery
 const LADDER_OFFSETS: Array[Vector2] = [
 	Vector2(170.0, 320.0),
 	Vector2(590.0, 320.0),
@@ -81,11 +83,11 @@ const LADDER_OFFSETS: Array[Vector2] = [
 const COLOM_SCULPTURE_OFFSETS: Array[Vector2] = [
 	Vector2(240.0, 420.0), # Cubist Guitar & Mandolin
 	Vector2(520.0, 410.0), # Harlequin
-	Vector2(260.0, 240.0), # Minotaur Totem
+	Vector2(260.0, 240.0), # Cubist Hound
 	Vector2(500.0, 220.0), # Pitcher & Palette
 ]
 
-# 3 Peace Doves ("Els Coloms") inside El Colom gallery
+# 3 faceted Barcelona pigeons ("Els Coloms") inside El Colom gallery
 const COLOM_DOVE_OFFSETS: Array[Vector2] = [
 	Vector2(180.0, 320.0),
 	Vector2(580.0, 320.0),
@@ -263,7 +265,7 @@ static func tick(m: Node2D, delta: float) -> void:
 			exit(m)
 	elif is_colom:
 		# El Colom gallery tick
-		# 1. Update Peace Doves ("Els Coloms")
+		# 1. Update the pigeons ("Els Coloms")
 		for i in range(COLOM_DOVE_OFFSETS.size()):
 			if dove_cooldown[i] > 0.0:
 				dove_cooldown[i] = maxf(0.0, dove_cooldown[i] - delta)
@@ -272,7 +274,7 @@ static func tick(m: Node2D, delta: float) -> void:
 				dove_cooldown[i] = 1.0
 				m.colom_doves_greeted += 1
 				_play_sfx(m, "hi", 1.20 + i * 0.1)
-				m.float_text(dp + Vector2(0.0, -22.0), "coo! peace dove!", Color(0.9, 0.95, 1.0))
+				m.float_text(dp + Vector2(0.0, -22.0), "coo! pigeon!", Color(0.9, 0.95, 1.0))
 
 		# 2. Check secret Golden Cubist Bone collection
 		var bp: Vector2 = o + BONE_POS
@@ -288,7 +290,7 @@ static func tick(m: Node2D, delta: float) -> void:
 			exit(m)
 	elif is_estel:
 		# L'Estel gallery tick
-		# 1. Update Starry Ladders ("L'Escala de l'Evasió")
+		# 1. Update the Hop Trails
 		for i in range(LADDER_OFFSETS.size()):
 			if ladder_cooldown[i] > 0.0:
 				ladder_cooldown[i] = maxf(0.0, ladder_cooldown[i] - delta)
@@ -297,7 +299,7 @@ static func tick(m: Node2D, delta: float) -> void:
 				ladder_cooldown[i] = 1.0
 				m.estel_ladders_climbed += 1
 				_play_sfx(m, "star", 1.25 + i * 0.15)
-				m.float_text(dp + Vector2(0.0, -22.0), "ladder to the stars!", Color(1.0, 0.9, 0.3))
+				m.float_text(dp + Vector2(0.0, -22.0), "hop hop hop!", Color(1.0, 0.9, 0.3))
 
 		# 2. Check secret Golden Star Bone collection
 		var bp: Vector2 = o + BONE_POS
