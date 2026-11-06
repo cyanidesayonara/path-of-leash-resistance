@@ -10,16 +10,16 @@ extends RefCounted
 #
 # Gameplay contract:
 # - 0.8 s warning telegraph: Gardener calls out from the west terrace edge:
-#   "Pas al carretó!" with a squeaky wooden trundle sound and speech bubble.
+#   "Wheelbarrow coming through!" with a squeaky wooden trundle sound and speech bubble.
 # - Soft failure / hazard: Distracted human wandering into the wheelbarrow
-#   gets bumped (-8 patience drop, "Whoa! Watch the wheelbarrow!",
-#   gardener: "Atenció a les plantes!").
+#   gets bumped (-8 patience drop, "Sorry, sorry! Your plants!",
+#   gardener: "Mind the plants!").
 # - Dog trick (geranium snatch): As the wheelbarrow trundles across center plaza
 #   (x >= 610.0), a terracotta clay pot with red geraniums slips off the barrow
 #   onto the sand; dog can snatch or boop it for "geranium snatch! +2" and
-#   bones/snack count (gardener: "Ei, les meves flors!").
+#   bones/snack count (gardener: "Hey, my flowers!").
 # - Boop trick: Booping the gardener's boots/apron awards "gardener boop! +2"
-#   ("Hola, trapella!").
+#   ("Hello, little troublemaker!").
 # - Bark trick: Barking within 130 px startles the gardener into a momentary
 #   wobble, awarding "gardener bark! +2" ("Ui, quin trontoll!").
 # - Dodge save: Steering your human safely clear of the crossing trajectory

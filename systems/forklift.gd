@@ -11,16 +11,16 @@ extends RefCounted
 # Gameplay contract:
 # - 0.8 s warning telegraph: When the pair reaches y = -820.0, the forklift operator
 #   sounds the reverse beeper ("Pi-pi-pi!") and calls out from the yard entrance:
-#   "Compte amb el torito!" with a telegraphed speech bubble.
+#   "Forklift coming through!" with a telegraphed speech bubble.
 # - Soft failure / hazard: Distracted human wandering into the forklift's path
-#   gets bumped (-8 patience drop, "Whoa! Watch the forklift!",
-#   driver: "Al tanto, que porto ferralla!").
+#   gets bumped (-8 patience drop, "That forklift clipped me!",
+#   driver: "Scrap load, clear the way!").
 # - Dog trick (hubcap snatch): As the forklift crosses the lane (x >= 550.0), a shiny
 #   vintage chrome hubcap ("tapacubs") slips loose from the forks onto the yard gravel;
 #   pouncing or booping it awards "hubcap snatch! +2" and increments bones/combo
-#   (Driver: "Ei, el meu ferro!").
+#   (Driver: "Hey, that's my scrap!").
 # - Boop trick: Booping the forklift directly awards "forklift boop! +2"
-#   ("Hola, gosset del ferro!").
+#   ("Hey there, scrap hound!").
 # - Bark trick: Barking near the forklift (within 130 px) causes the driver to brake
 #   with a tyre chirp, awarding "forklift bark! +2" ("Ui, quin fre!").
 # - Dodge save: Steering your human safely clear past the crossing trajectory after

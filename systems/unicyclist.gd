@@ -11,14 +11,14 @@ extends RefCounted
 # Gameplay contract:
 # - 0.8 s warning telegraph: Unicyclist teeters on the stone road kerb at
 #   x = 390.0, y = -2100.0, steadying their balance with outstretched arms
-#   and shouting "Compte amb l'equilibri!" with a telegraphed speech bubble.
+#   and shouting "Unicycle coming through!" with a telegraphed speech bubble.
 # - Soft failure / hazard: distracted human wandering into the unicyclist's path
-#   gets bumped by the wobbling wheel (-8 patience drop, "Whoa! Watch the unicycle!").
+#   gets bumped by the wobbling wheel (-8 patience drop, "A unicycle? Really?").
 # - Dog trick: as the performer pedals past the central road (x >= 550.0), a spinning
 #   juggling pin slips from the juggle and clatters onto the asphalt; pouncing or
 #   booping it awards "pin snatch! +2".
 # - Bark trick: barking near the teetering performer startles them into an acrobatic
-#   balancing pirouette, awarding "unicycle bark! +2" ("Epa!", "Uix, per poc!").
+#   balancing pirouette, awarding "unicycle bark! +2" ("Epa!", "Phew, close one!").
 # - Boop trick: booping the unicyclist directly awards "unicycle boop! +2".
 # - Dodge: steering your human safely clear past the crossing trajectory
 #   awards "summit dodge! +2" / "Whew, nice save!".

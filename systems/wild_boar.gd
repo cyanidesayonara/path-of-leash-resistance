@@ -12,7 +12,7 @@ extends RefCounted
 #   x = 340.0, y = -2150.0 ("Gronf!") with a telegraphed speech bubble
 #   and rustling brush sound as two striped piglets peek out first.
 # - Soft failure / hazard: distracted human wandering into the sow's crossing path
-#   gets bumped flat by the protective sow (-8 patience drop, "Whoa! Watch the boar!").
+#   gets bumped flat by the protective sow (-8 patience drop, "Is that a boar?!").
 # - Dog trick: as the sow roots across the center trail (x >= 590.0), an unearthed
 #   wild black truffle drops onto the dirt; pouncing or booping it awards
 #   "truffle snatch! +2" (sow: "Gronf!").

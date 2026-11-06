@@ -3,7 +3,7 @@ extends SceneTree
 const Waiter := preload("res://systems/waiter.gd")
 
 # Regression test for Plaça Reial bistro waiter & tapas tray live event (Walk 19).
-# Tests the 0.8s warning telegraph ("Compte amb la safata!"), eastward walk across
+# Tests the 0.8s warning telegraph ("Mind the tray!"), eastward walk across
 # plaza flagstones, tapas croqueta drop & dog snatch trick, human bump hazard,
 # waiter bark trick, plaza dodge save, autowalk safety, and leak-free cleanup.
 
