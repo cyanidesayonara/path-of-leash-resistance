@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-06 - Plaça d'Espanya drawn as the real place
+
+- `systems/espanya.gd`: the walk climbs the real axis. The round plaza's paving in light and dark stone bands between the two brick towers (brick coursing, stone quoins, pyramid roofs overhead), with the traffic ring and its lanes either side; Avinguda de la Reina Maria Cristina in granite slabs with a median of lit fountain grates, a sauló strip of plane trees, the road, and the exhibition halls' roofs (skylights, a domed lantern, the colonnade on the avenue); the Four Columns as ionic columns on a raised marble platform; the Magic Fountain's radial plaza, stone terrace, rim and basin, with a show of rising jets and a central plume; the stairs to the palace with the cascade's stepped basins and foam lips between balustrades; terraced lawns, hedges and cypresses; the palace wings with domed corner towers by the gate. Senyeres ripple on the flag masts.
+- Before, the fountain basin and cascade pools were drawn under the avenue's paving and never showed, and the columns and flag masts were drawn as street trees and lampposts. The ground is now the walk's cross-section (`draw_cross_section`), and two hooks say what its poles are: `tree_kind` (none) and the new `is_lamp` (main.gd `is_lamppost`; declared in `tests/test_walk_hooks.gd`).
+- Fixed: "Wrap the leash around the Four Columns" could never be completed in play. The walk fits every pole's x to the corridor after build, so the exact match against the authored positions never held; a column is now any pole on the columns' row. `tests/test_espanya.gd` checks the fitted position and that a flag mast does not count.
+- Text: the goal is "Wrap the leash around the Four Columns" (it was cut off in the goal list), the prize "snatch the crystal finial off the cascade", and the bubble performer's warning "Bubbles coming!" (was Catalan).
+- Gameplay, positions, timings and gates are unchanged.
+
 ## 2026-11-06 - Draw Els Búnquers as the real place
 
 - Rebuilt Walk 28's visual layers (`systems/carmel.gd`, `world/level_build.gd`,
