@@ -40,7 +40,7 @@ const HOOKS := {
 	"llevant": ["draw_bin", "draw_cross_section", "draw_edge_layer", "draw_overhead", "rider_lane", "surface", "takes_prints"],
 	"boars": ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "grass_blocked", "tick", "tree_kind"],
 	"gracia": ["draw_live", "draw_overhead", "draw_scenery", "tick"],
-	"carmel": ["draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick", "tree_kind"],
+	"carmel": ["draw_bin", "draw_bollard", "draw_column", "draw_conveyor", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "on_bark", "surface", "takes_prints", "tick"],
 	"superilla": ["draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick"],
 	"forum": ["draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick"],
 	"espanya": ["draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick"],

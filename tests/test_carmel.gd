@@ -100,6 +100,10 @@ func _initialize() -> void:
 func _run() -> void:
 	root.get_node("Sfx").muted = true
 	var game: Node = root.get_node("Game")
+	game.persist = false
+	game.free_play = false
+	game.gate_open.clear()
+	game.records = {}
 	var goals_mod: GDScript = load("res://systems/goals.gd")
 	var th_mod: GDScript = load("res://systems/tony_hawk.gd")
 	var carmel: GDScript = load("res://systems/carmel.gd")
@@ -110,7 +114,7 @@ func _run() -> void:
 	_check(game.LEVEL_NAMES.has("carmel"), "LEVEL_NAMES has carmel")
 	_check(game.LEVEL_SUBTITLES.has("carmel"), "LEVEL_SUBTITLES has carmel")
 	_check(game.STAR_GATE.has("carmel"), "STAR_GATE has carmel")
-	_check(game.chase_gate_needed("carmel") == "gracia", "carmel gated by gracia")
+	_check(String(game.CHASE_GATE.get("carmel", "")) == "boars", "carmel opens after Els Senglars")
 
 	# 2. Goals & Tony Hawk checks
 	var g_list: Array = goals_mod.LEVEL_GOAL_IDS.get("carmel", [])
