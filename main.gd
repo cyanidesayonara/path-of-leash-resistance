@@ -2681,7 +2681,7 @@ func is_lamppost(i: int) -> bool:
 		return false
 	if tutorial_mode or lvl == "scrap":
 		return true
-	if lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "oldtown" or lvl == "carmel":
+	if lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "oldtown" or lvl == "carmel" or lvl == "superilla":
 		return false
 	return not (lvl == "rain" and poles[i].x < walk_cx)
 
