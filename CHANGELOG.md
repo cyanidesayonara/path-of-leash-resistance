@@ -8,6 +8,30 @@ Append-only session history, newest first.
   `test_freedom_sign_clear.gd` were in tests/ but not in ci.yml, so CI never
   ran them. Both pass (53 and 233 checks) and now run in CI.
 
+## 2026-11-06 - Draw Els Búnquers as the real place
+
+- Rebuilt Walk 28's visual layers (`systems/carmel.gd`, `world/level_build.gd`,
+  `main.gd`, `tests/test_walk_hooks.gd`, `tests/test_carmel.gd`) so Turó de la
+  Rovira and MUHBA Els Búnquers del Carmel read from above at sunset like the
+  finished hilltop walks:
+  - Cached `draw_edge_layer`: sunset sky gradient (`ShapeBatch.band`), Mediterranean
+    shoreline with golden wave glints, Eixample chamfered-block grid with interior
+    courtyards and Avinguda Diagonal cutting across, generic dusk skyline silhouettes,
+    dry-stone retaining walls along both flanks, Aleppo pine / agave / rosemary /
+    Spanish broom scrub, and post-war *barraques del Carmel* brick foundations with
+    checkerboard hydraulic-tile floors.
+  - Detailed `draw_cross_section` and `draw_conveyor`: compacted sauló granite grit
+    with gravel berms, erosion ruts, diagonal stone drainage *rigoles*, tiled
+    *barraques* floor thresholds, Baixada de la Glòria outdoor escalators with
+    corrugated steel steps, yellow safety comb plates, glass/steel balustrades and
+    stepped terracotta hillside rooftops, circular 1937 anti-aircraft gun pits with
+    bolt rings, ammunition niches and stencil plaques, reinforced-concrete command
+    bunker with rangefinder slit and blast steps, and the semicircular western
+    sunset mirador balcony with warm festival string lights (`ShapeBatch.glow`).
+  - Bespoke Carmel props (`draw_bollard`, `draw_column`, `draw_bin`, `draw_fountain`,
+    `draw_snack`) and off-leash summit battery esplanade (`draw_freedom`,
+    `FREEDOM_PROPS["carmel"]`, `surface_at`).
+
 ## 2026-11-06 - Thirty-one walks in the planner's order, Gràcia second to last again
 
 - The four walks added since 1.69 had been put after Festa de Gràcia, so
