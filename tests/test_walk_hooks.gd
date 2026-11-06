@@ -42,7 +42,7 @@ const HOOKS := {
 	"gracia": ["draw_live", "draw_overhead", "draw_scenery", "tick"],
 	"carmel": ["draw_bin", "draw_bollard", "draw_column", "draw_conveyor", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "on_bark", "surface", "takes_prints", "tick"],
 	"superilla": ["draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick"],
-	"forum": ["draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick"],
+	"forum": ["draw_bin", "draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "on_bark", "surface", "tick"],
 	"espanya": ["draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick"],
 	"raval": ["cam_lean", "draw_edge_layer", "draw_live", "draw_overhead", "hush_banner", "idle_status", "on_bark", "surface", "tick", "urgent_status"],
 }

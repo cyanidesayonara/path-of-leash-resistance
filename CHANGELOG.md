@@ -2,6 +2,38 @@
 
 Append-only session history, newest first.
 
+## 2026-11-06 - Draw El Fòrum as the real place
+
+- Rebuilt Walk 30's visual layers (`systems/forum.gd`, `world/level_build.gd`,
+  `main.gd`, `tests/test_walk_hooks.gd`) so Parc del Fòrum and Esplanada del Fòrum
+  read from above at the finish of the best coastal walks:
+  - Batched `draw_edge_layer`: West flank features Herzog & de Meuron's *Edifici
+    Fòrum* (Museu Blau) with rough indigo-blue triangular concrete elevations and
+    mirrored glass fissure glints; the CCIB convention center with standing-seam
+    zinc panels and tinted curtain walls; and the vast raked amphitheater seating
+    terraces where gulls roost. East flank opens directly to the Mediterranean
+    Sea, rendered with a turquoise coastal shelf, animated rhythmic swell waves,
+    interlocking concrete tetrapod breakwaters, Port Fòrum marina finger docks,
+    and moored boats with dual mooring lines.
+  - Authentic `draw_cross_section`: Vast coastal esplanade paving in modular precast
+    concrete slabs with expansion joints, asphalt skate speed strip with dashed
+    centerline, linear stainless slot drains, seawall coping with stainless steel
+    railings, skate banks with beveled transition ramps, steel coping pipes, wax
+    sheen and vibrant deck stickers, Pergola pylon footing pads, and a round teak
+    lookout deck at the marina plaza prize plinth featuring a golden star compass
+    and solar cell trophy.
+  - Monumental `draw_overhead`: 4,000 m² *Pèrgola Fotovoltaica* suspended space
+    truss frame with yellow diagonal cross struts, deep-blue photovoltaic cell
+    matrix, and glass sheen glints.
+  - Bespoke Forum props (`draw_column` animated marine windsock mast, `draw_bollard`
+    marine stainless stanchion, `draw_bin` brushed stainless recycling station,
+    `draw_fountain` square drinking fountain with splash pad, `draw_snack` foil
+    energy bar packet).
+  - Authentic off-leash area (`Banys del Fòrum`, `FREEDOM_PROPS["forum"]`,
+    `Forum.draw_freedom`): Seaside bathing park with stepped concrete sunbathing
+    terraces, salt-water bathing basin, swimming ladders, maritime pine planters,
+    dive buoys, and sunbathers. Clearances verified by `test_freedom_props.gd`.
+
 ## 2026-11-06 - Two tests CI never ran
 
 - `test_film_plinth.gd` (the Raval victory film, #448) and

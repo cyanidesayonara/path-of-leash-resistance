@@ -16,6 +16,8 @@ extends RefCounted
 #   concrete breaks down into the open blue sea water with salty wave crests.
 # - Wind cones (windsocks): tall slender masts with red-and-white striped cones
 #   fluttering in the stiff sea breeze.
+# - Banys del Fòrum: the unique open-air seaside bathing park and terraces at the
+#   finish of the walk.
 # - Signature live event: El Skater de l'Esplanada (ForumSkater) cruising across
 #   the open pavement practicing an ollie.
 
@@ -24,29 +26,56 @@ const Surfaces := preload("res://world/surfaces.gd")
 const ForumSkater := preload("res://systems/forum_skater.gd")
 
 const LIGHT := Vector2(0.5, 0.866)
-const SHADOW := Color(0.04, 0.05, 0.07, 0.22)
+const SHADOW := Color(0.04, 0.05, 0.07, 0.24)
 
 # --- colors ------------------------------------------------------------------
-const CONCRETE_LIGHT := Color(0.74, 0.75, 0.74)
-const CONCRETE_DARK := Color(0.64, 0.65, 0.64)
-const CONCRETE_JOINT := Color(0.50, 0.52, 0.52)
-const SEA_BLUE_DEEP := Color(0.12, 0.38, 0.62)
-const SEA_BLUE_SHALLOW := Color(0.22, 0.54, 0.72)
-const SEA_FOAM := Color(0.92, 0.96, 0.98, 0.75)
-const SEA_WALL_STONE := Color(0.56, 0.56, 0.58)
+const CONCRETE_LIGHT := Color(0.78, 0.79, 0.80)
+const CONCRETE_MID := Color(0.71, 0.72, 0.73)
+const CONCRETE_DARK := Color(0.58, 0.60, 0.62)
+const CONCRETE_JOINT := Color(0.46, 0.48, 0.50)
+const SKATE_ASPHALT := Color(0.30, 0.32, 0.34)
+const GRATE_STEEL := Color(0.42, 0.44, 0.47)
+const SEAWALL_COPING := Color(0.82, 0.83, 0.82)
+const SEAWALL_DARK := Color(0.52, 0.54, 0.55)
+
+# Mediterranean Sea & Marina
+const SEA_DEEP := Color(0.08, 0.30, 0.54)
+const SEA_MID := Color(0.14, 0.42, 0.66)
+const SEA_SHALLOW := Color(0.22, 0.58, 0.74)
+const SEA_FOAM := Color(0.92, 0.97, 1.0, 0.80)
+const TETRAPOD_STONE := Color(0.62, 0.64, 0.65)
+const TETRAPOD_DARK := Color(0.44, 0.46, 0.48)
+const PONTOON_WOOD := Color(0.68, 0.55, 0.40)
+const BOAT_WHITE := Color(0.94, 0.95, 0.96)
+const BOAT_NAVY := Color(0.12, 0.20, 0.36)
+const BOAT_TEAL := Color(0.16, 0.50, 0.55)
+
+# Architecture: Museu Blau & CCIB
+const MUSEU_BLUE := Color(0.14, 0.22, 0.38)
+const MUSEU_BLUE_DARK := Color(0.09, 0.15, 0.26)
+const GLASS_FISSURE := Color(0.70, 0.88, 0.96, 0.90)
+const GLASS_GLINT := Color(1.0, 1.0, 1.0, 0.95)
+const CCIB_FACADE := Color(0.44, 0.47, 0.50)
+const CCIB_GLASS := Color(0.22, 0.32, 0.42)
 
 # Solar Pergola colors
-const SOLAR_STEEL_DARK := Color(0.24, 0.26, 0.28)
-const SOLAR_STEEL_LIT := Color(0.38, 0.42, 0.46)
-const SOLAR_PANEL_BLUE := Color(0.10, 0.24, 0.42)
-const SOLAR_CELL_CYAN := Color(0.20, 0.48, 0.74)
-const SOLAR_SHADOW := Color(0.06, 0.08, 0.12, 0.32)
+const SOLAR_STEEL_DARK := Color(0.20, 0.22, 0.25)
+const SOLAR_STEEL_LIT := Color(0.36, 0.40, 0.45)
+const SOLAR_STEEL_YELLOW := Color(0.88, 0.76, 0.20)
+const SOLAR_PANEL_NAVY := Color(0.08, 0.16, 0.30, 0.92)
+const SOLAR_CELL_CYAN := Color(0.18, 0.42, 0.65, 0.88)
+const SOLAR_CELL_GRID := Color(0.30, 0.60, 0.85, 0.50)
+const SOLAR_SHADOW := Color(0.05, 0.07, 0.10, 0.35)
 
 # Skate Furniture colors
-const SKATE_CONCRETE := Color(0.68, 0.70, 0.68)
-const SKATE_RAIL_STEEL := Color(0.85, 0.88, 0.92)
-const WINDSOCK_RED := Color(0.88, 0.24, 0.20)
+const SKATE_CONCRETE := Color(0.70, 0.72, 0.70)
+const SKATE_RAMP_SLOPE := Color(0.62, 0.64, 0.62)
+const SKATE_RAIL_STEEL := Color(0.88, 0.90, 0.94)
+const SKATE_WAX := Color(0.96, 0.94, 0.80, 0.70)
+const WINDSOCK_RED := Color(0.88, 0.22, 0.18)
 const WINDSOCK_WHITE := Color(0.96, 0.96, 0.94)
+const TEAK_PLANK := Color(0.58, 0.42, 0.28)
+const TEAK_DARK := Color(0.42, 0.30, 0.20)
 
 # --- layout constants --------------------------------------------------------
 const HALF := 280.0
@@ -147,8 +176,11 @@ static func wrap_rects() -> Array[Rect2]:
 
 
 static func surface(_m: Node2D, p: Vector2) -> int:
-	# East side bathing pool / marina sea water
+	# East side bathing pool / marina sea water along walk
 	if p.x > SEAWALL_EDGE_X and p.y < -450.0 and p.y > -4450.0:
+		return Surfaces.S.WATER
+	# Banys del Fòrum sea bathing basin in off-leash area
+	if p.y < -5000.0 and p.x > 840.0:
 		return Surfaces.S.WATER
 	return Surfaces.S.PAVEMENT
 
@@ -213,119 +245,487 @@ static func on_bark(m: Node2D, _pos: Vector2 = Vector2.ZERO) -> bool:
 
 # --- drawing -----------------------------------------------------------------
 
-static func draw_edge_layer(m: Node2D, wc: Object, vt: float, vb: float) -> void:
-	var b := ShapeBatch.new()
-	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.28)
+static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
+	var b: ShapeBatch = c as ShapeBatch if c is ShapeBatch else ShapeBatch.new(c)
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.26)
+	var t_sec := AnimClock.msec() / 1000.0
 
-	# 1. Mediterranean sea water along eastern edge
+	# =========================================================================
+	# EAST SIDE: Open Mediterranean Sea, Waves, Tetrapods, and Port Fòrum Marina
+	# =========================================================================
 	if SEAWALL_EDGE_X < 1280.0:
-		var sea_rect := Rect2(SEAWALL_EDGE_X + 16.0, vt - 40.0, 1280.0 - SEAWALL_EDGE_X - 16.0, (vb - vt) + 80.0)
-		b.rect(sea_rect, SEA_BLUE_DEEP)
+		var sea_top := vt - 40.0
+		var sea_h := (vb - vt) + 80.0
 
-		# Stepped shallow wave margin
-		var margin_rect := Rect2(SEAWALL_EDGE_X + 16.0, vt - 40.0, 36.0, (vb - vt) + 80.0)
-		b.rect(margin_rect, SEA_BLUE_SHALLOW)
+		# Deep Mediterranean sea water
+		b.rect(Rect2(SEAWALL_EDGE_X + 16.0, sea_top, 1280.0 - SEAWALL_EDGE_X - 16.0, sea_h), SEA_DEEP)
 
-		# Coastal waves crests
-		var wave_y := floorf(vt / 90.0) * 90.0
-		while wave_y < vb + 90.0:
-			b.rect(Rect2(SEAWALL_EDGE_X + 20.0, wave_y, 44.0, 5.0), SEA_FOAM)
-			wave_y += 90.0
+		# Coastal shallows margin
+		b.rect(Rect2(SEAWALL_EDGE_X + 16.0, sea_top, 60.0, sea_h), SEA_SHALLOW)
+		b.rect(Rect2(SEAWALL_EDGE_X + 76.0, sea_top, 40.0, sea_h), SEA_MID)
 
-		# Sea wall stone coping
-		b.rect(Rect2(SEAWALL_EDGE_X, vt - 40.0, 16.0, (vb - vt) + 80.0), SEA_WALL_STONE.darkened(0.2))
-		b.rect(Rect2(SEAWALL_EDGE_X + 2.0, vt - 40.0, 12.0, (vb - vt) + 80.0), SEA_WALL_STONE)
+		# Animated rhythmic coastal waves
+		var wave_step := 110.0
+		var wave_start := floorf((vt - 40.0) / wave_step) * wave_step
+		var wy := wave_start
+		while wy < vb + 60.0:
+			var wave_phase := sin(t_sec * 2.2 + wy * 0.02)
+			var wave_x := SEAWALL_EDGE_X + 24.0 + wave_phase * 12.0
+			var wave_w := 48.0 + cos(t_sec * 1.8 + wy * 0.03) * 16.0
+			b.rect(Rect2(wave_x, wy, wave_w, 4.0), SEA_FOAM)
+			# Outer wave crest
+			var wave2_x := SEAWALL_EDGE_X + 90.0 + cos(t_sec * 1.6 + wy * 0.02) * 18.0
+			b.rect(Rect2(wave2_x, wy + 45.0, 38.0, 3.0), Color(SEA_FOAM.r, SEA_FOAM.g, SEA_FOAM.b, 0.55))
+			wy += wave_step
 
-	# 2. Large concrete flagstone pavement joints
-	var py := floorf(vt / 140.0) * 140.0
-	while py < vb + 140.0:
-		b.rect(Rect2(WALL_L, py, WALL_R - WALL_L, 2.0), CONCRETE_JOINT)
-		py += 140.0
+		# Breakwater armoring: interlocking concrete tetrapods along the waterline
+		var tetra_step := 52.0
+		var ty := floorf((vt - 40.0) / tetra_step) * tetra_step
+		while ty < vb + 40.0:
+			var tx := SEAWALL_EDGE_X + 10.0
+			b.circle(Vector2(tx + 4.0, ty + 4.0), 9.0, sh)
+			b.circle(Vector2(tx, ty), 8.5, TETRAPOD_DARK)
+			b.circle(Vector2(tx - 2.0, ty - 2.0), 6.5, TETRAPOD_STONE)
+			# Tetrapod arms
+			b.rect(Rect2(tx - 9.0, ty - 3.0, 18.0, 6.0), TETRAPOD_DARK)
+			b.rect(Rect2(tx - 8.0, ty - 2.0, 16.0, 4.0), TETRAPOD_STONE)
+			b.rect(Rect2(tx - 3.0, ty - 9.0, 6.0, 18.0), TETRAPOD_DARK)
+			b.rect(Rect2(tx - 2.0, ty - 8.0, 4.0, 16.0), TETRAPOD_STONE)
+			ty += tetra_step
 
-	var px := WALL_L + 140.0
-	while px < WALL_R - 20.0:
-		b.rect(Rect2(px, vt - 40.0, 2.0, (vb - vt) + 80.0), CONCRETE_JOINT)
-		px += 140.0
+		# Port Fòrum Marina: floating finger docks and moored recreational boats
+		for dy: float in [-1500.0, -2100.0, -2700.0, -3300.0]:
+			if dy > vt - 120.0 and dy < vb + 120.0:
+				# Wooden finger dock
+				b.rect(Rect2(1000.0 + 3.0, dy + 5.0, 220.0, 24.0), sh)
+				b.rect(Rect2(1000.0, dy, 220.0, 22.0), PONTOON_WOOD.darkened(0.2))
+				b.rect(Rect2(1002.0, dy + 2.0, 216.0, 18.0), PONTOON_WOOD)
+				# Dock planks
+				var px := 1010.0
+				while px < 1210.0:
+					b.rect(Rect2(px, dy + 2.0, 1.5, 18.0), PONTOON_WOOD.darkened(0.3))
+					px += 14.0
 
-	# 3. Solar pergola diagonal ground shadow
+				# Moored speedboats
+				for boat_side: float in [-1.0, 1.0]:
+					var by: float = dy + boat_side * 36.0
+					var bx := 1040.0
+					b.rect(Rect2(bx + 4.0, by + 4.0, 110.0, 32.0), sh)
+					# Hull
+					b.rect(Rect2(bx, by, 110.0, 30.0), BOAT_WHITE.darkened(0.15))
+					b.rect(Rect2(bx + 2.0, by + 2.0, 106.0, 26.0), BOAT_WHITE)
+					# Cockpit / cabin
+					var deck_col := BOAT_NAVY if boat_side < 0.0 else BOAT_TEAL
+					b.rect(Rect2(bx + 20.0, by + 6.0, 60.0, 18.0), deck_col)
+					b.rect(Rect2(bx + 26.0, by + 8.0, 40.0, 14.0), Color(0.85, 0.92, 0.96, 0.9))
+					# Mooring line to dock
+					b.line(Vector2(bx + 15.0, by + (15.0 if boat_side < 0.0 else 0.0)), Vector2(bx + 15.0, dy + 11.0), Color(0.3, 0.3, 0.3), 1.5)
+
+	# =========================================================================
+	# WEST SIDE: Edifici Fòrum (Museu Blau), CCIB Halls, and Monumental Ramps
+	# =========================================================================
+	var west_w := WALL_L - (-100.0)
+	var west_rect := Rect2(-100.0, vt - 40.0, west_w, (vb - vt) + 80.0)
+	b.rect(west_rect, CONCRETE_DARK)
+
+	# Base plaza terrace joints
+	var wjy := floorf((vt - 40.0) / 90.0) * 90.0
+	while wjy < vb + 60.0:
+		b.rect(Rect2(-100.0, wjy, west_w, 2.0), CONCRETE_JOINT)
+		wjy += 90.0
+
+	# 1. Museu Blau / Edifici Fòrum (y = -450 to -1750)
+	var mb_top := -1750.0
+	var mb_bot := -450.0
+	if mb_bot > vt - 80.0 and mb_top < vb + 80.0:
+		var mb_w := 320.0
+		var mb_rect := Rect2(-60.0, mb_top, mb_w, mb_bot - mb_top)
+
+		# Building mass shadow
+		b.rect(Rect2(mb_rect.position + Vector2(10.0, 14.0), mb_rect.size), sh)
+		# Deep indigo-blue textured concrete mass
+		b.rect(mb_rect, MUSEU_BLUE_DARK)
+		b.rect(mb_rect.grow(-6.0), MUSEU_BLUE)
+
+		# Mirrored glass fissure cuts running through the blue facade
+		var fiss_y := mb_top + 40.0
+		while fiss_y < mb_bot - 40.0:
+			var fiss_rect := Rect2(mb_rect.end.x - 38.0, fiss_y, 24.0, 70.0)
+			b.rect(fiss_rect, GLASS_FISSURE)
+			# Bright glass reflection glint
+			b.line(fiss_rect.position + Vector2(2.0, 4.0), fiss_rect.position + Vector2(20.0, 66.0), GLASS_GLINT, 2.0)
+			fiss_y += 110.0
+
+		# Cantilevered triangular undercroft shadow
+		b.rect(Rect2(mb_rect.position.x, mb_bot - 90.0, mb_w, 90.0), MUSEU_BLUE_DARK)
+
+	# 2. CCIB Convention Halls (y = -1900 to -3700)
+	var ccib_top := -3700.0
+	var ccib_bot := -1900.0
+	if ccib_bot > vt - 80.0 and ccib_top < vb + 80.0:
+		var ccib_w := 340.0
+		var ccib_rect := Rect2(-60.0, ccib_top, ccib_w, ccib_bot - ccib_top)
+
+		b.rect(Rect2(ccib_rect.position + Vector2(10.0, 12.0), ccib_rect.size), sh)
+		# Zinc & stainless cladding
+		b.rect(ccib_rect, CCIB_FACADE.darkened(0.2))
+		b.rect(ccib_rect.grow(-4.0), CCIB_FACADE)
+
+		# Tinted glass curtain wall window bays
+		var bay_y := ccib_top + 30.0
+		while bay_y < ccib_bot - 30.0:
+			b.rect(Rect2(ccib_rect.end.x - 30.0, bay_y, 22.0, 55.0), CCIB_GLASS)
+			b.rect(Rect2(ccib_rect.end.x - 28.0, bay_y + 2.0, 18.0, 51.0), Color(0.28, 0.42, 0.54, 0.9))
+			bay_y += 85.0
+
+	# 3. Terraced Amphitheater Concrete Seating (y = -3850 to -4900)
+	var amphi_top := -4900.0
+	var amphi_bot := -3850.0
+	if amphi_bot > vt - 80.0 and amphi_top < vb + 80.0:
+		var ay := amphi_top
+		while ay < amphi_bot:
+			if ay >= vt - 60.0 and ay <= vb + 60.0:
+				b.rect(Rect2(120.0, ay, 200.0, 36.0), CONCRETE_MID)
+				b.rect(Rect2(120.0, ay + 32.0, 200.0, 4.0), CONCRETE_DARK)
+				# Safety handrails
+				b.line(Vector2(310.0, ay), Vector2(310.0, ay + 36.0), SKATE_RAIL_STEEL, 1.5)
+			ay += 40.0
+
+	if c is not ShapeBatch:
+		b.flush(c)
+
+
+static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, bottom: float, ctop: float, vt: float, vb: float) -> void:
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.24)
+
+	# 1. Main Esplanade Ground Pavement Field
+	var walk_w := WALL_R - WALL_L
+	var walk_rect := Rect2(WALL_L, ctop, walk_w, bottom - ctop)
+	wc.rect(walk_rect, CONCRETE_MID)
+
+	# Alternating slab tone stripes (large precast pavers)
+	var slab_step := 120.0
+	var slab_y := floorf(maxf(ctop, vt - 40.0) / slab_step) * slab_step
+	while slab_y < minf(bottom, vb + 40.0):
+		if int(absf(slab_y / slab_step)) % 2 == 0:
+			wc.rect(Rect2(WALL_L, slab_y, walk_w, slab_step), CONCRETE_LIGHT)
+		slab_y += slab_step
+
+	# Longitudinal expansion joint lines
+	for px: float in [430.0, 500.0, 570.0, 640.0, 710.0, 780.0, 850.0]:
+		wc.rect(Rect2(px, maxf(ctop, vt - 40.0), 2.0, minf(bottom, vb + 40.0) - maxf(ctop, vt - 40.0)), CONCRETE_JOINT)
+
+	# Transverse expansion joint lines
+	var jy := floorf(maxf(ctop, vt - 40.0) / slab_step) * slab_step
+	while jy < minf(bottom, vb + 40.0):
+		wc.rect(Rect2(WALL_L, jy, walk_w, 2.0), CONCRETE_JOINT)
+		jy += slab_step
+
+	# 2. Smooth Charcoal Asphalt Skate Speed Strip (x = 510 to 610)
+	var skate_x := 510.0
+	var skate_w := 100.0
+	wc.rect(Rect2(skate_x, maxf(ctop, vt - 40.0), skate_w, minf(bottom, vb + 40.0) - maxf(ctop, vt - 40.0)), SKATE_ASPHALT)
+	# Dashed center speed run line
+	var dly := floorf(maxf(ctop, vt - 40.0) / 40.0) * 40.0
+	while dly < minf(bottom, vb + 40.0):
+		wc.rect(Rect2(skate_x + skate_w * 0.5 - 1.5, dly, 3.0, 22.0), Color(0.95, 0.95, 0.95, 0.85))
+		dly += 40.0
+
+	# 3. Linear Stainless Steel Slot Drains (x = 410 and x = 840)
+	for gx: float in [410.0, 840.0]:
+		wc.rect(Rect2(gx - 4.0, maxf(ctop, vt - 40.0), 8.0, minf(bottom, vb + 40.0) - maxf(ctop, vt - 40.0)), GRATE_STEEL)
+		wc.rect(Rect2(gx - 1.5, maxf(ctop, vt - 40.0), 3.0, minf(bottom, vb + 40.0) - maxf(ctop, vt - 40.0)), Color(0.18, 0.18, 0.20))
+
+	# 4. Seawall Granite Promenade Coping (x = 868 to 884)
+	var sea_len := minf(bottom, vb + 40.0) - maxf(ctop, vt - 40.0)
+	wc.rect(Rect2(SEAWALL_EDGE_X - 2.0, maxf(ctop, vt - 40.0), 16.0, sea_len), SEAWALL_DARK)
+	wc.rect(Rect2(SEAWALL_EDGE_X, maxf(ctop, vt - 40.0), 12.0, sea_len), SEAWALL_COPING)
+
+	# 5. Solar Pergola Diagonal Ground Shadow (y = -1980 to -1260)
 	var shadow_top := -1980.0
 	var shadow_bot := -1260.0
 	if shadow_bot > vt - 80.0 and shadow_top < vb + 80.0:
-		var sy := maxf(shadow_top, vt - 40.0)
-		var sh_h := minf(shadow_bot, vb + 40.0) - sy
-		if sh_h > 0.0:
-			# Diagonal striped shadow pattern from solar panel louvers
-			var sl_y := shadow_top
-			while sl_y < shadow_bot:
-				if sl_y >= vt - 60.0 and sl_y <= vb + 60.0:
-					b.rect(Rect2(WALL_L + 20.0, sl_y, (WALL_R - WALL_L) - 40.0, 28.0), SOLAR_SHADOW)
-				sl_y += 56.0
+		var sl_y := shadow_top
+		while sl_y < shadow_bot:
+			if sl_y >= vt - 60.0 and sl_y <= vb + 60.0:
+				wc.rect(Rect2(WALL_L + 15.0, sl_y, (WALL_R - WALL_L) - 30.0, 32.0), SOLAR_SHADOW)
+				# Diagonal truss beam shadows
+				wc.line(Vector2(WALL_L + 20.0, sl_y), Vector2(WALL_R - 20.0, sl_y + 40.0), SOLAR_SHADOW.darkened(0.2), 6.0)
+			sl_y += 56.0
 
-	b.flush(wc)
-
-
-static func draw_live(m: Node2D, wc: Object, vt: float, vb: float) -> void:
-	var b := ShapeBatch.new()
-	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.28)
-
-	# 1. Concrete skate banks & grindable coping rails
+	# 6. Concrete Skate Banks with Coping Rails
 	for sb: Rect2 in [SKATE_BANK_1, SKATE_BANK_2]:
 		if sb.end.y > vt - 80.0 and sb.position.y < vb + 80.0:
-			b.rect(Rect2(sb.position + Vector2(4, 6), sb.size), sh)
-			b.rect(sb, SKATE_CONCRETE.darkened(0.2))
-			b.rect(sb.grow(-3.0), SKATE_CONCRETE)
-			# Steel coping edge rails
-			b.rect(Rect2(sb.position.x, sb.position.y, 4.0, sb.size.y), SKATE_RAIL_STEEL)
-			b.rect(Rect2(sb.end.x - 4.0, sb.position.y, 4.0, sb.size.y), SKATE_RAIL_STEEL)
+			# Cast drop shadow
+			wc.rect(Rect2(sb.position + LIGHT * 8.0, sb.size), sh)
+			# Concrete transition body
+			wc.rect(sb, SKATE_CONCRETE.darkened(0.25))
+			wc.rect(sb.grow(-3.0), SKATE_CONCRETE)
+			wc.rect(Rect2(sb.position.x + 8.0, sb.position.y + 4.0, sb.size.x - 16.0, sb.size.y - 8.0), SKATE_RAMP_SLOPE)
+			# Steel coping edge pipes
+			wc.rect(Rect2(sb.position.x, sb.position.y, 5.0, sb.size.y), SKATE_RAIL_STEEL)
+			wc.rect(Rect2(sb.end.x - 5.0, sb.position.y, 5.0, sb.size.y), SKATE_RAIL_STEEL)
+			# Grind wax sheen along the copings
+			wc.rect(Rect2(sb.position.x + 1.0, sb.position.y + 10.0, 3.0, sb.size.y - 20.0), SKATE_WAX)
+			wc.rect(Rect2(sb.end.x - 4.0, sb.position.y + 10.0, 3.0, sb.size.y - 20.0), SKATE_WAX)
+			# Urban skate tags / stickers
+			wc.rect(Rect2(sb.position.x + 14.0, sb.position.y + 20.0, 16.0, 8.0), Color(0.88, 0.20, 0.50))
+			wc.rect(Rect2(sb.position.x + 18.0, sb.position.y + 70.0, 12.0, 12.0), Color(0.15, 0.75, 0.85))
 
-	# 2. Solar pergola pylon bases
+	# 7. Pergola Pylon Footing Bases
 	for py_rect: Rect2 in [PYLON_NW, PYLON_NE, PYLON_SW, PYLON_SE]:
 		if py_rect.end.y > vt - 80.0 and py_rect.position.y < vb + 80.0:
-			b.rect(Rect2(py_rect.position + Vector2(6, 8), py_rect.size), sh)
-			b.rect(py_rect, SOLAR_STEEL_DARK)
-			b.rect(py_rect.grow(-4.0), SOLAR_STEEL_LIT)
-			# Angled brace lines
-			b.rect(Rect2(py_rect.get_center().x - 2.0, py_rect.position.y + 4.0, 4.0, py_rect.size.y - 8.0), SOLAR_STEEL_DARK)
+			wc.rect(Rect2(py_rect.position + LIGHT * 10.0, py_rect.size), sh)
+			# Heavy chamfered concrete pad
+			wc.rect(py_rect.grow(4.0), CONCRETE_DARK)
+			wc.rect(py_rect, SOLAR_STEEL_DARK)
+			wc.rect(py_rect.grow(-4.0), SOLAR_STEEL_LIT)
+			# Center stiffener plate
+			wc.rect(Rect2(py_rect.get_center().x - 3.0, py_rect.position.y + 4.0, 6.0, py_rect.size.y - 8.0), SOLAR_STEEL_DARK)
+			# Industrial yellow hazard border striping
+			wc.rect(Rect2(py_rect.position.x + 4.0, py_rect.end.y - 8.0, py_rect.size.x - 8.0, 4.0), SOLAR_STEEL_YELLOW)
 
-	# 3. Windsock masts & cones
-	for wp: Vector2 in WINDSOCK_POSTS:
-		if wp.y > vt - 80.0 and wp.y < vb + 80.0:
-			b.circle(wp + Vector2(2, 4), 6.0, sh)
-			b.circle(wp, 4.5, SOLAR_STEEL_DARK)
-			b.circle(wp, 2.5, SKATE_RAIL_STEEL)
-			# Striped cone fluttering east in sea breeze
-			b.rect(Rect2(wp.x + 4.0, wp.y - 4.0, 10.0, 8.0), WINDSOCK_RED)
-			b.rect(Rect2(wp.x + 14.0, wp.y - 3.0, 8.0, 6.0), WINDSOCK_WHITE)
-			b.rect(Rect2(wp.x + 22.0, wp.y - 2.0, 8.0, 4.0), WINDSOCK_RED)
+	# 8. Marina Plaza Viewing Platform & Solar Cell Trophy (at PRIZE = 580, -4500)
+	if -4500.0 > vt - 120.0 and -4500.0 < vb + 120.0:
+		var pp := PRIZE
+		# Circular teak hardwood observation deck
+		wc.circle(pp + LIGHT * 8.0, 46.0, sh)
+		wc.circle(pp, 44.0, TEAK_DARK)
+		wc.circle(pp, 42.0, TEAK_PLANK)
+		# Planks across viewing deck
+		for tky: float in [-30.0, -15.0, 0.0, 15.0, 30.0]:
+			wc.rect(Rect2(pp.x - 36.0, pp.y + tky, 72.0, 1.5), TEAK_DARK)
+		# Compass rose star inlay
+		wc.line(pp + Vector2(-22.0, 0.0), pp + Vector2(22.0, 0.0), Color(0.85, 0.72, 0.35), 2.0)
+		wc.line(pp + Vector2(0.0, -22.0), pp + Vector2(0.0, 22.0), Color(0.85, 0.72, 0.35), 2.0)
+		# Marine cable railing stanchions around rim
+		for a_i in range(8):
+			var a := float(a_i) * (TAU / 8.0)
+			var sp := pp + Vector2(cos(a), sin(a)) * 40.0
+			wc.circle(sp, 2.5, SKATE_RAIL_STEEL)
 
-	# 4. Signature live event: El Skater
-	if m.skater != null:
-		m.skater.draw(m, b, vt, vb)
+		# Trophy pedestal
+		wc.circle(pp + LIGHT * 4.0, 14.0, sh)
+		wc.circle(pp, 12.0, CONCRETE_DARK)
+		wc.circle(pp, 9.0, SKATE_RAIL_STEEL)
+		# Solar Cell Trophy (the snatchable walk prize)
+		wc.circle(pp, 6.0, SOLAR_PANEL_NAVY)
+		wc.circle(pp, 4.0, SOLAR_CELL_CYAN)
+		wc.rect(Rect2(pp.x - 2.0, pp.y - 2.0, 4.0, 4.0), Color(1.0, 1.0, 1.0, 0.9))
 
-	b.flush(wc)
+
+static func draw_overhead(m: Node2D, c: Object) -> void:
+	# Massive Pèrgola Fotovoltaica steel space frame & 4,000 m² photovoltaic array
+	var b: ShapeBatch = c as ShapeBatch if c is ShapeBatch else ShapeBatch.new(c)
+
+	var pergola_rect := Rect2(WALL_L - 30.0, -1940.0, (WALL_R - WALL_L) + 60.0, 680.0)
+
+	# 1. Structural steel perimeter space truss
+	b.rect(pergola_rect, Color(SOLAR_STEEL_DARK.r, SOLAR_STEEL_DARK.g, SOLAR_STEEL_DARK.b, 0.94))
+	b.rect(pergola_rect.grow(-8.0), Color(SOLAR_STEEL_LIT.r, SOLAR_STEEL_LIT.g, SOLAR_STEEL_LIT.b, 0.90))
+
+	# 2. Heavy industrial yellow support diagonal struts
+	b.line(Vector2(pergola_rect.position.x + 20.0, pergola_rect.position.y + 20.0),
+		Vector2(pergola_rect.end.x - 20.0, pergola_rect.end.y - 20.0), SOLAR_STEEL_YELLOW, 5.0)
+	b.line(Vector2(pergola_rect.position.x + 20.0, pergola_rect.end.y - 20.0),
+		Vector2(pergola_rect.end.x - 20.0, pergola_rect.position.y + 20.0), SOLAR_STEEL_YELLOW, 5.0)
+
+	# 3. Photovoltaic solar array matrix modules
+	var grid_y := pergola_rect.position.y + 18.0
+	while grid_y < pergola_rect.end.y - 24.0:
+		var grid_x := pergola_rect.position.x + 18.0
+		while grid_x < pergola_rect.end.x - 24.0:
+			var panel_rect := Rect2(grid_x, grid_y, 42.0, 34.0)
+			b.rect(panel_rect, SOLAR_PANEL_NAVY)
+			b.rect(panel_rect.grow(-2.0), SOLAR_CELL_CYAN)
+			# Silver busbar solar gridlines
+			b.line(Vector2(grid_x + 14.0, grid_y + 2.0), Vector2(grid_x + 14.0, grid_y + 32.0), SOLAR_CELL_GRID, 1.0)
+			b.line(Vector2(grid_x + 28.0, grid_y + 2.0), Vector2(grid_x + 28.0, grid_y + 32.0), SOLAR_CELL_GRID, 1.0)
+			grid_x += 48.0
+		grid_y += 42.0
+
+	if c is not ShapeBatch:
+		b.flush(c)
 
 
-static func draw_overhead(m: Node2D, wc: Object) -> void:
-	# Massive Pèrgola Fotovoltaica steel superstructure & photovoltaic panels
+static func draw_freedom(m: Node2D, ci: Object) -> void:
+	# Banys del Fòrum: seaside bathing park, sunbathing terraces, and open sea
 	var b := ShapeBatch.new()
-	var cam_y: float = m.camera.position.y if m.camera != null else -1600.0
+	var r: Rect2 = m._freedom_rect()
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.24)
 
-	# Only draw when camera is near the pergola (-2300 to -900)
-	if cam_y < -850.0 and cam_y > -2350.0:
-		var pergola_rect := Rect2(WALL_L - 20.0, -1880.0, (WALL_R - WALL_L) + 40.0, 520.0)
+	# 1. Base seaside esplanade concrete ground
+	b.rect(r, CONCRETE_MID)
 
-		# Outer steel truss frame
-		b.rect(pergola_rect, Color(SOLAR_STEEL_DARK.r, SOLAR_STEEL_DARK.g, SOLAR_STEEL_DARK.b, 0.88))
-		b.rect(pergola_rect.grow(-8.0), Color(SOLAR_STEEL_LIT.r, SOLAR_STEEL_LIT.g, SOLAR_STEEL_LIT.b, 0.85))
+	# Precast concrete paving slabs with joints
+	var slab_w := 90.0
+	var sx := r.position.x
+	while sx < r.end.x:
+		b.line(Vector2(sx, r.position.y), Vector2(sx, r.end.y), CONCRETE_JOINT, 2.0)
+		sx += slab_w
 
-		# Photovoltaic solar cell array grids
-		var grid_y := pergola_rect.position.y + 14.0
-		while grid_y < pergola_rect.end.y - 20.0:
-			var grid_x := pergola_rect.position.x + 14.0
-			while grid_x < pergola_rect.end.x - 20.0:
-				b.rect(Rect2(grid_x, grid_y, 44.0, 36.0), SOLAR_PANEL_BLUE)
-				b.rect(Rect2(grid_x + 2.0, grid_y + 2.0, 40.0, 32.0), SOLAR_CELL_CYAN)
-				grid_x += 48.0
-			grid_y += 42.0
+	var sy := r.position.y
+	while sy < r.end.y:
+		b.line(Vector2(r.position.x, sy), Vector2(r.end.x, sy), CONCRETE_JOINT, 2.0)
+		sy += 70.0
 
-	b.flush(wc)
+	# 2. East side Sea Bathing Basin (Banys del Fòrum for x > 840)
+	var sea_basin_x := 840.0
+	var sea_rect := Rect2(sea_basin_x, r.position.y, r.end.x - sea_basin_x, r.size.y)
+	b.rect(sea_rect, SEA_MID)
+	b.rect(Rect2(sea_basin_x, r.position.y, 40.0, r.size.y), SEA_SHALLOW)
+
+	# Wave ripples in bathing basin
+	var wy := r.position.y + 30.0
+	while wy < r.end.y:
+		b.rect(Rect2(sea_basin_x + 16.0, wy, 36.0, 3.0), SEA_FOAM)
+		wy += 60.0
+
+	# Stepped concrete swimming terraces leading down into water
+	for terrace_i in range(3):
+		var tx := sea_basin_x - float(terrace_i + 1) * 16.0
+		b.rect(Rect2(tx, r.position.y, 14.0, r.size.y), CONCRETE_DARK)
+		b.rect(Rect2(tx + 2.0, r.position.y, 10.0, r.size.y), CONCRETE_LIGHT)
+
+	# Stainless steel swimming ladder handrails
+	for ly: float in [r.position.y + 120.0, r.position.y + 320.0]:
+		b.rect(Rect2(sea_basin_x - 14.0, ly, 22.0, 4.0), SKATE_RAIL_STEEL)
+		b.circle(Vector2(sea_basin_x - 14.0, ly + 2.0), 3.0, SKATE_RAIL_STEEL)
+		b.circle(Vector2(sea_basin_x + 8.0, ly + 2.0), 3.0, SKATE_RAIL_STEEL)
+
+	# Concrete tetrapod breakwaters along the deep corner
+	for tetra_y: float in [r.position.y + 40.0, r.position.y + 200.0, r.position.y + 440.0]:
+		var tp := Vector2(sea_basin_x + 60.0, tetra_y)
+		b.circle(tp + LIGHT * 4.0, 12.0, sh)
+		b.circle(tp, 11.0, TETRAPOD_DARK)
+		b.circle(tp, 8.0, TETRAPOD_STONE)
+
+	# 3. Northwest Sunbathing Wooden Platform
+	var deck_rect := Rect2(r.position.x + 40.0, r.position.y + 40.0, 180.0, 120.0)
+	b.rect(Rect2(deck_rect.position + LIGHT * 6.0, deck_rect.size), sh)
+	b.rect(deck_rect, TEAK_DARK)
+	b.rect(deck_rect.grow(-3.0), TEAK_PLANK)
+	for dpy in range(6):
+		var py := deck_rect.position.y + 10.0 + float(dpy) * 18.0
+		b.line(Vector2(deck_rect.position.x + 4.0, py), Vector2(deck_rect.end.x - 4.0, py), TEAK_DARK, 1.5)
+
+	# Flush pre-sign geometry
+	b.flush(ci)
+
+	# Standard benches and authentic entrance title sign
+	m._draw_freedom_benches(ci, r, Color(0.35, 0.38, 0.42))
+	m._freedom_sign(ci, r, "BANYS DEL FÒRUM", "the seaside bathing park, off leash")
+
+
+static func draw_column(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
+	# Windsock mast: concrete foundation pad, stainless steel mounting flange,
+	# slender marine mast, and fluttering red-and-white conical windsock.
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.26)
+	var t_sec := AnimClock.msec() / 1000.0
+
+	# 1. Concrete foundation footing
+	wc.circle(p + LIGHT * 4.0, 10.0, sh)
+	wc.circle(p, 9.0, CONCRETE_DARK)
+	wc.circle(p, 7.5, CONCRETE_LIGHT)
+
+	# 2. Steel flange baseplate with anchor bolts
+	wc.circle(p, 5.5, SOLAR_STEEL_DARK)
+	wc.circle(p, 3.5, SKATE_RAIL_STEEL)
+
+	# 3. Tall mast shadow
+	m.cast_shadow(wc, p, 3.5, 36.0)
+
+	# 4. Animated nautical windsock cone fluttering eastward in sea breeze
+	var flutter := sin(t_sec * 6.0 + p.y * 0.02) * 2.5
+	var droop := cos(t_sec * 3.0 + p.y * 0.01) * 1.5
+	var sock_x := p.x + 5.0
+	var sock_y := p.y - 4.0 + droop
+
+	# Segment 1 (Red throat)
+	wc.rect(Rect2(sock_x, sock_y, 11.0, 9.0), WINDSOCK_RED)
+	# Segment 2 (White center)
+	wc.rect(Rect2(sock_x + 11.0, sock_y + 1.0 + flutter * 0.3, 9.0, 7.0), WINDSOCK_WHITE)
+	# Segment 3 (Red tip)
+	wc.rect(Rect2(sock_x + 20.0, sock_y + 2.0 + flutter * 0.7, 9.0, 5.0), WINDSOCK_RED)
+
+
+static func draw_bollard(m: Node2D, wc: ShapeBatch, h: Dictionary) -> void:
+	# Marine stainless steel bollard: cylindrical satin post, mooring line collar,
+	# and progress ring while being marked.
+	var p: Vector2 = h.pos
+	var done: bool = bool(h.get("done", false))
+	var prog: float = float(h.get("prog", 0.0))
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.26)
+
+	# Drop shadow
+	m.cast_shadow(wc, p, 8.0, 20.0)
+
+	# Base mounting ring
+	wc.circle(p + Vector2(0.5, 0.5), 9.0, Color(0.35, 0.38, 0.40))
+	# Stainless steel cylindrical body
+	var body_col := SKATE_RAIL_STEEL if not done else SKATE_RAIL_STEEL.darkened(0.18)
+	wc.circle(p, 8.0, body_col.darkened(0.2))
+	wc.circle(p, 7.0, body_col)
+	# Beveled domed cap highlight
+	wc.circle(p + Vector2(-1.5, -1.5), 4.5, body_col.lightened(0.25))
+
+	# Wet mark or progress ring
+	if done:
+		wc.circle(p + Vector2(0.0, 6.0), 3.0, Color(0.20, 0.35, 0.25, 0.6))
+	elif prog > 0.0:
+		wc.draw_arc(p, 11.0, 0.0, prog * TAU, 16, Color(1.0, 0.85, 0.20), 2.5)
+
+
+static func draw_bin(m: Node2D, wc: ShapeBatch, bn: Vector2) -> void:
+	# Perforated stainless steel coastal recycling station with sorting hood
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.26)
+	wc.circle(bn + LIGHT * 6.0, 13.0, sh)
+
+	# Outer stainless steel perforated drum
+	wc.circle(bn, 12.0, Color(0.40, 0.42, 0.45))
+	wc.circle(bn, 10.5, SKATE_RAIL_STEEL)
+	# Dark aperture mouth
+	wc.circle(bn + Vector2(1.0, 1.0), 7.0, Color(0.16, 0.18, 0.20))
+	# Yellow selective sorting ring for plastic/packaging
+	wc.circle(bn + Vector2(1.0, 1.0), 4.5, Color(0.92, 0.78, 0.20))
+
+
+static func draw_fountain(m: Node2D, f: Vector2) -> void:
+	# Coastal stainless steel drinking column with drainage grate & wet splash
+	var wc: ShapeBatch = m._wc
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.24)
+
+	# Wet spray patch on paving
+	wc.circle(f + Vector2(12.0, 8.0), 10.0, Color(0.35, 0.50, 0.65, 0.40))
+	wc.circle(f + Vector2(16.0, 12.0), 6.0, Color(0.35, 0.50, 0.65, 0.25))
+
+	# Column drop shadow
+	wc.rect(Rect2(f.x - 7.0 + 4.0, f.y - 7.0 + 6.0, 14.0, 14.0), sh)
+
+	# Stainless square column body
+	wc.rect(Rect2(f.x - 7.0, f.y - 7.0, 14.0, 14.0), Color(0.38, 0.40, 0.44))
+	wc.rect(Rect2(f.x - 6.0, f.y - 6.0, 12.0, 12.0), SKATE_RAIL_STEEL)
+	# Push-button bubbler & basin
+	wc.circle(f, 3.5, Color(0.20, 0.38, 0.55))
+	wc.circle(f + Vector2(-1.0, -1.0), 1.5, Color(0.85, 0.95, 1.0))
+
+
+static func draw_snack(m: Node2D, wc: ShapeBatch, kp: Vector2) -> void:
+	# Dropped sports nutrition energy bar in foil packaging
+	m.contact_shadow(wc, kp, 9.0, 4.0, 0.20)
+	# Metallic foil packaging
+	wc.polygon(PackedVector2Array([
+		kp + Vector2(-10.0, -5.0),
+		kp + Vector2(8.0, -6.0),
+		kp + Vector2(10.0, 4.0),
+		kp + Vector2(-8.0, 5.0)
+	]), Color(0.80, 0.82, 0.85))
+	# Cyan & orange sports nutrition logo label
+	wc.rect(Rect2(kp.x - 4.0, kp.y - 3.0, 8.0, 6.0), Color(0.15, 0.65, 0.85))
+	wc.rect(Rect2(kp.x - 2.0, kp.y - 1.0, 4.0, 3.0), Color(0.95, 0.50, 0.15))
+
+
+static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	# Signature live event: El Skater de l'Esplanada
+	if m.skater != null:
+		m.skater.draw(m, wc, vt, vb)
