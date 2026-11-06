@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-11-06 - El Fòrum: the pergola no longer hides the pair
+
+- `systems/forum.gd`: the solar pergola covered the whole view and hid the dog and your human under it. It now thins to a third of its opacity while either is under it, as overhead pieces do, and is not drawn when the camera is far from it (it was about 200 panels every frame on the whole walk). It read `m.camera`, which main does not have; it reads `m.cam`. It declares `OVERHEAD_FOLLOWS_CAMERA`, so the overhead layer redraws it as the pair moves (that layer change is in #464).
+- The goal "Sprint under the solar pergola 3 times" was cut off in the goal list; it is "Sprint under the pergola 3 times".
+
 ## 2026-11-06 - Draw El Fòrum as the real place
 
 - Rebuilt Walk 30's visual layers (`systems/forum.gd`, `world/level_build.gd`,

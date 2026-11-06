@@ -22,6 +22,9 @@ extends RefCounted
 #   the open pavement practicing an ollie.
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+# the overhead layer redraws this walk at 30 fps: the pergola culls to the
+# camera and thins over the pair
+const OVERHEAD_FOLLOWS_CAMERA := true
 const Surfaces := preload("res://world/surfaces.gd")
 const ForumSkater := preload("res://systems/forum_skater.gd")
 
@@ -519,16 +522,28 @@ static func draw_overhead(m: Node2D, c: Object) -> void:
 	var b: ShapeBatch = c as ShapeBatch if c is ShapeBatch else ShapeBatch.new(c)
 
 	var pergola_rect := Rect2(WALL_L - 30.0, -1940.0, (WALL_R - WALL_L) + 60.0, 680.0)
+	# off screen: nothing to draw (the camera sees about 400 px either way)
+	var cam_y: float = m.cam.position.y if m.cam != null else pergola_rect.get_center().y
+	if cam_y < pergola_rect.position.y - 460.0 or cam_y > pergola_rect.end.y + 460.0:
+		if c is not ShapeBatch:
+			b.flush(c)
+		return
+	# the canopy is over the pair: thin it so the dog and your human show
+	# through, as every overhead piece does when someone walks under it
+	var f := 1.0
+	for who: Node2D in [m.dog, m.human]:
+		if who != null and pergola_rect.grow(30.0).has_point(who.global_position):
+			f = 0.3
 
 	# 1. Structural steel perimeter space truss
-	b.rect(pergola_rect, Color(SOLAR_STEEL_DARK.r, SOLAR_STEEL_DARK.g, SOLAR_STEEL_DARK.b, 0.94))
-	b.rect(pergola_rect.grow(-8.0), Color(SOLAR_STEEL_LIT.r, SOLAR_STEEL_LIT.g, SOLAR_STEEL_LIT.b, 0.90))
+	b.rect(pergola_rect, Color(SOLAR_STEEL_DARK.r, SOLAR_STEEL_DARK.g, SOLAR_STEEL_DARK.b, 0.94 * f))
+	b.rect(pergola_rect.grow(-8.0), Color(SOLAR_STEEL_LIT.r, SOLAR_STEEL_LIT.g, SOLAR_STEEL_LIT.b, 0.90 * f))
 
 	# 2. Heavy industrial yellow support diagonal struts
 	b.line(Vector2(pergola_rect.position.x + 20.0, pergola_rect.position.y + 20.0),
-		Vector2(pergola_rect.end.x - 20.0, pergola_rect.end.y - 20.0), SOLAR_STEEL_YELLOW, 5.0)
+		Vector2(pergola_rect.end.x - 20.0, pergola_rect.end.y - 20.0), _faded(SOLAR_STEEL_YELLOW, f), 5.0)
 	b.line(Vector2(pergola_rect.position.x + 20.0, pergola_rect.end.y - 20.0),
-		Vector2(pergola_rect.end.x - 20.0, pergola_rect.position.y + 20.0), SOLAR_STEEL_YELLOW, 5.0)
+		Vector2(pergola_rect.end.x - 20.0, pergola_rect.position.y + 20.0), _faded(SOLAR_STEEL_YELLOW, f), 5.0)
 
 	# 3. Photovoltaic solar array matrix modules
 	var grid_y := pergola_rect.position.y + 18.0
@@ -536,16 +551,20 @@ static func draw_overhead(m: Node2D, c: Object) -> void:
 		var grid_x := pergola_rect.position.x + 18.0
 		while grid_x < pergola_rect.end.x - 24.0:
 			var panel_rect := Rect2(grid_x, grid_y, 42.0, 34.0)
-			b.rect(panel_rect, SOLAR_PANEL_NAVY)
-			b.rect(panel_rect.grow(-2.0), SOLAR_CELL_CYAN)
+			b.rect(panel_rect, _faded(SOLAR_PANEL_NAVY, f))
+			b.rect(panel_rect.grow(-2.0), _faded(SOLAR_CELL_CYAN, f))
 			# Silver busbar solar gridlines
-			b.line(Vector2(grid_x + 14.0, grid_y + 2.0), Vector2(grid_x + 14.0, grid_y + 32.0), SOLAR_CELL_GRID, 1.0)
-			b.line(Vector2(grid_x + 28.0, grid_y + 2.0), Vector2(grid_x + 28.0, grid_y + 32.0), SOLAR_CELL_GRID, 1.0)
+			b.line(Vector2(grid_x + 14.0, grid_y + 2.0), Vector2(grid_x + 14.0, grid_y + 32.0), _faded(SOLAR_CELL_GRID, f), 1.0)
+			b.line(Vector2(grid_x + 28.0, grid_y + 2.0), Vector2(grid_x + 28.0, grid_y + 32.0), _faded(SOLAR_CELL_GRID, f), 1.0)
 			grid_x += 48.0
 		grid_y += 42.0
 
 	if c is not ShapeBatch:
 		b.flush(c)
+
+
+static func _faded(col: Color, f: float) -> Color:
+	return Color(col.r, col.g, col.b, col.a * f)
 
 
 static func draw_freedom(m: Node2D, ci: Object) -> void:
