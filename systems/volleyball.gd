@@ -6,12 +6,12 @@ extends RefCounted
 #
 # As the pair approaches on the outward walk (y ≈ -1750.0), the spiker leaps and
 # winds up a spike. A 0.8 s warning telegraph triggers:
-# Beachgoer shouts with a speech bubble: "Pilota fora!" ("Watch the ball!").
+# Beachgoer shouts with a speech bubble: "Ball coming in hot!" ("Watch the ball!").
 #
 # The server spikes the ball across the net. It flies in a high arc
 # eastward across the sand toward the boardwalk:
 # - Millie intercepts or boops the ball: ("volley! +2", +2 bones, +2 combo).
-#   The beachgoer calls: "Bona rematada!" ("Nice save!").
+#   The beachgoer calls: "Nice return!" ("Nice save!").
 # - An oblivious human walking in its landing path gets bonked on the head:
 #   ("Watch the game!", -8 patience).
 # - Steering the human safely along the promenade earns a rewarded dodge:

@@ -3,7 +3,7 @@ extends SceneTree
 const LuggageTrolley := preload("res://systems/luggage_trolley.gd")
 
 # Regression test for L'Estació runaway luggage trolley live event (Walk 9 / 19).
-# Tests the 0.8s warning telegraph ("Atenció, el carretó!"), eastward roll across
+# Tests the 0.8s warning telegraph ("Luggage cart coming through!"), eastward roll across
 # the concourse floor, brass joint clatters, human bump hazard, dog boop trick,
 # dog bark trick, concourse dodge save, autowalk safety, and leak-free cleanup.
 
