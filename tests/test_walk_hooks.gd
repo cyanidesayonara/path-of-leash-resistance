@@ -41,6 +41,7 @@ const HOOKS := {
 	"boars": ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "grass_blocked", "tick", "tree_kind"],
 	"gracia": ["draw_live", "draw_overhead", "draw_scenery", "tick"],
 	"carmel": ["draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick", "tree_kind"],
+	"superilla": ["draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick"],
 	"raval": ["cam_lean", "draw_edge_layer", "draw_live", "draw_overhead", "hush_banner", "idle_status", "on_bark", "surface", "tick", "urgent_status"],
 }
 

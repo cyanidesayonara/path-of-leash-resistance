@@ -39,8 +39,8 @@ func _run() -> void:
 	game._reset_persisted_state()
 
 	# 1. Campaign Registration & 15 Goals Per Walk
-	_check(game.LEVELS.size() == 28, "28 campaign walks registered in LEVELS: %d" % game.LEVELS.size())
-	_check(game.CAROUSEL.size() == 29, "29 carousel walks registered (including tutorial): %d" % game.CAROUSEL.size())
+	_check(game.LEVELS.size() == 29, "29 campaign walks registered in LEVELS: %d" % game.LEVELS.size())
+	_check(game.CAROUSEL.size() == 30, "30 carousel walks registered (including tutorial): %d" % game.CAROUSEL.size())
 
 	for lv in game.LEVELS:
 		_check(game.LEVEL_NAMES.has(lv), "LEVEL_NAMES has %s" % lv)

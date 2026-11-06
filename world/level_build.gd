@@ -23,6 +23,7 @@ const Boars := preload("res://systems/boars.gd")
 const Gracia := preload("res://systems/gracia.gd")
 const BossGat := preload("res://systems/boss_gat.gd")
 const Carmel := preload("res://systems/carmel.gd")
+const Superilla := preload("res://systems/superilla.gd")
 # the tutorial's pond for the brink lesson, beside the path at its station
 const TUT_POND_W := 150.0
 const ROPE_CLEAR := 4.0
@@ -1199,6 +1200,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"boars": half = Boars.HALF
 		"gracia": half = Gracia.HALF
 		"carmel": half = Carmel.HALF
+		"superilla": half = Superilla.HALF
 		"besos": half = BESOS_HALF
 	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
 	m.walk_half = half
@@ -1504,6 +1506,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_carmel: Array = Carmel.build(m)
 			hyd_list.assign(pl_carmel[0])
 			keb_list.assign(pl_carmel[1])
+		"superilla":
+			var pl_superilla: Array = Superilla.build(m)
+			hyd_list.assign(pl_superilla[0])
+			keb_list.assign(pl_superilla[1])
 		"raval":
 			var pl_raval: Array = BossGat.build(m)
 			hyd_list.assign(pl_raval[0])
@@ -2314,6 +2320,9 @@ static func build_level_data(m: Node2D) -> void:
 		"carmel":
 			m.prize_pos = Carmel.PRIZE
 			m.prize_text = Carmel.PRIZE_TEXT
+		"superilla":
+			m.prize_pos = Superilla.PRIZE
+			m.prize_text = Superilla.PRIZE_TEXT
 		"raval":
 			m.prize_pos = BossGat.PRIZE
 			m.prize_text = BossGat.PRIZE_TEXT
@@ -2706,6 +2715,13 @@ const FREEDOM_PROPS := {
 	],
 	# the wood behind the garden's back gate: pines and holm oaks, a fallen
 	# trunk, a stone bench someone carried up from the garden long ago
+	"superilla": [
+		[Vector2(288.0, -442.0), "dig"], [Vector2(642.0, -422.0), "dig"], [Vector2(876.0, -228.0), "dig"],
+		[Vector2(388.0, -460.0), "planter"], [Vector2(1028.0, -248.0), "planter"],
+		[Vector2(262.0, -350.0), "post"], [Vector2(528.0, -440.0), "post"], [Vector2(762.0, -430.0), "post"],
+		[Vector2(1048.0, -462.0), "post"], [Vector2(312.0, -240.0), "shrub"], [Vector2(558.0, -242.0), "post"],
+		[Vector2(780.0, -210.0), "shrub"],
+	],
 	"carmel": [
 		[Vector2(272.0, -452.0), "dig"], [Vector2(634.0, -428.0), "dig"], [Vector2(884.0, -222.0), "dig"],
 		[Vector2(378.0, -466.0), "planter"], [Vector2(1022.0, -242.0), "planter"],
@@ -3113,6 +3129,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_carmel: Array[Rect2] = Carmel.solids(m)
 			for i in range(ps_carmel.size()):
 				out.append(["carmel_bunker_%d" % i, ps_carmel[i]])
+		"superilla":
+			var ps_superilla: Array[Rect2] = Superilla.solids(m)
+			for i in range(ps_superilla.size()):
+				out.append(["superilla_solid_%d" % i, ps_superilla[i]])
 		"raval":
 			var ps_raval: Array[Rect2] = BossGat.solids(m)
 			for i in range(ps_raval.size()):
@@ -3554,6 +3574,9 @@ static func build_walls(m: Node2D) -> void:
 			add_rect_body(m, r.get_center(), r.size)
 		for c: Vector3 in Carmel.cannons():
 			add_circle_body(m, Vector2(c.x, c.y), c.z)
+	if m.lvl == "superilla":
+		for r: Rect2 in Superilla.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "raval":
 		for r: Rect2 in BossGat.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
