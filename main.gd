@@ -126,6 +126,7 @@ var botanic: Botanic
 var banderer: Banderer
 var guitarrista: Guitarrista
 var cargo: SuperillaCargo
+var skater: ForumSkater
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -215,6 +216,8 @@ const Guitarrista := preload("res://systems/guitarrista.gd")
 const Carmel := preload("res://systems/carmel.gd")
 const Superilla := preload("res://systems/superilla.gd")
 const SuperillaCargo := preload("res://systems/superilla_cargo.gd")
+const Forum := preload("res://systems/forum.gd")
+const ForumSkater := preload("res://systems/forum_skater.gd")
 # float_text(..., POP_SAY) draws a speech bubble rather than a sound or a score
 const POP_SAY := 0
 const POLE_RADIUS := 10.0
@@ -334,6 +337,7 @@ const WALK_MODULES := {
 	"gracia": preload("res://systems/gracia.gd"),
 	"carmel": preload("res://systems/carmel.gd"),
 	"superilla": preload("res://systems/superilla.gd"),
+	"forum": preload("res://systems/forum.gd"),
 	"raval": preload("res://systems/boss_gat.gd"),
 	"beach": preload("res://systems/passeig.gd"),
 	"rain": preload("res://systems/diluvi.gd"),
@@ -540,6 +544,8 @@ var carmel_cannon_wrapped := false
 var superilla_circles_sprinted := 0
 var superilla_pingpong_slid := false
 var superilla_circles_visited: Dictionary = {}
+var forum_pergola_sprinted: int = 0
+var forum_rails_grinded: int = 0
 var reial_fountain_drank := false
 var reial_busker_barked := false
 var vet_scale_weighed := false

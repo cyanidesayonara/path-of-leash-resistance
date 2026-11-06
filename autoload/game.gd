@@ -2,7 +2,7 @@ extends Node
 
 # Autoload: session state that must survive scene reloads.
 
-const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant", "boars", "gracia", "carmel", "superilla", "raval"]
+const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant", "boars", "gracia", "carmel", "superilla", "forum", "raval"]
 const LEVEL_NAMES := {
 	"tutorial": "First Walk",
 	# One scheme: a Catalan article plus one everyday noun for the place you
@@ -47,6 +47,7 @@ const LEVEL_NAMES := {
 	"gracia": "Festa de Gràcia",
 	"carmel": "Els Búnquers",
 	"superilla": "La Superilla",
+	"forum": "El Fòrum",
 	"raval": "Rambla del Raval",
 }
 # The Catalan name carries the character; this carries the meaning. The game
@@ -84,12 +85,13 @@ const LEVEL_SUBTITLES := {
 	"gracia": "The decorated festival street run",
 	"carmel": "The sunset overlook above the city",
 	"superilla": "The green superblock reclaimed for pedestrians",
+	"forum": "The solar pergola and coastal esplanade",
 	"raval": "The rambla where the big bronze cat sits",
 }
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
 # The first few open quickly, so a new player is never stuck on one walk.
-const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "llevant": 15, "tibidabo": 17, "vet": 19, "trail": 21, "spook": 23, "boars": 25, "guell": 27, "station": 29, "reial": 31, "aigues": 33, "horta": 35, "port": 37, "site": 39, "partit": 40, "scrap": 41, "gracia": 42, "carmel": 43, "superilla": 44, "raval": 45}
+const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "llevant": 15, "tibidabo": 17, "vet": 19, "trail": 21, "spook": 23, "boars": 25, "guell": 27, "station": 29, "reial": 31, "aigues": 33, "horta": 35, "port": 37, "site": 39, "partit": 40, "scrap": 41, "gracia": 42, "carmel": 43, "superilla": 44, "forum": 45, "raval": 46}
 
 # Keystone Chase milestone gates: each tier requires surviving the previous
 # tier's chase level end-to-end to enter.
@@ -121,6 +123,7 @@ const CHASE_GATE := {
 	"gracia": "boars",
 	"carmel": "gracia",
 	"superilla": "gracia",
+	"forum": "gracia",
 	# The Grand Finale (Rambla del Raval - Boss Arena)
 	"raval": "gracia",
 }
@@ -141,7 +144,7 @@ const WALK_WEATHER := {"rain": "rain", "tutorial": "clear"}
 const WALK_NIGHT := {"spook": true, "tutorial": false}
 
 # the walk select: the first walk, then the campaign walks in order
-const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "llevant", "tibidabo", "vet", "trail", "spook", "boars", "guell", "station", "reial", "aigues", "horta", "port", "site", "partit", "scrap", "gracia", "carmel", "superilla", "raval"]
+const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "llevant", "tibidabo", "vet", "trail", "spook", "boars", "guell", "station", "reial", "aigues", "horta", "port", "site", "partit", "scrap", "gracia", "carmel", "superilla", "forum", "raval"]
 
 # Cosmetics keep their catalog keys when equipped, but ownership is namespaced
 # by category so identically named items remain separate purchases.
@@ -376,6 +379,7 @@ const LEVEL_SUBTITLES_CA := {
 	"gracia": "La festa dels carrers guarnits",
 	"carmel": "El mirador del capvespre sobre la ciutat",
 	"superilla": "L'eix verd pacificat per a vianants",
+	"forum": "La pèrgola fotovoltaica i l'esplanada costanera",
 	"raval": "La rambla on seu el gat gros de bronze",
 }
 const LEVEL_SUBTITLES_ES := {
@@ -408,6 +412,7 @@ const LEVEL_SUBTITLES_ES := {
 	"gracia": "La fiesta de las calles adornadas",
 	"carmel": "El mirador del atardecer sobre la ciudad",
 	"superilla": "El eje verde pacificado para peatones",
+	"forum": "La pérgola fotovoltaica y la explanada costera",
 	"raval": "La rambla donde se sienta el gato gordo de bronce",
 }
 # the off-leash agility course's best time in seconds (0: never run). One
@@ -418,7 +423,7 @@ var agility_best := 0.0
 var gate_open: Array[String] = []
 # the walks that arrived with the chase gates: no save predates them, so
 # none is grandfathered past its gate
-const WALKS_SINCE_GATES: Array[String] = ["llevant", "boars", "gracia", "carmel", "superilla", "raval"]
+const WALKS_SINCE_GATES: Array[String] = ["llevant", "boars", "gracia", "carmel", "superilla", "forum", "raval"]
 # The goal card is a big block of text in the corner of a game whose whole
 # point is the mess in the middle. Collapsed it is one line; the player
 # decides, and the choice sticks.
