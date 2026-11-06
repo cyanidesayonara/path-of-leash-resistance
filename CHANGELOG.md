@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-11-04 - Montjuïc botanist live event
+
+- A signature live event for Montjuïc (`systems/botanic.gd`, `systems/montjuic.gd`, `world/level_build.gd`, `main.gd`):
+  a botanical gardener and succulent specialist ("el botànic de Montjuïc") in a straw sunhat, dark green gardening apron, and grey linen shirt crosses the hillside terrace from the eastern cactus gardens toward the western pine overlook at y = -1750.0, carefully carrying a terracotta clay pot with a blooming rosette succulent.
+- A 0.8 s warning telegraph as the pair approaches on the outward walk (y < -1450.0): the botanist calls out from the eastern gravel border at x = 850.0, y = -1750.0 ("Compte amb les espines!") with a terracotta clink and gravel scuff sound.
+- The crossing walk and hazard: the botanist walks westbound across the terrace at 200 px/s carrying his terracotta pot. A distracted human wandering into the botanist gets bumped (-8 patience drop, "Whoa! Watch the cactus!", botànic: "Al tanto amb les punxes!").
+- Dropped succulent pot & dog trick: as the botanist crosses the center terrace (x <= 640.0), a terracotta pot slips from his hands and slides on the path. Snatching or booping it awards "succulent snatch! +2" (+2 bones, +2 combo, botànic: "Ei, el meu cactus!").
+- Botànic boop trick: booping the botanist directly awards "botànic boop! +2" (+2 bones, +2 combo, "Hola, gosset de muntanya!").
+- Botànic bark trick: barking near the botanist (within 130 px) startles him into a pot wobble, awarding "botànic bark! +2" (+2 bones, +2 combo, "Ui, quin ensurt!").
+- Montjuïc dodge save: steering your human safely clear of the crossing trajectory after entering threat radius (66 px) awards "montjuïc dodge! +2" ("Whew, nice save!", +2 bones, +2 combo, increments saves_done) using `NearMiss.consider`. Walking past clear of threat awards nothing.
+- Autowalk clearance: timing clears the central corridor well before the autowalk pair arrives, ensuring 100% reliable automated traversal and test stability.
+- Zero added draw calls: batched directly into Montjuïc's existing `ShapeBatch` live pass in `draw_live`.
+- Tests: `tests/test_montjuic_botanic.gd`.
+
 ## 2026-11-04 - La Neteja street cleaner live event
 
 - A signature live event for La Neteja (`systems/escombriaire.gd`, `systems/neteja.gd`, `world/level_build.gd`, `main.gd`):

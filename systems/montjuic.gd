@@ -992,6 +992,8 @@ static func tick(m: Node2D, delta: float) -> void:
 static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 	draw_on_hill(m, wc, maxf(vt, m.GATE_Y - 30.0), vb)
 	draw_kites(m, wc, vt, vb)
+	if m.botanic != null:
+		m.botanic.draw(m, wc, vt, vb)
 
 
 static func draw_freedom(m: Node2D, c: Object) -> void:

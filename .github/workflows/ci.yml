@@ -342,6 +342,8 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_besos_ornitoleg.gd
       - name: La Neteja street cleaner test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_neteja_escombriaire.gd
+      - name: Montjuic botanist test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_montjuic_botanic.gd
       - name: Campaign mastery test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_campaign_mastery.gd
       - name: Chase milestone gates test
