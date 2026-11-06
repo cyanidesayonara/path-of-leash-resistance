@@ -3,7 +3,7 @@ extends SceneTree
 const Botanic := preload("res://systems/botanic.gd")
 
 # Regression test for Montjuïc (montjuic, Walk 7) Hillside Terrace Botanist ("El Botànic") live event.
-# Tests 0.8s warning telegraph ("Compte amb les espines!"), westward crossing walk across
+# Tests 0.8s warning telegraph ("Mind the cactus!"), westward crossing walk across
 # the hillside terrace at y = -1750.0, terracotta succulent pot drop and dog snatch trick,
 # distracted human bump hazard, botanic boop trick, startle bark trick,
 # near-miss dodge save ("montjuïc dodge! +2"), autowalk safety clearance, and clean reset.

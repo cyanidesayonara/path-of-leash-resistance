@@ -3,7 +3,7 @@ extends SceneTree
 const Escombriaire := preload("res://systems/escombriaire.gd")
 
 # Regression test for La Neteja (neteja, Walk 10) Street Cleaner ("L'Escombriaire") live event.
-# Tests 0.8s warning telegraph ("Aigua va, carrer net!"), westward crossing walk across
+# Tests 0.8s warning telegraph ("Wet street, mind the broom!"), westward crossing walk across
 # the dawn back street at y = -1600.0, yellow rubber duck drop and dog snatch trick,
 # distracted human bump hazard, escombriaire boop trick, startle bark trick,
 # near-miss dodge save ("neteja dodge! +2"), autowalk safety clearance, and clean reset.

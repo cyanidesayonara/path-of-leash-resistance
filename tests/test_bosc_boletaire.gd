@@ -3,7 +3,7 @@ extends SceneTree
 const Boletaire := preload("res://systems/boletaire.gd")
 
 # Regression test for El Bosc (trail, Walk 8) Mushroom Forager live event.
-# Tests 0.8s warning telegraph ("Mireu quins rovellons!"), eastward crossing walk across
+# Tests 0.8s warning telegraph ("Mushroom picker crossing!"), eastward crossing walk across
 # the woodland trail at y = -1650.0, saffron milk cap rovelló drop and dog snatch trick,
 # distracted human bump hazard, boletaire boop trick, startle bark trick,
 # near-miss dodge save, autowalk safety, and clean reset.

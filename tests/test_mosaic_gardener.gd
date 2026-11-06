@@ -3,7 +3,7 @@ extends SceneTree
 const Gardener := preload("res://systems/gardener.gd")
 
 # Regression test for Park Güell (El Mosaic, Walk 14) Municipal Gardener live event.
-# Tests 0.8s warning telegraph ("Pas al carretó!"), eastward crossing walk across
+# Tests 0.8s warning telegraph ("Wheelbarrow coming through!"), eastward crossing walk across
 # Plaça de la Natura at y = -3200.0, terracotta flower pot drop and dog snatch trick,
 # distracted human bump hazard, gardener boop trick, startle bark trick, near-miss
 # dodge save, autowalk safety, and clean reset.

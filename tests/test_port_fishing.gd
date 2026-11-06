@@ -3,7 +3,7 @@ extends SceneTree
 const Fisherman := preload("res://systems/fisherman.gd")
 
 # Regression test for El Port quayside fisherman reel-in live event (Walk 18).
-# Tests the 0.8s warning telegraph ("Pica el peix!"), arching sea bass reel,
+# Tests the 0.8s warning telegraph ("Mind the fishing line!"), arching sea bass reel,
 # quayside swing line snag hazard, central boardwalk dodge save, gull barking trick,
 # landed fish pounce trick, autowalk central clearance, and leak-free cleanup.
 
