@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-11-06 - Draw La Superilla as the real place
+
+- Rebuilt Walk 29 (`systems/superilla.gd`, `world/level_build.gd`, `main.gd`) as the Poblenou Superblock (*Superilla del Poblenou* at Carrer de Sancho d'Àvila and Carrer de la Ciutat de Granada):
+  - Edge layer (`Superilla.draw_edge_layer`): replaced the default park grass margins (`"superilla"` added to `LevelBuild.CROSS_SECTIONS` and `WORKS_FREE`) with 19th-century Poblenou red-brick textile mills (*vapors*) with terracotta sawtooth roofs, north-facing factory skylights and brick cornices, modern 22@ zinc-and-Corten design studios with rooftop terraces and photovoltaic arrays, and the three intersecting cross-streets (`y = -1200, -2200, -3800`) with superblock entry gateways and the green cycle track.
+  - Ground layer (`Superilla.draw_cross_section`): drew flanking Barcelona *panot* 4-rosette concrete sidewalks (`340..404` and `876..940`) with granite curbs, cast-iron storm grates and terracotta tactile intersection ramps, a dark reclaimed Poblenou asphalt superblock plaza (`404..876`), all 9 painted tactical-urbanism circles (`PAINT_CIRCLES`, previously drawn on `edge_layer` beneath the walk ribbon) with concentric stencil rings, radial white dots and inner geometric stars, painted hopscotch (*xarranca*) play courts, diagonal curb buffer bars, `10` km/h superblock speed roundels, and the green cycle-lane crossing at `y = -2200`.
+  - Planter poles, ping-pong tables and Orxateria terrace: added `"superilla"` to `LevelBuild.fit_props_to_corridor`, excluded `"superilla"` from `main.is_lamppost`, and implemented `Superilla.tree_kind` and `Superilla.draw_column` so the 8 modular Douglas-fir planter boxes with pruned olive trees and corner lavender/rosemary sit directly on `m.poles` without duplicate street-grate trees; drew precast concrete Poblenou ping-pong tables (`PINGPONG_1`, `PINGPONG_2`) with court aprons, steel nets, paddles and balls; and drew the slatted timber *Orxateria del Poblenou* terrace deck, marble bistro tables, chairs, striped Mediterranean awning, and frosted glass of *orxata de xufa* with cinnamon, straw, and *fartons* at `PRIZE = Vector2(740, -4520)`.
+  - Custom Poblenou street furniture (`draw_bollard`, `draw_bin`, `draw_fountain`, `draw_snack`): yellow-banded Barcelona superblock bollards, slatted wooden waste drums, classic dark-green cast-iron Barcelona drinking fountains, and dropped glazed *fartons* on bakery paper.
+  - Off-leash area (`Superilla.draw_freedom`, `Superilla.surface`, `LevelBuild.FREEDOM_PROPS["superilla"]`): built **Passatge del Vapor** (`y = -4800 .. -5420`) as a historic Poblenou steam-mill courtyard with a central herringbone brick-and-granite paved court (`300..980`, `Surfaces.S.PAVEMENT`), an octagonal 19th-century red-brick factory smokestack (*Xemeneia del Vapor*) with radial brick medallion, and flanking green rain-garden beds (`x < 300` and `x > 980`, `Surfaces.S.GRASS`).
+  - Fixed `SuperillaCargo.tick` (`systems/superilla_cargo.gd`) calling nonexistent `m.human.bump(Vector2.DOWN, 8.0)` instead of `m.human.bumped(Vector2.DOWN)`.
+
 ## 2026-11-06 - Thirty-one walks in the planner's order, Gràcia second to last again
 
 - The four walks added since 1.69 had been put after Festa de Gràcia, so

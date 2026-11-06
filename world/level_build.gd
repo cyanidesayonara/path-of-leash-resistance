@@ -107,6 +107,7 @@ const CROSS_SECTIONS := {
 	"tibidabo": ["none", 0.0, "none", 0.0],
 	"aigues": ["none", 0.0, "none", 0.0],          # the fence and the cut bank at the track
 	"horta": ["none", 0.0, "none", 0.0],           # lawns and the maze drawn in systems/horta.gd
+	"superilla": ["none", 0.0, "none", 0.0],       # Poblenou superblock drawn in systems/superilla.gd
 	"raval": ["none", 0.0, "none", 0.0],           # promenade and plaza drawn in systems/boss_gat.gd
 	"gracia": ["none", 0.0, "none", 0.0],          # a narrow street: the houses at the paving
 	# flood wall on the left, grass then the river on the right
@@ -1400,7 +1401,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "superilla" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia":
 		return
 	# and so does El Barri; the First Walk, built on it, is still fitted
 	if m.lvl == "barri" and not m.tutorial_mode:
@@ -2733,12 +2734,12 @@ const FREEDOM_PROPS := {
 	],
 	# the wood behind the garden's back gate: pines and holm oaks, a fallen
 	# trunk, a stone bench someone carried up from the garden long ago
+	# Passatge del Vapor: industrial brick factory courtyard flanked by green rain-garden beds
 	"superilla": [
-		[Vector2(296.0, -446.0), "dig"], [Vector2(638.0, -416.0), "dig"], [Vector2(882.0, -236.0), "dig"],
-		[Vector2(382.0, -464.0), "planter"], [Vector2(1036.0, -244.0), "planter"],
-		[Vector2(268.0, -356.0), "post"], [Vector2(522.0, -444.0), "post"], [Vector2(758.0, -434.0), "post"],
-		[Vector2(1044.0, -454.0), "post"], [Vector2(318.0, -244.0), "shrub"], [Vector2(552.0, -238.0), "post"],
-		[Vector2(776.0, -214.0), "shrub"],
+		[Vector2(212.0, -496.0), "dig"], [Vector2(232.0, -296.0), "dig"], [Vector2(1058.0, -328.0), "dig"],
+		[Vector2(362.0, -478.0), "planter"], [Vector2(918.0, -478.0), "planter"], [Vector2(1062.0, -472.0), "planter"],
+		[Vector2(476.0, -464.0), "post"], [Vector2(804.0, -464.0), "post"], [Vector2(328.0, -218.0), "post"],
+		[Vector2(938.0, -228.0), "post"], [Vector2(168.0, -396.0), "shrub"], [Vector2(1096.0, -242.0), "shrub"],
 	],
 	"forum": [
 		[Vector2(302.0, -450.0), "dig"], [Vector2(646.0, -410.0), "dig"], [Vector2(888.0, -240.0), "dig"],
@@ -2935,7 +2936,7 @@ static func placa_clear(m: Node2D, at: Vector2) -> bool:
 # paving. Not a park's gravel path, a forest trail, the scrapyard's dirt or
 # El Mosaic's terraces, and on the seafront only the promenade, not the brick
 # bike path beside it.
-const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell", "station", "aigues", "horta"]
+const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell", "station", "aigues", "horta", "superilla"]
 const BEACH_PROM_X := 560.0
 
 # PASSEIG MARÍTIM's landmarks, on the walk itself so its stretches differ
