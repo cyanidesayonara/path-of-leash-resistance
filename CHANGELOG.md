@@ -26,6 +26,13 @@ Append-only session history, newest first.
 - Entrance sign: cascade water droplets and turquoise glazed tiles material (`world/world_sign.gd`).
 - Tests: `tests/test_espanya.gd`.
 
+## 2026-11-06 - No club name at Dia de Partit
+
+- The flag bearer's warning and cheer named the club ("Força Barça",
+  "Visca el Barça!"), which Dia de Partit keeps out. They are now "Big flag
+  coming through! Kickoff soon!", in English so the 0.8 s warning reads,
+  and "Come on, team!".
+
 ## 2026-11-06 - Calls to functions that did not exist
 
 - Els Búnquers' guitarist drew himself with `ShapeBatch.capsule`, and El

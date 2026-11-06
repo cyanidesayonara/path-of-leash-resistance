@@ -3,7 +3,7 @@ extends SceneTree
 const Banderer := preload("res://systems/banderer.gd")
 
 # Regression test for Dia de Partit (partit, Walk 17) Match-day Flag Bearer ("El Banderer") live event.
-# Tests 0.8s warning telegraph ("Força Barça, que comença el partit!"), westward crossing walk across
+# Tests 0.8s warning telegraph ("Big flag coming through! Kickoff soon!"), westward crossing walk across
 # the stadium avenue at y = -1380.0, match scarf drop and dog snatch trick,
 # distracted human bump hazard, banderer boop trick, startle bark trick,
 # near-miss dodge save ("partit dodge! +2"), autowalk safety clearance, and clean reset.
