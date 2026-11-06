@@ -11,16 +11,16 @@ extends RefCounted
 # Gameplay contract:
 # - 0.8 s warning telegraph: Tourist appears at the west cypress hedge archway
 #   at x = 350.0, y = -1740.0, waving their fold-out labyrinth map and calling
-#   out "On és la sortida?!" with a telegraphed speech bubble.
+#   out "Lost tourist! Mind the map!" with a telegraphed speech bubble.
 # - Soft failure / hazard: distracted human wandering into the tourist's path
 #   gets bumped by the tourist and flapping paper map (-8 patience drop,
-#   "Whoa! Watch the map!").
+#   "Oof, that's a big map!").
 # - Dog trick: as the tourist sprints past the center aisle (x >= 620.0), a wrapped
 #   traditional Catalan carquinyoli (crunchy almond biscuit) drops onto the sauló
-#   gravel; pouncing or booping it awards "carquinyoli snatch! +2" (tourist: "El meu carquinyoli!").
+#   gravel; pouncing or booping it awards "carquinyoli snatch! +2" (tourist: "My cookie!").
 # - Bark trick: barking near the passing tourist startles them into panic, flipping
-#   their map upside down ("tourist bark! +2", "Per aquí no!").
-# - Boop trick: booping the tourist directly awards "tourist boop! +2" ("Perdó!").
+#   their map upside down ("tourist bark! +2", "Not that way!").
+# - Boop trick: booping the tourist directly awards "tourist boop! +2" ("Sorry, sorry!").
 # - Dodge save: steering your human safely clear past the crossing trajectory
 #   awards "maze dodge! +2" / "Whew, close one!".
 # - Autowalk: timing naturally clears the central corridor before the autowalk

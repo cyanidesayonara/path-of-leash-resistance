@@ -15,7 +15,7 @@ const ShapeBatch := preload("res://systems/shape_batch.gd")
 # - 0.8 s warning telegraph: approaches on outward walk (y < -1860.0), rings a cheerful
 #   brass bell with float text "Ding-ding! Passeu, si us plau!" and a bicycle bell chime.
 # - Distracted human bump hazard: -8 patience drop, "Whoa! Watch the cargo bike!",
-#   cyclist: "Al tanto amb la bici!".
+#   cyclist: "Mind the bike!".
 # - Near-miss dodge save: NearMiss.consider awards "superilla dodge! +2" and increments
 #   saves_done only when entering threat radius and steering human safely clear.
 # - Dropped baguette snatch trick: a fresh crusty baguette slips from the front cargo crate
@@ -123,7 +123,7 @@ func tick(m: Node2D, delta: float) -> void:
 				triggered = true
 				state = State.TELEGRAPH
 				timer = WARN_DURATION
-				m.feed.say("El del patí de càrrega: \"Ding-ding! Passeu, si us plau!\"", EventFeed.Tone.LOUD)
+				m.feed.say("CARGO BIKE COMING THROUGH!", EventFeed.Tone.LOUD)
 				var sfx = m.get_node_or_null("/root/Sfx")
 				if sfx != null:
 					sfx.play("bell", 1.2, -3.0)
@@ -153,7 +153,7 @@ func tick(m: Node2D, delta: float) -> void:
 					human_hit = true
 					m.human.bump(Vector2.DOWN, 8.0)
 					m.float_text(human_p + Vector2(0, -34), "Watch the cargo bike!", Color(1.0, 0.45, 0.4), m.POP_SAY)
-					m.float_text(pos + Vector2(0, -28), "Al tanto amb la bici!", Color(0.96, 0.88, 0.35))
+					m.float_text(pos + Vector2(0, -28), "Mind the bike!", Color(0.96, 0.88, 0.35))
 					var sfx = m.get_node_or_null("/root/Sfx")
 					if sfx != null:
 						sfx.play("grunt", 0.95, -2.0)

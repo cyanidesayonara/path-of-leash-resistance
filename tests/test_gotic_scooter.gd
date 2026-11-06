@@ -3,7 +3,7 @@ extends SceneTree
 const Scooter := preload("res://systems/scooter.gd")
 
 # Regression test for El Gòtic (oldtown, Walk 7) Vintage Vespa Courier live event.
-# Tests 0.8s warning telegraph ("Pas a la Vespa!"), eastward crossing drive across
+# Tests 0.8s warning telegraph ("Scooter coming through!"), eastward crossing drive across
 # the narrow alleyway at y = -1720.0, airmail letter drop and dog snatch trick,
 # distracted human bump hazard, scooter boop trick, brake screech bark trick,
 # near-miss dodge save, autowalk safety, and clean reset.

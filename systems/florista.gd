@@ -9,9 +9,9 @@ extends RefCounted
 #
 # Design contract:
 # - 0.8 s warning telegraph: approaches on outward walk (y < -2660.0), calls out
-#   "Flors fresques de la Rambla!" with a floral rustle sound.
-# - Distracted human bump hazard: -8 patience drop, "Whoa! Watch the flowers!",
-#   florista: "Ai, les meves roses!".
+#   "Fresh flowers coming through!" with a floral rustle sound.
+# - Distracted human bump hazard: -8 patience drop, "Oops, petals everywhere!",
+#   florista: "Oh, my roses!".
 # - Near-miss dodge save: NearMiss.consider awards "rambla dodge! +2" and increments
 #   saves_done only when entering threat radius and steering human safely clear.
 #   Walking past without near miss awards nothing.

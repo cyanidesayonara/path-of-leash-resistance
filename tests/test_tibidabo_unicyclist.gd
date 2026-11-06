@@ -3,7 +3,7 @@ extends SceneTree
 const Unicyclist := preload("res://systems/unicyclist.gd")
 
 # Regression test for El Tibidabo summit fairground unicyclist live event (Walk 21).
-# Tests the 0.8s warning telegraph ("Compte amb l'equilibri!"), eastward ride
+# Tests the 0.8s warning telegraph ("Unicycle coming through!"), eastward ride
 # across the mountain road, dropped juggling pin snatch trick, distracted human
 # bump hazard, dog boop trick, unicycle bark trick, summit dodge save, autowalk
 # safety, and leak-free cleanup.

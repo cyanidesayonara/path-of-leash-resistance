@@ -11,16 +11,16 @@ extends RefCounted
 # Gameplay contract:
 # - 0.8 s warning telegraph: When the pair reaches y = -1320.0, the forager calls
 #   out from the western pine grove threshold at x = 380.0, y = -1650.0:
-#   "Mireu quins rovellons!" with a telegraphed speech bubble and brush rustle.
+#   "Mushroom picker crossing!" with a telegraphed speech bubble and brush rustle.
 # - Soft failure / hazard: Distracted human wandering into the forager's path
-#   gets bumped (-8 patience drop, "Whoa! Watch the basket!",
-#   forager: "Al tanto amb els bolets!").
+#   gets bumped (-8 patience drop, "Oops, not the mushrooms!",
+#   forager: "Mind the mushrooms!").
 # - Dog trick (rovelló snatch): As the forager strides across the trail (x >= 650.0),
 #   a prize saffron milk cap ("rovelló") slips loose from the wicker basket onto
 #   the pine needles; pouncing or booping it awards "rovelló snatch! +2" and
-#   increments bones/combo (Forager: "Ei, el meu rovelló!").
+#   increments bones/combo (Forager: "Hey, my mushroom!").
 # - Boop trick: Booping the forager directly awards "boletaire boop! +2"
-#   ("Hola, gosset de bosc!").
+#   ("Hello, forest pup!").
 # - Bark trick: Barking near the forager (within 130 px) causes him to stumble/wobble
 #   in surprise, awarding "boletaire bark! +2" ("Ui, quin ensurt!").
 # - Dodge save: Steering your human safely clear past the crossing trajectory after

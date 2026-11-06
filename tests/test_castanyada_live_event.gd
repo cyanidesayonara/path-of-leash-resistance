@@ -3,7 +3,7 @@ extends SceneTree
 const Castanyera := preload("res://systems/castanyera.gd")
 
 # Regression test for La Castanyada hurrying castanyera live event (Walk 12).
-# Tests the 0.8s warning telegraph ("Castanyes calentes!"), eastbound crossing walk
+# Tests the 0.8s warning telegraph ("Hot chestnuts coming through!"), eastbound crossing walk
 # across the festive street, dropped roasted chestnut paperina snatch trick,
 # distracted human bump hazard, dog boop trick, castanyera bark trick, near-miss
 # dodge save, autowalk safety, and clean reset.

@@ -11,9 +11,9 @@ extends RefCounted
 # Gameplay contract:
 # - 0.8 s warning telegraph: Radiografia door rattles ajar at x = 360.0, y = -2200.0,
 #   and a vet nurse in clinical teal scrubs pops out with a clipboard waving
-#   frantically and shouting "Atenció, s'escapa el con!" with a speech bubble.
+#   frantically and shouting "Cone dog on the loose!" with a speech bubble.
 # - Soft failure / hazard: distracted human wandering into the cone dog's trajectory
-#   gets bumped by the wide plastic cone (-8 patience drop, "Whoa! Watch the cone!").
+#   gets bumped by the wide plastic cone (-8 patience drop, "Ow, that cone is hard!").
 # - Dog trick: as the pup scrambles across the linoleum, a savory clinic treat
 #   (bacon pill pocket) drops from its mouth; pouncing or booping it awards
 #   "treat snatch! +2".
