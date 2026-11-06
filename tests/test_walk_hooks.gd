@@ -43,6 +43,7 @@ const HOOKS := {
 	"carmel": ["draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick", "tree_kind"],
 	"superilla": ["draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick"],
 	"forum": ["draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick"],
+	"espanya": ["draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick"],
 	"raval": ["cam_lean", "draw_edge_layer", "draw_live", "draw_overhead", "hush_banner", "idle_status", "on_bark", "surface", "tick", "urgent_status"],
 }
 

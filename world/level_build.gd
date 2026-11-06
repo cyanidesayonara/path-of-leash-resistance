@@ -25,6 +25,7 @@ const BossGat := preload("res://systems/boss_gat.gd")
 const Carmel := preload("res://systems/carmel.gd")
 const Superilla := preload("res://systems/superilla.gd")
 const Forum := preload("res://systems/forum.gd")
+const Espanya := preload("res://systems/espanya.gd")
 # the tutorial's pond for the brink lesson, beside the path at its station
 const TUT_POND_W := 150.0
 const ROPE_CLEAR := 4.0
@@ -1203,6 +1204,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"carmel": half = Carmel.HALF
 		"superilla": half = Superilla.HALF
 		"forum": half = Forum.HALF
+		"espanya": half = Espanya.HALF
 		"besos": half = BESOS_HALF
 	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
 	m.walk_half = half
@@ -1516,6 +1518,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_forum: Array = Forum.build(m)
 			hyd_list.assign(pl_forum[0])
 			keb_list.assign(pl_forum[1])
+		"espanya":
+			var pl_espanya: Array = Espanya.build(m)
+			hyd_list.assign(pl_espanya[0])
+			keb_list.assign(pl_espanya[1])
 		"raval":
 			var pl_raval: Array = BossGat.build(m)
 			hyd_list.assign(pl_raval[0])
@@ -2332,6 +2338,9 @@ static func build_level_data(m: Node2D) -> void:
 		"forum":
 			m.prize_pos = Forum.PRIZE
 			m.prize_text = Forum.PRIZE_TEXT
+		"espanya":
+			m.prize_pos = Espanya.PRIZE
+			m.prize_text = Espanya.PRIZE_TEXT
 		"raval":
 			m.prize_pos = BossGat.PRIZE
 			m.prize_text = BossGat.PRIZE_TEXT
@@ -2737,6 +2746,13 @@ const FREEDOM_PROPS := {
 		[Vector2(274.0, -352.0), "post"], [Vector2(526.0, -448.0), "post"], [Vector2(764.0, -438.0), "post"],
 		[Vector2(1038.0, -450.0), "post"], [Vector2(324.0, -248.0), "shrub"], [Vector2(556.0, -234.0), "post"],
 		[Vector2(770.0, -218.0), "shrub"],
+	],
+	"espanya": [
+		[Vector2(308.0, -444.0), "dig"], [Vector2(650.0, -418.0), "dig"], [Vector2(894.0, -232.0), "dig"],
+		[Vector2(386.0, -472.0), "planter"], [Vector2(1048.0, -242.0), "planter"],
+		[Vector2(282.0, -346.0), "post"], [Vector2(534.0, -454.0), "post"], [Vector2(772.0, -440.0), "post"],
+		[Vector2(1030.0, -458.0), "post"], [Vector2(332.0, -250.0), "shrub"], [Vector2(564.0, -226.0), "post"],
+		[Vector2(762.0, -222.0), "shrub"],
 	],
 	"carmel": [
 		[Vector2(272.0, -452.0), "dig"], [Vector2(634.0, -428.0), "dig"], [Vector2(884.0, -222.0), "dig"],
@@ -3153,6 +3169,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_forum: Array[Rect2] = Forum.solids(m)
 			for i in range(ps_forum.size()):
 				out.append(["forum_solid_%d" % i, ps_forum[i]])
+		"espanya":
+			var ps_espanya: Array[Rect2] = Espanya.solids(m)
+			for i in range(ps_espanya.size()):
+				out.append(["espanya_solid_%d" % i, ps_espanya[i]])
 		"raval":
 			var ps_raval: Array[Rect2] = BossGat.solids(m)
 			for i in range(ps_raval.size()):
@@ -3599,6 +3619,9 @@ static func build_walls(m: Node2D) -> void:
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "forum":
 		for r: Rect2 in Forum.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "espanya":
+		for r: Rect2 in Espanya.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "raval":
 		for r: Rect2 in BossGat.solids(m):
