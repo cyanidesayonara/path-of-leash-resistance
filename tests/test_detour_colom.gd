@@ -1,11 +1,11 @@
-extends SceneTree
+﻿extends SceneTree
 
-# Tests for the third Artsy Detour: "EL COLOM" (Pablo Picasso cubism homage) off Plaça Reial.
+# Tests for the third Artsy Detour: "EL COLOM" (after Picasso's general cubist style) off Plaça Reial.
 # Covers:
 # 1. Doorway placement on Plaça Reial and DetourLayer initialization.
 # 2. Sculpture poles: 4 faceted analytical cubist sculptures wrapped by the leash.
 # 3. Entering the gallery: pair teleport, leash resnap, camera framing, surface shift to TILE.
-# 4. Peace Doves ("Els Coloms de la Pau") greeting interaction and tracking.
+# 4. Pigeons ("Els Coloms") greeting interaction and tracking.
 # 5. Golden Cubist Bone collection and Tony Hawk goal registration ("colom").
 # 6. Exit portal: smooth return to Plaça Reial west arcade outside gallery past entrance.
 # 7. Autowalk bot safety (leaves detour alone and follows the main walk).
@@ -91,12 +91,12 @@ func _run() -> void:
 	_check(m.detour_layer.z_index < m.dog.z_index and m.detour_layer.z_index < m.human.z_index,
 		"the gallery is drawn under the pair (layer z %d, dog z %d)" % [m.detour_layer.z_index, m.dog.z_index])
 
-	# 4. Peace Doves Greeting
+	# 4. Pigeons Greeting
 	var dove_pos: Vector2 = Detour.COLOM_ORIGIN + Detour.COLOM_DOVE_OFFSETS[0]
 	_place(m, dove_pos)
 	for _i in range(5):
 		await physics_frame
-	_check(m.colom_doves_greeted >= 1, "stepping near a peace dove greets it (%d greeted)" % m.colom_doves_greeted)
+	_check(m.colom_doves_greeted >= 1, "stepping near a pigeon greets it (%d greeted)" % m.colom_doves_greeted)
 
 	# 5. Human browsing inside gallery
 	var room: Rect2 = Detour.COLOM_RECT

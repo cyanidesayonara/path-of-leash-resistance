@@ -20,14 +20,14 @@ const C_CARPET_GOLD := Color(0.92, 0.78, 0.25)
 const C_BANNER := Color(0.55, 0.10, 0.16)
 const C_BRASS := Color(0.88, 0.74, 0.32)
 
-# Miró ("L'Estel") primary palette
+# L'Estel primary palette (after Miró's general style)
 const C_WHITE := Color(0.97, 0.97, 0.95)
 const C_BLACK := Color(0.10, 0.10, 0.12)
 const C_RED := Color(0.88, 0.18, 0.14)
 const C_BLUE := Color(0.10, 0.30, 0.76)
 const C_YELLOW := Color(0.98, 0.82, 0.12)
 
-# Picasso ("El Colom") analytical cubist palette
+# El Colom analytical cubist palette (after Picasso's general style)
 const C_OCHRE := Color(0.82, 0.64, 0.38)
 const C_SLATE := Color(0.36, 0.40, 0.44)
 const C_TERRACOTTA := Color(0.72, 0.34, 0.22)
@@ -194,7 +194,7 @@ func _draw_street_doorway(b: ShapeBatch, _t: float) -> void:
 		b.line(dp + Vector2(50.0, -22.0), dp + Vector2(54.0, 0.0), C_BLUE, 2.4)
 		b.line(dp + Vector2(54.0, 0.0), dp + Vector2(50.0, 22.0), C_BLUE, 2.4)
 
-		# Easel displaying cubist dove artwork
+		# Easel displaying a faceted pigeon
 		var easel_p := dp + Vector2(64.0, 38.0)
 		b.rect(Rect2(easel_p + Vector2(-8.0, -12.0), Vector2(16.0, 24.0)), C_CREAM)
 		b.rect(Rect2(easel_p + Vector2(-7.0, -11.0), Vector2(14.0, 22.0)), C_TERRACOTTA)
@@ -365,7 +365,7 @@ func _draw_estel_gallery(b: ShapeBatch, t: float) -> void:
 		var sp: Vector2 = o + DetourScript.SCULPTURE_OFFSETS[i]
 		_draw_miro_sculpture(b, sp, i, t)
 
-	# 5. 3 Starry Ladders ("L'Escala de l'Evasió")
+	# 5. 3 Hop Trails (chimes)
 	for i in range(DetourScript.LADDER_OFFSETS.size()):
 		var lp: Vector2 = o + DetourScript.LADDER_OFFSETS[i]
 		_draw_starry_ladder(b, lp, i, t)
@@ -414,11 +414,17 @@ func _draw_estel_gallery(b: ShapeBatch, t: float) -> void:
 
 
 func _draw_miro_star(b: ShapeBatch, p: Vector2, r: float, dot_col: Color) -> void:
-	# 8-point calligraphic asterisk
-	for a in [0.0, PI * 0.25, PI * 0.5, PI * 0.75]:
-		var dir := Vector2(cos(a), sin(a)) * r
-		b.line(p - dir, p + dir, C_BLACK, 2.4)
-	b.circle(p, r * 0.28, dot_col)
+	# an original lopsided five-point star: a filled primary blob with a thick
+	# off-centre black outline. Deliberately NOT an asterisk with a coloured
+	# hub (that reads as a specific foundation logo).
+	var pts := PackedVector2Array()
+	for k in range(10):
+		var ang: float = -PI * 0.5 + float(k) * PI * 0.2 + 0.18
+		var rad: float = r * (1.0 if k % 2 == 0 else 0.46) * (1.0 + 0.12 * sin(float(k) * 2.3))
+		pts.append(p + Vector2(cos(ang), sin(ang)) * rad)
+	b.polygon(pts, dot_col)
+	for k in range(10):
+		b.line(pts[k], pts[(k + 1) % 10], C_BLACK, 1.8)
 
 
 func _draw_miro_eye(b: ShapeBatch, p: Vector2, w: float, t: float) -> void:
@@ -501,33 +507,23 @@ func _draw_miro_sculpture(b: ShapeBatch, sp: Vector2, idx: int, t: float) -> voi
 
 
 func _draw_starry_ladder(b: ShapeBatch, lp: Vector2, idx: int, t: float) -> void:
-	var tilt := -6.0 if idx == 1 else (6.0 if idx == 0 else 0.0)
-	var stile_l := lp + Vector2(-10.0 + tilt, -34.0)
-	var stile_r := lp + Vector2(10.0 + tilt, -34.0)
-	var foot_l := lp + Vector2(-10.0 - tilt, 34.0)
-	var foot_r := lp + Vector2(10.0 - tilt, 34.0)
-
-	# Shadow
-	b.line(foot_l, foot_l + Vector2(12.0, 6.0), Color(0.0, 0.0, 0.0, 0.18), 3.0)
-	b.line(foot_r, foot_r + Vector2(12.0, 6.0), Color(0.0, 0.0, 0.0, 0.18), 3.0)
-
-	# Black upright stiles
-	b.line(stile_l, foot_l, C_BLACK, 2.8)
-	b.line(stile_r, foot_r, C_BLACK, 2.8)
-
-	# 5 horizontal rungs with primary caps
-	for r in range(5):
-		var frac: float = float(r) / 4.0
-		var rl: Vector2 = stile_l.lerp(foot_l, frac)
-		var rr: Vector2 = stile_r.lerp(foot_r, frac)
-		b.line(rl, rr, C_BLACK, 2.2)
-		var cap_col: Color = [C_RED, C_YELLOW, C_BLUE][(r + idx) % 3]
-		b.circle(rl, 2.2, cap_col)
-		b.circle(rr, 2.2, cap_col)
-
-	# Gentle floating sparkle dust
+	# "Hop Trail" (original): a wavy black line with five primary stepping blobs
+	# and a bobbing yellow bead. Same spot and role as the old ladders (a
+	# proximity chime), but not a ladder and not a star ladder.
+	var dir := -1.0 if idx == 1 else 1.0
+	var prev := lp + Vector2(-30.0 * dir, 30.0)
+	for k in range(5):
+		var f: float = float(k) / 4.0
+		var pos := lp + Vector2((-30.0 + 60.0 * f) * dir, 30.0 - 60.0 * f + sin(f * TAU + float(idx)) * 9.0)
+		b.line(prev, pos, C_BLACK, 2.2)
+		prev = pos
+		var col: Color = [C_RED, C_YELLOW, C_BLUE][(k + idx) % 3]
+		var rad: float = 6.5 - 0.7 * float(k % 3)
+		b.circle(pos + Vector2(1.5, 2.0), rad, Color(0.0, 0.0, 0.0, 0.16))
+		b.circle(pos, rad + 1.4, C_BLACK)
+		b.circle(pos, rad, col)
 	var spk := lp + Vector2(sin(t * 3.5 + float(idx)) * 14.0, -38.0 + cos(t * 2.5 + float(idx)) * 6.0)
-	b.circle(spk, 2.0, C_YELLOW)
+	b.circle(spk, 2.4, C_YELLOW)
 
 
 # --- INSIDE EL SOMNI GALLERY (Salvador Dalí Homage) ---
@@ -852,15 +848,11 @@ func _draw_drac_gallery(b: ShapeBatch, t: float) -> void:
 
 
 func _draw_dove_icon(b: ShapeBatch, p: Vector2, s: float) -> void:
-	# Stylized white peace dove silhouette
-	var wing := PackedVector2Array([
-		p + Vector2(-s * 0.8, s * 0.4),
-		p + Vector2(s * 0.6, -s * 0.8),
-		p + Vector2(s * 0.2, s * 0.6),
-	])
-	b.polygon(wing, C_WHITE)
-	b.circle(p + Vector2(-s * 0.5, -s * 0.2), s * 0.45, C_WHITE)
-	b.line(p + Vector2(-s * 0.8, -s * 0.2), p + Vector2(-s * 1.2, -s * 0.1), Color(0.98, 0.72, 0.2), 1.2)
+	# tiny faceted street pigeon (original): slate wing facet, ochre breast, no
+	# olive sprig and no white dove silhouette
+	b.polygon(PackedVector2Array([p + Vector2(-s * 0.9, s * 0.3), p + Vector2(s * 0.5, -s * 0.7), p + Vector2(s * 0.9, s * 0.5)]), C_SLATE)
+	b.polygon(PackedVector2Array([p + Vector2(-s * 0.9, s * 0.3), p + Vector2(s * 0.9, s * 0.5), p + Vector2(-s * 0.2, s * 0.9)]), C_OCHRE)
+	b.circle(p + Vector2(-s * 0.7, -s * 0.2), s * 0.4, C_CHARCOAL)
 
 
 func _draw_colom_gallery(b: ShapeBatch, t: float) -> void:
@@ -918,7 +910,7 @@ func _draw_colom_gallery(b: ShapeBatch, t: float) -> void:
 		var sp: Vector2 = o + DetourScript.COLOM_SCULPTURE_OFFSETS[i]
 		_draw_colom_sculpture(b, sp, i, t)
 
-	# 5. 3 Peace Doves ("Els Coloms")
+	# 5. 3 Barcelona Pigeons ("Els Coloms")
 	for i in range(DetourScript.COLOM_DOVE_OFFSETS.size()):
 		var dp: Vector2 = o + DetourScript.COLOM_DOVE_OFFSETS[i]
 		_draw_peace_dove(b, dp, i, t)
@@ -986,34 +978,24 @@ func _draw_colom_gallery(b: ShapeBatch, t: float) -> void:
 
 
 func _draw_peace_dove(b: ShapeBatch, p: Vector2, i: int, t: float) -> void:
-	# Small wooden perch
+	# "Barcelona pigeon" (original replacement for the old peace dove): a plump
+	# faceted plaza pigeon in slate, ochre and terracotta, a teal neck facet,
+	# and a bobbing head. No olive branch, no white dove.
 	b.rect(Rect2(p + Vector2(-16.0, 10.0), Vector2(32.0, 6.0)), C_UMBER)
 	b.line(p + Vector2(0.0, 16.0), p + Vector2(0.0, 24.0), C_CHARCOAL, 2.0)
-
-	# Flapping wing offset
-	var flap: float = sin(t * 3.5 + float(i) * 1.5) * 3.5
-	var dove_body := PackedVector2Array([
-		p + Vector2(-14.0, 2.0),
-		p + Vector2(-6.0, -12.0 + flap),
-		p + Vector2(10.0, -16.0 + flap * 1.5),
-		p + Vector2(8.0, 4.0),
-		p + Vector2(16.0, 10.0),
-		p + Vector2(-4.0, 8.0),
-	])
-	b.polygon(dove_body, C_WHITE)
-	b.line(dove_body[0], dove_body[1], Color(0.85, 0.85, 0.88), 1.2)
-	b.line(dove_body[1], dove_body[2], Color(0.85, 0.85, 0.88), 1.2)
-
-	# Head and beak
-	b.circle(p + Vector2(-10.0, -4.0), 6.5, C_WHITE)
-	b.circle(p + Vector2(-12.0, -4.5), 1.4, C_CHARCOAL) # Eye
-	b.line(p + Vector2(-16.0, -4.0), p + Vector2(-22.0, -3.0), Color(0.98, 0.72, 0.2), 2.2) # Beak
-
-	# Olive branch sprig in beak
-	var sprig_end := p + Vector2(-28.0, -7.0)
-	b.line(p + Vector2(-18.0, -3.5), sprig_end, Color(0.24, 0.52, 0.22), 1.6)
-	b.circle(sprig_end + Vector2(2.0, -2.0), 2.2, Color(0.32, 0.62, 0.28))
-	b.circle(sprig_end + Vector2(-2.0, 2.0), 2.2, Color(0.32, 0.62, 0.28))
+	var bob: float = sin(t * 4.0 + float(i) * 1.7) * 2.0
+	b.polygon(PackedVector2Array([p + Vector2(-8.0, -2.0), p + Vector2(14.0, -8.0), p + Vector2(18.0, 8.0), p + Vector2(0.0, 11.0)]), C_SLATE)
+	b.polygon(PackedVector2Array([p + Vector2(-8.0, -2.0), p + Vector2(0.0, 11.0), p + Vector2(-12.0, 8.0)]), C_OCHRE)
+	b.polygon(PackedVector2Array([p + Vector2(14.0, -8.0), p + Vector2(18.0, 8.0), p + Vector2(26.0, 12.0)]), C_UMBER)
+	b.line(p + Vector2(-8.0, -2.0), p + Vector2(18.0, 8.0), C_CHARCOAL, 1.2)
+	b.polygon(PackedVector2Array([p + Vector2(2.0, -4.0), p + Vector2(16.0, -6.0), p + Vector2(10.0, 6.0)]), C_TERRACOTTA)
+	# head: two facets (front and side, a cubist nod) with a teal collar
+	var hp := p + Vector2(-12.0, -8.0 + bob)
+	b.circle(hp, 6.0, C_CREAM)
+	b.polygon(PackedVector2Array([hp + Vector2(0.0, -6.0), hp + Vector2(6.0, 0.0), hp + Vector2(0.0, 6.0)]), C_SLATE)
+	b.polygon(PackedVector2Array([hp + Vector2(-5.0, 5.0), hp + Vector2(5.0, 5.0), hp + Vector2(3.0, 9.0), hp + Vector2(-3.0, 9.0)]), Color(0.18, 0.55, 0.52))
+	b.circle(hp + Vector2(-2.0, -1.0), 1.5, C_TERRACOTTA)
+	b.polygon(PackedVector2Array([hp + Vector2(-5.0, 0.0), hp + Vector2(-12.0, 2.0), hp + Vector2(-5.0, 3.0)]), C_UMBER)
 
 
 func _draw_colom_sculpture(b: ShapeBatch, p: Vector2, idx: int, _t: float) -> void:
@@ -1064,23 +1046,16 @@ func _draw_colom_sculpture(b: ShapeBatch, p: Vector2, idx: int, _t: float) -> vo
 			# Bicorne hat
 			b.line(p + Vector2(-12.0, -36.0), p + Vector2(12.0, -36.0), C_CHARCOAL, 3.2)
 		2:
-			# Sculpture 2: Minotaur Totem
-			# Angular bovine head
-			var m_pts := PackedVector2Array([
-				p + Vector2(-14.0, -10.0),
-				p + Vector2(-8.0, -32.0),
-				p + Vector2(8.0, -32.0),
-				p + Vector2(14.0, -10.0),
-				p + Vector2(0.0, 12.0),
-			])
-			b.polygon(m_pts, C_SLATE)
-			# Horns
-			b.line(p + Vector2(-8.0, -30.0), p + Vector2(-22.0, -42.0), C_CREAM, 3.5)
-			b.line(p + Vector2(8.0, -30.0), p + Vector2(22.0, -42.0), C_CREAM, 3.5)
-			# Snout & eyes
-			b.line(p + Vector2(-6.0, -18.0), p + Vector2(6.0, -18.0), C_CHARCOAL, 2.2)
-			b.circle(p + Vector2(-6.0, -22.0), 2.2, C_CHARCOAL)
-			b.circle(p + Vector2(6.0, -22.0), 2.2, C_CHARCOAL)
+			# Sculpture 2: Cubist Hound (original; replaces the old horned bull head).
+			# One face seen from two sides: a front facet and a profile facet.
+			b.polygon(PackedVector2Array([p + Vector2(-14.0, -12.0), p + Vector2(-2.0, -34.0), p + Vector2(0.0, 10.0), p + Vector2(-10.0, 4.0)]), C_SLATE)
+			b.polygon(PackedVector2Array([p + Vector2(-2.0, -34.0), p + Vector2(16.0, -22.0), p + Vector2(22.0, -4.0), p + Vector2(0.0, 10.0)]), C_OCHRE)
+			b.polygon(PackedVector2Array([p + Vector2(-14.0, -12.0), p + Vector2(-24.0, -4.0), p + Vector2(-12.0, 2.0)]), C_UMBER)
+			b.rect(Rect2(p + Vector2(14.0, -8.0), Vector2(9.0, 8.0)), C_CHARCOAL)
+			b.line(p + Vector2(-2.0, -34.0), p + Vector2(0.0, 10.0), C_CHARCOAL, 2.0)
+			b.circle(p + Vector2(-7.0, -16.0), 2.4, C_CREAM)
+			b.circle(p + Vector2(-7.0, -16.0), 1.1, C_CHARCOAL)
+			b.circle(p + Vector2(9.0, -16.0), 2.2, C_TERRACOTTA)
 		3:
 			# Sculpture 3: Pitcher & Palette
 			# Pitcher body
