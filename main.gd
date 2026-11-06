@@ -126,6 +126,8 @@ var botanic: Botanic
 var banderer: Banderer
 var guitarrista: Guitarrista
 var cargo: SuperillaCargo
+var skater: ForumSkater
+var espanya_bubble: EspanyaBubble
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -215,6 +217,10 @@ const Guitarrista := preload("res://systems/guitarrista.gd")
 const Carmel := preload("res://systems/carmel.gd")
 const Superilla := preload("res://systems/superilla.gd")
 const SuperillaCargo := preload("res://systems/superilla_cargo.gd")
+const Forum := preload("res://systems/forum.gd")
+const ForumSkater := preload("res://systems/forum_skater.gd")
+const Espanya := preload("res://systems/espanya.gd")
+const EspanyaBubble := preload("res://systems/espanya_bubble.gd")
 # float_text(..., POP_SAY) draws a speech bubble rather than a sound or a score
 const POP_SAY := 0
 const POLE_RADIUS := 10.0
@@ -334,6 +340,8 @@ const WALK_MODULES := {
 	"gracia": preload("res://systems/gracia.gd"),
 	"carmel": preload("res://systems/carmel.gd"),
 	"superilla": preload("res://systems/superilla.gd"),
+	"forum": preload("res://systems/forum.gd"),
+	"espanya": preload("res://systems/espanya.gd"),
 	"raval": preload("res://systems/boss_gat.gd"),
 	"beach": preload("res://systems/passeig.gd"),
 	"rain": preload("res://systems/diluvi.gd"),
@@ -540,6 +548,12 @@ var carmel_cannon_wrapped := false
 var superilla_circles_sprinted := 0
 var superilla_pingpong_slid := false
 var superilla_circles_visited: Dictionary = {}
+var forum_pergola_sprinted: int = 0
+var forum_rails_grinded: int = 0
+var espanya_bubbles_popped: int = 0
+var espanya_fountain_splashed: int = 0
+var espanya_columns_wrapped: int = 0
+var espanya_escalator_ridden: int = 0
 var reial_fountain_drank := false
 var reial_busker_barked := false
 var vet_scale_weighed := false
@@ -2437,7 +2451,7 @@ const TREE_PIT := 5        # El Gotic's plaça tree in its stone pit
 
 func pole_tree(i: int) -> int:
 	var p := poles[i]
-	if tutorial_mode or lvl == "scrap" or lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "neteja":
+	if tutorial_mode or lvl == "scrap" or lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "neteja" or lvl == "carmel":
 		return TREE_NONE
 	if walk_mod != null and walk_mod.has_method("tree_kind"):
 		return walk_mod.tree_kind(self, p)
@@ -2667,7 +2681,7 @@ func is_lamppost(i: int) -> bool:
 		return false
 	if tutorial_mode or lvl == "scrap":
 		return true
-	if lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "oldtown":
+	if lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "oldtown" or lvl == "carmel":
 		return false
 	return not (lvl == "rain" and poles[i].x < walk_cx)
 
@@ -4336,6 +4350,8 @@ func draw_freedom_onto(c: Object) -> void:
 		surround = Montjuic.RAMPART.darkened(0.2)
 	elif lvl == "guell":
 		surround = Mosaic.HILL_SCRUB
+	elif lvl == "carmel":
+		surround = Carmel.SCRUB_DARK
 	# El Gòtic's roofscape runs on under the gate's last few feet, from the
 	# edge layer: stop short of it rather than paint a grey band over it
 	c.draw_rect(Rect2(-400.0, GATE_Y - 2400.0, 2100.0, 2370.0 if lvl == "oldtown" else 2400.0), surround)
@@ -4501,7 +4517,7 @@ func _draw_gate() -> void:
 	var style := "iron"
 	if lvl in ["trail", "guell", "park", "llevant"] and not tutorial_mode:
 		style = "timber"
-	elif freedom_kind == "placa" or lvl == "rain":
+	elif freedom_kind == "placa" or lvl == "rain" or lvl == "carmel":
 		style = "stone"
 	var gy := GATE_Y - 16.0
 	# the posts stand at the path's real edges here: gate_l and gate_r are the
@@ -7147,7 +7163,7 @@ func _tick_banderer(delta: float) -> void:
 		return
 	var bc: Dictionary = banderer.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(bc["warn"]):
-		float_text(banderer.pos + Vector2(0.0, -32.0), "Força Barça, que comença el partit!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(banderer.pos + Vector2(0.0, -32.0), "Big flag coming through! Kickoff soon!", Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("bark", 1.2, -4.0)
 	if bool(bc["bump"]):
 		human.patience = maxf(0.0, human.patience - 8.0)
@@ -8423,6 +8439,16 @@ func _greetings() -> void:
 # what another walker's dog and its owner make of yours coming up to say hello
 const GREET_LINES := ["Aw, hello there!", "Say hello!", "Don't worry, he's friendly!", "Hi there, pup!", "Go ahead."]
 const GRUMPY_LINES := ["Sorry! He's not friendly.", "Bruno! Leave it.", "Sorry! He's grumpy.", "Not today, buddy."]
+
+
+# A walk's small reward for a trick or a find: bones, the chime, the score
+# chip over the dog ("solar sprint! +2"), the HUD. The way every live event
+# pays out (the forklift boop, the trolley boop).
+func award_points(amount: int, text: String) -> void:
+	bones += amount
+	Sfx.play("star", 1.2, -4.0)
+	float_text(dog.global_position + Vector2(0.0, -20.0), text, Color(1.0, 0.92, 0.45))
+	_update_hud()
 
 
 func _greet_pair(pair: Node2D) -> void:
@@ -11276,7 +11302,7 @@ func on_bark(pos: Vector2) -> void:
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
 		float_text(pos + Vector2(0.0, -20.0), "banderer bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(banderer.pos + Vector2(0.0, -32.0), "Visca el Barça!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(banderer.pos + Vector2(0.0, -32.0), "Come on, team!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if walk_mod != null and walk_mod.has_method("on_bark"):
 		walk_mod.on_bark(self, pos)

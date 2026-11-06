@@ -24,6 +24,8 @@ const Gracia := preload("res://systems/gracia.gd")
 const BossGat := preload("res://systems/boss_gat.gd")
 const Carmel := preload("res://systems/carmel.gd")
 const Superilla := preload("res://systems/superilla.gd")
+const Forum := preload("res://systems/forum.gd")
+const Espanya := preload("res://systems/espanya.gd")
 # the tutorial's pond for the brink lesson, beside the path at its station
 const TUT_POND_W := 150.0
 const ROPE_CLEAR := 4.0
@@ -107,6 +109,7 @@ const CROSS_SECTIONS := {
 	"horta": ["none", 0.0, "none", 0.0],           # lawns and the maze drawn in systems/horta.gd
 	"raval": ["none", 0.0, "none", 0.0],           # promenade and plaza drawn in systems/boss_gat.gd
 	"gracia": ["none", 0.0, "none", 0.0],          # a narrow street: the houses at the paving
+	"carmel": ["none", 0.0, "none", 0.0],          # sunset panorama and hillside slopes in systems/carmel.gd
 	# flood wall on the left, grass then the river on the right
 	"besos": ["none", 0.0, "grass", 120.0],
 }
@@ -1201,6 +1204,8 @@ static func apply_corridor(m: Node2D) -> void:
 		"gracia": half = Gracia.HALF
 		"carmel": half = Carmel.HALF
 		"superilla": half = Superilla.HALF
+		"forum": half = Forum.HALF
+		"espanya": half = Espanya.HALF
 		"besos": half = BESOS_HALF
 	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
 	m.walk_half = half
@@ -1396,7 +1401,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel":
 		return
 	# and so does El Barri; the First Walk, built on it, is still fitted
 	if m.lvl == "barri" and not m.tutorial_mode:
@@ -1510,6 +1515,14 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_superilla: Array = Superilla.build(m)
 			hyd_list.assign(pl_superilla[0])
 			keb_list.assign(pl_superilla[1])
+		"forum":
+			var pl_forum: Array = Forum.build(m)
+			hyd_list.assign(pl_forum[0])
+			keb_list.assign(pl_forum[1])
+		"espanya":
+			var pl_espanya: Array = Espanya.build(m)
+			hyd_list.assign(pl_espanya[0])
+			keb_list.assign(pl_espanya[1])
 		"raval":
 			var pl_raval: Array = BossGat.build(m)
 			hyd_list.assign(pl_raval[0])
@@ -2323,6 +2336,12 @@ static func build_level_data(m: Node2D) -> void:
 		"superilla":
 			m.prize_pos = Superilla.PRIZE
 			m.prize_text = Superilla.PRIZE_TEXT
+		"forum":
+			m.prize_pos = Forum.PRIZE
+			m.prize_text = Forum.PRIZE_TEXT
+		"espanya":
+			m.prize_pos = Espanya.PRIZE
+			m.prize_text = Espanya.PRIZE_TEXT
 		"raval":
 			m.prize_pos = BossGat.PRIZE
 			m.prize_text = BossGat.PRIZE_TEXT
@@ -2722,12 +2741,26 @@ const FREEDOM_PROPS := {
 		[Vector2(1044.0, -454.0), "post"], [Vector2(318.0, -244.0), "shrub"], [Vector2(552.0, -238.0), "post"],
 		[Vector2(776.0, -214.0), "shrub"],
 	],
+	"forum": [
+		[Vector2(302.0, -450.0), "dig"], [Vector2(646.0, -410.0), "dig"], [Vector2(888.0, -240.0), "dig"],
+		[Vector2(376.0, -470.0), "planter"], [Vector2(1040.0, -238.0), "planter"],
+		[Vector2(274.0, -352.0), "post"], [Vector2(526.0, -448.0), "post"], [Vector2(764.0, -438.0), "post"],
+		[Vector2(1038.0, -450.0), "post"], [Vector2(324.0, -248.0), "shrub"], [Vector2(556.0, -234.0), "post"],
+		[Vector2(770.0, -218.0), "shrub"],
+	],
+	"espanya": [
+		[Vector2(308.0, -444.0), "dig"], [Vector2(650.0, -418.0), "dig"], [Vector2(894.0, -232.0), "dig"],
+		[Vector2(386.0, -472.0), "planter"], [Vector2(1048.0, -242.0), "planter"],
+		[Vector2(282.0, -346.0), "post"], [Vector2(534.0, -454.0), "post"], [Vector2(772.0, -440.0), "post"],
+		[Vector2(1030.0, -458.0), "post"], [Vector2(332.0, -250.0), "shrub"], [Vector2(548.0, -238.0), "post"],
+		[Vector2(762.0, -222.0), "shrub"],
+	],
 	"carmel": [
-		[Vector2(272.0, -452.0), "dig"], [Vector2(634.0, -428.0), "dig"], [Vector2(884.0, -222.0), "dig"],
-		[Vector2(378.0, -466.0), "planter"], [Vector2(1022.0, -242.0), "planter"],
-		[Vector2(258.0, -360.0), "post"], [Vector2(518.0, -446.0), "post"], [Vector2(754.0, -436.0), "post"],
-		[Vector2(1042.0, -468.0), "post"], [Vector2(306.0, -246.0), "shrub"], [Vector2(548.0, -236.0), "post"],
-		[Vector2(774.0, -216.0), "shrub"],
+		[Vector2(180.0, -450.0), "dig"], [Vector2(640.0, -340.0), "dig"], [Vector2(1095.0, -440.0), "dig"],
+		[Vector2(162.0, -340.0), "log"], [Vector2(905.0, -480.0), "log"],
+		[Vector2(345.0, -510.0), "rock"], [Vector2(640.0, -515.0), "rock"], [Vector2(845.0, -310.0), "rock"],
+		[Vector2(155.0, -240.0), "shrub"], [Vector2(1110.0, -265.0), "shrub"],
+		[Vector2(495.0, -475.0), "post"], [Vector2(925.0, -220.0), "post"],
 	],
 	"raval": [
 		[Vector2(288.0, -442.0), "dig"], [Vector2(642.0, -422.0), "dig"], [Vector2(876.0, -228.0), "dig"],
@@ -2903,7 +2936,7 @@ static func placa_clear(m: Node2D, at: Vector2) -> bool:
 # paving. Not a park's gravel path, a forest trail, the scrapyard's dirt or
 # El Mosaic's terraces, and on the seafront only the promenade, not the brick
 # bike path beside it.
-const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell", "station", "aigues", "horta"]
+const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell", "station", "aigues", "horta", "carmel"]
 const BEACH_PROM_X := 560.0
 
 # PASSEIG MARÍTIM's landmarks, on the walk itself so its stretches differ
@@ -3133,6 +3166,14 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_superilla: Array[Rect2] = Superilla.solids(m)
 			for i in range(ps_superilla.size()):
 				out.append(["superilla_solid_%d" % i, ps_superilla[i]])
+		"forum":
+			var ps_forum: Array[Rect2] = Forum.solids(m)
+			for i in range(ps_forum.size()):
+				out.append(["forum_solid_%d" % i, ps_forum[i]])
+		"espanya":
+			var ps_espanya: Array[Rect2] = Espanya.solids(m)
+			for i in range(ps_espanya.size()):
+				out.append(["espanya_solid_%d" % i, ps_espanya[i]])
 		"raval":
 			var ps_raval: Array[Rect2] = BossGat.solids(m)
 			for i in range(ps_raval.size()):
@@ -3468,7 +3509,7 @@ static func build_walls(m: Node2D) -> void:
 		# a hillside with no buildings, and its path winds right across where
 		# the straight building line would stand
 		"montjuic": wall_sides = []
-		"besos": wall_sides = [-1.0]   # the concrete flood wall; the river side stays open
+		"besos", "forum": wall_sides = [-1.0]   # concrete wall on west; coastal sea side stays open
 		_: wall_sides = [-1.0, 1.0]
 	# the straight wall runs the whole walk at sw_l/sw_r, START_Y + 200 to
 	# GATE_Y - 200. El Mercat's hall is far wider than its sw_l..sw_r, so
@@ -3576,6 +3617,12 @@ static func build_walls(m: Node2D) -> void:
 			add_circle_body(m, Vector2(c.x, c.y), c.z)
 	if m.lvl == "superilla":
 		for r: Rect2 in Superilla.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "forum":
+		for r: Rect2 in Forum.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "espanya":
+		for r: Rect2 in Espanya.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "raval":
 		for r: Rect2 in BossGat.solids(m):

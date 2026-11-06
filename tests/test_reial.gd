@@ -49,7 +49,7 @@ func _run() -> void:
 	# 1. Registration in campaign lists
 	_check(game.LEVELS.has("reial"), "reial is in LEVELS")
 	_check(game.CAROUSEL.has("reial"), "reial is in CAROUSEL")
-	_check(int(game.STAR_GATE["reial"]) == 31, "opens at 31 stars")
+	_check(int(game.STAR_GATE["reial"]) == 35, "opens at 35 stars")
 	_check(String(game.LEVEL_NAMES["reial"]) == "Plaça Reial", "named Plaça Reial")
 	_check(m.gate_text == "PLAÇA REIAL", "gate text is PLAÇA REIAL")
 	_check(m.freedom_kind == "placa", "ends in placa")
