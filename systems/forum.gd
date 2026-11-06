@@ -308,7 +308,7 @@ static func draw_live(m: Node2D, wc: Object, vt: float, vb: float) -> void:
 static func draw_overhead(m: Node2D, wc: Object) -> void:
 	# Massive Pèrgola Fotovoltaica steel superstructure & photovoltaic panels
 	var b := ShapeBatch.new()
-	var cam_y: float = m.camera.position.y if m.camera != null else -1600.0
+	var cam_y: float = m.cam.position.y if m.cam != null else -1600.0
 
 	# Only draw when camera is near the pergola (-2300 to -900)
 	if cam_y < -850.0 and cam_y > -2350.0:
