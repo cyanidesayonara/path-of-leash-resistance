@@ -94,10 +94,11 @@ class FakeHuman:
 		pass
 
 
+# the fields the walk reads off the real leash (entities/leash.gd)
 class FakeLeash:
-	var contacts: Array[Vector2] = []
-	func has_contact_with(p: Vector2) -> bool:
-		return contacts.has(p)
+	var contact_pole := Vector2(INF, INF)
+	var static_contacts := 0
+	var contact_static := false
 
 
 func _init() -> void:
@@ -113,8 +114,8 @@ func _run() -> void:
 	_check(game.CAROUSEL.has("espanya"), "espanya in CAROUSEL")
 	_check(game.LEVEL_NAMES.get("espanya") == "Plaça d'Espanya", "LEVEL_NAMES is Plaça d'Espanya")
 	_check(game.LEVEL_SUBTITLES.has("espanya"), "LEVEL_SUBTITLES has espanya")
-	_check(game.STAR_GATE.get("espanya") == 46, "STAR_GATE for espanya is 46")
-	_check(game.CHASE_GATE.get("espanya") == "gracia", "CHASE_GATE for espanya is gracia")
+	_check(game.STAR_GATE.get("espanya") == 45, "STAR_GATE for espanya is 45")
+	_check(game.CHASE_GATE.get("espanya") == "boars", "CHASE_GATE for espanya is boars")
 
 	# 2. Exact 15 goals roster
 	var goals_mod: GDScript = load("res://systems/goals.gd")
@@ -205,7 +206,9 @@ func _run() -> void:
 	_check(m.espanya_fountain_splashed == 1, "fountain_splashed marked 1")
 
 	# Test Columns wrap
-	m.leash.contacts.append(Espanya.COLUMN_POSTS[0])
+	m.leash.contact_pole = Espanya.COLUMN_POSTS[0]
+	m.leash.static_contacts = 1
+	m.leash.contact_static = true
 	Espanya.tick(m, 0.016)
 	_check(m.espanya_columns_wrapped == 1, "columns_wrapped marked 1")
 

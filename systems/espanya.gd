@@ -209,12 +209,13 @@ static func tick(m: Node2D, delta: float) -> void:
 			m.award_points(2, "magic fountain splash! +2")
 
 	# 3. Columns wrapping check
+	# the leash caught on a column, read the way every walk reads a wrapped
+	# pole (main._tick_vault)
 	if m.espanya_columns_wrapped == 0 and m.leash != null:
-		for col_p: Vector2 in COLUMN_POSTS:
-			if m.leash.has_contact_with(col_p):
-				m.espanya_columns_wrapped = 1
-				m.award_points(2, "columns wrap! +2")
-				break
+		var pole: Vector2 = m.leash.contact_pole
+		if pole.x < INF and m.leash.static_contacts > 0 and m.leash.contact_static and pole in COLUMN_POSTS:
+			m.espanya_columns_wrapped = 1
+			m.award_points(2, "columns wrap! +2")
 
 	# 4. Bubble performer live event tick
 	if m.espanya_bubble != null:
