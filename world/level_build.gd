@@ -2751,7 +2751,7 @@ const FREEDOM_PROPS := {
 		[Vector2(308.0, -444.0), "dig"], [Vector2(650.0, -418.0), "dig"], [Vector2(894.0, -232.0), "dig"],
 		[Vector2(386.0, -472.0), "planter"], [Vector2(1048.0, -242.0), "planter"],
 		[Vector2(282.0, -346.0), "post"], [Vector2(534.0, -454.0), "post"], [Vector2(772.0, -440.0), "post"],
-		[Vector2(1030.0, -458.0), "post"], [Vector2(332.0, -250.0), "shrub"], [Vector2(564.0, -226.0), "post"],
+		[Vector2(1030.0, -458.0), "post"], [Vector2(332.0, -250.0), "shrub"], [Vector2(548.0, -238.0), "post"],
 		[Vector2(762.0, -222.0), "shrub"],
 	],
 	"carmel": [
