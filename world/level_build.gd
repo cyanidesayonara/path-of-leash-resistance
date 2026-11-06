@@ -2706,6 +2706,13 @@ const FREEDOM_PROPS := {
 	],
 	# the wood behind the garden's back gate: pines and holm oaks, a fallen
 	# trunk, a stone bench someone carried up from the garden long ago
+	"carmel": [
+		[Vector2(272.0, -452.0), "dig"], [Vector2(634.0, -428.0), "dig"], [Vector2(884.0, -222.0), "dig"],
+		[Vector2(378.0, -466.0), "planter"], [Vector2(1022.0, -242.0), "planter"],
+		[Vector2(258.0, -360.0), "post"], [Vector2(518.0, -446.0), "post"], [Vector2(754.0, -436.0), "post"],
+		[Vector2(1042.0, -468.0), "post"], [Vector2(306.0, -246.0), "shrub"], [Vector2(548.0, -236.0), "post"],
+		[Vector2(774.0, -216.0), "shrub"],
+	],
 	"raval": [
 		[Vector2(288.0, -442.0), "dig"], [Vector2(642.0, -422.0), "dig"], [Vector2(876.0, -228.0), "dig"],
 		[Vector2(388.0, -460.0), "planter"], [Vector2(1028.0, -248.0), "planter"],
