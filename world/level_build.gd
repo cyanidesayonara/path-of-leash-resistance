@@ -22,6 +22,7 @@ const Detour := preload("res://systems/detour.gd")
 const Boars := preload("res://systems/boars.gd")
 const Gracia := preload("res://systems/gracia.gd")
 const BossGat := preload("res://systems/boss_gat.gd")
+const Carmel := preload("res://systems/carmel.gd")
 # the tutorial's pond for the brink lesson, beside the path at its station
 const TUT_POND_W := 150.0
 const ROPE_CLEAR := 4.0
@@ -1197,6 +1198,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"raval": half = BossGat.HALF     # wide pedestrian rambla (BossGat.edge_nodes)
 		"boars": half = Boars.HALF
 		"gracia": half = Gracia.HALF
+		"carmel": half = Carmel.HALF
 		"besos": half = BESOS_HALF
 	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
 	m.walk_half = half
@@ -1360,6 +1362,8 @@ static func apply_corridor(m: Node2D) -> void:
 		m.edge_nodes = Horta.edge_nodes(m)
 	elif m.lvl == "raval":
 		m.edge_nodes = BossGat.edge_nodes(m)
+	elif m.lvl == "carmel":
+		m.edge_nodes = Carmel.edge_nodes(m)
 	elif m.lvl == "trail":
 		# EL BOSC BENDS - the first walk in the game that is not a straight
 		# line. A woodland trail has no business being ruler-drawn: it wanders
@@ -1496,6 +1500,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_horta: Array = Horta.build(m)
 			hyd_list.assign(pl_horta[0])
 			keb_list.assign(pl_horta[1])
+		"carmel":
+			var pl_carmel: Array = Carmel.build(m)
+			hyd_list.assign(pl_carmel[0])
+			keb_list.assign(pl_carmel[1])
 		"raval":
 			var pl_raval: Array = BossGat.build(m)
 			hyd_list.assign(pl_raval[0])
@@ -2303,6 +2311,9 @@ static func build_level_data(m: Node2D) -> void:
 		"horta":
 			m.prize_pos = Horta.PRIZE
 			m.prize_text = Horta.PRIZE_TEXT
+		"carmel":
+			m.prize_pos = Carmel.PRIZE
+			m.prize_text = Carmel.PRIZE_TEXT
 		"raval":
 			m.prize_pos = BossGat.PRIZE
 			m.prize_text = BossGat.PRIZE_TEXT
@@ -2695,6 +2706,13 @@ const FREEDOM_PROPS := {
 	],
 	# the wood behind the garden's back gate: pines and holm oaks, a fallen
 	# trunk, a stone bench someone carried up from the garden long ago
+	"carmel": [
+		[Vector2(272.0, -452.0), "dig"], [Vector2(634.0, -428.0), "dig"], [Vector2(884.0, -222.0), "dig"],
+		[Vector2(378.0, -466.0), "planter"], [Vector2(1022.0, -242.0), "planter"],
+		[Vector2(258.0, -360.0), "post"], [Vector2(518.0, -446.0), "post"], [Vector2(754.0, -436.0), "post"],
+		[Vector2(1042.0, -468.0), "post"], [Vector2(306.0, -246.0), "shrub"], [Vector2(548.0, -236.0), "post"],
+		[Vector2(774.0, -216.0), "shrub"],
+	],
 	"raval": [
 		[Vector2(288.0, -442.0), "dig"], [Vector2(642.0, -422.0), "dig"], [Vector2(876.0, -228.0), "dig"],
 		[Vector2(388.0, -460.0), "planter"], [Vector2(1028.0, -248.0), "planter"],
@@ -3091,6 +3109,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_horta: Array[Rect2] = Horta.solids(m)
 			for i in range(ps_horta.size()):
 				out.append(["horta_%d" % i, ps_horta[i]])
+		"carmel":
+			var ps_carmel: Array[Rect2] = Carmel.solids(m)
+			for i in range(ps_carmel.size()):
+				out.append(["carmel_bunker_%d" % i, ps_carmel[i]])
 		"raval":
 			var ps_raval: Array[Rect2] = BossGat.solids(m)
 			for i in range(ps_raval.size()):
@@ -3422,7 +3444,7 @@ static func build_walls(m: Node2D) -> void:
 	match m.lvl:
 		"street": wall_sides = [-1.0]
 		"rain": wall_sides = []      # its frontage walls are the building line
-		"park", "trail", "beach", "llevant", "barri": wall_sides = []
+		"park", "trail", "beach", "llevant", "barri", "carmel": wall_sides = []
 		# a hillside with no buildings, and its path winds right across where
 		# the straight building line would stand
 		"montjuic": wall_sides = []
@@ -3527,6 +3549,11 @@ static func build_walls(m: Node2D) -> void:
 		for r: Rect2 in Horta.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
 		add_circle_body(m, Horta.EROS, Horta.EROS_R)
+	if m.lvl == "carmel":
+		for r: Rect2 in Carmel.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+		for c: Vector3 in Carmel.cannons():
+			add_circle_body(m, Vector2(c.x, c.y), c.z)
 	if m.lvl == "raval":
 		for r: Rect2 in BossGat.solids(m):
 			add_rect_body(m, r.get_center(), r.size)

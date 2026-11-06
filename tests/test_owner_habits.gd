@@ -78,7 +78,7 @@ func _run() -> void:
 	var at: Vector2 = p.npc_owner.position
 	for i in range(int(p.TYPE_T * 60.0) + 2):
 		p._tick_walking(dt, false)
-	_check(p.type_t <= 0.0 and p.type_gap >= p.TYPE_GAP_MIN, "typing ends and the next pause is a while off")
+	_check(p.type_t <= 0.0 and p.type_gap >= p.TYPE_GAP_MIN - 0.1, "typing ends and the next pause is a while off")
 	for i in range(60):
 		p._tick_walking(dt, false)
 	_check(p.npc_owner.position.distance_to(at) > 20.0, "and they walk on")

@@ -34,7 +34,7 @@ const MATERIALS := {
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
 	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
 	"montjuic": "cactus", "port": "rope", "reial": "fronds", "vet": "biscuits",
-	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "boars": "pipes", "gracia": "tickets", "raval": "pegs", "tutorial": "balls",
+	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "raval": "pegs", "tutorial": "balls",
 }
 # No glow or bed under the pieces: a name reads on its ground by each piece's
 # own dark edge and contact shadow, the way a real thing lying there would.
@@ -75,6 +75,7 @@ const FEEL := {
 	"biscuits": {"spacing": 0.15, "r": 0.075, "drag": 4.0, "take": 1.1, "spin": 4.0, "align": true},
 	"pinecones": {"spacing": 0.15, "r": 0.08, "drag": 2.2, "take": 1.0, "roll": true, "align": true},
 	"shells": {"spacing": 0.14, "r": 0.075, "drag": 3.5, "take": 1.0, "spin": 3.0},
+	"rubble": {"spacing": 0.16, "r": 0.08, "drag": 3.0, "take": 1.0, "spin": 3.0},
 	"balls": {"spacing": 0.15, "r": 0.075, "drag": 0.9, "take": 1.2, "roll": true},
 	"bulbs": {"fixed": true},
 	"setts": {"fixed": true},
@@ -525,6 +526,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_pinecones(c, sign, h, light)
 		"shells":
 			_shells(c, sign, h, light)
+		"rubble":
+			_rubble(c, sign, h, light)
 		"balls":
 			_balls(c, sign, h, light)
 		"bulbs":
@@ -1150,3 +1153,28 @@ static func _shells(c: Object, sign: Dictionary, h: float, light: Vector2) -> vo
 			var tip := p + ax * r * 0.75 + ay * float(k) * r * 0.28
 			c.draw_line(hinge, tip, col.darkened(0.18), 1.1)
 		c.draw_circle(p - light * r * 0.28, r * 0.24, col.lightened(0.22))
+
+static func _chunk(p: Vector2, rot: float, r: float) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	var angles := [0.0, 1.25, 2.5, 3.8, 5.1]
+	var radii := [1.15, 0.85, 1.1, 0.9, 1.05]
+	for i in range(5):
+		var a: float = rot + angles[i]
+		pts.append(p + Vector2(cos(a), sin(a)) * (r * radii[i]))
+	return pts
+
+
+static func _rubble(c: Object, sign: Dictionary, h: float, light: Vector2) -> void:
+	# concrete chunks from the bunker battery: fractured angular grey stone with warm sunset highlights
+	var cols := [Color(0.66, 0.64, 0.60), Color(0.74, 0.70, 0.64), Color(0.58, 0.56, 0.54), Color(0.70, 0.66, 0.58)]
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		c.draw_colored_polygon(_chunk((pc.p as Vector2) + light * r * 0.5, float(pc.rot), r), Color(0, 0, 0, 0.28))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var col: Color = _pick(cols, float(pc["var"]))
+		c.draw_colored_polygon(_chunk(p, float(pc.rot), r), col.darkened(0.35))
+		c.draw_colored_polygon(_chunk(p - light * r * 0.15, float(pc.rot), r * 0.88), col)
+		c.draw_circle(p - light * r * 0.35, r * 0.25, Color(0.92, 0.84, 0.74, 0.4))
+

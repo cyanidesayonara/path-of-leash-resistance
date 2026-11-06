@@ -13,6 +13,8 @@ const EventFeed := preload("res://hud/event_feed.gd")
 const UiIcons := preload("res://hud/ui_icons.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
 const TonyHawk := preload("res://systems/tony_hawk.gd")
+const Aigues := preload("res://systems/aigues.gd")
+const Carmel := preload("res://systems/carmel.gd")
 const LEVEL_GOAL_IDS := {
 	# El Barri, the everyday walk: the staples and nothing exotic
 	"barri": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "snack", "combo", "prize", "spell", "jamon", "clock"],
@@ -63,6 +65,8 @@ const LEVEL_GOAL_IDS := {
 	"boars": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "boar", "mud", "oaks", "combo", "prize", "spell", "jamon", "clock"],
 	# Festa de Gràcia: decorated festival street run
 	"gracia": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "correfoc", "churros", "decor", "combo", "prize", "spell", "jamon", "clock"],
+	# Els Búnquers del Carmel: the summit battery, escalators, and sunset overlook
+	"carmel": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "escalator", "view", "bunker", "prize", "spell", "jamon", "clock"],
 	# Rambla del Raval: the finale, El Gat de Botero. Tying him up is how the
 	# walk ends, so it is not a goal; the ways of wearing him down are.
 	"raval": ["mark", "sniff", "phone", "paws", "bag", "clothesline", "pigeons", "swat", "smash", "pummel", "combo", "prize", "spell", "jamon", "clock"],
@@ -99,6 +103,8 @@ static func defs(m: Node2D) -> Dictionary:
 		"floodgap": {"text": "Keep the deep flood front a leash length away", "target": 1, "fn": func() -> int: return 1 if m.chase_min_gap >= HomeChase.OUTRUN_GAP else 0},
 		"unseen": {"text": "Never get spotted", "target": 1, "fn": func() -> int: return 1 if m.times_spotted == 0 else 0},
 		"walkway": {"text": "Ride the moving walkway end to end", "target": 1, "fn": func() -> int: return m.walkway_rides},
+		"escalator": {"text": "Ride the outdoor escalators up the hill", "target": 1, "fn": func() -> int: return m.walkway_rides},
+		"bunker": {"text": "Wrap the leash around an anti-aircraft cannon battery", "target": 1, "fn": func() -> int: return 1 if bool(m.get("carmel_cannon_wrapped")) else 0},
 		"dry": {"text": "Get your human home less than half soaked", "target": 1, "fn": func() -> int: return 1 if m.human_soak < 0.5 else 0,
 			"readout": func() -> Dictionary: return {"text": "%d%% wet" % int(round(m.human_soak * 100.0)), "bad": m.human_soak >= 0.5}},
 		"splash": {"text": "Splash through %d puddles at speed", "target": 4, "fn": func() -> int: return m.splashes},
@@ -118,7 +124,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"cone": {"text": "Escape the vet without getting bumped", "target": 1, "fn": func() -> int: return 1 if bool(m.dog_hits == 0 and m.finished) else 0},
 		"funicular": {"text": "Watch the vintage funicular climb the mountain", "target": 1, "fn": func() -> int: return 1 if m.tibidabo_funicular_seen else 0},
 		"bikes": {"text": "Let %d mountain bikes squeak past your human", "target": 3, "fn": func() -> int: return m.close_calls},
-		"view": {"text": "Get your human to look up at the view", "target": 1, "fn": func() -> int: return 1 if Aigues.view_taken(m) else 0},
+		"view": {"text": "Get your human to look up at the view", "target": 1, "fn": func() -> int: return 1 if (Carmel.view_taken(m) if m.lvl == "carmel" else Aigues.view_taken(m)) else 0},
 		"eros": {"text": "Lead your human round Eros in the middle of the maze", "target": 1, "fn": func() -> int: return 1 if Horta.eros_lapped(m) else 0},
 		"viewfinder": {"text": "Gaze through the panoramic cliffside viewfinder", "target": 1, "fn": func() -> int: return 1 if m.tibidabo_viewfinder_gazed else 0},
 		"boar": {"text": "Keep the wild boars a leash length away", "target": 1, "fn": func() -> int: return 1 if m.chase_min_gap >= HomeChase.OUTRUN_GAP else 0},
