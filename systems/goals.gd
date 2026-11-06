@@ -51,7 +51,7 @@ const LEVEL_GOAL_IDS := {
 	# El Port: harbor wharf, seagulls, fish scraps, iron bollards
 	"port": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "gulls", "bollard", "combo", "prize", "spell", "jamon", "clock"],
 	# Plaça Reial: palm trees, Gaudi lampposts, Three Graces fountain, guitar busker
-	"reial": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "gaudi", "fountain", "combo", "prize", "spell", "jamon", "clock"],
+	"reial": ["mark", "sniff", "phone", "colom", "bag", "fetch", "tofu", "snack", "gaudi", "fountain", "combo", "prize", "spell", "jamon", "clock"],
 	# El Veterinari: clinic escape chase. No Tofu.
 	"vet": ["mark", "sniff", "phone", "paws", "bag", "fetch", "hi", "snack", "scale", "cone", "combo", "prize", "spell", "jamon", "clock"],
 	# El Tibidabo: the mountain funicular & panoramic overlook
@@ -96,6 +96,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"cats": {"text": "Chase off %d cats on the walls", "target": 3, "fn": func() -> int: return m.wall_cats_spooked},
 		"somni": {"text": "Visit El Somni gallery and claim the dream bone", "target": 1, "fn": func() -> int: return 1 if m.somni_bone_taken else 0},
 		"estel": {"text": "Visit L'Estel gallery and claim the star bone", "target": 1, "fn": func() -> int: return 1 if m.estel_bone_taken else 0},
+		"colom": {"text": "Visit El Colom gallery and claim the cubist bone", "target": 1, "fn": func() -> int: return 1 if m.colom_bone_taken else 0},
 		"carry": {"text": m.carry_text, "target": 1, "fn": func() -> int: return 1 if m.carry_state >= 2 else 0},
 		"combo": {"text": "Land an x%d trick combo", "target": 3, "fn": func() -> int: return int(m.combo.best_mult) if m.combo != null else 0},
 		"tummy": {"text": "Walk past every chocolate", "target": 1, "fn": func() -> int: return 1 if m.candy_eaten == 0 else 0},

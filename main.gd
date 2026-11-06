@@ -53,6 +53,8 @@ var detour_entered := false
 var somni_bone_taken := false
 var estel_bone_taken := false
 var estel_ladders_climbed := 0
+var colom_bone_taken := false
+var colom_doves_greeted := 0
 var detour_layer: Node2D = null
 # where --shot-cam points the camera (INF: follow the pair as usual)
 var shot_cam := Vector2(INF, INF)
@@ -9317,7 +9319,7 @@ func walk_edges(y: float) -> Vector2:
 
 func surface_at(p: Vector2) -> int:
 	if detour_active:
-		return Surfaces.S.TILE if detour_kind == "estel" else Surfaces.S.SAND
+		return Surfaces.S.TILE if (detour_kind == "estel" or detour_kind == "colom") else Surfaces.S.SAND
 	# The one place that decides what the ground is. Everything that cares -
 	# how fast she goes, how well she can turn, how far she can smell - asks
 	# this and then asks surfaces.gd, rather than each re-deriving it from a

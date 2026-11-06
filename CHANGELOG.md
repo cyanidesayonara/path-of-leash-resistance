@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-11-06 - Artsy detour «El Colom» (Pablo Picasso homage) off Plaça Reial
+
+- The third Artsy Detour: «El Colom» (`systems/detour.gd`, `world/detour_layer.gd`, `world/level_build.gd`, `main.gd`):
+  a vaulted stone gallery off the western arcade of Plaça Reial (gateway at y = -2050.0 recessed into the vaulted portico with terracotta & charcoal stone archways, Mediterranean wrought iron lantern, easel with dove study, and gallery host in striped marinière sailor shirt and charcoal beret).
+- Gallery space at isolated level coordinates (7200, -2000): polished terracotta floor with cubist ochre/cobalt insets, Picasso-inspired cubist and peace dove murals, 4 cubist geometric sculptures wrapped as rope poles by the verlet leash (Faceted Mandolin, Geometric Silhouette, Mediterranean Harlequin, Cubist Bull Totem), peace doves that coo when greeted, and the secret Golden Cubist Bone on a hexagonal pedestal.
+- Tony Hawk quest "colom": "Visit El Colom gallery and claim the cubist bone" on Plaça Reial, maintaining the exact 15-goal invariant per walk.
+- Exit portal arch ("SORTIDA - A PLAÇA REIAL") returning the pair smoothly back to the west arcade.
+- Autowalk safety: autowalk bot ignores detour doorways and completes the walk uninterrupted.
+- Tests: `tests/test_detour_colom.gd`.
+
 ## 2026-11-06 - Artsy detour «L'Estel» (Joan Miró homage) off Montjuïc
 
 - The second Artsy Detour: «L'Estel» (`systems/detour.gd`, `world/detour_layer.gd`, `systems/montjuic.gd`, `world/level_build.gd`, `main.gd`):

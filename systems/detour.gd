@@ -11,6 +11,8 @@ const LevelBuild := preload("res://world/level_build.gd")
 #    located off Carrer del Gòtic (Walk 7: El Gòtic / "oldtown").
 # 2. "L'ESTEL" (Homage to Joan Miró's primary shapes, constellations and starry ladders)
 #    located off Montjuïc (Walk 16: Montjuïc / "montjuic").
+# 3. "EL COLOM" (Homage to Pablo Picasso's analytical cubism, guitars, and peace doves)
+#    located off Plaça Reial (Walk 19: Plaça Reial / "reial").
 #
 # Features:
 # - Inviting street doorway on the walk's wall:
@@ -30,14 +32,17 @@ const LevelBuild := preload("res://world/level_build.gd")
 
 const DETOUR_ORIGIN := Vector2(3600.0, -2200.0)
 const ESTEL_ORIGIN := Vector2(5400.0, -3400.0)
+const COLOM_ORIGIN := Vector2(7200.0, -2000.0)
 const ROOM_W := 760.0
 const ROOM_H := 660.0
 const ROOM_RECT := Rect2(DETOUR_ORIGIN, Vector2(ROOM_W, ROOM_H))
 const ESTEL_RECT := Rect2(ESTEL_ORIGIN, Vector2(ROOM_W, ROOM_H))
+const COLOM_RECT := Rect2(COLOM_ORIGIN, Vector2(ROOM_W, ROOM_H))
 
 # Street entrances
 const STREET_DOOR_Y := -2150.0
 const ESTEL_DOOR_Y := -3350.0
+const COLOM_DOOR_Y := -2050.0
 const DOOR_TRIGGER_R := 46.0
 const EXIT_TRIGGER_R := 44.0
 
@@ -69,8 +74,24 @@ const LADDER_OFFSETS: Array[Vector2] = [
 	Vector2(380.0, 180.0),
 ]
 
+# 4 Cubist Sculpture offsets inside El Colom gallery (rope poles)
+const COLOM_SCULPTURE_OFFSETS: Array[Vector2] = [
+	Vector2(240.0, 420.0), # Cubist Guitar & Mandolin
+	Vector2(520.0, 410.0), # Harlequin
+	Vector2(260.0, 240.0), # Minotaur Totem
+	Vector2(500.0, 220.0), # Pitcher & Palette
+]
+
+# 3 Peace Doves ("Els Coloms") inside El Colom gallery
+const COLOM_DOVE_OFFSETS: Array[Vector2] = [
+	Vector2(180.0, 320.0),
+	Vector2(580.0, 320.0),
+	Vector2(380.0, 180.0),
+]
+
 static var droop_t: Array[float] = [0.0, 0.0, 0.0, 0.0]
 static var ladder_cooldown: Array[float] = [0.0, 0.0, 0.0]
+static var dove_cooldown: Array[float] = [0.0, 0.0, 0.0]
 
 
 static func _play_sfx(m: Node2D, sound: String, pitch := 1.0) -> void:
@@ -79,8 +100,11 @@ static func _play_sfx(m: Node2D, sound: String, pitch := 1.0) -> void:
 
 
 static func origin_for(m: Node2D) -> Vector2:
-	if m != null and (m.detour_kind == "estel" or m.lvl == "montjuic"):
-		return ESTEL_ORIGIN
+	if m != null:
+		if m.detour_kind == "colom" or m.lvl == "reial":
+			return COLOM_ORIGIN
+		if m.detour_kind == "estel" or m.lvl == "montjuic":
+			return ESTEL_ORIGIN
 	return DETOUR_ORIGIN
 
 
@@ -92,33 +116,43 @@ static func room_rect_for(m: Node2D) -> Rect2:
 # as rope poles with bodies, with the rest of the level's round posts
 static func lamp_points(m: Node2D = null) -> Array[Vector2]:
 	var out: Array[Vector2] = []
-	if m != null and m.lvl == "montjuic":
-		for off: Vector2 in SCULPTURE_OFFSETS:
-			out.append(ESTEL_ORIGIN + off)
-		return out
+	if m != null:
+		if m.lvl == "reial":
+			for off: Vector2 in COLOM_SCULPTURE_OFFSETS:
+				out.append(COLOM_ORIGIN + off)
+			return out
+		if m.lvl == "montjuic":
+			for off: Vector2 in SCULPTURE_OFFSETS:
+				out.append(ESTEL_ORIGIN + off)
+			return out
 	for off: Vector2 in LAMP_OFFSETS:
 		out.append(DETOUR_ORIGIN + off)
 	return out
 
 
 static func is_on(m: Node2D) -> bool:
-	return m.lvl == "oldtown" or m.lvl == "montjuic"
+	return m.lvl == "oldtown" or m.lvl == "montjuic" or m.lvl == "reial"
 
 
 static func build_layer(m: Node2D) -> void:
 	if not is_on(m):
 		return
+	var is_colom: bool = m.lvl == "reial"
 	var is_estel: bool = m.lvl == "montjuic"
-	var door_y: float = ESTEL_DOOR_Y if is_estel else STREET_DOOR_Y
-	var o: Vector2 = ESTEL_ORIGIN if is_estel else DETOUR_ORIGIN
+	var door_y: float = COLOM_DOOR_Y if is_colom else (ESTEL_DOOR_Y if is_estel else STREET_DOOR_Y)
+	var o: Vector2 = COLOM_ORIGIN if is_colom else (ESTEL_ORIGIN if is_estel else DETOUR_ORIGIN)
 	var e: Vector2 = m.walk_edges(door_y)
 
 	m.detour_door_pos = Vector2(e.x - 14.0, door_y)
 	m.detour_return_pos = Vector2(e.x + 45.0, door_y - 70.0)
 	m.detour_active = false
-	m.detour_kind = "estel" if is_estel else "somni"
+	m.detour_kind = "colom" if is_colom else ("estel" if is_estel else "somni")
 	m.detour_entered = false
-	if is_estel:
+	if is_colom:
+		m.colom_bone_taken = false
+		m.colom_doves_greeted = 0
+		dove_cooldown = [0.0, 0.0, 0.0]
+	elif is_estel:
 		m.estel_bone_taken = false
 		m.estel_ladders_climbed = 0
 		ladder_cooldown = [0.0, 0.0, 0.0]
@@ -165,6 +199,7 @@ static func tick(m: Node2D, delta: float) -> void:
 	if not is_on(m) or m.frozen or m.auto_walk:
 		return
 	var dp: Vector2 = m.dog.global_position
+	var is_colom: bool = m.detour_kind == "colom" or (not m.detour_active and m.lvl == "reial")
 	var is_estel: bool = m.detour_kind == "estel" or (not m.detour_active and m.lvl == "montjuic")
 
 	# Check doorway on street
@@ -175,7 +210,32 @@ static func tick(m: Node2D, delta: float) -> void:
 
 	var o: Vector2 = origin_for(m)
 
-	if is_estel:
+	if is_colom:
+		# El Colom gallery tick
+		# 1. Update Peace Doves ("Els Coloms")
+		for i in range(COLOM_DOVE_OFFSETS.size()):
+			if dove_cooldown[i] > 0.0:
+				dove_cooldown[i] = maxf(0.0, dove_cooldown[i] - delta)
+			var dove_p: Vector2 = o + COLOM_DOVE_OFFSETS[i]
+			if dp.distance_to(dove_p) < 36.0 and dove_cooldown[i] <= 0.0:
+				dove_cooldown[i] = 1.0
+				m.colom_doves_greeted += 1
+				_play_sfx(m, "hi", 1.20 + i * 0.1)
+				m.float_text(dp + Vector2(0.0, -22.0), "coo! peace dove!", Color(0.9, 0.95, 1.0))
+
+		# 2. Check secret Golden Cubist Bone collection
+		var bp: Vector2 = o + BONE_POS
+		if not m.colom_bone_taken and dp.distance_to(bp) < 34.0:
+			m.colom_bone_taken = true
+			_play_sfx(m, "pickup", 1.25)
+			m.float_text(bp + Vector2(0.0, -32.0), "cubist bone!", Color(1.0, 0.88, 0.2))
+			m.feed.say("EL COLOM: THE CUBIST BONE! MASTERPIECE CLAIMED", EventFeed.Tone.GOOD)
+
+		# 3. Check exit portal
+		var ep: Vector2 = o + ROOM_EXIT
+		if dp.distance_to(ep) < EXIT_TRIGGER_R:
+			exit(m)
+	elif is_estel:
 		# L'Estel gallery tick
 		# 1. Update Starry Ladders ("L'Escala de l'Evasió")
 		for i in range(LADDER_OFFSETS.size()):
@@ -255,7 +315,10 @@ static func enter(m: Node2D) -> void:
 	m.cam.reset_smoothing()
 
 	_play_sfx(m, "ui", 0.95)
-	if is_estel:
+	if m.detour_kind == "colom":
+		m.feed.say("EL COLOM: THE CUBIST GALLERY", EventFeed.Tone.LOUD)
+		m.float_text(m.dog.global_position + Vector2(0.0, -36.0), "Welcome to El Colom!", Color(1.0, 0.92, 0.7), m.POP_SAY)
+	elif is_estel:
 		m.feed.say("L'ESTEL: THE STAR GALLERY", EventFeed.Tone.LOUD)
 		m.float_text(m.dog.global_position + Vector2(0.0, -36.0), "Welcome to L'Estel!", Color(1.0, 0.92, 0.7), m.POP_SAY)
 	else:
@@ -279,7 +342,9 @@ static func exit(m: Node2D) -> void:
 	m.cam.reset_smoothing()
 
 	_play_sfx(m, "ui", 1.05)
-	if m.detour_kind == "estel":
+	if m.detour_kind == "colom":
+		m.feed.say("BACK OUT ON PLAÇA REIAL", EventFeed.Tone.PLAIN)
+	elif m.detour_kind == "estel":
 		m.feed.say("BACK OUT ON MONTJUÏC", EventFeed.Tone.PLAIN)
 	else:
 		m.feed.say("BACK OUT ON EL GÒTIC", EventFeed.Tone.PLAIN)

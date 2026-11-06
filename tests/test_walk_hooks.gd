@@ -23,7 +23,7 @@ const HOOKS := {
 	"oldtown": ["build_layer", "draw_column", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "tick"],
 	"partit": ["draw_bollard", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_van"],
 	"port": ["draw_bollard", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "on_bark", "surface", "tick"],
-	"reial": ["draw_edge_layer", "draw_live", "draw_overhead", "surface", "tick"],
+	"reial": ["build_layer", "draw_edge_layer", "draw_live", "draw_overhead", "surface", "tick"],
 	"vet": ["draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick"],
 	"tibidabo": ["build_layer", "draw_edge_layer", "draw_live", "draw_overhead", "surface", "tick"],
 	"beach": ["draw_bin", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_overhead", "surface", "takes_prints"],
