@@ -2716,11 +2716,11 @@ const FREEDOM_PROPS := {
 	# the wood behind the garden's back gate: pines and holm oaks, a fallen
 	# trunk, a stone bench someone carried up from the garden long ago
 	"superilla": [
-		[Vector2(288.0, -442.0), "dig"], [Vector2(642.0, -422.0), "dig"], [Vector2(876.0, -228.0), "dig"],
-		[Vector2(388.0, -460.0), "planter"], [Vector2(1028.0, -248.0), "planter"],
-		[Vector2(262.0, -350.0), "post"], [Vector2(528.0, -440.0), "post"], [Vector2(762.0, -430.0), "post"],
-		[Vector2(1048.0, -462.0), "post"], [Vector2(312.0, -240.0), "shrub"], [Vector2(558.0, -242.0), "post"],
-		[Vector2(780.0, -210.0), "shrub"],
+		[Vector2(296.0, -446.0), "dig"], [Vector2(638.0, -416.0), "dig"], [Vector2(882.0, -236.0), "dig"],
+		[Vector2(382.0, -464.0), "planter"], [Vector2(1036.0, -244.0), "planter"],
+		[Vector2(268.0, -356.0), "post"], [Vector2(522.0, -444.0), "post"], [Vector2(758.0, -434.0), "post"],
+		[Vector2(1044.0, -454.0), "post"], [Vector2(318.0, -244.0), "shrub"], [Vector2(552.0, -238.0), "post"],
+		[Vector2(776.0, -214.0), "shrub"],
 	],
 	"carmel": [
 		[Vector2(272.0, -452.0), "dig"], [Vector2(634.0, -428.0), "dig"], [Vector2(884.0, -222.0), "dig"],
