@@ -2,6 +2,30 @@
 
 Append-only session history, newest first.
 
+## 2026-11-06 - Walk 30: «El Fòrum» (Parc del Fòrum / Esplanada del Fòrum)
+
+- Walk 30 added to the campaign (`systems/forum.gd`, `systems/forum_skater.gd`, `autoload/game.gd`, `world/level_build.gd`, `main.gd`):
+  Barcelona's monumental coastal esplanade at Parc del Fòrum where modern architecture, Mediterranean sea winds, and urban skate culture meet.
+- The Pèrgola Fotovoltaica: the monumental inclined solar pergola spanning high overhead, supported by 4 massive steel pylon bases serving as solid leash wrap points and casting diagonal louver shadows. Fast sprinting under the pergola canopy awards "solar sprint! +2".
+- Concrete skate banks and grindable coping rails: low angled banks with polished steel rails where dogs can kerb-grind at speed for "skate rail grind! +2".
+- Mediterranean bathing zone: the eastern margin opens directly onto stepped concrete sea walls and deep blue sea water with salty wave crests.
+- Windsock masts: tall slender poles with red-and-white striped cones fluttering in the coastal breeze.
+- Signature live event: El Skater de l'Esplanada (`systems/forum_skater.gd`):
+  - 0.8 s warning telegraph: loud wheel clatter and shout ("Watch the board! / Compte amb el patí!").
+  - Distracted human bump hazard: -8 patience drop.
+  - Dropped energy bar snack trick: snack packet drops at center path for "energy bar snack! +2".
+  - Board boop trick: booping the rolling deck directly awards "board boop! +2".
+  - Skater cheer on bark: barking within 140 px prompts an enthusiastic kickflip and "Yeah! Kickflip! +2".
+  - Near-miss dodge save: `NearMiss.consider` awards "forum dodge! +2" and increments `saves_done`.
+  - Zero added draw calls: batched directly into Forum's live `ShapeBatch`.
+- Tony Hawk progression:
+  - 15 goals roster: mark, sniff, phone, paws, bag, fetch, snack, skater, pergola, rails, combo, prize, spell, jamon, clock.
+  - Secret Jamón tucked behind the northern solar pylon base.
+  - Beat the clock par time: 180 s.
+- Soundtrack: seaside electro-chill groove with acoustic guitar, whistle, slap bass, and rim drums (`audio/music.gd`).
+- Entrance sign: photovoltaic solar silicon wafers material (`world/world_sign.gd`).
+- Tests: `tests/test_forum.gd`.
+
 ## 2026-11-06 - Walk 29: «La Superilla» (The Poblenou Superblock)
 
 - Walk 29 added to the campaign (`systems/superilla.gd`, `systems/superilla_cargo.gd`, `autoload/game.gd`, `world/level_build.gd`, `main.gd`):
