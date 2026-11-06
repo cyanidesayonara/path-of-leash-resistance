@@ -11,14 +11,14 @@ extends RefCounted
 # Gameplay contract:
 # - 0.8 s warning telegraph: Trail runner steps onto the rock spur threshold at
 #   x = 810.0, y = -1700.0, trekking poles clicking sharply against the gravel
-#   ("tac, tac, tac") as they call out "Pista, pista!" with a telegraphed speech bubble.
+#   ("tac, tac, tac") as they call out "Runner coming through!" with a telegraphed speech bubble.
 # - Soft failure / hazard: distracted human wandering into the runner's path
-#   gets bumped by the runner's hydration pack/poles (-8 patience drop, "Whoa! Watch the trail runner!").
+#   gets bumped by the runner's hydration pack/poles (-8 patience drop, "Oof! Fast, aren't you?").
 # - Dog trick: as the runner sprints past the center track (x <= 600.0), a foil
 #   electrolyte energy gel pouch drops from their hydration pocket; pouncing or
 #   booping it awards "gel snatch! +2".
 # - Bark trick: barking near the passing runner startles them into an agile
-#   high-knee stride recovery, awarding "runner bark! +2" ("Epa!", "Més ràpid que jo!").
+#   high-knee stride recovery, awarding "runner bark! +2" ("Epa!", "Faster than me!").
 # - Boop trick: booping the trail runner directly awards "runner boop! +2".
 # - Dodge: steering your human safely clear past the crossing trajectory
 #   awards "trail dodge! +2" / "Whew, close one!".

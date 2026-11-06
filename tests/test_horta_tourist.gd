@@ -3,7 +3,7 @@ extends SceneTree
 const LostTourist := preload("res://systems/lost_tourist.gd")
 
 # Regression test for El Laberint d'Horta lost maze tourist live event (Walk 23).
-# Tests the 0.8s warning telegraph ("On és la sortida?!"), eastbound sprint across
+# Tests the 0.8s warning telegraph ("Lost tourist! Mind the map!"), eastbound sprint across
 # the maze aisle, dropped carquinyoli snatch trick, distracted human bump hazard,
 # dog boop trick, tourist bark trick, maze dodge save, autowalk safety, and
 # leak-free cleanup.

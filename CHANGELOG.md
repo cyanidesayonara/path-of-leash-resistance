@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-11-06 - Speak English in every live event
+
+- The live events added in PRs #417-#447 spoke mostly Catalan, so a player who cannot read it could not read the 0.8 s warning. Every player-facing string they show is now American English (`main.gd`, `systems/guitarrista.gd`, `systems/superilla_cargo.gd`). Strings only: no gameplay, timing, position or drawing change.
+  - Warnings name what is coming, plainly ("Forklift coming through!", "Mind the tray!").
+  - The identical "Whoa! Watch the X!" bump line is replaced by one line per character, all different.
+  - Workers answer boops, snatches and barks in English; one Catalan word is kept for flavor only where the English carries the meaning ("Giant coming through! Visca!", "Happy Castanyada, pup!").
+  - Score chips and combo names for the worker's trade are English ("birder boop! +2"); place names stay Catalan.
+  - Banderer is left to PR #456. Comments and test headers that quote the old lines now quote the new ones.
+
 ## 2026-11-06 - Walk 29: «La Superilla» (The Poblenou Superblock)
 
 - Walk 29 added to the campaign (`systems/superilla.gd`, `systems/superilla_cargo.gd`, `autoload/game.gd`, `world/level_build.gd`, `main.gd`):

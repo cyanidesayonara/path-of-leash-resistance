@@ -3,7 +3,7 @@ extends SceneTree
 const Forklift := preload("res://systems/forklift.gd")
 
 # Regression test for La Ferralla (scrap, Walk 13) Scrapyard Forklift live event.
-# Tests 0.8s warning telegraph ("Compte amb el torito!"), eastward crossing drive across
+# Tests 0.8s warning telegraph ("Forklift coming through!"), eastward crossing drive across
 # the open yard lane at y = -1150.0, chrome hubcap drop and dog snatch trick,
 # distracted human bump hazard, forklift boop trick, brake screech bark trick,
 # near-miss dodge save, autowalk safety, and clean reset.

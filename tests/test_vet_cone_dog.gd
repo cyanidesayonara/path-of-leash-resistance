@@ -3,7 +3,7 @@ extends SceneTree
 const ConeDog := preload("res://systems/cone_dog.gd")
 
 # Regression test for El Veterinari cone-of-shame dog live event (Walk 20).
-# Tests the 0.8s warning telegraph ("Atenció, s'escapa el con!"), eastward scramble
+# Tests the 0.8s warning telegraph ("Cone dog on the loose!"), eastward scramble
 # across slippery linoleum floor, dropped bacon pill pocket snatch trick, distracted
 # human bump hazard, dog boop trick, cone bark trick, clinic dodge save, autowalk
 # safety, and leak-free cleanup.

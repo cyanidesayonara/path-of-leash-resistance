@@ -3,7 +3,7 @@ extends SceneTree
 const Ornitoleg := preload("res://systems/ornitoleg.gd")
 
 # Regression test for El Besòs (besos, Walk 15) Birdwatcher ("L'Ornitòleg") live event.
-# Tests 0.8s warning telegraph ("Mireu, un bernat pescaire!"), westward crossing walk across
+# Tests 0.8s warning telegraph ("Birdwatcher crossing!"), westward crossing walk across
 # the riverside promenade at y = -2680.0, field binoculars drop and dog snatch trick,
 # distracted human bump hazard, ornitòleg boop trick, startle bark trick,
 # near-miss dodge save ("besòs dodge! +2"), autowalk safety clearance, and clean reset.

@@ -10,9 +10,9 @@ extends RefCounted
 #
 # Design contract:
 # - 0.8 s warning telegraph: approaches on outward walk (y < -1300.0), calls out
-#   "Aigua va, carrer net!" with a soapy splash and broom scuff sound.
-# - Distracted human bump hazard: -8 patience drop, "Whoa! Watch the broom!",
-#   escombriaire: "Al tanto amb l'escombra!".
+#   "Wet street, mind the broom!" with a soapy splash and broom scuff sound.
+# - Distracted human bump hazard: -8 patience drop, "Ugh, I'm all dusty!",
+#   escombriaire: "Watch the bristles!".
 # - Near-miss dodge save: NearMiss.consider awards "neteja dodge! +2" and increments
 #   saves_done only when entering threat radius and steering human safely clear.
 #   Walking past without near miss awards nothing.

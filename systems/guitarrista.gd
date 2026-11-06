@@ -15,13 +15,13 @@ const EventFeed := preload("res://hud/event_feed.gd")
 # - 0.8 s warning telegraph: approaches on outward walk (y < -3160.0), calls out
 #   "Una rumbeta pel capvespre!" with an acoustic chime.
 # - Distracted human bump hazard: -8 patience drop, "Whoa! Watch the guitar!",
-#   guitarist: "Al tanto amb la guitarra!".
+#   guitarist: "Watch those strings!".
 # - Near-miss dodge save: NearMiss.consider awards "carmel dodge! +2" and increments
 #   saves_done only when entering threat radius and steering human safely clear.
 #   Walking past without near miss awards nothing.
 # - Dropped olives snatch trick: a tin of stuffed olives ("olives farcides") slips from his
 #   picnic bag at center path (x <= 640.0). Dog can snatch it for "olives snatch! +2".
-# - Direct boop trick: booping the guitarist awards "guitarrista boop! +2".
+# - Direct boop trick: booping the guitarist awards "guitarist boop! +2".
 # - Bark trick: barking within 130 px prompts an energetic rumba flourish for "rumba bark! +2".
 # - Autowalk clearance: crosses well before autowalk pair arrives.
 # - Zero new draw calls: batched into Carmel's live ShapeBatch.
@@ -116,7 +116,7 @@ func tick(m: Node2D, delta: float) -> void:
 				triggered = true
 				state = State.TELEGRAPH
 				timer = WARN_DURATION
-				m.feed.say("El guitarrista: \"Una rumbeta pel capvespre!\"", EventFeed.Tone.LOUD)
+				m.feed.say("RUMBA TIME!", EventFeed.Tone.LOUD)
 				m.get_node("/root/Sfx").play("whoop", 1.15, -4.0)
 
 		State.TELEGRAPH:
@@ -140,7 +140,7 @@ func tick(m: Node2D, delta: float) -> void:
 					human_hit = true
 					m.human.bump(Vector2.DOWN, 8.0)
 					m.float_text(human_p + Vector2(0, -34), "Watch the guitar!", Color(1.0, 0.45, 0.4), m.POP_SAY)
-					m.float_text(pos + Vector2(0, -28), "Al tanto amb la guitarra!", Color(0.96, 0.88, 0.35))
+					m.float_text(pos + Vector2(0, -28), "Watch those strings!", Color(0.96, 0.88, 0.35))
 					m.get_node("/root/Sfx").play("grunt", 0.95, -2.0)
 
 			if pos.distance_to(END_POS) < 8.0:
@@ -178,8 +178,8 @@ func tick(m: Node2D, delta: float) -> void:
 		if dog_p.distance_to(pos) < BOOP_RADIUS:
 			booped = true
 			wobble_t = 0.5
-			m.combo.add("GUITARRISTA BOOP", 2)
-			m.float_text(pos + Vector2(0, -32), "guitarrista boop! +2", Color(1.0, 0.85, 0.3))
+			m.combo.add("GUITARIST BOOP", 2)
+			m.float_text(pos + Vector2(0, -32), "guitarist boop! +2", Color(1.0, 0.85, 0.3))
 			m.get_node("/root/Sfx").play("whoop", 1.25, -3.0)
 
 
@@ -191,7 +191,7 @@ func on_bark(m: Node2D) -> bool:
 		barked = true
 		wobble_t = 0.8
 		m.combo.add("RUMBA BARK", 2)
-		m.float_text(pos + Vector2(0, -36), "Olé! rumba bark! +2", Color(1.0, 0.75, 0.3))
+		m.float_text(pos + Vector2(0, -36), "rumba bark! +2", Color(1.0, 0.75, 0.3))
 		m.get_node("/root/Sfx").play("bell", 1.2, -3.0)
 		return true
 	return false

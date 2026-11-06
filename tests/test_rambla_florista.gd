@@ -3,7 +3,7 @@ extends SceneTree
 const Florista := preload("res://systems/florista.gd")
 
 # Regression test for La Rambla (street, Walk 2) Flower Seller ("La Florista") live event.
-# Tests 0.8s warning telegraph ("Flors fresques de la Rambla!"), eastward crossing walk across
+# Tests 0.8s warning telegraph ("Fresh flowers coming through!"), eastward crossing walk across
 # the central promenade at y = -2980.0, cut red rose drop and dog snatch trick,
 # distracted human bump hazard, florista boop trick, startle bark trick,
 # near-miss dodge save ("rambla dodge! +2"), autowalk safety clearance, and clean reset.

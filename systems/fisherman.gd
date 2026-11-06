@@ -8,10 +8,10 @@ extends RefCounted
 #
 # Gameplay contract:
 # - 0.8 s warning telegraph: fisherman feels a heavy bite, leans back with a
-#   straining bent rod, and calls out "Pica el peix!" with a speech bubble.
+#   straining bent rod, and calls out "Mind the fishing line!" with a speech bubble.
 # - Soft failure / hazard: distracted human wandering into the quayside edge
 #   zone gets snagged by the flying tackle or whipped by the swinging line
-#   (patience drop, "Whoa! Watch the hook!").
+#   (patience drop, "Yikes, that's a hook!").
 # - Dog trick: pouncing or dashing onto the flapping sea bass on the flagstones
 #   awards "fish snatch! +2". Barking near the reeling fisherman scares wheeling
 #   gulls and awards "gull bark! +2".

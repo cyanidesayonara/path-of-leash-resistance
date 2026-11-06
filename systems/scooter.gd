@@ -11,16 +11,16 @@ extends RefCounted
 # Gameplay contract:
 # - 0.8 s warning telegraph: When the pair reaches y = -1400.0, the courier sounds
 #   the two-tone scooter horn ("Bip-bip!") and calls out from the side archway:
-#   "Pas a la Vespa!" with a telegraphed speech bubble.
+#   "Scooter coming through!" with a telegraphed speech bubble.
 # - Soft failure / hazard: Distracted human wandering into the scooter's crossing path
-#   gets bumped (-8 patience drop, "Whoa! Watch the scooter!",
-#   rider: "Atenció, que el carreró és estret!").
+#   gets bumped (-8 patience drop, "Ow! My elbow!",
+#   rider: "Tight alley, watch it!").
 # - Dog trick (letter snatch): As the scooter crosses the center alley (x >= 660.0), a
 #   stamped airmail letter slips loose from the mail satchel onto the setts;
 #   pouncing or booping it awards "letter snatch! +2" and increments bones/combo
-#   (Rider: "Gràcies pel correu!").
+#   (Rider: "Thanks for the mail!").
 # - Boop trick: Booping the scooter directly awards "scooter boop! +2"
-#   ("Hola, gosset!").
+#   ("Hello, little guy!").
 # - Bark trick: Barking near the scooter (within 130 px) causes the rider to brake
 #   with a tyre screech, awarding "scooter bark! +2" ("Ui, quin fre!").
 # - Dodge save: Steering your human safely clear past the crossing trajectory after

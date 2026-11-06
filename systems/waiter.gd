@@ -10,9 +10,9 @@ extends RefCounted
 # Gameplay contract:
 # - 0.8 s warning telegraph: waiter steps out of the west arcade arch at
 #   x = 350.0, y = -1280.0, steadying the precariously balanced silver tray
-#   with an upraised palm and calling out "Compte amb la safata!" with a speech bubble.
+#   with an upraised palm and calling out "Mind the tray!" with a speech bubble.
 # - Soft failure / hazard: distracted human wandering into the waiter's crossing
-#   path gets bumped and splashed (patience drop, "Whoa! Watch the tray!").
+#   path gets bumped and splashed (patience drop, "Hey, my shirt!").
 # - Dog trick: as the waiter crosses, a crispy tapas croqueta bounces off the plate;
 #   pouncing onto or snatching it awards "croqueta snatch! +2". Barking near the
 #   balancing waiter startles them into a theatrical balance recovery ("waiter bark! +2").
