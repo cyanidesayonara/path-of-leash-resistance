@@ -7,7 +7,7 @@ extends RefCounted
 #
 # Gameplay contract:
 # - 0.8 s warning telegraph: as the pair approaches outward bound (y ≈ -2320.0),
-#   the worker revs the compressor, raises a hand and shouts "Atenció, el martell!".
+#   the worker revs the compressor, raises a hand and shouts "Jackhammer starting!".
 # - Hazard: walking into the noisy vibration rattle zone startles the human
 #   (covers ears, stumbles, patience loss, "Too loud!").
 # - Dog tricks: barking at the drill awards "jackhammer bark! +2".

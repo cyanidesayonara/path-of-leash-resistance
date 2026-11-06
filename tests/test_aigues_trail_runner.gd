@@ -3,7 +3,7 @@ extends SceneTree
 const TrailRunner := preload("res://systems/trail_runner.gd")
 
 # Regression test for La Carretera de les Aigües trail runner live event (Walk 22).
-# Tests the 0.8s warning telegraph ("Pista, pista!"), westbound run across the
+# Tests the 0.8s warning telegraph ("Runner coming through!"), westbound run across the
 # sauló track, dropped electrolyte gel snatch trick, distracted human bump hazard,
 # dog boop trick, runner bark trick, trail dodge save, autowalk safety, and
 # leak-free cleanup.

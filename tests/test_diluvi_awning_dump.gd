@@ -3,7 +3,7 @@ extends SceneTree
 const AwningDump := preload("res://systems/awning_dump.gd")
 
 # Regression test for El Diluvi awning rain dump live event (Walk 5).
-# Tests the 0.8s warning telegraph ("Aigua va!"), falling water cascade,
+# Tests the 0.8s warning telegraph ("Water coming down!"), falling water cascade,
 # human soaking hazard, dog splash trick, barking interaction, arcade dodge save,
 # and autowalk central clearance.
 

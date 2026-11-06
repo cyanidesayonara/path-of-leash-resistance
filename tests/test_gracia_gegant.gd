@@ -3,7 +3,7 @@ extends SceneTree
 const Gegant := preload("res://systems/gegant.gd")
 
 # Regression test for Festa de Gràcia Gegant rehearsal twirl live event (Walk 26).
-# Tests the 0.8s warning telegraph ("Visca la Festa!"), eastbound crossing twirl
+# Tests the 0.8s warning telegraph ("Giant coming through! Visca!"), eastbound crossing twirl
 # across the decorated narrow street, dropped festival ribbon rosette snatch trick,
 # distracted human bump hazard, dog boop trick, gegant bark dance trick, near-miss
 # dodge save, autowalk safety, and clean reset.

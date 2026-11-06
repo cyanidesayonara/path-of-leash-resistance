@@ -7,7 +7,7 @@ extends RefCounted
 # A telegraphed shout 0.8 s before the bowl ("Watch the boule!").
 # The boule rolls along the sauló court with a soft rumble, clinking against the
 # boules by the jack. If your dog intercepts or nudges the rolling boule, she
-# boops it ("boop! +2") and the old man scolds ("Ei, el gos!").
+# boops it ("boop! +2") and the old man scolds ("Ha, good dog!").
 
 const PITCH := Rect2(412.0, -1985.0, 130.0, 250.0)
 const THROWER := Vector2(464.0, -1765.0)

@@ -5,13 +5,13 @@ extends RefCounted
 # A market porter pushes a two-wheeled wooden fruit handcart across the aisle
 # between stall blocks at y = -2700.0, from the west wall to the east wall.
 #
-# A telegraphed shout 0.8 s before entering the walkway ("Passo! Coming through!").
+# A telegraphed shout 0.8 s before entering the walkway ("Produce cart coming through!").
 # As the cart rattles over the terrazzo floor tile seams, a ripe orange bounces
 # off the crates onto the floor. If Millie snatches it, she enjoys a snack
 # ("snack! +2", +2 bones, +2 combo, advances snack goal).
 # If the human walks into the cart, they bump it ("Watch out!", -8 patience),
 # but if the human or dog is directly in front, the polite porter pauses
-# ("Passeu!").
+# ("After you!").
 
 const START_POS := Vector2(270.0, -2700.0)
 const END_POS := Vector2(980.0, -2700.0)

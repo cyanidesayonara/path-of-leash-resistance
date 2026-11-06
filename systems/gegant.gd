@@ -9,15 +9,15 @@ extends RefCounted
 #
 # Gameplay contract:
 # - 0.8 s warning telegraph: Bearer hoists the giant and calls out from the western sidewalk
-#   at x = 445.0, y = -2080.0 ("Visca la Festa!" / "Compte amb el gegant!") with a celebratory
+#   at x = 445.0, y = -2080.0 ("Giant coming through! Visca!" / "Compte amb el gegant!") with a celebratory
 #   chime and rustling velvet folds as the towering figure prepares to twirl.
 # - Soft failure / hazard: distracted human wandering into the giant's spinning velvet skirt
-#   gets bumped (-8 patience drop, "Whoa! Watch the giant!").
+#   gets bumped (-8 patience drop, "Wow, that thing is huge!").
 # - Dog trick (rosette snatch): as the giant twirls across the center street (x >= 610.0),
 #   a decorative festival ribbon rosette slips loose and flutters onto the street pavement;
 #   pouncing or booping it awards "rosette snatch! +2" and increments snack/bone count.
 # - Bark trick: barking near the giant (within 150 px) prompts the giant to break into an
-#   enthusiastic celebratory pirouette spin; the bearer/spectator shouts "Visca!" or "Olé!",
+#   enthusiastic celebratory pirouette spin; the bearer/spectator shouts "Dance with us! Visca!" or "Olé!",
 #   awarding "giant dance! +2".
 # - Boop trick: booping the giant's hem directly awards "giant boop! +2".
 # - Dodge: steering your human safely clear past the crossing trajectory after entering

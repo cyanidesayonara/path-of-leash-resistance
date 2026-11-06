@@ -10,9 +10,9 @@ extends RefCounted
 #
 # Design contract:
 # - 0.8 s warning telegraph: approaches on outward walk (y < -2340.0), calls out
-#   "Mireu, un bernat pescaire!" with a bird chirp and field rustle sound.
-# - Distracted human bump hazard: -8 patience drop, "Whoa! Watch the binoculars!",
-#   ornitòleg: "Compte amb el telescopi!".
+#   "Birdwatcher crossing!" with a bird chirp and field rustle sound.
+# - Distracted human bump hazard: -8 patience drop, "Oops, didn't see you there!",
+#   ornitòleg: "Mind the scope!".
 # - Near-miss dodge save: NearMiss.consider awards "besòs dodge! +2" and increments
 #   saves_done only when entering threat radius and steering human safely clear.
 #   Walking past without near miss awards nothing.

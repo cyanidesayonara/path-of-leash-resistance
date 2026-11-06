@@ -10,18 +10,18 @@ extends RefCounted
 #
 # Gameplay contract:
 # - 0.8 s warning telegraph: The castanyera steps out at x = 405.0, y = -1780.0,
-#   waving her hand and calling out from the sidewalk threshold: "Castanyes calentes!"
+#   waving her hand and calling out from the sidewalk threshold: "Hot chestnuts coming through!"
 #   with a telegraphed speech bubble and festive chime.
 # - Soft failure / hazard: Distracted human wandering into the castanyera's path
-#   gets bumped by her steaming basket (-8 patience drop, "Whoa! Watch the chestnuts!").
+#   gets bumped by her steaming basket (-8 patience drop, "Hot! Hot! Hot!").
 # - Dog trick (paperina snatch): As she hurries across the center street (x >= 620.0),
 #   a paper cone of hot roasted chestnuts ("paperina de castanyes") slips from the basket
 #   onto the cobblestones; pouncing or booping it awards "chestnut snatch! +2" and
-#   increments bones/combo (Castanyera: "Vigila que crema!").
+#   increments bones/combo (Castanyera: "Careful, they're hot!").
 # - Boop trick: Booping the castanyera's apron directly awards "castanyera boop! +2"
-#   ("Bona castanyada!").
+#   ("Happy Castanyada, pup!").
 # - Bark trick: Barking near the castanyera (within 140 px) startles her into a surprised
-#   hop and apron ruffle, awarding "castanyera bark! +2" ("Ai, quin gosset!").
+#   hop and apron ruffle, awarding "castanyera bark! +2" ("Oh, what a cutie!").
 # - Dodge save: Steering your human safely clear past the crossing trajectory after
 #   entering threat radius (64 px) awards "chestnut dodge! +2" and increments saves_done
 #   via NearMiss.consider. Walking past outside threat radius awards nothing.

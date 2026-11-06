@@ -3,7 +3,7 @@ extends SceneTree
 const Jackhammer := preload("res://systems/jackhammer.gd")
 
 # Regression test for Les Obres pneumatic jackhammer live event (Walk 11).
-# Tests the 0.8s warning telegraph ("Atenció, el martell!"), drilling state,
+# Tests the 0.8s warning telegraph ("Jackhammer starting!"), drilling state,
 # human rattle hazard, dog detour and bark tricks, quiet passage dodge save,
 # autowalk clearance, and clean exit.
 
