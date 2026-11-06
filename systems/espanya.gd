@@ -229,11 +229,11 @@ static func tick(m: Node2D, delta: float) -> void:
 		if ev.get("bump_hazard", false):
 			m.human.patience = maxf(0.0, m.human.patience - 8.0)
 			m.float_text(m.human.global_position + Vector2(0.0, -32.0), "Ugh, the bucket!", Color(0.95, 0.40, 0.35), m.POP_SAY)
-			m.play_sfx("bump")
+			_play_sfx(m, "bump")
 		if ev.get("bubble_pop", false):
 			m.espanya_bubbles_popped += 1
 			m.award_points(2, "bubble pop! +2")
-			m.play_sfx("splash")
+			_play_sfx(m, "splash")
 		if ev.get("soapy_slide", false):
 			m.award_points(2, "soapy slide! +2")
 		if ev.get("dodge_save", false):
@@ -398,3 +398,10 @@ static func draw_overhead(m: Node2D, wc: Object) -> void:
 			b.rect(Rect2(flag_rect.position.x, flag_rect.position.y + 13.5, flag_rect.size.x, 2.5), FLAG_RED)
 
 	b.flush(wc)
+
+
+# the Sfx autoload looked up at run time, as systems/detour.gd does, so a test
+# that loads this script on its own still compiles it
+static func _play_sfx(m: Node2D, sound: String) -> void:
+	if m != null and m.has_node("/root/Sfx"):
+		m.get_node("/root/Sfx").play(sound)
