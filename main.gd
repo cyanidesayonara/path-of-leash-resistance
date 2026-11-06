@@ -2443,7 +2443,7 @@ const TREE_PIT := 5        # El Gotic's plaça tree in its stone pit
 
 func pole_tree(i: int) -> int:
 	var p := poles[i]
-	if tutorial_mode or lvl == "scrap" or lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "neteja":
+	if tutorial_mode or lvl == "scrap" or lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "neteja" or lvl == "carmel":
 		return TREE_NONE
 	if walk_mod != null and walk_mod.has_method("tree_kind"):
 		return walk_mod.tree_kind(self, p)
@@ -2673,7 +2673,7 @@ func is_lamppost(i: int) -> bool:
 		return false
 	if tutorial_mode or lvl == "scrap":
 		return true
-	if lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "oldtown":
+	if lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "oldtown" or lvl == "carmel":
 		return false
 	return not (lvl == "rain" and poles[i].x < walk_cx)
 
@@ -4342,6 +4342,8 @@ func draw_freedom_onto(c: Object) -> void:
 		surround = Montjuic.RAMPART.darkened(0.2)
 	elif lvl == "guell":
 		surround = Mosaic.HILL_SCRUB
+	elif lvl == "carmel":
+		surround = Carmel.SCRUB_DARK
 	# El Gòtic's roofscape runs on under the gate's last few feet, from the
 	# edge layer: stop short of it rather than paint a grey band over it
 	c.draw_rect(Rect2(-400.0, GATE_Y - 2400.0, 2100.0, 2370.0 if lvl == "oldtown" else 2400.0), surround)
@@ -4507,7 +4509,7 @@ func _draw_gate() -> void:
 	var style := "iron"
 	if lvl in ["trail", "guell", "park", "llevant"] and not tutorial_mode:
 		style = "timber"
-	elif freedom_kind == "placa" or lvl == "rain":
+	elif freedom_kind == "placa" or lvl == "rain" or lvl == "carmel":
 		style = "stone"
 	var gy := GATE_Y - 16.0
 	# the posts stand at the path's real edges here: gate_l and gate_r are the
