@@ -25,6 +25,8 @@ const EspanyaBubble := preload("res://systems/espanya_bubble.gd")
 const AnimClock := preload("res://systems/anim_clock.gd")
 
 const LIGHT := Vector2(0.5, 0.866)
+# the overhead layer redraws this walk at 30 fps: its overhead follows the camera
+const OVERHEAD_FOLLOWS_CAMERA := true
 const SHADOW := Color(0.04, 0.05, 0.07, 0.22)
 
 # --- colors ------------------------------------------------------------------

@@ -9,6 +9,7 @@ Append-only session history, newest first.
 - Fixed: "Wrap the leash around the Four Columns" could never be completed in play. The walk fits every pole's x to the corridor after build, so the exact match against the authored positions never held; a column is now any pole on the columns' row. `tests/test_espanya.gd` checks the fitted position and that a flag mast does not count.
 - Text: the goal is "Wrap the leash around the Four Columns" (it was cut off in the goal list), the prize "snatch the crystal finial off the cascade", and the bubble performer's warning "Bubbles coming!" (was Catalan).
 - Fixed: a walk module's `draw_overhead` was only ever drawn for a hard-coded list of walks (`LevelBuild`, the overhead layer), so Plaça d'Espanya's tower roofs and flags, and Els Búnquers' pine canopies and string lights, never showed. The layer is now made for any module that draws overhead. Plaça d'Espanya's overhead read `m.camera`, which main does not have (it is `m.cam`); it never ran, so it never failed.
+- The overhead layer drew once, when the walk started, and never again, so an overhead that culls to the camera showed only what was in view at the start. A module that culls, animates or fades its overhead now declares `OVERHEAD_FOLLOWS_CAMERA` and is redrawn at 30 fps (`world/overheadlayer.gd`); Plaça d'Espanya and Els Búnquers do. Walks that draw their whole overhead once are unchanged.
 - Gameplay, positions, timings and gates are unchanged.
 
 ## 2026-11-06 - Speak English in every live event
