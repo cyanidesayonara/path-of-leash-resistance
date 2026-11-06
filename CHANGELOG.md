@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-11-06 - Artsy detour «L'Estel» (Joan Miró homage) off Montjuïc
+
+- The second Artsy Detour: «L'Estel» (`systems/detour.gd`, `world/detour_layer.gd`, `systems/montjuic.gd`, `world/level_build.gd`, `main.gd`):
+  a modernist gallery pavilion off the Passeig de Montjuïc terrace (gateway at y = -3350.0 recessed into the west balustrade with primary red, blue, and yellow geometric pylons, Miró star banner «L'ESTEL», easel, and gallery host in beret).
+- Gallery space at isolated level coordinates (5400, -3400): white museum floor with red/yellow/blue geometric field insets, black calligraphic murals (thick asterisks, biomorphic eyes with eyelashes, crescent moons), 4 biomorphic primary-shape sculptures wrapped as rope poles by the verlet leash (Solar Disc, Celestial Droplet, Orbital Cylinder, Calligraphic Totem), 3 Starry Ladders ("L'Escala de l'Evasió") with star dust chimes, and the secret Golden Star Bone on a white modernist pedestal.
+- Tony Hawk quest "estel": "Visit L'Estel gallery and claim the star bone" on Montjuïc, maintaining the exact 15-goal invariant per walk.
+- Exit portal arch ("SORTIDA") returning the pair smoothly back to the Montjuïc terrace outside the pavilion.
+- Autowalk safety: autowalk bot ignores detour doorways and completes the walk uninterrupted.
+- Tests: `tests/test_detour_estel.gd`.
+
 ## 2026-11-05 - Dia de Partit match-day flag bearer live event
 
 - A signature live event for Dia de Partit (`systems/banderer.gd`, `systems/partit.gd`, `world/level_build.gd`, `main.gd`):

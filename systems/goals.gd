@@ -44,7 +44,7 @@ const LEVEL_GOAL_IDS := {
 	# El Besos: the way home is the flood. No Tofu, same as the other chase.
 	"besos": ["mark", "sniff", "phone", "paws", "bag", "fetch", "shallows", "snack", "combo", "prize", "floodgap", "dry", "spell", "jamon", "clock"],
 	# Montjuic: the climb, with the park staples
-	"montjuic": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "cable", "combo", "prize", "spell", "jamon", "clock"],
+	"montjuic": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "estel", "drink", "cable", "combo", "prize", "spell", "jamon", "clock"],
 	# Dia de Partit. No Tofu: the way home belongs to the final whistle.
 	# No hi and no combo: fifteen goals, and the fans' dogs are a greeting.
 	"partit": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "march", "scarf", "kickabout", "fulltime", "prize", "spell", "jamon", "clock"],
@@ -95,6 +95,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"snack": {"text": "Scarf down %d dropped snacks", "target": 2, "fn": func() -> int: return m.kebabs_eaten},
 		"cats": {"text": "Chase off %d cats on the walls", "target": 3, "fn": func() -> int: return m.wall_cats_spooked},
 		"somni": {"text": "Visit El Somni gallery and claim the dream bone", "target": 1, "fn": func() -> int: return 1 if m.somni_bone_taken else 0},
+		"estel": {"text": "Visit L'Estel gallery and claim the star bone", "target": 1, "fn": func() -> int: return 1 if m.estel_bone_taken else 0},
 		"carry": {"text": m.carry_text, "target": 1, "fn": func() -> int: return 1 if m.carry_state >= 2 else 0},
 		"combo": {"text": "Land an x%d trick combo", "target": 3, "fn": func() -> int: return int(m.combo.best_mult) if m.combo != null else 0},
 		"tummy": {"text": "Walk past every chocolate", "target": 1, "fn": func() -> int: return 1 if m.candy_eaten == 0 else 0},
