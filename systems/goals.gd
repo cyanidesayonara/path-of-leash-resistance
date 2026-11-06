@@ -70,6 +70,8 @@ const LEVEL_GOAL_IDS := {
 	# La Superilla: Poblenou superblock tactical circles, ping-pong tables, and cargo trike
 	"superilla": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "cargo", "pingpong", "circles", "combo", "prize", "spell", "jamon", "clock"],
 	"forum": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "skater", "pergola", "rails", "combo", "prize", "spell", "jamon", "clock"],
+	# Plaça d'Espanya: the dancing magic fountain, bubble performer, and monumental columns
+	"espanya": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "bubble", "magic_fountain", "columns", "combo", "prize", "spell", "jamon", "clock"],
 	# Rambla del Raval: the finale, El Gat de Botero. Tying him up is how the
 	# walk ends, so it is not a goal; the ways of wearing him down are.
 	"raval": ["mark", "sniff", "phone", "paws", "bag", "clothesline", "pigeons", "swat", "smash", "pummel", "combo", "prize", "spell", "jamon", "clock"],
@@ -150,6 +152,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"skater": {"text": "Dodge or cheer the esplanade skater", "target": 1, "fn": func() -> int: return 1 if (m.skater != null and (m.skater.dodge_done or m.skater.cheered or m.skater.booped)) else 0},
 		"pergola": {"text": "Sprint under the solar pergola %d times", "target": 3, "fn": func() -> int: return m.forum_pergola_sprinted},
 		"rails": {"text": "Grind skate rails for %d style points", "target": 6, "fn": func() -> int: return m.forum_rails_grinded},
+		"bubble": {"text": "Pop giant soap bubbles from the street performer", "target": 1, "fn": func() -> int: return 1 if m.espanya_bubbles_popped >= 1 else 0},
+		"magic_fountain": {"text": "Splash through the Magic Fountain basin", "target": 1, "fn": func() -> int: return 1 if m.espanya_fountain_splashed >= 1 else 0},
+		"columns": {"text": "Wrap the leash around Puig i Cadafalch's monumental columns", "target": 1, "fn": func() -> int: return 1 if m.espanya_columns_wrapped >= 1 else 0},
 		"spell": {"text": "Spell LEASH", "target": 5, "fn": func() -> int: return int(m.get("word_letters_collected"))},
 		"jamon": {"text": "Find the hidden pernil", "target": 1, "fn": func() -> int: return 1 if bool(m.get("jamon_found")) else 0},
 		"clock": {"text": "Beat the clock (under %s)" % clock(float(m.clock_target)), "target": 1,

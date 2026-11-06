@@ -26,6 +26,47 @@ Append-only session history, newest first.
     `draw_snack`) and off-leash summit battery esplanade (`draw_freedom`,
     `FREEDOM_PROPS["carmel"]`, `surface_at`).
 
+## 2026-11-06 - Thirty-one walks in the planner's order, Gràcia second to last again
+
+- The four walks added since 1.69 had been put after Festa de Gràcia, so
+  Gràcia was no longer the walk before El Gat. They now sit where the walk
+  planner put them: La Superilla after El Mosaic, El Fòrum after Plaça
+  Reial; Els Búnquers (on the planner's bench) in the open slot after
+  L'Estació, away from the other hill walks; Plaça d'Espanya in the open
+  slot after El Port. Star gates run by position, 0 to 51; Els Senglars
+  opens everything after it up to Gràcia, and Gràcia opens the Raval.
+- A save from 1.69 keeps every walk that order had open (`gates_version` 3,
+  `_grandfather_from` with the 1.69 tables). The historical 1.67 table no
+  longer lists Els Búnquers, which did not exist then.
+- README, the itch page and the Store description list thirty-one walks.
+- Tests: the walks' gate checks follow the new values; La Superilla's no
+  longer reads the local save; `test_chase_milestone_gates.gd` checks a
+  1.69 save.
+
+## 2026-11-06 - Walk 31: «Plaça d'Espanya» (Avinguda Maria Cristina & La Font Màgica)
+
+- Walk 31 added to the campaign (`systems/espanya.gd`, `systems/espanya_bubble.gd`, `autoload/game.gd`, `world/level_build.gd`, `main.gd`):
+  Barcelona's grand ceremonial avenue ascending from the twin Venetian Towers of Plaça d'Espanya along Avinguda de la Reina Maria Cristina to the monumental Magic Fountain (La Font Màgica) and the cascading stairs of Palau Nacional.
+- Torres Venecianes: twin monumental brick towers flanking the avenue entrance as imposing solid obstacles and boundary markers.
+- Les Quatre Columnes de Puig i Cadafalch: four monumental ionic columns forming a classical gateway and tight leash winding challenge.
+- La Font Màgica de Montjuïc: colossal circular fountain basin with dancing concentric rings of animated water jets and illuminated spray (`Surfaces.S.WATER`).
+- Palau Cascades & Outdoor Escalators: running water cascade basins flanked by moving escalator conveyors carrying the pair up the hillside terrace.
+- Signature live event: El Bufador de Bombolles (`systems/espanya_bubble.gd`):
+  - 0.8 s warning telegraph: soapy swirl and shout ("Look at the bubbles! / Mireu les bombolles!").
+  - Distracted human bump hazard: -8 patience drop on bucket collision.
+  - Giant bubble popping trick: dog leaps/snouts into floating bubbles for "bubble pop! +2".
+  - Soapy wet-stone slide trick: dog sliding on soapy stone awards "soapy slide! +2".
+  - Artist cheer on bark: barking within 145 px prompts "Molt bé! +2".
+  - Near-miss dodge save: `NearMiss.consider` awards "espanya dodge! +2" and increments `saves_done`.
+  - Zero added draw calls: batched directly into Espanya's live `ShapeBatch`.
+- Tony Hawk progression:
+  - 15 goals roster: mark, sniff, phone, paws, bag, fetch, snack, bubble, magic_fountain, columns, combo, prize, spell, jamon, clock.
+  - Secret Jamón tucked behind the fountain terrace balustrade.
+  - Beat the clock par time: 180 s.
+- Soundtrack: grand ceremonial fountain waltz, acoustic guitar and whistle over dancing rumba bass and brush drums (`audio/music.gd`).
+- Entrance sign: cascade water droplets and turquoise glazed tiles material (`world/world_sign.gd`).
+- Tests: `tests/test_espanya.gd`.
+
 ## 2026-11-06 - No club name at Dia de Partit
 
 - The flag bearer's warning and cheer named the club ("Força Barça",

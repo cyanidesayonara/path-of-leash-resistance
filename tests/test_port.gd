@@ -48,7 +48,7 @@ func _run() -> void:
 	# 1. Registration in campaign lists
 	_check(game.LEVELS.has("port"), "port is in LEVELS")
 	_check(game.CAROUSEL.has("port"), "port is in CAROUSEL")
-	_check(int(game.STAR_GATE["port"]) == 37, "opens at 37 stars")
+	_check(int(game.STAR_GATE["port"]) == 43, "opens at 43 stars")
 	_check(String(game.LEVEL_NAMES["port"]) == "El Port", "named El Port")
 	_check(m.gate_text == "MOLL DE LA FUSTA", "gate text is MOLL DE LA FUSTA")
 	_check(m.freedom_kind == "placa", "ends in quayside placa")
