@@ -1470,6 +1470,8 @@ static func build_level_data(m: Node2D) -> void:
 			var pl: Array = Partit.build(m)
 			hyd_list.assign(pl[0])
 			keb_list.assign(pl[1])
+			if not m.tutorial_mode:
+				m.banderer = Banderer.new()
 		"port":
 			var pl_port: Array = Port.build(m)
 			hyd_list.assign(pl_port[0])
