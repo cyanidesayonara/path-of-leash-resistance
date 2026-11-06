@@ -201,6 +201,15 @@ func line(from: Vector2, to: Vector2, color: Color, width: float) -> void:
 	_colors.append_array(_quad_fill)
 
 
+# a rounded bar from a to b, radius r: a body, a limb, a case. One line and
+# its two round ends, batched like any shape.
+func capsule(a: Vector2, b: Vector2, r: float, color: Color) -> void:
+	if a.distance_squared_to(b) > 0.0001:
+		line(a, b, color, r * 2.0)
+	circle(a, r, color)
+	circle(b, r, color)
+
+
 # draw_colored_polygon(points, color)
 func polygon(points: PackedVector2Array, color: Color) -> void:
 	var tri := Geometry2D.triangulate_polygon(points)

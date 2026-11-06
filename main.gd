@@ -8431,6 +8431,16 @@ const GREET_LINES := ["Aw, hello there!", "Say hello!", "Don't worry, he's frien
 const GRUMPY_LINES := ["Sorry! He's not friendly.", "Bruno! Leave it.", "Sorry! He's grumpy.", "Not today, buddy."]
 
 
+# A walk's small reward for a trick or a find: bones, the chime, the score
+# chip over the dog ("solar sprint! +2"), the HUD. The way every live event
+# pays out (the forklift boop, the trolley boop).
+func award_points(amount: int, text: String) -> void:
+	bones += amount
+	Sfx.play("star", 1.2, -4.0)
+	float_text(dog.global_position + Vector2(0.0, -20.0), text, Color(1.0, 0.92, 0.45))
+	_update_hud()
+
+
 func _greet_pair(pair: Node2D) -> void:
 	pair.greet()
 	var dp: Vector2 = pair.npc_dog.position
