@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-11-06 - Two tests CI never ran
+
+- `test_film_plinth.gd` (the Raval victory film, #448) and
+  `test_freedom_sign_clear.gd` were in tests/ but not in ci.yml, so CI never
+  ran them. Both pass (53 and 233 checks) and now run in CI.
+
 ## 2026-11-06 - Thirty-one walks in the planner's order, Gràcia second to last again
 
 - The four walks added since 1.69 had been put after Festa de Gràcia, so
