@@ -14,6 +14,114 @@ Append-only session history, newest first.
 - Positions, pole radii, trigger distances and the goals are unchanged; the doves and ladders keep their chime role.
 - Not touched, flagged for Santtu: the Pla de l'Os mosaic on La Rambla (`world/rambla.gd`, `draw_miro_mosaic`) copies one specific Miró work.
 
+## 2026-11-06 - Draw Els Búnquers as the real place
+
+- Rebuilt Walk 28's visual layers (`systems/carmel.gd`, `world/level_build.gd`,
+  `main.gd`, `tests/test_walk_hooks.gd`, `tests/test_carmel.gd`) so Turó de la
+  Rovira and MUHBA Els Búnquers del Carmel read from above at sunset like the
+  finished hilltop walks:
+  - Cached `draw_edge_layer`: sunset sky gradient (`ShapeBatch.band`), Mediterranean
+    shoreline with golden wave glints, Eixample chamfered-block grid with interior
+    courtyards and Avinguda Diagonal cutting across, generic dusk skyline silhouettes,
+    dry-stone retaining walls along both flanks, Aleppo pine / agave / rosemary /
+    Spanish broom scrub, and post-war *barraques del Carmel* brick foundations with
+    checkerboard hydraulic-tile floors.
+  - Detailed `draw_cross_section` and `draw_conveyor`: compacted sauló granite grit
+    with gravel berms, erosion ruts, diagonal stone drainage *rigoles*, tiled
+    *barraques* floor thresholds, Baixada de la Glòria outdoor escalators with
+    corrugated steel steps, yellow safety comb plates, glass/steel balustrades and
+    stepped terracotta hillside rooftops, circular 1937 anti-aircraft gun pits with
+    bolt rings, ammunition niches and stencil plaques, reinforced-concrete command
+    bunker with rangefinder slit and blast steps, and the semicircular western
+    sunset mirador balcony with warm festival string lights (`ShapeBatch.glow`).
+  - Bespoke Carmel props (`draw_bollard`, `draw_column`, `draw_bin`, `draw_fountain`,
+    `draw_snack`) and off-leash summit battery esplanade (`draw_freedom`,
+    `FREEDOM_PROPS["carmel"]`, `surface_at`).
+
+## 2026-11-06 - Thirty-one walks in the planner's order, Gràcia second to last again
+
+- The four walks added since 1.69 had been put after Festa de Gràcia, so
+  Gràcia was no longer the walk before El Gat. They now sit where the walk
+  planner put them: La Superilla after El Mosaic, El Fòrum after Plaça
+  Reial; Els Búnquers (on the planner's bench) in the open slot after
+  L'Estació, away from the other hill walks; Plaça d'Espanya in the open
+  slot after El Port. Star gates run by position, 0 to 51; Els Senglars
+  opens everything after it up to Gràcia, and Gràcia opens the Raval.
+- A save from 1.69 keeps every walk that order had open (`gates_version` 3,
+  `_grandfather_from` with the 1.69 tables). The historical 1.67 table no
+  longer lists Els Búnquers, which did not exist then.
+- README, the itch page and the Store description list thirty-one walks.
+- Tests: the walks' gate checks follow the new values; La Superilla's no
+  longer reads the local save; `test_chase_milestone_gates.gd` checks a
+  1.69 save.
+
+## 2026-11-06 - Walk 31: «Plaça d'Espanya» (Avinguda Maria Cristina & La Font Màgica)
+
+- Walk 31 added to the campaign (`systems/espanya.gd`, `systems/espanya_bubble.gd`, `autoload/game.gd`, `world/level_build.gd`, `main.gd`):
+  Barcelona's grand ceremonial avenue ascending from the twin Venetian Towers of Plaça d'Espanya along Avinguda de la Reina Maria Cristina to the monumental Magic Fountain (La Font Màgica) and the cascading stairs of Palau Nacional.
+- Torres Venecianes: twin monumental brick towers flanking the avenue entrance as imposing solid obstacles and boundary markers.
+- Les Quatre Columnes de Puig i Cadafalch: four monumental ionic columns forming a classical gateway and tight leash winding challenge.
+- La Font Màgica de Montjuïc: colossal circular fountain basin with dancing concentric rings of animated water jets and illuminated spray (`Surfaces.S.WATER`).
+- Palau Cascades & Outdoor Escalators: running water cascade basins flanked by moving escalator conveyors carrying the pair up the hillside terrace.
+- Signature live event: El Bufador de Bombolles (`systems/espanya_bubble.gd`):
+  - 0.8 s warning telegraph: soapy swirl and shout ("Look at the bubbles! / Mireu les bombolles!").
+  - Distracted human bump hazard: -8 patience drop on bucket collision.
+  - Giant bubble popping trick: dog leaps/snouts into floating bubbles for "bubble pop! +2".
+  - Soapy wet-stone slide trick: dog sliding on soapy stone awards "soapy slide! +2".
+  - Artist cheer on bark: barking within 145 px prompts "Molt bé! +2".
+  - Near-miss dodge save: `NearMiss.consider` awards "espanya dodge! +2" and increments `saves_done`.
+  - Zero added draw calls: batched directly into Espanya's live `ShapeBatch`.
+- Tony Hawk progression:
+  - 15 goals roster: mark, sniff, phone, paws, bag, fetch, snack, bubble, magic_fountain, columns, combo, prize, spell, jamon, clock.
+  - Secret Jamón tucked behind the fountain terrace balustrade.
+  - Beat the clock par time: 180 s.
+- Soundtrack: grand ceremonial fountain waltz, acoustic guitar and whistle over dancing rumba bass and brush drums (`audio/music.gd`).
+- Entrance sign: cascade water droplets and turquoise glazed tiles material (`world/world_sign.gd`).
+- Tests: `tests/test_espanya.gd`.
+
+## 2026-11-06 - No club name at Dia de Partit
+
+- The flag bearer's warning and cheer named the club ("Força Barça",
+  "Visca el Barça!"), which Dia de Partit keeps out. They are now "Big flag
+  coming through! Kickoff soon!", in English so the 0.8 s warning reads,
+  and "Come on, team!".
+
+## 2026-11-06 - Calls to functions that did not exist
+
+- Els Búnquers' guitarist drew himself with `ShapeBatch.capsule`, and El
+  Fòrum (and Plaça d'Espanya, #455) paid out with `main.award_points`;
+  neither existed, so those walks logged a SCRIPT ERROR on every frame the
+  line ran (2,866 times in a two-minute Búnquers autowalk) and the rewards
+  never paid. Both now exist: `capsule` is a batched line with round ends,
+  `award_points` pays bones with the chime, the score chip and the HUD, as
+  every live event does.
+- New test `test_called_methods_exist.gd`: every `m.name(` call in
+  systems/ must name a function main.gd defines.
+
+## 2026-11-06 - Walk 30: «El Fòrum» (Parc del Fòrum / Esplanada del Fòrum)
+
+- Walk 30 added to the campaign (`systems/forum.gd`, `systems/forum_skater.gd`, `autoload/game.gd`, `world/level_build.gd`, `main.gd`):
+  Barcelona's monumental coastal esplanade at Parc del Fòrum where modern architecture, Mediterranean sea winds, and urban skate culture meet.
+- The Pèrgola Fotovoltaica: the monumental inclined solar pergola spanning high overhead, supported by 4 massive steel pylon bases serving as solid leash wrap points and casting diagonal louver shadows. Fast sprinting under the pergola canopy awards "solar sprint! +2".
+- Concrete skate banks and grindable coping rails: low angled banks with polished steel rails where dogs can kerb-grind at speed for "skate rail grind! +2".
+- Mediterranean bathing zone: the eastern margin opens directly onto stepped concrete sea walls and deep blue sea water with salty wave crests.
+- Windsock masts: tall slender poles with red-and-white striped cones fluttering in the coastal breeze.
+- Signature live event: El Skater de l'Esplanada (`systems/forum_skater.gd`):
+  - 0.8 s warning telegraph: loud wheel clatter and shout ("Watch the board! / Compte amb el patí!").
+  - Distracted human bump hazard: -8 patience drop.
+  - Dropped energy bar snack trick: snack packet drops at center path for "energy bar snack! +2".
+  - Board boop trick: booping the rolling deck directly awards "board boop! +2".
+  - Skater cheer on bark: barking within 140 px prompts an enthusiastic kickflip and "Yeah! Kickflip! +2".
+  - Near-miss dodge save: `NearMiss.consider` awards "forum dodge! +2" and increments `saves_done`.
+  - Zero added draw calls: batched directly into Forum's live `ShapeBatch`.
+- Tony Hawk progression:
+  - 15 goals roster: mark, sniff, phone, paws, bag, fetch, snack, skater, pergola, rails, combo, prize, spell, jamon, clock.
+  - Secret Jamón tucked behind the northern solar pylon base.
+  - Beat the clock par time: 180 s.
+- Soundtrack: seaside electro-chill groove with acoustic guitar, whistle, slap bass, and rim drums (`audio/music.gd`).
+- Entrance sign: photovoltaic solar silicon wafers material (`world/world_sign.gd`).
+- Tests: `tests/test_forum.gd`.
+
 ## 2026-11-06 - Walk 29: «La Superilla» (The Poblenou Superblock)
 
 - Walk 29 added to the campaign (`systems/superilla.gd`, `systems/superilla_cargo.gd`, `autoload/game.gd`, `world/level_build.gd`, `main.gd`):

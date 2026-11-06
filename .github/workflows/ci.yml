@@ -332,8 +332,14 @@ jobs:
 
       - name: Festa de Gracia Gegant rehearsal twirl test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_gracia_gegant.gd
+      - name: Els Bunquers del Carmel test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_carmel.gd
       - name: La Superilla (Poblenou superblock) test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_superilla.gd
+      - name: El Forum (Parc del Forum) test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_forum.gd
+      - name: Placa d'Espanya (Font Magica) test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_espanya.gd
       - name: La Castanyada castanyera crossing test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_castanyada_live_event.gd
       - name: Park Guell municipal gardener crossing test
@@ -390,6 +396,8 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_greet.gd
       - name: Pair meeting test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_pair_meet.gd
+      - name: Called methods exist test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_called_methods_exist.gd
       - name: Owner habits test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_owner_habits.gd
       - name: Planted dog skid test
