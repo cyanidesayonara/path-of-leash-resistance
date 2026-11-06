@@ -3,6 +3,7 @@ extends RefCounted
 
 const EventFeed := preload("res://hud/event_feed.gd")
 const CableCar := preload("res://systems/cable_car.gd")
+const Detour := preload("res://systems/detour.gd")
 
 # MONTJUÏC, the climb (La Pujada). A top-down view has no up, so the climb is
 # sold by everything round it at once:
@@ -981,11 +982,13 @@ static func _block(b: ShapeBatch, at: Vector2, step: float, haze: float) -> void
 
 static func build_layer(m: Node2D) -> void:
 	CableCar.build(m)
+	Detour.build_layer(m)
 
 
 static func tick(m: Node2D, delta: float) -> void:
 	tick_wind(m, delta)
 	CableCar.tick(m, delta)
+	Detour.tick(m, delta)
 
 
 # the things on the hill, up to the gate; the kites fly over the esplanade too

@@ -2168,7 +2168,7 @@ static func build_level_data(m: Node2D) -> void:
 	# entities, they left the leash's radii one array short, and the rope
 	# fell back to its default pad for every obstacle on the walk.
 	if Detour.is_on(m):
-		for c: Vector2 in Detour.lamp_points():
+		for c: Vector2 in Detour.lamp_points(m):
 			m.poles.append(c)
 	# Everything above is a round post/trunk. Wide things use a sampled body
 	# outline at the leash plane, and all non-pole contacts use furniture slip
@@ -3403,7 +3403,7 @@ static func build_walls(m: Node2D) -> void:
 		db.add_child(dcs)
 		m.add_child(db)
 	if Detour.is_on(m):
-		for c: Vector2 in Detour.lamp_points():
+		for c: Vector2 in Detour.lamp_points(m):
 			var lb := StaticBody2D.new()
 			lb.collision_layer = 1
 			lb.position = c
