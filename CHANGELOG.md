@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-11-06 - Calls to functions that did not exist
+
+- Els Búnquers' guitarist drew himself with `ShapeBatch.capsule`, and El
+  Fòrum (and Plaça d'Espanya, #455) paid out with `main.award_points`;
+  neither existed, so those walks logged a SCRIPT ERROR on every frame the
+  line ran (2,866 times in a two-minute Búnquers autowalk) and the rewards
+  never paid. Both now exist: `capsule` is a batched line with round ends,
+  `award_points` pays bones with the chime, the score chip and the HUD, as
+  every live event does.
+- New test `test_called_methods_exist.gd`: every `m.name(` call in
+  systems/ must name a function main.gd defines.
+
 ## 2026-11-06 - Walk 30: «El Fòrum» (Parc del Fòrum / Esplanada del Fòrum)
 
 - Walk 30 added to the campaign (`systems/forum.gd`, `systems/forum_skater.gd`, `autoload/game.gd`, `world/level_build.gd`, `main.gd`):
