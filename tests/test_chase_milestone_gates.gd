@@ -138,7 +138,25 @@ func _run() -> void:
 	_check(not game.is_unlocked("horta"), "horta was shut before and is shut now")
 	game.gate_open.clear()
 
-	# 9. Free play mode opens all walks
+	# 9. A save from 1.69 keeps the walks that order had open: La Superilla
+	# came after Gràcia then and needs Els Senglars now
+	game.gate_open.clear()
+	game.records = {}
+	for lv in game.LEVELS:
+		game.records[lv] = game._default_level_record()
+	var filled := 0
+	for lv: String in game.LEVELS:
+		if filled >= 15:
+			break
+		game.records[lv].stars = 3
+		filled += 1
+	game.records["gracia"].bones = 9
+	_check(not game.is_unlocked("superilla"), "without the old save's rules, La Superilla waits for Els Senglars")
+	game._grandfather_from(game.V2_STAR_GATE, game.V2_CHASE_GATE)
+	_check(game.is_unlocked("superilla"), "a 1.69 save with 45 stars and Gràcia walked keeps La Superilla open")
+	game.gate_open.clear()
+
+	# 10. Free play mode opens all walks
 	game.records = {}
 	for lv in game.LEVELS:
 		game.records[lv] = game._default_level_record()

@@ -115,7 +115,7 @@ func _run() -> void:
 	_check(game.LEVEL_SUBTITLES_CA.has("superilla"), "LEVEL_SUBTITLES_CA has superilla")
 	_check(game.LEVEL_SUBTITLES_ES.has("superilla"), "LEVEL_SUBTITLES_ES has superilla")
 	_check(game.STAR_GATE.has("superilla"), "STAR_GATE has superilla")
-	_check(game.chase_gate_needed("superilla") == "gracia", "superilla gated by gracia")
+	_check(String(game.CHASE_GATE.get("superilla", "")) == "boars", "superilla opens after Els Senglars")
 
 	# 2. Goals & Tony Hawk checks
 	var g_list: Array = goals_mod.LEVEL_GOAL_IDS.get("superilla", [])

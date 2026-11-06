@@ -100,8 +100,8 @@ func _run() -> void:
 	_check(game.CAROUSEL.has("forum"), "forum in CAROUSEL")
 	_check(game.LEVEL_NAMES.get("forum") == "El Fòrum", "LEVEL_NAMES is El Fòrum")
 	_check(game.LEVEL_SUBTITLES.has("forum"), "LEVEL_SUBTITLES has forum")
-	_check(game.STAR_GATE.get("forum") == 45, "STAR_GATE for forum is 45")
-	_check(game.CHASE_GATE.get("forum") == "gracia", "CHASE_GATE for forum is gracia")
+	_check(game.STAR_GATE.get("forum") == 37, "STAR_GATE for forum is 37")
+	_check(game.CHASE_GATE.get("forum") == "boars", "CHASE_GATE for forum is boars")
 
 	# 2. Exact 15 goals roster
 	var goals_mod: GDScript = load("res://systems/goals.gd")

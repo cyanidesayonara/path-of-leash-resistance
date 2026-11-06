@@ -2,6 +2,23 @@
 
 Append-only session history, newest first.
 
+## 2026-11-06 - Thirty-one walks in the planner's order, Gràcia second to last again
+
+- The four walks added since 1.69 had been put after Festa de Gràcia, so
+  Gràcia was no longer the walk before El Gat. They now sit where the walk
+  planner put them: La Superilla after El Mosaic, El Fòrum after Plaça
+  Reial; Els Búnquers (on the planner's bench) in the open slot after
+  L'Estació, away from the other hill walks; Plaça d'Espanya in the open
+  slot after El Port. Star gates run by position, 0 to 51; Els Senglars
+  opens everything after it up to Gràcia, and Gràcia opens the Raval.
+- A save from 1.69 keeps every walk that order had open (`gates_version` 3,
+  `_grandfather_from` with the 1.69 tables). The historical 1.67 table no
+  longer lists Els Búnquers, which did not exist then.
+- README, the itch page and the Store description list thirty-one walks.
+- Tests: the walks' gate checks follow the new values; La Superilla's no
+  longer reads the local save; `test_chase_milestone_gates.gd` checks a
+  1.69 save.
+
 ## 2026-11-06 - Walk 31: «Plaça d'Espanya» (Avinguda Maria Cristina & La Font Màgica)
 
 - Walk 31 added to the campaign (`systems/espanya.gd`, `systems/espanya_bubble.gd`, `autoload/game.gd`, `world/level_build.gd`, `main.gd`):
