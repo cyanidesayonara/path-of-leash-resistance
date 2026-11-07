@@ -83,7 +83,7 @@ const PINGPONG_2 := Rect2(740.0, -3240.0, 70.0, 110.0)
 
 # Unique Superblock prize (Artisanal Horchata at the Orxateria table)
 const PRIZE := Vector2(740.0, -4520.0)
-const PRIZE_TEXT := "snatch the artisan horchata from the orxateria table"
+const PRIZE_TEXT := "snatch the horchata off the orxateria table"
 
 # Painted tactical circle center coordinates
 const PAINT_CIRCLES: Array[Dictionary] = [

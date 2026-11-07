@@ -82,7 +82,7 @@ const BELL_R := 300.0
 const LANDMARKS: Array[Vector3] = [Vector3(150.0, -1500.0, 0.0), Vector3(120.0, -3900.0, 1.0)]
 
 const PRIZE := Vector2(386.0, -3150.0)
-const PRIZE_TEXT := "nab the trail runner's banana off the mirador bench"
+const PRIZE_TEXT := "nab the runner's banana off the mirador bench"
 
 
 # Walk order, down the level: the trailhead, a spur west, a gully east, the

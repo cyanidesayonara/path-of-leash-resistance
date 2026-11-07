@@ -9,6 +9,17 @@ Append-only session history, newest first.
 - `--weather=` and `--night` still set the sky on every walk for the run (CI, screenshots): the campaign does not override them.
 - Tests: `test_snow_slush` and `test_footprints` set their snow as `--weather` does; `test_walk_sky` covers the campaign, free walks, the WALK row and the card; `test_menu_flow` knows the fifth row.
 
+## 2026-11-07 - Every goal fits the goal list
+
+- Twelve goals on ten walks were cut off in the goal list; shortened, same meaning: "Haul your human clear 2 times" (Passeig Marítim, Platja de Llevant), "Get your human home mostly dry" (El Diluvi, El Besòs), "Splash through the shallows 4 times" (El Besòs), "Let 3 bikes squeak past your human" and "Nab the runner's banana off the mirador bench" (Carretera de les Aigües), "Wrap the leash around an anti-aircraft gun" (Els Búnquers), "Snatch the solar trophy off the marina podium" (El Fòrum), "Lead your human round Eros in the maze" (Laberint d'Horta), "Snatch the horchata off the orxateria table" (La Superilla), "Snatch the spun sugar off the fairground cart" (Tibidabo).
+- `tests/test_goal_text_fits.gd` (above) now passes on every walk, so it can run in CI.
+
+## 2026-11-07 - Goal text row width fit regression test
+
+- Added `tests/test_goal_text_fits.gd` and registered it in `.github/workflows/ci.yml`.
+- The test builds every walk's goals via `main.tscn` instantiation, computes each goal's displayed text (`quest_text`), and measures string width with `ThemeDB.fallback_font` at `GoalsCard.FONT_SIZE` (15 px) against the goal card's per-row available text width (`W - TEXT_X - PAD - side_w`, accounting for meters, spelling tiles, and readouts).
+- Fails with `"LEVEL: 'TEXT' is W px, the row holds R px"` when a goal's text exceeds its row width.
+
 ## 2026-11-07 - Test that walk systems and world layers only read properties main declares
 
 - Added `tests/test_main_properties_exist.gd` to mirror `test_called_methods_exist.gd` for property reads:
