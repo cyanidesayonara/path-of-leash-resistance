@@ -40,10 +40,15 @@ func _run() -> void:
 	FlowScript = load("res://hud/menu_flow.gd")
 	GoalsScript = load("res://systems/goals.gd")
 
+	# the epilogue's game flow saves: keep it off the player's own file
+	var game: Node = root.get_node("Game")
+	var keep_persist: bool = game.persist
+	game.persist = false
 	_test_scene_home()
 	_test_scene_walkies_polish()
 	await _test_epilogue_stage_and_game_flow()
 
+	game.persist = keep_persist
 	print("HOME_EPILOGUE checks=%d failures=%d" % [checks, failures.size()])
 	quit(0 if failures.is_empty() else 1)
 

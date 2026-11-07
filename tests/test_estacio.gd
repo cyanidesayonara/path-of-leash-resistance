@@ -32,6 +32,9 @@ func _push(body: CharacterBody2D, from: Vector2, v: Vector2, frames: int) -> Vec
 func _run() -> void:
 	var LevelBuild: GDScript = load("res://world/level_build.gd")
 	var game: Node = root.get_node("Game")
+	var keep_persist: bool = game.persist
+	var keep_level: String = game.level_id
+	game.persist = false
 	game.level_id = "station"
 	var m: Node2D = load("res://main.tscn").instantiate()
 	root.add_child(m)
@@ -141,6 +144,8 @@ func _run() -> void:
 	_check(LevelBuild.ESTACIO_LUGGAGE.size() >= 3, "rolling suitcases placed on the concourse")
 	m.queue_free()
 	await process_frame
+	game.persist = keep_persist
+	game.level_id = keep_level
 	print("\n%d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():
 		print("test_estacio: OK")

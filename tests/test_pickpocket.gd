@@ -67,6 +67,9 @@ func _rope(m: Node2D, a: Vector2, b: Vector2) -> void:
 
 func _run() -> void:
 	var game: Node = root.get_node("Game")
+	var keep_persist: bool = game.persist
+	var keep_level: String = game.level_id
+	game.persist = false
 	game.level_id = "street"
 	var m: Node2D = load("res://main.tscn").instantiate()
 	root.add_child(m)
@@ -191,6 +194,8 @@ func _run() -> void:
 	_check(m.owner_wallet_lost and pp.state == pp.S.GONE, "he gets away, and the human's wallet is gone")
 	m.queue_free()
 	await process_frame
+	game.persist = keep_persist
+	game.level_id = keep_level
 	print("\n%d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():
 		print("test_pickpocket: OK")

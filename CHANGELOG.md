@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-06 - Test isolation against developer save files
+
+- Test suite isolation (`tests/test_superilla.gd`, `tests/test_carmel.gd`, `tests/test_campaign_mastery.gd`, `tests/test_controls_overhaul.gd`, `tests/test_free_play.gd`, `tests/test_tofu_spots.gd`, `tests/test_tony_hawk_quests.gd`, `tests/test_losses.gd`, `tests/test_tips.gd`, `tests/test_ui_scale.gd`, `tests/test_barri.gd`, `tests/test_estacio.gd`, `tests/test_pickpocket.gd`, `tests/test_mercat_owner_path.gd`, `tests/test_crowd_river.gd`, `tests/test_menu_flow.gd`, `tests/test_menu_tree.gd`, `tests/test_menu_anim_polish.gd`, `tests/test_freedom_fixes.gd`, `tests/test_home_epilogue.gd`):
+  - Fixed tests that failed on developer machines with pre-existing save data (e.g., `tests/test_superilla.gd` and `tests/test_carmel.gd` checking chase gates when later chases or free play were already unlocked in `user://records.cfg`).
+  - Tests now explicitly set their required baseline state (`records`, `gate_open`, `free_play`, `goals_expanded`, `human_look`) and restore original state upon completion following the `test_chase_milestone_gates.gd` pattern.
+  - Set `game.persist = false` and redirected settings round-trip checks to scratch save files (`test_controls_overhaul.gd`, `test_free_play.gd`) so tests never mutate the developer's save.
+  - Verified full test suite runs cleanly: 204 passed, 0 failed with a 100% completed save + free play, and 204 passed, 0 failed with no save file present.
+
 ## 2026-11-06 - El Fòrum: the pergola no longer hides the pair
 
 - `systems/forum.gd`: the solar pergola covered the whole view and hid the dog and your human under it. It now thins to a third of its opacity while either is under it, as overhead pieces do, and is not drawn when the camera is far from it (it was about 200 panels every frame on the whole walk). It read `m.camera`, which main does not have; it reads `m.cam`. It declares `OVERHEAD_FOLLOWS_CAMERA`, so the overhead layer redraws it as the pair moves (that layer change is in #464).

@@ -20,6 +20,9 @@ func _check(condition: bool, message: String) -> void:
 		print("FAIL: %s" % message)
 
 
+const SCRATCH_SAVE := "user://test_free_play_scratch.cfg"
+
+
 func _initialize() -> void:
 	call_deferred("_run")
 
@@ -97,12 +100,17 @@ func _run() -> void:
 	MenuFlow.settings_adjust(m, 1)
 	_check(game.free_play == false, "settings adjust toggles free play off")
 
-	# Settings roundtrip check
+	# Settings roundtrip check: it really saves and loads, so point it at a
+	# scratch file, never the player's records.cfg
+	var orig_path: String = game.save_path
+	game.save_path = SCRATCH_SAVE
 	game.persist = true
 	var roundtrip_problems: Array = MenuFlow.check_settings_roundtrip(m)
 	_check(roundtrip_problems.is_empty(), "settings roundtrip with free_play passed (%s)" % ", ".join(roundtrip_problems))
 
 	# Cleanup
+	game.save_path = orig_path
+	DirAccess.remove_absolute(SCRATCH_SAVE)
 	m.queue_free()
 	game.free_play = orig_free_play
 	game.persist = orig_persist

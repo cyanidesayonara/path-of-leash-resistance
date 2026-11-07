@@ -47,6 +47,9 @@ func _run() -> void:
 	var game = root.get_node("Game")
 	var keep := [game.vol_master, game.vol_sfx, game.vol_music, game.menu_step, game.owner_id,
 		game.night, game.weather, game.collar, game.bandana, game.coat]
+	# settings and the cosmetics toggles save: keep it off the player's own file
+	var keep_persist: bool = game.persist
+	game.persist = false
 	var main: Node2D = load("res://main.tscn").instantiate()
 	root.add_child(main)
 	if not main.is_node_ready():
@@ -265,6 +268,7 @@ func _run() -> void:
 	game.bandana = keep[8]
 	game.coat = keep[9]
 	game.save_records()
+	game.persist = keep_persist
 
 	print("\n%d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():

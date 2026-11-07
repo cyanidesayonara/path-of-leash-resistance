@@ -44,6 +44,11 @@ func _close(m: Node2D) -> void:
 
 
 func _run() -> void:
+	# the walks save as they are entered and left: keep it off the player's own file
+	var game: Node = root.get_node("Game")
+	var keep_persist: bool = game.persist
+	var keep_level: String = game.level_id
+	game.persist = false
 	# --- Brutus and the ball, and the bone
 	var m: Node2D = await _open("park")
 	var rv := Node2D.new()
@@ -143,6 +148,8 @@ func _run() -> void:
 	_check(dry_ok, "free dogs and parked pairs start on the sand")
 	await _close(m)
 
+	game.persist = keep_persist
+	game.level_id = keep_level
 	print("\n%d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():
 		print("test_freedom_fixes: OK")

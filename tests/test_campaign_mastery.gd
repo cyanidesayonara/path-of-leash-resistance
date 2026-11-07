@@ -34,7 +34,15 @@ func _run() -> void:
 	var level_check: GDScript = load("res://world/level_check.gd")
 	var main_scene: PackedScene = load("res://main.tscn")
 
-	# the autoload has already read this machine's save: start from none
+	# the autoload has already read this machine's save: start from none, restore at the end
+	var saved_persist: bool = game.persist
+	var saved_records: Dictionary = game.records.duplicate(true)
+	var saved_bones: int = game.total_bones
+	var saved_open: Array[String] = game.gate_open.duplicate()
+	var saved_free_play: bool = game.free_play
+	var saved_dog: String = game.dog
+	var saved_dog_upgrades: Dictionary = game.dog_upgrades.duplicate(true)
+	var saved_level: String = game.level_id
 	game.persist = false
 	game._reset_persisted_state()
 
@@ -108,6 +116,15 @@ func _run() -> void:
 		_check(probs.is_empty(), "LevelCheck on %s passes cleanly: %s" % [ch_lv, str(probs)])
 		m.queue_free()
 		await process_frame
+
+	game.records = saved_records
+	game.total_bones = saved_bones
+	game.gate_open = saved_open
+	game.free_play = saved_free_play
+	game.dog = saved_dog
+	game.dog_upgrades = saved_dog_upgrades
+	game.level_id = saved_level
+	game.persist = saved_persist
 
 	print("test_campaign_mastery: %d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():

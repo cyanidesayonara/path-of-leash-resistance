@@ -22,6 +22,9 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var game: Node = root.get_node("Game")
+	var keep_persist: bool = game.persist
+	var keep_level: String = game.level_id
+	game.persist = false
 	_check(game.LEVELS[0] == "barri", "El Barri is the first walk")
 	_check(int(game.STAR_GATE["barri"]) == 0, "and open from the start")
 	_check(int(game.STAR_GATE["street"]) > 0, "La Rambla now needs stars")
@@ -83,6 +86,8 @@ func _run() -> void:
 	_check(riders == 0, "no riders on a walk without a rider lane (saw %d)" % riders)
 	m.queue_free()
 	await process_frame
+	game.persist = keep_persist
+	game.level_id = keep_level
 	print("\n%d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():
 		print("test_barri: OK")

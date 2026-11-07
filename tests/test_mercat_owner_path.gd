@@ -37,6 +37,9 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var game: Node = root.get_node("Game")
+	var keep_persist: bool = game.persist
+	var keep_level: String = game.level_id
+	game.persist = false
 	game.level_id = "market"
 	# With the dog left to herself the rope can snag round a stall and hold him
 	# for minutes, so the seeded walks check only that he never wedges on a
@@ -165,6 +168,8 @@ func _run() -> void:
 			sc[1], up_s, stuck_at])
 		ms.queue_free()
 		await process_frame
+	game.persist = keep_persist
+	game.level_id = keep_level
 	print("\n%d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():
 		print("test_mercat_owner_path: OK")
