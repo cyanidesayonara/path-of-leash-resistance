@@ -36,14 +36,14 @@ Decided 2026-11-02 (see PROJECT.md and the planner artifact for order):
 
 ## Release train
 
-### 1.70 - Hardening and light (next)
+### 1.70 - Hardening and light (tagged 2026-11-07)
 
 No new walks. What is in it since 1.69: the four-hour sky with a real dawn
 and dusk, campaign skies, squared roofs and walkable yards on winding
 streets, shader edge smoothing, Superilla, Els Búnquers, El Fòrum, Plaça
 d'Espanya, three detour galleries, the Raval victory film, the live events.
 
-The release gate, all of it before the tag:
+The release gate. Tagged with the hand-playtest (item 4) and the phone check (item 7) still owed; fix what they find first in 1.71:
 
 1. Full local test suite green, and CI green on main.
 2. Shot sweep reviewed walk by walk for the sky, roof and yard changes; every

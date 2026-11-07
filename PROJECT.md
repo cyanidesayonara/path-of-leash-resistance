@@ -204,10 +204,10 @@ Every feature must serve at least one. If it serves none, cut it.
 - **v1.68 and v1.69 - shipped.** Story films on the chase walks, Els Búnquers,
   El Gat's finale, a signature live event on every walk, true near-miss saves.
   1.69 tagged 2026-11-03.
-- **v1.70 - next.** Hardening and light: dawn and dusk, campaign skies,
+- **v1.70 - shipped 2026-11-07.** Hardening and light: dawn and dusk, campaign skies,
   squared streets with walkable yards, edge smoothing, four new walks
   (Superilla, Fòrum, Espanya, Carmel), three detour galleries. No new walks
-  after these until it ships. The gate and everything after it:
+  after these. Everything after it (1.71 is next):
   `docs/ROADMAP.md`. Tag only when Santtu says, and only once the Store's
   What's new and the itch notes describe it (docs/MICROSOFT_STORE.md).
 - **v2.0 - The Product.** Watercolor art integration, sound and music
