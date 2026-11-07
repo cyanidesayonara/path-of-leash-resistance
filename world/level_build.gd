@@ -3359,9 +3359,29 @@ static func build_walls(m: Node2D) -> void:
 				if absf((y + y2) * 0.5 - ly) < float(m.LANE_HALF) + 50.0:
 					crossing = true
 			if not crossing:
-				var fa: Vector2 = m.frontage(y)
-				var fb: Vector2 = m.frontage(y2)
-				for pair in [[Vector2(fa.x - 6.0, y), Vector2(fb.x - 6.0, y2)], [Vector2(fa.y + 6.0, y), Vector2(fb.y + 6.0, y2)]]:
+				# the building line, stepped where the street bends (main.building_line):
+				# the wall runs along each step and across between them
+				var fa: Vector2 = m.building_line(y)
+				var fb: Vector2 = m.building_line(y2 + 0.01)
+				var pairs: Array = [[Vector2(fa.x - 6.0, y), Vector2(fb.x - 6.0, y2)], [Vector2(fa.y + 6.0, y), Vector2(fb.y + 6.0, y2)]]
+				if m._stepped_line():
+					pairs = []
+					var ya := y
+					while ya > y2 + 0.5:
+						var yb := maxf(y2, (ceilf(ya / m.EDGE_MOD) - 1.0) * m.EDGE_MOD)
+						var bl: Vector2 = m.building_line(ya - 0.01)
+						pairs.append([Vector2(bl.x - 6.0, ya), Vector2(bl.x - 6.0, yb)])
+						pairs.append([Vector2(bl.y + 6.0, ya), Vector2(bl.y + 6.0, yb)])
+						if yb > y2 + 0.5:
+							# across the step, set out into the yard from the end of
+							# whichever building stands further forward
+							var nb: Vector2 = m.building_line(yb - 0.01)
+							var ly: float = yb - 10.0 if bl.x > nb.x else yb + 10.0
+							var ry: float = yb - 10.0 if bl.y < nb.y else yb + 10.0
+							pairs.append([Vector2(bl.x - 6.0, ly), Vector2(nb.x - 6.0, ly)])
+							pairs.append([Vector2(bl.y + 6.0, ry), Vector2(nb.y + 6.0, ry)])
+						ya = yb
+				for pair in pairs:
 					# the river side is grass and water, not a roof
 					if m.lvl == "besos" and pair[0].x > m.walk_cx:
 						continue

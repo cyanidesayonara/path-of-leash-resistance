@@ -1421,43 +1421,15 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 			if sy + slice <= GATE_Y - 30.0:
 				sy += slice
 				continue
-			# the line at the slice's top and bottom: each band is a strip
-			# from one to the other, so where the street bends the walls
-			# follow it in a clean slant instead of stepping down in stairs
-			var fa := frontage(sy)
-			var fb := frontage(sy + slice)
-			var has_r := lvl != "besos"
-			_edge_slab(c, fa.x, fb.x, -far, 0.0, sy, slice, base)
-			if has_r:
-				_edge_slab(c, fa.y, fb.y, 0.0, far, sy, slice, base)
-			# Les Obres' line is a fence, not a building: no wall face, no cast
-			if lvl == "site":
-				sy += slice
-				continue
-			# Seen from directly overhead you do not see a facade at all - you
-			# see the ROOF. The roof is inset from its footprint and the gap
-			# becomes a visible WALL FACE, angled toward the viewer: dark at the
-			# base, lighter up the wall, with a bright cap along the roof edge.
-			for i in range(7):
-				var t := float(i) / 6.0
-				var lo := -face + face * t
-				_edge_slab(c, fa.x, fb.x, lo, lo + face / 6.0 + 1.0, sy, slice, base.darkened(0.52 - t * 0.34))
-				if has_r:
-					var hi := face - face * t
-					_edge_slab(c, fa.y, fb.y, hi - face / 6.0 - 1.0, hi, sy, slice, base.darkened(0.56 - t * 0.34))
-			_edge_slab(c, fa.x, fb.x, -face - 5.0, -face, sy, slice, base.lightened(0.30))
-			if has_r:
-				_edge_slab(c, fa.y, fb.y, face, face + 5.0, sy, slice, base.lightened(0.24))
-			# the light is up-and-left, so the LEFT block throws a shadow out
-			# across the ground; the right block throws its own away from us
-			for i in range(6):
-				var t := float(i) / 5.0
-				_edge_slab(c, fa.x, fb.x, 0.0, cast * (1.0 - t * 0.82), sy, slice, Color(0.05, 0.04, 0.07, 0.055))
-			if has_r:
-				for i in range(3):
-					var g := float(i) / 2.0
-					_edge_slab(c, fa.y, fb.y, -11.0 * (1.0 - g), 0.0, sy, slice, Color(0.05, 0.04, 0.07, 0.05))
+			# the slice, split where the building line steps (building_line),
+			# so each step's wall stands square
+			var pa := sy
+			while pa < sy + slice - 0.5:
+				var pb := minf(sy + slice, (floorf(pa / EDGE_MOD) + 1.0) * EDGE_MOD) if _stepped_line() else sy + slice
+				_edge_band(c, pa, pb - pa, base, far, face, cast)
+				pa = pb
 			sy += slice
+	_draw_yards(c, vt, vb)
 	if lvl == "oldtown" or lvl == "neteja":
 		Gotic.draw_roofs(self, c, vt, vb)
 	# the roof sits BACK from the kerb by the depth of the wall face drawn
@@ -1493,56 +1465,143 @@ func _edge_slab(c: Object, xa: float, xb: float, lo: float, hi: float, sy: float
 			Vector2(xb + hi, sy + h), Vector2(xb + lo, sy + h)]), col)
 
 
-# A roof module beside a bending street. Laid square at the line's middle,
-# the paving cut its street side off on the diagonal and it read as shaved.
-# It stays square, but stands back at the line's outermost point across its
-# height, so the street never reaches it; the wedge between the slanting
-# wall face and the module is a flat terrace, its parapet along the street.
-# A straight walk draws the module exactly as before.
-const EDGE_STEP_MIN := 4.0
-const EDGE_SAMPLES := 8
+# One band of the building line, y = sy to sy + h: the masonry behind it, the
+# wall face, its cap, and the shadow it casts. The line is building_line at
+# the band's top and bottom: where the street bends without steps, a strip
+# from one to the other, so the walls follow it in a clean slant instead of
+# stepping down in stairs.
+func _edge_band(c: Object, sy: float, h: float, base: Color, far: float, face: float, cast: float) -> void:
+	var fa := building_line(sy)
+	var fb := building_line(sy + h - 0.01)
+	var has_r := lvl != "besos"
+	_edge_slab(c, fa.x, fb.x, -far, 0.0, sy, h, base)
+	if has_r:
+		_edge_slab(c, fa.y, fb.y, 0.0, far, sy, h, base)
+	# Les Obres' line is a fence, not a building: no wall face, no cast
+	if lvl == "site":
+		return
+	# Seen from directly overhead you do not see a facade at all - you
+	# see the ROOF. The roof is inset from its footprint and the gap
+	# becomes a visible WALL FACE, angled toward the viewer: dark at the
+	# base, lighter up the wall, with a bright cap along the roof edge.
+	for i in range(7):
+		var t := float(i) / 6.0
+		var lo := -face + face * t
+		_edge_slab(c, fa.x, fb.x, lo, lo + face / 6.0 + 1.0, sy, h, base.darkened(0.52 - t * 0.34))
+		if has_r:
+			var hi := face - face * t
+			_edge_slab(c, fa.y, fb.y, hi - face / 6.0 - 1.0, hi, sy, h, base.darkened(0.56 - t * 0.34))
+	_edge_slab(c, fa.x, fb.x, -face - 5.0, -face, sy, h, base.lightened(0.30))
+	if has_r:
+		_edge_slab(c, fa.y, fb.y, face, face + 5.0, sy, h, base.lightened(0.24))
+	# the light is up-and-left, so the LEFT block throws a shadow out
+	# across the ground; the right block throws its own away from us
+	for i in range(6):
+		var t := float(i) / 5.0
+		_edge_slab(c, fa.x, fb.x, 0.0, cast * (1.0 - t * 0.82), sy, h, Color(0.05, 0.04, 0.07, 0.055))
+	if has_r:
+		for i in range(3):
+			var g := float(i) / 2.0
+			_edge_slab(c, fa.y, fb.y, -11.0 * (1.0 - g), 0.0, sy, h, Color(0.05, 0.04, 0.07, 0.05))
 
 
+# A roof module beside a bending street stands square, at the building line,
+# which steps out with each module (building_line): laid at the street's
+# middle, the paving cut its street side off on the diagonal. Between the
+# kerb and the step is a front yard, paved like the street, walkable, the
+# building line's wall along its back. A straight walk draws the module
+# exactly as before.
 func _edge_module_along(c: Object, r: Rect2, side: float, k: int, y: float, mod: float) -> void:
-	if not built:
+	if not _stepped_line():
 		_draw_edge_module(c, r, side, k)
 		return
 	var inset := 27.0
-	var line := PackedVector2Array()
-	var outer := INF if side < 0.0 else -INF
-	var inner_most := -INF if side < 0.0 else INF
-	for i in range(EDGE_SAMPLES + 1):
-		var sy := y + mod * float(i) / float(EDGE_SAMPLES)
-		var f := frontage(sy)
-		var lx: float = (f.x - inset) if side < 0.0 else (f.y + inset)
-		line.append(Vector2(lx, sy))
-		outer = minf(outer, lx) if side < 0.0 else maxf(outer, lx)
-		inner_most = maxf(inner_most, lx) if side < 0.0 else minf(inner_most, lx)
-	if absf(inner_most - outer) < EDGE_STEP_MIN:
-		_draw_edge_module(c, r, side, k)
-		return
-	# the terrace: from the wall face's top edge back to the module
-	var poly := PackedVector2Array(line)
-	poly.append(Vector2(outer, y + mod))
-	poly.append(Vector2(outer, y))
-	# a roof's tone, not the paving's: a pale deck beside the street read as
-	# somewhere she could walk
-	var deck := _edge_base_color().lightened(0.10)
-	if lvl == "oldtown" or lvl == "neteja" or lvl == "gracia":
-		deck = Gotic.TERRAT[k % Gotic.TERRAT.size()].darkened(0.30)
-	c.draw_colored_polygon(poly, deck)
-	# the module's shadow lying on it, and the parapet along the street
-	var shade := PackedVector2Array()
-	for q in line:
-		var d: float = q.x - outer
-		shade.append(Vector2(outer + clampf(d, -9.0, 9.0), q.y))
-	shade.append(Vector2(outer, y + mod))
-	shade.append(Vector2(outer, y))
-	c.draw_colored_polygon(shade, Color(0.05, 0.04, 0.07, 0.22))
-	for i in range(line.size() - 1):
-		c.draw_line(line[i], line[i + 1], deck.lightened(0.25), 4.0)
-	var x0: float = outer - r.size.x if side < 0.0 else outer
+	var bl := building_line(y + mod * 0.5)
+	var lx: float = (bl.x - inset) if side < 0.0 else (bl.y + inset)
+	var x0: float = lx - r.size.x if side < 0.0 else lx
 	_draw_edge_module(c, Rect2(x0, r.position.y, r.size.x, r.size.y), side, k)
+
+
+# The yards: from the street's own edge (frontage) out to the building line,
+# in the ground the street side has there.
+func _draw_yards(c: Object, vt: float, vb: float) -> void:
+	if not _stepped_line():
+		return
+	var y := maxf(floorf((vt - 320.0) / EDGE_MOD) * EDGE_MOD, GATE_Y - 30.0)
+	while y < vb + 320.0:
+		var y1 := y + EDGE_MOD
+		var bl := building_line(y + EDGE_MOD * 0.5)
+		for side: float in [-1.0, 1.0]:
+			if lvl == "besos" and side > 0.0:
+				continue
+			var kind := strip_kind_l if side < 0.0 else strip_kind_r
+			var col := walkway_col()
+			if kind == "grass":
+				col = grass_col()
+			elif kind != "none":
+				col = STRIP_SIDEWALK
+			var pts := PackedVector2Array()
+			var back: float = bl.x if side < 0.0 else bl.y
+			for i in range(EDGE_SAMPLES + 1):
+				var sy := lerpf(y, y1, float(i) / float(EDGE_SAMPLES))
+				var f := frontage(sy)
+				pts.append(Vector2(f.x if side < 0.0 else f.y, sy))
+			if absf(back - pts[0].x) < 0.5 and absf(back - pts[EDGE_SAMPLES].x) < 0.5:
+				continue
+			pts.append(Vector2(back, y1))
+			pts.append(Vector2(back, y))
+			c.draw_colored_polygon(pts, col)
+		# the end wall of a building standing forward of the next: its shadow
+		# lying across the yard, a few steps of soft dark
+		var nb := building_line(y1 + 0.01)
+		for side: float in [-1.0, 1.0]:
+			if lvl == "besos" and side > 0.0:
+				continue
+			var here: float = bl.x if side < 0.0 else bl.y
+			var next: float = nb.x if side < 0.0 else nb.y
+			if absf(here - next) < 1.0:
+				continue
+			var fwd: bool = (here > next) if side < 0.0 else (here < next)
+			var x_a := minf(here, next)
+			var w := absf(here - next)
+			for i in range(4):
+				var t := float(i) / 3.0
+				var d := 14.0 * (1.0 - t * 0.75)
+				var r := Rect2(x_a, y1, w, d) if fwd else Rect2(x_a, y1 - d, w, d)
+				c.draw_rect(r, Color(0.05, 0.04, 0.07, 0.07))
+		y = y1
+
+
+# Where a built walk's buildings stand: the street's edge (frontage) where it
+# runs straight, and where it bends, stepped out module by module to the
+# street's outermost point across that module, so the buildings stay square
+# and the street never cuts a corner off one. The wall's collision follows it
+# too (level_build), so the step's front yard is somewhere she can go. Walks
+# that draw their own edges keep their line at the frontage.
+const EDGE_MOD := 220.0
+const EDGE_SAMPLES := 8
+var _bl_cache := {}
+
+
+func _stepped_line() -> bool:
+	return built and not detour_active and not (walk_mod != null and walk_mod.has_method("draw_edge_layer"))
+
+
+func building_line(y: float) -> Vector2:
+	if not _stepped_line():
+		return frontage(y)
+	var i := int(floorf(y / EDGE_MOD))
+	var got: Variant = _bl_cache.get(i)
+	if got != null:
+		return got
+	var y0 := float(i) * EDGE_MOD
+	var out := Vector2(INF, -INF)
+	for k in range(EDGE_SAMPLES + 1):
+		var f := frontage(maxf(y0 + EDGE_MOD * float(k) / float(EDGE_SAMPLES), GATE_Y + 1.0))
+		out.x = minf(out.x, f.x)
+		out.y = maxf(out.y, f.y)
+	_bl_cache[i] = out
+	return out
 
 
 func draw_edges_onto(c: Object) -> void:
@@ -1942,7 +2001,7 @@ static func _cell01(x: float, y: float) -> float:
 func _grass_blocked(p: Vector2) -> bool:
 	if built:
 		# past the building line are roofs, which the edge layer draws
-		var f := frontage(p.y)
+		var f := building_line(p.y)
 		if p.x < f.x or p.x > f.y:
 			return true
 	if walk_mod != null and walk_mod.has_method("grass_blocked") and walk_mod.grass_blocked(self, p):
@@ -11904,35 +11963,50 @@ func _draw_furniture(vt: float, vb: float) -> void:
 			_wc.draw_circle(st + (fr[0] as Vector2) + Vector2(-1.5, -1.5), float(fr[1]) * 0.35, fc.lightened(0.35))
 
 
+# the cross-section's two grounds: the green either side and the walkway
+func _ground_cols() -> Array:
+	var grass := COL_GRASS if lvl == "street" else Color(0.3, 0.45, 0.28)
+	var walkway := Color(0.62, 0.55, 0.42)
+	if lvl == "street":
+		walkway = COL_SIDEWALK
+	elif lvl == "market":
+		grass = COL_GRASS
+		walkway = Color(0.76, 0.73, 0.66)
+	elif lvl == "neteja":
+		walkway = Color(0.52, 0.50, 0.50)   # a back street's grey setts, still wet
+	elif lvl == "station":
+		walkway = Estacio.TERRAZZO          # the concourse's polished terrazzo
+	elif lvl == "guell":
+		walkway = Color(0.80, 0.72, 0.56)   # sandy gravel, the park's own ground
+	elif lvl == "trail" or lvl == "boars":
+		grass = TRAIL_FLOOR
+		walkway = TRAIL_DIRT
+	elif lvl == "park" or lvl == "barri":
+		walkway = Color(0.74, 0.67, 0.53)   # sandy gravel, as the city's parks are
+	elif lvl == "scrap":
+		grass = Ferralla.GRAVEL             # oily gravel up to the fence
+	elif lvl == "montjuic":
+		grass = Montjuic.HILL
+		walkway = Montjuic.SAULO
+	elif lvl == "besos":
+		walkway = Color(0.72, 0.68, 0.60)   # the paved river path, warm concrete
+	return [grass, walkway]
+
+
+func grass_col() -> Color:
+	return _ground_cols()[0]
+
+
+func walkway_col() -> Color:
+	return _ground_cols()[1]
+
+
 func _draw_cross_section(top: float, bottom: float, ctop: float, vt: float, vb: float) -> void:
 	if walk_mod != null and walk_mod.has_method("draw_cross_section"):
 		walk_mod.draw_cross_section(self, _wc, top, bottom, ctop, vt, vb)
 	else:
-		var grass := COL_GRASS if lvl == "street" else Color(0.3, 0.45, 0.28)
-		var walkway := Color(0.62, 0.55, 0.42)
-		if lvl == "street":
-			walkway = COL_SIDEWALK
-		elif lvl == "market":
-			grass = COL_GRASS
-			walkway = Color(0.76, 0.73, 0.66)
-		elif lvl == "neteja":
-			walkway = Color(0.52, 0.50, 0.50)   # a back street's grey setts, still wet
-		elif lvl == "station":
-			walkway = Estacio.TERRAZZO          # the concourse's polished terrazzo
-		elif lvl == "guell":
-			walkway = Color(0.80, 0.72, 0.56)   # sandy gravel, the park's own ground
-		elif lvl == "trail" or lvl == "boars":
-			grass = TRAIL_FLOOR
-			walkway = TRAIL_DIRT
-		elif lvl == "park" or lvl == "barri":
-			walkway = Color(0.74, 0.67, 0.53)   # sandy gravel, as the city's parks are
-		elif lvl == "scrap":
-			grass = Ferralla.GRAVEL             # oily gravel up to the fence
-		elif lvl == "montjuic":
-			grass = Montjuic.HILL
-			walkway = Montjuic.SAULO
-		elif lvl == "besos":
-			walkway = Color(0.72, 0.68, 0.60)   # the paved river path, warm concrete
+		var grass := grass_col()
+		var walkway := walkway_col()
 		if walk_mod != null and walk_mod.has_method("draw_ground"):
 			# Montjuic: the hill only, between its rims; past them, the city below
 			walk_mod.draw_ground(self, _wc, vt, vb)
