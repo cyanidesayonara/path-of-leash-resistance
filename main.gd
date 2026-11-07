@@ -1606,8 +1606,8 @@ func building_line(y: float) -> Vector2:
 
 func draw_edges_onto(c: Object) -> void:
 	# called by the edge layer, which decides WHEN rather than what
-	var vt: float = cam.position.y - 560.0
-	var vb: float = cam.position.y + 560.0
+	var vt: float = view_y() - 560.0
+	var vb: float = view_y() + 560.0
 	# drawn through a ShapeBatch: the modules alternate rects, lines and discs,
 	# and every switch was a new draw call (316 of street's 781 a frame). Same
 	# pixels, see systems/shape_batch.gd. c is a CanvasItem or that stand-in.
@@ -2651,8 +2651,8 @@ var _canopy: Array[Dictionary] = []
 
 func canopy_trees() -> Array[Dictionary]:
 	_canopy.clear()
-	var vt: float = cam.position.y - 500.0
-	var vb: float = cam.position.y + 500.0
+	var vt: float = view_y() - 500.0
+	var vb: float = view_y() + 500.0
 	for i in range(deco_pole_count):
 		var p := poles[i]
 		if p.y < vt or p.y > vb:
@@ -2788,8 +2788,8 @@ func overhead_pieces() -> Array[Dictionary]:
 	# hangs between walk_edges at draw time: it would be strung across the room
 	if detour_active:
 		return _over
-	var vt: float = cam.position.y - 500.0
-	var vb: float = cam.position.y + 500.0
+	var vt: float = view_y() - 500.0
+	var vb: float = view_y() + 500.0
 	var raining := Game.weather == "rain"
 	for t: Dictionary in _over_all:
 		if float(t["bot"]) < vt or float(t["top"]) > vb:
@@ -3231,8 +3231,8 @@ func _diluvi_awning(b: ShapeBatch, r: Rect2, i: int) -> void:
 
 # the arcade's vaulted roof seen from above, only the stretch on screen
 func _diluvi_arcade_roof(b: ShapeBatch, ar: Rect2) -> void:
-	var vt: float = cam.position.y - 440.0
-	var vb: float = cam.position.y + 440.0
+	var vt: float = view_y() - 440.0
+	var vb: float = view_y() + 440.0
 	var y0 := maxf(ar.position.y, vt - 40.0)
 	var y1 := minf(ar.end.y, vb + 40.0)
 	if y1 <= y0:
@@ -6746,11 +6746,11 @@ func _process(_delta: float) -> void:
 	_redraw_acc += _delta
 	# the teeter is a reflex moment, so it gets every frame, not 30fps
 	# the frontage only needs redrawing when new frontage comes into view
-	if absf(cam.position.y - _edge_drawn_y) > 150.0:
-		_edge_drawn_y = cam.position.y
+	if absf(view_y() - _edge_drawn_y) > 150.0:
+		_edge_drawn_y = view_y()
 		edge_layer.queue_redraw()
-	if verge_layer != null and absf(cam.position.y - _verge_drawn_y) > 150.0:
-		_verge_drawn_y = cam.position.y
+	if verge_layer != null and absf(view_y() - _verge_drawn_y) > 150.0:
+		_verge_drawn_y = view_y()
 		verge_layer.queue_redraw()
 	if _redraw_acc >= 0.033 or shake_t > 0.0 or teeter.active or grind.active:
 		_redraw_acc = 0.0
@@ -11737,6 +11737,16 @@ var _ground_args := []
 # changes, and the world pass draws nothing for it. The first time, it is
 # recorded once to see whether it reads the animation clock; if it does, it
 # is drawn in the world pass every time instead.
+# Where the view really is. The camera is smoothed (level_build), so after a
+# jump - a shot, a restart, the turn for home - the screen trails
+# cam.position by hundreds of pixels for a while. Everything culled to the
+# view, and every cached canvas that decides when to redraw, asks this, or
+# the stretch on screen is drawn for where the camera is heading and the
+# rest of the view stays bare.
+func view_y() -> float:
+	return cam.get_screen_center_position().y
+
+
 func _draw_ground(top: float, bottom: float, ctop: float, vt: float, vb: float) -> void:
 	if not _ground_live and ground_layer != null and _ground_key.is_empty():
 		var rec := ShapeBatch.new()
@@ -11750,7 +11760,7 @@ func _draw_ground(top: float, bottom: float, ctop: float, vt: float, vb: float) 
 		_draw_cross_section(top, bottom, ctop, vt, vb)
 		return
 	var key := [Game.weather, Game.hour, detour_active, tutorial_mode]
-	var cy: float = cam.position.y
+	var cy: float = view_y()
 	if key != _ground_key or absf(cy - _ground_cam) > SECTION_BAND:
 		_ground_key = key
 		_ground_cam = cy
@@ -11781,7 +11791,7 @@ func _draw_section(sec: String, key: Array, vt: float, vb: float, draw: Callable
 		draw.call(vt, vb)
 		return
 	var full := [Game.weather, Game.hour, detour_active, tutorial_mode] + key
-	var cy: float = cam.position.y
+	var cy: float = view_y()
 	if sc.rec == null or full != sc.key or absf(cy - sc.cam) > SECTION_BAND:
 		var rec := ShapeBatch.new()
 		var keep := _wc
@@ -12059,8 +12069,8 @@ func _draw_world() -> void:
 	var ctop := GATE_Y - 40.0
 	# cull to the camera: redrawing 5500px of detail lines every frame
 	# was the browser stutter
-	var vt: float = cam.position.y - 440.0
-	var vb: float = cam.position.y + 440.0
+	var vt: float = view_y() - 440.0
+	var vb: float = view_y() + 440.0
 	_draw_ground(top, bottom, ctop, vt, vb)
 	_dprof("cross section")
 	# (what lies beyond the gate is drawn by freedomlayer, which owns
