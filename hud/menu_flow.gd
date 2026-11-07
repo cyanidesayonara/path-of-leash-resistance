@@ -258,14 +258,14 @@ static func walk_info(m: Node2D) -> Dictionary:
 	return info
 
 
-# how the campaign walks this walk: "day, clear", "night, rain"
+# how the campaign walks this walk: "day, clear", "dawn, wind", "night, rain"
 static func sky_line(lv: String) -> String:
 	var sky: Array = Game.CAMPAIGN_SKY.get(lv, [])
 	if sky.is_empty():
 		return ""
 	var w := String(Game.WALK_WEATHER.get(lv, sky[0]))
-	var n := bool(Game.WALK_NIGHT.get(lv, sky[1]))
-	return "%s, %s" % ["night" if n else "day", String(Game.WEATHER_NAMES[w]).to_lower()]
+	var h := String(Game.WALK_HOUR.get(lv, sky[1]))
+	return "%s, %s" % [h, String(Game.WEATHER_NAMES[w]).to_lower()]
 
 
 static func clock(secs: float) -> String:
@@ -285,8 +285,8 @@ static func details_rows(m: Node2D) -> Array:
 		{"id": "dog", "name": "YOUR DOG", "value": d_name, "fixed": false,
 			"trait": Game.dog_trait().to_upper(), "unlocked": d_unlocked},
 		{"id": "walker", "name": "YOUR HUMAN", "value": "HIM" if Game.owner_id == "him" else "HER", "fixed": false},
-		{"id": "time", "name": "TIME", "value": "NIGHT" if Game.night else "DAY",
-			"fixed": Game.walk_sets_night(Game.level_id)},
+		{"id": "time", "name": "TIME", "value": String(Game.HOUR_NAMES[Game.hour]),
+			"fixed": Game.walk_sets_hour(Game.level_id)},
 		{"id": "weather", "name": "WEATHER", "value": String(Game.WEATHER_NAMES[Game.weather]),
 			"fixed": Game.walk_sets_weather(Game.level_id)},
 		# the campaign walks a walk in its own sky; a finished one can be
@@ -309,7 +309,7 @@ static func details_change(m: Node2D, dir: int) -> void:
 			Game.save_records()
 			m.human.queue_redraw()
 		"time":
-			Game.toggle_night()
+			Game.cycle_hour(dir)
 			m.apply_sky()
 		"weather":
 			Game.cycle_weather(dir)

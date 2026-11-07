@@ -141,31 +141,35 @@ const OLD_CHASE_GATE := {"site": "besos", "spook": "besos", "scrap": "besos", "g
 
 const WEATHERS: Array[String] = ["clear", "rain", "wind", "snow"]
 const WEATHER_NAMES := {"clear": "CLEAR", "rain": "RAIN", "wind": "WIND", "snow": "SNOW"}
+# the hour a walk is walked at, in the order TIME cycles them
+const HOURS: Array[String] = ["dawn", "day", "dusk", "night"]
+const HOUR_NAMES := {"dawn": "DAWN", "day": "DAY", "dusk": "DUSK", "night": "NIGHT"}
 
 # Some walks bring their own sky: El Diluvi is always a downpour, La
 # Castanyada always after dark, and the first walk a clear day. It holds for
 # that walk only (apply_walk_sky), so browsing past one never carries its rain
 # or its dark on to the walks after it.
 const WALK_WEATHER := {"rain": "rain", "tutorial": "clear"}
-const WALK_NIGHT := {"spook": true, "tutorial": false}
+const WALK_HOUR := {"spook": "night", "tutorial": "day"}
 # The campaign's sky: each walk is walked at its own time and in its own
 # weather, shown on the walk card, so a walk is the same walk for everyone
 # the first time. Once a walk is finished, FREE WALK (GET READY) opens its
 # time and weather to the player, and records nothing (is_free_walk,
 # recording). The films agree: Festa de Gràcia and El Gat's are at night;
-# La Neteja is its warm dawn, which the walk draws by day. WALK_WEATHER and WALK_NIGHT still win.
+# La Neteja is the street cleaning at first light, Els Búnquers the sunset
+# over the city. WALK_WEATHER and WALK_HOUR still win.
 const CAMPAIGN_SKY := {
-	"barri": ["clear", false], "street": ["clear", false], "park": ["clear", false],
-	"beach": ["wind", false], "neteja": ["clear", false], "oldtown": ["clear", false],
-	"montjuic": ["clear", false], "market": ["clear", false], "rain": ["rain", false],
-	"besos": ["rain", false], "llevant": ["wind", false], "tibidabo": ["clear", false],
-	"vet": ["clear", false], "trail": ["clear", false], "spook": ["clear", true],
-	"boars": ["clear", false], "guell": ["clear", false], "superilla": ["clear", false],
-	"station": ["clear", false], "carmel": ["clear", false], "reial": ["clear", true],
-	"forum": ["wind", false], "aigues": ["clear", false], "horta": ["clear", false],
-	"port": ["clear", false], "espanya": ["clear", true], "site": ["clear", false],
-	"partit": ["clear", true], "scrap": ["clear", false], "gracia": ["clear", true],
-	"raval": ["clear", true],
+	"barri": ["clear", "day"], "street": ["clear", "day"], "park": ["clear", "day"],
+	"beach": ["wind", "dawn"], "neteja": ["clear", "dawn"], "oldtown": ["clear", "day"],
+	"montjuic": ["clear", "day"], "market": ["clear", "day"], "rain": ["rain", "day"],
+	"besos": ["rain", "day"], "llevant": ["wind", "day"], "tibidabo": ["clear", "day"],
+	"vet": ["clear", "day"], "trail": ["clear", "day"], "spook": ["clear", "night"],
+	"boars": ["clear", "day"], "guell": ["clear", "day"], "superilla": ["clear", "day"],
+	"station": ["clear", "day"], "carmel": ["clear", "dusk"], "reial": ["clear", "night"],
+	"forum": ["wind", "day"], "aigues": ["clear", "day"], "horta": ["clear", "day"],
+	"port": ["clear", "day"], "espanya": ["clear", "night"], "site": ["clear", "day"],
+	"partit": ["clear", "night"], "scrap": ["clear", "day"], "gracia": ["clear", "night"],
+	"raval": ["clear", "night"],
 }
 
 # the walk select: the first walk, then the campaign walks in order
@@ -321,9 +325,15 @@ var owner_id: String:
 	set(v):
 		if v != owner_id:
 			toggle_owner()
-var night := false
+var hour := "day"
+# after dark: the lamps lit, the parasols furled, the phone a light
+var night: bool:
+	get:
+		return hour == "night"
+	set(v):
+		hour = "night" if v else "day"
 var weather := "clear"
-# [weather, night] as the player picked them, while a walk with its own sky
+# [weather, hour] as the player picked them, while a walk with its own sky
 # has replaced them; empty otherwise
 var _held_sky: Array = []
 # which title-menu step to land on (survives the level-cycle reload;
@@ -461,7 +471,7 @@ var free_play := false
 # GET READY's WALK row: free walk (true) or the campaign. For this session
 # only, and only on a finished walk (is_free_walk).
 var free_walk := false
-# --weather= or --night was given: that sky, on every walk, for the run
+# --weather=, --hour= or --night was given: that sky, on every walk, for the run
 var sky_from_args := false
 # The first walk (the tutorial): whether the title still offers it before the
 # walks, and whether it has been walked to the end.
@@ -475,20 +485,20 @@ var walks_lost := 0
 
 func apply_walk_sky(lv: String) -> void:
 	var own_weather := walk_sets_weather(lv)
-	var own_night := walk_sets_night(lv)
-	if own_weather or own_night:
+	var own_hour := walk_sets_hour(lv)
+	if own_weather or own_hour:
 		if _held_sky.is_empty():
-			_held_sky = [weather, night]
+			_held_sky = [weather, hour]
 		weather = _walk_weather(lv) if own_weather else String(_held_sky[0])
-		night = _walk_night(lv) if own_night else bool(_held_sky[1])
+		hour = _walk_hour(lv) if own_hour else String(_held_sky[1])
 	elif not _held_sky.is_empty():
 		weather = String(_held_sky[0])
-		night = bool(_held_sky[1])
+		hour = String(_held_sky[1])
 		_held_sky = []
 
 
 # the campaign holds a walk's sky unless this is a free walk, or the sky was
-# set on the command line (--weather, --night: CI and screenshots)
+# set on the command line (--weather, --hour, --night: CI and screenshots)
 func _campaign_holds(lv: String) -> bool:
 	return CAMPAIGN_SKY.has(lv) and not is_free_walk(lv) and not sky_from_args
 
@@ -499,18 +509,18 @@ func _walk_weather(lv: String) -> String:
 	return String(CAMPAIGN_SKY[lv][0])
 
 
-func _walk_night(lv: String) -> bool:
-	if WALK_NIGHT.has(lv):
-		return bool(WALK_NIGHT[lv])
-	return bool(CAMPAIGN_SKY[lv][1])
+func _walk_hour(lv: String) -> String:
+	if WALK_HOUR.has(lv):
+		return String(WALK_HOUR[lv])
+	return String(CAMPAIGN_SKY[lv][1])
 
 
 func walk_sets_weather(lv: String) -> bool:
 	return WALK_WEATHER.has(lv) or _campaign_holds(lv)
 
 
-func walk_sets_night(lv: String) -> bool:
-	return WALK_NIGHT.has(lv) or _campaign_holds(lv)
+func walk_sets_hour(lv: String) -> bool:
+	return WALK_HOUR.has(lv) or _campaign_holds(lv)
 
 
 # FREE WALK: a finished walk at any time and in any weather, for the fun of
@@ -528,10 +538,20 @@ func recording(lv: String) -> bool:
 	return not free_play and not is_free_walk(lv) and lv != "tutorial" and lv in LEVELS
 
 
-func toggle_night() -> void:
-	night = not night
+func cycle_hour(dir := 1) -> void:
+	hour = HOURS[wrapi(HOURS.find(hour) + dir, 0, HOURS.size())]
 	if not _held_sky.is_empty():
-		_held_sky[1] = night
+		_held_sky[1] = hour
+
+
+# How lit the street lamps are: full after dark, still on at first light and
+# coming on at dusk, off by day.
+func lamp_glow() -> float:
+	match hour:
+		"night": return 1.0
+		"dusk": return 0.55
+		"dawn": return 0.45
+	return 0.0
 
 
 func collar_color() -> Color:
@@ -981,6 +1001,11 @@ func _ready() -> void:
 			var w := arg.trim_prefix("--weather=")
 			if w in WEATHERS:
 				weather = w
+				sky_from_args = true
+		elif arg.begins_with("--hour="):
+			var h := arg.trim_prefix("--hour=")
+			if h in HOURS:
+				hour = h
 				sky_from_args = true
 		elif arg == "--night":
 			# after dark, as the title's TIME toggle would set it - for

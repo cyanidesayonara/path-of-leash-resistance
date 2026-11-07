@@ -1824,7 +1824,7 @@ func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 			# a rooflight: from above this is the window that makes sense
 			if k % 3 == 0:
 				var sk := Rect2(inner_x + side * 66.0, r.position.y + 96.0, 34.0, 46.0)
-				c.draw_rect(sk, Color(0.88, 0.83, 0.52, 0.85) if Game.night else Color(0.62, 0.72, 0.78, 0.8))
+				c.draw_rect(sk, Color(0.88, 0.83, 0.52, 0.85) if Game.lamp_glow() > 0.0 else Color(0.62, 0.72, 0.78, 0.8))
 				c.draw_rect(sk, felt.darkened(0.35), false, 3.0)
 			_draw_edge_awning(c, r, side, k, inner_x)
 			_draw_doorway(c, inner_x, side, r.position.y + 168.0, felt)
@@ -1915,7 +1915,7 @@ func _diluvi_roof_lot(c: Object, lot: Rect2, out: float, k: int, lit: float, pit
 		elif front:
 			var sk := Rect2(ridge - out * 44.0 - 13.0, lot.position.y + 120.0, 26.0, 36.0)
 			c.draw_rect(sk.grow(3.0), tile.darkened(0.35))
-			c.draw_rect(sk, Color(0.88, 0.83, 0.52, 0.85) if Game.night else Color(0.46, 0.56, 0.64))
+			c.draw_rect(sk, Color(0.88, 0.83, 0.52, 0.85) if Game.lamp_glow() > 0.0 else Color(0.46, 0.56, 0.64))
 			c.draw_rect(Rect2(sk.position.x + 3.0, sk.position.y + 3.0, 6.0, sk.size.y - 6.0), Color(1, 1, 1, 0.16))
 		return
 	# a terrat: pale tiles inside a parapet, puddled after the rain
@@ -4204,7 +4204,7 @@ func _draw_lamppost(p: Vector2) -> void:
 	# under the lantern, so the long shadow lying away from it is what tells
 	# you it is three metres tall and not a manhole cover.
 	cast_shadow(_wc, p, 6.0, 52.0, 0.18)
-	if not Game.night:
+	if Game.lamp_glow() <= 0.0:
 		_wc.glow(p, 66.0, Color(1.0, 0.9, 0.6, 0.12))
 	# the base plinth it is bolted to
 	_wc.draw_circle(p + Vector2(0, 2), POLE_RADIUS + 6.0, Color(0.24, 0.24, 0.27))
@@ -4226,8 +4226,9 @@ func _lamp_head(b: ShapeBatch, p: Vector2) -> void:
 		b.line(p, p + bo, Color(0.46, 0.46, 0.5), 1.5)
 		var lp := p + bo * 1.4
 		b.circle(lp, 5.0, Color(0.26, 0.26, 0.29))
-		if Game.night:
-			b.glow(lp, 12.0, SkyLook.light(Color(1.0, 0.90, 0.62, 0.55), night_cm.color), 0.3)
+		var lit := Game.lamp_glow()
+		if lit > 0.0:
+			b.glow(lp, 12.0, SkyLook.light(Color(1.0, 0.90, 0.62, 0.55 * lit), night_cm.color), 0.3)
 			b.circle(lp, 3.6, SkyLook.light(Color(1.0, 0.97, 0.86), night_cm.color))
 		else:
 			b.circle(lp, 3.6, Color(0.86, 0.88, 0.9))
@@ -5897,14 +5898,14 @@ func _build_hud() -> void:
 
 
 func _weather_tint() -> Color:
-	return SkyLook.tint(lvl, Game.weather, Game.night)
+	return SkyLook.tint(lvl, Game.weather, Game.hour)
 
 
 # the world's tint and the sky's grade, from the weather and the hour; again
 # whenever either changes
 func apply_sky() -> void:
 	night_cm.color = _weather_tint()
-	sky_mod = SkyLook.grade_mod(lvl, Game.weather, Game.night)
+	sky_mod = SkyLook.grade_mod(lvl, Game.weather, Game.hour)
 	if grade_rect != null:
 		var g: Dictionary = mood.grade() if mood != null else {}
 		SkyLook.apply(grade_rect.material, SkyLook.compose(Mood.GRADE[Mood.M.HAPPY] if g.is_empty() else g, sky_mod))
@@ -11748,7 +11749,7 @@ func _draw_ground(top: float, bottom: float, ctop: float, vt: float, vb: float) 
 	if _ground_live or ground_layer == null:
 		_draw_cross_section(top, bottom, ctop, vt, vb)
 		return
-	var key := [Game.weather, Game.night, detour_active, tutorial_mode]
+	var key := [Game.weather, Game.hour, detour_active, tutorial_mode]
 	var cy: float = cam.position.y
 	if key != _ground_key or absf(cy - _ground_cam) > SECTION_BAND:
 		_ground_key = key
@@ -11779,7 +11780,7 @@ func _draw_section(sec: String, key: Array, vt: float, vb: float, draw: Callable
 	if sc.live:
 		draw.call(vt, vb)
 		return
-	var full := [Game.weather, Game.night, detour_active, tutorial_mode] + key
+	var full := [Game.weather, Game.hour, detour_active, tutorial_mode] + key
 	var cy: float = cam.position.y
 	if sc.rec == null or full != sc.key or absf(cy - sc.cam) > SECTION_BAND:
 		var rec := ShapeBatch.new()
