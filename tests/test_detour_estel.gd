@@ -1,6 +1,6 @@
-extends SceneTree
+﻿extends SceneTree
 
-# Tests for the second Artsy Detour: "L'ESTEL" (Joan Miró homage) off Passeig de Montjuïc.
+# Tests for the second Artsy Detour: "L'ESTEL" (after Miró's general style) off Passeig de Montjuïc.
 # Covers:
 # 1. Doorway placement on Passeig de Montjuïc and DetourLayer initialization.
 # 2. Sculpture poles: 4 biomorphic primary-shape sculptures wrapped by the leash.

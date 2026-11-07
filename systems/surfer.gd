@@ -11,14 +11,14 @@ extends RefCounted
 # Gameplay contract:
 # - 0.8 s warning telegraph: Surfer steps out from the promenade pergola edge
 #   at x = 880.0, y = -2140.0, balancing the surfboard and calling out
-#   "Agafo l'onada!" with a telegraphed speech bubble.
+#   "Surfboard coming through!" with a telegraphed speech bubble.
 # - Soft failure / hazard: distracted human wandering into the surfer's path
-#   gets bumped by the surfboard nose (-8 patience drop, "Whoa! Watch the surfboard!").
+#   gets bumped by the surfboard nose (-8 patience drop, "Ow! Was that a surfboard?").
 # - Dog trick: as the surfer crosses past the center esplanade (x <= 610.0), a chilled
 #   wrapped lemon ice pop (polo de llimona) drops from their beach tote onto the
-#   pavement; pouncing or booping it awards "polo snatch! +2" (surfer: "El meu polo!").
+#   pavement; pouncing or booping it awards "polo snatch! +2" (surfer: "Hey, my polo!").
 # - Bark trick: barking near the passing surfer startles them into an acrobatic
-#   overhead board balance recovery, awarding "surfer bark! +2" ("Bona onada!").
+#   overhead board balance recovery, awarding "surfer bark! +2" ("Nice wave, buddy!").
 # - Boop trick: booping the surfer directly awards "surfer boop! +2" ("Epa!").
 # - Dodge save: steering your human safely clear past the crossing trajectory
 #   awards "surf dodge! +2" / "Whew, close one!".

@@ -1,14 +1,14 @@
 class_name AwningDump
 extends RefCounted
 
-# WALK 5: EL DILUVI - AWNING RAIN DUMP ("Aigua va!")
+# WALK 5: EL DILUVI - AWNING RAIN DUMP ("Water coming down!")
 # Signature live event for El Diluvi: shopkeepers poke waterlogged sagging
 # canvas awnings with a broom handle during torrential downpours, dumping
-# pooled rainwater onto the street with the traditional cry "Aigua va!".
+# pooled rainwater onto the street with the traditional cry "Water coming down!".
 #
 # Gameplay contract:
 # - 0.8 s warning telegraph: shopkeeper steps to the door holding a broom,
-#   the awning canvas bulges with trembling water, and calls "Aigua va!".
+#   the awning canvas bulges with trembling water, and calls "Water coming down!".
 # - Soft failure / hazard: distracted human walking under the dump gets drenched
 #   (soak boost, patience drop, phone fumbled/wiped).
 # - Dog trick: dashing through the falling water or splash pool awards

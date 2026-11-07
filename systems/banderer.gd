@@ -3,7 +3,7 @@ extends RefCounted
 
 # EL BANDERER DEL PARTIT (Dia de Partit live event)
 #
-# An enthusiastic match-day fan and flag bearer ("el banderer del Barça") in a striped
+# An enthusiastic match-day fan and flag bearer ("el banderer") in a striped
 # Blaugrana jersey (#10), blue match shorts, and Catalan barretina hurries across the
 # stadium avenue from the scarf stall (east kerb, x = 950.0) toward the stadium gates and
 # west barricades (x = 350.0) at y = -1380.0, waving a large striped Blaugrana club flag
@@ -11,7 +11,7 @@ extends RefCounted
 #
 # Design contract:
 # - 0.8 s warning telegraph: approaches on outward walk (y < -1080.0), calls out
-#   "Força Barça, que comença el partit!" with stadium horn toot.
+#   "Big flag coming through! Kickoff soon!" with stadium horn toot.
 # - Distracted human bump hazard: -8 patience drop, "Whoa! Watch the flag!",
 #   banderer: "Al tanto amb la bandera!".
 # - Near-miss dodge save: NearMiss.consider awards "partit dodge! +2" and increments
@@ -80,7 +80,7 @@ const SCARF_FRINGE := Color(0.96, 0.88, 0.22)
 
 
 func _init() -> void:
-	_toss.seed = 0xBA4CA  # BARCA
+	_toss.seed = 0xBA4CA
 
 
 func reset() -> void:

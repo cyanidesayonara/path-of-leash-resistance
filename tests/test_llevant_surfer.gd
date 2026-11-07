@@ -3,7 +3,7 @@ extends SceneTree
 const Surfer := preload("res://systems/surfer.gd")
 
 # Regression test for Platja de Llevant beach surfer live event (Walk 24).
-# Tests the 0.8s warning telegraph ("Agafo l'onada!"), westbound run carrying
+# Tests the 0.8s warning telegraph ("Surfboard coming through!"), westbound run carrying
 # the longboard across the esplanade, dropped polo snatch trick, distracted
 # human bump hazard, dog boop trick, surfer bark trick, surf dodge save,
 # autowalk safety, and leak-free cleanup.

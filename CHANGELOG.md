@@ -10,6 +10,161 @@ Append-only session history, newest first.
   - Set `game.persist = false` and redirected settings round-trip checks to scratch save files (`test_controls_overhaul.gd`, `test_free_play.gd`) so tests never mutate the developer's save.
   - Verified full test suite runs cleanly: 204 passed, 0 failed with a 100% completed save + free play, and 204 passed, 0 failed with no save file present.
 
+## 2026-11-06 - Plaça d'Espanya drawn as the real place
+
+- `systems/espanya.gd`: the walk climbs the real axis. The round plaza's paving in light and dark stone bands between the two brick towers (brick coursing, stone quoins, pyramid roofs overhead), with the traffic ring and its lanes either side; Avinguda de la Reina Maria Cristina in granite slabs with a median of lit fountain grates, a sauló strip of plane trees, the road, and the exhibition halls' roofs (skylights, a domed lantern, the colonnade on the avenue); the Four Columns as ionic columns on a raised marble platform; the Magic Fountain's radial plaza, stone terrace, rim and basin, with a show of rising jets and a central plume; the stairs to the palace with the cascade's stepped basins and foam lips between balustrades; terraced lawns, hedges and cypresses; the palace wings with domed corner towers by the gate. Senyeres ripple on the flag masts.
+- Before, the fountain basin and cascade pools were drawn under the avenue's paving and never showed, and the columns and flag masts were drawn as street trees and lampposts. The ground is now the walk's cross-section (`draw_cross_section`), and two hooks say what its poles are: `tree_kind` (none) and the new `is_lamp` (main.gd `is_lamppost`; declared in `tests/test_walk_hooks.gd`).
+- Fixed: "Wrap the leash around the Four Columns" could never be completed in play. The walk fits every pole's x to the corridor after build, so the exact match against the authored positions never held; a column is now any pole on the columns' row. `tests/test_espanya.gd` checks the fitted position and that a flag mast does not count.
+- Text: the goal is "Wrap the leash around the Four Columns" (it was cut off in the goal list), the prize "snatch the crystal finial off the cascade", and the bubble performer's warning "Bubbles coming!" (was Catalan).
+- Fixed: a walk module's `draw_overhead` was only ever drawn for a hard-coded list of walks (`LevelBuild`, the overhead layer), so Plaça d'Espanya's tower roofs and flags, and Els Búnquers' pine canopies and string lights, never showed. The layer is now made for any module that draws overhead. Plaça d'Espanya's overhead read `m.camera`, which main does not have (it is `m.cam`); it never ran, so it never failed.
+- The overhead layer drew once, when the walk started, and never again, so an overhead that culls to the camera showed only what was in view at the start. A module that culls, animates or fades its overhead now declares `OVERHEAD_FOLLOWS_CAMERA` and is redrawn at 30 fps (`world/overheadlayer.gd`); Plaça d'Espanya and Els Búnquers do. Walks that draw their whole overhead once are unchanged.
+- Gameplay, positions, timings and gates are unchanged.
+
+## 2026-11-06 - Draw La Superilla as the real place
+
+- Rebuilt Walk 29 (`systems/superilla.gd`, `world/level_build.gd`, `main.gd`) as the Poblenou Superblock (*Superilla del Poblenou* at Carrer de Sancho d'Àvila and Carrer de la Ciutat de Granada):
+  - Edge layer (`Superilla.draw_edge_layer`): replaced the default park grass margins (`"superilla"` added to `LevelBuild.CROSS_SECTIONS` and `WORKS_FREE`) with 19th-century Poblenou red-brick textile mills (*vapors*) with terracotta sawtooth roofs, north-facing factory skylights and brick cornices, modern 22@ zinc-and-Corten design studios with rooftop terraces and photovoltaic arrays, and the three intersecting cross-streets (`y = -1200, -2200, -3800`) with superblock entry gateways and the green cycle track.
+  - Ground layer (`Superilla.draw_cross_section`): drew flanking Barcelona *panot* 4-rosette concrete sidewalks (`340..404` and `876..940`) with granite curbs, cast-iron storm grates and terracotta tactile intersection ramps, a dark reclaimed Poblenou asphalt superblock plaza (`404..876`), all 9 painted tactical-urbanism circles (`PAINT_CIRCLES`, previously drawn on `edge_layer` beneath the walk ribbon) with concentric stencil rings, radial white dots and inner geometric stars, painted hopscotch (*xarranca*) play courts, diagonal curb buffer bars, `10` km/h superblock speed roundels, and the green cycle-lane crossing at `y = -2200`.
+  - Planter poles, ping-pong tables and Orxateria terrace: added `"superilla"` to `LevelBuild.fit_props_to_corridor`, excluded `"superilla"` from `main.is_lamppost`, and implemented `Superilla.tree_kind` and `Superilla.draw_column` so the 8 modular Douglas-fir planter boxes with pruned olive trees and corner lavender/rosemary sit directly on `m.poles` without duplicate street-grate trees; drew precast concrete Poblenou ping-pong tables (`PINGPONG_1`, `PINGPONG_2`) with court aprons, steel nets, paddles and balls; and drew the slatted timber *Orxateria del Poblenou* terrace deck, marble bistro tables, chairs, striped Mediterranean awning, and frosted glass of *orxata de xufa* with cinnamon, straw, and *fartons* at `PRIZE = Vector2(740, -4520)`.
+  - Custom Poblenou street furniture (`draw_bollard`, `draw_bin`, `draw_fountain`, `draw_snack`): yellow-banded Barcelona superblock bollards, slatted wooden waste drums, classic dark-green cast-iron Barcelona drinking fountains, and dropped glazed *fartons* on bakery paper.
+  - Off-leash area (`Superilla.draw_freedom`, `Superilla.surface`, `LevelBuild.FREEDOM_PROPS["superilla"]`): built **Passatge del Vapor** (`y = -4800 .. -5420`) as a historic Poblenou steam-mill courtyard with a central herringbone brick-and-granite paved court (`300..980`, `Surfaces.S.PAVEMENT`), an octagonal 19th-century red-brick factory smokestack (*Xemeneia del Vapor*) with radial brick medallion, and flanking green rain-garden beds (`x < 300` and `x > 980`, `Surfaces.S.GRASS`).
+  - Fixed `SuperillaCargo.tick` (`systems/superilla_cargo.gd`) calling nonexistent `m.human.bump(Vector2.DOWN, 8.0)` instead of `m.human.bumped(Vector2.DOWN)`.
+
+## 2026-11-06 - L'Estel and El Colom: original art, no copies of specific works
+
+- Rule (as for every gallery): an artist's general style is fine, a recognizable copy of a specific in-copyright work is not, and Miró's and Picasso's names stay out of player-facing text (comments may name them). Gaudí (d. 1926) is public domain and stays.
+- `world/detour_layer.gd`, `systems/detour.gd`, `tests/test_detour_*.gd`:
+  - El Colom's white peace dove with an olive sprig (and its easel icon) is now a faceted Barcelona plaza pigeon in slate, ochre and terracotta, no olive branch.
+  - El Colom's horned Minotaur head pole is now an original Cubist Hound: one face seen from two sides.
+  - L'Estel's three star-studded ladders, which used the title and motif of a specific Miró work, are now Hop Trails: a wavy line of stepping blobs in primary colours.
+  - L'Estel's black eight-arm asterisk with a coloured hub (too near a foundation logo) is now a lopsided filled five-point star.
+  - Text: "coo! peace dove!" is "coo! pigeon!", "ladder to the stars!" is "hop hop hop!". No Miró or Picasso name was in any goal, sign, shout or gloss; a header comment and test comments now say so.
+- Positions, pole radii, trigger distances and the goals are unchanged; the doves and ladders keep their chime role.
+- Not touched, flagged for Santtu: the Pla de l'Os mosaic on La Rambla (`world/rambla.gd`, `draw_miro_mosaic`) copies one specific Miró work.
+
+## 2026-11-06 - Speak English in every live event
+
+- The live events added in PRs #417-#447 spoke mostly Catalan, so a player who cannot read it could not read the 0.8 s warning. Every player-facing string they show is now American English (`main.gd`, `systems/guitarrista.gd`, `systems/superilla_cargo.gd`). Strings only: no gameplay, timing, position or drawing change.
+  - Warnings name what is coming, plainly ("Forklift coming through!", "Mind the tray!").
+  - The identical "Whoa! Watch the X!" bump line is replaced by one line per character, all different.
+  - Workers answer boops, snatches and barks in English; one Catalan word is kept for flavor only where the English carries the meaning ("Giant coming through! Visca!", "Happy Castanyada, pup!").
+  - Score chips and combo names for the worker's trade are English ("birder boop! +2"); place names stay Catalan.
+  - Banderer is left to PR #456. Comments and test headers that quote the old lines now quote the new ones.
+
+## 2026-11-06 - Two tests CI never ran
+
+- `test_film_plinth.gd` (the Raval victory film, #448) and
+  `test_freedom_sign_clear.gd` were in tests/ but not in ci.yml, so CI never
+  ran them. Both pass (53 and 233 checks) and now run in CI.
+
+## 2026-11-06 - Draw Els Búnquers as the real place
+
+- Rebuilt Walk 28's visual layers (`systems/carmel.gd`, `world/level_build.gd`,
+  `main.gd`, `tests/test_walk_hooks.gd`, `tests/test_carmel.gd`) so Turó de la
+  Rovira and MUHBA Els Búnquers del Carmel read from above at sunset like the
+  finished hilltop walks:
+  - Cached `draw_edge_layer`: sunset sky gradient (`ShapeBatch.band`), Mediterranean
+    shoreline with golden wave glints, Eixample chamfered-block grid with interior
+    courtyards and Avinguda Diagonal cutting across, generic dusk skyline silhouettes,
+    dry-stone retaining walls along both flanks, Aleppo pine / agave / rosemary /
+    Spanish broom scrub, and post-war *barraques del Carmel* brick foundations with
+    checkerboard hydraulic-tile floors.
+  - Detailed `draw_cross_section` and `draw_conveyor`: compacted sauló granite grit
+    with gravel berms, erosion ruts, diagonal stone drainage *rigoles*, tiled
+    *barraques* floor thresholds, Baixada de la Glòria outdoor escalators with
+    corrugated steel steps, yellow safety comb plates, glass/steel balustrades and
+    stepped terracotta hillside rooftops, circular 1937 anti-aircraft gun pits with
+    bolt rings, ammunition niches and stencil plaques, reinforced-concrete command
+    bunker with rangefinder slit and blast steps, and the semicircular western
+    sunset mirador balcony with warm festival string lights (`ShapeBatch.glow`).
+  - Bespoke Carmel props (`draw_bollard`, `draw_column`, `draw_bin`, `draw_fountain`,
+    `draw_snack`) and off-leash summit battery esplanade (`draw_freedom`,
+    `FREEDOM_PROPS["carmel"]`, `surface_at`).
+
+## 2026-11-06 - Thirty-one walks in the planner's order, Gràcia second to last again
+
+- The four walks added since 1.69 had been put after Festa de Gràcia, so
+  Gràcia was no longer the walk before El Gat. They now sit where the walk
+  planner put them: La Superilla after El Mosaic, El Fòrum after Plaça
+  Reial; Els Búnquers (on the planner's bench) in the open slot after
+  L'Estació, away from the other hill walks; Plaça d'Espanya in the open
+  slot after El Port. Star gates run by position, 0 to 51; Els Senglars
+  opens everything after it up to Gràcia, and Gràcia opens the Raval.
+- A save from 1.69 keeps every walk that order had open (`gates_version` 3,
+  `_grandfather_from` with the 1.69 tables). The historical 1.67 table no
+  longer lists Els Búnquers, which did not exist then.
+- README, the itch page and the Store description list thirty-one walks.
+- Tests: the walks' gate checks follow the new values; La Superilla's no
+  longer reads the local save; `test_chase_milestone_gates.gd` checks a
+  1.69 save.
+
+## 2026-11-06 - Walk 31: «Plaça d'Espanya» (Avinguda Maria Cristina & La Font Màgica)
+
+- Walk 31 added to the campaign (`systems/espanya.gd`, `systems/espanya_bubble.gd`, `autoload/game.gd`, `world/level_build.gd`, `main.gd`):
+  Barcelona's grand ceremonial avenue ascending from the twin Venetian Towers of Plaça d'Espanya along Avinguda de la Reina Maria Cristina to the monumental Magic Fountain (La Font Màgica) and the cascading stairs of Palau Nacional.
+- Torres Venecianes: twin monumental brick towers flanking the avenue entrance as imposing solid obstacles and boundary markers.
+- Les Quatre Columnes de Puig i Cadafalch: four monumental ionic columns forming a classical gateway and tight leash winding challenge.
+- La Font Màgica de Montjuïc: colossal circular fountain basin with dancing concentric rings of animated water jets and illuminated spray (`Surfaces.S.WATER`).
+- Palau Cascades & Outdoor Escalators: running water cascade basins flanked by moving escalator conveyors carrying the pair up the hillside terrace.
+- Signature live event: El Bufador de Bombolles (`systems/espanya_bubble.gd`):
+  - 0.8 s warning telegraph: soapy swirl and shout ("Look at the bubbles! / Mireu les bombolles!").
+  - Distracted human bump hazard: -8 patience drop on bucket collision.
+  - Giant bubble popping trick: dog leaps/snouts into floating bubbles for "bubble pop! +2".
+  - Soapy wet-stone slide trick: dog sliding on soapy stone awards "soapy slide! +2".
+  - Artist cheer on bark: barking within 145 px prompts "Molt bé! +2".
+  - Near-miss dodge save: `NearMiss.consider` awards "espanya dodge! +2" and increments `saves_done`.
+  - Zero added draw calls: batched directly into Espanya's live `ShapeBatch`.
+- Tony Hawk progression:
+  - 15 goals roster: mark, sniff, phone, paws, bag, fetch, snack, bubble, magic_fountain, columns, combo, prize, spell, jamon, clock.
+  - Secret Jamón tucked behind the fountain terrace balustrade.
+  - Beat the clock par time: 180 s.
+- Soundtrack: grand ceremonial fountain waltz, acoustic guitar and whistle over dancing rumba bass and brush drums (`audio/music.gd`).
+- Entrance sign: cascade water droplets and turquoise glazed tiles material (`world/world_sign.gd`).
+- Tests: `tests/test_espanya.gd`.
+
+## 2026-11-06 - No club name at Dia de Partit
+
+- The flag bearer's warning and cheer named the club ("Força Barça",
+  "Visca el Barça!"), which Dia de Partit keeps out. They are now "Big flag
+  coming through! Kickoff soon!", in English so the 0.8 s warning reads,
+  and "Come on, team!".
+
+## 2026-11-06 - Calls to functions that did not exist
+
+- Els Búnquers' guitarist drew himself with `ShapeBatch.capsule`, and El
+  Fòrum (and Plaça d'Espanya, #455) paid out with `main.award_points`;
+  neither existed, so those walks logged a SCRIPT ERROR on every frame the
+  line ran (2,866 times in a two-minute Búnquers autowalk) and the rewards
+  never paid. Both now exist: `capsule` is a batched line with round ends,
+  `award_points` pays bones with the chime, the score chip and the HUD, as
+  every live event does.
+- New test `test_called_methods_exist.gd`: every `m.name(` call in
+  systems/ must name a function main.gd defines.
+
+## 2026-11-06 - Walk 30: «El Fòrum» (Parc del Fòrum / Esplanada del Fòrum)
+
+- Walk 30 added to the campaign (`systems/forum.gd`, `systems/forum_skater.gd`, `autoload/game.gd`, `world/level_build.gd`, `main.gd`):
+  Barcelona's monumental coastal esplanade at Parc del Fòrum where modern architecture, Mediterranean sea winds, and urban skate culture meet.
+- The Pèrgola Fotovoltaica: the monumental inclined solar pergola spanning high overhead, supported by 4 massive steel pylon bases serving as solid leash wrap points and casting diagonal louver shadows. Fast sprinting under the pergola canopy awards "solar sprint! +2".
+- Concrete skate banks and grindable coping rails: low angled banks with polished steel rails where dogs can kerb-grind at speed for "skate rail grind! +2".
+- Mediterranean bathing zone: the eastern margin opens directly onto stepped concrete sea walls and deep blue sea water with salty wave crests.
+- Windsock masts: tall slender poles with red-and-white striped cones fluttering in the coastal breeze.
+- Signature live event: El Skater de l'Esplanada (`systems/forum_skater.gd`):
+  - 0.8 s warning telegraph: loud wheel clatter and shout ("Watch the board! / Compte amb el patí!").
+  - Distracted human bump hazard: -8 patience drop.
+  - Dropped energy bar snack trick: snack packet drops at center path for "energy bar snack! +2".
+  - Board boop trick: booping the rolling deck directly awards "board boop! +2".
+  - Skater cheer on bark: barking within 140 px prompts an enthusiastic kickflip and "Yeah! Kickflip! +2".
+  - Near-miss dodge save: `NearMiss.consider` awards "forum dodge! +2" and increments `saves_done`.
+  - Zero added draw calls: batched directly into Forum's live `ShapeBatch`.
+- Tony Hawk progression:
+  - 15 goals roster: mark, sniff, phone, paws, bag, fetch, snack, skater, pergola, rails, combo, prize, spell, jamon, clock.
+  - Secret Jamón tucked behind the northern solar pylon base.
+  - Beat the clock par time: 180 s.
+- Soundtrack: seaside electro-chill groove with acoustic guitar, whistle, slap bass, and rim drums (`audio/music.gd`).
+- Entrance sign: photovoltaic solar silicon wafers material (`world/world_sign.gd`).
+- Tests: `tests/test_forum.gd`.
+
 ## 2026-11-06 - Walk 29: «La Superilla» (The Poblenou Superblock)
 
 - Walk 29 added to the campaign (`systems/superilla.gd`, `systems/superilla_cargo.gd`, `autoload/game.gd`, `world/level_build.gd`, `main.gd`):

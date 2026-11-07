@@ -10,9 +10,9 @@ extends RefCounted
 #
 # Design contract:
 # - 0.8 s warning telegraph: approaches on outward walk (y < -1450.0), calls out
-#   "Compte amb les espines!" with a terracotta clink and gravel scuff sound.
-# - Distracted human bump hazard: -8 patience drop, "Whoa! Watch the cactus!",
-#   botànic: "Al tanto amb les punxes!".
+#   "Mind the cactus!" with a terracotta clink and gravel scuff sound.
+# - Distracted human bump hazard: -8 patience drop, "Ouch! Is that a cactus?",
+#   botànic: "Mind the spines!".
 # - Near-miss dodge save: NearMiss.consider awards "montjuïc dodge! +2" and increments
 #   saves_done only when entering threat radius and steering human safely clear.
 #   Walking past without near miss awards nothing.

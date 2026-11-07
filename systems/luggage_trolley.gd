@@ -9,10 +9,10 @@ extends RefCounted
 #
 # Gameplay contract:
 # - 0.8 s warning telegraph: traveler loses grip of the trolley at x = 330.0,
-#   y = -1210.0, calling out "Atenció, el carretó!" with a speech bubble
+#   y = -1210.0, calling out "Luggage cart coming through!" with a speech bubble
 #   and rattling casters.
 # - Soft failure / hazard: distracted human wandering into the trolley crossing
-#   zone gets bumped (patience drop, "Whoa! Watch the cart!").
+#   zone gets bumped (patience drop, "Ow, my ankles!").
 # - Dog trick: booping or pouncing on the rolling cart / luggage awards
 #   "trolley boop! +2". Barking near the runaway cart alerts the station and
 #   awards "trolley bark! +2".
