@@ -49,6 +49,15 @@ uniform float wet = 0.0;
 uniform float surface = 1.0;
 // the world's animation clock in seconds (AnimClock, pinned in shot mode)
 uniform float world_t = 0.0;
+// a low sun (dawn, dusk): the screen's sun side brightened by sun_col per
+// channel, the far side darkened by sun_shade, sun_dir pointing from the
+// middle toward the sun. Zero is no sun: the day's grade exactly.
+uniform vec3 sun_col = vec3(0.0);
+uniform vec3 sun_shade = vec3(0.0);
+uniform vec2 sun_dir = vec2(1.0, 0.0);
+// morning mist lying on the ground, 0 to 1: soft pale banks, world-locked
+// and drifting slowly, thinnest in the middle of the screen
+uniform float mist = 0.0;
 
 // arithmetic hash (no sin): software GL, which CI soaks under and some
 // players' browsers fall back to, pays dearly for transcendentals per pixel
@@ -173,6 +182,25 @@ void fragment() {
 
 	// lift the blacks so shadowed ground keeps its shape at night
 	col += lift * (1.0 - col);
+
+	// the low sun: light from one side of the screen, shade on the other,
+	// eased so the middle, where the dog is, sits between the two
+	if (sun_col != vec3(0.0) || sun_shade != vec3(0.0)) {
+		float side = clamp(dot(uv - 0.5, sun_dir) * 1.25 + 0.5, 0.0, 1.0);
+		side = side * side * (3.0 - 2.0 * side);
+		col *= mix(vec3(1.0) - sun_shade, vec3(1.0) + sun_col * (0.4 + 0.6 * lum), side);
+	}
+
+	// mist: two slow noises, world-locked, a pale cool veil that thins near
+	// the middle of the screen so the play never fogs over
+	if (mist > 0.0) {
+		float m1 = vnoise(wp / 300.0 + vec2(world_t * 0.020, world_t * 0.006));
+		float m2 = vnoise(wp / 120.0 - vec2(world_t * 0.035, 0.0));
+		float bank = smoothstep(0.38, 0.82, m1 * 0.65 + m2 * 0.35);
+		vec2 dm = uv - 0.5;
+		float edge = 0.45 + 0.55 * smoothstep(0.02, 0.22, dot(dm, dm));
+		col = mix(col, vec3(0.86, 0.85, 0.93), bank * edge * mist * 0.45);
+	}
 
 	// the mood's colour cast and its exposure, before the vignette so that
 	// closing the world in still darkens the tinted picture rather than

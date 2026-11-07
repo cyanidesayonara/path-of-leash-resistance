@@ -113,7 +113,7 @@ static func _ambient(m: Node2D, delta: float) -> void:
 
 
 static func sunny() -> bool:
-	return Game.weather == "clear" and not Game.night
+	return Game.weather == "clear" and (Game.hour == "day" or Game.hour == "dusk")
 
 
 static func in_shade(m: Node2D, p: Vector2) -> bool:

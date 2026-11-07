@@ -41,7 +41,7 @@ func _load(level_id: String) -> Node2D:
 
 func _sky() -> String:
 	var game = root.get_node("Game")
-	return "%s/%s" % [game.weather, "night" if game.night else "day"]
+	return "%s/%s" % [game.weather, game.hour]
 
 
 func _row(m: Node2D, id: String) -> Dictionary:
@@ -58,14 +58,14 @@ func _run() -> void:
 	var keep_records: Dictionary = game.records.duplicate(true)
 	var keep_free_play: bool = game.free_play
 	var keep_free_walk: bool = game.free_walk
-	var keep_sky := [game.weather, game.night]
+	var keep_sky := [game.weather, game.hour]
 	game.free_play = false
 	game.free_walk = false
 	game.records = {}
 	for lv: String in game.LEVELS:
 		game.records[lv] = game._default_level_record()
 	game.weather = "snow"
-	game.night = false
+	game.hour = "day"
 	var Flow = load("res://hud/menu_flow.gd")
 
 	for lv: String in game.LEVELS:
@@ -81,6 +81,10 @@ func _run() -> void:
 	_check(game.recording("barri"), "the campaign records")
 	m = await _load("reial")
 	_check(_sky() == "clear/night", "Plaça Reial is walked after dark (%s)" % _sky())
+	m = await _load("neteja")
+	_check(_sky() == "clear/dawn", "La Neteja is walked at first light (%s)" % _sky())
+	m = await _load("carmel")
+	_check(_sky() == "clear/dusk", "Els Búnquers at sunset (%s)" % _sky())
 	game.free_walk = true
 	m = await _load("market")
 	_check(_sky() == "clear/day", "FREE WALK does nothing on a walk not finished (%s)" % _sky())
@@ -93,7 +97,13 @@ func _run() -> void:
 	_check(not bool(_row(m, "mode").fixed) and String(_row(m, "mode").value) == "FREE WALK", "the row says FREE WALK")
 	_check(not game.recording("barri"), "a free walk records nothing")
 	_check(not game.mark_goal("barri", "mark"), "a free walk marks no goal")
-	game.toggle_night()
+	# TIME cycles the four hours, dawn to night and round again
+	var seen: Array[String] = []
+	for i in game.HOURS.size():
+		game.cycle_hour(1)
+		seen.append(game.hour)
+	_check(seen == ["dusk", "night", "dawn", "day"], "TIME cycles every hour (%s)" % [seen])
+	game.cycle_hour(2)
 	m = await _load("market")
 	_check(_sky() == "clear/day", "the next unfinished walk is the campaign's again (%s)" % _sky())
 	m = await _load("barri")
@@ -126,6 +136,7 @@ func _run() -> void:
 
 	# the walk card says how the campaign walks it
 	_check(Flow.sky_line("espanya") == "night, clear", "the card: Plaça d'Espanya at night (%s)" % Flow.sky_line("espanya"))
+	_check(Flow.sky_line("neteja") == "dawn, clear", "the card: La Neteja at dawn (%s)" % Flow.sky_line("neteja"))
 	_check(Flow.sky_line("rain") == "day, rain", "the card: El Diluvi in the rain (%s)" % Flow.sky_line("rain"))
 
 	_check(not "daily" in game.CAROUSEL, "the walk select has no Daily Walk")
@@ -138,7 +149,7 @@ func _run() -> void:
 	game.free_play = keep_free_play
 	game.free_walk = keep_free_walk
 	game.weather = keep_sky[0]
-	game.night = keep_sky[1]
+	game.hour = keep_sky[1]
 	if _failures > 0:
 		print("test_walk_sky: %d FAILURES" % _failures)
 		quit(1)
