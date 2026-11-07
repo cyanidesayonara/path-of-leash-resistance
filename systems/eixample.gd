@@ -150,6 +150,25 @@ static func in_cross_street(y: float) -> bool:
 	return false
 
 
+# each octagon's sides as wall segments, 6 px out like main's building line:
+# the chamfers and, across the side streets' mouths, where the containers
+# stand. Main leaves a gap in its building line where bikes cross (it is how
+# other walks' side streets lead somewhere), which here opened a way out of
+# the street down a side street; the bikes are not bodies and ride through.
+static func octagon_walls() -> Array:
+	var out: Array = []
+	for yi: float in XINGS:
+		for side: float in [-1.0, 1.0]:
+			var lo := Vector2(CX + side * (HALF + 6.0), yi + STREET_H + RAMP)
+			var a := Vector2(CX + side * (XHALF + 6.0), yi + STREET_H)
+			var b := Vector2(CX + side * (XHALF + 6.0), yi - STREET_H)
+			var hi := Vector2(CX + side * (HALF + 6.0), yi - STREET_H - RAMP)
+			out.append([lo, a])
+			out.append([a, b])
+			out.append([b, hi])
+	return out
+
+
 static func island_rects() -> Array[Rect2]:
 	var out: Array[Rect2] = []
 	for isl: Vector2 in ISLANDS:

@@ -23,6 +23,10 @@ func _check(ok: bool, what: String) -> void:
 		print("FAIL: " + what)
 
 
+func CX_OF(side: float, d: float) -> float:
+	return 640.0 + side * d
+
+
 func _initialize() -> void:
 	call_deferred("_run")
 
@@ -50,6 +54,21 @@ func _run() -> void:
 		var mid: Vector2 = m.walk_edges(yi + Eixample.STREET_H + Eixample.RAMP * 0.5)
 		_check(absf((mid.y - mid.x) * 0.5 - Eixample.half_at(yi + Eixample.STREET_H + Eixample.RAMP * 0.5)) < 2.0,
 			"the chamfer at %.0f runs where the module draws it" % yi)
+	# she cannot leave down a side street, bike crossing or not: pushed out
+	# across each octagon's mouth, and up a chamfer into it, she stays in
+	await physics_frame
+	var body: CharacterBody2D = m.dog
+	body.collision_mask = 1
+	for yi: float in Eixample.XINGS:
+		for side: float in [-1.0, 1.0]:
+			for start: Vector2 in [Vector2(CX_OF(side, 380.0), yi), Vector2(CX_OF(side, 280.0), yi + 200.0), Vector2(CX_OF(side, 280.0), yi - 200.0)]:
+				await physics_frame
+				body.global_position = start
+				for i in range(60):
+					body.velocity = Vector2(side * 600.0, -200.0)
+					body.move_and_slide()
+				_check(absf(body.global_position.x - 640.0) < Eixample.XHALF + 4.0,
+					"she stays in the street at the %s mouth of %.0f (x %.0f)" % ["east" if side > 0.0 else "west", yi, body.global_position.x])
 	var g: Vector2 = m.walk_edges(m.GATE_Y + 10.0)
 	_check(g.x < m.gate_l and g.y > m.gate_r, "the gate fits the street")
 

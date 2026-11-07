@@ -3666,6 +3666,16 @@ static func build_walls(m: Node2D) -> void:
 	if m.lvl == "eixample":
 		for r: Rect2 in Eixample.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
+		var oct := StaticBody2D.new()
+		oct.collision_layer = 1
+		for seg: Array in Eixample.octagon_walls():
+			var ss := SegmentShape2D.new()
+			ss.a = seg[0]
+			ss.b = seg[1]
+			var ocs := CollisionShape2D.new()
+			ocs.shape = ss
+			oct.add_child(ocs)
+		m.add_child(oct)
 	if m.lvl == "superilla":
 		for r: Rect2 in Superilla.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
