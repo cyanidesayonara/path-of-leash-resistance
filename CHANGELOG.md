@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-07 - Dawn and dusk
+
+- TIME has four hours now: DAWN, DAY, DUSK and NIGHT (`Game.hour`; `Game.night` still reads and sets after dark). GET READY cycles them on a free walk, and `--hour=dawn|day|dusk|night` sets one for the run.
+- Dawn is first light: the street still dim and blue, a low gold sun from one side of the screen, the far side in shade, the lamps still on but fading, and a pale mist drifting in the street. Dusk is golden hour: warm, the sun low from the other side, the far side going violet, the lamps coming on.
+- The campaign walks La Neteja at dawn (the sweepers' hour), the beach at dawn (the sun comes up over the sea), and Els Búnquers at dusk. La Neteja's dawn and Els Búnquers' sunset were hard-wired to the two walks' names; they are hours now, so a free walk can have either anywhere.
+- The low sun and the mist are two uniforms in the grade shader, zero on a day and at night, so those look exactly as before. Under rain or snow most of the low sun goes behind the cloud.
+- Tests: `test_sky` checks the four hours and that a walk's hour, not its name, sets the sky; `test_walk_sky` checks the campaign's dawn and dusk walks and that TIME cycles every hour.
+
 ## 2026-11-07 - Campaign skies and FREE WALK
 
 - Every walk now has its own time and weather in the campaign (`Game.CAMPAIGN_SKY`), so a walk is the same walk for everyone the first time: Plaça Reial, Plaça d'Espanya, Dia de Partit, Festa de Gràcia and El Gat after dark (the films agree: Gràcia and El Gat at night; La Neteja stays its warm dawn, drawn by day), wind on the beach, Platja de Llevant and El Fòrum, rain on El Diluvi and El Besòs, clear days elsewhere. The walk card shows it ("day, wind") beside the best.

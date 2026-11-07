@@ -46,8 +46,10 @@ func _run() -> void:
 			puddles += 1
 	_check(puddles >= 4, "puddles from the water truck (%d)" % puddles)
 	_check(m.laundry_lines.size() >= 4, "washing overhead")
-	var tint: Color = m._weather_tint()
-	_check(tint.r > tint.b + 0.1, "a warm dawn light")
+	# first light: the campaign walks it at dawn, the street still blue and
+	# the warmth in the low sun from one side
+	_check(game.hour == "dawn", "walked at dawn (%s)" % game.hour)
+	_check((m.sky_mod["sun"] as Vector3).x > 0.1 and float(m.sky_mod["mist"]) > 0.0, "a warm low sun and a morning mist")
 	# the market skeleton used to leave an open manhole, and four warning
 	# cones round it, in the middle of the chase
 	_check(m.manholes.is_empty(), "no open manhole in the lane")
