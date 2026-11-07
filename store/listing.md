@@ -86,18 +86,19 @@ dog walking
 ### What's new in this version
 
 ```
-- Signature live events across the city: every walk now has its own unique local incident. Look out for the quayside fisherman at El Port, the bistro waiter on Plaça Reial, a cone-of-shame dog outside El Veterinari, a unicyclist on Tibidabo, a trail runner on Carretera de les Aigües, a lost tourist in the Horta maze, a surfer crossing at Platja de Llevant, a wild boar family on Els Senglars, and a towering Gegant rehearsing festival twirls in Festa de Gràcia.
-- True near-miss saves: dodging a hazard now requires a real near miss. Steer your human into trouble's reach and haul them clear in time to earn a dodge save. Taking the ordinary line or walking past clear of danger pays nothing.
-- Unique dog tricks on every live encounter: snatch dropped snacks (fresh catch, a fallen croqueta, energy gel, a carquinyoli cookie, an unearthed wild truffle, or a festive ribbon rosette), boop snouts and hemlines, and bark for surprising reactions.
-- Every hazard telegraphed: speech bubbles and local audio give you 0.8 seconds of clear warning before any mover steps into the path.
-- Smooth live rendering: all animated actors render directly on the live pass with zero added draw calls, keeping performance silky smooth on desktop and browser.
-- Authentic Catalan voices and street calls: "Compte!", "Epa!", "Visca la Festa!", "Atenció, el martell!".
+- Four new places: La Superilla's play streets, Els Búnquers above the city, the seaside esplanade at El Fòrum, and the fountain avenue of Plaça d'Espanya. Thirty-one walks in all.
+- A real dawn and dusk. Walks now have their own hour: La Neteja opens in blue early light with a low gold sun and morning mist, Els Búnquers sits in golden hour. After a walk, FREE WALK lets you pick any weather and hour.
+- Cleaner streets: the buildings along winding streets stand square, with front yards you can walk in, and edges are smoother.
+- Three new galleries to wander into: L'Estel, El Colom and El Drac.
+- A victory scene on the plinth at the Rambla del Raval finale.
+- A signature live event on every walk, with a true near-miss save. Every hazard is telegraphed 0.8 seconds ahead.
+- Snatch dropped snacks, boop snouts, and hear the street in Catalan: "Compte!", "Epa!", "Visca la Festa!".
 ```
 
 ### Notes for certification
 
 ```
-Update 1.69: signature live events across all walks (fishermen, waiters, cone dogs, unicyclists, trail runners, tourists, surfers, wild boars, and festive giants), true near-miss saves, and dropped snack snatching. Update 1.68: story films on the chase walks, a new look for your human, livelier other dogs and owners, the walks in a new order, and smoother performance. Update 1.67: six new walks since 1.64 (La Carretera de les Aigües, El Laberint d'Horta, Platja de Llevant, Els Senglars, Festa de Gràcia and the Rambla del Raval finale), five dogs to choose from, dares with their own music on every walk, fifteen goals a walk, separate poop and pick-up buttons with key layouts and rebinding, and a language setting for the walks' place names. No change to capabilities, network use or data handling since 1.55.
+Update 1.70: four new walks (La Superilla, Els Búnquers, El Fòrum, Plaça d'Espanya), dawn and dusk lighting, squarer streets with walkable front yards, three new galleries. Update 1.69: signature live events across all walks (fishermen, waiters, cone dogs, unicyclists, trail runners, tourists, surfers, wild boars, and festive giants), true near-miss saves, and dropped snack snatching. Update 1.68: story films on the chase walks, a new look for your human, livelier other dogs and owners, the walks in a new order, and smoother performance. Update 1.67: six new walks since 1.64 (La Carretera de les Aigües, El Laberint d'Horta, Platja de Llevant, Els Senglars, Festa de Gràcia and the Rambla del Raval finale), five dogs to choose from, dares with their own music on every walk, fifteen goals a walk, separate poop and pick-up buttons with key layouts and rebinding, and a language setting for the walks' place names. No change to capabilities, network use or data handling since 1.55.
 
 Path of Leash Resistance is a single-player Win32 desktop game built with the Godot engine (4.7), packaged as MSIX.
 

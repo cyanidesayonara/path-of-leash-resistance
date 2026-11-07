@@ -121,6 +121,23 @@ Single player. No ads, no purchases, no account. The download plays offline; the
 Made in Godot by Santtu Nykänen. The dog is Millie, a distinguished salt-and-pepper mutt who squats like a lady.
 ```
 
+## What's new in 1.70
+
+For a devlog post or the top of the body. Everything since v1.69, from
+CHANGELOG.md. The Store's What's new is the short form of this.
+
+```
+- Four new walks, thirty-one in all:
+  - La Superilla: Poblenou's play streets, ping-pong tables, painted circles and a cargo trike.
+  - Els Búnquers: the Civil War bunkers above the city, with a guitarist at the overlook.
+  - El Fòrum: the seaside esplanade.
+  - Plaça d'Espanya: the fountain avenue and the Magic Fountain.
+- Four hours of day: dawn, day, dusk and night. La Neteja now opens at first light, with blue shadows, a low gold sun from one side and morning mist; Els Búnquers sits in golden hour. Each campaign walk keeps its own sky, and FREE WALK on a finished walk lets you pick any weather and hour.
+- Cleaner streets on winding walks: buildings stand square along the bend, the front yards between the kerb and the wall are walkable, and the edges are smoothed by an anti-aliasing pass.
+- Three artsy galleries off existing walks: L'Estel (off Montjuïc), El Colom (off Plaça Reial) and El Drac (off La Rambla), original art in the spirit of Miró, Picasso and Gaudí.
+- A victory scene on the plinth at the end of the Rambla del Raval finale.
+```
+
 ## What's new in 1.69
 
 For a devlog post or the top of the body. Everything since v1.68, from
