@@ -1421,13 +1421,15 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 			if sy + slice <= GATE_Y - 30.0:
 				sy += slice
 				continue
-			var f := frontage(sy + slice * 0.5)
-			var fl := f.x
-			var fr := f.y
+			# the line at the slice's top and bottom: each band is a strip
+			# from one to the other, so where the street bends the walls
+			# follow it in a clean slant instead of stepping down in stairs
+			var fa := frontage(sy)
+			var fb := frontage(sy + slice)
 			var has_r := lvl != "besos"
-			c.draw_rect(Rect2(fl - far, sy, far, slice), base)
+			_edge_slab(c, fa.x, fb.x, -far, 0.0, sy, slice, base)
 			if has_r:
-				c.draw_rect(Rect2(fr, sy, far, slice), base)
+				_edge_slab(c, fa.y, fb.y, 0.0, far, sy, slice, base)
 			# Les Obres' line is a fence, not a building: no wall face, no cast
 			if lvl == "site":
 				sy += slice
@@ -1438,21 +1440,23 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 			# base, lighter up the wall, with a bright cap along the roof edge.
 			for i in range(7):
 				var t := float(i) / 6.0
-				c.draw_rect(Rect2(fl - face + face * t, sy, face / 6.0 + 1.0, slice), base.darkened(0.52 - t * 0.34))
+				var lo := -face + face * t
+				_edge_slab(c, fa.x, fb.x, lo, lo + face / 6.0 + 1.0, sy, slice, base.darkened(0.52 - t * 0.34))
 				if has_r:
-					c.draw_rect(Rect2(fr + face - face * t - face / 6.0 - 1.0, sy, face / 6.0 + 1.0, slice), base.darkened(0.56 - t * 0.34))
-			c.draw_rect(Rect2(fl - face - 5.0, sy, 5.0, slice), base.lightened(0.30))
+					var hi := face - face * t
+					_edge_slab(c, fa.y, fb.y, hi - face / 6.0 - 1.0, hi, sy, slice, base.darkened(0.56 - t * 0.34))
+			_edge_slab(c, fa.x, fb.x, -face - 5.0, -face, sy, slice, base.lightened(0.30))
 			if has_r:
-				c.draw_rect(Rect2(fr + face, sy, 5.0, slice), base.lightened(0.24))
+				_edge_slab(c, fa.y, fb.y, face, face + 5.0, sy, slice, base.lightened(0.24))
 			# the light is up-and-left, so the LEFT block throws a shadow out
 			# across the ground; the right block throws its own away from us
 			for i in range(6):
 				var t := float(i) / 5.0
-				c.draw_rect(Rect2(fl, sy, cast * (1.0 - t * 0.82), slice), Color(0.05, 0.04, 0.07, 0.055))
+				_edge_slab(c, fa.x, fb.x, 0.0, cast * (1.0 - t * 0.82), sy, slice, Color(0.05, 0.04, 0.07, 0.055))
 			if has_r:
 				for i in range(3):
 					var g := float(i) / 2.0
-					c.draw_rect(Rect2(fr - 11.0 * (1.0 - g), sy, 11.0 * (1.0 - g), slice), Color(0.05, 0.04, 0.07, 0.05))
+					_edge_slab(c, fa.y, fb.y, -11.0 * (1.0 - g), 0.0, sy, slice, Color(0.05, 0.04, 0.07, 0.05))
 			sy += slice
 	if lvl == "oldtown" or lvl == "neteja":
 		Gotic.draw_roofs(self, c, vt, vb)
@@ -1474,8 +1478,71 @@ func _draw_edges(c: Object, vt: float, vb: float) -> void:
 			var r := Rect2(x0, y, depth, mod)
 			# a stable per-module variation without touching the global rng
 			var k := int(absf(y) / mod) + (0 if side < 0.0 else 7)
-			_draw_edge_module(c, r, side, k)
+			_edge_module_along(c, r, side, k, y, mod)
 		y += mod
+
+
+# One band of the building line from y = sy to sy + h, lo to hi px across
+# from the line, which runs from x = xa at the top to xb at the bottom. On a
+# straight walk it is exactly the rect it replaced.
+func _edge_slab(c: Object, xa: float, xb: float, lo: float, hi: float, sy: float, h: float, col: Color) -> void:
+	if c is ShapeBatch:
+		(c as ShapeBatch).quad(Vector2(xa + lo, sy), Vector2(xa + hi, sy), Vector2(xb + hi, sy + h), Vector2(xb + lo, sy + h), col)
+	else:
+		c.draw_colored_polygon(PackedVector2Array([Vector2(xa + lo, sy), Vector2(xa + hi, sy),
+			Vector2(xb + hi, sy + h), Vector2(xb + lo, sy + h)]), col)
+
+
+# A roof module beside a bending street. Laid square at the line's middle,
+# the paving cut its street side off on the diagonal and it read as shaved.
+# It stays square, but stands back at the line's outermost point across its
+# height, so the street never reaches it; the wedge between the slanting
+# wall face and the module is a flat terrace, its parapet along the street.
+# A straight walk draws the module exactly as before.
+const EDGE_STEP_MIN := 4.0
+const EDGE_SAMPLES := 8
+
+
+func _edge_module_along(c: Object, r: Rect2, side: float, k: int, y: float, mod: float) -> void:
+	if not built:
+		_draw_edge_module(c, r, side, k)
+		return
+	var inset := 27.0
+	var line := PackedVector2Array()
+	var outer := INF if side < 0.0 else -INF
+	var inner_most := -INF if side < 0.0 else INF
+	for i in range(EDGE_SAMPLES + 1):
+		var sy := y + mod * float(i) / float(EDGE_SAMPLES)
+		var f := frontage(sy)
+		var lx: float = (f.x - inset) if side < 0.0 else (f.y + inset)
+		line.append(Vector2(lx, sy))
+		outer = minf(outer, lx) if side < 0.0 else maxf(outer, lx)
+		inner_most = maxf(inner_most, lx) if side < 0.0 else minf(inner_most, lx)
+	if absf(inner_most - outer) < EDGE_STEP_MIN:
+		_draw_edge_module(c, r, side, k)
+		return
+	# the terrace: from the wall face's top edge back to the module
+	var poly := PackedVector2Array(line)
+	poly.append(Vector2(outer, y + mod))
+	poly.append(Vector2(outer, y))
+	# a roof's tone, not the paving's: a pale deck beside the street read as
+	# somewhere she could walk
+	var deck := _edge_base_color().lightened(0.10)
+	if lvl == "oldtown" or lvl == "neteja" or lvl == "gracia":
+		deck = Gotic.TERRAT[k % Gotic.TERRAT.size()].darkened(0.30)
+	c.draw_colored_polygon(poly, deck)
+	# the module's shadow lying on it, and the parapet along the street
+	var shade := PackedVector2Array()
+	for q in line:
+		var d: float = q.x - outer
+		shade.append(Vector2(outer + clampf(d, -9.0, 9.0), q.y))
+	shade.append(Vector2(outer, y + mod))
+	shade.append(Vector2(outer, y))
+	c.draw_colored_polygon(shade, Color(0.05, 0.04, 0.07, 0.22))
+	for i in range(line.size() - 1):
+		c.draw_line(line[i], line[i + 1], deck.lightened(0.25), 4.0)
+	var x0: float = outer - r.size.x if side < 0.0 else outer
+	_draw_edge_module(c, Rect2(x0, r.position.y, r.size.x, r.size.y), side, k)
 
 
 func draw_edges_onto(c: Object) -> void:
@@ -9311,10 +9378,13 @@ func _draw_walk_ribbon(vt: float, vb: float, bottom: float, col: Color) -> void:
 	if walk_mod != null and walk_mod.has_method("draw_path_edges"):
 		walk_mod.draw_path_edges(self, left, right, col)
 		return
-	# the kerbs, following the same two edges the surface test uses
+	# the kerbs, following the same two edges the surface test uses; a dot at
+	# every joint where the line turns, so the segments meet without a notch
 	for pts: PackedVector2Array in [left, right]:
 		for i in range(pts.size() - 1):
 			_wc.draw_line(pts[i], pts[i + 1], COL_SEAM, 3.0)
+			if i > 0 and absf((pts[i] - pts[i - 1]).normalized().cross((pts[i + 1] - pts[i]).normalized())) > 0.01:
+				_wc.draw_circle(pts[i], 1.5, COL_SEAM)
 
 
 # A forest trail has no kerb: it frays into the floor. A darker trodden band

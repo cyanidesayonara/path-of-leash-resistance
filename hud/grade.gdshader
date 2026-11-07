@@ -50,6 +50,12 @@ uniform float surface = 1.0;
 // the world's animation clock in seconds (AnimClock, pinned in shot mode)
 uniform float world_t = 0.0;
 
+// edge smoothing (FXAA, the short form): 1 on, 0 off. The renderer has no
+// MSAA for 2D, so every slanted edge (a bending kerb, a roof turned along the
+// street, a rope) stepped in whole pixels. Flat areas leave after four
+// fetches; only edges pay for the blend along them.
+uniform float aa = 1.0;
+
 // arithmetic hash (no sin): software GL, which CI soaks under and some
 // players' browsers fall back to, pays dearly for transcendentals per pixel
 float hash(vec2 p) {
@@ -75,9 +81,34 @@ float fbm(vec2 p) {
 	return (vnoise(p) * 0.65 + vnoise(p * 2.3 + 17.0) * 0.35) - 0.5;
 }
 
+vec3 fxaa(vec2 uv, vec2 px) {
+	vec3 rgb_m = texture(screen_tex, uv).rgb;
+	const vec3 L = vec3(0.299, 0.587, 0.114);
+	float l_nw = dot(texture(screen_tex, uv + vec2(-0.5, -0.5) * px).rgb, L);
+	float l_ne = dot(texture(screen_tex, uv + vec2(0.5, -0.5) * px).rgb, L);
+	float l_sw = dot(texture(screen_tex, uv + vec2(-0.5, 0.5) * px).rgb, L);
+	float l_se = dot(texture(screen_tex, uv + vec2(0.5, 0.5) * px).rgb, L);
+	float l_m = dot(rgb_m, L);
+	float l_min = min(l_m, min(min(l_nw, l_ne), min(l_sw, l_se)));
+	float l_max = max(l_m, max(max(l_nw, l_ne), max(l_sw, l_se)));
+	if (l_max - l_min < max(0.05, l_max * 0.125)) {
+		return rgb_m;
+	}
+	vec2 dir = vec2(-((l_nw + l_ne) - (l_sw + l_se)), (l_nw + l_sw) - (l_ne + l_se));
+	float reduce = max((l_nw + l_ne + l_sw + l_se) * 0.25 * 0.125, 1.0 / 128.0);
+	float rcp_min = 1.0 / (min(abs(dir.x), abs(dir.y)) + reduce);
+	dir = clamp(dir * rcp_min, vec2(-4.0), vec2(4.0)) * px;
+	vec3 rgb_a = 0.5 * (texture(screen_tex, uv + dir * (1.0 / 3.0 - 0.5)).rgb
+		+ texture(screen_tex, uv + dir * (2.0 / 3.0 - 0.5)).rgb);
+	vec3 rgb_b = rgb_a * 0.5 + 0.25 * (texture(screen_tex, uv - dir * 0.5).rgb
+		+ texture(screen_tex, uv + dir * 0.5).rgb);
+	float l_b = dot(rgb_b, L);
+	return (l_b < l_min || l_b > l_max) ? rgb_a : rgb_b;
+}
+
 void fragment() {
 	vec2 uv = SCREEN_UV;
-	vec3 col = texture(screen_tex, uv).rgb;
+	vec3 col = aa > 0.5 ? fxaa(uv, SCREEN_PIXEL_SIZE) : texture(screen_tex, uv).rgb;
 
 	// world position of this pixel, for texture that stays put on the ground
 	vec2 wp = uv * view_px + cam_off;

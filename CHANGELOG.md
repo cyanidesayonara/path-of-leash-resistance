@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-07 - Clean street edges on winding walks
+
+- Built-up walks that bend (El Gòtic, La Neteja, La Castanyada and the rest): the wall faces, the cast shadow and the masonry along the street were 55 px horizontal slices, so a slanting street was lined with stairs. Each band is now a strip from the line at the slice's top to the line at its bottom, so the walls follow the bend in a clean slant. On a straight walk the strips are exactly the rects they replaced (`ShapeBatch.quad`).
+- The roofs along a bend were laid square at the line's middle, and the paving cut their street side off on the diagonal. They stay square but stand back at the line's outermost point across their height, so no corner is cut; the wedge between the slanting wall and the roof is a flat terrace in a roof tone, with its parapet along the street.
+- The kerbs along a bending path get a dot at every turn, so their segments meet without a notch.
+- Edge smoothing: the renderer has no 2D MSAA, so the world's grade shader now runs a short FXAA pass (`aa` uniform). Flat areas leave after four texture reads; only edges pay. GPU only, no draw calls.
+
 ## 2026-11-07 - Test that walk systems and world layers only read properties main declares
 
 - Added `tests/test_main_properties_exist.gd` to mirror `test_called_methods_exist.gd` for property reads:
