@@ -2683,7 +2683,7 @@ func is_lamppost(i: int) -> bool:
 		return true
 	if walk_mod != null and walk_mod.has_method("is_lamp"):
 		return walk_mod.is_lamp(self, poles[i])
-	if lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "oldtown" or lvl == "carmel" or lvl == "superilla":
+	if lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "oldtown" or lvl == "carmel" or lvl == "superilla" or lvl == "forum":
 		return false
 	return not (lvl == "rain" and poles[i].x < walk_cx)
 
@@ -8249,7 +8249,7 @@ func _squirrels(delta: float) -> void:
 		cat_y = 0.0
 	while flock_ys.size() > 0 and cam.position.y < flock_ys[0] + 650.0:
 		var fy: float = flock_ys.pop_front()
-		var gulls := lvl == "beach" or lvl == "llevant" or lvl == "port"
+		var gulls := lvl == "beach" or lvl == "llevant" or lvl == "port" or lvl == "forum"
 		var keets := lvl == "guell"
 		var fe := walk_edges(fy)
 		# only El Mosaic draws a side, so other walks keep their random sequence

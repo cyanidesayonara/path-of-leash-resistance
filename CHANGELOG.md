@@ -10,6 +10,43 @@ Append-only session history, newest first.
   - Set `game.persist = false` and redirected settings round-trip checks to scratch save files (`test_controls_overhaul.gd`, `test_free_play.gd`) so tests never mutate the developer's save.
   - Verified full test suite runs cleanly: 204 passed, 0 failed with a 100% completed save + free play, and 204 passed, 0 failed with no save file present.
 
+## 2026-11-06 - El Fòrum: the pergola no longer hides the pair
+
+- `systems/forum.gd`: the solar pergola covered the whole view and hid the dog and your human under it. It now thins to a third of its opacity while either is under it, as overhead pieces do, and is not drawn when the camera is far from it (it was about 200 panels every frame on the whole walk). It read `m.camera`, which main does not have; it reads `m.cam`. It declares `OVERHEAD_FOLLOWS_CAMERA`, so the overhead layer redraws it as the pair moves (that layer change is in #464).
+- The goal "Sprint under the solar pergola 3 times" was cut off in the goal list; it is "Sprint under the pergola 3 times".
+
+## 2026-11-06 - Draw El Fòrum as the real place
+
+- Rebuilt Walk 30's visual layers (`systems/forum.gd`, `world/level_build.gd`,
+  `main.gd`, `tests/test_walk_hooks.gd`) so Parc del Fòrum and Esplanada del Fòrum
+  read from above at the finish of the best coastal walks:
+  - Batched `draw_edge_layer`: West flank features Herzog & de Meuron's *Edifici
+    Fòrum* (Museu Blau) with rough indigo-blue triangular concrete elevations and
+    mirrored glass fissure glints; the CCIB convention center with standing-seam
+    zinc panels and tinted curtain walls; and the vast raked amphitheater seating
+    terraces where gulls roost. East flank opens directly to the Mediterranean
+    Sea, rendered with a turquoise coastal shelf, animated rhythmic swell waves,
+    interlocking concrete tetrapod breakwaters, Port Fòrum marina finger docks,
+    and moored boats with dual mooring lines.
+  - Authentic `draw_cross_section`: Vast coastal esplanade paving in modular precast
+    concrete slabs with expansion joints, asphalt skate speed strip with dashed
+    centerline, linear stainless slot drains, seawall coping with stainless steel
+    railings, skate banks with beveled transition ramps, steel coping pipes, wax
+    sheen and vibrant deck stickers, Pergola pylon footing pads, and a round teak
+    lookout deck at the marina plaza prize plinth featuring a golden star compass
+    and solar cell trophy.
+  - Monumental `draw_overhead`: 4,000 m² *Pèrgola Fotovoltaica* suspended space
+    truss frame with yellow diagonal cross struts, deep-blue photovoltaic cell
+    matrix, and glass sheen glints.
+  - Bespoke Forum props (`draw_column` animated marine windsock mast, `draw_bollard`
+    marine stainless stanchion, `draw_bin` brushed stainless recycling station,
+    `draw_fountain` square drinking fountain with splash pad, `draw_snack` foil
+    energy bar packet).
+  - Authentic off-leash area (`Banys del Fòrum`, `FREEDOM_PROPS["forum"]`,
+    `Forum.draw_freedom`): Seaside bathing park with stepped concrete sunbathing
+    terraces, salt-water bathing basin, swimming ladders, maritime pine planters,
+    dive buoys, and sunbathers. Clearances verified by `test_freedom_props.gd`.
+
 ## 2026-11-06 - Plaça d'Espanya drawn as the real place
 
 - `systems/espanya.gd`: the walk climbs the real axis. The round plaza's paving in light and dark stone bands between the two brick towers (brick coursing, stone quoins, pyramid roofs overhead), with the traffic ring and its lanes either side; Avinguda de la Reina Maria Cristina in granite slabs with a median of lit fountain grates, a sauló strip of plane trees, the road, and the exhibition halls' roofs (skylights, a domed lantern, the colonnade on the avenue); the Four Columns as ionic columns on a raised marble platform; the Magic Fountain's radial plaza, stone terrace, rim and basin, with a show of rising jets and a central plume; the stairs to the palace with the cascade's stepped basins and foam lips between balustrades; terraced lawns, hedges and cypresses; the palace wings with domed corner towers by the gate. Senyeres ripple on the flag masts.

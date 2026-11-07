@@ -111,6 +111,7 @@ const CROSS_SECTIONS := {
 	"raval": ["none", 0.0, "none", 0.0],           # promenade and plaza drawn in systems/boss_gat.gd
 	"gracia": ["none", 0.0, "none", 0.0],          # a narrow street: the houses at the paving
 	"carmel": ["none", 0.0, "none", 0.0],          # sunset panorama and hillside slopes in systems/carmel.gd
+	"forum": ["none", 0.0, "none", 0.0],           # coastal concrete plaza and bathing esplanade in systems/forum.gd
 	# flood wall on the left, grass then the river on the right
 	"besos": ["none", 0.0, "grass", 120.0],
 }
@@ -1402,7 +1403,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum":
 		return
 	# and so does El Barri; the First Walk, built on it, is still fitted
 	if m.lvl == "barri" and not m.tutorial_mode:
@@ -2743,11 +2744,11 @@ const FREEDOM_PROPS := {
 		[Vector2(938.0, -228.0), "post"], [Vector2(168.0, -396.0), "shrub"], [Vector2(1096.0, -242.0), "shrub"],
 	],
 	"forum": [
-		[Vector2(302.0, -450.0), "dig"], [Vector2(646.0, -410.0), "dig"], [Vector2(888.0, -240.0), "dig"],
-		[Vector2(376.0, -470.0), "planter"], [Vector2(1040.0, -238.0), "planter"],
-		[Vector2(274.0, -352.0), "post"], [Vector2(526.0, -448.0), "post"], [Vector2(764.0, -438.0), "post"],
-		[Vector2(1038.0, -450.0), "post"], [Vector2(324.0, -248.0), "shrub"], [Vector2(556.0, -234.0), "post"],
-		[Vector2(770.0, -218.0), "shrub"],
+		[Vector2(210.0, -480.0), "dig"], [Vector2(620.0, -320.0), "dig"], [Vector2(780.0, -220.0), "dig"],
+		[Vector2(320.0, -490.0), "planter"], [Vector2(720.0, -490.0), "planter"],
+		[Vector2(160.0, -350.0), "post"], [Vector2(290.0, -240.0), "post"], [Vector2(530.0, -480.0), "post"],
+		[Vector2(810.0, -470.0), "post"], [Vector2(180.0, -210.0), "shrub"], [Vector2(740.0, -350.0), "shrub"],
+		[Vector2(360.0, -350.0), "rock"],
 	],
 	"espanya": [
 		[Vector2(308.0, -444.0), "dig"], [Vector2(650.0, -418.0), "dig"], [Vector2(894.0, -232.0), "dig"],

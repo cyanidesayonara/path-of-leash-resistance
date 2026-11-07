@@ -150,7 +150,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"pingpong": {"text": "Slide under a concrete ping-pong table", "target": 1, "fn": func() -> int: return 1 if m.superilla_pingpong_slid else 0},
 		"circles": {"text": "Sprint through %d painted circles", "target": 3, "fn": func() -> int: return m.superilla_circles_sprinted},
 		"skater": {"text": "Dodge or cheer the esplanade skater", "target": 1, "fn": func() -> int: return 1 if (m.skater != null and (m.skater.dodge_done or m.skater.cheered or m.skater.booped)) else 0},
-		"pergola": {"text": "Sprint under the solar pergola %d times", "target": 3, "fn": func() -> int: return m.forum_pergola_sprinted},
+		"pergola": {"text": "Sprint under the pergola %d times", "target": 3, "fn": func() -> int: return m.forum_pergola_sprinted},
 		"rails": {"text": "Grind skate rails for %d style points", "target": 6, "fn": func() -> int: return m.forum_rails_grinded},
 		"bubble": {"text": "Pop giant soap bubbles from the street performer", "target": 1, "fn": func() -> int: return 1 if m.espanya_bubbles_popped >= 1 else 0},
 		"magic_fountain": {"text": "Splash through the Magic Fountain basin", "target": 1, "fn": func() -> int: return 1 if m.espanya_fountain_splashed >= 1 else 0},
