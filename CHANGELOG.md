@@ -2,6 +2,10 @@
 
 Append-only session history, newest first.
 
+## 2026-11-07 - v1.70 tagged
+
+- v1.70 tagged on the merge of #483. AGENTS.md, PROJECT.md and docs/ROADMAP.md say so; 1.71 is next. The hand-playtest of the new walks and edges and the phone check are still owed and come first in 1.71.
+
 ## 2026-11-07 - Release notes for 1.70
 
 - Store "What's new" and the certification note now describe 1.70 (everything since 1.69, under the Store's 1500 characters), and docs/itch-page.md has "What's new in 1.70". The walk count and lists (31) already matched the game.
