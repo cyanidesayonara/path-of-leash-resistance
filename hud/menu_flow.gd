@@ -250,11 +250,22 @@ static func walk_info(m: Node2D) -> Dictionary:
 	info["goals_total"] = (m.LEVEL_GOAL_IDS.get(sel, []) as Array).size()
 	if Game.free_play:
 		info["free_play"] = true
+	info["sky"] = sky_line(sel)
 	if Game.records.has(sel) and int(Game.records[sel].bones) > 0:
 		info["best"] = "Best: %d bones in %s" % [int(Game.records[sel].bones), clock(float(Game.records[sel].time))]
 	else:
 		info["best"] = "Not walked yet"
 	return info
+
+
+# how the campaign walks this walk: "day, clear", "night, rain"
+static func sky_line(lv: String) -> String:
+	var sky: Array = Game.CAMPAIGN_SKY.get(lv, [])
+	if sky.is_empty():
+		return ""
+	var w := String(Game.WALK_WEATHER.get(lv, sky[0]))
+	var n := bool(Game.WALK_NIGHT.get(lv, sky[1]))
+	return "%s, %s" % ["night" if n else "day", String(Game.WEATHER_NAMES[w]).to_lower()]
 
 
 static func clock(secs: float) -> String:
@@ -278,6 +289,10 @@ static func details_rows(m: Node2D) -> Array:
 			"fixed": Game.walk_sets_night(Game.level_id)},
 		{"id": "weather", "name": "WEATHER", "value": String(Game.WEATHER_NAMES[Game.weather]),
 			"fixed": Game.walk_sets_weather(Game.level_id)},
+		# the campaign walks a walk in its own sky; a finished one can be
+		# walked free, at any time and in any weather, for no stars
+		{"id": "mode", "name": "WALK", "value": "FREE WALK" if Game.is_free_walk(Game.level_id) else "CAMPAIGN",
+			"fixed": not Game.can_free_walk(Game.level_id), "hint": "finish it first"},
 	]
 
 
@@ -300,6 +315,11 @@ static func details_change(m: Node2D, dir: int) -> void:
 			Game.cycle_weather(dir)
 			m.apply_sky()
 			# snow writes the name in paw prints
+			m.build_signs()
+		"mode":
+			Game.free_walk = not Game.free_walk
+			Game.apply_walk_sky(Game.level_id)
+			m.apply_sky()
 			m.build_signs()
 	Sfx.play("ui")
 

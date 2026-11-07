@@ -15,7 +15,7 @@ const CurrentFlow := preload("res://systems/current_flow.gd")
 const SHALLOW_LEAD := 110.0
 const PUSH := 220.0
 const PLANT_PUSH := 28.0
-# standing in the shallow the whole way home fails "less than half soaked"
+# standing in the shallow the whole way home fails "mostly dry"
 const SOAK_SECS := 36.0
 const SWELL_MAX := 90.0
 const JAM_SECS := 3.0
