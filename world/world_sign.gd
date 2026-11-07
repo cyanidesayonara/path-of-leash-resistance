@@ -34,7 +34,7 @@ const MATERIALS := {
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
 	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
 	"montjuic": "cactus", "port": "rope", "reial": "fronds", "vet": "biscuits",
-	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "superilla": "pingpong", "forum": "solar", "espanya": "cascade", "raval": "pegs", "tutorial": "balls",
+	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "superilla": "pingpong", "forum": "solar", "espanya": "cascade", "angels": "wheels", "raval": "pegs", "tutorial": "balls",
 }
 # No glow or bed under the pieces: a name reads on its ground by each piece's
 # own dark edge and contact shadow, the way a real thing lying there would.
@@ -80,6 +80,7 @@ const FEEL := {
 	"pingpong": {"spacing": 0.14, "r": 0.07, "drag": 0.8, "take": 1.3, "roll": true},
 	"solar": {"spacing": 0.16, "r": 0.08, "drag": 4.0, "take": 0.8, "spin": 2.0, "align": true},
 	"cascade": {"spacing": 0.14, "r": 0.075, "drag": 4.5, "take": 1.0, "spin": 3.5},
+	"wheels": {"spacing": 0.14, "r": 0.075, "drag": 1.0, "take": 1.3, "roll": true},
 	"bulbs": {"fixed": true},
 	"setts": {"fixed": true},
 	"topiary": {"fixed": true},
@@ -539,6 +540,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_solar(c, sign, h, light)
 		"cascade":
 			_cascade(c, sign, h, light)
+		"wheels":
+			_wheels(c, sign, h, light)
 		"bulbs":
 			_bulbs(c, lines, h, t)
 		"studs":
@@ -1237,3 +1240,20 @@ static func _cascade(c: Object, sign: Dictionary, h: float, light: Vector2) -> v
 		# Specular crystalline droplet highlight
 		c.draw_circle(p - light * r * 0.35, r * 0.32, Color(1, 1, 1, 0.80))
 		c.draw_circle(p + light * r * 0.25, r * 0.18, Color(0.9, 0.98, 1.0, 0.50))
+
+
+static func _wheels(c: Object, sign: Dictionary, _h: float, light: Vector2) -> void:
+	# Polyurethane skateboard wheels with steel bearings on the plaza stone
+	var cols := [Color(0.94, 0.92, 0.84), Color(0.92, 0.34, 0.26), Color(0.24, 0.72, 0.86), Color(0.94, 0.76, 0.22)]
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		c.draw_circle((pc.p as Vector2) + light * r * 0.45, r * 1.04, Color(0, 0, 0, 0.28))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var col: Color = _pick(cols, float(pc["var"]))
+		c.draw_circle(p, r, col.darkened(0.35))
+		c.draw_circle(p, r * 0.86, col)
+		c.draw_circle(p, r * 0.42, Color(0.68, 0.70, 0.74))
+		c.draw_circle(p, r * 0.20, Color(0.22, 0.24, 0.28))
+		c.draw_circle(p - light * r * 0.34, r * 0.22, Color(1, 1, 1, 0.65))

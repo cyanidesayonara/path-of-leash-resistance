@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-07 - Add Els Àngels, the skate plaza
+
+- Added the walk `"angels"` (`Els Àngels`, `"The skate plaza outside the white museum"` / `"La plaça dels patinadors davant del museu blanc"` / `"La plaza de los patinadores frente al museo blanco"`), placed in `CAROUSEL` directly after `"trail"` (`El Bosc`) with `STAR_GATE` 22, `CHASE_GATE` `"vet"`, and `CAMPAIGN_SKY` `["clear", "dusk"]`.
+- `systems/angels.gd`: narrow Raval approach street opening into the wide granite plaza bulge in front of the white modernist museum (long glass curtain-wall facade, cantilevered canopy, entry ramp, and waxed granite skate ledges) and the stone Gothic chapel of Convent dels Àngels across the square, pinching back into the narrow Raval exit street before the quiet cloister-like university courtyard off-leash area.
+- Real grindables (`systems/rails.gd`): both museum skate ledges, the stair-set handrail, and the convent stone ledge are rideable with zoomies.
+- Live event (`systems/angels_skate.gd`): a skater bails on the plaza ledge with a 0.8 s `"Board!"` speech-bubble warning before the runaway skateboard shoots across the square (`NearMiss` dodge save, bark cheer, nose boop, dropped churro, and human ankle bump hazard).
+- Three walk-specific goals (`systems/goals.gd`): `"Grind a museum ledge"`, `"Sniff 3 skateboards on the ground"`, and `"Steal a dropped churro"`, plus the hazardous prize (`"snatch the churro bag off the plaza ledge"`), polyurethane skateboard-wheel world sign (`world/world_sign.gd`), dusk skate-plaza soundtrack (`audio/music.gd`), and regression suite (`tests/test_angels.gd`).
+
 ## 2026-11-07 - The whole view drawn after a camera jump; bumps cost a bump's worth
 
 - The camera is smoothed, so after a jump (a `--shot-y` shot, a restart, the turn for home) the screen trails `cam.position` by hundreds of pixels for a while. The world pass, the edge, verge and ground canvases and the section caches culled and cached for `cam.position`, so the stretch actually on screen could be left bare: a band of the view with no paving under the props (every `--shot-y` shot of Plaça d'Espanya, and the new L'Eixample). They cull to `main.view_lo()`/`view_hi()` now, a band that covers both where the camera is heading and where the screen really is; the canvases still decide when to redraw by the camera's position, so what they record always covers the view.

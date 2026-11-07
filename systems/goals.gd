@@ -72,6 +72,8 @@ const LEVEL_GOAL_IDS := {
 	"forum": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "skater", "pergola", "rails", "combo", "prize", "spell", "jamon", "clock"],
 	# Plaça d'Espanya: the dancing magic fountain, bubble performer, and monumental columns
 	"espanya": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "bubble", "magic_fountain", "columns", "combo", "prize", "spell", "jamon", "clock"],
+	# Els Àngels: the skate plaza outside the white museum
+	"angels": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "ledge", "decks", "churro", "combo", "prize", "spell", "jamon", "clock"],
 	# Rambla del Raval: the finale, El Gat de Botero. Tying him up is how the
 	# walk ends, so it is not a goal; the ways of wearing him down are.
 	"raval": ["mark", "sniff", "phone", "paws", "bag", "clothesline", "pigeons", "swat", "smash", "pummel", "combo", "prize", "spell", "jamon", "clock"],
@@ -155,6 +157,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"bubble": {"text": "Pop giant soap bubbles from the street performer", "target": 1, "fn": func() -> int: return 1 if m.espanya_bubbles_popped >= 1 else 0},
 		"magic_fountain": {"text": "Splash through the Magic Fountain basin", "target": 1, "fn": func() -> int: return 1 if m.espanya_fountain_splashed >= 1 else 0},
 		"columns": {"text": "Wrap the leash around the Four Columns", "target": 1, "fn": func() -> int: return 1 if m.espanya_columns_wrapped >= 1 else 0},
+		"ledge": {"text": "Grind a museum ledge", "target": 1, "fn": func() -> int: return 1 if m.angels_ledge_ground else 0},
+		"decks": {"text": "Sniff %d skateboards on the ground", "target": 3, "fn": func() -> int: return m.angels_decks_sniffed},
+		"churro": {"text": "Steal a dropped churro", "target": 1, "fn": func() -> int: return 1 if m.angels_churro_stolen else 0},
 		"spell": {"text": "Spell LEASH", "target": 5, "fn": func() -> int: return int(m.get("word_letters_collected"))},
 		"jamon": {"text": "Find the hidden pernil", "target": 1, "fn": func() -> int: return 1 if bool(m.get("jamon_found")) else 0},
 		"clock": {"text": "Beat the clock (under %s)" % clock(float(m.clock_target)), "target": 1,

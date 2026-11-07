@@ -2,7 +2,7 @@ extends Node
 
 # Autoload: session state that must survive scene reloads.
 
-const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant", "boars", "gracia", "carmel", "superilla", "forum", "espanya", "raval"]
+const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "angels", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant", "boars", "gracia", "carmel", "superilla", "forum", "espanya", "raval"]
 const LEVEL_NAMES := {
 	"tutorial": "First Walk",
 	# One scheme: a Catalan article plus one everyday noun for the place you
@@ -20,7 +20,7 @@ const LEVEL_NAMES := {
 	"barri": "El Barri",
 	"street": "La Rambla", "park": "El Parc",
 	"beach": "Passeig Marítim", "rain": "El Diluvi", "market": "El Mercat",
-	"oldtown": "El Gòtic", "trail": "El Bosc", "station": "L'Estació",
+	"oldtown": "El Gòtic", "trail": "El Bosc", "angels": "Els Àngels", "station": "L'Estació",
 	"besos": "El Besòs", "site": "Les Obres",
 	"spook": "La Castanyada", "scrap": "La Ferralla",
 	# invented, not the real site: the terraces are the STYLE reference, and
@@ -66,6 +66,7 @@ const LEVEL_SUBTITLES := {
 	"market": "The market hall",
 	"oldtown": "The old town alleys",
 	"trail": "A winding trail through the woods",
+	"angels": "The skate plaza outside the white museum",
 	"station": "Rush hour at the train station",
 	"besos": "The river park that floods when it rains",
 	"site": "The work site",
@@ -93,7 +94,7 @@ const LEVEL_SUBTITLES := {
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
 # The first few open quickly, so a new player is never stuck on one walk.
-const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "llevant": 15, "tibidabo": 17, "vet": 19, "trail": 21, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "station": 31, "carmel": 33, "reial": 35, "forum": 37, "aigues": 39, "horta": 41, "port": 43, "espanya": 45, "site": 47, "partit": 48, "scrap": 49, "gracia": 50, "raval": 51}
+const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "llevant": 15, "tibidabo": 17, "vet": 19, "trail": 21, "angels": 22, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "station": 31, "carmel": 33, "reial": 35, "forum": 37, "aigues": 39, "horta": 41, "port": 43, "espanya": 45, "site": 47, "partit": 48, "scrap": 49, "gracia": 50, "raval": 51}
 
 # Keystone Chase milestone gates: each tier requires surviving the previous
 # tier's chase level end-to-end to enter.
@@ -110,6 +111,7 @@ const CHASE_GATE := {
 	"vet": "besos",
 	# Tier 4 (Walks after El Veterinari)
 	"trail": "vet",
+	"angels": "vet",
 	"spook": "vet",
 	"boars": "vet",
 	# Tier 5 (Walks after Els Senglars)
@@ -163,7 +165,7 @@ const CAMPAIGN_SKY := {
 	"beach": ["wind", "dawn"], "neteja": ["clear", "dawn"], "oldtown": ["clear", "day"],
 	"montjuic": ["clear", "day"], "market": ["clear", "day"], "rain": ["rain", "day"],
 	"besos": ["rain", "day"], "llevant": ["wind", "day"], "tibidabo": ["clear", "day"],
-	"vet": ["clear", "day"], "trail": ["clear", "day"], "spook": ["clear", "night"],
+	"vet": ["clear", "day"], "trail": ["clear", "day"], "angels": ["clear", "dusk"], "spook": ["clear", "night"],
 	"boars": ["clear", "day"], "guell": ["clear", "day"], "superilla": ["clear", "day"],
 	"station": ["clear", "day"], "carmel": ["clear", "dusk"], "reial": ["clear", "night"],
 	"forum": ["wind", "day"], "aigues": ["clear", "day"], "horta": ["clear", "day"],
@@ -173,7 +175,7 @@ const CAMPAIGN_SKY := {
 }
 
 # the walk select: the first walk, then the campaign walks in order
-const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "llevant", "tibidabo", "vet", "trail", "spook", "boars", "guell", "superilla", "station", "carmel", "reial", "forum", "aigues", "horta", "port", "espanya", "site", "partit", "scrap", "gracia", "raval"]
+const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "llevant", "tibidabo", "vet", "trail", "angels", "spook", "boars", "guell", "superilla", "station", "carmel", "reial", "forum", "aigues", "horta", "port", "espanya", "site", "partit", "scrap", "gracia", "raval"]
 
 # Cosmetics keep their catalog keys when equipped, but ownership is namespaced
 # by category so identically named items remain separate purchases.
@@ -394,6 +396,7 @@ const LEVEL_SUBTITLES_CA := {
 	"market": "El mercat cobert",
 	"oldtown": "Els carrerons del barri vell",
 	"trail": "Un camí que serpenteja pel bosc",
+	"angels": "La plaça dels patinadors davant del museu blanc",
 	"station": "Hora punta a l'estació de tren",
 	"besos": "El parc fluvial que s'inunda quan plou",
 	"site": "El carrer en obres",
@@ -428,6 +431,7 @@ const LEVEL_SUBTITLES_ES := {
 	"market": "El mercado cubierto",
 	"oldtown": "Los callejones del casco antiguo",
 	"trail": "Un sendero que serpentea por el bosque",
+	"angels": "La plaza de los patinadores frente al museo blanco",
 	"station": "Hora punta en la estación de tren",
 	"besos": "El parque fluvial que se inunda cuando llueve",
 	"site": "La calle en obras",
@@ -460,7 +464,7 @@ var agility_best := 0.0
 var gate_open: Array[String] = []
 # the walks that arrived with the chase gates: no save predates them, so
 # none is grandfathered past its gate
-const WALKS_SINCE_GATES: Array[String] = ["llevant", "boars", "gracia", "carmel", "superilla", "forum", "espanya", "raval"]
+const WALKS_SINCE_GATES: Array[String] = ["llevant", "angels", "boars", "gracia", "carmel", "superilla", "forum", "espanya", "raval"]
 # The goal card is a big block of text in the corner of a game whose whole
 # point is the mess in the middle. Collapsed it is one line; the player
 # decides, and the choice sticks.
