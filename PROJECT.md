@@ -199,8 +199,16 @@ Every feature must serve at least one. If it serves none, cut it.
   and speech, the full goal list, one speech bubble for everyone. 1.65 and
   1.66 went to the Store with 1.64's notes; the Store's notes for 1.67 cover
   everything since.
-- **v1.67 - next.** A tune for every dare-giver, a count-in and a hurry,
-  20-second dares. Tag only when Santtu says, and only once the Store's
+- **v1.67 - shipped 2026-10-31.** Controls overhaul, five dogs, Badalona's
+  Passeig Marítim, Tony Hawk quests, stars and bones for the campaign.
+- **v1.68 and v1.69 - shipped.** Story films on the chase walks, Els Búnquers,
+  El Gat's finale, a signature live event on every walk, true near-miss saves.
+  1.69 tagged 2026-11-03.
+- **v1.70 - next.** Hardening and light: dawn and dusk, campaign skies,
+  squared streets with walkable yards, edge smoothing, four new walks
+  (Superilla, Fòrum, Espanya, Carmel), three detour galleries. No new walks
+  after these until it ships. The gate and everything after it:
+  `docs/ROADMAP.md`. Tag only when Santtu says, and only once the Store's
   What's new and the itch notes describe it (docs/MICROSOFT_STORE.md).
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
@@ -208,6 +216,8 @@ Every feature must serve at least one. If it serves none, cut it.
   one new rare event, and a CHANGELOG entry. Tags on every release.
 
 ## Roadmap
+
+The finish line, release by release, is in `docs/ROADMAP.md`.
 
 ### Phase 1 — Find the fun (now, 2-6 weeks of evenings)
 
