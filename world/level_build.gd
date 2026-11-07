@@ -2760,10 +2760,10 @@ const FREEDOM_PROPS := {
 	# the garden inside the next block: the water tower's lawns, its plane
 	# trees and the play corner
 	"eixample": [
-		[Vector2(250.0, -480.0), "dig"], [Vector2(1010.0, -300.0), "dig"], [Vector2(420.0, -250.0), "dig"],
+		[Vector2(250.0, -480.0), "dig"], [Vector2(1010.0, -300.0), "dig"], [Vector2(560.0, -300.0), "dig"],
 		[Vector2(330.0, -470.0), "planter"], [Vector2(950.0, -470.0), "planter"],
 		[Vector2(200.0, -330.0), "post"], [Vector2(480.0, -440.0), "post"], [Vector2(800.0, -440.0), "post"],
-		[Vector2(1080.0, -330.0), "post"], [Vector2(240.0, -210.0), "shrub"], [Vector2(1040.0, -200.0), "shrub"],
+		[Vector2(1080.0, -330.0), "post"], [Vector2(240.0, -210.0), "shrub"], [Vector2(1100.0, -260.0), "shrub"],
 	],
 	"forum": [
 		[Vector2(210.0, -480.0), "dig"], [Vector2(620.0, -320.0), "dig"], [Vector2(780.0, -220.0), "dig"],
