@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-07 - L'Eixample, the grid of cut corners
+
+- New walk, the first of 1.71: L'Eixample (`systems/eixample.gd`), one street of the grid walked to the basilica. Panot flower tiles, a granite middle, plane trees, planted islands; the street opens into an octagon at each of the four crossings, with a lamp on every cut corner. Modernista roofs with terraces, stair houses, water tanks and washing; a turret with a trencadís cap on each corner house; courtyards inside the blocks; parked cars and recycling containers on the side streets. The last block runs between Plaça de Gaudí's pond and the basilica's towers. Off leash in the garden inside the next block.
+- Live event: a tour group follows its guide's umbrella across the last crossing (`systems/eixample_tour.gd`), warned 0.8 s ahead. Bump, save, bark-for-a-photo, boop and a dropped pastry.
+- Goals: mark the lamps on 3 cut corners, get photographed by a tour group, paddle in the pond by the basilica; the croissant off the terrace table is the prize.
+- After Platja de Llevant in the campaign (16 stars, past El Besòs), as the planner orders it. Its own music settings, sign material (plane-tree seed balls), clock target and pernil. `tests/test_eixample.gd` in CI.
+
 ## 2026-11-07 - v1.70 tagged
 
 - v1.70 tagged on the merge of #483. AGENTS.md, PROJECT.md and docs/ROADMAP.md say so; 1.71 is next. The hand-playtest of the new walks and edges and the phone check are still owed and come first in 1.71.

@@ -343,6 +343,8 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_forum.gd
       - name: Placa d'Espanya (Font Magica) test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_espanya.gd
+      - name: L'Eixample (the grid and the tour group) test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_eixample.gd
       - name: La Castanyada castanyera crossing test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_castanyada_live_event.gd
       - name: Park Guell municipal gardener crossing test
