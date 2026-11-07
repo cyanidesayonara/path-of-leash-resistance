@@ -24,6 +24,8 @@ const Surfaces := preload("res://world/surfaces.gd")
 const EspanyaBubble := preload("res://systems/espanya_bubble.gd")
 const AnimClock := preload("res://systems/anim_clock.gd")
 
+# a bump costs your human this much of their patience (0..1, entities/human.gd)
+const BUMP_PATIENCE := 0.08
 const LIGHT := Vector2(0.5, 0.866)
 # the overhead layer redraws this walk at 30 fps: its overhead follows the camera
 const OVERHEAD_FOLLOWS_CAMERA := true
@@ -229,7 +231,7 @@ static func tick(m: Node2D, delta: float) -> void:
 		if ev.get("telegraph", false):
 			m.float_text(m.espanya_bubble.pos + Vector2(0.0, -42.0), "Bubbles coming!", Color(0.96, 0.94, 0.88), m.POP_SAY)
 		if ev.get("bump_hazard", false):
-			m.human.patience = maxf(0.0, m.human.patience - 8.0)
+			m.human.patience = maxf(0.0, m.human.patience - BUMP_PATIENCE)
 			m.float_text(m.human.global_position + Vector2(0.0, -32.0), "Ugh, the bucket!", Color(0.95, 0.40, 0.35), m.POP_SAY)
 			_play_sfx(m, "bump")
 		if ev.get("bubble_pop", false):

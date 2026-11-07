@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-11-07 - The whole view drawn after a camera jump; bumps cost a bump's worth
+
+- The camera is smoothed, so after a jump (a `--shot-y` shot, a restart, the turn for home) the screen trails `cam.position` by hundreds of pixels for a while. The world pass, the edge, verge and ground canvases and the section caches culled and cached for `cam.position`, so the stretch actually on screen could be left bare: a band of the view with no paving under the props (every `--shot-y` shot of Plaça d'Espanya, and the new L'Eixample). They cull to `main.view_lo()`/`view_hi()` now, a band that covers both where the camera is heading and where the screen really is; the canvases still decide when to redraw by the camera's position, so what they record always covers the view.
+- Plaça d'Espanya's bubble performer and El Fòrum's skater took 8.0 off your human's patience on a bump. Patience runs from 0 to 1, so one bump emptied it and sprang a correction on the player. A bump costs 0.08 now (`BUMP_PATIENCE`), as the other live events' do. `tests/test_patience_scale.gd` fails on any script that takes a whole number off it.
+
 ## 2026-11-07 - v1.70 tagged
 
 - v1.70 tagged on the merge of #483. AGENTS.md, PROJECT.md and docs/ROADMAP.md say so; 1.71 is next. The hand-playtest of the new walks and edges and the phone check are still owed and come first in 1.71.
