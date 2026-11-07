@@ -201,6 +201,20 @@ func line(from: Vector2, to: Vector2, color: Color, width: float) -> void:
 	_colors.append_array(_quad_fill)
 
 
+# Four corners in order, as draw_rect's two triangles (a b c, then a c d), so
+# a rect given by its corners draws the same pixels as rect(). A slanted one
+# is a strip that follows a bend.
+func quad(a: Vector2, b: Vector2, c: Vector2, d: Vector2, color: Color) -> void:
+	_points.append(a)
+	_points.append(b)
+	_points.append(c)
+	_points.append(a)
+	_points.append(c)
+	_points.append(d)
+	_quad_fill.fill(color)
+	_colors.append_array(_quad_fill)
+
+
 # a rounded bar from a to b, radius r: a body, a limb, a case. One line and
 # its two round ends, batched like any shape.
 func capsule(a: Vector2, b: Vector2, r: float, color: Color) -> void:

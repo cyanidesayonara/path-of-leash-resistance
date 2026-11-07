@@ -188,6 +188,8 @@ func _run() -> void:
 	while py > LevelBuild.MERCAT_DOOR_Y + 120.0:
 		var pe: Vector2 = m.walk_edges(py)
 		for side: float in [-1.0, 1.0]:
+			# on a bend the wall stands at the building line, out past the
+			# street's edge (the front yard in between is walkable)
 			var wall_x: float = pe.x if side < 0.0 else pe.y
 			var band := Rect2(minf(wall_x, wall_x - side * 200.0), py - 34.0, 200.0, 68.0)
 			if _crowded(m, band):
@@ -199,7 +201,7 @@ func _run() -> void:
 				dog.move_and_slide()
 			# she slides along a slanting wall (floating motion), so measure
 			# against the wall where she ended up, not where she set off
-			var end_e: Vector2 = m.walk_edges(dog.global_position.y)
+			var end_e: Vector2 = m.building_line(dog.global_position.y)
 			wall_x = end_e.x if side < 0.0 else end_e.y
 			var gap: float = absf(wall_x - dog.global_position.x)
 			_check(gap <= 14.0 + 6.0 + 3.0, "she reaches the %s wall at y=%.0f (stops %.0f px short)" % [
