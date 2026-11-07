@@ -13,6 +13,13 @@ Append-only session history, newest first.
 - The test builds every walk's goals via `main.tscn` instantiation, computes each goal's displayed text (`quest_text`), and measures string width with `ThemeDB.fallback_font` at `GoalsCard.FONT_SIZE` (15 px) against the goal card's per-row available text width (`W - TEXT_X - PAD - side_w`, accounting for meters, spelling tiles, and readouts).
 - Fails with `"LEVEL: 'TEXT' is W px, the row holds R px"` when a goal's text exceeds its row width.
 
+## 2026-11-07 - Test that walk systems and world layers only read properties main declares
+
+- Added `tests/test_main_properties_exist.gd` to mirror `test_called_methods_exist.gd` for property reads:
+  - Scans `systems/*.gd` and `world/*.gd` for `m.NAME` property reads (`\bm\.([a-z_][a-z0-9_]*)\b(?!\s*\()`) inside functions where `m` is main (`m: Node2D` or untyped `m`).
+  - Verifies that every property read is declared by `main.gd` (`var`, `const`, `func`, `signal`) or inherited from `Node2D`/`Node`.
+  - Added CI step `Main properties exist test` in `.github/workflows/ci.yml`.
+
 ## 2026-11-07 - The crowd river test runs the same way every time
 
 - `tests/test_crowd_river.gd` failed now and then for reasons outside the code under test. The live walks drew on the engine RNG, which a plain launch leaves unseeded, so a fan once stood inside your human on one CI run (#462); both live walks now seed it first. The step-cost check timed one average and failed 3 runs in 8 on a loaded desktop; it takes the fastest of ten short batches a frame apart (typically 470-960 us against the 1500 us budget). The simulation part was not awaited, so that timing also ran alongside the live walk; it is awaited now.
