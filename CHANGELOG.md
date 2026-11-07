@@ -13,6 +13,11 @@ Append-only session history, newest first.
 - The test builds every walk's goals via `main.tscn` instantiation, computes each goal's displayed text (`quest_text`), and measures string width with `ThemeDB.fallback_font` at `GoalsCard.FONT_SIZE` (15 px) against the goal card's per-row available text width (`W - TEXT_X - PAD - side_w`, accounting for meters, spelling tiles, and readouts).
 - Fails with `"LEVEL: 'TEXT' is W px, the row holds R px"` when a goal's text exceeds its row width.
 
+## 2026-11-07 - The crowd river test runs the same way every time
+
+- `tests/test_crowd_river.gd` failed now and then for reasons outside the code under test. The live walks drew on the engine RNG, which a plain launch leaves unseeded, so a fan once stood inside your human on one CI run (#462); both live walks now seed it first. The step-cost check timed one average and failed 3 runs in 8 on a loaded desktop; it takes the fastest of ten short batches a frame apart (typically 470-960 us against the 1500 us budget). The simulation part was not awaited, so that timing also ran alongside the live walk; it is awaited now.
+- Tests only; no change to the game.
+
 ## 2026-11-06 - Test isolation against developer save files
 
 - Test suite isolation (`tests/test_superilla.gd`, `tests/test_carmel.gd`, `tests/test_campaign_mastery.gd`, `tests/test_controls_overhaul.gd`, `tests/test_free_play.gd`, `tests/test_tofu_spots.gd`, `tests/test_tony_hawk_quests.gd`, `tests/test_losses.gd`, `tests/test_tips.gd`, `tests/test_ui_scale.gd`, `tests/test_barri.gd`, `tests/test_estacio.gd`, `tests/test_pickpocket.gd`, `tests/test_mercat_owner_path.gd`, `tests/test_crowd_river.gd`, `tests/test_menu_flow.gd`, `tests/test_menu_tree.gd`, `tests/test_menu_anim_polish.gd`, `tests/test_freedom_fixes.gd`, `tests/test_home_epilogue.gd`):
