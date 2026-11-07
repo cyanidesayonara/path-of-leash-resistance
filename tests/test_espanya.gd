@@ -38,7 +38,7 @@ class FakeMain:
 	var saves_done := 0
 	var dog: Node2D
 	var human: FakeHuman
-	var camera: Node2D
+	var cam: Node2D
 	var espanya_bubble: EspanyaBubble = null
 	var marks: Array[Vector2] = []
 	var bins: Array[Vector2] = []
@@ -65,11 +65,11 @@ class FakeMain:
 	func _init() -> void:
 		dog = FakeDog.new()
 		human = FakeHuman.new()
-		camera = Node2D.new()
+		cam = Node2D.new()
 		leash = FakeLeash.new()
 		add_child(dog)
 		add_child(human)
-		add_child(camera)
+		add_child(cam)
 
 	func float_text(_pos: Vector2, _txt: String, _col: Color, _kind: int = 0) -> void:
 		pass
@@ -205,16 +205,25 @@ func _run() -> void:
 	Espanya.tick(m, 0.016)
 	_check(m.espanya_fountain_splashed == 1, "fountain_splashed marked 1")
 
-	# Test Columns wrap
-	m.leash.contact_pole = Espanya.COLUMN_POSTS[0]
+	# Test Columns wrap. A flag mast does not count; a column counts at the x
+	# the walk fits it to (LevelBuild.fit_props_to_corridor moves every pole's
+	# x after build, so the authored x is never the one the rope touches)
+	m.leash.contact_pole = Espanya.FLAGPOLES[0]
 	m.leash.static_contacts = 1
 	m.leash.contact_static = true
 	Espanya.tick(m, 0.016)
-	_check(m.espanya_columns_wrapped == 1, "columns_wrapped marked 1")
+	_check(m.espanya_columns_wrapped == 0, "a flag mast is not a column")
+	m.leash.contact_pole = Vector2(557.4117, Espanya.COLUMNS_Y)   # where the first column is in play
+	Espanya.tick(m, 0.016)
+	_check(m.espanya_columns_wrapped == 1, "columns_wrapped marked 1 at the fitted column")
 
 	# Verify batching
 	var b := ShapeBatch.new()
 	Espanya.draw_edge_layer(m, b, -4500.0, -500.0)
+	Espanya.draw_cross_section(m, b, 0.0, 0.0, -4800.0, -4500.0, 200.0)
+	for col: Vector2 in Espanya.COLUMN_POSTS:
+		Espanya.draw_column(m, b, col)
+	Espanya.draw_column(m, b, Espanya.FLAGPOLES[0])
 	Espanya.draw_live(m, b, -4500.0, -500.0)
 	Espanya.draw_overhead(m, b)
 	_check(b._points.size() > 0, "ShapeBatch accumulates geometry without error")

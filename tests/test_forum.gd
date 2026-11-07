@@ -38,7 +38,7 @@ class FakeMain:
 	var saves_done := 0
 	var dog: Node2D
 	var human: FakeHuman
-	var camera: Node2D
+	var cam: Node2D
 	var skater: ForumSkater = null
 	var marks: Array[Vector2] = []
 	var bins: Array[Vector2] = []
@@ -62,10 +62,10 @@ class FakeMain:
 	func _init() -> void:
 		dog = FakeDog.new()
 		human = FakeHuman.new()
-		camera = Node2D.new()
+		cam = Node2D.new()
 		add_child(dog)
 		add_child(human)
-		add_child(camera)
+		add_child(cam)
 
 	func float_text(_pos: Vector2, _txt: String, _col: Color, _kind: int = 0) -> void:
 		pass

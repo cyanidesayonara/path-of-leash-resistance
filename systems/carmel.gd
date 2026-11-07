@@ -22,6 +22,8 @@ extends RefCounted
 # - Live event: El Guitarrista del Carmel (systems/guitarrista.gd) playing sunset rumba.
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+# the overhead layer redraws this walk at 30 fps: its overhead follows the camera
+const OVERHEAD_FOLLOWS_CAMERA := true
 const EventFeed := preload("res://hud/event_feed.gd")
 const Guitarrista := preload("res://systems/guitarrista.gd")
 const Surfaces := preload("res://world/surfaces.gd")
