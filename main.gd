@@ -1606,8 +1606,8 @@ func building_line(y: float) -> Vector2:
 
 func draw_edges_onto(c: Object) -> void:
 	# called by the edge layer, which decides WHEN rather than what
-	var vt: float = cam.position.y - 560.0
-	var vb: float = cam.position.y + 560.0
+	var vt: float = view_lo(560.0)
+	var vb: float = view_hi(560.0)
 	# drawn through a ShapeBatch: the modules alternate rects, lines and discs,
 	# and every switch was a new draw call (316 of street's 781 a frame). Same
 	# pixels, see systems/shape_batch.gd. c is a CanvasItem or that stand-in.
@@ -2651,8 +2651,8 @@ var _canopy: Array[Dictionary] = []
 
 func canopy_trees() -> Array[Dictionary]:
 	_canopy.clear()
-	var vt: float = cam.position.y - 500.0
-	var vb: float = cam.position.y + 500.0
+	var vt: float = view_lo(500.0)
+	var vb: float = view_hi(500.0)
 	for i in range(deco_pole_count):
 		var p := poles[i]
 		if p.y < vt or p.y > vb:
@@ -2788,8 +2788,8 @@ func overhead_pieces() -> Array[Dictionary]:
 	# hangs between walk_edges at draw time: it would be strung across the room
 	if detour_active:
 		return _over
-	var vt: float = cam.position.y - 500.0
-	var vb: float = cam.position.y + 500.0
+	var vt: float = view_lo(500.0)
+	var vb: float = view_hi(500.0)
 	var raining := Game.weather == "rain"
 	for t: Dictionary in _over_all:
 		if float(t["bot"]) < vt or float(t["top"]) > vb:
@@ -3233,8 +3233,8 @@ func _diluvi_awning(b: ShapeBatch, r: Rect2, i: int) -> void:
 
 # the arcade's vaulted roof seen from above, only the stretch on screen
 func _diluvi_arcade_roof(b: ShapeBatch, ar: Rect2) -> void:
-	var vt: float = cam.position.y - 440.0
-	var vb: float = cam.position.y + 440.0
+	var vt: float = view_lo(440.0)
+	var vb: float = view_hi(440.0)
 	var y0 := maxf(ar.position.y, vt - 40.0)
 	var y1 := minf(ar.end.y, vb + 40.0)
 	if y1 <= y0:
@@ -11739,6 +11739,20 @@ var _ground_args := []
 # changes, and the world pass draws nothing for it. The first time, it is
 # recorded once to see whether it reads the animation clock; if it does, it
 # is drawn in the world pass every time instead.
+# What is on screen, give or take a margin. The camera is smoothed
+# (level_build), so after a jump - a shot, a restart, the turn for home - the
+# screen trails cam.position by hundreds of pixels for a while. Everything
+# culled to the view covers both where the camera is heading and where the
+# screen really is, or the stretch on screen is drawn for the one and the
+# rest of the view stays bare.
+func view_lo(margin: float) -> float:
+	return minf(cam.position.y, cam.get_screen_center_position().y) - margin
+
+
+func view_hi(margin: float) -> float:
+	return maxf(cam.position.y, cam.get_screen_center_position().y) + margin
+
+
 func _draw_ground(top: float, bottom: float, ctop: float, vt: float, vb: float) -> void:
 	if not _ground_live and ground_layer != null and _ground_key.is_empty():
 		var rec := ShapeBatch.new()
@@ -12061,8 +12075,8 @@ func _draw_world() -> void:
 	var ctop := GATE_Y - 40.0
 	# cull to the camera: redrawing 5500px of detail lines every frame
 	# was the browser stutter
-	var vt: float = cam.position.y - 440.0
-	var vb: float = cam.position.y + 440.0
+	var vt: float = view_lo(440.0)
+	var vb: float = view_hi(440.0)
 	_draw_ground(top, bottom, ctop, vt, vb)
 	_dprof("cross section")
 	# (what lies beyond the gate is drawn by freedomlayer, which owns

@@ -345,6 +345,8 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_espanya.gd
       - name: Building walls on bending streets test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_building_walls.gd
+      - name: Patience scale (live events take a fraction of it)
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_patience_scale.gd
       - name: La Castanyada castanyera crossing test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_castanyada_live_event.gd
       - name: Park Guell municipal gardener crossing test
