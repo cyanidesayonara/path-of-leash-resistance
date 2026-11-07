@@ -32,6 +32,7 @@ func _main(lv: String, weather: String) -> Node2D:
 	var game: Node = root.get_node("Game")
 	game.level_id = lv
 	game.weather = weather
+	game.sky_from_args = true   # as --weather=: the campaign does not override it
 	var m: Node2D = load("res://main.tscn").instantiate()
 	root.add_child(m)
 	return m
@@ -75,6 +76,7 @@ func _run() -> void:
 	snow.queue_free()
 	await process_frame
 	root.get_node("Game").weather = "clear"
+	root.get_node("Game").sky_from_args = false
 	print("\n%d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():
 		print("test_footprints: OK")

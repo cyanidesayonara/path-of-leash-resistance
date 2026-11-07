@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-07 - Campaign skies and FREE WALK
+
+- Every walk now has its own time and weather in the campaign (`Game.CAMPAIGN_SKY`), so a walk is the same walk for everyone the first time: Plaça Reial, Plaça d'Espanya, Dia de Partit, Festa de Gràcia and El Gat after dark (the films agree: Gràcia and El Gat at night; La Neteja stays its warm dawn, drawn by day), wind on the beach, Platja de Llevant and El Fòrum, rain on El Diluvi and El Besòs, clear days elsewhere. The walk card shows it ("day, wind") beside the best.
+- GET READY: TIME and WEATHER say "set by the walk" in the campaign. A new row, WALK, switches a finished walk to FREE WALK: your own time and weather, for the fun of it, with nothing recorded (no goals, stars, style, best tallies or banked bones; `Game.recording`). Unfinished walks say "finish it first". Free play opens free walks everywhere. A goal on a free walk toasts "FREE WALK +5"; the results head says FREE WALK. El Diluvi still always rains and La Castanyada is still always dark.
+- `--weather=` and `--night` still set the sky on every walk for the run (CI, screenshots): the campaign does not override them.
+- Tests: `test_snow_slush` and `test_footprints` set their snow as `--weather` does; `test_walk_sky` covers the campaign, free walks, the WALK row and the card; `test_menu_flow` knows the fifth row.
+
 ## 2026-11-06 - Test isolation against developer save files
 
 - Test suite isolation (`tests/test_superilla.gd`, `tests/test_carmel.gd`, `tests/test_campaign_mastery.gd`, `tests/test_controls_overhaul.gd`, `tests/test_free_play.gd`, `tests/test_tofu_spots.gd`, `tests/test_tony_hawk_quests.gd`, `tests/test_losses.gd`, `tests/test_tips.gd`, `tests/test_ui_scale.gd`, `tests/test_barri.gd`, `tests/test_estacio.gd`, `tests/test_pickpocket.gd`, `tests/test_mercat_owner_path.gd`, `tests/test_crowd_river.gd`, `tests/test_menu_flow.gd`, `tests/test_menu_tree.gd`, `tests/test_menu_anim_polish.gd`, `tests/test_freedom_fixes.gd`, `tests/test_home_epilogue.gd`):

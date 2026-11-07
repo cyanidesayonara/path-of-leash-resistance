@@ -228,8 +228,8 @@ static func credit(m: Node2D, q: Dictionary) -> void:
 		m.run_goals_new += 1
 	# by the goal list, not in the middle of the screen: a first time is
 	# gold, one already done on an earlier walk is quieter
-	if Game.free_play:
-		m.feed.toast("goal", "FREE PLAY  +5", quest_text(q), Color(0.98, 0.80, 0.38))
+	if not Game.recording(m.lvl):
+		m.feed.toast("goal", ("FREE PLAY" if Game.free_play else "FREE WALK") + "  +5", quest_text(q), Color(0.98, 0.80, 0.38))
 	elif newly:
 		m.feed.toast("goal", "GOAL!  +5", quest_text(q), Color(0.98, 0.80, 0.38))
 	else:
@@ -374,6 +374,8 @@ static func finish_walk(m: Node2D) -> void:
 		var head := ""
 		if Game.free_play:
 			head += "FREE PLAY (PRACTICE)   "
+		elif Game.is_free_walk(m.lvl):
+			head += "FREE WALK   "
 		elif star_gain > 0:
 			head += "+%d STAR%s   " % [star_gain, "" if star_gain == 1 else "S"]
 		if rec.bones_record:
