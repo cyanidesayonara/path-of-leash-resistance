@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-11-07 - Every goal fits the goal list
+
+- Twelve goals on ten walks were cut off in the goal list; shortened, same meaning: "Haul your human clear 2 times" (Passeig Marítim, Platja de Llevant), "Get your human home mostly dry" (El Diluvi, El Besòs), "Splash through the shallows 4 times" (El Besòs), "Let 3 bikes squeak past your human" and "Nab the runner's banana off the mirador bench" (Carretera de les Aigües), "Wrap the leash around an anti-aircraft gun" (Els Búnquers), "Snatch the solar trophy off the marina podium" (El Fòrum), "Lead your human round Eros in the maze" (Laberint d'Horta), "Snatch the horchata off the orxateria table" (La Superilla), "Snatch the spun sugar off the fairground cart" (Tibidabo).
+- `tests/test_goal_text_fits.gd` (above) now passes on every walk, so it can run in CI.
+
 ## 2026-11-07 - Goal text row width fit regression test
 
 - Added `tests/test_goal_text_fits.gd` and registered it in `.github/workflows/ci.yml`.

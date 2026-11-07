@@ -427,7 +427,7 @@ applies to every change, whoever makes it.
 Dry, fond, from the dog's side of the leash; American English; short.
 Each kind of text has one form, and its look comes from where it is drawn:
 - **Goals**: sentence case, an instruction to the dog ("Mark 5 spots",
-  "Get your human home less than half soaked"). `goals.quest_text`
+  "Get your human home mostly dry"). `goals.quest_text`
   capitalises the first letter of every goal, wherever it was written.
 - **Shouts** (`feed.say`): capitals, a few words, what she just did or what
   needs her now ("CURB RIDE!", "PICKPOCKET! WATCH HIS HANDS").

@@ -92,7 +92,7 @@ const VIEWFINDERS: Array[Vector2] = [
 
 # Summit fairground prize
 const PRIZE := Vector2(490.0, -4600.0)
-const PRIZE_TEXT := "snatch the spun sugar stick from the fairground cart"
+const PRIZE_TEXT := "snatch the spun sugar off the fairground cart"
 
 # Winding corridor geometry: ascending the mountain
 static func edge_nodes(m: Node2D) -> Array:
