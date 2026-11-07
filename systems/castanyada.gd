@@ -222,7 +222,8 @@ static func _draw_lanterns(m: Node2D, c: CanvasItem) -> void:
 	ys.append_array(yard_strings(m))
 	for i in range(ys.size()):
 		var ly: float = ys[i]
-		var e: Vector2 = m.walk_edges(ly) if i < n_walk else Vector2(fr.position.x - 10.0, fr.end.x + 10.0)
+		# tied to the houses (the building line), not the paving's edge
+		var e: Vector2 = m.building_line(ly) if i < n_walk else Vector2(fr.position.x - 10.0, fr.end.x + 10.0)
 		var a := Vector2(e.x - 10.0, ly - 20.0)
 		var z := Vector2(e.y + 10.0, ly + 20.0)
 		var prev := a
