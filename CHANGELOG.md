@@ -2,6 +2,10 @@
 
 Append-only session history, newest first.
 
+## 2026-11-07 - Release notes for 1.70
+
+- Store "What's new" and the certification note now describe 1.70 (everything since 1.69, under the Store's 1500 characters), and docs/itch-page.md has "What's new in 1.70". The walk count and lists (31) already matched the game.
+
 ## 2026-11-07 - Roadmap to 1.70 and the 41-walk finish line
 
 - `docs/ROADMAP.md`: where the game stands, the 41-walk target, the release train from 1.70 to 2.0, the 1.70 release gate, the videos still owed.
