@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-11-07 - Roadmap to 1.70 and the 41-walk finish line
+
+- `docs/ROADMAP.md`: where the game stands, the 41-walk target, the release train from 1.70 to 2.0, the 1.70 release gate, the videos still owed.
+- PROJECT.md's release plan caught up (1.67 to 1.69 shipped, 1.70 next); AGENTS.md names v1.69 as the last tag.
+
 ## 2026-11-07 - Clean street edges on winding walks
 
 - Built-up walks that bend (El Gòtic, La Neteja, La Castanyada and the rest): the wall faces, the cast shadow and the masonry along the street were 55 px horizontal slices at the line's middle, so a slanting street was lined with stairs that did not match the roofs. They follow the building line now, split where it steps, so each wall stands square under its roof. On a straight walk they are exactly the rects they replaced (`ShapeBatch.quad`).
