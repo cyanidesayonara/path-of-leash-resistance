@@ -100,7 +100,7 @@ const SEAWALL_EDGE_X := 870.0
 
 # Unique walk prize (Solar cell trophy at marina plaza podium)
 const PRIZE := Vector2(580.0, -4500.0)
-const PRIZE_TEXT := "snatch the solar cell trophy from the marina plaza podium"
+const PRIZE_TEXT := "snatch the solar trophy off the marina podium"
 
 # Wind cone mast positions
 const WINDSOCK_POSTS: Array[Vector2] = [

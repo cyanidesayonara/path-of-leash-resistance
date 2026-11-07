@@ -86,16 +86,25 @@ func _run() -> void:
 
 	# getting ready: rows, and left/right changes the picked one
 	var rows: Array = Flow.details_rows(main)
-	_check(rows.size() == 4 and String(rows[0].name) == "YOUR DOG" and String(rows[1].name) == "YOUR HUMAN",
-		"getting ready: your dog, your human, time, weather")
+	_check(rows.size() == 5 and String(rows[0].name) == "YOUR DOG" and String(rows[1].name) == "YOUR HUMAN"
+		and String(rows[4].name) == "WALK", "getting ready: your dog, your human, time, weather, the walk")
 	main.details_idx = 1
 	var who: String = game.owner_id
 	Flow.details_change(main, 1)
 	_check(game.owner_id != who, "left/right on YOUR HUMAN swaps who walks")
+	# the weather is the campaign's until the walk is walked free (free play
+	# opens free walks everywhere)
+	var keep_fp: bool = game.free_play
+	game.free_play = true
+	game.free_walk = true
+	game.apply_walk_sky(game.level_id)
 	main.details_idx = 3
 	var w: String = game.weather
 	Flow.details_change(main, 1)
-	_check(game.weather != w, "left/right on WEATHER changes the weather")
+	_check(game.weather != w, "left/right on WEATHER changes the weather on a free walk")
+	game.free_walk = false
+	game.free_play = keep_fp
+	game.apply_walk_sky(game.level_id)
 
 	# the walk-select plaque
 	main.menu_step = 1

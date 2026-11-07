@@ -94,7 +94,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"zoom": {"text": "Run yourself tired", "target": 1, "fn": func() -> int: return 1 if m.dog.energy <= 0.25 else 0},
 		"chase": {"text": "Chase off %d critters", "target": 2, "fn": func() -> int: return m.squirrels_chased},
 		"close": {"text": "Scrape past traffic %d times", "target": 3, "fn": func() -> int: return m.close_calls},
-		"save": {"text": "Haul your human out of trouble %d times", "target": 2, "fn": func() -> int: return m.saves_done},
+		"save": {"text": "Haul your human clear %d times", "target": 2, "fn": func() -> int: return m.saves_done},
 		"fling": {"text": "Tetherball your human around a pole", "target": 1, "fn": func() -> int: return m.flings_done},
 		"tangle": {"text": "Tangle leashes with a stranger", "target": 1, "fn": func() -> int: return 1 if m.tangles >= 1 else 0},
 		"snack": {"text": "Scarf down %d dropped snacks", "target": 2, "fn": func() -> int: return m.kebabs_eaten},
@@ -112,11 +112,11 @@ static func defs(m: Node2D) -> Dictionary:
 		"unseen": {"text": "Never get spotted", "target": 1, "fn": func() -> int: return 1 if m.times_spotted == 0 else 0},
 		"walkway": {"text": "Ride the moving walkway end to end", "target": 1, "fn": func() -> int: return m.walkway_rides},
 		"escalator": {"text": "Ride the outdoor escalators up the hill", "target": 1, "fn": func() -> int: return m.walkway_rides},
-		"bunker": {"text": "Wrap the leash around an anti-aircraft cannon battery", "target": 1, "fn": func() -> int: return 1 if bool(m.get("carmel_cannon_wrapped")) else 0},
-		"dry": {"text": "Get your human home less than half soaked", "target": 1, "fn": func() -> int: return 1 if m.human_soak < 0.5 else 0,
+		"bunker": {"text": "Wrap the leash around an anti-aircraft gun", "target": 1, "fn": func() -> int: return 1 if bool(m.get("carmel_cannon_wrapped")) else 0},
+		"dry": {"text": "Get your human home mostly dry", "target": 1, "fn": func() -> int: return 1 if m.human_soak < 0.5 else 0,
 			"readout": func() -> Dictionary: return {"text": "%d%% wet" % int(round(m.human_soak * 100.0)), "bad": m.human_soak >= 0.5}},
 		"splash": {"text": "Splash through %d puddles at speed", "target": 4, "fn": func() -> int: return m.splashes},
-		"shallows": {"text": "Splash through the flood's shallows %d times", "target": 4, "fn": func() -> int: return m.shallow_splashes},
+		"shallows": {"text": "Splash through the shallows %d times", "target": 4, "fn": func() -> int: return m.shallow_splashes},
 		"thief": {"text": "Stop %d pickpockets", "target": 2, "fn": func() -> int: return m.thieves_stopped},
 		"wallet": {"text": "Keep your human's wallet safe", "target": 1, "fn": func() -> int: return 0 if (m.owner_wallet_taken or m.owner_wallet_lost) else 1},
 		"prize": {"text": m.prize_text, "target": 1, "fn": func() -> int: return 1 if m.prize_taken else 0},
@@ -131,9 +131,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"scale": {"text": "Weigh in on the digital pet scale", "target": 1, "fn": func() -> int: return 1 if bool(m.get("vet_scale_weighed")) else 0},
 		"cone": {"text": "Escape the vet without getting bumped", "target": 1, "fn": func() -> int: return 1 if bool(m.dog_hits == 0 and m.finished) else 0},
 		"funicular": {"text": "Watch the vintage funicular climb the mountain", "target": 1, "fn": func() -> int: return 1 if m.tibidabo_funicular_seen else 0},
-		"bikes": {"text": "Let %d mountain bikes squeak past your human", "target": 3, "fn": func() -> int: return m.close_calls},
+		"bikes": {"text": "Let %d bikes squeak past your human", "target": 3, "fn": func() -> int: return m.close_calls},
 		"view": {"text": "Get your human to look up at the view", "target": 1, "fn": func() -> int: return 1 if (Carmel.view_taken(m) if m.lvl == "carmel" else Aigues.view_taken(m)) else 0},
-		"eros": {"text": "Lead your human round Eros in the middle of the maze", "target": 1, "fn": func() -> int: return 1 if Horta.eros_lapped(m) else 0},
+		"eros": {"text": "Lead your human round Eros in the maze", "target": 1, "fn": func() -> int: return 1 if Horta.eros_lapped(m) else 0},
 		"viewfinder": {"text": "Gaze through the panoramic cliffside viewfinder", "target": 1, "fn": func() -> int: return 1 if m.tibidabo_viewfinder_gazed else 0},
 		"boar": {"text": "Keep the wild boars a leash length away", "target": 1, "fn": func() -> int: return 1 if m.chase_min_gap >= HomeChase.OUTRUN_GAP else 0},
 		"mud": {"text": "Charge through %d boar wallows", "target": 3, "fn": func() -> int: return m.boar_mud_splashes},
@@ -228,8 +228,8 @@ static func credit(m: Node2D, q: Dictionary) -> void:
 		m.run_goals_new += 1
 	# by the goal list, not in the middle of the screen: a first time is
 	# gold, one already done on an earlier walk is quieter
-	if Game.free_play:
-		m.feed.toast("goal", "FREE PLAY  +5", quest_text(q), Color(0.98, 0.80, 0.38))
+	if not Game.recording(m.lvl):
+		m.feed.toast("goal", ("FREE PLAY" if Game.free_play else "FREE WALK") + "  +5", quest_text(q), Color(0.98, 0.80, 0.38))
 	elif newly:
 		m.feed.toast("goal", "GOAL!  +5", quest_text(q), Color(0.98, 0.80, 0.38))
 	else:
@@ -374,6 +374,8 @@ static func finish_walk(m: Node2D) -> void:
 		var head := ""
 		if Game.free_play:
 			head += "FREE PLAY (PRACTICE)   "
+		elif Game.is_free_walk(m.lvl):
+			head += "FREE WALK   "
 		elif star_gain > 0:
 			head += "+%d STAR%s   " % [star_gain, "" if star_gain == 1 else "S"]
 		if rec.bones_record:
