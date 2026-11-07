@@ -148,6 +148,25 @@ const WEATHER_NAMES := {"clear": "CLEAR", "rain": "RAIN", "wind": "WIND", "snow"
 # or its dark on to the walks after it.
 const WALK_WEATHER := {"rain": "rain", "tutorial": "clear"}
 const WALK_NIGHT := {"spook": true, "tutorial": false}
+# The campaign's sky: each walk is walked at its own time and in its own
+# weather, shown on the walk card, so a walk is the same walk for everyone
+# the first time. Once a walk is finished, FREE WALK (GET READY) opens its
+# time and weather to the player, and records nothing (is_free_walk,
+# recording). The films agree: Festa de Gràcia and El Gat's are at night;
+# La Neteja is its warm dawn, which the walk draws by day. WALK_WEATHER and WALK_NIGHT still win.
+const CAMPAIGN_SKY := {
+	"barri": ["clear", false], "street": ["clear", false], "park": ["clear", false],
+	"beach": ["wind", false], "neteja": ["clear", false], "oldtown": ["clear", false],
+	"montjuic": ["clear", false], "market": ["clear", false], "rain": ["rain", false],
+	"besos": ["rain", false], "llevant": ["wind", false], "tibidabo": ["clear", false],
+	"vet": ["clear", false], "trail": ["clear", false], "spook": ["clear", true],
+	"boars": ["clear", false], "guell": ["clear", false], "superilla": ["clear", false],
+	"station": ["clear", false], "carmel": ["clear", false], "reial": ["clear", true],
+	"forum": ["wind", false], "aigues": ["clear", false], "horta": ["clear", false],
+	"port": ["clear", false], "espanya": ["clear", true], "site": ["clear", false],
+	"partit": ["clear", true], "scrap": ["clear", false], "gracia": ["clear", true],
+	"raval": ["clear", true],
+}
 
 # the walk select: the first walk, then the campaign walks in order
 const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "llevant", "tibidabo", "vet", "trail", "spook", "boars", "guell", "superilla", "station", "carmel", "reial", "forum", "aigues", "horta", "port", "espanya", "site", "partit", "scrap", "gracia", "raval"]
@@ -439,6 +458,11 @@ var goals_expanded := false
 # Free play / demo mode: unlocks all walks freely for practice without
 # recording career stars, goals, best bones, or time tallies to the save.
 var free_play := false
+# GET READY's WALK row: free walk (true) or the campaign. For this session
+# only, and only on a finished walk (is_free_walk).
+var free_walk := false
+# --weather= or --night was given: that sky, on every walk, for the run
+var sky_from_args := false
 # The first walk (the tutorial): whether the title still offers it before the
 # walks, and whether it has been walked to the end.
 var ask_tutorial := true
@@ -450,25 +474,58 @@ var walks_lost := 0
 
 
 func apply_walk_sky(lv: String) -> void:
-	var own_weather := WALK_WEATHER.has(lv)
-	var own_night := WALK_NIGHT.has(lv)
+	var own_weather := walk_sets_weather(lv)
+	var own_night := walk_sets_night(lv)
 	if own_weather or own_night:
 		if _held_sky.is_empty():
 			_held_sky = [weather, night]
-		weather = String(WALK_WEATHER[lv]) if own_weather else String(_held_sky[0])
-		night = bool(WALK_NIGHT[lv]) if own_night else bool(_held_sky[1])
+		weather = _walk_weather(lv) if own_weather else String(_held_sky[0])
+		night = _walk_night(lv) if own_night else bool(_held_sky[1])
 	elif not _held_sky.is_empty():
 		weather = String(_held_sky[0])
 		night = bool(_held_sky[1])
 		_held_sky = []
 
 
+# the campaign holds a walk's sky unless this is a free walk, or the sky was
+# set on the command line (--weather, --night: CI and screenshots)
+func _campaign_holds(lv: String) -> bool:
+	return CAMPAIGN_SKY.has(lv) and not is_free_walk(lv) and not sky_from_args
+
+
+func _walk_weather(lv: String) -> String:
+	if WALK_WEATHER.has(lv):
+		return String(WALK_WEATHER[lv])
+	return String(CAMPAIGN_SKY[lv][0])
+
+
+func _walk_night(lv: String) -> bool:
+	if WALK_NIGHT.has(lv):
+		return bool(WALK_NIGHT[lv])
+	return bool(CAMPAIGN_SKY[lv][1])
+
+
 func walk_sets_weather(lv: String) -> bool:
-	return WALK_WEATHER.has(lv)
+	return WALK_WEATHER.has(lv) or _campaign_holds(lv)
 
 
 func walk_sets_night(lv: String) -> bool:
-	return WALK_NIGHT.has(lv)
+	return WALK_NIGHT.has(lv) or _campaign_holds(lv)
+
+
+# FREE WALK: a finished walk at any time and in any weather, for the fun of
+# it. Nothing it does is recorded (recording). Free play opens it everywhere.
+func can_free_walk(lv: String) -> bool:
+	return lv in LEVELS and (free_play or has_completed(lv))
+
+
+func is_free_walk(lv: String) -> bool:
+	return free_walk and can_free_walk(lv)
+
+
+# whether this walk's goals, stars, style and best tallies are saved
+func recording(lv: String) -> bool:
+	return not free_play and not is_free_walk(lv) and lv != "tutorial" and lv in LEVELS
 
 
 func toggle_night() -> void:
@@ -924,10 +981,12 @@ func _ready() -> void:
 			var w := arg.trim_prefix("--weather=")
 			if w in WEATHERS:
 				weather = w
+				sky_from_args = true
 		elif arg == "--night":
 			# after dark, as the title's TIME toggle would set it - for
 			# screenshots and the level review (#21)
 			night = true
+			sky_from_args = true
 		elif arg.begins_with("--dog="):
 			var d := arg.trim_prefix("--dog=")
 			if DOGS.has(d):
@@ -1175,7 +1234,7 @@ var _goal_ids: Dictionary = {}
 
 
 func mark_goal(lv: String, id: String) -> bool:
-	if free_play or lv == "tutorial" or not lv in LEVELS:
+	if not recording(lv):
 		return false
 	var record := _ensure_level_record(lv)
 	var gl: Array = record.get("goals", [])
@@ -1242,7 +1301,7 @@ func is_unlocked(lv: String) -> bool:
 # A walk's style (its banked combos, summed): kept per walk as a record. True
 # when it beat the old one.
 func record_style(lv: String, style: int) -> bool:
-	if free_play or not lv in LEVELS or style <= 0:
+	if not recording(lv) or style <= 0:
 		return false
 	var r := _ensure_level_record(lv)
 	if style <= int(r.get("style", 0)):
@@ -1257,7 +1316,7 @@ func record_result(lv: String, bones: int, time: float, perfect: bool) -> Dictio
 	# stars/unlocks now come from goals (marked live during the run); this
 	# only records the best-bones/time/perfect tallies and banks bones.
 	var out := {"bones_record": false, "time_record": false}
-	if free_play or lv == "tutorial" or not lv in LEVELS:
+	if not recording(lv):
 		return out
 	var r := _ensure_level_record(lv)
 	if bones > int(r.bones):

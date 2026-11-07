@@ -214,7 +214,10 @@ func _walk(vs: Vector2) -> void:
 		var goals := "%d / %d goals" % [int(info.goals), int(info.goals_total)]
 		draw_string(body, Vector2(r.position.x + 126.0, row_y), goals, HORIZONTAL_ALIGNMENT_LEFT,
 			-1, 17, Kit.INK)
-		draw_string(body, Vector2(r.position.x, row_y), "free play" if Game.free_play else String(info.best),
+		var right := "free play" if Game.free_play else String(info.best)
+		if not Game.free_play and String(info.get("sky", "")) != "":
+			right = "%s   %s" % [String(info.sky), right]
+		draw_string(body, Vector2(r.position.x, row_y), right,
 			HORIZONTAL_ALIGNMENT_RIGHT, w - 28.0, 17, Kit.GOLD if Game.free_play else Kit.INK_SOFT)
 	else:
 		draw_string(body, Vector2(r.position.x, row_y), "     ".join(info.lines),
@@ -272,7 +275,8 @@ func _details(vs: Vector2) -> void:
 		var vcol: Color = Kit.INK_FAINT if (fixed or not unlocked) else (Kit.INK if picked else Kit.INK_SOFT)
 		draw_string(f, Vector2(vx - vw, y + 27.0), val, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, vcol)
 		if fixed:
-			draw_string(Kit.body(), Vector2(vx - vw - 110.0, y + 26.0), "set for today",
+			var why := String(row.get("hint", "set by the walk"))
+			draw_string(Kit.body(), Vector2(vx - vw - 12.0 - Kit.text_w(Kit.body(), why, 13), y + 26.0), why,
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Kit.INK_FAINT)
 		elif not unlocked:
 			Kit.lock(self, Vector2(vx - vw - 18.0, y + 19.0), 12.0, Kit.INK_FAINT)
