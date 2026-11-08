@@ -115,12 +115,15 @@ func _initialize() -> void:
 	_check(pr_phone.size.x >= 60.0 and pr_phone.size.y >= 24.0, "phone focus rect encloses the 3 pips")
 
 	var pr_tank: Rect2 = HudPanel.POINT_RECTS["tank"]
-	_check(pr_tank.has_point(Vector2(16, 42)) and pr_tank.has_point(Vector2(22, 84)),
-		"tank focus rect encloses both tube and droplet glyph")
+	_check(pr_tank.has_point(Vector2(HudPanel.PAD + 7.0, HudPanel.ROW_TANK + 8.0))
+		and pr_tank.has_point(Vector2(HudPanel.CARD_W - HudPanel.PAD - 1.0, HudPanel.ROW_TANK + 7.0)),
+		"tank focus rect encloses the droplet glyph, its label and the whole bar")
 
 	var pr_zoomies: Rect2 = HudPanel.POINT_RECTS["zoomies"]
-	_check(pr_zoomies.has_point(Vector2(34, 42)) and pr_zoomies.has_point(Vector2(40, 84)),
-		"zoomies focus rect encloses both tube and bolt glyph")
+	_check(pr_zoomies.has_point(Vector2(HudPanel.PAD + 7.0, HudPanel.ROW_ZOOM + 8.0))
+		and pr_zoomies.has_point(Vector2(HudPanel.CARD_W - HudPanel.PAD - 1.0, HudPanel.ROW_ZOOM + 7.0)),
+		"zoomies focus rect encloses the bolt glyph, its label and the whole bar")
+	_check(not pr_tank.intersects(pr_zoomies), "tank and zoomies focus rects do not overlap")
 
 	print("--- testing GoalsCard geometry ---")
 	var gc: Control = GoalsCard.new()

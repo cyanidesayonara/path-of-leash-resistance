@@ -46,7 +46,7 @@ const STEPS: Array[Dictionary] = [
 	{
 		"id": "pee", "at": -1220.0, "hold": true, "bench": true, "meter": "tank",
 		"title": "Business first.",
-		"body": "Hold {pee} at the hydrant to leave your mark. Your tank is the yellow bar.",
+		"body": "Hold {pee} at the hydrant to leave your mark. The yellow bar is your pee.",
 	},
 	{
 		"id": "sniff", "at": -1620.0, "hold": true, "bench": true,
