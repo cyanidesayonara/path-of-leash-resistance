@@ -894,19 +894,28 @@ static func diluvi(m: Node2D) -> void:
 # gravel, the playground on the lawn beside it, and the plane trees stand far
 # enough in from each edge that their shadows fall on the gravel.
 const BARRI_PETANCA := Rect2(412.0, -1985.0, 130.0, 250.0)
-const BARRI_PLAYGROUND := Rect2(906.0, -4010.0, 166.0, 300.0)
+const BARRI_PLAYGROUND := Rect2(894.0, -4010.0, 144.0, 300.0)
 const BARRI_PINGPONG := Vector2(706.0, -2560.0)
 # the drinking fountain: a cast-iron column at the gravel's west edge
 const BARRI_FONT := Vector2(448.0, -3150.0)
-# the plane trees, two rows that do not mirror: the west row hugs its edge,
-# the east row stands further in, and neither keeps an even step
+# the plane trees, two rows at a steady 270 px step, the east row half a step
+# on from the west so the two never mirror; a tree is left out where a bench,
+# a bin, the fountain or the petanca pitch stands in its place
 const BARRI_TREES: Array[Vector2] = [
-	Vector2(436.0, -300.0), Vector2(444.0, -690.0), Vector2(432.0, -1060.0), Vector2(440.0, -1420.0),
-	Vector2(438.0, -2250.0), Vector2(446.0, -2640.0), Vector2(434.0, -2930.0), Vector2(440.0, -3420.0),
-	Vector2(432.0, -3790.0), Vector2(444.0, -4150.0), Vector2(436.0, -4560.0),
-	Vector2(812.0, -470.0), Vector2(818.0, -880.0), Vector2(806.0, -1250.0), Vector2(816.0, -1620.0),
-	Vector2(810.0, -1960.0), Vector2(814.0, -2330.0), Vector2(808.0, -2790.0), Vector2(816.0, -3110.0),
-	Vector2(812.0, -3560.0), Vector2(806.0, -3930.0), Vector2(818.0, -4330.0), Vector2(810.0, -4700.0),
+	Vector2(434.0, -250.0), Vector2(440.0, -520.0), Vector2(434.0, -790.0), Vector2(440.0, -1060.0),
+	Vector2(434.0, -1330.0), Vector2(440.0, -1600.0), Vector2(440.0, -2140.0), Vector2(434.0, -2410.0),
+	Vector2(440.0, -2680.0), Vector2(434.0, -2950.0), Vector2(440.0, -3220.0), Vector2(434.0, -3490.0),
+	Vector2(440.0, -3760.0), Vector2(434.0, -4030.0), Vector2(434.0, -4570.0),
+	Vector2(812.0, -385.0), Vector2(806.0, -655.0), Vector2(812.0, -925.0), Vector2(806.0, -1195.0),
+	Vector2(806.0, -1735.0), Vector2(812.0, -2005.0), Vector2(806.0, -2275.0), Vector2(812.0, -2545.0),
+	Vector2(806.0, -2815.0), Vector2(812.0, -3085.0), Vector2(806.0, -3355.0), Vector2(812.0, -3625.0),
+	Vector2(806.0, -3895.0), Vector2(812.0, -4165.0), Vector2(806.0, -4435.0), Vector2(812.0, -4705.0),
+]
+# the square's lamp posts, between the trees, alternating sides (deco poles
+# that are not trees: main.is_lamppost draws them, and the leash wraps them)
+const BARRI_LAMPS: Array[Vector2] = [
+	Vector2(420.0, -655.0), Vector2(818.0, -1330.0), Vector2(420.0, -2275.0), Vector2(818.0, -2680.0),
+	Vector2(420.0, -3895.0),
 ]
 
 
@@ -1100,6 +1109,105 @@ const PARK_PLAYGROUND := Rect2(958.0, -4460.0, 166.0, 300.0)
 const PARK_SLACK_A := Vector2(262.0, -1560.0)
 const PARK_SLACK_B := Vector2(262.0, -1960.0)
 const PARK_SLACK_TRUNK := 13.0
+# the park round the path (systems/parc.gd): green iron lamps on the lawn a
+# step out from the edging, the round kiosk by the gate and the bike lane
+# behind it, a plane tree with a reader under it, a picnic, a frisbee pair.
+# Lamps, kiosk and tree are rope points; they and the people are solid.
+const PARK_LAMPS: Array[Vector2] = [
+	Vector2(426.0, -700.0), Vector2(854.0, -1000.0), Vector2(426.0, -1900.0),
+	Vector2(1062.0, -2700.0), Vector2(218.0, -2760.0), Vector2(854.0, -3700.0),
+	Vector2(426.0, -4000.0), Vector2(854.0, -4600.0),
+]
+const PARK_LAMP_R := 6.0
+const PARK_KIOSK := Vector2(1080.0, -700.0)
+const PARK_KIOSK_R := 34.0
+const PARK_BIKE_LANE := Rect2(1150.0, -1520.0, 46.0, 1960.0)
+const PARK_READER_TREE := Vector2(1120.0, -1250.0)
+const PARK_TREE_TRUNK := 14.0
+const PARK_PICNIC := Rect2(205.0, -690.0, 96.0, 66.0)
+const PARK_FRISBEE_A := Vector2(300.0, -3820.0)
+const PARK_FRISBEE_B := Vector2(250.0, -4140.0)
+const PARK_PERSON_R := 11.0
+
+
+# where each of El Parc's lawn people stands or sits (solid, as small circles)
+static func park_people() -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	var pc: Vector2 = PARK_PICNIC.get_center()
+	out.append(Vector3(pc.x, pc.y, 30.0))
+	var rd: Vector2 = PARK_READER_TREE + Vector2(-62.0, 34.0)
+	out.append(Vector3(rd.x, rd.y, PARK_PERSON_R))
+	out.append(Vector3(PARK_FRISBEE_A.x, PARK_FRISBEE_A.y, PARK_PERSON_R))
+	out.append(Vector3(PARK_FRISBEE_B.x, PARK_FRISBEE_B.y, PARK_PERSON_R))
+	out.append(Vector3(PARK_SUNBATHER.x, PARK_SUNBATHER.y, 16.0))
+	out.append(Vector3(PARK_DOG_WALKER.x, PARK_DOG_WALKER.y, PARK_PERSON_R))
+	out.append(Vector3(PARK_PARENT.x, PARK_PARENT.y, PARK_PERSON_R))
+	# the benches on the verge: a post at each end
+	for bn: Vector3 in PARK_EDGE_BENCHES:
+		out.append(Vector3(bn.x, bn.y - 16.0, 8.0))
+		out.append(Vector3(bn.x, bn.y + 16.0, 8.0))
+	out.append(Vector3(PARK_BOAT_HUT.x, PARK_BOAT_HUT.y, 26.0))
+	return out
+
+
+# The second pass: an avenue of plane trees along both sides of the path on
+# the narrow stretches, a step out past the hoop fence so their crowns shade
+# the gravel; benches on the verge facing the path; tree groups and shrub beds
+# on the lawns; the boat-hire hut by the lake; a sunbather, a dog walker, a
+# parent at the playground, a jogger on the bike lane.
+const PARK_AVENUE_X := Vector2(380.0, 900.0)
+const PARK_AVENUE_STEP := 300.0
+const PARK_AVENUE_TRUNK := 12.0
+# x, y, and 1 for someone sitting on it (west benches face east, east west)
+const PARK_EDGE_BENCHES: Array[Vector3] = [
+	Vector3(366.0, -400.0, 1.0), Vector3(914.0, -1500.0, 0.0),
+	Vector3(366.0, -1850.0, 2.0), Vector3(914.0, -3420.0, 1.0),
+	Vector3(366.0, -4000.0, 0.0),
+]
+const PARK_TREE_GROUPS: Array[Vector2] = [
+	Vector2(150.0, -2240.0), Vector2(205.0, -2330.0), Vector2(120.0, -2410.0),
+	Vector2(110.0, -3060.0), Vector2(170.0, -3170.0),
+	Vector2(1170.0, -2230.0), Vector2(1235.0, -2330.0), Vector2(1150.0, -2420.0),
+	Vector2(1210.0, -3080.0), Vector2(1150.0, -3200.0),
+]
+const PARK_SHRUBS: Array[Vector2] = [
+	Vector2(120.0, -1700.0), Vector2(1225.0, -1010.0), Vector2(1230.0, -3560.0), Vector2(110.0, -4320.0),
+]
+const PARK_BOAT_HUT := Vector2(1108.0, -2600.0)
+const PARK_SUNBATHER := Vector2(178.0, -2660.0)
+const PARK_DOG_WALKER := Vector2(1100.0, -2980.0)
+const PARK_PARENT := Vector2(1010.0, -4120.0)
+
+
+# the avenue's trunks: every PARK_AVENUE_STEP down the narrow stretches, both
+# sides, skipping wherever something already stands at the edge
+static func park_avenue() -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	var keep_clear: Array[Vector2] = [Vector2(390.0, -980.0), Vector2(336.0, -1300.0), Vector2(336.0, -3850.0),
+		Vector2(944.0, -1650.0), Vector2(944.0, -1900.0)]
+	for lp: Vector2 in PARK_LAMPS:
+		keep_clear.append(lp)
+	for bn: Vector3 in PARK_EDGE_BENCHES:
+		keep_clear.append(Vector2(bn.x, bn.y))
+	for i in range(7):
+		keep_clear.append(Vector2(440.0 if i % 2 == 0 else 840.0, -350.0 - float(i) * 640.0))
+	var y := -250.0
+	while y > -4900.0:
+		if y > -2050.0 or y < -3420.0:
+			for x: float in [PARK_AVENUE_X.x, PARK_AVENUE_X.y]:
+				var ok := true
+				for kc: Vector2 in keep_clear:
+					if absf(kc.x - x) < 90.0 and absf(kc.y - y) < 75.0:
+						ok = false
+				# the flower borders run here
+				if x < 640.0 and y < -1110.0 and y > -1470.0:
+					ok = false
+				if x > 640.0 and ((y < -650.0 and y > -890.0) or (y < -3450.0 and y > -3910.0)):
+					ok = false
+				if ok:
+					out.append(Vector2(x, y))
+		y -= PARK_AVENUE_STEP
+	return out
 static func park_slackline() -> Rect2:
 	return Rect2(PARK_SLACK_A.x - 3.0, PARK_SLACK_B.y + 22.0, 6.0, PARK_SLACK_A.y - PARK_SLACK_B.y - 44.0)
 
@@ -1720,11 +1828,16 @@ static func build_level_data(m: Node2D) -> void:
 			m.gate_r = 880.0
 			for tp: Vector2 in BARRI_TREES:
 				m.poles.append(tp)
+			for lp: Vector2 in BARRI_LAMPS:
+				m.poles.append(lp)
 			m.deco_pole_count = m.poles.size()
+			# benches along both edges of the gravel, facing the path
 			m.benches = Array([Vector2(452, -880), Vector2(828, -1080), Vector2(452, -2470),
-				Vector2(828, -2960), Vector2(828, -3280), Vector2(452, -4320), Vector2(828, -4520)], TYPE_VECTOR2, &"", null)
+				Vector2(828, -2960), Vector2(828, -3280), Vector2(452, -4320), Vector2(828, -4520),
+				Vector2(828, -780), Vector2(452, -1200), Vector2(828, -1860), Vector2(828, -3480),
+				Vector2(452, -4140)], TYPE_VECTOR2, &"", null)
 			m.bins = Array([Vector2(470, -960), Vector2(800, -2200), Vector2(470, -3620),
-				Vector2(800, -4610)], TYPE_VECTOR2, &"", null)
+				Vector2(800, -4610), Vector2(470, -1460), Vector2(800, -3560)], TYPE_VECTOR2, &"", null)
 			m.stalls = Array([BARRI_PINGPONG], TYPE_VECTOR2, &"", null)
 			m.stall_kinds = Array(["pingpong"], TYPE_STRING, &"", null)
 			# the petanca players, on the pitch: one throwing from his circle at
@@ -2237,6 +2350,14 @@ static func build_level_data(m: Node2D) -> void:
 		add_rope_rect(m, park_slackline())
 		for st: Vector2 in [PARK_SLACK_A, PARK_SLACK_B]:
 			add_rope_point(m, st, PARK_SLACK_TRUNK + 2.0, false)
+		for lp: Vector2 in PARK_LAMPS:
+			add_rope_point(m, lp, PARK_LAMP_R + 2.0, false)
+		for at: Vector2 in park_avenue():
+			add_rope_point(m, at, PARK_AVENUE_TRUNK + 2.0, false)
+		for gt: Vector2 in PARK_TREE_GROUPS:
+			add_rope_point(m, gt, PARK_AVENUE_TRUNK + 2.0, false)
+		add_rope_point(m, PARK_KIOSK, PARK_KIOSK_R + 2.0, false)
+		add_rope_point(m, PARK_READER_TREE, PARK_TREE_TRUNK + 2.0, false)
 		if not m.tutorial_mode:
 			m.sprinkler = Sprinkler.new()
 	if m.lvl == "beach":
@@ -3736,6 +3857,16 @@ static func build_walls(m: Node2D) -> void:
 	if m.lvl == "park":
 		for st: Vector2 in [PARK_SLACK_A, PARK_SLACK_B]:
 			add_circle_body(m, st, PARK_SLACK_TRUNK)
+		for lp: Vector2 in PARK_LAMPS:
+			add_circle_body(m, lp, PARK_LAMP_R)
+		for at: Vector2 in park_avenue():
+			add_circle_body(m, at, PARK_AVENUE_TRUNK)
+		for gt: Vector2 in PARK_TREE_GROUPS:
+			add_circle_body(m, gt, PARK_AVENUE_TRUNK)
+		add_circle_body(m, PARK_KIOSK, PARK_KIOSK_R)
+		add_circle_body(m, PARK_READER_TREE, PARK_TREE_TRUNK)
+		for pp: Vector3 in park_people():
+			add_circle_body(m, Vector2(pp.x, pp.y), pp.z)
 	# El Barri's railings, with the street past them
 	if m.lvl == "barri":
 		for r: Rect2 in Barri.solids(m):
