@@ -126,6 +126,18 @@ func _run() -> void:
 		"a steady pull leads them into the ring (they stopped at x %.0f, ring at %.0f)" % [h.global_position.x, ring.x])
 	h.felt_pull = Vector2.ZERO
 
+	# every meter a lesson outlines is a rect the status card draws
+	var HudPanel: GDScript = load("res://hud/hud_panel.gd")
+	for i in range(TUT.step_count()):
+		var mt := String(TUT.step(i).get("meter", ""))
+		if mt != "":
+			_check(HudPanel.POINT_RECTS.has(mt), "%s: its meter outline %s is on the status card" % [TUT.step(i).id, mt])
+
+	# the poop lesson's ringed grass is a good spot, and the First Walk pays it
+	_check(m.walk_has_good_spots(), "the First Walk has good spots to teach")
+	_check(m.poop_spot_good(TUT.poop_grass(m)), "the lesson's ringed grass is a good spot")
+	_check(String(TUT.step(TUT.index_of("poop")).body).contains("good spot"), "the poop lesson names good spots")
+
 	# the lessons that need the zoomies give them back while she is not running
 	m.tut_step = TUT.index_of("vault")
 	m.dog.energy = 0.0

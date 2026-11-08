@@ -76,6 +76,9 @@ const DARE_HOW := "Tricks: swing around a pole, grind a ledge, fling your human.
 # the offer's prompt: the bark button itself, glowing, then these words; a
 # line under it says how to turn it down
 const DARE_TAKE := "to take the dare"
+# the space above the offer's button row: its glowing halo reaches about 10 px
+# out from the key, which met the line above it ("Win 38 bones.")
+const TAKE_GAP := 12.0
 const DARE_LEAVE := "Walk on to leave it."
 # how long the card shows the button pressed and DARE ON! once she barks
 const TOOK_S := 0.9
@@ -409,7 +412,7 @@ func _dare_card(vs: Vector2, y: float) -> void:
 	var bar := String(ch.phase) == "live" or (String(ch.phase) == "offer" and not bool(ch.waiting))
 	# the offer's button row: glowing while it waits, pressed once she barks
 	var take_row := String(ch.phase) == "offer" and (bool(ch.waiting) or _took_t > 0.0)
-	var h := 40.0 + 20.0 * float(lines.size()) + (16.0 if bar else 6.0) + (TAKE_CAP + 12.0 if take_row else 0.0)
+	var h := 40.0 + 20.0 * float(lines.size()) + (16.0 if bar else 6.0) + (TAKE_CAP + 12.0 + TAKE_GAP if take_row else 0.0)
 	var r := Rect2(vs.x * 0.5 - w * 0.5, y, w, h)
 	# never over the open goal list: into the gap beside it, or, where the gap
 	# is too narrow (a phone), below it
@@ -429,12 +432,12 @@ func _dare_card(vs: Vector2, y: float) -> void:
 	for i in range(n):
 		# the button row goes before the last line, how to leave it
 		if take_row and bool(ch.waiting) and i == n - 1:
-			ly = _take_row(Vector2(r.position.x + 18.0, ly - 14.0), col, true) + 14.0
+			ly = _take_row(Vector2(r.position.x + 18.0, ly - 14.0 + TAKE_GAP), col, true) + 14.0
 		draw_string(Kit.body(), Vector2(r.position.x + 18.0, ly), lines[i], HORIZONTAL_ALIGNMENT_LEFT, w - 36.0, 15,
 			Kit.INK_SOFT)
 		ly += 20.0
 	if take_row and not bool(ch.waiting):
-		_take_row(Vector2(r.position.x + 18.0, ly - 14.0), col, false)
+		_take_row(Vector2(r.position.x + 18.0, ly - 14.0 + TAKE_GAP), col, false)
 	if bar:
 		# the offer fills up to GO; the live clock drains
 		var f: float = float(ch.offer_fraction()) if String(ch.phase) == "offer" else float(ch.fraction())

@@ -1,7 +1,7 @@
 extends SceneTree
 
-# The screenshot sweep and the behaviour snapshot name every walk in
-# Game.LEVELS. Both lists are written out in shell, and both stopped at
+# The screenshot sweep, the behaviour snapshot and the surface map name every
+# walk in Game.LEVELS. These lists are written out in shell, and both stopped at
 # Dia de Partit for four walks: CI's sweep never photographed El Port,
 # Plaça Reial, El Veterinari or El Tibidabo, and a default snapshot never
 # ran them.
@@ -9,6 +9,7 @@ extends SceneTree
 const TOOLS := {
 	"res://tools/shot_sweep.sh": "LEVELS=(",
 	"res://tools/behaviour_snapshot.sh": "LEVELS=\"${LEVELS:-",
+	"res://tools/surface_map.sh": "LEVELS=\"${*:-",
 }
 
 var checks := 0

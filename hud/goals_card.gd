@@ -31,6 +31,20 @@ const FONT_SIZE_COMPACT := 13
 # the spelling goal's letters, as small tiles where a meter would be
 const TILE := 15.0
 const TILE_GAP := 2.0
+# the column every count, readout, letter tile and the key pill ends on, so
+# the right side reads as one straight edge like the ticks on the left
+const COUNT_W := 30.0
+# where the rows start under the heading, and how far below a row's top its
+# ink reaches (the tick box, or the text's descenders)
+const ROWS_TOP := PAD + 30.0
+const INK := 15.0
+const INK_COMPACT := 14.0
+# the heading's ink starts this far above its baseline, so the card's top
+# margin is PAD - 1: the bottom and sides use the same
+const HEAD_ASCENT := 11.0
+# collapsed: the second row's baseline and where its ink ends
+const COLLAPSED_BASE := 27.0
+const COLLAPSED_INK := 29.0
 const READ_OK := Color(0.78, 0.73, 0.55)
 const READ_BAD := Color(1.0, 0.52, 0.42)
 
@@ -51,7 +65,16 @@ func _ready() -> void:
 	sb.set_corner_radius_all(10)
 
 
-func _process(_delta: float) -> void:
+# Under a menu (the dim is up: pause, settings, a walk card) the card fades
+# out, so the menu is the only thing on screen; it fades back on resume.
+const DIM_FADE := 6.0
+
+
+func _process(delta: float) -> void:
+	# THAT'S THE BASICS points at the phone pips, so the card stays for it
+	var under_menu: bool = main != null and main.dim != null and main.dim.visible \
+		and String(main.confirm_id) != "basics"
+	modulate.a = move_toward(modulate.a, 0.0 if under_menu else 1.0, delta * DIM_FADE)
 	if visible:
 		queue_redraw()
 
@@ -71,9 +94,17 @@ func _draw() -> void:
 	# Collapsed, this is a clean compact card in the corner showing goal count,
 	# a mini progress bar, and the prompt key.
 	var w: float = W if open else 200.0
-	var h := PAD + 22.0 + float(rows.size()) * row_h + (16.0 if extra > 0 or folded > 0 else 0.0) + PAD * 0.6
+	# the last ink on the card, then the same margin as the top (PAD - 1
+	# above the heading's ink) below it
+	var ink := INK_COMPACT if compact else INK
+	var bottom := ROWS_TOP + float(maxi(rows.size() - 1, 0)) * row_h + ink
+	if extra > 0 or folded > 0:
+		bottom = ROWS_TOP + float(rows.size()) * row_h + 14.0
+	var margin := PAD + 10.0 - HEAD_ASCENT
+	var h := bottom + margin
 	if not open:
-		h = 42.0
+		# heading row, then the bar and the clock on a row of their own
+		h = PAD + COLLAPSED_INK + margin
 	size = Vector2(w, h)
 	# right-aligned to the ACTUAL viewport edge (aspect "expand" reveals more
 	# or less than the 1280 reference width on most phone shapes), so
@@ -107,22 +138,24 @@ func _draw() -> void:
 		var done_cnt := int(data.done)
 		var frac := clampf(float(done_cnt) / float(total_cnt), 0.0, 1.0)
 		var bar_w := 98.0
-		var bar_r := Rect2(PAD, PAD + 17.0, bar_w, 3.5)
+		var bar_y := PAD + COLLAPSED_BASE - 5.0
+		var bar_r := Rect2(PAD, bar_y, bar_w, 3.5)
 		draw_rect(bar_r, Color(1, 1, 1, 0.12))
 		if frac > 0.0:
-			draw_rect(Rect2(PAD, PAD + 17.0, bar_w * frac, 3.5),
+			draw_rect(Rect2(PAD, bar_y, bar_w * frac, 3.5),
 				Color(0.62, 0.90, 0.66) if all_done else Color(0.94, 0.79, 0.35))
 		# the walk's time against the clock goal, while that goal is open
 		var clk: Dictionary = data.get("clock", {})
 		if not clk.is_empty():
-			draw_string(f, Vector2(PAD + bar_w + 10.0, PAD + 22.0), String(clk.text),
-				HORIZONTAL_ALIGNMENT_LEFT, -1, 12, READ_BAD if bool(clk.bad) else READ_OK)
+			var cw := w - PAD * 2.0 - bar_w - 8.0
+			draw_string(f, Vector2(w - PAD - cw, PAD + COLLAPSED_BASE), String(clk.text),
+				HORIZONTAL_ALIGNMENT_RIGHT, cw, 12, READ_BAD if bool(clk.bad) else READ_OK)
 		return
 
 	var y := PAD + 30.0
 	for row: Dictionary in rows:
 		var state := int(row.state)
-		Icons.draw_check(self, Vector2(PAD + 2.0, y + (0.0 if compact else 1.0)), BOX, state)
+		Icons.draw_check(self, Vector2(PAD, y + (0.0 if compact else 1.0)), BOX, state)
 		var txt_col := Color(0.95, 0.93, 0.88)
 		if state == Icons.Check.DONE_NOW:
 			txt_col = Color(0.73, 0.85, 0.74)
@@ -134,8 +167,9 @@ func _draw() -> void:
 		var readout: String = String(row.get("readout", "")) if open_row else ""
 		var show_meter: bool = target > 1 and open_row and letters.is_empty()
 		var side_w := 0.0
+		var right := W - PAD
 		if show_meter:
-			side_w = METER_W + 34.0
+			side_w = METER_W + 6.0 + COUNT_W
 		elif not letters.is_empty():
 			side_w = float(letters.size()) * (TILE + TILE_GAP) + 8.0
 		elif readout != "":
@@ -146,7 +180,7 @@ func _draw() -> void:
 		draw_multiline_string(f, Vector2(TEXT_X, y + 12.0), String(row.text),
 			HORIZONTAL_ALIGNMENT_LEFT, text_w, font_size, 1, txt_col)
 		if not letters.is_empty():
-			var lx := W - PAD - float(letters.size()) * (TILE + TILE_GAP) + TILE_GAP
+			var lx := right - float(letters.size()) * (TILE + TILE_GAP) + TILE_GAP
 			for l: Dictionary in letters:
 				var c := Vector2(lx + TILE * 0.5, y + (1.0 if compact else 2.0) + TILE * 0.5)
 				if bool(l.got):
@@ -159,15 +193,15 @@ func _draw() -> void:
 						HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(1, 1, 1, 0.35))
 				lx += TILE + TILE_GAP
 		elif readout != "":
-			draw_string(f, Vector2(W - PAD - side_w + 12.0, y + 12.0), readout,
-				HORIZONTAL_ALIGNMENT_LEFT, -1, 13, READ_BAD if bool(row.get("bad", false)) else READ_OK)
+			draw_string(f, Vector2(right - side_w, y + 12.0), readout,
+				HORIZONTAL_ALIGNMENT_RIGHT, side_w, 13, READ_BAD if bool(row.get("bad", false)) else READ_OK)
 		if show_meter:
 			var got: int = mini(int(row.got), target)
-			var mx := W - PAD - METER_W - 30.0
+			var mx := right - COUNT_W - 6.0 - METER_W
 			Icons.draw_meter(self, Vector2(mx, y + (4.0 if compact else 5.0)), METER_W, 7.0 if not compact else 6.0,
 				float(got) / float(target))
-			draw_string(f, Vector2(mx + METER_W + 5.0, y + 12.0), "%d/%d" % [got, target],
-				HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.78, 0.73, 0.55))
+			draw_string(f, Vector2(right - COUNT_W, y + 12.0), "%d/%d" % [got, target],
+				HORIZONTAL_ALIGNMENT_RIGHT, COUNT_W, 13, Color(0.78, 0.73, 0.55))
 		y += row_h
 	if folded > 0:
 		draw_string(f, Vector2(TEXT_X, y + 11.0), "+ %d done" % folded,

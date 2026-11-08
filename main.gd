@@ -910,6 +910,28 @@ var active_quests: Array[Dictionary] = []
 var poop_state := 0  # 0 not yet, 1 urge, 2 done, 3 forced telegraph, 4 forced squat
 var urge_y := -2000.0
 var urge_timer := 0.0
+# THE CALL OF NATURE. It comes at urge_y down the walk (a random point, set
+# by level_build), and what she does brings it on sooner: a dropped snack
+# moves it POOP_SNACK_PULL back up the walk, zoomies POOP_ZOOM_PULL a second.
+# Once it comes, any spot will do, but a dog has standards: soft ground (grass,
+# earth) or a tree's pit is a good spot and pays POOP_GOOD_BONES; the pavement
+# pays POOP_PAVE_BONES and costs your human a little patience.
+const POOP_URGE_S := 35.0
+const POOP_SNACK_PULL := 300.0
+const POOP_ZOOM_PULL := 60.0
+# never so soon it comes at the start line
+const POOP_URGE_MIN_GAP := 600.0
+const POOP_TREE_R := 34.0
+const POOP_GOOD_BONES := 8
+const POOP_PAVE_BONES := 2
+const POOP_PAVE_PATIENCE := 0.06
+# the sniff that starts a squat, said once per squat
+var _poop_sniffed := false
+# whether this walk has a good spot anywhere (-1 not looked yet). A walk of
+# nothing but paving and stone (L'Estació, El Mercat) asks for none: any spot
+# is the spot, at the old price, and nobody minds.
+var _poop_good_walk := -1
+const POOP_ANY_BONES := 5
 var squat_progress := 0.0
 var business_spot := Vector2(INF, INF)
 var elapsed := 0.0
@@ -2420,6 +2442,49 @@ func _broadleaf_crown(crown: ShapeBatch, p: Vector2, scale: float, trunk := true
 		crown.circle(p + Vector2.from_angle(a) * r * 0.95, r * 0.17, mid)
 
 
+# El Barri's plane trees (TREE_PLANE): a London plane's bark flakes off in
+# patches, cream and olive over grey, and its crown is broad and pale, the big
+# lobed leaves catching the light in clumps
+const PLANE_SCALE := 1.08
+const PLANE_BARK: Array[Color] = [Color(0.78, 0.76, 0.62), Color(0.52, 0.54, 0.40), Color(0.64, 0.62, 0.56)]
+
+
+func _plane_trunk(b: Object, p: Vector2) -> void:
+	b.circle(p, 7.5, Color(0.40, 0.40, 0.34))
+	b.circle(p + Vector2(-1.5, -1.5), 5.6, PLANE_BARK[2])
+	b.circle(p + Vector2(-2.5, 0.5), 2.4, PLANE_BARK[0])
+	b.circle(p + Vector2(1.8, -2.2), 2.0, PLANE_BARK[1])
+	b.circle(p + Vector2(0.8, 2.4), 1.6, PLANE_BARK[0])
+
+
+func _plane_crown(crown: ShapeBatch, p: Vector2, trunk := true) -> void:
+	var r := 34.0 * PLANE_SCALE
+	var dark := Color(0.22, 0.34, 0.17)
+	var mid := Color(0.32, 0.47, 0.22)
+	var lit := Color(0.48, 0.62, 0.30)
+	var tip := Color(0.60, 0.72, 0.36)
+	crown.circle(p + Vector2(2, 3), r, dark)
+	crown.circle(p - LIGHT * r * 0.10, r * 0.86, mid)
+	for lv: Vector2 in BROADLEAF_LOBES:
+		crown.circle(p + lv * r, r * 0.48, mid)
+	# clumps of leaves catching the light, more of them than an oak's
+	for k in range(9):
+		var a := TAU * float(k) / 9.0 + p.y * 0.01
+		var lv := Vector2.from_angle(a)
+		if lv.dot(LIGHT) > 0.35:
+			continue
+		var cp := p + lv * r * (0.42 + 0.18 * float(k % 2)) - LIGHT * r * 0.12
+		crown.circle(cp, r * 0.24, lit)
+		crown.circle(cp - LIGHT * 3.0, r * 0.11, tip)
+	crown.circle(p - LIGHT * r * 0.40, r * 0.26, lit)
+	if trunk:
+		_plane_trunk(crown, p)
+	# the broad leaves breaking the outline
+	for i in range(9):
+		var a := TAU * float(i) / 9.0 + p.x * 0.013
+		crown.circle(p + Vector2.from_angle(a) * r * 0.94, r * 0.16, mid)
+
+
 # El Bosc's ground: packed dark earth on the trail, leaf litter either side
 const TRAIL_DIRT := Color(0.50, 0.41, 0.29)
 const TRAIL_FLOOR := Color(0.25, 0.31, 0.19)
@@ -2598,6 +2663,7 @@ const TREE_FOREST := 2     # El Bosc: holm oak or stone pine
 const TREE_PALM := 3
 const TREE_STREET := 4     # a street tree in its grate
 const TREE_PIT := 5        # El Gotic's plaça tree in its stone pit
+const TREE_PLANE := 6      # El Barri's plane tree: mottled bark, a big pale crown
 
 func pole_tree(i: int) -> int:
 	var p := poles[i]
@@ -2645,6 +2711,7 @@ func _tree_trunk(b: ShapeBatch, p: Vector2, i: int, kind: int) -> void:
 		TREE_PALM: _palm_trunk(b, p)
 		TREE_STREET: _broadleaf_trunk(b, p, 0.72)
 		TREE_PIT: _broadleaf_trunk(b, p, 0.8)
+		TREE_PLANE: _plane_trunk(b, p)
 
 
 func _draw_tree_ground_only(c: Object, p: Vector2, i: int, kind: int) -> void:
@@ -2658,6 +2725,8 @@ func _draw_tree_ground_only(c: Object, p: Vector2, i: int, kind: int) -> void:
 		TREE_PIT:
 			_draw_tree_pit(p)
 			_broadleaf_ground(c, p, 0.8)
+		TREE_PLANE:
+			_broadleaf_ground(c, p, PLANE_SCALE)
 		TREE_STREET:
 			cast_shadow(c, p, 20.0, 40.0, 0.16)
 			c.draw_circle(p, 19.0, Color(0.26, 0.24, 0.22))          # the pit
@@ -2708,6 +2777,7 @@ func _crown_r(kind: int, i: int) -> float:
 		TREE_PALM: return 38.0
 		TREE_STREET: return 34.0 * 0.72
 		TREE_PIT: return 34.0 * 0.8
+		TREE_PLANE: return 34.0 * PLANE_SCALE
 	return 0.0
 
 
@@ -2722,6 +2792,7 @@ func draw_tree_crown(b: ShapeBatch, t: Dictionary, faded := false) -> void:
 		TREE_PALM: _palm_crown(b, p, trunk)
 		TREE_STREET: _broadleaf_crown(b, p, 0.72, trunk)
 		TREE_PIT: _broadleaf_crown(b, p, 0.8, trunk)
+		TREE_PLANE: _plane_crown(b, p, trunk)
 
 
 # What else is over her head, drawn by the canopy layer with the crowns: above
@@ -6027,7 +6098,12 @@ func _update_hud() -> void:
 		else:
 			hud_status = "HEAD HOME"
 	elif poop_state == 1:
-		hud_status = Prompts.fill("NATURE CALLS! STAND STILL, HOLD {poop}")
+		if not walk_has_good_spots():
+			hud_status = Prompts.fill("NATURE CALLS! STAND STILL, HOLD {poop}")
+		elif poop_spot_good(dog.global_position):
+			hud_status = Prompts.fill("GOOD SPOT! STAND STILL, HOLD {poop}")
+		else:
+			hud_status = "NATURE CALLS! FIND GRASS OR A TREE"
 	elif poop_state >= 3:
 		hud_status = "UH OH..."
 	elif carry_state == 0 and carry_pickup.x < INF and dog.global_position.distance_to(carry_pickup) < 45.0:
@@ -6040,7 +6116,7 @@ func _update_hud() -> void:
 	elif walk_mod != null and walk_mod.has_method("idle_status") and walk_mod.idle_status(self) != "":
 		hud_status = walk_mod.idle_status(self)
 	elif pee >= 0.999:
-		hud_status = "FULL TANK! GO MARK A SPOT"
+		hud_status = "BURSTING! GO MARK A SPOT"
 	elif pee <= 0.02:
 		hud_status = "THIRSTY! FIND A FOUNTAIN"
 	if phase == "out" and walk_mod != null and walk_mod.has_method("urgent_status"):
@@ -10326,6 +10402,7 @@ func _pickups(delta: float) -> void:
 			# the pavement is most of the way out of a flagging walk, which is
 			# both realistic and the reason to go out of your way for one
 			mood.soothe(Mood.M.TIRED, 0.55)
+			poop_sooner(POOP_SNACK_PULL)
 			Sfx.play("snack")
 			combo.add("SNACK", 1)
 			float_text(k.pos, "snack +1", Color(1, 0.95, 0.7))
@@ -10477,15 +10554,21 @@ func _bodily(delta: float) -> void:
 		mark_target = Vector2(INF, INF)
 	match poop_state:
 		0:
+			if dog.turbo_active:
+				poop_sooner(POOP_ZOOM_PULL * delta)
 			if dog.global_position.y < urge_y:
 				poop_state = 1
-				urge_timer = 35.0
+				urge_timer = POOP_URGE_S
 				float_text(dog.global_position, "Uh oh...", Color(1, 0.9, 0.6))
 		1:
 			urge_timer -= delta
 			var squatting: bool = Input.is_action_pressed("poop") \
 				and not dog.is_tumbling() and dog.velocity.length() < 90.0
 			if squatting:
+				if not _poop_sniffed:
+					# she checks the spot before she commits to it
+					_poop_sniffed = true
+					float_text(dog.global_position + Vector2(0, -34), "sniff, sniff", Color(1, 0.95, 0.8))
 				squat_progress += delta
 				dog.squat_ui = squat_progress / 2.5
 				if squat_progress >= 2.5:
@@ -10493,6 +10576,10 @@ func _bodily(delta: float) -> void:
 			else:
 				squat_progress = maxf(0.0, squat_progress - delta * 2.0)
 				dog.squat_ui = squat_progress / 2.5
+				if squat_progress <= 0.0:
+					_poop_sniffed = false
+			# the dog shows a good spot under her paws while nature calls
+			dog.poop_cue = 2 if walk_has_good_spots() and poop_spot_good(dog.global_position) else 1
 			if poop_state == 1 and urge_timer <= 0.0:
 				poop_state = 3
 				urge_timer = 1.2
@@ -10521,14 +10608,67 @@ func _bodily(delta: float) -> void:
 		_update_hud()
 
 
+# The call comes sooner by `px` down the walk (a snack, zoomies), never at
+# the start line. The First Walk's comes at its station, always.
+func poop_sooner(px: float) -> void:
+	if poop_state != 0 or tutorial_mode:
+		return
+	urge_y = minf(urge_y + px, float(START_Y) - POOP_URGE_MIN_GAP)
+
+
+# Soft ground (grass, earth) or a tree's pit: where a dog would choose to go.
+func poop_spot_good(p: Vector2) -> bool:
+	var g := surface_at(p)
+	if g == Surfaces.S.GRASS or g == Surfaces.S.MUD:
+		return true
+	for i in range(deco_pole_count):
+		if p.distance_to(poles[i]) < POOP_TREE_R and pole_tree(i) != TREE_NONE:
+			return true
+	for t: Vector2 in trees:
+		if p.distance_to(t) < POOP_TREE_R:
+			return true
+	return false
+
+
+func walk_has_good_spots() -> bool:
+	# the First Walk's grass is the lawn beside its sand path, outside the
+	# edges the scan below walks, and its trees are cleared; the poop lesson
+	# rings a patch of that lawn
+	if tutorial_mode:
+		return true
+	if _poop_good_walk < 0:
+		_poop_good_walk = 0
+		var y := float(START_Y) - 200.0
+		while y > float(GATE_Y) + 100.0 and _poop_good_walk == 0:
+			var e := walk_edges(y)
+			var x := e.x + 10.0
+			while x < e.y:
+				if poop_spot_good(Vector2(x, y)):
+					_poop_good_walk = 1
+					break
+				x += 40.0
+			y -= 80.0
+	return _poop_good_walk == 1
+
+
 func _finish_business(voluntary: bool) -> void:
 	poop_state = 2
 	dog.squat_ui = 0.0
+	dog.poop_cue = 0
 	squat_progress = 0.0
+	_poop_sniffed = false
 	business_spot = dog.global_position + Vector2(0, 8)
-	if voluntary:
-		bones += 5
-		feed.say("MUCH BETTER!  +5", EventFeed.Tone.GOOD)
+	if voluntary and not walk_has_good_spots():
+		bones += POOP_ANY_BONES
+		feed.say("MUCH BETTER!  +%d" % POOP_ANY_BONES, EventFeed.Tone.GOOD)
+	elif voluntary and poop_spot_good(dog.global_position):
+		bones += POOP_GOOD_BONES
+		feed.say("PERFECT SPOT!  +%d" % POOP_GOOD_BONES, EventFeed.Tone.GOOD)
+	elif voluntary:
+		bones += POOP_PAVE_BONES
+		feed.say("ON THE SIDEWALK...  +%d" % POOP_PAVE_BONES, EventFeed.Tone.GOOD)
+		human.patience = maxf(0.0, human.patience - POOP_PAVE_PATIENCE)
+		human.notice("Here? Really?", 1.6)
 	else:
 		feed.say("COULDN'T WAIT...", EventFeed.Tone.BAD)
 	bag_pending = true

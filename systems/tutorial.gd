@@ -89,7 +89,7 @@ const STEPS: Array[Dictionary] = [
 	{
 		"id": "poop", "at": -2850.0, "hold": true, "bench": true, "ghost": "grass",
 		"title": "Nature calls.",
-		"body": "Find some grass, stand still and hold {poop}. Your human bags it. Eventually.",
+		"body": "Grass, earth or a tree's pit is a good spot. Stand still on one and hold {poop}.",
 	},
 	{
 		"id": "vault", "refill": true, "at": -3200.0, "hold": true, "bench": true, "ghost": "swing",

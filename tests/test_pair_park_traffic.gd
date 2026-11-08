@@ -167,11 +167,19 @@ func _test_failed_spawn_and_cap(main: Node2D) -> void:
 func _test_configure_failure_falls_back_without_slot_leak() -> void:
 	var main := _make_main()
 	main.bypasser_blockers.clear()
+	# Across the path just above where an arrival starts (GATE_Y + 420), so
+	# every arrival's spawn sweep meets it; and out of reach of every departure:
+	# from GATE_Y - 120 a departing dog leads 70 px and sweeps up to 351 px
+	# (240 + 82 * 1.35) at the fastest roll, which ends 21 px short of this
+	# rect grown by the pairs' 48 px clearance. At GATE_Y + 340 the fastest
+	# third of departure speeds reached it too, so the fallback held only for
+	# the lucky draws of the seeded dice, and any change to what a level rolls
+	# while it builds could fail it.
 	main.bypasser_blockers.append({
 		"id": "arrival_only_blocker",
 		"rect": Rect2(
 			main.walk_cx - main.walk_half - 100.0,
-			main.GATE_Y + 340.0,
+			main.GATE_Y + 370.0,
 			main.walk_half * 2.0 + 200.0,
 			20.0
 		),
