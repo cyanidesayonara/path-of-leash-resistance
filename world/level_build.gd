@@ -1096,6 +1096,37 @@ const PARK_PLAYGROUND := Rect2(958.0, -4460.0, 166.0, 300.0)
 const PARK_SLACK_A := Vector2(262.0, -1560.0)
 const PARK_SLACK_B := Vector2(262.0, -1960.0)
 const PARK_SLACK_TRUNK := 13.0
+# the park round the path (systems/parc.gd): green iron lamps on the lawn a
+# step out from the edging, the round kiosk by the gate and the bike lane
+# behind it, a plane tree with a reader under it, a picnic, a frisbee pair.
+# Lamps, kiosk and tree are rope points; they and the people are solid.
+const PARK_LAMPS: Array[Vector2] = [
+	Vector2(388.0, -560.0), Vector2(892.0, -1080.0), Vector2(388.0, -2060.0),
+	Vector2(1062.0, -2700.0), Vector2(218.0, -2760.0), Vector2(388.0, -3700.0),
+	Vector2(892.0, -4060.0), Vector2(388.0, -4560.0),
+]
+const PARK_LAMP_R := 6.0
+const PARK_KIOSK := Vector2(1080.0, -700.0)
+const PARK_KIOSK_R := 34.0
+const PARK_BIKE_LANE := Rect2(1150.0, -1520.0, 46.0, 1960.0)
+const PARK_READER_TREE := Vector2(1120.0, -1250.0)
+const PARK_TREE_TRUNK := 14.0
+const PARK_PICNIC := Rect2(205.0, -690.0, 96.0, 66.0)
+const PARK_FRISBEE_A := Vector2(300.0, -3820.0)
+const PARK_FRISBEE_B := Vector2(250.0, -4140.0)
+const PARK_PERSON_R := 11.0
+
+
+# where each of El Parc's lawn people stands or sits (solid, as small circles)
+static func park_people() -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	var pc: Vector2 = PARK_PICNIC.get_center()
+	out.append(Vector3(pc.x, pc.y, 30.0))
+	var rd: Vector2 = PARK_READER_TREE + Vector2(-62.0, 34.0)
+	out.append(Vector3(rd.x, rd.y, PARK_PERSON_R))
+	out.append(Vector3(PARK_FRISBEE_A.x, PARK_FRISBEE_A.y, PARK_PERSON_R))
+	out.append(Vector3(PARK_FRISBEE_B.x, PARK_FRISBEE_B.y, PARK_PERSON_R))
+	return out
 static func park_slackline() -> Rect2:
 	return Rect2(PARK_SLACK_A.x - 3.0, PARK_SLACK_B.y + 22.0, 6.0, PARK_SLACK_A.y - PARK_SLACK_B.y - 44.0)
 
@@ -2219,6 +2250,10 @@ static func build_level_data(m: Node2D) -> void:
 		add_rope_rect(m, park_slackline())
 		for st: Vector2 in [PARK_SLACK_A, PARK_SLACK_B]:
 			add_rope_point(m, st, PARK_SLACK_TRUNK + 2.0, false)
+		for lp: Vector2 in PARK_LAMPS:
+			add_rope_point(m, lp, PARK_LAMP_R + 2.0, false)
+		add_rope_point(m, PARK_KIOSK, PARK_KIOSK_R + 2.0, false)
+		add_rope_point(m, PARK_READER_TREE, PARK_TREE_TRUNK + 2.0, false)
 		if not m.tutorial_mode:
 			m.sprinkler = Sprinkler.new()
 	if m.lvl == "beach":
@@ -3623,6 +3658,12 @@ static func build_walls(m: Node2D) -> void:
 	if m.lvl == "park":
 		for st: Vector2 in [PARK_SLACK_A, PARK_SLACK_B]:
 			add_circle_body(m, st, PARK_SLACK_TRUNK)
+		for lp: Vector2 in PARK_LAMPS:
+			add_circle_body(m, lp, PARK_LAMP_R)
+		add_circle_body(m, PARK_KIOSK, PARK_KIOSK_R)
+		add_circle_body(m, PARK_READER_TREE, PARK_TREE_TRUNK)
+		for pp: Vector3 in park_people():
+			add_circle_body(m, Vector2(pp.x, pp.y), pp.z)
 	# El Barri's railings, with the street past them
 	if m.lvl == "barri":
 		for r: Rect2 in Barri.solids(m):

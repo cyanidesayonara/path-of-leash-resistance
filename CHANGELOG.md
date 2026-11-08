@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-11-08 - El Parc: the park round the path
+
+- Els Àngels' paired upgrade. El Parc read as El Barri: one flat path fill with a seam and empty lawns. The path now has a granite edging and the park's low iron hoop fence beside it (`Parc.draw_path_edges`), raked gravel on a world-fixed grid and a worn track down the middle that stops where the path splits round the lake (`Parc.draw_over_walkway`).
+- On the lawns (`world/level_build.gd`, the `PARK_*` constants): eight green cast-iron park lamps a step out from the edging, lit by `Game.lamp_glow()`; a round kiosk by the gate under a striped scalloped awning with its hatch, ice-cream board and a bike locked at the rack; the bike lane on the east lawn with painted bicycles; a checked-blanket picnic; a reader under a plane tree; two friends throwing a frisbee; three flower borders beside the edging. Lamps, kiosk and tree are rope points and solid; the people are solid circles.
+- The behaviour snapshot for park and barri is byte-identical. No new hazard; El Barri untouched (every change is in El Parc's module or behind `lvl == "park"`).
+
 ## 2026-11-07 - The whole view drawn after a camera jump; bumps cost a bump's worth
 
 - The camera is smoothed, so after a jump (a `--shot-y` shot, a restart, the turn for home) the screen trails `cam.position` by hundreds of pixels for a while. The world pass, the edge, verge and ground canvases and the section caches culled and cached for `cam.position`, so the stretch actually on screen could be left bare: a band of the view with no paving under the props (every `--shot-y` shot of Plaça d'Espanya, and the new L'Eixample). They cull to `main.view_lo()`/`view_hi()` now, a band that covers both where the camera is heading and where the screen really is; the canvases still decide when to redraw by the camera's position, so what they record always covers the view.
