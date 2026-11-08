@@ -146,7 +146,10 @@ static func tutorial_benches(m: Node2D) -> Array[Rect2]:
 		if not bool(TUT.step(i).get("bench", false)):
 			continue
 		var hp: Vector2 = m.tut_hold_point(i)
-		out.append(Rect2(hp.x - 26.0, hp.y - 10.0, 52.0, 14.0))
+		var r := Rect2(hp.x - 26.0, hp.y - 10.0, 52.0, 14.0)
+		# the yard's steps share one bench
+		if not out.has(r):
+			out.append(r)
 	return out
 
 
@@ -1415,8 +1418,9 @@ static func fit_props_to_corridor(m: Node2D) -> void:
 	# level space
 	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "angels":
 		return
-	# and so does El Barri; the First Walk, built on it, is still fitted
-	if m.lvl == "barri" and not m.tutorial_mode:
+	# and so does El Barri, and the First Walk built on it, whose stations
+	# (systems/tutorial.gd) are laid out where they stand
+	if m.lvl == "barri":
 		return
 	# Props were all authored for the old fixed 300..980 corridor, so a
 	# narrower walk would leave them stranded out on the verge. Pull every
@@ -2002,10 +2006,13 @@ static func build_level_data(m: Node2D) -> void:
 		m.poles.clear()
 		m.poles.append(Vector2(640.0, TUT.at("vault")))
 		m.poles.append(Vector2(640.0, TUT.at("fling")))
+		# the practice yard's two lampposts
+		m.poles.append_array(TUT.yard_poles(m))
 		m.deco_pole_count = m.poles.size()
-		hyd_list = [Vector2(560.0, TUT.at("pee") - 40.0), Vector2(720.0, TUT.at("sniff") - 40.0)]
+		hyd_list = [Vector2(560.0, TUT.at("pee") - 40.0), Vector2(720.0, TUT.at("sniff") - 40.0),
+			TUT.yard_hydrant(m)]
 		keb_list = []
-		m.bins = Array([Vector2(m.sw_r - 30.0, TUT.at("bag") - 60.0)], TYPE_VECTOR2, &"", null)
+		m.bins = Array([Vector2(m.sw_r - 30.0, TUT.at("poop") - 60.0)], TYPE_VECTOR2, &"", null)
 		m.fountains = Array([], TYPE_VECTOR2, &"", null)
 	for tb in m.tables:
 		m.poles.append(tb)
@@ -2054,7 +2061,7 @@ static func build_level_data(m: Node2D) -> void:
 		m.flock_ys = Array([TUT.at("bark") - 60.0], TYPE_FLOAT, &"", null)
 		m.duck_ys = Array([], TYPE_FLOAT, &"", null)
 		m.cat_y = 0.0
-		m.urge_y = TUT.at("bag") + 40.0
+		m.urge_y = TUT.at("poop") + 40.0
 	for cp in m.candy_spots:
 		m.candy.append({"pos": cp, "eaten": false})
 	build_ground_detail(m)

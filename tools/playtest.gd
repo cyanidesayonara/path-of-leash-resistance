@@ -234,6 +234,11 @@ func _frames(seconds: float) -> void:
 
 func _shot() -> void:
 	shots += 1
+	# in the First Walk, which lesson is up: a run can be followed from its log
+	if bool(m.tutorial_mode):
+		var st: Dictionary = m.TutorialSteps.step(int(m.tut_step))
+		print("PLAYTEST lesson %d %s, dog (%.0f, %.0f), human (%.0f, %.0f) " % [int(m.tut_step), String(st.get("id", "")),
+			m.dog.global_position.x, m.dog.global_position.y, m.human.global_position.x, m.human.global_position.y])
 	if DisplayServer.get_name() == "headless" or out_dir == "":
 		return
 	await process_frame

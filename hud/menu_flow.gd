@@ -551,10 +551,12 @@ static func walk_card(m: Node2D) -> Dictionary:
 		"time": clock(float(m.elapsed)), "goals": [], "lesson": ""}
 	if m.tutorial_mode:
 		var st: Dictionary = TutorialSteps.step(m.tut_step)
-		# the closing "done" step is the tutorial's last card, not a lesson
-		if String(st.id) != "" and String(st.id) != "done":
-			out.lesson = "Lesson %d of %d: %s" % [int(m.tut_step) + 1, TutorialSteps.step_count() - 1,
+		# the free practice at the end is not a lesson
+		if String(st.id) != "" and not TutorialSteps.is_free(int(m.tut_step)):
+			out.lesson = "Lesson %d of %d: %s" % [int(m.tut_step) + 1, TutorialSteps.lesson_count(),
 				String(st.title)]
+		elif String(st.id) != "":
+			out.lesson = "Free practice: %s" % String(st.title)
 		return out
 	for q: Dictionary in m.active_quests:
 		var target := int(q.target)

@@ -35,7 +35,7 @@ func _run() -> void:
 	m._skip_title()
 	var TUT: GDScript = load("res://systems/tutorial.gd")
 	var Flow: GDScript = load("res://hud/menu_flow.gd")
-	var bag: int = TUT.index_of("bag")
+	var bag: int = TUT.index_of("poop")
 	_check(bag > 0 and bag < TUT.index_of("vault"), "bagging is among the basics, before the tricks")
 	_check(TUT.index_of("vault") < TUT.index_of("grind") and TUT.index_of("fling") < TUT.index_of("grind"),
 		"the leash tricks come before the grind")
@@ -64,13 +64,20 @@ func _run() -> void:
 	m._tut_advance(true)
 	_check(String(m.confirm_id) == "", "the card does not come back once answered")
 
-	# the end, in the dog park: it finishes by itself
-	m.tut_step = TUT.index_of("done")
-	m._tick_tutorial(1.0)
-	_check(not m.finished, "the last card stays up a moment")
-	m._tick_tutorial(2.0)
-	_check(m.finished and m.results_card.visible, "then the tutorial ends itself, no walk home")
+	# the free practice at the end: nothing ends by itself, the button does
+	m.tut_step = TUT.index_of("practice")
+	for k in range(120):
+		m._tick_tutorial(0.5)
+	_check(not m.finished, "the practice yard never ends by itself")
+	_check(String(TUT.skip_label(m.tut_step)) == "finish", "its prompt bar offers finish")
+	m.tut_step = TUT.index_of("park")
+	for k in range(120):
+		m._tick_tutorial(0.5)
+	_check(not m.finished, "nor does the dog park")
+	TUT.skip(m)
+	_check(m.finished and m.results_card.visible, "finish ends the First Walk, no walk home")
 	_check(game.tutorial_done, "and counts as done")
+	_check(not m.tut_label.visible and not bool(m.tut_skippable), "the lesson card and its bar go with it")
 
 	m.free()
 	print("test_tutorial_checkpoint: %d checks, %s" % [checks, "OK" if failures.is_empty() else "%d FAILED" % failures.size()])

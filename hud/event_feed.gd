@@ -347,8 +347,9 @@ func _draw_cards(vs: Vector2) -> void:
 		y += 80.0
 		# moving on is a button, so it goes in the prompt bar, as on every
 		# menu screen, and never into the lesson's sentence
-		if bool(main.get("tut_skippable")):
-			Kit.prompt_bar(self, vs, [["skip", "move on"]])
+		# a question over the walk (THAT'S THE BASICS) has the bar to itself
+		if bool(main.get("tut_skippable")) and String(main.confirm_id) == "":
+			Kit.prompt_bar(self, vs, [["skip", String(main.tut_skip_label)]])
 	if main.challenge_l != null and main.challenge_l.visible and main.challenge != null:
 		_dare_card(vs, y)
 
