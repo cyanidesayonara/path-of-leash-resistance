@@ -90,10 +90,10 @@ jobs:
       - name: Download Godot + export templates
         run: |
           set -euo pipefail
-          curl -sL -o godot.zip https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
+          curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o godot.zip https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
           unzip -q godot.zip
           chmod +x Godot_v4.7-stable_linux.x86_64
-          curl -sL -o templates.tpz https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_export_templates.tpz
+          curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o templates.tpz https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_export_templates.tpz
           unzip -q templates.tpz
           mkdir -p ~/.local/share/godot/export_templates/4.7.stable
           mv templates/* ~/.local/share/godot/export_templates/4.7.stable/
@@ -165,7 +165,7 @@ jobs:
             echo "Refusing to skip itch upload with a successful exit."
             exit 1
           fi
-          curl -sL -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
           unzip -q butler.zip
           chmod +x butler
           ./butler -V
