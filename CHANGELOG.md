@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-08 - Test that every walk is registered in every table
+
+- `tests/test_walk_registry.gd`: regression test verifying that every walk in `Game.LEVELS` is registered across all per-walk tables (`LEVEL_NAMES`, `LEVEL_SUBTITLES`, `LEVEL_SUBTITLES_CA`, `LEVEL_SUBTITLES_ES`, `STAR_GATE`, `CAMPAIGN_SKY`, `CAROUSEL`, `WALK_MODULES`, `LEVEL_GOAL_IDS`, `CLOCK_TARGETS`, `JAMON_POS`, `STYLES`, `MATERIALS`), and checking the reverse that no table has unknown keys outside documented allow lists (`tutorial`, `title`, `freedom`).
+- Checks that every sign material named in `WorldSign.MATERIALS` has a valid definition in `WorldSign.FEEL`.
+- Extended `tests/test_tool_levels.gd` to check `tools/surface_map.sh` alongside `shot_sweep.sh` and `behaviour_snapshot.sh`.
+- Added `test_walk_registry.gd` to `.github/workflows/ci.yml`.
+
 ## 2026-11-08 - El Barri: the neighborhood round the square
 
 - El Barri, the first walk, was the same frame from start to pipicà: a sand strip between two lawns, the street with its motorbikes on one side and lawn to the frame's edge on the other. Paired with L'Eixample for 1.71, it now changes down its length (`systems/barri.gd`).
