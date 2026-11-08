@@ -10,6 +10,10 @@ Append-only session history, newest first.
 - Each octagon is walled along its chamfers and across the side streets' mouths (`Eixample.octagon_walls`): main's building line leaves a gap where bikes cross, which let her leave the street down a side street. `test_cross_section` probes the building line on a straight stretch near -2000, since on a slant a dog started 10 px in already overlaps the wall.
 - After Platja de Llevant in the campaign (16 stars, past El Besòs), as the planner orders it. Its own music settings, sign material (plane-tree seed balls), clock target and pernil. `tests/test_eixample.gd` in CI.
 
+## 2026-11-08 - CI survives a failed Godot download
+
+- GitHub's release downloads returned 504 for every job on 2026-11-08, so every CI, soak and sweep job failed at its first step. ci, soak and shots now keep the Godot zip in the Actions cache (`godot-4.7-stable-linux-x86_64`) and download only when it is missing; every download in those and in release.yml retries (`curl -fsSL --retry 8 --retry-all-errors`), and `-f` makes an error page fail the download instead of reaching `unzip`.
+
 ## 2026-11-07 - The whole view drawn after a camera jump; bumps cost a bump's worth
 
 - The camera is smoothed, so after a jump (a `--shot-y` shot, a restart, the turn for home) the screen trails `cam.position` by hundreds of pixels for a while. The world pass, the edge, verge and ground canvases and the section caches culled and cached for `cam.position`, so the stretch actually on screen could be left bare: a band of the view with no paving under the props (every `--shot-y` shot of Plaça d'Espanya, and the new L'Eixample). They cull to `main.view_lo()`/`view_hi()` now, a band that covers both where the camera is heading and where the screen really is; the canvases still decide when to redraw by the camera's position, so what they record always covers the view.
