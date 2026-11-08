@@ -17,7 +17,10 @@ const ROW_PHONE := 8.0
 const ROW_TANK := 36.0
 const ROW_MARKS := 54.0
 const ROW_ZOOM := 72.0
-const ROW_MOOD := 90.0
+# rows that show only while they matter (nature calling, a mood) stack under
+# the zoomies from here, and the card grows by a row for each
+const ROW_EXTRA := 90.0
+const POOP_COL := Color(0.70, 0.48, 0.28)
 const ROW_H := 18.0
 const CARD_H := ROW_ZOOM + ROW_H + 6.0
 # the label column, then the column every bar and the mark dots start at
@@ -77,11 +80,21 @@ func _draw() -> void:
 	_b.flush()
 
 
-# The card grows a row while a mood is on, and only then.
+# The rows that show only while they matter: "poop" while nature calls (its
+# bar is the time she can hold it), "mood" while a mood lasts.
+func extra_rows() -> Array[String]:
+	var out: Array[String] = []
+	if main == null:
+		return out
+	if int(main.poop_state) in [1, 3, 4]:
+		out.append("poop")
+	if main.mood != null and String(main.mood.badge()) != "":
+		out.append("mood")
+	return out
+
+
 func card_h() -> float:
-	if main != null and main.mood != null and String(main.mood.badge()) != "":
-		return ROW_MOOD + ROW_H + 6.0
-	return CARD_H
+	return CARD_H + ROW_H * float(extra_rows().size())
 
 
 func _label(text: String, x: float, row: float, col := LABEL_COL) -> void:
@@ -167,12 +180,28 @@ func _draw_shapes() -> void:
 		var a := 0.55 + 0.45 * sin(t / 160.0)
 		_b.draw_rect(POINT_RECTS[point], Color(0.98, 0.80, 0.38, a), false, 2.5)
 
-	# The mood, when there is one: its own row, named, with a bar draining,
-	# because a mood you cannot cancel has to be a mood you can see going.
-	if h > CARD_H:
-		var badge: String = main.mood.badge()
-		var mi: float = clampf(main.mood.intensity, 0.0, 1.0)
-		var tint: Color = main.mood.tint()
-		_b.draw_circle(Vector2(PAD + 7.0, ROW_MOOD + 8.0), 4.5, tint)
-		_label(badge, LABEL_X, ROW_MOOD, Color(tint.r, tint.g, tint.b, 0.65 + 0.35 * mi))
-		_bar(ROW_MOOD, mi, Color(tint.r, tint.g, tint.b, 0.85))
+	var extra := extra_rows()
+	for i in range(extra.size()):
+		var row := ROW_EXTRA + ROW_H * float(i)
+		match extra[i]:
+			"poop":
+				# nature calls: the bar is the time left to choose a spot. The
+				# last ten seconds, and the warning after them, pulse red.
+				var left: float = float(main.urge_timer) / float(main.POOP_URGE_S) if int(main.poop_state) == 1 else 0.0
+				var pcol := POOP_COL
+				if left < 10.0 / float(main.POOP_URGE_S) and fmod(t / 250.0, 2.0) < 1.0:
+					pcol = Color(1.0, 0.45, 0.35)
+				var c := Vector2(PAD + 7.0, row + 9.0)
+				_b.draw_circle(c + Vector2(0.0, 2.0), 5.0, POOP_COL.darkened(0.2))
+				_b.draw_circle(c + Vector2(0.0, -1.5), 3.8, POOP_COL)
+				_b.draw_circle(c + Vector2(0.5, -4.5), 2.4, POOP_COL.lightened(0.12))
+				_label("POOP", LABEL_X, row, pcol)
+				_bar(row, left, pcol)
+			"mood":
+				# a mood you cannot cancel has to be a mood you can see going
+				var badge: String = main.mood.badge()
+				var mi: float = clampf(main.mood.intensity, 0.0, 1.0)
+				var tint: Color = main.mood.tint()
+				_b.draw_circle(Vector2(PAD + 7.0, row + 8.0), 4.5, tint)
+				_label(badge, LABEL_X, row, Color(tint.r, tint.g, tint.b, 0.65 + 0.35 * mi))
+				_bar(row, mi, Color(tint.r, tint.g, tint.b, 0.85))

@@ -885,6 +885,8 @@ var active_quests: Array[Dictionary] = []
 var poop_state := 0  # 0 not yet, 1 urge, 2 done, 3 forced telegraph, 4 forced squat
 var urge_y := -2000.0
 var urge_timer := 0.0
+# how long she can hold it once nature calls (the HUD drains a bar over it)
+const POOP_URGE_S := 35.0
 var squat_progress := 0.0
 var business_spot := Vector2(INF, INF)
 var elapsed := 0.0
@@ -10576,7 +10578,7 @@ func _bodily(delta: float) -> void:
 		0:
 			if dog.global_position.y < urge_y:
 				poop_state = 1
-				urge_timer = 35.0
+				urge_timer = POOP_URGE_S
 				float_text(dog.global_position, "Uh oh...", Color(1, 0.9, 0.6))
 		1:
 			urge_timer -= delta
