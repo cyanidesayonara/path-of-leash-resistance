@@ -169,7 +169,7 @@ func say(text: String, tone: int = Tone.PLAIN) -> void:
 	queue_redraw()
 
 
-# The owner's news ("HE'S TEXTING! HE'S NOT LOOKING") is about the walk
+# The owner's news ("TEXTING! NOT LOOKING") is about the walk
 # right now, so it takes the banner for a moment rather than shouting.
 func flash(text: String) -> void:
 	flash_text = text
