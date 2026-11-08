@@ -128,6 +128,8 @@ var guitarrista: Guitarrista
 var cargo: SuperillaCargo
 var skater: ForumSkater
 var espanya_bubble: EspanyaBubble
+var eixample_tour: EixampleTour
+var angels_skate: AngelsSkate
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -220,7 +222,11 @@ const SuperillaCargo := preload("res://systems/superilla_cargo.gd")
 const Forum := preload("res://systems/forum.gd")
 const ForumSkater := preload("res://systems/forum_skater.gd")
 const Espanya := preload("res://systems/espanya.gd")
+const Eixample := preload("res://systems/eixample.gd")
+const EixampleTour := preload("res://systems/eixample_tour.gd")
 const EspanyaBubble := preload("res://systems/espanya_bubble.gd")
+const Angels := preload("res://systems/angels.gd")
+const AngelsSkate := preload("res://systems/angels_skate.gd")
 # float_text(..., POP_SAY) draws a speech bubble rather than a sound or a score
 const POP_SAY := 0
 const POLE_RADIUS := 10.0
@@ -342,6 +348,8 @@ const WALK_MODULES := {
 	"superilla": preload("res://systems/superilla.gd"),
 	"forum": preload("res://systems/forum.gd"),
 	"espanya": preload("res://systems/espanya.gd"),
+	"eixample": preload("res://systems/eixample.gd"),
+	"angels": preload("res://systems/angels.gd"),
 	"raval": preload("res://systems/boss_gat.gd"),
 	"beach": preload("res://systems/passeig.gd"),
 	"rain": preload("res://systems/diluvi.gd"),
@@ -554,6 +562,12 @@ var espanya_bubbles_popped: int = 0
 var espanya_fountain_splashed: int = 0
 var espanya_columns_wrapped: int = 0
 var espanya_escalator_ridden: int = 0
+var eixample_pond_paddled := false
+var angels_ledge_ground := false
+var angels_decks_sniffed := 0
+var angels_decks_visited: Dictionary = {}
+var angels_churro_stolen := false
+var angels_lamps_wrapped: Dictionary = {}
 var reial_fountain_drank := false
 var reial_busker_barked := false
 var vet_scale_weighed := false
@@ -2858,7 +2872,7 @@ func is_lamppost(i: int) -> bool:
 		return true
 	if walk_mod != null and walk_mod.has_method("is_lamp"):
 		return walk_mod.is_lamp(self, poles[i])
-	if lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "oldtown" or lvl == "carmel" or lvl == "superilla" or lvl == "forum":
+	if lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "oldtown" or lvl == "carmel" or lvl == "superilla" or lvl == "forum" or lvl == "angels":
 		return false
 	return not (lvl == "rain" and poles[i].x < walk_cx)
 
@@ -10213,6 +10227,8 @@ func _tick_grind(delta: float) -> void:
 		return
 	grind_rail = ri
 	grind.begin()
+	if lvl == "angels":
+		angels_ledge_ground = true
 	Sfx.play("save", 1.35, -10.0)
 	feed.say("%s!" % String(rails[ri]["name"]), EventFeed.Tone.LOUD)
 
@@ -10736,6 +10752,8 @@ const FREEDOM_KINDS := {
 	# the wood behind the garden's back gate
 	"horta": "clearing",
 	"raval": "placa",
+	# the garden inside the next block of the grid (systems/eixample.gd)
+	"eixample": "yard",
 }
 const BEACH_SEA_R := 430.0
 const BEACH_GATE_SHORE_X := 230.0

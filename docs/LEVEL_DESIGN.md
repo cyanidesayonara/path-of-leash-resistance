@@ -538,6 +538,34 @@ park could be just a neighborhood park in bcn."
 - Opens at 41 stars, after El Laberint d'Horta. Arrives by metro (`"metro"`).
   Built in `systems/llevant.gd`.
 
+### L'Eixample (eixample) - the grid of cut corners round the basilica
+- Is: one street of Cerdà's grid, walked block by block to the basilica. One
+  of the green axes: paved wall to wall, panot flower tiles along the
+  facades, a granite middle where the road was, plane trees down both sides,
+  planted islands with benches. Built in `systems/eixample.gd`.
+- Shape: straight blocks that open into an octagon at each of the four
+  crossings (`XINGS`), because every corner of the grid is cut at 45 degrees
+  (`edge_nodes`, `half_at`). The cross streets run out either side; their
+  mouths are closed by the recycling containers. Bikes ride two of them
+  (`BIKE_XINGS`, main's bike lanes).
+- Signature line: a lamp on every chamfer (16, `chamfer_spots`) to wrap as
+  the street opens, the islands to thread, the octagons to cut across on the
+  diagonal. The corner goal marks the chamfer lamps.
+- Set pieces: the café terrace on a chamfer with the croissant prize, a
+  delivery van in a loading bay, Plaça de Gaudí's pond (water) with the
+  towers reflected in it, the basilica's facade, bell towers and crane
+  along the last block.
+- Live event: the tour group following its guide's umbrella across the last
+  crossing (`systems/eixample_tour.gd`). Warned 0.8 s ahead ("Stay with the
+  umbrella!"); walking into the line costs your human a little patience;
+  steering them clear is a save; a bark gets her photographed; the last
+  tourist drops a pastry.
+- Off-leash: INTERIOR D'ILLA, the garden inside the next block: lawns either
+  side of a sauló path, the block's rear galleries and washing all round,
+  the old brick water tower.
+- After Platja de Llevant in the campaign (the planner's order), 16 stars,
+  past El Besòs. Sign material: plane-tree seed balls.
+
 ### First Walk (tutorial) - learn each trick in peace
 Santtu: "we should really upgrade the tutorial too, so that the user can
 learn each trick & mechanic individually and in peace, without all the
