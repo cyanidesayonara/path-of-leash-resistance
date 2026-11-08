@@ -41,9 +41,20 @@ jobs:
       - name: Store listing check
         run: python3 tools/store_listing.py --check store/listing.md
 
+      # A GitHub release download can fail for minutes at a time (504s on
+      # 2026-11-08 failed every job): keep the zip in the Actions cache and
+      # retry the download when it is not there.
+      - name: Cache Godot
+        uses: actions/cache@v4
+        with:
+          path: godot.zip
+          key: godot-4.7-stable-linux-x86_64
+
       - name: Download Godot
         run: |
-          curl -sL -o godot.zip https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
+          if [ ! -s godot.zip ]; then
+            curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o godot.zip https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
+          fi
           unzip -q godot.zip
           chmod +x Godot_v4.7-stable_linux.x86_64
 
