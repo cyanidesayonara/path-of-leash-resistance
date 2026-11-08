@@ -130,6 +130,7 @@ var skater: ForumSkater
 var espanya_bubble: EspanyaBubble
 var eixample_tour: EixampleTour
 var angels_skate: AngelsSkate
+var poble_balcony: PobleBalcony
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -227,6 +228,8 @@ const EixampleTour := preload("res://systems/eixample_tour.gd")
 const EspanyaBubble := preload("res://systems/espanya_bubble.gd")
 const Angels := preload("res://systems/angels.gd")
 const AngelsSkate := preload("res://systems/angels_skate.gd")
+const Poble := preload("res://systems/poble.gd")
+const PobleBalcony := preload("res://systems/poble_balcony.gd")
 # float_text(..., POP_SAY) draws a speech bubble rather than a sound or a score
 const POP_SAY := 0
 const POLE_RADIUS := 10.0
@@ -350,6 +353,7 @@ const WALK_MODULES := {
 	"espanya": preload("res://systems/espanya.gd"),
 	"eixample": preload("res://systems/eixample.gd"),
 	"angels": preload("res://systems/angels.gd"),
+	"poble": preload("res://systems/poble.gd"),
 	"raval": preload("res://systems/boss_gat.gd"),
 	"beach": preload("res://systems/passeig.gd"),
 	"rain": preload("res://systems/diluvi.gd"),
@@ -497,21 +501,32 @@ const SCENT_REACH_MIN := 130.0
 const SCENT_REACH_MAX := 430.0
 # the tutorial walk (see tutorial.gd): one lesson at a time, all skippable
 const TutorialSteps := preload("res://systems/tutorial.gd")
+const TutorialLayer := preload("res://world/tutorial_layer.gd")
 const UiIcons := preload("res://hud/ui_icons.gd")
 var tutorial_mode := false
 var tut_step := 0
-# where the owner stands to wait, this far south of the lesson's station
-const TUT_HOLD_BACK := 150.0
-# how far in from the path's edge a lesson's "stand" puts the waiting owner
-const TUT_STAND_IN := 60.0
+# where the owner stands to wait, and how far in from the path's edge a
+# lesson's "stand" puts them (systems/tutorial.gd)
+const TUT_HOLD_BACK := TutorialSteps.HOLD_BACK
+const TUT_STAND_IN := TutorialSteps.STAND_IN
 var tut_plant_t := 0.0
 var tut_teetered := false
 var tut_flash := 0.0
 var tut_start_y := 0.0
 var tut_label: Label
 var tut_hint: Label
-# the lesson up can be skipped: event_feed draws its prompt bar
+# the lesson up can be skipped: event_feed draws its prompt bar, offering
+# tut_skip_label ("move on", or "finish" in the free practice)
 var tut_skippable := false
+var tut_skip_label := "move on"
+# how long the current lesson card has been up
+var tut_card_t := 0.0
+# the lead lesson's chalk ring (systems/tutorial.gd ring_at)
+var tut_ring := Vector2(INF, INF)
+# the patience lesson: the temper cloud has shown
+var tut_clouded := false
+# the practice yard: she has headed for the gate, and your human goes with her
+var tut_leaving := false
 # counters the tutorial checks against
 var barks_done := 0
 var grinds_landed := 0
@@ -568,6 +583,10 @@ var angels_decks_sniffed := 0
 var angels_decks_visited: Dictionary = {}
 var angels_churro_stolen := false
 var angels_lamps_wrapped: Dictionary = {}
+var poble_columns_wrapped: Dictionary = {}
+var poble_workshops_sniffed: Dictionary = {}
+var poble_shakes: int = 0
+var poble_fountain_wrapped: bool = false
 var reial_fountain_drank := false
 var reial_busker_barked := false
 var vet_scale_weighed := false
@@ -899,8 +918,28 @@ var active_quests: Array[Dictionary] = []
 var poop_state := 0  # 0 not yet, 1 urge, 2 done, 3 forced telegraph, 4 forced squat
 var urge_y := -2000.0
 var urge_timer := 0.0
-# how long she can hold it once nature calls (the HUD drains a bar over it)
+# THE CALL OF NATURE. It comes at urge_y down the walk (a random point, set
+# by level_build), and what she does brings it on sooner: a dropped snack
+# moves it POOP_SNACK_PULL back up the walk, zoomies POOP_ZOOM_PULL a second.
+# Once it comes, any spot will do, but a dog has standards: soft ground (grass,
+# earth) or a tree's pit is a good spot and pays POOP_GOOD_BONES; the pavement
+# pays POOP_PAVE_BONES and costs your human a little patience.
 const POOP_URGE_S := 35.0
+const POOP_SNACK_PULL := 300.0
+const POOP_ZOOM_PULL := 60.0
+# never so soon it comes at the start line
+const POOP_URGE_MIN_GAP := 600.0
+const POOP_TREE_R := 34.0
+const POOP_GOOD_BONES := 8
+const POOP_PAVE_BONES := 2
+const POOP_PAVE_PATIENCE := 0.06
+# the sniff that starts a squat, said once per squat
+var _poop_sniffed := false
+# whether this walk has a good spot anywhere (-1 not looked yet). A walk of
+# nothing but paving and stone (L'Estació, El Mercat) asks for none: any spot
+# is the spot, at the old price, and nobody minds.
+var _poop_good_walk := -1
+const POOP_ANY_BONES := 5
 var squat_progress := 0.0
 var business_spot := Vector2(INF, INF)
 var elapsed := 0.0
@@ -974,7 +1013,6 @@ var ui_scale := 1.0
 # the HUD meter the current lesson uses ("tank", "zoomies"), outlined on the
 # card while the lesson is up; "" for none
 var hud_point := ""
-var tut_done_t := 0.0
 var pause_view := ""
 var locked_nudge := 0.0
 var shop_preview: CharacterBody2D
@@ -2874,7 +2912,7 @@ func is_lamppost(i: int) -> bool:
 		return true
 	if walk_mod != null and walk_mod.has_method("is_lamp"):
 		return walk_mod.is_lamp(self, poles[i])
-	if lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "oldtown" or lvl == "carmel" or lvl == "superilla" or lvl == "forum" or lvl == "angels":
+	if lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "oldtown" or lvl == "carmel" or lvl == "superilla" or lvl == "forum" or lvl == "angels" or lvl == "poble":
 		return false
 	return not (lvl == "rain" and poles[i].x < walk_cx)
 
@@ -4108,55 +4146,6 @@ func _draw_rambla_stall(st: Vector2, kind: String, i: int) -> void:
 		b.line(Vector2(r.position.x + 1.5, r.position.y + 1.0), Vector2(r.position.x + 1.5, r.end.y - 2.0), Color(1, 1, 1, 0.20), 3.0)
 		b.line(Vector2(r.position.x + 2.0, r.end.y - 1.5), Vector2(r.end.x, r.end.y - 1.5), Color(0, 0, 0, 0.26), 3.0)
 		b.line(Vector2(r.end.x - 1.5, r.position.y + 2.0), Vector2(r.end.x - 1.5, r.end.y), Color(0, 0, 0, 0.30), 3.0)
-	b.flush(_wc)
-
-
-# the brink lesson's pond: a muddy bank and the water, like El Parc's lake
-func _draw_tutorial_pond() -> void:
-	var r: Rect2 = LevelBuild.tutorial_pond(self)
-	var pc := r.get_center()
-	var bank := {"y": pc.y, "at": 0.5, "rx": r.size.x * 0.5, "ry": r.size.y * 0.5, "seed": 1.9}
-	_draw_pinned_patch(bank, pc, Color(0.40, 0.36, 0.28), 1.08)
-	_draw_pinned_patch(bank, pc, Color(0.31, 0.44, 0.52), 0.94)
-
-
-# The benches the owner waits on at the quiet lessons (LevelBuild.
-# tutorial_benches): slats across, cast-iron ends, the backrest on the south
-# side so whoever sits there faces the lesson.
-func _draw_tutorial_benches(vt: float, vb: float) -> void:
-	var b := ShapeBatch.new()
-	for r: Rect2 in LevelBuild.tutorial_benches(self):
-		if r.end.y < vt - 40.0 or r.position.y > vb + 40.0:
-			continue
-		b.rect(Rect2(r.position + LIGHT * 7.0, r.size + Vector2(0, 6)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
-		for ex: float in [r.position.x + 3.0, r.end.x - 7.0]:
-			b.rect(Rect2(ex, r.position.y - 1.0, 4.0, r.size.y + 8.0), Color(0.16, 0.16, 0.17))
-		for si in range(3):
-			var sl := Rect2(r.position.x, r.position.y + float(si) * 5.0, r.size.x, 4.2)
-			var wc := Color(0.56, 0.41, 0.27).lightened(0.10 if si == 0 else 0.0)
-			b.rect(sl, wc.darkened(0.25))
-			b.rect(Rect2(sl.position, sl.size - Vector2(0.0, 1.2)), wc)
-		var back := Rect2(r.position.x, r.end.y + 2.0, r.size.x, 5.0)
-		b.rect(back, Color(0.46, 0.33, 0.21))
-		b.rect(Rect2(back.position, Vector2(back.size.x, 1.5)), Color(0.66, 0.50, 0.34))
-	b.flush(_wc)
-
-
-# The grind lesson's stone ledge: a long low wall beside the path, its coping
-# pale and worn smooth, made to be ridden (systems/rails.gd).
-func _draw_tutorial_ledge(vt: float, vb: float) -> void:
-	var at := TutorialSteps.at("grind")
-	var r := Rect2(Rails.TUT_LEDGE_X - 9.0, at - Rails.TUT_LEDGE_HALF, 18.0, Rails.TUT_LEDGE_HALF * 2.0)
-	if r.end.y < vt or r.position.y > vb:
-		return
-	var b := ShapeBatch.new()
-	b.rect(Rect2(r.position + Vector2(5, 6), r.size), Color(0, 0, 0, 0.18))
-	b.rect(r, Color(0.62, 0.58, 0.52))
-	b.rect(Rect2(r.position.x + 2.0, r.position.y, r.size.x - 4.0, r.size.y), Color(0.80, 0.77, 0.70))
-	var y := r.position.y + 30.0
-	while y < r.end.y:
-		b.rect(Rect2(r.position.x, y, r.size.x, 2.0), Color(0.52, 0.48, 0.42))
-		y += 30.0
 	b.flush(_wc)
 
 
@@ -6117,7 +6106,12 @@ func _update_hud() -> void:
 		else:
 			hud_status = "HEAD HOME"
 	elif poop_state == 1:
-		hud_status = Prompts.fill("NATURE CALLS! STAND STILL, HOLD {poop}")
+		if not walk_has_good_spots():
+			hud_status = Prompts.fill("NATURE CALLS! STAND STILL, HOLD {poop}")
+		elif poop_spot_good(dog.global_position):
+			hud_status = Prompts.fill("GOOD SPOT! STAND STILL, HOLD {poop}")
+		else:
+			hud_status = "NATURE CALLS! FIND GRASS OR A TREE"
 	elif poop_state >= 3:
 		hud_status = "UH OH..."
 	elif carry_state == 0 and carry_pickup.x < INF and dog.global_position.distance_to(carry_pickup) < 45.0:
@@ -8169,8 +8163,9 @@ func _leash_tug(delta: float) -> void:
 			dog_m *= 2.0
 	var human_m := HUMAN_MASS * (2.0 if human.is_fallen() else 1.0)
 	# a tutorial owner waiting at a lesson plants their feet, as she does:
-	# pulling ahead must not tow them past the lesson and out of the tutorial
-	if human.tut_holding():
+	# pulling ahead must not tow them past the lesson and out of the tutorial.
+	# Not at tetherball, where being wound round the post is the lesson
+	if human.tut_holding() and not tut_loose():
 		human_m *= TUT_BRACE
 	var base_tension := minf(leash.tension_force(excess, LEASH_K), 1600.0)
 	# pulley: with the rope wound and the dog working its end, the pole
@@ -9993,110 +9988,33 @@ func _tick_needle(delta: float) -> void:
 
 
 func _tut_step_done(id: String) -> bool:
-	# One check per lesson, each written against what the game already
-	# tracks, so the tutorial teaches the REAL mechanics rather than a
-	# scripted imitation of them.
-	match id:
-		"walk": return tut_start_y - dog.global_position.y > 240.0
-		"pull": return leash.taut and leash.used_length() > leash_len * 0.98
-		"plant": return tut_plant_t >= 1.0
-		"pee": return marks.size() >= 1
-		"sniff": return sniffs_done >= 1
-		"nose": return kebabs_eaten >= 1
-		"dig": return digs_done >= 1
-		"fling": return flings_done >= 1
-		"teeter": return tut_teetered and not teeter.active
-		"bag": return poop_state == 2 and not bag_pending
-		"bark": return barks_done >= 1
-		"turbo": return dog.turbo_active and dog.energy < 0.94
-		"grind": return grinds_landed >= 1
-		"vault": return vaults_landed >= 1
-		"done": return false   # the last card just sees you off
-	return false
+	return TutorialSteps.step_done(self, id)
 
 
-# Where the owner waits for lesson i: y short of the station, and x by the
-# path's edge when the lesson gives a "stand" (INF when it does not, so the
-# owner keeps their own place in the weave).
 func tut_hold_point(i: int) -> Vector2:
-	var st: Dictionary = TutorialSteps.step(i)
-	if not bool(st.get("hold", false)):
-		return Vector2(INF, -INF)
-	var y := float(st["at"]) + TUT_HOLD_BACK
-	var side := int(st.get("stand", 0))
-	if side == 0:
-		# a lesson with a bench seats them on it, mid-path
-		return Vector2(walk_cx if bool(st.get("bench", false)) else INF, y)
-	var e := walk_edges(y)
-	return Vector2((e.x + TUT_STAND_IN) if side < 0 else (e.y - TUT_STAND_IN), y)
+	return TutorialSteps.hold_point(self, i)
 
 
 func _tick_tutorial(delta: float) -> void:
-	tut_flash = maxf(0.0, tut_flash - delta)
-	var st: Dictionary = TutorialSteps.step(tut_step)
-	var id := String(st.id)
-	hud_point = String(st.get("meter", ""))
-	# the owner waits at a lesson that wants them still, just short of it
-	var hp := tut_hold_point(tut_step)
-	human.tut_hold_y = hp.y
-	human.tut_hold_x = hp.x
-	# a waiting owner leaves the reel alone at full length: a lesson's target
-	# is laid out for the whole leash, and a click to 170 would put it out of reach
-	if bool(st.get("hold", false)) and leash_target < LEASH_LENGTH:
-		set_leash_target(LEASH_LENGTH)
-	if id == "plant" and dog.planted and leash.taut:
-		tut_plant_t += delta
-	if teeter.active:
-		tut_teetered = true
-	if id == "":
-		return
-	# the end, in the dog park: no walk home with nothing left to learn
-	if id == "done":
-		tut_done_t += delta
-		if tut_done_t > 2.5 and not finished:
-			_finish_tutorial_walk()
-		return
-	# skippable, always: a tutorial that traps a player who cannot do the
-	# thing is worse than no tutorial at all
-	if Input.is_action_just_pressed("share") and id != "done":
-		_tut_advance(false)
-		return
-	if _tut_step_done(id):
-		_tut_advance(true)
+	TutorialSteps.tick(self, delta)
 
 
 func _tut_advance(earned: bool) -> void:
-	var was := String(TutorialSteps.step(tut_step).id)
-	tut_step += 1
-	# the basics done: a card offering the first real walk now, or the tricks
-	if was == "bag" and not tut_basics_seen:
-		MenuFlow.open_basics(self)
-	tut_flash = 1.1
-	if earned:
-		Sfx.play("star", 1.15)
-		bones += 2
-	else:
-		Sfx.play("ui", 0.9)
-	_update_hud()
+	TutorialSteps.advance(self, earned)
+
 
 func _update_tut_card() -> void:
-	if not started:
-		return
-	var st: Dictionary = TutorialSteps.step(tut_step)
-	if String(st.id) == "":
-		tut_label.visible = false
-		tut_hint.visible = false
-		return
-	tut_label.visible = true
-	tut_hint.visible = true
-	tut_label.text = String(st.title)
-	# the skip button is offered in the card's own prompt bar (event_feed.gd),
-	# never written into the sentence
-	tut_skippable = String(st.id) != "done"
-	tut_hint.text = Prompts.fill(String(st.body))
-	# a green flash of acknowledgement as each lesson lands
-	var glow: float = clampf(tut_flash, 0.0, 1.0)
-	tut_label.modulate = Color(1, 1, 1).lerp(Color(0.6, 1.0, 0.65), glow)
+	TutorialSteps.update_card(self)
+
+
+# the lesson up wants your human waiting but not braced (systems/tutorial.gd)
+func tut_loose() -> bool:
+	return tutorial_mode and bool(TutorialSteps.step(tut_step).get("loose", false))
+
+
+# the yard's kid offers dares only once the dare lesson is up
+func tut_dares_open() -> bool:
+	return TutorialSteps.dares_open(self)
 
 
 func on_rival_snatch(at: Vector2, what: String) -> void:
@@ -10492,6 +10410,7 @@ func _pickups(delta: float) -> void:
 			# the pavement is most of the way out of a flagging walk, which is
 			# both realistic and the reason to go out of your way for one
 			mood.soothe(Mood.M.TIRED, 0.55)
+			poop_sooner(POOP_SNACK_PULL)
 			Sfx.play("snack")
 			combo.add("SNACK", 1)
 			float_text(k.pos, "snack +1", Color(1, 0.95, 0.7))
@@ -10643,6 +10562,8 @@ func _bodily(delta: float) -> void:
 		mark_target = Vector2(INF, INF)
 	match poop_state:
 		0:
+			if dog.turbo_active:
+				poop_sooner(POOP_ZOOM_PULL * delta)
 			if dog.global_position.y < urge_y:
 				poop_state = 1
 				urge_timer = POOP_URGE_S
@@ -10652,6 +10573,10 @@ func _bodily(delta: float) -> void:
 			var squatting: bool = Input.is_action_pressed("poop") \
 				and not dog.is_tumbling() and dog.velocity.length() < 90.0
 			if squatting:
+				if not _poop_sniffed:
+					# she checks the spot before she commits to it
+					_poop_sniffed = true
+					float_text(dog.global_position + Vector2(0, -34), "sniff, sniff", Color(1, 0.95, 0.8))
 				squat_progress += delta
 				dog.squat_ui = squat_progress / 2.5
 				if squat_progress >= 2.5:
@@ -10659,6 +10584,10 @@ func _bodily(delta: float) -> void:
 			else:
 				squat_progress = maxf(0.0, squat_progress - delta * 2.0)
 				dog.squat_ui = squat_progress / 2.5
+				if squat_progress <= 0.0:
+					_poop_sniffed = false
+			# the dog shows a good spot under her paws while nature calls
+			dog.poop_cue = 2 if walk_has_good_spots() and poop_spot_good(dog.global_position) else 1
 			if poop_state == 1 and urge_timer <= 0.0:
 				poop_state = 3
 				urge_timer = 1.2
@@ -10687,14 +10616,67 @@ func _bodily(delta: float) -> void:
 		_update_hud()
 
 
+# The call comes sooner by `px` down the walk (a snack, zoomies), never at
+# the start line. The First Walk's comes at its station, always.
+func poop_sooner(px: float) -> void:
+	if poop_state != 0 or tutorial_mode:
+		return
+	urge_y = minf(urge_y + px, float(START_Y) - POOP_URGE_MIN_GAP)
+
+
+# Soft ground (grass, earth) or a tree's pit: where a dog would choose to go.
+func poop_spot_good(p: Vector2) -> bool:
+	var g := surface_at(p)
+	if g == Surfaces.S.GRASS or g == Surfaces.S.MUD:
+		return true
+	for i in range(deco_pole_count):
+		if p.distance_to(poles[i]) < POOP_TREE_R and pole_tree(i) != TREE_NONE:
+			return true
+	for t: Vector2 in trees:
+		if p.distance_to(t) < POOP_TREE_R:
+			return true
+	return false
+
+
+func walk_has_good_spots() -> bool:
+	# the First Walk's grass is the lawn beside its sand path, outside the
+	# edges the scan below walks, and its trees are cleared; the poop lesson
+	# rings a patch of that lawn
+	if tutorial_mode:
+		return true
+	if _poop_good_walk < 0:
+		_poop_good_walk = 0
+		var y := float(START_Y) - 200.0
+		while y > float(GATE_Y) + 100.0 and _poop_good_walk == 0:
+			var e := walk_edges(y)
+			var x := e.x + 10.0
+			while x < e.y:
+				if poop_spot_good(Vector2(x, y)):
+					_poop_good_walk = 1
+					break
+				x += 40.0
+			y -= 80.0
+	return _poop_good_walk == 1
+
+
 func _finish_business(voluntary: bool) -> void:
 	poop_state = 2
 	dog.squat_ui = 0.0
+	dog.poop_cue = 0
 	squat_progress = 0.0
+	_poop_sniffed = false
 	business_spot = dog.global_position + Vector2(0, 8)
-	if voluntary:
-		bones += 5
-		feed.say("MUCH BETTER!  +5", EventFeed.Tone.GOOD)
+	if voluntary and not walk_has_good_spots():
+		bones += POOP_ANY_BONES
+		feed.say("MUCH BETTER!  +%d" % POOP_ANY_BONES, EventFeed.Tone.GOOD)
+	elif voluntary and poop_spot_good(dog.global_position):
+		bones += POOP_GOOD_BONES
+		feed.say("PERFECT SPOT!  +%d" % POOP_GOOD_BONES, EventFeed.Tone.GOOD)
+	elif voluntary:
+		bones += POOP_PAVE_BONES
+		feed.say("ON THE SIDEWALK...  +%d" % POOP_PAVE_BONES, EventFeed.Tone.GOOD)
+		human.patience = maxf(0.0, human.patience - POOP_PAVE_PATIENCE)
+		human.notice("Here? Really?", 1.6)
 	else:
 		feed.say("COULDN'T WAIT...", EventFeed.Tone.BAD)
 	bag_pending = true
@@ -11110,11 +11092,17 @@ func _caught(what: String) -> void:
 func _spawn_challenger() -> void:
 	# one dare-giver per walk, on the out leg where you still have room and
 	# energy to show off; who it is depends on the walk (challenger.gd WHO)
-	if tutorial_mode:
-		return
 	var giver := Node2D.new()
 	var script: GDScript = load("res://entities/challenger.gd")
 	giver.set_script(script)
+	if tutorial_mode:
+		# the First Walk's kid sits in the practice yard (systems/tutorial.gd)
+		giver.position = TutorialSteps.yard_kid(self)
+		giver.z_index = 6
+		add_child(giver)
+		giver.setup(self, dog, "kid")
+		_pops_layer().add_speaker(giver, giver.speech)
+		return
 	var who: String = script.giver_for(lvl)
 	if who == "monkey":
 		# the bronze monkey on the Pont del Petroli's steps gives this walk's dares
@@ -12231,9 +12219,7 @@ func _draw_world() -> void:
 			_wc.line(_flare_at, tip, Color(1.0, 0.55, 0.22, 0.9), 2.2)
 			_wc.circle(tip, 3.4, Color(1.0, 0.82, 0.4))
 	if tutorial_mode:
-		_draw_tutorial_pond()
-		_draw_tutorial_ledge(wvt, vb)
-		_draw_tutorial_benches(wvt, vb)
+		TutorialLayer.draw(self, _wc, wvt, vb)
 	if rambla():
 		_draw_rambla(vt, vb)
 	if walk_mod != null and walk_mod.has_method("draw_scenery"):

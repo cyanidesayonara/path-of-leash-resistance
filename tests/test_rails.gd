@@ -51,11 +51,12 @@ func _run() -> void:
 	m.free()
 	await physics_frame
 
-	# the tutorial's stone ledge
+	# the tutorial's stone ledges: the grind lesson's, and the practice yard's
 	m = await _load("tutorial")
-	_check(m.rails.size() == 1 and String(m.rails[0]["name"]) == "LEDGE RUN", "the grind lesson has its stone ledge")
+	_check(m.rails.size() == 2 and String(m.rails[0]["name"]) == "LEDGE RUN" and String(m.rails[1]["name"]) == "LEDGE RUN",
+		"the grind lesson has its stone ledge, and the practice yard another")
 	var at: float = load("res://systems/tutorial.gd").at("grind")
-	var on := Vector2(R.TUT_LEDGE_X + 6.0, at + 60.0)
+	var on := Vector2(R.TUT_LEDGE_X + 6.0, at + R.TUT_LEDGE_HALF - 50.0)
 	m.dog.global_position = on
 	m.dog.velocity = Vector2(0, -420)
 	m.dog.turbo_active = false

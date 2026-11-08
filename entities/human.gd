@@ -125,6 +125,8 @@ var homeward := false
 # the tutorial holds the owner here (north of it is where they stop); -INF off
 var tut_hold_y := -INF
 var tut_hold_x := INF
+# waiting at the patience lesson, they still keep score of the leash
+var tut_mind := false
 # waiting at a lesson, they hold their ground: dragged further than this past
 # their spot, they walk back to it (main.gd braces them against the pull)
 const TUT_HOLD_SLACK := 30.0
@@ -488,7 +490,7 @@ func _converse(delta: float) -> void:
 		return
 	# only a walking owner minds: on a call, in an orbit, down or held for a
 	# lesson they are not keeping score
-	var minding := state in [HState.WALK, HState.DRIFT] and tut_hold_y == -INF
+	var minding := state in [HState.WALK, HState.DRIFT] and (tut_hold_y == -INF or tut_mind)
 	if correct_t > 0.0:
 		# something else took over mid-telegraph (an orbit, a fall, a call):
 		# the correction is off, and leaves them still short of patience
@@ -876,6 +878,10 @@ func _events(delta: float) -> void:
 		return
 	# a "Hey!" winding up owns the bubble: no new event starts over it
 	if state != HState.WALK or halt_t > 0.0 or correct_t > 0.0:
+		return
+	# waiting at a First Walk lesson they keep still and let her practice; the
+	# phone gets them between stations, as it does on every walk
+	if tut_holding() and telegraph_t <= 0.0:
 		return
 	if telegraph_t > 0.0:
 		telegraph_t -= delta

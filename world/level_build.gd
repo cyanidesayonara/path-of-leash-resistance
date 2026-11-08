@@ -28,6 +28,7 @@ const Forum := preload("res://systems/forum.gd")
 const Espanya := preload("res://systems/espanya.gd")
 const Eixample := preload("res://systems/eixample.gd")
 const Angels := preload("res://systems/angels.gd")
+const Poble := preload("res://systems/poble.gd")
 # the tutorial's pond for the brink lesson, beside the path at its station
 const TUT_POND_W := 150.0
 const ROPE_CLEAR := 4.0
@@ -116,6 +117,7 @@ const CROSS_SECTIONS := {
 	"forum": ["none", 0.0, "none", 0.0],           # coastal concrete plaza and bathing esplanade in systems/forum.gd
 	"eixample": ["none", 0.0, "none", 0.0],        # the grid street and its blocks in systems/eixample.gd
 	"angels": ["none", 0.0, "none", 0.0],          # skate plaza, museum and convent in systems/angels.gd
+	"poble": ["none", 0.0, "none", 0.0],           # walled architectural village in systems/poble.gd
 	# flood wall on the left, grass then the river on the right
 	"besos": ["none", 0.0, "grass", 120.0],
 }
@@ -146,7 +148,10 @@ static func tutorial_benches(m: Node2D) -> Array[Rect2]:
 		if not bool(TUT.step(i).get("bench", false)):
 			continue
 		var hp: Vector2 = m.tut_hold_point(i)
-		out.append(Rect2(hp.x - 26.0, hp.y - 10.0, 52.0, 14.0))
+		var r := Rect2(hp.x - 26.0, hp.y - 10.0, 52.0, 14.0)
+		# the yard's steps share one bench
+		if not out.has(r):
+			out.append(r)
 	return out
 
 
@@ -1322,6 +1327,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"espanya": half = Espanya.HALF
 		"eixample": half = Eixample.HALF   # the octagons at the crossings (Eixample.edge_nodes)
 		"angels": half = Angels.HALF
+		"poble": half = Poble.HALF
 		"besos": half = BESOS_HALF
 	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
 	m.walk_half = half
@@ -1491,6 +1497,8 @@ static func apply_corridor(m: Node2D) -> void:
 		m.edge_nodes = Eixample.edge_nodes(m)
 	elif m.lvl == "angels":
 		m.edge_nodes = Angels.edge_nodes(m)
+	elif m.lvl == "poble":
+		m.edge_nodes = Poble.edge_nodes(m)
 	elif m.lvl == "trail":
 		# EL BOSC BENDS - the first walk in the game that is not a straight
 		# line. A woodland trail has no business being ruler-drawn: it wanders
@@ -1521,10 +1529,11 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "angels":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "angels" or m.lvl == "poble":
 		return
-	# and so does El Barri; the First Walk, built on it, is still fitted
-	if m.lvl == "barri" and not m.tutorial_mode:
+	# and so does El Barri, and the First Walk built on it, whose stations
+	# (systems/tutorial.gd) are laid out where they stand
+	if m.lvl == "barri":
 		return
 	# Props were all authored for the old fixed 300..980 corridor, so a
 	# narrower walk would leave them stranded out on the verge. Pull every
@@ -1651,6 +1660,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_angels: Array = Angels.build(m)
 			hyd_list.assign(pl_angels[0])
 			keb_list.assign(pl_angels[1])
+		"poble":
+			var pl_poble: Array = Poble.build(m)
+			hyd_list.assign(pl_poble[0])
+			keb_list.assign(pl_poble[1])
 		"raval":
 			var pl_raval: Array = BossGat.build(m)
 			hyd_list.assign(pl_raval[0])
@@ -2113,12 +2126,15 @@ static func build_level_data(m: Node2D) -> void:
 		m.benches.clear()
 		m.patches.clear()
 		m.poles.clear()
-		m.poles.append(Vector2(640.0, TUT.at("vault")))
+		m.poles.append(TUT.vault_post())
 		m.poles.append(Vector2(640.0, TUT.at("fling")))
+		# the practice yard's two lampposts
+		m.poles.append_array(TUT.yard_poles(m))
 		m.deco_pole_count = m.poles.size()
-		hyd_list = [Vector2(560.0, TUT.at("pee") - 40.0), Vector2(720.0, TUT.at("sniff") - 40.0)]
+		hyd_list = [Vector2(560.0, TUT.at("pee") - 40.0), Vector2(720.0, TUT.at("sniff") - 40.0),
+			TUT.yard_hydrant(m)]
 		keb_list = []
-		m.bins = Array([Vector2(m.sw_r - 30.0, TUT.at("bag") - 60.0)], TYPE_VECTOR2, &"", null)
+		m.bins = Array([Vector2(m.sw_r - 30.0, TUT.at("poop") - 60.0)], TYPE_VECTOR2, &"", null)
 		m.fountains = Array([], TYPE_VECTOR2, &"", null)
 	for tb in m.tables:
 		m.poles.append(tb)
@@ -2167,7 +2183,7 @@ static func build_level_data(m: Node2D) -> void:
 		m.flock_ys = Array([TUT.at("bark") - 60.0], TYPE_FLOAT, &"", null)
 		m.duck_ys = Array([], TYPE_FLOAT, &"", null)
 		m.cat_y = 0.0
-		m.urge_y = TUT.at("bag") + 40.0
+		m.urge_y = TUT.at("poop") + 40.0
 	for cp in m.candy_spots:
 		m.candy.append({"pos": cp, "eaten": false})
 	build_ground_detail(m)
@@ -2254,6 +2270,8 @@ static func build_level_data(m: Node2D) -> void:
 			var clear := tree.distance_to(m.gate_bench) > 95.0
 			if m.lvl == "scrap":
 				clear = clear and not Ferralla.yard_wreck(m._freedom_rect()).grow(30.0).has_point(tree)
+			if m.lvl == "poble":
+				clear = clear and (tree.y < m.GATE_Y - 180.0 or absf(tree.x - 640.0) > 310.0)
 			if m.lvl == "beach":
 				clear = clear and not Passeig.HOTEL_RECT.grow(35.0).has_point(tree)
 				clear = clear and not Passeig.HOTEL_SIGN_RECT.grow(35.0).has_point(tree)
@@ -2492,6 +2510,9 @@ static func build_level_data(m: Node2D) -> void:
 		"angels":
 			m.prize_pos = Angels.PRIZE
 			m.prize_text = Angels.PRIZE_TEXT
+		"poble":
+			m.prize_pos = Poble.PRIZE
+			m.prize_text = Poble.PRIZE_TEXT
 		"raval":
 			m.prize_pos = BossGat.PRIZE
 			m.prize_text = BossGat.PRIZE_TEXT
@@ -2922,6 +2943,13 @@ const FREEDOM_PROPS := {
 		[Vector2(1034.0, -462.0), "post"], [Vector2(326.0, -246.0), "shrub"], [Vector2(554.0, -242.0), "post"],
 		[Vector2(770.0, -218.0), "shrub"],
 	],
+	"poble": [
+		[Vector2(240.0, -460.0), "dig"], [Vector2(260.0, -250.0), "dig"], [Vector2(1010.0, -340.0), "dig"],
+		[Vector2(375.0, -470.0), "planter"], [Vector2(905.0, -470.0), "planter"],
+		[Vector2(495.0, -460.0), "post"], [Vector2(785.0, -460.0), "post"], [Vector2(330.0, -170.0), "post"],
+		[Vector2(905.0, -225.0), "post"], [Vector2(175.0, -345.0), "shrub"], [Vector2(1085.0, -235.0), "shrub"],
+		[Vector2(290.0, -355.0), "rock"], [Vector2(990.0, -455.0), "log"],
+	],
 	"carmel": [
 		[Vector2(180.0, -450.0), "dig"], [Vector2(640.0, -340.0), "dig"], [Vector2(1095.0, -440.0), "dig"],
 		[Vector2(162.0, -340.0), "log"], [Vector2(905.0, -480.0), "log"],
@@ -3103,7 +3131,7 @@ static func placa_clear(m: Node2D, at: Vector2) -> bool:
 # paving. Not a park's gravel path, a forest trail, the scrapyard's dirt or
 # El Mosaic's terraces, and on the seafront only the promenade, not the brick
 # bike path beside it.
-const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell", "station", "aigues", "horta", "carmel", "superilla", "angels"]
+const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell", "station", "aigues", "horta", "carmel", "superilla", "angels", "poble"]
 const BEACH_PROM_X := 560.0
 
 # PASSEIG MARÍTIM's landmarks, on the walk itself so its stretches differ
@@ -3349,6 +3377,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_angels: Array[Rect2] = Angels.solids(m)
 			for i in range(ps_angels.size()):
 				out.append(["angels_solid_%d" % i, ps_angels[i]])
+		"poble":
+			var ps_poble: Array[Rect2] = Poble.solids(m)
+			for i in range(ps_poble.size()):
+				out.append(["poble_solid_%d" % i, ps_poble[i]])
 		"raval":
 			var ps_raval: Array[Rect2] = BossGat.solids(m)
 			for i in range(ps_raval.size()):
@@ -3906,6 +3938,9 @@ static func build_walls(m: Node2D) -> void:
 	if m.lvl == "angels":
 		for r: Rect2 in Angels.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "poble":
+		for r: Rect2 in Poble.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "raval":
 		for r: Rect2 in BossGat.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
@@ -4149,61 +4184,66 @@ static func spawn_cones(m: Node2D) -> void:
 	# deterministic autowalk seed is untouched.
 	var jr := RandomNumberGenerator.new()
 	jr.seed = 0x7A17B0B
-	# the level's background litter, for stretches with nothing else nearby
-	var kinds := ["can", "bottle", "sack", "can"]
-	match m.lvl:
-		"scrap", "site": kinds = ["crate", "sack", "can", "bottle", "crate"]
-		"beach", "llevant": kinds = ["bottle", "ball", "can"]
-		"park", "trail": kinds = ["bottle", "ball", "can"]
-		"besos": kinds = ["bottle", "ball", "can"]
-		"aigues": kinds = ["bottle", "can", "bottle"]   # what runners drop: no bin bags up here
-		"horta": kinds = ["can", "bottle", "ball"]      # picnics on the lawns
-		"market", "spook": kinds = ["crate", "bottle", "can"]
-		"neteja": kinds = ["crate", "crate", "sack", "bottle"]
-		"station": kinds = ["can", "bottle", "bottle"]
-		"oldtown": kinds = ["sack", "bottle", "can"]
-	# Litter accumulates around whatever produced it, so junk is placed by
-	# AREA rather than sprinkled evenly: crates pile up behind market stalls,
-	# cans and bottles collect around cafe tables and buskers, sacks slump by
-	# the bins, crates and cones litter the works. Feels observed rather than
-	# randomised, and it makes each stretch of a walk look like somewhere.
-	var zones: Array[Dictionary] = []
-	for b in m.bins:
-		zones.append({"at": b, "pal": ["sack", "sack", "bottle"]})
-	for st in m.stalls:
-		zones.append({"at": st, "pal": ["crate", "crate", "bottle"]})
-	for tb in m.tables:
-		zones.append({"at": tb, "pal": ["can", "bottle", "can"]})
-	for pf in m.performers:
-		zones.append({"at": pf, "pal": ["can", "can", "bottle"]})
-	for v in m.vans:
-		zones.append({"at": v, "pal": ["crate", "sack", "can"]})
-	for bn in m.benches:
-		zones.append({"at": bn, "pal": ["can", "bottle", "ball"]})
-	for z in zones:
-		var pal: Array = z.pal
-		for i in range(jr.randi_range(1, 3)):
-			var at: Vector2 = z.at
-			# round whatever produced it, never on top of it: a few tries for
-			# a clear spot, or it is not dropped at all
-			for attempt in range(6):
-				var off := Vector2(jr.randf_range(-70.0, 70.0), jr.randf_range(-60.0, 66.0))
-				var jp := Vector2(clampf(at.x + off.x, m.sw_l + 16.0, m.sw_r - 16.0), at.y + off.y)
-				if junk_spot_clear(m, jp):
-					spawn_junk(m, jp, pal[jr.randi() % pal.size()])
-					break
-	# then a thin background scatter, so the quiet stretches are not bare
-	var jy = m.START_Y - 120.0
-	while jy > m.GATE_Y + 160.0:
-		jy -= jr.randf_range(260.0, 520.0)
-		var jx := jr.randf_range(m.sw_l + 30.0, m.sw_r - 30.0)
-		# the step can carry the last one past the gate, onto the off-leash
-		# space's sign (La Castanyada's crate on its PLAÇA, #157). Only there
-		# for now: on the other walks it would move their snapshots
-		if m.lvl == "spook" and jy < m.GATE_Y:
-			break
-		if junk_spot_clear(m, Vector2(jx, jy)):
-			spawn_junk(m, Vector2(jx, jy), kinds[jr.randi() % kinds.size()])
+	# the First Walk keeps its stations clear of litter (a sack had a way of
+	# landing on the benches): one lost ball in the practice yard, to punt
+	if m.tutorial_mode:
+		spawn_junk(m, TUT.practice_bench(m) + TUT.YARD_BALL, "ball")
+	else:
+		# the level's background litter, for stretches with nothing else nearby
+		var kinds := ["can", "bottle", "sack", "can"]
+		match m.lvl:
+			"scrap", "site": kinds = ["crate", "sack", "can", "bottle", "crate"]
+			"beach", "llevant": kinds = ["bottle", "ball", "can"]
+			"park", "trail": kinds = ["bottle", "ball", "can"]
+			"besos": kinds = ["bottle", "ball", "can"]
+			"aigues": kinds = ["bottle", "can", "bottle"]   # what runners drop: no bin bags up here
+			"horta": kinds = ["can", "bottle", "ball"]      # picnics on the lawns
+			"market", "spook": kinds = ["crate", "bottle", "can"]
+			"neteja": kinds = ["crate", "crate", "sack", "bottle"]
+			"station": kinds = ["can", "bottle", "bottle"]
+			"oldtown": kinds = ["sack", "bottle", "can"]
+		# Litter accumulates around whatever produced it, so junk is placed by
+		# AREA rather than sprinkled evenly: crates pile up behind market stalls,
+		# cans and bottles collect around cafe tables and buskers, sacks slump by
+		# the bins, crates and cones litter the works. Feels observed rather than
+		# randomised, and it makes each stretch of a walk look like somewhere.
+		var zones: Array[Dictionary] = []
+		for b in m.bins:
+			zones.append({"at": b, "pal": ["sack", "sack", "bottle"]})
+		for st in m.stalls:
+			zones.append({"at": st, "pal": ["crate", "crate", "bottle"]})
+		for tb in m.tables:
+			zones.append({"at": tb, "pal": ["can", "bottle", "can"]})
+		for pf in m.performers:
+			zones.append({"at": pf, "pal": ["can", "can", "bottle"]})
+		for v in m.vans:
+			zones.append({"at": v, "pal": ["crate", "sack", "can"]})
+		for bn in m.benches:
+			zones.append({"at": bn, "pal": ["can", "bottle", "ball"]})
+		for z in zones:
+			var pal: Array = z.pal
+			for i in range(jr.randi_range(1, 3)):
+				var at: Vector2 = z.at
+				# round whatever produced it, never on top of it: a few tries for
+				# a clear spot, or it is not dropped at all
+				for attempt in range(6):
+					var off := Vector2(jr.randf_range(-70.0, 70.0), jr.randf_range(-60.0, 66.0))
+					var jp := Vector2(clampf(at.x + off.x, m.sw_l + 16.0, m.sw_r - 16.0), at.y + off.y)
+					if junk_spot_clear(m, jp):
+						spawn_junk(m, jp, pal[jr.randi() % pal.size()])
+						break
+		# then a thin background scatter, so the quiet stretches are not bare
+		var jy = m.START_Y - 120.0
+		while jy > m.GATE_Y + 160.0:
+			jy -= jr.randf_range(260.0, 520.0)
+			var jx := jr.randf_range(m.sw_l + 30.0, m.sw_r - 30.0)
+			# the step can carry the last one past the gate, onto the off-leash
+			# space's sign (La Castanyada's crate on its PLAÇA, #157). Only there
+			# for now: on the other walks it would move their snapshots
+			if m.lvl == "spook" and jy < m.GATE_Y:
+				break
+			if junk_spot_clear(m, Vector2(jx, jy)):
+				spawn_junk(m, Vector2(jx, jy), kinds[jr.randi() % kinds.size()])
 	# A-stands are entities too: light, toppleable, never re-stood. Spawned
 	# once here with the rest of the kickable furniture; this loop used to sit
 	# in on_junk_kicked, so none stood at the start and every kick added a
