@@ -2412,6 +2412,49 @@ func _broadleaf_crown(crown: ShapeBatch, p: Vector2, scale: float, trunk := true
 		crown.circle(p + Vector2.from_angle(a) * r * 0.95, r * 0.17, mid)
 
 
+# El Barri's plane trees (TREE_PLANE): a London plane's bark flakes off in
+# patches, cream and olive over grey, and its crown is broad and pale, the big
+# lobed leaves catching the light in clumps
+const PLANE_SCALE := 1.08
+const PLANE_BARK: Array[Color] = [Color(0.78, 0.76, 0.62), Color(0.52, 0.54, 0.40), Color(0.64, 0.62, 0.56)]
+
+
+func _plane_trunk(b: Object, p: Vector2) -> void:
+	b.circle(p, 7.5, Color(0.40, 0.40, 0.34))
+	b.circle(p + Vector2(-1.5, -1.5), 5.6, PLANE_BARK[2])
+	b.circle(p + Vector2(-2.5, 0.5), 2.4, PLANE_BARK[0])
+	b.circle(p + Vector2(1.8, -2.2), 2.0, PLANE_BARK[1])
+	b.circle(p + Vector2(0.8, 2.4), 1.6, PLANE_BARK[0])
+
+
+func _plane_crown(crown: ShapeBatch, p: Vector2, trunk := true) -> void:
+	var r := 34.0 * PLANE_SCALE
+	var dark := Color(0.22, 0.34, 0.17)
+	var mid := Color(0.32, 0.47, 0.22)
+	var lit := Color(0.48, 0.62, 0.30)
+	var tip := Color(0.60, 0.72, 0.36)
+	crown.circle(p + Vector2(2, 3), r, dark)
+	crown.circle(p - LIGHT * r * 0.10, r * 0.86, mid)
+	for lv: Vector2 in BROADLEAF_LOBES:
+		crown.circle(p + lv * r, r * 0.48, mid)
+	# clumps of leaves catching the light, more of them than an oak's
+	for k in range(9):
+		var a := TAU * float(k) / 9.0 + p.y * 0.01
+		var lv := Vector2.from_angle(a)
+		if lv.dot(LIGHT) > 0.35:
+			continue
+		var cp := p + lv * r * (0.42 + 0.18 * float(k % 2)) - LIGHT * r * 0.12
+		crown.circle(cp, r * 0.24, lit)
+		crown.circle(cp - LIGHT * 3.0, r * 0.11, tip)
+	crown.circle(p - LIGHT * r * 0.40, r * 0.26, lit)
+	if trunk:
+		_plane_trunk(crown, p)
+	# the broad leaves breaking the outline
+	for i in range(9):
+		var a := TAU * float(i) / 9.0 + p.x * 0.013
+		crown.circle(p + Vector2.from_angle(a) * r * 0.94, r * 0.16, mid)
+
+
 # El Bosc's ground: packed dark earth on the trail, leaf litter either side
 const TRAIL_DIRT := Color(0.50, 0.41, 0.29)
 const TRAIL_FLOOR := Color(0.25, 0.31, 0.19)
@@ -2590,6 +2633,7 @@ const TREE_FOREST := 2     # El Bosc: holm oak or stone pine
 const TREE_PALM := 3
 const TREE_STREET := 4     # a street tree in its grate
 const TREE_PIT := 5        # El Gotic's plaça tree in its stone pit
+const TREE_PLANE := 6      # El Barri's plane tree: mottled bark, a big pale crown
 
 func pole_tree(i: int) -> int:
 	var p := poles[i]
@@ -2637,6 +2681,7 @@ func _tree_trunk(b: ShapeBatch, p: Vector2, i: int, kind: int) -> void:
 		TREE_PALM: _palm_trunk(b, p)
 		TREE_STREET: _broadleaf_trunk(b, p, 0.72)
 		TREE_PIT: _broadleaf_trunk(b, p, 0.8)
+		TREE_PLANE: _plane_trunk(b, p)
 
 
 func _draw_tree_ground_only(c: Object, p: Vector2, i: int, kind: int) -> void:
@@ -2650,6 +2695,8 @@ func _draw_tree_ground_only(c: Object, p: Vector2, i: int, kind: int) -> void:
 		TREE_PIT:
 			_draw_tree_pit(p)
 			_broadleaf_ground(c, p, 0.8)
+		TREE_PLANE:
+			_broadleaf_ground(c, p, PLANE_SCALE)
 		TREE_STREET:
 			cast_shadow(c, p, 20.0, 40.0, 0.16)
 			c.draw_circle(p, 19.0, Color(0.26, 0.24, 0.22))          # the pit
@@ -2700,6 +2747,7 @@ func _crown_r(kind: int, i: int) -> float:
 		TREE_PALM: return 38.0
 		TREE_STREET: return 34.0 * 0.72
 		TREE_PIT: return 34.0 * 0.8
+		TREE_PLANE: return 34.0 * PLANE_SCALE
 	return 0.0
 
 
@@ -2714,6 +2762,7 @@ func draw_tree_crown(b: ShapeBatch, t: Dictionary, faded := false) -> void:
 		TREE_PALM: _palm_crown(b, p, trunk)
 		TREE_STREET: _broadleaf_crown(b, p, 0.72, trunk)
 		TREE_PIT: _broadleaf_crown(b, p, 0.8, trunk)
+		TREE_PLANE: _plane_crown(b, p, trunk)
 
 
 # What else is over her head, drawn by the canopy layer with the crowns: above

@@ -55,8 +55,14 @@ func _run() -> void:
 	_check(m.fountains.size() == 1 and m.fountains[0] == LB.BARRI_FONT, "the drinking fountain is there")
 	var left_ys: Array[float] = []
 	var right_ys: Array[float] = []
+	var lamps := 0
 	for i in range(m.deco_pole_count):
 		var tp: Vector2 = m.poles[i]
+		# the lamp posts between the trees stand at the edging and are not trees
+		if m.pole_tree(i) == m.TREE_NONE:
+			lamps += 1
+			continue
+		_check(m.pole_tree(i) == m.TREE_PLANE, "the square's tree at %s is a plane tree" % tp)
 		var te: Vector2 = m.walk_edges(tp.y)
 		_check(tp.x - 13.0 > te.x and tp.x + 60.0 < te.y, "plane tree at %s stands with its shadow on the gravel" % tp)
 		if tp.x < m.walk_cx:
@@ -69,6 +75,8 @@ func _run() -> void:
 			if absf(ly - ry) < 60.0:
 				mirrored += 1
 	_check(mirrored == 0, "the two rows of plane trees do not mirror each other (%d pairs)" % mirrored)
+	_check(lamps == LB.BARRI_LAMPS.size(), "the lamp posts stand among the trees (%d)" % lamps)
+	_check(left_ys.size() >= 14 and right_ys.size() >= 14, "a row of plane trees down each edge (%d and %d)" % [left_ys.size(), right_ys.size()])
 	_check(m.surface_at(Vector2(640.0, -2000.0)) == m.Surfaces.S.PAVEMENT, "the square's walkway is pavement")
 	_check(m.surface_at(Vector2(270.0, -2000.0)) == m.Surfaces.S.GRASS, "the outer lawn is grass")
 	_check(m.surface_at(Vector2(200.0, -2000.0)) == m.Surfaces.S.PAVEMENT, "past the railing is the street's pavement")
