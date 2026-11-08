@@ -26,6 +26,7 @@ const Carmel := preload("res://systems/carmel.gd")
 const Superilla := preload("res://systems/superilla.gd")
 const Forum := preload("res://systems/forum.gd")
 const Espanya := preload("res://systems/espanya.gd")
+const Poble := preload("res://systems/poble.gd")
 # the tutorial's pond for the brink lesson, beside the path at its station
 const TUT_POND_W := 150.0
 const ROPE_CLEAR := 4.0
@@ -112,6 +113,7 @@ const CROSS_SECTIONS := {
 	"gracia": ["none", 0.0, "none", 0.0],          # a narrow street: the houses at the paving
 	"carmel": ["none", 0.0, "none", 0.0],          # sunset panorama and hillside slopes in systems/carmel.gd
 	"forum": ["none", 0.0, "none", 0.0],           # coastal concrete plaza and bathing esplanade in systems/forum.gd
+	"poble": ["none", 0.0, "none", 0.0],           # walled architectural village in systems/poble.gd
 	# flood wall on the left, grass then the river on the right
 	"besos": ["none", 0.0, "grass", 120.0],
 }
@@ -1208,6 +1210,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"superilla": half = Superilla.HALF
 		"forum": half = Forum.HALF
 		"espanya": half = Espanya.HALF
+		"poble": half = Poble.HALF
 		"besos": half = BESOS_HALF
 	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
 	m.walk_half = half
@@ -1373,6 +1376,8 @@ static func apply_corridor(m: Node2D) -> void:
 		m.edge_nodes = BossGat.edge_nodes(m)
 	elif m.lvl == "carmel":
 		m.edge_nodes = Carmel.edge_nodes(m)
+	elif m.lvl == "poble":
+		m.edge_nodes = Poble.edge_nodes(m)
 	elif m.lvl == "trail":
 		# EL BOSC BENDS - the first walk in the game that is not a straight
 		# line. A woodland trail has no business being ruler-drawn: it wanders
@@ -1403,7 +1408,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "poble":
 		return
 	# and so does El Barri; the First Walk, built on it, is still fitted
 	if m.lvl == "barri" and not m.tutorial_mode:
@@ -1525,6 +1530,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_espanya: Array = Espanya.build(m)
 			hyd_list.assign(pl_espanya[0])
 			keb_list.assign(pl_espanya[1])
+		"poble":
+			var pl_poble: Array = Poble.build(m)
+			hyd_list.assign(pl_poble[0])
+			keb_list.assign(pl_poble[1])
 		"raval":
 			var pl_raval: Array = BossGat.build(m)
 			hyd_list.assign(pl_raval[0])
@@ -2123,6 +2132,8 @@ static func build_level_data(m: Node2D) -> void:
 			var clear := tree.distance_to(m.gate_bench) > 95.0
 			if m.lvl == "scrap":
 				clear = clear and not Ferralla.yard_wreck(m._freedom_rect()).grow(30.0).has_point(tree)
+			if m.lvl == "poble":
+				clear = clear and (tree.y < m.GATE_Y - 180.0 or absf(tree.x - 640.0) > 310.0)
 			if m.lvl == "beach":
 				clear = clear and not Passeig.HOTEL_RECT.grow(35.0).has_point(tree)
 				clear = clear and not Passeig.HOTEL_SIGN_RECT.grow(35.0).has_point(tree)
@@ -2344,6 +2355,9 @@ static func build_level_data(m: Node2D) -> void:
 		"espanya":
 			m.prize_pos = Espanya.PRIZE
 			m.prize_text = Espanya.PRIZE_TEXT
+		"poble":
+			m.prize_pos = Poble.PRIZE
+			m.prize_text = Poble.PRIZE_TEXT
 		"raval":
 			m.prize_pos = BossGat.PRIZE
 			m.prize_text = BossGat.PRIZE_TEXT
@@ -2757,6 +2771,13 @@ const FREEDOM_PROPS := {
 		[Vector2(1030.0, -458.0), "post"], [Vector2(332.0, -250.0), "shrub"], [Vector2(548.0, -238.0), "post"],
 		[Vector2(762.0, -222.0), "shrub"],
 	],
+	"poble": [
+		[Vector2(240.0, -460.0), "dig"], [Vector2(260.0, -250.0), "dig"], [Vector2(1010.0, -340.0), "dig"],
+		[Vector2(375.0, -470.0), "planter"], [Vector2(905.0, -470.0), "planter"],
+		[Vector2(495.0, -460.0), "post"], [Vector2(785.0, -460.0), "post"], [Vector2(375.0, -225.0), "post"],
+		[Vector2(905.0, -225.0), "post"], [Vector2(175.0, -345.0), "shrub"], [Vector2(1085.0, -235.0), "shrub"],
+		[Vector2(290.0, -355.0), "rock"], [Vector2(990.0, -455.0), "log"],
+	],
 	"carmel": [
 		[Vector2(180.0, -450.0), "dig"], [Vector2(640.0, -340.0), "dig"], [Vector2(1095.0, -440.0), "dig"],
 		[Vector2(162.0, -340.0), "log"], [Vector2(905.0, -480.0), "log"],
@@ -2938,7 +2959,7 @@ static func placa_clear(m: Node2D, at: Vector2) -> bool:
 # paving. Not a park's gravel path, a forest trail, the scrapyard's dirt or
 # El Mosaic's terraces, and on the seafront only the promenade, not the brick
 # bike path beside it.
-const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell", "station", "aigues", "horta", "carmel", "superilla"]
+const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell", "station", "aigues", "horta", "carmel", "superilla", "poble"]
 const BEACH_PROM_X := 560.0
 
 # PASSEIG MARÍTIM's landmarks, on the walk itself so its stretches differ
@@ -3176,6 +3197,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_espanya: Array[Rect2] = Espanya.solids(m)
 			for i in range(ps_espanya.size()):
 				out.append(["espanya_solid_%d" % i, ps_espanya[i]])
+		"poble":
+			var ps_poble: Array[Rect2] = Poble.solids(m)
+			for i in range(ps_poble.size()):
+				out.append(["poble_solid_%d" % i, ps_poble[i]])
 		"raval":
 			var ps_raval: Array[Rect2] = BossGat.solids(m)
 			for i in range(ps_raval.size()):
@@ -3645,6 +3670,9 @@ static func build_walls(m: Node2D) -> void:
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "espanya":
 		for r: Rect2 in Espanya.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "poble":
+		for r: Rect2 in Poble.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "raval":
 		for r: Rect2 in BossGat.solids(m):

@@ -45,6 +45,7 @@ const CLOCK_TARGETS := {
 	"superilla": 180,
 	"forum": 180,
 	"espanya": 180,
+	"poble": 180,
 	"raval": 210,  # the walk plus the whole fight with El Gat
 }
 
@@ -79,6 +80,7 @@ const JAMON_POS := {
 	"superilla": Vector2(510.0, -3200.0),
 	"forum": Vector2(480.0, -1820.0),
 	"espanya": Vector2(860.0, -3200.0),
+	"poble": Vector2(820.0, -2480.0),
 	"raval": Vector2(640.0, -2200.0),
 }
 

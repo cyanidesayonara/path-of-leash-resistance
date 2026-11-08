@@ -169,6 +169,9 @@ const STYLES := {
 	# Plaça d'Espanya: grand ceremonial fountain waltz, acoustic guitar and whistle over dancing rumba bass and brush drums
 	"espanya": {"bpm": 116, "key": 5, "lead": "guitar", "lead2": ["whistle", 0], "comp": "rumba",
 		"bass": "walk", "drums": "brush", "swing": 0.08, "verb": 0.32},
+	# El Poble Espanyol: Spanish village guitar & castanets over a lively Plaza Mayor pasodoble/rumba pulse
+	"poble": {"bpm": 114, "key": 2, "lead": "guitar", "lead2": ["whistle", 0], "comp": "rasgueado",
+		"bass": "walk", "drums": "castanets", "swing": 0.06, "verb": 0.28},
 	# Rambla del Raval: the finale's fight, fast and minor, its own chords and melody
 	"raval": {"bpm": 148, "key": 0, "minor": true, "lead": "guitar", "lead2": ["accordion", 0], "lead2_all": true,
 		"comp": "push", "bass": "eighths", "drums": "drive", "verb": 0.20, "chords": RAVAL_BOSS_CHORDS, "mel": RAVAL_BOSS_MELODY},
