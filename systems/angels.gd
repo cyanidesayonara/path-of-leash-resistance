@@ -1209,6 +1209,27 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 			b.rect(Rect2(sx.x, ry, w, 58.0), CONVENT_ROOF)
 			b.line(Vector2(sx.x, ry + 29.0), Vector2(sx.y, ry + 29.0), CONVENT_STONE, 2.5)
 		ry += 76.0
+	# the north range closes the courtyard: its roofs run the full width
+	# above the yard, and its arcade wall stands on the yard's top edge (the
+	# plain backdrop used to show there, and she stood on it)
+	ry = r.position.y - 400.0
+	while ry < r.position.y - 40.0:
+		b.rect(Rect2(-380.0, ry, 2060.0, 58.0), CONVENT_ROOF)
+		b.line(Vector2(-380.0, ry + 29.0), Vector2(1680.0, ry + 29.0), CONVENT_STONE, 2.5)
+		b.line(Vector2(-380.0, ry + 56.0), Vector2(1680.0, ry + 56.0), CONVENT_ROOF_DARK, 2.0)
+		ry += 76.0
+	var top := r.position.y
+	b.rect(Rect2(r.position.x - 24.0, top - 44.0, r.size.x + 48.0, 44.0), CLOISTER_STONE.darkened(0.08))
+	b.rect(Rect2(r.position.x - 24.0, top - 44.0, r.size.x + 48.0, 5.0), CLOISTER_STONE.lightened(0.12))
+	b.rect(Rect2(r.position.x - 24.0, top - 4.0, r.size.x + 48.0, 10.0), Color(SHADOW.r, SHADOW.g, SHADOW.b, 0.32))
+	var ax := r.position.x + 40.0
+	while ax < r.end.x - 30.0:
+		# an arch of the gallery: the shadowed walk behind, the column after it
+		b.rect(Rect2(ax, top - 30.0, 46.0, 26.0), CONVENT_DARK)
+		b.circle(Vector2(ax + 23.0, top - 30.0), 23.0, CONVENT_DARK)
+		b.rect(Rect2(ax + 52.0, top - 36.0, 12.0, 34.0), CLOISTER_ARCH)
+		b.circle(Vector2(ax + 58.0, top - 4.0), 7.0, CLOISTER_STONE)
+		ax += 70.0
 
 	# 2. Cloister garden lawn beds on the west (x < 300) and east (x > 980) wings (Surfaces.S.GRASS)
 	var grass_base := Color(0.28, 0.45, 0.26)
