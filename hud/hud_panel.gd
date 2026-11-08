@@ -1,24 +1,42 @@
 extends Control
 
-# The whole left-side HUD as one quiet card: phone pips, bones, the
-# tube, mark dots, and a status line. The world is chaotic on purpose;
-# the overlay is not.
+# The whole left-side HUD as one quiet card. Every row says what it is: the
+# phone's lives, then her pee and, right under it in the same yellow, the
+# spots it has marked (the one idea: pee is what marks a spot), then the
+# zoomies, with the bones banked top right. It used to be glyphs
+# alone (three pips, two upright tubes, five rings), and nobody could tell
+# which was which. The world is chaotic on purpose; the overlay is not.
 
 const Icons := preload("res://hud/ui_icons.gd")
 const Kit := preload("res://hud/ui_kit.gd")
 
-# the card's size, and where the mood badge sits: its bottom row, under the
-# mark dots and to the right of the tubes
-const CARD_W := 196.0
-const CARD_H := 92.0
-const MOOD_X := 60.0
-const MOOD_BASELINE := 86.0
+const CARD_W := 214.0
+const PAD := 10.0
+# the rows, top to bottom: each value is the row's top
+const ROW_PHONE := 8.0
+const ROW_TANK := 36.0
+const ROW_MARKS := 54.0
+const ROW_ZOOM := 72.0
+# rows that show only while they matter (nature calling, a mood) stack under
+# the zoomies from here, and the card grows by a row for each
+const ROW_EXTRA := 90.0
+const POOP_COL := Color(0.70, 0.48, 0.28)
+const ROW_H := 18.0
+const CARD_H := ROW_ZOOM + ROW_H + 6.0
+# the label column, then the column every bar and the mark dots start at
+const LABEL_X := 28.0
+const BAR_X := 90.0
+const BAR_H := 8.0
+const LABEL_PX := 11
+const LABEL_COL := Color(0.80, 0.78, 0.72)
+const TANK_COL := Color(0.94, 0.82, 0.25)
+const ZOOM_COL := Color(0.35, 0.88, 0.45)
 
 # what a lesson can point at, and the outline drawn round it
 const POINT_RECTS := {
-	"phone": Rect2(10, 8, 66, 32),
-	"tank": Rect2(12, 38, 20, 52),
-	"zoomies": Rect2(30, 38, 20, 52),
+	"phone": Rect2(4, ROW_PHONE - 4.0, 104, 28),
+	"tank": Rect2(4, ROW_TANK - 2.0, CARD_W - 8.0, ROW_H),
+	"zoomies": Rect2(4, ROW_ZOOM - 2.0, CARD_W - 8.0, ROW_H),
 }
 
 var main: Node2D
@@ -36,7 +54,16 @@ func _ready() -> void:
 	sb.set_corner_radius_all(10)
 
 
-func _process(_delta: float) -> void:
+# Under a menu (the dim is up: pause, settings, a walk card) the card fades
+# out, so the menu is the only thing on screen; it fades back on resume.
+const DIM_FADE := 6.0
+
+
+func _process(delta: float) -> void:
+	# THAT'S THE BASICS points at the phone pips, so the card stays for it
+	var under_menu: bool = main != null and main.dim != null and main.dim.visible \
+		and String(main.confirm_id) != "basics"
+	modulate.a = move_toward(modulate.a, 0.0 if under_menu else 1.0, delta * DIM_FADE)
 	if visible:
 		queue_redraw()
 
@@ -53,85 +80,128 @@ func _draw() -> void:
 	_b.flush()
 
 
-func _draw_shapes() -> void:
-	var f := ThemeDB.fallback_font
-	_b.draw_style_box(sb, Rect2(0, 0, CARD_W, CARD_H))
+# The rows that show only while they matter: "poop" while nature calls (its
+# bar is the time she can hold it), "mood" while a mood lasts.
+func extra_rows() -> Array[String]:
+	var out: Array[String] = []
+	if main == null:
+		return out
+	if int(main.poop_state) in [1, 3, 4]:
+		out.append("poop")
+	if main.mood != null and String(main.mood.badge()) != "":
+		out.append("mood")
+	return out
 
-	# phone pips: the phone's three lives, rendered as smart-device silhouettes
-	# with glowing cyan screens when active and cracked red fractures when lost
+
+func card_h() -> float:
+	return CARD_H + ROW_H * float(extra_rows().size())
+
+
+func _label(text: String, x: float, row: float, col := LABEL_COL) -> void:
+	_b.draw_string(Kit.display(), Vector2(x, row + 11.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1, LABEL_PX, col)
+
+
+# a horizontal meter from BAR_X to the card's right padding
+func _bar(row: float, frac: float, col: Color) -> void:
+	var r := Rect2(BAR_X, row + 3.0, CARD_W - PAD - BAR_X, BAR_H)
+	_b.draw_rect(r, Color(0.04, 0.05, 0.06, 0.70))
+	var w := r.size.x * clampf(frac, 0.0, 1.0)
+	if w > 1.0:
+		_b.draw_rect(Rect2(r.position, Vector2(w, r.size.y)), col)
+		# a sheen along the top third, so the fill reads as liquid, not paint
+		_b.draw_rect(Rect2(r.position, Vector2(w, 2.0)), Color(1, 1, 1, 0.22))
+	_b.draw_rect(r, Color(1, 1, 1, 0.30), false, 1.0)
+
+
+func _draw_shapes() -> void:
+	var h := card_h()
+	_b.draw_style_box(sb, Rect2(0, 0, CARD_W, h))
+	var t := AnimClock.msec()
+
+	# the phone's three lives, and what they are
 	for i in range(3):
 		var on: bool = i < main.phone_hp
-		Icons.draw_phone_pip(_b, Vector2(14 + i * 21, 12), 24.0, on)
+		Icons.draw_phone_pip(_b, Vector2(PAD + i * 15, ROW_PHONE), 20.0, on)
+	var phone_col := LABEL_COL if main.phone_hp > 1 else Color(1.0, 0.52, 0.42)
+	_label("PHONE", 58.0, ROW_PHONE + 4.0, phone_col)
 
-	# the bone count bank
-	var bx := Vector2(104, 22)
-	Icons.draw_bone(_b, bx, 11.0, Color(0.93, 0.90, 0.83))
-	_b.draw_string(Kit.display(), Vector2(120, 29), str(main.bones), HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(0.95, 0.94, 0.90))
+	# the bones banked, right-aligned to the card's padding
+	var bones_s := str(main.bones)
+	var bw := Kit.text_w(Kit.display(), bones_s, 18)
+	_b.draw_string(Kit.display(), Vector2(CARD_W - PAD - bw, ROW_PHONE + 18.0), bones_s,
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(0.95, 0.94, 0.90))
+	Icons.draw_bone(_b, Vector2(CARD_W - PAD - bw - 14.0, ROW_PHONE + 11.0), 11.0, Color(0.93, 0.90, 0.83))
 
-	# combo streak pill badge
-	if main.streak > 1:
-		var st_rect := Rect2(100, 35, 78, 16)
-		_b.draw_rect(st_rect, Color(0.18, 0.50, 0.32, 0.45))
-		_b.draw_rect(st_rect, Color(0.40, 0.85, 0.55, 0.70), false, 1.0)
-		_b.draw_string(Kit.display(), Vector2(104, 47), "STREAK x%d" % main.streak, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.75, 1.0, 0.80))
+	# her pee (yellow): full, the bar pulses (the banner says what to do)
+	var full: bool = main.pee >= 0.999
+	var tcol := TANK_COL
+	if full and fmod(t / 350.0, 2.0) < 1.0:
+		tcol = Color(1.0, 0.94, 0.45)
+	Icons.draw_droplet(_b, Vector2(PAD + 7.0, ROW_TANK + 7.5), 13.0, TANK_COL)
+	_label("PEE", LABEL_X, ROW_TANK)
+	_bar(ROW_TANK, main.pee, tcol)
 
-	# the pee / bladder tube (yellow) and droplet glyph
-	var tr := Rect2(16, 42, 12, 36)
-	_b.draw_rect(tr, Color(0.06, 0.08, 0.10, 0.65))
-	var lh: float = 32.0 * clampf(main.pee, 0.0, 1.0)
-	if lh > 1.0:
-		var col := Color(0.94, 0.82, 0.25, 0.95)
-		if main.pee >= 0.999 and fmod(AnimClock.msec() / 350.0, 2.0) < 1.0:
-			col = Color(1.0, 0.94, 0.45)
-		_b.draw_rect(Rect2(17, 44 + 32.0 - lh, 10, lh), col)
-	_b.draw_rect(tr, Color(1, 1, 1, 0.45), false, 1.2)
-	Icons.draw_droplet(_b, Vector2(22, 84), 7.5, Color(0.94, 0.82, 0.25, 0.90))
-
-	# the zoomies / energy tube (green) and lightning bolt glyph
-	var er := Rect2(34, 42, 12, 36)
-	_b.draw_rect(er, Color(0.06, 0.08, 0.10, 0.65))
-	var eh: float = 32.0 * clampf(main.dog.energy, 0.0, 1.0)
-	var ecol := Color(0.35, 0.88, 0.45, 0.95)
+	# the zoomies (green), gold while a golden bone lasts
+	var ecol := ZOOM_COL
 	if float(main.golden_t) > 0.0:
-		ecol = Color(1.0, 0.80, 0.30).lerp(Color(1.0, 0.95, 0.60), 0.5 + 0.5 * sin(AnimClock.msec() / 90.0))
-	elif main.dog.turbo_active and fmod(AnimClock.msec() / 120.0, 2.0) < 1.0:
+		ecol = Color(1.0, 0.80, 0.30).lerp(Color(1.0, 0.95, 0.60), 0.5 + 0.5 * sin(t / 90.0))
+	elif main.dog.turbo_active and fmod(t / 120.0, 2.0) < 1.0:
 		ecol = Color(0.65, 1.0, 0.75)
-	if eh > 1.0:
-		_b.draw_rect(Rect2(35, 44 + 32.0 - eh, 10, eh), ecol)
-	_b.draw_rect(er, Color(1, 1, 1, 0.45), false, 1.2)
-	Icons.draw_bolt(_b, Vector2(40, 84), 7.5, ecol)
+	Icons.draw_bolt(_b, Vector2(PAD + 7.0, ROW_ZOOM + 7.5), 13.0, ecol)
+	_label("ZOOMIES", LABEL_X, ROW_ZOOM)
+	_bar(ROW_ZOOM, main.dog.energy, ecol)
+
+	# the spots her pee has marked, five drops in the pee's yellow filling in
+	# under its bar; the drop glyph at the label column is hollow, a spot
+	var made: int = mini(main.marks.size(), 5)
+	_label("MARKED", LABEL_X, ROW_MARKS)
+	for i in range(5):
+		var p := Vector2(BAR_X + 6.0 + i * 16.0, ROW_MARKS + 8.0)
+		if i < made:
+			Icons.draw_droplet(_b, p, 11.0, TANK_COL)
+		else:
+			Icons.draw_droplet(_b, p, 11.0, Color(1, 1, 1, 0.22))
+	_b.draw_arc(Vector2(PAD + 7.0, ROW_MARKS + 8.0), 4.5, 0, TAU, 14, TANK_COL, 1.4)
+
+	# the streak, on the marked row's free end
+	if main.streak > 1:
+		var st := "x%d STREAK" % main.streak
+		var sw := Kit.text_w(Kit.display(), st, 10) + 10.0
+		var sr := Rect2(CARD_W - PAD - sw, ROW_MARKS, sw, 15.0)
+		_b.draw_rect(sr, Color(0.18, 0.50, 0.32, 0.55))
+		_b.draw_rect(sr, Color(0.40, 0.85, 0.55, 0.75), false, 1.0)
+		_b.draw_string(Kit.display(), Vector2(sr.position.x + 5.0, sr.position.y + 11.0), st,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.80, 1.0, 0.84))
 
 	# the meter a lesson is about, outlined and pulsing while it is up; the
 	# phone's pips while THAT'S THE BASICS names them
 	var point := "phone" if String(main.confirm_id) == "basics" else String(main.hud_point)
 	if POINT_RECTS.has(point):
-		var a := 0.55 + 0.45 * sin(AnimClock.msec() / 160.0)
+		var a := 0.55 + 0.45 * sin(t / 160.0)
 		_b.draw_rect(POINT_RECTS[point], Color(0.98, 0.80, 0.38, a), false, 2.5)
 
-	# territory mark posts: claimed marks glow bright gold with outer ring
-	for i in range(5):
-		var p := Vector2(60 + i * 16, 62)
-		var claimed: bool = i < mini(main.marks.size(), 5)
-		if claimed:
-			_b.draw_circle(p, 3.8, Color(0.96, 0.88, 0.42, 0.95))
-			_b.draw_arc(p, 5.5, 0, TAU, 14, Color(0.96, 0.88, 0.42, 0.85), 1.4)
-		else:
-			_b.draw_circle(p, 1.5, Color(1, 1, 1, 0.16))
-			_b.draw_arc(p, 5.5, 0, TAU, 14, Color(1, 1, 1, 0.35), 1.2)
-
-	# The mood, when there is one. It rides on the card's bottom rule as a
-	# named badge with a bar, because a mood you cannot cancel has to be a mood
-	# you can at least SEE going: the bar draining is the promise that this
-	# passes on its own.
-	if main.mood != null:
-		var badge: String = main.mood.badge()
-		if badge != "":
-			var mi: float = clampf(main.mood.intensity, 0.0, 1.0)
-			var tint: Color = main.mood.tint()
-			_b.draw_string(f, Vector2(MOOD_X, MOOD_BASELINE), badge, HORIZONTAL_ALIGNMENT_LEFT, -1, 13,
-				Color(tint.r, tint.g, tint.b, 0.55 + 0.45 * mi))
-			var bar_x: float = MOOD_X + f.get_string_size(badge, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 8.0
-			var bar_w: float = maxf(24.0, CARD_W - 10.0 - bar_x)
-			var mb := Rect2(bar_x, MOOD_BASELINE - 6.0, bar_w, 4)
-			_b.draw_rect(mb, Color(1, 1, 1, 0.12))
-			_b.draw_rect(Rect2(mb.position, Vector2(bar_w * mi, 4)), Color(tint.r, tint.g, tint.b, 0.8))
+	var extra := extra_rows()
+	for i in range(extra.size()):
+		var row := ROW_EXTRA + ROW_H * float(i)
+		match extra[i]:
+			"poop":
+				# nature calls: the bar is the time left to choose a spot. The
+				# last ten seconds, and the warning after them, pulse red.
+				var left: float = float(main.urge_timer) / float(main.POOP_URGE_S) if int(main.poop_state) == 1 else 0.0
+				var pcol := POOP_COL
+				if left < 10.0 / float(main.POOP_URGE_S) and fmod(t / 250.0, 2.0) < 1.0:
+					pcol = Color(1.0, 0.45, 0.35)
+				var c := Vector2(PAD + 7.0, row + 9.0)
+				_b.draw_circle(c + Vector2(0.0, 2.0), 5.0, POOP_COL.darkened(0.2))
+				_b.draw_circle(c + Vector2(0.0, -1.5), 3.8, POOP_COL)
+				_b.draw_circle(c + Vector2(0.5, -4.5), 2.4, POOP_COL.lightened(0.12))
+				_label("POOP", LABEL_X, row, pcol)
+				_bar(row, left, pcol)
+			"mood":
+				# a mood you cannot cancel has to be a mood you can see going
+				var badge: String = main.mood.badge()
+				var mi: float = clampf(main.mood.intensity, 0.0, 1.0)
+				var tint: Color = main.mood.tint()
+				_b.draw_circle(Vector2(PAD + 7.0, row + 8.0), 4.5, tint)
+				_label(badge, LABEL_X, row, Color(tint.r, tint.g, tint.b, 0.65 + 0.35 * mi))
+				_bar(row, mi, Color(tint.r, tint.g, tint.b, 0.85))

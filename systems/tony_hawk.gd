@@ -46,6 +46,7 @@ const CLOCK_TARGETS := {
 	"forum": 180,
 	"espanya": 180,
 	"eixample": 180,
+	"angels": 180,
 	"raval": 210,  # the walk plus the whole fight with El Gat
 }
 
@@ -81,6 +82,7 @@ const JAMON_POS := {
 	"forum": Vector2(480.0, -1820.0),
 	"espanya": Vector2(860.0, -3200.0),
 	"eixample": Vector2(470.0, -2900.0),
+	"angels": Vector2(380.0, -2950.0),
 	"raval": Vector2(640.0, -2200.0),
 }
 
