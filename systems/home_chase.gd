@@ -496,7 +496,7 @@ static func banner(m: Node2D) -> String:
 	if m.chase_kind == "both":
 		return "RUN HOME TOGETHER!"
 	if m.chase_kind == "bolt":
-		return "HE'S RUNNING! KEEP UP"
+		return "RUNNING! KEEP UP"
 	if m.chase_kind == "flood":
 		return "RUN! STAY OUT OF THE DEEP"
 	return String(_behavior(m, held_profile(m)).get("run_banner", "RUN! DON'T LET IT CATCH YOU"))

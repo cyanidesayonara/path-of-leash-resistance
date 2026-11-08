@@ -11,8 +11,8 @@ const HINT := {
 	"phone": "Bikes knock your human over. Dig in at a crossing and keep\nthem out of the bike lane.",
 	"manhole": "Steer your human around open manholes, or dig in until\nyou are both past.",
 	"cellar": "Keep your human off the store side where a cellar\ndoor stands open.",
-	"dog_hole": "When she wobbles at the brink, steer away from the hole.",
-	"edge": "When she wobbles at the brink, steer away from the edge.",
+	"dog_hole": "When you wobble at the brink, steer away from the hole.",
+	"edge": "When you wobble at the brink, steer away from the edge.",
 	"chase": "Run for home and pull steadily: your human speeds up when\nthe leash leads them.",
 }
 

@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-11-08 - Fix the voice audit's findings (#495)
+
+- Feed lines (`entities/human.gd`): rewrote hard-coded male pronouns in event feed lines so they fit male, female, or custom human looks ("YOUR HUMAN'S HAD ENOUGH! DIG IN", "WATCHING THE BAR", "STOPPED TO ANSWER! GO", "TEXTING! NOT LOOKING", "TAKING A SELFIE", "FILMING! STOPPED", "LOST SIGNAL! THIS WILL TAKE A WHILE", "STOPPED! LEASH IS LOOSE"), and updated `systems/home_chase.gd` bolt chase banner ("RUNNING! KEEP UP").
+- Dog gender neutrality (`main.gd`, `systems/losses.gd`, `systems/mosaic.gd`): changed "Good girl!" / "Who's a good girl?" to "Good dog!" / "Who's a good dog?" in ConeDog, hat retrieval, and tourist interactions; changed romp fetch score chip to "good dog! +N".
+- Dog loss cards (`main.gd`, `systems/losses.gd`): manhole and cellar loss cards now use `Game.dog_name().to_upper()` and dropped gendered pronoun ("All fine. The walk is very over.", "Found the sausages. The walk is still over."); edge death card changed to "You went over, and your human went with you."; brink loss hints updated to second person ("When you wobble at the brink, steer away from the hole/edge.").
+- Vocabulary and style: Horta's prize goal changed from British slang "nick" to "snatch the gardener's bocadillo off his barrow" (fitting row width); maze goal changed from prohibited verb "Lead" to "Steer your human round Eros in the maze"; Gos d'Atura trait and description updated to "Herds your human, collects muck" and "steers your human".
+- Accents & Catalan place names: added accent to "Gaudí dragon lamppost" (`systems/goals.gd`) and "BÚNQUERS DEL CARMEL" (`systems/carmel.gd`); changed "plaza dodge! +2" to "plaça dodge! +2" (`main.gd`).
+- Speech classification (`POP_SAY`): added `POP_SAY` to "Whoa there!" (`entities/human.gd`), "Watch those strings!" (`systems/guitarrista.gd`), "Mind the bike!" (`systems/superilla_cargo.gd`), and the rival escape line `msg` ("He got away with it!", `main.gd`). Capitalized and added `POP_SAY` to "The jig is up!" (`main.gd`), "Five minutes left!" (`main.gd`), and "...Or not." (`systems/freedom_games.gd`). Capitalized rival warning shout " BARK AT HIM!" (`main.gd`).
+- Capitalization & glosses: results screen summary lines capitalized ("The phone says %s.", "Best combo x%d"); all twelve off-leash gate sign glosses passed to `_freedom_sign` start with a capital letter, and Passeig Marítim's gloss updated to "The hotel square by the sea, off leash".
+- Regression tests: updated `tests/test_event_feed.gd`, `tests/test_float_text.gd`, and `tests/test_losses.gd` for the updated feed and card strings.
+
 ## 2026-11-08 - El Parc: the park round the path
 
 - Els Àngels' paired upgrade. El Parc read as El Barri: one flat path fill with a seam and empty lawns. The path now has a granite edging and the park's low iron hoop fence beside it (`Parc.draw_path_edges`), raked gravel on a world-fixed grid and a worn track down the middle that stops where the path splits round the lake (`Parc.draw_over_walkway`).

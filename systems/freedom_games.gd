@@ -133,7 +133,7 @@ static func _tick_agility(m: Node2D, delta: float) -> void:
 			"quit":
 				# a run that never got going was not one
 				if m.agility.t > 2.0:
-					m.float_text(b, "...or not", Color(0.9, 0.9, 0.9))
+					m.float_text(b, "...Or not.", Color(0.9, 0.9, 0.9), m.POP_SAY)
 
 
 static func _agility_finish(m: Node2D, secs: float, faults: int) -> void:

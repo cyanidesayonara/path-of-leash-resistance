@@ -42,8 +42,8 @@ func _run() -> void:
 	# the loss titles are drawn as headings. The longest one used to lose its
 	# last letter: draw_string clips a glyph that crosses the card width.
 	var Kit: GDScript = load("res://hud/ui_kit.gd")
-	var titles := ["YOUR HUMAN WENT DOWN THE MANHOLE", "MILLIE WENT DOWN THE MANHOLE",
-		"YOUR HUMAN FELL IN THE CELLAR", "MILLIE FELL INTO THE CELLAR", "PHONE SMASHED"]
+	var titles := ["YOUR HUMAN WENT DOWN THE MANHOLE", "%s WENT DOWN THE MANHOLE" % game.dog_name().to_upper(),
+		"YOUR HUMAN FELL IN THE CELLAR", "%s FELL INTO THE CELLAR" % game.dog_name().to_upper(), "PHONE SMASHED"]
 	for title: String in titles:
 		var px: int = Kit.heading_px(title, 30, 660.0)
 		var tw: float = Kit.text_w(Kit.display(), title, px)

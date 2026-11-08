@@ -1377,7 +1377,7 @@ static func draw_freedom(m: Node2D, ci: Object) -> void:
 		ci.draw_line(Vector2(bx.x + 20, bx.y - 5), Vector2(bx.x + 20, bx.y + 8), bcol.darkened(0.2), 2.0)
 	m.contact_shadow(ci, m.gate_bench, 20.0, 8.0, 0.20)
 	ci.draw_rect(Rect2(m.gate_bench.x - 18, m.gate_bench.y - 6, 36, 11), Color(0.54, 0.4, 0.27))
-	m._freedom_sign(ci, r, m.gate_text, "the hotel plaza by the sea, off leash")
+	m._freedom_sign(ci, r, m.gate_text, "The hotel square by the sea, off leash")
 
 
 # THE SEAFRONT HAS NO GRASS. Its cross-section is sea, sand, boardwalk,

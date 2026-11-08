@@ -256,7 +256,7 @@ static func _draw_goods_yard(m: Node2D, c: Object) -> void:
 	if b != c:
 		b.flush()
 	m._draw_freedom_benches(c, r, Color(0.36, 0.40, 0.44))
-	m._freedom_sign(c, r, m.gate_text, "the old goods yard, off leash")
+	m._freedom_sign(c, r, m.gate_text, "The old goods yard, off leash")
 
 
 # Past L'Estacio's goods yard wall: the running lines (ballast, sleepers,

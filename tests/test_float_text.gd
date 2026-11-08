@@ -32,7 +32,7 @@ func _run() -> void:
 	var feed: Control = main.feed
 	feed.banner = "GET THE CAT HOME! FOLLOW HER"
 	feed.lines = Array([
-		{"text": "HE'S TEXTING! HE'S NOT LOOKING", "tone": 0, "t": 0.6},
+		{"text": "TEXTING! NOT LOOKING", "tone": 0, "t": 0.6},
 		{"text": "YOU TANGLED THEM! +3", "tone": 1, "t": 0.1},
 	], TYPE_DICTIONARY, &"", null)
 	var vs: Vector2 = main.get_viewport_rect().size

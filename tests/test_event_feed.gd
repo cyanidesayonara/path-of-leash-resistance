@@ -33,7 +33,7 @@ func _initialize() -> void:
 				while t_new <= t_old:
 					feed.banner = "GET THE CAT HOME! FOLLOW HER" if with_banner else ""
 					feed.lines = Array([
-						{"text": "HE'S FILMING! HE'S STOPPED", "tone": 0, "t": t_old},
+						{"text": "FILMING! STOPPED", "tone": 0, "t": t_old},
 						{"text": "YOU TANGLED THEM! +3", "tone": 1, "t": t_new},
 					], TYPE_DICTIONARY, &"", null)
 					var lay: Array[Dictionary] = feed.layout(vs)

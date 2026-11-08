@@ -1392,7 +1392,7 @@ static func draw_freedom(m: Node2D, ci: Object) -> void:
 	c.circle(fr.get_center(), 4.0, Color(0.84, 0.94, 0.98))
 	c.flush(ci)
 	m._draw_freedom_benches(ci, r, Color(0.36, 0.30, 0.24))
-	m._freedom_sign(ci, r, m.gate_text, "goal square, off leash")
+	m._freedom_sign(ci, r, m.gate_text, "Goal square, off leash")
 
 
 # The bowl past the square's top edge: its apron, the outer wall curving away,

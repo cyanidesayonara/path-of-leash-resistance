@@ -3505,7 +3505,7 @@ func _bust_shells(_why: String) -> void:
 	var sp: Vector2 = shell_game["pos"]
 	bones += 6
 	combo.add("RIGGED", 6)
-	float_text(sp + Vector2(0, -30), "THE JIG IS UP!", Color(1, 0.9, 0.5))
+	float_text(sp + Vector2(0, -30), "The jig is up!", Color(1, 0.9, 0.5), POP_SAY)
 	feed.say("SHELL GAME BUSTED +6", EventFeed.Tone.GOOD)
 	for tw: Node2D in get_tree().get_nodes_in_group("tourists"):
 		if tw.global_position.distance_to(sp) < 240.0:
@@ -4872,7 +4872,7 @@ func _draw_yard(c: Object, gravel: bool) -> void:
 		walk_mod.draw_yard(self, c, r)
 	_draw_freedom_fence(c, r, gravel)
 	_draw_freedom_benches(c, r, Color(0.5, 0.38, 0.26))
-	_freedom_sign(c, r, gate_text, "the off-leash yard" if gravel else "the off-leash dog park")
+	_freedom_sign(c, r, gate_text, "The off-leash yard" if gravel else "The off-leash dog park")
 
 
 # EL BARRI's PIPICÀ: the fenced dog area every neighbourhood park has. Raked
@@ -5005,7 +5005,7 @@ func _draw_clearing(c: Object) -> void:
 	# tree. They are placed as real trees at build time now, so they have
 	# collision, the rope wraps them, and the grove draws them.
 	_draw_freedom_benches(c, r, Color(0.42, 0.33, 0.22))
-	_freedom_sign(c, r, gate_text, "the clearing, off leash")
+	_freedom_sign(c, r, gate_text, "The clearing, off leash")
 
 
 func _draw_dog_beach(c: Object) -> void:
@@ -6562,7 +6562,7 @@ func _shot_menu(which: String) -> void:
 			MenuFlow.open_basics(self)
 		"notice":
 			_skip_title()
-			_death("OFF THE EDGE\n\nShe went over, and your human went with her.", "edge")
+			_death("OFF THE EDGE\n\nYou went over, and your human went with you.", "edge")
 
 
 # Straight into the walk, as if SPACE had been pressed on the title. For the
@@ -7760,7 +7760,7 @@ func _tick_cone_dog(delta: float) -> void:
 		Sfx.play("crack", 2.2, -4.0)
 		Sfx.play("star", 1.1, -6.0)
 		float_text(dog.global_position + Vector2(0.0, -20.0), "treat snatch! +2", Color(1.0, 0.78, 0.32))
-		float_text(ConeDog.DOOR + Vector2(0.0, -32.0), "Good girl!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(ConeDog.DOOR + Vector2(0.0, -32.0), "Good dog!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(cc["dodge"]):
 		saves_done += 1
@@ -7800,7 +7800,7 @@ func _tick_waiter(delta: float) -> void:
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "plaza dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(dog.global_position + Vector2(0.0, -20.0), "plaça dodge! +2", Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -7931,7 +7931,7 @@ func _tick_match_day(delta: float) -> void:
 	if bool(cue["pa"]):
 		var at := human.global_position + Vector2(0.0, -70.0)
 		float_text(at, "Five minutes to kickoff!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(at + Vector2(0.0, 22.0), "five minutes left", Color(0.85, 0.84, 0.78))
+		float_text(at + Vector2(0.0, 22.0), "Five minutes left!", Color(0.85, 0.84, 0.78), POP_SAY)
 	if bool(cue["whistle"]):
 		Sfx.play("whistle", 1.0, -2.0)
 		_match_roar = 0.6
@@ -10106,7 +10106,7 @@ func on_rival_snatch(at: Vector2, what: String) -> void:
 	shake_t = maxf(shake_t, 0.3)
 	Sfx.play("bark", 0.7, -5.0)
 	var label := "MY BALL!" if what == "ball" else "MY BONE!"
-	float_text(at + Vector2(0, -30), label + " bark at him!", Color(1, 0.7, 0.6))
+	float_text(at + Vector2(0, -30), label + " BARK AT HIM!", Color(1, 0.7, 0.6))
 	_update_hud()
 
 
@@ -10121,7 +10121,7 @@ func on_rival_drop(at: Vector2, what: String, msg: String, earned: bool, prop: D
 		# he wandered off with it. You get nothing, because you did nothing -
 		# and the bone stays gone, so a thief who is ignored actually costs
 		# you something.
-		float_text(at + Vector2(0, -28), msg, Color(0.85, 0.8, 0.75))
+		float_text(at + Vector2(0, -28), msg, Color(0.85, 0.8, 0.75), POP_SAY)
 		return
 	# recovered: worth more than the thing was, because taking it back off
 	# him is the better story
@@ -10403,14 +10403,14 @@ func _hazards(delta: float) -> void:
 		# the dog gets a teeter first: a brink is a skill moment, not an
 		# instant punishment
 		if dog.global_position.distance_to(m) < 22.0:
-			_start_teeter("hole", m, "MILLIE WENT DOWN THE MANHOLE\n\nShe is fine. The walk is very over.")
+			_start_teeter("hole", m, "%s WENT DOWN THE MANHOLE\n\nAll fine. The walk is very over." % Game.dog_name().to_upper())
 			return
 	for c in cellars:
 		if c.has_point(human.global_position):
 			_death("YOUR HUMAN FELL IN THE CELLAR\n\nRight onto the delivery. You did warn them,\nin the only language you have.", "cellar")
 			return
 		if c.grow(6.0).has_point(dog.global_position):
-			_start_teeter("hole", c.get_center(), "MILLIE FELL INTO THE CELLAR\n\nShe found the sausages. The walk is still over.")
+			_start_teeter("hole", c.get_center(), "%s FELL INTO THE CELLAR\n\nFound the sausages. The walk is still over." % Game.dog_name().to_upper())
 			return
 
 
@@ -11242,7 +11242,7 @@ func on_ball_returned(thrower: Node2D) -> void:
 	bones += reward
 	Sfx.play("fetch")
 	combo.add("FETCH", reward)
-	float_text(thrower.global_position, ("good girl! +%d" % reward) if mine else ("shared! +%d" % reward), Color(0.8, 1.0, 0.8))
+	float_text(thrower.global_position, ("good dog! +%d" % reward) if mine else ("shared! +%d" % reward), Color(0.8, 1.0, 0.8))
 	if mine and is_instance_valid(thrower):
 		human.throw_pose()
 	if romp_catches >= romp_target and not romp_done:
@@ -11619,7 +11619,7 @@ func on_hat_returned(_pos: Vector2) -> void:
 	bones += 6
 	combo.add("HAT", 5)
 	Sfx.play("fetch", 1.1)
-	float_text(human.global_position + Vector2(0, -34), "You found my hat! Good girl!", Color(1, 1, 1), POP_SAY)
+	float_text(human.global_position + Vector2(0, -34), "You found my hat! Good dog!", Color(1, 1, 1), POP_SAY)
 	feed.say("HAT RETURNED!", EventFeed.Tone.GOOD)
 	_update_hud()
 

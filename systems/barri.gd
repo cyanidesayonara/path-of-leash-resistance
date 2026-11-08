@@ -175,7 +175,7 @@ static func _draw_pipica(m: Node2D, c: Object) -> void:
 	b.circle(bn, 7.5, Color(0.16, 0.17, 0.18))
 	b.flush(c)
 	m._draw_freedom_benches(c, r, Color(0.42, 0.30, 0.20))
-	m._freedom_sign(c, r, m.gate_text, "the off-leash dog park")
+	m._freedom_sign(c, r, m.gate_text, "The off-leash dog park")
 
 
 # a run of the pipicà's fence, a to b: green steel posts and a welded mesh
