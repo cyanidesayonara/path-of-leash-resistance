@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-08 - El Parc: the park round the path
+
+- Els Àngels' paired upgrade. El Parc read as El Barri: one flat path fill with a seam and empty lawns. The path now has a granite edging and the park's low iron hoop fence beside it (`Parc.draw_path_edges`), raked gravel on a world-fixed grid and a worn track down the middle that stops where the path splits round the lake (`Parc.draw_over_walkway`).
+- On the lawns (`world/level_build.gd`, the `PARK_*` constants): eight green cast-iron park lamps a step out from the edging, lit by `Game.lamp_glow()`; a round kiosk by the gate under a striped scalloped awning with its hatch, ice-cream board and a bike locked at the rack; the bike lane on the east lawn with painted bicycles; a checked-blanket picnic; a reader under a plane tree; two friends throwing a frisbee; three flower borders beside the edging. Lamps, kiosk and tree are rope points and solid; the people are solid circles.
+- Second pass: an avenue of plane trees and horse chestnuts at a 300 px rhythm along both narrow stretches, a step past the hoop fence, their crowns and soft shade over the gravel (`LevelBuild.park_avenue()`, skipping wherever a lamp, bench, border or path tree already stands); fallen leaves and conkers along both edges and a lost glove; the narrow stretches' lamps moved to just inside the edging, between the trees; five benches on the verge facing the path, an old man with his paper on two, a couple on one; mown stripes on both lawns; tree groups and shrub beds on the lawns; the boat-hire hut by the lake with its board, oars and life ring; a sunbather, a dog walker with a sniffing terrier, a parent watching a toddler by the playground, and a jogger up and down the bike lane. The grass keeps off the kiosk, hut, lane, blankets and shrub beds. Trunks are rope points and solid; the new people, benches and hut are solid circles.
+- The behaviour snapshot for park and barri is byte-identical after both passes. No new hazard; El Barri untouched (every change is in El Parc's module or behind `lvl == "park"`).
+
 ## 2026-11-08 - Test that every walk is registered in every table
 
 - `tests/test_walk_registry.gd`: regression test verifying that every walk in `Game.LEVELS` is registered across all per-walk tables (`LEVEL_NAMES`, `LEVEL_SUBTITLES`, `LEVEL_SUBTITLES_CA`, `LEVEL_SUBTITLES_ES`, `STAR_GATE`, `CAMPAIGN_SKY`, `CAROUSEL`, `WALK_MODULES`, `LEVEL_GOAL_IDS`, `CLOCK_TARGETS`, `JAMON_POS`, `STYLES`, `MATERIALS`), and checking the reverse that no table has unknown keys outside documented allow lists (`tutorial`, `title`, `freedom`).
