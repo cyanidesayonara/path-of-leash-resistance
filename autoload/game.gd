@@ -2,7 +2,7 @@ extends Node
 
 # Autoload: session state that must survive scene reloads.
 
-const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant", "boars", "gracia", "carmel", "superilla", "forum", "espanya", "raval", "angels"]
+const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant", "boars", "gracia", "carmel", "superilla", "forum", "espanya", "raval", "eixample", "angels"]
 const LEVEL_NAMES := {
 	"tutorial": "First Walk",
 	# One scheme: a Catalan article plus one everyday noun for the place you
@@ -50,6 +50,8 @@ const LEVEL_NAMES := {
 	"forum": "El Fòrum",
 	"espanya": "Plaça d'Espanya",
 	"raval": "Rambla del Raval",
+	# Cerdà's grid round the basilica, named for the district
+	"eixample": "L'Eixample",
 }
 # The Catalan name carries the character; this carries the meaning. The game
 # ships in English, so a player who does not speak Catalan should never have to
@@ -90,11 +92,12 @@ const LEVEL_SUBTITLES := {
 	"forum": "The solar pergola and coastal esplanade",
 	"espanya": "The dancing fountains and grand palace cascades",
 	"raval": "The rambla where the big bronze cat sits",
+	"eixample": "The grid of cut corners round the basilica",
 }
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
 # The first few open quickly, so a new player is never stuck on one walk.
-const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "llevant": 15, "tibidabo": 17, "vet": 19, "trail": 21, "angels": 22, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "station": 31, "carmel": 33, "reial": 35, "forum": 37, "aigues": 39, "horta": 41, "port": 43, "espanya": 45, "site": 47, "partit": 48, "scrap": 49, "gracia": 50, "raval": 51}
+const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "llevant": 15, "eixample": 16, "tibidabo": 17, "vet": 19, "trail": 21, "angels": 22, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "station": 31, "carmel": 33, "reial": 35, "forum": 37, "aigues": 39, "horta": 41, "port": 43, "espanya": 45, "site": 47, "partit": 48, "scrap": 49, "gracia": 50, "raval": 51}
 
 # Keystone Chase milestone gates: each tier requires surviving the previous
 # tier's chase level end-to-end to enter.
@@ -107,6 +110,7 @@ const CHASE_GATE := {
 	"besos": "neteja",
 	# Tier 3 (Walks after El Besòs)
 	"llevant": "besos",
+	"eixample": "besos",
 	"tibidabo": "besos",
 	"vet": "besos",
 	# Tier 4 (Walks after El Veterinari)
@@ -171,11 +175,11 @@ const CAMPAIGN_SKY := {
 	"forum": ["wind", "day"], "aigues": ["clear", "day"], "horta": ["clear", "day"],
 	"port": ["clear", "day"], "espanya": ["clear", "night"], "site": ["clear", "day"],
 	"partit": ["clear", "night"], "scrap": ["clear", "day"], "gracia": ["clear", "night"],
-	"raval": ["clear", "night"],
+	"raval": ["clear", "night"], "eixample": ["clear", "day"],
 }
 
 # the walk select: the first walk, then the campaign walks in order
-const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "llevant", "tibidabo", "vet", "trail", "angels", "spook", "boars", "guell", "superilla", "station", "carmel", "reial", "forum", "aigues", "horta", "port", "espanya", "site", "partit", "scrap", "gracia", "raval"]
+const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "llevant", "eixample", "tibidabo", "vet", "trail", "angels", "spook", "boars", "guell", "superilla", "station", "carmel", "reial", "forum", "aigues", "horta", "port", "espanya", "site", "partit", "scrap", "gracia", "raval"]
 
 # Cosmetics keep their catalog keys when equipped, but ownership is namespaced
 # by category so identically named items remain separate purchases.
@@ -420,6 +424,7 @@ const LEVEL_SUBTITLES_CA := {
 	"forum": "La pèrgola fotovoltaica i l'esplanada costanera",
 	"espanya": "Les fonts màgiques i les grans cascades del palau",
 	"raval": "La rambla on seu el gat gros de bronze",
+	"eixample": "La quadrícula dels xamfrans al voltant de la basílica",
 }
 const LEVEL_SUBTITLES_ES := {
 	"tutorial": "Aprende la correa, truco a truco",
@@ -455,6 +460,7 @@ const LEVEL_SUBTITLES_ES := {
 	"forum": "La pérgola fotovoltaica y la explanada costera",
 	"espanya": "Las fuentes mágicas y las grandes cascadas del palacio",
 	"raval": "La rambla donde se sienta el gato gordo de bronce",
+	"eixample": "La cuadrícula de chaflanes alrededor de la basílica",
 }
 # the off-leash agility course's best time in seconds (0: never run). One
 # record for all of them: it is the same course in every space.
@@ -464,7 +470,7 @@ var agility_best := 0.0
 var gate_open: Array[String] = []
 # the walks that arrived with the chase gates: no save predates them, so
 # none is grandfathered past its gate
-const WALKS_SINCE_GATES: Array[String] = ["llevant", "angels", "boars", "gracia", "carmel", "superilla", "forum", "espanya", "raval"]
+const WALKS_SINCE_GATES: Array[String] = ["llevant", "angels", "boars", "gracia", "carmel", "superilla", "forum", "espanya", "raval", "eixample"]
 # The goal card is a big block of text in the corner of a game whose whole
 # point is the mess in the middle. Collapsed it is one line; the player
 # decides, and the choice sticks.
