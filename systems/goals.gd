@@ -453,6 +453,9 @@ static func finish_tutorial_walk(m: Node2D) -> void:
 	m.tut_label.visible = false
 	m.tut_hint.visible = false
 	m.tut_skippable = false
+	# the feed is not redrawn once the walk is frozen: clear its cards now
+	if m.feed != null:
+		m.feed.queue_redraw()
 	m.finished = true
 	m.frozen = true
 	m.msg_label.visible = false

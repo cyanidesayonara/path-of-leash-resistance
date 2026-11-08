@@ -126,6 +126,40 @@ func _run() -> void:
 		"a steady pull leads them into the ring (they stopped at x %.0f, ring at %.0f)" % [h.global_position.x, ring.x])
 	h.felt_pull = Vector2.ZERO
 
+	# the lessons that need the zoomies give them back while she is not running
+	m.tut_step = TUT.index_of("vault")
+	m.dog.energy = 0.0
+	m.dog.turbo_active = false
+	m._tick_tutorial(2.0)
+	_check(float(m.dog.energy) > 0.5, "a bar burnt on the way fills again at a trick lesson")
+	m.tut_step = TUT.index_of("pee")
+	m.dog.energy = 0.0
+	m._tick_tutorial(2.0)
+	_check(float(m.dog.energy) == 0.0, "and only there")
+	m.dog.energy = 1.0
+
+	# the yard's ledge can be ridden, and two tricks in a row pass the combo
+	# lesson; business alone does not
+	var yl: PackedVector2Array = TUT.yard_ledge(m)
+	m.tut_step = TUT.index_of("combo")
+	m.tut_card_t = 5.0
+	m.dog.global_position = Vector2(yl[0].x + 6.0, yl[0].y - 50.0)
+	m.dog.velocity = Vector2(0, -420)
+	m.dog.turbo_active = true
+	m.grind_cd = 0.0
+	m._tick_grind(1.0 / 60.0)
+	_check(m.grind.active, "zoomies along the yard's ledge: she is up on it")
+	m.grind.active = false
+	m.dog.turbo_active = false
+	m.combo.add("SNIFF", 2)
+	m.combo.add("MARK", 3)
+	m._tick_tutorial(0.1)
+	_check(int(m.tut_step) == TUT.index_of("combo"), "business is not a combo")
+	m.combo.add("LEDGE RUN", 4)
+	m.combo.add("POLE SWING", 4)
+	m._tick_tutorial(0.1)
+	_check(int(m.tut_step) == TUT.index_of("dare"), "a grind then a swing is")
+
 	# the yard: the kid sits there, and dares only once the dare lesson is up
 	var kid: Node2D = m.challenge_giver if is_instance_valid(m.challenge_giver) else null
 	for c in m.get_children():

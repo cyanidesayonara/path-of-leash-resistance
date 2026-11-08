@@ -30,8 +30,8 @@ const BLOOMS: Array[Color] = [Color(0.93, 0.42, 0.42), Color(0.98, 0.83, 0.36), 
 # 1280-wide window (about x 140 to 1140), well off the path
 const BED_WEST := 230.0
 const BED_EAST := 1050.0
-# the chalk paw prints up from the start line
-const PAWS_FROM := 240.0
+# the chalk paw prints from the start line's sign up to the first bench
+const PAWS_FROM := -30.0
 const PAWS_TO := -200.0
 const PAW_STEP := 46.0
 # how long a ghost takes to come up once its lesson is
@@ -280,7 +280,7 @@ static func _ghost(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 			b.glow(gp, 60.0, Color(HINT.r, HINT.g, HINT.b, 0.24 * a))
 			_dashed_ring(b, gp, 40.0, 18, hint, 2.0)
 		"swing":
-			var vp: Vector2 = Vector2(640.0, TUT.at("vault"))
+			var vp: Vector2 = TUT.vault_post()
 			# in from the south-west, round the far side, out to the east
 			_dotted_arc(b, vp, 84.0, 84.0, PI * 0.75, PI * 2.1, hint)
 		"wind":

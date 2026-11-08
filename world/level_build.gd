@@ -2004,7 +2004,7 @@ static func build_level_data(m: Node2D) -> void:
 		m.benches.clear()
 		m.patches.clear()
 		m.poles.clear()
-		m.poles.append(Vector2(640.0, TUT.at("vault")))
+		m.poles.append(TUT.vault_post())
 		m.poles.append(Vector2(640.0, TUT.at("fling")))
 		# the practice yard's two lampposts
 		m.poles.append_array(TUT.yard_poles(m))
@@ -3964,61 +3964,66 @@ static func spawn_cones(m: Node2D) -> void:
 	# deterministic autowalk seed is untouched.
 	var jr := RandomNumberGenerator.new()
 	jr.seed = 0x7A17B0B
-	# the level's background litter, for stretches with nothing else nearby
-	var kinds := ["can", "bottle", "sack", "can"]
-	match m.lvl:
-		"scrap", "site": kinds = ["crate", "sack", "can", "bottle", "crate"]
-		"beach", "llevant": kinds = ["bottle", "ball", "can"]
-		"park", "trail": kinds = ["bottle", "ball", "can"]
-		"besos": kinds = ["bottle", "ball", "can"]
-		"aigues": kinds = ["bottle", "can", "bottle"]   # what runners drop: no bin bags up here
-		"horta": kinds = ["can", "bottle", "ball"]      # picnics on the lawns
-		"market", "spook": kinds = ["crate", "bottle", "can"]
-		"neteja": kinds = ["crate", "crate", "sack", "bottle"]
-		"station": kinds = ["can", "bottle", "bottle"]
-		"oldtown": kinds = ["sack", "bottle", "can"]
-	# Litter accumulates around whatever produced it, so junk is placed by
-	# AREA rather than sprinkled evenly: crates pile up behind market stalls,
-	# cans and bottles collect around cafe tables and buskers, sacks slump by
-	# the bins, crates and cones litter the works. Feels observed rather than
-	# randomised, and it makes each stretch of a walk look like somewhere.
-	var zones: Array[Dictionary] = []
-	for b in m.bins:
-		zones.append({"at": b, "pal": ["sack", "sack", "bottle"]})
-	for st in m.stalls:
-		zones.append({"at": st, "pal": ["crate", "crate", "bottle"]})
-	for tb in m.tables:
-		zones.append({"at": tb, "pal": ["can", "bottle", "can"]})
-	for pf in m.performers:
-		zones.append({"at": pf, "pal": ["can", "can", "bottle"]})
-	for v in m.vans:
-		zones.append({"at": v, "pal": ["crate", "sack", "can"]})
-	for bn in m.benches:
-		zones.append({"at": bn, "pal": ["can", "bottle", "ball"]})
-	for z in zones:
-		var pal: Array = z.pal
-		for i in range(jr.randi_range(1, 3)):
-			var at: Vector2 = z.at
-			# round whatever produced it, never on top of it: a few tries for
-			# a clear spot, or it is not dropped at all
-			for attempt in range(6):
-				var off := Vector2(jr.randf_range(-70.0, 70.0), jr.randf_range(-60.0, 66.0))
-				var jp := Vector2(clampf(at.x + off.x, m.sw_l + 16.0, m.sw_r - 16.0), at.y + off.y)
-				if junk_spot_clear(m, jp):
-					spawn_junk(m, jp, pal[jr.randi() % pal.size()])
-					break
-	# then a thin background scatter, so the quiet stretches are not bare
-	var jy = m.START_Y - 120.0
-	while jy > m.GATE_Y + 160.0:
-		jy -= jr.randf_range(260.0, 520.0)
-		var jx := jr.randf_range(m.sw_l + 30.0, m.sw_r - 30.0)
-		# the step can carry the last one past the gate, onto the off-leash
-		# space's sign (La Castanyada's crate on its PLAÇA, #157). Only there
-		# for now: on the other walks it would move their snapshots
-		if m.lvl == "spook" and jy < m.GATE_Y:
-			break
-		if junk_spot_clear(m, Vector2(jx, jy)):
-			spawn_junk(m, Vector2(jx, jy), kinds[jr.randi() % kinds.size()])
+	# the First Walk keeps its stations clear of litter (a sack had a way of
+	# landing on the benches): one lost ball in the practice yard, to punt
+	if m.tutorial_mode:
+		spawn_junk(m, TUT.practice_bench(m) + TUT.YARD_BALL, "ball")
+	else:
+		# the level's background litter, for stretches with nothing else nearby
+		var kinds := ["can", "bottle", "sack", "can"]
+		match m.lvl:
+			"scrap", "site": kinds = ["crate", "sack", "can", "bottle", "crate"]
+			"beach", "llevant": kinds = ["bottle", "ball", "can"]
+			"park", "trail": kinds = ["bottle", "ball", "can"]
+			"besos": kinds = ["bottle", "ball", "can"]
+			"aigues": kinds = ["bottle", "can", "bottle"]   # what runners drop: no bin bags up here
+			"horta": kinds = ["can", "bottle", "ball"]      # picnics on the lawns
+			"market", "spook": kinds = ["crate", "bottle", "can"]
+			"neteja": kinds = ["crate", "crate", "sack", "bottle"]
+			"station": kinds = ["can", "bottle", "bottle"]
+			"oldtown": kinds = ["sack", "bottle", "can"]
+		# Litter accumulates around whatever produced it, so junk is placed by
+		# AREA rather than sprinkled evenly: crates pile up behind market stalls,
+		# cans and bottles collect around cafe tables and buskers, sacks slump by
+		# the bins, crates and cones litter the works. Feels observed rather than
+		# randomised, and it makes each stretch of a walk look like somewhere.
+		var zones: Array[Dictionary] = []
+		for b in m.bins:
+			zones.append({"at": b, "pal": ["sack", "sack", "bottle"]})
+		for st in m.stalls:
+			zones.append({"at": st, "pal": ["crate", "crate", "bottle"]})
+		for tb in m.tables:
+			zones.append({"at": tb, "pal": ["can", "bottle", "can"]})
+		for pf in m.performers:
+			zones.append({"at": pf, "pal": ["can", "can", "bottle"]})
+		for v in m.vans:
+			zones.append({"at": v, "pal": ["crate", "sack", "can"]})
+		for bn in m.benches:
+			zones.append({"at": bn, "pal": ["can", "bottle", "ball"]})
+		for z in zones:
+			var pal: Array = z.pal
+			for i in range(jr.randi_range(1, 3)):
+				var at: Vector2 = z.at
+				# round whatever produced it, never on top of it: a few tries for
+				# a clear spot, or it is not dropped at all
+				for attempt in range(6):
+					var off := Vector2(jr.randf_range(-70.0, 70.0), jr.randf_range(-60.0, 66.0))
+					var jp := Vector2(clampf(at.x + off.x, m.sw_l + 16.0, m.sw_r - 16.0), at.y + off.y)
+					if junk_spot_clear(m, jp):
+						spawn_junk(m, jp, pal[jr.randi() % pal.size()])
+						break
+		# then a thin background scatter, so the quiet stretches are not bare
+		var jy = m.START_Y - 120.0
+		while jy > m.GATE_Y + 160.0:
+			jy -= jr.randf_range(260.0, 520.0)
+			var jx := jr.randf_range(m.sw_l + 30.0, m.sw_r - 30.0)
+			# the step can carry the last one past the gate, onto the off-leash
+			# space's sign (La Castanyada's crate on its PLAÇA, #157). Only there
+			# for now: on the other walks it would move their snapshots
+			if m.lvl == "spook" and jy < m.GATE_Y:
+				break
+			if junk_spot_clear(m, Vector2(jx, jy)):
+				spawn_junk(m, Vector2(jx, jy), kinds[jr.randi() % kinds.size()])
 	# A-stands are entities too: light, toppleable, never re-stood. Spawned
 	# once here with the rest of the kickable furniture; this loop used to sit
 	# in on_junk_kicked, so none stood at the start and every kick added a

@@ -28,6 +28,11 @@ extends RefCounted
 # their patience. "meter" names the HUD meter the lesson uses (hud_panel.gd
 # outlines it). "ghost" names the hint drawn in the world while the lesson is
 # up (world/tutorial_layer.gd). "yard" steps share the practice yard's bench.
+# "refill" tops the zoomies back up while she is not running: those lessons
+# need them, and a bar burnt on the way must not leave a lesson undoable.
+# "loose" leaves the waiting human unbraced (main.TUT_BRACE), and "back"
+# overrides how far short of the station they wait: tetherball needs them
+# close to the post and windable.
 # "free" marks the practice steps, which are not lessons and have no check:
 # their skip is "finish".
 const STEPS: Array[Dictionary] = [
@@ -77,7 +82,7 @@ const STEPS: Array[Dictionary] = [
 		"body": "Press {bark} at the pigeons. It scatters them and stops your human dead.",
 	},
 	{
-		"id": "turbo", "at": -2600.0, "hold": false, "meter": "zoomies",
+		"id": "turbo", "refill": true, "at": -2600.0, "hold": false, "meter": "zoomies",
 		"title": "The zoomies.",
 		"body": "Hold {turbo} to run flat out. It burns the green bar.",
 	},
@@ -87,37 +92,37 @@ const STEPS: Array[Dictionary] = [
 		"body": "Find some grass, stand still and hold {poop}. Your human bags it. Eventually.",
 	},
 	{
-		"id": "vault", "at": -3200.0, "hold": true, "bench": true, "ghost": "swing",
+		"id": "vault", "refill": true, "at": -3200.0, "hold": true, "bench": true, "ghost": "swing",
 		"title": "Swing around a post.",
 		"body": "Hold {turbo} and run past the lamppost. The leash catches and slings you around it.",
 	},
 	{
-		"id": "fling", "at": -3550.0, "hold": true, "ghost": "wind",
+		"id": "fling", "refill": true, "at": -3550.0, "hold": true, "ghost": "wind", "loose": true, "back": 90.0,
 		"title": "Tetherball.",
 		"body": "Your human is waiting by the post. Run around it twice to wind them up, then pull away.",
 	},
 	{
-		"id": "grind", "at": -3900.0, "hold": true, "ghost": "ledge",
+		"id": "grind", "refill": true, "at": -3900.0, "hold": true, "ghost": "ledge",
 		"title": "Ride the ledge.",
 		"body": "Hold {turbo} and run along the stone ledge to hop up. Steer against the wobble.",
 	},
 	{
-		"id": "teeter", "at": -4270.0, "hold": true, "stand": 1,
+		"id": "teeter", "refill": true, "at": -4270.0, "hold": true, "stand": 1,
 		"title": "The brink.",
 		"body": "Run at the pond's edge. When you wobble, steer away from the water.",
 	},
 	{
-		"id": "combo", "at": -4600.0, "hold": true, "bench": true, "yard": true,
+		"id": "combo", "refill": true, "at": -4600.0, "hold": true, "bench": true, "yard": true,
 		"title": "Chain them.",
 		"body": "Land tricks back to back, a swing then a grind, and the combo multiplies your bones.",
 	},
 	{
-		"id": "dare", "at": -4600.0, "hold": true, "bench": true, "yard": true,
+		"id": "dare", "refill": true, "at": -4600.0, "hold": true, "bench": true, "yard": true,
 		"title": "Take a dare.",
 		"body": "The kid on the bench has dares. Bark to take one. Losing costs nothing.",
 	},
 	{
-		"id": "practice", "at": -4600.0, "hold": true, "bench": true, "yard": true, "free": true,
+		"id": "practice", "refill": true, "at": -4600.0, "hold": true, "bench": true, "yard": true, "free": true,
 		"title": "Practice yard.",
 		"body": "Try anything, as long as you like. Head through the gate when you're done.",
 	},
@@ -146,22 +151,33 @@ const RING_R := 60.0
 const RING_X := 150.0
 const LEAD_PULL := 140.0
 const LEAD_STEP := 120.0
+# how fast a "refill" lesson tops the zoomies back up, per second, while she
+# is not running (they burn at 0.28)
+const ZOOM_REFILL := 0.3
 # the dig-in lesson: this long dug in on a tight leash
 const PLANT_S := 1.0
 # the practice yard, around the bench your human waits on (practice_bench):
 # two lampposts, a hydrant, a stone ledge and the kid with the dares, each in
 # reach of a full leash from the bench
-const YARD_POLES: Array[Vector2] = [Vector2(-140.0, -110.0), Vector2(-80.0, -290.0)]
+const YARD_POLES: Array[Vector2] = [Vector2(-150.0, -200.0), Vector2(-60.0, -300.0)]
 const YARD_HYDRANT := Vector2(60.0, -190.0)
 const YARD_LEDGE_X := 190.0
 const YARD_LEDGE_Y0 := 10.0
 const YARD_LEDGE_Y1 := -250.0
 const YARD_KID := Vector2(-200.0, -330.0)
+# a lost ball lies in the yard, the one piece of loose junk on the First Walk
+const YARD_BALL := Vector2(100.0, -90.0)
 # leaving the yard: she has pulled the leash tight this far north of the
 # bench, inside this far of the path's middle (heading for the gate, not for
 # the kid or a post), and your human gets up and walks her to the gate
 const YARD_EXIT_Y := 340.0
 const YARD_EXIT_X := 150.0
+# the vault lesson's lamppost stands this far beyond its station. A swing
+# needs under 190 px of rope past the post (main._tick_vault), and under the
+# zoomies the leash stretches to about 400: from 150 px away the rope past it
+# was always too long, from 260 it swings
+# (the yard's posts keep the same 250 px or more from its bench)
+const VAULT_POST_AHEAD := 110.0
 # the grind lesson's ledge (systems/rails.gd)
 const LEDGE_X := 760.0
 const LEDGE_HALF := 150.0
@@ -210,6 +226,10 @@ static func skip_label(i: int) -> String:
 	return "finish" if is_free(i) else "move on"
 
 
+static func vault_post() -> Vector2:
+	return Vector2(640.0, at("vault") - VAULT_POST_AHEAD)
+
+
 # The yard's bench: where your human waits through the practice steps.
 static func practice_bench(m: Node2D) -> Vector2:
 	return Vector2(float(m.walk_cx), at("practice") + HOLD_BACK)
@@ -237,12 +257,13 @@ static func yard_kid(m: Node2D) -> Vector2:
 	return practice_bench(m) + YARD_KID
 
 
-# The patch of lawn the poop lesson points at: beside the bench, on the west
-# grass, inside a full leash.
+# The patch of lawn the poop lesson points at: level with the bench, just
+# onto the west grass, well inside a full leash (squatting at the end of the
+# leash, the tow from your human keeps interrupting her)
 static func poop_grass(m: Node2D) -> Vector2:
-	var y := at("poop") + HOLD_BACK - 40.0
+	var y := at("poop") + HOLD_BACK
 	var e: Vector2 = m.walk_edges(y)
-	return Vector2(e.x - 60.0, y)
+	return Vector2(e.x - 40.0, y)
 
 
 # Dares are offered once the dare lesson is up, never earlier (the kid sits
@@ -297,7 +318,7 @@ static func hold_point(m: Node2D, i: int) -> Vector2:
 	# the lead lesson: they stop level with the ring, wherever they are across
 	if String(st.id) == "lead":
 		return Vector2(INF, float(st["at"]))
-	var y := float(st["at"]) + HOLD_BACK
+	var y := float(st["at"]) + float(st.get("back", HOLD_BACK))
 	var side := int(st.get("stand", 0))
 	if side == 0:
 		# a lesson with a bench seats them on it, mid-path
@@ -323,6 +344,8 @@ static func tick(m: Node2D, delta: float) -> void:
 	# is laid out for the whole leash, and a click to 170 would put it out of reach
 	if bool(st.get("hold", false)) and float(m.leash_target) < m.LEASH_LENGTH:
 		m.set_leash_target(m.LEASH_LENGTH)
+	if bool(st.get("refill", false)) and not m.dog.turbo_active:
+		m.dog.energy = minf(1.0, float(m.dog.energy) + ZOOM_REFILL * delta)
 	if id == "plant" and m.dog.planted and m.leash.taut:
 		m.tut_plant_t = float(m.tut_plant_t) + delta
 	if id == "patience" and float(m.human.patience) < m.human.PATIENCE_WARN:

@@ -8077,8 +8077,9 @@ func _leash_tug(delta: float) -> void:
 			dog_m *= 2.0
 	var human_m := HUMAN_MASS * (2.0 if human.is_fallen() else 1.0)
 	# a tutorial owner waiting at a lesson plants their feet, as she does:
-	# pulling ahead must not tow them past the lesson and out of the tutorial
-	if human.tut_holding():
+	# pulling ahead must not tow them past the lesson and out of the tutorial.
+	# Not at tetherball, where being wound round the post is the lesson
+	if human.tut_holding() and not tut_loose():
 		human_m *= TUT_BRACE
 	var base_tension := minf(leash.tension_force(excess, LEASH_K), 1600.0)
 	# pulley: with the rope wound and the dog working its end, the pole
@@ -9918,6 +9919,11 @@ func _tut_advance(earned: bool) -> void:
 
 func _update_tut_card() -> void:
 	TutorialSteps.update_card(self)
+
+
+# the lesson up wants your human waiting but not braced (systems/tutorial.gd)
+func tut_loose() -> bool:
+	return tutorial_mode and bool(TutorialSteps.step(tut_step).get("loose", false))
 
 
 # the yard's kid offers dares only once the dare lesson is up

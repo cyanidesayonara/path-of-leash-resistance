@@ -73,6 +73,14 @@ func _run() -> void:
 	for p: Vector2 in TUT.yard_poles(m):
 		yard_ok = yard_ok and m.poles.slice(0, m.deco_pole_count).has(p)
 	_check(yard_ok, "the yard's posts stand where the yard puts them, not refitted")
+	# a swing needs under 190 px of rope past the post, and the zoomies stretch
+	# the leash to about 400: every post to swing on stands 240 px or more from
+	# the bench your human waits on
+	var vault_bench: Vector2 = m.tut_hold_point(TUT.index_of("vault"))
+	var far_enough: bool = vault_bench.distance_to(m.poles[0]) >= 240.0
+	for p: Vector2 in TUT.yard_poles(m):
+		far_enough = far_enough and TUT.practice_bench(m).distance_to(p) >= 240.0
+	_check(far_enough, "every post to swing on stands far enough from the bench for a swing")
 	var fling_pole: Vector2 = m.poles[1]
 	var hold_at := float(TUT.at("fling")) + float(m.TUT_HOLD_BACK)
 	_check(absf(fling_pole.y - hold_at) < 200.0, "the owner waits close enough to the fling post to be wound round it")
@@ -94,6 +102,9 @@ func _run() -> void:
 	_check(seated, "every bench lesson has a bench under the owner's spot")
 	_check(absf(m.urge_y - TUT.at("poop")) < 120.0 and m.bins.size() == 1, "the call of nature comes at the business station, a bin beside it")
 	_check(m.stalls.is_empty() and m.performers.is_empty() and m.benches.is_empty(), "none of El Barri's furniture")
+	var junk: Array = m.get_tree().get_nodes_in_group("cones")
+	_check(junk.size() == 1 and (junk[0] as Node2D).position.is_equal_approx(TUT.practice_bench(m) + TUT.YARD_BALL),
+		"no litter on the stations: the one loose thing is the yard's ball (%d)" % junk.size())
 	# every held lesson's target is inside leash reach from where the owner
 	# waits: a full leash, short of the stretch cap, from the worst spot the
 	# owner can stand (their own spot if the lesson gives one, otherwise
