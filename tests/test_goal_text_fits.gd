@@ -52,7 +52,7 @@ func _run() -> void:
 
 			var side_w := 0.0
 			if show_meter:
-				side_w = GoalsCard.METER_W + 34.0
+				side_w = GoalsCard.METER_W + 6.0 + GoalsCard.COUNT_W
 			elif not letters.is_empty():
 				side_w = float(letters.size()) * (GoalsCard.TILE + GoalsCard.TILE_GAP) + 8.0
 			elif readout != "":

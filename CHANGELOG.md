@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-08 - HUD facelift: a status card that says what it shows, a goal list on one edge
+
+- The status card (top left, `hud/hud_panel.gd`) was glyphs alone: three phone pips, two upright tubes, five rings. Now each row is labelled: PHONE with its three lives (the label turns red on the last one), TANK and ZOOMIES as horizontal bars with their droplet and bolt (TANK reads FULL, in yellow, when it is), MARKS with its five dots, the bones banked on the right of the top row, the streak on the marks row's free end. A mood gets its own row and grows the card only while it lasts. The tutorial's yellow and green bars keep their colors; its lesson outlines (`POINT_RECTS`) frame the new rows.
+- The goal list (`hud/goals_card.gd`): the same margin on all four sides (the bottom had about half the top's), and every count, readout, letter tile and the key pill right-aligned to one edge, as the ticks are on the left. Collapsed, the clock has its own row under the pill instead of touching it.
+- Under a menu (pause, settings, a walk card, the results) the status card and the goal list fade out, so the menu is the only thing on screen, and fade back on resume. THAT'S THE BASICS keeps them, since it points at the phone.
+- Speech bubbles steer clear of the status card and the goal list: one under the goal list's glass read as text running off the end of its bubble.
+- YOUR WALKS cuts a long subtitle at the stars column with "..." instead of running it on under the stars.
+
 ## 2026-11-08 - CI survives a failed Godot download
 
 - GitHub's release downloads returned 504 for every job on 2026-11-08, so every CI, soak and sweep job failed at its first step. ci, soak and shots now keep the Godot zip in the Actions cache (`godot-4.7-stable-linux-x86_64`) and download only when it is missing; every download in those and in release.yml retries (`curl -fsSL --retry 8 --retry-all-errors`), and `-f` makes an error page fail the download instead of reaching `unzip`.
