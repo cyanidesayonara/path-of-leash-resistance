@@ -74,7 +74,10 @@ func _run() -> void:
 		# the paving where the street widens (La Castanyada at -2000 opens to
 		# x 214), and the yard in front of it is walkable (#487)
 		var wall_x: float = main.building_line(dog.global_position.y).x
-		_check(dog.global_position.x > wall_x - 30.0 and dog.global_position.x < wall_x + 30.0,
+		# within reach of it either way; measured across, so on a slanted
+		# stretch (El Carmel's) where she slides along the wall the gap reads
+		# wider than it is
+		_check(dog.global_position.x > wall_x - 30.0 and dog.global_position.x < wall_x + 48.0,
 			"%s: the dog stops at the left building line (x %.0f, line %.0f)" % [lv, dog.global_position.x, wall_x])
 		main.queue_free()
 		await process_frame
