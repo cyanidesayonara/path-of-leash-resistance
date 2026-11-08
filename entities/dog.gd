@@ -51,6 +51,9 @@ var tumble_t := 0.0
 var hole_cd := 0.0
 var squat_t := 0.0
 var squat_ui := 0.0
+# while nature calls: 0 not calling, 1 calling on a poor spot, 2 on a good
+# spot (main.poop_spot_good), shown as a soft ring at her paws
+var poop_cue := 0
 var bark_cd := 0.0
 var bark_anim := 0.0
 var peeing := false
@@ -1043,6 +1046,10 @@ func _draw_shapes() -> void:
 	if bark_anim > 0.0:
 		var r := (0.35 - bark_anim) / 0.35
 		_b.draw_arc(head + facing * 8.0, 10.0 + r * 34.0, 0, TAU, 24, Color(1, 1, 1, 0.7 * (1.0 - r)), 2.0)
+	if poop_cue == 2:
+		# a good spot: a breathing green ring on the ground round her
+		var k := 0.5 + 0.5 * sin(t * 5.0)
+		_b.draw_arc(Vector2(0, 4), 24.0 + k * 3.0, 0, TAU, 28, Color(0.55, 0.95, 0.55, 0.35 + 0.25 * k), 2.5)
 	if squat_ui > 0.0 or squat_t > 0.0:
 		for i in range(3):
 			_b.draw_circle(Vector2(-8 + i * 8, -26), 2.0, Color(1, 1, 1, 0.7))

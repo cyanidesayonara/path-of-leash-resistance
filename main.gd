@@ -890,6 +890,28 @@ var active_quests: Array[Dictionary] = []
 var poop_state := 0  # 0 not yet, 1 urge, 2 done, 3 forced telegraph, 4 forced squat
 var urge_y := -2000.0
 var urge_timer := 0.0
+# THE CALL OF NATURE. It comes at urge_y down the walk (a random point, set
+# by level_build), and what she does brings it on sooner: a dropped snack
+# moves it POOP_SNACK_PULL back up the walk, zoomies POOP_ZOOM_PULL a second.
+# Once it comes, any spot will do, but a dog has standards: soft ground (grass,
+# earth) or a tree's pit is a good spot and pays POOP_GOOD_BONES; the pavement
+# pays POOP_PAVE_BONES and costs your human a little patience.
+const POOP_URGE_S := 35.0
+const POOP_SNACK_PULL := 300.0
+const POOP_ZOOM_PULL := 60.0
+# never so soon it comes at the start line
+const POOP_URGE_MIN_GAP := 600.0
+const POOP_TREE_R := 34.0
+const POOP_GOOD_BONES := 8
+const POOP_PAVE_BONES := 2
+const POOP_PAVE_PATIENCE := 0.06
+# the sniff that starts a squat, said once per squat
+var _poop_sniffed := false
+# whether this walk has a good spot anywhere (-1 not looked yet). A walk of
+# nothing but paving and stone (L'Estació, El Mercat) asks for none: any spot
+# is the spot, at the old price, and nobody minds.
+var _poop_good_walk := -1
+const POOP_ANY_BONES := 5
 var squat_progress := 0.0
 var business_spot := Vector2(INF, INF)
 var elapsed := 0.0
@@ -6055,7 +6077,12 @@ func _update_hud() -> void:
 		else:
 			hud_status = "HEAD HOME"
 	elif poop_state == 1:
-		hud_status = Prompts.fill("NATURE CALLS! STAND STILL, HOLD {poop}")
+		if not walk_has_good_spots():
+			hud_status = Prompts.fill("NATURE CALLS! STAND STILL, HOLD {poop}")
+		elif poop_spot_good(dog.global_position):
+			hud_status = Prompts.fill("GOOD SPOT! STAND STILL, HOLD {poop}")
+		else:
+			hud_status = "NATURE CALLS! FIND GRASS OR A TREE"
 	elif poop_state >= 3:
 		hud_status = "UH OH..."
 	elif carry_state == 0 and carry_pickup.x < INF and dog.global_position.distance_to(carry_pickup) < 45.0:
@@ -10428,6 +10455,7 @@ func _pickups(delta: float) -> void:
 			# the pavement is most of the way out of a flagging walk, which is
 			# both realistic and the reason to go out of your way for one
 			mood.soothe(Mood.M.TIRED, 0.55)
+			poop_sooner(POOP_SNACK_PULL)
 			Sfx.play("snack")
 			combo.add("SNACK", 1)
 			float_text(k.pos, "snack +1", Color(1, 0.95, 0.7))
@@ -10579,15 +10607,21 @@ func _bodily(delta: float) -> void:
 		mark_target = Vector2(INF, INF)
 	match poop_state:
 		0:
+			if dog.turbo_active:
+				poop_sooner(POOP_ZOOM_PULL * delta)
 			if dog.global_position.y < urge_y:
 				poop_state = 1
-				urge_timer = 35.0
+				urge_timer = POOP_URGE_S
 				float_text(dog.global_position, "Uh oh...", Color(1, 0.9, 0.6))
 		1:
 			urge_timer -= delta
 			var squatting: bool = Input.is_action_pressed("poop") \
 				and not dog.is_tumbling() and dog.velocity.length() < 90.0
 			if squatting:
+				if not _poop_sniffed:
+					# she checks the spot before she commits to it
+					_poop_sniffed = true
+					float_text(dog.global_position + Vector2(0, -34), "sniff, sniff", Color(1, 0.95, 0.8))
 				squat_progress += delta
 				dog.squat_ui = squat_progress / 2.5
 				if squat_progress >= 2.5:
@@ -10595,6 +10629,10 @@ func _bodily(delta: float) -> void:
 			else:
 				squat_progress = maxf(0.0, squat_progress - delta * 2.0)
 				dog.squat_ui = squat_progress / 2.5
+				if squat_progress <= 0.0:
+					_poop_sniffed = false
+			# the dog shows a good spot under her paws while nature calls
+			dog.poop_cue = 2 if walk_has_good_spots() and poop_spot_good(dog.global_position) else 1
 			if poop_state == 1 and urge_timer <= 0.0:
 				poop_state = 3
 				urge_timer = 1.2
@@ -10623,14 +10661,65 @@ func _bodily(delta: float) -> void:
 		_update_hud()
 
 
+# The call comes sooner by `px` down the walk (a snack, zoomies), never at
+# the start line. The First Walk's comes at its station, always.
+func poop_sooner(px: float) -> void:
+	if poop_state != 0 or tutorial_mode:
+		return
+	urge_y = minf(urge_y + px, float(START_Y) - POOP_URGE_MIN_GAP)
+
+
+# Soft ground (grass, earth) or a tree's pit: where a dog would choose to go.
+func poop_spot_good(p: Vector2) -> bool:
+	var g := surface_at(p)
+	if g == Surfaces.S.GRASS or g == Surfaces.S.MUD:
+		return true
+	for i in range(deco_pole_count):
+		if p.distance_to(poles[i]) < POOP_TREE_R and pole_tree(i) != TREE_NONE:
+			return true
+	for t: Vector2 in trees:
+		if p.distance_to(t) < POOP_TREE_R:
+			return true
+	return false
+
+
+func walk_has_good_spots() -> bool:
+	# the First Walk teaches the squat at its station, on whatever is there
+	if tutorial_mode:
+		return false
+	if _poop_good_walk < 0:
+		_poop_good_walk = 0
+		var y := float(START_Y) - 200.0
+		while y > float(GATE_Y) + 100.0 and _poop_good_walk == 0:
+			var e := walk_edges(y)
+			var x := e.x + 10.0
+			while x < e.y:
+				if poop_spot_good(Vector2(x, y)):
+					_poop_good_walk = 1
+					break
+				x += 40.0
+			y -= 80.0
+	return _poop_good_walk == 1
+
+
 func _finish_business(voluntary: bool) -> void:
 	poop_state = 2
 	dog.squat_ui = 0.0
+	dog.poop_cue = 0
 	squat_progress = 0.0
+	_poop_sniffed = false
 	business_spot = dog.global_position + Vector2(0, 8)
-	if voluntary:
-		bones += 5
-		feed.say("MUCH BETTER!  +5", EventFeed.Tone.GOOD)
+	if voluntary and not walk_has_good_spots():
+		bones += POOP_ANY_BONES
+		feed.say("MUCH BETTER!  +%d" % POOP_ANY_BONES, EventFeed.Tone.GOOD)
+	elif voluntary and poop_spot_good(dog.global_position):
+		bones += POOP_GOOD_BONES
+		feed.say("PERFECT SPOT!  +%d" % POOP_GOOD_BONES, EventFeed.Tone.GOOD)
+	elif voluntary:
+		bones += POOP_PAVE_BONES
+		feed.say("ON THE SIDEWALK...  +%d" % POOP_PAVE_BONES, EventFeed.Tone.GOOD)
+		human.patience = maxf(0.0, human.patience - POOP_PAVE_PATIENCE)
+		human.notice("Here? Really?", 1.6)
 	else:
 		feed.say("COULDN'T WAIT...", EventFeed.Tone.BAD)
 	bag_pending = true

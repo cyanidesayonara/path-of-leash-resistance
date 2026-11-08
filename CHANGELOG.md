@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-08 - A dog has standards: good spots, and a call that comes sooner after snacks
+
+- Nature used to call at a random point down the walk and any spot would do. It still comes at that point (`urge_y`), but what she does brings it on sooner: a dropped snack moves it 300 px back up the walk (`POOP_SNACK_PULL`) and zoomies 60 px a second (`POOP_ZOOM_PULL`), never closer than 600 px to the start line.
+- Where she goes matters. Grass, earth or a tree's pit is a good spot: PERFECT SPOT! +8. The pavement pays +2, says ON THE SIDEWALK..., costs your human a little patience and gets a "Here? Really?". While nature calls, a soft green ring breathes at her paws on a good spot, the banner says NATURE CALLS! FIND GRASS OR A TREE, and on a good spot GOOD SPOT! STAND STILL, HOLD the poop button. Holding it starts with a "sniff, sniff".
+- A walk with no good spot anywhere (all paving and stone: L'Estació, El Mercat) keeps the old rule, any spot for +5 and no complaint, as does the First Walk's station. `main.walk_has_good_spots()` looks once per walk.
+- The forced squat when she waits too long is unchanged. `tests/test_poop_spots.gd` in CI.
+
 ## 2026-11-07 - L'Eixample, the grid of cut corners
 
 - New walk, the first of 1.71: L'Eixample (`systems/eixample.gd`), one street of the grid walked to the basilica. Panot flower tiles, a granite middle, plane trees, planted islands; the street opens into an octagon at each of the four crossings, with a lamp on every cut corner. Modernista roofs with terraces, stair houses, water tanks and washing; a turret with a trencadís cap on each corner house; courtyards inside the blocks; parked cars and recycling containers on the side streets. The last block runs between Plaça de Gaudí's pond and the basilica's towers. Off leash in the garden inside the next block.
