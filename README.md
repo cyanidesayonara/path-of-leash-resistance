@@ -77,6 +77,7 @@ you want to go; constant hauling wears their patience down until they say
 | El Diluvi | the downpour |
 | El Besòs | the river park |
 | Platja de Llevant | the dog beach at the far end of the coast |
+| L'Eixample | the grid of cut corners round the basilica |
 | El Tibidabo | the mountain road |
 | El Veterinari | the clinic escape |
 | El Bosc | the forest |

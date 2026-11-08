@@ -38,7 +38,11 @@ func _run() -> void:
 			await main.ready
 		var xs: Array = LevelBuild.CROSS_SECTIONS[lv]
 		_check(bool(main.built), "%s is built" % lv)
+		# a straight stretch near -2000: on a slant (L'Eixample's chamfers) a
+		# dog started 10 px in from the paving's edge already overlaps the wall
 		var y := -2000.0
+		while not main.walk_edges(y - 60.0).is_equal_approx(main.walk_edges(y + 60.0)) and y > -2600.0:
+			y -= 50.0
 		var e: Vector2 = main.walk_edges(y)
 		var f: Vector2 = main.frontage(y)
 		_check(is_equal_approx(e.x - f.x, float(xs[1])) and is_equal_approx(f.y - e.y, float(xs[3])),
