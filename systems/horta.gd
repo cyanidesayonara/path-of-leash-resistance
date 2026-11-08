@@ -93,7 +93,7 @@ const POOL := Rect2(140.0, -4690.0, 170.0, 120.0)
 const PALACE := Rect2(990.0, -320.0, 230.0, 300.0)
 
 const PRIZE := Vector2(866.0, -2552.0)
-const PRIZE_TEXT := "nick the gardener's bocadillo off his wheelbarrow"
+const PRIZE_TEXT := "snatch the gardener's bocadillo off his barrow"
 
 
 # Walk order, down the level: the avenue past the palace, the romantic

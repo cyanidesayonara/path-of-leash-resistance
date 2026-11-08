@@ -526,7 +526,7 @@ func _converse(delta: float) -> void:
 	if patience <= 0.0 and telegraph_t <= 0.0 and halt_t <= 0.0:
 		correct_t = CORRECT_WARN
 		planted_at_hey = bool(main.dog.planted)
-		_show_bubble("Hey!", "HE'S HAD ENOUGH! DIG IN")
+		_show_bubble("Hey!", "YOUR HUMAN'S HAD ENOUGH! DIG IN")
 
 
 func _correct() -> void:
@@ -867,7 +867,7 @@ func _fire_bar() -> void:
 	state_t = WAIT_MAX
 	drift_dir = -1.0
 	bar_watching = true
-	_show_bubble("Ooh, look at the replay...", "HE'S WATCHING THE BAR")
+	_show_bubble("Ooh, look at the replay...", "WATCHING THE BAR")
 
 
 func _events(delta: float) -> void:
@@ -933,31 +933,31 @@ func _fire_event() -> void:
 		HState.STOPPED:
 			state = HState.STOPPED
 			state_t = randf_range(1.5, 2.8)
-			_show_bubble("Ring ring!", "HE STOPPED TO ANSWER! GO")
+			_show_bubble("Ring ring!", "STOPPED TO ANSWER! GO")
 		HState.DRIFT:
 			state = HState.DRIFT
 			state_t = 1.8
-			_show_bubble("Typing a reply...", "HE'S TEXTING! HE'S NOT LOOKING")
+			_show_bubble("Typing a reply...", "TEXTING! NOT LOOKING")
 			drift_dir = 1.0 if randf() < 0.5 else -1.0
 		HState.SELFIE:
 			state = HState.SELFIE
 			state_t = 2.2
-			_show_bubble("Selfie time!", "HE'S TAKING A SELFIE")
+			_show_bubble("Selfie time!", "TAKING A SELFIE")
 		HState.FILM:
 			state = HState.FILM
 			state_t = randf_range(1.6, 2.4)
-			_show_bubble("Getting this on video...", "HE'S FILMING! HE'S STOPPED")
+			_show_bubble("Getting this on video...", "FILMING! STOPPED")
 		HState.SIGNAL:
 			state = HState.SIGNAL
 			state_t = randf_range(2.6, 4.2)
-			_show_bubble("No signal...", "HE LOST SIGNAL! HE'LL BE A WHILE")
+			_show_bubble("No signal...", "LOST SIGNAL! THIS WILL TAKE A WHILE")
 		HState.CALL:
 			# a proper natter: long enough to be a real opportunity
 			state = HState.CALL
 			state_t = randf_range(16.0, 21.0)
 			call_total = state_t
 			call_used = true
-			_show_bubble("Hello? ...Oh, hi!", "HE STOPPED! LEASH IS LOOSE")
+			_show_bubble("Hello? ...Oh, hi!", "STOPPED! LEASH IS LOOSE")
 		HState.DASH:
 			var de: Vector2 = main.walk_edges(global_position.y)
 			var lo: float = de.x + 40.0
@@ -1298,7 +1298,7 @@ func on_leash_yank(dir: Vector2, dog_planted: bool, yank_speed: float) -> void:
 		velocity = -dir * (yank_speed * 0.9 + 90.0)
 		telegraph_t = 0.0
 		bubble.visible = false
-		main.float_text(global_position, "Whoa there!", Color(1, 1, 1))
+		main.float_text(global_position, "Whoa there!", Color(1, 1, 1), main.POP_SAY)
 		main.on_stumble_save(global_position)
 
 

@@ -175,7 +175,7 @@ static func fence_posts(m: Node2D) -> Array[Vector2]:
 
 
 static func build(m: Node2D) -> Array:
-	m.gate_text = "BUNQUERS DEL CARMEL"
+	m.gate_text = "BÚNQUERS DEL CARMEL"
 	m.stalls.clear()
 	m.stall_kinds.clear()
 	m.astands = Array([], TYPE_VECTOR2, &"", null)
@@ -1018,4 +1018,4 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 	b.line(Vector2(gap_r, gy - 9.0), Vector2(1220.0, gy - 9.0), STONE_TOP, 3.0)
 	b.flush(c)
 	m._draw_freedom_benches(c, r, Color(0.46, 0.36, 0.26))
-	m._freedom_sign(c, r, m.gate_text, "the summit battery, off leash")
+	m._freedom_sign(c, r, m.gate_text, "The summit battery, off leash")
