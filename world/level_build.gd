@@ -26,6 +26,8 @@ const Carmel := preload("res://systems/carmel.gd")
 const Superilla := preload("res://systems/superilla.gd")
 const Forum := preload("res://systems/forum.gd")
 const Espanya := preload("res://systems/espanya.gd")
+const Eixample := preload("res://systems/eixample.gd")
+const Angels := preload("res://systems/angels.gd")
 const Poble := preload("res://systems/poble.gd")
 # the tutorial's pond for the brink lesson, beside the path at its station
 const TUT_POND_W := 150.0
@@ -113,6 +115,8 @@ const CROSS_SECTIONS := {
 	"gracia": ["none", 0.0, "none", 0.0],          # a narrow street: the houses at the paving
 	"carmel": ["none", 0.0, "none", 0.0],          # sunset panorama and hillside slopes in systems/carmel.gd
 	"forum": ["none", 0.0, "none", 0.0],           # coastal concrete plaza and bathing esplanade in systems/forum.gd
+	"eixample": ["none", 0.0, "none", 0.0],        # the grid street and its blocks in systems/eixample.gd
+	"angels": ["none", 0.0, "none", 0.0],          # skate plaza, museum and convent in systems/angels.gd
 	"poble": ["none", 0.0, "none", 0.0],           # walled architectural village in systems/poble.gd
 	# flood wall on the left, grass then the river on the right
 	"besos": ["none", 0.0, "grass", 120.0],
@@ -892,19 +896,28 @@ static func diluvi(m: Node2D) -> void:
 # gravel, the playground on the lawn beside it, and the plane trees stand far
 # enough in from each edge that their shadows fall on the gravel.
 const BARRI_PETANCA := Rect2(412.0, -1985.0, 130.0, 250.0)
-const BARRI_PLAYGROUND := Rect2(906.0, -4010.0, 166.0, 300.0)
+const BARRI_PLAYGROUND := Rect2(894.0, -4010.0, 144.0, 300.0)
 const BARRI_PINGPONG := Vector2(706.0, -2560.0)
 # the drinking fountain: a cast-iron column at the gravel's west edge
 const BARRI_FONT := Vector2(448.0, -3150.0)
-# the plane trees, two rows that do not mirror: the west row hugs its edge,
-# the east row stands further in, and neither keeps an even step
+# the plane trees, two rows at a steady 270 px step, the east row half a step
+# on from the west so the two never mirror; a tree is left out where a bench,
+# a bin, the fountain or the petanca pitch stands in its place
 const BARRI_TREES: Array[Vector2] = [
-	Vector2(436.0, -300.0), Vector2(444.0, -690.0), Vector2(432.0, -1060.0), Vector2(440.0, -1420.0),
-	Vector2(438.0, -2250.0), Vector2(446.0, -2640.0), Vector2(434.0, -2930.0), Vector2(440.0, -3420.0),
-	Vector2(432.0, -3790.0), Vector2(444.0, -4150.0), Vector2(436.0, -4560.0),
-	Vector2(812.0, -470.0), Vector2(818.0, -880.0), Vector2(806.0, -1250.0), Vector2(816.0, -1620.0),
-	Vector2(810.0, -1960.0), Vector2(814.0, -2330.0), Vector2(808.0, -2790.0), Vector2(816.0, -3110.0),
-	Vector2(812.0, -3560.0), Vector2(806.0, -3930.0), Vector2(818.0, -4330.0), Vector2(810.0, -4700.0),
+	Vector2(434.0, -250.0), Vector2(440.0, -520.0), Vector2(434.0, -790.0), Vector2(440.0, -1060.0),
+	Vector2(434.0, -1330.0), Vector2(440.0, -1600.0), Vector2(440.0, -2140.0), Vector2(434.0, -2410.0),
+	Vector2(440.0, -2680.0), Vector2(434.0, -2950.0), Vector2(440.0, -3220.0), Vector2(434.0, -3490.0),
+	Vector2(440.0, -3760.0), Vector2(434.0, -4030.0), Vector2(434.0, -4570.0),
+	Vector2(812.0, -385.0), Vector2(806.0, -655.0), Vector2(812.0, -925.0), Vector2(806.0, -1195.0),
+	Vector2(806.0, -1735.0), Vector2(812.0, -2005.0), Vector2(806.0, -2275.0), Vector2(812.0, -2545.0),
+	Vector2(806.0, -2815.0), Vector2(812.0, -3085.0), Vector2(806.0, -3355.0), Vector2(812.0, -3625.0),
+	Vector2(806.0, -3895.0), Vector2(812.0, -4165.0), Vector2(806.0, -4435.0), Vector2(812.0, -4705.0),
+]
+# the square's lamp posts, between the trees, alternating sides (deco poles
+# that are not trees: main.is_lamppost draws them, and the leash wraps them)
+const BARRI_LAMPS: Array[Vector2] = [
+	Vector2(420.0, -655.0), Vector2(818.0, -1330.0), Vector2(420.0, -2275.0), Vector2(818.0, -2680.0),
+	Vector2(420.0, -3895.0),
 ]
 
 
@@ -1210,6 +1223,8 @@ static func apply_corridor(m: Node2D) -> void:
 		"superilla": half = Superilla.HALF
 		"forum": half = Forum.HALF
 		"espanya": half = Espanya.HALF
+		"eixample": half = Eixample.HALF   # the octagons at the crossings (Eixample.edge_nodes)
+		"angels": half = Angels.HALF
 		"poble": half = Poble.HALF
 		"besos": half = BESOS_HALF
 	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
@@ -1376,6 +1391,10 @@ static func apply_corridor(m: Node2D) -> void:
 		m.edge_nodes = BossGat.edge_nodes(m)
 	elif m.lvl == "carmel":
 		m.edge_nodes = Carmel.edge_nodes(m)
+	elif m.lvl == "eixample":
+		m.edge_nodes = Eixample.edge_nodes(m)
+	elif m.lvl == "angels":
+		m.edge_nodes = Angels.edge_nodes(m)
 	elif m.lvl == "poble":
 		m.edge_nodes = Poble.edge_nodes(m)
 	elif m.lvl == "trail":
@@ -1408,7 +1427,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "poble":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "angels" or m.lvl == "poble":
 		return
 	# and so does El Barri; the First Walk, built on it, is still fitted
 	if m.lvl == "barri" and not m.tutorial_mode:
@@ -1518,6 +1537,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_carmel: Array = Carmel.build(m)
 			hyd_list.assign(pl_carmel[0])
 			keb_list.assign(pl_carmel[1])
+		"eixample":
+			var pl_eixample: Array = Eixample.build(m)
+			hyd_list.assign(pl_eixample[0])
+			keb_list.assign(pl_eixample[1])
 		"superilla":
 			var pl_superilla: Array = Superilla.build(m)
 			hyd_list.assign(pl_superilla[0])
@@ -1530,6 +1553,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_espanya: Array = Espanya.build(m)
 			hyd_list.assign(pl_espanya[0])
 			keb_list.assign(pl_espanya[1])
+		"angels":
+			var pl_angels: Array = Angels.build(m)
+			hyd_list.assign(pl_angels[0])
+			keb_list.assign(pl_angels[1])
 		"poble":
 			var pl_poble: Array = Poble.build(m)
 			hyd_list.assign(pl_poble[0])
@@ -1711,11 +1738,16 @@ static func build_level_data(m: Node2D) -> void:
 			m.gate_r = 880.0
 			for tp: Vector2 in BARRI_TREES:
 				m.poles.append(tp)
+			for lp: Vector2 in BARRI_LAMPS:
+				m.poles.append(lp)
 			m.deco_pole_count = m.poles.size()
+			# benches along both edges of the gravel, facing the path
 			m.benches = Array([Vector2(452, -880), Vector2(828, -1080), Vector2(452, -2470),
-				Vector2(828, -2960), Vector2(828, -3280), Vector2(452, -4320), Vector2(828, -4520)], TYPE_VECTOR2, &"", null)
+				Vector2(828, -2960), Vector2(828, -3280), Vector2(452, -4320), Vector2(828, -4520),
+				Vector2(828, -780), Vector2(452, -1200), Vector2(828, -1860), Vector2(828, -3480),
+				Vector2(452, -4140)], TYPE_VECTOR2, &"", null)
 			m.bins = Array([Vector2(470, -960), Vector2(800, -2200), Vector2(470, -3620),
-				Vector2(800, -4610)], TYPE_VECTOR2, &"", null)
+				Vector2(800, -4610), Vector2(470, -1460), Vector2(800, -3560)], TYPE_VECTOR2, &"", null)
 			m.stalls = Array([BARRI_PINGPONG], TYPE_VECTOR2, &"", null)
 			m.stall_kinds = Array(["pingpong"], TYPE_STRING, &"", null)
 			# the petanca players, on the pitch: one throwing from his circle at
@@ -2271,6 +2303,9 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "vet":
 		for r: Rect2 in Vet.wrap_rects():
 			add_rope_rect(m, r)
+	if m.lvl == "angels":
+		for r: Rect2 in Angels.wrap_rects():
+			add_rope_rect(m, r)
 	if m.lvl == "horta":
 		if not m.tutorial_mode:
 			m.lost_tourist = LostTourist.new()
@@ -2346,6 +2381,9 @@ static func build_level_data(m: Node2D) -> void:
 		"carmel":
 			m.prize_pos = Carmel.PRIZE
 			m.prize_text = Carmel.PRIZE_TEXT
+		"eixample":
+			m.prize_pos = Eixample.PRIZE
+			m.prize_text = Eixample.PRIZE_TEXT
 		"superilla":
 			m.prize_pos = Superilla.PRIZE
 			m.prize_text = Superilla.PRIZE_TEXT
@@ -2355,6 +2393,9 @@ static func build_level_data(m: Node2D) -> void:
 		"espanya":
 			m.prize_pos = Espanya.PRIZE
 			m.prize_text = Espanya.PRIZE_TEXT
+		"angels":
+			m.prize_pos = Angels.PRIZE
+			m.prize_text = Angels.PRIZE_TEXT
 		"poble":
 			m.prize_pos = Poble.PRIZE
 			m.prize_text = Poble.PRIZE_TEXT
@@ -2532,6 +2573,8 @@ static func build_freedom_area(m: Node2D) -> void:
 		m.water.append(placa_fountain(m))
 	if m.lvl == "montjuic":
 		m.water.append(Montjuic.FONT)
+	if m.lvl == "eixample":
+		m.water.append(Eixample.POND)
 	if m.lvl == "horta":
 		m.water.append(Horta.CANAL)
 		m.water.append(Horta.POOL)
@@ -2757,6 +2800,14 @@ const FREEDOM_PROPS := {
 		[Vector2(476.0, -464.0), "post"], [Vector2(804.0, -464.0), "post"], [Vector2(328.0, -218.0), "post"],
 		[Vector2(938.0, -228.0), "post"], [Vector2(168.0, -396.0), "shrub"], [Vector2(1096.0, -242.0), "shrub"],
 	],
+	# the garden inside the next block: the water tower's lawns, its plane
+	# trees and the play corner
+	"eixample": [
+		[Vector2(250.0, -480.0), "dig"], [Vector2(1010.0, -300.0), "dig"], [Vector2(560.0, -300.0), "dig"],
+		[Vector2(330.0, -470.0), "planter"], [Vector2(950.0, -470.0), "planter"],
+		[Vector2(200.0, -330.0), "post"], [Vector2(480.0, -440.0), "post"], [Vector2(800.0, -440.0), "post"],
+		[Vector2(1080.0, -330.0), "post"], [Vector2(240.0, -210.0), "shrub"], [Vector2(1100.0, -260.0), "shrub"],
+	],
 	"forum": [
 		[Vector2(210.0, -480.0), "dig"], [Vector2(620.0, -320.0), "dig"], [Vector2(780.0, -220.0), "dig"],
 		[Vector2(320.0, -490.0), "planter"], [Vector2(720.0, -490.0), "planter"],
@@ -2770,6 +2821,13 @@ const FREEDOM_PROPS := {
 		[Vector2(282.0, -346.0), "post"], [Vector2(534.0, -454.0), "post"], [Vector2(772.0, -440.0), "post"],
 		[Vector2(1030.0, -458.0), "post"], [Vector2(332.0, -250.0), "shrub"], [Vector2(548.0, -238.0), "post"],
 		[Vector2(762.0, -222.0), "shrub"],
+	],
+	"angels": [
+		[Vector2(314.0, -448.0), "dig"], [Vector2(644.0, -422.0), "dig"], [Vector2(886.0, -236.0), "dig"],
+		[Vector2(392.0, -468.0), "planter"], [Vector2(1042.0, -246.0), "planter"],
+		[Vector2(276.0, -352.0), "post"], [Vector2(538.0, -450.0), "post"], [Vector2(768.0, -436.0), "post"],
+		[Vector2(1034.0, -462.0), "post"], [Vector2(326.0, -246.0), "shrub"], [Vector2(554.0, -242.0), "post"],
+		[Vector2(770.0, -218.0), "shrub"],
 	],
 	"poble": [
 		[Vector2(240.0, -460.0), "dig"], [Vector2(260.0, -250.0), "dig"], [Vector2(1010.0, -340.0), "dig"],
@@ -2959,7 +3017,7 @@ static func placa_clear(m: Node2D, at: Vector2) -> bool:
 # paving. Not a park's gravel path, a forest trail, the scrapyard's dirt or
 # El Mosaic's terraces, and on the seafront only the promenade, not the brick
 # bike path beside it.
-const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell", "station", "aigues", "horta", "carmel", "superilla", "poble"]
+const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell", "station", "aigues", "horta", "carmel", "superilla", "angels", "poble"]
 const BEACH_PROM_X := 560.0
 
 # PASSEIG MARÍTIM's landmarks, on the walk itself so its stretches differ
@@ -3185,6 +3243,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_carmel: Array[Rect2] = Carmel.solids(m)
 			for i in range(ps_carmel.size()):
 				out.append(["carmel_bunker_%d" % i, ps_carmel[i]])
+		"eixample":
+			var ps_eixample: Array[Rect2] = Eixample.solids(m)
+			for i in range(ps_eixample.size()):
+				out.append(["eixample_island_%d" % i, ps_eixample[i]])
 		"superilla":
 			var ps_superilla: Array[Rect2] = Superilla.solids(m)
 			for i in range(ps_superilla.size()):
@@ -3197,6 +3259,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_espanya: Array[Rect2] = Espanya.solids(m)
 			for i in range(ps_espanya.size()):
 				out.append(["espanya_solid_%d" % i, ps_espanya[i]])
+		"angels":
+			var ps_angels: Array[Rect2] = Angels.solids(m)
+			for i in range(ps_angels.size()):
+				out.append(["angels_solid_%d" % i, ps_angels[i]])
 		"poble":
 			var ps_poble: Array[Rect2] = Poble.solids(m)
 			for i in range(ps_poble.size()):
@@ -3307,6 +3373,35 @@ static func build_bypasser_blockers(m: Node2D) -> void:
 			"rect": m.pond,
 			"forced_side": "right",
 		})
+
+
+# The stretches, as (top, bottom) in y, between lo and hi where the building
+# line on this side stays at or inside sw_l/sw_r: where the straight wall can
+# stand without standing on the path. Sampled every STRAIGHT_STEP px.
+const STRAIGHT_STEP := 20.0
+
+
+static func straight_runs(m: Node2D, side: float, lo: float, hi: float) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	if m.edge_nodes.is_empty():
+		out.append(Vector2(lo, hi))
+		return out
+	var run_top := INF
+	var y := lo
+	while y <= hi:
+		# the building line, not the paving: a step's front yard is walkable too
+		var e: Vector2 = m.building_line(y)
+		var inside: bool = (e.x >= m.sw_l - 0.5) if side < 0.0 else (e.y <= m.sw_r + 0.5)
+		if inside and run_top == INF:
+			run_top = y
+		elif not inside and run_top != INF:
+			out.append(Vector2(run_top, y - STRAIGHT_STEP))
+			run_top = INF
+		y += STRAIGHT_STEP
+	if run_top != INF:
+		out.append(Vector2(run_top, hi))
+	# a run too short to matter would only be a post in the yard
+	return out.filter(func(r: Vector2) -> bool: return r.y - r.x >= 40.0)
 
 
 static func build_walls(m: Node2D) -> void:
@@ -3567,17 +3662,49 @@ static func build_walls(m: Node2D) -> void:
 	var wall_hi := float(m.START_Y) + 200.0
 	if m.lvl == "market":
 		wall_hi = MERCAT_DOOR_Y - 160.0
+	# Only where the path keeps to sw_l/sw_r: where it bends or opens out past
+	# them (El Gòtic's alleys, El Mosaic's terraces, L'Estació's concourse,
+	# L'Eixample's crossings) the straight wall stood across the path itself,
+	# and the building line (above) walls those stretches. A straight walk
+	# gets the one rect it always had.
 	for ws in wall_sides:
 		var bx: float = (m.sw_l - 60.0) if ws < 0.0 else (m.sw_r + 60.0)
-		var bb := StaticBody2D.new()
-		bb.collision_layer = 1
-		bb.position = Vector2(bx, (wall_lo + wall_hi) / 2.0)
-		var bcs := CollisionShape2D.new()
-		var bsh := RectangleShape2D.new()
-		bsh.size = Vector2(120.0, wall_hi - wall_lo)
-		bcs.shape = bsh
-		bb.add_child(bcs)
-		m.add_child(bb)
+		for run: Vector2 in straight_runs(m, ws, wall_lo, wall_hi):
+			var bb := StaticBody2D.new()
+			bb.collision_layer = 1
+			bb.position = Vector2(bx, (run.x + run.y) / 2.0)
+			var bcs := CollisionShape2D.new()
+			var bsh := RectangleShape2D.new()
+			bsh.size = Vector2(120.0, run.y - run.x)
+			bcs.shape = bsh
+			bb.add_child(bcs)
+			m.add_child(bb)
+		# where a bike lane crosses, the building line has a gap (so a side
+		# street leads somewhere) that the straight wall used to close; on a
+		# walk that bends, close it at the building line instead
+		if not m.edge_nodes.is_empty():
+			for ly: float in m.lane_ys:
+				var g0: float = ly - float(m.LANE_HALF) - 60.0
+				var g1: float = ly + float(m.LANE_HALF) + 60.0
+				if g1 < wall_lo or g0 > wall_hi:
+					continue
+				var gx := INF if ws < 0.0 else -INF
+				var gy := g0
+				while gy <= g1:
+					var gl: Vector2 = m.building_line(gy)
+					gx = minf(gx, gl.x) if ws < 0.0 else maxf(gx, gl.y)
+					gy += STRAIGHT_STEP
+				# a wall like the straight one, not furniture: kept out of
+				# solid_rects, which bypassers route round
+				var gb := StaticBody2D.new()
+				gb.collision_layer = 1
+				gb.position = Vector2(gx + ws * 60.0, ly)
+				var gcs := CollisionShape2D.new()
+				var gsh := RectangleShape2D.new()
+				gsh.size = Vector2(120.0, g1 - g0)
+				gcs.shape = gsh
+				gb.add_child(gcs)
+				m.add_child(gb)
 	if m.lvl == "besos":
 		var channel: Rect2 = besos_deep_rect(m)
 		add_rect_body(m, channel.get_center(), channel.size)
@@ -3662,6 +3789,19 @@ static func build_walls(m: Node2D) -> void:
 			add_rect_body(m, r.get_center(), r.size)
 		for c: Vector3 in Carmel.cannons():
 			add_circle_body(m, Vector2(c.x, c.y), c.z)
+	if m.lvl == "eixample":
+		for r: Rect2 in Eixample.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+		var oct := StaticBody2D.new()
+		oct.collision_layer = 1
+		for seg: Array in Eixample.octagon_walls():
+			var ss := SegmentShape2D.new()
+			ss.a = seg[0]
+			ss.b = seg[1]
+			var ocs := CollisionShape2D.new()
+			ocs.shape = ss
+			oct.add_child(ocs)
+		m.add_child(oct)
 	if m.lvl == "superilla":
 		for r: Rect2 in Superilla.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
@@ -3670,6 +3810,9 @@ static func build_walls(m: Node2D) -> void:
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "espanya":
 		for r: Rect2 in Espanya.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "angels":
+		for r: Rect2 in Angels.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "poble":
 		for r: Rect2 in Poble.solids(m):

@@ -15,6 +15,7 @@ const HomeChase := preload("res://systems/home_chase.gd")
 const TonyHawk := preload("res://systems/tony_hawk.gd")
 const Aigues := preload("res://systems/aigues.gd")
 const Carmel := preload("res://systems/carmel.gd")
+const Eixample := preload("res://systems/eixample.gd")
 const LEVEL_GOAL_IDS := {
 	# El Barri, the everyday walk: the staples and nothing exotic
 	"barri": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "snack", "combo", "prize", "spell", "jamon", "clock"],
@@ -72,6 +73,10 @@ const LEVEL_GOAL_IDS := {
 	"forum": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "skater", "pergola", "rails", "combo", "prize", "spell", "jamon", "clock"],
 	# Plaça d'Espanya: the dancing magic fountain, bubble performer, and monumental columns
 	"espanya": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "bubble", "magic_fountain", "columns", "combo", "prize", "spell", "jamon", "clock"],
+	# L'Eixample: the cut corners, the tour group, Plaça de Gaudí's pond
+	"eixample": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "corners", "tour", "pond", "combo", "prize", "spell", "jamon", "clock"],
+	# Els Àngels: the skate plaza outside the white museum
+	"angels": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "ledge", "decks", "lamps", "combo", "prize", "spell", "jamon", "clock"],
 	# El Poble Espanyol: Plaza Mayor arcade columns, craft workshops, and Andalusian watering cans
 	"poble": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "columns_poble", "workshops", "watering", "combo", "prize", "spell", "jamon", "clock"],
 	# Rambla del Raval: the finale, El Gat de Botero. Tying him up is how the
@@ -150,6 +155,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"swat": {"text": "Dodge %d paw swats", "target": 3, "fn": func() -> int: return m.gat_swats_dodged},
 		"cargo": {"text": "Dodge the family cargo trike safely", "target": 1, "fn": func() -> int: return 1 if (m.cargo != null and (m.cargo.dodged or (m.cargo.state == m.cargo.State.SETTLED and not m.cargo.human_hit))) else 0},
 		"pingpong": {"text": "Slide under a concrete ping-pong table", "target": 1, "fn": func() -> int: return 1 if m.superilla_pingpong_slid else 0},
+		"corners": {"text": "Mark the lamps on %d cut corners", "target": 3, "fn": func() -> int: return Eixample.corners_marked(m)},
+		"tour": {"text": "Get photographed by a tour group", "target": 1, "fn": func() -> int: return 1 if m.eixample_tour != null and m.eixample_tour.photographed else 0},
+		"pond": {"text": "Paddle in the pond by the basilica", "target": 1, "fn": func() -> int: return 1 if m.eixample_pond_paddled else 0},
 		"circles": {"text": "Sprint through %d painted circles", "target": 3, "fn": func() -> int: return m.superilla_circles_sprinted},
 		"skater": {"text": "Dodge or cheer the esplanade skater", "target": 1, "fn": func() -> int: return 1 if (m.skater != null and (m.skater.dodge_done or m.skater.cheered or m.skater.booped)) else 0},
 		"pergola": {"text": "Sprint under the pergola %d times", "target": 3, "fn": func() -> int: return m.forum_pergola_sprinted},
@@ -157,6 +165,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"bubble": {"text": "Pop giant soap bubbles from the street performer", "target": 1, "fn": func() -> int: return 1 if m.espanya_bubbles_popped >= 1 else 0},
 		"magic_fountain": {"text": "Splash through the Magic Fountain basin", "target": 1, "fn": func() -> int: return 1 if m.espanya_fountain_splashed >= 1 else 0},
 		"columns": {"text": "Wrap the leash around the Four Columns", "target": 1, "fn": func() -> int: return 1 if m.espanya_columns_wrapped >= 1 else 0},
+		"ledge": {"text": "Grind a museum ledge", "target": 1, "fn": func() -> int: return 1 if m.angels_ledge_ground else 0},
+		"decks": {"text": "Sniff %d skateboards on the ground", "target": 3, "fn": func() -> int: return m.angels_decks_sniffed},
+		"lamps": {"text": "Wrap the leash around %d lamps", "target": 3, "fn": func() -> int: return m.angels_lamps_wrapped.size()},
 		"columns_poble": {"text": "Wrap the leash round %d columns", "target": 4, "fn": func() -> int: return m.poble_columns_wrapped.size()},
 		"workshops": {"text": "Sniff %d craft workshops", "target": 3, "fn": func() -> int: return m.poble_workshops_sniffed.size()},
 		"watering": {"text": "Shake off under a watering can", "target": 1, "fn": func() -> int: return 1 if m.poble_shakes >= 1 else 0},

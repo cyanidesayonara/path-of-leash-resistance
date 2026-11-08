@@ -169,6 +169,12 @@ const STYLES := {
 	# Plaça d'Espanya: grand ceremonial fountain waltz, acoustic guitar and whistle over dancing rumba bass and brush drums
 	"espanya": {"bpm": 116, "key": 5, "lead": "guitar", "lead2": ["whistle", 0], "comp": "rumba",
 		"bass": "walk", "drums": "brush", "swing": 0.08, "verb": 0.32},
+	# L'Eixample: a bright morning stroll down the grid, marimba over a walking bass
+	"eixample": {"bpm": 114, "key": 7, "lead": "marimba", "lead2": ["whistle", 12], "comp": "bossa",
+		"bass": "walk", "drums": "rim", "swing": 0.06, "verb": 0.26},
+	# Els Àngels: dusk skate plaza groove with marimba, vibes, skank chords, walking bass, and kick-rim drums
+	"angels": {"bpm": 118, "key": 2, "lead": "marimba", "lead2": ["vibes", 0], "comp": "skank",
+		"bass": "walk", "drums": "kickrim", "swing": 0.06, "verb": 0.24},
 	# El Poble Espanyol: Spanish village guitar & castanets over a lively Plaza Mayor pasodoble/rumba pulse
 	"poble": {"bpm": 114, "key": 2, "lead": "guitar", "lead2": ["whistle", 0], "comp": "rasgueado",
 		"bass": "walk", "drums": "castanets", "swing": 0.06, "verb": 0.28},

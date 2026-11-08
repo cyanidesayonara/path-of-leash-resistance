@@ -128,6 +128,8 @@ var guitarrista: Guitarrista
 var cargo: SuperillaCargo
 var skater: ForumSkater
 var espanya_bubble: EspanyaBubble
+var eixample_tour: EixampleTour
+var angels_skate: AngelsSkate
 var poble_balcony: PobleBalcony
 var _tout_said := false
 var _fan_pairs := false
@@ -221,7 +223,11 @@ const SuperillaCargo := preload("res://systems/superilla_cargo.gd")
 const Forum := preload("res://systems/forum.gd")
 const ForumSkater := preload("res://systems/forum_skater.gd")
 const Espanya := preload("res://systems/espanya.gd")
+const Eixample := preload("res://systems/eixample.gd")
+const EixampleTour := preload("res://systems/eixample_tour.gd")
 const EspanyaBubble := preload("res://systems/espanya_bubble.gd")
+const Angels := preload("res://systems/angels.gd")
+const AngelsSkate := preload("res://systems/angels_skate.gd")
 const Poble := preload("res://systems/poble.gd")
 const PobleBalcony := preload("res://systems/poble_balcony.gd")
 # float_text(..., POP_SAY) draws a speech bubble rather than a sound or a score
@@ -345,6 +351,8 @@ const WALK_MODULES := {
 	"superilla": preload("res://systems/superilla.gd"),
 	"forum": preload("res://systems/forum.gd"),
 	"espanya": preload("res://systems/espanya.gd"),
+	"eixample": preload("res://systems/eixample.gd"),
+	"angels": preload("res://systems/angels.gd"),
 	"poble": preload("res://systems/poble.gd"),
 	"raval": preload("res://systems/boss_gat.gd"),
 	"beach": preload("res://systems/passeig.gd"),
@@ -558,6 +566,12 @@ var espanya_bubbles_popped: int = 0
 var espanya_fountain_splashed: int = 0
 var espanya_columns_wrapped: int = 0
 var espanya_escalator_ridden: int = 0
+var eixample_pond_paddled := false
+var angels_ledge_ground := false
+var angels_decks_sniffed := 0
+var angels_decks_visited: Dictionary = {}
+var angels_churro_stolen := false
+var angels_lamps_wrapped: Dictionary = {}
 var poble_columns_wrapped: Dictionary = {}
 var poble_workshops_sniffed: Dictionary = {}
 var poble_shakes: int = 0
@@ -893,6 +907,8 @@ var active_quests: Array[Dictionary] = []
 var poop_state := 0  # 0 not yet, 1 urge, 2 done, 3 forced telegraph, 4 forced squat
 var urge_y := -2000.0
 var urge_timer := 0.0
+# how long she can hold it once nature calls (the HUD drains a bar over it)
+const POOP_URGE_S := 35.0
 var squat_progress := 0.0
 var business_spot := Vector2(INF, INF)
 var elapsed := 0.0
@@ -2404,6 +2420,49 @@ func _broadleaf_crown(crown: ShapeBatch, p: Vector2, scale: float, trunk := true
 		crown.circle(p + Vector2.from_angle(a) * r * 0.95, r * 0.17, mid)
 
 
+# El Barri's plane trees (TREE_PLANE): a London plane's bark flakes off in
+# patches, cream and olive over grey, and its crown is broad and pale, the big
+# lobed leaves catching the light in clumps
+const PLANE_SCALE := 1.08
+const PLANE_BARK: Array[Color] = [Color(0.78, 0.76, 0.62), Color(0.52, 0.54, 0.40), Color(0.64, 0.62, 0.56)]
+
+
+func _plane_trunk(b: Object, p: Vector2) -> void:
+	b.circle(p, 7.5, Color(0.40, 0.40, 0.34))
+	b.circle(p + Vector2(-1.5, -1.5), 5.6, PLANE_BARK[2])
+	b.circle(p + Vector2(-2.5, 0.5), 2.4, PLANE_BARK[0])
+	b.circle(p + Vector2(1.8, -2.2), 2.0, PLANE_BARK[1])
+	b.circle(p + Vector2(0.8, 2.4), 1.6, PLANE_BARK[0])
+
+
+func _plane_crown(crown: ShapeBatch, p: Vector2, trunk := true) -> void:
+	var r := 34.0 * PLANE_SCALE
+	var dark := Color(0.22, 0.34, 0.17)
+	var mid := Color(0.32, 0.47, 0.22)
+	var lit := Color(0.48, 0.62, 0.30)
+	var tip := Color(0.60, 0.72, 0.36)
+	crown.circle(p + Vector2(2, 3), r, dark)
+	crown.circle(p - LIGHT * r * 0.10, r * 0.86, mid)
+	for lv: Vector2 in BROADLEAF_LOBES:
+		crown.circle(p + lv * r, r * 0.48, mid)
+	# clumps of leaves catching the light, more of them than an oak's
+	for k in range(9):
+		var a := TAU * float(k) / 9.0 + p.y * 0.01
+		var lv := Vector2.from_angle(a)
+		if lv.dot(LIGHT) > 0.35:
+			continue
+		var cp := p + lv * r * (0.42 + 0.18 * float(k % 2)) - LIGHT * r * 0.12
+		crown.circle(cp, r * 0.24, lit)
+		crown.circle(cp - LIGHT * 3.0, r * 0.11, tip)
+	crown.circle(p - LIGHT * r * 0.40, r * 0.26, lit)
+	if trunk:
+		_plane_trunk(crown, p)
+	# the broad leaves breaking the outline
+	for i in range(9):
+		var a := TAU * float(i) / 9.0 + p.x * 0.013
+		crown.circle(p + Vector2.from_angle(a) * r * 0.94, r * 0.16, mid)
+
+
 # El Bosc's ground: packed dark earth on the trail, leaf litter either side
 const TRAIL_DIRT := Color(0.50, 0.41, 0.29)
 const TRAIL_FLOOR := Color(0.25, 0.31, 0.19)
@@ -2582,6 +2641,7 @@ const TREE_FOREST := 2     # El Bosc: holm oak or stone pine
 const TREE_PALM := 3
 const TREE_STREET := 4     # a street tree in its grate
 const TREE_PIT := 5        # El Gotic's plaça tree in its stone pit
+const TREE_PLANE := 6      # El Barri's plane tree: mottled bark, a big pale crown
 
 func pole_tree(i: int) -> int:
 	var p := poles[i]
@@ -2629,6 +2689,7 @@ func _tree_trunk(b: ShapeBatch, p: Vector2, i: int, kind: int) -> void:
 		TREE_PALM: _palm_trunk(b, p)
 		TREE_STREET: _broadleaf_trunk(b, p, 0.72)
 		TREE_PIT: _broadleaf_trunk(b, p, 0.8)
+		TREE_PLANE: _plane_trunk(b, p)
 
 
 func _draw_tree_ground_only(c: Object, p: Vector2, i: int, kind: int) -> void:
@@ -2642,6 +2703,8 @@ func _draw_tree_ground_only(c: Object, p: Vector2, i: int, kind: int) -> void:
 		TREE_PIT:
 			_draw_tree_pit(p)
 			_broadleaf_ground(c, p, 0.8)
+		TREE_PLANE:
+			_broadleaf_ground(c, p, PLANE_SCALE)
 		TREE_STREET:
 			cast_shadow(c, p, 20.0, 40.0, 0.16)
 			c.draw_circle(p, 19.0, Color(0.26, 0.24, 0.22))          # the pit
@@ -2692,6 +2755,7 @@ func _crown_r(kind: int, i: int) -> float:
 		TREE_PALM: return 38.0
 		TREE_STREET: return 34.0 * 0.72
 		TREE_PIT: return 34.0 * 0.8
+		TREE_PLANE: return 34.0 * PLANE_SCALE
 	return 0.0
 
 
@@ -2706,6 +2770,7 @@ func draw_tree_crown(b: ShapeBatch, t: Dictionary, faded := false) -> void:
 		TREE_PALM: _palm_crown(b, p, trunk)
 		TREE_STREET: _broadleaf_crown(b, p, 0.72, trunk)
 		TREE_PIT: _broadleaf_crown(b, p, 0.8, trunk)
+		TREE_PLANE: _plane_crown(b, p, trunk)
 
 
 # What else is over her head, drawn by the canopy layer with the crowns: above
@@ -2817,7 +2882,7 @@ func is_lamppost(i: int) -> bool:
 		return true
 	if walk_mod != null and walk_mod.has_method("is_lamp"):
 		return walk_mod.is_lamp(self, poles[i])
-	if lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "oldtown" or lvl == "carmel" or lvl == "superilla" or lvl == "forum" or lvl == "poble":
+	if lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "oldtown" or lvl == "carmel" or lvl == "superilla" or lvl == "forum" or lvl == "angels" or lvl == "poble":
 		return false
 	return not (lvl == "rain" and poles[i].x < walk_cx)
 
@@ -2844,7 +2909,9 @@ func night_lights() -> Array[Vector3]:
 	var side := -1.0
 	var y := START_Y - 60.0
 	while y > GATE_Y + 120.0:
-		var e := walk_edges(y)
+		# on the wall, which is the building line: where the street steps
+		# out, the paving's edge is the front of a yard, mid-air for a lamp
+		var e := building_line(y)
 		var at := Vector2(e.x + 8.0 if side < 0.0 else e.y - 8.0, y)
 		var near := false
 		for l: Vector3 in _night_lights:
@@ -6071,7 +6138,7 @@ func _update_hud() -> void:
 	elif walk_mod != null and walk_mod.has_method("idle_status") and walk_mod.idle_status(self) != "":
 		hud_status = walk_mod.idle_status(self)
 	elif pee >= 0.999:
-		hud_status = "FULL TANK! GO MARK A SPOT"
+		hud_status = "BURSTING! GO MARK A SPOT"
 	elif pee <= 0.02:
 		hud_status = "THIRSTY! FIND A FOUNTAIN"
 	if phase == "out" and walk_mod != null and walk_mod.has_method("urgent_status"):
@@ -10172,6 +10239,8 @@ func _tick_grind(delta: float) -> void:
 		return
 	grind_rail = ri
 	grind.begin()
+	if lvl == "angels":
+		angels_ledge_ground = true
 	Sfx.play("save", 1.35, -10.0)
 	feed.say("%s!" % String(rails[ri]["name"]), EventFeed.Tone.LOUD)
 
@@ -10584,7 +10653,7 @@ func _bodily(delta: float) -> void:
 		0:
 			if dog.global_position.y < urge_y:
 				poop_state = 1
-				urge_timer = 35.0
+				urge_timer = POOP_URGE_S
 				float_text(dog.global_position, "Uh oh...", Color(1, 0.9, 0.6))
 		1:
 			urge_timer -= delta
@@ -10695,6 +10764,8 @@ const FREEDOM_KINDS := {
 	# the wood behind the garden's back gate
 	"horta": "clearing",
 	"raval": "placa",
+	# the garden inside the next block of the grid (systems/eixample.gd)
+	"eixample": "yard",
 }
 const BEACH_SEA_R := 430.0
 const BEACH_GATE_SHORE_X := 230.0
