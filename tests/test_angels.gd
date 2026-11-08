@@ -64,6 +64,8 @@ class FakeMain:
 	var angels_decks_sniffed := 0
 	var angels_decks_visited: Dictionary = {}
 	var angels_churro_stolen := false
+	var angels_lamps_wrapped: Dictionary = {}
+	var leash: FakeLeash = FakeLeash.new()
 
 	func _init() -> void:
 		dog = Node2D.new()
@@ -80,6 +82,12 @@ class FakeMain:
 
 	func _freedom_rect() -> Rect2:
 		return freedom_rect
+
+
+class FakeLeash:
+	var contact_pole := Vector2(INF, INF)
+	var static_contacts := 0
+	var contact_static := false
 
 
 class FakeDogScript:
@@ -152,14 +160,15 @@ func _run() -> void:
 	_check(game.LEVEL_SUBTITLES_ES.has("angels"), "LEVEL_SUBTITLES_ES has angels")
 	_check(int(game.STAR_GATE.get("angels", -1)) == 22, "STAR_GATE for angels is 22")
 	_check(String(game.CHASE_GATE.get("angels", "")) == "vet", "angels gated by vet")
-	_check(game.CAMPAIGN_SKY.get("angels", []) == ["clear", "dusk"], "angels CAMPAIGN_SKY is [clear, dusk]")
+	_check(game.CAMPAIGN_SKY.get("angels", []) == ["clear", "day"], "angels CAMPAIGN_SKY is [clear, day]")
 
 	# 2. Goals & Tony Hawk checks
 	var g_list: Array = goals_mod.LEVEL_GOAL_IDS.get("angels", [])
 	_check(g_list.size() == 15, "angels has 15 goals: %d" % g_list.size())
 	_check("ledge" in g_list, "ledge goal registered")
 	_check("decks" in g_list, "decks goal registered")
-	_check("churro" in g_list, "churro goal registered")
+	_check("lamps" in g_list, "lamps goal registered")
+	_check(not ("churro" in g_list), "no walk goal about churros beside the churro prize")
 	_check(th_mod.CLOCK_TARGETS.has("angels"), "CLOCK_TARGETS has angels")
 	_check(int(th_mod.CLOCK_TARGETS["angels"]) == 180, "angels clock target is 180s")
 	_check(th_mod.JAMON_POS.has("angels"), "JAMON_POS has angels")
@@ -185,8 +194,12 @@ func _run() -> void:
 	_check(m.angels_skate != null, "AngelsSkate live event initialized")
 
 	var solids: Array[Rect2] = Angels.solids(m)
-	_check(solids.size() == 3, "3 solid obstacles (museum podium blocks and convent plinth): %d" % solids.size())
-	_check(Angels.wrap_rects().size() == 3, "3 wrap rects matching solids")
+	_check(solids.size() == 8, "8 solid obstacles (podium blocks, convent plinth, bike rack, 4 planters): %d" % solids.size())
+	_check(Angels.wrap_rects().size() == solids.size(), "wrap rects match solids")
+	for sr: Rect2 in solids:
+		_check(not sr.grow(30.0).has_point(Vector2(sr.get_center().x, AngelsSkate.CROSSING_Y)), "solid %s clear of the board's crossing" % sr)
+		for rx: float in [340.0, 450.0, 920.0]:
+			_check(sr.end.x < rx - 6.0 or sr.position.x > rx + 6.0 or sr.end.y < -3260.0 or sr.position.y > -1480.0 or (rx == 450.0 and (sr.end.y < -2100.0 or sr.position.y > -1840.0)) or (rx == 920.0 and (sr.end.y < -2420.0 or sr.position.y > -1900.0)), "solid %s clear of the rail at x %d" % [sr, rx])
 
 	rails_mod.build(m)
 	_check(m.rails.size() == 4, "4 grindable rails built on museum ledges, stair handrail, and convent ledge: %d" % m.rails.size())
@@ -208,6 +221,23 @@ func _run() -> void:
 		Angels.tick(m, DT)
 	_check(m.angels_decks_sniffed == 3, "sniffed 3 skateboards on the ground: %d" % m.angels_decks_sniffed)
 	_check("DECK INSPECTOR" in m.combo.banked, "awarded DECK INSPECTOR combo")
+
+	# Wrapping the leash round three different lamp posts completes the lamps goal;
+	# the same post twice counts once, a podium block not at all
+	m.leash.static_contacts = 1
+	m.leash.contact_static = true
+	for lp: Vector2 in [Angels.LAMP_POSTS[2], Angels.LAMP_POSTS[2], Angels.LAMP_POSTS[3]]:
+		m.leash.contact_pole = lp
+		Angels.tick(m, DT)
+	_check(m.angels_lamps_wrapped.size() == 2, "the same post counts once: %d" % m.angels_lamps_wrapped.size())
+	m.leash.contact_pole = Vector2(Angels.MUSEUM_PODIUM_S.position.x + 8.0, Angels.MUSEUM_PODIUM_S.get_center().y)
+	Angels.tick(m, DT)
+	_check(m.angels_lamps_wrapped.size() == 2, "a podium block is not a lamp post")
+	m.leash.contact_pole = Angels.LAMP_POSTS[5]
+	Angels.tick(m, DT)
+	_check(m.angels_lamps_wrapped.size() == 3, "three lamp posts wrapped")
+	m.leash.contact_pole = Vector2(INF, INF)
+	m.leash.static_contacts = 0
 
 	# 6. Live event: bailing skater & runaway board
 	var sk: AngelsSkate = m.angels_skate

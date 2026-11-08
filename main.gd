@@ -562,6 +562,7 @@ var angels_ledge_ground := false
 var angels_decks_sniffed := 0
 var angels_decks_visited: Dictionary = {}
 var angels_churro_stolen := false
+var angels_lamps_wrapped: Dictionary = {}
 var reial_fountain_drank := false
 var reial_busker_barked := false
 var vet_scale_weighed := false

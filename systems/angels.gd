@@ -82,6 +82,16 @@ const WALL_R := 1060.0
 const MUSEUM_PODIUM_S := Rect2(250.0, -1780.0, 64.0, 150.0)
 const MUSEUM_PODIUM_N := Rect2(250.0, -2960.0, 64.0, 150.0)
 const CONVENT_PLINTH := Rect2(960.0, -2560.0, 64.0, 130.0)
+# Plane trees in square concrete planters, and a bike rack by the convent: solid,
+# and the rope wraps them. Clear of the rail lines and of the runaway board's
+# crossing at y = -2400.
+const PLANTERS: Array[Rect2] = [
+	Rect2(972.0, -1596.0, 64.0, 64.0),
+	Rect2(972.0, -3116.0, 64.0, 64.0),
+	Rect2(728.0, -2012.0, 64.0, 64.0),
+	Rect2(528.0, -2812.0, 64.0, 64.0),
+]
+const BIKE_RACK := Rect2(1000.0, -2880.0, 46.0, 120.0)
 
 # Plaza lamp posts and stone bollards for leash wrapping
 const LAMP_POSTS: Array[Vector2] = [
@@ -189,12 +199,15 @@ static func build(m: Node2D) -> Array:
 	m.angels_decks_sniffed = 0
 	m.angels_decks_visited = {}
 	m.angels_churro_stolen = false
+	m.angels_lamps_wrapped = {}
 
 	return [hyd_list, keb_list]
 
 
 static func solids(_m: Node2D) -> Array[Rect2]:
-	return [MUSEUM_PODIUM_S, MUSEUM_PODIUM_N, CONVENT_PLINTH]
+	var out: Array[Rect2] = [MUSEUM_PODIUM_S, MUSEUM_PODIUM_N, CONVENT_PLINTH, BIKE_RACK]
+	out.append_array(PLANTERS)
+	return out
 
 
 static func wrap_rects() -> Array[Rect2]:
@@ -228,9 +241,16 @@ static func tick(m: Node2D, delta: float) -> void:
 				m.float_text(dog_p + Vector2(0.0, -28.0), "deck inspector! +2", Color(0.42, 0.88, 0.96))
 	m.angels_decks_sniffed = maxi(sniff_done, m.angels_decks_visited.size())
 
-	# Goal 3: Steal a dropped churro (from plaza snacks or the bailing skater)
-	if not m.angels_churro_stolen and m.kebabs_eaten > 0:
-		m.angels_churro_stolen = true
+	# Goal 3: wrap the leash round three of the plaza's lamp posts (the
+	# pole the rope is wound on, as Port's bollards and Reial's Gaudi posts)
+	if "leash" in m and m.leash != null:
+		var pole: Vector2 = m.leash.contact_pole
+		if pole.x < INF and int(m.leash.static_contacts) > 0 and bool(m.leash.contact_static):
+			var li := LAMP_POSTS.find(pole)
+			if li >= 0 and not m.angels_lamps_wrapped.has(li):
+				m.angels_lamps_wrapped[li] = true
+				m.combo.add("LAMP WRAP", 1)
+				m.float_text(pole + Vector2(0.0, -26.0), "wrapped! +1", Color(0.96, 0.86, 0.44))
 
 
 static func on_bark(m: Node2D, _pos: Vector2 = Vector2.ZERO) -> bool:
@@ -265,122 +285,352 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> v
 	if y_top < -1140.0 and y_bot > -3660.0:
 		_draw_convent_east(b, y_top, y_bot)
 
+	# where the street widens into the plaza, the building fronts step out to
+	# the walk's edge: no gap of bare block between
+	for span: Vector2 in [Vector2(-1290.0, -1170.0), Vector2(-3630.0, -3510.0)]:
+		var yy := maxf(span.x, y_top)
+		while yy < minf(span.y, y_bot):
+			var e: Vector2 = m.walk_edges(yy + 5.0) if m.has_method("walk_edges") else Vector2(WALL_L, WALL_R)
+			if e.x > WALL_L:
+				b.rect(Rect2(WALL_L, yy, e.x - WALL_L, 10.0), MUSEUM_SHADE)
+			if e.y < WALL_R:
+				b.rect(Rect2(e.y, yy, WALL_R - e.y, 10.0), RAVAL_TERRA.darkened(0.30))
+			yy += 10.0
+
+
+static func _h(k: int) -> float:
+	return fposmod(sin(float(k) * 12.9898 + 4.1) * 43758.5453, 1.0)
+
+
+# Narrow Raval houses, one lot every RAVAL_LOT px, each its own color and roof:
+# a terracotta pitched roof, or a flat terrat with washing, a water tank and a
+# stair hut. The street face is a strip of balconies with iron rails and pots.
+const RAVAL_LOT := 84.0
+const RAVAL_WALLS: Array[Color] = [
+	Color(0.80, 0.66, 0.48), Color(0.74, 0.46, 0.36), Color(0.62, 0.64, 0.62),
+	Color(0.86, 0.78, 0.62), Color(0.70, 0.56, 0.62), Color(0.58, 0.66, 0.70),
+]
+const WASHING: Array[Color] = [
+	Color(0.94, 0.94, 0.92), Color(0.86, 0.30, 0.26), Color(0.28, 0.48, 0.76),
+	Color(0.96, 0.80, 0.30), Color(0.42, 0.68, 0.46), Color(0.92, 0.56, 0.70),
+]
+
 
 static func _draw_raval_flanks(m: Node2D, b: ShapeBatch, top: float, bot: float) -> void:
 	if bot <= top:
 		return
-	var mod := 160.0
-	var sy := floorf(top / mod) * mod
+	var sy := floorf(top / RAVAL_LOT) * RAVAL_LOT
 	while sy < bot:
 		var r0 := maxf(sy, top)
-		var r1 := minf(sy + mod - 4.0, bot)
-		if r1 - r0 >= 28.0:
-			var e: Vector2 = m.walk_edges((r0 + r1) * 0.5) if m.has_method("walk_edges") else Vector2(425.0, 855.0)
-			var k := absi(int(floorf(sy / mod)))
-			_draw_raval_house(b, Rect2(-420.0, r0, e.x + 420.0, r1 - r0), -1.0, k)
-			_draw_raval_house(b, Rect2(e.y, r0, 1720.0 - e.y, r1 - r0), 1.0, k + 3)
-		sy += mod
+		var r1 := minf(sy + RAVAL_LOT, bot)
+		if r1 - r0 >= 8.0:
+			# reach the walk's edge across the whole lot (the ground is drawn
+			# over this layer), so a lot where the street widens leaves no gap
+			var e := Vector2(425.0, 855.0)
+			if m.has_method("walk_edges"):
+				var ea: Vector2 = m.walk_edges(r0)
+				var eb: Vector2 = m.walk_edges(r1)
+				e = Vector2(maxf(ea.x, eb.x), minf(ea.y, eb.y))
+			var k := int(floorf(sy / RAVAL_LOT))
+			_draw_raval_house(b, Rect2(-420.0, r0, e.x + 420.0, r1 - r0), -1.0, k * 7 + 1)
+			_draw_raval_house(b, Rect2(e.y, r0, 1720.0 - e.y, r1 - r0), 1.0, k * 7 + 4)
+		sy += RAVAL_LOT
 
 
 static func _draw_raval_house(b: ShapeBatch, r: Rect2, side: float, k: int) -> void:
-	var cols: Array[Color] = [RAVAL_OCHRE, RAVAL_TERRA, RAVAL_SLATE, Color(0.74, 0.68, 0.58)]
-	var wall_c: Color = cols[k % cols.size()]
+	var wall_c: Color = RAVAL_WALLS[int(_h(k) * 997.0) % RAVAL_WALLS.size()]
 	var inner_x := r.end.x if side < 0.0 else r.position.x
-	var face := 18.0
-	b.rect(r, wall_c.darkened(0.18))
-	var roof_r := Rect2(r.position.x, r.position.y + 3.0, r.size.x - face, r.size.y - 6.0) if side < 0.0 \
-		else Rect2(r.position.x + face, r.position.y + 3.0, r.size.x - face, r.size.y - 6.0)
-	b.rect(roof_r, wall_c)
-	b.rect(roof_r.grow(-10.0), wall_c.darkened(0.08))
-	# Foreshortened street facade and wrought-iron Raval balconies
+	var face := 22.0
+	# party wall between lots
+	b.rect(r, wall_c.darkened(0.42))
+	var body := Rect2(r.position.x, r.position.y + 2.0, r.size.x, maxf(r.size.y - 4.0, 1.0))
+	# the street face, foreshortened: balconies stacked floor over floor
 	var fx := (inner_x - face) if side < 0.0 else inner_x
-	b.rect(Rect2(fx, r.position.y, face, r.size.y), wall_c.darkened(0.32))
-	var by := r.position.y + 20.0
-	while by < r.end.y - 20.0:
-		var bx := (inner_x - 7.0) if side < 0.0 else (inner_x + 2.0)
-		b.rect(Rect2(bx, by, 5.0, 18.0), Color(0.14, 0.16, 0.18))
-		b.line(Vector2(inner_x, by - 2.0), Vector2(inner_x, by + 20.0), Color(0.22, 0.24, 0.26), 2.0)
-		by += 38.0
-	# Rooftop terrat skylight or water tank
-	var c_pos := Vector2(inner_x - 76.0 if side < 0.0 else inner_x + 76.0, r.get_center().y)
-	b.rect(Rect2(c_pos - Vector2(18.0, 14.0), Vector2(36.0, 28.0)), Color(0.36, 0.44, 0.50))
-	b.line(c_pos + Vector2(-16.0, 0.0), c_pos + Vector2(16.0, 0.0), Color(0.78, 0.84, 0.88, 0.55), 1.5)
+	b.rect(Rect2(fx, body.position.y, face, body.size.y), wall_c.darkened(0.22))
+	var wy := body.position.y + 10.0
+	var wn := 0
+	while wy + 22.0 < body.end.y:
+		var wx := fx + 4.0
+		# shutter pair either side of a dark balcony door
+		b.rect(Rect2(wx, wy, 14.0, 20.0), Color(0.16, 0.15, 0.15))
+		var shut := Color(0.24, 0.42, 0.34) if (k + wn) % 3 != 0 else Color(0.52, 0.30, 0.22)
+		b.rect(Rect2(wx, wy - 2.0, 14.0, 3.0), shut)
+		b.rect(Rect2(wx, wy + 19.0, 14.0, 3.0), shut)
+		# iron balcony rail on the street side, a pot on some
+		var rx := (fx + 1.0) if side > 0.0 else (fx + face - 3.0)
+		b.rect(Rect2(rx, wy - 3.0, 2.0, 26.0), Color(0.12, 0.13, 0.14))
+		if _h(k * 13 + wn) > 0.55:
+			b.circle(Vector2(rx + 1.0, wy + 4.0), 3.2, Color(0.30, 0.52, 0.26))
+			b.circle(Vector2(rx + 1.0, wy + 3.0), 1.6, Color(0.90, 0.30, 0.34))
+		wy += 32.0
+		wn += 1
+	# cornice between the face and the roof
+	var cx := (fx - 3.0) if side < 0.0 else (fx + face)
+	b.rect(Rect2(cx, body.position.y, 3.0, body.size.y), wall_c.lightened(0.18))
+	# the roof, out to the block's far side
+	var roof := Rect2(r.position.x, body.position.y, r.size.x - face - 3.0, body.size.y) if side < 0.0 \
+		else Rect2(fx + face + 3.0, body.position.y, r.end.x - fx - face - 3.0, body.size.y)
+	if roof.size.x <= 4.0 or roof.size.y <= 4.0:
+		return
+	var kind := int(_h(k * 19 + 5) * 3.0)
+	if kind == 0:
+		# terracotta pitched roof: tile courses across the lot, a ridge along it
+		var tile := Color(0.70, 0.40, 0.28).lerp(wall_c, 0.15)
+		b.rect(roof, tile)
+		var mid := roof.position.y + roof.size.y * 0.5
+		b.rect(Rect2(roof.position.x, mid, roof.size.x, roof.end.y - mid), tile.darkened(0.16))
+		var tx := roof.position.x + 3.0
+		while tx < roof.end.x:
+			b.line(Vector2(tx, roof.position.y + 2.0), Vector2(tx, roof.end.y - 2.0), tile.darkened(0.30), 1.2)
+			tx += 7.0
+		b.line(Vector2(roof.position.x, mid), Vector2(roof.end.x, mid), tile.lightened(0.22), 2.4)
+	else:
+		# flat terrat: clay tiles in a grid, a parapet, a stair hut and a tank
+		var tc := Color(0.78, 0.66, 0.54) if kind == 1 else Color(0.70, 0.68, 0.64)
+		b.rect(roof, wall_c.lightened(0.10))
+		var inner := roof.grow(-4.0)
+		b.rect(inner, tc)
+		var gx := inner.position.x + 12.0
+		while gx < inner.end.x:
+			b.line(Vector2(gx, inner.position.y), Vector2(gx, inner.end.y), tc.darkened(0.10), 1.0)
+			gx += 12.0
+		var gy := inner.position.y + 12.0
+		while gy < inner.end.y:
+			b.line(Vector2(inner.position.x, gy), Vector2(inner.end.x, gy), tc.darkened(0.10), 1.0)
+			gy += 12.0
+		var near := (inner.end.x - 46.0) if side < 0.0 else (inner.position.x + 30.0)
+		# stair hut with its shadow
+		var hut := Rect2(near - 8.0 + side * 30.0, inner.position.y + 6.0, 26.0, minf(30.0, inner.size.y - 12.0))
+		if hut.size.y > 8.0:
+			b.rect(Rect2(hut.position + LIGHT * 6.0, hut.size), SHADOW)
+			b.rect(hut, wall_c.lightened(0.04))
+			b.rect(Rect2(hut.position.x, hut.position.y, hut.size.x, 5.0), wall_c.darkened(0.12))
+		# water tank or a dish
+		var tp := Vector2(near + side * 82.0, inner.end.y - 16.0)
+		if tp.y > inner.position.y + 8.0:
+			b.circle(tp + LIGHT * 4.0, 9.0, SHADOW)
+			b.circle(tp, 8.5, Color(0.64, 0.68, 0.70))
+			b.circle(tp - LIGHT * 2.0, 5.0, Color(0.78, 0.82, 0.84))
+		# a washing line with the week's laundry
+		if kind == 1 and inner.size.y > 30.0:
+			var ly := inner.position.y + inner.size.y * 0.5 + 6.0
+			var la := near - side * 4.0
+			var lb := la - side * 70.0
+			var lx0 := minf(la, lb)
+			var lx1 := maxf(la, lb)
+			b.line(Vector2(lx0, ly), Vector2(lx1, ly), Color(0.86, 0.86, 0.84), 1.0)
+			var px := lx0 + 4.0
+			var pi := 0
+			while px < lx1 - 8.0:
+				var wc: Color = WASHING[(k + pi) % WASHING.size()]
+				var pw := 7.0 + 4.0 * _h(k * 5 + pi)
+				b.rect(Rect2(px, ly - 1.0, pw, 9.0 + 4.0 * _h(k + pi * 3)), wc)
+				px += pw + 3.0
+				pi += 1
+		else:
+			# planters along the parapet
+			for pp in range(3):
+				var py := inner.position.y + 8.0 + float(pp) * (inner.size.y - 16.0) * 0.5
+				var ppx := (inner.position.x + 6.0) if side > 0.0 else (inner.end.x - 6.0)
+				b.circle(Vector2(ppx, py), 4.5, Color(0.30, 0.50, 0.28))
 
 
 static func _draw_white_museum(b: ShapeBatch, vt: float, vb: float) -> void:
-	var m_top := -3540.0
-	var m_bot := -1260.0
+	var m_top := -3620.0
+	var m_bot := -1180.0
 	if m_bot < vt or m_top > vb:
 		return
+	var y0 := maxf(m_top, vt - 60.0)
+	var y1 := minf(m_bot, vb + 60.0)
 
-	# Monumental white modernist museum mass on the west side of the plaza (x = -420 .. 220)
+	# The white museum fills the whole west side of the plaza. Read from the
+	# far side in: a low roof with skylight strips, the taller gallery volume
+	# casting its shadow, a band of white sun louvers, and the glass atrium
+	# facing the plaza with the white ramps zigzagging up behind it.
 	var body := Rect2(-420.0, m_top, WALL_L + 420.0, m_bot - m_top)
-	b.rect(Rect2(body.position + LIGHT * 14.0, body.size), SHADOW)
-	b.rect(body, MUSEUM_SHADE)
-	b.rect(Rect2(-400.0, m_top + 8.0, WALL_L + 394.0, (m_bot - m_top) - 16.0), MUSEUM_WHITE)
+	b.rect(body, MUSEUM_WHITE)
+	# the low roof's grey membrane inside a white parapet
+	b.rect(Rect2(-420.0, m_top + 10.0, 450.0, (m_bot - m_top) - 20.0), Color(0.76, 0.78, 0.80))
 
-	# Crisp geometric white architectural panel grid and louvers across the visible roof (x = 140 .. 220)
-	var py := m_top + 60.0
-	while py < m_bot - 40.0:
-		if py >= vt - 40.0 and py <= vb + 40.0:
-			b.line(Vector2(-380.0, py), Vector2(WALL_L - 6.0, py), MUSEUM_DEEP, 2.0)
-			b.rect(Rect2(142.0, py + 8.0, 44.0, 18.0), MUSEUM_SHADE)
-			b.line(Vector2(144.0, py + 17.0), Vector2(184.0, py + 17.0), MUSEUM_DEEP, 1.5)
-		py += 72.0
-	for px: float in [-260.0, -120.0, 20.0, 140.0, 188.0]:
-		b.line(Vector2(px, maxf(m_top, vt - 40.0)), Vector2(px, minf(m_bot, vb + 40.0)), MUSEUM_DEEP, 2.0)
+	# low roof: panel grid and long skylight strips
+	var py := floorf(y0 / 48.0) * 48.0
+	while py < y1:
+		if py > m_top + 6.0 and py < m_bot - 6.0:
+			b.line(Vector2(-420.0, py), Vector2(30.0, py), Color(0.70, 0.72, 0.75), 1.2)
+		py += 48.0
+	var sk := m_top + 90.0
+	while sk < m_bot - 120.0:
+		if sk + 140.0 >= y0 and sk <= y1:
+			b.rect(Rect2(-40.0, sk, 18.0, 140.0), MUSEUM_GLASS_DARK)
+			b.rect(Rect2(-38.0, sk + 2.0, 14.0, 136.0), MUSEUM_GLASS)
+			b.line(Vector2(-36.0, sk + 10.0), Vector2(-26.0, sk + 40.0), MUSEUM_GLINT, 1.6)
+			# a plant box on the roof beside it
+			b.rect(Rect2(-6.0, sk + 30.0, 22.0, 30.0), Color(0.78, 0.80, 0.82))
+			b.rect(Rect2(-3.0, sk + 33.0, 16.0, 24.0), Color(0.62, 0.64, 0.66))
+		sk += 260.0
 
-	# Long continuous glass curtain wall along the museum edge (x = 188 .. 220)
-	var glass_r := Rect2(WALL_L - 32.0, m_top + 24.0, 32.0, (m_bot - m_top) - 48.0)
-	b.rect(glass_r, MUSEUM_GLASS_DARK)
-	b.rect(glass_r.grow(-2.5), MUSEUM_GLASS)
-	var my := m_top + 44.0
-	while my < m_bot - 44.0:
-		if my >= vt - 50.0 and my <= vb + 50.0:
-			b.line(Vector2(glass_r.position.x, my), Vector2(glass_r.end.x, my), MUSEUM_WHITE, 2.4)
-			b.line(Vector2(glass_r.position.x + 4.0, my + 8.0), Vector2(glass_r.end.x - 4.0, my + 32.0), MUSEUM_GLINT, 2.2)
+	# the taller gallery volume (x = 40 .. 132): brighter, edged, casting a
+	# shadow band over the louvers in the sun's direction
+	var gal := Rect2(40.0, m_top + 60.0, 92.0, (m_bot - m_top) - 300.0)
+	b.rect(Rect2(gal.position + Vector2(-16.0, 0.0), Vector2(16.0, gal.size.y)), Color(0.86, 0.88, 0.90))
+	b.rect(Rect2(gal.position + Vector2(14.0, 24.0), gal.size), Color(0.22, 0.26, 0.34, 0.42))
+	b.rect(gal, Color(0.99, 0.99, 1.0))
+	b.rect(Rect2(gal.position.x, gal.position.y, 3.0, gal.size.y), MUSEUM_DEEP)
+	b.rect(Rect2(gal.end.x - 3.0, gal.position.y, 3.0, gal.size.y), MUSEUM_DEEP)
+	b.rect(Rect2(gal.position.x, gal.position.y, gal.size.x, 3.0), MUSEUM_DEEP)
+	var rl := floorf(maxf(gal.position.y, y0) / 64.0) * 64.0 + 20.0
+	while rl < minf(gal.end.y - 20.0, y1):
+		if rl > gal.position.y + 16.0:
+			b.rect(Rect2(gal.position.x + 14.0, rl, 64.0, 22.0), MUSEUM_DEEP)
+			b.rect(Rect2(gal.position.x + 17.0, rl + 3.0, 58.0, 16.0), MUSEUM_GLASS)
+			b.line(Vector2(gal.position.x + 20.0, rl + 5.0), Vector2(gal.position.x + 34.0, rl + 17.0), MUSEUM_GLINT, 2.0)
+		rl += 64.0
+
+	# white sun louvers (x = 132 .. 156), blades across, shade between
+	b.rect(Rect2(132.0, y0, 24.0, y1 - y0), MUSEUM_DEEP)
+	var lv := floorf(y0 / 9.0) * 9.0
+	while lv < y1:
+		b.rect(Rect2(132.0, lv, 24.0, 5.0), MUSEUM_WHITE)
+		lv += 9.0
+
+	# the glass atrium (x = 156 .. 220) with the ramps behind it
+	var gl := Rect2(156.0, m_top + 40.0, WALL_L - 156.0, (m_bot - m_top) - 80.0)
+	b.rect(Rect2(gl.position.x, maxf(gl.position.y, y0), gl.size.x, minf(gl.end.y, y1) - maxf(gl.position.y, y0)), MUSEUM_GLASS_DARK)
+	var ry := m_top + 120.0
+	var rk := 0
+	while ry < m_bot - 260.0:
+		if ry + 300.0 >= y0 and ry <= y1:
+			# one ramp run, its landing, and the next run back the other way
+			var xa := gl.position.x + 6.0
+			var xb := gl.end.x - 6.0
+			var rw := 24.0
+			var rc := Color(0.94, 0.95, 0.97)
+			if rk % 2 == 0:
+				b.quad(Vector2(xa, ry + 22.0), Vector2(xa + rw, ry + 22.0), Vector2(xb, ry + 230.0), Vector2(xb - rw, ry + 230.0), rc)
+				b.line(Vector2(xa + rw, ry + 22.0), Vector2(xb, ry + 230.0), MUSEUM_DEEP, 2.0)
+			else:
+				b.quad(Vector2(xb - rw, ry + 22.0), Vector2(xb, ry + 22.0), Vector2(xa + rw, ry + 230.0), Vector2(xa, ry + 230.0), rc)
+				b.line(Vector2(xb - rw, ry + 22.0), Vector2(xa, ry + 230.0), MUSEUM_DEEP, 2.0)
+			b.rect(Rect2(xa, ry + 228.0, xb - xa, 24.0), MUSEUM_SHADE)
+			b.rect(Rect2(xa, ry + 228.0, xb - xa, 4.0), MUSEUM_WHITE)
+			# a visitor or two on the ramp, seen through the glass
+			var vp := Vector2(lerpf(xa + rw * 0.5, xb - rw * 0.5, 0.4 if rk % 2 == 0 else 0.6), ry + 22.0 + 208.0 * 0.4)
+			b.circle(vp, 4.5, SKATER_SHIRTS[rk % SKATER_SHIRTS.size()].darkened(0.2))
+			b.circle(vp, 2.6, SKIN[rk % SKIN.size()].darkened(0.2))
+		ry += 250.0
+		rk += 1
+	# glass over it all: a tint, mullions, sky glints
+	b.rect(Rect2(gl.position.x, maxf(gl.position.y, y0), gl.size.x, minf(gl.end.y, y1) - maxf(gl.position.y, y0)), Color(0.42, 0.62, 0.78, 0.30))
+	var my := floorf(maxf(gl.position.y, y0) / 44.0) * 44.0
+	while my < minf(gl.end.y, y1):
+		if my >= gl.position.y:
+			b.line(Vector2(gl.position.x, my), Vector2(gl.end.x, my), Color(0.94, 0.96, 0.98), 2.0)
+			if int(absf(my / 44.0)) % 3 == 0:
+				b.line(Vector2(gl.position.x + 8.0, my + 6.0), Vector2(gl.position.x + 26.0, my + 38.0), MUSEUM_GLINT, 3.0)
 		my += 44.0
+	b.line(Vector2(gl.position.x + gl.size.x * 0.5, maxf(gl.position.y, y0)), Vector2(gl.position.x + gl.size.x * 0.5, minf(gl.end.y, y1)), Color(0.90, 0.93, 0.96), 1.4)
+	b.rect(Rect2(WALL_L - 4.0, y0, 4.0, y1 - y0), MUSEUM_WHITE)
+
+	# the white drum at the south end, where the street opens into the plaza
+	var drum := Vector2(70.0, -1440.0)
+	if drum.y + 120.0 >= vt and drum.y - 120.0 <= vb:
+		b.circle(drum + Vector2(14.0, 22.0), 104.0, Color(0.30, 0.34, 0.40, 0.30))
+		b.circle(drum, 104.0, MUSEUM_SHADE)
+		b.circle(drum - Vector2(6.0, 9.0), 96.0, Color(0.99, 0.99, 1.0))
+		b.circle(drum, 62.0, MUSEUM_DEEP)
+		b.circle(drum, 58.0, Color(0.88, 0.90, 0.92))
+		# light slots round its rim
+		for i in range(12):
+			var ang := TAU * float(i) / 12.0
+			var d := Vector2(cos(ang), sin(ang))
+			b.line(drum + d * 70.0, drum + d * 88.0, MUSEUM_GLASS, 4.0)
+
+	# a dark annex box at the north end, for contrast
+	var ax := Rect2(-260.0, m_top + 6.0, 300.0, 200.0)
+	if ax.end.y >= vt and ax.position.y <= vb:
+		b.rect(Rect2(ax.position + Vector2(10.0, 16.0), ax.size), Color(0.30, 0.34, 0.40, 0.30))
+		b.rect(ax, Color(0.20, 0.21, 0.23))
+		b.rect(ax.grow(-6.0), Color(0.26, 0.27, 0.30))
+		var ah := ax.position.x + 30.0
+		while ah < ax.end.x - 20.0:
+			b.line(Vector2(ah, ax.position.y + 10.0), Vector2(ah, ax.end.y - 10.0), Color(0.34, 0.35, 0.38), 2.0)
+			ah += 30.0
 
 
 static func _draw_convent_east(b: ShapeBatch, vt: float, vb: float) -> void:
-	# 16th-century Gothic-Renaissance stone chapel (Convent dels Àngels) on the east side
+	# The 16th-century chapel of the Convent dels Àngels: a plain sandstone
+	# face on the plaza, buttresses, a pointed portal under a rose window, a
+	# bell gable at its north end, the terracotta nave roof behind.
 	var c_top := -2880.0
 	var c_bot := -1620.0
 	if c_bot >= vt - 60.0 and c_top <= vb + 60.0:
 		var nave := Rect2(WALL_R, c_top, 460.0, c_bot - c_top)
-		b.rect(Rect2(nave.position + LIGHT * 10.0, nave.size), SHADOW)
 		b.rect(nave, CONVENT_DARK)
-		b.rect(nave.grow(-5.0), CONVENT_STONE)
-
-		# Terracotta gable roof over the chapel nave (starts at WALL_R + 14 so it is clearly visible in frame)
-		var roof := Rect2(WALL_R + 14.0, c_top + 28.0, 320.0, (c_bot - c_top) - 56.0)
-		b.rect(roof, CONVENT_ROOF_DARK)
-		b.rect(Rect2(roof.position.x, roof.position.y, 56.0, roof.size.y), CONVENT_ROOF)
-		var ty := roof.position.y + 16.0
-		while ty < roof.end.y - 12.0:
-			b.line(Vector2(roof.position.x, ty), Vector2(roof.end.x, ty), CONVENT_ROOF_DARK.darkened(0.22), 2.0)
-			ty += 20.0
-		b.line(Vector2(WALL_R + 70.0, roof.position.y), Vector2(WALL_R + 70.0, roof.end.y), CONVENT_STONE, 4.0)
-
-		# Stone buttresses projecting along the west chapel wall (x = WALL_R)
-		var by := c_top + 40.0
-		while by <= c_bot - 40.0:
-			b.rect(Rect2(WALL_R - 8.0, by - 11.0, 24.0, 22.0), CONVENT_DARK)
-			b.rect(Rect2(WALL_R - 6.0, by - 9.0, 20.0, 18.0), CONVENT_STONE.lightened(0.10))
-			by += 120.0
-
-		# Arched Renaissance portal and rose window trace at y = -2250
+		# terracotta nave roof: tile courses along the nave, the ridge in the middle
+		var roof := Rect2(WALL_R + 34.0, c_top + 20.0, 400.0, (c_bot - c_top) - 40.0)
+		b.rect(roof, CONVENT_ROOF)
+		var ridge := roof.position.x + roof.size.x * 0.5
+		b.rect(Rect2(ridge, roof.position.y, roof.end.x - ridge, roof.size.y), CONVENT_ROOF_DARK)
+		var ty := floorf(maxf(roof.position.y, vt - 60.0) / 9.0) * 9.0
+		while ty < minf(roof.end.y, vb + 60.0):
+			if ty > roof.position.y:
+				b.line(Vector2(roof.position.x, ty), Vector2(roof.end.x, ty), CONVENT_ROOF_DARK.darkened(0.25), 1.4)
+			ty += 9.0
+		b.line(Vector2(ridge, roof.position.y), Vector2(ridge, roof.end.y), CONVENT_ROOF.lightened(0.25), 3.0)
+		# the stone face (x = WALL_R .. +34): ashlar courses
+		var face := Rect2(WALL_R, c_top, 34.0, c_bot - c_top)
+		b.rect(face, CONVENT_STONE)
+		var cy := floorf(maxf(c_top, vt - 60.0) / 12.0) * 12.0
+		while cy < minf(c_bot, vb + 60.0):
+			if cy > c_top:
+				b.line(Vector2(face.position.x, cy), Vector2(face.end.x, cy), CONVENT_DARK.lightened(0.10), 1.0)
+				var off := 9.0 if int(absf(cy / 12.0)) % 2 == 0 else 20.0
+				b.line(Vector2(face.position.x + off, cy), Vector2(face.position.x + off, cy + 12.0), CONVENT_DARK.lightened(0.10), 1.0)
+			cy += 12.0
+		b.rect(Rect2(face.end.x - 4.0, c_top, 4.0, c_bot - c_top), CONVENT_DARK)
+		# buttresses stepping out onto the plaza edge
+		var by := c_top + 60.0
+		while by <= c_bot - 60.0:
+			if absf(by - -2250.0) > 70.0:
+				b.rect(Rect2(WALL_R - 10.0, by - 13.0, 26.0, 26.0), CONVENT_DARK)
+				b.rect(Rect2(WALL_R - 8.0, by - 11.0, 22.0, 20.0), CONVENT_STONE.lightened(0.08))
+			by += 150.0
+		# the portal: pointed arch, dark doors, voussoirs, the rose window over it
 		var port_y := -2250.0
-		b.rect(Rect2(WALL_R - 6.0, port_y - 44.0, 22.0, 88.0), CONVENT_DARK)
-		b.rect(Rect2(WALL_R - 2.0, port_y - 34.0, 16.0, 68.0), Color(0.18, 0.14, 0.12))
-		b.circle(Vector2(WALL_R + 22.0, port_y), 16.0, CONVENT_DARK)
-		b.circle(Vector2(WALL_R + 22.0, port_y), 12.0, ROSE_GLASS)
-		b.circle(Vector2(WALL_R + 22.0, port_y), 5.0, Color(0.88, 0.68, 0.42, 0.75))
+		b.rect(Rect2(WALL_R - 4.0, port_y - 46.0, 30.0, 92.0), CONVENT_DARK)
+		b.rect(Rect2(WALL_R - 1.0, port_y - 36.0, 18.0, 72.0), Color(0.30, 0.20, 0.14))
+		b.line(Vector2(WALL_R - 1.0, port_y), Vector2(WALL_R + 17.0, port_y), Color(0.20, 0.13, 0.09), 2.0)
+		for v in range(5):
+			var vy := port_y - 44.0 + float(v) * 22.0
+			b.line(Vector2(WALL_R - 4.0, vy), Vector2(WALL_R + 2.0, vy), CONVENT_STONE.lightened(0.15), 1.6)
+		# the rose window in the face above the portal
+		var rose := Vector2(WALL_R + 16.0, port_y - 78.0)
+		b.circle(rose, 16.0, CONVENT_DARK)
+		b.circle(rose, 12.5, ROSE_GLASS)
+		for i in range(8):
+			var ang := TAU * float(i) / 8.0
+			b.line(rose, rose + Vector2(cos(ang), sin(ang)) * 12.0, CONVENT_STONE, 1.4)
+		b.circle(rose, 3.6, Color(0.88, 0.68, 0.42))
+		# bell gable over the north end, two bells in their openings
+		var bg := Rect2(WALL_R + 20.0, c_top + 4.0, 70.0, 26.0)
+		b.rect(Rect2(bg.position + LIGHT * 8.0, bg.size), SHADOW)
+		b.rect(bg, CONVENT_STONE.lightened(0.06))
+		b.rect(Rect2(bg.position.x, bg.position.y, bg.size.x, 4.0), CONVENT_DARK)
+		for bx: float in [bg.position.x + 20.0, bg.position.x + 50.0]:
+			b.circle(Vector2(bx, bg.get_center().y + 2.0), 8.0, Color(0.18, 0.14, 0.12))
+			b.circle(Vector2(bx, bg.get_center().y + 2.0), 5.0, Color(0.70, 0.54, 0.26))
 
-	# Flanking Raval stone buildings north and south of the convent on the east plaza edge
-	for span: Vector2 in [Vector2(-1600.0, -1200.0), Vector2(-3560.0, -2900.0)]:
-		if span.y >= vt - 40.0 and span.x <= vb + 40.0:
-			_draw_raval_house(b, Rect2(WALL_R, span.x, 460.0, span.y - span.x), 1.0, int(absf(span.x)))
+	# Raval houses either side of the chapel on the east plaza edge
+	for span: Vector2 in [Vector2(-1620.0, -1180.0), Vector2(-3620.0, -2880.0)]:
+		if span.y >= vt - 100.0 and span.x <= vb + 100.0:
+			var sy := span.x
+			var k := int(absf(span.x)) / 40
+			while sy < span.y:
+				var h := minf(RAVAL_LOT, span.y - sy)
+				if sy + h >= vt - 100.0 and sy <= vb + 100.0:
+					_draw_raval_house(b, Rect2(WALL_R, sy, 660.0, h), 1.0, k)
+				sy += RAVAL_LOT
+				k += 1
 
 
 # --- ground layer: Raval alleys, granite skate plaza, ledges & stair set -----
@@ -427,6 +677,17 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 			for lx: float in [360.0, 480.0, 600.0, 720.0, 840.0, 960.0]:
 				if lx > e0.x + 12.0 and lx < e0.y - 12.0:
 					b.line(Vector2(lx, sy), Vector2(lx, sy + step), GRANITE_JOINT, 1.3)
+			# slab to slab the granite varies a little, lighter and darker
+			for ci in range(9):
+				var xa := maxf(240.0 + 120.0 * float(ci), e0.x + 2.0)
+				var xb := minf(360.0 + 120.0 * float(ci), e0.y - 2.0)
+				if xb - xa < 8.0:
+					continue
+				var t := _h(row * 31 + ci)
+				if t > 0.62:
+					b.rect(Rect2(xa + 1.0, sy + 1.0, xb - xa - 2.0, step - 2.0), Color(1.0, 1.0, 1.0, 0.07))
+				elif t < 0.28:
+					b.rect(Rect2(xa + 1.0, sy + 1.0, xb - xa - 2.0, step - 2.0), Color(0.10, 0.10, 0.12, 0.06))
 			if row % 6 == 0:
 				b.rect(Rect2(e0.x + 16.0, sy + 4.0, (e0.y - e0.x) - 32.0, 8.0), GRANITE_DARK)
 			# Polyurethane wheel skid marks and board wax streaks near the grind ledges
@@ -443,10 +704,20 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 	if y0 < -1760.0 and y1 > -2760.0:
 		_draw_convent_terrace(b, y0, y1)
 
-	# 4. Warm dusk lamp pools around the plaza lamp posts
-	for lp: Vector2 in LAMP_POSTS:
-		if lp.y + 90.0 >= y0 and lp.y - 90.0 <= y1:
-			b.glow(lp, 68.0, LAMP_WARM)
+	# 4. Lamp pools round the plaza lamp posts, as lit as the hour says
+	# the autoload by node: a preloaded walk module compiles before Game is a global
+	var game: Node = (Engine.get_main_loop() as SceneTree).root.get_node_or_null("Game")
+	var lit: float = float(game.call("lamp_glow")) if game != null else 0.0
+	if lit > 0.0:
+		var lc := Color(LAMP_WARM.r, LAMP_WARM.g, LAMP_WARM.b, LAMP_WARM.a * lit)
+		for lp: Vector2 in LAMP_POSTS:
+			if lp.y + 90.0 >= y0 and lp.y - 90.0 <= y1:
+				b.glow(lp, 68.0, lc)
+
+	# 4b. Plane trees in planters, the bike rack, and what skaters leave lying about
+	_draw_planters(b, y0, y1)
+	_draw_bike_rack(b, y0, y1)
+	_draw_plaza_gear(b, y0, y1)
 
 	# 5. Stationary street skaters hanging out by the museum steps and convent wall
 	_draw_plaza_skaters(b, y0, y1)
@@ -463,21 +734,14 @@ static func _draw_museum_podium_and_ledges(b: ShapeBatch, y0: float, y1: float) 
 		b.rect(Rect2(pod.position + Vector2(6.0, 6.0), pod.size), SHADOW)
 		b.rect(pod, PODIUM_STONE)
 
-		# Projecting white modernist museum gallery canopy & long glass curtain wall (x = 220 .. 264)
-		var fac := Rect2(WALL_L, p_top, 44.0, p_bot - p_top)
-		b.rect(Rect2(fac.position + LIGHT * 6.0, fac.size), SHADOW)
-		b.rect(fac, MUSEUM_SHADE)
-		b.rect(Rect2(WALL_L, p_top, 30.0, p_bot - p_top), MUSEUM_WHITE)
-		# Long glass curtain wall strip (x = 248 .. 264) with white mullions & sky glints
-		var gl := Rect2(WALL_L + 28.0, p_top, 16.0, p_bot - p_top)
-		b.rect(gl, MUSEUM_GLASS_DARK)
-		b.rect(gl.grow(-1.5), MUSEUM_GLASS)
-		var gy_m := floorf(p_top / 44.0) * 44.0
-		while gy_m < p_bot:
-			if gy_m >= p_top and gy_m <= p_bot:
-				b.line(Vector2(WALL_L, gy_m), Vector2(WALL_L + 44.0, gy_m), MUSEUM_WHITE, 2.0)
-				b.line(Vector2(gl.position.x + 2.0, gy_m + 6.0), Vector2(gl.end.x - 2.0, gy_m + 26.0), MUSEUM_GLINT, 1.8)
-			gy_m += 44.0
+		# the museum is tall: its shadow lies across the podium's near edge
+		b.rect(Rect2(WALL_L, p_top, 34.0, p_bot - p_top), Color(0.24, 0.28, 0.36, 0.22))
+		var pj := floorf(p_top / 40.0) * 40.0
+		while pj < p_bot:
+			if pj >= p_top:
+				b.line(Vector2(WALL_L, pj), Vector2(WALL_L + 120.0, pj), GRANITE_JOINT, 1.2)
+			pj += 40.0
+		b.line(Vector2(WALL_L + 120.0, p_top), Vector2(WALL_L + 120.0, p_bot), GRANITE_DARK, 2.0)
 
 		# Signature inclined white modernist museum entry ramp (x = 264 .. 324, y = -2620 .. -2120)
 		var r_top := maxf(-2620.0, y0)
@@ -563,29 +827,206 @@ static func _draw_convent_terrace(b: ShapeBatch, y0: float, y1: float) -> void:
 		b.rect(CONVENT_PLINTH.grow(-8.0), CONVENT_STONE.lightened(0.10))
 
 
+const SKATER_SHIRTS: Array[Color] = [
+	Color(0.86, 0.32, 0.26), Color(0.24, 0.56, 0.68), Color(0.92, 0.76, 0.24),
+	Color(0.36, 0.66, 0.44), Color(0.16, 0.17, 0.20), Color(0.94, 0.94, 0.92),
+]
+const SKATER_HAIR: Array[Color] = [
+	Color(0.18, 0.14, 0.12), Color(0.36, 0.24, 0.14), Color(0.80, 0.30, 0.20),
+	Color(0.10, 0.10, 0.12), Color(0.82, 0.70, 0.40),
+]
+const SKIN: Array[Color] = [
+	Color(0.90, 0.74, 0.60), Color(0.70, 0.50, 0.36), Color(0.48, 0.32, 0.22), Color(0.84, 0.66, 0.50),
+]
+
+
+# Skaters sitting on the ledges and standing about, boards beside them:
+# x, y, kind (0 sitting facing east, 1 sitting facing west, 2 standing).
+const HANGERS: Array[Vector3] = [
+	Vector3(364.0, -1600.0, 0.0), Vector3(364.0, -1990.0, 0.0),
+	Vector3(364.0, -2760.0, 0.0), Vector3(364.0, -3170.0, 0.0),
+	Vector3(898.0, -2010.0, 1.0), Vector3(898.0, -2310.0, 1.0),
+	Vector3(300.0, -1460.0, 2.0), Vector3(292.0, -3290.0, 2.0),
+	Vector3(946.0, -2700.0, 2.0),
+]
+
+# Boards, backpacks, a bottle, a speaker, a cone: lying where skaters leave
+# them, off the grind lines and the board's crossing.
+const GEAR: Array[Vector3] = [
+	Vector3(384.0, -1640.0, 0.0), Vector3(384.0, -2800.0, 0.0), Vector3(880.0, -2060.0, 0.0),
+	Vector3(612.0, -1352.0, 0.0), Vector3(706.0, -3200.0, 0.0),
+	Vector3(380.0, -1572.0, 1.0), Vector3(380.0, -3050.0, 1.0), Vector3(884.0, -2250.0, 1.0),
+	Vector3(394.0, -1610.0, 2.0), Vector3(890.0, -2346.0, 2.0), Vector3(398.0, -3200.0, 2.0),
+	Vector3(400.0, -2190.0, 3.0), Vector3(770.0, -2620.0, 4.0), Vector3(470.0, -2620.0, 4.0),
+]
+
+
+static func _draw_skater_body(b: ShapeBatch, p: Vector2, facing: Vector2, k: int, sitting: bool) -> void:
+	var side := Vector2(-facing.y, facing.x)
+	var shirt: Color = SKATER_SHIRTS[k % SKATER_SHIRTS.size()]
+	var hair: Color = SKATER_HAIR[(k * 3 + 1) % SKATER_HAIR.size()]
+	var skin: Color = SKIN[(k * 5 + 2) % SKIN.size()]
+	b.circle(p + LIGHT * 4.0, 10.0, SHADOW)
+	if sitting:
+		# legs out in front, sneakers at the end
+		var jeans := Color(0.24, 0.32, 0.46) if k % 2 == 0 else Color(0.16, 0.16, 0.18)
+		b.line(p + side * 4.0, p + side * 4.0 + facing * 15.0, jeans, 5.0)
+		b.line(p - side * 4.0, p - side * 4.0 + facing * 15.0, jeans, 5.0)
+		b.circle(p + side * 4.0 + facing * 17.0, 3.0, Color(0.95, 0.95, 0.94))
+		b.circle(p - side * 4.0 + facing * 17.0, 3.0, Color(0.95, 0.95, 0.94))
+	b.capsule(p + side * 7.0, p - side * 7.0, 5.5, shirt)
+	b.line(p + side * 7.0, p + side * 9.0 + facing * 7.0, skin, 3.0)
+	b.line(p - side * 7.0, p - side * 9.0 + facing * 7.0, skin, 3.0)
+	b.circle(p - facing * 1.0, 5.4, skin)
+	if k % 3 == 0:
+		# a beanie
+		b.circle(p - facing * 2.2, 5.0, Color(0.82, 0.26, 0.20) if k % 2 == 0 else Color(0.20, 0.40, 0.30))
+	else:
+		b.circle(p - facing * 2.0, 4.6, hair)
+
+
+static func _draw_board(b: ShapeBatch, p: Vector2, along: Vector2, k: int) -> void:
+	var side := Vector2(-along.y, along.x)
+	b.capsule(p - along * 11.0 + LIGHT * 2.5, p + along * 11.0 + LIGHT * 2.5, 4.6, SHADOW)
+	b.capsule(p - along * 11.0, p + along * 11.0, 4.6, DECK_GRIP if k % 2 == 0 else Color(0.56, 0.28, 0.24))
+	b.line(p - along * 6.0 - side * 3.0, p - along * 6.0 + side * 3.0, RAIL_STEEL, 1.4)
+	b.line(p + along * 6.0 - side * 3.0, p + along * 6.0 + side * 3.0, RAIL_STEEL, 1.4)
+
+
 static func _draw_plaza_skaters(b: ShapeBatch, y0: float, y1: float) -> void:
-	# Visual-only local skaters sitting/chatting on the podium edge with boards beside them
-	var spots: Array[Vector3] = [
-		Vector3(312.0, -1580.0, 0.0),
-		Vector3(312.0, -2220.0, 1.0),
-		Vector3(312.0, -3120.0, 2.0),
-		Vector3(948.0, -2160.0, 3.0),
-	]
-	var shirts: Array[Color] = [
-		Color(0.86, 0.32, 0.26),
-		Color(0.24, 0.56, 0.68),
-		Color(0.92, 0.76, 0.24),
-		Color(0.36, 0.66, 0.44),
-	]
-	for sp: Vector3 in spots:
-		if sp.y + 30.0 < y0 or sp.y - 30.0 > y1:
+	for i in range(HANGERS.size()):
+		var hp: Vector3 = HANGERS[i]
+		if hp.y + 30.0 < y0 or hp.y - 30.0 > y1:
 			continue
-		var p := Vector2(sp.x, sp.y)
-		var idx := int(sp.z)
-		b.circle(p + LIGHT * 3.0, 8.5, SHADOW)
-		b.circle(p, 8.0, shirts[idx % shirts.size()])
-		b.circle(p + Vector2(0.0, -2.0), 5.2, Color(0.88, 0.72, 0.58))
-		b.circle(p + Vector2(0.0, -3.2), 4.6, Color(0.18, 0.16, 0.15))
+		var p := Vector2(hp.x, hp.y)
+		match int(hp.z):
+			0:
+				_draw_skater_body(b, p, Vector2.RIGHT, i, true)
+			1:
+				_draw_skater_body(b, p, Vector2.LEFT, i, true)
+			_:
+				_draw_board(b, p + Vector2(0.0, 18.0), Vector2.RIGHT, i)
+				_draw_skater_body(b, p, Vector2(0.6, 0.8).normalized(), i, false)
+
+
+static func _draw_plaza_gear(b: ShapeBatch, y0: float, y1: float) -> void:
+	for i in range(GEAR.size()):
+		var g: Vector3 = GEAR[i]
+		if g.y + 20.0 < y0 or g.y - 20.0 > y1:
+			continue
+		var p := Vector2(g.x, g.y)
+		match int(g.z):
+			0:
+				var ang := _h(i * 17) * PI
+				_draw_board(b, p, Vector2(cos(ang), sin(ang)), i)
+			1:
+				# a backpack, flap and straps
+				var bc: Color = [Color(0.20, 0.30, 0.46), Color(0.50, 0.20, 0.18), Color(0.22, 0.24, 0.22)][i % 3]
+				b.rect(Rect2(p + Vector2(-7.0, -6.0) + LIGHT * 3.0, Vector2(14.0, 13.0)), SHADOW)
+				b.rect(Rect2(p + Vector2(-7.0, -6.0), Vector2(14.0, 13.0)), bc)
+				b.rect(Rect2(p + Vector2(-7.0, -6.0), Vector2(14.0, 5.0)), bc.darkened(0.25))
+				b.line(p + Vector2(-4.0, 7.0), p + Vector2(-4.0, 10.0), bc.darkened(0.35), 1.6)
+				b.line(p + Vector2(4.0, 7.0), p + Vector2(4.0, 10.0), bc.darkened(0.35), 1.6)
+			2:
+				# a water bottle on its side
+				b.capsule(p + Vector2(-5.0, 0.0), p + Vector2(5.0, 0.0), 2.6, Color(0.62, 0.82, 0.92, 0.85))
+				b.circle(p + Vector2(6.5, 0.0), 1.8, Color(0.22, 0.48, 0.80))
+			3:
+				# a little speaker
+				b.rect(Rect2(p + Vector2(-8.0, -5.0) + LIGHT * 3.0, Vector2(16.0, 10.0)), SHADOW)
+				b.rect(Rect2(p + Vector2(-8.0, -5.0), Vector2(16.0, 10.0)), Color(0.12, 0.12, 0.14))
+				b.circle(p + Vector2(-3.5, 0.0), 3.2, Color(0.30, 0.30, 0.34))
+				b.circle(p + Vector2(3.5, 0.0), 3.2, Color(0.30, 0.30, 0.34))
+			_:
+				# a traffic cone set out as an obstacle line
+				b.rect(Rect2(p + Vector2(-7.0, -7.0) + LIGHT * 3.0, Vector2(14.0, 14.0)), SHADOW)
+				b.rect(Rect2(p + Vector2(-7.0, -7.0), Vector2(14.0, 14.0)), Color(0.92, 0.42, 0.14))
+				b.circle(p, 4.5, Color(0.96, 0.94, 0.90))
+				b.circle(p, 2.4, Color(0.92, 0.42, 0.14))
+
+
+static func _draw_planters(b: ShapeBatch, y0: float, y1: float) -> void:
+	for i in range(PLANTERS.size()):
+		var r: Rect2 = PLANTERS[i]
+		if r.end.y + 40.0 < y0 or r.position.y - 40.0 > y1:
+			continue
+		b.rect(Rect2(r.position + LIGHT * 5.0, r.size), SHADOW)
+		b.rect(r, Color(0.66, 0.66, 0.64))
+		b.rect(r.grow(-5.0), Color(0.36, 0.28, 0.20))
+		b.rect(Rect2(r.position.x, r.position.y, r.size.x, 3.0), Color(0.80, 0.80, 0.78))
+		# the plane tree's crown, lit on the sun side
+		var c := r.get_center()
+		b.circle(c + LIGHT * 12.0, 40.0, Color(0.04, 0.06, 0.04, 0.22))
+		b.circle(c, 40.0, Color(0.28, 0.42, 0.22))
+		b.circle(c + Vector2(-14.0, -10.0), 24.0, Color(0.36, 0.52, 0.26))
+		b.circle(c + Vector2(16.0, -4.0), 20.0, Color(0.32, 0.48, 0.24))
+		b.circle(c + Vector2(-2.0, 16.0), 22.0, Color(0.30, 0.45, 0.23))
+		b.circle(c + Vector2(-18.0, -16.0), 10.0, Color(0.48, 0.64, 0.34))
+		b.circle(c + Vector2(10.0, -14.0), 8.0, Color(0.46, 0.62, 0.32))
+
+
+static func _draw_bike_rack(b: ShapeBatch, y0: float, y1: float) -> void:
+	var r := BIKE_RACK
+	if r.end.y + 20.0 < y0 or r.position.y - 20.0 > y1:
+		return
+	# three steel hoops along the convent wall, two bikes locked to them
+	for i in range(4):
+		var hy := r.position.y + 12.0 + float(i) * 32.0
+		b.line(Vector2(r.position.x + 4.0, hy), Vector2(r.end.x - 4.0, hy), RAIL_STEEL, 3.0)
+		b.circle(Vector2(r.position.x + 4.0, hy), 2.2, LAMP_IRON)
+		b.circle(Vector2(r.end.x - 4.0, hy), 2.2, LAMP_IRON)
+	for bk in range(2):
+		var by := r.position.y + 28.0 + float(bk) * 64.0
+		var col := Color(0.20, 0.44, 0.62) if bk == 0 else Color(0.74, 0.22, 0.20)
+		b.line(Vector2(r.position.x - 2.0, by) + LIGHT * 3.0, Vector2(r.end.x + 2.0, by) + LIGHT * 3.0, SHADOW, 6.0)
+		b.circle(Vector2(r.position.x + 2.0, by), 7.0, Color(0.10, 0.10, 0.11))
+		b.circle(Vector2(r.end.x - 2.0, by), 7.0, Color(0.10, 0.10, 0.11))
+		b.circle(Vector2(r.position.x + 2.0, by), 4.5, Color(0.40, 0.40, 0.42))
+		b.circle(Vector2(r.end.x - 2.0, by), 4.5, Color(0.40, 0.40, 0.42))
+		b.line(Vector2(r.position.x + 2.0, by), Vector2(r.end.x - 2.0, by), col, 3.0)
+		b.line(Vector2(r.end.x - 6.0, by - 5.0), Vector2(r.end.x - 6.0, by + 5.0), Color(0.16, 0.16, 0.18), 2.0)
+
+
+# Three skaters rolling laps of the open plaza, out of the pair's way: each
+# leans off when the dog or your human comes near.
+const ROLLERS: Array[Vector4] = [
+	# center x, center y, radius x, radius y
+	Vector4(995.0, -2020.0, 14.0, 330.0),
+	Vector4(690.0, -3020.0, 120.0, 150.0),
+	Vector4(700.0, -1440.0, 110.0, 80.0),
+]
+
+
+static func _draw_rollers(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	var t := float(AnimClock.msec()) * 0.001
+	var dog_p: Vector2 = m.dog.global_position if "dog" in m and m.dog != null else Vector2(INF, INF)
+	var hum_p: Vector2 = m.human.global_position if "human" in m and m.human != null else Vector2(INF, INF)
+	for i in range(ROLLERS.size()):
+		var rl: Vector4 = ROLLERS[i]
+		if rl.y + rl.w + 30.0 < vt or rl.y - rl.w - 30.0 > vb:
+			continue
+		var w := 0.55 + 0.12 * float(i)
+		var a := t * w + float(i) * 2.1
+		var p := Vector2(rl.x + cos(a) * rl.z, rl.y + sin(a) * rl.w)
+		var v := Vector2(-sin(a) * rl.z, cos(a) * rl.w)
+		var along := v.normalized() if v.length() > 0.01 else Vector2.UP
+		for q: Vector2 in [dog_p, hum_p]:
+			var d := p.distance_to(q)
+			if d < 70.0 and d > 0.01:
+				p += (p - q) / d * (70.0 - d)
+		_draw_board(b, p, along, i + 2)
+		# standing on it, sideways to the way it rolls, arms out for balance
+		var side := Vector2(-along.y, along.x)
+		var k := i + 3
+		var shirt: Color = SKATER_SHIRTS[k % SKATER_SHIRTS.size()]
+		var skin: Color = SKIN[k % SKIN.size()]
+		b.circle(p + LIGHT * 4.0, 9.0, SHADOW)
+		b.capsule(p + along * 6.0, p - along * 6.0, 5.5, shirt)
+		var sway := sin(t * 3.0 + float(i)) * 3.0
+		b.line(p + along * 6.0, p + along * 15.0 + side * sway, skin, 3.0)
+		b.line(p - along * 6.0, p - along * 15.0 - side * sway, skin, 3.0)
+		b.circle(p + side * 1.0, 5.2, skin)
+		b.circle(p + side * 2.0, 4.6, SKATER_HAIR[k % SKATER_HAIR.size()])
 
 
 # --- custom furniture hooks (cached in main's furniture pass) ----------------
@@ -685,12 +1126,65 @@ static func draw_live(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 		for st: float in [-4.0, 1.0, 5.0]:
 			b.line(PRIZE + Vector2(st, -3.0), PRIZE + Vector2(st + 4.0, -9.0), CHURRO_GOLD, 3.2)
 
+	_draw_rollers(m, b, vt, vb)
 	if m.angels_skate != null:
 		m.angels_skate.draw(b, vt, vb)
 
 
-static func draw_overhead(_m: Node2D, _wc: Object) -> void:
-	pass
+# Washing hung across the narrow Raval streets, balcony to balcony, over
+# everyone's heads. Drawn once for the whole walk.
+const WASH_YS: Array[float] = [-250.0, -660.0, -3760.0, -4150.0]
+
+
+static func draw_overhead(m: Node2D, wc: Object) -> void:
+	if not m.has_method("walk_edges"):
+		return
+	var b := ShapeBatch.new()
+	for i in range(WASH_YS.size()):
+		var y: float = WASH_YS[i]
+		var e: Vector2 = m.walk_edges(y)
+		var a := Vector2(e.x - 12.0, y)
+		var c := Vector2(e.y + 12.0, y + 18.0)
+		var sag := (a + c) * 0.5 + Vector2(0.0, 12.0)
+		var cord := Color(0.88, 0.88, 0.86, 0.9)
+		b.line(a, sag, cord, 1.3)
+		b.line(sag, c, cord, 1.3)
+		var u := 0.06 + 0.05 * _h(i * 29)
+		var n := 0
+		while u < 0.94:
+			var q := a.lerp(sag, u * 2.0) if u < 0.5 else sag.lerp(c, (u - 0.5) * 2.0)
+			var col: Color = WASHING[(i * 3 + n) % WASHING.size()]
+			var kind := int(_h(i * 13 + n * 7) * 4.0)
+			var w := 14.0
+			match kind:
+				0:
+					# a T-shirt pegged by its hem
+					w = 18.0
+					b.rect(Rect2(q + Vector2(3.0, 4.0), Vector2(12.0, 16.0)), Color(0.0, 0.0, 0.0, 0.16))
+					b.rect(Rect2(q + Vector2(3.0, 0.0), Vector2(12.0, 16.0)), col)
+					b.rect(Rect2(q + Vector2(0.0, 10.0), Vector2(18.0, 6.0)), col.darkened(0.08))
+				1:
+					# trousers, two legs
+					w = 14.0
+					b.rect(Rect2(q + Vector2(2.0, 4.0), Vector2(12.0, 20.0)), Color(0.0, 0.0, 0.0, 0.16))
+					var tc := Color(0.24, 0.32, 0.48) if n % 2 == 0 else Color(0.66, 0.58, 0.44)
+					b.rect(Rect2(q, Vector2(12.0, 6.0)), tc)
+					b.rect(Rect2(q + Vector2(0.0, 5.0), Vector2(5.0, 15.0)), tc)
+					b.rect(Rect2(q + Vector2(7.0, 5.0), Vector2(5.0, 15.0)), tc)
+				2:
+					# a towel
+					w = 22.0
+					b.rect(Rect2(q + Vector2(2.0, 4.0), Vector2(20.0, 14.0)), Color(0.0, 0.0, 0.0, 0.16))
+					b.rect(Rect2(q, Vector2(20.0, 14.0)), col)
+					b.rect(Rect2(q + Vector2(0.0, 10.0), Vector2(20.0, 2.0)), col.lightened(0.3))
+				_:
+					# a pair of socks
+					w = 10.0
+					b.rect(Rect2(q, Vector2(3.0, 8.0)), col)
+					b.rect(Rect2(q + Vector2(5.0, 0.0), Vector2(3.0, 8.0)), col)
+			u += (w + 12.0 + 26.0 * _h(i * 3 + n * 11)) / (c.x - a.x)
+			n += 1
+	b.flush(wc)
 
 
 # --- off-leash area: CLAUSTRE DE LES LLETRES (the university courtyard) ------

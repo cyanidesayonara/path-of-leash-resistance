@@ -165,7 +165,7 @@ const CAMPAIGN_SKY := {
 	"beach": ["wind", "dawn"], "neteja": ["clear", "dawn"], "oldtown": ["clear", "day"],
 	"montjuic": ["clear", "day"], "market": ["clear", "day"], "rain": ["rain", "day"],
 	"besos": ["rain", "day"], "llevant": ["wind", "day"], "tibidabo": ["clear", "day"],
-	"vet": ["clear", "day"], "trail": ["clear", "day"], "angels": ["clear", "dusk"], "spook": ["clear", "night"],
+	"vet": ["clear", "day"], "trail": ["clear", "day"], "angels": ["clear", "day"], "spook": ["clear", "night"],
 	"boars": ["clear", "day"], "guell": ["clear", "day"], "superilla": ["clear", "day"],
 	"station": ["clear", "day"], "carmel": ["clear", "dusk"], "reial": ["clear", "night"],
 	"forum": ["wind", "day"], "aigues": ["clear", "day"], "horta": ["clear", "day"],
