@@ -3603,7 +3603,17 @@ static func build_walls(m: Node2D) -> void:
 					var gl: Vector2 = m.building_line(gy)
 					gx = minf(gx, gl.x) if ws < 0.0 else maxf(gx, gl.y)
 					gy += STRAIGHT_STEP
-				add_rect_body(m, Vector2(gx + ws * 60.0, ly), Vector2(120.0, g1 - g0))
+				# a wall like the straight one, not furniture: kept out of
+				# solid_rects, which bypassers route round
+				var gb := StaticBody2D.new()
+				gb.collision_layer = 1
+				gb.position = Vector2(gx + ws * 60.0, ly)
+				var gcs := CollisionShape2D.new()
+				var gsh := RectangleShape2D.new()
+				gsh.size = Vector2(120.0, g1 - g0)
+				gcs.shape = gsh
+				gb.add_child(gcs)
+				m.add_child(gb)
 	if m.lvl == "besos":
 		var channel: Rect2 = besos_deep_rect(m)
 		add_rect_body(m, channel.get_center(), channel.size)
