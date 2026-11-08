@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-08 - A dog has standards: good spots, and a call that comes sooner after snacks
+
+- Nature used to call at a random point down the walk and any spot would do. It still comes at that point (`urge_y`), but what she does brings it on sooner: a dropped snack moves it 300 px back up the walk (`POOP_SNACK_PULL`) and zoomies 60 px a second (`POOP_ZOOM_PULL`), never closer than 600 px to the start line.
+- Where she goes matters. Grass, earth or a tree's pit is a good spot: PERFECT SPOT! +8. The pavement pays +2, says ON THE SIDEWALK..., costs your human a little patience and gets a "Here? Really?". While nature calls, a soft green ring breathes at her paws on a good spot, the banner says NATURE CALLS! FIND GRASS OR A TREE, and on a good spot GOOD SPOT! STAND STILL, HOLD the poop button. Holding it starts with a "sniff, sniff".
+- A walk with no good spot anywhere (all paving and stone: L'Estació, El Mercat) keeps the old rule, any spot for +5 and no complaint, as does the First Walk's station. `main.walk_has_good_spots()` looks once per walk.
+- The forced squat when she waits too long is unchanged. `tests/test_poop_spots.gd` in CI.
+
 ## 2026-11-08 - El Parc: the park round the path
 
 - Els Àngels' paired upgrade. El Parc read as El Barri: one flat path fill with a seam and empty lawns. The path now has a granite edging and the park's low iron hoop fence beside it (`Parc.draw_path_edges`), raked gravel on a world-fixed grid and a worn track down the middle that stops where the path splits round the lake (`Parc.draw_over_walkway`).
