@@ -128,7 +128,7 @@ func trigger(m: Node2D, idx: int = 0) -> void:
 		if m.has_method("float_text"):
 			m.float_text(balcony_pos + Vector2(0.0, -34.0), "Heads up!", Color(0.98, 0.95, 0.88), m.POP_SAY)
 		if m.get("feed") != null:
-			m.feed.say("HEADS UP! WATER FROM THE BALCONY!", EventFeed.Tone.LOUD)
+			m.feed.say("WATER FROM ABOVE!", EventFeed.Tone.LOUD)
 		var sfx = m.get_node_or_null("/root/Sfx")
 		if sfx != null:
 			sfx.play("intro_tap", 1.65, -4.0)

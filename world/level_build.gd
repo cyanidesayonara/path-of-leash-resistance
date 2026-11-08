@@ -2832,7 +2832,7 @@ const FREEDOM_PROPS := {
 	"poble": [
 		[Vector2(240.0, -460.0), "dig"], [Vector2(260.0, -250.0), "dig"], [Vector2(1010.0, -340.0), "dig"],
 		[Vector2(375.0, -470.0), "planter"], [Vector2(905.0, -470.0), "planter"],
-		[Vector2(495.0, -460.0), "post"], [Vector2(785.0, -460.0), "post"], [Vector2(375.0, -225.0), "post"],
+		[Vector2(495.0, -460.0), "post"], [Vector2(785.0, -460.0), "post"], [Vector2(330.0, -170.0), "post"],
 		[Vector2(905.0, -225.0), "post"], [Vector2(175.0, -345.0), "shrub"], [Vector2(1085.0, -235.0), "shrub"],
 		[Vector2(290.0, -355.0), "rock"], [Vector2(990.0, -455.0), "log"],
 	],
