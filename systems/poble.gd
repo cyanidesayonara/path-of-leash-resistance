@@ -432,6 +432,35 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 
 		sy += step
 
+	# The arcades: the ground between the house fronts and the column line is
+	# covered, so it lies in a shade that deepens toward the wall, and each bay
+	# is marked by its transverse arch, a stone rib from the column to the
+	# wall, with a lantern hanging in the middle of the bay
+	var arc_lo := maxf(y0, PLAZA_TOP + 80.0)
+	var arc_hi := minf(y1, PLAZA_BOT - 40.0)
+	if arc_hi > arc_lo:
+		for side: float in [-1.0, 1.0]:
+			var wall := float(WALL_L) if side < 0.0 else float(WALL_R)
+			var col_x := 305.0 if side < 0.0 else 975.0
+			var pts := PackedVector2Array([
+				Vector2(wall, arc_lo), Vector2(lerpf(wall, col_x, 0.55), arc_lo), Vector2(col_x + side * -14.0, arc_lo),
+				Vector2(wall, arc_hi), Vector2(lerpf(wall, col_x, 0.55), arc_hi), Vector2(col_x + side * -14.0, arc_hi),
+			])
+			b.band(pts, 3, Color(0.10, 0.07, 0.05), PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([0.34, 0.20, 0.04]))
+			var prev_y := INF
+			for cp: Vector2 in ARCADE_COLUMNS:
+				if absf(cp.x - col_x) > 1.0 or cp.y < arc_lo - 120.0 or cp.y > arc_hi + 120.0:
+					continue
+				b.line(Vector2(wall, cp.y), cp, Color(0.56, 0.47, 0.37), 6.0)
+				b.line(Vector2(wall, cp.y - 2.0), cp + Vector2(0.0, -2.0), Color(0.74, 0.65, 0.52), 1.5)
+				if prev_y < INF:
+					var lp := Vector2(lerpf(wall, col_x, 0.5), (prev_y + cp.y) * 0.5)
+					b.line(Vector2(wall, lp.y), lp, Color(0.18, 0.16, 0.14, 0.6), 1.0)
+					b.circle(lp + LIGHT * 4.0, 5.0, SHADOW)
+					b.circle(lp, 4.5, Color(0.16, 0.14, 0.13))
+					b.circle(lp, 2.6, Color(1.0, 0.80, 0.42))
+				prev_y = cp.y
+
 	# Concentric decorative stone rings & compass rose around the Plaza Mayor fountain
 	if FOUNTAIN_POS.y + 180.0 >= y0 and FOUNTAIN_POS.y - 180.0 <= y1:
 		b.circle(FOUNTAIN_POS, 136.0, Color(0.66, 0.55, 0.44))
@@ -786,6 +815,56 @@ static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 
 		sy += step
 
+	# The village beyond the house fronts: one roof per house, in each town's
+	# style, over the flat fill the rows above lay down
+	for section: Array in [[-640.0, CASTILIAN_TOP, 24.0, "castile"], [CASTILIAN_TOP, PLAZA_TOP, 64.0, "plaza"],
+			[PLAZA_TOP, ANDALUS_TOP, 26.0, "andalus"], [ANDALUS_TOP, gate_y - 30.0, 24.0, "aragon"]]:
+		var s_bot: float = section[0]
+		var s_top: float = section[1]
+		var lo := maxf(s_top, y_top)
+		var hi := minf(s_bot, y_bot)
+		if hi - lo < 8.0:
+			continue
+		for side: float in [-1.0, 1.0]:
+			_house_lots(m, b, side, lo, hi, s_top, s_bot, float(section[2]), String(section[3]))
+
+	# The curtain wall runs out from each tower to the frame's edge: grass in
+	# front of it, the wall-walk between its two crenellated parapets, and the
+	# first lane's paving behind
+	if GATE_PINCH_BOT + 40.0 >= y_top and GATE_PINCH_TOP - 40.0 <= y_bot:
+		var wy0 := GATE_TOWER_L.y - 34.0
+		var wy1 := GATE_TOWER_L.y + 34.0
+		for side: float in [-1.0, 1.0]:
+			var tx: float = (GATE_TOWER_L.x - GATE_TOWER_R_PX + 8.0) if side < 0.0 else (GATE_TOWER_R.x + GATE_TOWER_R_PX - 8.0)
+			var far := -460.0 if side < 0.0 else 1740.0
+			var x0 := minf(far, tx)
+			var w := absf(far - tx)
+			# in front, the grass bank; behind, the town's first paving
+			b.rect(Rect2(x0, wy1, w, GATE_PINCH_BOT - wy1 + 4.0), Color(0.32, 0.46, 0.26))
+			b.rect(Rect2(x0, GATE_PINCH_TOP - 4.0, w, wy0 - GATE_PINCH_TOP + 4.0), Color(0.60, 0.54, 0.46))
+			# the wall's shadow on the grass
+			b.rect(Rect2(x0, wy1, w, 16.0), Color(0.05, 0.04, 0.08, 0.28))
+			# the wall-walk and its stone courses
+			b.rect(Rect2(x0, wy0, w, wy1 - wy0), Color(0.62, 0.55, 0.45))
+			var cy := wy0 + 12.0
+			while cy < wy1 - 8.0:
+				b.line(Vector2(x0, cy), Vector2(x0 + w, cy), Color(0.52, 0.46, 0.38), 1.2)
+				cy += 11.0
+			# merlons along both parapets, the gaps between them dark
+			var mx := x0
+			var mi := 0
+			while mx < x0 + w:
+				var mw := minf(14.0, x0 + w - mx)
+				if mi % 2 == 0:
+					b.rect(Rect2(mx, wy0 - 4.0, mw, 10.0), Color(0.76, 0.69, 0.57))
+					b.rect(Rect2(mx, wy1 - 6.0, mw, 10.0), Color(0.76, 0.69, 0.57))
+					b.rect(Rect2(mx + 2.0, wy1 + 4.0, mw, 4.0), Color(0.05, 0.04, 0.08, 0.20))
+				else:
+					b.rect(Rect2(mx, wy0 - 2.0, mw, 6.0), Color(0.42, 0.37, 0.30))
+					b.rect(Rect2(mx, wy1 - 4.0, mw, 6.0), Color(0.42, 0.37, 0.30))
+				mx += 14.0
+				mi += 1
+
 	# Draw the two big round crenellated stone gate towers flanking the entrance pinch
 	if GATE_TOWER_L.y + 140.0 >= y_top and GATE_TOWER_L.y - 140.0 <= y_bot:
 		_draw_crenellated_gate_tower(b, GATE_TOWER_L)
@@ -793,6 +872,146 @@ static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 
 	if not (c is ShapeBatch):
 		b.flush()
+
+
+# --- the houses behind the fronts ---------------------------------------------
+# Each lot is LOT_H tall down the street (jittered by a hash of its index, so
+# the party walls do not line up like a ruler): a front house whose roof runs
+# from the facade line back FRONT_D px, and a back row behind it to the frame's
+# edge. Pitched tile roofs in Castile, round the plaza and in Aragon: a lit
+# slope and a shaded one either side of the ridge, tile courses, chimneys.
+# Andalusia's are mostly flat white terraces (azoteas) with parapets, water
+# tanks, pots and washing, and the odd tiled one. Some back lots open into a
+# patio. Everything is batched into the edge layer's ShapeBatch.
+const LOT_H := 128.0
+const FRONT_D := 150.0
+const ROOF_TILES := {
+	"castile": [Color(0.62, 0.33, 0.22), Color(0.56, 0.30, 0.20), Color(0.66, 0.40, 0.26), Color(0.44, 0.42, 0.40)],
+	"plaza": [Color(0.66, 0.36, 0.22), Color(0.70, 0.44, 0.28), Color(0.60, 0.32, 0.21), Color(0.72, 0.52, 0.34)],
+	"andalus": [Color(0.68, 0.38, 0.24), Color(0.72, 0.42, 0.26)],
+	"aragon": [Color(0.58, 0.30, 0.19), Color(0.62, 0.34, 0.21), Color(0.54, 0.28, 0.18)],
+}
+const AZOTEA := Color(0.95, 0.94, 0.90)
+const PATIO_FLOOR := {"castile": Color(0.66, 0.60, 0.52), "plaza": Color(0.70, 0.62, 0.50),
+	"andalus": Color(0.86, 0.80, 0.70), "aragon": Color(0.70, 0.52, 0.40)}
+
+
+static func _lot_hash(k: int, side: float, salt: int) -> int:
+	var h := (k * 73856093) ^ (int(side + 2.0) * 19349663) ^ (salt * 83492791)
+	return absi(h) % 1000
+
+
+static func _facade_x(m: Node2D, y: float, side: float, face: float) -> float:
+	var e: Vector2 = m.walk_edges(y)
+	return (e.x - face) if side < 0.0 else (e.y + face)
+
+
+static func _house_lots(m: Node2D, b: ShapeBatch, side: float, lo: float, hi: float,
+		s_top: float, s_bot: float, face: float, style: String) -> void:
+	var far := -460.0 if side < 0.0 else 1740.0
+	var k0 := int(floorf(lo / LOT_H)) - 1
+	var k1 := int(floorf(hi / LOT_H)) + 1
+	for k in range(k0, k1 + 1):
+		var jit := float(_lot_hash(k, side, 1) % 40) - 20.0
+		var y0 := maxf(float(k) * LOT_H + jit, s_top)
+		var y1 := minf(float(k + 1) * LOT_H + float(_lot_hash(k + 1, side, 1) % 40) - 20.0, s_bot)
+		if y1 - y0 < 24.0:
+			continue
+		var f0 := _facade_x(m, y0, side, face)
+		var f1 := _facade_x(m, y1, side, face)
+		var d := FRONT_D + float(_lot_hash(k, side, 2) % 50)
+		var back0 := f0 + side * d
+		var back1 := f1 + side * d
+		var h := _lot_hash(k, side, 3)
+		var flat := style == "andalus" and h % 3 != 0
+		var tiles: Array = ROOF_TILES[style]
+		var tile: Color = tiles[h % tiles.size()]
+		# the back row first, a shade darker, its own ridge
+		var back_tile: Color = (tiles[(h / 7) % tiles.size()] as Color).darkened(0.12)
+		if style == "andalus" and h % 2 == 0:
+			back_tile = AZOTEA.darkened(0.06)
+		b.quad(Vector2(back0, y0), Vector2(far, y0), Vector2(far, y1), Vector2(back1, y1), back_tile)
+		b.line(Vector2(back0 + side * 70.0, y0), Vector2(back1 + side * 70.0, y1), back_tile.lightened(0.10), 2.5)
+		# a patio in some back lots: floor, a lemon tree, its walls' shade
+		if h % 4 == 1 and y1 - y0 > 70.0:
+			var pa := Rect2(minf(back0 + side * 20.0, back0 + side * 120.0), y0 + 16.0, 100.0, y1 - y0 - 32.0)
+			b.rect(pa, PATIO_FLOOR[style])
+			if style == "andalus":
+				# a checker of glazed tiles and a little round fountain
+				var ty := pa.position.y
+				var row_i := 0
+				while ty < pa.end.y - 1.0:
+					var tx := pa.position.x + (10.0 if row_i % 2 == 1 else 0.0)
+					while tx < pa.end.x - 1.0:
+						b.rect(Rect2(tx, ty, minf(10.0, pa.end.x - tx), minf(10.0, pa.end.y - ty)), Color(0.20, 0.42, 0.72, 0.55))
+						tx += 20.0
+					ty += 10.0
+					row_i += 1
+				b.circle(pa.get_center(), 9.0, Color(0.92, 0.90, 0.86))
+				b.circle(pa.get_center(), 6.0, Color(0.36, 0.62, 0.80))
+			var tc := pa.get_center() + Vector2(side * 22.0, -10.0)
+			b.circle(tc + LIGHT * 6.0, 15.0, SHADOW)
+			b.circle(tc, 14.0, Color(0.20, 0.40, 0.22))
+			b.circle(tc - LIGHT * 4.0, 8.0, Color(0.30, 0.50, 0.28))
+			if style != "aragon":
+				b.circle(tc + Vector2(4.0, 2.0), 2.2, Color(0.96, 0.82, 0.22))
+			b.rect(Rect2(pa.position.x, pa.position.y, pa.size.x, 6.0), Color(0.0, 0.0, 0.0, 0.18))
+		if flat:
+			# the front house's flat white terrace and its parapet
+			b.quad(Vector2(f0, y0), Vector2(back0, y0), Vector2(back1, y1), Vector2(f1, y1), AZOTEA)
+			b.line(Vector2(f0, y0 + 3.0), Vector2(back0, y0 + 3.0), AZOTEA.darkened(0.14), 3.0)
+			b.line(Vector2(f1, y1 - 3.0), Vector2(back1, y1 - 3.0), AZOTEA.darkened(0.14), 3.0)
+			b.line(Vector2(back0 - side * 3.0, y0), Vector2(back1 - side * 3.0, y1), AZOTEA.darkened(0.14), 3.0)
+			b.line(Vector2(f0 + side * 3.0, y0), Vector2(f1 + side * 3.0, y1), AZOTEA.darkened(0.08), 2.0)
+			var mid := Vector2((f0 + back0 + f1 + back1) * 0.25, (y0 + y1) * 0.5)
+			if h % 5 < 3:
+				# the water tank
+				var tp := mid + Vector2(-side * 30.0, -14.0)
+				b.circle(tp + LIGHT * 5.0, 10.0, SHADOW)
+				b.circle(tp, 9.0, Color(0.62, 0.64, 0.66))
+				b.circle(tp - LIGHT * 2.0, 5.0, Color(0.74, 0.76, 0.78))
+			if h % 2 == 0:
+				# washing on a line across the terrace
+				var wy := mid.y + 12.0
+				var wa := Vector2(f0 + side * 18.0, wy)
+				var wb := Vector2(back0 - side * 18.0, wy)
+				b.line(wa, wb, Color(0.30, 0.30, 0.32), 1.0)
+				var cols := [Color(0.92, 0.36, 0.30), Color(0.30, 0.52, 0.86), Color(0.98, 0.96, 0.90), Color(0.96, 0.78, 0.24)]
+				for wi in range(4):
+					var wp := wa.lerp(wb, 0.15 + 0.22 * float(wi))
+					b.rect(Rect2(wp.x - 5.0, wy, 10.0, 8.0 + float(wi % 2) * 3.0), cols[(wi + h) % 4])
+			# pots along the street-side parapet
+			for pi in range(3):
+				var pp := Vector2(f0, y0).lerp(Vector2(f1, y1), 0.2 + 0.3 * float(pi)) + Vector2(side * 8.0, 0.0)
+				b.circle(pp, 3.6, Color(0.72, 0.36, 0.20))
+				b.circle(pp + Vector2(0.0, -1.5), 3.0, Color(0.92, 0.18, 0.24) if (pi + h) % 2 == 0 else Color(0.20, 0.50, 0.24))
+		else:
+			# a pitched roof: the slope toward the street, the ridge, the slope behind
+			var r0 := f0 + side * d * 0.5
+			var r1 := f1 + side * d * 0.5
+			var lit := tile.lightened(0.10) if side > 0.0 else tile.darkened(0.06)
+			var shade := tile.darkened(0.14) if side > 0.0 else tile.lightened(0.04)
+			b.quad(Vector2(f0, y0), Vector2(r0, y0), Vector2(r1, y1), Vector2(f1, y1), lit)
+			b.quad(Vector2(r0, y0), Vector2(back0, y0), Vector2(back1, y1), Vector2(r1, y1), shade)
+			# tile courses, parallel to the ridge
+			var dd := 10.0
+			while dd < d - 4.0:
+				if absf(dd - d * 0.5) > 4.0:
+					var cc := (lit if dd < d * 0.5 else shade).darkened(0.10)
+					b.line(Vector2(f0 + side * dd, y0 + 2.0), Vector2(f1 + side * dd, y1 - 2.0), cc, 1.2)
+				dd += 11.0
+			b.line(Vector2(r0, y0), Vector2(r1, y1), tile.lightened(0.22), 3.0)
+			# the eaves along the street
+			b.line(Vector2(f0, y0), Vector2(f1, y1), tile.darkened(0.28), 2.5)
+			if h % 3 == 0:
+				# a chimney with its pot, and its shadow on the tiles
+				var cp := Vector2((r0 + back0) * 0.5, (y0 + y1) * 0.5 - 12.0)
+				b.rect(Rect2(cp + LIGHT * 7.0 - Vector2(7, 7), Vector2(14, 14)), SHADOW)
+				b.rect(Rect2(cp - Vector2(7, 7), Vector2(14, 14)), Color(0.80, 0.74, 0.64) if style != "aragon" else Color(0.66, 0.36, 0.24))
+				b.rect(Rect2(cp - Vector2(4, 4), Vector2(8, 8)), Color(0.26, 0.22, 0.20))
+		# the party wall between this house and the next one down the street
+		b.line(Vector2(f0, y0), Vector2(far, y0), Color(0.18, 0.13, 0.10, 0.55), 2.5)
+		b.line(Vector2(f0, y0 + 2.5), Vector2(far, y0 + 2.5), Color(1.0, 0.95, 0.85, 0.12), 1.0)
 
 
 static func _draw_crenellated_gate_tower(b: ShapeBatch, center: Vector2) -> void:
