@@ -66,7 +66,12 @@ func _run() -> void:
 		for i in range(40):
 			dog.velocity = Vector2(-600.0, 0.0)
 			dog.move_and_slide()
-		_check(dog.global_position.x > f.x - 30.0, "%s: the dog stops at the left building line (x %.0f, line %.0f)" % [lv, dog.global_position.x, f.x])
+		# the wall is the building line: on a walk that bends it steps out past
+		# the paving where the street widens (La Castanyada at -2000 opens to
+		# x 214), and the yard in front of it is walkable (#487)
+		var wall_x: float = main.building_line(dog.global_position.y).x
+		_check(dog.global_position.x > wall_x - 30.0 and dog.global_position.x < wall_x + 30.0,
+			"%s: the dog stops at the left building line (x %.0f, line %.0f)" % [lv, dog.global_position.x, wall_x])
 		main.queue_free()
 		await process_frame
 	# El Mosaic's terrace walls follow the path through every bend and wave,
