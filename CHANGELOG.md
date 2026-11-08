@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-11-08 - El Barri: the neighborhood round the square
+
+- El Barri, the first walk, was the same frame from start to pipicà: a sand strip between two lawns, the street with its motorbikes on one side and lawn to the frame's edge on the other. Paired with L'Eixample for 1.71, it now changes down its length (`systems/barri.gd`).
+- The east railing moved in (`RAIL_E` 1100 to 1050, the playground narrowed to fit) so the east side shows as much as the west, and past it there is no street: the block of flats faces the park across its pavement, balconies out over it (geraniums, washing, air conditioners, blinds), a corner bar's tables, the bakery, the newspaper kiosk, the pharmacy's green cross, the greengrocer's crates, the hairdresser.
+- West, in the street's parking lane: the bar across from the entrance puts its terrace out on a timber platform, the recycling containers stand near the pipicà, and the Bicing dock moved over from the east.
+- The lawns, in the order she meets them: rosemary and the entrance flower bed, roses and the old folks' exercise corner on its rubber pad, lavender along the plane-tree avenue, the stone chess table with a game on, the petanca's spectators on their bench, the kiosk bar and its tables by the square, the pergola under its bougainvillea, a picnic table, the parent's bench and pram across from the playground, the allotment's raised beds and newly staked trees before the pipicà. Each is solid (`Barri.solids`, so bypassers route round it) and keeps the grass off.
+- The gravel: granite edging along both lawns, a track worn down the middle, scattered stones and damp patches, and a band of setts across each end of the square.
+- Nothing changes in the First Walk (the tutorial draws none of it and has no solids), and the behaviour snapshot for El Barri is identical.
+
 ## 2026-11-07 - The whole view drawn after a camera jump; bumps cost a bump's worth
 
 - The camera is smoothed, so after a jump (a `--shot-y` shot, a restart, the turn for home) the screen trails `cam.position` by hundreds of pixels for a while. The world pass, the edge, verge and ground canvases and the section caches culled and cached for `cam.position`, so the stretch actually on screen could be left bare: a band of the view with no paving under the props (every `--shot-y` shot of Plaça d'Espanya, and the new L'Eixample). They cull to `main.view_lo()`/`view_hi()` now, a band that covers both where the camera is heading and where the screen really is; the canvases still decide when to redraw by the camera's position, so what they record always covers the view.
