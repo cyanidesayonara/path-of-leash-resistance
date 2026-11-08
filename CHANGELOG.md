@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-11-08 - HUD facelift: a status card that says what it shows, a goal list on one edge
+
+- The status card (top left, `hud/hud_panel.gd`) was glyphs alone: three phone pips, two upright tubes, five rings. Now each row is labelled: PHONE with its three lives (the label turns red on the last one), PEE as a yellow bar with its droplet, MARKED right under it with five drops filling in the same yellow (pee is what marks a spot, so the two read as one idea), ZOOMIES as a green bar with its bolt, the bones banked on the right of the top row, the streak on the marked row's free end. Two rows show only while they matter, growing the card by a row each: POOP while nature calls, its brown bar the time she can still choose a spot (`main.POOP_URGE_S`, red for the last ten seconds and the warning), and a mood while it lasts. The full-bladder banner says BURSTING! GO MARK A SPOT and the pee lesson calls the yellow bar "your pee" (it said "tank", which nothing else in the game explains). The lesson outlines (`POINT_RECTS`) frame the new rows.
+- The goal list (`hud/goals_card.gd`): the same margin on all four sides (the bottom had about half the top's), and every count, readout, letter tile and the key pill right-aligned to one edge, as the ticks are on the left. Collapsed, the clock has its own row under the pill instead of touching it.
+- Under a menu (pause, settings, a walk card, the results) the status card and the goal list fade out, so the menu is the only thing on screen, and fade back on resume. THAT'S THE BASICS keeps them, since it points at the phone.
+- Speech bubbles steer clear of the status card and the goal list: one under the goal list's glass read as text running off the end of its bubble.
+- YOUR WALKS cuts a long subtitle at the stars column with "..." instead of running it on under the stars.
+- The dare offer card leaves a gap above its button row (`TAKE_GAP`): the key's glow touched "Win 38 bones." above it.
+
 ## 2026-11-08 - Walls at the building line on every street that bends
 
 - The shot-sweep review (#474) found front yards drawn but blocked. It was worse: every built walk also had a straight wall at its nominal width (sw_l/sw_r) the whole way, which stood across the path itself wherever the street bends or opens out past it (80 px of El Gòtic's alley, L'Estació's concourse, El Mosaic's terraces, L'Eixample's crossings) and across every front yard. That wall now stands only along stretches where the building line keeps to sw_l/sw_r (`LevelBuild.straight_runs`); a walk that never bends gets the same single wall as before. Where a bike lane crosses a bending walk, its gap in the building line is closed at the building line instead.

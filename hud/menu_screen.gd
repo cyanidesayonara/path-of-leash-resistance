@@ -465,6 +465,17 @@ static func progress_rect(vs: Vector2, row_count: int) -> Rect2:
 	return Rect2(vs.x * 0.5 - w * 0.5, y0, w, h)
 
 
+# text cut at a word, or a letter, to fit w, with "..." where it was cut
+static func fit_text(f: Font, text: String, px: int, w: float) -> String:
+	if Kit.text_w(f, text, px) <= w:
+		return text
+	var cut := text
+	while cut.length() > 1 and Kit.text_w(f, cut + "...", px) > w:
+		var sp := cut.rfind(" ")
+		cut = cut.substr(0, sp) if sp > cut.length() / 2 else cut.substr(0, cut.length() - 1)
+	return cut.strip_edges() + "..."
+
+
 func _progress(vs: Vector2) -> void:
 	var acc := Kit.accent("progress")
 	var rows := Flow.progress_rows(main)
@@ -504,9 +515,12 @@ func _progress(vs: Vector2) -> void:
 		var ncol: Color = Kit.INK_SOFT if locked else Kit.INK
 		draw_string(f, Vector2(r.position.x + 36.0, base), String(row.name), HORIZONTAL_ALIGNMENT_LEFT, -1, font_px, ncol)
 		var nw := Kit.text_w(f, String(row.name), font_px)
-		var gloss_w := maxf(40.0, c_stars - (r.position.x + 54.0 + nw))
-		draw_string(body, Vector2(r.position.x + 46.0 + nw, base), String(row.gloss), HORIZONTAL_ALIGNMENT_LEFT,
-			gloss_w, sub_px, Kit.INK_SOFT)
+		# cut to the stars column: draw_string's width does not clip, and a
+		# long gloss ran on under the stars
+		var gloss_w := c_stars - 14.0 - (r.position.x + 46.0 + nw)
+		if gloss_w > 30.0:
+			draw_string(body, Vector2(r.position.x + 46.0 + nw, base), fit_text(body, String(row.gloss), sub_px, gloss_w),
+				HORIZONTAL_ALIGNMENT_LEFT, -1, sub_px, Kit.INK_SOFT)
 		if locked:
 			Kit.lock(self, Vector2(c_stars + 8.0, base - 5.0), lock_sz, Kit.INK_FAINT)
 			var lock_lbl := "Opens at %d stars" % int(row.gate)

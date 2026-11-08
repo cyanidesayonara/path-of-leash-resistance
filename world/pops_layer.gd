@@ -168,12 +168,22 @@ func _draw_speech() -> void:
 		return
 	var vis := get_global_transform_with_canvas().affine_inverse() * get_viewport_rect()
 	var placed: Array[Rect2] = []
+	var cards := _hud_cards()
 	for it: Dictionary in items:
 		var ls: Array[String] = Bubble.lines(String(it.text), String(it.split))
 		var sz := Bubble.size_of(ls)
 		var tip: Vector2 = it.tip
 		var box := Rect2(tip.x - sz.x * 0.5, tip.y - Bubble.TAIL_H - sz.y, sz.x, sz.y)
 		box.position.x = clampf(box.position.x, vis.position.x + 6.0, maxf(vis.position.x + 6.0, vis.end.x - 6.0 - sz.x))
+		# clear of the HUD's cards: a bubble under the goal list was read
+		# through its glass as text running off the end of the bubble
+		for card: Rect2 in cards:
+			if not card.grow(4.0).intersects(box):
+				continue
+			if card.get_center().x > vis.get_center().x:
+				box.position.x = maxf(vis.position.x + 6.0, card.position.x - 6.0 - sz.x)
+			else:
+				box.position.x = minf(vis.end.x - 6.0 - sz.x, card.end.x + 6.0)
 		for _pass in range(6):
 			var moved := false
 			for q: Rect2 in placed:
@@ -190,6 +200,26 @@ func _draw_speech() -> void:
 	for i in range(items.size() - 1, -1, -1):
 		var it: Dictionary = items[i]
 		Bubble.draw(self, it.box, it.tip, it.ls, float(it.t), float(it.a), it.paper)
+
+
+# The vitals card and the goal list, where they are on screen, in this
+# layer's (world) coordinates. Both live on the HUD layer, which draws over
+# the world unscaled by the camera.
+func _hud_cards() -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var m := get_parent()
+	if m == null:
+		return out
+	var to_world := get_global_transform_with_canvas().affine_inverse()
+	for key: String in ["panel", "goals_card"]:
+		var c = m.get(key)
+		if c is Control and (c as Control).is_visible_in_tree():
+			var cc := c as Control
+			var r := Rect2(cc.get_global_rect().position, cc.size)
+			if key == "panel" and cc.has_method("card_h"):
+				r.size = Vector2(cc.CARD_W, cc.card_h())
+			out.append(to_world * r)
+	return out
 
 
 func _sfx(at: Vector2, text: String, col: Color, a: float, t: float, tilt: float) -> void:
