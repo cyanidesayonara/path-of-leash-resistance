@@ -899,6 +899,8 @@ var active_quests: Array[Dictionary] = []
 var poop_state := 0  # 0 not yet, 1 urge, 2 done, 3 forced telegraph, 4 forced squat
 var urge_y := -2000.0
 var urge_timer := 0.0
+# how long she can hold it once nature calls (the HUD drains a bar over it)
+const POOP_URGE_S := 35.0
 var squat_progress := 0.0
 var business_spot := Vector2(INF, INF)
 var elapsed := 0.0
@@ -6128,7 +6130,7 @@ func _update_hud() -> void:
 	elif walk_mod != null and walk_mod.has_method("idle_status") and walk_mod.idle_status(self) != "":
 		hud_status = walk_mod.idle_status(self)
 	elif pee >= 0.999:
-		hud_status = "FULL TANK! GO MARK A SPOT"
+		hud_status = "BURSTING! GO MARK A SPOT"
 	elif pee <= 0.02:
 		hud_status = "THIRSTY! FIND A FOUNTAIN"
 	if phase == "out" and walk_mod != null and walk_mod.has_method("urgent_status"):
@@ -10643,7 +10645,7 @@ func _bodily(delta: float) -> void:
 		0:
 			if dog.global_position.y < urge_y:
 				poop_state = 1
-				urge_timer = 35.0
+				urge_timer = POOP_URGE_S
 				float_text(dog.global_position, "Uh oh...", Color(1, 0.9, 0.6))
 		1:
 			urge_timer -= delta
