@@ -561,6 +561,8 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_tool_levels.gd
       - name: Every walk is registered in every table test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_walk_registry.gd
+      - name: Poop spots (good ground pays, snacks and zoomies bring the call sooner)
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_poop_spots.gd
       - name: Walk modules' hooks take the arguments main passes test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_walk_hooks.gd
 
