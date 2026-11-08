@@ -27,6 +27,7 @@ const Superilla := preload("res://systems/superilla.gd")
 const Forum := preload("res://systems/forum.gd")
 const Espanya := preload("res://systems/espanya.gd")
 const Eixample := preload("res://systems/eixample.gd")
+const Angels := preload("res://systems/angels.gd")
 # the tutorial's pond for the brink lesson, beside the path at its station
 const TUT_POND_W := 150.0
 const ROPE_CLEAR := 4.0
@@ -112,8 +113,9 @@ const CROSS_SECTIONS := {
 	"raval": ["none", 0.0, "none", 0.0],           # promenade and plaza drawn in systems/boss_gat.gd
 	"gracia": ["none", 0.0, "none", 0.0],          # a narrow street: the houses at the paving
 	"carmel": ["none", 0.0, "none", 0.0],          # sunset panorama and hillside slopes in systems/carmel.gd
-	"forum": ["none", 0.0, "none", 0.0],
-	"eixample": ["none", 0.0, "none", 0.0],        # the grid street and its blocks in systems/eixample.gd           # coastal concrete plaza and bathing esplanade in systems/forum.gd
+	"forum": ["none", 0.0, "none", 0.0],           # coastal concrete plaza and bathing esplanade in systems/forum.gd
+	"eixample": ["none", 0.0, "none", 0.0],        # the grid street and its blocks in systems/eixample.gd
+	"angels": ["none", 0.0, "none", 0.0],          # skate plaza, museum and convent in systems/angels.gd
 	# flood wall on the left, grass then the river on the right
 	"besos": ["none", 0.0, "grass", 120.0],
 }
@@ -1211,6 +1213,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"forum": half = Forum.HALF
 		"espanya": half = Espanya.HALF
 		"eixample": half = Eixample.HALF   # the octagons at the crossings (Eixample.edge_nodes)
+		"angels": half = Angels.HALF
 		"besos": half = BESOS_HALF
 	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
 	m.walk_half = half
@@ -1378,6 +1381,8 @@ static func apply_corridor(m: Node2D) -> void:
 		m.edge_nodes = Carmel.edge_nodes(m)
 	elif m.lvl == "eixample":
 		m.edge_nodes = Eixample.edge_nodes(m)
+	elif m.lvl == "angels":
+		m.edge_nodes = Angels.edge_nodes(m)
 	elif m.lvl == "trail":
 		# EL BOSC BENDS - the first walk in the game that is not a straight
 		# line. A woodland trail has no business being ruler-drawn: it wanders
@@ -1408,7 +1413,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "angels":
 		return
 	# and so does El Barri; the First Walk, built on it, is still fitted
 	if m.lvl == "barri" and not m.tutorial_mode:
@@ -1534,6 +1539,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_espanya: Array = Espanya.build(m)
 			hyd_list.assign(pl_espanya[0])
 			keb_list.assign(pl_espanya[1])
+		"angels":
+			var pl_angels: Array = Angels.build(m)
+			hyd_list.assign(pl_angels[0])
+			keb_list.assign(pl_angels[1])
 		"raval":
 			var pl_raval: Array = BossGat.build(m)
 			hyd_list.assign(pl_raval[0])
@@ -2269,6 +2278,9 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "vet":
 		for r: Rect2 in Vet.wrap_rects():
 			add_rope_rect(m, r)
+	if m.lvl == "angels":
+		for r: Rect2 in Angels.wrap_rects():
+			add_rope_rect(m, r)
 	if m.lvl == "horta":
 		if not m.tutorial_mode:
 			m.lost_tourist = LostTourist.new()
@@ -2356,6 +2368,9 @@ static func build_level_data(m: Node2D) -> void:
 		"espanya":
 			m.prize_pos = Espanya.PRIZE
 			m.prize_text = Espanya.PRIZE_TEXT
+		"angels":
+			m.prize_pos = Angels.PRIZE
+			m.prize_text = Angels.PRIZE_TEXT
 		"raval":
 			m.prize_pos = BossGat.PRIZE
 			m.prize_text = BossGat.PRIZE_TEXT
@@ -2779,6 +2794,13 @@ const FREEDOM_PROPS := {
 		[Vector2(1030.0, -458.0), "post"], [Vector2(332.0, -250.0), "shrub"], [Vector2(548.0, -238.0), "post"],
 		[Vector2(762.0, -222.0), "shrub"],
 	],
+	"angels": [
+		[Vector2(314.0, -448.0), "dig"], [Vector2(644.0, -422.0), "dig"], [Vector2(886.0, -236.0), "dig"],
+		[Vector2(392.0, -468.0), "planter"], [Vector2(1042.0, -246.0), "planter"],
+		[Vector2(276.0, -352.0), "post"], [Vector2(538.0, -450.0), "post"], [Vector2(768.0, -436.0), "post"],
+		[Vector2(1034.0, -462.0), "post"], [Vector2(326.0, -246.0), "shrub"], [Vector2(554.0, -242.0), "post"],
+		[Vector2(770.0, -218.0), "shrub"],
+	],
 	"carmel": [
 		[Vector2(180.0, -450.0), "dig"], [Vector2(640.0, -340.0), "dig"], [Vector2(1095.0, -440.0), "dig"],
 		[Vector2(162.0, -340.0), "log"], [Vector2(905.0, -480.0), "log"],
@@ -2960,7 +2982,7 @@ static func placa_clear(m: Node2D, at: Vector2) -> bool:
 # paving. Not a park's gravel path, a forest trail, the scrapyard's dirt or
 # El Mosaic's terraces, and on the seafront only the promenade, not the brick
 # bike path beside it.
-const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell", "station", "aigues", "horta", "carmel", "superilla"]
+const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell", "station", "aigues", "horta", "carmel", "superilla", "angels"]
 const BEACH_PROM_X := 560.0
 
 # PASSEIG MARÍTIM's landmarks, on the walk itself so its stretches differ
@@ -3202,6 +3224,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_espanya: Array[Rect2] = Espanya.solids(m)
 			for i in range(ps_espanya.size()):
 				out.append(["espanya_solid_%d" % i, ps_espanya[i]])
+		"angels":
+			var ps_angels: Array[Rect2] = Angels.solids(m)
+			for i in range(ps_angels.size()):
+				out.append(["angels_solid_%d" % i, ps_angels[i]])
 		"raval":
 			var ps_raval: Array[Rect2] = BossGat.solids(m)
 			for i in range(ps_raval.size()):
@@ -3308,6 +3334,35 @@ static func build_bypasser_blockers(m: Node2D) -> void:
 			"rect": m.pond,
 			"forced_side": "right",
 		})
+
+
+# The stretches, as (top, bottom) in y, between lo and hi where the building
+# line on this side stays at or inside sw_l/sw_r: where the straight wall can
+# stand without standing on the path. Sampled every STRAIGHT_STEP px.
+const STRAIGHT_STEP := 20.0
+
+
+static func straight_runs(m: Node2D, side: float, lo: float, hi: float) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	if m.edge_nodes.is_empty():
+		out.append(Vector2(lo, hi))
+		return out
+	var run_top := INF
+	var y := lo
+	while y <= hi:
+		# the building line, not the paving: a step's front yard is walkable too
+		var e: Vector2 = m.building_line(y)
+		var inside: bool = (e.x >= m.sw_l - 0.5) if side < 0.0 else (e.y <= m.sw_r + 0.5)
+		if inside and run_top == INF:
+			run_top = y
+		elif not inside and run_top != INF:
+			out.append(Vector2(run_top, y - STRAIGHT_STEP))
+			run_top = INF
+		y += STRAIGHT_STEP
+	if run_top != INF:
+		out.append(Vector2(run_top, hi))
+	# a run too short to matter would only be a post in the yard
+	return out.filter(func(r: Vector2) -> bool: return r.y - r.x >= 40.0)
 
 
 static func build_walls(m: Node2D) -> void:
@@ -3568,17 +3623,49 @@ static func build_walls(m: Node2D) -> void:
 	var wall_hi := float(m.START_Y) + 200.0
 	if m.lvl == "market":
 		wall_hi = MERCAT_DOOR_Y - 160.0
+	# Only where the path keeps to sw_l/sw_r: where it bends or opens out past
+	# them (El Gòtic's alleys, El Mosaic's terraces, L'Estació's concourse,
+	# L'Eixample's crossings) the straight wall stood across the path itself,
+	# and the building line (above) walls those stretches. A straight walk
+	# gets the one rect it always had.
 	for ws in wall_sides:
 		var bx: float = (m.sw_l - 60.0) if ws < 0.0 else (m.sw_r + 60.0)
-		var bb := StaticBody2D.new()
-		bb.collision_layer = 1
-		bb.position = Vector2(bx, (wall_lo + wall_hi) / 2.0)
-		var bcs := CollisionShape2D.new()
-		var bsh := RectangleShape2D.new()
-		bsh.size = Vector2(120.0, wall_hi - wall_lo)
-		bcs.shape = bsh
-		bb.add_child(bcs)
-		m.add_child(bb)
+		for run: Vector2 in straight_runs(m, ws, wall_lo, wall_hi):
+			var bb := StaticBody2D.new()
+			bb.collision_layer = 1
+			bb.position = Vector2(bx, (run.x + run.y) / 2.0)
+			var bcs := CollisionShape2D.new()
+			var bsh := RectangleShape2D.new()
+			bsh.size = Vector2(120.0, run.y - run.x)
+			bcs.shape = bsh
+			bb.add_child(bcs)
+			m.add_child(bb)
+		# where a bike lane crosses, the building line has a gap (so a side
+		# street leads somewhere) that the straight wall used to close; on a
+		# walk that bends, close it at the building line instead
+		if not m.edge_nodes.is_empty():
+			for ly: float in m.lane_ys:
+				var g0: float = ly - float(m.LANE_HALF) - 60.0
+				var g1: float = ly + float(m.LANE_HALF) + 60.0
+				if g1 < wall_lo or g0 > wall_hi:
+					continue
+				var gx := INF if ws < 0.0 else -INF
+				var gy := g0
+				while gy <= g1:
+					var gl: Vector2 = m.building_line(gy)
+					gx = minf(gx, gl.x) if ws < 0.0 else maxf(gx, gl.y)
+					gy += STRAIGHT_STEP
+				# a wall like the straight one, not furniture: kept out of
+				# solid_rects, which bypassers route round
+				var gb := StaticBody2D.new()
+				gb.collision_layer = 1
+				gb.position = Vector2(gx + ws * 60.0, ly)
+				var gcs := CollisionShape2D.new()
+				var gsh := RectangleShape2D.new()
+				gsh.size = Vector2(120.0, g1 - g0)
+				gcs.shape = gsh
+				gb.add_child(gcs)
+				m.add_child(gb)
 	if m.lvl == "besos":
 		var channel: Rect2 = besos_deep_rect(m)
 		add_rect_body(m, channel.get_center(), channel.size)
@@ -3684,6 +3771,9 @@ static func build_walls(m: Node2D) -> void:
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "espanya":
 		for r: Rect2 in Espanya.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "angels":
+		for r: Rect2 in Angels.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "raval":
 		for r: Rect2 in BossGat.solids(m):

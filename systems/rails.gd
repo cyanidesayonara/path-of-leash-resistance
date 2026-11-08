@@ -105,6 +105,13 @@ static func build(m: Node2D) -> void:
 			if z.size.y > 0.0:
 				for hx: float in [z.position.x + 3.0, z.end.x - 3.0]:
 					m.rails.append(line(Vector2(hx, z.end.y), Vector2(hx, z.position.y), "HANDRAIL"))
+		"angels":
+			# the white museum's long low skate ledges, the stair-set handrail,
+			# and the stone convent ledge across the plaza
+			m.rails.append(line(Vector2(340.0, -1480.0), Vector2(340.0, -2120.0), "LEDGE GRIND"))
+			m.rails.append(line(Vector2(340.0, -2620.0), Vector2(340.0, -3260.0), "LEDGE GRIND"))
+			m.rails.append(line(Vector2(450.0, -1840.0), Vector2(450.0, -2100.0), "HANDRAIL"))
+			m.rails.append(line(Vector2(920.0, -1900.0), Vector2(920.0, -2420.0), "LEDGE GRIND"))
 
 
 # The nearest point of a rail to p: {"q": point, "dir": unit direction of that

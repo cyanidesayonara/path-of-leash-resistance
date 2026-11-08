@@ -45,6 +45,7 @@ const HOOKS := {
 	"forum": ["draw_bin", "draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "on_bark", "surface", "tick"],
 	"espanya": ["draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "is_lamp", "on_bark", "surface", "tick", "tree_kind"],
 	"eixample": ["draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_live", "is_lamp", "on_bark", "surface", "tick", "tree_kind"],
+	"angels": ["draw_bin", "draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "on_bark", "surface", "tick", "tree_kind"],
 	"raval": ["cam_lean", "draw_edge_layer", "draw_live", "draw_overhead", "hush_banner", "idle_status", "on_bark", "surface", "tick", "urgent_status"],
 }
 
