@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-09 - Plaça d'Espanya at night: the towers, the halls and the show
+
+- El Poble Espanyol's paired upgrade. Plaça d'Espanya is a night walk, and its paving, halls and gardens read as one dark blue field. Now the place is lit: lamp posts with warm pools between the plane trees down both sauló strips and along the garden promenades up to the palace; the exhibition halls lit from inside (skylights and colonnades); the Venetian towers lit from below; the palace's windows and corner domes glowing.
+- By the ring road at the start, the old bullring's brick drum with its lit arches, roof terrace and glass dome, and a hotel opposite with lit windows. Traffic on the ring road and both avenue roads, cars and taxis (black with yellow doors) with headlights and tail lights.
+- People walk up the sauló to the show and a few come back; a crowd lines the promenades round the Magic Fountain; two vendors fling light-up toys; the jets, the basin and the cascade take the show's slowly changing colour.
+- Every light goes through `SkyLook.light` and scales with `Game.lamp_glow()` (looked up at run time, since `test_espanya` preloads the script before the autoload exists), so a free walk by day shows none of it. Drawing only: no new solids or hazards; the behaviour snapshot for espanya is identical to main.
+
 ## 2026-11-08 - Walk 33: «El Poble Espanyol» (The walled village of copied towns)
 
 - Walk 33 added to the campaign (`systems/poble.gd`, `systems/poble_balcony.gd`, `autoload/game.gd`, `world/level_build.gd`, `main.gd`):
