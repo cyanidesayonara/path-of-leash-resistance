@@ -9,6 +9,7 @@ Append-only session history, newest first.
 - Under a menu (pause, settings, a walk card, the results) the status card and the goal list fade out, so the menu is the only thing on screen, and fade back on resume. THAT'S THE BASICS keeps them, since it points at the phone.
 - Speech bubbles steer clear of the status card and the goal list: one under the goal list's glass read as text running off the end of its bubble.
 - YOUR WALKS cuts a long subtitle at the stars column with "..." instead of running it on under the stars.
+- The dare offer card leaves a gap above its button row (`TAKE_GAP`): the key's glow touched "Win 38 bones." above it.
 
 ## 2026-11-08 - CI survives a failed Godot download
 
