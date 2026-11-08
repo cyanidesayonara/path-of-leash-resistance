@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-08 - Test that every walk is registered in every table
+
+- `tests/test_walk_registry.gd`: regression test verifying that every walk in `Game.LEVELS` is registered across all per-walk tables (`LEVEL_NAMES`, `LEVEL_SUBTITLES`, `LEVEL_SUBTITLES_CA`, `LEVEL_SUBTITLES_ES`, `STAR_GATE`, `CAMPAIGN_SKY`, `CAROUSEL`, `WALK_MODULES`, `LEVEL_GOAL_IDS`, `CLOCK_TARGETS`, `JAMON_POS`, `STYLES`, `MATERIALS`), and checking the reverse that no table has unknown keys outside documented allow lists (`tutorial`, `title`, `freedom`).
+- Checks that every sign material named in `WorldSign.MATERIALS` has a valid definition in `WorldSign.FEEL`.
+- Extended `tests/test_tool_levels.gd` to check `tools/surface_map.sh` alongside `shot_sweep.sh` and `behaviour_snapshot.sh`.
+- Added `test_walk_registry.gd` to `.github/workflows/ci.yml`.
+
 ## 2026-11-07 - L'Eixample, the grid of cut corners
 
 - New walk, the first of 1.71: L'Eixample (`systems/eixample.gd`), one street of the grid walked to the basilica. Panot flower tiles, a granite middle, plane trees, planted islands; the street opens into an octagon at each of the four crossings, with a lamp on every cut corner. Modernista roofs with terraces, stair houses, water tanks and washing; a turret with a trencadís cap on each corner house; courtyards inside the blocks; parked cars and recycling containers on the side streets. The last block runs between Plaça de Gaudí's pond and the basilica's towers. Off leash in the garden inside the next block.
