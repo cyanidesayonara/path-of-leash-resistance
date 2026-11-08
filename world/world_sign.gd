@@ -34,7 +34,7 @@ const MATERIALS := {
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
 	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
 	"montjuic": "cactus", "port": "rope", "reial": "fronds", "vet": "biscuits",
-	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "superilla": "pingpong", "forum": "solar", "espanya": "cascade", "raval": "pegs", "tutorial": "balls",
+	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "superilla": "pingpong", "forum": "solar", "espanya": "cascade", "eixample": "planeballs", "raval": "pegs", "tutorial": "balls",
 }
 # No glow or bed under the pieces: a name reads on its ground by each piece's
 # own dark edge and contact shadow, the way a real thing lying there would.
@@ -79,6 +79,7 @@ const FEEL := {
 	"balls": {"spacing": 0.15, "r": 0.075, "drag": 0.9, "take": 1.2, "roll": true},
 	"pingpong": {"spacing": 0.14, "r": 0.07, "drag": 0.8, "take": 1.3, "roll": true},
 	"solar": {"spacing": 0.16, "r": 0.08, "drag": 4.0, "take": 0.8, "spin": 2.0, "align": true},
+	"planeballs": {"spacing": 0.14, "r": 0.075, "drag": 1.2, "take": 1.1, "roll": true},
 	"cascade": {"spacing": 0.14, "r": 0.075, "drag": 4.5, "take": 1.0, "spin": 3.5},
 	"bulbs": {"fixed": true},
 	"setts": {"fixed": true},
@@ -537,6 +538,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_pingpong(c, sign, h, light)
 		"solar":
 			_solar(c, sign, h, light)
+		"planeballs":
+			_planeballs(c, sign, h, light)
 		"cascade":
 			_cascade(c, sign, h, light)
 		"bulbs":
@@ -1220,6 +1223,23 @@ static func _solar(c: Object, sign: Dictionary, h: float, light: Vector2) -> voi
 		c.draw_rect(rect.grow(-1.5), col)
 		c.draw_line(Vector2(p.x - r * 0.7, p.y), Vector2(p.x + r * 0.7, p.y), Color(0.85, 0.90, 0.98, 0.6), 1.0)
 		c.draw_circle(p - light * r * 0.35, r * 0.28, Color(0.30, 0.65, 0.95, 0.4))
+
+
+static func _planeballs(c: Object, sign: Dictionary, h: float, light: Vector2) -> void:
+	# the plane trees' seed balls, the bristly brown pompoms every Eixample
+	# sidewalk is strewn with in winter
+	for pc: Dictionary in sign.pieces:
+		c.draw_circle((pc.p as Vector2) + light * float(pc.r) * 0.45, float(pc.r) * 1.05, Color(0, 0, 0, 0.28))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var col := Color(0.50, 0.36, 0.20).lerp(Color(0.62, 0.48, 0.26), float(pc["var"]))
+		c.draw_circle(p, r, col.darkened(0.35))
+		c.draw_circle(p, r * 0.84, col)
+		for i in range(6):
+			var a := float(pc.rot) + TAU * float(i) / 6.0
+			c.draw_line(p + Vector2.from_angle(a) * r * 0.4, p + Vector2.from_angle(a) * r * 1.15, col.darkened(0.25), 1.0)
+		c.draw_circle(p - light * r * 0.35, r * 0.24, Color(0.92, 0.82, 0.62, 0.45))
 
 
 static func _cascade(c: Object, sign: Dictionary, h: float, light: Vector2) -> void:

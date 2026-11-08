@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-07 - L'Eixample, the grid of cut corners
+
+- New walk, the first of 1.71: L'Eixample (`systems/eixample.gd`), one street of the grid walked to the basilica. Panot flower tiles, a granite middle, plane trees, planted islands; the street opens into an octagon at each of the four crossings, with a lamp on every cut corner. Modernista roofs with terraces, stair houses, water tanks and washing; a turret with a trencadís cap on each corner house; courtyards inside the blocks; parked cars and recycling containers on the side streets. The last block runs between Plaça de Gaudí's pond and the basilica's towers. Off leash in the garden inside the next block.
+- Live event: a tour group follows its guide's umbrella across the last crossing (`systems/eixample_tour.gd`), warned 0.8 s ahead. Bump, save, bark-for-a-photo, boop and a dropped pastry.
+- Goals: mark the lamps on 3 cut corners, get photographed by a tour group, paddle in the pond by the basilica; the croissant off the terrace table is the prize.
+- Each octagon is walled along its chamfers and across the side streets' mouths (`Eixample.octagon_walls`): main's building line leaves a gap where bikes cross, which let her leave the street down a side street. `test_cross_section` probes the building line on a straight stretch near -2000, since on a slant a dog started 10 px in already overlaps the wall.
+- After Platja de Llevant in the campaign (16 stars, past El Besòs), as the planner orders it. Its own music settings, sign material (plane-tree seed balls), clock target and pernil. `tests/test_eixample.gd` in CI.
+
 ## 2026-11-08 - CI survives a failed Godot download
 
 - GitHub's release downloads returned 504 for every job on 2026-11-08, so every CI, soak and sweep job failed at its first step. ci, soak and shots now keep the Godot zip in the Actions cache (`godot-4.7-stable-linux-x86_64`) and download only when it is missing; every download in those and in release.yml retries (`curl -fsSL --retry 8 --retry-all-errors`), and `-f` makes an error page fail the download instead of reaching `unzip`.

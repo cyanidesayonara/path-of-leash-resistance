@@ -26,6 +26,7 @@ const Carmel := preload("res://systems/carmel.gd")
 const Superilla := preload("res://systems/superilla.gd")
 const Forum := preload("res://systems/forum.gd")
 const Espanya := preload("res://systems/espanya.gd")
+const Eixample := preload("res://systems/eixample.gd")
 # the tutorial's pond for the brink lesson, beside the path at its station
 const TUT_POND_W := 150.0
 const ROPE_CLEAR := 4.0
@@ -111,7 +112,8 @@ const CROSS_SECTIONS := {
 	"raval": ["none", 0.0, "none", 0.0],           # promenade and plaza drawn in systems/boss_gat.gd
 	"gracia": ["none", 0.0, "none", 0.0],          # a narrow street: the houses at the paving
 	"carmel": ["none", 0.0, "none", 0.0],          # sunset panorama and hillside slopes in systems/carmel.gd
-	"forum": ["none", 0.0, "none", 0.0],           # coastal concrete plaza and bathing esplanade in systems/forum.gd
+	"forum": ["none", 0.0, "none", 0.0],
+	"eixample": ["none", 0.0, "none", 0.0],        # the grid street and its blocks in systems/eixample.gd           # coastal concrete plaza and bathing esplanade in systems/forum.gd
 	# flood wall on the left, grass then the river on the right
 	"besos": ["none", 0.0, "grass", 120.0],
 }
@@ -1208,6 +1210,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"superilla": half = Superilla.HALF
 		"forum": half = Forum.HALF
 		"espanya": half = Espanya.HALF
+		"eixample": half = Eixample.HALF   # the octagons at the crossings (Eixample.edge_nodes)
 		"besos": half = BESOS_HALF
 	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
 	m.walk_half = half
@@ -1373,6 +1376,8 @@ static func apply_corridor(m: Node2D) -> void:
 		m.edge_nodes = BossGat.edge_nodes(m)
 	elif m.lvl == "carmel":
 		m.edge_nodes = Carmel.edge_nodes(m)
+	elif m.lvl == "eixample":
+		m.edge_nodes = Eixample.edge_nodes(m)
 	elif m.lvl == "trail":
 		# EL BOSC BENDS - the first walk in the game that is not a straight
 		# line. A woodland trail has no business being ruler-drawn: it wanders
@@ -1403,7 +1408,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample":
 		return
 	# and so does El Barri; the First Walk, built on it, is still fitted
 	if m.lvl == "barri" and not m.tutorial_mode:
@@ -1513,6 +1518,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_carmel: Array = Carmel.build(m)
 			hyd_list.assign(pl_carmel[0])
 			keb_list.assign(pl_carmel[1])
+		"eixample":
+			var pl_eixample: Array = Eixample.build(m)
+			hyd_list.assign(pl_eixample[0])
+			keb_list.assign(pl_eixample[1])
 		"superilla":
 			var pl_superilla: Array = Superilla.build(m)
 			hyd_list.assign(pl_superilla[0])
@@ -2335,6 +2344,9 @@ static func build_level_data(m: Node2D) -> void:
 		"carmel":
 			m.prize_pos = Carmel.PRIZE
 			m.prize_text = Carmel.PRIZE_TEXT
+		"eixample":
+			m.prize_pos = Eixample.PRIZE
+			m.prize_text = Eixample.PRIZE_TEXT
 		"superilla":
 			m.prize_pos = Superilla.PRIZE
 			m.prize_text = Superilla.PRIZE_TEXT
@@ -2518,6 +2530,8 @@ static func build_freedom_area(m: Node2D) -> void:
 		m.water.append(placa_fountain(m))
 	if m.lvl == "montjuic":
 		m.water.append(Montjuic.FONT)
+	if m.lvl == "eixample":
+		m.water.append(Eixample.POND)
 	if m.lvl == "horta":
 		m.water.append(Horta.CANAL)
 		m.water.append(Horta.POOL)
@@ -2742,6 +2756,14 @@ const FREEDOM_PROPS := {
 		[Vector2(362.0, -478.0), "planter"], [Vector2(918.0, -478.0), "planter"], [Vector2(1062.0, -472.0), "planter"],
 		[Vector2(476.0, -464.0), "post"], [Vector2(804.0, -464.0), "post"], [Vector2(328.0, -218.0), "post"],
 		[Vector2(938.0, -228.0), "post"], [Vector2(168.0, -396.0), "shrub"], [Vector2(1096.0, -242.0), "shrub"],
+	],
+	# the garden inside the next block: the water tower's lawns, its plane
+	# trees and the play corner
+	"eixample": [
+		[Vector2(250.0, -480.0), "dig"], [Vector2(1010.0, -300.0), "dig"], [Vector2(560.0, -300.0), "dig"],
+		[Vector2(330.0, -470.0), "planter"], [Vector2(950.0, -470.0), "planter"],
+		[Vector2(200.0, -330.0), "post"], [Vector2(480.0, -440.0), "post"], [Vector2(800.0, -440.0), "post"],
+		[Vector2(1080.0, -330.0), "post"], [Vector2(240.0, -210.0), "shrub"], [Vector2(1100.0, -260.0), "shrub"],
 	],
 	"forum": [
 		[Vector2(210.0, -480.0), "dig"], [Vector2(620.0, -320.0), "dig"], [Vector2(780.0, -220.0), "dig"],
@@ -3164,6 +3186,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_carmel: Array[Rect2] = Carmel.solids(m)
 			for i in range(ps_carmel.size()):
 				out.append(["carmel_bunker_%d" % i, ps_carmel[i]])
+		"eixample":
+			var ps_eixample: Array[Rect2] = Eixample.solids(m)
+			for i in range(ps_eixample.size()):
+				out.append(["eixample_island_%d" % i, ps_eixample[i]])
 		"superilla":
 			var ps_superilla: Array[Rect2] = Superilla.solids(m)
 			for i in range(ps_superilla.size()):
@@ -3637,6 +3663,19 @@ static func build_walls(m: Node2D) -> void:
 			add_rect_body(m, r.get_center(), r.size)
 		for c: Vector3 in Carmel.cannons():
 			add_circle_body(m, Vector2(c.x, c.y), c.z)
+	if m.lvl == "eixample":
+		for r: Rect2 in Eixample.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+		var oct := StaticBody2D.new()
+		oct.collision_layer = 1
+		for seg: Array in Eixample.octagon_walls():
+			var ss := SegmentShape2D.new()
+			ss.a = seg[0]
+			ss.b = seg[1]
+			var ocs := CollisionShape2D.new()
+			ocs.shape = ss
+			oct.add_child(ocs)
+		m.add_child(oct)
 	if m.lvl == "superilla":
 		for r: Rect2 in Superilla.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
