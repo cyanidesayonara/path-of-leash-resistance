@@ -2852,7 +2852,9 @@ func night_lights() -> Array[Vector3]:
 	var side := -1.0
 	var y := START_Y - 60.0
 	while y > GATE_Y + 120.0:
-		var e := walk_edges(y)
+		# on the wall, which is the building line: where the street steps
+		# out, the paving's edge is the front of a yard, mid-air for a lamp
+		var e := building_line(y)
 		var at := Vector2(e.x + 8.0 if side < 0.0 else e.y - 8.0, y)
 		var near := false
 		for l: Vector3 in _night_lights:
