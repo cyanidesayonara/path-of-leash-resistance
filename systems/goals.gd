@@ -450,6 +450,17 @@ static func complete_tutorial(m: Node2D) -> bool:
 
 static func finish_tutorial_walk(m: Node2D) -> void:
 	var banked := complete_tutorial(m)
+	# a dare still running in the practice yard ends with the walk
+	m.challenge.phase = ""
+	m.challenge.active = false
+	m.challenge_l.visible = false
+	# and so do the lesson card and its prompt bar
+	m.tut_label.visible = false
+	m.tut_hint.visible = false
+	m.tut_skippable = false
+	# the feed is not redrawn once the walk is frozen: clear its cards now
+	if m.feed != null:
+		m.feed.queue_redraw()
 	m.finished = true
 	m.frozen = true
 	m.msg_label.visible = false
@@ -467,6 +478,7 @@ static func finish_tutorial_walk(m: Node2D) -> void:
 		"goal_bones": 0,
 		"lines": [
 			("%d bones banked" % m.bones) if banked else ("%d bones (banked the first time around)" % m.bones),
+			"Every real walk has goals to chase.",
 			"Next: El Barri, the everyday walk.",
 		],
 	}

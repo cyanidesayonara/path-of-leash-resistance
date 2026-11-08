@@ -19,8 +19,8 @@ const MOUNT_BAND := 18.0
 # how squarely along it she has to be travelling: the cosine of the angle
 const ALONG := 0.8
 # the tutorial's stone ledge, beside the path at the grind lesson
-const TUT_LEDGE_X := 760.0
-const TUT_LEDGE_HALF := 200.0
+const TUT_LEDGE_X := TutorialSteps.LEDGE_X
+const TUT_LEDGE_HALF := TutorialSteps.LEDGE_HALF
 
 
 static func rail(pts: PackedVector2Array, name: String) -> Dictionary:
@@ -37,6 +37,9 @@ static func build(m: Node2D) -> void:
 	if m.tutorial_mode:
 		var at := TutorialSteps.at("grind")
 		m.rails.append(line(Vector2(TUT_LEDGE_X, at + TUT_LEDGE_HALF), Vector2(TUT_LEDGE_X, at - TUT_LEDGE_HALF), "LEDGE RUN"))
+		# and the practice yard's
+		var yl: PackedVector2Array = TutorialSteps.yard_ledge(m)
+		m.rails.append(line(yl[0], yl[1], "LEDGE RUN"))
 		return
 	match String(m.lvl):
 		"park":

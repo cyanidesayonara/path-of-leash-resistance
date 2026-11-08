@@ -93,13 +93,6 @@ func _check_clean_profile(game: Node) -> void:
 	_check(not game.goals_expanded, "missing save resets the goals-card setting")
 
 
-func _has_challenger_child(node: Node) -> bool:
-	for child in node.get_children():
-		if child.get_script() == ChallengerScript:
-			return true
-	return false
-
-
 func _finish() -> void:
 	_cleanup()
 	if failures > 0:
@@ -123,9 +116,6 @@ func _run() -> void:
 		return
 	var probe := Node2D.new()
 	probe.set_script(main_script)
-	probe.tutorial_mode = true
-	probe.call("_spawn_challenger")
-	_check(not _has_challenger_child(probe), "tutorial does not spawn a campaign challenge giver")
 	var dedicated_completion := probe.has_method("_finish_tutorial_walk")
 	_check(dedicated_completion, "tutorial has a dedicated non-campaign result path")
 	probe.free()
@@ -192,7 +182,18 @@ func _run() -> void:
 	_check(not main.tofu_quest_active and not main.tofu_home, "tutorial has no Tofu campaign state")
 	_check(main.challenge_giver == null, "tutorial has no active challenge giver reference")
 	_check(not bool(main.challenge.active), "tutorial campaign challenge remains inactive")
-	_check(get_nodes_in_group("challengers").is_empty(), "tutorial scene contains no challenger node")
+	# the practice yard's kid is the First Walk's own: the yard's easier dares,
+	# and nothing offered before the dare lesson
+	var kids: Array = []
+	for child in main.get_children():
+		if child.get_script() == ChallengerScript:
+			kids.append(child)
+	var TUT: GDScript = load("res://systems/tutorial.gd")
+	_check(kids.size() == 1 and (kids[0] as Node2D).position.is_equal_approx(TUT.yard_kid(main)),
+		"tutorial's only dare-giver is the practice yard's kid")
+	if kids.size() == 1:
+		_check(kids[0].ladder() == TUT.YARD_LADDER, "the yard's kid offers the First Walk's dares")
+	_check(not main.tut_dares_open(), "no dare is on offer before the dare lesson")
 
 	var lesson_step := int(main.tut_step)
 	var lesson_bones := int(main.bones)
@@ -234,7 +235,7 @@ func _run() -> void:
 		"phone": int(main.phone_hp),
 		"time": int(main.elapsed),
 		"goal_bones": 0,
-		"lines": [practice_line, "Next: El Barri, the everyday walk."],
+		"lines": [practice_line, "Every real walk has goals to chase.", "Next: El Barri, the everyday walk."],
 	}
 	_check(main.results == expected_results, "tutorial produces its complete result payload")
 	_check((main.results.lines as Array).has(practice_line), "rendered result text says the bones are banked")
