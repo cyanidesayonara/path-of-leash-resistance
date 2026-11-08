@@ -471,7 +471,7 @@ static func _draw_white_museum(b: ShapeBatch, vt: float, vb: float) -> void:
 
 	# the taller gallery volume (x = 40 .. 132): brighter, edged, casting a
 	# shadow band over the louvers in the sun's direction
-	var gal := Rect2(40.0, m_top + 60.0, 92.0, (m_bot - m_top) - 300.0)
+	var gal := Rect2(28.0, m_top + 60.0, 92.0, (m_bot - m_top) - 300.0)
 	b.rect(Rect2(gal.position + Vector2(-16.0, 0.0), Vector2(16.0, gal.size.y)), Color(0.86, 0.88, 0.90))
 	b.rect(Rect2(gal.position + Vector2(14.0, 24.0), gal.size), Color(0.22, 0.26, 0.34, 0.42))
 	b.rect(gal, Color(0.99, 0.99, 1.0))
@@ -486,15 +486,15 @@ static func _draw_white_museum(b: ShapeBatch, vt: float, vb: float) -> void:
 			b.line(Vector2(gal.position.x + 20.0, rl + 5.0), Vector2(gal.position.x + 34.0, rl + 17.0), MUSEUM_GLINT, 2.0)
 		rl += 64.0
 
-	# white sun louvers (x = 132 .. 156), blades across, shade between
-	b.rect(Rect2(132.0, y0, 24.0, y1 - y0), MUSEUM_DEEP)
+	# white sun louvers (x = 120 .. 140), blades across, shade between
+	b.rect(Rect2(120.0, y0, 20.0, y1 - y0), MUSEUM_DEEP)
 	var lv := floorf(y0 / 9.0) * 9.0
 	while lv < y1:
-		b.rect(Rect2(132.0, lv, 24.0, 5.0), MUSEUM_WHITE)
+		b.rect(Rect2(120.0, lv, 20.0, 5.0), MUSEUM_WHITE)
 		lv += 9.0
 
-	# the glass atrium (x = 156 .. 220) with the ramps behind it
-	var gl := Rect2(156.0, m_top + 40.0, WALL_L - 156.0, (m_bot - m_top) - 80.0)
+	# the glass atrium (x = 140 .. 194) with the ramps behind it
+	var gl := Rect2(140.0, m_top + 40.0, 54.0, (m_bot - m_top) - 80.0)
 	b.rect(Rect2(gl.position.x, maxf(gl.position.y, y0), gl.size.x, minf(gl.end.y, y1) - maxf(gl.position.y, y0)), MUSEUM_GLASS_DARK)
 	var ry := m_top + 120.0
 	var rk := 0
@@ -529,7 +529,13 @@ static func _draw_white_museum(b: ShapeBatch, vt: float, vb: float) -> void:
 				b.line(Vector2(gl.position.x + 8.0, my + 6.0), Vector2(gl.position.x + 26.0, my + 38.0), MUSEUM_GLINT, 3.0)
 		my += 44.0
 	b.line(Vector2(gl.position.x + gl.size.x * 0.5, maxf(gl.position.y, y0)), Vector2(gl.position.x + gl.size.x * 0.5, minf(gl.end.y, y1)), Color(0.90, 0.93, 0.96), 1.4)
-	b.rect(Rect2(WALL_L - 4.0, y0, 4.0, y1 - y0), MUSEUM_WHITE)
+	# the white roof edge cantilevered over the atrium, the face the plaza sees
+	b.rect(Rect2(194.0, y0, WALL_L - 194.0, y1 - y0), Color(0.99, 0.99, 1.0))
+	b.rect(Rect2(194.0, y0, 3.0, y1 - y0), MUSEUM_DEEP)
+	var fj := floorf(y0 / 120.0) * 120.0
+	while fj < y1:
+		b.line(Vector2(197.0, fj), Vector2(WALL_L, fj), MUSEUM_SHADE, 1.5)
+		fj += 120.0
 
 	# the white drum at the south end, where the street opens into the plaza
 	var drum := Vector2(70.0, -1440.0)
