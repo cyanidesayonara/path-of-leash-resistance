@@ -1,8 +1,9 @@
 extends Control
 
 # The whole left-side HUD as one quiet card. Every row says what it is: the
-# phone's lives, then the tank and the zoomies as labelled bars, then the
-# marks made so far, with the bones banked top right. It used to be glyphs
+# phone's lives, then her pee and, right under it in the same yellow, the
+# spots it has marked (the one idea: pee is what marks a spot), then the
+# zoomies, with the bones banked top right. It used to be glyphs
 # alone (three pips, two upright tubes, five rings), and nobody could tell
 # which was which. The world is chaotic on purpose; the overlay is not.
 
@@ -14,11 +15,11 @@ const PAD := 10.0
 # the rows, top to bottom: each value is the row's top
 const ROW_PHONE := 8.0
 const ROW_TANK := 36.0
-const ROW_ZOOM := 54.0
-const ROW_MARKS := 72.0
+const ROW_MARKS := 54.0
+const ROW_ZOOM := 72.0
 const ROW_MOOD := 90.0
 const ROW_H := 18.0
-const CARD_H := ROW_MARKS + ROW_H + 6.0
+const CARD_H := ROW_ZOOM + ROW_H + 6.0
 # the label column, then the column every bar and the mark dots start at
 const LABEL_X := 28.0
 const BAR_X := 90.0
@@ -27,7 +28,6 @@ const LABEL_PX := 11
 const LABEL_COL := Color(0.80, 0.78, 0.72)
 const TANK_COL := Color(0.94, 0.82, 0.25)
 const ZOOM_COL := Color(0.35, 0.88, 0.45)
-const MARK_COL := Color(0.96, 0.88, 0.42)
 
 # what a lesson can point at, and the outline drawn round it
 const POINT_RECTS := {
@@ -119,13 +119,13 @@ func _draw_shapes() -> void:
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(0.95, 0.94, 0.90))
 	Icons.draw_bone(_b, Vector2(CARD_W - PAD - bw - 14.0, ROW_PHONE + 11.0), 11.0, Color(0.93, 0.90, 0.83))
 
-	# the tank (yellow): full, it pulses and says so
+	# her pee (yellow): full, the bar pulses (the banner says what to do)
 	var full: bool = main.pee >= 0.999
 	var tcol := TANK_COL
 	if full and fmod(t / 350.0, 2.0) < 1.0:
 		tcol = Color(1.0, 0.94, 0.45)
 	Icons.draw_droplet(_b, Vector2(PAD + 7.0, ROW_TANK + 7.5), 13.0, TANK_COL)
-	_label("FULL" if full else "TANK", LABEL_X, ROW_TANK, TANK_COL if full else LABEL_COL)
+	_label("PEE", LABEL_X, ROW_TANK)
 	_bar(ROW_TANK, main.pee, tcol)
 
 	# the zoomies (green), gold while a golden bone lasts
@@ -138,21 +138,19 @@ func _draw_shapes() -> void:
 	_label("ZOOMIES", LABEL_X, ROW_ZOOM)
 	_bar(ROW_ZOOM, main.dog.energy, ecol)
 
-	# the marks made, as a count and five dots on the bars' column
+	# the spots her pee has marked, five drops in the pee's yellow filling in
+	# under its bar; the drop glyph at the label column is hollow, a spot
 	var made: int = mini(main.marks.size(), 5)
-	_label("MARKS", LABEL_X, ROW_MARKS)
+	_label("MARKED", LABEL_X, ROW_MARKS)
 	for i in range(5):
-		var p := Vector2(BAR_X + 5.0 + i * 15.0, ROW_MARKS + 7.0)
+		var p := Vector2(BAR_X + 6.0 + i * 16.0, ROW_MARKS + 8.0)
 		if i < made:
-			_b.draw_circle(p, 4.2, MARK_COL)
+			Icons.draw_droplet(_b, p, 11.0, TANK_COL)
 		else:
-			_b.draw_arc(p, 4.2, 0, TAU, 14, Color(1, 1, 1, 0.32), 1.2)
-	# a paw stamp for the label column, the same width as the glyphs above
-	_b.draw_circle(Vector2(PAD + 7.0, ROW_MARKS + 9.0), 3.2, LABEL_COL)
-	for k in range(3):
-		_b.draw_circle(Vector2(PAD + 3.5 + k * 3.5, ROW_MARKS + 4.0), 1.5, LABEL_COL)
+			Icons.draw_droplet(_b, p, 11.0, Color(1, 1, 1, 0.22))
+	_b.draw_arc(Vector2(PAD + 7.0, ROW_MARKS + 8.0), 4.5, 0, TAU, 14, TANK_COL, 1.4)
 
-	# the streak, on the marks row's free end
+	# the streak, on the marked row's free end
 	if main.streak > 1:
 		var st := "x%d STREAK" % main.streak
 		var sw := Kit.text_w(Kit.display(), st, 10) + 10.0

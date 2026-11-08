@@ -6063,7 +6063,7 @@ func _update_hud() -> void:
 	elif walk_mod != null and walk_mod.has_method("idle_status") and walk_mod.idle_status(self) != "":
 		hud_status = walk_mod.idle_status(self)
 	elif pee >= 0.999:
-		hud_status = "FULL TANK! GO MARK A SPOT"
+		hud_status = "BURSTING! GO MARK A SPOT"
 	elif pee <= 0.02:
 		hud_status = "THIRSTY! FIND A FOUNTAIN"
 	if phase == "out" and walk_mod != null and walk_mod.has_method("urgent_status"):
