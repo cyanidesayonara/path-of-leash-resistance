@@ -22,6 +22,8 @@ extends RefCounted
 #   the open pavement practicing an ollie.
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+# a bump costs your human this much of their patience (0..1, entities/human.gd)
+const BUMP_PATIENCE := 0.08
 # the overhead layer redraws this walk at 30 fps: the pergola culls to the
 # camera and thins over the pair
 const OVERHEAD_FOLLOWS_CAMERA := true
@@ -198,7 +200,7 @@ static func tick(m: Node2D, delta: float) -> void:
 		m.float_text(m.skater.pos + Vector2(0.0, -36.0), "Watch the board!", Color(0.96, 0.94, 0.88), m.POP_SAY)
 
 	if res["bump_hazard"]:
-		m.human.patience = maxf(0.0, m.human.patience - 8.0)
+		m.human.patience = maxf(0.0, m.human.patience - BUMP_PATIENCE)
 		m.human.temper_t = 1.2
 		m.human.say("Ugh, watch out!", 1.2)
 
