@@ -1101,9 +1101,9 @@ const PARK_SLACK_TRUNK := 13.0
 # behind it, a plane tree with a reader under it, a picnic, a frisbee pair.
 # Lamps, kiosk and tree are rope points; they and the people are solid.
 const PARK_LAMPS: Array[Vector2] = [
-	Vector2(388.0, -560.0), Vector2(892.0, -1080.0), Vector2(388.0, -2060.0),
-	Vector2(1062.0, -2700.0), Vector2(218.0, -2760.0), Vector2(388.0, -3700.0),
-	Vector2(892.0, -4060.0), Vector2(388.0, -4560.0),
+	Vector2(426.0, -700.0), Vector2(854.0, -1000.0), Vector2(426.0, -1900.0),
+	Vector2(1062.0, -2700.0), Vector2(218.0, -2760.0), Vector2(854.0, -3700.0),
+	Vector2(426.0, -4000.0), Vector2(854.0, -4600.0),
 ]
 const PARK_LAMP_R := 6.0
 const PARK_KIOSK := Vector2(1080.0, -700.0)
@@ -1126,6 +1126,74 @@ static func park_people() -> Array[Vector3]:
 	out.append(Vector3(rd.x, rd.y, PARK_PERSON_R))
 	out.append(Vector3(PARK_FRISBEE_A.x, PARK_FRISBEE_A.y, PARK_PERSON_R))
 	out.append(Vector3(PARK_FRISBEE_B.x, PARK_FRISBEE_B.y, PARK_PERSON_R))
+	out.append(Vector3(PARK_SUNBATHER.x, PARK_SUNBATHER.y, 16.0))
+	out.append(Vector3(PARK_DOG_WALKER.x, PARK_DOG_WALKER.y, PARK_PERSON_R))
+	out.append(Vector3(PARK_PARENT.x, PARK_PARENT.y, PARK_PERSON_R))
+	# the benches on the verge: a post at each end
+	for bn: Vector3 in PARK_EDGE_BENCHES:
+		out.append(Vector3(bn.x, bn.y - 16.0, 8.0))
+		out.append(Vector3(bn.x, bn.y + 16.0, 8.0))
+	out.append(Vector3(PARK_BOAT_HUT.x, PARK_BOAT_HUT.y, 26.0))
+	return out
+
+
+# The second pass: an avenue of plane trees along both sides of the path on
+# the narrow stretches, a step out past the hoop fence so their crowns shade
+# the gravel; benches on the verge facing the path; tree groups and shrub beds
+# on the lawns; the boat-hire hut by the lake; a sunbather, a dog walker, a
+# parent at the playground, a jogger on the bike lane.
+const PARK_AVENUE_X := Vector2(380.0, 900.0)
+const PARK_AVENUE_STEP := 300.0
+const PARK_AVENUE_TRUNK := 12.0
+# x, y, and 1 for someone sitting on it (west benches face east, east west)
+const PARK_EDGE_BENCHES: Array[Vector3] = [
+	Vector3(366.0, -400.0, 1.0), Vector3(914.0, -1500.0, 0.0),
+	Vector3(366.0, -1850.0, 2.0), Vector3(914.0, -3420.0, 1.0),
+	Vector3(366.0, -4000.0, 0.0),
+]
+const PARK_TREE_GROUPS: Array[Vector2] = [
+	Vector2(150.0, -2240.0), Vector2(205.0, -2330.0), Vector2(120.0, -2410.0),
+	Vector2(110.0, -3060.0), Vector2(170.0, -3170.0),
+	Vector2(1170.0, -2230.0), Vector2(1235.0, -2330.0), Vector2(1150.0, -2420.0),
+	Vector2(1210.0, -3080.0), Vector2(1150.0, -3200.0),
+]
+const PARK_SHRUBS: Array[Vector2] = [
+	Vector2(120.0, -1700.0), Vector2(1225.0, -1010.0), Vector2(1230.0, -3560.0), Vector2(110.0, -4320.0),
+]
+const PARK_BOAT_HUT := Vector2(1108.0, -2600.0)
+const PARK_SUNBATHER := Vector2(178.0, -2660.0)
+const PARK_DOG_WALKER := Vector2(1100.0, -2980.0)
+const PARK_PARENT := Vector2(1010.0, -4120.0)
+
+
+# the avenue's trunks: every PARK_AVENUE_STEP down the narrow stretches, both
+# sides, skipping wherever something already stands at the edge
+static func park_avenue() -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	var keep_clear: Array[Vector2] = [Vector2(390.0, -980.0), Vector2(336.0, -1300.0), Vector2(336.0, -3850.0),
+		Vector2(944.0, -1650.0), Vector2(944.0, -1900.0)]
+	for lp: Vector2 in PARK_LAMPS:
+		keep_clear.append(lp)
+	for bn: Vector3 in PARK_EDGE_BENCHES:
+		keep_clear.append(Vector2(bn.x, bn.y))
+	for i in range(7):
+		keep_clear.append(Vector2(440.0 if i % 2 == 0 else 840.0, -350.0 - float(i) * 640.0))
+	var y := -250.0
+	while y > -4900.0:
+		if y > -2050.0 or y < -3420.0:
+			for x: float in [PARK_AVENUE_X.x, PARK_AVENUE_X.y]:
+				var ok := true
+				for kc: Vector2 in keep_clear:
+					if absf(kc.x - x) < 90.0 and absf(kc.y - y) < 75.0:
+						ok = false
+				# the flower borders run here
+				if x < 640.0 and y < -1110.0 and y > -1470.0:
+					ok = false
+				if x > 640.0 and ((y < -650.0 and y > -890.0) or (y < -3450.0 and y > -3910.0)):
+					ok = false
+				if ok:
+					out.append(Vector2(x, y))
+		y -= PARK_AVENUE_STEP
 	return out
 static func park_slackline() -> Rect2:
 	return Rect2(PARK_SLACK_A.x - 3.0, PARK_SLACK_B.y + 22.0, 6.0, PARK_SLACK_A.y - PARK_SLACK_B.y - 44.0)
@@ -2252,6 +2320,10 @@ static func build_level_data(m: Node2D) -> void:
 			add_rope_point(m, st, PARK_SLACK_TRUNK + 2.0, false)
 		for lp: Vector2 in PARK_LAMPS:
 			add_rope_point(m, lp, PARK_LAMP_R + 2.0, false)
+		for at: Vector2 in park_avenue():
+			add_rope_point(m, at, PARK_AVENUE_TRUNK + 2.0, false)
+		for gt: Vector2 in PARK_TREE_GROUPS:
+			add_rope_point(m, gt, PARK_AVENUE_TRUNK + 2.0, false)
 		add_rope_point(m, PARK_KIOSK, PARK_KIOSK_R + 2.0, false)
 		add_rope_point(m, PARK_READER_TREE, PARK_TREE_TRUNK + 2.0, false)
 		if not m.tutorial_mode:
@@ -3660,6 +3732,10 @@ static func build_walls(m: Node2D) -> void:
 			add_circle_body(m, st, PARK_SLACK_TRUNK)
 		for lp: Vector2 in PARK_LAMPS:
 			add_circle_body(m, lp, PARK_LAMP_R)
+		for at: Vector2 in park_avenue():
+			add_circle_body(m, at, PARK_AVENUE_TRUNK)
+		for gt: Vector2 in PARK_TREE_GROUPS:
+			add_circle_body(m, gt, PARK_AVENUE_TRUNK)
 		add_circle_body(m, PARK_KIOSK, PARK_KIOSK_R)
 		add_circle_body(m, PARK_READER_TREE, PARK_TREE_TRUNK)
 		for pp: Vector3 in park_people():

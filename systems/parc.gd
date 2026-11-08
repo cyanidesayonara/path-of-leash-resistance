@@ -86,6 +86,11 @@ static func _draw_lawns(m: Node2D, vt: float, vb: float) -> void:
 		_draw_sprinkler(m, b)
 	_bike_lane(b, vt, vb)
 	_borders(b, vt, vb)
+	_shrubs(m, b, vt, vb)
+	_edge_benches(m, b, vt, vb)
+	if LevelBuild.PARK_BOAT_HUT.y > vt - 120.0 and LevelBuild.PARK_BOAT_HUT.y < vb + 120.0:
+		_boat_hut(m, b)
+	_lawn_people(m, b, vt, vb)
 	if LevelBuild.PARK_KIOSK.y > vt - 120.0 and LevelBuild.PARK_KIOSK.y < vb + 120.0:
 		_kiosk(m, b)
 	var pc: Rect2 = LevelBuild.PARK_PICNIC
@@ -96,6 +101,7 @@ static func _draw_lawns(m: Node2D, vt: float, vb: float) -> void:
 	if LevelBuild.PARK_READER_TREE.y > vt - 120.0 and LevelBuild.PARK_READER_TREE.y < vb + 120.0:
 		_reader(m, b)
 	_lamps(m, b, vt, vb)
+	_trees(m, b, vt, vb)
 	b.flush(m._wc)
 
 
@@ -440,6 +446,21 @@ static func grass_blocked(_m: Node2D, p: Vector2) -> bool:
 			return true
 	if LevelBuild.PARK_PLAYGROUND.grow(8.0).has_point(p):
 		return true
+	# the lawn's furniture: the kiosk, the hut, the blankets, the shrub beds
+	if p.distance_to(LevelBuild.PARK_KIOSK) < LevelBuild.PARK_KIOSK_R + 22.0:
+		return true
+	if Rect2(LevelBuild.PARK_BOAT_HUT - Vector2(46.0, 46.0), Vector2(92.0, 110.0)).has_point(p):
+		return true
+	if LevelBuild.PARK_BIKE_LANE.grow(8.0).has_point(p):
+		return true
+	if LevelBuild.PARK_PICNIC.grow(10.0).has_point(p):
+		return true
+	if Rect2(LevelBuild.PARK_SUNBATHER - Vector2(22.0, 40.0), Vector2(44.0, 80.0)).has_point(p):
+		return true
+	for sh: Vector2 in LevelBuild.PARK_SHRUBS:
+		var d := p - sh
+		if (d.x * d.x) / (54.0 * 54.0) + (d.y * d.y) / (66.0 * 66.0) < 1.0:
+			return true
 	return p.distance_to(LevelBuild.PARK_BANDSTAND) < LevelBuild.BANDSTAND_R + 22.0
 
 
@@ -541,6 +562,8 @@ static func draw_over_walkway(m: Node2D, wc: Object, vt: float, vb: float) -> vo
 		ty += TRACK_STEP
 	if tpts.size() >= 8:
 		b.band(tpts, 4, TRACK, rows, PackedFloat32Array([0.0, 1.0, 1.0, 0.0]))
+	_mown_stripes(m, b, top, vb)
+	_litter(m, b, top, vb)
 	# the stones: on a grid fixed in the world, so they do not crawl
 	var gy := floorf(top / GRAVEL_STEP) * GRAVEL_STEP
 	while gy <= vb + GRAVEL_STEP:
@@ -766,3 +789,238 @@ static func _borders(b: ShapeBatch, vt: float, vb: float) -> void:
 				b.circle(Vector2(r.end.x - 6.0 - h * 4.0, y + 5.0), 2.4, col.lightened(0.15))
 			y += 9.0
 			i += 1
+
+
+# --- the second pass: the avenue, the lawns' groups, more people --------------
+
+const MOW := Color(0.80, 0.92, 0.62, 0.07)
+const MOW_STEP := 56.0
+const LEAF_COLS: Array[Color] = [Color(0.80, 0.56, 0.22), Color(0.70, 0.42, 0.18), Color(0.86, 0.70, 0.32), Color(0.56, 0.40, 0.20)]
+const CONKER := Color(0.42, 0.20, 0.10)
+const GLOVE := Vector2(800.0, -4000.0)
+const BENCH_WOOD := Color(0.56, 0.41, 0.27)
+const BENCH_IRON := Color(0.16, 0.16, 0.17)
+
+
+# the lawns mown in stripes, the mower's way, up and back
+static func _mown_stripes(m: Node2D, b: ShapeBatch, top: float, vb: float) -> void:
+	var y := floorf(top / MOW_STEP) * MOW_STEP
+	while y < vb + MOW_STEP:
+		if int(floorf(y / MOW_STEP)) % 2 == 0:
+			var e: Vector2 = m.walk_edges(y + MOW_STEP * 0.5)
+			var e2: Vector2 = m.walk_edges(y)
+			var e3: Vector2 = m.walk_edges(y + MOW_STEP)
+			var lx := minf(e.x, minf(e2.x, e3.x)) - 20.0
+			var rx := maxf(e.y, maxf(e2.y, e3.y)) + 20.0
+			b.rect(Rect2(-400.0, y, lx + 400.0, MOW_STEP), MOW)
+			b.rect(Rect2(rx, y, 1700.0 - rx, MOW_STEP), MOW)
+		y += MOW_STEP
+
+
+# fallen plane leaves and conkers along the path's edges under the avenue,
+# and someone's lost glove
+static func _litter(m: Node2D, b: ShapeBatch, top: float, vb: float) -> void:
+	var y := floorf(top / 23.0) * 23.0
+	while y < vb + 23.0:
+		if y > LAKE_BOT or y < LAKE_TOP:
+			var e: Vector2 = m.walk_edges(y)
+			for side: int in 2:
+				var h := _hash(y, 7.0 + float(side))
+				var x: float = (e.x + 8.0 + h * 54.0) if side == 0 else (e.y - 8.0 - h * 54.0)
+				var p := Vector2(x, y + (_hash(x, y) - 0.5) * 16.0)
+				if h < 0.55:
+					var a := _hash(x, 3.0) * TAU
+					var f := Vector2.from_angle(a) * 4.5
+					var s := f.orthogonal() * 0.75
+					var col: Color = LEAF_COLS[int(h * 40.0) % LEAF_COLS.size()]
+					b.quad(p - f, p - s * 0.6, p + f, p + s * 1.1, col)
+					b.line(p - f * 0.8, p + f * 0.8, col.darkened(0.25), 0.8)
+				elif h < 0.62:
+					b.circle(p, 2.8, CONKER)
+					b.circle(p + Vector2(-0.8, -0.8), 1.0, Color(0.70, 0.40, 0.22))
+		y += 23.0
+	if GLOVE.y > top and GLOVE.y < vb:
+		var g := GLOVE
+		b.capsule(g + Vector2(-5, 2), g + Vector2(5, -1), 4.2, Color(0.26, 0.34, 0.56))
+		for k in range(4):
+			b.capsule(g + Vector2(3.0, -4.0 + float(k) * 2.6), g + Vector2(9.0, -6.0 + float(k) * 3.2), 1.3, Color(0.26, 0.34, 0.56))
+		b.capsule(g + Vector2(-2, -4), g + Vector2(1, -8), 1.4, Color(0.26, 0.34, 0.56))
+		b.line(g + Vector2(-7, 3), g + Vector2(-7, -2), Color(0.86, 0.84, 0.78), 2.0)
+
+
+# a plane tree from above: its soft shade on the ground (falling toward the
+# path), the trunk, and a crown of lobes, darker at the rim. i varies the size
+# and tint, and every other one is a horse chestnut, darker and rounder.
+static func _tree(m: Node2D, b: ShapeBatch, t: Vector2, lean: float, i: int) -> void:
+	var r := 30.0 + float(i % 3) * 4.0
+	var c := t + Vector2(lean * 12.0, -4.0)
+	var chestnut := i % 2 == 1
+	b.glow(c + m.LIGHT * 26.0, r + 30.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.30), 0.35)
+	b.glow(c + m.LIGHT * 26.0 + Vector2(lean * 22.0, 10.0), r * 0.7, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.14), 0.2)
+	b.circle(t, LevelBuild.PARK_AVENUE_TRUNK + 2.0, Color(0.30, 0.28, 0.24))
+	b.circle(t, LevelBuild.PARK_AVENUE_TRUNK, Color(0.64, 0.60, 0.48) if not chestnut else Color(0.42, 0.34, 0.26))
+	var rim := Color(0.13, 0.26, 0.14) if not chestnut else Color(0.10, 0.20, 0.12)
+	var leaf := Color(0.24, 0.42, 0.21) if not chestnut else Color(0.18, 0.34, 0.18)
+	var lobes := 6 if not chestnut else 5
+	for k in range(lobes):
+		b.circle(c + Vector2.from_angle(float(k) * TAU / float(lobes) + float(i)) * r * 0.62, r * 0.62 + 2.5, rim)
+	for k in range(lobes):
+		b.circle(c + Vector2.from_angle(float(k) * TAU / float(lobes) + float(i)) * r * 0.62, r * 0.62, leaf)
+	b.circle(c - m.LIGHT * r * 0.35, r * 0.55, leaf.lightened(0.12))
+	b.circle(c - m.LIGHT * r * 0.6 + Vector2(r * 0.25, 0.0), r * 0.22, leaf.lightened(0.26))
+	if chestnut:
+		# its candles of white flower
+		for k in range(4):
+			b.circle(c + Vector2.from_angle(float(k) * 1.7 + float(i)) * r * 0.5, 2.4, Color(0.96, 0.94, 0.88))
+
+
+# the avenue along the path and the groups on the lawns
+static func _trees(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	var i := 0
+	for t: Vector2 in LevelBuild.park_avenue():
+		if t.y > vt - 90.0 and t.y < vb + 90.0:
+			_tree(m, b, t, 1.0 if t.x < 640.0 else -1.0, i)
+		i += 1
+	for t: Vector2 in LevelBuild.PARK_TREE_GROUPS:
+		if t.y > vt - 90.0 and t.y < vb + 90.0:
+			_tree(m, b, t, 0.0, i)
+		i += 1
+
+
+# low shrub beds on the lawns: a mulched oval and clipped mounds
+static func _shrubs(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	var k := 0
+	for s: Vector2 in LevelBuild.PARK_SHRUBS:
+		k += 1
+		if s.y < vt - 80.0 or s.y > vb + 80.0:
+			continue
+		b.glow(s + m.LIGHT * 10.0, 62.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22), 0.4)
+		var pts := PackedVector2Array()
+		for a in range(16):
+			var v := Vector2.from_angle(TAU * float(a) / 16.0)
+			pts.append(s + Vector2(v.x * 44.0, v.y * 56.0))
+		b.polygon(pts, Color(0.38, 0.28, 0.20))
+		for j in range(7):
+			var off := Vector2.from_angle(float(j) * 0.9 + float(k)) * (12.0 + float(j % 3) * 9.0)
+			off.y *= 1.25
+			b.circle(s + off, 15.0, Color(0.16, 0.32, 0.18))
+			b.circle(s + off - m.LIGHT * 3.0, 12.0, Color(0.26, 0.46, 0.24) if j % 3 != 0 else Color(0.40, 0.30, 0.46))
+
+
+# the benches on the verge, facing the path; someone on some of them
+static func _edge_benches(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	for bn: Vector3 in LevelBuild.PARK_EDGE_BENCHES:
+		if bn.y < vt - 60.0 or bn.y > vb + 60.0:
+			continue
+		var p := Vector2(bn.x, bn.y)
+		var face := 1.0 if p.x < 640.0 else -1.0
+		b.rect(Rect2(p + Vector2(-8.0, -24.0) + m.LIGHT * 6.0, Vector2(16.0, 48.0)), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
+		for ey: float in [-21.0, 17.0]:
+			b.rect(Rect2(p.x - 10.0, p.y + ey, 20.0, 4.0), BENCH_IRON)
+		for si in range(3):
+			var wc := BENCH_WOOD.lightened(0.10 if si == 0 else 0.0).darkened(0.12 if si == 2 else 0.0)
+			b.rect(Rect2(p.x - 8.0 + float(si) * 5.5, p.y - 24.0, 5.0, 48.0), wc.darkened(0.3))
+			b.rect(Rect2(p.x - 8.0 + float(si) * 5.5, p.y - 24.0, 3.8, 46.8), wc)
+		# the backrest on the lawn side
+		b.rect(Rect2(p.x - face * 11.0 - 2.0, p.y - 24.0, 4.0, 48.0), BENCH_WOOD.darkened(0.2))
+		if bn.z >= 1.0:
+			var ang := 0.0 if face > 0.0 else PI
+			_sitter(b, p + Vector2(-face * 2.0, -8.0 if bn.z >= 2.0 else 0.0), ang, Color(0.46, 0.48, 0.52), Color(0.86, 0.86, 0.84), Color(0.86, 0.70, 0.58))
+			if bn.z >= 2.0:
+				_sitter(b, p + Vector2(-face * 2.0, 12.0), ang, Color(0.62, 0.30, 0.40), Color(0.70, 0.70, 0.72), Color(0.84, 0.66, 0.54))
+			else:
+				# his newspaper
+				b.rect(Rect2(p + Vector2(face * 8.0 - 6.0, -6.0), Vector2(12.0, 10.0)), Color(0.92, 0.90, 0.84))
+				b.line(p + Vector2(face * 8.0 - 4.0, -3.0), p + Vector2(face * 8.0 + 4.0, -3.0), Color(0.40, 0.40, 0.40), 1.0)
+
+
+# the boat-hire hut on the east lawn by the lake: a timber hut with a pitched
+# roof, the hire board, oars racked against its wall, a life ring
+static func _boat_hut(m: Node2D, b: ShapeBatch) -> void:
+	var c: Vector2 = LevelBuild.PARK_BOAT_HUT
+	var r := Rect2(c - Vector2(30.0, 24.0), Vector2(60.0, 48.0))
+	b.rect(Rect2(r.position + m.LIGHT * 12.0, r.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.26))
+	b.rect(r.grow(4.0), Color(0.66, 0.62, 0.54))
+	b.rect(Rect2(r.position, Vector2(r.size.x * 0.5, r.size.y)), Color(0.34, 0.46, 0.52))
+	b.rect(Rect2(r.position + Vector2(r.size.x * 0.5, 0.0), Vector2(r.size.x * 0.5, r.size.y)), Color(0.42, 0.56, 0.62))
+	b.line(Vector2(c.x, r.position.y), Vector2(c.x, r.end.y), Color(0.24, 0.32, 0.36), 2.0)
+	var y := r.position.y + 6.0
+	while y < r.end.y:
+		b.line(Vector2(r.position.x, y), Vector2(r.end.x, y), Color(0.0, 0.0, 0.0, 0.08), 1.0)
+		y += 6.0
+	# the board at its north end, the oars, the life ring
+	b.rect(Rect2(c.x - 12.0, r.position.y - 18.0, 24.0, 11.0), Color(0.94, 0.92, 0.86))
+	b.rect(Rect2(c.x - 9.0, r.position.y - 15.0, 10.0, 3.0), Color(0.20, 0.40, 0.60))
+	b.rect(Rect2(c.x - 9.0, r.position.y - 11.0, 16.0, 2.0), Color(0.40, 0.40, 0.40))
+	for k in range(3):
+		var ox := r.position.x + 10.0 + float(k) * 7.0
+		b.line(Vector2(ox, r.end.y + 2.0), Vector2(ox + 2.0, r.end.y + 26.0), Color(0.62, 0.44, 0.26), 2.4)
+		b.capsule(Vector2(ox + 2.0, r.end.y + 22.0), Vector2(ox + 2.5, r.end.y + 30.0), 2.6, Color(0.70, 0.52, 0.30))
+	var lr := Vector2(r.end.x + 10.0, c.y)
+	b.circle(lr, 8.0, Color(0.92, 0.30, 0.24))
+	b.circle(lr, 4.6, Color(0.66, 0.62, 0.54))
+	for a: float in [0.4, 2.0, 3.6, 5.2]:
+		b.line(lr + Vector2.from_angle(a) * 4.8, lr + Vector2.from_angle(a) * 7.8, Color(0.96, 0.95, 0.92), 2.4)
+
+
+# someone lying down, seen from above, on a towel
+static func _lier(b: ShapeBatch, p: Vector2, skin: Color, wear: Color) -> void:
+	b.rect(Rect2(p - Vector2(16.0, 34.0), Vector2(32.0, 68.0)), Color(0.20, 0.62, 0.70))
+	for k in range(4):
+		b.rect(Rect2(p.x - 16.0, p.y - 30.0 + float(k) * 18.0, 32.0, 5.0), Color(0.96, 0.94, 0.86))
+	b.capsule(p + Vector2(-4, -6), p + Vector2(-4, 26), 3.0, skin)
+	b.capsule(p + Vector2(4, -6), p + Vector2(4, 26), 3.0, skin)
+	b.capsule(p + Vector2(0, -18), p + Vector2(0, 2), 7.0, wear)
+	b.capsule(p + Vector2(-9, -18), p + Vector2(-12, -2), 2.4, skin)
+	b.capsule(p + Vector2(9, -18), p + Vector2(12, -2), 2.4, skin)
+	b.circle(p + Vector2(0, -24), 5.6, skin)
+	b.rect(Rect2(p + Vector2(-5, -27), Vector2(10, 3)), Color(0.10, 0.10, 0.12))
+
+
+# the sunbather, the dog walker with a sniffing terrier, the parent at the
+# playground and the toddler, and a jogger running up and down the bike lane
+static func _lawn_people(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	var t := AnimClock.msec() / 1000.0
+	var sb: Vector2 = LevelBuild.PARK_SUNBATHER
+	if sb.y > vt - 60.0 and sb.y < vb + 60.0:
+		_lier(b, sb, Color(0.92, 0.74, 0.60), Color(0.90, 0.30, 0.44))
+		b.circle(sb + Vector2(26.0, -26.0), 4.0, Color(0.96, 0.62, 0.20))
+	var dw: Vector2 = LevelBuild.PARK_DOG_WALKER
+	if dw.y > vt - 80.0 and dw.y < vb + 80.0:
+		var sniff := dw + Vector2(cos(t * 0.7) * 26.0, 18.0 + sin(t * 1.1) * 12.0)
+		_stander(b, dw, (sniff - dw).angle(), 0.4, Color(0.36, 0.40, 0.30), Color(0.40, 0.30, 0.22), Color(0.80, 0.62, 0.50))
+		b.line(dw + Vector2(6, 2), sniff, Color(0.82, 0.24, 0.20), 1.2)
+		var dd := Vector2.from_angle(t * 0.9 + 1.0)
+		b.circle(sniff + Vector2(4, 5), 6.0, Color(0.04, 0.05, 0.07, 0.2))
+		b.capsule(sniff - dd * 5.0, sniff + dd * 4.0, 4.4, Color(0.90, 0.88, 0.82))
+		b.circle(sniff + dd * 6.5, 3.4, Color(0.90, 0.88, 0.82))
+		b.circle(sniff + dd * 6.0 + dd.orthogonal() * 2.6, 1.6, Color(0.50, 0.34, 0.22))
+		b.circle(sniff + dd * 6.0 - dd.orthogonal() * 2.6, 1.6, Color(0.50, 0.34, 0.22))
+	var pa: Vector2 = LevelBuild.PARK_PARENT
+	if pa.y > vt - 80.0 and pa.y < vb + 80.0:
+		var tod := pa + Vector2(36.0 + sin(t * 0.6) * 14.0, 6.0 + cos(t * 0.8) * 10.0)
+		_stander(b, pa, (tod - pa).angle(), 0.6, Color(0.52, 0.66, 0.76), Color(0.22, 0.16, 0.12), Color(0.74, 0.56, 0.44))
+		var bob := sin(t * 6.0) * 0.8
+		b.circle(tod + Vector2(3, 4), 5.0, Color(0.04, 0.05, 0.07, 0.2))
+		b.capsule(tod + Vector2(-4, bob), tod + Vector2(4, -bob), 3.6, Color(0.98, 0.78, 0.30))
+		b.circle(tod, 3.6, Color(0.80, 0.62, 0.50))
+		b.circle(tod + Vector2(0, -0.6), 3.2, Color(0.66, 0.48, 0.26))
+	# the jogger: up the lane and back down it, about half a minute a lap
+	var ln: Rect2 = LevelBuild.PARK_BIKE_LANE
+	var u := fposmod(t / 14.0, 2.0)
+	var k := u if u < 1.0 else 2.0 - u
+	var jy := lerpf(ln.end.y - 40.0, ln.position.y + 40.0, k)
+	if jy > vt - 40.0 and jy < vb + 40.0:
+		var up := u < 1.0
+		var jp := Vector2(ln.position.x + 12.0 if up else ln.end.x - 12.0, jy)
+		var face := -PI * 0.5 if up else PI * 0.5
+		var stride := sin(t * 9.0)
+		var f := Vector2.from_angle(face)
+		var s := f.orthogonal()
+		b.circle(jp + Vector2(5, 7), 8.0, Color(0.04, 0.05, 0.07, 0.2))
+		b.line(jp + s * 7.0, jp + s * 7.0 + f * 7.0 * stride, Color(0.86, 0.68, 0.54), 3.0)
+		b.line(jp - s * 7.0, jp - s * 7.0 - f * 7.0 * stride, Color(0.86, 0.68, 0.54), 3.0)
+		b.capsule(jp - s * 6.5, jp + s * 6.5, 5.6, Color(0.20, 0.72, 0.56))
+		b.circle(jp, 4.8, Color(0.86, 0.68, 0.54))
+		b.circle(jp - f * 1.0, 4.4, Color(0.18, 0.12, 0.08))
+		b.capsule(jp - f * 4.0, jp - f * 9.0, 1.8, Color(0.18, 0.12, 0.08))
