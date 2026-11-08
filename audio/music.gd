@@ -175,6 +175,9 @@ const STYLES := {
 	# Els Àngels: dusk skate plaza groove with marimba, vibes, skank chords, walking bass, and kick-rim drums
 	"angels": {"bpm": 118, "key": 2, "lead": "marimba", "lead2": ["vibes", 0], "comp": "skank",
 		"bass": "walk", "drums": "kickrim", "swing": 0.06, "verb": 0.24},
+	# El Poble Espanyol: Spanish village guitar & castanets over a lively Plaza Mayor pasodoble/rumba pulse
+	"poble": {"bpm": 114, "key": 2, "lead": "guitar", "lead2": ["whistle", 0], "comp": "rasgueado",
+		"bass": "walk", "drums": "castanets", "swing": 0.06, "verb": 0.28},
 	# Rambla del Raval: the finale's fight, fast and minor, its own chords and melody
 	"raval": {"bpm": 148, "key": 0, "minor": true, "lead": "guitar", "lead2": ["accordion", 0], "lead2_all": true,
 		"comp": "push", "bass": "eighths", "drums": "drive", "verb": 0.20, "chords": RAVAL_BOSS_CHORDS, "mel": RAVAL_BOSS_MELODY},

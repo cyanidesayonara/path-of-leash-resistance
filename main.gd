@@ -130,6 +130,7 @@ var skater: ForumSkater
 var espanya_bubble: EspanyaBubble
 var eixample_tour: EixampleTour
 var angels_skate: AngelsSkate
+var poble_balcony: PobleBalcony
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
@@ -227,6 +228,8 @@ const EixampleTour := preload("res://systems/eixample_tour.gd")
 const EspanyaBubble := preload("res://systems/espanya_bubble.gd")
 const Angels := preload("res://systems/angels.gd")
 const AngelsSkate := preload("res://systems/angels_skate.gd")
+const Poble := preload("res://systems/poble.gd")
+const PobleBalcony := preload("res://systems/poble_balcony.gd")
 # float_text(..., POP_SAY) draws a speech bubble rather than a sound or a score
 const POP_SAY := 0
 const POLE_RADIUS := 10.0
@@ -350,6 +353,7 @@ const WALK_MODULES := {
 	"espanya": preload("res://systems/espanya.gd"),
 	"eixample": preload("res://systems/eixample.gd"),
 	"angels": preload("res://systems/angels.gd"),
+	"poble": preload("res://systems/poble.gd"),
 	"raval": preload("res://systems/boss_gat.gd"),
 	"beach": preload("res://systems/passeig.gd"),
 	"rain": preload("res://systems/diluvi.gd"),
@@ -568,6 +572,10 @@ var angels_decks_sniffed := 0
 var angels_decks_visited: Dictionary = {}
 var angels_churro_stolen := false
 var angels_lamps_wrapped: Dictionary = {}
+var poble_columns_wrapped: Dictionary = {}
+var poble_workshops_sniffed: Dictionary = {}
+var poble_shakes: int = 0
+var poble_fountain_wrapped: bool = false
 var reial_fountain_drank := false
 var reial_busker_barked := false
 var vet_scale_weighed := false
@@ -2894,7 +2902,7 @@ func is_lamppost(i: int) -> bool:
 		return true
 	if walk_mod != null and walk_mod.has_method("is_lamp"):
 		return walk_mod.is_lamp(self, poles[i])
-	if lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "oldtown" or lvl == "carmel" or lvl == "superilla" or lvl == "forum" or lvl == "angels":
+	if lvl == "station" or lvl == "guell" or lvl == "market" or lvl == "oldtown" or lvl == "carmel" or lvl == "superilla" or lvl == "forum" or lvl == "angels" or lvl == "poble":
 		return false
 	return not (lvl == "rain" and poles[i].x < walk_cx)
 

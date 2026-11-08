@@ -77,6 +77,8 @@ const LEVEL_GOAL_IDS := {
 	"eixample": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "corners", "tour", "pond", "combo", "prize", "spell", "jamon", "clock"],
 	# Els Àngels: the skate plaza outside the white museum
 	"angels": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "ledge", "decks", "lamps", "combo", "prize", "spell", "jamon", "clock"],
+	# El Poble Espanyol: Plaza Mayor arcade columns, craft workshops, and Andalusian watering cans
+	"poble": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "columns_poble", "workshops", "watering", "combo", "prize", "spell", "jamon", "clock"],
 	# Rambla del Raval: the finale, El Gat de Botero. Tying him up is how the
 	# walk ends, so it is not a goal; the ways of wearing him down are.
 	"raval": ["mark", "sniff", "phone", "paws", "bag", "clothesline", "pigeons", "swat", "smash", "pummel", "combo", "prize", "spell", "jamon", "clock"],
@@ -166,6 +168,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"ledge": {"text": "Grind a museum ledge", "target": 1, "fn": func() -> int: return 1 if m.angels_ledge_ground else 0},
 		"decks": {"text": "Sniff %d skateboards on the ground", "target": 3, "fn": func() -> int: return m.angels_decks_sniffed},
 		"lamps": {"text": "Wrap the leash around %d lamps", "target": 3, "fn": func() -> int: return m.angels_lamps_wrapped.size()},
+		"columns_poble": {"text": "Wrap the leash round %d columns", "target": 4, "fn": func() -> int: return m.poble_columns_wrapped.size()},
+		"workshops": {"text": "Sniff %d craft workshops", "target": 3, "fn": func() -> int: return m.poble_workshops_sniffed.size()},
+		"watering": {"text": "Shake off under a watering can", "target": 1, "fn": func() -> int: return 1 if m.poble_shakes >= 1 else 0},
 		"spell": {"text": "Spell LEASH", "target": 5, "fn": func() -> int: return int(m.get("word_letters_collected"))},
 		"jamon": {"text": "Find the hidden pernil", "target": 1, "fn": func() -> int: return 1 if bool(m.get("jamon_found")) else 0},
 		"clock": {"text": "Beat the clock (under %s)" % clock(float(m.clock_target)), "target": 1,

@@ -2,6 +2,28 @@
 
 Append-only session history, newest first.
 
+## 2026-11-08 - Walk 33: «El Poble Espanyol» (The walled village of copied towns)
+
+- Walk 33 added to the campaign (`systems/poble.gd`, `systems/poble_balcony.gd`, `autoload/game.gd`, `world/level_build.gd`, `main.gd`):
+  Montjuïc's open-air architectural museum built for the 1929 International Exposition, gathering copied streets and squares from towns across Spain behind medieval stone fortress walls.
+- Walled entrance & Ávila gate: the walk starts outside the walls on the open Montjuïc road and pinches through a stone city gate between two round crenellated watchtowers with machicolations and an overhead bridge arch.
+- Castilian half-timbered lane: narrow winding street of stone and half-timbered houses (*entramado de madera*), dark oak cantilevered balconies, and a central stone rain gutter.
+- Plaza Mayor: wide arcaded square with colonnade aprons, café tables under the arcades, strings of overhead triangular festival bunting, a north stage, and a central tiered stone fountain basin with concentric compass rings.
+- Andalusian stepped lane: stepped street of dazzling whitewashed lime facades, cobalt-blue *zócalos*, wrought-iron window grilles, red geranium flower pots, and authentic Córdoba pebble-mosaic (*empedrado cordobés*) diamond runner.
+- Aragonese brick tower: prominent Mudejar pointed brick tower landmark with green-and-white ceramic tile friezes and a polygonal spire.
+- Craft workshops: glassblower's furnace (*Forn de Vidre*) with glowing brick glory-hole, potter's kick-wheel (*Taller de Ceràmica*) with hand-painted plates, and leather workshop (*Taller de Cuir*) with tanned hides and buckles.
+- Signature live event: Balcony Water Pour (`systems/poble_balcony.gd`): a neighbor on an upper balcony waters the geraniums, telegraphed 0.8 s ahead with a "Heads up!" speech bubble and a wet splash ring. Soaks your human if caught underneath (costing patience and phone safety), dog gets a shake-off bonus (+2), bark interaction (+2), and saves count as near misses.
+- Signature line: wrap the leash around the Plaza Mayor's arcade columns and the central fountain, weave the café tables, and pinch through the entrance gate.
+- Walk-specific goals:
+  - "Wrap the leash round 4 columns"
+  - "Sniff 3 craft workshops"
+  - "Shake off under a watering can"
+- Authentic off-leash area: *Jardí dels Olivers* (`FREEDOM_PROPS["poble"]`, `Poble.draw_freedom`), the terraced garden on the old bastion walls with gnarled Mediterranean olive trees, dry-stone retaining walls, and a daytime panoramic view of Barcelona and the sea below.
+- Soundtrack: warm Spanish classical nylon-string guitar with syncopated percussion, tambourine, and bass groove (`audio/music.gd`).
+- Entrance sign: terracotta roof pantile ceramic material (`world/world_sign.gd`).
+- Tests: `tests/test_poble.gd`.
+- Finish pass before merge: beyond the house fronts the village is houses now, not a flat brown field: one roof per house down both sides (`Poble._house_lots`), tiled and slate pitched roofs with ridges, tile courses and chimneys in the Castilian street, round the plaza and in the Aragonese court; flat white roof terraces with parapets, water tanks, pots and washing in the Andalusian quarter; party walls, a back row, patios with lemon trees (glazed tiles and a little fountain in Andalusia). The plaza's arcades read as covered bays: shade deepening toward the wall, a stone rib from each column to the wall, a lantern in each bay. The gate's curtain walls run out from both towers with a wall-walk and merlons on both parapets. The balcony shout is WATER FROM ABOVE!
+
 ## 2026-11-08 - A dog has standards: good spots, and a call that comes sooner after snacks
 
 - Nature used to call at a random point down the walk and any spot would do. It still comes at that point (`urge_y`), but what she does brings it on sooner: a dropped snack moves it 300 px back up the walk (`POOP_SNACK_PULL`) and zoomies 60 px a second (`POOP_ZOOM_PULL`), never closer than 600 px to the start line.
