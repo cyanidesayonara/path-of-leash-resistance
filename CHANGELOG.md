@@ -22,6 +22,7 @@ Append-only session history, newest first.
 - Soundtrack: warm Spanish classical nylon-string guitar with syncopated percussion, tambourine, and bass groove (`audio/music.gd`).
 - Entrance sign: terracotta roof pantile ceramic material (`world/world_sign.gd`).
 - Tests: `tests/test_poble.gd`.
+- Finish pass before merge: beyond the house fronts the village is houses now, not a flat brown field: one roof per house down both sides (`Poble._house_lots`), tiled and slate pitched roofs with ridges, tile courses and chimneys in the Castilian street, round the plaza and in the Aragonese court; flat white roof terraces with parapets, water tanks, pots and washing in the Andalusian quarter; party walls, a back row, patios with lemon trees (glazed tiles and a little fountain in Andalusia). The plaza's arcades read as covered bays: shade deepening toward the wall, a stone rib from each column to the wall, a lantern in each bay. The gate's curtain walls run out from both towers with a wall-walk and merlons on both parapets. The balcony shout is WATER FROM ABOVE!
 
 ## 2026-11-08 - Test that every walk is registered in every table
 
