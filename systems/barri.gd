@@ -223,6 +223,42 @@ static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
 	_draw_neighbourhood(m, maxf(vt, _rail_top(m)), minf(vb, _rail_bottom(m)))
 
 
+# the square's deco poles: plane trees, and the lamp posts between them
+static func tree_kind(m: Node2D, p: Vector2) -> int:
+	if LevelBuild.BARRI_LAMPS.has(p):
+		return m.TREE_NONE
+	return m.TREE_PLANE
+
+
+# the neighbours sitting on some of the benches, drawn over the bench (the
+# furniture pass comes after draw_live); the whole walk once, like every
+# overhead piece that does not follow the camera
+static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
+	if m.tutorial_mode:
+		return
+	var b := ShapeBatch.new()
+	var looks: Array = [[Color(0.40, 0.40, 0.44), Color(0.84, 0.84, 0.86)], [Color(0.70, 0.36, 0.30), Color(0.30, 0.22, 0.16)],
+		[Color(0.32, 0.46, 0.36), Color(0.86, 0.86, 0.88)], [Color(0.86, 0.72, 0.34), Color(0.16, 0.12, 0.10)]]
+	for i in range(m.benches.size()):
+		var bn: Vector2 = m.benches[i]
+		if _h1(i, 41.0) < 0.42:
+			continue
+		var look: Array = looks[i % looks.size()]
+		var at := bn + Vector2(0.0, -10.0 if i % 2 == 0 else 9.0)
+		_person(m, b, at, look[0], look[1])
+		# what they brought: a newspaper, a bag of bread for the pigeons, a phone
+		var thing := at + Vector2(0.0, 18.0 if i % 2 == 0 else -18.0)
+		match i % 3:
+			0:
+				b.rect(Rect2(thing - Vector2(5, 6), Vector2(10, 12)), Color(0.92, 0.90, 0.84))
+				b.line(thing + Vector2(-3, -2), thing + Vector2(3, -2), Color(0.5, 0.5, 0.5), 1.0)
+			1:
+				b.circle(thing, 4.5, Color(0.86, 0.76, 0.56))
+			_:
+				b.rect(Rect2(thing - Vector2(3, 5), Vector2(6, 10)), Color(0.16, 0.16, 0.20))
+	b.flush(c)
+
+
 static func draw_freedom_ground(m: Node2D, c: Object) -> void:
 	_draw_pipica(m, c)
 
@@ -305,6 +341,22 @@ const BOUGAINVILLEA := Color(0.80, 0.22, 0.52)
 const ROSEMARY := Color(0.34, 0.44, 0.34)
 const LAVENDER := Color(0.58, 0.48, 0.74)
 const SOIL := Color(0.36, 0.26, 0.18)
+# the gravel's marks, level space: puddle stains (x, y, radius), leaf drifts
+# against the edging (x, y, spread), dropped things (x, y, kind)
+const PUDDLE_STAINS: Array[Vector3] = [
+	Vector3(600.0, -720.0, 26.0), Vector3(742.0, -1650.0, 20.0), Vector3(560.0, -2900.0, 30.0),
+	Vector3(690.0, -3900.0, 22.0), Vector3(610.0, -4480.0, 18.0),
+]
+const LEAF_DRIFTS: Array[Vector3] = [
+	Vector3(412.0, -420.0, 10.0), Vector3(866.0, -1010.0, 10.0), Vector3(412.0, -1520.0, 9.0),
+	Vector3(866.0, -2380.0, 10.0), Vector3(412.0, -3300.0, 10.0), Vector3(866.0, -3800.0, 9.0),
+	Vector3(412.0, -4700.0, 10.0),
+]
+const LEAF_COLS: Array[Color] = [Color(0.78, 0.56, 0.22), Color(0.66, 0.40, 0.18), Color(0.86, 0.70, 0.30), Color(0.54, 0.46, 0.22)]
+const DROPPED: Array[Vector3] = [
+	Vector3(470.0, -600.0, 0.0), Vector3(846.0, -3740.0, 1.0), Vector3(430.0, -2570.0, 2.0),
+	Vector3(850.0, -1420.0, 3.0), Vector3(860.0, -4180.0, 0.0),
+]
 # the gates in the railing, and the worn tracks across the lawn to them
 const RAIL_GATES: Array[Vector2] = [
 	Vector2(RAIL_W, -1420.0), Vector2(RAIL_E, -2160.0), Vector2(RAIL_W, -3380.0), Vector2(RAIL_E, -4260.0),
@@ -347,6 +399,10 @@ const SHOPS: Array[Vector2] = [
 	Vector2(-2900.0, 3.0),    # the pharmacy, its green cross out over the door
 	Vector2(-3460.0, 4.0),    # the greengrocer, crates out front
 	Vector2(-4200.0, 5.0),    # the hairdresser
+	Vector2(-520.0, 6.0),     # the florist, buckets out on the pavement
+	Vector2(-2240.0, 0.0),    # a second bar, its terrace by the kiosk gate
+	Vector2(-3940.0, 6.0),    # a second florist
+	Vector2(-4700.0, 1.0),    # the bakery's other branch, by the pipica
 ]
 
 
@@ -393,6 +449,9 @@ static func solids(m: Node2D) -> Array[Rect2]:
 static func _lawn_blocked(p: Vector2) -> bool:
 	for r: Rect2 in [ROSEMARY_BED, FLOWER_BED, GYM_PAD, LAVENDER_BED, PERGOLA, HORT, ROSE_BED, PICNIC]:
 		if r.grow(6.0).has_point(p):
+			return true
+	for g: Vector2 in RAIL_GATES:
+		if absf(p.y - g.y) < 24.0:
 			return true
 	return Rect2(900.0, -2500.0, 136.0, 210.0).has_point(p)
 
@@ -441,6 +500,83 @@ static func _draw_gravel(m: Node2D, b: ShapeBatch, top: float, bot: float) -> vo
 			var sp := Vector2(px + (_h1(k * 3 + s, 11.0) - 0.5) * 60.0, py + (_h1(k * 3 + s, 12.0) - 0.5) * 60.0)
 			b.circle(sp, 1.6, Color(0.86, 0.80, 0.68, 0.7))
 			b.circle(sp + Vector2(5.0, 3.0), 1.2, Color(0.50, 0.44, 0.34, 0.6))
+	# the trees' shade: dapples of sun through the crown on the gravel
+	for tp: Vector2 in LevelBuild.BARRI_TREES:
+		if tp.y < lo - 120.0 or tp.y > hi + 80.0:
+			continue
+		var sc := tp + LIGHT * 50.0
+		for d in range(7):
+			var dp := sc + Vector2((_h1(int(tp.y) + d, 51.0) - 0.5) * 70.0, (_h1(int(tp.y) + d, 52.0) - 0.5) * 34.0)
+			b.circle(dp, 3.0 + _h1(int(tp.y) + d, 53.0) * 4.0, Color(1.0, 0.96, 0.80, 0.10))
+		b.circle(sc, 16.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.06))
+	# a pram's two wheel tracks down the east side, a bike's single one down
+	# the west, wandering as they go
+	var ty := floorf(lo / 24.0) * 24.0
+	while ty < hi:
+		var px := 700.0 + sin(ty * 0.0031) * 40.0
+		var px2 := 700.0 + sin((ty + 24.0) * 0.0031) * 40.0
+		for o: float in [-7.0, 7.0]:
+			b.line(Vector2(px + o, ty), Vector2(px2 + o, ty + 24.0), Color(0.50, 0.43, 0.32, 0.20), 1.4)
+		var bx := 540.0 + sin(ty * 0.0043 + 1.0) * 52.0
+		var bx2 := 540.0 + sin((ty + 24.0) * 0.0043 + 1.0) * 52.0
+		b.line(Vector2(bx, ty), Vector2(bx2, ty + 24.0), Color(0.50, 0.43, 0.32, 0.16), 1.2)
+		ty += 24.0
+	# where the rain stood: darker stains with a crust of fine silt round them
+	for st: Vector3 in PUDDLE_STAINS:
+		if st.y < lo - 60.0 or st.y > hi + 60.0:
+			continue
+		var sp := Vector2(st.x, st.y)
+		b.circle(sp, st.z + 3.0, Color(0.80, 0.74, 0.60, 0.16))
+		b.circle(sp, st.z, Color(0.50, 0.44, 0.34, 0.24))
+		b.circle(sp + Vector2(st.z * 0.5, 2.0), st.z * 0.6, Color(0.50, 0.44, 0.34, 0.20))
+		b.circle(sp - Vector2(st.z * 0.4, 1.0), st.z * 0.45, Color(0.46, 0.40, 0.31, 0.18))
+	# the gravel raked smooth beside the petanca pitch, the rake's teeth in it
+	var pp: Rect2 = LevelBuild.BARRI_PETANCA
+	if pp.end.y > lo - 20.0 and pp.position.y < hi + 20.0:
+		var rk := Rect2(pp.end.x + 10.0, pp.position.y + 20.0, 64.0, pp.size.y - 40.0)
+		b.rect(rk, Color(0.82, 0.74, 0.58, 0.35))
+		var ry := rk.position.y + 4.0
+		while ry < rk.end.y:
+			b.line(Vector2(rk.position.x + 2.0, ry), Vector2(rk.end.x - 2.0, ry), Color(0.60, 0.52, 0.40, 0.30), 1.0)
+			ry += 5.0
+		# the rake, laid down at its edge
+		b.line(Vector2(rk.end.x + 4.0, rk.position.y + 10.0), Vector2(rk.end.x + 4.0, rk.position.y + 70.0), Color(0.58, 0.42, 0.26), 2.2)
+		b.rect(Rect2(rk.end.x - 6.0, rk.position.y + 6.0, 20.0, 4.0), Color(0.30, 0.30, 0.32))
+	# a band of panots across the gravel at each gate in the railing, where the
+	# paved path from the gate meets the square
+	for g: Vector2 in RAIL_GATES:
+		if g.y < lo - 30.0 or g.y > hi + 30.0:
+			continue
+		_panots(b, 402.0, 878.0, g.y - 18.0, g.y + 18.0)
+		b.rect(Rect2(402.0, g.y - 19.0, 476.0, 1.5), GRANITE_JOINT)
+		b.rect(Rect2(402.0, g.y + 18.0, 476.0, 1.5), GRANITE_JOINT)
+	# things dropped on the gravel: a ball, a dummy, a glove, drifts of leaves
+	# against the edging
+	for dr: Vector3 in LEAF_DRIFTS:
+		if dr.y < lo - 40.0 or dr.y > hi + 40.0:
+			continue
+		for li in range(14):
+			var lp := Vector2(dr.x + (_h1(int(dr.y) + li, 61.0) - 0.5) * dr.z * 2.0,
+				dr.y + (_h1(int(dr.y) + li, 62.0) - 0.5) * dr.z * 3.2)
+			b.circle(lp, 3.2, LEAF_COLS[li % LEAF_COLS.size()])
+	for dt: Vector3 in DROPPED:
+		if dt.y < lo - 20.0 or dt.y > hi + 20.0:
+			continue
+		var dp2 := Vector2(dt.x, dt.y)
+		b.circle(dp2 + LIGHT * 2.0, 5.0, Color(0, 0, 0, 0.16))
+		match int(dt.z):
+			0:      # a child's ball, red and yellow
+				b.circle(dp2, 5.5, Color(0.90, 0.24, 0.20))
+				b.circle(dp2 + Vector2(-1.5, -1.5), 2.6, Color(0.96, 0.84, 0.26))
+			1:      # a dummy
+				b.circle(dp2, 4.0, Color(0.56, 0.78, 0.92))
+				b.circle(dp2 + Vector2(4, 0), 2.0, Color(0.96, 0.94, 0.90))
+			2:      # a glove
+				b.rect(Rect2(dp2 - Vector2(4, 3), Vector2(8, 7)), Color(0.36, 0.30, 0.46))
+				for f in range(3):
+					b.rect(Rect2(dp2.x - 4.0 + float(f) * 3.0, dp2.y - 7.0, 2.0, 4.0), Color(0.36, 0.30, 0.46))
+			_:      # a hair clip, bright pink
+				b.rect(Rect2(dp2 - Vector2(4, 1.5), Vector2(8, 3)), Color(0.94, 0.40, 0.66))
 	# the setts across each end of the square: three rows, staggered
 	for sy: float in [-1560.0, -3330.0]:
 		if sy < lo - 40.0 or sy > hi + 40.0:
@@ -637,7 +773,7 @@ static func _draw_east_block(m: Node2D, b: ShapeBatch, top: float, bot: float) -
 
 
 static func _balcony(b: ShapeBatch, at: Vector2, k: int) -> void:
-	var r := Rect2(at.x - 12.0, at.y, 12.0, 34.0)
+	var r := Rect2(at.x - 16.0, at.y, 16.0, 34.0)
 	b.rect(Rect2(r.position + Vector2(-3.0, 4.0), r.size), Color(0, 0, 0, 0.14))
 	b.rect(r, Color(0.80, 0.76, 0.70))
 	b.rect(Rect2(r.position.x, r.position.y, 2.0, r.size.y), Color(0.20, 0.22, 0.24))
@@ -673,9 +809,9 @@ static func _shopfront(m: Node2D, b: ShapeBatch, y: float, kind: int) -> void:
 	var fx := FACADE_E
 	match kind:
 		0:      # the corner bar: a green awning and its tables on the pavement
-			_awning(b, Rect2(fx - 20.0, y - 70.0, 20.0, 140.0), Color(0.18, 0.44, 0.32), Color(0.92, 0.90, 0.84))
+			_awning(b, Rect2(fx - 30.0, y - 70.0, 30.0, 140.0), Color(0.18, 0.44, 0.32), Color(0.92, 0.90, 0.84))
 			for i in range(3):
-				var tc := Vector2(fx - 36.0, y - 52.0 + float(i) * 52.0)
+				var tc := Vector2(fx - 42.0, y - 52.0 + float(i) * 52.0)
 				b.circle(tc + LIGHT * 2.0, 8.0, _shadow(m))
 				b.circle(tc, 8.0, Color(0.74, 0.74, 0.72))
 				b.circle(tc + Vector2(-2, -1), 2.2, Color(0.96, 0.84, 0.40))
@@ -685,9 +821,9 @@ static func _shopfront(m: Node2D, b: ShapeBatch, y: float, kind: int) -> void:
 			b.rect(Rect2(fx - 46.0, y + 86.0, 10.0, 14.0), Color(0.16, 0.16, 0.18))
 			b.rect(Rect2(fx - 45.0, y + 88.0, 8.0, 10.0), Color(0.86, 0.86, 0.84, 0.25))
 		1:      # the bakery: a cream and brown striped awning, a bench by the door
-			_awning(b, Rect2(fx - 18.0, y - 50.0, 18.0, 100.0), Color(0.52, 0.34, 0.20), Color(0.94, 0.88, 0.74))
-			b.rect(Rect2(fx - 32.0, y - 26.0, 10.0, 40.0), TIMBER)
-			b.rect(Rect2(fx - 31.0, y - 25.0, 3.0, 38.0), TIMBER_LIT)
+			_awning(b, Rect2(fx - 28.0, y - 50.0, 28.0, 100.0), Color(0.52, 0.34, 0.20), Color(0.94, 0.88, 0.74))
+			b.rect(Rect2(fx - 44.0, y - 26.0, 10.0, 40.0), TIMBER)
+			b.rect(Rect2(fx - 43.0, y - 25.0, 3.0, 38.0), TIMBER_LIT)
 		2:      # the newspaper kiosk, green steel, its shutters folded open
 			var kr := Rect2(fx - 46.0, y - 34.0, 38.0, 68.0)
 			b.rect(Rect2(kr.position + LIGHT * 5.0, kr.size), _shadow(m))
@@ -708,16 +844,26 @@ static func _shopfront(m: Node2D, b: ShapeBatch, y: float, kind: int) -> void:
 			b.rect(Rect2(c.x - 2.0, c.y - 7.0, 4.0, 14.0), Color(0.46, 0.92, 0.52))
 			b.rect(Rect2(c.x - 7.0, c.y - 2.0, 14.0, 4.0), Color(0.46, 0.92, 0.52))
 		4:      # the greengrocer: a green awning and crates of fruit out front
-			_awning(b, Rect2(fx - 20.0, y - 60.0, 20.0, 120.0), Color(0.26, 0.52, 0.28), Color(0.90, 0.92, 0.84))
+			_awning(b, Rect2(fx - 28.0, y - 60.0, 28.0, 120.0), Color(0.26, 0.52, 0.28), Color(0.90, 0.92, 0.84))
 			var fruit: Array[Color] = [Color(0.96, 0.56, 0.14), Color(0.86, 0.18, 0.16), Color(0.94, 0.86, 0.26), Color(0.50, 0.70, 0.24)]
 			for i in range(4):
-				var cr := Rect2(fx - 40.0, y - 50.0 + float(i) * 26.0, 18.0, 22.0)
+				var cr := Rect2(fx - 48.0, y - 50.0 + float(i) * 26.0, 18.0, 22.0)
 				b.rect(Rect2(cr.position + LIGHT * 2.0, cr.size), _shadow(m))
 				b.rect(cr, TIMBER_LIT)
 				for f in range(4):
 					b.circle(cr.position + Vector2(5.0 + float(f % 2) * 8.0, 6.0 + float(f / 2) * 9.0), 3.6, fruit[i])
+		6:      # the florist: a pink awning, buckets of flowers out on the pavement
+			_awning(b, Rect2(fx - 26.0, y - 50.0, 26.0, 100.0), Color(0.80, 0.36, 0.50), Color(0.96, 0.92, 0.92))
+			var blooms: Array[Color] = [Color(0.94, 0.86, 0.22), Color(0.90, 0.26, 0.32), Color(0.96, 0.96, 0.94), Color(0.62, 0.40, 0.80)]
+			for i in range(5):
+				var bp := Vector2(fx - 38.0 - float(i % 2) * 8.0, y - 44.0 + float(i) * 20.0)
+				b.circle(bp + LIGHT * 2.0, 8.0, _shadow(m))
+				b.circle(bp, 7.0, Color(0.30, 0.32, 0.36))
+				for f in range(5):
+					b.circle(bp + Vector2.from_angle(TAU * float(f) / 5.0) * 3.6, 2.6, blooms[i % blooms.size()])
+				b.circle(bp, 2.0, Color(0.30, 0.50, 0.26))
 		_:      # the hairdresser: a striped blind and a pot by the door
-			_awning(b, Rect2(fx - 16.0, y - 40.0, 16.0, 80.0), Color(0.30, 0.30, 0.34), Color(0.86, 0.86, 0.88))
+			_awning(b, Rect2(fx - 24.0, y - 40.0, 24.0, 80.0), Color(0.30, 0.30, 0.34), Color(0.86, 0.86, 0.88))
 			b.circle(Vector2(fx - 28.0, y + 52.0), 7.0, Color(0.62, 0.36, 0.24))
 			b.circle(Vector2(fx - 28.0, y + 52.0), 5.6, Color(0.28, 0.50, 0.26))
 
@@ -1061,20 +1207,16 @@ static func _person(m: Node2D, b: ShapeBatch, p: Vector2, body: Color, hair: Col
 	b.circle(p + Vector2(-1.5, -5.5), 1.6, hair.lightened(0.2))
 
 
-# the worn tracks across the lawn from the path to the railing's gates: grass
-# rubbed down to earth where everyone cuts across
-static func _desire_paths(m: Node2D, b: ShapeBatch, top: float, bot: float) -> void:
+# the paved paths across the lawn from each gate in the railing to the gravel
+static func _desire_paths(_m: Node2D, b: ShapeBatch, top: float, bot: float) -> void:
 	for g: Vector2 in RAIL_GATES:
-		if g.y < top - 200.0 or g.y > bot + 200.0:
+		if g.y < top - 40.0 or g.y > bot + 40.0:
 			continue
-		var e: Vector2 = m.walk_edges(g.y + 120.0)
-		var from := Vector2(e.y if g.x > 640.0 else e.x, g.y + 120.0)
-		var n := 14
-		for i in range(n + 1):
-			var u := float(i) / float(n)
-			var p := from.lerp(g, u) + Vector2(0.0, sin(u * PI) * 26.0)
-			b.circle(p, 11.0 - u * 2.0, Color(0.50, 0.46, 0.32, 0.55))
-			b.circle(p + Vector2(2.0, 1.0), 6.0 - u * 1.5, Color(0.56, 0.50, 0.36, 0.5))
+		var x0: float = minf(g.x, 402.0 if g.x < 640.0 else 878.0)
+		var x1: float = maxf(g.x, 402.0 if g.x < 640.0 else 878.0)
+		_panots(b, x0, x1, g.y - 18.0, g.y + 18.0)
+		b.rect(Rect2(x0, g.y - 20.0, x1 - x0, 2.0), GRANITE)
+		b.rect(Rect2(x0, g.y + 18.0, x1 - x0, 2.0), GRANITE)
 
 
 static func _motorbike(b: ShapeBatch, p: Vector2, side: float, v: float) -> void:

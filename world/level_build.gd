@@ -894,15 +894,24 @@ const BARRI_PLAYGROUND := Rect2(894.0, -4010.0, 144.0, 300.0)
 const BARRI_PINGPONG := Vector2(706.0, -2560.0)
 # the drinking fountain: a cast-iron column at the gravel's west edge
 const BARRI_FONT := Vector2(448.0, -3150.0)
-# the plane trees, two rows that do not mirror: the west row hugs its edge,
-# the east row stands further in, and neither keeps an even step
+# the plane trees, two rows at a steady 270 px step, the east row half a step
+# on from the west so the two never mirror; a tree is left out where a bench,
+# a bin, the fountain or the petanca pitch stands in its place
 const BARRI_TREES: Array[Vector2] = [
-	Vector2(436.0, -300.0), Vector2(444.0, -690.0), Vector2(432.0, -1060.0), Vector2(440.0, -1420.0),
-	Vector2(438.0, -2250.0), Vector2(446.0, -2640.0), Vector2(434.0, -2930.0), Vector2(440.0, -3420.0),
-	Vector2(432.0, -3790.0), Vector2(444.0, -4150.0), Vector2(436.0, -4560.0),
-	Vector2(812.0, -470.0), Vector2(818.0, -880.0), Vector2(806.0, -1250.0), Vector2(816.0, -1620.0),
-	Vector2(810.0, -1960.0), Vector2(814.0, -2330.0), Vector2(808.0, -2790.0), Vector2(816.0, -3110.0),
-	Vector2(812.0, -3560.0), Vector2(806.0, -3930.0), Vector2(818.0, -4330.0), Vector2(810.0, -4700.0),
+	Vector2(434.0, -250.0), Vector2(440.0, -520.0), Vector2(434.0, -790.0), Vector2(440.0, -1060.0),
+	Vector2(434.0, -1330.0), Vector2(440.0, -1600.0), Vector2(440.0, -2140.0), Vector2(434.0, -2410.0),
+	Vector2(440.0, -2680.0), Vector2(434.0, -2950.0), Vector2(440.0, -3220.0), Vector2(434.0, -3490.0),
+	Vector2(440.0, -3760.0), Vector2(434.0, -4030.0), Vector2(434.0, -4570.0),
+	Vector2(812.0, -385.0), Vector2(806.0, -655.0), Vector2(812.0, -925.0), Vector2(806.0, -1195.0),
+	Vector2(806.0, -1735.0), Vector2(812.0, -2005.0), Vector2(806.0, -2275.0), Vector2(812.0, -2545.0),
+	Vector2(806.0, -2815.0), Vector2(812.0, -3085.0), Vector2(806.0, -3355.0), Vector2(812.0, -3625.0),
+	Vector2(806.0, -3895.0), Vector2(812.0, -4165.0), Vector2(806.0, -4435.0), Vector2(812.0, -4705.0),
+]
+# the square's lamp posts, between the trees, alternating sides (deco poles
+# that are not trees: main.is_lamppost draws them, and the leash wraps them)
+const BARRI_LAMPS: Array[Vector2] = [
+	Vector2(420.0, -655.0), Vector2(818.0, -1330.0), Vector2(420.0, -2275.0), Vector2(818.0, -2680.0),
+	Vector2(420.0, -3895.0),
 ]
 
 
@@ -1702,11 +1711,16 @@ static func build_level_data(m: Node2D) -> void:
 			m.gate_r = 880.0
 			for tp: Vector2 in BARRI_TREES:
 				m.poles.append(tp)
+			for lp: Vector2 in BARRI_LAMPS:
+				m.poles.append(lp)
 			m.deco_pole_count = m.poles.size()
+			# benches along both edges of the gravel, facing the path
 			m.benches = Array([Vector2(452, -880), Vector2(828, -1080), Vector2(452, -2470),
-				Vector2(828, -2960), Vector2(828, -3280), Vector2(452, -4320), Vector2(828, -4520)], TYPE_VECTOR2, &"", null)
+				Vector2(828, -2960), Vector2(828, -3280), Vector2(452, -4320), Vector2(828, -4520),
+				Vector2(828, -780), Vector2(452, -1200), Vector2(828, -1860), Vector2(828, -3480),
+				Vector2(452, -4140)], TYPE_VECTOR2, &"", null)
 			m.bins = Array([Vector2(470, -960), Vector2(800, -2200), Vector2(470, -3620),
-				Vector2(800, -4610)], TYPE_VECTOR2, &"", null)
+				Vector2(800, -4610), Vector2(470, -1460), Vector2(800, -3560)], TYPE_VECTOR2, &"", null)
 			m.stalls = Array([BARRI_PINGPONG], TYPE_VECTOR2, &"", null)
 			m.stall_kinds = Array(["pingpong"], TYPE_STRING, &"", null)
 			# the petanca players, on the pitch: one throwing from his circle at
