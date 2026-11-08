@@ -890,7 +890,7 @@ static func diluvi(m: Node2D) -> void:
 # gravel, the playground on the lawn beside it, and the plane trees stand far
 # enough in from each edge that their shadows fall on the gravel.
 const BARRI_PETANCA := Rect2(412.0, -1985.0, 130.0, 250.0)
-const BARRI_PLAYGROUND := Rect2(906.0, -4010.0, 166.0, 300.0)
+const BARRI_PLAYGROUND := Rect2(894.0, -4010.0, 144.0, 300.0)
 const BARRI_PINGPONG := Vector2(706.0, -2560.0)
 # the drinking fountain: a cast-iron column at the gravel's west edge
 const BARRI_FONT := Vector2(448.0, -3150.0)
