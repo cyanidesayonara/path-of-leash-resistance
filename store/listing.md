@@ -157,48 +157,61 @@ Screenshots and logos are regenerated, not stored here:
   (`--level=guell --shot-at=3100`, with `tools/stamp_version.sh` run first so
   the corner says the version, not "dev"), captioned "El Mosaic: the winding
   terrace and its broken-tile mosaic". 1.57 replaces the set with the
-  rebuilt walks (see "Screenshots for 1.57" below). The chase can be shot
+  rebuilt walks, and 1.60 and 1.71 replace it again (the current set is
+  "Screenshots for 1.71" below). The chase can be shot
   since #20 (`--level=neteja --shot-y=-4300 --shot-home --shot-sweeper`),
   and pick frames where no two feed lines overlap.
 - Logos: `tools/make_store_art.gd` writes the 9:16 poster (1440x2160), 1:1
   box art (2160) and the 300/150/71 tiles into `build/store-art/`. No hero
   art, trailers or Xbox images.
 
-### Screenshots for 1.60
+### Screenshots for 1.71
 
-Ten 1920x1080 images from a checkout of the v1.60 tag
-(`tools/stamp_version.sh` first, so the corner reads v1.60), uploaded in this
+Ten 1920x1080 images from a checkout of the v1.71 tag
+(`tools/stamp_version.sh` first, so the corner reads v1.71), uploaded in this
 order with these captions:
 
-1. La Rambla: crowds, cafe parasols and a kid with a dare
-   (`--level=street --autowalk --fixed-fps 60 --shot-at=900`)
-2. El Mercat: the market hall, its stalls and the fish counter
-   (`--level=market --shot-y=-2000 --shot-at=60`)
-3. Off the leash: an agility course, fetch and a frisbee
-   (`--level=park --at-freedom --autowalk --fixed-fps 60 --shot-at=300`)
-4. El Gòtic: washing lines over the old town's alleys
-   (`--level=oldtown --shot-y=-3420 --shot-at=300`)
-5. El Mosaic: the tiled terraces and the mosaic salamander
-   (`--level=guell --shot-y=-760 --shot-at=300`)
-6. Montjuïc: the climb up the hill, and a dare against the clock
-   (`--level=montjuic --autowalk --fixed-fps 60 --shot-at=2600`)
-7. El Parc: a slack leash and a tree to wind your human around
-   (`--level=park --shot-y=-300 --shot-at=300`)
-8. La Castanyada: the chestnut festival at night
-   (`--level=spook --autowalk --fixed-fps 60 --shot-at=1200`)
-9. Passeig Marítim: sand, sea and a dog beach at the end
-   (`--level=beach --shot-y=-2850 --shot-at=300`)
-10. L'Estació: the moving walkway and the station
-    (`--level=station --autowalk --fixed-fps 60 --shot-at=1500`)
+1. Festa de Gràcia: the correfoc's dragon and fire devils, and a head start
+   home
+   (`--level=gracia --shot-y=-2000 --shot-home --shot-sweeper --shot-at=170`)
+2. Rambla del Raval: El Gat de Botero wakes up, and he is big
+   (`--level=raval --shot-y=-700 --shot-at=300`)
+3. Plaça d'Espanya: the cascade, lit up at night
+   (`--level=espanya --shot-y=-3800 --shot-at=300`)
+4. La Neteja: the street sweeper at first light, coming your way
+   (`--level=neteja --shot-y=-4300 --shot-home --shot-sweeper --shot-at=200`)
+5. L'Eixample: cut corners, a planter, and a dare on the bench
+   (`--level=eixample --shot-y=-1200 --shot-at=300`)
+6. El Parc: a swim in the pond, leash and all
+   (`--level=park --shot-y=-2600 --shot-at=300`)
+7. El Barri: off the leash, with an agility course and fetch
+   (`--level=barri --at-freedom --autowalk --fixed-fps 60 --shot-at=300`)
+8. El Poble Espanyol: the village square, dressed for a festa
+   (`--level=poble --shot-y=-2000 --shot-at=300`)
+9. Els Àngels: the skate plaza outside the white museum
+   (`--level=angels --shot-y=-2600 --shot-at=420`)
+10. Els Búnquers: sunset on the path up the hill
+    (`--level=carmel --shot-y=-1200 --shot-at=300`)
 
 All with `--rendering-method gl_compatibility --resolution 1920x1080` and
 `-- --shot --shot-quit --shot-out=FILE`. A `--shot-y` shot needs
-`--shot-at=300` or so: sooner, the menu's prompt bar is still fading out. The
-sweeper chase is left out: no frame had the chase on and the walk not lost.
+`--shot-at=300` or so: sooner, the menu's prompt bar is still fading out. A
+chase shot (`--shot-home --shot-sweeper`) is the exception: by frame 300 the
+shout and the threat have moved on, so take it at 170-200. The El Barri shot
+uses `--autowalk`, which is not frame-exact, so take a few and keep one with
+the agility course in view.
 
-The Store logos for 1.60 are the refreshed art from #230 (googly eyes),
-written by `tools/make_store_art.gd`: the 9:16 poster, the 1:1 box art and the
-300/150/71 tiles.
+Shoot from a fresh profile. The saved settings carry the goal list's open or
+closed state (`goals_expanded`), and an open list covers a third of the
+frame. Pointing `APPDATA` at an empty folder for the run gives the defaults
+without touching the real records:
+`APPDATA=$PWD/build/appdata godot ... -- --shot ...`. A fresh profile can show
+the first-time question on some frames; skip those.
+
+The Store logos for 1.71 are `tools/make_store_art.gd`'s output, unchanged in
+design since #230 (googly eyes) and regenerated from the v1.71 tag: the 9:16
+poster, the 1:1 box art and the 300/150/71 tiles. `tools/make_icon.gd` has not
+changed since the icon was last generated, so the icon is as it was.
 
 ### Other fields
 
