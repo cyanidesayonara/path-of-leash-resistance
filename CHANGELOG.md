@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-11-09 - El Gat pounces
+
+- Below half, El Gat no longer charges: a cat does not charge, and the mammoth in La Ciutadella is the boss who does (docs/BOSSES.md). He crouches low and wiggles his rear while a landing ring fills on the spot where she stood, a dashed arc showing his leap, then he leaps. A taut leash across him in the air catches him (CAUGHT IN THE LEASH!). Coming down on a terrace table or a palm crashes him (CRASH!). Landing on her knocks her, and landing on nothing costs him and leaves him skidding (it counts as a dodge). Your human flung into him still bowls him, and the boop and the last stand are unchanged.
+- The two goals are renamed to match: "Catch pouncing El Gat in a taut leash" and "Make El Gat land on a palm or a table". Their ids and counters are the same, so records carry over.
+- `tests/test_boss_gat.gd` covers the leap's catch, the landing on a palm, a landing on her, the miss and its skid, and the crouch's aim and banner. `tools/boss_shots.gd` photographs the crouch and the leap.
+
 ## 2026-11-09 - The First Walk passes its own structural selftest
 
 - CI's level sanity sweep has failed on main since the First Walk rebuild (#497): the selftest wanted six kickables on every walk, and the rebuilt tutorial keeps its stations clear of litter on purpose, with one ball in the practice yard. The tutorial is now held to that one ball, and every other walk still to six. `tools/run_tests.sh` does not run the sweep, so the local suite never saw it.

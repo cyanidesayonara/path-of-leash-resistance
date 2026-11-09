@@ -6,8 +6,10 @@ extends SceneTree
 #   that follow him in main.poles, main.rope_soft and the leash's own copy
 # - he wakes, prowls north only, and swats where the dust ring was: a hit
 #   knocks her, a near miss staggers him
-# - below half he charges; a taut leash across his path, a palm, or your
-#   human flung into him each stun him, and the rope's ends never count
+# - below half he pounces: a taut leash across him in the air, a palm or a
+#   terrace under his landing, or your human flung into him each stun him,
+#   and the rope's ends never count; landing on her knocks her, and a miss
+#   costs him and leaves him skidding
 # - a bark on his nose while dazed is one boop per stun
 # - out of fight he walks back to his plinth; three legs within LEG_MEMORY
 #   tie him, he topples, and a bark on the snout settles him
@@ -131,7 +133,7 @@ func _run() -> void:
 
 	# phase two
 	gat.damage_boss(gat.hp - BG.MAX_HP * 0.5)
-	_check(gat.phase == 2, "half his health gone: he charges")
+	_check(gat.phase == 2, "half his health gone: he pounces")
 	gat.transition_to(BG.State.PROWL)
 	_check(gat.state == BG.State.ENRAGE, "back on his feet below half, he rears up first")
 	for i in range(int(BG.ENRAGE_TIME / 0.05) + 2):
@@ -143,7 +145,7 @@ func _run() -> void:
 	# solid: she is kept out of his body
 	m.dog.global_position = gat.pos + Vector2(10.0, 5.0)
 	gat.swat_cooldown = 99.0
-	gat.charge_cooldown = 99.0
+	gat.pounce_cooldown = 99.0
 	gat.tick_state(0.016)
 	_check(m.dog.global_position.distance_to(gat.pos) >= BG.BODY_R - 0.5, "she cannot stand inside him")
 
@@ -154,11 +156,13 @@ func _run() -> void:
 	m.dog.global_position = Vector2(500.0, -1000.0)
 	m.human.global_position = Vector2(780.0, -1000.0)
 	_lay_rope(m, Vector2(500.0, -1000.0), Vector2(780.0, -1000.0))
-	gat.transition_to(BG.State.CHARGE)
-	gat.charge_dir = Vector2.ZERO
+	gat.transition_to(BG.State.POUNCE)
+	gat.pounce_from = gat.pos
+	gat.pounce_to = gat.pos
+	gat.state_t = BG.POUNCE_TIME * 0.5
 	_check(gat.check_clothesline(), "a taut rope across him is a clothesline")
 	gat.tick_state(0.016)
-	_check(bool(m.gat_clotheslined) and gat.state == BG.State.STUNNED, "the clothesline stuns him")
+	_check(bool(m.gat_clotheslined) and gat.state == BG.State.STUNNED, "the leash catches him mid-leap")
 	_check(is_equal_approx(gat.hp, 90.0 - BG.CLOTHESLINE_DAMAGE), "for CLOTHESLINE_DAMAGE")
 	gat.pos = m.leash.pts[0] + Vector2(-30.0, 0.0)
 	_check(not gat.check_clothesline(), "rope at her collar is no clothesline")
@@ -172,19 +176,51 @@ func _run() -> void:
 	_check(is_equal_approx(gat.hp, hp_b - BG.BOOP_DAMAGE), "the boop hurts his pride")
 	_check(not gat.on_bark_action(nose), "one boop per stun")
 
-	# the palm
+	# the palm under his landing
 	gat.hp = 90.0
-	gat.transition_to(BG.State.CHARGE)
-	gat.charge_dir = Vector2.ZERO
-	gat.pos = BG.PALMS[4] + Vector2(10.0, 10.0)
+	gat.transition_to(BG.State.POUNCE)
+	gat.pounce_from = BG.PALMS[4] + Vector2(10.0, 10.0)
+	gat.pounce_to = gat.pounce_from
+	gat.state_t = 0.01
 	gat.tick_state(0.016)
-	_check(bool(m.gat_tree_smashed) and gat.state == BG.State.STUNNED, "a palm in his path stuns him")
+	_check(bool(m.gat_tree_smashed) and gat.state == BG.State.STUNNED, "landing on a palm stuns him")
+
+	# landing on her knocks her; landing on nothing costs him and he skids
+	gat.hp = 90.0
+	var hits0: int = m.dog_hits
+	gat.transition_to(BG.State.POUNCE)
+	gat.pounce_from = Vector2(640.0, -1600.0)
+	gat.pounce_to = gat.pounce_from
+	m.dog.global_position = gat.pounce_to + Vector2(20.0, 0.0)
+	m.dog.tumble_t = 0.0
+	gat.state_t = 0.01
+	gat.tick_state(0.016)
+	_check(m.dog_hits == hits0 + 1 and gat.state == BG.State.PROWL, "a pounce on her knocks her")
+	var dodged1: int = m.gat_swats_dodged
+	gat.transition_to(BG.State.POUNCE)
+	gat.pounce_from = Vector2(640.0, -1600.0)
+	gat.pounce_to = gat.pounce_from
+	m.dog.global_position = gat.pounce_to + Vector2(200.0, 0.0)
+	gat.state_t = 0.01
+	gat.tick_state(0.016)
+	_check(gat.state == BG.State.SKID and m.gat_swats_dodged == dodged1 + 1, "a miss leaves him skidding")
+	_check(is_equal_approx(gat.hp, 90.0 - BG.MISS_DAMAGE), "and costs him MISS_DAMAGE")
+	for i in range(int(BG.SKID_TIME / 0.05) + 2):
+		gat.tick_state(0.05)
+	_check(gat.state == BG.State.PROWL, "then he prowls again")
+
+	# the crouch commits him to where she stood, and the banner says so
+	gat.transition_to(BG.State.POUNCE_WARN)
+	_check(gat.pounce_to.distance_to(m.dog.global_position) < 70.0, "he aims at where she is")
+	_check(gat.fight_status() == "HE'S CROUCHING! OUT OF THE RING", "the crouch's banner")
 
 	# your human, flung
 	gat.hp = 90.0
-	gat.transition_to(BG.State.CHARGE)
-	gat.charge_dir = Vector2.ZERO
+	gat.transition_to(BG.State.POUNCE)
 	gat.pos = Vector2(640.0, -1500.0)
+	gat.pounce_from = gat.pos
+	gat.pounce_to = gat.pos
+	gat.state_t = 0.01
 	m.human.global_position = gat.pos + Vector2(20.0, 20.0)
 	m.human.whirl_flung_t = 1.0
 	gat.tick_state(0.016)
