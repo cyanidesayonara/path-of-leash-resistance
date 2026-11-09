@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-09 - Who is out follows the weather and the hour
+
+- One rule per kind of passer-by or prop (`systems/outdoors.gd`), read where that kind is spawned or drawn, not a system per walk. Sunbathers and their towels, the beach parasols, picnics on the grass, the Rambla's ice-cream cart and kids on scooters and skates are out in fair weather (clear or windy) by day or at dusk only. So Passeig Marítim at its campaign dawn has no towels and its parasols are furled; in rain, snow or after dark the same. The ice-cream cart is covered and nobody queues at it.
+- Buskers stand it out under an umbrella in snow as well as rain (no rain streaks in snow). Terrace parasols stay up in the rain, as they are for, and are furled at night and under snow; El Parc's picnic, frisbee pair and sunbather stay in when it is not fair, and take their bodies with them.
+- Crowds thin with the sky: the Rambla's and El Mosaic's tourists and the people browsing at a stall scale by hour (dawn 0.35, day 1, dusk 0.85, night 0.6) and weather (wind 0.85, rain 0.5, snow 0.45), measured against each walk's own campaign sky, so every campaign walk keeps the crowd it was built with (La Castanyada's night market stays busy) and only another sky thins it. Other dog walkers come a little oftener at first light and late evening and less often in a downpour.
+- Nothing draws from an RNG: towels are still placed and kids still set up with the same draws, then left out, so a seeded walk replays as before. Live events and their goals are untouched. Test: `tests/test_outdoors.gd`.
+
 ## 2026-11-09 - Walk 11: «La Ciutadella» and El Mamut, the first statue boss
 
 - A new walk in the boss slot at 11, after El Besòs (`Game.CAROUSEL`, 15 stars, after the second chase): Passeig de Lluís Companys from under the brick Arc de Triomf with its bench-lamps, the park gate, the gravel avenue between the Castell dels Tres Dragons and the Hivernacle, the mammoth's lawn by the boating lake, La Cascada with its pool at the path's edge and the golden chariot on top, then the zoo wall with giraffes looking over it and the Parliament opposite, out to the dog area (`systems/ciutadella.gd`).
