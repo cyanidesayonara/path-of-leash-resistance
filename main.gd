@@ -355,6 +355,7 @@ const WALK_MODULES := {
 	"angels": preload("res://systems/angels.gd"),
 	"poble": preload("res://systems/poble.gd"),
 	"raval": preload("res://systems/boss_gat.gd"),
+	"ciutadella": preload("res://systems/ciutadella.gd"),
 	"beach": preload("res://systems/passeig.gd"),
 	"rain": preload("res://systems/diluvi.gd"),
 	"market": preload("res://world/mercat.gd"),
@@ -600,6 +601,19 @@ var gat_clotheslined := false
 var gat_human_pummeled := false
 var gat_tree_smashed := false
 var boss_gat: RefCounted = null
+# La Ciutadella: El Mamut (systems/boss_mamut.gd) and what the goals count of him
+var mamut: RefCounted = null
+var mamut_dodges := 0
+var mamut_splashed := false
+var mamut_tripped := false
+var mamut_bonked := false
+var mamut_bowled := false
+var mamut_booped := false
+var mamut_sat := false
+var mamut_settled := false
+# the zoo palms' parakeets and your human's croissant
+var ciut_shooed := false
+var ciut_birds: Dictionary = {"state": "perched", "t": 0.0, "done": false}
 # Els Senglars (systems/boars.gd) and Festa de Gràcia (systems/gracia.gd)
 var boar_mud_splashes := 0
 var boar_mud_cd := 0.0
@@ -10784,6 +10798,8 @@ func _nearest_markable(pos: Vector2) -> Vector2:
 		# El Gat's legs walk off with a mark (marks are kept by position)
 		if boss_gat != null and boss_gat.is_leg_index(pi):
 			continue
+		if mamut != null and mamut.is_leg_index(pi):
+			continue
 		if not marks.has(p):
 			var d := pos.distance_to(p)
 			if d < best_d:
@@ -12316,10 +12332,10 @@ func _draw_world() -> void:
 			if not h.done and h.progress > 0.0:
 				_wc.draw_arc(hp, 19.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
 			continue
-		if String(h.get("kind", "")) == "mammoth":
+		if String(h.get("kind", "")) == "statue":
 			if not h.done and h.progress > 0.0:
 				_wc.draw_arc(hp, 17.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
-			continue     # the foot of the statue, drawn with it
+			continue     # the corner of the statue's plinth, drawn with it
 		var c := Color(0.45, 0.4, 0.38) if h.done else Color(0.68, 0.23, 0.18)
 		cast_shadow(_wc, hp, 8.0, 26.0)
 		# the flange it is bolted down with

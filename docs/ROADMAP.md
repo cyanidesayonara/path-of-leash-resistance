@@ -64,8 +64,10 @@ L'Eixample, Els Àngels, El Poble Espanyol; the mammoth mid boss waits for
 
 ### 1.72 - La Ciutadella and La Cremada
 
-The mammoth mid boss and its walk, and La Cremada as a chase with its
-correfoc film.
+The mammoth boss and its walk (walk 11, built: El Mamut, his wake film, El
+Parc's bronze dog in his old place), and La Cremada as a chase with its
+correfoc film. Every boss is designed against `docs/BOSSES.md`; El Gat's
+pounce, replacing his charge, belongs here too.
 
 ### 1.73 - Airport and mountain
 

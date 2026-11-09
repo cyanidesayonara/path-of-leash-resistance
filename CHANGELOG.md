@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-11-09 - Walk 11: «La Ciutadella» and El Mamut, the first statue boss
+
+- A new walk in the boss slot at 11, after El Besòs (`Game.CAROUSEL`, 15 stars, after the second chase): Passeig de Lluís Companys from under the brick Arc de Triomf with its bench-lamps, the park gate, the gravel avenue between the Castell dels Tres Dragons and the Hivernacle, the mammoth's lawn by the boating lake, La Cascada with its pool at the path's edge and the golden chariot on top, then the zoo wall with giraffes looking over it and the Parliament opposite, out to the dog area (`systems/ciutadella.gd`).
+- El Mamut (`systems/boss_mamut.gd`) is the stone mammoth by the lake, and he wakes as she passes. Your human will not walk past a mammoth ("Not past a mammoth."). The fight has three parts in the shared boss grammar, now written down in `docs/BOSSES.md`:
+  - **Part one:** he plods ahead of your human and turns slowly. In front of him she gets a trunk swipe across a sector of the ground; beside or behind him, a stomp with a shockwave ring. Both are telegraphed, and a miss wears him down.
+  - **Part two,** below half: he trumpets and adds the tusk charge. Into the lake it is a SPLASH, the longest daze, and he comes up spraying a lane of lake water. Into a plane tree he bonks, and a taut leash trips him. Your human whirled into him bowls him. Dazed, a bark on his trunk is a boop.
+  - **Part three:** back on his plinth, swiping. Three legs tied and he sits down hard; a bark on the trunk settles him, with a happy trumpet and a fountain with a rainbow in it.
+- His wake film, `intro/film_mamut.gd`, on FilmKit's grammar: the lake in the morning, a rower dropping an oar at the trumpet, the step down that rocks the boat, and the stand-off. Render it with `tools/intro_render.gd -- mamut`. A synthesized trumpet (`Sfx` `mamut_trumpet`) and a lumbering oompah walk track.
+- The walk's live event: the zoo palms' monk parakeets mob your human's croissant ("Ooh, parakeets!" first), and a bark shoos them. Fifteen goals, among them dodging four swipes or stomps, leading his charge into the lake, tripping him with the leash, and saving the croissant.
+- El Parc's statue is now a bronze dog sitting up on the same plinth, his nose and a paw rubbed gold, still markable, his plinth's corners still catching the leash. The mammoth lives in La Ciutadella.
+- `docs/BOSSES.md` designs all four statue bosses against one grammar, each with its own big move: El Mamut charges, El Drac slithers, Els Lleons pincer, El Gat pounces. El Gat's pounce, replacing his shipped charge, is still to build.
+- Tests: `tests/test_ciutadella.gd` fights him through all three parts and covers the parakeets. The registry, hooks and campaign counts tests are updated.
+
 ## 2026-11-09 - The sweep's HUD findings (#474)
 
 - The status card grows a few pixels more while it shows POOP or a mood, so the last row no longer runs into the card's rounded bottom corner (`HudPanel.EXTRA_PAD`).

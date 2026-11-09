@@ -3,7 +3,7 @@ extends RefCounted
 
 # WALK: EL PARC (the park). Its drawing as static functions over main's state
 # (main.WALK_MODULES): the box-hedged flowerbeds, the bandstand, the
-# Ciutadella mammoth, the playground (El Barri's square has one too, through
+# bronze dog, the playground (El Barri's square has one too, through
 # main._playground) and the lake's shore, and the lawns they keep the grass
 # off. The bandstand's roof on the overhead layer and the walk's pace stay
 # in main.
@@ -12,8 +12,8 @@ const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 
 # EL PARC's own furniture, on the lawns beside the path: box-hedged
-# flowerbeds (their edging is a grind rail), the bandstand, the Ciutadella
-# mammoth, and the playground.
+# flowerbeds (their edging is a grind rail), the bandstand, the bronze dog on
+# his plinth, and the playground.
 static func _draw_lawns(m: Node2D, vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
 	var flower_cols := [Color(0.86, 0.30, 0.34), Color(0.95, 0.78, 0.30), Color(0.62, 0.42, 0.78), Color(0.96, 0.95, 0.92)]
@@ -21,38 +21,57 @@ static func _draw_lawns(m: Node2D, vt: float, vb: float) -> void:
 		if bed.end.y < vt - 40.0 or bed.position.y > vb + 40.0:
 			continue
 		_flowerbed(m, b, bed, flower_cols)
-	# the mammoth: grey stone, a huge domed head, the trunk curled, tusks
-	var mp: Vector2 = LevelBuild.PARK_MAMMOTH
-	if mp.y > vt - 120.0 and mp.y < vb + 120.0:
-		var stone := Color(0.42, 0.38, 0.35)
-		var mbs: Vector2 = LevelBuild.MAMMOTH_BODY
-		var plinth := Rect2(mp - mbs * 0.5 - Vector2(8, 22), mbs + Vector2(16, 44))
+	# the bronze dog: sitting up on his plinth, looking down the path, his nose
+	# and one paw rubbed bright by everyone who passes
+	var sp: Vector2 = LevelBuild.PARK_STATUE
+	if sp.y > vt - 120.0 and sp.y < vb + 120.0:
+		var sbs: Vector2 = LevelBuild.STATUE_BODY
+		var plinth := Rect2(sp - sbs * 0.5, sbs)
 		b.rect(Rect2(plinth.position + m.LIGHT * 10.0, plinth.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
-		b.rect(plinth, Color(0.70, 0.68, 0.63))
-		b.rect(plinth.grow(-3.0), Color(0.64, 0.62, 0.57))
-		b.line(plinth.position + Vector2(4.0, 3.0), Vector2(plinth.end.x - 4.0, plinth.position.y + 3.0), Color(0.80, 0.78, 0.74), 1.5)
-		# commemorative bronze plaque on the plinth face
-		var pq := Rect2(mp.x - 14.0, plinth.end.y - 14.0, 28.0, 10.0)
+		b.rect(plinth, Color(0.64, 0.62, 0.57))
+		b.rect(plinth.grow(-4.0), Color(0.72, 0.70, 0.65))
+		b.line(plinth.position + Vector2(4.0, 3.0), Vector2(plinth.end.x - 4.0, plinth.position.y + 3.0), Color(0.82, 0.80, 0.76), 1.5)
+		var pq := Rect2(sp.x - 14.0, plinth.end.y - 13.0, 28.0, 9.0)
 		b.rect(pq, Color(0.45, 0.34, 0.18))
 		b.rect(pq.grow(-1.2), Color(0.62, 0.48, 0.26))
-		b.line(Vector2(pq.position.x + 3.0, pq.position.y + 3.5), Vector2(pq.end.x - 3.0, pq.position.y + 3.5), Color(0.32, 0.22, 0.12), 1.0)
-		b.line(Vector2(pq.position.x + 4.0, pq.position.y + 6.5), Vector2(pq.end.x - 4.0, pq.position.y + 6.5), Color(0.32, 0.22, 0.12), 1.0)
-		b.circle(mp + m.LIGHT * 22.0, 44.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
-		for lg: Vector2 in [Vector2(-22, -30), Vector2(22, -30), Vector2(-22, 34), Vector2(22, 34)]:
-			b.circle(mp + lg, 10.0, stone.darkened(0.25))
-		b.circle(mp + Vector2(0, 16), 30.0, stone)
-		b.circle(mp + Vector2(0, -12), 28.0, stone)
-		b.circle(mp + Vector2(0, -44), 22.0, stone.lightened(0.06))
-		b.circle(mp + Vector2(-6, -50), 10.0, stone.lightened(0.14))
-		b.circle(mp + Vector2(-20, -40), 11.0, stone.darkened(0.12))
-		b.circle(mp + Vector2(20, -40), 11.0, stone.darkened(0.12))
-		b.line(mp + Vector2(0, -60), mp + Vector2(0, -78), stone.darkened(0.1), 9.0)
-		b.circle(mp + Vector2(4, -80), 5.0, stone.darkened(0.1))
-		for tx: float in [-1.0, 1.0]:
-			b.line(mp + Vector2(tx * 10.0, -60), mp + Vector2(tx * 22.0, -80), Color(0.88, 0.85, 0.76), 4.0)
-			b.line(mp + Vector2(tx * 22.0, -80), mp + Vector2(tx * 14.0, -92), Color(0.92, 0.89, 0.80), 3.5)
-			b.circle(mp + Vector2(tx * 14.0, -92), 1.6, Color(0.96, 0.94, 0.88))
-		b.line(mp + Vector2(0, 46), mp + Vector2(4, 60), stone.darkened(0.2), 3.0)
+		b.line(Vector2(pq.position.x + 3.0, pq.position.y + 4.5), Vector2(pq.end.x - 3.0, pq.position.y + 4.5), Color(0.32, 0.22, 0.12), 1.0)
+		var bronze := Color(0.36, 0.30, 0.22)
+		var lit := Color(0.50, 0.42, 0.30)
+		var verd := Color(0.34, 0.50, 0.42)
+		var gold := Color(0.92, 0.76, 0.40)
+		var d := sp + Vector2(0.0, -6.0)
+		var dark := bronze.darkened(0.35)
+		# haunches and the tail curled round them
+		b.circle(d + Vector2(3.0, 5.0), 21.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
+		b.circle(d, 20.0, dark)
+		b.circle(d, 18.0, bronze)
+		b.circle(d + Vector2(-5.0, -5.0), 10.0, lit)
+		b.capsule(d + Vector2(17.0, -6.0), d + Vector2(20.0, 10.0), 4.0, dark)
+		b.capsule(d + Vector2(20.0, 10.0), d + Vector2(13.0, 20.0), 3.5, bronze)
+		# the front paws, side by side under the chest
+		var chest := d + Vector2(0.0, 16.0)
+		for sd: float in [-1.0, 1.0]:
+			b.capsule(chest + Vector2(sd * 10.0, 2.0), chest + Vector2(sd * 10.0, 18.0), 4.5, dark)
+			b.circle(chest + Vector2(sd * 10.0, 19.0), 4.2, lit)
+		b.circle(chest + Vector2(10.0, 19.0), 3.0, gold)
+		# the head: big and forward, pointed ears up, the muzzle past the paws
+		var head := chest + Vector2(0.0, 6.0)
+		for sd: float in [-1.0, 1.0]:
+			b.polygon(PackedVector2Array([head + Vector2(sd * 4.0, -8.0), head + Vector2(sd * 17.0, -17.0),
+				head + Vector2(sd * 13.0, 2.0)]), dark)
+			b.polygon(PackedVector2Array([head + Vector2(sd * 6.0, -7.0), head + Vector2(sd * 14.0, -13.0),
+				head + Vector2(sd * 12.0, -1.0)]), bronze)
+		b.circle(head, 12.0, dark)
+		b.circle(head, 10.5, bronze)
+		b.circle(head + Vector2(-3.0, -4.0), 5.5, lit)
+		b.capsule(head + Vector2(0.0, 6.0), head + Vector2(0.0, 18.0), 5.0, dark)
+		b.capsule(head + Vector2(0.0, 6.0), head + Vector2(0.0, 17.0), 4.0, bronze)
+		b.circle(head + Vector2(0.0, 19.5), 3.4, gold)
+		for sd: float in [-1.0, 1.0]:
+			b.circle(head + Vector2(sd * 5.0, 2.0), 1.6, dark.darkened(0.4))
+		# weathering: green in the hollows
+		b.circle(d + Vector2(9.0, -12.0), 3.5, Color(verd.r, verd.g, verd.b, 0.6))
+		b.circle(d + Vector2(-11.0, 6.0), 2.5, Color(verd.r, verd.g, verd.b, 0.5))
 	# the bandstand: stone podium with concentric radial planks, iron railings and posts
 	var bs: Vector2 = LevelBuild.PARK_BANDSTAND
 	if bs.y > vt - 120.0 and bs.y < vb + 120.0:
