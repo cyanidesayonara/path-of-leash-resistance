@@ -552,7 +552,7 @@ static func draw_freedom(m: Node2D, ci: Object) -> void:
 	letters(c, "PLAÇA DEL FAR", Vector2(640.0, gy + 32.0), 10.0, Color.WHITE, 2.0, 320.0)
 	c.flush(ci)
 	m._draw_freedom_benches(ci, Rect2(160.0, top, 960.0, 600.0), Color(0.36, 0.30, 0.24))
-	m._freedom_sign(ci, Rect2(160.0, top, 960.0, 600.0), m.gate_text, "the lighthouse square, off leash")
+	m._freedom_sign(ci, Rect2(160.0, top, 960.0, 600.0), m.gate_text, "The lighthouse square, off leash")
 
 # main.surface_at, through walk_mod: the ground here, or -1 for main's own
 static func surface(m: Node2D, p: Vector2) -> int:

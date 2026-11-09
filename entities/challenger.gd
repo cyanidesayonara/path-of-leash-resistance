@@ -2,6 +2,7 @@ extends Node2D
 
 const HumanLook := preload("res://entities/human_appearance.gd")
 const SpeechBubble := preload("res://world/speech_bubble.gd")
+const TutorialSteps := preload("res://systems/tutorial.gd")
 
 # The dare-giver (Combo Phase B): somebody on the walk who dares you into a
 # bounded trick window as you pass. Who it is depends on the walk (WHO): a
@@ -159,6 +160,9 @@ func _physics_process(delta: float) -> void:
 	# only offer while walking out - not mid off-leash romp or the way home
 	if main.phase != "out":
 		return
+	# the First Walk's kid waits for the dare lesson
+	if bool(main.tutorial_mode) and not main.tut_dares_open():
+		return
 	var d: float = my_dog.global_position.distance_to(global_position)
 	# walked off without barking: the offer lapses, and is made again when
 	# she comes back (never for the bot, which takes it by itself)
@@ -191,7 +195,7 @@ func _offer(follow_up: bool) -> void:
 	_was_again = again
 	result = ""
 	queue_redraw()
-	var dare: Array = LADDER[rung]
+	var dare: Array = ladder()[rung]
 	main.start_challenge(self, int(dare[0]), float(dare[1]), follow_up, again)
 
 
@@ -201,17 +205,22 @@ func can_go_again() -> bool:
 	return result != "" and has_another_go() and not main.challenge.showing()
 
 
+# The dares on offer: the First Walk's are easier (systems/tutorial.gd).
+func ladder() -> Array:
+	return TutorialSteps.YARD_LADDER if main != null and bool(main.tutorial_mode) else LADDER
+
+
 func has_another_go() -> bool:
-	return rung < LADDER.size() and main != null and not bool(main.auto_walk)
+	return rung < ladder().size() and main != null and not bool(main.auto_walk)
 
 
 # Which dare is on offer, counting from 1, and how many there are.
 func dare_number() -> int:
-	return mini(rung, LADDER.size() - 1) + 1
+	return mini(rung, ladder().size() - 1) + 1
 
 
 func dare_count() -> int:
-	return LADDER.size()
+	return ladder().size()
 
 
 func display_name() -> String:

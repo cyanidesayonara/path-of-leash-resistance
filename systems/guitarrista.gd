@@ -140,7 +140,7 @@ func tick(m: Node2D, delta: float) -> void:
 					human_hit = true
 					m.human.bump(Vector2.DOWN, 8.0)
 					m.float_text(human_p + Vector2(0, -34), "Watch the guitar!", Color(1.0, 0.45, 0.4), m.POP_SAY)
-					m.float_text(pos + Vector2(0, -28), "Watch those strings!", Color(0.96, 0.88, 0.35))
+					m.float_text(pos + Vector2(0, -28), "Watch those strings!", Color(0.96, 0.88, 0.35), m.POP_SAY)
 					m.get_node("/root/Sfx").play("grunt", 0.95, -2.0)
 
 			if pos.distance_to(END_POS) < 8.0:

@@ -30,17 +30,25 @@ func _run() -> void:
 	if not m.is_node_ready():
 		await m.ready
 	_check(m.tutorial_mode and m.lvl == "barri", "the tutorial runs on El Barri")
-	# stations in order up the walk, a screen apart
+	# stations in order up the walk; the yard's steps share one bench
 	var spaced := true
 	for i in range(1, TUT.STEPS.size()):
 		var gap := float(TUT.STEPS[i - 1]["at"]) - float(TUT.STEPS[i]["at"])
-		spaced = spaced and gap >= 90.0
+		var shared := bool(TUT.STEPS[i - 1].get("yard", false)) and bool(TUT.STEPS[i].get("yard", false))
+		spaced = spaced and (gap == 0.0 if shared else gap >= 90.0)
 	_check(spaced, "every station is further up the walk than the last")
-	var on_path_gap := true
-	for i in range(1, TUT.STEPS.size()):
-		if float(TUT.STEPS[i]["at"]) > m.GATE_Y:
-			on_path_gap = on_path_gap and (float(TUT.STEPS[i - 1]["at"]) - float(TUT.STEPS[i]["at"])) >= 360.0
-	_check(on_path_gap, "stations on the walk are at least a screen apart")
+	# the stations that hold furniture (a bench, a prop) are far enough apart
+	# that one at a time fills the screen
+	var furnished: Array[float] = []
+	for st: Dictionary in TUT.STEPS:
+		var y := float(st["at"])
+		var has := bool(st.get("bench", false)) or String(st.id) in ["nose", "fling", "grind", "teeter"]
+		if has and y > m.GATE_Y and not furnished.has(y):
+			furnished.append(y)
+	var apart := true
+	for i in range(1, furnished.size()):
+		apart = apart and furnished[i - 1] - furnished[i] >= 330.0
+	_check(apart and furnished.size() >= 10, "furnished stations are at least 330 apart (%s)" % str(furnished))
 	# each station holds what its lesson needs
 	var pee_y: float = TUT.at("pee")
 	var sniff_y: float = TUT.at("sniff")
@@ -49,14 +57,30 @@ func _run() -> void:
 	for h: Dictionary in m.hydrants:
 		near_pee = near_pee or absf((h.pos as Vector2).y - pee_y) < 120.0
 		near_sniff = near_sniff or absf((h.pos as Vector2).y - sniff_y) < 120.0
-	_check(near_pee and near_sniff and m.hydrants.size() == 2, "one hydrant at the mark station and one at the sniff station")
+	var yard_hyd := false
+	for h: Dictionary in m.hydrants:
+		yard_hyd = yard_hyd or (h.pos as Vector2).distance_to(TUT.yard_hydrant(m)) < 1.0
+	_check(near_pee and near_sniff and yard_hyd and m.hydrants.size() == 3,
+		"a hydrant at the mark station, one at the sniff station and one in the yard")
 	var snack_off := false
 	for k: Dictionary in m.kebabs:
 		var kp: Vector2 = k.pos
 		snack_off = kp.x < m.walk_edges(kp.y).x and absf(kp.y - TUT.at("nose")) < 160.0
 	_check(m.kebabs.size() == 1 and snack_off, "the nose lesson's snack is out on the grass, off the path")
 	_check(m.flock_ys.size() == 1 and absf(float(m.flock_ys[0]) - TUT.at("bark")) < 120.0, "the pigeons wait at the bark station")
-	_check(m.deco_pole_count == 2, "the only posts are the vault's and the fling's")
+	_check(m.deco_pole_count == 4, "the only posts are the vault's, the fling's and the yard's two")
+	var yard_ok := true
+	for p: Vector2 in TUT.yard_poles(m):
+		yard_ok = yard_ok and m.poles.slice(0, m.deco_pole_count).has(p)
+	_check(yard_ok, "the yard's posts stand where the yard puts them, not refitted")
+	# a swing needs under 190 px of rope past the post, and the zoomies stretch
+	# the leash to about 400: every post to swing on stands 240 px or more from
+	# the bench your human waits on
+	var vault_bench: Vector2 = m.tut_hold_point(TUT.index_of("vault"))
+	var far_enough: bool = vault_bench.distance_to(m.poles[0]) >= 240.0
+	for p: Vector2 in TUT.yard_poles(m):
+		far_enough = far_enough and TUT.practice_bench(m).distance_to(p) >= 240.0
+	_check(far_enough, "every post to swing on stands far enough from the bench for a swing")
 	var fling_pole: Vector2 = m.poles[1]
 	var hold_at := float(TUT.at("fling")) + float(m.TUT_HOLD_BACK)
 	_check(absf(fling_pole.y - hold_at) < 200.0, "the owner waits close enough to the fling post to be wound round it")
@@ -66,7 +90,7 @@ func _run() -> void:
 	# the quiet lessons seat the owner on a bench (#162), the lesson's words
 	# say nothing about the skip button
 	var benches: Array = LevelBuild.tutorial_benches(m)
-	var seated := benches.size() == 8
+	var seated := benches.size() == 7
 	for i in range(TUT.STEPS.size()):
 		if bool(TUT.STEPS[i].get("bench", false)):
 			var hp: Vector2 = m.tut_hold_point(i)
@@ -76,8 +100,11 @@ func _run() -> void:
 			seated = seated and on
 		_check(String(TUT.STEPS[i]["body"]).find("{skip}") < 0, "lesson %d does not write the skip button into its text" % i)
 	_check(seated, "every bench lesson has a bench under the owner's spot")
-	_check(absf(m.urge_y - TUT.at("bag")) < 120.0 and m.bins.size() == 1, "the call of nature comes at the business station, a bin beside it")
+	_check(absf(m.urge_y - TUT.at("poop")) < 120.0 and m.bins.size() == 1, "the call of nature comes at the business station, a bin beside it")
 	_check(m.stalls.is_empty() and m.performers.is_empty() and m.benches.is_empty(), "none of El Barri's furniture")
+	var junk: Array = m.get_tree().get_nodes_in_group("cones")
+	_check(junk.size() == 1 and (junk[0] as Node2D).position.is_equal_approx(TUT.practice_bench(m) + TUT.YARD_BALL),
+		"no litter on the stations: the one loose thing is the yard's ball (%d)" % junk.size())
 	# every held lesson's target is inside leash reach from where the owner
 	# waits: a full leash, short of the stretch cap, from the worst spot the
 	# owner can stand (their own spot if the lesson gives one, otherwise
@@ -90,6 +117,9 @@ func _run() -> void:
 		"nose": [(m.kebabs[0].pos as Vector2)],
 		"vault": [(m.poles[0] as Vector2)],
 		"fling": [(m.poles[1] as Vector2)],
+		"practice": [(m.poles[2] as Vector2), (m.poles[3] as Vector2), TUT.yard_hydrant(m),
+			TUT.yard_ledge(m)[0], TUT.yard_ledge(m)[1]],
+		"poop": [TUT.poop_grass(m)],
 	}
 	for id: String in targets.keys():
 		var i: int = TUT.index_of(id)

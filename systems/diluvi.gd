@@ -233,7 +233,7 @@ static func _draw_porxo(m: Node2D, c: Object) -> void:
 	if b != c:
 		b.flush()
 	m._draw_freedom_benches(c, r, Color(0.46, 0.34, 0.24))
-	m._freedom_sign(c, r, m.gate_text, "the covered yard, off leash")
+	m._freedom_sign(c, r, m.gate_text, "The covered yard, off leash")
 
 
 # --- main's walk hooks (main.WALK_MODULES) ---------------------------------------

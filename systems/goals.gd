@@ -133,14 +133,14 @@ static func defs(m: Node2D) -> Dictionary:
 		"kickabout": {"text": "Score a goal in the kids' street game", "target": 1, "fn": func() -> int: return 1 if m.kickabout != null and m.kickabout.scored else 0},
 		"gulls": {"text": "Startle %d harbor seagulls into flight", "target": 3, "fn": func() -> int: return m.port_gulls_startled},
 		"bollard": {"text": "Wrap the leash around an iron mooring bollard", "target": 1, "fn": func() -> int: return 1 if m.port_bollard_wrapped else 0},
-		"gaudi": {"text": "Wrap the leash around a Gaudi dragon lamppost", "target": 1, "fn": func() -> int: return 1 if m.reial_gaudi_wrapped else 0},
+		"gaudi": {"text": "Wrap the leash around a Gaudí dragon lamppost", "target": 1, "fn": func() -> int: return 1 if m.reial_gaudi_wrapped else 0},
 		"fountain": {"text": "Drink fresh water from the Three Graces fountain", "target": 1, "fn": func() -> int: return 1 if m.reial_fountain_drank else 0},
 		"scale": {"text": "Weigh in on the digital pet scale", "target": 1, "fn": func() -> int: return 1 if bool(m.get("vet_scale_weighed")) else 0},
 		"cone": {"text": "Escape the vet without getting bumped", "target": 1, "fn": func() -> int: return 1 if bool(m.dog_hits == 0 and m.finished) else 0},
 		"funicular": {"text": "Watch the vintage funicular climb the mountain", "target": 1, "fn": func() -> int: return 1 if m.tibidabo_funicular_seen else 0},
 		"bikes": {"text": "Let %d bikes squeak past your human", "target": 3, "fn": func() -> int: return m.close_calls},
 		"view": {"text": "Get your human to look up at the view", "target": 1, "fn": func() -> int: return 1 if (Carmel.view_taken(m) if m.lvl == "carmel" else Aigues.view_taken(m)) else 0},
-		"eros": {"text": "Lead your human round Eros in the maze", "target": 1, "fn": func() -> int: return 1 if Horta.eros_lapped(m) else 0},
+		"eros": {"text": "Steer your human round Eros in the maze", "target": 1, "fn": func() -> int: return 1 if Horta.eros_lapped(m) else 0},
 		"viewfinder": {"text": "Gaze through the panoramic cliffside viewfinder", "target": 1, "fn": func() -> int: return 1 if m.tibidabo_viewfinder_gazed else 0},
 		"boar": {"text": "Keep the wild boars a leash length away", "target": 1, "fn": func() -> int: return 1 if m.chase_min_gap >= HomeChase.OUTRUN_GAP else 0},
 		"mud": {"text": "Charge through %d boar wallows", "target": 3, "fn": func() -> int: return m.boar_mud_splashes},
@@ -403,10 +403,10 @@ static func finish_walk(m: Node2D) -> void:
 		lines.append("%d/%d goals here    %d stars in all    %d bones banked"
 			% [lifetime, total, Game.total_stars(), Game.total_bones])
 		if m.lvl == "partit" and m.match_day != null and m.match_day.result != "":
-			lines.append("the phone says %s" % MatchDay.score_line(m.match_day.result))
+			lines.append("The phone says %s." % MatchDay.score_line(m.match_day.result))
 		if m.combo.best_mult >= 2:
 			var best_style: bool = Game.record_style(m.lvl, int(m.combo.run_style))
-			lines.append("best combo x%d    style %d%s" % [m.combo.best_mult, m.combo.run_style,
+			lines.append("Best combo x%d    style %d%s" % [m.combo.best_mult, m.combo.run_style,
 				"    BEST STYLE" if best_style else ""])
 		if m.overmarks > 0:
 			lines.append("%d spot%s over-marked. They will know."
@@ -450,6 +450,17 @@ static func complete_tutorial(m: Node2D) -> bool:
 
 static func finish_tutorial_walk(m: Node2D) -> void:
 	var banked := complete_tutorial(m)
+	# a dare still running in the practice yard ends with the walk
+	m.challenge.phase = ""
+	m.challenge.active = false
+	m.challenge_l.visible = false
+	# and so do the lesson card and its prompt bar
+	m.tut_label.visible = false
+	m.tut_hint.visible = false
+	m.tut_skippable = false
+	# the feed is not redrawn once the walk is frozen: clear its cards now
+	if m.feed != null:
+		m.feed.queue_redraw()
 	m.finished = true
 	m.frozen = true
 	m.msg_label.visible = false
@@ -467,6 +478,7 @@ static func finish_tutorial_walk(m: Node2D) -> void:
 		"goal_bones": 0,
 		"lines": [
 			("%d bones banked" % m.bones) if banked else ("%d bones (banked the first time around)" % m.bones),
+			"Every real walk has goals to chase.",
 			"Next: El Barri, the everyday walk.",
 		],
 	}

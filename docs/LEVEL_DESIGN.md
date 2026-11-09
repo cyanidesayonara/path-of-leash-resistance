@@ -582,16 +582,21 @@ distractions of normal levels."
   button for the device in use, and a ghost of the move where it helps (a
   dotted arc round the lamppost for the vault). A tick and a chime when it
   lands; the skip button always works.
-- **The lessons**, in order from "you already know this" to "nobody would
-  guess this":
-  1. Walk. 2. The leash is rope (walk until it goes tight). 3. Dig in
-  (plant and win the tug). 4. Mark (pee on the hydrant). 5. Sniff.
-  6. The nose (go slow, follow the scent). 7. Dig (the turned earth).
-  8. Bark (it stops your human). 9. The zoomies (turbo). 10. Ride the kerb
-  (grind). 11. Swing round the lamppost (vault). 12. Tetherball the owner
-  (wind them round the pole and fling). 13. The brink (the teeter, at a
-  safe fountain edge). 14. Business (the poop, and the owner bagging it).
-  Then the pipicà: off the lead, fetch.
+- **The lessons** (rebuilt 2026-11-08 to cover what the game has grown
+  into), in order from "you already know this" to "nobody would guess this":
+  THE BASICS: 1. Walk. 2. The leash is rope (walk until it goes tight).
+  3. Lead the way (steer your human through a chalk ring). 4. Dig in.
+  5. Easy does it (haul until the temper cloud shows, then ease off).
+  6. Mark. 7. Sniff. 8. Follow your nose. 9. Bark. 10. The zoomies.
+  11. Nature calls (poop on the grass, your human bags it). Then THAT'S THE
+  BASICS: the first real walk, or the tricks. THE TRICKS: 12. Swing round
+  the lamppost. 13. Tetherball. 14. Ride the ledge. 15. The brink. 16. Chain
+  them (a combo). 17. Take a dare. FREE PRACTICE: the practice yard (two
+  lampposts, a hydrant, a ledge, the kid's easier dares), then the dog park
+  off the leash. Nothing there ends by itself: the prompt bar's finish does.
+- Discovered later, on the walks: live events, goals and stars, bones and
+  the wardrobe, the phone's cracks beyond the one rule the halfway card
+  states, Brutus, the chase walks.
 - A lesson a player has done on a real walk can still be practised; the
   tutorial is replayable from the menu.
 - Audit fixes (2026-10-18, #162): the quiet lessons ("bench" in

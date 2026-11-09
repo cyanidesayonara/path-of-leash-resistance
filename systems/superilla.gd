@@ -958,7 +958,7 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 	if m.has_method("_draw_freedom_benches"):
 		m._draw_freedom_benches(c, r, BENCH_WOOD)
 	if m.has_method("_freedom_sign"):
-		m._freedom_sign(c, r, m.gate_text, "the old steam-mill courtyard, off leash")
+		m._freedom_sign(c, r, m.gate_text, "The old steam-mill courtyard, off leash")
 
 
 static func surface(m: Node2D, p: Vector2) -> int:

@@ -156,7 +156,7 @@ func tick(m: Node2D, delta: float) -> void:
 					if "patience" in m.human:
 						m.human.patience = maxf(0.0, float(m.human.patience) - 0.08)
 					m.float_text(human_p + Vector2(0, -34), "Watch the cargo bike!", Color(1.0, 0.45, 0.4), m.POP_SAY)
-					m.float_text(pos + Vector2(0, -28), "Mind the bike!", Color(0.96, 0.88, 0.35))
+					m.float_text(pos + Vector2(0, -28), "Mind the bike!", Color(0.96, 0.88, 0.35), m.POP_SAY)
 					var sfx = m.get_node_or_null("/root/Sfx")
 					if sfx != null:
 						sfx.play("grunt", 0.95, -2.0)

@@ -1362,4 +1362,4 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 	if m.has_method("_draw_freedom_benches"):
 		m._draw_freedom_benches(c, r, Color(0.48, 0.32, 0.20))
 	if m.has_method("_freedom_sign"):
-		m._freedom_sign(c, r, m.gate_text, "the olive terrace on the old walls, off leash")
+		m._freedom_sign(c, r, m.gate_text, "The olive terrace on the old walls, off leash")

@@ -169,7 +169,8 @@ func _stopped() -> bool:
 func _tutorial_skip() -> bool:
 	if not _walking() or not bool(main.tutorial_mode):
 		return false
-	return String(TutorialSteps.step(int(main.tut_step)).id) != "done"
+	# every step can be passed: a lesson moved on from, the practice finished
+	return String(TutorialSteps.step(int(main.tut_step)).id) != ""
 
 
 func _primary_controls() -> bool:
