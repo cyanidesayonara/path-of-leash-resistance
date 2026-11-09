@@ -1122,6 +1122,50 @@ static func _recycling_station(m: Node2D, c: Object, bn: Vector2) -> void:
 
 # --- main's walk hooks (main.WALK_MODULES) ---------------------------------------
 
+# THE KITE (systems/kite_flyer.gd): runs only in a kite's weather and hours, and
+# is not on the walk at all otherwise. The volleyball stays main's own tick.
+static func tick(m: Node2D, delta: float) -> void:
+	var k: KiteFlyer = m.kite_flyer
+	if k == null or not m.started or m.paused:
+		return
+	k.sky_ok = KiteFlyer.flies_in(Game.weather, Game.hour)
+	var r: Dictionary = k.tick(delta, m.dog.global_position, m.human.global_position, m.phase == "out")
+	if bool(r["warn"]):
+		m.float_text(KiteFlyer.FLYER_POS + Vector2(0.0, -40.0), "Kite coming down!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+		Sfx.play("intro_tap", 1.8, -4.0)
+	if bool(r["bump"]):
+		m.human.patience = maxf(0.0, m.human.patience - KiteFlyer.BUMP_PATIENCE)
+		m.human.bumped(k.bump_dir)
+		Sfx.play("bump", 1.1, -3.0)
+		m.float_text(m.human.global_position + Vector2(0.0, -32.0), "Ow! Is that a kite?", Color(1.0, 0.72, 0.72), m.POP_SAY)
+		m.float_text(KiteFlyer.FLYER_POS + Vector2(0.0, -40.0), "Sorry! The wind dropped!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+	if bool(r["pounce"]):
+		m.combo.add("POUNCE", 2)
+		m.award_points(2, "kite pounce! +2")
+		Sfx.play("crack", 2.2, -4.0)
+		m.float_text(k.pos + Vector2(0.0, -34.0), "You caught it! Thanks!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+	if bool(r["dodge"]):
+		m.saves_done += 1
+		m.combo.add("DODGE", 2)
+		m.award_points(2, "kite dodge! +2")
+		m.float_text(m.human.global_position + Vector2(0.0, -32.0), "Whew, close one!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+
+
+static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
+	var k: KiteFlyer = m.kite_flyer
+	if k == null or not k.on_bark(pos if pos != Vector2.ZERO else m.dog.global_position):
+		return
+	m.combo.add("BARK", 2)
+	m.award_points(2, "kite bark! +2")
+	m.float_text(KiteFlyer.FLYER_POS + Vector2(0.0, -40.0), "Whoa! Easy there!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+
+
+# the flyer and his kite, in the world's own batch
+static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	if m.kite_flyer != null:
+		m.kite_flyer.draw(m, wc, vt, vb, Game.weather == "wind")
+
+
 # no edge layer: the cross-section below runs out past the building line
 static func draw_edge_layer(_m: Node2D, _c: Object, _vt: float, _vb: float) -> void:
 	pass

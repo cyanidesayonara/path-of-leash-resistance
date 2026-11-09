@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-11-09 - Passeig Marítim's kite flyer, a second live event for the seafront
+
+- Passeig already had a live event (the volleyball, `systems/volleyball.gd`), so this is a second one, gated to the sky it belongs in. A kite flyer on the beach side of the promenade (`systems/kite_flyer.gd`, hooked through `systems/passeig.gd`): when the pair come within about 300 px of him on the way out, he shouts "Kite coming down!" (a 0.8 s telegraph, nothing hurts during it) and the kite stoops across the promenade, skids low along it, then climbs and is hauled back in.
+- It runs in clear or windy weather at dawn, day or dusk only. In rain, snow or at night the flyer is not there and the walk is exactly as it was. Passeig's own sky is wind at dawn, so the campaign walk has it. Free walks and `--weather` / `--hour` pick the rest.
+- Tricks, all "word! +2": pounce on the kite while it is down ("kite pounce!", the tail counts, and he thanks her), bark at it before it lands ("kite bark!"), and let it skid past without getting hit ("kite dodge!", which also counts as a save). The soft hazard: if your human walks into the low pass it clips them for a small drop in patience ("Ow! Is that a kite?"), and he apologizes.
+- The autowalk always clears it: the kite lands at x 650 and the bot walks at x 770. The beach selftest passes in the campaign sky and in clear day and wind dusk.
+- No new draw calls (circles, lines, capsules and quads on the walk's `ShapeBatch`; the kite lives in the batch, so nothing flushes it), and `tick` and `draw` allocate nothing per frame (one reused result dictionary).
+- Tests: `tests/test_passeig_kite.gd`, registered in CI. It runs the sky table, the telegraph, the dive, each trick and reward, the hazard, a real autowalk, and the three hooks through main. `tests/test_walk_hooks.gd` lists the beach's new `tick`, `on_bark` and `draw_live`.
+- Not touched, on purpose: Passeig's passers-by, towels and crowds. Left alone and noticed on the way: Forum's `human.say` calls do not match the human's API, and the surfer's patience hit is -8 on a 0..1 scale, so it empties the meter.
+
 ## 2026-11-09 - Walk 11: «La Ciutadella» and El Mamut, the first statue boss
 
 - A new walk in the boss slot at 11, after El Besòs (`Game.CAROUSEL`, 15 stars, after the second chase): Passeig de Lluís Companys from under the brick Arc de Triomf with its bench-lamps, the park gate, the gravel avenue between the Castell dels Tres Dragons and the Hivernacle, the mammoth's lawn by the boating lake, La Cascada with its pool at the path's edge and the golden chariot on top, then the zoo wall with giraffes looking over it and the Parliament opposite, out to the dog area (`systems/ciutadella.gd`).
