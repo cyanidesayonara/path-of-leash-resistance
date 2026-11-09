@@ -93,8 +93,14 @@ func extra_rows() -> Array[String]:
 	return out
 
 
+# the extra rows end lower than the card's corner radius allows, so the card
+# grows a little more than the rows themselves while it shows any
+const EXTRA_PAD := 5.0
+
+
 func card_h() -> float:
-	return CARD_H + ROW_H * float(extra_rows().size())
+	var n := extra_rows().size()
+	return CARD_H + ROW_H * float(n) + (EXTRA_PAD if n > 0 else 0.0)
 
 
 func _label(text: String, x: float, row: float, col := LABEL_COL) -> void:

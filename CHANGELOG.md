@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-11-09 - The sweep's HUD findings (#474)
+
+- The status card grows a few pixels more while it shows POOP or a mood, so the last row no longer runs into the card's rounded bottom corner (`HudPanel.EXTRA_PAD`).
+- Speech bubbles keep clear of the banner as they already did of the cards: one that would tuck under it drops below it, as long as it stays above whoever is speaking (`EventFeed.banner_rect`). They also stand 12 px off a card instead of 6, so the skater's "Board!" no longer touches the status card.
+
 ## 2026-11-09 - Plaça d'Espanya at night: the towers, the halls and the show
 
 - El Poble Espanyol's paired upgrade. Plaça d'Espanya is a night walk, and its paving, halls and gardens read as one dark blue field. Now the place is lit: lamp posts with warm pools between the plane trees down both sauló strips and along the garden promenades up to the palace; the exhibition halls lit from inside (skylights and colonnades); the Venetian towers lit from below; the palace's windows and corner domes glowing.
