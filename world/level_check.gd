@@ -129,8 +129,10 @@ static func check(m) -> Array:
 	# --- the walk has things to interact with ---
 	# kickable junk and sniffable spots are the small joys that make a walk
 	# feel inhabited, so a level that is short of either is a content bug
+	# The First Walk keeps its stations clear of litter on purpose (#497): one
+	# ball in the practice yard, so it is held to having that one
 	var kickables: int = m.get_tree().get_nodes_in_group("cones").size()
-	if kickables < 6:
+	if kickables < (1 if m.tutorial_mode else 6):
 		p.append("only %d kickable objects on the whole walk" % kickables)
 	# the tutorial has exactly what its lessons need, and no goals
 	if m.hydrants.size() < 3 and not m.tutorial_mode:

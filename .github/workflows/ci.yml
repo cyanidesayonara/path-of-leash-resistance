@@ -31,8 +31,9 @@ jobs:
 
   smoke:
     runs-on: ubuntu-latest
-    # a green run with 19 walks takes ~20-22 minutes; 35 leaves a slow runner room
-    timeout-minutes: 35
+    # a green run with 34 walks and the tutorial takes ~34 minutes (it was
+    # ~20-22 with 19); 50 leaves a slow runner room as the campaign grows
+    timeout-minutes: 50
 
     steps:
       - uses: actions/checkout@v5
