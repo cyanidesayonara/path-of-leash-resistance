@@ -22,6 +22,8 @@ const Detour := preload("res://systems/detour.gd")
 const Boars := preload("res://systems/boars.gd")
 const Gracia := preload("res://systems/gracia.gd")
 const BossGat := preload("res://systems/boss_gat.gd")
+const Ciutadella := preload("res://systems/ciutadella.gd")
+const BossMamut := preload("res://systems/boss_mamut.gd")
 const Carmel := preload("res://systems/carmel.gd")
 const Superilla := preload("res://systems/superilla.gd")
 const Forum := preload("res://systems/forum.gd")
@@ -118,6 +120,7 @@ const CROSS_SECTIONS := {
 	"eixample": ["none", 0.0, "none", 0.0],        # the grid street and its blocks in systems/eixample.gd
 	"angels": ["none", 0.0, "none", 0.0],          # skate plaza, museum and convent in systems/angels.gd
 	"poble": ["none", 0.0, "none", 0.0],           # walled architectural village in systems/poble.gd
+	"ciutadella": ["none", 0.0, "none", 0.0],      # the park and the mammoth's lawn in systems/ciutadella.gd
 	# flood wall on the left, grass then the river on the right
 	"besos": ["none", 0.0, "grass", 120.0],
 }
@@ -1103,9 +1106,10 @@ const PARK_BEDS: Array[Rect2] = [
 const PARK_BANDSTAND := Vector2(1042.0, -1880.0)
 const BANDSTAND_R := 58.0
 const BANDSTAND_POSTS := 8
-# the Ciutadella mammoth, life size, standing on the west lawn facing north
-const PARK_MAMMOTH := Vector2(240.0, -3480.0)
-const MAMMOTH_BODY := Vector2(58.0, 112.0)
+# the bronze dog on his plinth on the west lawn, his nose rubbed gold by every
+# passer-by (the mammoth he replaced lives in La Ciutadella now)
+const PARK_STATUE := Vector2(240.0, -3480.0)
+const STATUE_BODY := Vector2(64.0, 88.0)
 const PARK_PLAYGROUND := Rect2(958.0, -4460.0, 166.0, 300.0)
 # two big lawn trees on the west lawn with a slackline between them, at knee
 # height: she runs under it, the leash catches on it
@@ -1328,6 +1332,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"eixample": half = Eixample.HALF   # the octagons at the crossings (Eixample.edge_nodes)
 		"angels": half = Angels.HALF
 		"poble": half = Poble.HALF
+		"ciutadella": half = Ciutadella.HALF
 		"besos": half = BESOS_HALF
 	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
 	m.walk_half = half
@@ -1499,6 +1504,8 @@ static func apply_corridor(m: Node2D) -> void:
 		m.edge_nodes = Angels.edge_nodes(m)
 	elif m.lvl == "poble":
 		m.edge_nodes = Poble.edge_nodes(m)
+	elif m.lvl == "ciutadella":
+		m.edge_nodes = Ciutadella.edge_nodes(m)
 	elif m.lvl == "trail":
 		# EL BOSC BENDS - the first walk in the game that is not a straight
 		# line. A woodland trail has no business being ruler-drawn: it wanders
@@ -1529,7 +1536,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "angels" or m.lvl == "poble":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "angels" or m.lvl == "poble" or m.lvl == "ciutadella":
 		return
 	# and so does El Barri, and the First Walk built on it, whose stations
 	# (systems/tutorial.gd) are laid out where they stand
@@ -1664,6 +1671,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_poble: Array = Poble.build(m)
 			hyd_list.assign(pl_poble[0])
 			keb_list.assign(pl_poble[1])
+		"ciutadella":
+			var pl_ciut: Array = Ciutadella.build(m)
+			hyd_list.assign(pl_ciut[0])
+			keb_list.assign(pl_ciut[1])
 		"raval":
 			var pl_raval: Array = BossGat.build(m)
 			hyd_list.assign(pl_raval[0])
@@ -2311,10 +2322,10 @@ static func build_level_data(m: Node2D) -> void:
 		for bp: Vector2 in bandstand_posts():
 			m.park_posts.append(bp)
 			m.poles.append(bp)
-		# the mammoth's legs catch the rope, and her front foot can be marked
-		for lg: Vector2 in [Vector2(-22, -30), Vector2(22, -30), Vector2(-22, 34), Vector2(22, 34)]:
-			m.poles.append(PARK_MAMMOTH + lg)
-		m.hydrants.append({"pos": PARK_MAMMOTH + Vector2(34.0, -40.0), "done": false, "progress": 0.0, "kind": "mammoth"})
+		# the plinth's corners catch the rope, and its corner can be marked
+		for lg: Vector2 in [Vector2(-28, -40), Vector2(28, -40), Vector2(-28, 40), Vector2(28, 40)]:
+			m.poles.append(PARK_STATUE + lg)
+		m.hydrants.append({"pos": PARK_STATUE + Vector2(42.0, -36.0), "done": false, "progress": 0.0, "kind": "statue"})
 	# the end of each fallen trunk out on the trail is what the rope catches
 	if m.lvl == "trail":
 		for i in range(TRAIL_LOGS.size()):
@@ -2405,6 +2416,12 @@ static func build_level_data(m: Node2D) -> void:
 		# rope contacts with furniture slip, and nothing solid under them
 		if m.boss_gat != null:
 			m.boss_gat.register_legs(m)
+	if m.lvl == "ciutadella":
+		for r: Rect2 in Ciutadella.wrap_rects():
+			add_rope_rect(m, r)
+		# El Mamut's legs walk: after the bodies and the radii, as El Gat's
+		if m.mamut != null:
+			m.mamut.register_legs(m)
 	if m.lvl == "boars":
 		for r: Rect2 in Boars.wrap_rects():
 			add_rope_rect(m, r)
@@ -2513,6 +2530,9 @@ static func build_level_data(m: Node2D) -> void:
 		"poble":
 			m.prize_pos = Poble.PRIZE
 			m.prize_text = Poble.PRIZE_TEXT
+		"ciutadella":
+			m.prize_pos = BossMamut.PRIZE
+			m.prize_text = BossMamut.PRIZE_TEXT
 		"raval":
 			m.prize_pos = BossGat.PRIZE
 			m.prize_text = BossGat.PRIZE_TEXT
@@ -2585,7 +2605,7 @@ static func build_verge(m: Node2D) -> void:
 			# a park has verge on both sides, and the verge is the whole point.
 			# Set from the path's edge at each y, so the lake's widening cannot
 			# put a picnic on the path, and clear of the beds, the bandstand,
-			# the mammoth and the playground
+			# the bronze dog and the playground
 			var pv: Array[Dictionary] = []
 			for spec: Array in [[-760.0, -1.0, "picnic"], [-1250.0, 1.0, "picnic"], [-2260.0, -1.0, "stump"],
 					[-3860.0, -1.0, "bush"], [-4040.0, 1.0, "picnic"]]:
@@ -2950,6 +2970,15 @@ const FREEDOM_PROPS := {
 		[Vector2(905.0, -225.0), "post"], [Vector2(175.0, -345.0), "shrub"], [Vector2(1085.0, -235.0), "shrub"],
 		[Vector2(290.0, -355.0), "rock"], [Vector2(990.0, -455.0), "log"],
 	],
+	# the dog area at the park's north gate: plane trees' leaf litter, a
+	# drinking post, and a fallen bough
+	"ciutadella": [
+		[Vector2(250.0, -430.0), "dig"], [Vector2(660.0, -470.0), "dig"], [Vector2(1030.0, -300.0), "dig"],
+		[Vector2(380.0, -480.0), "planter"], [Vector2(920.0, -480.0), "planter"],
+		[Vector2(500.0, -455.0), "post"], [Vector2(800.0, -440.0), "post"], [Vector2(320.0, -190.0), "post"],
+		[Vector2(960.0, -210.0), "post"], [Vector2(170.0, -330.0), "shrub"], [Vector2(1100.0, -250.0), "shrub"],
+		[Vector2(275.0, -350.0), "log"], [Vector2(1000.0, -440.0), "rock"],
+	],
 	"carmel": [
 		[Vector2(180.0, -450.0), "dig"], [Vector2(640.0, -340.0), "dig"], [Vector2(1095.0, -440.0), "dig"],
 		[Vector2(162.0, -340.0), "log"], [Vector2(905.0, -480.0), "log"],
@@ -3305,7 +3334,7 @@ static func build_ground_detail(m: Node2D) -> void:
 
 # [id, Rect2] for every solid rect build_walls makes that is not a stall, a van
 # or an El Mercat block (those have blockers of their own): the beach bars, the
-# train, the mammoth, the salamander, the dumpsters, the roaster and the stage.
+# train, the bronze dog, the salamander, the dumpsters, the roaster and the stage.
 # Keep in step with the add_rect_body calls in build_walls; the test
 # test_npc_clear_of_solids checks every solid rect has a blocker.
 static func level_solid_rects(m: Node2D) -> Array:
@@ -3330,7 +3359,7 @@ static func level_solid_rects(m: Node2D) -> Array:
 		"station":
 			out.append(["estacio_train", ESTACIO_TRAIN])
 		"park":
-			out.append(["park_mammoth", Rect2(PARK_MAMMOTH - MAMMOTH_BODY * 0.5, MAMMOTH_BODY)])
+			out.append(["park_statue", Rect2(PARK_STATUE - STATUE_BODY * 0.5, STATUE_BODY)])
 		"guell":
 			out.append(["mosaic_salamander",
 				Rect2(MOSAIC_SALAMANDER - MOSAIC_SALAMANDER_SIZE * 0.5, MOSAIC_SALAMANDER_SIZE)])
@@ -3381,6 +3410,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_poble: Array[Rect2] = Poble.solids(m)
 			for i in range(ps_poble.size()):
 				out.append(["poble_solid_%d" % i, ps_poble[i]])
+		"ciutadella":
+			var ps_ciut: Array[Rect2] = Ciutadella.solids(m)
+			for i in range(ps_ciut.size()):
+				out.append(["ciutadella_solid_%d" % i, ps_ciut[i]])
 		"raval":
 			var ps_raval: Array[Rect2] = BossGat.solids(m)
 			for i in range(ps_raval.size()):
@@ -3662,7 +3695,7 @@ static func build_walls(m: Node2D) -> void:
 		fb.add_child(fcs)
 		m.add_child(fb)
 	if m.lvl == "park":
-		add_rect_body(m, PARK_MAMMOTH, MAMMOTH_BODY)
+		add_rect_body(m, PARK_STATUE, STATUE_BODY)
 		for bp: Vector2 in bandstand_posts():
 			var pb := StaticBody2D.new()
 			pb.collision_layer = 1
@@ -3940,6 +3973,9 @@ static func build_walls(m: Node2D) -> void:
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "poble":
 		for r: Rect2 in Poble.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "ciutadella":
+		for r: Rect2 in Ciutadella.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "raval":
 		for r: Rect2 in BossGat.solids(m):

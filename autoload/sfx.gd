@@ -359,6 +359,7 @@ func _build_library() -> void:
 	lib["gat_roar"] = _gat_roar()
 	lib["gat_clang"] = _gat_clang()
 	lib["gat_purr"] = _gat_purr()
+	lib["mamut_trumpet"] = _mamut_trumpet()
 
 
 func _pack(samples: PackedFloat32Array) -> AudioStreamWAV:
@@ -692,6 +693,30 @@ func _gat_roar() -> AudioStreamWAV:
 		var nz := rng.randf_range(-0.6, 0.6) * (0.6 + 0.4 * sin(TAU * 45.0 * t))
 		prev = lerpf(prev, nz, 0.22)
 		out[i] = (growl * 0.55 + prev * 0.45) * env * 0.70
+	return _pack(out)
+
+
+func _mamut_trumpet() -> AudioStreamWAV:
+	# El Mamut: a brassy elephant trumpet, a rising blare that cracks at the top
+	var dur := 1.05
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var ph := 0.0
+	var prev := 0.0
+	for i in range(n):
+		var t := float(i) / RATE
+		var prog := t / dur
+		var f := lerpf(330.0, 620.0, minf(prog * 2.2, 1.0)) - maxf(0.0, prog - 0.6) * 300.0
+		f += sin(TAU * 7.0 * t) * 18.0
+		ph += TAU * f / RATE
+		# a rough, reedy tone: a clipped stack of harmonics
+		var v := sin(ph) + 0.6 * sin(ph * 2.0) + 0.4 * sin(ph * 3.0) + 0.25 * sin(ph * 4.0)
+		v = clampf(v * 0.9, -1.0, 1.0)
+		var nz := rng.randf_range(-1.0, 1.0)
+		prev = lerpf(prev, nz, 0.3)
+		var env := minf(1.0, prog * 10.0) * (1.0 - prog * 0.55) * (1.0 - smoothstep(0.85, 1.0, prog))
+		out[i] = (v * 0.75 + prev * 0.25) * env * 0.55
 	return _pack(out)
 
 

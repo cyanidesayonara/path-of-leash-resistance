@@ -48,6 +48,7 @@ const CLOCK_TARGETS := {
 	"eixample": 180,
 	"angels": 180,
 	"poble": 180,
+	"ciutadella": 200,  # the walk plus the fight with El Mamut
 	"raval": 210,  # the walk plus the whole fight with El Gat
 }
 
@@ -85,6 +86,7 @@ const JAMON_POS := {
 	"eixample": Vector2(470.0, -2900.0),
 	"angels": Vector2(380.0, -2950.0),
 	"poble": Vector2(820.0, -2480.0),
+	"ciutadella": Vector2(560.0, -1300.0),
 	"raval": Vector2(640.0, -2200.0),
 }
 

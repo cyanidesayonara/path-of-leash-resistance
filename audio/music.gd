@@ -178,6 +178,9 @@ const STYLES := {
 	# El Poble Espanyol: Spanish village guitar & castanets over a lively Plaza Mayor pasodoble/rumba pulse
 	"poble": {"bpm": 114, "key": 2, "lead": "guitar", "lead2": ["whistle", 0], "comp": "rasgueado",
 		"bass": "walk", "drums": "castanets", "swing": 0.06, "verb": 0.28},
+	# La Ciutadella: a lumbering oompah for a stone mammoth, accordion over tuba
+	"ciutadella": {"bpm": 104, "key": 3, "lead": "accordion", "lead2": ["glock", 12], "comp": "oompah",
+		"bass": "oompah", "drums": "kickrim", "swing": 0.04, "verb": 0.24},
 	# Rambla del Raval: the finale's fight, fast and minor, its own chords and melody
 	"raval": {"bpm": 148, "key": 0, "minor": true, "lead": "guitar", "lead2": ["accordion", 0], "lead2_all": true,
 		"comp": "push", "bass": "eighths", "drums": "drive", "verb": 0.20, "chords": RAVAL_BOSS_CHORDS, "mel": RAVAL_BOSS_MELODY},

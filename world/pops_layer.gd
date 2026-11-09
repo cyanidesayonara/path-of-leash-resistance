@@ -169,6 +169,7 @@ func _draw_speech() -> void:
 	var vis := get_global_transform_with_canvas().affine_inverse() * get_viewport_rect()
 	var placed: Array[Rect2] = []
 	var cards := _hud_cards()
+	var banner := _banner_rect()
 	for it: Dictionary in items:
 		var ls: Array[String] = Bubble.lines(String(it.text), String(it.split))
 		var sz := Bubble.size_of(ls)
@@ -181,9 +182,15 @@ func _draw_speech() -> void:
 			if not card.grow(4.0).intersects(box):
 				continue
 			if card.get_center().x > vis.get_center().x:
-				box.position.x = maxf(vis.position.x + 6.0, card.position.x - 6.0 - sz.x)
+				box.position.x = maxf(vis.position.x + 6.0, card.position.x - CARD_GAP - sz.x)
 			else:
-				box.position.x = minf(vis.end.x - 6.0 - sz.x, card.end.x + 6.0)
+				box.position.x = minf(vis.end.x - 6.0 - sz.x, card.end.x + CARD_GAP)
+		# and clear of the banner across the top: down under it, while that
+		# still leaves the bubble above whoever is speaking
+		if banner.size.x > 0.0 and banner.grow(4.0).intersects(box):
+			var under := banner.end.y + CARD_GAP
+			if under + sz.y <= tip.y - Bubble.TAIL_H * 0.5:
+				box.position.y = under
 		for _pass in range(6):
 			var moved := false
 			for q: Rect2 in placed:
@@ -205,6 +212,23 @@ func _draw_speech() -> void:
 # The vitals card and the goal list, where they are on screen, in this
 # layer's (world) coordinates. Both live on the HUD layer, which draws over
 # the world unscaled by the camera.
+# A bubble stands this far off a HUD card or the banner, never touching it.
+const CARD_GAP := 12.0
+
+
+func _banner_rect() -> Rect2:
+	var m := get_parent()
+	if m == null:
+		return Rect2()
+	var feed = m.get("feed")
+	if feed == null or not feed.has_method("banner_rect"):
+		return Rect2()
+	var r: Rect2 = feed.banner_rect()
+	if r.size.x <= 0.0:
+		return r
+	return get_global_transform_with_canvas().affine_inverse() * r
+
+
 func _hud_cards() -> Array[Rect2]:
 	var out: Array[Rect2] = []
 	var m := get_parent()

@@ -111,7 +111,7 @@ static func check(m) -> Array:
 					break
 		for d in m.hydrants:
 			var he: Vector2 = m.walk_edges(d.pos.y)
-			# a markable landmark (El Parc's mammoth) stands where it stands
+			# a markable landmark (El Parc's bronze dog) stands where it stands
 			if d.has("kind"):
 				continue
 			if d.pos.x < he.x - 2.0 or d.pos.x > he.y + 2.0:

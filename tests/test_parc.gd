@@ -4,7 +4,7 @@ extends SceneTree
 # lake, which stands in the middle as an island with a shore to walk on either
 # side; the owner keeps to the east shore; the flowerbed edging is a grind
 # rail, and so are the path's own edges where it bends; the bandstand's posts
-# are solid; the mammoth can be marked; the sandpit takes prints.
+# are solid; the bronze dog can be marked; the sandpit takes prints.
 
 var checks := 0
 var failures: Array[String] = []
@@ -78,9 +78,9 @@ func _run() -> void:
 		dog.move_and_slide()
 	_check(dog.global_position.distance_to(post) > 16.0, "a bandstand post stops the dog")
 
-	# the mammoth is markable, and not counted as off the path
-	var mam: Array = m.hydrants.filter(func(h: Dictionary) -> bool: return String(h.get("kind", "")) == "mammoth")
-	_check(mam.size() == 1, "the mammoth's foot is a spot to mark")
+	# the bronze dog is markable, and not counted as off the path
+	var statue: Array = m.hydrants.filter(func(h: Dictionary) -> bool: return String(h.get("kind", "")) == "statue")
+	_check(statue.size() == 1, "the bronze dog's plinth is a spot to mark")
 
 	# the sandpit takes prints
 	var sp: Vector2 = LevelBuild.PARK_PLAYGROUND.get_center() + Vector2(-28.0, 40.0)
