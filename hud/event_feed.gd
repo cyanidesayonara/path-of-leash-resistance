@@ -247,16 +247,31 @@ func _draw() -> void:
 				e["col"], float(e["punch"]))
 
 
-func _pill(vs: Vector2, y: float, text: String, col: Color) -> void:
-	# the standing instruction: one pill, top centre, the tone as a dot
-	var f := Kit.display()
-	var up := text.to_upper()
-	var tw := Kit.text_w(f, up, BANNER_PX)
+# The banner pill's rect for this text, in the feed's own coordinates.
+func _pill_rect(vs: Vector2, y: float, text: String) -> Rect2:
+	var tw := Kit.text_w(Kit.display(), text.to_upper(), BANNER_PX)
 	var r := Rect2(vs.x * 0.5 - tw * 0.5 - 30.0, y - 22.0, tw + 50.0, 32.0)
 	# on a narrow screen (a small window, or a phone's enlarged interface) the
 	# open goal list can reach the middle: the pill moves into the gap between
 	# the vitals card and the list instead of running under it
 	r.position.x = pill_x(r, vs)
+	return r
+
+
+# Where the banner pill is on screen right now (an empty rect without one),
+# so speech bubbles can keep clear of it (world/pops_layer.gd).
+func banner_rect() -> Rect2:
+	var shown := flash_text if flash_t > 0.0 else banner
+	if shown == "" or not is_visible_in_tree():
+		return Rect2()
+	return get_global_transform() * _pill_rect(size, BANNER_Y, shown)
+
+
+func _pill(vs: Vector2, y: float, text: String, col: Color) -> void:
+	# the standing instruction: one pill, top centre, the tone as a dot
+	var f := Kit.display()
+	var up := text.to_upper()
+	var r := _pill_rect(vs, y, text)
 	draw_rect(Rect2(r.position + Vector2(0, 3), r.size), Color(0, 0, 0, 0.25 * col.a))
 	draw_rect(r, Color(0.07, 0.075, 0.09, 0.82 * col.a))
 	draw_circle(Vector2(r.position.x + 16.0, y - 6.0), 5.0, Color(col.r, col.g, col.b, col.a))

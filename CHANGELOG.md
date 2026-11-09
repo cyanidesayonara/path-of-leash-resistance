@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-11-09 - The sweep's HUD findings (#474)
+
+- The status card grows a few pixels more while it shows POOP or a mood, so the last row no longer runs into the card's rounded bottom corner (`HudPanel.EXTRA_PAD`).
+- Speech bubbles keep clear of the banner as they already did of the cards: one that would tuck under it drops below it, as long as it stays above whoever is speaking (`EventFeed.banner_rect`). They also stand 12 px off a card instead of 6, so the skater's "Board!" no longer touches the status card.
+
 ## 2026-11-09 - Release notes for 1.71
 
 - Store "What's new" and the certification note now describe 1.71 (everything since 1.70, under the Store's 1500 characters), 1.70's What's new is in "Past What's new", and docs/itch-page.md has "What's new in 1.71". The walk count is 34 everywhere (Store description, short description and features, itch body), with L'Eixample, Els Àngels and El Poble Espanyol in the Store and itch lists and README's table; the Store's tutorial is three-part. The certification note drops its 1.67 line to stay under 2000 characters.
