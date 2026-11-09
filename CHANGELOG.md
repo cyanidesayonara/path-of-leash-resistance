@@ -8,6 +8,7 @@ Append-only session history, newest first.
 - By the ring road at the start, the old bullring's brick drum with its lit arches, roof terrace and glass dome, and a hotel opposite with lit windows. Traffic on the ring road and both avenue roads, cars and taxis (black with yellow doors) with headlights and tail lights.
 - People walk up the sauló to the show and a few come back; a crowd lines the promenades round the Magic Fountain; two vendors fling light-up toys; the jets, the basin and the cascade take the show's slowly changing colour.
 - Every light goes through `SkyLook.light` and scales with `Game.lamp_glow()` (looked up at run time, since `test_espanya` preloads the script before the autoload exists), so a free walk by day shows none of it. Drawing only: no new solids or hazards; the behaviour snapshot for espanya is identical to main.
+- The avenue itself is lit too (`Espanya._avenue_lights`, drawn over the paving): the lamps' light spills well onto the granite, each fountain grate in the median throws a pale uplight, and the Four Columns are lit from their bases. Before, the walkway was the one dark thing on screen.
 
 ## 2026-11-08 - Fix the voice audit's findings (#495)
 

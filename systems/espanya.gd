@@ -405,6 +405,34 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, _bottom: 
 	# the kerb along both sides, all the way up
 	wc.rect(Rect2(WALL_L, lo, 8.0, hi - lo), CURB)
 	wc.rect(Rect2(WALL_R - 8.0, lo, 8.0, hi - lo), CURB)
+	_avenue_lights(m, wc, lo, hi)
+
+
+# The avenue itself, where she walks: the lamps' light spilling well onto
+# the granite, a cool uplight from each fountain grate in the median, and the
+# Four Columns lit from their bases. Drawn over the paving (the edge layer's
+# lamp pools stop at its edge, so the walkway was the one unlit thing on
+# screen). Scales with Game.lamp_glow like every light here.
+static func _avenue_lights(m: Node2D, b: ShapeBatch, top: float, bot: float) -> void:
+	var g := _glowing()
+	if g <= 0.0 or top >= PLAZA_TOP or bot <= AVENUE_TOP:
+		return
+	var sy := floorf(maxf(top, AVENUE_TOP) / 140.0) * 140.0
+	while sy < minf(bot, PLAZA_TOP):
+		if sy > AVENUE_TOP and absf(sy - COLUMNS_Y) > 140.0:
+			for side: float in [-1.0, 1.0]:
+				var sp := Vector2((WALL_L + 46.0) if side < 0.0 else (WALL_R - 46.0), sy)
+				b.glow(sp, 130.0, _lit(m, Color(WARM.r, WARM.g, WARM.b, 0.16 * g)), 0.05)
+		sy += 140.0
+	var gy := floorf(maxf(top, AVENUE_TOP) / 180.0) * 180.0
+	while gy < minf(bot, PLAZA_TOP):
+		if gy > AVENUE_TOP and absf(gy - COLUMNS_Y) > 120.0:
+			b.glow(Vector2(640.0, gy), 66.0, _lit(m, Color(0.86, 0.94, 1.0, 0.34 * g)), 0.15)
+		gy += 180.0
+	if COLUMNS_Y + 160.0 > top and COLUMNS_Y - 160.0 < bot:
+		b.glow(Vector2(640.0, COLUMNS_Y), 210.0, _lit(m, Color(1.0, 0.88, 0.66, 0.18 * g)), 0.1)
+		for cp: Vector2 in COLUMN_POSTS:
+			b.glow(cp, 46.0, _lit(m, Color(1.0, 0.92, 0.74, 0.45 * g)), 0.2)
 
 
 # the round plaza's paving: bands of light and dark stone on circles round the
