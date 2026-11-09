@@ -23,6 +23,7 @@ const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const EspanyaBubble := preload("res://systems/espanya_bubble.gd")
 const AnimClock := preload("res://systems/anim_clock.gd")
+const SkyLook := preload("res://systems/sky.gd")
 
 # a bump costs your human this much of their patience (0..1, entities/human.gd)
 const BUMP_PATIENCE := 0.08
@@ -305,6 +306,32 @@ const HALLS: Array[Vector2] = [
 	Vector2(-2900.0, -2440.0),
 ]
 
+# THE PLACE AT NIGHT. The walk is a night walk, and the paving, the halls and
+# the gardens all read as one dark blue field without the lights that make
+# the real place: lamps down the avenue, the halls lit from inside, the old
+# bullring and the hotel across the ring road, the traffic, the people going
+# up to the show and the show itself in colour. Every light goes through
+# _lit (SkyLook.light under the night tint) and scales with Game.lamp_glow,
+# so a free walk by day shows none of it.
+const WARM := Color(1.0, 0.84, 0.56)
+const WINDOW := Color(1.0, 0.80, 0.48)
+const LAMP_IRON := Color(0.16, 0.17, 0.19)
+const BULLRING_C := Vector2(-70.0, 330.0)
+const BULLRING_R := 290.0
+const BULLRING_BRICK := Color(0.60, 0.30, 0.22)
+const BULLRING_ROOF := Color(0.52, 0.48, 0.44)
+const HOTEL := Rect2(1060.0, -140.0, 560.0, 760.0)
+const HOTEL_ROOF := Color(0.46, 0.47, 0.50)
+const TAXI_BODY := Color(0.09, 0.09, 0.10)
+const TAXI_DOOR := Color(0.96, 0.76, 0.14)
+const CAR_COLS: Array[Color] = [Color(0.72, 0.74, 0.78), Color(0.46, 0.12, 0.12), Color(0.18, 0.26, 0.42), Color(0.86, 0.86, 0.84)]
+const COAT_COLS: Array[Color] = [Color(0.72, 0.30, 0.26), Color(0.26, 0.34, 0.52), Color(0.82, 0.74, 0.52), Color(0.30, 0.44, 0.34), Color(0.58, 0.40, 0.62), Color(0.20, 0.20, 0.24)]
+# the avenue's roads: their centres out from the walk's edges, one way each
+const ROAD_OFF := 103.0
+# the people on the sauló strip, walking up to the show
+const WALKER_OFF := 12.0
+const VENDORS: Array[Vector2] = [Vector2(WALL_L - 22.0, -3020.0), Vector2(WALL_R + 22.0, -3380.0)]
+
 
 static func _h(k: int) -> float:
 	return fmod(absf(sin(float(k) * 12.9898) * 43758.5453), 1.0)
@@ -378,6 +405,34 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, _bottom: 
 	# the kerb along both sides, all the way up
 	wc.rect(Rect2(WALL_L, lo, 8.0, hi - lo), CURB)
 	wc.rect(Rect2(WALL_R - 8.0, lo, 8.0, hi - lo), CURB)
+	_avenue_lights(m, wc, lo, hi)
+
+
+# The avenue itself, where she walks: the lamps' light spilling well onto
+# the granite, a cool uplight from each fountain grate in the median, and the
+# Four Columns lit from their bases. Drawn over the paving (the edge layer's
+# lamp pools stop at its edge, so the walkway was the one unlit thing on
+# screen). Scales with Game.lamp_glow like every light here.
+static func _avenue_lights(m: Node2D, b: ShapeBatch, top: float, bot: float) -> void:
+	var g := _glowing()
+	if g <= 0.0 or top >= PLAZA_TOP or bot <= AVENUE_TOP:
+		return
+	var sy := floorf(maxf(top, AVENUE_TOP) / 140.0) * 140.0
+	while sy < minf(bot, PLAZA_TOP):
+		if sy > AVENUE_TOP and absf(sy - COLUMNS_Y) > 140.0:
+			for side: float in [-1.0, 1.0]:
+				var sp := Vector2((WALL_L + 46.0) if side < 0.0 else (WALL_R - 46.0), sy)
+				b.glow(sp, 130.0, _lit(m, Color(WARM.r, WARM.g, WARM.b, 0.16 * g)), 0.05)
+		sy += 140.0
+	var gy := floorf(maxf(top, AVENUE_TOP) / 180.0) * 180.0
+	while gy < minf(bot, PLAZA_TOP):
+		if gy > AVENUE_TOP and absf(gy - COLUMNS_Y) > 120.0:
+			b.glow(Vector2(640.0, gy), 66.0, _lit(m, Color(0.86, 0.94, 1.0, 0.34 * g)), 0.15)
+		gy += 180.0
+	if COLUMNS_Y + 160.0 > top and COLUMNS_Y - 160.0 < bot:
+		b.glow(Vector2(640.0, COLUMNS_Y), 210.0, _lit(m, Color(1.0, 0.88, 0.66, 0.18 * g)), 0.1)
+		for cp: Vector2 in COLUMN_POSTS:
+			b.glow(cp, 46.0, _lit(m, Color(1.0, 0.92, 0.74, 0.45 * g)), 0.2)
 
 
 # the round plaza's paving: bands of light and dark stone on circles round the
@@ -551,6 +606,7 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> v
 			_gardens(b, side, top, minf(bot, AVENUE_TOP))
 		if top < PALACE_Y:
 			_palace_wing(b, side)
+	_night_dressing(m, b, top, bot)
 
 
 static func _xs(side: float, a: float, w: float) -> Rect2:
@@ -692,6 +748,274 @@ static func _palace_wing(b: ShapeBatch, side: float) -> void:
 	b.circle(tc, 4.0, FLAG_GOLD)
 
 
+static func _lit(m: Node2D, c: Color) -> Color:
+	if m == null or not ("night_cm" in m) or m.night_cm == null:
+		return c
+	return SkyLook.light(c, m.night_cm.color)
+
+
+# Game looked up at run time (as _play_sfx finds Sfx), so a test that
+# preloads this script compiles it before the autoload exists
+static func _glowing() -> float:
+	var ml := Engine.get_main_loop() as SceneTree
+	var game: Node = ml.root.get_node_or_null("Game") if ml != null else null
+	return float(game.lamp_glow()) if game != null else 0.0
+
+
+# What the night lights in the static layers: lamp posts with their pools
+# down both sauló strips, the halls' skylights and colonnades, the bullring
+# and the hotel by the ring road, the crowd on the promenades round the
+# fountain, and the palace's windows.
+static func _night_dressing(m: Node2D, b: ShapeBatch, top: float, bot: float) -> void:
+	var g := _glowing()
+	# 1. lamp posts between the plane trees, a warm pool on the sauló and the
+	# edge of the granite
+	if top < PLAZA_TOP and bot > AVENUE_TOP:
+		var ly := floorf(maxf(top, AVENUE_TOP) / 140.0) * 140.0
+		while ly < minf(bot, PLAZA_TOP):
+			if ly > AVENUE_TOP and absf(ly - COLUMNS_Y) > 140.0:
+				for side: float in [-1.0, 1.0]:
+					var lp := Vector2((WALL_L - 34.0) if side < 0.0 else (WALL_R + 34.0), ly)
+					if g > 0.0:
+						b.glow(lp, 96.0, _lit(m, Color(WARM.r, WARM.g, WARM.b, 0.30 * g)), 0.08)
+					b.circle(lp + LIGHT * 4.0, 5.0, SHADOW)
+					b.circle(lp, 4.0, LAMP_IRON)
+					b.circle(lp, 2.4, _lit(m, Color(1.0, 0.95, 0.82)) if g > 0.0 else HALL_PARAPET)
+			ly += 140.0
+	# 2. the halls lit from inside: their skylights and the colonnade fronts
+	if g > 0.0:
+		for hall: Vector2 in HALLS:
+			if hall.y < top - 40.0 or hall.x > bot + 40.0:
+				continue
+			for side: float in [-1.0, 1.0]:
+				var r := _strip(side, 150.0, 300.0, hall.x, hall.y).grow(-34.0)
+				var sy := r.position.y
+				while sy < r.end.y - 30.0:
+					b.rect(Rect2(r.position.x, sy + 3.0, r.size.x, 20.0), _lit(m, Color(WINDOW.r, WINDOW.g, WINDOW.b, 0.42 * g)))
+					sy += 48.0
+				var fx := (WALL_L - 142.0) if side < 0.0 else (WALL_R + 142.0)
+				var cy := hall.x + 22.0
+				while cy < hall.y - 10.0:
+					b.glow(Vector2(fx, cy), 26.0, _lit(m, Color(WARM.r, WARM.g, WARM.b, 0.32 * g)))
+					cy += 44.0
+	# 3. the old bullring across the ring road: a round brick drum of arches,
+	# its roof terrace and a glass dome, and the hotel opposite
+	if bot > BULLRING_C.y - BULLRING_R - 40.0:
+		_bullring(m, b, g)
+		_hotel(m, b, g)
+	# 4. people round the fountain for the show, on the promenades
+	if top < FOUNTAIN_CENTER.y + 320.0 and bot > FOUNTAIN_CENTER.y - 320.0:
+		for side: float in [-1.0, 1.0]:
+			var py := FOUNTAIN_CENTER.y - 300.0
+			var k := 0
+			while py < FOUNTAIN_CENTER.y + 300.0:
+				for row in range(2):
+					var px := (WALL_L - 12.0 - float(row) * 16.0) if side < 0.0 else (WALL_R + 12.0 + float(row) * 16.0)
+					var jitter := Vector2(_h(k * 3 + row) * 6.0 - 3.0, _h(k * 5 + row + 7) * 8.0 - 4.0)
+					_person(b, Vector2(px, py) + jitter, COAT_COLS[(k + row * 2) % COAT_COLS.size()], Vector2(-side, 0.0))
+				py += 26.0
+				k += 1
+	# 5. lamps along the garden promenades, up past the fountain to the palace
+	if top < AVENUE_TOP and bot > PALACE_Y:
+		var gy := floorf(maxf(top, PALACE_Y) / 180.0) * 180.0
+		while gy < minf(bot, AVENUE_TOP):
+			if gy > PALACE_Y + 40.0 and gy < AVENUE_TOP - 40.0:
+				for side: float in [-1.0, 1.0]:
+					var lp := Vector2((WALL_L - 46.0) if side < 0.0 else (WALL_R + 46.0), gy)
+					if g > 0.0:
+						b.glow(lp, 84.0, _lit(m, Color(WARM.r, WARM.g, WARM.b, 0.26 * g)), 0.08)
+					b.circle(lp + LIGHT * 4.0, 5.0, SHADOW)
+					b.circle(lp, 4.0, LAMP_IRON)
+					b.circle(lp, 2.4, _lit(m, Color(1.0, 0.95, 0.82)) if g > 0.0 else HALL_PARAPET)
+			gy += 180.0
+	# 6. the palace's windows, lit, along both wings' fronts
+	if top < PALACE_Y and g > 0.0:
+		for side: float in [-1.0, 1.0]:
+			var wr := _strip(side, 60.0, 520.0, -5040.0, PALACE_Y)
+			var wx := wr.position.x + 18.0
+			while wx < wr.end.x - 14.0:
+				b.rect(Rect2(wx, wr.end.y - 30.0, 8.0, 10.0), _lit(m, Color(WINDOW.r, WINDOW.g, WINDOW.b, 0.85 * g)))
+				wx += 22.0
+			var tc := Vector2(wr.end.x - 40.0 if side < 0.0 else wr.position.x + 40.0, wr.end.y - 60.0)
+			b.glow(tc, 70.0, _lit(m, Color(1.0, 0.86, 0.60, 0.32 * g)), 0.2)
+
+
+static func _bullring(m: Node2D, b: ShapeBatch, g: float) -> void:
+	var c := BULLRING_C
+	var r := BULLRING_R
+	b.circle(c + LIGHT * 18.0, r + 4.0, SHADOW)
+	b.circle(c, r + 18.0, PLAZA_DARK)
+	b.circle(c, r, BULLRING_BRICK)
+	b.circle(c, r - 16.0, BULLRING_BRICK.darkened(0.12))
+	# the arches round the drum, lit from inside at night
+	for k in range(64):
+		var a := TAU * float(k) / 64.0
+		var p := c + Vector2.from_angle(a) * (r - 8.0)
+		var col := _lit(m, Color(WINDOW.r, WINDOW.g, WINDOW.b, 0.9)) if g > 0.0 and k % 3 != 0 else BULLRING_BRICK.darkened(0.35)
+		b.circle(p, 3.2, col)
+	b.circle(c, r - 24.0, BULLRING_ROOF)
+	b.circle(c, r - 30.0, BULLRING_ROOF.lightened(0.06))
+	# the glass dome over the old ring, glowing
+	b.circle(c, r - 110.0, Color(0.30, 0.38, 0.44))
+	for k in range(12):
+		var a := TAU * float(k) / 12.0
+		b.line(c, c + Vector2.from_angle(a) * (r - 110.0), Color(0.22, 0.26, 0.30), 2.0)
+	if g > 0.0:
+		b.glow(c, r - 80.0, _lit(m, Color(1.0, 0.86, 0.62, 0.30 * g)), 0.3)
+		for k in range(64):
+			var a := TAU * float(k) / 64.0
+			if k % 3 != 0:
+				b.glow(c + Vector2.from_angle(a) * (r + 6.0), 12.0, _lit(m, Color(WARM.r, WARM.g, WARM.b, 0.22 * g)))
+
+
+static func _hotel(m: Node2D, b: ShapeBatch, g: float) -> void:
+	var r := HOTEL
+	b.rect(Rect2(r.position + Vector2(14.0, 18.0), r.size), SHADOW)
+	b.rect(r.grow(10.0), PLAZA_DARK)
+	b.rect(r, HOTEL_ROOF)
+	b.rect(r.grow(-8.0), HOTEL_ROOF.lightened(0.08))
+	# plant on the roof, and the lit windows of the front facing the plaza
+	for k in range(4):
+		b.rect(Rect2(r.position.x + 60.0 + float(k) * 110.0, r.position.y + 120.0, 60.0, 40.0), HOTEL_ROOF.darkened(0.2))
+	var front := Rect2(r.position.x, r.position.y + 10.0, 60.0, r.size.y - 20.0)
+	b.rect(front, Color(0.32, 0.34, 0.38))
+	var wy := front.position.y + 12.0
+	var k2 := 0
+	var dark := Color(0.20, 0.24, 0.30)
+	var lit_w := _lit(m, Color(WINDOW.r, WINDOW.g, WINDOW.b, 0.9))
+	while wy < front.end.y - 12.0:
+		b.rect(Rect2(front.position.x + 8.0, wy, 14.0, 10.0), lit_w if g > 0.0 and _h(k2) > 0.3 else dark)
+		b.rect(Rect2(front.position.x + 32.0, wy, 14.0, 10.0), lit_w if g > 0.0 and _h(k2 + 50) > 0.4 else dark)
+		wy += 22.0
+		k2 += 1
+	if g > 0.0:
+		b.glow(Vector2(r.position.x - 20.0, r.position.y + 120.0), 80.0, _lit(m, Color(WARM.r, WARM.g, WARM.b, 0.24 * g)))
+
+
+# a person from above: a shadow, shoulders in their coat, a head; `face` is
+# the way they look
+static func _person(b: ShapeBatch, p: Vector2, coat: Color, face: Vector2) -> void:
+	b.circle(p + LIGHT * 3.0, 7.4, SHADOW)
+	b.circle(p, 7.0, coat)
+	b.circle(p - face * 1.0, 5.4, coat.lightened(0.12))
+	b.circle(p + face * 1.6, 4.0, Color(0.30, 0.22, 0.16) if int(absf(p.x + p.y)) % 3 == 0 else Color(0.56, 0.40, 0.28))
+
+
+static func _car_pt(p: Vector2, f: Vector2, s: Vector2, a: float, w: float) -> Vector2:
+	return p + f * a + s * w
+
+
+# a car from above, nose along dir; door is the taxi's yellow band (alpha 0
+# for none); its lights at night
+static func _car(m: Node2D, b: ShapeBatch, p: Vector2, dir: Vector2, body: Color, door: Color, g: float) -> void:
+	var f := dir.normalized()
+	var s := Vector2(-f.y, f.x)
+	var hl := 21.0
+	var hw := 10.0
+	if g > 0.0:
+		b.glow(p + f * (hl + 26.0), 30.0, _lit(m, Color(1.0, 0.95, 0.80, 0.30 * g)))
+	var sh := LIGHT * 5.0
+	b.polygon(PackedVector2Array([_car_pt(p, f, s, hl, hw) + sh, _car_pt(p, f, s, hl, -hw) + sh,
+		_car_pt(p, f, s, -hl, -hw) + sh, _car_pt(p, f, s, -hl, hw) + sh]), SHADOW)
+	b.polygon(PackedVector2Array([_car_pt(p, f, s, hl, hw), _car_pt(p, f, s, hl, -hw),
+		_car_pt(p, f, s, -hl, -hw), _car_pt(p, f, s, -hl, hw)]), body)
+	if door.a > 0.0:
+		b.polygon(PackedVector2Array([_car_pt(p, f, s, 6.0, hw), _car_pt(p, f, s, 6.0, -hw),
+			_car_pt(p, f, s, -9.0, -hw), _car_pt(p, f, s, -9.0, hw)]), door)
+	b.polygon(PackedVector2Array([_car_pt(p, f, s, 8.0, 7.5), _car_pt(p, f, s, 8.0, -7.5),
+		_car_pt(p, f, s, -10.0, -7.5), _car_pt(p, f, s, -10.0, 7.5)]), body.darkened(0.3))
+	b.polygon(PackedVector2Array([_car_pt(p, f, s, 14.0, 8.0), _car_pt(p, f, s, 14.0, -8.0),
+		_car_pt(p, f, s, 9.0, -7.5), _car_pt(p, f, s, 9.0, 7.5)]), Color(0.42, 0.52, 0.62))
+	var head := _lit(m, Color(1.0, 0.96, 0.84)) if g > 0.0 else Color(0.86, 0.86, 0.80)
+	b.circle(_car_pt(p, f, s, hl - 1.0, 6.0), 2.0, head)
+	b.circle(_car_pt(p, f, s, hl - 1.0, -6.0), 2.0, head)
+	var tail := _lit(m, Color(1.0, 0.18, 0.12)) if g > 0.0 else Color(0.60, 0.14, 0.12)
+	b.circle(_car_pt(p, f, s, -hl + 1.0, 6.0), 1.8, tail)
+	b.circle(_car_pt(p, f, s, -hl + 1.0, -6.0), 1.8, tail)
+
+
+# The moving night: traffic on the avenue's roads and the ring road, people
+# walking up the sauló to the show, the vendors' light-up toys, the show's
+# colour and the towers' uplights.
+static func _night_live(m: Node2D, b: ShapeBatch, t: float, vt: float, vb: float) -> void:
+	var g := _glowing()
+	# the towers lit from below
+	if g > 0.0:
+		for tw_rect: Rect2 in [TOWER_WEST, TOWER_EAST]:
+			if tw_rect.end.y > vt - 120.0 and tw_rect.position.y < vb + 120.0:
+				b.glow(Vector2(tw_rect.get_center().x, tw_rect.end.y + 8.0), 70.0, _lit(m, Color(1.0, 0.82, 0.52, 0.38 * g)), 0.15)
+	# the avenue's traffic: up on the west road, down on the east, every
+	# fourth car a taxi
+	var lo := AVENUE_TOP - 200.0
+	var length := (PLAZA_TOP + 200.0) - lo
+	for side: float in [-1.0, 1.0]:
+		var x := (WALL_L - ROAD_OFF) if side < 0.0 else (WALL_R + ROAD_OFF)
+		for k in range(6):
+			var speed := 150.0 + _h(k + (0 if side < 0.0 else 20)) * 70.0
+			var along := fposmod(t * speed + float(k) * length / 6.0 + _h(k * 7) * 120.0, length)
+			var y := (PLAZA_TOP + 200.0 - along) if side < 0.0 else (lo + along)
+			if y < vt - 60.0 or y > vb + 60.0:
+				continue
+			var taxi := k % 4 == 1
+			_car(m, b, Vector2(x, y), Vector2(0.0, side), TAXI_BODY if taxi else CAR_COLS[(k + int(side + 1.0)) % CAR_COLS.size()],
+				TAXI_DOOR if taxi else Color(0, 0, 0, 0), g)
+	# the ring road round the plaza, both ways
+	if vb > PLAZA_TOP:
+		for k in range(10):
+			var rr := 930.0 if k % 2 == 0 else 1030.0
+			var dir_s := 1.0 if k % 2 == 0 else -1.0
+			var a := -PI * 0.5 + fposmod(t * 0.07 * dir_s + float(k) * 0.37, TAU)
+			var p := PLAZA_C + Vector2.from_angle(a) * rr
+			if p.y < PLAZA_TOP or p.y < vt - 60.0 or p.y > vb + 60.0:
+				continue
+			if p.x > WALL_L - 40.0 and p.x < WALL_R + 40.0:
+				continue
+			if p.distance_to(BULLRING_C) < BULLRING_R + 30.0 or HOTEL.grow(30.0).has_point(p):
+				continue
+			var tangent := Vector2.from_angle(a + PI * 0.5 * dir_s)
+			_car(m, b, p, tangent, TAXI_BODY if k % 3 == 0 else CAR_COLS[k % CAR_COLS.size()], TAXI_DOOR if k % 3 == 0 else Color(0, 0, 0, 0), g)
+	# people walking up the sauló to the show (and a few coming back)
+	for side: float in [-1.0, 1.0]:
+		var x := (WALL_L - WALKER_OFF) if side < 0.0 else (WALL_R + WALKER_OFF)
+		for k in range(9):
+			var up := k % 3 != 2
+			var speed := 34.0 + _h(k + 40) * 16.0
+			var along := fposmod(t * speed + float(k) * length / 9.0, length)
+			var y := (PLAZA_TOP + 200.0 - along) if up else (lo + along)
+			if y < vt - 30.0 or y > vb + 30.0 or y < AVENUE_TOP or y > PLAZA_TOP:
+				continue
+			var bob := sin(t * 7.0 + float(k)) * 0.8
+			_person(b, Vector2(x + bob, y), COAT_COLS[(k + (3 if side > 0.0 else 0)) % COAT_COLS.size()], Vector2(0.0, -1.0 if up else 1.0))
+	# the vendors by the fountain and their light-up toys, flung up and
+	# spinning down
+	for i in range(VENDORS.size()):
+		var vp: Vector2 = VENDORS[i]
+		if vp.y < vt - 120.0 or vp.y > vb + 120.0:
+			continue
+		_person(b, vp, Color(0.24, 0.24, 0.28), Vector2(1.0 if vp.x < 640.0 else -1.0, 0.0))
+		b.rect(Rect2(vp + Vector2(-9.0, 8.0), Vector2(18.0, 10.0)), Color(0.30, 0.22, 0.16))
+		for k in range(3):
+			var phase := fposmod(t * 0.7 + float(k) * 0.33 + float(i) * 0.5, 1.0)
+			var h := sin(phase * PI) * 46.0
+			var tp := vp + Vector2((float(k) - 1.0) * 10.0, -14.0 - h)
+			var hue := fposmod(t * 0.4 + float(k) * 0.3 + float(i) * 0.15, 1.0)
+			var col := Color.from_hsv(hue, 0.75, 1.0, 0.9)
+			b.glow(tp, 10.0, _lit(m, Color(col.r, col.g, col.b, 0.55)))
+			b.circle(tp, 2.0, _lit(m, col))
+	# the show's colour on the water, and the cascade lit up the hill
+	if g > 0.0:
+		var hue2 := fposmod(t * 0.05, 1.0)
+		var show := Color.from_hsv(hue2, 0.65, 1.0)
+		if FOUNTAIN_CENTER.y + 200.0 > vt and FOUNTAIN_CENTER.y - 200.0 < vb:
+			b.glow(FOUNTAIN_CENTER, FOUNTAIN_RADIUS + 70.0, _lit(m, Color(show.r, show.g, show.b, 0.32 * g)), 0.25)
+		var cy := CASCADE_BOT
+		while cy > CASCADE_TOP:
+			if cy > vt - 60.0 and cy < vb + 60.0:
+				var c2 := Color.from_hsv(fposmod(hue2 + (CASCADE_BOT - cy) / 2000.0, 1.0), 0.6, 1.0)
+				b.glow(Vector2(640.0, cy), 46.0, _lit(m, Color(c2.r, c2.g, c2.b, 0.30 * g)), 0.2)
+			cy -= 70.0
+
+
 static func draw_live(m: Node2D, wc: Object, vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
 	var t: float = float(AnimClock.msec()) * 0.001
@@ -720,16 +1044,19 @@ static func draw_live(m: Node2D, wc: Object, vt: float, vb: float) -> void:
 		b.rect(FOUNTAIN_PEDESTAL, PALACE_STONE_DARK)
 		b.rect(FOUNTAIN_PEDESTAL.grow(-4.0), PALACE_MARBLE)
 		var pulse: float = sin(t * 1.6) * 0.5 + 0.5
+		# the jets take the show's colour after dark
+		var sc := Color.from_hsv(fposmod(t * 0.05, 1.0), 0.55, 1.0)
+		var spray := WATER_SPRAY.lerp(Color(sc.r, sc.g, sc.b, WATER_SPRAY.a), 0.55 * _glowing())
 		for k in range(16):
 			var a := TAU * float(k) / 16.0
 			var lift: float = 0.5 + 0.5 * sin(t * 2.2 - float(k) * 0.8)
 			var jp := c + Vector2.from_angle(a) * 78.0
-			b.glow(jp, 9.0 + lift * 9.0, WATER_SPRAY)
+			b.glow(jp, 9.0 + lift * 9.0, spray)
 			b.circle(jp, 2.0 + lift * 1.5, Color.WHITE)
 		for k in range(8):
 			var a := TAU * float(k) / 8.0 + t * 0.4
 			var jp := c + Vector2.from_angle(a) * (40.0 + pulse * 6.0)
-			b.glow(jp, 8.0 + pulse * 6.0, WATER_SPRAY)
+			b.glow(jp, 8.0 + pulse * 6.0, spray)
 		b.glow(c, 30.0 + pulse * 14.0, Color(1.0, 1.0, 1.0, 0.65))
 
 	# 3. the outdoor escalators beside the stairs
@@ -745,7 +1072,10 @@ static func draw_live(m: Node2D, wc: Object, vt: float, vb: float) -> void:
 				b.rect(Rect2(esc.position.x + 5.0, step_y, esc.size.x - 10.0, 2.0), ESCALATOR_FRAME)
 				step_y += 18.0
 
-	# 4. the bubble performer
+	# 4. the night: traffic, walkers, vendors, the show's colour, uplights
+	_night_live(m, b, t, vt, vb)
+
+	# 5. the bubble performer
 	if m.espanya_bubble != null:
 		m.espanya_bubble.draw(b)
 
