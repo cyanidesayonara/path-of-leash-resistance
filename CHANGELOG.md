@@ -5,6 +5,7 @@ Append-only session history, newest first.
 ## 2026-11-09 - The First Walk passes its own structural selftest
 
 - CI's level sanity sweep has failed on main since the First Walk rebuild (#497): the selftest wanted six kickables on every walk, and the rebuilt tutorial keeps its stations clear of litter on purpose, with one ball in the practice yard. The tutorial is now held to that one ball, and every other walk still to six. `tools/run_tests.sh` does not run the sweep, so the local suite never saw it.
+- The smoke job's time limit goes from 35 to 50 minutes. A green run takes about 34 minutes now that there are 34 walks and the tutorial (main's last green one took 33:54), so a slow runner was cancelled partway through.
 
 ## 2026-11-09 - Plaça d'Espanya at night: the towers, the halls and the show
 
