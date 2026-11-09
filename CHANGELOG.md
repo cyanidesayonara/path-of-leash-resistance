@@ -7,6 +7,12 @@ Append-only session history, newest first.
 - New Store screenshots for 1.71, replacing 1.60's: ten 1920x1080 frames from the v1.71 tag that show what has changed since, from Festa de Gràcia's correfoc and El Gat de Botero waking on the Rambla del Raval to Plaça d'Espanya at night, La Neteja's sweeper at dawn, Els Búnquers at sunset, the rebuilt L'Eixample, Els Àngels and El Poble Espanyol, El Parc's pond and El Barri's off-leash area. `store/listing.md`'s "Screenshots for 1.71" has the order, captions and the command for each. The images and the regenerated logos are uploaded by hand in Partner Center and are not in the repository.
 - The recipe now says to shoot from a fresh profile (`APPDATA` pointed at an empty folder), since a saved open goal list covers a third of every frame, and to take chase shots at frame 170-200, before the shout and the threat move on.
 
+## 2026-11-09 - El Gat pounces
+
+- Below half, El Gat no longer charges: a cat does not charge, and the mammoth in La Ciutadella is the boss who does (docs/BOSSES.md). He crouches low and wiggles his rear while a landing ring fills on the spot where she stood, a dashed arc showing his leap, then he leaps. A taut leash across him in the air catches him (CAUGHT IN THE LEASH!). Coming down on a terrace table or a palm crashes him (CRASH!). Landing on her knocks her, and landing on nothing costs him and leaves him skidding (it counts as a dodge). Your human flung into him still bowls him, and the boop and the last stand are unchanged.
+- The two goals are renamed to match: "Catch pouncing El Gat in a taut leash" and "Make El Gat land on a palm or a table". Their ids and counters are the same, so records carry over.
+- `tests/test_boss_gat.gd` covers the leap's catch, the landing on a palm, a landing on her, the miss and its skid, and the crouch's aim and banner. `tools/boss_shots.gd` photographs the crouch and the leap.
+
 ## 2026-11-09 - Walk 11: «La Ciutadella» and El Mamut, the first statue boss
 
 - A new walk in the boss slot at 11, after El Besòs (`Game.CAROUSEL`, 15 stars, after the second chase): Passeig de Lluís Companys from under the brick Arc de Triomf with its bench-lamps, the park gate, the gravel avenue between the Castell dels Tres Dragons and the Hivernacle, the mammoth's lawn by the boating lake, La Cascada with its pool at the path's edge and the golden chariot on top, then the zoo wall with giraffes looking over it and the Parliament opposite, out to the dog area (`systems/ciutadella.gd`).
