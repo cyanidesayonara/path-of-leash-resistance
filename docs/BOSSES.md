@@ -96,7 +96,7 @@ A pair, so the fight is about where both of them are.
 
 A cat does not charge. He fights like a cat: still, then all at once.
 - **Paw swat:** a ring fills where the paw will land (shipped).
-- **Part two, the pounce (planned, replacing the shipped charge):** he crouches
+- **Part two, the pounce (#504, replacing the charge):** he crouches
   low and wiggles his rear, a landing ring fills where she stands, and he leaps.
   He comes down on a taut leash and is tangled in it. He comes down on a
   terrace table and crashes through it, dazed. A miss leaves him skidding.
