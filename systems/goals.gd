@@ -79,6 +79,9 @@ const LEVEL_GOAL_IDS := {
 	"angels": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "ledge", "decks", "lamps", "combo", "prize", "spell", "jamon", "clock"],
 	# El Poble Espanyol: Plaza Mayor arcade columns, craft workshops, and Andalusian watering cans
 	"poble": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "columns_poble", "workshops", "watering", "combo", "prize", "spell", "jamon", "clock"],
+	# La Ciutadella: El Mamut, the first statue boss. Settling him is how the
+	# fight ends, so it is not a goal; the ways of wearing him down are.
+	"ciutadella": ["mark", "sniff", "phone", "paws", "bag", "snack", "mamut_dodge", "mamut_lake", "mamut_trip", "parakeets", "combo", "prize", "spell", "jamon", "clock"],
 	# Rambla del Raval: the finale, El Gat de Botero. Tying him up is how the
 	# walk ends, so it is not a goal; the ways of wearing him down are.
 	"raval": ["mark", "sniff", "phone", "paws", "bag", "clothesline", "pigeons", "swat", "smash", "pummel", "combo", "prize", "spell", "jamon", "clock"],
@@ -170,6 +173,10 @@ static func defs(m: Node2D) -> Dictionary:
 		"lamps": {"text": "Wrap the leash around %d lamps", "target": 3, "fn": func() -> int: return m.angels_lamps_wrapped.size()},
 		"columns_poble": {"text": "Wrap the leash round %d columns", "target": 4, "fn": func() -> int: return m.poble_columns_wrapped.size()},
 		"workshops": {"text": "Sniff %d craft workshops", "target": 3, "fn": func() -> int: return m.poble_workshops_sniffed.size()},
+		"mamut_dodge": {"text": "Dodge the mammoth %d times", "target": 4, "fn": func() -> int: return m.mamut_dodges},
+		"mamut_lake": {"text": "Lead the mammoth's charge into the lake", "target": 1, "fn": func() -> int: return 1 if m.mamut_splashed else 0},
+		"mamut_trip": {"text": "Trip the mammoth with the leash", "target": 1, "fn": func() -> int: return 1 if m.mamut_tripped else 0},
+		"parakeets": {"text": "Shoo the parakeets off your human's croissant", "target": 1, "fn": func() -> int: return 1 if m.ciut_shooed else 0},
 		"watering": {"text": "Shake off under a watering can", "target": 1, "fn": func() -> int: return 1 if m.poble_shakes >= 1 else 0},
 		"spell": {"text": "Spell LEASH", "target": 5, "fn": func() -> int: return int(m.get("word_letters_collected"))},
 		"jamon": {"text": "Find the hidden pernil", "target": 1, "fn": func() -> int: return 1 if bool(m.get("jamon_found")) else 0},
