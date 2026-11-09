@@ -2,6 +2,10 @@
 
 Append-only session history, newest first.
 
+## 2026-11-09 - Release notes for 1.71
+
+- Store "What's new" and the certification note now describe 1.71 (everything since 1.70, under the Store's 1500 characters), 1.70's What's new is in "Past What's new", and docs/itch-page.md has "What's new in 1.71". The walk count is 34 everywhere (Store description, short description and features, itch body), with L'Eixample, Els Àngels and El Poble Espanyol in the Store and itch lists and README's table; the Store's tutorial is three-part. The certification note drops its 1.67 line to stay under 2000 characters.
+
 ## 2026-11-09 - Plaça d'Espanya at night: the towers, the halls and the show
 
 - El Poble Espanyol's paired upgrade. Plaça d'Espanya is a night walk, and its paving, halls and gardens read as one dark blue field. Now the place is lit: lamp posts with warm pools between the plane trees down both sauló strips and along the garden promenades up to the palace; the exhibition halls lit from inside (skylights and colonnades); the Venetian towers lit from below; the palace's windows and corner domes glowing.

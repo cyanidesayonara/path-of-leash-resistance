@@ -81,6 +81,7 @@ you want to go; constant hauling wears their patience down until they say
 | El Tibidabo | the mountain road |
 | El Veterinari | the clinic escape |
 | El Bosc | the forest |
+| Els Àngels | the skate plaza |
 | La Castanyada | the chestnut festival |
 | Els Senglars | the wild boar trail |
 | El Mosaic | the tiled terraces |
@@ -93,6 +94,7 @@ you want to go; constant hauling wears their patience down until they say
 | El Laberint d'Horta | the cypress maze |
 | El Port | the fishing wharf |
 | Plaça d'Espanya | the fountain avenue |
+| El Poble Espanyol | the walled village of copied towns |
 | Les Obres | the work site |
 | Dia de Partit | match day |
 | La Ferralla | the junkyard |

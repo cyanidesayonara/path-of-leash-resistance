@@ -51,7 +51,7 @@ The leash is real rope. The one you see is the one doing the physics: it wraps, 
 
 Your human answers it like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-THIRTY-ONE WALKS IN AND AROUND BARCELONA
+THIRTY-FOUR WALKS IN AND AROUND BARCELONA
 
 El Barri, the neighborhood park
 La Rambla, the crowded promenade
@@ -64,9 +64,11 @@ El Mercat, the market hall
 El Diluvi, the downpour
 El Besòs, the river park
 Platja de Llevant, the dog beach at the far end of the coast
+L'Eixample, the grid of cut corners round the basilica
 El Tibidabo, the mountain road
 El Veterinari, the clinic escape
 El Bosc, the forest
+Els Àngels, the skate plaza
 La Castanyada, the chestnut festival
 Els Senglars, the wild boar trail
 El Mosaic, the tiled terraces
@@ -79,6 +81,7 @@ La Carretera de les Aigües, the hillside hike
 El Laberint d'Horta, the cypress maze
 El Port, the fishing wharf
 Plaça d'Espanya, the fountain avenue
+El Poble Espanyol, the walled village of copied towns
 Les Obres, the work site
 Dia de Partit, match day
 La Ferralla, the junkyard
@@ -119,6 +122,25 @@ On a phone or tablet: a stick on the left, DIG, PEE, BARK and RUN on the right (
 Single player. No ads, no purchases, no account. The download plays offline; the itch app keeps it up to date.
 
 Made in Godot by Santtu Nykänen. The dog is Millie, a distinguished salt-and-pepper mutt who squats like a lady.
+```
+
+## What's new in 1.71
+
+For a devlog post or the top of the body. Everything since v1.70, from
+CHANGELOG.md. The Store's What's new is the short form of this.
+
+```
+- Three new walks, thirty-four in all:
+  - L'Eixample, open at 16 stars: one street of the grid walked to the basilica. Flower-tile paving, plane trees, and an octagon at each crossing with a lamp on every cut corner. A tour group follows its guide's umbrella across the last crossing; get photographed with them. Off leash in the garden inside the next block.
+  - Els Àngels, open at 22 stars: a narrow Raval street opens into the skate plaza outside the white museum, with the old convent chapel across the square. Grind the museum's ledges with the zoomies, and mind the skater who bails and sends a runaway board across the plaza. Off leash in a quiet university courtyard.
+  - El Poble Espanyol, open at 46 stars: the walled village of copied towns on Montjuïc. In through a gate between two towers, down a half-timbered Castilian lane, round an arcaded square with a fountain, up a whitewashed Andalusian lane, past a glassblower, a potter and a leather workshop. A neighbor waters the geraniums from a balcony, so keep your human out from under it. Off leash in the olive garden on the old walls.
+- The First Walk, rebuilt in three parts. The basics, one idea per card: lead your human through a chalk ring, dig in, ease off before their patience runs out, mark, sniff, bark, the zoomies, and poop on a good spot. Then the tricks: swing round a post, tetherball, ride the ledge, the brink, chain two tricks and take a dare. Then free practice in a yard with posts, a ledge and the kid with the dares, and the dog park off the leash.
+- A dog has standards. When nature calls, grass, earth or a tree's pit is a good spot, a soft green ring shows it, and it pays PERFECT SPOT. The sidewalk pays less and gets a "Here? Really?" from your human. A dropped snack or a run of zoomies brings the call on sooner. Walks with no good spot anywhere, L'Estació and El Mercat, keep the old rule.
+- El Barri changes down its length: a block of flats with balconies and shops past the railing, a bar terrace across the street, a chess table, the petanca and its spectators, a pergola, an allotment, plane trees and lamps down both sides of the square, and neighbors on the benches with a paper, a phone or bread for the pigeons.
+- El Parc round the path: granite edging and a hoop fence, park lamps, an ice-cream kiosk, an avenue of plane trees and horse chestnuts, a boat-hire hut by the lake, a bike lane, and people on the lawns: a picnic, a reader, a frisbee, a jogger.
+- Plaça d'Espanya at night is lit: lamps along the avenue and the gardens, the halls lit from inside, the towers from below, the old bullring at the start, cars and taxis with their lights on, a crowd round the Magic Fountain and vendors flinging light-up toys.
+- A status card that says what it shows: PHONE, PEE, MARKED and ZOOMIES each have a label, POOP shows while nature calls, and a mood while it lasts. The goal list lines up on one edge, and both fade out under a menu.
+- Fixes: front yards on bending streets can really be walked into, every stretch of the view is drawn after the camera jumps, and a bump from Plaça d'Espanya's bubble performer or El Fòrum's skater costs a bump's worth of patience instead of all of it. Your human's lines fit whatever look you give them.
 ```
 
 ## What's new in 1.70
