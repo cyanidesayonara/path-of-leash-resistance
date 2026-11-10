@@ -113,15 +113,12 @@ class FakeHuman:
 	extends Node2D
 	var patience := 1.0
 	var external_warning_t := 0.0
-	var look := {}
-	var bumped_dir := Vector2.ZERO
-	var noticed := ""
 
-	func bumped(dir: Vector2) -> void:
-		bumped_dir = dir
+	func bumped(_dir: Vector2) -> void:
+		pass
 
-	func notice(txt: String, _dur: float = 1.4) -> void:
-		noticed = txt
+	func notice(_txt: String, _dur: float = 1.4) -> void:
+		pass
 
 
 class FakeLeash:

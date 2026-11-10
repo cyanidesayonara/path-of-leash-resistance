@@ -72,9 +72,9 @@ class FakeDogScript:
 
 class FakeHuman:
 	extends Node2D
-	var patience := 100.0
-	func bump(_dir: Vector2, p: float) -> void:
-		patience -= p
+	var patience := 1.0
+	func bumped(_dir: Vector2) -> void:
+		pass
 
 
 class FakeCombo:
