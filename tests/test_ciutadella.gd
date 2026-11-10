@@ -4,7 +4,7 @@ extends SceneTree
 # - Registration: LEVELS, CAROUSEL (the boss slot after El Besòs), the gates,
 #   names, goals, the walk module; the level check
 # - The wake holds your human, and only while they are short of him
-# - Part one: a swipe knocks her in its sector, and one she is clear of wears him down
+# - Part one: no attack under his title card; a swipe knocks her in its sector, and one she is clear of wears him down
 # - Part two: a charge into the lake splashes him, dazes him, and a boop lands
 # - Part three: he goes back to his plinth, three legs tied sits him down, a
 #   bark settles him and lets your human walk on
@@ -101,6 +101,11 @@ func _run() -> void:
 	var hits0: int = m.dog_hits
 	m.dog.global_position = mam.pos + Vector2(0.0, 150.0)
 	m.dog.tumble_t = 0.0
+	# not while his title card is up over the banner
+	mam.card_t = BM.CARD_FROM + 0.5
+	_ticks(m, DT * 2.0)
+	_check(mam.state == BM.State.PROWL, "no attack while his card hushes the banner")
+	mam.card_t = BM.CARD_TIME + BM.CARD_FROM + 0.1
 	_ticks(m, DT * 2.0)
 	_check(mam.state == BM.State.SWIPE, "she is in front of him, within reach: he swipes")
 	_ticks(m, BM.SWIPE_WARN + 0.05)

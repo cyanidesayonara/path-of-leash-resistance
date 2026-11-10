@@ -9,6 +9,19 @@ Append-only session history, newest first.
 - Crowds thin with the sky: the Rambla's and El Mosaic's tourists and the people browsing at a stall scale by hour (dawn 0.35, day 1, dusk 0.85, night 0.6) and weather (wind 0.85, rain 0.5, snow 0.45), measured against each walk's own campaign sky, so every campaign walk keeps the crowd it was built with (La Castanyada's night market stays busy) and only another sky thins it. Other dog walkers come a little oftener at first light and late evening and less often in a downpour.
 - Nothing draws from an RNG: towels are still placed and kids still set up with the same draws, then left out, so a seeded walk replays as before. Live events and their goals are untouched. Test: `tests/test_outdoors.gd`.
 
+## 2026-11-10 - The boss review's findings, and live-event bumps that emptied patience
+
+From the played review of both bosses (#506):
+- El Mamut waits for his title card to clear before his first attack. The card hushes the banner, so his first swipe used to come with no word of what to do.
+- Both bosses' health bars move down below the HUD banner when the banner would cover them.
+- A boss's legs still hold the leash, but they are no longer a pole to swing round: circling El Mamut or El Gat no longer pays out a run of POLE SWING shouts.
+- No dare is offered while a boss fight is on (El Raval's dare-giver used to pop the dare card mid-fight).
+- During a fight, the boss's banner ("YOUR HUMAN WON'T PASS HIM...") outranks the bladder and poop banners.
+- El Mamut's film: the tusk is drawn in front of the trunk (it is on the near side; the raised trunk used to cut it in two), and the rower is moved into shot.
+- Not changed: a dog that never engages El Mamut leaves your human waiting at him indefinitely. That is the design (the banner says so), not a stalemate to break.
+
+Live events' bumps took 8.0 (one took 10.0) off your human's patience, which runs from 0 to 1: one bump emptied it and sprang a correction. All 25 in main.gd now take `LIVE_EVENT_BUMP_PATIENCE` (0.08), as El Fòrum's and Plaça d'Espanya's already did, and `tests/test_patience_scale.gd` now scans main.gd as well. El Fòrum's skater bump called a `human.say()` that does not exist; it uses `say_line()`.
+
 ## 2026-11-09 - Passeig Marítim's kite flyer, a second live event for the seafront
 
 - Passeig already had a live event (the volleyball, `systems/volleyball.gd`), so this is a second one, gated to the sky it belongs in. A kite flyer on the beach side of the promenade (`systems/kite_flyer.gd`, hooked through `systems/passeig.gd`): when the pair come within about 300 px of him on the way out, he shouts "Kite coming down!" (a 0.8 s telegraph, nothing hurts during it) and the kite stoops across the promenade, skids low along it, then climbs and is hauled back in.

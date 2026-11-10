@@ -121,7 +121,8 @@ static func _park(c: CanvasItem, t: float) -> void:
 	# the rowing boat, rocking harder at the thump; the oar dropped at the trumpet
 	var rock := sin(t * 2.0) * 3.0 + sin(Anim.span(t, DROP_AT, DROP_AT + 0.8) * PI * 3.0) * 14.0 \
 		* (1.0 - Anim.span(t, DROP_AT + 0.4, DROP_AT + 1.2))
-	var bx := -620.0
+	# right of the plinth, in shot while the camera holds on him
+	var bx := 420.0
 	var by := 400.0 + rock
 	c.draw_colored_polygon(PackedVector2Array([Vector2(bx - 120, by - 20), Vector2(bx + 130, by - 20),
 		Vector2(bx + 90, by + 30), Vector2(bx - 90, by + 30)]), Color(0.52, 0.30, 0.18))
@@ -205,13 +206,6 @@ static func mamut(c: CanvasItem, at: Vector2, k: float, t: float, awake: float, 
 		c.draw_colored_polygon(MillieSide.ellipse(p.call(eye), Vector2(10, 8 * awake) * k), EYE_AMBER)
 		c.draw_circle(p.call(eye + Vector2(2, 0)), 4.0 * k, INK)
 		c.draw_line(p.call(eye + Vector2(-18, -20)), p.call(eye + Vector2(18, -12)), INK, 6.0 * k)
-	# the tusk: out, down and curling up again
-	var tusk := PackedVector2Array()
-	for i in range(10):
-		var f := float(i) / 9.0
-		tusk.append(p.call(hc + Vector2(60.0 + f * 150.0, 60.0 + sin(f * PI * 0.9) * 90.0 - f * f * 150.0)))
-	c.draw_polyline(tusk, INK, 26.0 * k)
-	c.draw_polyline(tusk, TUSK, 18.0 * k)
 	# the trunk: hanging and curled at the tip, or raised high to trumpet
 	var trunk_pts := PackedVector2Array()
 	for i in range(12):
@@ -223,6 +217,14 @@ static func mamut(c: CanvasItem, at: Vector2, k: float, t: float, awake: float, 
 	c.draw_polyline(trunk_pts, STONE, 42.0 * k)
 	for i in range(2, 11, 2):
 		c.draw_circle(trunk_pts[i], 6.0 * k, STONE_DARK)
+	# the tusk: out, down and curling up again. It is on the near side of
+	# the head, so it goes over the trunk, not under it
+	var tusk := PackedVector2Array()
+	for i in range(10):
+		var f := float(i) / 9.0
+		tusk.append(p.call(hc + Vector2(60.0 + f * 150.0, 60.0 + sin(f * PI * 0.9) * 90.0 - f * f * 150.0)))
+	c.draw_polyline(tusk, INK, 26.0 * k)
+	c.draw_polyline(tusk, TUSK, 18.0 * k)
 
 
 # the card: the lawn gone gold behind EL MAMUT!, his head filling the frame
