@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-10 - A victory payoff film for El Mamut de la Ciutadella
+
+- Settling the park's stone mammoth (`systems/boss_mamut.gd`, `State.CONTENT`) now triggers a 5-second victory payoff film (`intro/film_mamut_win.gd`), matching El Gat's plinth celebration on Rambla del Raval.
+- The scene: morning by the boating lake in Parc de la Ciutadella; the mammoth has sat down on the lawn, and Millie trots up and boops his lowered trunk with a bark. Sparks burst, his amber eye opens wide in contentment, and he stands and plods back up onto his stone plinth with a solid thump.
+- On the plinth, he raises his trunk high in a triumphant trumpet, spraying a celebratory water fountain with a shimmering rainbow arc into the morning sunlight. On the lake, the rower drops oars and claps enthusiastically, and your human catches up smiling proudly. Title card slams in: EL MAMUT! / VICTORIA A LA CIUTADELLA / LA CIUTADELLA IS YOURS.
+- Registered in `tools/intro_render.gd` (`mamut_win`) and verified in `tests/test_chase_film.gd` (229 checks) and `tests/test_film_mamut_win.gd` (56 checks).
+
 ## 2026-11-10 - Finish the night pass: aligned doorways, wet reflections, and Plaça d'Espanya
 
 - Lit doorways on built-up streets now sit flush in the wall face rather than 27px out on the pavement, aligning the bright slit directly inside the door recess on both sides of the street (`main._draw_doorway`, `world/night_fronts.gd`).
