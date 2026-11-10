@@ -138,7 +138,8 @@ func tick(m: Node2D, delta: float) -> void:
 				var dist_human := human_p.distance_to(pos)
 				if dist_human < BUMP_RADIUS:
 					human_hit = true
-					m.human.bump(Vector2.DOWN, 8.0)
+					m.human.bumped(Vector2.DOWN)
+					m.human.patience = maxf(0.0, m.human.patience - m.LIVE_EVENT_BUMP_PATIENCE)
 					m.float_text(human_p + Vector2(0, -34), "Watch the guitar!", Color(1.0, 0.45, 0.4), m.POP_SAY)
 					m.float_text(pos + Vector2(0, -28), "Watch those strings!", Color(0.96, 0.88, 0.35), m.POP_SAY)
 					m.get_node("/root/Sfx").play("grunt", 0.95, -2.0)

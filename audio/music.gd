@@ -181,6 +181,10 @@ const STYLES := {
 	# La Ciutadella: a lumbering oompah for a stone mammoth, accordion over tuba
 	"ciutadella": {"bpm": 104, "key": 3, "lead": "accordion", "lead2": ["glock", 12], "comp": "oompah",
 		"bass": "oompah", "drums": "kickrim", "swing": 0.04, "verb": 0.24},
+	# La Cremada: a fiesta night's tabalers, drums driving a gralla-bright lead,
+	# minor and hurried for the run home ahead of the Dimoni
+	"cremada": {"bpm": 138, "key": 2, "minor": true, "lead": "whistle", "lead2": ["accordion", 0], "comp": "push",
+		"bass": "eighths", "drums": "drive", "swing": 0.02, "verb": 0.22},
 	# Rambla del Raval: the finale's fight, fast and minor, its own chords and melody
 	"raval": {"bpm": 148, "key": 0, "minor": true, "lead": "guitar", "lead2": ["accordion", 0], "lead2_all": true,
 		"comp": "push", "bass": "eighths", "drums": "drive", "verb": 0.20, "chords": RAVAL_BOSS_CHORDS, "mel": RAVAL_BOSS_MELODY},

@@ -391,7 +391,7 @@ headless, for the autowalk, or in a `--shot` run; `--no-films` stops them and
 (`intro/film_kit.gd`: walking, she hears it, looks back, stares, bolts, the
 card) and draws its own place and threat around `FilmKit.pair`. Render one
 like an intro scene (`sweeper` is La Neteja's, `flood` El Besòs's, `vet`
-El Veterinari's, `boars` Els Senglars', `gracia` Festa de Gràcia's, `gat` the Raval finale's,
+El Veterinari's, `boars` Els Senglars', `gracia` Festa de Gràcia's, `cremada` La Cremada's, `gat` the Raval finale's,
 played as she first passes El Gat's plinth): `--script res://tools/intro_render.gd -- flood OUTDIR 24 640`.
 Two more arguments pick the dog (`millie`, `pipa`, `mochi`, `bruna`, `tito`)
 and your human (`him`, `her`, or a number for a NEW LOOK), so a film can be

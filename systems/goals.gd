@@ -81,6 +81,7 @@ const LEVEL_GOAL_IDS := {
 	"poble": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "columns_poble", "workshops", "watering", "combo", "prize", "spell", "jamon", "clock"],
 	# La Ciutadella: El Mamut, the first statue boss. Settling him is how the
 	# fight ends, so it is not a goal; the ways of wearing him down are.
+	"cremada": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "traca", "dimoni_dodge", "dimoni_clean", "combo", "prize", "spell", "jamon", "clock"],
 	"ciutadella": ["mark", "sniff", "phone", "paws", "bag", "snack", "mamut_dodge", "mamut_lake", "mamut_trip", "parakeets", "combo", "prize", "spell", "jamon", "clock"],
 	# Rambla del Raval: the finale, El Gat. Tying him up is how the
 	# walk ends, so it is not a goal; the ways of wearing him down are.
@@ -177,6 +178,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"mamut_lake": {"text": "Lead the mammoth's charge into the lake", "target": 1, "fn": func() -> int: return 1 if m.mamut_splashed else 0},
 		"mamut_trip": {"text": "Trip the mammoth with the leash", "target": 1, "fn": func() -> int: return 1 if m.mamut_tripped else 0},
 		"parakeets": {"text": "Shoo the parakeets off your human's croissant", "target": 1, "fn": func() -> int: return 1 if m.ciut_shooed else 0},
+		"traca": {"text": "Pull your human clear of the traca", "target": 1, "fn": func() -> int: return 1 if m.cremada_traca_dodged else 0},
+		"dimoni_dodge": {"text": "Dodge %d of the Dimoni's rockets", "target": 4, "fn": func() -> int: return m.cremada_dodges},
+		"dimoni_clean": {"text": "Get home without a rocket hitting you", "target": 1, "fn": func() -> int: return 1 if (bool(m.finished) and m.cremada_hits == 0) else 0},
 		"watering": {"text": "Shake off under a watering can", "target": 1, "fn": func() -> int: return 1 if m.poble_shakes >= 1 else 0},
 		"spell": {"text": "Spell LEASH", "target": 5, "fn": func() -> int: return int(m.get("word_letters_collected"))},
 		"jamon": {"text": "Find the hidden pernil", "target": 1, "fn": func() -> int: return 1 if bool(m.get("jamon_found")) else 0},
