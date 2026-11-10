@@ -81,6 +81,7 @@ const PRIZE_TEXT := "grab the rower's dropped sandwich"
 # --- Tuning ------------------------------------------------------------------
 const MAX_HP := 100.0
 const FILM := "res://intro/film_mamut.gd"
+const FILM_WIN := "res://intro/film_mamut_win.gd"
 const LEAD := 240.0             # how far ahead of your human he plods
 const PLOD_SPEED := 70.0
 const CATCH_SPEED := 150.0
@@ -180,6 +181,7 @@ var ls_swipe_cd := LAST_SWIPE_EVERY
 var hold_noticed := false
 var enraged := false
 var film_shown := false
+var win_film_shown := false
 
 # the show: none of it touches the fight's rules
 var flash := 0.0
@@ -452,6 +454,9 @@ func transition_to(s: State) -> void:
 			_crowd_shout(WINS)
 			fountain_t = 0.0
 			trunk_lift = 1.0
+			if not win_film_shown and FilmPlayer.should_play(main) and ResourceLoader.exists(FILM_WIN):
+				win_film_shown = true
+				FilmPlayer.play(main, load(FILM_WIN))
 
 
 # --- Attacks -----------------------------------------------------------------
