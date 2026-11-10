@@ -83,7 +83,7 @@ const LEVEL_GOAL_IDS := {
 	# fight ends, so it is not a goal; the ways of wearing him down are.
 	"cremada": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "traca", "dimoni_dodge", "dimoni_clean", "combo", "prize", "spell", "jamon", "clock"],
 	"ciutadella": ["mark", "sniff", "phone", "paws", "bag", "snack", "mamut_dodge", "mamut_lake", "mamut_trip", "parakeets", "combo", "prize", "spell", "jamon", "clock"],
-	# Rambla del Raval: the finale, El Gat de Botero. Tying him up is how the
+	# Rambla del Raval: the finale, El Gat. Tying him up is how the
 	# walk ends, so it is not a goal; the ways of wearing him down are.
 	"raval": ["mark", "sniff", "phone", "paws", "bag", "clothesline", "pigeons", "swat", "smash", "pummel", "combo", "prize", "spell", "jamon", "clock"],
 }
@@ -152,9 +152,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"correfoc": {"text": "Keep the fire devils a leash length away", "target": 1, "fn": func() -> int: return 1 if m.chase_min_gap >= HomeChase.OUTRUN_GAP else 0},
 		"churros": {"text": "Sit pretty at the churro stand", "target": 1, "fn": func() -> int: return m.churros_eaten},
 		"decor": {"text": "Zoom under %d festival arches", "target": 3, "fn": func() -> int: return m.gracia_arches_zoomed},
-		"clothesline": {"text": "Trip charging El Gat with a taut leash", "target": 1, "fn": func() -> int: return 1 if m.gat_clotheslined else 0},
+		"clothesline": {"text": "Catch pouncing El Gat in a taut leash", "target": 1, "fn": func() -> int: return 1 if m.gat_clotheslined else 0},
 		"pummel": {"text": "Fling your human into El Gat", "target": 1, "fn": func() -> int: return 1 if m.gat_human_pummeled else 0},
-		"smash": {"text": "Lure charging El Gat into a palm", "target": 1, "fn": func() -> int: return 1 if m.gat_tree_smashed else 0},
+		"smash": {"text": "Make El Gat land on a palm or a table", "target": 1, "fn": func() -> int: return 1 if m.gat_tree_smashed else 0},
 		"pigeons": {"text": "Scatter %d pigeons", "target": 10, "fn": func() -> int: return m.raval_pigeons_scattered},
 		"swat": {"text": "Dodge %d paw swats", "target": 3, "fn": func() -> int: return m.gat_swats_dodged},
 		"cargo": {"text": "Dodge the family cargo trike safely", "target": 1, "fn": func() -> int: return 1 if (m.cargo != null and (m.cargo.dodged or (m.cargo.state == m.cargo.State.SETTLED and not m.cargo.human_hit))) else 0},

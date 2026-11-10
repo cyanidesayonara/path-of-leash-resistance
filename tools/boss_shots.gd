@@ -1,7 +1,7 @@
 extends SceneTree
 
-# BOSS SHOTS: photograph each beat of El Gat de Botero (systems/boss_gat.gd)
-# without playing up to it: the wake, the enrage, a charge and its lane, a
+# BOSS SHOTS: photograph each beat of El Gat (systems/boss_gat.gd)
+# without playing up to it: the wake, the enrage, a pounce (the crouch and the leap), a
 # stun, the last stand on the plinth, the teeter, the topple and the
 # fireworks. Each beat puts the pair beside him and forces his state, then
 # lets the real walk run for a moment before the photograph.
@@ -53,13 +53,13 @@ func _run() -> void:
 	gat.transition_to(BG.State.PROWL)
 	await _shot("enrage", 0.6)
 
-	# a charge: the lane, then the run
-	gat.charge_cooldown = 99.0
+	# a pounce: the crouch and its ring, then the leap
+	gat.pounce_cooldown = 99.0
 	gat.swat_cooldown = 99.0
 	_place(Vector2(640, -1220), Vector2(560, -1100))
-	gat.transition_to(BG.State.CHARGE_WARN)
-	await _shot("charge_lane", 0.5)
-	await _shot("charge_run", 0.55)
+	gat.transition_to(BG.State.POUNCE_WARN)
+	await _shot("pounce_crouch", 0.6)
+	await _shot("pounce_leap", 0.7)
 	gat.transition_to(BG.State.STUNNED)
 	await _shot("stunned", 0.25)
 

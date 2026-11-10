@@ -30,7 +30,7 @@ The leash is real rope physics. Your human outweighs you four to one and wins ev
 
 Your human answers the leash like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-Thirty-four walks through a sunny, slightly chaotic Barcelona and its edges, each its own place: the neighborhood park, La Rambla with its crowds, the city park, Badalona's seafront and its pier, the dawn cleanup sweeper, old town alleys, Montjuïc, a covered market hall, a downpour, a floodable river park, the dog beach at Platja de Llevant, the cut-corner crossings of L'Eixample, Tibidabo's mountain road, an indoor vet clinic escape in El Veterinari, a forest trail, the skate plaza at Els Àngels, a chestnut festival, the wild boar trails of Els Senglars, tiled terraces, the play streets of La Superilla, the train station, the Civil War bunkers above the city, the arcaded Plaça Reial, the seaside esplanade at El Fòrum, the old water road along Collserola, the cypress maze of Horta, the fishing harbor at El Port, the fountain avenue of Plaça d'Espanya, the walled village of El Poble Espanyol, a work site, match day in Les Corts, a junkyard, the festival street of Festa de Gràcia, and, to finish, the Rambla del Raval, where Botero's fat bronze cat climbs down off his plinth. Every walk ends off the leash, with an agility course, tug-of-war and a frisbee: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
+Thirty-four walks through a sunny, slightly chaotic Barcelona and its edges, each its own place: the neighborhood park, La Rambla with its crowds, the city park, Badalona's seafront and its pier, the dawn cleanup sweeper, old town alleys, Montjuïc, a covered market hall, a downpour, a floodable river park, the dog beach at Platja de Llevant, the cut-corner crossings of L'Eixample, Tibidabo's mountain road, an indoor vet clinic escape in El Veterinari, a forest trail, the skate plaza at Els Àngels, a chestnut festival, the wild boar trails of Els Senglars, tiled terraces, the play streets of La Superilla, the train station, the Civil War bunkers above the city, the arcaded Plaça Reial, the seaside esplanade at El Fòrum, the old water road along Collserola, the cypress maze of Horta, the fishing harbor at El Port, the fountain avenue of Plaça d'Espanya, the walled village of El Poble Espanyol, a work site, match day in Les Corts, a junkyard, the festival street of Festa de Gràcia, and, to finish, the Rambla del Raval, where a fat bronze cat climbs down off his plinth. Every walk ends off the leash, with an agility course, tug-of-war and a frisbee: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
 
 What happens on a walk changes how you feel, and how you feel changes how you move. A fright leaves you jumpy and half blind to smells, a good bark-off makes you barky, time off the leash brings on the zoomies, and running yourself empty leaves you flat. The ground matters too: grass and mud slow you down but hold far more scent than sidewalk, sand drags at your paws, and wet ground and snow make you skid.
 
@@ -157,48 +157,62 @@ Screenshots and logos are regenerated, not stored here:
   (`--level=guell --shot-at=3100`, with `tools/stamp_version.sh` run first so
   the corner says the version, not "dev"), captioned "El Mosaic: the winding
   terrace and its broken-tile mosaic". 1.57 replaces the set with the
-  rebuilt walks (see "Screenshots for 1.57" below). The chase can be shot
+  rebuilt walks, and 1.60 and 1.71 replace it again (the current set is
+  "Screenshots for 1.71" below). The chase can be shot
   since #20 (`--level=neteja --shot-y=-4300 --shot-home --shot-sweeper`),
   and pick frames where no two feed lines overlap.
 - Logos: `tools/make_store_art.gd` writes the 9:16 poster (1440x2160), 1:1
   box art (2160) and the 300/150/71 tiles into `build/store-art/`. No hero
   art, trailers or Xbox images.
 
-### Screenshots for 1.60
+### Screenshots for 1.71
 
-Ten 1920x1080 images from a checkout of the v1.60 tag
-(`tools/stamp_version.sh` first, so the corner reads v1.60), uploaded in this
+Ten 1920x1080 images from a checkout of the v1.71 tag
+(`tools/stamp_version.sh` first, so the corner reads v1.71), uploaded in this
 order with these captions:
 
-1. La Rambla: crowds, cafe parasols and a kid with a dare
-   (`--level=street --autowalk --fixed-fps 60 --shot-at=900`)
-2. El Mercat: the market hall, its stalls and the fish counter
-   (`--level=market --shot-y=-2000 --shot-at=60`)
-3. Off the leash: an agility course, fetch and a frisbee
-   (`--level=park --at-freedom --autowalk --fixed-fps 60 --shot-at=300`)
-4. El Gòtic: washing lines over the old town's alleys
-   (`--level=oldtown --shot-y=-3420 --shot-at=300`)
-5. El Mosaic: the tiled terraces and the mosaic salamander
-   (`--level=guell --shot-y=-760 --shot-at=300`)
-6. Montjuïc: the climb up the hill, and a dare against the clock
-   (`--level=montjuic --autowalk --fixed-fps 60 --shot-at=2600`)
-7. El Parc: a slack leash and a tree to wind your human around
-   (`--level=park --shot-y=-300 --shot-at=300`)
-8. La Castanyada: the chestnut festival at night
-   (`--level=spook --autowalk --fixed-fps 60 --shot-at=1200`)
-9. Passeig Marítim: sand, sea and a dog beach at the end
-   (`--level=beach --shot-y=-2850 --shot-at=300`)
-10. L'Estació: the moving walkway and the station
-    (`--level=station --autowalk --fixed-fps 60 --shot-at=1500`)
+1. Festa de Gràcia: the correfoc's dragon and fire devils, and a head start
+   home
+   (`--level=gracia --shot-y=-2000 --shot-home --shot-sweeper --shot-at=170`)
+2. Rambla del Raval: El Gat charges, and the leash is the answer
+   (`--resolution 1920x1080 --script res://tools/boss_shots.gd -- --no-films`, its
+   `06_charge_run.png`; the waking shot showed his title card, which named a sculptor)
+3. Plaça d'Espanya: the cascade, lit up at night
+   (`--level=espanya --shot-y=-3800 --shot-at=300`)
+4. La Neteja: the street sweeper at first light, coming your way
+   (`--level=neteja --shot-y=-4300 --shot-home --shot-sweeper --shot-at=200`)
+5. L'Eixample: cut corners, a planter, and a dare on the bench
+   (`--level=eixample --shot-y=-1200 --shot-at=300`)
+6. El Parc: a swim in the pond, leash and all
+   (`--level=park --shot-y=-2600 --shot-at=300`)
+7. El Barri: off the leash, with an agility course and fetch
+   (`--level=barri --at-freedom --autowalk --fixed-fps 60 --shot-at=300`)
+8. El Poble Espanyol: the village square, dressed for a festa
+   (`--level=poble --shot-y=-2000 --shot-at=300`)
+9. Els Àngels: the skate plaza outside the white museum
+   (`--level=angels --shot-y=-2600 --shot-at=420`)
+10. Els Búnquers: sunset on the path up the hill
+    (`--level=carmel --shot-y=-1200 --shot-at=300`)
 
 All with `--rendering-method gl_compatibility --resolution 1920x1080` and
 `-- --shot --shot-quit --shot-out=FILE`. A `--shot-y` shot needs
-`--shot-at=300` or so: sooner, the menu's prompt bar is still fading out. The
-sweeper chase is left out: no frame had the chase on and the walk not lost.
+`--shot-at=300` or so: sooner, the menu's prompt bar is still fading out. A
+chase shot (`--shot-home --shot-sweeper`) is the exception: by frame 300 the
+shout and the threat have moved on, so take it at 170-200. The El Barri shot
+uses `--autowalk`, which is not frame-exact, so take a few and keep one with
+the agility course in view.
 
-The Store logos for 1.60 are the refreshed art from #230 (googly eyes),
-written by `tools/make_store_art.gd`: the 9:16 poster, the 1:1 box art and the
-300/150/71 tiles.
+Shoot from a fresh profile. The saved settings carry the goal list's open or
+closed state (`goals_expanded`), and an open list covers a third of the
+frame. Pointing `APPDATA` at an empty folder for the run gives the defaults
+without touching the real records:
+`APPDATA=$PWD/build/appdata godot ... -- --shot ...`. A fresh profile can show
+the first-time question on some frames; skip those.
+
+The Store logos for 1.71 are `tools/make_store_art.gd`'s output, unchanged in
+design since #230 (googly eyes) and regenerated from the v1.71 tag: the 9:16
+poster, the 1:1 box art and the 300/150/71 tiles. `tools/make_icon.gd` has not
+changed since the icon was last generated, so the icon is as it was.
 
 ### Other fields
 
@@ -248,7 +262,7 @@ As submitted, newest first. The current one is in "Current listing".
   - La Carretera de les Aigües, the old water road along Collserola, and El Laberint d'Horta, the cypress maze.
   - Platja de Llevant, the dog beach at the far end of the coast.
   - Els Senglars, a forest trail with wild boars to outrun on the way home, and Festa de Gràcia, a festival street with the correfoc after you.
-  - The finale, Rambla del Raval: Botero's fat bronze cat climbs off his plinth and your human will not pass him. Dodge his paw, trip his charges with the leash, then tie his legs up.
+  - The finale, Rambla del Raval: El Gat, a fat bronze cat, climbs off his plinth and your human will not pass him. Dodge his paw, trip his charges with the leash, then tie his legs up.
 - Five dogs to walk, each with a knack of their own, opened with stars, and bones to train them.
 - A dare-giver on every walk, each with their own tune. Bark to take a dare, then land the tricks before the music runs out.
 - Fifteen goals on every walk, among them spelling LEASH, a hidden pernil and a par time.

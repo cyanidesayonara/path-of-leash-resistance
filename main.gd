@@ -102,6 +102,7 @@ var petanca: Petanca
 var sprinkler: Sprinkler
 var mercat_cart: MercatCart
 var volleyball: Volleyball
+var kite_flyer: KiteFlyer
 var awning_dump: AwningDump
 var jackhammer: Jackhammer
 var fisherman: Fisherman
@@ -145,6 +146,9 @@ const BLANE_R := 1072.0
 const SHOULDER_R := 1100.0
 const START_Y := 260.0
 const GATE_Y := -5000.0
+# what a live event's bump takes off your human's patience, which runs 0..1:
+# a fraction, so one bump never springs a correction (test_patience_scale.gd)
+const LIVE_EVENT_BUMP_PATIENCE := 0.08
 const PAIR_SPAWN_DIST := 560.0
 const AUTOWALK_SEED := 0x5A17C0DE
 const AUTOWALK_MIN_FINISH_TIME := 120.0
@@ -194,6 +198,7 @@ const EdgePath := preload("res://world/edge_path.gd")
 const TangleGeom := preload("res://systems/tangle_geom.gd")
 const MoodWiring := preload("res://systems/mood_wiring.gd")
 const SkyLook := preload("res://systems/sky.gd")
+const Outdoors := preload("res://systems/outdoors.gd")
 const Arrival := preload("res://systems/arrival.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
 const CurrentFlow := preload("res://systems/current_flow.gd")
@@ -308,7 +313,8 @@ var lvl := "street":
 # El Bosc's draw_scenery, draw_path_edges, draw_snack and draw_trough_prop;
 # L'Estacio's draw_freedom_beyond and draw_freedom_ground; and El Barri's
 # draw_gate_fence, draw_fountain and draw_performer; and Passeig Maritim's
-# draw_cross_section, takes_prints and draw_bin. El Diluvi's arcade pillars
+# draw_cross_section, takes_prints and draw_bin, and its kite flyer's tick,
+# on_bark and draw_live. El Diluvi's arcade pillars
 # are draw_column, its panots draw_over_walkway, and El Porxo is
 # draw_freedom_beyond and draw_freedom_ground.
 # El Mercat's hall is draw_live, its arches draw_overhead, its cast-iron
@@ -2892,7 +2898,7 @@ func _build_overhead() -> void:
 		if is_lamppost(i):
 			_add_over(Over.LAMP, i, poles[i], LAMP_HEAD_R)
 	for i in range(mini(stalls.size(), stall_kinds.size())):
-		if stall_kinds[i] == "icecream":
+		if stall_kinds[i] == "icecream" and Outdoors.icecream_open(Game.weather, Game.hour):
 			_add_over(Over.ICECREAM, i, stalls[i], ICECREAM_BROLLY_R)
 	if lvl != "barri" and lvl != "site":
 		for i in range(performers.size()):
@@ -2914,15 +2920,24 @@ func overhead_pieces() -> Array[Dictionary]:
 		return _over
 	var vt: float = view_lo(500.0)
 	var vb: float = view_hi(500.0)
-	var raining := Game.weather == "rain"
+	var busking := Outdoors.busking(Game.weather, Game.hour)
 	for t: Dictionary in _over_all:
 		if float(t["bot"]) < vt or float(t["top"]) > vb:
 			continue
-		# a performer only puts an umbrella up in the rain
-		if int(t["over"]) == Over.BROLLY and not raining:
+		# a performer only puts an umbrella up in rain or snow
+		if int(t["over"]) == Over.BROLLY and busking:
 			continue
 		_over.append(t)
 	return _over
+
+
+# Whether the walk's parasols are up. On the sand they are sunshades and
+# go up over the sunbathers only; in town they shade a terrace, rain or shine,
+# and are furled at night and under snow.
+func parasols_up() -> bool:
+	if lvl == "beach" or lvl == "llevant":
+		return Outdoors.sunbathers(Game.weather, Game.hour)
+	return Outdoors.terrace_parasols(Game.weather, Game.hour)
 
 
 # the post chain's lampposts (_draw_world): their heads are overhead
@@ -3047,16 +3062,18 @@ func draw_overhead_piece(b: ShapeBatch, t: Dictionary, _faded := false) -> void:
 	var i: int = t["i"]
 	match int(t["over"]):
 		Over.PARASOL:
-			# wide, over the tables by day; furled spikes at night
-			if Game.night:
+			# wide, over the tables by day, in the rain too; furled spikes
+			# at night and under snow (parasols_up)
+			if not parasols_up():
 				b.line(p + Vector2(-3, 24), p + Vector2(3, -28), Color(0.45, 0.4, 0.35), 5.0)
 				b.circle(p + Vector2(3, -28), 4.0, PARASOL_COLS[i % 3])
 			else:
 				_parasol_canopy(b, p, PARASOL_COLS[i % 3], float(i))
 		Over.PERGOLA:
-			# the beach terraces' canopies: out by day, furled at night
+			# the beach terraces' canopies: out by day, furled at night and
+			# under snow
 			var cn: Rect2 = t["rect"]
-			if Game.night:
+			if not Outdoors.terrace_parasols(Game.weather, Game.hour):
 				b.draw_rect(Rect2(cn.position.x, cn.position.y, cn.size.x, 10), Color(0.72, 0.67, 0.57))
 				b.draw_rect(Rect2(cn.position.x, cn.position.y, cn.size.x, 10), Color(0.5, 0.46, 0.38), false, 1.5)
 			else:
@@ -3081,7 +3098,14 @@ func draw_overhead_piece(b: ShapeBatch, t: Dictionary, _faded := false) -> void:
 		Over.BROLLY:
 			_brolly_canopy(b, performers[i] + Vector2(0, -8), BROLLY_COLS[i % BROLLY_COLS.size()], float(i))
 		Over.BEACH_PARASOL:
-			_beach_parasol_canopy(b, p, i)
+			# up over the sunbathers; furled when nobody is lying out
+			if Outdoors.sunbathers(Game.weather, Game.hour):
+				_beach_parasol_canopy(b, p, i)
+			else:
+				var pc: Color = BEACH_PARASOL_COLS[i % 3]
+				b.line(p + Vector2(-3, 24), p + Vector2(3, -28), Color(0.45, 0.4, 0.35), 5.0)
+				b.capsule(p + Vector2(1, -6), p + Vector2(3, -26), 5.0, pc)
+				b.circle(p + Vector2(3, -28), 3.0, pc.darkened(0.25))
 		Over.SHOP_AWNING:
 			Mercat.draw_awning(self, b, i)
 
@@ -3654,7 +3678,9 @@ func _tick_crowd(delta: float) -> void:
 	# the first fill puts people on screen too; after that they arrive from
 	# off screen, so nobody pops into view
 	var first_fill := n == 0
-	while n < (MOSAIC_CROWD if mosaic else CROWD_SIZE):
+	# fewer out at first light, after dark and in rain or snow
+	var want := Outdoors.crowd_here(MOSAIC_CROWD if mosaic else CROWD_SIZE)
+	while n < want:
 		var y := cy + crowd_rng.randf_range(-680.0, 680.0)
 		if absf(y - cy) < 420.0 and not first_fill:
 			y = cy + (420.0 + crowd_rng.randf_range(0.0, 300.0)) * (1.0 if crowd_rng.randf() < 0.5 else -1.0)
@@ -4089,7 +4115,7 @@ func _draw_browsers(b: ShapeBatch, r: Rect2, i: int) -> void:
 	var face_right := r.get_center().x < 640.0
 	var fwd := Vector2.LEFT if face_right else Vector2.RIGHT
 	var fx := r.end.x + 12.0 if face_right else r.position.x - 12.0
-	var count := 2 + (i % 2)
+	var count := Outdoors.crowd_here(2 + (i % 2), 0)
 	for k in range(count):
 		var h := (i * 7 + k * 13) % 97
 		var p := Vector2(fx + float(h % 5) - 2.0, r.position.y + 10.0 + float(k) * (r.size.y - 16.0) / float(maxi(count - 1, 1)))
@@ -4155,7 +4181,14 @@ func _draw_rambla_stall(st: Vector2, kind: String, i: int) -> void:
 	var b := ShapeBatch.new()
 	var r := Rect2(st.x - 48.0, st.y - 28.0, 96.0, 56.0)
 	Rambla.draw_rambla_stall(self, b, st, kind, i)
-	if kind == "icecream":
+	if kind == "icecream" and not Outdoors.icecream_open(Game.weather, Game.hour):
+		# shut: a cover drawn over the cart and tied down, nobody queueing
+		var cv := Rect2(st.x - 32.0, st.y - 20.0, 64.0, 40.0)
+		b.rect(cv, Color(0.30, 0.42, 0.50))
+		b.rect(cv.grow(-4.0), Color(0.36, 0.49, 0.57))
+		for tx: float in [-16.0, 16.0]:
+			b.line(Vector2(st.x + tx, cv.position.y), Vector2(st.x + tx, cv.end.y), Color(0.20, 0.18, 0.16), 1.6)
+	elif kind == "icecream":
 		# the cart is narrower than a stall: they queue at its side
 		_draw_browsers(b, r.grow_individual(-18.0, 0.0, -18.0, 0.0), i)
 	elif kind != "caricature":
@@ -6273,6 +6306,9 @@ static func dare_reward(target: int) -> int:
 func start_challenge(giver: Node2D, target: int, seconds: float, follow_up := false, again := false) -> void:
 	if challenge.showing():
 		return
+	# no dare card over a boss fight
+	if (boss_gat != null and boss_gat.in_fight()) or (mamut != null and mamut.in_fight()):
+		return
 	if challenge_offered and not follow_up:
 		return
 	challenge_offered = true
@@ -6943,7 +6979,7 @@ func _tick_sprinkler(delta: float) -> void:
 		float_text(dog.global_position + Vector2(0.0, -20.0), "splish! +2", Color(0.70, 0.90, 1.0))
 		_update_hud()
 	if bool(sc["human_soaked"]):
-		human.patience = maxf(0.0, human.patience - 10.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("splash", 0.9, -2.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Whoa! My phone!", Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(sc["dodge"]):
@@ -6976,7 +7012,7 @@ func _tick_mercat_cart(delta: float) -> void:
 		float_text(mercat_cart.orange_pos + Vector2(0.0, -18.0), "orange! +2", Color(1.0, 0.78, 0.32))
 		_update_hud()
 	if bool(mc["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.0, -4.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Watch out!", Color(1.0, 0.75, 0.75), POP_SAY)
 	if bool(mc["yield"]):
@@ -7003,7 +7039,7 @@ func _tick_volleyball(delta: float) -> void:
 		float_text(Volleyball.SPIKER_POS + Vector2(0.0, -32.0), "Nice return!", Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(vc["human_hit"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.0, -4.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Watch the game!", Color(1.0, 0.75, 0.75), POP_SAY)
 	if bool(vc["dodge"]):
@@ -7028,7 +7064,7 @@ func _tick_awning_dump(delta: float) -> void:
 		Sfx.play("splash", 1.3, -2.0)
 	if bool(dc["soak"]):
 		human_soak = minf(1.0, human_soak + 0.35)
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("splash", 0.9, -2.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Aah! I'm soaked!", Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(dc["dog_splash"]):
@@ -7060,7 +7096,7 @@ func _tick_jackhammer(delta: float) -> void:
 		Sfx.play("crack", 1.8, -4.0)
 		Sfx.play("grit", 1.4, -6.0)
 	if bool(jc["rattle"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.0, -4.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Aah! Too loud!", Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(jc["dog_detour"]):
@@ -7090,7 +7126,7 @@ func _tick_fisherman(delta: float) -> void:
 	if bool(fc["reel"]):
 		Sfx.play("splash", 1.3, -2.0)
 	if bool(fc["line_snag"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Yikes, that's a hook!", Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(fc["fish_snatch"]):
@@ -7124,7 +7160,7 @@ func _tick_luggage_trolley(delta: float) -> void:
 	if bool(tc["clatter"]):
 		Sfx.play("crack", 2.0, -8.0)
 	if bool(tc["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Ow, my ankles!", Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(tc["boop"]):
@@ -7154,7 +7190,7 @@ func _tick_surfer(delta: float) -> void:
 		float_text(surfer.pos + Vector2(0.0, -32.0), "Surfboard coming through!", Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("intro_tap", 1.8, -4.0)
 	if bool(sf["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Ow! Was that a surfboard?", Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(sf["boop"]):
@@ -7191,7 +7227,7 @@ func _tick_gegant(delta: float) -> void:
 		float_text(gegant.pos + Vector2(0.0, -32.0), "Giant coming through! Visca!", Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("bell", 1.05, -4.0)
 	if bool(gc["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Wow, that thing is huge!", Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(gc["boop"]):
@@ -7229,7 +7265,7 @@ func _tick_castanyera(delta: float) -> void:
 		float_text(castanyera.pos + Vector2(0.0, -32.0), "Hot chestnuts coming through!", Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("bell", 1.15, -4.0)
 	if bool(cc["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Hot! Hot! Hot!", Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(cc["boop"]):
@@ -7266,7 +7302,7 @@ func _tick_gardener(delta: float) -> void:
 		float_text(gardener.pos + Vector2(0.0, -32.0), "Wheelbarrow coming through!", Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("intro_tap", 1.8, -4.0)
 	if bool(gc["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Sorry, sorry! Your plants!", Color(1.0, 0.72, 0.72), POP_SAY)
 		float_text(gardener.pos + Vector2(0.0, -32.0), "Mind the plants!", Color(0.96, 0.94, 0.88), POP_SAY)
@@ -7304,7 +7340,7 @@ func _tick_forklift(delta: float) -> void:
 		float_text(forklift.pos + Vector2(0.0, -32.0), "Forklift coming through!", Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("ui", 1.8, -2.0)
 	if bool(fc["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("grunt", 0.9, -2.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "That forklift clipped me!", Color(1.0, 0.72, 0.72), POP_SAY)
 		float_text(forklift.pos + Vector2(0.0, -32.0), "Scrap load, clear the way!", Color(0.96, 0.94, 0.88), POP_SAY)
@@ -7342,7 +7378,7 @@ func _tick_scooter(delta: float) -> void:
 		float_text(scooter.pos + Vector2(0.0, -32.0), "Scooter coming through!", Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("whistle", 1.8, -3.0)
 	if bool(sc["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("grunt", 0.9, -2.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Ow! My elbow!", Color(1.0, 0.72, 0.72), POP_SAY)
 		float_text(scooter.pos + Vector2(0.0, -32.0), "Tight alley, watch it!", Color(0.96, 0.94, 0.88), POP_SAY)
@@ -7380,7 +7416,7 @@ func _tick_banderer(delta: float) -> void:
 		float_text(banderer.pos + Vector2(0.0, -32.0), "Big flag coming through! Kickoff soon!", Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("bark", 1.2, -4.0)
 	if bool(bc["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("grunt", 0.9, -2.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Whoa! Watch the flag!", Color(1.0, 0.72, 0.72), POP_SAY)
 		float_text(banderer.pos + Vector2(0.0, -32.0), "Al tanto amb la bandera!", Color(0.96, 0.94, 0.88), POP_SAY)
@@ -7418,7 +7454,7 @@ func _tick_botanic(delta: float) -> void:
 		float_text(botanic.pos + Vector2(0.0, -32.0), "Mind the cactus!", Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("rustle", 1.1, -3.0)
 	if bool(bc["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("grunt", 0.9, -2.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Ouch! Is that a cactus?", Color(1.0, 0.72, 0.72), POP_SAY)
 		float_text(botanic.pos + Vector2(0.0, -32.0), "Mind the spines!", Color(0.96, 0.94, 0.88), POP_SAY)
@@ -7456,7 +7492,7 @@ func _tick_escombriaire(delta: float) -> void:
 		float_text(escombriaire.pos + Vector2(0.0, -32.0), "Wet street, mind the broom!", Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("rustle", 1.1, -3.0)
 	if bool(ec["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("grunt", 0.9, -2.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Ugh, I'm all dusty!", Color(1.0, 0.72, 0.72), POP_SAY)
 		float_text(escombriaire.pos + Vector2(0.0, -32.0), "Watch the bristles!", Color(0.96, 0.94, 0.88), POP_SAY)
@@ -7494,7 +7530,7 @@ func _tick_ornitoleg(delta: float) -> void:
 		float_text(ornitoleg.pos + Vector2(0.0, -32.0), "Birdwatcher crossing!", Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("rustle", 1.1, -3.0)
 	if bool(oc["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("grunt", 0.9, -2.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Oops, didn't see you there!", Color(1.0, 0.72, 0.72), POP_SAY)
 		float_text(ornitoleg.pos + Vector2(0.0, -32.0), "Mind the scope!", Color(0.96, 0.94, 0.88), POP_SAY)
@@ -7532,7 +7568,7 @@ func _tick_florista(delta: float) -> void:
 		float_text(florista.pos + Vector2(0.0, -32.0), "Fresh flowers coming through!", Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("rustle", 1.1, -3.0)
 	if bool(fc["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("grunt", 0.9, -2.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Oops, petals everywhere!", Color(1.0, 0.72, 0.72), POP_SAY)
 		float_text(florista.pos + Vector2(0.0, -32.0), "Oh, my roses!", Color(0.96, 0.94, 0.88), POP_SAY)
@@ -7570,7 +7606,7 @@ func _tick_boletaire(delta: float) -> void:
 		float_text(boletaire.pos + Vector2(0.0, -32.0), "Mushroom picker crossing!", Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("rustle", 1.2, -3.0)
 	if bool(bc["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("grunt", 0.9, -2.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Oops, not the mushrooms!", Color(1.0, 0.72, 0.72), POP_SAY)
 		float_text(boletaire.pos + Vector2(0.0, -32.0), "Mind the mushrooms!", Color(0.96, 0.94, 0.88), POP_SAY)
@@ -7608,7 +7644,7 @@ func _tick_wild_boar(delta: float) -> void:
 		float_text(wild_boar.pos + Vector2(0.0, -32.0), "SNORT! SNORT!", Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("grunt", 0.95, -4.0)
 	if bool(bc["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Is that a boar?!", Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(bc["boop"]):
@@ -7645,7 +7681,7 @@ func _tick_lost_tourist(delta: float) -> void:
 		float_text(lost_tourist.pos + Vector2(0.0, -32.0), "Lost tourist! Mind the map!", Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("intro_tap", 1.8, -4.0)
 	if bool(lt["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Oof, that's a big map!", Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(lt["boop"]):
@@ -7684,7 +7720,7 @@ func _tick_trail_runner(delta: float) -> void:
 	if bool(tc["clack"]):
 		Sfx.play("crack", 2.2, -6.0)
 	if bool(tc["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Oof! Fast, aren't you?", Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(tc["boop"]):
@@ -7723,7 +7759,7 @@ func _tick_unicyclist(delta: float) -> void:
 	if bool(uc["wobble"]):
 		Sfx.play("crack", 2.0, -6.0)
 	if bool(uc["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "A unicycle? Really?", Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(uc["boop"]):
@@ -7762,7 +7798,7 @@ func _tick_cone_dog(delta: float) -> void:
 	if bool(cc["scuffle"]):
 		Sfx.play("crack", 2.0, -6.0)
 	if bool(cc["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Ow, that cone is hard!", Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(cc["boop"]):
@@ -7801,7 +7837,7 @@ func _tick_waiter(delta: float) -> void:
 	if bool(wc["clink"]):
 		Sfx.play("crack", 2.2, -6.0)
 	if bool(wc["bump"]):
-		human.patience = maxf(0.0, human.patience - 8.0)
+		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
 		float_text(human.global_position + Vector2(0.0, -32.0), "Hey, my shirt!", Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(wc["snatch"]):
@@ -8441,7 +8477,10 @@ func _vlane(delta: float) -> void:
 	b.setup(self, dog, human, Vector2(0.0, -speed if up else speed), r_kind)
 	if kid:
 		b.lane_keep(band_lo, band_hi)
-	if not b.configure_route(x, band_lo, band_hi, bypasser_blockers):
+	# kids on scooters are out in fair weather by day, skaters whenever it
+	# is dry and light (Outdoors.riding); drawn and set up all the same, so
+	# the walk's sequence holds
+	if not b.configure_route(x, band_lo, band_hi, bypasser_blockers) or not Outdoors.riding(r_kind, Game.weather, Game.hour):
 		b.free()
 		return
 	add_child(b)
@@ -9022,7 +9061,8 @@ func _pairs(delta: float) -> void:
 			var camera_y := cam.get_screen_center_position().y
 			var spawn_distance := _pair_spawn_distance(camera_y)
 			if spawn_distance > 0.0:
-				pair_spawn_t = randf_range(6.0, 11.0)
+				# first light and late evening are the dog walkers' hours
+				pair_spawn_t = randf_range(6.0, 11.0) * Outdoors.pair_gap(Game.weather, Game.hour)
 				var route := _pair_spawn_route(phase, randf() < 0.5, camera_y)
 				var y: float = route["y"]
 				if y >= GATE_Y + 60.0 and y <= START_Y + 100.0:
@@ -9856,6 +9896,10 @@ func _tick_vault(delta: float) -> void:
 	_tick_needle(delta)
 	var pole: Vector2 = leash.contact_pole
 	var wrapped: bool = pole.x < INF and leash.static_contacts > 0 and leash.contact_static
+	# a boss's legs hold the leash, but they are his, not a pole to swing
+	# round: no POLE SWING off El Mamut or El Gat
+	if wrapped and _is_boss_leg(pole):
+		wrapped = false
 	if wrapped and lvl == "port" and not port_bollard_wrapped:
 		if pole in Port.BOLLARDS:
 			port_bollard_wrapped = true
@@ -9930,6 +9974,19 @@ func _tick_vault(delta: float) -> void:
 	vault_recent = 2.6
 	Sfx.play("fling", 1.2, -8.0)
 	feed.say("POLE SWING!", EventFeed.Tone.LOUD)
+
+
+# a pole that is one of a boss's legs
+func _is_boss_leg(p: Vector2) -> bool:
+	if mamut != null:
+		for lp: Vector2 in mamut.leg_poles:
+			if lp.distance_to(p) < 1.0:
+				return true
+	if boss_gat != null:
+		for lp: Vector2 in boss_gat.leg_poles:
+			if lp.distance_to(p) < 1.0:
+				return true
+	return false
 
 
 func _end_vault() -> void:
@@ -11972,7 +12029,7 @@ func _draw_furniture(vt: float, vb: float) -> void:
 		_wc.draw_rect(Rect2(tb.x - 8.0, tb.y - 6.0, 5.0, 3.0), Color(0.92, 0.82, 0.56))
 	# the beach terraces' canopies and the parasols over the tables are
 	# overhead (draw_overhead_piece); here only the shade a parasol casts
-	if not Game.night:
+	if parasols_up():
 		for pa in parasols:
 			_wc.circle(pa + LIGHT * 16.0, PARASOL_R * 0.92, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
 	# benches
@@ -12620,12 +12677,13 @@ func _draw_world() -> void:
 	# they are an umbrella crowd instead - hunched under canopies, no busking.
 	var pt := AnimClock.msec() / 1000.0
 	var raining := Game.weather == "rain"
+	var busking := Outdoors.busking(Game.weather, Game.hour)
 	for idx in range(performers.size()):
 		var pf: Vector2 = performers[idx]
 		if walk_mod != null and walk_mod.has_method("draw_performer"):
 			walk_mod.draw_performer(self, _wc, pf, idx)
 			continue
-		if lvl == "guell" and idx == 1 and not raining:
+		if lvl == "guell" and idx == 1 and busking:
 			# a fan seller: a tray of paper fans opened out to show, one open
 			# in hand, waving
 			contact_shadow(_wc, pf, 12.0, 5.0, 0.2)
@@ -12645,16 +12703,16 @@ func _draw_world() -> void:
 			continue
 		if pf.y < vt - 60.0 or pf.y > vb + 60.0:
 			continue
-		# a busker with a guitar and its open case; in the rain, an umbrella
-		# crowd instead, hunched under canopies, no busking
-		if not raining:
+		# a busker with a guitar and its open case; in rain or snow, an
+		# umbrella crowd instead, hunched under canopies, no busking
+		if busking:
 			_draw_busker(pf, idx, pt)
 			continue
 		_wc.draw_circle(pf, 12.0, Color(0.5, 0.35, 0.5))
 		_wc.draw_circle(pf + Vector2(0, -4), 7.0, Color(0.85, 0.72, 0.58))
 		# (the wide domed umbrella over the head, on its stick, is overhead:
 		# draw_overhead_piece)
-		for r in range(2):
+		for r in range(2 if raining else 0):
 			var rx := fmod(pt * 120.0 + idx * 30.0 + r * 60.0, 120.0)
 			_wc.draw_line(pf + Vector2(-24 + rx * 0.4, -28), pf + Vector2(-24 + rx * 0.4, 12), Color(0.6, 0.7, 0.85, 0.4), 1.0)
 	_dprof("performers")

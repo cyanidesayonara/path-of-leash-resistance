@@ -157,6 +157,12 @@ explain every changed snapshot line; this does not relax the refactor rule.
   _apply_leash, leash.tick explicitly. Do not move entity logic into
   _physics_process on the entities themselves (except bikes, which are
   self-managing and order-independent).
+- **Who is out** (`systems/outdoors.gd`): one rule per kind of passer-by or
+  prop for the weather and the hour (sunbathers, picnics, the ice-cream cart,
+  kids on scooters and beach parasols in fair weather by day only; crowd sizes
+  thinned against each walk's own campaign sky). A new kind of person or prop
+  says which skies it is out in there. Spawners keep their RNG draws and
+  filter afterwards, so seeded walks replay. Test: `tests/test_outdoors.gd`.
 - Input actions are registered in code (`main.gd/_setup_input`), not in
   project.godot. Guarded against re-registration on scene reload.
 - **Button prompts** (`hud/prompts.gd`) name ACTIONS for the device the

@@ -1,7 +1,7 @@
 class_name BossGat
 extends RefCounted
 
-# WALK 27: RAMBLA DEL RAVAL, the finale. Botero's fat bronze cat climbs off
+# WALK 27: RAMBLA DEL RAVAL, the finale. The Raval's fat bronze cat climbs off
 # his plinth at the foot of the rambla and walks it ahead of you, and your
 # human will not cross his plaça until he is dealt with.
 #
@@ -13,10 +13,13 @@ extends RefCounted
 #   pair gets past him) and swats at the dog when she comes close. Every swat
 #   is telegraphed by a ring that fills where the paw will land; a near miss
 #   staggers him. His body is solid to both of you (BODY_R) off his plinths.
-# - Below half: he rears and roars (ENRAGE_TIME, eyes red, steam), then charges
-#   at her instead, a red lane SWAT_WARN ahead. A taut leash across his path
-#   trips him (clothesline), a palm or a terrace in his way stuns him (smash),
-#   and your human flung into him knocks him silly (pummel). Stunned, a bark
+# - Below half: he rears and roars (ENRAGE_TIME, eyes red, steam), then he
+#   pounces, the way a cat does (docs/BOSSES.md: the mammoth is the one who
+#   charges). He crouches and wiggles his rear while a landing ring fills
+#   where she stood (POUNCE_WARN), then leaps (POUNCE_TIME). A taut leash
+#   across him in the air catches him (clothesline); coming down on a terrace
+#   table or a palm crashes him (smash); a miss leaves him skidding, worn
+#   down. Your human flung into him knocks him silly (pummel). Stunned, a bark
 #   on the nose is a boop. The big hits get a beat of slow motion.
 # - Out of fight, he walks back to his plinth in the plaça for a last stand,
 #   still swatting at her (telegraphed) every LAST_SWAT_EVERY. The rope resting
@@ -97,11 +100,16 @@ const SWAT_REACH := 150.0       # she is this close: he swats
 const SWAT_WARN := 0.85         # dust ring to paw: every owner-scale event is ~0.8 s
 const SWAT_COOLDOWN := 3.0
 const DODGE_DAMAGE := 15.0
-const CHARGE_MIN := 160.0
-const CHARGE_MAX := 460.0
-const CHARGE_SPEED := 340.0
-const CHARGE_TIME := 1.4
-const CHARGE_COOLDOWN := 3.2
+const POUNCE_MIN := 150.0
+const POUNCE_MAX := 420.0
+const POUNCE_WARN := 1.0       # the crouch and the wiggle, the ring filling
+const POUNCE_TIME := 0.6       # in the air
+const POUNCE_HEIGHT := 110.0
+const POUNCE_R := 64.0         # the landing ring: inside it at touchdown is a hit
+const POUNCE_COOLDOWN := 3.2
+const SKID_TIME := 0.5
+const SKID_SPEED := 260.0
+const MISS_DAMAGE := 9.0
 const CLOTHESLINE_DAMAGE := 25.0
 const SMASH_DAMAGE := 20.0
 const PUMMEL_DAMAGE := 30.0
@@ -120,13 +128,11 @@ const AWAKEN_TIME := 2.4
 const AWAKEN_CRACK := 0.9
 const AWAKEN_ROAR := 1.25
 const AWAKEN_HOP := 1.6
-# the roar at half health before the first charge
+# the roar at half health before the first pounce
 const ENRAGE_TIME := 1.6
 const ENRAGE_BLAST := 0.55
 # walkers are kept this far from his middle while he is off his plinths
 const BODY_R := 56.0
-# a charge knocks whoever is this close
-const CHARGE_HIT_R := BODY_R + 8.0
 # the last stand on his plinth: a swat at her this often, this far out
 const LAST_SWAT_EVERY := 2.4
 const LAST_SWAT_REACH := 210.0
@@ -150,8 +156,9 @@ enum State {
 	ENRAGE,
 	PROWL,
 	SWAT,
-	CHARGE_WARN,
-	CHARGE,
+	POUNCE_WARN,
+	POUNCE,
+	SKID,
 	STUNNED,
 	RETREAT,
 	ROAR,
@@ -182,11 +189,10 @@ var swat_pos := Vector2.ZERO
 var swat_cooldown := SWAT_COOLDOWN
 var swat_paw_active := 0 # 0 left, 1 right
 
-var charge_dir := Vector2.DOWN
-var charge_lane_end := Vector2.ZERO
-var charge_cooldown := CHARGE_COOLDOWN
-var charge_hit_done := false
-var charge_from_obstacle := false
+var pounce_dir := Vector2.DOWN
+var pounce_from := Vector2.ZERO
+var pounce_to := Vector2.ZERO
+var pounce_cooldown := POUNCE_COOLDOWN
 var stun_booped := false
 var stun_pummeled := false
 var hold_noticed := false
@@ -505,6 +511,11 @@ func beaten() -> bool:
 	return state == State.PURR
 
 
+# awake and not yet purring: the fight is on
+func in_fight() -> bool:
+	return state != State.IDLE and not beaten()
+
+
 func damage_boss(amt: float) -> void:
 	var was := hp
 	hp = maxf(0.0, hp - amt)
@@ -552,22 +563,26 @@ func transition_to(new_state: State) -> void:
 			swat_pos = pos + to_dog.limit_length(110.0)
 			face_dir = to_dog.normalized() if to_dog.length() > 1.0 else Vector2.DOWN
 			dust_rings.append({"pos": swat_pos, "r": SWAT_RADIUS, "life": SWAT_WARN, "max_life": SWAT_WARN, "warn": true})
-		State.CHARGE_WARN:
-			state_t = SWAT_WARN
-			Sfx.play("gat_roar", 1.1, -4.0)
-			charge_dir = _to_dog_dir()
-			face_dir = charge_dir
-			charge_lane_end = pos + charge_dir * CHARGE_SPEED * CHARGE_TIME
-			dust_rings.append({"pos": pos, "r": 36.0, "life": SWAT_WARN, "max_life": SWAT_WARN})
-			main.shake_t = maxf(float(main.shake_t), 0.3)
+		State.POUNCE_WARN:
+			state_t = POUNCE_WARN
+			Sfx.play("gat_purr", 1.4, -8.0)
+			pounce_from = pos
+			# where she is now, inside the rambla: he commits to it
+			var tgt: Vector2 = main.dog.global_position
+			pounce_to = Vector2(clampf(tgt.x, CORRIDOR_L + 60.0, CORRIDOR_R - 60.0),
+				clampf(tgt.y, PEDESTAL_POS.y - 160.0, float(main.START_Y)))
+			pounce_dir = (pounce_to - pos).normalized() if pounce_to.distance_to(pos) > 1.0 else Vector2.DOWN
+			face_dir = pounce_dir
+			dust_rings.append({"pos": pounce_to, "r": POUNCE_R, "life": POUNCE_WARN, "max_life": POUNCE_WARN, "warn": true})
 			gasp = 1.0
 			_crowd_shout(GASPS)
-		State.CHARGE:
-			state_t = CHARGE_TIME
-			charge_hit_done = false
-			charge_from_obstacle = check_obstacle_collision()
+		State.POUNCE:
+			state_t = POUNCE_TIME
 			ghost_t = 0.0
+			Sfx.play("gat_roar", 1.2, -4.0)
 			Sfx.play("fling", 0.7, -4.0)
+		State.SKID:
+			state_t = SKID_TIME
 		State.STUNNED:
 			state_t = STUN_TIME
 			stun_booped = false
@@ -921,13 +936,13 @@ func tick_state(delta: float) -> void:
 				screen_flash = 0.25
 			if act_t >= ENRAGE_TIME:
 				hop_z = 0.0
-				# the first charge comes soon after
-				charge_cooldown = 0.6
+				# the first pounce comes soon after
+				pounce_cooldown = 0.6
 				transition_to(State.PROWL)
 
 		State.PROWL:
 			swat_cooldown -= delta
-			charge_cooldown -= delta
+			pounce_cooldown -= delta
 			# north only, LEAD ahead of your human, never past his plinth
 			var want_y := maxf(minf(pos.y, main.human.global_position.y - LEAD), PEDESTAL_POS.y)
 			# she is right against him: he does not walk into her
@@ -945,9 +960,9 @@ func tick_state(delta: float) -> void:
 			if d < SWAT_REACH and swat_cooldown <= 0.0:
 				swat_cooldown = SWAT_COOLDOWN
 				transition_to(State.SWAT)
-			elif phase == 2 and charge_cooldown <= 0.0 and d > CHARGE_MIN and d < CHARGE_MAX:
-				charge_cooldown = CHARGE_COOLDOWN
-				transition_to(State.CHARGE_WARN)
+			elif phase == 2 and pounce_cooldown <= 0.0 and d > POUNCE_MIN and d < POUNCE_MAX:
+				pounce_cooldown = POUNCE_COOLDOWN
+				transition_to(State.POUNCE_WARN)
 
 		State.SWAT:
 			state_t -= delta
@@ -955,75 +970,54 @@ func tick_state(delta: float) -> void:
 				execute_swat()
 				transition_to(State.PROWL)
 
-		State.CHARGE_WARN:
+		State.POUNCE_WARN:
 			state_t -= delta
 			if state_t <= 0.0:
-				transition_to(State.CHARGE)
+				transition_to(State.POUNCE)
 
-		State.CHARGE:
+		State.POUNCE:
 			state_t -= delta
-			pos += charge_dir * CHARGE_SPEED * delta
-			pos.x = clampf(pos.x, CORRIDOR_L + 60.0, CORRIDOR_R - 60.0)
-			pos.y = clampf(pos.y, PEDESTAL_POS.y - 160.0, float(main.START_Y))
+			var k := 1.0 - clampf(state_t / POUNCE_TIME, 0.0, 1.0)
+			pos = pounce_from.lerp(pounce_to, k)
+			hop_z = sin(k * PI) * POUNCE_HEIGHT
 			update_leg_positions()
-			_scatter_pigeons(pos, 120.0)
-
-			if check_clothesline():
+			ghost_t -= delta
+			if ghost_t <= 0.0:
+				ghost_t = 0.05
+				ghosts.append({"p": pos - Vector2(0.0, hop_z), "f": face_dir, "life": 0.3})
+			# a taut leash across him in the air catches him
+			if k > 0.15 and k < 0.9 and check_clothesline():
+				hop_z = 0.0
 				main.gat_clotheslined = true
 				damage_boss(CLOTHESLINE_DAMAGE)
 				Sfx.play("intro_taut", 1.0, -4.0)
 				Sfx.play("gat_clang", 1.1, -3.0)
 				main.shake_t = 1.1
-				main.feed.say("CLOTHESLINED!", EventFeed.Tone.LOUD)
+				main.feed.say("CAUGHT IN THE LEASH!", EventFeed.Tone.LOUD)
 				main.combo.add("CLOTHESLINE", 8)
-				main.float_text(pos, "clothesline! +8", Color(1.0, 0.85, 0.2))
+				main.float_text(pos, "caught! +8", Color(1.0, 0.85, 0.2))
 				for d_rad in [35.0, 70.0]:
 					dust_rings.append({"pos": pos, "r": d_rad, "life": 0.6, "max_life": 0.6})
 				screen_flash = 0.35
 				_big_hit()
 				transition_to(State.STUNNED)
 				return
-
-			# a charge begun beside a palm is not a smash until he has left it
-			if charge_from_obstacle and not check_obstacle_collision():
-				charge_from_obstacle = false
-			if not charge_from_obstacle and check_obstacle_collision():
-				main.gat_tree_smashed = true
-				damage_boss(SMASH_DAMAGE)
-				Sfx.play("crack", 0.6, -3.0)
-				Sfx.play("gat_clang", 0.95, -3.0)
-				main.shake_t = 1.2
-				main.feed.say("BONK! RIGHT INTO IT", EventFeed.Tone.LOUD)
-				main.combo.add("SMASH", 6)
-				main.float_text(pos, "smash! +6", Color(0.9, 0.5, 0.3))
-				for d_rad in [40.0, 80.0]:
-					dust_rings.append({"pos": pos, "r": d_rad, "life": 0.7, "max_life": 0.7})
-				# the palm sheds a few fronds' worth of leaves
-				_burst(pos + charge_dir * 40.0, 12, PALM_LEAF_LIGHT, 60.0, 200.0, 4.0, 1.1, false, 200.0)
-				screen_flash = 0.3
-				_big_hit()
-				transition_to(State.STUNNED)
+			if state_t <= 0.0:
+				_land()
 				return
 
+		State.SKID:
+			state_t -= delta
+			pos += pounce_dir * SKID_SPEED * (state_t / SKID_TIME) * delta
+			pos.x = clampf(pos.x, CORRIDOR_L + 60.0, CORRIDOR_R - 60.0)
+			update_leg_positions()
+			if fmod(state_t, 0.06) < delta:
+				_burst(pos - pounce_dir * 40.0, 2, DUST_COLOR, 30.0, 90.0, 5.0, 0.5)
 			if check_human_pummel():
 				_pummel()
 				transition_to(State.STUNNED)
-				# the same fling is still in reach next frame: one pummel each
 				stun_pummeled = true
 				return
-
-			# one knock per charge, however long she stays in front of him
-			if not charge_hit_done and dog_p.distance_to(pos) < CHARGE_HIT_R:
-				charge_hit_done = true
-				main.dog.knocked(charge_dir, "charge")
-			if main.human.global_position.distance_to(pos) < CHARGE_HIT_R:
-				main.human.bumped(charge_dir)
-			ghost_t -= delta
-			if ghost_t <= 0.0:
-				ghost_t = 0.05
-				ghosts.append({"p": pos, "f": face_dir, "life": 0.3})
-				_burst(pos - charge_dir * 50.0, 2, DUST_COLOR, 30.0, 90.0, 5.0, 0.5)
-
 			if state_t <= 0.0:
 				transition_to(State.PROWL)
 
@@ -1068,7 +1062,7 @@ func tick_state(delta: float) -> void:
 	# solid off his plinths, where the plinth itself keeps walkers off. The
 	# autowalk bot cannot fight him and is not held, so he would stand in
 	# its way in the plaça for ever: to the bot he is a ghost.
-	if not main.auto_walk and state in [State.PROWL, State.SWAT, State.CHARGE_WARN, State.CHARGE,
+	if not main.auto_walk and state in [State.PROWL, State.SWAT, State.POUNCE_WARN, State.SKID,
 			State.STUNNED, State.RETREAT, State.ENRAGE]:
 		_shove_out(main.dog)
 		if not main.human.is_whirling():
@@ -1090,6 +1084,55 @@ func _tick_last_stand(delta: float, dog_p: Vector2) -> void:
 		swat_paw_active = 1 - swat_paw_active
 		swat_pos = pos + (dog_p - pos).limit_length(120.0)
 		dust_rings.append({"pos": swat_pos, "r": SWAT_RADIUS, "life": SWAT_WARN, "max_life": SWAT_WARN, "warn": true})
+
+
+# Touchdown: onto a terrace table or a palm he crashes; onto her (or your
+# human) it is a hit; onto nothing he skids, and that wears him down.
+func _land() -> void:
+	hop_z = 0.0
+	pos = pounce_to
+	update_leg_positions()
+	Sfx.play("gat_clang", 0.75, -5.0)
+	main.shake_t = maxf(float(main.shake_t), 0.5)
+	dust_rings.append({"pos": pos, "r": POUNCE_R * 1.3, "life": 0.5, "max_life": 0.5})
+	_burst(pos, 10, DUST_COLOR, 60.0, 200.0, 4.0, 0.6, false, 140.0)
+	_scatter_pigeons(pos, 200.0)
+	if check_obstacle_collision():
+		main.gat_tree_smashed = true
+		damage_boss(SMASH_DAMAGE)
+		Sfx.play("crack", 0.6, -3.0)
+		Sfx.play("gat_clang", 0.95, -3.0)
+		main.shake_t = 1.2
+		main.feed.say("CRASH! RIGHT ONTO IT", EventFeed.Tone.LOUD)
+		main.combo.add("SMASH", 6)
+		main.float_text(pos, "smash! +6", Color(0.9, 0.5, 0.3))
+		for d_rad in [40.0, 80.0]:
+			dust_rings.append({"pos": pos, "r": d_rad, "life": 0.7, "max_life": 0.7})
+		_burst(pos, 12, PALM_LEAF_LIGHT, 60.0, 200.0, 4.0, 1.1, false, 200.0)
+		screen_flash = 0.3
+		_big_hit()
+		transition_to(State.STUNNED)
+		return
+	if check_human_pummel():
+		_pummel()
+		transition_to(State.STUNNED)
+		stun_pummeled = true
+		return
+	var hit := false
+	if main.dog.global_position.distance_to(pos) <= POUNCE_R:
+		hit = true
+		main.dog.knocked(pounce_dir, "pounce")
+	if main.human.global_position.distance_to(pos) <= POUNCE_R:
+		main.human.bumped(pounce_dir)
+	if hit:
+		transition_to(State.PROWL)
+		return
+	# she was not there: he skids on, and it costs him
+	main.gat_swats_dodged += 1
+	main.combo.add("DODGE", 2)
+	main.float_text(pos, "dodged! +2", Color(0.8, 1.0, 0.7))
+	damage_boss(MISS_DAMAGE)
+	transition_to(State.SKID)
 
 
 func _firework() -> void:
@@ -1140,7 +1183,7 @@ func _tick_show(delta: float) -> void:
 		if cracks[i].life <= 0.0:
 			cracks.remove_at(i)
 	# steam from his nose while he is furious
-	if phase == 2 and hp > 0.0 and state in [State.PROWL, State.CHARGE_WARN, State.ENRAGE]:
+	if phase == 2 and hp > 0.0 and state in [State.PROWL, State.POUNCE_WARN, State.ENRAGE]:
 		steam_t -= delta
 		if steam_t <= 0.0:
 			steam_t = 0.7
@@ -1207,8 +1250,10 @@ func fight_status() -> String:
 	match state:
 		State.SWAT:
 			return "WATCH THE PAW!" if near else ""
-		State.CHARGE_WARN, State.CHARGE:
-			return "CHARGE! LEASH ACROSS HIS PATH" if near else ""
+		State.POUNCE_WARN:
+			return "HE'S CROUCHING! OUT OF THE RING" if near else ""
+		State.POUNCE:
+			return "POUNCE! LEASH ACROSS HIS LEAP" if near else ""
 		State.STUNNED:
 			return Prompts.fill("HE'S DAZED! {bark} ON HIS NOSE") if near else ""
 		State.RETREAT:
@@ -1245,7 +1290,8 @@ static func idle_status(m: Node2D) -> String:
 static func urgent_status(m: Node2D) -> String:
 	if m.lvl != "raval" or m.boss_gat == null:
 		return ""
-	return m.boss_gat.fight_status()
+	# the whole of what he asks of her, over the bladder and the reel
+	return m.boss_gat.status()
 
 
 # his title card runs across the top of the screen, where the banner sits
@@ -1300,9 +1346,11 @@ func _draw_card() -> void:
 	card.draw_rect(Rect2(band.position + Vector2(0.0, band.size.y - 5.0 * u), Vector2(vs.x, 5.0 * u)), BRONZE_LIT)
 	Kit.heading(card, Vector2(slide, cy - 34.0 * u), "RAMBLA DEL RAVAL", int(18.0 * u), Color(0.86, 0.72, 0.52),
 		HORIZONTAL_ALIGNMENT_CENTER, vs.x)
-	Kit.heading(card, Vector2(slide, cy + 18.0 * u), "EL GAT DE BOTERO", int(52.0 * u), EYE_AMBER,
+	# El Gat is a cartoon cat of our own: never named for an artist or a real
+	# sculpture, on the card or anywhere else a player reads
+	Kit.heading(card, Vector2(slide, cy + 18.0 * u), "EL GAT", int(52.0 * u), EYE_AMBER,
 		HORIZONTAL_ALIGNMENT_CENTER, vs.x)
-	var gloss := "Botero's cat, and he is awake"
+	var gloss := "The Raval's bronze cat, and he is awake"
 	var gs := int(20.0 * u)
 	var gw: float = Kit.text_w(Kit.body(), gloss, gs)
 	card.draw_string(Kit.body(), Vector2(slide + (vs.x - gw) * 0.5, cy + 46.0 * u), gloss,
@@ -1465,7 +1513,7 @@ func draw_ground_marks(c: Object, vt: float, vb: float) -> void:
 	sb.flush(c)
 
 
-# The onlookers: they lean away when he swats or charges, and jump with their
+# The onlookers: they lean away when he swats or pounces, and jump with their
 # arms up when she lands one on him.
 func draw_crowd(c: Object, vt: float, vb: float, t: float) -> void:
 	var sb := ShapeBatch.new()
@@ -1527,32 +1575,26 @@ func draw_gat(c: Object, t: float) -> void:
 	if state == State.WRAPPED:
 		var k := clampf(act_t / WOBBLE_TIME, 0.0, 1.0)
 		cur_pos.x += sin(act_t * 16.0) * (3.0 + k * 12.0)
-	elif state == State.CHARGE_WARN:
-		# hunkers back, haunches up, before he goes
-		var k := 1.0 - clampf(state_t / SWAT_WARN, 0.0, 1.0)
-		cur_pos -= charge_dir * 10.0 * k
-		cur_pos.x += sin(t * 60.0) * 1.5 * k
+	elif state == State.POUNCE_WARN:
+		# low on his front paws, his rear up and wiggling: the cat's telegraph
+		var k := 1.0 - clampf(state_t / POUNCE_WARN, 0.0, 1.0)
+		cur_pos -= pounce_dir * 12.0 * k
+		cur_pos += pounce_dir.orthogonal() * sin(t * (18.0 + 22.0 * k)) * (2.0 + 4.0 * k)
 
-	if state == State.CHARGE_WARN:
-		var warn_pulse: float = 0.30 + sin(t * 14.0) * 0.12
-		var lane_col := Color(1.0, 0.25, 0.15, warn_pulse)
-		var side := charge_dir.orthogonal()
-		c.draw_line(pos, charge_lane_end, lane_col, 34.0)
-		c.draw_line(pos + side * 17.0, charge_lane_end + side * 17.0, Color(1.0, 0.3, 0.2, 0.6), 2.0)
-		c.draw_line(pos - side * 17.0, charge_lane_end - side * 17.0, Color(1.0, 0.3, 0.2, 0.6), 2.0)
-		# chevrons running down the lane, the way he will come
-		var lane_len := pos.distance_to(charge_lane_end)
-		var scroll := fmod(t * 260.0, 60.0)
-		var d := 40.0 + scroll
-		while d < lane_len - 10.0:
-			var cp := pos + charge_dir * d
-			var chev_col := Color(1.0, 0.85, 0.75, 0.75 * (1.0 - d / lane_len))
-			c.draw_line(cp - side * 11.0 - charge_dir * 8.0, cp, chev_col, 3.0)
-			c.draw_line(cp + side * 11.0 - charge_dir * 8.0, cp, chev_col, 3.0)
-			d += 60.0
-		c.draw_circle(charge_lane_end, 22.0, lane_col)
+	if state == State.POUNCE_WARN:
+		# the arc he will fly, in dashes, from him to the landing ring
+		var a_col := Color(1.0, 0.45, 0.30, 0.55 + sin(t * 14.0) * 0.15)
+		var steps := 12
+		for i in range(steps):
+			if i % 2 == 1:
+				continue
+			var u0 := float(i) / float(steps)
+			var u1 := float(i + 1) / float(steps)
+			var p0 := pos.lerp(pounce_to, u0) - Vector2(0.0, sin(u0 * PI) * POUNCE_HEIGHT * 0.5)
+			var p1 := pos.lerp(pounce_to, u1) - Vector2(0.0, sin(u1 * PI) * POUNCE_HEIGHT * 0.5)
+			c.draw_line(p0, p1, a_col, 4.0)
 
-	# afterimages behind a charge
+	# afterimages behind a pounce
 	for g: Dictionary in ghosts:
 		var a: float = float(g.life) / 0.3 * 0.35
 		c.draw_colored_polygon(Clay.ellipse_pts(g.p, Vector2(62.0, 52.0), g.f, 14),
@@ -1588,10 +1630,25 @@ func draw_gat(c: Object, t: float) -> void:
 				c.draw_arc(leg_poles[k], LEG_RADIUS + 6.0, 0.0, TAU, 20, Color(1.0, 0.90, 0.20, 0.9), 3.0)
 
 
+# The plate's top-left, pushed down below the HUD banner when the banner is up
+# over him: the banner sits top centre, and he is in the top third of the
+# screen for most of the fight. `above` is how far the name rises over `bp`.
+func _below_banner(bp: Vector2, above: float) -> Vector2:
+	if main == null or main.feed == null:
+		return bp
+	var r: Rect2 = main.feed.banner_rect()
+	if r.size == Vector2.ZERO:
+		return bp
+	var screen_bottom: Vector2 = main.feed.get_canvas_transform() * Vector2(r.get_center().x, r.end.y + 6.0)
+	var world: Vector2 = main.get_global_transform_with_canvas().affine_inverse() * screen_bottom
+	bp.y = maxf(bp.y, world.y + above)
+	return bp
+
+
 func draw_boss_health_bar(c: Object, at: Vector2) -> void:
 	var bar_w := 150.0
 	var bar_h := 10.0
-	var bar_pos := at + Vector2(-bar_w * 0.5, -104.0)
+	var bar_pos := _below_banner(at + Vector2(-bar_w * 0.5, -104.0), 24.0)
 	c.draw_rect(Rect2(bar_pos + LIGHT * 3.0, Vector2(bar_w, bar_h)), SHADOW)
 	c.draw_rect(Rect2(bar_pos - Vector2(2.0, 2.0), Vector2(bar_w + 4.0, bar_h + 4.0)), BRONZE_DARK)
 	c.draw_rect(Rect2(bar_pos - Vector2(1.0, 1.0), Vector2(bar_w + 2.0, bar_h + 2.0)), BRONZE_LIT)
@@ -1664,7 +1721,7 @@ func draw_upright_gat(c: Object, ground: Vector2, t: float) -> void:
 		c.draw_colored_polygon(PackedVector2Array([ear_base1, ear_tip, ear_base2]), dark)
 		c.draw_colored_polygon(PackedVector2Array([ear_base1.lerp(ear_base2, 0.2), ear_tip.lerp(head_c, 0.25), ear_base2.lerp(ear_base1, 0.2)]), lit)
 
-	var charging := state == State.CHARGE_WARN or state == State.CHARGE
+	var charging := state == State.POUNCE_WARN or state == State.POUNCE
 	var blink: bool = fmod(t + pos.x * 0.01, 4.5) < 0.18 and state != State.ROAR and not charging and not angry
 	var eye_col: Color = EYE_CHARGE if charging or angry or state == State.ENRAGE else EYE_AMBER
 	# a statue's eyes are shut; they open on the wake

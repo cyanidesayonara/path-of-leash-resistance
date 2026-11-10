@@ -161,6 +161,9 @@ jobs:
       - name: A walk's own weather or hour never carries on to the next walk
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_walk_sky.gd
 
+      - name: Who is out follows the weather and the hour
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_outdoors.gd
+
       - name: Sky tint, grade and lamp light
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_sky.gd
 
@@ -481,6 +484,9 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_passeig.gd
       - name: Platja de Llevant beach surfer test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_llevant_surfer.gd
+
+      - name: Passeig Maritim kite flyer live event test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --fixed-fps 60 --path . --script res://tests/test_passeig_kite.gd
 
       - name: La Rambla layout test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_rambla.gd
