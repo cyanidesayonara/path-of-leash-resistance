@@ -511,6 +511,11 @@ func beaten() -> bool:
 	return state == State.PURR
 
 
+# awake and not yet purring: the fight is on
+func in_fight() -> bool:
+	return state != State.IDLE and not beaten()
+
+
 func damage_boss(amt: float) -> void:
 	var was := hp
 	hp = maxf(0.0, hp - amt)
@@ -1285,7 +1290,8 @@ static func idle_status(m: Node2D) -> String:
 static func urgent_status(m: Node2D) -> String:
 	if m.lvl != "raval" or m.boss_gat == null:
 		return ""
-	return m.boss_gat.fight_status()
+	# the whole of what he asks of her, over the bladder and the reel
+	return m.boss_gat.status()
 
 
 # his title card runs across the top of the screen, where the banner sits
@@ -1624,10 +1630,25 @@ func draw_gat(c: Object, t: float) -> void:
 				c.draw_arc(leg_poles[k], LEG_RADIUS + 6.0, 0.0, TAU, 20, Color(1.0, 0.90, 0.20, 0.9), 3.0)
 
 
+# The plate's top-left, pushed down below the HUD banner when the banner is up
+# over him: the banner sits top centre, and he is in the top third of the
+# screen for most of the fight. `above` is how far the name rises over `bp`.
+func _below_banner(bp: Vector2, above: float) -> Vector2:
+	if main == null or main.feed == null:
+		return bp
+	var r: Rect2 = main.feed.banner_rect()
+	if r.size == Vector2.ZERO:
+		return bp
+	var screen_bottom: Vector2 = main.feed.get_canvas_transform() * Vector2(r.get_center().x, r.end.y + 6.0)
+	var world: Vector2 = main.get_global_transform_with_canvas().affine_inverse() * screen_bottom
+	bp.y = maxf(bp.y, world.y + above)
+	return bp
+
+
 func draw_boss_health_bar(c: Object, at: Vector2) -> void:
 	var bar_w := 150.0
 	var bar_h := 10.0
-	var bar_pos := at + Vector2(-bar_w * 0.5, -104.0)
+	var bar_pos := _below_banner(at + Vector2(-bar_w * 0.5, -104.0), 24.0)
 	c.draw_rect(Rect2(bar_pos + LIGHT * 3.0, Vector2(bar_w, bar_h)), SHADOW)
 	c.draw_rect(Rect2(bar_pos - Vector2(2.0, 2.0), Vector2(bar_w + 4.0, bar_h + 4.0)), BRONZE_DARK)
 	c.draw_rect(Rect2(bar_pos - Vector2(1.0, 1.0), Vector2(bar_w + 2.0, bar_h + 2.0)), BRONZE_LIT)

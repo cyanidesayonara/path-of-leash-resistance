@@ -245,7 +245,8 @@ static func idle_status(m: Node2D) -> String:
 
 static func urgent_status(m: Node2D) -> String:
 	if m.mamut != null:
-		var s: String = m.mamut.fight_status()
+		# the whole of what he asks of her, over the bladder and the reel
+		var s: String = m.mamut.status()
 		if s != "":
 			return s
 	var bd: Dictionary = m.ciut_birds
