@@ -81,9 +81,8 @@ class FakeDog:
 
 class FakeHuman:
 	extends Node2D
-	var patience := 100.0
-	var temper_t := 0.0
-	func say(_txt: String, _dur: float) -> void:
+	var patience := 1.0
+	func say_line(_txt: String) -> void:
 		pass
 
 

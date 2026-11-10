@@ -88,10 +88,7 @@ class FakeDog:
 
 class FakeHuman:
 	extends Node2D
-	var patience := 100.0
-	var temper_t := 0.0
-	func say(_txt: String, _dur: float) -> void:
-		pass
+	var patience := 1.0
 
 
 # the fields the walk reads off the real leash (entities/leash.gd)
