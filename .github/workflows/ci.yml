@@ -368,6 +368,8 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_poble.gd
       - name: La Ciutadella (El Mamut, the first statue boss) test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_ciutadella.gd
+      - name: Members exist (no call or property on main, the dog, your human or the leash that is not there)
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_members_exist.gd
       - name: Patience scale (live events take a fraction of it)
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_patience_scale.gd
       - name: La Castanyada castanyera crossing test
