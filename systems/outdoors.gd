@@ -71,6 +71,12 @@ static func busking(weather: String, _hour: String) -> bool:
 	return weather == "clear" or weather == "wind"
 
 
+# A traca or any other string of fireworks is hung out only when it is dry:
+# nobody lights wet fuses.
+static func fireworks(weather: String, _hour: String) -> bool:
+	return weather == "clear" or weather == "wind"
+
+
 # A street cafe parasol stays up in the rain (that is what it is for) but is
 # furled at night and under snow.
 static func terrace_parasols(weather: String, hour: String) -> bool:
