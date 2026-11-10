@@ -2,13 +2,6 @@
 
 Append-only session history, newest first.
 
-## 2026-11-09 - Who is out follows the weather and the hour
-
-- One rule per kind of passer-by or prop (`systems/outdoors.gd`), read where that kind is spawned or drawn, not a system per walk. Sunbathers and their towels, the beach parasols, picnics on the grass, the Rambla's ice-cream cart and kids on scooters are out in fair weather (clear or windy) by day or at dusk only; rollerbladers whenever it is dry and light, first light included. So Passeig Marítim at its campaign dawn has no towels and its parasols are furled; in rain, snow or after dark the same. The ice-cream cart is covered and nobody queues at it.
-- Buskers stand it out under an umbrella in snow as well as rain (no rain streaks in snow). Terrace parasols stay up in the rain, as they are for, and are furled at night and under snow; El Parc's picnic, frisbee pair and sunbather stay in when it is not fair, and take their bodies with them.
-- Crowds thin with the sky: the Rambla's and El Mosaic's tourists and the people browsing at a stall scale by hour (dawn 0.35, day 1, dusk 0.85, night 0.6) and weather (wind 0.85, rain 0.5, snow 0.45), measured against each walk's own campaign sky, so every campaign walk keeps the crowd it was built with (La Castanyada's night market stays busy) and only another sky thins it. Other dog walkers come a little oftener at first light and late evening and less often in a downpour.
-- Nothing draws from an RNG: towels are still placed and kids still set up with the same draws, then left out, so a seeded walk replays as before. Live events and their goals are untouched. Test: `tests/test_outdoors.gd`.
-
 ## 2026-11-10 - The boss review's findings, and live-event bumps that emptied patience
 
 From the played review of both bosses (#506):
@@ -21,6 +14,13 @@ From the played review of both bosses (#506):
 - Not changed: a dog that never engages El Mamut leaves your human waiting at him indefinitely. That is the design (the banner says so), not a stalemate to break.
 
 Live events' bumps took 8.0 (one took 10.0) off your human's patience, which runs from 0 to 1: one bump emptied it and sprang a correction. All 25 in main.gd now take `LIVE_EVENT_BUMP_PATIENCE` (0.08), as El Fòrum's and Plaça d'Espanya's already did, and `tests/test_patience_scale.gd` now scans main.gd as well. El Fòrum's skater bump called a `human.say()` that does not exist; it uses `say_line()`.
+
+## 2026-11-09 - Who is out follows the weather and the hour
+
+- One rule per kind of passer-by or prop (`systems/outdoors.gd`), read where that kind is spawned or drawn, not a system per walk. Sunbathers and their towels, the beach parasols, picnics on the grass, the Rambla's ice-cream cart and kids on scooters are out in fair weather (clear or windy) by day or at dusk only; rollerbladers whenever it is dry and light, first light included. So Passeig Marítim at its campaign dawn has no towels and its parasols are furled; in rain, snow or after dark the same. The ice-cream cart is covered and nobody queues at it.
+- Buskers stand it out under an umbrella in snow as well as rain (no rain streaks in snow). Terrace parasols stay up in the rain, as they are for, and are furled at night and under snow; El Parc's picnic, frisbee pair and sunbather stay in when it is not fair, and take their bodies with them.
+- Crowds thin with the sky: the Rambla's and El Mosaic's tourists and the people browsing at a stall scale by hour (dawn 0.35, day 1, dusk 0.85, night 0.6) and weather (wind 0.85, rain 0.5, snow 0.45), measured against each walk's own campaign sky, so every campaign walk keeps the crowd it was built with (La Castanyada's night market stays busy) and only another sky thins it. Other dog walkers come a little oftener at first light and late evening and less often in a downpour.
+- Nothing draws from an RNG: towels are still placed and kids still set up with the same draws, then left out, so a seeded walk replays as before. Live events and their goals are untouched. Test: `tests/test_outdoors.gd`.
 
 ## 2026-11-09 - Passeig Marítim's kite flyer, a second live event for the seafront
 
