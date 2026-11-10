@@ -48,7 +48,7 @@ you want to go; constant hauling wears their patience down until they say
   you through Gràcia.
 - **Five dogs**, each with a knack of their own, opened with stars, and bones
   to train them.
-- **A finale**: on the Rambla del Raval, Botero's fat bronze cat climbs off
+- **A finale**: on the Rambla del Raval, a fat bronze cat climbs off
   his plinth, and your human will not pass him until you deal with him.
 - **Moods**: a fright, a bark-off or a run off the leash leaves her jumpy,
   barky, full of zoomies or flat, and each changes how she moves.
@@ -99,7 +99,7 @@ you want to go; constant hauling wears their patience down until they say
 | Dia de Partit | match day |
 | La Ferralla | the junkyard |
 | Festa de Gràcia | the decorated festival street |
-| Rambla del Raval | the finale, with Botero's bronze cat |
+| Rambla del Raval | the finale, with El Gat, a bronze cat |
 
 ## Controls
 

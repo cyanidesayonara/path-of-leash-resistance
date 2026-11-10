@@ -27,7 +27,7 @@ including #380; the board has nothing awaiting acceptance.
 
 **What v1.67 added since 1.64:** six walks (La Carretera de les Aigües, El
 Laberint d'Horta, Platja de Llevant, Els Senglars, Festa de Gràcia and the
-finale, the Rambla del Raval with El Gat de Botero), five dogs with stat
+finale, the Rambla del Raval with El Gat), five dogs with stat
 upgrades, dare-givers with their own tunes, fifteen goals a walk (spell
 LEASH, a hidden pernil, a par time), separate poop and pick-up buttons with
 key layouts and rebinding, the Badalona rework of Passeig Marítim, and the

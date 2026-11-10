@@ -1,7 +1,7 @@
 class_name BossGat
 extends RefCounted
 
-# WALK 27: RAMBLA DEL RAVAL, the finale. Botero's fat bronze cat climbs off
+# WALK 27: RAMBLA DEL RAVAL, the finale. The Raval's fat bronze cat climbs off
 # his plinth at the foot of the rambla and walks it ahead of you, and your
 # human will not cross his plaça until he is dealt with.
 #
@@ -1346,9 +1346,11 @@ func _draw_card() -> void:
 	card.draw_rect(Rect2(band.position + Vector2(0.0, band.size.y - 5.0 * u), Vector2(vs.x, 5.0 * u)), BRONZE_LIT)
 	Kit.heading(card, Vector2(slide, cy - 34.0 * u), "RAMBLA DEL RAVAL", int(18.0 * u), Color(0.86, 0.72, 0.52),
 		HORIZONTAL_ALIGNMENT_CENTER, vs.x)
-	Kit.heading(card, Vector2(slide, cy + 18.0 * u), "EL GAT DE BOTERO", int(52.0 * u), EYE_AMBER,
+	# El Gat is a cartoon cat of our own: never named for an artist or a real
+	# sculpture, on the card or anywhere else a player reads
+	Kit.heading(card, Vector2(slide, cy + 18.0 * u), "EL GAT", int(52.0 * u), EYE_AMBER,
 		HORIZONTAL_ALIGNMENT_CENTER, vs.x)
-	var gloss := "Botero's cat, and he is awake"
+	var gloss := "The Raval's bronze cat, and he is awake"
 	var gs := int(20.0 * u)
 	var gw: float = Kit.text_w(Kit.body(), gloss, gs)
 	card.draw_string(Kit.body(), Vector2(slide + (vs.x - gw) * 0.5, cy + 46.0 * u), gloss,

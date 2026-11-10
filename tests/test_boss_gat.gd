@@ -1,6 +1,6 @@
 extends SceneTree
 
-# Rambla del Raval, El Gat de Botero (systems/boss_gat.gd), on a real walk:
+# Rambla del Raval, El Gat (systems/boss_gat.gd), on a real walk:
 # - registration, a clean level check, and the fifteen goals the fight can earn
 # - the legs: rope points with furniture slip, kept out of the static bodies,
 #   that follow him in main.poles, main.rope_soft and the leash's own copy

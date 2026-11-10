@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-11-10 - El Gat is our own cat, by name too
+
+- El Gat's title card read "EL GAT DE BOTERO" over "Botero's cat, and he is awake". It now reads "EL GAT" over "The Raval's bronze cat, and he is awake". El Gat is a cartoon cat of our own (Botero's sculptures are still in copyright, and the November plan says so), so no player-facing text names an artist.
+- The same in the Store listing's description and notes, the itch page, the README, the design docs and the code comments. The listing text is staged by `store-submit.yml` update_draft, so the staged 1.71 draft needs the action run again to pick it up.
+
 ## 2026-11-10 - The boss review's findings, and live-event bumps that emptied patience
 
 From the played review of both bosses (#506):

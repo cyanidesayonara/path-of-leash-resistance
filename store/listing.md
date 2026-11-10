@@ -30,7 +30,7 @@ The leash is real rope physics. Your human outweighs you four to one and wins ev
 
 Your human answers the leash like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-Thirty-four walks through a sunny, slightly chaotic Barcelona and its edges, each its own place: the neighborhood park, La Rambla with its crowds, the city park, Badalona's seafront and its pier, the dawn cleanup sweeper, old town alleys, Montjuïc, a covered market hall, a downpour, a floodable river park, the dog beach at Platja de Llevant, the cut-corner crossings of L'Eixample, Tibidabo's mountain road, an indoor vet clinic escape in El Veterinari, a forest trail, the skate plaza at Els Àngels, a chestnut festival, the wild boar trails of Els Senglars, tiled terraces, the play streets of La Superilla, the train station, the Civil War bunkers above the city, the arcaded Plaça Reial, the seaside esplanade at El Fòrum, the old water road along Collserola, the cypress maze of Horta, the fishing harbor at El Port, the fountain avenue of Plaça d'Espanya, the walled village of El Poble Espanyol, a work site, match day in Les Corts, a junkyard, the festival street of Festa de Gràcia, and, to finish, the Rambla del Raval, where Botero's fat bronze cat climbs down off his plinth. Every walk ends off the leash, with an agility course, tug-of-war and a frisbee: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
+Thirty-four walks through a sunny, slightly chaotic Barcelona and its edges, each its own place: the neighborhood park, La Rambla with its crowds, the city park, Badalona's seafront and its pier, the dawn cleanup sweeper, old town alleys, Montjuïc, a covered market hall, a downpour, a floodable river park, the dog beach at Platja de Llevant, the cut-corner crossings of L'Eixample, Tibidabo's mountain road, an indoor vet clinic escape in El Veterinari, a forest trail, the skate plaza at Els Àngels, a chestnut festival, the wild boar trails of Els Senglars, tiled terraces, the play streets of La Superilla, the train station, the Civil War bunkers above the city, the arcaded Plaça Reial, the seaside esplanade at El Fòrum, the old water road along Collserola, the cypress maze of Horta, the fishing harbor at El Port, the fountain avenue of Plaça d'Espanya, the walled village of El Poble Espanyol, a work site, match day in Les Corts, a junkyard, the festival street of Festa de Gràcia, and, to finish, the Rambla del Raval, where a fat bronze cat climbs down off his plinth. Every walk ends off the leash, with an agility course, tug-of-war and a frisbee: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
 
 What happens on a walk changes how you feel, and how you feel changes how you move. A fright leaves you jumpy and half blind to smells, a good bark-off makes you barky, time off the leash brings on the zoomies, and running yourself empty leaves you flat. The ground matters too: grass and mud slow you down but hold far more scent than sidewalk, sand drags at your paws, and wet ground and snow make you skid.
 
@@ -174,8 +174,9 @@ order with these captions:
 1. Festa de Gràcia: the correfoc's dragon and fire devils, and a head start
    home
    (`--level=gracia --shot-y=-2000 --shot-home --shot-sweeper --shot-at=170`)
-2. Rambla del Raval: El Gat de Botero wakes up, and he is big
-   (`--level=raval --shot-y=-700 --shot-at=300`)
+2. Rambla del Raval: El Gat charges, and the leash is the answer
+   (`--resolution 1920x1080 --script res://tools/boss_shots.gd -- --no-films`, its
+   `06_charge_run.png`; the waking shot showed his title card, which named a sculptor)
 3. Plaça d'Espanya: the cascade, lit up at night
    (`--level=espanya --shot-y=-3800 --shot-at=300`)
 4. La Neteja: the street sweeper at first light, coming your way
@@ -261,7 +262,7 @@ As submitted, newest first. The current one is in "Current listing".
   - La Carretera de les Aigües, the old water road along Collserola, and El Laberint d'Horta, the cypress maze.
   - Platja de Llevant, the dog beach at the far end of the coast.
   - Els Senglars, a forest trail with wild boars to outrun on the way home, and Festa de Gràcia, a festival street with the correfoc after you.
-  - The finale, Rambla del Raval: Botero's fat bronze cat climbs off his plinth and your human will not pass him. Dodge his paw, trip his charges with the leash, then tie his legs up.
+  - The finale, Rambla del Raval: El Gat, a fat bronze cat, climbs off his plinth and your human will not pass him. Dodge his paw, trip his charges with the leash, then tie his legs up.
 - Five dogs to walk, each with a knack of their own, opened with stars, and bones to train them.
 - A dare-giver on every walk, each with their own tune. Bark to take a dare, then land the tricks before the music runs out.
 - Fifteen goals on every walk, among them spelling LEASH, a hidden pernil and a par time.

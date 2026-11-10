@@ -2,9 +2,9 @@ class_name FilmPlinth
 extends RefCounted
 
 # The Rambla del Raval victory film, "El Rei del Raval":
-# The celebratory finale scene on the plinth after defeating Botero's giant cat.
+# The celebratory finale scene on the plinth after defeating the Raval's giant cat.
 # Night in the circular plaça at the top of the rambla, side on:
-# The palms, the terraces, lit windows, and the stone plinth. Botero's fat bronze cat
+# The palms, the terraces, lit windows, and the stone plinth. The Raval's fat bronze cat
 # lies happily toppled on the plinth, purring contentedly with eyes shut.
 # The dog trots in, leaps triumphantly onto the plinth, chest puffed out, tail wagging,
 # barking proudly over the defeated feline.

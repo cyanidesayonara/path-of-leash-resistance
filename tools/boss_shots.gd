@@ -1,6 +1,6 @@
 extends SceneTree
 
-# BOSS SHOTS: photograph each beat of El Gat de Botero (systems/boss_gat.gd)
+# BOSS SHOTS: photograph each beat of El Gat (systems/boss_gat.gd)
 # without playing up to it: the wake, the enrage, a pounce (the crouch and the leap), a
 # stun, the last stand on the plinth, the teeter, the topple and the
 # fireworks. Each beat puts the pair beside him and forces his state, then

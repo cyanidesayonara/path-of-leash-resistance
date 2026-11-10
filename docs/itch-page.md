@@ -86,9 +86,9 @@ Les Obres, the work site
 Dia de Partit, match day
 La Ferralla, the junkyard
 Festa de Gràcia, the decorated festival street
-Rambla del Raval, the finale, with Botero's bronze cat
+Rambla del Raval, the finale, with El Gat, a bronze cat
 
-Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. Five of them are chases: the street sweeper at dawn, the river flood on El Besòs, the clinic escape in El Veterinari, the wild boars of Els Senglars and the correfoc through Gràcia. On the last, the Rambla del Raval, Botero's fat bronze cat climbs off his plinth, and your human will not pass him until you deal with him. There is a gentle first walk that teaches one trick at a time, and every walk can be played in clear weather, rain, wind or snow, by day or at night.
+Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. Five of them are chases: the street sweeper at dawn, the river flood on El Besòs, the clinic escape in El Veterinari, the wild boars of Els Senglars and the correfoc through Gràcia. On the last, the Rambla del Raval, a fat bronze cat climbs off his plinth, and your human will not pass him until you deal with him. There is a gentle first walk that teaches one trick at a time, and every walk can be played in clear weather, rain, wind or snow, by day or at night.
 
 ALSO
 
@@ -195,7 +195,7 @@ CHANGELOG.md. The Store's What's new is the short form of this.
   - El Veterinari: a bell, a door banging open and the clinic staff pouring out with syringes, clippers, a cone of shame and a catch net.
   - Els Senglars: a rustle in the scrub, a bin going over and the whole sounder charging out of Collserola's oaks.
   - Festa de Gràcia: drums, bangers, the fire devils with their spark fountains and the Drac de Gràcia breathing sparks.
-  - The finale, Rambla del Raval: Botero's cat opens his eyes, splits his plinth and drops to the paving, and this time she does not run. She stands her ground. EL GAT!
+  - The finale, Rambla del Raval: El Gat opens his eyes, splits his plinth and drops to the paving, and this time she does not run. She stands her ground. EL GAT!
   - Any button skips a film.
 - The threats look the part on the walk too, drawn as the films draw them: the sweeper glares down the street, the flood is a rolling wall of water, the vet's staff come shoulder to shoulder, the boars charge as a herd, the devils wear horned hoods and the Drac beats its wings. Each one now fills exactly what can catch you.
 - NEW LOOK: on GET READY, pick YOUR HUMAN and press pee for a different-looking person every time, him or her, six skin tones, eight hairstyles, all the clothes. A portrait of the two of you shows the new look straight away, the films draw the same person, and your choice is remembered between sessions.
@@ -224,7 +224,7 @@ is the short form of this, inside its 1500 characters.
   - El Laberint d'Horta, open at 39 stars once El Veterinari is beaten: the oldest garden in the city. Drag your human through the cypress maze and swing them round Eros at its heart.
   - Platja de Llevant, the dog beach at the far end of the coast.
   - Els Senglars, a forest trail with wild boars to outrun on the way home, and Festa de Gràcia, a festival street with the correfoc after you.
-  - The finale, Rambla del Raval: Botero's fat bronze cat climbs off his plinth and your human will not pass him. Dodge his paw, trip his charges with the leash, then tie his legs up.
+  - The finale, Rambla del Raval: El Gat, a fat bronze cat, climbs off his plinth and your human will not pass him. Dodge his paw, trip his charges with the leash, then tie his legs up.
 - Five dogs to walk, each with a knack of their own, opened with stars, and bones to train them.
 - A dare-giver on every walk, each with their own tune: the bronze monkey on Badalona's Pont del Petroli, a living statue on La Rambla, a busker, a fisherman, an àvia in the market and more. Bark to take a dare, then land the tricks before the music runs out.
 - Fifteen goals on every walk, among them spelling LEASH, a hidden pernil and a par time.

@@ -4,7 +4,7 @@ extends RefCounted
 # The Rambla del Raval's film, "El Gat": the finale's telegraph, played as she
 # first passes his plinth (systems/boss_gat.gd), before the walk's own wake.
 # Night on the rambla, side on: the palms, the terraces, the onlookers, and
-# Botero's fat bronze cat on his plinth. The two of them walk past, your
+# The Raval's fat bronze cat on his plinth. The two of them walk past, your
 # human on the phone. A crack: her ears go up and she looks back. His eyes
 # open, amber; he stretches, the plinth splits, and he drops to the paving
 # with a thump that shakes the frame, the crowd gasping, and comes on down the
@@ -165,7 +165,7 @@ static func _plinth(c: CanvasItem, t: float) -> void:
 					+ Vector2(0, f * f * 140.0), Vector2(10, 8)), STONE_DARK)
 
 
-# Botero's cat side on, facing right, his feet at `at`: a great round bronze
+# The Raval's bronze cat side on, facing right, his feet at `at`: a great round bronze
 # body on stubby legs, the small head with its ears and whiskers, the tail up
 # in a curl. `awake` opens his amber eyes; `walking` swings the legs and the
 # tail; `stretch` arches him; `swat` lifts a front paw. Shared with the card.
@@ -194,7 +194,7 @@ static func cat(c: CanvasItem, at: Vector2, k: float, t: float, awake: float, wa
 		c.draw_line(p.call(hip), p.call(foot), INK, 40.0 * k)
 		c.draw_line(p.call(hip), p.call(foot), col, 32.0 * k)
 		c.draw_colored_polygon(MillieSide.ellipse(p.call(foot), Vector2(22, 12) * k), col)
-	# the body, round as Botero made it, its bronze sheen
+	# the body, round as a cat who is never refused a second breakfast, its bronze sheen
 	var bc := Vector2(0, -140 - arch)
 	c.draw_colored_polygon(MillieSide.ellipse(p.call(bc), Vector2(176, 118) * k), INK)
 	c.draw_colored_polygon(MillieSide.ellipse(p.call(bc), Vector2(170, 112) * k), BRONZE_BASE)
