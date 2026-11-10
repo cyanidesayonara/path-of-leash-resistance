@@ -437,7 +437,7 @@ memorable.
   dog beach moved to a Platja de Llevant walk, rollerbladers). Plenty is left over for a sequel.
   The campaign as built for 1.67 is 27 walks:
   - Five chases: La Neteja (the sweeper), El Besòs (the flood), El Veterinari (the clinic escape), Els Senglars (wild boars, walk 25) and Festa de Gràcia (the correfoc, walk 26). From El Besòs on, each chase walk gates the walks after it (`Game.CHASE_GATE`); a save from before the gates keeps every walk it had open.
-  - Walk 27, the finale: Rambla del Raval. El Gat de Botero prowls ahead and your human will not pass him into the plaça: dodge his telegraphed paw, then below half trip his charges with a taut leash, lure him into a palm or fling your human into him; out of fight he sits on his plinth and the rope round three of his legs topples him (systems/boss_gat.gd).
+  - Walk 27, the finale: Rambla del Raval. El Gat prowls ahead and your human will not pass him into the plaça: dodge his telegraphed paw, then below half trip his charges with a taut leash, lure him into a palm or fling your human into him; out of fight he sits on his plinth and the rope round three of his legs topples him (systems/boss_gat.gd).
   - Still on the list: Els Búnquers del Carmel (sunset overlook), and the victory scene on the plinth.
   - Free Play / Demo mode toggle in Settings unlocks all walks for practice with career persistence paused.
 - Character creator: two preset owners exist (HIM/HER); creator later.

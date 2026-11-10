@@ -678,7 +678,7 @@ func _intro_door() -> AudioStreamWAV:
 
 
 func _gat_roar() -> AudioStreamWAV:
-	# El Gat de Botero: a colossal bronze feline roar
+	# El Gat: a colossal bronze feline roar
 	var dur := 0.95
 	var n := int(dur * RATE)
 	var out := PackedFloat32Array()

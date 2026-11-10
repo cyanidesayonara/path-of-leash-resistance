@@ -82,7 +82,7 @@ const LEVEL_GOAL_IDS := {
 	# La Ciutadella: El Mamut, the first statue boss. Settling him is how the
 	# fight ends, so it is not a goal; the ways of wearing him down are.
 	"ciutadella": ["mark", "sniff", "phone", "paws", "bag", "snack", "mamut_dodge", "mamut_lake", "mamut_trip", "parakeets", "combo", "prize", "spell", "jamon", "clock"],
-	# Rambla del Raval: the finale, El Gat de Botero. Tying him up is how the
+	# Rambla del Raval: the finale, El Gat. Tying him up is how the
 	# walk ends, so it is not a goal; the ways of wearing him down are.
 	"raval": ["mark", "sniff", "phone", "paws", "bag", "clothesline", "pigeons", "swat", "smash", "pummel", "combo", "prize", "spell", "jamon", "clock"],
 }
