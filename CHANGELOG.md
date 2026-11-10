@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-11-09 - Passeig Marítim's kite flyer, a second live event for the seafront
+
+- Passeig already had a live event (the volleyball, `systems/volleyball.gd`), so this is a second one, gated to the sky it belongs in. A kite flyer on the beach side of the promenade (`systems/kite_flyer.gd`, hooked through `systems/passeig.gd`): when the pair come within about 300 px of him on the way out, he shouts "Kite coming down!" (a 0.8 s telegraph, nothing hurts during it) and the kite stoops across the promenade, skids low along it, then climbs and is hauled back in.
+- It runs in clear or windy weather at dawn, day or dusk only. In rain, snow or at night the flyer is not there and the walk is exactly as it was. Passeig's own sky is wind at dawn, so the campaign walk has it. Free walks and `--weather` / `--hour` pick the rest.
+- Tricks, all "word! +2": pounce on the kite while it is down ("kite pounce!", the tail counts, and he thanks her), bark at it before it lands ("kite bark!"), and let it skid past without getting hit ("kite dodge!", which also counts as a save). The soft hazard: if your human walks into the low pass it clips them for a small drop in patience ("Ow! Is that a kite?"), and he apologizes.
+- The autowalk always clears it: the kite lands at x 650 and the bot walks at x 770. The beach selftest passes in the campaign sky and in clear day and wind dusk.
+- No new draw calls (circles, lines, capsules and quads on the walk's `ShapeBatch`; the kite lives in the batch, so nothing flushes it), and `tick` and `draw` allocate nothing per frame (one reused result dictionary).
+- Tests: `tests/test_passeig_kite.gd`, registered in CI. It runs the sky table, the telegraph, the dive, each trick and reward, the hazard, a real autowalk, and the three hooks through main. `tests/test_walk_hooks.gd` lists the beach's new `tick`, `on_bark` and `draw_live`.
+- Not touched, on purpose: Passeig's passers-by, towels and crowds. Left alone and noticed on the way: Forum's `human.say` calls do not match the human's API, and the surfer's patience hit is -8 on a 0..1 scale, so it empties the meter.
+
 ## 2026-11-09 - Store screenshots and logos for 1.71
 
 - New Store screenshots for 1.71, replacing 1.60's: ten 1920x1080 frames from the v1.71 tag that show what has changed since, from Festa de Gràcia's correfoc and El Gat de Botero waking on the Rambla del Raval to Plaça d'Espanya at night, La Neteja's sweeper at dawn, Els Búnquers at sunset, the rebuilt L'Eixample, Els Àngels and El Poble Espanyol, El Parc's pond and El Barri's off-leash area. `store/listing.md`'s "Screenshots for 1.71" has the order, captions and the command for each. The images and the regenerated logos are uploaded by hand in Partner Center and are not in the repository.

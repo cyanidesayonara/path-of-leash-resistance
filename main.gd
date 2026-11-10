@@ -102,6 +102,7 @@ var petanca: Petanca
 var sprinkler: Sprinkler
 var mercat_cart: MercatCart
 var volleyball: Volleyball
+var kite_flyer: KiteFlyer
 var awning_dump: AwningDump
 var jackhammer: Jackhammer
 var fisherman: Fisherman
@@ -308,7 +309,8 @@ var lvl := "street":
 # El Bosc's draw_scenery, draw_path_edges, draw_snack and draw_trough_prop;
 # L'Estacio's draw_freedom_beyond and draw_freedom_ground; and El Barri's
 # draw_gate_fence, draw_fountain and draw_performer; and Passeig Maritim's
-# draw_cross_section, takes_prints and draw_bin. El Diluvi's arcade pillars
+# draw_cross_section, takes_prints and draw_bin, and its kite flyer's tick,
+# on_bark and draw_live. El Diluvi's arcade pillars
 # are draw_column, its panots draw_over_walkway, and El Porxo is
 # draw_freedom_beyond and draw_freedom_ground.
 # El Mercat's hall is draw_live, its arches draw_overhead, its cast-iron
