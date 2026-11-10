@@ -159,7 +159,7 @@ explain every changed snapshot line; this does not relax the refactor rule.
   self-managing and order-independent).
 - **Who is out** (`systems/outdoors.gd`): one rule per kind of passer-by or
   prop for the weather and the hour (sunbathers, picnics, the ice-cream cart,
-  kid riders and beach parasols in fair weather by day only; crowd sizes
+  kids on scooters and beach parasols in fair weather by day only; crowd sizes
   thinned against each walk's own campaign sky). A new kind of person or prop
   says which skies it is out in there. Spawners keep their RNG draws and
   filter afterwards, so seeded walks replay. Test: `tests/test_outdoors.gd`.

@@ -76,6 +76,11 @@ func _run() -> void:
 			"%s in its own sky (%s/%s) keeps its whole crowd" % [lv, sky[0], sky[1]])
 	_check(Outdoors.crowd_count(14, "rain", "night", ["clear", "day"]) < 14, "a clear-day walk thins out in rain at night")
 	_check(Outdoors.crowd_count(14, "clear", "day", ["clear", "night"]) == 14, "a night walk by day is never over-full")
+	_check(Outdoors.riding("roller", "wind", "dawn") and not Outdoors.riding("kid", "wind", "dawn"),
+		"skaters out at first light, kids on scooters not yet")
+	_check(Outdoors.riding("bike", "snow", "night"), "commuters ride in any sky")
+	_check(not Outdoors.riding("roller", "rain", "day") and not Outdoors.riding("roller", "clear", "night"),
+		"no skaters on a wet lane or in the dark")
 	_check(Outdoors.pair_gap("clear", "dawn") < 1.0, "dog walkers come oftener at first light")
 
 	# the beach: towels laid out on a clear day only

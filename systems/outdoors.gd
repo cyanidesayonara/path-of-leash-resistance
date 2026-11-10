@@ -32,8 +32,8 @@ static func fair(weather: String, hour: String) -> bool:
 
 
 # Sunbathers and the towels they lie on, the beach parasols up over them,
-# picnics on the grass, the ice-cream cart open, and kids out on scooters
-# and skates: fair weather by day.
+# picnics on the grass, the ice-cream cart open, and kids out on scooters:
+# fair weather by day.
 static func sunbathers(weather: String, hour: String) -> bool:
 	return fair(weather, hour)
 
@@ -48,6 +48,21 @@ static func icecream_open(weather: String, hour: String) -> bool:
 
 static func kids_riding(weather: String, hour: String) -> bool:
 	return fair(weather, hour)
+
+
+# Rollerbladers are out for their exercise in the early light too, but not on
+# a wet or frozen lane, and not in the dark.
+static func skating(weather: String, hour: String) -> bool:
+	return (weather == "clear" or weather == "wind") and hour != "night"
+
+
+# Whether a rider of this kind ("bike", "roller", "kid") is out. Commuters
+# ride in any sky.
+static func riding(kind: String, weather: String, hour: String) -> bool:
+	match kind:
+		"roller": return skating(weather, hour)
+		"kid": return kids_riding(weather, hour)
+	return true
 
 
 # A busker plays when it is dry; in rain or snow they stand it out under an

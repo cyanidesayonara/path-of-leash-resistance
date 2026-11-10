@@ -8459,9 +8459,10 @@ func _vlane(delta: float) -> void:
 	b.setup(self, dog, human, Vector2(0.0, -speed if up else speed), r_kind)
 	if kid:
 		b.lane_keep(band_lo, band_hi)
-	# kids on scooters and skates are out in fair weather by day; drawn
-	# and set up all the same, so the walk's sequence holds
-	if not b.configure_route(x, band_lo, band_hi, bypasser_blockers) or (kid and not Outdoors.kids_riding(Game.weather, Game.hour)):
+	# kids on scooters are out in fair weather by day, skaters whenever it
+	# is dry and light (Outdoors.riding); drawn and set up all the same, so
+	# the walk's sequence holds
+	if not b.configure_route(x, band_lo, band_hi, bypasser_blockers) or not Outdoors.riding(r_kind, Game.weather, Game.hour):
 		b.free()
 		return
 	add_child(b)
