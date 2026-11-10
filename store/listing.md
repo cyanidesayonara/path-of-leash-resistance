@@ -174,8 +174,9 @@ order with these captions:
 1. Festa de Gràcia: the correfoc's dragon and fire devils, and a head start
    home
    (`--level=gracia --shot-y=-2000 --shot-home --shot-sweeper --shot-at=170`)
-2. Rambla del Raval: El Gat wakes up, and he is big
-   (`--level=raval --shot-y=-700 --shot-at=300`)
+2. Rambla del Raval: El Gat charges, and the leash is the answer
+   (`--resolution 1920x1080 --script res://tools/boss_shots.gd -- --no-films`, its
+   `06_charge_run.png`; the waking shot showed his title card, which named a sculptor)
 3. Plaça d'Espanya: the cascade, lit up at night
    (`--level=espanya --shot-y=-3800 --shot-at=300`)
 4. La Neteja: the street sweeper at first light, coming your way
