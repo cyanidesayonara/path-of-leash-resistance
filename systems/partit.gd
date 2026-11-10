@@ -23,6 +23,7 @@ extends RefCounted
 # (draw_edge_layer); the world pass only draws what moves (draw_live).
 # Static functions over main's state, like the other systems.
 
+const NightFronts := preload("res://world/night_fronts.gd")
 const Letters := preload("res://world/sign_letters.gd")
 const HumanLook := preload("res://entities/human_appearance.gd")
 
@@ -1503,3 +1504,9 @@ static func _draw_stadium_bowl(_m: Node2D, c: ShapeBatch, r: Rect2) -> void:
 			var t := lerpf(a0, a1, (float(i) + 0.5) / 6.0)
 			c.circle(ctr + Vector2.from_angle(t) * 955.0, 70.0, Color(1.0, 0.96, 0.80, 0.18))
 			c.circle(ctr + Vector2.from_angle(t) * 955.0, 22.0, Color(1.0, 0.98, 0.90, 0.6))
+
+
+# The street after dark (world/night_fronts.gd): this walk draws its own
+# edges, so it says where its lit doorways and shopfronts are.
+static func night_fronts(m: Node2D) -> Array[Dictionary]:
+	return NightFronts.along_edges(m, float(m.START_Y), float(m.GATE_Y), 200.0, 0.0, 3)

@@ -368,6 +368,8 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_poble.gd
       - name: La Ciutadella (El Mamut, the first statue boss) test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_ciutadella.gd
+      - name: The street after dark (lit doorways, shopfronts and windows)
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_night_fronts.gd
       - name: La Cremada (the Dimoni float chase) test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_cremada.gd
       - name: Members exist (no call or property on main, the dog, your human or the leash that is not there)

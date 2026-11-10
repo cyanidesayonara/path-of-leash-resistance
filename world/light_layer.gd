@@ -2,7 +2,9 @@ extends Node2D
 
 # The walk's lamps after dark (and dimmer at dawn and dusk, Game.lamp_glow), over the dog, the owner and everything on the
 # ground, so whoever walks into a pool of light is lit by it, and under the
-# tree crowns, which a street lamp does not light from below. The pools are
+# tree crowns, which a street lamp does not light from below. With them, the
+# light out of the street's doorways, shopfronts and windows
+# (world/night_fronts.gd). The pools are
 # drawn through SkyLook.light() so they stay warm under the night's blue tint. In
 # the rain each lamp also lies in the wet paving as a long reflection.
 #
@@ -10,6 +12,7 @@ extends Node2D
 # that a lamp near the edge would come into view, or when the sky changes.
 
 const SkyLook := preload("res://systems/sky.gd")
+const NightFronts := preload("res://world/night_fronts.gd")
 const REDRAW_STEP := 160.0
 const MARGIN := 420.0
 # a pool's strength under the lamp, falling smoothly to nothing at its radius
@@ -47,6 +50,8 @@ func _draw() -> void:
 	var c: Vector2 = _drawn_at
 	var half: Vector2 = get_viewport_rect().size * 0.5 / maxf(main.cam.zoom.x, 0.01) + Vector2(MARGIN, MARGIN)
 	var b := ShapeBatch.new(self)
+	# the street's own light first, the lamps' pools over it
+	NightFronts.draw(b, main.night_fronts(), c, half, lit, tint)
 	for l: Vector3 in main.night_lights():
 		if absf(l.x - c.x) > half.x or absf(l.y - c.y) > half.y:
 			continue

@@ -199,6 +199,7 @@ const TangleGeom := preload("res://systems/tangle_geom.gd")
 const MoodWiring := preload("res://systems/mood_wiring.gd")
 const SkyLook := preload("res://systems/sky.gd")
 const Outdoors := preload("res://systems/outdoors.gd")
+const NightFronts := preload("res://world/night_fronts.gd")
 const Arrival := preload("res://systems/arrival.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
 const CurrentFlow := preload("res://systems/current_flow.gd")
@@ -2989,6 +2990,21 @@ func night_lights() -> Array[Vector3]:
 		side = -side
 		y -= NIGHT_WALL_STEP
 	return _night_lights
+
+
+# The lit doorways, shopfronts and windows of the street after dark
+# (world/night_fronts.gd), built once like the lamps.
+var _night_fronts: Array[Dictionary] = []
+var _night_fronts_built := false
+
+
+func night_fronts() -> Array[Dictionary]:
+	if not _night_fronts_built:
+		_night_fronts_built = true
+		_night_fronts = NightFronts.build(self)
+		if walk_mod != null and walk_mod.has_method("night_fronts"):
+			_night_fronts.append_array(walk_mod.night_fronts(self))
+	return _night_fronts
 
 
 # An umbrella from above: a filled canopy of eight panels, every other one in
