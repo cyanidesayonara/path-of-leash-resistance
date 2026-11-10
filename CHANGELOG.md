@@ -9,6 +9,13 @@ Append-only session history, newest first.
 - On the plinth, he raises his trunk high in a triumphant trumpet, spraying a celebratory water fountain with a shimmering rainbow arc into the morning sunlight. On the lake, the rower drops oars and claps enthusiastically, and your human catches up smiling proudly. Title card slams in: EL MAMUT! / VICTORIA A LA CIUTADELLA / LA CIUTADELLA IS YOURS.
 - Registered in `tools/intro_render.gd` (`mamut_win`) and verified in `tests/test_chase_film.gd` (229 checks) and `tests/test_film_mamut_win.gd` (56 checks).
 
+## 2026-11-10 - Finish the night pass: aligned doorways, wet reflections, and Plaça d'Espanya
+
+- Lit doorways on built-up streets now sit flush in the wall face rather than 27px out on the pavement, aligning the bright slit directly inside the door recess on both sides of the street (`main._draw_doorway`, `world/night_fronts.gd`).
+- In the rain, each lit doorway and shopfront now reflects into the wet paving toward the viewer with soft breaking streaks, matching the existing street lamp reflections in the light layer's single batch (`world/light_layer.gd`, `world/night_fronts.gd`).
+- Plaça d'Espanya (`systems/espanya.gd`) now has illuminated exhibition hall colonnade portals and avenue promenade kiosks through its own `night_fronts(m)` hook.
+- `tests/test_night_fronts.gd` (76 checks) and `tests/test_walk_hooks.gd` (883 checks) updated.
+
 ## 2026-11-10 - Delete dead test fake members and guard against stand-in drift
 
 - Test fakes in `tests/test_espanya.gd`, `tests/test_forum.gd`, `tests/test_superilla.gd` and `tests/test_poble.gd` had drifted from the real scripts: `temper_t`, `say()`, `bump()` and `look` that the real human never had, and `patience := 100.0` from an older 0..100 scale. Dead members removed, patience normalized to 1.0, and `bumped` and `say_line` used.

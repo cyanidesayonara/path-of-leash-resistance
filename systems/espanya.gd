@@ -24,6 +24,7 @@ const Surfaces := preload("res://world/surfaces.gd")
 const EspanyaBubble := preload("res://systems/espanya_bubble.gd")
 const AnimClock := preload("res://systems/anim_clock.gd")
 const SkyLook := preload("res://systems/sky.gd")
+const NightFronts := preload("res://world/night_fronts.gd")
 
 # a bump costs your human this much of their patience (0..1, entities/human.gd)
 const BUMP_PATIENCE := 0.08
@@ -1122,3 +1123,36 @@ static func draw_overhead(m: Node2D, wc: Object) -> void:
 static func _play_sfx(m: Node2D, sound: String) -> void:
 	if m != null and m.has_node("/root/Sfx"):
 		m.get_node("/root/Sfx").play(sound)
+
+
+# The street after dark (world/night_fronts.gd): this walk draws its own
+# edges, so it lists its illuminated exhibition hall portals and promenade
+# kiosks as night fronts.
+static func night_fronts(m: Node2D) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	# 1. Exhibition hall entrance portals along the colonnades
+	for i in range(HALLS.size()):
+		var hall: Vector2 = HALLS[i]
+		var cy: float = (hall.x + hall.y) * 0.5
+		var cy_lo: float = lerpf(hall.x, hall.y, 0.25)
+		var cy_hi: float = lerpf(hall.x, hall.y, 0.75)
+		for side: float in [-1.0, 1.0]:
+			var fx: float = (WALL_L - 142.0) if side < 0.0 else (WALL_R + 142.0)
+			var dir: float = -side
+			# central grand entrance of each hall
+			out.append(NightFronts.front(Vector2(fx, cy), dir, "shop", 200 + i * 10 + (0 if side < 0.0 else 1)))
+			# side illuminated hall colonnade bays
+			out.append(NightFronts.front(Vector2(fx, cy_lo), dir, "home", 210 + i * 10 + (0 if side < 0.0 else 1)))
+			out.append(NightFronts.front(Vector2(fx, cy_hi), dir, "home", 220 + i * 10 + (0 if side < 0.0 else 1)))
+	# 2. Promenade kiosks along the avenue
+	var kiosks: Array[Vector3] = [
+		Vector3(WALL_L - 10.0, -520.0, 1.0),
+		Vector3(WALL_R + 10.0, -1360.0, -1.0),
+		Vector3(WALL_L - 10.0, -2240.0, 1.0),
+		Vector3(WALL_R + 10.0, -3360.0, -1.0),
+	]
+	for k in range(kiosks.size()):
+		var kp: Vector3 = kiosks[k]
+		var kind: String = "bar" if k % 2 == 1 else "shop"
+		out.append(NightFronts.front(Vector2(kp.x, kp.y), kp.z, kind, 300 + k))
+	return out

@@ -1718,10 +1718,11 @@ func _draw_doorway(c: Object, inner_x: float, side: float, y: float, wall: Color
 	# across it - and that shadow is the whole trick. Drawn as a grey
 	# rectangle it read as a doormat someone had left in the street, which is
 	# exactly what it looked like.
-	var into: float = -side          # away from the pavement, into the building
+	var into: float = side           # away from the pavement, into the building
+	var street: float = -side        # toward the pavement
 	var jamb := wall.darkened(0.30)
 	# the reveal: the wall thickness the door is set back into
-	c.draw_rect(Rect2(inner_x + into * 22.0 if into > 0.0 else inner_x - 22.0,
+	c.draw_rect(Rect2(minf(inner_x, inner_x + into * 22.0),
 		y - 18.0, 22.0, 36.0), jamb)
 	# the leaf, foreshortened into a dark band, with a warm line of light
 	# escaping under it
@@ -1732,15 +1733,15 @@ func _draw_doorway(c: Object, inner_x: float, side: float, y: float, wall: Color
 		Color(0.30, 0.23, 0.18))
 	c.draw_circle(Vector2(leaf_x + into * 3.0, y + 7.0), 1.6, Color(0.80, 0.70, 0.42))
 	# the threshold, projecting onto the pavement, with a nosing on its edge
-	var t_out: float = inner_x + side * 13.0
+	var t_out: float = inner_x + street * 13.0
 	c.draw_rect(Rect2(minf(inner_x, t_out), y - 16.0, 13.0, 32.0), Color(0.60, 0.57, 0.52))
-	c.draw_rect(Rect2(t_out - (2.0 if side > 0.0 else 0.0), y - 16.0, 2.0, 32.0),
+	c.draw_rect(Rect2(t_out - (2.0 if street > 0.0 else 0.0), y - 16.0, 2.0, 32.0),
 		Color(0.72, 0.69, 0.63))
 	# the lintel shadow: deepest against the wall, fading out over the step
 	for i in range(4):
 		var f := float(i) / 3.0
-		var sx: float = inner_x + side * (2.0 + f * 16.0)
-		c.draw_rect(Rect2(minf(sx, sx + side * 5.0), y - 16.0, 5.0, 32.0),
+		var sx: float = inner_x + street * (2.0 + f * 16.0)
+		c.draw_rect(Rect2(minf(sx, sx + street * 5.0), y - 16.0, 5.0, 32.0),
 			Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.30 * (1.0 - f)))
 
 
