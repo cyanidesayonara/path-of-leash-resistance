@@ -30,7 +30,7 @@ you want to go; constant hauling wears their patience down until they say
   tangles with other people's leashes.
 - **A human with patience**, who telegraphs everything they are about to do
   ("Ring ring!", "Ooh!") and is never smarter than that.
-- **Thirty-one walks in and around Barcelona**, each built as its own place, plus a
+- **Thirty-six walks in and around Barcelona**, each built as its own place, plus a
   first walk that teaches one trick at a time. Every walk can be played in
   any weather, by day or at night.
 - **Off the leash at the end**: a dog park, a dog beach, a clearing in the
@@ -41,15 +41,16 @@ you want to go; constant hauling wears their patience down until they say
   near misses.
 - **Dares**: a dare-giver on every walk, each with their own tune. Bark to
   take a dare, then land the tricks before the music runs out.
-- **Five chases.** A street sweeper careens down a back street at dawn, and
+- **Six chases.** A street sweeper careens down a back street at dawn, and
   you drag your oblivious human home ahead of it. On El Besòs the river
   comes home with you, in El Veterinari you bolt from the vet's, wild boars
-  come down Els Senglars after you, and the correfoc's fire devils chase
-  you through Gràcia.
+  come down Els Senglars after you, the correfoc's fire devils chase
+  you through Gràcia, and the Dimoni's rolling firework float pursues you in
+  La Cremada.
 - **Five dogs**, each with a knack of their own, opened with stars, and bones
   to train them.
-- **A finale**: on the Rambla del Raval, a fat bronze cat climbs off
-  his plinth, and your human will not pass him until you deal with him.
+- **Two statue bosses**: El Mamut the stone mammoth in La Ciutadella, and on
+  the Rambla del Raval, El Gat, a fat bronze cat who climbs off his plinth.
 - **Moods**: a fright, a bark-off or a run off the leash leaves her jumpy,
   barky, full of zoomies or flat, and each changes how she moves.
 - **Ground you can feel**: grass and mud slow her but hold scent, sand drags
@@ -76,6 +77,7 @@ you want to go; constant hauling wears their patience down until they say
 | El Mercat | the market hall |
 | El Diluvi | the downpour |
 | El Besòs | the river park |
+| La Ciutadella | the waterfall cascade and El Mamut |
 | Platja de Llevant | the dog beach at the far end of the coast |
 | L'Eixample | the grid of cut corners round the basilica |
 | El Tibidabo | the mountain road |
@@ -89,6 +91,7 @@ you want to go; constant hauling wears their patience down until they say
 | L'Estació | the train station |
 | Els Búnquers | the overlook above the city |
 | Plaça Reial | the arcaded square |
+| La Cremada | Badalona's devil night and the Dimoni float |
 | El Fòrum | the seaside esplanade |
 | La Carretera de les Aigües | the hillside hike |
 | El Laberint d'Horta | the cypress maze |
@@ -143,7 +146,7 @@ Web export (needs the web export templates, see AGENTS.md):
 godot\Godot_v4.7-stable_win64_console.exe --headless --path . --export-release "Web" build/web/index.html
 ```
 
-Releasing is a tag. v1.67 is the last one. The next tag builds web and
+Releasing is a tag. v1.71 is the last one. The next tag builds web and
 Windows and pushes each to its own itch channel. AGENTS.md has the rest:
 tests, screenshots and benchmarks.
 

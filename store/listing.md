@@ -30,7 +30,7 @@ The leash is real rope physics. Your human outweighs you four to one and wins ev
 
 Your human answers the leash like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-Thirty-four walks through a sunny, slightly chaotic Barcelona and its edges, each its own place: the neighborhood park, La Rambla with its crowds, the city park, Badalona's seafront and its pier, the dawn cleanup sweeper, old town alleys, Montjuïc, a covered market hall, a downpour, a floodable river park, the dog beach at Platja de Llevant, the cut-corner crossings of L'Eixample, Tibidabo's mountain road, an indoor vet clinic escape in El Veterinari, a forest trail, the skate plaza at Els Àngels, a chestnut festival, the wild boar trails of Els Senglars, tiled terraces, the play streets of La Superilla, the train station, the Civil War bunkers above the city, the arcaded Plaça Reial, the seaside esplanade at El Fòrum, the old water road along Collserola, the cypress maze of Horta, the fishing harbor at El Port, the fountain avenue of Plaça d'Espanya, the walled village of El Poble Espanyol, a work site, match day in Les Corts, a junkyard, the festival street of Festa de Gràcia, and, to finish, the Rambla del Raval, where a fat bronze cat climbs down off his plinth. Every walk ends off the leash, with an agility course, tug-of-war and a frisbee: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
+Thirty-six walks through a sunny, slightly chaotic Barcelona and its edges, each its own place: the neighborhood park, La Rambla with its crowds, the city park, Badalona's seafront and its pier, the dawn cleanup sweeper, old town alleys, Montjuïc, a covered market hall, a downpour, a floodable river park, the waterfall cascade and stone mammoth of La Ciutadella, the dog beach at Platja de Llevant, the cut-corner crossings of L'Eixample, Tibidabo's mountain road, an indoor vet clinic escape in El Veterinari, a forest trail, the skate plaza at Els Àngels, a chestnut festival, the wild boar trails of Els Senglars, tiled terraces, the play streets of La Superilla, the train station, the Civil War bunkers above the city, the arcaded Plaça Reial, Badalona's devil night with the Dimoni float in La Cremada, the seaside esplanade at El Fòrum, the old water road along Collserola, the cypress maze of Horta, the fishing harbor at El Port, the fountain avenue of Plaça d'Espanya, the walled village of El Poble Espanyol, a work site, match day in Les Corts, a junkyard, the festival street of Festa de Gràcia, and, to finish, the Rambla del Raval, where a fat bronze cat climbs down off his plinth. Every walk ends off the leash, with an agility course, tug-of-war and a frisbee: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
 
 What happens on a walk changes how you feel, and how you feel changes how you move. A fright leaves you jumpy and half blind to smells, a good bark-off makes you barky, time off the leash brings on the zoomies, and running yourself empty leaves you flat. The ground matters too: grass and mud slow you down but hold far more scent than sidewalk, sand drags at your paws, and wet ground and snow make you skid.
 
@@ -38,7 +38,7 @@ Other dogs have lives of their own. They sniff and mark the posts you pass, and 
 
 Every walk has its own list of goals: sniff the good spots, mark your territory, fetch, greet other dogs, herd a runaway friend home, take on dares from the characters you meet (each with their own tune), and pull off tricks: swing around a pole on the leash, run a figure eight, thread the needle between two people, and ride ledges and handrails with the zoomies. Earn stars to unlock new walks and bones to spend on collars, bandanas and coats.
 
-Five walks are chases: dragging your human home ahead of the street sweeper, racing the river surge on El Besòs, escaping the vet clinic in El Veterinari with clinic assistants giving chase with giant cones of shame, outrunning the wild boars down Els Senglars, and keeping ahead of the correfoc's fire devils through Gràcia. Rain, wind, snow and night change how every walk plays, and everyone dresses for the weather. There is a three-part tutorial for anyone new.
+Six walks are chases: dragging your human home ahead of the street sweeper, racing the river surge on El Besòs, escaping the vet clinic in El Veterinari with clinic assistants giving chase with giant cones of shame, outrunning the wild boars down Els Senglars, keeping ahead of the correfoc's fire devils through Gràcia, and outrunning the Dimoni's rolling firework float in La Cremada. Rain, wind, snow and night change how every walk plays, and everyone dresses for the weather. There is a three-part tutorial for anyone new.
 
 Single player. No ads, no purchases, no account, and it plays offline. Keyboard or controller.
 ```
@@ -46,7 +46,7 @@ Single player. No ads, no purchases, no account, and it plays offline. Keyboard 
 ### Short description
 
 ```
-A dog walk as a physics comedy. Your human walks on autopilot, glued to their phone, and the leash is real rope. Dig in, wrap lampposts and bark your way through thirty-four walks in and around Barcelona, and get them home with the phone intact.
+A dog walk as a physics comedy. Your human walks on autopilot, glued to their phone, and the leash is real rope. Dig in, wrap lampposts and bark your way through thirty-six walks in and around Barcelona, and get them home with the phone intact.
 ```
 
 ### Product features
@@ -54,13 +54,13 @@ A dog walk as a physics comedy. Your human walks on autopilot, glued to their ph
 ```
 The leash is real rope physics: wrap it around poles, dig in, win the tug of war
 A human who answers the leash: a steady pull leads them, constant hauling runs out their patience
-Thirty-four hand-built walks through Barcelona, in any weather, by day or at night
+Thirty-six hand-built walks through Barcelona, in any weather, by day or at night
 Every walk ends off the leash, with agility, tug-of-war and a frisbee
 Goal lists on every walk, with stars that unlock new walks
 A dare-giver on every walk, each with their own tune
 Leash tricks: pole swings, figure eights, threading the needle, ledge and handrail rides
-Five chase walks: the street sweeper, the river flood, the clinic escape, the wild boars and the correfoc
-A finale with a bronze cat the size of a car
+Six chase walks: the street sweeper, the river flood, the clinic escape, the wild boars, the correfoc and the Dimoni float
+Two statue boss fights: El Mamut the stone mammoth, and a bronze cat the size of a car
 Dog moods: scared, barky, zoomies and flat, each changing how you move and what you notice
 Ground you can feel: grass and mud hold scent, sand drags, wet ground and snow skid
 Other dogs and their people with lives of their own: they sniff, mark, greet and tangle
@@ -86,22 +86,20 @@ dog walking
 ### What's new in this version
 
 ```
-- Three new walks, thirty-four in all:
-  - L'Eixample: one street of the grid to the basilica, an octagon at every crossing, and a tour group following its guide's umbrella.
-  - Els Àngels: the skate plaza outside the white museum. Grind the ledges and mind the runaway board.
-  - El Poble Espanyol: the walled village of copied towns, with an arcaded square, craft workshops and a neighbor watering the geraniums overhead.
-- The First Walk, rebuilt: the basics, then the tricks, then free practice in a yard and the dog park.
-- A dog has standards. When nature calls, grass, earth or a tree's pit is a perfect spot, and the sidewalk gets a "Here? Really?". Snacks and zoomies bring the call sooner.
-- El Barri and El Parc filled in: shops and balconies round the square, a chess table, petanca, a kiosk, a boat-hire hut and neighbors on the benches.
-- Plaça d'Espanya lit at night: lamps, glowing halls and towers, traffic, and a crowd round the Magic Fountain.
-- A clearer status card: phone, pee, marked spots and zoomies each labeled, and a poop bar while nature calls.
-- Front yards on bending streets can be walked into, and one bump from a performer or a skater no longer empties your human's patience.
+- Two new walks, thirty-six in all:
+  - La Ciutadella: the grand park avenue to the waterfall cascade, rowboats on the lake, and El Mamut, a full-size stone mammoth who climbs off his plinth as the first statue boss.
+  - La Cremada: Badalona's devil night down Carrer del Mar to the beach. The chase is the Dimoni's rolling float, firing rockets overhead that land with warning rings.
+- The street after dark comes alive: doorways ajar, lit shopfronts, amber bars, and the blue glow of televisions spill soft fans of light onto the paving, with lit windows on the roofs overhead.
+- El Gat pounces: below half health, the Raval's bronze cat wiggles his rear and leaps through the air with a landing ring. Catch him mid-leap with a taut leash or steer him into a palm or a terrace table.
+- A second live event on Badalona's seafront: a kite flyer on the beach side who dives his kite low across the promenade.
+- Who is out follows the weather and the hour: sunbathers, parasols, picnics and ice-cream carts stay in when it rains or after dark, and crowds thin in foul weather.
+- Health bars for boss fights stay clear of the banner, and live-event bumps cost a fair fraction of patience rather than emptying the meter.
 ```
 
 ### Notes for certification
 
 ```
-Update 1.71: three new walks (L'Eixample, Els Àngels, El Poble Espanyol), a rebuilt tutorial, a labeled status card, and El Barri, El Parc and Plaça d'Espanya redrawn. Update 1.70: four new walks (La Superilla, Els Búnquers, El Fòrum, Plaça d'Espanya), dawn and dusk lighting, squarer streets with walkable front yards, three new galleries. Update 1.69: signature live events across all walks (fishermen, waiters, cone dogs, unicyclists, trail runners, tourists, surfers, wild boars, and festive giants), true near-miss saves, and dropped snack snatching. Update 1.68: story films on the chase walks, a new look for your human, livelier other dogs and owners, the walks in a new order, and smoother performance. No change to capabilities, network use or data handling since 1.55.
+Update 1.72: two new walks (La Ciutadella with El Mamut statue boss, La Cremada with the Dimoni float chase), lit doorways and shopfronts at night, boss fight tuning, and live-event bump fixes. Update 1.71: three new walks (L'Eixample, Els Àngels, El Poble Espanyol), a rebuilt tutorial, a labeled status card, and El Barri, El Parc and Plaça d'Espanya redrawn. Update 1.70: four new walks (La Superilla, Els Búnquers, El Fòrum, Plaça d'Espanya), dawn and dusk lighting, squarer streets with walkable front yards, three new galleries. Update 1.69: signature live events across all walks (fishermen, waiters, cone dogs, unicyclists, trail runners, tourists, surfers, wild boars, and festive giants), true near-miss saves, and dropped snack snatching. No change to capabilities, network use or data handling since 1.55.
 
 Path of Leash Resistance is a single-player Win32 desktop game built with the Godot engine (4.7), packaged as MSIX.
 
@@ -226,6 +224,21 @@ changed since the icon was last generated, so the icon is as it was.
 ## Past What's new
 
 As submitted, newest first. The current one is in "Current listing".
+
+### What's new in 1.71 (tagged 2026-11-10)
+
+```
+- Three new walks, thirty-four in all:
+  - L'Eixample: one street of the grid to the basilica, an octagon at every crossing, and a tour group following its guide's umbrella.
+  - Els Àngels: the skate plaza outside the white museum. Grind the ledges and mind the runaway board.
+  - El Poble Espanyol: the walled village of copied towns, with an arcaded square, craft workshops and a neighbor watering the geraniums overhead.
+- The First Walk, rebuilt: the basics, then the tricks, then free practice in a yard and the dog park.
+- A dog has standards. When nature calls, grass, earth or a tree's pit is a perfect spot, and the sidewalk gets a "Here? Really?". Snacks and zoomies bring the call sooner.
+- El Barri and El Parc filled in: shops and balconies round the square, a chess table, petanca, a kiosk, a boat-hire hut and neighbors on the benches.
+- Plaça d'Espanya lit at night: lamps, glowing halls and towers, traffic, and a crowd round the Magic Fountain.
+- A clearer status card: phone, pee, marked spots and zoomies each labeled, and a poop bar while nature calls.
+- Front yards on bending streets can be walked into, and one bump from a performer or a skater no longer empties your human's patience.
+```
 
 ### What's new in 1.70 (tagged 2026-11-07)
 

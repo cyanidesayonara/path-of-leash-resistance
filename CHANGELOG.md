@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-11-10 - Release notes for 1.72
+
+- Store "What's new" and the certification note now describe 1.72 (everything since 1.71, under the Store's 1500 characters), 1.71's What's new is in "Past What's new", and `docs/itch-page.md` has "What's new in 1.72".
+- Walk count updated to thirty-six across the Store description, short description, features, itch body and README, with La Ciutadella and La Cremada added to the lists and tables in `Game.CAROUSEL` campaign order.
+- Six chase walks and two statue bosses recorded in features and descriptions.
+
 ## 2026-11-10 - The street after dark: lit doorways, shopfronts and windows
 
 - At night a lamp every so often lit the paving and everything past the kerb was a dark slab, as if nobody lived there. Now every doorway on a built-up walk is one kind of front, by a hash of its building module: most are dark, and the rest are a door ajar, a lit shopfront, an amber bar or the blue of a television. Each lit one lays a soft-edged fan of light across the paving, with a bright slit in the wall where it comes from and, for about half, a lit window up on the roof behind (`world/night_fronts.gd`).
