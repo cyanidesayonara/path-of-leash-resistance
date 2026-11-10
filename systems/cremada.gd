@@ -9,7 +9,8 @@ extends RefCounted
 # burned. The houses either side are main's old-town roofscape.
 #
 # On the way out, a traca hung across the street from a balcony goes off as
-# your human passes it (telegraphed: the fuse fizzes and a neighbor shouts).
+# your human passes it (telegraphed: the fuse fizzes and a neighbor shouts);
+# in rain or snow it is not hung out at all.
 # On the way home the Dimoni's fuse is lit early, his float's brake gives, and
 # he rolls up the street after them firing rockets (entities/dimoni_threat.gd,
 # home_chase.CREMADA_BANDS). He wedges in the underpass, then on the fiesta
@@ -17,6 +18,7 @@ extends RefCounted
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const DimoniThreat := preload("res://entities/dimoni_threat.gd")
+const Outdoors := preload("res://systems/outdoors.gd")
 
 const HALF := 220.0
 const WALL_L := 420.0
@@ -120,7 +122,8 @@ static func build(m: Node2D) -> Array:
 	m.chase_jams.clear()
 	m.chase_jams.append(Vector2(640.0, UNDERPASS_JAM_Y))
 	m.chase_jams.append(Vector2(640.0, ARCH_JAM_Y))
-	m.cremada_traca = {"state": "hung", "t": 0.0}
+	# no traca hung out in the wet (systems/outdoors.gd)
+	m.cremada_traca = {"state": "hung" if Outdoors.fireworks(Game.weather, Game.hour) else "spent", "t": 0.0}
 	var hyd_list: Array[Vector2] = [
 		Vector2(WALL_L + 25.0, -550.0),
 		Vector2(WALL_R - 25.0, -1550.0),
@@ -321,6 +324,9 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 	for p: Vector2 in PALMS:
 		_palm_crown(b, p)
 	# the traca's paper string, hung in a sag from balcony to balcony
+	if not Outdoors.fireworks(Game.weather, Game.hour):
+		b.flush()
+		return
 	var prev := Vector2(WALL_L, TRACA_Y)
 	for i in range(1, 25):
 		var f := float(i) / 24.0

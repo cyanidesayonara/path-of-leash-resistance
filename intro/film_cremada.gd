@@ -24,7 +24,7 @@ const ROCKET_AT := 3.0           # the first rocket goes up
 const BURST_AT := 3.45           # and bursts over them
 const BOLT_AT := FilmKit.BOLT_AT
 const TITLE_AT := FilmKit.TITLE_AT
-const K := 1.55
+const K := 1.05
 # the walk's colours (entities/dimoni_threat.gd)
 const DEVIL := Color(0.80, 0.14, 0.10)
 const DEVIL_DARK := Color(0.50, 0.07, 0.06)
@@ -43,6 +43,7 @@ const SPARK_ORANGE := Color(0.96, 0.52, 0.12)
 const SAND := Color(0.52, 0.46, 0.40)
 const SEA := Color(0.08, 0.12, 0.24)
 const INK := IntroKit.INK
+const ShapeBatch := preload("res://systems/shape_batch.gd")
 # the sound cues: [time, sound, pitch, volume dB]
 const CUES := [
 	[1.30, "hiss", 1.4, -8.0],
@@ -72,9 +73,9 @@ static func camera(t: float) -> Array:
 		return [Vector2(cx, 470.0), 1.0]
 	var x: float = Anim.k(t, [[0.0, 600.0], [1.6, 640.0, "io"], [2.1, 260.0, "io"], [3.0, 380.0, "io"],
 		[3.45, 520.0, "io"], [3.9, 560.0, "io"], [4.2, 760.0, "io"]])
-	var y: float = Anim.k(t, [[0.0, 470.0], [2.1, 400.0, "io"], [3.0, 400.0], [3.45, 330.0, "io"], [3.9, 440.0, "io"],
+	var y: float = Anim.k(t, [[0.0, 470.0], [2.1, 330.0, "io"], [3.0, 330.0], [3.45, 280.0, "io"], [3.9, 400.0, "io"],
 		[4.2, 520.0, "io"]])
-	var z: float = Anim.k(t, [[0.0, 1.2], [1.6, 1.25, "io"], [2.1, 0.86, "io"], [3.45, 0.8, "io"], [3.9, 0.96, "io"],
+	var z: float = Anim.k(t, [[0.0, 1.2], [1.6, 1.25, "io"], [2.1, 0.84, "io"], [3.45, 0.8, "io"], [3.9, 0.92, "io"],
 		[4.2, 1.7, "io"]])
 	return [Vector2(x, y), z]
 
@@ -110,8 +111,8 @@ static func _burning(t: float) -> float:
 static func _beach(c: CanvasItem, t: float) -> void:
 	# one smooth gradient: flat bands showed their steps
 	IntroKit.vgrad(c, Rect2(-1600, -900.0, 4600, 1000.0 + 200.0), Color(0.04, 0.05, 0.16), Color(0.20, 0.16, 0.32))
+	_glow(c, Vector2(1500.0, -120.0), 170.0, Color(0.96, 0.94, 0.84, 0.22))
 	c.draw_circle(Vector2(1500.0, -120.0), 60.0, Color(0.96, 0.94, 0.84))
-	c.draw_circle(Vector2(1500.0, -120.0), 110.0, Color(0.96, 0.94, 0.84, 0.10))
 	# the sea to the horizon
 	var hz := 300.0
 	c.draw_rect(Rect2(-1600, hz, 4600, FEET - hz), SEA)
@@ -138,8 +139,8 @@ static func _beach(c: CanvasItem, t: float) -> void:
 	lx = px0 + 30.0
 	while lx < px1:
 		c.draw_line(Vector2(lx, dy), Vector2(lx, dy - 30.0), Color(0.30, 0.30, 0.34), 2.0)
+		_glow(c, Vector2(lx, dy - 32.0), 18.0, Color(1.0, 0.86, 0.5, 0.35))
 		c.draw_circle(Vector2(lx, dy - 32.0), 4.0, Color(1.0, 0.86, 0.5))
-		c.draw_circle(Vector2(lx, dy - 32.0), 12.0, Color(1.0, 0.86, 0.5, 0.18))
 		lx += 140.0
 	# the town's lights along the left, past the Dimoni
 	for i in range(18):
@@ -159,8 +160,7 @@ static func _beach(c: CanvasItem, t: float) -> void:
 	var fire := _burning(t)
 	if fire > 0.0:
 		var flick := 0.8 + 0.2 * sin(t * 23.0) * sin(t * 7.0)
-		for r in range(4):
-			c.draw_circle(Vector2(float_x(t) + 120.0, FEET - 120.0), 220.0 + float(r) * 110.0, Color(1.0, 0.55, 0.15, 0.09 * fire * flick))
+		_glow(c, Vector2(float_x(t) - 80.0, FEET - 160.0), 620.0, Color(1.0, 0.55, 0.15, 0.42 * fire * flick))
 
 
 # The Dimoni on his float, side on, facing right: the timber float on its
@@ -191,17 +191,27 @@ static func dimoni(c: CanvasItem, at: Vector2, k: float, t: float, lit: float, b
 	# the Dimoni seated: legs over the front, body, the belly
 	var sway := sin(t * 3.0) * 4.0 if t > ROLL_AT else 0.0
 	var hip: Vector2 = p.call(Vector2(-150 + sway, -150))
-	c.draw_line(hip, p.call(Vector2(-60, -150)), DEVIL_DARK, 46.0 * k)
-	c.draw_line(p.call(Vector2(-60, -150)), p.call(Vector2(-50, -60)), DEVIL_DARK, 40.0 * k)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(Vector2(-32, -58)), Vector2(34, 16) * k), DEVIL_BLACK)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(Vector2(-170 + sway, -250)), Vector2(78, 108) * k), INK)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(Vector2(-170 + sway, -250)), Vector2(72, 102) * k), DEVIL)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(Vector2(-150 + sway, -230)), Vector2(40, 62) * k), DEVIL_DARK)
+	c.draw_line(hip, p.call(Vector2(-40, -160)), INK, 62.0 * k)
+	c.draw_line(hip, p.call(Vector2(-40, -160)), DEVIL, 54.0 * k)
+	c.draw_line(p.call(Vector2(-40, -160)), p.call(Vector2(-28, -50)), INK, 54.0 * k)
+	c.draw_line(p.call(Vector2(-40, -160)), p.call(Vector2(-28, -50)), DEVIL, 46.0 * k)
+	# a cloven hoof
+	c.draw_colored_polygon(MillieSide.ellipse(p.call(Vector2(-12, -40)), Vector2(44, 24) * k), DEVIL_BLACK)
+	c.draw_line(p.call(Vector2(-4, -58)), p.call(Vector2(8, -24)), DEVIL_DARK, 4.0 * k)
+	# the cape down his back, the barrel chest and shoulders, the belly
+	c.draw_colored_polygon(PackedVector2Array([p.call(Vector2(-250 + sway, -360)), p.call(Vector2(-150 + sway, -380)),
+		p.call(Vector2(-190, -140)), p.call(Vector2(-300, -140))]), DEVIL_BLACK)
+	c.draw_colored_polygon(MillieSide.ellipse(p.call(Vector2(-165 + sway, -255)), Vector2(104, 118) * k), INK)
+	c.draw_colored_polygon(MillieSide.ellipse(p.call(Vector2(-165 + sway, -255)), Vector2(98, 112) * k), DEVIL)
+	c.draw_colored_polygon(MillieSide.ellipse(p.call(Vector2(-140 + sway, -225)), Vector2(56, 70) * k), DEVIL_DARK)
+	c.draw_colored_polygon(MillieSide.ellipse(p.call(Vector2(-170 + sway, -335)), Vector2(110, 40) * k), DEVIL)
 	# the arm up with the fork, and its fireworks
-	var sh: Vector2 = p.call(Vector2(-140 + sway, -310))
-	var hand: Vector2 = p.call(Vector2(-60 + sway, -400))
-	c.draw_line(sh, hand, DEVIL, 34.0 * k)
-	c.draw_circle(hand, 20.0 * k, DEVIL_DARK)
+	var sh: Vector2 = p.call(Vector2(-110 + sway, -320))
+	var hand: Vector2 = p.call(Vector2(-10 + sway, -400))
+	c.draw_line(sh, hand, INK, 50.0 * k)
+	c.draw_line(sh, hand, DEVIL, 42.0 * k)
+	c.draw_circle(hand, 28.0 * k, INK)
+	c.draw_circle(hand, 24.0 * k, DEVIL_DARK)
 	var tip: Vector2 = hand + Vector2(40.0, -140.0) * k
 	c.draw_line(hand + Vector2(-20.0, 70.0) * k, tip, DEVIL_BLACK, 8.0 * k)
 	for px: float in [-22.0, 0.0, 22.0]:
@@ -211,30 +221,31 @@ static func dimoni(c: CanvasItem, at: Vector2, k: float, t: float, lit: float, b
 		if burning > 0.0:
 			sparks(c, prong + Vector2(px * 0.4, -70.0) * k, t + px * 0.01, k * burning, Vector2(px * 0.03, -1.0), 10)
 	# the head: horns, big grin, eyes, the beard
-	var hd: Vector2 = p.call(Vector2(-150 + sway, -400))
+	var hk := k * 1.45
+	var hd: Vector2 = p.call(Vector2(-140 + sway, -420))
 	for s: float in [-1.0, 1.0]:
-		c.draw_colored_polygon(PackedVector2Array([hd + Vector2(s * 30.0 - 10.0, -50.0) * k, hd + Vector2(s * 30.0 + 14.0, -50.0) * k,
-			hd + Vector2(s * 60.0, -130.0) * k]), HORN)
-	c.draw_colored_polygon(MillieSide.ellipse(hd, Vector2(70, 72) * k), INK)
-	c.draw_colored_polygon(MillieSide.ellipse(hd, Vector2(64, 66) * k), DEVIL)
-	c.draw_colored_polygon(PackedVector2Array([hd + Vector2(-10, 60) * k, hd + Vector2(40, 54) * k,
-		hd + Vector2(20, 120) * k]), DEVIL_BLACK)
+		c.draw_colored_polygon(PackedVector2Array([hd + Vector2(s * 30.0 - 10.0, -50.0) * hk, hd + Vector2(s * 30.0 + 14.0, -50.0) * hk,
+			hd + Vector2(s * 60.0, -130.0) * hk]), HORN)
+	c.draw_colored_polygon(MillieSide.ellipse(hd, Vector2(70, 72) * hk), INK)
+	c.draw_colored_polygon(MillieSide.ellipse(hd, Vector2(64, 66) * hk), DEVIL)
+	c.draw_colored_polygon(PackedVector2Array([hd + Vector2(-10, 60) * hk, hd + Vector2(40, 54) * hk,
+		hd + Vector2(20, 120) * hk]), DEVIL_BLACK)
 	# the brows, the eyes (dark until lit)
-	c.draw_line(hd + Vector2(-6, -16) * k, hd + Vector2(56, -30) * k, DEVIL_BLACK, 12.0 * k)
+	c.draw_line(hd + Vector2(-6, -16) * hk, hd + Vector2(56, -30) * hk, DEVIL_BLACK, 12.0 * hk)
 	var eye := Color(0.25, 0.08, 0.06).lerp(EYE, lit)
-	c.draw_circle(hd + Vector2(34, -6) * k, 12.0 * k, eye)
+	c.draw_circle(hd + Vector2(34, -6) * hk, 12.0 * hk, eye)
 	if lit > 0.0:
-		c.draw_circle(hd + Vector2(34, -6) * k, 30.0 * k, Color(EYE, 0.25 * lit))
-	c.draw_circle(hd + Vector2(38, -6) * k, 5.0 * k, DEVIL_BLACK)
+		_glow(c, hd + Vector2(34, -6) * hk, 44.0 * hk, Color(EYE, 0.5 * lit))
+	c.draw_circle(hd + Vector2(38, -6) * hk, 5.0 * hk, DEVIL_BLACK)
 	# the grin, teeth showing
-	c.draw_colored_polygon(PackedVector2Array([hd + Vector2(0, 20) * k, hd + Vector2(64, 14) * k,
-		hd + Vector2(54, 40) * k, hd + Vector2(10, 40) * k]), DEVIL_BLACK)
+	c.draw_colored_polygon(PackedVector2Array([hd + Vector2(0, 20) * hk, hd + Vector2(64, 14) * hk,
+		hd + Vector2(54, 40) * hk, hd + Vector2(10, 40) * hk]), DEVIL_BLACK)
 	for i in range(5):
-		c.draw_rect(Rect2(hd + Vector2(8.0 + float(i) * 10.0, 20.0) * k, Vector2(7, 8) * k), TEETH)
+		c.draw_rect(Rect2(hd + Vector2(8.0 + float(i) * 10.0, 20.0) * hk, Vector2(7, 8) * hk), TEETH)
 	# the fuse in his crown, fizzing from the first hiss
 	var fizz := Anim.span(t, 1.3, 1.45)
 	if fizz > 0.0:
-		sparks(c, hd + Vector2(-10, -78) * k, t, k * 0.7, Vector2(0.2, -1.0), 12)
+		sparks(c, hd + Vector2(-10, -78) * hk, t, hk * 0.7, Vector2(0.2, -1.0), 12)
 	# the fire round the float
 	if burning > 0.0:
 		for i in range(9):
@@ -252,8 +263,8 @@ static func dimoni(c: CanvasItem, at: Vector2, k: float, t: float, lit: float, b
 static func _rocket(c: CanvasItem, t: float) -> void:
 	if t < ROCKET_AT or t > BURST_AT + 0.9:
 		return
-	var from := Vector2(float_x(t) - 60.0 * K, FEET - 40.0 - 600.0 * K)
-	var to := Vector2(620.0, 120.0)
+	var from := Vector2(float_x(t) + 30.0 * K, FEET - 40.0 - 600.0 * K)
+	var to := Vector2(620.0, 60.0)
 	if t < BURST_AT:
 		var k := Anim.span(t, ROCKET_AT, BURST_AT)
 		var head := from.lerp(to, k) + Vector2(0.0, -sin(k * PI) * 160.0)
@@ -265,7 +276,7 @@ static func _rocket(c: CanvasItem, t: float) -> void:
 		c.draw_circle(head, 5.0, SPARK_YELLOW)
 		return
 	var b := Anim.span(t, BURST_AT, BURST_AT + 0.9)
-	c.draw_circle(to, 60.0 + b * 160.0, Color(1.0, 0.85, 0.5, 0.25 * (1.0 - b)))
+	_glow(c, to, 120.0 + b * 260.0, Color(1.0, 0.85, 0.5, 0.5 * (1.0 - b)))
 	for i in range(24):
 		var a := float(i) * TAU / 24.0
 		var r := 30.0 + b * 240.0
@@ -273,10 +284,17 @@ static func _rocket(c: CanvasItem, t: float) -> void:
 		c.draw_circle(pt, 7.0 * (1.0 - b) + 1.5, SPARK_YELLOW if i % 2 == 0 else Color(0.95, 0.30, 0.25))
 
 
+# a soft round pool of light: a gradient, never stacked discs
+static func _glow(c: CanvasItem, at: Vector2, r: float, col: Color) -> void:
+	var b := ShapeBatch.new(c)
+	b.glow(at, r, col, 0.1)
+	b.flush()
+
+
 # a fountain of sparks off `at`, sprayed along `dir`, falling as they go
 static func sparks(c: CanvasItem, at: Vector2, t: float, k: float, dir: Vector2, n: int) -> void:
+	_glow(c, at, 40.0 * k, Color(1.0, 0.65, 0.20, 0.45))
 	c.draw_circle(at, 10.0 * k, Color(1.0, 0.90, 0.50, 0.9))
-	c.draw_circle(at, 26.0 * k, Color(1.0, 0.65, 0.20, 0.25))
 	var d := dir.normalized()
 	for i in range(n):
 		var f := fposmod(t * 1.9 + float(i) / float(n), 1.0)
@@ -298,6 +316,8 @@ static func _title(c: CanvasItem, t: float) -> void:
 			var a := float(s) * TAU / 16.0
 			c.draw_circle(at + Vector2.from_angle(a) * (20.0 + bt * 130.0) + Vector2(0.0, bt * bt * 60.0),
 				5.0 * (1.0 - bt) + 1.0, SPARK_YELLOW if (s + i) % 2 == 0 else Color(0.95, 0.30, 0.25))
-	dimoni(c, Vector2(-80.0 + d * 140.0, 1180.0), 1.9, t, 1.0, 1.0)
+	# his head and fork fill the left of the card, rolling in
+	_glow(c, Vector2(380.0 + d * 60.0, 520.0), 560.0, Color(1.0, 0.62, 0.2, 0.5))
+	dimoni(c, Vector2(560.0 + d * 60.0, 1010.0), 1.55, t, 1.0, 1.0)
 	FilmKit.slam(c, t, "RUN!", Vector2(900, 210))
 	IntroKit.fade(c, 1.0 - Anim.span(t, TITLE_AT, TITLE_AT + 0.2), Color(1.0, 0.95, 0.85))
