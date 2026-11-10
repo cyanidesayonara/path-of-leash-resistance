@@ -8,6 +8,7 @@ extends RefCounted
 # streetlamps (Fanals de Gaudí), the ornate Font de les Tres Gràcies central
 # fountain, outdoor tapas terraces, and a Spanish guitar busker.
 
+const NightFronts := preload("res://world/night_fronts.gd")
 const Letters := preload("res://world/sign_letters.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -340,3 +341,9 @@ static func surface(m: Node2D, p: Vector2) -> int:
 	if p.y > m.GATE_Y:
 		return Surfaces.S.PAVEMENT
 	return -1
+
+
+# The street after dark (world/night_fronts.gd): this walk draws its own
+# edges, so it says where its lit doorways and shopfronts are.
+static func night_fronts(m: Node2D) -> Array[Dictionary]:
+	return NightFronts.along_edges(m, float(m.START_Y), float(m.GATE_Y), 170.0, 0.0, 2)

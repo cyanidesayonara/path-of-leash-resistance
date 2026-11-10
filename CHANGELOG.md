@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-10 - The street after dark: lit doorways, shopfronts and windows
+
+- At night a lamp every so often lit the paving and everything past the kerb was a dark slab, as if nobody lived there. Now every doorway on a built-up walk is one kind of front, by a hash of its building module: most are dark, and the rest are a door ajar, a lit shopfront, an amber bar or the blue of a television. Each lit one lays a soft-edged fan of light across the paving, with a bright slit in the wall where it comes from and, for about half, a lit window up on the roof behind (`world/night_fronts.gd`).
+- It is drawn by the light layer, over the dog and your human, so they are lit as they pass a doorway; in the layer's one batch (no added draw call), only as the camera moves on, and scaled by `Game.lamp_glow()`: full at night, fainter at dusk and dawn, nothing by day.
+- Walks with the generic built-up edge get it from their own doorways (La Rambla, El Gòtic, La Castanyada, Festa de Gràcia, El Diluvi and the rest). Rambla del Raval, Plaça Reial and Dia de Partit draw their own edges and list their fronts through a new `night_fronts(m)` hook. Walks whose edge is a wood, a wall, a fence or a canopy get none.
+- Hashed, never the RNG, so seeded walks replay; `tests/test_night_fronts.gd` (74 checks) holds that, the kinds' shares, and that every front sits on the building line facing the street.
+- Not in this pass: Plaça d'Espanya (its edges are lawns and avenues), flicker on the television windows, reflections of the fronts in wet paving.
+
 ## 2026-11-10 - El Gat is our own cat, by name too
 
 - El Gat's title card read "EL GAT DE BOTERO" over "Botero's cat, and he is awake". It now reads "EL GAT" over "The Raval's bronze cat, and he is awake". El Gat is a cartoon cat of our own (Botero's sculptures are still in copyright, and the November plan says so), so no player-facing text names an artist.

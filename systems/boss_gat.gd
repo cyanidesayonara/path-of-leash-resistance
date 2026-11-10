@@ -28,6 +28,7 @@ extends RefCounted
 #   to fireworks. Your human, who has waited at HOLD_Y all this time, walks on
 #   into the plaça.
 
+const NightFronts := preload("res://world/night_fronts.gd")
 const Clay := preload("res://entities/clay.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
@@ -1815,3 +1816,9 @@ func draw_toppled_gat(c: Object, at: Vector2, t: float) -> void:
 		var pulse := 1.0 + sin(t * 10.0) * 0.15
 		c.draw_circle(hc + Vector2(0, -28.0), 16.0 * pulse, Color(1.0, 0.90, 0.20, 0.75))
 		c.draw_circle(hc + Vector2(0, -28.0), 11.0 * pulse, Color(1.0, 1.0, 1.0, 0.95))
+
+
+# The street after dark (world/night_fronts.gd): this walk draws its own
+# edges, so it says where its lit doorways and shopfronts are.
+static func night_fronts(m: Node2D) -> Array[Dictionary]:
+	return NightFronts.along_edges(m, float(m.START_Y), float(m.GATE_Y), 190.0, 0.0, 1)

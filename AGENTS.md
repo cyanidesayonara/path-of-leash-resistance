@@ -157,6 +157,14 @@ explain every changed snapshot line; this does not relax the refactor rule.
   _apply_leash, leash.tick explicitly. Do not move entity logic into
   _physics_process on the entities themselves (except bikes, which are
   self-managing and order-independent).
+- **The street after dark** (`world/night_fronts.gd`): every doorway on a
+  built-up walk is one kind of front by a hash of its module (dark, a door
+  ajar, a shopfront, a bar, a television), and the lit ones spill a soft fan
+  of light across the paving with a lit window on the roof behind, drawn by
+  `world/light_layer.gd` in its one batch and scaled by `Game.lamp_glow()`.
+  A walk that draws its own edges lists its fronts in a `night_fronts(m)`
+  hook (`NightFronts.along_edges`). Never the RNG. Test:
+  `tests/test_night_fronts.gd`.
 - **Who is out** (`systems/outdoors.gd`): one rule per kind of passer-by or
   prop for the weather and the hour (sunbathers, picnics, the ice-cream cart,
   kids on scooters and beach parasols in fair weather by day only; crowd sizes
