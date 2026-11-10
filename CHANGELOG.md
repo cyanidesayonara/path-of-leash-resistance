@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-11-10 - Delete dead test fake members and guard against stand-in drift
+
+- Test fakes in `tests/test_espanya.gd`, `tests/test_forum.gd`, `tests/test_superilla.gd` and `tests/test_poble.gd` had drifted from the real scripts: `temper_t`, `say()`, `bump()` and `look` that the real human never had, and `patience := 100.0` from an older 0..100 scale. Dead members removed, patience normalized to 1.0, and `bumped` and `say_line` used.
+- `tests/test_members_exist.gd` now scans all test scripts for inner `*Human*` and `*Dog*` classes and asserts that every declared method and variable exists on the real script (7,335 checks, in CI).
+
 ## 2026-11-10 - The street after dark: lit doorways, shopfronts and windows
 
 - At night a lamp every so often lit the paving and everything past the kerb was a dark slab, as if nobody lived there. Now every doorway on a built-up walk is one kind of front, by a hash of its building module: most are dark, and the rest are a door ajar, a lit shopfront, an amber bar or the blue of a television. Each lit one lays a soft-edged fan of light across the paving, with a bright slit in the wall where it comes from and, for about half, a lit window up on the roof behind (`world/night_fronts.gd`).

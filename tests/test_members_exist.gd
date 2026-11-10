@@ -88,5 +88,35 @@ func _initialize() -> void:
 				for mt: RegExMatch in rx_main.search_all(code):
 					var member := mt.get_string(1)
 					_check(main_has.has(member), "%s:%d: main has no %s" % [path, i + 1, member])
+	# Test fakes (*Human*, *Dog*) must declare no member the real script lacks.
+	var rx_fake_class := RegEx.create_from_string(r"^class\s+(\w*(?:Human|Dog)\w*)")
+	var rx_fake_member := RegEx.create_from_string(r"^\t(?:var|func)\s+([A-Za-z0-9_]+)")
+	for f: String in DirAccess.get_files_at("res://tests"):
+		if not f.ends_with(".gd"):
+			continue
+		var tpath := "res://tests".path_join(f)
+		var tsrc := FileAccess.get_file_as_string(tpath)
+		var tlines := tsrc.split("\n")
+		var target := ""
+		for i in range(tlines.size()):
+			var line := tlines[i]
+			if not line.begins_with("\t") and not line.begins_with(" "):
+				var mc := rx_fake_class.search(line)
+				if mc:
+					var cname := mc.get_string(1)
+					if cname.contains("Human"):
+						target = "human"
+					elif cname.contains("Dog"):
+						target = "dog"
+					else:
+						target = ""
+				else:
+					target = ""
+			elif not target.is_empty():
+				var mm := rx_fake_member.search(line)
+				if mm:
+					var member := mm.get_string(1)
+					if member != "_init" and member != "bumps":
+						_check(have[target].has(member), "%s:%d: %s on %s does not exist on real %s" % [tpath, i + 1, member, target, target])
 	print("test_members_exist: %d checks, %d failures" % [checks, failures.size()])
 	quit(1 if not failures.is_empty() else 0)
