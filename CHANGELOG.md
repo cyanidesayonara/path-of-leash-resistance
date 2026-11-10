@@ -4,7 +4,7 @@ Append-only session history, newest first.
 
 ## 2026-11-10 - Two live events that crashed on a bump, and a test for the whole class
 
-- The Raval's guitarist called `human.bump()` when your human walked into him, which does not exist (it is `bumped`): a script error, so no stumble and neither line of speech. El Fòrum's skater set a `human.temper_t` that does not exist, on the line before the `say_line` fixed in #508, so that fix was never reached. Both bumps now land: a stumble, a fraction off patience, the lines said.
+- The Carmel bunkers' guitarist called `human.bump()` when your human walked into him, which does not exist (it is `bumped`): a script error, so no stumble and neither line of speech. El Fòrum's skater set a `human.temper_t` that does not exist, on the line before the `say_line` fixed in #508, so that fix was never reached. Both bumps now land: a stumble, a fraction off patience, the lines said.
 - Why they shipped: the walk modules reach main, the dog, your human and the leash through an untyped `m.`, GDScript only checks such a line when it runs, and these lines sit in live-event branches the autowalk and the selftests never take. `tests/test_members_exist.gd` now reads every game script and holds each `m.human.X`, `m.dog.X`, `m.leash.X`, `m.feed.X`, `m.combo.X` and `m.X` against what the target script and its engine class really have (7,202 references today). It failed on exactly these two before the fix. In CI.
 
 ## 2026-11-10 - El Gat is our own cat, by name too
