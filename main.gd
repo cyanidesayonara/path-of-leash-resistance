@@ -356,6 +356,7 @@ const WALK_MODULES := {
 	"poble": preload("res://systems/poble.gd"),
 	"raval": preload("res://systems/boss_gat.gd"),
 	"ciutadella": preload("res://systems/ciutadella.gd"),
+	"cremada": preload("res://systems/cremada.gd"),
 	"beach": preload("res://systems/passeig.gd"),
 	"rain": preload("res://systems/diluvi.gd"),
 	"market": preload("res://world/mercat.gd"),
@@ -614,6 +615,11 @@ var mamut_settled := false
 # the zoo palms' parakeets and your human's croissant
 var ciut_shooed := false
 var ciut_birds: Dictionary = {"state": "perched", "t": 0.0, "done": false}
+# La Cremada: the traca across Carrer del Mar, and the Dimoni's rockets
+var cremada_traca: Dictionary = {"state": "hung", "t": 0.0}
+var cremada_traca_dodged := false
+var cremada_dodges := 0
+var cremada_hits := 0
 # Els Senglars (systems/boars.gd) and Festa de Gràcia (systems/gracia.gd)
 var boar_mud_splashes := 0
 var boar_mud_cd := 0.0
@@ -1689,6 +1695,7 @@ func _edge_base_color() -> Color:
 		"oldtown", "spook": return Color(0.36, 0.33, 0.30)   # old stone
 		"neteja": return Color(0.40, 0.32, 0.28)             # warm stone, dawn
 		"gracia": return Color(0.42, 0.34, 0.29)             # the vila's warm render
+		"cremada": return Color(0.40, 0.33, 0.30)            # Badalona's old town at night
 		"besos": return Color(0.58, 0.56, 0.52)              # the concrete flood wall
 		"station": return Color(0.48, 0.48, 0.52)            # tiled interior
 		"site": return Obres.YARD                            # the works compound
@@ -1747,8 +1754,8 @@ func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 		style = "guell"
 	elif lvl == "boars":
 		style = "trail"      # the same Collserola wood as El Bosc
-	elif lvl == "gracia":
-		style = "oldtown"    # the vila's low tiled houses
+	elif lvl == "gracia" or lvl == "cremada":
+		style = "oldtown"    # the vila's low tiled houses; Carrer del Mar's
 	if lvl == "market":
 		# inside the hall the edge is the hall's own roof; outside it, the city's
 		var in_hall: bool = r.position.y < LevelBuild.MERCAT_ARCH_Y and r.end.y > LevelBuild.MERCAT_DOOR_Y
@@ -5093,7 +5100,10 @@ func _draw_dog_beach(c: Object) -> void:
 	for pa: Vector2 in beach_parasol_spots():
 		contact_shadow(c, pa, BEACH_PARASOL_R, 30.0, 0.20)
 	_draw_freedom_benches(c, r, Color(0.62, 0.5, 0.34))
-	_freedom_sign(c, r, "PLATJA DELS GOSSOS", "the dog beach, off leash")
+	if lvl == "cremada":
+		_freedom_sign(c, r, "PLATJA DEL DIMONI", "where the devil burns, off leash")
+	else:
+		_freedom_sign(c, r, "PLATJA DELS GOSSOS", "the dog beach, off leash")
 	_draw_espigo(c)
 
 
@@ -10754,6 +10764,8 @@ const FREEDOM_KINDS := {
 	"raval": "placa",
 	# the garden inside the next block of the grid (systems/eixample.gd)
 	"eixample": "yard",
+	# the beach where the Dimoni is burned
+	"cremada": "beach",
 }
 const BEACH_SEA_R := 430.0
 const BEACH_GATE_SHORE_X := 230.0

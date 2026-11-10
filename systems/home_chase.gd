@@ -81,6 +81,7 @@ const FLOOD_FILM := "res://intro/film_flood.gd"
 const VET_FILM := "res://intro/film_vet.gd"
 const BOARS_FILM := "res://intro/film_boars.gd"
 const GRACIA_FILM := "res://intro/film_gracia.gd"
+const CREMADA_FILM := "res://intro/film_cremada.gd"
 # La Neteja's dumpster jams, by depth (world/level_build.gd NETEJA_JAMS):
 # the first the way home meets, then the later one, the midpoint
 const NETEJA_BANDS := [
@@ -106,6 +107,13 @@ const BOAR_BANDS := [
 
 const GRACIA_BANDS := [
 	{"id": "castell", "kind": "respite", "jam_y": -3300.0},
+	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
+]
+
+# La Cremada: the float wedges in the railway underpass, then on the arch
+# over Carrer del Mar (systems/cremada.gd UNDERPASS_JAM_Y, ARCH_JAM_Y)
+const CREMADA_BANDS := [
+	{"id": "underpass", "kind": "respite", "jam_y": -3400.0},
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
 ]
 
@@ -157,6 +165,24 @@ static func kind_behavior(kind: String) -> Dictionary:
 				"warning_banner": "FIRE DEVILS! HEAD FOR HOME", "hold_banner": "THEY'RE STILL DANCING! GO  %d",
 				"caught_human": "SPARKED OUT!\n\nYour human caught firecrackers in their hood.\nThey dropped the phone in panic.",
 				"caught_dog": "TAIL SINGED!\n\nA fire devil's sparkler popped right behind you.\nYou bolted into the nearest doorway.",
+			}
+		"dimoni":
+			return {
+				"kind": "dimoni", "speed": 118.0, "flee": false,
+				"warning": "THE DIMONI IS LOOSE! RUN!",
+				"freed": "CRUNCH", "freed_sfx": "crack", "caught_shout": "SCORCHED!",
+				"jammed": "WEDGED", "jammed_sfx": "crack", "jammed_shout": "THE FLOAT'S WEDGED!",
+				"jammed_banner": "THE FLOAT'S WEDGED! CATCH YOUR BREATH", "run_banner": "RUN! KEEP OUT OF THE RINGS",
+				"warning_banner": "THE DIMONI'S COMING! HEAD FOR HOME", "hold_banner": "STILL WEDGED! GO  %d",
+				"rocket_banner": "ROCKET! OUT OF THE RING",
+				"caught_human": "THE DIMONI GOT YOUR HUMAN
+
+They stopped to film it. It came closer.
+The phone kept a lovely last video.",
+				"caught_dog": "SCORCHED!
+
+The Dimoni rolled right over you.
+You will smell of fireworks for a week.",
 			}
 		"vet":
 			return {
@@ -227,6 +253,13 @@ static func profile_for(level: String) -> Dictionary:
 		g["bands"] = GRACIA_BANDS.duplicate(true)
 		g["film"] = GRACIA_FILM
 		return g
+	if level == "cremada":
+		var d := kind_behavior("dimoni")
+		d["id"] = "cremada"
+		d["script"] = "res://entities/dimoni_threat.gd"
+		d["bands"] = CREMADA_BANDS.duplicate(true)
+		d["film"] = CREMADA_FILM
+		return d
 	return {}
 
 
@@ -499,6 +532,8 @@ static func banner(m: Node2D) -> String:
 		return "RUNNING! KEEP UP"
 	if m.chase_kind == "flood":
 		return "RUN! STAY OUT OF THE DEEP"
+	if sweeper.has_method("rocket_warning") and bool(sweeper.call("rocket_warning")):
+		return String(_behavior(m, held_profile(m)).get("rocket_banner", "OUT OF THE RING"))
 	return String(_behavior(m, held_profile(m)).get("run_banner", "RUN! DON'T LET IT CATCH YOU"))
 
 

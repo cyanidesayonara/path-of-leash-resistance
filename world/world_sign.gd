@@ -34,7 +34,7 @@ const MATERIALS := {
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
 	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
 	"montjuic": "cactus", "port": "rope", "reial": "fronds", "vet": "biscuits",
-	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "superilla": "pingpong", "forum": "solar", "espanya": "cascade", "eixample": "planeballs", "angels": "wheels", "poble": "azulejos", "ciutadella": "feathers", "raval": "pegs", "tutorial": "balls",
+	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "superilla": "pingpong", "forum": "solar", "espanya": "cascade", "eixample": "planeballs", "angels": "wheels", "poble": "azulejos", "ciutadella": "feathers", "cremada": "casings", "raval": "pegs", "tutorial": "balls",
 }
 # No glow or bed under the pieces: a name reads on its ground by each piece's
 # own dark edge and contact shadow, the way a real thing lying there would.
@@ -55,6 +55,7 @@ const DROP_H := 0.9
 # where it was laid (planted things); fixed: laid in, does not move at all.
 const FEEL := {
 	"leaves": {"spacing": 0.12, "r": 0.085, "drag": 5.0, "take": 1.1, "spin": 5.0},
+	"casings": {"spacing": 0.08, "r": 0.10, "drag": 3.0, "take": 1.2, "spin": 7.0},
 	"feathers": {"spacing": 0.08, "r": 0.10, "drag": 3.5, "take": 1.3, "spin": 6.0},
 	"pipes": {"spacing": 0.07, "r": 0.05, "drag": 6.0, "take": 1.3, "spin": 6.0},
 	"carnations": {"spacing": 0.15, "r": 0.09, "drag": 4.0, "take": 0.9, "spin": 3.0},
@@ -482,6 +483,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_leaves(c, sign, h)
 		"feathers":
 			_feathers(c, sign, h)
+		"casings":
+			_casings(c, sign, h)
 		"pipes":
 			_pipes(c, sign, h)
 		"carnations":
@@ -619,6 +622,29 @@ static func _feathers(c: Object, sign: Dictionary, _h: float) -> void:
 		c.draw_colored_polygon(PackedVector2Array([p - ax * r * 0.2 - ay * r * 0.1, p + ax * r * 0.9 + ay * r * 0.1,
 			p + ax * r * 0.3 - ay * r * 0.5]), Color(0.78, 0.86, 0.34))
 		c.draw_line(p - ax * r * 1.5, p + ax * r * 1.25, Color(0.90, 0.92, 0.74), 1.2)
+
+
+static func _casings(c: Object, sign: Dictionary, _h: float) -> void:
+	# spent firework casings from the night before: short cardboard tubes in
+	# red, yellow and blue paper, each with a charred, split end, lying every
+	# which way. Rotated by hand so the whole name stays one batch.
+	var cols := [Color(0.82, 0.16, 0.12), Color(0.94, 0.74, 0.18), Color(0.20, 0.36, 0.72),
+		Color(0.70, 0.12, 0.14), Color(0.92, 0.48, 0.14)]
+	for pc: Dictionary in sign.pieces:
+		var col := _pick(cols, float(pc["var"]))
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var ax := Vector2.from_angle(float(pc.rot))
+		var ay := ax.orthogonal()
+		var a := p - ax * r * 1.3
+		var b := p + ax * r * 1.3
+		var w := r * 0.55
+		var sh := Vector2(0.8, 1.0)
+		c.draw_colored_polygon(PackedVector2Array([a + ay * w + sh, b + ay * w + sh, b - ay * w + sh, a - ay * w + sh]), Color(0, 0, 0, 0.14))
+		c.draw_colored_polygon(PackedVector2Array([a + ay * w, b + ay * w, b - ay * w, a - ay * w]), col)
+		c.draw_colored_polygon(PackedVector2Array([a + ay * w * 0.35, b + ay * w * 0.35, b + ay * w * 0.8, a + ay * w * 0.8]), col.lightened(0.25))
+		# the charred end, split open
+		c.draw_colored_polygon(PackedVector2Array([b + ay * w * 1.2, b + ax * r * 0.45, b - ay * w * 1.2, b - ax * r * 0.1]), Color(0.10, 0.08, 0.08))
 
 
 static func _pipes(c: Object, sign: Dictionary, h: float) -> void:

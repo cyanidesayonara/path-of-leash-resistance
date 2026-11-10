@@ -23,6 +23,7 @@ const Boars := preload("res://systems/boars.gd")
 const Gracia := preload("res://systems/gracia.gd")
 const BossGat := preload("res://systems/boss_gat.gd")
 const Ciutadella := preload("res://systems/ciutadella.gd")
+const Cremada := preload("res://systems/cremada.gd")
 const BossMamut := preload("res://systems/boss_mamut.gd")
 const Carmel := preload("res://systems/carmel.gd")
 const Superilla := preload("res://systems/superilla.gd")
@@ -121,6 +122,7 @@ const CROSS_SECTIONS := {
 	"angels": ["none", 0.0, "none", 0.0],          # skate plaza, museum and convent in systems/angels.gd
 	"poble": ["none", 0.0, "none", 0.0],           # walled architectural village in systems/poble.gd
 	"ciutadella": ["none", 0.0, "none", 0.0],      # the park and the mammoth's lawn in systems/ciutadella.gd
+	"cremada": ["none", 0.0, "none", 0.0],         # Carrer del Mar: the houses at the paving
 	# flood wall on the left, grass then the river on the right
 	"besos": ["none", 0.0, "grass", 120.0],
 }
@@ -1333,6 +1335,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"angels": half = Angels.HALF
 		"poble": half = Poble.HALF
 		"ciutadella": half = Ciutadella.HALF
+		"cremada": half = Cremada.HALF
 		"besos": half = BESOS_HALF
 	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
 	m.walk_half = half
@@ -1536,7 +1539,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "angels" or m.lvl == "poble" or m.lvl == "ciutadella":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "angels" or m.lvl == "poble" or m.lvl == "ciutadella" or m.lvl == "cremada":
 		return
 	# and so does El Barri, and the First Walk built on it, whose stations
 	# (systems/tutorial.gd) are laid out where they stand
@@ -1675,6 +1678,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_ciut: Array = Ciutadella.build(m)
 			hyd_list.assign(pl_ciut[0])
 			keb_list.assign(pl_ciut[1])
+		"cremada":
+			var pl_crem: Array = Cremada.build(m)
+			hyd_list.assign(pl_crem[0])
+			keb_list.assign(pl_crem[1])
 		"raval":
 			var pl_raval: Array = BossGat.build(m)
 			hyd_list.assign(pl_raval[0])
@@ -2281,6 +2288,8 @@ static func build_level_data(m: Node2D) -> void:
 			var clear := tree.distance_to(m.gate_bench) > 95.0
 			if m.lvl == "scrap":
 				clear = clear and not Ferralla.yard_wreck(m._freedom_rect()).grow(30.0).has_point(tree)
+			if m.lvl == "cremada":
+				clear = clear and not Cremada.parked_rect().grow(50.0).has_point(tree)
 			if m.lvl == "poble":
 				clear = clear and (tree.y < m.GATE_Y - 180.0 or absf(tree.x - 640.0) > 310.0)
 			if m.lvl == "beach":
@@ -2416,6 +2425,9 @@ static func build_level_data(m: Node2D) -> void:
 		# rope contacts with furniture slip, and nothing solid under them
 		if m.boss_gat != null:
 			m.boss_gat.register_legs(m)
+	if m.lvl == "cremada":
+		for r: Rect2 in Cremada.wrap_rects():
+			add_rope_rect(m, r)
 	if m.lvl == "ciutadella":
 		for r: Rect2 in Ciutadella.wrap_rects():
 			add_rope_rect(m, r)
@@ -2530,6 +2542,9 @@ static func build_level_data(m: Node2D) -> void:
 		"poble":
 			m.prize_pos = Poble.PRIZE
 			m.prize_text = Poble.PRIZE_TEXT
+		"cremada":
+			m.prize_pos = Cremada.PRIZE
+			m.prize_text = Cremada.PRIZE_TEXT
 		"ciutadella":
 			m.prize_pos = BossMamut.PRIZE
 			m.prize_text = BossMamut.PRIZE_TEXT
@@ -2972,6 +2987,13 @@ const FREEDOM_PROPS := {
 	],
 	# the dog area at the park's north gate: plane trees' leaf litter, a
 	# drinking post, and a fallen bough
+	"cremada": [
+		# Llevant's beach, less what the parked Dimoni stands on
+		[Vector2(600.0, -300.0), "dig"], [Vector2(768.0, -268.0), "dig"], [Vector2(1042.0, -278.0), "dig"],
+		[Vector2(885.0, -516.0), "driftwood"], [Vector2(925.0, -235.0), "driftwood"], [Vector2(1055.0, -505.0), "driftwood"],
+		[Vector2(860.0, -420.0), "rock"], [Vector2(990.0, -410.0), "rock"], [Vector2(848.0, -296.0), "rock"],
+		[Vector2(980.0, -304.0), "rock"], [Vector2(536.0, -210.0), "post"], [Vector2(890.0, -198.0), "shrub"],
+	],
 	"ciutadella": [
 		[Vector2(250.0, -430.0), "dig"], [Vector2(660.0, -470.0), "dig"], [Vector2(1030.0, -300.0), "dig"],
 		[Vector2(380.0, -480.0), "planter"], [Vector2(920.0, -480.0), "planter"],
@@ -3410,6 +3432,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_poble: Array[Rect2] = Poble.solids(m)
 			for i in range(ps_poble.size()):
 				out.append(["poble_solid_%d" % i, ps_poble[i]])
+		"cremada":
+			var ps_crem: Array[Rect2] = Cremada.solids(m)
+			for i in range(ps_crem.size()):
+				out.append(["cremada_solid_%d" % i, ps_crem[i]])
 		"ciutadella":
 			var ps_ciut: Array[Rect2] = Ciutadella.solids(m)
 			for i in range(ps_ciut.size()):
@@ -3973,6 +3999,9 @@ static func build_walls(m: Node2D) -> void:
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "poble":
 		for r: Rect2 in Poble.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "cremada":
+		for r: Rect2 in Cremada.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "ciutadella":
 		for r: Rect2 in Ciutadella.solids(m):

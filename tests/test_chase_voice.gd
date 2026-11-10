@@ -25,7 +25,7 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var HomeChase: GDScript = load("res://systems/home_chase.gd")
-	for kind in ["vet", "boars", "correfoc"]:
+	for kind in ["vet", "boars", "correfoc", "dimoni"]:
 		var b: Dictionary = HomeChase.kind_behavior(kind)
 		for k in KEYS:
 			_check(b.has(k), "%s says its own %s" % [kind, k])
