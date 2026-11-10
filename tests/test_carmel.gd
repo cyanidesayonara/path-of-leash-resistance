@@ -21,6 +21,7 @@ class FakeMain:
 	var START_Y := 200.0
 	var GATE_Y := -4800.0
 	var POP_SAY := 0
+	var LIVE_EVENT_BUMP_PATIENCE := 0.08
 	var bones := 0
 	var saves_done := 0
 	var dog: Node2D
@@ -67,9 +68,13 @@ class FakeDogScript:
 
 class FakeHuman:
 	extends Node2D
-	var patience := 100.0
-	func bump(_dir: Vector2, p: float) -> void:
-		patience -= p
+	# as entities/human.gd has them: patience runs 0..1, and a bump is
+	# bumped(dir). The fake once had a bump(dir, amount) the real human never
+	# did, which is how the guitarist's call to it passed this test.
+	var patience := 1.0
+	var bumps := 0
+	func bumped(_dir: Vector2) -> void:
+		bumps += 1
 
 
 class FakeCombo:
@@ -205,7 +210,8 @@ func _run() -> void:
 	var was_patience := m.human.patience
 	g.tick(m, 0.05)
 	_check(g.human_hit, "human bump recorded")
-	_check(m.human.patience < was_patience, "human loses patience on bump")
+	_check(m.human.patience < was_patience and m.human.patience > 0.5, "human loses a fraction of patience on bump")
+	_check(m.human.bumps == 1, "and stumbles")
 
 	# Near-miss dodge save on second instance
 	var g2 := Guitarrista.new()
