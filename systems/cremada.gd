@@ -19,6 +19,7 @@ extends RefCounted
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const DimoniThreat := preload("res://entities/dimoni_threat.gd")
 const Outdoors := preload("res://systems/outdoors.gd")
+const ChurroCart := preload("res://systems/churro_cart.gd")
 
 const HALF := 220.0
 const WALL_L := 420.0
@@ -135,10 +136,11 @@ static func build(m: Node2D) -> Array:
 	var keb_list: Array[Vector2] = [
 		Vector2(700.0, -1700.0),
 		Vector2(580.0, -2900.0),
-		Vector2(720.0, -4150.0),
+		Vector2(560.0, -4380.0),
 	]
 	m.prize_pos = PRIZE
 	m.prize_text = PRIZE_TEXT
+	m.churro_cart = ChurroCart.new()
 	return [hyd_list, keb_list]
 
 
@@ -166,6 +168,50 @@ static func parked_rect() -> Rect2:
 
 static func tick(m: Node2D, delta: float) -> void:
 	_tick_traca(m, delta)
+	_tick_churros(m, delta)
+
+
+static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
+	var c: ChurroCart = m.churro_cart
+	if c == null:
+		return
+	var bp: Vector2 = pos if pos != Vector2.ZERO else m.dog.global_position
+	if c.on_bark(bp):
+		m.combo.add("BARK", 2)
+		m.award_points(2, "churro bark! +2")
+		Sfx.play("bell", 1.4, -4.0)
+		m.float_text(ChurroCart.CART_POS + Vector2(0.0, -32.0), "One for the doggie!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+
+
+# The churro cart: active on the Rambla outward leg during fair evening/night.
+# 0.8s warning bell & shout, soft hazard bumping the cart, dropped churro snack,
+# bark trick, and near-miss dodge.
+static func _tick_churros(m: Node2D, delta: float) -> void:
+	var c: ChurroCart = m.churro_cart
+	if c == null or not m.started or m.paused:
+		return
+	c.sky_ok = ChurroCart.active_in(Game.weather, Game.hour)
+	var r: Dictionary = c.tick(delta, m.dog.global_position, m.human.global_position, String(m.phase) != "home")
+	if bool(r["warn"]):
+		m.float_text(ChurroCart.CART_POS + Vector2(0.0, -32.0), "Xurros calents! Fresh and hot!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+		Sfx.play("bell", 1.2, -3.0)
+	if bool(r["bump"]):
+		m.human.patience = maxf(0.0, m.human.patience - ChurroCart.BUMP_PATIENCE)
+		m.human.bumped(c.bump_dir)
+		Sfx.play("bump", 1.1, -3.0)
+		m.float_text(m.human.global_position + Vector2(0.0, -32.0), "Ai, que crema!", Color(1.0, 0.72, 0.72), m.POP_SAY)
+		m.float_text(ChurroCart.CART_POS + Vector2(0.0, -32.0), "Careful with the cart!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+	if bool(r["snatch"]):
+		m.combo.add("SNACK", 2)
+		m.award_points(2, "churro snatch! +2")
+		Sfx.play("snack")
+		m.float_text(ChurroCart.CHURRO_DROP_POS + Vector2(0.0, -20.0), "churro snatch! +2", ChurroCart.CHURRO_GOLD)
+		m.float_text(ChurroCart.CART_POS + Vector2(0.0, -32.0), "Bon profit, little one!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+	if bool(r["dodge"]):
+		m.saves_done += 1
+		m.combo.add("DODGE", 2)
+		m.award_points(2, "churro dodge! +2")
+		m.float_text(m.human.global_position + Vector2(0.0, -32.0), "Whew, close one!", Color(0.96, 0.94, 0.88), m.POP_SAY)
 
 
 # The traca: lit as your human comes within TRACA_NOTICE of it on the way
@@ -287,6 +333,8 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 		var b := ShapeBatch.new()
 		DimoniThreat.paint_float(b, Vector2(PARKED_AT.x, PARKED_AT.y), HALF * DimoniThreat.CATCH_SPAN, t, false)
 		b.append_to(wc)
+	if m.churro_cart != null:
+		m.churro_cart.draw(m, wc, vt, vb)
 	var tr: Dictionary = m.cremada_traca
 	var st := String(tr.get("state", "hung"))
 	if TRACA_Y < vt - 60.0 or TRACA_Y > vb + 60.0 or st == "spent":

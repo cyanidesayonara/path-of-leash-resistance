@@ -47,7 +47,7 @@ const HOOKS := {
 	"eixample": ["draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_live", "is_lamp", "on_bark", "surface", "tick", "tree_kind"],
 	"angels": ["draw_bin", "draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "on_bark", "surface", "tick", "tree_kind"],
 	"poble": ["draw_bin", "draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "on_bark", "surface", "tick"],
-	"cremada": ["draw_live", "draw_overhead", "draw_scenery", "tick"],
+	"cremada": ["draw_live", "draw_overhead", "draw_scenery", "on_bark", "tick"],
 	"ciutadella": ["cam_lean", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "hush_banner", "idle_status", "is_lamp", "on_bark", "surface", "tick", "tree_kind", "urgent_status"],
 	"raval": ["cam_lean", "draw_edge_layer", "draw_live", "draw_overhead", "hush_banner", "idle_status", "night_fronts", "on_bark", "surface", "tick", "urgent_status"],
 }
