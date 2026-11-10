@@ -17,20 +17,25 @@ func _check(ok: bool, what: String) -> void:
 
 
 func _scan(dir: String) -> void:
-	var rx := RegEx.create_from_string(r"patience\s*-\s*([0-9]+(?:\.[0-9]+)?)")
 	for f: String in DirAccess.get_files_at(dir):
-		if not f.ends_with(".gd"):
-			continue
-		var path := dir.path_join(f)
-		var lines := FileAccess.get_file_as_string(path).split("\n")
-		for i in range(lines.size()):
-			for mt: RegExMatch in rx.search_all(lines[i]):
-				_check(float(mt.get_string(1)) < 1.0, "%s:%d takes %s off a 0..1 patience" % [path, i + 1, mt.get_string(1)])
+		if f.ends_with(".gd"):
+			_scan_file(dir.path_join(f))
+
+
+func _scan_file(path: String) -> void:
+	var rx := RegEx.create_from_string(r"patience\s*-\s*([0-9]+(?:\.[0-9]+)?)")
+	var lines := FileAccess.get_file_as_string(path).split("\n")
+	for i in range(lines.size()):
+		for mt: RegExMatch in rx.search_all(lines[i]):
+			_check(float(mt.get_string(1)) < 1.0, "%s:%d takes %s off a 0..1 patience" % [path, i + 1, mt.get_string(1)])
 
 
 func _initialize() -> void:
 	for d: String in ["res://systems", "res://entities", "res://world"]:
 		_scan(d)
+	# main.gd runs most of the live events' bumps itself
+	_scan_file("res://main.gd")
+	_check(load("res://main.gd").LIVE_EVENT_BUMP_PATIENCE < 0.5, "a live event bump costs a fraction")
 	_check(load("res://systems/espanya.gd").BUMP_PATIENCE < 0.5, "a bubble bump costs a fraction")
 	_check(load("res://systems/forum.gd").BUMP_PATIENCE < 0.5, "a board bump costs a fraction")
 	print("\n%d checks, %d failures" % [checks, failures.size()])

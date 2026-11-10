@@ -318,6 +318,11 @@ func beaten() -> bool:
 	return state == State.CONTENT
 
 
+# awake and not yet settled: the fight is on
+func in_fight() -> bool:
+	return state != State.IDLE and not beaten()
+
+
 func trunk_tip() -> Vector2:
 	var side := face_dir.orthogonal()
 	var reach := 118.0 - trunk_lift * 30.0
@@ -710,6 +715,10 @@ func tick_state(delta: float) -> void:
 				pos.y = move_toward(pos.y, want_y, spd * delta)
 				pos.x = move_toward(pos.x, clampf(dog_p.x, ARENA_L + 100.0, SHORE_X - 100.0), DRIFT_SPEED * delta)
 			update_leg_positions()
+			# no attack while his title card is up: the banner under it is hushed,
+			# and the first swipe came with no word of what to do
+			if hush_banner():
+				return
 			var d := dog_p.distance_to(pos)
 			var front := absf(face_dir.angle_to(dog_p - pos)) < FRONT_CONE
 			if d < SWIPE_TRIGGER and front and swipe_cd <= 0.0:
@@ -1403,13 +1412,28 @@ func draw_bits(b: ShapeBatch, vt: float, vb: float) -> void:
 			b.circle(at, float(bt.r) * (0.5 + f * 0.5), col)
 
 
+# The plate's top-left, pushed down below the HUD banner when the banner is up
+# over him: the banner sits top centre, and he is in the top third of the
+# screen for most of the fight. `above` is how far the name rises over `bp`.
+func _below_banner(bp: Vector2, above: float) -> Vector2:
+	if main == null or main.feed == null:
+		return bp
+	var r: Rect2 = main.feed.banner_rect()
+	if r.size == Vector2.ZERO:
+		return bp
+	var screen_bottom: Vector2 = main.feed.get_canvas_transform() * Vector2(r.get_center().x, r.end.y + 6.0)
+	var world: Vector2 = main.get_global_transform_with_canvas().affine_inverse() * screen_bottom
+	bp.y = maxf(bp.y, world.y + above)
+	return bp
+
+
 func draw_health_bar(c: Object) -> void:
 	if state == State.IDLE or state == State.AWAKEN or hp <= 0.0:
 		return
 	var at := pos - Vector2(0.0, hop_z)
 	var bar_w := 170.0
 	var bar_h := 10.0
-	var bp := at + Vector2(-bar_w * 0.5, -128.0)
+	var bp := _below_banner(at + Vector2(-bar_w * 0.5, -128.0), 24.0)
 	c.draw_rect(Rect2(bp + LIGHT * 3.0, Vector2(bar_w, bar_h)), SHADOW)
 	c.draw_rect(Rect2(bp - Vector2(2.0, 2.0), Vector2(bar_w + 4.0, bar_h + 4.0)), STONE_DARK)
 	c.draw_rect(Rect2(bp - Vector2(1.0, 1.0), Vector2(bar_w + 2.0, bar_h + 2.0)), STONE_LIT)

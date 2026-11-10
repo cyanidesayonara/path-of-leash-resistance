@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-11-10 - The boss review's findings, and live-event bumps that emptied patience
+
+From the played review of both bosses (#506):
+- El Mamut waits for his title card to clear before his first attack. The card hushes the banner, so his first swipe used to come with no word of what to do.
+- Both bosses' health bars move down below the HUD banner when the banner would cover them.
+- A boss's legs still hold the leash, but they are no longer a pole to swing round: circling El Mamut or El Gat no longer pays out a run of POLE SWING shouts.
+- No dare is offered while a boss fight is on (El Raval's dare-giver used to pop the dare card mid-fight).
+- During a fight, the boss's banner ("YOUR HUMAN WON'T PASS HIM...") outranks the bladder and poop banners.
+- El Mamut's film: the tusk is drawn in front of the trunk (it is on the near side; the raised trunk used to cut it in two), and the rower is moved into shot.
+- Not changed: a dog that never engages El Mamut leaves your human waiting at him indefinitely. That is the design (the banner says so), not a stalemate to break.
+
+Live events' bumps took 8.0 (one took 10.0) off your human's patience, which runs from 0 to 1: one bump emptied it and sprang a correction. All 25 in main.gd now take `LIVE_EVENT_BUMP_PATIENCE` (0.08), as El Fòrum's and Plaça d'Espanya's already did, and `tests/test_patience_scale.gd` now scans main.gd as well. El Fòrum's skater bump called a `human.say()` that does not exist; it uses `say_line()`.
+
 ## 2026-11-09 - Store screenshots and logos for 1.71
 
 - New Store screenshots for 1.71, replacing 1.60's: ten 1920x1080 frames from the v1.71 tag that show what has changed since, from Festa de Gràcia's correfoc and El Gat de Botero waking on the Rambla del Raval to Plaça d'Espanya at night, La Neteja's sweeper at dawn, Els Búnquers at sunset, the rebuilt L'Eixample, Els Àngels and El Poble Espanyol, El Parc's pond and El Barri's off-leash area. `store/listing.md`'s "Screenshots for 1.71" has the order, captions and the command for each. The images and the regenerated logos are uploaded by hand in Partner Center and are not in the repository.
