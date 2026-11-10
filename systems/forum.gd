@@ -201,7 +201,6 @@ static func tick(m: Node2D, delta: float) -> void:
 
 	if res["bump_hazard"]:
 		m.human.patience = maxf(0.0, m.human.patience - BUMP_PATIENCE)
-		m.human.temper_t = 1.2
 		m.human.say_line("Ugh, watch out!")
 
 	if res["boop"]:
