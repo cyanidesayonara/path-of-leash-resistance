@@ -90,7 +90,8 @@ static func build(m: Node2D) -> Array[Dictionary]:
 					if dy <= float(m.GATE_Y) + 20.0 or dy > float(m.START_Y) + 60.0:
 						continue
 					var bl: Vector2 = m.building_line(dy)
-					out.append(front(Vector2(bl.x if side < 0.0 else bl.y, dy), -side, kind, k))
+					var fx: float = (bl.x - 27.0) if side < 0.0 else (bl.y + 27.0)
+					out.append(front(Vector2(fx, dy), -side, kind, k))
 			y += MOD
 	return out
 
@@ -116,7 +117,7 @@ static func along_edges(m: Node2D, y_from: float, y_to: float, step: float, inse
 
 
 # The fronts in view, into the light layer's batch. `lit` is Game.lamp_glow().
-static func draw(b: ShapeBatch, fronts: Array[Dictionary], c: Vector2, half: Vector2, lit: float, tint: Color) -> void:
+static func draw(b: ShapeBatch, fronts: Array[Dictionary], c: Vector2, half: Vector2, lit: float, tint: Color, wet := false) -> void:
 	for f: Dictionary in fronts:
 		var at: Vector2 = f.at
 		if absf(at.x - c.x) > half.x or absf(at.y - c.y) > half.y:
@@ -141,6 +142,22 @@ static func draw(b: ShapeBatch, fronts: Array[Dictionary], c: Vector2, half: Vec
 		var sx := at.x - dir * SLIT_DEPTH
 		b.rect(Rect2(minf(sx, at.x), at.y - w * 0.42, SLIT_DEPTH, w * 0.84), bright)
 		b.glow(at, w * 0.7 + 14.0, SkyLook.light(Color(col.r, col.g, col.b, 0.34 * lit), tint), 0.2)
+		if wet:
+			# each front's reflection in the wet paving: streaks toward the
+			# viewer along the opening and across the light fan
+			for s in range(3):
+				var sf := float(s) / 2.0
+				var rx := at.x + dir * (4.0 + sf * reach * 0.55)
+				var streak_len := lerpf(w * 1.4, w * 0.8, sf)
+				var streak_w := lerpf(7.0, 4.0, sf)
+				var streak_bits := 5
+				for k in range(streak_bits):
+					var kf := float(k) / float(streak_bits)
+					var sw := streak_w * (0.8 + 0.4 * absf(sin(float(k) * 2.7 + rx)))
+					var y0 := at.y + w * 0.35 + kf * streak_len
+					var alpha := 0.14 * lit * (1.0 - kf) * (1.0 - sf * 0.35)
+					b.rect(Rect2(rx - sw * 0.5, y0, sw, streak_len / float(streak_bits) - 1.5),
+						SkyLook.light(Color(col.r, col.g, col.b, alpha), tint))
 		# a lit window up on the roof behind it: someone is in upstairs
 		var k: int = f.k
 		if _hash(k, 2.0) < ROOF_SHARE:

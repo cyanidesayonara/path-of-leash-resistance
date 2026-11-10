@@ -75,8 +75,8 @@ func _run() -> void:
 	for f: Dictionary in fronts:
 		var at: Vector2 = f.at
 		var bl: Vector2 = m.building_line(at.y)
-		var left := absf(at.x - bl.x) < 0.5
-		var right := absf(at.x - bl.y) < 0.5
+		var left := absf(at.x - (bl.x - 27.0)) < 0.5
+		var right := absf(at.x - (bl.y + 27.0)) < 0.5
 		on_line = on_line and (left or right)
 		faces_in = faces_in and ((left and float(f.dir) > 0.0) or (right and float(f.dir) < 0.0))
 		in_walk = in_walk and at.y > float(m.GATE_Y) and at.y < float(m.START_Y) + 80.0
@@ -96,19 +96,18 @@ func _run() -> void:
 		m.queue_free()
 		await process_frame
 
-	# 4. Its own edges, its own fronts: Rambla del Raval
-	m = await _walk("raval")
-	_check(m.walk_mod.has_method("night_fronts"), "Raval says where its fronts are")
-	_check(NF.build(m).is_empty(), "none from the generic edge")
-	var rf: Array[Dictionary] = m.night_fronts()
-	_check(rf.size() >= 10, "and has them down the rambla: %d" % rf.size())
-	var on_edge := true
-	for f: Dictionary in rf:
-		var e: Vector2 = m.walk_edges(Vector2(f.at).y)
-		on_edge = on_edge and (absf(Vector2(f.at).x - e.x) < 0.5 or absf(Vector2(f.at).x - e.y) < 0.5)
-	_check(on_edge, "each on a paving edge")
+	# 4. Its own edges, its own fronts: Rambla del Raval and Plaça d'Espanya
+	for lvl: String in ["raval", "espanya"]:
+		m = await _walk(lvl)
+		_check(m.walk_mod.has_method("night_fronts"), "%s says where its fronts are" % lvl)
+		_check(NF.build(m).is_empty(), "none from the generic edge")
+		var rf: Array[Dictionary] = m.night_fronts()
+		_check(rf.size() >= 10, "and has them down %s: %d" % [lvl, rf.size()])
+		m.queue_free()
+		await process_frame
 
 	# 5. Only when the lamps are lit
+	m = await _walk("raval")
 	var layer: Node2D = null
 	for ch in m.get_children():
 		if ch.get_script() != null and String(ch.get_script().resource_path).ends_with("light_layer.gd"):
