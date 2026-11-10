@@ -71,6 +71,8 @@ const MAIN_FIELDS := [
 	"owner_wallet_lost", "carry_state", "cable_rides",
 	# Els Senglars' and Festa de Gràcia's own goals
 	"boar_mud_splashes", "boar_swings", "churros_eaten", "gracia_arches_zoomed", "gracia_arch_mask",
+	# La Cremada's: the rockets dodged and taken
+	"cremada_dodges", "cremada_hits",
 	# one-run pickups and rewards
 	"hydrants", "kebabs", "npc_marks", "candy", "prize_taken", "furgoneta_sniffed",
 	"challenge_offered",

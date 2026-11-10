@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-11-10 - La Cremada: Badalona's devil night, and the Dimoni rolls
+
+- **A new walk, the campaign's chase at 25** (after Plaça Reial, 36 stars, gated by Els Senglars; a clear night): Badalona on the Nit del Dimoni. From the Plaça de la Vila down Carrer del Mar under strings of devil pennants and a fiesta arch, through the railway underpass, across the Rambla's palms (poles to wrap) to the beach, where the Dimoni sits on his float waiting to be burned (`systems/cremada.gd`). The off-leash area is the beach, with him on it.
+- **The chase is the Dimoni's float** (`entities/dimoni_threat.gd`, kind "dimoni" in `systems/home_chase.gd`). Festa de Gràcia already owns the correfoc devils, and no two chases share a threat: this is one huge, slow juggernaut that fires. Every couple of seconds a rocket leaves his fork for where the dog or your human is heading, and a ring fills on the paving for a second before it lands. In the ring when it lands knocks her (or bumps your human, a stagger, never a fall); out of it but close is a dodge and a bone. The banner says "ROCKET! OUT OF THE RING" while one is filling near either of them. He wedges in the underpass and on the arch: the two respites, the second the checkpoint.
+- **Its film, "El Dimoni"** (`intro/film_cremada.gd`): the beach at night, the Pont del Petroli and its lamps, the Dimoni dark on his float; his crown fizzes, his eyes light, fire runs round the float, the brake cracks and he rolls, a rocket bursts overhead; she bolts; RUN! under his grin.
+- **A live event on the way out: the traca.** A string of firecrackers across the street goes off as your human reaches it, telegraphed (the fuse fizzes, "Traca! Cover your ears!"). Under it when it pops is a startle; held short of it is "traca dodge! +2". Not hung out in rain or snow (`Outdoors.fireworks`).
+- Goals: pull your human clear of the traca, dodge 4 of the Dimoni's rockets, get home without a rocket hitting you. Sign material: spent firework casings. Music: a hurried minor fiesta.
+- `tests/test_cremada.gd` (58 checks): registration, the rockets' aim, hits, dodges and limits, the float's roll, jams and catch line, the checkpoint's fields, the traca. Found by playing it: the chase checkpoint snapshots a `heading` on every threat, which the float did not have.
+- Not yet seen on screen: the brightened landing rings (the first ones were too dim under the night grade; the fix is in, the run that would have shown it got caught in the tug game). The release notes (Store, itch, README walk lists) still say 35 walks and are owed before the next tag.
+
 ## 2026-11-10 - El Gat is our own cat, by name too
 
 - El Gat's title card read "EL GAT DE BOTERO" over "Botero's cat, and he is awake". It now reads "EL GAT" over "The Raval's bronze cat, and he is awake". El Gat is a cartoon cat of our own (Botero's sculptures are still in copyright, and the November plan says so), so no player-facing text names an artist.

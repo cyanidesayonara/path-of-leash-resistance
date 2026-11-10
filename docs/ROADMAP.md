@@ -96,7 +96,7 @@ ads, no in-app purchases.
 ## Videos
 
 The story films are part of each chase walk (sweeper, flood, vet, boars,
-Gràcia and the cat are done). Still owed: La Cremada, L'Aeroport and
+Gràcia, La Cremada and the cat are done). Still owed: L'Aeroport and
 Montserrat each get a film with their walk, and each boss gets a short
 wake-up film. A trailer and devlog clips belong to the 2.0 Steam groundwork,
 cut from the playtest tool's captures.

@@ -40,8 +40,9 @@ const FLAME_CORE := Color(1.0, 0.90, 0.46)
 const SPARK := Color(1.0, 0.94, 0.56)
 const SMOKE := Color(0.30, 0.28, 0.30, 0.34)
 const SHADOW := Color(0.02, 0.02, 0.05, 0.30)
-const RING := Color(1.0, 0.40, 0.14)
-const RING_FILL := Color(1.0, 0.36, 0.10, 0.20)
+# bright enough to read under the night grade: the ring is the telegraph
+const RING := Color(1.0, 0.78, 0.30)
+const RING_FILL := Color(1.0, 0.45, 0.12, 0.42)
 const BLAST := Color(1.0, 0.84, 0.40)
 
 # the roll: steady, a little surge on the slope, catching up when far back
@@ -78,6 +79,9 @@ var kind := "dimoni"
 var rumble := 0.0
 var sway := 0.0
 var sway_v := 0.0
+# unused by a float that does not turn; the chase checkpoint snapshots it on
+# every threat (systems/chase_checkpoint.gd SWEEPER_FIELDS)
+var heading := 0.0
 var jams: Array[Vector2] = []
 var jam_t := 0.0
 var jam_side := 0.0
@@ -339,15 +343,19 @@ static func paint_float(b: ShapeBatch, c: Vector2, w: float, t: float, burning: 
 
 # a target ring filling over `k` (0..1): a dashed outline and its fill
 func _ring(b: ShapeBatch, at: Vector2, k: float) -> void:
+	# a pool of firelight on the paving, growing as the rocket comes down
+	b.glow(at, ROCKET_R * (1.5 + k * 0.6), Color(1.0, 0.55, 0.15, 0.35 + 0.35 * k), 0.15)
 	b.circle(at, ROCKET_R * k, RING_FILL)
-	var dashes := 18
-	var pulse := 0.7 + 0.3 * sin(rumble * 18.0)
+	var dashes := 16
+	var pulse := 0.75 + 0.25 * sin(rumble * 18.0)
 	for i in range(dashes):
 		var a0 := float(i) * TAU / float(dashes) + rumble * 1.5
-		var a1 := a0 + TAU / float(dashes) * 0.55
-		b.line(at + Vector2.from_angle(a0) * ROCKET_R, at + Vector2.from_angle(a1) * ROCKET_R,
-			Color(RING, pulse), 3.0)
-	b.circle(at, 5.0, Color(RING, 0.9))
+		var a1 := a0 + TAU / float(dashes) * 0.6
+		var p0 := at + Vector2.from_angle(a0) * ROCKET_R
+		var p1 := at + Vector2.from_angle(a1) * ROCKET_R
+		b.line(p0, p1, Color(0.20, 0.05, 0.02, 0.8), 7.0)
+		b.line(p0, p1, Color(RING, pulse), 4.0)
+	b.circle(at, 6.0, Color(RING, 0.95))
 
 
 # The Dimoni enthroned, seen from above and a little in front: shoulders and

@@ -152,6 +152,15 @@ func _run() -> void:
 	_check(f.gap_to(Vector2(640.0, f.front_y + 100.0)) > 99.0, "the gap is down the street")
 	f.queue_free()
 
+	# the checkpoint can snapshot him: every field it reads off a threat is there
+	var CC: GDScript = load("res://systems/chase_checkpoint.gd")
+	var probe: Node2D = Node2D.new()
+	probe.set_script(D)
+	for key: String in CC.SWEEPER_FIELDS:
+		_check(key in probe, "the float has the checkpoint's %s" % key)
+	probe.free()
+	_check(CC.MAIN_FIELDS.has("cremada_dodges") and CC.MAIN_FIELDS.has("cremada_hits"), "a continue restores the rocket counts")
+
 	# 3. The traca
 	m.phase = "out"
 	m.cremada_traca = {"state": "hung", "t": 0.0}
