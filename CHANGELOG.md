@@ -2,6 +2,20 @@
 
 Append-only session history, newest first.
 
+## 2026-11-10 - A signature live event for La Cremada: El Carretó de Xurros
+
+- A mobile festival churro cart (*Xurreria Ambulant*, `systems/churro_cart.gd`) now stands on La Rambla de Badalona between the railway underpass and the beach, nestled beside the palms at `x = 735.0, y = -4180.0`.
+- The event runs during festival evenings and nights (dusk and night in clear or wind weather); in rain or daylight hours the cart packs away, leaving the walk clean.
+- Telegraph: as your human approaches down the Rambla, the vendor rings the brass service bell ("Ding-ding!") and shouts "Xurros calents! Fresh and hot!" in a speech bubble 0.8 s before the cart becomes active.
+- Tricks & hazards:
+  - Dropped churro snack: as fresh churros come out of the fryer, a hot golden churro rolls onto the flagstones; dog pounces or reaches it for "churro snatch! +2" ("Bon profit, little one!").
+  - Bark greeting: barking near the cart earns a cheerful greeting from the vendor and "churro bark! +2" ("One for the doggie!").
+  - Soft hazard: bumping into the wooden cart frame deducts 0.08 patience and causes a small stumble ("Ai, que crema!").
+  - Dodge save: steering your human safely past the cart after a close brush awards "churro dodge! +2" through `NearMiss`.
+- Autowalk safe: positioned 95 px east of the centre line ($x = 640.0$), the bot passes cleanly without bumps or unintentional dodges.
+- Zero added draw calls: drawn into the world's `ShapeBatch` from Cremada's `draw_live` hook (dark timber chassis, spoked wheels, red-and-white striped scalloped awning, stainless fryer vat with simmering oil, paper cone with stacked churros, warm amber lantern glow, vendor in apron and barretina with tongs, and dropped churro with rising steam wisps).
+- Regression coverage: `tests/test_churro_cart.gd` (38 checks), `tests/test_cremada.gd` (58 checks), `tests/test_walk_hooks.gd` (886 checks), and `tests/test_members_exist.gd` (7,391 checks).
+
 ## 2026-11-10 - A victory payoff film for El Mamut de la Ciutadella
 
 - Settling the park's stone mammoth (`systems/boss_mamut.gd`, `State.CONTENT`) now triggers a 5-second victory payoff film (`intro/film_mamut_win.gd`), matching El Gat's plinth celebration on Rambla del Raval.

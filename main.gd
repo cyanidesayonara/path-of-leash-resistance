@@ -132,6 +132,7 @@ var espanya_bubble: EspanyaBubble
 var eixample_tour: EixampleTour
 var angels_skate: AngelsSkate
 var poble_balcony: PobleBalcony
+var churro_cart: ChurroCart
 var _tout_said := false
 var _fan_pairs := false
 var _partit_mark: Node2D
