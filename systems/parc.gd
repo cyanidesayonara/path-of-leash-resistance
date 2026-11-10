@@ -113,9 +113,10 @@ static func _draw_lawns(m: Node2D, vt: float, vb: float) -> void:
 	if LevelBuild.PARK_KIOSK.y > vt - 120.0 and LevelBuild.PARK_KIOSK.y < vb + 120.0:
 		_kiosk(m, b)
 	var pc: Rect2 = LevelBuild.PARK_PICNIC
-	if pc.end.y > vt - 40.0 and pc.position.y < vb + 40.0:
+	var fair := LevelBuild.park_lawn_out()
+	if fair and pc.end.y > vt - 40.0 and pc.position.y < vb + 40.0:
 		_picnic(m, b)
-	if LevelBuild.PARK_FRISBEE_B.y < vb + 60.0 and LevelBuild.PARK_FRISBEE_A.y > vt - 60.0:
+	if fair and LevelBuild.PARK_FRISBEE_B.y < vb + 60.0 and LevelBuild.PARK_FRISBEE_A.y > vt - 60.0:
 		_frisbee(m, b)
 	if LevelBuild.PARK_READER_TREE.y > vt - 120.0 and LevelBuild.PARK_READER_TREE.y < vb + 120.0:
 		_reader(m, b)
@@ -1001,7 +1002,7 @@ static func _lier(b: ShapeBatch, p: Vector2, skin: Color, wear: Color) -> void:
 static func _lawn_people(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	var t := AnimClock.msec() / 1000.0
 	var sb: Vector2 = LevelBuild.PARK_SUNBATHER
-	if sb.y > vt - 60.0 and sb.y < vb + 60.0:
+	if LevelBuild.park_lawn_out() and sb.y > vt - 60.0 and sb.y < vb + 60.0:
 		_lier(b, sb, Color(0.92, 0.74, 0.60), Color(0.90, 0.30, 0.44))
 		b.circle(sb + Vector2(26.0, -26.0), 4.0, Color(0.96, 0.62, 0.20))
 	var dw: Vector2 = LevelBuild.PARK_DOG_WALKER

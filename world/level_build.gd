@@ -29,6 +29,7 @@ const Superilla := preload("res://systems/superilla.gd")
 const Forum := preload("res://systems/forum.gd")
 const Espanya := preload("res://systems/espanya.gd")
 const Eixample := preload("res://systems/eixample.gd")
+const Outdoors := preload("res://systems/outdoors.gd")
 const Angels := preload("res://systems/angels.gd")
 const Poble := preload("res://systems/poble.gd")
 # the tutorial's pond for the brink lesson, beside the path at its station
@@ -1140,15 +1141,25 @@ const PARK_PERSON_R := 11.0
 
 
 # where each of El Parc's lawn people stands or sits (solid, as small circles)
+# whether El Parc's picnic, frisbee pair and sunbather are out on the lawn
+static func park_lawn_out() -> bool:
+	return Outdoors.picnics(Game.weather, Game.hour)
+
+
 static func park_people() -> Array[Vector3]:
 	var out: Array[Vector3] = []
-	var pc: Vector2 = PARK_PICNIC.get_center()
-	out.append(Vector3(pc.x, pc.y, 30.0))
+	# the picnic, the frisbee pair and the sunbather are out in fair weather
+	# by day only (park_lawn_out); the rest are out in any sky
+	var fair := park_lawn_out()
+	if fair:
+		var pc: Vector2 = PARK_PICNIC.get_center()
+		out.append(Vector3(pc.x, pc.y, 30.0))
 	var rd: Vector2 = PARK_READER_TREE + Vector2(-62.0, 34.0)
 	out.append(Vector3(rd.x, rd.y, PARK_PERSON_R))
-	out.append(Vector3(PARK_FRISBEE_A.x, PARK_FRISBEE_A.y, PARK_PERSON_R))
-	out.append(Vector3(PARK_FRISBEE_B.x, PARK_FRISBEE_B.y, PARK_PERSON_R))
-	out.append(Vector3(PARK_SUNBATHER.x, PARK_SUNBATHER.y, 16.0))
+	if fair:
+		out.append(Vector3(PARK_FRISBEE_A.x, PARK_FRISBEE_A.y, PARK_PERSON_R))
+		out.append(Vector3(PARK_FRISBEE_B.x, PARK_FRISBEE_B.y, PARK_PERSON_R))
+		out.append(Vector3(PARK_SUNBATHER.x, PARK_SUNBATHER.y, 16.0))
 	out.append(Vector3(PARK_DOG_WALKER.x, PARK_DOG_WALKER.y, PARK_PERSON_R))
 	out.append(Vector3(PARK_PARENT.x, PARK_PARENT.y, PARK_PERSON_R))
 	# the benches on the verge: a post at each end
@@ -1999,6 +2010,10 @@ static func build_level_data(m: Node2D) -> void:
 					if tr.intersects(keep):
 						tr.position.y = keep.end.y + 14.0
 				tw.rect = tr
+			# nobody lays a towel out at first light, after dark or in rain or
+			# snow: drawn above all the same, so the walk's sequence holds
+			if not Outdoors.sunbathers(Game.weather, Game.hour):
+				m.towels.clear()
 			m.bins = Array([
 				Vector2(590, -700), Vector2(950, -1600), Vector2(590, -2500),
 				Vector2(950, -3400), Vector2(590, -4300),
@@ -2642,6 +2657,10 @@ static func build_verge(m: Node2D) -> void:
 	# keeps its boulevard as it was)
 	if m.lvl == "street" and not m.tutorial_mode:
 		m.verge_items.clear()
+	# nobody spreads a blanket on wet, dark or frozen grass
+	if not Outdoors.picnics(Game.weather, Game.hour):
+		var kept: Array = m.verge_items.filter(func(it: Dictionary) -> bool: return String(it["kind"]) != "picnic")
+		m.verge_items = Array(kept, TYPE_DICTIONARY, &"", null)
 	# Nothing on the verge may sit in a bike lane. They are drawn straight
 	# across the level, verge included, so the first pass had a tree stump
 	# apparently growing out of the tarmac. Pushed clear here rather than

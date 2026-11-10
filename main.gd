@@ -198,6 +198,7 @@ const EdgePath := preload("res://world/edge_path.gd")
 const TangleGeom := preload("res://systems/tangle_geom.gd")
 const MoodWiring := preload("res://systems/mood_wiring.gd")
 const SkyLook := preload("res://systems/sky.gd")
+const Outdoors := preload("res://systems/outdoors.gd")
 const Arrival := preload("res://systems/arrival.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
 const CurrentFlow := preload("res://systems/current_flow.gd")
@@ -2890,7 +2891,7 @@ func _build_overhead() -> void:
 		if is_lamppost(i):
 			_add_over(Over.LAMP, i, poles[i], LAMP_HEAD_R)
 	for i in range(mini(stalls.size(), stall_kinds.size())):
-		if stall_kinds[i] == "icecream":
+		if stall_kinds[i] == "icecream" and Outdoors.icecream_open(Game.weather, Game.hour):
 			_add_over(Over.ICECREAM, i, stalls[i], ICECREAM_BROLLY_R)
 	if lvl != "barri" and lvl != "site":
 		for i in range(performers.size()):
@@ -2912,15 +2913,24 @@ func overhead_pieces() -> Array[Dictionary]:
 		return _over
 	var vt: float = view_lo(500.0)
 	var vb: float = view_hi(500.0)
-	var raining := Game.weather == "rain"
+	var busking := Outdoors.busking(Game.weather, Game.hour)
 	for t: Dictionary in _over_all:
 		if float(t["bot"]) < vt or float(t["top"]) > vb:
 			continue
-		# a performer only puts an umbrella up in the rain
-		if int(t["over"]) == Over.BROLLY and not raining:
+		# a performer only puts an umbrella up in rain or snow
+		if int(t["over"]) == Over.BROLLY and busking:
 			continue
 		_over.append(t)
 	return _over
+
+
+# Whether the walk's parasols are up. On the sand they are sunshades and
+# go up over the sunbathers only; in town they shade a terrace, rain or shine,
+# and are furled at night and under snow.
+func parasols_up() -> bool:
+	if lvl == "beach" or lvl == "llevant":
+		return Outdoors.sunbathers(Game.weather, Game.hour)
+	return Outdoors.terrace_parasols(Game.weather, Game.hour)
 
 
 # the post chain's lampposts (_draw_world): their heads are overhead
@@ -3045,16 +3055,18 @@ func draw_overhead_piece(b: ShapeBatch, t: Dictionary, _faded := false) -> void:
 	var i: int = t["i"]
 	match int(t["over"]):
 		Over.PARASOL:
-			# wide, over the tables by day; furled spikes at night
-			if Game.night:
+			# wide, over the tables by day, in the rain too; furled spikes
+			# at night and under snow (parasols_up)
+			if not parasols_up():
 				b.line(p + Vector2(-3, 24), p + Vector2(3, -28), Color(0.45, 0.4, 0.35), 5.0)
 				b.circle(p + Vector2(3, -28), 4.0, PARASOL_COLS[i % 3])
 			else:
 				_parasol_canopy(b, p, PARASOL_COLS[i % 3], float(i))
 		Over.PERGOLA:
-			# the beach terraces' canopies: out by day, furled at night
+			# the beach terraces' canopies: out by day, furled at night and
+			# under snow
 			var cn: Rect2 = t["rect"]
-			if Game.night:
+			if not Outdoors.terrace_parasols(Game.weather, Game.hour):
 				b.draw_rect(Rect2(cn.position.x, cn.position.y, cn.size.x, 10), Color(0.72, 0.67, 0.57))
 				b.draw_rect(Rect2(cn.position.x, cn.position.y, cn.size.x, 10), Color(0.5, 0.46, 0.38), false, 1.5)
 			else:
@@ -3079,7 +3091,14 @@ func draw_overhead_piece(b: ShapeBatch, t: Dictionary, _faded := false) -> void:
 		Over.BROLLY:
 			_brolly_canopy(b, performers[i] + Vector2(0, -8), BROLLY_COLS[i % BROLLY_COLS.size()], float(i))
 		Over.BEACH_PARASOL:
-			_beach_parasol_canopy(b, p, i)
+			# up over the sunbathers; furled when nobody is lying out
+			if Outdoors.sunbathers(Game.weather, Game.hour):
+				_beach_parasol_canopy(b, p, i)
+			else:
+				var pc: Color = BEACH_PARASOL_COLS[i % 3]
+				b.line(p + Vector2(-3, 24), p + Vector2(3, -28), Color(0.45, 0.4, 0.35), 5.0)
+				b.capsule(p + Vector2(1, -6), p + Vector2(3, -26), 5.0, pc)
+				b.circle(p + Vector2(3, -28), 3.0, pc.darkened(0.25))
 		Over.SHOP_AWNING:
 			Mercat.draw_awning(self, b, i)
 
@@ -3652,7 +3671,9 @@ func _tick_crowd(delta: float) -> void:
 	# the first fill puts people on screen too; after that they arrive from
 	# off screen, so nobody pops into view
 	var first_fill := n == 0
-	while n < (MOSAIC_CROWD if mosaic else CROWD_SIZE):
+	# fewer out at first light, after dark and in rain or snow
+	var want := Outdoors.crowd_here(MOSAIC_CROWD if mosaic else CROWD_SIZE)
+	while n < want:
 		var y := cy + crowd_rng.randf_range(-680.0, 680.0)
 		if absf(y - cy) < 420.0 and not first_fill:
 			y = cy + (420.0 + crowd_rng.randf_range(0.0, 300.0)) * (1.0 if crowd_rng.randf() < 0.5 else -1.0)
@@ -4087,7 +4108,7 @@ func _draw_browsers(b: ShapeBatch, r: Rect2, i: int) -> void:
 	var face_right := r.get_center().x < 640.0
 	var fwd := Vector2.LEFT if face_right else Vector2.RIGHT
 	var fx := r.end.x + 12.0 if face_right else r.position.x - 12.0
-	var count := 2 + (i % 2)
+	var count := Outdoors.crowd_here(2 + (i % 2), 0)
 	for k in range(count):
 		var h := (i * 7 + k * 13) % 97
 		var p := Vector2(fx + float(h % 5) - 2.0, r.position.y + 10.0 + float(k) * (r.size.y - 16.0) / float(maxi(count - 1, 1)))
@@ -4153,7 +4174,14 @@ func _draw_rambla_stall(st: Vector2, kind: String, i: int) -> void:
 	var b := ShapeBatch.new()
 	var r := Rect2(st.x - 48.0, st.y - 28.0, 96.0, 56.0)
 	Rambla.draw_rambla_stall(self, b, st, kind, i)
-	if kind == "icecream":
+	if kind == "icecream" and not Outdoors.icecream_open(Game.weather, Game.hour):
+		# shut: a cover drawn over the cart and tied down, nobody queueing
+		var cv := Rect2(st.x - 32.0, st.y - 20.0, 64.0, 40.0)
+		b.rect(cv, Color(0.30, 0.42, 0.50))
+		b.rect(cv.grow(-4.0), Color(0.36, 0.49, 0.57))
+		for tx: float in [-16.0, 16.0]:
+			b.line(Vector2(st.x + tx, cv.position.y), Vector2(st.x + tx, cv.end.y), Color(0.20, 0.18, 0.16), 1.6)
+	elif kind == "icecream":
 		# the cart is narrower than a stall: they queue at its side
 		_draw_browsers(b, r.grow_individual(-18.0, 0.0, -18.0, 0.0), i)
 	elif kind != "caricature":
@@ -8439,7 +8467,10 @@ func _vlane(delta: float) -> void:
 	b.setup(self, dog, human, Vector2(0.0, -speed if up else speed), r_kind)
 	if kid:
 		b.lane_keep(band_lo, band_hi)
-	if not b.configure_route(x, band_lo, band_hi, bypasser_blockers):
+	# kids on scooters are out in fair weather by day, skaters whenever it
+	# is dry and light (Outdoors.riding); drawn and set up all the same, so
+	# the walk's sequence holds
+	if not b.configure_route(x, band_lo, band_hi, bypasser_blockers) or not Outdoors.riding(r_kind, Game.weather, Game.hour):
 		b.free()
 		return
 	add_child(b)
@@ -9020,7 +9051,8 @@ func _pairs(delta: float) -> void:
 			var camera_y := cam.get_screen_center_position().y
 			var spawn_distance := _pair_spawn_distance(camera_y)
 			if spawn_distance > 0.0:
-				pair_spawn_t = randf_range(6.0, 11.0)
+				# first light and late evening are the dog walkers' hours
+				pair_spawn_t = randf_range(6.0, 11.0) * Outdoors.pair_gap(Game.weather, Game.hour)
 				var route := _pair_spawn_route(phase, randf() < 0.5, camera_y)
 				var y: float = route["y"]
 				if y >= GATE_Y + 60.0 and y <= START_Y + 100.0:
@@ -11985,7 +12017,7 @@ func _draw_furniture(vt: float, vb: float) -> void:
 		_wc.draw_rect(Rect2(tb.x - 8.0, tb.y - 6.0, 5.0, 3.0), Color(0.92, 0.82, 0.56))
 	# the beach terraces' canopies and the parasols over the tables are
 	# overhead (draw_overhead_piece); here only the shade a parasol casts
-	if not Game.night:
+	if parasols_up():
 		for pa in parasols:
 			_wc.circle(pa + LIGHT * 16.0, PARASOL_R * 0.92, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
 	# benches
@@ -12633,12 +12665,13 @@ func _draw_world() -> void:
 	# they are an umbrella crowd instead - hunched under canopies, no busking.
 	var pt := AnimClock.msec() / 1000.0
 	var raining := Game.weather == "rain"
+	var busking := Outdoors.busking(Game.weather, Game.hour)
 	for idx in range(performers.size()):
 		var pf: Vector2 = performers[idx]
 		if walk_mod != null and walk_mod.has_method("draw_performer"):
 			walk_mod.draw_performer(self, _wc, pf, idx)
 			continue
-		if lvl == "guell" and idx == 1 and not raining:
+		if lvl == "guell" and idx == 1 and busking:
 			# a fan seller: a tray of paper fans opened out to show, one open
 			# in hand, waving
 			contact_shadow(_wc, pf, 12.0, 5.0, 0.2)
@@ -12658,16 +12691,16 @@ func _draw_world() -> void:
 			continue
 		if pf.y < vt - 60.0 or pf.y > vb + 60.0:
 			continue
-		# a busker with a guitar and its open case; in the rain, an umbrella
-		# crowd instead, hunched under canopies, no busking
-		if not raining:
+		# a busker with a guitar and its open case; in rain or snow, an
+		# umbrella crowd instead, hunched under canopies, no busking
+		if busking:
 			_draw_busker(pf, idx, pt)
 			continue
 		_wc.draw_circle(pf, 12.0, Color(0.5, 0.35, 0.5))
 		_wc.draw_circle(pf + Vector2(0, -4), 7.0, Color(0.85, 0.72, 0.58))
 		# (the wide domed umbrella over the head, on its stick, is overhead:
 		# draw_overhead_piece)
-		for r in range(2):
+		for r in range(2 if raining else 0):
 			var rx := fmod(pt * 120.0 + idx * 30.0 + r * 60.0, 120.0)
 			_wc.draw_line(pf + Vector2(-24 + rx * 0.4, -28), pf + Vector2(-24 + rx * 0.4, 12), Color(0.6, 0.7, 0.85, 0.4), 1.0)
 	_dprof("performers")
