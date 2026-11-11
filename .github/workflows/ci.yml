@@ -535,6 +535,8 @@ jobs:
 
       - name: El Gotic is its own old town test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_gotic.gd
+      - name: El Gotic Castellers de Barcelona test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_gotic_castellers.gd
 
       - name: El Mercat market hall test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_mercat.gd
