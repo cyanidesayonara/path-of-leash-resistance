@@ -103,7 +103,86 @@ func _run() -> void:
 	_check(m.dog.global_position.distance_to(dog0) > 8.0, "the jet pushes her")
 	_check(dr.surface_at(dog0) == load("res://world/surfaces.gd").S.WATER, "soak puddle left behind")
 
+	# part two: furious below half, slither, column bind, leash trip
+	var LevelBuild: GDScript = load("res://world/level_build.gd")
+	var Surfaces: GDScript = load("res://world/surfaces.gd")
+	_ticks(m, BD.JET_TIME + 0.1)
+	_check(dr.state == BD.State.PROWL, "jet done, he prowls")
+	dr.damage(dr.hp - 45.0)
+	_check(dr.phase == 2, "below half he is in part two")
+	_ticks(m, DT)
+	_check(dr.state == BD.State.ENRAGE, "he enrages first")
+	_ticks(m, BD.ENRAGE_TIME + 0.1)
+	_check(dr.state == BD.State.PROWL and dr.enraged, "then prowls, furious")
+
+	dr.pos = Vector2(640.0, -1960.0)
+	dr.face_dir = Vector2.RIGHT
+	dr.slither_cd = 0.0
+	dr.tail_cd = 99.0
+	dr.jet_cd = 99.0
+	m.dog.global_position = Vector2(640.0, -1900.0)
+	m.human.global_position = Vector2(640.0, -1800.0)
+	var col: Vector2 = Vector2(LevelBuild.MOSAIC_HALL_COLS[3], LevelBuild.MOSAIC_HALL_ROWS[3])
+	_ticks(m, DT * 2.0)
+	_check(dr.state == BD.State.SLITHER, "he slithers through the hall")
+	_check(dr.status() == "WIND HIM ROUND A COLUMN", "slither banner")
+	# taut mid-segment across him, rope already on a hall Doric column
+	_lay_rope(m, Vector2(500.0, -1960.0), Vector2(780.0, -1960.0))
+	_mark_touch(m, col)
+	_check(dr.check_column_bind(), "column bind reads the wrapped taut leash")
+	_ticks(m, DT)
+	_check(m.drac_wound and dr.state == BD.State.STUNNED, "wound round a column")
+	var shed_mud := false
+	for z: Dictionary in dr.surface_zones:
+		if int(z.get("kind", -1)) == Surfaces.S.MUD:
+			shed_mud = true
+			break
+	_check(shed_mud, "slither sheds mud chips")
+
+	dr.transition_to(BD.State.PROWL)
+	dr.phase = 2
+	dr.enraged = true
+	dr.slither_cd = 0.0
+	dr.tail_cd = 99.0
+	dr.jet_cd = 99.0
+	dr.pos = Vector2(640.0, -1960.0)
+	m.drac_tripped = false
+	# taut across his path, no column wrap required
+	_lay_rope(m, Vector2(500.0, -1960.0), Vector2(780.0, -1960.0))
+	_clear_touch(m)
+	_check(dr.check_trip(), "a taut mid-segment is a trip")
+	_check(not dr.check_column_bind(), "trip needs no column")
+	_ticks(m, DT * 3.0)
+	_check(m.drac_tripped, "tripped with the leash")
+
 	print("test_drac: %d checks, %d failures" % [checks, failures.size()])
 	for f in failures:
 		print("  " + f)
 	quit(1 if failures.size() > 0 else 0)
+
+
+func _lay_rope(m: Node2D, a: Vector2, b: Vector2) -> void:
+	var n: int = m.leash.pts.size()
+	for i in range(n):
+		var p: Vector2 = a.lerp(b, float(i) / float(n - 1))
+		m.leash.pts[i] = p
+		if i < m.leash.prev.size():
+			m.leash.prev[i] = p
+	m.leash.rest_len = a.distance_to(b) * 0.8
+
+
+func _mark_touch(m: Node2D, col: Vector2) -> void:
+	var n: int = m.leash.pts.size()
+	m.leash._obs_pos = PackedVector2Array([col])
+	m.leash._touch.resize(n)
+	for i in range(n):
+		m.leash._touch[i] = -1
+	m.leash._touch[n / 2] = 0
+
+
+func _clear_touch(m: Node2D) -> void:
+	var n: int = m.leash.pts.size()
+	m.leash._obs_pos = PackedVector2Array()
+	m.leash._touch.resize(n)
+	for i in range(n):
+		m.leash._touch[i] = -1

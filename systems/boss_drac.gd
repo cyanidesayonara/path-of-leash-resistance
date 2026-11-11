@@ -3,8 +3,9 @@ extends RefCounted
 
 # EL DRAC, El Mosaic's salamander boss: asleep on the fountain stair until
 # she wakes him. He climbs off the plinth under a title card; your human will
-# not walk past that dragon. Part one: a tail whip across the rear sector
-# (Mamut's swipe, axis -face_dir); a clear miss wears him down.
+# not walk past that dragon. Part one: tail whip and fountain jet. Part two:
+# enrage, an S-curve slither through the hypostyle hall (mud chips, column
+# bind, leash trip). No separate charge — the mammoth owns that.
 
 const LevelBuild := preload("res://world/level_build.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -47,6 +48,21 @@ const JET_W := 42.0
 const JET_COOLDOWN := 2.8
 const FRONT_CONE := 1.15
 const PUDDLE_LIFE := 4.0
+# part two: enrage, slither, column bind, leash trip
+const ENRAGE_TIME := 1.7
+const SLITHER_TIME := 2.2
+const SLITHER_SPEED := 220.0
+const SLITHER_COOLDOWN := 3.0
+const SLITHER_WAVE := 5.5
+const SLITHER_AMP := 70.0
+const CHIP_EVERY := 0.18
+const CHIP_LIFE := 3.0
+const CHIP_HALF := 18.0
+const COLUMN_DAMAGE := 25.0
+const TRIP_DAMAGE := 25.0
+const STUN_TIME := 2.6
+const CLOTHESLINE_END_PTS := 3
+const HIT_BOX_R := 48.0
 
 enum State {
 	IDLE, AWAKEN, ENRAGE, PROWL, TAIL_WHIP, JET, SLITHER,
@@ -80,6 +96,10 @@ var whip_dir := Vector2.UP
 var whip_side := 1.0
 var whip_struck := false
 var jet_struck := false
+var slither_cd := 1.0
+var slither_from := Vector2.ZERO
+var slither_dir := Vector2.RIGHT
+var chip_t := 0.0
 # puddles / chips: [{ "rect": Rect2, "kind": int, "until": float }]
 var surface_zones: Array[Dictionary] = []
 
@@ -101,6 +121,8 @@ func setup(m: Node2D) -> void:
 	hold_noticed = false
 	tail_cd = 1.0
 	jet_cd = 1.0
+	slither_cd = 1.0
+	chip_t = 0.0
 	whip_struck = false
 	jet_struck = false
 	legs_tied = 0
@@ -175,6 +197,8 @@ func status() -> String:
 			return "WATCH THE TAIL!" if near else ""
 		State.JET:
 			return "WATCH THE JET!" if near else ""
+		State.SLITHER:
+			return "WIND HIM ROUND A COLUMN" if near else ""
 	return ""
 
 
@@ -183,7 +207,13 @@ func hush_banner() -> bool:
 
 
 func damage(amt: float) -> void:
+	var was := hp
 	hp = maxf(0.0, hp - amt)
+	if hp <= MAX_HP * 0.5 and phase == 1:
+		phase = 2
+		main.feed.say("EL DRAC IS FURIOUS!", EventFeed.Tone.LOUD)
+	if hp <= 0.0 and was > 0.0:
+		main.feed.say("HE'S HAD ENOUGH! AFTER HIM", EventFeed.Tone.GOOD)
 
 
 func in_sector(p: Vector2, dir: Vector2, reach: float, half: float) -> bool:
@@ -194,6 +224,10 @@ func in_sector(p: Vector2, dir: Vector2, reach: float, half: float) -> bool:
 
 
 func transition_to(s: State) -> void:
+	if s == State.PROWL and hp <= 0.0:
+		s = State.RETREAT
+	elif s == State.PROWL and phase == 2 and not enraged:
+		s = State.ENRAGE
 	state = s
 	state_t = 0.0
 	match s:
@@ -204,6 +238,10 @@ func transition_to(s: State) -> void:
 				Sfx.play("crack", 1.3, -10.0)
 			card_t = 0.0
 			_ensure_card()
+		State.ENRAGE:
+			enraged = true
+			Sfx.play("crack", 0.7, -4.0)
+			main.shake_t = maxf(float(main.shake_t), 0.7)
 		State.TAIL_WHIP:
 			state_t = TAIL_WARN
 			whip_dir = -face_dir
@@ -212,6 +250,13 @@ func transition_to(s: State) -> void:
 		State.JET:
 			state_t = JET_WARN
 			jet_struck = false
+		State.SLITHER:
+			slither_from = pos
+			slither_dir = face_dir.normalized() if face_dir.length_squared() > 0.01 else Vector2.RIGHT
+			chip_t = 0.0
+			_shed_chip()
+		State.STUNNED:
+			state_t = STUN_TIME
 		State.CONTENT:
 			hold_noticed = false
 
@@ -302,6 +347,74 @@ func _expire_zones() -> void:
 		i -= 1
 
 
+func _shed_chip() -> void:
+	var h := CHIP_HALF
+	surface_zones.append({
+		"rect": Rect2(pos - Vector2(h, h), Vector2(h * 2.0, h * 2.0)),
+		"kind": Surfaces.S.MUD,
+		"until": main.elapsed + CHIP_LIFE,
+	})
+
+
+func _rope_taut_across() -> bool:
+	var l = main.leash
+	if l == null or l.detached:
+		return false
+	var rest: float = maxf(float(l.rest_len), 1.0)
+	if l.taut_amount(l.used_length() / rest) < 0.15:
+		return false
+	var hit_sq := HIT_BOX_R * HIT_BOX_R
+	var n: int = l.pts.size()
+	for i in range(CLOTHESLINE_END_PTS, n - 1 - CLOTHESLINE_END_PTS):
+		var cp: Vector2 = Geometry2D.get_closest_point_to_segment(pos, l.pts[i], l.pts[i + 1])
+		if pos.distance_squared_to(cp) <= hit_sq:
+			return true
+	return false
+
+
+func check_trip() -> bool:
+	return _rope_taut_across()
+
+
+func check_column_bind() -> bool:
+	if main.leash == null or main.leash.detached:
+		return false
+	if not _rope_taut_across():
+		return false
+	for y: float in LevelBuild.MOSAIC_HALL_ROWS:
+		for x: float in LevelBuild.MOSAIC_HALL_COLS:
+			if main.leash.touches(Vector2(x, y)):
+				return true
+	return false
+
+
+func _hit(kind: String) -> void:
+	match kind:
+		"column":
+			main.drac_wound = true
+			damage(COLUMN_DAMAGE)
+			Sfx.play("intro_taut", 0.9, -4.0)
+			Sfx.play("crack", 0.7, -2.0)
+			main.feed.say("WOUND ROUND A COLUMN!", EventFeed.Tone.LOUD)
+			main.combo.add("COLUMN", 8)
+			main.float_text(pos, "wound! +8", Color(1.0, 0.85, 0.2))
+		"trip":
+			main.drac_tripped = true
+			damage(TRIP_DAMAGE)
+			Sfx.play("intro_taut", 0.9, -4.0)
+			Sfx.play("crack", 0.55, -1.0)
+			main.feed.say("TRIPPED!", EventFeed.Tone.LOUD)
+			main.combo.add("TRIP", 8)
+			main.float_text(pos, "tripped! +8", Color(1.0, 0.85, 0.2))
+	main.shake_t = maxf(float(main.shake_t), 1.0)
+	transition_to(State.STUNNED)
+
+
+func _clamp_hall() -> void:
+	pos.x = clampf(pos.x, LevelBuild.MOSAIC_HALL_COLS[0], LevelBuild.MOSAIC_HALL_COLS[LevelBuild.MOSAIC_HALL_COLS.size() - 1])
+	pos.y = clampf(pos.y, LevelBuild.MOSAIC_HALL_Y1 + 40.0, LevelBuild.MOSAIC_HALL_Y0 - 40.0)
+
+
 func tick_state(delta: float) -> void:
 	if main == null or main.frozen:
 		return
@@ -326,16 +439,28 @@ func tick_state(delta: float) -> void:
 				pos = LANDING
 				update_leg_positions()
 				transition_to(State.PROWL)
+		State.ENRAGE:
+			state_t += delta
+			if state_t >= ENRAGE_TIME:
+				transition_to(State.PROWL)
 		State.PROWL:
+			# a hit that crossed half or emptied him lands between attacks too
+			if hp <= 0.0 or (phase == 2 and not enraged):
+				transition_to(State.PROWL)
+				return
 			tail_cd -= delta
 			jet_cd -= delta
+			slither_cd -= delta
 			# no attack while his title card is up: the banner under it is hushed
 			if hush_banner():
 				return
 			var d := dog_p.distance_to(pos)
 			var behind := absf((-face_dir).angle_to(dog_p - pos)) < REAR_CONE
 			var front := absf(face_dir.angle_to(dog_p - pos)) < FRONT_CONE
-			if d < TAIL_TRIGGER and behind and tail_cd <= 0.0:
+			if phase == 2 and slither_cd <= 0.0:
+				slither_cd = SLITHER_COOLDOWN
+				transition_to(State.SLITHER)
+			elif d < TAIL_TRIGGER and behind and tail_cd <= 0.0:
 				tail_cd = TAIL_COOLDOWN
 				transition_to(State.TAIL_WHIP)
 			elif d < JET_LEN and front and jet_cd <= 0.0:
@@ -357,6 +482,33 @@ func tick_state(delta: float) -> void:
 				var k := clampf(-state_t / JET_TIME, 0.0, 1.0)
 				if k >= 1.0:
 					transition_to(State.PROWL)
+		State.SLITHER:
+			state_t += delta
+			var side := slither_dir.orthogonal()
+			pos = slither_from + slither_dir * (state_t * SLITHER_SPEED) \
+				+ side * sin(state_t * SLITHER_WAVE) * SLITHER_AMP
+			_clamp_hall()
+			face_dir = slither_dir
+			update_leg_positions()
+			chip_t += delta
+			if chip_t >= CHIP_EVERY:
+				chip_t = 0.0
+				_shed_chip()
+			if check_column_bind():
+				_hit("column")
+				return
+			if check_trip():
+				_hit("trip")
+				return
+			if state_t >= SLITHER_TIME:
+				transition_to(State.PROWL)
+		State.STUNNED:
+			state_t -= delta
+			if state_t <= 0.0:
+				transition_to(State.PROWL)
+		State.RETREAT:
+			# Task 6 fills the walk back to the steps
+			pass
 		_:
 			pass
 
