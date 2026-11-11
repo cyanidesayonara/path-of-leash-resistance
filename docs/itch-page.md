@@ -51,7 +51,7 @@ The leash is real rope. The one you see is the one doing the physics: it wraps, 
 
 Your human answers it like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-THIRTY-FOUR WALKS IN AND AROUND BARCELONA
+THIRTY-SIX WALKS IN AND AROUND BARCELONA
 
 El Barri, the neighborhood park
 La Rambla, the crowded promenade
@@ -63,6 +63,7 @@ Montjuïc, the climb
 El Mercat, the market hall
 El Diluvi, the downpour
 El Besòs, the river park
+La Ciutadella, the waterfall cascade and El Mamut
 Platja de Llevant, the dog beach at the far end of the coast
 L'Eixample, the grid of cut corners round the basilica
 El Tibidabo, the mountain road
@@ -76,6 +77,7 @@ La Superilla, the superblock play streets
 L'Estació, the train station
 Els Búnquers, the overlook above the city
 Plaça Reial, the arcaded square
+La Cremada, Badalona's devil night and the Dimoni
 El Fòrum, the seaside esplanade
 La Carretera de les Aigües, the hillside hike
 El Laberint d'Horta, the cypress maze
@@ -88,7 +90,7 @@ La Ferralla, the junkyard
 Festa de Gràcia, the decorated festival street
 Rambla del Raval, the finale, with El Gat, a bronze cat
 
-Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. Five of them are chases: the street sweeper at dawn, the river flood on El Besòs, the clinic escape in El Veterinari, the wild boars of Els Senglars and the correfoc through Gràcia. On the last, the Rambla del Raval, a fat bronze cat climbs off his plinth, and your human will not pass him until you deal with him. There is a gentle first walk that teaches one trick at a time, and every walk can be played in clear weather, rain, wind or snow, by day or at night.
+Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. Six of them are chases: the street sweeper at dawn, the river flood on El Besòs, the clinic escape in El Veterinari, the wild boars of Els Senglars, the correfoc through Gràcia and the Dimoni float in La Cremada. Two of them feature statue bosses: El Mamut in La Ciutadella and El Gat on the Rambla del Raval. There is a gentle first walk that teaches one trick at a time, and every walk can be played in clear weather, rain, wind or snow, by day or at night.
 
 ALSO
 
@@ -122,6 +124,26 @@ On a phone or tablet: a stick on the left, DIG, PEE, BARK and RUN on the right (
 Single player. No ads, no purchases, no account. The download plays offline; the itch app keeps it up to date.
 
 Made in Godot by Santtu Nykänen. The dog is Millie, a distinguished salt-and-pepper mutt who squats like a lady.
+```
+
+## What's new in 1.72
+
+For a devlog post or the top of the body. Everything since v1.71, from
+CHANGELOG.md. The Store's What's new is the short form of this.
+
+```
+- Two new walks, thirty-six in all:
+  - La Ciutadella, open at 15 stars: the grand promenade from the Arc de Triomf to the waterfall cascade, with rowboats on the lake and giraffes looking over the zoo wall. By the lake, El Mamut, a full-size stone mammoth, climbs off his plinth as the first statue boss. Dodge his trunk swipe and stomps, trip his charge with the leash, and boop his trunk when dazed. Settling him triggers a triumphant victory film with a celebratory rainbow water fountain.
+  - La Cremada, open at 36 stars: Badalona on the Nit del Dimoni. Down Carrer del Mar under strings of devil pennants and a fiesta arch, through the railway underpass to the beach. The chase is the Dimoni's rolling float, firing rockets that target the ground ahead with warning rings. Includes the "El Dimoni" story film, a traca firecracker string, and a mobile churro cart live event on the Rambla.
+- Signature live events & festival spectacles:
+  - El Carretó de Xurros on La Cremada: a festival churro wagon frying hot churros on the Rambla. Ringing service bell, vendor greeting, dropped churro snack trick, and a warm amber lantern glow.
+  - Castellers de Gràcia & Castellers de Barcelona: living dynamic human towers with organic micro-sway and an 8-second crowning cycle culminating in l'aleta (four outstretched fingers amidst celebratory sparkles). Traditional graller and tabaler musicians, diada bunting, and equilibri and aleta cheering tricks.
+  - The Fur-goneta: a shaggy Dumb & Dumber Mutt Cutts shag wagon homage with floppy ears, wagging tail, animated eye windshield, bobbing pink tongue, and iridescent bubbles. Features a mobile groomer style dare across four walks (the boulevard, beach promenade, superblock, and park entrance).
+  - Badalona seafront kite flyer: a kite flyer on the beach side dives his kite low across the promenade with pounce, bark and dodge tricks.
+- The street after dark comes alive: doorways ajar, lit shopfronts, amber bars, and the blue glow of televisions spill soft fans of light across the paving, reflecting into wet streets in the rain, with lit windows on the roofs overhead. Extended across all urban walks including L'Eixample, La Superilla, El Poble Espanyol, and Els Àngels.
+- El Gat pounces: below half health, the Raval's bronze cat crouches, wiggles his rear and leaps through the air with a landing ring. Catch him mid-leap with a taut leash or steer him into a palm or a terrace table.
+- Who is out follows the weather and the hour: sunbathers, parasols, picnics and ice-cream carts stay in when it rains or after dark, and crowds thin in foul weather.
+- Health bars for boss fights stay clear of the banner, and live-event bumps cost a fair fraction of patience rather than emptying the meter.
 ```
 
 ## What's new in 1.71

@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-11-11 - Release notes for 1.72
+
+- Store "What's new" and the certification note now describe 1.72 (everything since 1.71, under the Store's 1500 characters), 1.71's What's new is in "Past What's new", and `docs/itch-page.md` has "What's new in 1.72".
+- Walk count updated to thirty-six across the Store description, short description, features, itch body and README, with La Ciutadella and La Cremada added to the lists and tables in `Game.CAROUSEL` campaign order.
+- Six chase walks and two statue bosses recorded in features and descriptions.
+- Highlights 1.72 additions: La Ciutadella and La Cremada walks, El Mamut statue boss & victory payoff film, El Dimoni float chase, El Carretó de Xurros live event, Castellers de Gràcia & Castellers de Barcelona, Dumb & Dumber Fur-goneta facelift & style dare across four walks, and city-wide night illumination.
 ## 2026-11-11 - Night polish pass: illuminated fronts for modern and village walks
 
 - Extended night fronts (`world/night_fronts.gd`) across all remaining built-up walks that draw custom edge layers:
