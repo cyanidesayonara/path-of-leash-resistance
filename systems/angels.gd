@@ -23,6 +23,7 @@ const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const AngelsSkate := preload("res://systems/angels_skate.gd")
 const AnimClock := preload("res://systems/anim_clock.gd")
+const NightFronts := preload("res://world/night_fronts.gd")
 
 const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.07, 0.24)
@@ -1304,3 +1305,10 @@ static func surface(m: Node2D, p: Vector2) -> int:
 			return Surfaces.S.PAVEMENT
 		return Surfaces.S.GRASS
 	return Surfaces.S.PAVEMENT
+
+
+# The street after dark (world/night_fronts.gd): this walk draws its own
+# edges, so it lists its illuminated skate shops, bars and Raval doorways.
+static func night_fronts(m: Node2D) -> Array[Dictionary]:
+	return NightFronts.along_edges(m, float(m.START_Y), float(m.GATE_Y), 190.0, 0.0, 5)
+

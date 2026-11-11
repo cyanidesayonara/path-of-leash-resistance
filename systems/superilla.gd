@@ -23,6 +23,7 @@ extends RefCounted
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const SuperillaCargo := preload("res://systems/superilla_cargo.gd")
+const NightFronts := preload("res://world/night_fronts.gd")
 
 const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.07, 0.22)
@@ -968,3 +969,28 @@ static func surface(m: Node2D, p: Vector2) -> int:
 			return Surfaces.S.PAVEMENT
 		return Surfaces.S.GRASS
 	return Surfaces.S.PAVEMENT
+
+
+# The street after dark (world/night_fronts.gd): this walk draws its own
+# edges, so it lists its illuminated Poblenou industrial loft and studio doorways.
+static func night_fronts(m: Node2D) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var y := maxf(float(m.GATE_Y) + 40.0, -4800.0)
+	var i := 0
+	while y < minf(float(m.START_Y) + 60.0, 200.0):
+		var in_xway := false
+		for cy: float in CROSS_YS:
+			if absf(y - cy) < CROSS_HALF + 20.0:
+				in_xway = true
+				break
+		if not in_xway:
+			for side: float in [-1.0, 1.0]:
+				var k := i * 2 + (0 if side < 0.0 else 1) + 808
+				var kind := NightFronts.kind_of(k)
+				if kind != "":
+					var fx: float = WALL_L if side < 0.0 else WALL_R
+					out.append(NightFronts.front(Vector2(fx, y), -side, kind, k))
+		y += 180.0
+		i += 1
+	return out
+

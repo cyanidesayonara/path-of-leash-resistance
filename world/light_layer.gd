@@ -51,7 +51,7 @@ func _draw() -> void:
 	var half: Vector2 = get_viewport_rect().size * 0.5 / maxf(main.cam.zoom.x, 0.01) + Vector2(MARGIN, MARGIN)
 	var b := ShapeBatch.new(self)
 	# the street's own light first, the lamps' pools over it
-	NightFronts.draw(b, main.night_fronts(), c, half, lit, tint)
+	NightFronts.draw(b, main.night_fronts(), c, half, lit, tint, wet)
 	for l: Vector3 in main.night_lights():
 		if absf(l.x - c.x) > half.x or absf(l.y - c.y) > half.y:
 			continue

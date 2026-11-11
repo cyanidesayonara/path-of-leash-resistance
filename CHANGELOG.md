@@ -2,11 +2,101 @@
 
 Append-only session history, newest first.
 
-## 2026-11-10 - Release notes for 1.72
+## 2026-11-11 - Release notes for 1.72
 
 - Store "What's new" and the certification note now describe 1.72 (everything since 1.71, under the Store's 1500 characters), 1.71's What's new is in "Past What's new", and `docs/itch-page.md` has "What's new in 1.72".
 - Walk count updated to thirty-six across the Store description, short description, features, itch body and README, with La Ciutadella and La Cremada added to the lists and tables in `Game.CAROUSEL` campaign order.
 - Six chase walks and two statue bosses recorded in features and descriptions.
+- Highlights 1.72 additions: La Ciutadella and La Cremada walks, El Mamut statue boss & victory payoff film, El Dimoni float chase, El Carretó de Xurros live event, Castellers de Gràcia & Castellers de Barcelona, Dumb & Dumber Fur-goneta facelift & style dare across four walks, and city-wide night illumination.
+## 2026-11-11 - Night polish pass: illuminated fronts for modern and village walks
+
+- Extended night fronts (`world/night_fronts.gd`) across all remaining built-up walks that draw custom edge layers:
+  - **L'Eixample** (`systems/eixample.gd`): Illuminated avenue shopfronts, bars, and home doorways positioned flush along the building line, correctly skipping open cross-street crossings (`XINGS`).
+  - **La Superilla** (`systems/superilla.gd`): Lit industrial loft doorways, 22@ creative studios, and television windows along `WALL_L` and `WALL_R`, skipping perpendicular cross-streets.
+  - **El Poble Espanyol** (`systems/poble.gd`): Artisan workshops, taverns, and village doorways with warm glowing light fans spilling under festive bunting, plus lit roof windows upstairs.
+  - **Els Àngels** (`systems/angels.gd`): Skate shops, cultural spaces, and Raval doorways spilling light onto the granite plaza and convent lane.
+- All night fronts continue to batch cleanly through `world/light_layer.gd` with zero new draw calls, and reflect softly into wet paving during rain.
+- Regression coverage: `tests/test_night_fronts.gd` (expanded to 88 checks across all walks), `tests/test_walk_hooks.gd` (904 checks), and `tests/test_members_exist.gd` (7,562 checks).
+
+## 2026-11-11 - Castellers de Barcelona in El Gòtic: Placa de Sant Felip Neri diada
+
+- Added the historic *Castellers de Barcelona* colla (founded 1969, red shirts `Color(0.85, 0.16, 0.18)`, black faixes, and white trousers) to Walk 7 (El Gòtic, `systems/gotic_castellers.gd`, `world/gotic.gd`).
+- Diada setting in Plaça de Sant Felip Neri:
+  - Positioned at `Vector2(840.0, -2850.0)` in the quiet northeast quadrant of the square.
+  - Framed by a circular cobblestone diada apron, Senyera ribbon garland with festive flags, red velvet cordons on brass stanchions, and a "CASTELLERS DE BARCELONA" backdrop banner.
+  - Accompanied by traditional musicians (graller playing dolçaina/gralla with musical notes, tabaler beating the drum) and flanking coaches (*cap de colla*).
+  - Living human tower (pinya, tronc/quarts, acotxador, and crowning anxaneta) featuring organic micro-sway and an 8-second crowning cycle culminating in *l'aleta* (raising four outstretched fingers for *quatre barres* with celebratory sparkles).
+- Physics, obstacle clearance & rope wrapping:
+  - Solid collision body + bypasser blocker covering the $56 \times 56$ colla circle prevents tourists and dog-walking pairs from pathing through the formation.
+  - Flanking carved Gothic stone stanchions (`Vector2(804.0, -2850.0)` and `Vector2(876.0, -2850.0)`) register as leash wrap poles in `m.poles`.
+  - Full clearance verified: $>150$ px to central fountain, $>140$ px to acoustic busker, $>80$ px to east bench, $>250$ px to plane tree. Autowalk human path ($x \approx 740.0$) maintains $100$ px clearance from colla and $64$ px from left stanchion (100% autowalk safe).
+- Interactive tricks:
+  - *Equilibri trick (+2)*: Dog stands respectfully near the colla ($<130$ px, speed $<30$, not dragged) for 1.5 seconds to award `"equilibri! +2"` (`"Força, equilibri, valor i seny!"`). Single award flag `gotic_castell_watched`.
+  - *Aleta cheer bark (+2)*: Barking near the colla ($<150$ px) during *l'aleta* (phase 3.8s..6.5s in the 8s cycle) awards `"aleta cheer! +2"` (`"Visca els Castellers de Barcelona!"`). Single award flag `gotic_aleta_cheered`.
+- Zero new draw calls: Rendered completely through `ShapeBatch` flush inside `Gotic.draw_street()`.
+- Regression coverage: `tests/test_gotic_castellers.gd` (29 checks), `tests/test_gotic.gd` (10 checks), `tests/test_walk_hooks.gd` (892 checks), `tests/test_members_exist.gd` (7,554 checks), and `tests/test_npc_clear_of_solids.gd` (188 checks).
+
+## 2026-11-11 - Fur-goneta facelift, multi-walk presence and mobile groomer style dare
+
+- Visual facelift for the Fur-goneta (`systems/furgoneta.gd`), honoring the iconic Dumb & Dumber Mutt Cutts shag wagon homage:
+  - Shaggy cream/caramel fur coat with roof curls, floppy ears down the flanks, and a clay slab body.
+  - Front face: big black wet nose, curving wire whiskers, bobbing pink tongue with center cleft and saliva glint under the bumper, and raked windshield with animated eyes looking toward the dog.
+  - Expressive eyebrow wipers that waggle on horn honks, roof brass megaphone horn, side grooming dutch-door window with scissors & comb silhouette, and floating iridescent soap bubbles drifting off the roof bath rack.
+  - Paw-print hubcaps (`UiIcons.draw_paw`) on all four wheels, and wagging tail on the rear doors.
+  - Roof livery sign: "FUR GONETA dog grooming" with bone sign and paw icon.
+- Expanded presence across 4 walks at verified clear curb/path turnouts:
+  - La Rambla (`street`): `Vector2(m.sw_l + 66.0, -3560.0)`
+  - Passeig Marítim (`beach`): `Vector2(1045.0, -730.0)`
+  - La Superilla (`superilla`): `Vector2(405.0, -3350.0)`
+  - Parc de la Ciutadella (`park`): `Vector2(815.0, -780.0)`
+  - All 4 walks register 64x132 solid collision bodies, rope wrap rects (`add_rope_rect`), and bypasser blockers. Absence verified in market hall (`market`).
+- Interactive functionality & groomer dare:
+  - Bark honk: barking within 150 px triggers a two-tone cartoon brass horn (`autoload/sfx.gd`), flashing headlamps, wiggling eyebrow wipers, and awards `"van honk! +2"` with cooldown protection.
+  - Discovery sniffing payout: retains classic high-reward single-payout scent sniff (+12 bones, +8 combo, `"four hundred dogs have been in there +12"`).
+  - Mobile Groomer Style Dare: within 130 px, offers a 20-second style dare (6 tricks, upbeat kid dare music).
+  - Fresh Coat Grooming Buff: winning the dare grants a 45-second Fresh Coat buff that clears mud/wet paws immediately, displays golden grooming glints around Millie, and awards +1 bonus trick point on all scored tricks.
+- Regression coverage: `tests/test_furgoneta.gd` (47 checks), `tests/test_members_exist.gd` (7,515 checks), `tests/test_furniture_recovery.gd`, `tests/test_patience_scale.gd`, and `tests/test_baked_music.gd`.
+
+## 2026-11-11 - Living Castellers de Gràcia: dynamic human tower, l'aleta, and tricks
+
+- The practice stage on Walk 26 (Festa de Gràcia, `systems/gracia.gd`) now features a full, living Castellers de la Vila de Gràcia human tower with organic micro-sway, coaches on the flanks, and an 8-second crowning cycle.
+- Dynamic crowning cycle:
+  - Pujant (0..4s): Anxaneta climbs the tiers up to the acotxador crouched atop the quarts.
+  - L'Aleta (4..6.5s): Anxaneta crowns the apex and raises their right arm high with four outstretched fingers (*quatre barres*) amidst celebratory golden sparkles.
+  - Descarregat (6.5..8s): Safe slide down to the pinya as the colla holds steady.
+- New gameplay tricks:
+  - Equilibri trick (+2): Standing respectfully near the stage without dragging for 1.5 seconds awards "equilibri! +2" ("Força, equilibri, valor i seny!").
+  - Aleta cheer bark (+2): Barking near the stage during the aleta crowning window awards "aleta bark! +2" ("Visca els Castellers de Gràcia!").
+- Zero new draw calls: Drawn directly into the scenery `ShapeBatch` flush. Physical stage dimensions and wrap poles remain unchanged for Correfoc chase jam respite compatibility.
+- Regression coverage: `tests/test_gracia_castellers.gd` (21 checks), `tests/test_walk_hooks.gd` (889 checks), and `tests/test_members_exist.gd` (7,416 checks).
+
+## 2026-11-10 - A signature live event for La Cremada: El Carretó de Xurros
+
+- A mobile festival churro cart (*Xurreria Ambulant*, `systems/churro_cart.gd`) now stands on La Rambla de Badalona between the railway underpass and the beach, nestled beside the palms at `x = 735.0, y = -4180.0`.
+- The event runs during festival evenings and nights (dusk and night in clear or wind weather); in rain or daylight hours the cart packs away, leaving the walk clean.
+- Telegraph: as your human approaches down the Rambla, the vendor rings the brass service bell ("Ding-ding!") and shouts "Xurros calents! Fresh and hot!" in a speech bubble 0.8 s before the cart becomes active.
+- Tricks & hazards:
+  - Dropped churro snack: as fresh churros come out of the fryer, a hot golden churro rolls onto the flagstones; dog pounces or reaches it for "churro snatch! +2" ("Bon profit, little one!").
+  - Bark greeting: barking near the cart earns a cheerful greeting from the vendor and "churro bark! +2" ("One for the doggie!").
+  - Soft hazard: bumping into the wooden cart frame deducts 0.08 patience and causes a small stumble ("Ai, que crema!").
+  - Dodge save: steering your human safely past the cart after a close brush awards "churro dodge! +2" through `NearMiss`.
+- Autowalk safe: positioned 95 px east of the centre line ($x = 640.0$), the bot passes cleanly without bumps or unintentional dodges.
+- Zero added draw calls: drawn into the world's `ShapeBatch` from Cremada's `draw_live` hook (dark timber chassis, spoked wheels, red-and-white striped scalloped awning, stainless fryer vat with simmering oil, paper cone with stacked churros, warm amber lantern glow, vendor in apron and barretina with tongs, and dropped churro with rising steam wisps).
+- Regression coverage: `tests/test_churro_cart.gd` (38 checks), `tests/test_cremada.gd` (58 checks), `tests/test_walk_hooks.gd` (886 checks), and `tests/test_members_exist.gd` (7,391 checks).
+
+## 2026-11-10 - A victory payoff film for El Mamut de la Ciutadella
+
+- Settling the park's stone mammoth (`systems/boss_mamut.gd`, `State.CONTENT`) now triggers a 5-second victory payoff film (`intro/film_mamut_win.gd`), matching El Gat's plinth celebration on Rambla del Raval.
+- The scene: morning by the boating lake in Parc de la Ciutadella; the mammoth has sat down on the lawn, and Millie trots up and boops his lowered trunk with a bark. Sparks burst, his amber eye opens wide in contentment, and he stands and plods back up onto his stone plinth with a solid thump.
+- On the plinth, he raises his trunk high in a triumphant trumpet, spraying a celebratory water fountain with a shimmering rainbow arc into the morning sunlight. On the lake, the rower drops oars and claps enthusiastically, and your human catches up smiling proudly. Title card slams in: EL MAMUT! / VICTORIA A LA CIUTADELLA / LA CIUTADELLA IS YOURS.
+- Registered in `tools/intro_render.gd` (`mamut_win`) and verified in `tests/test_chase_film.gd` (229 checks) and `tests/test_film_mamut_win.gd` (56 checks).
+
+## 2026-11-10 - Finish the night pass: aligned doorways, wet reflections, and Plaça d'Espanya
+
+- Lit doorways on built-up streets now sit flush in the wall face rather than 27px out on the pavement, aligning the bright slit directly inside the door recess on both sides of the street (`main._draw_doorway`, `world/night_fronts.gd`).
+- In the rain, each lit doorway and shopfront now reflects into the wet paving toward the viewer with soft breaking streaks, matching the existing street lamp reflections in the light layer's single batch (`world/light_layer.gd`, `world/night_fronts.gd`).
+- Plaça d'Espanya (`systems/espanya.gd`) now has illuminated exhibition hall colonnade portals and avenue promenade kiosks through its own `night_fronts(m)` hook.
+- `tests/test_night_fronts.gd` (76 checks) and `tests/test_walk_hooks.gd` (883 checks) updated.
 
 ## 2026-11-10 - Delete dead test fake members and guard against stand-in drift
 

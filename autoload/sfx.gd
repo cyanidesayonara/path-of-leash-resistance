@@ -360,6 +360,7 @@ func _build_library() -> void:
 	lib["gat_clang"] = _gat_clang()
 	lib["gat_purr"] = _gat_purr()
 	lib["mamut_trumpet"] = _mamut_trumpet()
+	lib["van_horn"] = _van_horn()
 
 
 func _pack(samples: PackedFloat32Array) -> AudioStreamWAV:
@@ -746,4 +747,18 @@ func _gat_purr() -> AudioStreamWAV:
 		var rumble := sin(TAU * 52.0 * t) * 0.5 + sin(TAU * 104.0 * t) * 0.3
 		var breath := rng.randf_range(-0.15, 0.15)
 		out[i] = (rumble + breath) * mod * 0.45
+	return _pack(out)
+
+
+func _van_horn() -> AudioStreamWAV:
+	# A goofy cartoon van horn: a brassy two-tone "beep-beep!"
+	var dur := 0.26
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		var env := sin(PI * t / dur)
+		var s := 0.5 * sin(TAU * 440.0 * t) + 0.35 * sin(TAU * 554.37 * t) + 0.15 * sin(TAU * 880.0 * t)
+		out[i] = s * env * 0.35
 	return _pack(out)

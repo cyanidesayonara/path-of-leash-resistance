@@ -87,19 +87,20 @@ dog walking
 
 ```
 - Two new walks, thirty-six in all:
-  - La Ciutadella: the grand park avenue to the waterfall cascade, rowboats on the lake, and El Mamut, a full-size stone mammoth who climbs off his plinth as the first statue boss.
-  - La Cremada: Badalona's devil night down Carrer del Mar to the beach. The chase is the Dimoni's rolling float, firing rockets overhead that land with warning rings.
-- The street after dark comes alive: doorways ajar, lit shopfronts, amber bars, and the blue glow of televisions spill soft fans of light onto the paving, with lit windows on the roofs overhead.
-- El Gat pounces: below half health, the Raval's bronze cat wiggles his rear and leaps through the air with a landing ring. Catch him mid-leap with a taut leash or steer him into a palm or a terrace table.
-- A second live event on Badalona's seafront: a kite flyer on the beach side who dives his kite low across the promenade.
-- Who is out follows the weather and the hour: sunbathers, parasols, picnics and ice-cream carts stay in when it rains or after dark, and crowds thin in foul weather.
-- Health bars for boss fights stay clear of the banner, and live-event bumps cost a fair fraction of patience rather than emptying the meter.
+  - La Ciutadella: the grand park avenue to the waterfall cascade, rowboats on the lake, and El Mamut, a full-size stone mammoth who climbs off his plinth as the first statue boss (with his own victory payoff film).
+  - La Cremada: Badalona's devil night down Carrer del Mar to the beach, the Dimoni's rolling float chase, and a hot churro cart live event on the Rambla.
+- Castellers in Gràcia and El Gòtic: living dynamic human towers with l'aleta crowning, traditional musicians, and equilibri and cheering tricks.
+- The Fur-goneta: a shaggy Mutt Cutts dog van homage with floppy ears, wagging tail and tongue, touring four walks with a mobile groomer style dare.
+- The street after dark comes alive: doorways ajar, lit shopfronts, amber bars, and television blue spill soft fans of light onto paving and wet rain reflections.
+- El Gat pounces: below half health, the Raval's bronze cat wiggles his rear and leaps through the air with a landing ring. Catch him mid-leap or steer him into obstacles.
+- Who is out follows the weather and the hour: sunbathers, picnics and ice-cream carts stay in when it rains or after dark, and crowds thin in foul weather.
+- Badalona seafront kite flyer live event, clearer boss health bars, and fair patience costs for live-event bumps.
 ```
 
 ### Notes for certification
 
 ```
-Update 1.72: two new walks (La Ciutadella with El Mamut statue boss, La Cremada with the Dimoni float chase), lit doorways and shopfronts at night, boss fight tuning, and live-event bump fixes. Update 1.71: three new walks (L'Eixample, Els Àngels, El Poble Espanyol), a rebuilt tutorial, a labeled status card, and El Barri, El Parc and Plaça d'Espanya redrawn. Update 1.70: four new walks (La Superilla, Els Búnquers, El Fòrum, Plaça d'Espanya), dawn and dusk lighting, squarer streets with walkable front yards, three new galleries. Update 1.69: signature live events across all walks (fishermen, waiters, cone dogs, unicyclists, trail runners, tourists, surfers, wild boars, and festive giants), true near-miss saves, and dropped snack snatching. No change to capabilities, network use or data handling since 1.55.
+Update 1.72: two new walks (La Ciutadella with El Mamut statue boss, La Cremada with the Dimoni float chase), live events (churro cart, kite flyer), Castellers human towers, Fur-goneta dog van, lit doorways and shopfronts at night, boss fight tuning, and live-event bump fixes. Update 1.71: three new walks (L'Eixample, Els Àngels, El Poble Espanyol), a rebuilt tutorial, a labeled status card, and El Barri, El Parc and Plaça d'Espanya redrawn. Update 1.70: four new walks (La Superilla, Els Búnquers, El Fòrum, Plaça d'Espanya), dawn and dusk lighting, squarer streets with walkable front yards, three new galleries. Update 1.69: signature live events across all walks (fishermen, waiters, cone dogs, unicyclists, trail runners, tourists, surfers, wild boars, and festive giants), true near-miss saves, and dropped snack snatching. No change to capabilities, network use or data handling since 1.55.
 
 Path of Leash Resistance is a single-player Win32 desktop game built with the Godot engine (4.7), packaged as MSIX.
 

@@ -4,6 +4,7 @@ const EventFeed := preload("res://hud/event_feed.gd")
 const Gotic := preload("res://world/gotic.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
+const GoticCastellers := preload("res://systems/gotic_castellers.gd")
 
 # ARTSY DETOURS ("EXPOSICIÓ - ENTRADA LLIURE"):
 # Hidden-in-plain-sight side rooms off major Barcelona walks.
@@ -233,6 +234,8 @@ static func tick(m: Node2D, delta: float) -> void:
 
 	# Check doorway on street
 	if not m.detour_active:
+		if m.lvl == "oldtown":
+			GoticCastellers.tick(m, delta)
 		if dp.distance_to(m.detour_door_pos) < DOOR_TRIGGER_R:
 			enter(m)
 		return
@@ -455,3 +458,11 @@ static func draw_column(m: Node2D, _wc: ShapeBatch, p: Vector2) -> void:
 # the plaça's fountain draws with the plaça
 static func draw_fountain(_m: Node2D, _f: Vector2) -> void:
 	pass
+
+
+static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
+	if not is_on(m) or m.frozen:
+		return
+	if not m.detour_active and m.lvl == "oldtown":
+		GoticCastellers.on_bark(m, pos)
+
