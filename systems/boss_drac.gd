@@ -63,6 +63,13 @@ const TRIP_DAMAGE := 25.0
 const STUN_TIME := 2.6
 const CLOTHESLINE_END_PTS := 3
 const HIT_BOX_R := 48.0
+# last stand: retreat, wrap legs, belly slide, settling boop
+const RETREAT_SPEED := 200.0
+const TURN_RATE := 1.6
+const BOOP_REACH := 80.0
+const WOBBLE_TIME := 1.2
+const SLIDE_TIME := 1.4
+const LAST_JET_EVERY := 3.6
 
 enum State {
 	IDLE, AWAKEN, ENRAGE, PROWL, TAIL_WHIP, JET, SLITHER,
@@ -71,6 +78,7 @@ enum State {
 
 var state: State = State.IDLE
 var state_t := 0.0
+var act_t := 0.0
 var hp := MAX_HP
 var max_hp := MAX_HP
 var phase := 1
@@ -92,6 +100,7 @@ var enraged := false
 var hold_noticed := false
 var tail_cd := 1.0
 var jet_cd := 1.0
+var ls_jet_cd := LAST_JET_EVERY
 var whip_dir := Vector2.UP
 var whip_side := 1.0
 var whip_struck := false
@@ -100,6 +109,7 @@ var slither_cd := 1.0
 var slither_from := Vector2.ZERO
 var slither_dir := Vector2.RIGHT
 var chip_t := 0.0
+var fountain_t := -1.0
 # puddles / chips: [{ "rect": Rect2, "kind": int, "until": float }]
 var surface_zones: Array[Dictionary] = []
 
@@ -108,6 +118,7 @@ func setup(m: Node2D) -> void:
 	main = m
 	state = State.IDLE
 	state_t = 0.0
+	act_t = 0.0
 	hp = MAX_HP
 	max_hp = MAX_HP
 	phase = 1
@@ -121,11 +132,14 @@ func setup(m: Node2D) -> void:
 	hold_noticed = false
 	tail_cd = 1.0
 	jet_cd = 1.0
+	ls_jet_cd = LAST_JET_EVERY
 	slither_cd = 1.0
 	chip_t = 0.0
+	fountain_t = -1.0
 	whip_struck = false
 	jet_struck = false
 	legs_tied = 0
+	leg_touch_t = [-INF, -INF, -INF, -INF]
 	surface_zones.clear()
 	leg_poles.clear()
 	for off: Vector2 in LEG_OFFSETS:
@@ -190,6 +204,10 @@ func in_fight() -> bool:
 	return state != State.IDLE and not beaten()
 
 
+func nose_tip() -> Vector2:
+	return pos + face_dir * 70.0
+
+
 func status() -> String:
 	var near: bool = main != null and main.dog.global_position.distance_to(pos) < 600.0
 	match state:
@@ -199,6 +217,14 @@ func status() -> String:
 			return "WATCH THE JET!" if near else ""
 		State.SLITHER:
 			return "WIND HIM ROUND A COLUMN" if near else ""
+		State.RETREAT:
+			return "AFTER HIM! TO HIS STEPS"
+		State.STAND:
+			if last_jet_warning():
+				return "WATCH THE JET!"
+			return "WRAP THE LEASH AROUND HIS LEGS  %d/%d" % [legs_tied, LEGS_TO_TIE]
+		State.SLIDE:
+			return Prompts.fill("HE'S DOWN! {bark} ON HIS NOSE")
 	return ""
 
 
@@ -230,6 +256,7 @@ func transition_to(s: State) -> void:
 		s = State.ENRAGE
 	state = s
 	state_t = 0.0
+	act_t = 0.0
 	match s:
 		State.AWAKEN:
 			if Sfx.lib.has("drac_click"):
@@ -257,8 +284,43 @@ func transition_to(s: State) -> void:
 			_shed_chip()
 		State.STUNNED:
 			state_t = STUN_TIME
+		State.RETREAT:
+			pass
+		State.STAND:
+			pos = PLINTH
+			face_dir = Vector2.DOWN
+			update_leg_positions()
+			legs_tied = 0
+			leg_touch_t = [-INF, -INF, -INF, -INF]
+			ls_jet_cd = LAST_JET_EVERY
+			Sfx.play("crack", 0.85, -3.0)
+			main.shake_t = maxf(float(main.shake_t), 0.6)
+			main.feed.say("TIE UP HIS LEGS!", EventFeed.Tone.LOUD)
+		State.WRAPPED:
+			state_t = WOBBLE_TIME
+			Sfx.play("intro_taut", 0.8, -5.0)
+			Sfx.play("groan", 0.9, -5.0)
+			main.shake_t = maxf(float(main.shake_t), 0.8)
+		State.SLIDE:
+			state_t = SLIDE_TIME
+			main.drac_slid = true
+			Sfx.play("crack", 0.5, -3.0)
+			Sfx.play("whoop", 1.0, -6.0)
+			main.shake_t = 1.2
+			main.feed.say("EL DRAC SLIDES!", EventFeed.Tone.LOUD)
 		State.CONTENT:
 			hold_noticed = false
+			Sfx.play("star", 1.1)
+			Sfx.play("whoop", 1.1, -4.0)
+			main.drac_settled = true
+			main.combo.add("BOOP", 10)
+			main.float_text(nose_tip(), "booped! +10", Color(1.0, 0.88, 0.25))
+			main.feed.say("EL MOSAIC IS YOURS!", EventFeed.Tone.GOOD)
+			main.human.say_line("Good... dragon?")
+			fountain_t = 0.0
+			if not win_film_shown and FilmPlayer.should_play(main) and ResourceLoader.exists(FILM_WIN):
+				win_film_shown = true
+				FilmPlayer.play(main, load(FILM_WIN))
 
 
 func _hold_human() -> void:
@@ -415,13 +477,59 @@ func _clamp_hall() -> void:
 	pos.y = clampf(pos.y, LevelBuild.MOSAIC_HALL_Y1 + 40.0, LevelBuild.MOSAIC_HALL_Y0 - 40.0)
 
 
+func update_leg_tangle() -> void:
+	var now: float = main.elapsed
+	legs_tied = 0
+	for k in range(leg_poles.size()):
+		if main.leash != null and main.leash.touches(leg_poles[k]):
+			leg_touch_t[k] = now
+		if now - leg_touch_t[k] <= LEG_MEMORY:
+			legs_tied += 1
+	if legs_tied >= LEGS_TO_TIE:
+		transition_to(State.WRAPPED)
+
+
+func _turn_to(p: Vector2, delta: float) -> void:
+	var want := p - pos
+	if want.length() < 1.0:
+		return
+	var a := face_dir.angle()
+	var b := want.angle()
+	var d := wrapf(b - a, -PI, PI)
+	face_dir = Vector2.from_angle(a + clampf(d, -TURN_RATE * delta, TURN_RATE * delta))
+
+
+func _tick_last_stand(delta: float, dog_p: Vector2) -> void:
+	_turn_to(dog_p, delta)
+	update_leg_positions()
+	if act_t < 0.2:
+		return
+	ls_jet_cd -= delta
+	# defensive jet from the steps, same telegraph as the fight's jet
+	if ls_jet_cd <= JET_WARN and ls_jet_cd + delta > JET_WARN:
+		if dog_p.distance_to(pos) < JET_LEN + 80.0:
+			jet_struck = false
+		else:
+			ls_jet_cd = LAST_JET_EVERY
+	if ls_jet_cd <= 0.0:
+		_strike_jet()
+		ls_jet_cd = LAST_JET_EVERY
+
+
+func last_jet_warning() -> bool:
+	return state == State.STAND and ls_jet_cd <= JET_WARN and ls_jet_cd > 0.0
+
+
 func tick_state(delta: float) -> void:
 	if main == null or main.frozen:
 		return
 	_tick_card(delta)
 	_hold_human()
 	_expire_zones()
+	if fountain_t >= 0.0:
+		fountain_t += delta
 	var dog_p: Vector2 = main.dog.global_position
+	act_t += delta
 	match state:
 		State.IDLE:
 			# your human still short of him: a pair already past (a shot taken
@@ -503,17 +611,51 @@ func tick_state(delta: float) -> void:
 			if state_t >= SLITHER_TIME:
 				transition_to(State.PROWL)
 		State.STUNNED:
+			# empty HP: leave the daze for the retreat remap through PROWL
+			if hp <= 0.0:
+				transition_to(State.PROWL)
+				return
 			state_t -= delta
 			if state_t <= 0.0:
 				transition_to(State.PROWL)
 		State.RETREAT:
-			# Task 6 fills the walk back to the steps
+			pos = pos.move_toward(PLINTH, RETREAT_SPEED * delta)
+			_turn_to(PLINTH + (PLINTH - pos), delta)
+			update_leg_positions()
+			if pos.distance_to(PLINTH) < 1.0:
+				transition_to(State.STAND)
+		State.STAND:
+			_tick_last_stand(delta, dog_p)
+			update_leg_tangle()
+		State.WRAPPED:
+			state_t -= delta
+			if state_t <= 0.0:
+				transition_to(State.SLIDE)
+		State.SLIDE:
+			# belly down the stair toward the landing, then wait for a nose boop
+			if state_t > 0.0:
+				state_t = maxf(0.0, state_t - delta)
+				var k := 1.0 - clampf(state_t / SLIDE_TIME, 0.0, 1.0)
+				pos.x = PLINTH.x
+				pos.y = lerpf(PLINTH.y, LANDING.y, k)
+				face_dir = Vector2.DOWN
+				update_leg_positions()
+		State.CONTENT:
 			pass
 		_:
 			pass
 
 
-func on_bark_action(_pos: Vector2) -> bool:
+func on_bark_action(bark_pos: Vector2) -> bool:
+	var dog_p: Vector2 = main.dog.global_position
+	var tip := nose_tip()
+	var near := bark_pos.distance_to(tip) < BOOP_REACH or dog_p.distance_to(tip) < BOOP_REACH \
+		or dog_p.distance_to(pos + face_dir * 60.0) < BOOP_REACH
+	if state == State.SLIDE and near:
+		Sfx.play("bark", 1.25)
+		main.drac_booped = true
+		transition_to(State.CONTENT)
+		return true
 	return false
 
 
@@ -525,7 +667,8 @@ func surface_at(p: Vector2) -> int:
 
 
 func awake_for_draw() -> bool:
-	return state != State.IDLE
+	# beaten: hand the static salamander draw back to mosaic
+	return state != State.IDLE and state != State.CONTENT
 
 
 func _ensure_card() -> void:

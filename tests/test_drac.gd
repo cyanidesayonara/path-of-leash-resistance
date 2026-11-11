@@ -155,6 +155,25 @@ func _run() -> void:
 	_ticks(m, DT * 3.0)
 	_check(m.drac_tripped, "tripped with the leash")
 
+	# last stand: retreat, wrap three legs, belly slide, settling boop
+	dr.damage(dr.hp)
+	_ticks(m, DT)
+	_check(dr.state == BD.State.RETREAT, "out of fight he retreats")
+	_ticks(m, 6.0)
+	_check(dr.state == BD.State.STAND, "last stand on his steps")
+	for k in range(3):
+		dr.leg_touch_t[k] = m.elapsed
+	_ticks(m, DT)
+	_check(dr.state == BD.State.WRAPPED, "three legs tied")
+	_ticks(m, BD.WOBBLE_TIME + 0.1)
+	_check(dr.state == BD.State.SLIDE and m.drac_slid, "belly slide down the steps")
+	_ticks(m, BD.SLIDE_TIME + 0.1)
+	m.dog.global_position = dr.nose_tip()
+	load("res://systems/mosaic.gd").on_bark(m, m.dog.global_position)
+	_check(dr.state == BD.State.CONTENT and m.drac_settled and m.drac_booped, "boop settles him")
+	_ticks(m, DT)
+	_check(m.human.tut_hold_y != BD.HOLD_Y, "your human may walk on")
+
 	print("test_drac: %d checks, %d failures" % [checks, failures.size()])
 	for f in failures:
 		print("  " + f)
