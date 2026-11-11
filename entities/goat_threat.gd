@@ -256,16 +256,18 @@ func sweep_junk(_junk: Array) -> int:
 
 
 func _draw() -> void:
+	var b := ShapeBatch.new(self)
+
 	# Dust telegraph paths from rolling boulders
-	for b in boulders:
-		var from_p: Vector2 = to_local(b["from"])
-		var target_p: Vector2 = to_local(b["target"])
-		draw_line(from_p, target_p, DUST_COL, 6.0)
+	for bl in boulders:
+		var from_p: Vector2 = to_local(bl["from"])
+		var target_p: Vector2 = to_local(bl["target"])
+		b.line(from_p, target_p, DUST_COL, 6.0)
 		# Draw rolling boulder
-		var at_p: Vector2 = to_local(b["at"])
-		draw_circle(at_p + Vector2(4, 4), BOULDER_R * 0.5, SHADOW)
-		draw_circle(at_p, BOULDER_R * 0.5, BOULDER_COL)
-		draw_circle(at_p - Vector2(4, 4), BOULDER_R * 0.3, BOULDER_DARK)
+		var at_p: Vector2 = to_local(bl["at"])
+		b.circle(at_p + Vector2(4, 4), BOULDER_R * 0.5, SHADOW)
+		b.circle(at_p, BOULDER_R * 0.5, BOULDER_COL)
+		b.circle(at_p - Vector2(4, 4), BOULDER_R * 0.3, BOULDER_DARK)
 
 	# Impact dust puffs
 	for d in dust_puffs:
@@ -273,55 +275,56 @@ func _draw() -> void:
 		var progress: float = float(d.get("t", 0.0)) / IMPACT_TIME
 		var r := 18.0 + progress * 24.0
 		var alpha := 1.0 - progress
-		draw_circle(p, r, Color(DUST_COL.r, DUST_COL.g, DUST_COL.b, alpha * 0.4))
+		b.circle(p, r, Color(DUST_COL.r, DUST_COL.g, DUST_COL.b, alpha * 0.4))
 
-	# The Alpha Mountain Goat (top-down view)
+	# The Alpha Mountain Goat (top-down view, facing south towards player)
 	var bob := sin(rumble * 12.0) * 4.0
-	var head_tilt := sin(rumble * 6.0) * 0.2
 
 	# Shadow
-	draw_circle(Vector2(0, 10.0), 32.0, SHADOW)
+	b.circle(Vector2(0, -10.0 + bob), 32.0, SHADOW)
 
-	# Body
-	draw_circle(Vector2(0, bob), 26.0, GOAT_FUR)
-	draw_circle(Vector2(0, bob + 4.0), 20.0, GOAT_BELLY)
+	# Body & Rump (behind, north)
+	b.circle(Vector2(0, -38.0 + bob), 26.0, GOAT_FUR)
+	b.circle(Vector2(0, -42.0 + bob), 20.0, GOAT_BELLY)
 
 	# Shoulders & Flanks
-	draw_circle(Vector2(-14.0, bob - 6.0), 14.0, GOAT_DARK)
-	draw_circle(Vector2(14.0, bob - 6.0), 14.0, GOAT_DARK)
+	b.circle(Vector2(-14.0, -26.0 + bob), 15.0, GOAT_DARK)
+	b.circle(Vector2(14.0, -26.0 + bob), 15.0, GOAT_DARK)
 
-	# Head and Muzzle
-	var head_y := bob - 22.0
-	draw_circle(Vector2(0, head_y), 15.0, GOAT_FUR)
-	# Muzzle
-	draw_rect(Rect2(-7.0, head_y - 14.0, 14.0, 14.0), GOAT_BELLY)
+	# Head (forward, facing south)
+	var head_y := -10.0 + bob
+	b.circle(Vector2(0, head_y), 16.0, GOAT_FUR)
+	# Muzzle pointing south toward the player
+	b.rect(Rect2(-7.0, head_y + 4.0, 14.0, 14.0), GOAT_BELLY)
 
 	# Slit-pupil Eyes
-	draw_circle(Vector2(-9.0, head_y - 6.0), 3.5, GOAT_EYE)
-	draw_circle(Vector2(9.0, head_y - 6.0), 3.5, GOAT_EYE)
-	draw_line(Vector2(-11.0, head_y - 6.0), Vector2(-7.0, head_y - 6.0), Color.BLACK, 1.5)
-	draw_line(Vector2(7.0, head_y - 6.0), Vector2(11.0, head_y - 6.0), Color.BLACK, 1.5)
+	b.circle(Vector2(-8.0, head_y + 4.0), 3.5, GOAT_EYE)
+	b.circle(Vector2(8.0, head_y + 4.0), 3.5, GOAT_EYE)
+	b.line(Vector2(-10.0, head_y + 4.0), Vector2(-6.0, head_y + 4.0), Color.BLACK, 1.5)
+	b.line(Vector2(6.0, head_y + 4.0), Vector2(10.0, head_y + 4.0), Color.BLACK, 1.5)
 
-	# Goatee Beard
-	draw_line(Vector2(0, head_y - 14.0), Vector2(0, head_y - 24.0), GOAT_BELLY, 3.0)
+	# Goatee Beard pointing south
+	b.line(Vector2(0, head_y + 16.0), Vector2(0, head_y + 26.0), GOAT_BELLY, 3.0)
 
-	# Large Backwards-Curved Ribbed Horns
+	b.flush()
+
+	# Large Backwards-Curved Ribbed Horns (drawn curving back north over neck/shoulders)
 	var horn_l := PackedVector2Array([
-		Vector2(-6.0, head_y - 4.0),
-		Vector2(-20.0, head_y + 12.0),
-		Vector2(-26.0, head_y + 32.0),
-		Vector2(-22.0, head_y + 30.0),
-		Vector2(-14.0, head_y + 10.0),
-		Vector2(-4.0, head_y - 4.0),
+		Vector2(-5.0, head_y - 2.0),
+		Vector2(-18.0, head_y - 18.0),
+		Vector2(-24.0, head_y - 36.0),
+		Vector2(-20.0, head_y - 34.0),
+		Vector2(-13.0, head_y - 16.0),
+		Vector2(-3.0, head_y - 2.0),
 	])
 	draw_colored_polygon(horn_l, GOAT_HORN)
 
 	var horn_r := PackedVector2Array([
-		Vector2(6.0, head_y - 4.0),
-		Vector2(20.0, head_y + 12.0),
-		Vector2(26.0, head_y + 32.0),
-		Vector2(22.0, head_y + 30.0),
-		Vector2(14.0, head_y + 10.0),
-		Vector2(4.0, head_y - 4.0),
+		Vector2(5.0, head_y - 2.0),
+		Vector2(18.0, head_y - 18.0),
+		Vector2(24.0, head_y - 36.0),
+		Vector2(20.0, head_y - 34.0),
+		Vector2(13.0, head_y - 16.0),
+		Vector2(3.0, head_y - 2.0),
 	])
 	draw_colored_polygon(horn_r, GOAT_HORN)
