@@ -96,8 +96,8 @@ func _run() -> void:
 		m.queue_free()
 		await process_frame
 
-	# 4. Its own edges, its own fronts: Rambla del Raval and Plaça d'Espanya
-	for lvl: String in ["raval", "espanya"]:
+	# 4. Its own edges, its own fronts: Rambla del Raval, Plaça d'Espanya, L'Eixample, La Superilla, El Poble Espanyol, Els Àngels
+	for lvl: String in ["raval", "espanya", "eixample", "superilla", "poble", "angels"]:
 		m = await _walk(lvl)
 		_check(m.walk_mod.has_method("night_fronts"), "%s says where its fronts are" % lvl)
 		_check(NF.build(m).is_empty(), "none from the generic edge")

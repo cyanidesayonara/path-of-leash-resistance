@@ -23,6 +23,7 @@ extends RefCounted
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const EixampleTour := preload("res://systems/eixample_tour.gd")
+const NightFronts := preload("res://world/night_fronts.gd")
 
 const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.07, 0.22)
@@ -815,3 +816,28 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 		m._draw_freedom_benches(c, r, BENCH_WOOD)
 	if m.has_method("_freedom_sign"):
 		m._freedom_sign(c, r, m.gate_text, "The garden inside the block, off leash")
+
+
+# The street after dark (world/night_fronts.gd): this walk draws its own
+# edges, so it lists its illuminated shopfronts, bars and doorways.
+static func night_fronts(m: Node2D) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var y := maxf(float(m.GATE_Y) + 40.0, -4800.0)
+	var i := 0
+	while y < minf(float(m.START_Y) + 60.0, 200.0):
+		var in_xway := false
+		for xi: float in XINGS:
+			if absf(y - xi) < STREET_H + 24.0:
+				in_xway = true
+				break
+		if not in_xway:
+			for side: float in [-1.0, 1.0]:
+				var k := i * 2 + (0 if side < 0.0 else 1) + 707
+				var kind := NightFronts.kind_of(k)
+				if kind != "":
+					var fx := _front_x(y, side)
+					out.append(NightFronts.front(Vector2(fx, y), -side, kind, k))
+		y += 180.0
+		i += 1
+	return out
+

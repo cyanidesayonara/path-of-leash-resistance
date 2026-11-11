@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-11-11 - Night polish pass: illuminated fronts for modern and village walks
+
+- Extended night fronts (`world/night_fronts.gd`) across all remaining built-up walks that draw custom edge layers:
+  - **L'Eixample** (`systems/eixample.gd`): Illuminated avenue shopfronts, bars, and home doorways positioned flush along the building line, correctly skipping open cross-street crossings (`XINGS`).
+  - **La Superilla** (`systems/superilla.gd`): Lit industrial loft doorways, 22@ creative studios, and television windows along `WALL_L` and `WALL_R`, skipping perpendicular cross-streets.
+  - **El Poble Espanyol** (`systems/poble.gd`): Artisan workshops, taverns, and village doorways with warm glowing light fans spilling under festive bunting, plus lit roof windows upstairs.
+  - **Els Àngels** (`systems/angels.gd`): Skate shops, cultural spaces, and Raval doorways spilling light onto the granite plaza and convent lane.
+- All night fronts continue to batch cleanly through `world/light_layer.gd` with zero new draw calls, and reflect softly into wet paving during rain.
+- Regression coverage: `tests/test_night_fronts.gd` (expanded to 88 checks across all walks), `tests/test_walk_hooks.gd` (904 checks), and `tests/test_members_exist.gd` (7,562 checks).
+
 ## 2026-11-11 - Castellers de Barcelona in El Gòtic: Placa de Sant Felip Neri diada
 
 - Added the historic *Castellers de Barcelona* colla (founded 1969, red shirts `Color(0.85, 0.16, 0.18)`, black faixes, and white trousers) to Walk 7 (El Gòtic, `systems/gotic_castellers.gd`, `world/gotic.gd`).
