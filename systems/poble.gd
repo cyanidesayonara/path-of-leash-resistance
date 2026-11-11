@@ -24,6 +24,7 @@ extends RefCounted
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const PobleBalcony := preload("res://systems/poble_balcony.gd")
+const NightFronts := preload("res://world/night_fronts.gd")
 
 const OVERHEAD_FOLLOWS_CAMERA := true
 
@@ -1363,3 +1364,10 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 		m._draw_freedom_benches(c, r, Color(0.48, 0.32, 0.20))
 	if m.has_method("_freedom_sign"):
 		m._freedom_sign(c, r, m.gate_text, "The olive terrace on the old walls, off leash")
+
+
+# The street after dark (world/night_fronts.gd): this walk draws its own
+# edges, so it lists its illuminated artisan workshops, taverns and village doorways.
+static func night_fronts(m: Node2D) -> Array[Dictionary]:
+	return NightFronts.along_edges(m, float(m.START_Y), float(m.GATE_Y), 180.0, 0.0, 4)
+
