@@ -637,6 +637,9 @@ var churros_eaten := 0
 var gracia_beg_t := 0.0
 var gracia_arches_zoomed := 0
 var gracia_arch_mask := 0
+var gracia_castell_t := 0.0
+var gracia_castell_watched := false
+var gracia_aleta_cheered := false
 # the pole she last vaulted, and whether she has since cleared it. Without
 # this she can sit in one pole's orbit re-triggering forever: the autowalk
 # stall watchdog caught it, and it would also have been a score exploit
