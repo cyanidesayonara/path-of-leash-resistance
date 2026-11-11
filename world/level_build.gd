@@ -2321,12 +2321,20 @@ static func build_level_data(m: Node2D) -> void:
 				m.trees.append(tree)
 				break
 	# THE FUR-GONETA, where a mobile groomer would actually work: the
-	# boulevard (a trade in nervous poodles). Position only
+	# boulevard (a trade in nervous poodles), the seafront promenade (washing
+	# sandy beach dogs), the Poblenou superblock (curbside by the rain gardens),
+	# and the park entrance carriage drive (after a good run). Position only
 	# here - wrap flanks are appended AFTER the corridor fit so body, draw,
 	# blocker, scent and rope contacts share one fitted centre.
 	# (not El Mercat any more: a van has no business inside a market hall)
 	if m.lvl == "street":
 		m.furgoneta = Vector2(m.sw_l + 66.0, -3560.0)
+	elif m.lvl == "beach":
+		m.furgoneta = Vector2(1045.0, -730.0)
+	elif m.lvl == "superilla":
+		m.furgoneta = Vector2(405.0, -3350.0)
+	elif m.lvl == "park":
+		m.furgoneta = Vector2(815.0, -780.0)
 	for ly in m.lane_ys:
 		m.lane_state.append({"t": randf_range(1.0, 2.5), "phase": 0, "dir": 1})
 	build_substance_zones(m)
