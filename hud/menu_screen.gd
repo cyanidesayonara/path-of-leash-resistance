@@ -452,7 +452,7 @@ static func progress_row_h(vs: Vector2, row_count: int) -> float:
 	var top_limit := 16.0
 	var bottom_limit := vs.y - Kit.BAR_FROM_BOTTOM - 16.0
 	var avail := maxf(120.0, bottom_limit - top_limit - 102.0)
-	return clampf(avail / float(maxi(row_count, 1)), 6.0, PROGRESS_ROW_H)
+	return clampf(avail / float(maxi(row_count, 1)), 4.0, PROGRESS_ROW_H)
 
 
 static func progress_rect(vs: Vector2, row_count: int) -> Rect2:
