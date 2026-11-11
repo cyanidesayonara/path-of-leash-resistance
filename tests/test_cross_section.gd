@@ -59,7 +59,7 @@ func _run() -> void:
 		# the off-leash area past the gate keeps its own ground (El Fòrum's is a
 		# paved bathing esplanade, as the station, site and scrapyard are paved)
 		var yard := Vector2(main.walk_cx - main.walk_half - 60.0, main.GATE_Y - 300.0)
-		_check(main.surface_at(yard) != main.Surfaces.S.PAVEMENT or lv == "station" or lv == "site" or lv == "scrap" or lv == "forum",
+		_check(main.surface_at(yard) != main.Surfaces.S.PAVEMENT or lv == "station" or lv == "site" or lv == "scrap" or lv == "forum" or lv == "aeroport",
 			"%s: the off-leash area is not turned into sidewalk" % lv)
 		# a dog pushed at the building line stops at it (moved inside a physics
 		# step: outside one, move_and_slide uses the last frame's wall time)
