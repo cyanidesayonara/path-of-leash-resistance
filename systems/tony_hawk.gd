@@ -50,6 +50,7 @@ const CLOCK_TARGETS := {
 	"poble": 180,
 	"cremada": 185,     # the walk out and the run home ahead of the Dimoni
 	"aeroport": 180,    # concourse sprint and security cart chase
+	"montserrat": 185,  # mountain trail climb and goat herd sprint
 	"ciutadella": 200,  # the walk plus the fight with El Mamut
 	"raval": 210,  # the walk plus the whole fight with El Gat
 }
@@ -90,6 +91,7 @@ const JAMON_POS := {
 	"poble": Vector2(820.0, -2480.0),
 	"cremada": Vector2(800.0, -4200.0),
 	"aeroport": Vector2(740.0, -2200.0),
+	"montserrat": Vector2(620.0, -2100.0),
 	"ciutadella": Vector2(560.0, -1300.0),
 	"raval": Vector2(640.0, -2200.0),
 }

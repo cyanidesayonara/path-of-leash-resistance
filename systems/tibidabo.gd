@@ -214,6 +214,12 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 		b.line(Vector2(TRACK_X - 18.0, t_bot), Vector2(TRACK_X - 18.0, t_top), TRACK_RAIL, 4.0)
 		b.line(Vector2(TRACK_X + 18.0, t_bot), Vector2(TRACK_X + 18.0, t_top), TRACK_RAIL, 4.0)
 		b.line(Vector2(TRACK_X, t_bot), Vector2(TRACK_X, t_top), TRACK_CABLE, 2.0)
+		# Cable guide rollers / pulleys along center
+		var py := floorf(t_bot / 120.0) * 120.0
+		while py > t_top:
+			b.circle(Vector2(TRACK_X, py), 3.5, Color(0.20, 0.20, 0.22))
+			b.circle(Vector2(TRACK_X, py), 1.5, Color(0.70, 0.72, 0.75))
+			py -= 120.0
 
 	# Aleppo pines on the hillside
 	for pp: Vector2 in PINES:
@@ -230,6 +236,8 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 	while by > top - 70.0:
 		var we: Vector2 = m.walk_edges(by)
 		var bx: float = we.x - 8.0
+		# Cliff drop rock face beneath balustrade
+		b.rect(Rect2(bx - 14.0, by, 8.0, 60.0), Color(0.42, 0.40, 0.36))
 		b.rect(Rect2(bx - 8.0, by, 16.0, 60.0), BALUSTRADE_STONE)
 		b.circle(Vector2(bx, by + 30.0), 10.0, BALUSTRADE_STONE)
 		b.circle(Vector2(bx + LIGHT.x * 3.0, by + 30.0 + LIGHT.y * 3.0), 10.0, BALUSTRADE_SHADOW)

@@ -2,6 +2,34 @@
 
 Append-only session history, newest first.
 
+## 2026-11-11 - Walk 38: Montserrat, Sant Joan funicular crossing, and Wild Goat Herd chase
+
+- Added Walk 38: **Montserrat** (The serrated mountain trail and monastery terrace):
+  - Ascending mountain trail winding through Catalonia's holy mountain, bordered by weathered sandstone bedrock, stone steps, Aleppo and mountain stone pines, and towering conglomerate rock needle spires (*agulles*) that act as verlet leash wrap poles.
+  - Signature Live Event: **Sant Joan Funicular Crossing** (`_funicular_car_x` in `systems/montserrat.gd`):
+    - Railway tracks cut across the trail at $y = -2600.0$ with wooden sleepers, steel rails, and trackside warning signals.
+    - Two-tone warning crossing bell (`_crossing_bell()` in `autoload/sfx.gd`) rings as the red-and-cream carriage approaches; crossing safely without getting clipped awards the `"CLEAR OF THE FUNICULAR!"` trick (`funicular_dodge` goal).
+  - Mel i mató Artisanal Cheese Stall:
+    - Authored wooden stall at $y = -3300.0$ with striped awning, cheese rounds, and honey pots.
+    - Barking near the stall (`on_bark`) sets `montserrat_mato_barked` and triggers vendor greeting: *"Tasta el mel i mató de Montserrat!"*.
+  - Plaça de Santa Maria & Monastery Terrace:
+    - Romanesque stone arch arcade wall, *Font del Portal* water fountain, and summit prize: snatch the artisanal honey jar with fresh mató cheese (`Montserrat.PRIZE` at $y = -4680.0$).
+  - The Chase: **The Wild Goat Herd Leader** (*Cabres Salvatges*, `entities/goat_threat.gd`):
+    - Agile alpha mountain goat bounding down the craggy trail with massive backward-curved ribbed horns, goatee beard, and sure-footed leap cycle.
+    - Hazard: Head-butting and kicking rolling conglomerate boulders down the trail toward the player with dust telegraph paths and dynamic banner warning (`"BOULDER! STEP CLEAR"`). Dodging counts toward `boulder_dodge` goal; direct hit inflicts knockback and counts toward `montserrat_goat_hits`.
+    - Two authored chase respites (`home_chase.MONTSERRAT_BANDS`): goat wedges its horns in the Mel i mató cheese stall framework ($-3300$) and gets held in the Sant Joan funicular turnstile crossing gate ($-1900$, checkpoint).
+  - Story film: *The Horns of Montserrat* (`intro/film_montserrat.gd`):
+    - High mountain needle spires under clear sky, selfie distraction, wild goat echo bleats on rock pinnacle, leap down crags, and slam card with charging horns and tumbling rock face.
+  - Procedural Audio:
+    - `_bleat()` in `autoload/sfx.gd`: Raspy nasal goat call with rapid frequency vibrato.
+    - `_crossing_bell()` in `autoload/sfx.gd`: Dual-chime resonant railway crossing warning bell.
+    - Mountain trail acoustic music arrangement (`audio/music.gd`): 122 BPM, D major key, acoustic guitar lead, high whistle harmony, walking bass, brush drums, and wide canyon reverb.
+  - Paired Polish for **El Tibidabo** (`systems/tibidabo.gd`):
+    - Added stone cliff ledge shading beneath the western balustrade overlooking Barcelona and center cable guide pulleys along the funicular track.
+  - Comprehensive test suite: `tests/test_montserrat.gd` (30 checks covering registration, goals, chase profile, funicular crossing event, rolling boulder dodges, and cheese stall bark). All regression suites pass (`test_walk_registry.gd` 1100 checks, `test_walk_hooks.gd` 940 checks, `test_chase_film.gd` 265 checks, `test_main_properties_exist.gd` 3908 reads, `test_wrap.gd`, `test_tibidabo.gd`).
+
+
+
 ## 2026-11-11 - Walk 37: L'Aeroport concourse, Gate Rush live event, and Security Cart Buggy chase
 
 - Added Walk 37: **L'Aeroport** (Terminal 1 concourse at Barcelona-El Prat Airport):
