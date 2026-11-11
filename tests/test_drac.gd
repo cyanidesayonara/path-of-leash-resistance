@@ -48,6 +48,22 @@ func _run() -> void:
 		_check(defs.has(id), "goal %s is defined" % id)
 	var problems: Array = load("res://world/level_check.gd").check(m)
 	_check(problems.is_empty(), "level check clean: %s" % str(problems))
+
+	var dr = m.drac
+	m.human.global_position = Vector2(640.0, BD.HOLD_Y - 400.0)
+	m.dog.global_position = Vector2(640.0, BD.HOLD_Y - 500.0)
+	_ticks(m, 0.5)
+	_check(dr.state == BD.State.IDLE, "still asleep with the pair past him")
+
+	m.human.global_position = Vector2(640.0, BD.HOLD_Y + 120.0)
+	m.dog.global_position = Vector2(640.0, BD.WAKE_Y - 30.0)
+	_ticks(m, 0.1)
+	_check(dr.state == BD.State.AWAKEN, "wakes as she passes")
+	_check(m.human.tut_hold_y == BD.HOLD_Y, "your human is held short of him")
+	_check(dr.awake_for_draw(), "boss owns the salamander draw")
+	_ticks(m, BD.AWAKEN_TIME + 0.1)
+	_check(dr.state == BD.State.PROWL, "down off the fountain and prowling")
+
 	print("test_drac: %d checks, %d failures" % [checks, failures.size()])
 	for f in failures:
 		print("  " + f)
