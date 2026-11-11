@@ -206,10 +206,15 @@ Every feature must serve at least one. If it serves none, cut it.
   1.69 tagged 2026-11-03.
 - **v1.70 - shipped 2026-11-07.** Hardening and light: dawn and dusk, campaign skies,
   squared streets with walkable yards, edge smoothing, four new walks
-  (Superilla, Fòrum, Espanya, Carmel), three detour galleries. No new walks
-  after these. Everything after it (1.71 is next):
-  `docs/ROADMAP.md`. Tag only when Santtu says, and only once the Store's
-  What's new and the itch notes describe it (docs/MICROSOFT_STORE.md).
+  (Superilla, Fòrum, Espanya, Carmel), three detour galleries.
+- **v1.71 - shipped 2026-11-09.** L'Eixample, Els Àngels, El Poble Espanyol,
+  atmospheric grade shaders and softer night lighting.
+- **v1.72 - shipped 2026-11-11.** La Ciutadella & El Mamut (first statue boss, wake
+  and victory films), La Cremada & El Dimoni float chase, El Carretó de Xurros
+  live event, Castellers de Gràcia & Castellers de Barcelona, Dumb & Dumber
+  Fur-goneta facelift across four walks, and city-wide illuminated night fronts.
+- **v1.73 - in progress.** Comprehensive level sweep, blocker and navigation fixes,
+  Walk 37 (L'Aeroport) and Walk 38 (Montserrat), plus boss groundwork (El Drac, Els Lleons).
 - **v2.0 - The Product.** Watercolor art integration, sound and music
   pass, trademark verification, Steam page, Next Fest demo.
 - Every release also ships: mechanics tuning from playtests, at least

@@ -8,15 +8,15 @@ as issues.
 
 ## Where the game stands
 
-- 31 walks plus the tutorial, five chase walks (La Neteja, El Besòs, El
-  Veterinari, Els Senglars, Festa de Gràcia), El Gat as the finale boss with
-  its victory film on the plinth, four artsy detours (El Somni, L'Estel,
-  El Colom, El Drac).
+- 36 walks plus the tutorial, six chase walks (La Neteja, El Besòs, El
+  Veterinari, Els Senglars, Festa de Gràcia, La Cremada), two statue bosses (El
+  Mamut on La Ciutadella and El Gat finale on Rambla del Raval with victory
+  films), four artsy detours (El Somni, L'Estel, El Colom, El Drac).
 - Five dogs, a wardrobe, a campaign with fixed skies, FREE WALK after a
   finished walk, four hours of day (dawn, day, dusk, night), weather.
 - A signature live event on every walk, true near-miss saves, a story film for
   every chase.
-- Everything on the board is Done (accepted) except two groundwork items.
+- 1.71 and 1.72 shipped to itch.io and Microsoft Store.
 
 ## The target: the 41-walk campaign
 
@@ -57,19 +57,19 @@ The release gate. Tagged with the hand-playtest (item 4) and the phone check (it
 7. Real-device check on a phone browser (the open board item).
 8. Santtu says tag.
 
-### 1.71 - Three walks and the first new boss
+### 1.71 - Three walks and the first new boss (tagged 2026-11-09)
 
-L'Eixample, Els Àngels, El Poble Espanyol; the mammoth mid boss waits for
-1.72. Each with its upgrade and live event.
+L'Eixample, Els Àngels, El Poble Espanyol, night grade shaders and softer
+lighting; each with its upgrade and live event.
 
-### 1.72 - La Ciutadella and La Cremada
+### 1.72 - La Ciutadella and La Cremada (tagged 2026-11-11)
 
-The mammoth boss and its walk (walk 11, built: El Mamut, his wake film, El
+The mammoth boss and its walk (El Mamut, his wake and victory films, El
 Parc's bronze dog in his old place), and La Cremada as a chase with its
-correfoc film. Every boss is designed against `docs/BOSSES.md`; El Gat's
-pounce, replacing his charge, belongs here too.
+Dimoni float and Correfoc film. Castellers de Gràcia and Castellers de
+Barcelona, Fur-goneta facelift across four walks, and illuminated night fronts.
 
-### 1.73 - Airport and mountain
+### 1.73 - Airport and mountain (in progress)
 
 L'Aeroport (service dog, cabin havoc, security chase film) and Montserrat
 (goats chase her down, film).
