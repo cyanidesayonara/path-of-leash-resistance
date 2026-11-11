@@ -71,6 +71,16 @@ const WOBBLE_TIME := 1.2
 const SLIDE_TIME := 1.4
 const LAST_JET_EVERY := 3.6
 
+const DRAC_BLUE := Color(0.18, 0.58, 0.76)
+const DRAC_CYAN := Color(0.24, 0.74, 0.82)
+const DRAC_GREEN := Color(0.24, 0.70, 0.44)
+const DRAC_YELLOW := Color(0.96, 0.84, 0.22)
+const DRAC_ORANGE := Color(0.94, 0.52, 0.18)
+const DRAC_WHITE := Color(0.94, 0.94, 0.90)
+const EYE_AMBER := Color(1.0, 0.78, 0.22)
+const EYE_RED := Color(0.96, 0.28, 0.20)
+const SHADOW := Color(0.12, 0.10, 0.08, 0.28)
+
 enum State {
 	IDLE, AWAKEN, ENRAGE, PROWL, TAIL_WHIP, JET, SLITHER,
 	STUNNED, RETREAT, STAND, WRAPPED, SLIDE, CONTENT,
@@ -110,6 +120,7 @@ var slither_from := Vector2.ZERO
 var slither_dir := Vector2.RIGHT
 var chip_t := 0.0
 var fountain_t := -1.0
+var flash := 0.0
 # puddles / chips: [{ "rect": Rect2, "kind": int, "until": float }]
 var surface_zones: Array[Dictionary] = []
 
@@ -136,6 +147,7 @@ func setup(m: Node2D) -> void:
 	slither_cd = 1.0
 	chip_t = 0.0
 	fountain_t = -1.0
+	flash = 0.0
 	whip_struck = false
 	jet_struck = false
 	legs_tied = 0
@@ -234,6 +246,7 @@ func hush_banner() -> bool:
 
 func damage(amt: float) -> void:
 	var was := hp
+	flash = 0.4
 	hp = maxf(0.0, hp - amt)
 	if hp <= MAX_HP * 0.5 and phase == 1:
 		phase = 2
@@ -451,6 +464,7 @@ func check_column_bind() -> bool:
 
 
 func _hit(kind: String) -> void:
+	flash = 0.5
 	match kind:
 		"column":
 			main.drac_wound = true
@@ -526,6 +540,7 @@ func tick_state(delta: float) -> void:
 	_tick_card(delta)
 	_hold_human()
 	_expire_zones()
+	flash = maxf(0.0, flash - delta * 3.0)
 	if fountain_t >= 0.0:
 		fountain_t += delta
 	var dog_p: Vector2 = main.dog.global_position
@@ -713,3 +728,222 @@ func _draw_card() -> void:
 	var gw: float = Kit.text_w(Kit.body(), gloss, gs)
 	card.draw_string(Kit.body(), Vector2(slide + (vs.x - gw) * 0.5, cy + 46.0 * u), gloss,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, gs, Color(0.92, 0.88, 0.80))
+
+
+func draw_ground(b: ShapeBatch, vt: float, vb: float) -> void:
+	for z in surface_zones:
+		var r: Rect2 = z["rect"]
+		if r.end.y < vt - 40.0 or r.position.y > vb + 40.0:
+			continue
+		var kind: int = z["kind"]
+		var remaining: float = float(z["until"]) - main.elapsed
+		if kind == Surfaces.S.WATER:
+			var a := clampf(remaining / 0.5, 0.0, 1.0) * 0.42
+			b.rect(r, Color(0.30, 0.60, 0.78, a))
+			b.circle(r.get_center(), minf(r.size.x, r.size.y) * 0.35, Color(0.45, 0.72, 0.88, a * 0.7))
+		elif kind == Surfaces.S.MUD:
+			var a := clampf(remaining / 0.4, 0.0, 1.0) * 0.65
+			b.rect(r, Color(0.85, 0.72, 0.42, a * 0.4))
+			for k in range(4):
+				var cp := r.position + Vector2(fmod(float(k) * 17.0, r.size.x), fmod(float(k) * 23.0, r.size.y))
+				var col := DRAC_BLUE if k % 2 == 0 else DRAC_YELLOW
+				b.circle(cp, 3.5, Color(col.r, col.g, col.b, a))
+
+
+func draw_warnings(b: ShapeBatch, t: float) -> void:
+	var pulse := sin(t * 16.0) * 0.5 + 0.5
+	if state == State.TAIL_WHIP and not whip_struck:
+		var n := 16
+		var prev := pos + whip_dir.rotated(-TAIL_HALF) * TAIL_REACH
+		var col := Color(1.0, 0.45, 0.20, 0.22 + 0.14 * pulse)
+		for i in range(1, n + 1):
+			var a := -TAIL_HALF + float(i) * 2.0 * TAIL_HALF / float(n)
+			var cur := pos + whip_dir.rotated(a) * TAIL_REACH
+			b.line(prev, cur, col, 4.0)
+			if i % 3 == 0:
+				b.line(pos, cur, Color(col.r, col.g, col.b, 0.12), 2.0)
+			prev = cur
+		b.line(pos, pos + whip_dir * TAIL_REACH, col, 3.0)
+	elif (state == State.JET and not jet_struck) or last_jet_warning():
+		var from := pos + face_dir * 30.0
+		var to := from + face_dir * JET_LEN
+		var k := 1.0 - clampf(state_t / JET_WARN, 0.0, 1.0) if state == State.JET else \
+			1.0 - clampf(ls_jet_cd / JET_WARN, 0.0, 1.0)
+		b.line(from, to, Color(0.35, 0.75, 1.0, 0.16 + 0.10 * pulse), JET_W)
+		b.line(from, from.lerp(to, clampf(k, 0.0, 1.0)), Color(0.50, 0.85, 1.0, 0.35), JET_W * 0.5)
+
+
+func draw_drac(b: ShapeBatch, t: float) -> void:
+	var at := pos
+	if state == State.WRAPPED:
+		at.x += sin(act_t * 16.0) * 4.0
+	elif state == State.STUNNED:
+		at.x += sin(t * 10.0) * 2.5
+	elif state == State.SLIDE:
+		var spray_c := at + Vector2(sin(t * 22.0) * 12.0, 0.0)
+		b.circle(spray_c, 24.0, Color(0.70, 0.88, 1.0, 0.4))
+
+	var f := face_dir
+	var s := f.orthogonal()
+
+	b.polygon(_ellipse(at + Vector2(8.0, 10.0), f, 56.0, 36.0, 16), SHADOW)
+
+	# 4 splayed lizard legs at leg_poles
+	for k in range(leg_poles.size()):
+		var lp := leg_poles[k]
+		if state in [State.PROWL, State.SLITHER, State.RETREAT]:
+			lp += f * sin(t * 8.0 + float(k) * 1.6) * 5.0
+		b.circle(lp, LEG_RADIUS + 2.0, Color(0.12, 0.10, 0.08, 0.8))
+		b.circle(lp, LEG_RADIUS, DRAC_BLUE)
+		var shard_col := DRAC_YELLOW if k % 2 == 0 else DRAC_GREEN
+		b.circle(lp, LEG_RADIUS * 0.55, shard_col)
+		for n in range(3):
+			var claw := lp + f * (LEG_RADIUS + 3.0) + s * (float(n) - 1.0) * 6.0
+			b.circle(claw, 2.5, Color(0.10, 0.08, 0.06))
+
+	# tail
+	var tail_pts := PackedVector2Array()
+	var tail_wave := sin(t * 7.0) * 16.0 if state != State.CONTENT else 0.0
+	if state == State.SLITHER:
+		tail_wave = sin(act_t * SLITHER_WAVE) * SLITHER_AMP * 0.4
+	for i in range(7):
+		var frac := float(i) / 6.0
+		var tp := at - f * (30.0 + frac * 65.0) + s * (sin(frac * PI) * 24.0 + frac * tail_wave)
+		tail_pts.append(tp)
+	for i in range(tail_pts.size() - 1):
+		var w := lerpf(20.0, 6.0, float(i) / 6.0)
+		b.line(tail_pts[i], tail_pts[i + 1], DRAC_BLUE, w)
+		b.circle(tail_pts[i], w * 0.5, DRAC_CYAN)
+		if i % 2 == 1:
+			b.circle(tail_pts[i], w * 0.35, DRAC_YELLOW)
+
+	# arched body
+	var spine_offsets: Array[float] = [-18.0, -6.0, 8.0, 22.0, 34.0]
+	var spine_radii: Array[float] = [24.0, 28.0, 27.0, 23.0, 18.0]
+	var colors: Array[Color] = [DRAC_BLUE, DRAC_CYAN, DRAC_GREEN, DRAC_YELLOW, DRAC_ORANGE]
+	for i in range(spine_offsets.size()):
+		var sp_pos: Vector2 = at + f * spine_offsets[i]
+		if state == State.SLITHER:
+			sp_pos += s * sin(act_t * SLITHER_WAVE + float(i) * 0.8) * 12.0
+		var r: float = spine_radii[i]
+		b.circle(sp_pos, r + 2.0, Color(0.10, 0.08, 0.06))
+		b.circle(sp_pos, r, colors[i % colors.size()])
+		b.circle(sp_pos - f * 2.0, r * 0.65, DRAC_WHITE if i == 2 else colors[(i + 1) % colors.size()])
+		b.circle(sp_pos - s * (r - 2.0), 4.5, DRAC_ORANGE)
+
+	# head
+	var head := at + f * 50.0
+	b.circle(head, 20.0, Color(0.10, 0.08, 0.06))
+	b.circle(head, 18.0, DRAC_BLUE)
+	var snout := head + f * 14.0
+	b.circle(snout, 14.0, DRAC_CYAN)
+	b.circle(snout + f * 4.0, 8.0, DRAC_YELLOW)
+
+	# eyes
+	var awake := state != State.IDLE and state != State.CONTENT
+	var eye_col := EYE_RED if (enraged and hp > 0.0) else EYE_AMBER
+	for sd: float in [-1.0, 1.0]:
+		var ep := head + f * 6.0 + s * sd * 12.0
+		if awake:
+			b.circle(ep, 5.0, Color(0.10, 0.08, 0.06))
+			b.circle(ep, 3.8, eye_col)
+			b.circle(ep + f * 1.0, 1.8, Color(0.10, 0.08, 0.06))
+		else:
+			b.line(ep - s * 3.0, ep + s * 3.0, Color(0.15, 0.12, 0.10), 2.0)
+
+	# water stream shooting from mouth
+	if (state == State.JET and jet_struck) or fountain_t >= 0.0:
+		var mouth := snout + f * 8.0
+		var jto := mouth + f * JET_LEN
+		b.line(mouth, jto, Color(0.85, 0.95, 1.0, 0.85), 14.0)
+		b.line(mouth, jto, Color(0.40, 0.75, 0.95, 0.9), 8.0)
+		for j in range(6):
+			var jp := mouth.lerp(jto, float(j) / 5.0) + Vector2(sin(t * 18.0 + float(j)) * 6.0, 0.0)
+			b.circle(jp, 6.0, Color(0.92, 0.98, 1.0, 0.8))
+
+
+func draw_rings(b: ShapeBatch, t: float) -> void:
+	if state == State.STAND or state == State.WRAPPED:
+		_ring(b, pos, 96.0, Color(0.98, 0.85, 0.30, 0.30 + sin(t * 8.0) * 0.15), 3.0)
+		for k in range(leg_poles.size()):
+			if main.elapsed - leg_touch_t[k] <= LEG_MEMORY or state == State.WRAPPED:
+				_ring(b, leg_poles[k], LEG_RADIUS + 8.0, Color(1.0, 0.90, 0.20, 0.9), 3.5)
+			else:
+				_ring(b, leg_poles[k], LEG_RADIUS + 4.0, Color(0.98, 0.85, 0.30, 0.35), 2.0)
+	elif state == State.SLIDE and state_t <= 0.0:
+		var tip := nose_tip()
+		var p_pulse := sin(t * 10.0) * 0.5 + 0.5
+		_ring(b, tip, 28.0 + p_pulse * 8.0, Color(1.0, 0.88, 0.25, 0.7 + 0.3 * p_pulse), 3.0)
+	if fountain_t >= 0.0 and fountain_t < 8.0:
+		var a := clampf(fountain_t / 1.0, 0.0, 1.0) * clampf((8.0 - fountain_t) / 2.0, 0.0, 1.0)
+		var top := nose_tip() - Vector2(0.0, 40.0)
+		var r_colors: Array[Color] = [
+			Color(0.96, 0.30, 0.30), Color(0.96, 0.62, 0.22), Color(0.96, 0.90, 0.24),
+			Color(0.28, 0.82, 0.40), Color(0.22, 0.68, 0.96), Color(0.62, 0.32, 0.92)
+		]
+		for i in range(r_colors.size()):
+			var rc: Color = r_colors[i]
+			var rr := 90.0 - float(i) * 6.0
+			var pts := PackedVector2Array()
+			for k in range(17):
+				var ang := PI + PI * float(k) / 16.0
+				pts.append(top + Vector2(cos(ang) * rr, sin(ang) * rr * 0.6))
+			for k in range(16):
+				b.line(pts[k], pts[k + 1], Color(rc.r, rc.g, rc.b, 0.40 * a), 5.0)
+
+
+func _below_banner(bp: Vector2, above: float) -> Vector2:
+	if main == null or main.feed == null:
+		return bp
+	var r: Rect2 = main.feed.banner_rect()
+	if r.size == Vector2.ZERO:
+		return bp
+	var screen_bottom: Vector2 = main.feed.get_canvas_transform() * Vector2(r.get_center().x, r.end.y + 6.0)
+	var world: Vector2 = main.get_global_transform_with_canvas().affine_inverse() * screen_bottom
+	bp.y = maxf(bp.y, world.y + above)
+	return bp
+
+
+func draw_health_bar(c: Object) -> void:
+	if state == State.IDLE or state == State.AWAKEN or hp <= 0.0 or state == State.CONTENT:
+		return
+	var at := pos
+	var bar_w := 170.0
+	var bar_h := 10.0
+	var bp := _below_banner(at + Vector2(-bar_w * 0.5, -96.0), 24.0)
+	c.draw_rect(Rect2(bp + Vector2(3.0, 3.0), Vector2(bar_w, bar_h)), SHADOW)
+	c.draw_rect(Rect2(bp - Vector2(2.0, 2.0), Vector2(bar_w + 4.0, bar_h + 4.0)), Color(0.18, 0.16, 0.14))
+	c.draw_rect(Rect2(bp - Vector2(1.0, 1.0), Vector2(bar_w + 2.0, bar_h + 2.0)), DRAC_CYAN.darkened(0.2))
+	c.draw_rect(Rect2(bp, Vector2(bar_w, bar_h)), Color(0.10, 0.09, 0.08))
+	var hf := clampf(hp / max_hp, 0.0, 1.0)
+	if hf > 0.0:
+		var fc := Color(0.96, 0.32, 0.22) if phase == 2 else Color(0.96, 0.74, 0.18)
+		fc = fc.lerp(Color.WHITE, flash * 0.7)
+		var fill := Rect2(bp + Vector2(1, 1), Vector2((bar_w - 2.0) * hf, bar_h - 2.0))
+		c.draw_rect(fill, fc)
+		c.draw_rect(Rect2(fill.position, Vector2(fill.size.x, 2.0)), fc.lightened(0.35))
+	c.draw_rect(Rect2(bp + Vector2(bar_w * 0.5 - 1.0, -2.0), Vector2(2.0, bar_h + 4.0)), Color(0.18, 0.16, 0.14))
+	var fnt: Font = Kit.display()
+	var label := "EL DRAC"
+	var tw: float = Kit.text_w(fnt, label, 14)
+	var tp := bp + Vector2((bar_w - tw) * 0.5, -5.0)
+	c.draw_string_outline(fnt, tp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, 4, Color(0.05, 0.04, 0.04, 0.85))
+	c.draw_string(fnt, tp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, DRAC_YELLOW)
+
+
+static func _ring(b: ShapeBatch, c: Vector2, r: float, col: Color, w: float) -> void:
+	var n := 24
+	var prev := c + Vector2(r, 0.0)
+	for i in range(1, n + 1):
+		var cur := c + Vector2.from_angle(TAU * float(i) / float(n)) * r
+		b.line(prev, cur, col, w)
+		prev = cur
+
+
+static func _ellipse(c: Vector2, f: Vector2, rf: float, rs: float, n: int) -> PackedVector2Array:
+	var s := f.orthogonal()
+	var out := PackedVector2Array()
+	for i in range(n):
+		var a := TAU * float(i) / float(n)
+		out.append(c + f * cos(a) * rf + s * sin(a) * rs)
+	return out

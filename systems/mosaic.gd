@@ -151,6 +151,17 @@ static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
 	m._mosaic_cache.append_to(m._wc)
 	if m.gardener:
 		m.gardener.draw(m, m._wc, vt, vb)
+	if m.drac != null:
+		var t: float = AnimClock.msec() / 1000.0
+		if m.drac.awake_for_draw():
+			m.drac.draw_ground(m._wc, vt, vb)
+			m.drac.draw_warnings(m._wc, t)
+			if m.drac.pos.y > vt - 240.0 and m.drac.pos.y < vb + 240.0:
+				m.drac.draw_drac(m._wc, t)
+			m.drac.draw_rings(m._wc, t)
+			m.drac.draw_health_bar(m._wc)
+		elif m.drac.fountain_t >= 0.0 and m.drac.fountain_t < 8.0:
+			m.drac.draw_rings(m._wc, t)
 
 
 static func _draw_scenery(m: Node2D, vt: float, vb: float) -> void:

@@ -9,7 +9,7 @@ its own way of fighting, and its own wake film.
 | Walk | Boss | Where | Status |
 |---|---|---|---|
 | 11 | El Mamut, the stone mammoth (1907) | La Ciutadella, by the boating lake | 1.72 |
-| 21 | El Drac, the mosaic dragon of the Park Güell steps | El Mosaic | later |
+| 21 | El Drac, the mosaic dragon of the Park Güell steps | El Mosaic | 1.73 |
 | 31 | Els Lleons, the bronze lions at the foot of the Columbus column (1888) | El Port | later |
 | 41 | El Gat, the Raval's fat bronze cat | Rambla del Raval | shipped |
 

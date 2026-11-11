@@ -56,7 +56,7 @@ func _run() -> void:
 	var boss: GDScript = load("res://systems/boss_gat.gd")
 	var boss_mamut: GDScript = load("res://systems/boss_mamut.gd")
 	var boss_drac: GDScript = load("res://systems/boss_drac.gd")
-	for walk: Array in [["neteja", HomeChase.SWEEPER_FILM], ["besos", HomeChase.FLOOD_FILM], ["vet", HomeChase.VET_FILM], ["boars", HomeChase.BOARS_FILM], ["gracia", HomeChase.GRACIA_FILM], ["cremada", HomeChase.CREMADA_FILM], ["raval", boss.FILM], ["plinth", boss.FILM_PLINTH], ["mamut", boss_mamut.FILM], ["mamut_win", boss_mamut.FILM_WIN], ["drac", boss_drac.FILM]]:
+	for walk: Array in [["neteja", HomeChase.SWEEPER_FILM], ["besos", HomeChase.FLOOD_FILM], ["vet", HomeChase.VET_FILM], ["boars", HomeChase.BOARS_FILM], ["gracia", HomeChase.GRACIA_FILM], ["cremada", HomeChase.CREMADA_FILM], ["raval", boss.FILM], ["plinth", boss.FILM_PLINTH], ["mamut", boss_mamut.FILM], ["mamut_win", boss_mamut.FILM_WIN], ["drac", boss_drac.FILM], ["drac_win", boss_drac.FILM_WIN]]:
 		if walk[0] != "raval" and walk[0] != "plinth" and walk[0] != "mamut" and walk[0] != "mamut_win" and walk[0] != "drac" and walk[0] != "drac_win":
 			_check(HomeChase.profile_for(walk[0]).get("film", "") == walk[1], "%s's chase has its film" % walk[0])
 		var f: GDScript = load(walk[1])
