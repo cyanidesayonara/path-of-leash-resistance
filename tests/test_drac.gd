@@ -48,6 +48,7 @@ func _run() -> void:
 		_check(defs.has(id), "goal %s is defined" % id)
 	var problems: Array = load("res://world/level_check.gd").check(m)
 	_check(problems.is_empty(), "level check clean: %s" % str(problems))
+	_check(ResourceLoader.exists(BD.FILM), "wake film exists")
 
 	var dr = m.drac
 	m.human.global_position = Vector2(640.0, BD.HOLD_Y - 400.0)

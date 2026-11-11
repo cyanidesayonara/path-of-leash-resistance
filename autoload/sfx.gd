@@ -360,6 +360,8 @@ func _build_library() -> void:
 	lib["gat_clang"] = _gat_clang()
 	lib["gat_purr"] = _gat_purr()
 	lib["mamut_trumpet"] = _mamut_trumpet()
+	lib["drac_click"] = _drac_click()
+	lib["drac_jet"] = _drac_jet()
 	lib["van_horn"] = _van_horn()
 
 
@@ -762,3 +764,37 @@ func _van_horn() -> AudioStreamWAV:
 		var s := 0.5 * sin(TAU * 440.0 * t) + 0.35 * sin(TAU * 554.37 * t) + 0.15 * sin(TAU * 880.0 * t)
 		out[i] = s * env * 0.35
 	return _pack(out)
+
+
+func _drac_click() -> AudioStreamWAV:
+	# El Drac: sharp ceramic trencadís tile click / chink
+	var dur := 0.14
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		var v := sin(TAU * 2200.0 * t) * 0.55 + sin(TAU * 3450.0 * t) * 0.30 + sin(TAU * 4800.0 * t) * 0.15
+		var nz := rng.randf_range(-1.0, 1.0) * exp(-t * 90.0)
+		var atk := minf(1.0, float(i) / (0.001 * RATE))
+		out[i] = (v * 0.8 + nz * 0.2) * exp(-t * 32.0) * atk * 0.7
+	return _pack(out)
+
+
+func _drac_jet() -> AudioStreamWAV:
+	# El Drac: airy fountain water jet burst
+	var dur := 0.65
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var prev := 0.0
+	for i in range(n):
+		var t := float(i) / RATE
+		var prog := t / dur
+		var nz := rng.randf_range(-1.0, 1.0)
+		prev = lerpf(prev, nz, 0.45)
+		var tone := sin(TAU * (380.0 + sin(TAU * 12.0 * t) * 60.0) * t) * 0.2
+		var env := minf(1.0, prog * 15.0) * (1.0 - smoothstep(0.6, 1.0, prog))
+		out[i] = (prev * 0.8 + tone) * env * 0.6
+	return _pack(out)
+

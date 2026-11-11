@@ -536,7 +536,11 @@ func tick_state(delta: float) -> void:
 			# further up the walk) leaves him asleep
 			if dog_p.y <= WAKE_Y and main.human.global_position.y > HOLD_Y - 120.0 \
 					and not bool(main.get("film_playing")):
-				transition_to(State.AWAKEN)
+				if not film_shown and FilmPlayer.should_play(main) and ResourceLoader.exists(FILM):
+					film_shown = true
+					FilmPlayer.play(main, load(FILM))
+				else:
+					transition_to(State.AWAKEN)
 		State.AWAKEN:
 			state_t += delta
 			var k := clampf(state_t / AWAKEN_TIME, 0.0, 1.0)
