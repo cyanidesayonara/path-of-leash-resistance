@@ -22,12 +22,12 @@ func _natural(k: int) -> bool:
 
 
 func _run() -> void:
-	var levels: Array = LEVELS
+	var game: Node = root.get_node("Game")
+	var levels: Array = game.LEVELS
 	if not OS.get_cmdline_user_args().is_empty():
 		levels = Array(OS.get_cmdline_user_args())
 	var total_bad := 0
 	for lvl: String in levels:
-		var game: Node = root.get_node("Game")
 		game.level_id = lvl
 		var m: Node2D = load("res://main.tscn").instantiate()
 		root.add_child(m)

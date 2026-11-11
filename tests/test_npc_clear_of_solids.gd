@@ -18,7 +18,9 @@ extends SceneTree
 # Run with --fixed-fps 60, as CI does, so the walk is the same every time.
 
 const ALL_LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown",
-	"trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit"]
+	"trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit",
+	"port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant", "boars", "gracia", "carmel",
+	"superilla", "forum", "espanya", "poble", "ciutadella", "cremada", "raval", "eixample", "angels"]
 const WALKS: Array[String] = ["street", "guell", "station", "spook", "neteja"]
 const HOP := 700.0
 const HOP_FRAMES := 360
