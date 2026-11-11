@@ -73,6 +73,8 @@ const MAIN_FIELDS := [
 	"boar_mud_splashes", "boar_swings", "churros_eaten", "gracia_arches_zoomed", "gracia_arch_mask",
 	# La Cremada's: the rockets dodged and taken
 	"cremada_dodges", "cremada_hits",
+	# L'Aeroport's: tumbling suitcases dodged and buggy hits
+	"aeroport_luggage_dodges", "aeroport_cart_hits",
 	# one-run pickups and rewards
 	"hydrants", "kebabs", "npc_marks", "candy", "prize_taken", "furgoneta_sniffed",
 	"challenge_offered",

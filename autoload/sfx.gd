@@ -361,6 +361,7 @@ func _build_library() -> void:
 	lib["gat_purr"] = _gat_purr()
 	lib["mamut_trumpet"] = _mamut_trumpet()
 	lib["van_horn"] = _van_horn()
+	lib["chime"] = _chime()
 
 
 func _pack(samples: PackedFloat32Array) -> AudioStreamWAV:
@@ -761,4 +762,20 @@ func _van_horn() -> AudioStreamWAV:
 		var env := sin(PI * t / dur)
 		var s := 0.5 * sin(TAU * 440.0 * t) + 0.35 * sin(TAU * 554.37 * t) + 0.15 * sin(TAU * 880.0 * t)
 		out[i] = s * env * 0.35
+	return _pack(out)
+
+
+func _chime() -> AudioStreamWAV:
+	# an airport public announcement chime: three gentle bell notes
+	var freqs := [587.33, 440.0, 659.25]
+	var per := int(0.18 * RATE)
+	var out := PackedFloat32Array()
+	out.resize(per * freqs.size() + int(0.35 * RATE))
+	for k in range(freqs.size()):
+		var f: float = freqs[k]
+		var offset := k * per
+		for i in range(out.size() - offset):
+			var t := float(i) / RATE
+			var tone := sin(TAU * f * t) * 0.75 + sin(TAU * f * 2.0 * t) * 0.2 + sin(TAU * f * 3.0 * t) * 0.05
+			out[offset + i] += tone * exp(-t * 7.5) * 0.32
 	return _pack(out)

@@ -2,6 +2,30 @@
 
 Append-only session history, newest first.
 
+## 2026-11-11 - Walk 37: L'Aeroport concourse, Gate Rush live event, and Security Cart Buggy chase
+
+- Added Walk 37: **L'Aeroport** (Terminal 1 concourse at Barcelona-El Prat Airport):
+  - Soaring glass curtain wall terminal overlooking the western runway and apron tarmac with parked jetliners, polished high-gloss floor tiles with grid divisions, boarding gate check-in desks B20-B30 with LED departure monitors, structural steel columns (wrap poles), duty-free islands, and baggage carousel loop.
+  - High-speed central moving walkway (travelator, $3100$ px long): $+120$ px/s forward boost outbound, resists inbound, featuring yellow warning comb plates, moving directional chevrons, and grindable steel handrails (`systems/rails.gd`).
+  - Signature Live Event: **The Gate Rush** (`_tick_gate_rush` in `systems/aeroport.gd`):
+    - Airport chime (*ding-dong-ding*, `_chime()` in `autoload/sfx.gd`) followed by PA announcement: *"LAST CALL FOR GATE B24!"*.
+    - Hurried business travelers with rolling suitcases sprint across the concourse from Gate B20 toward Gate B24.
+    - Staying clear of the crossing path or planting firmly awards the `"GATE RUSH DODGED! +3"` trick.
+  - Interactive mechanics & goals:
+    - 15 level goals in `systems/goals.gd` (`walkway`, `gate_rush`, `luggage_dodge`, `security_clean`, `carousel_bark`, etc.).
+    - Snatch the giant duty-free chocolate box prize from the display island.
+    - Barking near the baggage carousel loop triggers the carousel bark goal.
+  - The Chase: **Security Cart Buggy** (`entities/aeroport_threat.gd`):
+    - Electric airport security cart chasing the pair down the concourse with flashing amber beacon, uniform driver, and electric motor hum.
+    - Tumbling rolling suitcases shed from the cart and skid across the tiles toward the player with real dodge ($<75$ px) and hit ($<24$ px) detection.
+    - Two authored chase respites (`home_chase.AEROPORT_BANDS`): wedges into the duty-free perfume display pyramid ($-3400$) and tangles in the Gate B24 queue stanchions ($-1900$, checkpoint).
+  - Story film: *Terminal Run* (`intro/film_aeroport.gd`) with boarding pass distraction, window apron view, two-wheeled electric cart turn, and slam card.
+  - Audio: Procedural airport PA broadcast chime (`_chime()`, D5-A4-E5) and upbeat airport vibes musical arrangement (126 BPM, vibes, glockenspiel, bossa rim drums).
+  - Level pairing upgrade: **L'Estació** (`systems/estacio.gd`):
+    - Added the direct *Aeroport T1* Rodalies departure board row on the main concourse board connecting the city station to the airport terminal, with updated divider lines.
+  - Comprehensive test suite: `tests/test_aeroport.gd` (35 checks covering level registration, goals, chase profile, conveyor zone, buggy threat advance and luggage dodges, gate rush state machine, and carousel bark). All regression suites pass (`test_walk_hooks.gd` 922 checks, `test_chase_film.gd` 247 checks, `test_npc_clear_of_solids.gd` 372 checks, `test_wrap.gd`).
+
+
 ## 2026-11-11 - Level sweep: solid bypasser blockers audit and test determinism
 
 - Comprehensive audit of solid bodies vs bypasser blockers across all 36 walks:

@@ -82,6 +82,7 @@ const VET_FILM := "res://intro/film_vet.gd"
 const BOARS_FILM := "res://intro/film_boars.gd"
 const GRACIA_FILM := "res://intro/film_gracia.gd"
 const CREMADA_FILM := "res://intro/film_cremada.gd"
+const AEROPORT_FILM := "res://intro/film_aeroport.gd"
 # La Neteja's dumpster jams, by depth (world/level_build.gd NETEJA_JAMS):
 # the first the way home meets, then the later one, the midpoint
 const NETEJA_BANDS := [
@@ -114,6 +115,13 @@ const GRACIA_BANDS := [
 # over Carrer del Mar (systems/cremada.gd UNDERPASS_JAM_Y, ARCH_JAM_Y)
 const CREMADA_BANDS := [
 	{"id": "underpass", "kind": "respite", "jam_y": -3400.0},
+	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
+]
+
+# L'Aeroport: the security cart crashes into the duty-free perfume pyramid,
+# then tangles in the gate queue tape stanchions
+const AEROPORT_BANDS := [
+	{"id": "perfume", "kind": "respite", "jam_y": -3400.0},
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
 ]
 
@@ -183,6 +191,18 @@ The phone kept a lovely last video.",
 
 The Dimoni rolled right over you.
 You will smell of fireworks for a week.",
+			}
+		"buggy":
+			return {
+				"kind": "buggy", "speed": 136.0, "flee": false,
+				"warning": "SECURITY CART INCOMING! OUT OF THE WAY!",
+				"freed": "SIREN", "freed_sfx": "whoop", "caught_shout": "CAUGHT!",
+				"jammed": "CRASH", "jammed_sfx": "crack", "jammed_shout": "THE BUGGY IS JAMMED!",
+				"jammed_banner": "THE BUGGY IS JAMMED! CATCH YOUR BREATH", "run_banner": "RUN! WATCH FOR TUMBLING BAGS",
+				"warning_banner": "SECURITY CART! HEAD FOR THE EXIT", "hold_banner": "STILL TANGLED! GO  %d",
+				"suitcase_banner": "SUITCASE! STEP CLEAR",
+				"caught_human": "GROUNDED!\n\nSecurity confiscated your human's boarding pass.\nThey were placed on the no-walk list.",
+				"caught_dog": "BAGGAGE RECLAIMED!\n\nThe buggy cornered you into oversized baggage.\nYou were scanned for contraband snacks.",
 			}
 		"vet":
 			return {
@@ -260,6 +280,13 @@ static func profile_for(level: String) -> Dictionary:
 		d["bands"] = CREMADA_BANDS.duplicate(true)
 		d["film"] = CREMADA_FILM
 		return d
+	if level == "aeroport":
+		var a := kind_behavior("buggy")
+		a["id"] = "aeroport"
+		a["script"] = "res://entities/aeroport_threat.gd"
+		a["bands"] = AEROPORT_BANDS.duplicate(true)
+		a["film"] = AEROPORT_FILM
+		return a
 	return {}
 
 
