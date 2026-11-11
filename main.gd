@@ -627,6 +627,15 @@ var mamut_bowled := false
 var mamut_booped := false
 var mamut_sat := false
 var mamut_settled := false
+# El Mosaic: El Drac (systems/boss_drac.gd) and what the goals count of him
+var drac: RefCounted = null
+var drac_dodges := 0
+var drac_wound := false
+var drac_tripped := false
+var drac_bowled := false
+var drac_booped := false
+var drac_slid := false
+var drac_settled := false
 # the zoo palms' parakeets and your human's croissant
 var ciut_shooed := false
 var ciut_birds: Dictionary = {"state": "perched", "t": 0.0, "done": false}
@@ -6219,7 +6228,7 @@ func start_challenge(giver: Node2D, target: int, seconds: float, follow_up := fa
 	if challenge.showing():
 		return
 	# no dare card over a boss fight
-	if (boss_gat != null and boss_gat.in_fight()) or (mamut != null and mamut.in_fight()):
+	if (boss_gat != null and boss_gat.in_fight()) or (mamut != null and mamut.in_fight()) or (drac != null and drac.in_fight()):
 		return
 	if challenge_offered and not follow_up:
 		return
@@ -9899,6 +9908,10 @@ func _is_boss_leg(p: Vector2) -> bool:
 		for lp: Vector2 in boss_gat.leg_poles:
 			if lp.distance_to(p) < 1.0:
 				return true
+	if drac != null:
+		for lp: Vector2 in drac.leg_poles:
+			if lp.distance_to(p) < 1.0:
+				return true
 	return false
 
 
@@ -10781,6 +10794,8 @@ func _nearest_markable(pos: Vector2) -> Vector2:
 		if boss_gat != null and boss_gat.is_leg_index(pi):
 			continue
 		if mamut != null and mamut.is_leg_index(pi):
+			continue
+		if drac != null and drac.is_leg_index(pi):
 			continue
 		if not marks.has(p):
 			var d := pos.distance_to(p)

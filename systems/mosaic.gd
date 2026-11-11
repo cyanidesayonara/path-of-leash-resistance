@@ -424,6 +424,27 @@ static func _draw_scenery(m: Node2D, vt: float, vb: float) -> void:
 			b4.rect(Rect2(gc + Vector2(14, -44), Vector2(32, 8)), Color(0.90, 0.88, 0.84))
 
 
+static func tick(m: Node2D, delta: float) -> void:
+	if m.drac != null:
+		m.drac.tick_state(delta)
+
+
+static func on_bark(m: Node2D, pos: Vector2) -> bool:
+	return m.drac != null and m.drac.on_bark_action(pos)
+
+
+static func urgent_status(m: Node2D) -> String:
+	return m.drac.status() if m.drac != null else ""
+
+
+static func hush_banner(m: Node2D) -> bool:
+	return m.drac != null and m.drac.hush_banner()
+
+
+static func cam_lean(m: Node2D) -> float:
+	return m.drac.lean if m.drac != null else 0.0
+
+
 static func tick_crowd(m: Node2D) -> void:
 	var cy: float = m.cam.position.y
 	if not m.mosaic_queue_out:
