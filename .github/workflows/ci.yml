@@ -350,6 +350,8 @@ jobs:
 
       - name: Festa de Gracia Gegant rehearsal twirl test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_gracia_gegant.gd
+      - name: Festa de Gracia Castellers test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_gracia_castellers.gd
       - name: Els Bunquers del Carmel test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_carmel.gd
       - name: La Superilla (Poblenou superblock) test

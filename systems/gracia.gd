@@ -132,7 +132,7 @@ static func draw_scenery(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> vo
 	var b := ShapeBatch.new()
 	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.28)
 	if _in_view(CASTELL_STAGE, vt, vb):
-		_draw_stage(b, sh)
+		_draw_stage(m, b, sh)
 	if _in_view(CHURRO_STAND, vt, vb):
 		_draw_churros(m, b, sh)
 	var stalls: Array[Rect2] = [FESTIVAL_STALL_1, FESTIVAL_STALL_2]
@@ -155,9 +155,9 @@ static func _in_view(r: Rect2, vt: float, vb: float) -> bool:
 	return r.end.y > vt - 80.0 and r.position.y < vb + 80.0
 
 
-# the castellers' practice stage: the mat, and a pinya of green shirts round
-# the base of a tower, the anxaneta's little helmet at the top
-static func _draw_stage(b: ShapeBatch, sh: Color) -> void:
+# the castellers' practice stage: the wooden mat, the banner, coaches on the flanks,
+# and the living castell with organic micro-sway, climbing, and l'aleta crowning
+static func _draw_stage(_m: Node2D, b: ShapeBatch, sh: Color) -> void:
 	var r := CASTELL_STAGE
 	b.rect(Rect2(r.position + Vector2(6, 8), r.size), sh)
 	b.rect(r, CASTELL_MAT.darkened(0.3))
@@ -169,20 +169,93 @@ static func _draw_stage(b: ShapeBatch, sh: Color) -> void:
 	# the colla's banner hung along the stage front
 	b.rect(Rect2(r.position.x + 20.0, r.end.y - 10.0, r.size.x - 40.0, 8.0), CASTELLER_SHIRT.darkened(0.1))
 	b.rect(Rect2(r.position.x + 20.0, r.end.y - 7.0, r.size.x - 40.0, 2.0), BANNER_WHITE)
+
+	# Coaches / cap de colla standing on the flanks of the stage
+	var coach_l := Vector2(r.position.x + 26.0, r.get_center().y + 2.0)
+	var coach_r := Vector2(r.end.x - 26.0, r.get_center().y + 2.0)
+	for cp: Vector2 in [coach_l, coach_r]:
+		b.circle(cp + Vector2(2, 3), 7.0, sh)
+		b.circle(cp, 6.5, CASTELLER_SHIRT)
+		b.circle(cp, 3.2, FAIXA)
+		var face_dir := 1.0 if cp.x < r.get_center().x else -1.0
+		b.circle(cp + Vector2(face_dir * 2.0, -1.0), 3.8, Color(0.24, 0.18, 0.14))
+
+	var t: float = AnimClock.msec() * 0.001
+	var sway := Vector2(sin(t * 2.1) * 2.4, cos(t * 1.5) * 1.6)
+
 	var c := r.get_center() + Vector2(0.0, -4.0)
+
+	# 1. Pinya (base ring of 10 castellers in tight formation, leaning inward)
 	for k in range(10):
 		var a := float(k) * (TAU / 10.0)
 		var p := c + Vector2(cos(a) * 26.0, sin(a) * 18.0)
 		b.circle(p + Vector2(2, 3), 8.0, sh)
 		b.circle(p, 7.5, CASTELLER_SHIRT)
-		b.circle(p - Vector2(cos(a), sin(a)) * 3.0, 4.0, Color(0.24, 0.18, 0.14))
+		b.circle(p, 3.2, FAIXA)
+		# heads facing inward toward the center of the tower
+		b.circle(p - Vector2(cos(a), sin(a)) * 3.2, 4.0, Color(0.24, 0.18, 0.14))
+
+	# 2. Tronc / Quarts (second tier of 4 castellers, swaying gently)
+	var c_quarts := c + sway * 0.5
 	for k in range(4):
 		var a := float(k) * (TAU / 4.0) + 0.4
-		var p := c + Vector2(cos(a) * 11.0, sin(a) * 8.0)
-		b.circle(p, 6.5, CASTELLER_SHIRT.lightened(0.08))
+		var p := c_quarts + Vector2(cos(a) * 11.0, sin(a) * 8.0)
+		b.circle(p + Vector2(1, 2), 6.5, sh)
+		b.circle(p, 6.2, CASTELLER_SHIRT.lightened(0.08))
 		b.circle(p, 3.0, FAIXA)
-	b.circle(c, 6.0, BANNER_WHITE)
-	b.circle(c, 3.5, BANNER_RED)
+		b.circle(p - Vector2(cos(a), sin(a)) * 2.2, 3.2, Color(0.22, 0.16, 0.12))
+
+	# 3. Apex / Acotxador (supporting crouch at the top)
+	var c_top := c + sway * 1.1
+	var aco_p := c_top + Vector2(0.0, 2.0)
+	b.circle(aco_p + Vector2(1, 2), 5.5, sh)
+	b.circle(aco_p, 5.0, CASTELLER_SHIRT.lightened(0.12))
+	b.circle(aco_p, 2.4, FAIXA)
+	b.circle(aco_p + Vector2(0.0, -1.5), 3.0, Color(0.20, 0.15, 0.12))
+
+	# 4. Anxaneta crowning cycle (8s loop: 0..4s climb, 4..6.5s l'aleta, 6.5..8s safe descent)
+	var phase_t := fmod(t, 8.0)
+	var anx_pos := c_top
+	var doing_aleta := false
+
+	if phase_t < 4.0:
+		# Climbing up the tier
+		var climb_p := clampf(phase_t / 3.6, 0.0, 1.0)
+		var bob := sin(phase_t * 10.0) * 1.4
+		anx_pos = c_quarts.lerp(c_top, climb_p) + Vector2(bob, 4.0 * (1.0 - climb_p) - 2.0)
+	elif phase_t <= 6.5:
+		# Crowned at peak: Fent l'Aleta!
+		doing_aleta = true
+		anx_pos = c_top + Vector2(0.0, -3.0)
+	else:
+		# Safe descent down the pinya
+		var desc_p := clampf((phase_t - 6.5) / 1.5, 0.0, 1.0)
+		anx_pos = c_top.lerp(c_quarts, desc_p) + Vector2(0.0, 3.0 * desc_p - 2.0)
+
+	# Anxaneta body
+	b.circle(anx_pos + Vector2(1, 2), 5.0, sh)
+	b.circle(anx_pos, 4.5, CASTELLER_SHIRT.lightened(0.15))
+	b.circle(anx_pos, 2.0, FAIXA)
+	# Anxaneta protective helmet (white shell with red protective crest)
+	var helmet_p := anx_pos + Vector2(0.0, -2.5)
+	b.circle(helmet_p, 4.2, BANNER_WHITE)
+	b.circle(helmet_p, 2.4, BANNER_RED)
+
+	# L'Aleta gesture: right arm raised high with outstretched fingers & golden glints
+	if doing_aleta:
+		var hand_p := anx_pos + Vector2(3.5, -9.0)
+		# Raised arm sleeve and forearm
+		b.line(anx_pos + Vector2(2.0, -1.0), hand_p, CASTELLER_SHIRT.lightened(0.2), 2.2)
+		b.circle(hand_p, 1.8, Color(0.88, 0.74, 0.62))
+		# 4 outstretched fingers (quatre barres)
+		for fi in range(4):
+			var fx := hand_p.x - 1.2 + float(fi) * 0.8
+			b.line(Vector2(fx, hand_p.y), Vector2(fx, hand_p.y - 2.5), Color(0.88, 0.74, 0.62), 0.8)
+		# Golden celebration sparkles around the outstretched hand
+		for si in range(4):
+			var sa := float(si) * (TAU / 4.0) + t * 5.0
+			var sp := hand_p + Vector2(cos(sa), sin(sa)) * (4.5 + sin(t * 8.0 + float(si)) * 1.5)
+			b.circle(sp, 1.2, BANNER_GOLD.lightened(0.4))
 
 
 # the churro stand: a red cart under a striped awning, the fryer, a paper
@@ -293,6 +366,41 @@ static func tick(m: Node2D, delta: float) -> void:
 				m.float_text(dp + Vector2(0, -26), "churro! +3", CHURRO_GOLD)
 		else:
 			m.gracia_beg_t = 0.0
+	_tick_castell(m, delta)
+
+
+static func _tick_castell(m: Node2D, delta: float) -> void:
+	if m.gracia_castell_watched:
+		return
+	var dp: Vector2 = m.dog.global_position
+	var c := CASTELL_STAGE.get_center()
+	# Respectful watch: dog stands calmly by the stage without dragging
+	if dp.distance_to(c) < 110.0 and m.dog.velocity.length() < 25.0 and not m.dog.dragged:
+		m.gracia_castell_t += delta
+		if m.gracia_castell_t >= 1.5:
+			m.gracia_castell_watched = true
+			m.combo.add("EQUILIBRI", 2)
+			m.award_points(2, "equilibri! +2")
+			Sfx.play("combo", 1.1, -4.0)
+			m.float_text(c + Vector2(0.0, -42.0), "Força, equilibri, valor i seny!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+	elif dp.distance_to(c) >= 130.0:
+		m.gracia_castell_t = 0.0
+
+
+static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
+	if m.gracia_aleta_cheered:
+		return
+	var bp: Vector2 = pos if pos != Vector2.ZERO else m.dog.global_position
+	var c := CASTELL_STAGE.get_center()
+	if bp.distance_to(c) <= 160.0:
+		var t: float = AnimClock.msec() * 0.001
+		var phase_t := fmod(t, 8.0)
+		if phase_t >= 3.8 and phase_t <= 6.5:
+			m.gracia_aleta_cheered = true
+			m.combo.add("ALETA", 2)
+			m.award_points(2, "aleta bark! +2")
+			Sfx.play("save", 1.2, -4.0)
+			m.float_text(c + Vector2(0.0, -42.0), "Visca els Castellers de Gràcia!", Color(0.96, 0.94, 0.88), m.POP_SAY)
 
 
 static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:

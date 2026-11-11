@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-11-11 - Living Castellers de Gràcia: dynamic human tower, l'aleta, and tricks
+
+- The practice stage on Walk 26 (Festa de Gràcia, `systems/gracia.gd`) now features a full, living Castellers de la Vila de Gràcia human tower with organic micro-sway, coaches on the flanks, and an 8-second crowning cycle.
+- Dynamic crowning cycle:
+  - Pujant (0..4s): Anxaneta climbs the tiers up to the acotxador crouched atop the quarts.
+  - L'Aleta (4..6.5s): Anxaneta crowns the apex and raises their right arm high with four outstretched fingers (*quatre barres*) amidst celebratory golden sparkles.
+  - Descarregat (6.5..8s): Safe slide down to the pinya as the colla holds steady.
+- New gameplay tricks:
+  - Equilibri trick (+2): Standing respectfully near the stage without dragging for 1.5 seconds awards "equilibri! +2" ("Força, equilibri, valor i seny!").
+  - Aleta cheer bark (+2): Barking near the stage during the aleta crowning window awards "aleta bark! +2" ("Visca els Castellers de Gràcia!").
+- Zero new draw calls: Drawn directly into the scenery `ShapeBatch` flush. Physical stage dimensions and wrap poles remain unchanged for Correfoc chase jam respite compatibility.
+- Regression coverage: `tests/test_gracia_castellers.gd` (21 checks), `tests/test_walk_hooks.gd` (889 checks), and `tests/test_members_exist.gd` (7,416 checks).
+
 ## 2026-11-10 - A signature live event for La Cremada: El Carretó de Xurros
 
 - A mobile festival churro cart (*Xurreria Ambulant*, `systems/churro_cart.gd`) now stands on La Rambla de Badalona between the railway underpass and the beach, nestled beside the palms at `x = 735.0, y = -4180.0`.
