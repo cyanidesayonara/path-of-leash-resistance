@@ -10,6 +10,7 @@ extends RefCounted
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
+const GoticCastellers := preload("res://systems/gotic_castellers.gd")
 
 # Past the alley's own roofs, the old town goes on: the frame either side of
 # the walk was the bare masonry fill, flat noisy grey over two fifths of the
@@ -116,6 +117,9 @@ static func draw_street(m: Node2D, vt: float, vb: float) -> void:
 			b.line(fp + sdir * 4.0, fp + sdir * 11.0, Color(0.44, 0.40, 0.30), 2.0)
 			b.circle(fp + sdir * 16.0, 2.2, Color(0.85, 0.95, 1.0, 0.75))
 			b.circle(fp + sdir * 16.0, 4.0, Color(0.48, 0.66, 0.74, 0.4))
+
+		# Castellers de Barcelona performing in the plaça
+		GoticCastellers.draw(m, b, vt, vb)
 
 	# doorway and square terracotta flowerpots with geraniums
 	_draw_pots(m, b, vt, vb, fp)

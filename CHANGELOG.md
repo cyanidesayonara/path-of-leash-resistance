@@ -2,6 +2,24 @@
 
 Append-only session history, newest first.
 
+## 2026-11-11 - Castellers de Barcelona in El Gòtic: Placa de Sant Felip Neri diada
+
+- Added the historic *Castellers de Barcelona* colla (founded 1969, red shirts `Color(0.85, 0.16, 0.18)`, black faixes, and white trousers) to Walk 7 (El Gòtic, `systems/gotic_castellers.gd`, `world/gotic.gd`).
+- Diada setting in Plaça de Sant Felip Neri:
+  - Positioned at `Vector2(840.0, -2850.0)` in the quiet northeast quadrant of the square.
+  - Framed by a circular cobblestone diada apron, Senyera ribbon garland with festive flags, red velvet cordons on brass stanchions, and a "CASTELLERS DE BARCELONA" backdrop banner.
+  - Accompanied by traditional musicians (graller playing dolçaina/gralla with musical notes, tabaler beating the drum) and flanking coaches (*cap de colla*).
+  - Living human tower (pinya, tronc/quarts, acotxador, and crowning anxaneta) featuring organic micro-sway and an 8-second crowning cycle culminating in *l'aleta* (raising four outstretched fingers for *quatre barres* with celebratory sparkles).
+- Physics, obstacle clearance & rope wrapping:
+  - Solid collision body + bypasser blocker covering the $56 \times 56$ colla circle prevents tourists and dog-walking pairs from pathing through the formation.
+  - Flanking carved Gothic stone stanchions (`Vector2(804.0, -2850.0)` and `Vector2(876.0, -2850.0)`) register as leash wrap poles in `m.poles`.
+  - Full clearance verified: $>150$ px to central fountain, $>140$ px to acoustic busker, $>80$ px to east bench, $>250$ px to plane tree. Autowalk human path ($x \approx 740.0$) maintains $100$ px clearance from colla and $64$ px from left stanchion (100% autowalk safe).
+- Interactive tricks:
+  - *Equilibri trick (+2)*: Dog stands respectfully near the colla ($<130$ px, speed $<30$, not dragged) for 1.5 seconds to award `"equilibri! +2"` (`"Força, equilibri, valor i seny!"`). Single award flag `gotic_castell_watched`.
+  - *Aleta cheer bark (+2)*: Barking near the colla ($<150$ px) during *l'aleta* (phase 3.8s..6.5s in the 8s cycle) awards `"aleta cheer! +2"` (`"Visca els Castellers de Barcelona!"`). Single award flag `gotic_aleta_cheered`.
+- Zero new draw calls: Rendered completely through `ShapeBatch` flush inside `Gotic.draw_street()`.
+- Regression coverage: `tests/test_gotic_castellers.gd` (29 checks), `tests/test_gotic.gd` (10 checks), `tests/test_walk_hooks.gd` (892 checks), `tests/test_members_exist.gd` (7,554 checks), and `tests/test_npc_clear_of_solids.gd` (188 checks).
+
 ## 2026-11-11 - Fur-goneta facelift, multi-walk presence and mobile groomer style dare
 
 - Visual facelift for the Fur-goneta (`systems/furgoneta.gd`), honoring the iconic Dumb & Dumber Mutt Cutts shag wagon homage:

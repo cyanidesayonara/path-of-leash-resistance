@@ -33,6 +33,7 @@ const Eixample := preload("res://systems/eixample.gd")
 const Outdoors := preload("res://systems/outdoors.gd")
 const Angels := preload("res://systems/angels.gd")
 const Poble := preload("res://systems/poble.gd")
+const GoticCastellers := preload("res://systems/gotic_castellers.gd")
 # the tutorial's pond for the brink lesson, beside the path at its station
 const TUT_POND_W := 150.0
 const ROPE_CLEAR := 4.0
@@ -201,6 +202,9 @@ static func gotic(m: Node2D) -> void:
 	# the plaça's plane tree
 	m.poles.append(GOTIC_PLACA + Vector2(-150.0, -60.0))
 	m.deco_pole_count = m.poles.size()
+	# flanking stone stanchions for Castellers de Barcelona in the plaça
+	m.poles.append(GoticCastellers.STANCHION_L)
+	m.poles.append(GoticCastellers.STANCHION_R)
 	# scooters parked against the walls: light props that bodies/the strap tip
 	m.scooters = Array([gotic_wall(m, -1300.0, false, 26.0), gotic_wall(m, -2100.0, true, 26.0),
 		gotic_wall(m, -3650.0, false, 26.0), gotic_wall(m, -4400.0, true, 26.0)], TYPE_VECTOR2, &"", null)
@@ -3408,6 +3412,8 @@ static func level_solid_rects(m: Node2D) -> Array:
 				out.append(["groin_%d" % i, Rect2(-140.0, Llevant.GROIN_YS[i] - 18.0, 420.0, 36.0)])
 		"station":
 			out.append(["estacio_train", ESTACIO_TRAIN])
+		"oldtown":
+			out.append(["gotic_castellers", GoticCastellers.COLLISION_RECT])
 		"park":
 			out.append(["park_statue", Rect2(PARK_STATUE - STATUE_BODY * 0.5, STATUE_BODY)])
 		"guell":
@@ -3748,6 +3754,7 @@ static func build_walls(m: Node2D) -> void:
 		fcs.shape = fsh
 		fb.add_child(fcs)
 		m.add_child(fb)
+		add_rect_body(m, GoticCastellers.COLLISION_RECT.get_center(), GoticCastellers.COLLISION_RECT.size)
 	if m.lvl == "park":
 		add_rect_body(m, PARK_STATUE, STATUE_BODY)
 		for bp: Vector2 in bandstand_posts():
