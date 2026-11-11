@@ -3171,6 +3171,13 @@ const FREEDOM_PROPS := {
 		[Vector2(1044.0, -466.0), "post"], [Vector2(308.0, -244.0), "shrub"], [Vector2(552.0, -238.0), "post"],
 		[Vector2(776.0, -214.0), "shrub"],
 	],
+	"aeroport": [
+		[Vector2(248.0, -536.0), "dig"], [Vector2(652.0, -282.0), "dig"], [Vector2(1046.0, -310.0), "dig"],
+		[Vector2(346.0, -528.0), "planter"], [Vector2(916.0, -248.0), "planter"], [Vector2(1074.0, -462.0), "planter"],
+		[Vector2(168.0, -438.0), "post"], [Vector2(178.0, -266.0), "shrub"], [Vector2(308.0, -318.0), "post"],
+		[Vector2(558.0, -532.0), "post"], [Vector2(814.0, -528.0), "shrub"], [Vector2(832.0, -308.0), "post"],
+		[Vector2(948.0, -244.0), "shrub"],
+	],
 }
 
 
