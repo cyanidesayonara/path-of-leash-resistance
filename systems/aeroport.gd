@@ -250,10 +250,8 @@ static func _tick_gate_rush(m: Node2D, delta: float) -> void:
 					m.float_text(hp + Vector2(0, -32), "GATE RUSH DODGED! +3", Color(0.4, 1.0, 0.6))
 
 
-static func _tick_carousel(m: Node2D) -> void:
-	# Subtle attraction / proximity cue
-	if not m.aeroport_carousel_barked and CAROUSEL_RECT.grow(60.0).has_point(m.dog.global_position):
-		m.hud_hint = "BARK AT THE CAROUSEL"
+static func _tick_carousel(_m: Node2D) -> void:
+	pass
 
 
 # --- WORLD DRAWING ---
