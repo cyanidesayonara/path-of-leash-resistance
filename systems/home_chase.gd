@@ -561,6 +561,8 @@ static func banner(m: Node2D) -> String:
 		return "RUN! STAY OUT OF THE DEEP"
 	if sweeper.has_method("rocket_warning") and bool(sweeper.call("rocket_warning")):
 		return String(_behavior(m, held_profile(m)).get("rocket_banner", "OUT OF THE RING"))
+	if sweeper.has_method("suitcase_warning") and bool(sweeper.call("suitcase_warning")):
+		return String(_behavior(m, held_profile(m)).get("suitcase_banner", "SUITCASE! STEP CLEAR"))
 	return String(_behavior(m, held_profile(m)).get("run_banner", "RUN! DON'T LET IT CATCH YOU"))
 
 

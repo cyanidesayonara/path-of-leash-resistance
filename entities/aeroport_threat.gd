@@ -236,6 +236,18 @@ func _land_suitcase(at: Vector2) -> void:
 			main.float_text(dp + Vector2(0, -25), "SUITCASE DODGE! +1", Color(0.4, 0.9, 1.0))
 
 
+func suitcase_warning() -> bool:
+	if main == null:
+		return false
+	var dp: Vector2 = main.dog.global_position
+	var hp: Vector2 = main.human.global_position
+	for s: Dictionary in suitcases:
+		var at: Vector2 = s["at"]
+		if at.distance_to(dp) < SUITCASE_DODGE_R or at.distance_to(hp) < SUITCASE_DODGE_R:
+			return true
+	return false
+
+
 func _draw() -> void:
 	var b := ShapeBatch.new(self)
 	_draw_skids_and_suitcases(b)

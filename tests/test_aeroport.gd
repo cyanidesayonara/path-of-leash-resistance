@@ -112,6 +112,7 @@ func _run() -> void:
 	# Position dog safely nearby for a dodge
 	m.dog.global_position = target_at + Vector2(threat.SUITCASE_DODGE_R - 10.0, 0.0)
 	m.human.global_position = target_at + Vector2(250.0, 0.0)
+	_check(threat.suitcase_warning(), "suitcase approaching pair triggers suitcase_warning")
 	var dodges0: int = m.aeroport_luggage_dodges
 	threat._land_suitcase(target_at)
 	_check(m.aeroport_luggage_dodges == dodges0 + 1, "dog within dodge radius counts a luggage dodge")
