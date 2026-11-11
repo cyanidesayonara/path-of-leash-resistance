@@ -237,6 +237,7 @@ const Angels := preload("res://systems/angels.gd")
 const AngelsSkate := preload("res://systems/angels_skate.gd")
 const Poble := preload("res://systems/poble.gd")
 const PobleBalcony := preload("res://systems/poble_balcony.gd")
+const FurgonetaMod := preload("res://systems/furgoneta.gd")
 # float_text(..., POP_SAY) draws a speech bubble rather than a sound or a score
 const POP_SAY := 0
 const POLE_RADIUS := 10.0
@@ -392,6 +393,12 @@ var dune_spots: Array[Vector2] = []
 # interesting object in the city, which is why it is worth a fortune to sniff.
 var furgoneta := Vector2(INF, INF)
 var furgoneta_sniffed := false
+var furgoneta_flash_t := 0.0
+var furgoneta_wiper_t := 0.0
+var furgoneta_honk_cd := 0.0
+var fresh_coat_t := 0.0
+var furgoneta_dare_offered := false
+var furgoneta_dare_won := false
 var freedomlayer: Node2D
 var gate_text := "PIPICÀ"
 var duck_ys: Array[float] = []
@@ -4462,128 +4469,7 @@ func _draw_service_van(v: Vector2) -> void:
 # signwriting is painted up there, which is where a real grooming van puts it
 # anyway. Front is north; body, wheels and footprint are the service van's.
 func _draw_furgoneta(v: Vector2) -> void:
-	var fur := Color(0.50, 0.33, 0.19)
-	var fur_lit := Color(0.64, 0.45, 0.27)
-	var fur_dark := Color(0.33, 0.21, 0.12)
-	var cream := Color(0.92, 0.86, 0.74)
-	var cream_dk := Color(0.76, 0.69, 0.57)
-	var ink := Color(0.40, 0.20, 0.16)
-	var body := Rect2(v.x - 32.0, v.y - 66.0, 64.0, 132.0)
-	box_shadow(_wc, body, 14.0, 26.0)
-	for w: Vector2 in [Vector2(-35, -40), Vector2(29, -40), Vector2(-35, 26), Vector2(29, 26)]:
-		_wc.draw_colored_polygon(round_rect_pts(Rect2(v.x + w.x, v.y + w.y, 6.0, 18.0), 2.5), Color(0.10, 0.10, 0.12))
-	# --- ears: big and floppy, hung from the front of the roof down the sides
-	for sx: float in [-1.0, 1.0]:
-		_wc.draw_colored_polygon(PackedVector2Array([
-			v + Vector2(24.0 * sx, -40.0), v + Vector2(48.0 * sx, -26.0),
-			v + Vector2(46.0 * sx, 6.0), v + Vector2(38.0 * sx, 16.0),
-			v + Vector2(27.0 * sx, 2.0),
-		]), fur_dark)
-		_wc.draw_colored_polygon(PackedVector2Array([
-			v + Vector2(26.0 * sx, -35.0), v + Vector2(42.0 * sx, -24.0),
-			v + Vector2(40.0 * sx, 4.0), v + Vector2(36.0 * sx, 10.0),
-			v + Vector2(28.0 * sx, -2.0),
-		]), fur if sx > 0.0 else fur_lit)
-		# the shaggy ends of the ear
-		for tf in range(3):
-			var tx := (32.0 + float(tf) * 4.5) * sx
-			_wc.draw_line(v + Vector2(tx, 6.0 + float(tf)), v + Vector2(tx - 1.5 * sx, 14.0 + float(tf) * 1.5), fur_dark, 2.2)
-	# --- the body: a soft fur slab, cream down the face and one rear corner
-	clay_slab(_wc, body, 14.0, fur, 3.0)
-	_wc.draw_colored_polygon(round_rect_pts(Rect2(v.x - 31.0, v.y + 22.0, 18.0, 41.0), 9.0), cream_dk)
-	# --- fur: rows of little curls over the roof, lit side and shaded side
-	for row in range(9):
-		var ry := v.y - 26.0 + float(row) * 10.5
-		for col in range(6):
-			var rx := v.x - 26.0 + float(col) * 10.5 + (5.0 if row % 2 == 0 else 0.0)
-			if absf(rx - v.x) < 25.0 and ry > v.y - 25.0 and ry < v.y + 26.0:
-				continue     # under the signwriting
-			var on_cream: bool = rx < v.x - 13.0 and ry > v.y + 22.0
-			var tc: Color = cream if on_cream else (fur_lit if rx < v.x - 6.0 else fur_dark)
-			_wc.draw_line(Vector2(rx, ry), Vector2(rx - 3.0, ry + 5.0), tc, 2.0)
-			_wc.draw_line(Vector2(rx - 3.0, ry + 5.0), Vector2(rx + 1.0, ry + 7.5), tc, 1.6)
-	# --- the face on the front (north) end -------------------------------
-	# the bumper, peeking out in front of the muzzle, with its two headlamps
-	_wc.draw_colored_polygon(round_rect_pts(Rect2(v.x - 30.0, v.y - 69.0, 60.0, 8.0), 4.0), Color(0.36, 0.34, 0.33))
-	for hx: float in [-21.0, 21.0]:
-		_wc.draw_circle(v + Vector2(hx, -64.0), 4.6, Color(0.30, 0.28, 0.26))
-		_wc.draw_circle(v + Vector2(hx, -64.0), 3.4, Color(0.98, 0.94, 0.78))
-		_wc.draw_circle(v + Vector2(hx - 1.0, -65.0), 1.2, Color(1, 1, 1))
-	# the muzzle over the bonnet, and a big wet nose where the grille would be
-	clay_slab(_wc, Rect2(v.x - 17.0, v.y - 66.0, 34.0, 19.0), 9.0, cream, 2.0)
-	_wc.draw_circle(v + Vector2(0.0, -59.0), 7.5, Color(0.10, 0.09, 0.10))
-	_wc.draw_circle(v + Vector2(-0.6, -59.8), 6.0, Color(0.17, 0.15, 0.16))
-	_wc.draw_circle(v + Vector2(-2.6, -62.0), 2.2, Color(0.62, 0.60, 0.62))
-	_wc.draw_line(v + Vector2(0.0, -52.5), v + Vector2(0.0, -48.5), Color(0.30, 0.22, 0.18), 1.6)
-	# the windscreen, raked, with a glare streak across it
-	_wc.draw_colored_polygon(PackedVector2Array([v + Vector2(-27, -47), v + Vector2(27, -47),
-		v + Vector2(25, -30), v + Vector2(-25, -30)]), Color(0.22, 0.29, 0.36))
-	_wc.draw_colored_polygon(PackedVector2Array([v + Vector2(-25, -46), v + Vector2(-13, -46),
-		v + Vector2(-19, -31), v + Vector2(-24, -31)]), Color(0.58, 0.68, 0.76, 0.5))
-	# the eyes, painted on the glass the way a cartoon car's are, peering out
-	# from under the fringe; the pupils slide towards the dog when she is near
-	var look := Vector2.ZERO
-	if dog != null and dog.global_position.distance_to(v) < 260.0:
-		look = (dog.global_position - v).normalized() * 1.6
-	for ex: float in [-10.5, 10.5]:
-		var ep := v + Vector2(ex, -40.5)
-		_wc.draw_circle(ep, 6.0, Color(0.20, 0.16, 0.14))
-		_wc.draw_circle(ep, 5.0, Color(0.98, 0.97, 0.94))
-		_wc.draw_circle(ep + Vector2(0.4, 1.2) + look, 2.6, Color(0.12, 0.10, 0.10))
-		_wc.draw_circle(ep + Vector2(-0.6, 0.2) + look, 0.9, Color(1, 1, 1))
-	# the fringe, hanging off the front of the roof over the tops of the eyes
-	for i in range(10):
-		var fx := v.x - 24.0 + float(i) * 5.4
-		var fl := 6.0 + float((i * 7) % 4) * 1.4
-		var fc: Color = fur_lit if fx < v.x - 6.0 else fur
-		_wc.draw_colored_polygon(PackedVector2Array([Vector2(fx - 3.4, v.y - 29.0),
-			Vector2(fx + 3.4, v.y - 29.0), Vector2(fx - 1.0, v.y - 29.0 - fl)]), fc)
-	# mirrors, out past the ears' roots
-	for mx: float in [-1.0, 1.0]:
-		_wc.draw_colored_polygon(round_rect_pts(Rect2(v.x + mx * 37.0 - 3.0, v.y - 47.0, 6.0, 8.0), 2.5), Color(0.28, 0.26, 0.25))
-	# --- the tail, wagging, on the back doors -----------------------------
-	var wag := sin(AnimClock.msec() / 210.0) * 0.55
-	var tail_dir := Vector2(0.0, 1.0).rotated(wag)
-	var tail_root := v + Vector2(0.0, 62.0)
-	_wc.draw_line(tail_root, tail_root + tail_dir * 30.0, fur_dark, 11.0)
-	_wc.draw_line(tail_root, tail_root + tail_dir * 26.0, fur, 7.0)
-	_wc.draw_line(tail_root - tail_dir.orthogonal() * 1.5, tail_root + tail_dir * 22.0 - tail_dir.orthogonal() * 1.5, fur_lit, 2.0)
-	_wc.draw_circle(tail_root + tail_dir * 29.0, 5.5, cream_dk)
-	_wc.draw_circle(tail_root + tail_dir * 28.0 + Vector2(-1, -1), 4.2, cream)
-	# --- the livery ----------------------------------------------------------
-	# Painted onto the roof rather than mounted above it: a light box the size
-	# of the van looked like a taxi sign. Two lines, inside the van's width.
-	var f_big := 16
-	var f_small := 13
-	var w_fur: float = font.get_string_size("FUR", HORIZONTAL_ALIGNMENT_LEFT, -1, f_big).x
-	var w_gon: float = font.get_string_size("GONETA", HORIZONTAL_ALIGNMENT_LEFT, -1, f_small).x
-	var pw: float = maxf(w_fur + 12.0, w_gon) + 12.0
-	var panel := Rect2(v.x - pw * 0.5, v.y - 23.0, pw, 47.0)
-	_wc.draw_colored_polygon(round_rect_pts(panel.grow(1.5), 8.0), Color(0.44, 0.28, 0.17))
-	clay_slab(_wc, panel, 7.0, Color(0.95, 0.91, 0.82), 2.0)
-	# a bone under the lettering, the one emblem every dog can read
-	var bc := v + Vector2(0.0, 30.0)
-	_wc.draw_line(bc + Vector2(-8, 0), bc + Vector2(8, 0), Color(0.40, 0.26, 0.16), 6.0)
-	for bx2: float in [-1.0, 1.0]:
-		for by2: float in [-1.0, 1.0]:
-			_wc.draw_circle(bc + Vector2(9.0 * bx2, 3.2 * by2), 4.4, Color(0.40, 0.26, 0.16))
-	_wc.draw_line(bc + Vector2(-8, 0), bc + Vector2(8, 0), cream, 3.6)
-	for bx2: float in [-1.0, 1.0]:
-		for by2: float in [-1.0, 1.0]:
-			_wc.draw_circle(bc + Vector2(9.0 * bx2, 3.2 * by2), 3.2, cream)
-	# FUR, with a paw print for the hyphen, then GONETA under it
-	var fur_x := v.x - (w_fur + 11.0) * 0.5
-	UiIcons.draw_paw(_wc, Vector2(fur_x + w_fur + 5.5, v.y - 13.0), 4.2, Color(0.66, 0.30, 0.22))
-	_wc.draw_string(font, Vector2(fur_x, v.y - 6.0), "FUR", HORIZONTAL_ALIGNMENT_LEFT, -1,
-		f_big, ink)
-	_wc.draw_string(font, Vector2(panel.position.x, v.y + 9.0), "GONETA",
-		HORIZONTAL_ALIGNMENT_CENTER, panel.size.x, f_small, ink)
-	_wc.draw_string(font, Vector2(panel.position.x, v.y + 19.0), "dog grooming",
-		HORIZONTAL_ALIGNMENT_CENTER, panel.size.x, 8, Color(0.52, 0.36, 0.26))
-	if not furgoneta_sniffed:
-		# it is the best smell in the city, so the nose can find it
-		var fg := 0.5 + 0.5 * sin(prize_glow * 0.8)
-		_wc.draw_arc(v, 74.0 + fg * 6.0, 0, TAU, 28, Color(1.0, 0.86, 0.5, 0.10 + fg * 0.07), 2.0)
+	FurgonetaMod.draw(self, v, _wc)
 
 
 func _freedom_dirty() -> void:
@@ -6297,6 +6183,8 @@ func on_scored(label: String, pts: int, trick: bool) -> int:
 	if not trick:
 		return pts
 	challenge.add_trick()
+	if fresh_coat_t > 0.0:
+		pts += 1
 	if golden_t > 0.0:
 		pts *= 2
 	else:
@@ -6540,6 +6428,7 @@ func _physics_process(delta: float) -> void:
 	combo.tick(delta)
 	challenge.tick(delta)
 	Tips.tick(self, delta)
+	FurgonetaMod.tick(self, delta)
 	_prof("combo, challenge")
 	owner_news_cd = maxf(0.0, owner_news_cd - delta)
 	# the banner shows live countdowns (slack left, fetch timer, chase), and
@@ -11450,6 +11339,7 @@ func on_bark(pos: Vector2) -> void:
 	# in the scrapyard, YOUR bark is noise too
 	for g in get_tree().get_nodes_in_group("guards"):
 		g.hear_noise(pos, 230.0)
+	FurgonetaMod.on_bark(self, pos)
 	if jackhammer != null and jackhammer.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)

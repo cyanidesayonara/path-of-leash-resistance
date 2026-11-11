@@ -713,6 +713,19 @@ func _draw_shapes() -> void:
 				var mw: float = shoulder_r * (1.0 - mu) + hip_r * mu + 0.6
 				var mp := shoulder.lerp(hip, mu) + side * (mw * (1.0 if mi % 2 == 0 else -1.0))
 				_b.draw_circle(mp, 1.4, mcol)
+		# Fresh coat grooming glints when main.fresh_coat_t > 0.0
+		if main != null and main.fresh_coat_t > 0.0:
+			var st: float = AnimClock.msec() * 0.006
+			for si in range(4):
+				var su: float = 0.2 + float(si) * 0.22
+				var sw: float = (shoulder_r * (1.0 - su) + hip_r * su + 4.0) * (1.0 if si % 2 == 0 else -1.0)
+				var sp: Vector2 = shoulder.lerp(hip, su) + side * sw
+				var sa: float = 0.5 + 0.5 * sin(st * 4.0 + float(si) * 1.57)
+				if sa > 0.25:
+					var scol := Color(1.0, 0.95, 0.70, sa * 0.85)
+					_b.draw_line(sp - Vector2(2.5, 0), sp + Vector2(2.5, 0), scol, 1.4)
+					_b.draw_line(sp - Vector2(0, 2.5), sp + Vector2(0, 2.5), scol, 1.4)
+					_b.draw_circle(sp, 0.9, Color.WHITE)
 	# only a few subtle flecks on the body - the grey lives on the head
 	for i in range(6):
 		var base := hip if i % 2 == 0 else shoulder

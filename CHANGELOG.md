@@ -2,6 +2,27 @@
 
 Append-only session history, newest first.
 
+## 2026-11-11 - Fur-goneta facelift, multi-walk presence and mobile groomer style dare
+
+- Visual facelift for the Fur-goneta (`systems/furgoneta.gd`), honoring the iconic Dumb & Dumber Mutt Cutts shag wagon homage:
+  - Shaggy cream/caramel fur coat with roof curls, floppy ears down the flanks, and a clay slab body.
+  - Front face: big black wet nose, curving wire whiskers, bobbing pink tongue with center cleft and saliva glint under the bumper, and raked windshield with animated eyes looking toward the dog.
+  - Expressive eyebrow wipers that waggle on horn honks, roof brass megaphone horn, side grooming dutch-door window with scissors & comb silhouette, and floating iridescent soap bubbles drifting off the roof bath rack.
+  - Paw-print hubcaps (`UiIcons.draw_paw`) on all four wheels, and wagging tail on the rear doors.
+  - Roof livery sign: "FUR GONETA dog grooming" with bone sign and paw icon.
+- Expanded presence across 4 walks at verified clear curb/path turnouts:
+  - La Rambla (`street`): `Vector2(m.sw_l + 66.0, -3560.0)`
+  - Passeig Marítim (`beach`): `Vector2(1045.0, -730.0)`
+  - La Superilla (`superilla`): `Vector2(405.0, -3350.0)`
+  - Parc de la Ciutadella (`park`): `Vector2(815.0, -780.0)`
+  - All 4 walks register 64x132 solid collision bodies, rope wrap rects (`add_rope_rect`), and bypasser blockers. Absence verified in market hall (`market`).
+- Interactive functionality & groomer dare:
+  - Bark honk: barking within 150 px triggers a two-tone cartoon brass horn (`autoload/sfx.gd`), flashing headlamps, wiggling eyebrow wipers, and awards `"van honk! +2"` with cooldown protection.
+  - Discovery sniffing payout: retains classic high-reward single-payout scent sniff (+12 bones, +8 combo, `"four hundred dogs have been in there +12"`).
+  - Mobile Groomer Style Dare: within 130 px, offers a 20-second style dare (6 tricks, upbeat kid dare music).
+  - Fresh Coat Grooming Buff: winning the dare grants a 45-second Fresh Coat buff that clears mud/wet paws immediately, displays golden grooming glints around Millie, and awards +1 bonus trick point on all scored tricks.
+- Regression coverage: `tests/test_furgoneta.gd` (47 checks), `tests/test_members_exist.gd` (7,515 checks), `tests/test_furniture_recovery.gd`, `tests/test_patience_scale.gd`, and `tests/test_baked_music.gd`.
+
 ## 2026-11-11 - Living Castellers de Gràcia: dynamic human tower, l'aleta, and tricks
 
 - The practice stage on Walk 26 (Festa de Gràcia, `systems/gracia.gd`) now features a full, living Castellers de la Vila de Gràcia human tower with organic micro-sway, coaches on the flanks, and an 8-second crowning cycle.
