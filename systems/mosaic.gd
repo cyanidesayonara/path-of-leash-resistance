@@ -426,6 +426,16 @@ static func _draw_scenery(m: Node2D, vt: float, vb: float) -> void:
 			b4.rect(Rect2(gc + Vector2(14, -44), Vector2(32, 8)), Color(0.90, 0.88, 0.84))
 
 
+# main.surface_at, through walk_mod: puddles from El Drac, else -1 so the
+# walk keeps its normal pavement / grass.
+static func surface(m: Node2D, p: Vector2) -> int:
+	if m.drac != null:
+		var o: int = m.drac.surface_at(p)
+		if o >= 0:
+			return o
+	return -1
+
+
 static func tick(m: Node2D, delta: float) -> void:
 	if m.drac != null:
 		m.drac.tick_state(delta)

@@ -90,6 +90,19 @@ func _run() -> void:
 	_ticks(m, BD.TAIL_WARN + 0.05)
 	_check(m.drac_dodges == 1 and dr.hp < hp0, "a dodged whip wears him down")
 
+	dr.transition_to(BD.State.PROWL)
+	dr.tail_cd = 99.0
+	dr.jet_cd = 0.0
+	dr.face_dir = Vector2.DOWN
+	m.dog.global_position = dr.pos + Vector2(0.0, 180.0)
+	m.human.global_position = dr.pos + Vector2(40.0, 200.0)
+	var dog0: Vector2 = m.dog.global_position
+	_ticks(m, DT * 2.0)
+	_check(dr.state == BD.State.JET, "he lines up a jet")
+	_ticks(m, BD.JET_WARN + 0.05)
+	_check(m.dog.global_position.distance_to(dog0) > 8.0, "the jet pushes her")
+	_check(dr.surface_at(dog0) == load("res://world/surfaces.gd").S.WATER, "soak puddle left behind")
+
 	print("test_drac: %d checks, %d failures" % [checks, failures.size()])
 	for f in failures:
 		print("  " + f)

@@ -10,6 +10,7 @@ const LevelBuild := preload("res://world/level_build.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 const Kit := preload("res://hud/ui_kit.gd")
+const Surfaces := preload("res://world/surfaces.gd")
 
 const PLINTH := LevelBuild.MOSAIC_SALAMANDER
 # a short step down the stair off the fountain toward the pair
@@ -38,6 +39,14 @@ const TAIL_TRIGGER := 180.0
 const TAIL_COOLDOWN := 2.4
 const REAR_CONE := 1.15
 const DODGE_DAMAGE := 12.0
+# fountain jet (Mamut spray lane, along face_dir)
+const JET_WARN := 0.8
+const JET_TIME := 0.55
+const JET_LEN := 360.0
+const JET_W := 42.0
+const JET_COOLDOWN := 2.8
+const FRONT_CONE := 1.15
+const PUDDLE_LIFE := 4.0
 
 enum State {
 	IDLE, AWAKEN, ENRAGE, PROWL, TAIL_WHIP, JET, SLITHER,
@@ -70,6 +79,7 @@ var jet_cd := 1.0
 var whip_dir := Vector2.UP
 var whip_side := 1.0
 var whip_struck := false
+var jet_struck := false
 # puddles / chips: [{ "rect": Rect2, "kind": int, "until": float }]
 var surface_zones: Array[Dictionary] = []
 
@@ -92,6 +102,7 @@ func setup(m: Node2D) -> void:
 	tail_cd = 1.0
 	jet_cd = 1.0
 	whip_struck = false
+	jet_struck = false
 	legs_tied = 0
 	surface_zones.clear()
 	leg_poles.clear()
@@ -162,6 +173,8 @@ func status() -> String:
 	match state:
 		State.TAIL_WHIP:
 			return "WATCH THE TAIL!" if near else ""
+		State.JET:
+			return "WATCH THE JET!" if near else ""
 	return ""
 
 
@@ -196,6 +209,9 @@ func transition_to(s: State) -> void:
 			whip_dir = -face_dir
 			whip_side = -whip_side
 			whip_struck = false
+		State.JET:
+			state_t = JET_WARN
+			jet_struck = false
 		State.CONTENT:
 			hold_noticed = false
 
@@ -246,11 +262,52 @@ func _dodge(at: Vector2) -> void:
 	damage(DODGE_DAMAGE)
 
 
+func _lane_hit(p: Vector2, dir: Vector2, half_w: float) -> bool:
+	var end := pos + dir * JET_LEN
+	return p.distance_to(Geometry2D.get_closest_point_to_segment(p, pos, end)) < half_w
+
+
+func _jet_puddle_rect(dir: Vector2) -> Rect2:
+	var end := pos + dir * JET_LEN
+	var hw := JET_W * 0.5
+	var min_v := Vector2(minf(pos.x, end.x), minf(pos.y, end.y)) - Vector2(hw, hw)
+	var max_v := Vector2(maxf(pos.x, end.x), maxf(pos.y, end.y)) + Vector2(hw, hw)
+	return Rect2(min_v, max_v - min_v)
+
+
+func _strike_jet() -> void:
+	jet_struck = true
+	Sfx.play("splash", 1.1, -4.0)
+	var dir := face_dir.normalized()
+	var dog_p: Vector2 = main.dog.global_position
+	if _lane_hit(dog_p, dir, JET_W * 0.5 + 10.0):
+		main.dog.knocked(dir, "jet")
+		# headless ticks skip dog physics; shove her along the lane now
+		main.dog.global_position += dir * 24.0
+	if _lane_hit(main.human.global_position, dir, JET_W * 0.5 + 12.0):
+		main.human.bumped(dir)
+		main.human.global_position += dir * 18.0
+	surface_zones.append({
+		"rect": _jet_puddle_rect(dir),
+		"kind": Surfaces.S.WATER,
+		"until": main.elapsed + PUDDLE_LIFE,
+	})
+
+
+func _expire_zones() -> void:
+	var i := surface_zones.size() - 1
+	while i >= 0:
+		if float(surface_zones[i].get("until", 0.0)) <= main.elapsed:
+			surface_zones.remove_at(i)
+		i -= 1
+
+
 func tick_state(delta: float) -> void:
 	if main == null or main.frozen:
 		return
 	_tick_card(delta)
 	_hold_human()
+	_expire_zones()
 	var dog_p: Vector2 = main.dog.global_position
 	match state:
 		State.IDLE:
@@ -277,15 +334,27 @@ func tick_state(delta: float) -> void:
 				return
 			var d := dog_p.distance_to(pos)
 			var behind := absf((-face_dir).angle_to(dog_p - pos)) < REAR_CONE
+			var front := absf(face_dir.angle_to(dog_p - pos)) < FRONT_CONE
 			if d < TAIL_TRIGGER and behind and tail_cd <= 0.0:
 				tail_cd = TAIL_COOLDOWN
 				transition_to(State.TAIL_WHIP)
+			elif d < JET_LEN and front and jet_cd <= 0.0:
+				jet_cd = JET_COOLDOWN
+				transition_to(State.JET)
 		State.TAIL_WHIP:
 			state_t -= delta
 			if state_t <= 0.0:
 				if not whip_struck:
 					_strike_tail()
 				var k := clampf(-state_t / TAIL_STRIKE, 0.0, 1.0)
+				if k >= 1.0:
+					transition_to(State.PROWL)
+		State.JET:
+			state_t -= delta
+			if state_t <= 0.0:
+				if not jet_struck:
+					_strike_jet()
+				var k := clampf(-state_t / JET_TIME, 0.0, 1.0)
 				if k >= 1.0:
 					transition_to(State.PROWL)
 		_:
@@ -296,7 +365,10 @@ func on_bark_action(_pos: Vector2) -> bool:
 	return false
 
 
-func surface_at(_p: Vector2) -> int:
+func surface_at(p: Vector2) -> int:
+	for z: Dictionary in surface_zones:
+		if float(z.get("until", 0.0)) > main.elapsed and (z["rect"] as Rect2).has_point(p):
+			return int(z["kind"])
 	return -1  # -1 = no override
 
 
