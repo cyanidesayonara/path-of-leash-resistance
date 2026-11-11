@@ -64,6 +64,32 @@ func _run() -> void:
 	_ticks(m, BD.AWAKEN_TIME + 0.1)
 	_check(dr.state == BD.State.PROWL, "down off the fountain and prowling")
 
+	# force PROWL after wake
+	dr.face_dir = Vector2.DOWN
+	dr.tail_cd = 0.0
+	dr.jet_cd = 99.0
+	var hits0: int = m.dog_hits
+	m.dog.global_position = dr.pos + Vector2(0.0, -140.0)  # behind him
+	m.dog.tumble_t = 0.0
+	dr.card_t = BD.CARD_TIME + BD.CARD_FROM + 0.1
+	_ticks(m, DT * 2.0)
+	_check(dr.state == BD.State.TAIL_WHIP, "she is behind him: he whips")
+	_ticks(m, BD.TAIL_WARN + 0.05)
+	_check(m.dog_hits == hits0 + 1, "the whip knocks her in its rear cone")
+	_ticks(m, BD.TAIL_STRIKE + 0.1)
+	_check(dr.state == BD.State.PROWL, "and he prowls on")
+
+	dr.face_dir = Vector2.DOWN
+	dr.tail_cd = 0.0
+	m.dog.tumble_t = 0.0
+	var hp0: float = dr.hp
+	m.dog.global_position = dr.pos + Vector2(0.0, -150.0)
+	_ticks(m, DT * 2.0)
+	_check(dr.state == BD.State.TAIL_WHIP, "a second whip")
+	m.dog.global_position = dr.pos + Vector2(260.0, 0.0)
+	_ticks(m, BD.TAIL_WARN + 0.05)
+	_check(m.drac_dodges == 1 and dr.hp < hp0, "a dodged whip wears him down")
+
 	print("test_drac: %d checks, %d failures" % [checks, failures.size()])
 	for f in failures:
 		print("  " + f)

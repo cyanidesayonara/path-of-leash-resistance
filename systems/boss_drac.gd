@@ -3,7 +3,8 @@ extends RefCounted
 
 # EL DRAC, El Mosaic's salamander boss: asleep on the fountain stair until
 # she wakes him. He climbs off the plinth under a title card; your human will
-# not walk past that dragon.
+# not walk past that dragon. Part one: a tail whip across the rear sector
+# (Mamut's swipe, axis -face_dir); a clear miss wears him down.
 
 const LevelBuild := preload("res://world/level_build.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -28,6 +29,15 @@ const LEGS_TO_TIE := 3
 const AWAKEN_TIME := 2.6
 const CARD_TIME := 3.4
 const CARD_FROM := 0.3
+# part one: the tail whip (Mamut swipe, rear sector)
+const TAIL_WARN := 0.8
+const TAIL_STRIKE := 0.25
+const TAIL_HALF := 0.9
+const TAIL_REACH := 160.0
+const TAIL_TRIGGER := 180.0
+const TAIL_COOLDOWN := 2.4
+const REAR_CONE := 1.15
+const DODGE_DAMAGE := 12.0
 
 enum State {
 	IDLE, AWAKEN, ENRAGE, PROWL, TAIL_WHIP, JET, SLITHER,
@@ -55,6 +65,11 @@ var film_shown := false
 var win_film_shown := false
 var enraged := false
 var hold_noticed := false
+var tail_cd := 1.0
+var jet_cd := 1.0
+var whip_dir := Vector2.UP
+var whip_side := 1.0
+var whip_struck := false
 # puddles / chips: [{ "rect": Rect2, "kind": int, "until": float }]
 var surface_zones: Array[Dictionary] = []
 
@@ -74,6 +89,9 @@ func setup(m: Node2D) -> void:
 	film_shown = false
 	win_film_shown = false
 	hold_noticed = false
+	tail_cd = 1.0
+	jet_cd = 1.0
+	whip_struck = false
 	legs_tied = 0
 	surface_zones.clear()
 	leg_poles.clear()
@@ -140,11 +158,26 @@ func in_fight() -> bool:
 
 
 func status() -> String:
+	var near: bool = main != null and main.dog.global_position.distance_to(pos) < 600.0
+	match state:
+		State.TAIL_WHIP:
+			return "WATCH THE TAIL!" if near else ""
 	return ""
 
 
 func hush_banner() -> bool:
 	return card_t >= 0.0 and card_t < CARD_FROM + CARD_TIME
+
+
+func damage(amt: float) -> void:
+	hp = maxf(0.0, hp - amt)
+
+
+func in_sector(p: Vector2, dir: Vector2, reach: float, half: float) -> bool:
+	var d := p - pos
+	if d.length() > reach or d.length() < 1.0:
+		return d.length() < 1.0
+	return absf(dir.angle_to(d)) <= half
 
 
 func transition_to(s: State) -> void:
@@ -158,6 +191,11 @@ func transition_to(s: State) -> void:
 				Sfx.play("crack", 1.3, -10.0)
 			card_t = 0.0
 			_ensure_card()
+		State.TAIL_WHIP:
+			state_t = TAIL_WARN
+			whip_dir = -face_dir
+			whip_side = -whip_side
+			whip_struck = false
 		State.CONTENT:
 			hold_noticed = false
 
@@ -187,21 +225,42 @@ func _tick_card(delta: float) -> void:
 		card.queue_redraw()
 
 
+func _strike_tail() -> void:
+	whip_struck = true
+	Sfx.play("fling", 0.8, -3.0)
+	Sfx.play("crack", 1.2, -8.0)
+	var dog_p: Vector2 = main.dog.global_position
+	var push := whip_dir.orthogonal() * whip_side
+	if in_sector(dog_p, whip_dir, TAIL_REACH + 12.0, TAIL_HALF):
+		main.dog.knocked((push + whip_dir * 0.4).normalized(), "tail")
+	elif dog_p.distance_to(pos) < TAIL_REACH + 130.0 and hp > 0.0:
+		_dodge(dog_p)
+	if in_sector(main.human.global_position, whip_dir, TAIL_REACH + 12.0, TAIL_HALF):
+		main.human.bumped(push)
+
+
+func _dodge(at: Vector2) -> void:
+	main.drac_dodges += 1
+	main.combo.add("DODGE", 2)
+	main.float_text(at, "dodged! +2", Color(0.8, 1.0, 0.7))
+	damage(DODGE_DAMAGE)
+
+
 func tick_state(delta: float) -> void:
 	if main == null or main.frozen:
 		return
 	_tick_card(delta)
 	_hold_human()
-	state_t += delta
+	var dog_p: Vector2 = main.dog.global_position
 	match state:
 		State.IDLE:
 			# your human still short of him: a pair already past (a shot taken
 			# further up the walk) leaves him asleep
-			var dog_p: Vector2 = main.dog.global_position
 			if dog_p.y <= WAKE_Y and main.human.global_position.y > HOLD_Y - 120.0 \
 					and not bool(main.get("film_playing")):
 				transition_to(State.AWAKEN)
 		State.AWAKEN:
+			state_t += delta
 			var k := clampf(state_t / AWAKEN_TIME, 0.0, 1.0)
 			pos = PLINTH.lerp(LANDING, k)
 			face_dir = Vector2.DOWN
@@ -210,6 +269,25 @@ func tick_state(delta: float) -> void:
 				pos = LANDING
 				update_leg_positions()
 				transition_to(State.PROWL)
+		State.PROWL:
+			tail_cd -= delta
+			jet_cd -= delta
+			# no attack while his title card is up: the banner under it is hushed
+			if hush_banner():
+				return
+			var d := dog_p.distance_to(pos)
+			var behind := absf((-face_dir).angle_to(dog_p - pos)) < REAR_CONE
+			if d < TAIL_TRIGGER and behind and tail_cd <= 0.0:
+				tail_cd = TAIL_COOLDOWN
+				transition_to(State.TAIL_WHIP)
+		State.TAIL_WHIP:
+			state_t -= delta
+			if state_t <= 0.0:
+				if not whip_struck:
+					_strike_tail()
+				var k := clampf(-state_t / TAIL_STRIKE, 0.0, 1.0)
+				if k >= 1.0:
+					transition_to(State.PROWL)
 		_:
 			pass
 
