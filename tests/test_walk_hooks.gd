@@ -23,7 +23,7 @@ const HOOKS := {
 	"barri": ["draw_edge_layer", "draw_fountain", "draw_freedom_ground", "draw_gate_fence", "draw_live", "draw_overhead", "draw_performer", "grass_blocked", "surface", "tree_kind"],
 	"oldtown": ["build_layer", "draw_column", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "on_bark", "tick"],
 	"partit": ["draw_bollard", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_van", "night_fronts"],
-	"port": ["draw_bollard", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "on_bark", "surface", "tick"],
+	"port": ["cam_lean", "draw_bollard", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "hush_banner", "idle_status", "on_bark", "surface", "tick", "urgent_status"],
 	"reial": ["build_layer", "draw_edge_layer", "draw_live", "draw_overhead", "night_fronts", "surface", "tick"],
 	"vet": ["draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick"],
 	"tibidabo": ["build_layer", "draw_edge_layer", "draw_live", "draw_overhead", "surface", "tick"],

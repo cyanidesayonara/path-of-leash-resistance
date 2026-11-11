@@ -2,6 +2,33 @@
 
 Append-only session history, newest first.
 
+## 2026-11-11 - Boss 3: Els Lleons, twin bronze lions of the Columbus Column in El Port
+
+- Implemented **Boss 3: Els Lleons** (`systems/boss_lleons.gd`, `systems/port.gd`, docs/BOSSES.md):
+  - Two massive bronze lion statues guarding the base of the Columbus Monument (*Monument a Colom*, 1888) at Portal de la Pau by Port Vell.
+  - Wake sequence at $y = -4000.0$:
+    - The pair approach Portal de la Pau at dusk with the harbor basin behind; left lion yawns with a resonant metallic creak, right lion blinks open glowing amber eyes, they glance at each other, and hop down from their stone plinths to flank the dog.
+    - Story film: *Dusk at the Columbus Column* (`intro/film_lleons.gd`), complete with Columbus column silhouette, harbor sunset, and title card.
+  - Phase 1 (Pincer & Roar):
+    - **Pincer Strike:** Lion A and Lion B circle wide on either side, telegraphing warning danger lanes before converging in a coordinated pincer attack. Dodging late awards the `lleons_pincer` goal (`"Steer clear of the lions' pincer charge"`).
+    - **Roar Blast:** Concentric shockwaves of sound and wind push the dog back toward the opposite lion; player can brace with `{plant}` to resist the push with 14x planted mass.
+  - Phase 2 (Double Rush & HEAD BUMP, below 50% HP):
+    - Both lions enter enraged mode with glowing red eyes and charge across opposite diagonal trajectories.
+    - Standing near the intersection point and stepping out at the critical moment tricks the lions into colliding with each other: **HEAD BUMP!** (`_head_bump()` sfx, screen shake, bronze spark burst), dazing both lions.
+    - Fulfills the `lleons_bump` goal (`"Trick the twin lions into colliding"`).
+    - While dazed, barking at either lion's nose awards a boop.
+  - Phase 3 (Last Stand, below 10% HP):
+    - Both lions retreat to their corner plinths (`PLINTH_L` and `PLINTH_R`).
+    - Wrapping the verlet leash around both plinth legs dynamically ties them together (`m.lleons_tied = true`), making them sit down.
+    - A friendly bark at each lion's nose (double boop) calms them, settling them back into peaceful guardians (`m.lleons_settled = true`).
+    - Victory film: *The Twin Guardians of El Port* (`intro/film_lleons_win.gd`), with calm harbor sunset, seated lions with closed peaceful eyes, and title card.
+  - Procedural Audio:
+    - `_lion_roar()` in `autoload/sfx.gd`: Resonant bronze feline roar blending low harmonic tones and modulated frequency noise.
+    - `_head_bump()` in `autoload/sfx.gd`: Heavy bronze impact clash with metallic chime decay.
+  - Comprehensive test suite: `tests/test_lleons.gd` (47 checks covering registration, goals, wake trigger, pincer dodge, roar wind push, Double Rush collision stun, leg tangle wrapping, and double boop victory).
+
+
+
 ## 2026-11-11 - Walk 38: Montserrat, Sant Joan funicular crossing, and Wild Goat Herd chase
 
 - Added Walk 38: **Montserrat** (The serrated mountain trail and monastery terrace):
