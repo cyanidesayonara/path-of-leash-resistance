@@ -3496,6 +3496,14 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_barri: Array[Rect2] = Barri.solids(m)
 			for i in range(ps_barri.size()):
 				out.append(["barri_railing_%d" % i, ps_barri[i]])
+		"reial":
+			var ps_reial: Array[Rect2] = Reial.solids(m)
+			for i in range(ps_reial.size()):
+				out.append(["reial_solid_%d" % i, ps_reial[i]])
+		"vet":
+			var ps_vet: Array[Rect2] = Vet.solids(m)
+			for i in range(ps_vet.size()):
+				out.append(["vet_solid_%d" % i, ps_vet[i]])
 	return out
 
 

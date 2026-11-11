@@ -21,6 +21,7 @@ func _initialize() -> void:
 
 
 func _run() -> void:
+	seed(1)
 	var game = root.get_node("Game")
 	game.persist = false
 	root.get_node("Sfx").muted = true
