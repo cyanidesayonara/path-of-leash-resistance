@@ -971,12 +971,16 @@ static func _bagtags(c: Object, sign: Dictionary, _h: float) -> void:
 		var p: Vector2 = pc.p
 		var rot: float = pc.rot
 		var ax := Vector2.from_angle(rot)
+		# tag body (clean off-white thermal paper)
 		c.draw_colored_polygon(_box(p, rot, r * 1.5, r * 0.7), Color(0.95, 0.96, 0.97))
+		# neon colored routing stripe at one end
 		var stripe_col := Color(0.18, 0.72, 0.90) if float(pc["var"]) > 0.5 else Color(0.96, 0.82, 0.20)
 		c.draw_colored_polygon(_box(p + ax * r * 0.55, rot, r * 0.35, r * 0.65), stripe_col)
+		# barcode lines in center
 		c.draw_colored_polygon(_box(p - ax * r * 0.15, rot, r * 0.08, r * 0.6), Color(0.12, 0.12, 0.14))
 		c.draw_colored_polygon(_box(p + ax * r * 0.05, rot, r * 0.05, r * 0.6), Color(0.12, 0.12, 0.14))
 		c.draw_colored_polygon(_box(p - ax * r * 0.35, rot, r * 0.10, r * 0.6), Color(0.12, 0.12, 0.14))
+		# punch hole at the tag loop end
 		c.draw_circle(p + ax * r * 0.62, r * 0.15, Color(0.20, 0.22, 0.25))
 
 
