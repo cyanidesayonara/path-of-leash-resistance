@@ -75,6 +75,8 @@ func _run() -> void:
 	_check(goals.has("boulder_dodge"), "has boulder_dodge goal")
 	_check(goals.has("goat_clean"), "has goat_clean goal")
 	_check(goals.has("mato_bark"), "has mato_bark goal")
+	_check(goals.has("jamon"), "has jamon goal")
+	_check(goals.has("clock"), "has clock goal")
 
 	# 3. Chase Profile
 	var prof: Dictionary = HC.profile_for("montserrat")
