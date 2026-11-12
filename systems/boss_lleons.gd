@@ -25,7 +25,6 @@ extends RefCounted
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 const Prompts := preload("res://hud/prompts.gd")
-const FilmPlayer := preload("res://intro/film_player.gd")
 
 const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.24)
@@ -217,6 +216,11 @@ func in_fight() -> bool:
 	return state != State.IDLE and state != State.SAT and state != State.CONTENT
 
 
+func _sfx(sound: String, pitch: float = 1.0, db: float = 0.0) -> void:
+	if main != null and main.has_node("/root/Sfx"):
+		main.get_node("/root/Sfx").play(sound, pitch, db)
+
+
 func tick_state(delta: float) -> void:
 	state_t += delta
 	act_t += delta
@@ -259,9 +263,11 @@ func tick_state(delta: float) -> void:
 func _tick_idle(_delta: float) -> void:
 	var dp: Vector2 = main.dog.global_position
 	if dp.y < WAKE_Y:
-		if not film_shown and FilmPlayer.should_play(main):
-			film_shown = true
-			FilmPlayer.play(main, load(FILM))
+		if not film_shown:
+			var FP: GDScript = load("res://intro/film_player.gd")
+			if FP != null and FP.should_play(main):
+				film_shown = true
+				FP.play(main, load(FILM))
 		transition_to(State.AWAKEN)
 
 
@@ -284,7 +290,7 @@ func _tick_awaken(_delta: float) -> void:
 		lion_b.face_dir = (dp - (lion_b.pos as Vector2)).normalized()
 
 	if act_t >= 3.0:
-		Sfx.play("lion_roar", 1.0, -1.0)
+		_sfx("lion_roar", 1.0, -1.0)
 		main.feed.say("WATCH OUT! THE BRONZE LIONS OF EL PORT!", EventFeed.Tone.LOUD)
 		transition_to(State.PROWL)
 
@@ -376,7 +382,7 @@ func _tick_roar_warn(_delta: float) -> void:
 	roaring_lion.face_dir = (dp - (roaring_lion.pos as Vector2)).normalized()
 	roaring_lion.jaw = clampf(act_t / ROAR_WARN, 0.0, 1.0)
 	if act_t >= ROAR_WARN:
-		Sfx.play("lion_roar", 1.05, 0.0)
+		_sfx("lion_roar", 1.05, 0.0)
 		transition_to(State.ROAR_BLAST)
 
 
@@ -446,7 +452,7 @@ func _tick_rush_charge(delta: float) -> void:
 func _trigger_head_bump() -> void:
 	bump_done = true
 	main.lleons_bumped = true
-	Sfx.play("head_bump", 1.0, 0.0)
+	_sfx("head_bump", 1.0, 0.0)
 	main.shake_t = maxf(float(main.shake_t), 0.7)
 	main.award_points(20, "HEAD BUMP! +20")
 	main.feed.say("HEAD BUMP! BOTH LIONS DAZED!", EventFeed.Tone.LOUD)
@@ -517,7 +523,7 @@ func update_leg_tangle() -> void:
 func _tick_wrapped(_delta: float) -> void:
 	_hold_human()
 	if act_t >= 0.8:
-		Sfx.play("drum", 0.4, 0.0)
+		_sfx("drum", 0.4, 0.0)
 		main.shake_t = maxf(float(main.shake_t), 0.5)
 		main.feed.say("THEY SAT! BOOP THEIR NOSES!", EventFeed.Tone.LOUD)
 		main.lleons_tied = true
@@ -536,9 +542,11 @@ func _tick_sat(_delta: float) -> void:
 func _tick_content(_delta: float) -> void:
 	# Battle won!
 	main.lleons_settled = true
-	if not win_film_shown and FilmPlayer.should_play(main):
-		win_film_shown = true
-		FilmPlayer.play(main, load(FILM_WIN))
+	if not win_film_shown:
+		var FP: GDScript = load("res://intro/film_player.gd")
+		if FP != null and FP.should_play(main):
+			win_film_shown = true
+			FP.play(main, load(FILM_WIN))
 
 
 func on_bark_action(bark_pos: Vector2) -> bool:
@@ -551,7 +559,7 @@ func on_bark_action(bark_pos: Vector2) -> bool:
 			lion_b.booped = true
 			hit = true
 		if hit:
-			Sfx.play("star", 1.2, -4.0)
+			_sfx("star", 1.2, -4.0)
 			main.award_points(10, "boop! +10")
 			_take_damage(10.0)
 			return true
@@ -565,7 +573,7 @@ func on_bark_action(bark_pos: Vector2) -> bool:
 			lion_b.booped = true
 			hit = true
 		if hit:
-			Sfx.play("star", 1.3, -3.0)
+			_sfx("star", 1.3, -3.0)
 			main.award_points(15, "boop! +15")
 			if lion_a.booped and lion_b.booped:
 				main.feed.say("GOOD PUPS... ER, BIG CATS!", EventFeed.Tone.GOOD)
