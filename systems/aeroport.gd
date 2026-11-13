@@ -11,7 +11,7 @@ extends RefCounted
 # On the way out:
 # - Moving walkway: +120 px/s forward boost outbound, resists inbound.
 # - The Gate Rush live event: an airport chime (ding-dong-ding) and PA announcement
-#   ("LAST CALL FOR GATE B24!") sparks a hurried sprint of business travelers with
+#   ("LAST CALL FOR GATE B30!") sparks a hurried sprint of business travelers with
 #   rolling suitcases crossing the concourse. Steer clear to dodge.
 # - Baggage carousel: rotating loop with suitcases and pet crate; bark for +2.
 # - Unique prize: grab the duty-free giant chocolate box.
@@ -40,20 +40,25 @@ const ENTRANCE_Y := -350.0            # security archway into terminal
 const DUTY_FREE_Y := -680.0           # duty-free perfume & chocolate islands
 const TRAVELATOR_START_Y := -900.0    # travelator begins
 const TRAVELATOR_END_Y := -4000.0     # travelator ends
-const GATE_RUSH_Y := -2500.0          # Gate B24 crossing
+const GATE_RUSH_Y := -4120.0          # Gate B30 crossing, just past the walkway's far end
 const CAROUSEL_Y := -4500.0           # baggage reclaim loop
 const TERRACE_Y := -4800.0            # outdoor pet relief terrace
 
 # Central moving walkway geometry
 const WALKWAY_RECT := Rect2(570.0, -4000.0, 140.0, 3100.0)
+# The walkway's sides, as in a real terminal: a glass balustrade with a rubber
+# handrail along each edge, solid for anyone walking, open only at the two
+# ends. The leash lies over the handrail (no rope rect).
+const BALUSTRADE_W := 12.0
 
 # Respite obstacle locations (home_chase.AEROPORT_BANDS)
 const PERFUME_JAM_Y := -3400.0
 const STANCHION_JAM_Y := -1900.0
 
 # Solids: duty-free islands, gate counters, pillars, carousel
-const PERFUME_ISLAND := Rect2(580.0, -3440.0, 120.0, 60.0)
-const TOBLERONE_ISLAND := Rect2(720.0, -680.0, 80.0, 50.0)
+# in the west lane: it stood on the travelator, an invisible wall under the belt
+const PERFUME_ISLAND := Rect2(445.0, -3470.0, 90.0, 56.0)
+const CHOCOLATE_ISLAND := Rect2(720.0, -680.0, 80.0, 50.0)
 const CAROUSEL_RECT := Rect2(420.0, -4580.0, 110.0, 160.0)
 
 # Gate check-in desks along the east wall
@@ -78,7 +83,10 @@ const POSTS: Array[Vector2] = [
 ]
 
 # THE GATE RUSH LIVE EVENT
-const RUSH_TRIGGER_Y := -2150.0
+# the rush fires while your human is this far short of the crossing line, so
+# the runners sweep it as they arrive: a dog can plant and hold them back
+const RUSH_LEAD := 200.0
+const RUSH_HIT_HALF := 30.0
 const RUSH_WARN_SECS := 0.85
 const RUSH_CROSS_SECS := 2.2
 const RUSH_COUNT := 4
@@ -98,6 +106,8 @@ const PILLAR_BASE := Color(0.30, 0.33, 0.38)
 const TRAVELATOR_STEEL := Color(0.42, 0.44, 0.48)
 const TRAVELATOR_COMB := Color(0.94, 0.78, 0.16)
 const TRAVELATOR_HANDRAIL := Color(0.12, 0.12, 0.14)
+const BALUSTRADE_GLASS := Color(0.72, 0.84, 0.90, 0.55)
+const BALUSTRADE_SKIRT := Color(0.58, 0.60, 0.64)
 const SIGN_BLUE := Color(0.10, 0.30, 0.65)
 const SIGN_YELLOW := Color(0.96, 0.84, 0.22)
 const CAROUSEL_RUBBER := Color(0.16, 0.16, 0.18)
@@ -161,10 +171,17 @@ static func build(m: Node2D) -> Array:
 	return [hydrants, kebabs]
 
 
+static func balustrades() -> Array[Rect2]:
+	var z := WALKWAY_RECT
+	var h := BALUSTRADE_W * 0.5
+	return [Rect2(z.position.x - h, z.position.y, BALUSTRADE_W, z.size.y),
+		Rect2(z.end.x - h, z.position.y, BALUSTRADE_W, z.size.y)]
+
+
 static func solids(_m: Node2D) -> Array[Rect2]:
-	var out: Array[Rect2] = []
+	var out: Array[Rect2] = balustrades()
 	out.append(PERFUME_ISLAND)
-	out.append(TOBLERONE_ISLAND)
+	out.append(CHOCOLATE_ISLAND)
 	out.append(CAROUSEL_RECT)
 	out.append_array(GATE_DESKS)
 	return out
@@ -173,7 +190,7 @@ static func solids(_m: Node2D) -> Array[Rect2]:
 static func wrap_rects() -> Array[Rect2]:
 	var out: Array[Rect2] = []
 	out.append(PERFUME_ISLAND)
-	out.append(TOBLERONE_ISLAND)
+	out.append(CHOCOLATE_ISLAND)
 	out.append(CAROUSEL_RECT)
 	out.append_array(GATE_DESKS)
 	return out
@@ -200,9 +217,7 @@ static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
 	if not m.aeroport_carousel_barked and CAROUSEL_RECT.grow(80.0).has_point(bp):
 		m.aeroport_carousel_barked = true
 		m.combo.add("CAROUSEL BARK", 2)
-		m.float_text(bp + Vector2(0, -28), "CAROUSEL BARK! +2", Color(0.3, 0.9, 1.0))
-		if Sfx != null:
-			Sfx.play("bark", 1.2)
+		m.award_points(2, "carousel bark! +2")
 
 
 static func _tick_gate_rush(m: Node2D, delta: float) -> void:
@@ -215,15 +230,13 @@ static func _tick_gate_rush(m: Node2D, delta: float) -> void:
 
 	match state:
 		"waiting":
-			if hp.y < RUSH_TRIGGER_Y:
+			if hp.y < GATE_RUSH_Y + RUSH_LEAD:
 				rush["state"] = "warn"
 				rush["t"] = 0.0
-				rush["dodged"] = true
-				if Sfx != null:
-					Sfx.play("chime", 1.0)
-				if m.feed != null:
-					m.feed.say("LAST CALL FOR GATE B24!", EventFeed.Tone.LOUD)
-				m.float_text(m.human.global_position + Vector2(0, -45), "BING BONG! GATE B24!", Color(1.0, 0.9, 0.3))
+				rush["hit"] = false
+				Sfx.play("chime", 1.0)
+				m.feed.say("LAST CALL FOR GATE B30!", EventFeed.Tone.LOUD)
+				m.float_text(Vector2(640.0, GATE_RUSH_Y - 40.0), "Bing bong!", Color(1.0, 0.9, 0.3), m.POP_SAY)
 		"warn":
 			rush["t"] = float(rush.get("t", 0.0)) + delta
 			if float(rush.t) >= RUSH_WARN_SECS:
@@ -232,22 +245,23 @@ static func _tick_gate_rush(m: Node2D, delta: float) -> void:
 		"running":
 			rush["t"] = float(rush.get("t", 0.0)) + delta
 			var progress: float = clampf(float(rush.t) / RUSH_CROSS_SECS, 0.0, 1.0)
-			# Travelers run across concourse from x=400 to x=880 at y ≈ GATE_RUSH_Y
-			var rx: float = lerpf(400.0, 880.0, progress)
-			var ry: float = GATE_RUSH_Y
-			# Check near miss / collision with dog or human
-			var check_rect := Rect2(rx - 30.0, ry - 30.0, 60.0, 60.0)
-			if check_rect.has_point(m.dog.global_position) or check_rect.has_point(hp):
-				if not m.dog.planted:
-					rush["dodged"] = false
-					m.human.bumped(Vector2.RIGHT)
-					m.float_text(hp + Vector2(0, -25), "EXCUSE ME! RUNNING LATE!", Color(1.0, 0.6, 0.4))
+			# the runners sweep the line from the baggage hall to the gate; the
+			# group spans the stagger drawn in _draw_gate_rush_live
+			var lead_x: float = lerpf(390.0, 870.0, progress)
+			var tail_x: float = lerpf(390.0, 870.0, clampf(progress - 0.08 * float(RUSH_COUNT - 1), 0.0, 1.0))
+			var on_line := absf(hp.y - GATE_RUSH_Y) <= RUSH_HIT_HALF
+			if not bool(rush.get("hit", false)) and on_line and hp.x >= tail_x - 20.0 and hp.x <= lead_x + 20.0:
+				rush["hit"] = true
+				m.human.patience = maxf(0.0, m.human.patience - m.LIVE_EVENT_BUMP_PATIENCE)
+				m.human.bumped(Vector2.RIGHT)
+				Sfx.play("bump", 1.1, -3.0)
+				m.float_text(hp + Vector2(0, -32), "Excuse me! Running late!", Color(1.0, 0.86, 0.80), m.POP_SAY)
 			if progress >= 1.0:
 				rush["state"] = "done"
-				if bool(rush.get("dodged", false)) and not m.aeroport_rush_dodged:
+				if not bool(rush.get("hit", false)) and not m.aeroport_rush_dodged:
 					m.aeroport_rush_dodged = true
 					m.combo.add("GATE RUSH", 3)
-					m.float_text(hp + Vector2(0, -32), "GATE RUSH DODGED! +3", Color(0.4, 1.0, 0.6))
+					m.award_points(3, "gate rush! +3")
 
 
 static func _tick_carousel(_m: Node2D) -> void:
@@ -347,9 +361,26 @@ static func _draw_travelator(_m: Node2D, b: ShapeBatch, vt: float, vb: float) ->
 	if z.end.y >= vt and z.end.y <= vb:
 		b.rect(Rect2(z.position.x, z.end.y - 24.0, z.size.x, 24.0), TRAVELATOR_COMB)
 
-	# Glass balustrades and black rubber handrails
-	b.rect(Rect2(z.position.x - 4.0, top, 6.0, bot - top), TRAVELATOR_HANDRAIL)
-	b.rect(Rect2(z.end.x - 2.0, top, 6.0, bot - top), TRAVELATOR_HANDRAIL)
+	# The sides: a steel skirt at the floor, the glass panel standing on it
+	# (seen from above as a pale strip with its joints), and the black rubber
+	# handrail along the top, rounded off in a newel at each end
+	for r: Rect2 in balustrades():
+		var seen := Rect2(r.position.x, top, r.size.x, bot - top)
+		b.rect(Rect2(seen.position + Vector2(3.0, 0.0), seen.size), Color(0.0, 0.0, 0.0, 0.16))
+		b.rect(seen, BALUSTRADE_SKIRT)
+		b.rect(seen.grow_individual(-2.0, 0.0, -2.0, 0.0), BALUSTRADE_GLASS)
+		var jy := floorf(top / 90.0) * 90.0
+		while jy < bot:
+			if jy > top and jy > r.position.y + 30.0 and jy < r.end.y - 30.0:
+				b.rect(Rect2(seen.position.x + 1.0, jy, seen.size.x - 2.0, 2.0), BALUSTRADE_SKIRT)
+			jy += 90.0
+		var cxr := r.get_center().x
+		b.rect(Rect2(cxr - 3.0, top, 6.0, bot - top), TRAVELATOR_HANDRAIL)
+		b.rect(Rect2(cxr - 3.0, top, 2.0, bot - top), Color(0.30, 0.30, 0.32))
+		for ey: float in [r.position.y, r.end.y]:
+			if ey >= vt - 12.0 and ey <= vb + 12.0:
+				b.circle(Vector2(cxr, ey), 8.0, TRAVELATOR_HANDRAIL)
+				b.circle(Vector2(cxr - 2.0, ey - 2.0), 3.0, Color(0.30, 0.30, 0.32))
 
 
 static func _draw_boarding_gates(b: ShapeBatch, vt: float, vb: float) -> void:
@@ -380,13 +411,13 @@ static func _draw_duty_free(b: ShapeBatch, vt: float, vb: float) -> void:
 			bx += 22.0
 
 	# Toblerone / chocolate display
-	if TOBLERONE_ISLAND.end.y >= vt and TOBLERONE_ISLAND.position.y <= vb:
-		b.rect(TOBLERONE_ISLAND, Color(0.30, 0.24, 0.18))
+	if CHOCOLATE_ISLAND.end.y >= vt and CHOCOLATE_ISLAND.position.y <= vb:
+		b.rect(CHOCOLATE_ISLAND, Color(0.30, 0.24, 0.18))
 		# Triangular gold packaging
 		var tri := PackedVector2Array([
-			Vector2(TOBLERONE_ISLAND.get_center().x, TOBLERONE_ISLAND.position.y + 6.0),
-			Vector2(TOBLERONE_ISLAND.end.x - 8.0, TOBLERONE_ISLAND.end.y - 8.0),
-			Vector2(TOBLERONE_ISLAND.position.x + 8.0, TOBLERONE_ISLAND.end.y - 8.0),
+			Vector2(CHOCOLATE_ISLAND.get_center().x, CHOCOLATE_ISLAND.position.y + 6.0),
+			Vector2(CHOCOLATE_ISLAND.end.x - 8.0, CHOCOLATE_ISLAND.end.y - 8.0),
+			Vector2(CHOCOLATE_ISLAND.position.x + 8.0, CHOCOLATE_ISLAND.end.y - 8.0),
 		])
 		b.polygon(tri, CHOCOLATE_GOLD)
 

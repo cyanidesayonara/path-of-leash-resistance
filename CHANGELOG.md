@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-13 - L'Aeroport review fixes
+
+- The travelator has real sides: a glass balustrade with its rubber handrail along each edge, solid for anyone walking and open only at the two ends, so you step on and off where a real one lets you (`Aeroport.balustrades()`).
+- The perfume island stood on the travelator, under the belt's drawing: an invisible wall that held your human mid-ride. It is in the west lane now.
+- The gate rush bumped your human and floated a line every frame they overlapped, and fired about 270 px ahead of them, so it almost never touched anyone. It now crosses the open floor just past the walkway's far end (Gate B30), fires while your human is 200 px short of the line, bumps once a rush, and pays only if they were kept clear.
+- The gate rush, carousel bark and suitcase dodges showed points they never paid: `combo.add` pays a non-trick only inside a chain. Each now pays through `award_points`, in the scores' lower-case form.
+- `tests/test_aeroport.gd` covers the single bump, the payouts and the balustrades (47 checks).
+
 ## 2026-11-11 - Walk 37: L'Aeroport concourse, Gate Rush live event, and Security Cart Buggy chase
 
 - Added Walk 37: **L'Aeroport** (Terminal 1 concourse at Barcelona-El Prat Airport):
