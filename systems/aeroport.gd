@@ -410,7 +410,7 @@ static func _draw_duty_free(b: ShapeBatch, vt: float, vb: float) -> void:
 			b.circle(Vector2(bx, PERFUME_ISLAND.get_center().y - 2.0), 3.0, PERFUME_GOLD)
 			bx += 22.0
 
-	# Toblerone / chocolate display
+	# the giant duty-free chocolate display
 	if CHOCOLATE_ISLAND.end.y >= vt and CHOCOLATE_ISLAND.position.y <= vb:
 		b.rect(CHOCOLATE_ISLAND, Color(0.30, 0.24, 0.18))
 		# Triangular gold packaging
