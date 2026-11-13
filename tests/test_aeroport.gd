@@ -131,23 +131,60 @@ func _run() -> void:
 	m.phase = "out"
 	m.aeroport_rush = {"state": "waiting", "t": 0.0}
 	m.aeroport_rush_dodged = false
-	m.human.global_position = Vector2(640.0, A.RUSH_TRIGGER_Y + 100.0)  # short of trigger
+	var trig_y: float = A.GATE_RUSH_Y + A.RUSH_LEAD
+	m.human.global_position = Vector2(640.0, trig_y + 40.0)  # short of trigger
 	A.tick(m, 0.1)
 	_check(String(m.aeroport_rush.get("state", "")) == "waiting", "gate rush waiting before trigger")
-
-	m.human.global_position = Vector2(640.0, A.RUSH_TRIGGER_Y - 50.0)  # crosses trigger
+	m.human.global_position = Vector2(640.0, trig_y - 10.0)
 	A.tick(m, 0.1)
 	_check(String(m.aeroport_rush.get("state", "")) == "warn", "gate rush enters warning state on trigger")
-
-	# Advance through warn into running
-	A.tick(m, A.RUSH_WARN_SECS + 0.1)
+	# nothing touches anyone during the telegraph
+	m.human.global_position = Vector2(640.0, A.GATE_RUSH_Y)
+	var pat0: float = m.human.patience
+	A.tick(m, A.RUSH_WARN_SECS * 0.5)
+	_check(m.human.patience == pat0, "no bump during the warning")
+	A.tick(m, A.RUSH_WARN_SECS)
 	_check(String(m.aeroport_rush.get("state", "")) == "running", "gate rush enters running state")
+	# your human standing on the line is swept once, however many frames they overlap
+	for i in range(int(A.RUSH_CROSS_SECS / 0.05) + 4):
+		m.human.global_position = Vector2(640.0, A.GATE_RUSH_Y)
+		A.tick(m, 0.05)
+	_check(is_equal_approx(m.human.patience, maxf(0.0, pat0 - m.LIVE_EVENT_BUMP_PATIENCE)), "one bump for the whole rush (patience %.2f)" % m.human.patience)
+	_check(String(m.aeroport_rush.get("state", "")) == "done", "the rush is over")
+	_check(not m.aeroport_rush_dodged, "a bumped human earns no dodge")
 
-	# Place pair clear of the crossing and complete
-	m.human.global_position = Vector2(640.0, A.GATE_RUSH_Y - 120.0)
-	m.dog.global_position = Vector2(640.0, A.GATE_RUSH_Y - 140.0)
+	# held back off the line: the dodge pays
+	m.aeroport_rush = {"state": "waiting", "t": 0.0}
+	var bones0: int = m.bones
+	m.human.global_position = Vector2(640.0, trig_y - 10.0)
+	A.tick(m, 0.1)
+	A.tick(m, A.RUSH_WARN_SECS + 0.1)
+	m.human.global_position = Vector2(640.0, A.GATE_RUSH_Y + 120.0)
 	A.tick(m, A.RUSH_CROSS_SECS + 0.5)
 	_check(m.aeroport_rush_dodged, "staying clear of the gate rush awards the dodge")
+	_check(m.bones == bones0 + 3, "and pays 3 bones (got %d)" % (m.bones - bones0))
+
+	# --- 7b. The walkway's sides ---
+	var z: Rect2 = A.WALKWAY_RECT
+	var sides: Array[Rect2] = A.balustrades()
+	_check(sides.size() == 2, "a balustrade on each side")
+	var solid_has := 0
+	for r: Rect2 in m.solid_rects:
+		for sr: Rect2 in sides:
+			if r.is_equal_approx(sr):
+				solid_has += 1
+	_check(solid_has == 2, "both balustrades are solid bodies")
+	var mid_y: float = z.get_center().y
+	var blocks_mid := true
+	for sr: Rect2 in sides:
+		blocks_mid = blocks_mid and sr.has_point(Vector2(sr.get_center().x, mid_y))
+	_check(blocks_mid, "they run the walkway's length")
+	var ends_open := true
+	for r: Rect2 in m.solid_rects:
+		for p: Vector2 in [Vector2(z.get_center().x, z.end.y + 10.0), Vector2(z.get_center().x, z.position.y - 10.0)]:
+			ends_open = ends_open and not r.has_point(p)
+	_check(ends_open, "and leave both ends open to step on and off")
+	_check(A.GATE_RUSH_Y < z.position.y - 60.0, "the rush crosses clear of the walkway's far end")
 
 	# --- 8. Baggage Carousel Bark ---
 	m.aeroport_carousel_barked = false
@@ -156,8 +193,10 @@ func _run() -> void:
 	_check(not m.aeroport_carousel_barked, "barking far away does not count")
 
 	m.dog.global_position = A.CAROUSEL_RECT.get_center()
+	var bones_c: int = m.bones
 	A.on_bark(m, m.dog.global_position)
 	_check(m.aeroport_carousel_barked, "barking near baggage carousel sets aeroport_carousel_barked")
+	_check(m.bones == bones_c + 2, "and the carousel bark pays 2")
 
 	if failures.is_empty():
 		print("test_aeroport: %d checks, OK" % checks)

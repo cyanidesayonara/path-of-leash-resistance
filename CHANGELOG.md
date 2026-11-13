@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-11-13 - Montserrat review fixes
+
+- The Sant Joan funicular was on the path about three quarters of its cycle, rang its bell only once already there, and knocked the dog and shouted every frame they overlapped, while your human walked through it. It now crosses, waits off the path at the far side for 6 seconds and comes back; the bell rings 0.8 s before it reaches the path; it hits the dog or your human once a pass (a bump costs the live-event share of patience); and a pass that came by the pair and hit nobody pays the goal once (`systems/montserrat.gd`, `tests/test_montserrat.gd`, 36 checks).
+- The funicular, the mel i mató bark and boulder dodges added bones without the HUD hearing; they pay through `award_points` now.
+
+## 2026-11-13 - L'Aeroport review fixes
+
+- The travelator has real sides: a glass balustrade with its rubber handrail along each edge, solid for anyone walking and open only at the two ends, so you step on and off where a real one lets you (`Aeroport.balustrades()`).
+- The perfume island stood on the travelator, under the belt's drawing: an invisible wall that held your human mid-ride. It is in the west lane now.
+- The gate rush bumped your human and floated a line every frame they overlapped, and fired about 270 px ahead of them, so it almost never touched anyone. It now crosses the open floor just past the walkway's far end (Gate B30), fires while your human is 200 px short of the line, bumps once a rush, and pays only if they were kept clear.
+- The gate rush, carousel bark and suitcase dodges showed points they never paid: `combo.add` pays a non-trick only inside a chain. Each now pays through `award_points`, in the scores' lower-case form.
+- `tests/test_aeroport.gd` covers the single bump, the payouts and the balustrades (47 checks).
 ## 2026-11-11 - Boss 3: Els Lleons, twin bronze lions of the Columbus Column in El Port
 
 - Implemented **Boss 3: Els Lleons** (`systems/boss_lleons.gd`, `systems/port.gd`, docs/BOSSES.md):
