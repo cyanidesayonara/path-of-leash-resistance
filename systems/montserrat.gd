@@ -161,52 +161,87 @@ static func build(m: Node2D) -> Array:
 	return [marks, snacks]
 
 
-# Funicular carriage position at walk time
+# The carriage crosses, waits off the path at the far side, and comes back:
+# a passing train with gaps to cross in, not a wall. Walk time (main.elapsed)
+# drives it, so a seeded walk replays.
+const FUNICULAR_FROM := 240.0
+const FUNICULAR_TO := 1040.0
+const FUNICULAR_PAUSE := 6.0
+# the path's span the carriage can hit, and the bell's lead before it does
+const PATH_L := 640.0 - HALF
+const PATH_R := 640.0 + HALF
+const FUNICULAR_WARN := 0.8
+const FUNICULAR_HIT_HALF := 28.0
+const FUNICULAR_INVOLVED := 260.0
+
+
 static func funicular_car_x(elapsed: float) -> float:
-	# Carriage travels back and forth across track at CROSSING_Y
-	var cycle: float = fmod(elapsed * FUNICULAR_SPEED, 1600.0)
-	if cycle < 800.0:
-		return 240.0 + cycle
-	return 1040.0 - (cycle - 800.0)
+	var run := (FUNICULAR_TO - FUNICULAR_FROM) / FUNICULAR_SPEED
+	var leg := run + FUNICULAR_PAUSE
+	var t := fmod(elapsed, leg * 2.0)
+	if t < run:
+		return FUNICULAR_FROM + t * FUNICULAR_SPEED
+	if t < leg:
+		return FUNICULAR_TO
+	if t < leg + run:
+		return FUNICULAR_TO - (t - leg) * FUNICULAR_SPEED
+	return FUNICULAR_FROM
 
 
-static func funicular_near_crossing(elapsed: float) -> bool:
+static func funicular_on_path(elapsed: float) -> bool:
 	var cx := funicular_car_x(elapsed)
-	return cx > 480.0 and cx < 800.0
+	return cx + FUNICULAR_CAR_W * 0.5 > PATH_L and cx - FUNICULAR_CAR_W * 0.5 < PATH_R
+
+
+# the bell rings from FUNICULAR_WARN before the carriage reaches the path
+# until it has left it
+static func funicular_near_crossing(elapsed: float) -> bool:
+	return funicular_on_path(elapsed) or funicular_on_path(elapsed + FUNICULAR_WARN)
 
 
 static func tick(m: Node2D, delta: float) -> void:
 	if m.lvl != "montserrat":
 		return
 	var dp: Vector2 = m.dog.global_position
-
-	# Funicular crossing state machine
-	var cur_state: String = String(m.montserrat_funicular.get("state", "waiting"))
+	var hp: Vector2 = m.human.global_position
+	var fun: Dictionary = m.montserrat_funicular
 	var car_x := funicular_car_x(m.elapsed)
 	var near := funicular_near_crossing(m.elapsed)
 
-	if cur_state == "waiting":
+	if String(fun.get("state", "waiting")) == "waiting":
 		if near:
-			m.montserrat_funicular["state"] = "crossing"
-			m.montserrat_funicular["t"] = 0.0
-			m.get_node("/root/Sfx").play("crossing_bell", 1.0)
-	elif cur_state == "crossing":
-		var t: float = float(m.montserrat_funicular.get("t", 0.0)) + delta
-		m.montserrat_funicular["t"] = t
-		if not near:
-			m.montserrat_funicular["state"] = "waiting"
-			# Award dodge if pair made it past crossing without getting clipped
-			if not m.montserrat_funicular_dodged and dp.y < CROSSING_Y - 80.0:
-				m.montserrat_funicular_dodged = true
-				m.bones += 3
-				m.float_text(dp + Vector2(0, -30), "funicular cleared! +3", Color(0.96, 0.86, 0.32))
-				m.feed.say("CLEAR OF THE FUNICULAR!", EventFeed.Tone.GOOD)
-
-	# Funicular carriage collision with dog / human
-	if absf(dp.y - CROSSING_Y) < 28.0 and absf(dp.x - car_x) < FUNICULAR_CAR_W * 0.5:
-		if m.dog.has_method("knocked"):
-			m.dog.knocked(Vector2(signf(dp.x - car_x), 0.0), "funicular")
-		m.feed.say("MIND THE FUNICULAR!", EventFeed.Tone.LOUD)
+			fun["state"] = "crossing"
+			fun["t"] = 0.0
+			fun["hit"] = false
+			fun["involved"] = false
+			Sfx.play("crossing_bell", 1.0)
+		return
+	fun["t"] = float(fun.get("t", 0.0)) + delta
+	if absf(hp.y - CROSSING_Y) < FUNICULAR_INVOLVED or absf(dp.y - CROSSING_Y) < FUNICULAR_INVOLVED:
+		fun["involved"] = true
+	if not near:
+		fun["state"] = "waiting"
+		# a pass that came by the pair and touched neither: waited out or dodged
+		if bool(fun.get("involved", false)) and not bool(fun.get("hit", false)) and not m.montserrat_funicular_dodged:
+			m.montserrat_funicular_dodged = true
+			m.award_points(3, "funicular cleared! +3")
+			m.feed.say("CLEAR OF THE FUNICULAR!", EventFeed.Tone.GOOD)
+		return
+	# the bell's lead is the warning: nothing is hit before the carriage is on the path
+	if not funicular_on_path(m.elapsed) or bool(fun.get("hit", false)):
+		return
+	var half_w := FUNICULAR_CAR_W * 0.5
+	var dog_hit := absf(dp.y - CROSSING_Y) < FUNICULAR_HIT_HALF and absf(dp.x - car_x) < half_w
+	var human_hit := absf(hp.y - CROSSING_Y) < FUNICULAR_HIT_HALF and absf(hp.x - car_x) < half_w
+	if not dog_hit and not human_hit:
+		return
+	fun["hit"] = true
+	m.feed.say("MIND THE FUNICULAR!", EventFeed.Tone.LOUD)
+	if dog_hit:
+		m.dog.knocked(Vector2(signf(dp.x - car_x), 0.0), "funicular")
+	if human_hit:
+		m.human.patience = maxf(0.0, m.human.patience - m.LIVE_EVENT_BUMP_PATIENCE)
+		m.human.bumped(Vector2(signf(hp.x - car_x), 0.0))
 
 
 static func on_bark(m: Node2D, pos: Vector2) -> void:

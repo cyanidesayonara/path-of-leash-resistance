@@ -219,8 +219,7 @@ func _resolve_boulder_impact(b: Dictionary) -> void:
 		# Clean dodge!
 		dodges += 1
 		main.montserrat_boulder_dodges += 1
-		main.bones += 2
-		main.float_text(dog_pos + Vector2(0, -25), "boulder dodged! +2", Color(0.96, 0.86, 0.32))
+		main.award_points(2, "dodged! +2")
 		if main.feed != null:
 			main.feed.say("STEPPED CLEAR OF THE BOULDER!", EventFeed.Tone.GOOD)
 

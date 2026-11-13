@@ -109,22 +109,53 @@ func _run() -> void:
 	_check(CC.MAIN_FIELDS.has("montserrat_boulder_dodges") and CC.MAIN_FIELDS.has("montserrat_goat_hits"),
 		"checkpoint snapshots montserrat boulder dodges and hits")
 
-	# 5. Funicular Crossing
+	# 5. Funicular Crossing (walk clock; the carriage pauses off the path)
+	var run: float = (M.FUNICULAR_TO - M.FUNICULAR_FROM) / M.FUNICULAR_SPEED
+	var leg: float = run + M.FUNICULAR_PAUSE
+	var off_t := 0.0
+	var on_t := -1.0
+	var t := 0.0
+	while t < leg * 2.0:
+		if not M.funicular_near_crossing(t) and off_t == 0.0 and t > run:
+			off_t = t
+		t += 0.05
+	_check(off_t > 0.0, "the carriage leaves the path for a while each cycle")
+	t = 0.0
+	while t < leg * 2.0 and on_t < 0.0:
+		if M.funicular_on_path(t):
+			on_t = t
+		t += 0.01
+	_check(on_t >= 0.0, "and crosses it")
+	_check(on_t <= 0.0 or M.funicular_near_crossing(on_t - M.FUNICULAR_WARN + 0.02), "the bell rings before it reaches the path")
+
+	# a pass that comes by the pair and hits nobody pays once
 	m.montserrat_funicular = {"state": "waiting", "t": 0.0}
 	m.montserrat_funicular_dodged = false
-	m.elapsed = 0.0
-	_check(String(m.montserrat_funicular.get("state", "")) == "waiting", "funicular waiting initially")
+	m.human.global_position = Vector2(640.0, M.CROSSING_Y + 120.0)
+	m.dog.global_position = Vector2(640.0, M.CROSSING_Y + 100.0)
+	var bones0: int = m.bones
+	t = 0.0
+	while t < leg:
+		m.elapsed = t
+		M.tick(m, 0.05)
+		t += 0.05
+	_check(m.montserrat_funicular_dodged, "waiting out a pass awards funicular_dodge")
+	_check(m.bones == bones0 + 3, "and pays 3 (got %d)" % (m.bones - bones0))
 
-	# Advance elapsed to trigger near crossing
-	m.elapsed = 4.0 # funicular near crossing
-	M.tick(m, 0.1)
-	_check(String(m.montserrat_funicular.get("state", "")) == "crossing", "funicular enters crossing state")
-
-	# Position dog past crossing and clear
-	m.dog.global_position = Vector2(640.0, -2750.0)
-	m.elapsed = 8.0 # carriage moved past
-	M.tick(m, 0.1)
-	_check(m.montserrat_funicular_dodged, "crossing safely awards funicular_dodge")
+	# standing on the line: hit once a pass, however long they stay there
+	m.montserrat_funicular = {"state": "waiting", "t": 0.0}
+	m.montserrat_funicular_dodged = false
+	var pat0: float = m.human.patience
+	t = leg * 2.0
+	while t < leg * 3.0:
+		m.elapsed = t
+		var cx: float = M.funicular_car_x(t)
+		m.human.global_position = Vector2(clampf(cx, M.PATH_L + 10.0, M.PATH_R - 10.0), M.CROSSING_Y)
+		m.dog.global_position = Vector2(640.0, M.CROSSING_Y + 200.0)
+		M.tick(m, 0.05)
+		t += 0.05
+	_check(is_equal_approx(m.human.patience, maxf(0.0, pat0 - m.LIVE_EVENT_BUMP_PATIENCE)), "one bump for the pass (patience %.2f)" % m.human.patience)
+	_check(not m.montserrat_funicular_dodged, "a pass that hit your human pays nothing")
 
 	# 6. Mel i mató Cheese Stall
 	m.montserrat_mato_barked = false
