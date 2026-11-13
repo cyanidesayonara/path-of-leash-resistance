@@ -396,6 +396,7 @@ var furgoneta_sniffed := false
 var furgoneta_flash_t := 0.0
 var furgoneta_wiper_t := 0.0
 var furgoneta_honk_cd := 0.0
+var furgoneta_honk_paid := false
 var fresh_coat_t := 0.0
 var furgoneta_dare_offered := false
 var furgoneta_dare_won := false

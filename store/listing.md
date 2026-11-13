@@ -90,7 +90,7 @@ dog walking
   - La Ciutadella: the grand park avenue to the waterfall cascade, rowboats on the lake, and El Mamut, a full-size stone mammoth who climbs off his plinth as the first statue boss (with his own victory payoff film).
   - La Cremada: Badalona's devil night down Carrer del Mar to the beach, the Dimoni's rolling float chase, and a hot churro cart live event on the Rambla.
 - Castellers in Gràcia and El Gòtic: living dynamic human towers with l'aleta crowning, traditional musicians, and equilibri and cheering tricks.
-- The Fur-goneta: a shaggy Mutt Cutts dog van homage with floppy ears, wagging tail and tongue, touring four walks with a mobile groomer style dare.
+- The Fur-goneta: a grooming van dressed as a shaggy dog, with floppy ears, wagging tail and tongue, touring four walks with a mobile groomer style dare.
 - The street after dark comes alive: doorways ajar, lit shopfronts, amber bars, and television blue spill soft fans of light onto paving and wet rain reflections.
 - El Gat pounces: below half health, the Raval's bronze cat wiggles his rear and leaps through the air with a landing ring. Catch him mid-leap or steer him into obstacles.
 - Who is out follows the weather and the hour: sunbathers, picnics and ice-cream carts stay in when it rains or after dark, and crowds thin in foul weather.
