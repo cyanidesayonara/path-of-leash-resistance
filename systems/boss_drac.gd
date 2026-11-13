@@ -327,7 +327,7 @@ func transition_to(s: State) -> void:
 			Sfx.play("whoop", 1.1, -4.0)
 			main.drac_settled = true
 			main.combo.add("BOOP", 10)
-			main.float_text(nose_tip(), "booped! +10", Color(1.0, 0.88, 0.25))
+			main.award_points(10, "booped! +10")
 			main.feed.say("EL MOSAIC IS YOURS!", EventFeed.Tone.GOOD)
 			main.human.say_line("Good... dragon?")
 			fountain_t = 0.0
@@ -378,7 +378,7 @@ func _strike_tail() -> void:
 func _dodge(at: Vector2) -> void:
 	main.drac_dodges += 1
 	main.combo.add("DODGE", 2)
-	main.float_text(at, "dodged! +2", Color(0.8, 1.0, 0.7))
+	main.award_points(2, "dodged! +2")
 	damage(DODGE_DAMAGE)
 
 
@@ -402,11 +402,8 @@ func _strike_jet() -> void:
 	var dog_p: Vector2 = main.dog.global_position
 	if _lane_hit(dog_p, dir, JET_W * 0.5 + 10.0):
 		main.dog.knocked(dir, "jet")
-		# headless ticks skip dog physics; shove her along the lane now
-		main.dog.global_position += dir * 24.0
 	if _lane_hit(main.human.global_position, dir, JET_W * 0.5 + 12.0):
 		main.human.bumped(dir)
-		main.human.global_position += dir * 18.0
 	surface_zones.append({
 		"rect": _jet_puddle_rect(dir),
 		"kind": Surfaces.S.WATER,
@@ -473,7 +470,7 @@ func _hit(kind: String) -> void:
 			Sfx.play("crack", 0.7, -2.0)
 			main.feed.say("WOUND ROUND A COLUMN!", EventFeed.Tone.LOUD)
 			main.combo.add("COLUMN", 8)
-			main.float_text(pos, "wound! +8", Color(1.0, 0.85, 0.2))
+			main.award_points(8, "wound! +8")
 		"trip":
 			main.drac_tripped = true
 			damage(TRIP_DAMAGE)
@@ -481,7 +478,7 @@ func _hit(kind: String) -> void:
 			Sfx.play("crack", 0.55, -1.0)
 			main.feed.say("TRIPPED!", EventFeed.Tone.LOUD)
 			main.combo.add("TRIP", 8)
-			main.float_text(pos, "tripped! +8", Color(1.0, 0.85, 0.2))
+			main.award_points(8, "tripped! +8")
 	main.shake_t = maxf(float(main.shake_t), 1.0)
 	transition_to(State.STUNNED)
 

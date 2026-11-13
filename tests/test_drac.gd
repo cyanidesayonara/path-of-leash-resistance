@@ -102,7 +102,7 @@ func _run() -> void:
 	_ticks(m, DT * 2.0)
 	_check(dr.state == BD.State.JET, "he lines up a jet")
 	_ticks(m, BD.JET_WARN + 0.05)
-	_check(m.dog.global_position.distance_to(dog0) > 8.0, "the jet pushes her")
+	_check(m.dog.tumble_t > 0.0 and m.dog.velocity.dot(Vector2.DOWN) > 100.0, "the jet knocks her down its lane")
 	_check(dr.surface_at(dog0) == load("res://world/surfaces.gd").S.WATER, "soak puddle left behind")
 
 	# part two: furious below half, slither, column bind, leash trip

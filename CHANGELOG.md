@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-11-13 - El Drac review fixes
+
+- El Drac's boop, dodge, wound and trip showed "+N" but paid nothing outside a running chain: `combo.add` pays a non-trick only inside one. Each pays through `award_points` now (`systems/boss_drac.gd`).
+- The jet moved the dog 24 px and your human 18 px by hand, a test shortcut in game code that could set her inside a column. The knock alone moves them; `tests/test_drac.gd` checks the knock instead.
+
 ## 2026-11-11 - Boss 2: El Drac (Park Güell / El Mosaic)
 
 - Implemented the second statue boss, **El Drac** (`systems/boss_drac.gd`), the iconic Gaudí trencadís salamander of Park Güell (`systems/mosaic.gd`, `LevelBuild.MOSAIC_SALAMANDER`).
