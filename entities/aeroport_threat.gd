@@ -219,21 +219,21 @@ func _land_suitcase(at: Vector2) -> void:
 		hits += 1
 		main.aeroport_cart_hits += 1
 		main.dog.knocked((dp - at).normalized() if dp.distance_to(at) > 1.0 else Vector2.DOWN, "suitcase")
-		main.float_text(dp + Vector2(0, -30), "TUMBLED BY LUGGAGE!", Color(1.0, 0.4, 0.3))
+		main.float_text(dp + Vector2(0, -30), "Oof!", Color(1.0, 0.4, 0.3))
 
 	if at.distance_to(hp) <= SUITCASE_R:
 		hit = true
 		hits += 1
 		main.aeroport_cart_hits += 1
 		main.human.bumped((hp - at).normalized() if hp.distance_to(at) > 1.0 else Vector2.DOWN)
-		main.float_text(hp + Vector2(0, -30), "TRIPPED BY SUITCASE!", Color(1.0, 0.5, 0.3))
+		main.float_text(hp + Vector2(0, -30), "Whoa! My ankle!", Color(1.0, 0.5, 0.3))
 
 	if not hit:
 		if at.distance_to(dp) <= SUITCASE_DODGE_R or at.distance_to(hp) <= SUITCASE_DODGE_R:
 			dodges += 1
 			main.aeroport_luggage_dodges += 1
 			main.combo.add("SUITCASE DODGE", 1)
-			main.float_text(dp + Vector2(0, -25), "SUITCASE DODGE! +1", Color(0.4, 0.9, 1.0))
+			main.award_points(1, "dodged! +1")
 
 
 func suitcase_warning() -> bool:
