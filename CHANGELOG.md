@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-13 - Els Lleons review fixes
+
+- Both lion films failed to parse (`FilmKit.pair` called with seven arguments, a `title_card` that does not exist, a missing "creak" sound), so the wake film could not load when it should play; and neither was registered with `tools/intro_render.gd` or `tests/test_chase_film.gd`, which is how it got through. Both play now in the shared film grammar and are checked like every other film.
+- A pincer hit shoved the dog and had your human say "Ouch!" every frame of contact, and `pincer_dodged` was never reset, so after the first dodge no pincer could hit or be dodged again. A pincer now hits once (a knock, telegraphed by its lanes) and re-arms each time.
+- Planting through a roar paid +2 every frame; it pays once a roar.
+- The double rush ran fixed lanes at one speed, so the lions head-bumped every time with nothing for the dog to do. The lanes now cross where she stands as the rush warns, both lions reach the crossing together, and they collide only if she has stepped out; still there, she is run over and they run on.
+- `tests/test_lleons.gd` covers all of it (52 checks).
+
 ## 2026-11-13 - Montserrat review fixes
 
 - The Sant Joan funicular was on the path about three quarters of its cycle, rang its bell only once already there, and knocked the dog and shouted every frame they overlapped, while your human walked through it. It now crosses, waits off the path at the far side for 6 seconds and comes back; the bell rings 0.8 s before it reaches the path; it hits the dog or your human once a pass (a bump costs the live-event share of patience); and a pass that came by the pair and hit nobody pays the goal once (`systems/montserrat.gd`, `tests/test_montserrat.gd`, 36 checks).

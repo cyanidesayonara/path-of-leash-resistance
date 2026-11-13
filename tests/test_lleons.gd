@@ -92,6 +92,14 @@ func _run() -> void:
 	m.dog.global_position = (boss.lion_a.pos as Vector2) + Vector2(BL.BODY_R + 25.0, 0.0)
 	_ticks(m, 0.05)
 	_check(m.lleons_pincer_dodges >= 1, "pincer dodged recorded")
+	# a second pincer re-arms: it can be dodged again
+	var dodges1: int = m.lleons_pincer_dodges
+	boss.transition_to(BL.State.PROWL)
+	boss._start_pincer()
+	_ticks(m, BL.PINCER_WARN + 0.05)
+	m.dog.global_position = (boss.lion_a.pos as Vector2) + Vector2(BL.BODY_R + 25.0, 0.0)
+	_ticks(m, 0.05)
+	_check(m.lleons_pincer_dodges == dodges1 + 1, "each pincer can be dodged")
 
 	# 4. Phase 1: Roar wind push
 	boss._start_roar()
@@ -104,16 +112,47 @@ func _run() -> void:
 	_ticks(m, 0.1)
 	var pushed_vel: float = m.dog.velocity.length()
 	_check(pushed_vel > 10.0, "roar wind pushes unplanted dog")
+	# planted through the whole roar: paid once, not every frame
+	boss.transition_to(BL.State.PROWL)
+	boss._start_roar()
+	_ticks(m, BL.ROAR_WARN + 0.05)
+	m.dog.global_position = boss.roaring_lion.pos + boss.roaring_lion.face_dir * 120.0
+	m.dog.planted = true
+	var bones_r: int = m.bones
+	for i in range(int(BL.ROAR_DUR / 0.05) - 2):
+		m.dog.global_position = boss.roaring_lion.pos + boss.roaring_lion.face_dir * 120.0
+		_ticks(m, 0.05)
+	m.dog.planted = false
+	_check(m.bones == bones_r + 2, "planting through a roar pays 2 once (got %d)" % (m.bones - bones_r))
 
-	# 5. Phase 2: Double Rush & HEAD BUMP
+	# 5. Phase 2: Double Rush. Standing in the crossing to the end: run over, no bump
 	boss.hp = 45.0
 	boss.phase = 2
+	boss.transition_to(BL.State.PROWL)
+	var stand_at := Vector2(640.0, -4400.0)
+	m.dog.global_position = stand_at
 	boss._start_rush()
 	_check(boss.state == BL.State.RUSH_WARN, "starts RUSH_WARN")
-	_ticks(m, BL.RUSH_WARN + 0.1)
+	_check(boss.rush_cross_pos.distance_to(stand_at) < 1.0, "the lanes cross where she stands")
+	_ticks(m, BL.RUSH_WARN + 0.05)
 	_check(boss.state == BL.State.RUSH_CHARGE, "charges RUSH_CHARGE")
-	# Step forward until they collide at the center
-	_ticks(m, 0.6)
+	for i in range(40):
+		m.dog.global_position = stand_at
+		_ticks(m, 0.05)
+	_check(not m.lleons_bumped, "she stayed in the crossing: no head bump")
+	_check(boss.state != BL.State.STUNNED, "and they are not dazed")
+
+	# stepped out during the warning: they meet each other
+	boss.transition_to(BL.State.PROWL)
+	m.dog.global_position = stand_at
+	boss._start_rush()
+	m.dog.global_position = stand_at + Vector2(0.0, 160.0)
+	_ticks(m, BL.RUSH_WARN + 0.05)
+	for i in range(30):
+		if boss.state != BL.State.RUSH_CHARGE:
+			break
+		m.dog.global_position = stand_at + Vector2(0.0, 160.0)
+		_ticks(m, 0.05)
 	_check(boss.state == BL.State.STUNNED, "collided into STUNNED")
 	_check(m.lleons_bumped, "HEAD BUMP recorded in main.lleons_bumped")
 	_check(boss.lion_a.dazed > 0.0 and boss.lion_b.dazed > 0.0, "both lions dazed")

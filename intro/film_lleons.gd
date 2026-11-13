@@ -34,7 +34,7 @@ const WATER := Color(0.18, 0.32, 0.46)
 const INK := IntroKit.INK
 
 const CUES := [
-	[1.30, "creak", 1.0, -8.0],
+	[1.30, "gat_clang", 0.6, -10.0],
 	[YAWN_AT, "lion_roar", 0.8, -4.0],
 	[EYES_AT, "chime", 1.2, -6.0],
 	[TURN_AT, "gat_clang", 0.9, -6.0],
@@ -72,7 +72,8 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 	_draw_film_lion(c, Vector2(PLINTH_R_X, PLINTH_TOP), 0.0, eyes_open, turned, false)
 
 	# The pair
-	FilmKit.pair(c, t_real, Vector2(720.0, FEET), Vector2(620.0, FEET), false, false, "dusk")
+	FilmKit.pair(c, t_real, FEET)
+	FilmKit.fades(c, t_real)
 
 
 static func _harbor_backdrop(c: CanvasItem, _t: float) -> void:
@@ -116,4 +117,7 @@ static func _draw_film_lion(c: CanvasItem, at: Vector2, jaw: float, eye: float, 
 
 
 static func _title(c: CanvasItem, t: float) -> void:
-	FilmKit.title_card(c, t, "ELS LLEONS", "The Bronze Lions of El Port")
+	IntroKit.vgrad(c, Rect2(-200, 0.0, 1680, 824.0), Color(0.92, 0.56, 0.40), Color(0.38, 0.22, 0.42))
+	FilmKit.slam(c, t, "ELS LLEONS!", Vector2(660, 200))
+	IntroTitle.word(c, "THE BRONZE LIONS OF EL PORT", Vector2(640, 420), 30)
+	IntroKit.fade(c, 1.0 - Anim.span(t, TITLE_AT, TITLE_AT + 0.2), Color(1.0, 0.95, 0.85))

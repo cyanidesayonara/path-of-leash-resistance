@@ -64,9 +64,8 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 	_draw_sitting_lion(c, Vector2(PLINTH_R_X, PLINTH_TOP), false)
 
 	# Pair strolling happily
-	var dog_x := Anim.k(t, [[0.0, 320.0], [BOOP_AT, 320.0], [WALK_OFF_AT, 580.0, "io"], [TITLE_AT, 780.0]])
-	var human_x := Anim.k(t, [[0.0, 220.0], [WALK_OFF_AT, 460.0, "io"], [TITLE_AT, 660.0]])
-	FilmKit.pair(c, t_real, Vector2(dog_x, FEET), Vector2(human_x, FEET), false, false, "dusk")
+	FilmKit.pair(c, t_real, FEET, true)
+	FilmKit.fades(c, t_real)
 
 
 static func _harbor_backdrop(c: CanvasItem, _t: float) -> void:
@@ -104,4 +103,7 @@ static func _draw_sitting_lion(c: CanvasItem, at: Vector2, is_left: bool) -> voi
 
 
 static func _title(c: CanvasItem, t: float) -> void:
-	FilmKit.title_card(c, t, "ELS LLEONS", "The Twin Guardians of El Port")
+	IntroKit.vgrad(c, Rect2(-200, 0.0, 1680, 824.0), Color(0.92, 0.56, 0.40), Color(0.38, 0.22, 0.42))
+	FilmKit.slam(c, t, "ELS LLEONS!", Vector2(660, 200))
+	IntroTitle.word(c, "EL PORT IS YOURS", Vector2(640, 420), 30)
+	IntroKit.fade(c, 1.0 - Anim.span(t, TITLE_AT, TITLE_AT + 0.2), Color(1.0, 0.95, 0.85))

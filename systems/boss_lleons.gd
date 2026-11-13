@@ -71,6 +71,13 @@ const ROAR_PUSH_FORCE := 380.0
 const ROAR_COOLDOWN := 3.8
 const RUSH_WARN := 1.00
 const RUSH_SPEED := 380.0
+# the double rush aims where she stands as it warns; both lions reach that
+# point together, so stepping out in the warning makes them meet
+const RUSH_TO_CROSS := 0.75
+const RUSH_SPREAD := Vector2(240.0, 150.0)
+const RUSH_CLEAR := 70.0
+const ARENA_X := Vector2(440.0, 840.0)
+const ARENA_Y := Vector2(-4520.0, -4280.0)
 const RUSH_COOLDOWN := 4.2
 const BUMP_STUN := 3.2
 const BOOP_REACH := 65.0
@@ -135,6 +142,10 @@ var roaring_lion: Dictionary = lion_a
 var boops_done := 0
 var bump_done := false
 var pincer_dodged := false
+var pincer_hit := false
+var roar_paid := false
+var rush_hit := false
+var rush_speeds: Array[float] = [RUSH_SPEED, RUSH_SPEED]
 var film_shown := false
 var win_film_shown := false
 var hold_noticed := false
@@ -329,6 +340,8 @@ func _start_pincer() -> void:
 	pincer_targets[0] = dp + Vector2(40.0, 0.0)
 	pincer_targets[1] = dp + Vector2(-40.0, 0.0)
 	pincer_cd = PINCER_COOLDOWN
+	pincer_dodged = false
+	pincer_hit = false
 	transition_to(State.PINCER_WARN)
 
 
@@ -348,12 +361,14 @@ func _tick_pincer_strike(delta: float) -> void:
 	var dp: Vector2 = main.dog.global_position
 	var hp_pos: Vector2 = main.human.global_position
 	# Check dog dodge
-	if not pincer_dodged:
+	if not pincer_dodged and not pincer_hit:
 		var d_a: float = (lion_a.pos as Vector2).distance_to(dp)
 		var d_b: float = (lion_b.pos as Vector2).distance_to(dp)
 		if d_a < BODY_R + 10.0 or d_b < BODY_R + 10.0:
-			# Hit!
-			main.dog.velocity += (dp - ((lion_a.pos as Vector2) + (lion_b.pos as Vector2)) * 0.5).normalized() * 320.0
+			# hit once a pincer: the warning lanes were the telegraph
+			pincer_hit = true
+			var mid: Vector2 = ((lion_a.pos as Vector2) + (lion_b.pos as Vector2)) * 0.5
+			main.dog.knocked((dp - mid).normalized() if dp.distance_to(mid) > 1.0 else Vector2.DOWN, "lion")
 			main.human.say_line("Ouch! Careful!")
 		elif d_a < BODY_R + 45.0 or d_b < BODY_R + 45.0:
 			# Close miss awards dodge
@@ -373,6 +388,7 @@ func _start_roar() -> void:
 	var dp: Vector2 = main.dog.global_position
 	roaring_lion.face_dir = (dp - (roaring_lion.pos as Vector2)).normalized()
 	roar_cd = ROAR_COOLDOWN
+	roar_paid = false
 	transition_to(State.ROAR_WARN)
 
 
@@ -400,7 +416,9 @@ func _tick_roar_blast(delta: float) -> void:
 		var push: Vector2 = r_dir * ROAR_PUSH_FORCE * (1.0 - dist / ROAR_REACH)
 		if main.dog.planted:
 			main.dog.velocity += push * 0.15
-			main.award_points(2, "planted! +2")
+			if not roar_paid:
+				roar_paid = true
+				main.award_points(2, "planted! +2")
 		else:
 			main.dog.velocity += push * delta * 60.0
 
@@ -411,14 +429,17 @@ func _tick_roar_blast(delta: float) -> void:
 
 
 func _start_rush() -> void:
-	# Position lions on opposite diagonals and rush across
-	rush_starts[0] = Vector2(400.0, -4250.0)
-	rush_starts[1] = Vector2(880.0, -4250.0)
-	rush_ends[0] = Vector2(860.0, -4550.0)
-	rush_ends[1] = Vector2(420.0, -4550.0)
-	# Intersection is at center x=640, y=-4400
-	rush_cross_pos = Vector2(640.0, -4400.0)
-
+	# aim both lanes at where she stands now; each lion gets the speed that
+	# brings it to the crossing at the same moment
+	var dp: Vector2 = main.dog.global_position
+	rush_cross_pos = Vector2(clampf(dp.x, ARENA_X.x, ARENA_X.y), clampf(dp.y, ARENA_Y.x, ARENA_Y.y))
+	rush_starts[0] = rush_cross_pos + Vector2(-RUSH_SPREAD.x, RUSH_SPREAD.y)
+	rush_starts[1] = rush_cross_pos + Vector2(RUSH_SPREAD.x, RUSH_SPREAD.y)
+	for i in range(2):
+		rush_starts[i].x = clampf(rush_starts[i].x, ARENA_X.x - 40.0, ARENA_X.y + 40.0)
+		rush_ends[i] = rush_cross_pos + (rush_cross_pos - rush_starts[i])
+		rush_speeds[i] = rush_starts[i].distance_to(rush_cross_pos) / RUSH_TO_CROSS
+	rush_hit = false
 	lion_a.pos = rush_starts[0]
 	lion_b.pos = rush_starts[1]
 	lion_a.face_dir = (rush_ends[0] - rush_starts[0]).normalized()
@@ -435,15 +456,25 @@ func _tick_rush_warn(_delta: float) -> void:
 
 func _tick_rush_charge(delta: float) -> void:
 	_hold_human()
-	lion_a.pos = lion_a.pos.move_toward(rush_ends[0], RUSH_SPEED * delta)
-	lion_b.pos = lion_b.pos.move_toward(rush_ends[1], RUSH_SPEED * delta)
+	lion_a.pos = lion_a.pos.move_toward(rush_ends[0], rush_speeds[0] * delta)
+	lion_b.pos = lion_b.pos.move_toward(rush_ends[1], rush_speeds[1] * delta)
+	var dp: Vector2 = main.dog.global_position
+	# run over on the way: once a rush
+	if not rush_hit:
+		for lion: Dictionary in [lion_a, lion_b]:
+			if (lion.pos as Vector2).distance_to(dp) < BODY_R + 6.0:
+				rush_hit = true
+				main.dog.knocked(((dp - (lion.pos as Vector2)).normalized()) if dp.distance_to(lion.pos) > 1.0 else Vector2.DOWN, "lion")
+				break
 
-	# Check collision between the two lions near the crossing!
+	# they meet at the crossing: only an empty crossing makes them collide;
+	# she still there, or already run over, and they run on to their ends
 	var dist_between: float = lion_a.pos.distance_to(lion_b.pos)
-	if dist_between < (BODY_R + HEAD_R) * 1.5:
-		# HEAD BUMP!
-		_trigger_head_bump()
-		return
+	if dist_between < (BODY_R + HEAD_R) * 1.5 and not rush_hit:
+		if dp.distance_to(rush_cross_pos) > RUSH_CLEAR:
+			_trigger_head_bump()
+			return
+		rush_hit = true
 
 	if lion_a.pos.distance_to(rush_ends[0]) < 10.0 and lion_b.pos.distance_to(rush_ends[1]) < 10.0:
 		transition_to(State.PROWL)
@@ -454,7 +485,7 @@ func _trigger_head_bump() -> void:
 	main.lleons_bumped = true
 	_sfx("head_bump", 1.0, 0.0)
 	main.shake_t = maxf(float(main.shake_t), 0.7)
-	main.award_points(20, "HEAD BUMP! +20")
+	main.award_points(20, "head bump! +20")
 	main.feed.say("HEAD BUMP! BOTH LIONS DAZED!", EventFeed.Tone.LOUD)
 	_take_damage(25.0)
 
