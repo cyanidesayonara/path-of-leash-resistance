@@ -20,6 +20,7 @@ const SCENES := {
 	"gracia": "res://intro/film_gracia.gd",
 	"cremada": "res://intro/film_cremada.gd",
 	"aeroport": "res://intro/film_aeroport.gd",
+	"montserrat": "res://intro/film_montserrat.gd",
 	"gat": "res://intro/film_gat.gd",
 	"mamut": "res://intro/film_mamut.gd",
 	"plinth": "res://intro/film_plinth.gd",
