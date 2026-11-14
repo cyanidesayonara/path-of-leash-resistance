@@ -3,6 +3,11 @@ extends Node2D
 # The Correfoc festival pursuers for Walk 26: Festa de Gràcia.
 # A troupe of festive fire devils (Colla de Diables de Gràcia) with sparklers,
 # pitchforks (maces de foc), and a paper-mâché fire dragon (Drac de Gràcia).
+# They are on foot (systems/chase_squad.gd), the dragon in the middle of the
+# line: each runs for their place and goes round anything solid, kicks
+# litter aside, skids in what she left lying, and the line waits for whoever
+# is held up. The catch is theirs: a body and its fork, and the line while it
+# holds together.
 # Implements the standard chase threat interface (setup, advance, caught,
 # gap_to, threat_boundary, sweep_junk) so systems/home_chase drives it.
 
@@ -22,6 +27,13 @@ const SMOKE := Color(0.62, 0.60, 0.62, 0.30)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.22)
 # across the street, the middle ones left out for the dragon
 const DEVILS := 7
+const DEVIL_R := 22.0
+const DEVIL_REACH := 36.0         # the fork and its fountain, ahead of the body
+const DEVIL_BACK := 62.0
+const DRAGON := 3                 # the middle of the line
+const HELD_LINES := ["Make way!", "Mind the sparks!", "Coming through!", "Out of the road!"]
+const Squad := preload("res://systems/chase_squad.gd")
+
 
 const SURGE := 0.25
 const CATCH_UP := 1.35
@@ -45,6 +57,7 @@ var jam_at := Vector2(INF, INF)
 var kerb_blocks: Array[Rect2] = []
 var jammed_now := false
 var freed_now := false
+var squad = Squad.new()
 
 
 func setup(m: Node2D, start_front_y: float, corridor_cx: float, corridor_half: float, correfoc_speed: float) -> void:
@@ -54,6 +67,10 @@ func setup(m: Node2D, start_front_y: float, corridor_cx: float, corridor_half: f
 	half = corridor_half
 	speed = correfoc_speed
 	cur_speed = correfoc_speed
+	var slots: Array = []
+	for i in range(DEVILS):
+		slots.append((float(i) / float(DEVILS - 1) * 2.0 - 1.0) * half * 0.82)
+	squad.setup(slots, Vector2(cx, front_y), DEVIL_R, DEVIL_REACH, DEVIL_BACK)
 
 
 func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
@@ -64,6 +81,7 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 		if jam_t == 0.0:
 			freed_now = true
 			jam_at = Vector2(INF, INF)
+		_run(delta)
 		queue_redraw()
 		return
 
@@ -78,6 +96,8 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 	else:
 		cur_speed = speed
 
+	# the line waits for whoever is held up on something
+	cur_speed *= squad.pace()
 	front_y += cur_speed * delta
 
 	# a respite holds the troupe once, then it is behind them
@@ -95,26 +115,27 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 	sway_v *= exp(-3.0 * delta)
 	sway += sway_v * delta
 	sway = clampf(sway, -half * 0.45, half * 0.45)
+	_run(delta)
 	queue_redraw()
 
 
+func _run(delta: float) -> void:
+	if main != null:
+		squad.run(main, delta, Vector2(cx + sway, front_y), cur_speed if jam_t <= 0.0 else 0.0, true, HELD_LINES, true, "Eww!")
+
+
 func threat_boundary() -> float:
-	return front_y
+	return squad.front()
 
 
+# a body and its fork, the line while it holds, or behind the whole troupe
+# (whoever slipped by was in the sparks)
 func caught(pos: Vector2) -> bool:
-	# the procession has run right past them: whoever slipped by at the side
-	# was in the sparks, rather than the devils dancing on home without them
-	if pos.y < front_y - 120.0:
-		return true
-	if absf(pos.x - (cx + sway)) > (half + 20.0):
-		return false
-	# Caught when player falls within sparker reach behind threat front
-	return pos.y <= front_y and pos.y >= (front_y - 120.0)
+	return squad.caught(pos)
 
 
 func gap_to(p: Vector2) -> float:
-	return p.y - front_y
+	return p.y - squad.front()
 
 
 func jammed() -> bool:
@@ -129,8 +150,8 @@ func set_kerb_blocks(blocks: Array[Rect2]) -> void:
 	kerb_blocks = blocks
 
 
-func sweep_junk(_junk: Array) -> int:
-	return 0
+func sweep_junk(junk: Array) -> int:
+	return squad.sweep_junk(junk)
 
 
 # Seen from above, coming south: the smoke they leave, the dragon down the
@@ -139,8 +160,9 @@ func sweep_junk(_junk: Array) -> int:
 # front (y <= 0), where caught() reaches.
 func _draw() -> void:
 	var b := ShapeBatch.new()
-	# home_chase keeps the node at (walk_cx, front_y): only the sway is local
-	var c := Vector2(sway, 0.0)
+	# home_chase keeps the node at (walk_cx, front_y); each of them is drawn
+	# where they really are (systems/chase_squad.gd)
+	var c := Vector2(cx + sway, front_y) - global_position
 	var t := float(AnimClock.msec()) * 0.001
 	var reach := half * 0.82
 
@@ -153,6 +175,9 @@ func _draw() -> void:
 		var sx := (float(i) / 4.0 - 0.5) * reach * 1.6
 		b.circle(c + Vector2(sx, -108.0 + sin(t + float(i)) * 6.0), 34.0, SMOKE.lightened(0.08))
 
+	# the dragon runs in the middle of the line, where its member is
+	if squad.members.size() > DRAGON:
+		c = (squad.members[DRAGON]["pos"] as Vector2) - global_position + Vector2(0.0, DEVIL_BACK)
 	# the Drac, as in the film (intro/film_gracia.gd): bearers' legs under the
 	# skirt, the scaled body with its ridge, wings out and beating, the horned
 	# head low with a red eye under a scowl and its jaws spraying sparks
@@ -207,10 +232,11 @@ func _draw() -> void:
 	# fountain of sparks
 	for i in range(DEVILS):
 		var u := float(i) / float(DEVILS - 1) * 2.0 - 1.0
-		if absf(u) < 0.3:
+		if i == DRAGON or i >= squad.members.size():
 			continue
-		var bob := sin(t * 5.0 + float(i) * 1.3) * 3.0
-		var dp := c + Vector2(u * reach, -62.0 + absf(u) * 14.0 + bob)
+		var held: bool = float(squad.members[i]["stuck_t"]) > 0.4
+		var bob := sin(t * (12.0 if held else 5.0) + float(i) * 1.3) * 3.0
+		var dp: Vector2 = (squad.members[i]["pos"] as Vector2) - global_position + Vector2(0.0, absf(u) * 14.0 + bob)
 		b.circle(dp + Vector2(4.0, 6.0), 19.0, SHADOW)
 		b.circle(dp + Vector2(0.0, -2.0), 19.0, Color(0.05, 0.04, 0.06))
 		b.circle(dp + Vector2(0.0, -2.0), 17.0, DEVIL_RED)

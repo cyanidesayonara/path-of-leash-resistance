@@ -35,6 +35,8 @@ const BEHIND := 70.0              # this far behind the rearmost of them is caug
 const SNAP := 420.0               # further than this from the slot (a continue moved the line): put there
 const SLIP_SECS := 0.9            # a member who runs through what she left is held up this long
 const SLIP_R := 16.0
+const CLAMBER_AFTER := 2.5        # held up this long, a member clambers over whatever it is
+const CLAMBER_SECS := 0.5
 
 # one per member: {"pos", "vel", "slot", "stuck_t", "lag", "said", "slip_t", "slipped"}
 var members: Array[Dictionary] = []
@@ -57,7 +59,7 @@ func setup(slots: Array, anchor: Vector2, body_r: float, catch_reach: float, lin
 	members.clear()
 	for sx: float in slots:
 		members.append({"pos": anchor + Vector2(sx, -back), "vel": Vector2.ZERO, "slot": sx,
-			"stuck_t": 0.0, "lag": 0.0, "said": false, "slip_t": 0.0, "slipped": []})
+			"stuck_t": 0.0, "lag": 0.0, "said": false, "slip_t": 0.0, "slipped": [], "clamber_t": 0.0})
 	spacing = 90.0
 	if slots.size() > 1:
 		spacing = absf(float(slots[1]) - float(slots[0]))
@@ -119,18 +121,34 @@ func tick(m: Node2D, delta: float, anchor: Vector2, line_speed: float) -> void:
 		var v := Vector2(clampf(to.x * 4.0, -LATERAL, LATERAL), clampf(to.y * 3.0 + line_speed, -top * 0.4, top))
 		if line_speed <= 0.0:
 			v.y = clampf(to.y * 3.0, -top * 0.4, top * 0.6)
-		v.x += _dodge(p, v) * LATERAL
+		# going round something: the sidestep wins over heading for the slot
+		var dodge := _dodge(m, p, v)
+		if dodge != 0.0:
+			v.x = dodge * LATERAL
 		# keep off the neighbours
 		for j in [i - 1, i + 1]:
 			if j < 0 or j >= members.size():
 				continue
 			var q: Vector2 = members[j]["pos"]
 			var d := p - q
+			# a held-up member squeezes in: the line bunches round what is in the way
 			var near := spacing * SEPARATION
+			if float(mb["stuck_t"]) > 0.2 or float(members[j]["stuck_t"]) > 0.2:
+				near = maxf(radius * 2.0, near * 0.55)
 			if d.length() < near and d.length() > 0.01:
 				v += d.normalized() * (near - d.length()) * 6.0
 		var before := p
-		p = _resolve(m, p + v * delta)
+		# held up too long: over it they go, rather than wedged for good
+		if float(mb["stuck_t"]) > CLAMBER_AFTER and float(mb.get("clamber_t", 0.0)) <= 0.0:
+			mb["clamber_t"] = CLAMBER_SECS
+		if float(mb.get("clamber_t", 0.0)) > 0.0:
+			mb["clamber_t"] = float(mb["clamber_t"]) - delta
+			p = _edges(m, p + Vector2(to.x * 2.0, maxf(to.y * 2.0, top * 0.6)) * delta)
+			if float(mb["clamber_t"]) <= 0.0:
+				p = _resolve(m, p)
+				mb["stuck_t"] = 0.0
+		else:
+			p = _resolve(m, p + v * delta)
 		var moved := (p - before) / maxf(delta, 0.0001)
 		mb["vel"] = moved
 		mb["pos"] = p
@@ -147,8 +165,8 @@ func tick(m: Node2D, delta: float, anchor: Vector2, line_speed: float) -> void:
 
 
 # Something solid ahead: which way to sidestep (-1 west, 1 east, 0 clear), the
-# side with the shorter way round, or the side of the slot when it is even
-func _dodge(p: Vector2, v: Vector2) -> float:
+# shorter way round that a member fits through within the walk's edges
+func _dodge(m: Node2D, p: Vector2, v: Vector2) -> float:
 	var dir := v.normalized() if v.length() > 1.0 else Vector2.DOWN
 	var ahead := p + dir * LOOK
 	var best := 0.0
@@ -174,10 +192,18 @@ func _dodge(p: Vector2, v: Vector2) -> float:
 		if d >= best_d:
 			continue
 		best_d = d
-		# the shorter way round: toward whichever edge of it is nearer
+		# the shorter way round that fits: a thing against the wall has one way
+		var e: Vector2 = m.walk_edges(p.y + LOOK * 0.5)
+		var fits_w := cx - half >= e.x + radius
+		var fits_e := cx + half <= e.y - radius
 		var west := (p.x - (cx - half))
 		var east := ((cx + half) - p.x)
-		best = -1.0 if west < east else 1.0
+		if fits_w and (not fits_e or west < east):
+			best = -1.0
+		elif fits_e:
+			best = 1.0
+		else:
+			best = 0.0
 	return best
 
 
@@ -223,9 +249,45 @@ func _resolve(m: Node2D, p: Vector2) -> Vector2:
 				var d := p - c
 				if d.length() < rr:
 					p = c + (d.normalized() if d.length() > 0.01 else Vector2.UP) * rr
+	return _edges(m, p)
+
+
+func _edges(m: Node2D, p: Vector2) -> Vector2:
 	var e: Vector2 = m.walk_edges(p.y)
 	p.x = clampf(p.x, e.x + radius, e.y - radius)
 	return p
+
+
+# The frame a squad threat (entities/*_threat.gd) runs each step: what she
+# left lying for them to skid in (unless `slips` is false: boars love muck),
+# the tick, and a word from whoever has just skidded or been held up.
+# `held` are their lines when held up, said in turn; `speech` puts them in a
+# bubble (people) rather than as a sound (animals).
+var _said_n := 0
+
+
+func run(m: Node2D, delta: float, anchor: Vector2, line_speed: float, slips: bool, held: Array,
+		speech: bool, slip_line: String) -> void:
+	slip_points.clear()
+	if slips and m.has_method("left_business"):
+		var lb: Vector2 = m.left_business()
+		if lb.x < INF:
+			slip_points.append(lb)
+	tick(m, delta, anchor, line_speed)
+	var sl := newly_slipped()
+	var st := newly_stuck()
+	if bool(m.get("auto_walk")) or not m.has_method("float_text"):
+		return
+	var kind: int = int(m.POP_SAY) if speech else -1
+	if sl >= 0 and slip_line != "":
+		m.float_text((members[sl]["pos"] as Vector2) + Vector2(0.0, -34.0), slip_line, Color(0.92, 0.94, 1.0), kind)
+		var sfx := m.get_node_or_null("/root/Sfx")
+		if sfx != null:
+			sfx.play("squelch", 0.8, -6.0)
+	if st >= 0 and not held.is_empty():
+		m.float_text((members[st]["pos"] as Vector2) + Vector2(0.0, -34.0), String(held[_said_n % held.size()]),
+			Color(0.92, 0.94, 1.0), kind)
+		_said_n += 1
 
 
 # How fast the line goes, as a share of its speed: it waits for the ones held
@@ -258,6 +320,10 @@ func newly_slipped() -> int:
 	var i := _slip_said
 	_slip_said = -1
 	return i
+
+
+func clambering(i: int) -> bool:
+	return float(members[i].get("clamber_t", 0.0)) > 0.0
 
 
 func slipping(i: int) -> bool:

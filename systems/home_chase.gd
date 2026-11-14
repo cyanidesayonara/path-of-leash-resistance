@@ -96,18 +96,20 @@ const BESOS_BANDS := [
 	{"id": "midpoint", "kind": "respite", "jam_y": LevelBuild.BESOS_JAM_Y, "checkpoint": true},
 ]
 
+# El Veterinari: the staff stop for a hissing cat in its carrier, then for a
+# patient on the scale (systems/vet.gd CHASE_JAMS)
 const VET_BANDS := [
-	{"id": "doors", "kind": "respite", "jam_y": -3300.0},
-	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
+	{"id": "carrier", "kind": "respite", "jam_y": -3600.0, "checkpoint": true},
+	{"id": "midpoint", "kind": "respite", "jam_y": -1650.0, "checkpoint": true},
 ]
 
 const BOAR_BANDS := [
-	{"id": "picnic", "kind": "respite", "jam_y": -3400.0},
+	{"id": "picnic", "kind": "respite", "jam_y": -3400.0, "checkpoint": true},
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
 ]
 
 const GRACIA_BANDS := [
-	{"id": "castell", "kind": "respite", "jam_y": -3300.0},
+	{"id": "castell", "kind": "respite", "jam_y": -3300.0, "checkpoint": true},
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
 ]
 
@@ -121,7 +123,7 @@ const CREMADA_BANDS := [
 # L'Aeroport: the security squad goes through the duty-free perfume pyramid,
 # then tangles in the gate queue's belts
 const AEROPORT_BANDS := [
-	{"id": "perfume", "kind": "respite", "jam_y": -3400.0},
+	{"id": "perfume", "kind": "respite", "jam_y": -3400.0, "checkpoint": true},
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
 ]
 

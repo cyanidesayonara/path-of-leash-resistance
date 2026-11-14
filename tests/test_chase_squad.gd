@@ -71,7 +71,10 @@ func _run() -> void:
 		t.advance(DT, 300.0, 0.0)
 		t.global_position = Vector2(m.walk_cx, t.front_y)
 		min_pace = minf(min_pace, t.squad.pace())
-		for p: Vector2 in t.squad.points():
+		for ci in range(t.squad.members.size()):
+			if t.squad.clambering(ci):
+				continue
+			var p: Vector2 = t.squad.members[ci]["pos"]
 			var hit := _inside(m, p, 2.0)
 			if hit != "" and worst == "":
 				worst = "%s at %s" % [hit, p]

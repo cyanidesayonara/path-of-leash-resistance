@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+
+## 2026-11-14 - The chases on foot: staff, boars and devils
+
+- El Veterinari's staff, Els Senglars' boars and Festa de Gràcia's devils (the dragon in the middle of their line) are squads on foot like L'Aeroport's security (`systems/chase_squad.gd`): each goes round anything solid, kicks litter aside, and the line waits for whoever is held up. The catch is theirs: a body and what it holds out, and the line while it holds together. Held up, the staff and devils call out; the boars snort. The staff and devils skid in what she left lying; boars, who love muck, run straight through it.
+- Every squad chase has two rest-and-save points. El Veterinari had none that worked (its bands named jams that were never placed): the staff now stop for a hissing cat in its carrier (-3600) and a patient on the scale (-1650). The first jam on Els Senglars, Festa de Gràcia and L'Aeroport is now a save too.
+- The squad's steering: a member goes round the side it fits through within the walk's edges, the sidestep wins over heading for its place, a held-up member squeezes in beside its neighbours, and one held up for over 2.5 s clambers over (none do on these walks now).
+- `tests/test_chase_squad_walks.gd` runs every squad the length of its walk.
 ## 2026-11-14 - L'Aeroport art pass, the security squad and La Cabina
 
 - The terminal is drawn as one (`systems/aeroport_art.gd`, on the cached edge, ground and overhead canvases). West: the apron through a floor-to-ceiling glass wall, mullions and their reflections, the head-of-stand road with tugs and dollies going by, jets parked nose in at B21, B25 and B29 with their boarding bridges, stand paint and ground crew, the runway beyond. East: glazed holdrooms B20 to B30 with carpet, seat beams, passengers and boarding doors, duty free, a cafe, the security hall at the start and the jets at the far windows. The floor: terrazzo slabs, sun through the glass, roof-beam shadows and rooflights, carpet at the gates, a tactile strip, floor signs. Hung signs, departure boards and the security arch overhead. Every solid is where it was.
