@@ -722,6 +722,7 @@ var frisbee_done := false
 var frisbee_air := 0
 var tug: RopeTug
 var tug_dog: Node2D
+var tug_phase_was := -1         # RopeTug.P last frame, for its sounds
 var tug_prev := Vector2.ZERO
 var tugs_won := 0
 var rope_loose := Vector2(INF, INF)

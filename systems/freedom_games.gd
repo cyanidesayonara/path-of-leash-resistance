@@ -188,6 +188,7 @@ static func _tick_tug(m: Node2D, delta: float) -> void:
 				and mouth.distance_to(fd.rope_end()) < GRAB_R:
 			m.tug = RopeTug.new(m.dog.global_position, fd.global_position)
 			m.tug_prev = m.dog.global_position
+			m.tug_phase_was = m.tug.phase
 			_face_the_toy(m, fd)
 			fd.state = fd.S.TUG
 			m.dog_carrying = true
@@ -205,6 +206,16 @@ static func _tick_tug(m: Node2D, delta: float) -> void:
 	fd.global_position = (out[1] as Vector2).clamp(r.position, r.end)
 	m.tug_prev = m.dog.global_position
 	_face_the_toy(m, fd)
+	var tug: RopeTug = m.tug
+	if tug.phase != m.tug_phase_was:
+		match tug.phase:
+			RopeTug.P.WIND:
+				Sfx.play("snort", 0.7, -10.0)
+			RopeTug.P.HEAVE:
+				Sfx.play("grunt", 0.9, -8.0)
+		m.tug_phase_was = tug.phase
+	if tug.yank:
+		Sfx.play("grunt", 1.5, -6.0)
 	if String(out[2]) != "":
 		_end_tug(m, String(out[2]))
 
@@ -290,11 +301,11 @@ static func on_frisbee_returned(m: Node2D, left: int) -> void:
 # What the banner says while a game is on, or "" for none.
 static func banner(m: Node2D) -> String:
 	if m.tug != null:
-		var bal: float = m.tug.balance()
-		var meter := ""
-		for i in range(10):
-			meter += "|" if float(i) / 9.0 <= (bal + 1.0) * 0.5 else "."
-		return Prompts.fill("TUG! PULL AWAY, {plant} DIG IN  [%s]" % meter)
+		# the meter over the two of them says who is winning; the banner says
+		# what to do about the other dog's rhythm right now
+		if m.tug.phase == RopeTug.P.REST:
+			return "IT'S TIRED! PULL AWAY NOW"
+		return Prompts.fill("HOLD ON! {plant} DIG IN")
 	if m.agility != null and m.agility.running:
 		return "AGILITY  %.1fS  %s" % [m.agility.t, _next_name(m.agility)]
 	if is_instance_valid(m.frisbee):
@@ -338,20 +349,72 @@ static func hints(m: Node2D) -> Array[String]:
 
 # --- drawing ------------------------------------------------------------------
 
-const ROPE_A := Color(0.86, 0.3, 0.24)
-const ROPE_B := Color(0.95, 0.9, 0.8)
+# a cotton rope toy, as sold in any pet shop: natural cotton twisted with
+# one dyed strand, a little grubby from use
+const ROPE_A := Color(0.33, 0.47, 0.60)   # the dyed strand, washed-out denim
+const ROPE_B := Color(0.89, 0.85, 0.75)   # natural cotton
+const ROPE_GROOVE := Color(0.55, 0.50, 0.42, 0.55)
 
 
-# the rope toy, from `a` to `b`: a twisted two-colour cord, knotted at the ends
-static func draw_rope(c: Variant, a: Vector2, b: Vector2) -> void:
-	var ink := Color(0.12, 0.1, 0.09)
-	c.draw_line(a, b, ink, 5.0)
-	var n := maxi(2, int(a.distance_to(b) / 5.0))
-	for i in range(n):
-		var p0 := a.lerp(b, float(i) / float(n))
-		var p1 := a.lerp(b, float(i + 1) / float(n))
-		c.draw_line(p0, p1, ROPE_A if i % 2 == 0 else ROPE_B, 3.0)
-	c.draw_circle(a, 3.4, ink)
-	c.draw_circle(a, 2.4, ROPE_A)
-	c.draw_circle(b, 4.2, ink)
-	c.draw_circle(b, 3.0, ROPE_A)
+# the rope toy, from `a` to `b`: a stiff braided cord, two strands twisted
+# round each other, a fat knot at each end. `bend` bows it sideways at the
+# middle (RopeTug.bend), as a stiff rope bows: one smooth arc, never a kink.
+const ROPE_SEGS := 8
+const ROPE_R := 3.4           # half its thickness
+const TWIST := 5.5            # px along the rope per strand crossing
+
+
+static func draw_rope(c: ShapeBatch, a: Vector2, b: Vector2, bend := 0.0) -> void:
+	var d := b - a
+	var length := d.length()
+	if length < 1.0:
+		return
+	var along := d / length
+	var nrm := along.orthogonal()
+	var ink := Color(0.16, 0.13, 0.11)
+	var pts: Array[Vector2] = [a]
+	for i in range(1, ROPE_SEGS + 1):
+		var u := float(i) / float(ROPE_SEGS)
+		pts.append(a.lerp(b, u) + nrm * bend * 4.0 * u * (1.0 - u))
+	for i in range(ROPE_SEGS):
+		c.capsule(pts[i], pts[i + 1], ROPE_R + 1.1, ink)
+	for i in range(ROPE_SEGS):
+		c.capsule(pts[i], pts[i + 1], ROPE_R, ROPE_B)
+	# the twist: every other lay is the dyed strand, a fine groove between
+	var walked := 0.0
+	var next := TWIST * 0.5
+	var lay := 0
+	for i in range(ROPE_SEGS):
+		var p0: Vector2 = pts[i]
+		var p1: Vector2 = pts[i + 1]
+		var seg := p0.distance_to(p1)
+		if seg < 0.01:
+			continue
+		var tdir := (p1 - p0) / seg
+		var sn := tdir.orthogonal()
+		while next < walked + seg:
+			var at := p0 + tdir * (next - walked)
+			var from := at - sn * ROPE_R * 0.9 - tdir * 1.8
+			var to := at + sn * ROPE_R * 0.9 + tdir * 1.8
+			if lay % 2 == 0:
+				c.line(from, to, ROPE_A, 2.6)
+			c.line(from + tdir * 1.6, to + tdir * 1.6, ROPE_GROOVE, 0.8)
+			next += TWIST * 0.5
+			lay += 1
+		walked += seg
+	# the knots: a chunky wrap, the dyed strand round it, and the frayed
+	# cotton tail sticking out past it
+	for e in range(2):
+		var end: Vector2 = a if e == 0 else b
+		var out := -along if e == 0 else along
+		for f in range(4):
+			var spread := (float(f) - 1.5) * 0.42
+			var tip := end + out.rotated(spread * 0.7) * (ROPE_R + 4.0 + float(f % 2) * 1.2)
+			c.line(end, tip, Color(ink.r, ink.g, ink.b, 0.6), 2.0)
+			c.line(end, tip - out * 0.5, ROPE_B.darkened(0.05), 1.3)
+		c.circle(end, ROPE_R + 2.4, ink)
+		c.circle(end, ROPE_R + 1.3, ROPE_B)
+		for k2: float in [-1.0, 1.0]:
+			var mid := end + along * k2 * 1.7
+			c.line(mid - nrm * (ROPE_R + 0.9), mid + nrm * (ROPE_R + 0.9), ROPE_A, 1.5)
+		c.circle(end - nrm * 1.3 - along * 1.0, 1.2, Color(1.0, 0.98, 0.92, 0.7))
