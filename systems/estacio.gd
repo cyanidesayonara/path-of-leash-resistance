@@ -17,9 +17,10 @@ const CHIPS: Array[Color] = [Color(0.42, 0.40, 0.38, 0.55), Color(0.62, 0.40, 0.
 const LUGGAGE_COLS: Array[Color] = [Color(0.20, 0.45, 0.82), Color(0.82, 0.22, 0.24),
 	Color(0.92, 0.70, 0.16), Color(0.18, 0.65, 0.45)]
 # The departures board's rows, amber dot-matrix on black: time, where to and
-# the platform, the way Rodalies boards read. One train is always cancelled.
+# the platform, the way Rodalies boards read. One train is always cancelled,
+# and the airport line runs direct to L'Aeroport T1.
 const DEPARTURES := [["10:42", "SITGES", "4"], ["10:47", "MATARÓ", "CANCEL·LAT"],
-	["10:55", "GIRONA", "2"], ["11:03", "VIC", "5"]]
+	["10:55", "GIRONA", "2"], ["11:03", "VIC", "5"], ["11:15", "AEROPORT T1", "1"]]
 
 
 # L'ESTACIO: the concourse floor's big tiles, the departures board, the
@@ -301,7 +302,7 @@ static func departures_board(m: Node2D, b: ShapeBatch, bd: Vector2) -> void:
 	b.rect(Rect2(bd.x - 154.0, bd.y - 38.0, 308.0, 3.0), Color(0.66, 0.68, 0.72))
 	b.rect(Rect2(bd.x - 150.0, bd.y - 34.0, 300.0, 68.0), Color(0.07, 0.07, 0.09))
 	b.rect(Rect2(bd.x - 150.0, bd.y - 34.0, 300.0, 13.0), Color(0.16, 0.30, 0.56))
-	for row in range(4):
+	for row in range(5):
 		b.line(Vector2(bd.x - 146.0, bd.y - 7.0 + float(row) * 11.0), Vector2(bd.x + 146.0, bd.y - 7.0 + float(row) * 11.0),
 			Color(1, 1, 1, 0.04), 1.0)
 	var amber := Color(1.0, 0.72, 0.18)

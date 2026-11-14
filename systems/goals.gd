@@ -82,6 +82,7 @@ const LEVEL_GOAL_IDS := {
 	# La Ciutadella: El Mamut, the first statue boss. Settling him is how the
 	# fight ends, so it is not a goal; the ways of wearing him down are.
 	"cremada": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "traca", "dimoni_dodge", "dimoni_clean", "combo", "prize", "spell", "jamon", "clock"],
+	"aeroport": ["mark", "sniff", "phone", "paws", "bag", "walkway", "gate_rush", "luggage_dodge", "security_clean", "carousel_bark", "combo", "prize", "spell", "jamon", "clock"],
 	"ciutadella": ["mark", "sniff", "phone", "paws", "bag", "snack", "mamut_dodge", "mamut_lake", "mamut_trip", "parakeets", "combo", "prize", "spell", "jamon", "clock"],
 	# Rambla del Raval: the finale, El Gat. Tying him up is how the
 	# walk ends, so it is not a goal; the ways of wearing him down are.
@@ -181,6 +182,10 @@ static func defs(m: Node2D) -> Dictionary:
 		"traca": {"text": "Pull your human clear of the traca", "target": 1, "fn": func() -> int: return 1 if m.cremada_traca_dodged else 0},
 		"dimoni_dodge": {"text": "Dodge %d of the Dimoni's rockets", "target": 4, "fn": func() -> int: return m.cremada_dodges},
 		"dimoni_clean": {"text": "Get home without a rocket hitting you", "target": 1, "fn": func() -> int: return 1 if (bool(m.finished) and m.cremada_hits == 0) else 0},
+		"gate_rush": {"text": "Steer clear of the airport gate rush", "target": 1, "fn": func() -> int: return 1 if m.aeroport_rush_dodged else 0},
+		"luggage_dodge": {"text": "Dodge %d tumbling suitcases", "target": 3, "fn": func() -> int: return m.aeroport_luggage_dodges},
+		"security_clean": {"text": "Get home without a suitcase clipping you", "target": 1, "fn": func() -> int: return 1 if (bool(m.finished) and m.aeroport_cart_hits == 0) else 0},
+		"carousel_bark": {"text": "Bark at the rotating baggage carousel", "target": 1, "fn": func() -> int: return 1 if m.aeroport_carousel_barked else 0},
 		"watering": {"text": "Shake off under a watering can", "target": 1, "fn": func() -> int: return 1 if m.poble_shakes >= 1 else 0},
 		"spell": {"text": "Spell LEASH", "target": 5, "fn": func() -> int: return int(m.get("word_letters_collected"))},
 		"jamon": {"text": "Find the hidden pernil", "target": 1, "fn": func() -> int: return 1 if bool(m.get("jamon_found")) else 0},

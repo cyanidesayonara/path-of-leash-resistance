@@ -2,6 +2,51 @@
 
 Append-only session history, newest first.
 
+## 2026-11-14 - L'Aeroport art pass, the security squad and La Cabina
+
+- The terminal is drawn as one (`systems/aeroport_art.gd`, on the cached edge, ground and overhead canvases). West: the apron through a floor-to-ceiling glass wall, mullions and their reflections, the head-of-stand road with tugs and dollies going by, jets parked nose in at B21, B25 and B29 with their boarding bridges, stand paint and ground crew, the runway beyond. East: glazed holdrooms B20 to B30 with carpet, seat beams, passengers and boarding doors, duty free, a cafe, the security hall at the start and the jets at the far windows. The floor: terrazzo slabs, sun through the glass, roof-beam shadows and rooflights, carpet at the gates, a tactile strip, floor signs. Hung signs, departure boards and the security arch overhead. Every solid is where it was.
+- The walkway's belt, combs and handrails move with it; the carousel carries cases, a guitar and a pet crate; columns, seats, bins and planted figs are the terminal's own.
+- The gate rush: an amber crossing telegraphs it, then four travellers run it at full tilt, each hauling a bouncing roller case.
+- The chase is the airport security squad (`entities/aeroport_threat.gd`), five officers across the hall like El Veterinari's staff, a queue belt taut between the ends, holding out a travel crate, a net, a detector wand, a loudhailer and a whistle, drawn to their real catch zone. They boot cases up the floor at you, with a filling ring where each will stop. The two respites are drawn: the queue at B22's tape (-1900) and the perfume pyramid (-3400), and both are now real jam points.
+- The off-leash space is La Cabina, the cabin of the jet at the end of the bridge (`systems/aeroport_cabin.gd`): three seat blocks and two aisles, bins, a galley and lavatories, passengers, dropped masks, a spilled drinks run and a trail of paper. Holdalls to dig, drinks trolleys to go round, roller cases and blanket heaps to sniff and mark, the ice bucket to drink from.
+- The film, "Last call", is rebuilt on the FilmKit beats: the pier side on with a jet at its stand, the bing bong, the squad bursting through the queue belts, cases skidding, and the crate's mouth on the card.
+- New walk hooks in main: `draw_park_prop`, `draw_gate` and `draw_bench`.
+- The squad is on foot (`systems/chase_squad.gd`, shared by any chase that is a line of walkers): each officer runs for their place in the line, goes round anything solid (the walkway's rails, desks, benches, posts), kicks litter aside, and the line slows to wait for whoever is held up, who strains and shouts. They catch with their bodies and what they hold out, and with the belt while the line is together; split round a pillar, the gap is open. `tests/test_chase_squad.gd`.
+- The way home, the walkway is stopped (an emergency: red lamps in its newels, ATURADA at each end). Before, your human walked home against the belt and the squad caught them every time.
+- With a chase on your tail or a boss fight on (`main.under_pressure()`), she holds it: her urge waits, and a squat she chooses takes 1 s, not 2.5. Your human leaves what she does where it lies ("No time!"), giving up the walk to it or to a bin, and an officer who runs through it skids ("Eww!"), held up for a moment while the line waits. Once a boss fight is over, your human goes back for it.
+- L'Aeroport now draws its own walkway in main's `draw_conveyor` slot: main had been drawing L'Estació's over it.
+
+## 2026-11-13 - L'Aeroport review fixes
+
+- The travelator has real sides: a glass balustrade with its rubber handrail along each edge, solid for anyone walking and open only at the two ends, so you step on and off where a real one lets you (`Aeroport.balustrades()`).
+- The perfume island stood on the travelator, under the belt's drawing: an invisible wall that held your human mid-ride. It is in the west lane now.
+- The gate rush bumped your human and floated a line every frame they overlapped, and fired about 270 px ahead of them, so it almost never touched anyone. It now crosses the open floor just past the walkway's far end (Gate B30), fires while your human is 200 px short of the line, bumps once a rush, and pays only if they were kept clear.
+- The gate rush, carousel bark and suitcase dodges showed points they never paid: `combo.add` pays a non-trick only inside a chain. Each now pays through `award_points`, in the scores' lower-case form.
+- `tests/test_aeroport.gd` covers the single bump, the payouts and the balustrades (47 checks).
+
+## 2026-11-11 - Walk 37: L'Aeroport concourse, Gate Rush live event, and Security Cart Buggy chase
+
+- Added Walk 37: **L'Aeroport** (Terminal 1 concourse at Barcelona-El Prat Airport):
+  - Soaring glass curtain wall terminal overlooking the western runway and apron tarmac with parked jetliners, polished high-gloss floor tiles with grid divisions, boarding gate check-in desks B20-B30 with LED departure monitors, structural steel columns (wrap poles), duty-free islands, and baggage carousel loop.
+  - High-speed central moving walkway (travelator, $3100$ px long): $+120$ px/s forward boost outbound, resists inbound, featuring yellow warning comb plates, moving directional chevrons, and grindable steel handrails (`systems/rails.gd`).
+  - Signature Live Event: **The Gate Rush** (`_tick_gate_rush` in `systems/aeroport.gd`):
+    - Airport chime (*ding-dong-ding*, `_chime()` in `autoload/sfx.gd`) followed by PA announcement: *"LAST CALL FOR GATE B24!"*.
+    - Hurried business travelers with rolling suitcases sprint across the concourse from Gate B20 toward Gate B24.
+    - Staying clear of the crossing path or planting firmly awards the `"GATE RUSH DODGED! +3"` trick.
+  - Interactive mechanics & goals:
+    - 15 level goals in `systems/goals.gd` (`walkway`, `gate_rush`, `luggage_dodge`, `security_clean`, `carousel_bark`, etc.).
+    - Snatch the giant duty-free chocolate box prize from the display island.
+    - Barking near the baggage carousel loop triggers the carousel bark goal.
+  - The Chase: **Security Cart Buggy** (`entities/aeroport_threat.gd`):
+    - Electric airport security cart chasing the pair down the concourse with flashing amber beacon, uniform driver, and electric motor hum.
+    - Tumbling rolling suitcases shed from the cart and skid across the tiles toward the player with real dodge ($<75$ px) and hit ($<24$ px) detection.
+    - Two authored chase respites (`home_chase.AEROPORT_BANDS`): wedges into the duty-free perfume display pyramid ($-3400$) and tangles in the Gate B24 queue stanchions ($-1900$, checkpoint).
+  - Story film: *Terminal Run* (`intro/film_aeroport.gd`) with boarding pass distraction, window apron view, two-wheeled electric cart turn, and slam card.
+  - Audio: Procedural airport PA broadcast chime (`_chime()`, D5-A4-E5) and upbeat airport vibes musical arrangement (126 BPM, vibes, glockenspiel, bossa rim drums).
+  - Level pairing upgrade: **L'Estació** (`systems/estacio.gd`):
+    - Added the direct *Aeroport T1* Rodalies departure board row on the main concourse board connecting the city station to the airport terminal, with updated divider lines.
+  - Comprehensive test suite: `tests/test_aeroport.gd` (35 checks covering level registration, goals, chase profile, conveyor zone, buggy threat advance and luggage dodges, gate rush state machine, and carousel bark). All regression suites pass (`test_walk_hooks.gd` 922 checks, `test_chase_film.gd` 247 checks, `test_npc_clear_of_solids.gd` 372 checks, `test_wrap.gd`).
+
 
 ## 2026-11-14 - The sweeper drives like a cartoon machine
 

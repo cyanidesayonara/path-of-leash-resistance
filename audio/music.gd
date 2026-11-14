@@ -185,6 +185,10 @@ const STYLES := {
 	# minor and hurried for the run home ahead of the Dimoni
 	"cremada": {"bpm": 138, "key": 2, "minor": true, "lead": "whistle", "lead2": ["accordion", 0], "comp": "push",
 		"bass": "eighths", "drums": "drive", "swing": 0.02, "verb": 0.22},
+	# L'Aeroport: a brisk modern terminal concourse pulse, vibes and glockenspiel
+	# over an optimistic walking bass and light bossa rim drums
+	"aeroport": {"bpm": 126, "key": 4, "lead": "vibes", "lead2": ["glock", 12], "comp": "skank",
+		"bass": "walk", "drums": "rim", "swing": 0.04, "verb": 0.30},
 	# Rambla del Raval: the finale's fight, fast and minor, its own chords and melody
 	"raval": {"bpm": 148, "key": 0, "minor": true, "lead": "guitar", "lead2": ["accordion", 0], "lead2_all": true,
 		"comp": "push", "bass": "eighths", "drums": "drive", "verb": 0.20, "chords": RAVAL_BOSS_CHORDS, "mel": RAVAL_BOSS_MELODY},
