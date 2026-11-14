@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-11-14 - Release notes for 1.73
+
+- `store/listing.md`: What's new for 1.73 (L'Aeroport and Montserrat, thirty-eight walks; Els Lleons and El Drac; the chases rebuilt; the tug of war; night shadows and softer lit fronts; the home walk-in; objects that fit the place), the walk count and list in the description, and the certification notes. The description no longer claims an agility course on every walk (only El Barri has one).
+- `docs/itch-page.md`: What's new in 1.73. `README.md`: thirty-eight walks, L'Aeroport and Montserrat in the table.
+
 ## 2026-11-14 - Tug of war: a real rope toy, a rhythm to read, a clear winner
 
 - The rope between the two dogs was never drawn outside El Barri: the games layer returned when a walk had no agility course, and the free dog hides its own end during a tug, so the rope vanished into their mouths. It is drawn on every walk now (`world/games_layer.gd`).
