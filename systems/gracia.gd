@@ -9,6 +9,7 @@ extends RefCounted
 # (home_chase.GRACIA_BANDS).
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+const CastellCycle := preload("res://systems/castell_cycle.gd")
 
 const HALF := 220.0
 const WALL_L := 420.0
@@ -157,7 +158,7 @@ static func _in_view(r: Rect2, vt: float, vb: float) -> bool:
 
 # the castellers' practice stage: the wooden mat, the banner, coaches on the flanks,
 # and the living castell with organic micro-sway, climbing, and l'aleta crowning
-static func _draw_stage(_m: Node2D, b: ShapeBatch, sh: Color) -> void:
+static func _draw_stage(m: Node2D, b: ShapeBatch, sh: Color) -> void:
 	var r := CASTELL_STAGE
 	b.rect(Rect2(r.position + Vector2(6, 8), r.size), sh)
 	b.rect(r, CASTELL_MAT.darkened(0.3))
@@ -214,7 +215,7 @@ static func _draw_stage(_m: Node2D, b: ShapeBatch, sh: Color) -> void:
 	b.circle(aco_p + Vector2(0.0, -1.5), 3.0, Color(0.20, 0.15, 0.12))
 
 	# 4. Anxaneta crowning cycle (8s loop: 0..4s climb, 4..6.5s l'aleta, 6.5..8s safe descent)
-	var phase_t := fmod(t, 8.0)
+	var phase_t := CastellCycle.phase(m)
 	var anx_pos := c_top
 	var doing_aleta := false
 
@@ -393,9 +394,7 @@ static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
 	var bp: Vector2 = pos if pos != Vector2.ZERO else m.dog.global_position
 	var c := CASTELL_STAGE.get_center()
 	if bp.distance_to(c) <= 160.0:
-		var t: float = AnimClock.msec() * 0.001
-		var phase_t := fmod(t, 8.0)
-		if phase_t >= 3.8 and phase_t <= 6.5:
+		if CastellCycle.cheer_window(m):
 			m.gracia_aleta_cheered = true
 			m.combo.add("ALETA", 2)
 			m.award_points(2, "aleta bark! +2")

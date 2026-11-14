@@ -205,7 +205,6 @@ static func _tick_churros(m: Node2D, delta: float) -> void:
 		m.combo.add("SNACK", 2)
 		m.award_points(2, "churro snatch! +2")
 		Sfx.play("snack")
-		m.float_text(ChurroCart.CHURRO_DROP_POS + Vector2(0.0, -20.0), "churro snatch! +2", ChurroCart.CHURRO_GOLD)
 		m.float_text(ChurroCart.CART_POS + Vector2(0.0, -32.0), "Bon profit, little one!", Color(0.96, 0.94, 0.88), m.POP_SAY)
 	if bool(r["dodge"]):
 		m.saves_done += 1

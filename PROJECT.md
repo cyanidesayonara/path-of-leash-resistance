@@ -211,7 +211,7 @@ Every feature must serve at least one. If it serves none, cut it.
   atmospheric grade shaders and softer night lighting.
 - **v1.72 - shipped 2026-11-11.** La Ciutadella & El Mamut (first statue boss, wake
   and victory films), La Cremada & El Dimoni float chase, El Carretó de Xurros
-  live event, Castellers de Gràcia & Castellers de Barcelona, Dumb & Dumber
+  live event, Castellers de Gràcia & Castellers de Barcelona, the
   Fur-goneta facelift across four walks, and city-wide illuminated night fronts.
 - **v1.73 - in progress.** Comprehensive level sweep, blocker and navigation fixes,
   Walk 37 (L'Aeroport) and Walk 38 (Montserrat), plus boss groundwork (El Drac, Els Lleons).
