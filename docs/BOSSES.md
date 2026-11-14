@@ -10,7 +10,7 @@ its own way of fighting, and its own wake film.
 |---|---|---|---|
 | 11 | El Mamut, the stone mammoth (1907) | La Ciutadella, by the boating lake | 1.72 |
 | 21 | El Drac, the mosaic dragon of the Park Güell steps | El Mosaic | 1.73 |
-| 31 | Els Lleons, the bronze lions at the foot of the Columbus column (1888) | El Port | later |
+| 31 | Els Lleons, the bronze lions at the foot of the Columbus column (1888) | El Port | 1.73 |
 | 41 | El Gat, the Raval's fat bronze cat | Rambla del Raval | shipped |
 
 Only the stone, bronze and tile of the real statues are drawn, as cartoons of our own:

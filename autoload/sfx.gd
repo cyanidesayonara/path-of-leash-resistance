@@ -360,9 +360,14 @@ func _build_library() -> void:
 	lib["gat_clang"] = _gat_clang()
 	lib["gat_purr"] = _gat_purr()
 	lib["mamut_trumpet"] = _mamut_trumpet()
+	lib["van_horn"] = _van_horn()
+	lib["chime"] = _chime()
+	lib["bleat"] = _bleat()
+	lib["crossing_bell"] = _crossing_bell()
+	lib["lion_roar"] = _lion_roar()
 	lib["drac_click"] = _drac_click()
 	lib["drac_jet"] = _drac_jet()
-	lib["van_horn"] = _van_horn()
+	lib["head_bump"] = _head_bump()
 
 
 func _pack(samples: PackedFloat32Array) -> AudioStreamWAV:
@@ -766,6 +771,86 @@ func _van_horn() -> AudioStreamWAV:
 	return _pack(out)
 
 
+func _chime() -> AudioStreamWAV:
+	# an airport public announcement chime: three gentle bell notes
+	var freqs := [587.33, 440.0, 659.25]
+	var per := int(0.18 * RATE)
+	var out := PackedFloat32Array()
+	out.resize(per * freqs.size() + int(0.35 * RATE))
+	for k in range(freqs.size()):
+		var f: float = freqs[k]
+		var offset := k * per
+		for i in range(out.size() - offset):
+			var t := float(i) / RATE
+			var tone := sin(TAU * f * t) * 0.75 + sin(TAU * f * 2.0 * t) * 0.2 + sin(TAU * f * 3.0 * t) * 0.05
+			out[offset + i] += tone * exp(-t * 7.5) * 0.32
+	return _pack(out)
+
+
+func _bleat() -> AudioStreamWAV:
+	# a wild goat bleat / snort: raspy nasal fundamental with vibrato
+	var n := int(0.35 * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		var vib := sin(TAU * 14.0 * t) * 18.0
+		var f := 290.0 + vib
+		var tone := sin(TAU * f * t) * 0.45 + sin(TAU * f * 2.0 * t) * 0.30 + sin(TAU * f * 3.0 * t) * 0.15 + sin(TAU * f * 4.0 * t) * 0.10
+		var env := sin(PI * clampf(t / 0.35, 0.0, 1.0))
+		out[i] = tone * env * 0.55
+	return _pack(out)
+
+
+func _crossing_bell() -> AudioStreamWAV:
+	# funicular railway crossing bell: two resonant clangs (660 Hz & 880 Hz)
+	var per := int(0.18 * RATE)
+	var out := PackedFloat32Array()
+	out.resize(per * 2 + int(0.3 * RATE))
+	var freqs := [660.0, 880.0]
+	for k in range(2):
+		var f: float = freqs[k]
+		for i in range(out.size() - k * per):
+			var t := float(i) / RATE
+			var v := (sin(TAU * f * t) + 0.35 * sin(TAU * f * 2.4 * t) + 0.15 * sin(TAU * f * 3.8 * t)) * exp(-t * 10.0) * 0.35
+			out[k * per + i] += v
+	return _pack(out)
+
+
+func _lion_roar() -> AudioStreamWAV:
+	# Els Lleons: two bronze lions roaring, a resonant bronze feline blast
+	var dur := 0.88
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var prev := 0.0
+	for i in range(n):
+		var t := float(i) / RATE
+		var prog := t / dur
+		var env := sin(PI * minf(1.0, prog * 1.8)) * (1.0 - prog * 0.35)
+		var f := lerpf(120.0, 70.0, prog)
+		var tone := sin(TAU * f * t) + 0.35 * sin(TAU * f * 2.01 * t) + 0.2 * sin(TAU * f * 3.03 * t)
+		var nz := rng.randf_range(-0.5, 0.5) * (0.7 + 0.3 * sin(TAU * 35.0 * t))
+		prev = lerpf(prev, nz, 0.25)
+		out[i] = (tone * 0.58 + prev * 0.42) * env * 0.75
+	return _pack(out)
+
+
+func _head_bump() -> AudioStreamWAV:
+	# Els Lleons head collision: a massive bronze impact with metallic chime
+	var dur := 1.10
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		var env := exp(-t * 4.5)
+		var clash := rng.randf_range(-0.8, 0.8) * exp(-t * 28.0)
+		var gong := (sin(TAU * 180.0 * t) * 0.5 + sin(TAU * 342.0 * t) * 0.3 + sin(TAU * 516.0 * t) * 0.2)
+		out[i] = (clash * 0.6 + gong * 0.7) * env * 0.85
+	return _pack(out)
+
+
 func _drac_click() -> AudioStreamWAV:
 	# El Drac: sharp ceramic trencadís tile click / chink
 	var dur := 0.14
@@ -797,4 +882,3 @@ func _drac_jet() -> AudioStreamWAV:
 		var env := minf(1.0, prog * 15.0) * (1.0 - smoothstep(0.6, 1.0, prog))
 		out[i] = (prev * 0.8 + tone) * env * 0.6
 	return _pack(out)
-

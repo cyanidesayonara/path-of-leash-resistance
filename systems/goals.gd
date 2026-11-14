@@ -50,8 +50,8 @@ const LEVEL_GOAL_IDS := {
 	# Dia de Partit. No Tofu: the way home belongs to the final whistle.
 	# No hi and no combo: fifteen goals, and the fans' dogs are a greeting.
 	"partit": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "march", "scarf", "kickabout", "fulltime", "prize", "spell", "jamon", "clock"],
-	# El Port: harbor wharf, seagulls, fish scraps, iron bollards
-	"port": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "snack", "gulls", "bollard", "combo", "prize", "spell", "jamon", "clock"],
+	# El Port: harbor wharf, seagulls, fish scraps, iron bollards, and Els Lleons (statue boss)
+	"port": ["mark", "sniff", "phone", "paws", "bag", "snack", "gulls", "lleons_pincer", "lleons_bump", "bollard", "combo", "prize", "spell", "jamon", "clock"],
 	# Plaça Reial: palm trees, Gaudi lampposts, Three Graces fountain, guitar busker
 	"reial": ["mark", "sniff", "phone", "colom", "bag", "fetch", "tofu", "snack", "gaudi", "fountain", "combo", "prize", "spell", "jamon", "clock"],
 	# El Veterinari: clinic escape chase. No Tofu.
@@ -83,6 +83,8 @@ const LEVEL_GOAL_IDS := {
 	# La Ciutadella: El Mamut, the first statue boss. Settling him is how the
 	# fight ends, so it is not a goal; the ways of wearing him down are.
 	"cremada": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "traca", "dimoni_dodge", "dimoni_clean", "combo", "prize", "spell", "jamon", "clock"],
+	"aeroport": ["mark", "sniff", "phone", "paws", "bag", "walkway", "gate_rush", "luggage_dodge", "security_clean", "carousel_bark", "combo", "prize", "spell", "jamon", "clock"],
+	"montserrat": ["mark", "sniff", "phone", "paws", "bag", "fetch", "funicular_dodge", "boulder_dodge", "goat_clean", "mato_bark", "combo", "prize", "spell", "jamon", "clock"],
 	"ciutadella": ["mark", "sniff", "phone", "paws", "bag", "snack", "mamut_dodge", "mamut_lake", "mamut_trip", "parakeets", "combo", "prize", "spell", "jamon", "clock"],
 	# Rambla del Raval: the finale, El Gat. Tying him up is how the
 	# walk ends, so it is not a goal; the ways of wearing him down are.
@@ -137,6 +139,8 @@ static func defs(m: Node2D) -> Dictionary:
 		"scarf": {"text": "Bring the lost scarf back", "target": 1, "fn": func() -> int: return 1 if m.lost_scarf != null and m.lost_scarf.back else 0},
 		"kickabout": {"text": "Score a goal in the kids' street game", "target": 1, "fn": func() -> int: return 1 if m.kickabout != null and m.kickabout.scored else 0},
 		"gulls": {"text": "Startle %d harbor seagulls into flight", "target": 3, "fn": func() -> int: return m.port_gulls_startled},
+		"lleons_pincer": {"text": "Steer clear of the lions' pincer charge", "target": 1, "fn": func() -> int: return 1 if m.lleons_pincer_dodges >= 1 else 0},
+		"lleons_bump": {"text": "Trick the twin lions into colliding", "target": 1, "fn": func() -> int: return 1 if m.lleons_bumped else 0},
 		"bollard": {"text": "Wrap the leash around an iron mooring bollard", "target": 1, "fn": func() -> int: return 1 if m.port_bollard_wrapped else 0},
 		"gaudi": {"text": "Wrap the leash around a Gaudí dragon lamppost", "target": 1, "fn": func() -> int: return 1 if m.reial_gaudi_wrapped else 0},
 		"fountain": {"text": "Drink fresh water from the Three Graces fountain", "target": 1, "fn": func() -> int: return 1 if m.reial_fountain_drank else 0},
@@ -185,6 +189,14 @@ static func defs(m: Node2D) -> Dictionary:
 		"traca": {"text": "Pull your human clear of the traca", "target": 1, "fn": func() -> int: return 1 if m.cremada_traca_dodged else 0},
 		"dimoni_dodge": {"text": "Dodge %d of the Dimoni's rockets", "target": 4, "fn": func() -> int: return m.cremada_dodges},
 		"dimoni_clean": {"text": "Get home without a rocket hitting you", "target": 1, "fn": func() -> int: return 1 if (bool(m.finished) and m.cremada_hits == 0) else 0},
+		"gate_rush": {"text": "Steer clear of the airport gate rush", "target": 1, "fn": func() -> int: return 1 if m.aeroport_rush_dodged else 0},
+		"luggage_dodge": {"text": "Dodge %d tumbling suitcases", "target": 3, "fn": func() -> int: return m.aeroport_luggage_dodges},
+		"security_clean": {"text": "Get home without a suitcase clipping you", "target": 1, "fn": func() -> int: return 1 if (bool(m.finished) and m.aeroport_cart_hits == 0) else 0},
+		"carousel_bark": {"text": "Bark at the rotating baggage carousel", "target": 1, "fn": func() -> int: return 1 if m.aeroport_carousel_barked else 0},
+		"funicular_dodge": {"text": "Wait out or dodge the Sant Joan funicular crossing", "target": 1, "fn": func() -> int: return 1 if m.montserrat_funicular_dodged else 0},
+		"boulder_dodge": {"text": "Dodge %d rolling boulders", "target": 3, "fn": func() -> int: return m.montserrat_boulder_dodges},
+		"goat_clean": {"text": "Get home without getting rammed", "target": 1, "fn": func() -> int: return 1 if (bool(m.finished) and m.montserrat_goat_hits == 0) else 0},
+		"mato_bark": {"text": "Bark at the mel i mató cheese stall", "target": 1, "fn": func() -> int: return 1 if m.montserrat_mato_barked else 0},
 		"watering": {"text": "Shake off under a watering can", "target": 1, "fn": func() -> int: return 1 if m.poble_shakes >= 1 else 0},
 		"spell": {"text": "Spell LEASH", "target": 5, "fn": func() -> int: return int(m.get("word_letters_collected"))},
 		"jamon": {"text": "Find the hidden pernil", "target": 1, "fn": func() -> int: return 1 if bool(m.get("jamon_found")) else 0},

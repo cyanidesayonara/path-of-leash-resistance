@@ -96,7 +96,7 @@ static func build(m: Node2D) -> void:
 			if z.size.y > 0.0:
 				for hx: float in [z.position.x - 1.0, z.end.x + 1.0]:
 					m.rails.append(line(Vector2(hx, z.end.y), Vector2(hx, z.position.y), "HANDRAIL"))
-		"station":
+		"station", "aeroport":
 			# the moving walkway's glass balustrade handrails
 			var z: Rect2 = m.conveyor_zone
 			if z.size.y > 0.0:

@@ -366,6 +366,8 @@ const WALK_MODULES := {
 	"raval": preload("res://systems/boss_gat.gd"),
 	"ciutadella": preload("res://systems/ciutadella.gd"),
 	"cremada": preload("res://systems/cremada.gd"),
+	"aeroport": preload("res://systems/aeroport.gd"),
+	"montserrat": preload("res://systems/montserrat.gd"),
 	"beach": preload("res://systems/passeig.gd"),
 	"rain": preload("res://systems/diluvi.gd"),
 	"market": preload("res://world/mercat.gd"),
@@ -396,6 +398,7 @@ var furgoneta_sniffed := false
 var furgoneta_flash_t := 0.0
 var furgoneta_wiper_t := 0.0
 var furgoneta_honk_cd := 0.0
+var furgoneta_honk_paid := false
 var fresh_coat_t := 0.0
 var furgoneta_dare_offered := false
 var furgoneta_dare_won := false
@@ -627,6 +630,15 @@ var mamut_bowled := false
 var mamut_booped := false
 var mamut_sat := false
 var mamut_settled := false
+# El Port: Els Lleons (systems/boss_lleons.gd) and what the goals count of them
+var lleons: RefCounted = null
+var lleons_pincer_dodges := 0
+var lleons_roars_dodged := 0
+var lleons_bumped := false
+var lleons_tied := false
+var lleons_booped := false
+var lleons_settled := false
+
 # El Mosaic: El Drac (systems/boss_drac.gd) and what the goals count of him
 var drac: RefCounted = null
 var drac_dodges := 0
@@ -644,6 +656,18 @@ var cremada_traca: Dictionary = {"state": "hung", "t": 0.0}
 var cremada_traca_dodged := false
 var cremada_dodges := 0
 var cremada_hits := 0
+# L'Aeroport: the gate rush announcement, luggage dodges, and baggage carousel
+var aeroport_rush: Dictionary = {"state": "waiting", "t": 0.0}
+var aeroport_rush_dodged := false
+var aeroport_luggage_dodges := 0
+var aeroport_cart_hits := 0
+var aeroport_carousel_barked := false
+# Montserrat: the funicular crossing, rolling boulders, and mel i mató stall
+var montserrat_funicular: Dictionary = {"state": "waiting", "t": 0.0}
+var montserrat_funicular_dodged := false
+var montserrat_boulder_dodges := 0
+var montserrat_goat_hits := 0
+var montserrat_mato_barked := false
 # Els Senglars (systems/boars.gd) and Festa de Gràcia (systems/gracia.gd)
 var boar_mud_splashes := 0
 var boar_mud_cd := 0.0
@@ -975,6 +999,8 @@ var urge_timer := 0.0
 # earth) or a tree's pit is a good spot and pays POOP_GOOD_BONES; the pavement
 # pays POOP_PAVE_BONES and costs your human a little patience.
 const POOP_URGE_S := 35.0
+const POOP_SQUAT := 2.5           # s of squat for her business
+const POOP_SQUAT_RUSHED := 1.0    # and with a chase or a boss on (under_pressure)
 const POOP_SNACK_PULL := 300.0
 const POOP_ZOOM_PULL := 60.0
 # never so soon it comes at the start line
@@ -1726,6 +1752,8 @@ func _edge_base_color() -> Color:
 		"neteja": return Color(0.40, 0.32, 0.28)             # warm stone, dawn
 		"gracia": return Color(0.42, 0.34, 0.29)             # the vila's warm render
 		"cremada": return Color(0.40, 0.33, 0.30)            # Badalona's old town at night
+		"aeroport": return Color(0.85, 0.88, 0.91)           # Terminal 1 polished tile
+		"montserrat": return Color(0.72, 0.65, 0.55)         # Montserrat conglomerate rock
 		"besos": return Color(0.58, 0.56, 0.52)              # the concrete flood wall
 		"station": return Color(0.48, 0.48, 0.52)            # tiled interior
 		"site": return Obres.YARD                            # the works compound
@@ -4672,6 +4700,11 @@ func _draw_freedom_beyond(c: Object) -> void:
 # two leaves swung open everywhere else. Same mouth, gate_l to gate_r.
 func _draw_gate() -> void:
 	var b := ShapeBatch.new()
+	if walk_mod != null and walk_mod.has_method("draw_gate"):
+		# a way in that is no gate at all (the door of L'Aeroport's jet)
+		walk_mod.draw_gate(self, b)
+		b.flush(_wc)
+		return
 	var style := "iron"
 	if lvl in ["trail", "guell", "park", "llevant"] and not tutorial_mode:
 		style = "timber"
@@ -5483,6 +5516,10 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 		# these were drawn in full every redraw with no culling at all
 		if p.y < vt - 60.0 or p.y > vb + 60.0:
 			continue
+		# a walk whose space is not a park draws its own furniture (L'Aeroport's
+		# cabin: bags to dig in, trolleys, roller cases)
+		if walk_mod != null and walk_mod.has_method("draw_park_prop") and walk_mod.draw_park_prop(self, c, pp):
+			continue
 		var prog := float(pp.prog)
 		var done: bool = pp.done
 		# everything gets a shadow: it is an object, not a decal. Uprights get
@@ -5758,7 +5795,7 @@ func _draw_ground_detail(vt: float, vb: float) -> void:
 		var dir := Vector2.from_angle(float(d.rot))
 		# the concourse floor is polished terrazzo, indoors: grit and litter
 		# on it, never a cracked or damp street slab
-		if lvl == "station" and (int(d.kind) == 0 or int(d.kind) == 2):
+		if (lvl == "station" or lvl == "aeroport") and (int(d.kind) == 0 or int(d.kind) == 2):
 			continue
 		match int(d.kind):
 			0:
@@ -6228,7 +6265,7 @@ func start_challenge(giver: Node2D, target: int, seconds: float, follow_up := fa
 	if challenge.showing():
 		return
 	# no dare card over a boss fight
-	if (boss_gat != null and boss_gat.in_fight()) or (mamut != null and mamut.in_fight()) or (drac != null and drac.in_fight()):
+	if (boss_gat != null and boss_gat.in_fight()) or (mamut != null and mamut.in_fight()) or (drac != null and drac.in_fight()) or (lleons != null and lleons.in_fight()):
 		return
 	if challenge_offered and not follow_up:
 		return
@@ -9904,6 +9941,10 @@ func _is_boss_leg(p: Vector2) -> bool:
 		for lp: Vector2 in mamut.leg_poles:
 			if lp.distance_to(p) < 1.0:
 				return true
+	if lleons != null:
+		for lp: Vector2 in lleons.leg_poles:
+			if lp.distance_to(p) < 1.0:
+				return true
 	if boss_gat != null:
 		for lp: Vector2 in boss_gat.leg_poles:
 			if lp.distance_to(p) < 1.0:
@@ -10576,7 +10617,10 @@ func _bodily(delta: float) -> void:
 				urge_timer = POOP_URGE_S
 				float_text(dog.global_position, "Uh oh...", Color(1, 0.9, 0.6))
 		1:
-			urge_timer -= delta
+			# she holds it while they run for it (a chase home, a boss fight)
+			var pressed := under_pressure()
+			if not pressed:
+				urge_timer -= delta
 			var squatting: bool = Input.is_action_pressed("poop") \
 				and not dog.is_tumbling() and dog.velocity.length() < 90.0
 			if squatting:
@@ -10584,13 +10628,15 @@ func _bodily(delta: float) -> void:
 					# she checks the spot before she commits to it
 					_poop_sniffed = true
 					float_text(dog.global_position + Vector2(0, -34), "sniff, sniff", Color(1, 0.95, 0.8))
+				# with them on your tail it is a quick one
+				var squat_secs := POOP_SQUAT_RUSHED if pressed else POOP_SQUAT
 				squat_progress += delta
-				dog.squat_ui = squat_progress / 2.5
-				if squat_progress >= 2.5:
+				dog.squat_ui = squat_progress / squat_secs
+				if squat_progress >= squat_secs:
 					_finish_business(true)
 			else:
 				squat_progress = maxf(0.0, squat_progress - delta * 2.0)
-				dog.squat_ui = squat_progress / 2.5
+				dog.squat_ui = squat_progress / (POOP_SQUAT_RUSHED if pressed else POOP_SQUAT)
 				if squat_progress <= 0.0:
 					_poop_sniffed = false
 			# the dog shows a good spot under her paws while nature calls
@@ -10603,13 +10649,19 @@ func _bodily(delta: float) -> void:
 			# the owner's chore chain: walk to it, bag it, find a bin.
 			# Falls and whirls interrupt; they resume when back on
 			# their feet - with the bag, if they already picked it up
-			if bag_pending and human.is_available_for_chore():
+			if bag_pending and under_pressure():
+				# no time: your human leaves it where it lies (or keeps the
+				# bag in hand), and it is there for whoever is chasing
+				if human.give_up_chore():
+					human.notice("No time!", 1.2)
+			elif bag_pending and human.is_available_for_chore():
 				if human.carrying_bag:
 					human.resume_to_bin(nearest_bin(human.global_position))
 				elif business_spot.x < INF:
 					human.fetch_poop(business_spot)
 		3:
-			urge_timer -= delta
+			if not under_pressure():
+				urge_timer -= delta
 			if urge_timer <= 0.0:
 				poop_state = 4
 				dog.forced_squat(2.5)
@@ -10621,6 +10673,22 @@ func _bodily(delta: float) -> void:
 	if hud_t <= 0.0:
 		hud_t = 0.15
 		_update_hud()
+
+
+# A chase home or a boss fight on: no time for chores. She holds it (her urge
+# waits), a squat she chooses is a quick one, and your human leaves what she
+# does where it lies.
+func under_pressure() -> bool:
+	if phase == "home" and chase_active and chase_sweeper != null:
+		return true
+	return (boss_gat != null and boss_gat.in_fight()) or (mamut != null and mamut.in_fight())
+
+
+# where she went, left lying because there was no time: for a chaser to step in
+func left_business() -> Vector2:
+	if bag_pending and business_spot.x < INF:
+		return business_spot
+	return Vector2(INF, INF)
 
 
 # The call comes sooner by `px` down the walk (a snack, zoomies), never at
@@ -10749,6 +10817,10 @@ const FREEDOM_KINDS := {
 	"eixample": "yard",
 	# the beach where the Dimoni is burned
 	"cremada": "beach",
+	# the cabin of the jet at the end of the bridge (systems/aeroport_cabin.gd)
+	"aeroport": "yard",
+	# the monastery terrace lookout clearing overlooking the valleys
+	"montserrat": "clearing",
 }
 const BEACH_SEA_R := 430.0
 const BEACH_GATE_SHORE_X := 230.0
@@ -10796,6 +10868,8 @@ func _nearest_markable(pos: Vector2) -> Vector2:
 		if mamut != null and mamut.is_leg_index(pi):
 			continue
 		if drac != null and drac.is_leg_index(pi):
+			continue
+		if lleons != null and lleons.is_leg_index(pi):
 			continue
 		if not marks.has(p):
 			var d := pos.distance_to(p)
@@ -11966,6 +12040,9 @@ func _draw_furniture(vt: float, vb: float) -> void:
 	# its upper-left, and the shadow of something knee high
 	for b in benches:
 		if b.y < vt - 60.0 or b.y > vb + 60.0:
+			continue
+		if walk_mod != null and walk_mod.has_method("draw_bench"):
+			walk_mod.draw_bench(self, _wc, b)
 			continue
 		var bseat := Rect2(b.x - 8.0, b.y - 24.0, 16.0, 48.0)
 		box_shadow(_wc, bseat, 4.0, 7.0)

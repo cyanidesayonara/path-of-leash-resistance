@@ -82,10 +82,12 @@ const VET_FILM := "res://intro/film_vet.gd"
 const BOARS_FILM := "res://intro/film_boars.gd"
 const GRACIA_FILM := "res://intro/film_gracia.gd"
 const CREMADA_FILM := "res://intro/film_cremada.gd"
+const AEROPORT_FILM := "res://intro/film_aeroport.gd"
+const MONTSERRAT_FILM := "res://intro/film_montserrat.gd"
 # La Neteja's dumpster jams, by depth (world/level_build.gd NETEJA_JAMS):
 # the first the way home meets, then the later one, the midpoint
 const NETEJA_BANDS := [
-	{"id": "first_jam", "kind": "respite", "jam_y": -3600.0},
+	{"id": "first_jam", "kind": "respite", "jam_y": -3600.0, "checkpoint": true},
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
 ]
 # El Besos's weir and maintenance apron respites, by depth:
@@ -95,25 +97,41 @@ const BESOS_BANDS := [
 	{"id": "midpoint", "kind": "respite", "jam_y": LevelBuild.BESOS_JAM_Y, "checkpoint": true},
 ]
 
+# El Veterinari: the staff stop for a hissing cat in its carrier, then for a
+# patient on the scale (systems/vet.gd CHASE_JAMS)
 const VET_BANDS := [
-	{"id": "doors", "kind": "respite", "jam_y": -3300.0},
-	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
+	{"id": "carrier", "kind": "respite", "jam_y": -3600.0, "checkpoint": true},
+	{"id": "midpoint", "kind": "respite", "jam_y": -1650.0, "checkpoint": true},
 ]
 
 const BOAR_BANDS := [
-	{"id": "picnic", "kind": "respite", "jam_y": -3400.0},
+	{"id": "picnic", "kind": "respite", "jam_y": -3400.0, "checkpoint": true},
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
 ]
 
 const GRACIA_BANDS := [
-	{"id": "castell", "kind": "respite", "jam_y": -3300.0},
+	{"id": "castell", "kind": "respite", "jam_y": -3300.0, "checkpoint": true},
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
 ]
 
 # La Cremada: the float wedges in the railway underpass, then on the arch
 # over Carrer del Mar (systems/cremada.gd UNDERPASS_JAM_Y, ARCH_JAM_Y)
 const CREMADA_BANDS := [
-	{"id": "underpass", "kind": "respite", "jam_y": -3400.0},
+	{"id": "underpass", "kind": "respite", "jam_y": -3400.0, "checkpoint": true},
+	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
+]
+
+# L'Aeroport: the security squad goes through the duty-free perfume pyramid,
+# then tangles in the gate queue's belts
+const AEROPORT_BANDS := [
+	{"id": "perfume", "kind": "respite", "jam_y": -3400.0, "checkpoint": true},
+	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
+]
+
+# Montserrat: the goat wedges its horns in the mel i mató cheese stall,
+# then gets held at the Sant Joan funicular turnstile crossing gate
+const MONTSERRAT_BANDS := [
+	{"id": "cheese_stall", "kind": "respite", "jam_y": -3300.0},
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
 ]
 
@@ -183,6 +201,30 @@ The phone kept a lovely last video.",
 
 The Dimoni rolled right over you.
 You will smell of fireworks for a week.",
+			}
+		"security":
+			return {
+				"kind": "security", "speed": 136.0, "flee": false,
+				"warning": "AIRPORT SECURITY! RUN FOR IT!",
+				"freed": "PHWEEET", "freed_sfx": "whistle", "caught_shout": "STOP RIGHT THERE!",
+				"jammed": "CRASH", "jammed_sfx": "crack", "jammed_shout": "SECURITY IS TANGLED UP!",
+				"jammed_banner": "SECURITY IS TANGLED UP! CATCH YOUR BREATH", "run_banner": "RUN! WATCH FOR SKIDDING BAGS",
+				"warning_banner": "SECURITY'S COMING! HEAD FOR THE EXIT", "hold_banner": "THEY'RE STILL TANGLED! GO  %d",
+				"suitcase_banner": "SUITCASE! STEP CLEAR",
+				"caught_human": "GROUNDED!\n\nSecurity took your human's boarding pass.\nThey are on the no-walk list now.",
+				"caught_dog": "IN THE CRATE!\n\nSecurity popped you in a travel crate.\nYou went round the carousel twice.",
+			}
+		"goat":
+			return {
+				"kind": "goat", "speed": 138.0, "flee": false,
+				"warning": "WILD GOATS INCOMING! WATCH FOR BOULDERS!",
+				"freed": "BLEAT", "freed_sfx": "bleat", "caught_shout": "HEADBUTTED!",
+				"jammed": "HORNS WEDGED", "jammed_sfx": "crack", "jammed_shout": "THE GOAT'S HORNS ARE STUCK!",
+				"jammed_banner": "THE GOAT'S HORNS ARE STUCK! CATCH YOUR BREATH", "run_banner": "RUN! WATCH FOR BOUNCING ROCKS",
+				"warning_banner": "WILD GOATS! HEAD DOWN THE TRAIL", "hold_banner": "STILL WEDGED! GO  %d",
+				"boulder_banner": "BOULDER! STEP CLEAR",
+				"caught_human": "HEADBUTTED!\n\nThe big mountain goat sent your human tumbling into the brambles.\nThe phone went flying down the crag.",
+				"caught_dog": "PINNED BY THE HORNS!\n\nThe alpha goat cornered you against the cliff face.\nYou surrendered your dried sausages.",
 			}
 		"vet":
 			return {
@@ -260,6 +302,20 @@ static func profile_for(level: String) -> Dictionary:
 		d["bands"] = CREMADA_BANDS.duplicate(true)
 		d["film"] = CREMADA_FILM
 		return d
+	if level == "aeroport":
+		var a := kind_behavior("security")
+		a["id"] = "aeroport"
+		a["script"] = "res://entities/aeroport_threat.gd"
+		a["bands"] = AEROPORT_BANDS.duplicate(true)
+		a["film"] = AEROPORT_FILM
+		return a
+	if level == "montserrat":
+		var g := kind_behavior("goat")
+		g["id"] = "montserrat"
+		g["script"] = "res://entities/goat_threat.gd"
+		g["bands"] = MONTSERRAT_BANDS.duplicate(true)
+		g["film"] = MONTSERRAT_FILM
+		return g
 	return {}
 
 
@@ -534,6 +590,10 @@ static func banner(m: Node2D) -> String:
 		return "RUN! STAY OUT OF THE DEEP"
 	if sweeper.has_method("rocket_warning") and bool(sweeper.call("rocket_warning")):
 		return String(_behavior(m, held_profile(m)).get("rocket_banner", "OUT OF THE RING"))
+	if sweeper.has_method("suitcase_warning") and bool(sweeper.call("suitcase_warning")):
+		return String(_behavior(m, held_profile(m)).get("suitcase_banner", "SUITCASE! STEP CLEAR"))
+	if sweeper.has_method("boulder_warning") and bool(sweeper.call("boulder_warning")):
+		return String(_behavior(m, held_profile(m)).get("boulder_banner", "BOULDER! STEP CLEAR"))
 	return String(_behavior(m, held_profile(m)).get("run_banner", "RUN! DON'T LET IT CATCH YOU"))
 
 

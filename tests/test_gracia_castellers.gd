@@ -94,33 +94,21 @@ func _run() -> void:
 	Gracia.on_bark(m, far_bark)
 	_check(not m.gracia_aleta_cheered, "distant bark does not trigger aleta cheer")
 
-	# 9. Bark near stage triggers aleta cheer only during aleta window (3.8s..6.5s in 8s cycle)
+	# 9. The cheer counts only while the anxaneta crowns (walk clock, CastellCycle)
 	var near_bark := stage_c + Vector2(0.0, 60.0)
-	var t_sec: float = AnimClock.msec() * 0.001
-	var phase_t := fmod(t_sec, 8.0)
-	if phase_t >= 3.8 and phase_t <= 6.5:
-		Gracia.on_bark(m, near_bark)
-		_check(m.gracia_aleta_cheered, "bark during aleta window triggers aleta cheer trick")
-		var bones_after_aleta: int = m.bones
-		Gracia.on_bark(m, near_bark)
-		_check(m.bones == bones_after_aleta, "aleta cheer does not trigger twice")
-	else:
-		# If outside window, simulate barking during aleta
-		# (anim clock advances with time, we verify logic contract directly)
-		_check(not m.gracia_aleta_cheered, "bark outside aleta window does not cheer")
-
-	# 10. Direct verification of on_bark aleta cheer
-	m.gracia_aleta_cheered = false
-	var bones_before: int = m.bones
-	# Test with AnimClock or simulate phase window:
-	# Gracia.on_bark checks bp.distance_to(c) <= 160.0 and phase_t in [3.8, 6.5]
-	var in_aleta := (phase_t >= 3.8 and phase_t <= 6.5)
+	m.elapsed = 16.0 + 1.0    # climbing
 	Gracia.on_bark(m, near_bark)
-	if in_aleta:
-		_check(m.gracia_aleta_cheered, "aleta bark awarded during aleta phase")
-		_check(m.bones == bones_before + 2, "aleta cheer awards 2 bones")
-	else:
-		_check(not m.gracia_aleta_cheered, "aleta bark not awarded outside aleta phase")
+	_check(not m.gracia_aleta_cheered, "bark while the anxaneta climbs does not cheer")
+	m.elapsed = 16.0 + 7.5    # descending
+	Gracia.on_bark(m, near_bark)
+	_check(not m.gracia_aleta_cheered, "bark on the way down does not cheer")
+	var bones_before: int = m.bones
+	m.elapsed = 16.0 + 5.0    # l'aleta
+	Gracia.on_bark(m, near_bark)
+	_check(m.gracia_aleta_cheered, "bark during l'aleta cheers")
+	_check(m.bones == bones_before + 2, "aleta cheer awards 2 bones")
+	Gracia.on_bark(m, near_bark)
+	_check(m.bones == bones_before + 2, "aleta cheer does not pay twice")
 
 	# 11. Scenery draw execution without errors
 	var vt := stage.position.y - 100.0

@@ -5,6 +5,11 @@ extends Node2D
 # a big boar on each flank and the striped piglets between, dust kicked up
 # behind them. The same animals are in the walk's film (intro/film_boars.gd),
 # seen side on.
+# They run as a herd of bodies (systems/chase_squad.gd): each boar charges for
+# its place in the line and goes round anything solid, scattering litter, and
+# the line slows for whoever is held up. Muck does not bother a boar: they
+# run straight through what she left. The catch is theirs: a snout and the
+# line while it holds together.
 # Implements the standard chase threat interface (setup, advance, caught,
 # gap_to, threat_boundary, sweep_junk) so systems/home_chase drives it.
 
@@ -26,6 +31,11 @@ const DUST := Color(0.62, 0.50, 0.36)
 # the line, west to east: [scale, piglet, how far ahead of the line it runs]
 const SOUNDER := [[0.95, false, 0.0], [0.55, true, 6.0], [1.2, false, 10.0], [0.55, true, 4.0], [0.95, false, 0.0]]
 
+const Squad := preload("res://systems/chase_squad.gd")
+const BOAR_R := 22.0
+const BOAR_REACH := 46.0          # the snout and tusks, ahead of the body
+const BOAR_BACK := 50.0
+const HELD_SOUNDS := ["SNORT", "squeal", "GRUNT"]
 const SURGE := 0.26
 const CATCH_UP := 1.35
 const JAM_SECS := 3.0
@@ -48,6 +58,7 @@ var jam_at := Vector2(INF, INF)
 var kerb_blocks: Array[Rect2] = []
 var jammed_now := false
 var freed_now := false
+var squad = Squad.new()
 
 
 func setup(m: Node2D, start_front_y: float, corridor_cx: float, corridor_half: float, boar_speed: float) -> void:
@@ -57,6 +68,11 @@ func setup(m: Node2D, start_front_y: float, corridor_cx: float, corridor_half: f
 	half = corridor_half
 	speed = boar_speed
 	cur_speed = boar_speed
+	var slots: Array = []
+	var mw := half * 0.72
+	for i in range(SOUNDER.size()):
+		slots.append(lerpf(-mw + 26.0, mw - 26.0, float(i) / float(SOUNDER.size() - 1)))
+	squad.setup(slots, Vector2(cx, front_y), BOAR_R, BOAR_REACH, BOAR_BACK)
 
 
 func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
@@ -68,13 +84,14 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 		cur_speed = 0.0
 		if jam_t <= 0.0:
 			freed_now = true
+		_run(delta)
 		return
 
 	var lurch := sin(rumble * 1.3) * 0.5 + sin(rumble * 3.1) * 0.3
 	var mult := 1.0 + SURGE * lurch
 	if gap > 680.0:
 		mult = maxf(mult, CATCH_UP)
-	cur_speed = speed * mult
+	cur_speed = speed * mult * squad.pace()
 	front_y += cur_speed * delta
 
 	# Check for jams (acorn piles, picnic benches)
@@ -93,7 +110,13 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 	sway_v *= exp(-2.8 * delta)
 	sway += sway_v * delta
 	position = Vector2(cx + sway, front_y)
+	_run(delta)
 	queue_redraw()
+
+
+func _run(delta: float) -> void:
+	if main != null:
+		squad.run(main, delta, Vector2(cx + sway, front_y), cur_speed if jam_t <= 0.0 else 0.0, false, HELD_SOUNDS, false, "")
 
 
 func jammed() -> bool:
@@ -101,42 +124,41 @@ func jammed() -> bool:
 
 
 func threat_boundary() -> float:
-	return front_y
+	return squad.front()
 
 
+# a snout, the line while it holds, or behind the whole herd (whoever slipped
+# by went under it, rather than the boars running on home without them)
 func caught(p: Vector2) -> bool:
-	# Inside the mama boar and piglets front line
-	if p.y <= front_y and p.y >= front_y - 120.0:
-		return absf(p.x - (cx + sway)) <= half * 0.72
-	# the herd has run right past them: whoever slipped by at the side went
-	# under it, rather than the boars running on home without them
-	return p.y < front_y - 120.0
+	return squad.caught(p)
 
 
 func gap_to(p: Vector2) -> float:
-	return p.y - front_y
+	return p.y - squad.front()
 
 
-func sweep_junk(_junk: Array) -> int:
-	return 0
+func sweep_junk(junk: Array) -> int:
+	return squad.sweep_junk(junk)
 
 
 func _draw() -> void:
 	# home_chase keeps the node at (walk_cx, front_y); caught() reads the sway.
 	# The line spans what caught() catches (half * 0.72 either side), every
 	# snout at the catch line and the bodies running back into its depth.
-	draw_set_transform(Vector2(sway, 0.0))
 	var b := ShapeBatch.new(self)
-	var mw := half * 0.72
-	# the dust they raise, behind the whole line
-	for i in range(14):
-		var f := fposmod(rumble * 1.6 + float(i) * 0.31, 1.0)
-		var dx := lerpf(-mw, mw, float(i) / 13.0) + sin(float(i) * 2.7) * 18.0
-		b.circle(Vector2(dx, -110.0 - f * 70.0), 14.0 + f * 22.0, Color(DUST, 0.45 * (1.0 - f)))
-	for i in range(SOUNDER.size()):
+	# the dust they raise, behind each of them
+	for i in range(mini(SOUNDER.size(), squad.members.size())):
+		var at: Vector2 = (squad.members[i]["pos"] as Vector2) - global_position
+		for k in range(3):
+			var f := fposmod(rumble * 1.6 + float(i * 3 + k) * 0.31, 1.0)
+			b.circle(at + Vector2(sin(float(i * 3 + k) * 2.7) * 18.0, -60.0 - f * 70.0), 14.0 + f * 22.0, Color(DUST, 0.45 * (1.0 - f)))
+	# each where it really is (systems/chase_squad.gd); held up, it scrabbles
+	for i in range(mini(SOUNDER.size(), squad.members.size())):
 		var st: Array = SOUNDER[i]
-		var x := lerpf(-mw + 26.0, mw - 26.0, float(i) / float(SOUNDER.size() - 1))
-		_boar(b, Vector2(x, -4.0 + float(st[2]) - 10.0), float(st[0]), rumble * 16.0 + float(i) * 1.3, bool(st[1]))
+		var held: bool = float(squad.members[i]["stuck_t"]) > 0.4
+		var at: Vector2 = (squad.members[i]["pos"] as Vector2) - global_position
+		_boar(b, at + Vector2(0.0, BOAR_BACK - 14.0 + float(st[2])), float(st[0]),
+			rumble * (30.0 if held else 16.0) + float(i) * 1.3, bool(st[1]))
 	b.flush()
 
 

@@ -34,7 +34,7 @@ const MATERIALS := {
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
 	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
 	"montjuic": "cactus", "port": "rope", "reial": "fronds", "vet": "biscuits",
-	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "superilla": "pingpong", "forum": "solar", "espanya": "cascade", "eixample": "planeballs", "angels": "wheels", "poble": "azulejos", "ciutadella": "feathers", "cremada": "casings", "raval": "pegs", "tutorial": "balls",
+	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "superilla": "pingpong", "forum": "solar", "espanya": "cascade", "eixample": "planeballs", "angels": "wheels", "poble": "azulejos", "ciutadella": "feathers", "cremada": "casings", "aeroport": "bagtags", "montserrat": "rosemary", "raval": "pegs", "tutorial": "balls",
 }
 # No glow or bed under the pieces: a name reads on its ground by each piece's
 # own dark edge and contact shadow, the way a real thing lying there would.
@@ -69,6 +69,8 @@ const FEEL := {
 	"suds": {"spacing": 0.055, "r": 0.05, "drag": 3.0, "take": 1.4, "pop": true},
 	"pegs": {"spacing": 0.15, "r": 0.06, "drag": 5.0, "take": 1.1, "spin": 5.0, "align": true},
 	"tickets": {"spacing": 0.15, "r": 0.065, "drag": 4.0, "take": 1.3, "spin": 6.0, "align": true},
+	"bagtags": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 5.0, "align": true},
+	"rosemary": {"spacing": 0.18, "r": 0.07, "drag": 5.2, "take": 0.8, "spin": 3.5, "segment": true},
 	"pebbles": {"spacing": 0.11, "r": 0.07, "drag": 1.8, "take": 1.0, "roll": true},
 	"cactus": {"spacing": 0.16, "r": 0.085, "drag": 7.0, "take": 0.6, "spring": 12.0},
 	"scarf": {"spacing": 0.24, "r": 0.06, "drag": 7.0, "take": 0.6, "spin": 1.2, "segment": true},
@@ -558,6 +560,10 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_bulbs(c, lines, h, t)
 		"studs":
 			_studs(c, sign, h, t)
+		"bagtags":
+			_bagtags(c, sign, h)
+		"rosemary":
+			_rosemary(c, sign, h)
 	for k in range(held.size()):
 		var pc: Dictionary = sign.pieces[k]
 		pc.p = held[k][0]
@@ -953,6 +959,53 @@ static func _tickets(c: Object, sign: Dictionary, h: float) -> void:
 		c.draw_colored_polygon(_box(p + ax * r * 0.55, rot, r * 0.2, r * 0.72), Color(0.12, 0.10, 0.10))
 		if float(pc["var"]) > 0.6:
 			c.draw_circle(p - ax * r * 0.5, r * 0.18, Color(0.22, 0.14, 0.10))
+
+
+static func _bagtags(c: Object, sign: Dictionary, _h: float) -> void:
+	# airport luggage baggage tags: elongated thermal paper tags with barcodes and neon routing strips
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		c.draw_colored_polygon(_box((pc.p as Vector2) + Vector2(1.5, 2.0), float(pc.rot), r * 1.5, r * 0.7), Color(0, 0, 0, 0.28))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var rot: float = pc.rot
+		var ax := Vector2.from_angle(rot)
+		# tag body (clean off-white thermal paper)
+		c.draw_colored_polygon(_box(p, rot, r * 1.5, r * 0.7), Color(0.95, 0.96, 0.97))
+		# neon colored routing stripe at one end
+		var stripe_col := Color(0.18, 0.72, 0.90) if float(pc["var"]) > 0.5 else Color(0.96, 0.82, 0.20)
+		c.draw_colored_polygon(_box(p + ax * r * 0.55, rot, r * 0.35, r * 0.65), stripe_col)
+		# barcode lines in center
+		c.draw_colored_polygon(_box(p - ax * r * 0.15, rot, r * 0.08, r * 0.6), Color(0.12, 0.12, 0.14))
+		c.draw_colored_polygon(_box(p + ax * r * 0.05, rot, r * 0.05, r * 0.6), Color(0.12, 0.12, 0.14))
+		c.draw_colored_polygon(_box(p - ax * r * 0.35, rot, r * 0.10, r * 0.6), Color(0.12, 0.12, 0.14))
+		# punch hole at the tag loop end
+		c.draw_circle(p + ax * r * 0.62, r * 0.15, Color(0.20, 0.22, 0.25))
+
+
+static func _rosemary(c: Object, sign: Dictionary, _h: float) -> void:
+	# fragrant wild mountain rosemary sprigs from Montserrat: woody green stems, needle clusters, pale violet blossoms
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var rot: float = pc.rot
+		var ax := Vector2.from_angle(rot)
+		c.draw_line(p - ax * r * 1.2 + Vector2(1.5, 2.0), p + ax * r * 1.2 + Vector2(1.5, 2.0), Color(0, 0, 0, 0.28), 3.0)
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var rot: float = pc.rot
+		var ax := Vector2.from_angle(rot)
+		var norm := ax.orthogonal()
+		c.draw_line(p - ax * r * 1.2, p + ax * r * 1.2, Color(0.38, 0.32, 0.22), 2.0)
+		for s: float in [-0.7, -0.2, 0.3, 0.8]:
+			var np: Vector2 = p + ax * r * s
+			c.draw_line(np, np + (ax * 0.4 + norm).normalized() * r * 0.65, Color(0.24, 0.40, 0.22), 1.6)
+			c.draw_line(np, np + (ax * 0.4 - norm).normalized() * r * 0.65, Color(0.28, 0.44, 0.24), 1.6)
+		if float(pc["var"]) > 0.4:
+			c.draw_circle(p + ax * r * 0.9 + norm * r * 0.3, r * 0.22, Color(0.72, 0.74, 0.90))
+			c.draw_circle(p + ax * r * 0.9 + norm * r * 0.3, r * 0.10, Color(0.95, 0.95, 0.98))
 
 
 static func _pebbles(c: Object, sign: Dictionary, h: float, light: Vector2) -> void:
