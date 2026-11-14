@@ -196,6 +196,8 @@ jobs:
 
       - name: Sweeper chase devourer regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_sweeper.gd
+      - name: Chase vehicle (swerves round heavy things, bonks over light ones) test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_chase_vehicle.gd
 
       # the autowalk steps cannot reach the chase's "caught" branch (the bot is
       # unsweepable), so this is what covers the chase ending a walk

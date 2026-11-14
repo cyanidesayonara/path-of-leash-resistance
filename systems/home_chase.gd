@@ -85,7 +85,7 @@ const CREMADA_FILM := "res://intro/film_cremada.gd"
 # La Neteja's dumpster jams, by depth (world/level_build.gd NETEJA_JAMS):
 # the first the way home meets, then the later one, the midpoint
 const NETEJA_BANDS := [
-	{"id": "first_jam", "kind": "respite", "jam_y": -3600.0},
+	{"id": "first_jam", "kind": "respite", "jam_y": -3600.0, "checkpoint": true},
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
 ]
 # El Besos's weir and maintenance apron respites, by depth:
@@ -113,7 +113,7 @@ const GRACIA_BANDS := [
 # La Cremada: the float wedges in the railway underpass, then on the arch
 # over Carrer del Mar (systems/cremada.gd UNDERPASS_JAM_Y, ARCH_JAM_Y)
 const CREMADA_BANDS := [
-	{"id": "underpass", "kind": "respite", "jam_y": -3400.0},
+	{"id": "underpass", "kind": "respite", "jam_y": -3400.0, "checkpoint": true},
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
 ]
 
