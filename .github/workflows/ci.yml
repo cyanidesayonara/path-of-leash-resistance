@@ -380,6 +380,8 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_aeroport.gd
       - name: Montserrat (the wild goat herd chase) test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_montserrat.gd
+      - name: Els Lleons (the twin bronze lions boss) test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_lleons.gd
       - name: Chase squad (officers go round solids, kick junk, catch by body and belt) test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_chase_squad.gd
       - name: Chase squads on their walks (staff, boars, devils, security: never in a solid, every respite a save) test
