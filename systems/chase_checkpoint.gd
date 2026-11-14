@@ -75,6 +75,8 @@ const MAIN_FIELDS := [
 	"cremada_dodges", "cremada_hits",
 	# L'Aeroport's: suitcases dodged and suitcase hits
 	"aeroport_luggage_dodges", "aeroport_cart_hits",
+	# Montserrat: tumbling boulders dodged and goat hits
+	"montserrat_boulder_dodges", "montserrat_goat_hits",
 	# one-run pickups and rewards
 	"hydrants", "kebabs", "npc_marks", "candy", "prize_taken", "furgoneta_sniffed",
 	"challenge_offered",

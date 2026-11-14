@@ -367,6 +367,7 @@ const WALK_MODULES := {
 	"ciutadella": preload("res://systems/ciutadella.gd"),
 	"cremada": preload("res://systems/cremada.gd"),
 	"aeroport": preload("res://systems/aeroport.gd"),
+	"montserrat": preload("res://systems/montserrat.gd"),
 	"beach": preload("res://systems/passeig.gd"),
 	"rain": preload("res://systems/diluvi.gd"),
 	"market": preload("res://world/mercat.gd"),
@@ -643,6 +644,12 @@ var aeroport_rush_dodged := false
 var aeroport_luggage_dodges := 0
 var aeroport_cart_hits := 0
 var aeroport_carousel_barked := false
+# Montserrat: the funicular crossing, rolling boulders, and mel i mató stall
+var montserrat_funicular: Dictionary = {"state": "waiting", "t": 0.0}
+var montserrat_funicular_dodged := false
+var montserrat_boulder_dodges := 0
+var montserrat_goat_hits := 0
+var montserrat_mato_barked := false
 # Els Senglars (systems/boars.gd) and Festa de Gràcia (systems/gracia.gd)
 var boar_mud_splashes := 0
 var boar_mud_cd := 0.0
@@ -1728,6 +1735,7 @@ func _edge_base_color() -> Color:
 		"gracia": return Color(0.42, 0.34, 0.29)             # the vila's warm render
 		"cremada": return Color(0.40, 0.33, 0.30)            # Badalona's old town at night
 		"aeroport": return Color(0.85, 0.88, 0.91)           # Terminal 1 polished tile
+		"montserrat": return Color(0.72, 0.65, 0.55)         # Montserrat conglomerate rock
 		"besos": return Color(0.58, 0.56, 0.52)              # the concrete flood wall
 		"station": return Color(0.48, 0.48, 0.52)            # tiled interior
 		"site": return Obres.YARD                            # the works compound
@@ -10785,6 +10793,8 @@ const FREEDOM_KINDS := {
 	"cremada": "beach",
 	# the cabin of the jet at the end of the bridge (systems/aeroport_cabin.gd)
 	"aeroport": "yard",
+	# the monastery terrace lookout clearing overlooking the valleys
+	"montserrat": "clearing",
 }
 const BEACH_SEA_R := 430.0
 const BEACH_GATE_SHORE_X := 230.0

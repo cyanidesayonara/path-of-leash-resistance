@@ -362,6 +362,8 @@ func _build_library() -> void:
 	lib["mamut_trumpet"] = _mamut_trumpet()
 	lib["van_horn"] = _van_horn()
 	lib["chime"] = _chime()
+	lib["bleat"] = _bleat()
+	lib["crossing_bell"] = _crossing_bell()
 
 
 func _pack(samples: PackedFloat32Array) -> AudioStreamWAV:
@@ -778,4 +780,34 @@ func _chime() -> AudioStreamWAV:
 			var t := float(i) / RATE
 			var tone := sin(TAU * f * t) * 0.75 + sin(TAU * f * 2.0 * t) * 0.2 + sin(TAU * f * 3.0 * t) * 0.05
 			out[offset + i] += tone * exp(-t * 7.5) * 0.32
+	return _pack(out)
+
+
+func _bleat() -> AudioStreamWAV:
+	# a wild goat bleat / snort: raspy nasal fundamental with vibrato
+	var n := int(0.35 * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		var vib := sin(TAU * 14.0 * t) * 18.0
+		var f := 290.0 + vib
+		var tone := sin(TAU * f * t) * 0.45 + sin(TAU * f * 2.0 * t) * 0.30 + sin(TAU * f * 3.0 * t) * 0.15 + sin(TAU * f * 4.0 * t) * 0.10
+		var env := sin(PI * clampf(t / 0.35, 0.0, 1.0))
+		out[i] = tone * env * 0.55
+	return _pack(out)
+
+
+func _crossing_bell() -> AudioStreamWAV:
+	# funicular railway crossing bell: two resonant clangs (660 Hz & 880 Hz)
+	var per := int(0.18 * RATE)
+	var out := PackedFloat32Array()
+	out.resize(per * 2 + int(0.3 * RATE))
+	var freqs := [660.0, 880.0]
+	for k in range(2):
+		var f: float = freqs[k]
+		for i in range(out.size() - k * per):
+			var t := float(i) / RATE
+			var v := (sin(TAU * f * t) + 0.35 * sin(TAU * f * 2.4 * t) + 0.15 * sin(TAU * f * 3.8 * t)) * exp(-t * 10.0) * 0.35
+			out[k * per + i] += v
 	return _pack(out)

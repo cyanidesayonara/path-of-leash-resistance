@@ -83,6 +83,7 @@ const LEVEL_GOAL_IDS := {
 	# fight ends, so it is not a goal; the ways of wearing him down are.
 	"cremada": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "traca", "dimoni_dodge", "dimoni_clean", "combo", "prize", "spell", "jamon", "clock"],
 	"aeroport": ["mark", "sniff", "phone", "paws", "bag", "walkway", "gate_rush", "luggage_dodge", "security_clean", "carousel_bark", "combo", "prize", "spell", "jamon", "clock"],
+	"montserrat": ["mark", "sniff", "phone", "paws", "bag", "fetch", "funicular_dodge", "boulder_dodge", "goat_clean", "mato_bark", "combo", "prize", "spell", "jamon", "clock"],
 	"ciutadella": ["mark", "sniff", "phone", "paws", "bag", "snack", "mamut_dodge", "mamut_lake", "mamut_trip", "parakeets", "combo", "prize", "spell", "jamon", "clock"],
 	# Rambla del Raval: the finale, El Gat. Tying him up is how the
 	# walk ends, so it is not a goal; the ways of wearing him down are.
@@ -186,6 +187,10 @@ static func defs(m: Node2D) -> Dictionary:
 		"luggage_dodge": {"text": "Dodge %d tumbling suitcases", "target": 3, "fn": func() -> int: return m.aeroport_luggage_dodges},
 		"security_clean": {"text": "Get home without a suitcase clipping you", "target": 1, "fn": func() -> int: return 1 if (bool(m.finished) and m.aeroport_cart_hits == 0) else 0},
 		"carousel_bark": {"text": "Bark at the rotating baggage carousel", "target": 1, "fn": func() -> int: return 1 if m.aeroport_carousel_barked else 0},
+		"funicular_dodge": {"text": "Wait out or dodge the Sant Joan funicular crossing", "target": 1, "fn": func() -> int: return 1 if m.montserrat_funicular_dodged else 0},
+		"boulder_dodge": {"text": "Dodge %d rolling boulders", "target": 3, "fn": func() -> int: return m.montserrat_boulder_dodges},
+		"goat_clean": {"text": "Get home without getting rammed", "target": 1, "fn": func() -> int: return 1 if (bool(m.finished) and m.montserrat_goat_hits == 0) else 0},
+		"mato_bark": {"text": "Bark at the mel i mató cheese stall", "target": 1, "fn": func() -> int: return 1 if m.montserrat_mato_barked else 0},
 		"watering": {"text": "Shake off under a watering can", "target": 1, "fn": func() -> int: return 1 if m.poble_shakes >= 1 else 0},
 		"spell": {"text": "Spell LEASH", "target": 5, "fn": func() -> int: return int(m.get("word_letters_collected"))},
 		"jamon": {"text": "Find the hidden pernil", "target": 1, "fn": func() -> int: return 1 if bool(m.get("jamon_found")) else 0},
