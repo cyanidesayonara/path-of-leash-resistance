@@ -17,11 +17,14 @@ extends RefCounted
 # - Unique prize: grab the duty-free giant chocolate box.
 #
 # On the way home:
-# - The Security Cart Buggy (entities/aeroport_threat.gd) chases the pair down
-#   the terminal concourse, flashing its amber roof beacon, siren chirping,
-#   and shedding tumbling rolling suitcases that skid across the tiles.
+# - The airport security squad (entities/aeroport_threat.gd) chases the pair
+#   down the concourse in a line, crate and net and whistle out, booting
+#   confiscated suitcases up the tiles at them.
 # - Wedges into the duty-free perfume pyramid (-3400) and tangles in the
-#   Gate B24 queue stanchions (-1900, checkpoint): the two respites.
+#   gate B22 queue's tape (-1900, checkpoint): the two respites.
+#
+# Past the gate the bridge ends in the jet's cabin, which is the off-leash
+# space (systems/aeroport_cabin.gd). The picture is systems/aeroport_art.gd.
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const AeroportThreat := preload("res://entities/aeroport_threat.gd")
@@ -42,7 +45,7 @@ const TRAVELATOR_START_Y := -900.0    # travelator begins
 const TRAVELATOR_END_Y := -4000.0     # travelator ends
 const GATE_RUSH_Y := -4120.0          # Gate B30 crossing, just past the walkway's far end
 const CAROUSEL_Y := -4500.0           # baggage reclaim loop
-const TERRACE_Y := -4800.0            # outdoor pet relief terrace
+const BRIDGE_Y := -4640.0             # the pier ends; the jet bridge out to the cabin
 
 # Central moving walkway geometry
 const WALKWAY_RECT := Rect2(570.0, -4000.0, 140.0, 3100.0)
@@ -118,6 +121,12 @@ const CHOCOLATE_GOLD := Color(0.88, 0.72, 0.20)
 
 
 static func build(m: Node2D) -> Array:
+	m.gate_text = "LA CABINA"
+	# where the squad comes unstuck on the way home (home_chase.AEROPORT_BANDS): the
+	# perfume pyramid in the west lane, then the tape of the gate queue
+	m.chase_jams.clear()
+	m.chase_jams.append(Vector2(PERFUME_ISLAND.get_center().x, PERFUME_JAM_Y))
+	m.chase_jams.append(Vector2(640.0, STANCHION_JAM_Y))
 	m.poles.clear()
 	for p: Vector2 in POSTS:
 		m.poles.append(p)
@@ -196,17 +205,32 @@ static func wrap_rects() -> Array[Rect2]:
 	return out
 
 
-static func surface(_m: Node2D, pos: Vector2) -> int:
-	if pos.y < TERRACE_Y and absf(pos.x - 640.0) < 200.0:
-		return Surfaces.S.GRASS
+# terrazzo, then the bridge's rubber, then the cabin's carpet: none of it lawn
+static func surface(_m: Node2D, _pos: Vector2) -> int:
 	return Surfaces.S.PAVEMENT
 
 
 static func tick(m: Node2D, delta: float) -> void:
 	if m.lvl != "aeroport":
 		return
+	_tick_walkway(m)
 	_tick_gate_rush(m, delta)
 	_tick_carousel(m)
+
+
+# The way home, the walkway is stopped: the security alert is an emergency, and
+# a belt running against you all the way home is no chase anyone can win. It
+# is a corridor between its rails, for you and for them.
+static func walkway_stopped(m: Node2D) -> bool:
+	return String(m.phase) == "home"
+
+
+static func _tick_walkway(m: Node2D) -> void:
+	var stopped := walkway_stopped(m)
+	m.conveyor_zone = Rect2() if stopped else WALKWAY_RECT
+	if stopped and not m.has_meta("aeroport_walkway_said"):
+		m.set_meta("aeroport_walkway_said", true)
+		m.feed.say("THE WALKWAY IS STOPPED", EventFeed.Tone.PLAIN)
 
 
 static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
@@ -269,104 +293,90 @@ static func _tick_carousel(_m: Node2D) -> void:
 
 
 # --- WORLD DRAWING ---
+# The picture is systems/aeroport_art.gd (the terminal) and
+# systems/aeroport_cabin.gd (the jet). What does not move is on the cached
+# edge, ground, overhead and freedom canvases; the world pass draws only the
+# walkway's belt, the carousel's bags, the apron's traffic and the rush.
+
+# both sides of the concourse, on the edge layer
+static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	AeroportArt.draw_edge(m, b, vt, vb)
+
+
+# the concourse floor and what stands on it, on the ground layer
+static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, bottom: float, ctop: float, vt: float, vb: float) -> void:
+	AeroportArt.draw_floor(m, wc, vt, vb, ctop, bottom)
+
 
 static func draw_scenery(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 	if m.lvl != "aeroport":
 		return
-	var b: ShapeBatch = wc
-	_draw_runway_apron(b, vt, vb)
-	_draw_terminal_floor(b, vt, vb)
-	_draw_travelator(m, b, vt, vb)
-	_draw_boarding_gates(b, vt, vb)
-	_draw_duty_free(b, vt, vb)
-	_draw_baggage_carousel(m, b, vt, vb)
+	AeroportArt.draw_apron_live(wc, vt, vb)
+	AeroportArt.draw_bridges(wc, vt, vb)
+	_draw_carousel_bags(wc, vt, vb)
 
 
-static func _draw_runway_apron(b: ShapeBatch, vt: float, vb: float) -> void:
-	# West tarmac outside glass curtain wall (x < WALL_L)
-	var tarmac_rect := Rect2(0.0, vt, WALL_L, vb - vt)
-	b.rect(tarmac_rect, RUNWAY_TARMAC)
-
-	# Yellow taxiway centerlines
-	var ty := floorf(vt / 120.0) * 120.0
-	while ty <= vb:
-		b.rect(Rect2(WALL_L - 140.0, ty, 6.0, 80.0), RUNWAY_LINE)
-		ty += 120.0
-
-	# Parked airliner wingtip silhouette at y ≈ -1800
-	if -2000.0 < vb and -1600.0 > vt:
-		var wing := PackedVector2Array([
-			Vector2(WALL_L - 280.0, -1700.0),
-			Vector2(WALL_L - 80.0, -1820.0),
-			Vector2(WALL_L - 70.0, -1880.0),  # winglet up
-			Vector2(WALL_L - 90.0, -1880.0),
-			Vector2(WALL_L - 110.0, -1830.0),
-			Vector2(WALL_L - 300.0, -1760.0),
-		])
-		b.polygon(wing, PLANE_WHITE)
-		b.rect(Rect2(WALL_L - 86.0, -1876.0, 12.0, 46.0), PLANE_BLUE)
-
-	# Glass curtain wall mullions along WALL_L
-	b.rect(Rect2(WALL_L - 6.0, vt, 12.0, vb - vt), GLASS_FRAME)
-	var my := floorf(vt / 60.0) * 60.0
-	while my <= vb:
-		b.rect(Rect2(WALL_L - 14.0, my - 2.0, 20.0, 4.0), GLASS_FRAME)
-		my += 60.0
+# the walkway, in main's conveyor slot (main draws L'Estacio's otherwise)
+static func draw_conveyor(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	if m.lvl != "aeroport":
+		return
+	_draw_travelator(m, wc, vt, vb)
 
 
-static func _draw_terminal_floor(b: ShapeBatch, vt: float, vb: float) -> void:
-	# Polished light granite concourse flooring
-	var floor_rect := Rect2(WALL_L, vt, WALL_R - WALL_L, vb - vt)
-	b.rect(floor_rect, TILE_LIGHT)
-
-	# Alternating polished darker tile bands every 160 px
-	var by := floorf(vt / 160.0) * 160.0
-	while by <= vb:
-		b.rect(Rect2(WALL_L, by, WALL_R - WALL_L, 40.0), TILE_DARK)
-		by += 160.0
-
-	# Thin subtle tile grid lines
-	var gx := WALL_L
-	while gx <= WALL_R:
-		b.rect(Rect2(gx, vt, 1.0, vb - vt), TILE_GRID)
-		gx += 80.0
-
-
-static func _draw_travelator(_m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+static func _draw_travelator(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	var z: Rect2 = WALKWAY_RECT
 	if z.end.y < vt or z.position.y > vb:
 		return
 	var top := maxf(z.position.y, vt)
 	var bot := minf(z.end.y, vb)
+	var stopped := walkway_stopped(m)
+	# stopped, the belt and its handrails hold still
+	var t: float = 0.0 if stopped else AnimClock.msec() / 1000.0
 
-	# Main steel bed
+	# the belt: dark grooved pallets, their seams and a yellow edge strip
+	# sliding up the hall at the speed it carries her
 	b.rect(Rect2(z.position.x, top, z.size.x, bot - top), TRAVELATOR_STEEL)
+	var gx := z.position.x + 16.0
+	while gx < z.end.x - 10.0:
+		b.rect(Rect2(gx, top, 2.0, bot - top), Color(0.34, 0.36, 0.40))
+		gx += 9.0
+	var scroll: float = fmod(t * 120.0, 48.0)
+	var py := floorf((top + scroll) / 48.0) * 48.0 - scroll
+	while py <= bot:
+		if py >= top:
+			b.rect(Rect2(z.position.x + 8.0, py, z.size.x - 16.0, 2.0), Color(0.22, 0.23, 0.26))
+			b.rect(Rect2(z.position.x + 8.0, py + 2.0, z.size.x - 16.0, 1.0), Color(0.56, 0.58, 0.62))
+		py += 48.0
+	var chev: float = fmod(t * 120.0, 240.0)
+	var cy := floorf((top + chev) / 240.0) * 240.0 - chev
+	while cy <= bot + 30.0:
+		if cy >= top + 24.0 and cy <= bot - 10.0:
+			var cx := z.get_center().x
+			b.quad(Vector2(cx, cy - 16.0), Vector2(cx + 26.0, cy + 6.0), Vector2(cx + 26.0, cy + 16.0), Vector2(cx, cy - 6.0), Color(TRAVELATOR_COMB, 0.75))
+			b.quad(Vector2(cx, cy - 16.0), Vector2(cx, cy - 6.0), Vector2(cx - 26.0, cy + 16.0), Vector2(cx - 26.0, cy + 6.0), Color(TRAVELATOR_COMB, 0.75))
+		cy += 240.0
+	for ex: float in [z.position.x + 8.0, z.end.x - 12.0]:
+		b.rect(Rect2(ex, top, 4.0, bot - top), Color(TRAVELATOR_COMB, 0.9))
 
-	# Scrolling yellow caution chevrons
-	var scroll: float = fmod(AnimClock.msec() / 1000.0 * 110.0, 60.0)
-	var cy := floorf((top - scroll) / 60.0) * 60.0 + scroll
-	while cy <= bot:
-		if cy >= z.position.y and cy <= z.end.y:
-			var pts := PackedVector2Array([
-				Vector2(z.get_center().x, cy - 14.0),
-				Vector2(z.get_center().x + 24.0, cy + 4.0),
-				Vector2(z.get_center().x - 24.0, cy + 4.0),
-			])
-			b.polygon(pts, Color(0.95, 0.82, 0.20, 0.80))
-		cy += 60.0
-
-	# Yellow comb warning plates at both ends
-	if z.position.y >= vt and z.position.y <= vb:
-		b.rect(Rect2(z.position.x, z.position.y, z.size.x, 24.0), TRAVELATOR_COMB)
-	if z.end.y >= vt and z.end.y <= vb:
-		b.rect(Rect2(z.position.x, z.end.y - 24.0, z.size.x, 24.0), TRAVELATOR_COMB)
+	# the comb plates at both ends: steel teeth, a yellow line to step over
+	for ey: float in [z.position.y, z.end.y - 26.0]:
+		if ey + 26.0 < vt or ey > vb:
+			continue
+		b.rect(Rect2(z.position.x, ey, z.size.x, 26.0), Color(0.70, 0.72, 0.76))
+		var tx := z.position.x + 10.0
+		var teeth_y := ey + 18.0 if ey == z.position.y else ey
+		while tx < z.end.x - 8.0:
+			b.rect(Rect2(tx, teeth_y, 3.0, 8.0), Color(0.46, 0.48, 0.52))
+			tx += 6.0
+		b.rect(Rect2(z.position.x, ey + 10.0, z.size.x, 5.0), TRAVELATOR_COMB)
 
 	# The sides: a steel skirt at the floor, the glass panel standing on it
 	# (seen from above as a pale strip with its joints), and the black rubber
-	# handrail along the top, rounded off in a newel at each end
+	# handrail along the top, rounded off in a newel at each end. The handrail
+	# moves with the belt: a pale seam slides along it.
 	for r: Rect2 in balustrades():
 		var seen := Rect2(r.position.x, top, r.size.x, bot - top)
-		b.rect(Rect2(seen.position + Vector2(3.0, 0.0), seen.size), Color(0.0, 0.0, 0.0, 0.16))
+		b.rect(Rect2(seen.position + Vector2(4.0, 0.0), seen.size), Color(0.0, 0.0, 0.0, 0.16))
 		b.rect(seen, BALUSTRADE_SKIRT)
 		b.rect(seen.grow_individual(-2.0, 0.0, -2.0, 0.0), BALUSTRADE_GLASS)
 		var jy := floorf(top / 90.0) * 90.0
@@ -377,68 +387,78 @@ static func _draw_travelator(_m: Node2D, b: ShapeBatch, vt: float, vb: float) ->
 		var cxr := r.get_center().x
 		b.rect(Rect2(cxr - 3.0, top, 6.0, bot - top), TRAVELATOR_HANDRAIL)
 		b.rect(Rect2(cxr - 3.0, top, 2.0, bot - top), Color(0.30, 0.30, 0.32))
+		var hs: float = fmod(t * 120.0, 160.0)
+		var hy := floorf((top + hs) / 160.0) * 160.0 - hs
+		while hy <= bot:
+			if hy >= top:
+				b.rect(Rect2(cxr - 3.0, hy, 6.0, 3.0), Color(0.46, 0.46, 0.50))
+			hy += 160.0
 		for ey: float in [r.position.y, r.end.y]:
 			if ey >= vt - 12.0 and ey <= vb + 12.0:
 				b.circle(Vector2(cxr, ey), 8.0, TRAVELATOR_HANDRAIL)
 				b.circle(Vector2(cxr - 2.0, ey - 2.0), 3.0, Color(0.30, 0.30, 0.32))
+				if stopped:
+					# the emergency lamp in each newel, red
+					b.glow(Vector2(cxr, ey), 26.0, Color(1.0, 0.20, 0.14, 0.45), 0.2)
+					b.circle(Vector2(cxr, ey), 4.0, Color(1.0, 0.26, 0.18))
+	if stopped:
+		# a stand at each end, out of service: the red disc and its bar
+		for ey: float in [z.position.y - 20.0, z.end.y + 20.0]:
+			if ey < vt - 30.0 or ey > vb + 30.0:
+				continue
+			var sp := Vector2(z.get_center().x + 46.0, ey)
+			b.circle(sp + Vector2(3.0, 5.0), 11.0, Color(0.0, 0.0, 0.0, 0.2))
+			b.circle(sp, 11.0, Color(0.10, 0.10, 0.12))
+			b.circle(sp, 9.0, Color(0.88, 0.16, 0.14))
+			b.rect(Rect2(sp.x - 6.0, sp.y - 1.8, 12.0, 3.6), Color(0.98, 0.98, 0.96))
+			var plate := Rect2(z.get_center().x - 44.0, ey - 9.0, 76.0, 18.0)
+			b.rect(plate, Color(0.10, 0.10, 0.12))
+			b.rect(plate.grow(-1.5), Color(0.88, 0.16, 0.14))
+			b.draw_string(m.font, Vector2(plate.position.x, plate.end.y - 4.5), "ATURADA", HORIZONTAL_ALIGNMENT_CENTER, plate.size.x, 12, Color(0.98, 0.98, 0.96))
 
 
-static func _draw_boarding_gates(b: ShapeBatch, vt: float, vb: float) -> void:
-	for i in range(GATE_DESKS.size()):
-		var desk: Rect2 = GATE_DESKS[i]
-		if desk.end.y < vt or desk.position.y > vb:
-			continue
-		# Desk body
-		b.rect(desk, Color(0.24, 0.26, 0.30))
-		b.rect(Rect2(desk.position.x, desk.position.y, 4.0, desk.size.y), Color(0.40, 0.44, 0.50))
-		# Overhead blue LED gate sign
-		var sign_rect := Rect2(desk.position.x - 20.0, desk.position.y - 30.0, 60.0, 22.0)
-		b.rect(sign_rect, SIGN_BLUE)
-		b.rect(sign_rect.grow(-2.0), Color(0.12, 0.16, 0.24))
-		b.rect(Rect2(sign_rect.position.x + 4.0, sign_rect.position.y + 4.0, 16.0, 4.0), SIGN_YELLOW)
-
-
-static func _draw_duty_free(b: ShapeBatch, vt: float, vb: float) -> void:
-	# Perfume island (first jam respite)
-	if PERFUME_ISLAND.end.y >= vt and PERFUME_ISLAND.position.y <= vb:
-		b.rect(PERFUME_ISLAND, Color(0.25, 0.22, 0.28))
-		b.rect(PERFUME_ISLAND.grow(-4.0), Color(0.35, 0.30, 0.40))
-		# Perfume bottles on tiered display
-		var bx: float = PERFUME_ISLAND.position.x + 12.0
-		while bx < PERFUME_ISLAND.end.x - 10.0:
-			b.circle(Vector2(bx, PERFUME_ISLAND.get_center().y), 9.0, PERFUME_GLASS)
-			b.circle(Vector2(bx, PERFUME_ISLAND.get_center().y - 2.0), 3.0, PERFUME_GOLD)
-			bx += 22.0
-
-	# the giant duty-free chocolate display
-	if CHOCOLATE_ISLAND.end.y >= vt and CHOCOLATE_ISLAND.position.y <= vb:
-		b.rect(CHOCOLATE_ISLAND, Color(0.30, 0.24, 0.18))
-		# Triangular gold packaging
-		var tri := PackedVector2Array([
-			Vector2(CHOCOLATE_ISLAND.get_center().x, CHOCOLATE_ISLAND.position.y + 6.0),
-			Vector2(CHOCOLATE_ISLAND.end.x - 8.0, CHOCOLATE_ISLAND.end.y - 8.0),
-			Vector2(CHOCOLATE_ISLAND.position.x + 8.0, CHOCOLATE_ISLAND.end.y - 8.0),
-		])
-		b.polygon(tri, CHOCOLATE_GOLD)
-
-
-static func _draw_baggage_carousel(_m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+# what rides the carousel: cases with their straps and tags, a guitar, and
+# the pet crate with somebody furious in it (the one worth a bark)
+static func _draw_carousel_bags(b: ShapeBatch, vt: float, vb: float) -> void:
 	var r: Rect2 = CAROUSEL_RECT
-	if r.end.y < vt or r.position.y > vb:
+	if r.end.y < vt - 20.0 or r.position.y > vb + 20.0:
 		return
-	# Stainless steel housing
-	b.rect(r, CAROUSEL_TRIM)
-	b.rect(r.grow(-8.0), CAROUSEL_RUBBER)
-	# Center island
-	b.rect(r.grow(-24.0), Color(0.40, 0.42, 0.46))
-
-	# Suitcases moving around the loop
-	var t: float = AnimClock.msec() / 1000.0 * 45.0
-	var bags: Array[Color] = [Color(0.85, 0.18, 0.16), Color(0.18, 0.45, 0.85), Color(0.20, 0.20, 0.22)]
-	for i in range(bags.size()):
-		var bag_pos := _carousel_pos(r, fmod(t + float(i) * 90.0, 360.0))
-		b.rect(Rect2(bag_pos - Vector2(10.0, 7.0), Vector2(20.0, 14.0)), bags[i])
-		b.rect(Rect2(bag_pos - Vector2(3.0, 3.0), Vector2(6.0, 6.0)), Color(0.9, 0.9, 0.9))
+	var t: float = AnimClock.msec() / 1000.0 * 26.0
+	for i in range(7):
+		var deg := fmod(t + float(i) * 51.0, 360.0)
+		var p := _carousel_pos(r, deg)
+		var ahead := _carousel_pos(r, deg + 4.0)
+		var dir := (ahead - p).angle()
+		var f := Vector2.from_angle(dir)
+		var s := f.orthogonal()
+		if i == 3:
+			# the crate: grey shell, a wire door, two eyes and a paw through it
+			AeroportArt.box(b, p + AeroportArt.LIGHT * 2.0, dir, 12.0, 9.0, Color(0.05, 0.05, 0.08, 0.3))
+			AeroportArt.box(b, p, dir, 12.0, 9.0, Color(0.56, 0.58, 0.62))
+			AeroportArt.box(b, p, dir, 10.0, 7.0, Color(0.74, 0.76, 0.80))
+			AeroportArt.box(b, p + f * 8.0, dir, 3.0, 6.0, Color(0.14, 0.14, 0.16))
+			for k in range(3):
+				b.line(p + f * 5.5 + s * (float(k) - 1.0) * 4.0, p + f * 11.0 + s * (float(k) - 1.0) * 4.0, Color(0.80, 0.82, 0.86), 1.0)
+			b.circle(p + f * 8.0 - s * 2.4, 1.4, Color(0.98, 0.90, 0.30))
+			b.circle(p + f * 8.0 + s * 2.4, 1.4, Color(0.98, 0.90, 0.30))
+			b.circle(p + f * 13.0 + s * 3.0, 2.0, Color(0.90, 0.56, 0.24))
+		elif i == 5:
+			# a guitar case
+			b.circle(p - f * 4.0, 7.0, Color(0.14, 0.12, 0.12))
+			b.circle(p + f * 4.0, 5.0, Color(0.14, 0.12, 0.12))
+			AeroportArt.box(b, p + f * 12.0, dir, 7.0, 2.4, Color(0.14, 0.12, 0.12))
+			b.circle(p - f * 4.0, 2.0, Color(0.80, 0.70, 0.30))
+		else:
+			var col := AeroportArt.pick(AeroportArt.BAGS, i * 3 + 1)
+			var hl := 11.0 + AeroportArt.h(i) * 3.0
+			AeroportArt.box(b, p + AeroportArt.LIGHT * 2.0, dir, hl, 7.5, Color(0.05, 0.05, 0.08, 0.3))
+			AeroportArt.box(b, p, dir, hl, 7.5, col.darkened(0.25))
+			AeroportArt.box(b, p, dir, hl - 1.5, 6.0, col)
+			b.line(p - s * 6.0 + f * 3.0, p + s * 6.0 + f * 3.0, col.darkened(0.35), 1.6)
+			b.line(p - s * 6.0 - f * 4.0, p + s * 6.0 - f * 4.0, col.lightened(0.3), 1.2)
+			AeroportArt.box(b, p + f * (hl + 1.5), dir, 1.5, 3.5, Color(0.12, 0.12, 0.14))
+			# the white tag, flapping off the handle
+			AeroportArt.box(b, p + f * (hl + 4.0) + s * 4.0, dir + 0.6, 3.5, 1.6, Color(0.98, 0.98, 0.95))
 
 
 static func _carousel_pos(r: Rect2, angle_deg: float) -> Vector2:
@@ -452,40 +472,119 @@ static func _carousel_pos(r: Rect2, angle_deg: float) -> Vector2:
 static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 	if m.lvl != "aeroport":
 		return
-	var b: ShapeBatch = wc
-	_draw_gate_rush_live(m, b, vt, vb)
+	_draw_gate_rush_live(m, wc, vt, vb)
 
 
+# The rush: during the warning the crossing lights up, a row of amber
+# chevrons chasing across it the way they will run; then the runners, each a
+# traveller at full tilt with a case bouncing behind. The group's lead and
+# tail are the ones _tick_gate_rush sweeps the line with.
 static func _draw_gate_rush_live(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	var rush: Dictionary = m.aeroport_rush
 	var state: String = rush.get("state", "waiting")
 	if state != "running" and state != "warn":
 		return
-	if GATE_RUSH_Y < vt or GATE_RUSH_Y > vb:
+	if GATE_RUSH_Y < vt - 60.0 or GATE_RUSH_Y > vb + 60.0:
 		return
-
+	var t: float = AnimClock.msec() / 1000.0
+	var lane := Rect2(390.0, GATE_RUSH_Y - RUSH_HIT_HALF, 480.0, RUSH_HIT_HALF * 2.0)
 	if state == "warn":
-		# Warning telegraph: dashed amber crossing line
-		b.rect(Rect2(400.0, GATE_RUSH_Y - 2.0, 480.0, 4.0), Color(1.0, 0.8, 0.2, 0.45))
-	elif state == "running":
-		var progress: float = clampf(float(rush.get("t", 0.0)) / RUSH_CROSS_SECS, 0.0, 1.0)
-		for k in range(RUSH_COUNT):
-			var stagger: float = float(k) * 0.08
-			var p: float = clampf(progress - stagger, 0.0, 1.0)
-			var px: float = lerpf(390.0, 870.0, p)
-			var py: float = GATE_RUSH_Y + float((k % 2) * 2 - 1) * 16.0
-			# Traveler body
-			b.circle(Vector2(px, py), 8.0, Color(0.20, 0.25, 0.35))
-			# Rolling suitcase behind them
-			b.rect(Rect2(px - 18.0, py - 6.0, 12.0, 10.0), Color(0.70, 0.20, 0.15))
-			b.rect(Rect2(px - 6.0, py - 1.0, 6.0, 2.0), Color(0.1, 0.1, 0.1))  # handle
+		var k: float = clampf(float(rush.get("t", 0.0)) / RUSH_WARN_SECS, 0.0, 1.0)
+		var pulse := 0.5 + 0.5 * sin(t * 16.0)
+		b.band(PackedVector2Array([Vector2(lane.position.x, lane.position.y - 14.0), Vector2(lane.end.x, lane.position.y - 14.0),
+			Vector2(lane.position.x, lane.get_center().y), Vector2(lane.end.x, lane.get_center().y),
+			Vector2(lane.position.x, lane.end.y + 14.0), Vector2(lane.end.x, lane.end.y + 14.0)]), 2,
+			Color(1.0, 0.76, 0.16, 0.30 + 0.16 * pulse), PackedFloat32Array([0.0, 1.0, 0.0]))
+		for i in range(12):
+			var cx := lane.position.x + 20.0 + fposmod(float(i) * 40.0 + t * 160.0, lane.size.x - 40.0)
+			var a := 0.75 * k
+			b.quad(Vector2(cx + 10.0, GATE_RUSH_Y), Vector2(cx - 2.0, GATE_RUSH_Y - 12.0), Vector2(cx - 8.0, GATE_RUSH_Y - 12.0), Vector2(cx + 4.0, GATE_RUSH_Y), Color(1.0, 0.80, 0.20, a))
+			b.quad(Vector2(cx + 10.0, GATE_RUSH_Y), Vector2(cx + 4.0, GATE_RUSH_Y), Vector2(cx - 8.0, GATE_RUSH_Y + 12.0), Vector2(cx - 2.0, GATE_RUSH_Y + 12.0), Color(1.0, 0.80, 0.20, a))
+		return
+	var progress: float = clampf(float(rush.get("t", 0.0)) / RUSH_CROSS_SECS, 0.0, 1.0)
+	for k in range(RUSH_COUNT - 1, -1, -1):
+		var p: float = clampf(progress - float(k) * 0.08, 0.0, 1.0)
+		if p <= 0.0 or p >= 1.0:
+			continue
+		var px: float = lerpf(390.0, 870.0, p)
+		var py: float = GATE_RUSH_Y + float((k % 2) * 2 - 1) * 16.0 + sin(t * 15.0 + float(k)) * 1.5
+		AeroportArt.runner(b, Vector2(px, py), 0.0, k, t)
 
 
 static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
 	if m.lvl != "aeroport":
 		return
-	# Draw structural pillars with metallic rims and 3D caps
-	for p: Vector2 in POSTS:
-		c.draw_circle(p, 16.0, PILLAR_BASE)
-		c.draw_circle(p, 13.0, PILLAR_STEEL)
-		c.draw_circle(p + Vector2(-3.0, -3.0), 5.0, Color(0.75, 0.80, 0.88))
+	AeroportArt.draw_overhead(m, c)
+
+
+# --- the walk's furniture, as a terminal has it ------------------------------
+
+# a roof column: a concrete drum on a steel shoe, with the soft shadow of
+# something that goes all the way up
+static func draw_column(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
+	wc.glow(p + m.LIGHT * 16.0, 40.0, Color(0.05, 0.05, 0.08, 0.26), 0.3)
+	wc.circle(p, 19.0, PILLAR_BASE)
+	wc.circle(p, 16.5, Color(0.44, 0.47, 0.52))
+	wc.circle(p, 14.0, Color(0.80, 0.80, 0.79))
+	wc.circle(p - m.LIGHT * 3.5, 9.5, Color(0.90, 0.90, 0.89))
+	# the wayfinding band painted round it
+	wc.circle(p + Vector2(0.0, 9.0), 3.2, AeroportArt.SIGN_YELLOW)
+
+
+# the columns hold up a roof, not a lantern
+static func is_lamp(_m: Node2D, _p: Vector2) -> bool:
+	return false
+
+
+# a row of four seats on a beam, where a park would have a bench
+static func draw_bench(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
+	m.box_shadow(wc, Rect2(p.x - 9.0, p.y - 25.0, 18.0, 50.0), 4.0, 7.0)
+	wc.rect(Rect2(p.x + 6.0, p.y - 26.0, 3.0, 52.0), AeroportArt.STEEL)
+	for k in range(4):
+		var sp := Vector2(p.x, p.y - 18.0 + float(k) * 12.0)
+		wc.rect(Rect2(sp.x - 9.0, sp.y - 5.5, 17.0, 11.0), AeroportArt.SEAT)
+		wc.rect(Rect2(sp.x - 8.0, sp.y - 4.5, 11.0, 9.0), AeroportArt.SEAT_PAD)
+		wc.rect(Rect2(sp.x + 4.0, sp.y - 5.0, 3.0, 10.0), AeroportArt.SEAT.lightened(0.14))
+	for ey: float in [-25.0, 23.0]:
+		wc.rect(Rect2(p.x - 9.0, p.y + ey, 18.0, 2.0), AeroportArt.STEEL_DARK)
+
+
+# the recycling point: three steel mouths, one colour each
+static func draw_bin(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
+	m.box_shadow(wc, Rect2(p.x - 13.0, p.y - 9.0, 26.0, 18.0), 3.0, 7.0)
+	wc.rect(Rect2(p.x - 13.0, p.y - 9.0, 26.0, 18.0), AeroportArt.STEEL_DARK)
+	wc.rect(Rect2(p.x - 12.0, p.y - 8.0, 24.0, 15.0), AeroportArt.STEEL)
+	var cols: Array[Color] = [Color(0.96, 0.80, 0.16), Color(0.20, 0.44, 0.80), Color(0.26, 0.60, 0.36)]
+	for k in range(3):
+		var q := Vector2(p.x - 8.0 + float(k) * 8.0, p.y - 1.0)
+		wc.circle(q, 3.4, cols[k])
+		wc.circle(q, 2.3, Color(0.08, 0.08, 0.10))
+
+
+# a fig in a steel tub: the terminal's stand-in for a lamp post to sniff
+static func draw_bollard(m: Node2D, wc: ShapeBatch, h) -> void:
+	var hp: Vector2 = h.pos
+	m.contact_shadow(wc, hp, 16.0, 6.0, 0.2)
+	wc.draw_circle(hp, 13.0, AeroportArt.STEEL_DARK)
+	wc.draw_circle(hp, 11.0, AeroportArt.STEEL if not h.done else AeroportArt.STEEL.darkened(0.15))
+	wc.draw_circle(hp, 9.0, Color(0.30, 0.24, 0.18))
+	for k in range(7):
+		var a := TAU * float(k) / 7.0 + hp.y * 0.01
+		wc.capsule(hp, hp + Vector2.from_angle(a) * 16.0, 4.2, Color(0.20, 0.44, 0.26))
+		wc.draw_line(hp, hp + Vector2.from_angle(a) * 15.0, Color(0.36, 0.62, 0.36), 1.6)
+	if not h.done and h.progress > 0.0:
+		wc.draw_arc(hp, 19.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
+
+
+# --- the cabin ---------------------------------------------------------------
+
+static func draw_freedom(m: Node2D, c: Object) -> void:
+	AeroportCabin.draw(m, c)
+
+
+static func draw_park_prop(m: Node2D, c: Object, pp: Dictionary) -> bool:
+	return AeroportCabin.draw_prop(m, c, pp)
+
+
+static func draw_gate(m: Node2D, b: ShapeBatch) -> void:
+	AeroportCabin.draw_gate(m, b)

@@ -5,10 +5,15 @@ extends Node2D
 # corridor, each holding out something a dog dreads: a cone of shame, a
 # giant syringe, the nail clippers, a catch net. The same line is in the
 # walk's film (intro/film_vet.gd).
+# They are on foot (systems/chase_squad.gd): each runs for their place in the
+# line and goes round anything solid, kicks litter aside, skids in what she
+# left lying, and the line waits for whoever is held up. The catch is theirs:
+# a body and what it holds out, and the line while it holds together.
 # Implements the standard chase threat interface (setup, advance, caught,
 # gap_to, threat_boundary, sweep_junk) so systems/home_chase drives it.
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+const Squad := preload("res://systems/chase_squad.gd")
 
 const SCRUBS_TEAL := Color(0.20, 0.65, 0.60)
 const COAT_WHITE := Color(0.94, 0.96, 0.98)
@@ -37,6 +42,9 @@ const STAFF := [
 	["net", Color(0.16, 0.24, 0.42), COAT_WHITE],
 ]
 
+const STAFF_R := 24.0
+const STAFF_REACH := 54.0         # the cone's mouth, the needle, the net, ahead of the body
+const HELD_LINES := ["Excuse us!", "Mind the cone!", "Coming through!", "Hold still, pup!"]
 const SURGE := 0.24
 const CATCH_UP := 1.35
 const JAM_SECS := 3.0
@@ -59,6 +67,7 @@ var jam_at := Vector2(INF, INF)
 var kerb_blocks: Array[Rect2] = []
 var jammed_now := false
 var freed_now := false
+var squad = Squad.new()
 
 
 func setup(m: Node2D, start_front_y: float, corridor_cx: float, corridor_half: float, vet_speed: float) -> void:
@@ -68,6 +77,11 @@ func setup(m: Node2D, start_front_y: float, corridor_cx: float, corridor_half: f
 	half = corridor_half
 	speed = vet_speed
 	cur_speed = vet_speed
+	var slots: Array = []
+	var mw := half * 0.75
+	for i in range(STAFF.size()):
+		slots.append(lerpf(-mw + 30.0, mw - 30.0, float(i) / float(STAFF.size() - 1)))
+	squad.setup(slots, Vector2(cx, front_y), STAFF_R, STAFF_REACH, STAFF_BACK)
 
 
 func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
@@ -79,6 +93,7 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 		cur_speed = 0.0
 		if jam_t <= 0.0:
 			freed_now = true
+		_run(delta)
 		return
 
 	var lurch := sin(rumble * 1.1) * 0.5 + sin(rumble * 2.5) * 0.3
@@ -86,10 +101,10 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 	# Catch up if the pair is far ahead
 	if gap > 680.0:
 		mult = maxf(mult, CATCH_UP)
-	cur_speed = speed * mult
+	cur_speed = speed * mult * squad.pace()
 	front_y += cur_speed * delta
 
-	# Check for jams (sliding doors, reception desk)
+	# Check for jams (the cat carrier, the scale: a patient needs them)
 	for i in range(jams.size()):
 		if front_y >= jams[i].y:
 			jam_side = signf(jams[i].x - cx)
@@ -105,7 +120,13 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 	sway_v *= exp(-3.0 * delta)
 	sway += sway_v * delta
 	position = Vector2(cx + sway, front_y)
+	_run(delta)
 	queue_redraw()
+
+
+func _run(delta: float) -> void:
+	if main != null:
+		squad.run(main, delta, Vector2(cx + sway, front_y), cur_speed if jam_t <= 0.0 else 0.0, true, HELD_LINES, true, "Eww!")
 
 
 func jammed() -> bool:
@@ -113,35 +134,31 @@ func jammed() -> bool:
 
 
 func threat_boundary() -> float:
-	return front_y
+	return squad.front()
 
 
 func caught(p: Vector2) -> bool:
-	# Inside the giant cone's reach
-	if p.y <= front_y and p.y >= front_y - 140.0:
-		return absf(p.x - (cx + sway)) <= half * 0.75
-	return false
+	return squad.caught(p)
 
 
 func gap_to(p: Vector2) -> float:
-	return p.y - front_y
+	return p.y - squad.front()
 
 
-func sweep_junk(_junk: Array) -> int:
-	return 0
+func sweep_junk(junk: Array) -> int:
+	return squad.sweep_junk(junk)
 
 
 func _draw() -> void:
 	# home_chase keeps the node at (walk_cx, front_y); caught() reads the sway.
 	# The line spans what caught() catches (half * 0.75 either side), the
 	# staff a stride behind the catch line and what they hold out reaching it.
-	draw_set_transform(Vector2(sway, 0.0))
+	# each where they really are (systems/chase_squad.gd): held up, they strain
 	var b := ShapeBatch.new(self)
-	var mw := half * 0.75
-	for i in range(STAFF.size()):
-		var x := lerpf(-mw + 30.0, mw - 30.0, float(i) / float(STAFF.size() - 1))
-		var bob := sin(rumble * 13.0 + float(i) * 1.7) * 3.0
-		var at := Vector2(x, -STAFF_BACK + bob)
+	for i in range(mini(STAFF.size(), squad.members.size())):
+		var held: bool = float(squad.members[i]["stuck_t"]) > 0.4
+		var bob := sin(rumble * (31.0 if held else 13.0) + float(i) * 1.7) * 3.0
+		var at: Vector2 = (squad.members[i]["pos"] as Vector2) - global_position + Vector2(0.0, bob)
 		b.circle(at + Vector2(4.0, 8.0), 24.0, Color(0.04, 0.05, 0.08, 0.20))
 		var st: Array = STAFF[i]
 		_draw_item(b, at + Vector2(0.0, 20.0), String(st[0]), float(i))

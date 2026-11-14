@@ -196,6 +196,8 @@ jobs:
 
       - name: Sweeper chase devourer regression test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_sweeper.gd
+      - name: Chase vehicle (swerves round heavy things, bonks over light ones) test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_chase_vehicle.gd
 
       # the autowalk steps cannot reach the chase's "caught" branch (the bot is
       # unsweepable), so this is what covers the chase ending a walk
@@ -374,10 +376,14 @@ jobs:
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_night_fronts.gd
       - name: La Cremada (the Dimoni float chase) test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_cremada.gd
-      - name: L'Aeroport (the security cart chase) test
+      - name: L'Aeroport (the security squad chase) test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_aeroport.gd
       - name: Montserrat (the wild goat herd chase) test
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_montserrat.gd
+      - name: Chase squad (officers go round solids, kick junk, catch by body and belt) test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_chase_squad.gd
+      - name: Chase squads on their walks (staff, boars, devils, security: never in a solid, every respite a save) test
+        run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_chase_squad_walks.gd
       - name: Members exist (no call or property on main, the dog, your human or the leash that is not there)
         run: bash tools/godot_ci.sh ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/test_members_exist.gd
       - name: Patience scale (live events take a fraction of it)

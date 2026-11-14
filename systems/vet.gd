@@ -102,6 +102,11 @@ const DOORS: Array[Dictionary] = [
 const PRIZE := Vector2(440.0, -2510.0)
 const PRIZE_TEXT := "snatch the liver treat jar from the reception desk"
 
+# Where the chase home holds them (home_chase.VET_BANDS): a cat hissing in its
+# carrier on the west wall, then a patient on the scale. They had none before:
+# the bands named jams that were never placed.
+const CHASE_JAMS: Array[Vector2] = [Vector2(395.0, -3600.0), Vector2(490.0, -1650.0)]
+
 # Cat carrier spots (nervous cats that hiss when barked at or approached)
 const CAT_CARRIERS: Array[Vector2] = [
 	Vector2(885.0, -1350.0),
@@ -151,6 +156,9 @@ static func wrap_rects() -> Array[Rect2]:
 # --- build -------------------------------------------------------------------
 static func build(m: Node2D) -> Array:
 	m.gate_text = "CLÍNICA VETERINÀRIA"
+	m.chase_jams.clear()
+	for j: Vector2 in CHASE_JAMS:
+		m.chase_jams.append(j)
 	m.patches.clear()
 	m.stalls.clear()
 	m.stall_kinds.clear()

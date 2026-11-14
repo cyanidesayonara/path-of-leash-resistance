@@ -7,6 +7,26 @@ Append-only session history, newest first.
 - The Sant Joan funicular was on the path about three quarters of its cycle, rang its bell only once already there, and knocked the dog and shouted every frame they overlapped, while your human walked through it. It now crosses, waits off the path at the far side for 6 seconds and comes back; the bell rings 0.8 s before it reaches the path; it hits the dog or your human once a pass (a bump costs the live-event share of patience); and a pass that came by the pair and hit nobody pays the goal once (`systems/montserrat.gd`, `tests/test_montserrat.gd`, 36 checks).
 - The funicular, the mel i mató bark and boulder dodges added bones without the HUD hearing; they pay through `award_points` now.
 
+## 2026-11-14 - The chases on foot: staff, boars and devils
+
+- El Veterinari's staff, Els Senglars' boars and Festa de Gràcia's devils (the dragon in the middle of their line) are squads on foot like L'Aeroport's security (`systems/chase_squad.gd`): each goes round anything solid, kicks litter aside, and the line waits for whoever is held up. The catch is theirs: a body and what it holds out, and the line while it holds together. Held up, the staff and devils call out; the boars snort. The staff and devils skid in what she left lying; boars, who love muck, run straight through it.
+- Every squad chase has two rest-and-save points. El Veterinari had none that worked (its bands named jams that were never placed): the staff now stop for a hissing cat in its carrier (-3600) and a patient on the scale (-1650). The first jam on Els Senglars, Festa de Gràcia and L'Aeroport is now a save too.
+- The squad's steering: a member goes round the side it fits through within the walk's edges, the sidestep wins over heading for its place, a held-up member squeezes in beside its neighbours, and one held up for over 2.5 s clambers over (none do on these walks now).
+- `tests/test_chase_squad_walks.gd` runs every squad the length of its walk.
+## 2026-11-14 - L'Aeroport art pass, the security squad and La Cabina
+
+- The terminal is drawn as one (`systems/aeroport_art.gd`, on the cached edge, ground and overhead canvases). West: the apron through a floor-to-ceiling glass wall, mullions and their reflections, the head-of-stand road with tugs and dollies going by, jets parked nose in at B21, B25 and B29 with their boarding bridges, stand paint and ground crew, the runway beyond. East: glazed holdrooms B20 to B30 with carpet, seat beams, passengers and boarding doors, duty free, a cafe, the security hall at the start and the jets at the far windows. The floor: terrazzo slabs, sun through the glass, roof-beam shadows and rooflights, carpet at the gates, a tactile strip, floor signs. Hung signs, departure boards and the security arch overhead. Every solid is where it was.
+- The walkway's belt, combs and handrails move with it; the carousel carries cases, a guitar and a pet crate; columns, seats, bins and planted figs are the terminal's own.
+- The gate rush: an amber crossing telegraphs it, then four travellers run it at full tilt, each hauling a bouncing roller case.
+- The chase is the airport security squad (`entities/aeroport_threat.gd`), five officers across the hall like El Veterinari's staff, a queue belt taut between the ends, holding out a travel crate, a net, a detector wand, a loudhailer and a whistle, drawn to their real catch zone. They boot cases up the floor at you, with a filling ring where each will stop. The two respites are drawn: the queue at B22's tape (-1900) and the perfume pyramid (-3400), and both are now real jam points.
+- The off-leash space is La Cabina, the cabin of the jet at the end of the bridge (`systems/aeroport_cabin.gd`): three seat blocks and two aisles, bins, a galley and lavatories, passengers, dropped masks, a spilled drinks run and a trail of paper. Holdalls to dig, drinks trolleys to go round, roller cases and blanket heaps to sniff and mark, the ice bucket to drink from.
+- The film, "Last call", is rebuilt on the FilmKit beats: the pier side on with a jet at its stand, the bing bong, the squad bursting through the queue belts, cases skidding, and the crate's mouth on the card.
+- New walk hooks in main: `draw_park_prop`, `draw_gate` and `draw_bench`.
+- The squad is on foot (`systems/chase_squad.gd`, shared by any chase that is a line of walkers): each officer runs for their place in the line, goes round anything solid (the walkway's rails, desks, benches, posts), kicks litter aside, and the line slows to wait for whoever is held up, who strains and shouts. They catch with their bodies and what they hold out, and with the belt while the line is together; split round a pillar, the gap is open. `tests/test_chase_squad.gd`.
+- The way home, the walkway is stopped (an emergency: red lamps in its newels, ATURADA at each end). Before, your human walked home against the belt and the squad caught them every time.
+- With a chase on your tail or a boss fight on (`main.under_pressure()`), she holds it: her urge waits, and a squat she chooses takes 1 s, not 2.5. Your human leaves what she does where it lies ("No time!"), giving up the walk to it or to a bin, and an officer who runs through it skids ("Eww!"), held up for a moment while the line waits. Once a boss fight is over, your human goes back for it.
+- L'Aeroport now draws its own walkway in main's `draw_conveyor` slot: main had been drawing L'Estació's over it.
+
 ## 2026-11-13 - L'Aeroport review fixes
 
 - The travelator has real sides: a glass balustrade with its rubber handrail along each edge, solid for anyone walking and open only at the two ends, so you step on and off where a real one lets you (`Aeroport.balustrades()`).
@@ -66,6 +86,23 @@ Append-only session history, newest first.
     - Added the direct *Aeroport T1* Rodalies departure board row on the main concourse board connecting the city station to the airport terminal, with updated divider lines.
   - Comprehensive test suite: `tests/test_aeroport.gd` (35 checks covering level registration, goals, chase profile, conveyor zone, buggy threat advance and luggage dodges, gate rush state machine, and carousel bark). All regression suites pass (`test_walk_hooks.gd` 922 checks, `test_chase_film.gd` 247 checks, `test_npc_clear_of_solids.gd` 372 checks, `test_wrap.gd`).
 
+
+## 2026-11-14 - The sweeper drives like a cartoon machine
+
+- The chase sweeper (La Neteja's, and the chase on walks without their own threat) cares what is in its way (`systems/chase_vehicle.gd`): a parked van, stall, fountain or block in its lane it swerves round, hard, where there is room; posts, hydrants and benches it bonks straight over, juddering, sparks and bits flying, a little slower for it. Its jams still hold it.
+- Something heavy it cannot swerve round stops it dead for a moment when it hits it (a crash, a shudder, bits flying), and then it smashes on through: an unplanned breather beside the authored jams.
+- La Cremada's Dimoni float drives the same way: too wide to swerve much, a juggernaut that crunches over posts and benches and stalls on anything heavy. It is drawn where it really is (it was always drawn on the centre line while its catch followed its sway). Its first jam (the underpass, -3400) is a save too.
+- La Neteja's first dumpster jam is a save as well as a rest, so the way home has two (`home_chase.NETEJA_BANDS`).
+- `tests/test_chase_vehicle.gd`; the chase-walk and checkpoint tests follow the two saves.
+## 2026-11-13 - Review fixes for #515-#523
+
+A review of the 1.72 PRs merged since the release notes (#515 to #523) found these, now fixed:
+
+- The Fur-goneta's bark honk paid +2 every 1.1 seconds with no limit, so a dog could stand by the van and bark for points. The first honk of a walk pays; later ones are only the horn (`systems/furgoneta.gd`, `tests/test_furgoneta.gd`).
+- The Fur-goneta no longer blows soap bubbles: they added nothing and could be mistaken for the dog's smell bubbles. Its horn reads AWOOGA!, BEEP-BEEP! and HONK! without asterisks, and the groomer's offer no longer writes a button into the sentence (the dare card already shows it).
+- The store listing, the itch page and PROJECT.md named a film and its van; they now describe our own van.
+- Snatching La Cremada's dropped churro showed "churro snatch! +2" twice (`systems/cremada.gd`).
+- The castellers' cheer window in Gràcia and El Gòtic read the cosmetic animation clock, so it ran on during pause and its tests only checked the window when the wall clock happened to land in it. The tower's cycle now runs on the walk's clock in one place (`systems/castell_cycle.gd`), the drawing and the cheer share it, and both tests set the clock in and out of the window.
 
 ## 2026-11-11 - Level sweep: solid bypasser blockers audit and test determinism
 
