@@ -7,7 +7,10 @@ extends SceneTree
 # hall's drain gets wet-floor signs, not road cones.
 
 const LEVELS := ["street", "park", "beach", "rain", "market", "oldtown", "trail", "station",
-	"besos", "site", "spook", "scrap", "guell", "neteja", "barri", "montjuic", "partit"]
+	"besos", "site", "spook", "scrap", "guell", "neteja", "barri", "montjuic", "partit",
+	"tibidabo", "aigues", "horta", "llevant", "montserrat", "vet"]
+# where a traffic cone would not belong (LevelBuild.CONE_KINDS): none
+const NO_CONES := ["park", "beach", "trail", "montjuic", "tibidabo", "aigues", "horta", "llevant", "montserrat", "vet"]
 const JUNK := ["can", "bottle", "sack", "crate", "ball"]
 
 var checks := 0
@@ -50,6 +53,14 @@ func _run() -> void:
 				if String(c.kind) == "cone" and c.position.distance_to(lb.MERCAT_DRAIN) < 50.0:
 					road_cones += 1
 			_check(wet >= 2 and road_cones == 0, "market: wet-floor signs at the drain, no road cones (%d, %d)" % [wet, road_cones])
+		if lvl in NO_CONES:
+			var cones := 0
+			for c: Node2D in m.get_tree().get_nodes_in_group("cones"):
+				if String(c.kind) == "cone":
+					cones += 1
+			_check(cones == 0, "%s: no traffic cones where there is no traffic (%d)" % [lvl, cones])
+		if lvl == "vet":
+			_check(wet >= 2, "vet: a wet-floor sign by each mopped spill (%d)" % wet)
 		_check(n > 0, "%s: there is some junk" % lvl)
 		_check(bad.is_empty(), "%s: no junk inside anything, in the road or off the path: %s" % [lvl, bad])
 		m.queue_free()

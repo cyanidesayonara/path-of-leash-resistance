@@ -206,15 +206,21 @@ static func build(m: Node2D) -> Array:
 		Vector2(480.0, -3600.0),
 	]
 
-	# Clean slick linoleum patches (wet floor cleaning / disinfectant spills)
-	m.patches.append({
-		"y": -1450.0, "at": 0.35, "rx": 34.0, "ry": 24.0, "seed": 7.1,
-		"kind": "puddle", "col": Color(0.75, 0.90, 0.95, 0.5), "splashes": true,
-	})
-	m.patches.append({
-		"y": -2850.0, "at": 0.65, "rx": 36.0, "ry": 26.0, "seed": 7.2,
-		"kind": "puddle", "col": Color(0.75, 0.90, 0.95, 0.5), "splashes": true,
-	})
+	# just mopped: two wet patches on the linoleum, each with its yellow
+	# wet-floor sign stood beside it (LevelBuild.CONE_KINDS). Drawn as a thin
+	# glossy film (main._draw_spill), not an outdoor puddle.
+	var spills: Array[Dictionary] = [
+		{"y": -1450.0, "at": 0.35, "rx": 34.0, "ry": 24.0, "seed": 7.1,
+			"kind": "puddle", "spill": true, "splashes": true},
+		{"y": -2850.0, "at": 0.65, "rx": 36.0, "ry": 26.0, "seed": 7.2,
+			"kind": "puddle", "spill": true, "splashes": true},
+	]
+	var signs: Array[Vector2] = []
+	for sp: Dictionary in spills:
+		m.patches.append(sp)
+		var c: Vector2 = m.patch_centre(sp)
+		signs.append(c + Vector2(float(sp["rx"]) + 18.0, -float(sp["ry"]) * 0.4))
+	m.cone_spots = Array(signs, TYPE_VECTOR2, &"", null)
 
 	return [marks, snacks]
 

@@ -4324,13 +4324,44 @@ static func build_entities(m: Node2D) -> void:
 const JUNK_Z := 4
 
 
+# What a walk's loose kickable things are, where a traffic cone would not
+# belong: cycled through its cone spots. A walk not listed has cones (streets,
+# works, the port, the stadium).
+const CONE_KINDS := {
+	"neteja": ["crate"],                 # the delivery crates by its dumpsters
+	"aeroport": ["wetfloor"],
+	"vet": ["wetfloor"],                 # beside the mopped spills
+	"park": ["ball"],                    # a lost kids' ball
+	"horta": ["ball"],
+	"tibidabo": ["ball"],
+	"beach": ["ball", "bottle"],
+	"llevant": ["ball", "bottle"],
+	"trail": ["bottle", "can"],          # litter someone left on the path
+	"montjuic": ["bottle", "can"],
+	"aigues": ["bottle", "can"],
+	"montserrat": ["bottle", "can"],     # a pilgrim's empty water bottle
+}
+
+
+static func cone_kind(lv: String, i: int) -> String:
+	var kinds: Array = CONE_KINDS.get(lv, ["cone"])
+	return String(kinds[i % kinds.size()])
+
+
 static func spawn_cones(m: Node2D) -> void:
 	# real, kickable cones at every work site plus a few loose ones
 	# [where, kind]: cones unless the place calls for something else
 	var spots: Array = []
-	for cs: Vector2 in m.cone_spots:
-		# La Neteja's are the delivery crates by its dumpsters
-		spots.append([cs, "crate" if m.lvl == "neteja" else ("wetfloor" if m.lvl == "aeroport" else "cone")])
+	for i in range(m.cone_spots.size()):
+		var kind := cone_kind(String(m.lvl), i)
+		var at: Vector2 = m.cone_spots[i]
+		if kind not in ["cone", "wetfloor"]:
+			# loose litter must lie where litter can (junk_spot_clear); a cone
+			# spot at the path's edge slides in toward its middle until it does
+			at = _clear_toward_middle(m, at)
+			if at.x >= INF:
+				continue
+		spots.append([at, kind])
 	# the market hall's floor drain, just hosed down: wet-floor signs
 	if m.lvl == "market":
 		spots.append([MERCAT_DRAIN + Vector2(34, -20), "wetfloor"])
@@ -4456,6 +4487,17 @@ static func on_cross_street(m: Node2D, p: Vector2) -> bool:
 # somewhere loose junk can lie: on the path, off the side streets and not
 # inside anything solid (bypasser_blockers: stalls, vans, benches, the pond,
 # manholes...)
+static func _clear_toward_middle(m: Node2D, p: Vector2) -> Vector2:
+	var e: Vector2 = m.walk_edges(p.y)
+	var mid := (e.x + e.y) * 0.5
+	var dir := signf(mid - p.x)
+	for k in range(12):
+		var q := Vector2(p.x + dir * 20.0 * float(k), p.y)
+		if junk_spot_clear(m, q):
+			return q
+	return Vector2(INF, INF)
+
+
 static func junk_spot_clear(m: Node2D, p: Vector2) -> bool:
 	if on_cross_street(m, p):
 		return false

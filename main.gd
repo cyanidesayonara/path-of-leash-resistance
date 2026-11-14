@@ -9330,6 +9330,52 @@ func _draw_mud_detail(pt: Dictionary, base: Color) -> void:
 	b.flush(_wc)
 
 
+# In a park the thing a dog marks is a tree stump: sawn flat, its rings
+# showing, moss on the shaded side, a fungus bracket. Marked, it darkens.
+func _draw_mark_stump(p: Vector2, done: bool) -> void:
+	var wet := 0.18 if done else 0.0
+	cast_shadow(_wc, p, 11.0, 16.0)
+	var bark := Color(0.36, 0.25, 0.17).darkened(wet)
+	var wood := Color(0.78, 0.62, 0.42).darkened(wet)
+	# the roots spreading into the ground
+	for k in range(4):
+		var a := 0.6 + float(k) * 1.55
+		_wc.draw_line(p, p + Vector2.from_angle(a) * 16.0, bark.darkened(0.15), 5.0)
+	_wc.draw_circle(p, 12.0, bark)
+	_wc.draw_circle(p, 9.5, wood)
+	for r: float in [6.8, 4.2, 1.8]:
+		_wc.draw_arc(p, r, 0.0, TAU, 14, wood.darkened(0.16), 1.0)
+	# the saw's last cut, a split, moss on the shaded side
+	_wc.draw_line(p + Vector2(-2.0, -1.0), p + Vector2(7.0, 4.0), wood.darkened(0.3), 1.2)
+	_wc.draw_arc(p + Shade.SUN * 1.5, 11.5, 0.2, 1.9, 8, Color(0.34, 0.48, 0.20).darkened(wet), 3.0)
+	_wc.draw_circle(p + Vector2(-11.0, 4.0), 3.2, Color(0.86, 0.68, 0.40).darkened(wet))
+	_wc.draw_circle(p + Vector2(-10.5, 3.2), 1.8, Color(0.96, 0.84, 0.58).darkened(wet))
+
+
+# water on an indoor floor (a mopped spot, a knocked-over bowl): a thin film,
+# barely tinted, that shows itself by its sheen and a smoother edge, never by
+# a dark lobed body with flecks (that is an outdoor puddle, and on lino it
+# read as wet cement)
+func _draw_spill(pt: Dictionary) -> void:
+	var mid := patch_centre(pt)
+	var rx := float(pt["rx"])
+	var ry := float(pt["ry"])
+	draw_patch(_wc, pt, Color(0.80, 0.90, 0.96, 0.30), Color(0.55, 0.66, 0.72, 0.16))
+	# the sheen: two soft streaks catching the ceiling lights
+	var sd := float(pt["seed"])
+	for k in range(2):
+		var off := Vector2(-rx * (0.22 - 0.30 * float(k)), -ry * (0.28 - 0.22 * float(k)))
+		var a := mid + off + Vector2(-rx * 0.20, ry * 0.06)
+		var b := mid + off + Vector2(rx * 0.16, -ry * 0.10)
+		_wc.draw_line(a, b, Color(1.0, 1.0, 1.0, 0.55 - 0.2 * float(k)), 3.0 - float(k))
+	# a few drops flicked off the mop past the edge
+	for i in range(3):
+		var ang := sd * 2.3 + float(i) * 2.1
+		var dp := mid + Vector2(cos(ang) * rx * 1.25, sin(ang) * ry * 1.25)
+		_wc.draw_circle(dp, 2.2 - float(i) * 0.4, Color(0.80, 0.90, 0.96, 0.4))
+		_wc.draw_circle(dp + Vector2(-0.6, -0.6), 0.8, Color(1, 1, 1, 0.6))
+
+
 func draw_patch(c: Object, pt: Dictionary, col: Color,
 		rim := Color(0, 0, 0, 0)) -> void:
 	var mid := patch_centre(pt)
@@ -12408,6 +12454,17 @@ func _draw_world() -> void:
 			if not h.done and h.progress > 0.0:
 				_wc.draw_arc(hp, 19.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
 			continue
+		if lvl == "park" or lvl == "ciutadella":
+			_draw_mark_stump(hp, h.done)
+			if not h.done and h.progress > 0.0:
+				_wc.draw_arc(hp, 20.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
+			continue
+		if lvl == "beach" or lvl == "llevant":
+			# the promenade's outdoor showers: what gets marked on a beach walk
+			_draw_beach_shower(_wc, hp)
+			if not h.done and h.progress > 0.0:
+				_wc.draw_arc(hp, 18.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
+			continue
 		if String(h.get("kind", "")) == "statue":
 			if not h.done and h.progress > 0.0:
 				_wc.draw_arc(hp, 17.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
@@ -12660,6 +12717,9 @@ func _draw_world() -> void:
 			continue
 		if sk == "sand":
 			_draw_sand_drift(pt)
+			continue
+		if pt.get("spill", false):
+			_draw_spill(pt)
 			continue
 		var base: Color = Color(0.34, 0.26, 0.18)
 		if SUBSTANCES.has(sk):

@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-14 - Objects that fit the place: Montserrat, the parks, the beaches, the vet's
+
+- Montserrat drew town fire hydrants as its marking spots and traffic cones on a mountain path. Its marking spots are cairns now, the stacked stones walkers leave to show the way, in the mountain's pink conglomerate, darkening when marked; its dropped snack is a carquinyoli biscuit spilt from its bag (`systems/montserrat.gd`).
+- A screenshot sweep of 16 natural walks found red street hydrants still standing in El Parc, on the Ciutadella's lawns and on the promenades at Passeig Marítim and Llevant. The parks' marking spots are sawn tree stumps now (rings, moss on the shaded side, a fungus bracket; `main._draw_mark_stump`), and the beaches' are the promenade's outdoor showers.
+- Cones only where there is traffic: each walk's cone spots take a kind from `LevelBuild.CONE_KINDS`. A lost ball in El Parc, El Laberint d'Horta and El Tibidabo; a ball or a bottle on the beaches; a bottle or a can on El Bosc, Montjuïc, La Carretera de les Aigües and Montserrat. Litter that lands at the path's edge slides in until it lies clear.
+- El Veterinari's "slick linoleum" spills were drawn as outdoor puddles (grey lobes with dark flecks), which read as wet cement. They are a thin glossy film now, with a sheen and a few drops off the mop, and a yellow wet-floor sign beside each (`main._draw_spill`, `systems/vet.gd`).
+- Tests: `tests/test_junk_placement.gd` covers six more walks, no traffic cones on the ten walks without traffic, and the vet's signs; `tests/test_walk_hooks.gd` declares Montserrat's new hooks.
+
 ## 2026-11-14 - Home walk-in strides, night shadows, softer lit fronts
 
 - Merged the 1.73 stack: #529 (chase machines), #524 (L'Aeroport), #531 (chase squads on foot), #525 (Montserrat), #526 (Els Lleons), #527 (El Drac).
