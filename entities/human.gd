@@ -1247,6 +1247,17 @@ func show_nag() -> void:
 			bubble.visible = false)
 
 
+# No time for the chore (a chase, a boss fight): heading for it or for a bin,
+# they give up and walk on, a bag already picked up kept in hand. Bent over
+# it or tossing, they finish. True if they gave something up.
+func give_up_chore() -> bool:
+	if state != HState.GO_POOP and state != HState.GO_BIN:
+		return false
+	state = HState.WALK
+	bin_stuck_t = 0.0
+	return true
+
+
 func resume_to_bin(bin: Vector2) -> void:
 	# chain interrupted while already carrying the bag: head for a bin
 	if state in [HState.FALLEN, HState.WHIRL, HState.GO_BIN, HState.TOSS]:

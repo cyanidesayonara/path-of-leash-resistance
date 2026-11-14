@@ -398,6 +398,7 @@ var furgoneta_sniffed := false
 var furgoneta_flash_t := 0.0
 var furgoneta_wiper_t := 0.0
 var furgoneta_honk_cd := 0.0
+var furgoneta_honk_paid := false
 var fresh_coat_t := 0.0
 var furgoneta_dare_offered := false
 var furgoneta_dare_won := false
@@ -988,6 +989,8 @@ var urge_timer := 0.0
 # earth) or a tree's pit is a good spot and pays POOP_GOOD_BONES; the pavement
 # pays POOP_PAVE_BONES and costs your human a little patience.
 const POOP_URGE_S := 35.0
+const POOP_SQUAT := 2.5           # s of squat for her business
+const POOP_SQUAT_RUSHED := 1.0    # and with a chase or a boss on (under_pressure)
 const POOP_SNACK_PULL := 300.0
 const POOP_ZOOM_PULL := 60.0
 # never so soon it comes at the start line
@@ -4687,6 +4690,11 @@ func _draw_freedom_beyond(c: Object) -> void:
 # two leaves swung open everywhere else. Same mouth, gate_l to gate_r.
 func _draw_gate() -> void:
 	var b := ShapeBatch.new()
+	if walk_mod != null and walk_mod.has_method("draw_gate"):
+		# a way in that is no gate at all (the door of L'Aeroport's jet)
+		walk_mod.draw_gate(self, b)
+		b.flush(_wc)
+		return
 	var style := "iron"
 	if lvl in ["trail", "guell", "park", "llevant"] and not tutorial_mode:
 		style = "timber"
@@ -5498,6 +5506,10 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 		# these were drawn in full every redraw with no culling at all
 		if p.y < vt - 60.0 or p.y > vb + 60.0:
 			continue
+		# a walk whose space is not a park draws its own furniture (L'Aeroport's
+		# cabin: bags to dig in, trolleys, roller cases)
+		if walk_mod != null and walk_mod.has_method("draw_park_prop") and walk_mod.draw_park_prop(self, c, pp):
+			continue
 		var prog := float(pp.prog)
 		var done: bool = pp.done
 		# everything gets a shadow: it is an object, not a decal. Uprights get
@@ -5773,7 +5785,7 @@ func _draw_ground_detail(vt: float, vb: float) -> void:
 		var dir := Vector2.from_angle(float(d.rot))
 		# the concourse floor is polished terrazzo, indoors: grit and litter
 		# on it, never a cracked or damp street slab
-		if lvl == "station" and (int(d.kind) == 0 or int(d.kind) == 2):
+		if (lvl == "station" or lvl == "aeroport") and (int(d.kind) == 0 or int(d.kind) == 2):
 			continue
 		match int(d.kind):
 			0:
@@ -10591,7 +10603,10 @@ func _bodily(delta: float) -> void:
 				urge_timer = POOP_URGE_S
 				float_text(dog.global_position, "Uh oh...", Color(1, 0.9, 0.6))
 		1:
-			urge_timer -= delta
+			# she holds it while they run for it (a chase home, a boss fight)
+			var pressed := under_pressure()
+			if not pressed:
+				urge_timer -= delta
 			var squatting: bool = Input.is_action_pressed("poop") \
 				and not dog.is_tumbling() and dog.velocity.length() < 90.0
 			if squatting:
@@ -10599,13 +10614,15 @@ func _bodily(delta: float) -> void:
 					# she checks the spot before she commits to it
 					_poop_sniffed = true
 					float_text(dog.global_position + Vector2(0, -34), "sniff, sniff", Color(1, 0.95, 0.8))
+				# with them on your tail it is a quick one
+				var squat_secs := POOP_SQUAT_RUSHED if pressed else POOP_SQUAT
 				squat_progress += delta
-				dog.squat_ui = squat_progress / 2.5
-				if squat_progress >= 2.5:
+				dog.squat_ui = squat_progress / squat_secs
+				if squat_progress >= squat_secs:
 					_finish_business(true)
 			else:
 				squat_progress = maxf(0.0, squat_progress - delta * 2.0)
-				dog.squat_ui = squat_progress / 2.5
+				dog.squat_ui = squat_progress / (POOP_SQUAT_RUSHED if pressed else POOP_SQUAT)
 				if squat_progress <= 0.0:
 					_poop_sniffed = false
 			# the dog shows a good spot under her paws while nature calls
@@ -10618,13 +10635,19 @@ func _bodily(delta: float) -> void:
 			# the owner's chore chain: walk to it, bag it, find a bin.
 			# Falls and whirls interrupt; they resume when back on
 			# their feet - with the bag, if they already picked it up
-			if bag_pending and human.is_available_for_chore():
+			if bag_pending and under_pressure():
+				# no time: your human leaves it where it lies (or keeps the
+				# bag in hand), and it is there for whoever is chasing
+				if human.give_up_chore():
+					human.notice("No time!", 1.2)
+			elif bag_pending and human.is_available_for_chore():
 				if human.carrying_bag:
 					human.resume_to_bin(nearest_bin(human.global_position))
 				elif business_spot.x < INF:
 					human.fetch_poop(business_spot)
 		3:
-			urge_timer -= delta
+			if not under_pressure():
+				urge_timer -= delta
 			if urge_timer <= 0.0:
 				poop_state = 4
 				dog.forced_squat(2.5)
@@ -10636,6 +10659,22 @@ func _bodily(delta: float) -> void:
 	if hud_t <= 0.0:
 		hud_t = 0.15
 		_update_hud()
+
+
+# A chase home or a boss fight on: no time for chores. She holds it (her urge
+# waits), a squat she chooses is a quick one, and your human leaves what she
+# does where it lies.
+func under_pressure() -> bool:
+	if phase == "home" and chase_active and chase_sweeper != null:
+		return true
+	return (boss_gat != null and boss_gat.in_fight()) or (mamut != null and mamut.in_fight())
+
+
+# where she went, left lying because there was no time: for a chaser to step in
+func left_business() -> Vector2:
+	if bag_pending and business_spot.x < INF:
+		return business_spot
+	return Vector2(INF, INF)
 
 
 # The call comes sooner by `px` down the walk (a snack, zoomies), never at
@@ -10764,7 +10803,7 @@ const FREEDOM_KINDS := {
 	"eixample": "yard",
 	# the beach where the Dimoni is burned
 	"cremada": "beach",
-	# the outdoor pet relief terrace overlooking the airfield
+	# the cabin of the jet at the end of the bridge (systems/aeroport_cabin.gd)
 	"aeroport": "yard",
 	# the monastery terrace lookout clearing overlooking the valleys
 	"montserrat": "clearing",
@@ -11985,6 +12024,9 @@ func _draw_furniture(vt: float, vb: float) -> void:
 	# its upper-left, and the shadow of something knee high
 	for b in benches:
 		if b.y < vt - 60.0 or b.y > vb + 60.0:
+			continue
+		if walk_mod != null and walk_mod.has_method("draw_bench"):
+			walk_mod.draw_bench(self, _wc, b)
 			continue
 		var bseat := Rect2(b.x - 8.0, b.y - 24.0, 16.0, 48.0)
 		box_shadow(_wc, bseat, 4.0, 7.0)

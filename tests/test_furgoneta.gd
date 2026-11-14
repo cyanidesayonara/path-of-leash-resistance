@@ -1,6 +1,6 @@
 extends SceneTree
 
-# Regression test for upgraded Fur-goneta (Mutt Cutts facelift & multi-walk presence).
+# Regression test for upgraded Fur-goneta (facelift & multi-walk presence).
 # Tests placement across 4 walks (street, beach, superilla, park),
 # absence in market hall, bypasser blockers, rope soft wrap, bark honk reaction & cooldown,
 # discovery sniffing payout, style dare offer/resolution, and fresh coat grooming buff.
@@ -110,6 +110,11 @@ func _run() -> void:
 	_check(m.furgoneta_honk_cd == 0.0, "cooldown ticks down")
 	_check(m.furgoneta_flash_t == 0.0, "flash timer ticks down")
 	_check(m.furgoneta_wiper_t == 0.0, "wiper timer ticks down")
+
+	# Honk again after the cooldown: the horn sounds, but only the first pays
+	var honk_again: bool = FurgonetaMod.on_bark(m, near_pos)
+	_check(honk_again, "the horn honks again once the cooldown is over")
+	_check(m.bones == 2, "a second honk pays nothing (got %d)" % m.bones)
 
 	# --- 4. Scent sniffing interaction ---
 	_check(not m.furgoneta_sniffed, "van starts unsniffed")

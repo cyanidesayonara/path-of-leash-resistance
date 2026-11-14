@@ -73,7 +73,7 @@ const MAIN_FIELDS := [
 	"boar_mud_splashes", "boar_swings", "churros_eaten", "gracia_arches_zoomed", "gracia_arch_mask",
 	# La Cremada's: the rockets dodged and taken
 	"cremada_dodges", "cremada_hits",
-	# L'Aeroport's: tumbling suitcases dodged and buggy hits
+	# L'Aeroport's: suitcases dodged and suitcase hits
 	"aeroport_luggage_dodges", "aeroport_cart_hits",
 	# Montserrat: tumbling boulders dodged and goat hits
 	"montserrat_boulder_dodges", "montserrat_goat_hits",

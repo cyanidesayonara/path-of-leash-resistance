@@ -2309,6 +2309,9 @@ static func build_level_data(m: Node2D) -> void:
 				m.trees.append_array(placa_trees(m))
 				# and the pigeons that live in every square
 				m.flock_ys.append(m.GATE_Y - 330.0)
+	# a jet's cabin grows nothing: its solids are the trolleys (FREEDOM_PROPS)
+	if m.lvl == "aeroport":
+		grove = 0
 	for i in range(grove):
 		for attempt in range(20):
 			var tx := randf_range(grove_lo, grove_hi)
@@ -3184,12 +3187,14 @@ const FREEDOM_PROPS := {
 		[Vector2(1044.0, -466.0), "post"], [Vector2(308.0, -244.0), "shrub"], [Vector2(552.0, -238.0), "post"],
 		[Vector2(776.0, -214.0), "shrub"],
 	],
+	# the cabin: bags to dig in the aisles, drinks trolleys to go round, roller
+	# cases and heaps of blankets to sniff, all clear of the door's mat
 	"aeroport": [
-		[Vector2(248.0, -536.0), "dig"], [Vector2(652.0, -282.0), "dig"], [Vector2(1046.0, -310.0), "dig"],
-		[Vector2(346.0, -528.0), "planter"], [Vector2(916.0, -248.0), "planter"], [Vector2(1074.0, -462.0), "planter"],
-		[Vector2(168.0, -438.0), "post"], [Vector2(178.0, -266.0), "shrub"], [Vector2(308.0, -318.0), "post"],
-		[Vector2(558.0, -532.0), "post"], [Vector2(814.0, -528.0), "shrub"], [Vector2(832.0, -308.0), "post"],
-		[Vector2(948.0, -244.0), "shrub"],
+		[Vector2(250.0, -480.0), "dig"], [Vector2(1100.0, -250.0), "dig"], [Vector2(720.0, -486.0), "dig"],
+		[Vector2(520.0, -300.0), "planter"], [Vector2(880.0, -470.0), "planter"], [Vector2(152.0, -204.0), "planter"],
+		[Vector2(168.0, -490.0), "post"], [Vector2(540.0, -500.0), "post"], [Vector2(820.0, -222.0), "post"],
+		[Vector2(308.0, -215.0), "post"], [Vector2(1100.0, -480.0), "post"],
+		[Vector2(400.0, -476.0), "shrub"], [Vector2(980.0, -458.0), "shrub"], [Vector2(640.0, -300.0), "shrub"],
 	],
 	"montserrat": [
 		[Vector2(244.0, -526.0), "dig"], [Vector2(638.0, -270.0), "dig"], [Vector2(1038.0, -312.0), "dig"],

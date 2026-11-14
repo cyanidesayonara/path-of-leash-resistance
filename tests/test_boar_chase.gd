@@ -48,7 +48,10 @@ func _run() -> void:
 	var prev_y: float = threat.front_y
 	threat.advance(0.1, 300.0, 0.0)
 	_check(threat.front_y > prev_y, "boar advances forward along y")
-	_check(threat.threat_boundary() == threat.front_y, "threat boundary matches front_y")
+	# the boundary is the frontmost snout (systems/chase_squad.gd), just behind
+	# the line's anchor
+	var tb: float = threat.threat_boundary()
+	_check(tb <= threat.front_y + 1.0 and tb > threat.front_y - 80.0, "threat boundary is the frontmost snout, at the line (%.0f vs %.0f)" % [tb, threat.front_y])
 
 	# 4. Catch detection
 	# A dog right at front_y within the corridor should be caught

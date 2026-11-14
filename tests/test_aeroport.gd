@@ -1,12 +1,12 @@
 extends SceneTree
 
-# Tests L'Aeroport and the Security Cart Buggy (systems/aeroport.gd,
+# Tests L'Aeroport and the airport security squad (systems/aeroport.gd,
 # entities/aeroport_threat.gd, intro/film_aeroport.gd):
 # - registered in LEVELS, CAROUSEL, STAR_GATE, CHASE_GATE, LEVEL_NAMES, CAMPAIGN_SKY
 # - the goals table has its goals
 # - its chase profile has its script and its story film
 # - the moving walkway (conveyor_zone) carries forward
-# - the security cart rolls, steers toward the pair, and drops rolling suitcases
+# - the security squad advances, steers toward the pair, and boots suitcases
 # - dodging clear of a tumbling suitcase awards a dodge; inside the radius hits
 # - a continue restores the suitcase dodge and hit counts
 # - the Gate Rush triggers on the way out, warns, crosses, and awards a dodge
@@ -80,7 +80,7 @@ func _run() -> void:
 	# --- 3. Chase profile and film ---
 	var prof: Dictionary = HC.profile_for("aeroport")
 	_check(not prof.is_empty(), "has a chase profile")
-	_check(String(prof.get("kind", "")) == "buggy", "threat kind is buggy")
+	_check(String(prof.get("kind", "")) == "security", "threat kind is security")
 	_check(String(prof.get("script", "")) == "res://entities/aeroport_threat.gd", "threat script")
 	_check(String(prof.get("film", "")) == "res://intro/film_aeroport.gd", "its film")
 	_check(prof.get("bands", []).size() == 2, "two respites")
@@ -98,13 +98,13 @@ func _run() -> void:
 
 	var y0: float = threat.front_y
 	threat.advance(0.1, 300.0, 0.0)
-	_check(threat.front_y > y0, "security cart advances")
+	_check(threat.front_y > y0, "security squad advances")
 	_check(not threat.jammed(), "not jammed in open concourse")
 
 	# Advance until a suitcase is dropped
 	threat.suitcase_t = 0.01
 	threat.advance(0.02, 300.0, 0.0)
-	_check(threat.suitcases.size() == 1, "cart drops a tumbling suitcase")
+	_check(threat.suitcases.size() == 1, "squad boots a suitcase")
 
 	# Suitcase landing and dodge detection
 	var s: Dictionary = threat.suitcases[0]
