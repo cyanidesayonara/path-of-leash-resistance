@@ -2,6 +2,25 @@
 
 Append-only session history, newest first.
 
+## 2026-11-13 - El Drac review fixes
+
+- El Drac's boop, dodge, wound and trip showed "+N" but paid nothing outside a running chain: `combo.add` pays a non-trick only inside one. Each pays through `award_points` now (`systems/boss_drac.gd`).
+- The jet moved the dog 24 px and your human 18 px by hand, a test shortcut in game code that could set her inside a column. The knock alone moves them; `tests/test_drac.gd` checks the knock instead.
+
+## 2026-11-11 - Boss 2: El Drac (Park Güell / El Mosaic)
+
+- Implemented the second statue boss, **El Drac** (`systems/boss_drac.gd`), the iconic Gaudí trencadís salamander of Park Güell (`systems/mosaic.gd`, `LevelBuild.MOSAIC_SALAMANDER`).
+- Three-phase combat faithfully following `docs/BOSSES.md`:
+  - **Wake & Hold**: Awake trigger at `WAKE_Y = -860.0`, holding your human at `HOLD_Y = -780.0` ("Not past that dragon."). Plays wake story film `intro/film_drac.gd` (*The Steps at Noon*) with FilmKit pair stand grammar.
+  - **Part One (Basic Attacks)**: Fast telegraphed tail whip (`TAIL_WHIP`) covering a rear cone (rewarding `drac_dodge` goal), and high-pressure fountain water jet (`JET`) creating slippery soak puddle zones (`Surfaces.S.WATER`).
+  - **Part Two (The Slither)**: Enraged below 50% HP, races in an undulating S-curve through the hypostyle hall (`SLITHER`), shedding sharp ceramic tile chip zones (`Surfaces.S.MUD`). Taut leash across columns winds him round (`drac_column` goal), or trips his path (`drac_trip` goal).
+  - **Part Three (Last Stand & Victory)**: Retreats to his fountain steps (`STAND`), spitting defensive water jets while the dog ties up three of his four legs with the verlet leash (`WRAPPED`). Slides down the stair ramp on his belly (`SLIDE`), settled by a joyful nose boop into his contented statue pose (`CONTENT`), triggering victory film `intro/film_drac_win.gd` with fountain rainbows.
+- Visuals & procedural audio:
+  - All boss body parts, trencadís ceramic shards, dorsal crest, tail, water jets, warnings, and health bar rendered with batching via `ShapeBatch`.
+  - Added procedural audio in `autoload/sfx.gd`: sharp ceramic tile clicks (`drac_click`) and rushing airy fountain water bursts (`drac_jet`).
+- Level & test integration:
+  - Updated `systems/goals.gd`: added boss goals `drac_dodge`, `drac_column`, `drac_trip` (15 total goals for `guell`).
+  - Regression coverage in `tests/test_drac.gd` and `tests/test_chase_film.gd`.
 ## 2026-11-13 - Els Lleons review fixes
 
 - Both lion films failed to parse (`FilmKit.pair` called with seven arguments, a `title_card` that does not exist, a missing "creak" sound), so the wake film could not load when it should play; and neither was registered with `tools/intro_render.gd` or `tests/test_chase_film.gd`, which is how it got through. Both play now in the shared film grammar and are checked like every other film.

@@ -151,6 +151,29 @@ static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
 	m._mosaic_cache.append_to(m._wc)
 	if m.gardener:
 		m.gardener.draw(m, m._wc, vt, vb)
+	if m.drac != null:
+		var t: float = AnimClock.msec() / 1000.0
+		if m.drac.awake_for_draw():
+			m.drac.draw_ground(m._wc, vt, vb)
+			m.drac.draw_warnings(m._wc, t)
+			if m.drac.pos.y > vt - 240.0 and m.drac.pos.y < vb + 240.0:
+				m.drac.draw_drac(m._wc, t)
+			m.drac.draw_rings(m._wc, t)
+			m.drac.draw_health_bar(m._wc)
+		else:
+			# asleep on his stair, or content where the fight left him: the
+			# same salamander the fight draws, so waking him changes nothing
+			# but his eyes
+			var beaten: bool = m.drac.beaten()
+			var at: Vector2 = m.drac.pos if beaten else LevelBuild.MOSAIC_SALAMANDER
+			if at.y > vt - 240.0 and at.y < vb + 240.0:
+				BossDrac.draw_asleep(m._wc, at, m.drac.face_dir if beaten else Vector2.DOWN, t, beaten)
+				if not beaten:
+					# the water from his mouth into the basin
+					var basin: Vector2 = at + Vector2(0.0, LevelBuild.MOSAIC_SALAMANDER_SIZE.y * 0.5 + 16.0)
+					m._wc.line(at + Vector2(0.0, 80.0), basin + Vector2(0.0, -6.0), Color(0.62, 0.78, 0.86, 0.8), 4.0)
+			if m.drac.fountain_t >= 0.0 and m.drac.fountain_t < 8.0:
+				m.drac.draw_rings(m._wc, t)
 
 
 static func _draw_scenery(m: Node2D, vt: float, vb: float) -> void:
@@ -229,26 +252,6 @@ static func _draw_scenery(m: Node2D, vt: float, vb: float) -> void:
 			b2.circle(bs + Vector2.from_angle(float(k) * TAU / 14.0) * 22.0, 3.6, SHARDS[(k * 3) % SHARDS.size()])
 		b2.circle(bs, 18.0, Color(0.30, 0.48, 0.60))
 		b2.circle(bs + Vector2(-5, -5), 8.0, Color(0.42, 0.60, 0.70))
-		# its body, head down the stair and tail curling up it: a chain of
-		# trencadis scales, fattest at the shoulders, its shadow under it
-		var spine := [sm + Vector2(0, 74), sm + Vector2(10, 46), sm + Vector2(-4, 16), sm + Vector2(10, -14),
-			sm + Vector2(-2, -44), sm + Vector2(-18, -66), sm + Vector2(-30, -80)]
-		var bw := [16.0, 24.0, 27.0, 24.0, 18.0, 12.0, 8.0]
-		for k in range(spine.size()):
-			b2.circle(spine[k] + LIGHT * 8.0, bw[k], Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
-		for leg: Vector2 in [Vector2(-34, 40), Vector2(36, 34), Vector2(-30, -20), Vector2(32, -26)]:
-			trencadis_disc(m, b2, sm + leg, 11.0, int(leg.x + leg.y))
-		for k in range(spine.size()):
-			trencadis_disc(m, b2, spine[k], bw[k], k * 5 + 3)
-		# its head, with a blunt snout and two dark eyes
-		var hd: Vector2 = sm + Vector2(0, 86)
-		b2.draw_colored_polygon(PackedVector2Array([hd + Vector2(-16, -10), hd + Vector2(16, -10), hd + Vector2(10, 16),
-			hd + Vector2(-10, 16)]), Color(0.18, 0.62, 0.70))
-		trencadis_disc(m, b2, hd, 13.0, 21)
-		b2.circle(hd + Vector2(-7, 6), 3.0, Color(0.1, 0.1, 0.1))
-		b2.circle(hd + Vector2(7, 6), 3.0, Color(0.1, 0.1, 0.1))
-		# the water from its mouth into the basin
-		b2.line(hd + Vector2(0, 14), bs + Vector2(0, -6), Color(0.62, 0.78, 0.86, 0.8), 4.0)
 	# the hypostyle hall: in the shade under the plaza, its floor darker,
 	# the shade thinning out at both ends rather than stopping at a line
 	var b3 := ShapeBatch.new()
@@ -422,6 +425,37 @@ static func _draw_scenery(m: Node2D, vt: float, vb: float) -> void:
 				b4.circle(gc + Vector2(30, -40) + Vector2.from_angle(float(d)) * 16.0, 5.0, Color(0.97, 0.96, 0.92))
 			b4.rect(Rect2(gc + Vector2(26, -56), Vector2(8, 32)), Color(0.90, 0.88, 0.84))
 			b4.rect(Rect2(gc + Vector2(14, -44), Vector2(32, 8)), Color(0.90, 0.88, 0.84))
+
+
+# main.surface_at, through walk_mod: puddles from El Drac, else -1 so the
+# walk keeps its normal pavement / grass.
+static func surface(m: Node2D, p: Vector2) -> int:
+	if m.drac != null:
+		var o: int = m.drac.surface_at(p)
+		if o >= 0:
+			return o
+	return -1
+
+
+static func tick(m: Node2D, delta: float) -> void:
+	if m.drac != null:
+		m.drac.tick_state(delta)
+
+
+static func on_bark(m: Node2D, pos: Vector2) -> bool:
+	return m.drac != null and m.drac.on_bark_action(pos)
+
+
+static func urgent_status(m: Node2D) -> String:
+	return m.drac.status() if m.drac != null else ""
+
+
+static func hush_banner(m: Node2D) -> bool:
+	return m.drac != null and m.drac.hush_banner()
+
+
+static func cam_lean(m: Node2D) -> float:
+	return m.drac.lean if m.drac != null else 0.0
 
 
 static func tick_crowd(m: Node2D) -> void:

@@ -35,8 +35,9 @@ const LEVEL_GOAL_IDS := {
 	"scrap": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "ghost", "unseen", "snack", "combo", "prize", "spell", "jamon", "clock"],
 	# El Parc leans on what the terraces are for: carving them (fling) and
 	# riding the serpentine bench (combo), plus the park staples.
-	"guell": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi",
-		"drink", "fling", "combo", "prize", "spell", "jamon", "clock"],
+	"guell": ["mark", "sniff", "phone", "paws", "bag", "fetch",
+		"drac_dodge", "drac_column", "drac_trip",
+		"fling", "combo", "prize", "spell", "jamon", "clock"],
 	# La Neteja: the chase is the walk home, so no Tofu (the two never share
 	# a home leg) and a goal for doing the chase WELL rather than just
 	# surviving it, which finishing already proves.
@@ -181,6 +182,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"mamut_dodge": {"text": "Dodge the mammoth %d times", "target": 4, "fn": func() -> int: return m.mamut_dodges},
 		"mamut_lake": {"text": "Lead the mammoth's charge into the lake", "target": 1, "fn": func() -> int: return 1 if m.mamut_splashed else 0},
 		"mamut_trip": {"text": "Trip the mammoth with the leash", "target": 1, "fn": func() -> int: return 1 if m.mamut_tripped else 0},
+		"drac_dodge": {"text": "Dodge the dragon %d times", "target": 4, "fn": func() -> int: return m.drac_dodges},
+		"drac_column": {"text": "Wind the dragon round a column", "target": 1, "fn": func() -> int: return 1 if m.drac_wound else 0},
+		"drac_trip": {"text": "Trip the dragon with the leash", "target": 1, "fn": func() -> int: return 1 if m.drac_tripped else 0},
 		"parakeets": {"text": "Shoo the parakeets off your human's croissant", "target": 1, "fn": func() -> int: return 1 if m.ciut_shooed else 0},
 		"traca": {"text": "Pull your human clear of the traca", "target": 1, "fn": func() -> int: return 1 if m.cremada_traca_dodged else 0},
 		"dimoni_dodge": {"text": "Dodge %d of the Dimoni's rockets", "target": 4, "fn": func() -> int: return m.cremada_dodges},

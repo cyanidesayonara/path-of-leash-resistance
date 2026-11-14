@@ -4,6 +4,9 @@ build/
 *.zip
 .idea/
 .superpowers/
+.worktrees/
+
+
 
 r.txt
 rr.txt

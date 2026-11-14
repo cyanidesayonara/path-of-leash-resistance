@@ -27,6 +27,7 @@ const Cremada := preload("res://systems/cremada.gd")
 const Aeroport := preload("res://systems/aeroport.gd")
 const Montserrat := preload("res://systems/montserrat.gd")
 const BossMamut := preload("res://systems/boss_mamut.gd")
+const BossDrac := preload("res://systems/boss_drac.gd")
 const Carmel := preload("res://systems/carmel.gd")
 const Superilla := preload("res://systems/superilla.gd")
 const Forum := preload("res://systems/forum.gd")
@@ -321,6 +322,16 @@ static func mosaic(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 	# the owner walks round the salamander on its east side
 	m.islands = Array([{"rect": Rect2(MOSAIC_SALAMANDER - MOSAIC_SALAMANDER_SIZE * 0.5 - Vector2(24.0, 24.0),
 		MOSAIC_SALAMANDER_SIZE + Vector2(48.0, 48.0)), "side": 1.0}], TYPE_DICTIONARY, &"", null)
+	m.drac_dodges = 0
+	m.drac_wound = false
+	m.drac_tripped = false
+	m.drac_bowled = false
+	m.drac_booped = false
+	m.drac_slid = false
+	m.drac_settled = false
+	var drac := BossDrac.new()
+	drac.setup(m)
+	m.drac = drac
 
 
 # LA NETEJA: a narrow back street at dawn, on the morning the sweeper comes
@@ -2485,6 +2496,9 @@ static func build_level_data(m: Node2D) -> void:
 		# El Mamut's legs walk: after the bodies and the radii, as El Gat's
 		if m.mamut != null:
 			m.mamut.register_legs(m)
+	if m.lvl == "guell" and m.drac != null:
+		# El Drac's legs walk: after the bodies and the radii, as El Mamut's
+		m.drac.register_legs(m)
 	if m.lvl == "boars":
 		for r: Rect2 in Boars.wrap_rects():
 			add_rope_rect(m, r)
