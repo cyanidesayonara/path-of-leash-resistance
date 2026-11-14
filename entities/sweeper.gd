@@ -123,6 +123,9 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 		cur_speed = 0.0
 		if jam_t <= 0.0:
 			freed_now = true
+		# the bits still fly while it is held
+		if main != null:
+			drive.bonk(main, Rect2(), delta)
 		return
 	var lurch := sin(rumble * 0.9) * 0.6 + sin(rumble * 2.3 + 1.0) * 0.4
 	var mult := 1.0 + SURGE * lurch
@@ -163,6 +166,13 @@ func _run_over(delta: float) -> void:
 	if main == null:
 		return
 	var body := Rect2(cx + sway - BODY_HALF, front_y + BODY_Y - BODY_HALF_LEN, BODY_HALF * 2.0, BODY_HALF_LEN * 2.0)
+	var side: float = drive.slam(main, body, cx)
+	if side != 0.0 and jam_t <= 0.0:
+		# nowhere to swerve: it hits it, stalls, and then smashes on through
+		jam_t = drive.SLAM_SECS
+		jam_side = side
+		jam_at = Vector2(INF, INF)
+		jammed_now = true
 	if drive.bonk(main, body, delta):
 		# looked up, not named: the sweeper also runs where there are no autoloads
 		var sfx := main.get_node_or_null("/root/Sfx")

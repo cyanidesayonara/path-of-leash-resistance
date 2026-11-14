@@ -14,12 +14,17 @@ const ShapeBatch := preload("res://systems/shape_batch.gd")
 #
 # It reads the walk's bypasser blockers, the same list the passers-by steer
 # round, and decides heavy or light by what each one is (its id).
-# The threat owns its movement; this only answers two questions each frame:
-# where to swerve to (dodge_sway) and what it has just run over (bonk).
+# A heavy thing it could not get round stops it dead for a moment when it
+# hits it (slam), the crash and shudder of a cartoon, and then it smashes on
+# through: an unplanned breather, besides the walk's authored jams.
+# The threat owns its movement; this only answers three questions each frame:
+# where to swerve to (dodge_sway), what it has just run over (bonk), and
+# what it has just slammed into (slam).
 
 const LOOK := 260.0               # how far ahead of its nose it sees what is coming
 const BONK_SECS := 0.35           # the judder of running something over
 const BONK_SLOW := 0.78           # its speed while it judders
+const SLAM_SECS := 1.3            # how long a heavy thing it hits holds it
 # what it flattens rather than goes round, by blocker id
 const LIGHT := ["pole_", "hydrant_", "bench_"]
 # what it neither goes round nor feels: flat on the ground
@@ -28,6 +33,7 @@ const FLAT := ["manhole_", "cellar_"]
 var bonk_t := 0.0
 var bonk_at := Vector2(INF, INF)  # where the last bonk was, world space
 var _bonked := {}                 # ids already run over, once each
+var _slammed := {}                # ids already slammed into, once each
 var _debris: Array[Dictionary] = []  # {"p", "v", "t", "c"} world space
 var _blockers: Array = []
 var _band := Vector2(INF, -INF)
@@ -126,6 +132,28 @@ func bonk(m: Node2D, body: Rect2, delta: float) -> bool:
 			_debris.append({"p": bonk_at, "v": Vector2.from_angle(a) * (120.0 + float(k % 3) * 70.0) + Vector2(0.0, 90.0),
 				"t": 0.5 + float(k % 4) * 0.08, "c": k % 3})
 	return hit
+
+
+# Whether its body has just hit something heavy (it could not swerve round),
+# once each; throws the bits like a bonk. The threat holds it SLAM_SECS.
+# Returns the side the thing was on (-1 west, 1 east) or 0 for none.
+func slam(m: Node2D, body: Rect2, cx: float) -> float:
+	for bl: Dictionary in _blockers:
+		var id := String(bl.get("id", ""))
+		if _is(id, LIGHT) or _slammed.has(id):
+			continue
+		var r := _rect(bl)
+		if not body.grow(-8.0).intersects(r):
+			continue
+		_slammed[id] = true
+		bonk_t = BONK_SECS
+		bonk_at = Vector2(r.get_center().x, body.end.y)
+		for k in range(16):
+			var a := -PI * 0.5 + (float(k) / 15.0 - 0.5) * 3.0
+			_debris.append({"p": bonk_at, "v": Vector2.from_angle(a) * (160.0 + float(k % 4) * 60.0) + Vector2(0.0, 120.0),
+				"t": 0.6 + float(k % 4) * 0.08, "c": k % 3})
+		return signf(r.get_center().x - cx) if absf(r.get_center().x - cx) > 1.0 else 1.0
+	return 0.0
 
 
 # its speed share while it judders over something

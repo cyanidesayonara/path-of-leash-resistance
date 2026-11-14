@@ -113,7 +113,7 @@ const GRACIA_BANDS := [
 # La Cremada: the float wedges in the railway underpass, then on the arch
 # over Carrer del Mar (systems/cremada.gd UNDERPASS_JAM_Y, ARCH_JAM_Y)
 const CREMADA_BANDS := [
-	{"id": "underpass", "kind": "respite", "jam_y": -3400.0},
+	{"id": "underpass", "kind": "respite", "jam_y": -3400.0, "checkpoint": true},
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
 ]
 
