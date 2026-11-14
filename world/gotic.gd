@@ -89,7 +89,7 @@ static func draw_street(m: Node2D, vt: float, vb: float) -> void:
 		for i in range(8):
 			var ang := float(i) * TAU / 8.0 + PI / 8.0
 			var dir := Vector2.from_angle(ang)
-			pts_sh.append(fp + m.LIGHT * 10.0 + dir * 44.0)
+			pts_sh.append(fp + Shade.light * 10.0 + dir * 44.0)
 			pts_plinth.append(fp + dir * 42.0)
 			pts_rim.append(fp + dir * 39.0)
 			pts_water.append(fp + dir * 31.0)
@@ -100,7 +100,7 @@ static func draw_street(m: Node2D, vt: float, vb: float) -> void:
 			var p0 := pts_rim[i]
 			var p1 := pts_rim[(i + 1) % 8]
 			var mid_n := ((p0 + p1) * 0.5 - fp).normalized()
-			var col := Color(0.78, 0.74, 0.67) if mid_n.dot(-m.LIGHT) > 0.0 else Color(0.46, 0.42, 0.36)
+			var col := Color(0.78, 0.74, 0.67) if mid_n.dot(-Shade.light) > 0.0 else Color(0.46, 0.42, 0.36)
 			b.line(p0, p1, col, 2.0)
 		b.polygon(pts_water, Color(0.28, 0.46, 0.54))
 		# water sky reflection & ripples
@@ -108,10 +108,10 @@ static func draw_street(m: Node2D, vt: float, vb: float) -> void:
 		b.circle(fp, 20.0, Color(0.34, 0.52, 0.60, 0.35))
 		b.circle(fp, 13.0, Color(0.38, 0.56, 0.64, 0.3))
 		# central Baroque baluster pedestal & spouts
-		b.circle(fp + m.LIGHT * 3.0, 10.0, Color(0.20, 0.32, 0.38, 0.5))
+		b.circle(fp + Shade.light * 3.0, 10.0, Color(0.20, 0.32, 0.38, 0.5))
 		b.circle(fp, 9.5, Color(0.56, 0.52, 0.46))
-		b.circle(fp - m.LIGHT * 1.5, 7.0, Color(0.68, 0.64, 0.58))
-		b.circle(fp - m.LIGHT * 2.5, 4.0, Color(0.78, 0.74, 0.68))
+		b.circle(fp - Shade.light * 1.5, 7.0, Color(0.68, 0.64, 0.58))
+		b.circle(fp - Shade.light * 2.5, 4.0, Color(0.78, 0.74, 0.68))
 		for s in range(4):
 			var sdir := Vector2.from_angle(float(s) * TAU / 4.0)
 			b.line(fp + sdir * 4.0, fp + sdir * 11.0, Color(0.44, 0.40, 0.30), 2.0)
@@ -166,7 +166,7 @@ static func _draw_pots(m: Node2D, b: ShapeBatch, vt: float, vb: float, fp: Vecto
 	for pp in pots:
 		if pp.y < vt - 30.0 or pp.y > vb + 30.0:
 			continue
-		b.circle(pp + m.LIGHT * 4.0, 8.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
+		b.circle(pp + Shade.light * 4.0, 8.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
 		b.circle(pp, 7.5, Color(0.72, 0.38, 0.24))
 		b.circle(pp, 5.5, Color(0.30, 0.20, 0.14))
 		for lf in range(4):
@@ -386,7 +386,7 @@ static func _draw_roof(m: Node2D, c: Object, r: Rect2, h: int) -> void:
 			# a tree in the patio, its crown up in the light
 			var tp := well.get_center() + Vector2(4.0, 4.0)
 			c.draw_circle(tp, 15.0, Color(0.17, 0.30, 0.17))
-			c.draw_circle(tp - m.LIGHT * 4.0, 10.0, Color(0.26, 0.42, 0.23))
+			c.draw_circle(tp - Shade.light * 4.0, 10.0, Color(0.26, 0.42, 0.23))
 		else:
 			c.draw_circle(well.get_center() + Vector2(6.0, 6.0), 5.0, Color(0.62, 0.34, 0.22))
 			c.draw_circle(well.get_center() + Vector2(6.0, 6.0), 3.8, Color(0.30, 0.46, 0.24))

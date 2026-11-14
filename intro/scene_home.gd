@@ -19,6 +19,7 @@ const DOOR := Rect2(1060, 250, 150, 360)
 const HOOK := Vector2(1010, 320)
 const LEASH_LEN := 300.0
 const CARRY_LEN := 120.0
+const WALK_AMP := 0.75         # your human's stride walking in
 
 
 static func camera(t: float) -> Array:
@@ -120,11 +121,17 @@ static func draw(c: CanvasItem, t: float) -> void:
 	])
 	var off_sofa := 1.0 - Anim.span(t, 3.4, 4.0)
 	var hy := FLOOR if off_sofa > 0.0 else FLOOR - 18.0
+	# the stride follows the ground covered, so each foot stays planted while
+	# the body passes over it; the swing starts with the first step and settles
+	# as they turn to sit
+	var walk_amp := WALK_AMP * Anim.span(t, 0.0, 0.2) * (1.0 - Anim.span(t, 3.3, 3.7))
+	var stride := (1300.0 - hx) * PI / (HumanSide.STEP * S * WALK_AMP)
 
 	var hpose := {
 		"sit": 1.0 - off_sofa,
 		"lean": lerpf(0.12, -0.06, 1.0 - off_sofa) + (0.02 * sin(t * 1.8) if off_sofa <= 0.0 else 0.0),
-		"stride": t * 14.0 * off_sofa,
+		"stride": stride,
+		"stride_amp": walk_amp,
 		"phone": lerpf(0.7, 0.0, 1.0 - off_sofa),
 		"glow": lerpf(0.6, 0.0, 1.0 - off_sofa),
 		"reach": 0.0,

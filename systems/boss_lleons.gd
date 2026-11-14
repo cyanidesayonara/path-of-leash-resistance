@@ -26,7 +26,6 @@ const ShapeBatch := preload("res://systems/shape_batch.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 const Prompts := preload("res://hud/prompts.gd")
 
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.24)
 
 # --- Bronze & Arena Palette --------------------------------------------------
@@ -759,7 +758,7 @@ func draw(wc: ShapeBatch, vt: float, vb: float) -> void:
 # hollow he lay in.
 func _draw_plinth(wc: ShapeBatch, p: Vector2, lion: Dictionary) -> void:
 	var r := Rect2(p - PLINTH_HALF, PLINTH_HALF * 2.0)
-	wc.rect(Rect2(r.position + LIGHT * 10.0, r.size), SHADOW)
+	wc.rect(Rect2(r.position + Shade.light * 10.0, r.size), SHADOW)
 	wc.rect(r, PLINTH_DARK)
 	wc.rect(r.grow(-4.0), PLINTH_COL)
 	wc.rect(Rect2(r.position + Vector2(4.0, 4.0), Vector2(r.size.x - 8.0, 3.0)), PLINTH_COL.lightened(0.16))
@@ -938,9 +937,9 @@ func _draw_lion(b: ShapeBatch, lion: Dictionary, t: float) -> void:
 			tail = _trail(-38.0, 9.0, sd * 8.0, -sd * 9.0)
 
 	# the shadow stays on the ground; everything else rides the hop
-	b.polygon(_ellipse(at + LIGHT * (9.0 + lift * 0.5), f, shadow_len * DRAW_K * (1.0 - lift * 0.004), 27.0 * DRAW_K, 18), SHADOW)
+	b.polygon(_ellipse(at + Shade.light * (9.0 + lift * 0.5), f, shadow_len * DRAW_K * (1.0 - lift * 0.004), 27.0 * DRAW_K, 18), SHADOW)
 	var x := Transform2D(f * DRAW_K, f.orthogonal() * DRAW_K, at - Vector2(0.0, lift))
-	var hi := -LIGHT * 2.6        # toward the light, in world space
+	var hi := -Shade.light * 2.6        # toward the light, in world space
 
 	# tail, under the body
 	for i in range(tail.size() - 1):
@@ -1027,12 +1026,12 @@ func _paw(b: ShapeBatch, at: Vector2, f: Vector2, r: float) -> void:
 	var s := f.orthogonal()
 	b.circle(at, rr + 1.8, BRONZE_DEEP)
 	b.circle(at, rr, BRONZE_DARK)
-	b.circle(at - LIGHT * 1.4, rr - 1.8, BRONZE)
+	b.circle(at - Shade.light * 1.4, rr - 1.8, BRONZE)
 	# toes, rubbed bright
 	for n in range(3):
 		var toe := at + f * rr * 0.72 + s * (float(n) - 1.0) * rr * 0.62
 		b.circle(toe, rr * 0.36, BRONZE_DEEP)
-		b.circle(toe - LIGHT * 0.5, rr * 0.25, BRONZE_SHINE)
+		b.circle(toe - Shade.light * 0.5, rr * 0.25, BRONZE_SHINE)
 
 
 # The mane and the head on it. `mx` is the mane's frame, `hx` the head's (x
@@ -1040,7 +1039,7 @@ func _paw(b: ShapeBatch, at: Vector2, f: Vector2, r: float) -> void:
 # skull with its ears, heavy brow, eyes, the pale muzzle and the nose.
 func _draw_head(b: ShapeBatch, lion: Dictionary, mx: Transform2D, hx: Transform2D, mane_r: float,
 		sweep: float, jaw: float, pose: Pose, t: float) -> void:
-	var hi := -LIGHT * 2.2
+	var hi := -Shade.light * 2.2
 	var sd: float = lion.side
 	var n := 13
 	var flare := jaw * 3.0
@@ -1070,7 +1069,7 @@ func _draw_head(b: ShapeBatch, lion: Dictionary, mx: Transform2D, hx: Transform2
 		var d := Vector2.from_angle(a + 0.2)
 		b.line(mx * (d * mane_r * 0.50), mx * (d * (mane_r - 1.0) - Vector2(sweep * 0.6, 0.0)), BRONZE_DEEP, 1.8)
 		var d2 := Vector2.from_angle(a - 0.08)
-		if mx.basis_xform(d2).normalized().dot(-LIGHT) > 0.1:
+		if mx.basis_xform(d2).normalized().dot(-Shade.light) > 0.1:
 			b.line(mx * (d2 * mane_r * 0.58) + hi * 0.4, mx * (d2 * (mane_r - 2.5)) + hi * 0.4, BRONZE_LIT, 1.7)
 		else:
 			b.line(mx * (d2 * mane_r * 0.62), mx * (d2 * (mane_r - 2.0)), PATINA, 1.5)

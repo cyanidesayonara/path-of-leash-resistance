@@ -118,11 +118,11 @@ static func sunny() -> bool:
 
 static func in_shade(m: Node2D, p: Vector2) -> bool:
 	# Shade is where the SHADOW is, not where the tree is. Everything in this
-	# game throws its shadow along one light (LIGHT), so the cool patch under a
+	# game throws its shadow along one light (Shade.light), so the cool patch under a
 	# plane tree sits clear of the trunk on the far side - standing on the tree
 	# does nothing, standing in its shadow is the thing. Costs nothing to agree
 	# with the picture, and it is the kind of detail a dog owner would notice.
-	var light: Vector2 = m.LIGHT
+	var light: Vector2 = Shade.light
 	for t: Vector2 in m.trees:
 		var d := p - (t + light * 46.0)
 		# the same squashed ellipse _draw_broadleaf lays its crown shadow on

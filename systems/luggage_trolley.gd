@@ -53,7 +53,6 @@ var threatened: bool = false
 var last_joint_idx: int = -1
 
 # Visual colors
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.22)
 const CHROME_BRIGHT := Color(0.85, 0.87, 0.90)
 const CHROME_MID := Color(0.62, 0.65, 0.70)
@@ -189,7 +188,7 @@ func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 
 	# Ground shadows
 	b.rect(Rect2(tp.x - 20.0 + 8.0, tp.y - 13.0 + 10.0, 40.0, 26.0), SHADOW)
-	b.circle(cp + LIGHT * 4.0, 9.0, SHADOW)
+	b.circle(cp + Shade.light * 4.0, 9.0, SHADOW)
 
 	# --- Trolley Frame (Stainless tubular steel) ---
 	# Base wire grid platform

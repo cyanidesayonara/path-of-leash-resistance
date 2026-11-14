@@ -24,7 +24,6 @@ extends RefCounted
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.05, 0.06, 0.05, 0.24)
 
 # --- colors ------------------------------------------------------------------
@@ -308,7 +307,7 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, _bottom: 
 # a clipped hedge seen from above: its shadow, the dense dark body, the
 # lit clipped top, and the shears' flat facets along it
 static func _draw_hedge(wc: ShapeBatch, r: Rect2, inner: bool) -> void:
-	wc.rect(Rect2(r.position + LIGHT * 9.0, r.size), SHADOW)
+	wc.rect(Rect2(r.position + Shade.light * 9.0, r.size), SHADOW)
 	wc.rect(r, HEDGE)
 	var top := r.grow(-5.0)
 	wc.rect(top, HEDGE_LIT)
@@ -336,7 +335,7 @@ static func _draw_maze_walls(wc: ShapeBatch, vt: float, vb: float) -> void:
 		return
 	for x: float in [MAZE_X0 - 34.0, MAZE_X1]:
 		var r := Rect2(x, y0, 34.0, y1 - y0)
-		wc.rect(Rect2(r.position + LIGHT * 9.0, r.size), SHADOW)
+		wc.rect(Rect2(r.position + Shade.light * 9.0, r.size), SHADOW)
 		wc.rect(r, HEDGE)
 		wc.rect(r.grow(-5.0), HEDGE_LIT)
 		var yy := floorf(y0 / 18.0) * 18.0
@@ -363,10 +362,10 @@ static func _draw_clearing(wc: ShapeBatch) -> void:
 # Eros on his plinth: a round stone drum, its moulding, and the winged boy
 # with his bow, seen from above
 static func _draw_eros(wc: ShapeBatch) -> void:
-	wc.circle(EROS + LIGHT * 12.0, EROS_R + 4.0, SHADOW)
+	wc.circle(EROS + Shade.light * 12.0, EROS_R + 4.0, SHADOW)
 	wc.circle(EROS, EROS_R + 4.0, STONE_DARK)
 	wc.circle(EROS, EROS_R, STONE)
-	wc.circle(EROS - LIGHT * 4.0, EROS_R - 8.0, STONE_SHADE)
+	wc.circle(EROS - Shade.light * 4.0, EROS_R - 8.0, STONE_SHADE)
 	wc.circle(EROS, EROS_R - 10.0, STONE)
 	# the wings, swept back from his shoulders, feathers drawn along them
 	var back := Vector2(0.0, 1.0)
@@ -409,7 +408,7 @@ static func _draw_balustrades(m: Node2D, wc: ShapeBatch) -> void:
 		while y < BALUSTRADE_Y1:
 			var e: Vector2 = m.walk_edges(y)
 			var x: float = e.y - 8.0 if side > 0.0 else e.x + 8.0
-			wc.rect(Rect2(x - 5.0 + LIGHT.x * 6.0, y + LIGHT.y * 6.0, 10.0, 15.0), SHADOW)
+			wc.rect(Rect2(x - 5.0 + Shade.light.x * 6.0, y + Shade.light.y * 6.0, 10.0, 15.0), SHADOW)
 			wc.rect(Rect2(x - 5.0, y, 10.0, 15.0), STONE)
 			wc.circle(Vector2(x, y + 7.5), 2.6, STONE_SHADE)
 			y += 15.0
@@ -510,7 +509,7 @@ static func _draw_outer_maze(b: ShapeBatch, top: float, bot: float) -> void:
 # stucco terrace to the avenue.
 static func _draw_palace(b: ShapeBatch) -> void:
 	var r := PALACE
-	b.rect(Rect2(r.position + LIGHT * 14.0, r.size), SHADOW)
+	b.rect(Rect2(r.position + Shade.light * 14.0, r.size), SHADOW)
 	b.rect(r.grow(10.0), STUCCO_SHADE)
 	b.rect(r, ROOF)
 	var c := r.get_center()
@@ -520,7 +519,7 @@ static func _draw_palace(b: ShapeBatch) -> void:
 	b.line(Vector2(c.x, c.y - 60.0), Vector2(c.x, c.y + 60.0), ROOF.lightened(0.25), 2.0)
 	# the tower on the corner, its own little roof
 	var t := Rect2(r.position.x - 10.0, r.position.y - 10.0, 70.0, 70.0)
-	b.rect(Rect2(t.position + LIGHT * 18.0, t.size), SHADOW)
+	b.rect(Rect2(t.position + Shade.light * 18.0, t.size), SHADOW)
 	b.rect(t, STUCCO)
 	b.polygon(PackedVector2Array([t.position + Vector2(6, 6), Vector2(t.end.x - 6.0, t.position.y + 6.0), t.get_center()]), ROOF.lightened(0.15))
 	b.polygon(PackedVector2Array([Vector2(t.end.x - 6.0, t.position.y + 6.0), t.end - Vector2(6, 6), t.get_center()]), ROOF.darkened(0.2))
@@ -551,7 +550,7 @@ static func _draw_pool(b: ShapeBatch) -> void:
 # columns of its portico to the path.
 static func _draw_pavilion(b: ShapeBatch) -> void:
 	var r := PAVILION
-	b.rect(Rect2(r.position + LIGHT * 16.0, r.size), SHADOW)
+	b.rect(Rect2(r.position + Shade.light * 16.0, r.size), SHADOW)
 	b.rect(r.grow(12.0), STONE_SHADE)
 	b.rect(r, STONE)
 	var c := r.get_center()
@@ -560,7 +559,7 @@ static func _draw_pavilion(b: ShapeBatch) -> void:
 	b.line(Vector2(r.position.x, c.y), Vector2(r.end.x, c.y), STONE_DARK, 2.0)
 	for k in range(5):
 		var cy := r.position.y + 12.0 + float(k) * (r.size.y - 24.0) / 4.0
-		b.circle(Vector2(r.position.x - 6.0 + LIGHT.x * 4.0, cy + LIGHT.y * 4.0), 6.0, SHADOW)
+		b.circle(Vector2(r.position.x - 6.0 + Shade.light.x * 4.0, cy + Shade.light.y * 4.0), 6.0, SHADOW)
 		b.circle(Vector2(r.position.x - 6.0, cy), 6.0, Color(0.96, 0.94, 0.88))
 	# its steps down to the terrace
 	for k in range(3):
@@ -579,10 +578,10 @@ static func _draw_cypresses(m: Node2D, b: ShapeBatch, top: float, bot: float) ->
 				if POOL.grow(30.0).has_point(Vector2(x, y)) or PAVILION.grow(30.0).has_point(Vector2(x, y)) \
 						or CANAL.grow(30.0).has_point(Vector2(x, y)):
 					continue
-				b.circle(Vector2(x, y) + LIGHT * 10.0, 13.0, SHADOW)
+				b.circle(Vector2(x, y) + Shade.light * 10.0, 13.0, SHADOW)
 				b.circle(Vector2(x, y), 13.0, CYPRESS)
-				b.circle(Vector2(x, y) - LIGHT * 3.0, 8.0, HEDGE)
-				b.circle(Vector2(x, y) - LIGHT * 5.0, 3.5, HEDGE_LIT)
+				b.circle(Vector2(x, y) - Shade.light * 3.0, 8.0, HEDGE)
+				b.circle(Vector2(x, y) - Shade.light * 5.0, 3.5, HEDGE_LIT)
 		y += 70.0
 
 

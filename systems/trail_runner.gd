@@ -61,7 +61,6 @@ var _toss := RandomNumberGenerator.new()
 var anim_time: float = 0.0
 
 # Visual colors
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.22)
 
 # Runner attire
@@ -195,7 +194,7 @@ func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 
 	# 1. Dropped electrolyte gel pouch on sauló grit
 	if gel_dropped and not gel_snatched:
-		b.circle(gel_pos + LIGHT * 2.0, 3.5, SHADOW)
+		b.circle(gel_pos + Shade.light * 2.0, 3.5, SHADOW)
 		# Shiny foil packet with tear tab
 		b.rect(Rect2(gel_pos.x - 4.0, gel_pos.y - 2.5, 8.0, 5.0), GEL_SILVER)
 		b.rect(Rect2(gel_pos.x - 2.0, gel_pos.y - 2.0, 4.0, 4.0), GEL_BLUE)
@@ -208,7 +207,7 @@ func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 		var pole_stride: float = cos(anim_time * 24.0) if state == State.RUNNING else 0.0
 
 		# Shadow on trail grit
-		b.circle(rp + LIGHT * 4.0, 11.0, SHADOW)
+		b.circle(rp + Shade.light * 4.0, 11.0, SHADOW)
 
 		# Pumping legs in running shorts
 		var leg_l := rp + Vector2(-stride * 5.0, -5.0)

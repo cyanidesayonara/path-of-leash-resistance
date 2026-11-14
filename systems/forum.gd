@@ -30,7 +30,6 @@ const OVERHEAD_FOLLOWS_CAMERA := true
 const Surfaces := preload("res://world/surfaces.gd")
 const ForumSkater := preload("res://systems/forum_skater.gd")
 
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.07, 0.24)
 
 # --- colors ------------------------------------------------------------------
@@ -461,7 +460,7 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, bottom: f
 	for sb: Rect2 in [SKATE_BANK_1, SKATE_BANK_2]:
 		if sb.end.y > vt - 80.0 and sb.position.y < vb + 80.0:
 			# Cast drop shadow
-			wc.rect(Rect2(sb.position + LIGHT * 8.0, sb.size), sh)
+			wc.rect(Rect2(sb.position + Shade.light * 8.0, sb.size), sh)
 			# Concrete transition body
 			wc.rect(sb, SKATE_CONCRETE.darkened(0.25))
 			wc.rect(sb.grow(-3.0), SKATE_CONCRETE)
@@ -479,7 +478,7 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, bottom: f
 	# 7. Pergola Pylon Footing Bases
 	for py_rect: Rect2 in [PYLON_NW, PYLON_NE, PYLON_SW, PYLON_SE]:
 		if py_rect.end.y > vt - 80.0 and py_rect.position.y < vb + 80.0:
-			wc.rect(Rect2(py_rect.position + LIGHT * 10.0, py_rect.size), sh)
+			wc.rect(Rect2(py_rect.position + Shade.light * 10.0, py_rect.size), sh)
 			# Heavy chamfered concrete pad
 			wc.rect(py_rect.grow(4.0), CONCRETE_DARK)
 			wc.rect(py_rect, SOLAR_STEEL_DARK)
@@ -493,7 +492,7 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, bottom: f
 	if -4500.0 > vt - 120.0 and -4500.0 < vb + 120.0:
 		var pp := PRIZE
 		# Circular teak hardwood observation deck
-		wc.circle(pp + LIGHT * 8.0, 46.0, sh)
+		wc.circle(pp + Shade.light * 8.0, 46.0, sh)
 		wc.circle(pp, 44.0, TEAK_DARK)
 		wc.circle(pp, 42.0, TEAK_PLANK)
 		# Planks across viewing deck
@@ -509,7 +508,7 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, bottom: f
 			wc.circle(sp, 2.5, SKATE_RAIL_STEEL)
 
 		# Trophy pedestal
-		wc.circle(pp + LIGHT * 4.0, 14.0, sh)
+		wc.circle(pp + Shade.light * 4.0, 14.0, sh)
 		wc.circle(pp, 12.0, CONCRETE_DARK)
 		wc.circle(pp, 9.0, SKATE_RAIL_STEEL)
 		# Solar Cell Trophy (the snatchable walk prize)
@@ -616,13 +615,13 @@ static func draw_freedom(m: Node2D, ci: Object) -> void:
 	# Concrete tetrapod breakwaters along the deep corner
 	for tetra_y: float in [r.position.y + 40.0, r.position.y + 200.0, r.position.y + 440.0]:
 		var tp := Vector2(sea_basin_x + 60.0, tetra_y)
-		b.circle(tp + LIGHT * 4.0, 12.0, sh)
+		b.circle(tp + Shade.light * 4.0, 12.0, sh)
 		b.circle(tp, 11.0, TETRAPOD_DARK)
 		b.circle(tp, 8.0, TETRAPOD_STONE)
 
 	# 3. Northwest Sunbathing Wooden Platform
 	var deck_rect := Rect2(r.position.x + 40.0, r.position.y + 40.0, 180.0, 120.0)
-	b.rect(Rect2(deck_rect.position + LIGHT * 6.0, deck_rect.size), sh)
+	b.rect(Rect2(deck_rect.position + Shade.light * 6.0, deck_rect.size), sh)
 	b.rect(deck_rect, TEAK_DARK)
 	b.rect(deck_rect.grow(-3.0), TEAK_PLANK)
 	for dpy in range(6):
@@ -644,7 +643,7 @@ static func draw_column(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
 	var t_sec := AnimClock.msec() / 1000.0
 
 	# 1. Concrete foundation footing
-	wc.circle(p + LIGHT * 4.0, 10.0, sh)
+	wc.circle(p + Shade.light * 4.0, 10.0, sh)
 	wc.circle(p, 9.0, CONCRETE_DARK)
 	wc.circle(p, 7.5, CONCRETE_LIGHT)
 
@@ -699,7 +698,7 @@ static func draw_bollard(m: Node2D, wc: ShapeBatch, h: Dictionary) -> void:
 static func draw_bin(m: Node2D, wc: ShapeBatch, bn: Vector2) -> void:
 	# Perforated stainless steel coastal recycling station with sorting hood
 	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.26)
-	wc.circle(bn + LIGHT * 6.0, 13.0, sh)
+	wc.circle(bn + Shade.light * 6.0, 13.0, sh)
 
 	# Outer stainless steel perforated drum
 	wc.circle(bn, 12.0, Color(0.40, 0.42, 0.45))

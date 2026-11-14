@@ -23,7 +23,6 @@ const EventFeed := preload("res://hud/event_feed.gd")
 const AnimClock := preload("res://systems/anim_clock.gd")
 
 const HALF := 260.0
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.06, 0.05, 0.08, 0.28)
 
 # Montserrat's conglomerate: pinkish grey, rounded pebbles of every stone the
@@ -342,10 +341,10 @@ static func _rim_x(y: float) -> float:
 # a lump of conglomerate from above: rounded, lit from the north-west, with
 # the pebbles that are set in it
 static func _dome(b: ShapeBatch, p: Vector2, r: float, seed_n: float, lit := 1.0) -> void:
-	b.circle(p + LIGHT * (r * 0.30), r * 1.02, Color(ROCK_DEEP, 0.55))
+	b.circle(p + Shade.light * (r * 0.30), r * 1.02, Color(ROCK_DEEP, 0.55))
 	b.circle(p, r, ROCK)
-	b.circle(p - LIGHT * (r * 0.20), r * 0.76, ROCK.lerp(ROCK_LIT, 0.75 * lit))
-	b.circle(p - LIGHT * (r * 0.42), r * 0.40, ROCK_LIT.lerp(Color.WHITE, 0.10 * lit))
+	b.circle(p - Shade.light * (r * 0.20), r * 0.76, ROCK.lerp(ROCK_LIT, 0.75 * lit))
+	b.circle(p - Shade.light * (r * 0.42), r * 0.40, ROCK_LIT.lerp(Color.WHITE, 0.10 * lit))
 	var n := 2 + int(r / 18.0)
 	for i in range(n):
 		var a := _h(seed_n + float(i) * 1.7) * TAU
@@ -356,16 +355,16 @@ static func _dome(b: ShapeBatch, p: Vector2, r: float, seed_n: float, lit := 1.0
 
 
 static func _oak(b: ShapeBatch, p: Vector2, r: float, seed_n: float) -> void:
-	b.coarse(p + LIGHT * (r * 0.5), r, Color(0.08, 0.10, 0.12, 0.34))
+	b.coarse(p + Shade.light * (r * 0.5), r, Color(0.08, 0.10, 0.12, 0.34))
 	b.coarse(p, r, OAK)
 	for i in range(4):
 		var a := seed_n + float(i) * 1.7
 		b.coarse(p + Vector2.from_angle(a) * r * 0.55, r * 0.55, OAK.lerp(OAK_LIT, 0.35 + 0.2 * float(i % 2)))
-	b.coarse(p - LIGHT * (r * 0.35), r * 0.42, OAK_LIT)
+	b.coarse(p - Shade.light * (r * 0.35), r * 0.42, OAK_LIT)
 
 
 static func _scrub(b: ShapeBatch, p: Vector2, r: float, seed_n: float) -> void:
-	b.coarse(p + LIGHT * 3.0, r, Color(0.08, 0.10, 0.12, 0.28))
+	b.coarse(p + Shade.light * 3.0, r, Color(0.08, 0.10, 0.12, 0.28))
 	b.coarse(p, r, SCRUB)
 	b.coarse(p + Vector2(-r * 0.4, -r * 0.3), r * 0.6, SCRUB.lightened(0.14))
 	if _h(seed_n) > 0.5:
@@ -551,7 +550,7 @@ static func _draw_stations(b: ShapeBatch, top: float, bot: float) -> void:
 		# the platform, north of the track, with its yellow line
 		var px0 := 940.0 if s > 0.0 else 160.0
 		var plat := Rect2(px0, CROSSING_Y - 76.0, 180.0, 46.0)
-		b.rect(Rect2(plat.position + LIGHT * 4.0, plat.size), SHADOW)
+		b.rect(Rect2(plat.position + Shade.light * 4.0, plat.size), SHADOW)
 		b.rect(plat, PLATFORM)
 		b.rect(Rect2(plat.position.x, plat.end.y - 7.0, plat.size.x, 4.0), Color(0.93, 0.78, 0.22))
 		for i in range(1, 6):
@@ -559,7 +558,7 @@ static func _draw_stations(b: ShapeBatch, top: float, bot: float) -> void:
 			b.line(Vector2(jx, plat.position.y), Vector2(jx, plat.end.y - 8.0), Color(PLATFORM.darkened(0.14), 0.7), 1.2)
 		# the shelter: a pitched roof, the bench under its eave
 		var roof := Rect2(plat.position.x + 34.0, plat.position.y - 20.0, 112.0, 44.0)
-		b.rect(Rect2(roof.position + LIGHT * 12.0, roof.size), Color(0.06, 0.05, 0.08, 0.34))
+		b.rect(Rect2(roof.position + Shade.light * 12.0, roof.size), Color(0.06, 0.05, 0.08, 0.34))
 		b.rect(Rect2(roof.position.x + 8.0, roof.end.y + 1.0, roof.size.x - 16.0, 6.0), Color(0.46, 0.32, 0.20))
 		b.rect(roof, SHELTER_ROOF.darkened(0.16))
 		b.rect(Rect2(roof.position, Vector2(roof.size.x, roof.size.y * 0.5)), SHELTER_ROOF)
@@ -616,7 +615,7 @@ static func _draw_monastery(m: Node2D, b: ShapeBatch, top: float, bot: float) ->
 	for s: float in [-1.0, 1.0]:
 		var x_lo := 140.0 if s < 0.0 else 902.0
 		var w := 238.0 if s < 0.0 else 258.0
-		b.rect(Rect2(x_lo + LIGHT.x * 16.0, y0 + LIGHT.y * 16.0, w, y1 - y0 + 30.0), Color(0.06, 0.05, 0.08, 0.36))
+		b.rect(Rect2(x_lo + Shade.light.x * 16.0, y0 + Shade.light.y * 16.0, w, y1 - y0 + 30.0), Color(0.06, 0.05, 0.08, 0.36))
 		# the south gable end, in the light: four windows under the eave
 		b.rect(Rect2(x_lo, y1, w, 30.0), MONASTERY_WALL.darkened(0.06))
 		b.rect(Rect2(x_lo, y1 + 27.0, w, 3.0), MONASTERY_WALL.darkened(0.22))
@@ -645,10 +644,10 @@ static func _draw_monastery(m: Node2D, b: ShapeBatch, top: float, bot: float) ->
 			wy -= 58.0
 	# a cypress by each gable, as the square has
 	for cp: Vector2 in [Vector2(350.0, TERRACE_Y + 24.0), Vector2(934.0, TERRACE_Y + 24.0)]:
-		b.coarse(cp + LIGHT * 12.0, 13.0, Color(0.06, 0.08, 0.10, 0.34))
+		b.coarse(cp + Shade.light * 12.0, 13.0, Color(0.06, 0.08, 0.10, 0.34))
 		b.coarse(cp, 13.0, Color(0.13, 0.24, 0.17))
-		b.coarse(cp - LIGHT * 3.0, 8.0, Color(0.20, 0.33, 0.22))
-		b.coarse(cp - LIGHT * 5.0, 3.6, Color(0.30, 0.44, 0.28))
+		b.coarse(cp - Shade.light * 3.0, 8.0, Color(0.20, 0.33, 0.22))
+		b.coarse(cp - Shade.light * 5.0, 3.6, Color(0.30, 0.44, 0.28))
 
 
 # a round-headed opening seen on a wall face, its foot at `foot`
@@ -808,7 +807,7 @@ static func _draw_trail_sides(wc: ShapeBatch, lo: float, hi: float) -> void:
 				var r := 2.2 + (1.0 - d) * 4.2
 				wc.coarse(p + Vector2(1.2, 1.6), r, Color(0.12, 0.10, 0.14, 0.30))
 				wc.coarse(p, r, ROCK.lerp(PEBBLES[(int(k) + i) % 5], 0.45))
-				wc.coarse(p - LIGHT * (r * 0.3), r * 0.5, ROCK_LIT)
+				wc.coarse(p - Shade.light * (r * 0.3), r * 0.5, ROCK_LIT)
 		y -= 30.0
 
 
@@ -837,7 +836,7 @@ static func _draw_crossing(wc: ShapeBatch, lo: float, hi: float) -> void:
 		wc.rect(Rect2(PATH_L + 12.0, CROSSING_Y + s * 66.0 - 3.0, PATH_R - PATH_L - 20.0, 6.0), Color(0.95, 0.94, 0.90, 0.85))
 	# the signal masts' feet and shadows (their lamps are live)
 	for sp: Vector2 in SIGNALS:
-		wc.line(sp, sp + LIGHT * 30.0, Color(0.08, 0.07, 0.10, 0.30), 5.0)
+		wc.line(sp, sp + Shade.light * 30.0, Color(0.08, 0.07, 0.10, 0.30), 5.0)
 		wc.rect(Rect2(sp.x - 7.0, sp.y - 7.0, 14.0, 14.0), Color(0.55, 0.53, 0.52))
 		wc.rect(Rect2(sp.x - 7.0, sp.y - 7.0, 14.0, 3.0), Color(0.70, 0.68, 0.66))
 
@@ -850,7 +849,7 @@ static func _draw_gate_piers(wc: ShapeBatch, lo: float, hi: float) -> void:
 			continue
 		var to_edge := Rect2(PATH_L, r.position.y + 10.0, r.position.x - PATH_L, 20.0) if r.position.x < 640.0 \
 			else Rect2(r.end.x, r.position.y + 10.0, PATH_R - r.end.x, 20.0)
-		wc.rect(Rect2(r.position + LIGHT * 9.0, r.size), SHADOW)
+		wc.rect(Rect2(r.position + Shade.light * 9.0, r.size), SHADOW)
 		wc.rect(to_edge, KERB.darkened(0.12))
 		wc.rect(Rect2(to_edge.position, Vector2(to_edge.size.x, 5.0)), KERB.lightened(0.1))
 		wc.rect(r, KERB.darkened(0.22))
@@ -870,7 +869,7 @@ static func _draw_stall(wc: ShapeBatch, lo: float, hi: float) -> void:
 	var sr := CHEESE_STALL_RECT
 	if sr.end.y < lo - 60.0 or sr.position.y > hi + 60.0:
 		return
-	wc.rect(Rect2(sr.position + LIGHT * 10.0, sr.size), SHADOW)
+	wc.rect(Rect2(sr.position + Shade.light * 10.0, sr.size), SHADOW)
 	# the trestle and its cloth
 	wc.rect(sr, Color(0.40, 0.28, 0.18))
 	wc.rect(Rect2(sr.position.x + 34.0, sr.position.y + 2.0, 34.0, sr.size.y - 4.0), CHEESE_CREAM)
@@ -888,10 +887,10 @@ static func _draw_stall(wc: ShapeBatch, lo: float, hi: float) -> void:
 		wc.circle(jp + Vector2(1.0, 1.5), 5.4, Color(0.10, 0.08, 0.08, 0.30))
 		wc.circle(jp, 5.0, HONEY_GOLD.darkened(0.18))
 		wc.circle(jp, 3.8, HONEY_GOLD)
-		wc.circle(jp - LIGHT * 1.2, 1.5, Color(1.0, 0.92, 0.6))
+		wc.circle(jp - Shade.light * 1.2, 1.5, Color(1.0, 0.92, 0.6))
 	# the awning, striped, its valance scalloped toward the path
 	var aw := Rect2(sr.position.x - 4.0, sr.position.y - 5.0, 40.0, sr.size.y + 10.0)
-	wc.rect(Rect2(aw.position + LIGHT * 5.0, aw.size), Color(0.06, 0.05, 0.08, 0.30))
+	wc.rect(Rect2(aw.position + Shade.light * 5.0, aw.size), Color(0.06, 0.05, 0.08, 0.30))
 	for i in range(6):
 		var col := HONEY_GOLD if i % 2 == 0 else CHEESE_CREAM
 		var ry := aw.position.y + float(i) * aw.size.y / 6.0
@@ -913,7 +912,7 @@ static func _draw_arcades(wc: ShapeBatch, lo: float, hi: float) -> void:
 		if arc.end.y < lo - 60.0 or arc.position.y > hi + 60.0:
 			continue
 		var face_y := arc.position.y + 16.0
-		wc.rect(Rect2(arc.position + LIGHT * 12.0, arc.size), Color(0.06, 0.05, 0.08, 0.36))
+		wc.rect(Rect2(arc.position + Shade.light * 12.0, arc.size), Color(0.06, 0.05, 0.08, 0.36))
 		# the roof
 		wc.rect(Rect2(arc.position.x - 2.0, arc.position.y - 6.0, arc.size.x + 4.0, 23.0), MONASTERY_ROOF.darkened(0.10))
 		wc.rect(Rect2(arc.position.x - 2.0, arc.position.y - 6.0, arc.size.x + 4.0, 11.0), MONASTERY_ROOF)
@@ -957,8 +956,8 @@ static func _is_spire(p: Vector2) -> bool:
 # pine's trunk, roots and the shade of its crown
 static func draw_column(_m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
 	if _is_spire(p):
-		var tip := p + LIGHT * SPIRE_SHADOW
-		var side := LIGHT.orthogonal()
+		var tip := p + Shade.light * SPIRE_SHADOW
+		var side := Shade.SUN.orthogonal()
 		wc.polygon(PackedVector2Array([
 			p + side * SPIRE_R, p - side * SPIRE_R,
 			tip - side * SPIRE_R * 0.7, tip + side * SPIRE_R * 0.7,
@@ -973,26 +972,26 @@ static func draw_column(_m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
 		wc.circle(p, SPIRE_R + 1.5, ROCK_DEEP)
 		wc.circle(p, SPIRE_R, ROCK_SHADE)
 		return
-	wc.glow(p + LIGHT * 20.0, PINE_CROWN * 1.25, Color(0.05, 0.07, 0.10, 0.30), 0.45)
+	wc.glow(p + Shade.light * 20.0, PINE_CROWN * 1.25, Color(0.05, 0.07, 0.10, 0.30), 0.45)
 	for ri in range(4):
 		var d := Vector2.from_angle(float(ri) * 1.6 + p.y * 0.02)
 		wc.line(p, p + d * (13.0 + float(ri % 2) * 6.0), PINE_TRUNK.darkened(0.2), 3.2)
 	wc.circle(p, 7.5, PINE_TRUNK.darkened(0.25))
 	wc.circle(p, 6.2, PINE_TRUNK)
-	wc.circle(p - LIGHT * 1.6, 3.4, PINE_TRUNK.lightened(0.2))
+	wc.circle(p - Shade.light * 1.6, 3.4, PINE_TRUNK.lightened(0.2))
 
 
 # Font del Portal: a carved stone back, a spout, the basin
 static func draw_fountain(m: Node2D, f: Vector2) -> void:
 	var c: ShapeBatch = m._wc
-	c.circle(f + LIGHT * 6.0, 21.0, SHADOW)
+	c.circle(f + Shade.light * 6.0, 21.0, SHADOW)
 	c.rect(Rect2(f.x - 22.0, f.y - 22.0, 44.0, 14.0), MONASTERY_WALL.darkened(0.16))
 	c.rect(Rect2(f.x - 22.0, f.y - 22.0, 44.0, 9.0), MONASTERY_WALL)
 	c.circle(Vector2(f.x, f.y - 20.0), 9.0, MONASTERY_WALL.lightened(0.10))
 	c.circle(f, 19.0, KERB.darkened(0.20))
 	c.circle(f, 17.0, KERB)
 	c.circle(f, 13.0, Color(0.20, 0.42, 0.52))
-	c.circle(f - LIGHT * 2.0, 10.0, Color(0.36, 0.62, 0.72))
+	c.circle(f - Shade.light * 2.0, 10.0, Color(0.36, 0.62, 0.72))
 	c.circle(f + Vector2(-3.0, -3.0), 3.0, Color(0.80, 0.92, 0.96, 0.7))
 	c.line(Vector2(f.x, f.y - 14.0), Vector2(f.x, f.y - 4.0), Color(0.78, 0.92, 0.98, 0.85), 2.0)
 	c.circle(Vector2(f.x, f.y - 15.0), 2.6, Color(0.62, 0.50, 0.24))
@@ -1015,7 +1014,7 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 		var pivot := Vector2(sp.x, sp.y + (12.0 if south else -12.0))
 		var ang := lerpf(PI * 0.5 if south else -PI * 0.5, 0.0, down)
 		var dir := Vector2(inward * cos(ang), sin(ang))
-		wc.line(pivot + LIGHT * 4.0, pivot + dir * BARRIER_LEN + LIGHT * 4.0, Color(0.06, 0.05, 0.08, 0.28), 4.0)
+		wc.line(pivot + Shade.light * 4.0, pivot + dir * BARRIER_LEN + Shade.light * 4.0, Color(0.06, 0.05, 0.08, 0.28), 4.0)
 		for si in range(6):
 			wc.line(pivot + dir * (BARRIER_LEN * float(si) / 6.0), pivot + dir * (BARRIER_LEN * float(si + 1) / 6.0),
 				Color(0.86, 0.16, 0.14) if si % 2 == 0 else Color(0.96, 0.95, 0.92), 4.0)
@@ -1042,7 +1041,7 @@ static func _draw_car(wc: ShapeBatch, car_x: float, elapsed: float) -> void:
 	var hh := FUNICULAR_CAR_H * 0.5
 	var c := Vector2(car_x, CROSSING_Y)
 	var r := Rect2(c.x - hw, c.y - hh, FUNICULAR_CAR_W, FUNICULAR_CAR_H)
-	wc.rect(Rect2(r.position + LIGHT * 9.0, r.size), Color(0.06, 0.05, 0.08, 0.34))
+	wc.rect(Rect2(r.position + Shade.light * 9.0, r.size), Color(0.06, 0.05, 0.08, 0.34))
 	# the body, its corners eased
 	wc.rect(r.grow_individual(2.0, -3.0, 2.0, -3.0), FUNICULAR_RED.darkened(0.28))
 	wc.rect(r, FUNICULAR_RED.darkened(0.28))
@@ -1131,12 +1130,12 @@ static func _draw_pine_crown(b: ShapeBatch, p: Vector2, seed_n: float) -> void:
 		var lr := r * (0.50 + 0.14 * float((k + int(seed_n)) % 3))
 		var lp := p + Vector2.from_angle(a) * lr
 		b.circle(lp, r * 0.38, PINE_NEEDLE)
-		b.circle(lp - LIGHT * (r * 0.10), r * 0.26, PINE_NEEDLE.lightened(0.10))
+		b.circle(lp - Shade.light * (r * 0.10), r * 0.26, PINE_NEEDLE.lightened(0.10))
 	for k in range(5):
 		var a := TAU * float(k) / 5.0 + seed_n * 1.3
-		var lp := p + Vector2.from_angle(a) * r * 0.30 - LIGHT * 4.0
+		var lp := p + Vector2.from_angle(a) * r * 0.30 - Shade.light * 4.0
 		b.circle(lp, r * 0.28, PINE_NEEDLE.lightened(0.07))
-		b.circle(lp - LIGHT * 3.0, r * 0.15, PINE_LIT)
+		b.circle(lp - Shade.light * 3.0, r * 0.15, PINE_LIT)
 	# cones
 	for k in range(3):
 		var a := seed_n * 2.1 + float(k) * 2.3

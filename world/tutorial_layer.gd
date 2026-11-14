@@ -213,7 +213,7 @@ static func _benches(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 		while sy < apron.end.y:
 			b.rect(Rect2(apron.position.x, sy, apron.size.x, 1.2), SETT_LINE)
 			sy += 8.0
-		b.rect(Rect2(r.position + m.LIGHT * 7.0, r.size + Vector2(0, 6)),
+		b.rect(Rect2(r.position + Shade.light * 7.0, r.size + Vector2(0, 6)),
 			Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
 		for ex: float in [r.position.x + 3.0, r.end.x - 7.0]:
 			b.rect(Rect2(ex, r.position.y - 1.0, 4.0, r.size.y + 8.0), Color(0.16, 0.16, 0.17))

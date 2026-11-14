@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-14 - Home walk-in strides, night shadows, softer lit fronts
+
+- Merged the 1.73 stack: #529 (chase machines), #524 (L'Aeroport), #531 (chase squads on foot), #525 (Montserrat), #526 (Els Lleons), #527 (El Drac).
+- The "Back on the Sofa" epilogue set your human's stride phase but never `stride_amp`, which defaults to 0, so they slid in on still legs. The phase now follows the ground covered (`HumanSide.STEP`), so each foot stays planted, and the swing fades in on the first step and out as they turn to sit (`intro/scene_home.gd`). `tools/intro_render.gd` renders it as `home`.
+- Night shadows: every shadow followed a sun constant copied into some 40 scripts, so trees and posts threw long afternoon shadows at midnight. They all read `Shade.light` now (`systems/shade.gd`, set as a walk starts and whenever the sky is applied): the old constant exactly by day (day shots unchanged pixel for pixel), a short pool leaning the same way after dark. Clay shading and the side-on films keep their own light. Test: `tests/test_shade.gd`.
+- Lit doorways, shopfronts, bars and televisions at night are about 40% dimmer, and so are their halos, wet-paving streaks and the lit windows upstairs (`world/night_fronts.gd`).
+
 ## 2026-11-13 - El Drac review fixes
 
 - El Drac's boop, dodge, wound and trip showed "+N" but paid nothing outside a running chain: `combo.add` pays a non-trick only inside one. Each pays through `award_points` now (`systems/boss_drac.gd`).

@@ -15,7 +15,6 @@ const ShapeBatch := preload("res://systems/shape_batch.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 const Detour := preload("res://systems/detour.gd")
 
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.22)
 
 # --- colors ------------------------------------------------------------------
@@ -210,7 +209,7 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, _vt: float = 0.0, _vb: flo
 		b.line(FOUNTAIN_POS + dir * (FOUNTAIN_RADIUS + 4.0), FOUNTAIN_POS + dir * 110.0, BAND_CREAM, 3.5)
 
 	# Fountain base and water
-	b.circle(FOUNTAIN_POS + LIGHT * 8.0, FOUNTAIN_RADIUS + 4.0, SHADOW)
+	b.circle(FOUNTAIN_POS + Shade.light * 8.0, FOUNTAIN_RADIUS + 4.0, SHADOW)
 	b.circle(FOUNTAIN_POS, FOUNTAIN_RADIUS, FOUNTAIN_STONE)
 	b.circle(FOUNTAIN_POS, FOUNTAIN_RADIUS - 6.0, FOUNTAIN_IRON)
 	b.circle(FOUNTAIN_POS, FOUNTAIN_RADIUS - 10.0, FOUNTAIN_WATER)
@@ -221,7 +220,7 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, _vt: float = 0.0, _vb: flo
 	# Gaudí 6-armed lampposts
 	for gp: Vector2 in GAUDI_POSTS:
 		# Marble plinth and shadow
-		b.circle(gp + LIGHT * 6.0, 24.0, SHADOW)
+		b.circle(gp + Shade.light * 6.0, 24.0, SHADOW)
 		b.circle(gp, 20.0, GAUDI_MARBLE)
 		b.circle(gp, 14.0, GAUDI_BRONZE)
 		# Six arms with glass globes
@@ -229,21 +228,21 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, _vt: float = 0.0, _vb: flo
 			var a := float(i) * (TAU / 6.0)
 			var arm := gp + Vector2(cos(a), sin(a)) * 26.0
 			b.line(gp, arm, GAUDI_BRONZE, 3.0)
-			b.circle(arm + LIGHT * 2.0, 5.0, SHADOW)
+			b.circle(arm + Shade.light * 2.0, 5.0, SHADOW)
 			b.circle(arm, 4.5, GAUDI_GLOBE)
 		# Central winged dragon-helmet finial
 		b.circle(gp, 6.0, GAUDI_GOLD)
 
 	# Palm tree trunks and base grates
 	for p: Vector2 in PALMS:
-		b.circle(p + LIGHT * 5.0, 16.0, SHADOW)
+		b.circle(p + Shade.light * 5.0, 16.0, SHADOW)
 		b.circle(p, 16.0, STONE_DARK)
 		b.circle(p, 12.0, PALM_TRUNK)
 		b.circle(p, 7.0, PALM_BARK)
 
 	# Dining terraces under the arcades
 	for tr: Rect2 in TERRACES:
-		b.rect(Rect2(tr.position + LIGHT * 4.0, tr.size), SHADOW)
+		b.rect(Rect2(tr.position + Shade.light * 4.0, tr.size), SHADOW)
 		b.rect(tr, Color(0.15, 0.16, 0.18, 0.45))
 		# Bistro tables
 		var cols := 2
@@ -251,12 +250,12 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, _vt: float = 0.0, _vb: flo
 		for r in range(rows):
 			for c in range(cols):
 				var tp := tr.position + Vector2(16.0 + float(c) * 44.0, 24.0 + float(r) * 48.0)
-				b.circle(tp + LIGHT * 3.0, 12.0, SHADOW)
+				b.circle(tp + Shade.light * 3.0, 12.0, SHADOW)
 				b.circle(tp, 11.0, Color(0.92, 0.90, 0.86)) # white marble top
 				b.circle(tp, 3.0, Color(0.20, 0.18, 0.16))   # plate
 
 	# Spanish guitar busker
-	b.circle(BUSKER_POS + LIGHT * 4.0, 14.0, SHADOW)
+	b.circle(BUSKER_POS + Shade.light * 4.0, 14.0, SHADOW)
 	b.circle(BUSKER_POS, 12.0, Color(0.25, 0.28, 0.35)) # blue shirt
 	# Wooden guitar
 	var gp := BUSKER_POS + Vector2(12.0, -4.0)
@@ -270,7 +269,7 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, _vt: float = 0.0, _vb: flo
 	b.circle(cp + Vector2(2, 4), 1.8, Color(0.90, 0.80, 0.30))  # gold coin
 
 	# Hot churros and chocolate prize
-	b.circle(PRIZE + LIGHT * 3.0, 10.0, SHADOW)
+	b.circle(PRIZE + Shade.light * 3.0, 10.0, SHADOW)
 	b.circle(PRIZE, 9.0, Color(0.95, 0.94, 0.90)) # ceramic plate
 	b.circle(PRIZE + Vector2(-3, -2), 3.5, CHOCOLATE_DARK) # chocolate cup
 	b.line(PRIZE + Vector2(0, 2), PRIZE + Vector2(6, -4), CHURRO_GOLD, 3.0) # churro

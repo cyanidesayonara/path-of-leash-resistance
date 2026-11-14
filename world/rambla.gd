@@ -11,7 +11,6 @@ extends RefCounted
 # - Caricaturist and painter pitches with easels, palettes, and sketch clotheslines
 # - Living statues on weathered stone pedestals with tipping coin dishes
 
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.05, 0.05, 0.08, 0.20)
 const Detour := preload("res://systems/detour.gd")
 
@@ -191,7 +190,7 @@ static func draw_canaletes(m: Node2D, wc: Object, f: Vector2) -> void:
 static func draw_rambla_stall(m: Node2D, b: ShapeBatch, st: Vector2, kind: String, i: int) -> void:
 	var r := Rect2(st.x - 48.0, st.y - 28.0, 96.0, 56.0)
 	if kind == "icecream" or kind == "caricature":
-		b.rect(Rect2(r.position + LIGHT * 12.0, r.size), Color(0.05, 0.05, 0.08, 0.22))
+		b.rect(Rect2(r.position + Shade.light * 12.0, r.size), Color(0.05, 0.05, 0.08, 0.22))
 	else:
 		m.box_shadow(b, r, 5.0, 12.0)
 	match kind:
@@ -205,7 +204,7 @@ static func draw_rambla_stall(m: Node2D, b: ShapeBatch, st: Vector2, kind: Strin
 				b.line(Vector2(r.position.x + 5.0 + float(k) * 11.5, r.end.y + 2.0), Vector2(r.position.x + 11.0 + float(k) * 11.5, r.end.y + 2.0), Color(0.2, 0.2, 0.2), 1.0)
 			for side: float in [-1.0, 1.0]:
 				var rx := st.x + side * 54.0
-				b.circle(Vector2(rx, st.y) + LIGHT * 4.0, 9.0, SHADOW)
+				b.circle(Vector2(rx, st.y) + Shade.light * 4.0, 9.0, SHADOW)
 				b.circle(Vector2(rx, st.y), 9.0, Color(0.32, 0.34, 0.36))
 				b.circle(Vector2(rx, st.y), 7.0, POSTCARD_BORDER)
 				for p in range(4):
@@ -223,20 +222,20 @@ static func draw_rambla_stall(m: Node2D, b: ShapeBatch, st: Vector2, kind: Strin
 			for k in range(12):
 				var fc: Color = [ROSE_RED, SUNFLOWER_GOLD, Color(0.96, 0.60, 0.20), LAVENDER_PURPLE, LILY_WHITE][(k + i) % 5]
 				var fp := Vector2(r.position.x + 10.0 + float(k % 6) * 15.0, r.position.y + 14.0 + float(k / 6) * 26.0)
-				b.circle(fp + LIGHT * 2.0, 7.5, SHADOW)
+				b.circle(fp + Shade.light * 2.0, 7.5, SHADOW)
 				b.circle(fp, 7.0, ZINC_BUCKET)
 				b.circle(fp, 5.5, ZINC_RIM)
 				b.circle(fp + Vector2(-1, -1), 4.5, fc)
 				b.circle(fp + Vector2(1, 1), 2.0, fc.lightened(0.25))
 			for k in range(4):
 				var bp := Vector2(r.position.x + 12.0 + float(k) * 24.0, r.end.y + 7.0)
-				b.circle(bp + LIGHT * 2.0, 6.5, SHADOW)
+				b.circle(bp + Shade.light * 2.0, 6.5, SHADOW)
 				b.circle(bp, 6.0, ZINC_BUCKET)
 				b.circle(bp, 4.5, ZINC_RIM)
 				b.circle(bp + Vector2(-0.8, -0.8), 3.8, [ROSE_RED, SUNFLOWER_GOLD][k % 2])
 			for side: float in [-1.0, 1.0]:
 				var pot_p := Vector2(st.x + side * 54.0, st.y + 10.0)
-				b.circle(pot_p + LIGHT * 3.0, 7.5, SHADOW)
+				b.circle(pot_p + Shade.light * 3.0, 7.5, SHADOW)
 				b.circle(pot_p, 7.0, POT_TERRACOTTA)
 				b.circle(pot_p, 5.2, Color(0.38, 0.24, 0.16))
 				for lf in range(5):
@@ -251,7 +250,7 @@ static func draw_rambla_stall(m: Node2D, b: ShapeBatch, st: Vector2, kind: Strin
 			b.rect(r.grow(-4.0), Color(0.54, 0.44, 0.34))
 			for h in range(3):
 				var hp := Vector2(r.position.x + 14.0 + float(h) * 34.0, r.position.y + 10.0)
-				b.circle(hp + LIGHT * 2.0, 8.5, SHADOW)
+				b.circle(hp + Shade.light * 2.0, 8.5, SHADOW)
 				b.circle(hp, 8.0, STRAW_HAT)
 				b.circle(hp, 5.0, STRAW_HAT.darkened(0.12))
 				b.circle(hp, 3.2, Color(0.85, 0.22, 0.24))
@@ -272,14 +271,14 @@ static func draw_rambla_stall(m: Node2D, b: ShapeBatch, st: Vector2, kind: Strin
 			b.circle(ep + Vector2(0, -9), 6.0, Color(0.92, 0.76, 0.62))
 			b.circle(ep + Vector2(0, -9), 4.0, Color(0.2, 0.2, 0.2))
 			var pal := Vector2(st.x + 24.0, st.y - 8.0)
-			b.circle(pal + LIGHT * 2.0, 8.5, SHADOW)
+			b.circle(pal + Shade.light * 2.0, 8.5, SHADOW)
 			b.circle(pal, 8.0, Color(0.72, 0.56, 0.36))
 			b.circle(pal + Vector2(4, 3), 2.0, Color(0.28, 0.20, 0.12))
 			for c in range(4):
 				var ca := float(c) * TAU / 4.0
 				b.circle(pal + Vector2.from_angle(ca) * 5.0, 1.8, [Color(0.85, 0.18, 0.18), Color(0.20, 0.50, 0.85), Color(0.95, 0.80, 0.15), Color(0.95, 0.95, 0.95)][c])
 			var stool := Vector2(st.x + 22.0, st.y + 14.0)
-			b.circle(stool + LIGHT * 3.0, 7.5, SHADOW)
+			b.circle(stool + Shade.light * 3.0, 7.5, SHADOW)
 			b.circle(stool, 7.0, Color(0.58, 0.42, 0.28))
 			b.circle(stool, 5.0, Color(0.44, 0.30, 0.18))
 			b.line(Vector2(r.position.x + 4.0, r.position.y - 8.0), Vector2(r.end.x - 4.0, r.position.y - 8.0), Color(0.35, 0.35, 0.38), 1.2)
@@ -338,7 +337,7 @@ static func draw_statue_dressing(m: Node2D, b: ShapeBatch, sp: Vector2, i: int, 
 	m.clay_slab(b, base, 5.0, Color(0.42, 0.40, 0.38), 3.0)
 	b.rect(base.grow(-3.0), Color(0.50, 0.48, 0.45))
 	var dish := Vector2(sp.x - 4.0, sp.y + 24.0)
-	b.circle(dish + LIGHT * 2.0, 6.0, SHADOW)
+	b.circle(dish + Shade.light * 2.0, 6.0, SHADOW)
 	b.circle(dish, 5.5, BRONZE_SPOUT.darkened(0.2))
 	b.circle(dish, 4.2, BRONZE_SPOUT)
 	b.circle(dish + Vector2(-1.5, -0.5), 1.6, CREST_GOLD)

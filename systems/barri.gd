@@ -10,7 +10,6 @@ extends RefCounted
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const Surfaces := preload("res://world/surfaces.gd")
-const LIGHT := Vector2(0.5, 0.866)       # as main.LIGHT: the direction shadows fall
 
 const PIPICA_GROUND := Color(0.72, 0.64, 0.48)
 const PIPICA_FENCE := Color(0.20, 0.38, 0.27)
@@ -32,7 +31,7 @@ static func _draw_square(m: Node2D, vt: float, vb: float) -> void:
 	var pp: Rect2 = m.LevelBuild.BARRI_PETANCA
 	if pp.end.y > vt - 40.0 and pp.position.y < vb + 40.0:
 		# raked sauló inside a timber edging, lying on the square's gravel
-		b.rect(Rect2(pp.position + LIGHT * 3.0, pp.size).grow(5.0), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.14))
+		b.rect(Rect2(pp.position + Shade.light * 3.0, pp.size).grow(5.0), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.14))
 		b.rect(pp.grow(5.0), Color(0.44, 0.32, 0.20))
 		b.rect(Rect2(pp.position - Vector2(5.0, 5.0), Vector2(pp.size.x + 10.0, 2.0)), Color(0.60, 0.46, 0.30))
 		b.rect(Rect2(pp.position - Vector2(5.0, 5.0), Vector2(2.0, pp.size.y + 10.0)), Color(0.60, 0.46, 0.30))
@@ -56,21 +55,21 @@ static func _draw_square(m: Node2D, vt: float, vb: float) -> void:
 			_boule(m, b, jack + Vector2(6.0, -13.0))
 		# yellow measuring tape (cinta mètrica) measuring distance to closest boule
 		b.line(jack, jack + Vector2(6.0, -13.0), Color(0.96, 0.84, 0.18), 1.2)
-		b.circle(jack + Vector2(9.0, -17.0) + LIGHT * 1.5, 3.2, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.20))
+		b.circle(jack + Vector2(9.0, -17.0) + Shade.light * 1.5, 3.2, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.20))
 		b.circle(jack + Vector2(9.0, -17.0), 3.0, Color(0.94, 0.82, 0.16))
 		b.circle(jack + Vector2(9.0, -17.0), 1.6, Color(0.20, 0.20, 0.22))
 		b.circle(jack + Vector2(0.6, 1.0), 3.4, Color(0, 0, 0, 0.22))
 		b.circle(jack, 3.0, Color(0.88, 0.32, 0.20))
 		# scoreboard on the west timber rail
 		var sb_pos := Vector2(pp.position.x - 14.0, pp.position.y + 40.0)
-		b.rect(Rect2(sb_pos + LIGHT * 2.5, Vector2(6.0, 24.0)), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.16))
+		b.rect(Rect2(sb_pos + Shade.light * 2.5, Vector2(6.0, 24.0)), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.16))
 		b.rect(Rect2(sb_pos, Vector2(6.0, 24.0)), Color(0.50, 0.38, 0.24))
 		b.rect(Rect2(sb_pos + Vector2(1.0, 2.0), Vector2(4.0, 20.0)), Color(0.18, 0.20, 0.18))
 		b.circle(sb_pos + Vector2(3.0, 6.0), 1.0, Color(0.92, 0.92, 0.90, 0.8))
 		b.circle(sb_pos + Vector2(3.0, 16.0), 1.0, Color(0.92, 0.92, 0.90, 0.8))
 		# leather boule carrying pouch on the south rail
 		var bag_pos := Vector2(pp.position.x + 24.0, pp.end.y + 1.0)
-		b.rect(Rect2(bag_pos + LIGHT * 2.0, Vector2(16.0, 9.0)), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.18))
+		b.rect(Rect2(bag_pos + Shade.light * 2.0, Vector2(16.0, 9.0)), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.18))
 		b.rect(Rect2(bag_pos, Vector2(16.0, 9.0)), Color(0.48, 0.30, 0.18))
 		b.circle(bag_pos + Vector2(3.0, 4.5), 3.0, Color(0.56, 0.36, 0.22))
 		b.circle(bag_pos + Vector2(8.0, 4.5), 3.0, Color(0.56, 0.36, 0.22))
@@ -116,8 +115,8 @@ static func _font(m: Node2D, f: Vector2) -> void:
 	b.circle(f + Vector2(0.5, 16.5), 2.2, Color(0.36, 0.56, 0.66))
 	b.circle(f + Vector2(-1.0, 15.0), 1.4, Color(0.82, 0.92, 0.98, 0.8))
 	# the column's shadow, long, away from the light
-	var side := LIGHT.orthogonal()
-	var tip := f + LIGHT * 46.0
+	var side := Shade.SUN.orthogonal()
+	var tip := f + Shade.light * 46.0
 	b.polygon(PackedVector2Array([f + side * 7.0, f - side * 7.0, tip - side * 4.0, tip + side * 4.0]),
 		Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.24))
 	# the column, its fluted cap and the knob on top
@@ -163,14 +162,14 @@ static func _draw_pipica(m: Node2D, c: Object) -> void:
 	_fence(m, b, Vector2(r.end.x, r.position.y), r.end)
 	# inside the gate: the bag dispenser on its post, and a bin
 	var dp := Vector2(m.gate_r + 46.0, r.end.y - 34.0)
-	b.polygon(PackedVector2Array([dp + Vector2(-4, 0), dp + Vector2(4, 0), dp + LIGHT * 30.0 + Vector2(3, 0),
-		dp + LIGHT * 30.0 - Vector2(3, 0)]), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
+	b.polygon(PackedVector2Array([dp + Vector2(-4, 0), dp + Vector2(4, 0), dp + Shade.light * 30.0 + Vector2(3, 0),
+		dp + Shade.light * 30.0 - Vector2(3, 0)]), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
 	b.rect(Rect2(dp - Vector2(8.0, 10.0), Vector2(16.0, 14.0)), PIPICA_FENCE.darkened(0.2))
 	b.rect(Rect2(dp - Vector2(6.0, 8.0), Vector2(12.0, 10.0)), PIPICA_FENCE.lightened(0.15))
 	b.rect(Rect2(dp.x - 4.0, dp.y - 3.0, 8.0, 3.0), Color(0.30, 0.30, 0.32))
 	b.circle(dp + Vector2(0.0, 1.0), 2.0, Color(0.20, 0.60, 0.30))
 	var bn := Vector2(m.gate_r + 78.0, r.end.y - 30.0)
-	b.circle(bn + LIGHT * 6.0, 10.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
+	b.circle(bn + Shade.light * 6.0, 10.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
 	b.circle(bn, 10.0, Color(0.28, 0.30, 0.32))
 	b.circle(bn, 7.5, Color(0.16, 0.17, 0.18))
 	b.flush(c)
@@ -183,7 +182,7 @@ static func _draw_pipica(m: Node2D, c: Object) -> void:
 static func _fence(m: Node2D, b: ShapeBatch, a: Vector2, z: Vector2) -> void:
 	if a.distance_to(z) < 2.0:
 		return
-	b.line(a + LIGHT * 5.0, z + LIGHT * 5.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.18), 4.0)
+	b.line(a + Shade.light * 5.0, z + Shade.light * 5.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.18), 4.0)
 	b.line(a, z, Color(PIPICA_FENCE.r, PIPICA_FENCE.g, PIPICA_FENCE.b, 0.35), 7.0)
 	b.line(a, z, PIPICA_FENCE, 2.5)
 	var n := maxi(1, int(a.distance_to(z) / 46.0))
@@ -504,7 +503,7 @@ static func _draw_gravel(m: Node2D, b: ShapeBatch, top: float, bot: float) -> vo
 	for tp: Vector2 in LevelBuild.BARRI_TREES:
 		if tp.y < lo - 120.0 or tp.y > hi + 80.0:
 			continue
-		var sc := tp + LIGHT * 50.0
+		var sc := tp + Shade.light * 50.0
 		for d in range(7):
 			var dp := sc + Vector2((_h1(int(tp.y) + d, 51.0) - 0.5) * 70.0, (_h1(int(tp.y) + d, 52.0) - 0.5) * 34.0)
 			b.circle(dp, 3.0 + _h1(int(tp.y) + d, 53.0) * 4.0, Color(1.0, 0.96, 0.80, 0.10))
@@ -563,7 +562,7 @@ static func _draw_gravel(m: Node2D, b: ShapeBatch, top: float, bot: float) -> vo
 		if dt.y < lo - 20.0 or dt.y > hi + 20.0:
 			continue
 		var dp2 := Vector2(dt.x, dt.y)
-		b.circle(dp2 + LIGHT * 2.0, 5.0, Color(0, 0, 0, 0.16))
+		b.circle(dp2 + Shade.light * 2.0, 5.0, Color(0, 0, 0, 0.16))
 		match int(dt.z):
 			0:      # a child's ball, red and yellow
 				b.circle(dp2, 5.5, Color(0.90, 0.24, 0.20))
@@ -636,10 +635,10 @@ static func _draw_neighbourhood(m: Node2D, top: float, bot: float) -> void:
 		while ty2 < bot + 40.0:
 			var tp := Vector2(rail2 + side * 28.0, ty2 + (70.0 if side > 0.0 else 0.0))
 			if absf(tp.y - BICING_Y) > 150.0 and not (side > 0.0 and _near_shop(tp.y, 60.0)):
-				b.circle(tp + LIGHT * 14.0, 30.0, Color(0, 0, 0, 0.18))
+				b.circle(tp + Shade.light * 14.0, 30.0, Color(0, 0, 0, 0.18))
 				b.circle(tp, 30.0, Color(0.24, 0.40, 0.22))
-				b.circle(tp - LIGHT * 8.0, 20.0, Color(0.32, 0.50, 0.28))
-				b.circle(tp - LIGHT * 13.0, 9.0, Color(0.42, 0.60, 0.34))
+				b.circle(tp - Shade.light * 8.0, 20.0, Color(0.32, 0.50, 0.28))
+				b.circle(tp - Shade.light * 13.0, 9.0, Color(0.42, 0.60, 0.34))
 			ty2 += STREET_TREE_STEP
 	b.flush(m._wc)
 
@@ -701,7 +700,7 @@ static func _draw_west_street(m: Node2D, b: ShapeBatch, top: float, bot: float) 
 # parasols furled by the kerb
 static func _lane_terrace(m: Node2D, b: ShapeBatch, kerb_x: float) -> void:
 	var r := Rect2(kerb_x - 50.0, TERRACE_LANE.x, 46.0, TERRACE_LANE.y - TERRACE_LANE.x)
-	b.rect(Rect2(r.position + LIGHT * 3.0, r.size), _shadow(m))
+	b.rect(Rect2(r.position + Shade.light * 3.0, r.size), _shadow(m))
 	b.rect(r, TIMBER)
 	var py := r.position.y + 6.0
 	while py < r.end.y:
@@ -718,7 +717,7 @@ static func _lane_terrace(m: Node2D, b: ShapeBatch, kerb_x: float) -> void:
 		var tc := Vector2(r.get_center().x, ty)
 		for cd: Vector2 in [Vector2(-14, 0), Vector2(14, 0)]:
 			b.rect(Rect2(tc + cd - Vector2(5, 5), Vector2(10, 10)), Color(0.28, 0.28, 0.30))
-		b.circle(tc + LIGHT * 2.0, 9.0, _shadow(m))
+		b.circle(tc + Shade.light * 2.0, 9.0, _shadow(m))
 		b.circle(tc, 9.0, Color(0.88, 0.88, 0.86))
 		b.circle(tc + Vector2(-3, -2), 2.4, Color(0.94, 0.94, 0.92) if k % 2 == 0 else Color(0.62, 0.34, 0.18))
 		b.circle(tc + Vector2(3, 2), 2.0, Color(0.96, 0.84, 0.40))
@@ -735,13 +734,13 @@ static func _recycling(m: Node2D, b: ShapeBatch, kerb_x: float) -> void:
 	for i in range(cols.size()):
 		var c := Vector2(kerb_x - 24.0, y + 20.0)
 		if i == 2:
-			b.circle(c + LIGHT * 4.0, 19.0, _shadow(m))
+			b.circle(c + Shade.light * 4.0, 19.0, _shadow(m))
 			b.circle(c, 19.0, cols[i])
 			b.circle(c, 12.0, cols[i].lightened(0.12))
 			b.circle(c, 4.0, cols[i].darkened(0.3))
 		else:
 			var r := Rect2(c - Vector2(18.0, 19.0), Vector2(36.0, 38.0))
-			b.rect(Rect2(r.position + LIGHT * 4.0, r.size), _shadow(m))
+			b.rect(Rect2(r.position + Shade.light * 4.0, r.size), _shadow(m))
 			b.rect(r, cols[i].darkened(0.15))
 			b.rect(r.grow(-3.0), cols[i])
 			b.rect(Rect2(r.position.x + 3.0, r.get_center().y - 1.0, r.size.x - 6.0, 2.0), cols[i].darkened(0.25))
@@ -812,7 +811,7 @@ static func _shopfront(m: Node2D, b: ShapeBatch, y: float, kind: int) -> void:
 			_awning(b, Rect2(fx - 30.0, y - 70.0, 30.0, 140.0), Color(0.18, 0.44, 0.32), Color(0.92, 0.90, 0.84))
 			for i in range(3):
 				var tc := Vector2(fx - 42.0, y - 52.0 + float(i) * 52.0)
-				b.circle(tc + LIGHT * 2.0, 8.0, _shadow(m))
+				b.circle(tc + Shade.light * 2.0, 8.0, _shadow(m))
 				b.circle(tc, 8.0, Color(0.74, 0.74, 0.72))
 				b.circle(tc + Vector2(-2, -1), 2.2, Color(0.96, 0.84, 0.40))
 				for cd: Vector2 in [Vector2(0, -13), Vector2(0, 13)]:
@@ -826,7 +825,7 @@ static func _shopfront(m: Node2D, b: ShapeBatch, y: float, kind: int) -> void:
 			b.rect(Rect2(fx - 43.0, y - 25.0, 3.0, 38.0), TIMBER_LIT)
 		2:      # the newspaper kiosk, green steel, its shutters folded open
 			var kr := Rect2(fx - 46.0, y - 34.0, 38.0, 68.0)
-			b.rect(Rect2(kr.position + LIGHT * 5.0, kr.size), _shadow(m))
+			b.rect(Rect2(kr.position + Shade.light * 5.0, kr.size), _shadow(m))
 			b.rect(kr, KIOSK_GREEN)
 			b.rect(kr.grow(-3.0), KIOSK_GREEN.lightened(0.1))
 			b.rect(Rect2(kr.position.x - 6.0, kr.position.y + 6.0, 6.0, kr.size.y - 12.0), Color(0.86, 0.86, 0.80))
@@ -848,7 +847,7 @@ static func _shopfront(m: Node2D, b: ShapeBatch, y: float, kind: int) -> void:
 			var fruit: Array[Color] = [Color(0.96, 0.56, 0.14), Color(0.86, 0.18, 0.16), Color(0.94, 0.86, 0.26), Color(0.50, 0.70, 0.24)]
 			for i in range(4):
 				var cr := Rect2(fx - 48.0, y - 50.0 + float(i) * 26.0, 18.0, 22.0)
-				b.rect(Rect2(cr.position + LIGHT * 2.0, cr.size), _shadow(m))
+				b.rect(Rect2(cr.position + Shade.light * 2.0, cr.size), _shadow(m))
 				b.rect(cr, TIMBER_LIT)
 				for f in range(4):
 					b.circle(cr.position + Vector2(5.0 + float(f % 2) * 8.0, 6.0 + float(f / 2) * 9.0), 3.6, fruit[i])
@@ -857,7 +856,7 @@ static func _shopfront(m: Node2D, b: ShapeBatch, y: float, kind: int) -> void:
 			var blooms: Array[Color] = [Color(0.94, 0.86, 0.22), Color(0.90, 0.26, 0.32), Color(0.96, 0.96, 0.94), Color(0.62, 0.40, 0.80)]
 			for i in range(5):
 				var bp := Vector2(fx - 38.0 - float(i % 2) * 8.0, y - 44.0 + float(i) * 20.0)
-				b.circle(bp + LIGHT * 2.0, 8.0, _shadow(m))
+				b.circle(bp + Shade.light * 2.0, 8.0, _shadow(m))
 				b.circle(bp, 7.0, Color(0.30, 0.32, 0.36))
 				for f in range(5):
 					b.circle(bp + Vector2.from_angle(TAU * float(f) / 5.0) * 3.6, 2.6, blooms[i % blooms.size()])
@@ -898,7 +897,7 @@ static func _draw_lawns(m: Node2D, b: ShapeBatch, top: float, bot: float) -> voi
 	if _in_view(SPECTATORS, top, bot):
 		# the petanca's spectators, on a bench facing the pitch
 		var sr := SPECTATORS
-		b.rect(Rect2(sr.position + LIGHT * 3.0, sr.size), _shadow(m))
+		b.rect(Rect2(sr.position + Shade.light * 3.0, sr.size), _shadow(m))
 		b.rect(sr, TIMBER)
 		b.rect(Rect2(sr.position.x, sr.position.y, 4.0, sr.size.y), TIMBER_LIT)
 		_person(m, b, sr.position + Vector2(13.0, 16.0), Color(0.44, 0.40, 0.34), Color(0.30, 0.28, 0.26))
@@ -929,7 +928,7 @@ static func _in_view(r: Rect2, top: float, bot: float) -> bool:
 
 # a raised bed edged in timber, clipped shrubs in a double row, in flower
 static func _shrub_bed(m: Node2D, b: ShapeBatch, r: Rect2, leaf: Color, bloom: Color, salt: int) -> void:
-	b.rect(Rect2(r.position + LIGHT * 4.0, r.size), _shadow(m))
+	b.rect(Rect2(r.position + Shade.light * 4.0, r.size), _shadow(m))
 	b.rect(r, TIMBER)
 	b.rect(r.grow(-4.0), SOIL)
 	var y := r.position.y + 18.0
@@ -938,9 +937,9 @@ static func _shrub_bed(m: Node2D, b: ShapeBatch, r: Rect2, leaf: Color, bloom: C
 		for col in range(2):
 			var p := Vector2(r.position.x + r.size.x * (0.28 + 0.44 * float(col)), y + float(col) * 12.0)
 			var rr := (16.0 if salt == 1 else 12.0) + _h1(k * 2 + col, float(salt)) * 4.0
-			b.circle(p + LIGHT * 4.0, rr, Color(0, 0, 0, 0.16))
+			b.circle(p + Shade.light * 4.0, rr, Color(0, 0, 0, 0.16))
 			b.circle(p, rr, leaf.darkened(0.15))
-			b.circle(p - LIGHT * 4.0, rr * 0.7, leaf)
+			b.circle(p - Shade.light * 4.0, rr * 0.7, leaf)
 			var nf := 4 if salt == 1 else 9
 			for f in range(nf):
 				var fa := TAU * _h1(k * 16 + col * 8 + f, float(salt) + 3.0)
@@ -953,7 +952,7 @@ static func _shrub_bed(m: Node2D, b: ShapeBatch, r: Rect2, leaf: Color, bloom: C
 # the flower bed by the entrance: a stone edge, the season's planting in rings
 static func _flower_bed(m: Node2D, b: ShapeBatch) -> void:
 	var r := FLOWER_BED
-	b.rect(Rect2(r.position + LIGHT * 3.0, r.size), _shadow(m))
+	b.rect(Rect2(r.position + Shade.light * 3.0, r.size), _shadow(m))
 	m._soft_rect(b, r, 18.0, GRANITE)
 	m._soft_rect(b, r.grow(-5.0), 14.0, SOIL)
 	var c := r.get_center()
@@ -968,7 +967,7 @@ static func _flower_bed(m: Node2D, b: ShapeBatch) -> void:
 			b.circle(p, 4.4, Color(0.26, 0.46, 0.24))
 			b.circle(p + Vector2(-1, -1), 2.4, rings[i])
 	b.circle(c, 9.0, Color(0.22, 0.40, 0.22))
-	b.circle(c - LIGHT * 2.0, 5.0, Color(0.34, 0.56, 0.30))
+	b.circle(c - Shade.light * 2.0, 5.0, Color(0.34, 0.56, 0.30))
 
 
 # The old folks' exercise corner on its rubber pad: a pedal machine, a double
@@ -987,7 +986,7 @@ static func _gym(m: Node2D, b: ShapeBatch) -> void:
 		y += 12.0
 	for i in range(GYM_MACHINES.size()):
 		var p: Vector2 = GYM_MACHINES[i]
-		b.circle(p + LIGHT * 8.0, 14.0, _shadow(m))
+		b.circle(p + Shade.light * 8.0, 14.0, _shadow(m))
 		b.circle(p, 5.0, GYM_STEEL.darkened(0.2))
 		match i:
 			0:      # pedals: a seat and the crank
@@ -1017,7 +1016,7 @@ static func _kiosk_bar(m: Node2D, b: ShapeBatch) -> void:
 	var pad := Rect2(900.0, -2500.0, 136.0, 210.0)
 	m._soft_rect(b, pad, 16.0, Color(0.70, 0.63, 0.50))
 	var kr := KIOSK
-	b.rect(Rect2(kr.position + LIGHT * 6.0, kr.size), _shadow(m))
+	b.rect(Rect2(kr.position + Shade.light * 6.0, kr.size), _shadow(m))
 	b.rect(kr, Color(0.90, 0.86, 0.76))
 	b.rect(kr.grow(-4.0), KIOSK_GREEN)
 	for i in range(4):
@@ -1032,7 +1031,7 @@ static func _kiosk_bar(m: Node2D, b: ShapeBatch) -> void:
 		var tc: Vector2 = KIOSK_TABLES[i]
 		for cd: Vector2 in [Vector2(-14, 2), Vector2(14, -2)]:
 			b.rect(Rect2(tc + cd - Vector2(5, 5), Vector2(10, 10)), Color(0.82, 0.30, 0.20))
-		b.circle(tc + LIGHT * 3.0, 11.0, _shadow(m))
+		b.circle(tc + Shade.light * 3.0, 11.0, _shadow(m))
 		b.circle(tc, 11.0, Color(0.30, 0.32, 0.34))
 		b.circle(tc, 9.5, Color(0.86, 0.86, 0.84))
 		b.circle(tc + Vector2(-3, -2), 2.4, Color(0.62, 0.34, 0.18))
@@ -1081,12 +1080,12 @@ static func _pergola(m: Node2D, b: ShapeBatch) -> void:
 # scooter dropped on the grass
 static func _parent_bench(m: Node2D, b: ShapeBatch) -> void:
 	var r := PARENT_BENCH
-	b.rect(Rect2(r.position + LIGHT * 3.0, r.size), _shadow(m))
+	b.rect(Rect2(r.position + Shade.light * 3.0, r.size), _shadow(m))
 	b.rect(r, TIMBER)
 	b.rect(Rect2(r.position.x, r.position.y, r.size.x, 4.0), TIMBER_LIT)
 	_person(m, b, r.get_center() + Vector2(10, 4), Color(0.86, 0.62, 0.30), Color(0.20, 0.16, 0.14))
 	var p := PRAM
-	b.rect(Rect2(p + LIGHT * 3.0 - Vector2(10, 14), Vector2(20, 28)), _shadow(m))
+	b.rect(Rect2(p + Shade.light * 3.0 - Vector2(10, 14), Vector2(20, 28)), _shadow(m))
 	m._soft_rect(b, Rect2(p - Vector2(10, 14), Vector2(20, 28)), 8.0, Color(0.24, 0.30, 0.42))
 	m._soft_rect(b, Rect2(p - Vector2(8, 12), Vector2(16, 13)), 6.0, Color(0.32, 0.40, 0.54))
 	b.line(p + Vector2(-8, 16), p + Vector2(8, 16), Color(0.18, 0.18, 0.20), 2.0)
@@ -1106,7 +1105,7 @@ static func _hort(m: Node2D, b: ShapeBatch) -> void:
 	var k := 0
 	while y + bed_h <= r.end.y + 1.0:
 		var br := Rect2(r.position.x, y, r.size.x, bed_h)
-		b.rect(Rect2(br.position + LIGHT * 4.0, br.size), _shadow(m))
+		b.rect(Rect2(br.position + Shade.light * 4.0, br.size), _shadow(m))
 		b.rect(br, TIMBER)
 		b.rect(br.grow(-4.0), SOIL)
 		match k % 3:
@@ -1143,7 +1142,7 @@ static func _hort(m: Node2D, b: ShapeBatch) -> void:
 # players hunched over it
 static func _chess(m: Node2D, b: ShapeBatch) -> void:
 	var c := CHESS
-	b.circle(c + LIGHT * 5.0, 20.0, _shadow(m))
+	b.circle(c + Shade.light * 5.0, 20.0, _shadow(m))
 	b.circle(c, 18.0, GRANITE)
 	b.rect(Rect2(c - Vector2(10, 10), Vector2(20, 20)), Color(0.86, 0.84, 0.80))
 	for i in range(4):
@@ -1161,7 +1160,7 @@ static func _chess(m: Node2D, b: ShapeBatch) -> void:
 # a timber picnic table on the east lawn, its benches, a family's lunch
 static func _picnic(m: Node2D, b: ShapeBatch) -> void:
 	var r := PICNIC
-	b.rect(Rect2(r.position + LIGHT * 4.0, r.size), _shadow(m))
+	b.rect(Rect2(r.position + Shade.light * 4.0, r.size), _shadow(m))
 	for by: float in [r.position.y, r.end.y - 9.0]:
 		b.rect(Rect2(r.position.x, by, r.size.x, 9.0), TIMBER)
 	var t := Rect2(r.position.x + 4.0, r.position.y + 13.0, r.size.x - 8.0, 18.0)
@@ -1178,18 +1177,18 @@ static func _picnic(m: Node2D, b: ShapeBatch) -> void:
 # a newly planted tree tied to its two stakes, a ring of bare earth round it
 static func _young_tree(m: Node2D, b: ShapeBatch, t: Vector2) -> void:
 	b.circle(t, 16.0, SOIL.lightened(0.15))
-	b.circle(t + LIGHT * 10.0, 16.0, Color(0, 0, 0, 0.14))
+	b.circle(t + Shade.light * 10.0, 16.0, Color(0, 0, 0, 0.14))
 	for sx: float in [-9.0, 9.0]:
 		b.circle(t + Vector2(sx, 0), 2.2, Color(0.66, 0.54, 0.36))
 		b.line(t + Vector2(sx, 0), t, Color(0.86, 0.80, 0.60), 1.0)
 	b.circle(t, 15.0, Color(0.30, 0.50, 0.26))
-	b.circle(t - LIGHT * 4.0, 10.0, Color(0.40, 0.62, 0.32))
+	b.circle(t - Shade.light * 4.0, 10.0, Color(0.40, 0.62, 0.32))
 	b.circle(t, 2.4, Color(0.42, 0.32, 0.22))
 
 
 # the dog-bag dispenser: a green post, the roll's box, a bin under it
 static func _bag_post(m: Node2D, b: ShapeBatch, p: Vector2) -> void:
-	b.circle(p + LIGHT * 6.0, 7.0, _shadow(m))
+	b.circle(p + Shade.light * 6.0, 7.0, _shadow(m))
 	b.circle(p, 3.0, RAILING)
 	b.rect(Rect2(p.x - 6.0, p.y - 18.0, 12.0, 12.0), Color(0.20, 0.50, 0.30))
 	b.rect(Rect2(p.x - 3.0, p.y - 15.0, 6.0, 6.0), Color(0.94, 0.94, 0.92))
@@ -1199,7 +1198,7 @@ static func _bag_post(m: Node2D, b: ShapeBatch, p: Vector2) -> void:
 
 # a neighbour seen from above, sitting or standing: shoulders, head, hair
 static func _person(m: Node2D, b: ShapeBatch, p: Vector2, body: Color, hair: Color) -> void:
-	b.circle(p + LIGHT * 3.0, 10.0, _shadow(m))
+	b.circle(p + Shade.light * 3.0, 10.0, _shadow(m))
 	b.circle(p, 9.5, body)
 	b.circle(p + Vector2(0, 2), 7.0, body.darkened(0.12))
 	b.circle(p + Vector2(0, -3), 5.2, Color(0.84, 0.68, 0.56))

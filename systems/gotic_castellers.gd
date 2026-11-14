@@ -116,10 +116,10 @@ static func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 
 	# 3. Flanking Gothic Carved Stone Stanchions & Red Cordon (wrap poles)
 	for sp: Vector2 in [STANCHION_L, STANCHION_R]:
-		b.circle(sp + m.LIGHT * 3.0, 6.0, sh)
+		b.circle(sp + Shade.light * 3.0, 6.0, sh)
 		b.circle(sp, 5.5, STONE_DARK)
-		b.circle(sp - m.LIGHT * 0.8, 4.2, STONE_PLINTH)
-		b.circle(sp - m.LIGHT * 1.5, 2.0, STONE_PLINTH.lightened(0.25))
+		b.circle(sp - Shade.light * 0.8, 4.2, STONE_PLINTH)
+		b.circle(sp - Shade.light * 1.5, 2.0, STONE_PLINTH.lightened(0.25))
 		b.circle(sp, 2.4, IRON_RING)
 		b.circle(sp, 1.0, STONE_DARK)
 	# Red velvet cordon swags linking stanchions toward banner flanks

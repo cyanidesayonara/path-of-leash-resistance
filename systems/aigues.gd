@@ -23,7 +23,6 @@ extends RefCounted
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.05, 0.05, 0.08, 0.22)
 
 # --- colors ------------------------------------------------------------------
@@ -318,9 +317,9 @@ static func _draw_fence(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void
 			if absf(q.y - p.y) < FENCE_STEP * 1.6:
 				wc.line(p + Vector2(-5, 0), q + Vector2(-5, 0), TIMBER, 3.0)
 				wc.line(p + Vector2(-1, 0), q + Vector2(-1, 0), TIMBER_LIT, 2.0)
-		wc.circle(p + LIGHT * 4.0, 6.0, SHADOW)
+		wc.circle(p + Shade.light * 4.0, 6.0, SHADOW)
 		wc.circle(p, 5.5, TIMBER)
-		wc.circle(p - LIGHT * 1.5, 3.0, TIMBER_LIT)
+		wc.circle(p - Shade.light * 1.5, 3.0, TIMBER_LIT)
 
 
 # What does not move: the slope and the city below on the west, the cut bank,
@@ -384,12 +383,12 @@ static func _draw_city(m: Node2D, b: ShapeBatch, top: float, bot: float) -> void
 		if int(lm.z) == 0:
 			b.rect(Rect2(at.x - 14.0, at.y - 22.0, 28.0, 44.0), BLOCK_SHADE)
 			for sp: Vector2 in [Vector2(-8, -14), Vector2(8, -14), Vector2(-8, 14), Vector2(8, 14), Vector2(0, 0), Vector2(0, -6)]:
-				b.circle(at + sp + LIGHT * 4.0, 4.0, Color(0.30, 0.28, 0.30, 0.35))
+				b.circle(at + sp + Shade.light * 4.0, 4.0, Color(0.30, 0.28, 0.30, 0.35))
 				b.circle(at + sp, 3.6, Color(0.86, 0.80, 0.68))
 		else:
-			b.circle(at + LIGHT * 6.0, 10.0, Color(0.30, 0.28, 0.30, 0.35))
+			b.circle(at + Shade.light * 6.0, 10.0, Color(0.30, 0.28, 0.30, 0.35))
 			b.circle(at, 9.0, Color(0.42, 0.52, 0.66))
-			b.circle(at - LIGHT * 3.0, 4.0, Color(0.78, 0.38, 0.32))
+			b.circle(at - Shade.light * 3.0, 4.0, Color(0.78, 0.38, 0.32))
 	# the haze thickening toward the sea
 	b.rect(Rect2(24.0, top, 60.0, bot - top), Color(HAZE.r, HAZE.g, HAZE.b, 0.45))
 	# the slope below the fence, row by row so it follows the bends
@@ -443,9 +442,9 @@ static func _draw_hillside(m: Node2D, b: ShapeBatch, top: float, bot: float) -> 
 				continue
 			var at := Vector2(e.y + 110.0 + float(c) * 70.0 + hc * 24.0, y + hc * step)
 			var r := 22.0 + hc * 12.0
-			b.circle(at + LIGHT * 8.0, r, Color(0.10, 0.16, 0.10, 0.5))
+			b.circle(at + Shade.light * 8.0, r, Color(0.10, 0.16, 0.10, 0.5))
 			b.circle(at, r, Color(0.20, 0.32, 0.18))
-			b.circle(at - LIGHT * r * 0.3, r * 0.45, Color(0.28, 0.40, 0.22))
+			b.circle(at - Shade.light * r * 0.3, r * 0.45, Color(0.28, 0.40, 0.22))
 		y += step
 
 
@@ -484,7 +483,7 @@ static func _draw_gully(m: Node2D, b: ShapeBatch, top: float, bot: float) -> voi
 # terracotta tiles seen from above, its iron door to the track, the plaque.
 static func _draw_hut(b: ShapeBatch) -> void:
 	var r := HUT
-	b.rect(Rect2(r.position + LIGHT * 10.0, r.size), SHADOW)
+	b.rect(Rect2(r.position + Shade.light * 10.0, r.size), SHADOW)
 	b.rect(r, DRYSTONE)
 	var c := r.get_center()
 	var inner := r.grow(-8.0)

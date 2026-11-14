@@ -30,7 +30,7 @@ extends Node2D
 # hard, if there is room; a post, a hydrant or a bench it bonks straight over,
 # juddering, bits flying, a little slower for it. Only the jams stop it.
 #
-# Everything here obeys the one light (main.LIGHT), like every other object
+# Everything here obeys the one light (Shade.light), like every other object
 # in the game: the machine throws a real shadow south-east, ahead of itself
 # and toward the player.
 #

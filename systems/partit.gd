@@ -27,7 +27,6 @@ const NightFronts := preload("res://world/night_fronts.gd")
 const Letters := preload("res://world/sign_letters.gd")
 const HumanLook := preload("res://entities/human_appearance.gd")
 
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.05, 0.05, 0.08, 0.20)
 
 # --- colors ---------------------------------------------------------------
@@ -568,8 +567,8 @@ static func _rr(r: Rect2, rad: float) -> PackedVector2Array:
 
 
 static func _box_shadow(c: ShapeBatch, r: Rect2, h: float) -> void:
-	c.polygon(_rr(Rect2(r.position + LIGHT * h, r.size).grow(2.0), 6.0), Color(0.05, 0.05, 0.08, 0.10))
-	c.polygon(_rr(Rect2(r.position + LIGHT * (h * 0.7), r.size), 5.0), SHADOW)
+	c.polygon(_rr(Rect2(r.position + Shade.light * h, r.size).grow(2.0), 6.0), Color(0.05, 0.05, 0.08, 0.10))
+	c.polygon(_rr(Rect2(r.position + Shade.light * (h * 0.7), r.size), 5.0), SHADOW)
 
 
 # Painted words, as the stroke letters the walk's names are made of: batched
@@ -886,7 +885,7 @@ static func _drum_stand(c: ShapeBatch, r: Rect2) -> void:
 		var p := drummer(i)
 		person(c, p, Vector2(1, 0), i + 2, HOME_CLARET, true)
 		var dp := p + Vector2(25.0, 0.0)
-		c.circle(dp + LIGHT * 3.0, 11.0, SHADOW)
+		c.circle(dp + Shade.light * 3.0, 11.0, SHADOW)
 		c.circle(dp, 11.0, Color(0.70, 0.18, 0.22) if i != 1 else Color(0.20, 0.24, 0.48))
 		c.circle(dp, 8.5, Color(0.78, 0.72, 0.60))
 		c.circle(dp, 2.0, Color(0.50, 0.44, 0.36))
@@ -968,9 +967,9 @@ static func _parcel(m: Node2D, c: ShapeBatch, k: int, side: float, y0: float, y1
 	var out := side   # away from the street, into the block
 	if int(h) % 2 == 1:
 		var tp := Vector2(line + out * (320.0 + fmod(h * 4.0, 160.0)), mid)
-		c.circle(tp + LIGHT * 14.0, 34.0, SHADOW)
+		c.circle(tp + Shade.light * 14.0, 34.0, SHADOW)
 		c.circle(tp, 34.0, Color(0.26, 0.40, 0.22))
-		c.circle(tp - LIGHT * 10.0, 20.0, Color(0.34, 0.48, 0.26))
+		c.circle(tp - Shade.light * 10.0, 20.0, Color(0.34, 0.48, 0.26))
 	if y1 - y0 < PARCEL * 0.5:
 		return
 	# the party wall to the next parcel
@@ -988,14 +987,14 @@ static func _parcel(m: Node2D, c: ShapeBatch, k: int, side: float, y0: float, y1
 	# the lift and stair housing, with its shadow
 	var hx := line + out * (90.0 + fmod(h * 3.0, 60.0))
 	var hb := Rect2(minf(hx, hx + out * 46.0), mid - 20.0 + fmod(h, 20.0) - 10.0, 46.0, 40.0)
-	c.rect(Rect2(hb.position + LIGHT * 14.0, hb.size), SHADOW)
+	c.rect(Rect2(hb.position + Shade.light * 14.0, hb.size), SHADOW)
 	c.rect(hb, roof.lightened(0.12))
 	c.rect(Rect2(hb.position, Vector2(hb.size.x, 4.0)), roof.lightened(0.3))
 	c.rect(Rect2(hb.position + Vector2(8.0, 12.0), Vector2(14.0, 10.0)), roof.darkened(0.2))
 	# the water tank: a drum on legs, on most roofs, wherever it was put
 	if int(h * 7.0) % 3 != 1:
 		var tp2 := Vector2(line + out * (44.0 + fmod(h * 7.3, 150.0)), y0 + 24.0 + fmod(h * 1.7, PARCEL - 48.0))
-		c.circle(tp2 + LIGHT * 9.0, 13.0, SHADOW)
+		c.circle(tp2 + Shade.light * 9.0, 13.0, SHADOW)
 		c.circle(tp2, 13.0, Color(0.80, 0.80, 0.78))
 		c.circle(tp2, 10.5, Color(0.88, 0.88, 0.86))
 		c.circle(tp2 + Vector2(-3, -3), 5.0, Color(0.95, 0.95, 0.93))
@@ -1004,7 +1003,7 @@ static func _parcel(m: Node2D, c: ShapeBatch, k: int, side: float, y0: float, y1
 		var ay := y0 + 26.0 + fmod(h * 5.0 + float(i) * 47.0, PARCEL - 52.0)
 		var ea: Vector2 = m.walk_edges(ay)
 		var ap := Vector2((ea.x if side < 0.0 else ea.y) + out * (34.0 + fmod(h * 9.0 + float(i) * 31.0, 60.0)), ay)
-		c.rect(Rect2(ap - Vector2(8, 6) + LIGHT * 4.0, Vector2(16, 12)), SHADOW)
+		c.rect(Rect2(ap - Vector2(8, 6) + Shade.light * 4.0, Vector2(16, 12)), SHADOW)
 		c.rect(Rect2(ap - Vector2(8, 6), Vector2(16, 12)), Color(0.82, 0.82, 0.80))
 		c.circle(ap + Vector2(-2.0, 0.0), 4.0, Color(0.46, 0.46, 0.48))
 	# a laundry line, with whatever is drying on it
@@ -1027,14 +1026,14 @@ static func _parcel(m: Node2D, c: ShapeBatch, k: int, side: float, y0: float, y1
 		for row in range(2):
 			for col in range(3):
 				var pr := Rect2(minf(px0, px0 + out * 24.0) + out * float(col) * 27.0, y0 + 20.0 + float(row) * 30.0, 24.0, 26.0)
-				c.rect(Rect2(pr.position + LIGHT * 4.0, pr.size), SHADOW)
+				c.rect(Rect2(pr.position + Shade.light * 4.0, pr.size), SHADOW)
 				c.rect(pr, Color(0.18, 0.24, 0.40))
 				c.line(Vector2(pr.position.x, pr.get_center().y), Vector2(pr.end.x, pr.get_center().y), Color(0.36, 0.44, 0.62), 1.0)
 				c.line(Vector2(pr.get_center().x, pr.position.y), Vector2(pr.get_center().x, pr.end.y), Color(0.36, 0.44, 0.62), 1.0)
 	elif feat == 3:
 		for i in range(7):
 			var gp := Vector2(line + out * (40.0 + fmod(float(i) * 23.0 + h, 120.0)), y0 + 16.0 + float(i) * 14.0)
-			c.circle(gp + LIGHT * 3.0, 7.0, SHADOW)
+			c.circle(gp + Shade.light * 3.0, 7.0, SHADOW)
 			c.circle(gp, 6.5, Color(0.62, 0.36, 0.24))
 			c.circle(gp, 5.0, Color(0.28, 0.46, 0.24).lightened(float(i % 3) * 0.06))
 		var awn := Rect2(minf(line + out * 30.0, line + out * 74.0), y1 - 40.0, 44.0, 26.0)
@@ -1099,7 +1098,7 @@ static func _draw_stadium_side(m: Node2D, c: ShapeBatch, top: float, bot: float)
 	while ty < bot:
 		if ty < STADIUM_Y0 - 80.0 and ty > m.GATE_Y + 40.0:
 			var tc := Vector2(m.walk_edges(ty).y + 56.0, ty)
-			c.circle(tc + LIGHT * 16.0, 34.0, SHADOW)
+			c.circle(tc + Shade.light * 16.0, 34.0, SHADOW)
 			c.circle(tc, 34.0, Color(0.44, 0.42, 0.40))
 			c.circle(tc, 29.0, Color(0.60, 0.58, 0.55))
 			c.circle(tc, 11.0, Color(0.40, 0.38, 0.36))
@@ -1121,7 +1120,7 @@ static func _draw_stadium_side(m: Node2D, c: ShapeBatch, top: float, bot: float)
 			if pennant_y < STADIUM_Y0 - 50.0 and pennant_y > m.GATE_Y + 50.0:
 				var pex: float = m.walk_edges(pennant_y).y
 				var pen_rect := Rect2(pex + 32.0, pennant_y - 22.0, 18.0, 44.0)
-				c.rect(Rect2(pen_rect.position + LIGHT * 5.0, pen_rect.size), Color(0, 0, 0, 0.14))
+				c.rect(Rect2(pen_rect.position + Shade.light * 5.0, pen_rect.size), Color(0, 0, 0, 0.14))
 				var is_senyera: bool = int(absf(by3) / 90.0) % 2 == 1
 				if is_senyera:
 					c.rect(pen_rect, SENYERA_GOLD)
@@ -1155,7 +1154,7 @@ static func _draw_stadium_side(m: Node2D, c: ShapeBatch, top: float, bot: float)
 		# electronic matchday LED board above Gate 10
 		if GATE_NUMS[i] == "10":
 			var disp := Rect2(ex3 + 88.0, gy - 20.0, 80.0, 40.0)
-			c.rect(Rect2(disp.position + LIGHT * 6.0, disp.size), Color(0, 0, 0, 0.20))
+			c.rect(Rect2(disp.position + Shade.light * 6.0, disp.size), Color(0, 0, 0, 0.20))
 			c.polygon(_rr(disp, 4.0), Color(0.14, 0.14, 0.16))
 			c.polygon(_rr(disp.grow(-2.5), 2.5), Color(0.06, 0.06, 0.08))
 			letters(c, "PARTIT", disp.position + Vector2(12.0, 14.0), 10.0, Color(0.98, 0.72, 0.18), 2.0, 56.0)
@@ -1205,7 +1204,7 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 static func draw_bollard(_m: Node2D, wc: ShapeBatch, h: Dictionary) -> void:
 	var p: Vector2 = h.pos
 	var done: bool = h.done
-	wc.circle(p + LIGHT * 7.0, 8.0, SHADOW)
+	wc.circle(p + Shade.light * 7.0, 8.0, SHADOW)
 	wc.circle(p, 8.5, Color(0.22, 0.20, 0.18))
 	wc.circle(p, 6.5, Color(0.36, 0.30, 0.26) if not done else Color(0.40, 0.36, 0.22))
 	wc.circle(p + Vector2(-2, -2), 2.6, Color(0.56, 0.50, 0.44))
@@ -1249,7 +1248,7 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 	var c := ShapeBatch.new(ci)
 	# floodlight pylon tower lattice gantries overhead
 	for f: Vector2 in FLOODS:
-		c.circle(f + LIGHT * 20.0, 22.0, Color(0, 0, 0, 0.18))
+		c.circle(f + Shade.light * 20.0, 22.0, Color(0, 0, 0, 0.18))
 		for s in range(4):
 			var a := float(s) * TAU / 4.0
 			c.line(f, f + Vector2.from_angle(a) * 20.0, Color(0.40, 0.42, 0.44), 2.5)
@@ -1272,7 +1271,7 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 				continue
 			var line: float = e.x if side < 0.0 else e.y
 			var slab := Rect2(line if side < 0.0 else line - 14.0, y - 24.0, 14.0, 48.0)
-			c.rect(Rect2(slab.position + Vector2(side * -1.0, 0) + LIGHT * 8.0, slab.size), Color(0.05, 0.05, 0.08, 0.14))
+			c.rect(Rect2(slab.position + Vector2(side * -1.0, 0) + Shade.light * 8.0, slab.size), Color(0.05, 0.05, 0.08, 0.14))
 			c.rect(slab, Color(0.80, 0.78, 0.72))
 			var rail_x: float = slab.end.x - 1.0 if side < 0.0 else slab.position.x + 1.0
 			c.line(Vector2(rail_x, slab.position.y), Vector2(rail_x, slab.end.y), Color(0.14, 0.14, 0.16), 2.0)
@@ -1327,7 +1326,7 @@ static func _banner(c: ShapeBatch, m: Node2D, y: float, txt: String, cloth: Colo
 	c.line(Vector2(e.x - 6.0, y), Vector2(mid - w * 0.5, y + 6.0), Color(0.20, 0.20, 0.20), 1.5)
 	c.line(Vector2(mid + w * 0.5, y + 6.0), Vector2(e.y + 6.0, y), Color(0.20, 0.20, 0.20), 1.5)
 	var r := Rect2(mid - w * 0.5, y - 10.0, w, 32.0)
-	c.rect(Rect2(r.position + LIGHT * 18.0, r.size), Color(0.05, 0.05, 0.08, 0.14))
+	c.rect(Rect2(r.position + Shade.light * 18.0, r.size), Color(0.05, 0.05, 0.08, 0.14))
 	c.rect(r, cloth)
 	c.rect(Rect2(r.position, Vector2(r.size.x, 3.0)), cloth.lightened(0.2))
 	letters(c, txt, r.get_center() + Vector2(0, 7.0), 14.0, ink, 2.6, w - 20.0)
@@ -1335,7 +1334,7 @@ static func _banner(c: ShapeBatch, m: Node2D, y: float, txt: String, cloth: Colo
 
 static func _board(c: ShapeBatch, at: Vector2, txt: String, w: float, bg: Color, ink: Color) -> void:
 	var r := Rect2(at.x - w * 0.5, at.y - 9.0, w, 18.0)
-	c.rect(Rect2(r.position + LIGHT * 10.0, r.size), Color(0.05, 0.05, 0.08, 0.16))
+	c.rect(Rect2(r.position + Shade.light * 10.0, r.size), Color(0.05, 0.05, 0.08, 0.16))
 	c.rect(r.grow(1.5), bg.darkened(0.35))
 	c.rect(r, bg)
 	letters(c, txt, r.get_center() + Vector2(0, 4.5), 9.0, ink, 1.8, w - 10.0)
@@ -1485,7 +1484,7 @@ static func _draw_stadium_bowl(_m: Node2D, c: ShapeBatch, r: Rect2) -> void:
 		var pt0 := ctr + Vector2.from_angle(t) * 1272.0
 		var pt1 := ctr + Vector2.from_angle(t) * 1330.0
 		c.line(pt0, pt1, Color(0.52, 0.50, 0.48), 4.0)
-		c.line(pt0 + LIGHT * 3.0, pt1 + LIGHT * 3.0, SHADOW, 2.5)
+		c.line(pt0 + Shade.light * 3.0, pt1 + Shade.light * 3.0, SHADOW, 2.5)
 	# the roof's ribs
 	for i in range(0, steps + 1, 2):
 		var t := lerpf(a0, a1, float(i) / float(steps))
@@ -1494,7 +1493,7 @@ static func _draw_stadium_bowl(_m: Node2D, c: ShapeBatch, r: Rect2) -> void:
 	for i in range(1, 8):
 		var t := lerpf(a0, a1, float(i) / 8.0)
 		var tc := ctr + Vector2.from_angle(t) * 1316.0
-		c.circle(tc + LIGHT * 16.0, 34.0, SHADOW)
+		c.circle(tc + Shade.light * 16.0, 34.0, SHADOW)
 		c.circle(tc, 34.0, Color(0.56, 0.54, 0.52))
 		c.circle(tc, 26.0, Color(0.68, 0.66, 0.63))
 		c.circle(tc, 10.0, Color(0.50, 0.48, 0.46))

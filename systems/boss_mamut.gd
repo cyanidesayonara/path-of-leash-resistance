@@ -28,7 +28,6 @@ const ShapeBatch := preload("res://systems/shape_batch.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 const Kit := preload("res://hud/ui_kit.gd")
 
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.24)
 
 # --- Colors ------------------------------------------------------------------
@@ -1148,7 +1147,7 @@ func _draw_card() -> void:
 # The plinth, drawn under everything of his: on it he is the statue.
 func draw_plinth(b: ShapeBatch) -> void:
 	var r := Rect2(PLINTH - PLINTH_HALF, PLINTH_HALF * 2.0)
-	b.rect(Rect2(r.position + LIGHT * 12.0, r.size), Color(SHADOW.r, SHADOW.g, SHADOW.b, 0.26))
+	b.rect(Rect2(r.position + Shade.light * 12.0, r.size), Color(SHADOW.r, SHADOW.g, SHADOW.b, 0.26))
 	b.rect(r, PLINTH_DARK)
 	b.rect(r.grow(-5.0), PLINTH_COL)
 	b.rect(Rect2(r.position + Vector2(5.0, 5.0), Vector2(r.size.x - 10.0, 4.0)), PLINTH_COL.lightened(0.15))
@@ -1208,7 +1207,7 @@ func draw_crowd(b: ShapeBatch, vt: float, vb: float, t: float) -> void:
 		var away := Vector2(signf(p.x - pos.x), 0.0)
 		var jump := absf(sin(t * 9.0 + ph)) * 7.0 * cheer
 		var at := p + away * gasp * 4.0 + Vector2(0.0, -jump)
-		b.circle(p + LIGHT * 3.0, 9.0, SHADOW)
+		b.circle(p + Shade.light * 3.0, 9.0, SHADOW)
 		if cheer > 0.3 or gasp > 0.5:
 			var up := 14.0 if cheer > 0.3 else 9.0
 			for sd: float in [-1.0, 1.0]:
@@ -1216,7 +1215,7 @@ func draw_crowd(b: ShapeBatch, vt: float, vb: float, t: float) -> void:
 				b.line(at + Vector2(sd * 6.0, -2.0), hand, shirt, 4.0)
 				b.circle(hand, 2.6, skin)
 		b.circle(at, 9.0, shirt.darkened(0.25))
-		b.circle(at - LIGHT * 1.2, 7.6, shirt)
+		b.circle(at - Shade.light * 1.2, 7.6, shirt)
 		b.circle(at + Vector2(0.0, -2.0), 5.4, skin)
 		b.circle(at + Vector2(0.0, -3.4), 4.6, pp.hair)
 
@@ -1281,7 +1280,7 @@ func draw_mamut(b: ShapeBatch, t: float) -> void:
 	var awake := state != State.IDLE and state != State.CONTENT
 	var in_lake := at.x > SHORE_X - 10.0
 	# the shadow on the ground, then everything lifted by hop_z
-	b.polygon(_ellipse(at + LIGHT * (16.0 + hop_z * 0.5), f, 78.0, 62.0, 20), SHADOW)
+	b.polygon(_ellipse(at + Shade.light * (16.0 + hop_z * 0.5), f, 78.0, 62.0, 20), SHADOW)
 	if in_lake:
 		b.polygon(_ellipse(at, f, 92.0, 76.0, 20), Color(0.70, 0.86, 0.98, 0.35))
 	var c := at + lift
@@ -1293,7 +1292,7 @@ func draw_mamut(b: ShapeBatch, t: float) -> void:
 			if state in [State.PROWL, State.RETREAT, State.CHARGE]:
 				lp += f * sin(t * 6.0 + float(k) * 1.7) * 4.0
 			b.circle(lp, LEG_RADIUS, STONE_DARK)
-			b.circle(lp - LIGHT * 2.0, LEG_RADIUS - 4.0, stone.darkened(0.12))
+			b.circle(lp - Shade.light * 2.0, LEG_RADIUS - 4.0, stone.darkened(0.12))
 			for n in range(3):
 				var toe := lp + f * 14.0 + s * (float(n) - 1.0) * 7.0
 				b.circle(toe, 3.2, TUSK_DARK)
@@ -1306,7 +1305,7 @@ func draw_mamut(b: ShapeBatch, t: float) -> void:
 		var e := body_c + f * cos(a) * 62.0 + s * sin(a) * 52.0
 		b.circle(e, 15.0, FUR.darkened(0.15))
 	b.polygon(_ellipse(body_c, f, 64.0, 54.0, 22), stone)
-	b.polygon(_ellipse(body_c - LIGHT * 6.0 - f * 6.0, f, 48.0, 38.0, 18), STONE_LIT.lerp(stone, 0.4))
+	b.polygon(_ellipse(body_c - Shade.light * 6.0 - f * 6.0, f, 48.0, 38.0, 18), STONE_LIT.lerp(stone, 0.4))
 	# fur strokes down his back
 	for i in range(7):
 		var off := (float(i) - 3.0) * 12.0
@@ -1322,7 +1321,7 @@ func draw_mamut(b: ShapeBatch, t: float) -> void:
 	for sd: float in [-1.0, 1.0]:
 		b.circle(head + s * sd * (32.0 + ear_w * sd) - f * 8.0, 13.0, FUR.darkened(0.2))
 	b.circle(head, 34.0, stone.darkened(0.05))
-	b.circle(head - f * 6.0 - LIGHT * 4.0, 22.0, STONE_LIT)
+	b.circle(head - f * 6.0 - Shade.light * 4.0, 22.0, STONE_LIT)
 	b.circle(head - f * 14.0, 10.0, STONE_LIT.lightened(0.1))
 	var eye_col := EYE_RED if enraged and hp > 0.0 else EYE_AMBER
 	for sd: float in [-1.0, 1.0]:
@@ -1354,7 +1353,7 @@ func draw_mamut(b: ShapeBatch, t: float) -> void:
 		var u := float(i) / 8.0
 		var p := root.lerp(mid, u).lerp(mid.lerp(tip, u), u)
 		var r := lerpf(13.0, 6.0, u)
-		b.circle(p + LIGHT * 1.5, r, stone.darkened(0.22))
+		b.circle(p + Shade.light * 1.5, r, stone.darkened(0.22))
 		b.circle(p, r - 1.5, stone.darkened(0.04))
 	b.circle(tip, 6.5, stone.darkened(0.25))
 	b.circle(tip, 3.0, Color(0.22, 0.20, 0.18))
@@ -1413,7 +1412,7 @@ func draw_bits(b: ShapeBatch, vt: float, vb: float) -> void:
 			b.line(at, at - (bt.v as Vector2) * 0.035, col, float(bt.r))
 		else:
 			if bt.z > 0.0:
-				b.circle(p + LIGHT * 2.0, float(bt.r) * 0.8, SHADOW)
+				b.circle(p + Shade.light * 2.0, float(bt.r) * 0.8, SHADOW)
 			b.circle(at, float(bt.r) * (0.5 + f * 0.5), col)
 
 
@@ -1439,7 +1438,7 @@ func draw_health_bar(c: Object) -> void:
 	var bar_w := 170.0
 	var bar_h := 10.0
 	var bp := _below_banner(at + Vector2(-bar_w * 0.5, -128.0), 24.0)
-	c.draw_rect(Rect2(bp + LIGHT * 3.0, Vector2(bar_w, bar_h)), SHADOW)
+	c.draw_rect(Rect2(bp + Shade.light * 3.0, Vector2(bar_w, bar_h)), SHADOW)
 	c.draw_rect(Rect2(bp - Vector2(2.0, 2.0), Vector2(bar_w + 4.0, bar_h + 4.0)), STONE_DARK)
 	c.draw_rect(Rect2(bp - Vector2(1.0, 1.0), Vector2(bar_w + 2.0, bar_h + 2.0)), STONE_LIT)
 	c.draw_rect(Rect2(bp, Vector2(bar_w, bar_h)), Color(0.10, 0.09, 0.08))

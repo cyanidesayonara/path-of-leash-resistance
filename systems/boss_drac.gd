@@ -82,7 +82,6 @@ const EYE_RED := Color(0.96, 0.28, 0.20)
 const SHADOW := Color(0.12, 0.10, 0.08, 0.28)
 # the trencadis: glazed shards on white mortar, in the colours of the one
 # on the Park Guell stair
-const LIGHT := Vector2(0.5, 0.866)
 const INK := Color(0.10, 0.08, 0.06)
 const GROUT := Color(0.80, 0.78, 0.72)
 const TILE_BLUE := Color(0.12, 0.34, 0.74)
@@ -761,7 +760,7 @@ func draw_ground(b: ShapeBatch, vt: float, vb: float) -> void:
 			var along := Vector2(1.0, 0.0) if r.size.x > r.size.y else Vector2(0.0, 1.0)
 			var half := maxf(r.size.x, r.size.y) * 0.5
 			for k in range(3):
-				var gp := c + along * (float(k) - 1.0) * half * 0.55 - LIGHT * rad * 0.3
+				var gp := c + along * (float(k) - 1.0) * half * 0.55 - Shade.light * rad * 0.3
 				b.line(gp - along * 12.0, gp + along * 12.0, Color(0.92, 0.98, 1.0, 0.55 * a), 2.0)
 		elif kind == Surfaces.S.MUD:
 			# what he sheds in the slither: grit and chips of his own tile
@@ -1003,7 +1002,7 @@ static func draw_salamander(b: ShapeBatch, at: Vector2, f: Vector2, t: float, o:
 		var tan := (pts[mini(i + 1, n - 1)] - pts[maxi(i - 1, 0)]).normalized()
 		nrm.append(tan.orthogonal())
 
-	_strip(b, pts, nrm, rad, 3.0, LIGHT * 9.0, SHADOW)
+	_strip(b, pts, nrm, rad, 3.0, Shade.light * 9.0, SHADOW)
 
 	# legs under the body: shoulder to elbow to a splayed five-toed foot
 	var feet: Array = o.get("feet", [])
@@ -1062,20 +1061,20 @@ static func draw_salamander(b: ShapeBatch, at: Vector2, f: Vector2, t: float, o:
 			var col := _tile(i, c, cols, h)
 			# the far side of him from the light sits a shade down
 			var mid := (a0 + a1) * 0.5
-			var lit := nrm[i].dot(-LIGHT) * mid
+			var lit := nrm[i].dot(-Shade.light) * mid
 			col = col.lightened(0.16 * lit) if lit > 0.0 else col.darkened(-0.22 * lit)
 			b.quad(q0, q1, q2, q3, col.lerp(Color.WHITE, white * 0.55))
 	# the crest: a bright boss on every other joint of his back
 	for i in range(3, BODY_N + 4, 2):
 		b.circle(pts[i], 3.6, INK)
-		b.circle(pts[i] - LIGHT * 0.8, 2.6, TILE_WHITE)
+		b.circle(pts[i] - Shade.light * 0.8, 2.6, TILE_WHITE)
 	# the glaze catches the sun here and there
 	for k in range(5):
 		var gi := 2 + k * 4
 		if gi >= n:
 			break
 		var tw := pow(maxf(0.0, sin(t * 2.1 + float(k) * 1.9)), 6.0)
-		b.circle(pts[gi] - nrm[gi] * rad[gi] * 0.4 - LIGHT * rad[gi] * 0.25, 1.4 + tw * 2.2, Color(1.0, 1.0, 1.0, 0.45 + 0.5 * tw))
+		b.circle(pts[gi] - nrm[gi] * rad[gi] * 0.4 - Shade.light * rad[gi] * 0.25, 1.4 + tw * 2.2, Color(1.0, 1.0, 1.0, 0.45 + 0.5 * tw))
 
 	# the head: nostrils, the mouth when it opens, and the eyes up on top
 	var tan0 := (pts[0] - pts[1]).normalized()
@@ -1094,7 +1093,7 @@ static func draw_salamander(b: ShapeBatch, at: Vector2, f: Vector2, t: float, o:
 				b.line(ep - tan0 * 3.6 - nrm[hi] * 3.6 * cr, ep + tan0 * 3.6 + nrm[hi] * 3.6 * cr, INK, 2.0)
 		elif eye <= 0.05 or happy:
 			b.circle(ep, 6.6, TILE_BLUE)
-			b.circle(ep - LIGHT * 1.6, 3.4, TILE_CYAN)
+			b.circle(ep - Shade.light * 1.6, 3.4, TILE_CYAN)
 			if happy:
 				b.line(ep - nrm[hi] * 4.6 - tan0 * 1.5, ep + tan0 * 1.5, INK, 2.0)
 				b.line(ep + tan0 * 1.5, ep + nrm[hi] * 4.6 - tan0 * 1.5, INK, 2.0)
@@ -1104,7 +1103,7 @@ static func draw_salamander(b: ShapeBatch, at: Vector2, f: Vector2, t: float, o:
 			b.circle(ep, 6.6, TILE_WHITE)
 			b.circle(ep + tan0 * 1.2, 4.6 * eye, eye_col)
 			b.line(ep + tan0 * (1.2 - 3.4 * eye), ep + tan0 * (1.2 + 3.4 * eye), INK, 2.2)
-			b.circle(ep - LIGHT * 2.4, 1.3, Color.WHITE)
+			b.circle(ep - Shade.light * 2.4, 1.3, Color.WHITE)
 			# a lid of tile over the back of each eye: a glare
 			b.line(ep - tan0 * 5.4 - nrm[hi] * 5.0, ep - tan0 * 5.4 + nrm[hi] * 5.0, TILE_ORANGE, 3.0)
 

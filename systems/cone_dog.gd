@@ -62,7 +62,6 @@ var anim_time: float = 0.0
 var _toss := RandomNumberGenerator.new()
 
 # Visual colors
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.20)
 
 # Dog colors
@@ -213,7 +212,7 @@ func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 
 		# Vet nurse standing at the doorway
 		var np := Vector2(dp.x - 12.0, dp.y + 10.0)
-		b.circle(np + LIGHT * 4.0, 10.0, SHADOW)
+		b.circle(np + Shade.light * 4.0, 10.0, SHADOW)
 		# scrub top & trousers
 		b.circle(np + Vector2(0.0, -8.0), 7.0, SCRUB_TEAL)
 		b.rect(Rect2(np.x - 6.0, np.y - 8.0, 12.0, 14.0), SCRUB_TEAL)
@@ -228,7 +227,7 @@ func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 
 	# 2. Dropped treat on linoleum floor
 	if treat_dropped and not treat_snatched:
-		b.circle(treat_pos + LIGHT * 2.0, 4.0, SHADOW)
+		b.circle(treat_pos + Shade.light * 2.0, 4.0, SHADOW)
 		b.circle(treat_pos, 4.2, TREAT_BROWN)
 		b.circle(treat_pos, 2.4, TREAT_TAN)
 		b.circle(treat_pos + Vector2(1.0, -1.0), 1.0, Color(0.95, 0.45, 0.35))
@@ -240,7 +239,7 @@ func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 		var scramble: float = cos(anim_time * 28.0) if state == State.RUNNING else 0.0
 
 		# Shadow on glossy linoleum
-		b.circle(dp + LIGHT * 5.0, 14.0, SHADOW)
+		b.circle(dp + Shade.light * 5.0, 14.0, SHADOW)
 
 		# Scrambling paws with comic motion lines
 		var paw_col := BELLY_CREAM

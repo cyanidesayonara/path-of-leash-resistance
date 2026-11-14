@@ -147,7 +147,7 @@ static func draw_scenery(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> vo
 			continue
 		b.rect(Rect2(WALL_L, ay - 4.0 + 18.0, WALL_R - WALL_L, 14.0), Color(sh.r, sh.g, sh.b, 0.14))
 		for fx: float in [WALL_L + 6.0, WALL_R - 6.0]:
-			b.circle(Vector2(fx, ay) + m.LIGHT * 5.0, 11.0, sh)
+			b.circle(Vector2(fx, ay) + Shade.light * 5.0, 11.0, sh)
 			b.circle(Vector2(fx, ay), 9.0, ARCH_COLS[i].darkened(0.35))
 	b.flush(m._wc)
 
@@ -263,7 +263,7 @@ static func _draw_stage(m: Node2D, b: ShapeBatch, sh: Color) -> void:
 # cone of churros on the counter
 static func _draw_churros(m: Node2D, b: ShapeBatch, sh: Color) -> void:
 	var r := CHURRO_STAND
-	b.rect(Rect2(r.position + m.LIGHT * 8.0, r.size), sh)
+	b.rect(Rect2(r.position + Shade.light * 8.0, r.size), sh)
 	b.rect(r, CHURRO_CART.darkened(0.25))
 	var sx := r.position.x
 	var k := 0

@@ -118,7 +118,7 @@ static func _draw_concourse(m: Node2D, vt: float, vb: float) -> void:
 
 
 static func _suitcase(m: Node2D, b: ShapeBatch, p: Vector2, col: Color) -> void:
-	b.rect(Rect2(p - Vector2(10, 14) + m.LIGHT * 4.0, Vector2(20, 28)), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.20))
+	b.rect(Rect2(p - Vector2(10, 14) + Shade.light * 4.0, Vector2(20, 28)), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.20))
 	b.rect(Rect2(p - Vector2(10, 14), Vector2(20, 28)), col)
 	b.rect(Rect2(p - Vector2(10, 14), Vector2(3, 28)), col.lightened(0.25))
 	b.line(Vector2(p.x, p.y - 12), Vector2(p.x, p.y + 12), Color(0.12, 0.12, 0.14), 1.5)
@@ -344,8 +344,8 @@ static func _pillar(m: Node2D, p: Vector2) -> void:
 	b.rect(Rect2(p.x - 17.0, p.y - 17.0, 34.0, 34.0), Color(0.50, 0.50, 0.53))
 	b.circle(p, 16.0, Color(0.30, 0.34, 0.38))
 	b.circle(p, 13.5, Color(0.40, 0.46, 0.50))
-	b.circle(p - m.LIGHT * 4.0, 8.0, Color(0.52, 0.58, 0.62))
-	b.circle(p - m.LIGHT * 6.0, 3.5, Color(0.70, 0.75, 0.78))
+	b.circle(p - Shade.light * 4.0, 8.0, Color(0.52, 0.58, 0.62))
+	b.circle(p - Shade.light * 6.0, 3.5, Color(0.70, 0.75, 0.78))
 	b.flush(m._wc)
 
 

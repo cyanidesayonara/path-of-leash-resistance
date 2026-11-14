@@ -53,7 +53,6 @@ var dodged: bool = false
 var threatened: bool = false
 
 # Visual colors
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.22)
 
 # Waiter uniform
@@ -181,8 +180,8 @@ func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	var wobble := sin(timer * 22.0) * 1.5 if state == State.WALKING else 0.0
 
 	# 1. Ground shadows
-	b.circle(wp + LIGHT * 4.0, 9.0, SHADOW)
-	b.circle(wp + Vector2(10.0, -12.0) + LIGHT * 3.0, 8.0, SHADOW) # tray shadow
+	b.circle(wp + Shade.light * 4.0, 9.0, SHADOW)
+	b.circle(wp + Vector2(10.0, -12.0) + Shade.light * 3.0, 8.0, SHADOW) # tray shadow
 
 	# 2. Waiter body & legs
 	# Dark trousers & shoes
@@ -262,7 +261,7 @@ func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 
 	# 5. Dropped tapas croqueta on the plaza flagstones
 	if croqueta_dropped and not croqueta_snatched:
-		b.circle(croqueta_pos + LIGHT * 2.0, 3.0, SHADOW)
+		b.circle(croqueta_pos + Shade.light * 2.0, 3.0, SHADOW)
 		b.circle(croqueta_pos, 3.0, CROQUETA_GOLD)
 		b.circle(croqueta_pos + Vector2(0.8, -0.6), 1.2, PAPRIKA_RED)
 		b.circle(croqueta_pos + Vector2(-0.8, 0.6), 1.0, CROQUETA_GOLD.lightened(0.25))

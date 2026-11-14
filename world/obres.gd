@@ -13,7 +13,6 @@ extends RefCounted
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.05, 0.05, 0.08, 0.22)
 
 # the compound ground past the fence, darker and greyer than the footway
@@ -85,7 +84,7 @@ static func _on_road(m: Node2D, y0: float, y1: float) -> bool:
 static func draw_fence(m: Node2D, b: Object, vt: float, vb: float) -> void:
 	var top: float = float(m.GATE_Y) - 30.0
 	var y := maxf(top, floorf((vt - PANEL) / PANEL) * PANEL)
-	var off := LIGHT * FENCE_CAST
+	var off := Shade.light * FENCE_CAST
 	while y < vb + PANEL:
 		var y1 := y + PANEL
 		if y < top or _on_road(m, y, y1):
@@ -126,7 +125,7 @@ static func draw_fence(m: Node2D, b: Object, vt: float, vb: float) -> void:
 				foot_c = Color(0.20, 0.20, 0.21)       # a black rubber foot among the concrete
 			var dir := (c - a).normalized()
 			var fq := _quad(a, Vector2(8.0, 16.0), dir.angle())
-			b.polygon(_quad(a + LIGHT * 3.0, Vector2(8.0, 16.0), dir.angle()), SHADOW)
+			b.polygon(_quad(a + Shade.light * 3.0, Vector2(8.0, 16.0), dir.angle()), SHADOW)
 			b.polygon(fq, foot_c)
 			b.line(fq[0], fq[3], foot_c.lightened(0.2), 2.0)
 			b.circle(a - dir * 3.0, 2.2, foot_c.darkened(0.45))
@@ -221,7 +220,7 @@ static func draw_tarp(b: Object, c: Vector2, col: Color, k: int) -> void:
 	var ang := (float(k % 5) - 2.0) * 0.05
 	var half := Vector2(40.0 + float(k % 3) * 6.0, 62.0)
 	var q := _quad(c, half, ang)
-	b.polygon(_quad(c + LIGHT * 10.0, half, ang), SHADOW)
+	b.polygon(_quad(c + Shade.light * 10.0, half, ang), SHADOW)
 	b.polygon(q, col)
 	# the ridge down the middle of the stack, and the sides falling away
 	var ax := Vector2.from_angle(ang)
@@ -253,7 +252,7 @@ static func draw_tarp(b: Object, c: Vector2, col: Color, k: int) -> void:
 # under a sheen of shrink-wrap.
 static func draw_pallet(b: Object, c: Vector2, ang: float, loaded: bool) -> void:
 	var half := Vector2(24.0, 20.0)
-	b.polygon(_quad(c + LIGHT * (8.0 if loaded else 3.0), half, ang), SHADOW)
+	b.polygon(_quad(c + Shade.light * (8.0 if loaded else 3.0), half, ang), SHADOW)
 	b.polygon(_quad(c, half, ang), Color(0.36, 0.28, 0.18))
 	var ax := Vector2.from_angle(ang)
 	var ay := ax.orthogonal()
@@ -272,12 +271,12 @@ static func draw_pallet(b: Object, c: Vector2, ang: float, loaded: bool) -> void
 # A heap of dug earth: layered, lighter where the light hits its top, clods
 # rolled off round the foot, and a shovel stuck in it.
 static func draw_spoil(b: Object, c: Vector2, rad: float, k: int) -> void:
-	b.circle(c + LIGHT * rad * 0.3, rad * 1.02, SHADOW)
+	b.circle(c + Shade.light * rad * 0.3, rad * 1.02, SHADOW)
 	for layer in range(4):
 		var f := float(layer) / 3.0
 		var pts := PackedVector2Array()
 		var lr := rad * (1.0 - f * 0.62)
-		var lc := c - LIGHT * rad * 0.18 * f
+		var lc := c - Shade.light * rad * 0.18 * f
 		for i in range(9):
 			var a := TAU * float(i) / 9.0
 			var rr := lr * (0.82 + _h(float(k + layer), float(i)) * 0.3)
@@ -287,7 +286,7 @@ static func draw_spoil(b: Object, c: Vector2, rad: float, k: int) -> void:
 		var a := TAU * _h(float(k), float(i) + 4.0)
 		b.circle(c + Vector2.from_angle(a) * rad * (1.0 + _h(float(i), float(k)) * 0.2), 2.5 + float(i % 3), EARTH.darkened(0.2))
 	if k % 2 == 0:
-		var sp := c - LIGHT * rad * 0.2
+		var sp := c - Shade.light * rad * 0.2
 		b.line(sp, sp + Vector2(rad * 0.6, -rad * 0.5), Color(0.52, 0.38, 0.22), 3.0)
 		b.rect(Rect2(sp.x - 5.0, sp.y - 3.0, 10.0, 8.0), Color(0.36, 0.38, 0.40))
 
@@ -303,7 +302,7 @@ static func draw_rebar(b: Object, c: Vector2, ang: float, length: float) -> void
 		var o := ay * (-9.0 + float(i) * 3.0)
 		var lo := c - ax * length * 0.5 + o + ax * float(i % 3) * 3.0
 		var hi := c + ax * length * 0.5 + o - ax * float((i + 1) % 3) * 4.0
-		b.line(lo + LIGHT * 2.0, hi + LIGHT * 2.0, SHADOW, 2.0)
+		b.line(lo + Shade.light * 2.0, hi + Shade.light * 2.0, SHADOW, 2.0)
 		b.line(lo, hi, RUST.lightened(0.06 * float(i % 3)), 2.0)
 		if i % 2 == 0:
 			b.circle(hi, 2.6, Color(0.96, 0.46, 0.10))
@@ -352,14 +351,14 @@ static func draw_footway(m: Node2D, b: Object, vt: float, vb: float) -> void:
 			"offcuts":
 				for i in range(3):
 					var o := Vector2.from_angle(ang + float(i) * 0.5) * 18.0
-					b.line(p - o + LIGHT * 1.5, p + o + LIGHT * 1.5, SHADOW, 2.0)
+					b.line(p - o + Shade.light * 1.5, p + o + Shade.light * 1.5, SHADOW, 2.0)
 					b.line(p - o, p + o, RUST, 2.0)
 			"bag":
 				b.polygon(_quad(p, Vector2(13.0, 8.0), ang), Color(0.84, 0.80, 0.70))
 				b.polygon(_quad(p, Vector2(13.0, 3.0), ang), Color(0.70, 0.30, 0.20))
 				b.circle(p + Vector2.from_angle(ang) * 16.0, 5.0, Color(0.70, 0.70, 0.68, 0.6))
 			"plank":
-				b.polygon(_quad(p + LIGHT * 2.0, Vector2(40.0, 5.0), ang), SHADOW)
+				b.polygon(_quad(p + Shade.light * 2.0, Vector2(40.0, 5.0), ang), SHADOW)
 				b.polygon(_quad(p, Vector2(40.0, 5.0), ang), Color(0.70, 0.56, 0.36))
 				b.line(p - Vector2.from_angle(ang) * 30.0, p + Vector2.from_angle(ang) * 26.0, Color(0.56, 0.44, 0.28), 1.0)
 			"gravel":
@@ -401,7 +400,7 @@ static func draw_pour(b: Object, cz: Vector2, size: Vector2, stage: int) -> void
 					prev = p
 		# the bull float, left on the slab, its pole out over the boards
 		var fp := r.position + Vector2(r.size.x * 0.55, r.size.y * 0.7)
-		b.polygon(_quad(fp + LIGHT * 3.0, Vector2(30.0, 6.0), 0.2), SHADOW)
+		b.polygon(_quad(fp + Shade.light * 3.0, Vector2(30.0, 6.0), 0.2), SHADOW)
 		b.polygon(_quad(fp, Vector2(30.0, 6.0), 0.2), Color(0.70, 0.72, 0.74))
 		b.line(fp, fp + Vector2.from_angle(0.2 - 0.9) * 120.0, Color(0.80, 0.80, 0.78), 3.0)
 	else:
@@ -431,7 +430,7 @@ static func draw_pour(b: Object, cz: Vector2, size: Vector2, stage: int) -> void
 			b.circle(Vector2(r.position.x + 12.0, bx), 2.4, Color(0.96, 0.46, 0.10))
 			bx += 32.0
 		# the screed bar across the wet end
-		b.polygon(_quad(Vector2(r.get_center().x, r.position.y + 30.0) + LIGHT * 2.0, Vector2(r.size.x * 0.5 + 14.0, 3.5), 0.0), SHADOW)
+		b.polygon(_quad(Vector2(r.get_center().x, r.position.y + 30.0) + Shade.light * 2.0, Vector2(r.size.x * 0.5 + 14.0, 3.5), 0.0), SHADOW)
 		b.polygon(_quad(Vector2(r.get_center().x, r.position.y + 30.0), Vector2(r.size.x * 0.5 + 14.0, 3.5), 0.0), Color(0.78, 0.80, 0.82))
 		# the barrow it came in by, standing off the east side
 		draw_barrow(b, Vector2(r.end.x + 46.0, r.end.y - 50.0), -0.4)
@@ -440,7 +439,7 @@ static func draw_pour(b: Object, cz: Vector2, size: Vector2, stage: int) -> void
 static func draw_barrow(b: Object, c: Vector2, ang: float) -> void:
 	var ax := Vector2.from_angle(ang)
 	var ay := ax.orthogonal()
-	b.polygon(_quad(c + LIGHT * 5.0, Vector2(18.0, 13.0), ang), SHADOW)
+	b.polygon(_quad(c + Shade.light * 5.0, Vector2(18.0, 13.0), ang), SHADOW)
 	# handles back from the pan, the wheel in front
 	b.line(c - ax * 10.0 - ay * 8.0, c - ax * 34.0 - ay * 9.0, Color(0.30, 0.30, 0.32), 3.0)
 	b.line(c - ax * 10.0 + ay * 8.0, c - ax * 34.0 + ay * 9.0, Color(0.30, 0.30, 0.32), 3.0)
@@ -519,7 +518,7 @@ static func _draw_works(m: Node2D, vt: float, vb: float) -> void:
 
 		# 2. Heavy timber construction bridge
 		var plank := Rect2(pc - half_w - 6.0, ty - 12.0, LevelBuild.OBRES_PLANK + 12.0, th + 24.0)
-		b.rect(Rect2(plank.position + LIGHT * 6.0, plank.size), Color(0, 0, 0, 0.24))
+		b.rect(Rect2(plank.position + Shade.light * 6.0, plank.size), Color(0, 0, 0, 0.24))
 		b.rect(plank, Color(0.62, 0.48, 0.28))
 		var n_planks := 4
 		for k in range(n_planks):
@@ -551,9 +550,9 @@ static func _draw_works(m: Node2D, vt: float, vb: float) -> void:
 			var rx: float = pc + side * (half_w + 2.0)
 			var y0 := ty - 18.0
 			var y1 := ty + th + 18.0
-			b.line(Vector2(rx, y0) + LIGHT * 5.0, Vector2(rx, y1) + LIGHT * 5.0, Color(0, 0, 0, 0.22), 4.0)
+			b.line(Vector2(rx, y0) + Shade.light * 5.0, Vector2(rx, y1) + Shade.light * 5.0, Color(0, 0, 0, 0.22), 4.0)
 			for py: float in [y0 + 2.0, (y0 + y1) * 0.5, y1 - 2.0]:
-				b.circle(Vector2(rx, py) + LIGHT * 3.0, 4.0, Color(0, 0, 0, 0.20))
+				b.circle(Vector2(rx, py) + Shade.light * 3.0, 4.0, Color(0, 0, 0, 0.20))
 				b.circle(Vector2(rx, py), 4.0, Color(0.48, 0.50, 0.52))
 				b.circle(Vector2(rx, py), 2.5, Color(0.76, 0.78, 0.80))
 			b.line(Vector2(rx, y0), Vector2(rx, y1), Color(0.78, 0.80, 0.82), 3.5)
@@ -620,7 +619,7 @@ static func _draw_digger(m: Node2D, v: Vector2) -> void:
 	var foot := v + Vector2(8.0, -22.0)
 	var knee := v + Vector2(10.0, -66.0)
 	var wrist := v + Vector2(2.0, -80.0)
-	b.line(foot + LIGHT * 4.0, knee + LIGHT * 4.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25), 12.0)
+	b.line(foot + Shade.light * 4.0, knee + Shade.light * 4.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25), 12.0)
 	b.polygon(PackedVector2Array([foot + Vector2(-7, 0), foot + Vector2(7, 0), knee + Vector2(4, 0), knee + Vector2(-4, 0)]), yel_d)
 	b.polygon(PackedVector2Array([foot + Vector2(-5, 0), foot + Vector2(3, 0), knee + Vector2(1, 0), knee + Vector2(-3, 0)]), yel)
 	# the ram along the boom: a steel rod out of its yellow cylinder

@@ -35,7 +35,6 @@ const Surfaces := preload("res://world/surfaces.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 const Kit := preload("res://hud/ui_kit.gd")
 
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.24)
 
 # --- Colors ------------------------------------------------------------------
@@ -1381,7 +1380,7 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 		b.rect(Rect2(CORRIDOR_L, y + 3.0, CORRIDOR_R - CORRIDOR_L, 6.0), STONE_DARK)
 
 	# 4. Central circular plaza
-	b.circle(PEDESTAL_POS + LIGHT * 8.0, PLAZA_R + 8.0, SHADOW)
+	b.circle(PEDESTAL_POS + Shade.light * 8.0, PLAZA_R + 8.0, SHADOW)
 	b.circle(PEDESTAL_POS, PLAZA_R, STONE_PLAZA)
 	b.circle(PEDESTAL_POS, PLAZA_R - 12.0, BAND_TERRACOTTA)
 	b.circle(PEDESTAL_POS, PLAZA_R - 24.0, STONE_PLAZA)
@@ -1392,7 +1391,7 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 
 	# 5. Both plinths
 	for pc: Vector2 in [START_PLINTH, PEDESTAL_POS]:
-		b.rect(Rect2(pc - PLINTH_HALF - Vector2(15, 5) + LIGHT * 6.0, PLINTH_HALF * 2.0 + Vector2(30, 10)), SHADOW)
+		b.rect(Rect2(pc - PLINTH_HALF - Vector2(15, 5) + Shade.light * 6.0, PLINTH_HALF * 2.0 + Vector2(30, 10)), SHADOW)
 		b.rect(Rect2(pc - PLINTH_HALF - Vector2(15, 5), PLINTH_HALF * 2.0 + Vector2(30, 10)), STONE_DARK)
 		b.rect(Rect2(pc - PLINTH_HALF - Vector2(9, 0), PLINTH_HALF * 2.0 + Vector2(18, 0)), Color(0.72, 0.70, 0.66))
 
@@ -1403,8 +1402,8 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 			continue
 		for i in range(9):
 			var a := float(i) * (TAU / 9.0) + _palm_spin(p)
-			_frond(b, p + LIGHT * 22.0, a, 60.0 + sin(float(i) * 2.3) * 8.0, 13.0, SHADOW)
-		b.circle(p + LIGHT * 5.0, 18.0, SHADOW)
+			_frond(b, p + Shade.light * 22.0, a, 60.0 + sin(float(i) * 2.3) * 8.0, 13.0, SHADOW)
+		b.circle(p + Shade.light * 5.0, 18.0, SHADOW)
 		b.rect(Rect2(p.x - 16.0, p.y - 16.0, 32.0, 32.0), STONE_DARK)
 		b.circle(p, 14.0, PALM_TRUNK)
 		b.circle(p, 8.0, PALM_BARK)
@@ -1413,22 +1412,22 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 	for tr: Rect2 in TERRACES:
 		if culled and (tr.end.y < vt - 40.0 or tr.position.y > vb + 40.0):
 			continue
-		b.rect(Rect2(tr.position + LIGHT * 4.0, tr.size), SHADOW)
+		b.rect(Rect2(tr.position + Shade.light * 4.0, tr.size), SHADOW)
 		b.rect(tr, Color(0.18, 0.16, 0.18, 0.35))
 		for r in range(int(tr.size.y / 48.0)):
 			for c in range(2):
 				var tp := tr.position + Vector2(16.0 + float(c) * 44.0, 24.0 + float(r) * 48.0)
-				b.circle(tp + LIGHT * 3.0, 12.0, SHADOW)
+				b.circle(tp + Shade.light * 3.0, 12.0, SHADOW)
 				b.circle(tp, 11.0, Color(0.92, 0.90, 0.86))
 				b.circle(tp, 3.5, Color(0.25, 0.22, 0.20))
 
 	# 8. Drinking fountain
-	b.circle(FOUNTAIN + LIGHT * 4.0, 14.0, SHADOW)
+	b.circle(FOUNTAIN + Shade.light * 4.0, 14.0, SHADOW)
 	b.circle(FOUNTAIN, 12.0, Color(0.18, 0.26, 0.20))
 	b.circle(FOUNTAIN, 6.0, Color(0.85, 0.72, 0.25))
 
 	# 9. Overturned kiosk at the plaza edge
-	b.rect(Rect2(KIOSK.position + LIGHT * 4.0, KIOSK.size), SHADOW)
+	b.rect(Rect2(KIOSK.position + Shade.light * 4.0, KIOSK.size), SHADOW)
 	b.rect(KIOSK, Color(0.35, 0.24, 0.18))
 	b.rect(KIOSK.grow(-4.0), Color(0.85, 0.40, 0.30))
 
@@ -1526,7 +1525,7 @@ func draw_crowd(c: Object, vt: float, vb: float, t: float) -> void:
 		var away := Vector2(signf(p.x - pos.x), 0.0)
 		var jump := absf(sin(t * 9.0 + ph)) * 7.0 * cheer
 		var at := p + away * gasp * 4.0 + Vector2(0.0, -jump + sin(t * 1.3 + ph) * 0.6)
-		sb.circle(p + LIGHT * 3.0, 9.0, SHADOW)
+		sb.circle(p + Shade.light * 3.0, 9.0, SHADOW)
 		var shirt: Color = pp.shirt
 		var skin: Color = pp.skin
 		if cheer > 0.3 or gasp > 0.5:
@@ -1537,7 +1536,7 @@ func draw_crowd(c: Object, vt: float, vb: float, t: float) -> void:
 				sb.line(at + Vector2(sd * 6.0, -2.0), hand, shirt, 4.0)
 				sb.circle(hand, 2.6, skin)
 		sb.circle(at, 9.0 if not pp.seated else 8.0, shirt.darkened(0.25))
-		sb.circle(at - LIGHT * 1.2, 7.6 if not pp.seated else 6.6, shirt)
+		sb.circle(at - Shade.light * 1.2, 7.6 if not pp.seated else 6.6, shirt)
 		sb.circle(at + Vector2(0.0, -2.0), 5.4, skin)
 		sb.circle(at + Vector2(0.0, -3.4), 4.6, pp.hair)
 	sb.flush(c)
@@ -1564,7 +1563,7 @@ func draw_bits(c: Object, vt: float, vb: float) -> void:
 			sb.circle(at + Vector2(0.0, r * 0.5), r * 0.55, col)
 		else:
 			if b.z > 0.0:
-				sb.circle(p + LIGHT * 2.0, float(b.r) * 0.8, SHADOW)
+				sb.circle(p + Shade.light * 2.0, float(b.r) * 0.8, SHADOW)
 			var r: float = float(b.r) * ((2.2 - f * 1.2) if b.has("grow") else (0.5 + f * 0.5))
 			sb.circle(at, r, col)
 	sb.flush(c)
@@ -1650,7 +1649,7 @@ func draw_boss_health_bar(c: Object, at: Vector2) -> void:
 	var bar_w := 150.0
 	var bar_h := 10.0
 	var bar_pos := _below_banner(at + Vector2(-bar_w * 0.5, -104.0), 24.0)
-	c.draw_rect(Rect2(bar_pos + LIGHT * 3.0, Vector2(bar_w, bar_h)), SHADOW)
+	c.draw_rect(Rect2(bar_pos + Shade.light * 3.0, Vector2(bar_w, bar_h)), SHADOW)
 	c.draw_rect(Rect2(bar_pos - Vector2(2.0, 2.0), Vector2(bar_w + 4.0, bar_h + 4.0)), BRONZE_DARK)
 	c.draw_rect(Rect2(bar_pos - Vector2(1.0, 1.0), Vector2(bar_w + 2.0, bar_h + 2.0)), BRONZE_LIT)
 	c.draw_rect(Rect2(bar_pos, Vector2(bar_w, bar_h)), Color(0.10, 0.08, 0.07))
@@ -1684,7 +1683,7 @@ func draw_upright_gat(c: Object, ground: Vector2, t: float) -> void:
 
 	for leg: Vector2 in leg_poles:
 		var lp := leg + (at - pos)
-		Clay.ball(c, lp + LIGHT * 2.0, LEG_RADIUS + 2.0, dark)
+		Clay.ball(c, lp + Shade.light * 2.0, LEG_RADIUS + 2.0, dark)
 		Clay.ball(c, lp, LEG_RADIUS, base)
 		for toe: float in [-5.0, 0.0, 5.0]:
 			c.draw_circle(lp + Vector2(toe, LEG_RADIUS - 4.0), 2.4, dark)
@@ -1706,7 +1705,7 @@ func draw_upright_gat(c: Object, ground: Vector2, t: float) -> void:
 
 	var body_half := Vector2(62.0, 52.0)
 	Clay.blob(c, at, body_half, face, base)
-	c.draw_colored_polygon(Clay.ellipse_pts(at - LIGHT * 14.0, body_half * 0.45, face), BRONZE_SPEC)
+	c.draw_colored_polygon(Clay.ellipse_pts(at - Shade.light * 14.0, body_half * 0.45, face), BRONZE_SPEC)
 
 	var head_c := at + face * 38.0
 	var head_r := 36.0
@@ -1791,7 +1790,7 @@ func draw_toppled_gat(c: Object, at: Vector2, t: float) -> void:
 
 	var belly_half := Vector2(68.0, 48.0)
 	Clay.blob(c, at, belly_half, Vector2.RIGHT, BRONZE_BASE)
-	c.draw_colored_polygon(Clay.ellipse_pts(at - LIGHT * 10.0, belly_half * 0.50, Vector2.RIGHT), BRONZE_SPEC)
+	c.draw_colored_polygon(Clay.ellipse_pts(at - Shade.light * 10.0, belly_half * 0.50, Vector2.RIGHT), BRONZE_SPEC)
 
 	for i in range(4):
 		var ang := float(i) * (TAU / 4.0) + PI * 0.25

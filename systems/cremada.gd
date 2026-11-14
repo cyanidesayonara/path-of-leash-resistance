@@ -276,7 +276,7 @@ static func draw_scenery(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> vo
 			ry += 40.0
 	for p: Vector2 in PALMS:
 		if p.y > vt - 60.0 and p.y < vb + 60.0:
-			b.circle(p + m.LIGHT * 10.0, 16.0, sh)
+			b.circle(p + Shade.light * 10.0, 16.0, sh)
 			b.circle(p, 13.0, PALM_TRUNK.darkened(0.3))
 			b.circle(p, 10.0, PALM_TRUNK)
 	if _in_view(KIOSK, vt, vb):
@@ -298,7 +298,7 @@ static func _in_view(r: Rect2, vt: float, vb: float) -> bool:
 # the newspaper kiosk, green and shuttered for the night but for its lamp
 static func _draw_kiosk(m: Node2D, b: ShapeBatch, sh: Color) -> void:
 	var r := KIOSK
-	b.rect(Rect2(r.position + m.LIGHT * 8.0, r.size), sh)
+	b.rect(Rect2(r.position + Shade.light * 8.0, r.size), sh)
 	b.rect(r, KIOSK_GREEN.darkened(0.3))
 	b.rect(r.grow(-4.0), KIOSK_GREEN)
 	for i in range(5):
