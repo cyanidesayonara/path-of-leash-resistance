@@ -47,6 +47,15 @@ Append-only session history, newest first.
     - Added the direct *Aeroport T1* Rodalies departure board row on the main concourse board connecting the city station to the airport terminal, with updated divider lines.
   - Comprehensive test suite: `tests/test_aeroport.gd` (35 checks covering level registration, goals, chase profile, conveyor zone, buggy threat advance and luggage dodges, gate rush state machine, and carousel bark). All regression suites pass (`test_walk_hooks.gd` 922 checks, `test_chase_film.gd` 247 checks, `test_npc_clear_of_solids.gd` 372 checks, `test_wrap.gd`).
 
+## 2026-11-13 - Review fixes for #515-#523
+
+A review of the 1.72 PRs merged since the release notes (#515 to #523) found these, now fixed:
+
+- The Fur-goneta's bark honk paid +2 every 1.1 seconds with no limit, so a dog could stand by the van and bark for points. The first honk of a walk pays; later ones are only the horn (`systems/furgoneta.gd`, `tests/test_furgoneta.gd`).
+- The Fur-goneta no longer blows soap bubbles: they added nothing and could be mistaken for the dog's smell bubbles. Its horn reads AWOOGA!, BEEP-BEEP! and HONK! without asterisks, and the groomer's offer no longer writes a button into the sentence (the dare card already shows it).
+- The store listing, the itch page and PROJECT.md named a film and its van; they now describe our own van.
+- Snatching La Cremada's dropped churro showed "churro snatch! +2" twice (`systems/cremada.gd`).
+- The castellers' cheer window in Gràcia and El Gòtic read the cosmetic animation clock, so it ran on during pause and its tests only checked the window when the wall clock happened to land in it. The tower's cycle now runs on the walk's clock in one place (`systems/castell_cycle.gd`), the drawing and the cheer share it, and both tests set the clock in and out of the window.
 
 ## 2026-11-11 - Level sweep: solid bypasser blockers audit and test determinism
 

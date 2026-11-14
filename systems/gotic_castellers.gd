@@ -10,6 +10,7 @@ extends RefCounted
 # a Diada banner, and a living 8-second dynamic crowning cycle with l'aleta.
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+const CastellCycle := preload("res://systems/castell_cycle.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 
 const DIADA_POS := Vector2(840.0, -2850.0)
@@ -62,9 +63,7 @@ static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
 		return
 	var bp: Vector2 = pos if pos != Vector2.ZERO else m.dog.global_position
 	if bp.distance_to(DIADA_POS) <= BARK_DIST:
-		var t: float = AnimClock.msec() * 0.001
-		var phase_t := fmod(t, 8.0)
-		if phase_t >= 3.8 and phase_t <= 6.5:
+		if CastellCycle.cheer_window(m):
 			m.gotic_aleta_cheered = true
 			m.combo.add("ALETA", 2)
 			m.award_points(2, "aleta cheer! +2")
@@ -78,7 +77,7 @@ static func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 
 	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.28)
 	var t: float = AnimClock.msec() * 0.001
-	var phase_t := fmod(t, 8.0)
+	var phase_t := CastellCycle.phase(m)
 	var sway := Vector2(sin(t * 1.9 + 0.4) * 2.2, cos(t * 1.4) * 1.5)
 
 	# 1. Diada cobblestone circle & chalk/ribbon perimeter
