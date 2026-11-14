@@ -14,12 +14,18 @@ extends Node2D
 # stagger, never a fall). Out of the ring as it lands, near enough to feel
 # it, is a dodge. The float itself is the catch line, as every chase's.
 #
+# What is in its way (systems/chase_vehicle.gd): a float this wide seldom has
+# room to swerve, so it is a juggernaut. A post, a hydrant, a bench it rolls
+# straight over, juddering, bits flying; something heavy it hits stops it
+# dead for a moment (a crash, a shudder), and then it smashes on through.
+#
 # Implements the standard chase threat interface (setup, advance, caught,
 # gap_to, threat_boundary, sweep_junk) so systems/home_chase drives it. Only
 # advance() moves it, and home_chase only calls that in the "chase" phase,
 # so nothing fires during the warning, the head start or a hold.
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+const ChaseVehicleScript := preload("res://systems/chase_vehicle.gd")
 
 # the float: timber deck, painted skirt, iron-shod wheels
 const DECK := Color(0.40, 0.27, 0.16)
@@ -99,6 +105,7 @@ var shots := 0
 # what the rockets did, for the walk's goals and the tests
 var hits := 0
 var dodges := 0
+var drive = ChaseVehicleScript.new()
 
 
 func setup(m: Node2D, start_front_y: float, corridor_cx: float, corridor_half: float, float_speed: float) -> void:
@@ -124,6 +131,8 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 		cur_speed = 0.0
 		if jam_t <= 0.0:
 			freed_now = true
+		if main != null:
+			drive.bonk(main, Rect2(), delta)
 		queue_redraw()
 		return
 
@@ -131,7 +140,7 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 	var mult := 1.0 + SURGE * lurch
 	if gap > CATCH_UP_GAP:
 		mult = maxf(mult, CATCH_UP)
-	cur_speed = speed * mult
+	cur_speed = speed * mult * drive.pace()
 	front_y += cur_speed * delta
 
 	for i in range(jams.size()):
@@ -143,9 +152,17 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 			jammed_now = true
 			break
 
-	# a float this heavy barely steers: a slow drift toward the dog's side
+	# a float this heavy barely steers: a slow drift toward the dog's side,
+	# or, where there is room, a lumbering swerve round something heavy
 	var target_sway: float = clampf(aim, -half * 0.35, half * 0.35)
-	sway_v += (target_sway - sway) * 1.6 * delta
+	var steer := 1.6
+	if main != null:
+		var room := maxf(half - half * CATCH_SPAN, 0.0) + half * 0.35
+		var dodge: float = drive.dodge_sway(main, cx, sway, front_y, half * CATCH_SPAN, room)
+		if not is_nan(dodge):
+			target_sway = dodge
+			steer = 3.2
+	sway_v += (target_sway - sway) * steer * delta
 	sway_v *= exp(-3.2 * delta)
 	sway += sway_v * delta
 
@@ -154,7 +171,30 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 		_fire()
 		fire_t = ROCKET_EVERY + ROCKET_JITTER * sin(float(shots) * 2.39)
 	position = Vector2(cx + sway, front_y)
+	_run_over(delta)
 	queue_redraw()
+
+
+# under its wheels: light things it rolls over, heavy ones stop it dead
+func _run_over(delta: float) -> void:
+	if main == null:
+		return
+	var w := half * CATCH_SPAN
+	var body := Rect2(cx + sway - w, front_y - FLOAT_DEPTH, w * 2.0, FLOAT_DEPTH)
+	var sfx := main.get_node_or_null("/root/Sfx")
+	var side: float = drive.slam(main, body, cx)
+	if side != 0.0 and jam_t <= 0.0:
+		jam_t = drive.SLAM_SECS
+		jam_side = side
+		jam_at = Vector2(INF, INF)
+		jammed_now = true
+		main.shake_t = maxf(float(main.shake_t), 0.6)
+	if drive.bonk(main, body, delta):
+		if sfx != null:
+			sfx.play("crack", 1.1, -8.0)
+		main.shake_t = maxf(float(main.shake_t), 0.3)
+		if not bool(main.auto_walk):
+			main.float_text(drive.bonk_at + Vector2(0.0, -24.0), "CRUNCH", Color(1.0, 0.86, 0.50))
 
 
 func jammed() -> bool:
@@ -286,7 +326,10 @@ func _draw() -> void:
 			var a := float(i) * TAU / 10.0 + 0.3
 			b.line(at + Vector2.from_angle(a) * ROCKET_R * (0.3 + k * 0.6),
 				at + Vector2.from_angle(a) * ROCKET_R * (0.55 + k * 1.1), Color(SPARK, 1.0 - k), 3.0)
-	paint_float(b, Vector2.ZERO, half * CATCH_SPAN, t, true)
+	# where it really is: home_chase keeps the node on the centre line, and
+	# the catch follows the sway
+	paint_float(b, Vector2(cx + sway, front_y) - global_position + drive.jolt(), half * CATCH_SPAN, t, true)
+	drive.draw_debris(b, global_position)
 	# rockets in flight, over everything: a spark streak and its smoke
 	for r: Dictionary in rockets:
 		var k := clampf(float(r["t"]) / ROCKET_WARN, 0.0, 1.0)
