@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-11-14 - L'Aeroport art pass, the security squad and La Cabina
+
+- The terminal is drawn as one (`systems/aeroport_art.gd`, on the cached edge, ground and overhead canvases). West: the apron through a floor-to-ceiling glass wall, mullions and their reflections, the head-of-stand road with tugs and dollies going by, jets parked nose in at B21, B25 and B29 with their boarding bridges, stand paint and ground crew, the runway beyond. East: glazed holdrooms B20 to B30 with carpet, seat beams, passengers and boarding doors, duty free, a cafe, the security hall at the start and the jets at the far windows. The floor: terrazzo slabs, sun through the glass, roof-beam shadows and rooflights, carpet at the gates, a tactile strip, floor signs. Hung signs, departure boards and the security arch overhead. Every solid is where it was.
+- The walkway's belt, combs and handrails move with it; the carousel carries cases, a guitar and a pet crate; columns, seats, bins and planted figs are the terminal's own.
+- The gate rush: an amber crossing telegraphs it, then four travellers run it at full tilt, each hauling a bouncing roller case.
+- The chase is the airport security squad (`entities/aeroport_threat.gd`), five officers across the hall like El Veterinari's staff, a queue belt taut between the ends, holding out a travel crate, a net, a detector wand, a loudhailer and a whistle, drawn to their real catch zone. They boot cases up the floor at you, with a filling ring where each will stop. The two respites are drawn: the queue at B22's tape (-1900) and the perfume pyramid (-3400), and both are now real jam points.
+- The off-leash space is La Cabina, the cabin of the jet at the end of the bridge (`systems/aeroport_cabin.gd`): three seat blocks and two aisles, bins, a galley and lavatories, passengers, dropped masks, a spilled drinks run and a trail of paper. Holdalls to dig, drinks trolleys to go round, roller cases and blanket heaps to sniff and mark, the ice bucket to drink from.
+- The film, "Last call", is rebuilt on the FilmKit beats: the pier side on with a jet at its stand, the bing bong, the squad bursting through the queue belts, cases skidding, and the crate's mouth on the card.
+- New walk hooks in main: `draw_park_prop`, `draw_gate` and `draw_bench`.
+
 ## 2026-11-13 - L'Aeroport review fixes
 
 - The travelator has real sides: a glass balustrade with its rubber handrail along each edge, solid for anyone walking and open only at the two ends, so you step on and off where a real one lets you (`Aeroport.balustrades()`).
