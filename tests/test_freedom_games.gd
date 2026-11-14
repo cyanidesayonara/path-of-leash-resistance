@@ -101,14 +101,41 @@ func _initialize() -> void:
 	_run(ag5, [Vector2(200, -400), Vector2(400, -400)])
 	_check(not ag5.running, "crossing the start line off the lane does not start a run")
 
-	# tug-of-war: pulling away wins, standing loses, digging in holds longer
+	# tug-of-war: pulling away wins, standing loses, digging in holds longer,
+	# and reading its rhythm (dig in through the heave, pull in its rest) wins
+	# far sooner than hauling blind
 	_check(_tug("away") == "won", "pulling away wins the tug")
 	_check(_tug("stand") == "lost", "standing about loses the tug")
+	_check(_tug("plant") == "lost", "only digging in loses in the end")
 	var t_stand := _tug_time("stand")
 	var t_plant := _tug_time("plant")
 	_check(t_plant > t_stand * 2.0, "digging in holds much longer (%.1f vs %.1f s)" % [t_plant, t_stand])
 	var t_away := _tug_time("away")
-	_check(t_away > 2.5 and t_away < 12.0, "a pulled-away win takes a few seconds (%.1f)" % t_away)
+	_check(t_away > 2.5 and t_away < RopeTug.TIME_OUT, "a pulled-away win takes a while (%.1f)" % t_away)
+	_check(_tug("timed") == "won", "timing the pulls wins the tug")
+	var t_timed := _tug_time("timed")
+	_check(t_timed > 2.5 and t_timed < t_away * 0.6, "timing wins far sooner (%.1f vs %.1f s)" % [t_timed, t_away])
+	# the rhythm: every heave is telegraphed by a wind-up first
+	var rt := RopeTug.new(Vector2.ZERO, Vector2(-84, 0))
+	var last := rt.phase
+	var heaves := 0
+	var told := 0
+	for i in range(60 * 10):
+		rt.step(Vector2.ZERO, Vector2(-84, 0), Vector2.ZERO, true, false, 1.0 / 60.0)
+		if rt.phase != last:
+			if rt.phase == RopeTug.P.HEAVE:
+				heaves += 1
+				if last == RopeTug.P.WIND:
+					told += 1
+			last = rt.phase
+	_check(heaves >= 3 and told == heaves, "every heave comes after a wind-up (%d of %d)" % [told, heaves])
+	# the toy bends and springs back: bowed in a heave, never past its stiffness
+	var bt := RopeTug.new(Vector2.ZERO, Vector2(-84, 0))
+	var max_bend := 0.0
+	for i in range(60 * 6):
+		bt.step(Vector2.ZERO, Vector2(-84, 0), Vector2.ZERO, true, false, 1.0 / 60.0)
+		max_bend = maxf(max_bend, absf(bt.bend))
+	_check(max_bend > 2.0 and max_bend <= RopeTug.BEND_MAX, "the rope toy bows and springs (%.1f px)" % max_bend)
 
 	# every space's lane: inside the space, and props pushed out of it
 	for kind: String in ["yard", "lot", "clearing", "placa", "beach"]:
@@ -124,13 +151,13 @@ func _initialize() -> void:
 
 func _tug_sim(style: String) -> Array:
 	var me := Vector2(0, 0)
-	var them := Vector2(-46, 0)
+	var them := Vector2(-RopeTug.ROPE, 0)
 	var tug := RopeTug.new(me, them)
 	var t := 0.0
 	while t < 30.0:
 		var pull := Vector2.ZERO
-		var planted := style == "plant"
-		if style == "away":
+		var planted := style == "plant" or (style == "timed" and tug.phase != RopeTug.P.REST)
+		if style == "away" or (style == "timed" and not planted):
 			pull = Vector2.RIGHT
 			me += pull * 330.0 * RopeTug.MY_SPEED / 60.0
 		var out := tug.step(me, them, pull, planted, false, 1.0 / 60.0)

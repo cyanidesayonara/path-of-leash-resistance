@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-14 - Tug of war: a real rope toy, a rhythm to read, a clear winner
+
+- The rope between the two dogs was never drawn outside El Barri: the games layer returned when a walk had no agility course, and the free dog hides its own end during a tug, so the rope vanished into their mouths. It is drawn on every walk now (`world/games_layer.gd`).
+- The toy is a cotton rope: natural cotton twisted with a washed-out denim strand, fine grooves between the lays, chunky knots with frayed tails. It is stiff but bends: a spring bows it with the other dog's head-shake and straightens it when taut (`RopeTug.bend`). The dogs' bodies are 84 px apart instead of 46, so about 50 px of toy shows between the mouths.
+- The other dog pulls in a rhythm: it winds up (crouches, snorts, growl marks; the telegraph), heaves, then catches its breath. Dig in through the heave and it gains little; pull while it rests ("IT'S TIRED! PULL AWAY NOW") and the rope comes fast. Hauling blind still wins, slowly (about 11 s); timing it wins in about 5 s; only digging in loses in the end (`systems/rope_tug.gd`).
+- Who is winning: chalk lines on the ground (the start, her green win line, their orange one), a red rag tied round the rope's middle, and a small meter over the pair with the rag's mark on it. The banner's text meter is gone.
+- `tools/tug_frames.gd` films a tug played with real input (`timed`, `away` or `stand`). Tests: `tests/test_freedom_games.gd` covers timing, the telegraphed heave and the bend.
+
 ## 2026-11-14 - Home walk-in strides, night shadows, softer lit fronts
 
 - Merged the 1.73 stack: #529 (chase machines), #524 (L'Aeroport), #531 (chase squads on foot), #525 (Montserrat), #526 (Els Lleons), #527 (El Drac).

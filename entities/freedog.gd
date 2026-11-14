@@ -117,9 +117,27 @@ func _physics_process(delta: float) -> void:
 	var to_mine: Vector2 = my_dog.global_position - global_position
 	var d_mine := to_mine.length()
 	if state == S.TUG:
+		# its body tells the rhythm: low and coiled in the wind-up, thrown back
+		# in the heave, eased off while it catches its breath; the head shakes
+		# the toy as it hauls
+		var tug: RopeTug = main.get("tug")
+		var want := 1.0
+		var shake := 0.08
+		if tug != null:
+			match tug.phase:
+				RopeTug.P.WIND:
+					want = 0.7 + 0.3 * tug.wind_amount()
+					shake = 0.14
+				RopeTug.P.HEAVE:
+					want = 1.0
+					shake = 0.3
+				_:
+					want = 0.35
+					shake = 0.06
 		if d_mine > 1.0:
-			face = to_mine / d_mine
-		lean = minf(lean + delta * 4.0, 1.0)
+			var shake_t: float = tug.t if tug != null else bow
+			face = (to_mine / d_mine).rotated(sin(shake_t * RopeTug.SHAKE_HZ) * shake)
+		lean = move_toward(lean, want, delta * 6.0)
 		if Engine.get_physics_frames() % 2 == 0:
 			Redraw.later(self)
 		return
