@@ -346,13 +346,12 @@ static func _dome(b: ShapeBatch, p: Vector2, r: float, seed_n: float, lit := 1.0
 	b.circle(p, r, ROCK)
 	b.circle(p - LIGHT * (r * 0.20), r * 0.76, ROCK.lerp(ROCK_LIT, 0.75 * lit))
 	b.circle(p - LIGHT * (r * 0.42), r * 0.40, ROCK_LIT.lerp(Color.WHITE, 0.10 * lit))
-	var n := 3 + int(r / 14.0)
+	var n := 2 + int(r / 18.0)
 	for i in range(n):
 		var a := _h(seed_n + float(i) * 1.7) * TAU
 		var d := r * (0.20 + 0.62 * _h(seed_n * 3.1 + float(i)))
 		var pr := 1.8 + _h(seed_n + float(i) * 5.3) * minf(4.5, r * 0.07)
 		var at := p + Vector2.from_angle(a) * d
-		b.coarse(at + Vector2(0.6, 0.9), pr, Color(ROCK_DEEP, 0.5))
 		b.coarse(at, pr, PEBBLES[int(_h(seed_n * 7.0 + float(i)) * 5.0) % 5])
 
 
@@ -381,11 +380,15 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> v
 	var bot: float = minf(vb, float(m.START_Y) + 560.0)
 	if bot <= top:
 		return
+	# hundreds of rounded rocks: sides by size, not 64 each (ShapeBatch.lod)
+	var was := b.lod
+	b.lod = true
 	_draw_valley(b, top, bot)
 	_draw_west_rim(b, top, bot)
 	_draw_east_wall(b, top, bot)
 	_draw_stations(b, top, bot)
 	_draw_monastery(m, b, top, bot)
+	b.lod = was
 
 
 # far below: the valley in its haze, the road and the river winding through
@@ -449,7 +452,7 @@ static func _draw_west_rim(b: ShapeBatch, top: float, bot: float) -> void:
 		var h2 := _h(k * 2.7 + 5.0)
 		# the lip is lumps of the same rock, not a ruled line
 		_dome(b, Vector2(rx + 8.0 + h1 * 6.0, y - strip * 0.5), 17.0 + h2 * 9.0, k * 1.3)
-		if rx < 330.0 and h2 > 0.35:
+		if rx < 330.0 and h2 > 0.55:
 			_dome(b, Vector2(rx + 34.0 + h1 * (350.0 - rx) * 0.6, y - h2 * strip), 12.0 + h1 * 10.0, k * 2.9, 0.6)
 		y -= strip
 	y = y0
@@ -482,14 +485,14 @@ static func _draw_east_wall(b: ShapeBatch, top: float, bot: float) -> void:
 	var y0 := floorf((bot + 200.0) / strip) * strip
 	var y := y0
 	# far domes first, so the near ones stand in front
-	for row in range(3, -1, -1):
+	for row in range(1, -1, -1):
 		y = y0
 		while y > top - 200.0:
 			var k := absf(y) / strip + float(row) * 37.0
 			var h1 := _h(k)
 			var h2 := _h(k * 3.3 + 1.0)
-			var r := 46.0 + h2 * 30.0 + float(row) * 14.0
-			var x := 968.0 + float(row) * 150.0 + h1 * 70.0
+			var r := 54.0 + h2 * 30.0 + float(row) * 22.0
+			var x := 972.0 + float(row) * 170.0 + h1 * 60.0
 			var p := Vector2(x, y - h2 * 40.0)
 			if not (_in_cutting(p, r) or (y < TERRACE_Y + 60.0 and x - r < 1150.0)):
 				_dome(b, p, r, k)
@@ -499,15 +502,16 @@ static func _draw_east_wall(b: ShapeBatch, top: float, bot: float) -> void:
 					_scrub(b, p + Vector2(-r * 0.8, r * 0.8), 8.0 + h2 * 4.0, k)
 			y -= strip
 	# the face at the path: lit from the west, runnels down it, a rounded brow
-	var fs := 40.0
+	var fs := 56.0
 	y = floorf(bot / fs) * fs + fs
 	while y > top - fs:
 		var k := absf(y) / fs
 		var h1 := _h(k * 4.3)
 		var h2 := _h(k * 6.1 + 3.0)
 		if absf(y - fs * 0.5 - CROSSING_Y) > 48.0 and y > TERRACE_Y:
-			_dome(b, Vector2(934.0 + h1 * 10.0, y - fs * 0.5), 24.0 + h2 * 12.0, k * 1.9)
+			_dome(b, Vector2(936.0 + h1 * 10.0, y - fs * 0.5), 28.0 + h2 * 12.0, k * 1.9)
 		y -= fs
+	fs = 40.0
 	b.rect(Rect2(896.0, top, 22.0, bot - top), WALL_FACE)
 	b.rect(Rect2(916.0, top, 4.0, bot - top), ROCK_LIT)
 	y = floorf(bot / fs) * fs + fs
@@ -662,6 +666,8 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, _bottom: 
 	var hi: float = minf(vb + 60.0, float(m.START_Y) + 560.0)
 	if hi <= lo:
 		return
+	var was := wc.lod
+	wc.lod = true
 	_draw_trail(wc, maxf(lo, TERRACE_Y), hi)
 	_draw_placa(wc, lo, minf(hi, TERRACE_Y))
 	_draw_trail_sides(wc, lo, hi)
@@ -669,6 +675,7 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, _bottom: 
 	_draw_gate_piers(wc, lo, hi)
 	_draw_stall(wc, lo, hi)
 	_draw_arcades(wc, lo, hi)
+	wc.lod = was
 
 
 # stone and gravel, climbing: a riser of cut blocks every flight, its face and
@@ -1077,6 +1084,7 @@ static func draw_overhead(m: Node2D, ci: Object) -> void:
 	if m.lvl != "montserrat":
 		return
 	var b := ShapeBatch.new()
+	b.lod = true
 	for i in range(SPIRES.size()):
 		_draw_spire_top(b, SPIRES[i], float(i))
 	for i in range(PINES.size()):
@@ -1122,7 +1130,6 @@ static func _draw_pine_crown(b: ShapeBatch, p: Vector2, seed_n: float) -> void:
 		var a := TAU * float(k) / 8.0 + seed_n * 0.7
 		var lr := r * (0.50 + 0.14 * float((k + int(seed_n)) % 3))
 		var lp := p + Vector2.from_angle(a) * lr
-		b.circle(lp + Vector2(1.5, 2.5), r * 0.40, PINE_NEEDLE.darkened(0.30))
 		b.circle(lp, r * 0.38, PINE_NEEDLE)
 		b.circle(lp - LIGHT * (r * 0.10), r * 0.26, PINE_NEEDLE.lightened(0.10))
 	for k in range(5):

@@ -263,6 +263,7 @@ func _draw() -> void:
 	# half * CATCH_SPAN either side of it: the herd fills that line, every
 	# nose on it, the bodies running back into its depth.
 	var b := ShapeBatch.new(self)
+	b.lod = true
 	var mw := half * CATCH_SPAN
 	_draw_boulders(b)
 	# the dust and grit they kick up, behind the whole line
