@@ -121,9 +121,36 @@ static func south_wing(b: ShapeBatch, gate_y: float) -> void:
 	wing(b, gate_y + BOT_OFF + HULL, 1.0)
 
 
+# The cabin's picture never changes, but the freedom canvas redraws whenever
+# a prop does (each tick of a dig): it is recorded once and replayed.
+static var _cache: ShapeBatch
+static var _cache_key := Rect2()
+
+
 static func draw(m: Node2D, c: Object) -> void:
 	var f := floor_rect(m)
-	var b := ShapeBatch.new()
+	# the props that follow on the freedom canvas get lod sides too (this
+	# walk's canvas only)
+	if c is ShapeBatch:
+		(c as ShapeBatch).lod = true
+	if _cache == null or _cache_key != f:
+		_cache = ShapeBatch.new()
+		_cache_key = f
+		_record(m, _cache, f)
+	var out: ShapeBatch = c if c is ShapeBatch else ShapeBatch.new(c as CanvasItem)
+	_cache.append_to(out)
+	if not (c is ShapeBatch):
+		out.flush()
+	var top := f.position.y
+	# the place's name over the forward bulkhead, as every space has one
+	c.draw_string(m.font, Vector2(0.0, top - 44.0), String(m.gate_text), HORIZONTAL_ALIGNMENT_CENTER, 1280, 22, Color(0.20, 0.22, 0.28))
+	c.draw_string(m.font, Vector2(0.0, top - 26.0), "The cabin, off leash", HORIZONTAL_ALIGNMENT_CENTER, 1280, 14, Color(0.20, 0.22, 0.28, 0.8))
+
+
+# everything static, into a recording batch: hundreds of small round things,
+# so lod sides, not 64-sided fans
+static func _record(m: Node2D, b: ShapeBatch, f: Rect2) -> void:
+	b.lod = true
 	var top := f.position.y
 	var bot := f.end.y
 	# the apron the jet stands on, and its other wing
@@ -144,10 +171,6 @@ static func draw(m: Node2D, c: Object) -> void:
 	_bins(b, f)
 	_havoc(m, b, f)
 	_jump_seat(b, m.gate_bench)
-	b.flush(c)
-	# the place's name over the forward bulkhead, as every space has one
-	c.draw_string(m.font, Vector2(0.0, top - 44.0), String(m.gate_text), HORIZONTAL_ALIGNMENT_CENTER, 1280, 22, Color(0.20, 0.22, 0.28))
-	c.draw_string(m.font, Vector2(0.0, top - 26.0), "The cabin, off leash", HORIZONTAL_ALIGNMENT_CENTER, 1280, 14, Color(0.20, 0.22, 0.28, 0.8))
 
 
 # the fuselage: skin, the stripe down it, the wall's inner liner, a window to

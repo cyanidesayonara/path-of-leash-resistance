@@ -460,7 +460,16 @@ static func draw_apron_live(b: ShapeBatch, vt: float, vb: float) -> void:
 
 # --- the edge layer: everything either side of the concourse ----------------
 
+# Static, and full of small round things (heads, wheels, cones): drawn with
+# ShapeBatch's lod, so a 3 px dot is not a 64-sided fan
 static func draw_edge(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	var keep := b.lod
+	b.lod = true
+	_draw_edge(m, b, vt, vb)
+	b.lod = keep
+
+
+static func _draw_edge(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	var gate_y: float = m.GATE_Y
 	var top := maxf(vt, gate_y - 60.0)
 	var bot := minf(vb, float(m.START_Y) + 620.0)
@@ -944,6 +953,13 @@ static func _apron_crew(b: ShapeBatch, side: float) -> void:
 # --- the concourse floor (the cached ground layer) ---------------------------
 
 static func draw_floor(m: Node2D, b: ShapeBatch, vt: float, vb: float, ctop: float, bottom: float) -> void:
+	var keep := b.lod
+	b.lod = true
+	_draw_floor(m, b, vt, vb, ctop, bottom)
+	b.lod = keep
+
+
+static func _draw_floor(m: Node2D, b: ShapeBatch, vt: float, vb: float, ctop: float, bottom: float) -> void:
 	var top := maxf(vt, ctop + 36.0)
 	var bot := minf(vb, bottom)
 	if bot <= top:
