@@ -4671,6 +4671,11 @@ func _draw_freedom_beyond(c: Object) -> void:
 # two leaves swung open everywhere else. Same mouth, gate_l to gate_r.
 func _draw_gate() -> void:
 	var b := ShapeBatch.new()
+	if walk_mod != null and walk_mod.has_method("draw_gate"):
+		# a way in that is no gate at all (the door of L'Aeroport's jet)
+		walk_mod.draw_gate(self, b)
+		b.flush(_wc)
+		return
 	var style := "iron"
 	if lvl in ["trail", "guell", "park", "llevant"] and not tutorial_mode:
 		style = "timber"
@@ -5482,6 +5487,10 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 		# these were drawn in full every redraw with no culling at all
 		if p.y < vt - 60.0 or p.y > vb + 60.0:
 			continue
+		# a walk whose space is not a park draws its own furniture (L'Aeroport's
+		# cabin: bags to dig in, trolleys, roller cases)
+		if walk_mod != null and walk_mod.has_method("draw_park_prop") and walk_mod.draw_park_prop(self, c, pp):
+			continue
 		var prog := float(pp.prog)
 		var done: bool = pp.done
 		# everything gets a shadow: it is an object, not a decal. Uprights get
@@ -5757,7 +5766,7 @@ func _draw_ground_detail(vt: float, vb: float) -> void:
 		var dir := Vector2.from_angle(float(d.rot))
 		# the concourse floor is polished terrazzo, indoors: grit and litter
 		# on it, never a cracked or damp street slab
-		if lvl == "station" and (int(d.kind) == 0 or int(d.kind) == 2):
+		if (lvl == "station" or lvl == "aeroport") and (int(d.kind) == 0 or int(d.kind) == 2):
 			continue
 		match int(d.kind):
 			0:
@@ -10744,7 +10753,7 @@ const FREEDOM_KINDS := {
 	"eixample": "yard",
 	# the beach where the Dimoni is burned
 	"cremada": "beach",
-	# the outdoor pet relief terrace overlooking the airfield
+	# the cabin of the jet at the end of the bridge (systems/aeroport_cabin.gd)
 	"aeroport": "yard",
 }
 const BEACH_SEA_R := 430.0
@@ -11961,6 +11970,9 @@ func _draw_furniture(vt: float, vb: float) -> void:
 	# its upper-left, and the shadow of something knee high
 	for b in benches:
 		if b.y < vt - 60.0 or b.y > vb + 60.0:
+			continue
+		if walk_mod != null and walk_mod.has_method("draw_bench"):
+			walk_mod.draw_bench(self, _wc, b)
 			continue
 		var bseat := Rect2(b.x - 8.0, b.y - 24.0, 16.0, 48.0)
 		box_shadow(_wc, bseat, 4.0, 7.0)
