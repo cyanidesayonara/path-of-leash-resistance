@@ -102,6 +102,16 @@ func _run() -> void:
 		m.freedom_games_tick(1.0 / 60.0)
 		if m.dog.hop > 0.0:
 			weave_k += 1
+		# on the table: sit tight for the count
+		var tp: Dictionary = {}
+		for p: Dictionary in ag.parts:
+			if int(p["kind"]) == AgilityCourse.E.TABLE:
+				tp = p
+		if not tp.is_empty() and absf(x - float(tp["x"])) < 2.5 and not tp["done"]:
+			m.dog.planted = true
+			for i in range(int(AgilityCourse.TABLE_S * 60.0) + 6):
+				m.freedom_games_tick(1.0 / 60.0)
+			m.dog.planted = false
 	_check(m.agility_runs == 1, "a run along the course finishes it")
 	_check(game.agility_best > 0.0, "the run sets the best time")
 	_check(m.bones > bones0, "the run scores")
@@ -145,6 +155,23 @@ func _run() -> void:
 	b1 = m.bones
 	m.on_frisbee_caught(false)
 	_check(air > m.bones - b1, "an air catch pays more than one off the ground")
+	# a streak pays more each catch, and a leap more again
+	m.frisbee.streak = 1
+	m.frisbee.leapt = false
+	b1 = m.bones
+	m.on_frisbee_caught(true)
+	var one: int = m.bones - b1
+	m.frisbee.streak = 3
+	b1 = m.bones
+	m.on_frisbee_caught(true)
+	var three: int = m.bones - b1
+	m.frisbee.leapt = true
+	b1 = m.bones
+	m.on_frisbee_caught(true)
+	var leap: int = m.bones - b1
+	_check(three > one, "a streak of air catches pays more (%d vs %d)" % [three, one])
+	_check(leap > three, "a leap catch pays more again (%d vs %d)" % [leap, three])
+	_check(m.frisbee.THROWS == 5, "five throws")
 
 	# --- home clears it all
 	m.dog.global_position = Vector2(640.0, m.GATE_Y + 60.0)

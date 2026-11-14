@@ -58,6 +58,8 @@ func _draw() -> void:
 	else:
 		if main.agility != null:
 			main.agility.draw_ground(_b, AnimClock.msec() / 1000.0)
+		if main.pigeon_game != null:
+			main.pigeon_game.draw_ground(_b)
 		if main.tug != null:
 			_draw_tug_ground(main.tug)
 	_b.flush()
