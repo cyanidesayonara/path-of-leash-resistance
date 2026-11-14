@@ -20,13 +20,14 @@ extends RefCounted
 const SkyLook := preload("res://systems/sky.gd")
 
 # the kinds: [share of doorways, width of the opening, how far the light
-# reaches into the street, strength, colour]. The shares sum to under one;
+# reaches into the street, strength, colour]. Strengths are kept low: a lit
+# front is a hint of life behind the wall, never a floodlight on the street. The shares sum to under one;
 # the rest are dark, because most doors are shut at night.
 const KINDS := {
-	"home": [0.34, 26.0, 78.0, 0.50, Color(1.0, 0.84, 0.56)],
-	"shop": [0.16, 76.0, 128.0, 0.58, Color(1.0, 0.92, 0.70)],
-	"bar": [0.12, 54.0, 116.0, 0.60, Color(1.0, 0.70, 0.36)],
-	"tv": [0.10, 30.0, 64.0, 0.42, Color(0.56, 0.74, 1.0)],
+	"home": [0.34, 26.0, 78.0, 0.30, Color(1.0, 0.84, 0.56)],
+	"shop": [0.16, 76.0, 128.0, 0.36, Color(1.0, 0.92, 0.70)],
+	"bar": [0.12, 54.0, 116.0, 0.38, Color(1.0, 0.70, 0.36)],
+	"tv": [0.10, 30.0, 64.0, 0.26, Color(0.56, 0.74, 1.0)],
 }
 const ORDER := ["home", "shop", "bar", "tv"]
 # where the edge modules put their doorway, down from the module's top
@@ -138,10 +139,10 @@ static func draw(b: ShapeBatch, fronts: Array[Dictionary], c: Vector2, half: Vec
 				pts.append(Vector2(x, at.y + hw * cx))
 		b.band(pts, 4, light, PackedFloat32Array([1.0, 0.5, 0.0]), PackedFloat32Array([0.0, 1.0, 1.0, 0.0]))
 		# the opening: a bright slit set in the wall face, and its halo
-		var bright := SkyLook.light(Color(lerpf(col.r, 1.0, 0.5), lerpf(col.g, 1.0, 0.5), lerpf(col.b, 1.0, 0.5), minf(1.0, 0.55 + lit * 0.45)), tint)
+		var bright := SkyLook.light(Color(lerpf(col.r, 1.0, 0.5), lerpf(col.g, 1.0, 0.5), lerpf(col.b, 1.0, 0.5), minf(1.0, 0.40 + lit * 0.35)), tint)
 		var sx := at.x - dir * SLIT_DEPTH
 		b.rect(Rect2(minf(sx, at.x), at.y - w * 0.42, SLIT_DEPTH, w * 0.84), bright)
-		b.glow(at, w * 0.7 + 14.0, SkyLook.light(Color(col.r, col.g, col.b, 0.34 * lit), tint), 0.2)
+		b.glow(at, w * 0.7 + 14.0, SkyLook.light(Color(col.r, col.g, col.b, 0.20 * lit), tint), 0.2)
 		if wet:
 			# each front's reflection in the wet paving: streaks toward the
 			# viewer along the opening and across the light fan
@@ -155,7 +156,7 @@ static func draw(b: ShapeBatch, fronts: Array[Dictionary], c: Vector2, half: Vec
 					var kf := float(k) / float(streak_bits)
 					var sw := streak_w * (0.8 + 0.4 * absf(sin(float(k) * 2.7 + rx)))
 					var y0 := at.y + w * 0.35 + kf * streak_len
-					var alpha := 0.14 * lit * (1.0 - kf) * (1.0 - sf * 0.35)
+					var alpha := 0.09 * lit * (1.0 - kf) * (1.0 - sf * 0.35)
 					b.rect(Rect2(rx - sw * 0.5, y0, sw, streak_len / float(streak_bits) - 1.5),
 						SkyLook.light(Color(col.r, col.g, col.b, alpha), tint))
 		# a lit window up on the roof behind it: someone is in upstairs
@@ -164,8 +165,8 @@ static func draw(b: ShapeBatch, fronts: Array[Dictionary], c: Vector2, half: Vec
 			var back := lerpf(ROOF_BACK.x, ROOF_BACK.y, _hash(k, 3.0))
 			var wp := Vector2(at.x - dir * back, at.y + lerpf(-70.0, 50.0, _hash(k, 4.0)))
 			var warm := Color(1.0, 0.86, 0.58) if f.kind != "tv" else Color(0.62, 0.78, 1.0)
-			b.glow(wp, 34.0, SkyLook.light(Color(warm.r, warm.g, warm.b, 0.30 * lit), tint), 0.15)
+			b.glow(wp, 28.0, SkyLook.light(Color(warm.r, warm.g, warm.b, 0.16 * lit), tint), 0.15)
 			b.rect(Rect2(wp - ROOF_WIN * 0.5 - Vector2(2, 2), ROOF_WIN + Vector2(4, 4)), Color(0.08, 0.07, 0.09, 0.8 * lit))
-			b.rect(Rect2(wp - ROOF_WIN * 0.5, ROOF_WIN), SkyLook.light(Color(warm.r, warm.g, warm.b, minf(1.0, 0.5 + lit * 0.5)), tint))
+			b.rect(Rect2(wp - ROOF_WIN * 0.5, ROOF_WIN), SkyLook.light(Color(warm.r, warm.g, warm.b, minf(1.0, 0.35 + lit * 0.40)), tint))
 			# the glazing bar
 			b.rect(Rect2(wp.x - 0.75, wp.y - ROOF_WIN.y * 0.5, 1.5, ROOF_WIN.y), Color(0.10, 0.09, 0.10, 0.7 * lit))

@@ -21,7 +21,7 @@ static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 			b.circle(pc, 380.0 - float(ring) * 70.0, Color(0, 0, 0, 0.035))
 		# the stage: boards on trestles, speakers at its corners, bunting
 		var st: Rect2 = LevelBuild.castanyada_stage(m)
-		b.rect(Rect2(st.position + m.LIGHT * 12.0, st.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
+		b.rect(Rect2(st.position + Shade.light * 12.0, st.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
 		b.rect(st, Color(0.46, 0.32, 0.22))
 		var by := st.position.y + 12.0
 		while by < st.end.y:
@@ -39,7 +39,7 @@ static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 		var rr := Rect2(rc - LevelBuild.CAST_ROASTER * 0.5, LevelBuild.CAST_ROASTER)
 		# its light on the setts; the festival is always at night
 		b.glow(rc, 240.0, Color(1.0, 0.62, 0.26, 0.42), 0.2)
-		b.rect(Rect2(rr.position + m.LIGHT * 12.0, rr.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
+		b.rect(Rect2(rr.position + Shade.light * 12.0, rr.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
 		# the wheels, either end, and the shafts out the front
 		for wx: float in [rr.position.x - 4.0, rr.end.x - 8.0]:
 			b.rect(Rect2(wx, rc.y - 30.0, 12.0, 60.0), Color(0.16, 0.12, 0.10))
@@ -62,7 +62,7 @@ static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 			b.circle(drum + Vector2.from_angle(float(k) * 0.9) * (8.0 + float(k % 3) * 6.0), 3.6, Color(0.36, 0.18, 0.08))
 		# the chimney, at the back corner: a stovepipe with its cap
 		var chim := Vector2(rr.end.x - 26.0, rr.position.y + 22.0)
-		b.circle(chim + m.LIGHT * 14.0, 11.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.3))
+		b.circle(chim + Shade.light * 14.0, 11.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.3))
 		b.circle(chim, 11.0, Color(0.20, 0.20, 0.22))
 		b.circle(chim, 7.0, Color(0.08, 0.08, 0.09))
 		b.circle(chim, 4.0, Color(1.0, 0.56, 0.20, 0.6 * glow))
@@ -75,7 +75,7 @@ static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 
 		# sweet potato (moniato) roaster pan: warm metal tray with baked sweet potatoes
 		var mbox := Rect2(rc.x + 8.0, rc.y - 28.0, 32.0, 20.0)
-		b.rect(Rect2(mbox.position + m.LIGHT * 3.0, mbox.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
+		b.rect(Rect2(mbox.position + Shade.light * 3.0, mbox.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
 		b.rect(mbox, Color(0.24, 0.22, 0.22))
 		b.rect(mbox.grow(-1.5), Color(0.78, 0.70, 0.54))
 		for mi: int in range(3):
@@ -92,7 +92,7 @@ static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 
 		# tray of panellets de pinyons (marzipan sweets rolled in roasted pine nuts)
 		var pbox := Rect2(rc.x + 44.0, rc.y - 28.0, 26.0, 20.0)
-		b.rect(Rect2(pbox.position + m.LIGHT * 3.0, pbox.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
+		b.rect(Rect2(pbox.position + Shade.light * 3.0, pbox.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
 		b.rect(pbox, Color(0.38, 0.26, 0.16))
 		b.rect(pbox.grow(-1.5), Color(0.86, 0.82, 0.74))
 		for pi: int in range(6):
@@ -104,7 +104,7 @@ static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 
 		# blackboard menu (la pissarra) propped near the cart shaft
 		var bb := Rect2(rc.x - 72.0, rr.end.y + 4.0, 28.0, 34.0)
-		b.rect(Rect2(bb.position + m.LIGHT * 4.0, bb.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.3))
+		b.rect(Rect2(bb.position + Shade.light * 4.0, bb.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.3))
 		b.rect(bb, Color(0.44, 0.28, 0.16))
 		b.rect(bb.grow(-2.0), Color(0.16, 0.18, 0.18))
 		b.line(Vector2(bb.position.x + 4.0, bb.position.y + 7.0), Vector2(bb.end.x - 4.0, bb.position.y + 7.0), Color(0.94, 0.94, 0.96, 0.8), 1.6)
@@ -257,7 +257,7 @@ static func _draw_yard(m: Node2D, c: Object, r: Rect2) -> void:
 	var b := ShapeBatch.new()
 	# the dance floor: boards on the paving, a rope ring for the sardana
 	var df := Rect2(r.get_center().x - 170.0, m.GATE_Y - 420.0, 340.0, 220.0)
-	b.rect(Rect2(df.position + m.LIGHT * 6.0, df.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.2))
+	b.rect(Rect2(df.position + Shade.light * 6.0, df.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.2))
 	b.rect(df, Color(0.50, 0.36, 0.24))
 	var bx := df.position.x + 20.0
 	while bx < df.end.x:

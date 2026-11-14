@@ -49,7 +49,6 @@ var threatened: bool = false
 var triggered: bool = false
 
 # Drawing colors matching Port & marine palette
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.22)
 const CAP_NAVY := Color(0.12, 0.20, 0.35)
 const SWEATER_CREAM := Color(0.86, 0.86, 0.82)
@@ -183,20 +182,20 @@ func draw(b: ShapeBatch, vt: float, vb: float) -> void:
 func _draw_furniture(b: ShapeBatch) -> void:
 	# Wooden crate stool under fisherman
 	var crate_rect := Rect2(FISHERMAN_POS.x - 12.0, FISHERMAN_POS.y - 10.0, 24.0, 20.0)
-	b.rect(Rect2(crate_rect.position + LIGHT * 5.0, crate_rect.size), SHADOW)
+	b.rect(Rect2(crate_rect.position + Shade.light * 5.0, crate_rect.size), SHADOW)
 	b.rect(crate_rect, CRATE_WOOD)
 	b.rect(Rect2(crate_rect.position.x + 3.0, crate_rect.position.y, 2.5, crate_rect.size.y), CRATE_BAND)
 	b.rect(Rect2(crate_rect.position.x + crate_rect.size.x - 5.5, crate_rect.position.y, 2.5, crate_rect.size.y), CRATE_BAND)
 
 	# Tackle box on flagstones
 	var tb_rect := Rect2(TACKLE_POS.x - 8.0, TACKLE_POS.y - 6.0, 16.0, 12.0)
-	b.rect(Rect2(tb_rect.position + LIGHT * 4.0, tb_rect.size), SHADOW)
+	b.rect(Rect2(tb_rect.position + Shade.light * 4.0, tb_rect.size), SHADOW)
 	b.rect(tb_rect, TACKLE_RED)
 	b.rect(Rect2(tb_rect.position.x + 4.0, tb_rect.position.y - 2.0, 8.0, 2.0), ROD_CARBON)
 	b.rect(Rect2(tb_rect.position.x + 2.0, tb_rect.position.y + 4.0, 12.0, 4.0), TACKLE_RED.darkened(0.2))
 
 	# Bait bucket with water and sardine tails
-	b.circle(BUCKET_POS + LIGHT * 4.0, 8.0, SHADOW)
+	b.circle(BUCKET_POS + Shade.light * 4.0, 8.0, SHADOW)
 	b.circle(BUCKET_POS, 7.5, BUCKET_METAL)
 	b.circle(BUCKET_POS, 5.5, WATER_INNER)
 	b.line(BUCKET_POS + Vector2(-6.0, 0.0), BUCKET_POS + Vector2(6.0, 0.0), BUCKET_METAL.lightened(0.2), 1.5)
@@ -209,7 +208,7 @@ func _draw_fisherman(b: ShapeBatch, t: float) -> void:
 	var p: Vector2 = FISHERMAN_POS
 
 	# Contact shadow
-	b.circle(p + LIGHT * 6.0, 12.0, SHADOW)
+	b.circle(p + Shade.light * 6.0, 12.0, SHADOW)
 
 	# Seated legs in dark navy trousers and rubber sea boots
 	var boot_l := p + Vector2(10.0, -5.0)
@@ -327,7 +326,7 @@ func _draw_tackle_and_fish(b: ShapeBatch, t: float) -> void:
 			b.line(rod_tip, fish_pos, LINE_NYLON, 1.2)
 
 			# Ground shadow underneath the airborne fish
-			var shadow_pos := Vector2(fish_x, lerpf(start_fish.y, end_fish.y, progress)) + LIGHT * (arc_height * 0.35 + 4.0)
+			var shadow_pos := Vector2(fish_x, lerpf(start_fish.y, end_fish.y, progress)) + Shade.light * (arc_height * 0.35 + 4.0)
 			var shadow_scale := 1.0 - clampf(arc_height / 100.0, 0.0, 0.5)
 			b.circle(shadow_pos, 6.0 * shadow_scale, SHADOW)
 
@@ -352,7 +351,7 @@ func _draw_tackle_and_fish(b: ShapeBatch, t: float) -> void:
 				var flap := absf(sin(t * 14.0))
 				var landed_pos := FISH_LAND_POS + Vector2(0.0, -flap * 3.5)
 				# Wet contact shadow
-				b.circle(FISH_LAND_POS + LIGHT * 3.0, 7.5, SHADOW)
+				b.circle(FISH_LAND_POS + Shade.light * 3.0, 7.5, SHADOW)
 				_draw_fish_body(b, landed_pos, 0.5, t)
 				# Water splash rings on the flagstone
 				b.circle(FISH_LAND_POS, 8.0 + flap * 2.0, Color(0.42, 0.72, 0.88, 0.3))
@@ -407,7 +406,7 @@ func _draw_wheeling_gulls(b: ShapeBatch, t: float) -> void:
 		var gull_pos := FISH_LAND_POS + Vector2(cos(g_angle) * g_rad * 1.2, sin(g_angle) * g_rad * 0.7 - 24.0)
 
 		# Ground shadow
-		var shadow_pos := Vector2(gull_pos.x, FISH_LAND_POS.y) + LIGHT * 16.0
+		var shadow_pos := Vector2(gull_pos.x, FISH_LAND_POS.y) + Shade.light * 16.0
 		b.circle(shadow_pos, 4.0, SHADOW)
 
 		# Flying gull body

@@ -5,7 +5,7 @@ extends SceneTree
 #   godot --rendering-method gl_compatibility --path . --script res://tools/intro_render.gd -- walkies OUTDIR [fps] [width] [dog]
 # `dog` draws that dog (millie, pipa, mochi, bruna, tito) instead of the saved one;
 # a sixth argument draws your human as `him`, `her`, or the NEW LOOK a number seeds.
-# Scenes: walkies, rooftops, titlefight, and the chase films (sweeper, flood, vet, boars, gracia, gat, mamut). Join the frames into a clip with
+# Scenes: walkies, rooftops, titlefight, home (the epilogue), and the chase films (sweeper, flood, vet, boars, gracia, gat, mamut). Join the frames into a clip with
 # tools/frames_to_gif.py.
 
 const SS := 2
@@ -13,6 +13,7 @@ const SCENES := {
 	"walkies": "res://intro/scene_walkies.gd",
 	"rooftops": "res://intro/scene_rooftops.gd",
 	"titlefight": "res://intro/scene_titlefight.gd",
+	"home": "res://intro/scene_home.gd",
 	"sweeper": "res://intro/film_sweeper.gd",
 	"flood": "res://intro/film_flood.gd",
 	"vet": "res://intro/film_vet.gd",

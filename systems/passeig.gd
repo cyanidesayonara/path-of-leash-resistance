@@ -310,13 +310,13 @@ static func _roofs(m: Node2D, vt: float, vb: float) -> void:
 				b.line(Vector2(r.position.x + 5.0, gy), Vector2(r.position.x + 120.0, gy), col.darkened(0.08), 1.0)
 				gy += 18.0
 			var hut := Rect2(r.position.x + 26.0 + fmod(float(k) * 29.0, 40.0), r.position.y + 20.0 + fmod(float(k) * 43.0, maxf(1.0, r.size.y - 80.0)), 34.0, 28.0)
-			b.rect(Rect2(hut.position + m.LIGHT * 8.0, hut.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
+			b.rect(Rect2(hut.position + Shade.light * 8.0, hut.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
 			b.rect(hut, Color(0.70, 0.66, 0.60))
 			b.rect(Rect2(hut.position, Vector2(hut.size.x, 5.0)), Color(0.80, 0.76, 0.70))
 			if k % 2 == 0:
 				var tank := Vector2(r.position.x + 82.0, hut.end.y + 22.0)
 				if tank.y < r.end.y - 14.0:
-					b.circle(tank + m.LIGHT * 6.0, 10.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
+					b.circle(tank + Shade.light * 6.0, 10.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
 					b.circle(tank, 10.0, Color(0.30, 0.30, 0.32))
 					b.circle(tank + Vector2(-2.0, -2.0), 5.0, Color(0.44, 0.44, 0.46))
 			if k % 3 == 1:
@@ -327,7 +327,7 @@ static func _roofs(m: Node2D, vt: float, vb: float) -> void:
 					var wc := [Color(0.92, 0.92, 0.90), Color(0.40, 0.56, 0.78), Color(0.86, 0.46, 0.40)][(p + k) % 3] as Color
 					b.rect(Rect2(r.position.x + 20.0 + float(p) * 22.0, wy, 12.0, 8.0), wc)
 			elif k % 3 == 2:
-				b.circle(Vector2(r.position.x + 70.0, r.end.y - 40.0) + m.LIGHT * 10.0, 20.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.2))
+				b.circle(Vector2(r.position.x + 70.0, r.end.y - 40.0) + Shade.light * 10.0, 20.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.2))
 				b.circle(Vector2(r.position.x + 70.0, r.end.y - 40.0), 20.0, Color(0.88, 0.56, 0.30))
 				b.circle(Vector2(r.position.x + 70.0, r.end.y - 40.0), 3.0, Color(0.40, 0.34, 0.28))
 		y = top
@@ -385,7 +385,7 @@ static func _bus_stop(m: Node2D, vt: float, vb: float) -> void:
 	b.line(bay.position, Vector2(bay.end.x, bay.position.y), yel, 2.5)
 	b.line(Vector2(bay.position.x, bay.end.y), bay.end, yel, 2.5)
 	# glass-and-steel bus shelter canopy and wooden bench
-	b.rect(Rect2(BUS_STOP_RECT.position + m.LIGHT * 7.0, BUS_STOP_RECT.size), sh)
+	b.rect(Rect2(BUS_STOP_RECT.position + Shade.light * 7.0, BUS_STOP_RECT.size), sh)
 	b.rect(BUS_STOP_RECT, Color(0.22, 0.26, 0.30))
 	b.rect(BUS_STOP_RECT.grow(-3.0), Color(0.68, 0.82, 0.88, 0.78))
 	for k in range(4):
@@ -394,7 +394,7 @@ static func _bus_stop(m: Node2D, vt: float, vb: float) -> void:
 	b.rect(Rect2(BUS_STOP_RECT.end.x - 16.0, BUS_STOP_RECT.position.y + 18.0, 10.0, BUS_STOP_RECT.size.y - 36.0), Color(0.56, 0.38, 0.24))
 	# yellow AMB metropolitan bus totem post at the head of the shelter
 	var totem := Rect2(BUS_STOP_RECT.position.x - 4.0, BUS_STOP_RECT.position.y - 26.0, 22.0, 14.0)
-	b.rect(Rect2(totem.position + m.LIGHT * 5.0, totem.size), sh)
+	b.rect(Rect2(totem.position + Shade.light * 5.0, totem.size), sh)
 	b.rect(totem, Color(0.96, 0.78, 0.14))
 	b.rect(Rect2(totem.position.x, totem.position.y, 6.0, totem.size.y), Color(0.84, 0.18, 0.18))
 	b.flush(m._wc)
@@ -415,7 +415,7 @@ static func _surf_club(m: Node2D, vt: float, vb: float) -> void:
 			b.line(Vector2(dx, deck.position.y), Vector2(dx, deck.end.y), Color(0.42, 0.28, 0.18), 1.4)
 			dx += 11.0
 		var hall := Rect2(1036.0, SURF_CLUB_RECT.position.y + 8.0, 144.0, SURF_CLUB_RECT.size.y - 16.0)
-		b.rect(Rect2(hall.position + m.LIGHT * 9.0, hall.size), sh)
+		b.rect(Rect2(hall.position + Shade.light * 9.0, hall.size), sh)
 		b.rect(hall, Color(0.94, 0.95, 0.96))
 		b.rect(Rect2(hall.position.x, hall.position.y, 10.0, hall.size.y), Color(0.16, 0.44, 0.72))
 		# blue nautical roof stripes and solar heater panels
@@ -427,7 +427,7 @@ static func _surf_club(m: Node2D, vt: float, vb: float) -> void:
 		var bcols := [Color(0.94, 0.36, 0.28), Color(0.20, 0.68, 0.78), Color(0.96, 0.78, 0.20), Color(0.30, 0.74, 0.48)]
 		for i in range(4):
 			var bp := Vector2(1012.0, hall.position.y + 26.0 + float(i) * 44.0)
-			_ellipse(b, bp + m.LIGHT * 2.5, 14.0, 4.5, 0.15, sh)
+			_ellipse(b, bp + Shade.light * 2.5, 14.0, 4.5, 0.15, sh)
 			_ellipse(b, bp, 14.0, 4.5, 0.15, bcols[i])
 			b.line(bp - Vector2(11.0, -1.6), bp + Vector2(11.0, 1.6), Color(0.98, 0.98, 0.96), 1.4)
 		b.rect(Rect2(hall.position.x + 14.0, hall.end.y - 24.0, 114.0, 18.0), Color(0.14, 0.36, 0.64))
@@ -436,19 +436,19 @@ static func _surf_club(m: Node2D, vt: float, vb: float) -> void:
 		_access_ramp(m, b, 380.0, 344.0, SURF_RACK_RECT.get_center().y, 28.0)
 		# timber board rack on the sand
 		var rk := Rect2(SURF_RACK_RECT.position.x + 28.0, SURF_RACK_RECT.position.y + 8.0, 56.0, 74.0)
-		b.rect(Rect2(rk.position + m.LIGHT * 4.0, rk.size), sh)
+		b.rect(Rect2(rk.position + Shade.light * 4.0, rk.size), sh)
 		b.line(rk.position, Vector2(rk.position.x, rk.end.y), Color(0.46, 0.30, 0.18), 3.5)
 		b.line(Vector2(rk.end.x, rk.position.y), rk.end, Color(0.46, 0.30, 0.18), 3.5)
 		var scols := [Color(0.96, 0.44, 0.24), Color(0.22, 0.62, 0.86), Color(0.98, 0.84, 0.24), Color(0.92, 0.30, 0.48), Color(0.24, 0.76, 0.64)]
 		for i in range(5):
 			var sp := Vector2(rk.get_center().x, rk.position.y + 9.0 + float(i) * 14.0)
-			_ellipse(b, sp + m.LIGHT * 2.0, 24.0, 5.0, 0.0, sh)
+			_ellipse(b, sp + Shade.light * 2.0, 24.0, 5.0, 0.0, sh)
 			_ellipse(b, sp, 24.0, 5.0, 0.0, scols[i])
 			b.line(sp - Vector2(20.0, 0.0), sp + Vector2(20.0, 0.0), Color(0.98, 0.97, 0.92), 1.4)
 		# twin-hull beach catamaran with a bright sail resting on the sand
 		var cat := Vector2(SURF_RACK_RECT.position.x + 48.0, SURF_RACK_RECT.end.y - 24.0)
 		for side: float in [-1.0, 1.0]:
-			_ellipse(b, cat + Vector2(0.0, side * 12.0) + m.LIGHT * 3.0, 28.0, 3.8, 0.0, sh)
+			_ellipse(b, cat + Vector2(0.0, side * 12.0) + Shade.light * 3.0, 28.0, 3.8, 0.0, sh)
 			_ellipse(b, cat + Vector2(0.0, side * 12.0), 28.0, 3.8, 0.0, Color(0.96, 0.96, 0.94))
 		b.rect(Rect2(cat.x - 14.0, cat.y - 10.0, 28.0, 20.0), Color(0.18, 0.34, 0.56))
 		b.polygon(PackedVector2Array([cat + Vector2(-18.0, -2.0), cat + Vector2(22.0, -16.0), cat + Vector2(18.0, 8.0)]), Color(0.96, 0.52, 0.18, 0.90))
@@ -470,7 +470,7 @@ static func _restaurant(m: Node2D, vt: float, vb: float) -> void:
 	# white-tablecloth dining tables along the seaward terrace
 	for i in range(4):
 		var tp := Vector2(1014.0, RESTAURANT_RECT.position.y + 32.0 + float(i) * 58.0)
-		b.circle(tp + m.LIGHT * 4.0, 13.0, sh)
+		b.circle(tp + Shade.light * 4.0, 13.0, sh)
 		b.circle(tp, 13.0, Color(0.97, 0.97, 0.95))
 		b.circle(tp, 10.0, Color(0.90, 0.92, 0.95))
 		b.circle(tp + Vector2(-3.0, -2.0), 2.4, Color(0.98, 0.98, 0.96))
@@ -478,7 +478,7 @@ static func _restaurant(m: Node2D, vt: float, vb: float) -> void:
 		b.circle(tp + Vector2(2.0, -3.0), 1.4, Color(0.76, 0.18, 0.22))
 	# white pavilion building with navy awning trim and porthole skylights
 	var pav := Rect2(1042.0, RESTAURANT_RECT.position.y + 6.0, 140.0, RESTAURANT_RECT.size.y - 12.0)
-	b.rect(Rect2(pav.position + m.LIGHT * 10.0, pav.size), sh)
+	b.rect(Rect2(pav.position + Shade.light * 10.0, pav.size), sh)
 	b.rect(pav, Color(0.96, 0.95, 0.92))
 	b.rect(pav.grow(-6.0), Color(0.90, 0.88, 0.83))
 	# navy-and-white striped awning over the terrace front
@@ -507,7 +507,7 @@ static func _gym(m: Node2D, vt: float, vb: float) -> void:
 	# Landward glass-fronted seafront fitness club (GIMNÀS)
 	if _drawn_window(GYM_RECT, vt, vb):
 		var gm := Rect2(1004.0, GYM_RECT.position.y, 176.0, GYM_RECT.size.y)
-		b.rect(Rect2(gm.position + m.LIGHT * 9.0, gm.size), sh)
+		b.rect(Rect2(gm.position + Shade.light * 9.0, gm.size), sh)
 		b.rect(gm, Color(0.24, 0.26, 0.30))
 		b.rect(gm.grow(-5.0), Color(0.22, 0.40, 0.56))
 		# glazed seaward wall with row of treadmills & spin bikes facing the sea
@@ -532,17 +532,17 @@ static func _gym(m: Node2D, vt: float, vb: float) -> void:
 		var r1 := Vector2(cr.end.x - 18.0, cr.position.y + 20.0)
 		var r2 := Vector2(cr.position.x + 18.0, cr.end.y - 20.0)
 		var r3 := Vector2(cr.end.x - 18.0, cr.end.y - 20.0)
-		b.line(r0 + m.LIGHT * 14.0, r2 + m.LIGHT * 14.0, sh, 3.5)
-		b.line(r1 + m.LIGHT * 14.0, r3 + m.LIGHT * 14.0, sh, 3.5)
+		b.line(r0 + Shade.light * 14.0, r2 + Shade.light * 14.0, sh, 3.5)
+		b.line(r1 + Shade.light * 14.0, r3 + Shade.light * 14.0, sh, 3.5)
 		b.line(r0, r2, bar_col, 3.0)
 		b.line(r1, r3, bar_col, 3.0)
 		var ry := r0.y
 		while ry <= r2.y + 0.5:
-			b.line(Vector2(r0.x, ry) + m.LIGHT * 14.0, Vector2(r1.x, ry) + m.LIGHT * 14.0, sh, 2.2)
+			b.line(Vector2(r0.x, ry) + Shade.light * 14.0, Vector2(r1.x, ry) + Shade.light * 14.0, sh, 2.2)
 			b.line(Vector2(r0.x, ry), Vector2(r1.x, ry), bar_col, 2.2)
 			ry += 20.0
 		for p: Vector2 in [r0, r1, r2, r3, Vector2(r0.x, (r0.y + r2.y) * 0.5), Vector2(r1.x, (r1.y + r3.y) * 0.5)]:
-			b.circle(p + m.LIGHT * 4.0, 4.5, sh)
+			b.circle(p + Shade.light * 4.0, 4.5, sh)
 			b.circle(p, 4.2, post_col)
 	b.flush(m._wc)
 	if _drawn_window(GYM_RECT, vt, vb):
@@ -594,13 +594,13 @@ static func _landmarks(m: Node2D, vt: float, vb: float) -> void:
 		var py := cn.position.y + 30.0
 		while py < cn.end.y - 20.0:
 			var box := Rect2(1154.0, py - 22.0, 28.0, 44.0)
-			b.rect(Rect2(box.position + m.LIGHT * 5.0, box.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.2))
+			b.rect(Rect2(box.position + Shade.light * 5.0, box.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.2))
 			b.rect(box, Color(0.62, 0.36, 0.24))
 			b.rect(box.grow(-3.0), Color(0.34, 0.26, 0.18))
 			for k in range(3):
 				var lp := Vector2(box.get_center().x + (-4.0 if k % 2 == 0 else 4.0), box.position.y + 9.0 + float(k) * 13.0)
 				b.circle(lp, 9.0, Color(0.22, 0.40, 0.24))
-				b.circle(lp - m.LIGHT * 3.0, 5.0, Color(0.32, 0.52, 0.30))
+				b.circle(lp - Shade.light * 3.0, 5.0, Color(0.32, 0.52, 0.30))
 				b.circle(lp + Vector2(3.0, -2.0), 2.2, Color(0.92, 0.46, 0.62) if i == 0 else Color(0.96, 0.92, 0.94))
 			py += 80.0
 		_bar_hut(m, b, bar, i == 0, bar.position.y > cn.position.y)
@@ -648,10 +648,10 @@ static func _pier(m: Node2D) -> void:
 	var b := ShapeBatch.new()
 	# shadows: the pier's on the water and the sand, the wedge's where it is
 	# above the sand, deeper toward the tip
-	b.rect(Rect2(Vector2(far, y - h - 5.0) + m.LIGHT * 9.0, Vector2(tip - far, h * 2.0 + 10.0)), sh)
+	b.rect(Rect2(Vector2(far, y - h - 5.0) + Shade.light * 9.0, Vector2(tip - far, h * 2.0 + 10.0)), sh)
 	var hr := LevelBuild.beach_ramp_half_at(raised)
 	b.polygon(PackedVector2Array([Vector2(raised, y + hr), Vector2(tip, y + h),
-		Vector2(tip, y + h) + m.LIGHT * 9.0, Vector2(raised, y + hr) + m.LIGHT * 2.0]), sh)
+		Vector2(tip, y + h) + Shade.light * 9.0, Vector2(raised, y + hr) + Shade.light * 2.0]), sh)
 	# the rocks, under everything else
 	for rk: Vector2 in LevelBuild.beach_pier_rocks():
 		var k := rk.x * 0.37 + rk.y * 0.11
@@ -662,10 +662,10 @@ static func _pier(m: Node2D) -> void:
 			pts.append(rk + Vector2(cos(a) * 1.15, sin(a) * 0.9).rotated(_hash(k, 2.0) * PI) * r * (0.7 + 0.45 * _hash(k + float(i), 5.0)))
 		var shp := PackedVector2Array()
 		for q: Vector2 in pts:
-			shp.append(q + m.LIGHT * 3.0)
+			shp.append(q + Shade.light * 3.0)
 		b.polygon(shp, sh)
 		b.polygon(pts, PIER_ROCK_DARK.lerp(PIER_ROCK, _hash(k, 11.0)))
-		b.circle(rk - m.LIGHT * r * 0.3, r * 0.45, PIER_ROCK.lightened(0.08))
+		b.circle(rk - Shade.light * r * 0.3, r * 0.45, PIER_ROCK.lightened(0.08))
 	# the pier: curbs, then the planks between them
 	b.rect(Rect2(far, y - h - 5.0, tip - far + 1.0, h * 2.0 + 10.0), PIER_CURB)
 	var x := tip
@@ -719,7 +719,7 @@ static func _pier(m: Node2D) -> void:
 	# two leaves swung open against the rails
 	for side: float in [-1.0, 1.0]:
 		var post := Vector2(tip - 3.0, y + side * (h + 3.0))
-		b.rect(Rect2(post + Vector2(-3.5, -3.5) + m.LIGHT * 3.0, Vector2(7.0, 7.0)), sh)
+		b.rect(Rect2(post + Vector2(-3.5, -3.5) + Shade.light * 3.0, Vector2(7.0, 7.0)), sh)
 		b.rect(Rect2(post - Vector2(3.5, 3.5), Vector2(7.0, 7.0)), GATE_RUST)
 		b.line(post + Vector2(-3.5, 1.5), post + Vector2(1.5, -3.5), Color(0.80, 0.18, 0.16), 1.6)
 		b.line(post + Vector2(-1.5, 3.5), post + Vector2(3.5, -1.5), Color(0.80, 0.18, 0.16), 1.6)
@@ -778,10 +778,10 @@ static func _monkey(m: Node2D, c: Vector2, rot: float) -> void:
 	var bl := LevelBuild.BEACH_BLOCK_LEN * 0.5
 	var bw := LevelBuild.BEACH_BLOCK_W * 0.5
 	# the block, a long dressed stone, its side showing toward the light's far side
-	_quad(b, c + m.LIGHT * 4.0, along, bl, bw, sh)
+	_quad(b, c + Shade.light * 4.0, along, bl, bw, sh)
 	_quad(b, c + fwd * 1.5, along, bl, bw + 1.5, BLOCK_SIDE)
 	_quad(b, c, along, bl, bw, BLOCK_STONE)
-	_quad(b, c - m.LIGHT * 1.0, along, bl - 3.0, bw - 3.0, BLOCK_STONE.lightened(0.06))
+	_quad(b, c - Shade.light * 1.0, along, bl - 3.0, bw - 3.0, BLOCK_STONE.lightened(0.06))
 	# a little brass plaque on its face
 	b.rect(Rect2(c + along * 14.0 + fwd * (bw - 1.0) - Vector2(2.5, 1.5), Vector2(5.0, 3.0)), Color(0.74, 0.64, 0.36))
 	var P := func(v: Vector2) -> Vector2: return c + v.rotated(rot) * K
@@ -793,7 +793,7 @@ static func _monkey(m: Node2D, c: Vector2, rot: float) -> void:
 		b.line(a0, a0.lerp(a1, 0.45) + fwd * 1.2, BLOCK_VEIN, 0.8)
 		b.line(a0.lerp(a1, 0.45) + fwd * 1.2, a1, BLOCK_VEIN, 0.8)
 	# his shadow, over the block's face and onto the planks
-	_ellipse(b, P.call(Vector2(2.0, 0.0)) + m.LIGHT * 6.0, 8.0 * K, 7.5 * K, rot, sh)
+	_ellipse(b, P.call(Vector2(2.0, 0.0)) + Shade.light * 6.0, 8.0 * K, 7.5 * K, rot, sh)
 	# the hanging leg: down off the block's front, the foot flat on the planks
 	b.line(P.call(Vector2(1.0, 3.6)), P.call(Vector2(5.0, 4.0)), BRONZE, 3.2 * K)
 	b.line(P.call(Vector2(5.0, 4.0)), P.call(Vector2(7.5, 4.4)), BRONZE, 2.6 * K)
@@ -823,16 +823,16 @@ static func _monkey(m: Node2D, c: Vector2, rot: float) -> void:
 	# so from above its shoulder and stopper, the diamond cut round it
 	b.line(P.call(Vector2(0.0, 5.0)), P.call(Vector2(3.0, 8.5)), BRONZE_MID, 2.3 * K)
 	var bt: Vector2 = P.call(Vector2(5.0, 9.0))
-	b.circle(bt + m.LIGHT * 4.0, 3.4 * K, sh)
+	b.circle(bt + Shade.light * 4.0, 3.4 * K, sh)
 	b.circle(bt, 3.2 * K, BRONZE_MID)
 	for k in range(6):
 		var a := TAU * float(k) / 6.0 + 0.3
 		b.line(bt + Vector2(cos(a), sin(a)) * 1.6 * K, bt + Vector2(cos(a + 0.9), sin(a + 0.9)) * 3.1 * K, BRONZE, 0.7)
-	b.circle(bt - m.LIGHT * 1.5, 1.7 * K, BRONZE_LIT)
+	b.circle(bt - Shade.light * 1.5, 1.7 * K, BRONZE_LIT)
 	b.circle(bt, 1.0 * K, BRONZE)
 	_ellipse(b, P.call(Vector2(3.6, 8.2)), 1.8 * K, 2.2 * K, rot, BRONZE)
 	# shoulders, lit from the light's side
-	_ellipse(b, P.call(Vector2(-0.5, 0.0)) - m.LIGHT * 2.0, 4.0 * K, 5.2 * K, rot, BRONZE_MID.lerp(BRONZE_LIT, 0.35))
+	_ellipse(b, P.call(Vector2(-0.5, 0.0)) - Shade.light * 2.0, 4.0 * K, 5.2 * K, rot, BRONZE_MID.lerp(BRONZE_LIT, 0.35))
 	# the head: ears out either side, the crown going bald, Darwin's long
 	# beard down his chest, his muzzle, and deep-set eyes under a heavy brow,
 	# looking at the bottle
@@ -843,7 +843,7 @@ static func _monkey(m: Node2D, c: Vector2, rot: float) -> void:
 		b.circle(H.call(Vector2(-0.5, 4.6 * side)), 2.0 * K, BRONZE)
 		b.circle(H.call(Vector2(-0.3, 4.6 * side)), 1.0 * K, BRONZE_MID)
 	b.circle(H.call(Vector2(0.0, 0.0)), 4.4 * K, BRONZE_MID)
-	b.circle(H.call(Vector2(-0.4, -0.2)) - m.LIGHT * 1.6, 2.6 * K, BRONZE_LIT)
+	b.circle(H.call(Vector2(-0.4, -0.2)) - Shade.light * 1.6, 2.6 * K, BRONZE_LIT)
 	_ellipse(b, H.call(Vector2(3.6, 0.0)), 1.8 * K, 2.4 * K, hrot, BRONZE_MID.lerp(BRONZE_LIT, 0.5))
 	b.line(H.call(Vector2(2.4, -2.6)), H.call(Vector2(2.4, 2.6)), BRONZE_LIT.lightened(0.1), 1.3 * K)
 	for side: float in [-1.0, 1.0]:
@@ -855,7 +855,7 @@ static func _monkey(m: Node2D, c: Vector2, rot: float) -> void:
 static func _access_ramp(m: Node2D, b: ShapeBatch, from_x: float, to_x: float, y: float, w: float = 32.0) -> void:
 	var rlen := from_x - to_x
 	var ramp := Rect2(to_x, y - w * 0.5, rlen, w)
-	b.rect(Rect2(ramp.position + m.LIGHT * 3.0, ramp.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.16))
+	b.rect(Rect2(ramp.position + Shade.light * 3.0, ramp.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.16))
 	b.rect(ramp, Color(0.48, 0.28, 0.22))
 	var rx := to_x + 3.0
 	while rx < from_x:
@@ -874,7 +874,7 @@ static func _drawn_window(r: Rect2, vt: float, vb: float) -> bool:
 # the bar hut: its roof from above, the counter along the side that faces the
 # terrace, and the stools in front (none where a terrace chair already is)
 static func _bar_hut(m: Node2D, b: ShapeBatch, r: Rect2, thatch: bool, faces_north: bool) -> void:
-	b.rect(Rect2(r.position + m.LIGHT * 10.0, r.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.24))
+	b.rect(Rect2(r.position + Shade.light * 10.0, r.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.24))
 	var front_y := r.position.y if faces_north else r.end.y
 	var out := -1.0 if faces_north else 1.0
 	# the counter, a timber top a little proud of the hut
@@ -892,7 +892,7 @@ static func _bar_hut(m: Node2D, b: ShapeBatch, r: Rect2, thatch: bool, faces_nor
 			if tb.distance_to(st) < 24.0:
 				clear = false
 		if clear:
-			b.circle(st + m.LIGHT * 2.0, 5.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.2))
+			b.circle(st + Shade.light * 2.0, 5.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.2))
 			b.circle(st, 4.6, Color(0.30, 0.24, 0.18))
 			b.circle(st + Vector2(-0.8, -0.8), 3.2, Color(0.56, 0.42, 0.28))
 		sx += 22.0
@@ -960,7 +960,7 @@ static func _volley_court(m: Node2D, court: Rect2) -> void:
 	var e: Vector2 = posts[1]
 	# referee tall chair next to post e
 	var ref_p := Vector2(court.end.x + 18.0, cy)
-	b.rect(Rect2(ref_p + m.LIGHT * 16.0 - Vector2(6.0, 6.0), Vector2(12.0, 12.0)), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.18))
+	b.rect(Rect2(ref_p + Shade.light * 16.0 - Vector2(6.0, 6.0), Vector2(12.0, 12.0)), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.18))
 	for off: Vector2 in [Vector2(-5, -5), Vector2(5, -5), Vector2(-5, 5), Vector2(5, 5)]:
 		b.circle(ref_p + off, 1.8, Color(0.35, 0.35, 0.38))
 	b.rect(Rect2(ref_p.x - 4.0, ref_p.y - 5.0, 8.0, 10.0), Color(0.24, 0.52, 0.80))
@@ -970,7 +970,7 @@ static func _volley_court(m: Node2D, court: Rect2) -> void:
 		var out := -1.0 if p.x < court.get_center().x else 1.0
 		for dy: float in [-16.0, 16.0]:
 			b.line(p, p + Vector2(out * 8.0, dy), Color(0.86, 0.84, 0.78, 0.8), 1.2)
-	b.line(a + m.LIGHT * 22.0, e + m.LIGHT * 22.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.18), 4.0)
+	b.line(a + Shade.light * 22.0, e + Shade.light * 22.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.18), 4.0)
 	b.line(a, e, Color(0.16, 0.16, 0.18, 0.75), 5.0)
 	var mx := a.x + 4.0
 	while mx < e.x - 2.0:
@@ -978,7 +978,7 @@ static func _volley_court(m: Node2D, court: Rect2) -> void:
 		mx += 4.0
 	b.line(a + Vector2(0.0, -2.5), e + Vector2(0.0, -2.5), Color(0.97, 0.97, 0.95), 1.6)
 	for p: Vector2 in [a, e]:
-		b.circle(p + m.LIGHT * 4.0, 6.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
+		b.circle(p + Shade.light * 4.0, 6.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
 		b.circle(p, 5.5, Color(0.30, 0.30, 0.33))
 		b.circle(p + Vector2(-1.2, -1.2), 3.2, Color(0.70, 0.72, 0.76))
 	# beach volleyball players: 2 south of net, 2 north of net
@@ -998,7 +998,7 @@ static func _volley_court(m: Node2D, court: Rect2) -> void:
 	if m.volleyball != null:
 		for pi in range(Volleyball.PLAYERS.size()):
 			var pp: Vector2 = Volleyball.PLAYERS[pi]
-			b.circle(pp + m.LIGHT * 5.0, 6.5, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
+			b.circle(pp + Shade.light * 5.0, 6.5, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
 			b.rect(Rect2(pp.x - 4.5, pp.y - 3.5, 9.0, 7.0), shorts[pi])
 			b.circle(pp, 5.2, skins[pi])
 			b.circle(pp + Vector2(0.0, -2.5), 4.0, skins[pi])
@@ -1016,7 +1016,7 @@ static func _volley_court(m: Node2D, court: Rect2) -> void:
 		var vp: Vector2 = vb.pos
 		var vz: float = vb.z
 		# shadow on the sand
-		var s_pos: Vector2 = vp + Vector2(m.LIGHT) * (vz * 0.40 + 3.0)
+		var s_pos: Vector2 = vp + Vector2(Shade.light) * (vz * 0.40 + 3.0)
 		var s_rad: float = maxf(2.0, 5.0 - vz * 0.03)
 		var s_alpha: float = clampf(0.28 - vz * 0.002, 0.08, 0.28)
 		b.circle(s_pos, s_rad, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, s_alpha))
@@ -1054,8 +1054,8 @@ static func _towel(m: Node2D, twd: Dictionary, i: int) -> void:
 		var suit: Color = TOWEL_SUITS[(i + 1) % TOWEL_SUITS.size()]
 		var sh := Color(0, 0, 0, 0.18)
 		# lying on their back, head at the top end: shadow, legs, arms, body
-		m._wc.draw_line(c + Vector2(-4, 4) + m.LIGHT * 2.0, c + Vector2(-5, 30) + m.LIGHT * 2.0, sh, 6.0)
-		m._wc.draw_line(c + Vector2(4, 4) + m.LIGHT * 2.0, c + Vector2(6, 30) + m.LIGHT * 2.0, sh, 6.0)
+		m._wc.draw_line(c + Vector2(-4, 4) + Shade.light * 2.0, c + Vector2(-5, 30) + Shade.light * 2.0, sh, 6.0)
+		m._wc.draw_line(c + Vector2(4, 4) + Shade.light * 2.0, c + Vector2(6, 30) + Shade.light * 2.0, sh, 6.0)
 		for s: float in [-1.0, 1.0]:
 			var foot := c + Vector2(s * (5.0 + float(i % 2)), 30.0)
 			m._wc.draw_line(c + Vector2(s * 4.0, 4.0), foot, skin, 5.5)
@@ -1208,7 +1208,7 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 		var pk := absi(int(tdy * 0.13)) % 4
 		if pk == 0:
 			# smooth rounded sea pebble
-			foam.circle(Vector2(tdx + 1.5, tdy) + m.LIGHT * 1.2, 2.2, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.18))
+			foam.circle(Vector2(tdx + 1.5, tdy) + Shade.light * 1.2, 2.2, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.18))
 			foam.circle(Vector2(tdx + 1.5, tdy), 2.0, Color(0.50, 0.48, 0.44))
 			foam.circle(Vector2(tdx + 0.8, tdy - 0.6), 1.0, Color(0.68, 0.66, 0.62))
 		elif pk == 1:
@@ -1363,7 +1363,7 @@ static func draw_freedom(m: Node2D, ci: Object) -> void:
 	# 3. Hotel L'Onada (our own name, not a real hotel's) rising behind the north edge of the plaza:
 	# modern white curved ship-deck terraces, blue glass railings, and rooftop infinity pool
 	var hrect := HOTEL_RECT
-	b.rect(Rect2(hrect.position + m.LIGHT * 18.0, hrect.size), sh)
+	b.rect(Rect2(hrect.position + Shade.light * 18.0, hrect.size), sh)
 	b.rect(hrect, Color(0.95, 0.96, 0.97))
 	b.rect(hrect.grow(-8.0), Color(0.89, 0.91, 0.93))
 	# Stepped white ship-deck balconies with blue glass railings along the south facade
@@ -1390,7 +1390,7 @@ static func draw_freedom(m: Node2D, ci: Object) -> void:
 			b.line(pl[i], pl[i + 1], Color(0.98, 0.96, 0.90), 2.0)
 	# 4. The 3D BADALONA tourist letters sign on its plinth in the plaza
 	var plinth := HOTEL_SIGN_RECT.grow(6.0)
-	b.rect(Rect2(plinth.position + m.LIGHT * 12.0, plinth.size), sh)
+	b.rect(Rect2(plinth.position + Shade.light * 12.0, plinth.size), sh)
 	b.rect(plinth, Color(0.32, 0.34, 0.38))
 	b.rect(HOTEL_SIGN_RECT, Color(0.46, 0.48, 0.52))
 	var word := "BADALONA"
@@ -1399,7 +1399,7 @@ static func draw_freedom(m: Node2D, ci: Object) -> void:
 		var lx := HOTEL_SIGN_RECT.position.x + 10.0 + float(i) * lw
 		var lbox := Rect2(lx + 2.0, HOTEL_SIGN_RECT.position.y + 5.0, lw - 4.0, HOTEL_SIGN_RECT.size.y - 10.0)
 		# 3D extruded shadow & coral-red side bevel, bright white/coral letter face
-		b.rect(Rect2(lbox.position + m.LIGHT * 7.0, lbox.size), sh)
+		b.rect(Rect2(lbox.position + Shade.light * 7.0, lbox.size), sh)
 		b.rect(Rect2(lbox.position + Vector2(2.5, 3.0), lbox.size), Color(0.76, 0.16, 0.18))
 		b.rect(lbox, Color(0.94, 0.24, 0.24))
 		var ch_lay: Array = Letters.layout(word.substr(i, 1), lbox.get_center() + Vector2(0.0, 6.0), 13.0, lw - 4.0)

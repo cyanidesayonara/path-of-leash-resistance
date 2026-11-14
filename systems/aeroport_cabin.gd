@@ -53,7 +53,6 @@ const STEEL_DARK := Color(0.40, 0.43, 0.48)
 const MASK := Color(0.98, 0.84, 0.16)
 const VEST := Color(0.98, 0.78, 0.10)
 const JUICE := Color(0.94, 0.72, 0.30, 0.28)
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.05, 0.05, 0.08)
 
 
@@ -82,7 +81,7 @@ static func _has_block(i: int, block: int) -> bool:
 # and by the cabin for the other side. `sy` is -1 for the wing above the hull.
 static func wing(b: ShapeBatch, root_y: float, sy: float) -> void:
 	var at := func(x: float, o: float) -> Vector2: return Vector2(x, root_y + sy * o)
-	var sh := LIGHT * 18.0
+	var sh := Shade.light * 18.0
 	var poly := PackedVector2Array([at.call(960.0, 0.0), at.call(1240.0, 0.0), at.call(1640.0, 640.0), at.call(1540.0, 646.0)])
 	var shp := PackedVector2Array()
 	for p: Vector2 in poly:
@@ -178,7 +177,7 @@ static func _record(m: Node2D, b: ShapeBatch, f: Rect2) -> void:
 static func _hull(_m: Node2D, b: ShapeBatch, f: Rect2) -> void:
 	var top := f.position.y
 	var bot := f.end.y
-	var sh := LIGHT * 18.0
+	var sh := Shade.light * 18.0
 	b.rect(Rect2(-400.0 + sh.x, top - HULL + sh.y, 2100.0, f.size.y + HULL * 2.0), Color(SHADOW, 0.20))
 	b.rect(Rect2(-400.0, top - HULL, 2100.0, f.size.y + HULL * 2.0), HULL_SHADE)
 	b.rect(Rect2(-400.0, top - HULL + 3.0, 2100.0, f.size.y + HULL * 2.0 - 8.0), HULL_WHITE)
@@ -264,7 +263,7 @@ static func _galley(m: Node2D, b: ShapeBatch, f: Rect2) -> void:
 		var y0 := top + 8.0 if half == 0 else top + f.size.y * 0.5 + 44.0
 		var hgt := f.size.y * 0.5 - 52.0
 		var unit := Rect2(x + 4.0, y0, 40.0, hgt)
-		b.rect(Rect2(unit.position + LIGHT * 6.0, unit.size), Color(SHADOW, 0.22))
+		b.rect(Rect2(unit.position + Shade.light * 6.0, unit.size), Color(SHADOW, 0.22))
 		b.rect(unit, STEEL_DARK)
 		b.rect(unit.grow(-2.5), STEEL)
 		# the worktop's kit: coffee pots on their plates, an oven's door, a
@@ -326,7 +325,7 @@ static func _lavatories(m: Node2D, b: ShapeBatch, f: Rect2) -> void:
 	var top := f.position.y
 	for half in range(2):
 		var r := Rect2(f.end.x - 64.0, top + 6.0 if half == 0 else f.end.y - 116.0, 64.0, 110.0)
-		b.rect(Rect2(r.position + LIGHT * 7.0, r.size), Color(SHADOW, 0.22))
+		b.rect(Rect2(r.position + Shade.light * 7.0, r.size), Color(SHADOW, 0.22))
 		b.rect(r, HULL_SHADE)
 		b.rect(r.grow(-3.0), Color(0.90, 0.92, 0.94))
 		# the bowl, the basin, a roll on the wall
@@ -346,7 +345,7 @@ static func _lavatories(m: Node2D, b: ShapeBatch, f: Rect2) -> void:
 		var t := float(k) / 21.0
 		pts.append(Vector2(roll.x - t * 420.0, roll.y + 40.0 + t * 46.0 + sin(t * 17.0) * 14.0 * (0.3 + t)))
 	for k in range(pts.size() - 1):
-		b.line(pts[k] + LIGHT * 2.0, pts[k + 1] + LIGHT * 2.0, Color(SHADOW, 0.12), 7.0)
+		b.line(pts[k] + Shade.light * 2.0, pts[k + 1] + Shade.light * 2.0, Color(SHADOW, 0.12), 7.0)
 		b.line(pts[k], pts[k + 1], Color(0.99, 0.99, 0.97), 6.0)
 	for k in range(0, pts.size() - 1, 2):
 		var mid := pts[k].lerp(pts[k + 1], 0.5)
@@ -398,7 +397,7 @@ static func _seats(m: Node2D, b: ShapeBatch, f: Rect2) -> void:
 			if biz:
 				n = 2 if block != 1 else 3
 			var sh := (span.y - span.x) / float(n)
-			b.rect(Rect2(x - 16.0 + LIGHT.x * 6.0, top + span.x + LIGHT.y * 6.0, 34.0, span.y - span.x), Color(SHADOW, 0.16))
+			b.rect(Rect2(x - 16.0 + Shade.light.x * 6.0, top + span.x + Shade.light.y * 6.0, 34.0, span.y - span.x), Color(SHADOW, 0.16))
 			for k in range(n):
 				var sp := Vector2(x, top + span.x + (float(k) + 0.5) * sh)
 				var seed := i * 37 + block * 11 + k
@@ -472,7 +471,7 @@ static func _bins(b: ShapeBatch, f: Rect2) -> void:
 			var x := _row_x(i)
 			var r := Rect2(x - PITCH * 0.5 + 1.0, y, PITCH - 2.0, 14.0)
 			var open := AeroportArt.h(i * 7 + block * 3 + 1) < 0.28
-			b.rect(Rect2(r.position + LIGHT * 5.0, r.size), Color(SHADOW, 0.16))
+			b.rect(Rect2(r.position + Shade.light * 5.0, r.size), Color(SHADOW, 0.16))
 			if open:
 				b.rect(r, Color(0.16, 0.17, 0.20))
 				AeroportArt.box(b, r.get_center() + Vector2(-6.0, 0.0), 0.0, 9.0, 5.0, AeroportArt.pick(AeroportArt.BAGS, i + block))
@@ -501,7 +500,7 @@ static func _havoc(m: Node2D, b: ShapeBatch, f: Rect2) -> void:
 				var sp := Vector2(_row_x(i) - 16.0, top + span.x + (float(k) + 0.5) * SEAT_H)
 				var sw := Vector2(AeroportArt.h(i * 9 + k) * 8.0 - 4.0, AeroportArt.h(i * 5 + k) * 8.0 - 4.0)
 				b.line(sp + Vector2(14.0, 0.0), sp + sw, Color(0.96, 0.96, 0.94, 0.9), 1.2)
-				b.circle(sp + sw + LIGHT * 2.0, 4.6, Color(SHADOW, 0.2))
+				b.circle(sp + sw + Shade.light * 2.0, 4.6, Color(SHADOW, 0.2))
 				b.circle(sp + sw, 4.6, MASK)
 				b.circle(sp + sw, 2.4, MASK.darkened(0.25))
 	# the spill in the north aisle: juice, ice, cans rolled every way
@@ -513,7 +512,7 @@ static func _havoc(m: Node2D, b: ShapeBatch, f: Rect2) -> void:
 		var cp := sp2 + Vector2(AeroportArt.h(k + 50) * 220.0 - 110.0, AeroportArt.h(k + 60) * 100.0 - 50.0)
 		var a := AeroportArt.h(k + 70) * PI
 		var col: Color = [Color(0.82, 0.16, 0.16), Color(0.16, 0.52, 0.30), Color(0.94, 0.94, 0.92), Color(0.96, 0.56, 0.12)][k % 4]
-		AeroportArt.box(b, cp + LIGHT * 2.0, a, 6.5, 3.6, Color(SHADOW, 0.2))
+		AeroportArt.box(b, cp + Shade.light * 2.0, a, 6.5, 3.6, Color(SHADOW, 0.2))
 		AeroportArt.box(b, cp, a, 6.5, 3.6, col)
 		AeroportArt.box(b, cp + Vector2.from_angle(a) * 5.5, a, 1.0, 3.6, STEEL)
 	for k in range(12):
@@ -530,12 +529,12 @@ static func _havoc(m: Node2D, b: ShapeBatch, f: Rect2) -> void:
 		if MAT.grow(10.0).has_point(pp):
 			continue
 		var a2 := AeroportArt.h(k + 120) * PI
-		AeroportArt.box(b, pp + LIGHT * 1.5, a2, 5.0, 3.4, Color(SHADOW, 0.18))
+		AeroportArt.box(b, pp + Shade.light * 1.5, a2, 5.0, 3.4, Color(SHADOW, 0.18))
 		AeroportArt.box(b, pp, a2, 5.0, 3.4, Color(0.86, 0.24, 0.20) if k % 3 != 0 else Color(0.20, 0.44, 0.76))
 		AeroportArt.box(b, pp, a2, 2.0, 3.4, Color(0.98, 0.94, 0.80))
 	# the life vest, inflated, by the second door
 	var vp := Vector2(980.0, top + BLOCK_C.y + 96.0)
-	b.capsule(vp + Vector2(-9.0, -10.0) + LIGHT * 3.0, vp + Vector2(-9.0, 12.0) + LIGHT * 3.0, 8.0, Color(SHADOW, 0.2))
+	b.capsule(vp + Vector2(-9.0, -10.0) + Shade.light * 3.0, vp + Vector2(-9.0, 12.0) + Shade.light * 3.0, 8.0, Color(SHADOW, 0.2))
 	b.capsule(vp + Vector2(-9.0, -10.0), vp + Vector2(-9.0, 12.0), 8.0, VEST)
 	b.capsule(vp + Vector2(9.0, -10.0), vp + Vector2(9.0, 12.0), 8.0, VEST)
 	b.capsule(vp + Vector2(-9.0, -14.0), vp + Vector2(9.0, -14.0), 6.0, VEST.darkened(0.08))
@@ -560,7 +559,7 @@ static func _havoc(m: Node2D, b: ShapeBatch, f: Rect2) -> void:
 
 # where your human waits: the crew's fold-down seat by the door, straps and all
 static func _jump_seat(b: ShapeBatch, p: Vector2) -> void:
-	b.rect(Rect2(p.x - 24.0 + LIGHT.x * 6.0, p.y - 12.0 + LIGHT.y * 6.0, 48.0, 24.0), Color(SHADOW, 0.22))
+	b.rect(Rect2(p.x - 24.0 + Shade.light.x * 6.0, p.y - 12.0 + Shade.light.y * 6.0, 48.0, 24.0), Color(SHADOW, 0.22))
 	b.rect(Rect2(p.x - 24.0, p.y - 13.0, 48.0, 7.0), STEEL_DARK)
 	b.rect(Rect2(p.x - 21.0, p.y - 8.0, 42.0, 19.0), Color(0.16, 0.18, 0.24))
 	b.rect(Rect2(p.x - 19.0, p.y - 6.0, 38.0, 14.0), Color(0.26, 0.30, 0.40))
@@ -604,7 +603,7 @@ static func _bag_to_dig(c: Object, p: Vector2, prog: float, done: bool, seed: in
 	var col := AeroportArt.pick(AeroportArt.BAGS, seed)
 	var open := prog if not done else 1.0
 	var body := Rect2(p - Vector2(22.0, 13.0), Vector2(44.0, 26.0))
-	c.draw_colored_polygon(MillieSide.ellipse(p + LIGHT * 5.0, Vector2(26.0, 15.0)), Color(SHADOW, 0.20))
+	c.draw_colored_polygon(MillieSide.ellipse(p + Shade.light * 5.0, Vector2(26.0, 15.0)), Color(SHADOW, 0.20))
 	# what has come out so far
 	for k in range(int(open * 7.0)):
 		var a := TAU * AeroportArt.h(seed + k * 3) + float(k)
@@ -665,7 +664,7 @@ static func _round(r: Rect2, rad: float) -> PackedVector2Array:
 # the drawers' handles down its side.
 static func _trolley(m: Node2D, c: Object, p: Vector2, seed: int) -> void:
 	var r := Rect2(p - Vector2(17.0, 17.0), Vector2(34.0, 34.0))
-	c.draw_rect(Rect2(r.position + LIGHT * 8.0, r.size), Color(SHADOW, 0.22))
+	c.draw_rect(Rect2(r.position + Shade.light * 8.0, r.size), Color(SHADOW, 0.22))
 	c.draw_rect(r, STEEL_DARK)
 	c.draw_rect(r.grow(-2.0), STEEL)
 	c.draw_rect(Rect2(r.position.x + 2.0, r.position.y + 2.0, 30.0, 3.0), Color(0.90, 0.92, 0.94))
@@ -686,7 +685,7 @@ static func _trolley(m: Node2D, c: Object, p: Vector2, seed: int) -> void:
 static func _carry_on(c: Object, p: Vector2, seed: int, done: bool) -> void:
 	var col := AeroportArt.pick(AeroportArt.BAGS, seed + 2)
 	c.draw_colored_polygon(PackedVector2Array([p + Vector2(-9.0, 4.0), p + Vector2(9.0, 4.0),
-		p + Vector2(9.0, 4.0) + LIGHT * 26.0, p + Vector2(-9.0, 4.0) + LIGHT * 26.0]), Color(SHADOW, 0.16))
+		p + Vector2(9.0, 4.0) + Shade.light * 26.0, p + Vector2(-9.0, 4.0) + Shade.light * 26.0]), Color(SHADOW, 0.16))
 	c.draw_rect(Rect2(p.x - 10.0, p.y - 7.0, 20.0, 14.0), col.darkened(0.3))
 	c.draw_rect(Rect2(p.x - 8.5, p.y - 6.0, 17.0, 11.0), col)
 	c.draw_rect(Rect2(p.x - 8.5, p.y - 6.0, 17.0, 2.5), col.lightened(0.25))
@@ -703,14 +702,14 @@ static func _carry_on(c: Object, p: Vector2, seed: int, done: bool) -> void:
 
 # the airline's blankets and little pillows, in a heap worth a good long sniff
 static func _blankets(c: Object, p: Vector2, seed: int, done: bool) -> void:
-	c.draw_circle(p + LIGHT * 5.0, 19.0, Color(SHADOW, 0.16))
+	c.draw_circle(p + Shade.light * 5.0, 19.0, Color(SHADOW, 0.16))
 	var navy := Color(0.20, 0.26, 0.48)
 	for k in range(5):
 		var a := TAU * float(k) / 5.0 + AeroportArt.h(seed) * 2.0
 		c.draw_circle(p + Vector2.from_angle(a) * 8.0, 10.5, navy.darkened(0.15))
 	for k in range(5):
 		var a2 := TAU * float(k) / 5.0 + AeroportArt.h(seed) * 2.0
-		c.draw_circle(p + Vector2.from_angle(a2) * 8.0 - LIGHT * 2.5, 7.5, navy)
+		c.draw_circle(p + Vector2.from_angle(a2) * 8.0 - Shade.light * 2.5, 7.5, navy)
 		# the blanket stitch along a fold
 		c.draw_line(p + Vector2.from_angle(a2) * 4.0, p + Vector2.from_angle(a2 + 0.5) * 15.0, Color(0.36, 0.44, 0.70), 1.4)
 	for k in range(2):
@@ -723,7 +722,7 @@ static func _blankets(c: Object, p: Vector2, seed: int, done: bool) -> void:
 
 # the galley's ice bucket, set down on the mat: melted enough to drink from
 static func _ice_bucket(c: Object, p: Vector2) -> void:
-	c.draw_circle(p + LIGHT * 5.0, 19.0, Color(SHADOW, 0.22))
+	c.draw_circle(p + Shade.light * 5.0, 19.0, Color(SHADOW, 0.22))
 	c.draw_circle(p, 19.0, STEEL_DARK)
 	c.draw_circle(p, 17.0, STEEL)
 	c.draw_arc(p, 17.0, PI * 1.05, PI * 1.9, 14, Color(0.94, 0.96, 0.98), 2.0)

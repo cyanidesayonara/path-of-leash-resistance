@@ -58,7 +58,7 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 			while rx < 270.0:
 				var rr := 14.0 + fmod(float(rk) * 5.3, 6.0)
 				var ry := gy0 + (-5.0 if rk % 2 == 0 else 5.0)
-				bg.circle(Vector2(rx, ry) + m.LIGHT * 3.0, rr, sh)
+				bg.circle(Vector2(rx, ry) + Shade.light * 3.0, rr, sh)
 				bg.circle(Vector2(rx, ry), rr, Color(0.58, 0.57, 0.54) if rk % 2 == 0 else Color(0.68, 0.67, 0.63))
 				bg.circle(Vector2(rx - 3.0, ry - 3.0), rr * 0.45, Color(0.78, 0.77, 0.73))
 				rx += 18.0
@@ -121,9 +121,9 @@ static func _landmarks(m: Node2D, vt: float, vb: float) -> void:
 		Passeig._access_ramp(m, b, 380.0, 320.0, tw.y, 32.0)
 	# Fòrum Photovoltaic Pergola (La Pèrgola Solar) on the eastern esplanade
 	if Passeig._drawn_window(PERGOLA_RECT, vt, vb):
-		b.rect(Rect2(PERGOLA_RECT.position + m.LIGHT * 22.0, PERGOLA_RECT.size), sh)
+		b.rect(Rect2(PERGOLA_RECT.position + Shade.light * 22.0, PERGOLA_RECT.size), sh)
 		for py: float in [PERGOLA_RECT.position.y + 70.0, PERGOLA_RECT.end.y - 70.0]:
-			b.circle(Vector2(PERGOLA_RECT.position.x + 28.0, py) + m.LIGHT * 8.0, 12.0, sh)
+			b.circle(Vector2(PERGOLA_RECT.position.x + 28.0, py) + Shade.light * 8.0, 12.0, sh)
 			b.circle(Vector2(PERGOLA_RECT.position.x + 28.0, py), 11.0, Color(0.56, 0.58, 0.60))
 		b.rect(PERGOLA_RECT, Color(0.14, 0.22, 0.38))
 		b.rect(PERGOLA_RECT.grow(-6.0), Color(0.18, 0.32, 0.56))
@@ -137,7 +137,7 @@ static func _landmarks(m: Node2D, vt: float, vb: float) -> void:
 			sx += 36.0
 	# Dog Rinse & Shade Station (Duxa de Gossos) before Platja dels Gossos
 	if Passeig._drawn_window(DOG_SHOWER_RECT, vt, vb):
-		b.rect(Rect2(DOG_SHOWER_RECT.position + m.LIGHT * 6.0, DOG_SHOWER_RECT.size), sh)
+		b.rect(Rect2(DOG_SHOWER_RECT.position + Shade.light * 6.0, DOG_SHOWER_RECT.size), sh)
 		b.rect(DOG_SHOWER_RECT, Color(0.56, 0.40, 0.26))
 		b.rect(DOG_SHOWER_RECT.grow(-8.0), Color(0.34, 0.62, 0.74))
 		b.circle(DOG_SHOWER_RECT.get_center(), 18.0, Color(0.22, 0.50, 0.64))

@@ -81,7 +81,6 @@ const CLOTHES: Array[Color] = [Color(0.22, 0.30, 0.48), Color(0.72, 0.24, 0.22),
 	Color(0.92, 0.70, 0.22), Color(0.48, 0.34, 0.58), Color(0.30, 0.32, 0.36), Color(0.94, 0.56, 0.62)]
 const BAGS: Array[Color] = [Color(0.82, 0.20, 0.18), Color(0.18, 0.42, 0.80), Color(0.16, 0.17, 0.20), Color(0.94, 0.74, 0.16),
 	Color(0.22, 0.58, 0.44), Color(0.86, 0.44, 0.66), Color(0.54, 0.56, 0.60)]
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.05, 0.05, 0.08)
 
 
@@ -101,7 +100,7 @@ static func pick(arr: Array, i: int) -> Color:
 static func person(b: ShapeBatch, p: Vector2, dir: float, shirt: Color, hair: Color, skin: Color, swing := 0.0, k := 1.0) -> void:
 	var f := Vector2.from_angle(dir)
 	var s := f.orthogonal()
-	b.circle(p + LIGHT * 5.0 * k, 9.0 * k, Color(SHADOW, 0.20))
+	b.circle(p + Shade.light * 5.0 * k, 9.0 * k, Color(SHADOW, 0.20))
 	if swing != 0.0:
 		# feet, striding
 		b.circle(p + f * 7.0 * swing * k + s * 4.0 * k, 3.4 * k, shirt.darkened(0.55))
@@ -125,7 +124,7 @@ static func box(b: ShapeBatch, p: Vector2, dir: float, half_len: float, half_w: 
 static func roller(b: ShapeBatch, p: Vector2, dir: float, col: Color, k := 1.0) -> void:
 	var f := Vector2.from_angle(dir)
 	var s := f.orthogonal()
-	box(b, p + LIGHT * 3.0, dir, 10.0 * k, 7.0 * k, Color(SHADOW, 0.22))
+	box(b, p + Shade.light * 3.0, dir, 10.0 * k, 7.0 * k, Color(SHADOW, 0.22))
 	b.line(p, p + f * 17.0 * k, Color(0.14, 0.14, 0.16), 2.0 * k)
 	b.line(p + f * 17.0 * k - s * 4.0 * k, p + f * 17.0 * k + s * 4.0 * k, Color(0.14, 0.14, 0.16), 2.4 * k)
 	box(b, p, dir, 10.0 * k, 7.0 * k, col.darkened(0.25))
@@ -195,7 +194,7 @@ static func sitter(b: ShapeBatch, p: Vector2, dir: float, i: int) -> void:
 # radome; `sx` is +1 for a nose pointing east (the west stands), -1 for west.
 static func jet(b: ShapeBatch, nose: Vector2, sx: float, tint: Color) -> void:
 	var at := func(d: float, o: float) -> Vector2: return Vector2(nose.x - sx * d, nose.y + o)
-	var sh := LIGHT * 16.0
+	var sh := Shade.light * 16.0
 	b.capsule(at.call(34.0, 0.0) + sh, at.call(900.0, 0.0) + sh, 34.0, Color(SHADOW, 0.20))
 	for s: float in [-1.0, 1.0]:
 		b.polygon(PackedVector2Array([at.call(150.0, s * 28.0) + sh, at.call(300.0, s * 28.0) + sh,
@@ -232,7 +231,7 @@ static func jet(b: ShapeBatch, nose: Vector2, sx: float, tint: Color) -> void:
 
 # a cone: orange with its white band, and a little shadow
 static func cone(b: ShapeBatch, p: Vector2) -> void:
-	b.circle(p + LIGHT * 3.0, 5.0, Color(SHADOW, 0.2))
+	b.circle(p + Shade.light * 3.0, 5.0, Color(SHADOW, 0.2))
 	b.circle(p, 5.0, HIVIS_ORANGE)
 	b.circle(p, 3.0, PAINT_WHITE)
 	b.circle(p, 1.6, HIVIS_ORANGE)
@@ -242,7 +241,7 @@ static func cone(b: ShapeBatch, p: Vector2) -> void:
 static func dolly(b: ShapeBatch, p: Vector2, dir: float, i: int, loaded := true) -> void:
 	var f := Vector2.from_angle(dir)
 	var s := f.orthogonal()
-	box(b, p + LIGHT * 5.0, dir, 17.0, 11.0, Color(SHADOW, 0.22))
+	box(b, p + Shade.light * 5.0, dir, 17.0, 11.0, Color(SHADOW, 0.22))
 	box(b, p, dir, 17.0, 11.0, STEEL_DARK)
 	box(b, p, dir, 15.0, 9.0, Color(0.26, 0.28, 0.32))
 	if loaded:
@@ -256,7 +255,7 @@ static func dolly(b: ShapeBatch, p: Vector2, dir: float, i: int, loaded := true)
 static func tug(b: ShapeBatch, p: Vector2, dir: float) -> void:
 	var f := Vector2.from_angle(dir)
 	var s := f.orthogonal()
-	box(b, p + LIGHT * 5.0, dir, 15.0, 10.0, Color(SHADOW, 0.24))
+	box(b, p + Shade.light * 5.0, dir, 15.0, 10.0, Color(SHADOW, 0.24))
 	for w: float in [-1.0, 1.0]:
 		box(b, p + f * 9.0 + s * w * 10.0, dir, 4.5, 2.4, Color(0.08, 0.08, 0.09))
 		box(b, p - f * 9.0 + s * w * 10.0, dir, 4.5, 2.4, Color(0.08, 0.08, 0.09))
@@ -322,7 +321,7 @@ static func _stand(m: Node2D, b: ShapeBatch, nose: Vector2, sx: float, label: St
 		cone(b, at.call(118.0, -158.0))
 		var gpu: Vector2 = at.call(40.0, 78.0)
 		b.line(gpu, at.call(46.0, 30.0), Color(0.10, 0.10, 0.12), 2.5)
-		box(b, gpu + LIGHT * 4.0, 0.0, 15.0, 10.0, Color(SHADOW, 0.22))
+		box(b, gpu + Shade.light * 4.0, 0.0, 15.0, 10.0, Color(SHADOW, 0.22))
 		box(b, gpu, 0.0, 15.0, 10.0, PAINT_YELLOW.darkened(0.15))
 		box(b, gpu, 0.0, 11.0, 6.0, PAINT_YELLOW)
 		b.line(gpu + Vector2(-8.0, 0.0), gpu + Vector2(8.0, 0.0), Color(0.20, 0.20, 0.22), 2.0)
@@ -363,14 +362,14 @@ static func _yard(b: ShapeBatch, x0: float, x1: float, y: float, i: int) -> void
 		var cp := Vector2(x0 + 30.0 + float(k) * 52.0, y - 62.0)
 		if h(i * 17 + k) < 0.25:
 			continue
-		box(b, cp + LIGHT * 6.0, 0.0, 20.0, 18.0, Color(SHADOW, 0.22))
+		box(b, cp + Shade.light * 6.0, 0.0, 20.0, 18.0, Color(SHADOW, 0.22))
 		box(b, cp, 0.0, 20.0, 18.0, STEEL_DARK)
 		box(b, cp + Vector2(-1.0, -1.0), 0.0, 18.0, 16.0, STEEL.lightened(h(i + k) * 0.15))
 		b.line(cp + Vector2(-18.0, -6.0), cp + Vector2(18.0, -6.0), STEEL_DARK, 1.2)
 		box(b, cp + Vector2(0.0, 6.0), 0.0, 7.0, 4.0, pick(LIVERIES, i * 3 + k))
 	if i % 2 == 0:
 		var fp := Vector2(lerpf(x0, x1, 0.5), y + 48.0)
-		box(b, fp + LIGHT * 7.0, 0.0, 44.0, 15.0, Color(SHADOW, 0.22))
+		box(b, fp + Shade.light * 7.0, 0.0, 44.0, 15.0, Color(SHADOW, 0.22))
 		b.capsule(fp + Vector2(-22.0, 0.0), fp + Vector2(22.0, 0.0), 15.0, Color(0.88, 0.89, 0.90))
 		b.line(fp + Vector2(-26.0, -5.0), fp + Vector2(26.0, -5.0), PLANE_WHITE, 4.0)
 		b.line(fp + Vector2(-30.0, 9.0), fp + Vector2(30.0, 9.0), PAINT_RED, 3.0)
@@ -388,7 +387,7 @@ static func _yard(b: ShapeBatch, x0: float, x1: float, y: float, i: int) -> void
 static func bridge(b: ShapeBatch, a: Vector2, d: Vector2) -> void:
 	var f := (d - a).normalized()
 	var s := f.orthogonal()
-	var sh := LIGHT * 14.0
+	var sh := Shade.light * 14.0
 	b.line(a + sh, d + sh, Color(SHADOW, 0.20), 30.0)
 	# the leg and its bogie, out to one side of the tunnel
 	var leg := a.lerp(d, 0.62)
@@ -412,7 +411,7 @@ static func bridge(b: ShapeBatch, a: Vector2, d: Vector2) -> void:
 	b.circle(a + sh * 0.6, 21.0, Color(SHADOW, 0.18))
 	b.circle(a, 21.0, FRAME)
 	b.circle(a, 18.0, Color(0.86, 0.87, 0.89))
-	b.circle(a - LIGHT * 5.0, 8.0, Color(0.95, 0.95, 0.96))
+	b.circle(a - Shade.light * 5.0, 8.0, Color(0.95, 0.95, 0.96))
 
 
 static func _west_bridge(i: int) -> Array:
@@ -638,7 +637,7 @@ static func _holdroom(m: Node2D, b: ShapeBatch, i: int, vt: float, vb: float) ->
 	# the gate's number on a blade over the door to the concourse, and a
 	# screen with the flight on it
 	var blade := Rect2(WALL_R + 12.0, dy - 58.0, 84.0, 34.0)
-	b.rect(Rect2(blade.position + LIGHT * 6.0, blade.size), Color(SHADOW, 0.25))
+	b.rect(Rect2(blade.position + Shade.light * 6.0, blade.size), Color(SHADOW, 0.25))
 	b.rect(blade, SIGN_INK)
 	b.rect(Rect2(blade.position, Vector2(34.0, blade.size.y)), SIGN_YELLOW)
 	# a little plane on the yellow: fuselage, wings, tail
@@ -660,7 +659,7 @@ static func _holdroom(m: Node2D, b: ShapeBatch, i: int, vt: float, vb: float) ->
 static func _seat_beam(b: ShapeBatch, x: float, y0: float, y1: float, seed: int) -> void:
 	if y1 - y0 < 24.0:
 		return
-	b.rect(Rect2(x - 20.0 + LIGHT.x * 6.0, y0 + LIGHT.y * 6.0, 40.0, y1 - y0), Color(SHADOW, 0.18))
+	b.rect(Rect2(x - 20.0 + Shade.light.x * 6.0, y0 + Shade.light.y * 6.0, 40.0, y1 - y0), Color(SHADOW, 0.18))
 	b.rect(Rect2(x - 2.0, y0 - 3.0, 4.0, y1 - y0 + 6.0), STEEL)
 	var y := y0
 	var k := 0
@@ -682,7 +681,7 @@ static func _seat_beam(b: ShapeBatch, x: float, y0: float, y1: float, seed: int)
 
 
 static func _plant(b: ShapeBatch, p: Vector2, i: int) -> void:
-	b.circle(p + LIGHT * 6.0, 14.0, Color(SHADOW, 0.2))
+	b.circle(p + Shade.light * 6.0, 14.0, Color(SHADOW, 0.2))
 	b.circle(p, 11.0, STEEL_DARK)
 	b.circle(p, 9.0, Color(0.30, 0.24, 0.18))
 	for k in range(7):
@@ -715,7 +714,7 @@ static func _shop(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	# gondolas across the floor: chocolate, spirits, sunglasses
 	for g in range(4):
 		var gr := Rect2(SHOP.position.x + 44.0, SHOP.position.y + 60.0 + float(g) * 122.0, 96.0, 34.0)
-		b.rect(Rect2(gr.position + LIGHT * 6.0, gr.size), Color(SHADOW, 0.18))
+		b.rect(Rect2(gr.position + Shade.light * 6.0, gr.size), Color(SHADOW, 0.18))
 		b.rect(gr, Color(0.22, 0.20, 0.22))
 		b.rect(gr.grow(-3.0), Color(0.94, 0.92, 0.88))
 		for n in range(8):
@@ -763,7 +762,7 @@ static func _cafe(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 		py += 18.0
 	b.glow(CAFE.get_center() + Vector2(40.0, 0.0), 170.0, Color(1.0, 0.86, 0.56, 0.20), 0.1)
 	var bar := Rect2(CAFE.end.x - 56.0, CAFE.position.y + 16.0, 26.0, CAFE.size.y - 32.0)
-	b.rect(Rect2(bar.position + LIGHT * 6.0, bar.size), Color(SHADOW, 0.2))
+	b.rect(Rect2(bar.position + Shade.light * 6.0, bar.size), Color(SHADOW, 0.2))
 	b.rect(bar, Color(0.24, 0.18, 0.14))
 	b.rect(bar.grow(-3.0), Color(0.92, 0.90, 0.84))
 	# the machine, the cups, a tray of ensaimades under glass
@@ -780,7 +779,7 @@ static func _cafe(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	person(b, Vector2(bar.end.x + 12.0, bar.get_center().y - 20.0), PI, Color(0.20, 0.20, 0.22), pick(HAIR, 3), pick(SKIN, 2))
 	for k in range(3):
 		var tp := Vector2(CAFE.position.x + 48.0 + float(k % 2) * 46.0, CAFE.position.y + 48.0 + float(k) * 82.0)
-		b.circle(tp + LIGHT * 6.0, 15.0, Color(SHADOW, 0.2))
+		b.circle(tp + Shade.light * 6.0, 15.0, Color(SHADOW, 0.2))
 		for c in range(2):
 			var cp := tp + Vector2(0.0, -22.0 if c == 0 else 22.0)
 			b.circle(cp, 7.5, Color(0.26, 0.20, 0.16))
@@ -817,7 +816,7 @@ static func _security(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	for lane in range(3):
 		var ly := -240.0 + float(lane) * 190.0
 		var belt := Rect2(WALL_R + 26.0, ly, 150.0, 30.0)
-		b.rect(Rect2(belt.position + LIGHT * 6.0, belt.size), Color(SHADOW, 0.2))
+		b.rect(Rect2(belt.position + Shade.light * 6.0, belt.size), Color(SHADOW, 0.2))
 		b.rect(belt, STEEL_DARK)
 		b.rect(belt.grow(-3.0), Color(0.16, 0.16, 0.18))
 		var rx := belt.position.x + 6.0
@@ -839,7 +838,7 @@ static func _security(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 				_: b.circle(tp, 6.0, pick(CLOTHES, lane + k))
 		# the scanner's hood over the belt, its lead curtain, the screen
 		var hood := Rect2(belt.position.x + 92.0, belt.position.y - 8.0, 44.0, 46.0)
-		b.rect(Rect2(hood.position + LIGHT * 8.0, hood.size), Color(SHADOW, 0.22))
+		b.rect(Rect2(hood.position + Shade.light * 8.0, hood.size), Color(SHADOW, 0.22))
 		b.rect(hood, Color(0.86, 0.87, 0.88))
 		b.rect(Rect2(hood.position, Vector2(hood.size.x, 6.0)), Color(0.96, 0.96, 0.97))
 		b.rect(Rect2(hood.position.x, hood.position.y + 8.0, 4.0, 30.0), Color(0.14, 0.14, 0.16))
@@ -855,7 +854,7 @@ static func _security(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	# where the water goes
 	for k in range(2):
 		var bp := Vector2(WALL_R + 26.0 + float(k) * 24.0, top + 34.0)
-		b.circle(bp + LIGHT * 5.0, 10.0, Color(SHADOW, 0.2))
+		b.circle(bp + Shade.light * 5.0, 10.0, Color(SHADOW, 0.2))
 		b.circle(bp, 10.0, STEEL_DARK)
 		b.circle(bp, 8.0, Color(0.56, 0.78, 0.92) if k == 0 else Color(0.20, 0.20, 0.22))
 	_partition(b, top, bot, -120.0, 40.0)
@@ -880,7 +879,7 @@ static func _between_rooms(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> vo
 			var n := 0
 			while vy + 40.0 < sp.x:
 				var vr := Rect2(WALL_R - 22.0, vy, 22.0, 36.0)
-				b.rect(Rect2(vr.position + LIGHT * 5.0, vr.size), Color(SHADOW, 0.2))
+				b.rect(Rect2(vr.position + Shade.light * 5.0, vr.size), Color(SHADOW, 0.2))
 				var body: Color = [Color(0.80, 0.16, 0.16), Color(0.16, 0.36, 0.70), Color(0.94, 0.94, 0.92)][(k + n) % 3]
 				b.rect(vr, body)
 				b.rect(Rect2(vr.position.x + 2.0, vr.position.y + 3.0, 6.0, 30.0), Color(0.12, 0.13, 0.16))
@@ -909,7 +908,7 @@ static func _jet_bridge_walls(b: ShapeBatch, vt: float, vb: float) -> void:
 		_apron_crew(b, -1.0)
 	for side: float in [-1.0, 1.0]:
 		var x := WALL_L - 22.0 if side < 0.0 else WALL_R
-		b.rect(Rect2(x + LIGHT.x * 14.0, top, 22.0, bot - top), Color(SHADOW, 0.18))
+		b.rect(Rect2(x + Shade.light.x * 14.0, top, 22.0, bot - top), Color(SHADOW, 0.18))
 		b.rect(Rect2(x, top, 22.0, bot - top), FRAME)
 		b.rect(Rect2(x + 3.0, top, 16.0, bot - top), Color(0.82, 0.83, 0.85))
 		b.rect(Rect2(x + 5.0, top, 4.0, bot - top), Color(0.93, 0.93, 0.94))
@@ -934,7 +933,7 @@ static func _apron_crew(b: ShapeBatch, side: float) -> void:
 	if side < 0.0:
 		# a catering truck backed up, its box raised on the scissor lift
 		var tp := Vector2(250.0, -4860.0)
-		box(b, tp + LIGHT * 12.0, 0.0, 52.0, 22.0, Color(SHADOW, 0.22))
+		box(b, tp + Shade.light * 12.0, 0.0, 52.0, 22.0, Color(SHADOW, 0.22))
 		box(b, tp, 0.0, 52.0, 22.0, STEEL_DARK)
 		box(b, tp + Vector2(6.0, 0.0), 0.0, 44.0, 20.0, PLANE_WHITE)
 		b.line(tp + Vector2(-34.0, -14.0), tp + Vector2(46.0, -14.0), LIVERIES[0], 5.0)
@@ -1135,7 +1134,7 @@ static func _queue(b: ShapeBatch, vt: float, vb: float) -> void:
 		for k in range(n):
 			var p0 := a.lerp(c, float(k) / float(n))
 			var p1 := a.lerp(c, float(k + 1) / float(n))
-			b.line(p0 + LIGHT * 7.0, p1 + LIGHT * 7.0, Color(SHADOW, 0.14), 4.0)
+			b.line(p0 + Shade.light * 7.0, p1 + Shade.light * 7.0, Color(SHADOW, 0.14), 4.0)
 			b.line(p0, p1, BELT_RED.darkened(0.25), 5.0)
 			b.line(p0, p1, BELT_RED, 3.4)
 		for k in range(n + 1):
@@ -1155,11 +1154,11 @@ static func _queue(b: ShapeBatch, vt: float, vb: float) -> void:
 
 # a queue post: weighted base, chrome post, the belt's cassette on top
 static func stanchion(b: ShapeBatch, p: Vector2) -> void:
-	b.circle(p + LIGHT * 4.0, 8.0, Color(SHADOW, 0.22))
+	b.circle(p + Shade.light * 4.0, 8.0, Color(SHADOW, 0.22))
 	b.circle(p, 8.0, Color(0.16, 0.16, 0.18))
 	b.circle(p, 6.4, Color(0.26, 0.27, 0.30))
 	b.circle(p, 3.6, STEEL)
-	b.circle(p - LIGHT * 1.2, 1.6, Color(0.96, 0.96, 0.98))
+	b.circle(p - Shade.light * 1.2, 1.6, Color(0.96, 0.96, 0.98))
 
 
 # what stands on the floor and never moves: the desks, the two islands, the
@@ -1210,7 +1209,7 @@ static func _perfume(m: Node2D, b: ShapeBatch, r: Rect2) -> void:
 	b.polygon(m.round_rect_pts(r.grow(-3.0), 5.0), Color(0.96, 0.94, 0.95))
 	for tier in range(3):
 		var tr := r.grow(-8.0 - float(tier) * 9.0)
-		b.rect(Rect2(tr.position + LIGHT * 2.5, tr.size), Color(SHADOW, 0.14))
+		b.rect(Rect2(tr.position + Shade.light * 2.5, tr.size), Color(SHADOW, 0.14))
 		b.rect(tr, Color(0.80, 0.90, 0.95, 0.75))
 		b.rect(Rect2(tr.position, Vector2(tr.size.x, 1.5)), Color(1.0, 1.0, 1.0, 0.9))
 		var n := 7 - tier * 2
@@ -1281,7 +1280,7 @@ static func _carousel(m: Node2D, b: ShapeBatch, r: Rect2) -> void:
 # A hanging sign seen from below-and-above at once, as the game's signs are:
 # the board laid flat, its two drop rods, a shadow on the floor far beneath.
 static func hanging_sign(m: Node2D, c: CanvasItem, r: Rect2, fill: Color) -> void:
-	c.draw_rect(Rect2(r.position + LIGHT * 26.0, r.size), Color(SHADOW, 0.10))
+	c.draw_rect(Rect2(r.position + Shade.light * 26.0, r.size), Color(SHADOW, 0.10))
 	c.draw_rect(Rect2(r.position.x + 8.0, r.position.y - 7.0, 3.0, 7.0), STEEL_DARK)
 	c.draw_rect(Rect2(r.end.x - 11.0, r.position.y - 7.0, 3.0, 7.0), STEEL_DARK)
 	c.draw_rect(r, SIGN_INK)
@@ -1315,7 +1314,7 @@ static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
 			c.draw_rect(Rect2(board.position.x + 124.0, ry, 18.0, 5.0), Color(0.94, 0.30, 0.24) if late else Color(0.36, 0.86, 0.50))
 	# the security arch you come in under
 	var arch := Rect2(WALL_L, SECURITY_Y - 14.0, WALL_R - WALL_L, 28.0)
-	c.draw_rect(Rect2(arch.position + LIGHT * 20.0, arch.size), Color(SHADOW, 0.12))
+	c.draw_rect(Rect2(arch.position + Shade.light * 20.0, arch.size), Color(SHADOW, 0.12))
 	c.draw_rect(arch, FRAME)
 	c.draw_rect(arch.grow_individual(0.0, -3.0, 0.0, -3.0), Color(0.90, 0.91, 0.92))
 	c.draw_rect(Rect2(arch.position.x, arch.position.y + 3.0, arch.size.x, 4.0), Color(0.98, 0.98, 0.99))

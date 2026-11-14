@@ -44,7 +44,7 @@ static func _draw_wood(m: Node2D, vt: float, vb: float) -> void:
 				var r := 30.0 + h * 14.0
 				b.circle(Vector2(cx, cy) + Vector2(3, 4), r, Color(0.10, 0.17, 0.10))
 				b.circle(Vector2(cx, cy), r * 0.9, Color(0.17, 0.29, 0.16) if (row + k) % 3 != 0 else Color(0.20, 0.31, 0.15))
-				b.circle(Vector2(cx, cy) - m.LIGHT * r * 0.35, r * 0.42, Color(0.25, 0.38, 0.20))
+				b.circle(Vector2(cx, cy) - Shade.light * r * 0.35, r * 0.42, Color(0.25, 0.38, 0.20))
 			# undergrowth and a trunk or two right on the line
 			var hu := fmod(absf(sin(float(row) * 78.233 + side) * 43758.5453), 1.0)
 			b.circle(Vector2(line + side * 4.0, sy + hu * step), 13.0 + hu * 6.0, Color(0.19, 0.30, 0.17))
@@ -59,7 +59,7 @@ static func _draw_wood(m: Node2D, vt: float, vb: float) -> void:
 # out on the trail, moss on the top, a shadow under it.
 static func _draw_fallen_log(m: Node2D, r: Rect2) -> void:
 	var b := ShapeBatch.new()
-	b.rect(Rect2(r.position + m.LIGHT * 7.0, r.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.28))
+	b.rect(Rect2(r.position + Shade.light * 7.0, r.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.28))
 	b.rect(r, Color(0.36, 0.26, 0.17))
 	b.rect(Rect2(r.position.x, r.position.y, r.size.x, 6.0), Color(0.46, 0.34, 0.22))
 	for k in range(4):
@@ -145,7 +145,7 @@ static func _draw_stream(m: Node2D, vt: float, vb: float) -> void:
 	var e: Vector2 = m.walk_edges(sy)
 	var bh: float = m.LevelBuild.TRAIL_BRIDGE_HALF
 	var deck := Rect2(e.x - 18.0, sy - bh, e.y - e.x + 36.0, bh * 2.0)
-	wb.rect(Rect2(deck.position + m.LIGHT * 8.0, deck.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
+	wb.rect(Rect2(deck.position + Shade.light * 8.0, deck.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
 	wb.rect(Rect2(deck.position.x + 8.0, sy - half, deck.size.x - 16.0, half * 2.0), Color(0.12, 0.20, 0.22, 0.45))
 	wb.rect(Rect2(deck.position.x - 4.0, sy - bh - 2.0, 10.0, bh * 2.0 + 4.0), Color(0.42, 0.38, 0.32))
 	wb.rect(Rect2(deck.end.x - 6.0, sy - bh - 2.0, 10.0, bh * 2.0 + 4.0), Color(0.42, 0.38, 0.32))
@@ -204,7 +204,7 @@ static func _draw_edges(m: Node2D, left: PackedVector2Array, right: PackedVector
 			elif hr > 0.72:
 				# wild saffron milk cap mushrooms (pinetells / rovellons) in pine needles
 				var mq := a.lerp(c, (hr - 0.72) * 3.5) + Vector2(out * 24.0, 0.0)
-				b.circle(mq + m.LIGHT * 1.5, 4.5, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.2))
+				b.circle(mq + Shade.light * 1.5, 4.5, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.2))
 				b.circle(mq, 4.2, Color(0.86, 0.44, 0.16))
 				b.circle(mq, 3.0, Color(0.76, 0.36, 0.12))
 				b.circle(mq + Vector2(-0.8, -0.8), 1.2, Color(0.96, 0.65, 0.30))
@@ -214,7 +214,7 @@ static func _draw_edges(m: Node2D, left: PackedVector2Array, right: PackedVector
 			elif hr > 0.40 and hr < 0.52:
 				# a stone pine cone (pinya) lying on the forest margin
 				var pq := a.lerp(c, (hr - 0.40) * 8.0) + Vector2(out * 18.0, 0.0)
-				b.circle(pq + m.LIGHT * 1.5, 3.5, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.2))
+				b.circle(pq + Shade.light * 1.5, 3.5, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.2))
 				b.circle(pq, 3.2, Color(0.36, 0.24, 0.14))
 				b.line(pq + Vector2(-2.0, 0.0), pq + Vector2(2.0, 0.0), Color(0.52, 0.38, 0.24), 1.4)
 				b.line(pq + Vector2(0.0, -2.0), pq + Vector2(0.0, 2.0), Color(0.52, 0.38, 0.24), 1.4)
@@ -235,11 +235,11 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 static func draw_trough_prop(m: Node2D, c: Object, p: Vector2) -> void:
 	# a forest spring, a font: a stone back with a pipe, the water
 	# falling from it into a round stone basin, moss on the stones
-	c.draw_circle(p + m.LIGHT * 5.0, 22.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
+	c.draw_circle(p + Shade.light * 5.0, 22.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
 	c.draw_rect(Rect2(p.x - 16.0, p.y - 26.0, 32.0, 12.0), Color(0.50, 0.47, 0.42))
 	c.draw_rect(Rect2(p.x - 16.0, p.y - 26.0, 32.0, 3.0), Color(0.64, 0.61, 0.56))
 	c.draw_circle(p, 20.0, Color(0.46, 0.43, 0.38))
-	c.draw_circle(p - m.LIGHT * 3.0, 18.0, Color(0.58, 0.55, 0.49))
+	c.draw_circle(p - Shade.light * 3.0, 18.0, Color(0.58, 0.55, 0.49))
 	c.draw_circle(p, 14.0, Color(0.20, 0.34, 0.40))
 	c.draw_circle(p + Vector2(-3.0, -3.0), 9.0, Color(0.32, 0.50, 0.58))
 	for mo: Vector2 in [Vector2(-14, 8), Vector2(12, 12), Vector2(-10, -24)]:

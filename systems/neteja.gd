@@ -107,7 +107,7 @@ static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 			continue
 		var sz: Vector2 = LevelBuild.NETEJA_DUMPSTER
 		var r := Rect2(d - sz * 0.5, sz)
-		b.rect(Rect2(r.position + m.LIGHT * 12.0, r.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
+		b.rect(Rect2(r.position + Shade.light * 12.0, r.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
 
 		# Cuidem Barcelona selective recycling category:
 		# 0: Envasos (Yellow), 1: Paper (Blue), 2: Orgànica (Brown), 3: Resta (Grey), 4: Vidre (Green)

@@ -17,7 +17,6 @@ const ShapeBatch := preload("res://systems/shape_batch.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 const Arrival := preload("res://systems/arrival.gd")
 
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.22)
 
 # --- colors ------------------------------------------------------------------
@@ -225,7 +224,7 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 	for pp: Vector2 in PINES:
 		if pp.y < top - PINE_R * 2.0 or pp.y > bot + PINE_R * 2.0:
 			continue
-		b.circle(pp + LIGHT * 10.0, PINE_R + 4.0, SHADOW)
+		b.circle(pp + Shade.light * 10.0, PINE_R + 4.0, SHADOW)
 		b.circle(pp, 6.0, PINE_TRUNK)
 		b.circle(pp + Vector2(-8.0, -6.0), PINE_R * 0.7, PINE_NEEDLES)
 		b.circle(pp + Vector2(9.0, -2.0), PINE_R * 0.75, PINE_NEEDLES)
@@ -240,14 +239,14 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 		b.rect(Rect2(bx - 14.0, by, 8.0, 60.0), Color(0.42, 0.40, 0.36))
 		b.rect(Rect2(bx - 8.0, by, 16.0, 60.0), BALUSTRADE_STONE)
 		b.circle(Vector2(bx, by + 30.0), 10.0, BALUSTRADE_STONE)
-		b.circle(Vector2(bx + LIGHT.x * 3.0, by + 30.0 + LIGHT.y * 3.0), 10.0, BALUSTRADE_SHADOW)
+		b.circle(Vector2(bx + Shade.light.x * 3.0, by + 30.0 + Shade.light.y * 3.0), 10.0, BALUSTRADE_SHADOW)
 		by -= 70.0
 
 	# Panoramic viewfinders (coin binoculars)
 	for vf: Vector2 in VIEWFINDERS:
 		if vf.y < top - 20.0 or vf.y > bot + 20.0:
 			continue
-		b.circle(vf + LIGHT * 4.0, 14.0, SHADOW)
+		b.circle(vf + Shade.light * 4.0, 14.0, SHADOW)
 		b.circle(vf, 12.0, BALUSTRADE_STONE)
 		b.circle(vf, 6.0, VIEWFINDER_METAL)
 		b.line(vf + Vector2(-6.0, -4.0), vf + Vector2(-6.0, 6.0), VIEWFINDER_METAL, 4.0)
@@ -257,7 +256,7 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 
 	# the cotton candy cart with the prize
 	if PRIZE.y > top - 30.0 and PRIZE.y < bot + 30.0:
-		b.rect(Rect2(PRIZE.x - 22.0 + LIGHT.x * 4.0, PRIZE.y - 14.0 + LIGHT.y * 4.0, 44.0, 28.0), SHADOW)
+		b.rect(Rect2(PRIZE.x - 22.0 + Shade.light.x * 4.0, PRIZE.y - 14.0 + Shade.light.y * 4.0, 44.0, 28.0), SHADOW)
 		b.rect(Rect2(PRIZE.x - 20.0, PRIZE.y - 12.0, 40.0, 24.0), FUNICULAR_CREAM)
 		b.rect(Rect2(PRIZE.x - 22.0, PRIZE.y - 14.0, 44.0, 6.0), Color(0.88, 0.22, 0.20))
 		b.circle(PRIZE + Vector2(-6.0, -2.0), 8.0, COTTON_CANDY_PINK)
@@ -281,7 +280,7 @@ static func shown_carriage_y(m: Node2D) -> float:
 # buffer stop at the foot of the rails.
 static func draw_station(b: ShapeBatch, c: Vector2) -> void:
 	var plat := Rect2(c.x - 30.0, c.y - 22.0, TRACK_X - TRACK_W * 0.5 - (c.x - 30.0), 44.0)
-	b.rect(Rect2(plat.position + LIGHT * 5.0, plat.size), SHADOW)
+	b.rect(Rect2(plat.position + Shade.light * 5.0, plat.size), SHADOW)
 	b.rect(plat, BALUSTRADE_STONE)
 	b.rect(Rect2(plat.position.x, plat.end.y - 5.0, plat.size.x, 5.0), BALUSTRADE_STONE.darkened(0.25))
 	# the yellow edge line along the track side
@@ -301,7 +300,7 @@ static func draw_moving(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	var car_y := shown_carriage_y(m)
 	if car_y > vt - CAR_L and car_y < vb + CAR_L:
 		var body := Rect2(TRACK_X - CAR_W * 0.5, car_y - CAR_L * 0.5, CAR_W, CAR_L)
-		b.rect(Rect2(body.position + LIGHT * 6.0, body.size), SHADOW)
+		b.rect(Rect2(body.position + Shade.light * 6.0, body.size), SHADOW)
 		b.rect(body, FUNICULAR_RED)
 		b.rect(body.grow_individual(-4.0, -8.0, -4.0, -8.0), FUNICULAR_CREAM)
 		for wi in range(5):
@@ -312,7 +311,7 @@ static func draw_moving(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 		var alt := fmod(AnimClock.msec() / 1000.0 * 3.0, 2.0) < 1.0
 		var off := Color(0.35, 0.1, 0.1)
 		var on := Color(0.95, 0.2, 0.2)
-		b.circle(SIGNAL_POS + LIGHT * 3.0, 8.0, SHADOW)
+		b.circle(SIGNAL_POS + Shade.light * 3.0, 8.0, SHADOW)
 		b.circle(SIGNAL_POS, 7.0, Color(0.18, 0.18, 0.20))
 		b.circle(SIGNAL_POS + Vector2(-4, 0), 3.0, on if lit and alt else off)
 		b.circle(SIGNAL_POS + Vector2(4, 0), 3.0, on if lit and not alt else off)

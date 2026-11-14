@@ -26,7 +26,6 @@ const EventFeed := preload("res://hud/event_feed.gd")
 
 const OVERHEAD_FOLLOWS_CAMERA := true
 const HALF := 300.0
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.24)
 
 # zone boundaries, south to north
@@ -201,7 +200,7 @@ static func draw_column(m: Node2D, wc: Object, p: Vector2) -> void:
 		return
 	# a gate pier: dressed stone, a cap and an iron lantern on it
 	var b: ShapeBatch = wc as ShapeBatch if wc is ShapeBatch else ShapeBatch.new(wc)
-	b.rect(Rect2(p + Vector2(-16.0, -16.0) + LIGHT * 8.0, Vector2(32.0, 32.0)), SHADOW)
+	b.rect(Rect2(p + Vector2(-16.0, -16.0) + Shade.light * 8.0, Vector2(32.0, 32.0)), SHADOW)
 	b.rect(Rect2(p - Vector2(16.0, 16.0), Vector2(32.0, 32.0)), Color(0.62, 0.58, 0.52))
 	b.rect(Rect2(p - Vector2(12.0, 12.0), Vector2(24.0, 24.0)), Color(0.74, 0.70, 0.64))
 	b.circle(p, 7.0, Color(0.14, 0.15, 0.17))
@@ -366,7 +365,7 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 	for r: Rect2 in ARC_PIERS:
 		if r.end.y < y0 or r.position.y > y1:
 			continue
-		b.rect(Rect2(r.position + LIGHT * 14.0, r.size), SHADOW)
+		b.rect(Rect2(r.position + Shade.light * 14.0, r.size), SHADOW)
 		b.rect(r.grow(6.0), Color(0.70, 0.66, 0.58))
 		b.rect(r, Color(0.66, 0.30, 0.20))
 		var by := r.position.y + 6.0
@@ -453,7 +452,7 @@ static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 				# palms on the carriageway's verge
 				if row % 3 == 0:
 					var pp := Vector2(xa + side * 54.0, ym)
-					b.circle(pp + LIGHT * 10.0, 24.0, SHADOW)
+					b.circle(pp + Shade.light * 10.0, 24.0, SHADOW)
 					for i in range(7):
 						var d := Vector2.from_angle(float(i) * TAU / 7.0 + float(row))
 						b.line(pp, pp + d * 30.0, Color(0.22, 0.48, 0.24), 6.0)
@@ -503,7 +502,7 @@ static func _draw_castle(b: ShapeBatch, y0: float, y1: float) -> void:
 	var r := CASTLE
 	if r.end.y < y0 or r.position.y > y1:
 		return
-	b.rect(Rect2(r.position + LIGHT * 24.0, r.size), SHADOW)
+	b.rect(Rect2(r.position + Shade.light * 24.0, r.size), SHADOW)
 	b.rect(r, Color(0.62, 0.28, 0.20))
 	b.rect(r.grow(-26.0), Color(0.72, 0.42, 0.30))
 	b.rect(r.grow(-70.0), Color(0.58, 0.54, 0.48))
@@ -536,7 +535,7 @@ static func _draw_hivernacle(b: ShapeBatch, y0: float, y1: float) -> void:
 	var r := HIVERNACLE
 	if r.end.y < y0 or r.position.y > y1:
 		return
-	b.rect(Rect2(r.position + LIGHT * 18.0, r.size), SHADOW)
+	b.rect(Rect2(r.position + Shade.light * 18.0, r.size), SHADOW)
 	b.rect(r, Color(0.20, 0.24, 0.24))
 	var halls: Array[Rect2] = [
 		Rect2(r.position.x + 10.0, r.position.y + 10.0, r.size.x - 20.0, 200.0),
@@ -585,7 +584,7 @@ static func _draw_lake(b: ShapeBatch, y0: float, y1: float) -> void:
 		b.circle(lp + Vector2(3.0, -2.0), 2.5, Color(0.96, 0.72, 0.80))
 	# the islet with its little round temple
 	var isl := Vector2(sx + 420.0, -2720.0)
-	b.circle(isl + LIGHT * 10.0, 90.0, Color(0.10, 0.20, 0.26, 0.3))
+	b.circle(isl + Shade.light * 10.0, 90.0, Color(0.10, 0.20, 0.26, 0.3))
 	b.circle(isl, 90.0, Color(0.38, 0.54, 0.28))
 	b.circle(isl, 36.0, Color(0.82, 0.78, 0.70))
 	b.circle(isl, 26.0, Color(0.70, 0.66, 0.58))
@@ -622,7 +621,7 @@ static func _draw_cascada(b: ShapeBatch, y0: float, y1: float) -> void:
 		while bx < fall_x:
 			b.circle(Vector2(bx, yy), 3.0, Color(0.92, 0.89, 0.82))
 			bx += 14.0
-	b.rect(Rect2(mon.position + LIGHT * 26.0, mon.size), SHADOW)
+	b.rect(Rect2(mon.position + Shade.light * 26.0, mon.size), SHADOW)
 	b.rect(mon, Color(0.64, 0.58, 0.48))
 	b.rect(mon.grow(-14.0), Color(0.80, 0.75, 0.63))
 	b.rect(mon.grow(-44.0), Color(0.72, 0.67, 0.56))
@@ -647,7 +646,7 @@ static func _draw_cascada(b: ShapeBatch, y0: float, y1: float) -> void:
 	for i in range(12):
 		var rp := Vector2(fall_x + rng.randf_range(4.0, 66.0), c.y + rng.randf_range(-160.0, 160.0))
 		b.circle(rp, rng.randf_range(12.0, 22.0), Color(0.50, 0.42, 0.32))
-		b.circle(rp - LIGHT * 4.0, rng.randf_range(6.0, 10.0), Color(0.62, 0.54, 0.42))
+		b.circle(rp - Shade.light * 4.0, rng.randf_range(6.0, 10.0), Color(0.62, 0.54, 0.42))
 	for i in range(18):
 		var fp := Vector2(fall_x + 74.0 + rng.randf_range(0.0, 30.0), c.y + rng.randf_range(-170.0, 170.0))
 		b.circle(fp, rng.randf_range(6.0, 12.0), Color(0.96, 0.99, 1.0, 0.85))
@@ -661,7 +660,7 @@ static func _draw_cascada(b: ShapeBatch, y0: float, y1: float) -> void:
 			sx += 10.0
 	# the Quadriga de l'Aurora: the chariot, Aurora in it, four horses fanned out ahead
 	var q := Vector2(mon.get_center().x - 10.0, c.y)
-	b.circle(q + LIGHT * 14.0, 70.0, SHADOW)
+	b.circle(q + Shade.light * 14.0, 70.0, SHADOW)
 	b.circle(q, 44.0, Color(0.56, 0.50, 0.40))
 	var gold := Color(0.86, 0.68, 0.24)
 	var gold_lit := Color(0.98, 0.86, 0.44)
@@ -696,16 +695,16 @@ static func _draw_zoo(b: ShapeBatch, y0: float, y1: float) -> void:
 	# acacia crowns and a feeding rack in the giraffe yard
 	for ap: Vector2 in [Vector2(1180.0, -4380.0), Vector2(1240.0, -4680.0)]:
 		if ap.y > top - 80.0 and ap.y < bot + 80.0:
-			b.circle(ap + LIGHT * 10.0, 60.0, SHADOW)
+			b.circle(ap + Shade.light * 10.0, 60.0, SHADOW)
 			b.circle(ap, 60.0, Color(0.36, 0.52, 0.26))
-			b.circle(ap - LIGHT * 10.0, 36.0, Color(0.46, 0.62, 0.32))
+			b.circle(ap - Shade.light * 10.0, 36.0, Color(0.46, 0.62, 0.32))
 
 
 static func _draw_parlament(b: ShapeBatch, y0: float, y1: float) -> void:
 	var r := Rect2(-380.0, -4760.0, 640.0, 420.0)
 	if r.end.y < y0 or r.position.y > y1:
 		return
-	b.rect(Rect2(r.position + LIGHT * 22.0, r.size), SHADOW)
+	b.rect(Rect2(r.position + Shade.light * 22.0, r.size), SHADOW)
 	b.rect(r, Color(0.84, 0.80, 0.70))
 	b.rect(r.grow(-30.0), Color(0.56, 0.58, 0.62))
 	b.rect(Rect2(r.end.x - 40.0, r.position.y, 40.0, r.size.y), Color(0.90, 0.86, 0.76))
@@ -751,7 +750,7 @@ static func _draw_giraffes(b: ShapeBatch, vt: float, vb: float, t: float) -> voi
 			continue
 		var sway := sin(t * 0.7 + float(i) * 2.1) * 0.25
 		# the body in the yard, the neck reaching over the wall toward the path
-		b.polygon(BossMamut._ellipse(g + LIGHT * 18.0, Vector2.LEFT, 46.0, 26.0, 14), SHADOW)
+		b.polygon(BossMamut._ellipse(g + Shade.light * 18.0, Vector2.LEFT, 46.0, 26.0, 14), SHADOW)
 		b.polygon(BossMamut._ellipse(g, Vector2.LEFT, 44.0, 24.0, 14), Color(0.88, 0.66, 0.32))
 		for k in range(6):
 			b.circle(g + Vector2(-26.0 + float(k) * 11.0, float((k * 7) % 11) - 6.0), 5.0, Color(0.56, 0.34, 0.16))
@@ -818,7 +817,7 @@ static func draw_overhead(m: Node2D, wc: Object) -> void:
 		return
 	var b := ShapeBatch.new()
 	var r := Rect2(296.0, ARC_Y - 70.0, 688.0, 90.0)
-	b.rect(Rect2(r.position + LIGHT * 20.0, r.size), Color(0.04, 0.03, 0.07, 0.26))
+	b.rect(Rect2(r.position + Shade.light * 20.0, r.size), Color(0.04, 0.03, 0.07, 0.26))
 	b.rect(r, Color(0.62, 0.28, 0.19))
 	b.rect(r.grow(-8.0), Color(0.72, 0.36, 0.24))
 	# the stone frieze along its face and the bats' crown at the middle

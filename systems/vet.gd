@@ -13,7 +13,6 @@ const Letters := preload("res://world/sign_letters.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.18)
 
 # --- colors ------------------------------------------------------------------

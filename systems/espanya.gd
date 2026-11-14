@@ -28,7 +28,6 @@ const NightFronts := preload("res://world/night_fronts.gd")
 
 # a bump costs your human this much of their patience (0..1, entities/human.gd)
 const BUMP_PATIENCE := 0.08
-const LIGHT := Vector2(0.5, 0.866)
 # the overhead layer redraws this walk at 30 fps: its overhead follows the camera
 const OVERHEAD_FOLLOWS_CAMERA := true
 const SHADOW := Color(0.04, 0.05, 0.07, 0.22)
@@ -358,7 +357,7 @@ static func draw_column(_m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
 	if _is_column(p):
 		# an ionic column from above: its long shadow, the square plinth, the
 		# fluted drum, the capital's abacus with a volute at each corner
-		wc.capsule(p + Vector2(4.0, 6.0), p + LIGHT * 46.0, 12.0, SHADOW)
+		wc.capsule(p + Vector2(4.0, 6.0), p + Shade.light * 46.0, 12.0, SHADOW)
 		wc.rect(Rect2(p - Vector2(19.0, 19.0), Vector2(38.0, 38.0)), PALACE_STONE_DARK)
 		wc.rect(Rect2(p - Vector2(16.0, 16.0), Vector2(32.0, 32.0)), BALUSTRADE_STONE)
 		wc.circle(p, 14.0, PALACE_STONE_DARK)
@@ -779,7 +778,7 @@ static func _night_dressing(m: Node2D, b: ShapeBatch, top: float, bot: float) ->
 					var lp := Vector2((WALL_L - 34.0) if side < 0.0 else (WALL_R + 34.0), ly)
 					if g > 0.0:
 						b.glow(lp, 96.0, _lit(m, Color(WARM.r, WARM.g, WARM.b, 0.30 * g)), 0.08)
-					b.circle(lp + LIGHT * 4.0, 5.0, SHADOW)
+					b.circle(lp + Shade.light * 4.0, 5.0, SHADOW)
 					b.circle(lp, 4.0, LAMP_IRON)
 					b.circle(lp, 2.4, _lit(m, Color(1.0, 0.95, 0.82)) if g > 0.0 else HALL_PARAPET)
 			ly += 140.0
@@ -825,7 +824,7 @@ static func _night_dressing(m: Node2D, b: ShapeBatch, top: float, bot: float) ->
 					var lp := Vector2((WALL_L - 46.0) if side < 0.0 else (WALL_R + 46.0), gy)
 					if g > 0.0:
 						b.glow(lp, 84.0, _lit(m, Color(WARM.r, WARM.g, WARM.b, 0.26 * g)), 0.08)
-					b.circle(lp + LIGHT * 4.0, 5.0, SHADOW)
+					b.circle(lp + Shade.light * 4.0, 5.0, SHADOW)
 					b.circle(lp, 4.0, LAMP_IRON)
 					b.circle(lp, 2.4, _lit(m, Color(1.0, 0.95, 0.82)) if g > 0.0 else HALL_PARAPET)
 			gy += 180.0
@@ -844,7 +843,7 @@ static func _night_dressing(m: Node2D, b: ShapeBatch, top: float, bot: float) ->
 static func _bullring(m: Node2D, b: ShapeBatch, g: float) -> void:
 	var c := BULLRING_C
 	var r := BULLRING_R
-	b.circle(c + LIGHT * 18.0, r + 4.0, SHADOW)
+	b.circle(c + Shade.light * 18.0, r + 4.0, SHADOW)
 	b.circle(c, r + 18.0, PLAZA_DARK)
 	b.circle(c, r, BULLRING_BRICK)
 	b.circle(c, r - 16.0, BULLRING_BRICK.darkened(0.12))
@@ -896,7 +895,7 @@ static func _hotel(m: Node2D, b: ShapeBatch, g: float) -> void:
 # a person from above: a shadow, shoulders in their coat, a head; `face` is
 # the way they look
 static func _person(b: ShapeBatch, p: Vector2, coat: Color, face: Vector2) -> void:
-	b.circle(p + LIGHT * 3.0, 7.4, SHADOW)
+	b.circle(p + Shade.light * 3.0, 7.4, SHADOW)
 	b.circle(p, 7.0, coat)
 	b.circle(p - face * 1.0, 5.4, coat.lightened(0.12))
 	b.circle(p + face * 1.6, 4.0, Color(0.30, 0.22, 0.16) if int(absf(p.x + p.y)) % 3 == 0 else Color(0.56, 0.40, 0.28))
@@ -915,7 +914,7 @@ static func _car(m: Node2D, b: ShapeBatch, p: Vector2, dir: Vector2, body: Color
 	var hw := 10.0
 	if g > 0.0:
 		b.glow(p + f * (hl + 26.0), 30.0, _lit(m, Color(1.0, 0.95, 0.80, 0.30 * g)))
-	var sh := LIGHT * 5.0
+	var sh := Shade.light * 5.0
 	b.polygon(PackedVector2Array([_car_pt(p, f, s, hl, hw) + sh, _car_pt(p, f, s, hl, -hw) + sh,
 		_car_pt(p, f, s, -hl, -hw) + sh, _car_pt(p, f, s, -hl, hw) + sh]), SHADOW)
 	b.polygon(PackedVector2Array([_car_pt(p, f, s, hl, hw), _car_pt(p, f, s, hl, -hw),
@@ -1026,7 +1025,7 @@ static func draw_live(m: Node2D, wc: Object, vt: float, vb: float) -> void:
 	for tw_rect: Rect2 in [TOWER_WEST, TOWER_EAST]:
 		if tw_rect.end.y > vt - 120.0 and tw_rect.position.y < vb + 120.0:
 			b.polygon(PackedVector2Array([tw_rect.position, tw_rect.position + Vector2(tw_rect.size.x, 0.0),
-				tw_rect.end + LIGHT * 70.0, Vector2(tw_rect.position.x, tw_rect.end.y) + LIGHT * 70.0]), SHADOW)
+				tw_rect.end + Shade.light * 70.0, Vector2(tw_rect.position.x, tw_rect.end.y) + Shade.light * 70.0]), SHADOW)
 			b.rect(tw_rect, TOWER_STONE)
 			b.rect(tw_rect.grow(-4.0), TOWER_BRICK)
 			var cy := tw_rect.position.y + 8.0

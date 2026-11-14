@@ -61,7 +61,6 @@ var anim_time: float = 0.0
 var _toss := RandomNumberGenerator.new()
 
 # Visual colors
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.22)
 
 # Unicycle chrome & rubber
@@ -201,7 +200,7 @@ func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 
 	# 1. Dropped juggling pin on road asphalt
 	if pin_dropped and not pin_snatched:
-		b.circle(pin_pos + LIGHT * 2.0, 3.5, SHADOW)
+		b.circle(pin_pos + Shade.light * 2.0, 3.5, SHADOW)
 		# Pin body & neck
 		b.circle(pin_pos, 3.8, PIN_CYAN)
 		b.line(pin_pos, pin_pos + Vector2(7.0, -2.0), PIN_WHITE, 2.2)
@@ -214,7 +213,7 @@ func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 		var pedal_angle: float = anim_time * 12.0 if state == State.RIDING else 0.0
 
 		# Wheel shadow on asphalt
-		b.circle(up + LIGHT * 4.0, 11.0, SHADOW)
+		b.circle(up + Shade.light * 4.0, 11.0, SHADOW)
 
 		# Chrome unicycle wheel
 		b.circle(up, 10.0, TIRE_BLACK)

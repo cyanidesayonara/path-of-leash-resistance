@@ -149,9 +149,8 @@ func _physics_process(delta: float) -> void:
 		Redraw.later(self)
 
 
-# the direction shadows fall (main.LIGHT), repeated here so a rider drawn
+# the direction shadows fall (Shade.light), repeated here so a rider drawn
 # without a main (a test, the lineup) still lights the same way
-const LIGHT := Vector2(0.5, 0.866)
 const HELMETS: Array[Color] = [Color(0.92, 0.30, 0.22), Color(0.98, 0.84, 0.26), Color(0.26, 0.56, 0.86),
 	Color(0.94, 0.94, 0.92)]
 const SKIN := Color(0.86, 0.70, 0.56)
@@ -171,7 +170,7 @@ static func _oval(at: Vector2, rx: float, ry: float) -> PackedVector2Array:
 # Everything goes through one ShapeBatch: one draw call per rider.
 func _draw() -> void:
 	var b := ShapeBatch.new(self)
-	var sh := LIGHT.rotated(-rotation)       # where shadows fall, in local space
+	var sh := Shade.light.rotated(-rotation)       # where shadows fall, in local space
 	var hi := -sh                            # where the light comes from
 	var helmet: Color = HELMETS[int(wob_seed * 7.0) % HELMETS.size()]
 	var tyre := Color(0.12, 0.12, 0.14)

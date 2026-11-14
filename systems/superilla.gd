@@ -25,7 +25,6 @@ const Surfaces := preload("res://world/surfaces.gd")
 const SuperillaCargo := preload("res://systems/superilla_cargo.gd")
 const NightFronts := preload("res://world/night_fronts.gd")
 
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.07, 0.22)
 
 # --- colors ------------------------------------------------------------------
@@ -331,11 +330,11 @@ static func _draw_side_street(b: ShapeBatch, cy: float) -> void:
 			b.circle(sp, 16.0, accent)
 			# Timber barrier planter in the side street
 			var pr := Rect2(gx + dir * 40.0 - 14.0, cy - 16.0, 28.0, 32.0)
-			b.rect(Rect2(pr.position + LIGHT * 5.0, pr.size), SHADOW)
+			b.rect(Rect2(pr.position + Shade.light * 5.0, pr.size), SHADOW)
 			b.rect(pr, TIMBER_BOX)
 			b.rect(pr.grow(-3.0), PLANTER_SOIL)
 			b.circle(pr.get_center(), 10.0, OLIVE_LEAF)
-			b.circle(pr.get_center() - LIGHT * 3.0, 5.5, OLIVE_LEAF.lightened(0.14))
+			b.circle(pr.get_center() - Shade.light * 3.0, 5.5, OLIVE_LEAF.lightened(0.14))
 
 
 static func _draw_poblenou_block(b: ShapeBatch, r: Rect2, side: float, k: int) -> void:
@@ -399,15 +398,15 @@ static func _draw_poblenou_block(b: ShapeBatch, r: Rect2, side: float, k: int) -
 			var sy2 := ter_r.position.y + 12.0 + float(s) * 42.0
 			if sy2 + 28.0 < ter_r.end.y - 8.0:
 				var pan := Rect2(ter_r.position.x + 12.0, sy2, 64.0, 26.0)
-				b.rect(Rect2(pan.position + LIGHT * 4.0, pan.size), SHADOW)
+				b.rect(Rect2(pan.position + Shade.light * 4.0, pan.size), SHADOW)
 				b.rect(pan.grow(1.4), Color(0.72, 0.76, 0.80))
 				b.rect(pan, SOLAR_BLUE)
 				b.line(Vector2(pan.position.x, pan.get_center().y), Vector2(pan.end.x, pan.get_center().y), Color(0.55, 0.68, 0.82, 0.55), 1.2)
 		# Rooftop olive bush in planter
 		var gp := Vector2(ter_r.end.x - 26.0, ter_r.get_center().y)
-		b.circle(gp + LIGHT * 4.0, 14.0, SHADOW)
+		b.circle(gp + Shade.light * 4.0, 14.0, SHADOW)
 		b.circle(gp, 13.0, OLIVE_LEAF.darkened(0.12))
-		b.circle(gp - LIGHT * 3.0, 8.0, OLIVE_LEAF.lightened(0.14))
+		b.circle(gp - Shade.light * 3.0, 8.0, OLIVE_LEAF.lightened(0.14))
 
 
 # --- ground layer: panot sidewalks, reclaimed asphalt & tactical urbanism ----
@@ -632,7 +631,7 @@ static func _draw_pingpong_table(b: ShapeBatch, r: Rect2) -> void:
 static func _draw_orxateria_terrace(b: ShapeBatch) -> void:
 	# Slatted wooden terrace platform outside the Poblenou Orxateria (around PRIZE = 740, -4520)
 	var deck := Rect2(708.0, -4584.0, 168.0, 128.0)
-	b.rect(Rect2(deck.position + LIGHT * 6.0, deck.size), SHADOW)
+	b.rect(Rect2(deck.position + Shade.light * 6.0, deck.size), SHADOW)
 	b.rect(deck, TIMBER_BOX.darkened(0.15))
 	b.rect(deck.grow(-3.0), TIMBER_BOX)
 	var py := deck.position.y + 6.0
@@ -653,22 +652,22 @@ static func _draw_orxateria_terrace(b: ShapeBatch) -> void:
 		PRIZE + Vector2(-24.0, -6.0), PRIZE + Vector2(24.0, 6.0), PRIZE + Vector2(0.0, 24.0),
 		Vector2(826.0, -4514.0), Vector2(826.0, -4462.0), Vector2(800.0, -4488.0),
 	]:
-		b.circle(ch + LIGHT * 3.0, 7.5, SHADOW)
+		b.circle(ch + Shade.light * 3.0, 7.5, SHADOW)
 		b.circle(ch, 7.2, Color(0.24, 0.54, 0.58))
-		b.circle(ch - LIGHT * 1.5, 5.0, Color(0.32, 0.66, 0.70))
+		b.circle(ch - Shade.light * 1.5, 5.0, Color(0.32, 0.66, 0.70))
 	# White-marble bistro tables (PRIZE table at 740, -4520 and companion table at 826, -4488)
 	for tb: Vector2 in [PRIZE, Vector2(826.0, -4488.0)]:
-		b.circle(tb + LIGHT * 4.5, 17.0, SHADOW)
+		b.circle(tb + Shade.light * 4.5, 17.0, SHADOW)
 		b.circle(tb, 16.5, Color(0.22, 0.22, 0.25))
-		b.circle(tb - LIGHT * 0.6, 14.8, Color(0.94, 0.92, 0.88))
-		b.circle(tb - LIGHT * 3.0, 9.0, Color(0.98, 0.97, 0.94))
+		b.circle(tb - Shade.light * 0.6, 14.8, Color(0.94, 0.92, 0.88))
+		b.circle(tb - Shade.light * 3.0, 9.0, Color(0.98, 0.97, 0.94))
 	# Companion table service: pitcher of horchata and napkins
 	var comp := Vector2(826.0, -4488.0)
 	b.circle(comp + Vector2(-3.0, -2.0), 4.5, Color(0.96, 0.93, 0.84))
 	b.circle(comp + Vector2(5.0, 3.0), 3.0, Color(0.86, 0.62, 0.32))
 	# Striped Mediterranean awning projecting from the east shopfront over the sidewalk
 	var aw := Rect2(864.0, -4576.0, 76.0, 112.0)
-	b.rect(Rect2(aw.position + LIGHT * 8.0, aw.size), SHADOW)
+	b.rect(Rect2(aw.position + Shade.light * 8.0, aw.size), SHADOW)
 	b.rect(aw, Color(0.96, 0.94, 0.88))
 	var ay := aw.position.y + 4.0
 	while ay < aw.end.y - 4.0:
@@ -689,8 +688,8 @@ static func _draw_planter_olive(b: ShapeBatch, p: Vector2) -> void:
 	var hs := PLANTER_SIZE * 0.5
 	var pr := Rect2(p.x - hs, p.y - hs, PLANTER_SIZE, PLANTER_SIZE)
 	# Cast shadow
-	b.rect(Rect2(pr.position + LIGHT * 8.0, pr.size), SHADOW)
-	b.circle(p + LIGHT * 12.0, 26.0, SHADOW)
+	b.rect(Rect2(pr.position + Shade.light * 8.0, pr.size), SHADOW)
+	b.circle(p + Shade.light * 12.0, 26.0, SHADOW)
 	# Heavy modular Douglas-fir timber walls with corner steel brackets
 	b.rect(pr.grow(2.0), TIMBER_BOX.darkened(0.28))
 	b.rect(pr, TIMBER_BOX)
@@ -706,7 +705,7 @@ static func _draw_planter_olive(b: ShapeBatch, p: Vector2) -> void:
 		for ly: float in [-14.5, 14.5]:
 			var lp := p + Vector2(lx, ly)
 			b.circle(lp, 6.2, Color(0.28, 0.42, 0.28))
-			b.circle(lp - LIGHT * 1.2, 4.2, LAVENDER_PURPLE)
+			b.circle(lp - Shade.light * 1.2, 4.2, LAVENDER_PURPLE)
 			b.circle(lp + Vector2(1.8, -1.5), 2.2, LAVENDER_PURPLE.lightened(0.22))
 	# Gnarled olive trunk and silvery-green Mediterranean olive canopy
 	b.circle(p + Vector2(1.0, 1.5), 7.0, OLIVE_TRUNK.darkened(0.25))
@@ -715,7 +714,7 @@ static func _draw_planter_olive(b: ShapeBatch, p: Vector2) -> void:
 		Vector2(-10.0, -6.0), Vector2(10.0, -5.0),
 		Vector2(-9.0, 8.0), Vector2(9.0, 7.0), Vector2(0.0, -11.0), Vector2(0.0, 10.0),
 	]:
-		b.circle(p + off + LIGHT * 2.0, 12.5, OLIVE_LEAF.darkened(0.20))
+		b.circle(p + off + Shade.light * 2.0, 12.5, OLIVE_LEAF.darkened(0.20))
 	for off2: Vector2 in [
 		Vector2(0.0, 0.0), Vector2(-9.0, -6.0), Vector2(9.0, -5.0),
 		Vector2(-8.0, 7.0), Vector2(8.0, 6.0), Vector2(0.0, -10.0),
@@ -734,16 +733,16 @@ static func draw_bollard(_m: Node2D, wc: Object, h: Dictionary) -> void:
 	var prog := float(h.get("progress", 0.0))
 	var b := ShapeBatch.new()
 	# Cast shadow
-	b.circle(hp + LIGHT * 9.0, 9.0, SHADOW)
-	b.line(hp, hp + LIGHT * 9.0, SHADOW, 15.0)
+	b.circle(hp + Shade.light * 9.0, 9.0, SHADOW)
+	b.line(hp, hp + Shade.light * 9.0, SHADOW, 15.0)
 	# Base granite collar
 	b.circle(hp, 11.5, Color(0.36, 0.36, 0.38))
 	# Barcelona Superblock tactical bollard: anthracite steel with yellow reflective band
 	var body := Color(0.24, 0.25, 0.27) if done else Color(0.18, 0.20, 0.22)
 	b.circle(hp, 9.0, body)
-	b.circle(hp - LIGHT * 1.2, 7.6, PAINT_YELLOW.darkened(0.22) if done else PAINT_YELLOW)
-	b.circle(hp - LIGHT * 1.8, 5.4, body.lightened(0.08))
-	b.circle(hp - LIGHT * 2.8, 2.4, Color(0.64, 0.66, 0.68))
+	b.circle(hp - Shade.light * 1.2, 7.6, PAINT_YELLOW.darkened(0.22) if done else PAINT_YELLOW)
+	b.circle(hp - Shade.light * 1.8, 5.4, body.lightened(0.08))
+	b.circle(hp - Shade.light * 2.8, 2.4, Color(0.64, 0.66, 0.68))
 	if not done and prog > 0.0:
 		var segs := maxi(2, int(ceilf(16.0 * prog / 0.8)))
 		var prev := hp + Vector2(0.0, -16.0)
@@ -757,7 +756,7 @@ static func draw_bollard(_m: Node2D, wc: Object, h: Dictionary) -> void:
 
 static func draw_bin(_m: Node2D, wc: Object, bn: Vector2) -> void:
 	var b := ShapeBatch.new()
-	b.circle(bn + LIGHT * 8.0, 12.5, SHADOW)
+	b.circle(bn + Shade.light * 8.0, 12.5, SHADOW)
 	# Slatted wood-and-iron Barcelona Superblock waste drum
 	b.circle(bn, 13.0, Color(0.20, 0.20, 0.22))
 	b.circle(bn, 11.5, TIMBER_BOX)
@@ -767,7 +766,7 @@ static func draw_bin(_m: Node2D, wc: Object, bn: Vector2) -> void:
 	b.circle(bn, 8.2, Color(0.24, 0.26, 0.28))
 	b.circle(bn + Vector2(0.8, 1.0), 5.6, Color(0.10, 0.11, 0.12))
 	# Green organic/selective ring accent
-	b.circle(bn - LIGHT * 2.5, 2.4, PAINT_GREEN)
+	b.circle(bn - Shade.light * 2.5, 2.4, PAINT_GREEN)
 	b.flush(wc)
 
 
@@ -775,7 +774,7 @@ static func draw_fountain(m: Node2D, f: Vector2) -> void:
 	var b := ShapeBatch.new()
 	# Wet splash patch on the panot sidewalk
 	b.circle(f + Vector2(10.0, 7.0), 9.0, Color(0.36, 0.52, 0.62, 0.42))
-	b.circle(f + LIGHT * 7.0, 12.0, SHADOW)
+	b.circle(f + Shade.light * 7.0, 12.0, SHADOW)
 	# Stone drain basin with iron grate
 	b.circle(f, 13.0, CURB_STONE.darkened(0.18))
 	b.circle(f, 10.5, Color(0.26, 0.38, 0.46))
@@ -784,7 +783,7 @@ static func draw_fountain(m: Node2D, f: Vector2) -> void:
 	# Classic dark-green Barcelona cast-iron column and brass tap
 	var col_p := f + Vector2(0.0, -6.0)
 	b.circle(col_p, 6.8, Color(0.14, 0.26, 0.20))
-	b.circle(col_p - LIGHT * 1.5, 4.4, Color(0.22, 0.38, 0.28))
+	b.circle(col_p - Shade.light * 1.5, 4.4, Color(0.22, 0.38, 0.28))
 	b.line(col_p, f + Vector2(0.0, 2.0), Color(0.82, 0.68, 0.32), 2.6)
 	b.circle(f + Vector2(0.0, 2.5), 2.2, Color(0.76, 0.90, 0.98, 0.90))
 	b.flush(m._wc)
@@ -792,7 +791,7 @@ static func draw_fountain(m: Node2D, f: Vector2) -> void:
 
 static func draw_snack(_m: Node2D, wc: Object, kp: Vector2) -> void:
 	var b := ShapeBatch.new()
-	b.circle(kp + LIGHT * 3.0, 10.0, SHADOW)
+	b.circle(kp + Shade.light * 3.0, 10.0, SHADOW)
 	# Crumpled bakery wax paper napkin
 	b.polygon(PackedVector2Array([
 		kp + Vector2(-11.0, 2.0), kp + Vector2(-6.0, -9.0),
@@ -921,22 +920,22 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 	b.polygon(PackedVector2Array([
 		chim + Vector2(-18.0, 12.0),
 		chim + Vector2(18.0, -12.0),
-		chim + LIGHT * 88.0 + Vector2(14.0, -8.0),
-		chim + LIGHT * 88.0 + Vector2(-14.0, 8.0),
+		chim + Shade.light * 88.0 + Vector2(14.0, -8.0),
+		chim + Shade.light * 88.0 + Vector2(-14.0, 8.0),
 	]), SHADOW)
-	b.circle(chim + LIGHT * 88.0, 15.0, SHADOW)
+	b.circle(chim + Shade.light * 88.0, 15.0, SHADOW)
 	# Stepped square brick pedestal base
 	var ped := Rect2(chim.x - 28.0, chim.y - 28.0, 56.0, 56.0)
-	b.rect(Rect2(ped.position + LIGHT * 6.0, ped.size), SHADOW)
+	b.rect(Rect2(ped.position + Shade.light * 6.0, ped.size), SHADOW)
 	b.rect(ped, BRICK_DARK)
 	b.rect(ped.grow(-4.0), BRICK_MILL)
 	b.rect(ped.grow(-8.0), Color(0.76, 0.70, 0.62))
 	# Octagonal tapering red-brick chimney shaft with wrought-iron tension bands
 	b.circle(chim, 22.0, BRICK_DARK)
-	b.circle(chim - LIGHT * 1.5, 19.0, BRICK_MILL)
-	b.circle(chim - LIGHT * 2.5, 15.0, Color(0.18, 0.18, 0.20))
-	b.circle(chim - LIGHT * 3.0, 13.5, BRICK_LIGHT)
-	b.circle(chim - LIGHT * 4.5, 8.5, Color(0.10, 0.09, 0.09))
+	b.circle(chim - Shade.light * 1.5, 19.0, BRICK_MILL)
+	b.circle(chim - Shade.light * 2.5, 15.0, Color(0.18, 0.18, 0.20))
+	b.circle(chim - Shade.light * 3.0, 13.5, BRICK_LIGHT)
+	b.circle(chim - Shade.light * 4.5, 8.5, Color(0.10, 0.09, 0.09))
 
 	# 5. Perimeter converted red-brick factory walls (north, west, east, and gate wall)
 	var wall_w := 22.0

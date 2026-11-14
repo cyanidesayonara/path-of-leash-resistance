@@ -31,7 +31,7 @@ const OVERHEAD_FOLLOWS_CAMERA := true
 const HALF := 390.0
 const WALL_L := 250.0
 const WALL_R := 1030.0
-const LIGHT := Vector2(0.6, 0.8)
+const POBLE_SUN := Vector2(0.6, 0.8)
 const SHADOW := Color(0.05, 0.04, 0.08, 0.24)
 
 # Architectural zone boundaries (south to north)
@@ -457,7 +457,7 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 				if prev_y < INF:
 					var lp := Vector2(lerpf(wall, col_x, 0.5), (prev_y + cp.y) * 0.5)
 					b.line(Vector2(wall, lp.y), lp, Color(0.18, 0.16, 0.14, 0.6), 1.0)
-					b.circle(lp + LIGHT * 4.0, 5.0, SHADOW)
+					b.circle(lp + (POBLE_SUN * Shade.throw) * 4.0, 5.0, SHADOW)
 					b.circle(lp, 4.5, Color(0.16, 0.14, 0.13))
 					b.circle(lp, 2.6, Color(1.0, 0.80, 0.42))
 				prev_y = cp.y
@@ -506,7 +506,7 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 
 static func _draw_plaza_stage(b: ShapeBatch) -> void:
 	var r := STAGE_RECT
-	b.rect(Rect2(r.position + LIGHT * 8.0, r.size), SHADOW)
+	b.rect(Rect2(r.position + (POBLE_SUN * Shade.throw) * 8.0, r.size), SHADOW)
 	# Stone plinth and dark timber stage deck
 	b.rect(r.grow(4.0), Color(0.46, 0.40, 0.34))
 	b.rect(r, Color(0.48, 0.32, 0.20))
@@ -539,7 +539,7 @@ static func _draw_workshop(b: ShapeBatch, ws: Dictionary) -> void:
 	var p: Vector2 = ws["pos"]
 	var side: float = float(ws["side"])
 	# Cobble workshop apron
-	b.circle(p + LIGHT * 5.0, 34.0, SHADOW)
+	b.circle(p + (POBLE_SUN * Shade.throw) * 5.0, 34.0, SHADOW)
 	b.circle(p, 33.0, Color(0.56, 0.48, 0.40))
 	b.circle(p, 29.0, Color(0.68, 0.60, 0.50))
 
@@ -599,9 +599,9 @@ static func _draw_aragonese_tower(b: ShapeBatch) -> void:
 	b.polygon(PackedVector2Array([
 		Vector2(r.position.x, r.end.y),
 		Vector2(r.end.x, r.position.y),
-		c + LIGHT * 145.0 + Vector2(22.0, -22.0),
-		c + LIGHT * 185.0,
-		c + LIGHT * 145.0 + Vector2(-22.0, 22.0),
+		c + (POBLE_SUN * Shade.throw) * 145.0 + Vector2(22.0, -22.0),
+		c + (POBLE_SUN * Shade.throw) * 185.0,
+		c + (POBLE_SUN * Shade.throw) * 145.0 + Vector2(-22.0, 22.0),
 	]), Color(0.05, 0.04, 0.08, 0.26))
 
 	# Stepped ashlar limestone plinth
@@ -635,7 +635,7 @@ static func _draw_aragonese_tower(b: ShapeBatch) -> void:
 		b.circle(bp, 4.5, Color(0.78, 0.62, 0.26)) # bronze bell
 
 	# Steep octagonal pointed spire roof clad in terracotta & glazed green tiles
-	var spire_tip := c - LIGHT * 18.0
+	var spire_tip := c - (POBLE_SUN * Shade.throw) * 18.0
 	var oct_r := 52.0
 	var oct_pts := PackedVector2Array()
 	for i: int in range(8):
@@ -687,9 +687,9 @@ static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 				if row % 3 == 0:
 					for side: float in [-1.0, 1.0]:
 						var cx := ea.x - 48.0 if side < 0.0 else ea.y + 48.0
-						b.circle(Vector2(cx, ym) + LIGHT * 8.0, 20.0, SHADOW)
+						b.circle(Vector2(cx, ym) + (POBLE_SUN * Shade.throw) * 8.0, 20.0, SHADOW)
 						b.circle(Vector2(cx, ym), 19.0, Color(0.18, 0.34, 0.20))
-						b.circle(Vector2(cx, ym) - LIGHT * 4.0, 11.0, Color(0.26, 0.44, 0.26))
+						b.circle(Vector2(cx, ym) - (POBLE_SUN * Shade.throw) * 4.0, 11.0, Color(0.26, 0.44, 0.26))
 			elif ym > GATE_PINCH_TOP:
 				# 2. Medieval curtain wall flanking the Avila gate towers
 				b.quad(Vector2(-460.0, sy), Vector2(ea.x, sy), Vector2(eb.x, sb), Vector2(-460.0, sb), Color(0.46, 0.40, 0.32))
@@ -951,9 +951,9 @@ static func _house_lots(m: Node2D, b: ShapeBatch, side: float, lo: float, hi: fl
 				b.circle(pa.get_center(), 9.0, Color(0.92, 0.90, 0.86))
 				b.circle(pa.get_center(), 6.0, Color(0.36, 0.62, 0.80))
 			var tc := pa.get_center() + Vector2(side * 22.0, -10.0)
-			b.circle(tc + LIGHT * 6.0, 15.0, SHADOW)
+			b.circle(tc + (POBLE_SUN * Shade.throw) * 6.0, 15.0, SHADOW)
 			b.circle(tc, 14.0, Color(0.20, 0.40, 0.22))
-			b.circle(tc - LIGHT * 4.0, 8.0, Color(0.30, 0.50, 0.28))
+			b.circle(tc - (POBLE_SUN * Shade.throw) * 4.0, 8.0, Color(0.30, 0.50, 0.28))
 			if style != "aragon":
 				b.circle(tc + Vector2(4.0, 2.0), 2.2, Color(0.96, 0.82, 0.22))
 			b.rect(Rect2(pa.position.x, pa.position.y, pa.size.x, 6.0), Color(0.0, 0.0, 0.0, 0.18))
@@ -968,9 +968,9 @@ static func _house_lots(m: Node2D, b: ShapeBatch, side: float, lo: float, hi: fl
 			if h % 5 < 3:
 				# the water tank
 				var tp := mid + Vector2(-side * 30.0, -14.0)
-				b.circle(tp + LIGHT * 5.0, 10.0, SHADOW)
+				b.circle(tp + (POBLE_SUN * Shade.throw) * 5.0, 10.0, SHADOW)
 				b.circle(tp, 9.0, Color(0.62, 0.64, 0.66))
-				b.circle(tp - LIGHT * 2.0, 5.0, Color(0.74, 0.76, 0.78))
+				b.circle(tp - (POBLE_SUN * Shade.throw) * 2.0, 5.0, Color(0.74, 0.76, 0.78))
 			if h % 2 == 0:
 				# washing on a line across the terrace
 				var wy := mid.y + 12.0
@@ -1007,7 +1007,7 @@ static func _house_lots(m: Node2D, b: ShapeBatch, side: float, lo: float, hi: fl
 			if h % 3 == 0:
 				# a chimney with its pot, and its shadow on the tiles
 				var cp := Vector2((r0 + back0) * 0.5, (y0 + y1) * 0.5 - 12.0)
-				b.rect(Rect2(cp + LIGHT * 7.0 - Vector2(7, 7), Vector2(14, 14)), SHADOW)
+				b.rect(Rect2(cp + (POBLE_SUN * Shade.throw) * 7.0 - Vector2(7, 7), Vector2(14, 14)), SHADOW)
 				b.rect(Rect2(cp - Vector2(7, 7), Vector2(14, 14)), Color(0.80, 0.74, 0.64) if style != "aragon" else Color(0.66, 0.36, 0.24))
 				b.rect(Rect2(cp - Vector2(4, 4), Vector2(8, 8)), Color(0.26, 0.22, 0.20))
 		# the party wall between this house and the next one down the street
@@ -1018,11 +1018,11 @@ static func _house_lots(m: Node2D, b: ShapeBatch, side: float, lo: float, hi: fl
 static func _draw_crenellated_gate_tower(b: ShapeBatch, center: Vector2) -> void:
 	var rad := GATE_TOWER_R_PX
 	# Deep shadow cast by the tall round stone tower
-	b.circle(center + LIGHT * 18.0, rad + 4.0, Color(0.04, 0.03, 0.07, 0.34))
+	b.circle(center + (POBLE_SUN * Shade.throw) * 18.0, rad + 4.0, Color(0.04, 0.03, 0.07, 0.34))
 	# Sloped stone talus base (escarpa)
 	b.circle(center, rad + 6.0, Color(0.46, 0.40, 0.33))
 	b.circle(center, rad, Color(0.64, 0.56, 0.45))
-	b.circle(center - LIGHT * 3.0, rad - 8.0, Color(0.72, 0.64, 0.52))
+	b.circle(center - (POBLE_SUN * Shade.throw) * 3.0, rad - 8.0, Color(0.72, 0.64, 0.52))
 	b.circle(center, rad - 18.0, Color(0.54, 0.47, 0.38))
 	# Radial stone machicolation corbels and 12 crenellated battlements (merlons)
 	for i: int in range(12):
@@ -1042,7 +1042,7 @@ static func _draw_crenellated_gate_tower(b: ShapeBatch, center: Vector2) -> void
 
 static func draw_column(_m: Node2D, wc: Object, p: Vector2) -> void:
 	var b := ShapeBatch.new()
-	b.circle(p + LIGHT * 9.0, 14.0, SHADOW)
+	b.circle(p + (POBLE_SUN * Shade.throw) * 9.0, 14.0, SHADOW)
 	if p.distance_to(TOWER_COLUMN) <= 18.0:
 		# Aragonese stone wayside cross (creu de terme) on octagonal stepped base
 		b.circle(p, 15.0, Color(0.54, 0.48, 0.40))
@@ -1053,14 +1053,14 @@ static func draw_column(_m: Node2D, wc: Object, p: Vector2) -> void:
 	elif p.y > -700.0:
 		# Heavy medieval stone gate pier with iron torch ring
 		b.circle(p, 14.0, Color(0.48, 0.42, 0.35))
-		b.circle(p - LIGHT * 1.5, 11.0, Color(0.64, 0.56, 0.46))
-		b.circle(p - LIGHT * 2.5, 6.5, Color(0.74, 0.66, 0.54))
+		b.circle(p - (POBLE_SUN * Shade.throw) * 1.5, 11.0, Color(0.64, 0.56, 0.46))
+		b.circle(p - (POBLE_SUN * Shade.throw) * 2.5, 6.5, Color(0.74, 0.66, 0.54))
 	else:
 		# Plaza Mayor carved Renaissance stone arcade column on square plinth
 		b.rect(Rect2(p.x - 13.0, p.y - 13.0, 26.0, 26.0), Color(0.58, 0.50, 0.40))
 		b.circle(p, 12.0, Color(0.70, 0.60, 0.48))
-		b.circle(p - LIGHT * 1.8, 9.2, Color(0.82, 0.72, 0.58))
-		b.circle(p - LIGHT * 3.0, 5.0, Color(0.90, 0.82, 0.68))
+		b.circle(p - (POBLE_SUN * Shade.throw) * 1.8, 9.2, Color(0.82, 0.72, 0.58))
+		b.circle(p - (POBLE_SUN * Shade.throw) * 3.0, 5.0, Color(0.90, 0.82, 0.68))
 	b.flush(wc)
 
 
@@ -1068,7 +1068,7 @@ static func draw_fountain(m: Node2D, f: Vector2) -> void:
 	var b := ShapeBatch.new()
 	var t: float = AnimClock.msec() / 1000.0
 	# Cast shadow of the grand octagonal Plaza Mayor stone fountain
-	b.circle(f + LIGHT * 12.0, FOUNTAIN_R + 8.0, SHADOW)
+	b.circle(f + (POBLE_SUN * Shade.throw) * 12.0, FOUNTAIN_R + 8.0, SHADOW)
 	# Octagonal granite steps and moulded stone basin rim
 	var oct_outer := PackedVector2Array()
 	var oct_water := PackedVector2Array()
@@ -1081,7 +1081,7 @@ static func draw_fountain(m: Node2D, f: Vector2) -> void:
 	b.circle(f, FOUNTAIN_R, Color(0.76, 0.68, 0.56))
 	# Shimmering turquoise basin water
 	b.polygon(oct_water, Color(0.20, 0.54, 0.66))
-	b.circle(f - LIGHT * 4.0, FOUNTAIN_R - 10.0, Color(0.28, 0.66, 0.78, 0.65))
+	b.circle(f - (POBLE_SUN * Shade.throw) * 4.0, FOUNTAIN_R - 10.0, Color(0.28, 0.66, 0.78, 0.65))
 	# Four brass lion-head water jets spouting into the basin
 	for i: int in range(4):
 		var a := float(i) * PI * 0.5 + PI * 0.25
@@ -1091,10 +1091,10 @@ static func draw_fountain(m: Node2D, f: Vector2) -> void:
 		var rph := fmod(t * 2.2 + float(i) * 0.25, 1.0)
 		b.circle(jet_end, 3.0 + rph * 7.0, Color(0.90, 0.98, 1.0, 0.45 * (1.0 - rph)))
 	# Central tiered stone pedestal & carved finial urn
-	b.circle(f + LIGHT * 4.0, 15.0, SHADOW)
+	b.circle(f + (POBLE_SUN * Shade.throw) * 4.0, 15.0, SHADOW)
 	b.circle(f, 15.0, Color(0.62, 0.54, 0.44))
-	b.circle(f - LIGHT * 1.5, 10.5, Color(0.78, 0.70, 0.58))
-	b.circle(f - LIGHT * 2.5, 5.5, Color(0.90, 0.82, 0.70))
+	b.circle(f - (POBLE_SUN * Shade.throw) * 1.5, 10.5, Color(0.78, 0.70, 0.58))
+	b.circle(f - (POBLE_SUN * Shade.throw) * 2.5, 5.5, Color(0.90, 0.82, 0.70))
 	b.flush(m._wc)
 
 
@@ -1103,12 +1103,12 @@ static func draw_bollard(_m: Node2D, wc: Object, h: Dictionary) -> void:
 	var done := bool(h.get("done", false))
 	var prog := float(h.get("progress", 0.0))
 	var b := ShapeBatch.new()
-	b.circle(hp + LIGHT * 8.0, 9.5, SHADOW)
+	b.circle(hp + (POBLE_SUN * Shade.throw) * 8.0, 9.5, SHADOW)
 	# Carved granite village wheel-guard stone (guardacanton) with wrought-iron ring
 	var stone := Color(0.52, 0.46, 0.38) if done else Color(0.64, 0.56, 0.46)
 	b.circle(hp, 10.5, stone.darkened(0.22))
-	b.circle(hp - LIGHT * 1.2, 8.2, stone)
-	b.circle(hp - LIGHT * 2.4, 4.2, stone.lightened(0.18))
+	b.circle(hp - (POBLE_SUN * Shade.throw) * 1.2, 8.2, stone)
+	b.circle(hp - (POBLE_SUN * Shade.throw) * 2.4, 4.2, stone.lightened(0.18))
 	b.circle(hp, 2.2, Color(0.22, 0.20, 0.18))
 	if not done and prog > 0.0:
 		var steps := maxi(2, int(ceil(12.0 * (prog / 0.8))))
@@ -1123,7 +1123,7 @@ static func draw_bollard(_m: Node2D, wc: Object, h: Dictionary) -> void:
 
 static func draw_bin(_m: Node2D, wc: Object, bn: Vector2) -> void:
 	var b := ShapeBatch.new()
-	b.circle(bn + LIGHT * 7.0, 12.0, SHADOW)
+	b.circle(bn + (POBLE_SUN * Shade.throw) * 7.0, 12.0, SHADOW)
 	# Wrought-iron and chestnut-slat village waste basket
 	b.circle(bn, 12.0, Color(0.18, 0.18, 0.20))
 	b.circle(bn, 10.2, Color(0.48, 0.31, 0.18))
@@ -1133,7 +1133,7 @@ static func draw_bin(_m: Node2D, wc: Object, bn: Vector2) -> void:
 
 static func draw_snack(_m: Node2D, wc: Object, kp: Vector2) -> void:
 	var b := ShapeBatch.new()
-	b.circle(kp + LIGHT * 3.0, 9.5, SHADOW)
+	b.circle(kp + (POBLE_SUN * Shade.throw) * 3.0, 9.5, SHADOW)
 	# Wax paper square with a golden crimped Spanish empanadilla & sugar-dusted rosquilla
 	b.rect(Rect2(kp.x - 9.0, kp.y - 8.0, 18.0, 16.0), Color(0.95, 0.92, 0.84))
 	b.circle(kp + Vector2(-2.0, 1.0), 6.0, Color(0.84, 0.58, 0.22))
@@ -1168,7 +1168,7 @@ static func draw_live(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	if GUIDE_POS.y + 80.0 >= vt and GUIDE_POS.y - 80.0 <= vb:
 		var sway := sin(t * 2.4) * 2.0
 		# Guide's shoulders, head, and outstretched arm holding the raised yellow-and-red umbrella
-		b.circle(GUIDE_POS + LIGHT * 6.0, 10.0, SHADOW)
+		b.circle(GUIDE_POS + (POBLE_SUN * Shade.throw) * 6.0, 10.0, SHADOW)
 		b.circle(GUIDE_POS, 9.5, Color(0.20, 0.42, 0.68))
 		b.circle(GUIDE_POS, 6.2, Color(0.90, 0.72, 0.58))
 		b.circle(GUIDE_POS, 4.6, Color(0.26, 0.18, 0.14))
@@ -1181,7 +1181,7 @@ static func draw_live(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 		# Small group of tourists facing the guide with cameras and paper village maps
 		for ti: int in range(TOURIST_SPOTS.size()):
 			var tsp: Vector2 = TOURIST_SPOTS[ti]
-			b.circle(tsp + LIGHT * 5.0, 9.5, SHADOW)
+			b.circle(tsp + (POBLE_SUN * Shade.throw) * 5.0, 9.5, SHADOW)
 			var t_col := Color(0.86, 0.62, 0.24) if ti == 0 else (Color(0.36, 0.66, 0.54) if ti == 1 else Color(0.74, 0.34, 0.52))
 			b.circle(tsp, 9.0, t_col)
 			b.circle(tsp, 6.0, Color(0.92, 0.76, 0.62))
@@ -1336,14 +1336,14 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 		Vector2(1025.0, r.position.y + 265.0),
 		Vector2(1060.0, r.position.y + 415.0),
 	]:
-		b.circle(olive_p + LIGHT * 12.0, 32.0, SHADOW)
+		b.circle(olive_p + (POBLE_SUN * Shade.throw) * 12.0, 32.0, SHADOW)
 		b.circle(olive_p, 8.0, Color(0.38, 0.28, 0.20))
 		for lobe: Vector2 in [
 			Vector2(-14.0, -8.0), Vector2(14.0, -7.0),
 			Vector2(-12.0, 10.0), Vector2(12.0, 9.0), Vector2(0.0, -14.0),
 		]:
 			b.circle(olive_p + lobe, 18.0, Color(0.42, 0.54, 0.38))
-			b.circle(olive_p + lobe - LIGHT * 3.0, 11.0, Color(0.56, 0.68, 0.50))
+			b.circle(olive_p + lobe - (POBLE_SUN * Shade.throw) * 3.0, 11.0, Color(0.56, 0.68, 0.50))
 
 	# 5. Low crenellated stone parapet along the old bastion walls
 	var wall_col := Color(0.62, 0.54, 0.44)

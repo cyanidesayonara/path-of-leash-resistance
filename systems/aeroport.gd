@@ -433,7 +433,7 @@ static func _draw_carousel_bags(b: ShapeBatch, vt: float, vb: float) -> void:
 		var s := f.orthogonal()
 		if i == 3:
 			# the crate: grey shell, a wire door, two eyes and a paw through it
-			AeroportArt.box(b, p + AeroportArt.LIGHT * 2.0, dir, 12.0, 9.0, Color(0.05, 0.05, 0.08, 0.3))
+			AeroportArt.box(b, p + Shade.light * 2.0, dir, 12.0, 9.0, Color(0.05, 0.05, 0.08, 0.3))
 			AeroportArt.box(b, p, dir, 12.0, 9.0, Color(0.56, 0.58, 0.62))
 			AeroportArt.box(b, p, dir, 10.0, 7.0, Color(0.74, 0.76, 0.80))
 			AeroportArt.box(b, p + f * 8.0, dir, 3.0, 6.0, Color(0.14, 0.14, 0.16))
@@ -451,7 +451,7 @@ static func _draw_carousel_bags(b: ShapeBatch, vt: float, vb: float) -> void:
 		else:
 			var col := AeroportArt.pick(AeroportArt.BAGS, i * 3 + 1)
 			var hl := 11.0 + AeroportArt.h(i) * 3.0
-			AeroportArt.box(b, p + AeroportArt.LIGHT * 2.0, dir, hl, 7.5, Color(0.05, 0.05, 0.08, 0.3))
+			AeroportArt.box(b, p + Shade.light * 2.0, dir, hl, 7.5, Color(0.05, 0.05, 0.08, 0.3))
 			AeroportArt.box(b, p, dir, hl, 7.5, col.darkened(0.25))
 			AeroportArt.box(b, p, dir, hl - 1.5, 6.0, col)
 			b.line(p - s * 6.0 + f * 3.0, p + s * 6.0 + f * 3.0, col.darkened(0.35), 1.6)
@@ -522,11 +522,11 @@ static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
 # a roof column: a concrete drum on a steel shoe, with the soft shadow of
 # something that goes all the way up
 static func draw_column(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
-	wc.glow(p + m.LIGHT * 16.0, 40.0, Color(0.05, 0.05, 0.08, 0.26), 0.3)
+	wc.glow(p + Shade.light * 16.0, 40.0, Color(0.05, 0.05, 0.08, 0.26), 0.3)
 	wc.circle(p, 19.0, PILLAR_BASE)
 	wc.circle(p, 16.5, Color(0.44, 0.47, 0.52))
 	wc.circle(p, 14.0, Color(0.80, 0.80, 0.79))
-	wc.circle(p - m.LIGHT * 3.5, 9.5, Color(0.90, 0.90, 0.89))
+	wc.circle(p - Shade.light * 3.5, 9.5, Color(0.90, 0.90, 0.89))
 	# the wayfinding band painted round it
 	wc.circle(p + Vector2(0.0, 9.0), 3.2, AeroportArt.SIGN_YELLOW)
 

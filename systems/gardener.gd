@@ -65,7 +65,6 @@ var _toss := RandomNumberGenerator.new()
 var anim_time: float = 0.0
 
 # Visual colors
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.04, 0.06, 0.22)
 
 # Attire
@@ -205,8 +204,8 @@ func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	var draw_pos := pos + Vector2(0.0, bob + wobble)
 
 	# 1. Contact shadow under gardener & wheelbarrow
-	b.circle(draw_pos + Vector2(14.0, 6.0) + LIGHT * 6.0, 22.0, SHADOW)
-	b.circle(draw_pos + Vector2(-10.0, 10.0) + LIGHT * 5.0, 16.0, SHADOW)
+	b.circle(draw_pos + Vector2(14.0, 6.0) + Shade.light * 6.0, 22.0, SHADOW)
+	b.circle(draw_pos + Vector2(-10.0, 10.0) + Shade.light * 5.0, 16.0, SHADOW)
 
 	# 2. Wheelbarrow:
 	# Front wheel (rolls forward at front of barrow)
@@ -273,7 +272,7 @@ func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	if pot_dropped:
 		var dp := pot_pos
 		if not pot_snatched:
-			b.circle(dp + LIGHT * 3.0, 7.0, SHADOW)
+			b.circle(dp + Shade.light * 3.0, 7.0, SHADOW)
 			b.circle(dp, 6.5, TERRACOTTA)
 			b.circle(dp, 4.8, SOIL_DARK)
 			for la in range(4):

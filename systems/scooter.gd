@@ -66,7 +66,6 @@ var _toss := RandomNumberGenerator.new()
 var anim_time: float = 0.0
 
 # Visual colors
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.04, 0.06, 0.24)
 
 # Vintage Vespa colors

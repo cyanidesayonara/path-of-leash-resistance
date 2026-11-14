@@ -11,7 +11,6 @@ extends RefCounted
 # hash of position, so a walk looks the same every run.
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.05, 0.05, 0.08, 0.24)
 
 # faded paint, then how far each car has gone to rust
@@ -122,7 +121,7 @@ static func draw_car(b: Object, c: Vector2, ang: float, kind: int, paint: Color,
 		b.polygon(_part(c, ang, Rect2(side * hw - (4.0 if side > 0.0 else 0.0), ws, 4.0, 34.0)), GLASSLESS)
 	if int(seed * 19.0) % 3 == 1:
 		var wp := _pt(c, ang, Vector2(hw * 0.2, (rf + rb) * 0.5))
-		b.circle(wp + LIGHT * 3.0, 12.0, SHADOW)
+		b.circle(wp + Shade.light * 3.0, 12.0, SHADOW)
 		b.circle(wp, 11.0, Color(0.12, 0.12, 0.13))
 		b.circle(wp, 5.5, Color(0.52, 0.52, 0.54))
 
@@ -173,9 +172,9 @@ static func draw_crane_ground(b: Object, cb: Vector2, tip: Vector2) -> void:
 	var ang := dir.angle()
 	var sh := Color(SHADOW.r, SHADOW.g, SHADOW.b, 0.20)
 	# the jib's shadow and the hook's, thrown down-light from their height
-	var lift := LIGHT * 70.0
-	b.line(cb + LIGHT * 40.0, tip + lift, sh, 14.0)
-	b.circle(tip + lift + LIGHT * 30.0, 12.0, sh)
+	var lift := Shade.light * 70.0
+	b.line(cb + Shade.light * 40.0, tip + lift, sh, 14.0)
+	b.circle(tip + lift + Shade.light * 30.0, 12.0, sh)
 	# the tracks run north-south, under the house
 	b.rect(Rect2(cb.x - 52.0 + 14.0, cb.y - 64.0 + 20.0, 104.0, 128.0), sh)
 	for tx: float in [-38.0, 38.0]:
@@ -186,7 +185,7 @@ static func draw_crane_ground(b: Object, cb: Vector2, tip: Vector2) -> void:
 			cy += 7.0
 		b.rect(Rect2(cb.x + tx - 5.0, cb.y - 52.0, 10.0, 104.0), Color(0.36, 0.36, 0.38))
 	# the house, slewed to face along the jib
-	b.polygon(_quad(cb + LIGHT * 8.0, Vector2(40.0, 30.0), ang), sh)
+	b.polygon(_quad(cb + Shade.light * 8.0, Vector2(40.0, 30.0), ang), sh)
 	b.polygon(_quad(cb, Vector2(40.0, 30.0), ang), CRANE_YELLOW.darkened(0.15))
 	b.polygon(_quad(cb + dir * 2.0, Vector2(36.0, 26.0), ang), CRANE_YELLOW)
 	# the counterweight at the back, striped
@@ -311,7 +310,7 @@ static func draw_roof_rust(b: Object, r: Rect2, inner_x: float, side: float, k: 
 static func draw_yard_pile(b: Object, p: Vector2, i: int) -> void:
 	if i % 3 == 2:
 		# wooden pallet with discarded car batteries
-		b.rect(Rect2(p.x - 20.0 + LIGHT.x * 6.0, p.y - 16.0 + LIGHT.y * 6.0, 40.0, 32.0), SHADOW)
+		b.rect(Rect2(p.x - 20.0 + Shade.light.x * 6.0, p.y - 16.0 + Shade.light.y * 6.0, 40.0, 32.0), SHADOW)
 		b.rect(Rect2(p.x - 20.0, p.y - 16.0, 40.0, 32.0), Color(0.48, 0.38, 0.26))
 		for si: int in range(4):
 			var sy: float = p.y - 14.0 + float(si) * 8.5
@@ -325,7 +324,7 @@ static func draw_yard_pile(b: Object, p: Vector2, i: int) -> void:
 			b.rect(Rect2(bp.x - 2.5, bp.y + 0.5, 5.0, 3.0), Color(0.90, 0.82, 0.25))
 	elif i % 2 == 0:
 		# tyres, stacked a little off true
-		b.circle(p + LIGHT * 10.0, 19.0, SHADOW)
+		b.circle(p + Shade.light * 10.0, 19.0, SHADOW)
 		for t in range(4):
 			var tp := p + Vector2(float(t % 2) * 3.0 - 1.5, -float(t) * 3.0)
 			b.circle(tp, 17.0, Color(0.10, 0.10, 0.11).lightened(0.04 * float(t)))
@@ -338,7 +337,7 @@ static func draw_yard_pile(b: Object, p: Vector2, i: int) -> void:
 	else:
 		# oil drums: one standing on the spot, two beside it, one on its side
 		var cols := [Color(0.22, 0.32, 0.46), Color(0.52, 0.20, 0.16), Color(0.30, 0.38, 0.26)]
-		b.circle(p + LIGHT * 10.0, 18.0, SHADOW)
+		b.circle(p + Shade.light * 10.0, 18.0, SHADOW)
 		draw_oil(b, p + Vector2(10.0, 16.0), 22.0, 12.0, float(i))
 		for d in range(3):
 			var dp := p + [Vector2(0, 0), Vector2(-22, 10), Vector2(18, 14)][d] as Vector2
@@ -396,13 +395,13 @@ static func draw_yard_wreck(b: Object, fr: Rect2) -> void:
 
 	# guard dog kennel and stainless steel water bowl in the yard corner
 	var kh := Vector2(fr.position.x + 18.0, fr.end.y - 62.0)
-	b.rect(Rect2(kh + LIGHT * 6.0, Vector2(34.0, 28.0)), SHADOW)
+	b.rect(Rect2(kh + Shade.light * 6.0, Vector2(34.0, 28.0)), SHADOW)
 	b.rect(Rect2(kh, Vector2(34.0, 28.0)), Color(0.42, 0.44, 0.46))
 	for ri: int in range(4):
 		b.line(Vector2(kh.x + 4.0 + float(ri) * 8.0, kh.y), Vector2(kh.x + 4.0 + float(ri) * 8.0, kh.y + 28.0), Color(0.58, 0.60, 0.62), 1.2)
 	b.circle(Vector2(kh.x + 17.0, kh.y + 28.0), 7.0, Color(0.12, 0.12, 0.14))
 	var bw := kh + Vector2(44.0, 18.0)
-	b.circle(bw + LIGHT * 2.0, 6.5, SHADOW)
+	b.circle(bw + Shade.light * 2.0, 6.5, SHADOW)
 	b.circle(bw, 6.0, Color(0.72, 0.74, 0.78))
 	b.circle(bw, 4.2, Color(0.28, 0.45, 0.55))
 	b.circle(bw + Vector2(-1.2, -1.2), 1.2, Color(0.85, 0.94, 0.98))

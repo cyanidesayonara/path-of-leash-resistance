@@ -25,7 +25,6 @@ const AngelsSkate := preload("res://systems/angels_skate.gd")
 const AnimClock := preload("res://systems/anim_clock.gd")
 const NightFronts := preload("res://world/night_fronts.gd")
 
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.07, 0.24)
 
 # --- colors ------------------------------------------------------------------
@@ -403,15 +402,15 @@ static func _draw_raval_house(b: ShapeBatch, r: Rect2, side: float, k: int) -> v
 		# stair hut with its shadow
 		var hut := Rect2(near - 8.0 + side * 30.0, inner.position.y + 6.0, 26.0, minf(30.0, inner.size.y - 12.0))
 		if hut.size.y > 8.0:
-			b.rect(Rect2(hut.position + LIGHT * 6.0, hut.size), SHADOW)
+			b.rect(Rect2(hut.position + Shade.light * 6.0, hut.size), SHADOW)
 			b.rect(hut, wall_c.lightened(0.04))
 			b.rect(Rect2(hut.position.x, hut.position.y, hut.size.x, 5.0), wall_c.darkened(0.12))
 		# water tank or a dish
 		var tp := Vector2(near + side * 82.0, inner.end.y - 16.0)
 		if tp.y > inner.position.y + 8.0:
-			b.circle(tp + LIGHT * 4.0, 9.0, SHADOW)
+			b.circle(tp + Shade.light * 4.0, 9.0, SHADOW)
 			b.circle(tp, 8.5, Color(0.64, 0.68, 0.70))
-			b.circle(tp - LIGHT * 2.0, 5.0, Color(0.78, 0.82, 0.84))
+			b.circle(tp - Shade.light * 2.0, 5.0, Color(0.78, 0.82, 0.84))
 		# a washing line with the week's laundry
 		if kind == 1 and inner.size.y > 30.0:
 			var ly := inner.position.y + inner.size.y * 0.5 + 6.0
@@ -620,7 +619,7 @@ static func _draw_convent_east(b: ShapeBatch, vt: float, vb: float) -> void:
 		b.circle(rose, 3.6, Color(0.88, 0.68, 0.42))
 		# bell gable over the north end, two bells in their openings
 		var bg := Rect2(WALL_R + 20.0, c_top + 4.0, 70.0, 26.0)
-		b.rect(Rect2(bg.position + LIGHT * 8.0, bg.size), SHADOW)
+		b.rect(Rect2(bg.position + Shade.light * 8.0, bg.size), SHADOW)
 		b.rect(bg, CONVENT_STONE.lightened(0.06))
 		b.rect(Rect2(bg.position.x, bg.position.y, bg.size.x, 4.0), CONVENT_DARK)
 		for bx: float in [bg.position.x + 20.0, bg.position.x + 50.0]:
@@ -755,7 +754,7 @@ static func _draw_museum_podium_and_ledges(b: ShapeBatch, y0: float, y1: float) 
 		var r_bot := minf(-2120.0, y1)
 		if r_bot > r_top:
 			var ramp := Rect2(264.0, r_top, 60.0, r_bot - r_top)
-			b.rect(Rect2(ramp.position + LIGHT * 5.0, ramp.size), SHADOW)
+			b.rect(Rect2(ramp.position + Shade.light * 5.0, ramp.size), SHADOW)
 			b.rect(ramp, MUSEUM_SHADE)
 			b.rect(Rect2(272.0, r_top, 44.0, r_bot - r_top), PODIUM_STONE.lightened(0.08))
 			# Bright white modernist parapet walls on both sides of the ramp
@@ -777,7 +776,7 @@ static func _draw_museum_podium_and_ledges(b: ShapeBatch, y0: float, y1: float) 
 	for ledge_span: Vector2 in [Vector2(-2120.0, -1480.0), Vector2(-3260.0, -2620.0)]:
 		if ledge_span.y >= y0 - 20.0 and ledge_span.x <= y1 + 20.0:
 			var lr := Rect2(328.0, ledge_span.x, 24.0, ledge_span.y - ledge_span.x)
-			b.rect(Rect2(lr.position + LIGHT * 6.0, lr.size), SHADOW)
+			b.rect(Rect2(lr.position + Shade.light * 6.0, lr.size), SHADOW)
 			b.rect(lr, GRANITE_DARK)
 			b.rect(lr.grow(-2.5), LEDGE_GRANITE)
 			# Waxed steel/granite coping edge along x = 340 (the exact grind line)
@@ -792,7 +791,7 @@ static func _draw_museum_podium_and_ledges(b: ShapeBatch, y0: float, y1: float) 
 	# Solid stone podium blocks on the upper terrace (MUSEUM_PODIUM_S & MUSEUM_PODIUM_N)
 	for pr: Rect2 in [MUSEUM_PODIUM_S, MUSEUM_PODIUM_N]:
 		if pr.end.y >= y0 - 20.0 and pr.position.y <= y1 + 20.0:
-			b.rect(Rect2(pr.position + LIGHT * 7.0, pr.size), SHADOW)
+			b.rect(Rect2(pr.position + Shade.light * 7.0, pr.size), SHADOW)
 			b.rect(pr, MUSEUM_DEEP)
 			b.rect(pr.grow(-3.0), MUSEUM_WHITE)
 			b.rect(pr.grow(-9.0), PODIUM_STONE)
@@ -800,7 +799,7 @@ static func _draw_museum_podium_and_ledges(b: ShapeBatch, y0: float, y1: float) 
 	# Famous museum stair-set projection and polished steel handrail at x = 450, y = -2100 .. -1840
 	var stair_r := Rect2(340.0, -2100.0, 118.0, 260.0)
 	if stair_r.end.y >= y0 - 30.0 and stair_r.position.y <= y1 + 30.0:
-		b.rect(Rect2(stair_r.position + LIGHT * 6.0, stair_r.size), SHADOW)
+		b.rect(Rect2(stair_r.position + Shade.light * 6.0, stair_r.size), SHADOW)
 		b.rect(stair_r, GRANITE_MID)
 		# 7 granite stair treads stepping down eastward toward the plaza center
 		for st in range(7):
@@ -808,7 +807,7 @@ static func _draw_museum_podium_and_ledges(b: ShapeBatch, y0: float, y1: float) 
 			b.rect(Rect2(tx, stair_r.position.y + 4.0, 12.0, stair_r.size.y - 8.0), PODIUM_STONE if st % 2 == 0 else GRANITE_LIGHT)
 			b.line(Vector2(tx + 12.0, stair_r.position.y + 4.0), Vector2(tx + 12.0, stair_r.end.y - 4.0), GRANITE_DARK, 2.0)
 		# Grindable steel stair-set handrail along x = 450 (matching Systems/Rails "HANDRAIL")
-		b.line(Vector2(450.0, -2100.0) + LIGHT * 5.0, Vector2(450.0, -1840.0) + LIGHT * 5.0, SHADOW, 6.0)
+		b.line(Vector2(450.0, -2100.0) + Shade.light * 5.0, Vector2(450.0, -1840.0) + Shade.light * 5.0, SHADOW, 6.0)
 		for py: float in [-2092.0, -1970.0, -1848.0]:
 			b.circle(Vector2(450.0, py), 5.0, LAMP_IRON)
 		b.line(Vector2(450.0, -2100.0), Vector2(450.0, -1840.0), LAMP_IRON, 7.0)
@@ -820,7 +819,7 @@ static func _draw_convent_terrace(b: ShapeBatch, y0: float, y1: float) -> void:
 	# East Convent dels Àngels stone bench-ledge along x = 920, y = -2420 .. -1900 ("LEDGE GRIND")
 	var cl := Rect2(910.0, -2420.0, 22.0, 520.0)
 	if cl.end.y >= y0 - 20.0 and cl.position.y <= y1 + 20.0:
-		b.rect(Rect2(cl.position + LIGHT * 5.0, cl.size), SHADOW)
+		b.rect(Rect2(cl.position + Shade.light * 5.0, cl.size), SHADOW)
 		b.rect(cl, CONVENT_DARK)
 		b.rect(cl.grow(-2.5), CONVENT_STONE)
 		b.rect(Rect2(917.0, cl.position.y, 6.0, cl.size.y), RAIL_STEEL)
@@ -828,7 +827,7 @@ static func _draw_convent_terrace(b: ShapeBatch, y0: float, y1: float) -> void:
 
 	# Solid stone convent plinth at CONVENT_PLINTH (960, -2560, 64, 130)
 	if CONVENT_PLINTH.end.y >= y0 - 20.0 and CONVENT_PLINTH.position.y <= y1 + 20.0:
-		b.rect(Rect2(CONVENT_PLINTH.position + LIGHT * 6.0, CONVENT_PLINTH.size), SHADOW)
+		b.rect(Rect2(CONVENT_PLINTH.position + Shade.light * 6.0, CONVENT_PLINTH.size), SHADOW)
 		b.rect(CONVENT_PLINTH, CONVENT_DARK)
 		b.rect(CONVENT_PLINTH.grow(-3.0), CONVENT_STONE)
 		b.rect(CONVENT_PLINTH.grow(-8.0), CONVENT_STONE.lightened(0.10))
@@ -873,7 +872,7 @@ static func _draw_skater_body(b: ShapeBatch, p: Vector2, facing: Vector2, k: int
 	var shirt: Color = SKATER_SHIRTS[k % SKATER_SHIRTS.size()]
 	var hair: Color = SKATER_HAIR[(k * 3 + 1) % SKATER_HAIR.size()]
 	var skin: Color = SKIN[(k * 5 + 2) % SKIN.size()]
-	b.circle(p + LIGHT * 4.0, 10.0, SHADOW)
+	b.circle(p + Shade.light * 4.0, 10.0, SHADOW)
 	if sitting:
 		# legs out in front, sneakers at the end
 		var jeans := Color(0.24, 0.32, 0.46) if k % 2 == 0 else Color(0.16, 0.16, 0.18)
@@ -894,7 +893,7 @@ static func _draw_skater_body(b: ShapeBatch, p: Vector2, facing: Vector2, k: int
 
 static func _draw_board(b: ShapeBatch, p: Vector2, along: Vector2, k: int) -> void:
 	var side := Vector2(-along.y, along.x)
-	b.capsule(p - along * 11.0 + LIGHT * 2.5, p + along * 11.0 + LIGHT * 2.5, 4.6, SHADOW)
+	b.capsule(p - along * 11.0 + Shade.light * 2.5, p + along * 11.0 + Shade.light * 2.5, 4.6, SHADOW)
 	b.capsule(p - along * 11.0, p + along * 11.0, 4.6, DECK_GRIP if k % 2 == 0 else Color(0.56, 0.28, 0.24))
 	b.line(p - along * 6.0 - side * 3.0, p - along * 6.0 + side * 3.0, RAIL_STEEL, 1.4)
 	b.line(p + along * 6.0 - side * 3.0, p + along * 6.0 + side * 3.0, RAIL_STEEL, 1.4)
@@ -929,7 +928,7 @@ static func _draw_plaza_gear(b: ShapeBatch, y0: float, y1: float) -> void:
 			1:
 				# a backpack, flap and straps
 				var bc: Color = [Color(0.20, 0.30, 0.46), Color(0.50, 0.20, 0.18), Color(0.22, 0.24, 0.22)][i % 3]
-				b.rect(Rect2(p + Vector2(-7.0, -6.0) + LIGHT * 3.0, Vector2(14.0, 13.0)), SHADOW)
+				b.rect(Rect2(p + Vector2(-7.0, -6.0) + Shade.light * 3.0, Vector2(14.0, 13.0)), SHADOW)
 				b.rect(Rect2(p + Vector2(-7.0, -6.0), Vector2(14.0, 13.0)), bc)
 				b.rect(Rect2(p + Vector2(-7.0, -6.0), Vector2(14.0, 5.0)), bc.darkened(0.25))
 				b.line(p + Vector2(-4.0, 7.0), p + Vector2(-4.0, 10.0), bc.darkened(0.35), 1.6)
@@ -940,13 +939,13 @@ static func _draw_plaza_gear(b: ShapeBatch, y0: float, y1: float) -> void:
 				b.circle(p + Vector2(6.5, 0.0), 1.8, Color(0.22, 0.48, 0.80))
 			3:
 				# a little speaker
-				b.rect(Rect2(p + Vector2(-8.0, -5.0) + LIGHT * 3.0, Vector2(16.0, 10.0)), SHADOW)
+				b.rect(Rect2(p + Vector2(-8.0, -5.0) + Shade.light * 3.0, Vector2(16.0, 10.0)), SHADOW)
 				b.rect(Rect2(p + Vector2(-8.0, -5.0), Vector2(16.0, 10.0)), Color(0.12, 0.12, 0.14))
 				b.circle(p + Vector2(-3.5, 0.0), 3.2, Color(0.30, 0.30, 0.34))
 				b.circle(p + Vector2(3.5, 0.0), 3.2, Color(0.30, 0.30, 0.34))
 			_:
 				# a traffic cone set out as an obstacle line
-				b.rect(Rect2(p + Vector2(-7.0, -7.0) + LIGHT * 3.0, Vector2(14.0, 14.0)), SHADOW)
+				b.rect(Rect2(p + Vector2(-7.0, -7.0) + Shade.light * 3.0, Vector2(14.0, 14.0)), SHADOW)
 				b.rect(Rect2(p + Vector2(-7.0, -7.0), Vector2(14.0, 14.0)), Color(0.92, 0.42, 0.14))
 				b.circle(p, 4.5, Color(0.96, 0.94, 0.90))
 				b.circle(p, 2.4, Color(0.92, 0.42, 0.14))
@@ -957,13 +956,13 @@ static func _draw_planters(b: ShapeBatch, y0: float, y1: float) -> void:
 		var r: Rect2 = PLANTERS[i]
 		if r.end.y + 40.0 < y0 or r.position.y - 40.0 > y1:
 			continue
-		b.rect(Rect2(r.position + LIGHT * 5.0, r.size), SHADOW)
+		b.rect(Rect2(r.position + Shade.light * 5.0, r.size), SHADOW)
 		b.rect(r, Color(0.66, 0.66, 0.64))
 		b.rect(r.grow(-5.0), Color(0.36, 0.28, 0.20))
 		b.rect(Rect2(r.position.x, r.position.y, r.size.x, 3.0), Color(0.80, 0.80, 0.78))
 		# the plane tree's crown, lit on the sun side
 		var c := r.get_center()
-		b.circle(c + LIGHT * 12.0, 40.0, Color(0.04, 0.06, 0.04, 0.22))
+		b.circle(c + Shade.light * 12.0, 40.0, Color(0.04, 0.06, 0.04, 0.22))
 		b.circle(c, 40.0, Color(0.28, 0.42, 0.22))
 		b.circle(c + Vector2(-14.0, -10.0), 24.0, Color(0.36, 0.52, 0.26))
 		b.circle(c + Vector2(16.0, -4.0), 20.0, Color(0.32, 0.48, 0.24))
@@ -985,7 +984,7 @@ static func _draw_bike_rack(b: ShapeBatch, y0: float, y1: float) -> void:
 	for bk in range(2):
 		var by := r.position.y + 28.0 + float(bk) * 64.0
 		var col := Color(0.20, 0.44, 0.62) if bk == 0 else Color(0.74, 0.22, 0.20)
-		b.line(Vector2(r.position.x - 2.0, by) + LIGHT * 3.0, Vector2(r.end.x + 2.0, by) + LIGHT * 3.0, SHADOW, 6.0)
+		b.line(Vector2(r.position.x - 2.0, by) + Shade.light * 3.0, Vector2(r.end.x + 2.0, by) + Shade.light * 3.0, SHADOW, 6.0)
 		b.circle(Vector2(r.position.x + 2.0, by), 7.0, Color(0.10, 0.10, 0.11))
 		b.circle(Vector2(r.end.x - 2.0, by), 7.0, Color(0.10, 0.10, 0.11))
 		b.circle(Vector2(r.position.x + 2.0, by), 4.5, Color(0.40, 0.40, 0.42))
@@ -1027,7 +1026,7 @@ static func _draw_rollers(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> voi
 		var k := i + 3
 		var shirt: Color = SKATER_SHIRTS[k % SKATER_SHIRTS.size()]
 		var skin: Color = SKIN[k % SKIN.size()]
-		b.circle(p + LIGHT * 4.0, 9.0, SHADOW)
+		b.circle(p + Shade.light * 4.0, 9.0, SHADOW)
 		b.capsule(p + along * 6.0, p - along * 6.0, 5.5, shirt)
 		var sway := sin(t * 3.0 + float(i)) * 3.0
 		b.line(p + along * 6.0, p + along * 15.0 + side * sway, skin, 3.0)
@@ -1041,11 +1040,11 @@ static func _draw_rollers(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> voi
 static func draw_column(_m: Node2D, wc: Object, p: Vector2) -> void:
 	var b := ShapeBatch.new()
 	# Modernist anthracite steel plaza lamp post with twin luminaire arms
-	b.circle(p + LIGHT * 9.0, 11.0, SHADOW)
-	b.line(p, p + LIGHT * 28.0, SHADOW, 8.0)
+	b.circle(p + Shade.light * 9.0, 11.0, SHADOW)
+	b.line(p, p + Shade.light * 28.0, SHADOW, 8.0)
 	b.circle(p, 11.0, GRANITE_DARK)
 	b.circle(p, 8.5, LAMP_IRON)
-	b.circle(p - LIGHT * 1.5, 5.5, LAMP_IRON.lightened(0.18))
+	b.circle(p - Shade.light * 1.5, 5.5, LAMP_IRON.lightened(0.18))
 	b.line(p + Vector2(-12.0, 0.0), p + Vector2(12.0, 0.0), LAMP_IRON, 3.2)
 	b.circle(p + Vector2(-12.0, 0.0), 3.6, Color(1.0, 0.92, 0.66))
 	b.circle(p + Vector2(12.0, 0.0), 3.6, Color(1.0, 0.92, 0.66))
@@ -1083,18 +1082,18 @@ static func draw_bollard(_m: Node2D, wc: Object, h: Dictionary) -> void:
 
 static func draw_bin(_m: Node2D, wc: Object, bn: Vector2) -> void:
 	var b := ShapeBatch.new()
-	b.circle(bn + LIGHT * 7.0, 12.0, SHADOW)
+	b.circle(bn + Shade.light * 7.0, 12.0, SHADOW)
 	b.circle(bn, 12.5, LAMP_IRON)
 	b.circle(bn, 10.5, Color(0.32, 0.34, 0.38))
 	b.circle(bn + Vector2(0.8, 1.0), 6.2, Color(0.10, 0.11, 0.12))
-	b.circle(bn - LIGHT * 2.5, 2.2, RAIL_STEEL)
+	b.circle(bn - Shade.light * 2.5, 2.2, RAIL_STEEL)
 	b.flush(wc)
 
 
 static func draw_fountain(m: Node2D, f: Vector2) -> void:
 	var b := ShapeBatch.new()
 	b.circle(f + Vector2(9.0, 6.0), 9.0, Color(0.36, 0.52, 0.62, 0.40))
-	b.circle(f + LIGHT * 6.0, 12.0, SHADOW)
+	b.circle(f + Shade.light * 6.0, 12.0, SHADOW)
 	b.circle(f, 12.5, GRANITE_DARK)
 	b.circle(f, 10.0, Color(0.24, 0.36, 0.44))
 	var col_p := f + Vector2(0.0, -5.5)
@@ -1106,7 +1105,7 @@ static func draw_fountain(m: Node2D, f: Vector2) -> void:
 
 static func draw_snack(_m: Node2D, wc: Object, kp: Vector2) -> void:
 	var b := ShapeBatch.new()
-	b.circle(kp + LIGHT * 3.0, 9.5, SHADOW)
+	b.circle(kp + Shade.light * 3.0, 9.5, SHADOW)
 	# Paper cone with two golden sugared churros
 	b.polygon(PackedVector2Array([
 		kp + Vector2(-10.0, 2.0), kp + Vector2(-4.0, -8.0),
@@ -1124,7 +1123,7 @@ static func draw_live(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	var taken: bool = bool(m.prize_taken) if "prize_taken" in m else false
 	if not taken and PRIZE.y + 40.0 >= vt and PRIZE.y - 40.0 <= vb:
 		b.glow(PRIZE, 24.0, Color(1.0, 0.88, 0.42, 0.28))
-		b.circle(PRIZE + LIGHT * 3.5, 11.0, SHADOW)
+		b.circle(PRIZE + Shade.light * 3.5, 11.0, SHADOW)
 		# Stone ledge plinth under the prize bag
 		b.rect(Rect2(PRIZE - Vector2(14.0, 10.0), Vector2(28.0, 20.0)), GRANITE_DARK)
 		b.rect(Rect2(PRIZE - Vector2(12.0, 8.0), Vector2(24.0, 16.0)), PODIUM_STONE)
@@ -1245,9 +1244,9 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 		for ti in range(4):
 			var ty := bed.position.y + 70.0 + float(ti) * 125.0
 			var tp := Vector2(bed.get_center().x, ty)
-			b.circle(tp + LIGHT * 6.0, 22.0, SHADOW)
+			b.circle(tp + Shade.light * 6.0, 22.0, SHADOW)
 			b.circle(tp, 21.0, ORANGE_LEAF.darkened(0.18))
-			b.circle(tp - LIGHT * 3.0, 15.0, ORANGE_LEAF)
+			b.circle(tp - Shade.light * 3.0, 15.0, ORANGE_LEAF)
 			b.circle(tp + Vector2(-5.0, -4.0), 3.0, ORANGE_FRUIT)
 			b.circle(tp + Vector2(6.0, 3.0), 2.8, ORANGE_FRUIT)
 			b.circle(tp + Vector2(2.0, -7.0), 2.6, ORANGE_FRUIT)
@@ -1264,7 +1263,7 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 		b.line(Vector2(304.0, cy), Vector2(976.0, cy), CLOISTER_ARCH.darkened(0.12), 1.5)
 		for col_x: float in [336.0, 944.0]:
 			var cp := Vector2(col_x, cy)
-			b.circle(cp + LIGHT * 4.0, 9.5, SHADOW)
+			b.circle(cp + Shade.light * 4.0, 9.5, SHADOW)
 			b.rect(Rect2(cp - Vector2(8.0, 8.0), Vector2(16.0, 16.0)), CLOISTER_ARCH)
 			b.circle(cp, 6.5, CLOISTER_STONE.lightened(0.08))
 		cy += 64.0
@@ -1273,13 +1272,13 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 
 	# 4. Octagonal Renaissance stone fountain basin in the north-center of the cloister
 	var f_pos := Vector2(640.0, r.position.y + 220.0)
-	b.circle(f_pos + LIGHT * 6.0, 46.0, SHADOW)
+	b.circle(f_pos + Shade.light * 6.0, 46.0, SHADOW)
 	b.circle(f_pos, 44.0, CLOISTER_ARCH)
 	b.circle(f_pos, 38.0, CLOISTER_STONE.lightened(0.06))
 	b.circle(f_pos, 30.0, Color(0.22, 0.44, 0.56))
-	b.circle(f_pos - LIGHT * 4.0, 18.0, Color(0.34, 0.58, 0.70, 0.65))
+	b.circle(f_pos - Shade.light * 4.0, 18.0, Color(0.34, 0.58, 0.70, 0.65))
 	b.circle(f_pos, 9.0, CLOISTER_ARCH)
-	b.circle(f_pos - LIGHT * 1.5, 5.5, CLOISTER_STONE.lightened(0.12))
+	b.circle(f_pos - Shade.light * 1.5, 5.5, CLOISTER_STONE.lightened(0.12))
 
 	# 5. Perimeter Romanesque/Renaissance sandstone cloister walls
 	var wall_w := 22.0

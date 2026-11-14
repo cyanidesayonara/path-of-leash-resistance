@@ -205,7 +205,7 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 static func _draw_picnic(m: Node2D, b: ShapeBatch) -> void:
 	var t := PICNIC_TABLE
 	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.28)
-	b.rect(Rect2(t.position + m.LIGHT * 8.0, t.size), sh)
+	b.rect(Rect2(t.position + Shade.light * 8.0, t.size), sh)
 	for by: float in [t.position.y - 14.0, t.end.y + 4.0]:
 		b.rect(Rect2(t.position.x + 6.0, by + 3.0, t.size.x - 12.0, 10.0), sh)
 		b.rect(Rect2(t.position.x + 6.0, by, t.size.x - 12.0, 10.0), WOOD_BARK)
@@ -224,7 +224,7 @@ static func _draw_picnic(m: Node2D, b: ShapeBatch) -> void:
 		b.line(t.position + Vector2(24 + k * 14, 8), t.position + Vector2(36 + k * 12, 66), Color(0.96, 0.94, 0.90, 0.8), 2.0)
 	# the basket on its side, and what came out of it
 	var bk := t.position + Vector2(96, 42)
-	b.circle(bk + m.LIGHT * 3.0, 13.0, sh)
+	b.circle(bk + Shade.light * 3.0, 13.0, sh)
 	b.circle(bk, 12.0, Color(0.62, 0.44, 0.24))
 	b.circle(bk + Vector2(-2, -2), 8.0, Color(0.72, 0.54, 0.30))
 	for k in range(5):
@@ -237,7 +237,7 @@ static func _draw_picnic(m: Node2D, b: ShapeBatch) -> void:
 static func _draw_dumpster(m: Node2D, b: ShapeBatch, d: Rect2, i: int) -> void:
 	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.30)
 	var mouth := -1.0 if i == 0 else 1.0
-	b.rect(Rect2(d.position + m.LIGHT * 9.0, d.size), sh)
+	b.rect(Rect2(d.position + Shade.light * 9.0, d.size), sh)
 	b.rect(d, BIN_DARK)
 	b.rect(d.grow(-3.0), BIN_GREEN)
 	for k in range(4):
@@ -258,7 +258,7 @@ static func _draw_dumpster(m: Node2D, b: ShapeBatch, d: Rect2, i: int) -> void:
 	for k in range(9):
 		var h := fmod(absf(sin(float(k) * 12.9898 + float(i) * 7.1) * 43758.5453), 1.0)
 		var sp := Vector2(hx + mouth * (16.0 + h * 46.0), d.get_center().y + (float(k) - 4.0) * 7.0 + (h - 0.5) * 8.0)
-		b.circle(sp + m.LIGHT * 1.5, 4.0, sh)
+		b.circle(sp + Shade.light * 1.5, 4.0, sh)
 		b.circle(sp, 3.0 + h * 2.0, LITTER[k % LITTER.size()])
 	b.polygon(PackedVector2Array([
 		Vector2(hx + mouth * 12.0, d.get_center().y - 8.0), Vector2(hx + mouth * 34.0, d.get_center().y - 14.0),

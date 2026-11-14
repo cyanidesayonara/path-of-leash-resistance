@@ -100,7 +100,7 @@ static func _drain_board(m: Node2D, b: ShapeBatch, c: Vector2, hh: float) -> voi
 # tables leaned behind them, all of it chained to the lamp standard with a
 # padlock on the chain. Water stands on the top seats.
 static func _stacked_terrace(m: Node2D, b: ShapeBatch, r: Rect2, t: float) -> void:
-	b.rect(Rect2(r.position + m.LIGHT * 7.0, r.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.26))
+	b.rect(Rect2(r.position + Shade.light * 7.0, r.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.26))
 	# the folded tables, wrapped in a blue waterproof vinyl tarpaulin
 	var tp := Rect2(r.end.x - 9.0, r.position.y + 2.0, 8.0, r.size.y - 4.0)
 	b.rect(tp, Color(0.18, 0.38, 0.65))
@@ -213,10 +213,10 @@ static func _draw_porxo(m: Node2D, c: Object) -> void:
 		cols.append(Vector2(ix1, cy))
 		cy += m.PORXO_BAY
 	for cp: Vector2 in cols:
-		b.circle(cp + m.LIGHT * 9.0, 12.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.30))
+		b.circle(cp + Shade.light * 9.0, 12.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.30))
 		b.rect(Rect2(cp - Vector2(13, 13), Vector2(26, 26)), Color(0.64, 0.60, 0.54))
 		b.circle(cp, 10.0, Color(0.76, 0.72, 0.66))
-		b.circle(cp - m.LIGHT * 2.5, 6.5, Color(0.84, 0.81, 0.76))
+		b.circle(cp - Shade.light * 2.5, 6.5, Color(0.84, 0.81, 0.76))
 	# the walls round the yard, open at the gate
 	var wall := Color(0.60, 0.54, 0.46)
 	b.rect(Rect2(r.position.x - 10.0, r.position.y - 10.0, r.size.x + 20.0, 10.0), wall)
@@ -273,7 +273,7 @@ static func draw_freedom_beyond(m: Node2D, c: Object) -> void:
 				tx += 9.0
 	for k in range(9):
 		var tp := Vector2(-300.0 + float(k) * 240.0, top - 260.0 + fmod(float(k) * 53.0, 80.0))
-		b.circle(tp + m.LIGHT * 10.0, 16.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.3))
+		b.circle(tp + Shade.light * 10.0, 16.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.3))
 		b.circle(tp, 15.0, Color(0.80, 0.80, 0.78))
 		b.circle(tp, 6.0, Color(0.56, 0.58, 0.60))
 	b.flush(c)

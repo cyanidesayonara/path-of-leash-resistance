@@ -155,7 +155,7 @@ func draw(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 
 	# 1. Cart shadow
 	var r := Rect2(cp.x - CART_SIZE.x * 0.5, cp.y - CART_SIZE.y * 0.5, CART_SIZE.x, CART_SIZE.y)
-	wc.rect(Rect2(r.position + m.LIGHT * 8.0, r.size), sh)
+	wc.rect(Rect2(r.position + Shade.light * 8.0, r.size), sh)
 
 	# 2. Wheels
 	var wy := cp.y + CART_SIZE.y * 0.5 - 2.0
@@ -211,7 +211,7 @@ func draw(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 
 	# 9. Vendor (standing behind/beside cart at north edge)
 	var vp := Vector2(cp.x + 4.0, cp.y - 18.0)
-	wc.circle(vp + m.LIGHT * 4.0, 6.0, sh)
+	wc.circle(vp + Shade.light * 4.0, 6.0, sh)
 	# Body / Apron
 	wc.capsule(vp + Vector2(-4.0, 0.0), vp + Vector2(4.0, 0.0), 5.0, VENDOR_APRON)
 	# Head & Red cap (barretina)
@@ -224,7 +224,7 @@ func draw(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 	# 10. Dropped churro on paving (if not eaten)
 	if state >= State.ACTIVE and not churro_eaten:
 		var ch_p := CHURRO_DROP_POS
-		wc.capsule(ch_p + m.LIGHT * 3.0, ch_p + Vector2(12.0, 5.0) + m.LIGHT * 3.0, 3.2, sh)
+		wc.capsule(ch_p + Shade.light * 3.0, ch_p + Vector2(12.0, 5.0) + Shade.light * 3.0, 3.2, sh)
 		wc.capsule(ch_p, ch_p + Vector2(12.0, 5.0), 3.0, CHURRO_CRUST)
 		wc.capsule(ch_p + Vector2(0.8, 0.6), ch_p + Vector2(11.2, 4.4), 2.2, CHURRO_GOLD)
 		# A few tiny golden crumbs

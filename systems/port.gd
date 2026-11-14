@@ -12,7 +12,6 @@ const Surfaces := preload("res://world/surfaces.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const BossLleons := preload("res://systems/boss_lleons.gd")
 
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.22)
 
 # --- colors ------------------------------------------------------------------
@@ -370,7 +369,7 @@ static func draw_edge_layer(m: Node2D, c: ShapeBatch, vt: float, vb: float) -> v
 
 
 static func _draw_lifebuoy(c: ShapeBatch, p: Vector2) -> void:
-	c.circle(p + LIGHT * 3.0, 11.0, SHADOW)
+	c.circle(p + Shade.light * 3.0, 11.0, SHADOW)
 	c.circle(p, 10.0, BUOY_ORANGE)
 	c.circle(p, 5.0, WAREHOUSE_WALL)
 	for angle in [0.0, PI * 0.5, PI, PI * 1.5]:
@@ -392,7 +391,7 @@ static func _draw_boat(c: ShapeBatch, r: Rect2) -> void:
 
 
 static func _draw_crate_stack(c: ShapeBatch, r: Rect2, label: String) -> void:
-	c.rect(Rect2(r.position + LIGHT * 8.0, r.size), SHADOW)
+	c.rect(Rect2(r.position + Shade.light * 8.0, r.size), SHADOW)
 	c.rect(r, CRATE_PINE)
 	c.rect(Rect2(r.position.x + 8.0, r.position.y, 4.0, r.size.y), CRATE_BAND)
 	c.rect(Rect2(r.position.x + r.size.x - 12.0, r.position.y, 4.0, r.size.y), CRATE_BAND)
@@ -408,7 +407,7 @@ static func _draw_crate_stack(c: ShapeBatch, r: Rect2, label: String) -> void:
 
 
 static func _draw_auction_shed(c: ShapeBatch, r: Rect2) -> void:
-	c.rect(Rect2(r.position + LIGHT * 10.0, r.size), SHADOW)
+	c.rect(Rect2(r.position + Shade.light * 10.0, r.size), SHADOW)
 	c.rect(r, WAREHOUSE_WALL)
 	c.rect(Rect2(r.position.x, r.position.y, r.size.x, 14.0), WAREHOUSE_TRIM)
 	letters(c, "LLOTJA", Vector2(r.position.x + r.size.x * 0.5, r.position.y + 10.0), 7.5, Color.WHITE, 1.6, r.size.x - 16.0)
@@ -421,20 +420,20 @@ static func _draw_auction_shed(c: ShapeBatch, r: Rect2) -> void:
 
 
 static func _draw_tavern_terrace(c: ShapeBatch, r: Rect2) -> void:
-	c.rect(Rect2(r.position + LIGHT * 8.0, r.size), SHADOW)
+	c.rect(Rect2(r.position + Shade.light * 8.0, r.size), SHADOW)
 	c.rect(r, BOARDWALK_TIMBER)
 	c.rect(Rect2(r.position.x, r.position.y, r.size.x, 4.0), BOARDWALK_PLANK)
 	c.rect(Rect2(r.position.x, r.position.y + r.size.y - 4.0, r.size.x, 4.0), BOARDWALK_PLANK)
 	for i in 3:
 		var tp := Vector2(r.position.x + r.size.x * 0.5, r.position.y + 24.0 + float(i) * 44.0)
-		c.circle(tp + LIGHT * 4.0, 14.0, SHADOW)
+		c.circle(tp + Shade.light * 4.0, 14.0, SHADOW)
 		c.circle(tp, 13.0, BOAT_BLUE)
 		c.circle(tp, 10.0, BOAT_WHITE)
 		c.circle(tp, 3.0, Color(0.85, 0.25, 0.20))
 
 
 static func _draw_net_reel(c: ShapeBatch, r: Rect2) -> void:
-	c.rect(Rect2(r.position + LIGHT * 6.0, r.size), SHADOW)
+	c.rect(Rect2(r.position + Shade.light * 6.0, r.size), SHADOW)
 	c.rect(r, Color(0.32, 0.35, 0.38))
 	var spool := Rect2(r.position.x + 6.0, r.position.y + 8.0, r.size.x - 12.0, r.size.y - 16.0)
 	c.rect(spool, Color(0.24, 0.42, 0.32))
@@ -449,7 +448,7 @@ static func draw_bollard(_m: Node2D, wc: ShapeBatch, h: Dictionary) -> void:
 	var is_cleat: bool = String(h.get("kind", "")) == "cleat"
 	var done: bool = bool(h.get("done", false))
 
-	wc.circle(p + LIGHT * 6.0, 11.0, SHADOW)
+	wc.circle(p + Shade.light * 6.0, 11.0, SHADOW)
 
 	if is_cleat:
 		wc.rect(Rect2(p.x - 14.0, p.y - 4.0, 28.0, 8.0), BOLLARD_IRON)
@@ -513,7 +512,7 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 static func _draw_gull(wc: ShapeBatch, p: Vector2, t: float) -> void:
 	var bob := sin(t * 3.0 + p.x) * 1.5
 	var gp := p + Vector2(0.0, bob)
-	wc.circle(p + LIGHT * 4.0, 4.0, SHADOW)
+	wc.circle(p + Shade.light * 4.0, 4.0, SHADOW)
 	wc.circle(gp, 4.5, Color(0.95, 0.95, 0.95))
 	wc.line(gp + Vector2(-3.0, 1.0), gp + Vector2(3.0, 1.0), Color(0.60, 0.65, 0.70), 2.5)
 	wc.line(gp + Vector2(3.0, -1.0), gp + Vector2(7.0, -0.5), Color(0.96, 0.75, 0.15), 1.8)
@@ -524,7 +523,7 @@ static func _draw_gull(wc: ShapeBatch, p: Vector2, t: float) -> void:
 static func _draw_gull_flying(wc: ShapeBatch, spot: Vector2, dir: Vector2, up: float, anim: float) -> void:
 	var gp := spot + dir * GULL_FLY_SPEED * up
 	var lift := minf(1.0, up / GULL_FLY_SECS)
-	wc.circle(spot + dir * GULL_FLY_SPEED * up * 0.6 + LIGHT * (4.0 + 26.0 * lift), 4.0 * (1.0 - 0.5 * lift), SHADOW)
+	wc.circle(spot + dir * GULL_FLY_SPEED * up * 0.6 + Shade.light * (4.0 + 26.0 * lift), 4.0 * (1.0 - 0.5 * lift), SHADOW)
 	var side := dir.orthogonal()
 	var flap := sin(anim * 24.0)
 	var s := 1.55
@@ -555,7 +554,7 @@ static func draw_freedom(m: Node2D, ci: Object) -> void:
 	c.rect(Rect2(1092.0, top, 28.0, 600.0), BOARDWALK_TIMBER)
 
 	var lh := Vector2(640.0, top + 40.0)
-	c.circle(lh + LIGHT * 10.0, 32.0, SHADOW)
+	c.circle(lh + Shade.light * 10.0, 32.0, SHADOW)
 	c.circle(lh, 28.0, Color(0.85, 0.85, 0.82))
 	c.circle(lh, 20.0, Color(0.18, 0.52, 0.32))
 	c.circle(lh, 12.0, Color(0.96, 0.96, 0.92))

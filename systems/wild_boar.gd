@@ -60,7 +60,6 @@ var _toss := RandomNumberGenerator.new()
 var anim_time: float = 0.0
 
 # Visual colors
-const LIGHT := Vector2(0.5, 0.866)
 const FUR_DARK := Color(0.20, 0.17, 0.15)
 const FUR_BRISTLE := Color(0.32, 0.26, 0.22)
 const SNOUT_PINK := Color(0.76, 0.52, 0.50)
@@ -181,7 +180,7 @@ func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 
 	# 1. Dropped wild truffle
 	if truffle_dropped and not truffle_snatched:
-		b.circle(truffle_pos + m.LIGHT * 2.0, 4.0, sh)
+		b.circle(truffle_pos + Shade.light * 2.0, 4.0, sh)
 		b.circle(truffle_pos, 4.5, TRUFFLE_BLACK)
 		b.circle(truffle_pos + Vector2(1.0, -1.0), 2.2, TRUFFLE_DIRT)
 
@@ -194,7 +193,7 @@ func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 		var p1 := pos + Vector2(piglet_lead, -12.0) + Vector2(sin(anim_time * 16.0) * 2.0, sin(anim_time * 18.0) * 2.0)
 		var p2 := pos + Vector2(piglet_lead - 10.0, 14.0) + Vector2(cos(anim_time * 15.0) * 2.0, cos(anim_time * 17.0) * 2.0)
 		for p: Vector2 in [p1, p2]:
-			b.circle(p + m.LIGHT * 3.0, 5.0, sh)
+			b.circle(p + Shade.light * 3.0, 5.0, sh)
 			b.circle(p, 5.5, PIG_BASE)
 			b.circle(p + Vector2(3.5, 0.0), 3.5, PIG_BASE)
 			b.circle(p + Vector2(5.5, 0.0), 1.6, SNOUT_PINK)
@@ -206,7 +205,7 @@ func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	var sow_p := pos + Vector2(0.0, bob)
 
 	# Cast shadow
-	b.circle(sow_p + m.LIGHT * 6.0, 16.0, sh)
+	b.circle(sow_p + Shade.light * 6.0, 16.0, sh)
 
 	# Body: hindquarters and shoulders
 	b.circle(sow_p + Vector2(-6.0, 0.0), 12.0, FUR_DARK)

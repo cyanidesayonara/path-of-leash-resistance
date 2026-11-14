@@ -25,7 +25,6 @@ const Surfaces := preload("res://world/surfaces.gd")
 const EixampleTour := preload("res://systems/eixample_tour.gd")
 const NightFronts := preload("res://world/night_fronts.gd")
 
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.07, 0.22)
 
 # --- the street's shape --------------------------------------------------------
@@ -388,7 +387,7 @@ static func _islands(wc: ShapeBatch, lo: float, hi: float) -> void:
 	for r: Rect2 in island_rects():
 		if r.end.y + 30.0 < lo or r.position.y - 30.0 > hi:
 			continue
-		wc.rect(Rect2(r.position + LIGHT * 8.0, r.size), SHADOW)
+		wc.rect(Rect2(r.position + Shade.light * 8.0, r.size), SHADOW)
 		var hy := r.position.y + 14.0
 		while hy < r.end.y - 10.0:
 			wc.circle(Vector2(r.get_center().x - 14.0, hy), 15.0, HEDGE)
@@ -599,9 +598,9 @@ static func _roof_detail(b: ShapeBatch, pts: PackedVector2Array, side: float, sa
 		# the corner house: a round tribune turret on the cut corner with a
 		# trencadís cap, as the modernista corners have
 		var corner := (pts[0] + pts[1]) * 0.5 + Vector2(side * 30.0, 0.0)
-		b.circle(corner + LIGHT * 10.0, 26.0, SHADOW)
+		b.circle(corner + Shade.light * 10.0, 26.0, SHADOW)
 		b.circle(corner, 26.0, TURRET)
-		b.circle(corner - LIGHT * 4.0, 19.0, TURRET_LIT)
+		b.circle(corner - Shade.light * 4.0, 19.0, TURRET_LIT)
 		for i in range(10):
 			var a := TAU * float(i) / 10.0
 			b.circle(corner + Vector2.from_angle(a) * 12.0, 3.4, TRENCADIS[(salt + i) % TRENCADIS.size()])
@@ -611,7 +610,7 @@ static func _roof_detail(b: ShapeBatch, pts: PackedVector2Array, side: float, sa
 		var mid := corner.lerp(back, 0.62)
 		b.rect(Rect2(mid - Vector2(34.0, 30.0), Vector2(68.0, 60.0)), PARAPET)
 		b.rect(Rect2(mid - Vector2(30.0, 26.0), Vector2(60.0, 52.0)), TERRAT)
-		b.rect(Rect2(mid + Vector2(-12.0, -22.0) + LIGHT * 5.0, Vector2(26.0, 20.0)), SHADOW)
+		b.rect(Rect2(mid + Vector2(-12.0, -22.0) + Shade.light * 5.0, Vector2(26.0, 20.0)), SHADOW)
 		b.rect(Rect2(mid + Vector2(-12.0, -22.0), Vector2(26.0, 20.0)), STAIR_HOUSE)
 		return
 	# a roof terrace: red tiles inside a white parapet, the stair house, a
@@ -621,14 +620,14 @@ static func _roof_detail(b: ShapeBatch, pts: PackedVector2Array, side: float, sa
 		inner.append(p + (c - p) * 0.14)
 	b.polygon(inner, TERRAT)
 	var sh := c + Vector2(side * 20.0, -10.0 + _h(salt) * 20.0)
-	b.rect(Rect2(sh + LIGHT * 6.0 - Vector2(16.0, 12.0), Vector2(32.0, 24.0)), SHADOW)
+	b.rect(Rect2(sh + Shade.light * 6.0 - Vector2(16.0, 12.0), Vector2(32.0, 24.0)), SHADOW)
 	b.rect(Rect2(sh - Vector2(16.0, 12.0), Vector2(32.0, 24.0)), STAIR_HOUSE)
 	b.rect(Rect2(sh - Vector2(16.0, 12.0), Vector2(32.0, 5.0)), STAIR_HOUSE.darkened(0.12))
 	if _h(salt * 3) > 0.4:
 		var tk := c + Vector2(-side * 26.0, 18.0)
-		b.circle(tk + LIGHT * 5.0, 9.0, SHADOW)
+		b.circle(tk + Shade.light * 5.0, 9.0, SHADOW)
 		b.circle(tk, 9.0, TANK)
-		b.circle(tk - LIGHT * 2.0, 5.0, TANK.lightened(0.1))
+		b.circle(tk - Shade.light * 2.0, 5.0, TANK.lightened(0.1))
 	if _h(salt * 7) > 0.5:
 		var w0 := c + Vector2(-side * 34.0, -26.0)
 		var w1 := w0 + Vector2(side * 56.0, 0.0)
@@ -659,7 +658,7 @@ static func _side_street(b: ShapeBatch, yi: float) -> void:
 		for i in range(3):
 			var car := Vector2(cx + side * float(i) * 120.0, yi + STREET_H - 26.0)
 			var col: Color = [Color(0.72, 0.18, 0.16), Color(0.86, 0.86, 0.84), Color(0.18, 0.24, 0.36)][(int(absf(yi) / 10.0) + i) % 3]
-			b.rect(Rect2(car - Vector2(46.0, 14.0) + LIGHT * 5.0, Vector2(92.0, 32.0)), SHADOW)
+			b.rect(Rect2(car - Vector2(46.0, 14.0) + Shade.light * 5.0, Vector2(92.0, 32.0)), SHADOW)
 			b.rect(Rect2(car - Vector2(46.0, 16.0), Vector2(92.0, 32.0)), col)
 			b.rect(Rect2(car - Vector2(20.0, 12.0), Vector2(40.0, 24.0)), Color(0.24, 0.30, 0.36))
 			b.rect(Rect2(car - Vector2(16.0, 10.0), Vector2(32.0, 20.0)), col.lightened(0.1))
@@ -672,7 +671,7 @@ static func _side_street(b: ShapeBatch, yi: float) -> void:
 		var offs: Array[float] = [-78.0, -52.0, 32.0, 58.0, 84.0]
 		for i in range(5):
 			var r := Rect2(x - 12.0, yi + offs[i] - 12.0, 24.0, 24.0)
-			b.rect(Rect2(r.position + LIGHT * 4.0, r.size), SHADOW)
+			b.rect(Rect2(r.position + Shade.light * 4.0, r.size), SHADOW)
 			b.rect(r, CONTAINERS[i])
 			b.rect(Rect2(r.position.x + 3.0, r.position.y + 3.0, r.size.x - 6.0, 6.0), CONTAINERS[i].lightened(0.18))
 
@@ -697,7 +696,7 @@ static func _basilica(b: ShapeBatch, top: float, bot: float) -> void:
 	b.rect(Rect2(fx, fy0, 480.0, fy1 - fy0), STONE)
 	for i in range(3):
 		var py := lerpf(fy0, fy1, (float(i) + 0.5) / 3.0)
-		b.circle(Vector2(fx + 20.0, py) + LIGHT * 8.0, 46.0, SHADOW)
+		b.circle(Vector2(fx + 20.0, py) + Shade.light * 8.0, 46.0, SHADOW)
 		b.circle(Vector2(fx + 20.0, py), 46.0, STONE_LIT)
 		b.circle(Vector2(fx + 20.0, py), 30.0, Color(0.70, 0.74, 0.54))
 		b.circle(Vector2(fx + 20.0, py), 16.0, Color(0.52, 0.62, 0.42))
@@ -706,28 +705,28 @@ static func _basilica(b: ShapeBatch, top: float, bot: float) -> void:
 	for i in range(4):
 		var ty := lerpf(fy0 + 40.0, fy1 - 40.0, float(i) / 3.0)
 		var tp := Vector2(fx + 150.0, ty)
-		b.capsule(tp, tp + LIGHT * 150.0, 26.0, SHADOW)
+		b.capsule(tp, tp + Shade.light * 150.0, 26.0, SHADOW)
 		b.circle(tp, 30.0, STONE_DARK)
-		b.circle(tp - LIGHT * 3.0, 25.0, STONE)
-		b.circle(tp - LIGHT * 6.0, 17.0, STONE_LIT)
+		b.circle(tp - Shade.light * 3.0, 25.0, STONE)
+		b.circle(tp - Shade.light * 6.0, 17.0, STONE_LIT)
 		for j in range(8):
 			var a := TAU * float(j) / 8.0
-			b.circle(tp - LIGHT * 6.0 + Vector2.from_angle(a) * 11.0, 3.0, TRENCADIS[(i + j) % TRENCADIS.size()])
-		b.circle(tp - LIGHT * 8.0, 6.0, Color(0.94, 0.86, 0.50))
+			b.circle(tp - Shade.light * 6.0 + Vector2.from_angle(a) * 11.0, 3.0, TRENCADIS[(i + j) % TRENCADIS.size()])
+		b.circle(tp - Shade.light * 8.0, 6.0, Color(0.94, 0.86, 0.50))
 		for j in range(4):
-			b.circle(tp - LIGHT * 8.0 + Vector2.from_angle(TAU * float(j) / 4.0) * 7.0, 2.4, Color(0.96, 0.96, 0.92))
+			b.circle(tp - Shade.light * 8.0 + Vector2.from_angle(TAU * float(j) / 4.0) * 7.0, 2.4, Color(0.96, 0.96, 0.92))
 	# the nave's long roof and the great central tower behind it
 	b.rect(Rect2(fx + 230.0, fy0 + 60.0, 400.0, fy1 - fy0 - 120.0), Color(0.62, 0.58, 0.50))
 	var ct := Vector2(fx + 420.0, (fy0 + fy1) * 0.5)
-	b.capsule(ct, ct + LIGHT * 260.0, 44.0, SHADOW)
+	b.capsule(ct, ct + Shade.light * 260.0, 44.0, SHADOW)
 	b.circle(ct, 50.0, STONE_DARK)
-	b.circle(ct - LIGHT * 6.0, 40.0, STONE_LIT)
-	b.circle(ct - LIGHT * 10.0, 16.0, Color(0.96, 0.96, 0.92))
+	b.circle(ct - Shade.light * 6.0, 40.0, STONE_LIT)
+	b.circle(ct - Shade.light * 10.0, 16.0, Color(0.96, 0.96, 0.92))
 	# a tower crane, its mast in the works and its jib swung over the nave
 	var mast := Vector2(fx + 320.0, fy0 + 30.0)
 	b.rect(Rect2(mast - Vector2(9.0, 9.0), Vector2(18.0, 18.0)), CRANE.darkened(0.2))
 	var jib_end := mast + Vector2(-40.0, 340.0)
-	b.line(mast + LIGHT * 40.0, jib_end + LIGHT * 40.0, SHADOW, 8.0)
+	b.line(mast + Shade.light * 40.0, jib_end + Shade.light * 40.0, SHADOW, 8.0)
 	b.line(mast, jib_end, CRANE, 6.0)
 	b.line(mast, mast + Vector2(16.0, -110.0), CRANE, 6.0)
 	b.rect(Rect2(mast + Vector2(6.0, -128.0), Vector2(26.0, 22.0)), Color(0.48, 0.50, 0.52))
@@ -803,11 +802,11 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 		if absf(tp.x - CX) > 70.0:
 			b.circle(tp, 5.0, Color(0.32, 0.48, 0.26))
 	var tower := Vector2(r.position.x + 150.0, r.position.y - 70.0)
-	b.capsule(tower, tower + LIGHT * 120.0, 40.0, SHADOW)
+	b.capsule(tower, tower + Shade.light * 120.0, 40.0, SHADOW)
 	b.circle(tower, 46.0, Color(0.56, 0.30, 0.22))
-	b.circle(tower - LIGHT * 4.0, 38.0, Color(0.68, 0.38, 0.28))
-	b.circle(tower - LIGHT * 8.0, 24.0, Color(0.30, 0.42, 0.48))
-	b.circle(tower - LIGHT * 10.0, 8.0, Color(0.20, 0.20, 0.22))
+	b.circle(tower - Shade.light * 4.0, 38.0, Color(0.68, 0.38, 0.28))
+	b.circle(tower - Shade.light * 8.0, 24.0, Color(0.30, 0.42, 0.48))
+	b.circle(tower - Shade.light * 10.0, 8.0, Color(0.20, 0.20, 0.22))
 	b.rect(Rect2(r.position.x - 20.0, r.position.y - 20.0, r.size.x + 40.0, 20.0), Color(0.86, 0.84, 0.78))
 	b.rect(Rect2(r.position.x - 20.0, r.position.y, 20.0, r.size.y), Color(0.86, 0.84, 0.78))
 	b.rect(Rect2(r.end.x, r.position.y, 20.0, r.size.y), Color(0.86, 0.84, 0.78))

@@ -28,7 +28,6 @@ const EventFeed := preload("res://hud/event_feed.gd")
 const Guitarrista := preload("res://systems/guitarrista.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.07, 0.24)
 
 # --- colors ------------------------------------------------------------------
@@ -358,12 +357,12 @@ static func _draw_city_panorama(m: Node2D, b: ShapeBatch, top: float, bot: float
 		if int(lm.z) == 0:
 			b.rect(Rect2(at.x - 12.0, at.y - 18.0, 24.0, 36.0), CITY_SHADE)
 			for sp: Vector2 in [Vector2(-7, -11), Vector2(7, -11), Vector2(-7, 11), Vector2(7, 11), Vector2(0, 0), Vector2(0, -5)]:
-				b.coarse(at + sp + LIGHT * 3.0, 3.5, Color(0.32, 0.24, 0.26, 0.38))
+				b.coarse(at + sp + Shade.light * 3.0, 3.5, Color(0.32, 0.24, 0.26, 0.38))
 				b.coarse(at + sp, 3.2, Color(0.90, 0.78, 0.62))
 		else:
-			b.coarse(at + LIGHT * 5.0, 9.0, Color(0.32, 0.24, 0.26, 0.38))
+			b.coarse(at + Shade.light * 5.0, 9.0, Color(0.32, 0.24, 0.26, 0.38))
 			b.coarse(at, 8.5, Color(0.68, 0.56, 0.58))
-			b.coarse(at - LIGHT * 2.5, 4.5, Color(0.92, 0.78, 0.64))
+			b.coarse(at - Shade.light * 2.5, 4.5, Color(0.92, 0.78, 0.64))
 
 
 static func _slope_drop(k: int) -> float:
@@ -456,7 +455,7 @@ static func _draw_hillside_slopes(m: Node2D, b: ShapeBatch, top: float, bot: flo
 
 
 static func _draw_agave(b: ShapeBatch, p: Vector2, r: float) -> void:
-	b.coarse(p + LIGHT * 2.5, r * 0.75, SHADOW)
+	b.coarse(p + Shade.light * 2.5, r * 0.75, SHADOW)
 	for i in range(7):
 		var a := float(i) * TAU / 7.0 + 0.2
 		var dir := Vector2(cos(a), sin(a))
@@ -470,7 +469,7 @@ static func _draw_barraca_ruin(b: ShapeBatch, pos: Vector2, seed_k: int) -> void
 	var rw := 52.0 + _hash(seed_k * 17) * 14.0
 	var rh := 32.0
 	var r := Rect2(pos.x, pos.y, rw, rh)
-	b.rect(Rect2(r.position + LIGHT * 3.0, r.size), SHADOW)
+	b.rect(Rect2(r.position + Shade.light * 3.0, r.size), SHADOW)
 	# Outer broken hollow-brick wall stub
 	b.rect(r, BRICK_DARK)
 	b.rect(r.grow(-3.5), TILE_CREAM)
@@ -500,7 +499,7 @@ static func _draw_sunset_watcher(b: ShapeBatch, pos: Vector2, seed_k: int) -> vo
 	b.line(pos + Vector2(-3.0, -3.0), pos + Vector2(-11.0, -3.0), Color(0.22, 0.26, 0.36), 3.5)
 	b.line(pos + Vector2(-3.0, 3.0), pos + Vector2(-11.0, 3.0), Color(0.22, 0.26, 0.36), 3.5)
 	# Shoulders & head facing west
-	b.coarse(pos + LIGHT * 2.5, 7.5, SHADOW)
+	b.coarse(pos + Shade.light * 2.5, 7.5, SHADOW)
 	b.coarse(pos, 7.0, shirt)
 	b.coarse(pos + Vector2(-2.0, 0.0), 4.8, Color(0.92, 0.76, 0.64))
 	b.coarse(pos + Vector2(-1.0, 0.0), 4.4, hair)
@@ -615,7 +614,7 @@ static func _draw_mirador_terrace(wc: ShapeBatch, vt: float, vb: float) -> void:
 
 	# Golden sunset glow over the western overlook balcony (clear of the bench at (420, -4500))
 	wc.glow(mp + Vector2(-10.0, 0.0), mr * 1.45, Color(1.0, 0.80, 0.44, 0.24))
-	wc.circle(mp + LIGHT * 4.0, mr + 3.0, SHADOW)
+	wc.circle(mp + Shade.light * 4.0, mr + 3.0, SHADOW)
 	wc.circle(mp, mr + 2.0, STONE_WALL)
 	wc.circle(mp, mr - 3.0, CONCRETE_LIT)
 	wc.circle(mp, mr - 10.0, CONCRETE_WARM)
@@ -694,9 +693,9 @@ static func _draw_cannons(wc: ShapeBatch, vt: float, vb: float) -> void:
 			continue
 
 		# Cast shadow & weathered concrete circular parapet
-		wc.circle(cp + LIGHT * 7.0, cr + 4.0, SHADOW)
+		wc.circle(cp + Shade.light * 7.0, cr + 4.0, SHADOW)
 		wc.circle(cp, cr, CONCRETE_BASE)
-		wc.circle(cp - LIGHT * 2.5, cr - 2.0, CONCRETE_LIT)
+		wc.circle(cp - Shade.light * 2.5, cr - 2.0, CONCRETE_LIT)
 		wc.circle(cp, cr - 6.0, CONCRETE_WARM)
 
 		# Radial expansion joints & brick repair patches on the parapet rim
@@ -710,7 +709,7 @@ static func _draw_cannons(wc: ShapeBatch, vt: float, vb: float) -> void:
 
 		# Sunken circular gun pit
 		var pit_r := cr - 13.0
-		wc.circle(cp + LIGHT * 2.0, pit_r, CONCRETE_DARK)
+		wc.circle(cp + Shade.light * 2.0, pit_r, CONCRETE_DARK)
 		wc.circle(cp, pit_r - 2.0, CONCRETE_PIT)
 
 		# Recessed ammunition ready-locker niches carved into the inner parapet wall
@@ -722,7 +721,7 @@ static func _draw_cannons(wc: ShapeBatch, vt: float, vb: float) -> void:
 		# Steel azimuth traverse ring & central Vickers 105 mm pedestal mount
 		wc.circle(cp, pit_r - 8.0, STEEL_RAIL)
 		wc.circle(cp, pit_r - 10.5, CONCRETE_PIT)
-		wc.circle(cp + LIGHT * 2.0, 15.0, SHADOW)
+		wc.circle(cp + Shade.light * 2.0, 15.0, SHADOW)
 		wc.circle(cp, 15.0, CONCRETE_LIP)
 		wc.circle(cp, 10.0, CORTEN)
 		wc.circle(cp, 6.0, STEEL_RAIL)
@@ -737,7 +736,7 @@ static func _draw_bunker(wc: ShapeBatch, vt: float, vb: float) -> void:
 		return
 
 	# Cast shadow
-	wc.rect(Rect2(b.position + LIGHT * 9.0, b.size), SHADOW)
+	wc.rect(Rect2(b.position + Shade.light * 9.0, b.size), SHADOW)
 	# Heavy reinforced-concrete command blockhouse
 	wc.rect(b, CONCRETE_DARK)
 	wc.rect(b.grow(-3.0), CONCRETE_BASE)
@@ -784,19 +783,19 @@ static func _draw_fence(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void
 			if absf(q.y - p.y) < FENCE_STEP * 1.6:
 				wc.line(p + Vector2(-4, 0), q + Vector2(-4, 0), TIMBER, 3.5)
 				wc.line(p + Vector2(-1, 0), q + Vector2(-1, 0), TIMBER_LIT, 2.0)
-		wc.circle(p + LIGHT * 4.0, 6.0, SHADOW)
+		wc.circle(p + Shade.light * 4.0, 6.0, SHADOW)
 		wc.circle(p, 5.5, TIMBER)
-		wc.circle(p - LIGHT * 1.5, 3.0, TIMBER_LIT)
+		wc.circle(p - Shade.light * 1.5, 3.0, TIMBER_LIT)
 
 
 # --- custom props: MUHBA Corten marker posts, hillside fountains, bravas -----
 
 static func draw_bollard(_m: Node2D, wc: ShapeBatch, h) -> void:
 	var p: Vector2 = h.pos
-	wc.circle(p + LIGHT * 4.0, 11.0, SHADOW)
+	wc.circle(p + Shade.light * 4.0, 11.0, SHADOW)
 	# Stone plinth base
 	wc.circle(p, 10.5, STONE_WALL)
-	wc.circle(p - LIGHT * 1.0, 8.5, STONE_TOP)
+	wc.circle(p - Shade.light * 1.0, 8.5, STONE_TOP)
 	# Rusted Corten-steel MUHBA battery marker post
 	var post_col := CORTEN if not h.done else CORTEN.darkened(0.22)
 	var top_col := CORTEN_LIT if not h.done else CORTEN_LIT.darkened(0.22)
@@ -812,7 +811,7 @@ static func draw_column(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
 	# Aleppo pine ground shadow, roots across the trail shoulder, and red-bark trunk
 	var e: Vector2 = m.walk_edges(p.y)
 	var edge_side := 1.0 if p.x < e.x + 80.0 else -1.0
-	wc.circle(p + LIGHT * 26.0, 32.0, Color(0.04, 0.05, 0.07, 0.18))
+	wc.circle(p + Shade.light * 26.0, 32.0, Color(0.04, 0.05, 0.07, 0.18))
 	for ri in range(3):
 		var a := (float(ri) - 1.0) * 0.52
 		var d := Vector2(edge_side, 0.0).rotated(a)
@@ -820,15 +819,15 @@ static func draw_column(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
 		wc.line(p, tip, Color(0.33, 0.25, 0.16), 3.6 - float(ri % 2))
 		wc.line(p + Vector2(0.0, -1.0), tip + Vector2(0.0, -1.0), Color(0.44, 0.35, 0.23), 1.2)
 	wc.circle(p, 6.5, PINE_TRUNK)
-	wc.circle(p - LIGHT * 1.2, 4.0, PINE_TRUNK.lightened(0.22))
+	wc.circle(p - Shade.light * 1.2, 4.0, PINE_TRUNK.lightened(0.22))
 
 
 static func draw_bin(_m: Node2D, wc: ShapeBatch, bn: Vector2) -> void:
 	# Park Güell / Carmel hillside timber-slatted drum bin on Corten post
-	wc.circle(bn + LIGHT * 6.0, 14.0, SHADOW)
+	wc.circle(bn + Shade.light * 6.0, 14.0, SHADOW)
 	wc.circle(bn, 13.0, CORTEN)
 	wc.circle(bn, 11.2, TIMBER)
-	wc.circle(bn - LIGHT * 1.5, 9.2, TIMBER_LIT)
+	wc.circle(bn - Shade.light * 1.5, 9.2, TIMBER_LIT)
 	wc.circle(bn + Vector2(0.8, 1.2), 6.8, Color(0.12, 0.14, 0.12))
 	wc.circle(bn + Vector2(11.5, 5.5), 3.8, Color(0.78, 0.78, 0.74, 0.85))
 
@@ -836,7 +835,7 @@ static func draw_bin(_m: Node2D, wc: ShapeBatch, bn: Vector2) -> void:
 static func draw_fountain(m: Node2D, f: Vector2) -> void:
 	var c: ShapeBatch = m._wc
 	# Semicircular hillside stone apron & drain basin (static for furniture cache)
-	c.circle(f + LIGHT * 5.0, 20.0, SHADOW)
+	c.circle(f + Shade.light * 5.0, 20.0, SHADOW)
 	c.circle(f, 19.0, STONE_WALL)
 	c.circle(f, 16.0, STONE_TOP)
 	c.circle(f + Vector2(0.0, 5.0), 10.5, STONE_MORTAR)
@@ -872,7 +871,7 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float = -6000.0, vb: float 
 static func _draw_picnic_prize(wc: ShapeBatch, p: Vector2) -> void:
 	# Woven sunset picnic blanket with terracotta cazuela of patates braves
 	var br := Rect2(p - Vector2(20.0, 15.0), Vector2(40.0, 30.0))
-	wc.rect(Rect2(br.position + LIGHT * 3.0, br.size), SHADOW)
+	wc.rect(Rect2(br.position + Shade.light * 3.0, br.size), SHADOW)
 	wc.rect(br, Color(0.78, 0.30, 0.24))
 	wc.rect(br.grow(-3.0), Color(0.90, 0.82, 0.68))
 	for sx: float in [-12.0, -4.0, 4.0, 12.0]:
@@ -900,9 +899,9 @@ static func _draw_overhead_into(m: Node2D, b: ShapeBatch, vt: float, vb: float) 
 			b.circle(p + Vector2.from_angle(a) * lr, r * 0.36, PINE_CROWN)
 		for k in range(4):
 			var a := TAU * float(k) / 4.0 + float(i) * 1.3
-			var lp := p + Vector2.from_angle(a) * r * 0.38 - LIGHT * 5.0
+			var lp := p + Vector2.from_angle(a) * r * 0.38 - Shade.light * 5.0
 			b.circle(lp, r * 0.24, SCRUB_OLIVE)
-		b.circle(p - LIGHT * r * 0.45, r * 0.20, Color(0.54, 0.56, 0.32))
+		b.circle(p - Shade.light * r * 0.45, r * 0.20, Color(0.54, 0.56, 0.32))
 
 	# Warm festival string lights over the sunset mirador summit
 	var my := MIRADOR_Y

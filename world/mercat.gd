@@ -9,7 +9,6 @@ extends RefCounted
 # level_build turns into bodies and bypasser blockers.
 
 const LevelBuild := preload("res://world/level_build.gd")
-const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.05, 0.05, 0.08, 0.20)
 
 # along the hall's walls, in the stretches between the wall stalls:
@@ -103,7 +102,7 @@ static func draw_approach(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> voi
 		var r := awning_rect(m, i)
 		if r.end.y < vt - 40.0 or r.position.y > vb + 40.0:
 			continue
-		b.rect(Rect2(r.position + LIGHT * 18.0, r.size), SHADOW)
+		b.rect(Rect2(r.position + Shade.light * 18.0, r.size), SHADOW)
 
 
 # where awning i hangs, out from its wall over the pavement
@@ -172,7 +171,7 @@ static func draw_awning(m: Node2D, b: ShapeBatch, i: int) -> void:
 # wooden fruit crates and plastic ones, two high, the top one set back so
 # the stack has height
 static func draw_crate_stack(b: ShapeBatch, r: Rect2, seed: int) -> void:
-	b.rect(Rect2(r.position + LIGHT * 12.0, r.size), SHADOW)
+	b.rect(Rect2(r.position + Shade.light * 12.0, r.size), SHADOW)
 	var long_y := r.size.y >= r.size.x
 	var n := 2
 	for k in range(n):
@@ -184,9 +183,9 @@ static func draw_crate_stack(b: ShapeBatch, r: Rect2, seed: int) -> void:
 		var col: Color = CRATE_PLASTIC[(seed + k) % CRATE_PLASTIC.size()]
 		_crate(b, cr.grow(-1.0), col, (seed + k) % 3 == 0, seed + k)
 	# the top tier: one crate up, nudged towards the light
-	var top := Rect2(r.position + Vector2(4.0, 4.0 + (r.size.y * 0.18 if long_y else 0.0)) - LIGHT * 5.0,
+	var top := Rect2(r.position + Vector2(4.0, 4.0 + (r.size.y * 0.18 if long_y else 0.0)) - Shade.light * 5.0,
 		Vector2(r.size.x - 8.0, (r.size.y * 0.5 if long_y else r.size.y) - 6.0))
-	b.rect(Rect2(top.position + LIGHT * 4.0, top.size), Color(0.05, 0.05, 0.08, 0.22))
+	b.rect(Rect2(top.position + Shade.light * 4.0, top.size), Color(0.05, 0.05, 0.08, 0.22))
 	_crate(b, top, CRATE_PLASTIC[(seed + 2) % CRATE_PLASTIC.size()].lightened(0.08), seed % 2 == 0, seed + 5)
 
 
@@ -259,7 +258,7 @@ static func _draw_trolleys(b: ShapeBatch, r: Rect2, west: bool, seed: int) -> vo
 
 static func _trolley(b: ShapeBatch, c: Vector2, west: bool, col: Color) -> void:
 	var out := 1.0 if west else -1.0
-	b.rect(Rect2(c + Vector2(-9.0, -11.0) + LIGHT * 7.0, Vector2(18.0, 22.0)), SHADOW)
+	b.rect(Rect2(c + Vector2(-9.0, -11.0) + Shade.light * 7.0, Vector2(18.0, 22.0)), SHADOW)
 	# the wheels against the wall, the handle reaching out to the aisle
 	for wy: float in [-8.0, 8.0]:
 		b.rect(Rect2(c.x - out * 10.0 - 2.5, c.y + wy - 4.0, 5.0, 8.0), Color(0.10, 0.10, 0.12))
@@ -304,7 +303,7 @@ static func _draw_shoppers(m: Node2D, b: ShapeBatch, r: Rect2, west: bool, seed:
 static func _draw_porter(b: ShapeBatch, r: Rect2, west: bool, seed: int) -> void:
 	var out := 1.0 if west else -1.0
 	var c := r.get_center()
-	b.rect(Rect2(r.position + LIGHT * 9.0, r.size), SHADOW)
+	b.rect(Rect2(r.position + Shade.light * 9.0, r.size), SHADOW)
 	# the frame: two rails from the wheels at the wall end out to the handles
 	var base_x := c.x - out * 13.0
 	for ry: float in [-12.0, 12.0]:
@@ -312,7 +311,7 @@ static func _draw_porter(b: ShapeBatch, r: Rect2, west: bool, seed: int) -> void
 		b.rect(Rect2(base_x - 3.0, c.y + ry - 5.0 + (ry * 0.6), 6.0, 10.0), Color(0.10, 0.10, 0.12))
 	b.line(Vector2(base_x, c.y - 14.0), Vector2(base_x, c.y + 14.0), Color(0.36, 0.36, 0.38), 3.0)
 	_crate(b, Rect2(c.x - 11.0, c.y - 14.0, 22.0, 28.0), CRATE_WOOD, true, seed)
-	_crate(b, Rect2(c.x - 9.0 - LIGHT.x * 3.0, c.y - 12.0 - LIGHT.y * 3.0, 18.0, 22.0),
+	_crate(b, Rect2(c.x - 9.0 - Shade.light.x * 3.0, c.y - 12.0 - Shade.light.y * 3.0, 18.0, 22.0),
 		CRATE_PLASTIC[seed % CRATE_PLASTIC.size()].lightened(0.06), true, seed + 1)
 
 
@@ -367,7 +366,7 @@ static func draw_fish_counter(b: ShapeBatch, r: Rect2, aisle_right: bool, i: int
 		_fish(b, Vector2(col_a, ice.position.y + 6.0 + float(k) * 9.0), fwd.rotated(0.12 - 0.24 * float(k)), 17.0, 6.0,
 			Color(0.88, 0.42, 0.38), Color(0.72, 0.26, 0.24))
 	var sc := Vector2(col_b, ice.position.y + 9.0)
-	b.rect(Rect2(sc - Vector2(8.0, 8.0) + LIGHT * 3.0, Vector2(16.0, 16.0)), Color(0, 0, 0, 0.20))
+	b.rect(Rect2(sc - Vector2(8.0, 8.0) + Shade.light * 3.0, Vector2(16.0, 16.0)), Color(0, 0, 0, 0.20))
 	b.rect(Rect2(sc - Vector2(8.0, 8.0), Vector2(16.0, 16.0)), Color(0.94, 0.94, 0.92))
 	b.circle(sc + Vector2(-fwd.x * 2.0, -1.5), 5.2, Color(0.54, 0.58, 0.62))
 	b.circle(sc + Vector2(-fwd.x * 2.0, -1.5), 4.0, Color(0.78, 0.82, 0.86))
@@ -418,8 +417,8 @@ static func _fish(b: ShapeBatch, p: Vector2, dir: Vector2, length: float, width:
 static func draw_van(m: Node2D, c: Object, v: Vector2) -> void:
 	var b := ShapeBatch.new()
 	var body := Rect2(v.x - 32.0, v.y - 66.0, 64.0, 132.0)
-	b.rect(Rect2(body.position + LIGHT * 24.0, body.size), Color(0.05, 0.05, 0.08, 0.16))
-	b.rect(Rect2(body.position + LIGHT * 14.0, body.size), Color(0.05, 0.05, 0.08, 0.14))
+	b.rect(Rect2(body.position + Shade.light * 24.0, body.size), Color(0.05, 0.05, 0.08, 0.16))
+	b.rect(Rect2(body.position + Shade.light * 14.0, body.size), Color(0.05, 0.05, 0.08, 0.14))
 	for w: Vector2 in [Vector2(-35, -44), Vector2(29, -44), Vector2(-35, 26), Vector2(29, 26)]:
 		b.rect(Rect2(v.x + w.x, v.y + w.y, 6.0, 18.0), Color(0.10, 0.10, 0.12))
 	# the back doors, swung right open
@@ -534,7 +533,7 @@ static func _draw_floor_and_stalls(m: Node2D, vt: float, vb: float) -> void:
 		var blk: Rect2 = LevelBuild.MERCAT_BLOCKS[bi]
 		if blk.end.y < vt - 80.0 or blk.position.y > vb + 80.0:
 			continue
-		b.rect(Rect2(blk.position + m.LIGHT * 14.0, blk.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
+		b.rect(Rect2(blk.position + Shade.light * 14.0, blk.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
 		b.rect(blk, Color(0.40, 0.30, 0.22))
 		var mid := blk.get_center().x
 		b.rect(Rect2(mid - 6.0, blk.position.y + 6.0, 12.0, blk.size.y - 12.0), Color(0.30, 0.22, 0.16))
@@ -581,7 +580,7 @@ static func _draw_handcart(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> vo
 	if cp.y < vt - 60.0 or cp.y > vb + 60.0:
 		return
 	# cart shadow
-	b.rect(Rect2(cp.x - 24.0 + LIGHT.x * 6.0, cp.y - 15.0 + LIGHT.y * 6.0, 48.0, 30.0), SHADOW)
+	b.rect(Rect2(cp.x - 24.0 + Shade.light.x * 6.0, cp.y - 15.0 + Shade.light.y * 6.0, 48.0, 30.0), SHADOW)
 	# two iron-rimmed wooden wheels
 	b.rect(Rect2(cp.x - 12.0, cp.y - 18.0, 24.0, 4.0), Color(0.18, 0.19, 0.22))
 	b.rect(Rect2(cp.x - 12.0, cp.y + 14.0, 24.0, 4.0), Color(0.18, 0.19, 0.22))
@@ -603,7 +602,7 @@ static func _draw_handcart(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> vo
 			b.circle(cp + Vector2(ox, oy), 3.0, Color(0.96, 0.56, 0.12))
 	# the porter pushing the cart
 	var pp := Vector2(cp.x - 34.0, cp.y)
-	b.circle(pp + LIGHT * 5.0, 7.5, SHADOW)
+	b.circle(pp + Shade.light * 5.0, 7.5, SHADOW)
 	b.circle(pp, 7.5, Color(0.24, 0.44, 0.68))
 	b.circle(pp + Vector2(2.0, 0.0), 5.5, Color(0.85, 0.72, 0.58))
 	b.circle(pp + Vector2(2.5, -1.0), 4.5, Color(0.18, 0.26, 0.38))
@@ -614,7 +613,7 @@ static func _draw_handcart(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> vo
 	# dropped orange on the floor
 	if cart.orange_dropped and not cart.orange_eaten:
 		var op := cart.orange_pos
-		b.circle(op + LIGHT * 2.0, 3.5, SHADOW)
+		b.circle(op + Shade.light * 2.0, 3.5, SHADOW)
 		b.circle(op, 3.8, Color(0.96, 0.56, 0.12))
 		b.circle(op + Vector2(-1.2, -2.0), 1.4, Color(0.32, 0.60, 0.24))
 		b.circle(op + Vector2(1.0, -1.0), 1.0, Color(1.0, 0.80, 0.40))

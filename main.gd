@@ -1212,6 +1212,7 @@ func _ready() -> void:
 			run_seed = int(a.substr(7))
 			seed(run_seed)
 	Game.apply_walk_sky(Game.level_id)
+	Shade.set_night(Game.night)
 	bosc_high_stream = RunEvents.chosen(run_seed, lvl, "high_stream", Game.weather, 20)
 	_setup_input()
 	_build_level_data()
@@ -1837,9 +1838,9 @@ func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 						c.draw_line(gp, gp + Vector2.from_angle(float(f) * TAU / 7.0 + gh) * 15.0, Color(0.44, 0.58, 0.54), 4.0)
 					continue
 				var gr := 26.0 + gh * 18.0
-				c.draw_circle(gp + LIGHT * 10.0, gr, Color(0.12, 0.14, 0.08, 0.45))
+				c.draw_circle(gp + Shade.light * 10.0, gr, Color(0.12, 0.14, 0.08, 0.45))
 				c.draw_circle(gp, gr, Color(0.22, 0.34, 0.18) if gi % 3 == 0 else Color(0.30, 0.40, 0.20))
-				c.draw_circle(gp - LIGHT * gr * 0.3, gr * 0.45, Color(0.34, 0.46, 0.24))
+				c.draw_circle(gp - Shade.light * gr * 0.3, gr * 0.45, Color(0.34, 0.46, 0.24))
 			# rubble-stone terrace walls, the stones laid rough, and the
 			# planting along the top: palms and agaves
 			var stone := Color(0.56, 0.48, 0.38).lightened(lit * 0.08)
@@ -2042,7 +2043,7 @@ func _diluvi_roof_lot(c: Object, lot: Rect2, out: float, k: int, lit: float, pit
 		# a chimney, or a skylight let into the slope
 		if k % 2 == 0:
 			var cp := Vector2(ridge + out * 22.0, lot.position.y + 60.0 + float(k % 4) * 24.0)
-			c.draw_rect(Rect2(cp + Vector2(-9.0, -9.0) + LIGHT * 8.0, Vector2(18, 18)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.3))
+			c.draw_rect(Rect2(cp + Vector2(-9.0, -9.0) + Shade.light * 8.0, Vector2(18, 18)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.3))
 			c.draw_rect(Rect2(cp - Vector2(9, 9), Vector2(18, 18)), Color(0.58, 0.44, 0.36))
 			c.draw_rect(Rect2(cp - Vector2(9, 9), Vector2(18, 4)), Color(0.68, 0.56, 0.48))
 			c.draw_circle(cp, 4.0, Color(0.16, 0.14, 0.14))
@@ -2078,16 +2079,16 @@ func _diluvi_roof_lot(c: Object, lot: Rect2, out: float, k: int, lit: float, pit
 	for ti in range(tanks):
 		var tp := Vector2(lot.get_center().x + (float(ti) - float(tanks - 1) * 0.5) * 40.0,
 			lot.position.y + 46.0 + float((k * 29) % 50))
-		c.draw_circle(tp + LIGHT * 10.0, 16.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.30))
+		c.draw_circle(tp + Shade.light * 10.0, 16.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.30))
 		c.draw_rect(Rect2(tp - Vector2(17, 17), Vector2(34, 34)), Color(0.36, 0.34, 0.32))
 		c.draw_circle(tp, 15.0, Color(0.80, 0.80, 0.78))
-		c.draw_circle(tp - LIGHT * 3.0, 11.0, Color(0.90, 0.90, 0.88))
+		c.draw_circle(tp - Shade.light * 3.0, 11.0, Color(0.90, 0.90, 0.88))
 		c.draw_circle(tp, 6.0, Color(0.56, 0.58, 0.60))
-		c.draw_circle(tp - LIGHT * 1.0, 4.0, Color(0.70, 0.72, 0.74))
+		c.draw_circle(tp - Shade.light * 1.0, 4.0, Color(0.70, 0.72, 0.74))
 	# the stair head: a little hut with its door onto the roof
 	if front and k % 2 == 1:
 		var sh := Rect2(lot.get_center().x - 18.0, lot.end.y - 70.0, 36.0, 44.0)
-		c.draw_rect(Rect2(sh.position + LIGHT * 9.0, sh.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.28))
+		c.draw_rect(Rect2(sh.position + Shade.light * 9.0, sh.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.28))
 		c.draw_rect(sh, Color(0.70, 0.64, 0.56))
 		c.draw_rect(Rect2(sh.position.x, sh.position.y, sh.size.x, 5.0), Color(0.80, 0.75, 0.68))
 
@@ -2441,14 +2442,13 @@ func _draw_scents() -> void:
 # has a shadow, a lamppost throws one several metres long. That difference
 # is most of what tells the eye how tall something is in a top-down view.
 
-const LIGHT := Vector2(0.5, 0.866)      # the direction shadows fall
 const SHADOW_COL := Color(0.05, 0.05, 0.08)
 
 
 func contact_shadow(c: Object, at: Vector2, r: float, h: float, a := 0.24) -> void:
 	# for things that sit ON the ground: a squashed ellipse, pushed away from
 	# the light by however tall the thing is
-	c.draw_set_transform(at + LIGHT * h, 0.0, Vector2(1.15, 0.5))
+	c.draw_set_transform(at + Shade.light * h, 0.0, Vector2(1.15, 0.5))
 	c.draw_circle(Vector2.ZERO, r, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, a))
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
@@ -2456,15 +2456,15 @@ func contact_shadow(c: Object, at: Vector2, r: float, h: float, a := 0.24) -> vo
 func cast_shadow(c: Object, at: Vector2, w: float, h: float, a := 0.20) -> void:
 	# for uprights: a tapering shadow lying on the ground away from the light,
 	# plus the darker patch where the object actually meets it
-	var tip := at + LIGHT * h
-	var side := LIGHT.orthogonal()
+	var tip := at + Shade.light * h
+	var side := Shade.SUN.orthogonal()
 	c.draw_colored_polygon(
 		PackedVector2Array([
 			at + side * w, at - side * w,
 			tip - side * w * 0.62, tip + side * w * 0.62,
 		]),
 		Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, a))
-	c.draw_set_transform(at + LIGHT * (w * 0.5), 0.0, Vector2(1.2, 0.55))
+	c.draw_set_transform(at + Shade.light * (w * 0.5), 0.0, Vector2(1.2, 0.55))
 	c.draw_circle(Vector2.ZERO, w * 1.15, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, a * 0.9))
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
@@ -2490,7 +2490,7 @@ func _draw_broadleaf(c: Object, p: Vector2, scale: float) -> void:
 # the trunk so the tree stands up
 func _broadleaf_ground(c: Object, p: Vector2, scale: float) -> void:
 	var r := 34.0 * scale
-	c.draw_set_transform(p + LIGHT * (46.0 * scale), 0.0, Vector2(1.1, 0.55))
+	c.draw_set_transform(p + Shade.light * (46.0 * scale), 0.0, Vector2(1.1, 0.55))
 	c.draw_circle(Vector2.ZERO, r * 1.02, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.17))
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
@@ -2512,15 +2512,15 @@ func _broadleaf_crown(crown: ShapeBatch, p: Vector2, scale: float, trunk := true
 	# ringed evenly around the centre left a dark hole in the middle and the
 	# canopy read as a doughnut.
 	crown.circle(p + Vector2(2, 3) * scale, r, dark)
-	crown.circle(p - LIGHT * r * 0.10, r * 0.86, mid)
+	crown.circle(p - Shade.light * r * 0.10, r * 0.86, mid)
 	for lv: Vector2 in BROADLEAF_LOBES:
 		crown.circle(p + lv * r, r * 0.50, mid)
 	# the light falls on the upper-left of the crown, so only those lobes catch
 	for lv: Vector2 in BROADLEAF_LOBES:
-		if lv.dot(LIGHT) > 0.10:
+		if lv.dot(Shade.light) > 0.10:
 			continue          # this lobe is on the shaded side
-		crown.circle(p + lv * r - LIGHT * r * 0.14, r * 0.34, lit)
-	crown.circle(p - LIGHT * r * 0.42, r * 0.30, lit.lightened(0.08))
+		crown.circle(p + lv * r - Shade.light * r * 0.14, r * 0.34, lit)
+	crown.circle(p - Shade.light * r * 0.42, r * 0.30, lit.lightened(0.08))
 	# the trunk, visible in the middle where the canopy parts
 	if trunk:
 		_broadleaf_trunk(crown, p, scale)
@@ -2552,19 +2552,19 @@ func _plane_crown(crown: ShapeBatch, p: Vector2, trunk := true) -> void:
 	var lit := Color(0.48, 0.62, 0.30)
 	var tip := Color(0.60, 0.72, 0.36)
 	crown.circle(p + Vector2(2, 3), r, dark)
-	crown.circle(p - LIGHT * r * 0.10, r * 0.86, mid)
+	crown.circle(p - Shade.light * r * 0.10, r * 0.86, mid)
 	for lv: Vector2 in BROADLEAF_LOBES:
 		crown.circle(p + lv * r, r * 0.48, mid)
 	# clumps of leaves catching the light, more of them than an oak's
 	for k in range(9):
 		var a := TAU * float(k) / 9.0 + p.y * 0.01
 		var lv := Vector2.from_angle(a)
-		if lv.dot(LIGHT) > 0.35:
+		if lv.dot(Shade.light) > 0.35:
 			continue
-		var cp := p + lv * r * (0.42 + 0.18 * float(k % 2)) - LIGHT * r * 0.12
+		var cp := p + lv * r * (0.42 + 0.18 * float(k % 2)) - Shade.light * r * 0.12
 		crown.circle(cp, r * 0.24, lit)
-		crown.circle(cp - LIGHT * 3.0, r * 0.11, tip)
-	crown.circle(p - LIGHT * r * 0.40, r * 0.26, lit)
+		crown.circle(cp - Shade.light * 3.0, r * 0.11, tip)
+	crown.circle(p - Shade.light * r * 0.40, r * 0.26, lit)
 	if trunk:
 		_plane_trunk(crown, p)
 	# the broad leaves breaking the outline
@@ -2611,7 +2611,7 @@ func _forest_ground(c: Object, p: Vector2, i: int) -> void:
 	if i % 3 == 1:
 		_broadleaf_ground(c, p, 0.85)   # holm oak
 		return
-	c.draw_set_transform(p + LIGHT * 52.0, 0.0, Vector2(1.15, 0.55))
+	c.draw_set_transform(p + Shade.light * 52.0, 0.0, Vector2(1.15, 0.55))
 	c.draw_circle(Vector2.ZERO, 40.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
@@ -2630,9 +2630,9 @@ func _forest_crown(crown: ShapeBatch, p: Vector2, i: int, trunk := true) -> void
 		crown.circle(p + Vector2.from_angle(a) * lr, r * 0.36, Color(0.30, 0.37, 0.18))
 	for k in range(5):
 		var a := TAU * float(k) / 5.0 + float(i) * 1.3
-		var lp := p + Vector2.from_angle(a) * r * 0.42 - LIGHT * 6.0
+		var lp := p + Vector2.from_angle(a) * r * 0.42 - Shade.light * 6.0
 		crown.circle(lp, r * 0.24, Color(0.40, 0.47, 0.24))
-	crown.circle(p - LIGHT * r * 0.5, r * 0.20, Color(0.48, 0.54, 0.29))
+	crown.circle(p - Shade.light * r * 0.5, r * 0.20, Color(0.48, 0.54, 0.29))
 	# the red-brown trunk showing through at the middle
 	if trunk:
 		_pine_trunk(crown, p)
@@ -2733,10 +2733,10 @@ static func oval_pts(at: Vector2, rx: float, ry: float, n := 16) -> PackedVector
 func _draw_bollard(p: Vector2) -> void:
 	cast_shadow(_wc, p, 9.0, 30.0, 0.22)
 	_wc.circle(p, 9.5, Color(0.12, 0.11, 0.11))
-	_wc.circle(p - LIGHT * 0.8, 8.2, Color(0.34, 0.32, 0.30))
+	_wc.circle(p - Shade.light * 0.8, 8.2, Color(0.34, 0.32, 0.30))
 	_wc.circle(p, 6.4, Color(0.17, 0.16, 0.16))
-	_wc.circle(p - LIGHT * 1.4, 4.6, Color(0.26, 0.25, 0.24))
-	_wc.circle(p - LIGHT * 2.8, 1.8, Color(0.56, 0.55, 0.53))
+	_wc.circle(p - Shade.light * 1.4, 4.6, Color(0.26, 0.25, 0.24))
+	_wc.circle(p - Shade.light * 2.8, 1.8, Color(0.56, 0.55, 0.53))
 
 
 # a street tree's pit, square in the paving: a stone kerb, earth, and the
@@ -3070,13 +3070,13 @@ func _brolly_canopy(b: ShapeBatch, c: Vector2, col: Color, seed_f: float) -> voi
 	var tips := PackedVector2Array()
 	for k in range(8):
 		tips.append(c + Vector2.from_angle(rot + TAU * float(k) / 8.0) * BROLLY_R)
-	b.circle(c + LIGHT * 7.0, BROLLY_R, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+	b.circle(c + Shade.light * 7.0, BROLLY_R, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
 	b.polygon(tips, col)
 	for k in range(8):
 		var a := tips[k]
 		var z := tips[(k + 1) % 8]
 		# the panels facing the light are lit, the far ones in shade
-		var facing := (a + z - c * 2.0).normalized().dot(-LIGHT)
+		var facing := (a + z - c * 2.0).normalized().dot(-Shade.light)
 		if facing < 0.0:
 			b.polygon(PackedVector2Array([c, a, z]), col.darkened(0.22 * -facing))
 		else:
@@ -3085,7 +3085,7 @@ func _brolly_canopy(b: ShapeBatch, c: Vector2, col: Color, seed_f: float) -> voi
 		b.line(c, tips[k], col.darkened(0.38), 1.4)
 		b.circle(tips[k], 1.6, Color(0.20, 0.18, 0.18))
 	b.circle(c, 3.0, Color(0.18, 0.16, 0.16))
-	b.circle(c - LIGHT * 1.0, 1.4, Color(0.75, 0.75, 0.78))
+	b.circle(c - Shade.light * 1.0, 1.4, Color(0.75, 0.75, 0.78))
 	# drops running off two of the tips
 	var t := AnimClock.msec() / 1000.0
 	for k in range(2):
@@ -3109,7 +3109,7 @@ func _beach_parasol_canopy(b: ShapeBatch, pa: Vector2, i: int) -> void:
 		if panel % 2 == 0:
 			b.polygon(PackedVector2Array([pa, pa + Vector2.from_angle(a0) * BEACH_PARASOL_R,
 				pa + Vector2.from_angle(a0 + TAU / 8.0) * BEACH_PARASOL_R]), Color(1, 1, 1, 0.10))
-	b.circle(pa - LIGHT * 10.0, 12.0, Color(1, 1, 1, 0.13))   # the lit side
+	b.circle(pa - Shade.light * 10.0, 12.0, Color(1, 1, 1, 0.13))   # the lit side
 	b.circle(pa, 5.0, Color(0.42, 0.38, 0.34))                # the pole
 	b.circle(pa, 2.2, Color(0.62, 0.58, 0.52))
 
@@ -3335,7 +3335,7 @@ static func _draw_cast_pumpkin(b: ShapeBatch, p: Vector2, seed: float, t: float)
 	b.circle(p + Vector2(0.0, 3.0), 28.0, Color(1.0, 0.64, 0.18, 0.11 * flk))
 	b.circle(p + Vector2(0.0, 3.0), 14.0, Color(1.0, 0.78, 0.32, 0.12 * flk))
 	# drop shadow
-	b.circle(p + LIGHT * 3.5, 9.5, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.28))
+	b.circle(p + Shade.light * 3.5, 9.5, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.28))
 	# ribbed pumpkin body
 	var pcol := Color(0.92, 0.44, 0.10)
 	var pshd := Color(0.80, 0.34, 0.06)
@@ -4132,7 +4132,7 @@ func _draw_cellar(c: Rect2) -> void:
 	var b := ShapeBatch.new()
 	var steel := Color(0.40, 0.41, 0.44)
 	var tread := Color(0.54, 0.55, 0.58)
-	b.rect(Rect2(c.position + LIGHT * 4.0, c.size).grow(3.0), Color(0, 0, 0, 0.18))
+	b.rect(Rect2(c.position + Shade.light * 4.0, c.size).grow(3.0), Color(0, 0, 0, 0.18))
 	b.rect(c.grow(3.0), Color(0.60, 0.58, 0.54))
 	var lw := c.size.x * 0.24
 	var hole := Rect2(c.position.x + lw, c.position.y + 3.0, c.size.x - lw * 2.0, c.size.y - 6.0)
@@ -4305,7 +4305,7 @@ func _draw_pingpong(st: Vector2) -> void:
 	b.line(st + Vector2(36.0, -19.0), st + Vector2(42.0, -21.0), Color(0.68, 0.52, 0.36), 2.0)
 	b.circle(st + Vector2(32.0, -18.0), 4.0, Color(0.18, 0.18, 0.20))
 	# white celluloid ball (pilota)
-	b.circle(st + Vector2(-16.0, 10.0) + LIGHT * 1.0, 2.0, Color(0, 0, 0, 0.15))
+	b.circle(st + Vector2(-16.0, 10.0) + Shade.light * 1.0, 2.0, Color(0, 0, 0, 0.15))
 	b.circle(st + Vector2(-16.0, 10.0), 2.0, Color(0.98, 0.98, 0.95))
 	b.circle(st + Vector2(-16.5, 9.5), 0.8, Color(1, 1, 1))
 	b.flush(_wc)
@@ -4338,7 +4338,7 @@ func _draw_palm(c: Object, p: Vector2) -> void:
 # a palm's shadow copies the frond pattern, which is what makes the beach read
 # as glaring midday sun
 func _palm_ground(c: Object, p: Vector2) -> void:
-	var sh := p + LIGHT * 40.0
+	var sh := p + Shade.light * 40.0
 	for j in range(7):
 		var sa := TAU * float(j) / 7.0 + p.x * 0.01 + p.y * 0.007
 		c.draw_line(sh, sh + Vector2.from_angle(sa) * 34.0,
@@ -4450,8 +4450,8 @@ func clay_slab(c: Object, r: Rect2, rad: float, col: Color, lift := 2.5) -> void
 # core and a fainter fringe, both pushed away from the light.
 func box_shadow(c: Object, r: Rect2, rad: float, h: float) -> void:
 	var sc := Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.10)
-	c.draw_colored_polygon(round_rect_pts(Rect2(r.position + LIGHT * (h * 1.15), r.size).grow(3.0), rad + 3.0), sc)
-	c.draw_colored_polygon(round_rect_pts(Rect2(r.position + LIGHT * h, r.size), rad),
+	c.draw_colored_polygon(round_rect_pts(Rect2(r.position + Shade.light * (h * 1.15), r.size).grow(3.0), rad + 3.0), sc)
+	c.draw_colored_polygon(round_rect_pts(Rect2(r.position + Shade.light * h, r.size), rad),
 		Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.18))
 
 
@@ -4628,9 +4628,9 @@ func _draw_freedom_beyond(c: Object) -> void:
 				hx += 26.0
 			for k in range(12):
 				var tp := Vector2(-300.0 + float(k) * 170.0 + fmod(float(k) * 53.0, 60.0), top - 150.0 - fmod(float(k) * 97.0, 120.0))
-				b.circle(tp + LIGHT * 18.0, 52.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.2))
+				b.circle(tp + Shade.light * 18.0, 52.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.2))
 				b.circle(tp, 50.0, Color(0.22, 0.36, 0.21))
-				b.circle(tp - LIGHT * 14.0, 30.0, Color(0.30, 0.46, 0.27))
+				b.circle(tp - Shade.light * 14.0, 30.0, Color(0.30, 0.46, 0.27))
 		"lot":
 			# a block wall along the fence, and the backs of sheds behind it
 			b.rect(Rect2(-400.0, top - 26.0, 2100.0, 22.0), Color(0.52, 0.50, 0.46))
@@ -4640,7 +4640,7 @@ func _draw_freedom_beyond(c: Object) -> void:
 			while sx < 1700.0:
 				var w := 150.0 + fmod(float(k) * 71.0, 90.0)
 				var sh := Rect2(sx, top - 230.0 - fmod(float(k) * 37.0, 60.0), w - 16.0, 180.0)
-				b.rect(Rect2(sh.position + LIGHT * 12.0, sh.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
+				b.rect(Rect2(sh.position + Shade.light * 12.0, sh.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
 				var roof := [Color(0.46, 0.48, 0.50), Color(0.56, 0.40, 0.30), Color(0.40, 0.44, 0.40)][k % 3] as Color
 				b.rect(sh, roof)
 				var ry := sh.position.y + 8.0
@@ -4659,13 +4659,13 @@ func _draw_freedom_beyond(c: Object) -> void:
 				while cx < 1700.0:
 					var rr := 54.0 + fmod(absf(cx) * 0.37 + float(row) * 13.0, 22.0)
 					var dk := 0.06 * float(row)
-					b.circle(Vector2(cx, cy) + LIGHT * 16.0, rr, Color(0.08, 0.12, 0.08, 0.3))
+					b.circle(Vector2(cx, cy) + Shade.light * 16.0, rr, Color(0.08, 0.12, 0.08, 0.3))
 					if dry:
 						b.circle(Vector2(cx, cy), rr, Color(0.30 - dk, 0.34 - dk, 0.20 - dk))
-						b.circle(Vector2(cx, cy) - LIGHT * rr * 0.3, rr * 0.55, Color(0.38 - dk, 0.42 - dk, 0.25 - dk))
+						b.circle(Vector2(cx, cy) - Shade.light * rr * 0.3, rr * 0.55, Color(0.38 - dk, 0.42 - dk, 0.25 - dk))
 					else:
 						b.circle(Vector2(cx, cy), rr, Color(0.17 - dk, 0.30 - dk, 0.17 - dk))
-						b.circle(Vector2(cx, cy) - LIGHT * rr * 0.3, rr * 0.55, Color(0.23 - dk, 0.38 - dk, 0.21 - dk))
+						b.circle(Vector2(cx, cy) - Shade.light * rr * 0.3, rr * 0.55, Color(0.23 - dk, 0.38 - dk, 0.21 - dk))
 					cx += 110.0
 		"placa":
 			# the houses' roofs behind their fronts: terracotta in ridged rows
@@ -4719,7 +4719,7 @@ func _draw_gate() -> void:
 	match style:
 		"timber":
 			for px: float in [gl - 12.0, gr + 12.0]:
-				b.circle(Vector2(px, gy) + LIGHT * 6.0, 10.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+				b.circle(Vector2(px, gy) + Shade.light * 6.0, 10.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
 				b.circle(Vector2(px, gy), 9.0, Color(0.42, 0.30, 0.18))
 				b.circle(Vector2(px, gy), 6.0, Color(0.58, 0.44, 0.28))
 				# the end grain: a ring, and the heart
@@ -4734,7 +4734,7 @@ func _draw_gate() -> void:
 				jx += 40.0
 			for px: float in [gl - 14.0, gr + 14.0]:
 				var pr := Rect2(px - 14.0, gy - 14.0, 28.0, 28.0)
-				b.rect(Rect2(pr.position + LIGHT * 8.0, pr.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+				b.rect(Rect2(pr.position + Shade.light * 8.0, pr.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
 				b.rect(pr, Color(0.62, 0.56, 0.48))
 				b.rect(pr.grow(-5.0), Color(0.74, 0.69, 0.60))
 				b.circle(pr.get_center(), 5.0, Color(0.66, 0.60, 0.52))
@@ -4742,7 +4742,7 @@ func _draw_gate() -> void:
 			var iron := Color(0.20, 0.22, 0.22)
 			for side: float in [-1.0, 1.0]:
 				var hinge := Vector2(gl - 10.0 if side < 0.0 else gr + 10.0, gy)
-				b.rect(Rect2(hinge - Vector2(8, 8) + LIGHT * 5.0, Vector2(16, 16)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+				b.rect(Rect2(hinge - Vector2(8, 8) + Shade.light * 5.0, Vector2(16, 16)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
 				b.rect(Rect2(hinge - Vector2(7, 7), Vector2(14, 14)), iron)
 				b.circle(hinge, 3.0, Color(0.40, 0.42, 0.42))
 				# the leaf, swung open into the dog park against the fence
@@ -5046,7 +5046,7 @@ func _draw_dog_beach(c: Object) -> void:
 		var dsx := beach_shore_x(dby) + BEACH_WET_W * 0.8
 		var dpk := absi(int(dby * 0.17)) % 4
 		if dpk == 0:
-			db.circle(Vector2(dsx, dby) + LIGHT * 1.5, 2.5, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.20))
+			db.circle(Vector2(dsx, dby) + Shade.light * 1.5, 2.5, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.20))
 			db.circle(Vector2(dsx, dby), 2.4, Color(0.50, 0.48, 0.44))
 			db.circle(Vector2(dsx - 0.7, dby - 0.7), 1.2, Color(0.68, 0.66, 0.62))
 		elif dpk == 1:
@@ -5066,11 +5066,11 @@ func _draw_dog_beach(c: Object) -> void:
 	for dp: Vector2 in dune_spots:
 		contact_shadow(c, dp, 27.0, 12.0, 0.16)
 		c.draw_circle(dp, 27.0, Color(0.74, 0.67, 0.52))          # the shaded flank
-		c.draw_circle(dp - LIGHT * 7.0, 21.0, Color(0.93, 0.88, 0.73))  # the lit crest
+		c.draw_circle(dp - Shade.light * 7.0, 21.0, Color(0.93, 0.88, 0.73))  # the lit crest
 		for g in range(6):
 			var ga := -PI * 0.62 + (float(g) - 2.5) * 0.26
 			var gl := 15.0 + fmod(dp.x * 0.7 + float(g) * 3.0, 9.0)
-			c.draw_line(dp - LIGHT * 5.0, dp - LIGHT * 5.0 + Vector2.from_angle(ga) * gl,
+			c.draw_line(dp - Shade.light * 5.0, dp - Shade.light * 5.0 + Vector2.from_angle(ga) * gl,
 				Color(0.55, 0.62, 0.36, 0.9), 2.0)
 	# the outdoor shower, a lifeguard chair and parasols: a real beach has
 	# furniture, and the shower is hers - it fills the tank back up
@@ -5102,9 +5102,9 @@ func _draw_espigo(c: Object) -> void:
 	while bx < BEACH_GATE_SHORE_X + 10.0:
 		var rr := 15.0 + fmod(float(k) * 7.3, 8.0)
 		var rp := Vector2(bx, fy + fmod(float(k) * 5.1, 8.0) - 4.0)
-		b.circle(rp + LIGHT * 5.0, rr, Color(0.10, 0.20, 0.26, 0.45))
+		b.circle(rp + Shade.light * 5.0, rr, Color(0.10, 0.20, 0.26, 0.45))
 		b.circle(rp, rr, Color(0.46, 0.44, 0.40))
-		b.circle(rp - LIGHT * rr * 0.35, rr * 0.5, Color(0.60, 0.58, 0.53))
+		b.circle(rp - Shade.light * rr * 0.35, rr * 0.5, Color(0.60, 0.58, 0.53))
 		bx += rr * 1.5
 		k += 1
 	b.flush(c)
@@ -5173,9 +5173,9 @@ func _draw_world_text(at: Vector2, txt: String, px: int, style: String,
 		"sand":
 			# a trench dragged with a stick: dark inside, bright sand piled on
 			# the light side of the furrow
-			_hand_text(at + LIGHT * 3.0, txt, px, Color(0.62, 0.55, 0.42, 0.75), 3.0, key)
+			_hand_text(at + Shade.light * 3.0, txt, px, Color(0.62, 0.55, 0.42, 0.75), 3.0, key)
 			_hand_text(at, txt, px, Color(0.48, 0.42, 0.32, 0.85), 3.0, key)
-			_hand_text(at - LIGHT * 2.0, txt, px, Color(0.97, 0.93, 0.82, 0.55), 3.0, key)
+			_hand_text(at - Shade.light * 2.0, txt, px, Color(0.97, 0.93, 0.82, 0.55), 3.0, key)
 		"dirt":
 			# scuffed into bare earth with a paw
 			_hand_text(at, txt, px, Color(0.34, 0.28, 0.20, 0.75), 3.4, key)
@@ -5298,7 +5298,7 @@ func _draw_signs(vt: float, vb: float) -> void:
 func draw_signs_onto(c: Object, vt: float, vb: float) -> void:
 	for sg: Dictionary in signs:
 		if sign_shown(sg, vt, vb):
-			WorldSign.draw(c, sg, AnimClock.msec() / 1000.0, LIGHT)
+			WorldSign.draw(c, sg, AnimClock.msec() / 1000.0, Shade.light)
 
 
 func _draw_ground_title() -> void:
@@ -5396,7 +5396,7 @@ func _draw_gloss(at: Vector2, txt: String) -> void:
 func _draw_beach_shower(c: Object, sh: Vector2) -> void:
 	var b := ShapeBatch.new()
 	var plate := Rect2(sh.x - 15.0, sh.y - 13.0, 30.0, 30.0)
-	b.rect(Rect2(plate.position + LIGHT * 3.0, plate.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
+	b.rect(Rect2(plate.position + Shade.light * 3.0, plate.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
 	b.rect(plate, Color(0.50, 0.38, 0.26))
 	for k in range(5):
 		var sx := plate.position.x + 1.0 + float(k) * 6.0
@@ -5440,21 +5440,21 @@ func _draw_lifeguard_tower(c: Object, lg: Vector2, legs: bool, cabin: bool) -> v
 	if legs:
 		var shade := Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.20)
 		# a tall thing announces itself by its shadow: the cabin's, well clear
-		b.rect(Rect2(lg + LIGHT * 46.0 - Vector2(15.0, 15.0), Vector2(30.0, 30.0)), shade)
+		b.rect(Rect2(lg + Shade.light * 46.0 - Vector2(15.0, 15.0), Vector2(30.0, 30.0)), shade)
 		for lo: Vector2 in [Vector2(-20, -20), Vector2(20, -20), Vector2(-20, 20), Vector2(20, 20)]:
-			b.line(lg + lo, lg + lo + LIGHT * 44.0, shade, 3.0)
+			b.line(lg + lo, lg + lo + Shade.light * 44.0, shade, 3.0)
 			b.circle(lg + lo, 3.6, Color(0.30, 0.28, 0.24))
 			b.circle(lg + lo + Vector2(-0.8, -0.8), 2.2, Color(0.92, 0.92, 0.88))
 		# cross-bracing diagonal shadows on the sand
-		b.line(lg + Vector2(-20, -20) + LIGHT * 22.0, lg + Vector2(20, 20) + LIGHT * 22.0, shade, 1.2)
-		b.line(lg + Vector2(20, -20) + LIGHT * 22.0, lg + Vector2(-20, 20) + LIGHT * 22.0, shade, 1.2)
+		b.line(lg + Vector2(-20, -20) + Shade.light * 22.0, lg + Vector2(20, 20) + Shade.light * 22.0, shade, 1.2)
+		b.line(lg + Vector2(20, -20) + Shade.light * 22.0, lg + Vector2(-20, 20) + Shade.light * 22.0, shade, 1.2)
 		# structural perimeter tie-beams between leg footings
 		b.line(lg + Vector2(-20, -20), lg + Vector2(20, -20), Color(0.72, 0.70, 0.65), 1.5)
 		b.line(lg + Vector2(-20, 20), lg + Vector2(20, 20), Color(0.72, 0.70, 0.65), 1.5)
 		b.line(lg + Vector2(-20, -20), lg + Vector2(-20, 20), Color(0.72, 0.70, 0.65), 1.5)
 		# hanging lifebuoy ring (salva-vides) on the seaward stanchion
 		var bp := lg + Vector2(-19.0, 8.0)
-		b.circle(bp + LIGHT * 10.0, 4.5, shade)
+		b.circle(bp + Shade.light * 10.0, 4.5, shade)
 		b.circle(bp, 4.5, Color(0.96, 0.44, 0.14))
 		b.circle(bp, 2.2, Color(0.85, 0.80, 0.68))
 		b.rect(Rect2(bp.x - 1.0, bp.y - 4.5, 2.0, 9.0), Color(0.98, 0.98, 0.98))
@@ -5548,12 +5548,12 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 				# this is the main reward for wandering off the path.
 				var soil := Color(0.34, 0.26, 0.18)
 				# spoil heaped on the far side, where a digging dog puts it
-				c.draw_circle(p + LIGHT * 9.0, 16.0, soil.lightened(0.10))
-				c.draw_circle(p + LIGHT * 12.0, 10.0, soil.lightened(0.22))
+				c.draw_circle(p + Shade.light * 9.0, 16.0, soil.lightened(0.10))
+				c.draw_circle(p + Shade.light * 12.0, 10.0, soil.lightened(0.22))
 				c.draw_circle(p, 17.0, soil.darkened(0.10))
 				# the pit: darker toward the light side, where the wall is
 				c.draw_circle(p, 12.0 + prog * 3.0, soil.darkened(0.42 + prog * 0.2))
-				c.draw_circle(p - LIGHT * 3.0, 8.0 + prog * 3.0, soil.darkened(0.62))
+				c.draw_circle(p - Shade.light * 3.0, 8.0 + prog * 3.0, soil.darkened(0.62))
 				c.draw_arc(p, 13.0 + prog * 3.0, PI * 0.95, PI * 1.95, 14,
 					soil.lightened(0.30), 2.0)
 				# clods and a couple of scratched-up roots
@@ -5621,7 +5621,7 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 				var top := PackedVector2Array()
 				for i in range(5):
 					var a2 := TAU * float(i) / 5.0 + 0.4
-					top.append(p - LIGHT * 4.0 + Vector2(cos(a2), sin(a2) * 0.9) * 8.0)
+					top.append(p - Shade.light * 4.0 + Vector2(cos(a2), sin(a2) * 0.9) * 8.0)
 				c.draw_colored_polygon(top, tcol)
 				c.draw_polyline(rp, rcol.darkened(0.25), 1.4)
 			"post" when freedom_kind == "placa":
@@ -5665,7 +5665,7 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 					c.draw_circle(p, 17.0, Color(0.68, 0.36, 0.22))
 					c.draw_circle(p, 13.5, Color(0.30, 0.22, 0.16))
 					c.draw_circle(p, 11.5, Color(0.28, 0.42, 0.28))
-					c.draw_circle(p - LIGHT * 3.5, 6.5, Color(0.42, 0.56, 0.38))
+					c.draw_circle(p - Shade.light * 3.5, 6.5, Color(0.42, 0.56, 0.38))
 					continue
 				# a stone planter with a clipped bush in it: solid, go round it
 				c.draw_rect(Rect2(p - Vector2(17, 17), Vector2(34, 34)), Color(0.74, 0.70, 0.62))
@@ -5674,7 +5674,7 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 					c.draw_rect(Rect2(p.x - 16.0, p.y + 11.0, 16.0, 4.0), Color(0.12, 0.26, 0.58))
 					c.draw_rect(Rect2(p.x, p.y + 11.0, 16.0, 4.0), Color(0.62, 0.12, 0.24))
 				c.draw_circle(p, 12.0, Color(0.26, 0.42, 0.24))
-				c.draw_circle(p - LIGHT * 4.0, 7.0, Color(0.34, 0.52, 0.30))
+				c.draw_circle(p - Shade.light * 4.0, 7.0, Color(0.34, 0.52, 0.30))
 			"post" when lvl == "guell":
 				# rough quarry-stone and trencadís mosaic cairn post
 				c.draw_circle(p, 14.0, Color(0.58, 0.44, 0.28, 0.35))
@@ -5733,7 +5733,7 @@ func _draw_park_props(c: Object, vt: float, vb: float) -> void:
 					c.draw_circle(p + Vector2.from_angle(a) * 8.0, 10.0, g1)
 				for i in range(5):
 					var a2 := TAU * float(i) / 5.0 + p.y * 0.01
-					c.draw_circle(p + Vector2.from_angle(a2) * 8.0 - LIGHT * 4.0, 5.5,
+					c.draw_circle(p + Vector2.from_angle(a2) * 8.0 - Shade.light * 4.0, 5.5,
 						Color(0.28, 0.43, 0.25))
 				for i in range(6):
 					var a3 := TAU * float(i) / 6.0 + p.x * 0.02
@@ -5851,7 +5851,7 @@ func _parasol_canopy(b: ShapeBatch, pa: Vector2, col: Color, key: float) -> void
 	for panel in range(8):
 		var a := TAU * float(panel) / 8.0 + turn
 		b.line(pa, pa + Vector2.from_angle(a) * R * 0.97, Color(col.r * 0.6, col.g * 0.6, col.b * 0.6, 0.55), 1.5)
-	b.circle(pa - LIGHT * 12.0, 13.0, Color(1, 1, 1, 0.12))
+	b.circle(pa - Shade.light * 12.0, 13.0, Color(1, 1, 1, 0.12))
 	b.circle(pa, 4.5, Color(0.42, 0.38, 0.34))
 	b.circle(pa, 2.0, Color(0.66, 0.62, 0.56))
 
@@ -5973,6 +5973,7 @@ func _weather_tint() -> Color:
 # the world's tint and the sky's grade, from the weather and the hour; again
 # whenever either changes
 func apply_sky() -> void:
+	Shade.set_night(Game.night)
 	night_cm.color = _weather_tint()
 	sky_mod = SkyLook.grade_mod(lvl, Game.weather, Game.hour)
 	if grade_rect != null:
@@ -9319,7 +9320,7 @@ func _draw_mud_detail(pt: Dictionary, base: Color) -> void:
 		b.polygon(pool, Color(base.r * 0.62, base.g * 0.62, base.b * 0.66, 0.9))
 		b.line(pp + Vector2(-pw * 0.5, -pw * 0.22), pp + Vector2(pw * 0.3, -pw * 0.3), Color(0.78, 0.84, 0.88, 0.40), 1.5)
 	# the wet sheen on the side the light comes from
-	b.circle(mid + LIGHT * rx * 0.35, minf(rx, ry) * 0.36, Color(1.0, 1.0, 1.0, 0.06))
+	b.circle(mid + Shade.light * rx * 0.35, minf(rx, ry) * 0.36, Color(1.0, 1.0, 1.0, 0.06))
 	# suction rings where something sank in and came out again
 	for i in range(2):
 		var a2 := sd * 5.3 + float(i) * 3.1
@@ -9544,7 +9545,7 @@ const TRAIL_FRAY_STEP := 48.0
 
 # One Collserola Natural Park trail marker post (fita de sender) with PR blazes
 static func _draw_trail_waymarker(b: ShapeBatch, p: Vector2, out: float) -> void:
-	b.rect(Rect2(p + LIGHT * 4.0 - Vector2(4.5, 4.5), Vector2(9.0, 9.0)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
+	b.rect(Rect2(p + Shade.light * 4.0 - Vector2(4.5, 4.5), Vector2(9.0, 9.0)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25))
 	b.rect(Rect2(p - Vector2(4.5, 4.5), Vector2(9.0, 9.0)), Color(0.44, 0.32, 0.20))
 	b.rect(Rect2(p - Vector2(3.5, 3.5), Vector2(7.0, 7.0)), Color(0.56, 0.42, 0.26))
 	b.line(p - Vector2(3.5, 3.5), p + Vector2(3.5, -3.5), Color(0.72, 0.58, 0.38), 1.5)
@@ -12034,7 +12035,7 @@ func _draw_furniture(vt: float, vb: float) -> void:
 	# overhead (draw_overhead_piece); here only the shade a parasol casts
 	if parasols_up():
 		for pa in parasols:
-			_wc.circle(pa + LIGHT * 16.0, PARASOL_R * 0.92, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
+			_wc.circle(pa + Shade.light * 16.0, PARASOL_R * 0.92, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
 	# benches
 	# benches: three slats on cast-iron ends, each slat a soft plank lit on
 	# its upper-left, and the shadow of something knee high
@@ -12340,7 +12341,7 @@ func _draw_world() -> void:
 		if m.y < vt - 50.0 or m.y > vb + 50.0:
 			continue
 		# the cover, lifted off and propped against the kerb side
-		var cv := m + LIGHT * 30.0
+		var cv := m + Shade.light * 30.0
 		contact_shadow(_wc, cv, 15.0, 5.0, 0.22)
 		_wc.draw_circle(cv, 14.0, Color(0.30, 0.30, 0.33))
 		_wc.draw_circle(cv, 11.0, Color(0.37, 0.37, 0.40))
@@ -12352,7 +12353,7 @@ func _draw_world() -> void:
 		_wc.draw_circle(m, 22.0, Color(0.24, 0.23, 0.23))
 		# the shaft: dark, and darker away from the light
 		_wc.draw_circle(m, 19.0, Color(0.10, 0.10, 0.12))
-		_wc.draw_circle(m + LIGHT * 5.0, 15.0, Color(0.05, 0.05, 0.07))
+		_wc.draw_circle(m + Shade.light * 5.0, 15.0, Color(0.05, 0.05, 0.07))
 		# the lit rim on the light side, which is what makes it a hole and
 		# not a disc
 		_wc.draw_arc(m, 19.5, PI * 0.95, PI * 1.95, 16, Color(0.55, 0.53, 0.50), 2.4)
