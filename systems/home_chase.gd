@@ -85,7 +85,7 @@ const CREMADA_FILM := "res://intro/film_cremada.gd"
 # La Neteja's dumpster jams, by depth (world/level_build.gd NETEJA_JAMS):
 # the first the way home meets, then the later one, the midpoint
 const NETEJA_BANDS := [
-	{"id": "first_jam", "kind": "respite", "jam_y": -3600.0},
+	{"id": "first_jam", "kind": "respite", "jam_y": -3600.0, "checkpoint": true},
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
 ]
 # El Besos's weir and maintenance apron respites, by depth:

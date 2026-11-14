@@ -85,7 +85,7 @@ func _run() -> void:
 		_check(String(prof.get(key, "")).length() > 4, "its %s copy is written" % key)
 	_check(prof.get("bands") is Array, "it leaves an ordered-bands list for respites and checkpoints")
 	# the bands, in the order the way home meets them: the first dumpster jam
-	# a respite, the later one the respite that is also the midpoint checkpoint
+	# a respite, and each a save: two rest-and-save points down the street
 	var bands: Array = prof.get("bands", [])
 	var jam_ys: Array = []
 	for j: float in load("res://world/level_build.gd").NETEJA_JAMS:
@@ -98,8 +98,8 @@ func _run() -> void:
 		_check(is_equal_approx(float(bands[0].get("jam_y", 0.0)), float(jam_ys[0]))
 			and is_equal_approx(float(bands[1].get("jam_y", 0.0)), float(jam_ys[1])),
 			"the bands are the authored jams, nearest the destination first (%s)" % str(jam_ys))
-		_check(not bool(bands[0].get("checkpoint", false)) and bool(bands[1].get("checkpoint", false)),
-			"only the later jam is a checkpoint")
+		_check(bool(bands[0].get("checkpoint", false)) and bool(bands[1].get("checkpoint", false)),
+			"both jams are checkpoints")
 	_check(HomeChase.profile_for("street").get("bands", []).is_empty(), "an ordinary walk has no bands")
 
 	# --- ordinary play on La Neteja: always the sweeper, same draws ---

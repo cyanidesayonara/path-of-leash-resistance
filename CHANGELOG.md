@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+
+## 2026-11-14 - The sweeper drives like a cartoon machine
+
+- The chase sweeper (La Neteja's, and the chase on walks without their own threat) cares what is in its way (`systems/chase_vehicle.gd`): a parked van, stall, fountain or block in its lane it swerves round, hard, where there is room; posts, hydrants and benches it bonks straight over, juddering, sparks and bits flying, a little slower for it. Its jams still hold it.
+- La Neteja's first dumpster jam is a save as well as a rest, so the way home has two (`home_chase.NETEJA_BANDS`).
+- `tests/test_chase_vehicle.gd`; the chase-walk and checkpoint tests follow the two saves.
 ## 2026-11-11 - Level sweep: solid bypasser blockers audit and test determinism
 
 - Comprehensive audit of solid bodies vs bypasser blockers across all 36 walks:
