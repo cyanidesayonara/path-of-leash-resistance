@@ -184,7 +184,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"dimoni_clean": {"text": "Get home without a rocket hitting you", "target": 1, "fn": func() -> int: return 1 if (bool(m.finished) and m.cremada_hits == 0) else 0},
 		"gate_rush": {"text": "Steer clear of the airport gate rush", "target": 1, "fn": func() -> int: return 1 if m.aeroport_rush_dodged else 0},
 		"luggage_dodge": {"text": "Dodge %d tumbling suitcases", "target": 3, "fn": func() -> int: return m.aeroport_luggage_dodges},
-		"security_clean": {"text": "Get home without the security cart clipping you", "target": 1, "fn": func() -> int: return 1 if (bool(m.finished) and m.aeroport_cart_hits == 0) else 0},
+		"security_clean": {"text": "Get home without a suitcase clipping you", "target": 1, "fn": func() -> int: return 1 if (bool(m.finished) and m.aeroport_cart_hits == 0) else 0},
 		"carousel_bark": {"text": "Bark at the rotating baggage carousel", "target": 1, "fn": func() -> int: return 1 if m.aeroport_carousel_barked else 0},
 		"watering": {"text": "Shake off under a watering can", "target": 1, "fn": func() -> int: return 1 if m.poble_shakes >= 1 else 0},
 		"spell": {"text": "Spell LEASH", "target": 5, "fn": func() -> int: return int(m.get("word_letters_collected"))},

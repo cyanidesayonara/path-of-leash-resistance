@@ -118,8 +118,8 @@ const CREMADA_BANDS := [
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
 ]
 
-# L'Aeroport: the security cart crashes into the duty-free perfume pyramid,
-# then tangles in the gate queue tape stanchions
+# L'Aeroport: the security squad goes through the duty-free perfume pyramid,
+# then tangles in the gate queue's belts
 const AEROPORT_BANDS := [
 	{"id": "perfume", "kind": "respite", "jam_y": -3400.0},
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
@@ -192,17 +192,17 @@ The phone kept a lovely last video.",
 The Dimoni rolled right over you.
 You will smell of fireworks for a week.",
 			}
-		"buggy":
+		"security":
 			return {
-				"kind": "buggy", "speed": 136.0, "flee": false,
-				"warning": "SECURITY CART INCOMING! OUT OF THE WAY!",
-				"freed": "SIREN", "freed_sfx": "whoop", "caught_shout": "CAUGHT!",
-				"jammed": "CRASH", "jammed_sfx": "crack", "jammed_shout": "THE BUGGY IS JAMMED!",
-				"jammed_banner": "THE BUGGY IS JAMMED! CATCH YOUR BREATH", "run_banner": "RUN! WATCH FOR TUMBLING BAGS",
-				"warning_banner": "SECURITY CART! HEAD FOR THE EXIT", "hold_banner": "STILL TANGLED! GO  %d",
+				"kind": "security", "speed": 136.0, "flee": false,
+				"warning": "AIRPORT SECURITY! RUN FOR IT!",
+				"freed": "PHWEEET", "freed_sfx": "whistle", "caught_shout": "STOP RIGHT THERE!",
+				"jammed": "CRASH", "jammed_sfx": "crack", "jammed_shout": "SECURITY IS TANGLED UP!",
+				"jammed_banner": "SECURITY IS TANGLED UP! CATCH YOUR BREATH", "run_banner": "RUN! WATCH FOR SKIDDING BAGS",
+				"warning_banner": "SECURITY'S COMING! HEAD FOR THE EXIT", "hold_banner": "THEY'RE STILL TANGLED! GO  %d",
 				"suitcase_banner": "SUITCASE! STEP CLEAR",
-				"caught_human": "GROUNDED!\n\nSecurity confiscated your human's boarding pass.\nThey were placed on the no-walk list.",
-				"caught_dog": "BAGGAGE RECLAIMED!\n\nThe buggy cornered you into oversized baggage.\nYou were scanned for contraband snacks.",
+				"caught_human": "GROUNDED!\n\nSecurity took your human's boarding pass.\nThey are on the no-walk list now.",
+				"caught_dog": "IN THE CRATE!\n\nSecurity popped you in a travel crate.\nYou went round the carousel twice.",
 			}
 		"vet":
 			return {
@@ -281,7 +281,7 @@ static func profile_for(level: String) -> Dictionary:
 		d["film"] = CREMADA_FILM
 		return d
 	if level == "aeroport":
-		var a := kind_behavior("buggy")
+		var a := kind_behavior("security")
 		a["id"] = "aeroport"
 		a["script"] = "res://entities/aeroport_threat.gd"
 		a["bands"] = AEROPORT_BANDS.duplicate(true)

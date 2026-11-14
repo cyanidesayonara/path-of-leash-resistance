@@ -49,7 +49,7 @@ const CLOCK_TARGETS := {
 	"angels": 180,
 	"poble": 180,
 	"cremada": 185,     # the walk out and the run home ahead of the Dimoni
-	"aeroport": 180,    # concourse sprint and security cart chase
+	"aeroport": 180,    # concourse sprint and security squad chase
 	"ciutadella": 200,  # the walk plus the fight with El Mamut
 	"raval": 210,  # the walk plus the whole fight with El Gat
 }
