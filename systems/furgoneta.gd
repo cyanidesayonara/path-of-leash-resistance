@@ -1,8 +1,8 @@
 class_name Furgoneta
 extends RefCounted
 
-# The FUR-GONETA (Walks 1, 2, 4, 29): the mobile dog grooming van homage to
-# Dumb and Dumber's Mutt Cutts shag wagon.
+# The FUR-GONETA (Walks 1, 2, 4, 29): a mobile dog grooming van dressed as a
+# shaggy dog of our own.
 #
 # Facelift:
 #   - Derpy bobbing pink tongue hanging out over the front bumper with a cleft tip
@@ -10,12 +10,12 @@ extends RefCounted
 #   - Expressive eyebrow windscreen wipers that angle and sweep
 #   - Paw-print silver hubcaps on all four wheels
 #   - Side grooming dutch door with warm interior glow and tool silhouette
-#   - Procedural iridescent soap bubbles gently floating off the roof bath rack
 #   - Brass cartoon horn / megaphone that squashes and honks on bark
 #
 # Gameplay:
 #   - Honk on bark: barking near the van triggers an "AWOOGA!" horn, flashing
-#     headlamps, wiper wiggle, and "van honk! +2" trick combo
+#     headlamps and a wiper wiggle; the first honk of a walk pays "van honk! +2",
+#     later ones are only the horn
 #   - Scent prize: sniffing the van awards the classic +12 bones and "four
 #     hundred dogs have been in there"
 #   - Style Dare: the groomer offers a 6-tricks-in-20s style dare; winning
@@ -24,7 +24,6 @@ extends RefCounted
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const UiIcons := preload("res://hud/ui_icons.gd")
-const Prompts := preload("res://hud/prompts.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 
 
@@ -77,8 +76,7 @@ static func tick(m: Node2D, delta: float) -> void:
 				var giver := GroomerGiver.new()
 				giver.setup(m)
 				m.add_child(giver)
-				var prompt_str := Prompts.fill("Looking scruffy, pup! 6 tricks in 20s? {bark} Bark if you're in!")
-				m.float_text(m.furgoneta + Vector2(0.0, -72.0), prompt_str, Color(0.96, 0.94, 0.88), m.POP_SAY)
+				m.float_text(m.furgoneta + Vector2(0.0, -72.0), "Looking scruffy, pup! Six tricks for a fresh coat?", Color(0.96, 0.94, 0.88), m.POP_SAY)
 				m.start_challenge(giver, 6, 20.0)
 
 
@@ -108,13 +106,14 @@ static func on_bark(m: Node2D, pos: Vector2) -> bool:
 	m.furgoneta_flash_t = 0.35
 	m.furgoneta_wiper_t = 0.65
 	Sfx.play("van_horn", 1.0, -2.0)
-	var honk_sayings: Array[String] = ["*AWOOGA!*", "*BEEP-BEEP!*", "*HONK!*"]
+	var honk_sayings: Array[String] = ["AWOOGA!", "BEEP-BEEP!", "HONK!"]
 	var say_text: String = honk_sayings[int(AnimClock.msec() / 800.0) % honk_sayings.size()]
 	m.float_text(m.furgoneta + Vector2(0.0, -74.0), say_text, Color(0.98, 0.96, 0.90), m.POP_SAY)
-	m.bones += 2
-	m.combo.add("BARK", 2)
-	m.float_text(pos + Vector2(0.0, -20.0), "van honk! +2", Color(1.0, 0.92, 0.45))
-	m._update_hud()
+	# one paid honk a walk: the horn is a toy, not a points tap
+	if not m.furgoneta_honk_paid:
+		m.furgoneta_honk_paid = true
+		m.combo.add("BARK", 2)
+		m.award_points(2, "van honk! +2")
 	return true
 
 
@@ -279,20 +278,6 @@ static func draw(m: Node2D, v: Vector2, wc: Object = null) -> void:
 		horn_root + Vector2(-5.0, -12.0) * horn_pulse,
 	]), Color(0.92, 0.78, 0.32))
 	wc.draw_circle(horn_root + Vector2(0.0, -12.0) * horn_pulse, 4.0 * horn_pulse, Color(0.35, 0.25, 0.12))
-
-	# --- Floating iridescent soap bubbles drifting off roof bath rack ---
-	var msec := AnimClock.msec()
-	for bi in range(5):
-		var phase: float = float(bi) * 0.2
-		var life: float = fmod(msec * 0.0004 + phase, 1.0)
-		var bx: float = v.x + 6.0 + sin(msec * 0.0025 + float(bi) * 2.2) * 11.0 + (float(bi) - 2.0) * 6.0
-		var by: float = v.y - 12.0 - life * 68.0
-		var br: float = 3.2 + float(bi % 3) * 1.4
-		var alpha: float = sin(life * PI) * 0.75
-		if alpha > 0.04:
-			wc.draw_circle(Vector2(bx, by), br, Color(0.72, 0.88, 1.0, alpha * 0.25))
-			wc.draw_arc(Vector2(bx, by), br, 0.0, TAU, 14, Color(0.86, 0.94, 1.0, alpha), 1.2)
-			wc.draw_circle(Vector2(bx - br * 0.35, by - br * 0.35), br * 0.26, Color(1.0, 1.0, 1.0, alpha * 0.9))
 
 	# --- wagging tail on back doors ---
 	var wag := sin(AnimClock.msec() / 210.0) * 0.55
