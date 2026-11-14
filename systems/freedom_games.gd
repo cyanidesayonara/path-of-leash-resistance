@@ -13,6 +13,7 @@ extends RefCounted
 const EventFeed := preload("res://hud/event_feed.gd")
 const Frisbee := preload("res://entities/frisbee.gd")
 const PigeonGameScript := preload("res://systems/pigeon_game.gd")
+const WaveGameScript := preload("res://systems/wave_game.gd")
 const GamesLayer := preload("res://world/games_layer.gd")
 
 const HOP_S := 0.36           # a jump's hang time
@@ -64,6 +65,8 @@ static func begin(m: Node2D) -> void:
 	if m.pigeon_game != null:
 		m.pigeon_game.clear()
 	m.pigeon_game = PigeonGameScript.new(int(m.GATE_Y) ^ 0xC0105) if m.freedom_kind == "placa" and not m.auto_walk else null
+	# the dog beach's: the waves
+	m.wave_game = WaveGameScript.new() if m.freedom_kind == "beach" and not m.auto_walk else null
 	m.rope_loose = Vector2(INF, INF)
 	m.rope_carry_t = 0.0
 	m.frisbee_done = false
@@ -85,6 +88,7 @@ static func end(m: Node2D) -> void:
 	if m.pigeon_game != null:
 		m.pigeon_game.clear()
 		m.pigeon_game = null
+	m.wave_game = null
 	if is_instance_valid(m.frisbee):
 		m.frisbee.queue_free()
 	m.frisbee = null
@@ -106,8 +110,34 @@ static func tick(m: Node2D, delta: float) -> void:
 	_tick_frisbee(m)
 	if m.pigeon_game != null:
 		m.pigeon_game.tick(m, delta)
+	_tick_waves(m, delta)
 	m.hop_t = maxf(0.0, m.hop_t - delta)
 	m.dog.hop = sin(PI * (1.0 - m.hop_t / HOP_S)) * HOP_H if m.hop_t > 0.0 else 0.0
+
+
+# --- the waves (the dog beach) ------------------------------------------------
+
+static func _tick_waves(m: Node2D, delta: float) -> void:
+	var wg: WaveGame = m.wave_game
+	if wg == null or wg.done:
+		return
+	var p: Vector2 = m.dog.global_position
+	for ev: Array in wg.step(p.x - m.beach_shore_x(p.y), delta):
+		match String(ev[0]):
+			"outran":
+				var pay: int = ev[1]
+				m.bones += pay
+				m.combo.add("WAVES", pay)
+				m.float_text(p, "outran it! +%d" % pay, Color(0.85, 1.0, 0.85))
+				if int(ev[2]) > 1:
+					m.feed.say("DRY  %d IN A ROW" % int(ev[2]), EventFeed.Tone.GOOD)
+				Sfx.play("whoop", 1.3, -10.0)
+			"soaked":
+				m.float_text(p, "SPLOOSH", Color(0.75, 0.9, 1.0))
+				m.feed.say("SOAKED!", EventFeed.Tone.PLAIN)
+				Sfx.play("splash", 1.0)
+			"done":
+				m.feed.say("THE SEA WINS IN THE END", EventFeed.Tone.PLAIN)
 
 
 # --- agility ------------------------------------------------------------------
@@ -345,6 +375,9 @@ static func banner(m: Node2D) -> String:
 		return "FRISBEE!  %d TO GO" % m.frisbee.throws_left
 	if m.rope_carry_t > 0.0:
 		return "SHOW IT OFF"
+	if m.wave_game != null and not m.wave_game.done \
+			and m.dog.global_position.x - m.beach_shore_x(m.dog.global_position.y) < 320.0:
+		return "CHASE THE WAVE OUT, THEN RUN FOR IT!"
 	if m.pigeon_game != null and m.pigeon_game.active() \
 			and m.dog.global_position.distance_to(m.pigeon_game.at) < 360.0:
 		return Prompts.fill("PIGEONS! CREEP UP, THEN {bark} BARK")

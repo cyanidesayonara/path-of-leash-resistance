@@ -60,9 +60,49 @@ func _draw() -> void:
 			main.agility.draw_ground(_b, AnimClock.msec() / 1000.0)
 		if main.pigeon_game != null:
 			main.pigeon_game.draw_ground(_b)
+		if main.wave_game != null and not main.wave_game.done:
+			_draw_waves(main.wave_game)
 		if main.tug != null:
 			_draw_tug_ground(main.tug)
 	_b.flush()
+
+
+const SURF := Color(0.40, 0.74, 0.78, 0.55)
+const FOAM := Color(0.98, 0.99, 1.0, 0.85)
+const WET_SAND := Color(0.62, 0.55, 0.42, 0.35)
+
+
+# the wave game's water up the sand: a sheet from the shoreline to its edge,
+# a line of foam at the edge, the wet sand it leaves as it drains, and the
+# crest building out at sea before it comes (the telegraph)
+func _draw_waves(wg: WaveGame) -> void:
+	var r: Rect2 = main._freedom_rect()
+	var top := r.position.y
+	var bot := r.end.y
+	var off := wg.front_off()
+	var step := 40.0
+	var y := top
+	var wet := wg.phase == WaveGame.P.DRAIN or wg.phase == WaveGame.P.LULL
+	while y < bot:
+		var y2 := minf(y + step, bot)
+		var s1: float = main.beach_shore_x(y)
+		var s2: float = main.beach_shore_x(y2)
+		var w1 := sin(y * 0.031 + float(wg.wave)) * 6.0
+		var w2 := sin(y2 * 0.031 + float(wg.wave)) * 6.0
+		if wet:
+			_b.quad(Vector2(s1, y), Vector2(s1 + SURGE_WET, y), Vector2(s2 + SURGE_WET, y2), Vector2(s2, y2), WET_SAND)
+		if off > 1.0:
+			_b.quad(Vector2(s1, y), Vector2(s1 + off + w1, y), Vector2(s2 + off + w2, y2), Vector2(s2, y2), SURF)
+			_b.line(Vector2(s1 + off + w1, y), Vector2(s2 + off + w2, y2), FOAM, 4.0)
+		var k := wg.crest()
+		if k > 0.0:
+			var cx1 := s1 - 70.0 + 30.0 * k
+			var cx2 := s2 - 70.0 + 30.0 * k
+			_b.line(Vector2(cx1 + w1, y), Vector2(cx2 + w2, y2), Color(1, 1, 1, 0.4 + 0.5 * k), 2.0 + 5.0 * k)
+		y = y2
+
+
+const SURGE_WET := 110.0
 
 
 func _draw_rope_cover() -> void:

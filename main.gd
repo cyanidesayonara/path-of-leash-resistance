@@ -724,6 +724,7 @@ var tug: RopeTug
 var tug_dog: Node2D
 var tug_phase_was := -1         # RopeTug.P last frame, for its sounds
 var pigeon_game: RefCounted = null   # a plaça's pigeons (systems/pigeon_game.gd)
+var wave_game: RefCounted = null     # the dog beach's waves (systems/wave_game.gd)
 var tug_prev := Vector2.ZERO
 var tugs_won := 0
 var rope_loose := Vector2(INF, INF)

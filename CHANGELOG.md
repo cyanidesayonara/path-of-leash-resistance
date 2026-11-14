@@ -2,12 +2,13 @@
 
 Append-only session history, newest first.
 
-## 2026-11-15 - Off the leash: an agility course you can read, frisbee and fetch with something to chase, pigeons in the plaça
+## 2026-11-15 - Off the leash: an agility course you can read, frisbee and fetch with something to chase, pigeons in the plaça, waves at the beach
 
 - Agility (El Barri): it was hard to tell how to finish. The weave asked for a side at each pole that only a tiny chalk dash showed, the tunnel's mouth was narrow, and six seconds without progress quietly ended the run. Now a chalk racing line snakes through six weave poles the right way, each pole turns green or red as she passes, a bouncing arrow stands over the next element (over the start when no run is on), and funnel wings lead into a wider tunnel mouth. A new pause table: stand on it dug in for "1... 2... 3! Go!". Medals by time (gold 6.5 s, silver 9 s, bronze 14 s) pay 8, 5 and 3 bones, plus 5 for a new best. A run is abandoned only 200 px off the lane or after 10 s without progress. The park's other dogs trot off the lane while she runs (`systems/agility.gd`, `entities/freedog.gd`).
 - Frisbee: five throws, not three. A ring on the grass shows where each one will come down and fills as it gets there. Sprint in under it and she leaps for it, catching it higher ("LEAP CATCH!"). Air catches in a row are a streak that pays more each time, and a streak earns longer, curvier throws (`entities/frisbee.gd`).
 - Fetch: the ball bounces as it goes. Snatch it while it is still moving (no pickup press) and bring it back within 4 s, and each pays 2 more ("good dog on the bounce quick! +7") (`entities/ball.gd`).
 - A new game in every plaça (about fifteen walks end in one): the pigeons. A flock of nine lands on scattered crumbs. Run at them and the near ones take off, lost (at a sprint they see her from much further off). Creep up, stop close and bark: every pigeon still down bursts up at once, a bone each, double when she is right among them, five more for the whole flock. Three flocks, each somewhere new (`systems/pigeon_game.gd`, test `tests/test_pigeon_game.gd`).
+- A new game at the dog beaches (Platja de Llevant, La Cremada): the waves. A crest builds out at sea (the telegraph), the wave rushes up the sand and drains back. Follow it out and outrun the next one: further out pays more, dry escapes in a row add up, and caught she is soaked and the streak is gone. Six waves (`systems/wave_game.gd`, test `tests/test_wave_game.gd`).
 - `tools/agility_frames.gd` films a run along the chalk line. Tests: the table's count and fault, the racing line passing every pole on its side and running clean, medals, the frisbee streak and leap pay.
 ## 2026-11-14 - CI was not running
 
