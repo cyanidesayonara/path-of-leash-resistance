@@ -2,6 +2,10 @@
 
 Append-only session history, newest first.
 
+## 2026-11-14 - CI was not running
+
+- `ci.yml` had not run since #531 merged: a step name ("...security: never in a solid...") held an unquoted colon and space, which YAML reads as a mapping, so GitHub rejected the whole workflow file and every push and pull request ran only the sweep, soak and MSIX workflows. #529, #524, #531, #525, #526, #527, #532 and #533 merged without it; each was run through the full local suite (`tools/run_tests.sh`) before merging. The colon is a semicolon now, and every workflow file parses.
+
 ## 2026-11-14 - Tug of war: a real rope toy, a rhythm to read, a clear winner
 
 - The rope between the two dogs was never drawn outside El Barri: the games layer returned when a walk had no agility course, and the free dog hides its own end during a tug, so the rope vanished into their mouths. It is drawn on every walk now (`world/games_layer.gd`).
