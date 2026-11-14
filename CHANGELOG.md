@@ -2,6 +2,10 @@
 
 Append-only session history, newest first.
 
+## 2026-11-15 - Boss arenas planned
+
+- `docs/BOSSES.md`: an arena section planning two or three interactables per boss from each real place (El Mamut's rowboat jetty, deckchairs and kiosk railing; El Drac's fountain spouts, tile slides and serpentine bench; Els Lleons' bollards, crane net and the Golondrina's horn; El Gat's awnings and yarn stall), El Mamut first.
+
 ## 2026-11-14 - Release notes for 1.73
 
 - `store/listing.md`: What's new for 1.73 (L'Aeroport and Montserrat, thirty-eight walks; Els Lleons and El Drac; the chases rebuilt; the tug of war; night shadows and softer lit fronts; the home walk-in; objects that fit the place), the walk count and list in the description, and the certification notes. The description no longer claims an agility course on every walk (only El Barri has one).
