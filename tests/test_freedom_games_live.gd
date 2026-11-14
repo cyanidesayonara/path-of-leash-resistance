@@ -123,7 +123,7 @@ func _run() -> void:
 			m.freedom_games_tick(1.0 / 60.0)
 		_check(fd.global_position.distance_to(fd0) > 2.0, "the other dog hauls during the tug")
 		_check(m.dog_carrying, "her mouth is full while she tugs")
-		for i in range(60 * 15):
+		for i in range(int(60.0 * (RopeTug.TIME_OUT + 2.0))):
 			if m.tug == null:
 				break
 			m.freedom_games_tick(1.0 / 60.0)
