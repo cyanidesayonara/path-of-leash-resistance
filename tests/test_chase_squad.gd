@@ -130,6 +130,41 @@ func _run() -> void:
 		far = maxf(far, (t.squad.members[i]["pos"] as Vector2).distance_to(t.squad.target(i, Vector2(t.cx + t.sway, t.front_y))))
 	_check(far < 140.0, "a jump back puts them in their places (furthest %.0f px off)" % far)
 
+	# --- 5. what she leaves, with them on your tail ---
+	m.phase = "home"
+	m.chase_active = true
+	m.chase_sweeper = t
+	_check(m.under_pressure(), "a chase home is pressure")
+	# she holds it: the urge waits
+	m.poop_state = 1
+	m.urge_timer = 5.0
+	m._bodily(1.0)
+	_check(is_equal_approx(m.urge_timer, 5.0), "her urge waits while they run (%.2f left)" % m.urge_timer)
+	# done: your human, on the way to it, gives up and walks on
+	m.poop_state = 2
+	m.bag_pending = true
+	m.business_spot = Vector2(640.0, -2000.0)
+	m.human.fetch_poop(m.business_spot)
+	m._bodily(DT)
+	_check(m.human.state == m.human.HState.WALK, "your human leaves it, no time")
+	_check(m.left_business() == m.business_spot, "and it lies there")
+	# an officer who runs through it skids
+	t.setup(m, -2000.0 - 300.0, m.walk_cx, m.walk_half, 136.0)
+	var slipped := false
+	for k in range(240):
+		t.advance(DT, 300.0, 0.0)
+		for i in range(5):
+			if t.squad.slipping(i):
+				slipped = true
+	var mid_i := 2
+	_check(slipped, "an officer who runs through it skids")
+	_check(t.squad.members[mid_i]["slipped"].size() <= 1, "once each")
+	# no chase: your human goes back for it as ever
+	m.chase_active = false
+	m.chase_sweeper = null
+	_check(not m.under_pressure(), "no chase, no pressure")
+	_check(m.human.is_available_for_chore(), "and your human is free for the chore again")
+
 	if failures.is_empty():
 		print("test_chase_squad: %d checks, OK" % checks)
 	else:

@@ -33,9 +33,14 @@ const BELT_SPAN := 1.35           # neighbours this many spacings apart still ho
 const BELT_REACH := 16.0
 const BEHIND := 70.0              # this far behind the rearmost of them is caught
 const SNAP := 420.0               # further than this from the slot (a continue moved the line): put there
+const SLIP_SECS := 0.9            # a member who runs through what she left is held up this long
+const SLIP_R := 16.0
 
-# one per member: {"pos", "vel", "slot", "stuck_t", "lag", "said"}
+# one per member: {"pos", "vel", "slot", "stuck_t", "lag", "said", "slip_t", "slipped"}
 var members: Array[Dictionary] = []
+# what they skid in: set by the threat each frame (where she went, left lying)
+var slip_points: Array[Vector2] = []
+var _slip_said := -1
 var radius := 22.0                # a member's body
 var reach := 34.0                 # how far ahead of the body their catch reaches
 var spacing := 90.0
@@ -52,7 +57,7 @@ func setup(slots: Array, anchor: Vector2, body_r: float, catch_reach: float, lin
 	members.clear()
 	for sx: float in slots:
 		members.append({"pos": anchor + Vector2(sx, -back), "vel": Vector2.ZERO, "slot": sx,
-			"stuck_t": 0.0, "lag": 0.0, "said": false})
+			"stuck_t": 0.0, "lag": 0.0, "said": false, "slip_t": 0.0, "slipped": []})
 	spacing = 90.0
 	if slots.size() > 1:
 		spacing = absf(float(slots[1]) - float(slots[0]))
@@ -94,6 +99,22 @@ func tick(m: Node2D, delta: float, anchor: Vector2, line_speed: float) -> void:
 			mb["pos"] = p
 			mb["stuck_t"] = 0.0
 		var to := want - p
+		# skidding in it: carried on a little, flailing, then up again
+		if float(mb["slip_t"]) > 0.0:
+			mb["slip_t"] = float(mb["slip_t"]) - delta
+			var sv: Vector2 = (mb["vel"] as Vector2) * exp(-4.0 * delta)
+			mb["vel"] = sv
+			mb["pos"] = _resolve(m, p + sv * delta)
+			mb["lag"] = maxf(0.0, want.y - (mb["pos"] as Vector2).y)
+			mb["stuck_t"] = maxf(float(mb["stuck_t"]), 0.7)
+			continue
+		for sp: Vector2 in slip_points:
+			if p.distance_to(sp) < radius * 0.6 + SLIP_R and not (mb["slipped"] as Array).has(sp):
+				(mb["slipped"] as Array).append(sp)
+				mb["slip_t"] = SLIP_SECS
+				_slip_said = i
+		if float(mb["slip_t"]) > 0.0:
+			continue
 		# run for the slot: forward as fast as they can, sideways a sidestep
 		var v := Vector2(clampf(to.x * 4.0, -LATERAL, LATERAL), clampf(to.y * 3.0 + line_speed, -top * 0.4, top))
 		if line_speed <= 0.0:
@@ -230,6 +251,17 @@ func held_up() -> int:
 		if float(mb["stuck_t"]) > 0.5:
 			n += 1
 	return n
+
+
+# the member who has just skidded in it (-1 for none), once
+func newly_slipped() -> int:
+	var i := _slip_said
+	_slip_said = -1
+	return i
+
+
+func slipping(i: int) -> bool:
+	return float(members[i]["slip_t"]) > 0.0
 
 
 # The one member who has just been held up long enough to complain, once a

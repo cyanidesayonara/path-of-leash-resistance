@@ -177,7 +177,17 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 func _tick_squad(delta: float) -> void:
 	if main == null:
 		return
+	squad.slip_points.clear()
+	if main.has_method("left_business"):
+		var lb: Vector2 = main.left_business()
+		if lb.x < INF:
+			squad.slip_points.append(lb)
 	squad.tick(main, delta, Vector2(cx + sway, front_y), cur_speed)
+	var sl := squad.newly_slipped()
+	if sl >= 0 and not bool(main.auto_walk) and main.has_method("float_text"):
+		main.float_text(squad.members[sl]["pos"] + Vector2(0.0, -34.0), "Eww!", Color(0.92, 0.94, 1.0), main.POP_SAY)
+		if Sfx != null:
+			Sfx.play("squelch", 0.8, -6.0)
 	var i := squad.newly_stuck()
 	if i >= 0 and not bool(main.auto_walk) and main.has_method("float_text"):
 		main.float_text(squad.members[i]["pos"] + Vector2(0.0, -34.0), String(HELD_UP_LINES[_said % HELD_UP_LINES.size()]),

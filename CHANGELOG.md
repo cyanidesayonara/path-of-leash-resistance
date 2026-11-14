@@ -13,6 +13,7 @@ Append-only session history, newest first.
 - New walk hooks in main: `draw_park_prop`, `draw_gate` and `draw_bench`.
 - The squad is on foot (`systems/chase_squad.gd`, shared by any chase that is a line of walkers): each officer runs for their place in the line, goes round anything solid (the walkway's rails, desks, benches, posts), kicks litter aside, and the line slows to wait for whoever is held up, who strains and shouts. They catch with their bodies and what they hold out, and with the belt while the line is together; split round a pillar, the gap is open. `tests/test_chase_squad.gd`.
 - The way home, the walkway is stopped (an emergency: red lamps in its newels, ATURADA at each end). Before, your human walked home against the belt and the squad caught them every time.
+- With a chase on your tail or a boss fight on (`main.under_pressure()`), she holds it: her urge waits, and a squat she chooses takes 1 s, not 2.5. Your human leaves what she does where it lies ("No time!"), giving up the walk to it or to a bin, and an officer who runs through it skids ("Eww!"), held up for a moment while the line waits. Once a boss fight is over, your human goes back for it.
 - L'Aeroport now draws its own walkway in main's `draw_conveyor` slot: main had been drawing L'Estació's over it.
 
 ## 2026-11-13 - L'Aeroport review fixes
