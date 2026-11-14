@@ -160,8 +160,20 @@ static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
 				m.drac.draw_drac(m._wc, t)
 			m.drac.draw_rings(m._wc, t)
 			m.drac.draw_health_bar(m._wc)
-		elif m.drac.fountain_t >= 0.0 and m.drac.fountain_t < 8.0:
-			m.drac.draw_rings(m._wc, t)
+		else:
+			# asleep on his stair, or content where the fight left him: the
+			# same salamander the fight draws, so waking him changes nothing
+			# but his eyes
+			var beaten: bool = m.drac.beaten()
+			var at: Vector2 = m.drac.pos if beaten else LevelBuild.MOSAIC_SALAMANDER
+			if at.y > vt - 240.0 and at.y < vb + 240.0:
+				BossDrac.draw_asleep(m._wc, at, m.drac.face_dir if beaten else Vector2.DOWN, t, beaten)
+				if not beaten:
+					# the water from his mouth into the basin
+					var basin: Vector2 = at + Vector2(0.0, LevelBuild.MOSAIC_SALAMANDER_SIZE.y * 0.5 + 16.0)
+					m._wc.line(at + Vector2(0.0, 80.0), basin + Vector2(0.0, -6.0), Color(0.62, 0.78, 0.86, 0.8), 4.0)
+			if m.drac.fountain_t >= 0.0 and m.drac.fountain_t < 8.0:
+				m.drac.draw_rings(m._wc, t)
 
 
 static func _draw_scenery(m: Node2D, vt: float, vb: float) -> void:
@@ -240,28 +252,6 @@ static func _draw_scenery(m: Node2D, vt: float, vb: float) -> void:
 			b2.circle(bs + Vector2.from_angle(float(k) * TAU / 14.0) * 22.0, 3.6, SHARDS[(k * 3) % SHARDS.size()])
 		b2.circle(bs, 18.0, Color(0.30, 0.48, 0.60))
 		b2.circle(bs + Vector2(-5, -5), 8.0, Color(0.42, 0.60, 0.70))
-		# once awake the boss owns the salamander; keep the fountain basin
-		if m.drac == null or not m.drac.awake_for_draw():
-			# its body, head down the stair and tail curling up it: a chain of
-			# trencadis scales, fattest at the shoulders, its shadow under it
-			var spine := [sm + Vector2(0, 74), sm + Vector2(10, 46), sm + Vector2(-4, 16), sm + Vector2(10, -14),
-				sm + Vector2(-2, -44), sm + Vector2(-18, -66), sm + Vector2(-30, -80)]
-			var bw := [16.0, 24.0, 27.0, 24.0, 18.0, 12.0, 8.0]
-			for k in range(spine.size()):
-				b2.circle(spine[k] + LIGHT * 8.0, bw[k], Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
-			for leg: Vector2 in [Vector2(-34, 40), Vector2(36, 34), Vector2(-30, -20), Vector2(32, -26)]:
-				trencadis_disc(m, b2, sm + leg, 11.0, int(leg.x + leg.y))
-			for k in range(spine.size()):
-				trencadis_disc(m, b2, spine[k], bw[k], k * 5 + 3)
-			# its head, with a blunt snout and two dark eyes
-			var hd: Vector2 = sm + Vector2(0, 86)
-			b2.draw_colored_polygon(PackedVector2Array([hd + Vector2(-16, -10), hd + Vector2(16, -10), hd + Vector2(10, 16),
-				hd + Vector2(-10, 16)]), Color(0.18, 0.62, 0.70))
-			trencadis_disc(m, b2, hd, 13.0, 21)
-			b2.circle(hd + Vector2(-7, 6), 3.0, Color(0.1, 0.1, 0.1))
-			b2.circle(hd + Vector2(7, 6), 3.0, Color(0.1, 0.1, 0.1))
-			# the water from its mouth into the basin
-			b2.line(hd + Vector2(0, 14), bs + Vector2(0, -6), Color(0.62, 0.78, 0.86, 0.8), 4.0)
 	# the hypostyle hall: in the shade under the plaza, its floor darker,
 	# the shade thinning out at both ends rather than stopping at a line
 	var b3 := ShapeBatch.new()

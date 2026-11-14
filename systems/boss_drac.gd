@@ -80,6 +80,23 @@ const DRAC_WHITE := Color(0.94, 0.94, 0.90)
 const EYE_AMBER := Color(1.0, 0.78, 0.22)
 const EYE_RED := Color(0.96, 0.28, 0.20)
 const SHADOW := Color(0.12, 0.10, 0.08, 0.28)
+# the trencadis: glazed shards on white mortar, in the colours of the one
+# on the Park Guell stair
+const LIGHT := Vector2(0.5, 0.866)
+const INK := Color(0.10, 0.08, 0.06)
+const GROUT := Color(0.80, 0.78, 0.72)
+const TILE_BLUE := Color(0.12, 0.34, 0.74)
+const TILE_CYAN := Color(0.16, 0.62, 0.78)
+const TILE_GREEN := Color(0.26, 0.64, 0.34)
+const TILE_YELLOW := Color(0.98, 0.80, 0.20)
+const TILE_ORANGE := Color(0.94, 0.48, 0.14)
+const TILE_WHITE := Color(0.98, 0.97, 0.93)
+const TILES: Array[Color] = [TILE_BLUE, TILE_YELLOW, TILE_CYAN, TILE_ORANGE, TILE_GREEN, TILE_WHITE]
+# his spine: joints from nose to hips, then down the tail
+const BODY_N := 13
+const TAIL_N := 11
+# asleep his tail lies curled this far round (radians over its length)
+const CURL := 2.3
 
 enum State {
 	IDLE, AWAKEN, ENRAGE, PROWL, TAIL_WHIP, JET, SLITHER,
@@ -735,39 +752,131 @@ func draw_ground(b: ShapeBatch, vt: float, vb: float) -> void:
 		var kind: int = z["kind"]
 		var remaining: float = float(z["until"]) - main.elapsed
 		if kind == Surfaces.S.WATER:
-			var a := clampf(remaining / 0.5, 0.0, 1.0) * 0.42
-			b.rect(r, Color(0.30, 0.60, 0.78, a))
-			b.circle(r.get_center(), minf(r.size.x, r.size.y) * 0.35, Color(0.45, 0.72, 0.88, a * 0.7))
+			# the jet's puddle: the wet it is, a paler sheet on it, a glint
+			var a := clampf(remaining / 0.5, 0.0, 1.0)
+			var rad := minf(r.size.x, r.size.y) * 0.5
+			b.polygon(_rounded(r, rad), Color(0.24, 0.50, 0.70, 0.40 * a))
+			b.polygon(_rounded(r.grow(-5.0), rad - 5.0), Color(0.46, 0.72, 0.88, 0.30 * a))
+			var c := r.get_center()
+			var along := Vector2(1.0, 0.0) if r.size.x > r.size.y else Vector2(0.0, 1.0)
+			var half := maxf(r.size.x, r.size.y) * 0.5
+			for k in range(3):
+				var gp := c + along * (float(k) - 1.0) * half * 0.55 - LIGHT * rad * 0.3
+				b.line(gp - along * 12.0, gp + along * 12.0, Color(0.92, 0.98, 1.0, 0.55 * a), 2.0)
 		elif kind == Surfaces.S.MUD:
-			var a := clampf(remaining / 0.4, 0.0, 1.0) * 0.65
-			b.rect(r, Color(0.85, 0.72, 0.42, a * 0.4))
-			for k in range(4):
-				var cp := r.position + Vector2(fmod(float(k) * 17.0, r.size.x), fmod(float(k) * 23.0, r.size.y))
-				var col := DRAC_BLUE if k % 2 == 0 else DRAC_YELLOW
-				b.circle(cp, 3.5, Color(col.r, col.g, col.b, a))
+			# what he sheds in the slither: grit and chips of his own tile
+			var a := clampf(remaining / 0.4, 0.0, 1.0)
+			b.polygon(_rounded(r, 12.0), Color(0.86, 0.80, 0.66, 0.42 * a))
+			for k in range(7):
+				var h := _hash(r.position.x + float(k) * 3.1, r.position.y)
+				var cp := r.position + Vector2(4.0 + fmod(float(k) * 17.0 + h * 9.0, r.size.x - 8.0), 4.0 + fmod(float(k) * 23.0 + h * 13.0, r.size.y - 8.0))
+				var d := Vector2.from_angle(h * TAU) * 3.6
+				var e := d.orthogonal() * (0.6 + h * 0.5)
+				var col: Color = TILES[k % TILES.size()]
+				b.quad(cp - d, cp + e, cp + d, cp - e, Color(col.r, col.g, col.b, a))
 
 
 func draw_warnings(b: ShapeBatch, t: float) -> void:
 	var pulse := sin(t * 16.0) * 0.5 + 0.5
 	if state == State.TAIL_WHIP and not whip_struck:
-		var n := 16
-		var prev := pos + whip_dir.rotated(-TAIL_HALF) * TAIL_REACH
-		var col := Color(1.0, 0.45, 0.20, 0.22 + 0.14 * pulse)
-		for i in range(1, n + 1):
-			var a := -TAIL_HALF + float(i) * 2.0 * TAIL_HALF / float(n)
-			var cur := pos + whip_dir.rotated(a) * TAIL_REACH
-			b.line(prev, cur, col, 4.0)
-			if i % 3 == 0:
-				b.line(pos, cur, Color(col.r, col.g, col.b, 0.12), 2.0)
-			prev = cur
-		b.line(pos, pos + whip_dir * TAIL_REACH, col, 3.0)
+		# the sector his tail will sweep, filling as the warning runs out
+		var fill := 1.0 - clampf(state_t / TAIL_WARN, 0.0, 1.0)
+		var a0 := whip_dir.angle() - TAIL_HALF
+		var pts := PackedVector2Array([pos])
+		var inner := PackedVector2Array([pos])
+		for i in range(13):
+			var d := Vector2.from_angle(a0 + TAIL_HALF * 2.0 * float(i) / 12.0)
+			pts.append(pos + d * TAIL_REACH)
+			inner.append(pos + d * TAIL_REACH * maxf(fill, 0.05))
+		b.polygon(pts, Color(1.0, 0.36, 0.20, 0.10 + 0.08 * pulse))
+		b.polygon(inner, Color(1.0, 0.36, 0.20, 0.20))
+		for i in range(12):
+			b.line(pts[i + 1], pts[i + 2], Color(1.0, 0.45, 0.28, 0.8), 3.0)
+		b.line(pos, pts[1], Color(1.0, 0.45, 0.28, 0.6), 2.0)
+		b.line(pos, pts[13], Color(1.0, 0.45, 0.28, 0.6), 2.0)
 	elif (state == State.JET and not jet_struck) or last_jet_warning():
 		var from := pos + face_dir * 30.0
 		var to := from + face_dir * JET_LEN
+		var side := face_dir.orthogonal() * JET_W * 0.5
 		var k := 1.0 - clampf(state_t / JET_WARN, 0.0, 1.0) if state == State.JET else \
 			1.0 - clampf(ls_jet_cd / JET_WARN, 0.0, 1.0)
 		b.line(from, to, Color(0.35, 0.75, 1.0, 0.16 + 0.10 * pulse), JET_W)
 		b.line(from, from.lerp(to, clampf(k, 0.0, 1.0)), Color(0.50, 0.85, 1.0, 0.35), JET_W * 0.5)
+		b.line(from + side, to + side, Color(0.62, 0.90, 1.0, 0.65), 2.0)
+		b.line(from - side, to - side, Color(0.62, 0.90, 1.0, 0.65), 2.0)
+		var d := 40.0 + fmod(t * 260.0, 60.0)
+		while d < JET_LEN - 10.0:
+			var cp := from + face_dir * d
+			var cc := Color(0.90, 0.98, 1.0, 0.7 * (1.0 - d / JET_LEN))
+			b.line(cp - side * 0.6 - face_dir * 9.0, cp, cc, 2.5)
+			b.line(cp + side * 0.6 - face_dir * 9.0, cp, cc, 2.5)
+			d += 60.0
+
+
+# How he holds himself in each state, for draw_salamander.
+func _pose(t: float) -> Dictionary:
+	var o := {
+		"eye": 1.0, "eye_col": EYE_RED if (enraged and hp > 0.0) else EYE_AMBER,
+		"wave": 2.0, "phase": t * 2.0, "tail_wag": 0.5, "tail_phase": t * 4.0,
+		"flash": flash, "feet": leg_poles,
+	}
+	match state:
+		State.AWAKEN:
+			var k := clampf(state_t / AWAKEN_TIME, 0.0, 1.0)
+			o["eye"] = clampf(state_t / 0.35, 0.0, 1.0)
+			o["tail_bend"] = CURL * (1.0 - clampf(k * 2.0, 0.0, 1.0))
+			o["wave"] = 7.0 * k
+			o["phase"] = t * 7.0
+			o["step"] = t * 9.0
+		State.PROWL, State.RETREAT:
+			o["wave"] = 5.0
+			o["phase"] = t * 5.0
+			o["step"] = t * 8.0
+		State.ENRAGE:
+			o["wave"] = 9.0
+			o["phase"] = t * 24.0
+			o["mouth"] = 1.0
+			o["tail_wag"] = 1.6
+			o["tail_phase"] = t * 22.0
+			o["flash"] = maxf(flash, 0.35 + 0.35 * sin(t * 30.0))
+		State.TAIL_WHIP:
+			# cocked to one side through the warning, then across in a blink
+			var cock := 1.0 - clampf(state_t / TAIL_WARN, 0.0, 1.0)
+			var bend := -1.5 * cock
+			var reach := 1.0 + 0.25 * cock
+			if state_t <= 0.0:
+				var k := clampf(-state_t / TAIL_STRIKE, 0.0, 1.0)
+				bend = lerpf(-1.5, 1.6, k * k * (3.0 - 2.0 * k))
+				reach = 1.45
+			o["tail_bend"] = bend * whip_side
+			o["tail_len"] = reach
+			o["tail_wag"] = 0.15
+		State.JET:
+			o["mouth"] = 1.0 - clampf(state_t / JET_WARN, 0.0, 1.0) if state_t > 0.0 else 1.0
+			o["tail_wag"] = 0.2
+		State.SLITHER:
+			o["wave"] = 15.0
+			o["phase"] = state_t * SLITHER_WAVE * 2.0
+			o["tail_wag"] = 1.5
+			o["tail_phase"] = state_t * SLITHER_WAVE * 2.0
+			o["step"] = t * 16.0
+		State.STUNNED:
+			o["dazed"] = true
+			o["wave"] = 0.0
+			o["tail_bend"] = 0.7
+			o["tail_wag"] = 0.1
+		State.STAND:
+			o["mouth"] = 1.0 - clampf(ls_jet_cd / JET_WARN, 0.0, 1.0) if last_jet_warning() else 0.0
+		State.WRAPPED:
+			o["mouth"] = 0.7
+			o["wave"] = 6.0
+			o["phase"] = t * 26.0
+		State.SLIDE:
+			o["dazed"] = true
+			o["wave"] = 4.0 if state_t > 0.0 else 0.0
+			o["phase"] = t * 18.0
+			o["tail_bend"] = 0.5
+	return o
 
 
 func draw_drac(b: ShapeBatch, t: float) -> void:
@@ -776,87 +885,299 @@ func draw_drac(b: ShapeBatch, t: float) -> void:
 		at.x += sin(act_t * 16.0) * 4.0
 	elif state == State.STUNNED:
 		at.x += sin(t * 10.0) * 2.5
-	elif state == State.SLIDE:
-		var spray_c := at + Vector2(sin(t * 22.0) * 12.0, 0.0)
-		b.circle(spray_c, 24.0, Color(0.70, 0.88, 1.0, 0.4))
-
 	var f := face_dir
 	var s := f.orthogonal()
+	var o := _pose(t)
+	if state == State.SLIDE and state_t > 0.0:
+		# the belly slide: a wake of spray off either shoulder
+		for sd: float in [-1.0, 1.0]:
+			for k in range(4):
+				var u := fposmod(t * 3.0 + float(k) * 0.25, 1.0)
+				var sp := at + f * (30.0 - u * 70.0) + s * sd * (26.0 + u * 34.0)
+				b.circle(sp, 7.0 * (1.0 - u) + 2.0, Color(0.86, 0.95, 1.0, 0.7 * (1.0 - u)))
+	draw_salamander(b, at, f, t, o)
 
-	b.polygon(_ellipse(at + Vector2(8.0, 10.0), f, 56.0, 36.0, 16), SHADOW)
+	if state == State.TAIL_WHIP and state_t <= 0.0:
+		# the swish it leaves
+		var k := clampf(-state_t / TAIL_STRIKE, 0.0, 1.0)
+		var a0 := whip_dir.angle() - TAIL_HALF * whip_side
+		var prev := Vector2.ZERO
+		for i in range(11):
+			var a := a0 + whip_side * TAIL_HALF * 2.0 * k * float(i) / 10.0
+			var cur := at + Vector2.from_angle(a) * (TAIL_REACH - 14.0)
+			if i > 0:
+				b.line(prev, cur, Color(1.0, 0.97, 0.86, 0.75 * (1.0 - k) * float(i) / 10.0), 7.0 * float(i) / 10.0 + 1.0)
+			prev = cur
+	if state == State.JET and jet_struck:
+		_draw_jet(b, at + f * 76.0, f, t, clampf(-state_t / JET_TIME, 0.0, 1.0))
+	if state == State.STUNNED or (state == State.SLIDE and state_t <= 0.0):
+		var head := at + f * 56.0
+		for k in range(3):
+			var sa := t * 6.0 + float(k) * TAU / 3.0
+			var sp := head + Vector2(cos(sa) * 28.0, sin(sa) * 12.0 - 14.0)
+			b.circle(sp, 4.4, Color(1.0, 0.92, 0.42))
+			b.line(sp - Vector2(6.0, 0.0), sp + Vector2(6.0, 0.0), Color(1.0, 0.98, 0.80), 1.6)
+			b.line(sp - Vector2(0.0, 6.0), sp + Vector2(0.0, 6.0), Color(1.0, 0.98, 0.80), 1.6)
 
-	# 4 splayed lizard legs at leg_poles
-	for k in range(leg_poles.size()):
-		var lp := leg_poles[k]
-		if state in [State.PROWL, State.SLITHER, State.RETREAT]:
-			lp += f * sin(t * 8.0 + float(k) * 1.6) * 5.0
-		b.circle(lp, LEG_RADIUS + 2.0, Color(0.12, 0.10, 0.08, 0.8))
-		b.circle(lp, LEG_RADIUS, DRAC_BLUE)
-		var shard_col := DRAC_YELLOW if k % 2 == 0 else DRAC_GREEN
-		b.circle(lp, LEG_RADIUS * 0.55, shard_col)
-		for n in range(3):
-			var claw := lp + f * (LEG_RADIUS + 3.0) + s * (float(n) - 1.0) * 6.0
-			b.circle(claw, 2.5, Color(0.10, 0.08, 0.06))
 
-	# tail
-	var tail_pts := PackedVector2Array()
-	var tail_wave := sin(t * 7.0) * 16.0 if state != State.CONTENT else 0.0
-	if state == State.SLITHER:
-		tail_wave = sin(act_t * SLITHER_WAVE) * SLITHER_AMP * 0.4
-	for i in range(7):
-		var frac := float(i) / 6.0
-		var tp := at - f * (30.0 + frac * 65.0) + s * (sin(frac * PI) * 24.0 + frac * tail_wave)
-		tail_pts.append(tp)
-	for i in range(tail_pts.size() - 1):
-		var w := lerpf(20.0, 6.0, float(i) / 6.0)
-		b.line(tail_pts[i], tail_pts[i + 1], DRAC_BLUE, w)
-		b.circle(tail_pts[i], w * 0.5, DRAC_CYAN)
-		if i % 2 == 1:
-			b.circle(tail_pts[i], w * 0.35, DRAC_YELLOW)
+# the fountain jet: a hard rope of water down the lane, breaking up as it
+# goes, and where it lands
+func _draw_jet(b: ShapeBatch, mouth: Vector2, f: Vector2, t: float, k: float) -> void:
+	var s := f.orthogonal()
+	var fade := 1.0 - k * k
+	var n := 9
+	var prev := mouth
+	for i in range(1, n + 1):
+		var u := float(i) / float(n)
+		var cur := mouth + f * (JET_LEN - 46.0) * u + s * sin(t * 30.0 + u * 9.0) * 5.0 * u
+		var w := lerpf(13.0, JET_W * 0.8, u)
+		b.line(prev, cur, Color(0.42, 0.74, 0.94, 0.55 * fade), w)
+		b.line(prev, cur, Color(0.90, 0.97, 1.0, 0.85 * fade), w * 0.4)
+		prev = cur
+	for i in range(8):
+		var u := fposmod(t * 2.4 + float(i) * 0.125, 1.0)
+		var dp := mouth + f * (JET_LEN - 40.0) * u + s * sin(float(i) * 2.3) * (6.0 + u * 20.0)
+		b.circle(dp, 3.0 + u * 2.0, Color(0.92, 0.98, 1.0, 0.8 * fade))
+	var end := mouth + f * (JET_LEN - 46.0)
+	_ring(b, end, 16.0 + k * 30.0, Color(0.86, 0.96, 1.0, 0.7 * fade), 3.0)
+	_ring(b, end, 6.0 + k * 18.0, Color(1.0, 1.0, 1.0, 0.6 * fade), 2.0)
 
-	# arched body
-	var spine_offsets: Array[float] = [-18.0, -6.0, 8.0, 22.0, 34.0]
-	var spine_radii: Array[float] = [24.0, 28.0, 27.0, 23.0, 18.0]
-	var colors: Array[Color] = [DRAC_BLUE, DRAC_CYAN, DRAC_GREEN, DRAC_YELLOW, DRAC_ORANGE]
-	for i in range(spine_offsets.size()):
-		var sp_pos: Vector2 = at + f * spine_offsets[i]
-		if state == State.SLITHER:
-			sp_pos += s * sin(act_t * SLITHER_WAVE + float(i) * 0.8) * 12.0
-		var r: float = spine_radii[i]
-		b.circle(sp_pos, r + 2.0, Color(0.10, 0.08, 0.06))
-		b.circle(sp_pos, r, colors[i % colors.size()])
-		b.circle(sp_pos - f * 2.0, r * 0.65, DRAC_WHITE if i == 2 else colors[(i + 1) % colors.size()])
-		b.circle(sp_pos - s * (r - 2.0), 4.5, DRAC_ORANGE)
 
-	# head
-	var head := at + f * 50.0
-	b.circle(head, 20.0, Color(0.10, 0.08, 0.06))
-	b.circle(head, 18.0, DRAC_BLUE)
-	var snout := head + f * 14.0
-	b.circle(snout, 14.0, DRAC_CYAN)
-	b.circle(snout + f * 4.0, 8.0, DRAC_YELLOW)
+# Asleep on the stair, as the park has him: head down the steps, tail
+# curled up behind. `content` is him after the fight, eyes shut in a smile.
+static func draw_asleep(b: ShapeBatch, at: Vector2, f: Vector2, t: float, content: bool) -> void:
+	draw_salamander(b, at, f, t, {"eye": 0.0, "happy": content, "tail_bend": CURL, "tail_wag": 0.0, "wave": 3.0,
+		"phase": 0.6})
 
-	# eyes
-	var awake := state != State.IDLE and state != State.CONTENT
-	var eye_col := EYE_RED if (enraged and hp > 0.0) else EYE_AMBER
+
+# The salamander from above, his middle at `at`, nose along `f`: a spine
+# from snout to tail tip with a girth at every joint, skinned in broken tile
+# on white mortar the way Gaudi's is, four splayed legs, bulging eyes.
+# The pose `o`: `wave` and `phase` bend the body, `tail_bend` curls the tail
+# (radians over its length), `tail_wag`/`tail_phase` swing it, `tail_len`
+# stretches it, `eye` opens the eyes (`eye_col`), `happy`, `dazed`, `mouth`
+# opens the mouth, `feet` are where the four feet are planted (his own legs'
+# places when empty), `step` walks them, `flash` whitens him when hit.
+static func draw_salamander(b: ShapeBatch, at: Vector2, f: Vector2, t: float, o: Dictionary) -> void:
+	if f.length_squared() < 0.01:
+		f = Vector2.DOWN
+	var wave: float = o.get("wave", 0.0)
+	var phase: float = o.get("phase", 0.0)
+	var bend: float = o.get("tail_bend", 0.0)
+	var wag: float = o.get("tail_wag", 0.0)
+	var tphase: float = o.get("tail_phase", 0.0)
+	var tail_len: float = o.get("tail_len", 1.0)
+	var eye: float = o.get("eye", 1.0)
+	var eye_col: Color = o.get("eye_col", EYE_AMBER)
+	var happy: bool = o.get("happy", false)
+	var dazed: bool = o.get("dazed", false)
+	var mouth: float = o.get("mouth", 0.0)
+	var white: float = o.get("flash", 0.0)
+	var step: float = o.get("step", -1.0)
+	var x := Transform2D(f, f.orthogonal(), at)
+
+	# the spine, in his frame: head and trunk laid out along it, the tail
+	# walked out behind joint by joint so a bend curls it
+	var sp := PackedVector2Array()
+	var rad := PackedFloat32Array()
+	for i in range(BODY_N):
+		var bx := lerpf(74.0, -36.0, float(i) / float(BODY_N - 1))
+		var env := 1.0 - clampf((bx - 20.0) / 54.0, 0.0, 1.0) * 0.75
+		sp.append(Vector2(bx, wave * sin(phase - bx * 0.05) * env))
+		rad.append(_girth(bx))
+	var heading := (sp[BODY_N - 1] - sp[BODY_N - 2]).angle()
+	var ds := 9.6 * tail_len
+	var p := sp[BODY_N - 1]
+	for j in range(1, TAIL_N + 1):
+		var v := float(j) / float(TAIL_N)
+		var h := heading + bend * v + wag * sin(tphase - v * 4.0) * v * 0.7
+		p += Vector2.from_angle(h) * ds
+		sp.append(p)
+		rad.append(lerpf(15.0, 3.2, pow(v, 0.8)))
+	var n := sp.size()
+	var pts := PackedVector2Array()
+	var nrm := PackedVector2Array()
+	for i in range(n):
+		pts.append(x * sp[i])
+	for i in range(n):
+		var tan := (pts[mini(i + 1, n - 1)] - pts[maxi(i - 1, 0)]).normalized()
+		nrm.append(tan.orthogonal())
+
+	_strip(b, pts, nrm, rad, 3.0, LIGHT * 9.0, SHADOW)
+
+	# legs under the body: shoulder to elbow to a splayed five-toed foot
+	var feet: Array = o.get("feet", [])
+	for k in range(4):
+		var foot: Vector2 = feet[k] if feet.size() == 4 else x * Vector2(LEG_OFFSETS[k].y, LEG_OFFSETS[k].x)
+		var loc: Vector2 = x.affine_inverse() * foot
+		var front := loc.x > 0.0
+		var sd := signf(loc.y)
+		if step >= 0.0:
+			foot += f * sin(step + float(k) * 1.7) * 6.0
+		var hip: Vector2 = x * Vector2(24.0 if front else -22.0, sd * 14.0 + wave * sin(phase - (24.0 if front else -22.0) * 0.05))
+		var out: Vector2 = (foot - hip).normalized()
+		var elbow := hip.lerp(foot, 0.55) + out.orthogonal() * sd * (-5.0 if front else 5.0)
+		b.capsule(hip, elbow, 9.4, INK)
+		b.capsule(elbow, foot, 8.4, INK)
+		b.circle(foot, 12.4, INK)
+		var toe_dir := (out + f * 0.8).normalized()
+		for n2 in range(4):
+			var td := toe_dir.rotated((float(n2) - 1.5) * 0.5)
+			b.capsule(foot + td * 9.0, foot + td * 17.0, 4.2, INK)
+		b.capsule(hip, elbow, 7.4, TILE_BLUE)
+		b.capsule(elbow, foot, 6.4, TILE_CYAN)
+		b.circle(foot, 10.4, TILE_BLUE)
+		for n2 in range(4):
+			var td := toe_dir.rotated((float(n2) - 1.5) * 0.5)
+			b.capsule(foot + td * 9.0, foot + td * 17.0, 2.5, TILE_BLUE if n2 % 2 == 0 else TILE_CYAN)
+		_shard(b, hip.lerp(elbow, 0.55), out, 5.4, 4.6, TILE_YELLOW.lerp(Color.WHITE, white * 0.5), float(k))
+		_shard(b, elbow.lerp(foot, 0.5), out, 4.4, 4.0, TILE_BLUE.lerp(Color.WHITE, white * 0.5), float(k) + 3.0)
+		_shard(b, foot - out * 1.0, out, 5.6, 5.6, (TILE_ORANGE if front else TILE_GREEN).lerp(Color.WHITE, white * 0.5), float(k) + 7.0)
+
+	# the skin: ink round it, mortar, then the tile
+	_strip(b, pts, nrm, rad, 2.8, Vector2.ZERO, INK)
+	b.circle(pts[0], rad[0] + 2.8, INK)
+	_strip(b, pts, nrm, rad, 0.0, Vector2.ZERO, GROUT)
+	b.circle(pts[0], rad[0], GROUT)
+	for i in range(n - 1):
+		var r0 := rad[i]
+		var r1 := rad[i + 1]
+		var cols := clampi(int((r0 + r1) / 13.0), 1, 4)
+		for c in range(cols):
+			var a0 := -1.0 + 2.0 * float(c) / float(cols)
+			var a1 := -1.0 + 2.0 * float(c + 1) / float(cols)
+			var h := _hash(float(i), float(c))
+			# every shard its own odd shape, the mortar showing between
+			var g0 := 0.03 + h * 0.05
+			var g1 := 0.03 + fmod(h * 7.0, 1.0) * 0.05
+			var pa := pts[i].lerp(pts[i + 1], g0)
+			var pb := pts[i].lerp(pts[i + 1], 1.0 - g1)
+			var la0 := a0 + (0.03 + 0.08 / float(cols) * h)
+			var la1 := a1 - (0.03 + 0.08 / float(cols) * fmod(h * 3.0, 1.0))
+			var edge := 0.98
+			var q0 := pa + nrm[i] * r0 * la0 * edge
+			var q1 := pb + nrm[i + 1] * r1 * la0 * edge
+			var q2 := pb + nrm[i + 1] * r1 * la1 * edge
+			var q3 := pa + nrm[i] * r0 * la1 * edge
+			var col := _tile(i, c, cols, h)
+			# the far side of him from the light sits a shade down
+			var mid := (a0 + a1) * 0.5
+			var lit := nrm[i].dot(-LIGHT) * mid
+			col = col.lightened(0.16 * lit) if lit > 0.0 else col.darkened(-0.22 * lit)
+			b.quad(q0, q1, q2, q3, col.lerp(Color.WHITE, white * 0.55))
+	# the crest: a bright boss on every other joint of his back
+	for i in range(3, BODY_N + 4, 2):
+		b.circle(pts[i], 3.6, INK)
+		b.circle(pts[i] - LIGHT * 0.8, 2.6, TILE_WHITE)
+	# the glaze catches the sun here and there
+	for k in range(5):
+		var gi := 2 + k * 4
+		if gi >= n:
+			break
+		var tw := pow(maxf(0.0, sin(t * 2.1 + float(k) * 1.9)), 6.0)
+		b.circle(pts[gi] - nrm[gi] * rad[gi] * 0.4 - LIGHT * rad[gi] * 0.25, 1.4 + tw * 2.2, Color(1.0, 1.0, 1.0, 0.45 + 0.5 * tw))
+
+	# the head: nostrils, the mouth when it opens, and the eyes up on top
+	var tan0 := (pts[0] - pts[1]).normalized()
+	if mouth > 0.03:
+		b.circle(pts[0] + tan0 * 2.0, 3.0 + 6.0 * mouth, INK)
+		b.circle(pts[0] + tan0 * 2.0, 1.5 + 4.6 * mouth, Color(0.62, 0.16, 0.14))
 	for sd: float in [-1.0, 1.0]:
-		var ep := head + f * 6.0 + s * sd * 12.0
-		if awake:
-			b.circle(ep, 5.0, Color(0.10, 0.08, 0.06))
-			b.circle(ep, 3.8, eye_col)
-			b.circle(ep + f * 1.0, 1.8, Color(0.10, 0.08, 0.06))
+		b.circle(pts[0] - tan0 * 3.0 + nrm[0] * sd * 4.6, 1.5, INK)
+	var hi := 2
+	for sd: float in [-1.0, 1.0]:
+		var ep: Vector2 = pts[hi] + nrm[hi] * sd * 12.5
+		b.circle(ep, 8.4, INK)
+		if dazed:
+			b.circle(ep, 6.6, TILE_WHITE)
+			for cr: float in [-1.0, 1.0]:
+				b.line(ep - tan0 * 3.6 - nrm[hi] * 3.6 * cr, ep + tan0 * 3.6 + nrm[hi] * 3.6 * cr, INK, 2.0)
+		elif eye <= 0.05 or happy:
+			b.circle(ep, 6.6, TILE_BLUE)
+			b.circle(ep - LIGHT * 1.6, 3.4, TILE_CYAN)
+			if happy:
+				b.line(ep - nrm[hi] * 4.6 - tan0 * 1.5, ep + tan0 * 1.5, INK, 2.0)
+				b.line(ep + tan0 * 1.5, ep + nrm[hi] * 4.6 - tan0 * 1.5, INK, 2.0)
+			else:
+				b.line(ep - nrm[hi] * 5.0, ep + nrm[hi] * 5.0, INK, 2.2)
 		else:
-			b.line(ep - s * 3.0, ep + s * 3.0, Color(0.15, 0.12, 0.10), 2.0)
+			b.circle(ep, 6.6, TILE_WHITE)
+			b.circle(ep + tan0 * 1.2, 4.6 * eye, eye_col)
+			b.line(ep + tan0 * (1.2 - 3.4 * eye), ep + tan0 * (1.2 + 3.4 * eye), INK, 2.2)
+			b.circle(ep - LIGHT * 2.4, 1.3, Color.WHITE)
+			# a lid of tile over the back of each eye: a glare
+			b.line(ep - tan0 * 5.4 - nrm[hi] * 5.0, ep - tan0 * 5.4 + nrm[hi] * 5.0, TILE_ORANGE, 3.0)
 
-	# water stream shooting from mouth
-	if (state == State.JET and jet_struck) or fountain_t >= 0.0:
-		var mouth := snout + f * 8.0
-		var jto := mouth + f * JET_LEN
-		b.line(mouth, jto, Color(0.85, 0.95, 1.0, 0.85), 14.0)
-		b.line(mouth, jto, Color(0.40, 0.75, 0.95, 0.9), 8.0)
-		for j in range(6):
-			var jp := mouth.lerp(jto, float(j) / 5.0) + Vector2(sin(t * 18.0 + float(j)) * 6.0, 0.0)
-			b.circle(jp, 6.0, Color(0.92, 0.98, 1.0, 0.8))
+
+# his girth at a point along his body, nose (74) to hips (-36)
+static func _girth(bx: float) -> float:
+	var keys := [[74.0, 9.0], [66.0, 15.0], [54.0, 19.0], [42.0, 15.5], [28.0, 23.0], [8.0, 27.0], [-12.0, 26.0],
+		[-28.0, 21.0], [-36.0, 17.0]]
+	for i in range(keys.size() - 1):
+		if bx >= float(keys[i + 1][0]):
+			var u := (float(keys[i][0]) - bx) / (float(keys[i][0]) - float(keys[i + 1][0]))
+			return lerpf(float(keys[i][1]), float(keys[i + 1][1]), smoothstep(0.0, 1.0, u))
+	return 17.0
+
+
+# The tile at joint i, column c of `cols` across him: blues down his flanks,
+# a yellow and orange stripe down his back, a band of gold round him every
+# few joints, greens on the tail, a yellow snout.
+static func _tile(i: int, c: int, cols: int, h: float) -> Color:
+	var centre := cols >= 3 and (c == cols / 2 or (cols % 2 == 0 and c == cols / 2 - 1))
+	if i < 2:
+		return TILE_YELLOW if h < 0.7 else TILE_ORANGE
+	if i >= BODY_N:
+		var ring := (i - BODY_N) % 4
+		if ring == 0:
+			return TILE_YELLOW
+		if ring == 2:
+			return TILE_GREEN if h < 0.6 else TILE_CYAN
+		return TILE_BLUE if h < 0.7 else TILE_CYAN
+	if centre:
+		return TILE_ORANGE if (i / 2) % 2 == 0 else TILE_YELLOW
+	if i % 5 == 4:
+		return TILE_YELLOW
+	if h < 0.50:
+		return TILE_BLUE
+	if h < 0.74:
+		return TILE_CYAN
+	if h < 0.94:
+		return TILE_GREEN
+	return TILE_WHITE
+
+
+static func _hash(a: float, c: float) -> float:
+	return fposmod(sin(a * 12.9898 + c * 78.233) * 43758.5453, 1.0)
+
+
+# one odd four-sided shard, `along` its long way
+static func _shard(b: ShapeBatch, at: Vector2, along: Vector2, hl: float, hw: float, col: Color, key: float) -> void:
+	var h := _hash(key, 1.7)
+	var a := along.rotated((h - 0.5) * 0.7) * hl
+	var w := along.orthogonal().rotated((h - 0.5) * 0.5) * hw
+	b.quad(at - a - w * 0.8, at + a - w, at + a * 0.8 + w, at - a + w * 0.9, col)
+
+
+# a ribbon along the spine, `grow` wider than his girth, moved by `off`
+static func _strip(b: ShapeBatch, pts: PackedVector2Array, nrm: PackedVector2Array, rad: PackedFloat32Array,
+		grow: float, off: Vector2, col: Color) -> void:
+	for i in range(pts.size() - 1):
+		var r0 := rad[i] + grow
+		var r1 := rad[i + 1] + grow
+		b.quad(pts[i] + nrm[i] * r0 + off, pts[i + 1] + nrm[i + 1] * r1 + off,
+			pts[i + 1] - nrm[i + 1] * r1 + off, pts[i] - nrm[i] * r0 + off, col)
+
+
+static func _rounded(r: Rect2, rad: float) -> PackedVector2Array:
+	rad = clampf(rad, 1.0, minf(r.size.x, r.size.y) * 0.5)
+	var out := PackedVector2Array()
+	var cs := [Vector2(r.end.x - rad, r.position.y + rad), Vector2(r.end.x - rad, r.end.y - rad),
+		Vector2(r.position.x + rad, r.end.y - rad), Vector2(r.position.x + rad, r.position.y + rad)]
+	for k in range(4):
+		for i in range(5):
+			out.append(cs[k] + Vector2.from_angle(-PI * 0.5 + float(k) * PI * 0.5 + float(i) / 4.0 * PI * 0.5) * rad)
+	return out
 
 
 func draw_rings(b: ShapeBatch, t: float) -> void:
