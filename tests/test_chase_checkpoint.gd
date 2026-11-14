@@ -357,7 +357,7 @@ func _test_destination_and_head_start() -> void:
 	await _drop(m)
 
 
-# --- the midpoint is the later jam, and continue restores it exactly -------
+# --- each jam is a save, and continue restores it exactly ----------------
 func _test_midpoint_and_exact_restore() -> void:
 	var m := await _fresh_main("neteja")
 	_leave_destination(m)
@@ -373,20 +373,21 @@ func _test_midpoint_and_exact_restore() -> void:
 		if j.y > later.y:
 			later = j
 	_check(absf(later.y - (-1900.0)) < 100.0, "the later jam is the dumpster near y -1900 (%.0f)" % later.y)
-	# the first jam is a respite, not a checkpoint
+	# the first jam is a respite and a save
 	sw.front_y = first.y - 2.0
 	m.dog.global_position = Vector2(m.walk_cx, first.y + 600.0)
 	m.human.global_position = Vector2(m.walk_cx, first.y + 650.0)
 	HomeChase.tick(m, 0.1)
 	_check(sw.jammed(), "the first dumpster jams the machine")
-	_check(String(m.chase_checkpoint.get("id", "")) == "destination", "the first jam is not a checkpoint")
-	# a body crossing the later jam's depth is not the checkpoint either
+	_check(String(m.chase_checkpoint.get("id", "")) == "midpoint", "being held by the first jam saves")
+	var first_snap: Dictionary = m.chase_checkpoint.duplicate(true)
+	# a body crossing the later jam's depth is not a checkpoint
 	sw.jam_t = 0.0
 	m.dog.global_position = Vector2(m.walk_cx, later.y - 40.0)
 	HomeChase.tick(m, 0.05)
 	m.dog.global_position = Vector2(m.walk_cx, later.y + 40.0)
 	HomeChase.tick(m, 0.05)
-	_check(String(m.chase_checkpoint.get("id", "")) == "destination", "crossing y -1900 is not the checkpoint")
+	_check(m.chase_checkpoint == first_snap, "crossing y -1900 takes no checkpoint")
 	# the machine reaching and being held by the later jam is
 	sw.jam_t = 0.0
 	sw.front_y = later.y - 2.0

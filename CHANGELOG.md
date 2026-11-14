@@ -47,6 +47,14 @@ Append-only session history, newest first.
     - Added the direct *Aeroport T1* Rodalies departure board row on the main concourse board connecting the city station to the airport terminal, with updated divider lines.
   - Comprehensive test suite: `tests/test_aeroport.gd` (35 checks covering level registration, goals, chase profile, conveyor zone, buggy threat advance and luggage dodges, gate rush state machine, and carousel bark). All regression suites pass (`test_walk_hooks.gd` 922 checks, `test_chase_film.gd` 247 checks, `test_npc_clear_of_solids.gd` 372 checks, `test_wrap.gd`).
 
+
+## 2026-11-14 - The sweeper drives like a cartoon machine
+
+- The chase sweeper (La Neteja's, and the chase on walks without their own threat) cares what is in its way (`systems/chase_vehicle.gd`): a parked van, stall, fountain or block in its lane it swerves round, hard, where there is room; posts, hydrants and benches it bonks straight over, juddering, sparks and bits flying, a little slower for it. Its jams still hold it.
+- Something heavy it cannot swerve round stops it dead for a moment when it hits it (a crash, a shudder, bits flying), and then it smashes on through: an unplanned breather beside the authored jams.
+- La Cremada's Dimoni float drives the same way: too wide to swerve much, a juggernaut that crunches over posts and benches and stalls on anything heavy. It is drawn where it really is (it was always drawn on the centre line while its catch followed its sway). Its first jam (the underpass, -3400) is a save too.
+- La Neteja's first dumpster jam is a save as well as a rest, so the way home has two (`home_chase.NETEJA_BANDS`).
+- `tests/test_chase_vehicle.gd`; the chase-walk and checkpoint tests follow the two saves.
 ## 2026-11-13 - Review fixes for #515-#523
 
 A review of the 1.72 PRs merged since the release notes (#515 to #523) found these, now fixed:

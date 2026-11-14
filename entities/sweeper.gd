@@ -25,6 +25,11 @@ extends Node2D
 # between them are what visibly sweeps it. The body careens about inside
 # the street and the arms reach to keep the brooms on the kerbs.
 #
+# WHAT IS IN ITS WAY (systems/chase_vehicle.gd). A cartoonishly strong
+# machine: a parked van, a stall, a fountain in its lane it swerves round,
+# hard, if there is room; a post, a hydrant or a bench it bonks straight over,
+# juddering, bits flying, a little slower for it. Only the jams stop it.
+#
 # Everything here obeys the one light (main.LIGHT), like every other object
 # in the game: the machine throws a real shadow south-east, ahead of itself
 # and toward the player.
@@ -92,6 +97,9 @@ var freed_now := false
 # the machine's own dice, so flinging junk never moves the walk's seeded
 # random sequence
 var _rng := RandomNumberGenerator.new()
+const ChaseVehicleScript := preload("res://systems/chase_vehicle.gd")
+var drive = ChaseVehicleScript.new()
+const DODGE_K := 2.2              # how much harder it steers to get round something than to wander
 
 
 func setup(m: Node2D, start_front_y: float, corridor_cx: float, corridor_half: float, sweeper_speed: float) -> void:
@@ -115,14 +123,18 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 		cur_speed = 0.0
 		if jam_t <= 0.0:
 			freed_now = true
+		# the bits still fly while it is held
+		if main != null:
+			drive.bonk(main, Rect2(), delta)
 		return
 	var lurch := sin(rumble * 0.9) * 0.6 + sin(rumble * 2.3 + 1.0) * 0.4
 	var mult := 1.0 + SURGE * lurch
 	if gap >= 0.0:
 		mult += CATCH_UP * clampf((gap - CATCH_UP_GAP) / CATCH_UP_RAMP, 0.0, 1.0)
-	cur_speed = speed * mult
+	cur_speed = speed * mult * drive.pace()
 	front_y += cur_speed * delta
 	_swerve(delta, aim)
+	_run_over(delta)
 	for i in range(jams.size()):
 		if front_y >= jams[i].y:
 			jam_side = signf(jams[i].x - cx)
@@ -137,9 +149,38 @@ func _swerve(delta: float, aim: float) -> void:
 	var room := maxf(half - BODY_HALF - 14.0, 0.0)
 	var wobble := sin(rumble * 1.3) * 0.7 + sin(rumble * 0.47 + 2.0) * 0.3
 	var want := lerpf(wobble * room, clampf(aim, -room, room), SWERVE_TRACK)
-	sway_v += ((want - sway) * SWERVE_K - sway_v * SWERVE_DAMP) * delta
+	var k := SWERVE_K
+	if main != null:
+		# something heavy coming up in its lane: round it, hard
+		var dodge := drive.dodge_sway(main, cx, sway, front_y, BODY_HALF, room)
+		if not is_nan(dodge):
+			want = dodge
+			k = SWERVE_K * DODGE_K
+	sway_v += ((want - sway) * k - sway_v * SWERVE_DAMP) * delta
 	sway = clampf(sway + sway_v * delta, -room, room)
 	heading = clampf(atan2(sway_v, maxf(cur_speed, 60.0)), -HEADING_MAX, HEADING_MAX)
+
+
+# a post, a hydrant, a bench under its body: straight over it, BONK
+func _run_over(delta: float) -> void:
+	if main == null:
+		return
+	var body := Rect2(cx + sway - BODY_HALF, front_y + BODY_Y - BODY_HALF_LEN, BODY_HALF * 2.0, BODY_HALF_LEN * 2.0)
+	var side: float = drive.slam(main, body, cx)
+	if side != 0.0 and jam_t <= 0.0:
+		# nowhere to swerve: it hits it, stalls, and then smashes on through
+		jam_t = drive.SLAM_SECS
+		jam_side = side
+		jam_at = Vector2(INF, INF)
+		jammed_now = true
+	if drive.bonk(main, body, delta):
+		# looked up, not named: the sweeper also runs where there are no autoloads
+		var sfx := main.get_node_or_null("/root/Sfx")
+		if sfx != null:
+			sfx.play("crack", 1.3, -8.0)
+		main.shake_t = maxf(float(main.shake_t), 0.3)
+		if not bool(main.auto_walk):
+			main.float_text(drive.bonk_at + Vector2(0.0, -24.0), "BONK", Color(1.0, 0.92, 0.60))
 
 
 func jammed() -> bool:
@@ -237,7 +278,7 @@ func _draw() -> void:
 	var stuck := jam_t > 0.0
 	# it shudders against the dumpster while stuck, and idles otherwise
 	var jig := Vector2(sin(rumble * 61.0), cos(rumble * 47.0)) * (3.0 if stuck else 0.8)
-	var body_at := Vector2(sway, BODY_Y) + jig
+	var body_at := Vector2(sway, BODY_Y) + jig + drive.jolt()
 	var body_xf := Transform2D(-heading, body_at)
 
 	# --- the road it has already been over --------------------------------
@@ -336,6 +377,7 @@ func _draw() -> void:
 		var f := float(i) / 4.0
 		b.draw_rect(Rect2(-half, -6.0 + f * 46.0, full, 12.0),
 			Color(1.0, 0.80, 0.30, glow * (1.0 - f)))
+	drive.draw_debris(b, global_position)
 	b.flush()
 
 
