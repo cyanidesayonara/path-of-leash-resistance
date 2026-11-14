@@ -6,6 +6,10 @@ Append-only session history, newest first.
 
 - `store/listing.md`: What's new for 1.73 (L'Aeroport and Montserrat, thirty-eight walks; Els Lleons and El Drac; the chases rebuilt; the tug of war; night shadows and softer lit fronts; the home walk-in; objects that fit the place), the walk count and list in the description, and the certification notes. The description no longer claims an agility course on every walk (only El Barri has one).
 - `docs/itch-page.md`: What's new in 1.73. `README.md`: thirty-eight walks, L'Aeroport and Montserrat in the table.
+## 2026-11-14 - CI was not running
+
+- `ci.yml` had not run since #531 merged: a step name ("...security: never in a solid...") held an unquoted colon and space, which YAML reads as a mapping, so GitHub rejected the whole workflow file and every push and pull request ran only the sweep, soak and MSIX workflows. #529, #524, #531, #525, #526, #527, #532 and #533 merged without it; each was run through the full local suite (`tools/run_tests.sh`) before merging. The colon is a semicolon now, and every workflow file parses.
+- With CI back, `tests/test_freedom_games_live.gd` failed on main: #533 raised the tug's stalemate timeout to 16 s, but the test waited only 15 s for a tug to end. It waits for `RopeTug.TIME_OUT` plus two seconds now.
 
 ## 2026-11-14 - Tug of war: a real rope toy, a rhythm to read, a clear winner
 
