@@ -422,10 +422,10 @@ applies to every change, whoever makes it.
   acceptance" column of the project board
   (https://github.com/users/cyanidesayonara/projects/4) until Santtu accepts it,
   and only then moves to Done.
-- **The limit:** at most **5** changes on `main` awaiting acceptance. At the
+- **The limit:** at most **8** changes on `main` awaiting acceptance. At the
   limit, only hardening (bug fixes, tests, refactors with no player-facing
   effect) and tooling may land. No new player-facing change starts until the
-  count drops below 5.
+  count drops below 8.
 - **Check before starting:** count the player-facing items in "Awaiting
   acceptance" on the board. Changes older than the board are tracked in the
   acceptance backlog issue (#23); each unticked entry there counts as one.
