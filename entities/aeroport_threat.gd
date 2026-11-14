@@ -14,10 +14,17 @@ extends Node2D
 # pair. A ring on the floor fills where it will stop.
 # Dodging clear counts toward the "luggage_dodge" goal; a hit is a tumble.
 #
+# They are a squad on foot (systems/chase_squad.gd): each officer runs for
+# their place in the line and goes round anything solid, the walkway's rails
+# included; they kick litter out of the way, and the line slows to wait for
+# whoever is held up on something. The catch is theirs: an officer's body and
+# what they hold out, and the belt while the line is together.
+#
 # Implements the standard chase threat interface (setup, advance, caught,
 # gap_to, threat_boundary, sweep_junk) so systems/home_chase drives it.
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+const Squad := preload("res://systems/chase_squad.gd")
 
 const BEACON_AMBER := Color(1.0, 0.75, 0.15)
 const WHEEL_RUBBER := Color(0.12, 0.12, 0.14)
@@ -37,6 +44,10 @@ const SQUAD := [
 	["net", Color(0.86, 0.62, 0.48), true],
 ]
 const SQUAD_BACK := 70.0          # the line, a stride behind the catch line
+const OFFICER_R := 22.0           # an officer's body, for what they go round
+const OFFICER_REACH := 40.0       # what they hold out, ahead of the body
+# what an officer says, held up on something
+const HELD_UP_LINES := ["Coming through!", "Out of the way!", "Excuse me!", "Hold that dog!", "Move it!"]
 
 # Movement and tuning
 const SPEED_DEFAULT := 136.0
@@ -91,6 +102,8 @@ var suitcase_t := SUITCASE_FIRST
 var drop_count := 0
 var hits := 0
 var dodges := 0
+var squad: Squad = Squad.new()
+var _said := 0
 
 
 func setup(m: Node2D, start_front_y: float, corridor_cx: float, corridor_half: float, squad_speed: float) -> void:
@@ -104,6 +117,11 @@ func setup(m: Node2D, start_front_y: float, corridor_cx: float, corridor_half: f
 	impacts.clear()
 	suitcase_t = SUITCASE_FIRST
 	position = Vector2(cx, front_y)
+	var slots: Array = []
+	var mw := half * CATCH_SPAN
+	for i in range(SQUAD.size()):
+		slots.append(lerpf(-mw + 30.0, mw - 30.0, float(i) / float(SQUAD.size() - 1)))
+	squad.setup(slots, Vector2(cx, front_y), OFFICER_R, OFFICER_REACH, SQUAD_BACK)
 
 
 func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
@@ -117,6 +135,7 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 		cur_speed = 0.0
 		if jam_t <= 0.0:
 			freed_now = true
+		_tick_squad(delta)
 		queue_redraw()
 		return
 
@@ -124,7 +143,8 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 	var mult := 1.0 + SURGE * lurch
 	if gap > CATCH_UP_GAP:
 		mult = maxf(mult, CATCH_UP)
-	cur_speed = speed * mult
+	# the line waits for whoever is held up on something
+	cur_speed = speed * mult * squad.pace()
 	front_y += cur_speed * delta
 
 	for i in range(jams.size()):
@@ -150,34 +170,47 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 		suitcase_t = SUITCASE_EVERY + SUITCASE_JITTER * sin(float(drop_count) * 2.7)
 
 	position = Vector2(cx + sway, front_y)
+	_tick_squad(delta)
 	queue_redraw()
+
+
+func _tick_squad(delta: float) -> void:
+	if main == null:
+		return
+	squad.tick(main, delta, Vector2(cx + sway, front_y), cur_speed)
+	var i := squad.newly_stuck()
+	if i >= 0 and not bool(main.auto_walk) and main.has_method("float_text"):
+		main.float_text(squad.members[i]["pos"] + Vector2(0.0, -34.0), String(HELD_UP_LINES[_said % HELD_UP_LINES.size()]),
+			Color(0.92, 0.94, 1.0), main.POP_SAY)
+		_said += 1
 
 
 func jammed() -> bool:
 	return jam_t > 0.0
 
 
+# the reach of the frontmost officer: where the camera keeps them in view
 func threat_boundary() -> float:
-	return front_y
+	return squad.front()
 
 
 func caught(p: Vector2) -> bool:
-	if p.y <= front_y and p.y >= front_y - SQUAD_DEPTH * 0.7:
-		return absf(p.x - (cx + sway)) <= half * CATCH_SPAN
-	return p.y < front_y - SQUAD_DEPTH * 0.7
+	return squad.caught(p)
 
 
 func gap_to(p: Vector2) -> float:
-	return p.y - front_y
+	return p.y - squad.front()
 
 
-func sweep_junk(_junk: Array) -> int:
-	return 0
+func sweep_junk(junk: Array) -> int:
+	return squad.sweep_junk(junk)
 
 
-# where a case is booted from: the middle of the line
+# where a case is booted from: the officer in the middle of the line
 func squad_pos() -> Vector2:
-	return Vector2(cx + sway, front_y - SQUAD_DEPTH * 0.4)
+	if squad.members.is_empty():
+		return Vector2(cx + sway, front_y - SQUAD_DEPTH * 0.4)
+	return squad.members[squad.members.size() / 2]["pos"]
 
 
 func aim_point(target: Vector2, vel: Vector2) -> Vector2:
@@ -268,14 +301,22 @@ func _draw() -> void:
 	var snag := 0
 	if jam_t > 0.0:
 		snag = SNAG_TAPE if absf(jam_at.y - TAPE_JAM_Y) < 80.0 else SNAG_PERFUME
-	paint_squad(b, Vector2.ZERO, half * CATCH_SPAN, rumble, snag, clampf(jam_t / JAM_SECS, 0.0, 1.0))
+	var spots: Array[Vector2] = []
+	var held: Array[bool] = []
+	var belts: Array[bool] = []
+	for i in range(squad.members.size()):
+		spots.append((squad.members[i]["pos"] as Vector2) - global_position)
+		held.append(float(squad.members[i]["stuck_t"]) > 0.4)
+		belts.append(squad.belt_held(i))
+	paint_squad(b, spots, held, belts, Vector2(cx + sway, front_y) - global_position, half * CATCH_SPAN, rumble, snag,
+		clampf(jam_t / JAM_SECS, 0.0, 1.0))
 	b.flush()
 
 
 func _draw_skids_and_suitcases(b: ShapeBatch) -> void:
 	for s: Dictionary in suitcases:
-		var p_from: Vector2 = s["from"] - position
-		var p_at: Vector2 = s["at"] - position
+		var p_from: Vector2 = s["from"] - global_position
+		var p_at: Vector2 = s["at"] - global_position
 		var k: float = clampf(float(s["t"]) / SUITCASE_WARN, 0.0, 1.0)
 		var cur: Vector2 = p_from.lerp(p_at, k)
 		var dir := (p_at - p_from).angle()
@@ -296,7 +337,7 @@ func _draw_skids_and_suitcases(b: ShapeBatch) -> void:
 		b.line(cur - f * 26.0, cur - f * 40.0, Color(1.0, 1.0, 1.0, 0.6), 2.0)
 
 	for imp: Dictionary in impacts:
-		var ip: Vector2 = imp["at"] - position
+		var ip: Vector2 = imp["at"] - global_position
 		var it: float = float(imp["t"]) / IMPACT_TIME
 		b.glow(ip, SUITCASE_R * (1.1 + (1.0 - it) * 0.9), Color(1.0, 0.80, 0.36, 0.6 * it), 0.3)
 		# it bursts: socks and shirts thrown out in a ring
@@ -324,49 +365,64 @@ static func _case(b: ShapeBatch, p: Vector2, dir: float, col: Color, k: float) -
 	b.circle(q.call(-14.0, 7.0), 2.4 * k, WHEEL_RUBBER)
 
 
-# The squad with its catch line at `c`, `w` either side: the catch zone,
-# filled. Five officers shoulder to shoulder, a stride behind the line, each
-# holding out what a dog dreads in an airport, and a queue belt pulled taut
-# between the two on the ends: the line you must not be behind. The film
-# draws the same five side on (intro/film_aeroport.gd). `snag` and `snag_k`
-# (1 just stuck, 0 about to pull free) show what has stopped them.
-static func paint_squad(b: ShapeBatch, c: Vector2, w: float, t: float, snag := 0, snag_k := 0.0) -> void:
-	var n := SQUAD.size()
+# The squad where they are (`spots`, local), each a stride behind their catch:
+# five officers, each holding out what a dog dreads in an airport, and a queue
+# belt pulled taut between neighbours while they hold the line (`belts[i]`:
+# officer i and i + 1). Split round something, the belt hangs from one of them.
+# `held[i]`: that officer is held up on something, and shows it. `o` is the
+# line's anchor and `w` its half width, for what they are snagged in while
+# jammed (`snag`, `snag_k` 1 just stuck, 0 about to pull free). The film draws
+# the same five side on (intro/film_aeroport.gd).
+static func paint_squad(b: ShapeBatch, spots: Array[Vector2], held: Array[bool], belts: Array[bool], o: Vector2, w: float,
+		t: float, snag := 0, snag_k := 0.0) -> void:
+	var n := spots.size()
+	if n == 0:
+		return
+	var at_: Array[Vector2] = []
+	for i in range(n):
+		var bob := sin(t * 13.0 + float(i) * 1.7) * 3.0
+		if held[i]:
+			# straining at whatever is in the way
+			bob = sin(t * 31.0 + float(i)) * 2.5
+		at_.append(spots[i] + Vector2(0.0, bob))
 	# their torches on the floor ahead
-	b.glow(c + Vector2(0.0, 60.0), w * 0.9, Color(1.0, 0.96, 0.70, 0.16), 0.1)
-	var spots: Array[Vector2] = []
-	for i in range(n):
-		var x := lerpf(-w + 30.0, w - 30.0, float(i) / float(n - 1))
-		var bob := sin(t * 13.0 + float(i) * 1.7) * 3.0 if snag == 0 else sin(t * 20.0 + float(i) * 2.3) * 2.0 * snag_k
-		# stuck, they stagger out of line
-		var stagger := Vector2(sin(float(i) * 2.9) * 12.0, cos(float(i) * 1.7) * 10.0) * (snag_k if snag != 0 else 0.0)
-		spots.append(c + Vector2(x, -SQUAD_BACK + bob) + stagger)
-	for at: Vector2 in spots:
-		b.circle(at + Vector2(4.0, 8.0), 25.0, Color(0.04, 0.05, 0.08, 0.22))
-	# the belt between the end two, at the line itself
+	var mid := (at_[0] + at_[n - 1]) * 0.5
+	b.glow(mid + Vector2(0.0, 130.0), w * 0.9, Color(1.0, 0.96, 0.70, 0.16), 0.1)
+	for p: Vector2 in at_:
+		b.circle(p + Vector2(4.0, 8.0), 25.0, Color(0.04, 0.05, 0.08, 0.22))
 	if snag != SNAG_TAPE:
-		var l := spots[0] + Vector2(-16.0, 30.0)
-		var r := spots[n - 1] + Vector2(16.0, 30.0)
-		var sag := sin(t * 9.0) * 3.0
-		var mid := (l + r) * 0.5 + Vector2(0.0, 38.0 + sag)
-		for seg: Array in [[l, mid], [mid, r]]:
-			b.line(seg[0], seg[1], BELT_RED.darkened(0.3), 9.0)
-			b.line(seg[0], seg[1], BELT_RED, 6.0)
-		# NO DOGS, stencilled down it
-		for k in range(1, 8):
-			var q := l.lerp(mid, float(k) / 8.0) if k < 5 else mid.lerp(r, float(k - 4) / 4.0)
-			b.circle(q, 2.0, Color(1.0, 1.0, 1.0, 0.9))
-		for e: Vector2 in [l, r]:
-			b.circle(e, 6.0, Color(0.16, 0.16, 0.18))
-			b.circle(e, 3.5, Color(0.80, 0.82, 0.86))
+		for i in range(n - 1):
+			var l := at_[i] + Vector2(10.0, 30.0)
+			var r := at_[i + 1] + Vector2(-10.0, 30.0)
+			if belts[i]:
+				var sag := l.lerp(r, 0.5) + Vector2(0.0, 14.0 + sin(t * 9.0 + float(i)) * 3.0)
+				_belt(b, l, sag)
+				_belt(b, sag, r)
+			else:
+				# let go: the end hangs off the one holding it, trailing
+				var hang := l + Vector2(16.0, 26.0 + sin(t * 7.0 + float(i)) * 4.0)
+				_belt(b, l, hang)
+				b.circle(hang, 4.0, Color(0.80, 0.82, 0.86))
 	for i in range(n):
-		var st: Array = SQUAD[i]
-		_item(b, spots[i] + Vector2(0.0, 20.0), String(st[0]), float(i), t)
-		_officer(b, spots[i], st[1], st[2], String(st[0]) == "whistle", t + float(i))
+		var st: Array = SQUAD[i % SQUAD.size()]
+		_item(b, at_[i] + Vector2(0.0, 20.0), String(st[0]), float(i), t)
+		_officer(b, at_[i], st[1], st[2], String(st[0]) == "whistle", t + float(i))
+		if held[i]:
+			# effort: sweat off them, and lines of strain
+			var f := fposmod(t * 2.6 + float(i) * 0.3, 1.0)
+			for s in [-1.0, 1.0]:
+				b.circle(at_[i] + Vector2(s * (16.0 + f * 10.0), -12.0 - f * 8.0), 2.4 * (1.0 - f) + 0.8, Color(0.70, 0.88, 1.0, 1.0 - f))
+				b.line(at_[i] + Vector2(s * 26.0, -4.0), at_[i] + Vector2(s * 34.0, -10.0), Color(1.0, 1.0, 1.0, 0.85), 2.0)
 	if snag == SNAG_TAPE:
-		_snag_tape(b, c, w, t, snag_k)
+		_snag_tape(b, o, w, t, snag_k)
 	elif snag == SNAG_PERFUME:
-		_snag_perfume(b, c, w, t, snag_k)
+		_snag_perfume(b, o, w, t, snag_k)
+
+
+static func _belt(b: ShapeBatch, a: Vector2, c: Vector2) -> void:
+	b.line(a, c, BELT_RED.darkened(0.3), 9.0)
+	b.line(a, c, BELT_RED, 6.0)
+	b.circle(a.lerp(c, 0.5), 1.8, Color(1.0, 1.0, 1.0, 0.9))
 
 
 # one officer from above, facing down the hall at you: navy shoulders under a

@@ -213,8 +213,24 @@ static func surface(_m: Node2D, _pos: Vector2) -> int:
 static func tick(m: Node2D, delta: float) -> void:
 	if m.lvl != "aeroport":
 		return
+	_tick_walkway(m)
 	_tick_gate_rush(m, delta)
 	_tick_carousel(m)
+
+
+# The way home, the walkway is stopped: the security alert is an emergency, and
+# a belt running against you all the way home is no chase anyone can win. It
+# is a corridor between its rails, for you and for them.
+static func walkway_stopped(m: Node2D) -> bool:
+	return String(m.phase) == "home"
+
+
+static func _tick_walkway(m: Node2D) -> void:
+	var stopped := walkway_stopped(m)
+	m.conveyor_zone = Rect2() if stopped else WALKWAY_RECT
+	if stopped and not m.has_meta("aeroport_walkway_said"):
+		m.set_meta("aeroport_walkway_said", true)
+		m.feed.say("THE WALKWAY IS STOPPED", EventFeed.Tone.PLAIN)
 
 
 static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
@@ -297,17 +313,25 @@ static func draw_scenery(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> voi
 		return
 	AeroportArt.draw_apron_live(wc, vt, vb)
 	AeroportArt.draw_bridges(wc, vt, vb)
-	_draw_travelator(wc, vt, vb)
 	_draw_carousel_bags(wc, vt, vb)
 
 
-static func _draw_travelator(b: ShapeBatch, vt: float, vb: float) -> void:
+# the walkway, in main's conveyor slot (main draws L'Estacio's otherwise)
+static func draw_conveyor(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	if m.lvl != "aeroport":
+		return
+	_draw_travelator(m, wc, vt, vb)
+
+
+static func _draw_travelator(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	var z: Rect2 = WALKWAY_RECT
 	if z.end.y < vt or z.position.y > vb:
 		return
 	var top := maxf(z.position.y, vt)
 	var bot := minf(z.end.y, vb)
-	var t: float = AnimClock.msec() / 1000.0
+	var stopped := walkway_stopped(m)
+	# stopped, the belt and its handrails hold still
+	var t: float = 0.0 if stopped else AnimClock.msec() / 1000.0
 
 	# the belt: dark grooved pallets, their seams and a yellow edge strip
 	# sliding up the hall at the speed it carries her
@@ -373,6 +397,24 @@ static func _draw_travelator(b: ShapeBatch, vt: float, vb: float) -> void:
 			if ey >= vt - 12.0 and ey <= vb + 12.0:
 				b.circle(Vector2(cxr, ey), 8.0, TRAVELATOR_HANDRAIL)
 				b.circle(Vector2(cxr - 2.0, ey - 2.0), 3.0, Color(0.30, 0.30, 0.32))
+				if stopped:
+					# the emergency lamp in each newel, red
+					b.glow(Vector2(cxr, ey), 26.0, Color(1.0, 0.20, 0.14, 0.45), 0.2)
+					b.circle(Vector2(cxr, ey), 4.0, Color(1.0, 0.26, 0.18))
+	if stopped:
+		# a stand at each end, out of service: the red disc and its bar
+		for ey: float in [z.position.y - 20.0, z.end.y + 20.0]:
+			if ey < vt - 30.0 or ey > vb + 30.0:
+				continue
+			var sp := Vector2(z.get_center().x + 46.0, ey)
+			b.circle(sp + Vector2(3.0, 5.0), 11.0, Color(0.0, 0.0, 0.0, 0.2))
+			b.circle(sp, 11.0, Color(0.10, 0.10, 0.12))
+			b.circle(sp, 9.0, Color(0.88, 0.16, 0.14))
+			b.rect(Rect2(sp.x - 6.0, sp.y - 1.8, 12.0, 3.6), Color(0.98, 0.98, 0.96))
+			var plate := Rect2(z.get_center().x - 44.0, ey - 9.0, 76.0, 18.0)
+			b.rect(plate, Color(0.10, 0.10, 0.12))
+			b.rect(plate.grow(-1.5), Color(0.88, 0.16, 0.14))
+			b.draw_string(m.font, Vector2(plate.position.x, plate.end.y - 4.5), "ATURADA", HORIZONTAL_ALIGNMENT_CENTER, plate.size.x, 12, Color(0.98, 0.98, 0.96))
 
 
 # what rides the carousel: cases with their straps and tags, a guitar, and

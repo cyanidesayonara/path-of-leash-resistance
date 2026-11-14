@@ -11,6 +11,9 @@ Append-only session history, newest first.
 - The off-leash space is La Cabina, the cabin of the jet at the end of the bridge (`systems/aeroport_cabin.gd`): three seat blocks and two aisles, bins, a galley and lavatories, passengers, dropped masks, a spilled drinks run and a trail of paper. Holdalls to dig, drinks trolleys to go round, roller cases and blanket heaps to sniff and mark, the ice bucket to drink from.
 - The film, "Last call", is rebuilt on the FilmKit beats: the pier side on with a jet at its stand, the bing bong, the squad bursting through the queue belts, cases skidding, and the crate's mouth on the card.
 - New walk hooks in main: `draw_park_prop`, `draw_gate` and `draw_bench`.
+- The squad is on foot (`systems/chase_squad.gd`, shared by any chase that is a line of walkers): each officer runs for their place in the line, goes round anything solid (the walkway's rails, desks, benches, posts), kicks litter aside, and the line slows to wait for whoever is held up, who strains and shouts. They catch with their bodies and what they hold out, and with the belt while the line is together; split round a pillar, the gap is open. `tests/test_chase_squad.gd`.
+- The way home, the walkway is stopped (an emergency: red lamps in its newels, ATURADA at each end). Before, your human walked home against the belt and the squad caught them every time.
+- L'Aeroport now draws its own walkway in main's `draw_conveyor` slot: main had been drawing L'Estació's over it.
 
 ## 2026-11-13 - L'Aeroport review fixes
 
