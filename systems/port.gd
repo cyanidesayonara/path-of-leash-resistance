@@ -10,6 +10,7 @@ extends RefCounted
 const Letters := preload("res://world/sign_letters.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+const BossLleons := preload("res://systems/boss_lleons.gd")
 
 const LIGHT := Vector2(0.5, 0.866)
 const SHADOW := Color(0.04, 0.05, 0.08, 0.22)
@@ -121,7 +122,9 @@ static func reset_gulls() -> void:
 	gull_dir.fill(Vector2.UP)
 
 
-static func tick(m: Node2D, _delta: float) -> void:
+static func tick(m: Node2D, delta: float) -> void:
+	if m.lleons != null:
+		m.lleons.tick_state(delta)
 	if gull_took_off.size() != GULL_SPOTS.size():
 		reset_gulls()
 	var dp: Vector2 = m.dog.global_position
@@ -138,6 +141,8 @@ static func tick(m: Node2D, _delta: float) -> void:
 
 # a bark sends up every perched gull in earshot, as it does the flocks
 static func on_bark(m: Node2D, pos: Vector2) -> void:
+	if m.lleons != null and m.lleons.on_bark_action(pos):
+		return
 	if gull_took_off.size() != GULL_SPOTS.size():
 		reset_gulls()
 	for i in range(GULL_SPOTS.size()):
@@ -186,6 +191,8 @@ static func solids(_m: Node2D) -> Array[Rect2]:
 	]
 	for b: Rect2 in BOATS:
 		list.append(b)
+	list.append(Rect2(BossLleons.PLINTH_L - BossLleons.PLINTH_HALF, BossLleons.PLINTH_HALF * 2.0))
+	list.append(Rect2(BossLleons.PLINTH_R - BossLleons.PLINTH_HALF, BossLleons.PLINTH_HALF * 2.0))
 	return list
 
 
@@ -196,6 +203,8 @@ static func wrap_rects() -> Array[Rect2]:
 		AUCTION_SHED,
 		TAVERN_TERRACE,
 		NET_REEL,
+		Rect2(BossLleons.PLINTH_L - BossLleons.PLINTH_HALF, BossLleons.PLINTH_HALF * 2.0),
+		Rect2(BossLleons.PLINTH_R - BossLleons.PLINTH_HALF, BossLleons.PLINTH_HALF * 2.0),
 	]
 
 
@@ -204,6 +213,8 @@ static func build(m: Node2D) -> Array:
 	reset_gulls()
 	if not m.tutorial_mode:
 		m.fisherman = Fisherman.new()
+	m.lleons = BossLleons.new()
+	m.lleons.setup(m)
 	m.gate_text = "MOLL DE LA FUSTA"
 	m.stalls.clear()
 	m.stall_kinds.clear()
@@ -495,6 +506,8 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 			_draw_gull_flying(wc, spot, gull_dir[i], up, anim + float(i))
 	if m.fisherman != null:
 		m.fisherman.draw(wc, vt, vb)
+	if m.lleons != null:
+		m.lleons.draw(wc, vt, vb)
 
 
 static func _draw_gull(wc: ShapeBatch, p: Vector2, t: float) -> void:
@@ -561,3 +574,19 @@ static func surface(m: Node2D, p: Vector2) -> int:
 	if p.y > m.GATE_Y:
 		return Surfaces.S.PAVEMENT
 	return -1
+
+
+static func idle_status(m: Node2D) -> String:
+	return m.lleons.status() if m.lleons != null else ""
+
+
+static func urgent_status(m: Node2D) -> String:
+	return m.lleons.status() if m.lleons != null else ""
+
+
+static func hush_banner(m: Node2D) -> bool:
+	return m.lleons != null and m.lleons.hush_banner()
+
+
+static func cam_lean(m: Node2D) -> float:
+	return m.lleons.lean if m.lleons != null else 0.0

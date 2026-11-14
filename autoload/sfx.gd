@@ -364,6 +364,8 @@ func _build_library() -> void:
 	lib["chime"] = _chime()
 	lib["bleat"] = _bleat()
 	lib["crossing_bell"] = _crossing_bell()
+	lib["lion_roar"] = _lion_roar()
+	lib["head_bump"] = _head_bump()
 
 
 func _pack(samples: PackedFloat32Array) -> AudioStreamWAV:
@@ -810,4 +812,38 @@ func _crossing_bell() -> AudioStreamWAV:
 			var t := float(i) / RATE
 			var v := (sin(TAU * f * t) + 0.35 * sin(TAU * f * 2.4 * t) + 0.15 * sin(TAU * f * 3.8 * t)) * exp(-t * 10.0) * 0.35
 			out[k * per + i] += v
+	return _pack(out)
+
+
+func _lion_roar() -> AudioStreamWAV:
+	# Els Lleons: two bronze lions roaring, a resonant bronze feline blast
+	var dur := 0.88
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var prev := 0.0
+	for i in range(n):
+		var t := float(i) / RATE
+		var prog := t / dur
+		var env := sin(PI * minf(1.0, prog * 1.8)) * (1.0 - prog * 0.35)
+		var f := lerpf(120.0, 70.0, prog)
+		var tone := sin(TAU * f * t) + 0.35 * sin(TAU * f * 2.01 * t) + 0.2 * sin(TAU * f * 3.03 * t)
+		var nz := rng.randf_range(-0.5, 0.5) * (0.7 + 0.3 * sin(TAU * 35.0 * t))
+		prev = lerpf(prev, nz, 0.25)
+		out[i] = (tone * 0.58 + prev * 0.42) * env * 0.75
+	return _pack(out)
+
+
+func _head_bump() -> AudioStreamWAV:
+	# Els Lleons head collision: a massive bronze impact with metallic chime
+	var dur := 1.10
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		var env := exp(-t * 4.5)
+		var clash := rng.randf_range(-0.8, 0.8) * exp(-t * 28.0)
+		var gong := (sin(TAU * 180.0 * t) * 0.5 + sin(TAU * 342.0 * t) * 0.3 + sin(TAU * 516.0 * t) * 0.2)
+		out[i] = (clash * 0.6 + gong * 0.7) * env * 0.85
 	return _pack(out)

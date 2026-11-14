@@ -21,6 +21,8 @@ const SCENES := {
 	"cremada": "res://intro/film_cremada.gd",
 	"aeroport": "res://intro/film_aeroport.gd",
 	"montserrat": "res://intro/film_montserrat.gd",
+	"lleons": "res://intro/film_lleons.gd",
+	"lleons_win": "res://intro/film_lleons_win.gd",
 	"gat": "res://intro/film_gat.gd",
 	"mamut": "res://intro/film_mamut.gd",
 	"plinth": "res://intro/film_plinth.gd",

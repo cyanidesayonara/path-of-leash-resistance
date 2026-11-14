@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-13 - Els Lleons review fixes
+
+- Both lion films failed to parse (`FilmKit.pair` called with seven arguments, a `title_card` that does not exist, a missing "creak" sound), so the wake film could not load when it should play; and neither was registered with `tools/intro_render.gd` or `tests/test_chase_film.gd`, which is how it got through. Both play now in the shared film grammar and are checked like every other film.
+- A pincer hit shoved the dog and had your human say "Ouch!" every frame of contact, and `pincer_dodged` was never reset, so after the first dodge no pincer could hit or be dodged again. A pincer now hits once (a knock, telegraphed by its lanes) and re-arms each time.
+- Planting through a roar paid +2 every frame; it pays once a roar.
+- The double rush ran fixed lanes at one speed, so the lions head-bumped every time with nothing for the dog to do. The lanes now cross where she stands as the rush warns, both lions reach the crossing together, and they collide only if she has stepped out; still there, she is run over and they run on.
+- `tests/test_lleons.gd` covers all of it (52 checks).
+
 ## 2026-11-13 - Montserrat review fixes
 
 - The Sant Joan funicular was on the path about three quarters of its cycle, rang its bell only once already there, and knocked the dog and shouted every frame they overlapped, while your human walked through it. It now crosses, waits off the path at the far side for 6 seconds and comes back; the bell rings 0.8 s before it reaches the path; it hits the dog or your human once a pass (a bump costs the live-event share of patience); and a pass that came by the pair and hit nobody pays the goal once (`systems/montserrat.gd`, `tests/test_montserrat.gd`, 36 checks).
@@ -34,6 +42,32 @@ Append-only session history, newest first.
 - The gate rush bumped your human and floated a line every frame they overlapped, and fired about 270 px ahead of them, so it almost never touched anyone. It now crosses the open floor just past the walkway's far end (Gate B30), fires while your human is 200 px short of the line, bumps once a rush, and pays only if they were kept clear.
 - The gate rush, carousel bark and suitcase dodges showed points they never paid: `combo.add` pays a non-trick only inside a chain. Each now pays through `award_points`, in the scores' lower-case form.
 - `tests/test_aeroport.gd` covers the single bump, the payouts and the balustrades (47 checks).
+## 2026-11-11 - Boss 3: Els Lleons, twin bronze lions of the Columbus Column in El Port
+
+- Implemented **Boss 3: Els Lleons** (`systems/boss_lleons.gd`, `systems/port.gd`, docs/BOSSES.md):
+  - Two massive bronze lion statues guarding the base of the Columbus Monument (*Monument a Colom*, 1888) at Portal de la Pau by Port Vell.
+  - Wake sequence at $y = -4000.0$:
+    - The pair approach Portal de la Pau at dusk with the harbor basin behind; left lion yawns with a resonant metallic creak, right lion blinks open glowing amber eyes, they glance at each other, and hop down from their stone plinths to flank the dog.
+    - Story film: *Dusk at the Columbus Column* (`intro/film_lleons.gd`), complete with Columbus column silhouette, harbor sunset, and title card.
+  - Phase 1 (Pincer & Roar):
+    - **Pincer Strike:** Lion A and Lion B circle wide on either side, telegraphing warning danger lanes before converging in a coordinated pincer attack. Dodging late awards the `lleons_pincer` goal (`"Steer clear of the lions' pincer charge"`).
+    - **Roar Blast:** Concentric shockwaves of sound and wind push the dog back toward the opposite lion; player can brace with `{plant}` to resist the push with 14x planted mass.
+  - Phase 2 (Double Rush & HEAD BUMP, below 50% HP):
+    - Both lions enter enraged mode with glowing red eyes and charge across opposite diagonal trajectories.
+    - Standing near the intersection point and stepping out at the critical moment tricks the lions into colliding with each other: **HEAD BUMP!** (`_head_bump()` sfx, screen shake, bronze spark burst), dazing both lions.
+    - Fulfills the `lleons_bump` goal (`"Trick the twin lions into colliding"`).
+    - While dazed, barking at either lion's nose awards a boop.
+  - Phase 3 (Last Stand, below 10% HP):
+    - Both lions retreat to their corner plinths (`PLINTH_L` and `PLINTH_R`).
+    - Wrapping the verlet leash around both plinth legs dynamically ties them together (`m.lleons_tied = true`), making them sit down.
+    - A friendly bark at each lion's nose (double boop) calms them, settling them back into peaceful guardians (`m.lleons_settled = true`).
+    - Victory film: *The Twin Guardians of El Port* (`intro/film_lleons_win.gd`), with calm harbor sunset, seated lions with closed peaceful eyes, and title card.
+  - Procedural Audio:
+    - `_lion_roar()` in `autoload/sfx.gd`: Resonant bronze feline roar blending low harmonic tones and modulated frequency noise.
+    - `_head_bump()` in `autoload/sfx.gd`: Heavy bronze impact clash with metallic chime decay.
+  - Comprehensive test suite: `tests/test_lleons.gd` (47 checks covering registration, goals, wake trigger, pincer dodge, roar wind push, Double Rush collision stun, leg tangle wrapping, and double boop victory).
+
+
 
 ## 2026-11-11 - Walk 38: Montserrat, Sant Joan funicular crossing, and Wild Goat Herd chase
 
