@@ -9,6 +9,10 @@ Append-only session history, newest first.
 - Fetch: the ball bounces as it goes. Snatch it while it is still moving (no pickup press) and bring it back within 4 s, and each pays 2 more ("good dog on the bounce quick! +7") (`entities/ball.gd`).
 - A new game in every plaça (about fifteen walks end in one): the pigeons. A flock of nine lands on scattered crumbs. Run at them and the near ones take off, lost (at a sprint they see her from much further off). Creep up, stop close and bark: every pigeon still down bursts up at once, a bone each, double when she is right among them, five more for the whole flock. Three flocks, each somewhere new (`systems/pigeon_game.gd`, test `tests/test_pigeon_game.gd`).
 - `tools/agility_frames.gd` films a run along the chalk line. Tests: the table's count and fault, the racing line passing every pole on its side and running clean, medals, the frisbee streak and leap pay.
+## 2026-11-14 - CI was not running
+
+- `ci.yml` had not run since #531 merged: a step name ("...security: never in a solid...") held an unquoted colon and space, which YAML reads as a mapping, so GitHub rejected the whole workflow file and every push and pull request ran only the sweep, soak and MSIX workflows. #529, #524, #531, #525, #526, #527, #532 and #533 merged without it; each was run through the full local suite (`tools/run_tests.sh`) before merging. The colon is a semicolon now, and every workflow file parses.
+- With CI back, `tests/test_freedom_games_live.gd` failed on main: #533 raised the tug's stalemate timeout to 16 s, but the test waited only 15 s for a tug to end. It waits for `RopeTug.TIME_OUT` plus two seconds now.
 
 ## 2026-11-14 - Tug of war: a real rope toy, a rhythm to read, a clear winner
 
