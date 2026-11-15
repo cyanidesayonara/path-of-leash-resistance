@@ -227,6 +227,66 @@ func _run() -> void:
 	_check(bool(m.gat_human_pummeled) and gat.state == BG.State.STUNNED, "your human flung into him stuns him")
 	m.human.whirl_flung_t = 0.0
 
+	# the arena: a yarn stall's basket rocks for its telegraph, then tips
+	gat.hp = 90.0
+	gat.transition_to(BG.State.PROWL)
+	var bp: Vector2 = BG.YARN_BASKETS[0]
+	gat.pos = Vector2(700.0, bp.y - 150.0)
+	gat.update_leg_positions()
+	gat.swat_cooldown = 99.0
+	gat.pounce_cooldown = 99.0
+	gat.yarn_cd = 0.0
+	m.human.global_position = Vector2(640.0, bp.y + 320.0)
+	m.dog.global_position = bp + Vector2(-24.0, 0.0)
+	gat.tick_state(0.016)
+	_check(gat.basket_t[0] >= 0.0 and not gat.basket_tipped[0], "she bumps the basket: it rocks first")
+	m.dog.global_position = Vector2(640.0, bp.y + 260.0)
+	var warn_steps := int((BG.YARN_WARN - 0.1) / 0.05)
+	for i in range(warn_steps):
+		gat.tick_state(0.05)
+	_check(not gat.basket_tipped[0] and gat.yarn.is_empty(), "it holds through its telegraph")
+	_check(gat.state == BG.State.PROWL, "and he is still on the prowl")
+	gat.tick_state(0.15)
+	_check(gat.basket_tipped[0] and gat.yarn.size() == BG.YARN_BALLS, "then tips its yarn out")
+	gat.tick_state(0.016)
+	_check(gat.state == BG.State.YARN, "loose yarn: he goes after it")
+	_check(gat.fight_status().begins_with("HE'S AFTER THE YARN!"), "the banner says where to bark")
+	for i in range(30):
+		gat.tick_state(0.05)
+	_check(gat.state == BG.State.YARN, "the ball holds him")
+	var to_dog: Vector2 = (m.dog.global_position - gat.pos).normalized()
+	_check(gat.face_dir.dot(to_dog) < 0.0, "his back is to her (%.2f, him %s, ball %s)" % [gat.face_dir.dot(to_dog), gat.pos, gat.yarn[gat.yarn_ball].p if gat.yarn_ball >= 0 else Vector2.ZERO])
+	var hp_y: float = gat.hp
+	_check(not gat.on_bark_action(gat.pos + gat.face_dir * 60.0) or gat.state != BG.State.STUNNED, "a bark at his face is no tail tug")
+	_check(gat.on_bark_action(gat.tail_pos()), "a bark on his tail")
+	_check(is_equal_approx(gat.hp, hp_y - BG.TAIL_DAMAGE) and gat.state == BG.State.STUNNED, "is a tail tug: it hurts and dazes him")
+	# the next ball holds him YARN_CHASE, then it is wool and he fights on
+	gat.transition_to(BG.State.PROWL)
+	gat.yarn_cd = 0.0
+	var balls0: int = gat.yarn.size()
+	gat.tick_state(0.016)
+	_check(gat.state == BG.State.YARN, "the next ball tempts him too")
+	for i in range(int(BG.YARN_CHASE / 0.05) + 2):
+		gat.tick_state(0.05)
+	_check(gat.state == BG.State.PROWL and gat.yarn.size() == balls0 - 1 and gat.yarn_tangles.size() == 1,
+		"the chase runs out: the ball is wool and he prowls on")
+	gat.tick_state(0.016)
+	_check(gat.state == BG.State.PROWL, "and not straight after the next ball")
+	# the other basket tips from the leash dragged through it, once
+	var bp2: Vector2 = BG.YARN_BASKETS[1]
+	_lay_rope(m, bp2 + Vector2(-80.0, 0.0), bp2 + Vector2(80.0, 0.0))
+	m.dog.global_position = bp2 + Vector2(0.0, 200.0)
+	gat.tick_state(0.016)
+	_check(gat.basket_t[1] >= 0.0, "the leash dragged through the other basket rocks it")
+	_lay_rope(m, Vector2(100.0, 100.0), Vector2(200.0, 100.0))
+	for i in range(int(BG.YARN_WARN / 0.05) + 2):
+		gat.tick_state(0.05)
+	_check(gat.basket_tipped[1], "and it tips")
+	m.dog.global_position = bp + Vector2(-24.0, 0.0)
+	gat.tick_state(0.016)
+	_check(gat.basket_t[0] < 0.0, "a tipped basket tips once")
+	gat.transition_to(BG.State.PROWL)
+
 	# your human waits short of the plaça
 	m.human.global_position = Vector2(640.0, BG.HOLD_Y + 100.0)
 	gat.tick_state(0.016)

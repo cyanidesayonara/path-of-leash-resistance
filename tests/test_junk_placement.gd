@@ -11,6 +11,8 @@ const LEVELS := ["street", "park", "beach", "rain", "market", "oldtown", "trail"
 	"tibidabo", "aigues", "horta", "llevant", "montserrat", "vet"]
 # where a traffic cone would not belong (LevelBuild.CONE_KINDS): none
 const NO_CONES := ["park", "beach", "trail", "montjuic", "tibidabo", "aigues", "horta", "llevant", "montserrat", "vet"]
+# roofed walks, where the floor is swept and mopped
+const INDOORS := ["market", "vet", "station"]
 const JUNK := ["can", "bottle", "sack", "crate", "ball"]
 
 var checks := 0
@@ -61,6 +63,19 @@ func _run() -> void:
 			_check(cones == 0, "%s: no traffic cones where there is no traffic (%d)" % [lvl, cones])
 		if lvl == "vet":
 			_check(wet >= 2, "vet: a wet-floor sign by each mopped spill (%d)" % wet)
+		if lvl in INDOORS:
+			# water on an indoor floor is a film (main._draw_spill), never the
+			# lobed outdoor puddle
+			var outdoor := 0
+			for pt: Dictionary in m.patches:
+				if String(pt["kind"]) == "puddle" and not pt.get("spill", false):
+					outdoor += 1
+			_check(outdoor == 0, "%s: no outdoor puddles on an indoor floor (%d)" % [lvl, outdoor])
+		if lvl == "station":
+			# a concourse has steel seating and its own bin, not a park bench
+			# and a street bin
+			_check(m.walk_mod != null and m.walk_mod.has_method("draw_bench") and m.walk_mod.has_method("draw_bin"),
+				"station: the concourse draws its own seating and bin")
 		_check(n > 0, "%s: there is some junk" % lvl)
 		_check(bad.is_empty(), "%s: no junk inside anything, in the road or off the path: %s" % [lvl, bad])
 		m.queue_free()

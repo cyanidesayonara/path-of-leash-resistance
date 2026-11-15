@@ -157,6 +157,44 @@ func _run() -> void:
 	_ticks(m, BM.SPRAY_WARN + BM.SPRAY_TIME + 0.1)
 	_check(mam.state == BM.State.PROWL and mam.pos.x < BM.SHORE_X, "and back out of the shallows")
 
+	# 5b. The arena: the rowboat jetty breaks under a charge, once
+	mam.hp = 90.0
+	mam.pos = Vector2(700.0, BM.JETTY.get_center().y)
+	mam.state = BM.State.PROWL
+	mam.swipe_cd = 99.0
+	mam.stomp_cd = 99.0
+	mam.charge_cd = 0.0
+	mam.face_dir = Vector2.RIGHT
+	m.dog.global_position = Vector2(BM.JETTY.position.x - 20.0, BM.JETTY.get_center().y)
+	_ticks(m, DT * 2.0)
+	_check(mam.state == BM.State.CHARGE_WARN, "she stands by the jetty: he paws the gravel")
+	m.dog.global_position = Vector2(BM.JETTY.position.x - 40.0, BM.JETTY.get_center().y + 150.0)
+	m.dog.tumble_t = 0.0
+	var hp3: float = mam.hp
+	_ticks(m, BM.CHARGE_WARN + 1.0)
+	_check(mam.jetty_broken, "the charge goes through the jetty")
+	_check(absf(hp3 - mam.hp - BM.JETTY_DAMAGE) < 0.1, "the jetty costs him more than the lake (%.0f)" % (hp3 - mam.hp))
+	_check(mam.state == BM.State.STUNNED and mam.state_t > BM.SPLASH_STUN - 0.5, "and dazes him longest")
+	_ticks(m, BM.JETTY_STUN + BM.SPRAY_WARN + BM.SPRAY_TIME + 0.3)
+	# 5c. The chairs: a swipe scatters a stack; a charge through one trips him
+	var stack: Vector2 = BM.CHAIR_STACKS[1]
+	mam.pos = stack + Vector2(0.0, -150.0)
+	mam.swipe_dir = Vector2.DOWN
+	mam.swipe_side = 1.0
+	mam._strike_swipe(BM.SWIPE_REACH)
+	_check(not mam.stacks_up[1] and mam.chairs_down.size() == BM.CHAIRS_PER_STACK, "his swipe scatters a stack of chairs")
+	var chair: Vector2 = mam.chairs_down[0].p
+	mam.state = BM.State.CHARGE
+	mam.state_t = 1.0
+	mam.charge_dir = Vector2.RIGHT
+	mam.charge_from_tree = true
+	mam.pos = chair + Vector2(-BM.CHAIR_TRIP_R - 20.0, 0.0)
+	var hp4: float = mam.hp
+	var down0: int = mam.chairs_down.size()
+	_ticks(m, 0.3)
+	_check(mam.hp < hp4 and mam.chairs_down.size() == down0 - 1, "charging through a lying chair trips him")
+	mam.state = BM.State.PROWL
+
 	# 6. Part three: out of fight he goes back to his plinth
 	mam.damage(mam.hp)
 	_ticks(m, DT)

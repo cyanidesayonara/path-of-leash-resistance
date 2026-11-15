@@ -11,7 +11,10 @@ const ShapeBatch := preload("res://systems/shape_batch.gd")
 
 # L'Estacio's floor and fittings
 const TERRAZZO := Color(0.72, 0.73, 0.74)
-const BRASS := Color(0.70, 0.56, 0.30, 0.55)
+const STEEL := Color(0.68, 0.70, 0.73)
+const SEAT := Color(0.44, 0.50, 0.58)       # the seats' blue-grey powder coat
+const STEEL_DARK := Color(0.26, 0.28, 0.31)
+const BRASS :=Color(0.70, 0.56, 0.30, 0.55)
 const CHIPS: Array[Color] = [Color(0.42, 0.40, 0.38, 0.55), Color(0.62, 0.40, 0.32, 0.45),
 	Color(0.95, 0.94, 0.90, 0.6), Color(0.30, 0.34, 0.36, 0.45)]
 const LUGGAGE_COLS: Array[Color] = [Color(0.20, 0.45, 0.82), Color(0.82, 0.22, 0.24),
@@ -390,6 +393,52 @@ static func draw_bollard(m: Node2D, wc: ShapeBatch, h) -> void:
 		wc.draw_line(hp, hp + Vector2.from_angle(fa) * 16.0, Color(0.26, 0.48, 0.26), 4.0)
 	if not h.done and h.progress > 0.0:
 		wc.draw_arc(hp, 17.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
+
+
+# concourse seating: four perforated steel seats on a beam, bolted to the
+# terrazzo, where a street would have a slatted wooden bench
+static func draw_bench(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
+	m.box_shadow(wc, Rect2(p.x - 9.0, p.y - 25.0, 18.0, 50.0), 4.0, 7.0)
+	# the beam, and the two feet it stands on
+	wc.rect(Rect2(p.x - 2.0, p.y - 26.0, 4.0, 52.0), STEEL_DARK)
+	for ey: float in [-22.0, 19.0]:
+		wc.rect(Rect2(p.x - 10.0, p.y + ey, 20.0, 3.0), STEEL_DARK)
+	for k in range(4):
+		var sp := Vector2(p.x, p.y - 18.0 + float(k) * 12.0)
+		# the pan, its lit front lip, the raised back along the far side
+		wc.rect(Rect2(sp.x - 9.0, sp.y - 5.0, 18.0, 10.0), STEEL_DARK)
+		wc.rect(Rect2(sp.x - 8.0, sp.y - 4.2, 16.0, 8.4), SEAT)
+		wc.rect(Rect2(sp.x - 8.0, sp.y - 4.2, 2.0, 8.4), SEAT.lightened(0.30))
+		wc.rect(Rect2(sp.x + 4.5, sp.y - 4.2, 3.5, 8.4), SEAT.lightened(0.14))
+		# the perforations
+		for hx: float in [-4.5, -1.0, 2.5]:
+			for hy: float in [-2.2, 2.2]:
+				wc.circle(sp + Vector2(hx, hy), 0.8, SEAT.darkened(0.45))
+
+
+# the station's bin: a steel hoop on a post holding a clear sack, so what is
+# in it can be seen
+static func draw_bin(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
+	m.cast_shadow(wc, p, 10.0, 20.0)
+	wc.circle(p + Vector2(0.8, 1.0), 12.4, STEEL_DARK)
+	# the sack, bulging past the hoop, and what shows through it
+	wc.circle(p, 11.2, Color(0.80, 0.85, 0.88))
+	wc.circle(p + Vector2(1.0, 1.4), 8.6, Color(0.60, 0.66, 0.70))
+	wc.circle(p + Vector2(-3.0, 2.0), 3.0, Color(0.84, 0.26, 0.24))
+	wc.rect(Rect2(p.x + 0.5, p.y - 4.5, 5.5, 4.0), Color(0.94, 0.92, 0.86))
+	wc.circle(p + Vector2(2.5, 4.0), 2.4, Color(0.36, 0.60, 0.82))
+	wc.line(p + Vector2(-5.0, -3.0), p + Vector2(-1.0, -5.5), Color(0.92, 0.80, 0.30), 2.2)
+	# the hoop's hinged lid ring, lit on the upper left, and its post
+	for k in range(5):
+		var a0 := PI * (1.02 + 0.11 * float(k))
+		wc.line(p + Vector2.from_angle(a0) * 11.6, p + Vector2.from_angle(a0 + PI * 0.11) * 11.6,
+			STEEL.lightened(0.25), 2.0)
+	for k in range(5):
+		var a1 := PI * (0.02 + 0.11 * float(k))
+		wc.line(p + Vector2.from_angle(a1) * 11.6, p + Vector2.from_angle(a1 + PI * 0.11) * 11.6,
+			STEEL_DARK, 2.0)
+	wc.circle(p + Vector2(11.5, -6.5), 3.0, STEEL_DARK)
+	wc.circle(p + Vector2(11.0, -7.0), 1.6, STEEL.lightened(0.2))
 
 
 # the hall's pillars; at the barrier line a post is a gate cabinet, drawn

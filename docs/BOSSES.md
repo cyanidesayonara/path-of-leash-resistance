@@ -133,8 +133,10 @@ and dangerous to him.
   flinch toward the sound. (All three shipped.)
 - **El Gat, the Rambla del Raval.** Terrace tables (shipped: he crashes through
   them). Café awnings: a pounce that lands on one bounces him back up and off
-  balance. The yarn stall: knock its basket over and loose balls roll across the
-  square, and he cannot help chasing them, turning his back on her.
+  balance. The yarn stall (shipped: two stalls, each basket tips once, and a bark
+  on his tail while he chases a ball is a tail tug): knock its basket over and
+  loose balls roll across the square, and he cannot help chasing them, turning
+  his back on her.
 
 Order: El Mamut first (the earliest boss, walk 11, where most players meet the
 grammar), then El Drac, Els Lleons and El Gat, one PR each with its own feel

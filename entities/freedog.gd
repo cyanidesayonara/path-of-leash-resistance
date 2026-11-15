@@ -226,6 +226,14 @@ func _physics_process(delta: float) -> void:
 
 	if state != S.SNIFF and state != S.MARK and state != S.PLAY and state != S.OFFER:
 		lean = maxf(lean - delta * 4.0, 0.0)
+	# while she runs the agility course, the park's other dogs keep off it:
+	# trotted out sideways, the shorter way, instead of sitting on her table
+	var ag: AgilityCourse = main.get("agility")
+	if ag != null and ag.running:
+		var lane := ag.lane_rect(18.0)
+		if lane.has_point(position):
+			var out := -1.0 if position.y < ag.ly else 1.0
+			vel = vel.move_toward(Vector2(vel.x * 0.5, out * BOLT), ACCEL * 2.0 * delta)
 	position += vel * delta
 	if state == S.WANDER:
 		vel = vel.move_toward(Vector2.ZERO, 120.0 * delta)

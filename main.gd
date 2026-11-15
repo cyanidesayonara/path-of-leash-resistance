@@ -723,6 +723,8 @@ var frisbee_air := 0
 var tug: RopeTug
 var tug_dog: Node2D
 var tug_phase_was := -1         # RopeTug.P last frame, for its sounds
+var pigeon_game: RefCounted = null   # a plaça's pigeons (systems/pigeon_game.gd)
+var wave_game: RefCounted = null     # the dog beach's waves (systems/wave_game.gd)
 var tug_prev := Vector2.ZERO
 var tugs_won := 0
 var rope_loose := Vector2(INF, INF)
@@ -9331,6 +9333,42 @@ func _draw_mud_detail(pt: Dictionary, base: Color) -> void:
 	b.flush(_wc)
 
 
+# Barcelona's street bin, the paperera: a perforated steel basket hung between
+# two posts on the axle it tips over to be emptied, a black sack folded over
+# its rim. Filled shapes only, so the whole bin stays in the world batch (the
+# green drum it replaces drew two arcs, a draw call each).
+const PAPERERA_STEEL := Color(0.63, 0.66, 0.68)
+const PAPERERA_IRON := Color(0.19, 0.20, 0.22)
+
+
+func _draw_paperera(bn: Vector2) -> void:
+	cast_shadow(_wc, bn, 11.0, 22.0)
+	# the posts and the axle between them
+	_wc.draw_line(bn + Vector2(-15.5, 0.0), bn + Vector2(15.5, 0.0), PAPERERA_IRON, 3.0)
+	for sx: float in [-15.5, 15.5]:
+		_wc.draw_circle(bn + Vector2(sx, 0.0), 3.4, PAPERERA_IRON)
+		_wc.draw_circle(bn + Vector2(sx - 0.8, -0.8), 1.7, PAPERERA_IRON.lightened(0.30))
+	# the basket: its shaded far side, the steel, the rim lit on the upper left
+	_wc.draw_circle(bn + Vector2(0.9, 1.1), 12.4, PAPERERA_STEEL.darkened(0.50))
+	_wc.draw_circle(bn, 11.8, PAPERERA_STEEL)
+	for k in range(4):
+		var a := PI * (1.04 + 0.11 * float(k))
+		_wc.draw_line(bn + Vector2.from_angle(a) * 11.0, bn + Vector2.from_angle(a + PI * 0.11) * 11.0,
+			PAPERERA_STEEL.lightened(0.45), 1.6)
+	# the punched holes, showing between the rim and the sack
+	for k in range(12):
+		_wc.draw_circle(bn + Vector2.from_angle(TAU * float(k) / 12.0 + 0.26) * 9.7, 1.0,
+			PAPERERA_STEEL.darkened(0.55))
+	# the sack folded over the rim, and the dark it holds
+	_wc.draw_circle(bn, 7.8, Color(0.13, 0.14, 0.15))
+	_wc.draw_circle(bn + Vector2(-1.4, -1.4), 6.2, Color(0.20, 0.21, 0.23))
+	_wc.draw_circle(bn + Vector2(0.8, 1.0), 5.8, Color(0.05, 0.05, 0.06))
+	# what is in it: a crushed can and a ball of paper, near the top
+	_wc.draw_circle(bn + Vector2(2.6, 2.4), 2.3, Color(0.70, 0.72, 0.70))
+	_wc.draw_circle(bn + Vector2(2.0, 1.8), 1.0, Color(0.92, 0.92, 0.88))
+	_wc.draw_line(bn + Vector2(-3.4, 2.8), bn + Vector2(-0.6, 4.2), Color(0.78, 0.20, 0.18), 2.4)
+
+
 # In a park the thing a dog marks is a tree stump: sawn flat, its rings
 # showing, moss on the shaded side, a fungus bracket. Marked, it darkens.
 func _draw_mark_stump(p: Vector2, done: bool) -> void:
@@ -9361,7 +9399,11 @@ func _draw_spill(pt: Dictionary) -> void:
 	var mid := patch_centre(pt)
 	var rx := float(pt["rx"])
 	var ry := float(pt["ry"])
-	draw_patch(_wc, pt, Color(0.80, 0.90, 0.96, 0.30), Color(0.55, 0.66, 0.72, 0.16))
+	if pt.get("ice", false):
+		# meltwater, on a warm stone floor: a little more body than a mopped film
+		draw_patch(_wc, pt, Color(0.66, 0.80, 0.90, 0.46), Color(0.40, 0.52, 0.60, 0.26))
+	else:
+		draw_patch(_wc, pt, Color(0.80, 0.90, 0.96, 0.30), Color(0.55, 0.66, 0.72, 0.16))
 	# the sheen: two soft streaks catching the ceiling lights
 	var sd := float(pt["seed"])
 	for k in range(2):
@@ -9375,6 +9417,51 @@ func _draw_spill(pt: Dictionary) -> void:
 		var dp := mid + Vector2(cos(ang) * rx * 1.25, sin(ang) * ry * 1.25)
 		_wc.draw_circle(dp, 2.2 - float(i) * 0.4, Color(0.80, 0.90, 0.96, 0.4))
 		_wc.draw_circle(dp + Vector2(-0.6, -0.6), 0.8, Color(1, 1, 1, 0.6))
+	if pt.get("ice", false):
+		_draw_ice_chips(mid, rx * 0.62, ry * 0.62, sd, 6)
+
+
+# crushed ice off a fish counter, melting where it fell: pale chips, each with
+# its lit corner
+func _draw_ice_chips(mid: Vector2, rx: float, ry: float, sd: float, n: int) -> void:
+	for i in range(n):
+		var a := sd * 1.7 + float(i) * 2.4
+		var rr := 0.35 + 0.65 * fmod(float(i) * 0.41 + sd * 0.13, 1.0)
+		var ip := mid + Vector2(cos(a) * rx * rr, sin(a) * ry * rr)
+		var sz := 2.6 + fmod(float(i) * 1.3 + sd, 2.2)
+		_wc.draw_rect(Rect2(ip.x - sz * 0.5, ip.y - sz * 0.5, sz, sz), Color(0.86, 0.93, 0.97, 0.85))
+		_wc.draw_rect(Rect2(ip.x - sz * 0.5, ip.y - sz * 0.5, sz * 0.5, sz * 0.5), Color(1, 1, 1, 0.9))
+
+
+# what lies on the floor in front of a fish counter: a thin slick of brine,
+# scales that catch the light, a few chips of ice and one sardine that got
+# away. (It was a flat grey-green lobe with dark flecks, which read as moss.)
+func _draw_fish_slick(pt: Dictionary) -> void:
+	var mid := patch_centre(pt)
+	var rx := float(pt["rx"])
+	var ry := float(pt["ry"])
+	var sd := float(pt["seed"])
+	draw_patch(_wc, pt, Color(0.62, 0.74, 0.80, 0.50), Color(0.36, 0.46, 0.52, 0.28))
+	# the scales: small silver discs, each with a glint
+	for i in range(11):
+		var a := sd * 1.3 + float(i) * 2.399
+		var rr := 0.18 + 0.72 * fmod(float(i) * 0.618 + sd * 0.21, 1.0)
+		var sp := mid + Vector2(cos(a) * rx * rr, sin(a) * ry * rr)
+		_wc.draw_circle(sp, 1.9, Color(0.72, 0.78, 0.82, 0.9))
+		_wc.draw_circle(sp + Vector2(-0.5, -0.5), 0.8, Color(1, 1, 1, 0.9))
+	_draw_ice_chips(mid, rx * 0.8, ry * 0.8, sd + 1.0, 4)
+	# the sardine: blue-grey back, silver flank, forked tail, one eye
+	var dir := Vector2.from_angle(sd * 2.1)
+	var side := dir.orthogonal()
+	var fp := mid + Vector2(cos(sd * 3.3) * rx * 0.3, sin(sd * 3.3) * ry * 0.3)
+	_wc.draw_colored_polygon(PackedVector2Array([fp - dir * 6.0, fp - dir * 10.5 + side * 3.2,
+		fp - dir * 9.0, fp - dir * 10.5 - side * 3.2]), Color(0.36, 0.44, 0.52))
+	_wc.draw_colored_polygon(PackedVector2Array([fp + dir * 8.0, fp + dir * 3.0 + side * 3.0,
+		fp - dir * 4.0 + side * 2.2, fp - dir * 7.0, fp - dir * 4.0 - side * 2.2,
+		fp + dir * 3.0 - side * 3.0]), Color(0.38, 0.47, 0.56))
+	_wc.draw_colored_polygon(PackedVector2Array([fp + dir * 7.4 + side * 0.4, fp + dir * 3.0 + side * 2.9,
+		fp - dir * 4.0 + side * 2.1, fp - dir * 6.6 + side * 0.3]), Color(0.80, 0.85, 0.88))
+	_wc.draw_circle(fp + dir * 5.4 + side * 0.9, 1.0, Color(0.08, 0.08, 0.10))
 
 
 func draw_patch(c: Object, pt: Dictionary, col: Color,
@@ -11353,7 +11440,8 @@ func on_frisbee_returned(left: int) -> void:
 
 
 func on_ball_grabbed() -> void:
-	float_text(dog.global_position, "got it!", Color(0.85, 1.0, 0.85))
+	var snatched: bool = is_instance_valid(ball) and ball.state == ball.State.CARRIED and ball.snatched
+	float_text(dog.global_position, "snatched!" if snatched else "got it!", Color(0.85, 1.0, 0.85))
 
 
 func on_ball_returned(thrower: Node2D) -> void:
@@ -11362,10 +11450,20 @@ func on_ball_returned(thrower: Node2D) -> void:
 	var mine := thrower == human
 	romp_catches += 1
 	var reward := 3 if mine else 4
+	# taken on the bounce, and brought back quick: each worth more
+	var b: Node2D = ball if mine else npc_ball
+	var extra := ""
+	if is_instance_valid(b):
+		if b.snatched:
+			reward += 2
+			extra = " on the bounce"
+		if b.out_t < b.QUICK_S:
+			reward += 2
+			extra += " quick"
 	bones += reward
 	Sfx.play("fetch")
 	combo.add("FETCH", reward)
-	float_text(thrower.global_position, ("good dog! +%d" % reward) if mine else ("shared! +%d" % reward), Color(0.8, 1.0, 0.8))
+	float_text(thrower.global_position, ("good dog%s! +%d" % [extra, reward]) if mine else ("shared! +%d" % reward), Color(0.8, 1.0, 0.8))
 	if mine and is_instance_valid(thrower):
 		human.throw_pose()
 	if romp_catches >= romp_target and not romp_done:
@@ -11450,6 +11548,9 @@ func on_bark(pos: Vector2) -> void:
 		feed.say("DARE ON! GET SET", EventFeed.Tone.LOUD)
 	mood.bump(Mood.M.BARKY, 0.22)
 	Sfx.play("bark")
+	# the plaça's pigeon game scores the burst before the bark scatters them
+	if pigeon_game != null:
+		pigeon_game.on_bark(self, pos)
 	if human.global_position.distance_to(pos) < 170.0:
 		human.halt(0.8)
 	for s in get_tree().get_nodes_in_group("squirrels"):
@@ -12031,26 +12132,15 @@ func _draw_furniture(vt: float, vb: float) -> void:
 			walk_mod.draw_column(self, _wc, p)
 		else:
 			_draw_lamppost(p)
-	# trash bins: green, lidded, with a visible mouth - the ONLY thing
-	# the owner will throw a bag into (or Barcelona seaside selective recycling station)
+	# litter bins: the ONLY thing the owner will throw a bag into. Barcelona's
+	# own steel basket unless the walk draws its own (draw_bin)
 	for bn in bins:
 		if bn.y < vt - 40.0 or bn.y > vb + 40.0:
 			continue
 		if walk_mod != null and walk_mod.has_method("draw_bin"):
 			walk_mod.draw_bin(self, _wc, bn)
 			continue
-		cast_shadow(_wc, bn, 11.0, 24.0)
-		# the drum, on its post, with a lit rim and a genuinely dark mouth
-		_wc.draw_circle(bn, 13.0, Color(0.18, 0.25, 0.20))
-		_wc.draw_circle(bn, 11.0, Color(0.26, 0.36, 0.28))
-		_wc.draw_circle(bn + Vector2(-3, -3), 7.0, Color(0.32, 0.44, 0.33))
-		_wc.draw_arc(bn, 11.0, PI * 1.05, PI * 1.95, 14, Color(0.42, 0.55, 0.42), 2.0)
-		# the hinged lid, tipped open toward the light
-		_wc.draw_circle(bn + Vector2(1, 2), 8.6, Color(0.10, 0.14, 0.11))
-		_wc.draw_arc(bn + Vector2(1, 2), 8.6, PI * 0.1, PI * 0.9, 12, Color(0.20, 0.28, 0.22), 3.0)
-		# a bag someone has knotted round the handle, as always
-		_wc.draw_circle(bn + Vector2(12, 6), 4.0, Color(0.78, 0.78, 0.74, 0.85))
-		_wc.draw_line(bn + Vector2(10, 2), bn + Vector2(12, 5), Color(0.7, 0.7, 0.66), 1.5)
+		_draw_paperera(bn)
 	# cafe tables with a little service on them
 	for tb in tables:
 		if tb.y < vt - 40.0 or tb.y > vb + 40.0:
@@ -12726,6 +12816,9 @@ func _draw_world() -> void:
 			continue
 		if pt.get("spill", false):
 			_draw_spill(pt)
+			continue
+		if sk == "fish":
+			_draw_fish_slick(pt)
 			continue
 		var base: Color = Color(0.34, 0.26, 0.18)
 		if SUBSTANCES.has(sk):
