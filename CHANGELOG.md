@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-11-15 - La Diagonal: the art pass, bike lanes and roads across the avenue
+
+- The grid is full size now (`GRID_SCALE`): a block is as big as one of L'Eixample's, so the usual view shows the corners of real roofs, not a map of small ones. Each block (`_block`) is a ring of houses round a courtyard, built along its own turned axes: every plot its own terrat of rajola or a flat gravel roof inside its parapets, with a stair house, a light well, a water tank, and solar panels, washing or pots; corner houses on the chamfers, some under a slate cupola; courtyards that are a garden with sauló paths or the low workshop roofs; plane trees on a panot pavement, and zebras where four chamfers meet. Where the avenue cuts a block, a row of houses fronts the avenue. A block the avenue runs through the middle of leaves a wedge each side.
+- Two landmarks on those wedges: Casa de les Punxes (brick walls, steep tiled roofs, towers under pointed spires that throw pointed shadows) a third of the way up, and Torre Glòries on its plaza by the gate (the coloured skin under its louvres, the glass dome, a long tapering shadow).
+- The tram (`_tram`) is a five-module articulated tram inside the same `tram_rect`: rounded noses, the green band, glass along the sides (lit from inside after dark, spilling onto the grass), doors, roof coolers, bellows, the pantograph up at the wire, headlights and red tails (brighter when it brakes for your human).
+- The promenade: granite slabs in three greys, sauló under the trees, la via verda mown in stripes with daisies and grooved rails, a staggered contact wire on bracketed masts, signal heads by the masts. The newspaper kiosk and the Bicing dock, solid but never drawn before, are drawn: a green iron kiosk with racks of magazines, a row of red-and-white bikes.
+- From playing it (Santtu): a bike lane inside each tree line, red asphalt between white lines; and a road straight across the promenade and the track at each of three crossings (`CROSSINGS`), with a zebra, stop lines and traffic lights that cycle. No traffic drives them yet. Trees stay off the roads; the track handles as pavement where a road crosses it.
+- Moved for the lanes and the tram: the kiosk stands inside the left bike lane (x 446, was 372), the benches a little further in, and the two track-side pilones stand on the grass edge beside the rails, not in the tram's path. No tufts grow where the tram runs (`grass_blocked`); they stood through its roof.
+- The side roads have a parking lane: cars and rows of motos, none in a street's mouth.
+- Every walk: a drain grate in the paving sits square to the slabs. It was drawn at a random angle (`main._draw_ground_detail`), which showed on the turned walk as a grate lying across the path.
+
 ## 2026-11-15 - La Diagonal: the first walk seen at an angle, and its tram
 
 - A new walk, La Diagonal (`systems/diagonal.gd`), the 39th: Avinguda Diagonal's central promenade up to Plaça de les Glòries, open at 38 stars, right after El Fòrum (where the avenue ends) in the campaign, in Els Senglars' tier, so every chase stays on a fifth walk. Its name is laid in the kiosk's blown newspapers.
