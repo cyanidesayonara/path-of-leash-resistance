@@ -152,11 +152,14 @@ static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
 		m.gardener.draw(m, m._wc, vt, vb)
 	if m.drac != null:
 		var t: float = AnimClock.msec() / 1000.0
+		# the fountain's spouts and their tiles are the stair's, awake or not
+		m.drac.draw_spouts(m._wc, t, vt, vb)
 		if m.drac.awake_for_draw():
 			m.drac.draw_ground(m._wc, vt, vb)
 			m.drac.draw_warnings(m._wc, t)
 			if m.drac.pos.y > vt - 240.0 and m.drac.pos.y < vb + 240.0:
 				m.drac.draw_drac(m._wc, t)
+			m.drac.draw_spout_jets(m._wc, t)
 			m.drac.draw_rings(m._wc, t)
 			m.drac.draw_health_bar(m._wc)
 		else:
@@ -443,6 +446,11 @@ static func tick(m: Node2D, delta: float) -> void:
 
 static func on_bark(m: Node2D, pos: Vector2) -> bool:
 	return m.drac != null and m.drac.on_bark_action(pos)
+
+
+# the spouts, when nothing more pressing is up
+static func idle_status(m: Node2D) -> String:
+	return m.drac.spout_hint() if m.drac != null else ""
 
 
 static func urgent_status(m: Node2D) -> String:

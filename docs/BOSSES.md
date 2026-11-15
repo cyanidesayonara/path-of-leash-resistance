@@ -127,13 +127,16 @@ and dangerous to him.
 - **Els Lleons, the foot of the column.** The mooring bollards (already
   leash-wrappable): a lion wound round one is held for the other's rush. A
   cargo net hanging from a harbour crane, its rope across the boardwalk: pull
-  the rope with the leash and it drops on whichever lion is under it. The
+  the rope with the leash and it drops on whichever lion is under it (shipped:
+  wind the leash on the trip rope's post and haul it taut). The
   Golondrina's horn: bark at the pier and the boat answers, and both lions
   flinch toward the sound.
 - **El Gat, the Rambla del Raval.** Terrace tables (shipped: he crashes through
   them). Café awnings: a pounce that lands on one bounces him back up and off
-  balance. The yarn stall: knock its basket over and loose balls roll across the
-  square, and he cannot help chasing them, turning his back on her.
+  balance. The yarn stall (shipped: two stalls, each basket tips once, and a bark
+  on his tail while he chases a ball is a tail tug): knock its basket over and
+  loose balls roll across the square, and he cannot help chasing them, turning
+  his back on her.
 
 Order: El Mamut first (the earliest boss, walk 11, where most players meet the
 grammar), then El Drac, Els Lleons and El Gat, one PR each with its own feel

@@ -13,6 +13,9 @@ extends RefCounted
 #   pair gets past him) and swats at the dog when she comes close. Every swat
 #   is telegraphed by a ring that fills where the paw will land; a near miss
 #   staggers him. His body is solid to both of you (BODY_R) off his plinths.
+# - The yarn stalls (YARN_BASKETS): a basket she tips spills balls of yarn,
+#   and loose yarn near him on the prowl beats any swat or pounce. He chases
+#   a ball with his back to her (YARN), and a bark on his tail is a tail tug.
 # - Below half: he rears and roars (ENRAGE_TIME, eyes red, steam), then he
 #   pounces, the way a cat does (docs/BOSSES.md: the mammoth is the one who
 #   charges). He crouches and wiggles his rear while a landing ring fills
@@ -165,6 +168,7 @@ enum State {
 	WRAPPED,
 	TOPPLED,
 	PURR,
+	YARN,
 }
 
 var state: State = State.IDLE
@@ -230,6 +234,17 @@ var ghosts: Array[Dictionary] = []
 var bits: Array[Dictionary] = []
 var cracks: Array[Dictionary] = []
 var crowd: Array[Dictionary] = []
+# the yarn stalls: each basket's rocking clock (-1 still, then counting up to
+# YARN_WARN) and whether it has tipped; the loose balls {p, v, col, spin, from};
+# the unravelled wool he leaves behind {p, col, a}
+var basket_t: Array[float] = [-1.0, -1.0]
+var basket_tipped: Array[bool] = [false, false]
+var yarn: Array[Dictionary] = []
+var yarn_tangles: Array[Dictionary] = []
+var yarn_ball := -1             # the ball he is after
+var yarn_cd := 0.0
+var bat_cd := 0.0
+var tail_tugged := false
 # sparks, crowd shouts and fireworks draw from their own generator, so the
 # show never shifts the walk's shared random sequence
 var fx := RandomNumberGenerator.new()
@@ -302,6 +317,37 @@ const PIGEON_SPOTS: Array[Vector2] = [
 const KIOSK := Rect2(705.0, -4490.0, 50.0, 44.0)
 const FOUNTAIN := Vector2(450.0, -1800.0)
 
+# The arena's own piece (docs/BOSSES.md, the arenas): the rambla's weekend
+# market. A yarn stall on each side, its basket of wool in front of the table.
+# Bump the basket or drag the leash through it and it rocks (YARN_WARN, a ball
+# peeking over the rim), then tips, and its balls roll out across the paving.
+# Loose yarn near him and he cannot help it: he chases a ball, batting it on
+# away from her, his back turned (YARN_CHASE). A bark on his tail then is a
+# tail tug, which stuns him. Each basket tips once.
+const YARN_BASKETS: Array[Vector2] = [Vector2(888.0, -1700.0), Vector2(392.0, -2900.0)]
+const STALL_SIZE := Vector2(42.0, 92.0)    # the table, behind its basket toward the edge
+const BASKET_R := 20.0
+const YARN_WARN := 0.8          # the basket rocks this long before it tips
+const YARN_BALLS := 3
+const YARN_ROLL := 300.0        # how fast a ball leaves the basket
+const YARN_DRAG := 1.4          # how quickly a rolling ball slows
+const BALL_R := 9.0
+const YARN_NOTICE := 420.0      # a ball this close and he goes after it
+const YARN_CHASE := 3.4         # how long one ball holds him
+const YARN_SPEED := 150.0       # his stalk after a ball: she can catch him
+const YARN_BAT := 230.0         # how hard he bats it on
+const YARN_PAW := 68.0          # he bats a ball this far in front of him
+const YARN_COOLDOWN := 2.5      # back on the prowl this long before the next ball tempts him
+const TAIL_DAMAGE := 15.0
+const TAIL_REACH := 70.0
+const YARN_COLS: Array[Color] = [Color(0.86, 0.26, 0.30), Color(0.96, 0.78, 0.22), Color(0.30, 0.56, 0.90),
+	Color(0.44, 0.76, 0.36), Color(0.82, 0.46, 0.80), Color(0.96, 0.58, 0.26)]
+const WICKER := Color(0.62, 0.46, 0.26)
+const WICKER_DARK := Color(0.42, 0.30, 0.17)
+const TABLE_WOOD := Color(0.50, 0.36, 0.24)
+const AWNING_A := Color(0.80, 0.24, 0.22)
+const AWNING_B := Color(0.94, 0.90, 0.82)
+
 # --- Static Level Building API -----------------------------------------------
 
 static func edge_nodes(m: Node2D) -> Array:
@@ -323,6 +369,7 @@ static func wrap_rects() -> Array[Rect2]:
 	for t in TERRACES:
 		out.append(t)
 	out.append(KIOSK)
+	out.append_array(stall_rects())
 	return out
 
 
@@ -334,7 +381,22 @@ static func solids(_m: Node2D) -> Array[Rect2]:
 	out.append(Rect2(START_PLINTH - PLINTH_HALF, PLINTH_HALF * 2.0))
 	out.append(Rect2(PEDESTAL_POS - PLINTH_HALF, PLINTH_HALF * 2.0))
 	out.append(KIOSK)
+	out.append_array(stall_rects())
 	return out
+
+
+# Each yarn stall's table: behind its basket, toward the rambla's edge.
+static func stall_rects() -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	for bp: Vector2 in YARN_BASKETS:
+		out.append(_stall_rect(bp))
+	return out
+
+
+static func _stall_rect(bp: Vector2) -> Rect2:
+	var side := signf(bp.x - 640.0)
+	var c := bp + Vector2(side * (BASKET_R + 6.0 + STALL_SIZE.x * 0.5), 0.0)
+	return Rect2(c - STALL_SIZE * 0.5, STALL_SIZE)
 
 
 static func setup_poles(m: Node2D) -> void:
@@ -443,6 +505,12 @@ func setup(m_ref: Node2D) -> void:
 	leg_poles.clear()
 	for off: Vector2 in LEG_OFFSETS:
 		leg_poles.append(pos + off)
+	basket_t = [-1.0, -1.0]
+	basket_tipped = [false, false]
+	yarn.clear()
+	yarn_tangles.clear()
+	yarn_ball = -1
+	yarn_cd = 0.0
 	fx.seed = 1907
 	_build_crowd()
 
@@ -583,6 +651,16 @@ func transition_to(new_state: State) -> void:
 			Sfx.play("fling", 0.7, -4.0)
 		State.SKID:
 			state_t = SKID_TIME
+		State.YARN:
+			state_t = YARN_CHASE
+			bat_cd = 0.0
+			tail_tugged = false
+			Sfx.play("gat_purr", 1.6, -6.0)
+			if yarn_ball >= 0 and yarn_ball < yarn.size():
+				var to_ball: Vector2 = yarn[yarn_ball].p - pos
+				if to_ball.length() > 1.0:
+					face_dir = to_ball.normalized()
+			main.feed.say("YARN! HIS BACK IS TURNED", EventFeed.Tone.GOOD)
 		State.STUNNED:
 			state_t = STUN_TIME
 			stun_booped = false
@@ -880,6 +958,7 @@ func tick_state(delta: float) -> void:
 	_hold_human()
 	var dog_p: Vector2 = main.dog.global_position
 	act_t += delta
+	_tick_market(delta, dog_p)
 
 	match state:
 		State.IDLE:
@@ -956,6 +1035,13 @@ func tick_state(delta: float) -> void:
 			if not against:
 				pos.x = move_toward(pos.x, want_x, DRIFT_SPEED * delta)
 			update_leg_positions()
+			yarn_cd -= delta
+			var ball := _yarn_in_reach()
+			if ball >= 0 and hp > 0.0:
+				# a cat is a cat: loose yarn beats a swat or a pounce
+				yarn_ball = ball
+				transition_to(State.YARN)
+				return
 			var d := dog_p.distance_to(pos)
 			if d < SWAT_REACH and swat_cooldown <= 0.0:
 				swat_cooldown = SWAT_COOLDOWN
@@ -1021,6 +1107,9 @@ func tick_state(delta: float) -> void:
 			if state_t <= 0.0:
 				transition_to(State.PROWL)
 
+		State.YARN:
+			_tick_yarn_chase(delta, dog_p)
+
 		State.STUNNED:
 			state_t -= delta
 			if not stun_pummeled and check_human_pummel():
@@ -1063,10 +1152,140 @@ func tick_state(delta: float) -> void:
 	# autowalk bot cannot fight him and is not held, so he would stand in
 	# its way in the plaça for ever: to the bot he is a ghost.
 	if not main.auto_walk and state in [State.PROWL, State.SWAT, State.POUNCE_WARN, State.SKID,
-			State.STUNNED, State.RETREAT, State.ENRAGE]:
+			State.STUNNED, State.RETREAT, State.ENRAGE, State.YARN]:
 		_shove_out(main.dog)
 		if not main.human.is_whirling():
 			_shove_out(main.human)
+
+
+# The yarn stalls: a basket she bumps or drags the leash through rocks for
+# YARN_WARN, then tips its balls out across the paving, where they roll and
+# slow. Each basket tips once.
+func _tick_market(delta: float, dog_p: Vector2) -> void:
+	for i in range(YARN_BASKETS.size()):
+		if basket_tipped[i]:
+			continue
+		var bp: Vector2 = YARN_BASKETS[i]
+		if basket_t[i] < 0.0:
+			if not beaten() and _basket_bumped(bp, dog_p):
+				basket_t[i] = 0.0
+				Sfx.play("creak", 1.3, -4.0)
+			continue
+		basket_t[i] += delta
+		if basket_t[i] >= YARN_WARN:
+			_tip_basket(i)
+	for k in range(yarn.size()):
+		var yb: Dictionary = yarn[k]
+		var v: Vector2 = yb.v
+		if v.length_squared() < 4.0:
+			continue
+		var p: Vector2 = yb.p + v * delta
+		# off the rambla's sides, back toward the middle
+		if p.x < CORRIDOR_L + 70.0 or p.x > CORRIDOR_R - 70.0:
+			p.x = clampf(p.x, CORRIDOR_L + 70.0, CORRIDOR_R - 70.0)
+			v.x = -v.x * 0.6
+		v *= exp(-YARN_DRAG * delta)
+		yb.p = p
+		yb.v = v
+		yb.spin = float(yb.spin) + v.length() * delta / BALL_R
+
+
+func _basket_bumped(bp: Vector2, dog_p: Vector2) -> bool:
+	if dog_p.distance_to(bp) < BASKET_R + 16.0:
+		return true
+	var l = main.leash
+	if l == null or l.detached:
+		return false
+	var r_sq := (BASKET_R + 6.0) * (BASKET_R + 6.0)
+	for lp: Vector2 in l.pts:
+		if lp.distance_squared_to(bp) < r_sq:
+			return true
+	return false
+
+
+func _tip_basket(i: int) -> void:
+	basket_tipped[i] = true
+	basket_t[i] = -1.0
+	var bp: Vector2 = YARN_BASKETS[i]
+	# out across the rambla and up it, ahead of the pair, where he walks
+	var out_dir := Vector2(-signf(bp.x - 640.0), -0.55).normalized()
+	Sfx.play("bump", 0.9, -3.0)
+	Sfx.play("pop", 1.2, -6.0)
+	main.feed.say("BASKET DOWN! YARN EVERYWHERE", EventFeed.Tone.PLAIN)
+	for k in range(YARN_BALLS):
+		var spread := lerpf(-0.65, 0.65, float(k) / float(YARN_BALLS - 1))
+		var v := out_dir.rotated(spread) * YARN_ROLL * (0.8 + 0.2 * float((k + i) % 2))
+		yarn.append({"p": bp + out_dir * BASKET_R * 0.6, "v": v,
+			"col": YARN_COLS[(i * YARN_BALLS + k) % YARN_COLS.size()], "spin": 0.0, "from": bp})
+	_burst(bp + out_dir * 10.0, 8, WICKER, 60.0, 180.0, 3.0, 0.6, false, 160.0)
+
+
+# The nearest loose ball he can see from the prowl, or -1.
+func _yarn_in_reach() -> int:
+	if yarn_cd > 0.0:
+		return -1
+	var best := -1
+	var best_d := YARN_NOTICE
+	for k in range(yarn.size()):
+		var d: float = (yarn[k].p as Vector2).distance_to(pos)
+		if d < best_d:
+			best_d = d
+			best = k
+	return best
+
+
+# After the ball: he stalks it, and when he reaches it he bats it on, away
+# from her, so his back stays to her. When the chase runs out the ball is
+# wool on the paving and he remembers the fight.
+func _tick_yarn_chase(delta: float, dog_p: Vector2) -> void:
+	state_t -= delta
+	bat_cd -= delta
+	if yarn_ball < 0 or yarn_ball >= yarn.size():
+		yarn_cd = YARN_COOLDOWN
+		transition_to(State.PROWL)
+		return
+	var yb: Dictionary = yarn[yarn_ball]
+	var bp: Vector2 = yb.p
+	var to_ball := bp - pos
+	if to_ball.length() > 1.0:
+		face_dir = face_dir.slerp(to_ball.normalized(), minf(6.0 * delta, 1.0)).normalized()
+	if to_ball.length() > YARN_PAW:
+		pos += to_ball.normalized() * minf(YARN_SPEED * delta, to_ball.length() - YARN_PAW)
+	elif bat_cd <= 0.0:
+		# straight on away from her: he follows it, and turns his back
+		bat_cd = 0.7
+		var away := bp - dog_p
+		yb.v = (away.normalized() if away.length() > 1.0 else face_dir) * YARN_BAT
+		Sfx.play("pop", 1.5, -10.0)
+	# a little hop as he goes after it
+	hop_z = absf(sin(act_t * 7.0)) * 6.0
+	pos.x = clampf(pos.x, CORRIDOR_L + 70.0, CORRIDOR_R - 70.0)
+	pos.y = maxf(pos.y, PEDESTAL_POS.y + 160.0)
+	update_leg_positions()
+	if check_human_pummel():
+		hop_z = 0.0
+		_pummel()
+		transition_to(State.STUNNED)
+		stun_pummeled = true
+		return
+	if state_t <= 0.0:
+		hop_z = 0.0
+		_unravel(yarn_ball)
+		yarn_cd = YARN_COOLDOWN
+		transition_to(State.PROWL)
+
+
+# The ball he was after is wool on the paving now.
+func _unravel(k: int) -> void:
+	if k < 0 or k >= yarn.size():
+		return
+	yarn_tangles.append({"p": yarn[k].p, "col": yarn[k].col, "a": fx.randf() * TAU})
+	yarn.remove_at(k)
+	yarn_ball = -1
+
+
+func tail_pos() -> Vector2:
+	return pos - face_dir * 80.0 + face_dir.orthogonal() * 30.0
 
 
 # On his plinth with no fight left, he still swats at her while she ties him.
@@ -1221,6 +1440,11 @@ func on_bark_action(bark_pos: Vector2) -> bool:
 			Sfx.play("bark", 1.25)
 			transition_to(State.PURR)
 			return true
+	elif state == State.YARN and not tail_tugged:
+		var tail := tail_pos()
+		if bark_pos.distance_to(tail) < TAIL_REACH or dog_p.distance_to(tail) < TAIL_REACH:
+			_tail_tug()
+			return true
 	elif state == State.STUNNED and not stun_booped:
 		var nose := pos + face_dir * 48.0
 		if bark_pos.distance_to(nose) < BOOP_REACH or dog_p.distance_to(nose) < BOOP_REACH:
@@ -1230,6 +1454,25 @@ func on_bark_action(bark_pos: Vector2) -> bool:
 			main.float_text(nose, "boop! +3", Color(1.0, 0.88, 0.25))
 			return true
 	return false
+
+
+# A bark on his tail while he is after the yarn: he yowls, spins round and is
+# dazed, and the ball rolls on without him.
+func _tail_tug() -> void:
+	tail_tugged = true
+	Sfx.play("hiss", 0.8, -2.0)
+	Sfx.play("gat_clang", 1.3, -6.0)
+	main.feed.say("TAIL TUG!", EventFeed.Tone.LOUD)
+	main.combo.add("TAIL", 6)
+	main.award_points(6, "tail tug! +6")
+	main.shake_t = maxf(float(main.shake_t), 0.7)
+	_burst(tail_pos(), 10, Color(1.0, 0.9, 0.45), 160.0, 320.0, 2.5, 0.3, true)
+	yarn_ball = -1
+	yarn_cd = YARN_COOLDOWN + STUN_TIME
+	hop_z = 0.0
+	damage_boss(TAIL_DAMAGE)
+	_big_hit()
+	transition_to(State.STUNNED)
 
 
 # The banner while he is about: what to do about him right now. Empty lets the
@@ -1256,6 +1499,8 @@ func fight_status() -> String:
 			return "POUNCE! LEASH ACROSS HIS LEAP" if near else ""
 		State.STUNNED:
 			return Prompts.fill("HE'S DAZED! {bark} ON HIS NOSE") if near else ""
+		State.YARN:
+			return Prompts.fill("HE'S AFTER THE YARN! {bark} ON HIS TAIL") if near else ""
 		State.RETREAT:
 			return "AFTER HIM! TO THE PLAÇA"
 		State.ENRAGE:
@@ -1480,6 +1725,7 @@ static func draw_live(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	var gat: BossGat = m.boss_gat
 	var t: float = AnimClock.msec() / 1000.0
 	gat.draw_ground_marks(c, vt, vb)
+	gat.draw_market(c, vt, vb, t)
 	gat.draw_crowd(c, vt, vb, t)
 	if gat.pos.y > vt - 240.0 and gat.pos.y < vb + 240.0:
 		gat.draw_gat(c, t)
@@ -1511,6 +1757,115 @@ func draw_ground_marks(c: Object, vt: float, vb: float) -> void:
 			sb.line(mid, mid + d.rotated(0.6 - float(i % 3) * 0.5) * 14.0, col, 1.5)
 		sb.circle(cp, 7.0, Color(col.r, col.g, col.b, col.a * 0.6))
 	sb.flush(c)
+
+
+# The yarn stalls from above: a trestle table of skeins under the edge of a
+# striped awning, a string of bulbs along it after dark, the wicker basket in
+# front; the basket rocking with a ball peeking over its rim, or on its side
+# with the wool trailing from it to each loose ball.
+func draw_market(c: Object, vt: float, vb: float, t: float) -> void:
+	var sb := ShapeBatch.new()
+	var lit: float = Game.lamp_glow()
+	for i in range(YARN_BASKETS.size()):
+		var bp: Vector2 = YARN_BASKETS[i]
+		if bp.y < vt - 120.0 or bp.y > vb + 120.0:
+			continue
+		var side := signf(bp.x - 640.0)
+		var tr := _stall_rect(bp)
+		# the table and its skeins
+		sb.rect(Rect2(tr.position + Shade.light * 6.0, tr.size), SHADOW)
+		sb.rect(tr.grow(2.0), TABLE_WOOD.darkened(0.35))
+		sb.rect(tr, TABLE_WOOD)
+		for r in range(5):
+			for col in range(2):
+				var sk := tr.position + Vector2(11.0 + float(col) * 20.0, 12.0 + float(r) * 17.0)
+				var yc: Color = YARN_COLS[(r * 2 + col + i) % YARN_COLS.size()]
+				sb.circle(sk + Vector2(0.0, 1.5), 7.0, yc.darkened(0.35))
+				sb.circle(sk, 6.5, yc)
+				sb.line(sk + Vector2(-4.0, -2.0), sk + Vector2(4.0, 2.0), yc.lightened(0.25), 1.2)
+		# the awning's front edge along the back of the table, scalloped stripes
+		var ax := tr.end.x - 8.0 if side > 0.0 else tr.position.x - 4.0
+		var stripe := tr.size.y / 6.0
+		for k in range(6):
+			var y0 := tr.position.y + float(k) * stripe
+			sb.rect(Rect2(ax, y0, 12.0, stripe), AWNING_A if k % 2 == 0 else AWNING_B)
+			sb.circle(Vector2(ax + (12.0 if side < 0.0 else 0.0), y0 + stripe * 0.5), stripe * 0.5,
+				AWNING_A if k % 2 == 0 else AWNING_B)
+		if lit > 0.0:
+			# the string of bulbs along the awning
+			for k in range(5):
+				var lb := Vector2(ax + 6.0, tr.position.y + 8.0 + float(k) * (tr.size.y - 16.0) / 4.0)
+				sb.glow(lb, 16.0, Color(1.0, 0.86, 0.55, 0.30 * lit), 0.2)
+				sb.circle(lb, 2.6, Color(1.0, 0.95, 0.75).lerp(Color(0.5, 0.45, 0.35), 1.0 - lit))
+		# the basket
+		if not basket_tipped[i]:
+			var rock := 0.0
+			var peek := 0.0
+			if basket_t[i] >= 0.0:
+				var k := clampf(basket_t[i] / YARN_WARN, 0.0, 1.0)
+				rock = sin(basket_t[i] * (22.0 + 18.0 * k)) * (2.0 + 5.0 * k)
+				peek = k
+			var c0 := bp + Vector2(rock, 0.0)
+			sb.circle(c0 + Shade.light * 4.0, BASKET_R + 1.0, SHADOW)
+			sb.circle(c0, BASKET_R, WICKER_DARK)
+			sb.circle(c0, BASKET_R - 3.0, WICKER)
+			for w in range(8):
+				var a := float(w) * TAU / 8.0
+				sb.line(c0 + Vector2.from_angle(a) * (BASKET_R - 6.0), c0 + Vector2.from_angle(a) * (BASKET_R - 1.0), WICKER_DARK, 1.4)
+			sb.circle(c0, BASKET_R - 6.0, WICKER_DARK.darkened(0.3))
+			for k in range(YARN_BALLS):
+				var bc := c0 + Vector2.from_angle(float(k) * TAU / float(YARN_BALLS) + 0.4) * 6.0
+				_yarn_ball(sb, bc, BALL_R * 0.85, YARN_COLS[(i * YARN_BALLS + k) % YARN_COLS.size()], float(k))
+			if peek > 0.0:
+				# the one that is coming: up over the rim, toward the rambla
+				var pc := c0 + Vector2(-side * (BASKET_R - 4.0) * peek, -4.0 * peek)
+				_yarn_ball(sb, pc, BALL_R * (0.85 + 0.25 * peek), YARN_COLS[(i * YARN_BALLS) % YARN_COLS.size()], t * 6.0)
+		else:
+			# on its side, its mouth to the rambla
+			var mouth := Vector2(-side, 0.0)
+			var body := bp + mouth * 2.0
+			var pts := PackedVector2Array()
+			for k in range(14):
+				var a := float(k) * TAU / 14.0
+				pts.append(body + Vector2(cos(a) * BASKET_R * 1.05, sin(a) * BASKET_R * 0.8))
+			sb.polygon(pts, WICKER_DARK)
+			for k in range(4):
+				var x := body.x - side * (-12.0 + float(k) * 7.0)
+				sb.line(Vector2(x, body.y - BASKET_R * 0.7), Vector2(x, body.y + BASKET_R * 0.7), WICKER, 3.0)
+			sb.circle(body + mouth * BASKET_R * 0.7, BASKET_R * 0.55, Color(0.16, 0.11, 0.07))
+	# the wool on the paving where he gave up on a ball
+	for tg: Dictionary in yarn_tangles:
+		var p: Vector2 = tg.p
+		if p.y < vt - 60.0 or p.y > vb + 60.0:
+			continue
+		var col: Color = tg.col
+		var a: float = tg.a
+		for k in range(6):
+			var d := Vector2.from_angle(a + float(k) * 1.9)
+			sb.line(p + d * 6.0, p + d.rotated(1.2) * 18.0 + d * 8.0, col.darkened(0.15), 2.0)
+		sb.circle(p, 4.0, col)
+	# the loose balls, each still trailing its wool back to the basket
+	for yb: Dictionary in yarn:
+		var p: Vector2 = yb.p
+		if p.y < vt - 80.0 or p.y > vb + 80.0:
+			continue
+		var col: Color = yb.col
+		var from: Vector2 = yb.from
+		var mid := from.lerp(p, 0.5) + (p - from).orthogonal().normalized() * 10.0
+		sb.line(from, mid, col.darkened(0.1), 1.6)
+		sb.line(mid, p, col.darkened(0.1), 1.6)
+		sb.circle(p + Shade.light * 3.0, BALL_R, SHADOW)
+		_yarn_ball(sb, p, BALL_R, col, float(yb.spin))
+	sb.flush(c)
+
+
+# One ball of yarn: the ball, its wound strands turning with its roll.
+func _yarn_ball(sb: ShapeBatch, p: Vector2, r: float, col: Color, spin: float) -> void:
+	sb.circle(p, r, col.darkened(0.3))
+	sb.circle(p - Shade.light * 1.0, r - 1.5, col)
+	for k in range(3):
+		var d := Vector2.from_angle(spin + float(k) * 1.05)
+		sb.line(p - d * (r - 2.5), p + d * (r - 2.5) + d.orthogonal() * 2.0, col.lightened(0.3), 1.2)
 
 
 # The onlookers: they lean away when he swats or pounces, and jump with their
@@ -1621,6 +1976,9 @@ func draw_gat(c: Object, t: float) -> void:
 		var r: float = float(dr.r) * (0.3 + frac * 0.7)
 		var base: Color = dr.get("col", DUST_COLOR)
 		c.draw_arc(dr.pos, r, 0.0, TAU, 32, Color(base.r, base.g, base.b, (1.0 - frac) * 0.6), 4.0)
+	if state == State.YARN and not tail_tugged:
+		# his tail is the target: a ring round it, like the legs at the end
+		c.draw_arc(tail_pos(), 22.0 + sin(t * 10.0) * 3.0, 0.0, TAU, 20, Color(1.0, 0.90, 0.20, 0.85), 3.0)
 	if state == State.ROAR:
 		var ring_col := Color(0.98, 0.85, 0.30, 0.35 + sin(t * 8.0) * 0.15)
 		c.draw_arc(cur_pos, 92.0, 0.0, TAU, 40, ring_col, 3.0)
@@ -1692,7 +2050,8 @@ func draw_upright_gat(c: Object, ground: Vector2, t: float) -> void:
 	var back := -face
 	var side := face.orthogonal()
 	var angry := phase == 2 and hp > 0.0
-	var lash := sin(t * (9.0 if angry else 3.0)) * (12.0 if angry else 4.0)
+	var keen := angry or state == State.YARN
+	var lash := sin(t * (9.0 if keen else 3.0)) * (12.0 if keen else 4.0)
 	var tail_pts := PackedVector2Array([
 		at + back * 45.0,
 		at + back * 62.0 + side * 14.0,
@@ -1820,4 +2179,14 @@ func draw_toppled_gat(c: Object, at: Vector2, t: float) -> void:
 # The street after dark (world/night_fronts.gd): this walk draws its own
 # edges, so it says where its lit doorways and shopfronts are.
 static func night_fronts(m: Node2D) -> Array[Dictionary]:
-	return NightFronts.along_edges(m, float(m.START_Y), float(m.GATE_Y), 190.0, 0.0, 1)
+	var out := NightFronts.along_edges(m, float(m.START_Y), float(m.GATE_Y), 190.0, 0.0, 1)
+	# the yarn stalls are lit like a shopfront, into the rambla; a key with no
+	# lit window up behind, as a stall has no upstairs
+	for bp: Vector2 in YARN_BASKETS:
+		var side := signf(bp.x - 640.0)
+		var k := 0
+		while NightFronts._hash(k, 2.0) < NightFronts.ROOF_SHARE:
+			k += 1
+		var tr := _stall_rect(bp)
+		out.append(NightFronts.front(Vector2(tr.end.x if side > 0.0 else tr.position.x, bp.y), -side, "shop", k))
+	return out
