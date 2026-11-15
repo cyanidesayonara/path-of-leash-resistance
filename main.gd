@@ -12454,21 +12454,29 @@ func _draw_world() -> void:
 	# break the outline, a lit side, and a hint of trunk and limbs showing
 	# through the gaps.
 	if lvl == "street":
-		# parallel bike lane + far shoulder
-		_wc.draw_rect(Rect2(BLANE_L, GATE_Y - 40.0, BLANE_R - BLANE_L, bottom - GATE_Y), Color(0.4, 0.31, 0.29))
+		# parallel bike lane + far shoulder: two-way, in the red-brown the
+		# pavement lanes are laid in, white edges, a dashed centre, and the
+		# bicycle with its arrow each way
+		var bl_col := Color(0.4, 0.31, 0.29)
+		var bl_line := Color(0.90, 0.88, 0.82, 0.78)
+		var bl_mid := (BLANE_L + BLANE_R) / 2.0
+		_wc.draw_rect(Rect2(BLANE_L, GATE_Y - 40.0, BLANE_R - BLANE_L, bottom - GATE_Y), bl_col)
 		_wc.draw_rect(Rect2(BLANE_R, GATE_Y - 40.0, SHOULDER_R - BLANE_R, bottom - GATE_Y), COL_SIDEWALK)
+		var lane_top := maxf(GATE_Y, vt - 4.0)
+		var lane_bot := minf(START_Y + 200.0, vb + 4.0)
+		if lane_bot > lane_top:
+			_wc.rect(Rect2(BLANE_L + 4.0, lane_top, 2.0, lane_bot - lane_top), bl_line)
+			_wc.rect(Rect2(BLANE_R - 6.0, lane_top, 2.0, lane_bot - lane_top), bl_line)
 		var dy := minf(START_Y + 200.0, vb + 64.0 - fmod(vb, 64.0))
 		while dy > GATE_Y and dy > vt - 64.0:
 			if dy < vb and dy > vt:
-				_wc.draw_line(Vector2((BLANE_L + BLANE_R) / 2.0, dy), Vector2((BLANE_L + BLANE_R) / 2.0, dy - 26.0), Color(0.85, 0.82, 0.75, 0.5), 2.0)
+				_wc.draw_line(Vector2(bl_mid, dy), Vector2(bl_mid, dy - 26.0), bl_line, 2.0)
 			dy -= 64.0
 		var gy := START_Y - 100.0
 		while gy > GATE_Y:
-			if gy < vb and gy > vt:
-				var cxx := (BLANE_L + BLANE_R) / 2.0 - 14.0
-				_wc.draw_circle(Vector2(cxx - 7, gy), 4.0, Color(1, 1, 1, 0.3))
-				_wc.draw_circle(Vector2(cxx + 7, gy), 4.0, Color(1, 1, 1, 0.3))
-				_wc.draw_line(Vector2(cxx - 7, gy), Vector2(cxx + 7, gy - 6), Color(1, 1, 1, 0.3), 2.0)
+			if gy < vb + 40.0 and gy > vt - 40.0:
+				BikePaint.glyph(_wc, Vector2(bl_mid + 20.0, gy), Vector2.UP, bl_line, bl_col)
+				BikePaint.glyph(_wc, Vector2(bl_mid - 20.0, gy - 90.0), Vector2.DOWN, bl_line, bl_col)
 			gy -= 600.0
 		_wc.draw_line(Vector2(BLANE_L, bottom), Vector2(BLANE_L, GATE_Y), COL_SEAM, 3.0)
 		_wc.draw_line(Vector2(BLANE_R, bottom), Vector2(BLANE_R, GATE_Y), COL_SEAM, 2.0)
@@ -12545,6 +12553,15 @@ func _draw_world() -> void:
 			x += 70.0
 		_wc.draw_line(Vector2(-400, ly - LANE_HALF), Vector2(1700, ly - LANE_HALF), COL_STRIPE, 2.0)
 		_wc.draw_line(Vector2(-400, ly + LANE_HALF), Vector2(1700, ly + LANE_HALF), COL_STRIPE, 2.0)
+		# it is a bike lane: where it crosses the walk, the cyclists'
+		# crossing in white squares either side, and the bicycle each way
+		var xing_col := Color(0.92, 0.90, 0.84, 0.88)
+		for e: float in [-1.0, 1.0]:
+			BikePaint.squares(_wc, Vector2(sw_l - 30.0, ly + e * (LANE_HALF - 10.0)),
+				Vector2(sw_r + 30.0, ly + e * (LANE_HALF - 10.0)), 9.0, xing_col)
+		for gx: float in [sw_l - 70.0, sw_r + 40.0]:
+			BikePaint.glyph(_wc, Vector2(gx, ly - 32.0), Vector2.LEFT, xing_col, COL_ROAD)
+			BikePaint.glyph(_wc, Vector2(gx + 30.0, ly + 32.0), Vector2.RIGHT, xing_col, COL_ROAD)
 		var ls: Dictionary = lane_state[i]
 		if ls.phase == 1 and fmod(AnimClock.msec() / 150.0, 2.0) < 1.0:
 			var wx := 40.0 if ls.dir > 0 else 1240.0

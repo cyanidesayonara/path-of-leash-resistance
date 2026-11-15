@@ -381,6 +381,60 @@ static func tick(m: Node2D, delta: float) -> void:
 		t.wait = t.rng.randf_range(TRAM_GAP_MIN, TRAM_GAP_MAX)
 
 
+# --- riders: the two bike lanes and the lights at the crossings --------------------
+
+# The lights at the crossings, on the walk's own clock so riders and the
+# lamps agree in every run: green for the promenade, amber, then red while
+# the cross street goes. 0 red, 1 amber, 2 green.
+const LIGHT_CYCLE := 14.0
+const GREEN_T := 6.0
+const AMBER_T := 1.0
+const STOP_BACK := 8.0                 # a rider's stop line, this far short of the roadway
+const OVERRUN := 16.0                  # how far over the line a stopping rider may roll
+const AMBER_GO := 70.0                 # nearer the line than this on amber, they ride on
+
+
+static func light(m: Node2D) -> int:
+	var ph := fmod(float(m.get("elapsed")), LIGHT_CYCLE)
+	if ph < GREEN_T:
+		return 2
+	return 1 if ph < GREEN_T + AMBER_T else 0
+
+
+# Riders on the Diagonal keep to its two bike lanes, inside the tree lines,
+# both of them two-way: a commuter, a courier, a Bicing, now and then a kid.
+static func rider_lane(_m: Node2D, _up: bool) -> Dictionary:
+	var kid := randf() < 0.12
+	var speed := randf_range(80.0, 120.0) if kid else randf_range(280.0, 400.0)
+	var bx := BIKE_L if randf() < 0.5 else BIKE_R
+	var lo := bx + 7.0
+	var hi := bx + BIKE_W - 7.0
+	return {"kid": kid, "speed": speed, "x": randf_range(lo, hi), "lo": lo, "hi": hi}
+
+
+# How far a rider at `p` riding along `fwd` is from the stop line they must
+# stop at, or -1 to ride on: the lights at the next crossing ahead, red, or
+# amber with room to stop. A rider who has come a touch over it while
+# stopping still stops there; one well over (in the crossing) rides on.
+static func rider_hold(m: Node2D, p: Vector2, fwd: Vector2) -> float:
+	if absf(fwd.y) < 0.5:
+		return -1.0
+	var lt := light(m)
+	if lt == 2:
+		return -1.0
+	var best := -1.0
+	for y0: float in CROSSINGS:
+		var line_y := y0 - signf(fwd.y) * (CROSS_HALF + STOP_BACK)
+		var d := (line_y - p.y) * signf(fwd.y)
+		if d < -OVERRUN or d > 600.0:
+			continue
+		if lt == 1 and d < AMBER_GO:
+			continue
+		if best < 0.0 or d < best:
+			best = maxf(d, 0.0)
+	return best
+
+
 static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> bool:
 	var p: Vector2 = m.dog.global_position if pos == Vector2.ZERO else pos
 	if not m.diagonal_kiosk_barked and KIOSK.grow(70.0).has_point(p):
@@ -1191,8 +1245,7 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 				wc.glow(sp, 24.0, Color(SIGNAL_ON.r, SIGNAL_ON.g, SIGNAL_ON.b, 0.35 * pulse))
 		y -= 380.0
 	# the traffic lights at the corners of each road across the avenue
-	var ph := fmod(AnimClock.msec() / 1000.0, 14.0)
-	var on := 2 if ph < 6.0 else (1 if ph < 7.0 else 0)
+	var on := light(m)
 	for y0: float in CROSSINGS:
 		if y0 + 120.0 < vt or y0 - 120.0 > vb:
 			continue
