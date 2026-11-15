@@ -4,8 +4,8 @@ extends RefCounted
 # WALK: L'EIXAMPLE, the grid of cut corners round the unfinished basilica.
 #
 # One street of Cerdà's grid, walked block by block towards the basilica: the
-# street is one of the new green axes, paved wall to wall, with panot flower
-# tiles along the facades, a granite middle where the road was, plane trees
+# street is one of the new green axes, paved wall to wall, with Gaudí's hexagonal
+# panots along the facades, a granite middle where the road was, plane trees
 # down both sides and planted islands with benches. Every block ends in a
 # crossing where all four corners are cut off at forty-five degrees (the
 # chamfers, els xamfrans), so the street opens into an octagon at each
@@ -22,6 +22,7 @@ extends RefCounted
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
+const Panot := preload("res://world/panot.gd")
 const EixampleTour := preload("res://systems/eixample_tour.gd")
 const NightFronts := preload("res://world/night_fronts.gd")
 
@@ -53,9 +54,10 @@ const ISLAND_W := 74.0
 const CORNER_R := 40.0
 
 # --- colours -----------------------------------------------------------------------
-const PANOT := Color(0.71, 0.68, 0.63)
-const PANOT_JOINT := Color(0.60, 0.57, 0.52)
-const PANOT_FLOWER := Color(0.64, 0.61, 0.56)
+# the blue-grey of Passeig de Gràcia's hexagons
+const PANOT := Color(0.60, 0.65, 0.69)
+const PANOT_INK := Color(0.08, 0.14, 0.22, 0.13)
+const PANOT_SHINE := Color(0.92, 0.97, 1.0, 0.10)
 const GRANITE := Color(0.66, 0.65, 0.62)
 const GRANITE_LIT := Color(0.71, 0.70, 0.67)
 const GRANITE_JOINT := Color(0.56, 0.55, 0.52)
@@ -342,7 +344,7 @@ static func _draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, _bottom:
 	# the channels either side of it, where the kerbs used to be
 	wc.rect(Rect2(gl - 8.0, lo, 8.0, hi - lo), RIGOLA)
 	wc.rect(Rect2(gr, lo, 8.0, hi - lo), RIGOLA)
-	# panot: the four-petal flower tile, a joint grid and one flower per tile
+	# panot: Gaudí's hexagon, with its reliefs
 	_panot(wc, lo, hi)
 	# the cross streets: asphalt across the octagon, a kerb each side, the
 	# zebra where the walk crosses and a green bike lane down the middle
@@ -402,54 +404,15 @@ static func _islands(wc: ShapeBatch, lo: float, hi: float) -> void:
 
 
 static func _panot(wc: ShapeBatch, lo: float, hi: float) -> void:
-	# the four-petal flower tile: one diamond per tile and the joints between
-	# them. Joints run the whole length of a straight stretch as one line;
-	# only the chamfers, whose width changes, are jointed row by row.
-	const T := 40.0
+	# Gaudí's hexagon, the panot of Passeig de Gràcia: from the facades to
+	# the channel either side of the granite, widening with the chamfers and
+	# stopping at the cross streets' asphalt (world/panot.gd)
 	var gl := CX - HALF + SIDEWALK + 14.0
 	var gr := CX + HALF - SIDEWALK - 14.0
-	var yy := floorf(lo / T) * T
-	var run_top := yy
-	var run_on := false
-	while yy < hi:
-		var mid := yy + T * 0.5
-		var hh := half_at(mid)
-		var straight := hh <= HALF + 0.5
-		var crossing := in_cross_street(mid)
-		# close a straight run: its vertical joints, one line each
-		if run_on and not straight:
-			_panot_columns(wc, run_top, yy, CX - HALF, gl, gr, CX + HALF)
-			run_on = false
-		if straight and not run_on:
-			run_top = yy
-			run_on = true
-		if not crossing:
-			var spans: Array[Vector2] = [Vector2(CX - hh, gl), Vector2(gr, CX + hh)]
-			if not straight:
-				spans = [Vector2(CX - hh, CX + hh)]
-			for sp: Vector2 in spans:
-				wc.line(Vector2(sp.x, yy), Vector2(sp.y, yy), PANOT_JOINT, 1.2)
-				var xx := CX - floorf((CX - sp.x) / T) * T
-				while xx < sp.y:
-					if not straight and xx > sp.x:
-						wc.line(Vector2(xx, yy), Vector2(xx, yy + T), PANOT_JOINT, 1.2)
-					var c := Vector2(xx + T * 0.5, mid)
-					if c.x > sp.x + 10.0 and c.x < sp.y - 10.0:
-						wc.quad(c + Vector2(0, -12), c + Vector2(12, 0), c + Vector2(0, 12), c + Vector2(-12, 0), PANOT_FLOWER)
-					xx += T
-		yy += T
-	if run_on:
-		_panot_columns(wc, run_top, yy, CX - HALF, gl, gr, CX + HALF)
-
-
-static func _panot_columns(wc: ShapeBatch, top: float, bot: float, x0: float, gl: float, gr: float, x1: float) -> void:
-	const T := 40.0
-	for sp: Vector2 in [Vector2(x0, gl), Vector2(gr, x1)]:
-		var xx := CX - floorf((CX - sp.x) / T) * T
-		while xx < sp.y:
-			if xx > sp.x:
-				wc.line(Vector2(xx, top), Vector2(xx, bot), PANOT_JOINT, 1.2)
-			xx += T
+	Panot.gaudi(wc, func(y: float) -> Vector2:
+		return Vector2(INF, -INF) if in_cross_street(y) else Vector2(CX - half_at(y) + 4.0, gl), lo, hi, PANOT_INK, PANOT_SHINE)
+	Panot.gaudi(wc, func(y: float) -> Vector2:
+		return Vector2(INF, -INF) if in_cross_street(y) else Vector2(gr, CX + half_at(y) - 4.0), lo, hi, PANOT_INK, PANOT_SHINE)
 
 
 static func _pond(wc: ShapeBatch) -> void:
