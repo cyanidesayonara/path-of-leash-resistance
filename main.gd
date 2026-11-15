@@ -5831,7 +5831,9 @@ func _draw_ground_detail(vt: float, vb: float) -> void:
 				# a damp patch / old stain
 				_wc.draw_circle(p, float(d.len) * 0.35, stain)
 			4:
-				# a drain grate set in the paving: a dark frame and its slots
+				# a drain grate set in the paving: a dark frame and its slots,
+				# square to the slabs (and so to the walk), never at an angle
+				dir = Vector2.from_angle(snappedf(float(d.rot), PI * 0.5))
 				var dq := PackedVector2Array([p + dir * 9.0 + dir.orthogonal() * 6.0, p + dir * 9.0 - dir.orthogonal() * 6.0,
 					p - dir * 9.0 - dir.orthogonal() * 6.0, p - dir * 9.0 + dir.orthogonal() * 6.0])
 				_wc.draw_colored_polygon(dq, Color(0.20, 0.20, 0.22, 0.75))

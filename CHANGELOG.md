@@ -11,6 +11,7 @@ Append-only session history, newest first.
 - From playing it (Santtu): a bike lane inside each tree line, red asphalt between white lines; and a road straight across the promenade and the track at each of three crossings (`CROSSINGS`), with a zebra, stop lines and traffic lights that cycle. No traffic drives them yet. Trees stay off the roads; the track handles as pavement where a road crosses it.
 - Moved for the lanes and the tram: the kiosk stands inside the left bike lane (x 446, was 372), the benches a little further in, and the two track-side pilones stand on the grass edge beside the rails, not in the tram's path. No tufts grow where the tram runs (`grass_blocked`); they stood through its roof.
 - The side roads have a parking lane: cars and rows of motos, none in a street's mouth.
+- Every walk: a drain grate in the paving sits square to the slabs. It was drawn at a random angle (`main._draw_ground_detail`), which showed on the turned walk as a grate lying across the path.
 
 ## 2026-11-15 - La Diagonal: the first walk seen at an angle, and its tram
 
