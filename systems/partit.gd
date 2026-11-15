@@ -1200,14 +1200,12 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 				wc.line(drummer(i) + Vector2(8.0, s * 7.0), tip, Color(0.86, 0.78, 0.56), 2.0)
 
 
-# A cast-iron bollard: what a dog marks on a city corner.
-static func draw_bollard(_m: Node2D, wc: ShapeBatch, h: Dictionary) -> void:
+# A cast-iron bollard: what a dog marks on a city corner (main's pilona,
+# as on every town walk).
+static func draw_bollard(m: Node2D, wc: ShapeBatch, h: Dictionary) -> void:
 	var p: Vector2 = h.pos
 	var done: bool = h.done
-	wc.circle(p + Shade.light * 7.0, 8.0, SHADOW)
-	wc.circle(p, 8.5, Color(0.22, 0.20, 0.18))
-	wc.circle(p, 6.5, Color(0.36, 0.30, 0.26) if not done else Color(0.40, 0.36, 0.22))
-	wc.circle(p + Vector2(-2, -2), 2.6, Color(0.56, 0.50, 0.44))
+	m._draw_pilona(wc, p, done)
 	if not done and float(h.progress) > 0.0:
 		wc.draw_arc(p, 14.0, -PI / 2.0, -PI / 2.0 + TAU * float(h.progress) / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
 

@@ -9369,6 +9369,39 @@ func _draw_paperera(bn: Vector2) -> void:
 	_wc.draw_line(bn + Vector2(-3.4, 2.8), bn + Vector2(-0.6, 4.2), Color(0.78, 0.20, 0.18), 2.4)
 
 
+# On a Barcelona street the thing a dog marks is a pilona: the knee-high
+# cast-iron bollard on every corner, near black, a collar ring under its
+# domed head. Seen from above: base, barrel, collar, dome. The rim on the
+# lit side keeps it readable on dark and night paving. Marked, a wet stain
+# spreads round its foot.
+const PILONA_IRON := Color(0.17, 0.16, 0.15)
+const PILONA_EDGE := Color(0.07, 0.07, 0.07)
+
+
+func _draw_pilona(c: Object, p: Vector2, done: bool) -> void:
+	if done:
+		c.draw_set_transform(p + Vector2(3.0, 5.0), 0.0, Vector2(1.25, 0.8))
+		c.draw_circle(Vector2.ZERO, 15.0, Color(0.30, 0.27, 0.12, 0.30))
+		c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	cast_shadow(c, p, 8.0, 24.0)
+	# the base it is bolted into the paving with
+	c.draw_circle(p + Vector2(0, 2), 10.5, PILONA_EDGE)
+	c.draw_circle(p + Vector2(0, 2), 9.0, PILONA_IRON.darkened(0.15))
+	# the barrel, then the collar ring under the head
+	c.draw_circle(p, 8.0, PILONA_EDGE)
+	c.draw_circle(p, 7.0, PILONA_IRON)
+	c.draw_circle(p - Shade.SUN * 1.2, 6.4, PILONA_IRON.lightened(0.18))
+	# a rim of light on the lit side of the barrel, so it reads on night paving
+	var lit := (-Shade.SUN).angle()
+	c.draw_arc(p, 7.4, lit - 1.1, lit + 1.1, 10, Color(0.70, 0.68, 0.62, 0.75), 1.4)
+	c.draw_circle(p, 5.2, PILONA_EDGE)
+	# the domed head, lit on one side
+	var head := PILONA_IRON.lightened(0.08) if not done else PILONA_IRON.darkened(0.1)
+	c.draw_circle(p, 4.6, head)
+	c.draw_circle(p - Shade.SUN * 1.3, 2.6, PILONA_IRON.lightened(0.42))
+	c.draw_circle(p - Shade.SUN * 2.0, 1.1, Color(0.86, 0.84, 0.80, 0.9))
+
+
 # In a park the thing a dog marks is a tree stump: sawn flat, its rings
 # showing, moss on the shaded side, a fungus bracket. Marked, it darkens.
 func _draw_mark_stump(p: Vector2, done: bool) -> void:
@@ -12499,9 +12532,10 @@ func _draw_world() -> void:
 		for ri in range(2):
 			_wc.draw_line(m + Vector2(-6.0, 2.0 + float(ri) * 7.0), m + Vector2(6.0, 2.0 + float(ri) * 7.0),
 				Color(0.22, 0.21, 0.20), 2.0)
-	# hydrants: cast iron, and the most important object in the world if you
-	# are a dog. Base flange, barrel, bonnet, two side outlets and a chain -
-	# it was two flat circles and read as a red dot.
+	# the marking spots ("hydrants" in the code): on a town walk a pilona, the
+	# city's cast-iron bollard, the most important object in the world if you
+	# are a dog; a walk with its own (draw_bollard) or a park, beach, hall or
+	# plaça draws what gets marked there.
 	for h in hydrants:
 		var hp: Vector2 = h.pos
 		if hp.y < vt - 40.0 or hp.y > vb + 40.0:
@@ -12565,28 +12599,7 @@ func _draw_world() -> void:
 			if not h.done and h.progress > 0.0:
 				_wc.draw_arc(hp, 17.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
 			continue     # the corner of the statue's plinth, drawn with it
-		var c := Color(0.45, 0.4, 0.38) if h.done else Color(0.68, 0.23, 0.18)
-		cast_shadow(_wc, hp, 8.0, 26.0)
-		# the flange it is bolted down with
-		_wc.draw_circle(hp + Vector2(0, 3), 12.0, c.darkened(0.45))
-		_wc.draw_circle(hp + Vector2(0, 3), 9.5, c.darkened(0.3))
-		# side outlets, one either side, with their caps
-		for so: float in [-1.0, 1.0]:
-			var op := hp + Vector2(10.0 * so, -1.0)
-			_wc.draw_line(hp, op, c.darkened(0.15), 5.0)
-			_wc.draw_circle(op, 3.6, c.lightened(0.08))
-			_wc.draw_circle(op, 1.8, c.darkened(0.35))
-		# the barrel, lit from the upper left
-		_wc.draw_circle(hp, 8.5, c)
-		_wc.draw_circle(hp + Vector2(-2.5, -2.5), 5.0, c.lightened(0.16))
-		# the bonnet on top, and its little cap nut
-		_wc.draw_circle(hp + Vector2(0, -7), 5.6, c.darkened(0.12))
-		_wc.draw_circle(hp + Vector2(-1.5, -8.5), 3.0, c.lightened(0.22))
-		_wc.draw_circle(hp + Vector2(0, -11), 2.0, Color(0.85, 0.8, 0.7, 0.9))
-		# the chain, hanging off to one side
-		for ci in range(3):
-			_wc.draw_circle(hp + Vector2(7.0 + float(ci) * 2.6, 6.0 + float(ci) * 1.6), 1.5,
-				Color(0.62, 0.6, 0.58))
+		_draw_pilona(_wc, hp, h.done)
 		if not h.done and h.progress > 0.0:
 			_wc.draw_arc(hp, 17.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
 	# the dropped snack. A brown circle could have been anything; this is a

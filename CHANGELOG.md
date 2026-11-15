@@ -9,6 +9,11 @@ Append-only session history, newest first.
 - El Port's mooring bollards were never drawn (walk-module poles are not drawn by main): every one is now a cast-iron bollard with a line made fast.
 - `systems/boss_lleons.gd`, `systems/port.gd` (the arena bollards are poles; the boat is solid). `tests/test_lleons.gd` winds the real rope round a leg and a bollard (held still, his twin's pincer runs into him, he strains free) and barks at the pier (nothing until the horn, both flinch toward it, the reload).
 
+## 2026-11-15 - Pilones instead of fire hydrants
+
+- The marking spot on every town walk without one of its own was a red fire hydrant, which Barcelona's streets do not have standing on the pavement. It is a pilona now, the city's knee-high cast-iron bollard: near black, a collar ring under a domed head, a lit rim so it reads on night paving, and a wet stain round its foot once it is marked (`main._draw_pilona`). Les Corts' own bollard uses the same drawing. Walks with a spot of their own (stumps, showers, waymarkers, crates, urns, tyres) are unchanged.
+- The tutorial says "bollard": "Hold {pee} at the bollard", "Stand still by the next bollard".
+
 ## 2026-11-15 - Release notes: the off-leash games, the boss arenas, the street props; CI in parallel shards
 
 - `store/listing.md` and `docs/itch-page.md`: 1.73's What's new adds the four boss arenas, the street-walk props and the off-leash games (agility, frisbee, fetch, pigeons, waves); the description names the pigeons and the waves; the certification notes drop 1.69 to stay inside 2000 characters.
