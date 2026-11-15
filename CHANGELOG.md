@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-15 - The woodland clearing's squirrel game, and 1.73 release notes
+
+- Off the leash in the woodland clearings (`El Bosc`, `Els Senglars`): a squirrel comes down to forage (`systems/squirrel_game.gd`, `SquirrelGame`, created in `systems/freedom_games.gd` when `freedom_kind == "clearing"`). Run close and it bolts up the nearest trunk (it cannot be caught). Bark from under the tree: the first bark pays 3 bones ("treed! +3"), later ones pay 1. After a 0.8 s crown-rustle telegraph (shaking leaves aimed toward the next trunk), it leaps in an arc to another tree with a ground shadow underneath; bark there before it settles for a streak bonus ("after it! treed again x2"). After two leaps it slips off into the canopy; three squirrels per round.
+- `main.gd` holds `squirrel_game` and forwards `on_bark` after the pigeon game; `tools/squirrel_frames.gd` films the clearing game frame by frame (`-- OUTDIR [every] [level]`).
+- Test: `tests/test_squirrel_game.gd` (21 checks covering approach bolt, first and repeat barks, rustle telegraph holding `tree` vs `next_tree` before the leap, leap streak bonus, and three-squirrel round completion, registered in `tests/ci_tests.txt`).
+- Release notes updated for 1.73 (`store/listing.md`, `docs/itch-page.md`, `README.md`): all thirty-nine walks in campaign order, four statue bosses, off-leash squirrels, riders, passers-by on `NpcFigure`, `pilona` bollards and `panot` tiles.
+
 ## 2026-11-15 - Riders: delivery couriers, a mix for every walk, and riding like people
 
 - Who rides (`entities/bike.gd`): a rider's `kind` still says how it behaves and what a hit does; its new `style` says who it is. Bikes: a city bike with a wicker basket, a Bicing (white with red, the front carrier), a road cyclist down on the drops in lycra, a mountain biker on knobbly tyres with a hydration pack and a peaked helmet, a food-delivery courier on an e-bike with the big insulated box on their back (deep violet, no company's colour or logo), reflective bands, a phone lit on the bars, and an adult on an electric scooter. Kids: a kick scooter or a little bike with stabilisers and streamers. Skaters: a rollerblader or a skateboarder stood sideways on the board. In the market hall: a parent pushing a pram. Skin, hair, clothes and helmets vary per rider.
