@@ -20,6 +20,7 @@ extends RefCounted
 # - Signature live event: El Patí de Càrrega - a front-loading family cargo trike
 #   gliding along the green cycle lane, ringing a cheerful bell ("ding-ding!").
 
+const Panot := preload("res://world/panot.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const SuperillaCargo := preload("res://systems/superilla_cargo.gd")
@@ -431,7 +432,8 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 	b.line(Vector2(640.0, y0), Vector2(640.0, y1), Color(0.18, 0.18, 0.20, 0.35), 1.5)
 
 	# 2. Flanking Barcelona panot sidewalks (interrupted at cross-street mouths)
-	var slab := 40.0
+	# two panots de flor to the sidewalk's width (world/panot.gd)
+	var slab := SIDEWALK_W * 0.5
 	var sy := floorf(y0 / slab) * slab
 	while sy < y1:
 		if not _in_cross_street(sy + slab * 0.5):
@@ -440,17 +442,17 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 			# Left and right sidewalk slabs
 			b.rect(Rect2(WALL_L, sy, SIDEWALK_W, slab - 1.5), tone)
 			b.rect(Rect2(ROAD_R, sy, SIDEWALK_W, slab - 1.5), tone)
-			# Mid-sidewalk longitudinal joint
-			b.line(Vector2(WALL_L + SIDEWALK_W * 0.5, sy), Vector2(WALL_L + SIDEWALK_W * 0.5, sy + slab), Color(0, 0, 0, 0.09), 1.2)
-			b.line(Vector2(ROAD_R + SIDEWALK_W * 0.5, sy), Vector2(ROAD_R + SIDEWALK_W * 0.5, sy + slab), Color(0, 0, 0, 0.09), 1.2)
+			# The row's two flower tiles, either side
+			Panot.flor_row(b, WALL_L, ROAD_L - 5.0, sy, WALL_L, Panot.INK, Panot.SHINE, slab)
+			Panot.flor_row(b, ROAD_R + 5.0, WALL_R, sy, ROAD_R, Panot.INK, Panot.SHINE, slab)
 			# Granite curb stones
 			b.rect(Rect2(ROAD_L - 5.0, sy, 5.0, slab - 1.0), CURB_STONE)
 			b.rect(Rect2(ROAD_R, sy, 5.0, slab - 1.0), CURB_STONE)
 			# Gutter shadow line
 			b.line(Vector2(ROAD_L + 1.0, sy), Vector2(ROAD_L + 1.0, sy + slab), Color(0, 0, 0, 0.25), 2.0)
 			b.line(Vector2(ROAD_R - 1.0, sy), Vector2(ROAD_R - 1.0, sy + slab), Color(0, 0, 0, 0.20), 1.5)
-			# Cast-iron gutter storm grate every 8 slabs
-			if row % 8 == 3:
+			# Cast-iron gutter storm grate every 10 slabs
+			if row % 10 == 3:
 				for gx: float in [ROAD_L + 7.0, ROAD_R - 7.0]:
 					b.rect(Rect2(gx - 5.0, sy + 10.0, 10.0, 18.0), Color(0.16, 0.17, 0.19))
 					for gi in range(3):
