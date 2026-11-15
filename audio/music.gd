@@ -172,6 +172,10 @@ const STYLES := {
 	# L'Eixample: a bright morning stroll down the grid, marimba over a walking bass
 	"eixample": {"bpm": 114, "key": 7, "lead": "marimba", "lead2": ["whistle", 12], "comp": "bossa",
 		"bass": "walk", "drums": "rim", "swing": 0.06, "verb": 0.26},
+	# La Diagonal: a long confident stride up the avenue, vibes over a bossa
+	# comp, a little brighter and quicker than the grid it cuts across
+	"diagonal": {"bpm": 120, "key": 9, "lead": "vibes", "lead2": ["whistle", 12], "comp": "bossa",
+		"bass": "walk", "drums": "rim", "swing": 0.05, "verb": 0.28},
 	# Els Àngels: dusk skate plaza groove with marimba, vibes, skank chords, walking bass, and kick-rim drums
 	"angels": {"bpm": 118, "key": 2, "lead": "marimba", "lead2": ["vibes", 0], "comp": "skank",
 		"bass": "walk", "drums": "kickrim", "swing": 0.06, "verb": 0.24},

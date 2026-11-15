@@ -285,14 +285,22 @@ static func draw_gate_fence(m: Node2D, b: ShapeBatch, gl: float, gr: float, gy: 
 
 
 static func draw_performer(m: Node2D, wc: ShapeBatch, pf: Vector2, idx: int) -> void:
-	# an old man at the petanca, flat cap, hands behind his back
-	m.contact_shadow(wc, pf, 12.0, 5.0, 0.2)
-	wc.draw_circle(pf, 12.0, [Color(0.42, 0.40, 0.36), Color(0.30, 0.34, 0.42), Color(0.50, 0.44, 0.34)][idx % 3])
-	wc.draw_circle(pf + Vector2(0, -4), 6.5, Color(0.84, 0.68, 0.56))
-	wc.draw_circle(pf + Vector2(0, -5), 6.8, Color(0.30, 0.28, 0.26))
-	wc.draw_rect(Rect2(pf.x - 5.0, pf.y - 14.0, 10.0, 4.0), Color(0.26, 0.24, 0.22))
-	if idx == 0 and m.petanca != null and m.petanca.state == Petanca.St.WARN:
-		wc.draw_circle(pf + Vector2(6.0, -6.0), 3.4, Color(0.58, 0.58, 0.60))
+	# an old man at the petanca in his flat cap, watching the boules with his
+	# hands behind his back; the thrower winds up with one in his hand
+	var face := Vector2.UP
+	if m.petanca != null and m.petanca.pos.distance_to(pf) > 4.0:
+		face = m.petanca.pos - pf
+	var throwing: bool = idx == 0 and m.petanca != null and m.petanca.state == Petanca.St.WARN
+	var key := 71 + idx * 13
+	NpcFigure.person(wc, pf, face, key, -1.0, {"size": 1.1,
+		"top": [Color(0.42, 0.40, 0.36), Color(0.30, 0.34, 0.42), Color(0.50, 0.44, 0.34)][idx % 3],
+		"hair": Color(0.82, 0.82, 0.80), "hair_style": "bald_spot", "headwear": "cap",
+		"headwear_col": [Color(0.30, 0.28, 0.26), Color(0.22, 0.24, 0.30), Color(0.40, 0.34, 0.26)][idx % 3],
+		"arms": NpcFigure.Arms.THROW if throwing else NpcFigure.Arms.BEHIND})
+	if throwing:
+		var f := face.normalized()
+		wc.draw_circle(pf + (f * 9.0 + f.orthogonal() * 3.0) * 1.1, 3.0, Color(0.58, 0.58, 0.60))
+		wc.draw_circle(pf + (f * 9.0 + f.orthogonal() * 3.0) * 1.1 + Vector2(-0.8, -0.8), 1.1, Color(0.86, 0.86, 0.88))
 
 
 # --- the neighbourhood round the square ---------------------------------------

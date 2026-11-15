@@ -196,6 +196,7 @@ const Mood := preload("res://systems/mood.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const Panot := preload("res://world/panot.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
+const BikeScript := preload("res://entities/bike.gd")
 const EdgePath := preload("res://world/edge_path.gd")
 const TangleGeom := preload("res://systems/tangle_geom.gd")
 const MoodWiring := preload("res://systems/mood_wiring.gd")
@@ -362,6 +363,7 @@ const WALK_MODULES := {
 	"forum": preload("res://systems/forum.gd"),
 	"espanya": preload("res://systems/espanya.gd"),
 	"eixample": preload("res://systems/eixample.gd"),
+	"diagonal": preload("res://systems/diagonal.gd"),
 	"angels": preload("res://systems/angels.gd"),
 	"poble": preload("res://systems/poble.gd"),
 	"raval": preload("res://systems/boss_gat.gd"),
@@ -663,6 +665,11 @@ var aeroport_rush_dodged := false
 var aeroport_luggage_dodges := 0
 var aeroport_cart_hits := 0
 var aeroport_carousel_barked := false
+# La Diagonal: the tram (systems/diagonal.gd), dodged and dealt with, and the kiosk
+var diagonal_tram: RefCounted = null
+var diagonal_tram_dodges := 0
+var diagonal_tram_hits := 0
+var diagonal_kiosk_barked := false
 # Montserrat: the funicular crossing, rolling boulders, and mel i mató stall
 var montserrat_funicular: Dictionary = {"state": "waiting", "t": 0.0}
 var montserrat_funicular_dodged := false
@@ -5826,7 +5833,9 @@ func _draw_ground_detail(vt: float, vb: float) -> void:
 				# a damp patch / old stain
 				_wc.draw_circle(p, float(d.len) * 0.35, stain)
 			4:
-				# a drain grate set in the paving: a dark frame and its slots
+				# a drain grate set in the paving: a dark frame and its slots,
+				# square to the slabs (and so to the walk), never at an angle
+				dir = Vector2.from_angle(snappedf(float(d.rot), PI * 0.5))
 				var dq := PackedVector2Array([p + dir * 9.0 + dir.orthogonal() * 6.0, p + dir * 9.0 - dir.orthogonal() * 6.0,
 					p - dir * 9.0 - dir.orthogonal() * 6.0, p - dir * 9.0 + dir.orthogonal() * 6.0])
 				_wc.draw_colored_polygon(dq, Color(0.20, 0.20, 0.22, 0.75))
@@ -6823,6 +6832,10 @@ func _process(_delta: float) -> void:
 	if walk_mod != null and walk_mod.has_method("cam_lean"):
 		target_y += walk_mod.cam_lean(self)
 	var cx_want := _cam_x()
+	# SPIKE: on a turned camera a step off the path is a step across the
+	# screen, so the camera follows the pair across as well as along
+	if cam.rotation != 0.0 and phase != "freedom":
+		cx_want = (dog.global_position.x + human.global_position.x) * 0.5
 	if cam_x_now > 1e8:
 		cam_x_now = cx_want
 	cam_x_now = lerpf(cam_x_now, cx_want, 1.0 - exp(-CAM_X_EASE * get_process_delta_time()))
@@ -6861,6 +6874,7 @@ func _process(_delta: float) -> void:
 		var view_w: Vector2 = get_viewport_rect().size / cam.zoom
 		gm.set_shader_parameter("view_px", view_w)
 		gm.set_shader_parameter("cam_off", cam.get_screen_center_position() - view_w * 0.5)
+		gm.set_shader_parameter("cam_rot", cam.rotation)
 		gm.set_shader_parameter("world_t", AnimClock.msec() / 1000.0)
 
 
@@ -8363,8 +8377,13 @@ func _spawn_bike(y: float, dir: int) -> void:
 	b.set_script(load("res://entities/bike.gd"))
 	b.position = Vector2(-250.0 if dir > 0 else 1530.0, y)
 	b.z_index = 12
-	add_child(b)
 	b.setup(self, dog, human, Vector2(dir * randf_range(480.0, 640.0), 0.0), "bike")
+	# set up all the same, so the walk's sequence holds, then left out if
+	# this style does not ride in this sky (Outdoors.rider_out)
+	if not Outdoors.rider_out(b.kind, b.style, Game.weather, Game.hour):
+		b.free()
+		return
+	add_child(b)
 
 
 func _vlane(delta: float) -> void:
@@ -8444,17 +8463,21 @@ func _vlane(delta: float) -> void:
 			r_kind = "roller"
 		else:
 			r_kind = "kid"
+	# adults in a narrow two-way lane keep to their own side of it, the right;
+	# where in that half comes from the x already drawn
+	if not kid and band_hi - band_lo < 120.0 and lvl != "aigues":
+		x = BikeScript.keep_right(band_lo, band_hi, up, inverse_lerp(band_lo, band_hi, x))
 	var b := Node2D.new()
-	b.set_script(load("res://entities/bike.gd"))
+	b.set_script(BikeScript)
 	b.position = Vector2(x, y)
 	b.z_index = 12
 	b.setup(self, dog, human, Vector2(0.0, -speed if up else speed), r_kind)
 	if kid:
 		b.lane_keep(band_lo, band_hi)
 	# kids on scooters are out in fair weather by day, skaters whenever it
-	# is dry and light (Outdoors.riding); drawn and set up all the same, so
-	# the walk's sequence holds
-	if not b.configure_route(x, band_lo, band_hi, bypasser_blockers) or not Outdoors.riding(r_kind, Game.weather, Game.hour):
+	# is dry and light, road cyclists in the dry (Outdoors.rider_out); drawn
+	# and set up all the same, so the walk's sequence holds
+	if not b.configure_route(x, band_lo, band_hi, bypasser_blockers) or not Outdoors.rider_out(r_kind, b.style, Game.weather, Game.hour):
 		b.free()
 		return
 	add_child(b)
@@ -10994,6 +11017,8 @@ const FREEDOM_KINDS := {
 	"raval": "placa",
 	# the garden inside the next block of the grid (systems/eixample.gd)
 	"eixample": "yard",
+	# Plaça de les Glòries, where the avenue ends: a plaça with its pigeons
+	"diagonal": "placa",
 	# the beach where the Dimoni is burned
 	"cremada": "beach",
 	# the cabin of the jet at the end of the bridge (systems/aeroport_cabin.gd)
@@ -11963,6 +11988,9 @@ func _pops_layer() -> Node2D:
 	if pops == null:
 		pops = PopsLayer.new()
 		add_child(pops)
+		# SPIKE: turned with a turned camera, so text and bubbles stay upright
+		if cam != null:
+			pops.rotation = cam.rotation
 	return pops
 
 
@@ -12087,11 +12115,19 @@ var _ground_args := []
 # screen really is, or the stretch on screen is drawn for the one and the
 # rest of the view stays bare.
 func view_lo(margin: float) -> float:
-	return minf(cam.position.y, cam.get_screen_center_position().y) - margin
+	return minf(cam.position.y, cam.get_screen_center_position().y) - margin - _rot_pad()
 
 
 func view_hi(margin: float) -> float:
-	return maxf(cam.position.y, cam.get_screen_center_position().y) + margin
+	return maxf(cam.position.y, cam.get_screen_center_position().y) + margin + _rot_pad()
+
+
+# SPIKE: a turned camera sees further up and down the world than its height
+func _rot_pad() -> float:
+	if cam == null or cam.rotation == 0.0:
+		return 0.0
+	var half := get_viewport_rect().size / (2.0 * cam.zoom)
+	return half.x * absf(sin(cam.rotation)) + half.y * absf(cos(cam.rotation)) - half.y
 
 
 func _draw_ground(top: float, bottom: float, ctop: float, vt: float, vb: float) -> void:

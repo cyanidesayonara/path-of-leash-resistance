@@ -96,10 +96,15 @@ func draw(wc: ShapeBatch, vt: float, vb: float) -> void:
 	wc.rect(Rect2(JACKET_A.x - 8.0, JACKET_A.y - 5.0, 16.0, 10.0), cloth)
 	wc.rect(Rect2(JACKET_B.x - 8.0, JACKET_B.y - 5.0, 16.0, 10.0), cloth2)
 	if not gone:
-		var bob := sin(AnimClock.msec() / 280.0) * 1.4
+		# three kids facing the ball, each bouncing on their toes in their
+		# own time, ready for it
+		var t := float(AnimClock.msec()) / 1000.0
 		for i in KIDS.size():
-			var k: Vector2 = KIDS[i] + Vector2(0.0, bob)
-			wc.rect(Rect2(k.x - 5.0, k.y - 2.0, 10.0, 12.0), Color(0.85, 0.55, 0.28) if i != 1 else Color(0.25, 0.45, 0.72))
-			wc.circle(k + Vector2(0.0, -8.0), 4.2, Color(0.86, 0.70, 0.55))
+			var k: Vector2 = KIDS[i]
+			var face := pos - k if pos.distance_to(k) > 4.0 else MOUTH - k
+			var jig := t * 5.2 + float(i) * 2.1
+			NpcFigure.person(wc, k, face, 31 + i * 5, jig, {"size": 0.78, "step": 0.35,
+				"arms": NpcFigure.Arms.READY, "top": [Color(0.85, 0.55, 0.28), Color(0.25, 0.45, 0.72),
+				Color(0.86, 0.86, 0.84)][i]})
 	wc.circle(pos, 5.5, Color(0.95, 0.95, 0.93))
 	wc.circle(pos + Vector2(-1.4, -1.2), 1.6, Color(0.18, 0.18, 0.2))
