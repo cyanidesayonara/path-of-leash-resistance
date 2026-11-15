@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-11-15 - El Gat's café awnings on Rambla del Raval
+
+- Four striped café awnings now project out from Rambla del Raval's shopfronts into open bays between palm rows and dining terraces (`AWNINGS`, `draw_awning_shades()`, and `draw_awnings()` in `systems/boss_gat.gd`), with marble bistro tables and menu boards shaded underneath a translucent scalloped canvas with iron struts and evening lights.
+- Baiting El Gat's Phase 2 pounce onto a café awning highlights the canvas edge during `POUNCE_WARN`, catches him at touchdown before hitting anyone sheltered underneath, and springs him back into the middle of the rambla (`State.BOUNCE` -> `_finish_awning_bounce()`, `AWNING_DAMAGE`, `AWNING_PAY` bones, `"AWNING"` combo, and extended `AWNING_STUN` daze).
+- Test: `tests/test_boss_gat.gd` (124 checks covering awning landing interception, dog shielding underneath, mid-air bounce height and center return, damage, `awnings_bounced`, and extended `STUNNED` window).
+
 ## 2026-11-15 - El Drac's serpentine bench
 
 - El Drac's stair arena now has four trencadis serpentine bench curves flanking the upper and lower terraces (`STAIR_BENCHES` in `systems/boss_drac.gd`, drawn smoothly via `_draw_stair_benches` with scrolled bend caps at both ends; plaza serpentine bench runs are also supported).

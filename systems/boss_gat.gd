@@ -118,6 +118,12 @@ const SMASH_DAMAGE := 20.0
 const PUMMEL_DAMAGE := 30.0
 const BOOP_DAMAGE := 10.0
 const STUN_TIME := 2.6
+const BOUNCE_TIME := 0.65
+const BOUNCE_HEIGHT := 130.0
+const AWNING_DAMAGE := 22.0
+const AWNING_STUN := 3.2
+const AWNING_PAY := 8
+const AWNING_BOUNCE_FX := 0.75
 const RETREAT_SPEED := 200.0
 # the rope on three legs inside this window ties him up
 const LEG_MEMORY := 1.5
@@ -169,6 +175,7 @@ enum State {
 	TOPPLED,
 	PURR,
 	YARN,
+	BOUNCE,
 }
 
 var state: State = State.IDLE
@@ -197,6 +204,11 @@ var pounce_dir := Vector2.DOWN
 var pounce_from := Vector2.ZERO
 var pounce_to := Vector2.ZERO
 var pounce_cooldown := POUNCE_COOLDOWN
+var bounce_from := Vector2.ZERO
+var bounce_to := Vector2.ZERO
+var bounce_awning_idx := -1
+var awnings_bounced := 0
+var awning_bounce_t: Array[float] = []
 var stun_booped := false
 var stun_pummeled := false
 var hold_noticed := false
@@ -347,6 +359,17 @@ const WICKER_DARK := Color(0.42, 0.30, 0.17)
 const TABLE_WOOD := Color(0.50, 0.36, 0.24)
 const AWNING_A := Color(0.80, 0.24, 0.22)
 const AWNING_B := Color(0.94, 0.90, 0.82)
+const AWNING_GREEN_A := Color(0.22, 0.48, 0.34)
+const AWNING_GREEN_B := Color(0.94, 0.91, 0.84)
+# Café awnings jutting out from the shopfronts into the open bays between palm
+# rows and terraces: baiting a pounce onto one bounces El Gat back off balance.
+const AWNINGS: Array[Rect2] = [
+	Rect2(320.0, -965.0, 104.0, 130.0),
+	Rect2(856.0, -2165.0, 104.0, 130.0),
+	Rect2(320.0, -3385.0, 104.0, 130.0),
+	Rect2(856.0, -4165.0, 104.0, 130.0),
+]
+const AWNING_CATCH_GROW := 10.0
 
 # --- Static Level Building API -----------------------------------------------
 
@@ -511,6 +534,13 @@ func setup(m_ref: Node2D) -> void:
 	yarn_tangles.clear()
 	yarn_ball = -1
 	yarn_cd = 0.0
+	bounce_from = Vector2.ZERO
+	bounce_to = Vector2.ZERO
+	bounce_awning_idx = -1
+	awnings_bounced = 0
+	awning_bounce_t.clear()
+	for _i in range(AWNINGS.size()):
+		awning_bounce_t.append(0.0)
 	fx.seed = 1907
 	_build_crowd()
 
@@ -649,6 +679,9 @@ func transition_to(new_state: State) -> void:
 			ghost_t = 0.0
 			Sfx.play("gat_roar", 1.2, -4.0)
 			Sfx.play("fling", 0.7, -4.0)
+		State.BOUNCE:
+			state_t = BOUNCE_TIME
+			ghost_t = 0.0
 		State.SKID:
 			state_t = SKID_TIME
 		State.YARN:
@@ -1092,6 +1125,20 @@ func tick_state(delta: float) -> void:
 				_land()
 				return
 
+		State.BOUNCE:
+			state_t -= delta
+			var k := 1.0 - clampf(state_t / BOUNCE_TIME, 0.0, 1.0)
+			pos = bounce_from.lerp(bounce_to, k)
+			hop_z = sin(k * PI) * BOUNCE_HEIGHT
+			update_leg_positions()
+			ghost_t -= delta
+			if ghost_t <= 0.0:
+				ghost_t = 0.05
+				ghosts.append({"p": pos - Vector2(0.0, hop_z), "f": face_dir, "life": 0.3})
+			if state_t <= 0.0:
+				_finish_awning_bounce()
+				return
+
 		State.SKID:
 			state_t -= delta
 			pos += pounce_dir * SKID_SPEED * (state_t / SKID_TIME) * delta
@@ -1305,17 +1352,44 @@ func _tick_last_stand(delta: float, dog_p: Vector2) -> void:
 		dust_rings.append({"pos": swat_pos, "r": SWAT_RADIUS, "life": SWAT_WARN, "max_life": SWAT_WARN, "warn": true})
 
 
-# Touchdown: onto a terrace table or a palm he crashes; onto her (or your
-# human) it is a hit; onto nothing he skids, and that wears him down.
+func _awning_at(p: Vector2) -> int:
+	for i in range(AWNINGS.size()):
+		if AWNINGS[i].grow(AWNING_CATCH_GROW).has_point(p):
+			return i
+	return -1
+
+
+# Touchdown: a striped café awning catches him and flings him back off balance
+# before anything under it gets flattened; onto a terrace table or a palm he
+# crashes; onto her (or your human) it is a hit; onto nothing he skids.
 func _land() -> void:
 	hop_z = 0.0
 	pos = pounce_to
 	update_leg_positions()
+	_scatter_pigeons(pos, 200.0)
+	var aw_idx := _awning_at(pos)
+	if aw_idx >= 0:
+		bounce_awning_idx = aw_idx
+		if aw_idx < awning_bounce_t.size():
+			awning_bounce_t[aw_idx] = AWNING_BOUNCE_FX
+		bounce_from = pos
+		var center_shift := 40.0 if pos.x < 640.0 else -40.0
+		bounce_to = Vector2(640.0 + center_shift, clampf(pos.y, HOLD_Y + 80.0, -560.0))
+		face_dir = (pos - bounce_to).normalized() if bounce_to.distance_to(pos) > 1.0 else Vector2.DOWN
+		Sfx.play("intro_taut", 1.1, -2.0)
+		Sfx.play("fling", 1.15, -3.0)
+		main.shake_t = maxf(float(main.shake_t), 0.45)
+		dust_rings.append({"pos": pos, "r": POUNCE_R * 1.1, "life": 0.45, "max_life": 0.45, "col": AWNING_B})
+		_burst(pos, 8, AWNING_B, 70.0, 170.0, 4.0, 0.5, false, 150.0)
+		main.feed.say("BOING! OFF THE CAFÉ AWNING", EventFeed.Tone.GOOD)
+		main.float_text(pos, "boing!", Color(1.0, 0.88, 0.35))
+		gasp = 0.8
+		transition_to(State.BOUNCE)
+		return
 	Sfx.play("gat_clang", 0.75, -5.0)
 	main.shake_t = maxf(float(main.shake_t), 0.5)
 	dust_rings.append({"pos": pos, "r": POUNCE_R * 1.3, "life": 0.5, "max_life": 0.5})
 	_burst(pos, 10, DUST_COLOR, 60.0, 200.0, 4.0, 0.6, false, 140.0)
-	_scatter_pigeons(pos, 200.0)
 	if check_obstacle_collision():
 		main.gat_tree_smashed = true
 		damage_boss(SMASH_DAMAGE)
@@ -1354,6 +1428,28 @@ func _land() -> void:
 	transition_to(State.SKID)
 
 
+func _finish_awning_bounce() -> void:
+	hop_z = 0.0
+	pos = bounce_to
+	update_leg_positions()
+	awnings_bounced += 1
+	damage_boss(AWNING_DAMAGE)
+	Sfx.play("head_bump", 0.9, -2.0)
+	Sfx.play("gat_clang", 0.85, -3.0)
+	Sfx.play("crack", 0.75, -4.0)
+	main.shake_t = 1.0
+	main.combo.add("AWNING", AWNING_PAY)
+	main.float_text(pos, "off balance! +%d" % AWNING_PAY, Color(1.0, 0.85, 0.25))
+	main.feed.say("LANDED OFF BALANCE!", EventFeed.Tone.LOUD)
+	for d_rad in [42.0, 84.0]:
+		dust_rings.append({"pos": pos, "r": d_rad, "life": 0.7, "max_life": 0.7, "col": AWNING_A})
+	_burst(pos, 12, AWNING_B, 70.0, 210.0, 4.0, 0.9, false, 180.0)
+	screen_flash = 0.3
+	_big_hit()
+	transition_to(State.STUNNED)
+	state_t = AWNING_STUN
+
+
 func _firework() -> void:
 	# over the plaça, in the part of it the camera holds
 	var at := PEDESTAL_POS + Vector2(fx.randf_range(-260.0, 260.0), fx.randf_range(-200.0, 60.0))
@@ -1377,6 +1473,8 @@ func _tick_show(delta: float) -> void:
 	flash = maxf(0.0, flash - delta * 5.0)
 	screen_flash = maxf(0.0, screen_flash - delta * 2.5)
 	spin_t = maxf(0.0, spin_t - delta)
+	for i in range(awning_bounce_t.size()):
+		awning_bounce_t[i] = maxf(0.0, awning_bounce_t[i] - delta)
 	cheer = maxf(0.0, cheer - delta * (0.25 if state == State.PURR else 0.6))
 	gasp = maxf(0.0, gasp - delta * 0.8)
 	shout_cd = maxf(0.0, shout_cd - delta)
@@ -1497,6 +1595,8 @@ func fight_status() -> String:
 			return "HE'S CROUCHING! OUT OF THE RING" if near else ""
 		State.POUNCE:
 			return "POUNCE! LEASH ACROSS HIS LEAP" if near else ""
+		State.BOUNCE:
+			return "BOING! HE'S BOUNCING OFF BALANCE" if near else ""
 		State.STUNNED:
 			return Prompts.fill("HE'S DAZED! {bark} ON HIS NOSE") if near else ""
 		State.YARN:
@@ -1725,8 +1825,10 @@ static func draw_live(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	var gat: BossGat = m.boss_gat
 	var t: float = AnimClock.msec() / 1000.0
 	gat.draw_ground_marks(c, vt, vb)
+	gat.draw_awning_shades(c, vt, vb)
 	gat.draw_market(c, vt, vb, t)
 	gat.draw_crowd(c, vt, vb, t)
+	gat.draw_awnings(c, vt, vb, t)
 	if gat.pos.y > vt - 240.0 and gat.pos.y < vb + 240.0:
 		gat.draw_gat(c, t)
 	gat.draw_bits(c, vt, vb)
@@ -1757,6 +1859,100 @@ func draw_ground_marks(c: Object, vt: float, vb: float) -> void:
 			sb.line(mid, mid + d.rotated(0.6 - float(i % 3) * 0.5) * 14.0, col, 1.5)
 		sb.circle(cp, 7.0, Color(col.r, col.g, col.b, col.a * 0.6))
 	sb.flush(c)
+
+
+# The shade, bistro tables, and menu board beneath each striped café awning.
+func draw_awning_shades(c: Object, vt: float, vb: float) -> void:
+	var sb := ShapeBatch.new()
+	for i in range(AWNINGS.size()):
+		var aw: Rect2 = AWNINGS[i]
+		if aw.end.y < vt - 120.0 or aw.position.y > vb + 120.0:
+			continue
+		var west := aw.position.x < 640.0
+		var wall_x := aw.position.x if west else aw.end.x
+		var dir := 1.0 if west else -1.0
+		var shade := Rect2(aw.position + Shade.light * 18.0, aw.size)
+		sb.rect(shade, Color(0.06, 0.05, 0.08, 0.26))
+		# two small marble-top bistro tables and chairs tucked near the wall under the awning
+		for ty_off: float in [36.0, 92.0]:
+			var tp := Vector2(wall_x + dir * 28.0, aw.position.y + ty_off)
+			sb.circle(tp + Shade.light * 3.0, 11.0, SHADOW)
+			for ch_dy: float in [-13.0, 13.0]:
+				sb.circle(tp + Vector2(0.0, ch_dy), 5.5, Color(0.28, 0.24, 0.22))
+			sb.circle(tp, 10.0, Color(0.88, 0.85, 0.78))
+			sb.circle(tp, 3.0, Color(0.26, 0.22, 0.20))
+		# café chalkboard easel leaned against the shopfront beneath the awning
+		var bx := wall_x + dir * 10.0
+		var by := aw.position.y + 14.0
+		sb.rect(Rect2(bx - 6.0, by - 9.0, 12.0, 18.0), Color(0.28, 0.20, 0.14))
+		sb.rect(Rect2(bx - 4.0, by - 7.0, 8.0, 14.0), Color(0.14, 0.17, 0.16))
+	sb.flush(c)
+
+
+# Striped café awnings jutting from the shopfronts: rigid wrought-iron brackets,
+# taut translucent canvas with side gussets and scalloped fringe, evening bulbs,
+# and a springy bounce when El Gat lands on one.
+func draw_awnings(c: Object, vt: float, vb: float, t: float) -> void:
+	var sb := ShapeBatch.new()
+	var lit: float = Game.lamp_glow()
+	var warn_idx := _awning_at(pounce_to) if state == State.POUNCE_WARN else -1
+	var iron := Color(0.18, 0.16, 0.17)
+	for i in range(AWNINGS.size()):
+		var aw: Rect2 = AWNINGS[i]
+		if aw.end.y < vt - 120.0 or aw.position.y > vb + 120.0:
+			continue
+		var west := aw.position.x < 640.0
+		var col_a := AWNING_A if i % 2 == 0 else AWNING_GREEN_A
+		var col_b := AWNING_B if i % 2 == 0 else AWNING_GREEN_B
+		col_a.a = 0.88
+		col_b.a = 0.86
+		var b_rem := awning_bounce_t[i] if i < awning_bounce_t.size() else 0.0
+		var spring := 0.0
+		if b_rem > 0.0:
+			var k := 1.0 - clampf(b_rem / AWNING_BOUNCE_FX, 0.0, 1.0)
+			spring = sin(k * TAU * 2.5) * (1.0 - k) * 10.0
+		var r := aw
+		if west:
+			r.size.x = maxf(68.0, aw.size.x + spring)
+		else:
+			r.position.x = aw.position.x - spring
+			r.size.x = maxf(68.0, aw.size.x + spring)
+		var wall_x := r.position.x if west else r.end.x
+		var outer_x := r.end.x if west else r.position.x
+		# wrought-iron support arms along top and bottom seams
+		for y_arm: float in [r.position.y + 4.0, r.end.y - 4.0]:
+			sb.line(Vector2(wall_x, y_arm), Vector2(outer_x, y_arm), iron, 3.0)
+		var stripes := 8
+		var sh := r.size.y / float(stripes)
+		for k in range(stripes):
+			var y0 := r.position.y + float(k) * sh
+			var sc := col_a if k % 2 == 0 else col_b
+			sb.rect(Rect2(r.position.x, y0, r.size.x, sh + 0.5), sc)
+			# crisp scalloped valance along the rambla-facing edge
+			sb.circle(Vector2(outer_x, y0 + sh * 0.5), sh * 0.48, sc.darkened(0.10))
+		# folded fabric side flaps so the canopy reads overhanging, not flat
+		var gusset_col := col_a.darkened(0.30)
+		sb.line(Vector2(wall_x, r.position.y), Vector2(outer_x, r.position.y), gusset_col, 2.5)
+		sb.line(Vector2(wall_x, r.end.y), Vector2(outer_x, r.end.y), gusset_col, 2.5)
+		# roller box at the wall and top highlight across the slope
+		var roll_x := wall_x - (2.0 if west else 6.0)
+		sb.rect(Rect2(roll_x, r.position.y - 2.0, 8.0, r.size.y + 4.0), iron)
+		var sheen_x := wall_x + (8.0 if west else -24.0)
+		sb.rect(Rect2(sheen_x, r.position.y + 4.0, 16.0, r.size.y - 8.0), Color(1.0, 0.98, 0.90, 0.14))
+		sb.line(Vector2(outer_x, r.position.y), Vector2(outer_x, r.end.y), col_a.darkened(0.32), 2.2)
+		if lit > 0.0:
+			for k in range(5):
+				var lb := Vector2(outer_x + (-5.0 if west else 5.0), r.position.y + 12.0 + float(k) * (r.size.y - 24.0) / 4.0)
+				sb.glow(lb, 14.0, Color(1.0, 0.86, 0.55, 0.28 * lit), 0.2)
+				sb.circle(lb, 2.4, Color(1.0, 0.95, 0.78).lerp(Color(0.5, 0.45, 0.35), 1.0 - lit))
+		if warn_idx == i:
+			var glow_a := 0.22 + 0.14 * sin(t * 14.0)
+			sb.rect(r.grow(3.0), Color(1.0, 0.88, 0.28, glow_a))
+	sb.flush(c)
+	if warn_idx >= 0 and warn_idx < AWNINGS.size():
+		var wr := AWNINGS[warn_idx]
+		var pulse_a := 0.65 + 0.30 * sin(t * 14.0)
+		c.draw_rect(wr.grow(2.0), Color(1.0, 0.88, 0.28, pulse_a), false, 3.0)
 
 
 # The yarn stalls from above: a trestle table of skeins under the edge of a
@@ -2036,8 +2232,13 @@ func draw_upright_gat(c: Object, ground: Vector2, t: float) -> void:
 	var base := BRONZE_BASE.lerp(Color(0.62, 0.26, 0.14), hot).lerp(Color.WHITE, flash * 0.55)
 	var dark := BRONZE_DARK.lerp(Color.WHITE, flash * 0.4)
 	var lit := BRONZE_LIT.lerp(Color.WHITE, flash * 0.5)
-	# the tumble at the start of a stun turns him a full circle
-	var face := face_dir.rotated(TAU * (spin_t / 0.5)) if spin_t > 0.0 else face_dir
+	# the tumble at the start of a stun turns him a full circle; during an
+	# awning bounce he spins head-over-heels back into the rambla
+	var face := face_dir
+	if state == State.BOUNCE:
+		face = face_dir.rotated(TAU * 1.5 * (1.0 - clampf(state_t / BOUNCE_TIME, 0.0, 1.0)))
+	elif spin_t > 0.0:
+		face = face_dir.rotated(TAU * (spin_t / 0.5))
 
 	for leg: Vector2 in leg_poles:
 		var lp := leg + (at - pos)
