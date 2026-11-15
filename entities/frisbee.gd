@@ -1,19 +1,24 @@
 extends Node2D
 
 # The frisbee, after the fetch round: your human throws it long and it floats,
-# curving, its shadow on the ground beneath. Snatch it out of the air for the
-# real prize; picked up off the grass it still counts, just. Brought back to
-# the bench, it goes again, three throws in all.
+# curving, its shadow on the ground beneath and a ring where it will come
+# down, filling as it gets there. Snatch it out of the air for the real
+# prize; sprint in under it and she leaps for it, taking it higher; picked
+# up off the grass it still counts, just. Air catches in a row are a streak
+# that pays more each time, and each throw of a streak goes longer and
+# curves harder. Brought back to your human, it goes again, five in all.
 #
 # Local RNG: the deterministic autowalk crosses this space (and never gets a
 # frisbee, but the habit is the rule here).
 
 enum State { WAIT, FLYING, LANDED, CARRIED, DONE }
 
-const THROWS := 3
+const THROWS := 5
 const WAIT_S := 0.8           # the telegraph: "Ready...?" before every throw
 const SPEED := 230.0          # px/s along the ground: it floats
 const AIR_H := 34.0           # below this height she can take it out of the air
+const LEAP_H := 58.0          # ...or this high, leaping for it at a sprint
+const LEAP_R := 34.0
 const CATCH_R := 26.0
 const PICK_R := 22.0
 const RETURN_R := 42.0
@@ -34,6 +39,8 @@ var spin := 0.0
 var wait_t := WAIT_S
 var throws_left := THROWS
 var air_catches := 0
+var streak := 0               # air catches in a row
+var leapt := false            # the last catch was a leap
 var rng := RandomNumberGenerator.new()
 
 
@@ -59,13 +66,15 @@ func _throw() -> void:
 	from = global_position
 	# long, and out into the space (up the screen, away from the gate)
 	var ang := rng.randf_range(-PI * 0.85, -PI * 0.15)
-	var dist := rng.randf_range(280.0, 440.0)
+	# a streak earns a harder throw: longer, and bending more
+	var hard := clampf(float(streak) / 3.0, 0.0, 1.0)
+	var dist := rng.randf_range(260.0 + 60.0 * hard, 400.0 + 80.0 * hard)
 	to = from + Vector2.from_angle(ang) * dist
 	to.x = clampf(to.x, area.position.x + 40.0, area.end.x - 40.0)
 	to.y = clampf(to.y, area.position.y + 40.0, area.end.y - 60.0)
 	fly_len = maxf(from.distance_to(to) / SPEED, 0.6)
 	top_h = 44.0 + from.distance_to(to) * 0.05
-	bow = rng.randf_range(-70.0, 70.0)
+	bow = rng.randf_range(-70.0, 70.0) * (1.0 + 0.8 * hard)
 	fly_t = 0.0
 	state = State.FLYING
 	if thrower == main.human:
@@ -97,12 +106,16 @@ func _physics_process(delta: float) -> void:
 			global_position = from.lerp(to, f) + perp * bow * sin(PI * f)
 			# up fast, a long hang, down soft: the shape of a good throw
 			h = top_h * sin(PI * pow(f, 0.8))
-			if f > 0.2 and h < AIR_H and not main.dog_carrying \
-					and global_position.distance_to(dog.global_position) < CATCH_R:
+			var near := global_position.distance_to(dog.global_position)
+			var sprint: bool = dog.turbo_active
+			if f > 0.2 and not main.dog_carrying and (
+					(h < AIR_H and near < CATCH_R) or (sprint and h < LEAP_H and near < LEAP_R)):
+				leapt = h >= AIR_H
 				_caught(true)
 			elif f >= 1.0:
 				state = State.LANDED
 				h = 0.0
+				streak = 0
 		State.LANDED:
 			if not main.dog_carrying and global_position.distance_to(dog.global_position) < PICK_R:
 				if main.auto_walk or Input.is_action_pressed("pickup") or Input.is_action_just_pressed("pickup"):
@@ -127,6 +140,9 @@ func _caught(air: bool) -> void:
 	main.dog_carrying = true
 	if air:
 		air_catches += 1
+		streak += 1
+	else:
+		leapt = false
 	main.on_frisbee_caught(air)
 
 
@@ -135,6 +151,14 @@ var _b: ShapeBatch
 
 func _draw() -> void:
 	_b = ShapeBatch.new(self)
+	# where it will come down: a ring on the grass, filling as it gets there
+	if state == State.FLYING:
+		var land := to - global_position
+		var f := clampf(fly_t / fly_len, 0.0, 1.0)
+		var ring := Color(1.0, 0.95, 0.75, 0.35 + 0.4 * f)
+		_b.draw_arc(land, 16.0, 0.0, TAU, 20, Color(0.12, 0.1, 0.09, 0.25), 4.0)
+		_b.draw_arc(land, 16.0, -PI / 2.0, -PI / 2.0 + TAU * f, 20, ring, 2.5)
+		_b.draw_circle(land, 3.0, ring)
 	# the shadow stays on the ground and shrinks as the disc climbs: the only
 	# way to read height from straight above
 	var sr := 9.0 - h * 0.06

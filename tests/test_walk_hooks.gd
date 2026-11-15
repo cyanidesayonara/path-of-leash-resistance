@@ -19,7 +19,7 @@ const HOOKS := {
 	"guell": ["cam_lean", "draw_bollard", "draw_clearing", "draw_column", "draw_live", "hush_banner", "idle_status", "on_bark", "surface", "tick", "tick_crowd", "urgent_status"],
 	"scrap": ["draw_bollard", "draw_column", "draw_grove", "draw_live", "draw_log_prop", "draw_overhead", "draw_top", "draw_van", "draw_verge", "draw_yard", "idle_status"],
 	"trail": ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "draw_trough_prop", "grass_blocked"],
-	"station": ["draw_bollard", "draw_column", "draw_freedom_beyond", "draw_freedom_ground", "draw_live", "draw_log_prop", "draw_van"],
+	"station": ["draw_bench", "draw_bin", "draw_bollard", "draw_column", "draw_freedom_beyond", "draw_freedom_ground", "draw_live", "draw_log_prop", "draw_van"],
 	"barri": ["draw_edge_layer", "draw_fountain", "draw_freedom_ground", "draw_gate_fence", "draw_live", "draw_overhead", "draw_performer", "grass_blocked", "surface", "tree_kind"],
 	"oldtown": ["build_layer", "draw_column", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "on_bark", "tick"],
 	"partit": ["draw_bollard", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_van", "night_fronts"],
@@ -50,7 +50,7 @@ const HOOKS := {
 	"cremada": ["draw_live", "draw_overhead", "draw_scenery", "on_bark", "tick"],
 	"aeroport": ["draw_bench", "draw_bin", "draw_bollard", "draw_column", "draw_conveyor", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_gate", "draw_live", "draw_overhead", "draw_park_prop", "draw_scenery", "is_lamp", "on_bark", "surface", "tick"],
 	"montserrat": ["draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_live", "draw_overhead", "draw_snack", "on_bark", "surface", "tick", "tree_kind"],
-	"ciutadella": ["cam_lean", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "hush_banner", "idle_status", "is_lamp", "on_bark", "surface", "tick", "tree_kind", "urgent_status"],
+	"ciutadella": ["cam_lean", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "grass_blocked", "hush_banner", "idle_status", "is_lamp", "on_bark", "surface", "tick", "tree_kind", "urgent_status"],
 	"raval": ["cam_lean", "draw_edge_layer", "draw_live", "draw_overhead", "hush_banner", "idle_status", "night_fronts", "on_bark", "surface", "tick", "urgent_status"],
 }
 

@@ -12,9 +12,35 @@ Append-only session history, newest first.
 - El Mosaic's stair has three fountain spouts now (`systems/boss_drac.gd`): a bronze pipe out of a knob of rock in each stair wall and the serpent's head under its medallion above El Drac's plinth. Each has a pressure tile of trencadís in its own colour on the paving. A paw or your human's shoe on a tile clicks it; the spout gurgles and marks its lane for 0.8 s while the tile glows, then fires a jet across the landing where he fights. A jet that catches him in the fight pays "soaked! +6" through `award_points`, takes 14 HP and dazes him for 2.2 s; at his last stand the serpent's jet chokes his own jet instead ("choked! +4"). Her water never knocks her or your human. A tile fires once per step and refills in 3.5 s. Until she has soaked him once, the banner between his attacks says "STEP ON A SPOUT'S TILE TO SOAK HIM" (`mosaic.idle_status`).
 - `tests/test_drac.gd`: the lanes cross the landing, the tiles sit on the stair out of their own lanes, the telegraph runs before any water, a jet from a tile hits him for its damage and daze and pays, a dazed dragon is not dazed twice, a held tile does not refire, your human triggers a tile too, tiles are inert while he sleeps, and the serpent chokes his last-stand jet.
 
+## 2026-11-15 - El Mamut's arena: the rowboat jetty and the park chairs
+
+- The first of the boss arenas (docs/BOSSES.md). A rowboat jetty on the lake shore, a boat tied up at its end: lure his tusk charge onto its boards and they give way, and he goes through into the lake for 40 damage and the longest daze of the fight (4.6 s), then comes up spraying. Once: after that the land end is snapped boards and the boat has drifted off.
+- Two stacks of the park's green chairs on the lawn. His trunk swipe scatters a stack across the grass ("CHAIRS EVERYWHERE! LEAD HIM THROUGH THEM"), and a charge through a lying chair trips him like a taut leash does.
+- Grass tufts no longer grow over the chair stacks or the jetty's shore boards (`Ciutadella.grass_blocked`).
+- `systems/boss_mamut.gd`; `tests/test_ciutadella.gd` covers the jetty breaking once for its damage and daze, the swipe scattering a stack, and a charge tripping on a chair.
+
+## 2026-11-15 - Off the leash: an agility course you can read, frisbee and fetch with something to chase, pigeons in the plaça, waves at the beach
+
+- Agility (El Barri): it was hard to tell how to finish. The weave asked for a side at each pole that only a tiny chalk dash showed, the tunnel's mouth was narrow, and six seconds without progress quietly ended the run. Now a chalk racing line snakes through six weave poles the right way, each pole turns green or red as she passes, a bouncing arrow stands over the next element (over the start when no run is on), and funnel wings lead into a wider tunnel mouth. A new pause table: stand on it dug in for "1... 2... 3! Go!". Medals by time (gold 6.5 s, silver 9 s, bronze 14 s) pay 8, 5 and 3 bones, plus 5 for a new best. A run is abandoned only 200 px off the lane or after 10 s without progress. The park's other dogs trot off the lane while she runs (`systems/agility.gd`, `entities/freedog.gd`).
+- Frisbee: five throws, not three. A ring on the grass shows where each one will come down and fills as it gets there. Sprint in under it and she leaps for it, catching it higher ("LEAP CATCH!"). Air catches in a row are a streak that pays more each time, and a streak earns longer, curvier throws (`entities/frisbee.gd`).
+- Fetch: the ball bounces as it goes. Snatch it while it is still moving (no pickup press) and bring it back within 4 s, and each pays 2 more ("good dog on the bounce quick! +7") (`entities/ball.gd`).
+- A new game in every plaça (about fifteen walks end in one): the pigeons. A flock of nine lands on scattered crumbs. Run at them and the near ones take off, lost (at a sprint they see her from much further off). Creep up, stop close and bark: every pigeon still down bursts up at once, a bone each, double when she is right among them, five more for the whole flock. Three flocks, each somewhere new (`systems/pigeon_game.gd`, test `tests/test_pigeon_game.gd`).
+- A new game at the dog beaches (Platja de Llevant, La Cremada): the waves. A crest builds out at sea (the telegraph), the wave rushes up the sand and drains back. Follow it out and outrun the next one: further out pays more, dry escapes in a row add up, and caught she is soaked and the streak is gone. Six waves (`systems/wave_game.gd`, test `tests/test_wave_game.gd`).
+- `tools/agility_frames.gd` films a run along the chalk line. Tests: the table's count and fault, the racing line passing every pole on its side and running clean, medals, the frisbee streak and leap pay.
+
+
 ## 2026-11-15 - Boss arenas planned
 
 - `docs/BOSSES.md`: an arena section planning two or three interactables per boss from each real place (El Mamut's rowboat jetty, deckchairs and kiosk railing; El Drac's fountain spouts, tile slides and serpentine bench; Els Lleons' bollards, crane net and the Golondrina's horn; El Gat's awnings and yarn stall), El Mamut first.
+
+## 2026-11-15 - Objects that fit the place: the streets, the market, the station
+
+- A sweep of 22 built-up walks, six points down each. Most are dressed for their place already; three things were not.
+- The litter bin on every walk without its own was a dark green lidded drum. It is Barcelona's paperera now: a perforated steel basket hung between two posts on the axle it tips over, a black sack folded over the rim (`main._draw_paperera`). Filled shapes only: the drum drew two arcs, a draw call each, so each bin in view is two calls fewer.
+- L'Estació's concourse had a slatted wooden park bench and the street bin. It has rows of four perforated steel seats on a beam and a steel hoop holding a clear sack (`systems/estacio.gd` `draw_bench`, `draw_bin`).
+- The meltwater off El Mercat's fish counters was drawn as an outdoor puddle (a grey-blue lobe with dark flecks) on the hall's floor. It is a thin film with chips of crushed ice now, as El Veterinari's mopped floor is. The "fishy paws" patch beside it, and the three on El Port's quay, were a flat grey-green lobe that read as moss; they are a slick of brine with scales catching the light, ice and one sardine that got away (`main._draw_fish_slick`).
+- Left as they are: the red hydrants on the street walks (the tutorial teaches "the hydrant"), the wooden benches outdoors (Barcelona's are slatted wood), Les Obres' and La Ferralla's furniture.
+- Tests: `tests/test_junk_placement.gd` checks no outdoor puddle lies on an indoor floor (market, vet, station) and that the station draws its own seating and bin; `tests/test_walk_hooks.gd` declares the station's two new hooks.
 
 ## 2026-11-14 - Objects that fit the place: Montserrat, the parks, the beaches, the vet's
 
