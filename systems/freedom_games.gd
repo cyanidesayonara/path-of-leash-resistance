@@ -14,6 +14,7 @@ const EventFeed := preload("res://hud/event_feed.gd")
 const Frisbee := preload("res://entities/frisbee.gd")
 const PigeonGameScript := preload("res://systems/pigeon_game.gd")
 const WaveGameScript := preload("res://systems/wave_game.gd")
+const SquirrelGameScript := preload("res://systems/squirrel_game.gd")
 const GamesLayer := preload("res://world/games_layer.gd")
 
 const HOP_S := 0.36           # a jump's hang time
@@ -67,6 +68,13 @@ static func begin(m: Node2D) -> void:
 	m.pigeon_game = PigeonGameScript.new(int(m.GATE_Y) ^ 0xC0105) if m.freedom_kind == "placa" and not m.auto_walk else null
 	# the dog beach's: the waves
 	m.wave_game = WaveGameScript.new() if m.freedom_kind == "beach" and not m.auto_walk else null
+	# the woodland clearing's: a squirrel to tree
+	if m.squirrel_game != null:
+		m.squirrel_game.clear()
+	m.squirrel_game = null
+	if m.freedom_kind == "clearing" and not m.auto_walk:
+		m.squirrel_game = SquirrelGameScript.new(int(m.GATE_Y) ^ 0x5017)
+		m.squirrel_game.attach(m)
 	m.rope_loose = Vector2(INF, INF)
 	m.rope_carry_t = 0.0
 	m.frisbee_done = false
@@ -89,6 +97,9 @@ static func end(m: Node2D) -> void:
 		m.pigeon_game.clear()
 		m.pigeon_game = null
 	m.wave_game = null
+	if m.squirrel_game != null:
+		m.squirrel_game.clear()
+		m.squirrel_game = null
 	if is_instance_valid(m.frisbee):
 		m.frisbee.queue_free()
 	m.frisbee = null
@@ -110,6 +121,8 @@ static func tick(m: Node2D, delta: float) -> void:
 	_tick_frisbee(m)
 	if m.pigeon_game != null:
 		m.pigeon_game.tick(m, delta)
+	if m.squirrel_game != null:
+		m.squirrel_game.tick(m, delta)
 	_tick_waves(m, delta)
 	m.hop_t = maxf(0.0, m.hop_t - delta)
 	m.dog.hop = sin(PI * (1.0 - m.hop_t / HOP_S)) * HOP_H if m.hop_t > 0.0 else 0.0
@@ -381,6 +394,8 @@ static func banner(m: Node2D) -> String:
 	if m.pigeon_game != null and m.pigeon_game.active() \
 			and m.dog.global_position.distance_to(m.pigeon_game.at) < 360.0:
 		return Prompts.fill("PIGEONS! CREEP UP, THEN {bark} BARK")
+	if m.squirrel_game != null and m.squirrel_game.banner(m) != "":
+		return m.squirrel_game.banner(m)
 	var fd: Node2D = m.tug_dog
 	if is_instance_valid(fd) and fd.rope and fd.state == fd.S.OFFER \
 			and fd.global_position.distance_to(m.dog.global_position) < 160.0:

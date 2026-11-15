@@ -200,6 +200,9 @@
 # The plaça pigeon game test
 --headless --path . --script res://tests/test_pigeon_game.gd
 
+# The woodland clearing squirrel game test
+--headless --path . --script res://tests/test_squirrel_game.gd
+
 # The dog beach wave game test
 --headless --path . --script res://tests/test_wave_game.gd
 

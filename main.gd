@@ -733,6 +733,7 @@ var tug_dog: Node2D
 var tug_phase_was := -1         # RopeTug.P last frame, for its sounds
 var pigeon_game: RefCounted = null   # a plaça's pigeons (systems/pigeon_game.gd)
 var wave_game: RefCounted = null     # the dog beach's waves (systems/wave_game.gd)
+var squirrel_game: RefCounted = null # a woodland clearing's squirrels (systems/squirrel_game.gd)
 var tug_prev := Vector2.ZERO
 var tugs_won := 0
 var rope_loose := Vector2(INF, INF)
@@ -11619,6 +11620,9 @@ func on_bark(pos: Vector2) -> void:
 	# the plaça's pigeon game scores the burst before the bark scatters them
 	if pigeon_game != null:
 		pigeon_game.on_bark(self, pos)
+	# the clearing's squirrel, barked at up its tree
+	if squirrel_game != null:
+		squirrel_game.on_bark(self, pos)
 	if human.global_position.distance_to(pos) < 170.0:
 		human.halt(0.8)
 	for s in get_tree().get_nodes_in_group("squirrels"):

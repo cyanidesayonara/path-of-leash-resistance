@@ -49,8 +49,7 @@ you want to go; constant hauling wears their patience down until they say
   La Cremada.
 - **Five dogs**, each with a knack of their own, opened with stars, and bones
   to train them.
-- **Two statue bosses**: El Mamut the stone mammoth in La Ciutadella, and on
-  the Rambla del Raval, El Gat, a fat bronze cat who climbs off his plinth.
+- **Four statue bosses**: El Mamut the stone mammoth in La Ciutadella, Els Lleons the twin bronze lions at El Port, El Drac the mosaic salamander in El Mosaic, and on the Rambla del Raval, El Gat, a fat bronze cat who climbs off his plinth.
 - **Moods**: a fright, a bark-off or a run off the leash leaves her jumpy,
   barky, full of zoomies or flat, and each changes how she moves.
 - **Ground you can feel**: grass and mud slow her but hold scent, sand drags
@@ -80,7 +79,6 @@ you want to go; constant hauling wears their patience down until they say
 | La Ciutadella | the waterfall cascade and El Mamut |
 | Platja de Llevant | the dog beach at the far end of the coast |
 | L'Eixample | the grid of cut corners round the basilica |
-| La Diagonal | the avenue that cuts the grid, and the tram that rides it |
 | El Tibidabo | the mountain road |
 | El Veterinari | the clinic escape |
 | El Bosc | the forest |
@@ -94,6 +92,7 @@ you want to go; constant hauling wears their patience down until they say
 | Plaça Reial | the arcaded square |
 | La Cremada | Badalona's devil night and the Dimoni float |
 | El Fòrum | the seaside esplanade |
+| La Diagonal | the avenue that cuts the grid, and the tram that rides it |
 | La Carretera de les Aigües | the hillside hike |
 | El Laberint d'Horta | the cypress maze |
 | El Port | the fishing wharf |

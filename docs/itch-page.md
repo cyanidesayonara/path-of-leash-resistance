@@ -51,7 +51,7 @@ The leash is real rope. The one you see is the one doing the physics: it wraps, 
 
 Your human answers it like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-THIRTY-SIX WALKS IN AND AROUND BARCELONA
+THIRTY-NINE WALKS IN AND AROUND BARCELONA
 
 El Barri, the neighborhood park
 La Rambla, the crowded promenade
@@ -79,6 +79,7 @@ Els Búnquers, the overlook above the city
 Plaça Reial, the arcaded square
 La Cremada, Badalona's devil night and the Dimoni
 El Fòrum, the seaside esplanade
+La Diagonal, the avenue that cuts the grid, with its tram
 La Carretera de les Aigües, the hillside hike
 El Laberint d'Horta, the cypress maze
 El Port, the fishing wharf
@@ -88,9 +89,11 @@ Les Obres, the work site
 Dia de Partit, match day
 La Ferralla, the junkyard
 Festa de Gràcia, the decorated festival street
+L'Aeroport, Terminal 1's long pier, with airport security on your tail
+Montserrat, the mountain trail across the funicular and the wild goats
 Rambla del Raval, the finale, with El Gat, a bronze cat
 
-Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. Six of them are chases: the street sweeper at dawn, the river flood on El Besòs, the clinic escape in El Veterinari, the wild boars of Els Senglars, the correfoc through Gràcia and the Dimoni float in La Cremada. Two of them feature statue bosses: El Mamut in La Ciutadella and El Gat on the Rambla del Raval. There is a gentle first walk that teaches one trick at a time, and every walk can be played in clear weather, rain, wind or snow, by day or at night.
+Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. Six of them are chases: the street sweeper at dawn, the river flood on El Besòs, the clinic escape in El Veterinari, the wild boars of Els Senglars, the correfoc through Gràcia and the Dimoni float in La Cremada. Four of them feature statue bosses: El Mamut in La Ciutadella, Els Lleons at El Port, El Drac in El Mosaic and El Gat on the Rambla del Raval. There is a gentle first walk that teaches one trick at a time, and every walk can be played in clear weather, rain, wind or snow, by day or at night.
 
 ALSO
 
@@ -135,27 +138,29 @@ CHANGELOG.md. The Store's What's new is the short form of this.
 - Three new walks, thirty-nine in all:
   - L'Aeroport, open at 51 stars: Terminal 1's long pier, past check-in and the perfume counters, with moving walkways that have proper sides, a luggage carousel to bark at and a gate rush at B30. The chase is the airport security squad on foot, and the off-leash space is La Cabina.
   - Montserrat, open at 52 stars: the serrated mountain trail from the old gate piers to the monastery, across the Sant Joan funicular (wait for the car, or dodge it), past a mel i mató stall. The chase is a wild goat herd kicking boulders down the trail, with its own film.
-  - La Diagonal, open at 38 stars, after El Fòrum: Avinguda Diagonal's central promenade up to Plaça de les Glòries, and the first walk seen at an angle. The camera turns 45 degrees, so the avenue slashes across the screen and the Eixample grid around it reads square, cut off where the avenue slices through. The tram runs on the grass track beside the promenade, where the best smells are: it rings its bell, then glides through, and bumps a dog on the rails aside. Hop off just in time for a close shave.
+  - La Diagonal, open at 38 stars, after El Fòrum: Avinguda Diagonal's central promenade up to Plaça de les Glòries, and the first walk seen at an angle. The camera turns 45 degrees, so the avenue slashes across the screen and the Eixample grid around it reads square, cut off where the avenue slices through. The tram runs on the grass track beside the promenade, where the best smells are: it rings its bell, then glides through, and bumps a dog on the rails aside. Hop off just in time for a close shave. Two red two-way bike lanes run inside the tree lines, with traffic lights across the promenade that the riders obey.
 - Two new statue bosses, each with a story film and a victory film:
   - Els Lleons: the twin bronze lions at the foot of the Columbus column in El Port. Dodge their pincer and their rush, and settle them with a head bump.
   - El Drac: the mosaic salamander of El Mosaic. Dodge his tail whip and his fountain jet, trip his slither between the columns, wind the leash round three of his legs, and boop his nose.
 - Boss arenas, each built from its real place:
   - El Mamut: a rowboat jetty on the lake shore and stacks of the park's green chairs. Lure his charge onto the jetty and the boards give way: into the lake he goes, for the longest daze of the fight. His trunk swipe scatters the chairs, and a charge through a lying chair trips him.
   - El Drac: three fountain spouts, each with a trencadís pressure tile on the landing. Step on one and a moment later its jet fires across his path and soaks him. Every hit knocks loose shards off him; run onto one and ride it clear of his tail or his jet.
-  - Els Lleons: a harbor crane hangs a cargo net of fish crates over the boardwalk. Wind the leash round its trip post and haul, and the net drops on whichever lion is under it.
+  - Els Lleons: a harbor crane hangs a cargo net of fish crates over the boardwalk. Wind the leash round its trip post and haul, and the net drops on whichever lion is under it. Mooring bollards on the quay let you tie one lion down while his twin charges, and barking at the Golondrina tour boat sounds her horn to daze them both.
   - El Gat: two market yarn stalls. Knock a basket over and the balls roll out; he chases them with his back to you, and a bark on his tail is a tail tug.
 - Chases rebuilt in two kinds: the machines (the street sweeper, the Dimoni's float) drive like cartoon vehicles that bonk over benches and posts and swerve round what they cannot flatten, and the squads (the vet staff, the boars, the devils, airport security) come after you on foot.
 - Tug of war reworked: the rope toy now shows between the two dogs as a real cotton rope that bends as they shake it. The other dog winds up, heaves and rests: dig in through the heave and pull while it rests. Chalk lines, a rag on the rope's middle and a meter over the pair show who is winning.
 - After dark, objects keep only a short soft shadow instead of an afternoon sun's, and lit doorways, shopfronts and windows glow more gently.
 - Your human walks into the home ending on real steps instead of gliding.
 - Objects that fit the place: cairns and a dropped carquinyoli on Montserrat, tree stumps in El Parc and La Ciutadella, outdoor showers on the promenades, a mopped floor with wet-floor signs at the vet's, and lost balls and litter instead of traffic cones on trails, beaches and in gardens.
-- In town: Barcelona's steel paperera street bins, rows of steel seats and a see-through sack bin at L'Estació, and the fish market's and the port's wet floors drawn as melting ice and brine with the odd sardine.
+- In town: Barcelona's cast-iron pilona bollards replace the red fire hydrants, steel paperera street bins, rows of steel seats and a see-through sack bin at L'Estació, the fish market's and the port's wet floors drawn as melting ice and brine with the odd sardine, and pressed panot paving tiles (flor de Barcelona on Festa de Gràcia, La Superilla and Dia de Partit; Gaudí's hexagons on L'Eixample).
+- Riders and passers-by: bikes, couriers with violet delivery boxes, Bicing bikes, scooters, skaters, kids and market prams each ride with their own pace, keep right in two-way lanes, ring their bells, brake and steer round people, and follow the weather and the dark, with Spanish white-square crossings painted where bike lanes cross the walk. Passers-by in the park, on the beach, at the petanca pitch and on El Diluvi are redrawn on the dog walkers' rig and face the way they walk.
 - Off the leash, every space has something to aim at:
   - Agility (El Barri): a chalk racing line through the weave poles, poles that turn green or red as she passes, an arrow over the next obstacle, a wider tunnel, a pause table to stand on for a count of three, and medals by time.
   - Frisbee: five throws, a ring where each will land, a leap catch when she sprints in under it, and streaks that earn longer, curvier throws.
   - Fetch: the ball bounces; snatch it on the move and bring it back quick for a bonus.
   - Pigeons, in every plaça: rush them and they scatter, lost. Creep up, stop close and bark, and the whole flock bursts up at once.
   - Waves, at the dog beaches: follow the backwash out and outrun the next wave. Further out pays more; caught, she is soaked.
+  - Squirrels, in the woodland clearings: run close and a squirrel bolts up a tree; bark beneath the trunk, watch the crown rustle to see where it means to leap, and meet it under the next tree.
 - The Fur-goneta honks and pays once per walk, and its bubbles are gone.
 ```
 
