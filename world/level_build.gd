@@ -4283,6 +4283,12 @@ static func build_entities(m: Node2D) -> void:
 	# oncoming hazards, so this is a feel dial (1.0 = the old framing).
 	m.cam.zoom = Vector2(m.CAM_ZOOM, m.CAM_ZOOM)
 	m.cam.position = Vector2(640, m.START_Y - 120.0)
+	# SPIKE: --cam-rot=DEG turns the view so the walk's north runs DEG degrees
+	# clockwise of screen-up (45: the path climbs to the upper right)
+	for a: String in OS.get_cmdline_user_args():
+		if a.begins_with("--cam-rot="):
+			m.cam.ignore_rotation = false
+			m.cam.rotation = -deg_to_rad(float(a.substr(10)))
 	m.add_child(m.cam)
 	m.cam.make_current()
 	# under the leash (z 5) and the pair (z 10), above the verge
