@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-15 - Els Lleons' arena: the mooring bollards and the Golondrina's horn
+
+- The mooring bollards. Run the leash round a lion's leg and on round a bollard on the coping, pull it taut, and he is tied there ("TIED TO THE BOLLARD! BRING HIS TWIN"): he cannot move, strains at her, and his lanes drop out of the warnings. His twin's pincer or rush that runs into him knocks both down ("tied up! +16", 22 damage, the head bump's daze, and it counts for tricking them into colliding). A leg sheds a hard-pulled rope, so a touch in the last second counts; he strains free after 4 s and cannot be tied again for 3.
+- The Golondrina, the old double-decker tour boat, tied up at the pier end by the lions, a gangway to the coping. Bark at the pier and she answers: steam at her whistle and a ring for 0.8 s, then the horn ("PAAARP"), and both lions flinch round toward it, hop at the sound and stand dazed 1.8 s with their noses out ("toot! +6"). Once every 12 s.
+- El Port's mooring bollards were never drawn (walk-module poles are not drawn by main): every one is now a cast-iron bollard with a line made fast.
+- `systems/boss_lleons.gd`, `systems/port.gd` (the arena bollards are poles; the boat is solid). `tests/test_lleons.gd` winds the real rope round a leg and a bollard (held still, his twin's pincer runs into him, he strains free) and barks at the pier (nothing until the horn, both flinch toward it, the reload).
+
 ## 2026-11-15 - Release notes: the off-leash games, the boss arenas, the street props; CI in parallel shards
 
 - `store/listing.md` and `docs/itch-page.md`: 1.73's What's new adds the four boss arenas, the street-walk props and the off-leash games (agility, frisbee, fetch, pigeons, waves); the description names the pigeons and the waves; the certification notes drop 1.69 to stay inside 2000 characters.
