@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-15 - Els Lleons' arena: the mooring bollards and the Golondrina's horn
+
+- The mooring bollards. Run the leash round a lion's leg and on round a bollard on the coping, pull it taut, and he is tied there ("TIED TO THE BOLLARD! BRING HIS TWIN"): he cannot move, strains at her, and his lanes drop out of the warnings. His twin's pincer or rush that runs into him knocks both down ("tied up! +16", 22 damage, the head bump's daze, and it counts for tricking them into colliding). A leg sheds a hard-pulled rope, so a touch in the last second counts; he strains free after 4 s and cannot be tied again for 3.
+- The Golondrina, the old double-decker tour boat, tied up at the pier end by the lions, a gangway to the coping. Bark at the pier and she answers: steam at her whistle and a ring for 0.8 s, then the horn ("PAAARP"), and both lions flinch round toward it, hop at the sound and stand dazed 1.8 s with their noses out ("toot! +6"). Once every 12 s.
+- El Port's mooring bollards were never drawn (walk-module poles are not drawn by main): every one is now a cast-iron bollard with a line made fast.
+- `systems/boss_lleons.gd`, `systems/port.gd` (the arena bollards are poles; the boat is solid). `tests/test_lleons.gd` winds the real rope round a leg and a bollard (held still, his twin's pincer runs into him, he strains free) and barks at the pier (nothing until the horn, both flinch toward it, the reload).
+
 ## 2026-11-15 - Pilones instead of fire hydrants
 
 - The marking spot on every town walk without one of its own was a red fire hydrant, which Barcelona's streets do not have standing on the pavement. It is a pilona now, the city's knee-high cast-iron bollard: near black, a collar ring under a domed head, a lit rim so it reads on night paving, and a wet stain round its foot once it is marked (`main._draw_pilona`). Les Corts' own bollard uses the same drawing. Walks with a spot of their own (stumps, showers, waymarkers, crates, urns, tyres) are unchanged.

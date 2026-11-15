@@ -130,7 +130,7 @@ and dangerous to him.
   the rope with the leash and it drops on whichever lion is under it (shipped:
   wind the leash on the trip rope's post and haul it taut). The
   Golondrina's horn: bark at the pier and the boat answers, and both lions
-  flinch toward the sound.
+  flinch toward the sound. (All three shipped.)
 - **El Gat, the Rambla del Raval.** Terrace tables (shipped: he crashes through
   them). Café awnings: a pounce that lands on one bounces him back up and off
   balance. The yarn stall (shipped: two stalls, each basket tips once, and a bark
