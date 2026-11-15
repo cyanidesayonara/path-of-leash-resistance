@@ -70,6 +70,32 @@ const BOOP_REACH := 80.0
 const WOBBLE_TIME := 1.2
 const SLIDE_TIME := 1.4
 const LAST_JET_EVERY := 3.6
+# The arena's fountain spouts (docs/BOSSES.md, the arenas): two stone masks in
+# the stair walls and the serpent's head above his plinth, each with a
+# pressure tile on the paving. A paw (or your human's shoe) on a tile clicks
+# it; SPOUT_WARN later its spout fires a jet down a fixed lane across the
+# landing where he fights. A jet that catches him in the fight pays damage and
+# a daze; at his last stand it chokes his own jet. Her water never hurts her.
+const SPOUT_WARN := 0.8
+const SPOUT_FIRE := 0.6
+const SPOUT_REST := 3.5
+const SPOUT_W := 40.0
+const SPOUT_HIT_R := 34.0
+const SPOUT_DAMAGE := 14.0
+const SPOUT_STUN := 2.2
+const SPOUT_PAY := 6
+const CHOKE_PAY := 4
+const TILE_R := 26.0
+# each spout: which wall (-1 west, 1 east, 0 the serpent above the plinth),
+# the lane's y (wall spouts) and its tile, from the landing
+const SPOUT_WALL: Array[int] = [-1, 1, 0]
+const SPOUT_LANE_Y: Array[float] = [-870.0, -826.0, 0.0]
+# (a wall spout's tile: x in from its wall, y from the landing)
+const SPOUT_TILE_OFF: Array[Vector2] = [Vector2(78.0, 108.0), Vector2(78.0, 104.0), Vector2(150.0, -196.0)]
+const SERPENT := Vector2(640.0, -1112.0)
+const SPOUT_COLS: Array[Color] = [Color(0.12, 0.34, 0.74), Color(0.26, 0.64, 0.34), Color(0.94, 0.48, 0.14)]
+const STONE := Color(0.72, 0.64, 0.50)
+const STONE_DARK := Color(0.50, 0.43, 0.33)
 
 const DRAC_BLUE := Color(0.18, 0.58, 0.76)
 const DRAC_CYAN := Color(0.24, 0.74, 0.82)
@@ -139,6 +165,16 @@ var fountain_t := -1.0
 var flash := 0.0
 # puddles / chips: [{ "rect": Rect2, "kind": int, "until": float }]
 var surface_zones: Array[Dictionary] = []
+# the spouts: mouth, lane direction and length, tile; and each one's state
+# (0 resting, 1 gurgling after a click, 2 firing, 3 refilling) and clock
+var spout_at: Array[Vector2] = []
+var spout_dir: Array[Vector2] = []
+var spout_len: Array[float] = []
+var spout_tile: Array[Vector2] = []
+var spout_phase: Array[int] = [0, 0, 0]
+var spout_t: Array[float] = [0.0, 0.0, 0.0]
+var spout_caught: Array[bool] = [false, false, false]
+var spout_hits := 0
 
 
 func setup(m: Node2D) -> void:
@@ -172,6 +208,36 @@ func setup(m: Node2D) -> void:
 	leg_poles.clear()
 	for off: Vector2 in LEG_OFFSETS:
 		leg_poles.append(pos + off)
+	spout_phase = [0, 0, 0]
+	spout_t = [0.0, 0.0, 0.0]
+	spout_caught = [false, false, false]
+	spout_hits = 0
+	place_spouts(Vector2(LANDING.x - 410.0, LANDING.x + 410.0))
+
+
+# The wall spouts sit in the stair's walls, so they follow the walk's edges
+# (`edges` is walk_edges at the landing, x left and right).
+func place_spouts(edges: Vector2) -> void:
+	spout_at.clear()
+	spout_dir.clear()
+	spout_len.clear()
+	spout_tile.clear()
+	for k in range(SPOUT_WALL.size()):
+		var w: int = SPOUT_WALL[k]
+		var at := SERPENT
+		var dir := Vector2.DOWN
+		if w != 0:
+			at = Vector2((edges.x - 2.0) if w < 0 else (edges.y + 2.0), SPOUT_LANE_Y[k])
+			dir = Vector2.RIGHT if w < 0 else Vector2.LEFT
+		var tile := LANDING + SPOUT_TILE_OFF[k]
+		if w != 0:
+			tile.x = at.x + dir.x * SPOUT_TILE_OFF[k].x
+		spout_at.append(at)
+		spout_dir.append(dir)
+		# across the landing to a little short of the far wall; the serpent's
+		# down past the landing's foot
+		spout_len.append((edges.y - edges.x - 30.0) if w != 0 else (LANDING.y + 90.0 - SERPENT.y))
+		spout_tile.append(tile)
 
 
 # Called by LevelBuild after the rope radii are filled: the legs are rope
@@ -189,6 +255,7 @@ func register_legs(m: Node2D) -> void:
 		m.rope_radii.append(LEG_RADIUS + 2.0)
 		m.rope_soft.append(lp)
 		leg_poles.append(lp)
+	place_spouts(m.walk_edges(LANDING.y))
 
 
 func is_leg_index(i: int) -> bool:
@@ -234,6 +301,16 @@ func in_fight() -> bool:
 
 func nose_tip() -> Vector2:
 	return pos + face_dir * 70.0
+
+
+# Between his attacks on the landing, until she has soaked him once: what
+# the tiles are for.
+func spout_hint() -> String:
+	if state != State.PROWL or phase != 1 or spout_hits > 0 or hush_banner():
+		return ""
+	if main.dog.global_position.distance_to(pos) > 600.0:
+		return ""
+	return "STEP ON A SPOUT'S TILE TO SOAK HIM"
 
 
 func status() -> String:
@@ -499,6 +576,89 @@ func _hit(kind: String) -> void:
 	transition_to(State.STUNNED)
 
 
+func spout_lane_hit(k: int, p: Vector2, half_w: float) -> bool:
+	var end: Vector2 = spout_at[k] + spout_dir[k] * spout_len[k]
+	return p.distance_to(Geometry2D.get_closest_point_to_segment(p, spout_at[k], end)) < half_w
+
+
+func spout_warning(k: int) -> bool:
+	return spout_phase[k] == 1
+
+
+func _on_tile(k: int) -> bool:
+	var tp: Vector2 = spout_tile[k]
+	return main.dog.global_position.distance_to(tp) < TILE_R \
+		or main.human.global_position.distance_to(tp) < TILE_R
+
+
+# Spouts work while he is up and about; asleep or settled, the tiles are
+# only paving.
+func _tick_spouts(delta: float) -> void:
+	var live := in_fight() and state != State.AWAKEN
+	for k in range(spout_at.size()):
+		match spout_phase[k]:
+			0:
+				if live and _on_tile(k):
+					spout_phase[k] = 1
+					spout_t[k] = SPOUT_WARN
+					spout_caught[k] = false
+					Sfx.play("drac_click", 0.8, -4.0)
+					Sfx.play("squelch", 0.55, -6.0)
+			1:
+				spout_t[k] -= delta
+				if spout_t[k] <= 0.0:
+					spout_phase[k] = 2
+					spout_t[k] = SPOUT_FIRE
+					Sfx.play("drac_jet", 1.15, -3.0)
+					var end: Vector2 = spout_at[k] + spout_dir[k] * spout_len[k]
+					var hw := SPOUT_W * 0.5
+					surface_zones.append({
+						"rect": Rect2(Vector2(minf(spout_at[k].x, end.x), minf(spout_at[k].y, end.y)) - Vector2(hw, hw),
+							(spout_at[k] - end).abs() + Vector2(hw, hw) * 2.0),
+						"kind": Surfaces.S.WATER,
+						"until": main.elapsed + PUDDLE_LIFE,
+					})
+			2:
+				if not spout_caught[k] and spout_lane_hit(k, pos, SPOUT_W * 0.5 + SPOUT_HIT_R):
+					spout_caught[k] = _soak(k)
+				spout_t[k] -= delta
+				if spout_t[k] <= 0.0:
+					spout_phase[k] = 3
+					spout_t[k] = SPOUT_REST
+			3:
+				spout_t[k] -= delta
+				# refilled, and only once she has stepped off
+				if spout_t[k] <= 0.0 and not _on_tile(k):
+					spout_phase[k] = 0
+
+
+# A jet from spout k catches him. In the fight it hurts and dazes him; at his
+# last stand it chokes his own jet. Returns whether it counted.
+func _soak(k: int) -> bool:
+	match state:
+		State.PROWL, State.TAIL_WHIP, State.JET, State.SLITHER:
+			spout_hits += 1
+			damage(SPOUT_DAMAGE)
+			Sfx.play("splash", 0.8, -2.0)
+			Sfx.play("groan", 1.1, -6.0)
+			main.feed.say("SOAKED WITH HIS OWN FOUNTAIN!", EventFeed.Tone.LOUD)
+			main.combo.add("SOAK", SPOUT_PAY)
+			main.award_points(SPOUT_PAY, "soaked! +%d" % SPOUT_PAY)
+			main.shake_t = maxf(float(main.shake_t), 0.6)
+			transition_to(State.STUNNED)
+			state_t = SPOUT_STUN
+			return true
+		State.STAND:
+			spout_hits += 1
+			flash = 0.4
+			ls_jet_cd = LAST_JET_EVERY + JET_WARN
+			Sfx.play("splash", 0.9, -3.0)
+			main.feed.say("CHOKED HIS JET!", EventFeed.Tone.GOOD)
+			main.award_points(CHOKE_PAY, "choked! +%d" % CHOKE_PAY)
+			return true
+	return false
+
+
 func _clamp_hall() -> void:
 	pos.x = clampf(pos.x, LevelBuild.MOSAIC_HALL_COLS[0], LevelBuild.MOSAIC_HALL_COLS[LevelBuild.MOSAIC_HALL_COLS.size() - 1])
 	pos.y = clampf(pos.y, LevelBuild.MOSAIC_HALL_Y1 + 40.0, LevelBuild.MOSAIC_HALL_Y0 - 40.0)
@@ -558,6 +718,7 @@ func tick_state(delta: float) -> void:
 		fountain_t += delta
 	var dog_p: Vector2 = main.dog.global_position
 	act_t += delta
+	_tick_spouts(delta)
 	match state:
 		State.IDLE:
 			# your human still short of him: a pair already past (a shot taken
@@ -812,6 +973,130 @@ func draw_warnings(b: ShapeBatch, t: float) -> void:
 			d += 60.0
 
 
+# The spouts and their tiles, under him: each tile a square of trencadis in
+# its spout's colour round a round pressure plate, lit while its spout fills;
+# each spout a stone mask in the wall, or the serpent's head over his plinth;
+# a filling spout gurgles at the mouth and marks its lane, filling as the
+# warning runs out, the way his own jet does.
+func draw_spouts(b: ShapeBatch, t: float, vt: float, vb: float) -> void:
+	var pulse := sin(t * 16.0) * 0.5 + 0.5
+	var live := in_fight() and state != State.AWAKEN
+	for k in range(spout_at.size()):
+		var col: Color = SPOUT_COLS[k]
+		var tp: Vector2 = spout_tile[k]
+		var ph: int = spout_phase[k]
+		if tp.y > vt - 60.0 and tp.y < vb + 60.0:
+			if ph == 1:
+				b.glow(tp, TILE_R * 2.4, Color(col.r, col.g, col.b, 0.35 + 0.25 * pulse), 0.3)
+			elif live and ph == 0:
+				# ready: a slow breath of its colour, so the tiles read as live
+				b.glow(tp, TILE_R * 1.9, Color(col.r, col.g, col.b, 0.10 + 0.08 * sin(t * 3.0 + float(k) * 2.1)), 0.2)
+			var h := TILE_R
+			b.rect(Rect2(tp - Vector2(h, h) + Shade.light * 3.0, Vector2(h, h) * 2.0), SHADOW)
+			b.rect(Rect2(tp - Vector2(h, h), Vector2(h, h) * 2.0), STONE_DARK)
+			b.rect(Rect2(tp - Vector2(h - 3.0, h - 3.0), Vector2(h - 3.0, h - 3.0) * 2.0), GROUT)
+			var dim := 0.0 if ph != 3 else 0.25
+			for i in range(8):
+				var a := float(i) * TAU / 8.0 + 0.4
+				var sp := tp + Vector2.from_angle(a) * (h - 9.0) * Vector2(1.0, 1.0)
+				var tc: Color = col if i % 2 == 0 else (TILE_WHITE if i % 4 == 1 else TILE_YELLOW)
+				_shard(b, sp, Vector2.from_angle(a + 1.2), 5.2, 4.2, tc.darkened(dim), float(k * 8 + i))
+			for cc: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:
+				_shard(b, tp + cc * (h - 7.0), Vector2(cc.x, -cc.y).normalized(), 3.6, 3.0, col.darkened(0.2 + dim), float(k * 4) + cc.x)
+			# the plate: pressed down (darker, no rim light) while it is held
+			var down := ph == 1 or ph == 2
+			b.circle(tp, 11.0, INK)
+			b.circle(tp, 9.0, col.darkened(0.35) if down else col.lerp(TILE_WHITE, 0.15).darkened(dim))
+			if not down:
+				b.circle(tp - Shade.light * 2.5, 4.0, col.lerp(TILE_WHITE, 0.5).darkened(dim))
+		var at: Vector2 = spout_at[k]
+		var dir: Vector2 = spout_dir[k]
+		if at.y < vt - 80.0 or at.y > vb + 80.0:
+			continue
+		_draw_spout_head(b, k, at, dir, col)
+		if ph == 1:
+			# the gurgle: bubbles at the mouth, and the lane it will fire down
+			var mouth := at + dir * 14.0
+			for i in range(4):
+				var u := fposmod(t * 3.2 + float(i) * 0.25, 1.0)
+				b.circle(mouth + dir * u * 10.0 + dir.orthogonal() * sin(float(i) * 2.7 + t * 9.0) * 6.0, 2.0 + u * 3.0,
+					Color(0.86, 0.96, 1.0, 0.85 * (1.0 - u)))
+			var fill := 1.0 - clampf(spout_t[k] / SPOUT_WARN, 0.0, 1.0)
+			var to := at + dir * spout_len[k]
+			var side := dir.orthogonal() * SPOUT_W * 0.5
+			b.line(mouth, to, Color(0.35, 0.75, 1.0, 0.14 + 0.10 * pulse), SPOUT_W)
+			b.line(mouth, mouth.lerp(to, fill), Color(0.50, 0.85, 1.0, 0.32), SPOUT_W * 0.5)
+			b.line(mouth + side, to + side, Color(0.62, 0.90, 1.0, 0.6), 2.0)
+			b.line(mouth - side, to - side, Color(0.62, 0.90, 1.0, 0.6), 2.0)
+
+
+# a spout's head: a stone mask set in the wall with a ring of its tile round
+# the mouth, or (k's wall 0) the serpent's head in green trencadis coming
+# down out of its medallion over the plinth
+func _draw_spout_head(b: ShapeBatch, k: int, at: Vector2, dir: Vector2, col: Color) -> void:
+	if SPOUT_WALL[k] != 0:
+		# a knob of rough rock out of the wall, a few shards of its tile set
+		# in it, and a bronze pipe through it pointing across the stair
+		var c := at - dir * 6.0
+		var rock := PackedVector2Array()
+		var sh := PackedVector2Array()
+		for i in range(10):
+			var a := TAU * float(i) / 10.0
+			var r := 20.0 + _hash(float(k), float(i)) * 7.0
+			rock.append(c + Vector2.from_angle(a) * Vector2(r, r * 1.25))
+			sh.append(rock[i] + Shade.light * 4.0)
+		b.polygon(sh, SHADOW)
+		b.polygon(rock, STONE_DARK)
+		var top := PackedVector2Array()
+		for p: Vector2 in rock:
+			top.append(c - Shade.light * 2.0 + (p - c) * 0.8)
+		b.polygon(top, STONE)
+		for i in range(4):
+			var sp := c + Vector2(-dir.x * 7.0, -18.0 + float(i) * 12.0)
+			_shard(b, sp, Vector2.from_angle(float(i) * 1.3), 3.8, 3.0, col if i % 2 == 0 else TILE_WHITE, float(k * 7 + i))
+		var bronze := Color(0.56, 0.40, 0.20)
+		b.capsule(c, at + dir * 14.0, 5.6, INK)
+		b.capsule(c, at + dir * 14.0, 4.0, bronze)
+		b.line(c - dir.orthogonal() * 1.5, at + dir * 13.0 - dir.orthogonal() * 1.5, bronze.lightened(0.35), 1.4)
+		b.circle(at + dir * 14.0, 5.6, INK)
+		b.circle(at + dir * 14.0, 3.0, Color(0.20, 0.36, 0.46))
+		return
+	# the medallion behind, the head over it
+	var m := at - dir * 30.0
+	b.circle(m + Shade.light * 5.0, 30.0, SHADOW)
+	b.circle(m, 30.0, INK)
+	b.circle(m, 28.0, STONE)
+	for i in range(5):
+		b.rect(Rect2(m + Vector2(-20.0 + float(i) * 8.4, -20.0), Vector2(4.6, 26.0)),
+			TILE_YELLOW if i % 2 == 0 else Color(0.82, 0.20, 0.16))
+	var s := dir.orthogonal()
+	var head := PackedVector2Array()
+	for i in range(14):
+		var a := TAU * float(i) / 14.0
+		head.append(at - dir * 8.0 + dir * cos(a) * 22.0 + s * sin(a) * (13.0 if cos(a) > 0.0 else 16.0))
+	b.polygon(head, INK)
+	var inner := PackedVector2Array()
+	for p: Vector2 in head:
+		inner.append(at - dir * 8.0 + (p - (at - dir * 8.0)) * 0.86)
+	b.polygon(inner, TILE_GREEN)
+	for i in range(5):
+		var sp := at - dir * (18.0 - float(i) * 6.0) + s * (float(i % 3) - 1.0) * 5.0
+		_shard(b, sp, dir, 3.2, 2.6, TILE_CYAN if i % 2 == 0 else TILE_YELLOW, float(30 + i))
+	for sd: float in [-1.0, 1.0]:
+		b.circle(at - dir * 12.0 + s * sd * 8.0, 3.6, INK)
+		b.circle(at - dir * 12.0 + s * sd * 8.0, 2.4, EYE_AMBER)
+	b.circle(at + dir * 11.0, 4.5, INK)
+
+
+# the spouts' jets, over him
+func draw_spout_jets(b: ShapeBatch, t: float) -> void:
+	for k in range(spout_at.size()):
+		if spout_phase[k] != 2:
+			continue
+		var kk := 1.0 - clampf(spout_t[k] / SPOUT_FIRE, 0.0, 1.0)
+		_draw_jet(b, spout_at[k] + spout_dir[k] * 12.0, spout_dir[k], t, kk, spout_len[k] - 12.0)
+
+
 # How he holds himself in each state, for draw_salamander.
 func _pose(t: float) -> Dictionary:
 	var o := {
@@ -921,23 +1206,23 @@ func draw_drac(b: ShapeBatch, t: float) -> void:
 
 # the fountain jet: a hard rope of water down the lane, breaking up as it
 # goes, and where it lands
-func _draw_jet(b: ShapeBatch, mouth: Vector2, f: Vector2, t: float, k: float) -> void:
+func _draw_jet(b: ShapeBatch, mouth: Vector2, f: Vector2, t: float, k: float, reach := JET_LEN - 46.0) -> void:
 	var s := f.orthogonal()
 	var fade := 1.0 - k * k
 	var n := 9
 	var prev := mouth
 	for i in range(1, n + 1):
 		var u := float(i) / float(n)
-		var cur := mouth + f * (JET_LEN - 46.0) * u + s * sin(t * 30.0 + u * 9.0) * 5.0 * u
+		var cur := mouth + f * reach * u + s * sin(t * 30.0 + u * 9.0) * 5.0 * u
 		var w := lerpf(13.0, JET_W * 0.8, u)
 		b.line(prev, cur, Color(0.42, 0.74, 0.94, 0.55 * fade), w)
 		b.line(prev, cur, Color(0.90, 0.97, 1.0, 0.85 * fade), w * 0.4)
 		prev = cur
 	for i in range(8):
 		var u := fposmod(t * 2.4 + float(i) * 0.125, 1.0)
-		var dp := mouth + f * (JET_LEN - 40.0) * u + s * sin(float(i) * 2.3) * (6.0 + u * 20.0)
+		var dp := mouth + f * (reach + 6.0) * u + s * sin(float(i) * 2.3) * (6.0 + u * 20.0)
 		b.circle(dp, 3.0 + u * 2.0, Color(0.92, 0.98, 1.0, 0.8 * fade))
-	var end := mouth + f * (JET_LEN - 46.0)
+	var end := mouth + f * reach
 	_ring(b, end, 16.0 + k * 30.0, Color(0.86, 0.96, 1.0, 0.7 * fade), 3.0)
 	_ring(b, end, 6.0 + k * 18.0, Color(1.0, 1.0, 1.0, 0.6 * fade), 2.0)
 

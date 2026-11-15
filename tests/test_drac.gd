@@ -52,10 +52,16 @@ func _run() -> void:
 	_check(ResourceLoader.exists(BD.FILM_WIN), "win film exists")
 
 	var dr = m.drac
+	var LevelBuild: GDScript = load("res://world/level_build.gd")
+	var Surfaces: GDScript = load("res://world/surfaces.gd")
 	m.human.global_position = Vector2(640.0, BD.HOLD_Y - 400.0)
 	m.dog.global_position = Vector2(640.0, BD.HOLD_Y - 500.0)
 	_ticks(m, 0.5)
 	_check(dr.state == BD.State.IDLE, "still asleep with the pair past him")
+	# asleep, the spout tiles are only paving
+	m.dog.global_position = dr.spout_tile[0]
+	_ticks(m, 0.2)
+	_check(dr.spout_phase[0] == 0, "a tile does nothing while he sleeps")
 
 	m.human.global_position = Vector2(640.0, BD.HOLD_Y + 120.0)
 	m.dog.global_position = Vector2(640.0, BD.WAKE_Y - 30.0)
@@ -106,10 +112,50 @@ func _run() -> void:
 	_check(dr.surface_at(dog0) == load("res://world/surfaces.gd").S.WATER, "soak puddle left behind")
 
 	# part two: furious below half, slither, column bind, leash trip
-	var LevelBuild: GDScript = load("res://world/level_build.gd")
-	var Surfaces: GDScript = load("res://world/surfaces.gd")
 	_ticks(m, BD.JET_TIME + 0.1)
 	_check(dr.state == BD.State.PROWL, "jet done, he prowls")
+
+	# the arena: three spouts, each fired from its tile across the landing
+	_check(dr.spout_at.size() == 3 and dr.spout_tile.size() == 3, "three spouts, three tiles")
+	var half: float = BD.SPOUT_W * 0.5 + BD.SPOUT_HIT_R
+	for k in range(3):
+		_check(dr.spout_lane_hit(k, BD.LANDING, half), "spout %d's lane crosses the landing" % k)
+		_check(not dr.spout_lane_hit(k, dr.spout_tile[k], BD.SPOUT_W * 0.5 + BD.TILE_R), "spout %d's tile is out of its lane" % k)
+		var e: Vector2 = m.walk_edges(dr.spout_tile[k].y)
+		_check(dr.spout_tile[k].x - BD.TILE_R > e.x and dr.spout_tile[k].x + BD.TILE_R < e.y, "spout %d's tile is on the stair" % k)
+	dr.pos = BD.LANDING
+	dr.face_dir = Vector2.DOWN
+	dr.update_leg_positions()
+	dr.tail_cd = 99.0
+	dr.jet_cd = 99.0
+	m.human.global_position = Vector2(640.0, -690.0)
+	var hp1: float = dr.hp
+	var bones1: int = m.bones
+	m.dog.global_position = dr.spout_tile[0]
+	_ticks(m, DT * 2.0)
+	_check(dr.spout_phase[0] == 1 and dr.spout_warning(0), "her paw on the tile: the spout gurgles")
+	_ticks(m, BD.SPOUT_WARN - 0.12)
+	_check(dr.spout_phase[0] == 1 and dr.hp == hp1 and dr.state == BD.State.PROWL, "the warning runs before any water")
+	_ticks(m, 0.16)
+	_check(dr.spout_phase[0] == 2, "then it fires")
+	_check(dr.spout_hits == 1 and dr.hp == hp1 - BD.SPOUT_DAMAGE, "the jet catches him for its damage: %f" % dr.hp)
+	_check(dr.state == BD.State.STUNNED and dr.state_t > BD.SPOUT_STUN - 0.2, "and dazes him")
+	_check(m.bones == bones1 + BD.SPOUT_PAY, "a soak pays through award_points")
+	_check(dr.surface_at(dr.spout_at[0] + dr.spout_dir[0] * 200.0) == Surfaces.S.WATER, "the jet wets its lane")
+	m.human.global_position = dr.spout_tile[1]
+	_ticks(m, DT * 2.0)
+	_check(dr.spout_phase[1] == 1, "your human's shoe clicks a tile too")
+	m.human.global_position = Vector2(640.0, -690.0)
+	_ticks(m, BD.SPOUT_WARN + DT * 3.0)
+	_check(dr.spout_phase[1] == 2 and dr.state == BD.State.STUNNED, "the second jet lands while he is dazed")
+	_check(dr.spout_hits == 1 and dr.hp == hp1 - BD.SPOUT_DAMAGE, "a jet on a dazed dragon does not daze him twice")
+	_ticks(m, BD.SPOUT_FIRE + BD.SPOUT_REST)
+	_check(dr.spout_phase[0] == 3, "a held tile does not refire")
+	_check(dr.state == BD.State.PROWL, "the daze wears off")
+	m.dog.global_position = Vector2(640.0, -700.0)
+	_ticks(m, DT * 2.0)
+	_check(dr.spout_phase[0] == 0, "stepped off and refilled, it is ready again")
+	dr.slither_cd = 1.0
 	dr.damage(dr.hp - 45.0)
 	_check(dr.phase == 2, "below half he is in part two")
 	_ticks(m, DT)
@@ -163,6 +209,14 @@ func _run() -> void:
 	_check(dr.state == BD.State.RETREAT, "out of fight he retreats")
 	_ticks(m, 6.0)
 	_check(dr.state == BD.State.STAND, "last stand on his steps")
+	# at his last stand the serpent's spout chokes his own jet
+	var bones2: int = m.bones
+	m.dog.global_position = dr.spout_tile[2]
+	_ticks(m, DT * 2.0)
+	_check(dr.spout_phase[2] == 1, "the serpent's tile clicks")
+	_ticks(m, BD.SPOUT_WARN + DT * 2.0)
+	_check(dr.state == BD.State.STAND and dr.ls_jet_cd > BD.LAST_JET_EVERY, "the serpent's jet chokes his jet, no daze")
+	_check(m.bones == bones2 + BD.CHOKE_PAY, "a choke pays")
 	for k in range(3):
 		dr.leg_touch_t[k] = m.elapsed
 	_ticks(m, DT)

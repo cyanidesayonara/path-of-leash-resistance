@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-11-15 - El Drac's arena: the fountain's three spouts
+
+- El Mosaic's stair has three fountain spouts now (`systems/boss_drac.gd`): a bronze pipe out of a knob of rock in each stair wall and the serpent's head under its medallion above El Drac's plinth. Each has a pressure tile of trencadís in its own colour on the paving. A paw or your human's shoe on a tile clicks it; the spout gurgles and marks its lane for 0.8 s while the tile glows, then fires a jet across the landing where he fights. A jet that catches him in the fight pays "soaked! +6" through `award_points`, takes 14 HP and dazes him for 2.2 s; at his last stand the serpent's jet chokes his own jet instead ("choked! +4"). Her water never knocks her or your human. A tile fires once per step and refills in 3.5 s. Until she has soaked him once, the banner between his attacks says "STEP ON A SPOUT'S TILE TO SOAK HIM" (`mosaic.idle_status`).
+- `tests/test_drac.gd`: the lanes cross the landing, the tiles sit on the stair out of their own lanes, the telegraph runs before any water, a jet from a tile hits him for its damage and daze and pays, a dazed dragon is not dazed twice, a held tile does not refire, your human triggers a tile too, tiles are inert while he sleeps, and the serpent chokes his last-stand jet.
+
 ## 2026-11-15 - Boss arenas planned
 
 - `docs/BOSSES.md`: an arena section planning two or three interactables per boss from each real place (El Mamut's rowboat jetty, deckchairs and kiosk railing; El Drac's fountain spouts, tile slides and serpentine bench; Els Lleons' bollards, crane net and the Golondrina's horn; El Gat's awnings and yarn stall), El Mamut first.
