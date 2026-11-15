@@ -198,6 +198,13 @@ the code). A filter picks tests by path; TIMEOUT sets seconds per test:
 ```
 GODOT=godot/Godot_v4.7-stable_win64_console.exe bash tools/run_tests.sh [leash]
 ```
+The list is `tests/ci_tests.txt`: a new test is a line there, never a step
+in ci.yml (give it `# cost N` above it if it takes 10 s or more on CI).
+`WALKS=1` adds what CI also runs on every walk in `Game.LEVELS` (selftest,
+1800 frames) and the four street autowalks. CI splits all of it by cost
+into eight `shard K/8` jobs that run side by side (`SHARD=K/8`; `DRY=1`
+lists a shard's share), and the `smoke` check passes only when every shard
+did, so `smoke` and `attribution` are still the two checks to look for.
 
 Playtest a walk as it is played: real input actions from a script of steps,
 screenshots along the way, and a log of what a player would notice (the dog
