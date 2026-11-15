@@ -155,6 +155,54 @@ func _run() -> void:
 	m.dog.global_position = Vector2(640.0, -700.0)
 	_ticks(m, DT * 2.0)
 	_check(dr.spout_phase[0] == 0, "stepped off and refilled, it is ready again")
+
+	# loose trencadis: hits knock shards off him, and she can ride one
+	_check(dr.loose.size() >= BD.LOOSE_PER_HIT, "hits knock loose tiles off him: %d" % dr.loose.size())
+	var on_stair := true
+	for lt: Dictionary in dr.loose:
+		var le: Vector2 = m.walk_edges((lt["p"] as Vector2).y)
+		on_stair = on_stair and (lt["p"] as Vector2).x > le.x and (lt["p"] as Vector2).x < le.y
+	_check(on_stair, "the shards land on the stair")
+	var n0: int = dr.loose.size()
+	m.dog.tumble_t = 0.0
+	m.dog.global_position = dr.loose[0]["p"]
+	m.dog.velocity = Vector2.ZERO
+	_ticks(m, DT)
+	_check(dr.rides == 0, "standing still on a shard does not ride it")
+	m.dog.velocity = Vector2(200.0, 0.0)
+	_ticks(m, DT)
+	_check(dr.rides == 1 and m.dog.is_riding() and dr.loose.size() == n0 - 1, "running onto a shard rides it")
+	_check(m.dog.ride_vel.length() > BD.RIDE_SPEED - 1.0, "at ride speed")
+	dr.transition_to(BD.State.PROWL)
+	dr.pos = BD.LANDING
+	dr.face_dir = Vector2.DOWN
+	dr.update_leg_positions()
+	dr.tail_cd = 0.0
+	dr.jet_cd = 99.0
+	m.dog.global_position = dr.pos + Vector2(0.0, -140.0)
+	m.dog.tumble_t = 0.0
+	var hits2: int = m.dog_hits
+	var hp2: float = dr.hp
+	_ticks(m, DT * 2.0)
+	_check(dr.state == BD.State.TAIL_WHIP, "he whips at her on her shard")
+	_ticks(m, BD.TAIL_WARN + 0.05)
+	_check(m.dog_hits == hits2 and dr.ride_dodges == 1, "the tail passes over a dog on a shard")
+	_check(dr.hp == hp2 - BD.DODGE_DAMAGE, "and it counts as a dodge")
+	m.dog.ride_t = 0.0
+	_ticks(m, BD.TAIL_STRIKE + 0.1)
+	_check(dr.riding.is_empty(), "off the shard, it is gone")
+	m.dog.global_position = Vector2(640.0, -700.0)
+	m.dog.velocity = Vector2.ZERO
+	m.dog.ride(Vector2(BD.RIDE_SPEED, 0.0), BD.RIDE_TIME)
+	var rp0: Vector2 = m.dog.global_position
+	for i in range(12):
+		m.dog.tick(DT)
+	_check(m.dog.global_position.x - rp0.x > 60.0 and m.dog.is_riding(), "a ride carries her: %s" % str(m.dog.global_position - rp0))
+	for i in range(40):
+		m.dog.tick(DT)
+	_check(not m.dog.is_riding(), "and runs out")
+	m.dog.velocity = Vector2.ZERO
+	dr.tail_cd = 99.0
 	dr.slither_cd = 1.0
 	dr.damage(dr.hp - 45.0)
 	_check(dr.phase == 2, "below half he is in part two")

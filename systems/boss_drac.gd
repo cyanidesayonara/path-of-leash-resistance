@@ -94,6 +94,19 @@ const SPOUT_LANE_Y: Array[float] = [-870.0, -826.0, 0.0]
 const SPOUT_TILE_OFF: Array[Vector2] = [Vector2(78.0, 108.0), Vector2(78.0, 104.0), Vector2(150.0, -196.0)]
 const SERPENT := Vector2(640.0, -1112.0)
 const SPOUT_COLS: Array[Color] = [Color(0.12, 0.34, 0.74), Color(0.26, 0.64, 0.34), Color(0.94, 0.48, 0.14)]
+# Loose trencadis (docs/BOSSES.md, the arenas): every hit knocks a few big
+# glazed shards off him, and the slither sheds one now and then. Run onto
+# one and she rides it, skating on for RIDE_TIME; his tail and his jet pass
+# over a dog on a tile, and that counts as a dodge.
+const LOOSE_PER_HIT := 2
+const LOOSE_EVERY := 0.7
+const LOOSE_MAX := 8
+const LOOSE_LIFE := 9.0
+const LOOSE_THROW := Vector2(70.0, 130.0)
+const LOOSE_R := 22.0
+const RIDE_FROM := 110.0
+const RIDE_SPEED := 520.0
+const RIDE_TIME := 0.6
 const STONE := Color(0.72, 0.64, 0.50)
 const STONE_DARK := Color(0.50, 0.43, 0.33)
 
@@ -175,6 +188,15 @@ var spout_phase: Array[int] = [0, 0, 0]
 var spout_t: Array[float] = [0.0, 0.0, 0.0]
 var spout_caught: Array[bool] = [false, false, false]
 var spout_hits := 0
+# loose shards: [{ "p": Vector2, "a": float, "col": int, "until": float }];
+# the one she is riding travels with her
+var loose: Array[Dictionary] = []
+var loose_n := 0
+var loose_t := 0.0
+var loose_taught := false
+var riding: Dictionary = {}
+var rides := 0
+var ride_dodges := 0
 
 
 func setup(m: Node2D) -> void:
@@ -212,6 +234,13 @@ func setup(m: Node2D) -> void:
 	spout_t = [0.0, 0.0, 0.0]
 	spout_caught = [false, false, false]
 	spout_hits = 0
+	loose.clear()
+	loose_n = 0
+	loose_t = 0.0
+	loose_taught = false
+	riding = {}
+	rides = 0
+	ride_dodges = 0
 	place_spouts(Vector2(LANDING.x - 410.0, LANDING.x + 410.0))
 
 
@@ -346,6 +375,9 @@ func damage(amt: float) -> void:
 		main.feed.say("EL DRAC IS FURIOUS!", EventFeed.Tone.LOUD)
 	if hp <= 0.0 and was > 0.0:
 		main.feed.say("HE'S HAD ENOUGH! AFTER HIM", EventFeed.Tone.GOOD)
+	if amt > 0.0:
+		for i in range(LOOSE_PER_HIT):
+			shed_loose()
 
 
 func in_sector(p: Vector2, dir: Vector2, reach: float, half: float) -> bool:
@@ -460,7 +492,9 @@ func _strike_tail() -> void:
 	Sfx.play("crack", 1.2, -8.0)
 	var dog_p: Vector2 = main.dog.global_position
 	var push := whip_dir.orthogonal() * whip_side
-	if in_sector(dog_p, whip_dir, TAIL_REACH + 12.0, TAIL_HALF):
+	if in_sector(dog_p, whip_dir, TAIL_REACH + 12.0, TAIL_HALF) and _riding_clear():
+		_dodge(dog_p, true)
+	elif in_sector(dog_p, whip_dir, TAIL_REACH + 12.0, TAIL_HALF):
 		main.dog.knocked((push + whip_dir * 0.4).normalized(), "tail")
 	elif dog_p.distance_to(pos) < TAIL_REACH + 130.0 and hp > 0.0:
 		_dodge(dog_p)
@@ -468,11 +502,20 @@ func _strike_tail() -> void:
 		main.human.bumped(push)
 
 
-func _dodge(at: Vector2) -> void:
+func _dodge(at: Vector2, slid := false) -> void:
 	main.drac_dodges += 1
 	main.combo.add("DODGE", 2)
-	main.award_points(2, "dodged! +2")
+	if slid:
+		ride_dodges += 1
+		main.award_points(2, "slid clear! +2")
+	else:
+		main.award_points(2, "dodged! +2")
 	damage(DODGE_DAMAGE)
+
+
+# she is on a tile, and he has a dodge in him to give
+func _riding_clear() -> bool:
+	return main.dog.is_riding() and hp > 0.0
 
 
 func _lane_hit(p: Vector2, dir: Vector2, half_w: float) -> bool:
@@ -494,7 +537,10 @@ func _strike_jet() -> void:
 	var dir := face_dir.normalized()
 	var dog_p: Vector2 = main.dog.global_position
 	if _lane_hit(dog_p, dir, JET_W * 0.5 + 10.0):
-		main.dog.knocked(dir, "jet")
+		if _riding_clear():
+			_dodge(dog_p, true)
+		else:
+			main.dog.knocked(dir, "jet")
 	if _lane_hit(main.human.global_position, dir, JET_W * 0.5 + 12.0):
 		main.human.bumped(dir)
 	surface_zones.append({
@@ -574,6 +620,53 @@ func _hit(kind: String) -> void:
 			main.award_points(8, "tripped! +8")
 	main.shake_t = maxf(float(main.shake_t), 1.0)
 	transition_to(State.STUNNED)
+
+
+# A big shard knocked off him, skittering out to land on the ground nearby;
+# its direction and colour by a hash of the count, so a seeded walk replays.
+func shed_loose() -> void:
+	loose_n += 1
+	var h := _hash(float(loose_n), 4.2)
+	var a := h * TAU
+	var p := pos + Vector2.from_angle(a) * lerpf(LOOSE_THROW.x, LOOSE_THROW.y, _hash(float(loose_n), 9.7))
+	if main != null and main.has_method("walk_edges"):
+		var e: Vector2 = main.walk_edges(p.y)
+		p.x = clampf(p.x, e.x + 30.0, e.y - 30.0)
+	loose.append({"p": p, "a": a * 1.7, "col": loose_n % TILES.size(), "until": main.elapsed + LOOSE_LIFE})
+	while loose.size() > LOOSE_MAX:
+		loose.remove_at(0)
+	if not loose_taught and in_fight():
+		loose_taught = true
+		main.feed.say("LOOSE TILES! RUN ONTO ONE TO SLIDE", EventFeed.Tone.PLAIN)
+
+
+# A dog running onto a shard rides it; the shard goes with her and breaks up
+# where she stops.
+func _tick_loose() -> void:
+	var dog = main.dog
+	if not riding.is_empty():
+		riding["p"] = dog.global_position
+		if not dog.is_riding():
+			riding = {}
+	var i := loose.size() - 1
+	while i >= 0:
+		if float(loose[i]["until"]) <= main.elapsed:
+			loose.remove_at(i)
+		i -= 1
+	if not riding.is_empty() or dog.is_riding() or dog.is_tumbling():
+		return
+	var v: Vector2 = dog.velocity
+	if v.length() < RIDE_FROM:
+		return
+	for k in range(loose.size()):
+		if (loose[k]["p"] as Vector2).distance_to(dog.global_position) < LOOSE_R:
+			riding = loose[k]
+			loose.remove_at(k)
+			rides += 1
+			dog.ride(v.normalized() * RIDE_SPEED, RIDE_TIME)
+			Sfx.play("drac_click", 1.5, -4.0)
+			Sfx.play("whoop", 1.3, -8.0)
+			return
 
 
 func spout_lane_hit(k: int, p: Vector2, half_w: float) -> bool:
@@ -719,6 +812,7 @@ func tick_state(delta: float) -> void:
 	var dog_p: Vector2 = main.dog.global_position
 	act_t += delta
 	_tick_spouts(delta)
+	_tick_loose()
 	match state:
 		State.IDLE:
 			# your human still short of him: a pair already past (a shot taken
@@ -795,6 +889,10 @@ func tick_state(delta: float) -> void:
 			if chip_t >= CHIP_EVERY:
 				chip_t = 0.0
 				_shed_chip()
+			loose_t += delta
+			if loose_t >= LOOSE_EVERY:
+				loose_t = 0.0
+				shed_loose()
 			if check_column_bind():
 				_hit("column")
 				return
@@ -934,6 +1032,51 @@ func draw_ground(b: ShapeBatch, vt: float, vb: float) -> void:
 				var e := d.orthogonal() * (0.6 + h * 0.5)
 				var col: Color = TILES[k % TILES.size()]
 				b.quad(cp - d, cp + e, cp + d, cp - e, Color(col.r, col.g, col.b, a))
+
+
+	var t: float = AnimClock.msec() / 1000.0
+	for lt: Dictionary in loose:
+		var lp: Vector2 = lt["p"]
+		if lp.y < vt - 40.0 or lp.y > vb + 40.0:
+			continue
+		var left: float = float(lt["until"]) - float(main.elapsed)
+		_draw_loose(b, lp, float(lt["a"]), int(lt["col"]), clampf(left / 1.2, 0.0, 1.0), t, false)
+	if not riding.is_empty():
+		var rv: Vector2 = main.dog.velocity
+		_draw_loose(b, riding["p"], rv.angle() if rv.length() > 1.0 else float(riding["a"]), int(riding["col"]), 1.0, t, true)
+
+
+# One loose shard: a big glazed piece of him, odd-shaped, ink round it and a
+# glint that comes and goes so it reads as loose on the paving. Ridden, it
+# throws grit off its back edge.
+func _draw_loose(b: ShapeBatch, p: Vector2, a: float, ci: int, alpha: float, t: float, ridden: bool) -> void:
+	var col: Color = TILES[ci]
+	var d := Vector2.from_angle(a)
+	var n := d.orthogonal()
+	# five jagged corners, no two alike: a broken piece, not a slab
+	var pts := PackedVector2Array()
+	for k in range(5):
+		var ang := a + float(k) * TAU / 5.0 + (_hash(a, float(k)) - 0.5) * 0.7
+		pts.append(p + Vector2.from_angle(ang) * (10.0 + _hash(a + 1.0, float(k)) * 9.0))
+	var sh := PackedVector2Array()
+	var ink := PackedVector2Array()
+	for q: Vector2 in pts:
+		sh.append(q + Shade.light * (3.0 if not ridden else 5.0))
+		ink.append(p + (q - p) * 1.16)
+	b.polygon(sh, Color(SHADOW.r, SHADOW.g, SHADOW.b, SHADOW.a * alpha))
+	b.polygon(ink, Color(INK.r, INK.g, INK.b, alpha))
+	b.polygon(pts, Color(col.r, col.g, col.b, alpha))
+	# the mortar still stuck to one broken edge, and a crack across the glaze
+	b.line(pts[2], pts[3], Color(GROUT.r, GROUT.g, GROUT.b, alpha), 2.4)
+	b.line(p.lerp(pts[0], 0.7), p.lerp(pts[3], 0.5), Color(col.darkened(0.4).r, col.darkened(0.4).g, col.darkened(0.4).b, alpha), 1.2)
+	var tw := pow(maxf(0.0, sin(t * 3.0 + a * 5.0)), 8.0)
+	b.line(p - d * 9.0 - n * 5.0 - Shade.light * 2.0, p + d * 5.0 - n * 6.0 - Shade.light * 2.0,
+		Color(1.0, 1.0, 1.0, (0.35 + 0.55 * tw) * alpha), 2.0)
+	if ridden:
+		for k in range(5):
+			var u := fposmod(t * 6.0 + float(k) * 0.2, 1.0)
+			b.circle(p - d * (20.0 + u * 34.0) + n * sin(float(k) * 2.4) * 10.0, 2.6 * (1.0 - u) + 0.8,
+				Color(0.92, 0.88, 0.76, 0.8 * (1.0 - u)))
 
 
 func draw_warnings(b: ShapeBatch, t: float) -> void:
