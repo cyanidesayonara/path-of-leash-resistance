@@ -107,7 +107,7 @@ const LEVEL_SUBTITLES := {
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
 # The first few open quickly, so a new player is never stuck on one walk.
-const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "ciutadella": 15, "llevant": 15, "eixample": 16, "diagonal": 17, "tibidabo": 17, "vet": 19, "trail": 21, "angels": 22, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "station": 31, "carmel": 33, "reial": 35, "cremada": 36, "forum": 37, "aigues": 39, "horta": 41, "port": 43, "espanya": 45, "poble": 46, "site": 47, "partit": 48, "scrap": 49, "gracia": 50, "aeroport": 51, "montserrat": 52, "raval": 53}
+const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "ciutadella": 15, "llevant": 15, "eixample": 16, "tibidabo": 17, "vet": 19, "trail": 21, "angels": 22, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "station": 31, "carmel": 33, "reial": 35, "cremada": 36, "forum": 37, "diagonal": 38, "aigues": 39, "horta": 41, "port": 43, "espanya": 45, "poble": 46, "site": 47, "partit": 48, "scrap": 49, "gracia": 50, "aeroport": 51, "montserrat": 52, "raval": 53}
 
 # Keystone Chase milestone gates: each tier requires surviving the previous
 # tier's chase level end-to-end to enter.
@@ -121,7 +121,7 @@ const CHASE_GATE := {
 	# Tier 3 (Walks after El Besòs)
 	"llevant": "besos",
 	"eixample": "besos",
-	"diagonal": "besos",
+	"diagonal": "boars",
 	"tibidabo": "besos",
 	"vet": "besos",
 	# Tier 4 (Walks after El Veterinari)
@@ -199,7 +199,7 @@ const CAMPAIGN_SKY := {
 }
 
 # the walk select: the first walk, then the campaign walks in order
-const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "ciutadella", "llevant", "eixample", "diagonal", "tibidabo", "vet", "trail", "angels", "spook", "boars", "guell", "superilla", "station", "carmel", "reial", "cremada", "forum", "aigues", "horta", "port", "espanya", "poble", "site", "partit", "scrap", "gracia", "aeroport", "montserrat", "raval"]
+const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "ciutadella", "llevant", "eixample", "tibidabo", "vet", "trail", "angels", "spook", "boars", "guell", "superilla", "station", "carmel", "reial", "cremada", "forum", "diagonal", "aigues", "horta", "port", "espanya", "poble", "site", "partit", "scrap", "gracia", "aeroport", "montserrat", "raval"]
 
 # Cosmetics keep their catalog keys when equipped, but ownership is namespaced
 # by category so identically named items remain separate purchases.

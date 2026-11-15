@@ -1,7 +1,7 @@
 extends SceneTree
 
 # Tests La Diagonal (systems/diagonal.gd) and its turned camera:
-# - registered in LEVELS, CAROUSEL (after L'Eixample), STAR_GATE, CHASE_GATE,
+# - registered in LEVELS, CAROUSEL (after El Fòrum), STAR_GATE, CHASE_GATE,
 #   LEVEL_NAMES and its glosses, CAMPAIGN_SKY, the goals table
 # - the camera is turned 45 degrees for this walk, and only this walk
 # - the stick means screen directions: screen-up walks her up the avenue's
@@ -53,9 +53,9 @@ func _run() -> void:
 	# --- 1. registration ---
 	_check(game.LEVELS.has("diagonal"), "in LEVELS")
 	var ci: int = game.CAROUSEL.find("diagonal")
-	_check(ci == game.CAROUSEL.find("eixample") + 1, "in CAROUSEL right after L'Eixample")
+	_check(ci == game.CAROUSEL.find("forum") + 1, "in CAROUSEL right after El Fòrum, where the avenue ends")
 	_check(game.STAR_GATE.has("diagonal"), "has a star gate")
-	_check(String(game.CHASE_GATE.get("diagonal", "")) == "besos", "in El Besòs's tier, with L'Eixample")
+	_check(String(game.CHASE_GATE.get("diagonal", "")) == "boars", "in Els Senglars' tier, with El Fòrum")
 	_check(String(game.LEVEL_NAMES["diagonal"]) == "La Diagonal", "named La Diagonal")
 	_check(game.LEVEL_SUBTITLES_CA.has("diagonal") and game.LEVEL_SUBTITLES_ES.has("diagonal"), "glossed in Catalan and Spanish")
 	_check(game.CAMPAIGN_SKY["diagonal"] == ["clear", "day"], "a clear day")

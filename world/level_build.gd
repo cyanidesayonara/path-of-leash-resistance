@@ -3047,6 +3047,12 @@ const FREEDOM_PROPS := {
 		[Vector2(200.0, -330.0), "post"], [Vector2(480.0, -440.0), "post"], [Vector2(800.0, -440.0), "post"],
 		[Vector2(1080.0, -330.0), "post"], [Vector2(240.0, -210.0), "shrub"], [Vector2(1100.0, -260.0), "shrub"],
 	],
+	"diagonal": [
+		[Vector2(270.0, -470.0), "dig"], [Vector2(990.0, -310.0), "dig"], [Vector2(600.0, -290.0), "dig"],
+		[Vector2(350.0, -480.0), "planter"], [Vector2(1040.0, -480.0), "planter"],
+		[Vector2(210.0, -350.0), "post"], [Vector2(500.0, -450.0), "post"], [Vector2(740.0, -440.0), "post"],
+		[Vector2(1070.0, -350.0), "post"], [Vector2(230.0, -230.0), "shrub"], [Vector2(1090.0, -240.0), "shrub"],
+	],
 	"forum": [
 		[Vector2(210.0, -480.0), "dig"], [Vector2(620.0, -320.0), "dig"], [Vector2(780.0, -220.0), "dig"],
 		[Vector2(320.0, -490.0), "planter"], [Vector2(720.0, -490.0), "planter"],
