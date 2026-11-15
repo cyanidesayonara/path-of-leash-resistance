@@ -388,6 +388,9 @@
 # The street after dark (lit doorways, shopfronts and windows)
 --headless --path . --script res://tests/test_night_fronts.gd
 
+# Panots: flower tiles and Gaudi hexagons stay on their pavement, in one batch
+--headless --path . --script res://tests/test_panot.gd
+
 # Night shadows test
 --headless --path . --script res://tests/test_shade.gd
 

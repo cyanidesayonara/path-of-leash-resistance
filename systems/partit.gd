@@ -24,6 +24,7 @@ extends RefCounted
 # Static functions over main's state, like the other systems.
 
 const NightFronts := preload("res://world/night_fronts.gd")
+const Panot := preload("res://world/panot.gd")
 const Letters := preload("res://world/sign_letters.gd")
 const HumanLook := preload("res://entities/human_appearance.gd")
 
@@ -33,6 +34,9 @@ const SHADOW := Color(0.05, 0.05, 0.08, 0.20)
 const ASPHALT := Color(0.31, 0.31, 0.33)
 const PAVING := Color(0.68, 0.66, 0.62)        # the sidewalks' hydraulic tiles
 const PAVING_JOINT := Color(0.58, 0.56, 0.52)
+const PANOT_T := 28.0
+const PANOT_INK := Color(0.10, 0.08, 0.06, 0.13)
+const PANOT_SHINE := Color(1.0, 0.98, 0.94, 0.08)
 const KERB := Color(0.78, 0.76, 0.71)
 const CONCOURSE := Color(0.74, 0.72, 0.67)
 const LINE_WHITE := Color(0.90, 0.89, 0.84)
@@ -309,21 +313,16 @@ static func _draw_ground(m: Node2D, c: ShapeBatch, top: float, bot: float) -> vo
 			var sw2 := sidewalk(ROAD_END_Y + 1.0)
 			c.line(Vector2(ee.x + sw2, ROAD_END_Y), Vector2(ee.y - sw2, ROAD_END_Y), KERB, 5.0)
 			c.rect(Rect2(560.0, ROAD_END_Y - 2.0, 120.0, 10.0), PAVING_JOINT)
-		# sidewalk tiles: the joints across, and one down the middle of each
-		var jy := floorf(rt / 26.0) * 26.0
+		# sidewalk tiles: panots de flor, three across on the avenue, rows
+		# following the kerb round the bend (world/panot.gd)
+		var jy := floorf(rt / PANOT_T) * PANOT_T
 		while jy < bot:
 			if jy >= rt:
-				var e2: Vector2 = m.walk_edges(jy)
-				var sw3 := sidewalk(jy)
-				c.line(Vector2(e2.x, jy), Vector2(e2.x + sw3 - 3.0, jy), PAVING_JOINT, 1.2)
-				c.line(Vector2(e2.y - sw3 + 3.0, jy), Vector2(e2.y, jy), PAVING_JOINT, 1.2)
-				# the panot's flower: a small diamond pressed into each tile
-				if int(absf(jy) / 26.0) % 2 == 0:
-					for x0: float in [e2.x + sw3 * 0.3, e2.x + sw3 * 0.72, e2.y - sw3 * 0.3, e2.y - sw3 * 0.72]:
-						var q := Vector2(x0, jy + 13.0)
-						c.polygon(PackedVector2Array([q + Vector2(0, -3.5), q + Vector2(3.5, 0), q + Vector2(0, 3.5),
-							q + Vector2(-3.5, 0)]), PAVING_JOINT.lightened(0.05))
-			jy += 26.0
+				var e2: Vector2 = m.walk_edges(jy + PANOT_T * 0.5)
+				var sw3 := sidewalk(jy + PANOT_T * 0.5)
+				Panot.flor_row(c, e2.x, e2.x + sw3 - 3.0, jy, e2.x, PANOT_INK, PANOT_SHINE, PANOT_T)
+				Panot.flor_row(c, e2.y - sw3 + 3.0, e2.y, jy, e2.y - sw3 + 3.0, PANOT_INK, PANOT_SHINE, PANOT_T)
+			jy += PANOT_T
 	# the stadium's paving: big granite slabs with a darker band every few
 	var ct := top
 	var cb := minf(bot, ROAD_END_Y)
