@@ -73,7 +73,7 @@ const STYLE_MIX := {
 }
 const WALK_MIX := {
 	"park": "park", "ciutadella": "park", "beach": "seafront", "llevant": "seafront", "forum": "seafront",
-	"aigues": "trail", "trail": "trail", "carmel": "trail", "horta": "trail", "market": "hall",
+	"aigues": "trail", "market": "hall",
 }
 
 var vel := Vector2.ZERO
