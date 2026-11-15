@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-11-15 - Release notes: the off-leash games and El Mamut's arena; CI in parallel shards
+
+- `store/listing.md` and `docs/itch-page.md`: 1.73's What's new adds El Mamut's arena and the off-leash games (agility, frisbee, fetch, pigeons, waves); the description names the pigeons and the waves; the certification notes drop 1.69 to stay inside 2000 characters.
+- CI (#538): the single 37-minute smoke job is eight cost-balanced shards (`tests/ci_tests.txt`, `tools/run_tests.sh` with `SHARD`/`WALKS`), about six minutes a push, behind a gate job still named `smoke`. The walk checks read `Game.LEVELS`, so eixample and angels, which the hardcoded list had missed, are checked again.
+
 ## 2026-11-15 - Boss arenas planned
 
 - `docs/BOSSES.md`: an arena section planning two or three interactables per boss from each real place (El Mamut's rowboat jetty, deckchairs and kiosk railing; El Drac's fountain spouts, tile slides and serpentine bench; Els Lleons' bollards, crane net and the Golondrina's horn; El Gat's awnings and yarn stall), El Mamut first.
