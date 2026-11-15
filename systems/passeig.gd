@@ -998,17 +998,16 @@ static func _volley_court(m: Node2D, court: Rect2) -> void:
 	if m.volleyball != null:
 		for pi in range(Volleyball.PLAYERS.size()):
 			var pp: Vector2 = Volleyball.PLAYERS[pi]
-			b.circle(pp + Shade.light * 5.0, 6.5, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
-			b.rect(Rect2(pp.x - 4.5, pp.y - 3.5, 9.0, 7.0), shorts[pi])
-			b.circle(pp, 5.2, skins[pi])
-			b.circle(pp + Vector2(0.0, -2.5), 4.0, skins[pi])
-			b.circle(pp + Vector2(0.0, -3.2), 3.4, hairs[pi])
-			var arm_dir := Vector2.UP if pi < 2 else Vector2.DOWN
-			if pi == 0 and m.volleyball.state == Volleyball.St.WARN:
-				b.line(pp, pp + Vector2(4.0, -9.0), skins[pi], 2.2)
-			else:
-				b.line(pp - Vector2(4.0, 0.0), pp + arm_dir * 4.0 - Vector2(3.0, 0.0), skins[pi], 1.8)
-				b.line(pp + Vector2(4.0, 0.0), pp + arm_dir * 4.0 + Vector2(3.0, 0.0), skins[pi], 1.8)
+			# facing the net, on their toes, arms out for the dig; the
+			# spiker's arms go up as she telegraphs the hit
+			var face := Vector2.UP if pi < 2 else Vector2.DOWN
+			var spiking: bool = pi == 0 and m.volleyball.state == Volleyball.St.WARN
+			var jig := float(AnimClock.msec()) / 1000.0 * 4.6 + float(pi) * 1.9
+			NpcFigure.person(b, pp, face, 90 + pi * 7, jig, {"size": 0.9, "step": 0.3,
+				"top": skins[pi], "legs": shorts[pi], "skin": skins[pi], "hair": hairs[pi],
+				"hair_style": ["short", "long", "curly", "bun"][pi],
+				"arms": NpcFigure.Arms.UP if spiking else NpcFigure.Arms.READY})
+			b.line(pp + face.orthogonal() * 4.6 * 0.9, pp - face.orthogonal() * 4.6 * 0.9, shorts[pi], 3.0)
 
 	# the volleyball: in play or held by spiker
 	if m.volleyball != null:

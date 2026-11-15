@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-11-15 - Passers-by drawn like the dog walkers
+
+- An audit of every passer-by against the best of them (the other dog walkers' owners, drawn by `HumanAppearance`) found the weakest were drawn side-on as a rect and a circle, one skin for all, standing still or sliding.
+- `entities/npc_figure.gd` (`NpcFigure.person`): a person on the owners' rig, from above: a shadow cast along the light, feet that step with a stride phase, arms posed for what they are doing (by the side, behind the back, ready, up, throwing), lit shoulders, a head with that person's own skin, hair and hairstyle from a stable key, a cap or a beanie. Into the caller's batch, no draw call of its own.
+- Dia de Partit's kickabout kids face the ball and bounce on their toes, each in their own time (they were rects bobbing in sync). El Barri's petanca players watch the boule in flat caps with their hands behind their backs, and the thrower winds up with the boule in his hand. La Platja's volleyball players face the net, ready for the dig, and the spiker's arms go up as she telegraphs. The street's florist walks with a step under her sunhat, her tray held out in front.
+- The shoppers in the crowd (El Diluvi) face the way they walk: half of them walked backwards.
+- Test: `tests/test_npc_figure.gd`.
+- Still on the list from the audit: Ornitòleg, Escombriaire and Banderer (the florist's template), El Guitarrista and El Fòrum's skater (drawn side-on), the castanyera and the boletaire, the lost tourist and the surfer, the pickpocket's stride.
+
 ## 2026-11-15 - La Diagonal: the art pass, bike lanes and roads across the avenue
 
 - The grid is full size now (`GRID_SCALE`): a block is as big as one of L'Eixample's, so the usual view shows the corners of real roofs, not a map of small ones. Each block (`_block`) is a ring of houses round a courtyard, built along its own turned axes: every plot its own terrat of rajola or a flat gravel roof inside its parapets, with a stair house, a light well, a water tank, and solar panels, washing or pots; corner houses on the chamfers, some under a slate cupola; courtyards that are a garden with sauló paths or the low workshop roofs; plane trees on a panot pavement, and zebras where four chamfers meet. Where the avenue cuts a block, a row of houses fronts the avenue. A block the avenue runs through the middle of leaves a wedge each side.
