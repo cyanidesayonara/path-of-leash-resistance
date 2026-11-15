@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-11-16 - Cache La Diagonal's edge-layer grid rows
+
+- Added `_row_cache` (64-entry static `ShapeBatch` row cache keyed by `[a, Shade.light, b.lod]`, replayed via `append_to()`) and affine half-plane culling (`_box_cs()`) in `systems/diagonal.gd` to skip whole courtyards, sides, plots, and corners outside the avenue clip band while keeping output pixel-identical (`shot_diff.py` across `--shot-y=-800,-1650,-2900,-4100`).
+- Reduced `edgelayer.gd` 15-second `--perf` redraw cost on `diagonal` from `26.043ms` (`0.244ms/frame`) to `9.608ms` (`0.103ms/frame`).
+- Tests: `tests/test_diagonal.gd`, `tests/test_walk_hooks.gd`, `tests/test_members_exist.gd`, and `diagonal` `--selftest`.
+
 ## 2026-11-15 - Boss arena and off-leash game look and batching pass
 
 - Batched `BossGat` statue drawing, roar/dust/target rings, health bar rects, and café awning warning frames into `ShapeBatch` (`_ring()` helper in `systems/boss_gat.gd`), cutting per-frame boss canvas draw calls to one flush before label text; bevelled and added bronze plaques to both plinths.

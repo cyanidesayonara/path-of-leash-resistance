@@ -797,6 +797,57 @@ static func _ll(b: ShapeBatch, f: Transform2D, x0: float, y0: float, x1: float, 
 		b.line(p0, p1, col, w * f.x.length())
 
 
+static var _row_cache := {}
+
+
+# 0 = wholly inside the clip half-plane, 2 = wholly outside (skip), cs = straddling
+static func _box_cs(f: Transform2D, x0: float, y0: float, x1: float, y1: float, cs: int, pad := 0.0) -> int:
+	if cs == 0:
+		return 0
+	var ax := f.x.x * (x0 - pad)
+	var bx := f.x.x * (x1 + pad)
+	var cy := f.y.x * (y0 - pad)
+	var dy := f.y.x * (y1 + pad)
+	var xmin := f.origin.x + minf(ax, bx) + minf(cy, dy)
+	var xmax := f.origin.x + maxf(ax, bx) + maxf(cy, dy)
+	if cs < 0:
+		if xmin >= BLOCK_L:
+			return 2
+		if xmax < BLOCK_L:
+			return 0
+	else:
+		if xmax <= BLOCK_R:
+			return 2
+		if xmin > BLOCK_R:
+			return 0
+	return cs
+
+
+static func _row(b: ShapeBatch, a: int, u: Vector2, v: Vector2, d: float, reach: float) -> void:
+	# far enough out to fill the turned view's corners, no further
+	for bb in range(-2, 3):
+		var c := Vector2(CX + float(bb) * d, float(a) * d)
+		if (a + bb) % 2 != 0:
+			if bb != 0:
+				_crossing(b, Transform2D(u, v, c), -1 if c.x < CX else 1)
+			continue
+		# wholly on one side: drawn as it is. Cut by the avenue:
+		# clipped, the only blocks that pay for a clip; one the avenue
+		# runs through the middle of leaves a wedge on each side.
+		if c.x + reach < BLOCK_L or c.x - reach > BLOCK_R:
+			_block(b, c, u, v, a * 31 + bb * 7, 0)
+			continue
+		for cs: int in [-1, 1]:
+			if (cs < 0 and c.x - reach >= BLOCK_L) or (cs > 0 and c.x + reach <= BLOCK_R):
+				continue
+			if cs < 0 and a == PUNXES_AT.x and bb == PUNXES_AT.y:
+				_punxes(b, c, u, v)
+			elif cs > 0 and a == GLORIES_AT.x and bb == GLORIES_AT.y:
+				_glories(b, c, u, v)
+			else:
+				_block(b, c, u, v, a * 31 + bb * 7 + cs, cs)
+
+
 # The blocks on the turned lattice, and the crossings between them. Each
 # block is a chamfered square BLOCK wide, built DEPTH deep round a
 # courtyard, and clipped where the avenue cuts it.
@@ -812,28 +863,16 @@ static func _blocks(b: ShapeBatch, lo: float, hi: float) -> void:
 	var a0 := int(floorf((lo - reach - 80.0) / d))
 	var a1 := int(ceilf((hi + reach + 80.0) / d))
 	for a in range(a0, a1 + 1):
-		# far enough out to fill the turned view's corners, no further
-		for bb in range(-2, 3):
-			var c := Vector2(CX + float(bb) * d, float(a) * d)
-			if (a + bb) % 2 != 0:
-				if bb != 0:
-					_crossing(b, Transform2D(u, v, c), -1 if c.x < CX else 1)
-				continue
-			# wholly on one side: drawn as it is. Cut by the avenue:
-			# clipped, the only blocks that pay for a clip; one the avenue
-			# runs through the middle of leaves a wedge on each side.
-			if c.x + reach < BLOCK_L or c.x - reach > BLOCK_R:
-				_block(b, c, u, v, a * 31 + bb * 7, 0)
-				continue
-			for cs: int in [-1, 1]:
-				if (cs < 0 and c.x - reach >= BLOCK_L) or (cs > 0 and c.x + reach <= BLOCK_R):
-					continue
-				if cs < 0 and a == PUNXES_AT.x and bb == PUNXES_AT.y:
-					_punxes(b, c, u, v)
-				elif cs > 0 and a == GLORIES_AT.x and bb == GLORIES_AT.y:
-					_glories(b, c, u, v)
-				else:
-					_block(b, c, u, v, a * 31 + bb * 7 + cs, cs)
+		var key := [a, Shade.light, b.lod]
+		var rec: ShapeBatch = _row_cache.get(key)
+		if rec == null:
+			if _row_cache.size() > 64:
+				_row_cache.clear()
+			rec = ShapeBatch.new()
+			rec.lod = b.lod
+			_row(rec, a, u, v, d, reach)
+			_row_cache[key] = rec
+		rec.append_to(b)
 
 
 # where four chamfers face each other: a zebra across each street mouth
@@ -873,6 +912,9 @@ static func _block(b: ShapeBatch, c: Vector2, u: Vector2, v: Vector2, salt: int,
 # inside the block: a garden with sauló paths, or the low workshop roofs
 # that fill so many Eixample courtyards, and trees either way
 static func _courtyard(b: ShapeBatch, f: Transform2D, salt: int, cs: int) -> void:
+	cs = _box_cs(f, -80.0, -80.0, 80.0, 80.0, cs, 20.0)
+	if cs == 2:
+		return
 	var l: Vector2 = Shade.light
 	var trees := 5
 	if _h(salt * 13 + 5) < 0.4:
@@ -913,6 +955,9 @@ static func _courtyard(b: ShapeBatch, f: Transform2D, salt: int, cs: int) -> voi
 # plots between the two corner houses, this side's corner house, the plane
 # trees on the pavement
 static func _side(b: ShapeBatch, f: Transform2D, salt: int, cs: int) -> void:
+	cs = _box_cs(f, -115.0, BLOCK * 0.5 - DEPTH * 1.2 - 16.0, BLOCK * 0.5 + 16.0, BLOCK * 0.5 + 28.0, cs, 16.0)
+	if cs == 2:
+		return
 	var s := BLOCK * 0.5
 	var l: Vector2 = Shade.light
 	var x := -60.0
@@ -937,6 +982,9 @@ static func _side(b: ShapeBatch, f: Transform2D, salt: int, cs: int) -> void:
 # street). A tiled terrat or a flat gravel roof inside its parapet, with
 # the stair house, a light well, a water tank and whatever else is up there.
 static func _plot(b: ShapeBatch, f: Transform2D, x0: float, x1: float, y0: float, y1: float, k: int, cs: int) -> void:
+	cs = _box_cs(f, x0, y0, x1, y1, cs, 12.0)
+	if cs == 2:
+		return
 	var l: Vector2 = Shade.light
 	var w := x1 - x0
 	var dd := y1 - y0
@@ -997,6 +1045,9 @@ static func _plot(b: ShapeBatch, f: Transform2D, x0: float, x1: float, y0: float
 # the corner house on the chamfer: a deeper roof, its terrat, and on some
 # a slate cupola over the cut corner as the modernista corners have
 static func _corner(b: ShapeBatch, f: Transform2D, salt: int, cs: int) -> void:
+	cs = _box_cs(f, 52.0, 52.0, BLOCK * 0.5 + 8.0, BLOCK * 0.5 + 8.0, cs, 20.0)
+	if cs == 2:
+		return
 	var s := BLOCK * 0.5
 	var k := s - CHAMFER
 	var l: Vector2 = Shade.light
