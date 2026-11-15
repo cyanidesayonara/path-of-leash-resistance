@@ -10,6 +10,16 @@ Append-only session history, newest first.
 - A new game in every plaça (about fifteen walks end in one): the pigeons. A flock of nine lands on scattered crumbs. Run at them and the near ones take off, lost (at a sprint they see her from much further off). Creep up, stop close and bark: every pigeon still down bursts up at once, a bone each, double when she is right among them, five more for the whole flock. Three flocks, each somewhere new (`systems/pigeon_game.gd`, test `tests/test_pigeon_game.gd`).
 - A new game at the dog beaches (Platja de Llevant, La Cremada): the waves. A crest builds out at sea (the telegraph), the wave rushes up the sand and drains back. Follow it out and outrun the next one: further out pays more, dry escapes in a row add up, and caught she is soaked and the streak is gone. Six waves (`systems/wave_game.gd`, test `tests/test_wave_game.gd`).
 - `tools/agility_frames.gd` films a run along the chalk line. Tests: the table's count and fault, the racing line passing every pole on its side and running clean, medals, the frisbee streak and leap pay.
+
+## 2026-11-15 - Boss arenas planned
+
+- `docs/BOSSES.md`: an arena section planning two or three interactables per boss from each real place (El Mamut's rowboat jetty, deckchairs and kiosk railing; El Drac's fountain spouts, tile slides and serpentine bench; Els Lleons' bollards, crane net and the Golondrina's horn; El Gat's awnings and yarn stall), El Mamut first.
+
+## 2026-11-14 - Release notes for 1.73
+
+- `store/listing.md`: What's new for 1.73 (L'Aeroport and Montserrat, thirty-eight walks; Els Lleons and El Drac; the chases rebuilt; the tug of war; night shadows and softer lit fronts; the home walk-in; objects that fit the place), the walk count and list in the description, and the certification notes. The description no longer claims an agility course on every walk (only El Barri has one).
+- `docs/itch-page.md`: What's new in 1.73. `README.md`: thirty-eight walks, L'Aeroport and Montserrat in the table.
+
 ## 2026-11-14 - CI was not running
 
 - `ci.yml` had not run since #531 merged: a step name ("...security: never in a solid...") held an unquoted colon and space, which YAML reads as a mapping, so GitHub rejected the whole workflow file and every push and pull request ran only the sweep, soak and MSIX workflows. #529, #524, #531, #525, #526, #527, #532 and #533 merged without it; each was run through the full local suite (`tools/run_tests.sh`) before merging. The colon is a semicolon now, and every workflow file parses.
