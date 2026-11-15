@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-15 - La Diagonal's riders, and bike lanes painted as Barcelona's
+
+- La Diagonal has riders (`Diagonal.rider_lane`): couriers, Bicing, city bikes, scooters and now and then a kid, in the two red two-way bike lanes inside the tree lines, each keeping to the right of its lane.
+- They give way at the three roads across the avenue (`Diagonal.rider_hold`): on red they stop at the line short of the roadway, on amber they stop if there is room to, and on green they ride on. The lights now run on the walk's own clock (`Diagonal.light`, 6 s green, 1 s amber, 7 s red), so the lamps drawn are the ones the riders obey; they used to cycle on the cosmetic clock.
+- Bike lane paint (`world/bike_paint.gd`, drawn into the caller's batch): the bicycle glyph with its arrow, and the rows of white squares Spanish road marking uses for a cyclists' crossing. The street's two-way lane gets white edge lines and the glyph each way; the lanes that cross the street, El Diluvi, Les Obres and L'Eixample are marked as cyclists' crossings where they cross the walk.
+- Test: `tests/test_diagonal_riders.gd` (the lanes, the light cycle, a rider stopping at a red line and crossing on green).
+
 ## 2026-11-15 - Riders: delivery couriers, a mix for every walk, and riding like people
 
 - Who rides (`entities/bike.gd`): a rider's `kind` still says how it behaves and what a hit does; its new `style` says who it is. Bikes: a city bike with a wicker basket, a Bicing (white with red, the front carrier), a road cyclist down on the drops in lycra, a mountain biker on knobbly tyres with a hydration pack and a peaked helmet, a food-delivery courier on an e-bike with the big insulated box on their back (deep violet, no company's colour or logo), reflective bands, a phone lit on the bars, and an adult on an electric scooter. Kids: a kick scooter or a little bike with stabilisers and streamers. Skaters: a rollerblader or a skateboarder stood sideways on the board. In the market hall: a parent pushing a pram. Skin, hair, clothes and helmets vary per rider.
