@@ -40,19 +40,17 @@ class FakeMain:
 
 class FakeDog:
 	extends Node2D
-	var hits := 0
 
 	func hit_by_rider(_d: Vector2) -> void:
-		hits += 1
+		pass
 
 
 class FakeHuman:
 	extends Node2D
-	var falls := 0
 	var bumps := 0
 
 	func fall(_r: String) -> bool:
-		falls += 1
+		set_meta("falls", int(get_meta("falls", 0)) + 1)
 		return true
 
 	func bumped(_d: Vector2) -> void:
@@ -129,7 +127,7 @@ func _initialize() -> void:
 		if i == 120:
 			_check(b.speed < 5.0, "a rider stops for your human in a narrow lane (%.0f px/s)" % b.speed)
 	_check(closest > 38.0, "short of them, and goes round them in the end without touching (%.0f px)" % closest)
-	_check((w.human as FakeHuman).falls == 0, "your human is not knocked over")
+	_check(int((w.human as Node2D).get_meta("falls", 0)) == 0, "your human is not knocked over")
 	_check(b.has_meta("rang") and "ring ring!" in (w.main as FakeMain).said, "the rider rang the bell")
 	(w.main as Node2D).queue_free()
 
@@ -157,7 +155,7 @@ func _initialize() -> void:
 	(w.human as Node2D).global_position = Vector2(100, 0)
 	for i in range(30):
 		b._physics_process(DT)
-	_check((w.human as FakeHuman).falls == 1, "a rider who cannot stop in time still knocks your human over")
+	_check(int((w.human as Node2D).get_meta("falls", 0)) == 1, "a rider who cannot stop in time still knocks your human over")
 	(w.main as Node2D).queue_free()
 
 	# 6. the rider ahead in the same line sets the pace

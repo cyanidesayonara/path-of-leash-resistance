@@ -346,6 +346,11 @@ func _lane_x(y: float, lane_i: int, kind_i: int, edges: Callable) -> float:
 	return clampf(x, lo, hi)
 
 
+# which way a walker in the river is going, for drawing them facing it
+func heading_south(i: int) -> bool:
+	return _southbound(i)
+
+
 func _southbound(i: int) -> bool:
 	if flow_mode == MODE_OUT:
 		return true
