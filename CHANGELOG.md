@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-11-15 - Release notes: the off-leash games, the boss arenas, the street props; CI in parallel shards
+
+- `store/listing.md` and `docs/itch-page.md`: 1.73's What's new adds the four boss arenas, the street-walk props and the off-leash games (agility, frisbee, fetch, pigeons, waves); the description names the pigeons and the waves; the certification notes drop 1.69 to stay inside 2000 characters.
+- CI (#538): the single 37-minute smoke job is eight cost-balanced shards (`tests/ci_tests.txt`, `tools/run_tests.sh` with `SHARD`/`WALKS`), about six minutes a push, behind a gate job still named `smoke`. The idle soak runs on pushes to main only (#545). The walk checks read `Game.LEVELS`, so eixample and angels, which the hardcoded list had missed, are checked again.
+
 ## 2026-11-15 - El Gat's arena: the yarn stalls
 
 - Two market yarn stalls on the Rambla del Raval (docs/BOSSES.md, the arenas), one each side: a trestle table of skeins under a striped awning edge, a wicker basket of yarn in front. Bump the basket or drag the leash through it and it rocks for 0.8 s, a ball peeking over the rim, then tips ("BASKET DOWN! YARN EVERYWHERE") and three balls roll out across and up the rambla, each trailing its wool back to the basket.
