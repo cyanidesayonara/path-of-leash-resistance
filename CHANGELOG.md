@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-11-15 - El Mamut's arena: the rowboat jetty and the park chairs
+
+- The first of the boss arenas (docs/BOSSES.md). A rowboat jetty on the lake shore, a boat tied up at its end: lure his tusk charge onto its boards and they give way, and he goes through into the lake for 40 damage and the longest daze of the fight (4.6 s), then comes up spraying. Once: after that the land end is snapped boards and the boat has drifted off.
+- Two stacks of the park's green chairs on the lawn. His trunk swipe scatters a stack across the grass ("CHAIRS EVERYWHERE! LEAD HIM THROUGH THEM"), and a charge through a lying chair trips him like a taut leash does.
+- `systems/boss_mamut.gd`; `tests/test_ciutadella.gd` covers the jetty breaking once for its damage and daze, the swipe scattering a stack, and a charge tripping on a chair.
+
 ## 2026-11-14 - CI was not running
 
 - `ci.yml` had not run since #531 merged: a step name ("...security: never in a solid...") held an unquoted colon and space, which YAML reads as a mapping, so GitHub rejected the whole workflow file and every push and pull request ran only the sweep, soak and MSIX workflows. #529, #524, #531, #525, #526, #527, #532 and #533 merged without it; each was run through the full local suite (`tools/run_tests.sh`) before merging. The colon is a semicolon now, and every workflow file parses.
