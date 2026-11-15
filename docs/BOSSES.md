@@ -104,3 +104,37 @@ A cat does not charge. He fights like a cat: still, then all at once.
   plinth, then the boop, then the plinth film.
 
 The mammoth is the one who charges; no two bosses share a big move.
+
+## The arenas (planned, November 2026)
+
+Santtu's note after playing them: a boss walk should feel like a stage built for
+its fight, with things in it that change the fight. Today each boss fights on
+its walk's ordinary ground (a lawn, steps, a boardwalk, a square). Each arena
+gets two or three interactables taken from the real place, each one telegraphed
+like every hazard (a ring or a glint 0.8 s ahead) and each one usable by her
+and dangerous to him.
+
+- **El Mamut, the boating lake.** The rowboat jetty: lure the tusk charge down
+  it and the boards give way, so he goes through into the lake for the longest
+  daze in the game. The deckchair stacks on the lawn: his trunk swipe scatters
+  them into a field of low hurdles she can hop and he trips on. The music
+  kiosk's railing: wind the leash round a post and the charge cannot cross it.
+- **El Drac, the hall of columns and the steps.** The fountain's three spouts:
+  a pressure tile at each, and stepping on one fires its jet across his path
+  (he hates his own water). Loose trencadís tiles he sheds become slides she
+  can ride to dodge. The serpentine bench: chase him along it and he grinds to
+  a stop where it bends.
+- **Els Lleons, the foot of the column.** The mooring bollards (already
+  leash-wrappable): a lion wound round one is held for the other's rush. A
+  cargo net hanging from a harbour crane, its rope across the boardwalk: pull
+  the rope with the leash and it drops on whichever lion is under it. The
+  Golondrina's horn: bark at the pier and the boat answers, and both lions
+  flinch toward the sound.
+- **El Gat, the Rambla del Raval.** Terrace tables (shipped: he crashes through
+  them). Café awnings: a pounce that lands on one bounces him back up and off
+  balance. The yarn stall: knock its basket over and loose balls roll across the
+  square, and he cannot help chasing them, turning his back on her.
+
+Order: El Mamut first (the earliest boss, walk 11, where most players meet the
+grammar), then El Drac, Els Lleons and El Gat, one PR each with its own feel
+card and a frame render of the fight.
