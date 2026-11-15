@@ -23,6 +23,15 @@ Append-only session history, newest first.
 
 - `docs/BOSSES.md`: an arena section planning two or three interactables per boss from each real place (El Mamut's rowboat jetty, deckchairs and kiosk railing; El Drac's fountain spouts, tile slides and serpentine bench; Els Lleons' bollards, crane net and the Golondrina's horn; El Gat's awnings and yarn stall), El Mamut first.
 
+## 2026-11-15 - Objects that fit the place: the streets, the market, the station
+
+- A sweep of 22 built-up walks, six points down each. Most are dressed for their place already; three things were not.
+- The litter bin on every walk without its own was a dark green lidded drum. It is Barcelona's paperera now: a perforated steel basket hung between two posts on the axle it tips over, a black sack folded over the rim (`main._draw_paperera`). Filled shapes only: the drum drew two arcs, a draw call each, so each bin in view is two calls fewer.
+- L'Estació's concourse had a slatted wooden park bench and the street bin. It has rows of four perforated steel seats on a beam and a steel hoop holding a clear sack (`systems/estacio.gd` `draw_bench`, `draw_bin`).
+- The meltwater off El Mercat's fish counters was drawn as an outdoor puddle (a grey-blue lobe with dark flecks) on the hall's floor. It is a thin film with chips of crushed ice now, as El Veterinari's mopped floor is. The "fishy paws" patch beside it, and the three on El Port's quay, were a flat grey-green lobe that read as moss; they are a slick of brine with scales catching the light, ice and one sardine that got away (`main._draw_fish_slick`).
+- Left as they are: the red hydrants on the street walks (the tutorial teaches "the hydrant"), the wooden benches outdoors (Barcelona's are slatted wood), Les Obres' and La Ferralla's furniture.
+- Tests: `tests/test_junk_placement.gd` checks no outdoor puddle lies on an indoor floor (market, vet, station) and that the station draws its own seating and bin; `tests/test_walk_hooks.gd` declares the station's two new hooks.
+
 ## 2026-11-14 - Objects that fit the place: Montserrat, the parks, the beaches, the vet's
 
 - Montserrat drew town fire hydrants as its marking spots and traffic cones on a mountain path. Its marking spots are cairns now, the stacked stones walkers leave to show the way, in the mountain's pink conglomerate, darkening when marked; its dropped snack is a carquinyoli biscuit spilt from its bag (`systems/montserrat.gd`).
