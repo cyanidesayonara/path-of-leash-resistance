@@ -397,6 +397,9 @@
 # L'Aeroport (the security squad chase) test
 --headless --path . --script res://tests/test_aeroport.gd
 
+# La Diagonal: the turned camera, screen-relative input and the tram
+--headless --path . --script res://tests/test_diagonal.gd
+
 # Montserrat (the wild goat herd chase) test
 --headless --path . --script res://tests/test_montserrat.gd
 

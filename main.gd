@@ -361,6 +361,7 @@ const WALK_MODULES := {
 	"forum": preload("res://systems/forum.gd"),
 	"espanya": preload("res://systems/espanya.gd"),
 	"eixample": preload("res://systems/eixample.gd"),
+	"diagonal": preload("res://systems/diagonal.gd"),
 	"angels": preload("res://systems/angels.gd"),
 	"poble": preload("res://systems/poble.gd"),
 	"raval": preload("res://systems/boss_gat.gd"),
@@ -662,6 +663,11 @@ var aeroport_rush_dodged := false
 var aeroport_luggage_dodges := 0
 var aeroport_cart_hits := 0
 var aeroport_carousel_barked := false
+# La Diagonal: the tram (systems/diagonal.gd), dodged and dealt with, and the kiosk
+var diagonal_tram: RefCounted = null
+var diagonal_tram_dodges := 0
+var diagonal_tram_hits := 0
+var diagonal_kiosk_barked := false
 # Montserrat: the funicular crossing, rolling boulders, and mel i mató stall
 var montserrat_funicular: Dictionary = {"state": "waiting", "t": 0.0}
 var montserrat_funicular_dodged := false
@@ -6854,6 +6860,7 @@ func _process(_delta: float) -> void:
 		var view_w: Vector2 = get_viewport_rect().size / cam.zoom
 		gm.set_shader_parameter("view_px", view_w)
 		gm.set_shader_parameter("cam_off", cam.get_screen_center_position() - view_w * 0.5)
+		gm.set_shader_parameter("cam_rot", cam.rotation)
 		gm.set_shader_parameter("world_t", AnimClock.msec() / 1000.0)
 
 
@@ -10987,6 +10994,8 @@ const FREEDOM_KINDS := {
 	"raval": "placa",
 	# the garden inside the next block of the grid (systems/eixample.gd)
 	"eixample": "yard",
+	# Plaça de les Glòries, where the avenue ends: a plaça with its pigeons
+	"diagonal": "placa",
 	# the beach where the Dimoni is burned
 	"cremada": "beach",
 	# the cabin of the jet at the end of the bridge (systems/aeroport_cabin.gd)

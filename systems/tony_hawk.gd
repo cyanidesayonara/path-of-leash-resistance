@@ -46,6 +46,7 @@ const CLOCK_TARGETS := {
 	"forum": 180,
 	"espanya": 180,
 	"eixample": 180,
+	"diagonal": 180,
 	"angels": 180,
 	"poble": 180,
 	"cremada": 185,     # the walk out and the run home ahead of the Dimoni
@@ -87,6 +88,7 @@ const JAMON_POS := {
 	"forum": Vector2(480.0, -1820.0),
 	"espanya": Vector2(860.0, -3200.0),
 	"eixample": Vector2(470.0, -2900.0),
+	"diagonal": Vector2(760.0, -1720.0),
 	"angels": Vector2(380.0, -2950.0),
 	"poble": Vector2(820.0, -2480.0),
 	"cremada": Vector2(800.0, -4200.0),

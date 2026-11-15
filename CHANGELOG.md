@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-11-15 - La Diagonal: the first walk seen at an angle, and its tram
+
+- A new walk, La Diagonal (`systems/diagonal.gd`), the 39th: Avinguda Diagonal's central promenade up to Plaça de les Glòries, open at 17 stars, right after L'Eixample in the campaign, in El Besòs's tier.
+- The camera turns 45 degrees for this walk (`LevelBuild.CAM_ROT`; `--cam-rot=DEG` tries an angle on any walk). The world still runs north-south, so the rope, the level code and the tests are unchanged; the avenue slashes across the screen, and the Eixample blocks around it, drawn at 45 degrees in the world, read square on screen, cut off where the avenue slices through them. Only the blocks the avenue cuts pay for a polygon clip.
+- A turned camera needed: screen-relative movement (`dog._screen_input`: up is always up the screen); a culled band that grows with the turned view (`main._rot_pad`, in `view_lo`/`view_hi` and the verge layer); a camera that follows the pair across the walk as well as along it; speech bubbles and score chips kept upright (the pops layer takes the camera's turn); and the grade shader's ground grain turned back into the world (`cam_rot`). With no turn, every one of these is exactly as before.
+- The tram, on the grass track beside the promenade where the best smells are: it rings its bell ("TRAM COMING! OFF THE TRACKS", the signals flash amber) as it comes into the stretch, reaches her two seconds later, glides through and bumps a dog on the rails aside. Off the rails just before it is a close shave ("close shave! +3"). It brakes for your human on the rails and never hits them. Catenary masts along the track are real poles to wind the leash round.
+- Goals: dodge the tram three times, get home without it bumping you, bark at the newspaper kiosk, and the usual twelve. The walk ends in a plaça with its pigeons. The tram as the home-leg chase is a later step, with the campaign's chase spacing.
+- Tests: `tests/test_diagonal.gd` (registration, the turned camera and input, the bell coming before the tram, a bump once per tram, a dodge paid, braking short of your human). Store, itch and README: thirty-nine walks.
+
 ## 2026-11-15 - Pilones instead of fire hydrants
 
 - The marking spot on every town walk without one of its own was a red fire hydrant, which Barcelona's streets do not have standing on the pavement. It is a pilona now, the city's knee-high cast-iron bollard: near black, a collar ring under a domed head, a lit rim so it reads on night paving, and a wet stain round its foot once it is marked (`main._draw_pilona`). Les Corts' own bollard uses the same drawing. Walks with a spot of their own (stumps, showers, waymarkers, crates, urns, tyres) are unchanged.

@@ -33,6 +33,9 @@ const Superilla := preload("res://systems/superilla.gd")
 const Forum := preload("res://systems/forum.gd")
 const Espanya := preload("res://systems/espanya.gd")
 const Eixample := preload("res://systems/eixample.gd")
+const Diagonal := preload("res://systems/diagonal.gd")
+# walks whose camera is turned: degrees clockwise of screen-up their north runs
+const CAM_ROT := {"diagonal": 45.0}
 const Outdoors := preload("res://systems/outdoors.gd")
 const Angels := preload("res://systems/angels.gd")
 const Poble := preload("res://systems/poble.gd")
@@ -123,6 +126,7 @@ const CROSS_SECTIONS := {
 	"gracia": ["none", 0.0, "none", 0.0],          # a narrow street: the houses at the paving
 	"carmel": ["none", 0.0, "none", 0.0],          # sunset panorama and hillside slopes in systems/carmel.gd
 	"forum": ["none", 0.0, "none", 0.0],           # coastal concrete plaza and bathing esplanade in systems/forum.gd
+	"diagonal": ["none", 0.0, "none", 0.0],        # the promenade, the track and the turned grid in systems/diagonal.gd
 	"eixample": ["none", 0.0, "none", 0.0],        # the grid street and its blocks in systems/eixample.gd
 	"angels": ["none", 0.0, "none", 0.0],          # skate plaza, museum and convent in systems/angels.gd
 	"poble": ["none", 0.0, "none", 0.0],           # walled architectural village in systems/poble.gd
@@ -1361,6 +1365,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"superilla": half = Superilla.HALF
 		"forum": half = Forum.HALF
 		"espanya": half = Espanya.HALF
+		"diagonal": half = Diagonal.HALF   # the central promenade and the tram track
 		"eixample": half = Eixample.HALF   # the octagons at the crossings (Eixample.edge_nodes)
 		"angels": half = Angels.HALF
 		"poble": half = Poble.HALF
@@ -1571,7 +1576,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "angels" or m.lvl == "poble" or m.lvl == "ciutadella" or m.lvl == "cremada" or m.lvl == "aeroport" or m.lvl == "montserrat":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "diagonal" or m.lvl == "angels" or m.lvl == "poble" or m.lvl == "ciutadella" or m.lvl == "cremada" or m.lvl == "aeroport" or m.lvl == "montserrat":
 		return
 	# and so does El Barri, and the First Walk built on it, whose stations
 	# (systems/tutorial.gd) are laid out where they stand
@@ -1682,6 +1687,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_carmel: Array = Carmel.build(m)
 			hyd_list.assign(pl_carmel[0])
 			keb_list.assign(pl_carmel[1])
+		"diagonal":
+			var pl_diagonal: Array = Diagonal.build(m)
+			hyd_list.assign(pl_diagonal[0])
+			keb_list.assign(pl_diagonal[1])
 		"eixample":
 			var pl_eixample: Array = Eixample.build(m)
 			hyd_list.assign(pl_eixample[0])
@@ -2487,6 +2496,9 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "aeroport":
 		for r: Rect2 in Aeroport.wrap_rects():
 			add_rope_rect(m, r)
+	if m.lvl == "diagonal":
+		for r: Rect2 in Diagonal.wrap_rects():
+			add_rope_rect(m, r)
 	if m.lvl == "montserrat":
 		for r: Rect2 in Montserrat.wrap_rects():
 			add_rope_rect(m, r)
@@ -2589,6 +2601,9 @@ static func build_level_data(m: Node2D) -> void:
 		"carmel":
 			m.prize_pos = Carmel.PRIZE
 			m.prize_text = Carmel.PRIZE_TEXT
+		"diagonal":
+			m.prize_pos = Diagonal.PRIZE
+			m.prize_text = Diagonal.PRIZE_TEXT
 		"eixample":
 			m.prize_pos = Eixample.PRIZE
 			m.prize_text = Eixample.PRIZE_TEXT
@@ -3501,6 +3516,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_carmel: Array[Rect2] = Carmel.solids(m)
 			for i in range(ps_carmel.size()):
 				out.append(["carmel_bunker_%d" % i, ps_carmel[i]])
+		"diagonal":
+			var ps_diagonal: Array[Rect2] = Diagonal.solids(m)
+			for i in range(ps_diagonal.size()):
+				out.append(["diagonal_solid_%d" % i, ps_diagonal[i]])
 		"eixample":
 			var ps_eixample: Array[Rect2] = Eixample.solids(m)
 			for i in range(ps_eixample.size()):
@@ -4082,6 +4101,9 @@ static func build_walls(m: Node2D) -> void:
 			add_rect_body(m, r.get_center(), r.size)
 		for c: Vector3 in Carmel.cannons():
 			add_circle_body(m, Vector2(c.x, c.y), c.z)
+	if m.lvl == "diagonal":
+		for r: Rect2 in Diagonal.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "eixample":
 		for r: Rect2 in Eixample.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
@@ -4283,12 +4305,16 @@ static func build_entities(m: Node2D) -> void:
 	# oncoming hazards, so this is a feel dial (1.0 = the old framing).
 	m.cam.zoom = Vector2(m.CAM_ZOOM, m.CAM_ZOOM)
 	m.cam.position = Vector2(640, m.START_Y - 120.0)
-	# SPIKE: --cam-rot=DEG turns the view so the walk's north runs DEG degrees
-	# clockwise of screen-up (45: the path climbs to the upper right)
+	# a walk that runs across the screen turns the camera: its north runs
+	# CAM_ROT degrees clockwise of screen-up (La Diagonal climbs to the upper
+	# right). --cam-rot=DEG tries an angle on any walk.
+	var turn: float = float(CAM_ROT.get(m.lvl, 0.0))
 	for a: String in OS.get_cmdline_user_args():
 		if a.begins_with("--cam-rot="):
-			m.cam.ignore_rotation = false
-			m.cam.rotation = -deg_to_rad(float(a.substr(10)))
+			turn = float(a.substr(10))
+	if turn != 0.0:
+		m.cam.ignore_rotation = false
+		m.cam.rotation = -deg_to_rad(turn)
 	m.add_child(m.cam)
 	m.cam.make_current()
 	# under the leash (z 5) and the pair (z 10), above the verge

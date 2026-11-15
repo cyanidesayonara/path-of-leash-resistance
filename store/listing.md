@@ -30,7 +30,7 @@ The leash is real rope physics. Your human outweighs you four to one and wins ev
 
 Your human answers the leash like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-Thirty-eight walks through a sunny, slightly chaotic Barcelona and its edges, each its own place: the neighborhood park, La Rambla with its crowds, the city park, Badalona's seafront and its pier, the dawn cleanup sweeper, old town alleys, Montjuïc, a covered market hall, a downpour, a floodable river park, the waterfall cascade and stone mammoth of La Ciutadella, the dog beach at Platja de Llevant, the cut-corner crossings of L'Eixample, Tibidabo's mountain road, an indoor vet clinic escape in El Veterinari, a forest trail, the skate plaza at Els Àngels, a chestnut festival, the wild boar trails of Els Senglars, tiled terraces, the play streets of La Superilla, the train station, the Civil War bunkers above the city, the arcaded Plaça Reial, Badalona's devil night with the Dimoni float in La Cremada, the seaside esplanade at El Fòrum, the old water road along Collserola, the cypress maze of Horta, the fishing harbor at El Port, the fountain avenue of Plaça d'Espanya, the walled village of El Poble Espanyol, a work site, match day in Les Corts, a junkyard, the festival street of Festa de Gràcia, the long pier of the airport's Terminal 1 with security on your tail, the mountain trail at Montserrat with its wild goats, and, to finish, the Rambla del Raval, where a fat bronze cat climbs down off his plinth. Every walk ends off the leash, with tug-of-war, a frisbee and fetch (and an agility course in El Barri, pigeons to stalk in a plaça, waves to outrun at the dog beach): a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
+Thirty-nine walks through a sunny, slightly chaotic Barcelona and its edges, each its own place: the neighborhood park, La Rambla with its crowds, the city park, Badalona's seafront and its pier, the dawn cleanup sweeper, old town alleys, Montjuïc, a covered market hall, a downpour, a floodable river park, the waterfall cascade and stone mammoth of La Ciutadella, the dog beach at Platja de Llevant, the cut-corner crossings of L'Eixample, Avinguda Diagonal slicing across the grid with its tram, Tibidabo's mountain road, an indoor vet clinic escape in El Veterinari, a forest trail, the skate plaza at Els Àngels, a chestnut festival, the wild boar trails of Els Senglars, tiled terraces, the play streets of La Superilla, the train station, the Civil War bunkers above the city, the arcaded Plaça Reial, Badalona's devil night with the Dimoni float in La Cremada, the seaside esplanade at El Fòrum, the old water road along Collserola, the cypress maze of Horta, the fishing harbor at El Port, the fountain avenue of Plaça d'Espanya, the walled village of El Poble Espanyol, a work site, match day in Les Corts, a junkyard, the festival street of Festa de Gràcia, the long pier of the airport's Terminal 1 with security on your tail, the mountain trail at Montserrat with its wild goats, and, to finish, the Rambla del Raval, where a fat bronze cat climbs down off his plinth. Every walk ends off the leash, with tug-of-war, a frisbee and fetch (and an agility course in El Barri, pigeons to stalk in a plaça, waves to outrun at the dog beach): a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
 
 What happens on a walk changes how you feel, and how you feel changes how you move. A fright leaves you jumpy and half blind to smells, a good bark-off makes you barky, time off the leash brings on the zoomies, and running yourself empty leaves you flat. The ground matters too: grass and mud slow you down but hold far more scent than sidewalk, sand drags at your paws, and wet ground and snow make you skid.
 
@@ -46,7 +46,7 @@ Single player. No ads, no purchases, no account, and it plays offline. Keyboard 
 ### Short description
 
 ```
-A dog walk as a physics comedy. Your human walks on autopilot, glued to their phone, and the leash is real rope. Dig in, wrap lampposts and bark your way through thirty-eight walks in and around Barcelona, and get them home with the phone intact.
+A dog walk as a physics comedy. Your human walks on autopilot, glued to their phone, and the leash is real rope. Dig in, wrap lampposts and bark your way through thirty-nine walks in and around Barcelona, and get them home with the phone intact.
 ```
 
 ### Product features
@@ -54,7 +54,7 @@ A dog walk as a physics comedy. Your human walks on autopilot, glued to their ph
 ```
 The leash is real rope physics: wrap it around poles, dig in, win the tug of war
 A human who answers the leash: a steady pull leads them, constant hauling runs out their patience
-Thirty-eight hand-built walks through Barcelona, in any weather, by day or at night
+Thirty-nine hand-built walks through Barcelona, in any weather, by day or at night
 Every walk ends off the leash, with agility, tug-of-war and a frisbee
 Goal lists on every walk, with stars that unlock new walks
 A dare-giver on every walk, each with their own tune
@@ -86,13 +86,14 @@ dog walking
 ### What's new in this version
 
 ```
-- Two new walks, thirty-eight in all:
+- Three new walks, thirty-nine in all:
   - L'Aeroport: Terminal 1's long pier, moving walkways with proper sides, and airport security on your tail.
   - Montserrat: the mountain trail across the Sant Joan funicular, with a wild goat herd loose.
+  - La Diagonal: the avenue that cuts the grid, seen at an angle, with its tram.
 - Two new statue bosses: Els Lleons, the twin bronze lions of El Port, and El Drac, the mosaic salamander of El Mosaic, each with their own films.
 - Boss arenas, from each real place: El Mamut's rowboat jetty and park chairs, El Drac's fountain spouts and loose tiles to ride, a harbor crane's cargo net to drop on Els Lleons, and El Gat's yarn stalls.
 - Chases rebuilt: the machines drive like cartoon vehicles, and the vet staff, the boars and the devils come after you on foot.
-- Tug of war reworked: a real cotton rope toy between the two dogs, a rhythm to read (dig in through the heave, pull while they rest), and a meter that shows who is winning.
+- Tug of war reworked: a real rope toy, a rhythm to read, and a meter that shows who is winning.
 - After dark, shadows shrink to soft pools and lit doorways and windows glow more gently.
 - Your human walks into the home ending on real steps instead of gliding.
 - Off the leash: an agility course with a chalk line to follow, a pause table and medals; frisbee leap catches and streaks; fetch on the bounce; pigeons to stalk in every plaça; and waves to outrun at the dog beaches.
