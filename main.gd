@@ -12455,6 +12455,11 @@ func _draw_world() -> void:
 			if not h.done and h.progress > 0.0:
 				_wc.draw_arc(hp, 19.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
 			continue
+		if lvl == "ciutadella" and hp.distance_to(BossMamut.PLINTH) < 140.0:
+			# the corner of El Mamut's plinth is what gets marked there
+			if not h.done and h.progress > 0.0:
+				_wc.draw_arc(hp, 17.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
+			continue
 		if lvl == "park" or lvl == "ciutadella":
 			_draw_mark_stump(hp, h.done)
 			if not h.done and h.progress > 0.0:
