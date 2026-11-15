@@ -185,6 +185,34 @@ func _run() -> void:
 	gat.tick_state(0.016)
 	_check(bool(m.gat_tree_smashed) and gat.state == BG.State.STUNNED, "landing on a palm stuns him")
 
+	# café awnings: pouncing onto one bounces him back into the center off balance,
+	# leaving the dog shielded underneath and not tripping the palm/terrace smash flag
+	gat.hp = 90.0
+	m.gat_tree_smashed = false
+	var aw: Rect2 = BG.AWNINGS[0]
+	var aw_spot := aw.get_center()
+	m.dog.global_position = aw_spot
+	m.dog.tumble_t = 0.0
+	gat.transition_to(BG.State.POUNCE)
+	gat.pounce_from = Vector2(640.0, aw_spot.y)
+	gat.pounce_to = aw_spot
+	gat.state_t = 0.01
+	gat.tick_state(0.016)
+	_check(gat.state == BG.State.BOUNCE, "pounce landing on a café awning triggers bounce state")
+	_check(m.dog.tumble_t == 0.0, "dog underneath the awning is not knocked by the bounce")
+	_check(not bool(m.gat_tree_smashed), "awning bounce does not trip the palm smash flag")
+	# mid-bounce airborne height rises cleanly and heads toward rambla center
+	gat.tick_state(BG.BOUNCE_TIME * 0.5)
+	_check(gat.hop_z > 50.0 and gat.pos.x > aw_spot.x, "mid-bounce arcs him aloft back toward mid-rambla")
+	# landing finishes the bounce off balance in STUNNED with extra stun time and damage
+	gat.state_t = 0.01
+	gat.tick_state(0.02)
+	_check(gat.state == BG.State.STUNNED, "awning bounce settles off balance in STUNNED")
+	_check(gat.awnings_bounced == 1, "awning bounce increments awnings_bounced counter")
+	_check(is_equal_approx(gat.hp, 90.0 - BG.AWNING_DAMAGE), "awning bounce deals AWNING_DAMAGE")
+	_check(absf(gat.pos.x - 640.0) <= 60.0 and gat.hop_z == 0.0, "bounce lands him back near rambla center on the ground")
+	_check(gat.state_t > BG.STUN_TIME, "awning bounce leaves extra stunned window to capitalize")
+
 	# landing on her knocks her; landing on nothing costs him and he skids
 	gat.hp = 90.0
 	var hits0: int = m.dog_hits
