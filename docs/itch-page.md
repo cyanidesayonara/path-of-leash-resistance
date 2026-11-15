@@ -138,12 +138,17 @@ CHANGELOG.md. The Store's What's new is the short form of this.
 - Two new statue bosses, each with a story film and a victory film:
   - Els Lleons: the twin bronze lions at the foot of the Columbus column in El Port. Dodge their pincer and their rush, and settle them with a head bump.
   - El Drac: the mosaic salamander of El Mosaic. Dodge his tail whip and his fountain jet, trip his slither between the columns, wind the leash round three of his legs, and boop his nose.
-- El Mamut's arena: a rowboat jetty on the lake shore and stacks of the park's green chairs. Lure his charge onto the jetty and the boards give way: into the lake he goes, for the longest daze of the fight. His trunk swipe scatters the chairs across the lawn, and a charge through a lying chair trips him.
+- Boss arenas, each built from its real place:
+  - El Mamut: a rowboat jetty on the lake shore and stacks of the park's green chairs. Lure his charge onto the jetty and the boards give way: into the lake he goes, for the longest daze of the fight. His trunk swipe scatters the chairs, and a charge through a lying chair trips him.
+  - El Drac: three fountain spouts, each with a trencadís pressure tile on the landing. Step on one and a moment later its jet fires across his path and soaks him. Every hit knocks loose shards off him; run onto one and ride it clear of his tail or his jet.
+  - Els Lleons: a harbor crane hangs a cargo net of fish crates over the boardwalk. Wind the leash round its trip post and haul, and the net drops on whichever lion is under it.
+  - El Gat: two market yarn stalls. Knock a basket over and the balls roll out; he chases them with his back to you, and a bark on his tail is a tail tug.
 - Chases rebuilt in two kinds: the machines (the street sweeper, the Dimoni's float) drive like cartoon vehicles that bonk over benches and posts and swerve round what they cannot flatten, and the squads (the vet staff, the boars, the devils, airport security) come after you on foot.
 - Tug of war reworked: the rope toy now shows between the two dogs as a real cotton rope that bends as they shake it. The other dog winds up, heaves and rests: dig in through the heave and pull while it rests. Chalk lines, a rag on the rope's middle and a meter over the pair show who is winning.
 - After dark, objects keep only a short soft shadow instead of an afternoon sun's, and lit doorways, shopfronts and windows glow more gently.
 - Your human walks into the home ending on real steps instead of gliding.
 - Objects that fit the place: cairns and a dropped carquinyoli on Montserrat, tree stumps in El Parc and La Ciutadella, outdoor showers on the promenades, a mopped floor with wet-floor signs at the vet's, and lost balls and litter instead of traffic cones on trails, beaches and in gardens.
+- In town: Barcelona's steel paperera street bins, rows of steel seats and a see-through sack bin at L'Estació, and the fish market's and the port's wet floors drawn as melting ice and brine with the odd sardine.
 - Off the leash, every space has something to aim at:
   - Agility (El Barri): a chalk racing line through the weave poles, poles that turn green or red as she passes, an arrow over the next obstacle, a wider tunnel, a pause table to stand on for a count of three, and medals by time.
   - Frisbee: five throws, a ring where each will land, a leap catch when she sprints in under it, and streaks that earn longer, curvier throws.

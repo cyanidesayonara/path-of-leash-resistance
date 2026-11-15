@@ -90,19 +90,19 @@ dog walking
   - L'Aeroport: Terminal 1's long pier, moving walkways with proper sides, and airport security on your tail.
   - Montserrat: the mountain trail across the Sant Joan funicular, with a wild goat herd loose.
 - Two new statue bosses: Els Lleons, the twin bronze lions of El Port, and El Drac, the mosaic salamander of El Mosaic, each with their own films.
-- El Mamut's arena: lure his charge onto the rowboat jetty and he goes through into the lake; scatter the park chairs and trip him on them.
+- Boss arenas, from each real place: El Mamut's rowboat jetty and park chairs, El Drac's fountain spouts and loose tiles to ride, a harbor crane's cargo net to drop on Els Lleons, and El Gat's yarn stalls.
 - Chases rebuilt: the machines drive like cartoon vehicles, and the vet staff, the boars and the devils come after you on foot.
 - Tug of war reworked: a real cotton rope toy between the two dogs, a rhythm to read (dig in through the heave, pull while they rest), and a meter that shows who is winning.
 - After dark, shadows shrink to soft pools and lit doorways and windows glow more gently.
 - Your human walks into the home ending on real steps instead of gliding.
 - Off the leash: an agility course with a chalk line to follow, a pause table and medals; frisbee leap catches and streaks; fetch on the bounce; pigeons to stalk in every plaça; and waves to outrun at the dog beaches.
-- Objects that fit the place: cairns on Montserrat, tree stumps in the parks, showers on the promenades, a mopped floor at the vet's, and no traffic cones on mountain trails.
+- Objects that fit the place: cairns on Montserrat, tree stumps in the parks, showers on the promenades, Barcelona's steel street bins, steel seats at the station, and no traffic cones on mountain trails.
 ```
 
 ### Notes for certification
 
 ```
-Update 1.73: two new walks (L'Aeroport, Montserrat), two statue bosses (Els Lleons, El Drac), El Mamut's arena, off-leash games (agility, frisbee, fetch, pigeons, waves), chases rebuilt, tug of war reworked, night lighting polish. Update 1.72: two new walks (La Ciutadella with El Mamut statue boss, La Cremada with the Dimoni float chase), live events (churro cart, kite flyer), Castellers human towers, Fur-goneta dog van, lit doorways and shopfronts at night, boss fight tuning, and live-event bump fixes. Update 1.71: three new walks (L'Eixample, Els Àngels, El Poble Espanyol), a rebuilt tutorial, a labeled status card, and El Barri, El Parc and Plaça d'Espanya redrawn. Update 1.70: four new walks (La Superilla, Els Búnquers, El Fòrum, Plaça d'Espanya), dawn and dusk lighting, squarer streets with walkable front yards, three new galleries. No change to capabilities, network use or data handling since 1.55.
+Update 1.73: two new walks (L'Aeroport, Montserrat), two statue bosses (Els Lleons, El Drac), boss arenas for all four statues, off-leash games (agility, frisbee, fetch, pigeons, waves), chases rebuilt, tug of war reworked, night lighting polish. Update 1.72: two new walks (La Ciutadella with El Mamut statue boss, La Cremada with the Dimoni float chase), live events (churro cart, kite flyer), Castellers human towers, Fur-goneta dog van, lit doorways and shopfronts at night, boss fight tuning, and live-event bump fixes. Update 1.71: three new walks (L'Eixample, Els Àngels, El Poble Espanyol), a rebuilt tutorial, a labeled status card, and El Barri, El Parc and Plaça d'Espanya redrawn. Update 1.70: four new walks (La Superilla, Els Búnquers, El Fòrum, Plaça d'Espanya), dawn and dusk lighting, squarer streets with walkable front yards, three new galleries. No change to capabilities, network use or data handling since 1.55.
 
 Path of Leash Resistance is a single-player Win32 desktop game built with the Godot engine (4.7), packaged as MSIX.
 
