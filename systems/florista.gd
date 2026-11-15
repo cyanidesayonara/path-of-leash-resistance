@@ -201,19 +201,18 @@ func draw(_m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 		b.circle(rose_pos + Vector2(4.5, -2.5), 3.8, ROSE_RED)
 		b.circle(rose_pos + Vector2(3.8, -3.2), 2.0, Color(1.0, 0.35, 0.40))
 
-	# Florist character drawing
+	# The florist, drawn as every passer-by is (NpcFigure): walking east with
+	# the tray held out in front, a cream dress under a green apron, her hair
+	# in a bun under a straw sunhat
 	var wobble := sin(anim_time * 16.0) * 4.0 if wobble_t > 0.0 else 0.0
-	var bob := sin(anim_time * 8.0) * 1.5 if state == State.WALKING else 0.0
-	var draw_p := pos + Vector2(0.0, bob)
-
-	# Shadow
-	b.circle(draw_p + Vector2(2.0, 4.0), 16.0, SHADOW)
-
-	# Dress & dark green apron
-	b.circle(draw_p, 13.0, DRESS_CREAM)
-	b.circle(draw_p + Vector2(2.0, 0.0), 11.5, APRON_GREEN)
-	b.line(draw_p + Vector2(-3.0, -8.0), draw_p + Vector2(5.0, -8.0), APRON_TIE, 2.0)
-	b.line(draw_p + Vector2(-4.0, 8.0), draw_p + Vector2(5.0, 8.0), APRON_TIE, 2.0)
+	var walking := state == State.WALKING
+	var draw_p := pos
+	NpcFigure.person(b, draw_p, Vector2.RIGHT, 404, anim_time * 9.0 if walking else -1.0, {"size": 1.25,
+		"top": DRESS_CREAM, "legs": DRESS_CREAM.darkened(0.15), "skin": SKIN_TONE, "hair": HAIR_BROWN,
+		"hair_style": "bun", "arms": NpcFigure.Arms.READY})
+	# the apron's bib over her front and its ties round her back
+	b.circle(draw_p + Vector2(4.0, 0.0), 5.4, APRON_GREEN)
+	b.line(draw_p + Vector2(-4.5, -8.0), draw_p + Vector2(-4.5, 8.0), APRON_TIE, 1.6)
 
 	# Wooden flower tray carried forward
 	var tray_center := draw_p + Vector2(10.0 + wobble, 0.0)
@@ -232,12 +231,10 @@ func draw(_m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 		b.circle(rp, 3.2, ROSE_DARK)
 		b.circle(rp + Vector2(-0.5, -0.5), 2.4, ROSE_RED)
 
-	# Head & hair
-	var head_p := draw_p + Vector2(-2.0, -1.0)
-	b.circle(head_p, 8.5, HAIR_BROWN)
-	b.circle(head_p + Vector2(2.0, 0.0), 6.5, SKIN_TONE)
-
-	# Straw sunhat with green band
-	b.circle(head_p + Vector2(0.5, -0.5), 9.0, HAT_STRAW)
-	b.circle(head_p + Vector2(0.5, -0.5), 7.2, HAT_BAND)
-	b.circle(head_p + Vector2(0.5, -0.5), 5.6, HAT_STRAW)
+	# the straw sunhat with its green band, over her head
+	var head_p := draw_p + Vector2(1.0, 0.0)
+	b.circle(head_p + Shade.light * 2.0, 7.4, SHADOW)
+	b.circle(head_p, 7.2, HAT_STRAW)
+	b.circle(head_p, 5.4, HAT_BAND)
+	b.circle(head_p, 4.2, HAT_STRAW)
+	b.circle(head_p + Vector2(-1.3, -1.3), 1.8, HAT_STRAW.lightened(0.15))
