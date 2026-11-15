@@ -283,7 +283,7 @@ func tick(delta: float) -> void:
 	if ride_t > 0.0:
 		_tick_ride(delta)
 		return
-	var iv := auto_move if auto else Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var iv := auto_move if auto else _screen_input()
 	input_dir = iv
 	input_active = iv.length() > 0.1
 	planted = Input.is_action_pressed("plant") and not auto
@@ -387,6 +387,15 @@ func ride(v: Vector2, time: float) -> void:
 	ride_time = time
 
 
+# The stick and keys mean screen directions: on a turned camera (the
+# Diagonal spike) up is up the screen, so it is turned into the world.
+func _screen_input() -> Vector2:
+	var iv := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	if main != null and main.cam != null and main.cam.rotation != 0.0:
+		iv = iv.rotated(main.cam.rotation)
+	return iv
+
+
 func is_riding() -> bool:
 	return ride_t > 0.0
 
@@ -394,7 +403,7 @@ func is_riding() -> bool:
 func _tick_ride(delta: float) -> void:
 	ride_t -= delta
 	planted = false
-	var iv := auto_move if auto else Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var iv := auto_move if auto else _screen_input()
 	input_dir = iv
 	input_active = iv.length() > 0.1
 	if input_active:

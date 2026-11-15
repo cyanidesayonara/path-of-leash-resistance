@@ -6812,6 +6812,10 @@ func _process(_delta: float) -> void:
 	if walk_mod != null and walk_mod.has_method("cam_lean"):
 		target_y += walk_mod.cam_lean(self)
 	var cx_want := _cam_x()
+	# SPIKE: on a turned camera a step off the path is a step across the
+	# screen, so the camera follows the pair across as well as along
+	if cam.rotation != 0.0 and phase != "freedom":
+		cx_want = (dog.global_position.x + human.global_position.x) * 0.5
 	if cam_x_now > 1e8:
 		cam_x_now = cx_want
 	cam_x_now = lerpf(cam_x_now, cx_want, 1.0 - exp(-CAM_X_EASE * get_process_delta_time()))
@@ -11949,6 +11953,9 @@ func _pops_layer() -> Node2D:
 	if pops == null:
 		pops = PopsLayer.new()
 		add_child(pops)
+		# SPIKE: turned with a turned camera, so text and bubbles stay upright
+		if cam != null:
+			pops.rotation = cam.rotation
 	return pops
 
 
@@ -12073,11 +12080,19 @@ var _ground_args := []
 # screen really is, or the stretch on screen is drawn for the one and the
 # rest of the view stays bare.
 func view_lo(margin: float) -> float:
-	return minf(cam.position.y, cam.get_screen_center_position().y) - margin
+	return minf(cam.position.y, cam.get_screen_center_position().y) - margin - _rot_pad()
 
 
 func view_hi(margin: float) -> float:
-	return maxf(cam.position.y, cam.get_screen_center_position().y) + margin
+	return maxf(cam.position.y, cam.get_screen_center_position().y) + margin + _rot_pad()
+
+
+# SPIKE: a turned camera sees further up and down the world than its height
+func _rot_pad() -> float:
+	if cam == null or cam.rotation == 0.0:
+		return 0.0
+	var half := get_viewport_rect().size / (2.0 * cam.zoom)
+	return half.x * absf(sin(cam.rotation)) + half.y * absf(cos(cam.rotation)) - half.y
 
 
 func _draw_ground(top: float, bottom: float, ctop: float, vt: float, vb: float) -> void:
