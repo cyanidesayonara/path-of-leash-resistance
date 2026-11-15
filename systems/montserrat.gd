@@ -1146,3 +1146,44 @@ static func surface(m: Node2D, p: Vector2) -> int:
 	if p.y > m.GATE_Y:
 		return Surfaces.S.PAVEMENT
 	return -1
+
+
+# What a dog marks on the mountain: a cairn, the stack of stones walkers
+# leave to show the path, in the pink conglomerate the mountain is made of.
+# Marked, the stones darken with the wet. (A town walk has a hydrant here.)
+static func draw_bollard(m: Node2D, wc: ShapeBatch, h) -> void:
+	var hp: Vector2 = h.pos
+	m.cast_shadow(wc, hp, 10.0, 16.0)
+	var wet := 0.16 if h.done else 0.0
+	var stones: Array = [
+		[Vector2(0.0, 3.0), 11.0, 0.0],
+		[Vector2(-1.5, -2.5), 8.0, 0.4],
+		[Vector2(1.0, -6.5), 5.6, 0.8],
+		[Vector2(-0.5, -9.5), 3.4, 1.3],
+	]
+	for st: Array in stones:
+		var p: Vector2 = hp + (st[0] as Vector2)
+		var r: float = float(st[1])
+		var tone := ROCK.lerp(ROCK_SHADE, fmod(float(st[2]) * 0.7, 0.5))
+		wc.circle(p, r + 1.2, ROCK_DEEP.darkened(wet))
+		wc.circle(p, r, tone.darkened(wet))
+		wc.circle(p + Vector2(-r * 0.30, -r * 0.30), r * 0.5, ROCK_LIT.darkened(wet))
+	# the pebbles set in the conglomerate, on the biggest stone
+	for k in range(3):
+		wc.circle(hp + Vector2(-5.0 + float(k) * 4.5, 7.0 - float(k % 2) * 2.0), 1.3, PEBBLES[k % PEBBLES.size()].darkened(wet))
+	if not h.done and h.progress > 0.0:
+		wc.draw_arc(hp, 19.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
+
+
+# a dropped snack: a carquinyoli (the almond biscuit sold by the monastery)
+# spilt from its paper bag
+static func draw_snack(m: Node2D, wc: ShapeBatch, kp: Vector2) -> void:
+	m.contact_shadow(wc, kp, 11.0, 3.0, 0.20)
+	wc.polygon(PackedVector2Array([kp + Vector2(-12, -7), kp + Vector2(0, -9), kp + Vector2(2, 5), kp + Vector2(-11, 6)]), Color(0.86, 0.80, 0.68))
+	wc.line(kp + Vector2(-12, -7), kp + Vector2(0, -9), Color(0.66, 0.58, 0.46), 1.4)
+	for i in range(3):
+		var bp := kp + Vector2(4.0 + float(i) * 3.5, -2.0 + float(i % 2) * 5.0)
+		var along := Vector2.from_angle(0.5 + float(i) * 0.9)
+		wc.capsule(bp - along * 4.0, bp + along * 4.0, 2.6, Color(0.70, 0.48, 0.24))
+		wc.capsule(bp - along * 3.2, bp + along * 3.2, 1.6, Color(0.86, 0.64, 0.36))
+		wc.circle(bp + along * 1.0, 0.9, Color(0.96, 0.90, 0.78))
