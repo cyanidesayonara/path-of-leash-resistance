@@ -20,8 +20,9 @@ func setup(m: Node2D) -> void:
 func _draw() -> void:
 	if main == null:
 		return
-	var vt: float = main.cam.position.y - 560.0
-	var vb: float = main.cam.position.y + 560.0
+	# a turned camera (La Diagonal) sees further up and down the world
+	var vt: float = main.cam.position.y - 560.0 - main._rot_pad()
+	var vb: float = main.cam.position.y + 560.0 + main._rot_pad()
 	# through a ShapeBatch: the same pixels in a fraction of the draw calls
 	# (systems/shape_batch.gd)
 	var b := ShapeBatch.new(self)

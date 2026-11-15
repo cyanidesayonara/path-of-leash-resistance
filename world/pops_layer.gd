@@ -68,6 +68,9 @@ func add_speaker(node: Node, fn: Callable) -> void:
 func add(pos: Vector2, text: String, col: Color, kind := -1) -> Dictionary:
 	if kind < 0:
 		kind = classify(text)
+	# the layer may be turned with the camera (to stay upright on screen):
+	# its own frame, not the world's
+	pos = to_local(pos)
 	var p := {"pos": pos, "text": text, "col": col, "kind": kind, "t": 0.0,
 		"tilt": (fmod(absf(sin(float(pops.size()) * 7.31 + pos.x * 0.13)) * 10.0, 1.0) - 0.5) * 0.24}
 	if kind == Kind.SCORE:

@@ -24,6 +24,8 @@ uniform sampler2D screen_tex : hint_screen_texture, filter_linear;
 // (the viewport over the camera zoom), so world position is exact at any
 // zoom and window shape
 uniform vec2 cam_off = vec2(0.0, 0.0);
+// the camera's turn (La Diagonal): screen offsets turned back into the world
+uniform float cam_rot = 0.0;
 uniform vec2 view_px = vec2(1000.0, 562.5);
 uniform vec3 cool_shadows = vec3(0.90, 0.95, 1.09);
 uniform vec3 warm_light = vec3(1.07, 1.01, 0.93);
@@ -121,6 +123,10 @@ void fragment() {
 
 	// world position of this pixel, for texture that stays put on the ground
 	vec2 wp = uv * view_px + cam_off;
+	if (cam_rot != 0.0) {
+		vec2 sp = uv * view_px - view_px * 0.5;
+		wp = cam_off + view_px * 0.5 + vec2(sp.x * cos(cam_rot) - sp.y * sin(cam_rot), sp.x * sin(cam_rot) + sp.y * cos(cam_rot));
+	}
 
 	float lum = dot(col, vec3(0.299, 0.587, 0.114));
 

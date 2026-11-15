@@ -362,6 +362,7 @@ const WALK_MODULES := {
 	"forum": preload("res://systems/forum.gd"),
 	"espanya": preload("res://systems/espanya.gd"),
 	"eixample": preload("res://systems/eixample.gd"),
+	"diagonal": preload("res://systems/diagonal.gd"),
 	"angels": preload("res://systems/angels.gd"),
 	"poble": preload("res://systems/poble.gd"),
 	"raval": preload("res://systems/boss_gat.gd"),
@@ -663,6 +664,11 @@ var aeroport_rush_dodged := false
 var aeroport_luggage_dodges := 0
 var aeroport_cart_hits := 0
 var aeroport_carousel_barked := false
+# La Diagonal: the tram (systems/diagonal.gd), dodged and dealt with, and the kiosk
+var diagonal_tram: RefCounted = null
+var diagonal_tram_dodges := 0
+var diagonal_tram_hits := 0
+var diagonal_kiosk_barked := false
 # Montserrat: the funicular crossing, rolling boulders, and mel i mató stall
 var montserrat_funicular: Dictionary = {"state": "waiting", "t": 0.0}
 var montserrat_funicular_dodged := false
@@ -6822,6 +6828,10 @@ func _process(_delta: float) -> void:
 	if walk_mod != null and walk_mod.has_method("cam_lean"):
 		target_y += walk_mod.cam_lean(self)
 	var cx_want := _cam_x()
+	# SPIKE: on a turned camera a step off the path is a step across the
+	# screen, so the camera follows the pair across as well as along
+	if cam.rotation != 0.0 and phase != "freedom":
+		cx_want = (dog.global_position.x + human.global_position.x) * 0.5
 	if cam_x_now > 1e8:
 		cam_x_now = cx_want
 	cam_x_now = lerpf(cam_x_now, cx_want, 1.0 - exp(-CAM_X_EASE * get_process_delta_time()))
@@ -6860,6 +6870,7 @@ func _process(_delta: float) -> void:
 		var view_w: Vector2 = get_viewport_rect().size / cam.zoom
 		gm.set_shader_parameter("view_px", view_w)
 		gm.set_shader_parameter("cam_off", cam.get_screen_center_position() - view_w * 0.5)
+		gm.set_shader_parameter("cam_rot", cam.rotation)
 		gm.set_shader_parameter("world_t", AnimClock.msec() / 1000.0)
 
 
@@ -10993,6 +11004,8 @@ const FREEDOM_KINDS := {
 	"raval": "placa",
 	# the garden inside the next block of the grid (systems/eixample.gd)
 	"eixample": "yard",
+	# Plaça de les Glòries, where the avenue ends: a plaça with its pigeons
+	"diagonal": "placa",
 	# the beach where the Dimoni is burned
 	"cremada": "beach",
 	# the cabin of the jet at the end of the bridge (systems/aeroport_cabin.gd)
@@ -11959,6 +11972,9 @@ func _pops_layer() -> Node2D:
 	if pops == null:
 		pops = PopsLayer.new()
 		add_child(pops)
+		# SPIKE: turned with a turned camera, so text and bubbles stay upright
+		if cam != null:
+			pops.rotation = cam.rotation
 	return pops
 
 
@@ -12083,11 +12099,19 @@ var _ground_args := []
 # screen really is, or the stretch on screen is drawn for the one and the
 # rest of the view stays bare.
 func view_lo(margin: float) -> float:
-	return minf(cam.position.y, cam.get_screen_center_position().y) - margin
+	return minf(cam.position.y, cam.get_screen_center_position().y) - margin - _rot_pad()
 
 
 func view_hi(margin: float) -> float:
-	return maxf(cam.position.y, cam.get_screen_center_position().y) + margin
+	return maxf(cam.position.y, cam.get_screen_center_position().y) + margin + _rot_pad()
+
+
+# SPIKE: a turned camera sees further up and down the world than its height
+func _rot_pad() -> float:
+	if cam == null or cam.rotation == 0.0:
+		return 0.0
+	var half := get_viewport_rect().size / (2.0 * cam.zoom)
+	return half.x * absf(sin(cam.rotation)) + half.y * absf(cos(cam.rotation)) - half.y
 
 
 func _draw_ground(top: float, bottom: float, ctop: float, vt: float, vb: float) -> void:

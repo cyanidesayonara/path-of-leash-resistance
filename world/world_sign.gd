@@ -29,7 +29,7 @@ const Letters := preload("res://world/sign_letters.gd")
 
 # the material per walk; a walk not listed keeps main.gd's drawn styles
 const MATERIALS := {
-	"barri": "leaves", "street": "carnations", "park": "flowerbed", "beach": "sand",
+	"barri": "leaves", "diagonal": "papers", "street": "carnations", "park": "flowerbed", "beach": "sand",
 	"rain": "puddle", "market": "fruit", "trail": "sticks", "site": "cones",
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
 	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
@@ -69,6 +69,7 @@ const FEEL := {
 	"suds": {"spacing": 0.055, "r": 0.05, "drag": 3.0, "take": 1.4, "pop": true},
 	"pegs": {"spacing": 0.15, "r": 0.06, "drag": 5.0, "take": 1.1, "spin": 5.0, "align": true},
 	"tickets": {"spacing": 0.15, "r": 0.065, "drag": 4.0, "take": 1.3, "spin": 6.0, "align": true},
+	"papers": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 4.0, "align": true},
 	"bagtags": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 5.0, "align": true},
 	"rosemary": {"spacing": 0.18, "r": 0.07, "drag": 5.2, "take": 0.8, "spin": 3.5, "segment": true},
 	"pebbles": {"spacing": 0.11, "r": 0.07, "drag": 1.8, "take": 1.0, "roll": true},
@@ -524,6 +525,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_topiary(c, lines, h, key, light)
 		"tickets":
 			_tickets(c, sign, h)
+		"papers":
+			_papers(c, sign, h)
 		"pebbles":
 			_pebbles(c, sign, h, light)
 		"cactus":
@@ -959,6 +962,28 @@ static func _tickets(c: Object, sign: Dictionary, h: float) -> void:
 		c.draw_colored_polygon(_box(p + ax * r * 0.55, rot, r * 0.2, r * 0.72), Color(0.12, 0.10, 0.10))
 		if float(pc["var"]) > 0.6:
 			c.draw_circle(p - ax * r * 0.5, r * 0.18, Color(0.22, 0.14, 0.10))
+
+
+static func _papers(c: Object, sign: Dictionary, _h: float) -> void:
+	# the kiosk's newspapers blown off its rack: folded newsprint, a black
+	# masthead bar, a column of grey type, the odd one with a red banner
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		c.draw_colored_polygon(_box((pc.p as Vector2) + Vector2(1.5, 2.0), float(pc.rot), r * 1.3, r * 0.9), Color(0, 0, 0, 0.28))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var rot: float = pc.rot
+		var ax := Vector2.from_angle(rot)
+		var ay := ax.orthogonal()
+		var v := float(pc["var"])
+		c.draw_colored_polygon(_box(p, rot, r * 1.32, r * 0.92), Color(0.40, 0.38, 0.34))
+		c.draw_colored_polygon(_box(p, rot, r * 1.24, r * 0.84), Color(0.93, 0.91, 0.84))
+		c.draw_colored_polygon(_box(p - ay * r * 0.56, rot, r * 1.1, r * 0.14), Color(0.10, 0.10, 0.10))
+		c.draw_colored_polygon(_box(p + ay * r * 0.12 - ax * r * 0.4, rot, r * 0.5, r * 0.38), Color(0.62, 0.61, 0.58))
+		c.draw_colored_polygon(_box(p + ay * r * 0.12 + ax * r * 0.45, rot, r * 0.5, r * 0.38), Color(0.70, 0.69, 0.66))
+		if v > 0.65:
+			c.draw_colored_polygon(_box(p - ay * r * 0.3, rot, r * 1.1, r * 0.1), Color(0.80, 0.16, 0.14))
 
 
 static func _bagtags(c: Object, sign: Dictionary, _h: float) -> void:
