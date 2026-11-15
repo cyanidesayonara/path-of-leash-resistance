@@ -1236,6 +1236,12 @@ func draw_plinth(b: ShapeBatch) -> void:
 			var lp: Vector2 = PLINTH + LEG_OFFSETS[k]
 			b.circle(lp, 15.0, Color(0.52, 0.50, 0.46))
 			b.line(lp, lp + Vector2(10.0, -8.0).rotated(float(k)), cc, 1.6)
+	# a few fallen park leaves tucked against the plinth corners
+	for lf: Array in [[-68.0, -48.0, 0.4, Color(0.76, 0.46, 0.20)], [66.0, -52.0, -0.5, Color(0.82, 0.62, 0.22)], [-62.0, 56.0, 1.1, Color(0.70, 0.42, 0.18)]]:
+		var lp := PLINTH + Vector2(float(lf[0]), float(lf[1]))
+		var d := Vector2.from_angle(float(lf[2]))
+		var n := d.orthogonal()
+		b.polygon(PackedVector2Array([lp - d * 5.0, lp + n * 2.6, lp + d * 5.0, lp - n * 2.6]), lf[3] as Color)
 
 
 func draw_ground(b: ShapeBatch, vt: float, vb: float) -> void:
@@ -1260,6 +1266,7 @@ func draw_ground(b: ShapeBatch, vt: float, vb: float) -> void:
 func _draw_jetty(b: ShapeBatch) -> void:
 	var j := JETTY
 	var out := Rect2(j.position, Vector2(j.size.x + JETTY_OUT, j.size.y))
+	var t := AnimClock.msec() / 1000.0
 	if not jetty_broken:
 		b.rect(Rect2(out.position + Shade.light * 6.0, out.size), SHADOW)
 		b.rect(out.grow(2.0), PLANK_DARK)
@@ -1271,8 +1278,13 @@ func _draw_jetty(b: ShapeBatch) -> void:
 			k += 1
 		for py: float in [out.position.y - 3.0, out.end.y - 3.0]:
 			for px: float in [j.end.x + 10.0, j.end.x + 64.0, out.end.x - 8.0]:
-				b.circle(Vector2(px, py + 3.0), 4.5, PLANK_DARK)
-		_draw_rowboat(b, Vector2(out.end.x - 30.0, out.end.y + 26.0), 0.0)
+				var post := Vector2(px, py + 3.0)
+				_ring(b, post, 8.2 + sin(t * 2.2 + px * 0.05) * 1.3, Color(0.84, 0.94, 0.98, 0.18), 1.2)
+				b.circle(post, 4.5, PLANK_DARK)
+		var boat_c := Vector2(out.end.x - 30.0, out.end.y + 26.0)
+		var post_c := Vector2(out.end.x - 8.0, out.end.y)
+		b.line(post_c, boat_c + Vector2(22.0, -8.0), Color(0.76, 0.68, 0.50), 2.0)
+		_draw_rowboat(b, boat_c, 0.0, t)
 	else:
 		# the land end, snapped; the posts out in the water; the boat adrift
 		var x := j.position.x
@@ -1281,17 +1293,25 @@ func _draw_jetty(b: ShapeBatch) -> void:
 			x += 12.0
 		b.line(Vector2(j.end.x - 6.0, j.position.y + 8.0), Vector2(j.end.x + 18.0, j.position.y + 30.0), PLANK, 7.0)
 		for px: float in [j.end.x + 64.0, out.end.x - 8.0]:
+			_ring(b, Vector2(px, j.position.y), 8.2 + sin(t * 2.2 + px * 0.05) * 1.3, Color(0.84, 0.94, 0.98, 0.18), 1.2)
+			_ring(b, Vector2(px, j.end.y), 8.2 + cos(t * 2.2 + px * 0.05) * 1.3, Color(0.84, 0.94, 0.98, 0.18), 1.2)
 			b.circle(Vector2(px, j.position.y), 4.5, PLANK_DARK)
 			b.circle(Vector2(px, j.end.y), 4.5, PLANK_DARK)
-		_draw_rowboat(b, Vector2(out.end.x + 40.0, out.end.y + 70.0), 0.5)
+		_draw_rowboat(b, Vector2(out.end.x + 40.0, out.end.y + 70.0), 0.5, t)
 
 
-func _draw_rowboat(b: ShapeBatch, c: Vector2, rot: float) -> void:
+func _draw_rowboat(b: ShapeBatch, c: Vector2, rot: float, t: float = 0.0) -> void:
+	var rip_a := 0.22 + 0.08 * sin(t * 1.8)
+	var rc := Color(0.84, 0.94, 0.98, rip_a)
 	var hull := PackedVector2Array()
 	for i in range(12):
 		var a := TAU * float(i) / 12.0
 		var r := Vector2(cos(a) * 36.0 * (1.0 if cos(a) > 0.0 else 0.85), sin(a) * 14.0)
 		hull.append(c + r.rotated(rot))
+	for i in range(12):
+		var p0 := hull[i]
+		var p1 := hull[(i + 1) % 12]
+		b.line(c + (p0 - c) * 1.18, c + (p1 - c) * 1.18, rc, 1.4)
 	var sh := PackedVector2Array()
 	for p: Vector2 in hull:
 		sh.append(p + Shade.light * 5.0)
@@ -1303,6 +1323,11 @@ func _draw_rowboat(b: ShapeBatch, c: Vector2, rot: float) -> void:
 	b.polygon(inner, Color(0.62, 0.48, 0.32))
 	for k: float in [-12.0, 10.0]:
 		b.line(c + Vector2(k, -11.0).rotated(rot), c + Vector2(k, 11.0).rotated(rot), PLANK_DARK, 3.0)
+	# weathered oars lying inside along the gunwales
+	for s: float in [-1.0, 1.0]:
+		var o0 := c + Vector2(-18.0, s * 6.5).rotated(rot)
+		var o1 := c + Vector2(18.0, s * 5.0).rotated(rot)
+		b.line(o0, o1, PLANK.lightened(0.12), 1.8)
 
 
 # the green chairs: a stack, or knocked over across the lawn

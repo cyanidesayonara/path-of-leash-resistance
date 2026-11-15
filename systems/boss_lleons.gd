@@ -1273,6 +1273,15 @@ func _draw_golondrina(b: ShapeBatch, t: float) -> void:
 	var r := GOLONDRINA
 	var c := r.get_center()
 	var bob := sin(t * 1.1) * 1.5
+	# subtle harbour water ripples fanning off the starboard beam and stern in open water
+	for wi in range(2):
+		var ph := fposmod(t * 0.35 + float(wi) * 0.5, 1.0)
+		var wa := 0.22 * sin(ph * PI)
+		var rc := Color(0.84, 0.94, 0.98, wa)
+		var span := ph * 12.0
+		var rad := r.size.y * 0.44
+		_arc(b, c + Vector2(r.size.x * 0.52 - rad + span, bob), rad, -0.38, 0.38, rc, 1.6)
+		_arc(b, c + Vector2(0.0, r.size.y * 0.50 - 38.0 + span * 0.7 + bob), 44.0, 0.35 * PI, 0.65 * PI, rc, 1.6)
 	var hull := PackedVector2Array()
 	var deck := PackedVector2Array()
 	for i in range(20):

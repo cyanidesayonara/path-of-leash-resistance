@@ -72,34 +72,73 @@ const FOAM := Color(0.98, 0.99, 1.0, 0.85)
 const WET_SAND := Color(0.62, 0.55, 0.42, 0.35)
 
 
-# the wave game's water up the sand: a sheet from the shoreline to its edge,
-# a line of foam at the edge, the wet sand it leaves as it drains, and the
-# crest building out at sea before it comes (the telegraph)
+# the wave game's water up the sand: a softly feathered wash from the shoreline
+# to its edge, lacy seafoam + bubbles along the tongue, feathered wet sand as
+# it drains, and a soft offshore swell crest building before it arrives
 func _draw_waves(wg: WaveGame) -> void:
 	var r: Rect2 = main._freedom_rect()
 	var top := r.position.y
 	var bot := r.end.y
 	var off := wg.front_off()
-	var step := 40.0
-	var y := top
+	var step := 36.0
 	var wet := wg.phase == WaveGame.P.DRAIN or wg.phase == WaveGame.P.LULL
-	while y < bot:
-		var y2 := minf(y + step, bot)
-		var s1: float = main.beach_shore_x(y)
-		var s2: float = main.beach_shore_x(y2)
-		var w1 := sin(y * 0.031 + float(wg.wave)) * 6.0
-		var w2 := sin(y2 * 0.031 + float(wg.wave)) * 6.0
-		if wet:
-			_b.quad(Vector2(s1, y), Vector2(s1 + SURGE_WET, y), Vector2(s2 + SURGE_WET, y2), Vector2(s2, y2), WET_SAND)
-		if off > 1.0:
-			_b.quad(Vector2(s1, y), Vector2(s1 + off + w1, y), Vector2(s2 + off + w2, y2), Vector2(s2, y2), SURF)
-			_b.line(Vector2(s1 + off + w1, y), Vector2(s2 + off + w2, y2), FOAM, 4.0)
-		var k := wg.crest()
-		if k > 0.0:
-			var cx1 := s1 - 70.0 + 30.0 * k
-			var cx2 := s2 - 70.0 + 30.0 * k
-			_b.line(Vector2(cx1 + w1, y), Vector2(cx2 + w2, y2), Color(1, 1, 1, 0.4 + 0.5 * k), 2.0 + 5.0 * k)
-		y = y2
+	var ys := PackedFloat32Array()
+	var shores := PackedFloat32Array()
+	var wiggles := PackedFloat32Array()
+	var y := top
+	while true:
+		ys.append(y)
+		shores.append(main.beach_shore_x(y))
+		wiggles.append(sin(y * 0.031 + float(wg.wave)) * 6.0)
+		if y >= bot:
+			break
+		y = minf(y + step, bot)
+	var n := ys.size()
+	if n < 2:
+		return
+	if wet:
+		var wet_pts := PackedVector2Array()
+		wet_pts.resize(n * 3)
+		for i in range(n):
+			var yi := ys[i]
+			var s := shores[i]
+			wet_pts[i] = Vector2(s, yi)
+			wet_pts[n + i] = Vector2(s + SURGE_WET * 0.55, yi)
+			wet_pts[n * 2 + i] = Vector2(s + SURGE_WET, yi)
+		_b.band(wet_pts, n, WET_SAND, PackedFloat32Array([1.0, 0.72, 0.0]))
+	if off > 1.0:
+		var surf_pts := PackedVector2Array()
+		surf_pts.resize(n * 3)
+		for i in range(n):
+			var yi := ys[i]
+			var edge := shores[i] + off + wiggles[i]
+			surf_pts[i] = Vector2(shores[i], yi)
+			surf_pts[n + i] = Vector2(edge, yi)
+			surf_pts[n * 2 + i] = Vector2(edge + 14.0, yi)
+		_b.band(surf_pts, n, SURF, PackedFloat32Array([1.0, 0.85, 0.0]))
+		for i in range(n - 1):
+			var p0 := Vector2(shores[i] + off + wiggles[i], ys[i])
+			var p1 := Vector2(shores[i + 1] + off + wiggles[i + 1], ys[i + 1])
+			_b.line(p0, p1, FOAM, 3.6)
+			_b.line(p0 + Vector2(-4.0, 0.0), p1 + Vector2(-4.0, 0.0), Color(FOAM.r, FOAM.g, FOAM.b, 0.35), 2.2)
+			if i % 2 == 0:
+				var bub := p0.lerp(p1, 0.45) + Vector2(3.5 + sin(ys[i] * 0.13) * 2.5, 0.0)
+				_b.circle(bub, 2.2 + 0.8 * absf(cos(ys[i] * 0.09)), Color(1.0, 1.0, 1.0, 0.65))
+	var k := wg.crest()
+	if k > 0.0:
+		var crest_pts := PackedVector2Array()
+		crest_pts.resize(n * 3)
+		for i in range(n):
+			var yi := ys[i]
+			var cx := shores[i] - 70.0 + 30.0 * k + wiggles[i]
+			crest_pts[i] = Vector2(cx - 10.0, yi)
+			crest_pts[n + i] = Vector2(cx, yi)
+			crest_pts[n * 2 + i] = Vector2(cx + 10.0, yi)
+		_b.band(crest_pts, n, Color(1.0, 1.0, 1.0, 0.25 + 0.35 * k), PackedFloat32Array([0.0, 1.0, 0.0]))
+		for i in range(n - 1):
+			var c0 := Vector2(shores[i] - 70.0 + 30.0 * k + wiggles[i], ys[i])
+			var c1 := Vector2(shores[i + 1] - 70.0 + 30.0 * k + wiggles[i + 1], ys[i + 1])
+			_b.line(c0, c1, Color(1.0, 1.0, 1.0, 0.4 + 0.5 * k), 2.0 + 3.5 * k)
 
 
 const SURGE_WET := 110.0
