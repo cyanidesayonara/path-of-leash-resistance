@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-11-15 - Boss arena and off-leash game look and batching pass
+
+- Batched `BossGat` statue drawing, roar/dust/target rings, health bar rects, and café awning warning frames into `ShapeBatch` (`_ring()` helper in `systems/boss_gat.gd`), cutting per-frame boss canvas draw calls to one flush before label text; bevelled and added bronze plaques to both plinths.
+- Added animated harbour wake ripples off the Golondrina's hull (`systems/boss_lleons.gd`), animated lake ripples round Ciutadella's jetty pilings and rowboats with mooring line, oars, and plinth leaves (`systems/boss_mamut.gd`), softly feathered shore/surf/crest bands (`_draw_waves()` in `world/games_layer.gd`), a dropped paper bakery bag and napkin beside `PigeonGame`'s crumbs (`systems/pigeon_game.gd`), and batched countdown rings in `entities/frisbee.gd` and `systems/agility.gd`.
+- Tests: `tests/test_boss_gat.gd`, `tests/test_ciutadella.gd`, `tests/test_lleons.gd`, `tests/test_port.gd`, `tests/test_drac.gd`, `tests/test_freedom_games.gd`, `tests/test_freedom_games_live.gd`, `tests/test_squirrel_game.gd`, `tests/test_walk_hooks.gd`, and `tests/test_members_exist.gd`.
+
 ## 2026-11-15 - El Gat's café awnings on Rambla del Raval
 
 - Four striped café awnings now project out from Rambla del Raval's shopfronts into open bays between palm rows and dining terraces (`AWNINGS`, `draw_awning_shades()`, and `draw_awnings()` in `systems/boss_gat.gd`), with marble bistro tables and menu boards shaded underneath a translucent scalloped canvas with iron struts and evening lights.

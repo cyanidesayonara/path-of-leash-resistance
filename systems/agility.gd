@@ -315,10 +315,18 @@ func draw_ground(c: Variant, now: float) -> void:
 				c.draw_rect(r.grow(2.0), INK)
 				c.draw_rect(r, GREEN.darkened(0.1) if passed else TABLE_TOP)
 				c.draw_rect(Rect2(r.position + Vector2(3, 3), Vector2(r.size.x - 6.0, 5.0)), Color(1, 1, 1, 0.18))
-				# the count, a ring filling round the middle
+				# the count, a ring filling round the middle (segmented so ShapeBatch never flushes)
 				var hold: float = p.get("hold", 0.0)
 				if hold > 0.0 and not passed:
-					c.draw_arc(r.get_center(), 15.0, -PI / 2.0, -PI / 2.0 + TAU * hold / TABLE_S, 24, WHITE, 3.5)
+					var rc := r.get_center()
+					var a_end := -PI / 2.0 + TAU * hold / TABLE_S
+					var segs := 24
+					var prev := rc + Vector2(0.0, -15.0)
+					for k in range(1, segs + 1):
+						var ang := lerpf(-PI / 2.0, a_end, float(k) / float(segs))
+						var cur := rc + Vector2.from_angle(ang) * 15.0
+						c.draw_line(prev, cur, WHITE, 3.5)
+						prev = cur
 				else:
 					# a paw print: stand here
 					c.draw_circle(r.get_center() + Vector2(0, 3), 5.0, Color(1, 1, 1, 0.35))

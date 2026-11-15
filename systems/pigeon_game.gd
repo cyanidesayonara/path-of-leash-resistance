@@ -145,10 +145,29 @@ func clear() -> void:
 	done = true
 
 
-# the crumbs, under the flock (games layer, ground)
+# the crumbs and dropped bakery paper bag under the flock (games layer, ground)
 func draw_ground(b: ShapeBatch) -> void:
 	if at.x >= INF:
 		return
+	# crumpled paper bakery bag + napkin beside the crumbs so the spot reads from afar
+	var bag_c := at + Vector2(-12.0, 7.0)
+	b.polygon(PackedVector2Array([
+		bag_c + Vector2(-7.0, -4.0), bag_c + Vector2(6.0, -6.0),
+		bag_c + Vector2(8.0, 5.0), bag_c + Vector2(-5.0, 7.0),
+	]), Color(0.05, 0.05, 0.08, 0.18))
+	var bag_pts := PackedVector2Array([
+		bag_c + Vector2(-8.0, -5.0), bag_c + Vector2(5.0, -7.0),
+		bag_c + Vector2(7.0, 3.0), bag_c + Vector2(-6.0, 5.0),
+	])
+	b.polygon(bag_pts, Color(0.86, 0.78, 0.64))
+	b.line(bag_pts[0], bag_pts[1], Color(0.68, 0.56, 0.42), 1.6)
+	b.line(bag_pts[1], bag_pts[2], Color(0.74, 0.62, 0.46), 1.4)
+	b.line(bag_c + Vector2(-3.0, -2.0), bag_c + Vector2(3.0, 1.0), Color(0.64, 0.50, 0.36, 0.7), 1.2)
+	var nap := at + Vector2(10.0, -8.0)
+	b.polygon(PackedVector2Array([
+		nap + Vector2(-5.0, -2.0), nap + Vector2(4.0, -5.0),
+		nap + Vector2(7.0, 3.0), nap + Vector2(-2.0, 5.0),
+	]), Color(0.95, 0.93, 0.88, 0.88))
 	var crumb := Color(0.86, 0.74, 0.52)
 	for i in range(14):
 		var a := float(i) * 2.39996

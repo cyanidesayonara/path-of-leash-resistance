@@ -1734,11 +1734,20 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 		var dir := Vector2(cos(a), sin(a))
 		b.line(PEDESTAL_POS + dir * 65.0, PEDESTAL_POS + dir * (PLAZA_R - 30.0), BAND_CREAM, 4.0)
 
-	# 5. Both plinths
+	# 5. Both plinths, with sunlit bevels and bronze plaques
 	for pc: Vector2 in [START_PLINTH, PEDESTAL_POS]:
-		b.rect(Rect2(pc - PLINTH_HALF - Vector2(15, 5) + Shade.light * 6.0, PLINTH_HALF * 2.0 + Vector2(30, 10)), SHADOW)
-		b.rect(Rect2(pc - PLINTH_HALF - Vector2(15, 5), PLINTH_HALF * 2.0 + Vector2(30, 10)), STONE_DARK)
-		b.rect(Rect2(pc - PLINTH_HALF - Vector2(9, 0), PLINTH_HALF * 2.0 + Vector2(18, 0)), Color(0.72, 0.70, 0.66))
+		var outer := Rect2(pc - PLINTH_HALF - Vector2(15, 5), PLINTH_HALF * 2.0 + Vector2(30, 10))
+		var top_r := Rect2(pc - PLINTH_HALF - Vector2(9, 0), PLINTH_HALF * 2.0 + Vector2(18, 0))
+		b.rect(Rect2(outer.position + Shade.light * 6.0, outer.size), SHADOW)
+		b.rect(outer, STONE_DARK)
+		b.rect(Rect2(outer.position, Vector2(outer.size.x, 3.0)), Color(0.60, 0.58, 0.54))
+		b.rect(top_r, Color(0.72, 0.70, 0.66))
+		b.rect(Rect2(top_r.position, Vector2(top_r.size.x, 3.0)), Color(0.82, 0.80, 0.76))
+		b.rect(Rect2(top_r.position, Vector2(3.0, top_r.size.y)), Color(0.78, 0.76, 0.72))
+		var pq := Rect2(pc.x - 22.0, outer.end.y - 11.0, 44.0, 9.0)
+		b.rect(pq, BRONZE_DARK)
+		b.rect(pq.grow(-1.5), BRONZE_LIT)
+		b.line(Vector2(pq.position.x + 6.0, pq.get_center().y), Vector2(pq.end.x - 6.0, pq.get_center().y), BRONZE_DARK, 1.2)
 
 	# 6. Palm trunks and tree grates
 	var culled := vb > vt
@@ -1948,11 +1957,13 @@ func draw_awnings(c: Object, vt: float, vb: float, t: float) -> void:
 		if warn_idx == i:
 			var glow_a := 0.22 + 0.14 * sin(t * 14.0)
 			sb.rect(r.grow(3.0), Color(1.0, 0.88, 0.28, glow_a))
+			var wr := aw.grow(2.0)
+			var w_col := Color(1.0, 0.88, 0.28, 0.65 + 0.30 * sin(t * 14.0))
+			sb.line(wr.position, Vector2(wr.end.x, wr.position.y), w_col, 3.0)
+			sb.line(Vector2(wr.end.x, wr.position.y), wr.end, w_col, 3.0)
+			sb.line(wr.end, Vector2(wr.position.x, wr.end.y), w_col, 3.0)
+			sb.line(Vector2(wr.position.x, wr.end.y), wr.position, w_col, 3.0)
 	sb.flush(c)
-	if warn_idx >= 0 and warn_idx < AWNINGS.size():
-		var wr := AWNINGS[warn_idx]
-		var pulse_a := 0.65 + 0.30 * sin(t * 14.0)
-		c.draw_rect(wr.grow(2.0), Color(1.0, 0.88, 0.28, pulse_a), false, 3.0)
 
 
 # The yarn stalls from above: a trestle table of skeins under the edge of a
@@ -2121,6 +2132,7 @@ func draw_bits(c: Object, vt: float, vb: float) -> void:
 
 
 func draw_gat(c: Object, t: float) -> void:
+	var sb := ShapeBatch.new()
 	var cur_pos := pos + Vector2(0, purr_vibe)
 	# tied up, he teeters harder and harder until he goes over
 	if state == State.WRAPPED:
@@ -2143,45 +2155,58 @@ func draw_gat(c: Object, t: float) -> void:
 			var u1 := float(i + 1) / float(steps)
 			var p0 := pos.lerp(pounce_to, u0) - Vector2(0.0, sin(u0 * PI) * POUNCE_HEIGHT * 0.5)
 			var p1 := pos.lerp(pounce_to, u1) - Vector2(0.0, sin(u1 * PI) * POUNCE_HEIGHT * 0.5)
-			c.draw_line(p0, p1, a_col, 4.0)
+			sb.line(p0, p1, a_col, 4.0)
 
 	# afterimages behind a pounce
 	for g: Dictionary in ghosts:
 		var a: float = float(g.life) / 0.3 * 0.35
-		c.draw_colored_polygon(Clay.ellipse_pts(g.p, Vector2(62.0, 52.0), g.f, 14),
+		sb.polygon(Clay.ellipse_pts(g.p, Vector2(62.0, 52.0), g.f, 14),
 			Color(BRONZE_LIT.r, BRONZE_LIT.g, BRONZE_LIT.b, a))
-		c.draw_circle(g.p + (g.f as Vector2) * 38.0, 34.0, Color(BRONZE_LIT.r, BRONZE_LIT.g, BRONZE_LIT.b, a))
+		sb.circle(g.p + (g.f as Vector2) * 38.0, 34.0, Color(BRONZE_LIT.r, BRONZE_LIT.g, BRONZE_LIT.b, a))
 
 	if state == State.TOPPLED:
-		draw_toppled_gat(c, cur_pos, t)
+		draw_toppled_gat(sb, cur_pos, t)
 	else:
-		draw_upright_gat(c, cur_pos, t)
+		draw_upright_gat(sb, cur_pos, t)
 
-	if state != State.IDLE and state != State.AWAKEN and hp > 0.0:
-		draw_boss_health_bar(c, cur_pos - Vector2(0.0, hop_z))
-
-	# the strokes last, together: each arc goes straight to the canvas
+	# the warning and stun rings all stay in the batch via segmented _ring
 	for dr in dust_rings:
 		var frac: float = 1.0 - (float(dr.life) / maxf(float(dr.max_life), 0.01))
 		if dr.get("warn", false):
 			# where the paw will land: the ring holds still and fills to it
 			var wr: float = dr.r
-			c.draw_circle(dr.pos, wr * frac, Color(1.0, 0.35, 0.2, 0.18 + 0.22 * frac))
-			c.draw_arc(dr.pos, wr, 0.0, TAU, 32, Color(1.0, 0.4, 0.25, 0.55 + 0.4 * frac), 3.0)
+			sb.circle(dr.pos, wr * frac, Color(1.0, 0.35, 0.2, 0.18 + 0.22 * frac))
+			_ring(sb, dr.pos, wr, Color(1.0, 0.4, 0.25, 0.55 + 0.4 * frac), 3.0, 32)
 			continue
 		var r: float = float(dr.r) * (0.3 + frac * 0.7)
 		var base: Color = dr.get("col", DUST_COLOR)
-		c.draw_arc(dr.pos, r, 0.0, TAU, 32, Color(base.r, base.g, base.b, (1.0 - frac) * 0.6), 4.0)
+		_ring(sb, dr.pos, r, Color(base.r, base.g, base.b, (1.0 - frac) * 0.6), 4.0, 32)
 	if state == State.YARN and not tail_tugged:
 		# his tail is the target: a ring round it, like the legs at the end
-		c.draw_arc(tail_pos(), 22.0 + sin(t * 10.0) * 3.0, 0.0, TAU, 20, Color(1.0, 0.90, 0.20, 0.85), 3.0)
+		_ring(sb, tail_pos(), 22.0 + sin(t * 10.0) * 3.0, Color(1.0, 0.90, 0.20, 0.85), 3.0, 20)
 	if state == State.ROAR:
 		var ring_col := Color(0.98, 0.85, 0.30, 0.35 + sin(t * 8.0) * 0.15)
-		c.draw_arc(cur_pos, 92.0, 0.0, TAU, 40, ring_col, 3.0)
+		_ring(sb, cur_pos, 92.0, ring_col, 3.0, 40)
 	if state == State.ROAR or state == State.WRAPPED:
 		for k in range(leg_poles.size()):
 			if main.elapsed - leg_touch_t[k] <= LEG_MEMORY or state == State.WRAPPED:
-				c.draw_arc(leg_poles[k], LEG_RADIUS + 6.0, 0.0, TAU, 20, Color(1.0, 0.90, 0.20, 0.9), 3.0)
+				_ring(sb, leg_poles[k], LEG_RADIUS + 6.0, Color(1.0, 0.90, 0.20, 0.9), 3.0, 20)
+
+	var show_hp := state != State.IDLE and state != State.AWAKEN and hp > 0.0
+	var hp_at := cur_pos - Vector2(0.0, hop_z)
+	if show_hp:
+		_draw_health_bar_rects(sb, hp_at)
+	sb.flush(c)
+	if show_hp:
+		_draw_health_bar_text(c, hp_at)
+
+
+static func _ring(b: ShapeBatch, c: Vector2, r: float, col: Color, w: float, segs := 28) -> void:
+	var prev := c + Vector2(r, 0.0)
+	for i in range(1, segs + 1):
+		var cur := c + Vector2.from_angle(TAU * float(i) / float(segs)) * r
+		b.line(prev, cur, col, w)
+		prev = cur
 
 
 # The plate's top-left, pushed down below the HUD banner when the banner is up
@@ -2199,10 +2224,14 @@ func _below_banner(bp: Vector2, above: float) -> Vector2:
 	return bp
 
 
-func draw_boss_health_bar(c: Object, at: Vector2) -> void:
+func _health_bar_pos(at: Vector2) -> Vector2:
+	return _below_banner(at + Vector2(-75.0, -104.0), 24.0)
+
+
+func _draw_health_bar_rects(c: Object, at: Vector2) -> void:
 	var bar_w := 150.0
 	var bar_h := 10.0
-	var bar_pos := _below_banner(at + Vector2(-bar_w * 0.5, -104.0), 24.0)
+	var bar_pos := _health_bar_pos(at)
 	c.draw_rect(Rect2(bar_pos + Shade.light * 3.0, Vector2(bar_w, bar_h)), SHADOW)
 	c.draw_rect(Rect2(bar_pos - Vector2(2.0, 2.0), Vector2(bar_w + 4.0, bar_h + 4.0)), BRONZE_DARK)
 	c.draw_rect(Rect2(bar_pos - Vector2(1.0, 1.0), Vector2(bar_w + 2.0, bar_h + 2.0)), BRONZE_LIT)
@@ -2216,12 +2245,22 @@ func draw_boss_health_bar(c: Object, at: Vector2) -> void:
 		c.draw_rect(Rect2(fill.position, Vector2(fill.size.x, 2.0)), fill_col.lightened(0.35))
 	# the notch where he loses his temper
 	c.draw_rect(Rect2(bar_pos + Vector2(bar_w * 0.5 - 1.0, -2.0), Vector2(2.0, bar_h + 4.0)), BRONZE_DARK)
+
+
+func _draw_health_bar_text(c: Object, at: Vector2) -> void:
+	var bar_w := 150.0
+	var bar_pos := _health_bar_pos(at)
 	var f: Font = Kit.display()
 	var label := "EL GAT"
 	var tw: float = Kit.text_w(f, label, 14)
 	var tp := bar_pos + Vector2((bar_w - tw) * 0.5, -5.0)
 	c.draw_string_outline(f, tp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, 4, Color(0.05, 0.04, 0.04, 0.85))
 	c.draw_string(f, tp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, EYE_AMBER)
+
+
+func draw_boss_health_bar(c: Object, at: Vector2) -> void:
+	_draw_health_bar_rects(c, at)
+	_draw_health_bar_text(c, at)
 
 
 func draw_upright_gat(c: Object, ground: Vector2, t: float) -> void:

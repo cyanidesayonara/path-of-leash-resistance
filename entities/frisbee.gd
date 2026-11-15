@@ -156,22 +156,35 @@ func _draw() -> void:
 		var land := to - global_position
 		var f := clampf(fly_t / fly_len, 0.0, 1.0)
 		var ring := Color(1.0, 0.95, 0.75, 0.35 + 0.4 * f)
-		_b.draw_arc(land, 16.0, 0.0, TAU, 20, Color(0.12, 0.1, 0.09, 0.25), 4.0)
-		_b.draw_arc(land, 16.0, -PI / 2.0, -PI / 2.0 + TAU * f, 20, ring, 2.5)
-		_b.draw_circle(land, 3.0, ring)
+		_arc_ring(_b, land, 16.0, 0.0, TAU, 20, Color(0.12, 0.1, 0.09, 0.25), 4.0)
+		if f > 0.02:
+			_arc_ring(_b, land, 16.0, -PI / 2.0, -PI / 2.0 + TAU * f, maxi(2, int(ceilf(20.0 * f))), ring, 2.5)
+		_b.circle(land, 3.0, ring)
 	# the shadow stays on the ground and shrinks as the disc climbs: the only
 	# way to read height from straight above
 	var sr := 9.0 - h * 0.06
-	_b.draw_colored_polygon(_ellipse(Vector2(h * 0.25, h * 0.3 + 2.0), Vector2(sr, sr * 0.6), 0.0), Color(0, 0, 0, 0.2))
+	_b.polygon(_ellipse(Vector2(h * 0.25, h * 0.3 + 2.0), Vector2(sr, sr * 0.6), 0.0), Color(0, 0, 0, 0.2))
 	var c := Vector2(0, -h)
 	var tilt := sin(spin) * 0.25
-	_b.draw_colored_polygon(_ellipse(c, Vector2(10.5, 8.0), tilt), Color(0.12, 0.1, 0.09))
-	_b.draw_colored_polygon(_ellipse(c, Vector2(9.0, 6.6), tilt), Color(0.95, 0.42, 0.2))
-	_b.draw_colored_polygon(_ellipse(c + Vector2(-1.5, -1.2), Vector2(5.0, 3.4), tilt), Color(1.0, 0.62, 0.36))
+	_b.polygon(_ellipse(c, Vector2(10.5, 8.0), tilt), Color(0.12, 0.1, 0.09))
+	_b.polygon(_ellipse(c, Vector2(9.0, 6.6), tilt), Color(0.95, 0.42, 0.2))
+	_b.polygon(_ellipse(c + Vector2(-1.5, -1.2), Vector2(5.0, 3.4), tilt), Color(1.0, 0.62, 0.36))
+	# molded flight-ring ridge on top of the disc
+	var ridge := _ellipse(c, Vector2(6.6, 4.7), tilt)
+	for i in range(ridge.size()):
+		_b.line(ridge[i], ridge[(i + 1) % ridge.size()], Color(0.76, 0.28, 0.12, 0.55), 1.0)
 	# the spin, as a mark going round the rim
 	var m := c + Vector2(cos(spin * 3.0) * 7.0, sin(spin * 3.0) * 5.0)
-	_b.draw_circle(m, 1.6, Color(1, 0.95, 0.85))
+	_b.circle(m, 1.6, Color(1, 0.95, 0.85))
 	_b.flush()
+
+
+static func _arc_ring(b: ShapeBatch, c: Vector2, r: float, a0: float, a1: float, steps: int, col: Color, w: float) -> void:
+	var prev := c + Vector2.from_angle(a0) * r
+	for i in range(1, steps + 1):
+		var cur := c + Vector2.from_angle(lerpf(a0, a1, float(i) / float(steps))) * r
+		b.line(prev, cur, col, w)
+		prev = cur
 
 
 static func _ellipse(c: Vector2, r: Vector2, rot: float) -> PackedVector2Array:
