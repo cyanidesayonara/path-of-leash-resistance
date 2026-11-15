@@ -17,6 +17,7 @@ var wall_side := 0.0           # a parakeet flies off over this side's wall
 var fly_dir := Vector2.UP
 var wander_t := 0.0
 var seed_o := 0.0
+var wary := 70.0               # takes off when someone comes this close (PigeonGame sets it)
 
 
 func setup(m: Node2D, d: Node2D, h: Node2D, is_gull: bool = false) -> void:
@@ -53,7 +54,7 @@ func _physics_process(delta: float) -> void:
 		var threat := minf(
 			global_position.distance_to(dog.global_position),
 			global_position.distance_to(human.global_position))
-		if threat < 70.0:
+		if threat < wary:
 			scare()
 		else:
 			# traffic scatters pigeons too

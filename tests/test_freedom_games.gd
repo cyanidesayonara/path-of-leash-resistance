@@ -15,11 +15,18 @@ func _check(ok: bool, what: String) -> void:
 		print("FAIL: ", what)
 
 
-# run a dog along waypoints at `speed`, feeding the course each 1/60 s
+# run a dog along waypoints at `speed`, feeding the course each 1/60 s; a
+# float in the list is that many seconds standing dug in where she is
 func _run(ag: AgilityCourse, pts: Array, speed := 300.0) -> Array:
 	var ev: Array = []
 	var pos: Vector2 = pts[0]
 	for i in range(1, pts.size()):
+		if pts[i] is float:
+			var held := 0.0
+			while held < float(pts[i]):
+				ev.append_array(ag.step(pos, pos, 1.0 / 60.0, true))
+				held += 1.0 / 60.0
+			continue
 		var to: Vector2 = pts[i]
 		while pos.distance_to(to) > 0.5:
 			var nxt := pos.move_toward(to, speed / 60.0)
@@ -28,11 +35,23 @@ func _run(ag: AgilityCourse, pts: Array, speed := 300.0) -> Array:
 	return ev
 
 
-func _weave_path(ag: AgilityCourse, wrong_at := -1) -> Array:
+func _part(ag: AgilityCourse, kind: int) -> Dictionary:
+	for p: Dictionary in ag.parts:
+		if int(p["kind"]) == kind:
+			return p
+	return {}
+
+
+func _weave_path(ag: AgilityCourse, wrong_at := -1, sit := true) -> Array:
 	var pts: Array = [Vector2(ag.x0 - 60.0, ag.ly)]
 	var k := 0
 	for p: Dictionary in ag.parts:
 		var px: float = p["x"]
+		if int(p["kind"]) == AgilityCourse.E.TABLE:
+			pts.append(Vector2(px, ag.ly))
+			if sit:
+				pts.append(AgilityCourse.TABLE_S + 0.1)
+			continue
 		if int(p["kind"]) == AgilityCourse.E.WEAVE:
 			var side: float = p["side"]
 			if k == wrong_at:
@@ -73,17 +92,54 @@ func _initialize() -> void:
 	var ag2 := AgilityCourse.new(-500.0, 260.0, 960.0)
 	var fin2 := _finish(_run(ag2, _weave_path(ag2, 2)))
 	_check(not fin2.is_empty() and int(fin2[2]) == 1, "a pole on the wrong side is one fault")
+	# running over the table without sitting: a fault
+	var agt := AgilityCourse.new(-500.0, 260.0, 960.0)
+	var fint := _finish(_run(agt, _weave_path(agt, -1, false)))
+	_check(not fint.is_empty() and int(fint[2]) == 1, "running over the table without sitting is a fault")
+	# sitting on it counts three
+	var agc := AgilityCourse.new(-500.0, 260.0, 960.0)
+	var counts := 0
+	var sat := false
+	for e: Array in _run(agc, _weave_path(agc)):
+		if String(e[0]) == "table_count":
+			counts += 1
+		sat = sat or String(e[0]) == "table_done"
+	_check(counts == 2 and sat, "the table counts one, two, then three (%d, %s)" % [counts, sat])
+	# the chalk racing line passes every pole on its own side
+	var agl := AgilityCourse.new(-500.0, 260.0, 960.0)
+	var line_ok := true
+	for p: Dictionary in agl.parts:
+		if int(p["kind"]) == AgilityCourse.E.WEAVE:
+			line_ok = line_ok and (agl.line_y(float(p["x"])) - agl.ly) * float(p["side"]) > 10.0
+	_check(line_ok, "the racing line passes each pole on its side")
+	# following the line exactly is a clean weave
+	var agf := AgilityCourse.new(-500.0, 260.0, 960.0)
+	var follow: Array = [Vector2(agf.x0 - 60.0, agf.ly)]
+	var fx := agf.x0
+	while fx < agf.x1 + 40.0:
+		follow.append(Vector2(fx, agf.line_y(fx)))
+		var tp := _part(agf, AgilityCourse.E.TABLE)
+		if absf(fx - float(tp["x"])) < 2.5:
+			follow.append(AgilityCourse.TABLE_S + 0.1)
+		fx += 5.0
+	var finf := _finish(_run(agf, follow, 260.0))
+	_check(not finf.is_empty() and int(finf[2]) == 0, "running the chalk line is clean (%s)" % [finf])
+	# medals by time
+	_check(AgilityCourse.medal_for(5.0) == "GOLD" and AgilityCourse.medal_for(8.0) == "SILVER"
+		and AgilityCourse.medal_for(12.0) == "BRONZE" and AgilityCourse.medal_for(40.0) == "", "medals by time")
+	if not finf.is_empty():
+		_check(String(finf[3]) != "", "a clean run at a trot wins a medal (%.1f s)" % float(finf[1]))
 	# round the tunnel instead of through it: a fault
 	var ag3 := AgilityCourse.new(-500.0, 260.0, 960.0)
 	var pts3 := _weave_path(ag3)
-	var tun: Dictionary = ag3.parts[6]
+	var tun: Dictionary = _part(ag3, AgilityCourse.E.TUNNEL)
 	var path3: Array = []
-	for p: Vector2 in pts3:
-		if p.x > float(tun["x"]) - 20.0 and p.x < float(tun["x_end"]) + 20.0:
+	for p in pts3:
+		if p is Vector2 and (p as Vector2).x > float(tun["x"]) - 20.0 and (p as Vector2).x < float(tun["x_end"]) + 20.0:
 			continue
 		path3.append(p)
 	var i3 := 0
-	while i3 < path3.size() and (path3[i3] as Vector2).x < float(tun["x"]):
+	while i3 < path3.size() and (path3[i3] is float or (path3[i3] as Vector2).x < float(tun["x"])):
 		i3 += 1
 	path3.insert(i3, Vector2(float(tun["x"]) - 30.0, ag3.ly + 60.0))
 	path3.insert(i3 + 1, Vector2(float(tun["x_end"]) + 30.0, ag3.ly + 60.0))

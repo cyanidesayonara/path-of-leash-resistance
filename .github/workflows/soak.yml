@@ -5,27 +5,17 @@ name: Idle soak
 # dog, mood arrivals and phone cracks, and fails a run over the thresholds in
 # the script. One job per walk so the matrix finishes in minutes.
 #
-# Separate from ci.yml while the thresholds are provisional: it reports on
-# every PR and push to main but does not gate the release. Move it into
-# ci.yml once the thresholds have held for a while.
+# Separate from ci.yml while the thresholds are provisional: it does not gate
+# the release. Move it into ci.yml once the thresholds have held for a while.
+#
+# Runs on pushes to main only (and by hand). On every pull request its matrix
+# of a job per walk filled the queue of 20 concurrent jobs and held the PRs'
+# CI shards back; every merge to main is still soaked, and a newer push to
+# main cancels a soak still running on the older one.
 
 on:
   push:
     branches: [main]
-  # on PRs only when gameplay code changes: twelve jobs per run is a lot of CI
-  # queue for a HUD tweak or a docs change, and every push to main still soaks
-  pull_request:
-    branches: [main]
-    paths:
-      - "main.gd"
-      - "main.tscn"
-      - "project.godot"
-      - "autoload/**"
-      - "entities/**"
-      - "systems/**"
-      - "world/**"
-      - "tools/idle_soak.sh"
-      - ".github/workflows/soak.yml"
   workflow_dispatch:
 
 concurrency:
