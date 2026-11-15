@@ -145,10 +145,12 @@ func _shopper(b: ShapeBatch, i: int) -> void:
 	var coat: Color = COATS[i % COATS.size()]
 	b.coarse(Vector2(x + 2.0, y + 3.0), 6.2, Color(0, 0, 0, 0.18))
 	b.coarse(Vector2(x, y + bob), 6.4, coat)
-	var head := Vector2(x, y + bob - 4.2)
+	# the head leads the way they are walking: shoppers walk both ways
+	var fy := 1.0 if river.heading_south(i) else -1.0
+	var head := Vector2(x, y + bob + fy * 4.2)
 	var si := i % _skin.size()
 	b.coarse(head, 3.5, _skin[si])
-	b.coarse(head + Vector2(0.0, -1.1), 2.0, _hair[si])
+	b.coarse(head + Vector2(0.0, -fy * 1.1), 2.0, _hair[si])
 
 
 func _canopy(b: ShapeBatch, i: int) -> void:
