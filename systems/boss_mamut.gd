@@ -74,6 +74,25 @@ const LEG_OFFSETS: Array[Vector2] = [
 const LEG_RADIUS := 20.0
 const BODY_R := 80.0
 
+# The arena's own pieces (docs/BOSSES.md, the arenas). The rowboat jetty on
+# the shore: a charge that runs onto its boards breaks through into the lake,
+# the longest daze of the fight, once. The park's green chairs, stacked on
+# the lawn: his trunk swipe scatters a stack across the grass, and a charge
+# through a lying chair trips him.
+const JETTY := Rect2(SHORE_X - 74.0, -3020.0, 74.0, 58.0)   # the boards on the shore
+const JETTY_OUT := 128.0          # how far it runs out over the lake
+const JETTY_DAMAGE := 40.0
+const JETTY_STUN := 4.6
+const CHAIR_STACKS: Array[Vector2] = [Vector2(520.0, -2990.0), Vector2(640.0, -2650.0)]
+const CHAIRS_PER_STACK := 4
+const CHAIR_SCATTER := 70.0
+const CHAIR_TRIP_R := 46.0
+const CHAIR_GREEN := Color(0.24, 0.42, 0.30)
+const CHAIR_GREEN_LIT := Color(0.36, 0.56, 0.40)
+const PLANK := Color(0.56, 0.42, 0.28)
+const PLANK_DARK := Color(0.40, 0.29, 0.19)
+const BOAT := Color(0.78, 0.30, 0.22)
+
 const PRIZE := Vector2(470.0, -3150.0)
 const PRIZE_TEXT := "grab the rower's dropped sandwich"
 
@@ -172,6 +191,12 @@ var charge_cd := CHARGE_COOLDOWN
 var charge_hit_done := false
 var charge_from_tree := false
 var stun_splash := false
+var stun_jetty := false
+var jetty_broken := false
+# the chairs: each stack whole until a swipe scatters it; each lying chair
+# {p, a} until a charge trips over it
+var stacks_up: Array[bool] = [true, true]
+var chairs_down: Array[Dictionary] = []
 var stun_booped := false
 var stun_bowled := false
 var spray_dir := Vector2.DOWN
@@ -390,7 +415,8 @@ func transition_to(s: State) -> void:
 			charge_from_tree = _near_tree()
 			Sfx.play("fling", 0.6, -4.0)
 		State.STUNNED:
-			state_t = SPLASH_STUN if stun_splash else STUN_TIME
+			state_t = JETTY_STUN if stun_jetty else (SPLASH_STUN if stun_splash else STUN_TIME)
+			stun_jetty = false
 			stun_booped = false
 			stun_bowled = false
 			Sfx.play("groan", 0.8, -5.0)
@@ -484,11 +510,26 @@ func _strike_swipe(reach: float) -> void:
 		_dodged(dog_p)
 	if in_sector(main.human.global_position, swipe_dir, reach + 12.0, SWIPE_HALF):
 		main.human.bumped(push)
+	# a stack of chairs in the sweep goes everywhere, along the swing
+	for si in range(CHAIR_STACKS.size()):
+		if stacks_up[si] and in_sector(CHAIR_STACKS[si], swipe_dir, reach + 30.0, SWIPE_HALF + 0.2):
+			stacks_up[si] = false
+			_scatter_chairs(CHAIR_STACKS[si], push)
 	# the gravel swept aside in an arc
 	for i in range(8):
 		var a := swipe_dir.angle() + lerpf(-SWIPE_HALF, SWIPE_HALF, float(i) / 7.0)
 		_burst(pos + Vector2.from_angle(a) * reach * 0.8, 2, DUST, 40.0, 140.0, 4.0, 0.5, false, 120.0)
 	_scatter_pigeons(pos, reach + 60.0)
+
+
+func _scatter_chairs(at: Vector2, push: Vector2) -> void:
+	Sfx.play("crack", 1.4, -6.0)
+	main.feed.say("CHAIRS EVERYWHERE! LEAD HIM THROUGH THEM", EventFeed.Tone.PLAIN)
+	for k in range(CHAIRS_PER_STACK):
+		var off := push.rotated(lerpf(-0.9, 0.9, float(k) / float(CHAIRS_PER_STACK - 1))) * CHAIR_SCATTER * (0.6 + 0.4 * float(k % 2))
+		var p := at + off
+		p.x = clampf(p.x, ARENA_L + 40.0, SHORE_X - 40.0)
+		chairs_down.append({"p": p, "a": push.angle() + float(k) * 1.3})
 
 
 func _strike_stomp() -> void:
@@ -583,6 +624,29 @@ func _hit(kind: String) -> void:
 			main.combo.add("BONK", 6)
 			main.float_text(pos, "bonk! +6", Color(0.9, 0.5, 0.3))
 			_burst(pos + charge_dir * 50.0, 14, Color(0.40, 0.62, 0.30), 60.0, 200.0, 4.0, 1.1, false, 200.0)
+		"jetty":
+			jetty_broken = true
+			main.mamut_splashed = true
+			damage(JETTY_DAMAGE)
+			Sfx.play("crack", 0.45, 0.0)
+			Sfx.play("splash", 0.5, 0.0)
+			main.feed.say("CRASH! THROUGH THE JETTY", EventFeed.Tone.LOUD)
+			main.combo.add("JETTY", 14)
+			main.float_text(pos, "through the jetty! +14", Color(0.6, 0.85, 1.0))
+			for i in range(4):
+				rings.append({"pos": pos + Vector2(60.0, 0.0), "r": 70.0 + float(i) * 60.0, "life": 1.1, "max": 1.1, "col": WATER})
+			_burst(pos, 22, PLANK, 140.0, 380.0, 5.0, 1.1, false, 380.0)
+			_burst(pos + Vector2(60.0, 0.0), 30, WATER, 120.0, 360.0, 4.5, 0.9, false, 360.0)
+			face_dir = Vector2.LEFT
+		"chair":
+			main.mamut_tripped = true
+			damage(TRIP_DAMAGE)
+			Sfx.play("crack", 1.1, -4.0)
+			Sfx.play("drum", 0.5, -2.0)
+			main.feed.say("TRIPPED OVER A DECKCHAIR!", EventFeed.Tone.LOUD)
+			main.combo.add("TRIP", 8)
+			main.float_text(pos, "chair trip! +8", Color(1.0, 0.85, 0.2))
+			_burst(pos, 10, CHAIR_GREEN, 80.0, 220.0, 4.0, 0.9, false, 200.0)
 		"lake":
 			main.mamut_splashed = true
 			damage(SPLASH_DAMAGE)
@@ -598,7 +662,8 @@ func _hit(kind: String) -> void:
 	main.shake_t = maxf(float(main.shake_t), 1.1)
 	screen_flash = 0.3
 	_big_hit()
-	stun_splash = kind == "lake"
+	stun_splash = kind == "lake" or kind == "jetty"
+	stun_jetty = kind == "jetty"
 	transition_to(State.STUNNED)
 
 
@@ -771,9 +836,17 @@ func tick_state(delta: float) -> void:
 			pos.x = clampf(pos.x, ARENA_L + 60.0, SHORE_X + 46.0)
 			update_leg_positions()
 			_scatter_pigeons(pos, 140.0)
+			if not jetty_broken and JETTY.grow(8.0).has_point(pos):
+				_hit("jetty")
+				return
 			if pos.x >= SHORE_X + 6.0:
 				_hit("lake")
 				return
+			for ci in range(chairs_down.size()):
+				if (chairs_down[ci].p as Vector2).distance_to(pos) < CHAIR_TRIP_R:
+					chairs_down.remove_at(ci)
+					_hit("chair")
+					return
 			if check_trip():
 				_hit("trip")
 				return
@@ -1167,6 +1240,8 @@ func draw_plinth(b: ShapeBatch) -> void:
 
 func draw_ground(b: ShapeBatch, vt: float, vb: float) -> void:
 	draw_plinth(b)
+	_draw_jetty(b)
+	_draw_chairs(b)
 	var cc := Color(0.30, 0.24, 0.16, 0.7)
 	for cr: Dictionary in craters:
 		var cp: Vector2 = cr.p
@@ -1177,6 +1252,90 @@ func draw_ground(b: ShapeBatch, vt: float, vb: float) -> void:
 		for i in range(6):
 			var d := Vector2.from_angle(float(cr.a) + float(i) * TAU / 6.0)
 			b.line(cp + d * 14.0, cp + d * (30.0 + float(i % 2) * 14.0), Color(cc.r, cc.g, cc.b, cc.a * a), 2.2)
+
+
+# the rowboat jetty: boards on posts from the shore out over the lake, a
+# rowboat tied up at its end; broken, the land end is snapped boards and the
+# boat has drifted off
+func _draw_jetty(b: ShapeBatch) -> void:
+	var j := JETTY
+	var out := Rect2(j.position, Vector2(j.size.x + JETTY_OUT, j.size.y))
+	if not jetty_broken:
+		b.rect(Rect2(out.position + Shade.light * 6.0, out.size), SHADOW)
+		b.rect(out.grow(2.0), PLANK_DARK)
+		var x := out.position.x
+		var k := 0
+		while x < out.end.x - 1.0:
+			b.rect(Rect2(x, out.position.y, 11.0, out.size.y), PLANK.lightened(0.06 * float(k % 2)))
+			x += 12.0
+			k += 1
+		for py: float in [out.position.y - 3.0, out.end.y - 3.0]:
+			for px: float in [j.end.x + 10.0, j.end.x + 64.0, out.end.x - 8.0]:
+				b.circle(Vector2(px, py + 3.0), 4.5, PLANK_DARK)
+		_draw_rowboat(b, Vector2(out.end.x - 30.0, out.end.y + 26.0), 0.0)
+	else:
+		# the land end, snapped; the posts out in the water; the boat adrift
+		var x := j.position.x
+		while x < j.end.x - 10.0:
+			b.rect(Rect2(x, j.position.y + 6.0, 11.0, j.size.y - 12.0), PLANK.darkened(0.1))
+			x += 12.0
+		b.line(Vector2(j.end.x - 6.0, j.position.y + 8.0), Vector2(j.end.x + 18.0, j.position.y + 30.0), PLANK, 7.0)
+		for px: float in [j.end.x + 64.0, out.end.x - 8.0]:
+			b.circle(Vector2(px, j.position.y), 4.5, PLANK_DARK)
+			b.circle(Vector2(px, j.end.y), 4.5, PLANK_DARK)
+		_draw_rowboat(b, Vector2(out.end.x + 40.0, out.end.y + 70.0), 0.5)
+
+
+func _draw_rowboat(b: ShapeBatch, c: Vector2, rot: float) -> void:
+	var hull := PackedVector2Array()
+	for i in range(12):
+		var a := TAU * float(i) / 12.0
+		var r := Vector2(cos(a) * 36.0 * (1.0 if cos(a) > 0.0 else 0.85), sin(a) * 14.0)
+		hull.append(c + r.rotated(rot))
+	var sh := PackedVector2Array()
+	for p: Vector2 in hull:
+		sh.append(p + Shade.light * 5.0)
+	b.polygon(sh, Color(0.05, 0.08, 0.12, 0.25))
+	b.polygon(hull, BOAT.darkened(0.3))
+	var inner := PackedVector2Array()
+	for p: Vector2 in hull:
+		inner.append(c + (p - c) * 0.8)
+	b.polygon(inner, Color(0.62, 0.48, 0.32))
+	for k: float in [-12.0, 10.0]:
+		b.line(c + Vector2(k, -11.0).rotated(rot), c + Vector2(k, 11.0).rotated(rot), PLANK_DARK, 3.0)
+
+
+# the green chairs: a stack, or knocked over across the lawn
+func _draw_chairs(b: ShapeBatch) -> void:
+	for si in range(CHAIR_STACKS.size()):
+		if not stacks_up[si]:
+			continue
+		var p: Vector2 = CHAIR_STACKS[si]
+		b.rect(Rect2(p + Vector2(-17, -14) + Shade.light * 9.0, Vector2(34, 30)), SHADOW)
+		# four chairs, each a little askew on the one below: seat, backrest
+		# rail across the top, a leg showing at each corner
+		for k in range(4):
+			var o := Vector2(float(k % 2) * 2.0 - 1.0, -3.0 * float(k))
+			var c := p + o
+			for lg: Vector2 in [Vector2(-14, -12), Vector2(14, -12), Vector2(-14, 12), Vector2(14, 12)]:
+				b.circle(c + lg, 2.2, CHAIR_GREEN.darkened(0.45))
+			b.rect(Rect2(c + Vector2(-13, -9), Vector2(26, 21)), CHAIR_GREEN.darkened(0.2))
+			b.rect(Rect2(c + Vector2(-12, -8), Vector2(24, 19)), CHAIR_GREEN if k < 3 else CHAIR_GREEN_LIT)
+			for sl in range(4):
+				b.line(c + Vector2(-12.0, -5.0 + float(sl) * 5.0), c + Vector2(12.0, -5.0 + float(sl) * 5.0), CHAIR_GREEN.darkened(0.3), 1.2)
+			b.capsule(c + Vector2(-14, -13), c + Vector2(14, -13), 2.4, CHAIR_GREEN.darkened(0.35))
+		b.line(p + Vector2(-13, -21), p + Vector2(9, -21), Color(1, 1, 1, 0.25), 1.5)
+	for ch: Dictionary in chairs_down:
+		var p: Vector2 = ch.p
+		var a: float = ch.a
+		var d := Vector2.from_angle(a)
+		var n := d.orthogonal()
+		b.quad(p - d * 14.0 - n * 11.0, p + d * 14.0 - n * 11.0, p + d * 14.0 + n * 11.0, p - d * 14.0 + n * 11.0, CHAIR_GREEN.darkened(0.2))
+		for k in range(3):
+			var o := -11.0 + float(k) * 11.0
+			b.line(p - d * 12.0 + n * o, p + d * 12.0 + n * o, CHAIR_GREEN_LIT, 2.5)
+		b.line(p + d * 14.0 - n * 11.0, p + d * 22.0 - n * 13.0, CHAIR_GREEN.darkened(0.35), 2.5)
+		b.line(p + d * 14.0 + n * 11.0, p + d * 22.0 + n * 13.0, CHAIR_GREEN.darkened(0.35), 2.5)
 
 
 func draw_crowd(b: ShapeBatch, vt: float, vb: float, t: float) -> void:
