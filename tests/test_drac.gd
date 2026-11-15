@@ -201,6 +201,74 @@ func _run() -> void:
 	for i in range(40):
 		m.dog.tick(DT)
 	_check(not m.dog.is_riding(), "and runs out")
+
+	# serpentine bench: chase him along a stair curve and he grinds to a stop in its bend
+	dr.transition_to(BD.State.PROWL)
+	dr.hp = 80.0
+	dr.phase = 1
+	dr.enraged = false
+	dr.tail_cd = 99.0
+	dr.jet_cd = 99.0
+	dr.bench_cd = 0.0
+	dr.slither_cd = 99.0
+	dr.pos = Vector2(400.0, -950.0)
+	var hp_bench: float = dr.hp
+	var bones_bench: int = m.bones
+	m.human.global_position = Vector2(540.0, -780.0)
+	m.dog.global_position = Vector2(400.0, -860.0)
+	m.dog.velocity = Vector2(0.0, -180.0)
+	_ticks(m, DT * 2.0)
+	_check(dr.state == BD.State.BENCH_WARN, "chased near serpentine bench: bolting warning")
+	_check(dr.bench_bend.distance_to(Vector2(422.0, -1132.0)) < 2.0, "bolts toward far bend")
+	_ticks(m, BD.BENCH_WARN - 0.1)
+	_check(dr.state == BD.State.BENCH_WARN and dr.hp == hp_bench, "0.8s bench warning before bolt")
+	_ticks(m, 0.15)
+	_check(dr.state == BD.State.BENCH_RUN, "scrambles onto and along the serpentine bench")
+	_ticks(m, BD.BENCH_RUN_TIME + 0.05)
+	_check(dr.bench_stops == 1, "ground to a stop at the bend")
+	_check(is_equal_approx(dr.hp, hp_bench - BD.BENCH_DAMAGE), "bend crash deals bench damage: %f" % dr.hp)
+	_check(dr.state == BD.State.STUNNED and dr.state_t > BD.BENCH_STUN - 0.2, "dazed in the bend")
+	_check(m.bones == bones_bench + BD.BENCH_PAY, "bench stop pays through award_points")
+	_check(dr.bench_spark_t > 0.0, "grind sparks active at the bend")
+	_ticks(m, BD.BENCH_STUN + 0.1)
+	_check(dr.state == BD.State.PROWL, "bench stun wears off")
+
+	# chasing from the north end sends him to the opposite bend
+	dr.bench_cd = 0.0
+	dr.tail_cd = 99.0
+	dr.jet_cd = 99.0
+	dr.slither_cd = 99.0
+	dr.pos = Vector2(390.0, -1080.0)
+	m.dog.global_position = Vector2(390.0, -1170.0)
+	m.dog.velocity = Vector2(0.0, 180.0)
+	_ticks(m, DT * 2.0)
+	_check(dr.state == BD.State.BENCH_WARN and dr.bench_bend.distance_to(Vector2(422.0, -918.0)) < 2.0,
+		"chasing from the north sends him to the south bend")
+	_ticks(m, BD.BENCH_WARN + BD.BENCH_RUN_TIME + 0.1)
+	_check(dr.bench_stops == 2, "second bend stop counted")
+
+	# phase 2 slither on the stair stays on the stair (does not snap to hall)
+	dr.phase = 2
+	dr.enraged = true
+	dr.transition_to(BD.State.PROWL)
+	dr.pos = BD.LANDING
+	dr.face_dir = Vector2.RIGHT
+	dr.slither_cd = 0.0
+	dr.bench_cd = 99.0
+	dr.tail_cd = 99.0
+	dr.jet_cd = 99.0
+	m.dog.global_position = Vector2(640.0, -700.0)
+	m.dog.velocity = Vector2.ZERO
+	_ticks(m, DT * 3.0)
+	_check(dr.state == BD.State.SLITHER and dr.pos.y >= LevelBuild.MOSAIC_STAIR_Y1,
+		"stair slither stays on the stair arena: %s" % str(dr.pos))
+
+	dr.hp = 62.0
+	dr.phase = 1
+	dr.enraged = false
+	dr.pos = BD.LANDING
+	dr.face_dir = Vector2.DOWN
+	dr.transition_to(BD.State.PROWL)
 	m.dog.velocity = Vector2.ZERO
 	dr.tail_cd = 99.0
 	dr.slither_cd = 1.0

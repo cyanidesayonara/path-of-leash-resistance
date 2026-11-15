@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-15 - El Drac's serpentine bench
+
+- El Drac's stair arena now has four trencadis serpentine bench curves flanking the upper and lower terraces (`STAIR_BENCHES` in `systems/boss_drac.gd`, drawn smoothly via `_draw_stair_benches` with scrolled bend caps at both ends; plaza serpentine bench runs are also supported).
+- Chase El Drac while he is near a serpentine bench (`check_bench_chase()`) and he panics into a 0.8 s telegraphed `BENCH_WARN` (`"HE'S BOLTING ALONG THE BENCH!"`), then races away from the dog along the curved spine (`BENCH_RUN`) and grinds to a stop in the far bend (`BENCH_DAMAGE`, `BENCH_STUN`, ceramic spark shower, `BENCH_PAY` bones). In `PROWL`, he skitters away when charged so he can be herded onto the curves.
+- Phase 2 `SLITHER` starting on the stair (`slither_from.y >= MOSAIC_STAIR_Y1`) now clamps to the stair arena instead of snapping into the hypostyle hall out of leash range of `HOLD_Y`.
+- Test: `tests/test_drac.gd` (extended to 106 checks covering north and south bend chases, 0.8 s telegraph, grind-to-stop damage and daze, and stair slither clamping).
+
 ## 2026-11-15 - The woodland clearing's squirrel game, and 1.73 release notes
 
 - Off the leash in the woodland clearings (`El Bosc`, `Els Senglars`): a squirrel comes down to forage (`systems/squirrel_game.gd`, `SquirrelGame`, created in `systems/freedom_games.gd` when `freedom_kind == "clearing"`). Run close and it bolts up the nearest trunk (it cannot be caught). Bark from under the tree: the first bark pays 3 bones ("treed! +3"), later ones pay 1. After a 0.8 s crown-rustle telegraph (shaking leaves aimed toward the next trunk), it leaps in an arc to another tree with a ground shadow underneath; bark there before it settles for a streak bonus ("after it! treed again x2"). After two leaps it slips off into the canopy; three squirrels per round.
