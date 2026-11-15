@@ -678,7 +678,7 @@ static func mercat(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 			# on the floor in front of the counter, past its customers
 			var out := 1.0 if bool(MERCAT_WALL_STALLS[i][1]) else -1.0
 			m.patches.append({"y": f.y, "at": 0.0, "rx": 58.0, "ry": 40.0, "seed": 2.2 + float(i),
-				"kind": "puddle", "pin": f + Vector2(out * 50.0, 24.0)})
+				"kind": "puddle", "spill": true, "ice": true, "pin": f + Vector2(out * 50.0, 24.0)})
 			m.patches.append({"y": f.y, "at": 0.0, "rx": 34.0, "ry": 24.0, "seed": 3.1 + float(i),
 				"kind": "fish", "pin": f + Vector2(out * 22.0, -26.0)})
 	# the owner keeps to one aisle round each block, alternating
