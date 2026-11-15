@@ -1,0 +1,745 @@
+# Every test script CI runs, one per line: the Godot arguments after the
+# binary. tools/run_tests.sh runs this list, locally and in each CI shard
+# (.github/workflows/ci.yml). A line without --headless needs a rendering
+# context: CI gives it xvfb and software GL. Comments above a line say what
+# it covers; "# cost N" is its seconds on a CI runner, for tests of 10 s or
+# more, so the shards come out even (anything unmarked counts as 5).
+# A new test is a new line here, nothing in ci.yml.
+
+# Leash winding regression test
+--headless --path . --script res://tests/test_wrap.gd
+
+# Leash repeated setup regression test
+--headless --path . --script res://tests/test_leash_setup.gd
+
+# Leash pull tangent regression test
+--headless --path . --script res://tests/test_leash_weighted_tangent.gd
+
+# Leash visible path regression test
+--headless --path . --script res://tests/test_leash_render_path.gd
+
+# Leash draw buffer regression test
+--headless --path . --script res://tests/test_leash_draw_buffers.gd
+
+# Leash taut onset regression test
+--headless --path . --script res://tests/test_leash_taut_transition.gd
+
+# Leash taut settling regression test
+--headless --path . --script res://tests/test_leash_taut_settling.gd
+
+# Leash tension wiring regression test
+--headless --path . --script res://tests/test_leash_tension_wiring.gd
+
+# Furniture recovery regression test
+--headless --path . --script res://tests/test_furniture_recovery.gd
+
+# Waist-high leash geometry regression test
+--headless --path . --script res://tests/test_leash_height_geometry.gd
+
+# Critter chase regression test
+--headless --path . --script res://tests/test_critter_chase.gd
+
+# Tangle event regression test
+--headless --path . --script res://tests/test_tangle_latch.gd
+
+# NPC leash tangle hardening regression test
+--headless --path . --script res://tests/test_tangle_hardening.gd
+
+# Freedom traffic regression test
+--headless --path . --script res://tests/test_freedom_traffic.gd
+
+# NPC pair direction regression test
+--headless --path . --script res://tests/test_pair_direction.gd
+
+# Bandana preview regression test
+--headless --path . --script res://tests/test_bandana_preview.gd
+
+# Shared bypasser route regression test
+--headless --path . --script res://tests/test_bypasser_route.gd
+
+# Rider obstacle avoidance regression test
+--headless --path . --script res://tests/test_rider_avoidance.gd
+
+# NPC pair obstacle avoidance regression test
+--headless --path . --script res://tests/test_pair_pond_avoidance.gd
+
+# NPC pair walk and leash regression test
+--headless --path . --script res://tests/test_pair_walk.gd
+
+# NPC pair park lifecycle regression test
+--headless --path . --script res://tests/test_pair_park_lifecycle.gd
+
+# NPC pair park slot regression test
+--headless --path . --script res://tests/test_pair_park_slots.gd
+
+# NPC pair park traffic regression test
+--headless --path . --script res://tests/test_pair_park_traffic.gd
+
+# Free-dog visual variety regression test
+--headless --path . --script res://tests/test_free_dog_variety.gd
+
+# NPC pair dog appearance regression test
+--headless --path . --script res://tests/test_pair_dog_appearance.gd
+
+# Bring-Tofu-home herding regression test
+--headless --path . --script res://tests/test_tofu_home.gd
+
+# A walk's own weather or hour never carries on to the next walk
+--headless --path . --script res://tests/test_walk_sky.gd
+
+# Who is out follows the weather and the hour
+--headless --path . --script res://tests/test_outdoors.gd
+
+# Sky tint, grade and lamp light
+--headless --path . --script res://tests/test_sky.gd
+
+# Arrival homes
+--headless --path . --script res://tests/test_arrival.gd
+
+# Tofu hides only where she can be reached, every walk
+# cost 21
+--headless --path . --script res://tests/test_tofu_spots.gd
+
+# Per-level goal/star progression regression test
+--headless --path . --script res://tests/test_goals.gd
+
+# Tony Hawk quests regression test
+--headless --path . --script res://tests/test_tony_hawk_quests.gd
+
+# Goal text row width fit regression test
+--headless --path . --script res://tests/test_goal_text_fits.gd
+
+# Fresh-save progression persistence regression test
+--headless --path . --script res://tests/test_fresh_save_progression.gd
+
+# Tutorial campaign-isolation regression test
+--headless --path . --script res://tests/test_tutorial_isolation.gd
+
+# Cosmetic ownership migration regression test
+--headless --path . --script res://tests/test_cosmetic_ownership.gd
+
+# Combo/multiplier meter regression test
+--headless --path . --script res://tests/test_combo.gd
+
+# Sweeper chase devourer regression test
+--headless --path . --script res://tests/test_sweeper.gd
+
+# Chase vehicle (swerves round heavy things, bonks over light ones) test
+--headless --path . --script res://tests/test_chase_vehicle.gd
+
+# Home-leg chase wiring test
+# the autowalk steps cannot reach the chase's "caught" branch (the bot is
+# unsweepable), so this is what covers the chase ending a walk
+--headless --path . --script res://tests/test_home_chase.gd
+
+# Chase walk profile and content test
+# the chase profile: La Neteja's fixed sweeper, the dev hooks, the
+# random-number draws, and the lane's content purity
+--headless --path . --script res://tests/test_chase_walk.gd
+
+# Chase checkpoint and continue test
+# the warning and head start, the two checkpoints, and continuing a
+# chase loss: exact restore, no reward twice, restarts clear it
+# cost 16
+--headless --path . --script res://tests/test_chase_checkpoint.gd
+
+# Title, wardrobe and settings flow test
+# headless runs skip the title, so this is the only check on the menu
+# steps, the wardrobe and the settings screen
+--headless --path . --script res://tests/test_menu_flow.gd
+
+# Menu tree test
+# every screen reached from the main menu, and back with BACK alone
+--headless --path . --script res://tests/test_menu_tree.gd
+
+# Menu layout, wardrobe and dog action animation polish test
+--headless --path . --script res://tests/test_menu_anim_polish.gd
+
+# Free play demo mode settings and unlock test
+--headless --path . --script res://tests/test_free_play.gd
+
+# Dog in-game animation polish and feel test
+--headless --path . --script res://tests/test_dog_anim_juice.gd
+
+# Artsy detour El Somni gallery test
+# cost 21
+--headless --path . --script res://tests/test_detour_somni.gd
+
+# Artsy detour L'Estel gallery test
+--headless --path . --script res://tests/test_detour_estel.gd
+
+# Artsy detour El Colom gallery test
+--headless --path . --script res://tests/test_detour_colom.gd
+
+# Artsy detour El Drac gallery test
+--headless --path . --script res://tests/test_detour_drac.gd
+
+# World sign test
+--headless --path . --script res://tests/test_world_sign.gd
+
+# Gate sign test
+--headless --path . --script res://tests/test_gate_sign.gd
+
+# Sign layer test
+--headless --path . --script res://tests/test_sign_layer.gd
+
+# Town square off-leash test
+--headless --path . --script res://tests/test_placa_freedom.gd
+
+# Hand-authored off-leash props per walk test
+--headless --path . --script res://tests/test_freedom_props.gd
+
+# Off-leash fixes test
+# cost 10
+--headless --path . --script res://tests/test_freedom_fixes.gd
+
+# Off-leash games rules test
+--headless --path . --script res://tests/test_freedom_games.gd
+
+# Off-leash games test
+--headless --path . --script res://tests/test_freedom_games_live.gd
+
+# Rope tug backing-up regression test
+--headless --path . --script res://tests/test_rope_tug_backing.gd
+
+# Soundtrack test
+# cost 18
+--headless --path . --script res://tests/test_music.gd
+
+# Intro polish test
+--headless --path . --script res://tests/test_intro_polish.gd
+
+# Chase walk story films test
+--headless --path . --script res://tests/test_chase_film.gd
+
+# Chase threats speak for themselves test
+--headless --path . --script res://tests/test_chase_voice.gd
+
+# Your human's look test
+--headless --path . --script res://tests/test_human_look.gd
+
+# Soft light test
+--headless --path . --script res://tests/test_soft_light.gd
+
+# Baked soundtrack test
+--headless --path . --script res://tests/test_baked_music.gd
+
+# Circle level of detail test
+--headless --path . --script res://tests/test_circle_lod.gd
+
+# Grass cache test
+--headless --path . --script res://tests/test_grass_cache.gd
+
+# Cached cross-section test
+--headless --path . --script res://tests/test_world_cache.gd
+
+# Redraw once a frame test
+--headless --path . --script res://tests/test_redraw_once.gd
+
+# Home epilogue cutscene test
+--headless --path . --script res://tests/test_home_epilogue.gd
+
+# Tutorial checkpoint test
+--headless --path . --script res://tests/test_tutorial_checkpoint.gd
+
+# Junk placement test
+--headless --path . --script res://tests/test_junk_placement.gd
+
+# First-time tips test
+--headless --path . --script res://tests/test_tips.gd
+
+# Grindables test
+--headless --path . --script res://tests/test_rails.gd
+
+# Golden zoomies test
+--headless --path . --script res://tests/test_golden_zoomies.gd
+
+# Sunhat test
+--headless --path . --script res://tests/test_sunhat.gd
+
+# Litter test
+--headless --path . --script res://tests/test_litter.gd
+
+# Leash tricks test
+--headless --path . --script res://tests/test_leash_tricks.gd
+
+# Owner unstick test
+# cost 12
+--headless --path . --script res://tests/test_owner_unstick.gd
+
+# Dog slides along faces and parts from your human test
+# cost 13
+--headless --path . --script res://tests/test_dog_bodies.gd
+
+# Saves test
+--headless --path . --script res://tests/test_saves.gd
+
+# Tutorial brace test
+# cost 13
+--headless --path . --script res://tests/test_tutorial_brace.gd
+
+# Leash slack test
+--headless --path . --script res://tests/test_leash_slack.gd
+
+# Canopy test
+--headless --path . --script res://tests/test_canopy.gd
+
+# Draw order (overhead) test
+--headless --path . --script res://tests/test_zorder_overhead.gd
+
+# Montjuic test
+# cost 23
+--headless --path . --script res://tests/test_montjuic.gd
+
+# Montjuic visual polish test
+--headless --path . --script res://tests/test_montjuic_polish.gd
+
+# Dia de Partit test
+--headless --path . --script res://tests/test_partit.gd
+
+# El Port test
+--headless --path . --script res://tests/test_port.gd
+
+# El Port quayside fishing live event test
+--headless --path . --script res://tests/test_port_fishing.gd
+
+# Plaça Reial test
+--headless --path . --script res://tests/test_reial.gd
+
+# Plaça Reial bistro waiter live event test
+--headless --path . --script res://tests/test_reial_waiter.gd
+
+# El Veterinari test
+--headless --path . --script res://tests/test_vet.gd
+
+# El Veterinari cone dog live event test
+--headless --path . --script res://tests/test_vet_cone_dog.gd
+
+# El Tibidabo test
+--headless --path . --script res://tests/test_tibidabo.gd
+
+# El Tibidabo unicyclist live event test
+--headless --path . --script res://tests/test_tibidabo_unicyclist.gd
+
+# La Carretera de les Aigues test
+--headless --path . --script res://tests/test_aigues.gd
+
+# La Carretera de les Aigues trail runner live event test
+--headless --path . --script res://tests/test_aigues_trail_runner.gd
+
+# El Laberint d'Horta test
+--headless --path . --script res://tests/test_horta.gd
+
+# El Laberint d'Horta lost tourist test
+--headless --path . --script res://tests/test_horta_tourist.gd
+
+# Boss Gat (Rambla del Raval) test
+--headless --path . --script res://tests/test_boss_gat.gd
+
+# Boss Gat tied with the real rope test
+# cost 11
+--headless --path . --script res://tests/test_boss_tie_rope.gd
+
+# Els Senglars and Festa de Gracia chases test
+--headless --path . --script res://tests/test_boar_chase.gd
+
+# Els Senglars wild boar family crossing test
+--headless --path . --script res://tests/test_boars_wild_boar.gd
+
+# Festa de Gracia Gegant rehearsal twirl test
+--headless --path . --script res://tests/test_gracia_gegant.gd
+
+# Festa de Gracia Castellers test
+--headless --path . --script res://tests/test_gracia_castellers.gd
+
+# Els Bunquers del Carmel test
+--headless --path . --script res://tests/test_carmel.gd
+
+# La Superilla (Poblenou superblock) test
+--headless --path . --script res://tests/test_superilla.gd
+
+# Els Angels (skate plaza) test
+--headless --path . --script res://tests/test_angels.gd
+
+# El Forum (Parc del Forum) test
+--headless --path . --script res://tests/test_forum.gd
+
+# Placa d'Espanya (Font Magica) test
+--headless --path . --script res://tests/test_espanya.gd
+
+# L'Eixample (the grid and the tour group) test
+--headless --path . --script res://tests/test_eixample.gd
+
+# Building walls on bending streets test
+--headless --path . --script res://tests/test_building_walls.gd
+
+# El Poble Espanyol (walled village) test
+--headless --path . --script res://tests/test_poble.gd
+
+# La Ciutadella (El Mamut, the first statue boss) test
+--headless --path . --script res://tests/test_ciutadella.gd
+
+# The street after dark (lit doorways, shopfronts and windows)
+--headless --path . --script res://tests/test_night_fronts.gd
+
+# Night shadows test
+--headless --path . --script res://tests/test_shade.gd
+
+# La Cremada (the Dimoni float chase) test
+--headless --path . --script res://tests/test_cremada.gd
+
+# L'Aeroport (the security squad chase) test
+--headless --path . --script res://tests/test_aeroport.gd
+
+# Montserrat (the wild goat herd chase) test
+--headless --path . --script res://tests/test_montserrat.gd
+
+# Els Lleons (the twin bronze lions boss) test
+--headless --path . --script res://tests/test_lleons.gd
+
+# El Drac (the mosaic salamander boss) test
+--headless --path . --script res://tests/test_drac.gd
+
+# Chase squad (officers go round solids, kick junk, catch by body and belt) test
+--headless --path . --script res://tests/test_chase_squad.gd
+
+# Chase squads on their walks (staff, boars, devils, security; never in a solid, every respite a save) test
+--headless --path . --script res://tests/test_chase_squad_walks.gd
+
+# Members exist (no call or property on main, the dog, your human or the leash that is not there)
+--headless --path . --script res://tests/test_members_exist.gd
+
+# Patience scale (live events take a fraction of it)
+--headless --path . --script res://tests/test_patience_scale.gd
+
+# La Castanyada castanyera crossing test
+--headless --path . --script res://tests/test_castanyada_live_event.gd
+
+# Park Guell municipal gardener crossing test
+--headless --path . --script res://tests/test_mosaic_gardener.gd
+
+# La Ferralla scrapyard forklift crossing test
+--headless --path . --script res://tests/test_ferralla_forklift.gd
+
+# El Gotic vintage courier scooter test
+--headless --path . --script res://tests/test_gotic_scooter.gd
+
+# El Bosc mushroom forager test
+--headless --path . --script res://tests/test_bosc_boletaire.gd
+
+# La Rambla flower seller test
+--headless --path . --script res://tests/test_rambla_florista.gd
+
+# El Besos birdwatcher test
+--headless --path . --script res://tests/test_besos_ornitoleg.gd
+
+# La Neteja street cleaner test
+--headless --path . --script res://tests/test_neteja_escombriaire.gd
+
+# Montjuic botanist test
+--headless --path . --script res://tests/test_montjuic_botanic.gd
+
+# Dia de Partit flag bearer test
+--headless --path . --script res://tests/test_partit_banderer.gd
+
+# Campaign mastery test
+--headless --path . --script res://tests/test_campaign_mastery.gd
+
+# Chase milestone gates test
+--headless --path . --script res://tests/test_chase_milestone_gates.gd
+
+# Match-day corners test
+--headless --path . --script res://tests/test_corners.gd
+
+# Match-day branding test
+--headless --path . --script res://tests/test_partit_branding.gd
+
+# Dia de Partit visual polish test
+--headless --path . --script res://tests/test_partit_polish.gd
+
+# Crowd river test
+--headless --path . --script res://tests/test_crowd_river.gd
+
+# Match day test
+--headless --path . --script res://tests/test_match_day.gd
+
+# Telefèric test
+# cost 17
+--headless --path . --script res://tests/test_cable_car.gd
+
+# Small-screen interface test
+--headless --path . --script res://tests/test_ui_scale.gd
+
+# Loss card test
+--headless --path . --script res://tests/test_losses.gd
+
+# Reel test
+--headless --path . --script res://tests/test_reel.gd
+
+# Whirl test
+--headless --path . --script res://tests/test_whirl.gd
+
+# Guided whirl regression test
+--headless --path . --script res://tests/test_whirl_guided.gd
+
+# Owner drag pose test
+--headless --path . --script res://tests/test_owner_drag.gd
+
+# Leash conversation test
+--headless --path . --script res://tests/test_leash_conversation.gd
+
+# Other dogs mark posts test
+--headless --path . --script res://tests/test_pair_marks.gd
+
+# Meeting other dogs test
+--headless --path . --script res://tests/test_pair_greet.gd
+
+# Pair meeting test
+--headless --path . --script res://tests/test_pair_meet.gd
+
+# Raval victory film test
+--headless --path . --script res://tests/test_film_plinth.gd
+
+# Off-leash sign clear of props test
+--headless --path . --script res://tests/test_freedom_sign_clear.gd
+
+# Called methods exist test
+--headless --path . --script res://tests/test_called_methods_exist.gd
+
+# Main properties exist test
+--headless --path . --script res://tests/test_main_properties_exist.gd
+
+# Owner habits test
+--headless --path . --script res://tests/test_owner_habits.gd
+
+# Planted dog skid test
+--headless --path . --script res://tests/test_plant_skid.gd
+
+# Status banner test
+--headless --path . --script res://tests/test_status_banner.gd
+
+# Feed lines never overlap test
+--headless --path . --script res://tests/test_event_feed.gd
+
+# HUD iconography and layout polish test
+--headless --path . --script res://tests/test_hud_polish.gd
+
+# World labels keep clear of the feed test
+--headless --path . --script res://tests/test_float_text.gd
+
+# Snow slush follows the path test
+--headless --path . --script res://tests/test_snow_slush.gd
+
+# Footprints in sand and snow test
+--headless --path . --script res://tests/test_footprints.gd
+
+# El Bosc is its own wood test
+--headless --path . --script res://tests/test_bosc.gd
+
+# Shared water current test
+--headless --path . --script res://tests/test_current_flow.gd
+
+# El Bosc rainy stream find test
+--headless --path . --script res://tests/test_stream_find.gd
+
+# El Bosc boars and fallen trunks test
+--headless --path . --script res://tests/test_boar.gd
+
+# El Parc is its own park test
+--headless --path . --script res://tests/test_parc.gd
+
+# El Parc rotary lawn sprinkler live event test
+--headless --path . --script res://tests/test_parc_sprinkler.gd
+
+# The park pond swims where it is drawn
+--headless --path . --script res://tests/test_pond_swim.gd
+
+# Passeig Maritim landmarks test
+--headless --path . --script res://tests/test_passeig.gd
+
+# Platja de Llevant beach surfer test
+--headless --path . --script res://tests/test_llevant_surfer.gd
+
+# Passeig Maritim kite flyer live event test
+--headless --fixed-fps 60 --path . --script res://tests/test_passeig_kite.gd
+
+# La Rambla layout test
+--headless --path . --script res://tests/test_rambla.gd
+
+# La Rambla visual polish test
+--headless --path . --script res://tests/test_rambla_polish.gd
+
+# Pickpockets test
+--headless --path . --script res://tests/test_pickpocket.gd
+
+# Les Obres is its own roadworks test
+--headless --path . --script res://tests/test_obres.gd
+
+# Les Obres jackhammer live event test
+--headless --path . --script res://tests/test_obres_jackhammer.gd
+
+# El Barri is the first walk test
+# cost 22
+--headless --path . --script res://tests/test_barri.gd
+
+# El Barri petanca live event test
+--headless --path . --script res://tests/test_petanca.gd
+
+# Tutorial stations test
+# cost 14
+--headless --path . --script res://tests/test_tutorial_stations.gd
+
+# El Diluvi awning rain dump live event test
+--headless --path . --script res://tests/test_diluvi_awning_dump.gd
+
+# El Diluvi is its own rainy street test
+--headless --path . --script res://tests/test_diluvi.gd
+
+# L'Estacio is its own station test
+--headless --path . --script res://tests/test_estacio.gd
+
+# L'Estacio runaway luggage trolley live event test
+--headless --path . --script res://tests/test_estacio_trolley.gd
+
+# La Ferralla is its own scrapyard test
+--headless --path . --script res://tests/test_ferralla.gd
+
+# El Gotic is its own old town test
+--headless --path . --script res://tests/test_gotic.gd
+
+# El Gotic Castellers de Barcelona test
+--headless --path . --script res://tests/test_gotic_castellers.gd
+
+# El Mercat market hall test
+--headless --path . --script res://tests/test_mercat.gd
+
+# El Mercat owner path test
+# cost 146
+--headless --path . --script res://tests/test_mercat_owner_path.gd
+
+# El Mercat fruit handcart live event test
+--headless --path . --script res://tests/test_mercat_cart.gd
+
+# NPCs clear of solid bodies test
+# cost 77
+--headless --fixed-fps 60 --path . --script res://tests/test_npc_clear_of_solids.gd
+
+# La Castanyada festival test
+--headless --path . --script res://tests/test_castanyada.gd
+
+# La Neteja back street test
+--headless --path . --script res://tests/test_neteja.gd
+
+# La Neteja visual polish test
+--headless --path . --script res://tests/test_neteja_polish.gd
+
+# El Besos flood test
+--headless --path . --script res://tests/test_besos.gd
+
+# El Besos visual polish test
+--headless --path . --script res://tests/test_besos_polish.gd
+
+# El Mosaic terraces test
+--headless --path . --script res://tests/test_mosaic.gd
+
+# El Mosaic life test
+--headless --path . --script res://tests/test_mosaic_life.gd
+
+# La Platja beachfront test
+--headless --path . --script res://tests/test_platja.gd
+
+# La Platja beach volleyball live event test
+--headless --path . --script res://tests/test_beach_volley.gd
+
+# Built walks' cross-section test
+--headless --path . --script res://tests/test_cross_section.gd
+
+# Button prompts follow the last device test
+--headless --path . --script res://tests/test_prompts.gd
+
+# Every input action the code reads is registered test
+--headless --path . --script res://tests/test_input_actions.gd
+
+# Controls overhaul, actions separation and layouts test
+--headless --path . --script res://tests/test_controls_overhaul.gd
+
+# Dog selector and Pipa the Galgo test
+--headless --path . --script res://tests/test_dog_selector.gd
+
+# The sweep and the snapshot name every walk test
+--headless --path . --script res://tests/test_tool_levels.gd
+
+# Every walk is registered in every table test
+--headless --path . --script res://tests/test_walk_registry.gd
+
+# Poop spots (good ground pays, snacks and zoomies bring the call sooner)
+--headless --path . --script res://tests/test_poop_spots.gd
+
+# Walk modules' hooks take the arguments main passes test
+--headless --path . --script res://tests/test_walk_hooks.gd
+
+# A-stands stand once test
+--headless --path . --script res://tests/test_astands.gd
+
+# Combo challenge regression test
+--headless --path . --script res://tests/test_challenge.gd
+
+# Live event dodge, draw and creak fixes
+--headless --path . --script res://tests/test_live_event_fixes.gd
+
+# Dare offer and retry test
+--headless --path . --script res://tests/test_dare_retry.gd
+
+# El Gotic wall cat regression test
+--headless --path . --script res://tests/test_wallcat.gd
+
+# El Desguas guard dog regression test
+--headless --path . --script res://tests/test_guarddog.gd
+
+# Teeter / balance-save regression test
+--headless --path . --script res://tests/test_teeter.gd
+
+# Kerb grind regression test
+--headless --path . --script res://tests/test_grind.gd
+
+# Leash-vault swing geometry regression test
+--headless --path . --script res://tests/test_vault.gd
+
+# Corridor shape test
+--headless --path . --script res://tests/test_edge_path.gd
+
+# Ground surface test
+--headless --path . --script res://tests/test_surfaces.gd
+
+# Natural terrain test
+--headless --path . --script res://tests/test_terrain.gd
+
+# Dog mood test
+--headless --path . --script res://tests/test_mood.gd
+
+# Human appearance regression test
+--rendering-method gl_compatibility --path . --script res://tests/test_human_appearance.gd
+
+# NPC pair owner appearance regression test
+--rendering-method gl_compatibility --path . --script res://tests/test_pair_owner_appearance.gd
+
+# HUD anchoring across window shapes
+# reshapes a real viewport to a landscape phone and a portrait phone and
+# asserts the HUD follows. Needs a rendering context: anchors only resolve
+# against a live viewport, which is exactly what the headless run lacks.
+--rendering-method gl_compatibility --path . --script res://tests/test_hud_anchoring.gd
+
+# Touch controls across states and window shapes
+# touch buttons change with the walk state and reshape against the live
+# viewport, so this needs the same rendering context as HUD anchoring
+--rendering-method gl_compatibility --path . --script res://tests/test_touch_controls.gd
+
+# Rotate prompt in portrait windows
+# a portrait window gets the "turn your phone" prompt and a paused walk
+# (#5); reshapes a real viewport, so it needs a rendering context too
+--rendering-method gl_compatibility --path . --script res://tests/test_rotate_prompt.gd
+
+# Shape batch matches draw_circle
+# ShapeBatch merges circles into one draw call and must match
+# draw_circle pixel for pixel; renders offscreen, so it needs GL
+--rendering-method gl_compatibility --path . --script res://tests/test_shape_batch.gd
