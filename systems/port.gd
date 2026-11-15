@@ -192,7 +192,8 @@ static func solids(_m: Node2D) -> Array[Rect2]:
 		list.append(b)
 	list.append(Rect2(BossLleons.PLINTH_L - BossLleons.PLINTH_HALF, BossLleons.PLINTH_HALF * 2.0))
 	list.append(Rect2(BossLleons.PLINTH_R - BossLleons.PLINTH_HALF, BossLleons.PLINTH_HALF * 2.0))
-	# the harbor crane's legs on the coping, by the lions' arena
+	# the Golondrina at the pier end, and the harbor crane's legs on the coping
+	list.append(BossLleons.GOLONDRINA)
 	list.append(Rect2(BossLleons.CRANE_BASE - Vector2(BossLleons.CRANE_HALF, BossLleons.CRANE_HALF), Vector2(BossLleons.CRANE_HALF, BossLleons.CRANE_HALF) * 2.0))
 	return list
 
@@ -233,6 +234,10 @@ static func build(m: Node2D) -> Array:
 		m.poles.append(p)
 	# the post the crane net's trip rope is made fast to: wind the leash on it
 	m.poles.append(BossLleons.NET_POST)
+	# the lions' arena bollards (the first is the wharf's own last one)
+	for bp: Vector2 in BossLleons.ARENA_BOLLARDS:
+		if not m.poles.has(bp):
+			m.poles.append(bp)
 
 	# sniffable landmarks (hydrants): lifebuoy stand, cleat, auction scale, net hoist, anchor monument
 	var marks: Array[Vector2] = [
@@ -507,10 +512,29 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 		var up: float = t - gull_took_off[i]
 		if up < GULL_FLY_SECS:
 			_draw_gull_flying(wc, spot, gull_dir[i], up, anim + float(i))
+	# the mooring bollards on the coping: wrapped by the leash, so drawn
+	for bp: Vector2 in BOLLARDS:
+		if bp.y > vt - 40.0 and bp.y < vb + 40.0:
+			_draw_mooring_bollard(wc, bp)
+	for bp: Vector2 in BossLleons.ARENA_BOLLARDS:
+		if not bp in BOLLARDS and bp.y > vt - 40.0 and bp.y < vb + 40.0:
+			_draw_mooring_bollard(wc, bp)
 	if m.fisherman != null:
 		m.fisherman.draw(wc, vt, vb)
 	if m.lleons != null:
 		m.lleons.draw(wc, vt, vb)
+
+
+# A cast-iron mooring bollard seen from above: the squat post, its wide cap
+# with the rust of a century of salt, a mooring line made fast round it.
+static func _draw_mooring_bollard(wc: ShapeBatch, p: Vector2) -> void:
+	wc.circle(p + Shade.light * 7.0, 12.0, SHADOW)
+	wc.circle(p, 11.5, BOLLARD_IRON)
+	wc.circle(p + Vector2(-1.0, -1.5), 9.0, Color(0.24, 0.26, 0.28))
+	wc.circle(p + Vector2(-1.5, -2.0), 6.0, BOLLARD_RUST)
+	wc.circle(p + Vector2(-3.0, -4.0), 2.6, Color(0.60, 0.58, 0.54, 0.6))
+	wc.line(p + Vector2(8.0, 3.0), p + Vector2(30.0, 7.0), ROPE_MANILA.darkened(0.3), 3.2)
+	wc.line(p + Vector2(8.0, 3.0), p + Vector2(30.0, 7.0), ROPE_MANILA, 1.8)
 
 
 static func _draw_gull(wc: ShapeBatch, p: Vector2, t: float) -> void:

@@ -194,6 +194,7 @@ const SKID_MAX := 120
 const SwingMath := preload("res://systems/swing.gd")
 const Mood := preload("res://systems/mood.gd")
 const Surfaces := preload("res://world/surfaces.gd")
+const Panot := preload("res://world/panot.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 const EdgePath := preload("res://world/edge_path.gd")
 const TangleGeom := preload("res://systems/tangle_geom.gd")
@@ -1465,6 +1466,14 @@ func _build_level_data() -> void:
 	LevelBuild.build_level_data(self)
 
 
+# The straight streets paved in panots de flor over main's slabs
+# (world/panot.gd), each with the ink of its grooves and the shine of its
+# crowns: a walk at night presses its flowers darker, the lamps do the rest.
+const PANOT_WALKS := {
+	"gracia": [Color(0.04, 0.03, 0.05, 0.12), Color(1.0, 0.95, 0.86, 0.07)],
+}
+
+
 func _draw_paving(vt: float, vb: float, base: Color) -> void:
 	# A single flat fill with a seam line every 150px was the main reason the
 	# ground read as a colour swatch. Real paving has JOINTS and every slab
@@ -1483,9 +1492,10 @@ func _draw_paving(vt: float, vb: float, base: Color) -> void:
 			sw = 64.0
 			sh = 56.0
 			stagger = 0.5
-		"rain":
-			# laid square under El Diluvi's panots, two to a slab each way, so
-			# the slabs' tone and the tiles' joints agree (Diluvi.PANOT)
+		"rain", "gracia":
+			# laid square under the panots (El Diluvi's are its own
+			# draw_over_walkway, the rest PANOT_WALKS), two to a slab each
+			# way, so the slabs' tone and the tiles' joints agree (Panot.FLOR)
 			sw = 80.0
 			sh = 80.0
 			stagger = 0.0
@@ -12393,6 +12403,8 @@ func _draw_cross_section(top: float, bottom: float, ctop: float, vt: float, vb: 
 			# pay nothing at all for the ability to curve.
 			_wc.draw_rect(Rect2(sw_l, GATE_Y - 40.0, sw_r - sw_l, bottom - GATE_Y), walkway)
 			_draw_paving(maxf(vt, GATE_Y - 30.0), vb, walkway)
+			if lvl in PANOT_WALKS:
+				Panot.flor(_wc, sw_l, sw_r, maxf(vt - Panot.FLOR, GATE_Y - 30.0), vb + Panot.FLOR, PANOT_WALKS[lvl][0], PANOT_WALKS[lvl][1])
 			_wc.draw_line(Vector2(sw_l, bottom), Vector2(sw_l, GATE_Y), COL_SEAM, 3.0)
 			_wc.draw_line(Vector2(sw_r, bottom), Vector2(sw_r, GATE_Y), COL_SEAM, 3.0)
 		elif lvl != "partit" and lvl != "port" and lvl != "reial" and lvl != "vet" and lvl != "tibidabo" and lvl != "raval":

@@ -234,6 +234,14 @@ func polygon(points: PackedVector2Array, color: Color) -> void:
 	_add_colors(color, tri.size())
 
 
+# A shape built once as a triangle list round the origin, put down by `xf`:
+# one native multiply per copy, for a figure repeated by the hundred (a paving
+# tile's relief) that polygon() would triangulate again every time.
+func stamp(tris: PackedVector2Array, xf: Transform2D, color: Color) -> void:
+	_points.append_array(xf * tris)
+	_add_colors(color, tris.size())
+
+
 # A soft band across a strip: rows of points (left to right, the same count in
 # each row) with a colour per row, blended between rows by the GPU. Rows
 # fading to an alpha of zero at the strip's edges give a light or a sheen with

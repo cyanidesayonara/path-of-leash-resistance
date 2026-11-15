@@ -11,6 +11,23 @@ Append-only session history, newest first.
 - Goals: dodge the tram three times, get home without it bumping you, bark at the newspaper kiosk, and the usual twelve. The walk ends in a plaça with its pigeons. The tram as the home-leg chase is a later step, with the campaign's chase spacing.
 - Tests: `tests/test_diagonal.gd` (registration, the turned camera and input, the bell coming before the tram, a bump once per tram, a dodge paid, braking short of your human). Store, itch and README: thirty-nine walks.
 
+## 2026-11-15 - Panots: Barcelona's pavement tiles on the town walks
+
+- One shared drawing of the city's pavement tiles, `world/panot.gd`: the flor de Barcelona (the four-petal flower in a square tile, `Panot.flor` and `Panot.flor_row`) and Gaudí's hexagon from Passeig de Gràcia (`Panot.gaudi`: an ammonite, a starfish and a seaweed pressed where three tiles meet, the three taking turns so every tile touches one of each). Both are a relief of translucent ink and shine over the pavement's own colour, built once as triangle lists and stamped into the caller's batch (`ShapeBatch.stamp`, new): no draw call of their own and no triangulation per tile.
+- L'Eixample: the pavements either side of the granite are Gaudí's blue-grey hexagons, widening with the chamfers and stopping at the cross streets. They replace the flat diamonds that stood for flower tiles.
+- Festa de Gràcia: the street is flower tiles over main's slabs, which are laid square two tiles to a slab as El Diluvi's are (`PANOT_WALKS` in `main.gd`).
+- La Superilla: the sidewalks are two flower tiles wide in place of plain slabs with a joint down the middle. Dia de Partit: the sidewalks' flower tiles follow the kerb round the bend, in place of small diamonds on every other row.
+- The flower is the tile as it is pressed: four ring-shaped petals on the diagonals round a ringed button, the grooves in ink and the button catching the light. El Diluvi draws its flowers through the shared tile (same size, grid and wet inks), so its solid petals on the axes are now the real flower too.
+- Left as they are, on purpose: La Rambla (its own waves), El Barri's gate bands and the Rambla del Raval's strips (panots already), the setts of El Gòtic, La Neteja and La Castanyada, Plaça Reial's and Els Àngels' stone, Plaça d'Espanya's granite avenue, El Poble Espanyol's village lanes, La Cremada's Carrer del Mar (stone slabs), El Port's boards and quay, El Fòrum's concrete, and every indoor floor, track, park and beach.
+- `tests/test_panot.gd`: tiles stay on their pavement, a strip too narrow gets none, no hexagon crosses a cross street or pokes past a slanting edge, every hexagon touches one of each figure, and all of it is in the one batch.
+## 2026-11-15 - Els Lleons' arena: the mooring bollards and the Golondrina's horn
+
+- The mooring bollards. Run the leash round a lion's leg and on round a bollard on the coping, pull it taut, and he is tied there ("TIED TO THE BOLLARD! BRING HIS TWIN"): he cannot move, strains at her, and his lanes drop out of the warnings. His twin's pincer or rush that runs into him knocks both down ("tied up! +16", 22 damage, the head bump's daze, and it counts for tricking them into colliding). A leg sheds a hard-pulled rope, so a touch in the last second counts; he strains free after 4 s and cannot be tied again for 3.
+- The Golondrina, the old double-decker tour boat, tied up at the pier end by the lions, a gangway to the coping. Bark at the pier and she answers: steam at her whistle and a ring for 0.8 s, then the horn ("PAAARP"), and both lions flinch round toward it, hop at the sound and stand dazed 1.8 s with their noses out ("toot! +6"). Once every 12 s.
+- El Port's mooring bollards were never drawn (walk-module poles are not drawn by main): every one is now a cast-iron bollard with a line made fast.
+- `systems/boss_lleons.gd`, `systems/port.gd` (the arena bollards are poles; the boat is solid). `tests/test_lleons.gd` winds the real rope round a leg and a bollard (held still, his twin's pincer runs into him, he strains free) and barks at the pier (nothing until the horn, both flinch toward it, the reload).
+
+
 ## 2026-11-15 - Pilones instead of fire hydrants
 
 - The marking spot on every town walk without one of its own was a red fire hydrant, which Barcelona's streets do not have standing on the pavement. It is a pilona now, the city's knee-high cast-iron bollard: near black, a collar ring under a domed head, a lit rim so it reads on night paving, and a wet stain round its foot once it is marked (`main._draw_pilona`). Les Corts' own bollard uses the same drawing. Walks with a spot of their own (stumps, showers, waymarkers, crates, urns, tyres) are unchanged.

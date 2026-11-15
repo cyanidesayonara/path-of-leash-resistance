@@ -165,6 +165,13 @@ explain every changed snapshot line; this does not relax the refactor rule.
   A walk that draws its own edges lists its fronts in a `night_fronts(m)`
   hook (`NightFronts.along_edges`). Never the RNG. Test:
   `tests/test_night_fronts.gd`.
+- **Panots** (`world/panot.gd`): Barcelona's pavement tiles, drawn once for
+  every walk as a relief over the pavement's own colour: `Panot.flor` and
+  `flor_row` (the four-petal flower tile) and `Panot.gaudi` (Passeig de
+  Gràcia's hexagon). A town pavement that is not setts, stone or an indoor
+  floor is laid with these, never a copy of them; they stamp prebuilt
+  triangles into the caller's cached batch, so tiles add no draw call.
+  Test: `tests/test_panot.gd`.
 - **Who is out** (`systems/outdoors.gd`): one rule per kind of passer-by or
   prop for the weather and the hour (sunbathers, picnics, the ice-cream cart,
   kids on scooters and beach parasols in fair weather by day only; crowd sizes
