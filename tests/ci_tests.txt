@@ -196,6 +196,12 @@
 # Off-leash games rules test
 --headless --path . --script res://tests/test_freedom_games.gd
 
+# The plaça pigeon game test
+--headless --path . --script res://tests/test_pigeon_game.gd
+
+# The dog beach wave game test
+--headless --path . --script res://tests/test_wave_game.gd
+
 # Off-leash games test
 --headless --path . --script res://tests/test_freedom_games_live.gd
 

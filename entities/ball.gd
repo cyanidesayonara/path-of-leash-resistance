@@ -3,6 +3,8 @@ extends Node2D
 # A tennis ball for real fetch: the owner THROWS it out, the dog runs to
 # it, carries it in their mouth, and brings it back to the thrower. A
 # delivered ball scores and gets thrown again. main.gd counts returns.
+# It bounces as it goes. Snatched while it is still bouncing or rolling (no
+# pickup press needed), and brought back quick, it pays more.
 
 enum State { THROWN, RESTING, CARRIED }
 
@@ -18,6 +20,10 @@ var rest_t := 0.0
 var arc := 0.0  # visual hop height while thrown
 var x_lo := 180.0
 var x_hi := 1100.0
+var snatched := false   # taken on the move, not picked up off the grass
+var out_t := 0.0        # seconds since it was thrown
+const SNATCH_R := 24.0
+const QUICK_S := 4.0    # back to the thrower within this: a quick fetch
 
 
 func setup(
@@ -54,6 +60,8 @@ func is_carried() -> bool:
 
 func _throw() -> void:
 	state = State.THROWN
+	snatched = false
+	out_t = 0.0
 	global_position = thrower.global_position
 	var target := Vector2(randf_range(x_lo, x_hi), randf_range(lo + 40.0, hi - 40.0))
 	vel = (target - global_position).normalized() * randf_range(340.0, 460.0)
@@ -71,11 +79,19 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 		return
 	bob += delta
+	if state != State.CARRIED:
+		out_t += delta
 	match state:
 		State.THROWN:
 			position += vel * delta
 			vel = vel.move_toward(Vector2.ZERO, 300.0 * delta)
-			arc = clampf(vel.length() / 60.0, 0.0, 10.0)
+			# bounces, lower and quicker as it slows
+			arc = absf(sin(out_t * 7.0)) * clampf(vel.length() / 32.0, 0.0, 14.0)
+			if out_t > 0.35 and not main.dog_carrying and global_position.distance_to(dog.global_position) < SNATCH_R:
+				state = State.CARRIED
+				snatched = true
+				main.dog_carrying = true
+				main.on_ball_grabbed()
 			if position.x < 100.0 or position.x > 1180.0:
 				vel.x = -absf(vel.x) * signf(590.0 - position.x)
 			position.y = clampf(position.y, lo, hi)
