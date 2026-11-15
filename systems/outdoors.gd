@@ -65,6 +65,23 @@ static func riding(kind: String, weather: String, hour: String) -> bool:
 	return true
 
 
+# Whether a rider of this kind and style (entities/bike.gd) is out. Couriers,
+# city bikes and Bicing ride in any sky: deliveries go out in a downpour, and
+# that is when there are most of them. Road cyclists and mountain bikers ride
+# for the sport of it, so in the dry and the light; electric scooters stay in
+# under snow; a parent takes the pram out by day.
+static func rider_out(kind: String, style: String, weather: String, hour: String) -> bool:
+	if not riding(kind, weather, hour):
+		return false
+	var dry := weather == "clear" or weather == "wind"
+	match style:
+		"road": return dry and hour != "night"
+		"mtb": return weather != "snow" and hour != "night"
+		"escooter": return weather != "snow"
+		"pram": return hour != "night"
+	return true
+
+
 # A busker plays when it is dry; in rain or snow they stand it out under an
 # umbrella instead.
 static func busking(weather: String, _hour: String) -> bool:

@@ -196,6 +196,7 @@ const Mood := preload("res://systems/mood.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const Panot := preload("res://world/panot.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
+const BikeScript := preload("res://entities/bike.gd")
 const EdgePath := preload("res://world/edge_path.gd")
 const TangleGeom := preload("res://systems/tangle_geom.gd")
 const MoodWiring := preload("res://systems/mood_wiring.gd")
@@ -8375,8 +8376,13 @@ func _spawn_bike(y: float, dir: int) -> void:
 	b.set_script(load("res://entities/bike.gd"))
 	b.position = Vector2(-250.0 if dir > 0 else 1530.0, y)
 	b.z_index = 12
-	add_child(b)
 	b.setup(self, dog, human, Vector2(dir * randf_range(480.0, 640.0), 0.0), "bike")
+	# set up all the same, so the walk's sequence holds, then left out if
+	# this style does not ride in this sky (Outdoors.rider_out)
+	if not Outdoors.rider_out(b.kind, b.style, Game.weather, Game.hour):
+		b.free()
+		return
+	add_child(b)
 
 
 func _vlane(delta: float) -> void:
@@ -8456,17 +8462,21 @@ func _vlane(delta: float) -> void:
 			r_kind = "roller"
 		else:
 			r_kind = "kid"
+	# adults in a narrow two-way lane keep to their own side of it, the right;
+	# where in that half comes from the x already drawn
+	if not kid and band_hi - band_lo < 120.0 and lvl != "aigues":
+		x = BikeScript.keep_right(band_lo, band_hi, up, inverse_lerp(band_lo, band_hi, x))
 	var b := Node2D.new()
-	b.set_script(load("res://entities/bike.gd"))
+	b.set_script(BikeScript)
 	b.position = Vector2(x, y)
 	b.z_index = 12
 	b.setup(self, dog, human, Vector2(0.0, -speed if up else speed), r_kind)
 	if kid:
 		b.lane_keep(band_lo, band_hi)
 	# kids on scooters are out in fair weather by day, skaters whenever it
-	# is dry and light (Outdoors.riding); drawn and set up all the same, so
-	# the walk's sequence holds
-	if not b.configure_route(x, band_lo, band_hi, bypasser_blockers) or not Outdoors.riding(r_kind, Game.weather, Game.hour):
+	# is dry and light, road cyclists in the dry (Outdoors.rider_out); drawn
+	# and set up all the same, so the walk's sequence holds
+	if not b.configure_route(x, band_lo, band_hi, bypasser_blockers) or not Outdoors.rider_out(r_kind, b.style, Game.weather, Game.hour):
 		b.free()
 		return
 	add_child(b)

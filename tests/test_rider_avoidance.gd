@@ -359,9 +359,12 @@ func _test_horizontal_crossing_stays_straight(world: Dictionary) -> void:
 	var before := bike.position
 	bike._physics_process(0.1)
 	_check(bike.get("route") == null, "horizontal crossing bike has no route planner")
-	_check(is_equal_approx(bike.position.x, before.x + 50.0), "horizontal crossing keeps original speed")
+	# each style rides at its own pace (STYLE_PACE) of what the lane asked for
+	var cruise := float(bike.get("cruise"))
+	_check(cruise > 400.0 and cruise < 620.0, "horizontal crossing rides near the lane's speed")
+	_check(is_equal_approx(bike.position.x, before.x + cruise * 0.1), "horizontal crossing keeps its speed")
 	_check(is_equal_approx(bike.position.y, before.y), "horizontal crossing remains straight")
-	_check(bike.vel == Vector2(500, 0), "horizontal crossing velocity remains unchanged")
+	_check(bike.vel.is_equal_approx(Vector2(cruise, 0)), "horizontal crossing velocity is its speed")
 
 
 func _test_freedom_cleanup_queues_active_rider(world: Dictionary) -> void:
