@@ -8,6 +8,17 @@ Append-only session history, newest first.
 - In a daze only a dazed lion takes a boop, so the free one cannot be booped while his twin is under the net.
 - `systems/boss_lleons.gd`, `systems/port.gd` (the post is a pole; the crane's legs are solid); `tests/test_lleons.gd` drives the real rope round the post and checks the warning, the pin, the lion left outside, the hoist and reload, and a drop on nobody.
 
+## 2026-11-15 - El Drac's arena: loose trencadís to ride
+
+- Every hit El Drac takes knocks two big glazed shards off him, skittering out onto the stair, and his slither sheds one every 0.7 s (`systems/boss_drac.gd`, at most eight, each lasting 9 s). The first shout of a fight says "LOOSE TILES! RUN ONTO ONE TO SLIDE". She rides a shard she runs onto: 0.6 s carried at 520 px/s, steering a little, until it grinds to a stop or meets a wall (`dog.ride`, `entities/dog.gd`). His tail and his jet pass over a dog on a shard, and that counts as a dodge ("slid clear! +2" through `award_points`, his dodge damage). A shard is drawn as a jagged piece of his glaze with mortar on one edge and a passing glint; ridden, it throws grit off its back edge.
+- `tests/test_drac.gd`: hits shed shards onto the stair, standing still does not ride one, running onto one rides it at ride speed, the whip passes over her and counts as a dodge, the ride carries her and runs out.
+
+## 2026-11-15 - El Drac's arena: the fountain's three spouts
+
+- El Mosaic's stair has three fountain spouts now (`systems/boss_drac.gd`): a bronze pipe out of a knob of rock in each stair wall and the serpent's head under its medallion above El Drac's plinth. Each has a pressure tile of trencadís in its own colour on the paving. A paw or your human's shoe on a tile clicks it; the spout gurgles and marks its lane for 0.8 s while the tile glows, then fires a jet across the landing where he fights. A jet that catches him in the fight pays "soaked! +6" through `award_points`, takes 14 HP and dazes him for 2.2 s; at his last stand the serpent's jet chokes his own jet instead ("choked! +4"). Her water never knocks her or your human. A tile fires once per step and refills in 3.5 s. Until she has soaked him once, the banner between his attacks says "STEP ON A SPOUT'S TILE TO SOAK HIM" (`mosaic.idle_status`).
+- `tests/test_drac.gd`: the lanes cross the landing, the tiles sit on the stair out of their own lanes, the telegraph runs before any water, a jet from a tile hits him for its damage and daze and pays, a dazed dragon is not dazed twice, a held tile does not refire, your human triggers a tile too, tiles are inert while he sleeps, and the serpent chokes his last-stand jet.
+
+
 ## 2026-11-15 - El Mamut's arena: the rowboat jetty and the park chairs
 
 - The first of the boss arenas (docs/BOSSES.md). A rowboat jetty on the lake shore, a boat tied up at its end: lure his tusk charge onto its boards and they give way, and he goes through into the lake for 40 damage and the longest daze of the fight (4.6 s), then comes up spraying. Once: after that the land end is snapped boards and the boat has drifted off.
