@@ -8,7 +8,7 @@ Append-only session history, newest first.
 - L'Eixample: the pavements either side of the granite are Gaudí's blue-grey hexagons, widening with the chamfers and stopping at the cross streets. They replace the flat diamonds that stood for flower tiles.
 - Festa de Gràcia: the street is flower tiles over main's slabs, which are laid square two tiles to a slab as El Diluvi's are (`PANOT_WALKS` in `main.gd`).
 - La Superilla: the sidewalks are two flower tiles wide in place of plain slabs with a joint down the middle. Dia de Partit: the sidewalks' flower tiles follow the kerb round the bend, in place of small diamonds on every other row.
-- El Diluvi draws its flowers through the shared tile (same size, grid and wet inks; the petals are a little rounder).
+- The flower is the tile as it is pressed: four ring-shaped petals on the diagonals round a ringed button, the grooves in ink and the button catching the light. El Diluvi draws its flowers through the shared tile (same size, grid and wet inks), so its solid petals on the axes are now the real flower too.
 - Left as they are, on purpose: La Rambla (its own waves), El Barri's gate bands and the Rambla del Raval's strips (panots already), the setts of El Gòtic, La Neteja and La Castanyada, Plaça Reial's and Els Àngels' stone, Plaça d'Espanya's granite avenue, El Poble Espanyol's village lanes, La Cremada's Carrer del Mar (stone slabs), El Port's boards and quay, El Fòrum's concrete, and every indoor floor, track, park and beach.
 - `tests/test_panot.gd`: tiles stay on their pavement, a strip too narrow gets none, no hexagon crosses a cross street or pokes past a slanting edge, every hexagon touches one of each figure, and all of it is in the one batch.
 
