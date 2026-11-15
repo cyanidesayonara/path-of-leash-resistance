@@ -9,7 +9,7 @@
 # Why windowed and not headless: the idle knock (#6) looked like it depended on
 # window shape, and a headless run reports a fixed 1280x1280 viewport whatever
 # --resolution says. So each run opens a real window: on Linux on an xvfb
-# display with software GL (as the appearance tests in ci.yml do), elsewhere
+# display with software GL (as the appearance tests in CI do), elsewhere
 # placed off-screen. --fixed-fps 60 makes game time independent of how fast
 # the machine renders. No portrait size: a portrait window pauses the walk
 # behind the rotate prompt (#5), so there is nothing to soak.
