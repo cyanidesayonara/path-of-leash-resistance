@@ -723,6 +723,8 @@ var frisbee_air := 0
 var tug: RopeTug
 var tug_dog: Node2D
 var tug_phase_was := -1         # RopeTug.P last frame, for its sounds
+var pigeon_game: RefCounted = null   # a plaça's pigeons (systems/pigeon_game.gd)
+var wave_game: RefCounted = null     # the dog beach's waves (systems/wave_game.gd)
 var tug_prev := Vector2.ZERO
 var tugs_won := 0
 var rope_loose := Vector2(INF, INF)
@@ -11353,7 +11355,8 @@ func on_frisbee_returned(left: int) -> void:
 
 
 func on_ball_grabbed() -> void:
-	float_text(dog.global_position, "got it!", Color(0.85, 1.0, 0.85))
+	var snatched: bool = is_instance_valid(ball) and ball.state == ball.State.CARRIED and ball.snatched
+	float_text(dog.global_position, "snatched!" if snatched else "got it!", Color(0.85, 1.0, 0.85))
 
 
 func on_ball_returned(thrower: Node2D) -> void:
@@ -11362,10 +11365,20 @@ func on_ball_returned(thrower: Node2D) -> void:
 	var mine := thrower == human
 	romp_catches += 1
 	var reward := 3 if mine else 4
+	# taken on the bounce, and brought back quick: each worth more
+	var b: Node2D = ball if mine else npc_ball
+	var extra := ""
+	if is_instance_valid(b):
+		if b.snatched:
+			reward += 2
+			extra = " on the bounce"
+		if b.out_t < b.QUICK_S:
+			reward += 2
+			extra += " quick"
 	bones += reward
 	Sfx.play("fetch")
 	combo.add("FETCH", reward)
-	float_text(thrower.global_position, ("good dog! +%d" % reward) if mine else ("shared! +%d" % reward), Color(0.8, 1.0, 0.8))
+	float_text(thrower.global_position, ("good dog%s! +%d" % [extra, reward]) if mine else ("shared! +%d" % reward), Color(0.8, 1.0, 0.8))
 	if mine and is_instance_valid(thrower):
 		human.throw_pose()
 	if romp_catches >= romp_target and not romp_done:
@@ -11450,6 +11463,9 @@ func on_bark(pos: Vector2) -> void:
 		feed.say("DARE ON! GET SET", EventFeed.Tone.LOUD)
 	mood.bump(Mood.M.BARKY, 0.22)
 	Sfx.play("bark")
+	# the plaça's pigeon game scores the burst before the bark scatters them
+	if pigeon_game != null:
+		pigeon_game.on_bark(self, pos)
 	if human.global_position.distance_to(pos) < 170.0:
 		human.halt(0.8)
 	for s in get_tree().get_nodes_in_group("squirrels"):
