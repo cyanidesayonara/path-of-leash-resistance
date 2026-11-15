@@ -59,6 +59,7 @@
 
 # Rider obstacle avoidance regression test
 --headless --path . --script res://tests/test_rider_avoidance.gd
+--headless --path . --script res://tests/test_rider_ways.gd
 
 # NPC pair obstacle avoidance regression test
 --headless --path . --script res://tests/test_pair_pond_avoidance.gd
