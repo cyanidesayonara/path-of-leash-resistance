@@ -38,11 +38,13 @@ func _run() -> void:
 	game.level_id = "street"
 	var out := "user://riders.png"
 	var styles: Array = STYLES.duplicate()
+	var weather := ""
+	var hour := ""
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("weather="):
-			game.weather = arg.substr(8)
+			weather = arg.substr(8)
 		elif arg.begins_with("hour="):
-			game.hour = arg.substr(5)
+			hour = arg.substr(5)
 		elif arg.begins_with("only="):
 			var keep := arg.substr(5).split(",")
 			styles = STYLES.filter(func(e: Array) -> bool: return String(e[1]) in keep)
@@ -55,6 +57,11 @@ func _run() -> void:
 	for k in range(10):
 		await process_frame
 	m.frozen = true
+	# the walk sets its own sky as it loads; this one is for the riders
+	if weather != "":
+		game.weather = weather
+	if hour != "":
+		game.hour = hour
 	m.set_process(false)
 	m.set_physics_process(false)
 	for b in m.get_tree().get_nodes_in_group("bikes"):

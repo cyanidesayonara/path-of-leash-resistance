@@ -608,11 +608,36 @@ func _hair_head(b: ShapeBatch, at: Vector2, r: float, hair: Color, skin: Color, 
 	b.circle(at + hi * r * 0.45 + Vector2(-0.8, 0), r * 0.32, hair.lightened(0.22))
 
 
-func _poncho(b: ShapeBatch, at: Vector2, rx: float, ry: float, hi: Vector2) -> void:
+func _poncho_col() -> Color:
 	var col := PONCHO
 	col.h = fmod(col.h + float(look % 5) * 0.11, 1.0)
-	b.polygon(_oval(at, rx, ry), col)
-	b.polygon(_oval(at + hi * 3.0, rx * 0.4, ry * 0.32), Color(1, 1, 1, 0.28))
+	return col
+
+
+# The top half of an everyday rider: their top, or in the rain a poncho
+# draped over the shoulders and arms, wet and shining.
+func _dress(b: ShapeBatch, at: Vector2, rx: float, ry: float, top: Color, sh: Vector2, hi: Vector2) -> void:
+	if not _wet():
+		_shoulders(b, at, rx, ry, top, sh, hi)
+		return
+	var col := _poncho_col()
+	col.a = 1.0
+	b.polygon(_oval(at + sh * 1.8, rx + 3.4, ry + 2.6), SHADOW)
+	b.polygon(_oval(at + Vector2(-1.2, 0), rx + 3.0, ry + 2.2), col.darkened(0.25))
+	b.polygon(_oval(at + Vector2(-0.6, 0), rx + 2.2, ry + 1.6), col)
+	b.polygon(_oval(at + hi * 3.0, rx * 0.5, ry * 0.4), Color(1, 1, 1, 0.30))
+
+
+# A bare head, or in the rain the poncho's hood up over it.
+func _bare_head(b: ShapeBatch, at: Vector2, r: float, skin: Color, sh: Vector2, hi: Vector2, tail: bool) -> void:
+	if not _wet():
+		_hair_head(b, at, r, _hair(), skin, sh, hi, tail)
+		return
+	var col := _poncho_col()
+	col.a = 1.0
+	b.circle(at + Vector2(1.6, 0), r * 0.7, skin)
+	b.polygon(_oval(at + Vector2(-1.0, 0), r * 1.05, r * 1.1), col.darkened(0.12))
+	b.circle(at + hi * r * 0.45 + Vector2(-1.0, 0), r * 0.32, Color(1, 1, 1, 0.3))
 
 
 # lights after dark: a lamp ahead and a red one behind
@@ -672,13 +697,11 @@ func _draw_city(b: ShapeBatch, sh: Vector2, hi: Vector2) -> void:
 	_pedal_legs(b, -9.0 + body.x, 0.0, 5.6, legs, Color(0.20, 0.18, 0.18))
 	# the saddle, then the rider sitting up on it
 	b.polygon(_oval(Vector2(-10.0, 0), 4.0, 2.6), Color(0.14, 0.12, 0.10))
-	if _wet():
-		_poncho(b, Vector2(-5.0, 0) + body, 11.0, 11.0, hi)
 	_arms(b, -4.0, 6.6, 13.0, 8.6, top.darkened(0.06), skin, body)
-	_shoulders(b, Vector2(-5.0, 0) + body, 5.6, 8.4, top if not _wet() else top.lerp(PONCHO, 0.6), sh, hi)
+	_dress(b, Vector2(-5.0, 0) + body, 5.6, 8.4, top, sh, hi)
 	var head := Vector2(-3.4, 0) + body * 1.35
 	if bicing and look % 4 != 0 or not bicing and look % 5 < 3:
-		_hair_head(b, head, 4.5, _hair(), skin, sh, hi, look % 3 == 0)
+		_bare_head(b, head, 4.5, skin, sh, hi, look % 3 == 0)
 	else:
 		_helmet_head(b, head, 5.0, 4.6, _helmet(), sh, hi)
 	_lights(b, Vector2(26.0 if not bicing else 27.0, 0), Vector2(-26.0, 0))
@@ -824,14 +847,12 @@ func _draw_escooter(b: ShapeBatch, sh: Vector2, hi: Vector2) -> void:
 	b.polygon(_oval(Vector2(-6.5, -0.8), 4.2, 2.2), Color(0.92, 0.92, 0.90))
 	b.line(Vector2(-1.0, 1.6) + body * 0.5, Vector2(3.0, 0.8), legs, 3.2)
 	b.line(Vector2(-3.0, -1.6) + body * 0.5, Vector2(-6.5, -0.8), legs, 3.2)
-	if _wet():
-		_poncho(b, Vector2(-2.0, 0) + body, 10.0, 11.0, hi)
 	_arms(b, -1.0, 6.8, 12.5, 8.8, top, skin, body)
-	_shoulders(b, Vector2(-2.0, 0) + body, 5.4, 8.2, top if not _wet() else top.lerp(PONCHO, 0.6), sh, hi)
+	_dress(b, Vector2(-2.0, 0) + body, 5.4, 8.2, top, sh, hi)
 	if look % 10 < 3:
 		_helmet_head(b, Vector2(-1.0, 0) + body * 1.35, 5.0, 4.6, _helmet(), sh, hi)
 	else:
-		_hair_head(b, Vector2(-1.0, 0) + body * 1.35, 4.5, _hair(), skin, sh, hi, look % 4 == 1)
+		_bare_head(b, Vector2(-1.0, 0) + body * 1.35, 4.5, skin, sh, hi, look % 4 == 1)
 	_lights(b, Vector2(14.5, 0), Vector2(-18.5, 0))
 
 
@@ -1003,8 +1024,6 @@ func _draw_pram(b: ShapeBatch, sh: Vector2, hi: Vector2) -> void:
 		var foot := Vector2(-8.0 + stride * s * 5.0, s * 3.4)
 		b.line(Vector2(-8.0, s * 3.0), foot, legs, 3.4)
 		b.polygon(_oval(foot + Vector2(1.2, 0), 2.8, 1.8), Color(0.18, 0.16, 0.14))
-	if _wet():
-		_poncho(b, Vector2(-8.0, 0) + body, 9.0, 10.0, hi)
 	_arms(b, -7.0, 6.4, 3.0, 5.6, top, skin, body)
-	_shoulders(b, Vector2(-8.0, 0) + body, 5.0, 7.8, top, sh, hi)
-	_hair_head(b, Vector2(-7.0, 0) + body * 1.3, 4.4, _hair(), skin, sh, hi, look % 3 != 0)
+	_dress(b, Vector2(-8.0, 0) + body, 5.0, 7.8, top, sh, hi)
+	_bare_head(b, Vector2(-7.0, 0) + body * 1.3, 4.4, skin, sh, hi, look % 3 != 0)
