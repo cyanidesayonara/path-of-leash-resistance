@@ -48,6 +48,11 @@ const TURBO_ACCEL := 3200.0
 # the collision circle every walk is built round; a breed's gap_mult scales it
 const BODY_RADIUS := 14.0
 var tumble_t := 0.0
+# riding a loose tile (ride()): time left, of, and the carried velocity
+var ride_t := 0.0
+var ride_time := 0.0
+var ride_vel := Vector2.ZERO
+const RIDE_STEER := 2.2
 var hole_cd := 0.0
 var squat_t := 0.0
 var squat_ui := 0.0
@@ -275,6 +280,9 @@ func tick(delta: float) -> void:
 		if tumble_t <= 0.0:
 			rotation = 0.0
 		return
+	if ride_t > 0.0:
+		_tick_ride(delta)
+		return
 	var iv := auto_move if auto else Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	input_dir = iv
 	input_active = iv.length() > 0.1
@@ -371,6 +379,36 @@ func tick(delta: float) -> void:
 		main.on_bark(global_position)
 
 
+# Riding something loose across the ground (El Drac's shed tiles): she goes
+# where it carries her, steering a little, for `time` seconds; a wall ends it.
+func ride(v: Vector2, time: float) -> void:
+	ride_vel = v
+	ride_t = time
+	ride_time = time
+
+
+func is_riding() -> bool:
+	return ride_t > 0.0
+
+
+func _tick_ride(delta: float) -> void:
+	ride_t -= delta
+	planted = false
+	var iv := auto_move if auto else Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	input_dir = iv
+	input_active = iv.length() > 0.1
+	if input_active:
+		var turn := clampf(ride_vel.angle_to(iv), -RIDE_STEER * delta, RIDE_STEER * delta)
+		ride_vel = ride_vel.rotated(turn)
+	# full speed off the mark, easing as the tile grinds to a stop
+	velocity = ride_vel * lerpf(0.55, 1.0, clampf(ride_t / maxf(ride_time, 0.01), 0.0, 1.0))
+	facing = ride_vel.normalized()
+	move_and_slide()
+	if get_slide_collision_count() > 0:
+		ride_t = 0.0
+	gait += velocity.length() * delta * 0.02
+
+
 func trigger_launch_stretch(dir: Vector2, duration: float = 0.28) -> void:
 	launch_stretch_dir = dir.normalized()
 	launch_stretch_t = duration
@@ -386,6 +424,7 @@ func knocked(dir: Vector2, cause: String) -> void:
 	if tumble_t > 0.0:
 		return
 	tumble_t = 0.8
+	ride_t = 0.0
 	velocity = dir * 320.0
 	main.on_dog_hit(cause)
 	main.float_text(global_position, "yipe!", Color(1, 0.8, 0.6))
