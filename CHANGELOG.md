@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-11-15 - Els Lleons' arena: the harbor crane's cargo net
+
+- A portal crane stands on the coping by the lions' plinths, its jib out over the boardwalk and a cargo net of fish crates hanging from the hook. The net's trip rope runs across the boards to a cleat post. Wind the leash round the post and haul it taut (the real rope's contact and stretch) and, while the lions fight, the crane creaks, the load swings and its shadow gathers into a warning ring for 0.8 s; then the net drops. A lion under it is pinned: 18 damage, a 3.6 s daze, "netted! +12", and his nose takes a boop. A lion outside it is untouched. The crane hauls the net back up once he is out, and it can be pulled again 8 s later.
+- In a daze only a dazed lion takes a boop, so the free one cannot be booped while his twin is under the net.
+- `systems/boss_lleons.gd`, `systems/port.gd` (the post is a pole; the crane's legs are solid); `tests/test_lleons.gd` drives the real rope round the post and checks the warning, the pin, the lion left outside, the hoist and reload, and a drop on nobody.
+
 ## 2026-11-15 - El Drac's arena: loose trencadís to ride
 
 - Every hit El Drac takes knocks two big glazed shards off him, skittering out onto the stair, and his slither sheds one every 0.7 s (`systems/boss_drac.gd`, at most eight, each lasting 9 s). The first shout of a fight says "LOOSE TILES! RUN ONTO ONE TO SLIDE". She rides a shard she runs onto: 0.6 s carried at 520 px/s, steering a little, until it grinds to a stop or meets a wall (`dog.ride`, `entities/dog.gd`). His tail and his jet pass over a dog on a shard, and that counts as a dodge ("slid clear! +2" through `award_points`, his dodge damage). A shard is drawn as a jagged piece of his glaze with mortar on one edge and a passing glint; ridden, it throws grit off its back edge.
@@ -11,6 +17,7 @@ Append-only session history, newest first.
 
 - El Mosaic's stair has three fountain spouts now (`systems/boss_drac.gd`): a bronze pipe out of a knob of rock in each stair wall and the serpent's head under its medallion above El Drac's plinth. Each has a pressure tile of trencadís in its own colour on the paving. A paw or your human's shoe on a tile clicks it; the spout gurgles and marks its lane for 0.8 s while the tile glows, then fires a jet across the landing where he fights. A jet that catches him in the fight pays "soaked! +6" through `award_points`, takes 14 HP and dazes him for 2.2 s; at his last stand the serpent's jet chokes his own jet instead ("choked! +4"). Her water never knocks her or your human. A tile fires once per step and refills in 3.5 s. Until she has soaked him once, the banner between his attacks says "STEP ON A SPOUT'S TILE TO SOAK HIM" (`mosaic.idle_status`).
 - `tests/test_drac.gd`: the lanes cross the landing, the tiles sit on the stair out of their own lanes, the telegraph runs before any water, a jet from a tile hits him for its damage and daze and pays, a dazed dragon is not dazed twice, a held tile does not refire, your human triggers a tile too, tiles are inert while he sleeps, and the serpent chokes his last-stand jet.
+
 
 ## 2026-11-15 - El Mamut's arena: the rowboat jetty and the park chairs
 

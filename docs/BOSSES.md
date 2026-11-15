@@ -127,7 +127,8 @@ and dangerous to him.
 - **Els Lleons, the foot of the column.** The mooring bollards (already
   leash-wrappable): a lion wound round one is held for the other's rush. A
   cargo net hanging from a harbour crane, its rope across the boardwalk: pull
-  the rope with the leash and it drops on whichever lion is under it. The
+  the rope with the leash and it drops on whichever lion is under it (shipped:
+  wind the leash on the trip rope's post and haul it taut). The
   Golondrina's horn: bark at the pier and the boat answers, and both lions
   flinch toward the sound.
 - **El Gat, the Rambla del Raval.** Terrace tables (shipped: he crashes through

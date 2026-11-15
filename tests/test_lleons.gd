@@ -6,6 +6,8 @@ extends SceneTree
 # - 3. Wake trigger: dog crosses WAKE_Y, transitions to AWAKEN, holds human at HOLD_Y, then PROWL
 # - 4. Phase 1 (Pincer strike): warn telegraph, strike, close miss awards pincer dodge
 # - 5. Phase 1 (Roar wind): blast pushes dog, plant reduces push
+# - 5b. The crane's cargo net: the leash hauled taut on its post drops it after
+#   its warning, pinning a lion under it; one outside is unhurt
 # - 6. Phase 2 (Double Rush & HEAD BUMP): crossing charge, collision causes HEAD BUMP and stuns both
 # - 7. Stunned boop: bark at stunned nose awards boop
 # - 8. Phase 3 (Retreat & Stand): below 10% HP retreats to plinths
@@ -34,6 +36,27 @@ func _ticks(m: Node2D, secs: float) -> void:
 	for i in range(n):
 		m.elapsed += DT
 		m.lleons.tick_state(DT)
+
+
+# the dog and your human held at two spots, the rope laid straight between
+# them at this rest length
+func _lay_leash(m: Node2D, dog_at: Vector2, human_at: Vector2, rest: float) -> void:
+	m.dog.global_position = dog_at
+	m.human.global_position = human_at
+	m.human.rotation = 0.0
+	m.leash.rest_len = rest
+	m.leash.resnap()
+
+
+# the real rope solved every tick with both ends held, the lions kept where
+# the test puts them
+func _haul(m: Node2D, boss: Object, a_at: Vector2, b_at: Vector2, secs: float) -> void:
+	for i in range(int(secs / DT)):
+		boss.lion_a.pos = a_at
+		boss.lion_b.pos = b_at
+		m.elapsed += DT
+		m.leash.tick(DT)
+		boss.tick_state(DT)
 
 
 func _run() -> void:
@@ -124,6 +147,66 @@ func _run() -> void:
 		_ticks(m, 0.05)
 	m.dog.planted = false
 	_check(m.bones == bones_r + 2, "planting through a roar pays 2 once (got %d)" % (m.bones - bones_r))
+
+	# 4b. The arena: the crane's cargo net. The leash wound on its post and
+	# hauled taut trips it; it drops after its warning and pins a lion under it.
+	boss.transition_to(BL.State.PROWL)
+	boss.pincer_cd = 99.0
+	boss.roar_cd = 99.0
+	boss.rush_cd = 99.0
+	_check(m.poles.has(BL.NET_POST), "the net's post is a pole the leash wraps")
+	var under: Vector2 = BL.NET_C + Vector2(12.0, 18.0)
+	var clear: Vector2 = BL.NET_C + Vector2(0.0, -BL.NET_R - 60.0)
+	# slack: the leash lies by the post and nothing happens
+	_lay_leash(m, BL.NET_POST + Vector2(60.0, -50.0), BL.NET_POST + Vector2(-60.0, 50.0), 400.0)
+	_haul(m, boss, under, clear, 0.6)
+	_check(boss.net == BL.Net.UP and not boss.net_hauled, "a slack leash by the post leaves the net hanging")
+	# hauled: the rope bent round the post, pulled past its length
+	_lay_leash(m, BL.NET_POST + Vector2(150.0, -120.0), BL.NET_POST + Vector2(-150.0, 120.0), 340.0)
+	var hp_n: float = boss.hp
+	var bones_n: int = m.bones
+	_haul(m, boss, under, clear, 0.1)
+	_check(m.leash.touches(BL.NET_POST), "the rope rests on the post")
+	_check(boss.net_hauled, "and is hauled taut on it (taut %.2f)" % m.leash.taut_amount(m.leash.used_length() / m.leash.rest_len))
+	_haul(m, boss, under, clear, BL.NET_PULL_HOLD + 0.05)
+	_check(boss.net == BL.Net.WARN, "the haul starts the net's warning")
+	_haul(m, boss, under, clear, BL.NET_WARN - 0.2)
+	_check(boss.net == BL.Net.WARN and float(boss.lion_a.dazed) <= 0.0 and boss.hp == hp_n,
+		"nothing falls during the warning")
+	_haul(m, boss, under, clear, 0.3)
+	_check(boss.net == BL.Net.DOWN, "the net drops after its warning")
+	_check(float(boss.lion_a.dazed) > BL.NET_STUN - 0.5, "the lion under it is pinned and dazed")
+	_check(float(boss.lion_b.dazed) <= 0.0, "the lion outside it is untouched")
+	_check(absf(hp_n - boss.hp - BL.NET_DAMAGE) < 0.1, "the pin costs them %.0f (lost %.0f)" % [BL.NET_DAMAGE, hp_n - boss.hp])
+	_check(boss.state == BL.State.STUNNED and boss.stun_net, "the fight stops while he is pinned")
+	_check(m.bones == bones_n + 12, "netting a lion pays 12 (got %d)" % (m.bones - bones_n))
+	_check(not boss.on_bark_action(boss._nose_of(boss.lion_b)), "the free lion takes no boop")
+	_check(boss.on_bark_action(boss.lion_a.pos + boss.lion_a.face_dir * BL.HEAD_R) and boss.lion_a.booped,
+		"the pinned lion's nose takes one")
+	# he gets up, the crane hauls it back, and it waits to be pulled again
+	_lay_leash(m, BL.NET_POST + Vector2(-60.0, 50.0), BL.NET_POST + Vector2(-60.0, 140.0), 400.0)
+	_haul(m, boss, under, clear, BL.NET_STUN + 0.2)
+	_check(boss.state == BL.State.PROWL, "he gets up out of the net")
+	_haul(m, boss, under, clear, BL.NET_HOIST + 0.2)
+	_check(boss.net == BL.Net.UP and boss.net_cd > 0.0, "the crane hauls it back up and it reloads")
+	boss.pincer_cd = 99.0
+	boss.roar_cd = 99.0
+	boss.rush_cd = 99.0
+	# a drop with both lions clear of it hurts nobody
+	boss.net_cd = 0.0
+	_lay_leash(m, BL.NET_POST + Vector2(150.0, -120.0), BL.NET_POST + Vector2(-150.0, 120.0), 340.0)
+	var hp_m: float = boss.hp
+	_haul(m, boss, clear, clear + Vector2(-140.0, 0.0), BL.NET_PULL_HOLD + BL.NET_WARN + 0.3)
+	_check(boss.net == BL.Net.DOWN and boss.hp == hp_m and boss.state == BL.State.PROWL,
+		"dropped on nobody, it pins nobody")
+	_check(boss.net_pins == 1, "one lion netted in all")
+	# leave the net and the leash out of the rest of the fight
+	boss.net_cd = 999.0
+	_lay_leash(m, Vector2(640.0, BL.WAKE_Y - 20.0), Vector2(640.0, BL.HOLD_Y + 100.0), 400.0)
+	m.leash.tick(DT)
+	boss.lion_a.dazed = 0.0
+	boss.lion_b.dazed = 0.0
+	boss.transition_to(BL.State.PROWL)
 
 	# 5. Phase 2: Double Rush. Standing in the crossing to the end: run over, no bump
 	boss.hp = 45.0
