@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-11-15 - Els Lleons' arena: the harbor crane's cargo net
+
+- A portal crane stands on the coping by the lions' plinths, its jib out over the boardwalk and a cargo net of fish crates hanging from the hook. The net's trip rope runs across the boards to a cleat post. Wind the leash round the post and haul it taut (the real rope's contact and stretch) and, while the lions fight, the crane creaks, the load swings and its shadow gathers into a warning ring for 0.8 s; then the net drops. A lion under it is pinned: 18 damage, a 3.6 s daze, "netted! +12", and his nose takes a boop. A lion outside it is untouched. The crane hauls the net back up once he is out, and it can be pulled again 8 s later.
+- In a daze only a dazed lion takes a boop, so the free one cannot be booped while his twin is under the net.
+- `systems/boss_lleons.gd`, `systems/port.gd` (the post is a pole; the crane's legs are solid); `tests/test_lleons.gd` drives the real rope round the post and checks the warning, the pin, the lion left outside, the hoist and reload, and a drop on nobody.
+
 ## 2026-11-15 - Boss arenas planned
 
 - `docs/BOSSES.md`: an arena section planning two or three interactables per boss from each real place (El Mamut's rowboat jetty, deckchairs and kiosk railing; El Drac's fountain spouts, tile slides and serpentine bench; Els Lleons' bollards, crane net and the Golondrina's horn; El Gat's awnings and yarn stall), El Mamut first.
