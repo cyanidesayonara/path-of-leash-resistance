@@ -6,7 +6,17 @@ Append-only session history, newest first.
 
 - The first of the boss arenas (docs/BOSSES.md). A rowboat jetty on the lake shore, a boat tied up at its end: lure his tusk charge onto its boards and they give way, and he goes through into the lake for 40 damage and the longest daze of the fight (4.6 s), then comes up spraying. Once: after that the land end is snapped boards and the boat has drifted off.
 - Two stacks of the park's green chairs on the lawn. His trunk swipe scatters a stack across the grass ("CHAIRS EVERYWHERE! LEAD HIM THROUGH THEM"), and a charge through a lying chair trips him like a taut leash does.
+- Grass tufts no longer grow over the chair stacks or the jetty's shore boards (`Ciutadella.grass_blocked`).
 - `systems/boss_mamut.gd`; `tests/test_ciutadella.gd` covers the jetty breaking once for its damage and daze, the swipe scattering a stack, and a charge tripping on a chair.
+
+## 2026-11-15 - Boss arenas planned
+
+- `docs/BOSSES.md`: an arena section planning two or three interactables per boss from each real place (El Mamut's rowboat jetty, deckchairs and kiosk railing; El Drac's fountain spouts, tile slides and serpentine bench; Els Lleons' bollards, crane net and the Golondrina's horn; El Gat's awnings and yarn stall), El Mamut first.
+
+## 2026-11-14 - Release notes for 1.73
+
+- `store/listing.md`: What's new for 1.73 (L'Aeroport and Montserrat, thirty-eight walks; Els Lleons and El Drac; the chases rebuilt; the tug of war; night shadows and softer lit fronts; the home walk-in; objects that fit the place), the walk count and list in the description, and the certification notes. The description no longer claims an agility course on every walk (only El Barri has one).
+- `docs/itch-page.md`: What's new in 1.73. `README.md`: thirty-eight walks, L'Aeroport and Montserrat in the table.
 
 ## 2026-11-14 - CI was not running
 
