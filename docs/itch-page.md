@@ -126,6 +126,26 @@ Single player. No ads, no purchases, no account. The download plays offline; the
 Made in Godot by Santtu Nykänen. The dog is Millie, a distinguished salt-and-pepper mutt who squats like a lady.
 ```
 
+## What's new in 1.73
+
+For a devlog post or the top of the body. Everything since v1.72, from
+CHANGELOG.md. The Store's What's new is the short form of this.
+
+```
+- Two new walks, thirty-eight in all:
+  - L'Aeroport, open at 51 stars: Terminal 1's long pier, past check-in and the perfume counters, with moving walkways that have proper sides, a luggage carousel to bark at and a gate rush at B30. The chase is the airport security squad on foot, and the off-leash space is La Cabina.
+  - Montserrat, open at 52 stars: the serrated mountain trail from the old gate piers to the monastery, across the Sant Joan funicular (wait for the car, or dodge it), past a mel i mató stall. The chase is a wild goat herd kicking boulders down the trail, with its own film.
+- Two new statue bosses, each with a story film and a victory film:
+  - Els Lleons: the twin bronze lions at the foot of the Columbus column in El Port. Dodge their pincer and their rush, and settle them with a head bump.
+  - El Drac: the mosaic salamander of El Mosaic. Dodge his tail whip and his fountain jet, trip his slither between the columns, wind the leash round three of his legs, and boop his nose.
+- Chases rebuilt in two kinds: the machines (the street sweeper, the Dimoni's float) drive like cartoon vehicles that bonk over benches and posts and swerve round what they cannot flatten, and the squads (the vet staff, the boars, the devils, airport security) come after you on foot.
+- Tug of war reworked: the rope toy now shows between the two dogs as a real cotton rope that bends as they shake it. The other dog winds up, heaves and rests: dig in through the heave and pull while it rests. Chalk lines, a rag on the rope's middle and a meter over the pair show who is winning.
+- After dark, objects keep only a short soft shadow instead of an afternoon sun's, and lit doorways, shopfronts and windows glow more gently.
+- Your human walks into the home ending on real steps instead of gliding.
+- Objects that fit the place: cairns and a dropped carquinyoli on Montserrat, tree stumps in El Parc and La Ciutadella, outdoor showers on the promenades, a mopped floor with wet-floor signs at the vet's, and lost balls and litter instead of traffic cones on trails, beaches and in gardens.
+- The Fur-goneta honks and pays once per walk, and its bubbles are gone.
+```
+
 ## What's new in 1.72
 
 For a devlog post or the top of the body. Everything since v1.71, from
