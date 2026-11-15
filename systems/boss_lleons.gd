@@ -128,6 +128,35 @@ const CRATE := Color(0.66, 0.50, 0.32)
 
 enum Net { UP, WARN, DOWN, HOIST }
 
+# The mooring bollards on the coping. The leash run round a lion's leg and on
+# round a bollard, pulled taut, ties him to it (the real rope's contacts and
+# stretch): he cannot move while it holds, so his twin's pincer or rush can
+# run into him. He strains free after TETHER_MAX and cannot be tied again for
+# TETHER_REST.
+const ARENA_BOLLARDS: Array[Vector2] = [Vector2(905.0, -4150.0), Vector2(905.0, -4400.0)]
+const TETHER_TAUT := 0.3
+const TETHER_LEG_MEMORY := 1.0  # the rope slips off a leg under tension: on it this lately counts
+const TETHER_GRACE := 0.4      # slack for this long and he is loose again
+const TETHER_MAX := 4.0
+const TETHER_REST := 3.0
+const TETHER_BUMP_DAMAGE := 22.0
+
+# The Golondrina, the old harbor tour boat, tied up at the pier end. Bark at
+# the pier and her skipper answers: steam at the whistle for HORN_WARN, then
+# the horn, and both lions flinch round toward it, hop at the sound and stand
+# dazed a moment with their noses out. Once every HORN_RELOAD.
+const GOLONDRINA := Rect2(948.0, -4530.0, 116.0, 240.0)
+const HORN_SPOT := Vector2(915.0, -4455.0)   # the pier end, by her gangway
+const HORN_BARK_R := 150.0
+const HORN_WARN := 0.8
+const HORN_STUN := 1.8
+const HORN_HOP := 46.0
+const HORN_RELOAD := 12.0
+const BOAT_HULL := Color(0.94, 0.93, 0.88)
+const BOAT_DECK := Color(0.62, 0.46, 0.30)
+const BOAT_TRIM := Color(0.16, 0.36, 0.30)
+const BOAT_BENCH := Color(0.40, 0.58, 0.72)
+
 enum State {
 	IDLE, AWAKEN, PROWL,
 	PINCER_WARN, PINCER_STRIKE,
@@ -219,6 +248,20 @@ var net_pull_t := 0.0           # how long the trip rope has been hauled
 var net_hauled := false         # the leash on the post and taut, this tick
 var net_pins := 0               # lions pinned, over the fight
 var stun_net := false           # the daze is the net's, not a head bump
+var stun_horn := false          # the daze is the horn's flinch
+
+# per lion: tether grace left (> 0 tied), how long held, and the rest after
+var tether_t: Array[float] = [0.0, 0.0]
+var tether_held: Array[float] = [0.0, 0.0]
+var tether_rest: Array[float] = [0.0, 0.0]
+var tether_leg_t: Array[float] = [INF, INF]   # since the rope last touched each leg
+var tether_bumps := 0
+var _held_at: Array[Vector2] = [Vector2.ZERO, Vector2.ZERO]
+
+var horn_t := -1.0              # time since she barked at the pier; -1 quiet
+var horn_cd := 0.0
+var horn_blast_t := -1.0        # time since the horn sounded, for its rings
+var horn_blasts := 0
 
 
 func setup(m: Node2D) -> void:
@@ -243,6 +286,16 @@ func setup(m: Node2D) -> void:
 	net_hauled = false
 	net_pins = 0
 	stun_net = false
+	stun_horn = false
+	tether_t = [0.0, 0.0]
+	tether_held = [0.0, 0.0]
+	tether_rest = [0.0, 0.0]
+	tether_leg_t = [INF, INF]
+	tether_bumps = 0
+	horn_t = -1.0
+	horn_cd = 0.0
+	horn_blast_t = -1.0
+	horn_blasts = 0
 
 	lion_a.pos = PLINTH_L
 	lion_a.face_dir = Vector2.DOWN
@@ -315,6 +368,10 @@ func tick_state(delta: float) -> void:
 	_update_fx(delta)
 	update_leg_positions()
 	_tick_net(delta)
+	_tick_tether(delta)
+	_tick_horn(delta)
+	for k in range(2):
+		_held_at[k] = _lion(k).pos
 
 	match state:
 		State.IDLE:
@@ -347,6 +404,15 @@ func tick_state(delta: float) -> void:
 			_tick_sat(delta)
 		State.CONTENT:
 			_tick_content(delta)
+	# a lion tied to a bollard stays where he was tied, straining at her
+	if state != State.STUNNED:
+		for k in range(2):
+			if held(k):
+				var lion := _lion(k)
+				lion.pos = _held_at[k]
+				var to: Vector2 = main.dog.global_position - _held_at[k]
+				if to.length() > 1.0:
+					lion.face_dir = to.normalized()
 	_track_gait(delta)
 
 
@@ -458,8 +524,8 @@ func _tick_pincer_strike(delta: float) -> void:
 	var hp_pos: Vector2 = main.human.global_position
 	# Check dog dodge
 	if not pincer_dodged and not pincer_hit:
-		var d_a: float = (lion_a.pos as Vector2).distance_to(dp)
-		var d_b: float = (lion_b.pos as Vector2).distance_to(dp)
+		var d_a: float = INF if held(0) else (lion_a.pos as Vector2).distance_to(dp)
+		var d_b: float = INF if held(1) else (lion_b.pos as Vector2).distance_to(dp)
 		if d_a < BODY_R + 10.0 or d_b < BODY_R + 10.0:
 			# hit once a pincer: the warning lanes were the telegraph
 			pincer_hit = true
@@ -474,7 +540,10 @@ func _tick_pincer_strike(delta: float) -> void:
 			main.feed.say("PINCER DODGE!", EventFeed.Tone.GOOD)
 			_take_damage(12.0)
 
-	if (lion_a.pos as Vector2).distance_to(pincer_targets[0]) < 8.0 and (lion_b.pos as Vector2).distance_to(pincer_targets[1]) < 8.0:
+	if _tether_bump_check():
+		return
+	if (held(0) or (lion_a.pos as Vector2).distance_to(pincer_targets[0]) < 8.0) \
+			and (held(1) or (lion_b.pos as Vector2).distance_to(pincer_targets[1]) < 8.0):
 		transition_to(State.PROWL)
 
 
@@ -556,9 +625,12 @@ func _tick_rush_charge(delta: float) -> void:
 	lion_b.pos = lion_b.pos.move_toward(rush_ends[1], rush_speeds[1] * delta)
 	var dp: Vector2 = main.dog.global_position
 	# run over on the way: once a rush
+	if _tether_bump_check():
+		return
 	if not rush_hit:
-		for lion: Dictionary in [lion_a, lion_b]:
-			if (lion.pos as Vector2).distance_to(dp) < BODY_R + 6.0:
+		for k in range(2):
+			var lion := _lion(k)
+			if not held(k) and (lion.pos as Vector2).distance_to(dp) < BODY_R + 6.0:
 				rush_hit = true
 				main.dog.knocked(((dp - (lion.pos as Vector2)).normalized()) if dp.distance_to(lion.pos) > 1.0 else Vector2.DOWN, "lion")
 				break
@@ -566,13 +638,13 @@ func _tick_rush_charge(delta: float) -> void:
 	# they meet at the crossing: only an empty crossing makes them collide;
 	# she still there, or already run over, and they run on to their ends
 	var dist_between: float = lion_a.pos.distance_to(lion_b.pos)
-	if dist_between < (BODY_R + HEAD_R) * 1.5 and not rush_hit:
+	if dist_between < (BODY_R + HEAD_R) * 1.5 and not rush_hit and not held(0) and not held(1):
 		if dp.distance_to(rush_cross_pos) > RUSH_CLEAR:
 			_trigger_head_bump()
 			return
 		rush_hit = true
 
-	if lion_a.pos.distance_to(rush_ends[0]) < 10.0 and lion_b.pos.distance_to(rush_ends[1]) < 10.0:
+	if (held(0) or lion_a.pos.distance_to(rush_ends[0]) < 10.0) and (held(1) or lion_b.pos.distance_to(rush_ends[1]) < 10.0):
 		transition_to(State.PROWL)
 
 
@@ -598,6 +670,7 @@ func _trigger_head_bump() -> void:
 		})
 
 	stun_net = false
+	stun_horn = false
 	lion_a.dazed = BUMP_STUN
 	lion_b.dazed = BUMP_STUN
 	lion_a.booped = false
@@ -675,6 +748,137 @@ func _tick_content(_delta: float) -> void:
 		if FP != null and FP.should_play(main):
 			win_film_shown = true
 			FP.play(main, load(FILM_WIN))
+
+
+func _lion(k: int) -> Dictionary:
+	return lion_a if k == 0 else lion_b
+
+
+# --- The mooring bollards ------------------------------------------------------
+
+func held(k: int) -> bool:
+	return tether_t[k] > 0.0
+
+
+# The leash on this lion's leg (lately: a leg sheds a hard-pulled rope) and on
+# a bollard, and pulled taut: all read off the one verlet rope.
+func tethered(k: int) -> bool:
+	var lsh = main.leash
+	if lsh == null or leg_poles.size() < 2 or tether_leg_t[k] > TETHER_LEG_MEMORY:
+		return false
+	var on_bollard := false
+	for bp: Vector2 in ARENA_BOLLARDS:
+		if lsh.touches(bp):
+			on_bollard = true
+			break
+	if not on_bollard:
+		return false
+	return lsh.taut_amount(lsh.used_length() / maxf(lsh.rest_len, 1.0)) >= TETHER_TAUT
+
+
+func _tick_tether(delta: float) -> void:
+	for k in range(2):
+		tether_rest[k] = maxf(0.0, tether_rest[k] - delta)
+		tether_leg_t[k] += delta
+		if main.leash != null and leg_poles.size() == 2 and main.leash.touches(leg_poles[k], 12.0):
+			tether_leg_t[k] = 0.0
+		var can := net_live() and state != State.STUNNED and tether_rest[k] <= 0.0
+		if can and tethered(k):
+			if tether_t[k] <= 0.0:
+				tether_held[k] = 0.0
+				_sfx("tangle", 0.8, -4.0)
+				main.feed.say("TIED TO THE BOLLARD! BRING HIS TWIN", EventFeed.Tone.GOOD)
+			tether_t[k] = TETHER_GRACE
+		elif not can:
+			tether_t[k] = 0.0
+		else:
+			tether_t[k] = maxf(0.0, tether_t[k] - delta)
+		if tether_t[k] > 0.0:
+			tether_held[k] += delta
+			if tether_held[k] >= TETHER_MAX:
+				tether_t[k] = 0.0
+				tether_rest[k] = TETHER_REST
+				_sfx("crack", 1.3, -6.0)
+				main.float_text((_lion(k).pos as Vector2) + Vector2(0.0, -50.0), "yank", Color(0.95, 0.88, 0.70))
+		else:
+			tether_held[k] = 0.0
+
+
+# One lion tied, the other striking: run into his twin and both go down.
+func _tether_bump_check() -> bool:
+	if held(0) == held(1):
+		return false
+	if (lion_a.pos as Vector2).distance_to(lion_b.pos) >= (BODY_R + HEAD_R) * 1.5:
+		return false
+	tether_bumps += 1
+	main.lleons_bumped = true
+	_sfx("head_bump", 0.9, 0.0)
+	main.shake_t = maxf(float(main.shake_t), 0.7)
+	main.award_points(16, "tied up! +16")
+	main.feed.say("RIGHT INTO HIS TIED-UP TWIN!", EventFeed.Tone.LOUD)
+	var mid: Vector2 = ((lion_a.pos as Vector2) + (lion_b.pos as Vector2)) * 0.5
+	for i in range(12):
+		var a := float(i) * (TAU / 12.0)
+		sparks.append({"pos": mid, "vel": Vector2(cos(a), sin(a)) * randf_range(110.0, 240.0),
+			"life": 0.7, "max_life": 0.7, "col": BRONZE_SHINE})
+	for k in range(2):
+		tether_t[k] = 0.0
+		tether_rest[k] = TETHER_REST
+	stun_net = false
+	stun_horn = false
+	lion_a.dazed = BUMP_STUN
+	lion_b.dazed = BUMP_STUN
+	lion_a.booped = false
+	lion_b.booped = false
+	transition_to(State.STUNNED)
+	_take_damage(TETHER_BUMP_DAMAGE)
+	return true
+
+
+# --- The Golondrina's horn -----------------------------------------------------
+
+func horn_ready() -> bool:
+	return horn_t < 0.0 and horn_cd <= 0.0 and net_live()
+
+
+func _tick_horn(delta: float) -> void:
+	horn_cd = maxf(0.0, horn_cd - delta)
+	if horn_blast_t >= 0.0:
+		horn_blast_t += delta
+		if horn_blast_t > 1.2:
+			horn_blast_t = -1.0
+	if horn_t < 0.0:
+		return
+	horn_t += delta
+	if horn_t >= HORN_WARN:
+		horn_t = -1.0
+		horn_cd = HORN_RELOAD
+		_blast_horn()
+
+
+func _blast_horn() -> void:
+	horn_blast_t = 0.0
+	_sfx("van_horn", 0.55, 0.0)
+	_sfx("van_horn", 0.42, -4.0)
+	main.float_text(HORN_SPOT + Vector2(60.0, -80.0), "PAAARP", Color(0.95, 0.88, 0.70))
+	if not net_live():
+		return
+	horn_blasts += 1
+	for k in range(2):
+		var lion := _lion(k)
+		var to: Vector2 = HORN_SPOT - (lion.pos as Vector2)
+		var d := to.normalized() if to.length() > 1.0 else Vector2.RIGHT
+		lion.face_dir = d
+		var p: Vector2 = (lion.pos as Vector2) + d * minf(HORN_HOP, maxf(0.0, to.length() - 90.0))
+		lion.pos = Vector2(clampf(p.x, ARENA_X.x - 30.0, ARENA_X.y + 30.0), p.y)
+		lion.dazed = maxf(float(lion.dazed), HORN_STUN)
+		lion.booped = false
+		tether_t[k] = 0.0
+	stun_net = false
+	stun_horn = true
+	transition_to(State.STUNNED)
+	main.award_points(6, "toot! +6")
+	main.feed.say("THEY FLINCHED! BOOP THEM", EventFeed.Tone.LOUD)
 
 
 # --- The cargo net -------------------------------------------------------------
@@ -756,6 +960,7 @@ func _drop_net() -> void:
 		lion.booped = false
 	net_pins += pinned.size()
 	stun_net = true
+	stun_horn = false
 	if state != State.STUNNED:
 		transition_to(State.STUNNED)
 	var pay := 12 * pinned.size()
@@ -794,6 +999,12 @@ func on_bark_action(bark_pos: Vector2) -> bool:
 			if lion_a.booped and lion_b.booped:
 				main.feed.say("GOOD PUPS... ER, BIG CATS!", EventFeed.Tone.GOOD)
 			return true
+
+	if bark_pos.distance_to(HORN_SPOT) < HORN_BARK_R and horn_ready():
+		horn_t = 0.0
+		_sfx("whistle", 0.6, -8.0)
+		main.feed.say("THE GOLONDRINA ANSWERS!", EventFeed.Tone.PLAIN)
+		return true
 	return false
 
 
@@ -844,6 +1055,8 @@ func status() -> String:
 		State.STUNNED:
 			if stun_net:
 				return Prompts.fill("NETTED! {bark} AT HIS NOSE!")
+			if stun_horn:
+				return Prompts.fill("THEY FLINCHED! {bark} AT THEIR NOSES!")
 			return Prompts.fill("HEAD BUMP! {bark} AT THEIR NOSES!")
 		State.STAND:
 			return "LOOP LEASH AROUND BOTH PLINTHS  %d/%d" % [legs_tied, LEGS_TO_TIE]
@@ -869,6 +1082,7 @@ func draw(wc: ShapeBatch, vt: float, vb: float) -> void:
 	_draw_plinth(wc, PLINTH_L, lion_a)
 	_draw_plinth(wc, PLINTH_R, lion_b)
 	_draw_net_ground(wc, t)
+	_draw_golondrina(wc, t)
 
 	if state == State.PINCER_WARN:
 		_draw_pincer_warning(wc, t)
@@ -1049,6 +1263,79 @@ func _draw_mesh(b: ShapeBatch, c: Vector2, r: float, col: Color, w: float, step:
 			if half > 2.0:
 				b.line(c + nrm * d - dir * half, c + nrm * d + dir * half, col, w)
 			d += step
+
+
+# The Golondrina at the pier end, seen from above: a white double-decker with
+# a green rail, benches in rows on her top deck, a wheelhouse forward and her
+# whistle on its roof; a gangway to the pier. Barked at, steam at the whistle
+# and a ring round the pier through the warning; then the horn's rings.
+func _draw_golondrina(b: ShapeBatch, t: float) -> void:
+	var r := GOLONDRINA
+	var c := r.get_center()
+	var bob := sin(t * 1.1) * 1.5
+	var hull := PackedVector2Array()
+	var deck := PackedVector2Array()
+	for i in range(20):
+		var a := TAU * float(i) / 20.0
+		# a long hull, bow to the north
+		var v := Vector2(cos(a) * r.size.x * 0.5, sin(a) * r.size.y * 0.5)
+		if v.y < 0.0:
+			v.x *= 1.0 - 0.45 * (-v.y / (r.size.y * 0.5)) * (-v.y / (r.size.y * 0.5))
+		hull.append(c + v + Vector2(0.0, bob))
+		deck.append(c + v * 0.86 + Vector2(0.0, bob))
+	var sh := PackedVector2Array()
+	for p: Vector2 in hull:
+		sh.append(p + Shade.light * 8.0)
+	b.polygon(sh, Color(0.03, 0.06, 0.10, 0.28))
+	b.polygon(hull, BOAT_TRIM)
+	var inner := PackedVector2Array()
+	for p: Vector2 in hull:
+		inner.append(c + (p - c) * 0.95)
+	b.polygon(inner, BOAT_HULL)
+	b.polygon(deck, BOAT_DECK)
+	# benches across the top deck, an aisle down the middle
+	var y := c.y - r.size.y * 0.22
+	while y < c.y + r.size.y * 0.36:
+		for sd: float in [-1.0, 1.0]:
+			b.rect(Rect2(Vector2(c.x + sd * 8.0 - (34.0 if sd < 0.0 else 0.0), y + bob), Vector2(34.0, 6.0)), BOAT_BENCH)
+		y += 16.0
+	# the wheelhouse forward, its whistle on the roof
+	var wh := Rect2(c.x - 22.0, c.y - r.size.y * 0.38 + bob, 44.0, 30.0)
+	b.rect(wh.grow(2.0), BOAT_TRIM)
+	b.rect(wh, BOAT_HULL)
+	b.rect(Rect2(wh.position + Vector2(4.0, 3.0), Vector2(wh.size.x - 8.0, 8.0)), Color(0.45, 0.62, 0.72))
+	var whistle := wh.get_center() + Vector2(0.0, 4.0)
+	b.circle(whistle, 5.0, Color(0.72, 0.60, 0.28))
+	b.circle(whistle, 2.5, Color(0.30, 0.26, 0.20))
+	# the gangway to the pier
+	b.rect(Rect2(HORN_SPOT.x - 6.0, HORN_SPOT.y - 9.0, r.position.x - HORN_SPOT.x + 14.0, 18.0), BOAT_DECK.darkened(0.2))
+	for i in range(4):
+		var gx := HORN_SPOT.x - 2.0 + float(i) * 10.0
+		b.line(Vector2(gx, HORN_SPOT.y - 8.0), Vector2(gx, HORN_SPOT.y + 8.0), BOAT_DECK.darkened(0.45), 1.4)
+	var pulse := 0.5 + 0.5 * sin(t * 8.0)
+	if horn_ready() and main.dog.global_position.distance_to(HORN_SPOT) < HORN_BARK_R + 120.0:
+		_ring(b, HORN_SPOT, 22.0 + pulse * 3.0, Color(0.98, 0.85, 0.30, 0.35 + 0.25 * pulse), 3.0)
+	if horn_t >= 0.0:
+		var k := clampf(horn_t / HORN_WARN, 0.0, 1.0)
+		for i in range(3):
+			var u := fposmod(k * 2.0 + float(i) * 0.33, 1.0)
+			b.circle(whistle + Vector2(-6.0 * u, -10.0 - 30.0 * u), 5.0 + 9.0 * u, Color(1.0, 1.0, 1.0, 0.7 * (1.0 - u)))
+		_ring(b, whistle, 14.0 + 10.0 * k, Color(1.0, 0.85, 0.40, 0.55 + 0.4 * pulse), 3.0)
+	if horn_blast_t >= 0.0:
+		var k := clampf(horn_blast_t / 1.2, 0.0, 1.0)
+		for i in range(3):
+			var rr := 40.0 + (k + float(i) * 0.25) * 260.0
+			var a := (1.0 - k) * (0.6 - float(i) * 0.15)
+			_arc(b, whistle, rr, PI * 0.6, PI * 1.4, Color(1.0, 0.95, 0.80, maxf(a, 0.0)), 4.0)
+
+
+static func _arc(b: ShapeBatch, c: Vector2, r: float, a0: float, a1: float, col: Color, w: float) -> void:
+	var n := 16
+	var prev := c + Vector2.from_angle(a0) * r
+	for i in range(1, n + 1):
+		var cur := c + Vector2.from_angle(lerpf(a0, a1, float(i) / float(n))) * r
+		b.line(prev, cur, col, w)
+		prev = cur
 
 
 # The stone corner plinth and its bronze plaque; with the lion away, the worn
@@ -1456,6 +1743,15 @@ func _nose_of(lion: Dictionary) -> Vector2:
 # stand, the noses to bark at, the dust where they landed.
 func _draw_marks(b: ShapeBatch, t: float) -> void:
 	var pulse := 0.5 + 0.5 * sin(t * 8.0)
+	# a lion tied to a bollard: a ring on his leg and on the bollards
+	for k in range(2):
+		if held(k) and leg_poles.size() == 2:
+			var strain := tether_held[k] / TETHER_MAX
+			var col := Color(1.0, 0.90 - 0.5 * strain, 0.20, 0.9)
+			_ring(b, leg_poles[k], LEG_RADIUS + 8.0 + strain * pulse * 4.0, col, 3.0)
+			for bp: Vector2 in ARENA_BOLLARDS:
+				if main.leash != null and main.leash.touches(bp):
+					_ring(b, bp, 18.0, col, 3.0)
 	if state == State.STAND or state == State.WRAPPED:
 		for k in range(leg_poles.size()):
 			var held: bool = state == State.WRAPPED or (main != null and main.elapsed - leg_touch_t[k] <= LEG_MEMORY)
@@ -1478,6 +1774,8 @@ func _draw_pincer_warning(b: ShapeBatch, t: float) -> void:
 	var pulse := 0.5 + 0.5 * sin(t * 14.0)
 	var k := clampf(act_t / PINCER_WARN, 0.0, 1.0)
 	for i in range(2):
+		if held(i):
+			continue
 		var from: Vector2 = (lion_a if i == 0 else lion_b).pos
 		_lane(b, from, pincer_targets[i], (BODY_R + 10.0) * 2.0, k, pulse, t)
 		_ring(b, pincer_targets[i], BODY_R, Color(1.0, 0.45, 0.28, 0.5 + 0.3 * pulse), 2.5)
@@ -1489,6 +1787,8 @@ func _draw_rush_warning(b: ShapeBatch, t: float) -> void:
 	var pulse := 0.5 + 0.5 * sin(t * 14.0)
 	var k := clampf(act_t / RUSH_WARN, 0.0, 1.0)
 	for i in range(2):
+		if held(i):
+			continue
 		_lane(b, rush_starts[i], rush_ends[i], (BODY_R + 6.0) * 2.0, k, pulse, t)
 	b.circle(rush_cross_pos, RUSH_CLEAR * k, Color(WARN.r, WARN.g, WARN.b, 0.16 + 0.10 * pulse))
 	_ring(b, rush_cross_pos, RUSH_CLEAR, Color(1.0, 0.85, 0.40, 0.55 + 0.4 * pulse), 3.0)
