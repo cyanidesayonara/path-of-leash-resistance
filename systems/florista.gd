@@ -210,8 +210,9 @@ func draw(_m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	NpcFigure.person(b, draw_p, Vector2.RIGHT, 404, anim_time * 9.0 if walking else -1.0, {"size": 1.25,
 		"top": DRESS_CREAM, "legs": DRESS_CREAM.darkened(0.15), "skin": SKIN_TONE, "hair": HAIR_BROWN,
 		"hair_style": "bun", "arms": NpcFigure.Arms.READY})
-	b.circle(draw_p + Vector2(3.5, 0.0), 6.0, APRON_GREEN)
-	b.line(draw_p + Vector2(-1.0, -7.0), draw_p + Vector2(-1.0, 7.0), APRON_TIE, 1.6)
+	# the apron's bib over her front and its ties round her back
+	b.circle(draw_p + Vector2(4.0, 0.0), 5.4, APRON_GREEN)
+	b.line(draw_p + Vector2(-4.5, -8.0), draw_p + Vector2(-4.5, 8.0), APRON_TIE, 1.6)
 
 	# Wooden flower tray carried forward
 	var tray_center := draw_p + Vector2(10.0 + wobble, 0.0)
@@ -232,8 +233,8 @@ func draw(_m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 
 	# the straw sunhat with its green band, over her head
 	var head_p := draw_p + Vector2(1.0, 0.0)
-	b.circle(head_p + Shade.light * 2.0, 9.2, SHADOW)
-	b.circle(head_p, 9.0, HAT_STRAW)
-	b.circle(head_p, 7.2, HAT_BAND)
-	b.circle(head_p, 5.6, HAT_STRAW)
-	b.circle(head_p + Vector2(-1.6, -1.6), 2.4, HAT_STRAW.lightened(0.15))
+	b.circle(head_p + Shade.light * 2.0, 7.4, SHADOW)
+	b.circle(head_p, 7.2, HAT_STRAW)
+	b.circle(head_p, 5.4, HAT_BAND)
+	b.circle(head_p, 4.2, HAT_STRAW)
+	b.circle(head_p + Vector2(-1.3, -1.3), 1.8, HAT_STRAW.lightened(0.15))
