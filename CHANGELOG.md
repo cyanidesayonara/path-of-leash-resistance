@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-11-15 - El Gat's arena: the yarn stalls
+
+- Two market yarn stalls on the Rambla del Raval (docs/BOSSES.md, the arenas), one each side: a trestle table of skeins under a striped awning edge, a wicker basket of yarn in front. Bump the basket or drag the leash through it and it rocks for 0.8 s, a ball peeking over the rim, then tips ("BASKET DOWN! YARN EVERYWHERE") and three balls roll out across and up the rambla, each trailing its wool back to the basket.
+- Loose yarn within 420 px of a prowling El Gat beats a swat or a pounce: he goes after the nearest ball for 3.4 s, batting it on straight away from her so his back turns ("YARN! HIS BACK IS TURNED"; banner "HE'S AFTER THE YARN! {bark} ON HIS TAIL", a ring round his tail). A bark on his tail is a tail tug: 15 damage, "tail tug! +6", and a daze, so a boop can follow. When the chase runs out the ball is wool on the paving, and 2.5 s pass before the next ball tempts him.
+- Each basket tips once; the balls stay out until he has chased each one.
+- After dark each stall is lit like a shopfront into the rambla (`night_fronts`), with a string of bulbs along its awning scaled by `Game.lamp_glow()`.
+- The stall tables are solid and the rope wraps them (`BossGat.stall_rects`).
+- `systems/boss_gat.gd`; `tests/test_boss_gat.gd` covers the basket holding through its telegraph and then tipping, El Gat turning to the yarn with his back to her, the tail tug, the chase running out into wool with a cooldown, the leash tipping the other basket, and a basket tipping only once.
+
 ## 2026-11-15 - Els Lleons' arena: the harbor crane's cargo net
 
 - A portal crane stands on the coping by the lions' plinths, its jib out over the boardwalk and a cargo net of fish crates hanging from the hook. The net's trip rope runs across the boards to a cleat post. Wind the leash round the post and haul it taut (the real rope's contact and stretch) and, while the lions fight, the crane creaks, the load swings and its shadow gathers into a warning ring for 0.8 s; then the net drops. A lion under it is pinned: 18 damage, a 3.6 s daze, "netted! +12", and his nose takes a boop. A lion outside it is untouched. The crane hauls the net back up once he is out, and it can be pulled again 8 s later.
