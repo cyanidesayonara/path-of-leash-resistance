@@ -164,6 +164,17 @@ static func solids(_m: Node2D) -> Array[Rect2]:
 	return out
 
 
+# No tufts under the arena's furniture: the chair stacks and the jetty's
+# shore boards are drawn on the ground layer, so grass would grow over them.
+static func grass_blocked(_m: Node2D, p: Vector2) -> bool:
+	if BossMamut.JETTY.grow(10.0).has_point(p):
+		return true
+	for c: Vector2 in BossMamut.CHAIR_STACKS:
+		if absf(p.x - c.x) < 26.0 and p.y > c.y - 34.0 and p.y < c.y + 24.0:
+			return true
+	return false
+
+
 static func surface(m: Node2D, p: Vector2) -> int:
 	if p.y <= float(m.GATE_Y):
 		return -1
