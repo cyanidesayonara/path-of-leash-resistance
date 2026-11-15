@@ -107,6 +107,27 @@ const LOOSE_R := 22.0
 const RIDE_FROM := 110.0
 const RIDE_SPEED := 520.0
 const RIDE_TIME := 0.6
+# Serpentine benches flanking the stair terraces (docs/BOSSES.md, the arenas):
+# chase El Drac along a curve and he panics onto the glazed seat (BENCH_WARN),
+# then grinds to a stop in its tight end bend for damage, sparks, and a daze.
+const BENCH_CHASE_R := 185.0
+const BENCH_NEAR_R := 145.0
+const BENCH_WARN := 0.8
+const BENCH_RUN_TIME := 0.65
+const BENCH_DAMAGE := 16.0
+const BENCH_STUN := 2.4
+const BENCH_COOLDOWN := 2.0
+const BENCH_PAY := 6
+const BENCH_HERD_SPEED := 90.0
+# Each stair serpentine bench is an ordered spine of control points: both ends
+# curl sharply inward from the terrace grotto walls into tight U-bends, clear
+# of the three spout mouths/tiles and the salamander plinth.
+const STAIR_BENCHES: Array = [
+	[Vector2(422.0, -918.0), Vector2(368.0, -960.0), Vector2(392.0, -1025.0), Vector2(368.0, -1090.0), Vector2(422.0, -1132.0)],
+	[Vector2(868.0, -905.0), Vector2(918.0, -952.0), Vector2(892.0, -1018.0), Vector2(918.0, -1084.0), Vector2(868.0, -1132.0)],
+	[Vector2(424.0, -578.0), Vector2(374.0, -602.0), Vector2(356.0, -632.0), Vector2(374.0, -662.0), Vector2(424.0, -686.0)],
+	[Vector2(856.0, -578.0), Vector2(906.0, -602.0), Vector2(924.0, -632.0), Vector2(906.0, -662.0), Vector2(856.0, -686.0)],
+]
 const STONE := Color(0.72, 0.64, 0.50)
 const STONE_DARK := Color(0.50, 0.43, 0.33)
 
@@ -138,7 +159,7 @@ const CURL := 2.3
 
 enum State {
 	IDLE, AWAKEN, ENRAGE, PROWL, TAIL_WHIP, JET, SLITHER,
-	STUNNED, RETREAT, STAND, WRAPPED, SLIDE, CONTENT,
+	BENCH_WARN, BENCH_RUN, STUNNED, RETREAT, STAND, WRAPPED, SLIDE, CONTENT,
 }
 
 var state: State = State.IDLE
@@ -197,6 +218,13 @@ var loose_taught := false
 var riding: Dictionary = {}
 var rides := 0
 var ride_dodges := 0
+var bench_pts: Array[Vector2] = []
+var bench_from := Vector2.ZERO
+var bench_entry := Vector2.ZERO
+var bench_bend := Vector2.ZERO
+var bench_cd := 0.0
+var bench_stops := 0
+var bench_spark_t := 0.0
 
 
 func setup(m: Node2D) -> void:
@@ -241,6 +269,13 @@ func setup(m: Node2D) -> void:
 	riding = {}
 	rides = 0
 	ride_dodges = 0
+	bench_pts.clear()
+	bench_from = Vector2.ZERO
+	bench_entry = Vector2.ZERO
+	bench_bend = Vector2.ZERO
+	bench_cd = 0.0
+	bench_stops = 0
+	bench_spark_t = 0.0
 	place_spouts(Vector2(LANDING.x - 410.0, LANDING.x + 410.0))
 
 
@@ -351,6 +386,10 @@ func status() -> String:
 			return "WATCH THE JET!" if near else ""
 		State.SLITHER:
 			return "WIND HIM ROUND A COLUMN" if near else ""
+		State.BENCH_WARN:
+			return "HE'S BOLTING ALONG THE BENCH!"
+		State.BENCH_RUN:
+			return "GRIND TO THE BEND!"
 		State.RETREAT:
 			return "AFTER HIM! TO HIS STEPS"
 		State.STAND:
@@ -420,6 +459,15 @@ func transition_to(s: State) -> void:
 			slither_dir = face_dir.normalized() if face_dir.length_squared() > 0.01 else Vector2.RIGHT
 			chip_t = 0.0
 			_shed_chip()
+		State.BENCH_WARN:
+			state_t = BENCH_WARN
+			Sfx.play("drac_click", 1.35, -3.0)
+			if main != null and main.feed != null:
+				main.feed.say("HE'S BOLTING ALONG THE BENCH!", EventFeed.Tone.GOOD)
+		State.BENCH_RUN:
+			state_t = BENCH_RUN_TIME
+			Sfx.play("grit", 1.15, -2.0)
+			Sfx.play("whoop", 1.15, -6.0)
 		State.STUNNED:
 			state_t = STUN_TIME
 		State.RETREAT:
@@ -729,7 +777,7 @@ func _tick_spouts(delta: float) -> void:
 # last stand it chokes his own jet. Returns whether it counted.
 func _soak(k: int) -> bool:
 	match state:
-		State.PROWL, State.TAIL_WHIP, State.JET, State.SLITHER:
+		State.PROWL, State.TAIL_WHIP, State.JET, State.SLITHER, State.BENCH_WARN:
 			spout_hits += 1
 			damage(SPOUT_DAMAGE)
 			Sfx.play("splash", 0.8, -2.0)
@@ -753,8 +801,161 @@ func _soak(k: int) -> bool:
 
 
 func _clamp_hall() -> void:
+	if slither_from.y >= LevelBuild.MOSAIC_STAIR_Y1:
+		var e: Vector2 = main.walk_edges(pos.y) if main != null and main.has_method("walk_edges") else Vector2(320.0, 960.0)
+		pos.x = clampf(pos.x, e.x + 42.0, e.y - 42.0)
+		pos.y = clampf(pos.y, LevelBuild.MOSAIC_STAIR_Y1 + 60.0, LevelBuild.MOSAIC_STAIR_Y0 - 40.0)
+		return
 	pos.x = clampf(pos.x, LevelBuild.MOSAIC_HALL_COLS[0], LevelBuild.MOSAIC_HALL_COLS[LevelBuild.MOSAIC_HALL_COLS.size() - 1])
 	pos.y = clampf(pos.y, LevelBuild.MOSAIC_HALL_Y1 + 40.0, LevelBuild.MOSAIC_HALL_Y0 - 40.0)
+
+
+func _smooth_bench(raw: Array, sub: int = 4) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	var n := raw.size()
+	if n < 2:
+		for q in raw:
+			out.append(q as Vector2)
+		return out
+	for i in range(n - 1):
+		var p0: Vector2 = raw[maxi(i - 1, 0)]
+		var p1: Vector2 = raw[i]
+		var p2: Vector2 = raw[i + 1]
+		var p3: Vector2 = raw[mini(i + 2, n - 1)]
+		for s in range(sub):
+			var u := float(s) / float(sub)
+			out.append(p1.cubic_interpolate(p2, p0, p3, u))
+	out.append(raw[n - 1] as Vector2)
+	return out
+
+
+# Order a serpentine bench spine so index 0 is the entry closest to `at` and
+# the far end (`bench_bend`) is farther from `dog_p`.
+func _bench_run_for(at: Vector2, dog_p: Vector2) -> Dictionary:
+	var best_dist := INF
+	var best_pts: Array[Vector2] = []
+	for raw in STAIR_BENCHES:
+		var pts := _smooth_bench(raw as Array, 4)
+		for i in range(pts.size() - 1):
+			var cp := Geometry2D.get_closest_point_to_segment(at, pts[i], pts[i + 1])
+			var d := at.distance_to(cp)
+			if d < best_dist:
+				best_dist = d
+				best_pts = pts
+	if main != null and main.lvl == "guell" and at.y < LevelBuild.MOSAIC_HALL_Y1:
+		for by: float in [-2850.0, -3150.0, -3450.0]:
+			var e0: Vector2 = main.walk_edges(by + 110.0)
+			var e1: Vector2 = main.walk_edges(by)
+			var e2: Vector2 = main.walk_edges(by - 110.0)
+			for side_l: bool in [true, false]:
+				var x0: float = e0.x + 36.0 if side_l else e0.y - 36.0
+				var x1: float = e1.x + 28.0 if side_l else e1.y - 28.0
+				var x2: float = e2.x + 36.0 if side_l else e2.y - 36.0
+				var cand: Array[Vector2] = [Vector2(x0, by + 110.0), Vector2(x1, by), Vector2(x2, by - 110.0)]
+				for i in range(cand.size() - 1):
+					var cp := Geometry2D.get_closest_point_to_segment(at, cand[i], cand[i + 1])
+					var d := at.distance_to(cp)
+					if d < best_dist:
+						best_dist = d
+						best_pts = cand
+	if best_pts.is_empty() or best_dist > BENCH_NEAR_R:
+		return {}
+	# Chase him away from the dog along the bench toward the far bend.
+	if dog_p.distance_to(best_pts[0]) > dog_p.distance_to(best_pts[best_pts.size() - 1]):
+		best_pts.reverse()
+	return {"pts": best_pts, "dist": best_dist}
+
+
+func _sample_bench(pts: Array[Vector2], u: float) -> Vector2:
+	if pts.is_empty():
+		return pos
+	if pts.size() == 1 or u <= 0.0:
+		return pts[0]
+	if u >= 1.0:
+		return pts[pts.size() - 1]
+	var total := 0.0
+	var lens: Array[float] = []
+	for i in range(pts.size() - 1):
+		var seg := pts[i].distance_to(pts[i + 1])
+		lens.append(seg)
+		total += seg
+	if total < 0.01:
+		return pts[pts.size() - 1]
+	var want := u * total
+	var acc := 0.0
+	for i in range(lens.size()):
+		if acc + lens[i] >= want or i == lens.size() - 1:
+			var f := clampf((want - acc) / maxf(lens[i], 0.001), 0.0, 1.0)
+			return pts[i].lerp(pts[i + 1], f)
+		acc += lens[i]
+	return pts[pts.size() - 1]
+
+
+func check_bench_chase() -> bool:
+	if main == null or (state != State.PROWL and state != State.SLITHER):
+		return false
+	if bench_cd > 0.0 or hp <= 0.0:
+		return false
+	var dog_p: Vector2 = main.dog.global_position
+	var dog_v: Vector2 = main.dog.velocity
+	var dist := dog_p.distance_to(pos)
+	if dist > BENCH_CHASE_R:
+		return false
+	var chasing := dog_v.length() > 60.0 and dog_v.normalized().dot((pos - dog_p).normalized()) > 0.25
+	if not chasing and dist > 95.0:
+		return false
+	var run := _bench_run_for(pos, dog_p)
+	if run.is_empty():
+		return false
+	bench_pts = run["pts"]
+	bench_from = pos
+	bench_entry = bench_pts[0]
+	bench_bend = bench_pts[bench_pts.size() - 1]
+	transition_to(State.BENCH_WARN)
+	return true
+
+
+func _grind_stop_at_bend() -> void:
+	pos = bench_bend
+	if bench_pts.size() >= 2:
+		face_dir = (bench_bend - bench_pts[bench_pts.size() - 2]).normalized()
+	update_leg_positions()
+	bench_stops += 1
+	bench_spark_t = 0.6
+	bench_cd = BENCH_COOLDOWN
+	flash = 0.5
+	damage(BENCH_DAMAGE)
+	Sfx.play("crack", 0.72, -1.0)
+	Sfx.play("head_bump", 1.15, -3.0)
+	main.combo.add("BENCH", BENCH_PAY)
+	main.award_points(BENCH_PAY, "ground to a stop! +%d" % BENCH_PAY)
+	main.feed.say("GROUND TO A STOP IN THE BEND!", EventFeed.Tone.LOUD)
+	main.shake_t = maxf(float(main.shake_t), 0.85)
+	transition_to(State.STUNNED)
+	state_t = BENCH_STUN
+
+
+func _skitter_from_dog(dog_p: Vector2, delta: float) -> void:
+	var away := pos - dog_p
+	if away.length_squared() < 1.0:
+		away = Vector2.RIGHT
+	away = away.normalized()
+	pos += away * BENCH_HERD_SPEED * delta
+	var e: Vector2 = main.walk_edges(pos.y) if main != null and main.has_method("walk_edges") else Vector2(320.0, 960.0)
+	pos.x = clampf(pos.x, e.x + 42.0, e.y - 42.0)
+	pos.y = clampf(pos.y, LevelBuild.MOSAIC_STAIR_Y1 + 70.0, LevelBuild.MOSAIC_STAIR_Y0 - 40.0)
+	# Keep clear of the salamander island center so herding flows round it.
+	var isl := Rect2(LevelBuild.MOSAIC_SALAMANDER - LevelBuild.MOSAIC_SALAMANDER_SIZE * 0.5 - Vector2(28.0, 28.0),
+		LevelBuild.MOSAIC_SALAMANDER_SIZE + Vector2(56.0, 56.0))
+	if isl.has_point(pos):
+		var c := isl.get_center()
+		var out := pos - c
+		if absf(out.x) >= absf(out.y) * 0.6:
+			pos.x = isl.position.x if out.x < 0.0 else isl.end.x
+		else:
+			pos.y = isl.position.y if out.y < 0.0 else isl.end.y
+	face_dir = away
+	update_leg_positions()
 
 
 func update_leg_tangle() -> void:
@@ -807,6 +1008,8 @@ func tick_state(delta: float) -> void:
 	_hold_human()
 	_expire_zones()
 	flash = maxf(0.0, flash - delta * 3.0)
+	bench_cd = maxf(0.0, bench_cd - delta)
+	bench_spark_t = maxf(0.0, bench_spark_t - delta)
 	if fountain_t >= 0.0:
 		fountain_t += delta
 	var dog_p: Vector2 = main.dog.global_position
@@ -852,7 +1055,11 @@ func tick_state(delta: float) -> void:
 			var d := dog_p.distance_to(pos)
 			var behind := absf((-face_dir).angle_to(dog_p - pos)) < REAR_CONE
 			var front := absf(face_dir.angle_to(dog_p - pos)) < FRONT_CONE
-			if phase == 2 and slither_cd <= 0.0:
+			var dog_v: Vector2 = main.dog.velocity
+			var chasing := dog_v.length() > 60.0 and dog_v.normalized().dot((pos - dog_p).normalized()) > 0.25
+			if check_bench_chase():
+				return
+			elif phase == 2 and slither_cd <= 0.0:
 				slither_cd = SLITHER_COOLDOWN
 				transition_to(State.SLITHER)
 			elif d < TAIL_TRIGGER and behind and tail_cd <= 0.0:
@@ -861,6 +1068,8 @@ func tick_state(delta: float) -> void:
 			elif d < JET_LEN and front and jet_cd <= 0.0:
 				jet_cd = JET_COOLDOWN
 				transition_to(State.JET)
+			elif chasing and d < 170.0:
+				_skitter_from_dog(dog_p, delta)
 		State.TAIL_WHIP:
 			state_t -= delta
 			if state_t <= 0.0:
@@ -899,8 +1108,33 @@ func tick_state(delta: float) -> void:
 			if check_trip():
 				_hit("trip")
 				return
+			if check_bench_chase():
+				return
 			if state_t >= SLITHER_TIME:
 				transition_to(State.PROWL)
+		State.BENCH_WARN:
+			state_t -= delta
+			pos = pos.lerp(bench_entry, clampf(delta * 9.0, 0.0, 1.0))
+			if bench_pts.size() >= 2:
+				_turn_to(bench_pts[1], delta * 6.0)
+			update_leg_positions()
+			if state_t <= 0.0:
+				transition_to(State.BENCH_RUN)
+		State.BENCH_RUN:
+			state_t -= delta
+			var k := clampf(1.0 - state_t / BENCH_RUN_TIME, 0.0, 1.0)
+			var next_p := _sample_bench(bench_pts, pow(k, 0.85))
+			var seg := next_p - pos
+			if seg.length_squared() > 0.25:
+				face_dir = seg.normalized()
+			pos = next_p
+			update_leg_positions()
+			loose_t += delta
+			if loose_t >= LOOSE_EVERY * 0.6:
+				loose_t = 0.0
+				shed_loose()
+			if state_t <= 0.0:
+				_grind_stop_at_bend()
 		State.STUNNED:
 			# empty HP: leave the daze for the retreat remap through PROWL
 			if hp <= 0.0:
@@ -1114,6 +1348,71 @@ func draw_warnings(b: ShapeBatch, t: float) -> void:
 			b.line(cp - side * 0.6 - face_dir * 9.0, cp, cc, 2.5)
 			b.line(cp + side * 0.6 - face_dir * 9.0, cp, cc, 2.5)
 			d += 60.0
+	elif state == State.BENCH_WARN and bench_pts.size() >= 2:
+		var fill := 1.0 - clampf(state_t / BENCH_WARN, 0.0, 1.0)
+		for i in range(bench_pts.size() - 1):
+			b.capsule(bench_pts[i], bench_pts[i + 1], 11.0, Color(1.0, 0.72, 0.16, 0.22 + 0.14 * pulse))
+			b.capsule(bench_pts[i], bench_pts[i + 1], 2.0, Color(1.0, 0.86, 0.34, 0.75))
+		for k in range(1, 5):
+			var u := fmod(float(k) * 0.22 + t * 1.4, 0.92)
+			var p := _sample_bench(bench_pts, u)
+			var fw := (_sample_bench(bench_pts, minf(1.0, u + 0.05)) - p).normalized()
+			var sd := fw.orthogonal()
+			b.line(p - fw * 8.0 - sd * 7.0, p, Color(1.0, 0.96, 0.62, 0.85), 2.5)
+			b.line(p - fw * 8.0 + sd * 7.0, p, Color(1.0, 0.96, 0.62, 0.85), 2.5)
+		_ring(b, bench_bend, 28.0 * maxf(0.25, fill), Color(1.0, 0.84, 0.24, 0.85), 3.0)
+		_ring(b, bench_bend, 32.0 + pulse * 4.0, Color(1.0, 0.56, 0.16, 0.75), 2.5)
+	elif state == State.BENCH_RUN and bench_pts.size() >= 2:
+		var prog := clampf(1.0 - state_t / BENCH_RUN_TIME, 0.0, 1.0)
+		var prev := bench_pts[0]
+		for k in range(1, 7):
+			var cur := _sample_bench(bench_pts, prog * float(k) / 6.0)
+			b.line(prev, cur, Color(1.0, 0.84, 0.36, 0.45 * float(k) / 6.0), 10.0)
+			prev = cur
+
+
+func _draw_stair_benches(b: ShapeBatch, vt: float, vb: float) -> void:
+	for b_idx in range(STAIR_BENCHES.size()):
+		var pts := _smooth_bench(STAIR_BENCHES[b_idx] as Array, 4)
+		var y0 := float(pts[0].y)
+		var y1 := float(pts[pts.size() - 1].y)
+		if maxf(y0, y1) < vt - 40.0 or minf(y0, y1) > vb + 40.0:
+			continue
+		var wall_side := -1.0 if pts[pts.size() / 2].x < 640.0 else 1.0
+		var n := pts.size()
+		var norms: Array[Vector2] = []
+		for i in range(n):
+			var d := (pts[mini(i + 1, n - 1)] - pts[maxi(i - 1, 0)]).normalized()
+			var nrm := d.orthogonal()
+			if nrm.x * wall_side < 0.0:
+				nrm = -nrm
+			norms.append(nrm)
+		for i in range(n - 1):
+			b.capsule(pts[i] + Shade.light * 6.0, pts[i + 1] + Shade.light * 6.0, 11.5, SHADOW)
+		for i in range(n - 1):
+			b.capsule(pts[i], pts[i + 1], 10.5, INK)
+		for i in range(n - 1):
+			b.capsule(pts[i], pts[i + 1], 8.6, GROUT)
+		for i in range(n - 1):
+			var n0: Vector2 = norms[i]
+			var n1: Vector2 = norms[i + 1]
+			var q0 := pts[i] - n0 * 7.2
+			var q1 := pts[i + 1] - n1 * 7.2
+			var q2 := pts[i + 1] + n1 * 2.4
+			var q3 := pts[i] + n0 * 2.4
+			var tc: Color = TILES[(b_idx * 5 + i) % TILES.size()]
+			b.quad(q0, q1, q2, q3, tc)
+			# crisp ink seam every third shard so it reads as glazed trencadis courses
+			if i % 2 == 0:
+				b.line(q0.lerp(q1, 0.5), q3.lerp(q2, 0.5), GROUT, 1.4)
+		for i in range(n - 1):
+			b.capsule(pts[i] + norms[i] * 5.2, pts[i + 1] + norms[i + 1] * 5.2, 3.0, TILE_WHITE)
+		for ep: Vector2 in [pts[0], pts[n - 1]]:
+			b.circle(ep + Shade.light * 4.0, 13.0, SHADOW)
+			b.circle(ep, 13.0, INK)
+			b.circle(ep, 11.0, GROUT)
+			b.circle(ep, 6.8, TILE_YELLOW)
+			b.circle(ep - Shade.light * 1.5, 3.2, TILE_WHITE)
 
 
 # The spouts and their tiles, under him: each tile a square of trencadis in
@@ -1122,6 +1421,7 @@ func draw_warnings(b: ShapeBatch, t: float) -> void:
 # a filling spout gurgles at the mouth and marks its lane, filling as the
 # warning runs out, the way his own jet does.
 func draw_spouts(b: ShapeBatch, t: float, vt: float, vb: float) -> void:
+	_draw_stair_benches(b, vt, vb)
 	var pulse := sin(t * 16.0) * 0.5 + 0.5
 	var live := in_fight() and state != State.AWAKEN
 	for k in range(spout_at.size()):
@@ -1287,6 +1587,18 @@ func _pose(t: float) -> Dictionary:
 			o["tail_wag"] = 1.5
 			o["tail_phase"] = state_t * SLITHER_WAVE * 2.0
 			o["step"] = t * 16.0
+		State.BENCH_WARN:
+			o["wave"] = 7.0
+			o["phase"] = t * 22.0
+			o["tail_wag"] = 1.3
+			o["tail_phase"] = t * 18.0
+			o["step"] = t * 18.0
+		State.BENCH_RUN:
+			o["wave"] = 11.0
+			o["phase"] = t * 28.0
+			o["tail_wag"] = 1.6
+			o["tail_phase"] = t * 24.0
+			o["step"] = t * 24.0
 		State.STUNNED:
 			o["dazed"] = true
 			o["wave"] = 0.0
@@ -1345,6 +1657,15 @@ func draw_drac(b: ShapeBatch, t: float) -> void:
 			b.circle(sp, 4.4, Color(1.0, 0.92, 0.42))
 			b.line(sp - Vector2(6.0, 0.0), sp + Vector2(6.0, 0.0), Color(1.0, 0.98, 0.80), 1.6)
 			b.line(sp - Vector2(0.0, 6.0), sp + Vector2(0.0, 6.0), Color(1.0, 0.98, 0.80), 1.6)
+	if bench_spark_t > 0.0:
+		var sa := clampf(bench_spark_t / 0.6, 0.0, 1.0)
+		for k in range(8):
+			var ang := float(k) * TAU / 8.0 + (1.0 - sa) * 1.4
+			var r0 := 14.0 + (1.0 - sa) * 26.0
+			var p0 := bench_bend + Vector2.from_angle(ang) * r0
+			var p1 := bench_bend + Vector2.from_angle(ang) * (r0 + 14.0 * sa)
+			b.line(p0, p1, Color(1.0, 0.82, 0.24, sa), 3.0)
+			b.circle(p1, 2.5 * sa, Color(1.0, 0.96, 0.72, sa))
 
 
 # the fountain jet: a hard rope of water down the lane, breaking up as it
