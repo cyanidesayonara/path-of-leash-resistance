@@ -97,6 +97,37 @@ const BOOP_REACH := 65.0
 const LEG_MEMORY := 2.0
 const LEGS_TO_TIE := 2        # 1 leg on each lion
 
+# --- The arena: the harbor crane's cargo net (docs/BOSSES.md, the arenas) ----
+# A portal crane on the coping swings its jib out over the boardwalk, a cargo
+# net hanging from the hook. The net's trip rope runs down across the boards
+# to a cleat post. Wind the leash round the post and haul it taut (the real
+# rope's contact and stretch, nothing else) and the crane creaks, the load
+# swings and its shadow gathers on the ground for NET_WARN; then the net
+# drops, and a lion under it is pinned: damage and a daze. The crane hauls it
+# back up once he is out, and it can be pulled again after NET_RELOAD.
+const CRANE_BASE := Vector2(900.0, -4300.0)
+const CRANE_HALF := 24.0
+const NET_C := Vector2(664.0, -4300.0)        # under the hook, where it lands
+const NET_R := 66.0                           # the ground it covers
+const NET_POST := Vector2(536.0, -4210.0)     # the cleat its trip rope is made fast to
+const NET_PULL_TAUT := 0.6                    # leash taut amount that hauls it
+const NET_PULL_HOLD := 0.2                    # held that long: the trip lets go
+const NET_WARN := 0.8
+const NET_DAMAGE := 18.0
+const NET_STUN := 3.6
+const NET_HOIST := 1.4
+const NET_RELOAD := 8.0
+const NET_HANG := 80.0                       # how high the load hangs, for its shadow
+const CRANE_RED := Color(0.66, 0.24, 0.16)
+const CRANE_DARK := Color(0.36, 0.14, 0.10)
+const CRANE_CAB := Color(0.86, 0.84, 0.76)
+const NET_ROPE := Color(0.76, 0.66, 0.48)
+const NET_ROPE_DARK := Color(0.45, 0.37, 0.25)
+const NET_FLOAT := Color(0.92, 0.35, 0.15)
+const CRATE := Color(0.66, 0.50, 0.32)
+
+enum Net { UP, WARN, DOWN, HOIST }
+
 enum State {
 	IDLE, AWAKEN, PROWL,
 	PINCER_WARN, PINCER_STRIKE,
@@ -181,6 +212,14 @@ var card: Control = null
 var dust_rings: Array[Dictionary] = []
 var sparks: Array[Dictionary] = []
 
+var net: Net = Net.UP
+var net_t := 0.0                # time in the net's state
+var net_cd := 0.0               # after a hoist, until it can be pulled again
+var net_pull_t := 0.0           # how long the trip rope has been hauled
+var net_hauled := false         # the leash on the post and taut, this tick
+var net_pins := 0               # lions pinned, over the fight
+var stun_net := false           # the daze is the net's, not a head bump
+
 
 func setup(m: Node2D) -> void:
 	main = m
@@ -197,6 +236,13 @@ func setup(m: Node2D) -> void:
 	hold_noticed = false
 	legs_tied = 0
 	leg_touch_t = [-INF, -INF]
+	net = Net.UP
+	net_t = 0.0
+	net_cd = 0.0
+	net_pull_t = 0.0
+	net_hauled = false
+	net_pins = 0
+	stun_net = false
 
 	lion_a.pos = PLINTH_L
 	lion_a.face_dir = Vector2.DOWN
@@ -268,6 +314,7 @@ func tick_state(delta: float) -> void:
 	act_t += delta
 	_update_fx(delta)
 	update_leg_positions()
+	_tick_net(delta)
 
 	match state:
 		State.IDLE:
@@ -550,6 +597,7 @@ func _trigger_head_bump() -> void:
 			"col": BRONZE_SHINE,
 		})
 
+	stun_net = false
 	lion_a.dazed = BUMP_STUN
 	lion_b.dazed = BUMP_STUN
 	lion_a.booped = false
@@ -629,13 +677,101 @@ func _tick_content(_delta: float) -> void:
 			FP.play(main, load(FILM_WIN))
 
 
+# --- The cargo net -------------------------------------------------------------
+
+# The net can be tripped while they fight, not before they wake or once they
+# have gone back to their plinths.
+func net_live() -> bool:
+	match state:
+		State.PROWL, State.PINCER_WARN, State.PINCER_STRIKE, State.ROAR_WARN, \
+				State.ROAR_BLAST, State.RUSH_WARN, State.RUSH_CHARGE, State.STUNNED:
+			return true
+	return false
+
+
+# The leash resting on the trip rope's post and pulled taut: read off the one
+# verlet rope, its contact and its stretch.
+func rope_hauled() -> bool:
+	var lsh = main.leash
+	if lsh == null or not lsh.touches(NET_POST):
+		return false
+	return lsh.taut_amount(lsh.used_length() / maxf(lsh.rest_len, 1.0)) >= NET_PULL_TAUT
+
+
+func lion_under_net(lion: Dictionary) -> bool:
+	return (lion.pos as Vector2).distance_to(NET_C) <= NET_R
+
+
+func _tick_net(delta: float) -> void:
+	net_t += delta
+	net_hauled = main.leash != null and rope_hauled()
+	match net:
+		Net.UP:
+			net_cd = maxf(0.0, net_cd - delta)
+			if net_hauled and net_cd <= 0.0 and net_live():
+				net_pull_t += delta
+				if net_pull_t >= NET_PULL_HOLD:
+					_net_to(Net.WARN)
+					_sfx("intro_taut", 0.7, -3.0)
+					_sfx("groan", 1.7, -6.0)
+					main.float_text(NET_C + Vector2(0.0, -70.0), "creeeak", Color(0.95, 0.88, 0.70))
+					main.feed.say("THE NET! GET A LION UNDER IT", EventFeed.Tone.PLAIN)
+			else:
+				net_pull_t = 0.0
+		Net.WARN:
+			if net_t >= NET_WARN:
+				_drop_net()
+		Net.DOWN:
+			# hauled back up once whoever it caught is out from under it
+			var held := state == State.STUNNED and stun_net and (float(lion_a.dazed) > 0.0 or float(lion_b.dazed) > 0.0)
+			if net_t >= 1.0 and not held:
+				_net_to(Net.HOIST)
+				_sfx("intro_taut", 1.2, -8.0)
+		Net.HOIST:
+			if net_t >= NET_HOIST:
+				_net_to(Net.UP)
+				net_cd = NET_RELOAD
+
+
+func _net_to(n: Net) -> void:
+	net = n
+	net_t = 0.0
+	net_pull_t = 0.0
+
+
+func _drop_net() -> void:
+	_net_to(Net.DOWN)
+	_sfx("drum", 0.4, 0.0)
+	_sfx("crack", 0.7, -4.0)
+	main.shake_t = maxf(float(main.shake_t), 0.5)
+	main.float_text(NET_C + Vector2(0.0, -40.0), "THWUMP", Color(0.95, 0.88, 0.70))
+	var pinned: Array[Dictionary] = []
+	for lion: Dictionary in [lion_a, lion_b]:
+		if lion_under_net(lion):
+			pinned.append(lion)
+	if pinned.is_empty():
+		return
+	for lion: Dictionary in pinned:
+		lion.dazed = maxf(float(lion.dazed), NET_STUN)
+		lion.booped = false
+	net_pins += pinned.size()
+	stun_net = true
+	if state != State.STUNNED:
+		transition_to(State.STUNNED)
+	var pay := 12 * pinned.size()
+	main.award_points(pay, "netted! +%d" % pay)
+	main.feed.say("NETTED! BOOP HIM WHILE HE'S DOWN" if pinned.size() == 1 else "NETTED BOTH! BOOP THEM", EventFeed.Tone.LOUD)
+	_take_damage(NET_DAMAGE * float(pinned.size()))
+
+
 func on_bark_action(bark_pos: Vector2) -> bool:
 	if state == State.STUNNED:
 		var hit := false
-		if not lion_a.booped and bark_pos.distance_to(lion_a.pos + lion_a.face_dir * HEAD_R) < BOOP_REACH:
+		# only a dazed lion stands still for a boop: the net may hold just one
+		if not lion_a.booped and float(lion_a.dazed) > 0.0 and bark_pos.distance_to(lion_a.pos + lion_a.face_dir * HEAD_R) < BOOP_REACH:
 			lion_a.booped = true
 			hit = true
-		if not lion_b.booped and bark_pos.distance_to(lion_b.pos + lion_b.face_dir * HEAD_R) < BOOP_REACH:
+		if not lion_b.booped and float(lion_b.dazed) > 0.0 and bark_pos.distance_to(lion_b.pos + lion_b.face_dir * HEAD_R) < BOOP_REACH:
 			lion_b.booped = true
 			hit = true
 		if hit:
@@ -706,6 +842,8 @@ func status() -> String:
 		State.RUSH_WARN:
 			return "CROSSING RUSH! TRICK THEM INTO COLLIDING!"
 		State.STUNNED:
+			if stun_net:
+				return Prompts.fill("NETTED! {bark} AT HIS NOSE!")
 			return Prompts.fill("HEAD BUMP! {bark} AT THEIR NOSES!")
 		State.STAND:
 			return "LOOP LEASH AROUND BOTH PLINTHS  %d/%d" % [legs_tied, LEGS_TO_TIE]
@@ -730,6 +868,7 @@ func draw(wc: ShapeBatch, vt: float, vb: float) -> void:
 
 	_draw_plinth(wc, PLINTH_L, lion_a)
 	_draw_plinth(wc, PLINTH_R, lion_b)
+	_draw_net_ground(wc, t)
 
 	if state == State.PINCER_WARN:
 		_draw_pincer_warning(wc, t)
@@ -745,6 +884,7 @@ func draw(wc: ShapeBatch, vt: float, vb: float) -> void:
 	else:
 		_draw_lion(wc, lion_b, t)
 		_draw_lion(wc, lion_a, t)
+	_draw_net_overhead(wc, t)
 	_draw_marks(wc, t)
 
 	for sp: Dictionary in sparks:
@@ -752,6 +892,163 @@ func draw(wc: ShapeBatch, vt: float, vb: float) -> void:
 		var col: Color = sp.col
 		col.a = minf(k * 2.0, 1.0)
 		wc.line(sp.pos, (sp.pos as Vector2) - (sp.vel as Vector2) * 0.05, col, 3.0 * k + 1.0)
+
+
+# The crane's feet on the coping, the jib's shadow over the boards, the trip
+# rope's post, and the load's shadow: all on the ground, under the lions. In
+# the warning the shadow gathers under the hook and the ring it will cover
+# fills, like every other warning in the fight.
+func _draw_net_ground(b: ShapeBatch, t: float) -> void:
+	var sh := Shade.light * NET_HANG
+	var jib_end := NET_C + Vector2(-14.0, 0.0)
+	b.line(CRANE_BASE + sh * 0.9, jib_end + sh, Color(SHADOW.r, SHADOW.g, SHADOW.b, 0.14), 16.0)
+	for c: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
+		var lp := CRANE_BASE + c * CRANE_HALF
+		b.rect(Rect2(lp - Vector2(7, 7) + Shade.light * 5.0, Vector2(14, 14)), SHADOW)
+		b.rect(Rect2(lp - Vector2(7, 7), Vector2(14, 14)), CRANE_DARK)
+		b.rect(Rect2(lp - Vector2(5, 5), Vector2(10, 10)), CRANE_RED)
+	# the post, the trip rope's turns on it
+	b.circle(NET_POST + Shade.light * 6.0, 12.0, SHADOW)
+	b.circle(NET_POST, 10.5, Color(0.16, 0.18, 0.20))
+	b.circle(NET_POST + Vector2(-1.5, -2.0), 7.5, Color(0.32, 0.33, 0.34))
+	b.circle(NET_POST + Vector2(-2.5, -3.5), 3.0, Color(0.60, 0.58, 0.54, 0.6))
+	for k in range(3):
+		var a := 0.6 + float(k) * 0.7
+		b.line(NET_POST + Vector2.from_angle(a) * 9.0, NET_POST + Vector2.from_angle(a + 1.6) * 9.0, NET_ROPE, 2.4)
+	var pulse := 0.5 + 0.5 * sin(t * 8.0)
+	if net == Net.UP and net_cd <= 0.0 and net_live():
+		var col := Color(1.0, 0.90, 0.20, 0.9) if net_hauled else Color(0.98, 0.85, 0.30, 0.35 + 0.25 * pulse)
+		_ring(b, NET_POST, 20.0 + (0.0 if net_hauled else pulse * 3.0), col, 3.0)
+	match net:
+		Net.UP:
+			b.polygon(_ellipse(NET_C + sh, Vector2.RIGHT, 30.0, 26.0, 14), Color(SHADOW.r, SHADOW.g, SHADOW.b, 0.16))
+		Net.WARN:
+			var k := clampf(net_t / NET_WARN, 0.0, 1.0)
+			var at := (NET_C + sh).lerp(NET_C, k * k)
+			b.polygon(_ellipse(at, Vector2.RIGHT, lerpf(30.0, NET_R * 0.8, k), lerpf(26.0, NET_R * 0.8, k), 18),
+				Color(SHADOW.r, SHADOW.g, SHADOW.b, 0.16 + 0.26 * k))
+			b.circle(NET_C, NET_R * k, Color(WARN.r, WARN.g, WARN.b, 0.14 + 0.08 * pulse))
+			_ring(b, NET_C, NET_R, Color(1.0, 0.85, 0.40, 0.55 + 0.4 * pulse), 3.0)
+		Net.HOIST:
+			var k := clampf(net_t / NET_HOIST, 0.0, 1.0)
+			b.polygon(_ellipse(NET_C.lerp(NET_C + sh, k), Vector2.RIGHT, lerpf(NET_R * 0.8, 30.0, k), lerpf(NET_R * 0.8, 26.0, k), 14),
+				Color(SHADOW.r, SHADOW.g, SHADOW.b, 0.16))
+
+
+# Over the lions: the net (hanging from the hook, or spread on the ground over
+# whoever it caught), the trip rope across the boards, and the crane's cab
+# and jib above everything.
+func _draw_net_overhead(b: ShapeBatch, t: float) -> void:
+	var swing := Vector2(sin(t * 1.3) * 3.0, sin(t * 1.1) * 1.5)
+	if net == Net.WARN:
+		var k := clampf(net_t / NET_WARN, 0.0, 1.0)
+		var amp := 3.0 + 12.0 * k
+		swing = Vector2(sin(t * 11.0) * amp, sin(t * 8.0) * amp * 0.4)
+	var hung := NET_C + swing
+	var rope_from := hung
+	match net:
+		Net.DOWN:
+			_draw_net_spread(b, NET_C, NET_R, 0.0)
+			rope_from = NET_C + (NET_POST - NET_C).normalized() * NET_R
+		Net.HOIST:
+			var k := clampf(net_t / NET_HOIST, 0.0, 1.0)
+			_draw_net_spread(b, NET_C, lerpf(NET_R, 30.0, k), k)
+			rope_from = NET_C + (NET_POST - NET_C).normalized() * lerpf(NET_R, 30.0, k)
+		_:
+			_draw_net_bundle(b, hung)
+	# the trip rope: slack, it sags; hauled, it runs straight
+	var mid := rope_from.lerp(NET_POST, 0.5)
+	if not net_hauled and net != Net.WARN:
+		mid -= (NET_POST - rope_from).orthogonal().normalized() * 10.0
+	b.line(rope_from, mid, NET_ROPE_DARK, 3.6)
+	b.line(mid, NET_POST, NET_ROPE_DARK, 3.6)
+	b.line(rope_from, mid, NET_ROPE, 2.0)
+	b.line(mid, NET_POST, NET_ROPE, 2.0)
+	# the hoist line up to the jib's sheave
+	if net != Net.DOWN:
+		b.line(hung, NET_C + Vector2(-14.0, 0.0), Color(0.20, 0.20, 0.22), 1.6)
+	_draw_crane(b)
+
+
+# A portal crane seen from above: the cab on the legs, a lattice jib out over
+# the boards to the sheave the hook hangs from.
+func _draw_crane(b: ShapeBatch) -> void:
+	var tip := NET_C + Vector2(-14.0, 0.0)
+	var back := CRANE_BASE + Vector2(40.0, 0.0)
+	var w := 7.0
+	b.rect(Rect2(CRANE_BASE - Vector2(CRANE_HALF, CRANE_HALF) + Shade.light * 3.0, Vector2(CRANE_HALF, CRANE_HALF) * 2.0), SHADOW)
+	for s2: float in [-1.0, 1.0]:
+		b.line(back + Vector2(0.0, s2 * w), tip + Vector2(0.0, s2 * w * 0.6), CRANE_DARK, 4.0)
+		b.line(back + Vector2(0.0, s2 * w), tip + Vector2(0.0, s2 * w * 0.6), CRANE_RED, 2.4)
+	var n := 9
+	for i in range(n):
+		var u0 := float(i) / float(n)
+		var u1 := float(i + 1) / float(n)
+		var a0 := back.lerp(tip, u0)
+		var a1 := back.lerp(tip, u1)
+		var w0 := w * lerpf(1.0, 0.6, u0)
+		var w1 := w * lerpf(1.0, 0.6, u1)
+		var s0 := 1.0 if i % 2 == 0 else -1.0
+		b.line(a0 + Vector2(0.0, s0 * w0), a1 + Vector2(0.0, -s0 * w1), CRANE_DARK, 1.6)
+	b.circle(tip, 5.0, CRANE_DARK)
+	b.circle(tip, 3.0, Color(0.55, 0.55, 0.55))
+	# the counterweight behind, and the cab on the legs
+	b.rect(Rect2(back + Vector2(-4.0, -12.0), Vector2(18.0, 24.0)), Color(0.30, 0.30, 0.32))
+	var cab := Rect2(CRANE_BASE - Vector2(20.0, 16.0), Vector2(40.0, 32.0))
+	b.rect(cab.grow(2.0), CRANE_DARK)
+	b.rect(cab, CRANE_RED)
+	b.rect(Rect2(cab.position + Vector2(3.0, 3.0), Vector2(cab.size.x - 6.0, 4.0)), CRANE_RED.lightened(0.2))
+	b.rect(Rect2(cab.position + Vector2(4.0, 10.0), Vector2(12.0, 14.0)), CRANE_CAB)
+	b.rect(Rect2(cab.position + Vector2(5.0, 11.0), Vector2(10.0, 6.0)), Color(0.45, 0.62, 0.72))
+
+
+# The loaded net hanging from the hook: fish crates bundled in mesh, the four
+# slings drawn up to the hook ring.
+func _draw_net_bundle(b: ShapeBatch, c: Vector2) -> void:
+	var r := 30.0
+	b.polygon(_ellipse(c, Vector2.RIGHT, r + 2.0, r, 14), NET_ROPE_DARK)
+	b.rect(Rect2(c + Vector2(-22.0, -14.0), Vector2(22.0, 16.0)), CRATE.darkened(0.2))
+	b.rect(Rect2(c + Vector2(-21.0, -13.0), Vector2(20.0, 14.0)), CRATE)
+	b.rect(Rect2(c + Vector2(2.0, -8.0), Vector2(20.0, 18.0)), CRATE.darkened(0.25))
+	b.rect(Rect2(c + Vector2(3.0, -7.0), Vector2(18.0, 16.0)), CRATE.lightened(0.05))
+	b.rect(Rect2(c + Vector2(-12.0, 4.0), Vector2(18.0, 14.0)), CRATE.darkened(0.1))
+	_draw_mesh(b, c, r, Color(NET_ROPE.r, NET_ROPE.g, NET_ROPE.b, 0.6), 1.2, 11.0)
+	for a: float in [0.8, 2.4, 3.9, 5.5]:
+		b.line(c + Vector2.from_angle(a) * r, c, NET_ROPE, 2.0)
+	b.circle(c, 4.5, Color(0.20, 0.20, 0.22))
+	b.circle(c, 2.5, Color(0.55, 0.55, 0.55))
+
+
+# The net spread on the ground (k 0) or being drawn back together (k toward
+# 1): an open mesh, so whoever is under it shows through, corks on its rim.
+func _draw_net_spread(b: ShapeBatch, c: Vector2, r: float, k: float) -> void:
+	b.polygon(_ellipse(c, Vector2.RIGHT, r, r, 20), Color(NET_ROPE_DARK.r, NET_ROPE_DARK.g, NET_ROPE_DARK.b, 0.14))
+	_draw_mesh(b, c, r, Color(NET_ROPE.r, NET_ROPE.g, NET_ROPE.b, 0.9), 1.6, 12.0)
+	_ring(b, c, r, NET_ROPE_DARK, 3.4)
+	_ring(b, c, r, NET_ROPE, 1.8)
+	var corks := 10
+	for i in range(corks):
+		var a := TAU * float(i) / float(corks) + 0.2
+		b.circle(c + Vector2.from_angle(a) * r, 4.0 * (1.0 - k * 0.5), NET_FLOAT)
+	if k < 0.05:
+		# the crates it was carrying, spilled at its edge
+		for o: Vector2 in [Vector2(-0.9, 0.55), Vector2(0.95, 0.4), Vector2(0.2, -1.05)]:
+			var p := c + o * r
+			b.rect(Rect2(p - Vector2(10.0, 8.0), Vector2(20.0, 16.0)), CRATE.darkened(0.2))
+			b.rect(Rect2(p - Vector2(9.0, 7.0), Vector2(18.0, 14.0)), CRATE)
+			b.line(p + Vector2(-9.0, 0.0), p + Vector2(9.0, 0.0), CRATE.darkened(0.3), 1.2)
+
+
+# A diamond mesh clipped to a circle: two families of chords.
+func _draw_mesh(b: ShapeBatch, c: Vector2, r: float, col: Color, w: float, step: float) -> void:
+	for dir: Vector2 in [Vector2(1.0, 1.0).normalized(), Vector2(1.0, -1.0).normalized()]:
+		var nrm := dir.orthogonal()
+		var d := -r + fposmod(r, step)
+		while d < r:
+			var half := sqrt(maxf(r * r - d * d, 0.0))
+			if half > 2.0:
+				b.line(c + nrm * d - dir * half, c + nrm * d + dir * half, col, w)
+			d += step
 
 
 # The stone corner plinth and its bronze plaque; with the lion away, the worn
@@ -1166,7 +1463,7 @@ func _draw_marks(b: ShapeBatch, t: float) -> void:
 			_ring(b, leg_poles[k], LEG_RADIUS + 8.0 + (0.0 if held else pulse * 3.0), col, 3.0)
 	if state == State.STUNNED or state == State.SAT:
 		for lion: Dictionary in [lion_a, lion_b]:
-			if bool(lion.booped):
+			if bool(lion.booped) or (state == State.STUNNED and float(lion.dazed) <= 0.0):
 				continue
 			_ring(b, _nose_of(lion), 12.0 + pulse * 5.0, Color(1.0, 0.95, 0.55, 0.85 - 0.4 * pulse), 2.5)
 	if state == State.AWAKEN and act_t >= 2.8:

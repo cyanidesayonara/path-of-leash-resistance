@@ -192,6 +192,8 @@ static func solids(_m: Node2D) -> Array[Rect2]:
 		list.append(b)
 	list.append(Rect2(BossLleons.PLINTH_L - BossLleons.PLINTH_HALF, BossLleons.PLINTH_HALF * 2.0))
 	list.append(Rect2(BossLleons.PLINTH_R - BossLleons.PLINTH_HALF, BossLleons.PLINTH_HALF * 2.0))
+	# the harbor crane's legs on the coping, by the lions' arena
+	list.append(Rect2(BossLleons.CRANE_BASE - Vector2(BossLleons.CRANE_HALF, BossLleons.CRANE_HALF), Vector2(BossLleons.CRANE_HALF, BossLleons.CRANE_HALF) * 2.0))
 	return list
 
 
@@ -229,6 +231,8 @@ static func build(m: Node2D) -> Array:
 		m.poles.append(b)
 	for p: Vector2 in PALMS:
 		m.poles.append(p)
+	# the post the crane net's trip rope is made fast to: wind the leash on it
+	m.poles.append(BossLleons.NET_POST)
 
 	# sniffable landmarks (hydrants): lifebuoy stand, cleat, auction scale, net hoist, anchor monument
 	var marks: Array[Vector2] = [
