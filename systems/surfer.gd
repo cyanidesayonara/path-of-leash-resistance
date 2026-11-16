@@ -27,6 +27,7 @@ extends RefCounted
 # - Zero new draw calls: batched directly into Platja de Llevant's existing ShapeBatch.
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+const NpcFigure := preload("res://entities/npc_figure.gd")
 
 const START_POS := Vector2(880.0, -2140.0)
 const END_POS := Vector2(340.0, -2140.0)
@@ -159,43 +160,24 @@ func draw(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 		return
 
 	var t: float = AnimClock.msec() / 1000.0
-	var run_anim: float = sin(t * 12.0) if state == State.RUNNING else 0.0
-
-	# Contact shadow
-	m.contact_shadow(wc, pos + Vector2(0.0, 6.0), 22.0, 8.0, 0.28)
-
-	# Running legs
-	var leg_l := pos + Vector2(-4.0 + run_anim * 4.0, 6.0 + absf(run_anim) * 2.0)
-	var leg_r := pos + Vector2(4.0 - run_anim * 4.0, 6.0 + absf(run_anim) * 2.0)
-	# Boardshorts: tropical teal/cyan with yellow waistband
-	wc.rect(Rect2(pos.x - 7.0, pos.y, 14.0, 6.0), Color(0.20, 0.65, 0.70))
-	wc.line(pos + Vector2(-7.0, pos.y), pos + Vector2(7.0, pos.y), Color(0.96, 0.88, 0.30), 1.5)
-	# Bare legs
-	wc.circle(leg_l, 2.5, Color(0.85, 0.68, 0.52))
-	wc.circle(leg_r, 2.5, Color(0.85, 0.68, 0.52))
-	# Bare feet
-	wc.circle(leg_l + Vector2(-1.0, 2.0), 2.0, Color(0.82, 0.64, 0.48))
-	wc.circle(leg_r + Vector2(-1.0, 2.0), 2.0, Color(0.82, 0.64, 0.48))
-
-	# Torso: sun-tanned bare skin with zinc stripes
-	wc.circle(pos + Vector2(0.0, -1.0), 8.0, Color(0.85, 0.68, 0.52))
-
-	# Head & windblown sandy-blonde hair
-	wc.circle(pos + Vector2(0.0, -6.0), 4.5, Color(0.85, 0.68, 0.52))
-	# Sandy blonde hair
-	wc.circle(pos + Vector2(1.0, -7.5), 4.5, Color(0.88, 0.76, 0.48))
-	wc.circle(pos + Vector2(-2.0, -8.0), 3.0, Color(0.82, 0.70, 0.42))
-	# White zinc sunscreen strip across nose/cheeks
-	wc.line(pos + Vector2(-3.0, -6.0), pos + Vector2(1.0, -6.0), Color(0.98, 0.98, 0.98, 0.9), 1.2)
+	var walking := state == State.RUNNING
+	NpcFigure.person(wc, pos, Vector2.LEFT, 418, t * 12.0 if walking else -1.0, {
+		"size": 1.1, "top": Color(0.85, 0.68, 0.52), "legs": Color(0.20, 0.65, 0.70),
+		"skin": Color(0.85, 0.68, 0.52), "hair": Color(0.88, 0.76, 0.48),
+		"hair_style": "curly", "arms": NpcFigure.Arms.UP if bark_reacted else NpcFigure.Arms.READY,
+	})
+	# Yellow boardshorts waistband & zinc nose stripe
+	wc.line(pos + Vector2(1.0, -4.0), pos + Vector2(1.0, 4.0), Color(0.96, 0.88, 0.30), 1.6)
+	wc.line(pos + Vector2(-4.5, -1.5), pos + Vector2(-4.5, 1.5), Color(0.98, 0.98, 0.98, 0.9), 1.2)
 
 	# 9-foot longboard surfboard carried under arm
-	_draw_surfboard(wc, pos, run_anim)
+	_draw_surfboard(wc, pos)
 
 
-func _draw_surfboard(wc: ShapeBatch, p: Vector2, run_anim: float) -> void:
+func _draw_surfboard(wc: ShapeBatch, p: Vector2) -> void:
 	var tilt: float = sin(AnimClock.msec() / 100.0) * 1.5 if state == State.RUNNING else 0.0
 	var overhead: bool = bark_reacted
-	var b_center := p + (Vector2(0.0, -18.0) if overhead else Vector2(-4.0, -1.0 + tilt))
+	var b_center := p + (Vector2(0.0, -14.0) if overhead else Vector2(-2.0, -9.0 + tilt))
 	var board_w := 42.0
 	var board_h := 12.0
 

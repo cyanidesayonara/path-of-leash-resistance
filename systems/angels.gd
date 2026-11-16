@@ -24,6 +24,7 @@ const Surfaces := preload("res://world/surfaces.gd")
 const AngelsSkate := preload("res://systems/angels_skate.gd")
 const AnimClock := preload("res://systems/anim_clock.gd")
 const NightFronts := preload("res://world/night_fronts.gd")
+const NpcFigure := preload("res://entities/npc_figure.gd")
 
 const SHADOW := Color(0.04, 0.05, 0.07, 0.24)
 
@@ -872,23 +873,21 @@ static func _draw_skater_body(b: ShapeBatch, p: Vector2, facing: Vector2, k: int
 	var shirt: Color = SKATER_SHIRTS[k % SKATER_SHIRTS.size()]
 	var hair: Color = SKATER_HAIR[(k * 3 + 1) % SKATER_HAIR.size()]
 	var skin: Color = SKIN[(k * 5 + 2) % SKIN.size()]
-	b.circle(p + Shade.light * 4.0, 10.0, SHADOW)
+	var jeans := Color(0.24, 0.32, 0.46) if k % 2 == 0 else Color(0.16, 0.16, 0.18)
 	if sitting:
 		# legs out in front, sneakers at the end
-		var jeans := Color(0.24, 0.32, 0.46) if k % 2 == 0 else Color(0.16, 0.16, 0.18)
 		b.line(p + side * 4.0, p + side * 4.0 + facing * 15.0, jeans, 5.0)
 		b.line(p - side * 4.0, p - side * 4.0 + facing * 15.0, jeans, 5.0)
 		b.circle(p + side * 4.0 + facing * 17.0, 3.0, Color(0.95, 0.95, 0.94))
 		b.circle(p - side * 4.0 + facing * 17.0, 3.0, Color(0.95, 0.95, 0.94))
-	b.capsule(p + side * 7.0, p - side * 7.0, 5.5, shirt)
-	b.line(p + side * 7.0, p + side * 9.0 + facing * 7.0, skin, 3.0)
-	b.line(p - side * 7.0, p - side * 9.0 + facing * 7.0, skin, 3.0)
-	b.circle(p - facing * 1.0, 5.4, skin)
+	NpcFigure.person(b, p, facing, 420 + k, -1.0, {
+		"size": 0.95, "top": shirt, "legs": jeans, "skin": skin,
+		"hair": hair, "hair_style": "short",
+		"arms": NpcFigure.Arms.READY if sitting else NpcFigure.Arms.SIDE,
+	})
 	if k % 3 == 0:
-		# a beanie
-		b.circle(p - facing * 2.2, 5.0, Color(0.82, 0.26, 0.20) if k % 2 == 0 else Color(0.20, 0.40, 0.30))
-	else:
-		b.circle(p - facing * 2.0, 4.6, hair)
+		# a beanie over the crown
+		b.circle(p + facing * 0.4, 4.6, Color(0.82, 0.26, 0.20) if k % 2 == 0 else Color(0.20, 0.40, 0.30))
 
 
 static func _draw_board(b: ShapeBatch, p: Vector2, along: Vector2, k: int) -> void:
@@ -1024,15 +1023,11 @@ static func _draw_rollers(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> voi
 		# standing on it, sideways to the way it rolls, arms out for balance
 		var side := Vector2(-along.y, along.x)
 		var k := i + 3
-		var shirt: Color = SKATER_SHIRTS[k % SKATER_SHIRTS.size()]
-		var skin: Color = SKIN[k % SKIN.size()]
-		b.circle(p + Shade.light * 4.0, 9.0, SHADOW)
-		b.capsule(p + along * 6.0, p - along * 6.0, 5.5, shirt)
-		var sway := sin(t * 3.0 + float(i)) * 3.0
-		b.line(p + along * 6.0, p + along * 15.0 + side * sway, skin, 3.0)
-		b.line(p - along * 6.0, p - along * 15.0 - side * sway, skin, 3.0)
-		b.circle(p + side * 1.0, 5.2, skin)
-		b.circle(p + side * 2.0, 4.6, SKATER_HAIR[k % SKATER_HAIR.size()])
+		NpcFigure.person(b, p, side, 430 + i, -1.0, {
+			"size": 0.95, "top": SKATER_SHIRTS[k % SKATER_SHIRTS.size()],
+			"skin": SKIN[k % SKIN.size()], "hair": SKATER_HAIR[k % SKATER_HAIR.size()],
+			"arms": NpcFigure.Arms.UP,
+		})
 
 
 # --- custom furniture hooks (cached in main's furniture pass) ----------------

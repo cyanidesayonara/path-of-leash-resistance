@@ -1,6 +1,6 @@
 extends Node2D
 
-const HumanLook := preload("res://entities/human_appearance.gd")
+const NpcFigure := preload("res://entities/npc_figure.gd")
 
 # A pickpocket working La Rambla's crowd (docs/LEVEL_DESIGN.md, Pickpockets).
 #
@@ -227,9 +227,9 @@ func _draw() -> void:
 	var b := ShapeBatch.new(self)
 	var down := state == S.DOWN
 	var body := Color(0.22, 0.22, 0.26)
-	b.circle(Vector2(3, 4), 11.0, Color(0, 0, 0, 0.2))
 	if down:
 		# flat on his back, legs in the air
+		b.circle(Vector2(3, 4), 11.0, Color(0, 0, 0, 0.2))
 		b.circle(Vector2(0, 0), 11.0, body)
 		b.line(Vector2(-4, 8), Vector2(-10, 18), body.darkened(0.2), 4.0)
 		b.line(Vector2(4, 8), Vector2(12, 16), body.darkened(0.2), 4.0)
@@ -243,9 +243,13 @@ func _draw() -> void:
 		# to side while he sizes someone up
 		var glance := sin(t * 3.0 + weave_seed) * 0.5 if state == S.STALK else 0.0
 		var fd := (run_dir if state == S.RUN else Vector2.UP).rotated(glance)
-		HumanLook.draw_torso(b, Vector2.ZERO, fd, Vector2(9.0, 11.5), body)
-		HumanLook.draw_head(b, fd * 3.5, fd, 6.6, Color(0.66, 0.52, 0.42), Color(0.12, 0.10, 0.10), "short", "hood",
-			Color(0.16, 0.16, 0.19))
+		var stride := t * 11.0 if state == S.RUN else (t * 6.0 if state == S.STALK or state == S.SLINK else -1.0)
+		NpcFigure.person(b, Vector2.ZERO, fd, 419, stride, {
+			"size": 1.35, "top": body, "legs": body.darkened(0.2),
+			"skin": Color(0.66, 0.52, 0.42), "hair": Color(0.12, 0.10, 0.10),
+			"hair_style": "short", "headwear": "hood", "headwear_col": Color(0.16, 0.16, 0.19),
+			"arms": NpcFigure.Arms.READY if state == S.LIFT else NpcFigure.Arms.SIDE,
+		})
 		# hands in the hoodie's front pocket
 		b.rect(Rect2(-4.0, 2.0, 8.0, 4.0), body.darkened(0.3))
 		if state == S.LIFT:

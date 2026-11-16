@@ -1,6 +1,8 @@
 class_name Banderer
 extends RefCounted
 
+const NpcFigure := preload("res://entities/npc_figure.gd")
+
 # EL BANDERER DEL PARTIT (Dia de Partit live event)
 #
 # An enthusiastic match-day fan and flag bearer ("el banderer") in a striped
@@ -202,31 +204,25 @@ func draw(_m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 		b.rect(Rect2(scarf_pos + Vector2(10.0, -2.0), Vector2(2.0, 4.0)), SCARF_FRINGE)
 
 	# Flag bearer character drawing
-	var trot := sin(anim_time * 9.0) * 2.0 if state == State.WALKING else 0.0
 	var flag_wave := sin(anim_time * 7.0 + (3.0 if wobble_t > 0.0 else 0.0)) * 6.0
-	var draw_p := pos + Vector2(0.0, trot)
+	var walking := state == State.WALKING
+	var draw_p := pos
 
-	# Shadow
-	b.circle(draw_p + Vector2(2.0, 4.0), 16.0, SHADOW)
+	NpcFigure.person(b, draw_p, Vector2.LEFT, 412, anim_time * 9.0 if walking else -1.0, {
+		"size": 1.25, "top": HOME_BLUE, "legs": HOME_BLUE.darkened(0.25),
+		"skin": SKIN_TONE, "hair": HAIR_DARK, "arms": NpcFigure.Arms.UP,
+	})
 
-	# Match jersey: Blaugrana striped shirt (facing west)
-	b.circle(draw_p, 13.0, HOME_BLUE)
-	b.circle(draw_p + Vector2(-2.0, 0.0), 11.5, HOME_CLARET)
-	b.circle(draw_p + Vector2(-4.0, 0.0), 9.0, HOME_BLUE)
-	b.circle(draw_p + Vector2(-6.0, 0.0), 6.5, HOME_CLARET)
+	# Claret shoulder stripes & back trim over the jersey
+	b.rect(Rect2(draw_p + Vector2(-3.0, -7.5), Vector2(6.0, 3.5)), HOME_CLARET)
+	b.rect(Rect2(draw_p + Vector2(-3.0, 4.0), Vector2(6.0, 3.5)), HOME_CLARET)
+	b.circle(draw_p + Vector2(3.5, 0.0), 2.5, SHIRT_WHITE)
 
-	# Number 10 on back / white trim
-	b.circle(draw_p + Vector2(3.0, 0.0), 3.0, SHIRT_WHITE)
-
-	# Head & dark hair
-	var head_p := draw_p + Vector2(-1.5, -2.0)
-	b.circle(head_p, 8.5, HAIR_DARK)
-	b.circle(head_p + Vector2(-2.0, 0.0), 6.5, SKIN_TONE)
-
-	# Catalan red barretina / match cap with black trim
-	b.circle(head_p + Vector2(-1.0, -3.0), 7.0, SENYERA_RED)
-	b.circle(head_p + Vector2(-3.0, -3.0), 4.5, SENYERA_RED)
-	b.rect(Rect2(head_p + Vector2(-5.0, -1.0), Vector2(8.0, 2.0)), Color(0.12, 0.12, 0.12))
+	# Catalan red barretina with black rim over his head
+	var head_p := draw_p + Vector2(-1.0, 0.0)
+	b.circle(head_p, 6.2, SENYERA_RED)
+	b.circle(head_p + Vector2(2.5, 0.0), 3.6, SENYERA_RED)
+	b.rect(Rect2(head_p + Vector2(-4.5, -5.0), Vector2(2.0, 10.0)), Color(0.12, 0.12, 0.12))
 
 	# Wooden staff angled backwards/upwards
 	var staff_base := draw_p + Vector2(-4.0, 4.0)

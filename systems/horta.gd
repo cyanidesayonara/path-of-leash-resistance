@@ -23,6 +23,7 @@ extends RefCounted
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
+const NpcFigure := preload("res://entities/npc_figure.gd")
 
 const SHADOW := Color(0.05, 0.06, 0.05, 0.24)
 
@@ -649,10 +650,12 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 		wc.line(PRIZE + Vector2(-6, -2), PRIZE + Vector2(2, -2), Color(0.70, 0.30, 0.26), 2.0)
 	# the gardener, facing the hedge: hat, shoulders, the shears working
 	var g := GARDENER
-	m.contact_shadow(wc, g + Vector2(2, 4), 14.0, 5.0, 0.24)
-	wc.circle(g, 12.0, Color(0.26, 0.38, 0.30))
-	wc.circle(g + Vector2(2, 0), 8.0, Color(0.86, 0.80, 0.62))
-	wc.circle(g + Vector2(2, 0), 4.0, Color(0.74, 0.66, 0.46))
+	NpcFigure.person(wc, g, Vector2.RIGHT, 421, -1.0, {
+		"size": 1.15, "top": Color(0.26, 0.38, 0.30),
+		"legs": Color(0.22, 0.24, 0.22), "arms": NpcFigure.Arms.READY,
+	})
+	wc.circle(g + Vector2(1.0, 0.0), 7.8, Color(0.86, 0.80, 0.62))
+	wc.circle(g + Vector2(1.0, 0.0), 4.0, Color(0.74, 0.66, 0.46))
 	var snip := 0.35 + 0.25 * sin(t * 9.0)
 	for s: float in [-1.0, 1.0]:
 		wc.line(g + Vector2(10, s * 4.0), g + Vector2(24, s * 4.0 * (1.0 - snip)), Color(0.70, 0.72, 0.74), 2.0)

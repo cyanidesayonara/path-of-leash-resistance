@@ -3,6 +3,7 @@ extends RefCounted
 
 const NearMiss := preload("res://systems/near_miss.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
+const NpcFigure := preload("res://entities/npc_figure.gd")
 
 # EL GUITARRISTA DEL CARMEL (Els Búnquers live event)
 #
@@ -210,32 +211,28 @@ func draw(wc: ShapeBatch) -> void:
 
 	var w_offset := sin(anim_time * 26.0) * 3.5 if wobble_t > 0.0 else 0.0
 	var p := pos + Vector2(w_offset, 0.0)
+	var walking := state == State.WALKING
 
-	# Contact shadow
-	wc.circle(p + Vector2(0.0, 6.0), 18.0, SHADOW)
+	# Guitar case carried at his side
+	var case_p := p + Vector2(4.0, 14.0)
+	wc.circle(case_p + Vector2(2.0, 3.0), 8.0, SHADOW)
+	wc.capsule(case_p + Vector2(-12.0, 0.0), case_p + Vector2(12.0, 0.0), 6.0, CASE_LEATHER)
 
-	# Guitar case carried in right hand
-	var case_p := p + Vector2(16.0, 4.0)
-	wc.capsule(case_p + Vector2(0.0, -14.0), case_p + Vector2(0.0, 14.0), 7.0, CASE_LEATHER)
-
-	# Guitarist body & fedora hat
-	var walk_bob := sin(anim_time * 12.0) * 2.5 if state == State.WALKING else 0.0
-	var head_p := p + Vector2(0.0, -28.0 + walk_bob)
-
-	# Trousers and linen shirt
-	wc.capsule(p + Vector2(-5.0, -4.0), p + Vector2(-5.0, 8.0), 4.5, TROUSERS_BROWN)
-	wc.capsule(p + Vector2(5.0, -4.0), p + Vector2(5.0, 8.0), 4.5, TROUSERS_BROWN)
-	wc.capsule(p + Vector2(0.0, -20.0 + walk_bob), p + Vector2(0.0, -4.0), 9.0, SHIRT_CREAM)
+	NpcFigure.person(wc, p, Vector2.LEFT, 413, anim_time * 10.0 if walking else -1.0, {
+		"size": 1.2, "top": SHIRT_CREAM, "legs": TROUSERS_BROWN,
+		"skin": Color(0.88, 0.72, 0.58), "arms": NpcFigure.Arms.READY,
+	})
 
 	# Spanish guitar slung across torso
-	var g_p := p + Vector2(-8.0, -12.0 + walk_bob)
-	wc.circle(g_p + Vector2(-4.0, 4.0), 9.0, GUITAR_WOOD)
-	wc.circle(g_p + Vector2(-4.0, 4.0), 3.5, GUITAR_HOLE)
-	wc.circle(g_p + Vector2(2.0, -3.0), 7.0, GUITAR_WOOD)
-	wc.line(g_p + Vector2(2.0, -3.0), g_p + Vector2(10.0, -14.0), GUITAR_DARK, 3.0)
+	var g_p := p + Vector2(-7.0, -5.0)
+	wc.circle(g_p + Vector2(-2.0, 2.0), 7.5, GUITAR_WOOD)
+	wc.circle(g_p + Vector2(-2.0, 2.0), 2.8, GUITAR_HOLE)
+	wc.circle(g_p + Vector2(2.0, -2.0), 5.5, GUITAR_WOOD)
+	wc.line(g_p + Vector2(2.0, -2.0), g_p + Vector2(9.0, -11.0), GUITAR_DARK, 2.6)
 
-	# Head and brimmed hat
-	wc.circle(head_p, 8.0, Color(0.88, 0.72, 0.58))
-	wc.capsule(head_p + Vector2(-12.0, -3.0), head_p + Vector2(12.0, -3.0), 3.5, HAT_FELT)
-	wc.circle(head_p + Vector2(0.0, -5.0), 7.0, HAT_FELT)
-	wc.line(head_p + Vector2(-6.0, -4.0), head_p + Vector2(6.0, -4.0), HAT_BAND, 2.0)
+	# Wide-brimmed felt fedora hat
+	var head_p := p + Vector2(-1.0, 0.0)
+	wc.circle(head_p + Shade.light * 1.5, 9.0, SHADOW)
+	wc.circle(head_p, 8.8, HAT_FELT)
+	wc.circle(head_p, 6.2, HAT_BAND)
+	wc.circle(head_p, 4.8, HAT_FELT)

@@ -1,6 +1,8 @@
 class_name Escombriaire
 extends RefCounted
 
+const NpcFigure := preload("res://entities/npc_figure.gd")
+
 # L'ESCOMBRIAIRE DE LA NETEJA (La Neteja live event)
 #
 # A Barcelona municipal street sweeper ("l'escombriaire de carrer") in high-visibility
@@ -203,19 +205,8 @@ func draw(_m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 
 	# Sweeper character drawing
 	var wobble := sin(anim_time * 16.0) * 4.0 if wobble_t > 0.0 else 0.0
-	var bob := sin(anim_time * 8.0) * 1.5 if state == State.WALKING else 0.0
-	var draw_p := pos + Vector2(0.0, bob)
-
-	# Shadow
-	b.circle(draw_p + Vector2(2.0, 4.0), 16.0, SHADOW)
-
-	# Overalls & high-vis fluorescent yellow bib
-	b.circle(draw_p, 13.0, OVERALLS_NAVY)
-	b.circle(draw_p + Vector2(-1.0, 0.0), 11.5, HIVIS_YELLOW)
-
-	# Reflective safety bands
-	b.line(draw_p + Vector2(-7.0, -4.0), draw_p + Vector2(5.0, -4.0), SILVER_REFLECT, 2.0)
-	b.line(draw_p + Vector2(-7.0, 4.0), draw_p + Vector2(5.0, 4.0), SILVER_REFLECT, 2.0)
+	var walking := state == State.WALKING
+	var draw_p := pos + Vector2(wobble * 0.25, 0.0)
 
 	# Wheeled municipal cleaning bin cart pushed ahead (facing west)
 	var cart_p := draw_p + Vector2(-18.0 + wobble, 0.0)
@@ -227,15 +218,16 @@ func draw(_m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	b.circle(cart_p + Vector2(-4.0, 11.0), 3.0, CART_WHEEL)
 
 	# Stiff push-broom held in front
-	var broom_p := draw_p + Vector2(-12.0 + wobble, -9.0)
+	var broom_p := draw_p + Vector2(-13.0 + wobble, -9.0)
 	b.line(draw_p + Vector2(-2.0, -4.0), broom_p, BROOM_WOOD, 2.0)
 	b.line(broom_p + Vector2(-2.0, -5.0), broom_p + Vector2(-2.0, 5.0), BROOM_BRISTLE, 3.5)
 
-	# Head & hair
-	var head_p := draw_p + Vector2(2.0, -1.0)
-	b.circle(head_p, 8.5, HAIR_DARK)
-	b.circle(head_p + Vector2(-2.0, 0.0), 6.5, SKIN_TONE)
+	NpcFigure.person(b, draw_p, Vector2.LEFT, 411, anim_time * 8.0 if walking else -1.0, {
+		"size": 1.25, "top": HIVIS_YELLOW, "legs": OVERALLS_NAVY,
+		"skin": SKIN_TONE, "hair": HAIR_DARK, "headwear": "cap",
+		"headwear_col": CAP_ORANGE, "arms": NpcFigure.Arms.READY,
+	})
 
-	# Municipal orange work cap with peak facing west
-	b.circle(head_p + Vector2(-0.5, -0.5), 8.5, CAP_ORANGE)
-	b.rect(Rect2(head_p - Vector2(7.0, 3.5), Vector2(5.0, 7.0)), CAP_ORANGE.darkened(0.15))
+	# Reflective safety bands across high-vis vest
+	b.line(draw_p + Vector2(-5.0, -4.0), draw_p + Vector2(4.0, -4.0), SILVER_REFLECT, 2.0)
+	b.line(draw_p + Vector2(-5.0, 4.0), draw_p + Vector2(4.0, 4.0), SILVER_REFLECT, 2.0)

@@ -1,6 +1,8 @@
 class_name Ornitoleg
 extends RefCounted
 
+const NpcFigure := preload("res://entities/npc_figure.gd")
+
 # L'ORNITÒLEG DEL BESÒS (El Besòs river park live event)
 #
 # A Catalan wildlife enthusiast and birdwatcher ("l'ornitòleg del Besòs") in a khaki
@@ -204,33 +206,27 @@ func draw(_m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 
 	# Ornithologist character drawing
 	var wobble := sin(anim_time * 16.0) * 4.0 if wobble_t > 0.0 else 0.0
-	var bob := sin(anim_time * 8.0) * 1.5 if state == State.WALKING else 0.0
-	var draw_p := pos + Vector2(0.0, bob)
-
-	# Shadow
-	b.circle(draw_p + Vector2(2.0, 4.0), 16.0, SHADOW)
-
-	# Shoulders & safari vest
-	b.circle(draw_p, 13.0, SHIRT_SAGE)
-	b.circle(draw_p + Vector2(-1.0, 0.0), 11.5, VEST_BEIGE)
+	var walking := state == State.WALKING
+	var draw_p := pos + Vector2(wobble * 0.25, 0.0)
+	NpcFigure.person(b, draw_p, Vector2.LEFT, 410, anim_time * 8.0 if walking else -1.0, {
+		"size": 1.25, "top": VEST_BEIGE, "legs": SHIRT_SAGE.darkened(0.25),
+		"skin": SKIN_TONE, "hair": HAIR_GREY, "arms": NpcFigure.Arms.READY,
+	})
 
 	# Vest pockets & strap
-	b.rect(Rect2(draw_p - Vector2(8.0, 4.0), Vector2(5.0, 4.0)), POCKET_DARK)
-	b.rect(Rect2(draw_p + Vector2(3.0, -4.0), Vector2(5.0, 4.0)), POCKET_DARK)
-	b.line(draw_p + Vector2(-6.0, -9.0), draw_p + Vector2(6.0, 9.0), BINOC_STRAP, 1.8)
+	b.rect(Rect2(draw_p - Vector2(3.0, 7.0), Vector2(5.0, 3.5)), POCKET_DARK)
+	b.rect(Rect2(draw_p + Vector2(-3.0, 3.5), Vector2(5.0, 3.5)), POCKET_DARK)
+	b.line(draw_p + Vector2(-6.0, -7.0), draw_p + Vector2(6.0, 7.0), BINOC_STRAP, 1.8)
 
 	# Binoculars held forward (facing westbound)
-	var binoc_held := draw_p + Vector2(-11.0 + wobble, 0.0)
+	var binoc_held := draw_p + Vector2(-12.0 + wobble, 0.0)
 	b.rect(Rect2(binoc_held - Vector2(3.0, 5.0), Vector2(6.0, 10.0)), BINOC_BODY)
 	b.circle(binoc_held + Vector2(-3.0, -3.0), 2.2, BINOC_LENS)
 	b.circle(binoc_held + Vector2(-3.0, 3.0), 2.2, BINOC_LENS)
 
-	# Head & grey hair
-	var head_p := draw_p + Vector2(1.0, -1.0)
-	b.circle(head_p, 8.5, HAIR_GREY)
-	b.circle(head_p + Vector2(-2.0, 0.0), 6.5, SKIN_TONE)
-
 	# Safari bush hat with wide brim and darker band
-	b.circle(head_p + Vector2(-0.5, -0.5), 9.2, HAT_KHAKI)
-	b.circle(head_p + Vector2(-0.5, -0.5), 7.4, HAT_BAND)
-	b.circle(head_p + Vector2(-0.5, -0.5), 5.8, HAT_KHAKI)
+	var head_p := draw_p + Vector2(-1.0, 0.0)
+	b.circle(head_p + Shade.light * 1.5, 8.8, SHADOW)
+	b.circle(head_p, 8.6, HAT_KHAKI)
+	b.circle(head_p, 6.6, HAT_BAND)
+	b.circle(head_p, 5.2, HAT_KHAKI)

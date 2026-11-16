@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-11-16 - Upgrade remaining bespoke NPCs to NpcFigure
+
+- Converted the remaining circle-stack passers-by and live event characters to `NpcFigure.person()` (`entities/npc_figure.gd`): `Ornitoleg` (`systems/ornitoleg.gd`), `Escombriaire` (`systems/escombriaire.gd`), `Banderer` (`systems/banderer.gd`), `Guitarrista` (`systems/guitarrista.gd`), `Castanyera` (`systems/castanyera.gd`), `Boletaire` (`systems/boletaire.gd`), `Angels` sitting/rolling skaters and `AngelsSkate` (`systems/angels.gd`, `systems/angels_skate.gd`), `ForumSkater` (`systems/forum_skater.gd`), `LostTourist` and Horta's gardener (`systems/lost_tourist.gd`, `systems/horta.gd`), `Surfer` (`systems/surfer.gd`), and `Pickpocket`'s upright stride (`entities/pickpocket.gd`) while preserving each character's props, headwear, and event choreography (and removing a mid-batch `draw_arc` flush on `LostTourist`).
+- Tests: `tests/test_npc_figure.gd`, `tests/test_npc_clear_of_solids.gd`, `tests/test_besos.gd`, `tests/test_besos_ornitoleg.gd`, `tests/test_neteja.gd`, `tests/test_neteja_escombriaire.gd`, `tests/test_partit.gd`, `tests/test_partit_banderer.gd`, `tests/test_carmel.gd`, `tests/test_forum.gd`, `tests/test_angels.gd`, `tests/test_castanyada.gd`, `tests/test_castanyada_live_event.gd`, `tests/test_bosc.gd`, `tests/test_bosc_boletaire.gd`, `tests/test_horta.gd`, `tests/test_horta_tourist.gd`, `tests/test_llevant_surfer.gd`, `tests/test_pickpocket.gd`, `tests/test_walk_hooks.gd`, `tests/test_members_exist.gd`, plus `--selftest` on all 11 walks.
+
 ## 2026-11-16 - Cache La Diagonal's edge-layer grid rows
 
 - Added `_row_cache` (64-entry static `ShapeBatch` row cache keyed by `[a, Shade.light, b.lod]`, replayed via `append_to()`) and affine half-plane culling (`_box_cs()`) in `systems/diagonal.gd` to skip whole courtyards, sides, plots, and corners outside the avenue clip band while keeping output pixel-identical (`shot_diff.py` across `--shot-y=-800,-1650,-2900,-4100`).

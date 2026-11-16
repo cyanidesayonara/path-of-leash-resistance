@@ -4,6 +4,7 @@ extends RefCounted
 const NearMiss := preload("res://systems/near_miss.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+const NpcFigure := preload("res://entities/npc_figure.gd")
 
 # EL PATINADOR DELS ÀNGELS (Els Àngels live event)
 #
@@ -227,13 +228,13 @@ func draw(b: ShapeBatch, vt: float, vb: float) -> void:
 		return
 
 	# Bailed skater sitting/sliding on the west plaza slabs
-	b.circle(skater_pos + Vector2(3.0, 5.0), 12.0, SHADOW)
-	b.line(skater_pos + Vector2(-4.0, 4.0), skater_pos + Vector2(12.0, 7.0), SKATER_JEANS, 5.0)
-	b.line(skater_pos + Vector2(-4.0, -2.0), skater_pos + Vector2(10.0, -5.0), SKATER_JEANS, 5.0)
-	b.circle(skater_pos, 8.5, SKATER_TEE)
-	b.line(skater_pos + Vector2(2.0, -5.0), skater_pos + Vector2(13.0, -2.0), SKATER_SKIN, 3.2)
-	b.circle(skater_pos + Vector2(-2.0, -1.0), 6.2, SKATER_SKIN)
-	b.circle(skater_pos + Vector2(-3.5, -1.5), 5.4, SKATER_BEANIE)
+	b.line(skater_pos + Vector2(4.0, 4.0), skater_pos + Vector2(14.0, 6.0), SKATER_JEANS, 4.5)
+	b.line(skater_pos + Vector2(4.0, -4.0), skater_pos + Vector2(14.0, -6.0), SKATER_JEANS, 4.5)
+	NpcFigure.person(b, skater_pos, Vector2.RIGHT, 429, -1.0, {
+		"size": 1.0, "top": SKATER_TEE, "legs": SKATER_JEANS,
+		"skin": SKATER_SKIN, "hair_style": "short", "arms": NpcFigure.Arms.READY,
+	})
+	b.circle(skater_pos + Vector2(0.5, 0.0), 4.6, SKATER_BEANIE)
 
 	# Runaway skateboard shooting east across the plaza
 	b.rect(Rect2(pos.x - 16.0, pos.y + 4.0, 32.0, 9.0), SHADOW)
