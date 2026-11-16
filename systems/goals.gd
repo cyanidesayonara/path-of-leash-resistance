@@ -76,6 +76,8 @@ const LEVEL_GOAL_IDS := {
 	"espanya": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "bubble", "magic_fountain", "columns", "combo", "prize", "spell", "jamon", "clock"],
 	# L'Eixample: the cut corners, the tour group, Plaça de Gaudí's pond
 	"eixample": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "corners", "tour", "pond", "combo", "prize", "spell", "jamon", "clock"],
+	# El Metro: the turnstiles, the rush-hour surge, the car's doors
+	"metro": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "turnstile", "surge", "doors_clean", "combo", "prize", "spell", "jamon", "clock"],
 	"diagonal": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "tram_dodge", "tram_clean", "kiosk", "combo", "prize", "spell", "jamon", "clock"],
 	# Els Àngels: the skate plaza outside the white museum
 	"angels": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "ledge", "decks", "lamps", "combo", "prize", "spell", "jamon", "clock"],
@@ -169,6 +171,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"tour": {"text": "Get photographed by a tour group", "target": 1, "fn": func() -> int: return 1 if m.eixample_tour != null and m.eixample_tour.photographed else 0},
 		"tram_dodge": {"text": "Dodge the tram %d times", "target": 3, "fn": func() -> int: return m.diagonal_tram_dodges},
 		"tram_clean": {"text": "Get home without the tram bumping you", "target": 1, "fn": func() -> int: return 1 if (bool(m.finished) and m.diagonal_tram_hits == 0) else 0},
+		"turnstile": {"text": "Slip under a turnstile while your human finds their card", "target": 1, "fn": func() -> int: return 1 if m.metro_turnstile_slipped else 0},
+		"surge": {"text": "Dig in against the rush-hour crowd", "target": 1, "fn": func() -> int: return 1 if m.metro_surge_held else 0},
+		"doors_clean": {"text": "Get home without the doors catching the leash", "target": 1, "fn": func() -> int: return 1 if (bool(m.finished) and m.metro_door_catches == 0) else 0},
 		"kiosk": {"text": "Bark at the newspaper kiosk", "target": 1, "fn": func() -> int: return 1 if m.diagonal_kiosk_barked else 0},
 		"pond": {"text": "Paddle in the pond by the basilica", "target": 1, "fn": func() -> int: return 1 if m.eixample_pond_paddled else 0},
 		"circles": {"text": "Sprint through %d painted circles", "target": 3, "fn": func() -> int: return m.superilla_circles_sprinted},

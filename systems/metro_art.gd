@@ -1,0 +1,1022 @@
+extends RefCounted
+
+# EL METRO's pictures (systems/metro.gd holds the walk's layout and logic).
+#
+# The ground (draw_ground) and the edges (draw_edges) are cached by main and
+# never read the animation clock. What moves is draw_live (the turnstile
+# bars, the car's doors, the other train and everyone on foot), the
+# escalators' treads (draw_escalators) and the overhead: the car's outside,
+# a station or the tunnel going by, and the tunnel laid over the platforms
+# beyond its shut doors while it rides.
+#
+# The line roundels are this walk's own: a disc in the line's colour, a
+# white ring and a white letter. Line A is orange, line C teal.
+
+const ShapeBatch := preload("res://systems/shape_batch.gd")
+const Letters := preload("res://world/sign_letters.gd")
+const Panot := preload("res://world/panot.gd")
+const Outdoors := preload("res://systems/outdoors.gd")
+const NpcFigure := preload("res://entities/npc_figure.gd")
+const AnimClock := preload("res://systems/anim_clock.gd")
+
+const M := preload("res://systems/metro.gd")
+
+const SHADOW := Color(0.04, 0.05, 0.07, 0.22)
+# the street
+const PAVE := Color(0.66, 0.65, 0.63)
+const PAVE_WET := Color(0.52, 0.53, 0.55)
+const KERB := Color(0.60, 0.59, 0.57)
+const KERB_LIT := Color(0.72, 0.71, 0.69)
+const ASPHALT := Color(0.25, 0.25, 0.27)
+const ASPHALT_WET := Color(0.20, 0.21, 0.24)
+const LANE_LINE := Color(0.86, 0.85, 0.80, 0.8)
+const ROOF_TONES: Array[Color] = [Color(0.72, 0.52, 0.40), Color(0.66, 0.46, 0.38), Color(0.76, 0.60, 0.48), Color(0.70, 0.68, 0.64)]
+const PARAPET := Color(0.86, 0.82, 0.74)
+const AWNINGS: Array[Color] = [Color(0.20, 0.45, 0.36), Color(0.72, 0.22, 0.20), Color(0.18, 0.34, 0.56), Color(0.86, 0.62, 0.20)]
+const RAILING := Color(0.16, 0.30, 0.24)
+const RAILING_LIT := Color(0.30, 0.48, 0.38)
+const GRANITE := Color(0.56, 0.55, 0.54)
+# underground
+const VOID := Color(0.13, 0.12, 0.12)
+const VOID_LINE := Color(0.18, 0.17, 0.16)
+const TILE := Color(0.90, 0.90, 0.86)
+const TILE_GROUT := Color(0.74, 0.74, 0.70)
+const TILE_SHADE := Color(0.80, 0.80, 0.76)
+const STEP := Color(0.70, 0.68, 0.64)
+const STEP_DEEP := Color(0.60, 0.59, 0.57)
+const STEP_EDGE := Color(0.46, 0.45, 0.44)
+const NOSING := Color(0.86, 0.72, 0.26)
+const TERRAZZO := Color(0.80, 0.78, 0.73)
+const TERRAZZO_JOINT := Color(0.66, 0.64, 0.60)
+const CHIPS: Array[Color] = [Color(0.56, 0.54, 0.50), Color(0.92, 0.90, 0.86), Color(0.62, 0.48, 0.40), Color(0.44, 0.46, 0.48)]
+const PASS_FLOOR := Color(0.70, 0.70, 0.68)
+const PASS_JOINT := Color(0.60, 0.60, 0.58)
+const PLAT_FLOOR := Color(0.75, 0.74, 0.71)
+const PLAT_JOINT := Color(0.64, 0.63, 0.60)
+const TACTILE := Color(0.92, 0.74, 0.16)
+const TACTILE_DOT := Color(0.80, 0.62, 0.10)
+const COPING := Color(0.88, 0.87, 0.83)
+const SAFETY := Color(0.96, 0.96, 0.94)
+const PIT := Color(0.10, 0.10, 0.10)
+const BALLAST := Color(0.20, 0.19, 0.18)
+const SLEEPER := Color(0.30, 0.27, 0.24)
+const RAIL := Color(0.62, 0.62, 0.64)
+const RAIL_LIT := Color(0.84, 0.84, 0.86)
+const STEEL := Color(0.70, 0.72, 0.74)
+const STEEL_DARK := Color(0.40, 0.42, 0.45)
+const STEEL_LIT := Color(0.88, 0.89, 0.90)
+const RUBBER := Color(0.10, 0.10, 0.11)
+const GLASS := Color(0.62, 0.78, 0.84, 0.35)
+const LAMP_POOL := Color(1.0, 0.97, 0.88, 0.10)
+# each station its own colour; the line roundels
+const PARAIGUES := Color(0.20, 0.42, 0.72)
+const SANT_GOS := Color(0.88, 0.64, 0.20)
+const LINE_A := Color(0.95, 0.52, 0.14)
+const LINE_C := Color(0.10, 0.62, 0.62)
+# the car
+const CAR_FLOOR := Color(0.34, 0.36, 0.38)
+const CAR_DOT := Color(0.40, 0.42, 0.44)
+const CAR_SHELL := Color(0.90, 0.91, 0.92)
+const CAR_GLASS := Color(0.18, 0.24, 0.30)
+const SEAT := Color(0.24, 0.38, 0.60)
+const SEAT_LIT := Color(0.32, 0.48, 0.70)
+const DOOR := Color(0.78, 0.80, 0.82)
+const DOOR_EDGE := Color(0.14, 0.14, 0.15)
+const WARN_OFF := Color(0.36, 0.30, 0.16)
+const WARN_ON := Color(1.0, 0.76, 0.18)
+const TUNNEL := Color(0.09, 0.09, 0.10)
+const TUNNEL_WALL := Color(0.16, 0.15, 0.15)
+const TUNNEL_LAMP := Color(1.0, 0.86, 0.56)
+const CABLE := Color(0.05, 0.05, 0.06, 0.9)
+const TRAIN_BODY := Color(0.88, 0.89, 0.90)
+const TRAIN_ROOF := Color(0.78, 0.79, 0.80)
+const PRINT := Color(0.28, 0.26, 0.24)
+const RED := Color(0.82, 0.14, 0.12)
+const GREEN := Color(0.30, 0.86, 0.42)
+
+
+static func _h(k: int) -> float:
+	return fmod(absf(sin(float(k) * 12.9898) * 43758.5453), 1.0)
+
+
+static func letters(c: ShapeBatch, txt: String, at: Vector2, h: float, col: Color, w := 1.6, max_w := INF) -> void:
+	var lay: Array = Letters.layout(txt, at, h, max_w)
+	for pl: PackedVector2Array in lay[0]:
+		for i in range(pl.size()):
+			c.circle(pl[i], w * 0.5, col)
+			if i > 0:
+				c.line(pl[i - 1], pl[i], col, w)
+
+
+# a line roundel: the disc, a white ring, the letter
+static func roundel(c: ShapeBatch, at: Vector2, r: float, col: Color, letter: String) -> void:
+	c.circle(at, r + 1.5, Color(0.08, 0.08, 0.09))
+	c.circle(at, r, Color(0.98, 0.98, 0.96))
+	c.circle(at, r * 0.82, col)
+	letters(c, letter, at + Vector2(0.0, r * 0.42), r * 0.86, Color(0.98, 0.98, 0.96), maxf(1.4, r * 0.16))
+
+
+# a station's name panel: a frame in the station's colour, the name in white,
+# the line's roundel at its end
+static func name_panel(c: ShapeBatch, centre: Vector2, w: float, name: String, col: Color) -> void:
+	var r := Rect2(centre - Vector2(w * 0.5, 13.0), Vector2(w, 26.0))
+	c.rect(r.grow(2.0), Color(0.06, 0.06, 0.07))
+	c.rect(r, col)
+	c.rect(r.grow(-2.5), col.darkened(0.25))
+	letters(c, name, centre + Vector2(-8.0, 6.0), 12.0, Color(0.97, 0.97, 0.95), 1.8, w - 34.0)
+	roundel(c, Vector2(r.end.x - 13.0, centre.y), 8.5, LINE_A, "A")
+
+
+# --- the ground inside the walls (cached) ---------------------------------------------
+
+static func draw_ground(m: Node2D, wc: ShapeBatch, ctop: float, vt: float, vb: float) -> void:
+	var keep := wc.lod
+	wc.lod = true
+	var lo: float = maxf(vt - 30.0, maxf(ctop, float(m.GATE_Y) - 40.0))
+	var hi: float = minf(vb + 30.0, float(m.START_Y) + 560.0)
+	if hi > lo:
+		_ground(m, wc, lo, hi)
+	wc.lod = keep
+
+
+static func _clip(lo: float, hi: float, y0: float, y1: float) -> Vector2:
+	return Vector2(maxf(lo, y0), minf(hi, y1))
+
+
+static func _ground(m: Node2D, wc: ShapeBatch, lo: float, hi: float) -> void:
+	var wet := Outdoors.tracks_wet(Game.weather)
+	for sec: Array in M.SECTIONS:
+		var c := _clip(lo, hi, float(sec[0]), float(sec[1]))
+		if c.y <= c.x:
+			continue
+		var x0: float = sec[2]
+		var x1: float = sec[3]
+		match String(sec[4]):
+			"street", "street_b":
+				_street(wc, x0, x1, c.x, c.y, wet)
+			"stairs":
+				_steps(wc, x0, x1, c.x, c.y, M.STAIR_TOP, M.STAIR_FOOT)
+				if M.STAIR_RAIL.end.y > c.x and M.STAIR_RAIL.position.y < c.y:
+					_rail(wc, M.STAIR_RAIL)
+			"stairs_b":
+				_steps(wc, x0, x1, c.x, c.y, M.STREET_B, M.STAIR_B0)
+			"hall":
+				_terrazzo(wc, x0, x1, c.x, c.y)
+				_hall_fittings(wc, c.x, c.y)
+			"esc_a":
+				_steps(wc, x0, M.BAL_A.position.x, c.x, c.y, M.HALL_Y1, M.PASS_Y0)
+				wc.rect(Rect2(M.BAL_A.end.x, c.x, x1 - M.BAL_A.end.x, c.y - c.x), STEEL_DARK)
+				_balustrade(wc, M.BAL_A, c.x, c.y)
+			"esc_b":
+				_steps(wc, M.BAL_B.end.x, x1, c.x, c.y, M.PLAT_B1, M.STAIR_B0)
+				wc.rect(Rect2(x0, c.x, M.BAL_B.position.x - x0, c.y - c.x), STEEL_DARK)
+				_balustrade(wc, M.BAL_B, c.x, c.y)
+			"passage":
+				_small_tiles(wc, x0, x1, c.x, c.y)
+			"plat_a":
+				_platform(wc, x0, x1, c.x, c.y, PARAIGUES)
+			"plat_b":
+				_platform(wc, x0, x1, c.x, c.y, SANT_GOS)
+			"car":
+				_car_inside(wc, c.x, c.y)
+	if wet:
+		_footprints(wc, lo, hi)
+	_lamp_pools(wc, lo, hi)
+	_chamfers(m, wc, lo, hi)
+
+
+# Where the walls splay from one width to the next, the floor's rectangle
+# reaches past them: wall over it, following main.walk_edges, so the floor
+# ends exactly at the wall the dog walks along. Tile underground; at street
+# level the pavement round the stair mouth, its railing along the edge.
+static func _chamfers(m: Node2D, wc: ShapeBatch, lo: float, hi: float) -> void:
+	for sec: Array in M.SECTIONS:
+		var y0 := maxf(float(sec[0]), lo)
+		var y1 := minf(float(sec[1]), hi)
+		if y1 <= y0:
+			continue
+		var x0: float = sec[2]
+		var x1: float = sec[3]
+		var street := String(sec[4]).begins_with("street")
+		var col := PAVE if street else TILE
+		if street and Outdoors.tracks_wet(Game.weather):
+			col = PAVE_WET
+		var left := PackedVector2Array()
+		var right := PackedVector2Array()
+		var any := false
+		var y := y0
+		while true:
+			var e: Vector2 = m.walk_edges(y)
+			if e.x > x0 + 0.5 or e.y < x1 - 0.5:
+				any = true
+			left.append(Vector2(maxf(e.x, x0), y))
+			right.append(Vector2(minf(e.y, x1), y))
+			if y >= y1:
+				break
+			y = minf(y + 8.0, y1)
+		if not any:
+			continue
+		var lp := PackedVector2Array([Vector2(x0 - 1.0, y1), Vector2(x0 - 1.0, y0)])
+		lp.append_array(left)
+		var rr := right.duplicate()
+		rr.reverse()
+		var rp := PackedVector2Array([Vector2(x1 + 1.0, y0), Vector2(x1 + 1.0, y1)])
+		rp.append_array(rr)
+		wc.polygon(lp, col)
+		wc.polygon(rp, col)
+		if street:
+			for i in range(left.size() - 1):
+				if left[i].x > x0 + 1.0 or left[i + 1].x > x0 + 1.0:
+					wc.line(left[i], left[i + 1], RAILING, 4.0)
+				if right[i].x < x1 - 1.0 or right[i + 1].x < x1 - 1.0:
+					wc.line(right[i], right[i + 1], RAILING, 4.0)
+
+
+static func _street(wc: ShapeBatch, x0: float, x1: float, lo: float, hi: float, wet: bool) -> void:
+	wc.rect(Rect2(x0, lo, x1 - x0, hi - lo), PAVE_WET if wet else PAVE)
+	Panot.flor(wc, x0 + 10.0, x1, lo, hi)
+	# the kerb along the road side
+	wc.rect(Rect2(x0, lo, 10.0, hi - lo), KERB)
+	wc.rect(Rect2(x0, lo, 2.5, hi - lo), KERB_LIT)
+	if wet:
+		# the paving shining under the rain, in streaks
+		var y := floorf(lo / 90.0) * 90.0
+		while y < hi:
+			var k := int(y)
+			wc.rect(Rect2(x0 + 30.0 + _h(k) * 380.0, y, 60.0 + _h(k * 3) * 120.0, 5.0), Color(0.78, 0.84, 0.92, 0.12))
+			y += 90.0
+
+
+# stairs: a tread every 16 px, darker as they go down, the yellow nosing at
+# each step's edge; `top` is the street end, `deep` the station end
+static func _steps(wc: ShapeBatch, x0: float, x1: float, lo: float, hi: float, top: float, deep: float) -> void:
+	var y := floorf(lo / 16.0) * 16.0
+	while y < hi:
+		var f := clampf((y - top) / (deep - top), 0.0, 1.0)
+		wc.rect(Rect2(x0, y, x1 - x0, 16.0), STEP.lerp(STEP_DEEP, f))
+		wc.rect(Rect2(x0, y, x1 - x0, 2.0), STEP_EDGE)
+		wc.rect(Rect2(x0 + 6.0, y + 2.0, x1 - x0 - 12.0, 1.6), NOSING)
+		y += 16.0
+	# the low walls the handrails are fixed to
+	wc.rect(Rect2(x0, lo, 6.0, hi - lo), STEP_EDGE)
+	wc.rect(Rect2(x1 - 6.0, lo, 6.0, hi - lo), STEP_EDGE)
+	wc.rect(Rect2(x0 + 2.0, lo, 2.5, hi - lo), STEEL)
+	wc.rect(Rect2(x1 - 4.5, lo, 2.5, hi - lo), STEEL)
+
+
+static func _rail(wc: ShapeBatch, r: Rect2) -> void:
+	wc.rect(Rect2(r.position + Vector2(5.0, 5.0), r.size), SHADOW)
+	wc.rect(r, STEP_EDGE)
+	wc.rect(r.grow(-3.0), STEEL)
+	wc.rect(Rect2(r.position.x + 3.0, r.position.y, 2.0, r.size.y), STEEL_LIT)
+
+
+static func _balustrade(wc: ShapeBatch, r: Rect2, lo: float, hi: float) -> void:
+	var y0 := maxf(r.position.y, lo)
+	var y1 := minf(r.end.y, hi)
+	if y1 <= y0:
+		return
+	wc.rect(Rect2(r.position.x + 4.0, y0 + 4.0, r.size.x, y1 - y0), SHADOW)
+	wc.rect(Rect2(r.position.x, y0, r.size.x, y1 - y0), STEEL_DARK)
+	wc.rect(Rect2(r.position.x + 3.0, y0, r.size.x - 6.0, y1 - y0), GLASS)
+	# the black rubber handrails along both of its edges
+	wc.rect(Rect2(r.position.x, y0, 4.0, y1 - y0), RUBBER)
+	wc.rect(Rect2(r.end.x - 4.0, y0, 4.0, y1 - y0), RUBBER)
+
+
+static func _terrazzo(wc: ShapeBatch, x0: float, x1: float, lo: float, hi: float) -> void:
+	wc.rect(Rect2(x0, lo, x1 - x0, hi - lo), TERRAZZO)
+	var y := floorf(lo / 80.0) * 80.0
+	while y < hi:
+		wc.rect(Rect2(x0, y, x1 - x0, 1.4), TERRAZZO_JOINT)
+		var x := x0
+		while x < x1:
+			wc.rect(Rect2(x, y, 1.4, 80.0), TERRAZZO_JOINT)
+			x += 80.0
+		y += 80.0
+	# the chips set in it
+	var cy := floorf(lo / 11.0) * 11.0
+	while cy < hi:
+		var k := int(cy) * 7
+		for j in range(3):
+			var cx := x0 + _h(k + j * 31) * (x1 - x0)
+			wc.circle(Vector2(cx, cy + _h(k + j) * 10.0), 1.2 + _h(k * 3 + j) * 1.2, CHIPS[(k + j) % CHIPS.size()])
+		cy += 11.0
+	# the line's roundel inlaid in the floor at the foot of the stairs
+	if lo < -900.0 and hi > -1020.0:
+		var at := Vector2(M.CX, -960.0)
+		wc.circle(at, 52.0, Color(0.30, 0.29, 0.28))
+		wc.circle(at, 49.0, Color(0.94, 0.93, 0.90))
+		wc.circle(at, 40.0, LINE_A)
+		letters(wc, "A", at + Vector2(0.0, 18.0), 36.0, Color(0.96, 0.95, 0.92), 6.0)
+
+
+static func _hall_fittings(wc: ShapeBatch, lo: float, hi: float) -> void:
+	var l: Vector2 = Shade.light
+	# the ticket machines along the west wall: three, screen and slot each
+	var r := M.MACHINES
+	if r.end.y > lo and r.position.y < hi:
+		wc.rect(Rect2(r.position + l * 8.0, r.size), SHADOW)
+		for i in range(3):
+			var mr := Rect2(r.position.x, r.position.y + float(i) * 66.0 + 2.0, r.size.x, 62.0)
+			wc.rect(mr, Color(0.22, 0.24, 0.27))
+			wc.rect(mr.grow(-2.0), Color(0.86, 0.87, 0.88))
+			wc.rect(Rect2(mr.end.x - 14.0, mr.position.y + 10.0, 10.0, 26.0), Color(0.14, 0.30, 0.42))
+			wc.rect(Rect2(mr.end.x - 13.0, mr.position.y + 12.0, 8.0, 10.0), Color(0.44, 0.72, 0.88))
+			wc.rect(Rect2(mr.position.x + 6.0, mr.position.y + 40.0, 12.0, 4.0), Color(0.10, 0.10, 0.11))
+			wc.rect(Rect2(mr.position.x + 3.0, mr.position.y + 2.0, mr.size.x - 6.0, 5.0), LINE_A)
+	# the attendant's booth: a glass front onto the hall
+	r = M.BOOTH
+	if r.end.y > lo and r.position.y < hi:
+		wc.rect(Rect2(r.position + l * 10.0, r.size), SHADOW)
+		wc.rect(r, Color(0.30, 0.31, 0.33))
+		wc.rect(r.grow(-3.0), Color(0.58, 0.60, 0.62))
+		wc.rect(Rect2(r.position.x, r.position.y + 10.0, 8.0, r.size.y - 20.0), Color(0.56, 0.74, 0.82, 0.8))
+		wc.rect(Rect2(r.position.x + 16.0, r.position.y + 30.0, 30.0, 50.0), Color(0.44, 0.34, 0.26))
+		wc.circle(Vector2(r.position.x + 32.0, r.position.y + 100.0), 9.0, Color(0.20, 0.24, 0.40))
+		wc.circle(Vector2(r.position.x + 32.0, r.position.y + 98.0), 5.5, Color(0.70, 0.54, 0.42))
+	# the turnstiles' cabinets (their bars are live)
+	if M.TURN_Y + 40.0 > lo and M.TURN_Y - 40.0 < hi:
+		for x: float in M.CAB_XS:
+			_cabinet(wc, M.cab_rect(x))
+		_cabinet(wc, M.CAB_END)
+		# the wide gate's glass flaps, open
+		for fx: float in [M.WIDE_GATE.x + 4.0, M.WIDE_GATE.y - 18.0]:
+			wc.rect(Rect2(fx, M.TURN_Y - 2.0, 14.0, 4.0), Color(0.62, 0.80, 0.88, 0.7))
+
+
+static func _cabinet(wc: ShapeBatch, r: Rect2) -> void:
+	wc.rect(Rect2(r.position + Shade.light * 7.0, r.size), SHADOW)
+	wc.rect(r, STEEL_DARK)
+	wc.rect(r.grow(-2.0), STEEL)
+	wc.rect(Rect2(r.position.x + 2.0, r.position.y + 2.0, r.size.x - 4.0, 4.0), STEEL_LIT)
+	# the card reader, lit
+	wc.rect(Rect2(r.position.x + 5.0, r.end.y - 18.0, r.size.x - 10.0, 9.0), Color(0.12, 0.13, 0.15))
+	wc.rect(Rect2(r.position.x + 7.0, r.end.y - 16.0, r.size.x - 14.0, 5.0), LINE_A)
+
+
+static func _small_tiles(wc: ShapeBatch, x0: float, x1: float, lo: float, hi: float) -> void:
+	wc.rect(Rect2(x0, lo, x1 - x0, hi - lo), PASS_FLOOR)
+	var y := floorf(lo / 24.0) * 24.0
+	while y < hi:
+		wc.rect(Rect2(x0, y, x1 - x0, 1.0), PASS_JOINT)
+		y += 24.0
+	var x := x0
+	while x < x1:
+		wc.rect(Rect2(x, lo, 1.0, hi - lo), PASS_JOINT)
+		x += 24.0
+	# the worn line down the middle where everyone walks
+	wc.rect(Rect2(M.CX - 40.0, lo, 80.0, hi - lo), Color(0.74, 0.74, 0.72, 0.5))
+
+
+static func _platform(wc: ShapeBatch, x0: float, x1: float, lo: float, hi: float, col: Color) -> void:
+	wc.rect(Rect2(x0, lo, x1 - x0, hi - lo), PLAT_FLOOR)
+	var y := floorf(lo / 48.0) * 48.0
+	while y < hi:
+		wc.rect(Rect2(x0, y, x1 - x0, 1.2), PLAT_JOINT)
+		var x := x0 + (0.0 if int(y / 48.0) % 2 == 0 else 24.0)
+		while x < x1 - 40.0:
+			wc.rect(Rect2(x, y, 1.2, 48.0), PLAT_JOINT)
+			x += 48.0
+		y += 48.0
+	# the station's colour in a band along the wall
+	wc.rect(Rect2(x0, lo, 8.0, hi - lo), col)
+	# the platform edge: a white line, the yellow studs, the coping
+	wc.rect(Rect2(x1 - 54.0, lo, 3.0, hi - lo), SAFETY)
+	wc.rect(Rect2(x1 - 46.0, lo, 30.0, hi - lo), TACTILE)
+	var dy := floorf(lo / 8.0) * 8.0
+	while dy < hi:
+		for j in range(4):
+			wc.circle(Vector2(x1 - 42.0 + float(j) * 7.5 + (3.7 if int(dy / 8.0) % 2 == 0 else 0.0), dy + 4.0), 1.5, TACTILE_DOT)
+		dy += 8.0
+	wc.rect(Rect2(x1 - 16.0, lo, 16.0, hi - lo), COPING)
+	wc.rect(Rect2(x1 - 3.0, lo, 3.0, hi - lo), Color(0.56, 0.55, 0.52))
+
+
+static func _car_inside(wc: ShapeBatch, lo: float, hi: float) -> void:
+	var x0 := M.CAR_L
+	var x1 := M.CAR_R
+	wc.rect(Rect2(x0, lo, x1 - x0, hi - lo), CAR_FLOOR)
+	var y := floorf(lo / 10.0) * 10.0
+	while y < hi:
+		var off := 0.0 if int(y / 10.0) % 2 == 0 else 5.0
+		var x := x0 + 4.0 + off
+		while x < x1:
+			wc.circle(Vector2(x, y), 1.3, CAR_DOT)
+			x += 10.0
+		y += 10.0
+	# the shell: white walls, a run of windows down each side
+	for sx: float in [x0 - 16.0, x1]:
+		wc.rect(Rect2(sx, lo, 16.0, hi - lo), CAR_SHELL)
+		var wy := floorf((lo - M.CAR_N) / 74.0) * 74.0 + M.CAR_N + 12.0
+		while wy < hi:
+			if wy > M.CAR_N + 6.0 and wy + 52.0 < M.CAR_S - 6.0:
+				wc.rect(Rect2(sx + 4.0, wy, 8.0, 52.0), CAR_GLASS)
+			wy += 74.0
+		wc.rect(Rect2(sx + (12.0 if sx < x0 else 2.0), lo, 2.0, hi - lo), LINE_A)
+	# the end walls round the doors
+	for r: Rect2 in M.car_walls():
+		if r.end.y > lo and r.position.y < hi:
+			wc.rect(r.grow(2.0), STEEL_DARK)
+			wc.rect(r, CAR_SHELL)
+	# the bench seats, and the people sitting on them
+	var k := 0
+	for r: Rect2 in M.seats():
+		if r.end.y < lo or r.position.y > hi:
+			k += 6
+			continue
+		wc.rect(Rect2(r.position + Vector2(3.0, 3.0), r.size), SHADOW)
+		wc.rect(r, SEAT.darkened(0.3))
+		var sy := r.position.y + 2.0
+		var j := 0
+		while sy + 34.0 <= r.end.y:
+			wc.rect(Rect2(r.position.x + 2.0, sy, r.size.x - 4.0, 32.0), SEAT)
+			wc.rect(Rect2(r.position.x + 4.0, sy + 3.0, r.size.x - 8.0, 10.0), SEAT_LIT)
+			if _h(k * 7 + j) < 0.55:
+				var left := r.position.x < M.CX
+				var at := Vector2(r.position.x + r.size.x * (0.62 if left else 0.38), sy + 16.0)
+				NpcFigure.person(wc, at, Vector2.RIGHT if left else Vector2.LEFT, 300 + k * 5 + j, -1.0, {"arms": NpcFigure.Arms.READY})
+			sy += 36.0
+			j += 1
+		k += 6
+	# the grab rail along the ceiling, drawn where its poles stand
+	wc.line(Vector2(M.CX - 55.0, maxf(lo, M.CAR_N + 20.0)), Vector2(M.CX - 55.0, minf(hi, M.CAR_S - 20.0)), Color(0.70, 0.72, 0.74, 0.35), 3.0)
+	wc.line(Vector2(M.CX + 55.0, maxf(lo, M.CAR_N + 20.0)), Vector2(M.CX + 55.0, minf(hi, M.CAR_S - 20.0)), Color(0.70, 0.72, 0.74, 0.35), 3.0)
+
+
+# shoe prints walked in off the street, fading the further in they go
+static func _footprints(wc: ShapeBatch, lo: float, hi: float) -> void:
+	var y0 := maxf(lo, M.TURN_Y + 40.0)
+	var y1 := minf(hi, M.STAIR_TOP + 40.0)
+	if y1 <= y0:
+		return
+	for trail in range(7):
+		var tx := 520.0 + float(trail) * 40.0 + _h(trail * 9) * 30.0
+		var y := floorf(y0 / 30.0) * 30.0
+		var side := 0
+		while y < y1:
+			var depth := clampf((M.STAIR_TOP - y) / (M.STAIR_TOP - M.TURN_Y), 0.0, 1.0)
+			var a := 0.32 * (1.0 - depth)
+			if a > 0.02 and (trail < 3 or y > -1000.0):
+				var px := tx + (7.0 if side % 2 == 0 else -7.0) + sin(y * 0.013 + float(trail)) * 18.0
+				var p := Vector2(px, y)
+				wc.circle(p, 4.2, Color(PRINT.r, PRINT.g, PRINT.b, a))
+				wc.circle(p + Vector2(0.0, 7.0), 3.0, Color(PRINT.r, PRINT.g, PRINT.b, a))
+			y += 30.0
+			side += 1
+
+
+# the station's own lamps: soft pools down the middle of every room
+static func _lamp_pools(wc: ShapeBatch, lo: float, hi: float) -> void:
+	var y := floorf(lo / 180.0) * 180.0 + 90.0
+	while y < hi + 180.0:
+		var u: float = M.under_at(y)
+		if u > 0.3 and y > M.STREET_B and y < M.STAIR_TOP:
+			var x := M.CX
+			if y < M.STAIR_FOOT - 200.0 and y > M.HALL_Y1:
+				for hx: float in [M.CX - 170.0, M.CX + 170.0]:
+					wc.glow(Vector2(hx, y), 170.0, Color(LAMP_POOL.r, LAMP_POOL.g, LAMP_POOL.b, LAMP_POOL.a * u), 0.2)
+			else:
+				wc.glow(Vector2(x, y), 150.0, Color(LAMP_POOL.r, LAMP_POOL.g, LAMP_POOL.b, LAMP_POOL.a * u), 0.2)
+		y += 180.0
+
+
+# --- beyond the walls (cached) ----------------------------------------------------------
+
+static func draw_edges(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	var keep := b.lod
+	b.lod = true
+	var lo := maxf(vt - 400.0, float(m.GATE_Y) - 40.0)
+	var hi := minf(vb + 400.0, float(m.START_Y) + 700.0)
+	if hi > lo:
+		_edges(m, b, lo, hi)
+	b.lod = keep
+
+
+static func _edges(m: Node2D, b: ShapeBatch, lo: float, hi: float) -> void:
+	var wet := Outdoors.tracks_wet(Game.weather)
+	var c: Vector2
+	# underground, everything past the walls is the ground it is dug into
+	c = _clip(lo, hi, M.STAIR_B0, M.STAIR_FOOT)
+	if c.y > c.x:
+		b.rect(Rect2(-900.0, c.x, 3080.0, c.y - c.x), VOID)
+		var y := floorf(c.x / 70.0) * 70.0
+		while y < c.y:
+			b.rect(Rect2(-900.0, y, 3080.0, 2.0), VOID_LINE)
+			y += 70.0
+		_walls(b, c.x, c.y)
+		_tracks(b, c.x, c.y)
+		_signs(b, c.x, c.y)
+	# the streets: the road to the west, the shops to the east
+	c = _clip(lo, hi, M.STAIR_FOOT, float(m.START_Y) + 700.0)
+	if c.y > c.x:
+		_street_edges(b, c.x, c.y, wet, true)
+	c = _clip(lo, hi, float(m.GATE_Y) - 40.0, M.STAIR_B0)
+	if c.y > c.x:
+		_street_edges(b, c.x, c.y, wet, false)
+
+
+# a section's walls: white bevelled tile, a band round the floor
+static func _walls(b: ShapeBatch, lo: float, hi: float) -> void:
+	for sec: Array in M.SECTIONS:
+		var kind := String(sec[4])
+		if kind.begins_with("street") or kind.begins_with("stairs") or kind == "car":
+			continue
+		var y0 := maxf(float(sec[0]) - 26.0, lo)
+		var y1 := minf(float(sec[1]) + 26.0, hi)
+		if y1 <= y0:
+			continue
+		var x0: float = float(sec[2]) - 26.0
+		var w: float = float(sec[3]) - float(sec[2]) + 52.0
+		b.rect(Rect2(x0, y0, w, y1 - y0), TILE)
+		var ty := floorf(y0 / 13.0) * 13.0
+		while ty < y1:
+			b.rect(Rect2(x0, ty, w, 1.2), TILE_GROUT)
+			ty += 13.0
+		b.rect(Rect2(x0, y0, 4.0, y1 - y0), TILE_SHADE)
+		b.rect(Rect2(x0 + w - 4.0, y0, 4.0, y1 - y0), TILE_SHADE)
+	# the car's tunnel, beyond its shell (the overhead draws what is out there)
+	var cc := _clip(lo, hi, M.CAR_N, M.CAR_S)
+	if cc.y > cc.x:
+		b.rect(Rect2(-900.0, cc.x, 3080.0, cc.y - cc.x), TUNNEL)
+
+
+# the other line's track, east of both platforms, and the tunnel wall beyond
+static func _tracks(b: ShapeBatch, lo: float, hi: float) -> void:
+	for sec: Vector2 in [Vector2(M.CAR_S - 5.0, M.PLAT_A0), Vector2(M.PLAT_B1, M.CAR_N + 5.0)]:
+		var c := _clip(lo, hi, sec.x, sec.y)
+		if c.y <= c.x:
+			continue
+		var x0 := 880.0
+		b.rect(Rect2(x0, c.x, 170.0, c.y - c.x), PIT)
+		b.rect(Rect2(x0 + 20.0, c.x, 130.0, c.y - c.x), BALLAST)
+		var y := floorf(c.x / 30.0) * 30.0
+		while y < c.y:
+			b.rect(Rect2(M.TRACK_X - 40.0, y, 80.0, 10.0), SLEEPER)
+			y += 30.0
+		for rx: float in [M.TRACK_X - 26.0, M.TRACK_X + 26.0]:
+			b.rect(Rect2(rx - 3.0, c.x, 6.0, c.y - c.x), RAIL)
+			b.rect(Rect2(rx - 2.0, c.x, 1.5, c.y - c.x), RAIL_LIT)
+		# the far wall, tiled, the station's colour along it
+		b.rect(Rect2(x0 + 170.0, c.x, 30.0, c.y - c.x), TILE)
+		b.rect(Rect2(x0 + 170.0, c.x, 6.0, c.y - c.x), PARAIGUES if sec.y == M.PLAT_A0 else SANT_GOS)
+
+
+# the station names and the way out, on the walls
+static func _signs(b: ShapeBatch, lo: float, hi: float) -> void:
+	var panels := [
+		[Vector2(300.0, -2700.0), "PARAIGÜES", PARAIGUES], [Vector2(300.0, -2960.0), "PARAIGÜES", PARAIGUES],
+		[Vector2(300.0, -3200.0), "PARAIGÜES", PARAIGUES], [Vector2(1150.0, -2850.0), "PARAIGÜES", PARAIGUES],
+		[Vector2(1150.0, -3150.0), "PARAIGÜES", PARAIGUES],
+		[Vector2(300.0, -4000.0), "SANT GOS", SANT_GOS], [Vector2(300.0, -4330.0), "SANT GOS", SANT_GOS],
+		[Vector2(1150.0, -4150.0), "SANT GOS", SANT_GOS],
+		[Vector2(280.0, -980.0), "PARAIGÜES", PARAIGUES], [Vector2(280.0, -1400.0), "ANDANES", Color(0.30, 0.30, 0.32)],
+		[Vector2(1000.0, -1350.0), "SORTIDA", Color(0.20, 0.52, 0.30)], [Vector2(980.0, -4600.0), "SORTIDA", Color(0.20, 0.52, 0.30)],
+		[Vector2(372.0, -2380.0), "ANDANA", Color(0.30, 0.30, 0.32)],
+	]
+	for p: Array in panels:
+		var at: Vector2 = p[0]
+		if at.y < lo - 30.0 or at.y > hi + 30.0:
+			continue
+		name_panel(b, at, 150.0, String(p[1]), p[2])
+	# the change to line C, in the passage
+	if lo < -2180.0 and hi > -2260.0:
+		var at := Vector2(372.0, -2220.0)
+		b.rect(Rect2(at - Vector2(70.0, 13.0), Vector2(140.0, 26.0)), Color(0.96, 0.96, 0.94))
+		roundel(b, at + Vector2(-52.0, 0.0), 9.0, LINE_C, "C")
+		letters(b, "CORRESPONDÈNCIA", at + Vector2(10.0, 5.0), 9.0, Color(0.14, 0.14, 0.16), 1.3, 100.0)
+	# posters along the passage, framed
+	var py := floorf(lo / 210.0) * 210.0
+	while py < hi:
+		if py < M.PASS_Y0 - 40.0 and py > M.PLAT_A0 + 40.0 and not (py < M.NICHE_Y0 + 30.0 and py > M.NICHE_Y1 - 30.0) and absf(py + 2220.0) > 60.0 and absf(py + 2380.0) > 60.0:
+			var k := int(absf(py))
+			for side: float in [-1.0, 1.0]:
+				var x := M.CX + side * (M.PASS_HALF + 58.0)
+				var col: Color = AWNINGS[(k / 210 + (1 if side > 0.0 else 0)) % AWNINGS.size()]
+				b.rect(Rect2(x - 30.0, py - 44.0, 60.0, 88.0), Color(0.08, 0.08, 0.09))
+				b.rect(Rect2(x - 27.0, py - 41.0, 54.0, 82.0), col)
+				b.circle(Vector2(x, py - 10.0), 14.0, col.lightened(0.35))
+				b.rect(Rect2(x - 20.0, py + 18.0, 40.0, 5.0), Color(0.96, 0.96, 0.94))
+				b.rect(Rect2(x - 20.0, py + 28.0, 28.0, 3.0), Color(0.96, 0.96, 0.94, 0.8))
+		py += 210.0
+
+
+static func _street_edges(b: ShapeBatch, lo: float, hi: float, wet: bool, south: bool) -> void:
+	var x0 := M.CX - M.STREET_HALF
+	var x1 := M.CX + M.STREET_HALF
+	# the road to the west, glossy in the rain, a lane line down it
+	b.rect(Rect2(x0 - 160.0, lo, 160.0, hi - lo), ASPHALT_WET if wet else ASPHALT)
+	var dy := floorf(lo / 80.0) * 80.0
+	while dy < hi:
+		b.rect(Rect2(x0 - 82.0, dy, 3.0, 40.0), LANE_LINE)
+		if wet:
+			b.rect(Rect2(x0 - 150.0 + _h(int(dy)) * 120.0, dy + 20.0, 30.0, 3.0), Color(0.70, 0.78, 0.90, 0.18))
+		dy += 80.0
+	# the far pavement and its roofs
+	b.rect(Rect2(x0 - 210.0, lo, 50.0, hi - lo), PAVE_WET if wet else PAVE)
+	_roofs(b, x0 - 1100.0, x0 - 210.0, lo, hi, 3)
+	# the shops to the east: a row of awnings at the building line, then roofs
+	b.rect(Rect2(x1, lo, 30.0, hi - lo), Color(0.46, 0.42, 0.40))
+	var ay := floorf(lo / 110.0) * 110.0
+	while ay < hi:
+		var k := int(absf(ay)) / 110
+		b.rect(Rect2(x1 - 2.0, ay + 14.0, 26.0, 80.0), AWNINGS[k % AWNINGS.size()])
+		for s in range(4):
+			b.rect(Rect2(x1 - 2.0, ay + 14.0 + float(s) * 20.0, 26.0, 9.0), AWNINGS[k % AWNINGS.size()].lightened(0.18))
+		ay += 110.0
+	_roofs(b, x1 + 30.0, x1 + 1000.0, lo, hi, 9)
+	# the stair mouth: the pavement round it at street level, and its railing
+	var top := M.STAIR_TOP if south else M.STREET_B
+	var deep := M.STAIR_FOOT if south else M.STAIR_B0
+	var c := _clip(lo, hi, minf(top, deep), maxf(top, deep))
+	if c.y > c.x:
+		for side: float in [-1.0, 1.0]:
+			var wx := M.CX + side * M.STAIR_HALF
+			var px := minf(wx, M.CX + side * M.STREET_HALF)
+			b.rect(Rect2(px, c.x, M.STREET_HALF - M.STAIR_HALF, c.y - c.x), PAVE_WET if wet else PAVE)
+			Panot.flor(b, px, px + M.STREET_HALF - M.STAIR_HALF, c.x, c.y)
+			# the granite parapet the railing stands on, and the railing
+			var gx := wx if side > 0.0 else wx - 14.0
+			b.rect(Rect2(gx, c.x, 14.0, c.y - c.x), GRANITE)
+			b.rect(Rect2(gx + 5.0, c.x, 4.0, c.y - c.x), RAILING)
+			b.rect(Rect2(gx + 5.0, c.x, 1.5, c.y - c.x), RAILING_LIT)
+			var ry := floorf(c.x / 22.0) * 22.0
+			while ry < c.y:
+				b.circle(Vector2(gx + 7.0, ry), 2.6, RAILING)
+				ry += 22.0
+
+
+static func _roofs(b: ShapeBatch, x0: float, x1: float, lo: float, hi: float, salt: int) -> void:
+	var y := floorf(lo / 150.0) * 150.0
+	while y < hi:
+		var k := int(absf(y)) / 150 + salt
+		var col: Color = ROOF_TONES[k % ROOF_TONES.size()]
+		b.rect(Rect2(x0, y, x1 - x0, 150.0), col)
+		b.rect(Rect2(x0, y, x1 - x0, 4.0), PARAPET)
+		b.rect(Rect2(x0 + 40.0 + _h(k) * 200.0, y + 40.0, 44.0, 30.0), PARAPET.darkened(0.1))
+		y += 150.0
+
+
+# --- the escalators' treads (live) -------------------------------------------------------
+
+static func draw_escalators(_m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	var scroll := fmod(AnimClock.msec() / 1000.0 * 118.0, 18.0)
+	for z: Rect2 in [M.ESC_A, M.ESC_B]:
+		if z.end.y < vt - 40.0 or z.position.y > vb + 40.0:
+			continue
+		var y0 := maxf(z.position.y, vt - 40.0)
+		var y1 := minf(z.end.y, vb + 40.0)
+		wc.rect(Rect2(z.position.x, y0, z.size.x, y1 - y0), Color(0.46, 0.48, 0.51))
+		# treads moving north: a cleat line every 18 px
+		var y := floorf(y0 / 18.0) * 18.0 - scroll
+		while y < y1:
+			if y > z.position.y + 10.0 and y < z.end.y - 10.0:
+				wc.rect(Rect2(z.position.x + 6.0, y, z.size.x - 12.0, 2.0), Color(0.30, 0.31, 0.33))
+				wc.rect(Rect2(z.position.x + 6.0, y + 2.0, z.size.x - 12.0, 1.0), STEEL_LIT)
+			y += 18.0
+		# the yellow-edged skirt, and the comb plates at each end
+		wc.rect(Rect2(z.position.x, y0, 6.0, y1 - y0), NOSING)
+		wc.rect(Rect2(z.end.x - 6.0, y0, 6.0, y1 - y0), NOSING)
+		for ey: float in [z.position.y, z.end.y - 12.0]:
+			if ey > vt - 40.0 and ey < vb + 40.0:
+				wc.rect(Rect2(z.position.x, ey, z.size.x, 12.0), STEEL)
+				wc.rect(Rect2(z.position.x, ey + (10.0 if ey == z.position.y else 0.0), z.size.x, 2.0), NOSING)
+
+
+# --- live: bars, doors, the other train, everyone on foot -----------------------------------
+
+static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	var st = m.metro
+	if st == null:
+		return
+	var t := AnimClock.msec() / 1000.0
+	if M.TURN_Y > vt - 60.0 and M.TURN_Y < vb + 60.0:
+		_bars(wc, st)
+	if M.CAR_S > vt - 60.0 and M.CAR_N < vb + 60.0:
+		_doors(wc, st.train, t)
+	if M.CAR_S > vt - 200.0 and M.PLAT_A0 < vb + 200.0:
+		_other_train(wc, st.surge, vt, vb)
+	if M.BUSKER.y > vt - 80.0 and M.BUSKER.y < vb + 80.0:
+		_busker(wc, t)
+	if -860.0 > vt - 80.0 and -860.0 < vb + 80.0 and Outdoors.umbrella_shakers(Game.weather, Game.hour):
+		_shakers(wc, t)
+	for p: Dictionary in st.people:
+		var pos: Vector2 = p.p
+		if pos.y < vt - 40.0 or pos.y > vb + 40.0:
+			continue
+		var moving: bool = (p.v as Vector2).length() > 5.0
+		var stride := float(p.t) * 9.0 if moving else -1.0
+		var size := 1.0 + (0.14 if float(p.hop) > 0.0 else 0.0)
+		NpcFigure.person(wc, pos, p.face, int(p.key), stride, {"size": size,
+			"arms": NpcFigure.Arms.READY if String(p.mode) == "wait" else NpcFigure.Arms.SIDE})
+
+
+static func _bars(wc: ShapeBatch, st) -> void:
+	var g = st.gate
+	for i in range(M.GATE_XS.size()):
+		var gx: float = M.GATE_XS[i]
+		var hub := Vector2(gx - 26.0, M.TURN_Y + 6.0)
+		var ang := 0.0
+		if i == M.HUMAN_GATE:
+			ang = float(g.bar) * PI * 0.5
+		var tip := hub + Vector2(cos(-ang), sin(-ang)) * 48.0
+		wc.line(hub + Vector2(1.5, 2.0), tip + Vector2(1.5, 2.0), SHADOW, 4.0)
+		wc.line(hub, tip, STEEL_DARK, 4.0)
+		wc.line(hub, tip, STEEL_LIT, 1.6)
+		wc.circle(hub, 4.0, STEEL_DARK)
+		# the lamp on the cabinet: green for your human's, once the card is read
+		var lamp := Vector2(gx + 29.0, M.TURN_Y - 20.0)
+		var open: bool = i == M.HUMAN_GATE and float(g.bar) > 0.2
+		wc.circle(lamp, 3.0, GREEN if open else RED)
+
+
+static func _doors(wc: ShapeBatch, tr, t: float) -> void:
+	var warn: bool = tr.state == 1 or tr.state == 2
+	for end: int in [1, -1]:
+		var y := M.CAR_S if end > 0 else M.CAR_N
+		var g: float = tr.gap_s if end > 0 else tr.gap_n
+		var leaf := M.DOOR_HALF * (1.0 - g)
+		for side: float in [-1.0, 1.0]:
+			var edge := M.DOOR_L if side < 0.0 else M.DOOR_R
+			var x0 := minf(edge, edge - side * leaf)
+			var w := leaf
+			# the leaves slide into pockets in the end wall
+			wc.rect(Rect2(x0, y - 5.0, w, 10.0), DOOR)
+			if w > 6.0:
+				wc.rect(Rect2(x0 + 3.0, y - 2.5, w - 6.0, 5.0), CAR_GLASS)
+				var lip := x0 + w if side < 0.0 else x0
+				wc.rect(Rect2(lip - 1.5, y - 6.0, 3.0, 12.0), DOOR_EDGE)
+		# the warning lamp over the doorway, flashing with the chime
+		var on: bool = warn and end == tr.open_end and fmod(t * 4.0, 1.0) < 0.5
+		for lx: float in [M.DOOR_L - 8.0, M.DOOR_R + 8.0]:
+			wc.circle(Vector2(lx, y), 4.0, WARN_ON if on else WARN_OFF)
+			if on:
+				wc.glow(Vector2(lx, y), 26.0, Color(1.0, 0.76, 0.2, 0.35), 0.2)
+
+
+# the other line's train, in on the far track by the Paraigües platform
+static func _other_train(wc: ShapeBatch, s, vt: float, vb: float) -> void:
+	if s.state == 0:
+		return
+	var off := 0.0
+	match int(s.state):
+		1:
+			var k := clampf(float(s.t) / M.SURGE_IN_T, 0.0, 1.0)
+			off = -pow(1.0 - k, 2.0) * 1100.0
+		5:
+			var k := clampf(float(s.t) / M.SURGE_OUT_T, 0.0, 1.0)
+			off = k * k * 1300.0
+	var top := M.CAR_S + 6.0
+	var bot := M.PLAT_A0 - 6.0
+	var open: bool = int(s.state) >= 2 and int(s.state) <= 4
+	var x0 := M.TRACK_X - 50.0
+	var y := top + off - 40.0
+	var car := 0
+	while car < 4:
+		var c0 := y + float(car) * 236.0
+		var c1 := c0 + 226.0
+		var a := maxf(c0, maxf(top, vt - 40.0))
+		var b2 := minf(c1, minf(bot, vb + 40.0))
+		if b2 > a:
+			wc.rect(Rect2(x0, a, 100.0, b2 - a), TRAIN_BODY)
+			wc.rect(Rect2(x0 + 12.0, a, 76.0, b2 - a), TRAIN_ROOF)
+			wc.rect(Rect2(x0 + 2.0, a, 4.0, b2 - a), LINE_A)
+			# its doors on the platform side, open while it stands
+			for d in range(2):
+				var dy := c0 + 50.0 + float(d) * 110.0
+				if dy > a and dy + 40.0 < b2:
+					wc.rect(Rect2(x0 - 2.0, dy, 8.0, 40.0), Color(1.0, 0.92, 0.70) if open else DOOR)
+					if open:
+						wc.glow(Vector2(x0 - 20.0, dy + 20.0), 44.0, Color(1.0, 0.92, 0.7, 0.22), 0.2)
+		car += 1
+	# its headlights, coming in
+	if int(s.state) == 1:
+		var front := y + 4.0 * 236.0 - 10.0
+		if front > top and front < bot:
+			wc.glow(Vector2(M.TRACK_X, front + 40.0), 90.0, Color(1.0, 0.96, 0.8, 0.30), 0.2)
+
+
+static func _busker(wc: ShapeBatch, t: float) -> void:
+	var p := M.BUSKER
+	# the open case and the coins in it
+	wc.rect(Rect2(p.x - 50.0, p.y + 12.0, 34.0, 22.0), Color(0.20, 0.12, 0.10))
+	wc.rect(Rect2(p.x - 48.0, p.y + 14.0, 30.0, 18.0), Color(0.62, 0.16, 0.20))
+	for i in range(5):
+		wc.circle(Vector2(p.x - 44.0 + _h(i) * 22.0, p.y + 18.0 + _h(i * 3) * 10.0), 2.0, Color(0.92, 0.80, 0.36))
+	if not Outdoors.underground_busker(Game.weather, Game.hour):
+		return
+	NpcFigure.person(wc, p, Vector2.LEFT, 77, -1.0, {"hair": Color(0.82, 0.82, 0.80), "headwear": "cap",
+		"headwear_col": Color(0.24, 0.20, 0.18), "arms": NpcFigure.Arms.READY})
+	# the accordion, breathing in and out
+	var sq := 6.0 + 4.0 * sin(t * 3.2)
+	var at := p + Vector2(-14.0, 0.0)
+	wc.rect(Rect2(at.x - 6.0, at.y - sq - 6.0, 12.0, 6.0), Color(0.82, 0.14, 0.16))
+	wc.rect(Rect2(at.x - 6.0, at.y + sq, 12.0, 6.0), Color(0.82, 0.14, 0.16))
+	var by := at.y - sq
+	while by < at.y + sq:
+		wc.rect(Rect2(at.x - 5.0, by, 10.0, 1.6), Color(0.14, 0.12, 0.12))
+		by += 3.0
+	# notes rising off it
+	for i in range(3):
+		var ph := fmod(t * 0.6 + float(i) / 3.0, 1.0)
+		var np := at + Vector2(-10.0 - ph * 30.0 + sin(ph * 9.0 + float(i)) * 6.0, -10.0 - ph * 46.0)
+		var a := (1.0 - ph) * 0.8
+		wc.circle(np, 2.6, Color(1.0, 0.95, 0.75, a))
+		wc.line(np + Vector2(2.2, 0.0), np + Vector2(2.2, -8.0), Color(1.0, 0.95, 0.75, a), 1.2)
+
+
+# out of the rain: two people at the foot of the stairs shaking out their umbrellas
+static func _shakers(wc: ShapeBatch, t: float) -> void:
+	var spots := [[Vector2(430.0, -860.0), 41], [Vector2(852.0, -872.0), 53]]
+	for s: Array in spots:
+		var p: Vector2 = s[0]
+		var k: int = s[1]
+		var face := Vector2.RIGHT if p.x < M.CX else Vector2.LEFT
+		NpcFigure.person(wc, p, face, k, -1.0, {"arms": NpcFigure.Arms.READY})
+		var shake := sin(t * 11.0 + float(k)) * 0.5
+		var tip := p + face.rotated(shake) * 30.0
+		var col: Color = AWNINGS[k % AWNINGS.size()]
+		var pts := PackedVector2Array()
+		for i in range(8):
+			var a := TAU * float(i) / 8.0
+			pts.append(tip + Vector2(cos(a) * 15.0, sin(a) * 11.0).rotated(shake))
+		wc.polygon(pts, col)
+		wc.circle(tip, 2.0, Color(0.10, 0.10, 0.10))
+		wc.line(p + face * 8.0, tip, Color(0.12, 0.12, 0.12), 1.6)
+		# the water flung off it
+		for i in range(6):
+			var ph := fmod(t * 2.2 + float(i) / 6.0 + float(k), 1.0)
+			var d := face.rotated(shake * 2.0 + (float(i) - 2.5) * 0.4) * (18.0 + ph * 30.0)
+			wc.circle(tip + d, 1.6, Color(0.70, 0.82, 0.96, 0.7 * (1.0 - ph)))
+
+
+# --- overhead: the car's outside, the tunnel over the platforms during a ride ---------------
+
+static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
+	var st = m.metro
+	if st == null or m.cam == null:
+		return
+	var cy: float = m.cam.get_screen_center_position().y
+	if absf(cy - (M.CAR_S + M.CAR_N) * 0.5) > 1300.0:
+		return
+	var b := ShapeBatch.new(c)
+	var tr = st.train
+	var riding: bool = tr.state == 5 or tr.state == 6
+	# how far the station still has to slide in, braking into it
+	var slide := 0.0
+	if tr.state == 6:
+		var k := clampf(float(tr.t) / M.BRAKE_T, 0.0, 1.0)
+		slide = pow(1.0 - k, 2.0) * 520.0
+	var travel_dir := -float(tr.open_end)        # -1 north
+	for side: float in [-1.0, 1.0]:
+		var x_in := M.CAR_L - 16.0 if side < 0.0 else M.CAR_R + 16.0
+		var x0 := minf(x_in, x_in + side * 900.0)
+		var r := Rect2(x0, M.CAR_N, 900.0, M.CAR_S - M.CAR_N)
+		b.rect(r, TUNNEL)
+		if riding:
+			_tunnel(b, x_in, side, float(tr.travel), float(tr.speed), travel_dir)
+		if tr.state == 6 or not riding:
+			# docked (or braking into it): the station's platform beside the car
+			var here: int = tr.open_end
+			if tr.state == 6:
+				here = -tr.open_end
+			_station_side(b, x_in, side, here > 0, slide * travel_dir)
+	# the platforms beyond the shut doors are the tunnel while it rides
+	if riding:
+		for end: int in [1, -1]:
+			var y := M.CAR_S if end > 0 else M.CAR_N
+			var reach := 260.0
+			if tr.state == 6 and end == -tr.open_end:
+				reach *= minf(1.0, slide / 520.0 + 0.05)
+			var y0 := y if end > 0 else y - reach
+			b.rect(Rect2(M.CX - M.PLAT_HALF - 30.0, y0, M.PLAT_HALF * 2.0 + 60.0, reach), TUNNEL)
+			# with the tunnel's own lamps going by
+			var ly := fmod(float(tr.travel) * 0.7, 260.0)
+			for j in range(2):
+				var yy := y0 + fmod(ly + float(j) * 130.0, reach)
+				b.rect(Rect2(M.CX - M.PLAT_HALF - 20.0, yy, 10.0, 6.0 + float(tr.speed) * 0.04), TUNNEL_LAMP)
+				b.rect(Rect2(M.CX + M.PLAT_HALF + 10.0, yy, 10.0, 6.0 + float(tr.speed) * 0.04), TUNNEL_LAMP)
+	b.flush()
+
+
+static func _tunnel(b: ShapeBatch, x_in: float, side: float, travel: float, speed: float, dir: float) -> void:
+	# the tunnel wall close to the windows, its lamps and cables streaking by
+	var wall_x := x_in + side * 40.0
+	b.rect(Rect2(minf(wall_x, wall_x + side * 30.0), M.CAR_N, 30.0, M.CAR_S - M.CAR_N), TUNNEL_WALL)
+	for k in range(3):
+		var cx := x_in + side * (18.0 + float(k) * 6.0)
+		b.rect(Rect2(cx - 1.0, M.CAR_N, 2.0, M.CAR_S - M.CAR_N), CABLE)
+	var streak := 8.0 + speed * 0.06
+	var ph := fmod(travel, 220.0)
+	var y := M.CAR_N - 220.0 - ph * dir
+	while y < M.CAR_S + 220.0:
+		if y > M.CAR_N and y + streak < M.CAR_S:
+			b.rect(Rect2(wall_x - 4.0 if side < 0.0 else wall_x - 6.0, y, 10.0, streak), TUNNEL_LAMP)
+			b.glow(Vector2(x_in + side * 20.0, y + streak * 0.5), 34.0, Color(1.0, 0.86, 0.56, 0.18), 0.2)
+		y += 220.0
+
+
+static func _station_side(b: ShapeBatch, x_in: float, side: float, paraigues: bool, off: float) -> void:
+	var col := PARAIGUES if paraigues else SANT_GOS
+	var name := "PARAIGÜES" if paraigues else "SANT GOS"
+	var y0 := M.CAR_N + off
+	var y1 := M.CAR_S + off
+	var a := maxf(y0, M.CAR_N)
+	var z := minf(y1, M.CAR_S)
+	if z <= a:
+		return
+	# the platform at the car's side, its yellow edge, then the wall
+	var px := minf(x_in, x_in + side * 150.0)
+	b.rect(Rect2(px, a, 150.0, z - a), PLAT_FLOOR)
+	var ex := x_in + side * 4.0
+	b.rect(Rect2(minf(ex, ex + side * 22.0), a, 22.0, z - a), TACTILE)
+	var wx := x_in + side * 150.0
+	b.rect(Rect2(minf(wx, wx + side * 40.0), a, 40.0, z - a), TILE)
+	b.rect(Rect2(minf(wx, wx + side * 8.0), a, 8.0, z - a), col)
+	var ny := y0 + 120.0
+	while ny < y1:
+		if ny > M.CAR_N + 20.0 and ny < M.CAR_S - 20.0:
+			name_panel(b, Vector2(x_in + side * 75.0, ny), 120.0, name, col)
+		ny += 240.0
+	b.glow(Vector2(x_in + side * 70.0, (a + z) * 0.5), 260.0, Color(1.0, 0.97, 0.88, 0.10), 0.2)
+
+
+# --- furniture -------------------------------------------------------------------------
+
+static func draw_column(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
+	var l: Vector2 = Shade.light
+	if p in M.LAMPS:
+		m._draw_lamppost(p)
+		return
+	if p in M.ROUNDEL_POSTS:
+		# the entrance's post: a tall steel pole, its roundel on top
+		wc.line(p + l * 6.0, p + l * 70.0, SHADOW, 6.0)
+		wc.circle(p + l * 70.0, 14.0, SHADOW)
+		wc.circle(p, 5.0, STEEL_DARK)
+		roundel(wc, p, 12.0, LINE_A, "A")
+		return
+	if p in M.CAR_POLES:
+		# a grab pole: polished steel, floor to ceiling
+		wc.circle(p + l * 4.0, 5.0, SHADOW)
+		wc.circle(p, 4.5, STEEL_DARK)
+		wc.circle(p, 3.4, STEEL)
+		wc.circle(p - l * 1.2, 1.4, STEEL_LIT)
+		return
+	if absf(p.x - M.CX) < 1.0 and p.y > M.STAIR_FOOT and p.y < M.STAIR_TOP + 20.0:
+		# the handrail's end posts
+		wc.circle(p, 6.0, STEP_EDGE)
+		wc.circle(p, 4.5, STEEL)
+		return
+	# the platforms' and the hall's columns: square, tiled, the station's colour round them
+	var col := PARAIGUES if p.y > M.CAR_S else SANT_GOS
+	if p.y > M.HALL_Y1:
+		col = LINE_A
+	wc.glow(p + l * 14.0, 36.0, Color(0.05, 0.05, 0.08, 0.26), 0.3)
+	wc.rect(Rect2(p - Vector2(16.0, 16.0), Vector2(32.0, 32.0)), TILE_GROUT)
+	wc.rect(Rect2(p - Vector2(14.0, 14.0), Vector2(28.0, 28.0)), TILE)
+	wc.rect(Rect2(p - Vector2(14.0, 3.0), Vector2(28.0, 6.0)), col)
+	wc.rect(Rect2(p - Vector2(14.0, 14.0), Vector2(28.0, 3.0)), Color(1, 1, 1, 0.6))
+
+
+static func draw_bench(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
+	# a row of perforated steel seats on a rail along the wall
+	m.box_shadow(wc, Rect2(p.x - 10.0, p.y - 30.0, 20.0, 60.0), 4.0, 7.0)
+	wc.rect(Rect2(p.x - 12.0, p.y - 30.0, 3.0, 60.0), STEEL_DARK)
+	for k in range(4):
+		var sp := Vector2(p.x, p.y - 22.0 + float(k) * 15.0)
+		wc.rect(Rect2(sp.x - 9.0, sp.y - 6.0, 19.0, 13.0), STEEL_DARK)
+		wc.rect(Rect2(sp.x - 8.0, sp.y - 5.0, 17.0, 11.0), STEEL)
+		for d in range(3):
+			wc.circle(Vector2(sp.x - 4.0 + float(d) * 5.0, sp.y), 1.0, STEEL_DARK)
+
+
+static func draw_bin(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
+	if p.y > M.STAIR_TOP or p.y < M.STREET_B:
+		m._draw_paperera(p)
+		return
+	# a metro bin: a steel ring holding a clear bag, so it hides nothing
+	m.contact_shadow(wc, p, 13.0, 6.0, 0.22)
+	wc.circle(p, 12.0, STEEL_DARK)
+	wc.circle(p, 10.5, Color(0.78, 0.84, 0.86, 0.55))
+	wc.circle(p + Vector2(-2.0, 1.0), 5.0, Color(0.92, 0.90, 0.84, 0.5))
+	wc.rect(Rect2(p.x - 12.0, p.y - 1.5, 24.0, 3.0), STEEL)
+
+
+static func draw_bollard(m: Node2D, wc: ShapeBatch, h) -> void:
+	var hp: Vector2 = h.pos
+	if hp.y > M.STAIR_TOP or hp.y < M.STREET_B:
+		m._draw_pilona(wc, hp, h.done)
+		if not h.done and h.progress > 0.0:
+			wc.draw_arc(hp, 20.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
+		return
+	# a fire extinguisher on its stand by the wall: the station's lamp post
+	m.contact_shadow(wc, hp, 12.0, 8.0, 0.24)
+	wc.rect(Rect2(hp.x - 10.0, hp.y - 4.0, 20.0, 8.0), STEEL_DARK)
+	var body := RED if not h.done else RED.darkened(0.3)
+	wc.circle(hp, 8.0, body.darkened(0.3))
+	wc.circle(hp, 6.6, body)
+	wc.circle(hp - Shade.light * 2.0, 2.4, body.lightened(0.35))
+	wc.circle(hp + Vector2(0.0, -2.0), 2.2, Color(0.12, 0.12, 0.13))
+	wc.line(hp + Vector2(1.5, -2.0), hp + Vector2(9.0, -8.0), Color(0.12, 0.12, 0.13), 2.0)
+	if not h.done and h.progress > 0.0:
+		wc.draw_arc(hp, 18.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)

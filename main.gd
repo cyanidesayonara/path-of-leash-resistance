@@ -378,6 +378,7 @@ const WALK_MODULES := {
 	"espanya": preload("res://systems/espanya.gd"),
 	"eixample": preload("res://systems/eixample.gd"),
 	"diagonal": preload("res://systems/diagonal.gd"),
+	"metro": preload("res://systems/metro.gd"),
 	"angels": preload("res://systems/angels.gd"),
 	"poble": preload("res://systems/poble.gd"),
 	"raval": preload("res://systems/boss_gat.gd"),
@@ -684,6 +685,12 @@ var diagonal_tram: RefCounted = null
 var diagonal_tram_dodges := 0
 var diagonal_tram_hits := 0
 var diagonal_kiosk_barked := false
+# El Metro: the walk's state (systems/metro.gd), and its goals' tallies
+var metro: RefCounted = null
+var metro_turnstile_slipped := false
+var metro_surge_held := false
+var metro_door_catches := 0
+var metro_busker_cheered := false
 # Montserrat: the funicular crossing, rolling boulders, and mel i mató stall
 var montserrat_funicular: Dictionary = {"state": "waiting", "t": 0.0}
 var montserrat_funicular_dodged := false
@@ -11080,6 +11087,8 @@ const FREEDOM_KINDS := {
 	"eixample": "yard",
 	# Plaça de les Glòries, where the avenue ends: a plaça with its pigeons
 	"diagonal": "placa",
+	# up the stairs at Sant Gos, into its little square
+	"metro": "placa",
 	# the beach where the Dimoni is burned
 	"cremada": "beach",
 	# the cabin of the jet at the end of the bridge (systems/aeroport_cabin.gd)
