@@ -16,6 +16,61 @@ const REF := Vector2(1280.0, 720.0)
 const MIN_FRAME := 0.78
 const MAX_FACTOR := 1.45
 
+# override for headless tests; negative X means query OS/cmdline normally
+static var test_safe_insets := Vector4(-1.0, -1.0, -1.0, -1.0)
+
+
+# Safe-area insets (left, top, right, bottom) in viewport canvas coordinates,
+# returning Vector4.ZERO on desktop/web when unclipped so desktop framing
+# never shifts.
+static func safe_insets(win: Window = null) -> Vector4:
+	if test_safe_insets.x >= 0.0:
+		return test_safe_insets
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--safe-area="):
+			var parts := a.substr(12).split(",")
+			if parts.size() >= 4:
+				return Vector4(maxf(0.0, float(parts[0])), maxf(0.0, float(parts[1])),
+					maxf(0.0, float(parts[2])), maxf(0.0, float(parts[3])))
+	if DisplayServer.get_name() == "headless" or win == null:
+		return Vector4.ZERO
+	if not OS.has_feature("android") and not OS.has_feature("ios"):
+		return Vector4.ZERO
+	var wsize := Vector2(win.size)
+	if wsize.x <= 0.0 or wsize.y <= 0.0:
+		return Vector4.ZERO
+	var sa := Rect2(DisplayServer.get_display_safe_area())
+	if sa.size.x <= 0.0 or sa.size.y <= 0.0:
+		return Vector4.ZERO
+	var win_rect := Rect2(Vector2(win.position), wsize)
+	if not sa.intersects(win_rect):
+		return Vector4.ZERO
+	var vp := win.get_viewport()
+	var vs := vp.get_visible_rect().size if vp != null else wsize
+	if vs.x <= 0.0 or vs.y <= 0.0:
+		return Vector4.ZERO
+	var sx := vs.x / wsize.x
+	var sy := vs.y / wsize.y
+	return Vector4(
+		maxf(0.0, (sa.position.x - win_rect.position.x) * sx),
+		maxf(0.0, (sa.position.y - win_rect.position.y) * sy),
+		maxf(0.0, (win_rect.end.x - sa.end.x) * sx),
+		maxf(0.0, (win_rect.end.y - sa.end.y) * sy))
+
+
+# Keep top-corner HUD cards inside display cutouts / notches.
+static func apply_safe_area(m: Node2D) -> void:
+	var win: Window = m.get_window() if m.is_inside_tree() else null
+	var ins := safe_insets(win)
+	if m.panel != null:
+		m.panel.position = Vector2(16.0 + ins.x, 12.0 + ins.y)
+	if m.goals_card != null:
+		m.goals_card.position.y = 8.0 + ins.y
+		if ins.z > 0.0:
+			var vw: float = m.get_viewport_rect().size.x if m.is_inside_tree() else REF.x
+			var gw: float = m.goals_card.size.x if m.goals_card.size.x > 0.0 else 200.0
+			m.goals_card.position.x = (vw if vw > 0.0 else REF.x) - 8.0 - ins.z - gw
+
 
 # The content scale factor for a window of this size in logical pixels.
 static func factor_for(logical: Vector2) -> float:
@@ -42,7 +97,9 @@ static func apply(m: Node2D) -> void:
 		if a.begins_with("--ui-scale="):
 			k = clampf(float(a.substr(11)), 0.5, 3.0)
 	if is_equal_approx(k, float(m.ui_scale)) and is_equal_approx(win.content_scale_factor, k):
+		apply_safe_area(m)
 		return
 	m.cam.zoom *= float(m.ui_scale) / k
 	m.ui_scale = k
 	win.content_scale_factor = k
+	apply_safe_area(m)

@@ -15,6 +15,7 @@ extends RefCounted
 # every glyph that is not a letter (chevrons, locks, arrows) is a shape.
 
 const Icons := preload("res://hud/ui_icons.gd")
+const UiScale := preload("res://hud/ui_scale.gd")
 
 const INK := Color(0.98, 0.95, 0.88)
 const INK_SOFT := Color(0.80, 0.78, 0.74)
@@ -172,7 +173,8 @@ static func prompt_bar(c: CanvasItem, vs: Vector2, items: Array, a := 1.0) -> vo
 	if items.is_empty():
 		return
 	var w := bar_width(items)
-	var y := vs.y - BAR_FROM_BOTTOM
+	var ins := UiScale.safe_insets(c.get_window() if c.is_inside_tree() else null)
+	var y := vs.y - BAR_FROM_BOTTOM - ins.w
 	var back := Rect2((vs.x - w) * 0.5 - 18.0, y - 9.0, w + 36.0, BAR_CAP_H + 20.0)
 	c.draw_rect(back, Color(0.05, 0.05, 0.07, 0.62 * a))
 	var x := (vs.x - w) * 0.5

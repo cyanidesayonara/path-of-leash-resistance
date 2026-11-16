@@ -763,3 +763,6 @@
 
 # NpcFigure: passers-by on the dog walkers' rig
 --headless --path . --script res://tests/test_npc_figure.gd
+
+# Android readiness: safe-area insets, back/lifecycle hooks, export preset & icons
+--headless --path . --script res://tests/test_android_readiness.gd

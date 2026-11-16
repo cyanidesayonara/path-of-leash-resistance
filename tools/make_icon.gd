@@ -76,6 +76,8 @@ class IconCanvas:
 	var tilt := -0.09
 	# the poster paints its own, taller sky and turns this off
 	var paint_sky := true
+	var paint_ground := true
+	var paint_dog := true
 	# how far past the icon's top edge the leash carries on (the poster's is
 	# taller than the icon)
 	var leash_reach := 0.0
@@ -121,12 +123,14 @@ class IconCanvas:
 		draw_colored_polygon(_smooth(p), col)
 
 	func _draw() -> void:
-		_draw_ground()
-		_draw_body()
-		# over the collar, under the head: the ear may hang across it
-		_draw_leash()
-		_draw_ring()
-		_draw_head()
+		if paint_ground:
+			_draw_ground()
+		if paint_dog:
+			_draw_body()
+			# over the collar, under the head: the ear may hang across it
+			_draw_leash()
+			_draw_ring()
+			_draw_head()
 
 	func _draw_ground() -> void:
 		# full bleed; _run() masks the rounded corners back in afterwards, so
@@ -345,28 +349,51 @@ func _initialize() -> void:
 	call_deferred("_run")
 
 
-func _run() -> void:
-	var out := OUT
-	for a: String in OS.get_cmdline_user_args():
-		if a.begins_with("--out="):
-			out = a.trim_prefix("--out=")
+func _render_layer(px_size: int, layer_scale: float, at: Vector2,
+		do_sky: bool, do_ground: bool, do_dog: bool, rounded: bool) -> Image:
 	var vp := SubViewport.new()
-	vp.size = Vector2i(SIZE * SS, SIZE * SS)
+	vp.size = Vector2i(px_size * SS, px_size * SS)
 	vp.transparent_bg = true
 	vp.render_target_clear_mode = SubViewport.CLEAR_MODE_ALWAYS
 	vp.render_target_update_mode = SubViewport.UPDATE_ONCE
 	root.add_child(vp)
 	var canvas := IconCanvas.new()
-	canvas.s = float(SS)
+	canvas.s = float(px_size * SS) / 256.0 * layer_scale
+	canvas.position = at * float(px_size * SS)
 	canvas.eye_style = eye_style_arg()
+	canvas.paint_sky = do_sky
+	canvas.paint_ground = do_ground
+	canvas.paint_dog = do_dog
+	canvas.leash_reach = 180.0 if do_dog and not do_sky else 0.0
 	vp.add_child(canvas)
 	canvas.queue_redraw()
 	await process_frame
 	await process_frame
 	var img := vp.get_texture().get_image()
-	img.resize(SIZE, SIZE, Image.INTERPOLATE_LANCZOS)
-	_round_corners(img, 30.0)
+	img.resize(px_size, px_size, Image.INTERPOLATE_LANCZOS)
+	if rounded:
+		_round_corners(img, 30.0)
+	vp.queue_free()
+	return img
+
+
+func _run() -> void:
+	if "--android" in OS.get_cmdline_user_args():
+		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://store/android"))
+		var bg: Image = await _render_layer(432, 1.0, Vector2.ZERO, true, true, false, false)
+		var err_bg := bg.save_png("res://store/android/icon_background.png")
+		var fg_s := 0.68
+		var fg: Image = await _render_layer(432, fg_s, Vector2((1.0 - fg_s) * 0.5, (1.0 - fg_s) * 0.56), false, false, true, false)
+		var err_fg := fg.save_png("res://store/android/icon_foreground.png")
+		print("android adaptive icons: bg=%d fg=%d" % [err_bg, err_fg])
+		quit(0 if err_bg == OK and err_fg == OK else 1)
+		return
+	var out := OUT
+	for a: String in OS.get_cmdline_user_args():
+		if a.begins_with("--out="):
+			out = a.trim_prefix("--out=")
+	var img: Image = await _render_layer(SIZE, 1.0, Vector2.ZERO, true, true, true, true)
 	var err := img.save_png(out)
 	print("icon: %s (%dx%d, %s eyes) err=%d" % [out, img.get_width(), img.get_height(),
-		canvas.eye_style, err])
+		eye_style_arg(), err])
 	quit(0 if err == OK else 1)

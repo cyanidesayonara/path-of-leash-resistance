@@ -46,6 +46,7 @@ const STEP_NAMES := ["CHOOSE A WALK", "GET READY"]
 # Leaving the application is a desktop thing: a browser tab is closed by
 # the browser. `--no-exit` and tests set this to see the web layout anywhere.
 static var exit_hidden := false
+static var back_requested := false
 
 
 # --- which screen is up ---------------------------------------------------
@@ -139,6 +140,9 @@ static func end_prompts(m: Node2D) -> Array:
 
 # BACK, the same on every screen: the bark action or the pause action.
 static func back_pressed() -> bool:
+	if back_requested:
+		back_requested = false
+		return true
 	return Input.is_action_just_pressed("bark") or Input.is_action_just_pressed("pause")
 
 
