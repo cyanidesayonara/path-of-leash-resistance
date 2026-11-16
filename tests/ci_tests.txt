@@ -408,6 +408,9 @@
 --headless --path . --script res://tests/test_diagonal.gd
 --headless --path . --script res://tests/test_diagonal_riders.gd
 
+# Carrer de Blai: leave it, the waiters' trays, the terraces and the sky
+--headless --path . --script res://tests/test_blai.gd
+
 # Montserrat (the wild goat herd chase) test
 --headless --path . --script res://tests/test_montserrat.gd
 

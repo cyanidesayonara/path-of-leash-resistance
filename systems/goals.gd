@@ -77,6 +77,8 @@ const LEVEL_GOAL_IDS := {
 	# L'Eixample: the cut corners, the tour group, Plaça de Gaudí's pond
 	"eixample": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "corners", "tour", "pond", "combo", "prize", "spell", "jamon", "clock"],
 	"diagonal": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "tram_dodge", "tram_clean", "kiosk", "combo", "prize", "spell", "jamon", "clock"],
+	# Carrer de Blai: leaving the floor food, the waiters' trays, the terraces
+	"blai": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "leave_it", "tray", "beg", "combo", "prize", "spell", "jamon", "clock"],
 	# Els Àngels: the skate plaza outside the white museum
 	"angels": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "ledge", "decks", "lamps", "combo", "prize", "spell", "jamon", "clock"],
 	# El Poble Espanyol: Plaza Mayor arcade columns, craft workshops, and Andalusian watering cans
@@ -170,6 +172,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"tram_dodge": {"text": "Dodge the tram %d times", "target": 3, "fn": func() -> int: return m.diagonal_tram_dodges},
 		"tram_clean": {"text": "Get home without the tram bumping you", "target": 1, "fn": func() -> int: return 1 if (bool(m.finished) and m.diagonal_tram_hits == 0) else 0},
 		"kiosk": {"text": "Bark at the newspaper kiosk", "target": 1, "fn": func() -> int: return 1 if m.diagonal_kiosk_barked else 0},
+		"leave_it": {"text": "Leave it %d times when your human says so", "target": 3, "fn": func() -> int: return m.blai_leaves},
+		"tray": {"text": "Catch a pintxo off a tipping tray", "target": 1, "fn": func() -> int: return m.blai_tray_catches},
+		"beg": {"text": "Sit pretty at a terrace until someone shares", "target": 1, "fn": func() -> int: return m.blai_begged},
 		"pond": {"text": "Paddle in the pond by the basilica", "target": 1, "fn": func() -> int: return 1 if m.eixample_pond_paddled else 0},
 		"circles": {"text": "Sprint through %d painted circles", "target": 3, "fn": func() -> int: return m.superilla_circles_sprinted},
 		"skater": {"text": "Dodge or cheer the esplanade skater", "target": 1, "fn": func() -> int: return 1 if (m.skater != null and (m.skater.dodge_done or m.skater.cheered or m.skater.booped)) else 0},

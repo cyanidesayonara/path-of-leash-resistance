@@ -176,6 +176,10 @@ const STYLES := {
 	# comp, a little brighter and quicker than the grid it cuts across
 	"diagonal": {"bpm": 120, "key": 9, "lead": "vibes", "lead2": ["whistle", 12], "comp": "bossa",
 		"bass": "walk", "drums": "rim", "swing": 0.05, "verb": 0.28},
+	# Carrer de Blai: a late rumba out of a bar door, guitar over an accordion
+	# an octave down, minor and swung, the street's own Saturday night
+	"blai": {"bpm": 116, "key": 4, "minor": true, "lead": "guitar", "lead2": ["accordion", -12], "comp": "rumba",
+		"bass": "walk", "drums": "kickrim", "swing": 0.10, "verb": 0.30},
 	# Els Àngels: dusk skate plaza groove with marimba, vibes, skank chords, walking bass, and kick-rim drums
 	"angels": {"bpm": 118, "key": 2, "lead": "marimba", "lead2": ["vibes", 0], "comp": "skank",
 		"bass": "walk", "drums": "kickrim", "swing": 0.06, "verb": 0.24},

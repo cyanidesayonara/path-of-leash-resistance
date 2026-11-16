@@ -378,6 +378,7 @@ const WALK_MODULES := {
 	"espanya": preload("res://systems/espanya.gd"),
 	"eixample": preload("res://systems/eixample.gd"),
 	"diagonal": preload("res://systems/diagonal.gd"),
+	"blai": preload("res://systems/blai.gd"),
 	"angels": preload("res://systems/angels.gd"),
 	"poble": preload("res://systems/poble.gd"),
 	"raval": preload("res://systems/boss_gat.gd"),
@@ -684,6 +685,24 @@ var diagonal_tram: RefCounted = null
 var diagonal_tram_dodges := 0
 var diagonal_tram_hits := 0
 var diagonal_kiosk_barked := false
+# Carrer de Blai (systems/blai.gd): the waiters and their trays, pintxos in
+# the air, the "Leave it!" your human has going, the terraces and who is out
+var blai_waiters: Array = []
+var blai_pieces: Array = []
+var blai_spill_at := Vector2.INF
+var blai_leave: Dictionary = {}
+var blai_leave_cool := 0.0
+var blai_floor_seen := 0
+var blai_leaves := 0
+var blai_gobbled := 0
+var blai_tray_catches := 0
+var blai_trays_tipped := 0
+var blai_begged := 0
+var blai_beg_t := 0.0
+var blai_open: Array = []
+var blai_diners: Array = []
+var blai_standers: Array = []
+var blai_delivery: Array = []
 # Montserrat: the funicular crossing, rolling boulders, and mel i mató stall
 var montserrat_funicular: Dictionary = {"state": "waiting", "t": 0.0}
 var montserrat_funicular_dodged := false
@@ -11080,6 +11099,8 @@ const FREEDOM_KINDS := {
 	"eixample": "yard",
 	# Plaça de les Glòries, where the avenue ends: a plaça with its pigeons
 	"diagonal": "placa",
+	# Plaça del Sortidor, at the top of Carrer de Blai
+	"blai": "placa",
 	# the beach where the Dimoni is burned
 	"cremada": "beach",
 	# the cabin of the jet at the end of the bridge (systems/aeroport_cabin.gd)
@@ -12290,6 +12311,9 @@ func _draw_furniture(vt: float, vb: float) -> void:
 	# cafe tables with a little service on them
 	for tb in tables:
 		if tb.y < vt - 40.0 or tb.y > vb + 40.0:
+			continue
+		if walk_mod != null and walk_mod.has_method("draw_table"):
+			walk_mod.draw_table(self, _wc, tb)
 			continue
 		contact_shadow(_wc, tb, 14.0, 9.0, 0.20)
 		# a bistro table: a pale marble top in a dark metal rim, its lit edge on

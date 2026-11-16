@@ -34,6 +34,7 @@ const Forum := preload("res://systems/forum.gd")
 const Espanya := preload("res://systems/espanya.gd")
 const Eixample := preload("res://systems/eixample.gd")
 const Diagonal := preload("res://systems/diagonal.gd")
+const Blai := preload("res://systems/blai.gd")
 # walks whose camera is turned: degrees clockwise of screen-up their north runs
 const CAM_ROT := {"diagonal": 45.0}
 const Outdoors := preload("res://systems/outdoors.gd")
@@ -127,6 +128,7 @@ const CROSS_SECTIONS := {
 	"carmel": ["none", 0.0, "none", 0.0],          # sunset panorama and hillside slopes in systems/carmel.gd
 	"forum": ["none", 0.0, "none", 0.0],           # coastal concrete plaza and bathing esplanade in systems/forum.gd
 	"diagonal": ["none", 0.0, "none", 0.0],        # the promenade, the track and the turned grid in systems/diagonal.gd
+	"blai": ["none", 0.0, "none", 0.0],            # the bar street, its placeta and the roofs in systems/blai.gd
 	"eixample": ["none", 0.0, "none", 0.0],        # the grid street and its blocks in systems/eixample.gd
 	"angels": ["none", 0.0, "none", 0.0],          # skate plaza, museum and convent in systems/angels.gd
 	"poble": ["none", 0.0, "none", 0.0],           # walled architectural village in systems/poble.gd
@@ -1371,6 +1373,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"forum": half = Forum.HALF
 		"espanya": half = Espanya.HALF
 		"diagonal": half = Diagonal.HALF   # the central promenade and the tram track
+		"blai": half = Blai.HALF           # facade to facade; the placeta opens it (Blai.edge_nodes)
 		"eixample": half = Eixample.HALF   # the octagons at the crossings (Eixample.edge_nodes)
 		"angels": half = Angels.HALF
 		"poble": half = Poble.HALF
@@ -1545,6 +1548,8 @@ static func apply_corridor(m: Node2D) -> void:
 		m.edge_nodes = Carmel.edge_nodes(m)
 	elif m.lvl == "eixample":
 		m.edge_nodes = Eixample.edge_nodes(m)
+	elif m.lvl == "blai":
+		m.edge_nodes = Blai.edge_nodes(m)
 	elif m.lvl == "angels":
 		m.edge_nodes = Angels.edge_nodes(m)
 	elif m.lvl == "poble":
@@ -1581,7 +1586,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "diagonal" or m.lvl == "angels" or m.lvl == "poble" or m.lvl == "ciutadella" or m.lvl == "cremada" or m.lvl == "aeroport" or m.lvl == "montserrat":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "diagonal" or m.lvl == "blai" or m.lvl == "angels" or m.lvl == "poble" or m.lvl == "ciutadella" or m.lvl == "cremada" or m.lvl == "aeroport" or m.lvl == "montserrat":
 		return
 	# and so does El Barri, and the First Walk built on it, whose stations
 	# (systems/tutorial.gd) are laid out where they stand
@@ -1696,6 +1701,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_diagonal: Array = Diagonal.build(m)
 			hyd_list.assign(pl_diagonal[0])
 			keb_list.assign(pl_diagonal[1])
+		"blai":
+			var pl_blai: Array = Blai.build(m)
+			hyd_list.assign(pl_blai[0])
+			keb_list.assign(pl_blai[1])
 		"eixample":
 			var pl_eixample: Array = Eixample.build(m)
 			hyd_list.assign(pl_eixample[0])
@@ -2504,6 +2513,9 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "diagonal":
 		for r: Rect2 in Diagonal.wrap_rects():
 			add_rope_rect(m, r)
+	if m.lvl == "blai":
+		for r: Rect2 in Blai.wrap_rects(m):
+			add_rope_rect(m, r)
 	if m.lvl == "montserrat":
 		for r: Rect2 in Montserrat.wrap_rects():
 			add_rope_rect(m, r)
@@ -2609,6 +2621,9 @@ static func build_level_data(m: Node2D) -> void:
 		"diagonal":
 			m.prize_pos = Diagonal.PRIZE
 			m.prize_text = Diagonal.PRIZE_TEXT
+		"blai":
+			m.prize_pos = Blai.PRIZE
+			m.prize_text = Blai.PRIZE_TEXT
 		"eixample":
 			m.prize_pos = Eixample.PRIZE
 			m.prize_text = Eixample.PRIZE_TEXT
@@ -3057,6 +3072,12 @@ const FREEDOM_PROPS := {
 		[Vector2(350.0, -480.0), "planter"], [Vector2(1040.0, -480.0), "planter"],
 		[Vector2(210.0, -350.0), "post"], [Vector2(500.0, -450.0), "post"], [Vector2(740.0, -440.0), "post"],
 		[Vector2(1070.0, -350.0), "post"], [Vector2(230.0, -230.0), "shrub"], [Vector2(1090.0, -240.0), "shrub"],
+	],
+	"blai": [
+		[Vector2(280.0, -460.0), "dig"], [Vector2(1000.0, -300.0), "dig"], [Vector2(640.0, -300.0), "dig"],
+		[Vector2(360.0, -470.0), "planter"], [Vector2(920.0, -480.0), "planter"],
+		[Vector2(220.0, -340.0), "post"], [Vector2(520.0, -460.0), "post"], [Vector2(760.0, -450.0), "post"],
+		[Vector2(1060.0, -360.0), "post"], [Vector2(240.0, -220.0), "shrub"], [Vector2(1080.0, -230.0), "shrub"],
 	],
 	"forum": [
 		[Vector2(210.0, -480.0), "dig"], [Vector2(620.0, -320.0), "dig"], [Vector2(780.0, -220.0), "dig"],
@@ -3531,6 +3552,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_diagonal: Array[Rect2] = Diagonal.solids(m)
 			for i in range(ps_diagonal.size()):
 				out.append(["diagonal_solid_%d" % i, ps_diagonal[i]])
+		"blai":
+			var ps_blai: Array[Rect2] = Blai.solids(m)
+			for i in range(ps_blai.size()):
+				out.append(["blai_delivery_%d" % i, ps_blai[i]])
 		"eixample":
 			var ps_eixample: Array[Rect2] = Eixample.solids(m)
 			for i in range(ps_eixample.size()):
@@ -4114,6 +4139,9 @@ static func build_walls(m: Node2D) -> void:
 			add_circle_body(m, Vector2(c.x, c.y), c.z)
 	if m.lvl == "diagonal":
 		for r: Rect2 in Diagonal.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "blai":
+		for r: Rect2 in Blai.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "eixample":
 		for r: Rect2 in Eixample.solids(m):
