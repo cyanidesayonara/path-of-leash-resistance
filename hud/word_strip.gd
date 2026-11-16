@@ -15,7 +15,7 @@ const HOLD_S := 2.6
 const FADE_S := 0.45
 # where it sits, as a share of the screen's height
 const Y_SHARE := 0.25
-const GOLD := Color(1.0, 0.84, 0.26)
+const GOLD := Kit.SAFFRON
 
 var main: Node2D
 var t := 99.0
@@ -90,7 +90,7 @@ func _draw() -> void:
 				draw_arc(c, r + 3.0 + 4.0 * (1.0 - k), 0.0, TAU, 32, Color(1, 1, 1, 0.7 * k * a), 3.0, true)
 		else:
 			draw_circle(c + Vector2(0, 3), r, Color(0, 0, 0, 0.22 * a))
-			draw_circle(c, r, Color(0.07, 0.075, 0.09, 0.72 * a))
+			draw_circle(c, r, Color(Kit.NAVY, 0.72 * a))
 			draw_arc(c, r, 0.0, TAU, 32, Color(1, 1, 1, 0.22 * a), 1.5, true)
 			_letter(f, c, r, String(l.letter), Color(1, 1, 1, 0.22 * a))
 	if flying:
@@ -104,7 +104,7 @@ func _draw() -> void:
 # (systems/tony_hawk.gd): a dark rim, the gold face, a glint, the letter.
 static func coin(c: CanvasItem, f: Font, at: Vector2, r: float, ch: String, a := 1.0) -> void:
 	c.draw_circle(at + Vector2(0, r * 0.15), r, Color(0, 0, 0, 0.28 * a))
-	c.draw_circle(at, r, Color(0.62, 0.44, 0.08, a))
+	c.draw_circle(at, r, Color(Kit.SAFFRON_DEEP, a))
 	c.draw_circle(at, r * 0.88, Color(GOLD.r, GOLD.g, GOLD.b, a))
 	c.draw_circle(at + Vector2(-r * 0.32, -r * 0.36), r * 0.2, Color(1.0, 0.98, 0.72, a))
 	var px := int(round(r * 1.3))

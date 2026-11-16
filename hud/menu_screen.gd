@@ -163,6 +163,7 @@ func _main(vs: Vector2) -> void:
 	var y0 := maxf(top, (top + bottom) * 0.5 - h * 0.5)
 	var r := Rect2(48.0, y0, MAIN_W, h)
 	Kit.card(self, r, acc)
+	Kit.mosaic(self, r)
 	var f := Kit.display()
 	var px := 20 if row_h >= 40.0 else 17
 	var picked_i := clampi(int(main.main_idx), 0, n - 1)
@@ -170,7 +171,7 @@ func _main(vs: Vector2) -> void:
 		var rr := Rect2(r.position.x + 12.0, r.position.y + pad + row_h * float(i), r.size.x - 24.0, row_h)
 		var picked := i == picked_i
 		if picked:
-			draw_rect(rr, Color(acc.r, acc.g, acc.b, 0.14))
+			draw_rect(rr, Kit.pick_fill(acc))
 			draw_rect(Rect2(rr.position, Vector2(4.0, rr.size.y)), acc)
 			Kit.chevron(self, Vector2(rr.position.x + 22.0, rr.get_center().y), 8.0, acc)
 		draw_string(f, Vector2(rr.position.x + 40.0, rr.get_center().y + float(px) * 0.36), String(labels[i]),
@@ -256,7 +257,7 @@ func _details(vs: Vector2) -> void:
 		var picked: bool = i == int(main.details_idx)
 		var rr := Rect2(r.position.x + 14.0, y, r.size.x - 28.0, 38.0)
 		if picked:
-			draw_rect(rr, Color(acc.r, acc.g, acc.b, 0.14))
+			draw_rect(rr, Kit.pick_fill(acc))
 			draw_rect(Rect2(rr.position, Vector2(4.0, rr.size.y)), acc)
 		var has_trait := row.has("trait")
 		if has_trait and picked:
@@ -389,7 +390,7 @@ func _shop(vs: Vector2) -> void:
 		var picked: bool = i == int(main.shop_idx)
 		var rr := Rect2(lx, y, lw, SHOP_ROW_H - 6.0)
 		if picked:
-			draw_rect(rr, Color(acc.r, acc.g, acc.b, 0.15))
+			draw_rect(rr, Kit.pick_fill(acc))
 			draw_rect(Rect2(rr.position, Vector2(4.0, rr.size.y)), acc)
 		_swatch(Vector2(lx + 30.0, y + rr.size.y * 0.5), tab, key, d)
 		if tab == "stats":
@@ -434,7 +435,7 @@ func _swatch(at: Vector2, kind: String, key: String, d: Dictionary) -> void:
 					draw_arc(at, 10.0, TAU * float(i) / 6.0, TAU * float(i + 1) / 6.0, 6, cols[i], 6.0)
 			else:
 				draw_arc(at, 10.0, 0, TAU, 20, d.col, 6.0)
-			draw_circle(at + Vector2(0, 11.0), 3.0, Color(0.85, 0.78, 0.45))
+			draw_circle(at + Vector2(0, 11.0), 3.0, Kit.SAFFRON)
 		"bandana":
 			if key == "none":
 				draw_arc(at, 11.0, 0, TAU, 20, Kit.INK_FAINT, 1.6)
@@ -506,7 +507,7 @@ func _progress(vs: Vector2) -> void:
 		var by := y + float(i) * rh
 		var current := String(row.id) == Game.level_id
 		if current:
-			draw_rect(Rect2(r.position.x + 20.0, by, w - 40.0, rh), Color(acc.r, acc.g, acc.b, 0.11))
+			draw_rect(Rect2(r.position.x + 20.0, by, w - 40.0, rh), Kit.pick_fill(acc))
 			draw_rect(Rect2(r.position.x + 20.0, by, 3.0, rh), acc)
 		elif i % 2 == 0:
 			draw_rect(Rect2(r.position.x + 20.0, by, w - 40.0, rh), Color(1, 1, 1, 0.03))
@@ -551,6 +552,7 @@ func _pause(vs: Vector2) -> void:
 	var r := Rect2(vs.x * 0.5 - PAUSE_W * 0.5, vs.y * 0.5 - h * 0.5 - 20.0, PAUSE_W, h)
 	_card_pop(r.get_center())
 	Kit.card(self, r, acc)
+	Kit.mosaic(self, r)
 	Kit.heading(self, Vector2(r.position.x, r.position.y + 50.0), "PAUSED", 30, acc,
 		HORIZONTAL_ALIGNMENT_CENTER, PAUSE_W)
 	var sub := "%s    %s" % [String(main._walk_name()), Flow.clock(float(main.elapsed))]
@@ -564,7 +566,7 @@ func _pause(vs: Vector2) -> void:
 		var cell := Rect2(r.position.x + 24.0 + float(col) * (cw + PAUSE_GAP),
 			r.position.y + 100.0 + float(row) * (PAUSE_CELL_H + PAUSE_GAP), cw, PAUSE_CELL_H)
 		var picked: bool = i == int(main.pause_idx)
-		draw_rect(cell, Color(acc.r, acc.g, acc.b, 0.16) if picked else Color(1, 1, 1, 0.04))
+		draw_rect(cell, Kit.pick_fill(acc) if picked else Color(1, 1, 1, 0.04))
 		draw_rect(cell, acc if picked else Color(1, 1, 1, 0.10), false, 2.0 if picked else 1.0)
 		if picked:
 			Kit.chevron(self, Vector2(cell.position.x + 20.0, cell.get_center().y), 8.0, acc)
@@ -654,7 +656,7 @@ func _confirm(vs: Vector2) -> void:
 		for i in range(opts.size()):
 			var rr := Rect2(r.position.x + 28.0, oy + FIRST_ROW_H * float(i), CONFIRM_W - 56.0, FIRST_ROW_H - 6.0)
 			var picked: bool = i == int(main.first_idx)
-			draw_rect(rr, Color(acc.r, acc.g, acc.b, 0.16) if picked else Color(1, 1, 1, 0.04))
+			draw_rect(rr, Kit.pick_fill(acc) if picked else Color(1, 1, 1, 0.04))
 			draw_rect(rr, acc if picked else Color(1, 1, 1, 0.10), false, 2.0 if picked else 1.0)
 			if picked:
 				Kit.chevron(self, Vector2(rr.position.x + 20.0, rr.get_center().y), 8.0, acc)
