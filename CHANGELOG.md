@@ -7,6 +7,13 @@ Append-only session history, newest first.
 - Added `systems/pilones_retractils.gd` (`PilonesRetractils`) wired through `systems/detour.gd` on `oldtown` (`El Gòtic`): two pedestrian-zone bollard gates (`y = -1350`, `y = -3720`) with flush steel street plates, glowing amber LED caps, `StaticBody2D` collision when raised, `0.8 s` amber strobe telegraphs before dropping (`WARN_DOWN`) and rising (`WARN_UP`), a delivery van rolling through while lowered, gentle radial clear-nudge on rise, and sensor-trip on `on_bark()` (`sensor beep! +2`).
 - Tests: `tests/test_pilones_retractils.gd` (registered in `tests/ci_tests.txt`), `oldtown --selftest`, `tests/test_walk_hooks.gd`, and `tests/test_members_exist.gd`.
 
+## 2026-11-16 - Cull and cache bike lanes, La Rambla static scenery, and static canopies (#482)
+
+- Culled `lane_ys` bike lane crossings by `vt..vb` and cached their static asphalt, stripes, `BikePaint.squares`, and `BikePaint.glyph` markings via `_draw_section("bike_lanes", ...)` (`_draw_bike_lanes()` / `_draw_world_bike_lanes()` in `main.gd`), leaving only the blinking amber warning light live; cut `lanes to pickups` 300-frame GL `street` draw cost from `225.28 ms` to `134.90 ms` (-40%).
+- Split `Rambla.draw_pavement_waves`, `Rambla.draw_tree_leaf_drifts`, `Rambla.draw_miro_mosaic`, and `RAMBLA_ICECREAM` into `_draw_section("rambla_static", ...)` (`_draw_rambla_static()` in `main.gd`) and drew live Rambla props directly into `_wc`, cutting `live, scenery` 300-frame GL `street` draw cost from `102.12 ms` to `52.91 ms` (-48%).
+- Updated `world/canopylayer.gd` to redraw `_faded_node` only when `_fade_key`, `_sky_key`, or an in-view animated faded piece (`TREE_PALM`, `Over.LAUNDRY`, `Over.WALL_LAMP`, `Over.BOARD`) updates, and redraw `self` only on those changes or a >150 px camera move, skipping idle 30 fps canopy rebuilds on static-tree walks such as La Rambla.
+- Tests: `tests/test_shape_batch.gd` (GL Compatibility), `tests/test_walk_hooks.gd` (1072 checks), `tests/test_members_exist.gd` (8327 checks), `tests/test_npc_clear_of_solids.gd` (392 checks), and `street --selftest`.
+
 ## 2026-11-16 - Fix Montserrat chase respites, herd steering, and boulder targeting
 
 - Registered Montserrat's two chase respites (`CHEESE_STALL_POS` at `y = -3300` and the trail gate midpoint at `y = -1900`) in `m.chase_jams` (`systems/montserrat.gd`) and marked `cheese_stall` as a checkpoint in `MONTSERRAT_BANDS` (`systems/home_chase.gd`), so the goat herd jams and saves checkpoints consistently with the other seven chase walks.
